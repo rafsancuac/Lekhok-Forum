@@ -2,7 +2,7 @@
 
 A clean, responsive Bengali-language website for the **লেখক ফোরাম**.
 
-> Inspired by the design language of [bycwf.org](https://bycwf.org) and the modern Bengali web aesthetic of *Rafsan Daily*.
+> A clean Bengali-language site built with semantic HTML, custom CSS, and vanilla JavaScript.
 
 ## ✨ Features
 
