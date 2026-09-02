@@ -1,6 +1,6 @@
 # লেখক ফোরাম — Lekhok Forum
 
-A clean, responsive Bengali-language website for the **লেখক ফোরাম** (বাংলাদেশ তরুণ কলাম লেখক ফোরাম).
+A clean, responsive Bengali-language website for the **লেখক ফোরাম**.
 
 > Inspired by the design language of [bycwf.org](https://bycwf.org) and the modern Bengali web aesthetic of *Rafsan Daily*.
 
