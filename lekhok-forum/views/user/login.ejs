@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>লগইন — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/auth.css" />
+</head>
+<body>
+  <div class="auth-card">
+    <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> হোম</a>
+    <div class="logo-mark">ল</div>
+    <h1>স্বাগতম</h1>
+    <p class="sub">আপনার অ্যাকাউন্টে লগইন করুন</p>
+    <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+    <form method="POST">
+      <div class="form-group">
+        <label>ব্যবহারকারী নাম বা ইমেইল</label>
+        <input type="text" name="username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>পাসওয়ার্ড</label>
+        <input type="password" name="password" required>
+      </div>
+      <button type="submit" class="btn-primary">লগইন</button>
+    </form>
+    <p class="auth-foot">অ্যাকাউন্ট নেই? <a href="/register">রেজিস্ট্রেশন করুন</a></p>
+  </div>
+</body>
+</html>

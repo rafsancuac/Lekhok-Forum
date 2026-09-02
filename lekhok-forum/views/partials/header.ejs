@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-left">
+        <a href="/" class="topbar-brand">লেখক ফোরাম</a>
+      </div>
+      <div class="topbar-right">
+        <% if (user) { %>
+          <!-- Notifications bell -->
+          <div class="notif-bell-wrap" id="notifBell">
+            <button class="notif-bell-btn" onclick="toggleNotifs()">
+              <i class="fas fa-bell"></i>
+              <% if (unread > 0) { %><span class="notif-badge" id="notifBadge"><%= unread > 9 ? '9+' : unread %></span><% } %>
+            </button>
+            <div class="notif-dropdown" id="notifDropdown">
+              <div class="notif-header">
+                <span>বিজ্ঞপ্তি</span>
+                <a href="/notifications" class="notif-see-all">সব দেখুন</a>
+              </div>
+              <div id="notifList">
+                <% if (typeof recentNotifs !== 'undefined' && recentNotifs && recentNotifs.length) { %>
+                  <% recentNotifs.forEach(n => { %>
+                    <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>">
+                      <div class="notif-title"><%= n.title %></div>
+                      <div class="notif-body"><%= n.body %></div>
+                    </a>
+                  <% }); %>
+                <% } else { %>
+                  <div class="notif-empty">কোনো বিজ্ঞপ্তি নেই</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+          <div class="user-menu-wrap">
+            <button class="user-menu-btn" onclick="toggleUserMenu()">
+              <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="user-mini-avatar">
+              <span><%= user.username %></span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="user-dropdown" id="userDropdown">
+              <a href="/profile/<%= user.username %>"><i class="fas fa-user"></i> প্রোফাইল</a>
+              <a href="/articles/new"><i class="fas fa-pen-nib"></i> লেখা লিখুন</a>
+              <a href="/questions/new"><i class="fas fa-question"></i> প্রশ্ন করুন</a>
+              <a href="/bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত</a>
+              <hr style="border:none;border-top:1px solid #eee;margin:6px 0">
+              <a href="/profile/edit"><i class="fas fa-cog"></i> সেটিংস</a>
+              <% if (user.role === 'admin' || user.role === 'moderator') { %>
+                <a href="/admin" class="admin-link"><i class="fas fa-shield-alt"></i> অ্যাডমিন প্যানেল</a>
+              <% } %>
+              <a href="/logout" class="logout-link"><i class="fas fa-sign-out-alt"></i> লগআউট</a>
+            </div>
+          </div>
+        <% } else { %>
+          <a href="/login" class="topbar-link">লগইন</a>
+          <a href="/register" class="topbar-btn">রেজিস্ট্রেশন</a>
+        <% } %>
+        <button class="mobile-menu-btn" onclick="document.getElementById('mobileNav').classList.toggle('open')">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-links" id="mobileNav">
+        <a href="/" class="nav-item"><i class="fas fa-home"></i> হোম</a>
+        <a href="/articles" class="nav-item"><i class="fas fa-pen-nib"></i> লেখা</a>
+        <a href="/qa" class="nav-item"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
+        <a href="/members" class="nav-item"><i class="fas fa-users"></i> সদস্য</a>
+        <a href="/quiz" class="nav-item"><i class="fas fa-quiz"></i> কুইজ</a>
+        <a href="/on-this-day" class="nav-item"><i class="fas fa-calendar-day"></i> এই দিনে</a>
+        <a href="/activities" class="nav-item"><i class="fas fa-calendar-check"></i> কার্যক্রম</a>
+        <a href="/epaper" class="nav-item"><i class="fas fa-newspaper"></i> ই-পেপার</a>
+        <a href="/best-writer" class="nav-item"><i class="fas fa-star"></i> সেরা লেখক</a>
+        <a href="/achievements" class="nav-item"><i class="fas fa-trophy"></i> অর্জন</a>
+        <a href="/constitution" class="nav-item"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
+        <a href="/committee" class="nav-item"><i class="fas fa-users-cog"></i> কমিটি</a>
+        <a href="/notices" class="nav-item"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি</a>
+        <a href="/events" class="nav-item"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
+        <a href="/resources" class="nav-item"><i class="fas fa-file-alt"></i> ফাইল</a>
+        <a href="/about" class="nav-item"><i class="fas fa-info-circle"></i> পরিচিতি</a>
+        <a href="/contact" class="nav-item"><i class="fas fa-envelope"></i> যোগাযোগ</a>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    function toggleNotifs() {
+      document.getElementById('notifDropdown').classList.toggle('open');
+    }
+    function toggleUserMenu() {
+      document.getElementById('userDropdown').classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.notif-bell-wrap')) document.getElementById('notifDropdown')?.classList.remove('open');
+      if (!e.target.closest('.user-menu-wrap')) document.getElementById('userDropdown')?.classList.remove('open');
+    });
+
+    // Poll for new notifications
+    async function pollNotifs() {
+      const res = await fetch('/api/notifications/count');
+      const data = await res.json();
+      const badge = document.getElementById('notifBadge');
+      if (data.unread > 0) {
+        if (badge) badge.textContent = data.unread > 9 ? '9+' : data.unread;
+        else {
+          const bell = document.querySelector('.notif-bell-btn');
+          bell.insertAdjacentHTML('beforeend', '<span class="notif-badge" id="notifBadge">' + (data.unread > 9 ? '9+' : data.unread) + '</span>');
+        }
+      }
+    }
+    setInterval(pollNotifs, 30000);
+  </script>
+</body>
+</html>

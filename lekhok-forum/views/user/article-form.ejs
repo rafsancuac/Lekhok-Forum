@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title><%= editMode ? 'লেখা সম্পাদনা' : 'নতুন লেখা' %> — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/auth.css" />
+  <style>
+    .editor-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .editor-toolbar button { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer; font-family: inherit; }
+    .editor-toolbar button:hover { background: #f0f0f0; }
+    textarea#body { min-height: 300px; font-size: 1.1rem; }
+    .tag-hint { font-size: 0.85rem; color: #888; }
+    .form-group.full { grid-column: 1 / -1; }
+    @media (max-width: 600px) { .editor-toolbar { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="auth-card" style="max-width: 800px; margin: 30px auto;">
+    <a href="/articles" class="back-home"><i class="fas fa-arrow-left"></i> লেখার তালিকায় ফিরে যান</a>
+    <div class="logo-mark">ল</div>
+    <h1><%= editMode ? 'লেখা সম্পাদনা' : 'নতুন লেখা লিখুন' %></h1>
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST">
+      <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= post?.title || '' %>" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>ট্যাগ</label><input type="text" name="tags" value="<%= post?.tags || '' %>" placeholder="কবিতা, উপন্যাস,প্রবন্ধ"><small class="tag-hint">কমা দিয়ে আলাদা করুন</small></div>
+        <div class="form-group"><label>কভার ছবি URL</label><input type="url" name="cover_image" value="<%= post?.cover_image || '' %>"></div>
+      </div>
+      <div class="form-group"><label>সংক্ষিপ্ত সারাংশ</label><textarea name="excerpt" rows="2"><%= post?.excerpt || '' %></textarea></div>
+      <div class="form-group">
+        <label>বিষয়বস্তু *</label>
+        <div class="editor-toolbar">
+          <button type="button" onclick="wrap('**','**')"><b>B</b></button>
+          <button type="button" onclick="wrap('_','_')"><i>I</i></button>
+          <button type="button" onclick="wrap('\n- ','\n')">&#8226; List</button>
+          <button type="button" onclick="insertLink()">🔗 Link</button>
+        </div>
+        <textarea id="body" name="body" required><%= post?.body || '' %></textarea>
+      </div>
+      <button type="submit" class="btn-primary"><%= editMode ? 'সংরক্ষণ করুন' : 'প্রকাশ করুন' %></button>
+    </form>
+  </div>
+  <script>
+    function wrap(before, after) {
+      const ta = document.getElementById('body');
+      const s = ta.selectionStart, e = ta.selectionEnd;
+      ta.value = ta.value.substring(0, s) + before + ta.value.substring(s, e) + after + ta.value.substring(e);
+      ta.focus();
+    }
+    function insertLink() {
+      const url = prompt('URL:');
+      if (url) wrap('[', '](' + url + ')');
+    }
+  </script>
+</body>
+</html>

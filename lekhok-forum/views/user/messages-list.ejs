@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>মেসেজ — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="page-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-comment-dots"></i> মেসেজ</h1>
+    </div>
+
+    <div class="messages-wrap" style="grid-template-columns: 1fr">
+      <div class="conv-list" style="border-right: none; height: auto; min-height: 400px;">
+        <div class="conv-list-head">
+          <h2><i class="fas fa-inbox"></i> কথোপকথন</h2>
+        </div>
+        <% if (conversations.length === 0) { %>
+          <div class="empty-state-full">
+            <i class="fas fa-comment-slash"></i>
+            <p>কোনো কথোপকথন নেই।</p>
+            <a href="/members" class="btn-primary-sm">সদস্য খুঁজুন</a>
+          </div>
+        <% } else { %>
+          <% conversations.forEach(c => { %>
+            <a href="/messages/<%= c.other_username %>" class="conv-item">
+              <img src="<%= c.other_avatar || '/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a) %>" class="conv-avatar">
+              <div class="conv-info">
+                <div class="conv-name"><%= c.other_name %></div>
+                <div class="conv-preview"><%= c.last_body || 'নতুন কথোপকথন' %></div>
+              </div>
+              <div class="conv-meta">
+                <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
+              </div>
+            </a>
+          <% }); %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

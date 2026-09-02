@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ড্যাশবোর্ড — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="dashboard-wrap">
+    <!-- Left Sidebar -->
+    <aside class="dash-sidebar">
+      <div class="profile-card">
+        <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="dash-avatar">
+        <h3><%= user.full_name %></h3>
+        <p class="dash-handle">@<%= user.username %></p>
+        <a href="/profile/<%= user.username %>" class="dash-profile-link">প্রোফাইল দেখুন</a>
+      </div>
+      <nav class="dash-nav">
+        <a href="/dashboard" class="active"><i class="fas fa-home"></i> নিউজ ফিড</a>
+        <a href="/articles"><i class="fas fa-pen-nib"></i> লেখাসমূহ</a>
+        <a href="/qa"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
+        <a href="/members"><i class="fas fa-users"></i> সদস্য</a>
+        <a href="/messages"><i class="fas fa-comment-dots"></i> মেসেজ <span class="dash-badge" id="msgBadge"></span></a>
+        <a href="/complaints"><i class="fas fa-flag"></i> অভিযোগ</a>
+        <a href="/bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত</a>
+        <a href="/gallery"><i class="fas fa-images"></i> গ্যালারি</a>
+        <a href="/notifications"><i class="fas fa-bell"></i> বিজ্ঞপ্তি <% if (unread > 0) { %><span class="dash-badge"><%= unread %></span><% } %></a>
+      </nav>
+    </aside>
+
+    <!-- Main Feed -->
+    <main class="dash-main">
+      <div class="dash-composer">
+        <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
+        <a href="/articles/new" class="composer-input">আপনার লেখা শুরু করুন...</a>
+        <div class="composer-actions">
+          <a href="/articles/new" class="composer-action"><i class="fas fa-pen-nib" style="color:#C5A059"></i> লেখা</a>
+          <a href="/qa/new" class="composer-action"><i class="fas fa-question" style="color:#1a73e8"></i> প্রশ্ন</a>
+        </div>
+      </div>
+
+      <% if (feed.length === 0) { %>
+        <div class="empty-state-full">
+          <i class="fas fa-newspaper"></i>
+          <p>এখনো কোনো ফিড আইটেম নেই।</p>
+        </div>
+      <% } else { %>
+        <% feed.forEach(item => { %>
+          <div class="feed-card">
+            <div class="feed-card-head">
+              <img src="<%= item.avatar_url || '/avatar/' + (item.author_name === 'মডারেটর' ? 0 : 0) %>" class="feed-avatar">
+              <div>
+                <% if (item.username === 'moderator') { %>
+                  <span class="feed-author">মডারেটর <span class="verified-badge"><i class="fas fa-check-circle"></i></span></span>
+                <% } else { %>
+                  <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
+                <% } %>
+                <div class="feed-time"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
+              </div>
+              <% if (item.type === 'activity') { %><span class="feed-type-badge activity"><i class="fas fa-calendar-check"></i> কার্যক্রম</span><% } else { %><span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span><% } %>
+            </div>
+            <% if (item.cover_image) { %>
+              <img src="<%= item.cover_image %>" class="feed-image">
+            <% } %>
+            <div class="feed-card-body">
+              <h3 class="feed-title"><%= item.title %></h3>
+              <p class="feed-text"><%= item.body.substring(0, 280) %><% if (item.body.length > 280) { %>...<a href="<%= item.type === 'article' ? '/articles/' + item.id : '/activities' %>"> আরও পড়ুন</a><% } %></p>
+            </div>
+            <div class="feed-card-actions">
+              <button class="feed-action like-btn" data-id="<%= item.id %>" data-type="post">
+                <i class="far fa-heart"></i> <span><%= item.like_count || 0 %></span>
+              </button>
+              <a href="<%= item.type === 'article' ? '/articles/' + item.id : '#' %>#comments" class="feed-action">
+                <i class="far fa-comment"></i> মন্তব্য (<%= item.comment_count || 0 %>)
+              </a>
+              <button class="feed-action share-btn" onclick="navigator.clipboard.writeText(location.origin + '<%= item.type === 'article' ? '/articles/' + item.id : '/activities' %>')">
+                <i class="far fa-share-square"></i> শেয়ার
+              </button>
+            </div>
+          </div>
+        <% }); %>
+      <% } %>
+    </main>
+
+    <!-- Right Sidebar -->
+    <aside class="dash-right">
+      <div class="side-card">
+        <h4><i class="fas fa-birthday-cake"></i> আজকের জন্মদিন</h4>
+        <p class="side-text">আজ কারো জন্মদিন নেই।</p>
+        <a href="/birthdays" class="side-link">সব দেখুন →</a>
+      </div>
+      <div class="side-card">
+        <h4><i class="fas fa-fire"></i> ট্রেন্ডিং</h4>
+        <p class="side-text">#কবিতা, #উপন্যাস, #প্রবন্ধ</p>
+        <a href="/articles?tag=কবিতা" class="side-link">কবিতা দেখুন →</a>
+      </div>
+      <div class="side-card">
+        <h4><i class="fas fa-users"></i> অনলাইনে</h4>
+        <p class="side-text">সদস্যরা ফিডে সক্রিয়।</p>
+        <a href="/members" class="side-link">সদস্য তালিকা →</a>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const id = this.dataset.id, type = this.dataset.type;
+        const res = await fetch('/api/like', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type }) });
+        if (res.ok) {
+          const data = await res.json();
+          this.querySelector('i').className = data.liked ? 'fas fa-heart' : 'far fa-heart';
+          this.querySelector('i').style.color = data.liked ? '#e74c3c' : '';
+          this.querySelector('span').textContent = data.count;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

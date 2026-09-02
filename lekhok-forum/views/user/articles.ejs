@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>প্রকাশিত লেখা — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="page-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-pen-nib"></i> প্রকাশিত লেখা</h1>
+      <% if (user) { %>
+        <a href="/articles/new" class="btn-write"><i class="fas fa-plus"></i> নতুন লেখা</a>
+      <% } %>
+    </div>
+
+    <% if (tag) { %>
+      <div class="filter-tag">ট্যাগ: <strong>#<%= tag %></strong> <a href="/articles" class="clear-tag"><i class="fas fa-times"></i></a></div>
+    <% } %>
+
+    <div class="articles-grid">
+      <% if (articles.length === 0) { %>
+        <div class="empty-state-full">
+          <i class="fas fa-pen-nib"></i>
+          <p>কোনো লেখা পাওয়া যায়নি।</p>
+          <% if (user) { %><a href="/articles/new" class="btn-primary-sm">প্রথম লেখা লিখুন</a><% } %>
+        </div>
+      <% } else { %>
+        <% articles.forEach(post => { %>
+          <div class="post-card">
+            <% if (post.cover_image) { %>
+              <img src="<%= post.cover_image %>" alt="cover" class="post-cover">
+            <% } %>
+            <div class="post-card-body">
+              <div class="post-meta-top">
+                <span class="post-tag"><%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %></span>
+                <span class="post-date"><i class="far fa-clock"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD') %></span>
+              </div>
+              <a href="/articles/<%= post.id %>" class="post-title"><%= post.title %></a>
+              <p class="post-excerpt"><%= post.excerpt || post.body.substring(0, 200) %>...</p>
+              <div class="post-author-row">
+                <img src="<%= post.avatar_url || '/avatar/' + post.author_id %>" class="post-author-avatar">
+                <span class="post-author-name"><%= post.author_name %></span>
+              </div>
+              <div class="post-actions">
+                <button class="action-btn like-btn" data-id="<%= post.id %>" data-type="post">
+                  <i class="far fa-heart"></i> <%= post.like_count || 0 %>
+                </button>
+                <span><i class="far fa-comment"></i> <%= post.comment_count || 0 %></span>
+                <span><i class="far fa-eye"></i> <%= post.view_count || 0 %></span>
+                <button class="action-btn bookmark-btn" data-id="<%= post.id %>">
+                  <i class="far fa-bookmark"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } %>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        const res = await fetch('/api/like', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type: 'post' }) });
+        const data = await res.json();
+        this.innerHTML = '<i class="fas fa-heart" style="color:#e74c3c"></i> ' + data.count;
+      });
+    });
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        const res = await fetch('/api/bookmark', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: id }) });
+        const data = await res.json();
+        this.querySelector('i').className = data.saved ? 'fas fa-bookmark' : 'far fa-bookmark';
+      });
+    });
+  </script>
+</body>
+</html>

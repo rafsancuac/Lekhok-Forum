@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>অভিযোগ — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="complaints-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-flag"></i> অভিযোগ</h1>
+    </div>
+
+    <div class="complaint-privacy">
+      <i class="fas fa-shield-alt"></i> আপনার অভিযোগ <strong>সম্পূর্ণ গোপনীয়</strong> — শুধুমাত্র অ্যাডমিন ও বিশেষ কিছু মডারেটর দেখতে পারবেন।
+    </div>
+
+    <% if (typeof query !== 'undefined' && query.sent === '1') { %>
+      <div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px;margin-bottom:16px"><i class="fas fa-check-circle"></i> আপনার অভিযোগ সফলভাবে জমা হয়েছে।</div>
+    <% } %>
+
+    <form method="POST" class="complaint-form" enctype="multipart/form-data">
+      <div class="form-group"><label>বিষয় *</label><input type="text" name="subject" required></div>
+      <div class="form-group"><label>বিস্তারিত</label><textarea name="body" rows="4"></textarea></div>
+      <div class="form-group"><label>ফাইল (প্রমাণসহ)</label><input type="file" name="file"></div>
+      <button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> অভিযোগ জমা দিন</button>
+    </form>
+
+    <h2 style="color:var(--brand);margin:30px 0 14px"><i class="fas fa-list"></i> আমার অভিযোগসমূহ</h2>
+    <% if (mine.length === 0) { %>
+      <div class="empty-state-full">
+        <i class="fas fa-inbox"></i>
+        <p>আপনি এখনো কোনো অভিযোগ দেননি।</p>
+      </div>
+    <% } else { %>
+      <div class="complaint-list">
+        <% mine.forEach(c => { %>
+          <div class="complaint-item">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <h3 style="color:var(--brand);font-size:1rem"><%= c.subject %></h3>
+              <span class="complaint-status <%= c.status %>"><%= c.status === 'new' ? 'নতুন' : c.status === 'in_progress' ? 'প্রক্রিয়াধীন' : 'সমাধান' %></span>
+            </div>
+            <p style="color:var(--text);font-size:0.9rem"><%= c.body || '' %></p>
+            <% if (c.file_url) { %>
+              <a href="<%= c.file_url %>" class="message-file" style="display:inline-block;margin-top:6px"><i class="fas fa-paperclip"></i> <%= c.file_name || 'ফাইল' %></a>
+            <% } %>
+            <div style="color:var(--text-muted);font-size:0.78rem;margin-top:8px"><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleString('bn-BD') %></div>
+            <% if (c.admin_notes) { %>
+              <div style="background:#f0f6ff;padding:10px;border-radius:6px;margin-top:8px;font-size:0.88rem">
+                <strong>অ্যাডমিন নোট:</strong> <%= c.admin_notes %>
+              </div>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

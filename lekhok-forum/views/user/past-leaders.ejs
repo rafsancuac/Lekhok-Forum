@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সাবেক সভাপতি ও সাধারণ সম্পাদক — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <div class="page-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-history"></i> সাবেক সভাপতি ও সাধারণ সম্পাদক</h1>
+    </div>
+
+    <% if ((presidents || []).length === 0 && (secretaries || []).length === 0) { %>
+      <div class="empty-state-full"><i class="fas fa-history"></i><p>কোনো তথ্য যোগ করা হয়নি।</p></div>
+    <% } else { %>
+      <% if ((presidents || []).length > 0) { %>
+        <h2 style="color:var(--brand);margin-bottom:14px">সাবেক সভাপতি</h2>
+        <div class="past-leaders-grid">
+          <% presidents.forEach(l => { %>
+            <div class="leader-card">
+              <img src="<%= l.photo_url || '/assets/avatars/male.svg' %>" class="leader-photo">
+              <div class="leader-info">
+                <div class="leader-role">সভাপতি</div>
+                <h3><%= l.name %></h3>
+                <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <% if ((secretaries || []).length > 0) { %>
+        <h2 style="color:var(--brand);margin:30px 0 14px">সাবেক সাধারণ সম্পাদক</h2>
+        <div class="past-leaders-grid">
+          <% secretaries.forEach(l => { %>
+            <div class="leader-card">
+              <img src="<%= l.photo_url || '/assets/avatars/male.svg' %>" class="leader-photo">
+              <div class="leader-info">
+                <div class="leader-role">সাধারণ সম্পাদক</div>
+                <h3><%= l.name %></h3>
+                <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</body>
+</html>

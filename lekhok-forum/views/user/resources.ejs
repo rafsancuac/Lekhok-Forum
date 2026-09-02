@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>গুরুত্বপূর্ণ ফাইল — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <div class="page-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-file-alt"></i> গুরুত্বপূর্ণ ফাইল</h1>
+    </div>
+    <% if (resources.length === 0) { %>
+      <div class="empty-state-full"><i class="fas fa-file-alt"></i><p>কোনো ফাইল যোগ করা হয়নি।</p></div>
+    <% } else { %>
+      <div class="resources-list">
+        <% resources.forEach(r => { %>
+          <div class="resource-item">
+            <div class="resource-icon">
+              <% if (r.file_type === 'pdf') { %><i class="fas fa-file-pdf"></i>
+              <% } else if (r.file_type === 'doc') { %><i class="fas fa-file-word"></i>
+              <% } else if (r.file_type === 'image') { %><i class="fas fa-file-image"></i>
+              <% } else { %><i class="fas fa-file"></i><% } %>
+            </div>
+            <div class="resource-info">
+              <h3><%= r.title %></h3>
+              <% if (r.description) { %><p><%= r.description %></p><% } %>
+              <small><%= r.file_type.toUpperCase() %></small>
+            </div>
+            <a href="<%= r.file_url %>" class="resource-dl" download><i class="fas fa-download"></i> ডাউনলোড</a>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

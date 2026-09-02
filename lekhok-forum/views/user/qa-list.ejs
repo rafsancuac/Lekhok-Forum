@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সাধারণ জিজ্ঞাসা — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="page-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-question-circle"></i> সাধারণ জিজ্ঞাসা</h1>
+      <% if (user) { %>
+        <a href="/questions/new" class="btn-write"><i class="fas fa-plus"></i> নতুন প্রশ্ন</a>
+      <% } %>
+    </div>
+
+    <div class="qa-list">
+      <% if (questions.length === 0) { %>
+        <div class="empty-state-full">
+          <i class="fas fa-question-circle"></i>
+          <p>কোনো প্রশ্ন করা হয়নি।</p>
+          <% if (user) { %><a href="/questions/new" class="btn-primary-sm">প্রথম প্রশ্ন করুন</a><% } %>
+        </div>
+      <% } else { %>
+        <% questions.forEach(q => { %>
+          <div class="qa-item">
+            <div class="qa-votes">
+              <span class="vote-count"><%= q.like_count || 0 %></span>
+              <small>প্রাসঙ্গিক</small>
+            </div>
+            <div class="qa-content">
+              <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
+              <% if (q.body) { %><p class="qa-excerpt"><%= q.body.substring(0, 150) %>...</p><% } %>
+              <div class="qa-meta">
+                <img src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar">
+                <a href="/profile/<%= q.username %>" class="qa-author"><%= q.full_name %></a>
+                <span>&middot;</span>
+                <span><i class="far fa-comment"></i> <%= q.comment_count || 0 %> উত্তর</span>
+                <span>&middot;</span>
+                <span><i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

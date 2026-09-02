@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= question.title %> — সাধারণ জিজ্ঞাসা — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="page-wrap" style="max-width:900px">
+    <div class="question-full">
+      <div class="question-body">
+        <h1 class="question-title"><%= question.title %></h1>
+        <p class="question-detail"><%= question.body %></p>
+        <div class="question-meta">
+          <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="mini-avatar">
+          <a href="/profile/<%= author.username %>" class="qa-author"><%= author.full_name %></a>
+          <span>&middot;</span>
+          <span><i class="far fa-clock"></i> <%= new Date(question.created_at).toLocaleDateString('bn-BD') %></span>
+          <button class="like-btn-sm" data-id="<%= question.id %>" data-type="post">
+            <i class="far fa-heart"></i> <%= question.like_count || 0 %>
+          </button>
+        </div>
+      </div>
+
+      <div class="answers-section">
+        <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<%= answers.length %>)</h2>
+        <% answers.forEach(a => { %>
+          <div class="answer-item">
+            <div class="answer-sidebar">
+              <img src="<%= a.avatar_url || '/avatar/' + a.author_id %>" class="answer-avatar">
+            </div>
+            <div class="answer-body">
+              <div class="answer-header">
+                <a href="/profile/<%= a.username %>" class="answer-author"><%= a.full_name %></a>
+                <span class="answer-date"><i class="far fa-clock"></i> <%= new Date(a.created_at).toLocaleDateString('bn-BD') %></span>
+              </div>
+              <div class="answer-text"><%- a.body.replace(/\n/g, '<br>') %></div>
+              <div class="answer-actions">
+                <button class="like-btn-sm" data-id="<%= a.id %>" data-type="comment">
+                  <i class="far fa-heart"></i> <%= a.like_count || 0 %>
+                </button>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+
+        <% if (user) { %>
+          <div class="answer-form-wrap">
+            <h3>আপনার উত্তর দিন</h3>
+            <form method="POST" class="answer-form">
+              <textarea name="body" rows="5" placeholder="আপনার উত্তর লিখুন..." required></textarea>
+              <button type="submit" class="btn-primary" style="margin-top:10px;width:auto;padding:10px 30px"><i class="fas fa-paper-plane"></i> উত্তর দিন</button>
+            </form>
+          </div>
+        <% } else { %>
+          <p class="login-to-comment"><a href="/login">লগইন</a> করে উত্তর দিন</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.like-btn-sm').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const id = this.dataset.id, type = this.dataset.type;
+        const res = await fetch('/api/like', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type }) });
+        const data = await res.json();
+        this.innerHTML = '<i class="far fa-heart"></i> ' + data.count;
+      });
+    });
+  </script>
+</body>
+</html>

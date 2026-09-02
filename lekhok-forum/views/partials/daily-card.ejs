@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>আজকের কুইজ — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <div class="page-wrap" style="max-width:700px">
+    <div class="page-header">
+      <h1><i class="fas fa-question-circle"></i> আজকের কুইজ</h1>
+      <span class="today-date"><i class="far fa-calendar"></i> <%= new Date().toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+    </div>
+
+    <% if (quiz) { %>
+      <div class="daily-card quiz-card">
+        <div class="daily-card-badge"><i class="fas fa-quiz"></i> কুইজ</div>
+        <h2><%= quiz.title %></h2>
+        <p class="daily-body"><%= quiz.body %></p>
+        <% if (quiz.link_url) { %>
+          <a href="<%= quiz.link_url %>" class="btn-primary-sm" target="_blank"><i class="fas fa-external-link-alt"></i> উত্তর দিন</a>
+        <% } %>
+        <div class="daily-meta">প্রকাশ: <%= new Date(quiz.created_at).toLocaleDateString('bn-BD') %></div>
+      </div>
+    <% } else { %>
+      <div class="empty-state-full">
+        <i class="fas fa-question-circle"></i>
+        <p>আজকের জন্য কোনো কুইজ নেই। মডারেটর তাড়াতাড়ি যোগ করবেন।</p>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

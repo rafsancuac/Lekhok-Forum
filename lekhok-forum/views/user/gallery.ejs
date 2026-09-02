@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>গ্যালারি — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="gallery-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-images"></i> গ্যালারি</h1>
+      <p class="header-sub">সংগঠনের সেরা মুহূর্তগুলো</p>
+    </div>
+
+    <% if (Object.keys(byCategory).length === 0) { %>
+      <div class="empty-state-full">
+        <i class="fas fa-images"></i>
+        <p>এখনো কোনো ছবি যোগ করা হয়নি।</p>
+      </div>
+    <% } else { %>
+      <% Object.keys(byCategory).forEach(cat => { %>
+        <div class="gallery-section">
+          <h2><%= cat === 'general' ? 'সাধারণ' : cat === 'events' ? 'ইভেন্ট' : cat === 'meetings' ? 'সভা' : cat === 'awards' ? 'পুরস্কার' : cat === 'workshops' ? 'কর্মশালা' : cat %></h2>
+          <div class="gallery-grid">
+            <% byCategory[cat].forEach(item => { %>
+              <div class="gallery-card">
+                <img src="<%= item.image_url %>" alt="<%= item.title || 'gallery' %>" class="gallery-img" loading="lazy">
+                <div class="gallery-caption">
+                  <h3><%= item.title || 'ছবি' %></h3>
+                  <p><%= item.caption || '' %></p>
+                  <small><%= new Date(item.created_at).toLocaleDateString('bn-BD') %></small>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+</body>
+</html>

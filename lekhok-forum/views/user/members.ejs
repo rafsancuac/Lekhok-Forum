@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সদস্য পরিচিতি — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="page-wrap">
+    <div class="page-header">
+      <h1><i class="fas fa-users"></i> সদস্য পরিচিতি</h1>
+    </div>
+
+    <div class="member-search-bar">
+      <form method="GET" class="search-form">
+        <input type="text" name="q" value="<%= search || '' %>" placeholder="নাম, ব্যবহারকারী নাম বা পদবি দিয়ে খুঁজুন...">
+        <button type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
+      </form>
+    </div>
+
+    <p class="member-count"><%= totalUsers %> জন সদস্য</p>
+
+    <div class="members-grid">
+      <% members.forEach(m => { %>
+        <div class="member-card">
+          <a href="/profile/<%= m.username %>">
+            <img src="<%= m.avatar_url || '/avatar/' + m.id %>" class="member-avatar">
+            <h3 class="member-name"><%= m.full_name %></h3>
+            <p class="member-handle">@<%= m.username %></p>
+            <% if (m.designation) { %><p class="member-desig"><i class="fas fa-briefcase"></i> <%= m.designation %></p><% } %>
+            <% if (m.bio) { %><p class="member-bio"><%= m.bio.substring(0, 80) %>...</p><% } %>
+          </a>
+        </div>
+      <% }); %>
+    </div>
+
+    <% if (false) { %>
+      <div class="pagination">
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

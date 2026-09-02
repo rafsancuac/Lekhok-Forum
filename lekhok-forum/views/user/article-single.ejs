@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= post.title %> — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+  <link rel="stylesheet" href="/assets/css/article.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="article-wrap">
+    <article class="article-main">
+      <% if (post.cover_image) { %>
+        <img src="<%= post.cover_image %>" alt="cover" class="article-cover">
+      <% } %>
+      <div class="article-header">
+        <div class="article-tags">
+          <% (post.tags || '').split(',').filter(t => t.trim()).forEach(tag => { %>
+            <a href="/articles?tag=<%= encodeURIComponent(tag.trim()) %>" class="tag-chip">#<%= tag.trim() %></a>
+          <% }); %>
+        </div>
+        <h1 class="article-title"><%= post.title %></h1>
+        <div class="article-author-bar">
+          <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="author-avatar">
+          <div>
+            <a href="/profile/<%= author.username %>" class="author-name"><%= author.full_name %></a>
+            <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত</div>
+          </div>
+        </div>
+      </div>
+      <div class="article-body">
+        <%- post.body.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>') %>
+      </div>
+      <div class="article-footer">
+        <div class="article-actions">
+          <button class="action-btn-lg like-btn <%= userLiked ? 'liked' : '' %>" data-id="<%= post.id %>" data-type="post">
+            <i class="<%= userLiked ? 'fas' : 'far' %> fa-heart"></i> <span><%= post.like_count || 0 %></span>
+          </button>
+          <button class="action-btn-lg share-btn" onclick="navigator.clipboard.writeText(location.href)">
+            <i class="fas fa-share"></i> শেয়ার
+          </button>
+          <% if (user && user.id === post.author_id) { %>
+            <a href="/articles/<%= post.id %>/edit" class="action-btn-lg"><i class="fas fa-pen"></i> সম্পাদনা</a>
+            <form method="POST" action="/articles/<%= post.id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button type="submit" class="action-btn-lg danger"><i class="fas fa-trash"></i> মুছুন</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="comments-section">
+        <h3><i class="far fa-comment"></i> মন্তব্য (<%= comments.length %>)</h3>
+        <% if (user) { %>
+          <form method="POST" class="comment-form" id="commentForm">
+            <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar">
+            <div class="comment-input-wrap">
+              <textarea name="body" placeholder="আপনার মন্তব্য লিখুন... (নতুন লাইনে @ব্যবহারকারী নাম লিখুন)" rows="3" required></textarea>
+              <button type="submit"><i class="fas fa-paper-plane"></i> পাঠান</button>
+            </div>
+          </form>
+        <% } else { %>
+          <p class="login-to-comment"><a href="/login">লগইন</a> করে মন্তব্য করুন</p>
+        <% } %>
+
+        <div class="comments-list">
+          <% comments.forEach(c => { %>
+            <div class="comment-item" id="c<%= c.id %>">
+              <img src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
+              <div class="comment-bubble">
+                <a href="/profile/<%= c.username %>" class="comment-author"><%= c.full_name %></a>
+                <p class="comment-body"><%- c.body %></p>
+                <div class="comment-meta">
+                  <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
+                  <button class="reply-btn" data-id="<%= c.id %>"><i class="far fa-comment"></i> উত্তর</button>
+                </div>
+                <% c.replies && c.replies.forEach(r => { %>
+                  <div class="reply-item" id="c<%= r.id %>">
+                    <img src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar" style="width:28px;height:28px">
+                    <div class="comment-bubble small">
+                      <a href="/profile/<%= r.username %>" class="comment-author"><%= r.full_name %></a>
+                      <p class="comment-body"><%- r.body %></p>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <script>
+    document.querySelector('.like-btn').addEventListener('click', async function() {
+      const id = this.dataset.id;
+      const res = await fetch('/api/like', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type: 'post' }) });
+      const data = await res.json();
+      this.querySelector('i').className = data.liked ? 'fas fa-heart' : 'far fa-heart';
+      this.querySelector('span').textContent = data.count;
+    });
+
+    document.getElementById('commentForm')?.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = this;
+      const body = form.body.value;
+      const res = await fetch('/api/comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: '<%= post.id %>', body })
+      });
+      if (res.ok) location.reload();
+    });
+  </script>
+</body>
+</html>

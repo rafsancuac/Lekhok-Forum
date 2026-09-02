@@ -31,18 +31,36 @@ app.use(session({
 
 // ── Locals middleware ───────────────────────────────────────────────────────
 app.use((req, res, next) => {
-  res.locals.siteName = db.getSetting('site_name') || 'লেখক ফোরাম';
-  res.locals.tagline  = db.getSetting('tagline')  || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়';
+  res.locals.siteName  = db.getSetting('site_name') || 'লেখক ফোরাম';
+  res.locals.tagline   = db.getSetting('tagline')  || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়';
   res.locals.adminUser = req.session.adminUser || null;
+  res.locals.user      = req.session.user || null;          // social user session
   res.locals.currentPath = req.path;
-  res.locals.getSetting = db.getSetting;
+  res.locals.getSetting  = db.getSetting;
+
+  // Unread notification count
+  if (req.session.user) {
+    const row = db.prepare("SELECT COUNT(*) as c FROM notifications WHERE user_id = ? AND is_read = 0").get(req.session.user.id);
+    res.locals.unread = row.c;
+    const recent = db.prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5").all(req.session.user.id);
+    res.locals.recentNotifs = recent;
+  } else {
+    res.locals.unread = 0;
+    res.locals.recentNotifs = [];
+  }
+
   next();
 });
 
 // ── Routes ──────────────────────────────────────────────────────────────────
-app.use('/',     require('./routes/pages'));
-app.use('/api', require('./routes/api'));
-app.use('/admin', require('./admin/routes'));
+app.use('/',          require('./routes/auth'));    // login, register, logout, profile edit
+app.use('/',          require('./routes/social'));   // articles, qa, members, profile, follow, api
+app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
+app.use('/',          require('./routes/dashboard'));// dashboard feed, gallery, messages, complaints
+app.use('/avatar',    require('./routes/avatar'));   // default avatar serving
+app.use('/',          require('./routes/pages'));
+app.use('/api',      require('./routes/api'));
+app.use('/admin',    require('./admin/routes'));
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {

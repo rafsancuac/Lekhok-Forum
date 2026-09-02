@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>রেজিস্ট্রেশন — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/auth.css" />
+</head>
+<body>
+  <div class="auth-card" style="max-width: 600px;">
+    <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> হোম</a>
+    <div class="logo-mark">ল</div>
+    <h1>নতুন অ্যাকাউন্ট</h1>
+    <p class="sub">লেখক ফোরামে যোগ দিন — লিখুন, শেয়ার করুন, সংযুক্ত হোন</p>
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST">
+      <div class="form-row">
+        <div class="form-group"><label>ব্যবহারকারী নাম *</label><input type="text" name="username" value="<%= form.username || '' %>" required></div>
+        <div class="form-group"><label>পাসওয়ার্ড * (কমপক্ষে ৬ অক্ষর)</label><input type="password" name="password" required minlength="6"></div>
+      </div>
+      <div class="form-group"><label>পূর্ণ নাম *</label><input type="text" name="full_name" value="<%= form.full_name || '' %>" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>ইমেইল</label><input type="email" name="email" value="<%= form.email || '' %>"></div>
+        <div class="form-group"><label>মোবাইল</label><input type="tel" name="phone" value="<%= form.phone || '' %>"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>লিঙ্গ</label>
+          <select name="gender">
+            <option value="male">পুরুষ</option>
+            <option value="female">নারী</option>
+            <option value="other">অন্যান্য</option>
+          </select>
+        </div>
+        <div class="form-group"><label>জন্ম তারিখ</label><input type="date" name="birth_date" value="<%= form.birth_date || '' %>"></div>
+      </div>
+      <div class="form-group"><label>পদবি / সংক্ষিপ্ত পরিচয়</label><input type="text" name="designation" value="<%= form.designation || '' %>" placeholder="যেমন: কবি, ছাত্র, সাংবাদিক"></div>
+      <div class="form-group"><label>ঠিকানা</label><input type="text" name="address" value="<%= form.address || '' %>"></div>
+      <div class="form-group"><label>সংক্ষিপ্ত বায়ো</label><textarea name="bio" rows="3"><%= form.bio || '' %></textarea></div>
+      <h3 style="color:#0a1f44; margin: 16px 0 8px; font-size: 1rem;">সোশ্যাল মিডিয়া (ঐচ্ছিক)</h3>
+      <div class="form-row">
+        <div class="form-group"><label><i class="fab fa-facebook"></i> Facebook</label><input type="url" name="social_fb" value="<%= form.social_fb || '' %>"></div>
+        <div class="form-group"><label><i class="fab fa-twitter"></i> Twitter / X</label><input type="url" name="social_twitter" value="<%= form.social_twitter || '' %>"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label><i class="fab fa-linkedin"></i> LinkedIn</label><input type="url" name="social_linkedin" value="<%= form.social_linkedin || '' %>"></div>
+        <div class="form-group"><label><i class="fas fa-globe"></i> ওয়েবসাইট</label><input type="url" name="social_website" value="<%= form.social_website || '' %>"></div>
+      </div>
+      <button type="submit" class="btn-primary">রেজিস্ট্রেশন সম্পন্ন করুন</button>
+    </form>
+    <p class="auth-foot">ইতিমধ্যে অ্যাকাউন্ট আছে? <a href="/login">লগইন করুন</a></p>
+  </div>
+</body>
+</html>

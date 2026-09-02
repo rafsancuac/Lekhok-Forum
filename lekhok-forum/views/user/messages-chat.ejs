@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= other.full_name %> — মেসেজ — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="page-wrap">
+    <div class="messages-wrap">
+      <div class="conv-list">
+        <div class="conv-list-head">
+          <h2><i class="fas fa-inbox"></i> কথোপকথন</h2>
+        </div>
+        <% conversations.forEach(c => { %>
+          <a href="/messages/<%= c.other_username %>" class="conv-item <%= c.other_username === other.username ? 'active' : '' %>">
+            <img src="<%= c.other_avatar || '/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a) %>" class="conv-avatar">
+            <div class="conv-info">
+              <div class="conv-name"><%= c.other_name %></div>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+
+      <div class="chat-area">
+        <div class="chat-head">
+          <img src="<%= other.avatar_url || '/avatar/' + other.id %>">
+          <h3><a href="/profile/<%= other.username %>"><%= other.full_name %></a></h3>
+          <span style="margin-left:auto;color:var(--text-muted);font-size:0.85rem">@<%= other.username %></span>
+        </div>
+        <div class="chat-body" id="chatBody">
+          <% messages.forEach(m => { %>
+            <div class="message <%= m.sender_id === user.id ? 'me' : '' %>">
+              <div class="message-bubble">
+                <%= m.body %>
+                <% if (m.file_url) { %>
+                  <a href="<%= m.file_url %>" class="message-file" download="<%= m.file_name || 'file' %>">
+                    <i class="fas fa-paperclip"></i> <%= m.file_name || 'ফাইল' %>
+                  </a>
+                <% } %>
+                <div class="message-time"><%= new Date(m.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) %></div>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+        <form method="POST" class="chat-input" enctype="multipart/form-data">
+          <label for="fileInput" title="ফাইল যুক্ত করুন"><i class="fas fa-paperclip"></i></label>
+          <input type="file" id="fileInput" name="file">
+          <input type="text" name="body" placeholder="একটি মেসেজ লিখুন..." required>
+          <button type="submit"><i class="fas fa-paper-plane"></i> পাঠান</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Auto-scroll to bottom
+    const body = document.getElementById('chatBody');
+    if (body) body.scrollTop = body.scrollHeight;
+  </script>
+</body>
+</html>

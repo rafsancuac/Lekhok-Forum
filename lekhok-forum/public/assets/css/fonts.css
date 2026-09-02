@@ -1,0 +1,40 @@
+/* ============================================
+   লেখক ফোরাম — Multi-font Typography System
+   Supported: HindSiliguri, TiroBangla, Kalpurush, SolaimanLipi, Times New Roman
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Tiro+Bangla:ital@0;1&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap');
+
+/* Kalpurush — local fallback via @font-face if available, else use HindSiliguri */
+@font-face {
+  font-family: 'Kalpurush';
+  src: local('Kalpurush'), local('kalpurush'), local('Kalpurush ANSI'), local('SolaimanLipi');
+  font-display: swap;
+}
+
+:root {
+  --font-bn: 'Hind Siliguri', 'SolaimanLipi', 'Kalpurush', sans-serif;
+  --font-serif: 'Tiro Bangla', 'Noto Serif Bengali', 'Times New Roman', serif;
+  --font-sans: 'Hind Siliguri', system-ui, sans-serif;
+}
+
+/* Apply by user preference (saved in localStorage) */
+body.font-bn, body { font-family: var(--font-bn); }
+body.font-serif { font-family: var(--font-serif); }
+body.font-sans { font-family: var(--font-sans); }
+body.font-mixed h1, body.font-mixed h2, body.font-mixed h3 { font-family: var(--font-serif); }
+body.font-mixed { font-family: var(--font-bn); }
+
+/* Headings get serif by default for elegance */
+h1, h2, h3, h4, .post-title, .article-title, .member-name, .auth-card h1 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
+/* Body text — clean sans for readability */
+body, p, li, td, th, input, textarea, button, select {
+  font-family: var(--font-bn);
+}
+
+/* Times New Roman fallback for English passages */
+.latin, .english { font-family: 'Times New Roman', 'Tiro Bangla', serif; }
