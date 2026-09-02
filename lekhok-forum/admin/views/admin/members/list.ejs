@@ -1,0 +1,30 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>কমিটি সদস্য</h1>
+    <p><%= members.length %> জন সদস্য | <a href="/admin/members/new">+ নতুন সদস্য</a></p>
+  </div>
+  <% if (members.length === 0) { %>
+    <div class="card empty">কোনো সদস্য নেই</div>
+  <% } else { %>
+  <table>
+    <thead><tr><th>নাম</th><th>পদ</th><th>ধরন</th><th>ক্রম</th><th>কার্যক্রম</th></tr></thead>
+    <tbody>
+      <% members.forEach(m => { %>
+        <tr>
+          <td><strong><%= m.name %></strong></td>
+          <td><%= m.role || '—' %></td>
+          <td><%= m.member_type === 'central' ? 'কেন্দ্রীয়' : 'বিশ্ববিদ্যালয়' %></td>
+          <td><%= m.sort_order %></td>
+          <td>
+            <a href="/admin/members/<%= m.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <form method="POST" action="/admin/members/<%= m.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button class="btn btn-danger btn-sm">মুছুন</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>

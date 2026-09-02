@@ -1,0 +1,52 @@
+<header class="page-header">
+  <div class="container">
+    <h1>গ্যালারি</h1>
+    <p>লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <% if (items.length === 0) { %>
+      <div class="empty-state">
+        <i class="far fa-images"></i>
+        <h3>কোনো ছবি পাওয়া যায়নি</h3>
+        <a href="/admin/gallery/new" class="btn btn-primary">ছবি যোগ করুন</a>
+      </div>
+    <% } else { %>
+      <div class="gallery-grid">
+        <% items.forEach(g => { %>
+          <a href="<%= g.image_url %>" class="gallery-item" data-caption="<%= g.caption || g.title || '' %>" data-lightbox>
+            <img src="<%= g.image_url %>" alt="<%= g.title || 'গ্যালারি ছবি' %>" loading="lazy" />
+            <% if (g.caption) { %><div class="gallery-caption"><%= g.caption %></div><% } %>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- Lightbox modal -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose"><i class="fas fa-times"></i></button>
+  <img id="lightboxImg" src="" alt="" />
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lightboxImg');
+  const lbCap = document.getElementById('lightboxCaption');
+  document.querySelectorAll('[data-lightbox]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      lbImg.src = a.href;
+      lbCap.textContent = a.dataset.caption || '';
+      lb.classList.add('active');
+    });
+  });
+  document.getElementById('lightboxClose').addEventListener('click', () => lb.classList.remove('active'));
+  lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('active'); });
+});
+</script>

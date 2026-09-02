@@ -1,0 +1,43 @@
+<header class="page-header">
+  <div class="container">
+    <h1>সংগঠন কমিটি</h1>
+    <p>লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">কেন্দ্রীয় <span class="accent">কার্যনির্বাহী কমিটি</span></h2>
+    <div class="leader-grid">
+      <% central.forEach(m => { %>
+        <div class="leader-card">
+          <img src="<%= m.image_url %>" alt="<%= m.name %>" loading="lazy" />
+          <h3><%= m.name %></h3>
+          <p class="leader-role"><%= m.role %></p>
+          <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+        </div>
+      <% }) %>
+    </div>
+
+    <h2 class="section-title" style="margin-top:60px;">বিশ্ববিদ্যালয় <span class="accent">শাখা কমিটি</span></h2>
+    <% if (branch.length > 0) { %>
+      <div class="leader-grid">
+        <% branch.forEach(m => { %>
+          <div class="leader-card">
+            <img src="<%= m.image_url %>" alt="<%= m.name %>" loading="lazy" />
+            <h3><%= m.name %></h3>
+            <p class="leader-role"><%= m.role %></p>
+            <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <h3>আপনার বিশ্ববিদ্যালয় শাখার কমিটির তথ্য এখানে যুক্ত করুন</h3>
+        <p>অ্যাডমিন প্যানেল থেকে সদস্য যোগ করুন</p>
+        <a href="/admin/members/new" class="btn btn-primary">সদস্য যোগ করুন</a>
+      </div>
+    <% } %>
+  </div>
+</section>

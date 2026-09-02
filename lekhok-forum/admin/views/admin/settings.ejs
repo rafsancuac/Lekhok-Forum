@@ -1,0 +1,27 @@
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>সেটিংস</h1>
+    <p>সাইটের সাধারণ তথ্য পরিবর্তন করুন</p>
+  </div>
+  <div class="card">
+    <% if (success) { %><div class="success"><%= success %></div><% } %>
+    <form method="POST">
+      <h3 style="margin-bottom:16px; color:#0a1f44;">সাধারণ তথ্য</h3>
+      <div class="form-group"><label>সাইটের নাম</label><input type="text" name="site_name" value="<%= settings.site_name %>"></div>
+      <div class="form-group"><label>ট্যাগলাইন</label><input type="text" name="tagline" value="<%= settings.tagline %>"></div>
+
+      <h3 style="margin-top:24px; margin-bottom:16px; color:#0a1f44;">যোগাযোগ</h3>
+      <div class="form-group"><label>ঠিকানা</label><input type="text" name="contact_address" value="<%= settings.contact_address %>"></div>
+      <div class="form-group"><label>ইমেইল</label><input type="email" name="contact_email" value="<%= settings.contact_email %>"></div>
+      <div class="form-group"><label>ফোন</label><input type="text" name="contact_phone" value="<%= settings.contact_phone %>"></div>
+
+      <h3 style="margin-top:24px; margin-bottom:16px; color:#0a1f44;">সোশ্যাল মিডিয়া URL</h3>
+      <div class="form-group"><label>Facebook</label><input type="url" name="facebook_url" value="<%= settings.facebook_url %>"></div>
+      <div class="form-group"><label>Telegram</label><input type="url" name="telegram_url" value="<%= settings.telegram_url %>"></div>
+      <div class="form-group"><label>YouTube</label><input type="url" name="youtube_url" value="<%= settings.youtube_url %>"></div>
+
+      <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+    </form>
+  </div>
+</div>

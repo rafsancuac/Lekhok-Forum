@@ -1,0 +1,31 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>বিজ্ঞপ্তি</h1>
+    <p><%= notices.length %> টি বিজ্ঞপ্তি | <a href="/admin/notices/new">+ নতুন বিজ্ঞপ্তি</a></p>
+  </div>
+  <% if (notices.length === 0) { %>
+    <div class="card empty">কোনো বিজ্ঞপ্তি নেই</div>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr><th>শিরোনাম</th><th>ক্যাটাগরি</th><th>তারিখ</th><th>কার্যক্রম</th></tr>
+    </thead>
+    <tbody>
+      <% notices.forEach(n => { %>
+        <tr>
+          <td><strong><%= n.title %></strong></td>
+          <td><%= n.category %></td>
+          <td><%= n.date || '—' %></td>
+          <td>
+            <a href="/admin/notices/<%= n.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <form method="POST" action="/admin/notices/<%= n.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button class="btn btn-danger btn-sm">মুছুন</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>ড্যাশবোর্ড — লেখক ফোরাম অ্যাডমিন</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+  <%- include('partials/sidebar') %>
+  <div class="admin-main">
+    <div class="admin-header">
+      <h1>ড্যাশবোর্ড</h1>
+      <p>স্বাগতম, <strong><%= adminUser.display_name %></strong> | <a href="/admin/logout">লগআউট</a></p>
+    </div>
+    <div class="stat-grid">
+      <a href="/admin/notices"   class="stat-box"><i class="fas fa-bell"></i><div><strong><%= counts.notices %></strong><span>বিজ্ঞপ্তি</span></div></a>
+      <a href="/admin/events"    class="stat-box"><i class="fas fa-calendar"></i><div><strong><%= counts.events %></strong><span>ইভেন্ট</span></div></a>
+      <a href="/admin/members"   class="stat-box"><i class="fas fa-users"></i><div><strong><%= counts.members %></strong><span>সদস্য</span></div></a>
+      <a href="/admin/gallery"   class="stat-box"><i class="fas fa-images"></i><div><strong><%= counts.gallery %></strong><span>গ্যালারি</span></div></a>
+      <a href="/admin/resources" class="stat-box"><i class="fas fa-book"></i><div><strong><%= counts.resources %></strong><span>রিসোর্স</span></div></a>
+      <a href="/admin/messages"  class="stat-box"><i class="fas fa-envelope"></i><div><strong><%= counts.messages %></strong><span>বার্তা</span></div></a>
+    </div>
+    <div class="quick-actions">
+      <a href="/admin/notices/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন বিজ্ঞপ্তি</a>
+      <a href="/admin/events/new"    class="btn btn-primary"><i class="fas fa-plus"></i> নতুন ইভেন্ট</a>
+      <a href="/admin/members/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন সদস্য</a>
+      <a href="/admin/gallery/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন ছবি</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<header class="page-header">
+  <div class="container">
+    <h1>যোগাযোগ</h1>
+    <p>লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container two-col">
+    <div>
+      <h2 class="section-title">যোগাযোগের <span class="accent">তথ্য</span></h2>
+      <ul class="contact-list">
+        <li><i class="fas fa-map-marker-alt"></i><div><strong>ঠিকানা</strong><span>আপনার ক্যাম্পাসের ঠিকানা</span></div></li>
+        <li><i class="fas fa-envelope"></i><div><strong>ইমেইল</strong><span>info@lekhokforum.org</span></div></li>
+        <li><i class="fas fa-phone-alt"></i><div><strong>ফোন</strong><span>০১XXXXXXXXX</span></div></li>
+        <li><i class="fab fa-facebook-f"></i><div><strong>ফেসবুক</strong><span>আমাদের ফেসবুক পেজ</span></div></li>
+        <li><i class="fab fa-telegram-plane"></i><div><strong>টেলিগ্রাম</strong><span>আমাদের টেলিগ্রাম গ্রুপে যোগ দিন</span></div></li>
+      </ul>
+    </div>
+
+    <form class="contact-form card" method="POST" action="/api/contact">
+      <h2 class="section-title">বার্তা <span class="accent">পাঠান</span></h2>
+      <div class="form-row">
+        <input type="text" name="name" placeholder="আপনার নাম" required>
+        <input type="email" name="email" placeholder="ইমেইল" required>
+      </div>
+      <input type="text" name="subject" placeholder="বিষয়">
+      <textarea name="message" placeholder="আপনার বার্তা লিখুন..." rows="6" required></textarea>
+      <button type="submit" class="btn btn-primary">বার্তা পাঠান</button>
+    </form>
+  </div>
+</section>
+
+<section class="section emergency">
+  <div class="container">
+    <h2 class="section-title" style="text-align:center;">জরুরি <span class="accent">হটলাইন</span></h2>
+    <div class="hotline-grid">
+      <div class="hotline-card"><span class="num">৩৩৩</span><span>সরকারি তথ্য ও সেবা</span></div>
+      <div class="hotline-card"><span class="num">৯৯৯</span><span>জরুরি সেবা</span></div>
+      <div class="hotline-card"><span class="num">১০২</span><span>ফায়ার সার্ভিস</span></div>
+      <div class="hotline-card"><span class="num">১০৩</span><span>সুপ্রীম কোর্ট হেল্পলাইন</span></div>
+      <div class="hotline-card"><span class="num">১০৯</span><span>নারী ও শিশু নির্যাতন</span></div>
+      <div class="hotline-card"><span class="num">১৬১০৭</span><span>বিআরটিএ সার্ভিস</span></div>
+    </div>
+  </div>
+</section>

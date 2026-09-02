@@ -1,0 +1,25 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1><%= resource ? 'রিসোর্স সম্পাদনা' : 'নতুন রিসোর্স' %></h1>
+    <p><a href="/admin/resources">← রিসোর্স তালিকায় ফিরে যান</a></p>
+  </div>
+  <div class="card">
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST" action="<%= resource ? '/admin/resources/' + resource.id + '?_method=PUT' : '/admin/resources' %>">
+      <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= resource ? resource.title : '' %>" required></div>
+      <div class="form-group"><label>বিষয়বস্তু</label><textarea name="content" rows="8"><%= resource ? (resource.content || '') : '' %></textarea></div>
+      <div class="form-group">
+        <label>ক্যাটাগরি</label>
+        <select name="category">
+          <option value="scholarship"  <%= resource && resource.category === 'scholarship'  ? 'selected' : '' %>>ফেলোশিপ</option>
+          <option value="writing-tips" <%= resource && resource.category === 'writing-tips' ? 'selected' : '' %>>লেখালেখির টিপস</option>
+          <option value="general"      <%= resource && resource.category === 'general'      ? 'selected' : '' %>>সাধারণ</option>
+        </select>
+      </div>
+      <div class="form-group"><label>লেখক</label><input type="text" name="author" value="<%= resource ? (resource.author || '') : '' %>"></div>
+      <div class="form-group"><label>ট্যাগ (কমা দিয়ে আলাদা করুন)</label><input type="text" name="tags" value="<%= resource ? (resource.tags || '') : '' %>" placeholder="কবিতা, লেখালেখি, পরামর্শ"></div>
+      <button type="submit" class="btn btn-primary"><%= resource ? 'আপডেট' : 'তৈরি করুন' %></button>
+    </form>
+  </div>
+</div>

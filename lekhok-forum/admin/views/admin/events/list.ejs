@@ -1,0 +1,32 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>ইভেন্ট</h1>
+    <p><%= events.length %> টি ইভেন্ট | <a href="/admin/events/new">+ নতুন ইভেন্ট</a></p>
+  </div>
+  <% if (events.length === 0) { %>
+    <div class="card empty">কোনো ইভেন্ট নেই</div>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr><th>শিরোনাম</th><th>তারিখ</th><th>স্থান</th><th>বিশেষ</th><th>কার্যক্রম</th></tr>
+    </thead>
+    <tbody>
+      <% events.forEach(e => { %>
+        <tr>
+          <td><strong><%= e.title %></strong></td>
+          <td><%= e.date || '—' %></td>
+          <td><%= e.location || '—' %></td>
+          <td><%= e.featured ? '✓' : '' %></td>
+          <td>
+            <a href="/admin/events/<%= e.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <form method="POST" action="/admin/events/<%= e.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button class="btn btn-danger btn-sm">মুছুন</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>

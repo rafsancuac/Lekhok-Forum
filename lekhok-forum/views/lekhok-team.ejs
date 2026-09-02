@@ -1,0 +1,54 @@
+<header class="page-header">
+  <div class="container">
+    <h1>আমাদের টিম</h1>
+    <p>লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">প্রতিষ্ঠাতা <span class="accent">বোর্ড</span></h2>
+    <p style="text-align:center; margin-bottom:30px; color:#666;">আমাদের প্রতিষ্ঠাতা বোর্ড সদস্যদের সম্পর্কে জানুন, যাদের নেতৃত্বে লেখক ফোরাম আজকের এই অবস্থানে এসেছে।</p>
+
+    <div class="leader-grid">
+      <% central.slice(0, 2).forEach(m => { %>
+        <div class="leader-card large">
+          <img src="<%= m.image_url %>" alt="<%= m.name %>" loading="lazy" />
+          <h3><%= m.name %></h3>
+          <p class="leader-role"><%= m.role %></p>
+          <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+          <div class="leader-socials">
+            <% if (m.social_fb) { %><a href="<%= m.social_fb %>"><i class="fab fa-facebook-f"></i></a><% } %>
+            <% if (m.social_email) { %><a href="mailto:<%= m.social_email %>"><i class="fas fa-envelope"></i></a><% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <h2 class="section-title" style="margin-top:60px;">কার্যনির্বাহী <span class="accent">সদস্য</span></h2>
+    <div class="leader-grid">
+      <% central.slice(2).forEach(m => { %>
+        <div class="leader-card">
+          <img src="<%= m.image_url %>" alt="<%= m.name %>" loading="lazy" />
+          <h3><%= m.name %></h3>
+          <p class="leader-role"><%= m.role %></p>
+          <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+        </div>
+      <% }) %>
+    </div>
+
+    <% if (branch.length > 0) { %>
+      <h2 class="section-title" style="margin-top:60px;">বিশ্ববিদ্যালয় <span class="accent">শাখা</span></h2>
+      <div class="leader-grid">
+        <% branch.forEach(m => { %>
+          <div class="leader-card">
+            <img src="<%= m.image_url %>" alt="<%= m.name %>" loading="lazy" />
+            <h3><%= m.name %></h3>
+            <p class="leader-role"><%= m.role %></p>
+            <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>

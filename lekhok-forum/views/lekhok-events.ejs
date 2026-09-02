@@ -1,0 +1,55 @@
+<header class="page-header">
+  <div class="container">
+    <h1>ইভেন্ট</h1>
+    <p>লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">আসন্ন <span class="accent">ইভেন্ট</span></h2>
+    <% if (upcoming.length === 0) { %>
+      <div class="empty-state">
+        <i class="far fa-calendar"></i>
+        <h3>কোনো আসন্ন ইভেন্ট নেই</h3>
+      </div>
+    <% } else { %>
+      <div class="event-grid">
+        <% upcoming.forEach(e => { %>
+          <div class="event-card <%= e.featured ? 'featured' : '' %>">
+            <% if (e.image_url) { %><img src="<%= e.image_url %>" alt="<%= e.title %>" loading="lazy" /><% } %>
+            <div class="event-body">
+              <% if (e.featured) { %><span class="event-badge">বিশেষ</span><% } %>
+              <span class="event-date"><i class="far fa-calendar"></i> <%= e.date %></span>
+              <h3><%= e.title %></h3>
+              <p><%= e.description %></p>
+              <% if (e.location) { %><p class="event-location"><i class="fas fa-map-marker-alt"></i> <%= e.location %></p><% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <h2 class="section-title" style="margin-top:60px;">অতীত <span class="accent">ইভেন্ট</span></h2>
+    <% if (past.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-history"></i>
+        <h3>কোনো অতীত ইভেন্ট নেই</h3>
+      </div>
+    <% } else { %>
+      <div class="event-grid">
+        <% past.forEach(e => { %>
+          <div class="event-card past">
+            <% if (e.image_url) { %><img src="<%= e.image_url %>" alt="<%= e.title %>" loading="lazy" /><% } %>
+            <div class="event-body">
+              <span class="event-date"><i class="far fa-calendar"></i> <%= e.date %></span>
+              <h3><%= e.title %></h3>
+              <p><%= e.description %></p>
+              <% if (e.location) { %><p class="event-location"><i class="fas fa-map-marker-alt"></i> <%= e.location %></p><% } %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</section>

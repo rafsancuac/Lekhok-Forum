@@ -1,0 +1,34 @@
+<header class="page-header">
+  <div class="container">
+    <h1>রিসোর্স</h1>
+    <p>লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="notice-tabs">
+      <a href="?category=all"          class="<%= activeCategory === 'all' ? 'active' : '' %>">সকল</a>
+      <a href="?category=scholarship"  class="<%= activeCategory === 'scholarship' ? 'active' : '' %>">ফেলোশিপ</a>
+      <a href="?category=writing-tips" class="<%= activeCategory === 'writing-tips' ? 'active' : '' %>">লেখালেখির টিপস</a>
+    </div>
+
+    <div class="resource-list">
+      <% if (resources.length === 0) { %>
+        <div class="empty-state">
+          <i class="fas fa-book-open"></i>
+          <h3>কোনো রিসোর্স পাওয়া যায়নি</h3>
+        </div>
+      <% } %>
+      <% resources.forEach(r => { %>
+        <article class="resource-card card">
+          <span class="resource-badge"><%= r.category === 'scholarship' ? 'ফেলোশিপ' : 'লেখালেখি' %></span>
+          <h2><%= r.title %></h2>
+          <p class="resource-meta"><i class="far fa-user"></i> <%= r.author || 'সম্পাদক' %></p>
+          <p><%= r.content %></p>
+          <% if (r.tags) { %><p class="resource-tags"><i class="fas fa-tags"></i> <%= r.tags %></p><% } %>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>

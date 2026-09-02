@@ -1,0 +1,33 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1><%= notice ? 'বিজ্ঞপ্তি সম্পাদনা' : 'নতুন বিজ্ঞপ্তি' %></h1>
+    <p><a href="/admin/notices">← বিজ্ঞপ্তি তালিকায় ফিরে যান</a></p>
+  </div>
+  <div class="card">
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST" action="<%= notice ? '/admin/notices/' + notice.id + '?_method=PUT' : '/admin/notices' %>">
+      <div class="form-group">
+        <label>শিরোনাম *</label>
+        <input type="text" name="title" value="<%= notice ? notice.title : '' %>" required>
+      </div>
+      <div class="form-group">
+        <label>বিষয়বস্তু</label>
+        <textarea name="content" rows="5"><%= notice ? (notice.content || '') : '' %></textarea>
+      </div>
+      <div class="form-group">
+        <label>ক্যাটাগরি</label>
+        <select name="category">
+          <% ['notice','press','event'].forEach(c => { %>
+            <option value="<%= c %>" <%= notice && notice.category === c ? 'selected' : '' %>><%= c === 'press' ? 'প্রেস বিজ্ঞপ্তি' : c === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>তারিখ (বাংলা বা ISO)</label>
+        <input type="text" name="date" value="<%= notice ? (notice.date || '') : '' %>" placeholder="যেমন: ২০২৬ সালের ১৫ ফেব্রুয়ারি">
+      </div>
+      <button type="submit" class="btn btn-primary"><%= notice ? 'আপডেট' : 'তৈরি করুন' %></button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>যোগাযোগ বার্তা</h1>
+    <p><%= messages.length %> টি বার্তা</p>
+  </div>
+  <% if (messages.length === 0) { %>
+    <div class="card empty">কোনো বার্তা নেই</div>
+  <% } else { %>
+  <div style="display:grid; gap:12px;">
+    <% messages.forEach(m => { %>
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <strong><%= m.name %></strong>
+          <span style="color:#999; font-size:0.85rem;"><%= new Date(m.created_at).toLocaleString('bn-BD') %></span>
+        </div>
+        <% if (m.email) { %><p style="color:#666; font-size:0.9rem;"><i class="fas fa-envelope"></i> <%= m.email %></p><% } %>
+        <% if (m.subject) { %><p style="margin-top:6px;"><strong>বিষয়:</strong> <%= m.subject %></p><% } %>
+        <p style="margin-top:8px; line-height:1.6;"><%= m.message %></p>
+      </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>

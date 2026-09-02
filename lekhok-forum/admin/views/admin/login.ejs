@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>লগইন — লেখক ফোরাম অ্যাডমিন</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'SolaimanLipi', sans-serif; background: linear-gradient(135deg, #0a1f44 0%, #0B1121 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .login-card { background:white; border-radius:12px; padding:40px; max-width:400px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+    .login-card h1 { color:#0a1f44; margin-bottom:8px; font-size:1.8rem; }
+    .login-card p.sub { color:#666; margin-bottom:24px; font-size:0.9rem; }
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; margin-bottom:6px; color:#0a1f44; font-weight:600; font-size:0.9rem; }
+    .form-group input { width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:1rem; font-family:inherit; }
+    .form-group input:focus { outline:none; border-color:#C5A059; }
+    .btn-login { width:100%; padding:12px; background:#0a1f44; color:white; border:none; border-radius:6px; font-size:1rem; font-weight:600; cursor:pointer; font-family:inherit; }
+    .btn-login:hover { background:#0B1121; }
+    .error { background:#fee; color:#c33; padding:10px; border-radius:6px; margin-bottom:16px; font-size:0.9rem; border:1px solid #fcc; }
+    .logo { text-align:center; margin-bottom:20px; }
+    .logo-mark { display:inline-block; width:60px; height:60px; background:#0a1f44; color:#C5A059; border-radius:50%; line-height:60px; font-size:2.5rem; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="logo"><span class="logo-mark">ল</span></div>
+    <h1>অ্যাডমিন লগইন</h1>
+    <p class="sub">লেখক ফোরাম — কন্টেন্ট ম্যানেজমেন্ট</p>
+    <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+    <form method="POST">
+      <div class="form-group">
+        <label for="username">ব্যবহারকারী নাম</label>
+        <input type="text" id="username" name="username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password">পাসওয়ার্ড</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn-login">লগইন</button>
+    </form>
+  </div>
+</body>
+</html>

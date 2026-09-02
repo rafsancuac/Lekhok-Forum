@@ -1,0 +1,36 @@
+<header class="page-header">
+  <div class="container">
+    <h1>বিজ্ঞপ্তি</h1>
+    <p>লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="notice-tabs">
+      <a href="?category=all"   class="<%= activeCategory === 'all'   ? 'active' : '' %>">সকল</a>
+      <a href="?category=press"  class="<%= activeCategory === 'press'  ? 'active' : '' %>">প্রেস বিজ্ঞপ্তি</a>
+      <a href="?category=notice" class="<%= activeCategory === 'notice' ? 'active' : '' %>">নোটিশ</a>
+      <a href="?category=event"  class="<%= activeCategory === 'event'  ? 'active' : '' %>">ইভেন্ট</a>
+    </div>
+
+    <div class="notice-list">
+      <% if (notices.length === 0) { %>
+        <div class="empty-state">
+          <i class="far fa-bell"></i>
+          <h3>কোনো বিজ্ঞপ্তি পাওয়া যায়নি</h3>
+        </div>
+      <% } %>
+      <% notices.forEach(n => { %>
+        <div class="notice-item">
+          <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
+          <div>
+            <h3><%= n.title %></h3>
+            <p><%= n.content %></p>
+            <p class="notice-date"><i class="far fa-calendar"></i> <%= n.date || '' %></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>

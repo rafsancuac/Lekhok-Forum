@@ -1,0 +1,29 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>রিসোর্স</h1>
+    <p><%= resources.length %> টি রিসোর্স | <a href="/admin/resources/new">+ নতুন রিসোর্স</a></p>
+  </div>
+  <% if (resources.length === 0) { %>
+    <div class="card empty">কোনো রিসোর্স নেই</div>
+  <% } else { %>
+  <table>
+    <thead><tr><th>শিরোনাম</th><th>ক্যাটাগরি</th><th>লেখক</th><th>কার্যক্রম</th></tr></thead>
+    <tbody>
+      <% resources.forEach(r => { %>
+        <tr>
+          <td><strong><%= r.title %></strong></td>
+          <td><%= r.category %></td>
+          <td><%= r.author || '—' %></td>
+          <td>
+            <a href="/admin/resources/<%= r.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <form method="POST" action="/admin/resources/<%= r.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button class="btn btn-danger btn-sm">মুছুন</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>

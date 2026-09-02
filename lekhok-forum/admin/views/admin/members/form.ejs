@@ -1,0 +1,28 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1><%= member ? 'সদস্য সম্পাদনা' : 'নতুন সদস্য' %></h1>
+    <p><a href="/admin/members">← সদস্য তালিকায় ফিরে যান</a></p>
+  </div>
+  <div class="card">
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST" action="<%= member ? '/admin/members/' + member.id + '?_method=PUT' : '/admin/members' %>">
+      <div class="form-group"><label>নাম *</label><input type="text" name="name" value="<%= member ? member.name : '' %>" required></div>
+      <div class="form-group"><label>পদ</label><input type="text" name="role" value="<%= member ? (member.role || '') : '' %>" placeholder="যেমন: সভাপতি"></div>
+      <div class="form-group"><label>পদবি</label><input type="text" name="designation" value="<%= member ? (member.designation || '') : '' %>" placeholder="যেমন: কেন্দ্রীয় কমিটি"></div>
+      <div class="form-group"><label>বায়ো</label><textarea name="bio" rows="3"><%= member ? (member.bio || '') : '' %></textarea></div>
+      <div class="form-group"><label>ছবির URL</label><input type="url" name="image_url" value="<%= member ? (member.image_url || '') : '' %>"></div>
+      <div class="form-group"><label>ফেসবুক</label><input type="url" name="social_fb" value="<%= member ? (member.social_fb || '') : '' %>"></div>
+      <div class="form-group"><label>ইমেইল</label><input type="email" name="social_email" value="<%= member ? (member.social_email || '') : '' %>"></div>
+      <div class="form-group">
+        <label>ধরন</label>
+        <select name="member_type">
+          <option value="central" <%= member && member.member_type === 'central' ? 'selected' : '' %>>কেন্দ্রীয় কমিটি</option>
+          <option value="branch"  <%= member && member.member_type === 'branch'  ? 'selected' : '' %>>বিশ্ববিদ্যালয় শাখা</option>
+        </select>
+      </div>
+      <div class="form-group"><label>ক্রম (sort order)</label><input type="number" name="sort_order" value="<%= member ? member.sort_order : 0 %>"></div>
+      <button type="submit" class="btn btn-primary"><%= member ? 'আপডেট' : 'তৈরি করুন' %></button>
+    </form>
+  </div>
+</div>
