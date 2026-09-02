@@ -1,0 +1,28 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Env
+.env
+.env.local
+
+# Build
+dist/
+build/
+node_modules/
+
+# chrome-devtools-mcp (local reference only — clone separately)
+chrome-devtools-mcp/

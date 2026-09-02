@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="লেখক ফোরাম" />
+  <title>লেখক ফোরাম</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="home">
+  <!-- Top bar -->
+  <div class="btclf-topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <a href="index.html" class="logo-wrap">
+          <span class="logo-mark">ল</span>
+          <span class="logo-text">
+            <strong>লেখক ফোরাম</strong>
+            <small>সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়</small>
+          </span>
+        </a>
+      </div>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="index.html" class="active">হোম</a>
+        <a href="about.html">পরিচিতি</a>
+        <a href="committee.html">সংগঠন</a>
+        <a href="notices.html">বিজ্ঞপ্তি</a>
+        <a href="contact.html">যোগাযোগ</a>
+        <a href="#" class="btn-ghost">লগইন</a>
+      </nav>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar -->
+  <div class="mobile-sidebar" id="mobileSidebar" aria-hidden="true">
+    <button class="close-btn" id="closeSidebar" aria-label="Close menu"><i class="fas fa-times"></i></button>
+    <a href="index.html">হোম</a>
+    <a href="about.html">পরিচিতি</a>
+    <a href="committee.html">সংগঠন</a>
+    <a href="notices.html">বিজ্ঞপ্তি</a>
+    <a href="contact.html">যোগাযোগ</a>
+    <a href="#" class="btn-ghost">লগইন</a>
+  </div>
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <span class="eyebrow">লেখক ফোরাম</span>
+        <h1>তরুণ লেখকদের কণ্ঠস্বর হোক <span class="accent">দেশজুড়ে</span></h1>
+        <p>একটি জাতীয় বুদ্ধিবৃত্তিক ও সৃজনশীল সংগঠন, যা দেশের তরুণ লেখক, চিন্তাবিদ ও মতামতপ্রকাশকারী নাগরিকদের একটি শক্তিশালী প্ল্যাটফর্ম হিসেবে কাজ করে।</p>
+        <div class="hero-cta">
+          <a href="about.html" class="btn btn-primary">আমাদের সম্পর্কে</a>
+          <a href="notices.html" class="btn btn-outline">বিজ্ঞপ্তি দেখুন</a>
+        </div>
+      </div>
+      <div class="hero-stats" aria-label="Site statistics">
+        <div class="stat-card">
+          <span class="stat-num" data-count="22">০</span>
+          <span class="stat-label">মোট শাখা</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" data-count="704">০</span>
+          <span class="stat-label">লেখক সংখ্যা</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" data-count="1668">০</span>
+          <span class="stat-label">প্রকাশিত লেখা</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" data-count="51000">০</span>
+          <span class="stat-label">মোট পাঠক</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mission -->
+  <section class="section mission">
+    <div class="container">
+      <h2 class="section-title">এক নজরে <span class="accent">বিশ্ববিদ্যালয় শাখা</span></h2>
+      <p class="lead">লেখক ফোরাম একটি জাতীয় বুদ্ধিবৃত্তিক ও সৃজনশীল সংগঠন। এই সংগঠনের মূল লক্ষ্য হলো তরুণ প্রজন্মকে লেখালেখি, বিশ্লেষণধর্মী চিন্তা এবং সামাজিক দায়বদ্ধতার মাধ্যমে জাতীয় উন্নয়নের ধারায় সম্পৃক্ত করা।</p>
+    </div>
+  </section>
+
+  <!-- Central Committee -->
+  <section class="section committee-preview">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">কেন্দ্রীয় কার্যনির্বাহী পর্ষদ</h2>
+        <a href="committee.html" class="link-more">পূর্ণাঙ্গ কমিটি দেখুন →</a>
+      </div>
+      <div class="leaders-grid">
+        <article class="leader-card">
+          <div class="avatar">রা</div>
+          <h3>মো. রুহুল আমিন</h3>
+          <p class="role">সভাপতি</p>
+        </article>
+        <article class="leader-card">
+          <div class="avatar">সা</div>
+          <h3>সাইশা সুলতানা সাদিয়া</h3>
+          <p class="role">সাধারণ সম্পাদক</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent notices -->
+  <section class="section notices-preview">
+    <div class="container">
+      <div class="section-head">
+        <h2 class="section-title">সাম্প্রতিক <span class="accent">নোটিশ</span></h2>
+        <a href="notices.html" class="link-more">সকল নোটিশ →</a>
+      </div>
+      <ul class="notice-list">
+        <li class="notice-item">
+          <span class="notice-date">২৭ আগস্ট</span>
+          <a href="notices.html">২০২৬-২০২৭ কার্যবর্ষের সভাপতি ও সাধারণ সম্পাদক মনোনীত</a>
+        </li>
+        <li class="notice-item">
+          <span class="notice-date">২৪ আগস্ট</span>
+          <a href="notices.html">নবীনবরণ অনুষ্ঠানের তারিখ ও স্থান প্রকাশ</a>
+        </li>
+        <li class="notice-item">
+          <span class="notice-date">১৯ আগস্ট</span>
+          <a href="notices.html">কেন্দ্রীয় কমিটির পূর্ণাঙ্গ তালিকা প্রকাশ</a>
+        </li>
+        <li class="notice-item">
+          <span class="notice-date">১০ আগস্ট</span>
+          <a href="notices.html">ঈদ পরবর্তী কর্মসূচি ও লেখা জমা সংক্রান্ত বিজ্ঞপ্তি</a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="btclf-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <div class="logo-wrap">
+          <span class="logo-mark">ল</span>
+          <span class="logo-text"><strong>লেখক ফোরাম</strong></span>
+        </div>
+        <p>লেখক ফোরামের অফিশিয়াল ওয়েবসাইট। দেশের প্রগতিশীল চিন্তাধারা ও সৃজনশীলতার এক অনন্য প্ল্যাটফর্ম।</p>
+        <div class="f-socials">
+          <a href="https://facebook.com/bycwf" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+          <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+      <div>
+        <h4 class="f-widget-title">প্রয়োজনীয় লিংক</h4>
+        <ul class="f-links">
+          <li><a href="https://banglaacademy.gov.bd/"><i class="fas fa-circle"></i> বাংলা একাডেমি</a></li>
+          <li><a href="https://bangladesh.gov.bd/"><i class="fas fa-circle"></i> জাতীয় তথ্য বাতায়ন</a></li>
+          <li><a href="https://bycwf.org"><i class="fas fa-circle"></i> কেন্দ্রীয় ওয়েবসাইট</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="f-widget-title">যোগাযোগ</h4>
+        <ul class="f-contact">
+          <li><i class="fas fa-map-marker-alt"></i> <span>আপনার ক্যাম্পাস ঠিকানা</span></li>
+          <li><i class="fas fa-envelope"></i> <span>info@your-branch.org</span></li>
+          <li><i class="fas fa-phone-alt"></i> <span>০১XXXXXXXXX</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>© ২০২৬ লেখক ফোরাম</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
