@@ -1,16 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db');
-
-// Helper to render a page with the standard layout
-function renderPage(req, res, viewName, locals = {}) {
-  res.render('layout', {
-    page: viewName,
-    body: viewName.replace('lekhok-', 'pages/'),
-    currentPath: req.path,
-    ...locals
-  });
-}
+const db = require('../db');
 
 // ── Home ─────────────────────────────────────────────────────────────────────
 router.get('/', (req, res) => {
@@ -70,7 +60,7 @@ router.get('/contact', (req, res) => {
   });
 });
 
-// ── Events (new) ─────────────────────────────────────────────────────────────
+// ── Events ───────────────────────────────────────────────────────────────────
 router.get('/events', (req, res) => {
   const today = new Date().toISOString().split('T')[0];
   const upcoming = db.prepare('SELECT * FROM events WHERE date >= ? ORDER BY date ASC').all(today);
@@ -83,7 +73,7 @@ router.get('/events', (req, res) => {
   });
 });
 
-// ── Gallery (new) ────────────────────────────────────────────────────────────
+// ── Gallery ──────────────────────────────────────────────────────────────────
 router.get('/gallery', (req, res) => {
   const items = db.prepare('SELECT * FROM gallery ORDER BY id DESC').all();
   res.render('lekhok-gallery', {
@@ -93,7 +83,7 @@ router.get('/gallery', (req, res) => {
   });
 });
 
-// ── Resources (new) ──────────────────────────────────────────────────────────
+// ── Resources ────────────────────────────────────────────────────────────────
 router.get('/resources', (req, res) => {
   const category = req.query.category || 'all';
   let resources;
@@ -112,7 +102,7 @@ router.get('/resources', (req, res) => {
   });
 });
 
-// ── Team (new) ───────────────────────────────────────────────────────────────
+// ── Team ─────────────────────────────────────────────────────────────────────
 router.get('/team', (req, res) => {
   const central = db.prepare("SELECT * FROM members WHERE member_type = 'central' ORDER BY sort_order").all();
   const branch  = db.prepare("SELECT * FROM members WHERE member_type = 'branch'  ORDER BY sort_order").all();
@@ -125,3 +115,4 @@ router.get('/team', (req, res) => {
 });
 
 module.exports = router;
+

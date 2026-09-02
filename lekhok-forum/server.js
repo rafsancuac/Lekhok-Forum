@@ -15,7 +15,7 @@ app.set('views', [
   path.join(__dirname, 'admin', 'views')
 ]);
 app.use(expressLayouts);
-app.set('layout', false); // We use our own layout
+app.set('layout', false);
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
@@ -26,15 +26,16 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'lekhok-forum-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// ── Locals middleware ─────────────────────────────────────────────────────────
+// ── Locals middleware ───────────────────────────────────────────────────────
 app.use((req, res, next) => {
   res.locals.siteName = db.getSetting('site_name') || 'লেখক ফোরাম';
   res.locals.tagline  = db.getSetting('tagline')  || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়';
   res.locals.adminUser = req.session.adminUser || null;
   res.locals.currentPath = req.path;
+  res.locals.getSetting = db.getSetting;
   next();
 });
 
@@ -48,8 +49,14 @@ app.use((req, res) => {
   res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
 });
 
-// ── Start ────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n  লেখক ফোরাম server running at http://localhost:${PORT}\n`);
-  console.log(`  Admin panel:  http://localhost:${PORT}/admin\n`);
+// ── Start (after DB init) ───────────────────────────────────────────────────
+db.initDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`\n  লেখক ফোরাম server running at http://localhost:${PORT}`);
+    console.log(`  Admin panel:  http://localhost:${PORT}/admin`);
+    console.log(`  Login:        admin / admin123\n`);
+  });
+}).catch(err => {
+  console.error('Database initialization failed:', err);
+  process.exit(1);
 });

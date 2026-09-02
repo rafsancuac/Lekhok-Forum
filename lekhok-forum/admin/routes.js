@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { db, getSetting, setSetting } = require('../db');
+const db = require('../db');
+const getSetting = db.getSetting;
+const setSetting = db.setSetting;
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 function requireAdmin(req, res, next) {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../db');
+const db = require('../db');
 
 // ── Public read endpoints (no auth) ─────────────────────────────────────────
 router.get('/notices', (req, res) => {
@@ -16,11 +16,11 @@ router.get('/notices', (req, res) => {
 router.get('/events', (req, res) => {
   const { upcoming } = req.query;
   const today = new Date().toISOString().split('T')[0];
-  let q;
-  if (upcoming === 'true')  q = 'SELECT * FROM events WHERE date >= ? ORDER BY date ASC';
-  else if (upcoming === 'false') q = 'SELECT * FROM events WHERE date <  ? ORDER BY date DESC';
-  else q = 'SELECT * FROM events ORDER BY date DESC';
-  res.json(db.prepare(q).all(today));
+  let q, params = [];
+  if (upcoming === 'true')  { q = 'SELECT * FROM events WHERE date >= ? ORDER BY date ASC';  params = [today]; }
+  else if (upcoming === 'false') { q = 'SELECT * FROM events WHERE date <  ? ORDER BY date DESC'; params = [today]; }
+  else { q = 'SELECT * FROM events ORDER BY date DESC'; }
+  res.json(db.prepare(q).all(...params));
 });
 
 router.get('/members', (req, res) => {
@@ -45,7 +45,7 @@ router.get('/resources', (req, res) => {
   res.json(db.prepare(q).all(...params));
 });
 
-// ── Contact form submission (public, writes DB) ─────────────────────────────
+// ── Contact form submission ────────────────────────────────────────────────
 router.post('/contact', (req, res) => {
   const { name, email, subject, message } = req.body;
   if (!name || !message) return res.status(400).json({ error: 'নাম এবং বার্তা আবশ্যক' });
@@ -55,3 +55,4 @@ router.post('/contact', (req, res) => {
 });
 
 module.exports = router;
+
