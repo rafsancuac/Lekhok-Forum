@@ -60,14 +60,14 @@
                 <img src="/assets/img/avatar-placeholder.svg" class="feed-avatar" alt="">
                 <div>
                   <span class="feed-author">মডারেটর <span class="verified-badge"><i class="fas fa-check-circle"></i></span></span>
-                  <div class="feed-time"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
+                  <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
                 </div>
               <% } else { %>
                 <img src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
                 <div>
                   <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
                   <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
-                  <div class="feed-time"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
+                  <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
                 </div>
               <% } %>
               <% if (item.item_type === 'activity') { %>

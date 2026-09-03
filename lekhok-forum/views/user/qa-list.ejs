@@ -31,7 +31,7 @@
           <div class="qa-item">
             <div class="qa-votes">
               <span class="vote-count"><%= q.like_count || 0 %></span>
-              <small>প্রাসঙ্গিক</small>
+              <small><i class="far fa-thumbs-up"></i>প্রাসঙ্গিক</small>
             </div>
             <div class="qa-content">
               <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
@@ -42,7 +42,7 @@
                 <span>&middot;</span>
                 <span><i class="far fa-comment"></i> <%= q.comment_count || 0 %> উত্তর</span>
                 <span>&middot;</span>
-                <span><i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
+                <span data-ts="<%= new Date(q.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
               </div>
             </div>
           </div>
@@ -50,5 +50,6 @@
       <% } %>
     </div>
   </div>
+  <script src="/assets/js/main.js"></script>
 </body>
 </html>

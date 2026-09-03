@@ -53,6 +53,40 @@
     document.querySelectorAll('.stat-num').forEach(animateCount);
   }
 
+  /* ── Bengali relative time for [data-ts] elements ─────────────────────
+     Converts ISO timestamps into friendly relative strings:
+     এইমাত্র → ৫ মিনিট আগে → ২ ঘণ্টা আগে → গতকাল → ৪ দিন আগে → (date)   */
+  const BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  function bnRelTime(iso) {
+    const then = new Date(iso).getTime();
+    if (isNaN(then)) return null;
+    const diff = Date.now() - then;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return 'এইমাত্র';
+    if (min < 60) return toBn(min) + ' মিনিট আগে';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return toBn(hr) + ' ঘণ্টা আগে';
+    const day = Math.floor(hr / 24);
+    if (day === 1) return 'গতকাল';
+    if (day < 7) return toBn(day) + ' দিন আগে';
+    const d = new Date(then);
+    return toBn(d.getDate()) + ' ' + BN_MONTHS[d.getMonth()] + ', ' + toBn(d.getFullYear());
+  }
+  function renderRelTimes(root) {
+    (root || document).querySelectorAll('[data-ts]').forEach(el => {
+      const rel = bnRelTime(el.dataset.ts);
+      if (rel) {
+        const icon = el.querySelector('i');
+        el.textContent = '';
+        if (icon) el.appendChild(icon);
+        el.appendChild(document.createTextNode(' ' + rel));
+        el.setAttribute('title', new Date(el.dataset.ts).toLocaleString('bn-BD'));
+      }
+    });
+  }
+  window.LekhokRelTime = { render: renderRelTimes };
+  document.addEventListener('DOMContentLoaded', () => renderRelTimes());
+
   // ── v2: Sticky header shrink + scroll progress bar ────────────────────────
   const header = document.getElementById('mainHeader');
   const progress = document.getElementById('scrollProgress');
@@ -172,6 +206,22 @@ function closeMega() {
 }
 window.toggleMega = toggleMega;
 window.closeMega = closeMega;
+
+/* ── Notification bell + user dropdown toggles (header onclick) ── */
+function toggleNotifs() {
+  const dd = document.getElementById('notifDropdown');
+  const ud = document.getElementById('userDropdown');
+  if (ud) ud.classList.remove('open');
+  if (dd) dd.classList.toggle('open');
+}
+function toggleUserMenu() {
+  const dd = document.getElementById('userDropdown');
+  const nd = document.getElementById('notifDropdown');
+  if (nd) nd.classList.remove('open');
+  if (dd) dd.classList.toggle('open');
+}
+window.toggleNotifs = toggleNotifs;
+window.toggleUserMenu = toggleUserMenu;
 document.addEventListener('click', function (e) {
   const wrap = document.getElementById('megaWrap');
   if (wrap && !wrap.contains(e.target)) closeMega();

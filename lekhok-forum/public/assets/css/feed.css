@@ -3,9 +3,25 @@
    ============================================ */
 
 .page-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
-.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-.page-header h1 { color: var(--brand); font-size: 1.6rem; margin: 0; }
+/* Page hero — dark gradient band (style.css); column layout so title/subtitle/action stack neatly */
+.page-header {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  margin-bottom: 24px; gap: 10px; padding: 40px 24px 36px;
+  background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
+  border-radius: var(--radius-lg, 20px);
+  color: #fff; position: relative; overflow: hidden;
+}
+.page-header::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(5,150,105,0.16) 0%, transparent 42%),
+    radial-gradient(circle at 10% 85%, rgba(5,150,105,0.10) 0%, transparent 38%);
+  pointer-events: none;
+}
+.page-header > * { position: relative; }
+.page-header h1 { color: #fff; font-size: 1.7rem; margin: 0; letter-spacing: -0.2px; }
 .page-header h1 i { color: var(--accent); margin-right: 8px; }
+.page-header p, .page-header .page-subtitle { color: #cbd5e1; margin: 0; max-width: 640px; }
 .today-date { color: var(--text-muted); font-size: 0.9rem; }
 .header-sub { color: var(--text-muted); margin: 0; font-size: 0.95rem; }
 .btn-write, .topbar-btn { background: var(--accent); color: white; padding: 8px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; border: none; cursor: pointer; font-family: inherit; font-size: 0.95rem; }
@@ -67,10 +83,17 @@
 
 /* Q&A */
 .qa-list { display: flex; flex-direction: column; gap: 12px; }
-.qa-item { background: white; border-radius: 10px; padding: 16px; display: flex; gap: 14px; box-shadow: var(--shadow-soft); }
-.qa-votes { text-align: center; min-width: 50px; }
-.vote-count { display: block; font-size: 1.2rem; font-weight: 700; color: var(--brand); }
-.qa-votes small { font-size: 0.75rem; color: var(--text-muted); }
+.qa-item { background: white; border-radius: 10px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; box-shadow: var(--shadow-soft); }
+.qa-votes {
+  text-align: center; min-width: 54px; padding: 8px 6px;
+  background: var(--accent-soft, rgba(5,150,105,0.08));
+  border: 1px solid rgba(5,150,105,0.15);
+  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.vote-count { display: block; font-size: 1.05rem; font-weight: 700; color: var(--accent); line-height: 1.2; }
+.qa-votes small { font-size: 0.7rem; color: var(--text-muted); }
+.qa-votes small i { display: block; font-size: 0.85rem; color: var(--accent); margin-bottom: 2px; }
 .qa-content { flex: 1; }
 .qa-title { display: block; color: var(--brand); font-size: 1.05rem; font-weight: 600; text-decoration: none; margin-bottom: 6px; }
 .qa-title:hover { color: var(--accent); }

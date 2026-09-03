@@ -374,6 +374,10 @@ ul { list-style: none; padding: 0; margin: 0; }
   .hero-inner { grid-template-columns: 1fr; gap: 36px; }
   .footer-inner { grid-template-columns: 1fr; gap: 30px; }
   .topbar-nav { display: none; }
+  .topbar-tabs { display: none; }   /* app tabs move to mobile sidebar */
+  .mega-wrap { display: none; }     /* mega menu moves to mobile sidebar */
+  .topbar-inner { padding: 10px 14px; gap: 12px; }
+  .user-menu-btn span { display: none; } /* avatar-only chip on small screens */
   .menu-toggle { display: block; }
   .hero h1 { font-size: 34px; }
   .contact-grid { grid-template-columns: 1fr; }
@@ -1490,10 +1494,19 @@ a.notice-card-link .notice-item { margin: 0; }
 .stat-tile .num { font-size: 28px; font-weight: 800; color: var(--accent); }
 .stat-tile .lbl { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: var(--space-5); }
+/* /me personal hub — 7 stat tiles must fit one row inside the 900px wrap */
+.me-wrap .stats-grid { grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); }
+.me-wrap .stat-tile .num { font-size: 24px; }
 
 /* ── Topbar scroll behavior ─────────────────── */
 .topbar { transition: box-shadow 0.2s ease; }
 .topbar.scrolled { box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+
+/* ── Topbar right cluster (bell + avatar + mega + burger) ── */
+.topbar-right {
+  display: flex; align-items: center; gap: 4px;
+  flex-shrink: 0;
+}
 
 /* ── Topbar user button (avatar dropdown) ───── */
 .user-menu-btn {
@@ -1507,7 +1520,7 @@ a.notice-card-link .notice-item { margin: 0; }
 .user-menu-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
 .user-mini-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1.5px solid rgba(255,255,255,0.15); }
 .user-dropdown {
-  position: absolute; right: 20px; top: 60px;
+  position: absolute; right: 0; top: 46px;
   background: var(--card); color: var(--text);
   border-radius: var(--radius); min-width: 220px;
   box-shadow: var(--shadow-lg);
@@ -1542,7 +1555,7 @@ a.notice-card-link .notice-item { margin: 0; }
   border: 2px solid var(--bg-main);
 }
 .notif-dropdown {
-  position: absolute; right: 0; top: 56px;
+  position: absolute; right: 0; top: 46px;
   background: var(--card); color: var(--text);
   border-radius: var(--radius); width: 340px;
   max-height: 420px; overflow-y: auto;
@@ -1869,3 +1882,12 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 .campus-card strong { display: block; font-size: 14px; font-weight: 600; }
 .campus-card span { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
+
+/* ── v4 polish: mobile topbar collapse (must win over base rules above) ── */
+@media (max-width: 992px) {
+  .btclf-topbar .topbar-tabs,
+  .btclf-topbar .mega-wrap { display: none !important; }
+  .btclf-topbar .topbar-inner { padding: 10px 14px; }
+  .btclf-topbar .user-menu-btn span { display: none; }
+  .btclf-topbar .brand .logo-text strong { font-size: 16px; }
+}
