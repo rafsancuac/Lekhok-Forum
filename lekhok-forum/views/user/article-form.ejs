@@ -22,11 +22,12 @@
     <div class="logo-mark">ল</div>
     <h1><%= editMode ? 'লেখা সম্পাদনা' : 'নতুন লেখা লিখুন' %></h1>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= post?.title || '' %>" required></div>
       <div class="form-row">
         <div class="form-group"><label>ট্যাগ</label><input type="text" name="tags" value="<%= post?.tags || '' %>" placeholder="কবিতা, উপন্যাস,প্রবন্ধ"><small class="tag-hint">কমা দিয়ে আলাদা করুন</small></div>
-        <div class="form-group"><label>কভার ছবি URL</label><input type="url" name="cover_image" value="<%= post?.cover_image || '' %>"></div>
+        <div class="form-group"><label>কভার ছবি আপলোড</label><input type="file" name="cover" accept="image/*"></div>
+        <div class="form-group"><label>অথবা কভার ছবি URL</label><input type="url" name="cover_image" value="<%= post?.cover_image || '' %>"></div>
       </div>
       <div class="form-group"><label>সংক্ষিপ্ত সারাংশ</label><textarea name="excerpt" rows="2"><%= post?.excerpt || '' %></textarea></div>
       <div class="form-group">

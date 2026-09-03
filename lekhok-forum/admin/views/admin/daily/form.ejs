@@ -1,0 +1,48 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1><%= item ? 'কনটেন্ট সম্পাদনা' : 'নতুন ডেইলি কনটেন্ট' %></h1>
+    <p><a href="/admin/daily">← তালিকায় ফিরে যান</a> — প্রকাশ করলেই সব ইউজার নোটিফিকেশন পাবেন</p>
+  </div>
+  <div class="card">
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST" action="<%= item ? '/admin/daily/' + item.id + '?_method=PUT' : '/admin/daily' %>">
+      <div class="form-group">
+        <label>ধরন *</label>
+        <select name="content_type" required>
+          <option value="">— নির্বাচন করুন —</option>
+          <% Object.keys(DAILY_TYPES).forEach(t => { %>
+            <option value="<%= t %>" <%= item && item.content_type === t ? 'selected' : '' %>><%= DAILY_TYPES[t].label %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>শিরোনাম *</label>
+        <input type="text" name="title" value="<%= item ? item.title : '' %>" required>
+      </div>
+      <div class="form-group">
+        <label>বিষয়বস্তু</label>
+        <textarea name="body" rows="6"><%= item ? (item.body || '') : '' %></textarea>
+      </div>
+      <div class="form-group">
+        <label>ছবির URL (ঐচ্ছিক)</label>
+        <input type="url" name="image_url" value="<%= item ? (item.image_url || '') : '' %>" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>লিংক URL (ঐচ্ছিক — যেমন ই-পেপার PDF লিংক)</label>
+        <input type="url" name="link_url" value="<%= item ? (item.link_url || '') : '' %>" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label>প্রকাশের তারিখ</label>
+        <input type="date" name="scheduled_date" value="<%= item ? (item.scheduled_date || '') : today %>">
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+          <input type="checkbox" name="published" value="1" <%= !item || item.published ? 'checked' : '' %>>
+          এখনই প্রকাশ করুন (সব ইউজার নোটিফিকেশন পাবেন)
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary"><%= item ? 'আপডেট' : 'তৈরি করুন' %></button>
+    </form>
+  </div>
+</div>

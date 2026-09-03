@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const slugify = require('slugify');
 const db = require('../db');
+const { coverUpload, withUpload } = require('../middleware/upload');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCurrentUser(req) {
@@ -50,14 +51,15 @@ router.get('/articles/new', ensureLoggedIn, (req, res) => {
   res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new' });
 });
 
-// ── Submit article ───────────────────────────────────────────────────────────
-router.post('/articles/new', ensureLoggedIn, (req, res) => {
+// ── Submit article (with optional cover image upload) ────────────────────────
+router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), (req, res) => {
   const { title, body, excerpt, cover_image, tags, category } = req.body;
   if (!title || !body) {
     return res.render('user/article-form', { post: req.body, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক', currentPath: '/articles/new' });
   }
+  const cover = req.file ? '/uploads/covers/' + req.file.filename : (cover_image || null);
   const result = db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?)`).run(
-    req.session.user.id, title, body, excerpt || body.substring(0, 200), cover_image || null, tags || null, category || 'general'
+    req.session.user.id, title, body, excerpt || body.substring(0, 200), cover, tags || null, category || 'general'
   );
   res.redirect('/articles/' + result.lastInsertRowid);
 });
@@ -189,11 +191,11 @@ router.get('/qa', (req, res) => {
 });
 
 // ── New question ─────────────────────────────────────────────────────────────
-router.get('/qa/new', ensureLoggedIn, (req, res) => {
+router.get(['/qa/new', '/questions/new'], ensureLoggedIn, (req, res) => {
   res.render('user/qa-form', { post: null, error: null, currentPath: '/qa/new' });
 });
 
-router.post('/qa/new', ensureLoggedIn, (req, res) => {
+router.post(['/qa/new', '/questions/new'], ensureLoggedIn, (req, res) => {
   const { title, body, category, tags } = req.body;
   if (!title || !body) return res.render('user/qa-form', { post: req.body, error: 'শিরোনাম ও প্রশ্ন আবশ্যক', currentPath: '/qa/new' });
   const r = db.prepare(`INSERT INTO posts (author_id, type, title, body, category, tags) VALUES (?, 'question', ?, ?, ?, ?)`).run(req.session.user.id, title, body, category || 'general', tags || null);

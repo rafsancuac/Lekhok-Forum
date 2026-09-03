@@ -1,55 +1,60 @@
-<!DOCTYPE html>
-<html lang="bn" dir="ltr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>অভিযোগ — লেখক ফোরাম অ্যাডমিন</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/admin.css" />
-  <style>
-    .complaint-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
-    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
-    .status-new { background: #fee2e2; color: #b91c1c; }
-    .status-in_progress { background: #fef9c3; color: #854d0e; }
-    .status-resolved { background: #dcfce7; color: #166534; }
-  </style>
-</head>
-<body>
-  <%- include('partials/sidebar') %>
-  <div class="admin-main">
-    <div class="admin-header">
-      <h1>অভিযোগসমূহ (প্রাইভেট)</h1>
-      <p><%= items.length %> টি অভিযোগ — শুধু এডমিন ও অনুমোদিত মডারেটররা দেখতে পাবেন</p>
-    </div>
-    <% if (items.length === 0) { %>
-      <div class="card empty">কোনো অভিযোগ নেই</div>
-    <% } %>
-    <% items.forEach(c => { %>
-      <div class="complaint-card">
-        <div style="display:flex; justify-content:space-between;">
-          <div>
-            <strong><%= c.subject %></strong>
-            <span class="status-badge status-<%= c.status %>"><%= c.status %></span>
-          </div>
-          <span style="color:#999; font-size:0.85rem;"><%= new Date(c.created_at).toLocaleString('bn-BD') %></span>
-        </div>
-        <p style="color:#666; font-size:0.9rem; margin:6px 0;"><%= c.full_name %> (@<%= c.username %>)</p>
-        <% if (c.body) { %><p style="line-height:1.6;"><%= c.body %></p><% } %>
-        <% if (c.file_url) { %>
-          <p><a href="<%= c.file_url %>" target="_blank"><i class="fas fa-paperclip"></i> <%= c.file_name || 'সংযুক্ত ফাইল' %></a></p>
-        <% } %>
-        <form method="POST" action="/admin/complaints/<%= c.id %>/status" style="margin-top:10px; display:flex; gap:8px; align-items:center;">
-          <select name="status" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd;">
-            <option value="new" <%= c.status === 'new' ? 'selected' : '' %>>নতুন</option>
-            <option value="in_progress" <%= c.status === 'in_progress' ? 'selected' : '' %>>প্রক্রিয়াধীন</option>
-            <option value="resolved" <%= c.status === 'resolved' ? 'selected' : '' %>>সমাধান হয়েছে</option>
-          </select>
-          <input type="text" name="admin_notes" value="<%= c.admin_notes || '' %>" placeholder="নোট (ঐচ্ছিক)" style="flex:1; padding:6px 10px; border-radius:6px; border:1px solid #ddd;">
-          <button class="btn btn-primary btn-sm" type="submit">আপডেট করুন</button>
-        </form>
-      </div>
-    <% }) %>
+<%- include('./partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>অভিযোগ ব্যবস্থাপনা</h1>
+    <p><%= newCount %> টি নতুন অভিযোগ — এই তথ্য গোপনীয়, শুধু নির্ধারিত কর্মীরা দেখতে পারেন</p>
   </div>
-</body>
-</html>
+  <div style="margin-bottom:12px;">
+    <a href="/admin/complaints" class="btn <%= !status ? 'btn-primary' : '' %> btn-sm">সব</a>
+    <a href="/admin/complaints?status=new" class="btn <%= status === 'new' ? 'btn-primary' : '' %> btn-sm">নতুন</a>
+    <a href="/admin/complaints?status=in_review" class="btn <%= status === 'in_review' ? 'btn-primary' : '' %> btn-sm">পর্যালোচনাধীন</a>
+    <a href="/admin/complaints?status=resolved" class="btn <%= status === 'resolved' ? 'btn-primary' : '' %> btn-sm">সমাধান হয়েছে</a>
+    <a href="/admin/complaints?status=dismissed" class="btn <%= status === 'dismissed' ? 'btn-primary' : '' %> btn-sm">বাতিল</a>
+  </div>
+  <% if (complaints.length === 0) { %>
+    <div class="card empty">কোনো অভিযোগ নেই</div>
+  <% } else { %>
+    <% complaints.forEach(c => { %>
+    <div class="card" style="margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div>
+          <strong style="font-size:1.05rem;"><%= c.subject %></strong>
+          <div style="color:#666; font-size:.85rem; margin-top:4px;">
+            <i class="fas fa-user"></i>
+            <% if (c.submitter_username) { %>
+              <a href="/profile/<%= c.submitter_username %>"><%= c.submitter_name || c.submitter_username %></a>
+            <% } else { %>
+              অজানা ব্যবহারকারী
+            <% } %>
+            &middot; <%= c.created_at %>
+          </div>
+        </div>
+        <span style="padding:3px 10px; border-radius:12px; font-size:.8rem; font-weight:600;
+          <%= c.status === 'new' ? 'background:#fdecea; color:#c41033;' : c.status === 'in_review' ? 'background:#fff7e0; color:#9a6b00;' : c.status === 'resolved' ? 'background:#e6f6ea; color:#0a7d33;' : 'background:#eee; color:#555;' %>">
+          <%= c.status === 'new' ? 'নতুন' : c.status === 'in_review' ? 'পর্যালোচনাধীন' : c.status === 'resolved' ? 'সমাধান হয়েছে' : 'বাতিল' %>
+        </span>
+      </div>
+      <% if (c.body) { %><p style="margin:10px 0; white-space:pre-wrap;"><%= c.body %></p><% } %>
+      <% if (c.file_url) { %>
+        <p style="margin:8px 0;">
+          <i class="fas fa-paperclip"></i>
+          <a href="<%= c.file_url %>" target="_blank" download><%= c.file_name || 'সংযুক্ত ফাইল' %></a>
+        </p>
+      <% } %>
+      <form method="POST" action="/admin/complaints/<%= c.id %>?_method=PUT" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px;">
+        <select name="status" style="width:auto;">
+          <option value="new" <%= c.status === 'new' ? 'selected' : '' %>>নতুন</option>
+          <option value="in_review" <%= c.status === 'in_review' ? 'selected' : '' %>>পর্যালোচনাধীন</option>
+          <option value="resolved" <%= c.status === 'resolved' ? 'selected' : '' %>>সমাধান হয়েছে</option>
+          <option value="dismissed" <%= c.status === 'dismissed' ? 'selected' : '' %>>বাতিল</option>
+        </select>
+        <input type="text" name="admin_notes" placeholder="অভ্যন্তরীণ নোট" value="<%= c.admin_notes || '' %>" style="flex:1; min-width:180px;">
+        <button type="submit" class="btn btn-primary btn-sm">সংরক্ষণ</button>
+      </form>
+      <form method="POST" action="/admin/complaints/<%= c.id %>?_method=DELETE" style="margin-top:6px;" onsubmit="return confirm('অভিযোগটি মুছে ফেলতে চান?')">
+        <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
+      </form>
+    </div>
+    <% }) %>
+  <% } %>
+</div>

@@ -30,3 +30,14 @@ desktop.ini
 *.swp
 *.swo
 *~
+
+# User uploads (runtime content)
+public/uploads/
+
+# Test / debug scripts (not for production)
+test_bind.js
+test_seed.js
+*.test.js
+
+# Stray reference PDFs (not part of the app)
+*.pdf

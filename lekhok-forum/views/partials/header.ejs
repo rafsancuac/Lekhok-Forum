@@ -51,10 +51,13 @@
               <i class="fas fa-chevron-down"></i>
             </button>
             <div class="user-dropdown" id="userDropdown">
+              <a href="/dashboard"><i class="fas fa-stream"></i> ড্যাশবোর্ড</a>
               <a href="/profile/<%= user.username %>"><i class="fas fa-user"></i> প্রোফাইল</a>
               <a href="/articles/new"><i class="fas fa-pen-nib"></i> লেখা লিখুন</a>
               <a href="/questions/new"><i class="fas fa-question"></i> প্রশ্ন করুন</a>
+              <a href="/messages"><i class="fas fa-comments"></i> মেসেজ</a>
               <a href="/bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত</a>
+              <a href="/complaints"><i class="fas fa-user-shield"></i> অভিযোগ</a>
               <hr style="border:none;border-top:1px solid #eee;margin:6px 0">
               <a href="/profile/edit"><i class="fas fa-cog"></i> সেটিংস</a>
               <% if (user.role === 'admin' || user.role === 'moderator') { %>
@@ -77,25 +80,32 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="nav-inner">
-      <div class="nav-links" id="mobileNav">
-        <a href="/" class="nav-item"><i class="fas fa-home"></i> হোম</a>
-        <a href="/articles" class="nav-item"><i class="fas fa-pen-nib"></i> লেখা</a>
-        <a href="/qa" class="nav-item"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
-        <a href="/members" class="nav-item"><i class="fas fa-users"></i> সদস্য</a>
-        <a href="/quiz" class="nav-item"><i class="fas fa-quiz"></i> কুইজ</a>
-        <a href="/on-this-day" class="nav-item"><i class="fas fa-calendar-day"></i> এই দিনে</a>
-        <a href="/activities" class="nav-item"><i class="fas fa-calendar-check"></i> কার্যক্রম</a>
-        <a href="/epaper" class="nav-item"><i class="fas fa-newspaper"></i> ই-পেপার</a>
-        <a href="/best-writer" class="nav-item"><i class="fas fa-star"></i> সেরা লেখক</a>
-        <a href="/achievements" class="nav-item"><i class="fas fa-trophy"></i> অর্জন</a>
-        <a href="/constitution" class="nav-item"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
-        <a href="/committee" class="nav-item"><i class="fas fa-users-cog"></i> কমিটি</a>
-        <a href="/notices" class="nav-item"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি</a>
-        <a href="/events" class="nav-item"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
-        <a href="/resources" class="nav-item"><i class="fas fa-file-alt"></i> ফাইল</a>
-        <a href="/about" class="nav-item"><i class="fas fa-info-circle"></i> পরিচিতি</a>
-        <a href="/contact" class="nav-item"><i class="fas fa-envelope"></i> যোগাযোগ</a>
-      </div>
+        <div class="nav-links" id="mobileNav">
+          <a href="/" class="nav-item"><i class="fas fa-home"></i> হোম</a>
+          <% if (user) { %><a href="/dashboard" class="nav-item"><i class="fas fa-stream"></i> ড্যাশবোর্ড</a><% } %>
+          <a href="/articles" class="nav-item"><i class="fas fa-pen-nib"></i> লেখা</a>
+          <a href="/qa" class="nav-item"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
+          <a href="/members" class="nav-item"><i class="fas fa-users"></i> সদস্য</a>
+          <a href="/gallery" class="nav-item"><i class="fas fa-images"></i> গ্যালারি</a>
+          <a href="/quiz" class="nav-item"><i class="fas fa-quiz"></i> কুইজ</a>
+          <a href="/on-this-day" class="nav-item"><i class="fas fa-calendar-day"></i> এই দিনে</a>
+          <a href="/activities" class="nav-item"><i class="fas fa-calendar-check"></i> কার্যক্রম</a>
+          <a href="/epaper" class="nav-item"><i class="fas fa-newspaper"></i> ই-পেপার</a>
+          <a href="/best-writer" class="nav-item"><i class="fas fa-star"></i> সেরা লেখক</a>
+          <a href="/achievements" class="nav-item"><i class="fas fa-trophy"></i> অর্জন</a>
+          <a href="/constitution" class="nav-item"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
+          <a href="/committee" class="nav-item"><i class="fas fa-users-cog"></i> কমিটি</a>
+          <a href="/notices" class="nav-item"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি</a>
+          <a href="/events" class="nav-item"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
+          <a href="/resources" class="nav-item"><i class="fas fa-file-alt"></i> ফাইল</a>
+          <a href="/birthdays" class="nav-item"><i class="fas fa-birthday-cake"></i> জন্মদিন</a>
+          <% if (user) { %>
+            <a href="/messages" class="nav-item"><i class="fas fa-comments"></i> মেসেজ</a>
+            <a href="/complaints" class="nav-item"><i class="fas fa-user-shield"></i> অভিযোগ</a>
+          <% } %>
+          <a href="/about" class="nav-item"><i class="fas fa-info-circle"></i> পরিচিতি</a>
+          <a href="/contact" class="nav-item"><i class="fas fa-envelope"></i> যোগাযোগ</a>
+        </div>
     </div>
   </nav>
 

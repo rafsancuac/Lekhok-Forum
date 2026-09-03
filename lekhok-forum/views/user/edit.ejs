@@ -14,7 +14,7 @@
     <h1>প্রোফাইল সম্পাদনা</h1>
     <p class="sub">@<%= user.username %></p>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <div class="form-group"><label>পূর্ণ নাম *</label><input type="text" name="full_name" value="<%= user.full_name %>" required></div>
       <div class="form-row">
         <div class="form-group"><label>ইমেইল</label><input type="email" name="email" value="<%= user.email || '' %>"></div>
@@ -30,6 +30,13 @@
           </select>
         </div>
         <div class="form-group"><label>জন্ম তারিখ</label><input type="date" name="birth_date" value="<%= user.birth_date || '' %>"></div>
+      </div>
+      <div class="form-group">
+        <label>প্রোফাইল ছবি</label>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <img src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
+          <input type="file" name="avatar" accept="image/*" style="flex:1;">
+        </div>
       </div>
       <div class="form-group"><label>পদবি</label><input type="text" name="designation" value="<%= user.designation || '' %>"></div>
       <div class="form-group"><label>ঠিকানা</label><input type="text" name="address" value="<%= user.address || '' %>"></div>

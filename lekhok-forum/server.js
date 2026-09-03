@@ -4,6 +4,7 @@ const session = require('express-session');
 const methodOverride = require('method-override');
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./db');
+const { runBirthdayCheck } = require('./helpers/notify');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -31,6 +32,7 @@ app.use(session({
 
 // ── Locals middleware ───────────────────────────────────────────────────────
 app.use((req, res, next) => {
+  runBirthdayCheck();  // cheap date-guarded check, runs once per day per process
   res.locals.siteName  = db.getSetting('site_name') || 'লেখক ফোরাম';
   res.locals.tagline   = db.getSetting('tagline')  || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়';
   res.locals.adminUser = req.session.adminUser || null;

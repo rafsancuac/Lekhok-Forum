@@ -17,11 +17,25 @@
   </div>
   <div class="card">
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <form method="POST" action="<%= item ? '/admin/gallery/' + item.id + '?_method=PUT' : '/admin/gallery' %>">
-      <div class="form-group"><label>ছবির URL *</label><input type="url" name="image_url" value="<%= item ? item.image_url : '' %>" required placeholder="https://..."></div>
+    <form method="POST" action="<%= item ? '/admin/gallery/' + item.id + '?_method=PUT' : '/admin/gallery' %>" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>ছবি আপলোড করুন</label>
+        <input type="file" name="image" accept="image/*">
+      </div>
+      <div class="form-group">
+        <label>অথবা ছবির URL</label>
+        <input type="url" name="image_url" value="<%= item ? (item.image_url || '') : '' %>" placeholder="https://...">
+      </div>
       <div class="form-group"><label>শিরোনাম</label><input type="text" name="title" value="<%= item ? (item.title || '') : '' %>"></div>
       <div class="form-group"><label>ক্যাপশন</label><textarea name="caption" rows="3"><%= item ? (item.caption || '') : '' %></textarea></div>
-      <div class="form-group"><label>ইভেন্টের তারিখ</label><input type="text" name="event_date" value="<%= item ? (item.event_date || '') : '' %>" placeholder="YYYY-MM-DD"></div>
+      <div class="form-group">
+        <label>ক্যাটাগরি</label>
+        <select name="category">
+          <% [['events','ইভেন্ট'],['workshops','কর্মশালা'],['meetings','সভা'],['awards','পুরস্কার'],['general','সাধারণ']].forEach(([v, l]) => { %>
+            <option value="<%= v %>" <%= item && item.category === v ? 'selected' : '' %>><%= l %></option>
+          <% }) %>
+        </select>
+      </div>
       <button type="submit" class="btn btn-primary"><%= item ? 'আপডেট' : 'তৈরি করুন' %></button>
     </form>
   </div>

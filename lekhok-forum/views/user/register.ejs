@@ -14,7 +14,7 @@
     <h1>নতুন অ্যাকাউন্ট</h1>
     <p class="sub">লেখক ফোরামে যোগ দিন — লিখুন, শেয়ার করুন, সংযুক্ত হোন</p>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <div class="form-row">
         <div class="form-group"><label>ব্যবহারকারী নাম *</label><input type="text" name="username" value="<%= form.username || '' %>" required></div>
         <div class="form-group"><label>পাসওয়ার্ড * (কমপক্ষে ৬ অক্ষর)</label><input type="password" name="password" required minlength="6"></div>
@@ -34,6 +34,10 @@
           </select>
         </div>
         <div class="form-group"><label>জন্ম তারিখ</label><input type="date" name="birth_date" value="<%= form.birth_date || '' %>"></div>
+      </div>
+      <div class="form-group">
+        <label>প্রোফাইল ছবি (ঐচ্ছিক — না দিলে লিঙ্গ অনুযায়ী ডেমো ফেইস বসবে)</label>
+        <input type="file" name="avatar" accept="image/*">
       </div>
       <div class="form-group"><label>পদবি / সংক্ষিপ্ত পরিচয়</label><input type="text" name="designation" value="<%= form.designation || '' %>" placeholder="যেমন: কবি, ছাত্র, সাংবাদিক"></div>
       <div class="form-group"><label>ঠিকানা</label><input type="text" name="address" value="<%= form.address || '' %>"></div>

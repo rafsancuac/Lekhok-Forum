@@ -1,0 +1,38 @@
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>ডেইলি কনটেন্ট</h1>
+    <p>কুইজ, এই দিনে, ই-পেপার, কার্যক্রম — প্রকাশ করলেই সব ইউজার নোটিফিকেশন পাবেন | <a href="/admin/daily/new">+ নতুন কনটেন্ট</a></p>
+  </div>
+  <% if (items.length === 0) { %>
+    <div class="card empty">কোনো ডেইলি কনটেন্ট নেই</div>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr><th>ধরন</th><th>শিরোনাম</th><th>তারিখ</th><th>স্ট্যাটাস</th><th>কার্যক্রম</th></tr>
+    </thead>
+    <tbody>
+      <% items.forEach(it => { %>
+        <tr>
+          <td><%= DAILY_TYPES[it.content_type] ? DAILY_TYPES[it.content_type].label : it.content_type %></td>
+          <td><strong><%= it.title %></strong></td>
+          <td><%= it.scheduled_date || '—' %></td>
+          <td>
+            <% if (it.published) { %>
+              <span style="color:#0a7d33; font-weight:600;">প্রকাশিত</span>
+            <% } else { %>
+              <span style="color:#999;">খসড়া</span>
+            <% } %>
+          </td>
+          <td>
+            <a href="/admin/daily/<%= it.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <form method="POST" action="/admin/daily/<%= it.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button class="btn btn-danger btn-sm">মুছুন</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>

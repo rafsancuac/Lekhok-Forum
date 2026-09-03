@@ -294,13 +294,15 @@ function runMigrations() {
 
   // Add advisory member_type (alter for existing tables)
   try { db.exec("ALTER TABLE members ADD COLUMN member_type TEXT DEFAULT 'central'"); } catch(e) {}
-  // Fix: complaints needs file_name alongside file_url (attachment original filename)
-  try { db.exec("ALTER TABLE complaints ADD COLUMN file_name TEXT"); } catch(e) {}
-  // Fix: users table was missing 'role' — needed for moderator/admin permission checks
+  // v2.1: role on users (user / moderator / admin) + file_name on complaints
   try { db.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); } catch(e) {}
+  try { db.exec("ALTER TABLE complaints ADD COLUMN file_name TEXT"); } catch(e) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN last_login DATETIME"); } catch(e) {}
+  // Ensure at least one site moderator exists (demo: 'amin') — idempotent
+  try { db.exec("UPDATE users SET role='moderator' WHERE username='amin' AND NOT EXISTS (SELECT 1 FROM users WHERE role IN ('admin','moderator'))"); } catch(e) {}
 }
 
-// ── Moderator permission system ─────────────────────────────────────────────
+// ── Moderator scope helpers (used by admin routes + dashboard broadcast) ──────
 const MODERATOR_SCOPES = [
   { key: 'quiz',        label: 'আজকের কুইজ' },
   { key: 'this_day',    label: 'আজকের এই দিনে' },
