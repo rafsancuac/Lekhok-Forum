@@ -15,7 +15,7 @@
   <%- include('../partials/header') %>
 
   <div class="article-wrap">
-    <article class="article-main">
+    <article class="article-main card">
       <% if (post.cover_image) { %>
         <img src="<%= post.cover_image %>" alt="cover" class="article-cover">
       <% } %>
@@ -30,10 +30,7 @@
           <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="author-avatar">
           <div>
             <a href="/profile/<%= author.username %>" class="author-name"><%= author.full_name %></a>
-            <div class="article-date">
-              <i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %>
-              &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত
-            </div>
+            <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত</div>
           </div>
         </div>
       </div>
@@ -49,95 +46,84 @@
         </div>
       <% } } catch(e) {} %>
 
-      <%# ── Reaction Bar ──────────────────────────────────────────────── %>
-      <div class="reaction-bar" data-id="<%= post.id %>" data-type="post">
-        <div class="reaction-btn-wrap">
-          <button class="reaction-btn active" id="mainReactionBtn" title="প্রতিক্রিয়া দিন">
-            <% if (userReaction) { %>
-              <% const emojiMap = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' }; %>
-              <%= emojiMap[userReaction] || '👍' %>
-            <% } else { %>
-              <i class="far fa-thumbs-up"></i>
-            <% } %>
-            <span id="reactionCount"><%= post.like_count || 0 %></span>
-          </button>
-          <div class="reaction-picker" id="reactionPicker">
-            <% [{e:'👍',t:'like'},{e:'❤️',t:'love'},{e:'😂',t:'haha'},{e:'😮',t:'wow'},{e:'😢',t:'sad'}].forEach(r => { %>
-              <button class="reaction-opt" data-emoji="<%= r.e %>" data-type="<%= r.t %>" title="<%= r.t %>"><%= r.e %></button>
-            <% }); %>
-          </div>
-        </div>
-        <a href="#comments" class="feed-action"><i class="far fa-comment"></i> <%= comments.length %></a>
-        <div class="share-wrap">
-          <button class="feed-action share-trigger" id="shareTrigger"><i class="fas fa-share"></i> শেয়ার</button>
-          <div class="share-menu" id="shareMenu">
-            <button onclick="copyLink('<%= post.id %>')"><i class="fas fa-link"></i> লিংক কপি করুন</button>
-            <a href="https://wa.me/?text=<%= encodeURIComponent(post.title + ' ' + (req ? req.protocol + '://' + req.get('host') + '/articles/' + post.id : '')) %>" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-            <a href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(req ? req.protocol + '://' + req.get('host') + '/articles/' + post.id : '') %>" target="_blank"><i class="fab fa-facebook"></i> Facebook</a>
-            <button onclick="shareToUser('<%= post.id %>')"><i class="fas fa-user"></i> ইউজারকে পাঠান</button>
-          </div>
-        </div>
+      <div class="article-footer">
+        <%- include('../partials/actions-bar', {
+          targetId: post.id,
+          targetType: 'post',
+          counts: reaction.counts,
+          mine: reaction.mine,
+          link: '/articles/' + post.id,
+          bookmarked: userBookmarked
+        }) %>
         <% if (user && user.id === post.author_id) { %>
-          <a href="/articles/<%= post.id %>/edit" class="feed-action"><i class="fas fa-pen"></i></a>
-          <form method="POST" action="/articles/<%= post.id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('মুছে ফেলতে চান?')">
-            <button type="submit" class="feed-action danger"><i class="fas fa-trash"></i></button>
-          </form>
+          <div class="owner-actions">
+            <a href="/articles/<%= post.id %>/edit" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
+            <form method="POST" action="/articles/<%= post.id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
+            </form>
+          </div>
         <% } %>
       </div>
 
-      <%# ── Comments ─────────────────────────────────────────────────── %>
-      <div class="comments-section" id="comments">
-        <h3><i class="far fa-comment"></i> মন্তব্য (<%= comments.length %>)</h3>
+      <div class="comments-section">
+        <h3><i class="far fa-comment"></i> মন্তব্য (<%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %>)</h3>
         <% if (user) { %>
           <form method="POST" class="comment-form" id="commentForm">
             <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar">
             <div class="comment-input-wrap">
-              <textarea name="body" placeholder="আপনার মন্তব্য লিখুন... (নতুন লাইনে @ব্যবহারকারী নাম লিখুন)" rows="3" required></textarea>
-              <button type="submit"><i class="fas fa-paper-plane"></i> পাঠান</button>
+              <textarea name="body" placeholder="আপনার মন্তব্য লিখুন... (@ব্যবহারকারী নাম লিখে ম্যানশন করুন)" rows="3" required></textarea>
+              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> পাঠান</button>
             </div>
           </form>
         <% } else { %>
-          <p class="login-to-comment"><a href="/login">লগইন</a> করে মন্তব্য করুন</p>
+          <p class="login-to-comment"><a href="/login?next=/articles/<%= post.id %>">লগইন</a> করে সবার আগে মন্তব্য করুন</p>
         <% } %>
 
         <div class="comments-list">
-          <% if (!comments.length) { %>
-            <div class="empty-state-full" style="padding:30px">
-              <i class="far fa-comment-dots"></i>
-              <p>প্রথম মন্তব্যকারী হোন!</p>
-            </div>
+          <% if (comments.length === 0 && user) { %>
+            <div class="empty-state comments-empty"><i class="far fa-comment-dots"></i><p>প্রথম মন্তব্যকারী হোন</p></div>
           <% } %>
           <% comments.forEach(c => { %>
             <div class="comment-item" id="c<%= c.id %>">
               <img src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
               <div class="comment-bubble">
                 <a href="/profile/<%= c.username %>" class="comment-author"><%= c.full_name %></a>
-                <p class="comment-body"><%- c.body %></p>
+                <p class="comment-body"><%= c.body %></p>
                 <div class="comment-meta">
                   <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
-                  <button class="reply-btn" data-id="<%= c.id %>"><i class="far fa-comment"></i> উত্তর</button>
-                  <button class="feed-action like-btn-sm comment-like" data-id="<%= c.id %>" data-type="comment">
-                    <i class="far fa-thumbs-up"></i> <%= c.like_count || 0 %>
-                  </button>
+                  <span class="comment-react-mini"><%= (c.reaction && c.reaction.total) ? c.reaction.total + ' প্রতিক্রিয়া' : '' %></span>
+                  <% if (user) { %><button class="reply-btn" data-id="<%= c.id %>" data-name="<%= c.username %>"><i class="far fa-comment"></i> উত্তর</button><% } %>
                 </div>
-                <div class="reply-form-wrap" id="replyForm<%= c.id %>" style="display:none">
-                  <form class="reply-form" data-parent="<%= c.id %>">
-                    <textarea placeholder="উত্তর লিখুন..." rows="2" required></textarea>
-                    <button type="submit"><i class="fas fa-paper-plane"></i></button>
-                  </form>
+                <div class="comment-reactions">
+                  <% if (user) { %>
+                    <%- include('../partials/actions-bar', {
+                      targetId: c.id, targetType: 'comment',
+                      counts: c.reaction.counts, mine: c.reaction.mine,
+                      link: '/articles/' + post.id, showBookmark: false
+                    }) %>
+                  <% } %>
                 </div>
                 <% c.replies && c.replies.forEach(r => { %>
                   <div class="reply-item" id="c<%= r.id %>">
-                    <img src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar" style="width:28px;height:28px">
+                    <img src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
                     <div class="comment-bubble small">
                       <a href="/profile/<%= r.username %>" class="comment-author"><%= r.full_name %></a>
-                      <p class="comment-body"><%- r.body %></p>
+                      <p class="comment-body"><%= r.body %></p>
                       <div class="comment-meta">
                         <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
                       </div>
                     </div>
                   </div>
                 <% }); %>
+                <% if (user) { %>
+                  <form class="reply-form" data-parent="<%= c.id %>" hidden>
+                    <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar small">
+                    <div class="comment-input-wrap">
+                      <textarea name="body" rows="2" placeholder="<%= c.full_name %>-কে উত্তর দিন..." required></textarea>
+                      <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                  </form>
+                <% } %>
               </div>
             </div>
           <% }); %>
@@ -146,162 +132,40 @@
     </article>
   </div>
 
-  <%# ── Share-to-user modal ─────────────────────────────────────────── %>
-  <div id="shareModal" class="modal-backdrop" style="display:none">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3>ইউজারকে পাঠান</h3>
-        <button onclick="closeShareModal()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="shareUserSearch" placeholder="ইউজারনেম খুঁজুন..." class="input" autocomplete="off" />
-        <div id="shareUserResults"></div>
-        <input type="hidden" id="sharePostId" />
-      </div>
-    </div>
-  </div>
-
+  <%- include('../partials/share-modal') %>
+  <script src="/assets/js/main.js"></script>
   <script>
-    // ── 5-emoji reactions ──────────────────────────────────────────────
-    const mainBtn = document.getElementById('mainReactionBtn');
-    const picker = document.getElementById('reactionPicker');
-    const postId = document.querySelector('.reaction-bar').dataset.id;
-
-    mainBtn.addEventListener('click', () => picker.classList.toggle('open'));
-    picker.querySelectorAll('.reaction-opt').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const emoji = btn.dataset.emoji, type = btn.dataset.type;
-        picker.classList.remove('open');
-        const res = await fetch('/api/react', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ target_id: postId, target_type: 'post', reaction_type: type })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById('reactionCount').textContent = data.total;
-          mainBtn.innerHTML = emoji + ' <span id="reactionCount">' + data.total + '</span>';
-        }
-      });
-    });
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.reaction-btn-wrap')) picker.classList.remove('open');
-    });
-
-    // ── Comment form ──────────────────────────────────────────────────
-    document.getElementById('commentForm')?.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const body = this.body.value;
-      const res = await fetch('/api/comment', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: postId, body })
-      });
-      if (res.ok) location.reload();
-    });
-
-    // ── Reply toggle + submit ─────────────────────────────────────────
+    // Reply toggle
     document.querySelectorAll('.reply-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        document.querySelectorAll('.reply-form-wrap').forEach(f => f.style.display = 'none');
-        document.getElementById('replyForm' + id).style.display = 'block';
+        const item = btn.closest('.comment-item');
+        const form = item.querySelector('.reply-form');
+        if (form) { form.hidden = !form.hidden; if (!form.hidden) form.querySelector('textarea').focus(); }
       });
     });
-    document.querySelectorAll('.reply-form').forEach(f => {
-      f.addEventListener('submit', async function(e) {
+    // Reply submit (API)
+    document.querySelectorAll('.reply-form').forEach(form => {
+      form.addEventListener('submit', async e => {
         e.preventDefault();
-        const parentId = this.dataset.parent;
-        const body = this.querySelector('textarea').value;
+        const body = form.querySelector('textarea').value.trim();
+        if (!body) return;
         const res = await fetch('/api/comment', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ post_id: postId, body, parent_id: parentId })
+          body: JSON.stringify({ post_id: '<%= post.id %>', body, parent_id: form.dataset.parent })
         });
         if (res.ok) location.reload();
       });
     });
-
-    // ── Comment like ─────────────────────────────────────────────────
-    document.querySelectorAll('.comment-like').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const id = btn.dataset.id;
-        const res = await fetch('/api/react', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ target_id: id, target_type: 'comment', reaction_type: 'like' })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const icon = btn.querySelector('i');
-          const span = btn.querySelector('span') || btn;
-          if (data.user_reacted) { icon.className = 'fas fa-thumbs-up'; }
-          else { icon.className = 'far fa-thumbs-up'; }
-          btn.innerHTML = '<i class="' + icon.className + '"></i> ' + data.total;
-        }
-      });
-    });
-
-    // ── Share menu toggle ─────────────────────────────────────────────
-    document.getElementById('shareTrigger').addEventListener('click', e => {
-      e.stopPropagation();
-      document.getElementById('shareMenu').classList.toggle('open');
-    });
-    document.addEventListener('click', () => document.getElementById('shareMenu').classList.remove('open'));
-
-    function copyLink(id) {
-      navigator.clipboard.writeText(location.origin + '/articles/' + id).then(() => showToast('লিংক কপি হয়েছে! ✓'));
-      document.getElementById('shareMenu').classList.remove('open');
-    }
-
-    async function shareToUser(postId) {
-      document.getElementById('shareMenu').classList.remove('open');
-      document.getElementById('sharePostId').value = postId;
-      document.getElementById('shareModal').style.display = 'flex';
-      document.getElementById('shareUserSearch').focus();
-    }
-
-    function closeShareModal() {
-      document.getElementById('shareModal').style.display = 'none';
-    }
-
-    // User search in share modal
-    let shareSearchTimer;
-    document.getElementById('shareUserSearch').addEventListener('input', function() {
-      clearTimeout(shareSearchTimer);
-      const q = this.value.trim();
-      if (!q) { document.getElementById('shareUserResults').innerHTML = ''; return; }
-      shareSearchTimer = setTimeout(async () => {
-        const res = await fetch('/api/users/search?q=' + encodeURIComponent(q));
-        if (res.ok) {
-          const users = await res.json();
-          document.getElementById('shareUserResults').innerHTML = users.map(u =>
-            '<div class="share-user-result" onclick="sendToUser(\'' + u.username + '\',' + document.getElementById('sharePostId').value + ')">' +
-            '<img src="' + (u.avatar_url || '/avatar/' + u.id) + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover">' +
-            '<div><strong>' + u.full_name + '</strong><br><small>@' + u.username + '</small></div></div>'
-          ).join('');
-        }
-      }, 300);
-    });
-
-    async function sendToUser(username, postId) {
-      closeShareModal();
-      const res = await fetch('/api/share-to-user', {
+    // Top-level comment (API + optimistic reload)
+    document.getElementById('commentForm')?.addEventListener('submit', async e => {
+      e.preventDefault();
+      const body = e.target.body.value;
+      const res = await fetch('/api/comment', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to_username: username, post_id: postId })
+        body: JSON.stringify({ post_id: '<%= post.id %>', body })
       });
-      if (res.ok) {
-        const data = await res.json();
-        showToast('পোস্ট পাঠানো হয়েছে!');
-        if (data.redirect) window.location.href = data.redirect;
-      } else {
-        showToast('সমস্যা হয়েছে, আবার চেষ্টা করুন');
-      }
-    }
-
-    function showToast(msg) {
-      const t = document.createElement('div');
-      t.className = 'toast toast-success';
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 3000);
-    }
+      if (res.ok) location.reload();
+    });
   </script>
 </body>
 </html>

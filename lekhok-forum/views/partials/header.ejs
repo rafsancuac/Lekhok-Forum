@@ -11,6 +11,21 @@
   <link rel="stylesheet" href="/assets/css/feed.css" />
 </head>
 <body>
+<%# Apply per-user display preferences (theme / font size) early to avoid flash %>
+<% if (user) { %>
+<script>
+(function () {
+  try {
+    var prefs = <%- JSON.stringify(typeof displayPrefs !== 'undefined' ? displayPrefs : {}) %>;
+    var c = document.documentElement.classList;
+    if (prefs.theme === 'dark') c.add('theme-dark');
+    if (prefs.theme === 'light') c.add('theme-light');
+    if (prefs.font_size === 'small') c.add('fs-small');
+    if (prefs.font_size === 'large') c.add('fs-large');
+  } catch (e) {}
+})();
+</script>
+<% } %>
 
 <!-- ============= Top bar ============= -->
 <div class="btclf-topbar topbar" id="topbar">
@@ -29,7 +44,7 @@
     <!-- 4 main tabs (visible on desktop, hidden on mobile) -->
     <% if (user) { %>
     <nav class="topbar-tabs">
-      <a href="/dashboard" class="topbar-tab <%= currentPath === '/dashboard' || currentPath === '/me' ? 'active' : '' %>">
+      <a href="/dashboard" class="topbar-tab <%= currentPath === '/dashboard' ? 'active' : '' %>">
         <i class="fas fa-globe-asia"></i> কমিউনিটি ফিড
       </a>
       <a href="/me" class="topbar-tab <%= currentPath === '/me' ? 'active' : '' %>">

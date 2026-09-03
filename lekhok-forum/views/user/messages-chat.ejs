@@ -125,6 +125,11 @@
           <input type="file" id="fileInput" name="attachment" style="display:none" />
           <button type="submit" class="btn btn-primary" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
         </form>
+        <div class="file-preview" id="filePreview" hidden>
+          <i class="fas fa-paperclip"></i>
+          <span id="filePreviewName"></span>
+          <button type="button" id="filePreviewRemove" aria-label="সরান">&times;</button>
+        </div>
       </section>
     </div>
   </div>
@@ -252,6 +257,20 @@
     if (window.innerWidth <= 768 && convId) {
       document.getElementById('messengerList').classList.add('hidden');
     }
+
+    // File/image preview before send
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    fileInput?.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        document.getElementById('filePreviewName').textContent = fileInput.files[0].name;
+        filePreview.hidden = false;
+      }
+    });
+    document.getElementById('filePreviewRemove')?.addEventListener('click', () => {
+      fileInput.value = '';
+      filePreview.hidden = true;
+    });
   </script>
 </body>
 </html>

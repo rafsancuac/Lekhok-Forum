@@ -121,3 +121,32 @@
   .messages-wrap { grid-template-columns: 1fr; }
   .conv-list { display: none; }
 }
+
+/* ── v3: Community feed (two-column) ─────────────────────────────────── */
+.dashboard-wrap.two-col { grid-template-columns: minmax(0, 1fr) 300px; }
+.role-chip { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.68rem; font-weight: 700; vertical-align: middle; }
+.feed-type-badge.question { background: #fff3cd; color: #8a6d1a; }
+.side-user { display: flex; align-items: center; gap: 10px; padding: 6px 0; text-decoration: none; color: inherit; }
+.side-user-main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; text-decoration: none; color: inherit; }
+.side-user-main span, .side-user span { display: flex; flex-direction: column; min-width: 0; }
+.side-user strong { color: var(--brand); font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side-user small { color: var(--text-muted); font-size: 0.75rem; }
+.side-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+.interest-hint { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 14px; }
+.interest-hint i { font-size: 1.3rem; color: var(--accent); }
+.interest-hint div { flex: 1; display: flex; flex-direction: column; }
+.interest-hint strong { color: var(--brand); font-size: 0.92rem; }
+.interest-hint span { color: var(--text-muted); font-size: 0.8rem; }
+.follow-inline.following { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+@media (max-width: 980px) {
+  .dashboard-wrap.two-col { grid-template-columns: 1fr; }
+  .filter-chips { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 8px; }
+  .filter-chip { white-space: nowrap; }
+}
+
+/* v3: messenger file preview chip */
+.file-preview { display: flex; align-items: center; gap: 8px; margin: 8px 12px 0; padding: 8px 12px; background: var(--accent-soft); border-radius: 10px; font-size: 0.85rem; color: var(--accent-dark, #047857); }
+.file-preview i { color: var(--accent); }
+.file-preview span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-preview button { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: inherit; line-height: 1; }

@@ -7,16 +7,28 @@
 CREATE TABLE IF NOT EXISTS users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   username      TEXT    NOT NULL UNIQUE,
-  email         TEXT    NOT NULL UNIQUE,
+  email         TEXT,
   password_hash TEXT    NOT NULL,
   full_name     TEXT    NOT NULL,
+  phone         TEXT,
   bio           TEXT,
+  designation   TEXT,
+  address       TEXT,
   avatar_url    TEXT,
-  gender        TEXT    DEFAULT 'male',
-  institution   TEXT,
-  district      TEXT,
+  gender        TEXT    DEFAULT 'other',
+  birth_date    TEXT,
+  social_fb     TEXT,
+  social_twitter TEXT,
+  social_linkedin TEXT,
+  social_website TEXT,
+  show_email    INTEGER DEFAULT 0,
+  show_phone    INTEGER DEFAULT 0,
+  show_birth    INTEGER DEFAULT 1,
+  interests     TEXT    DEFAULT '[]',
+  notify_prefs  TEXT    DEFAULT '{}',
+  display_prefs TEXT    DEFAULT '{}',
   role          TEXT    DEFAULT 'user',      -- user | moderator | admin
-  status        TEXT    DEFAULT 'active',    -- active | pending | banned
+  status        TEXT    DEFAULT 'active',    -- active | pending | banned | inactive
   last_login    DATETIME,
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -71,6 +83,7 @@ CREATE TABLE IF NOT EXISTS posts (
   view_count    INTEGER DEFAULT 0,
   like_count    INTEGER DEFAULT 0,
   comment_count INTEGER DEFAULT 0,
+  reactions     TEXT    DEFAULT '{}',        -- JSON: {"like":0,"love":0,"haha":0,"wow":0,"sad":0}
   published_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
@@ -84,19 +97,31 @@ CREATE TABLE IF NOT EXISTS comments (
   author_id  INTEGER NOT NULL,
   body       TEXT    NOT NULL,
   like_count INTEGER DEFAULT 0,
+  reactions  TEXT    DEFAULT '{}',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (post_id)   REFERENCES posts(id)    ON DELETE CASCADE,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ── Likes ───────────────────────────────────────────────────
+-- ── Likes (reactions) ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS likes (
-  user_id   INTEGER NOT NULL,
-  target_id INTEGER NOT NULL,
-  type      TEXT    NOT NULL,    -- post | comment
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id, target_id, type),
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id       INTEGER NOT NULL,
+  post_id       INTEGER,
+  comment_id    INTEGER,
+  reaction_type TEXT    DEFAULT 'like',  -- like | love | haha | wow | sad
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ── Blocks ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS blocks (
+  blocker_id INTEGER NOT NULL,
+  blocked_id INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (blocker_id, blocked_id),
+  FOREIGN KEY (blocker_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (blocked_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ── Bookmarks ───────────────────────────────────────────────

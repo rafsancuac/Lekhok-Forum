@@ -39,6 +39,51 @@ function extractMentions(text) {
   return JSON.stringify(users.map(u => ({ id: u.id, username: u.username })));
 }
 
+// ── Reaction helpers (5-emoji system) ────────────────────────────────────────
+const REACTIONS = ['like', 'love', 'haha', 'wow', 'sad'];
+const REACTION_META = {
+  like: { emoji: '👍', label: 'লাইক' },
+  love: { emoji: '❤️', label: 'ভালোবাসা' },
+  haha: { emoji: '😂', label: 'হাহা' },
+  wow:  { emoji: '😮', label: 'বিস্ময়' },
+  sad:  { emoji: '😢', label: 'দুঃখ' }
+};
+
+function getReactionSummary(col, id, myUserId) {
+  const rows = db.prepare(`SELECT user_id, reaction_type FROM likes WHERE ${col} = ?`).all(id);
+  const counts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+  let mine = null;
+  rows.forEach(r => {
+    const t = r.reaction_type || 'like';
+    counts[t] = (counts[t] || 0) + 1;
+    if (myUserId && r.user_id === myUserId) mine = t;
+  });
+  return { counts, total: rows.length, mine };
+}
+
+function parseReactionsJson(json) {
+  try {
+    const p = JSON.parse(json || '{}');
+    return { like: p.like || 0, love: p.love || 0, haha: p.haha || 0, wow: p.wow || 0, sad: p.sad || 0 };
+  } catch (_) { return { like: 0, love: 0, haha: 0, wow: 0, sad: 0 }; }
+}
+
+function isBlockedBetween(a, b) {
+  return !!db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(a, b, b, a);
+}
+
+// Top tag pool from published posts (for interest/category pickers)
+function getTagPool(limit) {
+  const rows = db.prepare("SELECT tags FROM posts WHERE tags IS NOT NULL AND tags != '' AND status = 'published'").all();
+  const counts = {};
+  rows.forEach(r => {
+    String(r.tags).split(',').map(t => t.trim()).filter(Boolean).forEach(t => {
+      counts[t] = (counts[t] || 0) + 1;
+    });
+  });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, limit || 24).map(([tag, count]) => ({ tag, count }));
+}
+
 // ── Article list ─────────────────────────────────────────────────────────────
 router.get('/articles', (req, res) => {
   const tag = req.query.tag;
@@ -100,17 +145,26 @@ router.get('/articles/:id', (req, res) => {
   // increment view
   db.prepare('UPDATE posts SET view_count = view_count + 1 WHERE id = ?').run(req.params.id);
 
-  // comments
-  const comments = db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
+  // comments — threaded (top-level + replies), with reaction info
+  const flatComments = db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
                                FROM comments c JOIN users u ON c.author_id = u.id
                                WHERE c.post_id = ? ORDER BY c.created_at ASC`).all(req.params.id);
+  const myId = req.session.user ? req.session.user.id : null;
+  const comments = flatComments.filter(c => !c.parent_id).map(c => ({
+    ...c,
+    reaction: getReactionSummary('comment_id', c.id, myId),
+    replies: flatComments.filter(r => r.parent_id === c.id).map(r => ({
+      ...r,
+      reaction: getReactionSummary('comment_id', r.id, myId)
+    }))
+  }));
 
   // check if current user liked/bookmarked
-  let userLiked = false, userBookmarked = false;
+  let userBookmarked = false;
   if (req.session.user) {
-    userLiked = !!db.prepare('SELECT id FROM likes WHERE post_id = ? AND user_id = ? AND comment_id IS NULL').get(req.params.id, req.session.user.id);
     userBookmarked = !!db.prepare('SELECT id FROM bookmarks WHERE post_id = ? AND user_id = ?').get(req.params.id, req.session.user.id);
   }
+  const reaction = getReactionSummary('post_id', req.params.id, myId);
 
   const author = {
     id: post.author_id,
@@ -122,7 +176,7 @@ router.get('/articles/:id', (req, res) => {
     bio: post.author_bio
   };
   const user = req.session.user || null;
-  res.render('user/article-single', { post, author, comments, user, userLiked, userBookmarked, currentPath: '/articles' });
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles' });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────
@@ -253,7 +307,10 @@ router.get('/qa/:id', (req, res) => {
                               FROM comments c JOIN users u ON c.author_id = u.id
                               WHERE c.post_id = ? AND c.parent_id IS NULL
                               ORDER BY c.like_count DESC, c.created_at ASC`).all(req.params.id);
-  res.render('user/qa-single', { post, answers, currentPath: '/qa' });
+  const myId = req.session.user ? req.session.user.id : null;
+  answers.forEach(a => { a.reaction = getReactionSummary('comment_id', a.id, myId); });
+  const reaction = getReactionSummary('post_id', req.params.id, myId);
+  res.render('user/qa-single', { post, answers, reaction, REACTION_META, currentPath: '/qa' });
 });
 
 // ── Members directory ────────────────────────────────────────────────────────
@@ -279,22 +336,74 @@ router.get('/members', (req, res) => {
 
 // ── Public profile ───────────────────────────────────────────────────────────
 router.get('/profile/:username', (req, res) => {
-  const profile = db.prepare('SELECT * FROM users WHERE username = ? AND status = ?').get(req.params.username, 'active');
+  const profile = db.prepare('SELECT * FROM users WHERE username = ? AND status != ?').get(req.params.username, 'banned');
   if (!profile) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  const isOwner = req.session.user && req.session.user.id === profile.id;
+  const myId = req.session.user ? req.session.user.id : null;
+
   const articles = db.prepare("SELECT * FROM posts WHERE author_id = ? AND type = 'article' AND status = 'published' ORDER BY published_at DESC LIMIT 20").all(profile.id);
   const questions = db.prepare("SELECT * FROM posts WHERE author_id = ? AND type = 'question' AND status = 'published' ORDER BY published_at DESC LIMIT 20").all(profile.id);
-  const followerCount = db.prepare('SELECT COUNT(*) as c FROM follows WHERE following_id = ?').get(profile.id).c;
-  const followingCount = db.prepare('SELECT COUNT(*) as c FROM follows WHERE follower_id = ?').get(profile.id).c;
-  const isOwner = req.session.user && req.session.user.id === profile.id;
-  const isFollowing = req.session.user && !!db.prepare('SELECT id FROM follows WHERE follower_id = ? AND following_id = ?').get(req.session.user.id, profile.id);
+  const drafts = isOwner
+    ? db.prepare("SELECT id, title, type, created_at, status FROM posts WHERE author_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 20").all(profile.id)
+    : [];
+  const myDaily = isOwner
+    ? db.prepare('SELECT id, content_type, title, scheduled_date, published FROM daily_content WHERE author_id = ? ORDER BY created_at DESC LIMIT 10').all(profile.id)
+    : [];
+
+  // Comments by this user (public context)
+  const comments = db.prepare(`
+    SELECT c.id, c.body, c.created_at, p.id AS post_id, p.title AS post_title, p.type AS post_type
+    FROM comments c JOIN posts p ON p.id = c.post_id
+    WHERE c.author_id = ? ORDER BY c.created_at DESC LIMIT 30
+  `).all(profile.id);
+
+  // Reactions this user gave
+  const reactions = db.prepare(`
+    SELECT l.reaction_type, l.created_at, p.id AS post_id, p.title, p.type AS post_type
+    FROM likes l JOIN posts p ON p.id = l.post_id
+    WHERE l.user_id = ? AND l.post_id IS NOT NULL ORDER BY l.created_at DESC LIMIT 30
+  `).all(profile.id);
+
+  // Bookmarks — owner only (private)
+  const bookmarks = isOwner
+    ? db.prepare(`SELECT p.id, p.title, p.type, p.cover_image, b.created_at AS bookmarked_at
+                  FROM bookmarks b JOIN posts p ON p.id = b.post_id
+                  WHERE b.user_id = ? ORDER BY b.created_at DESC LIMIT 30`).all(profile.id)
+    : [];
+
+  // Followers / Following lists (with follow-date)
+  const followers = db.prepare(`
+    SELECT u.id, u.username, u.full_name, u.avatar_url, f.created_at AS since
+    FROM follows f JOIN users u ON u.id = f.follower_id
+    WHERE f.following_id = ? ORDER BY f.created_at DESC LIMIT 50
+  `).all(profile.id);
+  const followingList = db.prepare(`
+    SELECT u.id, u.username, u.full_name, u.avatar_url, f.created_at AS since
+    FROM follows f JOIN users u ON u.id = f.following_id
+    WHERE f.follower_id = ? ORDER BY f.created_at DESC LIMIT 50
+  `).all(profile.id);
+
+  const followerCount = followers.length || db.prepare('SELECT COUNT(*) as c FROM follows WHERE following_id = ?').get(profile.id).c;
+  const followingCount = followingList.length || db.prepare('SELECT COUNT(*) as c FROM follows WHERE follower_id = ?').get(profile.id).c;
+  const isFollowing = myId && !!db.prepare('SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?').get(myId, profile.id);
+  const iBlockedHim = myId && !!db.prepare('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?').get(myId, profile.id);
+
+  // Interests + tag pool (owner manages categories; visitors see them)
+  let interests = [];
+  try { interests = JSON.parse(profile.interests || '[]'); } catch (_) {}
+  const tagPool = isOwner ? getTagPool(24) : [];
+
   res.render('user/profile', {
     profile,
     author: profile,
     posts: articles,
-    questions,
+    questions, comments, reactions, bookmarks, drafts, myDaily,
+    followers, following: followingList,
+    interests, tagPool,
     postCount: articles.length,
     followerCount, followingCount,
-    isOwner, isFollowing,
+    isOwner, isFollowing, iBlockedHim,
+    REACTION_META,
     currentPath: '/profile/' + profile.username
   });
 });
@@ -304,6 +413,9 @@ router.post('/profile/:username/follow', ensureLoggedIn, (req, res) => {
   const back = req.get('Referrer') || ('/profile/' + req.params.username);
   const target = db.prepare('SELECT id FROM users WHERE username = ?').get(req.params.username);
   if (!target || target.id === req.session.user.id) return res.redirect(back);
+  if (isBlockedBetween(req.session.user.id, target.id)) {
+    return res.redirect(back + (back.includes('?') ? '&' : '?') + 'err=blocked');
+  }
   const existing = db.prepare('SELECT id FROM follows WHERE follower_id = ? AND following_id = ?').get(req.session.user.id, target.id);
   if (existing) {
     db.prepare('DELETE FROM follows WHERE id = ?').run(existing.id);
@@ -500,14 +612,36 @@ router.get('/me', ensureLoggedIn, (req, res) => {
     followers:   db.prepare('SELECT COUNT(*) AS c FROM follows WHERE following_id = ?').get(me.id).c
   };
 
-  res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, stats, currentPath: '/me' });
+  // Chronological activity feed (posted / commented / reacted / bookmarked)
+  const activity = [
+    ...myPosts.filter(p => p.status !== 'draft').map(p => ({ kind: 'posted', at: p.created_at, id: p.id, title: p.title, type: p.type })),
+    ...myComments.map(c => ({ kind: 'commented', at: c.created_at, id: c.post_id, title: c.post_title, type: c.post_type, body: c.body })),
+    ...myReactions.map(r => ({ kind: 'reacted', at: r.created_at, id: r.post_id, title: r.title, type: r.post_type, reaction: r.reaction_type })),
+    ...myBookmarks.map(b => ({ kind: 'bookmarked', at: b.bookmarked_at, id: b.id, title: b.title, type: b.type }))
+  ].sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 40);
+
+  // Interests (my categories) + tag pool for the picker
+  let myInterests = [];
+  try { myInterests = JSON.parse(db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {}
+  const tagPool = getTagPool(24);
+
+  res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, stats, activity, myInterests, tagPool, REACTION_META, currentPath: '/me' });
 });
 
 // ────────────────────────────────────────────────────────────────────────────
 // /settings — full settings page (profile, privacy, notifications, account, display, connected)
 // ────────────────────────────────────────────────────────────────────────────
 router.get('/settings', ensureLoggedIn, (req, res) => {
-  res.render('user/settings', { currentPath: '/settings' });
+  const me = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.user.id);
+  let notifyPrefs = {}, displayPrefs = {};
+  try { notifyPrefs = JSON.parse(me.notify_prefs || '{}'); } catch (_) {}
+  try { displayPrefs = JSON.parse(me.display_prefs || '{}'); } catch (_) {}
+  res.render('user/settings', {
+    currentPath: '/settings',
+    profileUser: me,
+    notifyPrefs, displayPrefs,
+    ok: req.query.ok || null, err: req.query.err || null
+  });
 });
 
 router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), (req, res) => {
@@ -585,42 +719,6 @@ router.post('/settings/display', ensureLoggedIn, (req, res) => {
   res.redirect('/settings?ok=display');
 });
 
-// ────────────────────────────────────────────────────────────────────────────
-// /profile/edit — fix missing route
-// ────────────────────────────────────────────────────────────────────────────
-router.get('/profile/edit', ensureLoggedIn, (req, res) => {
-  const me = req.session.user;
-  const profile = db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
-  res.render('user/edit', { profile, currentPath: '/me' });
-});
-
-router.post('/profile/edit', ensureLoggedIn, withUpload(coverUpload), (req, res) => {
-  const me = req.session.user;
-  const { full_name, bio, designation, address, gender, birth_date,
-          social_fb, social_twitter, social_linkedin, social_website,
-          show_email, show_phone, show_birth, email, phone } = req.body;
-  const avatarPath = req.file ? '/uploads/covers/' + req.file.filename : null;
-  db.prepare(`
-    UPDATE users SET
-      full_name = ?, bio = ?, designation = ?, address = ?,
-      gender = ?, birth_date = ?,
-      social_fb = ?, social_twitter = ?, social_linkedin = ?, social_website = ?,
-      show_email = ?, show_phone = ?, show_birth = ?,
-      email = ?, phone = ?
-      ${avatarPath ? ', avatar_url = ?' : ''}
-    WHERE id = ?
-  `).run(full_name, bio || null, designation || null, address || null, gender || null, birth_date || null,
-         social_fb || null, social_twitter || null, social_linkedin || null, social_website || null,
-         show_email === '1' ? 1 : 0, show_phone === '1' ? 1 : 0, show_birth === '1' ? 1 : 0,
-         email || null, phone || null,
-         ...(avatarPath ? [avatarPath] : []), me.id);
-  const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
-  req.session.user = fresh;
-  res.redirect('/profile/' + fresh.username + '?ok=updated');
-});
-
-// ────────────────────────────────────────────────────────────────────────────
-// /api/react — 5 emoji reactions (toggle)
 // ────────────────────────────────────────────────────────────────────────────
 router.post('/api/react', ensureLoggedIn, (req, res) => {
   const me = req.session.user;
@@ -706,6 +804,8 @@ router.post('/api/share-to-user', ensureLoggedIn, (req, res) => {
   const { to_username, post_id, message } = req.body;
   const other = db.prepare('SELECT * FROM users WHERE username = ?').get(to_username);
   if (!other) return res.status(404).json({ error: 'user not found' });
+  if (other.id === me.id) return res.status(400).json({ error: 'self' });
+  if (isBlockedBetween(me.id, other.id)) return res.status(403).json({ error: 'blocked' });
   let conv = db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me.id, other.id, other.id, me.id);
   if (!conv) {
@@ -739,6 +839,63 @@ router.post('/qa/:id/answer', ensureLoggedIn, (req, res) => {
       .run(q.author_id, 'comment', 'নতুন উত্তর', me.full_name + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid);
   }
   res.redirect('/qa/' + qid + '#answer-' + r.lastInsertRowid);
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/users/search — user search (share-to-user modal, messenger)
+// ────────────────────────────────────────────────────────────────────────────
+router.get('/api/users/search', (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json({ users: [] });
+  const users = db.prepare(`
+    SELECT username, full_name, avatar_url, id FROM users
+    WHERE status = 'active' AND (username LIKE ? OR full_name LIKE ?)
+    ORDER BY full_name LIMIT 8
+  `).all('%' + q + '%', '%' + q + '%');
+  res.json({ users });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/me/interests — save my categories (article interests)
+// ────────────────────────────────────────────────────────────────────────────
+router.post('/api/me/interests', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  let tags = req.body.tags;
+  if (typeof tags === 'string') tags = tags.split(',');
+  if (!Array.isArray(tags)) return res.status(400).json({ error: 'tags must be an array' });
+  const clean = [...new Set(tags.map(t => String(t).trim()).filter(Boolean))].slice(0, 20);
+  db.prepare('UPDATE users SET interests = ? WHERE id = ?').run(JSON.stringify(clean), me.id);
+  res.json({ ok: true, interests: clean });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/followers/:userId/remove — remove one of MY followers
+// ────────────────────────────────────────────────────────────────────────────
+router.post('/api/followers/:userId/remove', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const followerId = parseInt(req.params.userId, 10);
+  const r = db.prepare('DELETE FROM follows WHERE follower_id = ? AND following_id = ?').run(followerId, me.id);
+  res.json({ ok: true, removed: r.changes > 0 });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/block/:userId — toggle block (blocks follow, messages, share both ways)
+// ────────────────────────────────────────────────────────────────────────────
+router.post('/api/block/:userId', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const otherId = parseInt(req.params.userId, 10);
+  if (!otherId || otherId === me.id) return res.status(400).json({ error: 'invalid' });
+  const existing = db.prepare('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?').get(me.id, otherId);
+  if (existing) {
+    db.prepare('DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?').run(me.id, otherId);
+    // Unblock also restores the follow relationship if it existed
+    return res.json({ ok: true, blocked: false });
+  }
+  db.prepare('INSERT OR IGNORE INTO blocks (blocker_id, blocked_id) VALUES (?, ?)').run(me.id, otherId);
+  // Blocking removes both directions of follow + cleans their messages' future path
+  db.prepare('DELETE FROM follows WHERE (follower_id = ? AND following_id = ?) OR (follower_id = ? AND following_id = ?)')
+    .run(me.id, otherId, otherId, me.id);
+  return res.json({ ok: true, blocked: true });
 });
 
 module.exports = router;

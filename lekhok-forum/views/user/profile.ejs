@@ -6,22 +6,32 @@
   <title><%= profile.full_name %> — লেখক ফোরাম</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
   <link rel="stylesheet" href="/assets/css/profile.css" />
 </head>
 <body>
   <%- include('../partials/header') %>
 
   <div class="profile-wrap">
-    <div class="profile-cover">
+    <div class="profile-cover card">
       <div class="profile-banner"></div>
       <div class="profile-avatar-row">
         <img src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="profile-avatar">
         <% if (isOwner) { %>
-          <a href="/profile/edit" class="btn-edit-profile"><i class="fas fa-pen"></i> প্রোফাইল সম্পাদনা</a>
+          <div class="profile-owner-actions">
+            <a href="/profile/edit" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
+            <a href="/settings" class="btn btn-ghost btn-sm"><i class="fas fa-sliders-h"></i> সেটিংস</a>
+            <a href="/articles/new" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> নতুন লেখা</a>
+          </div>
         <% } else if (user) { %>
-          <button class="btn-follow <%= isFollowing ? 'following' : '' %>" data-user="<%= profile.id %>">
-            <i class="fas fa-<%= isFollowing ? 'check' : '-plus' %>"></i> <%= isFollowing ? 'অনুসরণ করছেন' : 'অনুসরণ করুন' %>
-          </button>
+          <div class="profile-owner-actions">
+            <button class="btn <%= isFollowing ? 'btn-ghost' : 'btn-primary' %> btn-sm btn-follow" data-user="<%= profile.id %>">
+              <i class="fas fa-<%= isFollowing ? 'check' : 'plus' %>"></i> <%= isFollowing ? 'অনুসরণ করছেন' : 'অনুসরণ করুন' %>
+            </button>
+            <a href="/messages/<%= profile.username %>" class="btn btn-ghost btn-sm"><i class="far fa-envelope"></i> মেসেজ</a>
+          </div>
         <% } %>
       </div>
     </div>
@@ -35,61 +45,78 @@
           <% if (profile.bio) { %><p class="profile-bio"><%= profile.bio %></p><% } %>
 
           <div class="profile-stats">
-            <div class="stat"><span><%= postCount %></span><small>লেখা</small></div>
-            <div class="stat"><span><%= followerCount %></span><small>অনুসরণকারী</small></div>
-            <div class="stat"><span><%= followingCount %></span><small>অনুসরণ</small></div>
+            <button class="stat tab-jump" data-tab="posts"><span><%= postCount %></span><small>লেখা</small></button>
+            <button class="stat tab-jump" data-tab="followers"><span><%= followerCount %></span><small>অনুসরণকারী</small></button>
+            <button class="stat tab-jump" data-tab="following"><span><%= followingCount %></span><small>অনুসরণ</small></button>
           </div>
 
           <div class="profile-contact">
-            <% if (profile.show_email && profile.email) { %>
+            <% if (isOwner || (profile.show_email && profile.email)) { %>
               <div><i class="fas fa-envelope"></i> <a href="mailto:<%= profile.email %>"><%= profile.email %></a></div>
             <% } %>
-            <% if (profile.show_phone && profile.phone) { %>
+            <% if (isOwner || (profile.show_phone && profile.phone)) { %>
               <div><i class="fas fa-phone"></i> <%= profile.phone %></div>
             <% } %>
             <% if (profile.address) { %>
               <div><i class="fas fa-map-marker-alt"></i> <%= profile.address %></div>
             <% } %>
-            <% if (profile.show_birth && profile.birth_date) { %>
+            <% if (isOwner || (profile.show_birth && profile.birth_date)) { %>
               <div><i class="fas fa-birthday-cake"></i> <%= profile.birth_date %></div>
             <% } %>
           </div>
 
           <div class="profile-social">
-            <% if (profile.social_fb) { %><a href="<%= profile.social_fb %>" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a><% } %>
-            <% if (profile.social_twitter) { %><a href="<%= profile.social_twitter %>" target="_blank" class="social-link"><i class="fab fa-twitter"></i></a><% } %>
-            <% if (profile.social_linkedin) { %><a href="<%= profile.social_linkedin %>" target="_blank" class="social-link"><i class="fab fa-linkedin"></i></a><% } %>
-            <% if (profile.social_website) { %><a href="<%= profile.social_website %>" target="_blank" class="social-link"><i class="fas fa-globe"></i></a><% } %>
+            <% if (profile.social_fb) { %><a href="<%= profile.social_fb %>" target="_blank" rel="noopener" class="social-link"><i class="fab fa-facebook"></i></a><% } %>
+            <% if (profile.social_twitter) { %><a href="<%= profile.social_twitter %>" target="_blank" rel="noopener" class="social-link"><i class="fab fa-twitter"></i></a><% } %>
+            <% if (profile.social_linkedin) { %><a href="<%= profile.social_linkedin %>" target="_blank" rel="noopener" class="social-link"><i class="fab fa-linkedin"></i></a><% } %>
+            <% if (profile.social_website) { %><a href="<%= profile.social_website %>" target="_blank" rel="noopener" class="social-link"><i class="fas fa-globe"></i></a><% } %>
           </div>
+
+          <% if (interests.length) { %>
+            <div class="interests-row">
+              <h4><i class="fas fa-tags"></i> আগ্রহের বিষয়</h4>
+              <div class="tag-cloud">
+                <% interests.forEach(t => { %><a href="/articles?tag=<%= encodeURIComponent(t) %>" class="tag-chip">#<%= t %></a><% }); %>
+              </div>
+            </div>
+          <% } %>
         </div>
       </div>
 
       <div class="profile-right">
         <div class="profile-tabs">
-          <button class="tab-btn active" data-tab="posts">লেখাসমূহ</button>
-          <button class="tab-btn" data-tab="questions">প্রশ্নোত্তর</button>
+          <button class="tab-btn active" data-tab="posts"><i class="fas fa-pen-nib"></i> লেখা</button>
+          <button class="tab-btn" data-tab="questions"><i class="fas fa-question-circle"></i> প্রশ্ন</button>
+          <button class="tab-btn" data-tab="comments"><i class="far fa-comment"></i> মন্তব্য</button>
+          <button class="tab-btn" data-tab="reactions"><i class="far fa-heart"></i> প্রতিক্রিয়া</button>
+          <button class="tab-btn" data-tab="followers"><i class="fas fa-users"></i> অনুসরণকারী</button>
+          <button class="tab-btn" data-tab="following"><i class="fas fa-user-friends"></i> অনুসরণ</button>
+          <% if (isOwner) { %>
+            <button class="tab-btn" data-tab="bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত</button>
+            <button class="tab-btn" data-tab="drafts"><i class="fas fa-file"></i> ড্রাফট</button>
+            <button class="tab-btn" data-tab="categories"><i class="fas fa-tags"></i> ক্যাটাগরি</button>
+          <% } %>
         </div>
 
+        <!-- Tab: Posts -->
         <div class="tab-content active" id="tab-posts">
           <% if (posts.length === 0) { %>
-            <div class="empty-state">
+            <div class="empty-state card">
               <i class="fas fa-pen-nib"></i>
               <p>এখনো কোনো লেখা প্রকাশ করা হয়নি।</p>
-              <% if (isOwner) { %><a href="/articles/new" class="btn-primary-sm">প্রথম লেখা লিখুন</a><% } %>
+              <% if (isOwner) { %><a href="/articles/new" class="btn btn-primary btn-sm">প্রথম লেখা লিখুন</a><% } %>
             </div>
           <% } else { %>
             <% posts.forEach(post => { %>
-              <div class="post-card">
-                <% if (post.cover_image) { %>
-                  <img src="<%= post.cover_image %>" alt="cover" class="post-cover">
-                <% } %>
+              <div class="post-card card">
+                <% if (post.cover_image) { %><img src="<%= post.cover_image %>" alt="cover" class="post-cover"><% } %>
                 <div class="post-card-body">
                   <div class="post-meta-top">
                     <span class="post-tag"><%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %></span>
                     <span class="post-date"><i class="far fa-clock"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD') %></span>
                   </div>
                   <a href="/articles/<%= post.id %>" class="post-title"><%= post.title %></a>
-                  <p class="post-excerpt"><%= post.excerpt || post.body.substring(0, 150) %>...</p>
+                  <p class="post-excerpt"><%= (post.excerpt || post.body || '').substring(0, 150) %>…</p>
                   <div class="post-actions">
                     <span><i class="far fa-heart"></i> <%= post.like_count || 0 %></span>
                     <span><i class="far fa-comment"></i> <%= post.comment_count || 0 %></span>
@@ -101,47 +128,218 @@
           <% } %>
         </div>
 
+        <!-- Tab: Questions -->
         <div class="tab-content" id="tab-questions">
           <% if (questions.length === 0) { %>
-            <div class="empty-state">
+            <div class="empty-state card">
               <i class="fas fa-question-circle"></i>
               <p>এখনো কোনো প্রশ্ন করা হয়নি।</p>
+              <% if (isOwner) { %><a href="/qa/new" class="btn btn-primary btn-sm">প্রশ্ন করুন</a><% } %>
             </div>
           <% } else { %>
             <% questions.forEach(q => { %>
-              <div class="qa-card">
-                <div class="qa-q"><i class="fas fa-question-circle"></i> <a href="/questions/<%= q.id %>"><%= q.title %></a></div>
+              <div class="qa-card card">
+                <div class="qa-q"><i class="fas fa-question-circle"></i> <a href="/qa/<%= q.id %>"><%= q.title %></a></div>
                 <div class="qa-meta"><%= q.comment_count || 0 %> উত্তর &middot; <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></div>
               </div>
             <% }); %>
           <% } %>
         </div>
+
+        <!-- Tab: Comments -->
+        <div class="tab-content" id="tab-comments">
+          <% if (comments.length === 0) { %>
+            <div class="empty-state card"><i class="far fa-comment"></i><p>কোনো মন্তব্য নেই।</p></div>
+          <% } else { %>
+            <% comments.forEach(c => { %>
+              <div class="qa-card card">
+                <p class="comment-excerpt"><%= c.body.substring(0, 180) %><%= c.body.length > 180 ? '…' : '' %></p>
+                <div class="qa-meta">
+                  <span class="badge badge-muted"><%= c.post_type === 'question' ? 'প্রশ্নে' : 'লেখায়' %></span>
+                  <a href="<%= c.post_type === 'question' ? '/qa/' + c.post_id : '/articles/' + c.post_id %>"><%= c.post_title %></a>
+                  &middot; <%= new Date(c.created_at).toLocaleDateString('bn-BD') %>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- Tab: Reactions -->
+        <div class="tab-content" id="tab-reactions">
+          <% const emo = REACTION_META; %>
+          <% if (reactions.length === 0) { %>
+            <div class="empty-state card"><i class="far fa-heart"></i><p>কোনো প্রতিক্রিয়া দেওয়া হয়নি।</p></div>
+          <% } else { %>
+            <% reactions.forEach(r => { %>
+              <div class="qa-card card">
+                <div class="qa-meta">
+                  <span class="badge"><%= emo[r.reaction_type || 'like'].emoji %> <%= emo[r.reaction_type || 'like'].label %></span>
+                  <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
+                </div>
+                <div class="qa-q"><a href="<%= r.post_type === 'question' ? '/qa/' + r.post_id : '/articles/' + r.post_id %>"><%= r.title %></a></div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- Tab: Followers (manageable by owner) -->
+        <div class="tab-content" id="tab-followers">
+          <% if (followers.length === 0) { %>
+            <div class="empty-state card"><i class="fas fa-users"></i><p>কোনো অনুসরণকারী নেই।</p></div>
+          <% } else { %>
+            <% if (isOwner) { %><p class="manage-hint"><i class="fas fa-sliders-h"></i> আপনার অনুসরণকারী ব্যবস্থাপনা — সরান বা ব্লক করুন</p><% } %>
+            <% followers.forEach(f => { %>
+              <div class="user-row card">
+                <a href="/profile/<%= f.username %>" class="side-user-main">
+                  <img src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
+                  <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
+                </a>
+                <% if (isOwner) { %>
+                  <span class="user-row-actions">
+                    <button type="button" class="btn btn-ghost btn-sm remove-follower" data-user="<%= f.id %>" title="অনুসরণকারী সরান"><i class="fas fa-user-minus"></i> সরান</button>
+                    <button type="button" class="btn btn-danger btn-sm block-user" data-user="<%= f.id %>" title="ব্লক করুন"><i class="fas fa-ban"></i></button>
+                  </span>
+                <% } %>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- Tab: Following -->
+        <div class="tab-content" id="tab-following">
+          <% if (following.length === 0) { %>
+            <div class="empty-state card"><i class="fas fa-user-friends"></i><p>কাউকে অনুসরণ করছেন না।</p></div>
+          <% } else { %>
+            <% following.forEach(f => { %>
+              <div class="user-row card">
+                <a href="/profile/<%= f.username %>" class="side-user-main">
+                  <img src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
+                  <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
+                </a>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <% if (isOwner) { %>
+        <!-- Tab: Bookmarks (owner only) -->
+        <div class="tab-content" id="tab-bookmarks">
+          <% if (bookmarks.length === 0) { %>
+            <div class="empty-state card"><i class="fas fa-bookmark"></i><p>কোনো সংরক্ষিত পোস্ট নেই।</p></div>
+          <% } else { %>
+            <% bookmarks.forEach(b => { %>
+              <div class="qa-card card">
+                <div class="qa-q"><a href="<%= b.type === 'question' ? '/qa/' + b.id : '/articles/' + b.id %>"><%= b.title %></a></div>
+                <div class="qa-meta"><span class="badge"><%= b.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span> সংরক্ষিত <%= new Date(b.bookmarked_at).toLocaleDateString('bn-BD') %></div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- Tab: Drafts + content management (owner only) -->
+        <div class="tab-content" id="tab-drafts">
+          <p class="manage-hint"><i class="fas fa-layer-group"></i> আমার কন্টেন্ট ব্যবস্থাপনা</p>
+          <% if (drafts.length === 0 && myDaily.length === 0) { %>
+            <div class="empty-state card"><i class="fas fa-file"></i><p>কোনো ড্রাফট বা শিডিউল করা কন্টেন্ট নেই।</p></div>
+          <% } %>
+          <% drafts.forEach(d => { %>
+            <div class="qa-card card">
+              <div class="qa-q"><%= d.title || 'শিরোনামহীন ড্রাফট' %></div>
+              <div class="qa-meta">
+                <span class="badge badge-muted"><%= d.type === 'question' ? 'প্রশ্ন ড্রাফট' : 'লেখা ড্রাফট' %></span>
+                <%= new Date(d.created_at).toLocaleDateString('bn-BD') %>
+              </div>
+            </div>
+          <% }); %>
+          <% myDaily.forEach(d => { %>
+            <div class="qa-card card">
+              <div class="qa-q"><%= d.title || '(শিরোনাম নেই)' %></div>
+              <div class="qa-meta">
+                <span class="badge <%= d.published ? '' : 'badge-muted' %>"><%= d.published ? 'প্রকাশিত' : 'শিডিউল' %></span>
+                <%= d.content_type %><% if (d.scheduled_date) { %> &middot; <%= d.scheduled_date %><% } %>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+
+        <!-- Tab: Categories (owner only) -->
+        <div class="tab-content" id="tab-categories">
+          <p class="manage-hint"><i class="fas fa-tags"></i> আগ্রহের বিষয় নির্বাচন করুন — এগুলো আপনার ফিড ব্যক্তিগত করবে</p>
+          <div class="card interest-picker">
+            <div class="tag-cloud" id="interestPool">
+              <% tagPool.forEach(t => { %>
+                <button type="button" class="tag-chip interest-opt <%= interests.includes(t.tag) ? 'selected' : '' %>" data-tag="<%= t.tag %>">#<%= t.tag %></button>
+              <% }); %>
+              <% if (tagPool.length === 0) { %><span class="side-text">এখনো কোনো ট্যাগ পুল নেই।</span><% } %>
+            </div>
+            <button type="button" class="btn btn-primary" id="saveInterests"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+          </div>
+        </div>
+        <% } %>
       </div>
     </div>
   </div>
 
+  <%- include('../partials/share-modal') %>
+  <script src="/assets/js/main.js"></script>
   <script>
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    // Tabs
+    document.querySelectorAll('.tab-btn, .tab-jump').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        const target = btn.dataset.tab;
+        const tb = document.querySelector('.tab-btn[data-tab="' + target + '"]');
+        if (tb) tb.classList.add('active');
+        document.getElementById('tab-' + target)?.classList.add('active');
       });
     });
 
-    document.querySelector('.btn-follow')?.addEventListener('click', async function() {
-      const userId = this.dataset.user;
-      const res = await fetch('/follow/' + userId, { method: 'POST' });
+    // Follow / unfollow
+    document.querySelector('.btn-follow')?.addEventListener('click', async function () {
+      const res = await fetch('/follow/' + this.dataset.user, { method: 'POST' });
       const data = await res.json();
       if (data.following) {
-        this.classList.add('following');
+        this.classList.remove('btn-primary'); this.classList.add('btn-ghost');
         this.innerHTML = '<i class="fas fa-check"></i> অনুসরণ করছেন';
       } else {
-        this.classList.remove('following');
+        this.classList.add('btn-primary'); this.classList.remove('btn-ghost');
         this.innerHTML = '<i class="fas fa-plus"></i> অনুসরণ করুন';
       }
     });
+
+    <% if (isOwner) { %>
+    // Remove follower
+    document.querySelectorAll('.remove-follower').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('এই অনুসরণকারীকে সরাতে চান?')) return;
+        const res = await fetch('/api/followers/' + btn.dataset.user + '/remove', { method: 'POST' });
+        if (res.ok) btn.closest('.user-row').remove();
+      });
+    });
+    // Block user
+    document.querySelectorAll('.block-user').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('এই ব্যবহারকারীকে ব্লক করতে চান? দুই দিক থেকেই ফলো বাতিল হবে।')) return;
+        const res = await fetch('/api/block/' + btn.dataset.user, { method: 'POST' });
+        const data = await res.json();
+        if (data.ok && data.blocked) showToast('ব্যবহারকারী ব্লক করা হয়েছে', 'success');
+        btn.closest('.user-row')?.remove();
+      });
+    });
+    // Interest picker
+    document.querySelectorAll('.interest-opt').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    });
+    document.getElementById('saveInterests')?.addEventListener('click', async function () {
+      const tags = [...document.querySelectorAll('.interest-opt.selected')].map(c => c.dataset.tag);
+      const res = await fetch('/api/me/interests', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags })
+      });
+      if (res.ok) { showToast('আগ্রহের বিষয় সংরক্ষিত হয়েছে', 'success'); setTimeout(() => location.reload(), 800); }
+    });
+    <% } %>
   </script>
 </body>
 </html>

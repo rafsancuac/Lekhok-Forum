@@ -8,22 +8,118 @@ function ensureAuth(req, res, next) {
   next();
 }
 
+// ── Online presence (5-min activity window) ───────────────────────
+// lastSeen map: userId -> timestamp
+const onlineState = new Map();
+function touchOnline(userId) { onlineState.set(userId, Date.now()); }
+function isOnline(userId) {
+  const ts = onlineState.get(userId);
+  return ts && (Date.now() - ts) < 5 * 60 * 1000;
+}
+
+// Touch own online state on ANY router hit (registered before all routes)
+router.use((req, res, next) => {
+  if (req.session && req.session.user) touchOnline(req.session.user.id);
+  next();
+});
+
+
 // ── Dashboard (Facebook-style feed) ───────────────────────────────────────
 router.get('/dashboard', ensureAuth, (req, res) => {
-  // Combined feed: articles + questions + activities from daily_content
-  const feed = db.prepare(`
-    SELECT 'article' as type, p.id, p.title, p.body, p.cover_image, p.published_at as created_at,
-           p.like_count, p.comment_count, u.full_name as author_name, u.username, u.avatar_url, u.gender
+  const me = req.session.user;
+  const filter = req.query.filter || 'all';   // all | article | question | activity | following
+
+  const ARTICLE_SQL = `
+    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags,
+           p.published_at as created_at, p.like_count, p.comment_count, p.reactions,
+           u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
-    WHERE p.status = 'published' AND p.type = 'article'
-    UNION ALL
-    SELECT 'activity' as type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.created_at,
-           0 as like_count, 0 as comment_count, 'মডারেটর' as author_name, 'moderator' as username, NULL as avatar_url, 'other' as gender
+    WHERE p.status = 'published' AND p.type = 'article'`;
+  const QUESTION_SQL = `
+    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags,
+           p.published_at as created_at, p.like_count, p.comment_count, p.reactions,
+           u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
+    FROM posts p JOIN users u ON p.author_id = u.id
+    WHERE p.status = 'published' AND p.type = 'question'`;
+  const ACTIVITY_SQL = `
+    SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
+           dc.created_at, 0 as like_count, 0 as comment_count, '{}' as reactions,
+           '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
-    WHERE dc.content_type = 'activity' AND dc.published = 1
-    ORDER BY created_at DESC LIMIT 30
-  `).all();
-  res.render('user/dashboard', { feed, currentPath: '/dashboard' });
+    WHERE dc.content_type = 'activity' AND dc.published = 1`;
+
+  let sql, params = [];
+  if (filter === 'article') {
+    sql = ARTICLE_SQL + ' ORDER BY created_at DESC LIMIT 30';
+  } else if (filter === 'question') {
+    sql = QUESTION_SQL + ' ORDER BY created_at DESC LIMIT 30';
+  } else if (filter === 'activity') {
+    sql = ACTIVITY_SQL + ' ORDER BY created_at DESC LIMIT 30';
+  } else if (filter === 'following') {
+    sql = ARTICLE_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
+      UNION ALL ` + QUESTION_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
+      ORDER BY created_at DESC LIMIT 30`;
+    params = [me.id, me.id];
+  } else {
+    sql = ARTICLE_SQL + ' UNION ALL ' + QUESTION_SQL + ' UNION ALL ' + ACTIVITY_SQL + ' ORDER BY created_at DESC LIMIT 30';
+  }
+
+  const feed = db.prepare(sql).all(...params);
+  feed.forEach(item => {
+    try { item.reactionCounts = JSON.parse(item.reactions || '{}'); } catch (_) { item.reactionCounts = {}; }
+    ['like','love','haha','wow','sad'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
+    item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
+    // my current reaction on this item (activities have no reactions)
+    if (item.item_type !== 'activity') {
+      const mine = db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND post_id = ?').get(me.id, item.id);
+      item.myReaction = mine ? (mine.reaction_type || 'like') : null;
+    } else {
+      item.myReaction = null;
+    }
+  });
+
+  // Right sidebar data
+  const mmdd = new Date().toISOString().slice(5, 10); // MM-DD
+  const birthdays = db.prepare(`
+    SELECT id, username, full_name, avatar_url, birth_date FROM users
+    WHERE status = 'active' AND birth_date IS NOT NULL AND birth_date != ''
+      AND substr(birth_date, 6) = ?
+    LIMIT 6
+  `).all(mmdd);
+
+  const suggested = db.prepare(`
+    SELECT id, username, full_name, avatar_url, designation,
+      (SELECT COUNT(*) FROM follows WHERE following_id = u.id) AS follower_count
+    FROM users u
+    WHERE u.status = 'active' AND u.id != ?
+      AND u.id NOT IN (SELECT following_id FROM follows WHERE follower_id = ?)
+      AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ?)
+      AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ?)
+    ORDER BY follower_count DESC LIMIT 5
+  `).all(me.id, me.id, me.id, me.id);
+
+  const myFollowing = db.prepare(`
+    SELECT u.id, u.username, u.full_name, u.avatar_url
+    FROM follows f JOIN users u ON u.id = f.following_id
+    WHERE f.follower_id = ? ORDER BY RANDOM() LIMIT 6
+  `).all(me.id);
+
+  const tagRows = db.prepare("SELECT tags FROM posts WHERE tags IS NOT NULL AND tags != '' AND status = 'published' ORDER BY published_at DESC LIMIT 100").all();
+  const tagCounts = {};
+  tagRows.forEach(r => {
+    String(r.tags).split(',').map(t => t.trim()).filter(Boolean).forEach(t => {
+      tagCounts[t] = (tagCounts[t] || 0) + 1;
+    });
+  });
+  const trendingTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([tag, count]) => ({ tag, count }));
+
+  let myInterests = [];
+  try { myInterests = JSON.parse(db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {}
+
+  res.render('user/dashboard', {
+    feed, filter, birthdays, suggested, myFollowing, trendingTags, myInterests,
+    currentPath: '/dashboard'
+  });
 });
 
 // ── Gallery ───────────────────────────────────────────────────────────────
@@ -97,6 +193,10 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), (re
   const me = req.session.user.id;
   const other = db.prepare('SELECT * FROM users WHERE username = ?').get(req.params.username);
   if (!other) return res.redirect('/messages');
+  // Block check — a blocked pair cannot exchange messages
+  if (db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(me, other.id, other.id, me)) {
+    return res.redirect('/messages/' + req.params.username + '?err=' + encodeURIComponent('আপনি এই ব্যবহারকারীর সাথে মেসেজ করতে পারবেন না'));
+  }
   if (req.uploadError) return res.redirect('/messages/' + req.params.username + '?err=' + encodeURIComponent(req.uploadError));
   const conv = db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me, other.id, other.id, me);
@@ -172,31 +272,14 @@ router.post('/api/messages/seen-all', ensureAuth, (req, res) => {
 });
 
 // ── v2.3: Messenger — online status (5-min activity window) ─────────────
-// Map<userId, lastSeenTimestamp>
-const onlineState = new Map();
-
-function touchOnline(userId) {
-  onlineState.set(userId, Date.now());
-}
-
-function isOnline(userId) {
-  const ts = onlineState.get(userId);
-  return ts && (Date.now() - ts) < 5 * 60 * 1000;
-}
-
+// ── v2.3: Messenger ── online status (query only; touch happens in top middleware) ──
 router.get('/api/messages/online', ensureAuth, (req, res) => {
   const userId = parseInt(req.query.user_id);
   if (!userId) return res.json({ online: false });
   res.json({ online: isOnline(userId) });
 });
 
-// Middleware to update own online state on any authed API hit
-router.use((req, res, next) => {
-  if (req.session && req.session.user) touchOnline(req.session.user.id);
-  next();
-});
-
-// ── v2.3: Messenger — combined poll (new messages + typing + online) ───
+// ── v2.3: Messenger ── combined poll
 router.get('/api/messages/poll', ensureAuth, (req, res) => {
   const me = req.session.user.id;
   const convId = parseInt(req.query.conv_id);

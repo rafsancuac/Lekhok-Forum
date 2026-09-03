@@ -114,6 +114,9 @@ const MIGRATION_SQL = `
     show_email INTEGER DEFAULT 0,
     show_phone INTEGER DEFAULT 0,
     show_birth INTEGER DEFAULT 1,
+    interests TEXT DEFAULT '[]',
+    notify_prefs TEXT DEFAULT '{}',
+    display_prefs TEXT DEFAULT '{}',
     avatar_url TEXT,
     status TEXT DEFAULT 'active',
     role TEXT DEFAULT 'user',
@@ -143,6 +146,7 @@ const MIGRATION_SQL = `
     view_count INTEGER DEFAULT 0,
     like_count INTEGER DEFAULT 0,
     comment_count INTEGER DEFAULT 0,
+    reactions TEXT DEFAULT '{}',
     published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -153,6 +157,7 @@ const MIGRATION_SQL = `
     body TEXT NOT NULL,
     parent_id INTEGER,
     like_count INTEGER DEFAULT 0,
+    reactions TEXT DEFAULT '{}',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS likes (
@@ -160,7 +165,14 @@ const MIGRATION_SQL = `
     user_id INTEGER NOT NULL,
     post_id INTEGER,
     comment_id INTEGER,
+    reaction_type TEXT DEFAULT 'like',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS blocks (
+    blocker_id INTEGER NOT NULL,
+    blocked_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (blocker_id, blocked_id)
   );
   CREATE TABLE IF NOT EXISTS bookmarks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -411,7 +423,8 @@ async function runMigrations() {
     "ALTER TABLE posts ADD COLUMN reactions TEXT DEFAULT '{}'",
     "ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'",
     "ALTER TABLE users ADD COLUMN notify_prefs TEXT DEFAULT '{}'",
-    "ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'"
+    "ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'",
+    "ALTER TABLE users ADD COLUMN interests TEXT DEFAULT '[]'"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}

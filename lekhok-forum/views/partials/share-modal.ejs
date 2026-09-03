@@ -1,0 +1,20 @@
+<%# Share-to-user modal — include once per page; powered by main.js (LekhokShare) %>
+<% if (typeof user !== 'undefined' && user) { %>
+<div class="modal-backdrop" id="shareUserModal" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-label="ইউজারকে শেয়ার করুন">
+    <header class="modal-head">
+      <h3><i class="fas fa-user-friends"></i> ইউজারকে পাঠান</h3>
+      <button type="button" class="modal-close" data-close-share aria-label="বন্ধ করুন">&times;</button>
+    </header>
+    <input type="hidden" id="sharePostId" value="" />
+    <div class="modal-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="shareUserSearch" placeholder="বন্ধুর নাম বা @ইউজারনেম লিখুন..." autocomplete="off" />
+    </div>
+    <div class="modal-results" id="shareUserResults">
+      <div class="modal-empty">নাম লিখতে শুরু করুন…</div>
+    </div>
+    <textarea id="shareMsg" rows="2" placeholder="একটি বার্তা যোগ করুন (ঐচ্ছিক)…"></textarea>
+  </div>
+</div>
+<% } %>

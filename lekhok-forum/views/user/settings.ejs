@@ -17,8 +17,12 @@
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
       <a href="/me" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> ফিডে ফিরুন</a>
       <h1 style="margin:0;font-size:24px;">সেটিংস</h1>
-      <% if (typeof req !== 'undefined' && req.query.ok) { %>
-        <span class="badge" style="background:#dcfce7;color:#059669;"><i class="fas fa-check"></i> সংরক্ষিত</span>
+      <% if (ok) { %>
+        <span class="badge save-ok"><i class="fas fa-check"></i> সংরক্ষিত</span>
+      <% } else if (err) { %>
+        <span class="badge save-err"><i class="fas fa-exclamation-triangle"></i>
+          <%= err === 'password_mismatch' ? 'পাসওয়ার্ড মেলেনি' : err === 'password_short' ? 'পাসওয়ার্ড খুব ছোट' : err === 'password_wrong' ? 'বর্তমান পাসওয়ার্ড ভুল' : 'সমস্যা হয়েছে' %>
+        </span>
       <% } %>
     </div>
 
@@ -40,41 +44,41 @@
             <form method="POST" action="/settings/profile" enctype="multipart/form-data">
               <div class="field">
                 <label>পুরো নাম</label>
-                <input class="input" name="full_name" value="<%= user.full_name %>" required>
+                <input class="input" name="full_name" value="<%= profileUser.full_name %>" required>
               </div>
               <div class="field">
                 <label>পরিচিতি (Bio)</label>
-                <textarea class="textarea" name="bio" rows="3" placeholder="নিজের সম্পর্কে কিছু লিখুন…"><%= user.bio || '' %></textarea>
+                <textarea class="textarea" name="bio" rows="3" placeholder="নিজের সম্পর্কে কিছু লিখুন…"><%= profileUser.bio || '' %></textarea>
                 <div class="hint">সর্বোচ্চ ৩০০ অক্ষর</div>
               </div>
               <div class="field">
                 <label>পদবি / Designation</label>
-                <input class="input" name="designation" value="<%= user.designation || '' %>" placeholder="যেমন: সাহিত্যিক, শিক্ষক…">
+                <input class="input" name="designation" value="<%= profileUser.designation || '' %>" placeholder="যেমন: সাহিত্যিক, শিক্ষক…">
               </div>
               <div class="field">
                 <label>ঠিকানা</label>
-                <input class="input" name="address" value="<%= user.address || '' %>">
+                <input class="input" name="address" value="<%= profileUser.address || '' %>">
               </div>
               <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
                   <label>লিঙ্গ</label>
                   <select class="select" name="gender">
-                    <option value="male"   <%= user.gender === 'male'   ? 'selected' : '' %>>পুরুষ</option>
-                    <option value="female" <%= user.gender === 'female' ? 'selected' : '' %>>নারী</option>
-                    <option value="other"  <%= user.gender === 'other'  ? 'selected' : '' %>>অন্যান্য</option>
+                    <option value="male"   <%= profileUser.gender === 'male'   ? 'selected' : '' %>>পুরুষ</option>
+                    <option value="female" <%= profileUser.gender === 'female' ? 'selected' : '' %>>নারী</option>
+                    <option value="other"  <%= profileUser.gender === 'other'  ? 'selected' : '' %>>অন্যান্য</option>
                   </select>
                 </div>
                 <div>
                   <label>জন্ম তারিখ</label>
-                  <input class="input" type="date" name="birth_date" value="<%= user.birth_date || '' %>">
+                  <input class="input" type="date" name="birth_date" value="<%= profileUser.birth_date || '' %>">
                 </div>
               </div>
               <h3 style="margin:20px 0 8px;font-size:15px;">সোশ্যাল লিংক</h3>
               <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <input class="input" name="social_fb"      value="<%= user.social_fb || '' %>"      placeholder="Facebook URL">
-                <input class="input" name="social_twitter"  value="<%= user.social_twitter || '' %>"  placeholder="Twitter URL">
-                <input class="input" name="social_linkedin" value="<%= user.social_linkedin || '' %>" placeholder="LinkedIn URL">
-                <input class="input" name="social_website"  value="<%= user.social_website || '' %>"  placeholder="ওয়েবসাইট URL">
+                <input class="input" name="social_fb"      value="<%= profileUser.social_fb || '' %>"      placeholder="Facebook URL">
+                <input class="input" name="social_twitter"  value="<%= profileUser.social_twitter || '' %>"  placeholder="Twitter URL">
+                <input class="input" name="social_linkedin" value="<%= profileUser.social_linkedin || '' %>" placeholder="LinkedIn URL">
+                <input class="input" name="social_website"  value="<%= profileUser.social_website || '' %>"  placeholder="ওয়েবসাইট URL">
               </div>
               <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
             </form>
@@ -88,15 +92,15 @@
             <form method="POST" action="/settings/privacy">
               <div class="field-row">
                 <div class="label-block"><strong>ইমেইল দেখান</strong><span>অন্যরা আপনার ইমেইল দেখতে পারবে</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="show_email" value="1" <%= user.show_email ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+                <label class="toggle-switch"><input type="checkbox" name="show_email" value="1" <%= profileUser.show_email ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
               <div class="field-row">
                 <div class="label-block"><strong>ফোন নম্বর দেখান</strong><span>অন্যরা আপনার ফোন নম্বর দেখতে পারবে</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="show_phone" value="1" <%= user.show_phone ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+                <label class="toggle-switch"><input type="checkbox" name="show_phone" value="1" <%= profileUser.show_phone ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
               <div class="field-row">
                 <div class="label-block"><strong>জন্ম তারিখ দেখান</strong><span>অন্যরা আপনার জন্ম তারিখ দেখতে পারবে</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="show_birth" value="1" <%= user.show_birth ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+                <label class="toggle-switch"><input type="checkbox" name="show_birth" value="1" <%= profileUser.show_birth ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
               <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
             </form>
@@ -110,19 +114,19 @@
             <form method="POST" action="/settings/notifications">
               <div class="field-row">
                 <div class="label-block"><strong>মেনশনে ইমেইল</strong><span>কেউ @উল্লেখ করলে ইমেইল পাঠান</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="email_mention" value="1" checked><span class="toggle-slider"></span></label>
+                <label class="toggle-switch"><input type="checkbox" name="email_mention" value="1" <%= notifyPrefs.email_mention ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
               <div class="field-row">
                 <div class="label-block"><strong>নতুন মন্তব্যে ইমেইল</strong><span>আপনার পোস্টে মন্তব্য হলে ইমেইল পাঠান</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="email_comment" value="1" checked><span class="toggle-slider"></span></label>
+                <label class="toggle-switch"><input type="checkbox" name="email_comment" value="1" <%= notifyPrefs.email_comment ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
               <div class="field-row">
                 <div class="label-block"><strong>প্রতিক্রিয়া পুশ</strong><span>❤️ বা 😂 পেলে পুশ নোটিফিকেশন</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="push_like" value="1"><span class="toggle-slider"></span></label>
+                <label class="toggle-switch"><input type="checkbox" name="push_like" value="1" <%= notifyPrefs.push_like ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
               <div class="field-row">
                 <div class="label-block"><strong>দৈনিক ডাইজেস্ট</strong><span>প্রতিদিন সকালে আপনার ফিডের সারাংশ</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="daily_digest" value="1"><span class="toggle-slider"></span></label>
+                <label class="toggle-switch"><input type="checkbox" name="daily_digest" value="1" <%= notifyPrefs.daily_digest ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
               <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
             </form>
@@ -160,24 +164,24 @@
               <div class="field">
                 <label>থিম</label>
                 <select class="select" name="theme">
-                  <option value="auto">অটো (সিস্টেম অনুসারে)</option>
-                  <option value="light">হালকা</option>
-                  <option value="dark">গাঢ়</option>
+                  <option value="auto" <%= (displayPrefs.theme || 'auto') === 'auto' ? 'selected' : '' %>>অটো (সিস্টেম অনুসারে)</option>
+                  <option value="light" <%= displayPrefs.theme === 'light' ? 'selected' : '' %>>হালকা</option>
+                  <option value="dark" <%= displayPrefs.theme === 'dark' ? 'selected' : '' %>>গাঢ়</option>
                 </select>
               </div>
               <div class="field">
                 <label>ফন্ট সাইজ</label>
                 <select class="select" name="font_size">
-                  <option value="small">ছোট</option>
-                  <option value="medium" selected>মাঝারি</option>
-                  <option value="large">বড়</option>
+                  <option value="small" <%= displayPrefs.font_size === 'small' ? 'selected' : '' %>>ছোট</option>
+                  <option value="medium" <%= (displayPrefs.font_size || 'medium') === 'medium' ? 'selected' : '' %>>মাঝারি</option>
+                  <option value="large" <%= displayPrefs.font_size === 'large' ? 'selected' : '' %>>বড়</option>
                 </select>
               </div>
               <div class="field">
                 <label>ভাষা</label>
                 <select class="select" name="language">
-                  <option value="bn">বাংলা</option>
-                  <option value="en">English</option>
+                  <option value="bn" <%= (displayPrefs.language || 'bn') === 'bn' ? 'selected' : '' %>>বাংলা</option>
+                  <option value="en" <%= displayPrefs.language === 'en' ? 'selected' : '' %>>English</option>
                 </select>
               </div>
               <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>

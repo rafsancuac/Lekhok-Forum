@@ -45,6 +45,8 @@
       <button class="personal-tab" data-tab="reactions"><i class="fas fa-heart"></i> প্রতিক্রিয়া (<%= stats.reactions %>)</button>
       <button class="personal-tab" data-tab="bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত (<%= stats.bookmarks %>)</button>
       <button class="personal-tab" data-tab="following"><i class="fas fa-user-friends"></i> অনুসরণ (<%= stats.following %>)</button>
+      <button class="personal-tab" data-tab="activity"><i class="fas fa-stream"></i> অ্যাক্টিভিটি</button>
+      <button class="personal-tab" data-tab="categories"><i class="fas fa-tags"></i> ক্যাটাগরি</button>
       <% if (stats.drafts > 0) { %><button class="personal-tab" data-tab="drafts"><i class="fas fa-file"></i> ড্রাফট (<%= stats.drafts %>)</button><% } %>
     </div>
 
@@ -157,6 +159,52 @@
       </div>
     </section>
 
+    <!-- Tab: Activity (chronological) -->
+    <section class="me-tab" data-pane="activity" hidden>
+      <% if (activity.length === 0) { %>
+        <div class="empty"><div class="icon"><i class="fas fa-stream"></i></div><h3>কোনো অ্যাক্টিভিটি নেই</h3><p>লিখুন, মন্তব্য করুন, প্রতিক্রিয়া দিন — সব এখানে জমা হবে।</p></div>
+      <% } %>
+      <% const _emo = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' }; %>
+      <% activity.forEach(a => { %>
+        <article class="feed-card activity-card">
+          <span class="activity-icon <%= a.kind %>">
+            <% if (a.kind === 'posted') { %><i class="fas fa-pen-nib"></i><% }
+               else if (a.kind === 'commented') { %><i class="far fa-comment"></i><% }
+               else if (a.kind === 'reacted') { %><span class="act-emoji"><%= _emo[a.reaction] || '👍' %></span><% }
+               else { %><i class="fas fa-bookmark"></i><% } %>
+          </span>
+          <div class="feed-card-body">
+            <div class="feed-card-meta">
+              <span class="badge badge-muted">
+                <% if (a.kind === 'posted') { %>পোস্ট করেছেন<% }
+                   else if (a.kind === 'commented') { %>মন্তব্য করেছেন<% }
+                   else if (a.kind === 'reacted') { %>প্রতিক্রিয়া দিয়েছেন<% }
+                   else { %>সংরক্ষণ করেছেন<% } %>
+              </span>
+              <span><i class="far fa-clock"></i> <%= new Date(a.at).toLocaleString('bn-BD') %></span>
+            </div>
+            <h3 class="feed-card-title"><a href="<%= a.type === 'question' ? '/qa/' + a.id : '/articles/' + a.id %>"><%= a.title %></a></h3>
+            <% if (a.body) { %><p class="feed-card-excerpt"><%= a.body.substring(0, 140) %><%= a.body.length > 140 ? '…' : '' %></p><% } %>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+
+    <!-- Tab: Categories (my interests) -->
+    <section class="me-tab" data-pane="categories" hidden>
+      <div class="card interest-picker">
+        <h3><i class="fas fa-tags"></i> আমার আগ্রহের বিষय</h3>
+        <p class="side-text">বিষয় বাছলে কমিউনিটি ফিড আপনার পছন্দ অনুযায়ী সাজানো হবে।</p>
+        <div class="tag-cloud" id="interestPool">
+          <% tagPool.forEach(t => { %>
+            <button type="button" class="tag-chip interest-opt <%= myInterests.includes(t.tag) ? 'selected' : '' %>" data-tag="<%= t.tag %>">#<%= t.tag %></button>
+          <% }); %>
+          <% if (tagPool.length === 0) { %><span class="side-text">এখনো কোনো ট্যাগ পুল নেই।</span><% } %>
+        </div>
+        <button type="button" class="btn btn-primary" id="saveInterests"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+      </div>
+    </section>
+
     <!-- Tab: Drafts -->
     <% if (stats.drafts > 0) { %>
     <section class="me-tab" data-pane="drafts" hidden>
@@ -185,6 +233,21 @@
         tab.classList.add('active');
         document.querySelectorAll('.me-tab').forEach(p => p.hidden = p.dataset.pane !== target);
       });
+    });
+    // Deep-link ?tab=x
+    const urlTab = new URLSearchParams(location.search).get('tab');
+    if (urlTab) document.querySelector('.personal-tab[data-tab="' + urlTab + '"]')?.click();
+    // Interest picker
+    document.querySelectorAll('.interest-opt').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    });
+    document.getElementById('saveInterests')?.addEventListener('click', async function () {
+      const tags = [...document.querySelectorAll('.interest-opt.selected')].map(c => c.dataset.tag);
+      const res = await fetch('/api/me/interests', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags })
+      });
+      if (res.ok) { if (window.showToast) showToast('আগ্রহের বিষয় সংরক্ষিত হয়েছে', 'success'); setTimeout(() => location.reload(), 800); }
     });
   </script>
 </body>

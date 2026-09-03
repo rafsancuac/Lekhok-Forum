@@ -1,0 +1,84 @@
+/* ============================================
+   লেখক ফোরাম — Article / Q&A / Comments
+   (shared actions-bar / share / modal live in style.css)
+   ============================================ */
+
+.article-wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+.article-main { background: #fff; border-radius: 14px; padding: 0 0 24px; box-shadow: var(--shadow-soft); overflow: hidden; }
+.article-cover { width: 100%; max-height: 420px; object-fit: cover; display: block; }
+.article-header { padding: 28px 32px 0; }
+.article-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.article-title { color: var(--brand); font-size: 2rem; line-height: 1.3; margin: 0 0 16px; }
+.article-author-bar { display: flex; align-items: center; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.author-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-soft); }
+.author-name { color: var(--brand); font-weight: 700; text-decoration: none; }
+.author-name:hover { color: var(--accent); }
+.article-date { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
+.article-date i { margin: 0 4px 0 10px; }
+.article-date i:first-child { margin-left: 0; }
+.article-body { padding: 22px 32px; color: var(--text); font-size: 1.05rem; line-height: 1.9; word-break: break-word; }
+.article-footer { padding: 8px 32px 20px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+.owner-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── Q&A ─────────────────────────────────────────────────────── */
+.qa-wrap .article-main { padding-top: 24px; }
+.qa-wrap .feed-type-badge { margin-left: 32px; }
+.question-body { padding: 14px 32px 8px; }
+.question-title { color: var(--brand); font-size: 1.7rem; line-height: 1.35; margin: 0 0 12px; }
+.question-detail { color: var(--text); font-size: 1.02rem; line-height: 1.85; }
+.question-meta { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.88rem; margin-top: 14px; flex-wrap: wrap; }
+.qa-author { color: var(--brand); font-weight: 700; text-decoration: none; }
+.qa-author:hover { color: var(--accent); }
+.answers-section { padding: 0 32px; }
+.answers-section h2 { color: var(--brand); font-size: 1.25rem; margin: 18px 0 14px; padding-top: 18px; border-top: 1px solid var(--border); }
+.answer-item { display: flex; gap: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 12px; scroll-margin-top: 90px; }
+.answer-sidebar { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 44px; }
+.answer-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.top-answer-chip { font-size: 0.68rem; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.answer-body { flex: 1; }
+.answer-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.answer-author { color: var(--brand); font-weight: 700; text-decoration: none; }
+.answer-author:hover { color: var(--accent); }
+.answer-date { color: var(--text-muted); font-size: 0.8rem; }
+.answer-text { color: var(--text); line-height: 1.8; margin-bottom: 10px; word-break: break-word; }
+.answer-actions { color: var(--text-muted); font-size: 0.88rem; }
+.answer-form-wrap { margin-top: 20px; padding: 20px; background: var(--bg-main, #f6f8fb); border-radius: 12px; }
+.answer-form-wrap h3 { color: var(--brand); margin: 0 0 12px; font-size: 1.05rem; }
+.answer-form textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: 0.98rem; resize: vertical; background: #fff; }
+.answer-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.answers-empty { margin: 10px 0 20px; }
+
+/* ── Comments ────────────────────────────────────────────────── */
+.comments-section { padding: 8px 32px 0; }
+.comments-section h3 { color: var(--brand); font-size: 1.2rem; margin: 14px 0; }
+.comment-form { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; }
+.comment-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.comment-avatar.small { width: 30px; height: 30px; }
+.comment-input-wrap { flex: 1; display: flex; gap: 8px; align-items: flex-end; }
+.comment-input-wrap textarea { flex: 1; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-family: inherit; font-size: 0.95rem; resize: vertical; background: #fff; }
+.comment-input-wrap textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.comments-list { display: flex; flex-direction: column; gap: 14px; }
+.comment-item { display: flex; gap: 10px; scroll-margin-top: 90px; }
+.comment-bubble { flex: 1; background: var(--bg-main, #f6f8fb); border-radius: 4px 14px 14px 14px; padding: 10px 14px; min-width: 0; }
+.comment-bubble.small { padding: 8px 12px; }
+.comment-author { color: var(--brand); font-weight: 700; font-size: 0.9rem; text-decoration: none; }
+.comment-author:hover { color: var(--accent); }
+.comment-body { color: var(--text); margin: 4px 0; line-height: 1.65; word-break: break-word; }
+.comment-meta { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 0.78rem; flex-wrap: wrap; }
+.comment-react-mini { color: var(--accent); font-weight: 600; }
+.reply-btn { background: none; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.8rem; cursor: pointer; padding: 0; font-weight: 600; }
+.reply-btn:hover { color: var(--accent); }
+.comment-reactions { margin-top: 6px; }
+.reply-item { display: flex; gap: 8px; margin-top: 10px; }
+.reply-form { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; }
+.login-to-comment { color: var(--text-muted); padding: 10px 0; }
+.login-to-comment a { color: var(--accent); font-weight: 700; }
+.comments-empty { text-align: center; color: var(--text-muted); padding: 20px; }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .article-header, .article-body, .article-footer, .comments-section, .answers-section, .question-body { padding-left: 18px; padding-right: 18px; }
+  .qa-wrap .feed-type-badge { margin-left: 18px; }
+  .article-title { font-size: 1.5rem; }
+  .question-title { font-size: 1.35rem; }
+}

@@ -40,6 +40,15 @@ app.use((req, res, next) => {
   res.locals.currentPath = req.path;
   res.locals.getSetting  = db.getSetting;
 
+  // Per-user display prefs (theme / font size) — consumed by header partial
+  res.locals.displayPrefs = {};
+  if (req.session.user) {
+    try {
+      const row = db.prepare('SELECT display_prefs FROM users WHERE id = ?').get(req.session.user.id);
+      if (row && row.display_prefs) res.locals.displayPrefs = JSON.parse(row.display_prefs) || {};
+    } catch (_) {}
+  }
+
   // Unread notification count
   if (req.session.user) {
     const row = db.prepare("SELECT COUNT(*) as c FROM notifications WHERE user_id = ? AND is_read = 0").get(req.session.user.id);

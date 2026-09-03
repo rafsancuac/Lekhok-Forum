@@ -9,7 +9,7 @@
 .today-date { color: var(--text-muted); font-size: 0.9rem; }
 .header-sub { color: var(--text-muted); margin: 0; font-size: 0.95rem; }
 .btn-write, .topbar-btn { background: var(--accent); color: white; padding: 8px 18px; border-radius: 6px; text-decoration: none; font-weight: 600; border: none; cursor: pointer; font-family: inherit; font-size: 0.95rem; }
-.btn-write:hover, .topbar-btn:hover { background: #b08d3a; }
+.btn-write:hover, .topbar-btn:hover { background: #047857; }
 .topbar-link { color: var(--brand); text-decoration: none; font-weight: 600; margin-right: 12px; }
 
 /* Post cards */
@@ -171,7 +171,7 @@
 .mentions-row {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   margin: 14px 0 4px; padding: 10px 14px;
-  background: linear-gradient(90deg, rgba(5,150,105,), transparent);
+  background: linear-gradient(90deg, rgba(5,150,105,0.08), transparent);
   border-left: 3px solid var(--accent);
   border-radius: 6px;
 }
@@ -180,7 +180,7 @@
   display: inline-block; padding: 3px 10px; border-radius: 999px;
   background: var(--bg-main); color: var(--accent);
   font-size: 13px; font-weight: 600; text-decoration: none;
-  border: 1px solid rgba(5,150,105,);
+  border: 1px solid rgba(5,150,105,0.25);
   transition: var(--transition);
 }
 .mention-chip:hover { background: var(--accent); color: var(--bg-main); }
