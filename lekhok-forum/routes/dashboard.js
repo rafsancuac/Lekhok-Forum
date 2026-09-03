@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { messageUpload, complaintUpload } = require('../middleware/upload');
 
 function ensureAuth(req, res, next) {
   if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
@@ -92,17 +93,19 @@ router.get('/messages/:username', ensureAuth, (req, res) => {
   res.render('user/messages-chat', { other, messages, conversations, conv, currentPath: '/messages' });
 });
 
-router.post('/messages/:username', ensureAuth, (req, res) => {
+router.post('/messages/:username', ensureAuth, messageUpload.single('file'), (req, res) => {
   const me = req.session.user.id;
   const other = db.prepare('SELECT * FROM users WHERE username = ?').get(req.params.username);
   if (!other) return res.redirect('/messages');
   const conv = db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me, other.id, other.id, me);
   if (!conv) return res.redirect('/messages');
-  const { body, file_url, file_name } = req.body;
-  if (!body || !body.trim()) return res.redirect('/messages/' + req.params.username);
+  const { body } = req.body;
+  const file_url = req.file ? '/uploads/messages/' + req.file.filename : null;
+  const file_name = req.file ? req.file.originalname : null;
+  if ((!body || !body.trim()) && !file_url) return res.redirect('/messages/' + req.params.username);
   db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
-    .run(conv.id, me, body.trim(), file_url || null, file_name || null);
+    .run(conv.id, me, (body || '').trim(), file_url, file_name);
   db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   // Notify recipient
   if (other.id !== me) {
@@ -118,16 +121,19 @@ router.get('/complaints', ensureAuth, (req, res) => {
   res.render('user/complaints', { mine, currentPath: '/complaints' });
 });
 
-router.post('/complaints', ensureAuth, (req, res) => {
-  const { subject, body, file_url, file_name } = req.body;
+router.post('/complaints', ensureAuth, complaintUpload.single('file'), (req, res) => {
+  const { subject, body } = req.body;
   if (!subject) return res.redirect('/complaints');
+  const file_url = req.file ? '/uploads/complaints/' + req.file.filename : null;
+  const file_name = req.file ? req.file.originalname : null;
   db.prepare('INSERT INTO complaints (submitted_by, subject, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
-    .run(req.session.user.id, subject, body || null, file_url || null, file_name || null);
-  // Notify admins
-  const admins = db.prepare("SELECT id FROM users WHERE role = 'admin'").all();
-  admins.forEach(a => {
+    .run(req.session.user.id, subject, body || null, file_url, file_name);
+  // Notify moderators who have the 'complaints' scope (admin sees all complaints
+  // directly on the /admin/complaints panel — admin_users has no notification bell)
+  const modScopes = db.prepare("SELECT user_id FROM moderator_scopes WHERE scope = 'complaints'").all();
+  modScopes.forEach(m => {
     db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
-      .run(a.id, 'complaint', 'নতুন অভিযোগ', `${req.session.user.full_name} একটি অভিযোগ দিয়েছেন: ${subject}`, '/admin/complaints');
+      .run(m.user_id, 'complaint', 'নতুন অভিযোগ', `${req.session.user.full_name} একটি অভিযোগ দিয়েছেন: ${subject}`, '/moderator/complaints');
   });
   res.redirect('/complaints?sent=1');
 });

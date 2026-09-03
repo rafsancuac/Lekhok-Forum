@@ -238,4 +238,43 @@ router.get('/messages', requireAdmin, (req, res) => {
   res.render('admin/messages', { messages, currentPath: '/admin/messages' });
 });
 
+// ── Complaints (private — admin sees all) ─────────────────────────────────────
+router.get('/complaints', requireAdmin, (req, res) => {
+  const items = db.prepare(`
+    SELECT c.*, u.full_name, u.username FROM complaints c
+    JOIN users u ON c.submitted_by = u.id
+    ORDER BY c.created_at DESC
+  `).all();
+  res.render('admin/complaints', { items, currentPath: '/admin/complaints' });
+});
+
+router.post('/complaints/:id/status', requireAdmin, (req, res) => {
+  const { status, admin_notes } = req.body;
+  db.prepare("UPDATE complaints SET status = ?, admin_notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    .run(status || 'new', admin_notes || '', req.params.id);
+  res.redirect('/admin/complaints');
+});
+
+// ── Moderators & permission scopes ────────────────────────────────────────────
+router.get('/moderators', requireAdmin, (req, res) => {
+  const q = req.query.q || '';
+  const results = q ? db.searchPromotableUsers(q) : [];
+  const moderators = db.listModerators();
+  res.render('admin/moderators', {
+    q, results, moderators, allScopes: db.MODERATOR_SCOPES, currentPath: '/admin/moderators'
+  });
+});
+
+router.post('/moderators/:userId/grant', requireAdmin, (req, res) => {
+  let scopes = req.body.scopes || [];
+  if (!Array.isArray(scopes)) scopes = [scopes];
+  db.grantModerator(parseInt(req.params.userId), scopes, req.session.adminUser.id);
+  res.redirect('/admin/moderators');
+});
+
+router.post('/moderators/:userId/revoke', requireAdmin, (req, res) => {
+  db.revokeModerator(parseInt(req.params.userId));
+  res.redirect('/admin/moderators');
+});
+
 module.exports = router;

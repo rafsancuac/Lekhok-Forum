@@ -58,6 +58,7 @@ app.use('/',          require('./routes/social'));   // articles, qa, members, p
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
 app.use('/',          require('./routes/dashboard'));// dashboard feed, gallery, messages, complaints
 app.use('/avatar',    require('./routes/avatar'));   // default avatar serving
+app.use('/moderator', require('./routes/moderator'));// scoped moderator posting panel
 app.use('/',          require('./routes/pages'));
 app.use('/api',      require('./routes/api'));
 app.use('/admin',    require('./admin/routes'));
@@ -78,3 +79,14 @@ db.initDb().then(() => {
   console.error('Database initialization failed:', err);
   process.exit(1);
 });
+
+// ── Graceful shutdown: force-flush the debounced sql.js DB to disk ──────────
+// Without this, a restart/redeploy/Ctrl+C within the ~200ms save-debounce
+// window silently drops the most recent writes (registrations, posts, etc.)
+function shutdown(signal) {
+  console.log(`\n  ${signal} পেয়েছি — ডাটাবেজ সেভ করে বন্ধ হচ্ছে...`);
+  try { db.saveDb(); } catch (e) { console.error('Shutdown save failed:', e.message); }
+  process.exit(0);
+}
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

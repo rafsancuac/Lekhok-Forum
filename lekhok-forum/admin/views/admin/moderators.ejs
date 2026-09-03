@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>মডারেটর — লেখক ফোরাম অ্যাডমিন</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+  <style>
+    .scope-check { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; border-radius: 8px; padding: 5px 10px; margin: 3px; font-size: 0.85rem; cursor: pointer; }
+    .scope-check input { margin: 0; }
+    .mod-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+    .mod-card .scopes-list span { background: #0a1f44; color: #C5A059; padding: 2px 9px; border-radius: 20px; font-size: 0.78rem; margin-right: 4px; display: inline-block; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <%- include('partials/sidebar') %>
+  <div class="admin-main">
+    <div class="admin-header">
+      <h1>মডারেটর ব্যবস্থাপনা</h1>
+      <p>ইউজারদের মডারেটর হিসেবে নিয়োগ দিন এবং তাদের কাজের পরিধি (scope) নির্ধারণ করুন</p>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin-top:0;">নতুন মডারেটর খুঁজুন</h3>
+      <form method="GET" action="/admin/moderators" style="display:flex; gap:8px;">
+        <input type="text" name="q" value="<%= q %>" placeholder="ইউজারনেম বা নাম দিয়ে খুঁজুন..." style="flex:1; padding:8px 12px; border:1px solid #ddd; border-radius:8px;">
+        <button class="btn btn-primary" type="submit">খুঁজুন</button>
+      </form>
+
+      <% if (q && results.length === 0) { %>
+        <p style="color:#999; margin-top:12px;">কোনো ইউজার পাওয়া যায়নি।</p>
+      <% } %>
+
+      <% results.forEach(u => { %>
+        <form method="POST" action="/admin/moderators/<%= u.id %>/grant" class="mod-card" style="margin-top:14px;">
+          <strong><%= u.full_name %></strong> <span style="color:#999;">@<%= u.username %></span>
+          <div style="margin:10px 0;">
+            <% allScopes.forEach(s => { %>
+              <label class="scope-check"><input type="checkbox" name="scopes" value="<%= s.key %>"> <%= s.label %></label>
+            <% }) %>
+          </div>
+          <button class="btn btn-primary btn-sm" type="submit">মডারেটর হিসেবে নিয়োগ দিন</button>
+        </form>
+      <% }) %>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">বর্তমান মডারেটরগণ (<%= moderators.length %>)</h3>
+      <% if (moderators.length === 0) { %>
+        <p style="color:#999;">এখনো কোনো মডারেটর নিয়োগ দেওয়া হয়নি।</p>
+      <% } %>
+      <% moderators.forEach(m => { %>
+        <div class="mod-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <strong><%= m.full_name %></strong> <span style="color:#999;">@<%= m.username %></span>
+              <div class="scopes-list" style="margin-top:8px;">
+                <% m.scopes.forEach(sk => { const s = allScopes.find(x => x.key === sk); %>
+                  <span><%= s ? s.label : sk %></span>
+                <% }) %>
+                <% if (m.scopes.length === 0) { %><span style="background:#999;">কোনো scope নেই</span><% } %>
+              </div>
+            </div>
+            <form method="POST" action="/admin/moderators/<%= m.user_id %>/revoke" onsubmit="return confirm('মডারেটর পদ বাতিল করতে চান?')">
+              <button class="btn btn-danger btn-sm">বাতিল করুন</button>
+            </form>
+          </div>
+
+          <!-- Inline scope editor -->
+          <details style="margin-top:10px;">
+            <summary style="cursor:pointer; color:#0a1f44; font-size:0.9rem;">scope পরিবর্তন করুন</summary>
+            <form method="POST" action="/admin/moderators/<%= m.user_id %>/grant" style="margin-top:8px;">
+              <% allScopes.forEach(s => { %>
+                <label class="scope-check">
+                  <input type="checkbox" name="scopes" value="<%= s.key %>" <%= m.scopes.includes(s.key) ? 'checked' : '' %>>
+                  <%= s.label %>
+                </label>
+              <% }) %>
+              <div style="margin-top:8px;"><button class="btn btn-primary btn-sm" type="submit">সংরক্ষণ করুন</button></div>
+            </form>
+          </details>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</body>
+</html>

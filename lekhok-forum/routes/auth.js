@@ -19,7 +19,7 @@ router.post('/login', (req, res) => {
   if (user.status === 'banned') {
     return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', currentPath: '/login' });
   }
-  req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender };
+  req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
   db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
   res.redirect('/profile/' + user.username);
 });
@@ -48,7 +48,7 @@ router.post('/register', (req, res) => {
     username, hash, full_name, email || null, phone || null, bio || null, designation || null, address || null, birth_date || null, gender || 'other',
     social_fb || null, social_twitter || null, social_linkedin || null, social_website || null
   );
-  req.session.user = { id: result.lastInsertRowid, username, full_name, avatar_url: null, gender: gender || 'other' };
+  req.session.user = { id: result.lastInsertRowid, username, full_name, avatar_url: null, gender: gender || 'other', role: 'user' };
   res.redirect('/profile/' + username);
 });
 

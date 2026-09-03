@@ -294,6 +294,69 @@ function runMigrations() {
 
   // Add advisory member_type (alter for existing tables)
   try { db.exec("ALTER TABLE members ADD COLUMN member_type TEXT DEFAULT 'central'"); } catch(e) {}
+  // Fix: complaints needs file_name alongside file_url (attachment original filename)
+  try { db.exec("ALTER TABLE complaints ADD COLUMN file_name TEXT"); } catch(e) {}
+  // Fix: users table was missing 'role' — needed for moderator/admin permission checks
+  try { db.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'"); } catch(e) {}
+}
+
+// ── Moderator permission system ─────────────────────────────────────────────
+const MODERATOR_SCOPES = [
+  { key: 'quiz',        label: 'আজকের কুইজ' },
+  { key: 'this_day',    label: 'আজকের এই দিনে' },
+  { key: 'best_writer', label: 'মাসিক সেরা লেখক' },
+  { key: 'activity',    label: 'সাংগঠনিক কার্যক্রম' },
+  { key: 'notice',      label: 'বিজ্ঞপ্তি' },
+  { key: 'epaper',      label: 'আজকের ই-পেপার' },
+  { key: 'event',       label: 'ইভেন্ট পেইজ' },
+  { key: 'complaints',  label: 'অভিযোগ দেখা' }
+];
+
+function isModerator(userId) {
+  return !!prepare('SELECT id FROM moderators WHERE user_id = ?').get(userId);
+}
+
+function getModeratorScopes(userId) {
+  return prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(userId).map(r => r.scope);
+}
+
+function hasScope(userId, scope) {
+  return !!prepare('SELECT id FROM moderator_scopes WHERE user_id = ? AND scope = ?').get(userId, scope);
+}
+
+function grantModerator(userId, scopes, grantedBy) {
+  if (!isModerator(userId)) {
+    prepare('INSERT INTO moderators (user_id, added_by) VALUES (?, ?)').run(userId, grantedBy || null);
+  }
+  prepare("UPDATE users SET role = 'moderator' WHERE id = ?").run(userId);
+  prepare('DELETE FROM moderator_scopes WHERE user_id = ?').run(userId);
+  (scopes || []).forEach(s => {
+    prepare('INSERT INTO moderator_scopes (user_id, scope, granted_by) VALUES (?, ?, ?)').run(userId, s, grantedBy || null);
+  });
+}
+
+function revokeModerator(userId) {
+  prepare('DELETE FROM moderators WHERE user_id = ?').run(userId);
+  prepare('DELETE FROM moderator_scopes WHERE user_id = ?').run(userId);
+  prepare("UPDATE users SET role = 'user' WHERE id = ?").run(userId);
+}
+
+function listModerators() {
+  const mods = prepare(`
+    SELECT u.id as user_id, u.username, u.full_name, u.avatar_url
+    FROM moderators m JOIN users u ON u.id = m.user_id
+    ORDER BY u.full_name
+  `).all();
+  return mods.map(m => ({ ...m, scopes: getModeratorScopes(m.user_id) }));
+}
+
+function searchPromotableUsers(q) {
+  if (!q) return [];
+  return prepare(`
+    SELECT id, username, full_name FROM users
+    WHERE (username LIKE ? OR full_name LIKE ?) AND role != 'admin'
+    ORDER BY full_name LIMIT 15
+  `).all('%' + q + '%', '%' + q + '%');
 }
 
 function saveDb() {
@@ -328,8 +391,10 @@ function wrapStmt(stmt) {
       stmt.bind(params.length === 1 && Array.isArray(params[0]) ? params[0] : params);
       stmt.step();
       stmt.reset();
+      const idRes = db.exec('SELECT last_insert_rowid() as id');
+      const lastInsertRowid = idRes.length ? idRes[0].values[0][0] : undefined;
       persist();
-      return { changes: db.getRowsModified() };
+      return { changes: db.getRowsModified(), lastInsertRowid };
     }
   };
 }
@@ -639,5 +704,13 @@ module.exports = {
   exec,
   getSetting,
   setSetting,
-  saveDb
+  saveDb,
+  MODERATOR_SCOPES,
+  isModerator,
+  getModeratorScopes,
+  hasScope,
+  grantModerator,
+  revokeModerator,
+  listModerators,
+  searchPromotableUsers
 };

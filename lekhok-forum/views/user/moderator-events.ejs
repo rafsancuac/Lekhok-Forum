@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ইভেন্ট — মডারেটর প্যানেল</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <style>
+    .mod-wrap { max-width: 760px; margin: 20px auto; padding: 0 16px; }
+    .mod-form { background:#fff; border-radius:12px; padding:22px; margin-bottom:20px; }
+    .mod-form input, .mod-form textarea { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; margin-bottom:12px; font-family:inherit; }
+    .mod-item { background:#fff; border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  </style>
+</head>
+<body>
+  <%- include('../partials/header') %>
+  <div class="mod-wrap">
+    <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
+    <h2><i class="fas fa-calendar-alt"></i> ইভেন্ট পোস্ট করুন</h2>
+    <% if (typeof posted !== 'undefined') { %><p style="color:#166534;">✓ সফলভাবে পোস্ট হয়েছে এবং সব ইউজারকে নোটিফিকেশন পাঠানো হয়েছে।</p><% } %>
+    <form method="POST" action="/moderator/events" class="mod-form">
+      <label>শিরোনাম</label>
+      <input type="text" name="title" required>
+      <label>বিবরণ</label>
+      <textarea name="description" rows="4"></textarea>
+      <label>শুরুর তারিখ</label>
+      <input type="date" name="date">
+      <label>শেষ তারিখ (ঐচ্ছিক)</label>
+      <input type="date" name="end_date">
+      <label>স্থান</label>
+      <input type="text" name="location" placeholder="ভেন্যু / অনলাইন">
+      <label>কভার ছবি URL (ঐচ্ছিক)</label>
+      <input type="url" name="image_url">
+      <button class="btn btn-primary" type="submit">পোস্ট করুন</button>
+    </form>
+    <h3>সাম্প্রতিক ইভেন্ট</h3>
+    <% events.forEach(e => { %>
+      <div class="mod-item">
+        <div><strong><%= e.title %></strong><div style="color:#999; font-size:0.85rem;"><%= e.date %></div></div>
+        <form method="POST" action="/moderator/events/<%= e.id %>?_method=DELETE" onsubmit="return confirm('মুছে ফেলতে চান?')">
+          <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
+        </form>
+      </div>
+    <% }) %>
+  </div>
+</body>
+</html>

@@ -10,6 +10,10 @@ lekhok.db-journal
 lekhok.db-wal
 lekhok.db-shm
 
+# User-uploaded attachments (messages/complaints) — never commit real user files
+public/uploads/*
+!public/uploads/.gitkeep
+
 # Environment
 .env
 .env.local
