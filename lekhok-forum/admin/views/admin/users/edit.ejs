@@ -65,7 +65,7 @@
           <h3><i class="fas fa-key"></i> মডারেটর স্কোপ</h3>
           <p class="hint">এই ইউজার কোন কোন কাজ করতে পারবে তা নির্বাচন করুন।</p>
           <div class="scope-grid">
-            <% ADMIN_SCOPES.forEach(s => { %>
+            <% CANONICAL_SCOPES.forEach(s => { %>
               <label class="scope-check">
                 <input type="checkbox" name="scopes" value="<%= s.key %>" <%= scopes.includes(s.key) ? 'checked' : '' %>>
                 <span><i class="fas fa-check-circle"></i> <%= s.label %></span>
@@ -77,7 +77,8 @@
       <% } %>
 
       <!-- Danger zone -->
-      <% if (u.id !== adminUser.id) { %>
+      <% const _me = (adminUser && adminUser.id) || (user && user.id) || null; %>
+      <% if (u.id !== _me) { %>
         <div class="data-card card danger-zone">
           <h3><i class="fas fa-exclamation-triangle"></i> বিপদ অঞ্চল</h3>
           <p>এই ইউজারকে নিষিদ্ধ (ban) করতে উপরের স্ট্যাটাস ড্রপডাউন থেকে "নিষিদ্ধ" নির্বাচন করুন।</p>

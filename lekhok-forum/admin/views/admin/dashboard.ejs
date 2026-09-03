@@ -12,7 +12,7 @@
   <div class="admin-main">
     <div class="admin-header">
       <h1>ড্যাশবোর্ড</h1>
-      <p>স্বাগতম, <strong><%= adminUser.display_name %></strong> | <a href="/admin/logout">লগআউট</a></p>
+      <p>স্বাগতম, <strong><%= (adminUser && adminUser.display_name) || (user && user.full_name) || 'স্টাফ' %></strong> | <a href="/admin/logout">লগআউট</a></p>
     </div>
     <div class="stat-grid">
       <a href="/admin/notices"   class="stat-box"><i class="fas fa-bell"></i><div><strong><%= counts.notices %></strong><span>বিজ্ঞপ্তি</span></div></a>

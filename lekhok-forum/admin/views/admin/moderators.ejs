@@ -32,12 +32,11 @@
       <form method="POST" action="/admin/users/<%= u.id %>/scopes" style="margin-top:10px; padding-top:10px; border-top:1px dashed #e5e5e5;">
         <label style="font-weight:600; font-size:.85rem; display:block; margin-bottom:6px;">কাজের পরিধি:</label>
         <div style="display:flex; gap:14px; flex-wrap:wrap;">
-          <% ADMIN_SCOPES.forEach(s => {
-               const has = (u.scopes || []).includes(s);
-               const labels = { daily: 'ডেইলি কনটেন্ট', notices: 'বিজ্ঞপ্তি', events: 'ইভেন্ট', gallery: 'গ্যালারি', complaints: 'অভিযোগ' };
+          <% CANONICAL_SCOPES.forEach(s => {
+               const has = (u.scopes || []).includes(s.key);
           %>
             <label style="font-weight:normal; display:flex; align-items:center; gap:5px; font-size:.9rem;">
-              <input type="checkbox" name="scopes" value="<%= s %>" <%= has ? 'checked' : '' %>> <%= labels[s] || s %>
+              <input type="checkbox" name="scopes" value="<%= s.key %>" <%= has ? 'checked' : '' %>> <%= s.label %>
             </label>
           <% }) %>
         </div>

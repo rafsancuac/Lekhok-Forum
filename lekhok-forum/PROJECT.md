@@ -1,6 +1,6 @@
 # লেখক ফোরাম — সম্পূর্ণ প্রজেক্ট ডকুমেন্টেশন
 
-> **সংস্করণ:** v4 (regression সেশন ৭-এর ফিক্সের পর) · **শেষ হালনাগাদ:** ৪ সেপ্টেম্বর ২০২৬
+> **সংস্করণ:** v5 (লগইন/মডারেটর সেশন ৮-এর ফিক্সের পর) · **শেষ হালনাগাদ:** ৪ সেপ্টেম্বর ২০২৬
 > **রিপোজিটরি:** https://github.com/rafsancuac/Lekhok-Forum.git
 >
 > এই ফাইলটা পুরো প্রজেক্টের একমাত্র সোর্স অব ট্রুথ। **একাধিক এজেন্ট সমান্তরালে এই রিপোতে কাজ
@@ -113,7 +113,10 @@ node server.js       # http://localhost:8080
 
 - **সাইট:** http://localhost:8080
 - **অ্যাডমিন প্যানেল:** http://localhost:8080/admin → `admin` / `admin123` *(ডেমো — প্রোডাকশনে অবশ্যই বদলাতে হবে)*
-- **ডেমো ইউজার:** `amin` / `sadia` / `mahmud` / `farzana` / `naim` → পাসওয়ার্ড `demo123`
+  v2.6 থেকে **একই ক্রেডেনশিয়াল `/login` (ইউজার পেজ) থেকেও কাজ করে** — অ্যাডমিন লগইন করলে সরাসরি `/admin`-এ পড়বেন।
+- **ডেমো মডারেটর:** `moderator` / `moderator123` → `/login` থেকে লগইন, প্যানেল `/moderator`
+  (সব স্কোপ আছে; `/admin`-এর স্কোপড সেকশনগুলোও দেখতে পারে) *(ডেমো — প্রোডাকশনে বদলাতে হবে)*
+- **ডেমো ইউজার:** `ismail` / `monem` / `karishma` / `mahfuz` / `nusrat` → পাসওয়ার্ড `demo123`
 - পোর্ট বদলাতে: `PORT=3000 node server.js`
 - ডাটাবেজ রিসেট: `lekhok.db` ফাইল ডিলিট করে সার্ভার রিস্টার্ট করলেই অটো সিড হয়ে যায়
 - **প্রোডাকশন সিক্রেট:** `SESSION_SECRET` এনভায়রনমেন্ট ভ্যারিয়েবল সেট করা উচিত (এখন হার্ডকোডেড ডিফল্ট আছে)
@@ -376,6 +379,42 @@ Hind Siliguri, Tiro Bangla, SolaimanLipi (ডিফল্ট/CDN), Kalpurush, Ti
 - সাম্প্রতিক কমিটে fonts.css + ফন্ট-সিলেক্টর UI (settings-এ ৭+ বাংলা ফন্ট) যোগ হয়েছে — যাচাইকৃত ✓
 
 ---
+
+
+### সেশন ৮ (৪ সেপ্টেম্বর ২০২৬) — অ্যাডমিন লগইন UX, ডেমো মডারেটর, scope-key unification
+**সেশনের ধরন:** verify-and-fix (ব্যবহারকারীর রিপোর্ট: "এডমিন লগিন কাজ করছে না, মডারেটর লগিনের ডিটেইল সেট করা হয়েছে?")।
+
+**ডায়াগনোসিস:** অ্যাডমিন লগইন আসলে কাজ করছিল (`/admin/login`-এ admin/admin123), কিন্তু
+ব্যবহারকারী `/login` (ইউজার পেজ) থেকে চেষ্টা করায় "ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড" দেখাচ্ছিল —
+UX কনফিউশন। আর মডারেটর সিস্টেম কোডে সম্পূর্ণ থাকলেও **কোনো মডারেটর অ্যাকাউন্ট কখনোই তৈরি হয়নি**
+(`moderators` + `moderator_scopes` টেবিল দুটোই ফাঁকা ছিল)।
+
+**পাওয়া ও ঠিক হওয়া বাগ (৪টি):**
+15. **`/login`-এ অ্যাডমিন ক্রেডেনশিয়াল কনফিউজিং এরর** — **ফিক্স:** `POST /login` এখন
+    `admin_users` টেবিলে fallback করে; অ্যাডমিন পাসওয়ার্ড মিললে `session.adminUser` সেট হয়ে
+    সরাসরি `/admin`-এ redirect।
+16. **মডারেটর লগইনের কোনো অ্যাকাউন্ট ছিল না** — **ফিক্স:** `db.js`-এ idempotent
+    `ensureDemoModerator()` — প্রতি বুটে চলে (দুই ব্যাকএন্ডেই): `moderator`/`moderator123`
+    ইউজার, role='moderator', সব canonical scope সহ।
+17. **Scope-key mismatch: `/admin` প্যানেল `notices`/`events` (বহুবচন) আর `/moderator`
+    প্যানে `notice`/`event` (একবচন)** — অ্যাডমিন প্যানেল থেকে প্রমোট করা মডারেটর
+    (ডিফল্ট গ্রান্ট `['daily','notices','events']`) নিজের `/moderator` প্যানেলের কোনো
+    চেকই পাস করত না। **ফিক্স:** `db.hasScope()` এখন alias-aware
+    (notice↔notices, event↔events — SCOPE_ALIASES export করা), `admin/routes.js`-এর
+    লোকাল `hasScope()` এখন `db.hasScope()`-এ delegate করে, রোল-চেঞ্জ ডিফল্ট গ্রান্ট এখন
+    পূর্ণ canonical সেট, স্কোপ-চেকবক্স UI (moderators.ejs + users/edit.ejs) ১০টা
+    canonical scope বাংলা লেবেলসহ দেখায় (users/edit.ejs আগে string-array-তে
+    `s.key`/`s.label` চালায় ভুল করে — undefined রেন্ডার হতো)।
+18. **মডারেটর সেশনে `GET /admin` → 500** — `admin/dashboard.ejs` সবসময়
+    `adminUser.display_name` চালাত; `/login` থেকে মডারেটর সেশনে `adminUser` null।
+    **ফিক্স:** fallback `(adminUser.display_name || user.full_name || 'স্টাফ')`;
+    users/edit.ejs-এর danger-zone guard-ও দুই সেশন টাইপ সামলায়।
+
+**অন্যান্য:** ডেড-কোড ডুপ্লিকেট `GET /admin/moderators` রুট (এক্সপ্রেস কখনো দ্বিতীয়টা
+ব্যবহার করত না) সরানো।
+
+**টেস্ট:** ২১-চেক E2E (`scripts/test-login-fixes.sh` — অ্যাডমিন/মডারেটর/ইউজার লগইন ফ্লো,
+দুই প্যানেলে scope অ্যাক্সেস, 403/302 গার্ড) + ৯১-চেক ফুল regression — **সব ALL GREEN**।
 
 ## ১১. বাগ ফিক্স হিস্ট্রি
 

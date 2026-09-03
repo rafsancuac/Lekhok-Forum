@@ -222,3 +222,36 @@ PORT=8081 TURSO_DATABASE_URL=file:./turso-check.db node server.js
 # Full endpoint suite: scripts/test-lekhok.sh (BASE=http://localhost:8081 ...)
 ```
 Both modes pass the 77-check suite; no `[object Promise]` leaks on any page.
+
+## Cross-Agent Note: Session 8 — Admin-Login UX + Demo Moderator + Scope Unification (৪ সেপ্টেম্বর ২০২৬)
+
+**Status:** ✅ DONE — 21/21 new E2E checks + 91/91 regression green (sql.js)
+
+### What changed (other agents: don't regress these!)
+- **`routes/auth.js` `POST /login`**: falls back to `admin_users` — admin credentials
+  on the user login page now create `session.adminUser` and redirect to `/admin`.
+  Keep this fallback if you touch login.
+- **`db.js`**: new idempotent `ensureDemoModerator()` runs on EVERY boot (both
+  backends) — creates `moderator`/`moderator123` with all canonical scopes if
+  missing; tops up scopes if the user exists but has none. `hasScope()` is now
+  alias-aware via `SCOPE_ALIASES` (exported): `notice↔notices`, `event↔events`.
+- **`admin/routes.js`**: local `hasScope()` delegates to `db.hasScope()`; role-change
+  default grant now = full canonical scope set via `db.grantModerator()`; scope-update
+  route accepts canonical + legacy plural keys; duplicate dead `GET /admin/moderators`
+  removed; views get `CANONICAL_SCOPES` (10 scopes with Bengali labels) —
+  `admin/moderators.ejs` + `admin/users/edit.ejs` render it (users/edit previously
+  called `.key/.label` on plain strings → undefined checkboxes).
+- **`admin/views/admin/dashboard.ejs` + `users/edit.ejs`**: moderator sessions
+  (`session.user`, no `adminUser`) no longer 500 — display_name/danger-zone guarded.
+
+### Demo logins (documented in README + PROJECT.md)
+- admin / admin123 — `/admin/login` **or** `/login` (new fallback)
+- moderator / moderator123 — `/login` → panel at `/moderator` (all scopes)
+- ismail|monem|karishma|mahfuz|nusrat / demo123 — `/login`
+
+### Verify
+```bash
+node server.js &
+bash scripts/test-login-fixes.sh   # 21 checks
+bash scripts/test-lekhok.sh http://localhost:8080   # 91 checks
+```

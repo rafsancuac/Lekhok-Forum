@@ -43,3 +43,6 @@ chrome-devtools-mcp/
 lekhok-forum/lekhok-forum/
 scripts/
 skills/
+
+# user-uploaded files (session screenshots etc.)
+upload/

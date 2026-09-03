@@ -11,6 +11,30 @@ const setSetting = db.setSetting;
 // Admin  = admin_users session OR user session with role='admin'  → full access
 // Staff  = admin + user session with role='moderator' (scope-limited)
 const ADMIN_SCOPES = ['daily', 'notices', 'events', 'gallery', 'complaints'];
+// Unified scope catalogue (v2.6): canonical singular keys match the
+// /moderator panel + MODERATOR_SCOPES catalogue; legacy plural keys keep
+// working via db.hasScope() aliases. The scope checkbox UI shows this list.
+const CANONICAL_SCOPES = [
+  { key: 'notice',      label: 'বিজ্ঞপ্তি' },
+  { key: 'event',       label: 'ইভেন্ট' },
+  { key: 'gallery',     label: 'গ্যালারি' },
+  { key: 'complaints',  label: 'অভিযোগ' },
+  { key: 'daily',       label: 'ডেইলি কনটেন্ট' },
+  { key: 'quiz',        label: 'আজকের কুইজ' },
+  { key: 'this_day',    label: 'আজকের এই দিনে' },
+  { key: 'best_writer', label: 'মাসিক সেরা লেখক' },
+  { key: 'activity',    label: 'সাংগঠনিক কার্যক্রম' },
+  { key: 'epaper',      label: 'আজকের ই-পেপার' }
+];
+const VALID_SCOPE_KEYS = CANONICAL_SCOPES.map(s => s.key).concat(ADMIN_SCOPES); // canonical + legacy plural
+
+function expandScopes(list) {
+  const out = new Set(list || []);
+  for (const s of (list || [])) {
+    if (db.SCOPE_ALIASES && db.SCOPE_ALIASES[s]) out.add(db.SCOPE_ALIASES[s]);
+  }
+  return [...out];
+}
 
 function requireAdmin(req, res, next) {
   if (req.session && req.session.adminUser) return next();
@@ -31,7 +55,9 @@ async function hasScope(req, scope) {
   if (!u) return false;
   if (u.role === 'admin') return true;
   if (u.role !== 'moderator') return false;
-  return !!await db.prepare('SELECT id FROM moderator_scopes WHERE user_id = ? AND scope = ?').get(u.id, scope);
+  // Delegate to db.hasScope — alias-aware (notice/notices, event/events)
+  // and cross-backend (sql.js + Turso).
+  return !!(await db.hasScope(u.id, scope));
 }
 
 function requireScope(scope) {
@@ -299,9 +325,10 @@ router.get('/moderators', requireAdmin, async (req, res) => {
   const staff = [];
   for (const u of users.filter(u => u.role === 'moderator' || u.role === 'admin')) {
     const scopes = await db.prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(u.id);
-    staff.push({ ...u, scopes: scopes.map(r => r.scope) });
+    // Expand aliases so checkbox state is accurate whichever variant is stored
+    staff.push({ ...u, scopes: expandScopes(scopes.map(r => r.scope)) });
   }
-  res.render('admin/moderators', { users, staff, ADMIN_SCOPES, currentPath: '/admin/moderators' });
+  res.render('admin/moderators', { users, staff, CANONICAL_SCOPES, currentPath: '/admin/moderators' });
 });
 
 router.post('/moderators/:userId/grant', requireAdmin, async (req, res) => {
@@ -390,21 +417,8 @@ router.delete('/complaints/:id', requireScope('complaints'), async (req, res) =>
 // ══════════════════════════════════════════════════════════════════════════════
 // ── Moderators & users management (admin only) ───────────────────────────────
 // ══════════════════════════════════════════════════════════════════════════════
-router.get('/moderators', requireAdmin, async (req, res) => {
-  const users = await db.prepare(`
-    SELECT u.*,
-      (SELECT COUNT(*) FROM moderator_scopes ms WHERE ms.user_id = u.id) as scope_count,
-      (SELECT COUNT(*) FROM posts p WHERE p.author_id = u.id) as post_count
-    FROM users u ORDER BY u.role DESC, u.full_name ASC
-  `).all();
-  // (async migration) nested per-user scope lookups moved from sync .map to for..of
-  const staff = [];
-  for (const u of users.filter(u => u.role === 'moderator' || u.role === 'admin')) {
-    const scopes = await db.prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(u.id);
-    staff.push({ ...u, scopes: scopes.map(r => r.scope) });
-  }
-  res.render('admin/moderators', { users, staff, ADMIN_SCOPES, currentPath: '/admin/moderators' });
-});
+// NOTE: a second, identical `GET /moderators` registration used to live here —
+// Express only ever used the first one, so it was dead code. Removed in v2.6.
 
 // Change a user's role (user / moderator / admin / banned)
 router.post('/users/:id/role', requireAdmin, async (req, res) => {
@@ -416,10 +430,11 @@ router.post('/users/:id/role', requireAdmin, async (req, res) => {
   if (role && allowedRoles.includes(role)) {
     await db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, req.params.id);
     if (role === 'moderator' && !await db.prepare('SELECT id FROM moderator_scopes WHERE user_id = ?').get(req.params.id)) {
-      // New moderators get the common scopes by default
-      for (const sc of ['daily', 'notices', 'events']) {
-        await db.prepare('INSERT INTO moderator_scopes (user_id, scope) VALUES (?, ?)').run(req.params.id, sc);
-      }
+      // New moderators get the full canonical scope set by default (v2.6).
+      // Previously only ['daily','notices','events'] was granted — plural keys
+      // satisfied NONE of the /moderator panel's singular scope checks, so a
+      // freshly promoted moderator could not use their own panel at all.
+      await db.grantModerator(parseInt(req.params.id), VALID_SCOPE_KEYS, null);
     }
   }
   if (status && allowedStatus.includes(status)) {
@@ -449,12 +464,13 @@ router.get('/users', requireAdmin, async (req, res) => {
 router.get('/users/:id/edit', requireAdmin, async (req, res) => {
   const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
   if (!u) return res.redirect('/admin/users');
-  const scopes = (await db.prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(u.id)).map(r => r.scope);
+  const rawScopes = (await db.prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(u.id)).map(r => r.scope);
+  const scopes = expandScopes(rawScopes);
   const postCount = (await db.prepare('SELECT COUNT(*) AS c FROM posts WHERE author_id = ?').get(u.id)).c;
   const complaintCount = (await db.prepare('SELECT COUNT(*) AS c FROM complaints WHERE submitted_by = ?').get(u.id)).c;
   const followerCount = (await db.prepare('SELECT COUNT(*) AS c FROM follows WHERE following_id = ?').get(u.id)).c;
   res.render('admin/users/edit', {
-    u, scopes, postCount, complaintCount, followerCount, ADMIN_SCOPES, currentPath: '/admin/users'
+    u, scopes, postCount, complaintCount, followerCount, CANONICAL_SCOPES, currentPath: '/admin/users'
   });
 });
 
@@ -465,8 +481,10 @@ router.post('/users/:id/scopes', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM moderator_scopes WHERE user_id = ?').run(req.params.id);
   const scopes = Array.isArray(req.body.scopes) ? req.body.scopes : (req.body.scopes ? [req.body.scopes] : []);
   for (const s of scopes) {
-    if (ADMIN_SCOPES.includes(s)) {
-      await db.prepare('INSERT INTO moderator_scopes (user_id, scope, granted_by) VALUES (?, ?, ?)').run(req.params.id, s, req.session.user ? req.session.user.id : null);
+    // Accept canonical + legacy plural keys (aliases keep old rows working)
+    if (VALID_SCOPE_KEYS.includes(s)) {
+      const granterId = req.session.user ? req.session.user.id : (req.session.adminUser ? req.session.adminUser.id : null);
+      await db.prepare('INSERT INTO moderator_scopes (user_id, scope, granted_by) VALUES (?, ?, ?)').run(req.params.id, s, granterId);
     }
   }
   res.redirect('/admin/moderators');

@@ -490,6 +490,62 @@ async function initDb() {
       console.error('[db] Demo content seeding failed (non-fatal):', e.message);
     }
   }
+
+  // Demo moderator account (moderator / moderator123) — idempotent, runs on
+  // EVERY boot for both backends. The moderator system existed in code
+  // (grantModerator, /moderator panel, moderator_scopes) but no moderator
+  // account was ever created — `moderators` and `moderator_scopes` were empty
+  // on every install, so the documented moderator flow had no login.
+  try {
+    await ensureDemoModerator();
+  } catch (e) {
+    console.error('[db] Demo moderator seeding failed (non-fatal):', e.message);
+  }
+}
+
+// ── Demo moderator seeder ───────────────────────────────────────────────────
+// Creates username `moderator` (password `moderator123`) with role
+// 'moderator' and ALL canonical scopes so both panels (/moderator AND the
+// scope-limited /admin sections) work out of the box. Canonical scope keys
+// unify the old plural/split keys ('notices'/'events' on /admin vs
+// 'notice'/'event' on /moderator) — plural legacy keys are also granted so
+// older exact-match UI checks keep showing the right checkbox state.
+async function ensureDemoModerator() {
+  const DEMO_MOD = {
+    username: 'moderator',
+    password: 'moderator123',
+    full_name: 'ডেমো মডারেটর',
+    designation: 'মডারেটর',
+    bio: 'ডেমো মডারেটর অ্যাকাউন্ট — মডারেটর প্যানেল পরীক্ষার জন্য।'
+  };
+  const scopes = [
+    // canonical (moderator panel + catalogue)
+    'quiz', 'this_day', 'best_writer', 'activity', 'notice', 'epaper', 'event', 'complaints',
+    // admin-panel feature scopes
+    'daily', 'gallery',
+    // legacy plural variants (kept so admin checkbox UI state stays accurate)
+    'notices', 'events'
+  ];
+  const existing = await prepare('SELECT id FROM users WHERE username = ?').get(DEMO_MOD.username);
+  if (existing) {
+    // Already present — only top up scopes if a moderator has none (e.g. the
+    // user was promoted manually with the old broken default grant).
+    const cnt = await prepare('SELECT COUNT(*) AS c FROM moderator_scopes WHERE user_id = ?').get(existing.id);
+    if (existing.role !== 'moderator' || !cnt || cnt.c === 0) {
+      await grantModerator(existing.id, scopes, null);
+      saveDb();
+      console.log('[db] ✓ Demo moderator scopes topped up');
+    }
+    return;
+  }
+  const hash = bcrypt.hashSync(DEMO_MOD.password, 10);
+  await prepare(
+    `INSERT INTO users (username, password_hash, full_name, designation, bio, gender, status, role) VALUES (?, ?, ?, ?, ?, 'other', 'active', 'user')`
+  ).run(DEMO_MOD.username, hash, DEMO_MOD.full_name, DEMO_MOD.designation, DEMO_MOD.bio);
+  const u = await prepare('SELECT id FROM users WHERE username = ?').get(DEMO_MOD.username);
+  await grantModerator(u.id, scopes, null);
+  saveDb();
+  console.log('[db] ✓ Demo moderator seeded (login: moderator / moderator123)');
 }
 
 async function seedAdmin() {
@@ -842,6 +898,11 @@ function saveDb() {
 }
 
 // ── Moderator helpers (sync-friendly on sql.js, async on Turso) ────────────
+// Scope alias map: the /admin panel historically used plural keys
+// ('notices', 'events') while the /moderator panel + MODERATOR_SCOPES
+// catalogue use singular ('notice', 'event'). A moderator holding either
+// variant must pass BOTH panels' checks, so hasScope() accepts aliases.
+const SCOPE_ALIASES = { notices: 'notice', events: 'event', notice: 'notices', event: 'events' };
 function isModerator(userId) {
   if (backend.type === 'sqljs') return !!backend.prepare('SELECT id FROM moderators WHERE user_id = ?').get(userId);
   return backend.prepare('SELECT id FROM moderators WHERE user_id = ?').get(userId).then(r => !!r);
@@ -853,10 +914,18 @@ function getModeratorScopes(userId) {
   return backend.prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(userId).then(rows => rows.map(r => r.scope));
 }
 function hasScope(userId, scope) {
+  const variants = [scope];
+  if (SCOPE_ALIASES[scope]) variants.push(SCOPE_ALIASES[scope]);
   if (backend.type === 'sqljs') {
-    return !!backend.prepare('SELECT id FROM moderator_scopes WHERE user_id = ? AND scope = ?').get(userId, scope);
+    return variants.some(v => !!backend.prepare('SELECT id FROM moderator_scopes WHERE user_id = ? AND scope = ?').get(userId, v));
   }
-  return backend.prepare('SELECT id FROM moderator_scopes WHERE user_id = ? AND scope = ?').get(userId, scope).then(r => !!r);
+  return (async () => {
+    for (const v of variants) {
+      const r = await backend.prepare('SELECT id FROM moderator_scopes WHERE user_id = ? AND scope = ?').get(userId, v);
+      if (r) return true;
+    }
+    return false;
+  })();
 }
 function grantModerator(userId, scopes, grantedBy) {
   if (backend.type === 'sqljs') {
@@ -936,6 +1005,7 @@ module.exports = {
   setSetting,
   saveDb,
   MODERATOR_SCOPES,
+  SCOPE_ALIASES,
   isModerator,
   getModeratorScopes,
   hasScope,

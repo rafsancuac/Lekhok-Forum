@@ -45,11 +45,26 @@ On first start, the database is auto-initialized with sample data.
 
 ## 🔐 Admin Panel
 
-URL: **http://localhost:8080/admin**
+URL: **http://localhost:8080/admin** (login page: `/admin/login`)
 
 Default credentials (change these immediately in production):
 - Username: `admin`
 - Password: `admin123`
+
+> v2.6+: the same admin credentials also work on the user login page `/login`
+> — you land straight on `/admin`.
+
+## 🛡️ Moderator Panel
+
+URL: **http://localhost:8080/moderator** (login via `/login`)
+
+Demo moderator (auto-created on boot, all scopes — change in production):
+- Username: `moderator`
+- Password: `moderator123`
+
+Moderators can also use the scoped `/admin` sections they have permission for
+(notices / events / gallery / daily / complaints). Manage scopes at
+`/admin/moderators`.
 
 The admin can manage:
 - 📋 বিজ্ঞপ্তি (Notices)
