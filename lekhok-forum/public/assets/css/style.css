@@ -537,7 +537,7 @@ ul { list-style: none; padding: 0; margin: 0; }
   position: fixed; top: 0; left: 0; height: 3px; width: 0%;
   background: linear-gradient(90deg, var(--accent), var(--accent-light));
   z-index: 200; transition: width 0.1s linear;
-  box-shadow: 0 0 10px rgba(197,160,89,0.6);
+  box-shadow: 0 0 10px rgba(5,150,105,);
 }
 
 /* Sticky header — shrink on scroll (CURHS signature) */
@@ -624,7 +624,7 @@ ul { list-style: none; padding: 0; margin: 0; }
 /* CURHS-এর মতো full animated home hero */
 .hero.curhs {
   background:
-    radial-gradient(ellipse at top right, rgba(197,160,89,0.22), transparent 55%),
+    radial-gradient(ellipse at top right, rgba(5,150,105,), transparent 55%),
     radial-gradient(ellipse at bottom left, rgba(10,31,68,0.55), transparent 50%),
     linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
   padding: 100px 0 120px;
@@ -635,7 +635,7 @@ ul { list-style: none; padding: 0; margin: 0; }
   content: ''; position: absolute; inset: 0;
   background-image:
     radial-gradient(rgba(255,255,255,0.06) 1.5px, transparent 1.5px),
-    radial-gradient(rgba(197,160,89,0.05) 1px, transparent 1px);
+    radial-gradient(rgba(5,150,105,) 1px, transparent 1px);
   background-size: 40px 40px, 25px 25px;
   background-position: 0 0, 20px 20px;
   pointer-events: none; opacity: 0.7;
@@ -645,7 +645,7 @@ ul { list-style: none; padding: 0; margin: 0; }
 }
 .hero.curhs .particle {
   position: absolute; border-radius: 50%;
-  background: linear-gradient(135deg, rgba(197,160,89,0.4), rgba(212,175,55,0.2));
+  background: linear-gradient(135deg, rgba(5,150,105,), rgba(16,185,129,0.2));
   filter: blur(2px);
   animation: float 12s ease-in-out infinite;
 }
@@ -666,9 +666,9 @@ ul { list-style: none; padding: 0; margin: 0; }
 .hero.curhs .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 16px; border-radius: 999px;
-  background: rgba(197,160,89,0.14); color: var(--accent);
+  background: rgba(5,150,105,); color: var(--accent);
   font-size: 13px; font-weight: 600; margin-bottom: 22px;
-  border: 1px solid rgba(197,160,89,0.28);
+  border: 1px solid rgba(5,150,105,);
   animation: slideDown 0.8s ease-out;
 }
 .hero.curhs .hero-title {
@@ -691,7 +691,7 @@ ul { list-style: none; padding: 0; margin: 0; }
 /* Page-header — keep gradient, add eyebrow + divider */
 .page-header .container > .eyebrow {
   display: inline-block; padding: 6px 14px; border-radius: 999px;
-  background: rgba(197,160,89,0.14); color: var(--accent);
+  background: rgba(5,150,105,); color: var(--accent);
   font-size: 13px; margin-bottom: 14px;
   border: 1px solid rgba(5,150,105,0.25);
 }
@@ -811,7 +811,7 @@ a.notice-card-link .notice-item { margin: 0; }
   cursor: pointer; border: 0;
   opacity: 0; visibility: hidden; transform: translateY(20px);
   transition: var(--transition);
-  box-shadow: 0 6px 18px rgba(197,160,89,0.35);
+  box-shadow: 0 6px 18px rgba(5,150,105,);
   z-index: 80;
 }
 .back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
@@ -913,7 +913,7 @@ a.notice-card-link .notice-item { margin: 0; }
   flex-direction: column;
   padding: 26px 24px;
   background: var(--bg-card, #fff);
-  border: 1px solid rgba(197, 160, 89, 0.22);
+  border: 1px solid rgba(5,150,105,);
   border-radius: 14px;
   text-decoration: none;
   color: inherit;
@@ -925,7 +925,7 @@ a.notice-card-link .notice-item { margin: 0; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(197, 160, 89, 0.10), transparent 60%);
+  background: linear-gradient(135deg, rgba(5,150,105,), transparent 60%);
   opacity: 0;
   transition: opacity 0.28s ease;
   z-index: -1;
@@ -944,7 +944,7 @@ a.notice-card-link .notice-item { margin: 0; }
   color: #fff;
   font-size: 20px;
   margin-bottom: 14px;
-  box-shadow: 0 6px 16px rgba(197, 160, 89, 0.32);
+  box-shadow: 0 6px 16px rgba(5,150,105,);
 }
 .today-card h3 {
   font-size: 14px;
