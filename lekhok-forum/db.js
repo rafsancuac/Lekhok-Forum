@@ -775,25 +775,12 @@ function seedDemoContentLocal() {
 }
 
 // ── Synchronous-looking wrapper ────────────────────────────────────────────
-// Most existing code calls `db.prepare(...).all()` synchronously. To keep
-// that working on Turso, we cache the last-issued prepare() result locally
-// and, when called sync, throw a friendly error pointing to the async API.
-// In practice every serverless request awaits the function chain.
+// Every route callsite now awaits prepare(...).all()/get()/run():
+//   • sql.js — methods are synchronous; `await` on their plain results is a
+//     harmless pass-through, so the same route code runs unchanged.
+//   • Turso — methods return promises; the awaited chain resolves normally.
 function prepare(sql) {
-  if (backend.type === 'sqljs') return backend.prepare(sql);
-
-  // Turso: return an object that synchronously throws — but we also attach
-  // the async API as `*Async` so callers that have been updated can use it.
-  const proxy = {
-    all: (...p) => { throw new Error('Turso backend: use db.prepare(sql).allAsync(...).'); },
-    get: (...p) => { throw new Error('Turso backend: use db.prepare(sql).getAsync(...).'); },
-    run: (...p) => { throw new Error('Turso backend: use db.prepare(sql).runAsync(...).'); }
-  };
-  const asyncStmt = backend.prepare(sql);
-  proxy.allAsync = asyncStmt.all;
-  proxy.getAsync = asyncStmt.get;
-  proxy.runAsync = asyncStmt.run;
-  return proxy;
+  return backend.prepare(sql);
 }
 
 function exec(sql) {
@@ -806,6 +793,18 @@ async function getSetting(key) {
     ? backend.prepare('SELECT value FROM settings WHERE key = ?').get(key)
     : await backend.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : null;
+}
+
+// All settings in one query — used by server.js per-request middleware to
+// expose a synchronous getSetting() accessor to EJS templates (a template
+// cannot await). One cheap SELECT per request on Turso.
+async function getSettingsAll() {
+  const rows = backend.type === 'sqljs'
+    ? backend.prepare('SELECT key, value FROM settings').all()
+    : await backend.prepare('SELECT key, value FROM settings').all();
+  const map = {};
+  for (const r of rows) map[r.key] = r.value;
+  return map;
 }
 
 function setSetting(key, value) {
@@ -915,6 +914,7 @@ module.exports = {
   prepare,
   exec,
   getSetting,
+  getSettingsAll,
   setSetting,
   saveDb,
   MODERATOR_SCOPES,

@@ -166,3 +166,37 @@ Complete Bengali social writing platform with:
   আগে `git pull` করে বর্তমান db.js দেখে নিন।
 - **Turso/Vercel async মাইগ্রেশন এখনো বাকি** — কেউ Vercel deploy নিয়ে কাজ করলে এটা priority #1,
   কিন্তু স্কোপ অনেক বড় (৩২০+ কল-সাইট)। শুরু করার আগে PROJECT.md §১২ পড়ুন।
+
+---
+
+## Plan: Turso / Vercel Async Migration (COMPLETE)
+**Date:** 2026-09-03
+**Status:** ✅ DONE — both backends green (77/77 checks each)
+
+### What changed
+- **db.js**: `prepare()` now returns the Turso promise-API directly (removed the
+  throw-on-sync proxy). `await` on sql.js sync results is a pass-through, so the
+  SAME route code runs on both backends. Added `getSettingsAll()`.
+- **All route files + admin/routes.js + helpers/notify.js**: every
+  `prepare(...).all()/get()/run()`, `exec()`, `getSetting()/setSetting()` and
+  dual-mode helper call (`hasScope`, `getModeratorScopes`, `grantModerator`,
+  `revokeModerator`, `broadcastToAll`, `getTagPool`, `getReactionSummary`,
+  `isBlockedBetween`, `extractMentions`, `getDailyFor/All`) is now `await`ed;
+  handlers are `async`; nested sync loops (`.forEach`/`.map` with per-item
+  queries) converted to `for..of`.
+- **server.js**: Express Router is patched so async handler rejections are
+  forwarded to `next(err)`; new error middleware (JSON for /api, HTML otherwise);
+  locals middleware is async + pre-loads settings once per request and exposes a
+  SYNC `res.locals.getSetting(k)` accessor for EJS templates.
+- Bonus fixes in this pass: `isOnline()` returned `undefined` (→ `{}` from
+  /api/messages/online); `/questions/:id` route was missing (every question link
+  404'd); `POST /api/comment` now returns the new comment `id`.
+
+### Verify
+```bash
+npm install && npm run dev            # sql.js — http://localhost:8080
+# Turso path (no account needed): point TURSO_DATABASE_URL at a file:
+PORT=8081 TURSO_DATABASE_URL=file:./turso-check.db node server.js
+# Full endpoint suite: scripts/test-lekhok.sh (BASE=http://localhost:8081 ...)
+```
+Both modes pass the 77-check suite; no `[object Promise]` leaks on any page.
