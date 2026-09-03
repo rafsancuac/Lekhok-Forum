@@ -320,10 +320,188 @@ router.get('/qa/:id', (req, res) => {
 
 // ── Members directory ────────────────────────────────────────────────────────
 router.get('/members', (req, res) => {
-  const search = req.query.q || '';
-  let q = 'SELECT id, username, full_name, designation, bio, avatar_url, gender, last_login, created_at FROM users WHERE status = ?';
+  const search     = req.query.q    || '';
+  const roleFilter = req.query.role || '';
+  const deptFilter = req.query.dept || '';
+
+  // Pull all active users to build the filter dropdowns AND the dept→raws reverse map
+  const allUsers = db.prepare('SELECT designation, role FROM users WHERE status = ?').all('active');
+
+  // Unique roles — Bengali labels
+  const roleMap = { user: 'ব্যবহারকারী', admin: 'অ্যাডমিন', moderator: 'মডারেটর' };
+  const uniqueRoles = [...new Set(allUsers.map(u => u.role).filter(Boolean))].sort();
+
+  // ── Department canonicalization ──
+  // Decode any HTML entities (e.g. "&amp;") in the raw designation so "& journalism"
+  // and "Communication &amp; Journalism" both produce the same key.
+  const decode = s => s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+  const norm = s => decode(s).split('(')[0].trim().replace(/\s+/g, ' ').toLowerCase();
+
+  // Canonical map: variant → preferred label (Bengali where possible, else English)
+  const CANON = {
+    'accounting': 'হিসাববিজ্ঞান', 'a/counting': 'হিসাববিজ্ঞান', 'accounts': 'হিসাববিজ্ঞান',
+    'anthropology': 'নৃবিজ্ঞান',
+    'arabic': 'আরবি', 'arabic literature': 'আরবি',
+    'bangla': 'বাংলা', 'bangladesh studies': 'বাংলাদেশ স্টাডিজ',
+    'botany': 'উদ্ভিদবিজ্ঞান',
+    'chemistry': 'রসায়ন',
+    'communication & journalism': 'যোগাযোগ ও সাংবাদিকতা',
+    'communication and journalism': 'যোগাযোগ ও সাংবাদিকতা',
+    'criminology': 'ক্রিমিনোলজি', 'criminology and police science': 'ক্রিমিনোলজি',
+    'economics': 'অর্থনীতি',
+    'electrical and electronic engineering': 'তড়িৎ ও ইলেকট্রনিক প্রকৌশল',
+    'electrical and electronics engineering': 'তড়িৎ ও ইলেকট্রনিক প্রকৌশল',
+    'english': 'ইংরেজি', 'department of english': 'ইংরেজি', 'department of engllish': 'ইংরেজি',
+    'englisg': 'ইংরেজি',
+    'history': 'ইতিহাস',
+    'islamic history and culture': 'ইসলামের ইতিহাস ও সংস্কৃতি',
+    'islamic history & culture': 'ইসলামের ইতিহাস ও সংস্কৃতি',
+    'islamic history and calture': 'ইসলামের ইতিহাস ও সংস্কৃতি',
+    'islamic studies': 'ইসলামিক স্টাডিজ',
+    'law': 'আইন',
+    'management': 'ম্যানেজমেন্ট', 'human resources management': 'ম্যানেজমেন্ট',
+    'marketing': 'মার্কেটিং',
+    'mathematics': 'গণিত',
+    'pali': 'পালি',
+    'persian language and literature': 'ফারসি',
+    'philosophy': 'দর্শন',
+    'physical education and sports science': 'শারীরিক শিক্ষা',
+    'political science': 'রাষ্ট্রবিজ্ঞান',
+    'sanskrit': 'সংস্কৃত',
+    'sociology': 'সমাজতত্ত্ব',
+    'soil science': 'মৃত্তিকা বিজ্ঞান',
+    'statistics': 'পরিসংখ্যান',
+    'zoology': 'প্রাণিবিজ্ঞান',
+    // Bengali variants → same Bengali canon
+    'অর্থনীতি': 'অর্থনীতি',
+    'অ্যারাবিক': 'আরবি', 'আরবি': 'আরবি', 'আরবী': 'আরবি', 'আরবি ভাষা ও সাহিত্য': 'আরবি',
+    'আইইআর': 'আইইআর', 'ier': 'আইইআর',
+    'ইনস্টিটিউট অব এডুকেশন অ্যান্ড রিসার্চ': 'আইইআর', 'institute of education and research': 'আইইআর',
+    'আইন': 'আইন', 'আইন ও বিচার': 'আইন',
+    'আধুনিক ভাষা ইনস্টিটিউট': 'আধুনিক ভাষা ইনস্টিটিউট',
+    'আন্তর্জাতিক সম্পর্ক': 'আন্তর্জাতিক সম্পর্ক',
+    'ইংরেজি': 'ইংরেজি',
+    'ইতিহাস': 'ইতিহাস', 'ইতিহাস।': 'ইতিহাস',
+    'ইসলামিক স্টাডিজ': 'ইসলামিক স্টাডিজ',
+    'ইসলামের ইতিহাস ও সংস্কৃতি': 'ইসলামের ইতিহাস ও সংস্কৃতি',
+    'ইসলামের ইতিহাস এবং সংস্কৃতি': 'ইসলামের ইতিহাস ও সংস্কৃতি',
+    'ইসলামের ইতিহাসের ও সংস্কৃতি': 'ইসলামের ইতিহাস ও সংস্কৃতি',
+    'উদ্ভিদবিজ্ঞান': 'উদ্ভিদবিজ্ঞান',
+    'একাউন্টিং': 'হিসাববিজ্ঞান', 'হিসাববিজ্ঞান ও অ্যাকাউন্টিং': 'হিসাববিজ্ঞান',
+    'কেমিস্ট্রি': 'রসায়ন', 'রসায়ন বিজ্ঞান': 'রসায়ন', 'ফলিত রসায়ন ও কেমিকৌশল': 'রসায়ন',
+    'ক্রিমিনোলজি এন্ড পুলিশ সাইন্স': 'ক্রিমিনোলজি',
+    'গণিত': 'গণিত',
+    'চারুকলা': 'চারুকলা',
+    'তথ্য ও যোগাযোগ প্রযুক্তি': 'তথ্য ও যোগাযোগ প্রযুক্তি',
+    'দর্শন': 'দর্শন',
+    'নাট্যকলা': 'নাট্যকলা',
+    'পরিসংখ্যান': 'পরিসংখ্যান',
+    'পালি': 'পালি', 'পালি ও বৌদ্ধ দর্শন': 'পালি',
+    'পদার্থবিজ্ঞান': 'পদার্থবিজ্ঞান',
+    'প্রাণিবিজ্ঞান': 'প্রাণিবিজ্ঞান',
+    'বাংলা': 'বাংলা', 'বাংলা বিভাগ': 'বাংলা',
+    'বাংলাদেশ স্টাডিজ': 'বাংলাদেশ স্টাডিজ',
+    'ব্যাংকিং অ্যান্ড ইন্স্যুরেন্স': 'ব্যাংকিং ও বীমা',
+    'মনোবিজ্ঞান': 'মনোবিজ্ঞান',
+    'মার্কেটিং': 'মার্কেটিং',
+    'মৃত্তিকা বিজ্ঞান': 'মৃত্তিকা বিজ্ঞান', 'মাটি ও পরিবেশ বিজ্ঞান': 'মৃত্তিকা বিজ্ঞান',
+    'ম্যানেজমেন্ট': 'ম্যানেজমেন্ট',
+    'যোগাযোগ ও সাংবাদিকতা': 'যোগাযোগ ও সাংবাদিকতা',
+    'রাজনীতি বিজ্ঞান': 'রাষ্ট্রবিজ্ঞান', 'রাজনীতি বিজ্ঞান বিভাগ': 'রাষ্ট্রবিজ্ঞান',
+    'পলিটিকাল সাইন্স': 'রাষ্ট্রবিজ্ঞান',
+    'রাষ্ট্রবিজ্ঞান': 'রাষ্ট্রবিজ্ঞান',
+    'লোকপ্রশাসন': 'লোকপ্রশাসন', 'লোক প্রশাসন': 'লোকপ্রশাসন',
+    'সংস্কৃত': 'সংস্কৃত', 'সংস্কৃত বিভাগ': 'সংস্কৃত',
+    'সমাজতত্ত্ব': 'সমাজতত্ত্ব',
+    'ফাইন্যান্স': 'ফাইন্যান্স',
+    'ফারসি ভাষা ও সাহিত্য': 'ফারসি',
+    'ইলেকট্রিক্যাল অ্যান্ড ইলেকট্রনিক ইঞ্জিনিয়ারিং': 'তড়িৎ ও ইলেকট্রনিক প্রকৌশল',
+    'ইলেকট্রিক্যাল এন্ড ইলেকট্রনিকস ইঞ্জিনিয়ারং': 'তড়িৎ ও ইলেকট্রনিক প্রকৌশল',
+    'কম্পিউটার বিজ্ঞান ও প্রকৌশল': 'কম্পিউটার বিজ্ঞান ও প্রকৌশল', 'cse': 'কম্পিউটার বিজ্ঞান ও প্রকৌশল',
+    'শিক্ষা ও গবেষণা ইন্সটিটিউট': 'শিক্ষা ও গবেষণা ইন্সটিটিউট',
+    'ifa': 'আইএফএ', 'iml': 'আইএমএল', 'ihc': 'আইএইচসি',
+    'pll': 'পিএলএল',
+  };
+
+  // Committee role titles and noise — not departments
+  const BLACKLIST = new Set([
+    'সভাপতি', 'সাধারণ সম্পাদক', 'যুগ্ম সাধারণ সম্পাদক', 'কার্যনির্বাহী সদস্য',
+    'অর্থ সম্পাদক', 'দপ্তর সম্পাদক', 'তথ্য ও প্রযুক্তি সম্পাদক',
+    'প্রচার সম্পাদক', 'প্রশিক্ষণ বিষয়ক সম্পাদক',
+    'সহ-দপ্তর সম্পাদক', 'সহ-সাংগঠনিক সম্পাদক',
+    'সাংগঠনিক সম্পাদক', 'সাহিত্য ও প্রকাশনা সম্পাদক',
+    'সম্পাদকীয় পর্ষদ সদস্য', 'সাহিত্যিক', 'মানবিক',
+    'writer', 'user', 'users', 'department of arabic', 'department of bangla',
+  ]);
+  // Lowercase blacklist for case-insensitive matching
+  const BLACKLIST_LO = new Set([...BLACKLIST].map(s => s.toLowerCase()));
+
+  // Extract the raw department token from a designation
+  // "কার্যনির্বাহী সদস্য — কম্পিউটার বিজ্ঞান" → "কম্পিউটার বিজ্ঞান"
+  // "কম্পিউটার বিজ্ঞান" → "কম্পিউটার বিজ্ঞান"
+  function extractRawDept(designation) {
+    if (!designation) return null;
+    const parts = designation.split(' — ');
+    return (parts[parts.length - 1]).split('(')[0].trim() || null;
+  }
+
+  // Build a canon → set-of-raw-fragments reverse map. Used both for the dropdown
+  // and for matching in the SQL filter.
+  const canonToRaws = new Map();
+  for (const u of allUsers) {
+    const rawExtracted = extractRawDept(u.designation);
+    if (!rawExtracted || rawExtracted.length < 2) continue;
+    const decoded = decode(rawExtracted);
+    if (BLACKLIST.has(decoded)) continue;
+    const key = norm(decoded);
+    if (BLACKLIST_LO.has(key)) continue;
+    const canon = CANON[key] || CANON[decoded] || decoded;
+    // If canon lands on a blacklist entry (e.g. 'user'), drop it
+    if (BLACKLIST_LO.has(norm(canon))) continue;
+    if (!canonToRaws.has(canon)) canonToRaws.set(canon, new Set());
+    canonToRaws.get(canon).add(decoded);
+  }
+  const departments = [...canonToRaws.keys()]
+    .filter(d => !BLACKLIST_LO.has(d.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b, 'bn'));
+
+
+  // ── Map each dept to a stable URL-safe slug so Bengali text never goes
+  //    through URL encoding (which the browser/server mangles for `ী`/`ি` etc).
+  const slugify = s => decodeURIComponent(escape(Buffer.from(s, 'utf8').toString('binary')))
+    .replace(/[^a-zA-Z0-9_-]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toLowerCase()
+    || ('d' + [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0).toString(36));
+  const slugToCanon = new Map();
+  for (const d of departments) {
+    const baseSlug = slugify(d);
+    let slug = baseSlug, i = 2;
+    while (slugToCanon.has(slug)) slug = baseSlug + '_' + (i++);
+    slugToCanon.set(slug, d);
+  }
+  const selectedCanon = deptFilter && slugToCanon.has(deptFilter) ? slugToCanon.get(deptFilter) : null;
+
+  // Now build the SQL query
+  let q = 'SELECT id, username, full_name, designation, bio, avatar_url, gender, role, last_login, created_at FROM users WHERE status = ?';
   const params = ['active'];
-  if (search) { q += ' AND (full_name LIKE ? OR username LIKE ? OR designation LIKE ?)'; const t = '%' + search + '%'; params.push(t, t, t); }
+  if (search)     { q += ' AND (full_name LIKE ? OR username LIKE ? OR designation LIKE ?)'; const t = '%' + search + '%'; params.push(t, t, t); }
+  if (roleFilter) { q += ' AND role = ?'; params.push(roleFilter); }
+  if (selectedCanon && canonToRaws.has(selectedCanon)) {
+    const raws = [...canonToRaws.get(selectedCanon)];
+    if (raws.length === 1) {
+      q += ' AND designation LIKE ?';
+      params.push('%' + raws[0] + '%');
+    } else {
+      const placeholders = raws.map(() => 'designation LIKE ?').join(' OR ');
+      q += ' AND (' + placeholders + ')';
+      raws.forEach(r => params.push('%' + r + '%'));
+    }
+  }
   q += ' ORDER BY full_name ASC';
   const members = db.prepare(q).all(...params);
 
@@ -336,7 +514,14 @@ router.get('/members', (req, res) => {
     founder:  allCommittee.filter(m => m.member_type === 'founder')
   };
   const totalUsers = db.prepare("SELECT COUNT(*) as c FROM users WHERE status='active'").get().c;
-  res.render('user/members', { members, search, totalUsers, grouped, currentPath: '/members' });
+  res.render('user/members', {
+    members, search, totalUsers, grouped, currentPath: '/members',
+    departments, uniqueRoles, roleMap,
+    deptSlugs: [...slugToCanon.keys()],
+    currentRole: roleFilter,
+    currentDept: deptFilter,
+    selectedCanon
+  });
 });
 
 // ── Public profile ───────────────────────────────────────────────────────────

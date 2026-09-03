@@ -109,8 +109,25 @@
           <h2 class="section-title"><i class="fas fa-search"></i> সকল নিবন্ধিত সদস্য</h2>
           <span class="badge"><%= totalUsers %> জন</span>
         </div>
-        <form method="GET" class="search-form" style="max-width:480px;margin-bottom:20px;">
+        <form method="GET" class="search-form member-filter-form">
           <input class="input" type="text" name="q" value="<%= search || '' %>" placeholder="নাম বা পদবি দিয়ে খুঁজুন…">
+          <select class="input" name="dept" aria-label="বিভাগ অনুযায়ী ফিল্টার">
+            <option value="">সকল বিভাগ</option>
+            <% departments.forEach((d, i) => { %>
+              <% const slug = deptSlugs[i]; %>
+              <option value="<%= slug %>" <%= selectedCanon === d ? 'selected' : '' %>><%= d %></option>
+            <% }); %>
+          </select>
+          <select class="input" name="role" aria-label="ভূমিকা অনুযায়ী ফিল্টার">
+            <option value="">সকল ভূমিকা</option>
+            <% uniqueRoles.forEach(r => { %>
+              <option value="<%= r %>" <%= currentRole === r ? 'selected' : '' %>><%= roleMap[r] || r %></option>
+            <% }); %>
+          </select>
+          <button type="submit" class="btn-primary"><i class="fas fa-filter"></i> ফিল্টার</button>
+          <% if (currentDept || currentRole || search) { %>
+            <a href="/members" class="btn-ghost" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;border:1px solid var(--border);"><i class="fas fa-times"></i> মুছুন</a>
+          <% } %>
         </form>
 
         <% if (members.length === 0) { %>
@@ -149,6 +166,17 @@
       border-radius: var(--radius); text-align: center; transition: var(--transition);
     }
     .follow-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--accent); }
+    .member-filter-form {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+      max-width: 720px; margin-bottom: 20px;
+    }
+    .member-filter-form .input { flex: 1; min-width: 160px; }
+    .member-filter-form select { flex: 0 0 160px; }
+    @media (max-width: 600px) {
+      .member-filter-form { flex-direction: column; }
+      .member-filter-form .input,
+      .member-filter-form select { width: 100%; flex: none; }
+    }
   </style>
 </body>
 </html>
