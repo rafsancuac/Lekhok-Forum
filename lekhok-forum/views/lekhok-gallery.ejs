@@ -13,25 +13,73 @@
     <% if (albumKeys.length) { %>
 
       <% albumKeys.forEach(cat => { %>
+        <% const items = albums[cat]; const count = items.length; const useFeatured = count >= 4; %>
         <div class="gallery-album reveal">
           <div class="album-header">
-            <h2 class="album-title"><i class="fas fa-folder-open"></i> <%= categoryLabels[cat] || cat %></h2>
-            <span class="album-count"><%= albums[cat].length %> ছবি</span>
+            <h2 class="album-title">
+              <i class="fas fa-folder-open"></i>
+              <%= categoryLabels[cat] || cat %>
+            </h2>
+            <span class="album-count"><%= count %> <%= count === 1 ? 'ছবি' : 'ছবি' %></span>
           </div>
-          <div class="album-grid">
-            <% albums[cat].slice(0, 8).forEach((g, i) => { %>
-              <a href="<%= g.image_url %>" class="album-photo <%= i === 0 && albums[cat].length > 4 ? 'album-photo--wide' : '' %>" data-caption="<%= g.caption || '' %>" data-lightbox="album-<%= cat %>">
-                <img src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
+
+          <% if (count === 1) { %>
+            <!-- Single photo: centered large view -->
+            <div class="album-single">
+              <a href="<%= items[0].image_url %>"
+                 class="album-photo album-photo--single"
+                 data-caption="<%= items[0].caption || '' %>"
+                 data-lightbox="album-<%= cat %>">
+                <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
                 <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
               </a>
-            <% }) %>
-            <% if (albums[cat].length > 8) { %>
-              <a href="/gallery?category=<%= cat %>" class="album-more" title="আরো দেখুন">
-                <span>+<%= albums[cat].length - 8 %></span>
-                <small>আরো দেখুন</small>
+              <% if (items[0].caption) { %>
+                <p class="album-caption-text"><%= items[0].caption %></p>
+              <% } %>
+            </div>
+
+          <% } else if (count <= 3) { %>
+            <!-- Small album: show all in equal columns -->
+            <div class="album-grid album-grid--small">
+              <% items.forEach(g => { %>
+                <a href="<%= g.image_url %>"
+                   class="album-photo"
+                   data-caption="<%= g.caption || '' %>"
+                   data-lightbox="album-<%= cat %>">
+                  <img src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
+                  <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
+                </a>
+              <% }) %>
+            </div>
+
+          <% } else { %>
+            <!-- Featured album: first photo spans 2x2 -->
+            <div class="album-grid album-grid--featured">
+              <a href="<%= items[0].image_url %>"
+                 class="album-photo album-photo--wide"
+                 data-caption="<%= items[0].caption || '' %>"
+                 data-lightbox="album-<%= cat %>">
+                <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
+                <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
               </a>
-            <% } %>
-          </div>
+              <% items.slice(1, 8).forEach(g => { %>
+                <a href="<%= g.image_url %>"
+                   class="album-photo"
+                   data-caption="<%= g.caption || '' %>"
+                   data-lightbox="album-<%= cat %>">
+                  <img src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
+                  <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
+                </a>
+              <% }) %>
+              <% if (count > 8) { %>
+                <a href="/gallery?category=<%= cat %>" class="album-more" title="আরো দেখুন">
+                  <span>+<%= count - 8 %></span>
+                  <small>আরো দেখুন</small>
+                </a>
+              <% } %>
+            </div>
+          <% } %>
+
         </div>
       <% }) %>
 
@@ -47,54 +95,279 @@
 </section>
 
 <!-- Lightbox -->
-<div class="lightbox" id="lightbox">
-  <button class="lightbox-close" id="lightboxClose"><i class="fas fa-times"></i></button>
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="ছবি দেখুন">
+  <button class="lightbox-close" id="lightboxClose" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
   <img id="lightboxImg" src="" alt="" />
   <div class="lightbox-caption" id="lightboxCaption"></div>
+  <% if (albumKeys.length) { %>
+  <div class="lightbox-nav">
+    <button id="lbPrev" aria-label="আগের ছবি"><i class="fas fa-chevron-left"></i></button>
+    <span id="lbCounter"></span>
+    <button id="lbNext" aria-label="পরের ছবি"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  <% } %>
 </div>
 
 <style>
+/* ── Lightbox (the key fix) ── */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 35, 0.94);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 20px;
+}
+.lightbox.active { display: flex; }
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  transition: background 0.2s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.22); }
+
+#lightboxImg {
+  max-width: 90vw;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.lightbox-caption {
+  color: rgba(255,255,255,0.75);
+  margin-top: 14px;
+  font-size: 0.88rem;
+  text-align: center;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+.lightbox-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 12px;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.82rem;
+}
+.lightbox-nav button {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.lightbox-nav button:hover { background: rgba(255,255,255,0.18); }
+
+/* ── Album layout ── */
 .gallery-album { margin-bottom: 40px; }
 .gallery-album:last-child { margin-bottom: 0; }
-.album-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
-.album-title { font-size: 1.15rem; color: var(--brand); margin: 0; }
-.album-title i { color: var(--accent); margin-right: 8px; }
-.album-count { background: var(--accent-soft, rgba(5,150,105,0.1)); color: var(--accent); padding: 3px 12px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; }
-.album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.album-photo { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: var(--radius-sm); display: block; }
-.album-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+
+.album-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  border-bottom: 2px solid var(--border, #e2e8f0);
+  padding-bottom: 10px;
+}
+.album-title {
+  font-size: 1.1rem;
+  color: var(--brand, #0a1f44);
+  margin: 0;
+  font-weight: 700;
+}
+.album-title i { color: var(--accent, #059669); margin-right: 8px; }
+.album-count {
+  background: rgba(5,150,105,0.1);
+  color: var(--accent, #059669);
+  padding: 3px 12px;
+  border-radius: var(--radius-sm, 5px);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Standard 4-col featured grid */
+.album-grid {
+  display: grid;
+  gap: 10px;
+}
+.album-grid--featured {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Small album: auto-fill equal columns */
+.album-grid--small {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+/* Single photo: centered with max-width */
+.album-single {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.album-photo--single {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16/9;
+}
+
+/* Shared photo styles */
+.album-photo {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-sm, 5px);
+  display: block;
+  background: var(--bg, #f8fafc);
+}
+.album-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
 .album-photo:hover img { transform: scale(1.05); }
-.album-photo--wide { grid-column: span 2; grid-row: span 2; }
-.album-photo-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; color: white; font-size: 1.4rem; }
+
+/* Featured wide: first photo spans 2x2 */
+.album-photo--wide {
+  grid-column: span 2;
+  grid-row: span 2;
+  aspect-ratio: auto;
+}
+
+.album-photo-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #fff;
+  font-size: 1.3rem;
+}
 .album-photo:hover .album-photo-overlay { opacity: 1; }
-.album-more { aspect-ratio: 1; background: var(--bg, #f6f8fb); border: 2px dashed var(--border); border-radius: var(--radius-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
-.album-more:hover { border-color: var(--accent); color: var(--accent); }
+
+.album-more {
+  aspect-ratio: 1;
+  background: var(--bg, #f8fafc);
+  border: 2px dashed var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 5px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.album-more:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); }
 .album-more span { font-size: 1.6rem; font-weight: 700; }
 .album-more small { font-size: 0.78rem; }
+
+.album-caption-text {
+  color: var(--text-muted, #64748b);
+  font-size: 0.85rem;
+  text-align: center;
+  max-width: 640px;
+  margin: 0;
+}
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .album-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .album-grid--featured { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .album-photo--wide { grid-column: span 1; grid-row: span 1; }
+  .album-grid--small { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
-  .album-grid { grid-template-columns: repeat(2, 1fr); }
+  .album-grid--featured { grid-template-columns: repeat(2, 1fr); gap: 5px; }
+  .album-photo--wide { grid-column: span 1; }
+  .album-grid--small { grid-template-columns: 1fr; }
+  .album-photo--single { max-width: 100%; }
 }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+(function() {
   const lb = document.getElementById('lightbox');
   const lbImg = document.getElementById('lightboxImg');
   const lbCap = document.getElementById('lightboxCaption');
-  document.querySelectorAll('[data-lightbox]').forEach(a => {
-    a.addEventListener('click', e => {
+  const lbCounter = document.getElementById('lbCounter');
+  const lbPrev = document.getElementById('lbPrev');
+  const lbNext = document.getElementById('lbNext');
+
+  let allPhotos = [];
+  let currentIdx = 0;
+
+  document.querySelectorAll('[data-lightbox]').forEach(function(a, i) {
+    allPhotos.push({ src: a.href, caption: a.dataset.caption || '' });
+    a.addEventListener('click', function(e) {
       e.preventDefault();
-      lbImg.src = a.href;
-      lbCap.textContent = a.dataset.caption || '';
+      currentIdx = allPhotos.findIndex(p => p.src === a.href);
+      showPhoto(currentIdx);
       lb.classList.add('active');
+      document.body.style.overflow = 'hidden';
     });
   });
-  document.getElementById('lightboxClose').addEventListener('click', () => lb.classList.remove('active'));
-  lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('active'); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('active'); });
-});
+
+  function showPhoto(idx) {
+    const photo = allPhotos[idx];
+    if (!photo) return;
+    lbImg.src = photo.src;
+    lbImg.alt = photo.caption;
+    lbCap.textContent = photo.caption;
+    if (lbCounter) lbCounter.textContent = (idx + 1) + ' / ' + allPhotos.length;
+  }
+
+  if (lbPrev) lbPrev.addEventListener('click', function() {
+    currentIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length;
+    showPhoto(currentIdx);
+  });
+  if (lbNext) lbNext.addEventListener('click', function() {
+    currentIdx = (currentIdx + 1) % allPhotos.length;
+    showPhoto(currentIdx);
+  });
+
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
+  document.addEventListener('keydown', function(e) {
+    if (!lb.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') { currentIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length; showPhoto(currentIdx); }
+    if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % allPhotos.length; showPhoto(currentIdx); }
+  });
+
+  function closeLightbox() {
+    lb.classList.remove('active');
+    document.body.style.overflow = '';
+    lbImg.src = '';
+  }
+})();
 </script>
