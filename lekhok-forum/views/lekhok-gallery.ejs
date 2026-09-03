@@ -1,42 +1,84 @@
+<!-- Gallery — Album Browser -->
 <header class="page-header">
   <div class="container">
-    <span class="eyebrow">গ্যালারি</span>
-    <h1>ফটো <span style="color:var(--accent);">গ্যালারি</span></h1>
-    <p>আমাদের ইভেন্ট, সেমিনার ও কার্যক্রমের মুহূর্তগুলো</p>
+    <span class="eyebrow"><i class="fas fa-images"></i> ফটো গ্যালারি</span>
+    <h1>আমাদের <span style="color:var(--accent);">অ্যালবাম</span></h1>
+    <p class="header-sub">ইভেন্ট, সেমিনার, সাংস্কৃতিক কার্যক্রম — সব এক জায়গায়</p>
   </div>
 </header>
 
-<section class="section reveal">
+<section class="section">
   <div class="container">
-    <% if (items && items.length) { %>
-      <div class="gallery-grid reveal-stagger">
-        <% items.forEach(g => { %>
-          <a href="<%= g.image_url %>" class="gallery-item" data-caption="<%= g.caption || g.title || '' %>" data-lightbox>
-            <img src="<%= g.image_url %>" alt="<%= g.title || 'গ্যালারি ছবি' %>" loading="lazy" />
-            <div class="gallery-overlay">
-              <i class="fas fa-search-plus"></i>
-              <span><%= g.caption || g.title || 'বিস্তারিত দেখুন' %></span>
-            </div>
-          </a>
-        <% }) %>
-      </div>
+    <% const albumKeys = Object.keys(albums); %>
+    <% if (albumKeys.length) { %>
+
+      <% albumKeys.forEach(cat => { %>
+        <div class="gallery-album reveal">
+          <div class="album-header">
+            <h2 class="album-title"><i class="fas fa-folder-open"></i> <%= categoryLabels[cat] || cat %></h2>
+            <span class="album-count"><%= albums[cat].length %> ছবি</span>
+          </div>
+          <div class="album-grid">
+            <% albums[cat].slice(0, 8).forEach((g, i) => { %>
+              <a href="<%= g.image_url %>" class="album-photo <%= i === 0 && albums[cat].length > 4 ? 'album-photo--wide' : '' %>" data-caption="<%= g.caption || '' %>" data-lightbox="album-<%= cat %>">
+                <img src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
+                <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
+              </a>
+            <% }) %>
+            <% if (albums[cat].length > 8) { %>
+              <a href="/gallery?category=<%= cat %>" class="album-more" title="আরো দেখুন">
+                <span>+<%= albums[cat].length - 8 %></span>
+                <small>আরো দেখুন</small>
+              </a>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+
     <% } else { %>
       <div class="empty-state">
         <i class="far fa-images"></i>
         <h3>এখনও কোনো ছবি যোগ হয়নি</h3>
         <p>অ্যাডমিন প্যানেল থেকে গ্যালারিতে ছবি আপলোড করুন</p>
-        <a href="/admin/gallery/new" class="btn btn-primary"><i class="fas fa-plus"></i> ছবি যোগ করুন</a>
+        <a href="/admin/gallery" class="btn btn-primary"><i class="fas fa-plus"></i> ছবি যোগ করুন</a>
       </div>
     <% } %>
   </div>
 </section>
 
-<!-- Lightbox modal -->
+<!-- Lightbox -->
 <div class="lightbox" id="lightbox">
   <button class="lightbox-close" id="lightboxClose"><i class="fas fa-times"></i></button>
   <img id="lightboxImg" src="" alt="" />
   <div class="lightbox-caption" id="lightboxCaption"></div>
 </div>
+
+<style>
+.gallery-album { margin-bottom: 40px; }
+.gallery-album:last-child { margin-bottom: 0; }
+.album-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
+.album-title { font-size: 1.15rem; color: var(--brand); margin: 0; }
+.album-title i { color: var(--accent); margin-right: 8px; }
+.album-count { background: var(--accent-soft, rgba(5,150,105,0.1)); color: var(--accent); padding: 3px 12px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; }
+.album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.album-photo { position: relative; aspect-ratio: 1; overflow: hidden; border-radius: var(--radius-sm); display: block; }
+.album-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.album-photo:hover img { transform: scale(1.05); }
+.album-photo--wide { grid-column: span 2; grid-row: span 2; }
+.album-photo-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; color: white; font-size: 1.4rem; }
+.album-photo:hover .album-photo-overlay { opacity: 1; }
+.album-more { aspect-ratio: 1; background: var(--bg, #f6f8fb); border: 2px dashed var(--border); border-radius: var(--radius-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); text-decoration: none; transition: all 0.2s; }
+.album-more:hover { border-color: var(--accent); color: var(--accent); }
+.album-more span { font-size: 1.6rem; font-weight: 700; }
+.album-more small { font-size: 0.78rem; }
+@media (max-width: 768px) {
+  .album-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .album-photo--wide { grid-column: span 1; grid-row: span 1; }
+}
+@media (max-width: 480px) {
+  .album-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

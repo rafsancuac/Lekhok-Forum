@@ -39,18 +39,6 @@
 
     <a href="/" class="brand">
       <div class="logo-wrap">
-        <div class="logo-mark">
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="18" cy="18" r="18" fill="url(#logoGrad)"/>
-            <path d="M10 26V10h4l4 8 4-8h4v16h-3.5V15l-3.5 7h-2L13.5 15v11H10z" fill="white"/>
-            <defs>
-              <linearGradient id="logoGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#059669"/>
-                <stop offset="1" stop-color="#047857"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
         <div class="logo-text">
           <strong>লেখক ফোরাম</strong>
           <small>সুপ্ত প্রতিভা বিকশিত হোক</small>
@@ -123,6 +111,12 @@
           <div class="user-dropdown" id="userDropdown">
             <a href="/profile/<%= user.username %>"><i class="fas fa-user"></i> আমার প্রোফাইল</a>
             <a href="/me"><i class="fas fa-stream"></i> ব্যক্তিগত ফিড</a>
+            <div class="user-socials">
+              <span class="user-socials-label">আমাদের অনুসরণ করুন</span>
+              <a href="<%= typeof getSetting === 'function' ? (getSetting('facebook_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+              <a href="<%= typeof getSetting === 'function' ? (getSetting('youtube_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+              <a href="<%= typeof getSetting === 'function' ? (getSetting('twitter_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="X"><i class="fab fa-twitter"></i></a>
+            </div>
             <a href="/articles/new"><i class="fas fa-pen-nib"></i> নতুন লেখা</a>
             <a href="/qa/new"><i class="fas fa-question"></i> নতুন প্রশ্ন</a>
             <a href="/bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত</a>

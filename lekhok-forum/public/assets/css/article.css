@@ -4,7 +4,7 @@
    ============================================ */
 
 .article-wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
-.article-main { background: #fff; border-radius: 14px; padding: 0 0 24px; box-shadow: var(--shadow-soft); overflow: hidden; }
+.article-main { background: #fff; border-radius: var(--radius-sm); padding: 0 0 16px; box-shadow: var(--shadow-soft); overflow: hidden; }
 .article-cover { width: 100%; max-height: 420px; object-fit: cover; display: block; }
 .article-header { padding: 28px 32px 0; }
 .article-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -31,7 +31,7 @@
 .qa-author:hover { color: var(--accent); }
 .answers-section { padding: 0 32px; }
 .answers-section h2 { color: var(--brand); font-size: 1.25rem; margin: 18px 0 14px; padding-top: 18px; border-top: 1px solid var(--border); }
-.answer-item { display: flex; gap: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 12px; scroll-margin-top: 90px; }
+.answer-item { display: flex; gap: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); scroll-margin-top: 90px; }
 .answer-sidebar { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 44px; }
 .answer-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
 .top-answer-chip { font-size: 0.68rem; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
@@ -42,24 +42,24 @@
 .answer-date { color: var(--text-muted); font-size: 0.8rem; }
 .answer-text { color: var(--text); line-height: 1.8; margin-bottom: 10px; word-break: break-word; }
 .answer-actions { color: var(--text-muted); font-size: 0.88rem; }
-.answer-form-wrap { margin-top: 20px; padding: 20px; background: var(--bg-main, #f6f8fb); border-radius: 12px; }
+.answer-form-wrap { margin-top: 16px; padding: 16px; background: var(--bg-main, #f6f8fb); border-radius: var(--radius-sm); }
 .answer-form-wrap h3 { color: var(--brand); margin: 0 0 12px; font-size: 1.05rem; }
-.answer-form textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: 0.98rem; resize: vertical; background: #fff; }
+.answer-form textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-family: inherit; font-size: 0.98rem; resize: vertical; background: #fff; }
 .answer-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .answers-empty { margin: 10px 0 20px; }
 
 /* ── Comments ────────────────────────────────────────────────── */
-.comments-section { padding: 8px 32px 0; }
+.comments-section { padding: 4px 32px 0; background: #fff; }
 .comments-section h3 { color: var(--brand); font-size: 1.2rem; margin: 14px 0; }
-.comment-form { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; }
+.comment-form { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
 .comment-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .comment-avatar.small { width: 30px; height: 30px; }
 .comment-input-wrap { flex: 1; display: flex; gap: 8px; align-items: flex-end; }
-.comment-input-wrap textarea { flex: 1; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-family: inherit; font-size: 0.95rem; resize: vertical; background: #fff; }
+.comment-input-wrap textarea { flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-family: inherit; font-size: 0.95rem; resize: vertical; background: #fff; }
 .comment-input-wrap textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .comments-list { display: flex; flex-direction: column; gap: 14px; }
 .comment-item { display: flex; gap: 10px; scroll-margin-top: 90px; }
-.comment-bubble { flex: 1; background: var(--bg-main, #f6f8fb); border-radius: 4px 14px 14px 14px; padding: 10px 14px; min-width: 0; }
+.comment-bubble { flex: 1; background: #f1f5f9; border-radius: var(--radius-sm); padding: 10px 14px; min-width: 0; }
 .comment-bubble.small { padding: 8px 12px; }
 .comment-author { color: var(--brand); font-weight: 700; font-size: 0.9rem; text-decoration: none; }
 .comment-author:hover { color: var(--accent); }

@@ -104,12 +104,35 @@ router.get('/events', async (req, res) => {
 
 // ── Gallery ──────────────────────────────────────────────────────────────────
 router.get('/gallery', async (req, res) => {
-  const items = await db.prepare('SELECT * FROM gallery ORDER BY id DESC').all();
+  const all = await db.prepare('SELECT * FROM gallery ORDER BY id DESC').all();
+  const getSetting = (k) => {
+    try { return (db.prepare('SELECT value FROM settings WHERE key = ?').get(k) || {}).value; } catch(e) { return null; }
+  };
+  // Group by category to render as albums
+  const albums = {};
+  const categoryLabels = {
+    general: 'সাধারণ',
+    event: 'ইভেন্ট',
+    seminar: 'সেমিনার',
+    workshop: 'কর্মশালা',
+    cultural: 'সাংস্কৃতিক',
+    sports: 'ক্রীড়া',
+    achievement: 'অর্জন',
+    press: 'প্রেস ও মিডিয়া'
+  };
+  for (const g of all) {
+    const cat = g.category || 'general';
+    if (!albums[cat]) albums[cat] = [];
+    albums[cat].push(g);
+  }
   res.render('lekhok-gallery', {
     layout: 'layout',
     pageTitle: 'গ্যালারি',
     currentPath: '/gallery',
-    items
+    items: all,
+    albums,
+    categoryLabels,
+    getSetting
   });
 });
 

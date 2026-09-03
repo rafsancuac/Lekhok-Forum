@@ -19,7 +19,6 @@
 <body>
   <div class="auth-card" style="max-width: 800px; margin: 30px auto;">
     <a href="/articles" class="back-home"><i class="fas fa-arrow-left"></i> লেখার তালিকায় ফিরে যান</a>
-    <div class="logo-mark">ল</div>
     <h1><%= !!post && post.id ? 'লেখা সম্পাদনা' : 'নতুন লেখা লিখুন' %></h1>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
     <form method="POST" enctype="multipart/form-data">
