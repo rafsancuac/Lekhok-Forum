@@ -116,6 +116,129 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), (re
   res.redirect('/messages/' + req.params.username);
 });
 
+// ── v2.3: Messenger — typing indicator (in-memory, 6s window) ──────────
+// Map<userId, Map<convId, timestamp>>
+const typingState = new Map();
+
+router.post('/api/messages/typing', ensureAuth, (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.body.conv_id || req.query.conv_id);
+  if (!convId) return res.json({ ok: false });
+  if (!typingState.has(me)) typingState.set(me, new Map());
+  typingState.get(me).set(convId, Date.now());
+  res.json({ ok: true });
+});
+
+router.get('/api/messages/typing', ensureAuth, (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.query.conv_id);
+  if (!convId) return res.json({ typing: false });
+  const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND (user_a = ? OR user_b = ?)').get(convId, me, me);
+  if (!conv) return res.json({ typing: false });
+  const otherId = conv.user_a === me ? conv.user_b : conv.user_a;
+  const others = typingState.get(otherId);
+  if (!others) return res.json({ typing: false });
+  const ts = others.get(convId);
+  if (!ts) return res.json({ typing: false });
+  const fresh = (Date.now() - ts) < 6000; // 6s freshness
+  res.json({ typing: fresh, user_id: otherId });
+});
+
+// ── v2.3: Messenger — mark message as seen (read receipt) ───────────────
+router.post('/api/messages/seen', ensureAuth, (req, res) => {
+  const me = req.session.user.id;
+  const messageId = parseInt(req.body.message_id);
+  if (!messageId) return res.json({ ok: false });
+  // Verify the message belongs to a conversation the user is in
+  const msg = db.prepare(`
+    SELECT m.* FROM messages m
+    JOIN conversations c ON c.id = m.conversation_id
+    WHERE m.id = ? AND (c.user_a = ? OR c.user_b = ?)
+  `).get(messageId, me, me);
+  if (!msg) return res.json({ ok: false });
+  if (msg.sender_id === me) return res.json({ ok: true }); // own message
+  db.prepare('UPDATE messages SET is_read = 1 WHERE id = ?').run(messageId);
+  res.json({ ok: true });
+});
+
+router.post('/api/messages/seen-all', ensureAuth, (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.body.conv_id);
+  if (!convId) return res.json({ ok: false });
+  const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND (user_a = ? OR user.b = ?)').get(convId, me, me);
+  if (!conv) return res.json({ ok: false });
+  db.prepare('UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?').run(convId, me);
+  res.json({ ok: true });
+});
+
+// ── v2.3: Messenger — online status (5-min activity window) ─────────────
+// Map<userId, lastSeenTimestamp>
+const onlineState = new Map();
+
+function touchOnline(userId) {
+  onlineState.set(userId, Date.now());
+}
+
+function isOnline(userId) {
+  const ts = onlineState.get(userId);
+  return ts && (Date.now() - ts) < 5 * 60 * 1000;
+}
+
+router.get('/api/messages/online', ensureAuth, (req, res) => {
+  const userId = parseInt(req.query.user_id);
+  if (!userId) return res.json({ online: false });
+  res.json({ online: isOnline(userId) });
+});
+
+// Middleware to update own online state on any authed API hit
+router.use((req, res, next) => {
+  if (req.session && req.session.user) touchOnline(req.session.user.id);
+  next();
+});
+
+// ── v2.3: Messenger — combined poll (new messages + typing + online) ───
+router.get('/api/messages/poll', ensureAuth, (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.query.conv_id);
+  const since = parseInt(req.query.since) || 0;
+  if (!convId) return res.json({ messages: [], typing: false, online: false });
+
+  const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND (user_a = ? OR user_b = ?)').get(convId, me, me);
+  if (!conv) return res.json({ messages: [], typing: false, online: false });
+  const otherId = conv.user_a === me ? conv.user_b : conv.user_a;
+
+  // New messages
+  const rows = db.prepare(
+    'SELECT m.*, u.username AS sender_username, u.full_name AS sender_name, u.avatar_url AS sender_avatar FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.conversation_id = ? AND m.id > ? ORDER BY m.id ASC'
+  ).all(convId, since);
+  const messages = rows.map(r => ({
+    id: r.id,
+    body: r.body,
+    file_url: r.file_url,
+    file_name: r.file_name,
+    sender_id: r.sender_id,
+    sender_name: r.sender_name,
+    sender_username: r.sender_username,
+    sender_avatar: r.sender_avatar || '/avatar/' + r.sender_id,
+    is_me: r.sender_id === me,
+    created_at: r.created_at,
+    is_read: !!r.is_read
+  }));
+
+  // Typing
+  let typing = false;
+  const others = typingState.get(otherId);
+  if (others) {
+    const ts = others.get(convId);
+    if (ts && (Date.now() - ts) < 6000) typing = true;
+  }
+
+  // Online
+  const online = isOnline(otherId);
+
+  res.json({ messages, typing, online, me: { id: me } });
+});
+
 // ── v2.2: Messenger polling — fetch new messages since timestamp ───────
 router.get('/api/messages/check', ensureAuth, (req, res) => {
   const me = req.session.user.id;

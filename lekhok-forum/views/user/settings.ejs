@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সেটিংস — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="container" style="padding: 30px 20px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <a href="/me" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> ফিডে ফিরুন</a>
+      <h1 style="margin:0;font-size:24px;">সেটিংস</h1>
+      <% if (typeof req !== 'undefined' && req.query.ok) { %>
+        <span class="badge" style="background:#dcfce7;color:#059669;"><i class="fas fa-check"></i> সংরক্ষিত</span>
+      <% } %>
+    </div>
+
+    <div class="settings-shell">
+      <aside class="settings-nav">
+        <a href="#" data-section="profile" class="active"><i class="fas fa-user"></i> প্রোফাইল</a>
+        <a href="#" data-section="privacy"><i class="fas fa-shield-alt"></i> গোপনীয়তা</a>
+        <a href="#" data-section="notifications"><i class="fas fa-bell"></i> বিজ্ঞপ্তি</a>
+        <a href="#" data-section="account"><i class="fas fa-key"></i> অ্যাকাউন্ট</a>
+        <a href="#" data-section="display"><i class="fas fa-palette"></i> প্রদর্শন</a>
+        <a href="#" data-section="connected"><i class="fas fa-link"></i> সংযুক্ত অ্যাকাউন্ট</a>
+      </aside>
+
+      <main>
+        <!-- Profile -->
+        <section class="settings-section active" data-pane="profile">
+          <div class="card">
+            <h2><i class="fas fa-user"></i> প্রোফাইল</h2>
+            <form method="POST" action="/settings/profile" enctype="multipart/form-data">
+              <div class="field">
+                <label>পুরো নাম</label>
+                <input class="input" name="full_name" value="<%= user.full_name %>" required>
+              </div>
+              <div class="field">
+                <label>পরিচিতি (Bio)</label>
+                <textarea class="textarea" name="bio" rows="3" placeholder="নিজের সম্পর্কে কিছু লিখুন…"><%= user.bio || '' %></textarea>
+                <div class="hint">সর্বোচ্চ ৩০০ অক্ষর</div>
+              </div>
+              <div class="field">
+                <label>পদবি / Designation</label>
+                <input class="input" name="designation" value="<%= user.designation || '' %>" placeholder="যেমন: সাহিত্যিক, শিক্ষক…">
+              </div>
+              <div class="field">
+                <label>ঠিকানা</label>
+                <input class="input" name="address" value="<%= user.address || '' %>">
+              </div>
+              <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label>লিঙ্গ</label>
+                  <select class="select" name="gender">
+                    <option value="male"   <%= user.gender === 'male'   ? 'selected' : '' %>>পুরুষ</option>
+                    <option value="female" <%= user.gender === 'female' ? 'selected' : '' %>>নারী</option>
+                    <option value="other"  <%= user.gender === 'other'  ? 'selected' : '' %>>অন্যান্য</option>
+                  </select>
+                </div>
+                <div>
+                  <label>জন্ম তারিখ</label>
+                  <input class="input" type="date" name="birth_date" value="<%= user.birth_date || '' %>">
+                </div>
+              </div>
+              <h3 style="margin:20px 0 8px;font-size:15px;">সোশ্যাল লিংক</h3>
+              <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <input class="input" name="social_fb"      value="<%= user.social_fb || '' %>"      placeholder="Facebook URL">
+                <input class="input" name="social_twitter"  value="<%= user.social_twitter || '' %>"  placeholder="Twitter URL">
+                <input class="input" name="social_linkedin" value="<%= user.social_linkedin || '' %>" placeholder="LinkedIn URL">
+                <input class="input" name="social_website"  value="<%= user.social_website || '' %>"  placeholder="ওয়েবসাইট URL">
+              </div>
+              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Privacy -->
+        <section class="settings-section" data-pane="privacy">
+          <div class="card">
+            <h2><i class="fas fa-shield-alt"></i> গোপনীয়তা</h2>
+            <form method="POST" action="/settings/privacy">
+              <div class="field-row">
+                <div class="label-block"><strong>ইমেইল দেখান</strong><span>অন্যরা আপনার ইমেইল দেখতে পারবে</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="show_email" value="1" <%= user.show_email ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+              </div>
+              <div class="field-row">
+                <div class="label-block"><strong>ফোন নম্বর দেখান</strong><span>অন্যরা আপনার ফোন নম্বর দেখতে পারবে</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="show_phone" value="1" <%= user.show_phone ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+              </div>
+              <div class="field-row">
+                <div class="label-block"><strong>জন্ম তারিখ দেখান</strong><span>অন্যরা আপনার জন্ম তারিখ দেখতে পারবে</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="show_birth" value="1" <%= user.show_birth ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+              </div>
+              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Notifications -->
+        <section class="settings-section" data-pane="notifications">
+          <div class="card">
+            <h2><i class="fas fa-bell"></i> বিজ্ঞপ্তি</h2>
+            <form method="POST" action="/settings/notifications">
+              <div class="field-row">
+                <div class="label-block"><strong>মেনশনে ইমেইল</strong><span>কেউ @উল্লেখ করলে ইমেইল পাঠান</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="email_mention" value="1" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="field-row">
+                <div class="label-block"><strong>নতুন মন্তব্যে ইমেইল</strong><span>আপনার পোস্টে মন্তব্য হলে ইমেইল পাঠান</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="email_comment" value="1" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="field-row">
+                <div class="label-block"><strong>প্রতিক্রিয়া পুশ</strong><span>❤️ বা 😂 পেলে পুশ নোটিফিকেশন</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="push_like" value="1"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="field-row">
+                <div class="label-block"><strong>দৈনিক ডাইজেস্ট</strong><span>প্রতিদিন সকালে আপনার ফিডের সারাংশ</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="daily_digest" value="1"><span class="toggle-slider"></span></label>
+              </div>
+              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Account -->
+        <section class="settings-section" data-pane="account">
+          <div class="card">
+            <h2><i class="fas fa-key"></i> অ্যাকাউন্ট</h2>
+
+            <h3 style="margin:0 0 12px;font-size:15px;">পাসওয়ার্ড পরিবর্তন</h3>
+            <form method="POST" action="/settings/account/password">
+              <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required></div>
+              <div class="field"><label>নতুন পাসওয়ার্ড</label><input class="input" type="password" name="new_password" required minlength="6"></div>
+              <div class="field"><label>পুনরায় নতুন পাসওয়ার্ড</label><input class="input" type="password" name="confirm_password" required minlength="6"></div>
+              <button type="submit" class="btn btn-primary">পাসওয়ার্ড পরিবর্তন</button>
+            </form>
+
+            <hr style="margin:30px 0;border:none;border-top:1px solid var(--border)">
+
+            <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;">বিপজ্জনক জোন</h3>
+            <p style="color:var(--text-muted);font-size:14px;">এই কার্যগুলো ফিরিয়ে আনা যাবে না।</p>
+            <form method="POST" action="/settings/account/deactivate" style="display:inline" onsubmit="return confirm('আপনি কি নিশ্চিত? অ্যাকাউন্ট নিষ্ক্রিয় হবে।')">
+              <button type="submit" class="btn btn-danger"><i class="fas fa-pause"></i> অ্যাকাউন্ট নিষ্ক্রিয় করুন</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Display -->
+        <section class="settings-section" data-pane="display">
+          <div class="card">
+            <h2><i class="fas fa-palette"></i> প্রদর্শন</h2>
+            <form method="POST" action="/settings/display">
+              <div class="field">
+                <label>থিম</label>
+                <select class="select" name="theme">
+                  <option value="auto">অটো (সিস্টেম অনুসারে)</option>
+                  <option value="light">হালকা</option>
+                  <option value="dark">গাঢ়</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>ফন্ট সাইজ</label>
+                <select class="select" name="font_size">
+                  <option value="small">ছোট</option>
+                  <option value="medium" selected>মাঝারি</option>
+                  <option value="large">বড়</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>ভাষা</label>
+                <select class="select" name="language">
+                  <option value="bn">বাংলা</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- Connected -->
+        <section class="settings-section" data-pane="connected">
+          <div class="card">
+            <h2><i class="fas fa-link"></i> সংযুক্ত অ্যাকাউন্ট</h2>
+            <p style="color:var(--text-muted);">আপনার সোশ্যাল অ্যাকাউন্ট সংযুক্ত করে দ্রুত লগইন করুন।</p>
+            <div class="connected-list" style="margin-top:16px;">
+              <div class="connected-row">
+                <div><i class="fab fa-facebook" style="color:#1877f2;font-size:24px;"></i> <strong>Facebook</strong></div>
+                <button class="btn btn-ghost btn-sm">সংযুক্ত করুন</button>
+              </div>
+              <div class="connected-row">
+                <div><i class="fab fa-google" style="color:#ea4335;font-size:22px;"></i> <strong>Google</strong></div>
+                <button class="btn btn-ghost btn-sm">সংযুক্ত করুন</button>
+              </div>
+              <div class="connected-row">
+                <div><i class="fab fa-twitter" style="color:#1da1f2;font-size:22px;"></i> <strong>Twitter / X</strong></div>
+                <button class="btn btn-ghost btn-sm">সংযুক্ত করুন</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+  <script>
+    document.querySelectorAll('.settings-nav a').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = link.dataset.section;
+        document.querySelectorAll('.settings-nav a').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+        document.querySelector('[data-pane="' + target + '"]').classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -15,96 +15,243 @@
   <%- include('../partials/header') %>
 
   <div class="page-wrap">
-    <div class="messages-wrap">
-      <div class="conv-list">
-        <div class="conv-list-head">
-          <h2><i class="fas fa-inbox"></i> কথোপকথন</h2>
+    <div class="messenger-shell" id="messengerShell">
+      <%# ── Left: conversation list ──────────────────────────────────── %>
+      <aside class="messenger-list" id="messengerList">
+        <div class="messenger-list-head">
+          <h2><i class="fas fa-comment-dots"></i> কথোপকথন</h2>
+          <a href="/messages" class="btn-ghost btn-sm" style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;text-decoration:none"><i class="fas fa-arrow-left"></i> সব মেসেজ</a>
+          <input type="search" class="messenger-search" placeholder="🔍 নাম খুঁজুন..." id="convSearch" oninput="filterConvs(this.value)" />
         </div>
+        <% if (!conversations.length) { %>
+          <div class="empty-state-full">
+            <i class="fas fa-comment-slash"></i>
+            <p>এখনো কোনো কথোপকথন নেই।</p>
+            <a href="/members" class="btn btn-primary btn-sm">সদস্য খুঁজুন</a>
+          </div>
+        <% } %>
         <% conversations.forEach(c => { %>
-          <a href="/messages/<%= c.other_username %>" class="conv-item <%= c.other_username === other.username ? 'active' : '' %>">
-            <img src="<%= c.other_avatar || '/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a) %>" class="conv-avatar">
-            <div class="conv-info">
+          <a href="/messages/<%= c.other_username %>" class="conv-item <%= c.other_username === other.username ? 'active' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-id="<%= c.id %>">
+            <div class="avatar avatar-md" style="position:relative">
+              <% if (c.other_avatar) { %>
+                <img src="<%= c.other_avatar %>" alt="<%= c.other_name %>" />
+              <% } else { %>
+                <%= c.other_name.charAt(0).toUpperCase() %>
+              <% } %>
+              <%# Online dot populated via polling (best-effort) %>
+              <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
+            </div>
+            <div class="conv-meta">
               <div class="conv-name"><%= c.other_name %></div>
+              <div class="conv-snippet"><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 50) : 'নতুন কথোপকথন' %></div>
+            </div>
+            <div class="conv-meta-right">
+              <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
             </div>
           </a>
         <% }); %>
-      </div>
+      </aside>
 
-      <div class="chat-area">
-        <div class="chat-head">
-          <img src="<%= other.avatar_url || '/avatar/' + other.id %>">
-          <h3><a href="/profile/<%= other.username %>"><%= other.full_name %></a></h3>
-          <span style="margin-left:auto;color:var(--text-muted);font-size:0.85rem">@<%= other.username %></span>
-        </div>
+      <%# ── Right: chat panel ────────────────────────────────────────── %>
+      <section class="messenger-chat" id="messengerChat">
+        <header class="chat-header">
+          <button class="back-btn btn-icon" onclick="document.getElementById('messengerList').classList.remove('hidden'); document.getElementById('messengerChat').classList.add('hidden');" title="ফিরে যান">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <div class="avatar avatar-md" style="position:relative">
+            <% if (other.avatar_url) { %>
+              <img src="<%= other.avatar_url %>" alt="<%= other.full_name %>" />
+            <% } else { %>
+              <%= other.full_name.charAt(0).toUpperCase() %>
+            <% } %>
+            <span class="online-dot" id="otherOnlineDot" data-user-id="<%= other.id %>" style="display:none"></span>
+          </div>
+          <div class="info">
+            <h3><a href="/profile/<%= other.username %>" style="text-decoration:none;color:inherit"><%= other.full_name %></a></h3>
+            <div class="status" id="otherStatus">
+              <i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> <%= other.online_text || '@' + other.username %>
+            </div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <a href="/profile/<%= other.username %>" class="btn-icon" title="প্রোফাইল"><i class="fas fa-user"></i></a>
+          </div>
+        </header>
+
         <div class="chat-body" id="chatBody">
           <% messages.forEach(m => { %>
-            <div class="message <%= m.sender_id === user.id ? 'me' : '' %>">
-              <div class="message-bubble">
-                <%= m.body %>
-                <% if (m.file_url) { %>
-                  <a href="<%= m.file_url %>" class="message-file" download="<%= m.file_name || 'file' %>">
+            <div class="bubble <%= m.sender_id === user.id ? 'me' : 'them' %>" data-id="<%= m.id %>">
+              <% if (m.body) { %><div class="bubble-text"><%= m.body %></div><% } %>
+              <% if (m.file_url) { %>
+                <% var isImg = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(m.file_url); %>
+                <% if (isImg) { %>
+                  <a href="<%= m.file_url %>" target="_blank"><img src="<%= m.file_url %>" alt="<%= m.file_name || 'ছবি' %>" class="bubble-image" /></a>
+                <% } else { %>
+                  <a href="<%= m.file_url %>" class="bubble-file" download="<%= m.file_name || 'file' %>">
                     <i class="fas fa-paperclip"></i> <%= m.file_name || 'ফাইল' %>
                   </a>
                 <% } %>
-                <div class="message-time"><%= new Date(m.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) %></div>
+              <% } %>
+              <div class="bubble-meta">
+                <span class="bubble-time"><%= new Date(m.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) %></span>
+                <% if (m.sender_id === user.id) { %>
+                  <span class="bubble-seen" data-msg-id="<%= m.id %>">
+                    <% if (m.is_read) { %><i class="fas fa-check-double" title="পড়া হয়েছে"></i><% } else { %><i class="fas fa-check" title="পৌঁছেছে"></i><% } %>
+                  </span>
+                <% } %>
               </div>
             </div>
           <% }); %>
+
+          <%# Typing indicator (hidden by default) %>
+          <div class="typing-indicator" id="typingIndicator">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span style="margin-left:6px">লিখছেন...</span>
+          </div>
         </div>
-        <form method="POST" class="chat-input" enctype="multipart/form-data">
-          <label for="fileInput" title="ফাইল যুক্ত করুন"><i class="fas fa-paperclip"></i></label>
-          <input type="file" id="fileInput" name="attachment">
-          <input type="text" name="body" placeholder="একটি মেসেজ লিখুন..." required>
-          <button type="submit"><i class="fas fa-paper-plane"></i> পাঠান</button>
+
+        <form method="POST" class="chat-input-bar" enctype="multipart/form-data" id="chatForm">
+          <button type="button" class="emoji-trigger" id="emojiBtn" title="ইমোজি"><i class="far fa-smile"></i></button>
+          <div class="chat-input-wrap">
+            <input type="text" name="body" id="msgInput" placeholder="একটি মেসেজ লিখুন..." autocomplete="off" />
+            <div class="emoji-picker" id="emojiPicker">
+              <% ['😀','😃','😄','😁','😆','😂','🤣','😊','😇','🙂','😉','😍','🥰','😘','😋','😜','🤔','😎','👍','👎','👏','🙏','💪','❤️','🔥','✨','🎉','📝','📚','✍️'].forEach(em => { %>
+                <button type="button" class="emoji-pick" onclick="insertEmoji('<%= em %>')"><%= em %></button>
+              <% }); %>
+            </div>
+          </div>
+          <label for="fileInput" class="emoji-trigger" title="ফাইল যুক্ত করুন"><i class="fas fa-paperclip"></i></label>
+          <input type="file" id="fileInput" name="attachment" style="display:none" />
+          <button type="submit" class="btn btn-primary" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
         </form>
-      </div>
+      </section>
     </div>
   </div>
+
   <script>
-    // Auto-scroll to bottom
+    // ── helpers ────────────────────────────────────────────────────────
     const body = document.getElementById('chatBody');
+    const convId = <%= conv ? conv.id : 0 %>;
+    const myId = <%= user.id %>;
+    const otherId = <%= other.id %>;
+    let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
+    let typingTimeout = null;
+
     if (body) body.scrollTop = body.scrollHeight;
 
-    // ── v2.2: 5-second polling for new messages ───────────────────────────
-    const convId = <%= conv ? conv.id : 0 %>;
-    let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
-    const userId = <%= user.id %>;
+    function filterConvs(q) {
+      q = (q || '').toLowerCase().trim();
+      document.querySelectorAll('.conv-item').forEach(el => {
+        el.style.display = !q || el.dataset.name.indexOf(q) !== -1 ? 'flex' : 'none';
+      });
+    }
+
+    function insertEmoji(em) {
+      const input = document.getElementById('msgInput');
+      input.value += em;
+      input.focus();
+      document.getElementById('emojiPicker').classList.remove('open');
+    }
+
+    document.getElementById('emojiBtn').addEventListener('click', () => {
+      document.getElementById('emojiPicker').classList.toggle('open');
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.chat-input-wrap') && !e.target.closest('#emojiBtn')) {
+        document.getElementById('emojiPicker').classList.remove('open');
+      }
+    });
 
     function appendMessage(msg) {
+      // Avoid duplicate
+      if (document.querySelector('.bubble[data-id="' + msg.id + '"]')) return;
       const div = document.createElement('div');
-      div.className = 'message' + (msg.is_me ? ' me' : '');
-      div.innerHTML = '<div class="message-bubble">' +
-        (msg.body ? msg.body : '') +
-        (msg.file_url ? '<a href="' + msg.file_url + '" class="message-file" download="' + (msg.file_name || 'file') + '"><i class="fas fa-paperclip"></i> ' + (msg.file_name || 'ফাইল') + '</a>' : '') +
-        '<div class="message-time">' + new Date(msg.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) + '</div>' +
-      '</div>';
-      body.appendChild(div);
+      div.className = 'bubble ' + (msg.is_me ? 'me' : 'them');
+      div.dataset.id = msg.id;
+      let html = '';
+      if (msg.body) html += '<div class="bubble-text"></div>';
+      if (msg.file_url) {
+        const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(msg.file_url);
+        if (isImg) html += '<a href="' + msg.file_url + '" target="_blank"><img src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
+        else html += '<a href="' + msg.file_url + '" class="bubble-file" download><i class="fas fa-paperclip"></i> ' + (msg.file_name || 'ফাইল') + '</a>';
+      }
+      html += '<div class="bubble-meta"><span class="bubble-time"></span>';
+      if (msg.is_me) {
+        html += '<span class="bubble-seen"><i class="fas fa-check" title="পৌঁছেছে"></i></span>';
+      }
+      html += '</div>';
+      div.innerHTML = html;
+      if (msg.body) div.querySelector('.bubble-text').textContent = msg.body;
+      div.querySelector('.bubble-time').textContent = new Date(msg.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+      // Insert before typing indicator
+      const ti = document.getElementById('typingIndicator');
+      body.insertBefore(div, ti);
       body.scrollTop = body.scrollHeight;
     }
 
+    function markSeen(id) {
+      const b = document.querySelector('.bubble[data-id="' + id + '"] .bubble-seen');
+      if (b) b.innerHTML = '<i class="fas fa-check-double" title="পড়া হয়েছে"></i>';
+    }
+
+    // Typing indicator — send signal + show theirs
+    document.getElementById('msgInput').addEventListener('input', () => {
+      if (!convId) return;
+      if (typingTimeout) clearTimeout(typingTimeout);
+      fetch('/api/messages/typing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conv_id: convId }) });
+      typingTimeout = setTimeout(() => {}, 6000);
+    });
+
+    // Auto-mark incoming as seen when polled
+    function markConvSeen() {
+      if (!convId) return;
+      fetch('/api/messages/seen-all', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conv_id: convId }) });
+    }
+
+    // Combined polling (5s): messages + typing + online
     async function poll() {
       if (!convId) return;
       try {
-        const res = await fetch('/api/messages/check?conversation_id=' + convId + '&since=' + lastMsgId);
-        const msgs = await res.json();
-        if (msgs.length) {
-          msgs.forEach(m => { lastMsgId = Math.max(lastMsgId, m.id); appendMessage(m); });
+        const res = await fetch('/api/messages/poll?conv_id=' + convId + '&since=' + lastMsgId);
+        const data = await res.json();
+
+        if (data.messages && data.messages.length) {
+          data.messages.forEach(m => { lastMsgId = Math.max(lastMsgId, m.id); appendMessage(m); });
+          markConvSeen();
         }
-        // Also refresh sidebar unread counts
-        const r2 = await fetch('/api/messages/unread');
-        const data = await r2.json();
-        const badge = document.getElementById('unreadBadge');
-        if (badge) badge.textContent = data.totalUnread || '';
-        document.querySelectorAll('.conv-unread-dot').forEach(d => d.remove());
-        data.conversations.forEach(c => {
-          if (c.unread > 0) {
-            const dot = document.querySelector('.conv-item[data-id="' + c.id + '"] .conv-unread');
-            if (dot) dot.textContent = c.unread;
-          }
-        });
-      } catch (e) { /* silent fail */ }
+
+        // Typing
+        const ti = document.getElementById('typingIndicator');
+        if (ti) ti.classList.toggle('show', !!data.typing);
+
+        // Other user online status
+        const dot = document.getElementById('otherOnlineDot');
+        const status = document.getElementById('otherStatus');
+        if (dot) dot.style.display = data.online ? 'block' : 'none';
+        if (status) {
+          status.innerHTML = data.online
+            ? '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle;color:var(--accent)"></i> এখনই অনলাইন'
+            : '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> @' + '<%= other.username %>';
+        }
+      } catch (e) { /* silent */ }
     }
     setInterval(poll, 5000);
+    // First poll after 1s
+    setTimeout(poll, 1000);
+
+    // Form: prevent double submit + optimistic append
+    document.getElementById('chatForm').addEventListener('submit', function (e) {
+      const btn = document.getElementById('sendBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      // Server returns redirect → just submit normally
+    });
+
+    // Mobile: hide list on load (show only chat) when convId is set
+    if (window.innerWidth <= 768 && convId) {
+      document.getElementById('messengerList').classList.add('hidden');
+    }
   </script>
 </body>
 </html>

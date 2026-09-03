@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ব্যক্তিগত ফিড — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="stylesheet" href="/assets/css/fonts.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body>
+  <%- include('../partials/header') %>
+
+  <div class="me-wrap">
+    <header class="me-header">
+      <div class="me-header-inner">
+        <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="avatar-xl" onerror="this.onerror=null;this.src='/avatar/<%= user.id %>'" style="border-radius:50%">
+        <div class="me-id">
+          <h1><%= user.full_name %></h1>
+          <p class="me-handle">@<%= user.username %></p>
+          <% if (user.bio) { %><p class="me-bio"><%= user.bio %></p><% } %>
+        </div>
+        <div class="me-actions">
+          <a href="/articles/new" class="btn btn-primary"><i class="fas fa-pen-nib"></i> নতুন লেখা</a>
+          <a href="/profile/<%= user.username %>" class="btn btn-ghost"><i class="fas fa-user"></i> প্রোফাইল</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-tile"><div class="num"><%= stats.posts %></div><div class="lbl">প্রকাশিত লেখা</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.drafts %></div><div class="lbl">ড্রাফট</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.comments %></div><div class="lbl">মন্তব্য</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.reactions %></div><div class="lbl">প্রতিক্রিয়া</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.bookmarks %></div><div class="lbl">সংরক্ষিত</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.following %></div><div class="lbl">অনুসরণ</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.followers %></div><div class="lbl">অনুসরণকারী</div></div>
+    </div>
+
+    <div class="personal-tabs" role="tablist">
+      <button class="personal-tab active" data-tab="posts"><i class="fas fa-pen-nib"></i> আমার পোস্ট (<%= stats.posts %>)</button>
+      <button class="personal-tab" data-tab="comments"><i class="fas fa-comment"></i> মন্তব্য (<%= stats.comments %>)</button>
+      <button class="personal-tab" data-tab="reactions"><i class="fas fa-heart"></i> প্রতিক্রিয়া (<%= stats.reactions %>)</button>
+      <button class="personal-tab" data-tab="bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত (<%= stats.bookmarks %>)</button>
+      <button class="personal-tab" data-tab="following"><i class="fas fa-user-friends"></i> অনুসরণ (<%= stats.following %>)</button>
+      <% if (stats.drafts > 0) { %><button class="personal-tab" data-tab="drafts"><i class="fas fa-file"></i> ড্রাফট (<%= stats.drafts %>)</button><% } %>
+    </div>
+
+    <!-- Tab: Posts -->
+    <section class="me-tab" data-pane="posts">
+      <% if (myPosts.length === 0) { %>
+        <div class="empty">
+          <div class="icon"><i class="fas fa-pen-nib"></i></div>
+          <h3>এখনো কোনো লেখা নেই</h3>
+          <p>আপনার প্রথম লেখাটি লিখুন।</p>
+          <a href="/articles/new" class="btn btn-primary">নতুন লেখা শুরু করুন</a>
+        </div>
+      <% } %>
+      <% myPosts.forEach(p => { %>
+        <article class="feed-card">
+          <% if (p.cover_image) { %><img src="<%= p.cover_image %>" class="feed-card-cover" alt=""> <% } %>
+          <div class="feed-card-body">
+            <div class="feed-card-meta">
+              <span class="badge <%= p.type === 'question' ? 'badge-muted' : '' %>"><%= p.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span>
+              <span><i class="far fa-clock"></i> <%= new Date(p.created_at).toLocaleDateString('bn-BD') %></span>
+              <span><i class="far fa-eye"></i> <%= p.view_count || 0 %></span>
+            </div>
+            <h3 class="feed-card-title"><a href="<%= p.type === 'question' ? '/qa/' + p.id : '/articles/' + p.id %>"><%= p.title %></a></h3>
+            <% if (p.excerpt) { %><p class="feed-card-excerpt"><%= p.excerpt.substring(0, 200) %><%= p.excerpt.length > 200 ? '…' : '' %></p><% } %>
+          </div>
+          <div class="feed-card-actions">
+            <span class="feed-action"><i class="far fa-heart"></i> <%= p.like_count || 0 %></span>
+            <span class="feed-action"><i class="far fa-comment"></i> <%= p.comment_count || 0 %></span>
+            <span class="feed-action-spacer"></span>
+            <a class="feed-action" href="/articles/<%= p.id %>/edit"><i class="fas fa-edit"></i> সম্পাদনা</a>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+
+    <!-- Tab: Comments -->
+    <section class="me-tab" data-pane="comments" hidden>
+      <% if (myComments.length === 0) { %>
+        <div class="empty"><div class="icon"><i class="far fa-comment"></i></div><h3>কোনো মন্তব্য নেই</h3><p>অন্যের লেখায় মন্তব্য করুন।</p></div>
+      <% } %>
+      <% myComments.forEach(c => { %>
+        <article class="feed-card">
+          <div class="feed-card-body">
+            <div class="feed-card-meta">
+              <span class="badge"><%= c.post_type === 'question' ? 'প্রশ্নে' : 'লেখায়' %></span>
+              <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
+            </div>
+            <h3 class="feed-card-title"><a href="<%= c.post_type === 'question' ? '/qa/' + c.post_id : '/articles/' + c.post_id %>"><%= c.post_title %></a></h3>
+            <p class="feed-card-excerpt"><%= c.body.substring(0, 200) %><%= c.body.length > 200 ? '…' : '' %></p>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+
+    <!-- Tab: Reactions -->
+    <section class="me-tab" data-pane="reactions" hidden>
+      <% if (myReactions.length === 0) { %>
+        <div class="empty"><div class="icon"><i class="far fa-heart"></i></div><h3>কোনো প্রতিক্রিয়া নেই</h3><p>পোস্টে ❤️ বা 👍 দিয়ে শুরু করুন।</p></div>
+      <% } %>
+      <% myReactions.forEach(r => { %>
+        <article class="feed-card">
+          <% if (r.cover_image) { %><img src="<%= r.cover_image %>" class="feed-card-cover" alt=""><% } %>
+          <div class="feed-card-body">
+            <div class="feed-card-meta">
+              <span class="badge">
+                <% const emo = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' }; %>
+                <%= emo[r.reaction_type] || '👍' %> <%= r.reaction_type %>
+              </span>
+              <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
+            </div>
+            <h3 class="feed-card-title"><a href="<%= r.post_type === 'question' ? '/qa/' + r.post_id : '/articles/' + r.post_id %>"><%= r.title %></a></h3>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+
+    <!-- Tab: Bookmarks -->
+    <section class="me-tab" data-pane="bookmarks" hidden>
+      <% if (myBookmarks.length === 0) { %>
+        <div class="empty"><div class="icon"><i class="far fa-bookmark"></i></div><h3>কোনো সংরক্ষিত পোস্ট নেই</h3><p>পছন্দের লেখা 📌 করে রাখুন।</p></div>
+      <% } %>
+      <% myBookmarks.forEach(b => { %>
+        <article class="feed-card">
+          <% if (b.cover_image) { %><img src="<%= b.cover_image %>" class="feed-card-cover" alt=""><% } %>
+          <div class="feed-card-body">
+            <div class="feed-card-meta">
+              <span class="badge <%= b.type === 'question' ? 'badge-muted' : '' %>"><%= b.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span>
+              <span><i class="far fa-clock"></i> <%= new Date(b.bookmarked_at).toLocaleDateString('bn-BD') %></span>
+            </div>
+            <h3 class="feed-card-title"><a href="<%= b.type === 'question' ? '/qa/' + b.id : '/articles/' + b.id %>"><%= b.title %></a></h3>
+            <% if (b.body) { %><p class="feed-card-excerpt"><%= b.body.substring(0, 200) %><%= b.body.length > 200 ? '…' : '' %></p><% } %>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+
+    <!-- Tab: Following -->
+    <section class="me-tab" data-pane="following" hidden>
+      <% if (following.length === 0) { %>
+        <div class="empty"><div class="icon"><i class="fas fa-user-friends"></i></div><h3>কাউকে অনুসরণ করছেন না</h3><p>সদস্যদের অনুসরণ করুন, তাদের নতুন লেখা এখানে দেখুন।</p></div>
+      <% } %>
+      <div class="follow-grid">
+        <% following.forEach(f => { %>
+          <a href="/profile/<%= f.username %>" class="follow-card">
+            <img src="<%= f.avatar_url || '/avatar/' + f.id %>" class="avatar-md" style="border-radius:50%" onerror="this.onerror=null;this.src='/avatar/<%= f.id %>'">
+            <strong><%= f.full_name %></strong>
+            <small>@<%= f.username %></small>
+          </a>
+        <% }) %>
+      </div>
+    </section>
+
+    <!-- Tab: Drafts -->
+    <% if (stats.drafts > 0) { %>
+    <section class="me-tab" data-pane="drafts" hidden>
+      <% myDrafts.forEach(d => { %>
+        <article class="feed-card">
+          <div class="feed-card-body">
+            <div class="feed-card-meta">
+              <span class="badge badge-muted">ড্রাফট</span>
+              <span><i class="far fa-clock"></i> <%= new Date(d.created_at).toLocaleDateString('bn-BD') %></span>
+            </div>
+            <h3 class="feed-card-title"><%= d.title || 'শিরোনামহীন ড্রাফট' %></h3>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+    <% } %>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+  <script>
+    document.querySelectorAll('.personal-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.personal-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.me-tab').forEach(p => p.hidden = p.dataset.pane !== target);
+      });
+    });
+  </script>
+</body>
+</html>

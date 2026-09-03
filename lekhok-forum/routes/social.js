@@ -259,13 +259,22 @@ router.get('/qa/:id', (req, res) => {
 // ── Members directory ────────────────────────────────────────────────────────
 router.get('/members', (req, res) => {
   const search = req.query.q || '';
-  let q = 'SELECT id, username, full_name, designation, bio, avatar_url, gender, created_at FROM users WHERE status = ?';
+  let q = 'SELECT id, username, full_name, designation, bio, avatar_url, gender, last_login, created_at FROM users WHERE status = ?';
   const params = ['active'];
   if (search) { q += ' AND (full_name LIKE ? OR username LIKE ? OR designation LIKE ?)'; const t = '%' + search + '%'; params.push(t, t, t); }
   q += ' ORDER BY full_name ASC';
   const members = db.prepare(q).all(...params);
+
+  // Group members of the organization (from members table) by member_type
+  const allCommittee = db.prepare('SELECT * FROM members ORDER BY member_type, sort_order, name').all();
+  const grouped = {
+    central:  allCommittee.filter(m => m.member_type === 'central'),
+    branch:   allCommittee.filter(m => m.member_type === 'branch'),
+    advisory: allCommittee.filter(m => m.member_type === 'advisory'),
+    founder:  allCommittee.filter(m => m.member_type === 'founder')
+  };
   const totalUsers = db.prepare("SELECT COUNT(*) as c FROM users WHERE status='active'").get().c;
-  res.render('user/members', { members, search, totalUsers, currentPath: '/members' });
+  res.render('user/members', { members, search, totalUsers, grouped, currentPath: '/members' });
 });
 
 // ── Public profile ───────────────────────────────────────────────────────────
@@ -428,6 +437,308 @@ router.post('/api/notifications/read', (req, res) => {
   if (!req.session.user) return res.json({ error: 'unauthorized' });
   db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.session.user.id);
   res.json({ success: true });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /me — Personal feed (control center for logged-in user)
+// ────────────────────────────────────────────────────────────────────────────
+router.get('/me', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+
+  // My published posts (articles + Q&A)
+  const myPosts = db.prepare(`
+    SELECT id, type, title, body, excerpt, cover_image, like_count, comment_count, view_count,
+           published_at, created_at, status, featured
+    FROM posts WHERE author_id = ? ORDER BY created_at DESC LIMIT 50
+  `).all(me.id);
+
+  // My drafts
+  const myDrafts = db.prepare(`
+    SELECT id, type, title, body, created_at, status
+    FROM posts WHERE author_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 20
+  `).all(me.id);
+
+  // My recent comments
+  const myComments = db.prepare(`
+    SELECT c.id, c.body, c.created_at, c.like_count,
+           p.id AS post_id, p.title AS post_title, p.type AS post_type
+    FROM comments c JOIN posts p ON p.id = c.post_id
+    WHERE c.author_id = ? ORDER BY c.created_at DESC LIMIT 30
+  `).all(me.id);
+
+  // My reactions
+  const myReactions = db.prepare(`
+    SELECT l.post_id, COALESCE(l.reaction_type, 'like') AS reaction_type, l.created_at,
+           p.title, p.type AS post_type, p.cover_image
+    FROM likes l JOIN posts p ON p.id = l.post_id
+    WHERE l.user_id = ? AND l.post_id IS NOT NULL ORDER BY l.created_at DESC LIMIT 30
+  `).all(me.id);
+
+  // My bookmarks
+  const myBookmarks = db.prepare(`
+    SELECT p.id, p.title, p.body, p.cover_image, p.type, p.like_count, p.comment_count,
+           b.created_at AS bookmarked_at
+    FROM bookmarks b JOIN posts p ON p.id = b.post_id
+    WHERE b.user_id = ? ORDER BY b.created_at DESC LIMIT 30
+  `).all(me.id);
+
+  // Following — users + their recent activity
+  const following = db.prepare(`
+    SELECT u.id, u.username, u.full_name, u.avatar_url, u.bio
+    FROM follows f JOIN users u ON u.id = f.following_id
+    WHERE f.follower_id = ? ORDER BY u.full_name LIMIT 50
+  `).all(me.id);
+
+  // Stats
+  const stats = {
+    posts:       myPosts.filter(p => p.status === 'published').length,
+    drafts:      myDrafts.length,
+    comments:    myComments.length,
+    reactions:   myReactions.length,
+    bookmarks:   myBookmarks.length,
+    following:   following.length,
+    followers:   db.prepare('SELECT COUNT(*) AS c FROM follows WHERE following_id = ?').get(me.id).c
+  };
+
+  res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, stats, currentPath: '/me' });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /settings — full settings page (profile, privacy, notifications, account, display, connected)
+// ────────────────────────────────────────────────────────────────────────────
+router.get('/settings', ensureLoggedIn, (req, res) => {
+  res.render('user/settings', { currentPath: '/settings' });
+});
+
+router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), (req, res) => {
+  const me = req.session.user;
+  const { full_name, bio, designation, address, gender, birth_date, social_fb, social_twitter, social_linkedin, social_website } = req.body;
+  db.prepare(`
+    UPDATE users SET
+      full_name = COALESCE(?, full_name),
+      bio = ?, designation = ?, address = ?,
+      gender = COALESCE(?, gender),
+      birth_date = ?,
+      social_fb = ?, social_twitter = ?, social_linkedin = ?, social_website = ?
+    WHERE id = ?
+  `).run(full_name, bio || null, designation || null, address || null, gender || null, birth_date || null,
+         social_fb || null, social_twitter || null, social_linkedin || null, social_website || null, me.id);
+  // Refresh session
+  const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
+  req.session.user = fresh;
+  res.redirect('/settings?ok=profile');
+});
+
+router.post('/settings/privacy', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const { show_email, show_phone, show_birth } = req.body;
+  db.prepare('UPDATE users SET show_email = ?, show_phone = ?, show_birth = ? WHERE id = ?')
+    .run(show_email === '1' ? 1 : 0, show_phone === '1' ? 1 : 0, show_birth === '1' ? 1 : 0, me.id);
+  res.redirect('/settings?ok=privacy');
+});
+
+router.post('/settings/notifications', ensureLoggedIn, (req, res) => {
+  // Stored in user_settings (light key-value); for now we use a JSON column on users.
+  // If the column doesn't exist, ignore. Migration adds it safely.
+  const me = req.session.user;
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN notify_prefs TEXT DEFAULT '{}'");
+  } catch (_) {}
+  const prefs = {
+    email_mention: req.body.email_mention === '1',
+    email_comment: req.body.email_comment === '1',
+    push_like:     req.body.push_like === '1',
+    daily_digest:  req.body.daily_digest === '1'
+  };
+  db.prepare('UPDATE users SET notify_prefs = ? WHERE id = ?').run(JSON.stringify(prefs), me.id);
+  res.redirect('/settings?ok=notifications');
+});
+
+router.post('/settings/account/password', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const { current_password, new_password, confirm_password } = req.body;
+  if (new_password !== confirm_password) return res.redirect('/settings?err=password_mismatch');
+  if (new_password.length < 6) return res.redirect('/settings?err=password_short');
+  const row = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(me.id);
+  if (!bcrypt.compareSync(current_password || '', row.password_hash)) {
+    return res.redirect('/settings?err=password_wrong');
+  }
+  const newHash = bcrypt.hashSync(new_password, 10);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, me.id);
+  res.redirect('/settings?ok=password');
+});
+
+router.post('/settings/account/deactivate', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  db.prepare("UPDATE users SET status = 'inactive' WHERE id = ?").run(me.id);
+  req.session.destroy(() => res.redirect('/'));
+});
+
+router.post('/settings/display', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const { theme, font_size, language } = req.body;
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'");
+  } catch (_) {}
+  const prefs = { theme: theme || 'auto', font_size: font_size || 'medium', language: language || 'bn' };
+  db.prepare('UPDATE users SET display_prefs = ? WHERE id = ?').run(JSON.stringify(prefs), me.id);
+  res.redirect('/settings?ok=display');
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /profile/edit — fix missing route
+// ────────────────────────────────────────────────────────────────────────────
+router.get('/profile/edit', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const profile = db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
+  res.render('user/edit', { profile, currentPath: '/me' });
+});
+
+router.post('/profile/edit', ensureLoggedIn, withUpload(coverUpload), (req, res) => {
+  const me = req.session.user;
+  const { full_name, bio, designation, address, gender, birth_date,
+          social_fb, social_twitter, social_linkedin, social_website,
+          show_email, show_phone, show_birth, email, phone } = req.body;
+  const avatarPath = req.file ? '/uploads/covers/' + req.file.filename : null;
+  db.prepare(`
+    UPDATE users SET
+      full_name = ?, bio = ?, designation = ?, address = ?,
+      gender = ?, birth_date = ?,
+      social_fb = ?, social_twitter = ?, social_linkedin = ?, social_website = ?,
+      show_email = ?, show_phone = ?, show_birth = ?,
+      email = ?, phone = ?
+      ${avatarPath ? ', avatar_url = ?' : ''}
+    WHERE id = ?
+  `).run(full_name, bio || null, designation || null, address || null, gender || null, birth_date || null,
+         social_fb || null, social_twitter || null, social_linkedin || null, social_website || null,
+         show_email === '1' ? 1 : 0, show_phone === '1' ? 1 : 0, show_birth === '1' ? 1 : 0,
+         email || null, phone || null,
+         ...(avatarPath ? [avatarPath] : []), me.id);
+  const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
+  req.session.user = fresh;
+  res.redirect('/profile/' + fresh.username + '?ok=updated');
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/react — 5 emoji reactions (toggle)
+// ────────────────────────────────────────────────────────────────────────────
+router.post('/api/react', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const { target_id, target_type, reaction_type } = req.body;
+  const ALLOWED = ['like', 'love', 'haha', 'wow', 'sad'];
+  if (!ALLOWED.includes(reaction_type)) return res.status(400).json({ error: 'invalid reaction' });
+  if (!['post', 'comment'].includes(target_type)) return res.status(400).json({ error: 'invalid target_type' });
+
+  // Schema: likes has columns (id, user_id, post_id, comment_id, created_at)
+  // For backward compat: post_id=target_id when type=post, comment_id=target_id when type=comment
+  if (target_type === 'post') {
+    const existing = db.prepare('SELECT id, reaction_type FROM likes WHERE user_id = ? AND post_id = ?').get(me.id, target_id);
+    if (existing && existing.reaction_type === reaction_type) {
+      db.prepare('DELETE FROM likes WHERE id = ?').run(existing.id);
+    } else if (existing) {
+      try { db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
+      db.prepare('UPDATE likes SET reaction_type = ? WHERE id = ?').run(reaction_type, existing.id);
+    } else {
+      try { db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
+      db.prepare('INSERT INTO likes (user_id, post_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+      // Notify post author (debounced — only for love/haha/wow)
+      if (['love', 'haha', 'wow'].includes(reaction_type)) {
+        const post = db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(target_id);
+        if (post && post.author_id !== me.id) {
+          const labels = { love: '❤️ ভালোবাসা', haha: '😂 হাসি', wow: '😮 বিস্ময়' };
+          db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
+            .run(post.author_id, 'reaction', labels[reaction_type] || 'প্রতিক্রিয়া',
+                 me.full_name + ' আপনার পোস্টে প্রতিক্রিয়া জানিয়েছেন', '/articles/' + target_id);
+        }
+      }
+    }
+    // Recompute like_count and store reactions JSON
+    const counts = db.prepare(`
+      SELECT reaction_type, COUNT(*) AS c FROM likes WHERE post_id = ? GROUP BY reaction_type
+    `).all(target_id);
+    const reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+    counts.forEach(r => { reactions[r.reaction_type || 'like'] = r.c; });
+    const total = Object.values(reactions).reduce((a, b) => a + b, 0);
+    try { db.exec("ALTER TABLE posts ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
+    db.prepare('UPDATE posts SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
+    res.json({ ok: true, reactions, total, mine: existing ? (existing.reaction_type === reaction_type ? null : reaction_type) : reaction_type });
+  } else {
+    // comment
+    const existing = db.prepare('SELECT id, reaction_type FROM likes WHERE user_id = ? AND comment_id = ?').get(me.id, target_id);
+    if (existing && existing.reaction_type === reaction_type) {
+      db.prepare('DELETE FROM likes WHERE id = ?').run(existing.id);
+    } else if (existing) {
+      try { db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
+      db.prepare('UPDATE likes SET reaction_type = ? WHERE id = ?').run(reaction_type, existing.id);
+    } else {
+      try { db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
+      db.prepare('INSERT INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+    }
+    const counts = db.prepare(`
+      SELECT reaction_type, COUNT(*) AS c FROM likes WHERE comment_id = ? GROUP BY reaction_type
+    `).all(target_id);
+    const reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+    counts.forEach(r => { reactions[r.reaction_type || 'like'] = r.c; });
+    const total = Object.values(reactions).reduce((a, b) => a + b, 0);
+    try { db.exec("ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
+    db.prepare('UPDATE comments SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
+    res.json({ ok: true, reactions, total, mine: existing ? (existing.reaction_type === reaction_type ? null : reaction_type) : reaction_type });
+  }
+});
+
+// Get reactions for a post (for initial render)
+router.get('/api/reactions/:type/:id', (req, res) => {
+  const { type, id } = req.params;
+  if (!['post', 'comment'].includes(type)) return res.status(400).json({ error: 'invalid' });
+  const col = type === 'post' ? 'post_id' : 'comment_id';
+  const rows = db.prepare(`SELECT user_id, reaction_type FROM likes WHERE ${col} = ?`).all(id);
+  const counts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+  rows.forEach(r => { counts[r.reaction_type || 'like'] = (counts[r.reaction_type || 'like'] || 0) + 1; });
+  const mine = req.session.user ? (rows.find(r => r.user_id === req.session.user.id) || null) : null;
+  res.json({ counts, total: rows.length, mine: mine ? (mine.reaction_type || 'like') : null });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/share-to-user — share a post to another user via DM
+// ────────────────────────────────────────────────────────────────────────────
+router.post('/api/share-to-user', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const { to_username, post_id, message } = req.body;
+  const other = db.prepare('SELECT * FROM users WHERE username = ?').get(to_username);
+  if (!other) return res.status(404).json({ error: 'user not found' });
+  let conv = db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
+    .get(me.id, other.id, other.id, me.id);
+  if (!conv) {
+    const a = Math.min(me.id, other.id), b = Math.max(me.id, other.id);
+    const r = db.prepare('INSERT INTO conversations (user_a, user_b) VALUES (?, ?)').run(a, b);
+    conv = { id: r.lastInsertRowid };
+  }
+  const post = db.prepare('SELECT title, type FROM posts WHERE id = ?').get(post_id);
+  const link = post && post.type === 'question' ? '/qa/' + post_id : '/articles/' + post_id;
+  const body = (message || '') + (post ? '\n\n— শেয়ার: ' + post.title + ' (' + link + ')' : '');
+  db.prepare('INSERT INTO messages (conversation_id, sender_id, body) VALUES (?, ?, ?)')
+    .run(conv.id, me.id, body.trim());
+  db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
+  res.json({ ok: true, redirect: '/messages/' + other.username });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /qa/:id/answer — fix broken Q&A answer form
+// ────────────────────────────────────────────────────────────────────────────
+router.post('/qa/:id/answer', ensureLoggedIn, (req, res) => {
+  const me = req.session.user;
+  const qid = parseInt(req.params.id);
+  const { body } = req.body;
+  if (!body || !body.trim()) return res.redirect('/qa/' + qid + '?err=empty');
+  const r = db.prepare('INSERT INTO comments (post_id, author_id, body) VALUES (?, ?, ?)').run(qid, me.id, body.trim());
+  db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(qid);
+  // Notify question author
+  const q = db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(qid);
+  if (q && q.author_id !== me.id) {
+    db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
+      .run(q.author_id, 'comment', 'নতুন উত্তর', me.full_name + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid);
+  }
+  res.redirect('/qa/' + qid + '#answer-' + r.lastInsertRowid);
 });
 
 module.exports = router;

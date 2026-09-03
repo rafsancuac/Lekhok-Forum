@@ -17,58 +17,87 @@
   <div class="page-wrap">
     <div class="page-header">
       <h1><i class="fas fa-comment-dots"></i> মেসেজ</h1>
+      <p class="page-subtitle">সবার সাথে কথা বলুন, ফাইল শেয়ার করুন</p>
     </div>
 
-    <div class="messages-wrap" style="grid-template-columns: 1fr">
-      <div class="conv-list" style="border-right: none; height: auto; min-height: 400px;">
-        <div class="conv-list-head">
+    <div class="messenger-shell" style="max-width:520px;margin:0 auto;grid-template-columns:1fr">
+      <aside class="messenger-list">
+        <div class="messenger-list-head">
           <h2><i class="fas fa-inbox"></i> কথোপকথন</h2>
+          <input type="search" class="messenger-search" placeholder="🔍 নাম খুঁজুন..." id="convSearch" oninput="filterConvs(this.value)" />
         </div>
         <% if (conversations.length === 0) { %>
           <div class="empty-state-full">
             <i class="fas fa-comment-slash"></i>
             <p>কোনো কথোপকথন নেই।</p>
-            <a href="/members" class="btn-primary-sm">সদস্য খুঁজুন</a>
+            <a href="/members" class="btn btn-primary btn-sm">সদস্য খুঁজুন</a>
           </div>
         <% } else { %>
           <% conversations.forEach(c => { %>
-            <a href="/messages/<%= c.other_username %>" class="conv-item" data-id="<%= c.id %>">
-              <img src="<%= c.other_avatar || '/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a) %>" class="conv-avatar">
-              <div class="conv-info">
-                <div class="conv-name"><%= c.other_name %></div>
-                <div class="conv-preview"><%= c.last_body || 'নতুন কথোপকথন' %></div>
+            <a href="/messages/<%= c.other_username %>" class="conv-item" data-name="<%= c.other_name.toLowerCase() %>" data-id="<%= c.id %>">
+              <div class="avatar avatar-md" style="position:relative">
+                <% if (c.other_avatar) { %>
+                  <img src="<%= c.other_avatar %>" alt="<%= c.other_name %>" />
+                <% } else { %>
+                  <%= c.other_name.charAt(0).toUpperCase() %>
+                <% } %>
+                <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
               </div>
               <div class="conv-meta">
+                <div class="conv-name"><%= c.other_name %></div>
+                <div class="conv-snippet"><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 50) : 'নতুন কথোপকথন' %></div>
+              </div>
+              <div class="conv-meta-right">
                 <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
               </div>
             </a>
           <% }); %>
         <% } %>
-      </div>
+      </aside>
     </div>
   </div>
+
   <script>
-    // v2.2: 5s polling for unread badge updates
+    function filterConvs(q) {
+      q = (q || '').toLowerCase().trim();
+      document.querySelectorAll('.conv-item').forEach(el => {
+        el.style.display = !q || el.dataset.name.indexOf(q) !== -1 ? 'flex' : 'none';
+      });
+    }
+
+    // 5s polling for unread counts + online dots
     async function pollList() {
       try {
-        const res = await fetch('/api/messages/unread');
-        const data = await res.json();
+        const r1 = await fetch('/api/messages/unread');
+        const data = await r1.json();
         document.querySelectorAll('.conv-item').forEach(el => {
           const id = parseInt(el.dataset.id);
           const conv = data.conversations.find(c => c.id === id);
-          let meta = el.querySelector('.conv-meta');
+          let meta = el.querySelector('.conv-meta-right');
           if (!meta) return;
           let badge = meta.querySelector('.conv-unread');
           if (conv && conv.unread > 0) {
             if (!badge) { badge = document.createElement('span'); badge.className = 'conv-unread'; meta.appendChild(badge); }
             badge.textContent = conv.unread;
-          } else if (badge) {
-            badge.remove();
-          }
+          } else if (badge) badge.remove();
         });
+
+        // Check online status for each visible user
+        const userIds = [...document.querySelectorAll('.online-dot')].map(d => d.dataset.userId).filter(Boolean);
+        const unique = [...new Set(userIds)];
+        await Promise.all(unique.map(async uid => {
+          try {
+            const r = await fetch('/api/messages/online?user_id=' + uid);
+            const d = await r.json();
+            document.querySelectorAll('.online-dot[data-user-id="' + uid + '"]').forEach(dot => {
+              dot.style.display = d.online ? 'block' : 'none';
+            });
+          } catch (e) {}
+        }));
       } catch (e) {}
     }
-    setInterval(pollList, 5000);
+    setInterval(pollList, 8000);
+    setTimeout(pollList, 1500);
   </script>
 </body>
 </html>

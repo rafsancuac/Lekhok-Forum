@@ -125,3 +125,79 @@
   // Initial run
   onScroll();
 })();
+
+/* ============= Topbar dropdowns + mega menu ============= */
+function openMenu() {
+  const s = document.getElementById('mobileSidebar');
+  const o = document.getElementById('mobileOverlay');
+  if (s) { s.classList.add('open'); s.setAttribute('aria-hidden', 'false'); }
+  if (o) o.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeMenu() {
+  const s = document.getElementById('mobileSidebar');
+  const o = document.getElementById('mobileOverlay');
+  if (s) { s.classList.remove('open'); s.setAttribute('aria-hidden', 'true'); }
+  if (o) o.classList.remove('show');
+  document.body.style.overflow = '';
+}
+window.openMenu = openMenu; window.closeMenu = closeMenu;
+document.addEventListener('DOMContentLoaded', function () {
+  const t = document.getElementById('menuToggle');
+  const c = document.getElementById('closeSidebar');
+  const o = document.getElementById('mobileOverlay');
+  if (t) t.addEventListener('click', openMenu);
+  if (c) c.addEventListener('click', closeMenu);
+  if (o) o.addEventListener('click', closeMenu);
+  // Close on Esc
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeMenu(); closeMega(); } });
+
+  // Sticky-shadow on topbar
+  const topbar = document.getElementById('topbar');
+  if (topbar) {
+    window.addEventListener('scroll', function () {
+      topbar.classList.toggle('scrolled', window.scrollY > 8);
+    }, { passive: true });
+  }
+});
+
+function toggleMega(e) {
+  if (e) e.stopPropagation();
+  const m = document.getElementById('megaMenu');
+  if (m) m.classList.toggle('open');
+}
+function closeMega() {
+  const m = document.getElementById('megaMenu');
+  if (m) m.classList.remove('open');
+}
+window.toggleMega = toggleMega;
+window.closeMega = closeMega;
+document.addEventListener('click', function (e) {
+  const wrap = document.getElementById('megaWrap');
+  if (wrap && !wrap.contains(e.target)) closeMega();
+  const nwrap = document.querySelector('.notif-bell-wrap');
+  if (nwrap && !nwrap.contains(e.target)) {
+    const dd = document.getElementById('notifDropdown');
+    if (dd) dd.classList.remove('open');
+  }
+  const uwrap = document.querySelector('.user-menu-wrap');
+  if (uwrap && !uwrap.contains(e.target)) {
+    const ud = document.getElementById('userDropdown');
+    if (ud) ud.classList.remove('open');
+  }
+});
+
+/* ============= Toast ============= */
+function showToast(msg, type) {
+  type = type || '';
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 350);
+  }, 2400);
+}
+window.showToast = showToast;

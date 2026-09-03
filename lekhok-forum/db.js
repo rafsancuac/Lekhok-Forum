@@ -406,7 +406,12 @@ async function runMigrations() {
     "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'",
     "ALTER TABLE complaints ADD COLUMN file_name TEXT",
     "ALTER TABLE users ADD COLUMN last_login DATETIME",
-    "ALTER TABLE posts ADD COLUMN mentions TEXT"
+    "ALTER TABLE posts ADD COLUMN mentions TEXT",
+    "ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'",
+    "ALTER TABLE posts ADD COLUMN reactions TEXT DEFAULT '{}'",
+    "ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'",
+    "ALTER TABLE users ADD COLUMN notify_prefs TEXT DEFAULT '{}'",
+    "ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}

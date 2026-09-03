@@ -14,8 +14,8 @@
 body { font-family: 'SolaimanLipi', sans-serif; background: linear-gradient(135deg, #0a1f44 0%, #0B1121 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .auth-card { background: white; border-radius: 12px; padding: 40px; max-width: 480px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative; }
 .back-home { position: absolute; top: 16px; left: 16px; color: #0a1f44; text-decoration: none; font-size: 0.9rem; }
-.back-home:hover { color: #C5A059; }
-.logo-mark { display: block; margin: 0 auto 16px; width: 60px; height: 60px; background: #0a1f44; color: #C5A059; border-radius: 50%; line-height: 60px; text-align: center; font-size: 2.5rem; font-weight: bold; }
+.back-home:hover { color: #059669; }
+.logo-mark { display: block; margin: 0 auto 16px; width: 60px; height: 60px; background: #0a1f44; color: #059669; border-radius: 50%; line-height: 60px; text-align: center; font-size: 2.5rem; font-weight: bold; }
 .auth-card h1 { text-align: center; color: #0a1f44; margin-bottom: 6px; }
 .sub { text-align: center; color: #666; margin-bottom: 24px; font-size: 0.95rem; }
 .error { background: #fee; color: #c33; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.9rem; border: 1px solid #fcc; }
@@ -23,13 +23,13 @@ body { font-family: 'SolaimanLipi', sans-serif; background: linear-gradient(135d
 .form-group { margin-bottom: 14px; }
 .form-group label { display: block; margin-bottom: 6px; color: #0a1f44; font-weight: 600; font-size: 0.9rem; }
 .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 1rem; }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #C5A059; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #059669; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
 .btn-primary { width: 100%; padding: 12px; background: #0a1f44; color: white; border: none; border-radius: 6px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
 .btn-primary:hover { background: #0B1121; }
 .auth-foot { text-align: center; margin-top: 20px; color: #666; font-size: 0.9rem; }
-.auth-foot a { color: #C5A059; font-weight: 600; }
+.auth-foot a { color: #059669; font-weight: 600; }
 .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
 .checkbox-group input { width: auto; }
 .checkbox-group label { margin: 0; font-weight: normal; }

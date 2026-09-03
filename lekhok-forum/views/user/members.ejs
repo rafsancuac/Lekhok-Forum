@@ -6,6 +6,7 @@
   <title>সদস্য পরিচিতি — লেখক ফোরাম</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
   <link rel="stylesheet" href="/assets/css/feed.css" />
 </head>
 <body>
@@ -14,35 +15,139 @@
   <div class="page-wrap">
     <div class="page-header">
       <h1><i class="fas fa-users"></i> সদস্য পরিচিতি</h1>
+      <p>আমাদের প্রতিষ্ঠানের নেতৃত্ব ও সকল সদস্য</p>
     </div>
 
-    <div class="member-search-bar">
-      <form method="GET" class="search-form">
-        <input type="text" name="q" value="<%= search || '' %>" placeholder="নাম, ব্যবহারকারী নাম বা পদবি দিয়ে খুঁজুন...">
-        <button type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
-      </form>
-    </div>
+    <div class="container">
 
-    <p class="member-count"><%= totalUsers %> জন সদস্য</p>
+      <!-- Categorized committee sections -->
+      <% if (grouped.central.length > 0) { %>
+        <section class="member-section">
+          <div class="section-head">
+            <h2 class="section-title"><i class="fas fa-crown"></i> কেন্দ্রীয় কার্যনির্বাহী কমিটি</h2>
+            <span class="badge"><%= grouped.central.length %> জন</span>
+          </div>
+          <div class="leaders-grid">
+            <% grouped.central.forEach(m => { %>
+              <article class="leader-card large">
+                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
+                  <div class="avatar avatar-lg"><%= m.name.charAt(0) %></div>
+                <% } %>
+                <h3><%= m.name %></h3>
+                <p class="role"><%= m.role %></p>
+                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 100) %><%= m.bio.length > 100 ? '…' : '' %></p><% } %>
+              </article>
+            <% }); %>
+          </div>
+        </section>
+      <% } %>
 
-    <div class="members-grid">
-      <% members.forEach(m => { %>
-        <div class="member-card">
-          <a href="/profile/<%= m.username %>">
-            <img src="<%= m.avatar_url || '/avatar/' + m.id %>" class="member-avatar">
-            <h3 class="member-name"><%= m.full_name %></h3>
-            <p class="member-handle">@<%= m.username %></p>
-            <% if (m.designation) { %><p class="member-desig"><i class="fas fa-briefcase"></i> <%= m.designation %></p><% } %>
-            <% if (m.bio) { %><p class="member-bio"><%= m.bio.substring(0, 80) %>...</p><% } %>
-          </a>
+      <% if (grouped.advisory.length > 0) { %>
+        <section class="member-section">
+          <div class="section-head">
+            <h2 class="section-title"><i class="fas fa-graduation-cap"></i> উপদেষ্টা পর্ষদ</h2>
+            <span class="badge"><%= grouped.advisory.length %> জন</span>
+          </div>
+          <div class="leaders-grid">
+            <% grouped.advisory.forEach(m => { %>
+              <article class="leader-card">
+                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
+                  <div class="avatar avatar-md"><%= m.name.charAt(0) %></div>
+                <% } %>
+                <h3><%= m.name %></h3>
+                <p class="role"><%= m.role %></p>
+              </article>
+            <% }); %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (grouped.branch.length > 0) { %>
+        <section class="member-section">
+          <div class="section-head">
+            <h2 class="section-title"><i class="fas fa-university"></i> বিশ্ববিদ্যালয় শাখা কমিটি</h2>
+            <span class="badge"><%= grouped.branch.length %> জন</span>
+          </div>
+          <div class="leaders-grid">
+            <% grouped.branch.forEach(m => { %>
+              <article class="leader-card">
+                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
+                  <div class="avatar avatar-md"><%= m.name.charAt(0) %></div>
+                <% } %>
+                <h3><%= m.name %></h3>
+                <p class="role"><%= m.role %></p>
+              </article>
+            <% }); %>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (grouped.founder.length > 0) { %>
+        <section class="member-section">
+          <div class="section-head">
+            <h2 class="section-title"><i class="fas fa-star"></i> প্রতিষ্ঠাতা সদস্য</h2>
+            <span class="badge"><%= grouped.founder.length %> জন</span>
+          </div>
+          <div class="leaders-grid">
+            <% grouped.founder.forEach(m => { %>
+              <article class="leader-card large">
+                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
+                  <div class="avatar avatar-lg"><%= m.name.charAt(0) %></div>
+                <% } %>
+                <h3><%= m.name %></h3>
+                <p class="role"><%= m.role %></p>
+              </article>
+            <% }); %>
+          </div>
+        </section>
+      <% } %>
+
+      <!-- All registered users search -->
+      <section class="member-section" style="margin-top:40px;">
+        <div class="section-head">
+          <h2 class="section-title"><i class="fas fa-search"></i> সকল নিবন্ধিত সদস্য</h2>
+          <span class="badge"><%= totalUsers %> জন</span>
         </div>
-      <% }); %>
-    </div>
+        <form method="GET" class="search-form" style="max-width:480px;margin-bottom:20px;">
+          <input class="input" type="text" name="q" value="<%= search || '' %>" placeholder="নাম বা পদবি দিয়ে খুঁজুন…">
+        </form>
 
-    <% if (false) { %>
-      <div class="pagination">
-      </div>
-    <% } %>
+        <% if (members.length === 0) { %>
+          <div class="empty"><div class="icon"><i class="fas fa-user-slash"></i></div><h3>কোনো সদস্য পাওয়া যায়নি</h3></div>
+        <% } else { %>
+          <div class="leaders-grid">
+            <% members.forEach(m => { %>
+              <a href="/profile/<%= m.username %>" class="leader-card" style="text-decoration:none;color:inherit;">
+                <% if (m.avatar_url) { %>
+                  <div class="avatar-wrap">
+                    <img src="<%= m.avatar_url %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;" onerror="this.onerror=null;this.src='/avatar/<%= m.id %>'">
+                    <% if (m.last_login && (Date.now() - new Date(m.last_login).getTime()) < 5*60*1000) { %><span class="online-dot"></span><% } %>
+                  </div>
+                <% } else { %>
+                  <div class="avatar avatar-md"><%= m.full_name.charAt(0) %></div>
+                <% } %>
+                <h3 style="font-size:15px;"><%= m.full_name %></h3>
+                <% if (m.designation) { %><p class="role" style="font-size:12px;"><%= m.designation %></p><% } %>
+                <small style="color:var(--text-muted);">@<%= m.username %></small>
+              </a>
+            <% }); %>
+          </div>
+        <% } %>
+      </section>
+    </div>
   </div>
+
+  <style>
+    .member-section { padding: 30px 0; border-bottom: 1px solid var(--border); }
+    .member-section:last-child { border-bottom: 0; }
+    .section-title i { color: var(--accent); margin-right: 6px; }
+    .follow-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+    .follow-card {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 16px 12px; background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); text-align: center; transition: var(--transition);
+    }
+    .follow-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--accent); }
+  </style>
 </body>
 </html>
