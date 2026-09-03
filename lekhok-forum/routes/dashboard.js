@@ -151,17 +151,6 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
   });
 });
 
-// ── Gallery ───────────────────────────────────────────────────────────────
-router.get('/gallery', async (req, res) => {
-  const items = await db.prepare('SELECT * FROM gallery ORDER BY created_at DESC').all();
-  const byCategory = {};
-  items.forEach(it => {
-    if (!byCategory[it.category]) byCategory[it.category] = [];
-    byCategory[it.category].push(it);
-  });
-  res.render('user/gallery', { items, byCategory, currentPath: '/gallery' });
-});
-
 // ── Messages (Messenger-like) ─────────────────────────────────────────────
 router.get('/messages', ensureAuth, async (req, res) => {
   const me = req.session.user.id;
