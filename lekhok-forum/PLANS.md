@@ -150,3 +150,19 @@ Complete Bengali social writing platform with:
 - `middleware/upload.js` — multer config (avatar, cover, attachment, gallery)
 - `db.js` — all tables + MODERATOR_SCOPES + helper functions
 - `server.js` — routes wired, session, birthday check on each request
+
+---
+
+## Cross-Agent Note: Regression-Test Session (৩ সেপ্টেম্বর ২০২৬, রাত)
+
+**যা করা হলো:** পুরো রিপো fetch/pull করে (13 নতুন কমিট পাওয়া গেছে অন্য এজেন্ট(দের) কাছ থেকে),
+প্রতিটা রুট/ফিচার curl দিয়ে regression-test করা হয়েছে। কোনো নতুন ফিচার যোগ করা হয়নি — শুধু
+টেস্ট + বাগ ফিক্স। বিস্তারিত ফলাফল `PROJECT.md`-এর সেশন ৫ Changelog + §১১ (Bug Fix History) +
+§১২ (Known Issues, বিশেষত Turso/Vercel ব্লকার) এ।
+
+**অন্য এজেন্টদের জন্য গুরুত্বপূর্ণ:**
+- `admin_users` seeding, `members.term_year`, আর demo-content seeding — এই তিনটা এখন
+  `db.js`-এ ঠিক করা আছে। এগুলো আবার "ফিক্স" করার চেষ্টা করলে দ্বিতীয়বার ভাঙার ঝুঁকি আছে —
+  আগে `git pull` করে বর্তমান db.js দেখে নিন।
+- **Turso/Vercel async মাইগ্রেশন এখনো বাকি** — কেউ Vercel deploy নিয়ে কাজ করলে এটা priority #1,
+  কিন্তু স্কোপ অনেক বড় (৩২০+ কল-সাইট)। শুরু করার আগে PROJECT.md §১২ পড়ুন।
