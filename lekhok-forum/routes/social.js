@@ -10,7 +10,12 @@ function getCurrentUser(req) {
 }
 
 function ensureLoggedIn(req, res, next) {
-  if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
+  if (!req.session.user) {
+    // API/XHR callers expect JSON, not a login-page redirect — main.js checks
+    // for 401 and redirects the browser itself.
+    if (req.originalUrl.startsWith('/api/') || req.xhr) return res.status(401).json({ error: 'login' });
+    return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
+  }
   next();
 }
 
@@ -498,6 +503,7 @@ router.post('/follow/:userId', (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   const targetId = parseInt(req.params.userId, 10);
   if (targetId === req.session.user.id) return res.json({ following: false });
+  if (isBlockedBetween(req.session.user.id, targetId)) return res.status(403).json({ error: 'blocked' });
   const existing = db.prepare('SELECT id FROM follows WHERE follower_id = ? AND following_id = ?').get(req.session.user.id, targetId);
   if (existing) {
     db.prepare('DELETE FROM follows WHERE id = ?').run(existing.id);
@@ -655,7 +661,7 @@ router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), (req, 
       birth_date = ?,
       social_fb = ?, social_twitter = ?, social_linkedin = ?, social_website = ?
     WHERE id = ?
-  `).run(full_name, bio || null, designation || null, address || null, gender || null, birth_date || null,
+  `).run(full_name ?? null, bio || null, designation || null, address || null, gender ?? null, birth_date || null,
          social_fb || null, social_twitter || null, social_linkedin || null, social_website || null, me.id);
   // Refresh session
   const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);

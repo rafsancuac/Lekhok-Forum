@@ -1,9 +1,19 @@
-<%- include('../partials/header', { adminUser, currentPath, pageTitle: 'ইউজার ম্যানেজমেন্ট' }) %>
-
-<div class="admin-page">
-  <div class="page-head">
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>লেখক ফোরাম — ইউজার ম্যানেজমেন্ট</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
     <h1><i class="fas fa-users-cog"></i> ইউজার ম্যানেজমেন্ট</h1>
-    <a href="/admin/moderators" class="btn btn-secondary"><i class="fas fa-user-shield"></i> মডারেটর ম্যানেজমেন্ট</a>
+    <p><a href="/admin/moderators"><i class="fas fa-user-shield"></i> মডারেটর ম্যানেজমেন্টে যান</a></p>
   </div>
 
   <form class="filter-bar" method="GET">
@@ -22,63 +32,82 @@
     </select>
     <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> ফিল্টার</button>
     <% if (q || roleFilter || statusFilter) { %>
-      <a href="/admin/users" class="btn btn-ghost"><i class="fas fa-times"></i> রিসেট</a>
+      <a href="/admin/users" class="btn btn-secondary"><i class="fas fa-times"></i> রিসেট</a>
     <% } %>
   </form>
 
-  <div class="data-card">
-    <table class="data-table">
-      <thead>
+  <table>
+    <thead>
+      <tr>
+        <th>ইউজার</th>
+        <th>রোল</th>
+        <th>স্ট্যাটাস</th>
+        <th>পোস্ট</th>
+        <th>ফলোয়ার</th>
+        <th>যোগদান</th>
+        <th>শেষ লগইন</th>
+        <th>অ্যাকশন</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (users.length === 0) { %>
+        <tr><td colspan="8" class="empty-row">কোনো ইউজার পাওয়া যায়নি</td></tr>
+      <% } %>
+      <% users.forEach(u => { %>
         <tr>
-          <th>ইউজার</th>
-          <th>রোল</th>
-          <th>স্ট্যাটাস</th>
-          <th>পোস্ট</th>
-          <th>ফলোয়ার</th>
-          <th>যোগদান</th>
-          <th>শেষ লগইন</th>
-          <th>অ্যাকশন</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (users.length === 0) { %>
-          <tr><td colspan="8" class="empty-row">কোনো ইউজার পাওয়া যায়নি</td></tr>
-        <% } %>
-        <% users.forEach(u => { %>
-          <tr>
-            <td>
-              <div class="user-cell">
-                <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="user-avatar-sm">
-                <div>
-                  <a href="/profile/<%= u.username %>" target="_blank" class="user-name-link"><%= u.full_name || u.username %></a>
-                  <div class="user-username">@<%= u.username %></div>
-                </div>
+          <td>
+            <div class="user-cell">
+              <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="user-avatar-sm" alt="">
+              <div>
+                <a href="/profile/<%= u.username %>" target="_blank" class="user-name-link"><%= u.full_name || u.username %></a>
+                <div class="user-username">@<%= u.username %></div>
               </div>
-            </td>
-            <td>
-              <% if (u.role === 'admin') { %><span class="badge badge-admin">এডমিন</span>
-              <% } else if (u.role === 'moderator') { %><span class="badge badge-mod">মডারেটর</span>
-              <% } else { %><span class="badge badge-user">ইউজার</span><% } %>
-            </td>
-            <td>
-              <% if (u.status === 'active') { %><span class="status-dot status-active"></span> সক্রিয়
-              <% } else if (u.status === 'pending') { %><span class="status-dot status-pending"></span> অপেক্ষমাণ
-              <% } else { %><span class="status-dot status-banned"></span> নিষিদ্ধ<% } %>
-            </td>
-            <td><%= u.post_count %></td>
-            <td><%= u.follower_count %></td>
-            <td><%= new Date(u.created_at).toLocaleDateString('bn-BD') %></td>
-            <td><%= u.last_login ? new Date(u.last_login).toLocaleDateString('bn-BD') : '—' %></td>
-            <td>
-              <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> এডিট</a>
-            </td>
-          </tr>
-        <% }); %>
-      </tbody>
-    </table>
-  </div>
+            </div>
+          </td>
+          <td>
+            <% if (u.role === 'admin') { %><span class="badge badge-admin">এডমিন</span>
+            <% } else if (u.role === 'moderator') { %><span class="badge badge-mod">মডারেটর</span>
+            <% } else { %><span class="badge badge-user">ইউজার</span><% } %>
+          </td>
+          <td>
+            <% if (u.status === 'active') { %><span class="status-dot status-active"></span> সক্রিয়
+            <% } else if (u.status === 'pending') { %><span class="status-dot status-pending"></span> অপেক্ষমাণ
+            <% } else { %><span class="status-dot status-banned"></span> নিষিদ্ধ<% } %>
+          </td>
+          <td><%= u.post_count %></td>
+          <td><%= u.follower_count %></td>
+          <td><%= new Date(u.created_at).toLocaleDateString('bn-BD') %></td>
+          <td><%= u.last_login ? new Date(u.last_login).toLocaleDateString('bn-BD') : '—' %></td>
+          <td>
+            <a href="/admin/users/<%= u.id %>/edit" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> এডিট</a>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
 
   <p class="hint"><i class="fas fa-info-circle"></i> সর্বমোট <strong><%= users.length %></strong> জন ইউজার দেখানো হচ্ছে (সর্বোচ্চ ২০০)।</p>
 </div>
 
-<%- include('../partials/footer') %>
+<style>
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; background: white; padding: 16px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.form-input { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.95rem; }
+.form-input:focus { outline: none; border-color: #059669; }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+.badge-admin { background: #0a1f44; color: white; }
+.badge-mod   { background: #059669; color: white; }
+.badge-user  { background: #e2e8f0; color: #1e293b; }
+.empty-row   { text-align: center; color: #94a3b8; padding: 30px !important; }
+.hint        { color: #64748b; font-size: 0.85rem; margin-top: 14px; }
+.user-cell { display: flex; align-items: center; gap: 10px; }
+.user-avatar-sm { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.user-name-link { color: #0a1f44; font-weight: 600; }
+.user-name-link:hover { color: #059669; }
+.user-username { font-size: 12px; color: #94a3b8; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.status-active  { background: #16a34a; }
+.status-pending { background: #f59e0b; }
+.status-banned  { background: #dc2626; }
+</style>
+</body>
+</html>

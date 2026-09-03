@@ -4,7 +4,12 @@ const db = require('../db');
 const { messageUpload, complaintUpload, attachmentUpload, withUpload } = require('../middleware/upload');
 
 function ensureAuth(req, res, next) {
-  if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
+  if (!req.session.user) {
+    // API endpoints (typing / poll / check / unread) must get JSON 401 —
+    // XHR follows redirects blindly and would choke on login-page HTML.
+    if (req.originalUrl.startsWith('/api/') || req.xhr) return res.status(401).json({ error: 'login' });
+    return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
+  }
   next();
 }
 
