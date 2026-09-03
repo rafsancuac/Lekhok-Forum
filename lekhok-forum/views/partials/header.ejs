@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>লেখক ফোরাম</title>
+  <title><%= typeof title !== 'undefined' && title ? title : 'লেখক ফোরাম' %></title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/style.css" />
   <link rel="stylesheet" href="/assets/css/fonts.css" />
   <link rel="stylesheet" href="/assets/css/feed.css" />
+  <%# পেজ-নির্দিষ্ট স্টাইলশিট (HTML nesting fix-এর পর পেজের নিজস্ব head আর নেই —
+      সেখান থেকে এখানে এসেছে) —%>
+  <% if (typeof extra_css !== 'undefined' && extra_css) { extra_css.forEach(function (href) { %>
+  <link rel="stylesheet" href="<%= href %>" />
+  <% }) } %>
 </head>
 <body>
 <%# Apply per-user display preferences (theme / font size / font family) early to avoid flash %>

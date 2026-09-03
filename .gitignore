@@ -41,3 +41,5 @@ chrome-devtools-mcp/
 
 # v2.2: lekhok-forum nested empty stubs (already removed)
 lekhok-forum/lekhok-forum/
+scripts/
+skills/

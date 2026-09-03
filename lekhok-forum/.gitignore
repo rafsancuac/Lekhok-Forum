@@ -41,3 +41,4 @@ test_seed.js
 
 # Stray reference PDFs (not part of the app)
 *.pdf
+turso-check.db

@@ -1,19 +1,20 @@
 # লেখক ফোরাম — সম্পূর্ণ প্রজেক্ট ডকুমেন্টেশন
 
-> **সংস্করণ:** v3 (Vercel/Turso + UI ওভারহল যোগ হওয়ার পর, testing session) · **শেষ হালনাগাদ:** ৩ সেপ্টেম্বর ২০২৬ (রাত)
+> **সংস্করণ:** v4 (regression সেশন ৭-এর ফিক্সের পর) · **শেষ হালনাগাদ:** ৪ সেপ্টেম্বর ২০২৬
 > **রিপোজিটরি:** https://github.com/rafsancuac/Lekhok-Forum.git
 >
 > এই ফাইলটা পুরো প্রজেক্টের একমাত্র সোর্স অব ট্রুথ। **একাধিক এজেন্ট সমান্তরালে এই রিপোতে কাজ
 > করছে** — কাজ শুরুর আগে সবসময় `git fetch && git log origin/main` চেক করুন, এবং কাজ শেষে
 > এই ফাইলে নিজের Changelog entry যোগ করে তারপর push করুন।
 
-> ## ✅ Turso/Vercel মোড এখন কার্যকর (আগে ছিল না — নিচে দেখুন)
+> ## ✅ Turso/Vercel মোড এখন কার্যকর
 > ~~এখানে আগে লেখা ছিল "Turso/Vercel মোড ভাঙা" — commit `5aa3eda`-এ আরেকটা এজেন্ট পুরো
 > async migration সম্পন্ন করেছে (৩৩০টা call site await করা হয়েছে, route handlers async
-> বানানো হয়েছে, error middleware যোগ)। এই সেশনে স্বাধীনভাবে যাচাই করা হয়েছে — sql.js মোডে
-> সব রুট/ফিচার (public pages, auth, admin, moderator, reactions, messenger online-status)
-> কোনো `[object Promise]` লিক বা এরর ছাড়াই ঠিকমতো কাজ করছে। Turso mode বাস্তব ক্রেডেনশিয়াল
-> দিয়ে টেস্ট করা হয়নি (সেই অ্যাক্সেস নেই), কিন্তু কোড-লেভেলে await প্যাটার্ন সামঞ্জস্যপূর্ণ।~~
+> বানানো হয়েছে, error middleware যোগ)।~~ সেশন ৬-এ স্বাধীনভাবে যাচাই করা হয়েছে (public
+> pages, auth, admin, moderator, reactions, messenger — কোনো `[object Promise]` লিক ছাড়াই)।
+> সেশন ৭-এ fresh-Turso ডেমো-সিডিং ফিক্সসহ **দুটো ব্যাকএন্ডই ৯১/৯১ চেক পাস করে**
+> (`bash scripts/test-lekhok.sh`; sql.js + `TURSO_DATABASE_URL=file:...` ফাইল-মোড)।
+> Turso বাস্তব ক্রেডেনশিয়াল দিয়ে টেস্ট হয়নি — কোড-লেভেলে প্যাটার্ন সামঞ্জস্যপূর্ণ।
 
 ---
 
@@ -219,7 +220,10 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 ## ৭. ডেমো অ্যাকাউন্ট ও সিড ডাটা
 
 ### ডেমো ইউজার (পাসওয়ার্ড: `demo123`)
-`amin`, `sadia`, `mahmud`, `farzana`, `naim`
+`ismail`, `monem`, `karishma`, `mahfuz`, `nusrat`
+
+> ⚠️ **লগইন দুই রকম:** সোশ্যাল ইউজাররা `/login`-এ ঢোকে; **এডমিন আলাদা** — `/admin/login`-এ
+> `admin` / `admin123` (admin_users টেবিল থেকে)। পুরনো ডকে amin/sadia/… লেখা থাকলে সেটা আউটডেটেড।
 
 ### সিড কাউন্ট (যাচাইকৃত)
 | টেবিল | সংখ্যা |
@@ -335,6 +339,42 @@ Hind Siliguri, Tiro Bangla, SolaimanLipi (ডিফল্ট/CDN), Kalpurush, Ti
 আছে। Turso mode বাস্তব ক্রেডেনশিয়াল ছাড়া টেস্ট করা যায়নি, কিন্তু কোড-লেভেলে migration সঠিক দেখাচ্ছে।
 **কোনো নতুন বাগ পাওয়া যায়নি এই রাউন্ডে** — শুধু ভেরিফিকেশন।
 
+### সেশন ৭ (৪ সেপ্টেম্বর ২০২৬) — রুট-মাউন্ট রিগ্রেশন ফিক্স, Turso ডেমো-সিডিং, HTML nesting
+**সেশনের ধরন:** verify-and-fix (অন্য এজেন্টদের কাজের উপর রিগ্রেশন টেস্ট + রোডম্যাপ এক্সিকিউশন)।
+
+**পাওয়া ও ঠিক হওয়া বাগ (৪টি):**
+11. **`/avatar/:id` ও পুরো `/moderator` প্যানেল 404** — কমিট `c2faa96` (gallery route reorder)
+    অ্যাক্সিডেন্টালি দুটো mount লাইন মুছে ফেলেছিল (`routes/avatar.js`, `routes/moderator.js`)।
+    প্রভাব: পুরো সাইটে gender-ভিত্তিক ডিফল্ট অ্যাভাটার + সম্পূর্ণ মডারেটর প্যানেল অকার্যকর।
+    **ফিক্স:** `server.js`-এ দুটো mount পুনরুদ্ধার।
+12. **Fresh Turso/Vercel deploy-এ ডেমো কনটেন্ট/ইউজার সিড হতো না** — Turso branch শুধু admin
+    seed করত (ইচ্ছাকৃত light-seed), ফলে `/articles`, `/qa`, `/profile/ismail` সব 404, ডকুমেন্টেড
+    ডেমো লগইন কাজ করত না। **ফিক্স:** `seedDemoContentLocal()` → dual-backend `seedDemoContent()`
+    (সব স্টেটমেন্ট awaited — sql.js-এ pass-through, Turso-এ আসল await), দুই branch থেকেই কল।
+13. **`POST /follow/<non-numeric>` → 500** — `parseInt('abc')` = NaN, sql.js bind-এ crash।
+    **ফিক্স:** numeric+existing-user guard → 404।
+14. **HTML nesting সমস্যা (§১২-এ বর্ণিত) — সম্পূর্ণ সমাধান** — ৩১টা `views/user/*.ejs` ফাইলের
+    ডুপ্লিকেট `<!DOCTYPE><head><body>` সরানো; `header.ejs` এখন একমাত্র ডকুমেন্ট-ওপেনার
+    (`title` + `extra_css` data হিসেবে include-এ পাস হয়)। ৫টা standalone পেজ (login/register/
+    edit/forms) অপরিবর্তিত। রেন্ডার আউটপুটে এখন ১টা DOCTYPE, পেজ-নির্দিষ্ট CSS ও dynamic
+    title (যেমন `post.title — লেখক ফোরাম`) ঠিক জায়গায়।
+
+**এই সেশনে টেস্ট:**
+- ১৮টা JS ফাইলের syntax check, পুরো রুট-ম্যাপ অডিট
+- নতুন **`scripts/test-lekhok.sh`** (রিপোতে কমিট করা): ৯১টা চেক — public pages, auth-guards,
+  admin panel (২০ পেজ), user panel (১০ পেজ), JSON API, write-flow POST (article/comment/
+  reaction/bookmark/follow/message/complaint/contact/register), ব্র্যান্ড-লিক ও promise-leak চেক
+- **দুই ব্যাকএন্ডেই ৯১/৯১ ALL GREEN** (sql.js + Turso file-mode; সেশন শুরুর আগে Turso ৭২/১৯ ছিল)
+- মডারেটর ফ্লো end-to-end: role+scope সেট → প্যানেল 200, unscoped পেজ 403, পোস্টিং 302 ✓
+- ডকুমেন্টেশন সংশোধন: §৭ ডেমো ইউজার (ismail/… সেট), top-level Turso সতর্কতা আপডেট
+
+**অন্য এজেন্টদের জন্য:**
+- টেস্ট চালাতে: `bash scripts/test-lekhok.sh http://localhost:8080` (আগে `npm install` +
+  `node server.js`)। Turso: `PORT=8081 TURSO_DATABASE_URL=file:./turso-check.db node server.js`।
+- সার্ভার চালু থাকা অবস্থায় `lekhok.db` ফাইল সরাসরি এডিট করবেন না — SIGTERM flush আপনার
+  পরিবর্তন মুছে দেবে (এই সেশনে ধরা পড়েছে)। আগে সার্ভার kill → তারপর এডিট → তারপর চালু।
+- সাম্প্রতিক কমিটে fonts.css + ফন্ট-সিলেক্টর UI (settings-এ ৭+ বাংলা ফন্ট) যোগ হয়েছে — যাচাইকৃত ✓
+
 ---
 
 ## ১১. বাগ ফিক্স হিস্ট্রি
@@ -358,28 +398,28 @@ Hind Siliguri, Tiro Bangla, SolaimanLipi (ডিফল্ট/CDN), Kalpurush, Ti
 
 ## ১২. জানা সমস্যা — এখনো বাকি
 
-### 🚨 Turso/Vercel মোড অকার্যকর (সবচেয়ে গুরুত্বপূর্ণ, দেখুন ডকুমেন্টের শুরুতে)
-৩২০+ জায়গায় সিঙ্ক্রোনাস `db.prepare().get()/.all()/.run()` প্যাটার্ন ব্যবহার হয়, কিন্তু Turso ব্যাকএন্ড
-শুধু async (`.getAsync()/.allAsync()/.runAsync()`) সাপোর্ট করে। `TURSO_DATABASE_URL` সেট করে Vercel-এ
-deploy করলে **প্রথম রিকোয়েস্ট থেকেই সব ভেঙে পড়বে**। এটা ঠিক করতে পুরো routes/admin কোডবেস
-async/await-এ কনভার্ট করতে হবে — বড়, পরিকল্পিত সেশনে করা উচিত, তাড়াহুড়া করে না। local/Railway/Render-এ
-sql.js মোডে অ্যাপ সম্পূর্ণ কার্যকর।
+### ~~🚨 Turso/Vercel মোড অকার্যকর~~ — ✅ সমাধান হয়েছে
 
-**✅ সমাধান হয়েছে (commit `5aa3eda`)** — উপরে দেখুন। এই আইটেমটা রেফারেন্সের জন্য রাখা হলো।
+**✅ সমাধান হয়েছে (commit `5aa3eda` + সেশন ৭-এর ডেমো-সিডিং ফিক্স)** — উপরে দেখুন। দুই
+ব্যাকএন্ড ৯১/৯১ গ্রিন (`scripts/test-lekhok.sh`)। এই আইটেমটা রেফারেন্সের জন্য রাখা হলো।
 
-### HTML nesting issue (কার্যকরী সমস্যা নয়, কিন্তু standards-অনুযায়ী ভুল)
-`views/partials/header.ejs` নিজেই একটা সম্পূর্ণ ডকুমেন্ট (`<!DOCTYPE html>` থেকে নিজস্ব `</body></html>` পর্যন্ত)। কিন্তু **~২৮টা `views/user/*.ejs` ফাইল** এই partial include করার সাথে সাথে **নিজেদেরও আলাদা `<!DOCTYPE html>...` wrapper রাখে** — ফলে টেকনিক্যালি nested/invalid HTML তৈরি হয় (একটা document-এর ভেতরে আরেকটা সম্পূর্ণ document)। ব্রাউজারের error-recovery-এর কারণে বাস্তবে ভেঙে যায় না — curl দিয়ে সবগুলো রুট verify করা হয়েছে, সব ঠিকমতো কাজ করছে — কিন্তু standard অনুযায়ী সঠিক না এবং ভবিষ্যতে subtle CSS/JS bug-এর কারণ হতে পারে।
+> (পুরনো HTML nesting-এর বিস্তারিত বর্ণনা সরানো হলো — নিচের সেকশনে সমাধান দেওয়া আছে।)
 
-**ঠিক করার উপায় (পরবর্তী পরিকল্পিত সেশনে, একসাথে ২৮টা ফাইলে হাত দেওয়ার ঝুঁকি এড়াতে এই সেশনে করা হয়নি):**
-- হয় প্রতিটা `views/user/*.ejs` থেকে ডুপ্লিকেট `<!DOCTYPE html><html><head>...</head><body>` সরিয়ে ফেলা, এবং `header.ejs`-এর নিজস্ব closing tag রেখে দেওয়া
-- অথবা `header.ejs`-কে শুধু "হেডার" বানানো (নিজে html/body খুলবে না/বন্ধও করবে না) এবং একটা আলাদা `footer.ejs` বানিয়ে প্রতিটা ফাইলে include করা — এটা বেশি "সঠিক" architecture কিন্তু ২৮+১২(admin) = ৪০টা ফাইলে ছুঁতে হবে
+### ~~HTML nesting issue~~ — ✅ সমাধান হয়েছে (সেশন ৭)
+আগে `header.ejs`-ও সম্পূর্ণ ডকুমেন্ট ছিল আর ~৩১টা `views/user/*.ejs` নিজেদেরও `<!DOCTYPE...>`
+wrapper রাখত — nested/invalid HTML। **সমাধান:** সেশন ৭-এ ৩১টা পেজের ডুপ্লিকেট head সরানো হয়েছে;
+`header.ejs` এখন একমাত্র ডকুমেন্ট-ওপেনার, পেজ-নির্দিষ্ট `title`/`extra_css` include-data হিসেবে পাস
+হয়। ৫টা standalone পেজ (login/register/edit/article-form/qa-form) নিজ ডকুমেন্ট রেখেছে (ওরা
+header include করে না)। যাচাই: প্রতিটা রেন্ডার করা পেজে ১টা DOCTYPE, dynamic title ও পেজ-CSS ঠিক।
+admin views-গুলো (`admin/views/admin/*.ejs`) শুরু থেকেই স্বয়ংসম্পূর্ণ — সেখানে nesting সমস্যা নেই।
 
 ### অন্যান্য ছোট ফাঁক
 - **role পরিবর্তন সেশনে রিফ্রেশ হয় না** — এডমিন কাউকে মডারেটর বানালে সেই ইউজারকে আবার লগইন করতে হবে নতুন পারমিশন কার্যকর করতে
-- ফন্ট টগল UI বাটন নেই (§৮ দেখুন)
+- ~~ফন্ট টগল UI বাটন নেই~~ — ✅ settings-এ ৭+ বাংলা ফন্ট-সিলেক্টর (সাম্প্রতিক কমিট, সেশন ৭-এ যাচাইকৃত)
 - CURHS-স্টাইল nav গ্রুপিং, sticky+shrink header, hero ক্যারোসেল, সার্চ — এখনো implement হয়নি (§১৩ দেখুন)
 - v1 স্ট্যাটিক সাইট (repo root-এর index.html ইত্যাদি) রাখা হবে নাকি সরানো হবে — সিদ্ধান্ত বাকি
 - `bcrypt` হ্যাশ synchronous — রেজিস্ট্রেশনে সাময়িক ইভেন্ট-লুপ ব্লক করে (ছোট স্কেলে সমস্যা না, বড় হলে async ভার্সন ব্যবহার করা ভালো)
+- **গ্লোবাল সার্চ (`/search?q=`) এখনো নেই** — এখন শুধু `/api/users/search` (মেসেঞ্জার/শেয়ার-মোডালের জন্য) আছে
 
 ---
 
@@ -408,9 +448,9 @@ CURHS (Elementor/WordPress-ভিত্তিক) থেকে যা নেও�
 ## ১৪. ইম্প্রুভমেন্ট রোডম্যাপ
 
 ### দ্রুত করণীয়
-- [ ] পাবলিক পেজে `fonts.css` যুক্ত করা + ফন্ট-টগল UI বাটন বানানো
-- [ ] ২৮টা ফাইলের HTML nesting সমস্যা ঠিক করা (§১২)
-- [ ] Topbar/নেভবারে ড্যাশবোর্ড/গ্যালারি/মেসেজ/অভিযোগ লিংক আছে কিনা যাচাই ও সংযোজন
+- [x] পাবলিক পেজে `fonts.css` যুক্ত করা + ফন্ট-টগল UI (সাম্প্রতিক কমিটে সম্পন্ন — সেশন ৭-এ যাচাইকৃত)
+- [x] ৩১টা ফাইলের HTML nesting সমস্যা ঠিক করা (§১২) — **সেশন ৭-এ সম্পন্ন**
+- [x] Topbar/নেভবারে ড্যাশবোর্ড/গ্যালারি/মেসেজ/অভিযোগ লিংক — **সেশন ৭-এ যাচাইকৃত, সব আছে**
 
 ### শর্ট টার্ম
 - [ ] CURHS-স্টাইল nav গ্রুপিং + sticky/shrink header + back-to-top + হিরো ক্যারোসেল

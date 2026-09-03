@@ -694,6 +694,13 @@ router.post('/api/comment', async (req, res) => {
 router.post('/follow/:userId', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   const targetId = parseInt(req.params.userId, 10);
+  // Guard: non-numeric or unknown targets previously crashed with a 500
+  // (sql.js rejects NaN binds) — reply 404 instead, like other user routes.
+  if (!Number.isInteger(targetId) || targetId <= 0) {
+    return res.status(404).json({ error: 'not_found' });
+  }
+  const targetExists = await db.prepare('SELECT id FROM users WHERE id = ?').get(targetId);
+  if (!targetExists) return res.status(404).json({ error: 'not_found' });
   if (targetId === req.session.user.id) return res.json({ following: false });
   if (await isBlockedBetween(req.session.user.id, targetId)) return res.status(403).json({ error: 'blocked' });
   const existing = await db.prepare('SELECT id FROM follows WHERE follower_id = ? AND following_id = ?').get(req.session.user.id, targetId);

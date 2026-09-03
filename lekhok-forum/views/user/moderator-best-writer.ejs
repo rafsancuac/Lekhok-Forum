@@ -1,22 +1,10 @@
-<!DOCTYPE html>
-<html lang="bn" dir="ltr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>মাসিক সেরা লেখক — মডারেটর প্যানেল</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/style.css" />
-  <link rel="stylesheet" href="/assets/css/fonts.css" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css" />
-  <style>
+<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
+<%- include('../partials/header', { title: 'মাসিক সেরা লেখক — মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<style>
     .mod-wrap { max-width: 760px; margin: 20px auto; padding: 0 16px; }
     .mod-item { background:#fff; border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
     .star-badge { color:#059669; }
   </style>
-</head>
-<body>
-  <%- include('../partials/header') %>
   <div class="mod-wrap">
     <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
     <h2><i class="fas fa-star star-badge"></i> মাসিক সেরা লেখক নির্বাচন করুন</h2>

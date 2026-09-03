@@ -102,6 +102,8 @@ app.use('/',          require('./routes/social'));   // articles, qa, members, p
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
 app.use('/',          require('./routes/pages'));     // public pages: home, about, gallery, committee, contact, events, resources, notices
 app.use('/',          require('./routes/dashboard'));// dashboard feed, messages, complaints
+app.use('/avatar',    require('./routes/avatar'));   // default avatar serving
+app.use('/moderator', require('./routes/moderator'));// scoped moderator posting panel
 app.use('/api',      require('./routes/api'));
 app.use('/admin',    require('./admin/routes'));
 

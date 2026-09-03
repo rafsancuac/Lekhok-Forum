@@ -164,8 +164,30 @@ Complete Bengali social writing platform with:
 - `admin_users` seeding, `members.term_year`, আর demo-content seeding — এই তিনটা এখন
   `db.js`-এ ঠিক করা আছে। এগুলো আবার "ফিক্স" করার চেষ্টা করলে দ্বিতীয়বার ভাঙার ঝুঁকি আছে —
   আগে `git pull` করে বর্তমান db.js দেখে নিন।
-- **Turso/Vercel async মাইগ্রেশন এখনো বাকি** — কেউ Vercel deploy নিয়ে কাজ করলে এটা priority #1,
-  কিন্তু স্কোপ অনেক বড় (৩২০+ কল-সাইট)। শুরু করার আগে PROJECT.md §১২ পড়ুন।
+- ~~**Turso/Vercel async মাইগ্রেশন এখনো বাকি**~~ — ✅ পরে সম্পন্ন হয়েছে (নিচের "Turso /
+  Vercel Async Migration (COMPLETE)" প্ল্যান দেখুন); সেশন ৭-এ ডেমো-সিডিং পার্টও দুই
+  ব্যাকএন্ডে কার্যকর করা হয়েছে।
+
+---
+
+## Cross-Agent Note: Session 7 — Route-Mount Regression + Turso Seeding + HTML Nesting (৪ সেপ্টেম্বর ২০২৬)
+
+**যা করা হলো (verify-and-fix সেশন):**
+- কমিট `c2faa96`-এর route reorder-এ **হারিয়ে যাওয়া দুটো mount পুনরুদ্ধার**:
+  `app.use('/avatar', routes/avatar.js)` + `app.use('/moderator', routes/moderator.js)` —
+  এগুলো ছাড়া পুরো মডারেটর প্যানেল আর ডিফল্ট অ্যাভাটার 404 দিচ্ছিল। **রুট reorder করলে
+  mount-লাইনগুলো আবার যাচাই করুন!**
+- `seedDemoContentLocal()` → dual-backend async `seedDemoContent()`: এখন fresh
+  **Turso/Vercel deploy-ও** লোকালের মতো ডেমো কনটেন্ট+ইউজার পায় (আগে শুধু admin seed হতো)।
+- HTML nesting সমাধান: ৩১টা `views/user/*.ejs`-এর ডুপ্লিকেট ডকুমেন্ট-head সরানো;
+  `header.ejs` একমাত্র ওপেনার, পেজ `title`/`extra_css` **include-এর data-argument হিসেবে**
+  পাস করে (EJS include-এ প্যারেন্টের `var` দেখা যায় না — শুধু render-locals বা explicit data)।
+- `POST /follow/:id`-তে numeric+existence guard (NaN bind-এ 500 হতো)।
+- **রিপোতে `scripts/test-lekhok.sh` যোগ হয়েছে** — ৯১ চেক। চালান:
+  `bash scripts/test-lekhok.sh http://localhost:8080`। দুই ব্যাকএন্ডেই (sql.js + Turso
+  file-mode) ৯১/৯১ গ্রিন। কোড বদলালে push-এর আগে দুই মোডেই চালিয়ে নিন।
+- ⚠️ সার্ভার চালু থাকা অবস্থায় `lekhok.db` সরাসরি এডিট করবেন না — SIGTERM flush
+  পরিবর্তন মুছে দেয়। আগে kill → এডিট → চালু।
 
 ---
 

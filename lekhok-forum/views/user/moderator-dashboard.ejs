@@ -1,25 +1,12 @@
-<!DOCTYPE html>
-<html lang="bn" dir="ltr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>মডারেটর প্যানেল — লেখক ফোরাম</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/style.css" />
-  <link rel="stylesheet" href="/assets/css/fonts.css" />
-  <link rel="stylesheet" href="/assets/css/feed.css" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css" />
-  <style>
+<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
+<%- include('../partials/header', { title: 'মডারেটর প্যানেল — লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
+<style>
     .mod-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; padding: 20px; }
     .mod-tile { background:#fff; border-radius:12px; padding:20px; text-align:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); transition:.2s; }
     .mod-tile:hover { transform:translateY(-3px); box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); }
     .mod-tile i { font-size:28px; color:#059669; margin-bottom:10px; display:block; }
     .mod-tile.locked { opacity:0.4; filter:grayscale(1); }
   </style>
-</head>
-<body>
-  <%- include('../partials/header') %>
   <div class="dashboard-wrap">
     <main class="dash-main" style="flex:1;">
       <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:16px;">

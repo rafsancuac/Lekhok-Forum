@@ -457,10 +457,18 @@ async function initDb() {
   if (IS_TURSO) {
     const c = await backend.prepare('SELECT COUNT(*) as c FROM admin_users').get();
     if (c.c === 0) {
-      console.log('[db] Seeding initial admin + content…');
-      // Light seed — full seeding is too heavy for first request; a separate
-      // db/seed.js script can populate content if needed.
+      console.log('[db] Seeding initial admin + settings…');
       await seedAdmin();
+    }
+    // Fresh Turso deploys now get the SAME documented demo content + accounts
+    // as a fresh local install (previously only the admin row was seeded, so
+    // /articles, /qa, /profile/ismail and the ismail/… demo123 logins were
+    // all 404 on a brand-new deploy). Guarded by the gallery/users count
+    // checks, so after the first seed this is one cheap SELECT per boot.
+    try {
+      await seedDemoContent();
+    } catch (e) {
+      console.error('[db] Demo content seeding failed (non-fatal):', e.message);
     }
   } else {
     const c = backend.prepare('SELECT COUNT(*) as c FROM admin_users').get();
@@ -476,7 +484,11 @@ async function initDb() {
     }
     // Independent of admin_users (so it also fills in if admin already
     // existed but content tables are empty — e.g. after this fix ships):
-    seedDemoContentLocal();
+    try {
+      await seedDemoContent();
+    } catch (e) {
+      console.error('[db] Demo content seeding failed (non-fatal):', e.message);
+    }
   }
 }
 
@@ -509,11 +521,15 @@ function seedIfEmptyLocal() {
 // ── Rich demo-content seeder (restored — was dropped during the Turso/libsql
 //    rewrite, regressing the explicit "10 demo items per section" requirement
 //    and leaving /committee, /team, /gallery, /quiz etc. empty on fresh
-//    installs). Runs once, only against the local sql.js backend, only when
-//    the relevant tables are empty — safe to call every boot. ──────────────
-function seedDemoContentLocal() {
-  const galleryCount = prepare('SELECT COUNT(*) as c FROM gallery').get().c;
-  if (galleryCount > 0) return; // already seeded (or admin/moderators added real content)
+//    installs). Runs once when the relevant tables are empty — safe to call
+//    every boot. Now DUAL-BACKEND: every statement is awaited (pass-through
+//    on sql.js, real await on Turso/libsql), so a fresh Turso/Vercel deploy
+//    gets the same documented demo content + accounts as a local install.
+//    Previously this ran local-only, so fresh Turso deploys had zero demo
+//    users/posts and the documented logins (ismail/… demo123) 404'd. ──────
+async function seedDemoContent() {
+  const g = await prepare('SELECT COUNT(*) as c FROM gallery').get();
+  if (g && g.c > 0) return; // already seeded (or admin/moderators added real content)
 
   console.log('[db] Seeding demo content (gallery/quiz/achievements/committee/...)…');
 
@@ -525,7 +541,7 @@ function seedDemoContentLocal() {
     ['ফেলোশিপ কার্যক্রম', 'প্রতিভাবান লেখকদের জন্য বিশেষ ফেলোশিপ ঘোষণা করা হয়েছে। আবেদনের শেষ তারিখ ৩১ মার্চ।', 'notice', '২০২৬ সালের ১০ ফেব্রুয়ারি'],
     ['লেখক সম্মাননা ২০২৬', 'প্রতি বছরের মতো এবারও শীর্ষ লেখকদের সম্মাননা প্রদান করা হবে।', 'press', '২০২৬ সালের ১৫ মার্চ']
   ];
-  notices.forEach(n => { try { prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)').run(...n); } catch(e) {} });
+  for (const n of notices) { try { await prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)').run(...n); } catch(e) {} }
 
   const events = [
     ['বার্ষিক সাহিত্য সম্মেলন ২০২৬', 'কবিতা পাঠ, প্রবন্ধ উপস্থাপন, আলোচনা সভা এবং সাংস্কৃতিক অনুষ্ঠান।', '২০২৬-০২-১৫', '২০২৬-০২-১৫', 'ক্যাম্পাস অডিটোরিয়াম', 'https://picsum.photos/seed/event1/800/400', 1],
@@ -533,7 +549,7 @@ function seedDemoContentLocal() {
     ['গবেষণা কর্মশালা: লেখালেখির পদ্ধতি', 'প্রফেশনাল লেখকদের তত্ত্বাবধানে একদিনের গবেষণা কর্মশালা।', '২০২৬-০৩-১০', '২০২৬-০৩-১০', 'অনলাইন (জুম)', 'https://picsum.photos/seed/event3/800/400', 0],
     ['প্রকাশনা মেলা ও বইমেলা', 'সদস্যদের প্রকাশিত বইয়ের প্রদর্শনী ও বিক্রয়।', '২০২৬-০৪-২০', '২০২৬-০৪-২২', 'কেন্দ্রীয় মিলনায়তন', 'https://picsum.photos/seed/event4/800/400', 1]
   ];
-  events.forEach(e => { try { prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?)').run(...e); } catch(e2) {} });
+  for (const e of events) { try { await prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?)').run(...e); } catch(e2) {} }
 
   // Central committee (২০২৫-২০২৬ term) — names from db/seed-committee.js,
   // with term_year set so the committee year-filter route has data to show.
@@ -548,12 +564,12 @@ function seedDemoContentLocal() {
     ['আব্দুল্লাহ আল নাঈম', 'সম্পাদকীয় পর্ষদ সদস্য', 12], ['আবরার আহাদ রাফি', 'কার্যনির্বাহী সদস্য', 13],
     ['ঋতু আক্তার', 'কার্যনির্বাহী সদস্য', 14]
   ];
-  committee.forEach(([name, role, sort_order]) => {
+  for (const [name, role, sort_order] of committee) {
     try {
-      prepare(`INSERT INTO members (name, role, designation, member_type, term_year, sort_order)
+      await prepare(`INSERT INTO members (name, role, designation, member_type, term_year, sort_order)
                VALUES (?, ?, 'কেন্দ্রীয় কমিটি', 'central', ?, ?)`).run(name, role, CURRENT_TERM, sort_order);
     } catch(e) {}
-  });
+  }
 
   const advisors = [
     ['অধ্যাপক ড. মো. আবুল কালাম', 'প্রধান উপদেষ্টা', 1], ['বিচারপতি (অব.) হাসিনা বেগম', 'আইনি উপদেষ্টা', 2],
@@ -562,12 +578,12 @@ function seedDemoContentLocal() {
     ['মো. ফারুক আহমেদ', 'প্রযুক্তি উপদেষ্টা', 7], ['শিল্পী নাজনীন আক্তার', 'সাংস্কৃতিক উপদেষ্টা', 8],
     ['মো. তৌহিদুল ইসলাম', 'গণমাধ্যম উপদেষ্টা', 9], ['অধ্যাপক সুফিয়া বেগম', 'নারী উন্নয়ন উপদেষ্টা', 10]
   ];
-  advisors.forEach(([name, designation, sort_order]) => {
+  for (const [name, designation, sort_order] of advisors) {
     try {
-      prepare(`INSERT INTO members (name, role, designation, member_type, sort_order) VALUES (?, 'উপদেষ্টা', ?, 'advisory', ?)`)
+      await prepare(`INSERT INTO members (name, role, designation, member_type, sort_order) VALUES (?, 'উপদেষ্টা', ?, 'advisory', ?)`)
         .run(name, designation, sort_order);
     } catch(e) {}
-  });
+  }
 
   const gallery = [
     ['সাহিত্য সম্মেলন ২০২৫', 'সম্মেলনের একাংশ — কবি ও লেখকদের পদচারণায় মুখরিত ছিল পুরো মঞ্চ।', 'https://picsum.photos/seed/gal1/600/400', 'events'],
@@ -581,9 +597,9 @@ function seedDemoContentLocal() {
     ['সেমিনার', 'বাংলা সাহিত্যের ভবিষ্যৎ শীর্ষক সেমিনার।', 'https://picsum.photos/seed/gal9/600/400', 'workshops'],
     ['সাংস্কৃতিক সন্ধ্যা', 'সাংস্কৃতিক সন্ধ্যায় নজরুলগীতি ও রবীন্দ্রসঙ্গীত পরিবেশনা।', 'https://picsum.photos/seed/gal10/600/400', 'events']
   ];
-  gallery.forEach(([title, caption, image_url, category]) => {
-    try { prepare('INSERT INTO gallery (title, caption, image_url, category) VALUES (?, ?, ?, ?)').run(title, caption, image_url, category); } catch(e) {}
-  });
+  for (const [title, caption, image_url, category] of gallery) {
+    try { await prepare('INSERT INTO gallery (title, caption, image_url, category) VALUES (?, ?, ?, ?)').run(title, caption, image_url, category); } catch(e) {}
+  }
 
   const today = new Date().toISOString().split('T')[0];
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -600,7 +616,7 @@ function seedDemoContentLocal() {
     ['কুইজ: বাংলা ভাষা আন্দোলন কোন সালে হয়?', '১৯৫২ সালে।', null, '2026-08-25'],
     ['কুইজ: "সঞ্চয়িতা" কার কাব্য সংকলন?', 'রবীন্দ্রনাথ ঠাকুরের।', null, '2026-08-24']
   ];
-  quizzes.forEach(q => { try { prepare('INSERT INTO daily_content (content_type, title, body, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, 1)').run('quiz', ...q); } catch(e) {} });
+  for (const q of quizzes) { try { await prepare('INSERT INTO daily_content (content_type, title, body, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, 1)').run('quiz', ...q); } catch(e) {} }
 
   const onThisDay = [
     ['আজকের এই দিনে: ভাষা আন্দোলনের ইতিহাস', '১৯৫২ সালের ২১ ফেব্রুয়ারি ভাষা আন্দোলনের ইতিহাস।', 'https://picsum.photos/seed/hist1/600/300', today],
@@ -614,7 +630,7 @@ function seedDemoContentLocal() {
     ['এই দিনে: সংবিধান কার্যকর', '১৯৭২ সালের ৪ নভেম্বর বাংলাদেশের সংবিধান কার্যকর।', 'https://picsum.photos/seed/hist10/600/300', '2026-11-04'],
     ['এই দিনে: স্বাধীনতার ঘোষণা', '১৯৭১ সালের ২৬ মার্চ স্বাধীনতার ঘোষণা।', 'https://picsum.photos/seed/hist4/600/300', '2026-04-12']
   ];
-  onThisDay.forEach(o => { try { prepare('INSERT INTO daily_content (content_type, title, body, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, 1)').run('this_day', ...o); } catch(e) {} });
+  for (const o of onThisDay) { try { await prepare('INSERT INTO daily_content (content_type, title, body, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, 1)').run('this_day', ...o); } catch(e) {} }
 
   const activities = [
     ['বার্ষিক সাহিত্য সম্মেলন', 'কবিতা পাঠ, প্রবন্ধ উপস্থাপন ও আলোচনা সভা।', 'https://picsum.photos/seed/act1/600/300', '2026-02-15'],
@@ -628,7 +644,7 @@ function seedDemoContentLocal() {
     ['ফেলোশিপ পুরস্কার বিতরণ', 'প্রতিভাবান লেখকদের ফেলোশিপ প্রদান।', 'https://picsum.photos/seed/act9/600/300', '2026-10-30'],
     ['বার্ষিক সাধারণ সভা', 'বার্ষিক সাধারণ সভা ও নির্বাচন।', 'https://picsum.photos/seed/act10/600/300', '2026-12-15']
   ];
-  activities.forEach(a => { try { prepare('INSERT INTO daily_content (content_type, title, body, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, 1)').run('activity', ...a); } catch(e) {} });
+  for (const a of activities) { try { await prepare('INSERT INTO daily_content (content_type, title, body, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, 1)').run('activity', ...a); } catch(e) {} }
 
   const epapers = [
     ['দৈনিক ই-পেপার ০১', 'আজকের ই-পেপার পড়ুন।', 'https://example.com/epaper/01.pdf', 'https://picsum.photos/seed/ep1/600/300', today],
@@ -642,7 +658,7 @@ function seedDemoContentLocal() {
     ['বিশেষ সাক্ষাৎকার', 'বিশিষ্ট লেখকদের সাক্ষাৎকার।', 'https://example.com/interview/01.pdf', 'https://picsum.photos/seed/ep9/600/300', '2026-08-10'],
     ['বর্ষপূর্তি সংখ্যা', 'পত্রিকার বর্ষপূর্তি বিশেষ সংখ্যা।', 'https://example.com/anniversary/01.pdf', 'https://picsum.photos/seed/ep10/600/300', '2026-12-01']
   ];
-  epapers.forEach(e => { try { prepare('INSERT INTO daily_content (content_type, title, body, link_url, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, ?, 1)').run('epaper', ...e); } catch(err) {} });
+  for (const e of epapers) { try { await prepare('INSERT INTO daily_content (content_type, title, body, link_url, image_url, scheduled_date, published) VALUES (?, ?, ?, ?, ?, ?, 1)').run('epaper', ...e); } catch(err) {} }
 
   const achievements = [
     ['বার্ষিক সেরা লেখক', 'ইসমাইল হোসেন', '২০২৫', 'বছরের সেরা লেখক হিসেবে নির্বাচিত।', null, 1],
@@ -656,7 +672,7 @@ function seedDemoContentLocal() {
     ['ডিজিটাল লেখালেখি', 'ঋতু আক্তার', '২০২৫', 'ডিজিটাল লেখালেখিতে অসামান্য অবদান।', null, 9],
     ['সাংগঠনিক সম্মাননা', 'আবরার আহাদ রাফি', '২০২৪', 'সংগঠনের জন্য বিশেষ অবদান।', null, 10]
   ];
-  achievements.forEach(a => { try { prepare('INSERT INTO achievements (title, recipient_name, year, description, image_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...a); } catch(e) {} });
+  for (const a of achievements) { try { await prepare('INSERT INTO achievements (title, recipient_name, year, description, image_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...a); } catch(e) {} }
 
   const pastPresidents = [
     ['মো. আনোয়ার হোসেন', 'president', '২০২২', '২০২৪', null, 1],
@@ -665,7 +681,7 @@ function seedDemoContentLocal() {
     ['মো. শাহজাহান সরকার', 'president', '২০১৬', '২০১৮', null, 4],
     ['মো. জহিরুল ইসলাম', 'president', '২০১৪', '২০১৬', null, 5]
   ];
-  pastPresidents.forEach(p => { try { prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...p); } catch(e) {} });
+  for (const p of pastPresidents) { try { await prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...p); } catch(e) {} }
 
   const pastSecretaries = [
     ['ফারহানা ইয়াসমিন', 'general_secretary', '২০২২', '২০২৪', null, 1],
@@ -674,7 +690,7 @@ function seedDemoContentLocal() {
     ['সাবরিনা ইসলাম', 'general_secretary', '২০১৬', '২০১৮', null, 4],
     ['ওয়াহিদুজ্জামান', 'general_secretary', '২০১৪', '২০১৬', null, 5]
   ];
-  pastSecretaries.forEach(p => { try { prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...p); } catch(e) {} });
+  for (const p of pastSecretaries) { try { await prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...p); } catch(e) {} }
 
   const constitutionSections = [
     ['ধারা ১: নাম ও সংজ্ঞা', 'এই সংগঠনের নাম "লেখক ফোরাম"। এটি একটি অরাজনৈতিক, অলাভজনক সাহিত্য ও সংস্কৃতি বিষয়ক সংগঠন।', 1],
@@ -688,7 +704,7 @@ function seedDemoContentLocal() {
     ['ধারা ৯: গঠনতন্ত্র সংশোধন', 'গঠনতন্ত্র সংশোধনের জন্য সাধারণ সভায় দুই-তৃতীয়াংশ সদস্যের ভোট প্রয়োজন।', 9],
     ['ধারা ১০: বিলুপ্তি', 'সংগঠন বিলুপ্ত হলে সম্পদ যথাযথ কর্তৃপক্ষের কাছে হস্তান্তর করা হবে।', 10]
   ];
-  constitutionSections.forEach(c => { try { prepare('INSERT INTO constitution (section_title, content, sort_order) VALUES (?, ?, ?)').run(...c); } catch(e) {} });
+  for (const c of constitutionSections) { try { await prepare('INSERT INTO constitution (section_title, content, sort_order) VALUES (?, ?, ?)').run(...c); } catch(e) {} }
 
   const resourceItems = [
     ['কবিতা লেখার কৌশল', 'কবিতা লেখার মূল ভিত্তি হলো অনুভূতির সত্যিকারের প্রকাশ।', 'guide', 'সম্পাদক'],
@@ -702,12 +718,12 @@ function seedDemoContentLocal() {
     ['ছোটগল্প সংকলন', 'সদস্যদের লেখা ছোটগল্পের সংকলন।', 'anthology', 'সম্পাদক'],
     ['সাহিত্য পরিভাষা', 'সাহিত্য বিষয়ক গুরুত্বপূর্ণ পরিভাষা।', 'reference', 'সম্পাদক']
   ];
-  resourceItems.forEach(r => { try { prepare('INSERT INTO resources (title, content, category, author, tags) VALUES (?, ?, ?, ?, ?)').run(r[0], r[1], r[2], r[3], r[2]); } catch(e) {} });
+  for (const r of resourceItems) { try { await prepare('INSERT INTO resources (title, content, category, author, tags) VALUES (?, ?, ?, ?, ?)').run(r[0], r[1], r[2], r[3], r[2]); } catch(e) {} }
 
   // Demo users + sample articles/questions (only if `users` table is still empty —
   // don't clobber a real db/seed-users.js run)
-  const userCount = prepare('SELECT COUNT(*) as c FROM users').get().c;
-  if (userCount === 0) {
+  const uc = await prepare('SELECT COUNT(*) as c FROM users').get();
+  if (!uc || uc.c === 0) {
     const demoPwd = bcrypt.hashSync('demo123', 10);
     const sampleAuthors = [
       { name: 'ইসমাইল হোসেন', handle: 'ismail' },
@@ -716,12 +732,12 @@ function seedDemoContentLocal() {
       { name: 'মাহফুজ রহমান', handle: 'mahfuz' },
       { name: 'নুসরাত সুলতানা', handle: 'nusrat' }
     ];
-    sampleAuthors.forEach(a => {
+    for (const a of sampleAuthors) {
       try {
-        prepare(`INSERT INTO users (username, password_hash, full_name, gender, designation, bio, status, role) VALUES (?, ?, ?, ?, ?, ?, 'active', 'user')`)
+        await prepare(`INSERT INTO users (username, password_hash, full_name, gender, designation, bio, status, role) VALUES (?, ?, ?, ?, ?, ?, 'active', 'user')`)
           .run(a.handle, demoPwd, a.name, 'other', 'সাহিত্যিক', `${a.name} একজন প্রতিশ্রুতিশীল লেখক।`);
       } catch(e) {}
-    });
+    }
 
     const sampleArticles = [
       ['কবিতায় ছন্দের যাত্রা', 'কবিতায় ছন্দ এক অনন্য শিল্পরূপ। মাত্রাবৃত্ত, স্বরবৃত্ত ও অক্ষরবৃত্ত — এই তিনটি প্রধান ছন্দ বাংলা কবিতার মেরুদণ্ড।', 'কবিতা,ছন্দ', 'https://picsum.photos/seed/art1/800/400'],
@@ -735,16 +751,17 @@ function seedDemoContentLocal() {
       ['সাহিত্য ও সমাজ', 'সাহিত্য সমাজের দর্পণ। সমাজের পরিবর্তনের সাথে সাথে সাহিত্যের ধারাও বদলায়।', 'সমাজ,সাহিত্য', 'https://picsum.photos/seed/art9/800/400'],
       ['ডিজিটাল যুগে লেখালেখি', 'ডিজিটাল প্ল্যাটফর্ম লেখালেখির নতুন দিগন্ত খুলে দিয়েছে।', 'ডিজিটাল,প্রযুক্তি', 'https://picsum.photos/seed/art10/800/400']
     ];
-    sampleArticles.forEach((a, i) => {
+    for (let i = 0; i < sampleArticles.length; i++) {
+      const a = sampleArticles[i];
       const author = sampleAuthors[i % sampleAuthors.length];
-      const u = prepare('SELECT id FROM users WHERE username = ?').get(author.handle);
+      const u = await prepare('SELECT id FROM users WHERE username = ?').get(author.handle);
       if (u) {
         try {
-          prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, status, featured, published_at) VALUES (?, 'article', ?, ?, ?, ?, ?, 'published', ?, datetime('now', '-' || ? || ' days'))`)
+          await prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, status, featured, published_at) VALUES (?, 'article', ?, ?, ?, ?, ?, 'published', ?, datetime('now', '-' || ? || ' days'))`)
             .run(u.id, a[0], a[1], a[1].substring(0, 150), a[3], a[2], i < 3 ? 1 : 0, i);
         } catch(e) {}
       }
-    });
+    }
 
     const sampleQ = [
       ['বাংলা কবিতায় ছন্দ কি এখনো প্রাসঙ্গিক?', 'গদ্যছন্দের যুগে মাত্রাবৃত্ত কি তার আকর্ষণ হারাচ্ছে? আপনার মতামত দিন।', 'সাহিত্য'],
@@ -758,16 +775,17 @@ function seedDemoContentLocal() {
       ['ফেলোশিপ পেতে কী কী যোগ্যতা লাগে?', 'তরুণ লেখক হিসেবে কোন ফেলোশিপগুলো আবেদনের যোগ্য?', 'ফেলোশিপ'],
       ['সাহিত্য পুরস্কার কি সত্যিকারের মূল্যায়ন?', 'পুরস্কার কি সাহিত্যিক মান নির্দেশ করে, নাকি জনপ্রিয়তা?', 'পুরস্কার']
     ];
-    sampleQ.forEach((q, i) => {
+    for (let i = 0; i < sampleQ.length; i++) {
+      const q = sampleQ[i];
       const author = sampleAuthors[i % sampleAuthors.length];
-      const u = prepare('SELECT id FROM users WHERE username = ?').get(author.handle);
+      const u = await prepare('SELECT id FROM users WHERE username = ?').get(author.handle);
       if (u) {
         try {
-          prepare(`INSERT INTO posts (author_id, type, title, body, category, status, published_at) VALUES (?, 'question', ?, ?, ?, 'published', datetime('now', '-' || ? || ' days'))`)
+          await prepare(`INSERT INTO posts (author_id, type, title, body, category, status, published_at) VALUES (?, 'question', ?, ?, ?, 'published', datetime('now', '-' || ? || ' days'))`)
             .run(u.id, q[0], q[1], q[2], i);
         } catch(e) {}
       }
-    });
+    }
   }
 
   saveDb();
