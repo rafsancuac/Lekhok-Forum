@@ -43,14 +43,20 @@ router.get('/about', (req, res) => {
 
 // ── Committee ────────────────────────────────────────────────────────────────
 router.get('/committee', (req, res) => {
-  const central = db.prepare("SELECT * FROM members WHERE member_type = 'central' ORDER BY sort_order").all();
-  const branch  = db.prepare("SELECT * FROM members WHERE member_type = 'branch'  ORDER BY sort_order").all();
+  // Year filter — term_year column added via ensure-year-column.js
+  const yearRows = db.prepare("SELECT DISTINCT term_year FROM members WHERE term_year IS NOT NULL ORDER BY term_year DESC").all();
+  const years = yearRows.map(r => r.term_year).filter(Boolean);
+  const selectedYear = req.query.year && years.includes(req.query.year) ? req.query.year : (years[0] || '২০২৫-২০২৬');
+  const central = db.prepare(
+    "SELECT * FROM members WHERE member_type = 'central' AND term_year = ? ORDER BY sort_order"
+  ).all(selectedYear);
   res.render('lekhok-committee', {
     layout: 'layout',
     pageTitle: 'সংগঠন',
     currentPath: '/committee',
     central,
-    branch
+    years,
+    selectedYear
   });
 });
 

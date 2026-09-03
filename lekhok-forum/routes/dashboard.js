@@ -113,11 +113,31 @@ router.get('/dashboard', ensureAuth, (req, res) => {
   });
   const trendingTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([tag, count]) => ({ tag, count }));
 
+  // Leaderboard: top users by engagement score
+  const leaderboard = db.prepare(`
+    SELECT u.id, u.username, u.full_name, u.avatar_url,
+      (SELECT COUNT(*) FROM posts WHERE author_id = u.id AND status='published') +
+      (SELECT COUNT(*) FROM comments WHERE author_id = u.id) +
+      (SELECT COUNT(*) FROM likes WHERE user_id = u.id) as score
+    FROM users u WHERE u.status = 'active'
+    ORDER BY score DESC LIMIT 8
+  `).all();
+
+  // Trending posts: highest engagement in last 30 days
+  const trendingPosts = db.prepare(`
+    SELECT p.id, p.title, p.type,
+      p.like_count + p.comment_count as engagement,
+      u.full_name as author_name
+    FROM posts p JOIN users u ON p.author_id = u.id
+    WHERE p.status = 'published' AND p.published_at >= date('now', '-30 days')
+    ORDER BY engagement DESC, p.published_at DESC LIMIT 5
+  `).all();
+
   let myInterests = [];
   try { myInterests = JSON.parse(db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {}
 
   res.render('user/dashboard', {
-    feed, filter, birthdays, suggested, myFollowing, trendingTags, myInterests,
+    feed, filter, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
     currentPath: '/dashboard'
   });
 });

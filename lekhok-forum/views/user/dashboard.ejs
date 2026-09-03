@@ -158,6 +158,57 @@
           <p class="side-text">এখনো কোনো ট্যাগ নেই।</p>
         <% } %>
       </div>
+
+      <div class="side-card card">
+        <h4><i class="fas fa-chart-line" style="color:var(--accent)"></i> ট্রেন্ডিং পোস্ট</h4>
+        <% if (trendingPosts && trendingPosts.length) { %>
+          <ul class="trending-list">
+            <% trendingPosts.forEach((t, idx) => { %>
+              <li class="trending-item">
+                <span class="trend-rank"><%= idx + 1 %></span>
+                <a href="/articles/<%= t.id %>" class="trend-link">
+                  <span class="trend-title"><%= t.title.length > 42 ? t.title.substring(0, 42) + '…' : t.title %></span>
+                  <span class="trend-meta">
+                    <i class="fas fa-fire"></i> <%= t.engagement %> এনগেজমেন্ট
+                    · <%= t.author_name %>
+                  </span>
+                </a>
+              </li>
+            <% }); %>
+          </ul>
+        <% } else { %>
+          <p class="side-text">এখনো কোনো ট্রেন্ডিং পোস্ট নেই।</p>
+        <% } %>
+      </div>
+
+      <div class="side-card card">
+        <h4><i class="fas fa-trophy" style="color:#f59e0b"></i> লিডারবোর্ড</h4>
+        <% if (leaderboard && leaderboard.length) { %>
+          <ul class="leaderboard-list">
+            <% leaderboard.forEach((u, idx) => { %>
+              <li class="leaderboard-item">
+                <span class="lb-rank <%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>">
+                  <% if (idx === 0) { %>🥇<% } else if (idx === 1) { %>🥈<% } else if (idx === 2) { %>🥉<% } else { %><%= idx + 1 %><% } %>
+                </span>
+                <a href="/profile/<%= u.username %>" class="lb-name">
+                  <% if (u.avatar_url) { %>
+                    <img src="<%= u.avatar_url %>" class="lb-avatar" onerror="this.onerror=null;this.src='/avatar/<%= u.id %>'">
+                  <% } else { %>
+                    <span class="lb-avatar lb-letter"><%= u.full_name.charAt(0).toUpperCase() %></span>
+                  <% } %>
+                  <span class="lb-info">
+                    <span class="lb-fullname"><%= u.full_name %></span>
+                    <span class="lb-score"><i class="fas fa-star"></i> <%= u.score %> পয়েন্ট</span>
+                  </span>
+                </a>
+              </li>
+            <% }); %>
+          </ul>
+        <% } else { %>
+          <p class="side-text">লিডারবোর্ডের জন্য এখনো যথেষ্ট ডেটা নেই।</p>
+        <% } %>
+        <a href="/members" class="side-link">সকল সদস্য →</a>
+      </div>
     </aside>
   </div>
 

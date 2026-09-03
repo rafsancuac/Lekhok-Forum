@@ -157,20 +157,17 @@
       <a href="/notices" class="link-more">সকল বিজ্ঞপ্তি <i class="fas fa-arrow-right"></i></a>
     </div>
     <% if (recentNotices && recentNotices.length) { %>
-      <div class="notice-list reveal-stagger">
-        <% recentNotices.forEach(n => { %>
-          <a href="/notices/<%= n.id %>" class="notice-card-link">
-            <div class="notice-item">
-              <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
-              <div>
-                <h3><%= n.title %></h3>
-                <p class="notice-date"><i class="far fa-calendar"></i> <%= n.date || '' %></p>
-              </div>
-              <i class="fas fa-arrow-right" style="margin-left:auto;color:var(--accent);"></i>
-            </div>
-          </a>
+      <ul class="update-list reveal-stagger">
+        <% recentNotices.slice(0, 6).forEach(n => { %>
+          <li class="update-item">
+            <a href="/notices/<%= n.id %>" class="update-link">
+              <span class="update-dot"></span>
+              <span class="update-title"><%= n.title %></span>
+              <span class="update-date"><%= n.date || '' %></span>
+            </a>
+          </li>
         <% }) %>
-      </div>
+      </ul>
     <% } else { %>
       <div class="empty-state">
         <i class="fas fa-bullhorn"></i>

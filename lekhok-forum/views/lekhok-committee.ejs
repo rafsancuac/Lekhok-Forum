@@ -2,29 +2,78 @@
   <div class="container">
     <span class="eyebrow">নেতৃত্ব</span>
     <h1>সংগঠন কমিটি</h1>
-    <p>লেখক ফোরাম — কেন্দ্রীয় ও বিশ্ববিদ্যালয় শাখা কমিটি</p>
+    <p>লেখক ফোরাম — কার্যনির্বাহী কমিটি</p>
   </div>
 </header>
+
+<style>
+.year-filter-wrap { display: flex; align-items: center; gap: 10px; }
+.year-filter-wrap label { color: var(--text-muted, #64748b); font-size: 0.9rem; }
+.year-filter-wrap select {
+  padding: 8px 14px; border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px; font-family: inherit; font-size: 0.95rem;
+  background: white; color: var(--brand, #0a1f44); cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.year-filter-wrap select:focus {
+  outline: none; border-color: var(--accent, #059669);
+  box-shadow: 0 0 0 3px rgba(5,150,105,0.15);
+}
+.clickable-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+.clickable-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+.click-hint { display: block; text-align: center; color: var(--accent, #059669); font-size: 0.75rem; margin-top: 6px; opacity: 0.7; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,31,68,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; animation: fadeIn 0.2s ease; }
+.modal-overlay.open { display: flex; }
+.modal-dialog { background: white; border-radius: 16px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border, #e2e8f0); }
+.modal-head h3 { margin: 0; color: var(--brand, #0a1f44); font-size: 1.2rem; }
+.modal-close { background: none; border: none; color: var(--text-muted, #64748b); cursor: pointer; font-size: 1.4rem; padding: 4px 8px; border-radius: 6px; }
+.modal-close:hover { background: var(--bg, #f8fafc); color: var(--brand, #0a1f44); }
+.modal-member-inner { padding: 24px; text-align: center; }
+.modal-member-inner img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 16px; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.modal-member-inner .mm-name { color: var(--brand, #0a1f44); font-size: 1.4rem; font-weight: 700; margin: 0 0 4px; }
+.modal-member-inner .mm-role { color: var(--accent, #059669); font-size: 1rem; font-weight: 600; margin: 0 0 8px; }
+.modal-member-inner .mm-desig { color: var(--text-muted, #64748b); font-size: 0.9rem; margin: 0 0 16px; }
+.modal-member-inner .mm-bio { color: var(--text, #334155); font-size: 0.95rem; line-height: 1.6; text-align: left; background: var(--bg, #f8fafc); padding: 14px 16px; border-radius: 10px; border-left: 3px solid var(--accent, #059669); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
 
 <!-- Central committee -->
 <section class="section reveal">
   <div class="container">
     <div class="section-head">
       <div>
-        <span class="eyebrow">কেন্দ্রীয় কমিটি</span>
-        <h2 class="section-title">কেন্দ্রীয় <span class="accent">কার্যনির্বাহী কমিটি</span></h2>
+        <span class="eyebrow">নেতৃত্ব</span>
+        <h2 class="section-title">কার্যনির্বাহী <span class="accent">কমিটি</span></h2>
         <span class="accent-divider"></span>
+      </div>
+      <div class="year-filter-wrap">
+        <label for="yearFilter"><i class="fas fa-calendar-alt"></i> মেয়াদ:</label>
+        <select id="yearFilter" onchange="window.location.href='/committee?year=' + encodeURIComponent(this.value)">
+          <% years.forEach(y => { %>
+            <option value="<%= y %>" <%= y === selectedYear ? 'selected' : '' %>><%= y %></option>
+          <% }); %>
+        </select>
       </div>
     </div>
     <% if (central && central.length) { %>
       <div class="leaders-grid reveal-stagger">
         <% central.forEach(m => { %>
-          <div class="leader-card has-image">
+          <div class="leader-card has-image clickable-card"
+               onclick="openMemberModal('<%= m.id %>')"
+               data-member="<%= m.id %>"
+               data-name="<%= m.name.replace(/'/g, '&#39;') %>"
+               data-role="<%= m.role.replace(/'/g, '&#39;') %>"
+               data-designation="<%= (m.designation || '').replace(/'/g, '&#39;') %>"
+               data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
+               data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
             <img src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="<%= m.name %>" loading="lazy" />
             <div class="leader-body">
               <h3><%= m.name %></h3>
               <p class="role"><%= m.role %></p>
-              <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+              <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+              <small class="click-hint"><i class="fas fa-hand-pointer"></i> বিস্তারিত দেখুন</small>
             </div>
           </div>
         <% }) %>
@@ -32,7 +81,7 @@
     <% } else { %>
       <div class="empty-state">
         <i class="fas fa-users-cog"></i>
-        <h3>এখনও কোনো কেন্দ্রীয় কমিটি সদস্য যোগ হয়নি</h3>
+        <h3>এখনও কোনো কমিটি সদস্য যোগ হয়নি</h3>
         <p>অ্যাডমিন প্যানেল থেকে কমিটি সদস্য যোগ করুন</p>
         <a href="/admin/members/new" class="btn btn-primary"><i class="fas fa-plus"></i> সদস্য যোগ করুন</a>
       </div>
@@ -40,36 +89,40 @@
   </div>
 </section>
 
-<!-- Branch committee -->
-<section class="section section-alt reveal">
-  <div class="container">
-    <div class="section-head">
-      <div>
-        <span class="eyebrow">বিশ্ববিদ্যালয় শাখা</span>
-        <h2 class="section-title">বিশ্ববিদ্যালয় <span class="accent">শাখা কমিটি</span></h2>
-        <span class="accent-divider"></span>
-      </div>
+<!-- Member detail modal -->
+<div class="modal-overlay" id="memberModal" onclick="if(event.target===this) closeMemberModal()">
+  <div class="modal-dialog">
+    <div class="modal-head">
+      <h3>সদস্যের বিস্তারিত</h3>
+      <button class="modal-close" onclick="closeMemberModal()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
     </div>
-    <% if (branch && branch.length) { %>
-      <div class="leaders-grid reveal-stagger">
-        <% branch.forEach(m => { %>
-          <div class="leader-card has-image">
-            <img src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="<%= m.name %>" loading="lazy" />
-            <div class="leader-body">
-              <h3><%= m.name %></h3>
-              <p class="role"><%= m.role %></p>
-              <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-    <% } else { %>
-      <div class="empty-state">
-        <i class="fas fa-university"></i>
-        <h3>আপনার বিশ্ববিদ্যালয় শাখার কমিটির তথ্য এখানে যুক্ত করুন</h3>
-        <p>অ্যাডমিন প্যানেল থেকে সদস্য যোগ করুন</p>
-        <a href="/admin/members/new" class="btn btn-primary"><i class="fas fa-plus"></i> সদস্য যোগ করুন</a>
-      </div>
-    <% } %>
+    <div class="modal-member-inner" id="modalBody"></div>
   </div>
-</section>
+</div>
+
+<script>
+function openMemberModal(id) {
+  const card = document.querySelector('[data-member="' + id + '"]');
+  if (!card) return;
+  const data = {
+    name: card.dataset.name,
+    role: card.dataset.role,
+    designation: card.dataset.designation,
+    bio: card.dataset.bio,
+    image: card.dataset.image
+  };
+  const body = document.getElementById('modalBody');
+  body.innerHTML = '<img src="' + data.image + '" alt="' + data.name + '">'
+    + '<h3 class="mm-name">' + data.name + '</h3>'
+    + '<p class="mm-role">' + data.role + '</p>'
+    + (data.designation ? '<p class="mm-desig">' + data.designation + '</p>' : '')
+    + (data.bio ? '<p class="mm-bio">' + data.bio + '</p>' : '<p class="mm-bio" style="text-align:center;color:var(--text-muted)">বিস্তারিত বিবরণ শীঘ্রই যোগ করা হবে।</p>');
+  document.getElementById('memberModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMemberModal() {
+  document.getElementById('memberModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMemberModal(); });
+</script>
