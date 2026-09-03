@@ -1,26 +1,31 @@
 <header class="page-header">
   <div class="container">
-    <h1>গ্যালারি</h1>
-    <p>লেখক ফোরাম</p>
+    <span class="eyebrow">গ্যালারি</span>
+    <h1>ফটো <span style="color:var(--accent);">গ্যালারি</span></h1>
+    <p>আমাদের ইভেন্ট, সেমিনার ও কার্যক্রমের মুহূর্তগুলো</p>
   </div>
 </header>
 
-<section class="section">
+<section class="section reveal">
   <div class="container">
-    <% if (items.length === 0) { %>
-      <div class="empty-state">
-        <i class="far fa-images"></i>
-        <h3>কোনো ছবি পাওয়া যায়নি</h3>
-        <a href="/admin/gallery/new" class="btn btn-primary">ছবি যোগ করুন</a>
-      </div>
-    <% } else { %>
-      <div class="gallery-grid">
+    <% if (items && items.length) { %>
+      <div class="gallery-grid reveal-stagger">
         <% items.forEach(g => { %>
           <a href="<%= g.image_url %>" class="gallery-item" data-caption="<%= g.caption || g.title || '' %>" data-lightbox>
             <img src="<%= g.image_url %>" alt="<%= g.title || 'গ্যালারি ছবি' %>" loading="lazy" />
-            <% if (g.caption) { %><div class="gallery-caption"><%= g.caption %></div><% } %>
+            <div class="gallery-overlay">
+              <i class="fas fa-search-plus"></i>
+              <span><%= g.caption || g.title || 'বিস্তারিত দেখুন' %></span>
+            </div>
           </a>
         <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="far fa-images"></i>
+        <h3>এখনও কোনো ছবি যোগ হয়নি</h3>
+        <p>অ্যাডমিন প্যানেল থেকে গ্যালারিতে ছবি আপলোড করুন</p>
+        <a href="/admin/gallery/new" class="btn btn-primary"><i class="fas fa-plus"></i> ছবি যোগ করুন</a>
       </div>
     <% } %>
   </div>
@@ -48,5 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('lightboxClose').addEventListener('click', () => lb.classList.remove('active'));
   lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('active'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('active'); });
 });
 </script>

@@ -1,40 +1,85 @@
 <header class="page-header">
   <div class="container">
-    <h1>যোগাযোগ</h1>
-    <p>লেখক ফোরাম</p>
+    <span class="eyebrow">যোগাযোগ</span>
+    <h1>আমাদের সাথে <span style="color:var(--accent);">যোগাযোগ</span></h1>
+    <p>যেকোনো প্রশ্ন, পরামর্শ বা সহযোগিতার জন্য আমরা সবসময় আছি আপনার পাশে</p>
   </div>
 </header>
 
-<section class="section">
-  <div class="container two-col">
-    <div>
-      <h2 class="section-title">যোগাযোগের <span class="accent">তথ্য</span></h2>
-      <ul class="contact-list">
-        <li><i class="fas fa-map-marker-alt"></i><div><strong>ঠিকানা</strong><span>আপনার ক্যাম্পাসের ঠিকানা</span></div></li>
-        <li><i class="fas fa-envelope"></i><div><strong>ইমেইল</strong><span>info@lekhokforum.org</span></div></li>
-        <li><i class="fas fa-phone-alt"></i><div><strong>ফোন</strong><span>০১XXXXXXXXX</span></div></li>
-        <li><i class="fab fa-facebook-f"></i><div><strong>ফেসবুক</strong><span>আমাদের ফেসবুক পেজ</span></div></li>
-        <li><i class="fab fa-telegram-plane"></i><div><strong>টেলিগ্রাম</strong><span>আমাদের টেলিগ্রাম গ্রুপে যোগ দিন</span></div></li>
-      </ul>
-    </div>
-
-    <form class="contact-form card" method="POST" action="/api/contact">
-      <h2 class="section-title">বার্তা <span class="accent">পাঠান</span></h2>
-      <div class="form-row">
-        <input type="text" name="name" placeholder="আপনার নাম" required>
-        <input type="email" name="email" placeholder="ইমেইল" required>
+<!-- Two-column: contact info + form -->
+<section class="section reveal">
+  <div class="container">
+    <div class="section-split">
+      <div>
+        <span class="eyebrow">যোগাযোগের তথ্য</span>
+        <h2 class="section-title">আমাদের <span class="accent">ঠিকানা</span></h2>
+        <span class="accent-divider"></span>
+        <p>যেকোনো বিষয়ে যোগাযোগ করতে নির্দ্বিধায় নিচের যেকোনো মাধ্যম ব্যবহার করুন। আমরা যত দ্রুত সম্ভব উত্তর দেওয়ার চেষ্টা করব।</p>
+        <ul class="contact-list">
+          <li><i class="fas fa-map-marker-alt"></i><div><strong>কেন্দ্রীয় কার্যালয়</strong><span>আপনার ক্যাম্পাসের ঠিকানা</span></div></li>
+          <li><i class="fas fa-envelope"></i><div><strong>ইমেইল</strong><span>info@lekhokforum.org</span></div></li>
+          <li><i class="fas fa-phone-alt"></i><div><strong>ফোন</strong><span>০১XXXXXXXXX</span></div></li>
+          <li><i class="fab fa-facebook-f"></i><div><strong>ফেসবুক পেজ</strong><span>আমাদের ফেসবুক পেজে লাইক দিন</span></div></li>
+          <li><i class="fab fa-telegram-plane"></i><div><strong>টেলিগ্রাম গ্রুপ</strong><span>আমাদের টেলিগ্রাম গ্রুপে যোগ দিন</span></div></li>
+        </ul>
       </div>
-      <input type="text" name="subject" placeholder="বিষয়">
-      <textarea name="message" placeholder="আপনার বার্তা লিখুন..." rows="6" required></textarea>
-      <button type="submit" class="btn btn-primary">বার্তা পাঠান</button>
-    </form>
+      <form class="contact-form card" method="POST" action="/api/contact">
+        <h3 style="margin-top:0;"><i class="fas fa-paper-plane" style="color:var(--accent);"></i> বার্তা পাঠান</h3>
+        <p style="color:var(--text-muted); margin-bottom:18px;">নিচের ফর্মে আপনার বার্তা লিখুন, আমরা শীঘ্রই যোগাযোগ করব।</p>
+        <div class="form-row">
+          <input type="text" name="name" placeholder="আপনার নাম *" required>
+          <input type="email" name="email" placeholder="ইমেইল *" required>
+        </div>
+        <input type="text" name="subject" placeholder="বিষয়">
+        <textarea name="message" placeholder="আপনার বার্তা লিখুন... *" rows="6" required></textarea>
+        <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-paper-plane"></i> বার্তা পাঠান</button>
+        <% if (success) { %>
+          <p style="margin-top:14px;color:#15803d;background:#dcfce7;padding:10px 14px;border-radius:8px;">
+            <i class="fas fa-check-circle"></i> <%= success %>
+          </p>
+        <% } %>
+      </form>
+    </div>
   </div>
 </section>
 
-<section class="section emergency">
+<!-- Map placeholder + Office hours -->
+<section class="section section-alt reveal">
   <div class="container">
-    <h2 class="section-title" style="text-align:center;">জরুরি <span class="accent">হটলাইন</span></h2>
-    <div class="hotline-grid">
+    <div class="section-split">
+      <div>
+        <span class="eyebrow">আমাদের অবস্থান</span>
+        <h2 class="section-title">কোথায় <span class="accent">আমরা</span></h2>
+        <span class="accent-divider"></span>
+        <p>আমাদের কেন্দ্রীয় কার্যালয়ে সরাসরি এসেও যোগাযোগ করতে পারেন। সাপ্তাহিক ছুটির দিন ব্যতীত সব সময় অফিস খোলা থাকে।</p>
+        <ul class="bullet-list">
+          <li>সোমবার – বৃহস্পতিবার: সকাল ১০টা – সন্ধ্যা ৬টা</li>
+          <li>শুক্রবার: বন্ধ</li>
+          <li>শনিবার: সকাল ১০টা – বিকাল ৪টা</li>
+          <li>রবিবার: সকাল ১১টা – বিকাল ৫টা</li>
+        </ul>
+      </div>
+      <div class="map-placeholder">
+        <div class="map-content">
+          <i class="fas fa-map-marked-alt"></i>
+          <h4>ম্যাপ</h4>
+          <p>আমাদের কার্যালয়ের অবস্থান</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Emergency hotline -->
+<section class="section reveal">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow">জরুরি যোগাযোগ</span>
+      <h2 class="section-title">জরুরি <span class="accent">হটলাইন</span></h2>
+      <span class="accent-divider center"></span>
+      <p class="lead">জরুরি প্রয়োজনে এই হটলাইন নম্বরগুলোতে যোগাযোগ করুন।</p>
+    </div>
+    <div class="hotline-grid reveal-stagger">
       <div class="hotline-card"><span class="num">৩৩৩</span><span>সরকারি তথ্য ও সেবা</span></div>
       <div class="hotline-card"><span class="num">৯৯৯</span><span>জরুরি সেবা</span></div>
       <div class="hotline-card"><span class="num">১০২</span><span>ফায়ার সার্ভিস</span></div>

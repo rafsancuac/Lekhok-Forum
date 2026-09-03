@@ -1,34 +1,61 @@
 <header class="page-header">
   <div class="container">
-    <h1>রিসোর্স</h1>
-    <p>লেখক ফোরাম</p>
+    <span class="eyebrow">রিসোর্স</span>
+    <h1>গুরুত্বপূর্ণ <span style="color:var(--accent);">ফাইল ও রিসোর্স</span></h1>
+    <p>ফেলোশিপ, লেখালেখির টিপস ও বিভিন্ন গুরুত্বপূর্ণ ডকুমেন্ট</p>
   </div>
 </header>
 
-<section class="section">
+<section class="section reveal">
   <div class="container">
     <div class="notice-tabs">
-      <a href="?category=all"          class="<%= activeCategory === 'all' ? 'active' : '' %>">সকল</a>
-      <a href="?category=scholarship"  class="<%= activeCategory === 'scholarship' ? 'active' : '' %>">ফেলোশিপ</a>
-      <a href="?category=writing-tips" class="<%= activeCategory === 'writing-tips' ? 'active' : '' %>">লেখালেখির টিপস</a>
+      <a href="?category=all"          class="<%= activeCategory === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সকল</a>
+      <% if (categories && categories.length) { %>
+        <% categories.forEach(c => { %>
+          <% if (c.category) { %>
+            <a href="?category=<%= c.category %>" class="<%= activeCategory === c.category ? 'active' : '' %>">
+              <i class="fas fa-folder"></i> <%= c.category === 'scholarship' ? 'ফেলোশিপ' : c.category === 'writing-tips' ? 'লেখালেখির টিপস' : c.category %>
+            </a>
+          <% } %>
+        <% }) %>
+      <% } %>
     </div>
 
-    <div class="resource-list">
-      <% if (resources.length === 0) { %>
-        <div class="empty-state">
-          <i class="fas fa-book-open"></i>
-          <h3>কোনো রিসোর্স পাওয়া যায়নি</h3>
-        </div>
-      <% } %>
-      <% resources.forEach(r => { %>
-        <article class="resource-card card">
-          <span class="resource-badge"><%= r.category === 'scholarship' ? 'ফেলোশিপ' : 'লেখালেখি' %></span>
-          <h2><%= r.title %></h2>
-          <p class="resource-meta"><i class="far fa-user"></i> <%= r.author || 'সম্পাদক' %></p>
-          <p><%= r.content %></p>
-          <% if (r.tags) { %><p class="resource-tags"><i class="fas fa-tags"></i> <%= r.tags %></p><% } %>
-        </article>
-      <% }) %>
-    </div>
+    <% if (resources && resources.length) { %>
+      <div class="resource-grid reveal-stagger">
+        <% resources.forEach(r => {
+             var iconClass = 'fas fa-file-alt';
+             var fileType = (r.file_type || '').toLowerCase();
+             if (fileType === 'pdf') iconClass = 'fas fa-file-pdf';
+             else if (fileType === 'doc' || fileType === 'docx') iconClass = 'fas fa-file-word';
+             else if (fileType === 'image' || fileType === 'jpg' || fileType === 'png') iconClass = 'fas fa-file-image';
+             else if (r.category === 'scholarship') iconClass = 'fas fa-graduation-cap';
+             else if (r.category === 'writing-tips') iconClass = 'fas fa-pen-fancy';
+        %>
+          <div class="resource-card has-image">
+            <div class="res-icon-wrap" style="position:relative;">
+              <span class="res-badge"><%= r.category === 'scholarship' ? 'ফেলোশিপ' : r.category === 'writing-tips' ? 'টিপস' : (r.file_type || 'FILE') %></span>
+              <i class="<%= iconClass %>"></i>
+            </div>
+            <div class="res-body">
+              <h3><%= r.title %></h3>
+              <% if (r.content) { %><p><%= r.content.length > 110 ? r.content.substring(0, 110) + '…' : r.content %></p><% } %>
+              <% if (r.author) { %><p class="res-meta"><i class="far fa-user"></i> <%= r.author %></p><% } %>
+              <% if (r.tags) { %><p class="res-meta"><i class="fas fa-tags"></i> <%= r.tags %></p><% } %>
+              <a href="<%= r.file_url || '#' %>" class="btn btn-primary" target="_blank" rel="noopener">
+                <i class="fas fa-download"></i> ডাউনলোড / দেখুন
+              </a>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="fas fa-book-open"></i>
+        <h3>এই ক্যাটাগরিতে কোনো রিসোর্স নেই</h3>
+        <p>নতুন রিসোর্স এখানে যোগ করা হবে</p>
+        <a href="/admin/resources/new" class="btn btn-primary"><i class="fas fa-plus"></i> রিসোর্স যোগ করুন</a>
+      </div>
+    <% } %>
   </div>
 </section>

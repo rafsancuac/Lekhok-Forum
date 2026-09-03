@@ -1,36 +1,42 @@
 <header class="page-header">
   <div class="container">
-    <h1>বিজ্ঞপ্তি</h1>
-    <p>লেখক ফোরাম</p>
+    <span class="eyebrow">বিজ্ঞপ্তি</span>
+    <h1>সকল <span style="color:var(--accent);">বিজ্ঞপ্তি</span></h1>
+    <p>লেখক ফোরামের সর্বশেষ খবর ও আপডেট</p>
   </div>
 </header>
 
-<section class="section">
+<section class="section reveal">
   <div class="container">
     <div class="notice-tabs">
-      <a href="?category=all"   class="<%= activeCategory === 'all'   ? 'active' : '' %>">সকল</a>
-      <a href="?category=press"  class="<%= activeCategory === 'press'  ? 'active' : '' %>">প্রেস বিজ্ঞপ্তি</a>
-      <a href="?category=notice" class="<%= activeCategory === 'notice' ? 'active' : '' %>">নোটিশ</a>
-      <a href="?category=event"  class="<%= activeCategory === 'event'  ? 'active' : '' %>">ইভেন্ট</a>
+      <a href="?category=all"   class="<%= activeCategory === 'all'   ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সকল</a>
+      <a href="?category=press"  class="<%= activeCategory === 'press'  ? 'active' : '' %>"><i class="fas fa-newspaper"></i> প্রেস বিজ্ঞপ্তি</a>
+      <a href="?category=notice" class="<%= activeCategory === 'notice' ? 'active' : '' %>"><i class="fas fa-bell"></i> নোটিশ</a>
+      <a href="?category=event"  class="<%= activeCategory === 'event'  ? 'active' : '' %>"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
     </div>
 
-    <div class="notice-list">
-      <% if (notices.length === 0) { %>
-        <div class="empty-state">
-          <i class="far fa-bell"></i>
-          <h3>কোনো বিজ্ঞপ্তি পাওয়া যায়নি</h3>
-        </div>
-      <% } %>
-      <% notices.forEach(n => { %>
-        <div class="notice-item">
-          <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
-          <div>
-            <h3><%= n.title %></h3>
-            <p><%= n.content %></p>
-            <p class="notice-date"><i class="far fa-calendar"></i> <%= n.date || '' %></p>
-          </div>
-        </div>
-      <% }) %>
-    </div>
+    <% if (notices && notices.length) { %>
+      <div class="notice-list reveal-stagger">
+        <% notices.forEach(n => { %>
+          <a href="/notices/<%= n.id %>" class="notice-card-link">
+            <div class="notice-item">
+              <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
+              <div>
+                <h3><%= n.title %></h3>
+                <% if (n.content) { %><p><%= n.content.length > 140 ? n.content.substring(0, 140) + '…' : n.content %></p><% } %>
+                <p class="notice-date"><i class="far fa-calendar"></i> <%= n.date || '' %></p>
+              </div>
+              <i class="fas fa-arrow-right" style="margin-left:auto;color:var(--accent);"></i>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="far fa-bell"></i>
+        <h3>এই ক্যাটাগরিতে কোনো বিজ্ঞপ্তি নেই</h3>
+        <p>নতুন বিজ্ঞপ্তি এখানে দেখা যাবে</p>
+      </div>
+    <% } %>
   </div>
 </section>

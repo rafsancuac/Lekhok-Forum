@@ -52,4 +52,76 @@
   } else {
     document.querySelectorAll('.stat-num').forEach(animateCount);
   }
+
+  // ── v2: Sticky header shrink + scroll progress bar ────────────────────────
+  const header = document.getElementById('mainHeader');
+  const progress = document.getElementById('scrollProgress');
+  const backToTop = document.getElementById('backToTop');
+  const heroBg = document.querySelector('.hero.curhs');
+
+  let lastScrollY = 0;
+  let ticking = false;
+
+  function onScroll() {
+    const y = window.scrollY || window.pageYOffset;
+    const max = Math.max(1, document.body.scrollHeight - window.innerHeight);
+
+    // Shrink header after 50px
+    if (header) header.classList.toggle('shrunk', y > 50);
+
+    // Update progress bar
+    if (progress) progress.style.width = Math.min(100, (y / max) * 100) + '%';
+
+    // Show back-to-top after 400px
+    if (backToTop) backToTop.classList.toggle('show', y > 400);
+
+    // Parallax on home hero (only when hero is in/near viewport)
+    if (heroBg) {
+      const rect = heroBg.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < window.innerHeight) {
+        heroBg.style.transform = 'translate3d(0, ' + (y * 0.3) + 'px, 0)';
+      }
+    }
+
+    lastScrollY = y;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) {
+      requestAnimationFrame(onScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Back-to-top click
+  if (backToTop) {
+    backToTop.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  // ── v2: Reveal-on-scroll (IntersectionObserver) ───────────────────────────
+  if ('IntersectionObserver' in window) {
+    const revealIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          revealIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+    document.querySelectorAll('.reveal, .reveal-stagger').forEach(function (el) {
+      revealIO.observe(el);
+    });
+  } else {
+    // Fallback: just show everything
+    document.querySelectorAll('.reveal, .reveal-stagger').forEach(function (el) {
+      el.classList.add('in');
+    });
+  }
+
+  // Initial run
+  onScroll();
 })();

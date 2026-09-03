@@ -1,23 +1,32 @@
 <header class="page-header">
   <div class="container">
-    <h1>ইভেন্ট</h1>
-    <p>লেখক ফোরাম</p>
+    <span class="eyebrow">ইভেন্ট</span>
+    <h1>আসন্ন ও অতীত <span style="color:var(--accent);">ইভেন্ট</span></h1>
+    <p>সেমিনার, কর্মশালা, সাংস্কৃতিক সন্ধ্যা ও বিশেষ আয়োজন</p>
   </div>
 </header>
 
-<section class="section">
+<!-- Upcoming events -->
+<section class="section reveal">
   <div class="container">
-    <h2 class="section-title">আসন্ন <span class="accent">ইভেন্ট</span></h2>
-    <% if (upcoming.length === 0) { %>
-      <div class="empty-state">
-        <i class="far fa-calendar"></i>
-        <h3>কোনো আসন্ন ইভেন্ট নেই</h3>
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">আসন্ন</span>
+        <h2 class="section-title">আসন্ন <span class="accent">ইভেন্ট</span></h2>
+        <span class="accent-divider"></span>
       </div>
-    <% } else { %>
-      <div class="event-grid">
+    </div>
+    <% if (upcoming && upcoming.length) { %>
+      <div class="event-grid reveal-stagger">
         <% upcoming.forEach(e => { %>
-          <div class="event-card <%= e.featured ? 'featured' : '' %>">
-            <% if (e.image_url) { %><img src="<%= e.image_url %>" alt="<%= e.title %>" loading="lazy" /><% } %>
+          <div class="event-card has-image <%= e.featured ? 'featured' : '' %>">
+            <% if (e.image_url) { %>
+              <img src="<%= e.image_url %>" alt="<%= e.title %>" loading="lazy" />
+            <% } else { %>
+              <div style="height:200px;background:linear-gradient(135deg, var(--brand), var(--bg-main));display:grid;place-items:center;color:var(--accent);font-size:48px;">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+            <% } %>
             <div class="event-body">
               <% if (e.featured) { %><span class="event-badge">বিশেষ</span><% } %>
               <span class="event-date"><i class="far fa-calendar"></i> <%= e.date %></span>
@@ -28,19 +37,38 @@
           </div>
         <% }) %>
       </div>
-    <% } %>
-
-    <h2 class="section-title" style="margin-top:60px;">অতীত <span class="accent">ইভেন্ট</span></h2>
-    <% if (past.length === 0) { %>
-      <div class="empty-state">
-        <i class="fas fa-history"></i>
-        <h3>কোনো অতীত ইভেন্ট নেই</h3>
-      </div>
     <% } else { %>
-      <div class="event-grid">
+      <div class="empty-state">
+        <i class="far fa-calendar"></i>
+        <h3>কোনো আসন্ন ইভেন্ট নেই</h3>
+        <p>নতুন ইভেন্টের ঘোষণা এখানে দেওয়া হবে</p>
+        <a href="/admin/events/new" class="btn btn-primary"><i class="fas fa-plus"></i> ইভেন্ট যোগ করুন</a>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- Past events -->
+<section class="section section-alt reveal">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">অতীত</span>
+        <h2 class="section-title">অতীত <span class="accent">ইভেন্ট</span></h2>
+        <span class="accent-divider"></span>
+      </div>
+    </div>
+    <% if (past && past.length) { %>
+      <div class="event-grid reveal-stagger">
         <% past.forEach(e => { %>
-          <div class="event-card past">
-            <% if (e.image_url) { %><img src="<%= e.image_url %>" alt="<%= e.title %>" loading="lazy" /><% } %>
+          <div class="event-card has-image past">
+            <% if (e.image_url) { %>
+              <img src="<%= e.image_url %>" alt="<%= e.title %>" loading="lazy" />
+            <% } else { %>
+              <div style="height:200px;background:linear-gradient(135deg, var(--bg-secondary), var(--bg-main));display:grid;place-items:center;color:var(--accent);font-size:48px;opacity:0.6;">
+                <i class="fas fa-history"></i>
+              </div>
+            <% } %>
             <div class="event-body">
               <span class="event-date"><i class="far fa-calendar"></i> <%= e.date %></span>
               <h3><%= e.title %></h3>
@@ -49,6 +77,12 @@
             </div>
           </div>
         <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="fas fa-history"></i>
+        <h3>এখনও কোনো ইভেন্ট অনুষ্ঠিত হয়নি</h3>
+        <p>আমাদের প্রথম ইভেন্টের অপেক্ষায় থাকুন</p>
       </div>
     <% } %>
   </div>

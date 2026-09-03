@@ -1,0 +1,33 @@
+<header class="page-header">
+  <div class="container">
+    <span class="eyebrow"><i class="fas fa-bullhorn"></i> <%= notice.category === 'press' ? 'প্রেস বিজ্ঞপ্তি' : notice.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
+    <h1><%= notice.title %></h1>
+    <p><i class="far fa-calendar"></i> <%= notice.date || '' %></p>
+  </div>
+</header>
+
+<section class="section reveal">
+  <div class="container">
+    <div class="section-split" style="grid-template-columns: 1fr 1.4fr;">
+      <div>
+        <span class="eyebrow">বিজ্ঞপ্তির বিবরণ</span>
+        <h2 class="section-title">বিস্তারিত <span class="accent">তথ্য</span></h2>
+        <span class="accent-divider"></span>
+        <ul class="bullet-list">
+          <li><strong>ক্যাটাগরি:</strong> <%= notice.category === 'press' ? 'প্রেস বিজ্ঞপ্তি' : notice.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></li>
+          <li><strong>প্রকাশের তারিখ:</strong> <%= notice.date || '—' %></li>
+          <li><strong>আইডি:</strong> #<%= notice.id %></li>
+        </ul>
+        <a href="/notices" class="btn btn-primary" style="margin-top:18px;"><i class="fas fa-arrow-left"></i> সকল বিজ্ঞপ্তি</a>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0;">বিজ্ঞপ্তির বিষয়বস্তু</h3>
+        <% if (notice.content) { %>
+          <p style="white-space:pre-wrap;line-height:1.8;color:var(--text);font-size:16px;"><%= notice.content %></p>
+        <% } else { %>
+          <p style="color:var(--text-muted);"><em>এই বিজ্ঞপ্তির জন্য বিস্তারিত বিষয়বস্তু যোগ করা হয়নি।</em></p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>

@@ -112,14 +112,29 @@ router.get('/resources', (req, res) => {
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 router.get('/team', (req, res) => {
-  const central = db.prepare("SELECT * FROM members WHERE member_type = 'central' ORDER BY sort_order").all();
-  const branch  = db.prepare("SELECT * FROM members WHERE member_type = 'branch'  ORDER BY sort_order").all();
+  const central  = db.prepare("SELECT * FROM members WHERE member_type = 'central'  ORDER BY sort_order").all();
+  const advisory = db.prepare("SELECT * FROM members WHERE member_type = 'advisory' ORDER BY sort_order").all();
+  const founders = db.prepare("SELECT * FROM members WHERE member_type = 'founder'  ORDER BY sort_order").all();
+  const branch   = db.prepare("SELECT * FROM members WHERE member_type = 'branch'   ORDER BY sort_order").all();
   res.render('lekhok-team', {
     layout: 'layout',
     pageTitle: 'টিম',
     currentPath: '/team',
-    central,
-    branch
+    central, advisory, founders, branch
+  });
+});
+
+// ── Single notice page (so notice cards from home/notices page link works) ──
+router.get('/notices/:id(\\d+)', (req, res) => {
+  const notice = db.prepare('SELECT * FROM notices WHERE id = ?').get(parseInt(req.params.id, 10));
+  if (!notice) {
+    return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  }
+  res.render('lekhok-notice-detail', {
+    layout: 'layout',
+    pageTitle: notice.title || 'বিজ্ঞপ্তি',
+    currentPath: '/notices',
+    notice
   });
 });
 
