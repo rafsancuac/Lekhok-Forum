@@ -112,11 +112,14 @@
 
 /* ── CSS custom properties ───────────────────────────────────────────────── */
 :root {
-  /* Core stack — Bengali-first */
-  --font-bn:    'HindSiliguri', 'Kalpurush', sans-serif;
-  --font-serif: 'LipiMollika', 'Kalpurush', serif;
-  --font-sans:  'HindSiliguri', sans-serif;
-  --font-hand:  'BenSen', 'HindSiliguri', sans-serif;
+  /* Core stack — Bengali-first
+     Default body → Kalpurush (SolaimanLipi-compatible rendering)
+     Headings / hero → HindSiliguri */
+  --font-bn:      'Kalpurush', 'HindSiliguri', sans-serif;
+  --font-heading: 'HindSiliguri', 'Kalpurush', sans-serif;
+  --font-serif:   'LipiMollika', 'Kalpurush', serif;
+  --font-sans:    'HindSiliguri', sans-serif;
+  --font-hand:    'BenSen', 'HindSiliguri', sans-serif;
   --font-display: 'AkhandBengali', 'Durnibar', serif;
 
   /* Font sizes */
@@ -147,7 +150,7 @@ html.fs-large  { font-size: var(--fs-lg); }
 html.fs-small body { font-size: var(--fs-sm); }
 html.fs-large body { font-size: var(--fs-lg); }
 
-/* Headings — serif elegance by default */
+/* Headings — HindSiliguri bold on home page, display for article UI */
 h1, h2, h3, h4,
 .post-title, .article-title,
 .member-name,
@@ -157,9 +160,28 @@ h1, h2, h3, h4,
   font-weight: 600;
 }
 
-/* Body text */
+/* Body text — Kalpurush by default */
 body, p, li, td, th, input, textarea, button, select {
   font-family: var(--font-bn);
+}
+
+/* ── Home page typography: headings + nav = HindSiliguri, body = Kalpurush ── */
+body.home-page h1,
+body.home-page h2,
+body.home-page h3,
+body.home-page h4,
+body.home-page .hero h1,
+body.home-page .section-title,
+body.home-page .stat-num,
+body.home-page nav a,
+body.home-page .main-nav a,
+body.home-page .topbar a,
+body.home-page .logo-text {
+  font-family: var(--font-heading);
+}
+
+body.home-page {
+  font-family: var(--font-bn); /* Kalpurush for all body text */
 }
 
 /* Bengali text */
