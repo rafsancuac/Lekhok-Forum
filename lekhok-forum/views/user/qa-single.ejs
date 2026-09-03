@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/feed.css" />
+  <link rel="stylesheet" href="/assets/css/style.css" />
 </head>
 <body>
   <%- include('../partials/header') %>
@@ -29,16 +30,37 @@
           <a href="/profile/<%= author.username %>" class="qa-author"><%= author.full_name %></a>
           <span>&middot;</span>
           <span><i class="far fa-clock"></i> <%= new Date(question.created_at).toLocaleDateString('bn-BD') %></span>
-          <button class="like-btn-sm" data-id="<%= question.id %>" data-type="post">
-            <i class="far fa-heart"></i> <%= question.like_count || 0 %>
-          </button>
+        </div>
+        <div class="feed-card-actions">
+          <div class="reaction-btn-wrap">
+            <button class="feed-action like-btn reaction-trigger" data-id="<%= question.id %>" data-type="post">
+              <i class="far fa-thumbs-up"></i> <span><%= question.like_count || 0 %></span>
+            </button>
+            <div class="reaction-picker">
+              <% [{e:'👍',t:'like'},{e:'❤️',t:'love'},{e:'😂',t:'haha'},{e:'😮',t:'wow'},{e:'😢',t:'sad'}].forEach(r => { %>
+                <button class="reaction-opt" data-emoji="<%= r.e %>" data-type="<%= r.t %>"><%= r.e %></button>
+              <% }); %>
+            </div>
+          </div>
+          <a href="#answers" class="feed-action">
+            <i class="far fa-comment"></i> উত্তর (<%= answers.length %>)
+          </a>
+          <div class="share-wrap">
+            <button class="feed-action share-btn"><i class="far fa-share-square"></i> শেয়ার</button>
+            <div class="share-menu">
+              <button class="share-opt copy-link" data-link="/qa/<%= question.id %>"><i class="fas fa-link"></i> লিংক কপি করুন</button>
+              <a class="share-opt" target="_blank" href="https://api.whatsapp.com/send?text=<%= encodeURIComponent(question.title + ' — লেখক ফোরাম') %>"><i class="fab fa-whatsapp"></i> হোয়াটসঅ্যাপ</a>
+              <a class="share-opt" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(location.origin + '/qa/' + question.id) %>"><i class="fab fa-facebook"></i> ফেসবুক</a>
+              <button class="share-opt send-to-user" data-post-id="<%= question.id %>"><i class="fas fa-user"></i> ইউজারকে পাঠান</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="answers-section">
+      <div class="answers-section" id="answers">
         <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<%= answers.length %>)</h2>
         <% answers.forEach(a => { %>
-          <div class="answer-item">
+          <div class="answer-item" id="answer-<%= a.id %>">
             <div class="answer-sidebar">
               <img src="<%= a.avatar_url || '/avatar/' + a.author_id %>" class="answer-avatar">
             </div>
@@ -49,9 +71,16 @@
               </div>
               <div class="answer-text"><%- a.body.replace(/\n/g, '<br>') %></div>
               <div class="answer-actions">
-                <button class="like-btn-sm" data-id="<%= a.id %>" data-type="comment">
-                  <i class="far fa-heart"></i> <%= a.like_count || 0 %>
-                </button>
+                <div class="reaction-btn-wrap">
+                  <button class="like-btn-sm reaction-trigger" data-id="<%= a.id %>" data-type="comment">
+                    <i class="far fa-thumbs-up"></i> <span><%= a.like_count || 0 %></span>
+                  </button>
+                  <div class="reaction-picker">
+                    <% [{e:'👍',t:'like'},{e:'❤️',t:'love'},{e:'😂',t:'haha'},{e:'😮',t:'wow'},{e:'😢',t:'sad'}].forEach(r => { %>
+                      <button class="reaction-opt" data-emoji="<%= r.e %>" data-type="<%= r.t %>"><%= r.e %></button>
+                    <% }); %>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -72,15 +101,128 @@
     </div>
   </div>
 
+  <!-- Share-to-user modal -->
+  <div class="modal-backdrop" id="shareModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3><i class="fas fa-user"></i> ইউজারকে পাঠান</h3>
+        <button class="modal-close" data-modal="shareModal"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="input user-search-input" placeholder="ইউজারনেম খুঁজুন..." autocomplete="off">
+        <div class="user-search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
   <script>
-    document.querySelectorAll('.like-btn-sm').forEach(btn => {
-      btn.addEventListener('click', async function() {
-        const id = this.dataset.id, type = this.dataset.type;
-        const res = await fetch('/api/like', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type }) });
-        const data = await res.json();
-        this.innerHTML = '<i class="far fa-heart"></i> ' + data.count;
+    // 5-emoji reaction picker
+    document.querySelectorAll('.reaction-btn-wrap').forEach(wrap => {
+      const trigger = wrap.querySelector('.reaction-trigger');
+      const picker = wrap.querySelector('.reaction-picker');
+      let timer;
+      const open = () => { clearTimeout(timer); picker.classList.add('open'); };
+      const close = () => { timer = setTimeout(() => picker.classList.remove('open'), 200); };
+      trigger.addEventListener('mouseenter', open);
+      trigger.addEventListener('mouseleave', close);
+      picker.addEventListener('mouseenter', open);
+      picker.addEventListener('mouseleave', close);
+      picker.querySelectorAll('.reaction-opt').forEach(opt => {
+        opt.addEventListener('click', async e => {
+          e.preventDefault();
+          const id = trigger.dataset.id, type = trigger.dataset.type;
+          const rType = opt.dataset.type, emoji = opt.dataset.emoji;
+          const res = await fetch('/api/react', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, type, reaction_type: rType })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            if (data.action === 'removed') {
+              trigger.innerHTML = '<i class="far fa-thumbs-up"></i> <span>' + (data.count || 0) + '</span>';
+            } else {
+              trigger.innerHTML = '<span style="font-size:18px">' + emoji + '</span> <span>' + (data.count || 0) + '</span>';
+            }
+            showToast('প্রতিক্রিয়া যোগ হয়েছে', 'success');
+          }
+          picker.classList.remove('open');
+        });
       });
     });
+
+    // Share menu
+    document.querySelectorAll('.share-wrap').forEach(wrap => {
+      const btn = wrap.querySelector('.share-btn');
+      const menu = wrap.querySelector('.share-menu');
+      btn.addEventListener('click', e => { e.stopPropagation(); menu.classList.toggle('open'); });
+      document.addEventListener('click', () => menu.classList.remove('open'));
+      menu.addEventListener('click', e => e.stopPropagation());
+    });
+    document.querySelectorAll('.copy-link').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(location.origin + btn.dataset.link).then(() => showToast('লিংক কপি হয়েছে', 'success'));
+      });
+    });
+
+    // Share to user
+    let currentPostId = null;
+    document.querySelectorAll('.send-to-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentPostId = btn.dataset.postId;
+        document.getElementById('shareModal').classList.add('open');
+      });
+    });
+    document.querySelectorAll('.modal-close').forEach(btn => {
+      btn.addEventListener('click', () => document.getElementById(btn.dataset.modal).classList.remove('open'));
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(bg => {
+      bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+    });
+    const userSearch = document.querySelector('.user-search-input');
+    const userResults = document.querySelector('.user-search-results');
+    let userTimer;
+    userSearch && userSearch.addEventListener('input', () => {
+      clearTimeout(userTimer);
+      const q = userSearch.value.trim();
+      if (!q) { userResults.innerHTML = ''; return; }
+      userTimer = setTimeout(async () => {
+        const res = await fetch('/api/users/search?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        if (data.users && data.users.length) {
+          userResults.innerHTML = data.users.map(u =>
+            '<button class="user-pick" data-username="' + u.username + '">' +
+            '<img src="' + (u.avatar_url || '/avatar/' + u.id) + '" class="avatar avatar-sm">' +
+            '<div><strong>' + u.full_name + '</strong><br><span>@' + u.username + '</span></div>' +
+            '</button>'
+          ).join('');
+          userResults.querySelectorAll('.user-pick').forEach(b => {
+            b.addEventListener('click', async () => {
+              const res = await fetch('/api/share-to-user', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to_username: b.dataset.username, post_id: currentPostId })
+              });
+              const data = await res.json();
+              if (data.ok) {
+                showToast('পাঠানো হয়েছে', 'success');
+                document.getElementById('shareModal').classList.remove('open');
+                setTimeout(() => location.href = data.redirect, 600);
+              }
+            });
+          });
+        } else {
+          userResults.innerHTML = '<p style="padding:12px;color:var(--text-muted)">কোনো ইউজার পাওয়া যায়নি</p>';
+        }
+      }, 250);
+    });
+
+    function showToast(msg, kind) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + (kind || '');
+      setTimeout(() => t.className = 'toast', 2200);
+    }
   </script>
 </body>
 </html>

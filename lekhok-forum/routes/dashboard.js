@@ -165,7 +165,7 @@ router.post('/api/messages/seen-all', ensureAuth, (req, res) => {
   const me = req.session.user.id;
   const convId = parseInt(req.body.conv_id);
   if (!convId) return res.json({ ok: false });
-  const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND (user_a = ? OR user.b = ?)').get(convId, me, me);
+  const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND (user_a = ? OR user_b = ?)').get(convId, me, me);
   if (!conv) return res.json({ ok: false });
   db.prepare('UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?').run(convId, me);
   res.json({ ok: true });

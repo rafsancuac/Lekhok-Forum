@@ -42,7 +42,7 @@
         <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
         <a href="/articles/new" class="composer-input">আপনার লেখা শুরু করুন...</a>
         <div class="composer-actions">
-          <a href="/articles/new" class="composer-action"><i class="fas fa-pen-nib" style="color:#C5A059"></i> লেখা</a>
+          <a href="/articles/new" class="composer-action"><i class="fas fa-pen-nib" style="color:var(--accent)"></i> লেখা</a>
           <a href="/qa/new" class="composer-action"><i class="fas fa-question" style="color:#1a73e8"></i> প্রশ্ন</a>
         </div>
       </div>
@@ -75,13 +75,20 @@
               <p class="feed-text"><%= item.body.substring(0, 280) %><% if (item.body.length > 280) { %>...<a href="<%= item.type === 'article' ? '/articles/' + item.id : '/activities' %>"> আরও পড়ুন</a><% } %></p>
             </div>
             <div class="feed-card-actions">
-              <button class="feed-action like-btn" data-id="<%= item.id %>" data-type="post">
-                <i class="far fa-heart"></i> <span><%= item.like_count || 0 %></span>
-              </button>
+              <div class="reaction-btn-wrap">
+                <button class="feed-action like-btn reaction-trigger" data-id="<%= item.id %>" data-type="post">
+                  <i class="far fa-thumbs-up"></i> <span><%= item.like_count || 0 %></span>
+                </button>
+                <div class="reaction-picker">
+                  <% [{e:'👍',t:'like'},{e:'❤️',t:'love'},{e:'😂',t:'haha'},{e:'😮',t:'wow'},{e:'😢',t:'sad'}].forEach(r => { %>
+                    <button class="reaction-opt" data-emoji="<%= r.e %>" data-type="<%= r.t %>"><%= r.e %></button>
+                  <% }); %>
+                </div>
+              </div>
               <a href="<%= item.type === 'article' ? '/articles/' + item.id : '#' %>#comments" class="feed-action">
                 <i class="far fa-comment"></i> মন্তব্য (<%= item.comment_count || 0 %>)
               </a>
-              <button class="feed-action share-btn" onclick="navigator.clipboard.writeText(location.origin + '<%= item.type === 'article' ? '/articles/' + item.id : '/activities' %>')">
+              <button class="feed-action share-btn" data-link="<%= item.type === 'article' ? '/articles/' + item.id : '/activities' %>">
                 <i class="far fa-share-square"></i> শেয়ার
               </button>
             </div>
