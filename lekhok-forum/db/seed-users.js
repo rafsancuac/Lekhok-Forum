@@ -103,14 +103,31 @@ const bcrypt = require('bcryptjs');
   }
 
   // ── 2. Build user list ──────────────────────────────────────
+  // Stable transliteration for common Bengali characters
+  const bnMap = {
+    'া':'a','ি':'i','ী':'i','ু':'u','ূ':'u','ৃ':'ri','ে':'e','ৈ':'oi','ো':'o','ৌ':'ou',
+    'ক':'k','খ':'kh','গ':'g','ঘ':'gh','ঙ':'ng',
+    'চ':'ch','ছ':'chh','জ':'j','ঝ':'jh','ঞ':'nj',
+    'ট':'t','ঠ':'th','ড':'d','ঢ':'dh','ণ':'n',
+    'ত':'t','থ':'th','দ':'d','ধ':'dh','ন':'n',
+    'প':'p','ফ':'ph','ব':'b','ভ':'bh','ম':'m',
+    'য':'j','র':'r','ল':'l','শ':'sh','ষ':'sh','স':'s','হ':'h',
+    'ড়':'r','ঢ়':'rh','য়':'y',
+    'ৎ':'t','ং':'ng','ঃ':'h','ঁ':'n',
+    '০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'
+  };
+  function translit(s) {
+    return s.split('').map(c => bnMap[c] !== undefined ? bnMap[c] : c).join('');
+  }
   function makeUsername(name, idx) {
     if (!name) return 'user' + idx;
-    return name.toLowerCase()
+    const t = translit(name.toLowerCase())
       .replace(/[^\w\s\.\-]/g, '')
       .trim()
       .replace(/[\s\.\-]+/g, '_')
       .replace(/^_+|_+$/g, '')
       .slice(0, 30) || ('user' + idx);
+    return t;
   }
 
   // Helper: sql.js step-based result iterator
@@ -132,21 +149,25 @@ const bcrypt = require('bcryptjs');
     stmt.free();
   }
 
-  // ── 3. Insert 13 committee first (with role=moderator/admin) ─────
+  // ── 3. Insert 15 committee — all as regular 'user' role ─────
+  // Per user policy: nobody gets admin/moderator role here.
+  // Admin/moderator promotions happen manually through the admin panel later.
   const committee = [
-    { name: 'কারিশমা ইরিন এ্যামি',    role: 'সহ-সাংগঠনিক সম্পাদক',     userRole: 'moderator' },
-    { name: 'আজিজ ওয়েসি',             role: 'সাংগঠনিক সম্পাদক',          userRole: 'admin'     },
-    { name: 'মোঃ রেজাউল করিম',         role: 'দপ্তর সম্পাদক',             userRole: 'moderator' },
-    { name: 'মোঃ নাঈম মিজি',           role: 'সাহিত্য ও প্রকাশনা সম্পাদক', userRole: 'moderator' },
-    { name: 'মাহফুজ রহমান',            role: 'প্রচার সম্পাদক',             userRole: 'moderator' },
-    { name: 'মাহমুদুল হাসান শাকিব',   role: 'তথ্য ও প্রযুক্তি সম্পাদক', userRole: 'moderator' },
-    { name: 'জান্নাতুল ফেরদৌস ইকরা',  role: 'অর্থ সম্পাদক',               userRole: 'moderator' },
-    { name: 'নুসরাত সুলতানা',          role: 'প্রশিক্ষণ বিষয়ক সম্পাদক',   userRole: 'moderator' },
-    { name: 'রাসেল হোসেন সাকিব',      role: 'যুগ্ম সাধারণ সম্পাদক',       userRole: 'moderator' },
-    { name: 'সানজিদা আফরোজ',          role: 'সহ-দপ্তর সম্পাদক',           userRole: 'moderator' },
-    { name: 'আব্দুল্লাহ আল নাঈম',      role: 'সম্পাদকীয় পর্ষদ সদস্য',      userRole: 'user'      },
-    { name: 'আবরার আহাদ রাফি',        role: 'কার্যনির্বাহী সদস্য',         userRole: 'user'      },
-    { name: 'ঋতু আক্তার',              role: 'কার্যনির্বাহী সদস্য',         userRole: 'user'      }
+    { name: 'ইসমাইল হোসেন',                       role: 'সভাপতি',                  userRole: 'user' },
+    { name: 'মোনেম শাহরিয়ার শাওন',               role: 'সাধারণ সম্পাদক',           userRole: 'user' },
+    { name: 'কারিশমা ইরিন এ্যামি',               role: 'সহ-সাংগঠনিক সম্পাদক',     userRole: 'user' },
+    { name: 'আজিজ ওয়েসি',                        role: 'সাংগঠনিক সম্পাদক',         userRole: 'user' },
+    { name: 'মোঃ রেজাউল করিম',                    role: 'দপ্তর সম্পাদক',            userRole: 'user' },
+    { name: 'মোঃ নাঈম মিজি',                      role: 'সাহিত্য ও প্রকাশনা সম্পাদক', userRole: 'user' },
+    { name: 'মাহফুজ রহমান',                       role: 'প্রচার সম্পাদক',            userRole: 'user' },
+    { name: 'মাহমুদুল হাসান শাকিব',              role: 'তথ্য ও প্রযুক্তি সম্পাদক', userRole: 'user' },
+    { name: 'জান্নাতুল ফেরদৌস ইকরা',             role: 'অর্থ সম্পাদক',              userRole: 'user' },
+    { name: 'নুসরাত সুলতানা',                     role: 'প্রশিক্ষণ বিষয়ক সম্পাদক',  userRole: 'user' },
+    { name: 'রাসেল হোসেন সাকিব',                 role: 'যুগ্ম সাধারণ সম্পাদক',      userRole: 'user' },
+    { name: 'সানজিদা আফরোজ',                     role: 'সহ-দপ্তর সম্পাদক',          userRole: 'user' },
+    { name: 'আব্দুল্লাহ আল নাঈম',                 role: 'সম্পাদকীয় পর্ষদ সদস্য',     userRole: 'user' },
+    { name: 'আবরার আহাদ রাফি',                   role: 'কার্যনির্বাহী সদস্য',         userRole: 'user' },
+    { name: 'ঋতু আক্তার',                         role: 'কার্যনির্বাহী সদস্য',         userRole: 'user' }
   ];
 
   let created = 0, skipped = 0;
@@ -187,5 +208,5 @@ const bcrypt = require('bcryptjs');
 
   fs.writeFileSync(dbPath, db.export());
   console.log(`[seed-users] Committee + attendees: created=${created + n} skipped=${skipped}`);
-  console.log(`[seed-users] 13 committee + ${n} attendees inserted (password for all: lekhok@2026)`);
+  console.log(`[seed-users] ${created} committee + ${n} attendees inserted (password for all: lekhok@2026)`);
 })().catch(err => { console.error(err); process.exit(1); });
