@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/assets/css/feed.css" />
 </head>
 <body>
-<%# Apply per-user display preferences (theme / font size) early to avoid flash %>
+<%# Apply per-user display preferences (theme / font size / font family) early to avoid flash %>
 <% if (user) { %>
 <script>
 (function () {
@@ -22,6 +22,12 @@
     if (prefs.theme === 'light') c.add('theme-light');
     if (prefs.font_size === 'small') c.add('fs-small');
     if (prefs.font_size === 'large') c.add('fs-large');
+    // Apply font family class to body as soon as DOM is ready
+    var ALLOWED_FF = ['bn','serif','sans','mixed','hand','display','durnibar','lipi'];
+    var ff = ALLOWED_FF.indexOf(prefs.font_family) >= 0 ? prefs.font_family : 'bn';
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.classList.add('font-' + ff);
+    });
   } catch (e) {}
 })();
 </script>

@@ -908,11 +908,17 @@ router.post('/settings/account/deactivate', ensureLoggedIn, async (req, res) => 
 
 router.post('/settings/display', ensureLoggedIn, async (req, res) => {
   const me = req.session.user;
-  const { theme, font_size, language } = req.body;
+  const { theme, font_size, language, font_family } = req.body;
   try {
     await db.exec("ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'");
   } catch (_) {}
-  const prefs = { theme: theme || 'auto', font_size: font_size || 'medium', language: language || 'bn' };
+  const ALLOWED_FONT = ['bn', 'serif', 'sans', 'mixed', 'hand', 'display', 'durnibar', 'lipi'];
+  const prefs = {
+    theme:       theme       || 'auto',
+    font_size:   font_size   || 'medium',
+    language:    language    || 'bn',
+    font_family: ALLOWED_FONT.includes(font_family) ? font_family : 'bn',
+  };
   await db.prepare('UPDATE users SET display_prefs = ? WHERE id = ?').run(JSON.stringify(prefs), me.id);
   res.redirect('/settings?ok=display');
 });

@@ -1,40 +1,173 @@
 /* ============================================
    লেখক ফোরাম — Multi-font Typography System
-   Supported: HindSiliguri, TiroBangla, Kalpurush, SolaimanLipi, Times New Roman
+   Local Bengali fonts from E:\New Bangla Font
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Tiro+Bangla:ital@0;1&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap');
-
-/* Kalpurush — local fallback via @font-face if available, else use HindSiliguri */
+/* ── Local font faces ──────────────────────────────────────────────────────── */
 @font-face {
-  font-family: 'Kalpurush';
-  src: local('Kalpurush'), local('kalpurush'), local('Kalpurush ANSI'), local('SolaimanLipi');
+  font-family: 'HindSiliguri';
+  src: url('/assets/fonts/HindSiliguri-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HindSiliguri';
+  src: url('/assets/fonts/HindSiliguri-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HindSiliguri';
+  src: url('/assets/fonts/HindSiliguri-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HindSiliguri';
+  src: url('/assets/fonts/HindSiliguri-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HindSiliguri';
+  src: url('/assets/fonts/HindSiliguri-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
   font-display: swap;
 }
 
-:root {
-  --font-bn: 'Hind Siliguri', 'SolaimanLipi', 'Kalpurush', sans-serif;
-  --font-serif: 'Tiro Bangla', 'Noto Serif Bengali', 'Times New Roman', serif;
-  --font-sans: 'Hind Siliguri', system-ui, sans-serif;
+@font-face {
+  font-family: 'Kalpurush';
+  src: url('/assets/fonts/kalpurush.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-/* Apply by user preference (saved in localStorage) */
-body.font-bn, body { font-family: var(--font-bn); }
-body.font-serif { font-family: var(--font-serif); }
-body.font-sans { font-family: var(--font-sans); }
-body.font-mixed h1, body.font-mixed h2, body.font-mixed h3 { font-family: var(--font-serif); }
-body.font-mixed { font-family: var(--font-bn); }
+@font-face {
+  font-family: 'BenSen';
+  src: url('/assets/fonts/BenSen.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
-/* Headings get serif by default for elegance */
-h1, h2, h3, h4, .post-title, .article-title, .member-name, .auth-card h1 {
-  font-family: var(--font-serif);
+@font-face {
+  font-family: 'LipiMollika';
+  src: url('/assets/fonts/Lipi%20Mollika%20Unicode.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AkhandBengali';
+  src: url('/assets/fonts/AkhandBengali.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'AkhandBengali';
+  src: url('/assets/fonts/AkhandBengali-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'AkhandBengali';
+  src: url('/assets/fonts/AkhandBengali-Extrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Durnibar';
+  src: url('/assets/fonts/Li%20Durnibar%20Unicode%20Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Olibrick';
+  src: url('/assets/fonts/Olibrick-1jn00.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RushfordPrinted';
+  src: url('/assets/fonts/RushfordPrinted-MVnDe.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── CSS custom properties ───────────────────────────────────────────────── */
+:root {
+  /* Core stack — Bengali-first */
+  --font-bn:    'HindSiliguri', 'Kalpurush', sans-serif;
+  --font-serif: 'LipiMollika', 'Kalpurush', serif;
+  --font-sans:  'HindSiliguri', sans-serif;
+  --font-hand:  'BenSen', 'HindSiliguri', sans-serif;
+  --font-display: 'AkhandBengali', 'Durnibar', serif;
+
+  /* Font sizes */
+  --fs-sm:   0.875rem;   /* 14px */
+  --fs-base: 1rem;        /* 16px default */
+  --fs-lg:   1.125rem;   /* 18px */
+  --fs-xl:   1.25rem;    /* 20px */
+  --fs-2xl:  1.5rem;     /* 24px */
+}
+
+/* ── Apply font family to body by user preference ────────────────────────── */
+body, body.font-bn    { font-family: var(--font-bn); }
+body.font-serif       { font-family: var(--font-serif); }
+body.font-sans        { font-family: var(--font-sans); }
+body.font-mixed h1,
+body.font-mixed h2,
+body.font-mixed h3 { font-family: var(--font-serif); }
+body.font-mixed       { font-family: var(--font-bn); }
+body.font-hand        { font-family: var(--font-hand); }
+body.font-display     { font-family: var(--font-display); }
+body.font-lipi       { font-family: 'LipiMollika', 'Kalpurush', serif; }
+body.font-akhand     { font-family: 'AkhandBengali', 'Durnibar', serif; }
+body.font-durnibar   { font-family: 'Durnibar', 'AkhandBengali', serif; }
+
+/* Font size preferences */
+html.fs-small  { font-size: var(--fs-sm); }
+html.fs-large  { font-size: var(--fs-lg); }
+html.fs-small body { font-size: var(--fs-sm); }
+html.fs-large body { font-size: var(--fs-lg); }
+
+/* Headings — serif elegance by default */
+h1, h2, h3, h4,
+.post-title, .article-title,
+.member-name,
+.auth-card h1,
+.leader-card h3 {
+  font-family: var(--font-display);
   font-weight: 600;
 }
 
-/* Body text — clean sans for readability */
+/* Body text */
 body, p, li, td, th, input, textarea, button, select {
   font-family: var(--font-bn);
 }
 
-/* Times New Roman fallback for English passages */
-.latin, .english { font-family: 'Times New Roman', 'Tiro Bangla', serif; }
+/* Bengali text */
+.bn-text, .bangla {
+  font-family: var(--font-bn);
+}
+
+/* Latin / English passages */
+.latin, .english {
+  font-family: 'Times New Roman', serif;
+}

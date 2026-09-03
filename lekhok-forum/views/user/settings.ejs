@@ -170,11 +170,24 @@
                 </select>
               </div>
               <div class="field">
+                <label>ফন্ট স্টাইল</label>
+                <select class="select" name="font_family">
+                  <option value="bn"       <%= (displayPrefs.font_family || 'bn') === 'bn'       ? 'selected' : '' %>>হিন্দ সিলিগুড়ি (সহজ, পড়ার জন্য আদর্শ)</option>
+                  <option value="serif"    <%= displayPrefs.font_family === 'serif'             ? 'selected' : '' %>>লিপি মল্লিকা (ক্লাসিক বাংলা সিরিফ)</option>
+                  <option value="sans"     <%= displayPrefs.font_family === 'sans'             ? 'selected' : '' %>>সিস্টেম স্ট্যান্ডার্ড (আধুনিক)</option>
+                  <option value="mixed"    <%= displayPrefs.font_family === 'mixed'             ? 'selected' : '' %>>মিশ্র (হিন্দ বডি + আখন্দ শীর্ষক)</option>
+                  <option value="hand"     <%= displayPrefs.font_family === 'hand'             ? 'selected' : '' %>>বেনসেন (হাতে লেখা স্টাইল)</option>
+                  <option value="display"  <%= displayPrefs.font_family === 'display'           ? 'selected' : '' %>>আখন্দ বাংলা (বোল্ড ডিসপ্লে)</option>
+                  <option value="durnibar"<%= displayPrefs.font_family === 'durnibar'           ? 'selected' : '' %>>দুর্নিবার (সুন্দর বাংলা সিরিফ)</option>
+                  <option value="lipi"    <%= displayPrefs.font_family === 'lipi'             ? 'selected' : '' %>>লিপি মল্লিকা (প্রিমিয়াম সিরিফ)</option>
+                </select>
+              </div>
+              <div class="field">
                 <label>ফন্ট সাইজ</label>
                 <select class="select" name="font_size">
-                  <option value="small" <%= displayPrefs.font_size === 'small' ? 'selected' : '' %>>ছোট</option>
+                  <option value="small"  <%= displayPrefs.font_size === 'small'  ? 'selected' : '' %>>ছোট</option>
                   <option value="medium" <%= (displayPrefs.font_size || 'medium') === 'medium' ? 'selected' : '' %>>মাঝারি</option>
-                  <option value="large" <%= displayPrefs.font_size === 'large' ? 'selected' : '' %>>বড়</option>
+                  <option value="large"  <%= displayPrefs.font_size === 'large'  ? 'selected' : '' %>>বড়</option>
                 </select>
               </div>
               <div class="field">
