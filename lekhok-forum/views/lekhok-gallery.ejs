@@ -62,7 +62,7 @@
                 <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
                 <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
               </a>
-              <% items.slice(1, 8).forEach(g => { %>
+              <% items.slice(1, 16).forEach(g => { %>
                 <a href="<%= g.image_url %>"
                    class="album-photo"
                    data-caption="<%= g.caption || '' %>"
@@ -71,9 +71,9 @@
                   <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
                 </a>
               <% }) %>
-              <% if (count > 8) { %>
+              <% if (count > 16) { %>
                 <a href="/gallery?category=<%= cat %>" class="album-more" title="আরো দেখুন">
-                  <span>+<%= count - 8 %></span>
+                  <span>+<%= count - 16 %></span>
                   <small>আরো দেখুন</small>
                 </a>
               <% } %>
