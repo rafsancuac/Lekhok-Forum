@@ -15,9 +15,25 @@
     <% if (error) { %><div class="error"><%= error %></div><% } %>
     <form method="POST">
       <div class="form-group"><label>প্রশ্নের বিষয় *</label><input type="text" name="title" placeholder="আপনার প্রশ্ন সংক্ষেপে লিখুন..." required></div>
-      <div class="form-group"><label>বিস্তারিত (ঐচ্ছিক)</label><textarea name="body" rows="6" placeholder="প্রসঙ্গ বা বিস্তারিত বিবরণ..."></textarea></div>
+      <div class="form-group"><label>বিস্তারিত (ঐচ্ছিক)</label><textarea id="body" name="body" rows="6" placeholder="প্রসঙ্গ বা বিস্তারিত বিবরণ..."></textarea><div class="char-counter" id="charCounter" aria-live="polite"></div></div>
       <button type="submit" class="btn-primary"><i class="fas fa-question-circle"></i> প্রশ্ন করুন</button>
     </form>
   </div>
+  <script>
+    (function () {
+      const ta = document.getElementById('body');
+      const counter = document.getElementById('charCounter');
+      const MAX = 5000, WARN = 4500;
+      const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      const toBn = n => String(n).replace(/[0-9]/g, d => bnDigits[d]);
+      function update() {
+        const len = ta.value.length;
+        counter.textContent = toBn(len) + ' / ' + toBn(MAX) + ' অক্ষর';
+        counter.className = 'char-counter' + (len > MAX ? ' is-error' : len > WARN ? ' is-warn' : '');
+        if (len > MAX) counter.textContent += ' (সীমা অতিক্রম!)';
+      }
+      if (ta && counter) { ta.addEventListener('input', update); update(); }
+    })();
+  </script>
 </body>
 </html>

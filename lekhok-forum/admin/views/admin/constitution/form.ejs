@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>লেখক ফোরাম — অ্যাডমিন প্যানেল</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1><%= item ? 'গঠনতন্ত্র সম্পাদনা' : 'নতুন গঠনতন্ত্র ধারা' %></h1>
+    <p><a href="/admin/constitution">← গঠনতন্ত্র তালিকায় ফিরে যান</a></p>
+  </div>
+  <div class="card">
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST" action="<%= item ? '/admin/constitution/' + item.id + '?_method=PUT' : '/admin/constitution' %>">
+      <div class="form-group">
+        <label>ধারার শিরোনাম *</label>
+        <input type="text" name="section_title" value="<%= item ? item.section_title : '' %>" required placeholder="যেমন: সংগঠনের নাম ও ঠিকানা">
+      </div>
+      <div class="form-group">
+        <label>বিষয়বস্তু *</label>
+        <textarea name="content" rows="10" required placeholder="এই ধারার বিস্তারিত বিধান লিখুন..."><%= item ? (item.content || '') : '' %></textarea>
+      </div>
+      <div class="form-group">
+        <label>সর্ট অর্ডার (ছোট সংখ্যা আগে)</label>
+        <input type="number" name="sort_order" value="<%= item ? (item.sort_order || 0) : 0 %>" min="0">
+      </div>
+      <button type="submit" class="btn btn-primary"><%= item ? 'আপডেট' : 'তৈরি করুন' %></button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

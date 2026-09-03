@@ -15,7 +15,15 @@
     <div class="question-full">
       <div class="question-body">
         <h1 class="question-title"><%= question.title %></h1>
-        <p class="question-detail"><%= question.body %></p>
+        <p class="question-detail"><%- question.body.replace(/\n/g, '<br>').replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>') %></p>
+        <% try { const qMentions = JSON.parse(question.mentions || '[]'); if (qMentions.length) { %>
+          <div class="mentions-row">
+            <span class="mentions-label"><i class="fas fa-at"></i> ম্যানশন:</span>
+            <% qMentions.forEach(m => { %>
+              <a href="/profile/<%= m.username %>" class="mention-chip">@<%= m.username %></a>
+            <% }); %>
+          </div>
+        <% } } catch(e) {} %>
         <div class="question-meta">
           <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="mini-avatar">
           <a href="/profile/<%= author.username %>" class="qa-author"><%= author.full_name %></a>

@@ -26,3 +26,18 @@ node_modules/
 
 # chrome-devtools-mcp (local reference only — clone separately)
 chrome-devtools-mcp/
+
+# ── v2.2: Top-level inspiration files (moved into lekhok-forum/public/docs/inspiration/) ──
+/index.html
+/about.html
+/committee.html
+/contact.html
+/notices.html
+/assets/
+/CURHS/
+/promito*.pdf
+/সরকারি-*.pdf
+/README.md
+
+# v2.2: lekhok-forum nested empty stubs (already removed)
+lekhok-forum/lekhok-forum/

@@ -32,7 +32,7 @@
           </div>
         <% } else { %>
           <% conversations.forEach(c => { %>
-            <a href="/messages/<%= c.other_username %>" class="conv-item">
+            <a href="/messages/<%= c.other_username %>" class="conv-item" data-id="<%= c.id %>">
               <img src="<%= c.other_avatar || '/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a) %>" class="conv-avatar">
               <div class="conv-info">
                 <div class="conv-name"><%= c.other_name %></div>
@@ -47,5 +47,28 @@
       </div>
     </div>
   </div>
+  <script>
+    // v2.2: 5s polling for unread badge updates
+    async function pollList() {
+      try {
+        const res = await fetch('/api/messages/unread');
+        const data = await res.json();
+        document.querySelectorAll('.conv-item').forEach(el => {
+          const id = parseInt(el.dataset.id);
+          const conv = data.conversations.find(c => c.id === id);
+          let meta = el.querySelector('.conv-meta');
+          if (!meta) return;
+          let badge = meta.querySelector('.conv-unread');
+          if (conv && conv.unread > 0) {
+            if (!badge) { badge = document.createElement('span'); badge.className = 'conv-unread'; meta.appendChild(badge); }
+            badge.textContent = conv.unread;
+          } else if (badge) {
+            badge.remove();
+          }
+        });
+      } catch (e) {}
+    }
+    setInterval(pollList, 5000);
+  </script>
 </body>
 </html>

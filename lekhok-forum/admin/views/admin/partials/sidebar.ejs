@@ -5,17 +5,19 @@
   </div>
   <nav>
     <a href="/admin"         class="<%= currentPath === '/admin' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
+    <a href="/admin/users"     class="<%= currentPath.startsWith('/admin/users')     ? 'active' : '' %>"><i class="fas fa-users-cog"></i> ইউজার</a>
+    <a href="/admin/moderators" class="<%= currentPath.startsWith('/admin/moderators') ? 'active' : '' %>"><i class="fas fa-user-shield"></i> মডারেটর</a>
     <a href="/admin/daily"     class="<%= currentPath.startsWith('/admin/daily')     ? 'active' : '' %>"><i class="fas fa-sun"></i> ডেইলি কনটেন্ট</a>
     <a href="/admin/notices"   class="<%= currentPath.startsWith('/admin/notices')   ? 'active' : '' %>"><i class="fas fa-bell"></i> বিজ্ঞপ্তি</a>
-    <a href="/admin/events"    class="<%= currentPath.startsWith('/admin/events')    ? 'active' : '' %>"><i class="fas fa-calendar"></i> ইভেন্ট</a>
+    <a href="/admin/events"    class="<%= currentPath.startsWith('/admin/events')    ? 'active' : '' %>"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
     <a href="/admin/members"   class="<%= currentPath.startsWith('/admin/members')   ? 'active' : '' %>"><i class="fas fa-users"></i> কমিটি সদস্য</a>
     <a href="/admin/gallery"   class="<%= currentPath.startsWith('/admin/gallery')   ? 'active' : '' %>"><i class="fas fa-images"></i> গ্যালারি</a>
-    <a href="/admin/complaints" class="<%= currentPath.startsWith('/admin/complaints') ? 'active' : '' %>"><i class="fas fa-user-shield"></i> অভিযোগ</a>
-    <a href="/admin/moderators" class="<%= currentPath.startsWith('/admin/moderators') ? 'active' : '' %>"><i class="fas fa-user-cog"></i> মডারেটর</a>
+    <a href="/admin/achievements" class="<%= currentPath.startsWith('/admin/achievements') ? 'active' : '' %>"><i class="fas fa-trophy"></i> অর্জন</a>
+    <a href="/admin/constitution" class="<%= currentPath.startsWith('/admin/constitution') ? 'active' : '' %>"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
+    <a href="/admin/past-leaders" class="<%= currentPath.startsWith('/admin/past-leaders') ? 'active' : '' %>"><i class="fas fa-history"></i> প্রাক্তন নেতৃত্ব</a>
     <a href="/admin/resources" class="<%= currentPath.startsWith('/admin/resources') ? 'active' : '' %>"><i class="fas fa-book"></i> রিসোর্স</a>
     <a href="/admin/messages"  class="<%= currentPath.startsWith('/admin/messages')  ? 'active' : '' %>"><i class="fas fa-envelope"></i> বার্তা</a>
     <a href="/admin/complaints" class="<%= currentPath.startsWith('/admin/complaints') ? 'active' : '' %>"><i class="fas fa-flag"></i> অভিযোগ</a>
-    <a href="/admin/moderators" class="<%= currentPath.startsWith('/admin/moderators') ? 'active' : '' %>"><i class="fas fa-user-shield"></i> মডারেটর</a>
     <a href="/admin/settings"  class="<%= currentPath.startsWith('/admin/settings')  ? 'active' : '' %>"><i class="fas fa-cog"></i> সেটিংস</a>
     <a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> সাইট দেখুন</a>
     <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> লগআউট</a>

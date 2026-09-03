@@ -39,6 +39,7 @@
           <button type="button" onclick="insertLink()">🔗 Link</button>
         </div>
         <textarea id="body" name="body" required><%= post?.body || '' %></textarea>
+        <div class="char-counter" id="charCounter" aria-live="polite"></div>
       </div>
       <button type="submit" class="btn-primary"><%= editMode ? 'সংরক্ষণ করুন' : 'প্রকাশ করুন' %></button>
     </form>
@@ -54,6 +55,22 @@
       const url = prompt('URL:');
       if (url) wrap('[', '](' + url + ')');
     }
+    // ── Bengali character counter ─────────────────────────────────────────
+    (function () {
+      const ta = document.getElementById('body');
+      const counter = document.getElementById('charCounter');
+      const MAX = 5000, WARN = 4500;
+      const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      const toBn = n => String(n).replace(/[0-9]/g, d => bnDigits[d]);
+      function update() {
+        const len = ta.value.length;
+        counter.textContent = toBn(len) + ' / ' + toBn(MAX) + ' অক্ষর';
+        counter.className = 'char-counter' + (len > MAX ? ' is-error' : len > WARN ? ' is-warn' : '');
+        if (len > MAX) counter.textContent += ' (সীমা অতিক্রম!)';
+      }
+      ta.addEventListener('input', update);
+      update();
+    })();
   </script>
 </body>
 </html>

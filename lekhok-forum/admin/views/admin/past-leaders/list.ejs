@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>লেখক ফোরাম — অ্যাডমিন প্যানেল</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>প্রাক্তন নেতৃত্ব</h1>
+    <p><%= items.length %> জন প্রাক্তন নেতা | <a href="/admin/past-leaders/new">+ নতুন প্রাক্তন নেতা</a></p>
+  </div>
+  <% if (items.length === 0) { %>
+    <div class="card empty">কোনো প্রাক্তন নেতা যোগ করা হয়নি</div>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr><th>নাম</th><th>পদ</th><th>মেয়াদ</th><th>কার্যক্রম</th></tr>
+    </thead>
+    <tbody>
+      <% items.forEach(p => { %>
+        <tr>
+          <td>
+            <% if (p.photo_url) { %><img src="<%= p.photo_url %>" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;margin-right:6px;object-fit:cover;"><% } %>
+            <strong><%= p.name %></strong>
+          </td>
+          <td><%= p.role %></td>
+          <td>
+            <%= p.term_start || '—' %> — <%= p.term_end || 'বর্তমান' %>
+          </td>
+          <td>
+            <a href="/admin/past-leaders/<%= p.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <form method="POST" action="/admin/past-leaders/<%= p.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button class="btn btn-danger btn-sm">মুছুন</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+</body>
+</html>

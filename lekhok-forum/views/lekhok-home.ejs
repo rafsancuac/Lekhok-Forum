@@ -27,6 +27,66 @@
   </div>
 </section>
 
+<% if (hasToday) { %>
+<!-- Today's daily content — auto-shows scheduled items for today -->
+<section class="section section-alt today-content reveal">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow"><i class="far fa-calendar-alt"></i> আজকের কন্টেন্ট</span>
+      <h2 class="section-title">আজ <span class="accent">বিশেষ</span> কী আছে?</h2>
+      <span class="accent-divider center"></span>
+      <p class="lead">প্রতিদিনের জন্য নির্বাচিত কুইজ, এই দিনে ইতিহাস, ই-পেপার ও সেরা লেখক — সব এক জায়গায়।</p>
+    </div>
+    <div class="today-grid reveal-stagger">
+      <% if (todayByType.quiz) { %>
+        <a href="<%= todayByType.quiz.link_url || '/daily' %>" class="today-card today-quiz">
+          <div class="today-icon"><i class="fas fa-question-circle"></i></div>
+          <h3>আজকের কুইজ</h3>
+          <p class="today-title"><%= todayByType.quiz.title %></p>
+          <% if (todayByType.quiz.body) { %><p class="today-body"><%= todayByType.quiz.body.substring(0, 110) %><%= todayByType.quiz.body.length > 110 ? '…' : '' %></p><% } %>
+          <span class="today-cta">কুইজে অংশ নিন <i class="fas fa-arrow-right"></i></span>
+        </a>
+      <% } %>
+      <% if (todayByType.this_day) { %>
+        <a href="/daily" class="today-card today-thisday">
+          <div class="today-icon"><i class="fas fa-history"></i></div>
+          <h3>এই দিনে</h3>
+          <p class="today-title"><%= todayByType.this_day.title %></p>
+          <% if (todayByType.this_day.body) { %><p class="today-body"><%= todayByType.this_day.body.substring(0, 110) %><%= todayByType.this_day.body.length > 110 ? '…' : '' %></p><% } %>
+          <span class="today-cta">বিস্তারিত পড়ুন <i class="fas fa-arrow-right"></i></span>
+        </a>
+      <% } %>
+      <% if (todayByType.activity) { %>
+        <div class="today-card today-activity">
+          <div class="today-icon"><i class="fas fa-running"></i></div>
+          <h3>আজকের কার্যক্রম</h3>
+          <p class="today-title"><%= todayByType.activity.title %></p>
+          <% if (todayByType.activity.body) { %><p class="today-body"><%= todayByType.activity.body.substring(0, 110) %><%= todayByType.activity.body.length > 110 ? '…' : '' %></p><% } %>
+        </div>
+      <% } %>
+      <% if (todayByType.epaper) { %>
+        <a href="<%= todayByType.epaper.link_url || todayByType.epaper.file_url || '/daily' %>" target="_blank" rel="noopener" class="today-card today-epaper">
+          <div class="today-icon"><i class="far fa-newspaper"></i></div>
+          <h3>আজকের ই-পেপার</h3>
+          <p class="today-title"><%= todayByType.epaper.title %></p>
+          <% if (todayByType.epaper.body) { %><p class="today-body"><%= todayByType.epaper.body.substring(0, 110) %><%= todayByType.epaper.body.length > 110 ? '…' : '' %></p><% } %>
+          <span class="today-cta">পড়ুন / ডাউনলোড <i class="fas fa-external-link-alt"></i></span>
+        </a>
+      <% } %>
+      <% if (todayByType.best_writer) { %>
+        <a href="<%= todayByType.best_writer.link_url || '/committee' %>" class="today-card today-best">
+          <div class="today-icon"><i class="fas fa-crown"></i></div>
+          <h3>সেরা লেখক</h3>
+          <p class="today-title"><%= todayByType.best_writer.title %></p>
+          <% if (todayByType.best_writer.body) { %><p class="today-body"><%= todayByType.best_writer.body.substring(0, 110) %><%= todayByType.best_writer.body.length > 110 ? '…' : '' %></p><% } %>
+          <span class="today-cta">পরিচয় দেখুন <i class="fas fa-arrow-right"></i></span>
+        </a>
+      <% } %>
+    </div>
+  </div>
+</section>
+<% } %>
+
 <!-- Mission — section-alt with reveal -->
 <section class="section section-alt reveal">
   <div class="container">

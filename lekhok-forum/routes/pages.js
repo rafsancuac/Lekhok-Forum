@@ -6,12 +6,29 @@ const db = require('../db');
 router.get('/', (req, res) => {
   const recentNotices = db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all();
   const centralMembers = db.prepare("SELECT * FROM members WHERE member_type = 'central' ORDER BY sort_order LIMIT 4").all();
+
+  // Today's daily content — split by content_type for the home page cards
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const todayRows = db.prepare(
+    "SELECT * FROM daily_content WHERE scheduled_date = ? AND published = 1 ORDER BY id"
+  ).all(today);
+  const todayByType = {
+    quiz:        todayRows.find(r => r.content_type === 'quiz')        || null,
+    this_day:    todayRows.find(r => r.content_type === 'this_day')    || null,
+    activity:    todayRows.find(r => r.content_type === 'activity')    || null,
+    epaper:      todayRows.find(r => r.content_type === 'epaper')      || null,
+    best_writer: todayRows.find(r => r.content_type === 'best_writer') || null
+  };
+  const hasToday = Object.values(todayByType).some(v => v);
+
   res.render('lekhok-home', {
     layout: 'layout',
     pageTitle: 'হোম',
     currentPath: '/',
     recentNotices,
-    centralMembers
+    centralMembers,
+    todayByType,
+    hasToday
   });
 });
 

@@ -64,6 +64,47 @@
     // Auto-scroll to bottom
     const body = document.getElementById('chatBody');
     if (body) body.scrollTop = body.scrollHeight;
+
+    // ── v2.2: 5-second polling for new messages ───────────────────────────
+    const convId = <%= conv ? conv.id : 0 %>;
+    let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
+    const userId = <%= user.id %>;
+
+    function appendMessage(msg) {
+      const div = document.createElement('div');
+      div.className = 'message' + (msg.is_me ? ' me' : '');
+      div.innerHTML = '<div class="message-bubble">' +
+        (msg.body ? msg.body : '') +
+        (msg.file_url ? '<a href="' + msg.file_url + '" class="message-file" download="' + (msg.file_name || 'file') + '"><i class="fas fa-paperclip"></i> ' + (msg.file_name || 'ফাইল') + '</a>' : '') +
+        '<div class="message-time">' + new Date(msg.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) + '</div>' +
+      '</div>';
+      body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    async function poll() {
+      if (!convId) return;
+      try {
+        const res = await fetch('/api/messages/check?conversation_id=' + convId + '&since=' + lastMsgId);
+        const msgs = await res.json();
+        if (msgs.length) {
+          msgs.forEach(m => { lastMsgId = Math.max(lastMsgId, m.id); appendMessage(m); });
+        }
+        // Also refresh sidebar unread counts
+        const r2 = await fetch('/api/messages/unread');
+        const data = await r2.json();
+        const badge = document.getElementById('unreadBadge');
+        if (badge) badge.textContent = data.totalUnread || '';
+        document.querySelectorAll('.conv-unread-dot').forEach(d => d.remove());
+        data.conversations.forEach(c => {
+          if (c.unread > 0) {
+            const dot = document.querySelector('.conv-item[data-id="' + c.id + '"] .conv-unread');
+            if (dot) dot.textContent = c.unread;
+          }
+        });
+      } catch (e) { /* silent fail */ }
+    }
+    setInterval(poll, 5000);
   </script>
 </body>
 </html>

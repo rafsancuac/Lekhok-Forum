@@ -33,8 +33,16 @@
         </div>
       </div>
       <div class="article-body">
-        <%- post.body.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>') %>
+        <%- post.body.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>').replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>') %>
       </div>
+      <% try { const mentions = JSON.parse(post.mentions || '[]'); if (mentions.length) { %>
+        <div class="mentions-row">
+          <span class="mentions-label"><i class="fas fa-at"></i> ম্যানশন:</span>
+          <% mentions.forEach(m => { %>
+            <a href="/profile/<%= m.username %>" class="mention-chip">@<%= m.username %></a>
+          <% }); %>
+        </div>
+      <% } } catch(e) {} %>
       <div class="article-footer">
         <div class="article-actions">
           <button class="action-btn-lg like-btn <%= userLiked ? 'liked' : '' %>" data-id="<%= post.id %>" data-type="post">

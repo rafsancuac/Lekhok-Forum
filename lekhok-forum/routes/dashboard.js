@@ -116,6 +116,44 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), (re
   res.redirect('/messages/' + req.params.username);
 });
 
+// ── v2.2: Messenger polling — fetch new messages since timestamp ───────
+router.get('/api/messages/check', ensureAuth, (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.query.conversation_id);
+  const since = parseInt(req.query.since) || 0; // last known message id
+  if (!convId) return res.json([]);
+  // Confirm the conversation belongs to this user
+  const conv = db.prepare('SELECT * FROM conversations WHERE id = ? AND (user_a = ? OR user_b = ?)').get(convId, me, me);
+  if (!conv) return res.json([]);
+  const rows = db.prepare(
+    'SELECT m.*, u.username AS sender_username, u.full_name AS sender_name, u.avatar_url AS sender_avatar FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.conversation_id = ? AND m.id > ? ORDER BY m.id ASC'
+  ).all(convId, since);
+  res.json(rows.map(r => ({
+    id: r.id,
+    body: r.body,
+    file_url: r.file_url,
+    file_name: r.file_name,
+    sender_id: r.sender_id,
+    sender_name: r.sender_name,
+    sender_username: r.sender_username,
+    sender_avatar: r.sender_avatar || '/avatar/' + r.sender_id,
+    is_me: r.sender_id === me,
+    created_at: r.created_at
+  })));
+});
+
+// Poll: returns all conversations with new activity since timestamp (for sidebar refresh)
+router.get('/api/messages/unread', ensureAuth, (req, res) => {
+  const me = req.session.user.id;
+  const rows = db.prepare(`
+    SELECT c.id, c.last_message_at,
+      (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) AS unread
+    FROM conversations c WHERE c.user_a = ? OR c.user_b = ?
+  `).all(me, me, me);
+  const totalUnread = rows.reduce((a, r) => a + r.unread, 0);
+  res.json({ totalUnread, conversations: rows });
+});
+
 // ── Complaints (private) ──────────────────────────────────────────────────
 router.get('/complaints', ensureAuth, (req, res) => {
   const mine = db.prepare('SELECT * FROM complaints WHERE submitted_by = ? ORDER BY created_at DESC').all(req.session.user.id);

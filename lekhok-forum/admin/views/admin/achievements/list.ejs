@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>লেখক ফোরাম — অ্যাডমিন প্যানেল</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>অর্জনসমূহ</h1>
+    <p><%= items.length %> টি অর্জন | <a href="/admin/achievements/new">+ নতুন অর্জন</a></p>
+  </div>
+  <% if (items.length === 0) { %>
+    <div class="card empty">কোনো অর্জন যোগ করা হয়নি</div>
+  <% } else { %>
+  <table>
+    <thead>
+      <tr><th>শিরোনাম</th><th>প্রাপক</th><th>সাল</th><th>তারিখ</th><th>কার্যক্রম</th></tr>
+    </thead>
+    <tbody>
+      <% items.forEach(a => { %>
+        <tr>
+          <td><strong><%= a.title %></strong></td>
+          <td><%= a.recipient_name || '—' %></td>
+          <td><%= a.year || '—' %></td>
+          <td><%= a.achievement_date || '—' %></td>
+          <td>
+            <a href="/admin/achievements/<%= a.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <form method="POST" action="/admin/achievements/<%= a.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+              <button class="btn btn-danger btn-sm">মুছুন</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+</body>
+</html>

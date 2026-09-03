@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>লেখক ফোরাম — অ্যাডমিন প্যানেল</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1><%= item ? 'প্রাক্তন নেতা সম্পাদনা' : 'নতুন প্রাক্তন নেতা' %></h1>
+    <p><a href="/admin/past-leaders">← প্রাক্তন নেতা তালিকায় ফিরে যান</a></p>
+  </div>
+  <div class="card">
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST" action="<%= item ? '/admin/past-leaders/' + item.id + '?_method=PUT' : '/admin/past-leaders' %>" enctype="multipart/form-data">
+      <div class="form-group">
+        <label>নাম *</label>
+        <input type="text" name="name" value="<%= item ? item.name : '' %>" required placeholder="পুরো নাম লিখুন">
+      </div>
+      <div class="form-group">
+        <label>পদ *</label>
+        <input type="text" name="role" value="<%= item ? item.role : '' %>" required placeholder="যেমন: সভাপতি, সাধারণ সম্পাদক">
+      </div>
+      <div class="form-group">
+        <label>মেয়াদ শুরু (সাল)</label>
+        <input type="text" name="term_start" value="<%= item ? (item.term_start || '') : '' %>" placeholder="যেমন: ২০১৮">
+      </div>
+      <div class="form-group">
+        <label>মেয়াদ শেষ (সাল)</label>
+        <input type="text" name="term_end" value="<%= item ? (item.term_end || '') : '' %>" placeholder="খালি রাখলে 'বর্তমান' দেখাবে">
+      </div>
+      <div class="form-group">
+        <label>ছবির URL (ঐচ্ছিক)</label>
+        <input type="text" name="photo_url" value="<%= item ? (item.photo_url || '') : '' %>" placeholder="/uploads/leaders/foo.jpg">
+      </div>
+      <div class="form-group">
+        <label>সংক্ষিপ্ত পরিচিতি</label>
+        <textarea name="bio" rows="5" placeholder="নেতার সংক্ষিপ্ত পরিচিতি লিখুন..."><%= item ? (item.bio || '') : '' %></textarea>
+      </div>
+      <div class="form-group">
+        <label>প্রদর্শন ক্রম</label>
+        <input type="number" name="display_order" value="<%= item ? (item.display_order || 0) : 0 %>" min="0">
+        <small style="color:#777;">ছোট সংখ্যা আগে দেখানো হবে</small>
+      </div>
+      <button type="submit" class="btn btn-primary"><%= item ? 'আপডেট' : 'তৈরি করুন' %></button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -28,6 +28,17 @@ function linkify(text) {
   return s;
 }
 
+// Extract @mentions from post body — returns JSON array of {username, user_id} for valid users
+function extractMentions(text) {
+  if (!text) return JSON.stringify([]);
+  const matches = text.match(/@([a-zA-Z0-9_]+)/g) || [];
+  const usernames = [...new Set(matches.map(m => m.substring(1).toLowerCase()))];
+  if (!usernames.length) return JSON.stringify([]);
+  const placeholders = usernames.map(() => '?').join(',');
+  const users = db.prepare(`SELECT id, username FROM users WHERE LOWER(username) IN (${placeholders})`).all(...usernames);
+  return JSON.stringify(users.map(u => ({ id: u.id, username: u.username })));
+}
+
 // ── Article list ─────────────────────────────────────────────────────────────
 router.get('/articles', (req, res) => {
   const tag = req.query.tag;
@@ -58,9 +69,24 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), (req, res)
     return res.render('user/article-form', { post: req.body, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক', currentPath: '/articles/new' });
   }
   const cover = req.file ? '/uploads/covers/' + req.file.filename : (cover_image || null);
-  const result = db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?)`).run(
-    req.session.user.id, title, body, excerpt || body.substring(0, 200), cover, tags || null, category || 'general'
+  const mentions = extractMentions(body);
+  const result = db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?, ?)`).run(
+    req.session.user.id, title, body, excerpt || body.substring(0, 200), cover, tags || null, mentions, category || 'general'
   );
+
+  // Send notifications to mentioned users
+  try {
+    const mentioned = JSON.parse(mentions);
+    const postId = result.lastInsertRowid;
+    mentioned.forEach(m => {
+      if (m.id !== req.session.user.id) {
+        db.prepare(`INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, 'mention', ?, ?, ?)`).run(
+          m.id, 'ম্যানশন', req.session.user.full_name + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId
+        );
+      }
+    });
+  } catch (e) {}
+
   res.redirect('/articles/' + result.lastInsertRowid);
 });
 
@@ -198,7 +224,22 @@ router.get(['/qa/new', '/questions/new'], ensureLoggedIn, (req, res) => {
 router.post(['/qa/new', '/questions/new'], ensureLoggedIn, (req, res) => {
   const { title, body, category, tags } = req.body;
   if (!title || !body) return res.render('user/qa-form', { post: req.body, error: 'শিরোনাম ও প্রশ্ন আবশ্যক', currentPath: '/qa/new' });
-  const r = db.prepare(`INSERT INTO posts (author_id, type, title, body, category, tags) VALUES (?, 'question', ?, ?, ?, ?)`).run(req.session.user.id, title, body, category || 'general', tags || null);
+  const mentions = extractMentions(body);
+  const r = db.prepare(`INSERT INTO posts (author_id, type, title, body, category, tags, mentions) VALUES (?, 'question', ?, ?, ?, ?, ?)`).run(req.session.user.id, title, body, category || 'general', tags || null, mentions);
+
+  // Send notifications to mentioned users
+  try {
+    const mentioned = JSON.parse(mentions);
+    const postId = r.lastInsertRowid;
+    mentioned.forEach(m => {
+      if (m.id !== req.session.user.id) {
+        db.prepare(`INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, 'mention', ?, ?, ?)`).run(
+          m.id, 'ম্যানশন', req.session.user.full_name + ' আপনাকে একটি প্রশ্নে ম্যানশন করেছেন', '/qa/' + postId
+        );
+      }
+    });
+  } catch (e) {}
+
   res.redirect('/qa/' + r.lastInsertRowid);
 });
 

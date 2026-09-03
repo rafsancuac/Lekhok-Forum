@@ -1,0 +1,110 @@
+<%- include('../partials/header', { adminUser, currentPath, pageTitle: u.full_name + ' — সম্পাদনা' }) %>
+
+<div class="admin-page">
+  <div class="page-head">
+    <h1><i class="fas fa-user-edit"></i> ইউজার সম্পাদনা</h1>
+    <a href="/admin/users" class="btn btn-ghost"><i class="fas fa-arrow-left"></i> ফিরে যান</a>
+  </div>
+
+  <div class="edit-grid">
+    <!-- Left: profile snapshot -->
+    <div class="profile-card">
+      <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="profile-avatar-lg">
+      <h2><%= u.full_name || u.username %></h2>
+      <p class="muted">@<%= u.username %></p>
+      <% if (u.email) { %><p><i class="fas fa-envelope"></i> <%= u.email %></p><% } %>
+      <% if (u.bio) { %><p class="bio">"<%= u.bio %>"</p><% } %>
+      <div class="stat-row">
+        <div class="stat-mini"><strong><%= postCount %></strong><span>পোস্ট</span></div>
+        <div class="stat-mini"><strong><%= followerCount %></strong><span>ফলোয়ার</span></div>
+        <div class="stat-mini"><strong><%= complaintCount %></strong><span>অভিযোগ</span></div>
+      </div>
+      <a href="/profile/<%= u.username %>" target="_blank" class="btn btn-outline" style="width:100%;margin-top:14px;">
+        <i class="fas fa-external-link-alt"></i> পাবলিক প্রোফাইল দেখুন
+      </a>
+    </div>
+
+    <!-- Right: edit forms -->
+    <div class="edit-forms">
+      <!-- Role + Status -->
+      <form method="POST" action="/admin/users/<%= u.id %>/role" class="data-card">
+        <h3><i class="fas fa-user-tag"></i> রোল ও স্ট্যাটাস</h3>
+        <div class="form-row">
+          <label>রোল
+            <select name="role" class="form-input">
+              <option value="user"      <%= u.role === 'user' ? 'selected' : '' %>>ইউজার</option>
+              <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>মডারেটর</option>
+              <option value="admin"     <%= u.role === 'admin' ? 'selected' : '' %>>এডমিন</option>
+            </select>
+          </label>
+          <label>স্ট্যাটাস
+            <select name="status" class="form-input">
+              <option value="active"  <%= u.status === 'active' ? 'selected' : '' %>>সক্রিয়</option>
+              <option value="pending" <%= u.status === 'pending' ? 'selected' : '' %>>অপেক্ষমাণ</option>
+              <option value="banned"  <%= u.status === 'banned' ? 'selected' : '' %>>নিষিদ্ধ</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+        <p class="hint">মডারেটর বানালে ডিফল্টভাবে daily/notices/events scopes যোগ হবে।</p>
+      </form>
+
+      <!-- Scopes (if moderator) -->
+      <% if (u.role === 'moderator' || u.role === 'admin') { %>
+        <form method="POST" action="/admin/users/<%= u.id %>/scopes" class="data-card">
+          <h3><i class="fas fa-key"></i> মডারেটর স্কোপ</h3>
+          <p class="hint">এই ইউজার কোন কোন কাজ করতে পারবে তা নির্বাচন করুন।</p>
+          <div class="scope-grid">
+            <% ADMIN_SCOPES.forEach(s => { %>
+              <label class="scope-check">
+                <input type="checkbox" name="scopes" value="<%= s.key %>" <%= scopes.includes(s.key) ? 'checked' : '' %>>
+                <span><i class="fas fa-check-circle"></i> <%= s.label %></span>
+              </label>
+            <% }); %>
+          </div>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> স্কোপ সংরক্ষণ</button>
+        </form>
+      <% } %>
+
+      <!-- Danger zone -->
+      <% if (u.id !== adminUser.id) { %>
+        <div class="data-card danger-zone">
+          <h3><i class="fas fa-exclamation-triangle"></i> বিপদ অঞ্চল</h3>
+          <p>এই ইউজারকে নিষিদ্ধ (ban) করতে উপরের স্ট্যাটাস ড্রপডাউন থেকে "নিষিদ্ধ" নির্বাচন করুন।</p>
+        </div>
+      <% } else { %>
+        <div class="data-card"><p class="muted"><i class="fas fa-info-circle"></i> আপনি নিজে — আপনার নিজের এডিট থেকে বিরত থাকুন।</p></div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<style>
+.edit-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+@media (max-width: 768px) { .edit-grid { grid-template-columns: 1fr; } }
+.profile-card { background: white; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.profile-avatar-lg { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 12px; object-fit: cover; border: 4px solid #C5A059; }
+.profile-card h2 { margin: 6px 0 2px; color: #0a1f44; }
+.muted { color: #94a3b8; font-size: 14px; }
+.bio { font-style: italic; color: #64748b; margin: 12px 0; font-size: 14px; }
+.stat-row { display: flex; gap: 8px; margin-top: 14px; }
+.stat-mini { flex: 1; background: #f1f5f9; padding: 10px 4px; border-radius: 8px; }
+.stat-mini strong { display: block; font-size: 20px; color: #0a1f44; }
+.stat-mini span { font-size: 11px; color: #64748b; }
+.scope-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
+.scope-check { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; cursor: pointer; }
+.scope-check input { width: 18px; height: 18px; }
+.scope-check span { color: #1e293b; font-size: 14px; }
+.danger-zone { border-left: 4px solid #dc2626; background: #fef2f2; }
+.danger-zone h3 { color: #dc2626; }
+.user-cell { display: flex; align-items: center; gap: 10px; }
+.user-avatar-sm { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.user-name-link { color: #0a1f44; font-weight: 600; }
+.user-username { font-size: 12px; color: #94a3b8; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.status-active  { background: #16a34a; }
+.status-pending { background: #f59e0b; }
+.status-banned  { background: #dc2626; }
+</style>
+
+<%- include('../partials/footer') %>

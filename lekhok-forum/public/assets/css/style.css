@@ -824,3 +824,94 @@ a.notice-card-link .notice-item { margin: 0; }
 @media (max-width: 480px) {
   .hero.curhs .hero-title { font-size: 30px; }
 }
+
+/* ── v2.2: Today's content cards (auto from daily_content) ─────────────── */
+.today-content { position: relative; }
+.today-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+.today-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 24px;
+  background: var(--bg-card, #fff);
+  border: 1px solid rgba(197, 160, 89, 0.22);
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  overflow: hidden;
+  isolation: isolate;
+}
+.today-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.10), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  z-index: -1;
+}
+.today-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(10, 31, 68, 0.12);
+  border-color: var(--accent, #C5A059);
+}
+.today-card:hover::before { opacity: 1; }
+.today-icon {
+  width: 48px; height: 48px;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent, #C5A059), #a78644);
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 16px rgba(197, 160, 89, 0.32);
+}
+.today-card h3 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent, #C5A059);
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+.today-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main, #0a1f44);
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+.today-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted, #5a6378);
+  margin: 0 0 14px;
+  flex: 1;
+}
+.today-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent, #C5A059);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+}
+.today-cta i { transition: transform 0.22s ease; }
+.today-card:hover .today-cta i { transform: translateX(4px); }
+.today-quiz      { border-left: 4px solid #C5A059; }
+.today-thisday   { border-left: 4px solid #0a1f44; }
+.today-activity  { border-left: 4px solid #2c8a6b; }
+.today-epaper    { border-left: 4px solid #b14444; }
+.today-best      { border-left: 4px solid #8b6fc4; }
+
+@media (max-width: 640px) {
+  .today-grid { grid-template-columns: 1fr; }
+  .today-card { padding: 20px 18px; }
+}

@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { broadcastToAll } = require('../helpers/notify');
-const { galleryUpload, withUpload } = require('../middleware/upload');
+const { galleryUpload, attachmentUpload, withUpload } = require('../middleware/upload');
 const getSetting = db.getSetting;
 const setSetting = db.setSetting;
 
@@ -427,6 +427,36 @@ router.post('/users/:id/role', requireAdmin, (req, res) => {
   res.redirect('/admin/moderators');
 });
 
+// ── v2.2: User management (full list + edit) ──────────────────────────────────
+router.get('/users', requireAdmin, (req, res) => {
+  const q = (req.query.q || '').trim();
+  const roleFilter = req.query.role || '';
+  const statusFilter = req.query.status || '';
+  let sql = `SELECT u.id, u.username, u.full_name, u.email, u.role, u.status, u.gender, u.created_at, u.last_login,
+                    (SELECT COUNT(*) FROM posts p WHERE p.author_id = u.id) AS post_count,
+                    (SELECT COUNT(*) FROM follows f WHERE f.following_id = u.id) AS follower_count
+             FROM users u WHERE 1=1`;
+  const params = [];
+  if (q) { sql += ' AND (u.username LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)'; params.push('%' + q + '%', '%' + q + '%', '%' + q + '%'); }
+  if (roleFilter)   { sql += ' AND u.role = ?';   params.push(roleFilter); }
+  if (statusFilter) { sql += ' AND u.status = ?'; params.push(statusFilter); }
+  sql += ' ORDER BY u.created_at DESC LIMIT 200';
+  const users = db.prepare(sql).all(...params);
+  res.render('admin/users/list', { users, q, roleFilter, statusFilter, currentPath: '/admin/users' });
+});
+
+router.get('/users/:id/edit', requireAdmin, (req, res) => {
+  const u = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
+  if (!u) return res.redirect('/admin/users');
+  const scopes = db.prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(u.id).map(r => r.scope);
+  const postCount = db.prepare('SELECT COUNT(*) AS c FROM posts WHERE author_id = ?').get(u.id).c;
+  const complaintCount = db.prepare('SELECT COUNT(*) AS c FROM complaints WHERE submitted_by = ?').get(u.id).c;
+  const followerCount = db.prepare('SELECT COUNT(*) AS c FROM follows WHERE following_id = ?').get(u.id).c;
+  res.render('admin/users/edit', {
+    u, scopes, postCount, complaintCount, followerCount, ADMIN_SCOPES, currentPath: '/admin/users'
+  });
+});
+
 // Update a moderator's scopes
 router.post('/users/:id/scopes', requireAdmin, (req, res) => {
   const target = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
@@ -439,6 +469,94 @@ router.post('/users/:id/scopes', requireAdmin, (req, res) => {
     }
   });
   res.redirect('/admin/moderators');
+});
+
+// ── v2.2: Achievements CRUD ──────────────────────────────────────────────────
+router.get('/achievements', requireAdmin, (req, res) => {
+  const items = db.prepare('SELECT * FROM achievements ORDER BY year DESC, id DESC').all();
+  res.render('admin/achievements/list', { items, currentPath: '/admin/achievements' });
+});
+router.get('/achievements/new', requireAdmin, (req, res) => {
+  res.render('admin/achievements/form', { item: null, currentPath: '/admin/achievements' });
+});
+router.post('/achievements', requireAdmin, withUpload(attachmentUpload), (req, res) => {
+  const { title, recipient_name, year, description } = req.body;
+  const image_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.image_url || null);
+  db.prepare('INSERT INTO achievements (title, recipient_name, year, description, image_url) VALUES (?, ?, ?, ?, ?)').run(title, recipient_name, parseInt(year) || null, description || null, image_url);
+  res.redirect('/admin/achievements');
+});
+router.get('/achievements/:id/edit', requireAdmin, (req, res) => {
+  const item = db.prepare('SELECT * FROM achievements WHERE id = ?').get(req.params.id);
+  if (!item) return res.redirect('/admin/achievements');
+  res.render('admin/achievements/form', { item, currentPath: '/admin/achievements' });
+});
+router.post('/achievements/:id', requireAdmin, withUpload(attachmentUpload), (req, res) => {
+  const { title, recipient_name, year, description } = req.body;
+  const image_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.image_url || null);
+  db.prepare('UPDATE achievements SET title=?, recipient_name=?, year=?, description=?, image_url=? WHERE id=?').run(title, recipient_name, parseInt(year) || null, description || null, image_url, req.params.id);
+  res.redirect('/admin/achievements');
+});
+router.post('/achievements/:id/delete', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM achievements WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/achievements');
+});
+
+// ── v2.2: Constitution CRUD ──────────────────────────────────────────────────
+router.get('/constitution', requireAdmin, (req, res) => {
+  const items = db.prepare('SELECT * FROM constitution ORDER BY sort_order, id').all();
+  res.render('admin/constitution/list', { items, currentPath: '/admin/constitution' });
+});
+router.get('/constitution/new', requireAdmin, (req, res) => {
+  res.render('admin/constitution/form', { item: null, currentPath: '/admin/constitution' });
+});
+router.post('/constitution', requireAdmin, (req, res) => {
+  const { section_title, content, sort_order } = req.body;
+  db.prepare('INSERT INTO constitution (section_title, content, sort_order) VALUES (?, ?, ?)').run(section_title, content, parseInt(sort_order) || 0);
+  res.redirect('/admin/constitution');
+});
+router.get('/constitution/:id/edit', requireAdmin, (req, res) => {
+  const item = db.prepare('SELECT * FROM constitution WHERE id = ?').get(req.params.id);
+  if (!item) return res.redirect('/admin/constitution');
+  res.render('admin/constitution/form', { item, currentPath: '/admin/constitution' });
+});
+router.post('/constitution/:id', requireAdmin, (req, res) => {
+  const { section_title, content, sort_order } = req.body;
+  db.prepare('UPDATE constitution SET section_title=?, content=?, sort_order=? WHERE id=?').run(section_title, content, parseInt(sort_order) || 0, req.params.id);
+  res.redirect('/admin/constitution');
+});
+router.post('/constitution/:id/delete', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM constitution WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/constitution');
+});
+
+// ── v2.2: Past leaders CRUD ──────────────────────────────────────────────────
+router.get('/past-leaders', requireAdmin, (req, res) => {
+  const items = db.prepare('SELECT * FROM past_leaders ORDER BY term_start DESC, id DESC').all();
+  res.render('admin/past-leaders/list', { items, currentPath: '/admin/past-leaders' });
+});
+router.get('/past-leaders/new', requireAdmin, (req, res) => {
+  res.render('admin/past-leaders/form', { item: null, currentPath: '/admin/past-leaders' });
+});
+router.post('/past-leaders', requireAdmin, withUpload(attachmentUpload), (req, res) => {
+  const { name, role, term_start, term_end, bio } = req.body;
+  const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
+  db.prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, bio) VALUES (?, ?, ?, ?, ?, ?)').run(name, role, term_start || null, term_end || null, photo_url, bio || null);
+  res.redirect('/admin/past-leaders');
+});
+router.get('/past-leaders/:id/edit', requireAdmin, (req, res) => {
+  const item = db.prepare('SELECT * FROM past_leaders WHERE id = ?').get(req.params.id);
+  if (!item) return res.redirect('/admin/past-leaders');
+  res.render('admin/past-leaders/form', { item, currentPath: '/admin/past-leaders' });
+});
+router.post('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), (req, res) => {
+  const { name, role, term_start, term_end, bio } = req.body;
+  const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
+  db.prepare('UPDATE past_leaders SET name=?, role=?, term_start=?, term_end=?, photo_url=?, bio=? WHERE id=?').run(name, role, term_start || null, term_end || null, photo_url, bio || null, req.params.id);
+  res.redirect('/admin/past-leaders');
+});
+router.post('/past-leaders/:id/delete', requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM past_leaders WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/past-leaders');
 });
 
 module.exports = router;

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>লেখক ফোরাম — অ্যাডমিন প্যানেল</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/maateen/font-solaimanlipi@master/src/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1><%= item ? 'অর্জন সম্পাদনা' : 'নতুন অর্জন' %></h1>
+    <p><a href="/admin/achievements">← অর্জন তালিকায় ফিরে যান</a></p>
+  </div>
+  <div class="card">
+    <% if (error) { %><div class="error"><%= error %></div><% } %>
+    <form method="POST" action="<%= item ? '/admin/achievements/' + item.id + '?_method=PUT' : '/admin/achievements' %>">
+      <div class="form-group">
+        <label>শিরোনাম *</label>
+        <input type="text" name="title" value="<%= item ? item.title : '' %>" required placeholder="যেমন: জাতীয় কলাম প্রতিযোগিতায় প্রথম">
+      </div>
+      <div class="form-group">
+        <label>প্রাপকের নাম</label>
+        <input type="text" name="recipient_name" value="<%= item ? (item.recipient_name || '') : '' %>" placeholder="যেমন: আব্দুল্লাহ আল মামুন">
+      </div>
+      <div class="form-group">
+        <label>সাল</label>
+        <input type="number" name="year" value="<%= item ? (item.year || '') : '' %>" placeholder="যেমন: ২০২৫" min="1900" max="2100">
+      </div>
+      <div class="form-group">
+        <label>অর্জনের তারিখ (ISO)</label>
+        <input type="date" name="achievement_date" value="<%= item ? (item.achievement_date || '') : '' %>">
+      </div>
+      <div class="form-group">
+        <label>বিবরণ</label>
+        <textarea name="description" rows="6" placeholder="অর্জন সম্পর্কে বিস্তারিত লিখুন..."><%= item ? (item.description || '') : '' %></textarea>
+      </div>
+      <div class="form-group">
+        <label>ছবির URL (ঐচ্ছিক)</label>
+        <input type="text" name="image_url" value="<%= item ? (item.image_url || '') : '' %>" placeholder="/uploads/achievements/foo.jpg">
+      </div>
+      <button type="submit" class="btn btn-primary"><%= item ? 'আপডেট' : 'তৈরি করুন' %></button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
