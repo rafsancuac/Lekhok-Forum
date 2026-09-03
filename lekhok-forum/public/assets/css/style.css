@@ -485,6 +485,49 @@ ul { list-style: none; padding: 0; margin: 0; }
 .hotline-card .num { display: block; font-size: 1.8rem; color: var(--brand); font-weight: bold; margin-bottom: 6px; }
 .hotline-card span:last-child { color: #666; font-size: 0.9rem; }
 
+/* Campus channel (FB group/page/email/phone) — top row of campus section */
+.campus-channel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 24px 0 36px; }
+.campus-channel-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 20px 14px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); text-decoration: none; color: var(--text);
+  transition: var(--transition); text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.campus-channel-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow); }
+.campus-channel-card .ch-icon {
+  width: 48px; height: 48px; display: grid; place-items: center;
+  border-radius: 50%; background: var(--accent-soft); color: var(--accent);
+  font-size: 20px;
+}
+.campus-channel-card .ch-title { font-weight: 700; font-size: 15px; }
+.campus-channel-card .ch-desc { color: var(--text-muted); font-size: 12px; }
+
+.campus-resource-section { margin-top: 32px; }
+.campus-resource-section .crs-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 18px; font-weight: 700; color: var(--brand);
+  margin: 0 0 16px; padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent-soft);
+}
+.campus-resource-section .crs-title i { color: var(--accent); font-size: 20px; }
+.campus-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.campus-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); text-decoration: none; color: var(--text);
+  transition: var(--transition);
+}
+.campus-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow); }
+.campus-card.static { cursor: default; }
+.campus-card .cc-icon {
+  flex-shrink: 0; width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: var(--radius); background: var(--accent-soft); color: var(--accent);
+  font-size: 18px;
+}
+.campus-card strong { display: block; font-size: 14px; font-weight: 600; }
+.campus-card span { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
 /* ============================================
    v2 — CURHS-style Design Enhancements
    ============================================ */
