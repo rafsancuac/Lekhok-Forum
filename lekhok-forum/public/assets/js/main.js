@@ -208,11 +208,24 @@ window.toggleMega = toggleMega;
 window.closeMega = closeMega;
 
 /* ── Notification bell + user dropdown toggles (header onclick) ── */
+/* Bell খোলামাত্র সব নোটিফিকেশন "পঠিত" — ব্যাজ (১,২,৩) সাথে সাথে অদৃশ্য (DB-তেও is_read=1) */
+function clearNotifBadge() {
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  badge.remove();
+  document.querySelectorAll('#notifList .notif-item.unread')
+    .forEach(el => el.classList.remove('unread'));
+  fetch('/api/notifications/read', { method: 'POST' }).catch(function () {});
+}
 function toggleNotifs() {
   const dd = document.getElementById('notifDropdown');
   const ud = document.getElementById('userDropdown');
   if (ud) ud.classList.remove('open');
-  if (dd) dd.classList.toggle('open');
+  if (dd) {
+    const opening = !dd.classList.contains('open');
+    dd.classList.toggle('open');
+    if (opening) clearNotifBadge();
+  }
 }
 function toggleUserMenu() {
   const dd = document.getElementById('userDropdown');
