@@ -93,7 +93,7 @@
                     <%- include('../partials/actions-bar', {
                       targetId: c.id, targetType: 'comment',
                       counts: c.reaction.counts, mine: c.reaction.mine,
-                      link: '/articles/' + post.id, showBookmark: false
+                      link: '/articles/' + post.id, showBookmark: false, showShare: false
                     }) %>
                   <% } %>
                 </div>

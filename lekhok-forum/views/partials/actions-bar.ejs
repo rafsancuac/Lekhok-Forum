@@ -3,6 +3,7 @@
   // Params: targetId, targetType ('post'|'comment'), counts {like..sad}, mine, link,
   //         bookmarked (optional bool), showBookmark (optional, default true)
   if (typeof showBookmark === 'undefined') showBookmark = true;
+  if (typeof showShare === 'undefined') showShare = true;
   if (typeof bookmarked === 'undefined') bookmarked = false;
   var _meta = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' };
   var _labels = { like: 'লাইক', love: 'ভালোবাসা', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
@@ -32,6 +33,7 @@
 
   <span class="ab-spacer"></span>
 
+  <% if (showShare) { %>
   <div class="share-wrap">
     <button type="button" class="reaction-btn share-trigger"><i class="far fa-share-square"></i> শেয়ার</button>
     <div class="share-menu" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>" data-share-post="<%= targetType === 'post' ? targetId : '' %>">
@@ -48,6 +50,7 @@
       <% } %>
     </div>
   </div>
+  <% } %>
 
   <% if (showBookmark && user) { %>
     <button type="button" class="reaction-btn bookmark-btn <%= bookmarked ? 'active' : '' %>" data-bookmark-id="<%= targetId %>" aria-label="সংরক্ষণ">

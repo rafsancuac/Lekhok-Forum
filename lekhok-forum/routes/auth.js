@@ -122,13 +122,13 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
 
   // Preserve current avatar unless a new file was uploaded.
   // req.file.url is correct in BOTH modes: local → /uploads/avatars/…, Vercel → blob https URL
-  const avatarPath = req.file ? (req.file.url || req.file.path) : (u.avatar_url || null);
+  const avatarPath = req.file ? (req.file.url || req.file.path) : undefined;
   // Treat empty strings as null for nullable fields. The form always sends every field, so a blank
   // value is the user's intent to clear it.
   const clean = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();
   if (passwordHash) {
     await db.prepare(
-      `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=?, password_hash=? WHERE id=?`
+      `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url), password_hash=? WHERE id=?`
     ).run(
       full_name.trim(),
       clean(email),
@@ -151,7 +151,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     );
   } else {
     await db.prepare(
-      `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=? WHERE id=?`
+      `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url) WHERE id=?`
     ).run(
       full_name.trim(),
       clean(email),
@@ -174,6 +174,9 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
   }
   // Re-read the full user record so session reflects every updated field (including avatar_url).
   const updated = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  if (!updated || !updated.username) {
+    return res.redirect('/profile/edit?err=' + encodeURIComponent('প্রোফাইল আপডেটে সমস্যা হয়েছে'));
+  }
   req.session.user = {
     id: updated.id,
     username: updated.username,
@@ -182,7 +185,15 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     gender: updated.gender,
     role: updated.role || 'user'
   };
-  res.redirect('/profile/' + updated.username + '?updated=1' + (passwordHash ? '&pwd=1' : ''));
+  // Explicitly save session before redirect — required on serverless (Vercel)
+  // where the response is sent before the async session write completes.
+  return new Promise((resolve) => {
+    req.session.save((err) => {
+      if (err) console.error('[auth] /profile/edit session save error:', err);
+      res.redirect('/profile/' + updated.username + '?updated=1' + (passwordHash ? '&pwd=1' : ''));
+      resolve();
+    });
+  });
 });
 
 module.exports = router;

@@ -22,6 +22,8 @@
 .clickable-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
 .clickable-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
 .click-hint { display: block; text-align: center; color: var(--accent, #059669); font-size: 0.75rem; margin-top: 6px; opacity: 0.7; }
+.profile-link-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 3px 10px; background: var(--accent-soft, rgba(5,150,105,0.1)); color: var(--accent, #059669); border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+.leader-card.linked-member { text-decoration: none; color: inherit; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,31,68,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; animation: fadeIn 0.2s ease; }
 .modal-overlay.open { display: flex; }
 .modal-dialog { background: white; border-radius: 16px; max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease; }
@@ -60,22 +62,36 @@
     <% if (central && central.length) { %>
       <div class="leaders-grid reveal-stagger">
         <% central.forEach(m => { %>
-          <div class="leader-card has-image clickable-card"
-               onclick="openMemberModal('<%= m.id %>')"
-               data-member="<%= m.id %>"
-               data-name="<%= m.name.replace(/'/g, '&#39;') %>"
-               data-role="<%= m.role.replace(/'/g, '&#39;') %>"
-               data-designation="<%= (m.designation || '').replace(/'/g, '&#39;') %>"
-               data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
-               data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
-            <img src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="<%= m.name %>" loading="lazy" />
-            <div class="leader-body">
-              <h3><%= m.name %></h3>
-              <p class="role"><%= m.role %></p>
-              <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
-              <small class="click-hint"><i class="fas fa-hand-pointer"></i> বিস্তারিত দেখুন</small>
+          <% const displayName = m.user_full_name || m.name; %>
+          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% if (m.user_username) { %>
+            <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
+              </div>
+            </a>
+          <% } else { %>
+            <div class="leader-card has-image clickable-card"
+                 onclick="openMemberModal('<%= m.id %>')"
+                 data-member="<%= m.id %>"
+                 data-name="<%= m.name.replace(/'/g, '&#39;') %>"
+                 data-role="<%= m.role.replace(/'/g, '&#39;') %>"
+                 data-designation="<%= (m.designation || '').replace(/'/g, '&#39;') %>"
+                 data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
+                 data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                <small class="click-hint"><i class="fas fa-hand-pointer"></i> বিস্তারিত দেখুন</small>
+              </div>
             </div>
-          </div>
+          <% } %>
         <% }) %>
       </div>
     <% } else { %>

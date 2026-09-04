@@ -47,9 +47,16 @@ router.get('/committee', async (req, res) => {
   const yearRows = await db.prepare("SELECT DISTINCT term_year FROM members WHERE term_year IS NOT NULL ORDER BY term_year DESC").all();
   const years = yearRows.map(r => r.term_year).filter(Boolean);
   const selectedYear = req.query.year && years.includes(req.query.year) ? req.query.year : (years[0] || '২০২৫-২০২৬');
-  const central = await db.prepare(
-    "SELECT * FROM members WHERE member_type = 'central' AND term_year = ? ORDER BY sort_order"
-  ).all(selectedYear);
+  // LEFT JOIN users so members linked to a user account show that user's
+  // avatar/username (and become clickable to their profile).
+  const central = await db.prepare(`
+    SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+           u.full_name AS user_full_name, u.designation AS user_designation
+    FROM members m
+    LEFT JOIN users u ON u.id = m.user_id
+    WHERE m.member_type = 'central' AND m.term_year = ?
+    ORDER BY m.sort_order
+  `).all(selectedYear);
   res.render('lekhok-committee', {
     layout: 'layout',
     pageTitle: 'সংগঠন',
