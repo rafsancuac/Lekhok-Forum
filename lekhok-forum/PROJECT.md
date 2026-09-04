@@ -416,6 +416,24 @@ UX কনফিউশন। আর মডারেটর সিস্টেম �
 **টেস্ট:** ২১-চেক E2E (`scripts/test-login-fixes.sh` — অ্যাডমিন/মডারেটর/ইউজার লগইন ফ্লো,
 দুই প্যানেলে scope অ্যাক্সেস, 403/302 গার্ড) + ৯১-চেক ফুল regression — **সব ALL GREEN**।
 
+### সেশন ৯ (৪ সেপ্টেম্বর ২০২৬) — 'daily' umbrella scope-এর বাকি থাকা ফাঁক
+সেশন ৮-এর scope-unification ফিক্স যাচাই করতে গিয়ে একটা সংকীর্ণ কিন্তু বাস্তব ফাঁক পেলাম: সেশন
+৮ শুধু `notice`↔`notices` আর `event`↔`event` alias ঠিক করেছিল, কিন্তু checkbox UI-তে থাকা
+**`daily` (ডেইলি কনটেন্ট) umbrella scope-টা কোথাও ব্যবহারই হতো না।** সরাসরি টেস্ট করে দেখলাম:
+`/admin/users/:id/scopes`-এ শুধু `daily` চেক করে সেভ করলে সেই মডারেটর `/moderator/daily/quiz`,
+`/epaper` ইত্যাদি কোনোটাতেই ঢুকতে পারত না (৪০৩) — যদিও checkbox-এ "ডেইলি কনটেন্ট" নামে
+একটা সুস্পষ্ট অপশন দেখানো হচ্ছিল, যেন এটা সবকিছু কভার করে।
+
+**ফিক্স:** `db.js`-এ নতুন `DAILY_CONTENT_SCOPES = ['quiz','this_day','activity','epaper']`
+এক্সপোর্ট করে `hasScope()`-এ যোগ করা হয়েছে — এই ৪টার যেকোনোটা চেক করলে ব্যবহারকারীর
+`daily` scope থাকলেও পাস করবে (SCOPE_ALIASES-এর মতোই প্যাটার্ন, শুধু 1-বনাম-many)।
+`views/user/moderator-dashboard.ejs`-এর tile-grid unlock-লজিকও একই সমন্বয় মেনে আপডেট করা
+হয়েছে, যাতে ড্যাশবোর্ড আর বাস্তব অ্যাক্সেস সবসময় মিলে যায়।
+
+**টেস্ট:** নতুন মডারেটরকে শুধু `daily` scope দিয়ে — `/moderator/daily/quiz` ও `/epaper`
+দুটোই এখন 200 দেয় (আগে 403), ড্যাশবোর্ড টাইলও আনলকড দেখায়। বাকি ৯১-চেক regression আবার
+চালিয়ে নিশ্চিত হয়েছি কিছু ভাঙেনি।
+
 ## ১১. বাগ ফিক্স হিস্ট্রি
 
 > এই বাগগুলো সেশন ৩-এর ডকুমেন্টেশনে "Known Issues" হিসেবে চিহ্নিত হয়েছিল এবং সেশন ৪-এ ঠিক করা হয়েছে। রেফারেন্সের জন্য এখানে রাখা হলো — যদি ভবিষ্যতে কোনো রিফ্যাক্টর এই ফিক্সগুলো ভুলবশত উল্টে দেয়।
@@ -432,6 +450,11 @@ UX কনফিউশন। আর মডারেটর সিস্টেম �
 | ৮ | local (sql.js) মোডে `admin_users` টেবিল কখনো seed হতো না — `seedIfEmptyLocal()` শুধু একটা লগ মেসেজ প্রিন্ট করত, বাস্তবে কিছু insert করত না | **fresh install-এ `admin`/`admin123` লগইন কখনো কাজ করত না** — পুরো অ্যাডমিন প্যানেল অ্যাক্সেসযোগ্য ছিল না | local branch-এও `seedAdmin()` কল করা হয় এখন (আগে শুধু Turso mode-এ কল হতো) |
 | ৯ | `/committee` route-এর নতুন year-filter ফিচার `members.term_year` কলামের উপর নির্ভর করত, কিন্তু কোনো migration-এ এই কলাম কখনো যোগ হয়নি (কমেন্টে বলা "ensure-year-column.js" ফাইলটাই রিপোতে নেই) | `/committee` পেইজ প্রতিবার `500 Internal Server Error` দিত | `ALTER TABLE members ADD COLUMN term_year TEXT` migration যোগ + সিড ডেটায় term_year সেট করা হয়েছে |
 | ১০ | Turso/libsql রিরাইটের সময় পুরনো rich demo-content seed function (gallery/quiz/achievements/constitution/past_leaders/resources — মূল "১০টা প্রতীকী আইটেম" চাহিদা) সম্পূর্ণ মুছে ফেলা হয়েছিল, কোনো প্রতিস্থাপন ছাড়াই | fresh install-এ গ্যালারি/কুইজ/অর্জন/গঠনতন্ত্র/রিসোর্স/কমিটি সব খালি থাকত — ডিজাইন-রেফারেন্স উদ্দেশ্যই ব্যর্থ হতো | পুরনো seed ডেটা (git history থেকে উদ্ধার করে) নতুন `seedDemoContentLocal()` ফাংশনে পুনর্লিখিত হয়েছে, `initDb()`-এর local branch থেকে অটো-কল হয় |
+| ১১ | `/login`-এ অ্যাডমিন ক্রেডেনশিয়াল দিলে কনফিউজিং এরর (admin শুধু `/admin/login`-এ কাজ করত) | ব্যবহারকারী মনে করত admin login ভাঙা | `POST /login` এখন `admin_users`-এ fallback করে |
+| ১২ | মডারেটর সিস্টেম কোডে সম্পূর্ণ থাকলেও কোনো ডেমো মডারেটর অ্যাকাউন্টই কখনো সিড হতো না | টেস্ট/ডেমোর জন্য মডারেটর লগইন করার কোনো উপায় ছিল না | প্রতি বুটে idempotent `ensureDemoModerator()` — `moderator`/`moderator123` |
+| ১৩ | `/admin` প্যানেল `notices`/`events` (বহুবচন) স্কোপ-কী ব্যবহার করত, `/moderator` প্যানেল `notice`/`event` (একবচন) চেক করত — দুটো কখনো মেলেনি | অ্যাডমিন প্যানেল থেকে প্রমোট করা মডারেটরের বিজ্ঞপ্তি/ইভেন্ট পোস্টিং permission কার্যত অকেজো ছিল | `db.hasScope()` alias-aware করা হয়েছে (`SCOPE_ALIASES`); checkbox UI-ও ঠিক করা হয়েছে (আগে `users/edit.ejs` string-array-কে object ভেবে `s.key`/`s.label` চালাত — undefined রেন্ডার হতো) |
+| ১৪ | মডারেটর সেশনে `GET /admin` 500 দিত (`admin/dashboard.ejs` সবসময় `adminUser.display_name` ধরে নিত, কিন্তু user-session মডারেটরের `adminUser` null) | মডারেটর নিজের ড্যাশবোর্ড দেখতে গেলে ক্র্যাশ | fallback `(adminUser.display_name \|\| user.full_name \|\| 'স্টাফ')` |
+| ১৫ | checkbox UI-তে "ডেইলি কনটেন্ট" (`daily`) নামে একটা umbrella scope অপশন দেখানো হতো, কিন্তু `hasScope()`-এ `daily`-কে quiz/this_day/activity/epaper-এর কোনোটার সমতুল্য ধরা হতো না | শুধু `daily` scope দেওয়া মডারেটর `/moderator/daily/quiz`, `/epaper` ইত্যাদি **কোনোটাতেই** ঢুকতে পারত না, যদিও UI স্পষ্টভাবে বোঝাত এটা সব কভার করে | নতুন `DAILY_CONTENT_SCOPES` এক্সপোর্ট করে `hasScope()`-এ ১-বনাম-many সম্প্রসারণ যোগ করা হয়েছে; ড্যাশবোর্ড tile-এর unlock-লজিকও মেলানো হয়েছে |
 
 ---
 

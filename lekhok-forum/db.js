@@ -903,6 +903,13 @@ function saveDb() {
 // catalogue use singular ('notice', 'event'). A moderator holding either
 // variant must pass BOTH panels' checks, so hasScope() accepts aliases.
 const SCOPE_ALIASES = { notices: 'notice', events: 'event', notice: 'notices', event: 'events' };
+// The admin scope UI also offers a single umbrella 'daily' checkbox as a
+// shortcut for all four daily-content types — but nothing ever checked for
+// it, so granting only 'daily' silently unlocked none of /moderator/daily/*
+// (found in testing: granting 'daily' via /admin/users/:id/scopes still 403'd
+// on /moderator/daily/quiz). Any of these four scope checks now also passes
+// if the user holds the umbrella 'daily' scope instead.
+const DAILY_CONTENT_SCOPES = ['quiz', 'this_day', 'activity', 'epaper'];
 function isModerator(userId) {
   if (backend.type === 'sqljs') return !!backend.prepare('SELECT id FROM moderators WHERE user_id = ?').get(userId);
   return backend.prepare('SELECT id FROM moderators WHERE user_id = ?').get(userId).then(r => !!r);
@@ -916,6 +923,7 @@ function getModeratorScopes(userId) {
 function hasScope(userId, scope) {
   const variants = [scope];
   if (SCOPE_ALIASES[scope]) variants.push(SCOPE_ALIASES[scope]);
+  if (DAILY_CONTENT_SCOPES.includes(scope)) variants.push('daily');
   if (backend.type === 'sqljs') {
     return variants.some(v => !!backend.prepare('SELECT id FROM moderator_scopes WHERE user_id = ? AND scope = ?').get(userId, v));
   }
@@ -1006,6 +1014,7 @@ module.exports = {
   saveDb,
   MODERATOR_SCOPES,
   SCOPE_ALIASES,
+  DAILY_CONTENT_SCOPES,
   isModerator,
   getModeratorScopes,
   hasScope,

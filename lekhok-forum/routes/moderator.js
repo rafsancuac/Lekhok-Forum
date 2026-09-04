@@ -31,6 +31,8 @@ router.get('/', ensureModerator, async (req, res) => {
   res.render('user/moderator-dashboard', {
     scopes: db.MODERATOR_SCOPES,
     myScopes,
+    scopeAliases: db.SCOPE_ALIASES,
+    dailyContentScopes: db.DAILY_CONTENT_SCOPES,
     currentPath: '/moderator'
   });
 });

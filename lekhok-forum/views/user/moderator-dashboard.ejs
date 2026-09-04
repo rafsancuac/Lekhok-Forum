@@ -20,7 +20,11 @@
           notice: '/moderator/notices', event: '/moderator/events',
           best_writer: '/moderator/best-writer', complaints: '/moderator/complaints'
         }; %>
-        <% scopes.forEach(s => { const allowed = myScopes.includes(s.key); %>
+        <% scopes.forEach(s => {
+          const aliased = scopeAliases[s.key];
+          const isDaily = dailyContentScopes.includes(s.key);
+          const allowed = myScopes.includes(s.key) || (aliased && myScopes.includes(aliased)) || (isDaily && myScopes.includes('daily'));
+        %>
           <% if (allowed) { %>
             <a href="<%= links[s.key] %>" class="mod-tile">
               <i class="fas fa-check-circle"></i>
