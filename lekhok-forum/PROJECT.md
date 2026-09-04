@@ -301,6 +301,14 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 - **পেন্ডিং (ভাষ্য নয়)**: ৪টি Environment Variables — `SESSION_SECRET`, `BLOB_READ_WRITE_TOKEN` (Vercel Storage → Blob), `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` (turso.app) — এগুলো ছাড়া ডাটা পারসিস্ট হবে না
 - ডেপ্লয়-পরবর্তী যাচাই-চেকলিস্ট: `/` 200, লগইন পেইজ রেন্ডার, `/admin/login` 200
 
+### সেশন ১৬ (৪ সেপ্টেম্বর ২০২৬) — Vercel লাইভ 🎉 + DB-ব্যাকড সেশন স্টোর
+- **`vercel.json` স্কিমা ফিক্স** (`fd3195c`): `functions["api/index.js"].includeFiles` অ্যারে → **এক স্ট্রিং brace-glob** `"{views/**,admin/views/**,public/**,node_modules/sql.js/dist/**}"` — আগের অ্যারে ফরম্যাটে বিল্ড ফেল করছিল ("includeFiles should be string"), ফলে প্রোডাকশন পুরনো ভাঙা ডেপ্লয়মেন্টে আটকে ছিল
+- **সাইট লাইভ**: `/`, `/login`, `/register`, `/admin/login`, `/assets/css/fonts.css` সব 200 — দুই-ফন্ট টাইপোগ্রাফি সহ পূর্ণ অ্যাপ
+- **লগইন "স্টিক না করা" বাগ ফিক্স** (`17dd48d`): Vercel সার্ভারলেসে MemoryStore প্রতি-ইনস্ট্যান্স RAM-এ সেশন রাখত → লগইন সফল হয়েও পরের রিকোয়েস্টে অন্য instance-এ সেশন হারাত। নতুন `session-store.js` (DbStore extends session.Store) + `sessions` টেবিল — সেশন এখন ডাটাবেসে persist, ইনস্ট্যান্স-বদলেও টিকে
+- **Turso সংযুক্ত**: ব্যবহারকারী turso.app-এ ডাটাবেস বানিয়ে `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` Vercel-এ যোগ করেছেন — এই কমিট নতুন ডেপ্লয় ট্রিগার করবে যাতে ভ্যারিয়েবলগুলো কার্যকর হয় (env var কার্যকর হয় শুধু নতুন ডেপ্লয়ে)
+- লোকাল যাচাই: ফ্রেশ-DB বুট + admin লগইন → `sessions` টেবিলে রো নিশ্চিত; ৭৭/৭৭ রিগ্রেশন পাস (riya/tanvir ডেমো ইউজার register করে)
+- **নোট**: লোকাল-অনলি অ্যাকাউন্ট (যেমন b55555) Vercel-এ নেই — Turso সংযুক্ত হলে লাইভ সাইটে পুনঃনিবন্ধন বা লোকাল DB মাইগ্রেশন করতে হবে
+
 ### সেশন ১৪ (৪ সেপ্টেম্বর ২০২৬) — কঠোর দুই-ফন্ট টাইপোগ্রাফি + admin moderators/daily UI ফিক্স
 - **নতুন সাইট-ওয়াইড কঠোর নিয়ম**: হেডিং, সাব-হেডিং, মেনু, বড় লেখা = **Hind Siliguri**; বাকি সব টেক্সট = **Kalpurush** — সাইটে এই দুই ফন্ট ছাড়া আর কিছু নেই
 - fonts.css রিরাইট: AkhandBengali/BenSen/Durnibar/LipiMollika/Olibrick/RushfordPrinted/Times New Roman সরাতে (হেডিং আগে AkhandBengali-তে ছিল — নিয়ম লঙ্ঘন); legacy CSS ভেরিয়েবল দুই ফন্টে রিম্যাপ
