@@ -74,6 +74,7 @@ app.use(express.json());
 app.use(methodOverride('_method'));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lekhok-forum-secret-key-change-in-production',
+  store: new (require('./session-store'))(),  // DB-backed — MemoryStore loses logins across serverless instances
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
