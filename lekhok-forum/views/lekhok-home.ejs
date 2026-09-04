@@ -145,29 +145,30 @@
   </div>
 </section>
 
-<!-- Recent notices — clickable cards -->
+<!-- Recent notices — professional card grid -->
 <section class="section section-alt reveal">
   <div class="container">
     <div class="section-head">
       <div>
-        <span class="eyebrow">সাম্প্রতিক বিজ্ঞপ্তি</span>
+        <span class="eyebrow"><i class="fas fa-bullhorn"></i> সাম্প্রতিক বিজ্ঞপ্তি</span>
         <h2 class="section-title">সর্বশেষ <span class="accent">আপডেট</span></h2>
         <span class="accent-divider"></span>
       </div>
       <a href="/notices" class="link-more">সকল বিজ্ঞপ্তি <i class="fas fa-arrow-right"></i></a>
     </div>
     <% if (recentNotices && recentNotices.length) { %>
-      <ul class="update-list reveal-stagger">
+      <div class="notice-grid reveal-stagger">
         <% recentNotices.slice(0, 6).forEach(n => { %>
-          <li class="update-item">
-            <a href="/notices/<%= n.id %>" class="update-link">
-              <span class="update-dot"></span>
-              <span class="update-title"><%= n.title %></span>
-              <span class="update-date"><%= n.date || '' %></span>
-            </a>
-          </li>
+          <a href="/notices/<%= n.id %>" class="notice-card">
+            <div class="notice-icon"><i class="fas fa-bullhorn"></i></div>
+            <div class="notice-body">
+              <h3 class="notice-title"><%= n.title %></h3>
+              <% if (n.date) { %><span class="notice-date"><i class="far fa-calendar-alt"></i> <%= n.date %></span><% } %>
+            </div>
+            <span class="notice-arrow"><i class="fas fa-arrow-right"></i></span>
+          </a>
         <% }) %>
-      </ul>
+      </div>
     <% } else { %>
       <div class="empty-state">
         <i class="fas fa-bullhorn"></i>

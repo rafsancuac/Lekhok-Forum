@@ -1,20 +1,27 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: 'বিজ্ঞপ্তিসমূহ — লেখক ফোরাম' }) %>
   <div class="page-wrap" style="max-width:700px">
-    <div class="page-header">
-      <h1><i class="fas fa-bell"></i> বিজ্ঞপ্তিসমূহ</h1>
-      <% if (items.some(n => !n.is_read)) { %>
-        <a href="/notifications/mark-all-read" class="mark-all-read">সব পঠিত করুন</a>
+    <div class="notif-page-header">
+      <h1 style="font-size:1.5rem;color:var(--brand);margin:0;">
+        <i class="fas fa-bell" style="color:var(--accent);margin-right:8px;"></i>বিজ্ঞপ্তিসমূহ
+        <% const unreadCount = items.filter(n => !n.is_read).length; %>
+        <% if (unreadCount > 0) { %>
+          <span class="notif-count-chip"><%= unreadCount %> টি নতুন</span>
+        <% } %>
+      </h1>
+      <% if (unreadCount > 0) { %>
+        <a href="/notifications/mark-all-read" class="mark-all-read"><i class="fas fa-check-double"></i> সব পঠিত করুন</a>
       <% } %>
     </div>
 
     <% if (items.length === 0) { %>
-      <div class="empty-state-full"><i class="fas fa-bell"></i><p>কোনো বিজ্ঞপ্তি নেই।</p></div>
+      <div class="notif-empty"><i class="fas fa-bell-slash"></i><p>এখনও কোনো বিজ্ঞপ্তি আসেনি।</p><small style="color:var(--text-muted);">নতুন কার্যকলাপ এখানে দেখা যাবে।</small></div>
     <% } else { %>
       <div class="notif-page-list">
         <% items.forEach(n => { %>
+          <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' ? 'icon-like' : (n.type === 'comment' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : 'icon-system'))); %>
           <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" onclick="markRead('<%= n.id %>')">
-            <div class="notif-page-icon">
+            <div class="notif-page-icon <%= iconClass %>">
               <% if (n.type === 'birthday') { %><i class="fas fa-birthday-cake"></i>
               <% } else if (n.type === 'like') { %><i class="fas fa-heart"></i>
               <% } else if (n.type === 'comment') { %><i class="fas fa-comment"></i>
@@ -26,7 +33,6 @@
               <div class="notif-page-text"><%= n.body %></div>
               <div class="notif-page-time"><i class="far fa-clock"></i> <%= new Date(n.created_at).toLocaleDateString('bn-BD') %></div>
             </div>
-            <% if (!n.is_read) { %><div class="unread-dot"></div><% } %>
           </a>
         <% }); %>
       </div>
