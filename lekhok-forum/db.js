@@ -519,7 +519,8 @@ async function runMigrations() {
     "ALTER TABLE users ADD COLUMN notify_prefs TEXT DEFAULT '{}'",
     "ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'",
     "ALTER TABLE users ADD COLUMN interests TEXT DEFAULT '[]'",
-    "ALTER TABLE members ADD COLUMN term_year TEXT"
+    "ALTER TABLE members ADD COLUMN term_year TEXT",
+    "ALTER TABLE members ADD COLUMN user_id INTEGER"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}
