@@ -15,16 +15,16 @@ const ADMIN_SCOPES = ['daily', 'notices', 'events', 'gallery', 'complaints'];
 // /moderator panel + MODERATOR_SCOPES catalogue; legacy plural keys keep
 // working via db.hasScope() aliases. The scope checkbox UI shows this list.
 const CANONICAL_SCOPES = [
-  { key: 'notice',      label: 'বিজ্ঞপ্তি' },
-  { key: 'event',       label: 'ইভেন্ট' },
-  { key: 'gallery',     label: 'গ্যালারি' },
-  { key: 'complaints',  label: 'অভিযোগ' },
-  { key: 'daily',       label: 'ডেইলি কনটেন্ট' },
-  { key: 'quiz',        label: 'আজকের কুইজ' },
-  { key: 'this_day',    label: 'আজকের এই দিনে' },
-  { key: 'best_writer', label: 'মাসিক সেরা লেখক' },
-  { key: 'activity',    label: 'সাংগঠনিক কার্যক্রম' },
-  { key: 'epaper',      label: 'আজকের ই-পেপার' }
+  { key: 'notice',      label: 'বিজ্ঞপ্তি',        icon: 'fas fa-bullhorn' },
+  { key: 'event',       label: 'ইভেন্ট',           icon: 'fas fa-calendar-day' },
+  { key: 'gallery',     label: 'গ্যালারি',          icon: 'fas fa-images' },
+  { key: 'complaints',  label: 'অভিযোগ',           icon: 'fas fa-flag' },
+  { key: 'daily',       label: 'ডেইলি কনটেন্ট',    icon: 'fas fa-sun' },
+  { key: 'quiz',        label: 'আজকের কুইজ',       icon: 'fas fa-question-circle' },
+  { key: 'this_day',    label: 'আজকের এই দিনে',    icon: 'fas fa-history' },
+  { key: 'best_writer', label: 'মাসিক সেরা লেখক',  icon: 'fas fa-pen-fancy' },
+  { key: 'activity',    label: 'সাংগঠনিক কার্যক্রম', icon: 'fas fa-running' },
+  { key: 'epaper',      label: 'আজকের ই-পেপার',   icon: 'fas fa-newspaper' }
 ];
 const VALID_SCOPE_KEYS = CANONICAL_SCOPES.map(s => s.key).concat(ADMIN_SCOPES); // canonical + legacy plural
 
@@ -347,11 +347,11 @@ router.post('/moderators/:userId/revoke', requireAdmin, async (req, res) => {
 // ── Daily Content (scope: daily) — quiz / this_day / epaper / activity ──────
 // ══════════════════════════════════════════════════════════════════════════════
 const DAILY_TYPES = {
-  quiz:      { label: 'আজকের কুইজ',      link: '/quiz' },
-  this_day:  { label: 'আজকের এই দিনে',   link: '/on-this-day' },
-  epaper:    { label: 'আজকের ই-পেপার',   link: '/epaper' },
-  activity:  { label: 'সাংগঠনিক কার্যক্রম', link: '/activities' },
-  best_writer: { label: 'মাসিক সেরা লেখক', link: '/best-writer' }
+  quiz:        { label: 'আজকের কুইজ',         link: '/quiz',          icon: 'fas fa-question-circle' },
+  this_day:    { label: 'আজকের এই দিনে',      link: '/on-this-day',   icon: 'fas fa-history' },
+  epaper:      { label: 'আজকের ই-পেপার',      link: '/epaper',        icon: 'fas fa-newspaper' },
+  activity:    { label: 'সাংগঠনিক কার্যক্রম', link: '/activities',    icon: 'fas fa-running' },
+  best_writer: { label: 'মাসিক সেরা লেখক',    link: '/best-writer',   icon: 'fas fa-pen-fancy' }
 };
 
 function dailyTypeMeta(type) { return DAILY_TYPES[type] || { label: type, link: '/' }; }

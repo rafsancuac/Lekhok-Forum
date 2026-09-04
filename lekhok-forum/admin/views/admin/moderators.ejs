@@ -1,52 +1,85 @@
 <%- include('./partials/sidebar') %>
 <div class="admin-main">
   <div class="admin-header">
-    <h1>মডারেটর ও ইউজার ব্যবস্থাপনা</h1>
-    <p>কার্যের পরিধি নিয়ন্ত্রণ করুন — কোন মডারেটর কোন সেকশনে কাজ করবে</p>
+    <div>
+      <h1><i class="fas fa-user-shield" style="color:#059669;margin-right:6px;"></i> মডারেটর ও ইউজার ব্যবস্থাপনা</h1>
+      <p>কার্যের পরিধি নিয়ন্ত্রণ করুন — কোন মডারেটর কোন সেকশনে কাজ করবে</p>
+    </div>
+    <div class="header-actions">
+      <span class="chip chip-accent"><i class="fas fa-user-shield"></i> <%= staff.length %> কর্মী</span>
+      <span class="chip"><i class="fas fa-users"></i> <%= users.length %> মোট ইউজার</span>
+    </div>
   </div>
 
-  <h2 style="margin:0 0 10px; font-size:1.15rem;">কর্মী (অ্যাডমিন/মডারেটর)</h2>
+  <% if (typeof flash !== 'undefined' && flash) { %>
+    <div class="<%= flash.type === 'error' ? 'error' : 'success' %>"><%= flash.message %></div>
+  <% } %>
+
+  <div class="section-head">
+    <h2>কর্মী (অ্যাডমিন/মডারেটর)</h2>
+  </div>
   <% if (staff.length === 0) { %>
-    <div class="card empty">কোনো মডারেটর নেই — নিচের তালিকা থেকে ইউজারকে মডারেটর করুন</div>
+    <div class="empty-state-full">
+      <i class="fas fa-user-shield"></i>
+      <p>কোনো মডারেটর নেই — নিচের তালিকা থেকে ইউজারকে মডারেটর করুন</p>
+    </div>
   <% } %>
   <% staff.forEach(u => { %>
-    <div class="card" style="margin-bottom:14px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <img src="<%= u.avatar_url || '/avatar/' + u.id %>" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" alt="">
-          <div>
-            <strong><%= u.full_name %></strong> <span style="color:#888;">@<%= u.username %></span>
-            <div style="font-size:.8rem; color:#666;"><%= u.post_count %> পোস্ট &middot; <%= u.scope_count %> পারমিশন</div>
-          </div>
+    <div class="person-card">
+      <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="person-avatar" alt="">
+      <div class="person-info">
+        <div>
+          <span class="pname"><%= u.full_name %></span>
+          <span class="pusername">@<%= u.username %></span>
+          <% if (u.role === 'admin') { %>
+            <span class="badge-soft role-admin" style="margin-left:6px;">অ্যাডমিন</span>
+          <% } else if (u.role === 'moderator') { %>
+            <span class="badge-soft role-moderator" style="margin-left:6px;">মডারেটর</span>
+          <% } %>
         </div>
-        <form method="POST" action="/admin/users/<%= u.id %>/role" style="display:flex; gap:6px; align-items:center;">
-          <select name="role" style="width:auto;">
-            <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>ইউজার</option>
-            <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>মডারেটর</option>
-            <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>অ্যাডমিন</option>
-          </select>
-          <button class="btn btn-primary btn-sm">রোল সেভ</button>
-        </form>
+        <div class="pmeta"><i class="far fa-file-alt"></i> <%= u.post_count %> পোস্ট &middot; <i class="fas fa-key"></i> <%= u.scope_count %> পারমিশন</div>
       </div>
-      <% if (u.role === 'moderator') { %>
-      <form method="POST" action="/admin/users/<%= u.id %>/scopes" style="margin-top:10px; padding-top:10px; border-top:1px dashed #e5e5e5;">
-        <label style="font-weight:600; font-size:.85rem; display:block; margin-bottom:6px;">কাজের পরিধি:</label>
-        <div style="display:flex; gap:14px; flex-wrap:wrap;">
+      <form method="POST" action="/admin/users/<%= u.id %>/role" class="row-actions">
+        <select name="role" class="chip" style="border:none;cursor:pointer;padding:6px 10px;">
+          <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>ইউজার</option>
+          <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>মডারেটর</option>
+          <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>অ্যাডমিন</option>
+        </select>
+        <button class="btn btn-primary btn-sm"><i class="fas fa-save"></i> সেভ</button>
+      </form>
+    </div>
+    <% if (u.role === 'moderator') { %>
+      <form method="POST" action="/admin/users/<%= u.id %>/scopes" style="margin: -6px 0 16px 0; padding: 16px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm);">
+        <div style="font-weight:700;color:#0a1f44;font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <i class="fas fa-key" style="color:#059669;"></i> কাজের পরিধি
+        </div>
+        <div class="scope-grid">
           <% CANONICAL_SCOPES.forEach(s => {
                const has = (u.scopes || []).includes(s.key);
           %>
-            <label style="font-weight:normal; display:flex; align-items:center; gap:5px; font-size:.9rem;">
-              <input type="checkbox" name="scopes" value="<%= s.key %>" <%= has ? 'checked' : '' %>> <%= s.label %>
+            <label class="scope-toggle">
+              <input type="checkbox" name="scopes" value="<%= s.key %>" <%= has ? 'checked' : '' %>>
+              <i class="<%= s.icon || 'fas fa-check' %>"></i>
+              <span><%= s.label %></span>
             </label>
           <% }) %>
         </div>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;">পারমিশন সেভ</button>
+        <button class="btn btn-primary btn-sm" style="margin-top:12px;"><i class="fas fa-save"></i> পারমিশন সেভ</button>
       </form>
-      <% } %>
-    </div>
+    <% } %>
   <% }) %>
 
-  <h2 style="margin:20px 0 10px; font-size:1.15rem;">সব ইউজার (<%= users.length %>)</h2>
+  <div class="section-head">
+    <h2>সব ইউজার</h2>
+    <span class="count-pill"><%= users.length %></span>
+  </div>
+  <% if (users.length === 0) { %>
+    <div class="empty-state-full">
+      <i class="fas fa-users"></i>
+      <p>কোনো ইউজার নেই</p>
+    </div>
+  <% } else { %>
+  <div class="card" style="padding:0;overflow:hidden;">
   <table>
     <thead>
       <tr><th>নাম</th><th>রোল</th><th>স্ট্যাটাস</th><th>যোগদান</th><th>অ্যাকশন</th></tr>
@@ -55,29 +88,39 @@
       <% users.forEach(u => { %>
         <tr>
           <td>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <img src="<%= u.avatar_url || '/avatar/' + u.id %>" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" alt="">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="person-avatar" style="width:36px;height:36px;" alt="">
               <div>
-                <strong><%= u.full_name %></strong><br>
-                <span style="font-size:.78rem; color:#888;">@<%= u.username %></span>
+                <strong><%= u.full_name %></strong>
+                <div class="pusername" style="font-size:.78rem;">@<%= u.username %></div>
               </div>
             </div>
           </td>
-          <td><%= u.role === 'admin' ? 'অ্যাডমিন' : u.role === 'moderator' ? 'মডারেটর' : 'ইউজার' %></td>
-          <td><%= u.status === 'active' ? 'সক্রিয়' : u.status === 'banned' ? 'নিষিদ্ধ' : u.status %></td>
-          <td><%= (u.created_at || '').split(' ')[0] %></td>
           <td>
-            <form method="POST" action="/admin/users/<%= u.id %>/role" style="display:flex; gap:5px; align-items:center;">
-              <select name="status" style="width:auto; font-size:.85rem;">
+            <% if (u.role === 'admin') { %><span class="badge-soft role-admin">অ্যাডমিন</span>
+            <% } else if (u.role === 'moderator') { %><span class="badge-soft role-moderator">মডারেটর</span>
+            <% } else { %><span class="badge-soft role-user">ইউজার</span><% } %>
+          </td>
+          <td>
+            <% if (u.status === 'active') { %><span class="badge-soft status-active">সক্রিয়</span>
+            <% } else if (u.status === 'banned') { %><span class="badge-soft status-banned">নিষিদ্ধ</span>
+            <% } else { %><span class="badge-soft status-pending"><%= u.status %></span><% } %>
+          </td>
+          <td style="font-size:.85rem;color:#64748b;"><%= (u.created_at || '').split(' ')[0] %></td>
+          <td>
+            <form method="POST" action="/admin/users/<%= u.id %>/role" class="row-actions">
+              <select name="status" class="chip" style="border:none;cursor:pointer;padding:5px 10px;font-size:.85rem;">
                 <option value="active" <%= u.status === 'active' ? 'selected' : '' %>>সক্রিয়</option>
                 <option value="pending" <%= u.status === 'pending' ? 'selected' : '' %>>অপেক্ষমাণ</option>
                 <option value="banned" <%= u.status === 'banned' ? 'selected' : '' %>>নিষিদ্ধ</option>
               </select>
-              <button class="btn btn-primary btn-sm">সেভ</button>
+              <button class="btn btn-primary btn-sm"><i class="fas fa-save"></i></button>
             </form>
           </td>
         </tr>
       <% }) %>
     </tbody>
   </table>
+  </div>
+  <% } %>
 </div>
