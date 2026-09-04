@@ -47,3 +47,59 @@ Stage Summary:
 - Scope সিস্টেম unified: notice↔notices, event↔events alias-aware; নতুন মডারেটররা full canonical scope পায়
 - মডারেটর সেশনে /admin ড্যাশবোর্ড আর 500 দেয় না
 - ⚠️ শেখা: এই sandbox-এ detached background প্রসেস টুল-কলের মাঝে মরে যায় — টেস্ট এক ইনভোকেশনে সার্ভার+টেস্ট একসাথে চালাতে হয় (scripts/run-all-tests.sh)
+
+---
+Task ID: 3
+Agent: Main verification agent (Session 9)
+Task: ইউজার রিপোর্ট — ক্রেডেনশিয়াল টেবিল (admin/admin123, moderator/moderator123) "কাজ করছে না" — রি-ভেরিফিকেশন
+
+Work Log:
+- রিপো স্টেট চেক: HEAD 6d3f0cd = origin/main (সেশন ৮-এর ফিক্স intact); working tree-এর diff শুধু permission-bit (644→755), কনটেন্ট পরিবর্তন নেই
+- ফ্রেশ DB (lekhok.db ডিলিট) বুট → সিডিং ঠিক: admin + demo content + "Demo moderator seeded (moderator/moderator123)"
+- ২১-চেক E2E (test-login-fixes.sh): ALL GREEN; আলাদা ভেরিফিকেশন: POST /login admin 302→/admin, POST /admin/login 302→/admin, POST /login moderator 302→/dashboard
+- Detached-server persistence পরীক্ষা: setsid+nohup+disown দিয়েও টুল-কলের মাঝে প্রসেস মরে যায় — কনফার্মড, sandbox preview দিয়ে লগইন টেস্ট সম্ভব নয়
+
+Stage Summary:
+- কোড ও ক্রেডেনশিয়াল ১০০% কাজ করছে (ফ্রেশ DB-তে সম্পূর্ণ ভেরিফায়েড); "কাজ করছে না"-এর কারণ ইউজারের টেস্ট এনভায়রনমেন্ট (পুরনো ক্লোন / sandbox limitation)
+
+---
+Task ID: 4
+Agent: Main verification agent (Session 9, cont.)
+Task: ইউজার Windows PowerShell-এ কমান্ড চালাতে ব্যর্থ — সাপোর্ট
+
+Work Log:
+- ইউজার এনভায়রনমেন্ট কনফার্মড: Windows PowerShell 5.1 (&& সাপোর্ট করে না — কমান্ড আলাদা লাইনে দিতে হবে)
+- চেক: github.com/rafsancuac/Lekhok-Forum এখন PUBLIC — টোকেন ছাড়াই clone/pull করা যায়
+- ⚠️ package.json-এ "start": "node api/index.js" (Vercel serverless entry) — লোকাল রানে npm start নয়, node server.js
+
+Stage Summary:
+- ইউজারকে PowerShell-সেফ (আলাদা লাইনে) clone+run নির্দেশনা দেওয়া হয়েছে
+
+---
+Task ID: 5
+Agent: Main verification agent (Session 9, cont.)
+Task: ইউজারের Windows এনভায়রনমেন্ট ডিবাগ
+
+Work Log:
+- কনফার্মড: ইউজারের পুরনো ক্লোন a28deb1-এ আটকে ছিল (অ্যাপ তখন রিপোতে ছিলই না) — এটাই লগইন না করার মূল কারণ
+- Node ছিল (C:\Program Files\nodejs) কিন্তু পুরনো PowerShell সেশনে PATH-এ ছিল না → $env:Path fix দেওয়া হয়েছে
+- ডিপেনডেন্সি অডিট: সব Windows-সেফ (bcryptjs pure-JS, sql.js WASM) — npm install-এ compiler লাগবে না
+
+Stage Summary:
+- ইউজারের git pull সফল: a28deb1 → 6ed7a7c fast-forward, পুরো অ্যাপ fresh নেমেছে; Node v24.19.0 চালু
+
+---
+Task ID: 6
+Agent: Main verification agent (Session 9, cont.)
+Task: রিপো sync (remote-এর নতুন ৩ কমিট) + ইউজারের npm execution-policy ফিক্স + নতুন কোডে রি-ভেরিফিকেশন
+
+Work Log:
+- git fetch: রিমোটে নতুন ৩ কমিট — a4d5ba3 ('daily' umbrella scope ডেড-চেকবক্স ফিক্স), 660dd70 (গ্যালারি রিডিজাইন + ১১ ডেমো ফটো), 6ed7a7c (রিঅ্যাকশন পিকার + অ্যাকশন বার ফিক্স) — অন্য এজেন্টরা push করেছে
+- Local sandbox-এ auto-snapshot UUID কমিটগুলো (perm-bit 755 + worklog) rebase-এ mode-conflict দিচ্ছিল → git reset --hard origin/main দিয়ে clean sync; আমার worklog সেকশনগুলো এই কমিটে পুনরুদ্ধার করা হলো
+- repo restructure নোট: অ্যাপ এখন repo-root-এর lekhok-forum/ সাবফোল্ডারে — ইউজারের পুরনো ক্লোনে repo-root ছিল default\lekhok-forum, তাই pull-এর পর অ্যাপ পাথ = default\lekhok-forum\lekhok-forum\ (ইউজারকে আরেকটা cd lekhok-forum বলা হয়েছে)
+- ইউজারের npm ব্লকড: PowerShell execution policy (npm.ps1 disabled) → npm.cmd install ওার্কঅ্যারাউন্ড + Set-ExecutionPolicy RemoteSigned -Scope CurrentUser স্থায়ী ফিক্স দেওয়া হয়েছে
+- 6ed7a7c-তে ২১-চেক লগইন E2E re-run (ফ্রেশ DB): ALL GREEN + smoke (/ , /gallery, /notices, /quiz → সব 200)
+
+Stage Summary:
+- HEAD = 6ed7a7c + এই worklog কমিট, push করা হয়েছে (সব এজেন্ট sync-এ)
+- ইউজারের পরবর্তী ধাপ: cd lekhok-forum → npm.cmd install → node server.js → localhost:8080/login
