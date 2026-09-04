@@ -294,6 +294,13 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ১৫ (৪ সেপ্টেম্বর ২০২৬) — Vercel ডেপ্লয়মেন্ট ট্রিগার (Root Directory কার্যকর করা)
+- **লাইভ ডায়াগনোসিস**: `lekhok-forum.vercel.app` এখনো `500 FUNCTION_INVOCATION_FAILED` — কারণ প্রোডাকশনে চলা ডেপ্লয়মেন্ট (`cf350b6`) বিল্ড হয়েছিল **Root Directory সেট হওয়ার আগে** → repo root থেকে বিল্ড → `lekhok-forum/vercel.json` অদৃশ্য, `api/index.js` ফাংশন হিসেবে ডিসকভারই হয়নি
+- ঐ ডেপ্লয়মেন্ট **redeploy-অযোগ্য** ("This deployment can not be redeployed. Please try again from a fresh commit") → নতুন কমিট ছাড়া উপায় নেই
+- **এই কমিটই ট্রিগার**: নতুন ডেপ্লয় এবার হবে আপডেটেড Project Settings দিয়ে (Root Directory=`lekhok-forum`) → `vercel.json` (functions+rewrites) কার্যকর হবে
+- **পেন্ডিং (ভাষ্য নয়)**: ৪টি Environment Variables — `SESSION_SECRET`, `BLOB_READ_WRITE_TOKEN` (Vercel Storage → Blob), `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` (turso.app) — এগুলো ছাড়া ডাটা পারসিস্ট হবে না
+- ডেপ্লয়-পরবর্তী যাচাই-চেকলিস্ট: `/` 200, লগইন পেইজ রেন্ডার, `/admin/login` 200
+
 ### সেশন ১৪ (৪ সেপ্টেম্বর ২০২৬) — কঠোর দুই-ফন্ট টাইপোগ্রাফি + admin moderators/daily UI ফিক্স
 - **নতুন সাইট-ওয়াইড কঠোর নিয়ম**: হেডিং, সাব-হেডিং, মেনু, বড় লেখা = **Hind Siliguri**; বাকি সব টেক্সট = **Kalpurush** — সাইটে এই দুই ফন্ট ছাড়া আর কিছু নেই
 - fonts.css রিরাইট: AkhandBengali/BenSen/Durnibar/LipiMollika/Olibrick/RushfordPrinted/Times New Roman সরাতে (হেডিং আগে AkhandBengali-তে ছিল — নিয়ম লঙ্ঘন); legacy CSS ভেরিয়েবল দুই ফন্টে রিম্যাপ
