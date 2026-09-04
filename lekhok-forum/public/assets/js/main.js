@@ -318,27 +318,54 @@ window.showToast = showToast;
     const mainBtn = wrap.querySelector('.main-react');
     const picker = wrap.querySelector('.reaction-picker');
 
-    // Desktop hover; mobile long-press handled via touchstart timer
+    // Facebook-style: a quick click on the main button just toggles the
+    // default reaction (like/unlike). Opening the picker to choose a
+    // *different* reaction is a deliberate separate gesture — hover on
+    // devices that support it, or press-and-hold (mouse OR touch) — never
+    // both at once. The previous version fired the reaction on every single
+    // click AND force-closed the picker 400ms later regardless of what the
+    // person was doing, so there was never a real chance to pick anything
+    // but the default "like".
     let pressTimer = null;
-    wrap.addEventListener('mouseenter', () => { if (window.matchMedia('(hover:hover)').matches) picker.classList.add('open'); });
-    wrap.addEventListener('mouseleave', () => picker.classList.remove('open'));
-    mainBtn.addEventListener('touchstart', () => {
-      pressTimer = setTimeout(() => picker.classList.add('open'), 350);
-    }, { passive: true });
-    ['touchend', 'touchcancel'].forEach(ev =>
-      mainBtn.addEventListener(ev, () => { clearTimeout(pressTimer); }, { passive: true })
-    );
+    let longPressOpened = false;
+    const LONG_PRESS_MS = 350;
 
-    // Quick react (default = current mine? toggle like) on main button click
+    function openPicker() { picker.classList.add('open'); }
+    function closePicker() { picker.classList.remove('open'); }
+
+    function startPress() {
+      longPressOpened = false;
+      pressTimer = setTimeout(() => { openPicker(); longPressOpened = true; }, LONG_PRESS_MS);
+    }
+    function cancelPress() { clearTimeout(pressTimer); }
+
+    // Desktop hover (only on devices that actually support hovering with a
+    // pointer — touch devices report hover:hover as false so this never
+    // fights with the press-and-hold handling below).
+    if (window.matchMedia('(hover: hover)').matches) {
+      wrap.addEventListener('mouseenter', openPicker);
+      wrap.addEventListener('mouseleave', closePicker);
+    }
+
+    // Press-and-hold on the main button — works with mouse *and* touch, so
+    // it's a reliable fallback even when hover isn't available or usable.
+    mainBtn.addEventListener('mousedown', startPress);
+    ['mouseup', 'mouseleave'].forEach(ev => mainBtn.addEventListener(ev, cancelPress));
+    mainBtn.addEventListener('touchstart', startPress, { passive: true });
+    ['touchend', 'touchcancel'].forEach(ev => mainBtn.addEventListener(ev, cancelPress, { passive: true }));
+
     mainBtn.addEventListener('click', () => {
       if (!loggedIn()) return location.href = '/login?next=' + encodeURIComponent(location.pathname);
+      // A long press already opened the picker for this same gesture —
+      // the click that follows (mouseup/touchend fires a click too) should
+      // not also toggle the default reaction.
+      if (longPressOpened) { longPressOpened = false; return; }
       const mine = mainBtn.dataset.mine || '';
-      picker.classList.toggle('open');
-      if (picker.classList.contains('open') && window.matchMedia('(hover:hover)').matches) {
-        // desktop: hovering already opened; clicking toggles like
-      }
-      react(wrap, mine ? mine : 'like');
-      setTimeout(() => picker.classList.remove('open'), 400);
+      // Sending the same reaction again toggles it off server-side (see
+      // POST /api/react) — so clicking with no existing reaction applies
+      // 'like' (the default, matching the button's resting icon/label),
+      // and clicking again while a reaction is active removes it.
+      react(wrap, mine || 'like');
     });
 
     wrap.querySelectorAll('.reaction-opt').forEach(opt => {
@@ -346,10 +373,17 @@ window.showToast = showToast;
         e.stopPropagation();
         if (!loggedIn()) return location.href = '/login?next=' + encodeURIComponent(location.pathname);
         react(wrap, opt.dataset.reaction);
-        picker.classList.remove('open');
+        closePicker();
       });
     });
   }
+
+  // Close any open picker when clicking elsewhere on the page.
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.react-wrap')) {
+      document.querySelectorAll('.reaction-picker.open').forEach(p => p.classList.remove('open'));
+    }
+  });
 
   function initAll(root) { (root || document).querySelectorAll('.actions-bar').forEach(initBar); }
   window.LekhokReactions = { init: initAll };

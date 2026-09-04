@@ -1676,6 +1676,13 @@ a.notice-card-link .notice-item { margin: 0; }
   background: #fff; border: 1px solid var(--border); border-radius: 999px;
   box-shadow: var(--shadow-lg);
 }
+/* Invisible hit-area bridging the visual gap to the button below — without
+   this, moving the mouse from the button up to the picker crosses empty
+   space that belongs to a different element, firing mouseleave on
+   .react-wrap and closing the picker before it can be reached. */
+.actions-bar .reaction-picker::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px;
+}
 .actions-bar .reaction-picker.open { display: flex; animation: pickIn 0.16s ease; }
 @keyframes pickIn { from { opacity: 0; transform: translateY(6px) scale(0.94); } to { opacity: 1; transform: none; } }
 .actions-bar .reaction-opt {
