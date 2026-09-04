@@ -3,9 +3,19 @@ const router = express.Router();
 const db = require('../db');
 
 // ── Home ─────────────────────────────────────────────────────────────────────
+// Member query with LEFT JOIN so any member linked to a user account inherits
+// the user's avatar, full name, and profile link.  Used everywhere members are
+// rendered on the public site.
+const MEMBER_JOIN = `
+  SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+         u.full_name AS user_full_name, u.designation AS user_designation
+  FROM members m
+  LEFT JOIN users u ON u.id = m.user_id
+`;
+
 router.get('/', async (req, res) => {
   const recentNotices = await db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all();
-  const centralMembers = await db.prepare("SELECT * FROM members WHERE member_type = 'central' ORDER BY sort_order LIMIT 4").all();
+  const centralMembers = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 4").all();
 
   // Today's daily content — split by content_type for the home page cards
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -49,14 +59,7 @@ router.get('/committee', async (req, res) => {
   const selectedYear = req.query.year && years.includes(req.query.year) ? req.query.year : (years[0] || '২০২৫-২০২৬');
   // LEFT JOIN users so members linked to a user account show that user's
   // avatar/username (and become clickable to their profile).
-  const central = await db.prepare(`
-    SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
-           u.full_name AS user_full_name, u.designation AS user_designation
-    FROM members m
-    LEFT JOIN users u ON u.id = m.user_id
-    WHERE m.member_type = 'central' AND m.term_year = ?
-    ORDER BY m.sort_order
-  `).all(selectedYear);
+  const central = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order").all(selectedYear);
   res.render('lekhok-committee', {
     layout: 'layout',
     pageTitle: 'সংগঠন',
@@ -175,10 +178,10 @@ router.get('/resources', async (req, res) => {
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 router.get('/team', async (req, res) => {
-  const central  = await db.prepare("SELECT * FROM members WHERE member_type = 'central'  ORDER BY sort_order").all();
-  const advisory = await db.prepare("SELECT * FROM members WHERE member_type = 'advisory' ORDER BY sort_order").all();
-  const founders = await db.prepare("SELECT * FROM members WHERE member_type = 'founder'  ORDER BY sort_order").all();
-  const branch   = await db.prepare("SELECT * FROM members WHERE member_type = 'branch'   ORDER BY sort_order").all();
+  const central  = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central'  ORDER BY m.sort_order").all();
+  const advisory = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order").all();
+  const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder'  ORDER BY m.sort_order").all();
+  const branch   = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'branch'   ORDER BY m.sort_order").all();
   res.render('lekhok-team', {
     layout: 'layout',
     pageTitle: 'টিম',

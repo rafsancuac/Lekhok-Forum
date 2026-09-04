@@ -19,14 +19,28 @@
           </div>
           <div class="leaders-grid">
             <% grouped.central.forEach(m => { %>
-              <article class="leader-card large">
-                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
-                  <div class="avatar avatar-lg"><%= m.name.charAt(0) %></div>
-                <% } %>
-                <h3><%= m.name %></h3>
-                <p class="role"><%= m.role %></p>
-                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 100) %><%= m.bio.length > 100 ? '…' : '' %></p><% } %>
-              </article>
+              <% const displayName = m.user_full_name || m.name; %>
+              <% const displayImg  = m.user_avatar_url || m.image_url; %>
+              <% if (m.user_username) { %>
+                <a href="/profile/<%= m.user_username %>" class="leader-card large linked-member" style="text-decoration:none;color:inherit;">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
+                    <div class="avatar avatar-lg"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                  <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 100) %><%= m.bio.length > 100 ? '…' : '' %></p><% } %>
+                  <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
+                </a>
+              <% } else { %>
+                <article class="leader-card large">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
+                    <div class="avatar avatar-lg"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                  <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 100) %><%= m.bio.length > 100 ? '…' : '' %></p><% } %>
+                </article>
+              <% } %>
             <% }); %>
           </div>
         </section>
@@ -40,13 +54,26 @@
           </div>
           <div class="leaders-grid">
             <% grouped.advisory.forEach(m => { %>
-              <article class="leader-card">
-                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
-                  <div class="avatar avatar-md"><%= m.name.charAt(0) %></div>
-                <% } %>
-                <h3><%= m.name %></h3>
-                <p class="role"><%= m.role %></p>
-              </article>
+              <% const displayName = m.user_full_name || m.name; %>
+              <% const displayImg  = m.user_avatar_url || m.image_url; %>
+              <% if (m.user_username) { %>
+                <a href="/profile/<%= m.user_username %>" class="leader-card linked-member" style="text-decoration:none;color:inherit;">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
+                    <div class="avatar avatar-md"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                  <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল</span>
+                </a>
+              <% } else { %>
+                <article class="leader-card">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
+                    <div class="avatar avatar-md"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                </article>
+              <% } %>
             <% }); %>
           </div>
         </section>
@@ -60,13 +87,25 @@
           </div>
           <div class="leaders-grid">
             <% grouped.branch.forEach(m => { %>
-              <article class="leader-card">
-                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
-                  <div class="avatar avatar-md"><%= m.name.charAt(0) %></div>
-                <% } %>
-                <h3><%= m.name %></h3>
-                <p class="role"><%= m.role %></p>
-              </article>
+              <% const displayName = m.user_full_name || m.name; %>
+              <% const displayImg  = m.user_avatar_url || m.image_url; %>
+              <% if (m.user_username) { %>
+                <a href="/profile/<%= m.user_username %>" class="leader-card linked-member" style="text-decoration:none;color:inherit;">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
+                    <div class="avatar avatar-md"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                </a>
+              <% } else { %>
+                <article class="leader-card">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-md" style="border-radius:50%;margin:0 auto 10px;"> <% } else { %>
+                    <div class="avatar avatar-md"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                </article>
+              <% } %>
             <% }); %>
           </div>
         </section>
@@ -80,13 +119,25 @@
           </div>
           <div class="leaders-grid">
             <% grouped.founder.forEach(m => { %>
-              <article class="leader-card large">
-                <% if (m.image_url) { %><img src="<%= m.image_url %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
-                  <div class="avatar avatar-lg"><%= m.name.charAt(0) %></div>
-                <% } %>
-                <h3><%= m.name %></h3>
-                <p class="role"><%= m.role %></p>
-              </article>
+              <% const displayName = m.user_full_name || m.name; %>
+              <% const displayImg  = m.user_avatar_url || m.image_url; %>
+              <% if (m.user_username) { %>
+                <a href="/profile/<%= m.user_username %>" class="leader-card large linked-member" style="text-decoration:none;color:inherit;">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
+                    <div class="avatar avatar-lg"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                </a>
+              <% } else { %>
+                <article class="leader-card large">
+                  <% if (displayImg) { %><img src="<%= displayImg %>" class="avatar-lg" style="border-radius:50%;margin:0 auto 12px;"> <% } else { %>
+                    <div class="avatar avatar-lg"><%= displayName.charAt(0) %></div>
+                  <% } %>
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                </article>
+              <% } %>
             <% }); %>
           </div>
         </section>

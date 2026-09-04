@@ -65,14 +65,32 @@ router.get('/constitution', async (req, res) => {
 
 // ── Past Leaders ─────────────────────────────────────────────────────────────
 router.get('/committee/past', async (req, res) => {
-  const presidents = await db.prepare("SELECT * FROM past_leaders WHERE role = 'president' ORDER BY term_start DESC").all();
-  const secretaries = await db.prepare("SELECT * FROM past_leaders WHERE role = 'general_secretary' ORDER BY term_start DESC").all();
+  const presidents = await db.prepare(`
+    SELECT p.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+           u.full_name AS user_full_name, u.designation AS user_designation
+    FROM past_leaders p
+    LEFT JOIN users u ON u.id = p.user_id
+    WHERE p.role = 'president' ORDER BY p.term_start DESC
+  `).all();
+  const secretaries = await db.prepare(`
+    SELECT p.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+           u.full_name AS user_full_name, u.designation AS user_designation
+    FROM past_leaders p
+    LEFT JOIN users u ON u.id = p.user_id
+    WHERE p.role = 'general_secretary' ORDER BY p.term_start DESC
+  `).all();
   res.render('user/past-leaders', { presidents, secretaries, currentPath: '/committee/past' });
 });
 
 // ── Advisory Board ───────────────────────────────────────────────────────────
 router.get('/committee/advisory', async (req, res) => {
-  const advisory = await db.prepare("SELECT * FROM members WHERE member_type = 'advisory' ORDER BY sort_order").all();
+  const advisory = await db.prepare(`
+    SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+           u.full_name AS user_full_name, u.designation AS user_designation
+    FROM members m
+    LEFT JOIN users u ON u.id = m.user_id
+    WHERE m.member_type = 'advisory' ORDER BY m.sort_order
+  `).all();
   res.render('user/advisory', { advisory, currentPath: '/committee/advisory' });
 });
 

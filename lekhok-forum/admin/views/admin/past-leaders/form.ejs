@@ -39,12 +39,24 @@
         <input type="text" name="photo_url" value="<%= item ? (item.photo_url || '') : '' %>" placeholder="/uploads/leaders/foo.jpg">
       </div>
       <div class="form-group">
+        <label>সদস্যের অ্যাকাউন্ট লিংক</label>
+        <select name="user_id">
+          <option value="">— লিংক নেই —</option>
+          <% (allUsers || []).forEach(u => { %>
+            <option value="<%= u.id %>" <%= item && item.user_id == u.id ? 'selected' : '' %>>
+              <%= u.full_name %> (<%= u.username %>)
+            </option>
+          <% }); %>
+        </select>
+        <small style="color:#64748b">এই নেতা যদি নিবন্ধিত ইউজার হয়, তাহলে তার প্রোফাইল ছবি ও নাম সব জায়গায় ব্যবহার হবে।</small>
+      </div>
+      <div class="form-group">
         <label>সংক্ষিপ্ত পরিচিতি</label>
         <textarea name="bio" rows="5" placeholder="নেতার সংক্ষিপ্ত পরিচিতি লিখুন..."><%= item ? (item.bio || '') : '' %></textarea>
       </div>
       <div class="form-group">
         <label>প্রদর্শন ক্রম</label>
-        <input type="number" name="display_order" value="<%= item ? (item.display_order || 0) : 0 %>" min="0">
+        <input type="number" name="sort_order" value="<%= item ? (item.sort_order || 0) : 0 %>" min="0">
         <small style="color:#777;">ছোট সংখ্যা আগে দেখানো হবে</small>
       </div>
       <button type="submit" class="btn btn-primary"><%= item ? 'আপডেট' : 'তৈরি করুন' %></button>

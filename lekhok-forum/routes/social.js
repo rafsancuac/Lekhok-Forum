@@ -562,7 +562,13 @@ router.get('/members', async (req, res) => {
   const members = await db.prepare(q).all(...params);
 
   // Group members of the organization (from members table) by member_type
-  const allCommittee = await db.prepare('SELECT * FROM members ORDER BY member_type, sort_order, name').all();
+  const allCommittee = await db.prepare(`
+    SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+           u.full_name AS user_full_name, u.designation AS user_designation
+    FROM members m
+    LEFT JOIN users u ON u.id = m.user_id
+    ORDER BY m.member_type, m.sort_order, m.name
+  `).all();
   const grouped = {
     central:  allCommittee.filter(m => m.member_type === 'central'),
     branch:   allCommittee.filter(m => m.member_type === 'branch'),

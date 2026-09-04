@@ -12,14 +12,28 @@
         <h2 style="color:var(--brand);margin-bottom:14px">সাবেক সভাপতি</h2>
         <div class="past-leaders-grid">
           <% presidents.forEach(l => { %>
-            <div class="leader-card">
-              <img src="<%= l.photo_url || '/assets/avatars/male.svg' %>" class="leader-photo">
-              <div class="leader-info">
-                <div class="leader-role">সভাপতি</div>
-                <h3><%= l.name %></h3>
-                <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+            <% const displayName = l.user_full_name || l.name; %>
+            <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg'; %>
+            <% if (l.user_username) { %>
+              <a href="/profile/<%= l.user_username %>" class="leader-card linked-member">
+                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <div class="leader-info">
+                  <div class="leader-role">সভাপতি</div>
+                  <h3><%= displayName %></h3>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                  <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
+                </div>
+              </a>
+            <% } else { %>
+              <div class="leader-card">
+                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <div class="leader-info">
+                  <div class="leader-role">সভাপতি</div>
+                  <h3><%= displayName %></h3>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                </div>
               </div>
-            </div>
+            <% } %>
           <% }); %>
         </div>
       <% } %>
@@ -28,14 +42,28 @@
         <h2 style="color:var(--brand);margin:30px 0 14px">সাবেক সাধারণ সম্পাদক</h2>
         <div class="past-leaders-grid">
           <% secretaries.forEach(l => { %>
-            <div class="leader-card">
-              <img src="<%= l.photo_url || '/assets/avatars/male.svg' %>" class="leader-photo">
-              <div class="leader-info">
-                <div class="leader-role">সাধারণ সম্পাদক</div>
-                <h3><%= l.name %></h3>
-                <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+            <% const displayName = l.user_full_name || l.name; %>
+            <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg'; %>
+            <% if (l.user_username) { %>
+              <a href="/profile/<%= l.user_username %>" class="leader-card linked-member">
+                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <div class="leader-info">
+                  <div class="leader-role">সাধারণ সম্পাদক</div>
+                  <h3><%= displayName %></h3>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                  <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
+                </div>
+              </a>
+            <% } else { %>
+              <div class="leader-card">
+                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <div class="leader-info">
+                  <div class="leader-role">সাধারণ সম্পাদক</div>
+                  <h3><%= displayName %></h3>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                </div>
               </div>
-            </div>
+            <% } %>
           <% }); %>
         </div>
       <% } %>

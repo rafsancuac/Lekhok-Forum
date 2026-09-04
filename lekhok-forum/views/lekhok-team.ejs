@@ -12,14 +12,28 @@
   <% if (members && members.length) { %>
     <div class="leaders-grid reveal-stagger">
       <% members.forEach(m => { %>
-        <div class="leader-card has-image">
-          <img src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="<%= m.name %>" loading="lazy" />
-          <div class="leader-body">
-            <h3><%= m.name %></h3>
-            <p class="role"><%= m.role %></p>
-            <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+        <% const displayName = m.user_full_name || m.name; %>
+        <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+        <% if (m.user_username) { %>
+          <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member">
+            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <div class="leader-body">
+              <h3><%= displayName %></h3>
+              <p class="role"><%= m.role %></p>
+              <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+              <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
+            </div>
+          </a>
+        <% } else { %>
+          <div class="leader-card has-image">
+            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <div class="leader-body">
+              <h3><%= displayName %></h3>
+              <p class="role"><%= m.role %></p>
+              <% if (m.bio) { %><p class="leader-bio"><%= m.bio %></p><% } %>
+            </div>
           </div>
-        </div>
+        <% } %>
       <% }) %>
     </div>
   <% } else { %>

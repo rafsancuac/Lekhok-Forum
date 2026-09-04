@@ -232,6 +232,7 @@ CREATE TABLE IF NOT EXISTS members (
   member_type  TEXT    DEFAULT 'central',  -- central | branch
   sort_order   INTEGER DEFAULT 0,
   bio          TEXT,
+  user_id      INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -310,6 +311,7 @@ CREATE TABLE IF NOT EXISTS past_leaders (
   term_end       TEXT,
   photo_url      TEXT,
   bio            TEXT,
-  display_order  INTEGER DEFAULT 0,
+  user_id        INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  sort_order     INTEGER DEFAULT 0,
   created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
 );

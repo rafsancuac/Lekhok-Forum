@@ -123,6 +123,37 @@ app.use(async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ── Global session-save-before-redirect middleware ────────────────────────────
+// On Vercel serverless, routes that mutate req.session.* and then immediately
+// res.redirect() risk the response being sent before the DB-backed session
+// store has finished writing. The follow-up GET then sees no session.user
+// and the 404 catch-all at the bottom of this file fires. This middleware
+// wraps res.redirect so every redirect awaits the session write first.
+// Routes that already call req.session.save(cb) explicitly remain safe — the
+// express-session save is idempotent within a single request.
+app.use((req, res, next) => {
+  const original = res.redirect.bind(res);
+  res.redirect = function (url) {
+    // Skip re-save if a session save is already in flight for this request —
+    // avoids recursion when a route does `req.session.save(cb => res.redirect(...))`.
+    if (req.session && typeof req.session.save === 'function' && !req._sessionSaving) {
+      req._sessionSaving = true;
+      try {
+        return req.session.save((err) => {
+          req._sessionSaving = false;
+          if (err) console.error('[session-save] before redirect:', err);
+          return original(url);
+        });
+      } catch (e) {
+        req._sessionSaving = false;
+        return original(url);
+      }
+    }
+    return original(url);
+  };
+  next();
+});
+
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/',          require('./routes/auth'));    // login, register, logout, profile edit
 app.use('/',          require('./routes/social'));   // articles, qa, members, profile, follow, api

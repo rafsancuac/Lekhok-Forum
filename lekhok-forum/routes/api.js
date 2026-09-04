@@ -25,10 +25,14 @@ router.get('/events', async (req, res) => {
 
 router.get('/members', async (req, res) => {
   const { type } = req.query;
-  let q = 'SELECT * FROM members';
+  let q = `
+    SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+           u.full_name AS user_full_name, u.designation AS user_designation
+    FROM members m
+    LEFT JOIN users u ON u.id = m.user_id`;
   const params = [];
-  if (type) { q += ' WHERE member_type = ?'; params.push(type); }
-  q += ' ORDER BY sort_order';
+  if (type) { q += ' WHERE m.member_type = ?'; params.push(type); }
+  q += ' ORDER BY m.sort_order';
   res.json(await db.prepare(q).all(...params));
 });
 

@@ -23,6 +23,18 @@
       <div class="form-group"><label>পদবি</label><input type="text" name="designation" value="<%= member ? (member.designation || '') : '' %>" placeholder="যেমন: কেন্দ্রীয় কমিটি"></div>
       <div class="form-group"><label>বায়ো</label><textarea name="bio" rows="3"><%= member ? (member.bio || '') : '' %></textarea></div>
       <div class="form-group"><label>ছবির URL</label><input type="url" name="image_url" value="<%= member ? (member.image_url || '') : '' %>"></div>
+      <div class="form-group">
+        <label>সদস্যের অ্যাকাউন্ট লিংক</label>
+        <select name="user_id">
+          <option value="">— লিংক নেই —</option>
+          <% (allUsers || []).forEach(u => { %>
+            <option value="<%= u.id %>" <%= member && member.user_id == u.id ? 'selected' : '' %>>
+              <%= u.full_name %> (<%= u.username %>)
+            </option>
+          <% }); %>
+        </select>
+        <small style="color:#64748b">এই সদস্য যদি নিবন্ধিত ইউজার হয়, তাহলে তার প্রোফাইল ছবি ও নাম সব জায়গায় ব্যবহার হবে।</small>
+      </div>
       <div class="form-group"><label>ফেসবুক</label><input type="url" name="social_fb" value="<%= member ? (member.social_fb || '') : '' %>"></div>
       <div class="form-group"><label>ইমেইল</label><input type="email" name="social_email" value="<%= member ? (member.social_email || '') : '' %>"></div>
       <div class="form-group">

@@ -196,31 +196,41 @@ router.delete('/events/:id', requireScope('events'), async (req, res) => {
 });
 
 // ── Members CRUD ─────────────────────────────────────────────────────────────
+// Helper — fetch all users for the "link to account" dropdown.
+const fetchAllUsers = () => db.prepare("SELECT id, username, full_name FROM users ORDER BY full_name").all();
+
 router.get('/members', requireAdmin, async (req, res) => {
   const members = await db.prepare('SELECT * FROM members ORDER BY sort_order').all();
   res.render('admin/members/list', { members, currentPath: '/admin/members' });
 });
 
 router.get('/members/new', requireAdmin, async (req, res) => {
-  res.render('admin/members/form', { member: null, error: null, currentPath: '/admin/members' });
+  const allUsers = await fetchAllUsers();
+  res.render('admin/members/form', { member: null, error: null, allUsers, currentPath: '/admin/members' });
 });
 
 router.post('/members', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order } = req.body;
-  if (!name) return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', currentPath: '/admin/members' });
-  await db.prepare('INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0);
+  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id } = req.body;
+  if (!name) {
+    const allUsers = await fetchAllUsers();
+    return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
+  }
+  const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
+  await db.prepare('INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum);
   res.redirect('/admin/members');
 });
 
 router.get('/members/:id/edit', requireAdmin, async (req, res) => {
   const member = await db.prepare('SELECT * FROM members WHERE id = ?').get(req.params.id);
   if (!member) return res.redirect('/admin/members');
-  res.render('admin/members/form', { member, error: null, currentPath: '/admin/members' });
+  const allUsers = await fetchAllUsers();
+  res.render('admin/members/form', { member, error: null, allUsers, currentPath: '/admin/members' });
 });
 
 router.put('/members/:id', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order } = req.body;
-  await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, image_url=?, social_fb=?, social_email=?, member_type=?, sort_order=? WHERE id=?').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, req.params.id);
+  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id } = req.body;
+  const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
+  await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, image_url=?, social_fb=?, social_email=?, member_type=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum, req.params.id);
   res.redirect('/admin/members');
 });
 
@@ -563,23 +573,27 @@ router.get('/past-leaders', requireAdmin, async (req, res) => {
   res.render('admin/past-leaders/list', { items, currentPath: '/admin/past-leaders' });
 });
 router.get('/past-leaders/new', requireAdmin, async (req, res) => {
-  res.render('admin/past-leaders/form', { item: null, currentPath: '/admin/past-leaders' });
+  const allUsers = await fetchAllUsers();
+  res.render('admin/past-leaders/form', { item: null, allUsers, currentPath: '/admin/past-leaders' });
 });
 router.post('/past-leaders', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
-  const { name, role, term_start, term_end, bio } = req.body;
+  const { name, role, term_start, term_end, bio, sort_order, user_id } = req.body;
   const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
-  await db.prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, bio) VALUES (?, ?, ?, ?, ?, ?)').run(name, role, term_start || null, term_end || null, photo_url, bio || null);
+  const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
+  await db.prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, bio, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(name, role, term_start || null, term_end || null, photo_url, bio || null, parseInt(sort_order) || 0, userIdNum);
   res.redirect('/admin/past-leaders');
 });
 router.get('/past-leaders/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM past_leaders WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/past-leaders');
-  res.render('admin/past-leaders/form', { item, currentPath: '/admin/past-leaders' });
+  const allUsers = await fetchAllUsers();
+  res.render('admin/past-leaders/form', { item, allUsers, currentPath: '/admin/past-leaders' });
 });
 router.post('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
-  const { name, role, term_start, term_end, bio } = req.body;
+  const { name, role, term_start, term_end, bio, sort_order, user_id } = req.body;
   const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
-  await db.prepare('UPDATE past_leaders SET name=?, role=?, term_start=?, term_end=?, photo_url=?, bio=? WHERE id=?').run(name, role, term_start || null, term_end || null, photo_url, bio || null, req.params.id);
+  const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
+  await db.prepare('UPDATE past_leaders SET name=?, role=?, term_start=?, term_end=?, photo_url=?, bio=?, sort_order=?, user_id=? WHERE id=?').run(name, role, term_start || null, term_end || null, photo_url, bio || null, parseInt(sort_order) || 0, userIdNum, req.params.id);
   res.redirect('/admin/past-leaders');
 });
 router.post('/past-leaders/:id/delete', requireAdmin, async (req, res) => {

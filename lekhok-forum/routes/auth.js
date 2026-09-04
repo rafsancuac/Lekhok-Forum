@@ -82,9 +82,11 @@ router.post('/register', withUpload(avatarUpload), async (req, res) => {
 });
 
 // ── Logout ───────────────────────────────────────────────────────────────────
-router.get('/logout', async (req, res) => {
-  req.session.user = null;
-  res.redirect('/');
+router.get('/logout', (req, res) => {
+  // req.session.destroy() ensures the session is removed from the DB-backed
+  // store before we redirect — nulling req.session.user alone is racy on
+  // serverless because the next request can still read the old user.
+  req.session.destroy(() => res.redirect('/'));
 });
 
 // ── Profile edit (GET) ───────────────────────────────────────────────────────
@@ -96,6 +98,7 @@ router.get('/profile/edit', async (req, res) => {
 
 // ── Profile edit (POST, with optional avatar upload) ─────────────────────────
 router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
+  try {
   if (!req.session.user) return res.redirect('/login');
   const u = req.session.user;
   const { full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, show_email, show_phone, show_birth, new_password, confirm_password } = req.body;
@@ -122,7 +125,8 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
 
   // Preserve current avatar unless a new file was uploaded.
   // req.file.url is correct in BOTH modes: local → /uploads/avatars/…, Vercel → blob https URL
-  const avatarPath = req.file ? (req.file.url || req.file.path) : undefined;
+  // Always pass NULL when no new file — COALESCE then keeps the existing avatar.
+  const avatarPath = req.file ? (req.file.url || req.file.path) : null;
   // Treat empty strings as null for nullable fields. The form always sends every field, so a blank
   // value is the user's intent to clear it.
   const clean = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();
@@ -194,6 +198,10 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
       resolve();
     });
   });
+  } catch (e) {
+    console.error('[auth] /profile/edit error:', e && e.stack || e);
+    res.status(500).send('প্রোফাইল সম্পাদনায় সমস্যা: ' + (e && e.message || 'অজানা'));
+  }
 });
 
 module.exports = router;

@@ -133,13 +133,25 @@
     </div>
     <div class="leaders-grid reveal-stagger">
       <% centralMembers.forEach(m => { %>
-        <div class="leader-card has-image">
-          <img src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="<%= m.name %>" loading="lazy" />
-          <div class="leader-body">
-            <h3><%= m.name %></h3>
-            <p class="role"><%= m.role %></p>
+        <% const displayName = m.user_full_name || m.name; %>
+        <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+        <% if (m.user_username) { %>
+          <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member">
+            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <div class="leader-body">
+              <h3><%= displayName %></h3>
+              <p class="role"><%= m.role %></p>
+            </div>
+          </a>
+        <% } else { %>
+          <div class="leader-card has-image">
+            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <div class="leader-body">
+              <h3><%= displayName %></h3>
+              <p class="role"><%= m.role %></p>
+            </div>
           </div>
-        </div>
+        <% } %>
       <% }) %>
     </div>
   </div>
