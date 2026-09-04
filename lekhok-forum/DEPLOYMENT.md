@@ -83,6 +83,41 @@ After the first deploy, run migrations against the live Turso DB:
 TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... npm run migrate
 ```
 
+## Deploy WITHOUT Turso — Blob snapshot mode (zero external accounts)
+
+No Turso account? The app can still run on Vercel. When `BLOB_READ_WRITE_TOKEN`
+is set and no `TURSO_DATABASE_URL` is configured, **db.js automatically switches
+to snapshot mode**: the sql.js database image is periodically uploaded to a
+secret-hashed Vercel Blob object (`private/db-<hash>.sqlite`) and restored on
+every cold boot. Data survives restarts/redeploys with no extra service.
+
+### Setup (dashboard only, ~3 minutes)
+1. Vercel → Project → **Settings → General → Root Directory** → `lekhok-forum` → Save
+2. Vercel → Project → **Storage** → **Create Database/Blob** → create a Blob store
+   (Hobby plan includes free tier) → **Connect to project** → the
+   `BLOB_READ_WRITE_TOKEN` env var is added automatically
+3. Optional: Settings → Environment Variables → `SESSION_SECRET` (long random string)
+4. **Deployments → Redeploy**
+
+Logins on a fresh deploy: `admin/admin123`, `moderator/moderator123`,
+demo users `ismail`/`monem`/… (`demo123`) — seeded automatically on first boot.
+
+### Trade-offs vs Turso (read before real-world use)
+| | Blob snapshot mode | Turso |
+|---|---|---|
+| Signup | none (part of Vercel) | free account needed |
+| Consistency | **last-write-wins** — two serverless instances writing "at once" can drop one writer's changes | real transactions, always consistent |
+| Cold boots | 1 extra Blob download (~100–300 ms) | direct SQL |
+| Best for | demo / very light traffic club site | production |
+
+The DB snapshot pathname contains a SHA-256 hash of `SESSION_SECRET`, so the
+blob URL is unguessable — but treat the mode as demo-grade. When the site outgrows
+it, create a Turso DB, set the two `TURSO_*` vars, and redeploy: snapshot mode
+switches off automatically (users/data do NOT migrate automatically; export first
+via `npm run migrate`-style tooling or the admin panel).
+
+Force-disable with env `DB_BLOB_SNAPSHOT=0`.
+
 ## File-upload migration
 
 Files in `public/uploads/` (created during local dev) **won't survive** the Vercel deploy because the serverless filesystem is read-only.

@@ -48,14 +48,17 @@ function diskStorage(subdir) {
 }
 
 // ── Blob uploader (Vercel) ────────────────────────────────────────────────────
+// FIX: @vercel/blob v0.x has NO createClient() export — the old code here
+// (`createClient(token).upload(...)`) crashed on every prod upload with
+// "createClient is not a function". The real API is put(pathname, body, opts).
 async function uploadToBlob(file, subdir) {
-  const { createClient } = require('@vercel/blob');
-  const blob = createClient(process.env.BLOB_READ_WRITE_TOKEN);
+  const { put } = require('@vercel/blob');
   const ext  = (path.extname(file.originalname) || '').toLowerCase().replace(/[^a-z0-9.]/g, '');
-  const key  = `${subdir}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { url } = await blob.upload(key, file.buffer, {
-    contentType: file.mimetype,
-    access:      'public'
+  const key  = `${subdir}/${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+  const { url } = await put(key, file.buffer, {
+    access:      'public',
+    token:       process.env.BLOB_READ_WRITE_TOKEN,
+    contentType: file.mimetype
   });
   return { path: url, filename: file.originalname, url };
 }

@@ -160,10 +160,18 @@ db.initDb().then(() => {
 // ── Graceful shutdown: force-flush the debounced sql.js DB to disk ──────────
 // Without this, a restart/redeploy/Ctrl+C within the ~200ms save-debounce
 // window silently drops the most recent writes (registrations, posts, etc.)
+// In Blob-snapshot mode (Vercel, no Turso) flushDb() additionally force-
+// uploads the snapshot so the latest state survives the instance dying.
 function shutdown(signal) {
   console.log(`\n  ${signal} পেয়েছি — ডাটাবেজ সেভ করে বন্ধ হচ্ছে...`);
   try { db.saveDb(); } catch (e) { console.error('Shutdown save failed:', e.message); }
-  process.exit(0);
+  // give the async Blob upload a brief window before exit
+  const done = () => process.exit(0);
+  if (db.USE_DB_SNAPSHOT && db.flushDb) {
+    Promise.race([db.flushDb(), new Promise(r => setTimeout(r, 3000))]).then(done, done);
+  } else {
+    done();
+  }
 }
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));

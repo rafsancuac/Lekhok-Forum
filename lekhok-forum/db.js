@@ -24,9 +24,25 @@
 const bcrypt = require('bcryptjs');
 const fs     = require('fs');
 const path   = require('path');
+const crypto = require('crypto');
 
 const DB_PATH     = path.join(__dirname, 'lekhok.db');
 const IS_TURSO    = !!process.env.TURSO_DATABASE_URL;
+
+// ── DB snapshot-over-Vercel-Blob mode (serverless WITHOUT Turso) ────────────
+// When a BLOB_READ_WRITE_TOKEN exists and Turso is NOT configured, the sql.js
+// database image is periodically pushed to Vercel Blob and restored on every
+// cold boot — so data survives serverless restarts with zero external
+// accounts. Opt out with DB_BLOB_SNAPSHOT=0 (or set Turso vars for real
+// transactional persistence — see DEPLOYMENT.md for the trade-offs).
+const BLOB_TOKEN      = process.env.BLOB_READ_WRITE_TOKEN || '';
+const USE_DB_SNAPSHOT = !IS_TURSO && !!BLOB_TOKEN && process.env.DB_BLOB_SNAPSHOT !== '0';
+const SNAPSHOT_PATH   = 'private/db-' + crypto.createHash('sha256')
+  .update(process.env.SESSION_SECRET || 'lekhok-forum-snapshot')
+  .digest('hex').slice(0, 16) + '.sqlite';
+let _uploadTimer   = null;
+let _bootRestored  = false;
+let _bootSeeded    = false;
 
 // ────────────────────────────────────────────────────────────────────────────
 // Migration SQL (kept in-sync with db/schema.sql for local-dev convenience)
@@ -307,8 +323,10 @@ function normalizeParams(params) {
 }
 
 // ── sql.js implementation ──────────────────────────────────────────────────
-function makeSqlJsBackend(SQL) {
-  if (fs.existsSync(DB_PATH)) {
+function makeSqlJsBackend(SQL, initialBuffer) {
+  if (initialBuffer) {
+    _sqlJsDb = new SQL.Database(initialBuffer);
+  } else if (fs.existsSync(DB_PATH)) {
     const buf = fs.readFileSync(DB_PATH);
     _sqlJsDb = new SQL.Database(buf);
   } else {
@@ -316,8 +334,33 @@ function makeSqlJsBackend(SQL) {
   }
 
   function saveDb() {
-    const data = _sqlJsDb.export();
+    const data = Buffer.from(_sqlJsDb.export());
+    if (USE_DB_SNAPSHOT) {
+      // /tmp is writable on serverless — keeps the live instance consistent
+      try { fs.writeFileSync('/tmp/lekhok.db', data); } catch (_) {}
+      // Debounced upload to Vercel Blob (survives cold starts)
+      if (_uploadTimer) clearTimeout(_uploadTimer);
+      _uploadTimer = setTimeout(uploadSnapshot, 1500);
+      return;
+    }
     fs.writeFileSync(DB_PATH, Buffer.from(data));
+  }
+  async function uploadSnapshot() {
+    _uploadTimer = null;
+    if (!USE_DB_SNAPSHOT) return;
+    try {
+      const { put } = require('@vercel/blob');
+      const data = Buffer.from(_sqlJsDb.export());   // fresh state at upload time
+      await put(SNAPSHOT_PATH, data, {
+        access: 'public',
+        addRandomSuffix: false,
+        token: BLOB_TOKEN,
+        contentType: 'application/octet-stream'
+      });
+      console.log('[db] Snapshot saved to Vercel Blob (' + data.length + ' bytes)');
+    } catch (e) {
+      console.error('[db] Snapshot upload failed:', e.message);
+    }
   }
   function persist() {
     clearTimeout(_saveTimer);
@@ -354,8 +397,28 @@ function makeSqlJsBackend(SQL) {
     prepare: (sql) => wrapStmt(_sqlJsDb.prepare(sql)),
     exec:    (sql) => { _sqlJsDb.exec(sql); persist(); },
     save:    saveDb,
+    flush:   uploadSnapshot,
     type:    'sqljs'
   };
+}
+
+// ── Snapshot helpers (Vercel Blob, no-Turso deploys) ───────────────────────
+async function fetchSnapshot() {
+  if (!USE_DB_SNAPSHOT) return null;
+  try {
+    const { list } = require('@vercel/blob');
+    const res = await list({ prefix: SNAPSHOT_PATH, limit: 1, token: BLOB_TOKEN });
+    const hit = res.blobs && res.blobs.length ? res.blobs[0] : null;
+    if (!hit) return null;
+    const r = await fetch(hit.url);
+    if (!r.ok) return null;
+    const buf = Buffer.from(await r.arrayBuffer());
+    console.log('[db] Snapshot restored from Vercel Blob (' + buf.length + ' bytes)');
+    return buf;
+  } catch (e) {
+    console.warn('[db] Snapshot restore skipped:', e.message);
+    return null;
+  }
 }
 
 // ── Turso implementation ───────────────────────────────────────────────────
@@ -447,8 +510,12 @@ async function initDb() {
   } else {
     const initSqlJs = require('sql.js');
     const SQL = await initSqlJs();
-    backend = makeSqlJsBackend(SQL);
-    console.log('[db] Using local sql.js at', DB_PATH);
+    const snap = await fetchSnapshot();
+    _bootRestored = !!snap;
+    backend = makeSqlJsBackend(SQL, snap);
+    console.log(USE_DB_SNAPSHOT
+      ? '[db] sql.js + Vercel Blob snapshot mode (no Turso configured)'
+      : '[db] Using local sql.js at ' + DB_PATH);
   }
 
   await runMigrations();
@@ -481,6 +548,7 @@ async function initDb() {
       // both sql.js and Turso), so reuse it here too.
       await seedAdmin();
       seedIfEmptyLocal();
+      _bootSeeded = true;
     }
     // Independent of admin_users (so it also fills in if admin already
     // existed but content tables are empty — e.g. after this fix ships):
@@ -500,6 +568,12 @@ async function initDb() {
     await ensureDemoModerator();
   } catch (e) {
     console.error('[db] Demo moderator seeding failed (non-fatal):', e.message);
+  }
+
+  // Blob-snapshot mode: make sure the very first state (fresh seed or just
+  // migrated schema) lands in Blob so subsequent cold boots restore it.
+  if (USE_DB_SNAPSHOT && (!_bootRestored || _bootSeeded)) {
+    await backend.flush();
   }
 }
 
@@ -907,6 +981,12 @@ function saveDb() {
   if (backend) backend.save();
 }
 
+// flushDb — force-upload the DB snapshot to Vercel Blob right now (no debounce).
+// Called on server shutdown; no-op outside snapshot mode.
+async function flushDb() {
+  if (backend && backend.flush) await backend.flush();
+}
+
 // ── Moderator helpers (sync-friendly on sql.js, async on Turso) ────────────
 // Scope alias map: the /admin panel historically used plural keys
 // ('notices', 'events') while the /moderator panel + MODERATOR_SCOPES
@@ -1022,6 +1102,7 @@ module.exports = {
   getSettingsAll,
   setSetting,
   saveDb,
+  flushDb,
   MODERATOR_SCOPES,
   SCOPE_ALIASES,
   DAILY_CONTENT_SCOPES,
@@ -1032,5 +1113,6 @@ module.exports = {
   revokeModerator,
   listModerators,
   searchPromotableUsers,
-  IS_TURSO
+  IS_TURSO,
+  USE_DB_SNAPSHOT
 };

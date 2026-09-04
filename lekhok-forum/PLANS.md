@@ -381,3 +381,38 @@ node /home/z/my-project/scripts/test-footer-fix.js   # 61 checks — geometry (c
                                                      # homepage btclf-footer regression (3-col, 1 footer)
 bash /home/z/my-project/scripts/test-lekhok.sh       # 77/77 ALL GREEN
 ```
+
+## Cross-Agent Note: Session 13 — Turso-ছাড়া Vercel ডিপ্লয়: Blob snapshot মোড + v1 সাইট আর্কাইভ (৪ সেপ্টেম্বর ২০২৬)
+
+### কনটেক্সট
+ইউজার `lekhok-forum.vercel.app`-এ পুরনো v1 স্ট্যাটিক সাইট দেখছিল (রিপো root থেকে ডিপ্লয় হচ্ছিল;
+আসল অ্যাপ `lekhok-forum/` সাবডিরেক্টরিত)। Turso অ্যাকাউন্টও নেই। সিদ্ধান্ত: Turso ছাড়াই
+Vercel-এ অ্যাপ চালানো + v1 সাইট হিস্টোরি হিসেবে রাখা।
+
+### কী পরিবর্তন হলো
+- **`db.js` — Blob snapshot মোড (নতুন)**: `BLOB_READ_WRITE_TOKEN` সেট থাকলে + Turso না থাকলে
+  অটো-অন (`DB_BLOB_SNAPSHOT=0` দিয়ে বন্ধ)। sql.js ইমেজ debounced (১.৫s) Vercel Blob `put()`-এ
+  যায় — path: `private/db-<sha256(SESSION_SECRET)-এর ১৬-ক্যারেক্টার>.sqlite` (unguessable);
+  boot-এ `list({prefix}) → fetch(url)` দিয়ে রিস্টোর। `flushDb()` এক্সপোর্ট করা হয়েছে
+  (server shutdown-এ force upload, `server.js` shutdown হ্যান্ডলার ৩s wait করে)।
+  **জেনে রাখুন**: last-write-wins — একাধিক serverless instance একসাথে লিখলে একজনের লেখা
+  হারাতে পারে; হেভি ট্রাফিকে Turso-তে যাওয়াই উত্তম (ডকস: DEPLOYMENT.md)।
+- **`middleware/upload.js` — ক্রিটিক্যাল বাগ ফিক্স**: `@vercel/blob`-এ `createClient()` আসলে
+  নেই (v0.23.4 verified) → প্রোডাকশনে সব আপলোড (অ্যাভাটার/গ্যালারি/অ্যাটাচমেন্ট) ক্র্যাশ করত।
+  এখন সঠিক `put(pathname, buffer, { access:'public', token })` API।
+- **`vercel.json`**: `@vercel/node` build-এ `includeFiles: node_modules/sql.js/dist/**` —
+  sql.js-এর .wasm serverless bundle-এ না যাওয়ার ঝুঁকি বন্ধ।
+- **রিপো root**: `index.html/about/committee/contact/notices.html` + `assets/` →
+  **`legacy-static-site/`** (git mv, history অক্ষত) + সেখানে README। অ্যাপের কোথাও এদের
+  রেফারেন্স ছিল না (verified)।
+
+### ভেরিফাই
+```bash
+node /home/z/my-project/scripts/test-blob-snapshot.js   # 10/10 — mock blob দিয়ে save→restart→restore round-trip
+bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল sql.js মোড অক্ষত)
+```
+
+### Vercel ড্যাশবোর্ডে ইউজারের করণীয় (আমাদের কোড এখান থেকে অটো কাজ করবে)
+1. Settings → General → Root Directory = `lekhok-forum`
+2. Storage → Blob store তৈরি → Connect (token অটো-যোগ হয়)
+3. Redeploy — এরপর থেকে lekhok-forum.vercel.app-এ বর্তমান অ্যাপ চলবে
