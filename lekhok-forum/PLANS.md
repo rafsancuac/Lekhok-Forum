@@ -416,3 +416,16 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 1. Settings → General → Root Directory = `lekhok-forum`
 2. Storage → Blob store তৈরি → Connect (token অটো-যোগ হয়)
 3. Redeploy — এরপর থেকে lekhok-forum.vercel.app-এ বর্তমান অ্যাপ চলবে
+
+### Session 14 — কঠোর দুই-ফন্ট সিস্টেম + admin/moderators + admin/daily UI ফিক্স (cross-agent)
+**সমস্যা**: ইউজার রিপোর্ট — /admin/moderators ও /admin/daily-তে "কোনো UI ডিজাইন নাই"; নতুন কঠোর নিয়ম: সাইট-ওয়াইড শুধু দুই ফন্ট (হেডিং/মেনু/বড় লেখা = Hind Siliguri, বাকি সব = Kalpurush/SolaimanLipi-শ্রেণির)।
+**Root cause (দুই স্তর)**:
+1. d91f496 (অন্য agent) body-কনটেন্ট রিরাইট করেছিল, কিন্তু moderators.ejs, daily/list.ejs, daily/form.ejs, complaints.ejs, denied.ejs — ৫টি view-তে `<head>`+CSS লিংকই ছিল না → কাঁচা Times New Roman HTML
+2. fonts.css h1–h4 → `--font-display` (AkhandBengali!) — নিয়ম লঙ্ঘন; SolaimanLipi CDN ৩৮ ফাইলে; admin.css/auth.css-এও SolaimanLipi (রিপোতে ফন্ট নেই → fallback)
+**ফিক্স**:
+- fonts.css রিরাইট: কঠোর দুই-ফন্ট — HindSiliguri (h1–h6, th, nav/menu, logo, section/card title, stat-num) + Kalpurush (body, p, li, td, form, button); legacy var (--font-serif/hand/display/sans/base/bn) সব এই দুটিতে রিম্যাপ; font-* প্রেফ ক্লাস no-op
+- ৩৬ ফাইলে SolaimanLipi CDN → লোকাল `/assets/css/fonts.css?v=<%= AV %>`; layout.ejs + header.ejs থেকে CDN লাইন ডিলিট (fonts.css আগেই আছে)
+- ৫টি bare admin view-এ full HTML skeleton (fonts.css + FontAwesome + admin.css, ?v=<%= AV %>)
+- admin.css: body → Kalpurush + h1–h6/th + sidebar logo/nav → HindSiliguri; auth.css body → Kalpurush
+- অপ্রয়োজনীয় ৮ ফন্ট ফাইল git rm (AkhandBengali×3, BenSen, Durnibar, LipiMollika, Olibrick, RushfordPrinted) — git হিস্টোরিতে সংরক্ষিত
+**ভেরিফাই**: ১৩-পেইজ Playwright অডিট — সব পেইজে h1/nav=HindSiliguri, p=Kalpurush; লোড হয় শুধু HindSiliguri×4 + kalpurush.ttf; 404/JS-এরর ০; ৭৭/৭৭ রিগ্রেশন; admin ১৬ রুট 200

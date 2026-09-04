@@ -1,9 +1,13 @@
 /* ============================================
-   লেখক ফোরাম — Multi-font Typography System
-   Local Bengali fonts from E:\New Bangla Font
+   লেখক ফোরাম — STRICT Two-Font Typography System
+   ─────────────────────────────────────────────
+   নিয়ম (সাইট-ওয়াইড, কঠোরভাবে অনুসরণীয়):
+   • হেডিং, সাব-হেডিং, মেনু, বড় লেখা  → Hind Siliguri
+   • বাকি সব (বডি টেক্সট, প্যারা, ফর্ম) → Kalpurush
+   অন্য কোনো ফন্ট সাইটে ব্যবহার করা যাবে না।
    ============================================ */
 
-/* ── Local font faces ──────────────────────────────────────────────────────── */
+/* ── Font faces — শুধুমাত্র এই দুটি ফন্ট ──────────────────────────────────── */
 @font-face {
   font-family: 'HindSiliguri';
   src: url('/assets/fonts/HindSiliguri-Regular.ttf') format('truetype');
@@ -48,148 +52,65 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'BenSen';
-  src: url('/assets/fonts/BenSen.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'LipiMollika';
-  src: url('/assets/fonts/Lipi%20Mollika%20Unicode.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'AkhandBengali';
-  src: url('/assets/fonts/AkhandBengali.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'AkhandBengali';
-  src: url('/assets/fonts/AkhandBengali-Semibold.otf') format('opentype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'AkhandBengali';
-  src: url('/assets/fonts/AkhandBengali-Extrabold.otf') format('opentype');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Durnibar';
-  src: url('/assets/fonts/Li%20Durnibar%20Unicode%20Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Olibrick';
-  src: url('/assets/fonts/Olibrick-1jn00.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'RushfordPrinted';
-  src: url('/assets/fonts/RushfordPrinted-MVnDe.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* ── CSS custom properties ───────────────────────────────────────────────── */
 :root {
-  /* Core stack — Bengali-first
-     Default body → Kalpurush (SolaimanLipi-compatible rendering)
-     Headings / hero → HindSiliguri */
-  --font-bn:      'Kalpurush', 'HindSiliguri', sans-serif;
-  --font-heading: 'HindSiliguri', 'Kalpurush', sans-serif;
-  --font-serif:   'LipiMollika', 'Kalpurush', serif;
-  --font-sans:    'HindSiliguri', sans-serif;
-  --font-hand:    'BenSen', 'HindSiliguri', sans-serif;
-  --font-display: 'AkhandBengali', 'Durnibar', serif;
+  /* দুই-ফন্ট টোকেন */
+  --font-hs: 'HindSiliguri', sans-serif;             /* হেডিং / মেনু / বড় লেখা */
+  --font-kp: 'Kalpurush', 'HindSiliguri', sans-serif; /* বাকি সব */
+
+  /* Legacy aliases — পুরনো CSS ভাঙবে না, সবাই এখন এই দুটিতেই নামবে */
+  --font-bn:      var(--font-kp);
+  --font-base:    var(--font-kp);
+  --font-body:    var(--font-kp);
+  --font-serif:   var(--font-kp);
+  --font-hand:    var(--font-kp);
+  --font-heading: var(--font-hs);
+  --font-sans:    var(--font-hs);
+  --font-display: var(--font-hs);
 
   /* Font sizes */
   --fs-sm:   0.875rem;   /* 14px */
-  --fs-base: 1rem;        /* 16px default */
+  --fs-base: 1rem;       /* 16px default */
   --fs-lg:   1.125rem;   /* 18px */
   --fs-xl:   1.25rem;    /* 20px */
   --fs-2xl:  1.5rem;     /* 24px */
 }
 
-/* ── Apply font family to body by user preference ────────────────────────── */
-body, body.font-bn    { font-family: var(--font-bn); }
-body.font-serif       { font-family: var(--font-serif); }
-body.font-sans        { font-family: var(--font-sans); }
-body.font-mixed h1,
-body.font-mixed h2,
-body.font-mixed h3 { font-family: var(--font-serif); }
-body.font-mixed       { font-family: var(--font-bn); }
-body.font-hand        { font-family: var(--font-hand); }
-body.font-display     { font-family: var(--font-display); }
-body.font-lipi       { font-family: 'LipiMollika', 'Kalpurush', serif; }
-body.font-akhand     { font-family: 'AkhandBengali', 'Durnibar', serif; }
-body.font-durnibar   { font-family: 'Durnibar', 'AkhandBengali', serif; }
+/* ── বাকি সব — Kalpurush (ডিফল্ট বডি টেক্সট) ──────────────────────────────── */
+body, p, li, td, input, textarea, button, select {
+  font-family: var(--font-kp);
+}
 
-/* Font size preferences */
+/* ── হেডিং / সাব-হেডিং / বড় লেখা / মেনু — Hind Siliguri ──────────────────── */
+h1, h2, h3, h4, h5, h6,
+th,
+.post-title, .article-title,
+.section-title, .card-title, .widget-title,
+.member-name, .leader-card h3,
+.stat-num, .hero h1,
+.logo-text, .brand-name,
+nav a, .main-nav a, .topbar a, .topbar-nav a,
+.drawer a, .menu a, .tab-btn, .tabs a,
+.admin-sidebar nav a, .admin-sidebar .logo strong {
+  font-family: var(--font-hs);
+}
+
+/* ── ইউজার ফন্ট-পছন্দ ক্লাস — এখন no-op (শুধু দুই ফন্টই বৈধ) ─────────────── */
+body.font-bn, body.font-serif, body.font-sans, body.font-hand,
+body.font-mixed, body.font-display, body.font-lipi, body.font-akhand,
+body.font-durnibar { font-family: var(--font-kp); }
+body.font-serif h1, body.font-serif h2, body.font-serif h3,
+body.font-serif h4, body.font-serif h5, body.font-serif h6,
+body.font-mixed h1, body.font-mixed h2, body.font-mixed h3 {
+  font-family: var(--font-hs);
+}
+
+/* ── Font size preferences ───────────────────────────────────────────────── */
 html.fs-small  { font-size: var(--fs-sm); }
 html.fs-large  { font-size: var(--fs-lg); }
 html.fs-small body { font-size: var(--fs-sm); }
 html.fs-large body { font-size: var(--fs-lg); }
 
-/* Headings — HindSiliguri bold on home page, display for article UI */
-h1, h2, h3, h4,
-.post-title, .article-title,
-.member-name,
-.auth-card h1,
-.leader-card h3 {
-  font-family: var(--font-display);
-  font-weight: 600;
-}
-
-/* Body text — Kalpurush by default */
-body, p, li, td, th, input, textarea, button, select {
-  font-family: var(--font-bn);
-}
-
-/* ── Home page typography: headings + nav = HindSiliguri, body = Kalpurush ── */
-body.home-page h1,
-body.home-page h2,
-body.home-page h3,
-body.home-page h4,
-body.home-page .hero h1,
-body.home-page .section-title,
-body.home-page .stat-num,
-body.home-page nav a,
-body.home-page .main-nav a,
-body.home-page .topbar a,
-body.home-page .logo-text {
-  font-family: var(--font-heading);
-}
-
-body.home-page {
-  font-family: var(--font-bn); /* Kalpurush for all body text */
-}
-
-/* Bengali text */
-.bn-text, .bangla {
-  font-family: var(--font-bn);
-}
-
-/* Latin / English passages */
-.latin, .english {
-  font-family: 'Times New Roman', serif;
-}
+/* ── বিশেষ টেক্সট ক্লাস — সব একই দুই-ফন্ট সিস্টেমে ────────────────────────── */
+.bn-text, .bangla   { font-family: var(--font-kp); }
+.latin, .english    { font-family: var(--font-kp); }

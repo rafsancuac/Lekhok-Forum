@@ -1,10 +1,12 @@
 /* Admin panel styles */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'SolaimanLipi', sans-serif; background: #f5f6fa; color: #2c3e50; display: flex; min-height: 100vh; }
+body { font-family: 'Kalpurush', 'HindSiliguri', sans-serif; background: #f5f6fa; color: #2c3e50; display: flex; min-height: 100vh; }
+/* দুই-ফন্ট নিয়ম: হেডিং/সাব-হেডিং/মেনু/বড় লেখা = Hind Siliguri, বাকি সব = Kalpurush */
+h1, h2, h3, h4, h5, h6, th { font-family: 'HindSiliguri', sans-serif; }
 a { color: inherit; text-decoration: none; }
 .admin-sidebar { width: 240px; background: #0a1f44; color: white; min-height: 100vh; padding: 20px 0; position: fixed; }
 .admin-sidebar .logo { text-align: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
-.admin-sidebar .logo strong { display: block; font-size: 1.1rem; }
+.admin-sidebar .logo strong { display: block; font-size: 1.1rem; font-family: 'HindSiliguri', sans-serif; }
 .admin-sidebar nav a { display: block; padding: 12px 20px; color: rgba(255,255,255,0.8); border-left: 3px solid transparent; transition: all 0.2s; }
 .admin-sidebar nav a:hover, .admin-sidebar nav a.active { background: rgba(255,255,255,0.1); border-left-color: #059669; color: white; }
 .admin-sidebar nav a i { margin-right: 10px; width: 20px; }

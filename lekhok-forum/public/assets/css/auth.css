@@ -11,7 +11,7 @@
 .char-counter.is-error { color: #c0392b; font-weight: 700; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'SolaimanLipi', sans-serif; background: linear-gradient(135deg, #0a1f44 0%, #0B1121 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+body { font-family: 'Kalpurush', 'HindSiliguri', sans-serif; background: linear-gradient(135deg, #0a1f44 0%, #0B1121 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .auth-card { background: white; border-radius: var(--radius-sm); padding: 40px; max-width: 480px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); position: relative; }
 .back-home { position: absolute; top: 16px; left: 16px; color: #0a1f44; text-decoration: none; font-size: 0.9rem; }
 .back-home:hover { color: #059669; }

@@ -246,12 +246,13 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ৮. ডিজাইন সিস্টেম
 
-### মাল্টি-ফন্ট (`public/assets/css/fonts.css`)
-Hind Siliguri, Tiro Bangla, SolaimanLipi (ডিফল্ট/CDN), Kalpurush, Times New Roman — body class দিয়ে টগল করার সিস্টেম বানানো আছে।
-
-**⚠️ স্ট্যাটাস:** CSS ক্লাস সিস্টেম আছে ও ড্যাশবোর্ড/ইউজার পেজে যুক্ত, কিন্তু —
-- পাবলিক পেজে (`layout.ejs`) এখনো যুক্ত হয়নি (শুধু SolaimanLipi)
-- **কোনো UI টগল বাটনই নেই** — ইউজার এখনো ফন্ট বদলাতে পারে না, শুধু ভিত্তি বানানো আছে
+### কঠোর দুই-ফন্ট নিয়ম (`public/assets/css/fonts.css`) — সেশন ১৪ থেকে কার্যকর
+**সাইট-ওয়াইড শুধু দুটি ফন্ট, কঠোরভাবে অনুসরণীয়:**
+- **Hind Siliguri** → সব হেডিং (h1–h6), সাব-হেডিং, মেনু/নেভ, লোগো, সেকশন/কার্ড টাইটেল, টেবিল হেডার (th), বড় সংখ্যা
+- **Kalpurush** → বাকি সব (বডি টেক্সট, প্যারাগ্রাফ, লিস্ট, টেবিল সেল, ফর্ম, বাটন)
+- নিয়ম ভাঙা যাবে না — নতুন CSS-এ ফন্ট লাগলে `var(--font-hs)` বা `var(--font-kp)` ব্যবহার করুন; অন্য কোনো ফন্ট-ফ্যামিলি যোগ নিষিদ্ধ
+- SolaimanLipi CDN সম্পূর্ণ সরানো হয়েছে — সব ফন্ট লোকাল (fonts/ = HindSiliguri×৫ ওয়েট + kalpurush.ttf)
+- পুরনো `--font-display/serif/hand/sans/base/bn` ভেরিয়েবল ও `body.font-*` প্রেফারেন্স ক্লাস এখন এই দুই ফন্টেই রিম্যাপড (backward-compatible)
 
 ### UI কম্পোনেন্ট
 - **Topbar:** ব্র্যান্ড + নোটিফ বেল (ড্রপডাউন, unread ব্যাজ) + ইউজার মেনু (ড্যাশবোর্ড পেজে)
@@ -292,6 +293,14 @@ Hind Siliguri, Tiro Bangla, SolaimanLipi (ডিফল্ট/CDN), Kalpurush, Ti
 ---
 
 ## ১০. Changelog
+
+### সেশন ১৪ (৪ সেপ্টেম্বর ২০২৬) — কঠোর দুই-ফন্ট টাইপোগ্রাফি + admin moderators/daily UI ফিক্স
+- **নতুন সাইট-ওয়াইড কঠোর নিয়ম**: হেডিং, সাব-হেডিং, মেনু, বড় লেখা = **Hind Siliguri**; বাকি সব টেক্সট = **Kalpurush** — সাইটে এই দুই ফন্ট ছাড়া আর কিছু নেই
+- fonts.css রিরাইট: AkhandBengali/BenSen/Durnibar/LipiMollika/Olibrick/RushfordPrinted/Times New Roman সরাতে (হেডিং আগে AkhandBengali-তে ছিল — নিয়ম লঙ্ঘন); legacy CSS ভেরিয়েবল দুই ফন্টে রিম্যাপ
+- **Root cause ফিক্স**: /admin/moderators, /admin/daily (list+form), /admin/complaints, /admin/denied — ৫টি পেইজে `<head>`+CSS লিংকই ছিল না (কাঁচা unstyled HTML) → full skeleton যোগ
+- SolaimanLipi CDN (৩৮ ফাইল) → লোকাল fonts.css — এক্সটার্নাল ফন্ট ডিপেন্ডেন্সি শূন্য; admin.css/auth.css-এর অসম্ভব SolaimanLipi → Kalpurush
+- অপ্রয়োজনীয় ৮ ফন্ট ফাইল রিপো থেকে সরানো (git হিস্টোরিতে সংরক্ষিত); এখন fonts/ = HindSiliguri×৫ + kalpurush.ttf
+- যাচাই: ১৩-পেইজ ফন্ট অডিট (সব হেডিং/মেনু HS, বডি KP), ৭৭/৭৭ রিগ্রেশন, admin ১৬ রুট 200, 404/JS-এরর ০
 
 ### সেশন ৩ (৩ সেপ্টেম্বর ২০২৬, বিকেল) — বাগ ফিক্স ও নথিভুক্তকরণ
 - একটা বিস্তারিত ডকুমেন্টেশন সেশন — code পরিবর্তন হয়নি, শুধু bugs/routes/schema/roadmap নথিভুক্ত করা হয়েছিল (দেখুন কমিট `f1c5c43`)।
