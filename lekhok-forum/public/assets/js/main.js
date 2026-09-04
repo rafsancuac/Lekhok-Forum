@@ -254,6 +254,9 @@ window.showToast = showToast;
 
 /* ============= v3: Reactions (5 emoji) ============= */
 (function () {
+  // Build marker — lets anyone verify in the DevTools console that the
+  // browser is running THIS main.js (not a stale cached copy).
+  console.log('%cলেখক ফোরাম · main.js build 2026-09-04-r3 (hold+slide reactions)', 'color:#059669;font-weight:600');
   const META = {
     like: { emoji: '👍', label: 'লাইক' },
     love: { emoji: '❤️', label: 'ভালোবাসা' },
@@ -331,7 +334,11 @@ window.showToast = showToast;
     let holdPreview = null; /* option currently highlighted while holding */
     const LONG_PRESS_MS = 350;
 
-    function openPicker() { picker.classList.add('open'); }
+    function openPicker() {
+      picker.classList.add('open');
+      /* haptic cue that the hold registered (mobile) */
+      if (navigator.vibrate) { try { navigator.vibrate(15); } catch (_) {} }
+    }
     function closePicker() { picker.classList.remove('open'); }
     function clearPreview() { if (holdPreview) { holdPreview.classList.remove('preview'); holdPreview = null; } }
     function previewOpt(opt) {
@@ -391,6 +398,10 @@ window.showToast = showToast;
       clearPreview();
     });
     mainBtn.addEventListener('mouseleave', cancelPress);
+    // Android: long-press would otherwise open the system text-selection /
+    // context menu (~500ms) and break the hold gesture. A react button never
+    // needs a context menu.
+    mainBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // ── Touch: hold opens, slide previews, release selects ──
     // (Touch events keep firing on the element where the touch STARTED,

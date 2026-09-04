@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const expressLayouts = require('express-ejs-layouts');
@@ -8,6 +9,27 @@ const { runBirthdayCheck } = require('./helpers/notify');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// ── Asset cache-busting version ──────────────────────────────────────────────
+// Hash of public/assets file sizes+mtimes at boot. Exposed to all views as
+// `AV` (app.locals) and appended to hot asset URLs (?v=…) so a browser can
+// never keep serving a stale main.js/style.css after an update + restart.
+function computeAssetVersion() {
+  let h = 5381;
+  try {
+    const walk = (d) => {
+      for (const f of fs.readdirSync(d)) {
+        const p = path.join(d, f);
+        const st = fs.statSync(p);
+        if (st.isDirectory()) walk(p);
+        else { h = ((h * 33) ^ (st.size + Math.floor(st.mtimeMs / 1000))) | 0; }
+      }
+    };
+    walk(path.join(__dirname, 'public', 'assets'));
+  } catch (e) { h = Date.now() & 0x7fffffff; }
+  return (h >>> 0).toString(36);
+}
+app.locals.AV = computeAssetVersion();
 
 // ── Async-handler safety net ─────────────────────────────────────────────────
 // The async/Turso migration turned every route handler into an async function.

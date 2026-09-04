@@ -329,3 +329,33 @@ node /home/z/my-project/scripts/test-reaction-e2e.js   # 20 gesture checks (Play
 bash scripts/test-login-fixes.sh                        # 21 checks
 bash scripts/test-lekhok.sh http://localhost:8080       # 77 checks
 ```
+
+## Cross-Agent Note: Session 11 — Asset Cache-Busting + Android Long-Press Fix (৪ সেপ্টেম্বর ২০২৬)
+
+**Status:** ✅ DONE — 37 views compile, 20/20 reaction E2E + 16/16 regression green, build marker verified in browser
+
+### Why the user still saw the old reaction behavior (report: "হচ্ছে না ত")
+- Static assets were served WITHOUT any version param — a browser (or CDN) holding
+  a cached `/assets/js/main.js` kept running the OLD reaction code even after
+  pull + restart. Every `main.js`/hot-CSS URL now carries `?v=<AV>`.
+- **`server.js`**: new `computeAssetVersion()` (djb2 hash of public/assets
+  sizes+mtimes at boot) → `app.locals.AV`. Version changes whenever any asset
+  file changes and the server restarts → URL changes → cache busted.
+- **Views**: ALL `main.js` includes (37: layout.ejs + every user/admin view)
+  + header.ejs (style/fonts/feed + extra_css loop) + layout.ejs CSS links now
+  append `?v=<%= AV %>`. External CDN links untouched.
+- **`main.js`**: `console.log` build marker
+  (`লেখক ফোরাম · main.js build 2026-09-04-r3`) — open DevTools console; if the
+  marker is absent the browser is running a STALE copy. Bump the date-suffix on
+  every future main.js edit.
+- **Android long-press fix**: `contextmenu` preventDefault on `.main-react`
+  (system text-selection menu at ~500ms was stealing the hold gesture on
+  Android Chrome; iOS was already covered by `-webkit-touch-callout`).
+- Haptic feedback: `navigator.vibrate(15)` when the picker opens on touch.
+
+### Verify
+```bash
+pkill -f "node server.js"; node server.js &
+curl -s localhost:8080/gallery | grep 'main.js?v='   # non-empty
+node /home/z/my-project/scripts/test-reaction-e2e.js # 20 checks
+```
