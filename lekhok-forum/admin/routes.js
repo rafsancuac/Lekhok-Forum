@@ -83,13 +83,22 @@ router.get('/login', async (req, res) => {
 
 // ── Login (POST) ─────────────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-    return res.render('admin/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', layout: false, currentPath: '/admin/login' });
+  try {
+    const { username, password } = req.body;
+    const user = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      return res.render('admin/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', layout: false, currentPath: '/admin/login' });
+    }
+    req.session.adminUser = { id: user.id, username: user.username, display_name: user.display_name };
+    return new Promise((resolve) => req.session.save((err) => {
+      if (err) console.error('[admin] /admin/login session save error:', err);
+      res.redirect('/admin');
+      resolve();
+    }));
+  } catch (e) {
+    console.error('[admin] /admin/login error:', e);
+    return res.status(500).render('admin/login', { error: 'লগইন ব্যর্থ: ' + e.message, layout: false, currentPath: '/admin/login' });
   }
-  req.session.adminUser = { id: user.id, username: user.username, display_name: user.display_name };
-  res.redirect('/admin');
 });
 
 // ── Logout ───────────────────────────────────────────────────────────────────

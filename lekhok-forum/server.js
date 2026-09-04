@@ -10,6 +10,10 @@ const { runBirthdayCheck } = require('./helpers/notify');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Vercel runs behind a CDN/proxy — tell Express to trust it so req.protocol,
+// req.secure, and secure cookies work correctly.
+app.set('trust proxy', 1);
+
 // ── Asset cache-busting version ──────────────────────────────────────────────
 // Hash of public/assets file sizes+mtimes at boot. Exposed to all views as
 // `AV` (app.locals) and appended to hot asset URLs (?v=…) so a browser can

@@ -16,25 +16,38 @@ router.get('/login', async (req, res) => {
 //    shown a confusing "ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড" on /login; now the
 //    same credentials work here and land straight on /admin.
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  const user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
-  if (user && bcrypt.compareSync(password, user.password_hash)) {
-    if (user.status === 'banned') {
-      return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', currentPath: '/login' });
+  try {
+    const { username, password } = req.body;
+    const user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
+    if (user && bcrypt.compareSync(password, user.password_hash)) {
+      if (user.status === 'banned') {
+        return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', currentPath: '/login' });
+      }
+      req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
+      await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+      return new Promise((resolve) => req.session.save((err) => {
+        if (err) console.error('[auth] /login session save error:', err);
+        res.redirect('/dashboard');
+        resolve();
+      }));
     }
-    req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
-    await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
-    return res.redirect('/dashboard');
-  }
 
-  // Admin-panel account fallback
-  const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
-  if (admin && bcrypt.compareSync(password, admin.password_hash)) {
-    req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
-    return res.redirect('/admin');
-  }
+    // Admin-panel account fallback
+    const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
+    if (admin && bcrypt.compareSync(password, admin.password_hash)) {
+      req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
+      return new Promise((resolve) => req.session.save((err) => {
+        if (err) console.error('[auth] /login admin session save error:', err);
+        res.redirect('/admin');
+        resolve();
+      }));
+    }
 
-  return res.render('user/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', currentPath: '/login' });
+    return res.render('user/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', currentPath: '/login' });
+  } catch (e) {
+    console.error('[auth] /login error:', e);
+    return res.status(500).render('user/login', { error: 'লগইন ব্যর্থ: ' + e.message, currentPath: '/login' });
+  }
 });
 
 // ── Register (GET) ───────────────────────────────────────────────────────────
