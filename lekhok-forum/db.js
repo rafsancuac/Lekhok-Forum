@@ -343,7 +343,16 @@ function makeSqlJsBackend(SQL, initialBuffer) {
       _uploadTimer = setTimeout(uploadSnapshot, 1500);
       return;
     }
-    fs.writeFileSync(DB_PATH, Buffer.from(data));
+    // No Turso, no Blob token configured: best-effort local write. This path
+    // works for local dev (DB_PATH is a normal writable file) but will throw
+    // EROFS if it ever runs on Vercel's read-only bundle filesystem — fall
+    // back to /tmp so the app still boots (without persistence) rather than
+    // crashing outright if someone deploys before setting up Blob or Turso.
+    try {
+      fs.writeFileSync(DB_PATH, Buffer.from(data));
+    } catch (e) {
+      try { fs.writeFileSync('/tmp/lekhok.db', Buffer.from(data)); } catch (_) {}
+    }
   }
   async function uploadSnapshot() {
     _uploadTimer = null;

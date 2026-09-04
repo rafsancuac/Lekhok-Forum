@@ -6,12 +6,6 @@
   "routes": [
     { "src": "/(.*)", "dest": "api/index.js" }
   ],
-  "env": {
-    "TURSO_DATABASE_URL": "@turso_database_url",
-    "TURSO_AUTH_TOKEN": "@turso_auth_token",
-    "SESSION_SECRET": "@session_secret",
-    "BLOB_READ_WRITE_TOKEN": "@blob_read_write_token"
-  },
   "headers": [
     {
       "source": "/uploads/(.*)",
