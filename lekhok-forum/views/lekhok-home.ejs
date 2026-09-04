@@ -157,15 +157,22 @@
       <a href="/notices" class="link-more">সকল বিজ্ঞপ্তি <i class="fas fa-arrow-right"></i></a>
     </div>
     <% if (recentNotices && recentNotices.length) { %>
-      <div class="notice-grid reveal-stagger">
+      <div class="notice-list notice-list--home reveal-stagger">
         <% recentNotices.slice(0, 6).forEach(n => { %>
-          <a href="/notices/<%= n.id %>" class="notice-card">
-            <div class="notice-icon"><i class="fas fa-bullhorn"></i></div>
-            <div class="notice-body">
-              <h3 class="notice-title"><%= n.title %></h3>
-              <% if (n.date) { %><span class="notice-date"><i class="far fa-calendar-alt"></i> <%= n.date %></span><% } %>
-            </div>
-            <span class="notice-arrow"><i class="fas fa-arrow-right"></i></span>
+          <a href="/notices/<%= n.id %>" class="notice-row notice-row--compact">
+            <span class="notice-row-icon cat-<%= n.category %>">
+              <i class="fas fa-<%= n.category === 'press' ? 'bullhorn' : n.category === 'event' ? 'calendar-alt' : 'bell' %>"></i>
+            </span>
+            <span class="notice-row-main">
+              <span class="notice-row-top">
+                <span class="notice-row-title"><%= n.title %></span>
+                <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
+              </span>
+            </span>
+            <span class="notice-row-meta">
+              <span class="notice-row-date"><i class="far fa-calendar"></i><%= n.date || '' %></span>
+              <i class="fas fa-chevron-right notice-row-arrow"></i>
+            </span>
           </a>
         <% }) %>
       </div>

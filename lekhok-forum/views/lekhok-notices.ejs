@@ -18,16 +18,21 @@
     <% if (notices && notices.length) { %>
       <div class="notice-list reveal-stagger">
         <% notices.forEach(n => { %>
-          <a href="/notices/<%= n.id %>" class="notice-card-link">
-            <div class="notice-item">
-              <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
-              <div>
-                <h3><%= n.title %></h3>
-                <% if (n.content) { %><p><%= n.content.length > 140 ? n.content.substring(0, 140) + '…' : n.content %></p><% } %>
-                <p class="notice-date"><i class="far fa-calendar"></i> <%= n.date || '' %></p>
-              </div>
-              <i class="fas fa-arrow-right" style="margin-left:auto;color:var(--accent);"></i>
-            </div>
+          <a href="/notices/<%= n.id %>" class="notice-row">
+            <span class="notice-row-icon cat-<%= n.category %>">
+              <i class="fas fa-<%= n.category === 'press' ? 'bullhorn' : n.category === 'event' ? 'calendar-alt' : 'bell' %>"></i>
+            </span>
+            <span class="notice-row-main">
+              <span class="notice-row-top">
+                <span class="notice-row-title"><%= n.title %></span>
+                <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
+              </span>
+              <% if (n.content) { %><span class="notice-row-excerpt"><%= n.content.length > 140 ? n.content.substring(0, 140) + '…' : n.content %></span><% } %>
+            </span>
+            <span class="notice-row-meta">
+              <span class="notice-row-date"><i class="far fa-calendar"></i><%= n.date || '' %></span>
+              <i class="fas fa-chevron-right notice-row-arrow"></i>
+            </span>
           </a>
         <% }) %>
       </div>

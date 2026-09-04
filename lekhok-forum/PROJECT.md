@@ -294,6 +294,14 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ১৮ (৫ সেপ্টেম্বর ২০২৬) — বিজ্ঞপ্তির ডিজাইন প্রফেশনাল রি-ডিজাইন (হোম + সকল বিজ্ঞপ্তি)
+- **ইউজার রিপোর্ট**: "সকল বিজ্ঞপ্তি পেইজ আর হোম পেইজের বিজ্ঞপ্তির ডিজাইন প্রফেশনাল লাগছে না; ১ লাইনে ১টাই রাখো; কালো কালারটা ভালো দেখাচ্ছে না"
+- **নতুন শেয়ার্ড `.notice-row` সিস্টেম** (style.css): দুই পেইজেই একই প্রফেশনাল রো-ডিজাইন — প্রতি লাইনে ঠিক ১টি বিজ্ঞপ্তি, বামে ক্যাটাগরি-রঙিন আইকন চিপ (প্রেস=cyan `fa-bullhorn`, নোটিশ=blue `fa-bell`, ইভেন্ট=amber `fa-calendar-alt`), টাইটেল + inline pill badge, নিচে ১-লাইন excerpt (শুধু /notices), ডানে muted তারিখ + chevron
+- **"কালো" উপাদান অপসারণ**: পুরনো `.notice-date`-এর ডার্ক-নেভি (`--brand #0a1f44`) চিপ বাদ — তারিখ এখন `--text-muted` লেখা + emerald ক্যালেন্ডার আইকন; হোমের পুরনো `.update-*` bare-text তালিকাও বাদ (dashboard.css থেকে ডেড CSS মুছে)
+- **হোভার**: emerald left-rail (::before) + border-glow + তীর স্লাইড; মোবাইল (≤576/640px) badge লুকানো, টাইটেল-লেখা পড়ে যাওয়ার জায়গা পায়
+- মাইগ্রেশন: `lekhok-notices.ejs` + `lekhok-home.ejs` (৬টি সাম্প্রতিক বিজ্ঞপ্তি) নতুন মার্কআপে; `notice-card-link`/`notice-item`/`update-list` ক্লাস কোথাও ব্যবহৃত নেই (grep-verified); ডিটেইল পেইজ অপরিবর্তিত
+- যাচাই: Playwright ডেস্কটপ+মোবাইল স্ক্রিনশট, hover-state, 77/77 রিগ্রেশন, `/notices` `/` `/notices/:id` সব 200
+
 ### সেশন ১৫ (৪ সেপ্টেম্বর ২০২৬) — Vercel ডেপ্লয়মেন্ট ট্রিগার (Root Directory কার্যকর করা)
 - **লাইভ ডায়াগনোসিস**: `lekhok-forum.vercel.app` এখনো `500 FUNCTION_INVOCATION_FAILED` — কারণ প্রোডাকশনে চলা ডেপ্লয়মেন্ট (`cf350b6`) বিল্ড হয়েছিল **Root Directory সেট হওয়ার আগে** → repo root থেকে বিল্ড → `lekhok-forum/vercel.json` অদৃশ্য, `api/index.js` ফাংশন হিসেবে ডিসকভারই হয়নি
 - ঐ ডেপ্লয়মেন্ট **redeploy-অযোগ্য** ("This deployment can not be redeployed. Please try again from a fresh commit") → নতুন কমিট ছাড়া উপায় নেই
