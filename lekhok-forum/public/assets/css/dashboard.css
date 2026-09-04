@@ -203,3 +203,41 @@
 .update-date { font-size: 0.72rem; color: var(--text-muted, #64748b); flex-shrink: 0; }
 
 /* v3+: (logo-mark CSS removed — text-only logo) */
+
+/* v4: Repost card (Facebook-style timeline share) */
+.repost-card { padding: 0; }
+.repost-card > .feed-card-head { padding: 14px 16px 8px; }
+.repost-card .repost-tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+}
+.repost-card .repost-tag i { color: var(--accent, #059669); margin-right: 4px; }
+.repost-card .repost-undo {
+  background: none; border: none; color: var(--text-muted, #64748b);
+  padding: 4px 8px; border-radius: 6px; cursor: pointer;
+  font-size: 0.95rem; align-self: flex-start;
+}
+.repost-card .repost-undo:hover { background: #f1f5f9; color: #dc2626; }
+.repost-card .repost-note {
+  padding: 4px 16px 8px;
+  font-size: 0.95rem;
+  color: var(--text, #1f2937);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.repost-card .repost-original {
+  margin: 0 12px 12px;
+  padding: 0;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.repost-card .repost-original > .feed-card-head { padding: 12px 14px 6px; }
+.repost-card .repost-original .feed-card-body { padding: 0 14px 10px; }
+.repost-card .feed-type-badge.repost {
+  background: rgba(5,150,105,0.12);
+  color: var(--accent, #059669);
+}

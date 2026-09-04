@@ -40,7 +40,59 @@
           <a href="/members" class="btn btn-primary btn-sm">সদস্যদের খুঁজুন</a>
         </div>
       <% } else { %>
-        <% feed.forEach(item => { %>
+        <% feed.forEach(item => {
+             if (item._orphan) return; // skip reposts whose original was deleted
+        %>
+          <% if (item.item_type === 'repost' && item.original) { %>
+            <article class="feed-card card repost-card" data-repost-id="<%= item.id %>">
+              <div class="feed-card-head">
+                <img src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                <div>
+                  <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
+                  <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
+                  <span class="repost-tag"><i class="fas fa-share"></i> নিজের টাইমলাইনে শেয়ার করেছেন</span>
+                  <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
+                </div>
+                <span class="feed-type-badge repost"><i class="fas fa-share"></i> শেয়ার</span>
+                <% if (item.username === user.username) { %>
+                  <button type="button" class="btn-icon repost-undo" data-repost-id="<%= item.id %>" title="শেয়ার প্রত্যাহার"><i class="fas fa-times"></i></button>
+                <% } %>
+              </div>
+              <% if (item.repost_note) { %>
+                <div class="repost-note"><%= item.repost_note %></div>
+              <% } %>
+              <div class="repost-original card-inner">
+                <div class="feed-card-head">
+                  <img src="<%= item.original.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                  <div>
+                    <a href="/profile/<%= item.original.username %>" class="feed-author"><%= item.original.author_name %></a>
+                    <% if (item.original.author_role === 'admin' || item.original.author_role === 'moderator') { %><span class="role-chip"><%= item.original.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
+                    <div class="feed-time" data-ts="<%= new Date(item.original.published_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.original.published_at).toLocaleString('bn-BD') %></div>
+                  </div>
+                  <% if (item.original.type === 'question') { %>
+                    <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
+                  <% } else { %>
+                    <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+                  <% } %>
+                </div>
+                <% if (item.original.cover_image) { %>
+                  <a href="<%= item.original.link %>"><img src="<%= item.original.cover_image %>" class="feed-image" alt=""></a>
+                <% } %>
+                <div class="feed-card-body">
+                  <h3 class="feed-title"><a href="<%= item.original.link %>"><%= item.original.title %></a></h3>
+                  <p class="feed-text"><%= (item.original.body || '').substring(0, 280) %><% if ((item.original.body || '').length > 280) { %>…<a href="<%= item.original.link %>"> আরও পড়ুন</a><% } %></p>
+                </div>
+                <%- include('../partials/actions-bar', {
+                  targetId: item.original.id,
+                  targetType: 'post',
+                  counts: item.original.reactionCounts,
+                  mine: item.original.myReaction,
+                  link: item.original.link,
+                  bookmarked: false
+                }) %>
+              </div>
+            </article>
+          <% } else { %>
           <article class="feed-card card">
             <div class="feed-card-head">
               <% if (item.username === 'moderator') { %>
@@ -81,6 +133,7 @@
               bookmarked: false
             }) %>
           </article>
+          <% } %>
         <% }); %>
       <% } %>
     </main>

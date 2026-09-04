@@ -97,7 +97,7 @@ router.get('/profile/edit', async (req, res) => {
 router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   const u = req.session.user;
-  const { full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, show_email, show_phone, show_birth } = req.body;
+  const { full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, show_email, show_phone, show_birth, new_password, confirm_password } = req.body;
 
   if (req.uploadError) {
     return res.redirect('/profile/edit?err=' + encodeURIComponent(req.uploadError));
@@ -106,32 +106,70 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     return res.redirect('/profile/edit?err=' + encodeURIComponent('পূর্ণ নাম আবশ্যক'));
   }
 
+  // Password change (optional). Empty + empty = no change. Any non-empty value
+  // must be 6+ chars and match the confirm field.
+  let passwordHash = null;
+  if (new_password || confirm_password) {
+    if (String(new_password).length < 6) {
+      return res.redirect('/profile/edit?err=' + encodeURIComponent('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে'));
+    }
+    if (new_password !== confirm_password) {
+      return res.redirect('/profile/edit?err=' + encodeURIComponent('নতুন পাসওয়ার্ড ও নিশ্চিতকরণ মিলছে না'));
+    }
+    passwordHash = bcrypt.hashSync(new_password, 10);
+  }
+
   // Preserve current avatar unless a new file was uploaded.
   const avatarPath = req.file ? '/uploads/avatars/' + req.file.filename : (u.avatar_url || null);
   // Treat empty strings as null for nullable fields. The form always sends every field, so a blank
   // value is the user's intent to clear it.
   const clean = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();
-  await db.prepare(
-    `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=? WHERE id=?`
-  ).run(
-    full_name.trim(),
-    clean(email),
-    clean(phone),
-    clean(bio),
-    clean(designation),
-    clean(address),
-    clean(birth_date),
-    gender && ['male','female','other'].includes(gender) ? gender : (u.gender || 'other'),
-    clean(social_fb),
-    clean(social_twitter),
-    clean(social_linkedin),
-    clean(social_website),
-    show_email ? 1 : 0,
-    show_phone ? 1 : 0,
-    show_birth ? 1 : 0,
-    avatarPath,
-    u.id
-  );
+  if (passwordHash) {
+    await db.prepare(
+      `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=?, password_hash=? WHERE id=?`
+    ).run(
+      full_name.trim(),
+      clean(email),
+      clean(phone),
+      clean(bio),
+      clean(designation),
+      clean(address),
+      clean(birth_date),
+      gender && ['male','female','other'].includes(gender) ? gender : (u.gender || 'other'),
+      clean(social_fb),
+      clean(social_twitter),
+      clean(social_linkedin),
+      clean(social_website),
+      show_email ? 1 : 0,
+      show_phone ? 1 : 0,
+      show_birth ? 1 : 0,
+      avatarPath,
+      passwordHash,
+      u.id
+    );
+  } else {
+    await db.prepare(
+      `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=? WHERE id=?`
+    ).run(
+      full_name.trim(),
+      clean(email),
+      clean(phone),
+      clean(bio),
+      clean(designation),
+      clean(address),
+      clean(birth_date),
+      gender && ['male','female','other'].includes(gender) ? gender : (u.gender || 'other'),
+      clean(social_fb),
+      clean(social_twitter),
+      clean(social_linkedin),
+      clean(social_website),
+      show_email ? 1 : 0,
+      show_phone ? 1 : 0,
+      show_birth ? 1 : 0,
+      avatarPath,
+      u.id
+    );
+  }
   // Re-read the full user record so session reflects every updated field (including avatar_url).
   const updated = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
   req.session.user = {
@@ -142,7 +180,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     gender: updated.gender,
     role: updated.role || 'user'
   };
-  res.redirect('/profile/' + updated.username + '?updated=1');
+  res.redirect('/profile/' + updated.username + '?updated=1' + (passwordHash ? '&pwd=1' : ''));
 });
 
 module.exports = router;

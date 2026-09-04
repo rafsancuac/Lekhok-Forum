@@ -2,7 +2,7 @@
 <html lang="bn" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <title>নতুন প্রশ্ন — লেখক ফোরাম</title>
+  <title><%= post?.id ? 'প্রশ্ন সম্পাদনা' : 'নতুন প্রশ্ন' %> — লেখক ফোরাম</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/auth.css" />
@@ -10,12 +10,12 @@
 <body>
   <div class="auth-card" style="max-width:600px;margin:30px auto">
     <a href="/qa" class="back-home"><i class="fas fa-arrow-left"></i> প্রশ্নের তালিকায় ফিরে যান</a>
-    <h1>নতুন প্রশ্ন করুন</h1>
+    <h1><%= post?.id ? 'প্রশ্ন সম্পাদনা' : 'নতুন প্রশ্ন করুন' %></h1>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
     <form method="POST">
-      <div class="form-group"><label>প্রশ্নের বিষয় *</label><input type="text" name="title" placeholder="আপনার প্রশ্ন সংক্ষেপে লিখুন..." required></div>
-      <div class="form-group"><label>বিস্তারিত (ঐচ্ছিক)</label><textarea id="body" name="body" rows="6" placeholder="প্রসঙ্গ বা বিস্তারিত বিবরণ..."></textarea><div class="char-counter" id="charCounter" aria-live="polite"></div></div>
-      <button type="submit" class="btn-primary"><i class="fas fa-question-circle"></i> প্রশ্ন করুন</button>
+      <div class="form-group"><label>প্রশ্নের বিষয় *</label><input type="text" name="title" value="<%= post?.title || '' %>" placeholder="আপনার প্রশ্ন সংক্ষেপে লিখুন..." required></div>
+      <div class="form-group"><label>বিস্তারিত (ঐচ্ছিক)</label><textarea id="body" name="body" rows="6" placeholder="প্রসঙ্গ বা বিস্তারিত বিবরণ..."><%= post?.body || '' %></textarea><div class="char-counter" id="charCounter" aria-live="polite"></div></div>
+      <button type="submit" class="btn-primary"><i class="fas fa-<%= post?.id ? 'save' : 'question-circle' %>"></i> <%= post?.id ? 'সংরক্ষণ করুন' : 'প্রশ্ন করুন' %></button>
     </form>
   </div>
   <script>

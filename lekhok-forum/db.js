@@ -303,6 +303,20 @@ const MIGRATION_SQL = `
   CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);
 `;
 
+// Columns added in later migrations — applied to existing installs during initDb().
+const LATER_COLUMNS = [
+  // [table, column, definition]
+  ['posts', 'repost_of',   'INTEGER'],
+  ['posts', 'repost_note', 'TEXT'],
+];
+async function applyLaterMigrations() {
+  for (const [table, col, def] of LATER_COLUMNS) {
+    try {
+      await backend.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`).run();
+    } catch (e) { /* duplicate column — fine */ }
+  }
+}
+
 // ── Moderator scope catalogue (used by admin/moderator routes) ────────────
 const MODERATOR_SCOPES = [
   { key: 'quiz',        label: 'আজকের কুইজ' },
@@ -534,6 +548,7 @@ async function initDb() {
   }
 
   await runMigrations();
+  await applyLaterMigrations();
 
   // Seed if empty (Turso + local)
   if (IS_TURSO) {

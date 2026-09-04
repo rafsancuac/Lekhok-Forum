@@ -521,6 +521,29 @@ window.showToast = showToast;
           if (!LOGGED_IN()) return location.href = '/login';
           openShareModal(url);
           menu.classList.remove('open');
+        } else if (kind === 'timeline') {
+          if (!LOGGED_IN()) return location.href = '/login';
+          const postId = menu.dataset.sharePostId;
+          if (!postId) { showToast('পোস্ট শনাক্ত হয়নি', 'error'); return; }
+          const note = prompt('আপনার টাইমলাইনে শেয়ার করুন (ঐচ্ছিক নোট লিখুন বা খালি রাখুন):', '');
+          if (note === null) { menu.classList.remove('open'); return; } // user cancelled
+          menu.classList.remove('open');
+          const res = await fetch('/api/repost', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ post_id: postId, note: note.trim() })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            showToast('আপনার টাইমলাইনে শেয়ার হয়েছে ✓', 'success');
+            setTimeout(() => location.reload(), 600);
+          } else {
+            const msg = data.error === 'already reposted' ? 'আপনি ইতিমধ্যে শেয়ার করেছেন'
+                     : data.error === 'cannot repost a repost' ? 'একটি শেয়ারকে আবার শেয়ার করা যাবে না'
+                     : data.error === 'own post' ? 'নিজের পোস্ট শেয়ার করার দরকার নেই'
+                     : data.error === 'post not found' ? 'পোস্ট পাওয়া যায়নি'
+                     : 'শেয়ার করা যায়নি — আবার চেষ্টা করুন';
+            showToast(msg, 'error');
+          }
         } else {
           // Web Share API first on mobile
           if (navigator.share && window.matchMedia('(max-width: 768px)').matches) {
@@ -627,6 +650,22 @@ document.addEventListener('click', async e => {
     btn.classList.toggle('active', data.saved);
     btn.querySelector('i').className = (data.saved ? 'fas' : 'far') + ' fa-bookmark';
     showToast(data.saved ? 'সংরক্ষিত হয়েছে 📌' : 'সংরক্ষণ সরানো হয়েছে', 'success');
+  }
+});
+
+/* ============= v4: Undo repost (delete own repost) ============= */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.repost-undo');
+  if (!btn) return;
+  if (!confirm('এই শেয়ার প্রত্যাহার করতে চান?')) return;
+  const card = btn.closest('.repost-card');
+  const res = await fetch('/api/repost/' + btn.dataset.repostId, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.ok) {
+    card.remove();
+    showToast('শেয়ার প্রত্যাহার হয়েছে', 'success');
+  } else {
+    showToast('ব্যর্থ হয়েছে', 'error');
   }
 });
 

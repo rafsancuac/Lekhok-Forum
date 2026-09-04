@@ -49,6 +49,9 @@
         <div class="form-group"><label>LinkedIn</label><input type="url" name="social_linkedin" value="<%= user.social_linkedin || '' %>"></div>
         <div class="form-group"><label>ওয়েবসাইট</label><input type="url" name="social_website" value="<%= user.social_website || '' %>"></div>
       </div>
+      <h3 style="color:#0a1f44; margin: 16px 0 8px; font-size: 1rem;">পাসওয়ার্ড পরিবর্তন</h3>
+      <div class="form-group"><label>নতুন পাসওয়ার্ড (খালি রাখলে পরিবর্তন হবে না)</label><input type="password" name="new_password" minlength="6" autocomplete="new-password"></div>
+      <div class="form-group"><label>পাসওয়ার্ড নিশ্চিত করুন</label><input type="password" name="confirm_password" autocomplete="new-password"></div>
       <h3 style="color:#0a1f44; margin: 16px 0 8px; font-size: 1rem;">প্রাইভেসি</h3>
       <div class="checkbox-group"><input type="checkbox" id="show_email" name="show_email" value="1" <%= user.show_email ? 'checked' : '' %>><label for="show_email">প্রোফাইলে ইমেইল দেখান</label></div>
       <div class="checkbox-group"><input type="checkbox" id="show_phone" name="show_phone" value="1" <%= user.show_phone ? 'checked' : '' %>><label for="show_phone">প্রোফাইলে ফোন নম্বর দেখান</label></div>

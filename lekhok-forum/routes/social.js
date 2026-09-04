@@ -194,11 +194,15 @@ router.get('/articles/:id/edit', ensureLoggedIn, async (req, res) => {
 });
 
 // ── Update article ───────────────────────────────────────────────────────────
-router.post('/articles/:id/edit', ensureLoggedIn, async (req, res) => {
+router.post('/articles/:id/edit', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const post = await db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
   if (!post || post.author_id !== req.session.user.id) return res.redirect('/articles/' + req.params.id);
   const { title, body, excerpt, cover_image, tags, category } = req.body;
-  await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?').run(title, body, excerpt || body.substring(0, 200), cover_image || null, tags || null, category || 'general', req.params.id);
+  // If a new cover image was uploaded, prefer it over the text field
+  let finalCover = cover_image || post.cover_image || null;
+  if (req.file) finalCover = req.file.url;
+  await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?')
+    .run(title, body, excerpt || body.substring(0, 200), finalCover, tags || null, category || 'general', req.params.id);
   res.redirect('/articles/' + req.params.id);
 });
 
@@ -321,6 +325,34 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   for (const a of answers) { a.reaction = await getReactionSummary('comment_id', a.id, myId); }
   const reaction = await getReactionSummary('post_id', req.params.id, myId);
   res.render('user/qa-single', { post, answers, reaction, REACTION_META, currentPath: '/qa' });
+});
+
+// ── Edit Q&A question ────────────────────────────────────────────────────────
+router.get('/qa/:id/edit', ensureLoggedIn, async (req, res) => {
+  const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND type = ?').get(req.params.id, 'question');
+  if (!post || post.author_id !== req.session.user.id) return res.redirect('/qa/' + req.params.id);
+  res.render('user/qa-form', { post, error: null, currentPath: '/qa' });
+});
+
+router.post('/qa/:id/edit', ensureLoggedIn, async (req, res) => {
+  const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND type = ?').get(req.params.id, 'question');
+  if (!post || post.author_id !== req.session.user.id) return res.redirect('/qa/' + req.params.id);
+  const { title, body } = req.body;
+  if (!title || !body) {
+    return res.render('user/qa-form', { post: { ...post, ...req.body }, error: 'শিরোনাম ও বিবরণ আবশ্যক', currentPath: '/qa' });
+  }
+  await db.prepare('UPDATE posts SET title=?, body=? WHERE id=?').run(title, body, req.params.id);
+  res.redirect('/qa/' + req.params.id);
+});
+
+// ── Delete Q&A question ──────────────────────────────────────────────────────
+router.post('/qa/:id/delete', ensureLoggedIn, async (req, res) => {
+  const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND type = ?').get(req.params.id, 'question');
+  if (!post || post.author_id !== req.session.user.id) return res.redirect('/qa/' + req.params.id);
+  await db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id);
+  await db.prepare('DELETE FROM comments WHERE post_id = ?').run(req.params.id);
+  await db.prepare('DELETE FROM likes WHERE post_id = ?').run(req.params.id);
+  res.redirect('/qa');
 });
 
 // ── Members directory ────────────────────────────────────────────────────────
@@ -1107,6 +1139,53 @@ router.post('/api/block/:userId', ensureLoggedIn, async (req, res) => {
   await db.prepare('DELETE FROM follows WHERE (follower_id = ? AND following_id = ?) OR (follower_id = ? AND following_id = ?)')
     .run(me.id, otherId, otherId, me.id);
   return res.json({ ok: true, blocked: true });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/repost — Facebook-style share to own timeline
+// POST: { post_id, note? } → creates a "repost" entry on the user's timeline
+// ────────────────────────────────────────────────────────────────────────────
+router.post('/api/repost', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const { post_id, note } = req.body;
+  if (!post_id) return res.status(400).json({ error: 'post_id required' });
+
+  const original = await db.prepare('SELECT * FROM posts WHERE id = ? AND status = ?').get(parseInt(post_id, 10), 'published');
+  if (!original) return res.status(404).json({ error: 'post not found' });
+  if (original.type === 'repost') return res.status(400).json({ error: 'cannot repost a repost' });
+  if (original.author_id === me.id) return res.status(400).json({ error: 'own post' });
+
+  // Prevent duplicate repost
+  const existing = await db.prepare('SELECT id FROM posts WHERE repost_of = ? AND author_id = ?').get(original.id, me.id);
+  if (existing) return res.status(400).json({ error: 'already reposted' });
+
+  const r = await db.prepare(
+    `INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, category, repost_of, repost_note, status, view_count, like_count, comment_count, reactions, published_at)
+     VALUES (?, 'repost', ?, ?, ?, ?, ?, ?, ?, ?, 'published', 0, 0, 0, '{}', CURRENT_TIMESTAMP)`
+  ).run(
+    me.id,
+    original.title,
+    note || null,
+    note || null,  // body gets the note
+    original.cover_image,
+    original.tags,
+    original.category,
+    original.id,
+    note || null
+  );
+  res.json({ ok: true, post_id: r.lastInsertRowid });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// /api/repost/:postId — delete a repost (only the reposter can delete their repost)
+// ────────────────────────────────────────────────────────────────────────────
+router.delete('/api/repost/:postId', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const postId = parseInt(req.params.postId, 10);
+  const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND author_id = ? AND type = ?').get(postId, me.id, 'repost');
+  if (!post) return res.status(404).json({ error: 'not found or not your repost' });
+  await db.prepare('DELETE FROM posts WHERE id = ?').run(postId);
+  res.json({ ok: true });
 });
 
 module.exports = router;

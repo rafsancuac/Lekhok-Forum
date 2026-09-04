@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS follows (
 CREATE TABLE IF NOT EXISTS posts (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   author_id     INTEGER NOT NULL,
-  type          TEXT    DEFAULT 'article',   -- article | question
+  type          TEXT    DEFAULT 'article',   -- article | question | repost
   title         TEXT    NOT NULL,
   body          TEXT,
   excerpt       TEXT,
@@ -84,10 +84,13 @@ CREATE TABLE IF NOT EXISTS posts (
   like_count    INTEGER DEFAULT 0,
   comment_count INTEGER DEFAULT 0,
   reactions     TEXT    DEFAULT '{}',        -- JSON: {"like":0,"love":0,"haha":0,"wow":0,"sad":0}
+  repost_of     INTEGER,                     -- id of original post if this is a repost
+  repost_note   TEXT,                        -- optional quote/comment added by the reposter
   published_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS idx_posts_repost_of ON posts(repost_of);
 
 -- ── Comments / Answers ──────────────────────────────────────
 CREATE TABLE IF NOT EXISTS comments (

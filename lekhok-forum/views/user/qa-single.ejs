@@ -21,6 +21,14 @@
           <span>&middot;</span>
           <span><i class="far fa-clock"></i> <%= new Date(post.created_at).toLocaleDateString('bn-BD') %></span>
         </div>
+        <% if (user && user.id === post.author_id) { %>
+        <div class="qa-owner-controls" style="margin-top:8px; display:flex; gap:8px;">
+          <a href="/qa/<%= post.id %>/edit" class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i> সম্পাদনা</a>
+          <form method="POST" action="/qa/<%= post.id %>/delete" onsubmit="return confirm('এই প্রশ্ন মুছে ফেলতে চান?');" style="display:inline;">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
+          </form>
+        </div>
+        <% } %>
       </div>
 
       <div class="article-footer">
