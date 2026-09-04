@@ -136,6 +136,26 @@
 </div>
 
 <style>
+/* ── Gallery hero (light theme override) ── */
+.page-header {
+  background: linear-gradient(180deg, #f0fdf4 0%, #ecfeff 100%) !important;
+  color: var(--brand, #0a1f44) !important;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+.page-header h1, .page-header .eyebrow { color: var(--brand, #0a1f44) !important; }
+.page-header p, .page-header .header-sub { color: var(--text-muted, #475569) !important; }
+.page-header .eyebrow {
+  background: rgba(5,150,105,0.12) !important;
+  color: var(--accent, #059669) !important;
+  border: none !important;
+}
+html.theme-dark .page-header {
+  background: linear-gradient(180deg, #ecfdf5 0%, #eff6ff 100%) !important;
+  color: var(--brand, #0a1f44) !important;
+}
+html.theme-dark .page-header h1,
+html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
+
 /* ── Category filter bar (white, link-style) ── */
 .gallery-tabs {
   display: flex;
