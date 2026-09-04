@@ -309,12 +309,47 @@ const LATER_COLUMNS = [
   // [table, column, definition]
   ['posts', 'repost_of',   'INTEGER'],
   ['posts', 'repost_note', 'TEXT'],
+  // Member/past-leader linkage to registered user accounts — added 2026-09
+  // (committee / advisory / past leaders render the linked user's avatar,
+  //  name, and a link to /profile/:username everywhere they appear).
+  ['members',      'user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
+  ['past_leaders', 'user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
 ];
 async function applyLaterMigrations() {
   for (const [table, col, def] of LATER_COLUMNS) {
     try {
       await backend.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`).run();
     } catch (e) { /* duplicate column — fine */ }
+  }
+  // After columns are guaranteed, auto-link members/past_leaders to users by
+  // exact full_name match. Idempotent — only fills rows where user_id is null.
+  try { await autoLinkMembersToUsers(); } catch (e) {
+    console.error('[db] autoLinkMembersToUsers failed:', e.message);
+  }
+}
+
+// Auto-link committee / advisory / past leaders to their registered user
+// accounts by matching full name. Runs once per deploy; safe on every boot.
+async function autoLinkMembersToUsers() {
+  const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const alphaOnly = (s) => norm(s).replace(/[^a-z0-9\u0980-\u09ff]/g, '');
+  const fuzzyContains = (a, b) => {
+    const aa = alphaOnly(a), bb = alphaOnly(b);
+    return (aa.length > 3 && bb.length > 3) && (aa.includes(bb) || bb.includes(aa));
+  };
+  const tables = ['members', 'past_leaders'];
+  for (const t of tables) {
+    const rows = await backend.prepare(`SELECT id, name FROM ${t} WHERE user_id IS NULL`).all();
+    if (!rows || !rows.length) continue;
+    const users = await backend.prepare('SELECT id, full_name FROM users WHERE full_name IS NOT NULL').all();
+    for (const r of rows) {
+      const rn = norm(r.name);
+      let match = users.find(u => norm(u.full_name) === rn);
+      if (!match) match = users.find(u => fuzzyContains(r.name, u.full_name) || fuzzyContains(u.full_name, r.name));
+      if (match) {
+        await backend.prepare(`UPDATE ${t} SET user_id = ? WHERE id = ? AND user_id IS NULL`).run(match.id, r.id);
+      }
+    }
   }
 }
 
