@@ -318,53 +318,114 @@ window.showToast = showToast;
     const mainBtn = wrap.querySelector('.main-react');
     const picker = wrap.querySelector('.reaction-picker');
 
-    // Facebook-style: a quick click on the main button just toggles the
-    // default reaction (like/unlike). Opening the picker to choose a
-    // *different* reaction is a deliberate separate gesture — hover on
-    // devices that support it, or press-and-hold (mouse OR touch) — never
-    // both at once. The previous version fired the reaction on every single
-    // click AND force-closed the picker 400ms later regardless of what the
-    // person was doing, so there was never a real chance to pick anything
-    // but the default "like".
+    // Facebook-style reactions:
+    //   • quick click  → toggle the default reaction (like/unlike)
+    //   • hover        → open the picker (pointer devices that support it)
+    //   • press & hold → open the picker; then SLIDE over an emoji and
+    //     release to select it (works with touch AND mouse)
+    // The previous version fired the reaction on every single click AND
+    // force-closed the picker 400ms later, so a different reaction could
+    // never actually be chosen.
     let pressTimer = null;
     let longPressOpened = false;
+    let holdPreview = null; /* option currently highlighted while holding */
     const LONG_PRESS_MS = 350;
 
     function openPicker() { picker.classList.add('open'); }
     function closePicker() { picker.classList.remove('open'); }
-
+    function clearPreview() { if (holdPreview) { holdPreview.classList.remove('preview'); holdPreview = null; } }
+    function previewOpt(opt) {
+      if (opt !== holdPreview) { clearPreview(); if (opt) { opt.classList.add('preview'); holdPreview = opt; } }
+    }
     function startPress() {
       longPressOpened = false;
+      clearTimeout(pressTimer);
       pressTimer = setTimeout(() => { openPicker(); longPressOpened = true; }, LONG_PRESS_MS);
     }
     function cancelPress() { clearTimeout(pressTimer); }
+    function applyReaction(reaction) {
+      if (!loggedIn()) return location.href = '/login?next=' + encodeURIComponent(location.pathname);
+      react(wrap, reaction);
+      closePicker();
+    }
 
-    // Desktop hover (only on devices that actually support hovering with a
-    // pointer — touch devices report hover:hover as false so this never
-    // fights with the press-and-hold handling below).
+    // Desktop hover (pointer devices only — touch reports hover:hover=false
+    // so this never fights with the press-and-hold handling below).
     if (window.matchMedia('(hover: hover)').matches) {
       wrap.addEventListener('mouseenter', openPicker);
       wrap.addEventListener('mouseleave', closePicker);
     }
 
-    // Press-and-hold on the main button — works with mouse *and* touch, so
-    // it's a reliable fallback even when hover isn't available or usable.
+    // ── Mouse + touch: press-and-hold opens the picker; sliding over an
+    // emoji previews it; releasing applies it (Facebook-style). Resolution
+    // uses event-target traversal (NOT stored coordinates) so a shift of
+    // the picker/scroll position can never make the gesture misfire. ──
+    let suppressClick = false; /* a completed hold must not ALSO toggle on the click that follows */
     mainBtn.addEventListener('mousedown', startPress);
-    ['mouseup', 'mouseleave'].forEach(ev => mainBtn.addEventListener(ev, cancelPress));
-    mainBtn.addEventListener('touchstart', startPress, { passive: true });
-    ['touchend', 'touchcancel'].forEach(ev => mainBtn.addEventListener(ev, cancelPress, { passive: true }));
 
+    function optFromEvent(e) {
+      if (e.target && e.target.closest) { const o = e.target.closest('.reaction-opt'); if (o) return o; }
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      return el && el.closest ? el.closest('.reaction-opt') : null;
+    }
+
+    // While holding, moving over an emoji highlights it (mouse + touch).
+    wrap.addEventListener('mousemove', (e) => {
+      if (longPressOpened) previewOpt(optFromEvent(e));
+    });
+
+    // Release can happen anywhere (button, emoji, elsewhere on the page)
+    // once a hold is in progress — hence the document-level listener.
+    document.addEventListener('mouseup', (e) => {
+      if (!longPressOpened) return;
+      cancelPress();
+      longPressOpened = false;
+      suppressClick = true; /* swallow the click that trails this gesture */
+      setTimeout(() => { suppressClick = false; }, 0);
+      const opt = optFromEvent(e);
+      if (opt) { clearPreview(); applyReaction(opt.dataset.reaction); }
+      else {
+        if (!(e.target.closest && e.target.closest('.react-wrap'))) closePicker();
+        /* released on the button itself → picker stays open for a click */
+      }
+      clearPreview();
+    });
+    mainBtn.addEventListener('mouseleave', cancelPress);
+
+    // ── Touch: hold opens, slide previews, release selects ──
+    // (Touch events keep firing on the element where the touch STARTED,
+    // so binding move/end here covers the slide even over the picker.)
+    mainBtn.addEventListener('touchstart', startPress, { passive: true });
+    mainBtn.addEventListener('touchmove', (e) => {
+      if (!longPressOpened) return; /* not holding → normal scrolling */
+      e.preventDefault();           /* picker open → stop scroll, slide-select */
+      const t = e.touches[0];
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      previewOpt(el && el.closest ? el.closest('.reaction-opt') : null);
+    }, { passive: false });
+    mainBtn.addEventListener('touchend', (e) => {
+      cancelPress();
+      if (longPressOpened) {
+        e.preventDefault(); /* suppress the synthetic click after a hold */
+        longPressOpened = false;
+        suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
+        if (holdPreview) { const r = holdPreview.dataset.reaction; clearPreview(); applyReaction(r); }
+        /* no slide → keep the picker open; next tap selects an option */
+      } else { clearPreview(); }
+    }, { passive: false });
+    mainBtn.addEventListener('touchcancel', () => { cancelPress(); clearPreview(); longPressOpened = false; }, { passive: true });
+
+    // Quick click → toggle default reaction (long-press gestures above
+    // consume their own click via suppressClick, so this only fires for
+    // plain taps).
     mainBtn.addEventListener('click', () => {
+      if (suppressClick) { suppressClick = false; return; }
       if (!loggedIn()) return location.href = '/login?next=' + encodeURIComponent(location.pathname);
-      // A long press already opened the picker for this same gesture —
-      // the click that follows (mouseup/touchend fires a click too) should
-      // not also toggle the default reaction.
       if (longPressOpened) { longPressOpened = false; return; }
       const mine = mainBtn.dataset.mine || '';
-      // Sending the same reaction again toggles it off server-side (see
-      // POST /api/react) — so clicking with no existing reaction applies
-      // 'like' (the default, matching the button's resting icon/label),
-      // and clicking again while a reaction is active removes it.
+      // Sending the same reaction again toggles it off server-side (POST
+      // /api/react) — click applies 'like' when nothing is set, removes it
+      // when the current reaction is 'like'.
       react(wrap, mine || 'like');
     });
 

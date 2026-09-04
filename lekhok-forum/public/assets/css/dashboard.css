@@ -48,16 +48,16 @@
 .feed-action { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px; border: none; background: none; color: var(--text-muted); font-size: 0.88rem; cursor: pointer; border-radius: var(--radius-sm); font-family: inherit; text-decoration: none; }
 .feed-action:hover { background: var(--bg); color: var(--brand); }
 
-/* The reactions/comment/share/save bar was visually fused into the post
-   content above it (no border, same background, generous shared padding —
-   looked like one big frame). Give it its own clearly separated strip,
-   the way the content card and its action bar look in Facebook's feed:
-   a divider line, a slightly tinted background, and tighter padding since
-   it doesn't need the same breathing room as the writing itself. */
+/* The reactions/comment/share/save bar must read as its OWN shape — the
+   post content lives in the white card, and the action row floats inside
+   it as a separate inset panel (tinted, bordered, rounded corners) — not
+   as a fused-on strip of the same frame. */
 .feed-card .actions-bar {
-  margin: 0; padding: 4px 12px;
-  border-top: 1px solid var(--border);
+  margin: 12px 16px 16px;
+  padding: 6px 10px;
   background: var(--bg, #f7f8fa);
+  border: 1px solid var(--border);
+  border-radius: 12px;
 }
 
 /* Right sidebar */

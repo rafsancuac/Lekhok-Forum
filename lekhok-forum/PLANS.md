@@ -287,3 +287,45 @@ node /home/z/my-project/scripts/test-gallery-ui.js   # 13 visual checks (Playwri
 bash scripts/test-login-fixes.sh                     # 21 checks
 bash scripts/test-lekhok.sh http://localhost:8080    # 77 checks (register riya/tanvir first on fresh DB)
 ```
+
+## Cross-Agent Note: Session 10 — Reaction Picker Rebuilt (slide-to-select) + Action Bar as Distinct Shape (৪ সেপ্টেম্বর ২০২৬)
+
+**Status:** ✅ DONE — 20/20 gesture E2E + 21/21 login E2E + 77/77 regression green (fresh server)
+
+### Follow-up to Session-8's 6ed7a7c picker fix — what was still broken & how it's fixed
+- **`public/assets/js/main.js` (initBar gestures, rewritten)**: the previous
+  press-and-hold consumed its `longPressOpened` flag in the mouseup handler, so the
+  trailing **click still toggled the default like** (press-and-release = accidental
+  like/unlike). And after sliding, `mouseup` was bound to the button — but with the
+  picker open the release lands on the picker/option, so slide-to-select NEVER fired;
+  `elementFromPoint` against a stored coordinate also breaks when the picker/scroll
+  shifts. Now: `mousedown` starts the hold; `document`-level `mouseup` resolves via
+  **event-target traversal** (`e.target.closest('.reaction-opt')` first,
+  `elementFromPoint` fallback); sliding previews via `.preview` class (mouse:
+  wrap mousemove; touch: touchmove on the button — touch retargets to the touchstart
+  element, so the slide works even over the picker); `touchend` preventDefaults the
+  synthetic click; a completed hold sets `suppressClick` (consumed by the trailing
+  click, auto-reset via setTimeout 0) so release-on-button keeps the picker open
+  WITHOUT toggling. Quick click still toggles like (server already toggle-offs when
+  the same reaction repeats). Picking the currently-active emoji still toggles it
+  off (Facebook parity).
+- **Visual separation (user asked for TWO shapes, not a fused frame)**:
+  `.feed-card .actions-bar` (dashboard.css) and `.article-footer .actions-bar`
+  (style.css) are now **inset rounded panels** (tinted `--bg`, 1px border,
+  12px radius, margin 12/16px) — content lives in the white card, the
+  react/comment/share/save row reads as its own distinct box.
+- **iOS long-press callout**: `-webkit-touch-callout: none` + `-webkit-user-select`
+  on `.actions-bar .reaction-btn`.
+- **Moderator 500 on GET /moderator was a STALE-SERVER artifact** (old process kept
+  port 8080 through the 6d3f0cd/a4d5ba3 pulls → old in-memory route). No code bug:
+  kill all `node server.js` processes before testing after a pull (16/16 green after
+  restart). Reminder for everyone testing in this sandbox: **background processes die
+  between tool calls, and zombie servers hold 8080 — pkill before starting.**
+
+### Verify
+```bash
+pkill -f "node server.js"; node server.js &   # fresh server
+node /home/z/my-project/scripts/test-reaction-e2e.js   # 20 gesture checks (Playwright, needs BASE env)
+bash scripts/test-login-fixes.sh                        # 21 checks
+bash scripts/test-lekhok.sh http://localhost:8080       # 77 checks
+```
