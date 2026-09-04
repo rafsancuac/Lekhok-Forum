@@ -255,3 +255,35 @@ node server.js &
 bash scripts/test-login-fixes.sh   # 21 checks
 bash scripts/test-lekhok.sh http://localhost:8080   # 91 checks
 ```
+
+## Cross-Agent Note: Session 9 — Gallery Redesign: White Filter Bar + ইমেজ গ্যালারি + খালি ফ্রেম ফিক্স (৪ সেপ্টেম্বর ২০২৬)
+
+**Status:** ✅ DONE — 13/13 visual E2E + 21/21 login E2E + 77/77 regression green (fresh DB, sql.js)
+
+### User-requested changes (don't regress!)
+- **`views/lekhok-gallery.ejs` (rewritten)**: heading "আমাদের অ্যালবাম" → **"ইমেজ গ্যালারি"**;
+  new **white category filter bar** (`#galleryTabs`) — link-style items (NO per-item
+  pills/frames on purpose, user explicitly rejected them), hover = accent color,
+  active = accent underline, counts inline. Client-side filtering (no page reload);
+  lightbox now rebuilds its photo list from VISIBLE anchors only (`offsetParent`
+  check) so filtered-out albums and unrevealed extras never appear in prev/next.
+- **Empty-frame fix**: album grids use `auto-fit` (small albums, ≤8 photos) and
+  `auto-fill + dense` (featured, ≥9) — few photos no longer leave phantom empty
+  cells at the right/bottom. Featured hero (2x2) only for ≥9 photos now.
+  ">16 photos" renders ALL extras server-side, hidden via `hidden` attr;
+  the "আরো দেখুন" tile reveals them inline (no navigation to a dead ?category= URL).
+- **Bengali labels everywhere**: `routes/pages.js` categoryLabels now covers
+  singular+plural+alias keys (events/workshops/meetings/awards/press/media/...).
+  Visible English category text = 0 on /gallery. `views/user/gallery.ejs` uses a
+  full label map. Admin gallery form now offers press/cultural/seminar options.
+- **`db.js` demo seeds**: +11 real-photo gallery items (press×4, workshops×4→ws1..4,
+  events×2) so fresh deploys don't show half-empty albums. Seed only runs when
+  gallery table is empty (unchanged rule).
+
+### Verify
+```bash
+node server.js &   # fresh lekhok.db
+node /home/z/my-project/scripts/test-gallery-ui.js   # 13 visual checks (Playwright)
+bash scripts/test-login-fixes.sh                     # 21 checks
+bash scripts/test-lekhok.sh http://localhost:8080    # 77 checks (register riya/tanvir first on fresh DB)
+```

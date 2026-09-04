@@ -1,23 +1,49 @@
-<!-- Gallery — Album Browser -->
+<!-- Gallery — Image Gallery with category filter -->
 <header class="page-header">
   <div class="container">
-    <span class="eyebrow"><i class="fas fa-images"></i> ফটো গ্যালারি</span>
-    <h1>আমাদের <span style="color:var(--accent);">অ্যালবাম</span></h1>
+    <span class="eyebrow"><i class="fas fa-images"></i> ছবির সংগ্রহ</span>
+    <h1>ইমেজ <span style="color:var(--accent);">গ্যালারি</span></h1>
     <p class="header-sub">ইভেন্ট, সেমিনার, সাংস্কৃতিক কার্যক্রম — সব এক জায়গায়</p>
   </div>
 </header>
 
 <section class="section">
   <div class="container">
-    <% const albumKeys = Object.keys(albums); %>
+    <% const albumKeys = Object.keys(albums);
+       const catIcons = {
+         general: 'fas fa-layer-group',
+         event: 'fas fa-calendar-alt', events: 'fas fa-calendar-alt',
+         seminar: 'fas fa-microphone-alt', seminars: 'fas fa-microphone-alt',
+         workshop: 'fas fa-chalkboard-teacher', workshops: 'fas fa-chalkboard-teacher',
+         meeting: 'fas fa-users', meetings: 'fas fa-users',
+         award: 'fas fa-trophy', awards: 'fas fa-trophy',
+         press: 'far fa-newspaper', media: 'far fa-newspaper',
+         cultural: 'fas fa-music', sports: 'fas fa-running',
+         achievement: 'fas fa-medal', achievements: 'fas fa-medal',
+         others: 'fas fa-folder'
+       }; %>
     <% if (albumKeys.length) { %>
 
+      <!-- Category filter — white bar, link-style items -->
+      <nav class="gallery-tabs" id="galleryTabs" aria-label="গ্যালারি ক্যাটাগরি">
+        <a href="#" class="gtab active" data-cat="all">
+          <i class="fas fa-images"></i> সব ছবি
+          <span class="gtab-count"><%= items.length %></span>
+        </a>
+        <% albumKeys.forEach(cat => { %>
+          <a href="#" class="gtab" data-cat="<%= cat %>">
+            <i class="<%= catIcons[cat] || 'fas fa-folder' %>"></i> <%= categoryLabels[cat] || cat %>
+            <span class="gtab-count"><%= albums[cat].length %></span>
+          </a>
+        <% }) %>
+      </nav>
+
       <% albumKeys.forEach(cat => { %>
-        <% const items = albums[cat]; const count = items.length; const useFeatured = count >= 4; %>
-        <div class="gallery-album reveal">
+        <% const items = albums[cat]; const count = items.length; %>
+        <div class="gallery-album reveal" data-cat="<%= cat %>">
           <div class="album-header">
             <h2 class="album-title">
-              <i class="fas fa-folder-open"></i>
+              <i class="<%= catIcons[cat] || 'fas fa-folder-open' %>"></i>
               <%= categoryLabels[cat] || cat %>
             </h2>
             <span class="album-count"><%= count %> <%= count === 1 ? 'ছবি' : 'ছবি' %></span>
@@ -38,8 +64,8 @@
               <% } %>
             </div>
 
-          <% } else if (count <= 3) { %>
-            <!-- Small album: show all in equal columns -->
+          <% } else if (count <= 8) { %>
+            <!-- Small album: uniform auto-fit grid (no empty cells) -->
             <div class="album-grid album-grid--small">
               <% items.forEach(g => { %>
                 <a href="<%= g.image_url %>"
@@ -53,7 +79,7 @@
             </div>
 
           <% } else { %>
-            <!-- Featured album: first photo spans 2x2 -->
+            <!-- Featured album: first photo spans 2x2, dense packing -->
             <div class="album-grid album-grid--featured">
               <a href="<%= items[0].image_url %>"
                  class="album-photo album-photo--wide"
@@ -62,9 +88,10 @@
                 <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
                 <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
               </a>
-              <% items.slice(1, 16).forEach(g => { %>
+              <% items.slice(1).forEach((g, i) => { %>
                 <a href="<%= g.image_url %>"
-                   class="album-photo"
+                   class="album-photo<%= i >= 15 ? ' album-photo--extra' : '' %>"
+                   <% if (i >= 15) { %>hidden<% } %>
                    data-caption="<%= g.caption || '' %>"
                    data-lightbox="album-<%= cat %>">
                   <img src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
@@ -72,10 +99,10 @@
                 </a>
               <% }) %>
               <% if (count > 16) { %>
-                <a href="/gallery?category=<%= cat %>" class="album-more" title="আরো দেখুন">
+                <button type="button" class="album-more" title="সব ছবি দেখুন">
                   <span>+<%= count - 16 %></span>
                   <small>আরো দেখুন</small>
-                </a>
+                </button>
               <% } %>
             </div>
           <% } %>
@@ -109,77 +136,60 @@
 </div>
 
 <style>
-/* ── Lightbox (the key fix) ── */
-.lightbox {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 15, 35, 0.94);
-  z-index: 9999;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 20px;
-}
-.lightbox.active { display: flex; }
-
-.lightbox-close {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.15);
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 18px;
-  display: grid;
-  place-items: center;
-  transition: background 0.2s;
-}
-.lightbox-close:hover { background: rgba(255,255,255,0.22); }
-
-#lightboxImg {
-  max-width: 90vw;
-  max-height: 78vh;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-}
-
-.lightbox-caption {
-  color: rgba(255,255,255,0.75);
-  margin-top: 14px;
-  font-size: 0.88rem;
-  text-align: center;
-  max-width: 600px;
-  line-height: 1.5;
-}
-
-.lightbox-nav {
+/* ── Category filter bar (white, link-style) ── */
+.gallery-tabs {
   display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0 26px;
+  background: #fff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius, 10px);
+  padding: 0 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+.gallery-tabs .gtab {
+  display: inline-flex;
   align-items: center;
-  gap: 20px;
-  margin-top: 12px;
-  color: rgba(255,255,255,0.6);
-  font-size: 0.82rem;
+  gap: 7px;
+  padding: 14px 2px 12px;
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  font-size: 0.93rem;
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  transition: color 0.18s, border-color 0.18s;
 }
-.lightbox-nav button {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #fff;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  transition: background 0.2s;
+.gallery-tabs .gtab i { font-size: 0.95em; opacity: 0.75; transition: opacity 0.18s; }
+.gallery-tabs .gtab:hover { color: var(--accent, #059669); }
+.gallery-tabs .gtab:hover i { opacity: 1; }
+.gallery-tabs .gtab.active {
+  color: var(--accent, #059669);
+  border-bottom-color: var(--accent, #059669);
 }
-.lightbox-nav button:hover { background: rgba(255,255,255,0.18); }
+.gallery-tabs .gtab.active i { opacity: 1; }
+.gallery-tabs .gtab-count {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #94a3b8;
+  transition: color 0.18s;
+}
+.gallery-tabs .gtab:hover .gtab-count,
+.gallery-tabs .gtab.active .gtab-count { color: inherit; }
+
+@media (max-width: 640px) {
+  .gallery-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 14px;
+    gap: 0 20px;
+    scrollbar-width: none;
+  }
+  .gallery-tabs::-webkit-scrollbar { display: none; }
+  .gallery-tabs .gtab { white-space: nowrap; padding: 12px 2px 10px; }
+}
 
 /* ── Album layout ── */
 .gallery-album { margin-bottom: 40px; }
@@ -209,19 +219,19 @@
   font-weight: 600;
 }
 
-/* Standard 4-col featured grid */
+/* Uniform grid — auto-fit collapses empty tracks, so few photos never leave holes */
 .album-grid {
   display: grid;
   gap: 10px;
 }
-.album-grid--featured {
-  grid-template-columns: repeat(4, minmax(0, 180px));
-  justify-content: start;
+.album-grid--small {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
-/* Small album: auto-fill equal columns */
-.album-grid--small {
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+/* Featured album: hero 2x2 + dense packing */
+.album-grid--featured {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-auto-flow: dense;
 }
 
 /* Single photo: centered with capped max-width */
@@ -254,12 +264,14 @@
   transition: transform 0.3s;
 }
 .album-photo:hover img { transform: scale(1.05); }
+.album-photo[hidden] { display: none; }
 
 /* Featured wide: first photo spans 2x2 */
 .album-photo--wide {
   grid-column: span 2;
   grid-row: span 2;
   aspect-ratio: auto;
+  max-height: none;
 }
 
 .album-photo-overlay {
@@ -278,6 +290,7 @@
 
 .album-more {
   aspect-ratio: 1;
+  max-height: 240px;
   background: var(--bg, #f8fafc);
   border: 2px dashed var(--border, #e2e8f0);
   border-radius: var(--radius-sm, 5px);
@@ -286,6 +299,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted, #64748b);
+  font-family: inherit;
   text-decoration: none;
   transition: all 0.2s;
   cursor: pointer;
@@ -304,15 +318,14 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .album-grid--featured { grid-template-columns: repeat(3, minmax(0, 150px)); gap: 6px; }
-  .album-photo--wide { grid-column: span 1; grid-row: span 1; }
-  .album-grid--small { grid-template-columns: repeat(2, 1fr); }
+  .album-grid--featured { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
+  .album-photo--wide { grid-column: span 1; grid-row: span 1; aspect-ratio: 1; max-height: 180px; }
+  .album-grid--small { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .album-photo { max-height: 180px; }
 }
 @media (max-width: 480px) {
-  .album-grid--featured { grid-template-columns: repeat(2, minmax(0, 130px)); gap: 5px; }
-  .album-photo--wide { grid-column: span 1; }
-  .album-grid--small { grid-template-columns: 1fr; }
+  .album-grid--featured { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 5px; }
+  .album-grid--small { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
   .album-photo--single { max-width: 100%; max-height: 220px; }
   .album-photo { max-height: 150px; }
 }
@@ -321,6 +334,7 @@
 <script>
 (function() {
   const lb = document.getElementById('lightbox');
+  if (!lb) return;
   const lbImg = document.getElementById('lightboxImg');
   const lbCap = document.getElementById('lightboxCaption');
   const lbCounter = document.getElementById('lbCounter');
@@ -330,11 +344,44 @@
   let allPhotos = [];
   let currentIdx = 0;
 
-  document.querySelectorAll('[data-lightbox]').forEach(function(a, i) {
-    allPhotos.push({ src: a.href, caption: a.dataset.caption || '' });
+  /* Category filter — link-style tabs, instant client-side switch */
+  const tabs = document.querySelectorAll('#galleryTabs .gtab');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      const cat = tab.dataset.cat;
+      document.querySelectorAll('.gallery-album').forEach(function(sec) {
+        sec.style.display = (cat === 'all' || sec.dataset.cat === cat) ? '' : 'none';
+      });
+    });
+  });
+
+  /* "আরো দেখুন" — reveal hidden extras in this album */
+  document.querySelectorAll('.album-more').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const album = btn.closest('.gallery-album');
+      if (album) album.querySelectorAll('.album-photo--extra').forEach(function(x) { x.hidden = false; });
+      btn.remove();
+    });
+  });
+
+  /* Lightbox — rebuilds photo list from currently visible photos only */
+  function collectPhotos() {
+    allPhotos = [];
+    document.querySelectorAll('[data-lightbox]').forEach(function(a) {
+      if (a.offsetParent === null) return; /* skip hidden (filtered-out album / unrevealed extras) */
+      allPhotos.push({ src: a.href, caption: a.dataset.caption || '' });
+    });
+  }
+
+  document.querySelectorAll('[data-lightbox]').forEach(function(a) {
     a.addEventListener('click', function(e) {
       e.preventDefault();
-      currentIdx = allPhotos.findIndex(p => p.src === a.href);
+      collectPhotos();
+      const idx = allPhotos.findIndex(function(p) { return p.src === a.href; });
+      currentIdx = idx >= 0 ? idx : 0;
       showPhoto(currentIdx);
       lb.classList.add('active');
       document.body.style.overflow = 'hidden';

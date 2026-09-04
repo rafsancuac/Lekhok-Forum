@@ -113,12 +113,22 @@ router.get('/gallery', async (req, res) => {
   const categoryLabels = {
     general: 'সাধারণ',
     event: 'ইভেন্ট',
+    events: 'ইভেন্ট',
     seminar: 'সেমিনার',
+    seminars: 'সেমিনার',
     workshop: 'কর্মশালা',
+    workshops: 'কর্মশালা',
     cultural: 'সাংস্কৃতিক',
     sports: 'ক্রীড়া',
     achievement: 'অর্জন',
-    press: 'প্রেস ও মিডিয়া'
+    achievements: 'অর্জন',
+    awards: 'পুরস্কার',
+    award: 'পুরস্কার',
+    meeting: 'সভা',
+    meetings: 'সভা',
+    press: 'প্রেস ও মিডিয়া',
+    media: 'প্রেস ও মিডিয়া',
+    others: 'অন্যান্য'
   };
   for (const g of all) {
     const cat = g.category || 'general';

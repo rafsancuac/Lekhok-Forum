@@ -651,7 +651,17 @@ async function seedDemoContent() {
     ['পুরস্কার বিতরণী', 'বার্ষিক লেখক সম্মাননা ২০২৫।', 'https://picsum.photos/seed/gal7/600/400', 'awards'],
     ['নবীন বরণ', 'নতুন সদস্যদের বরণ ও পরিচিতি সভা।', 'https://picsum.photos/seed/gal8/600/400', 'events'],
     ['সেমিনার', 'বাংলা সাহিত্যের ভবিষ্যৎ শীর্ষক সেমিনার।', 'https://picsum.photos/seed/gal9/600/400', 'workshops'],
-    ['সাংস্কৃতিক সন্ধ্যা', 'সাংস্কৃতিক সন্ধ্যায় নজরুলগীতি ও রবীন্দ্রসঙ্গীত পরিবেশনা।', 'https://picsum.photos/seed/gal10/600/400', 'events']
+    ['সাংস্কৃতিক সন্ধ্যা', 'সাংস্কৃতিক সন্ধ্যায় নজরুলগীতি ও রবীন্দ্রসঙ্গীত পরিবেশনা।', 'https://picsum.photos/seed/gal10/600/400', 'events'],
+    ['সংবাদ সম্মেলন', 'সংগঠনের বার্ষিক সংবাদ সম্মেলনে সাংবাদিকদের প্রশ্নোত্তর পর্ব।', 'https://picsum.photos/seed/press1/600/400', 'press'],
+    ['সংবাদপত্রে সংবাদ', 'জাতীয় দৈনিকে প্রকাশিত সংগঠনের কার্যক্রমের সংবাদ।', 'https://picsum.photos/seed/press2/600/400', 'press'],
+    ['টেলিভিশন সাক্ষাৎকার', 'জাতীয় টেলিভিশনে সদস্যদের সাক্ষাৎকারের মুহূর্ত।', 'https://picsum.photos/seed/press3/600/400', 'press'],
+    ['মিডিয়া কভারেজ', 'গণমাধ্যমে সংগঠনের ইভেন্টের কভারেজ।', 'https://picsum.photos/seed/press4/600/400', 'press'],
+    ['সৃজনশীল লেখালেখি কর্মশালা', 'কর্মশালায় অংশগ্রহণকারীদের কলম চর্চার মুহূর্ত।', 'https://picsum.photos/seed/ws1/600/400', 'workshops'],
+    ['প্রযুক্তি কর্মশালা', 'ডিজিটাল প্রকাশনা ও অনলাইন প্ল্যাটফর্ম বিষয়ক কর্মশালা।', 'https://picsum.photos/seed/ws2/600/400', 'workshops'],
+    ['সম্পাদনা কর্মশালা', 'পাণ্ডুলিপি সম্পাদনা ও স্টাইলগাইড প্রশিক্ষণ।', 'https://picsum.photos/seed/ws3/600/400', 'workshops'],
+    ['কবিতা পাঠ কর্মশালা', 'আবৃত্তি ও কবিতা পাঠ প্রশিক্ষণ কর্মশালা।', 'https://picsum.photos/seed/ws4/600/400', 'workshops'],
+    ['বসন্ত উৎসব', 'বসন্ত উপলক্ষে আয়োজিত সাংস্কৃতিক অনুষ্ঠানের মুহূর্ত।', 'https://picsum.photos/seed/event-spring/600/400', 'events'],
+    ['বার্ষিক সাধারণ সভা', 'বার্ষিক সাধারণ সভা ও পুরস্কার বিতরণীর মঞ্চ।', 'https://picsum.photos/seed/event-agm/600/400', 'events']
   ];
   for (const [title, caption, image_url, category] of gallery) {
     try { await prepare('INSERT INTO gallery (title, caption, image_url, category) VALUES (?, ?, ?, ?)').run(title, caption, image_url, category); } catch(e) {}

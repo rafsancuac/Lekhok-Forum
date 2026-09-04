@@ -31,7 +31,7 @@
       <div class="form-group">
         <label>ক্যাটাগরি</label>
         <select name="category">
-          <% [['events','ইভেন্ট'],['workshops','কর্মশালা'],['meetings','সভা'],['awards','পুরস্কার'],['general','সাধারণ']].forEach(([v, l]) => { %>
+          <% [['events','ইভেন্ট'],['workshops','কর্মশালা'],['meetings','সভা'],['awards','পুরস্কার'],['press','প্রেস ও মিডিয়া'],['cultural','সাংস্কৃতিক'],['seminar','সেমিনার'],['general','সাধারণ']].forEach(([v, l]) => { %>
             <option value="<%= v %>" <%= item && item.category === v ? 'selected' : '' %>><%= l %></option>
           <% }) %>
         </select>

@@ -15,7 +15,7 @@
     <% } else { %>
       <% Object.keys(byCategory).forEach(cat => { %>
         <div class="gallery-section">
-          <h2><%= cat === 'general' ? 'সাধারণ' : cat === 'events' ? 'ইভেন্ট' : cat === 'meetings' ? 'সভা' : cat === 'awards' ? 'পুরস্কার' : cat === 'workshops' ? 'কর্মশালা' : cat %></h2>
+          <h2><%= { general:'সাধারণ', event:'ইভেন্ট', events:'ইভেন্ট', seminar:'সেমিনার', seminars:'সেমিনার', workshop:'কর্মশালা', workshops:'কর্মশালা', meeting:'সভা', meetings:'সভা', award:'পুরস্কার', awards:'পুরস্কার', press:'প্রেস ও মিডিয়া', media:'প্রেস ও মিডিয়া', cultural:'সাংস্কৃতিক', sports:'ক্রীড়া', achievement:'অর্জন', achievements:'অর্জন', others:'অন্যান্য' }[cat] || cat %></h2>
           <div class="gallery-grid">
             <% byCategory[cat].forEach(item => { %>
               <div class="gallery-card">
