@@ -378,6 +378,31 @@ router.get('/api/messages/unread', ensureAuth, async (req, res) => {
   res.json({ totalUnread, conversations: rows });
 });
 
+// ── User search for new conversation ────────────────────────────────────
+// ?q=… — case-insensitive prefix + substring on full_name and username.
+// Excludes the caller and banned accounts. Limited to 15 hits.
+router.get('/api/users/search', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const q = String(req.query.q || '').trim();
+  if (q.length < 1) return res.json({ users: [] });
+  const like = '%' + q + '%';
+  const start = q + '%';
+  const rows = await db.prepare(`
+    SELECT id, username, full_name, designation, avatar_url, role
+    FROM users
+    WHERE status != 'banned' AND id != ? AND (
+      full_name LIKE ? COLLATE NOCASE OR
+      username   LIKE ? COLLATE NOCASE OR
+      full_name LIKE ? COLLATE NOCASE
+    )
+    ORDER BY
+      CASE WHEN full_name LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END,
+      full_name
+    LIMIT 15
+  `).all(me, start, start, like, start);
+  res.json({ users: rows });
+});
+
 // ── Complaints (private) ──────────────────────────────────────────────────
 router.get('/complaints', ensureAuth, async (req, res) => {
   const mine = await db.prepare('SELECT * FROM complaints WHERE submitted_by = ? ORDER BY created_at DESC').all(req.session.user.id);

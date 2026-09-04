@@ -77,7 +77,7 @@ async function uploadToBlob(file, subdir) {
  *   • On Blob: reads file into RAM (multer.memoryStorage) then pushes to @vercel/blob
  *   • On disk:  writes directly via diskStorage
  */
-function makeUpload({ subdir, maxBytes, allowedTypes }) {
+function makeUpload({ subdir, maxBytes, allowedTypes, fieldName = 'file' }) {
   const dest = path.join(UPLOAD_ROOT, subdir);
 
   return (req, res, next) => {
@@ -92,7 +92,7 @@ function makeUpload({ subdir, maxBytes, allowedTypes }) {
           cb(new Error('এই ধরনের ফাইল অনুমোদিত নয়'));
         }
       }
-    }).single('file')(req, res, async (err) => {
+    }).single(fieldName)(req, res, async (err) => {
       if (err) {
         req.uploadError = err.message || 'ফাইল আপলোড ব্যর্থ হয়েছে';
         return next();
@@ -142,7 +142,8 @@ const DOC_TYPES = /^((image|application|text)\/(jpe?g|png|gif|webp|pdf|msword|vn
 const attachmentUpload = makeUpload({
   subdir:      'attachments',
   maxBytes:    10 * 1024 * 1024,
-  allowedTypes: DOC_TYPES
+  allowedTypes: DOC_TYPES,
+  fieldName:    'attachment'  // matches name="attachment" in form fields
 });
 
 const messageUpload   = attachmentUpload;

@@ -12,6 +12,12 @@
         <div class="messenger-list-head">
           <h2><i class="fas fa-inbox"></i> কথোপকথন</h2>
           <input type="search" class="messenger-search" placeholder="🔍 নাম খুঁজুন..." id="convSearch" oninput="filterConvs(this.value)" />
+
+          <%# ── নতুন কথোপকথন শুরু: যেকোনো সদস্যকে নাম লিখে খুঁজুন ── %>
+          <div class="new-conv-box">
+            <input type="search" class="messenger-search" id="userSearch" placeholder="➕ নতুন মেসেজ — নাম বা ইউজারনেম লিখুন..." autocomplete="off" />
+            <div class="user-search-results" id="userSearchResults" hidden></div>
+          </div>
         </div>
         <% if (conversations.length === 0) { %>
           <div class="empty-state-full">
@@ -44,6 +50,32 @@
     </div>
   </div>
 
+  <style>
+    .new-conv-box { position: relative; margin-top: 8px; }
+    .user-search-results {
+      position: absolute; left: 0; right: 0; top: 100%;
+      background: var(--card, #fff); border: 1px solid var(--border, #e5e7eb);
+      border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      max-height: 320px; overflow-y: auto; z-index: 50;
+    }
+    .user-search-results .usr-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; cursor: pointer; text-decoration: none; color: inherit;
+      border-bottom: 1px solid var(--border, #f1f5f9);
+    }
+    .user-search-results .usr-row:last-child { border-bottom: 0; }
+    .user-search-results .usr-row:hover { background: var(--accent-soft, rgba(5,150,105,0.08)); }
+    .user-search-results .usr-avatar {
+      width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex: 0 0 36px;
+      background: var(--accent-soft, #e5e7eb); display:flex; align-items:center; justify-content:center;
+      font-weight: 600; color: var(--accent, #059669);
+    }
+    .user-search-results .usr-meta { flex: 1; min-width: 0; }
+    .user-search-results .usr-name { font-weight: 600; }
+    .user-search-results .usr-sub { font-size: 12px; color: var(--text-muted, #64748b); }
+    .user-search-results .empty { padding: 14px; color: var(--text-muted, #64748b); text-align: center; font-size: 14px; }
+  </style>
+
   <script>
     function filterConvs(q) {
       q = (q || '').toLowerCase().trim();
@@ -51,6 +83,59 @@
         el.style.display = !q || el.dataset.name.indexOf(q) !== -1 ? 'flex' : 'none';
       });
     }
+
+    // ── User search (new conversation) ──────────────────────────────────
+    const userSearch = document.getElementById('userSearch');
+    const userResults = document.getElementById('userSearchResults');
+    let searchTimer = null;
+    let lastQuery = '';
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function renderResults(users) {
+      if (!users || !users.length) {
+        userResults.innerHTML = '<div class="empty">কোনো সদস্য পাওয়া যায়নি</div>';
+        userResults.hidden = false;
+        return;
+      }
+      const html = users.map(u => {
+        const avatar = u.avatar_url
+          ? `<img class="usr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\\'usr-avatar\\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
+          : `<div class="usr-avatar">${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>`;
+        const sub = [u.designation, '@' + u.username].filter(Boolean).join(' • ');
+        return `<a class="usr-row" href="/messages/${encodeURIComponent(u.username)}">${avatar}<div class="usr-meta"><div class="usr-name">${escapeHtml(u.full_name || u.username)}</div><div class="usr-sub">${escapeHtml(sub)}</div></div><i class="fas fa-chevron-right" style="color:var(--text-muted)"></i></a>`;
+      }).join('');
+      userResults.innerHTML = html;
+      userResults.hidden = false;
+    }
+
+    async function doUserSearch(q) {
+      q = (q || '').trim();
+      if (q === lastQuery) return;
+      lastQuery = q;
+      if (q.length < 1) { userResults.hidden = true; userResults.innerHTML = ''; return; }
+      try {
+        const r = await fetch('/api/users/search?q=' + encodeURIComponent(q));
+        const data = await r.json();
+        renderResults(data.users || []);
+      } catch (e) {
+        userResults.innerHTML = '<div class="empty">অনুসন্ধান ব্যর্থ হয়েছে</div>';
+        userResults.hidden = false;
+      }
+    }
+
+    userSearch?.addEventListener('input', () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => doUserSearch(userSearch.value), 200);
+    });
+    userSearch?.addEventListener('focus', () => {
+      if (userSearch.value.trim().length >= 1 && userResults.innerHTML) userResults.hidden = false;
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.new-conv-box')) userResults.hidden = true;
+    });
 
     // 5s polling for unread counts + online dots
     async function pollList() {

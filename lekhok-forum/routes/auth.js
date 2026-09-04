@@ -86,17 +86,49 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
   const u = req.session.user;
   const { full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, show_email, show_phone, show_birth } = req.body;
 
-  const avatarPath = req.file ? '/uploads/avatars/' + req.file.filename : u.avatar_url || null;
+  if (req.uploadError) {
+    return res.redirect('/profile/edit?err=' + encodeURIComponent(req.uploadError));
+  }
+  if (!full_name || !full_name.trim()) {
+    return res.redirect('/profile/edit?err=' + encodeURIComponent('পূর্ণ নাম আবশ্যক'));
+  }
+
+  // Preserve current avatar unless a new file was uploaded.
+  const avatarPath = req.file ? '/uploads/avatars/' + req.file.filename : (u.avatar_url || null);
+  // Treat empty strings as null for nullable fields. The form always sends every field, so a blank
+  // value is the user's intent to clear it.
+  const clean = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();
   await db.prepare(
     `UPDATE users SET full_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=? WHERE id=?`
   ).run(
-    full_name || u.full_name, email || null, phone || null, bio || null, designation || null, address || null,
-    birth_date || null, gender || 'other',
-    social_fb || null, social_twitter || null, social_linkedin || null, social_website || null,
-    show_email ? 1 : 0, show_phone ? 1 : 0, show_birth ? 1 : 0, avatarPath, u.id
+    full_name.trim(),
+    clean(email),
+    clean(phone),
+    clean(bio),
+    clean(designation),
+    clean(address),
+    clean(birth_date),
+    gender && ['male','female','other'].includes(gender) ? gender : (u.gender || 'other'),
+    clean(social_fb),
+    clean(social_twitter),
+    clean(social_linkedin),
+    clean(social_website),
+    show_email ? 1 : 0,
+    show_phone ? 1 : 0,
+    show_birth ? 1 : 0,
+    avatarPath,
+    u.id
   );
-  const updated = await db.prepare('SELECT id, username, full_name, avatar_url, gender, role FROM users WHERE id = ?').get(u.id);
-  req.session.user = updated;
+  // Re-read the full user record so session reflects every updated field (including avatar_url).
+  const updated = await db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  req.session.user = {
+    id: updated.id,
+    username: updated.username,
+    full_name: updated.full_name,
+    avatar_url: updated.avatar_url,
+    gender: updated.gender,
+    role: updated.role || 'user'
+  };
   res.redirect('/profile/' + updated.username + '?updated=1');
 });
 
