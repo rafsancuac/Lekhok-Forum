@@ -1,10 +1,17 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/index.js", "use": "@vercel/node", "config": { "includeFiles": "node_modules/sql.js/dist/**" } }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "api/index.js" }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": [
+        "views/**",
+        "admin/views/**",
+        "public/**",
+        "node_modules/sql.js/dist/**"
+      ]
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index.js" }
   ],
   "headers": [
     {

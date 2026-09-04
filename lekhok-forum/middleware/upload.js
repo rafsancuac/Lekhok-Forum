@@ -16,9 +16,16 @@ const UPLOAD_ROOT   = path.join(__dirname, '..', 'public', 'uploads');
 const USE_BLOB      = !!process.env.BLOB_READ_WRITE_TOKEN;  // true on Vercel when token is set
 
 // ── Local: ensure subdirectories exist ───────────────────────────────────────
+// ⚠️ Vercel serverless এ ফাইল-সিস্টেম read-only (শুধু /tmp লেখা যায়) — এই
+// top-level mkdir একবার EROFS ছুঁড়লেই পুরো ল্যাম্বডা কোল্ড-বুটে মরে যায়
+// (FUNCTION_INVOCATION_FAILED, সব পেইজ 500)। তাই try/catch বাধ্যতামূলক।
+// প্রোডাকশনে আপলোডের আসল পথ Vercel Blob (BLOB_READ_WRITE_TOKEN) — diskStorage
+// শুধু লোকাল ডেভের জন্য; read-only হলে withUpload() সেটাই ধরে রিপোর্ট করে।
 ['avatars', 'covers', 'attachments', 'gallery', 'epaper'].forEach(dir => {
-  const p = path.join(UPLOAD_ROOT, dir);
-  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+  try {
+    const p = path.join(UPLOAD_ROOT, dir);
+    if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+  } catch (e) { /* read-only FS (Vercel) — upload requests degrade via withUpload() */ }
 });
 
 // ── Local filename sanitizer ───────────────────────────────────────────────────

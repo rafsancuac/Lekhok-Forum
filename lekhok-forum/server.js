@@ -146,16 +146,29 @@ app.use((err, req, res, next) => {
 });
 
 // ── Start (after DB init) ───────────────────────────────────────────────────
-db.initDb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`\n  লেখক ফোরাম server running at http://localhost:${PORT}`);
-    console.log(`  Admin panel:  http://localhost:${PORT}/admin`);
-    console.log(`  Login:        admin / admin123\n`);
+// 🔴 Critical: this module MUST export the express app for the Vercel
+// serverless entrypoint (api/index.js does `app = require('../server')`).
+// Previously nothing was exported — on Vercel every request crashed with
+// "app is not a function" → FUNCTION_INVOCATION_FAILED (all pages 500).
+// Local `node server.js` worked because it listens directly, which is why
+// the bug never showed up in local testing.
+if (require.main === module) {
+  // Direct run: init DB once, then listen.
+  db.initDb().then(() => {
+    app.listen(PORT, () => {
+      console.log(`\n  লেখক ফোরাম server running at http://localhost:${PORT}`);
+      console.log(`  Admin panel:  http://localhost:${PORT}/admin`);
+      console.log(`  Login:        admin / admin123\n`);
+    });
+  }).catch(err => {
+    console.error('Database initialization failed:', err);
+    process.exit(1);
   });
-}).catch(err => {
-  console.error('Database initialization failed:', err);
-  process.exit(1);
-});
+}
+// Serverless entry (api/index.js) awaits db.initDb() BEFORE requiring this
+// module — so no side-effect init/listen is needed here.
+
+module.exports = app;
 
 // ── Graceful shutdown: force-flush the debounced sql.js DB to disk ──────────
 // Without this, a restart/redeploy/Ctrl+C within the ~200ms save-debounce
