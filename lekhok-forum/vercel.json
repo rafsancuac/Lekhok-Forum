@@ -2,12 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/index.js": {
-      "includeFiles": [
-        "views/**",
-        "admin/views/**",
-        "public/**",
-        "node_modules/sql.js/dist/**"
-      ]
+      "includeFiles": "{views/**,admin/views/**,public/**,node_modules/sql.js/dist/**}"
     }
   },
   "rewrites": [
