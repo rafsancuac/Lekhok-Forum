@@ -359,3 +359,25 @@ pkill -f "node server.js"; node server.js &
 curl -s localhost:8080/gallery | grep 'main.js?v='   # non-empty
 node /home/z/my-project/scripts/test-reaction-e2e.js # 20 checks
 ```
+
+## Cross-Agent Note: Session 12 — App-Footer Fix: ফ্রেমের বাইরে যাওয়া কনটেন্ট ভেতরে আনা (৪ সেপ্টেম্বর ২০২৬)
+
+### সমস্যা (ইউজার রিপোর্ট: /settings ফুটার বাঁ দিকের কনটেন্ট ফ্রেমের বাইরে)
+`views/partials/footer.ejs` (`/settings`, `/me` — layout=false পেজগুলো) -এ
+`class="site-footer"` ব্যবহার হচ্ছিল, কিন্তু style.css-এ `.site-footer`-এর **কোনো রুলই ছিল না**:
+- ফুটারের ব্যাকগ্রাউন্ড ছিল না → সাদা ব্যাকগ্রাউন্ডে `#fff` কলাম-টাইটেল অদৃশ্য
+- `.footer-inner`-এ `.container` ছিল না → কনটেন্ট x=0-তে ফ্রেমের বাইরে, কোনো side spacing নেই
+- ৪টা কলাম ৩-কলাম গ্রিডে → "যোগাযোগ" ২য় সারিতে গিয়ে বাম edge-এ লেগে যায়
+
+### ফিক্স (নতুন CSS না লিখে existing ডিজাইন-সিস্টেম রিইউজ)
+- **`views/partials/footer.ejs`**: `<footer class="btclf-footer site-footer">` + `<div class="container footer-inner">` (layout.ejs-এর প্রুভেন প্যাটার্ন) + footer-bottom-এও `.container`
+- **`public/assets/css/style.css`**: `.site-footer` scoped rules — ৪-কলাম গ্রিড (≥993px), ২-কলাম (≤992px), ১-কলাম (≤600px), brand h2 সাদা, `margin-top: 48px` (app-page কনটেন্ট থেকে ব্রিদিং)
+
+### ভেরিফাই
+```bash
+node /home/z/my-project/scripts/test-footer-fix.js   # 61 checks — geometry (content-box inside frame,
+                                                     # padding ≥16px, container ≤1200px centered),
+                                                     # ৪ ভিউপোর্ট (1920/1366/768/375), /me + /settings,
+                                                     # homepage btclf-footer regression (3-col, 1 footer)
+bash /home/z/my-project/scripts/test-lekhok.sh       # 77/77 ALL GREEN
+```

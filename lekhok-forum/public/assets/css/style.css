@@ -260,6 +260,21 @@ ul { list-style: none; padding: 0; margin: 0; }
   padding: 18px 0; text-align: center; font-size: 13px; color: #94a3b8;
 }
 
+/* App-pages footer (partials/footer.ejs on /settings, /me) — reuses btclf-footer system.
+   .container on .footer-inner keeps content inside the frame with equal side spacing. */
+.site-footer { margin-top: 48px; }
+.site-footer .footer-inner { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+.site-footer .footer-brand h2 { color: #fff; font-size: 22px; margin: 0 0 6px; }
+.site-footer .footer-brand p { max-width: 340px; }
+.site-footer .f-links li { color: #94a3b8; }
+@media (max-width: 992px) {
+  .site-footer .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+@media (max-width: 600px) {
+  .site-footer .footer-inner { grid-template-columns: 1fr; gap: 28px; }
+  .site-footer { margin-top: 36px; }
+}
+
 /* ============= Page header (for sub-pages) ============= */
 .page-header {
   background: linear-gradient(135deg, var(--bg-main) 0%, var(--bg-secondary) 100%);
