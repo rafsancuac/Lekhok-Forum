@@ -82,3 +82,20 @@
   .article-title { font-size: 1.5rem; }
   .question-title { font-size: 1.35rem; }
 }
+
+/* ── Shared-post attribution banner ─────────────────────────────────────── */
+.shared-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 18px;
+  padding: 10px 14px;
+  background: rgba(16, 163, 127, 0.08);
+  border: 1px solid rgba(16, 163, 127, 0.25);
+  border-radius: 10px;
+  color: var(--text-2, #555);
+  font-size: 0.92rem;
+}
+.shared-banner .fa-retweet { color: #10a37f; }
+.shared-banner a { color: #0b7a5f; font-weight: 600; text-decoration: none; }
+.shared-banner a:hover { text-decoration: underline; }
