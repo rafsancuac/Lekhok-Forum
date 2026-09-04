@@ -64,6 +64,15 @@
               <% } else { %>
                 <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
               <% } %>
+              <% if (item.shared_from) { %>
+                <span class="shared-chip"><i class="fas fa-retweet"></i> শেয়ারকৃত পোস্ট · <a href="/articles/<%= item.shared_from %>">মূল পোস্ট</a></span>
+              <% } %>
+              <% if (user && (item.item_type === 'article' || item.item_type === 'question') && item.username === user.username) { %>
+                <span class="feed-owner-actions">
+                  <a href="/articles/<%= item.id %>/edit" title="সম্পাদনা"><i class="fas fa-pen"></i> সম্পাদনা</a>
+                  <form method="POST" action="/articles/<%= item.id %>/delete" onsubmit="return confirm('মুছে ফেলতে চান?')"><button type="submit" title="মুছুন"><i class="fas fa-trash"></i></button></form>
+                </span>
+              <% } %>
             </div>
             <% if (item.cover_image) { %>
               <a href="<%= item.link %>"><img src="<%= item.cover_image %>" class="feed-image" alt=""></a>

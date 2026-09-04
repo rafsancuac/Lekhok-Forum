@@ -203,3 +203,25 @@
 .update-date { font-size: 0.72rem; color: var(--text-muted, #64748b); flex-shrink: 0; }
 
 /* v3+: (logo-mark CSS removed — text-only logo) */
+
+/* ── Shared-post attribution chip (feed cards) ─────────────────────────── */
+.shared-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #0b7a5f;
+  background: rgba(16, 163, 127, 0.08);
+  border: 1px solid rgba(16, 163, 127, 0.22);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin: 6px 0 2px;
+}
+.shared-chip a { color: inherit; font-weight: 600; text-decoration: none; }
+.feed-owner-actions { margin-left: auto; display: flex; gap: 6px; }
+.feed-owner-actions a, .feed-owner-actions button {
+  font-size: 0.78rem; padding: 3px 9px; border-radius: 8px;
+  border: 1px solid var(--border, #e3e6ea); background: transparent; color: var(--text-2, #555);
+  text-decoration: none; cursor: pointer;
+}
+.feed-owner-actions a:hover, .feed-owner-actions button:hover { background: var(--bg-2, #f4f6f8); }

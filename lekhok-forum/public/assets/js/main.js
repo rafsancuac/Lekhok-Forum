@@ -521,6 +521,25 @@ window.showToast = showToast;
           if (!LOGGED_IN()) return location.href = '/login';
           openShareModal(url);
           menu.classList.remove('open');
+        } else if (kind === 'timeline') {
+          if (!LOGGED_IN()) return location.href = '/login';
+          const postId = menu.dataset.sharePost;
+          menu.classList.remove('open');
+          if (!postId) { showToast('শেয়ার করা যাবে না', 'error'); return; }
+          el.disabled = true;
+          fetch('/articles/' + postId + '/share', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin'
+          }).then(r => r.json()).then(d => {
+            if (d.ok) {
+              showToast('নিজের টাইমলাইনে শেয়ার হয়েছে ✓', 'success');
+              setTimeout(() => { location.href = d.redirect || '/dashboard'; }, 700);
+            } else {
+              showToast(d.error || 'শেয়ার ব্যর্থ হয়েছে', 'error');
+              el.disabled = false;
+            }
+          }).catch(() => { showToast('শেয়ার ব্যর্থ হয়েছে', 'error'); el.disabled = false; });
         } else {
           // Web Share API first on mobile
           if (navigator.share && window.matchMedia('(max-width: 768px)').matches) {

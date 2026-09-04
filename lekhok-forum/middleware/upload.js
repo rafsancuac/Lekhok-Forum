@@ -77,7 +77,16 @@ async function uploadToBlob(file, subdir) {
  *   • On Blob: reads file into RAM (multer.memoryStorage) then pushes to @vercel/blob
  *   • On disk:  writes directly via diskStorage
  */
-function makeUpload({ subdir, maxBytes, allowedTypes, fieldName = 'file' }) {
+// ── Field-name compatibility fix ─────────────────────────────────────────────
+// BUGFIX: the old code used multer().single('file'), but NO form in the app
+// actually uses field name "file" — register/edit use "avatar", messages and
+// complaints use "attachment", article form uses "cover", gallery uses
+// "image". req.file was therefore ALWAYS undefined and every upload silently
+// did nothing. .fields() accepts all of them; the first present file is
+// normalized to req.file so routes keep working unchanged.
+const UPLOAD_FIELDS = ['file', 'avatar', 'attachment', 'cover', 'image', 'epaper', 'photo'];
+
+function makeUpload({ subdir, maxBytes, allowedTypes }) {
   const dest = path.join(UPLOAD_ROOT, subdir);
 
   return (req, res, next) => {
@@ -92,11 +101,14 @@ function makeUpload({ subdir, maxBytes, allowedTypes, fieldName = 'file' }) {
           cb(new Error('এই ধরনের ফাইল অনুমোদিত নয়'));
         }
       }
-    }).single(fieldName)(req, res, async (err) => {
+    }).fields(UPLOAD_FIELDS.map(n => ({ name: n, maxCount: 1 })))(req, res, async (err) => {
       if (err) {
         req.uploadError = err.message || 'ফাইল আপলোড ব্যর্থ হয়েছে';
         return next();
       }
+      // Normalize: pick the first uploaded file regardless of its field name
+      const all = Object.values(req.files || {}).flat();
+      req.file = all.length ? all[0] : undefined;
       if (!req.file) return next();
 
       if (USE_BLOB) {
@@ -110,12 +122,18 @@ function makeUpload({ subdir, maxBytes, allowedTypes, fieldName = 'file' }) {
         }
       } else {
         // Local disk fallback
-        const filename = makeFilenameSync(req.file);
-        const destPath = path.join(dest, filename);
-        fs.writeFileSync(destPath, req.file.buffer);
-        req.file.path     = destPath;
-        req.file.url      = `/uploads/${subdir}/${filename}`;
-        req.file.filename = filename;
+        try {
+          const filename = makeFilenameSync(req.file);
+          const destPath = path.join(dest, filename);
+          fs.writeFileSync(destPath, req.file.buffer);
+          req.file.path     = destPath;
+          req.file.url      = `/uploads/${subdir}/${filename}`;
+          req.file.filename = filename;
+        } catch (e) {
+          // Read-only FS (Vercel without Blob token) or disk error — report
+          // gracefully instead of crashing the request with a 500.
+          req.uploadError = 'ফাইল সংরক্ষণ করা যায়নি (স্টোরেজ কনফিগার নেই)';
+        }
       }
       next();
     });

@@ -68,7 +68,8 @@ router.post('/register', withUpload(avatarUpload), async (req, res) => {
   if (existing) return back('এই ব্যবহারকারী নাম বা ইমেইল ইতিমধ্যে ব্যবহৃত');
 
   const hash = bcrypt.hashSync(password, 10);
-  const avatarPath = req.file ? '/uploads/avatars/' + req.file.filename : null;
+  // req.file.url is correct in BOTH modes: local → /uploads/avatars/…, Vercel → blob https URL
+  const avatarPath = req.file ? (req.file.url || req.file.path) : null;
   const result = await db.prepare(
     `INSERT INTO users (username, password_hash, full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
@@ -107,7 +108,8 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
   }
 
   // Preserve current avatar unless a new file was uploaded.
-  const avatarPath = req.file ? '/uploads/avatars/' + req.file.filename : (u.avatar_url || null);
+  // req.file.url is correct in BOTH modes: local → /uploads/avatars/…, Vercel → blob https URL
+  const avatarPath = req.file ? (req.file.url || req.file.path) : (u.avatar_url || null);
   // Treat empty strings as null for nullable fields. The form always sends every field, so a blank
   // value is the user's intent to clear it.
   const clean = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();

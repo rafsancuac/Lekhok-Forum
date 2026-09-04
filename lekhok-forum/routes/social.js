@@ -118,7 +118,7 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
   if (!title || !body) {
     return res.render('user/article-form', { post: req.body, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক', currentPath: '/articles/new' });
   }
-  const cover = req.file ? '/uploads/covers/' + req.file.filename : (cover_image || null);
+  const cover = req.file ? (req.file.url || req.file.path) : (cover_image || null);
   const mentions = await extractMentions(body);
   const result = await db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?, ?)`).run(
     req.session.user.id, title, body, excerpt || body.substring(0, 200), cover, tags || null, mentions, category || 'general'
@@ -140,12 +140,60 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
   res.redirect('/articles/' + result.lastInsertRowid);
 });
 
+// ── Share to own timeline (Facebook-style) ───────────────────────────────────
+// Creates a NEW post authored by the current user that references the original
+// via posts.shared_from — the original stays untouched; the shared copy lives
+// on the sharer's timeline/profile like a Facebook share.
+router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
+  const orig = await db.prepare(`
+    SELECT p.*, u.full_name as orig_author, u.username as orig_username
+    FROM posts p JOIN users u ON p.author_id = u.id
+    WHERE p.id = ? AND p.status = 'published'
+  `).get(req.params.id);
+  if (!orig) return res.status(404).json({ ok: false, error: 'পোস্ট পাওয়া যায়নি' });
+  // Resolve to the true original when sharing an already-shared post
+  const sourceId = orig.shared_from || orig.id;
+  const source = sourceId !== orig.id
+    ? await db.prepare('SELECT p.*, u.full_name as orig_author FROM posts p JOIN users u ON p.author_id = u.id WHERE p.id = ?').get(sourceId)
+    : orig;
+
+  const title = source.title;
+  const body = source.body || '';
+  const excerpt = (source.excerpt || body.substring(0, 200));
+  const result = await db.prepare(`
+    INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category, shared_from)
+    VALUES (?, 'article', ?, ?, ?, ?, NULL, NULL, 'general', ?)
+  `).run(req.session.user.id, title, body, excerpt, source.cover_image || null, sourceId);
+  const newIdInt = result && result.lastInsertRowid;
+
+  // Notify the original author (not when sharing your own post)
+  const origAuthorId = orig.author_id;
+  if (origAuthorId && origAuthorId !== req.session.user.id) {
+    try {
+      await db.prepare(`INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, 'share', ?, ?, ?)`).run(
+        origAuthorId, 'শেয়ার',
+        req.session.user.full_name + ' আপনার পোস্ট শেয়ার করেছেন',
+        '/articles/' + (newIdInt || sourceId)
+      );
+    } catch (e) {}
+  }
+  res.json({ ok: true, new_id: newIdInt || null, redirect: newIdInt ? ('/articles/' + newIdInt) : '/dashboard' });
+});
+
 // ── Single article view ──────────────────────────────────────────────────────
 router.get('/articles/:id', async (req, res) => {
   const post = await db.prepare(`SELECT p.*, u.full_name as author_name, u.username as author_username, u.avatar_url as author_avatar, u.gender as author_gender, u.designation as author_designation, u.bio as author_bio
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.status = 'published'`).get(req.params.id);
   if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+
+  // If this is a shared copy, resolve the ORIGINAL post + author for attribution
+  if (post.shared_from) {
+    post.shared_original = await db.prepare(`
+      SELECT p.id, p.title, u.full_name as orig_author, u.username as orig_username
+      FROM posts p JOIN users u ON p.author_id = u.id WHERE p.id = ?
+    `).get(post.shared_from) || null;
+  }
 
   // increment view
   await db.prepare('UPDATE posts SET view_count = view_count + 1 WHERE id = ?').run(req.params.id);
@@ -194,11 +242,14 @@ router.get('/articles/:id/edit', ensureLoggedIn, async (req, res) => {
 });
 
 // ── Update article ───────────────────────────────────────────────────────────
-router.post('/articles/:id/edit', ensureLoggedIn, async (req, res) => {
+router.post('/articles/:id/edit', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const post = await db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
   if (!post || post.author_id !== req.session.user.id) return res.redirect('/articles/' + req.params.id);
+  if (req.uploadError) return res.render('user/article-form', { post, error: req.uploadError, currentPath: '/articles' });
   const { title, body, excerpt, cover_image, tags, category } = req.body;
-  await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?').run(title, body, excerpt || body.substring(0, 200), cover_image || null, tags || null, category || 'general', req.params.id);
+  // New upload wins; else keep the submitted URL; else keep the existing cover
+  const cover = req.file ? (req.file.url || req.file.path) : (cover_image !== undefined ? (cover_image || null) : post.cover_image);
+  await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?').run(title, body, excerpt || body.substring(0, 200), cover, tags || null, category || 'general', req.params.id);
   res.redirect('/articles/' + req.params.id);
 });
 
@@ -1055,14 +1106,27 @@ router.post('/qa/:id/answer', ensureLoggedIn, async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────
 // /api/users/search — user search (share-to-user modal, messenger)
 // ────────────────────────────────────────────────────────────────────────────
-router.get('/api/users/search', async (req, res) => {
-  const q = (req.query.q || '').trim();
-  if (!q) return res.json({ users: [] });
+router.get('/api/users/search', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user.id;
+  const q = String(req.query.q || '').trim();
+  if (q.length < 1) return res.json({ users: [] });
+  const like = '%' + q + '%';
+  const start = q + '%';
+  // Prefix-match ranks first; excludes the caller and banned accounts;
+  // designation powers the messenger search UI's subtitle row.
   const users = await db.prepare(`
-    SELECT username, full_name, avatar_url, id FROM users
-    WHERE status = 'active' AND (username LIKE ? OR full_name LIKE ?)
-    ORDER BY full_name LIMIT 8
-  `).all('%' + q + '%', '%' + q + '%');
+    SELECT id, username, full_name, designation, avatar_url
+    FROM users
+    WHERE status != 'banned' AND id != ? AND (
+      full_name LIKE ? COLLATE NOCASE OR
+      username   LIKE ? COLLATE NOCASE OR
+      full_name LIKE ? COLLATE NOCASE
+    )
+    ORDER BY
+      CASE WHEN full_name LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END,
+      full_name
+    LIMIT 15
+  `).all(me, start, start, like, start);
   res.json({ users });
 });
 

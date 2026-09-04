@@ -34,7 +34,10 @@
 
   <div class="share-wrap">
     <button type="button" class="reaction-btn share-trigger"><i class="far fa-share-square"></i> শেয়ার</button>
-    <div class="share-menu" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>">
+    <div class="share-menu" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>" data-share-post="<%= targetType === 'post' ? targetId : '' %>">
+      <% if (typeof user !== 'undefined' && user && targetType === 'post') { %>
+        <button type="button" data-share="timeline"><i class="fas fa-retweet"></i> নিজের টাইমলাইনে শেয়ার</button>
+      <% } %>
       <button type="button" data-share="copy"><i class="fas fa-link"></i> লিংক কপি করুন</button>
       <a data-share="whatsapp" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
       <a data-share="facebook" target="_blank" rel="noopener"><i class="fab fa-facebook"></i> Facebook</a>

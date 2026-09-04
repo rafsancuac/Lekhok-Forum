@@ -38,20 +38,20 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
   const filter = req.query.filter || 'all';   // all | article | question | activity | following
 
   const ARTICLE_SQL = `
-    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags,
+    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.reactions,
            u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
   const QUESTION_SQL = `
-    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags,
+    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.reactions,
            u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
   const ACTIVITY_SQL = `
     SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
-           dc.created_at, 0 as like_count, 0 as comment_count, '{}' as reactions,
+           NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, '{}' as reactions,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
     WHERE dc.content_type = 'activity' AND dc.published = 1`;
@@ -220,7 +220,8 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
     .get(me, other.id, other.id, me);
   if (!conv) return res.redirect('/messages');
   const { body } = req.body;
-  const fileUrl = req.file ? '/uploads/attachments/' + req.file.filename : null;
+  // req.file.url is correct in BOTH modes (local disk path or Vercel blob URL)
+  const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   const fileName = req.file ? req.file.originalname : null;
   if ((!body || !body.trim()) && !fileUrl) return res.redirect('/messages/' + req.params.username);
   await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
@@ -378,30 +379,8 @@ router.get('/api/messages/unread', ensureAuth, async (req, res) => {
   res.json({ totalUnread, conversations: rows });
 });
 
-// ── User search for new conversation ────────────────────────────────────
-// ?q=… — case-insensitive prefix + substring on full_name and username.
-// Excludes the caller and banned accounts. Limited to 15 hits.
-router.get('/api/users/search', ensureAuth, async (req, res) => {
-  const me = req.session.user.id;
-  const q = String(req.query.q || '').trim();
-  if (q.length < 1) return res.json({ users: [] });
-  const like = '%' + q + '%';
-  const start = q + '%';
-  const rows = await db.prepare(`
-    SELECT id, username, full_name, designation, avatar_url, role
-    FROM users
-    WHERE status != 'banned' AND id != ? AND (
-      full_name LIKE ? COLLATE NOCASE OR
-      username   LIKE ? COLLATE NOCASE OR
-      full_name LIKE ? COLLATE NOCASE
-    )
-    ORDER BY
-      CASE WHEN full_name LIKE ? COLLATE NOCASE THEN 0 ELSE 1 END,
-      full_name
-    LIMIT 15
-  `).all(me, start, start, like, start);
-  res.json({ users: rows });
-});
+// NOTE: /api/users/search lives in routes/social.js (canonical — social is
+// mounted before dashboard; the messenger + share-modal both use it).
 
 // ── Complaints (private) ──────────────────────────────────────────────────
 router.get('/complaints', ensureAuth, async (req, res) => {
@@ -413,7 +392,7 @@ router.post('/complaints', ensureAuth, withUpload(attachmentUpload), async (req,
   const { subject, body } = req.body;
   if (req.uploadError) return res.redirect('/complaints?err=' + encodeURIComponent(req.uploadError));
   if (!subject) return res.redirect('/complaints');
-  const fileUrl = req.file ? '/uploads/attachments/' + req.file.filename : null;
+  const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   const fileName = req.file ? req.file.originalname : null;
   await db.prepare('INSERT INTO complaints (submitted_by, subject, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
     .run(req.session.user.id, subject, body || null, fileUrl, fileName);
