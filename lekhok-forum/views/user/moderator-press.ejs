@@ -1,0 +1,151 @@
+<%- include('../partials/header', { title: 'পত্রিকা কাটিং ব্যবস্থাপনা | মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<style>
+  .mod-page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; font-family: 'Hind Siliguri', sans-serif !important; }
+  .mod-hero {
+    background: linear-gradient(135deg, #0a1f44 0%, #1e293b 100%);
+    border-radius: 16px; padding: 28px 32px; color: white;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+  }
+  .mod-hero h1 { margin: 0 0 6px; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .mod-hero h1 i { color: #d4a017; }
+  .mod-hero p { margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+  .mod-back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18); color: #e2e8f0;
+    border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+  }
+  .mod-back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; text-decoration: none; }
+  .mod-card { background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 22px; margin-bottom: 18px; }
+  .mod-card h2 { margin: 0 0 6px; font-size: 17px; color: var(--text, #0f172a); display: flex; align-items: center; gap: 8px; }
+  .mod-card .mod-hint { color: #64748b; font-size: 13.5px; margin: 0 0 16px; line-height: 1.6; }
+  .mod-flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
+  .mod-flash.ok { background: #dcfce7; color: #15803d; }
+  .mod-flash.err { background: #fef2f2; color: #dc2626; }
+  .clip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .clip-field label { display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin: 0 0 4px; }
+  .clip-field input, .clip-field select, .clip-field textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px; font-size: 13.5px; font-family: inherit; background: var(--surface, #fff);
+    color: var(--text, #0f172a); box-sizing: border-box;
+  }
+  .clip-field input:focus, .clip-field select:focus {
+    outline: none; border-color: #0a1f44; box-shadow: 0 0 0 3px rgba(10, 31, 68, 0.08);
+  }
+  .clip-row { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .clip-row summary {
+    list-style: none; display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; cursor: pointer; background: var(--surface-alt, #f8fafc);
+  }
+  .clip-row summary::-webkit-details-marker { display: none; }
+  .clip-row summary:hover { background: #eef2f7; }
+  .clip-thumb { width: 56px; height: 42px; border-radius: 6px; object-fit: cover; background: #e2e8f0; flex: 0 0 auto; }
+  .clip-name { font-weight: 600; font-size: 14px; color: var(--text, #0f172a); }
+  .clip-sub { font-size: 12px; color: #64748b; }
+  .clip-chip {
+    margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 999px; background: #dcfce7; color: #15803d; white-space: nowrap;
+  }
+  .clip-chip.off { background: #e2e8f0; color: #475569; }
+  .clip-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .clip-del {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+    background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
+    border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
+  }
+  .clip-del:hover { background: #fee2e2; }
+  .clip-count { font-size: 12px; color: #64748b; font-weight: 500; margin-left: auto; }
+  details[open] > summary .clip-chevron { transform: rotate(90deg); }
+  .clip-chevron { transition: transform .15s ease; color: #94a3b8; }
+</style>
+
+<div class="mod-page">
+  <div class="mod-hero">
+    <div>
+      <h1><i class="fas fa-newspaper"></i> পত্রিকা কাটিং ব্যবস্থাপনা</h1>
+      <p>পত্রিকায় ফোরামকে নিয়ে প্রকাশিত নিউজের ছবি যোগ / সম্পাদনা / মুছুন</p>
+    </div>
+    <a href="/moderator" class="mod-back-btn"><i class="fas fa-arrow-left"></i> প্যানেলে ফিরুন</a>
+  </div>
+
+  <% if (posted) { %><div class="mod-flash ok"><i class="fas fa-check-circle"></i> সফলভাবে সংরক্ষিত হয়েছে। পরিচিতি পেজ ও /press পেজে সাথে সাথে প্রযোজ্য।</div><% } %>
+  <% if (removed) { %><div class="mod-flash ok"><i class="fas fa-trash-alt"></i> কাটিংটি মুছে ফেলা হয়েছে।</div><% } %>
+  <% if (error) { %><div class="mod-flash err"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+
+  <%# ── নতুন কাটিং যোগ ── %>
+  <div class="mod-card">
+    <h2><i class="fas fa-plus"></i> নতুন কাটিং যোগ করুন</h2>
+    <p class="mod-hint">
+      ছবি আপলোড করলে স্বয়ংক্রিয়ভাবে অপটিমাইজ হয়ে সংরক্ষিত হবে (WebP)। চাইলে ছবির সরাসরি <strong>URL</strong>-ও দিতে পারেন।
+      যোগ করা ছবি <strong>/about</strong> পেজে সর্বোচ্চ ৪টি এবং <a href="/press" target="_blank" style="color:#059669;"><strong>/press</strong> পেজে</a> সবগুলো দেখা যাবে।
+    </p>
+    <form method="POST" action="/moderator/press" enctype="multipart/form-data">
+      <div class="clip-grid">
+        <div class="clip-field"><label>শিরোনাম</label><input type="text" name="title" maxlength="200" placeholder="যেমন: দৈনিক আজাদে ফোরামের সেমিনার নিয়ে খবর" /></div>
+        <div class="clip-field"><label>পত্রিকার নাম</label><input type="text" name="paper_name" maxlength="120" placeholder="যেমন: দৈনিক আজাদ / প্রথম আলো" /></div>
+        <div class="clip-field"><label>প্রকাশের তারিখ</label><input type="text" name="published_date" maxlength="40" placeholder="যেমন: জানুয়ারি ২০২৬" /></div>
+        <div class="clip-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="0" /></div>
+        <div class="clip-field"><label>ছবি আপলোড</label><input type="file" name="image" accept="image/*" /></div>
+        <div class="clip-field"><label>অথবা ছবির URL</label><input type="text" name="image_url" maxlength="600" placeholder="https://… (আপলোড না দিলে)" /></div>
+        <div class="clip-field"><label>প্রদর্শন অবস্থা</label>
+          <select name="is_active">
+            <option value="1">দৃশ্যমান</option>
+            <option value="0">লুকানো</option>
+          </select>
+        </div>
+      </div>
+      <div class="clip-actions">
+        <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-plus"></i> কাটিং যোগ করুন</button>
+      </div>
+    </form>
+  </div>
+
+  <%# ── কাটিং তালিকা ── %>
+  <div class="mod-card">
+    <h2><i class="fas fa-images"></i> সব কাটিং <span class="clip-count"><%= clips.length %> টি</span></h2>
+    <p class="mod-hint">যেকোনো কাটিংয়ের নামে ক্লিক করে সম্পাদনা করুন। "লুকানো" করলে পাবলিক পেজে দেখা যাবে না, তবে তথ্য থেকে যাবে।</p>
+    <% if (!clips.length) { %><p class="mod-hint"><i class="fas fa-info-circle"></i> এখনো কোনো কাটিং যোগ করা হয়নি।</p><% } %>
+    <% clips.forEach(c => { %>
+      <details class="clip-row">
+        <summary>
+          <i class="fas fa-chevron-right clip-chevron"></i>
+          <img class="clip-thumb" src="<%= c.image_url %>" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'" />
+          <div>
+            <div class="clip-name"><%= c.title || 'শিরোনাম নেই' %></div>
+            <div class="clip-sub"><%= [c.paper_name, c.published_date].filter(Boolean).join(' · ') || 'বিবরণ নেই' %></div>
+          </div>
+          <span class="clip-chip <%= c.is_active ? '' : 'off' %>"><%= c.is_active ? 'দৃশ্যমান' : 'লুকানো' %></span>
+        </summary>
+        <div style="padding:16px 14px;">
+          <form method="POST" action="/moderator/press/<%= c.id %>" enctype="multipart/form-data">
+            <div class="clip-grid">
+              <div class="clip-field"><label>শিরোনাম</label><input type="text" name="title" maxlength="200" value="<%= c.title || '' %>" /></div>
+              <div class="clip-field"><label>পত্রিকার নাম</label><input type="text" name="paper_name" maxlength="120" value="<%= c.paper_name || '' %>" /></div>
+              <div class="clip-field"><label>প্রকাশের তারিখ</label><input type="text" name="published_date" maxlength="40" value="<%= c.published_date || '' %>" /></div>
+              <div class="clip-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= c.sort_order || 0 %>" /></div>
+              <div class="clip-field"><label>নতুন ছবি আপলোড (ঐচ্ছিক)</label><input type="file" name="image" accept="image/*" /></div>
+              <div class="clip-field"><label>অথবা ছবির URL</label><input type="text" name="image_url" maxlength="600" value="<%= c.image_url %>" /></div>
+              <div class="clip-field"><label>প্রদর্শন অবস্থা</label>
+                <select name="is_active">
+                  <option value="1" <%= c.is_active ? 'selected' : '' %>>দৃশ্যমান</option>
+                  <option value="0" <%= c.is_active ? '' : 'selected' %>>লুকানো</option>
+                </select>
+              </div>
+            </div>
+            <div class="clip-actions">
+              <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+              <button type="submit" class="clip-del" formaction="/moderator/press/<%= c.id %>/delete" formnovalidate onclick="return confirm('নিশ্চিতভাবে এই কাটিংটি মুছে ফেলবেন?');"><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
+            </div>
+          </form>
+        </div>
+      </details>
+    <% }) %>
+  </div>
+</div>
+</main>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+</body>
+</html>

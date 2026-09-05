@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'অভিযোগ — বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
+<%- include('../partials/header', { title: 'অভিযোগ | বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
 
   <div class="complaints-wrap">
     <div class="page-header">
@@ -7,7 +7,7 @@
     </div>
 
     <div class="complaint-privacy">
-      <i class="fas fa-shield-alt"></i> আপনার অভিযোগ <strong>সম্পূর্ণ গোপনীয়</strong> — শুধুমাত্র অ্যাডমিন ও বিশেষ কিছু মডারেটর দেখতে পারবেন।
+      <i class="fas fa-shield-alt"></i> আপনার অভিযোগ <strong>সম্পূর্ণ গোপনীয়</strong>। শুধুমাত্র অ্যাডমিন ও বিশেষ কিছু মডারেটর দেখতে পারবেন।
     </div>
 
     <% if (typeof query !== 'undefined' && query.sent === '1') { %>

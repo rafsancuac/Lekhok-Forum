@@ -15,7 +15,7 @@
         <span class="accent-divider"></span>
         <ul class="bullet-list">
           <li><strong>ক্যাটাগরি:</strong> <%= notice.category === 'press' ? 'প্রেস বিজ্ঞপ্তি' : notice.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></li>
-          <li><strong>প্রকাশের তারিখ:</strong> <%= notice.date || '—' %></li>
+          <li><strong>প্রকাশের তারিখ:</strong> <%= notice.date || 'উল্লেখ নেই' %></li>
           <li><strong>আইডি:</strong> #<%= notice.id %></li>
         </ul>
         <a href="/notices" class="btn btn-primary" style="margin-top:18px;"><i class="fas fa-arrow-left"></i> সকল বিজ্ঞপ্তি</a>

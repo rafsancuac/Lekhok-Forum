@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'ব্যক্তিগত ফিড — বাংলাদেশ তরুণ কলাম লেখক ফোরাম' }) %>
+<%- include('../partials/header', { title: 'ব্যক্তিগত ফিড | বাংলাদেশ তরুণ কলাম লেখক ফোরাম' }) %>
 
   <div class="me-wrap">
     <header class="me-header">
@@ -150,7 +150,7 @@
     <!-- Tab: Activity (chronological) -->
     <section class="me-tab" data-pane="activity" hidden>
       <% if (activity.length === 0) { %>
-        <div class="empty"><div class="icon"><i class="fas fa-stream"></i></div><h3>কোনো অ্যাক্টিভিটি নেই</h3><p>লিখুন, মন্তব্য করুন, প্রতিক্রিয়া দিন — সব এখানে জমা হবে।</p></div>
+        <div class="empty"><div class="icon"><i class="fas fa-stream"></i></div><h3>কোনো অ্যাক্টিভিটি নেই</h3><p>লিখুন, মন্তব্য করুন, প্রতিক্রিয়া দিন, সব এখানে জমা হবে।</p></div>
       <% } %>
       <% const _emo = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' }; %>
       <% activity.forEach(a => { %>

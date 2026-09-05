@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'মাসিক সেরা লেখক — মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<%- include('../partials/header', { title: 'মাসিক সেরা লেখক | মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
 <style>
     .mod-wrap { max-width: 760px; margin: 20px auto; padding: 0 16px; }
     .mod-item { background:#fff; border-radius:10px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
@@ -13,7 +13,7 @@
       <div class="mod-item">
         <div>
           <strong><%= a.title %></strong>
-          <div style="color:#999; font-size:0.85rem;">— <%= a.full_name %> (@<%= a.username %>)</div>
+          <div style="color:#999; font-size:0.85rem;"><%= a.full_name %> (@<%= a.username %>)</div>
         </div>
         <form method="POST" action="/moderator/best-writer/<%= a.id %>/toggle">
           <button class="btn <%= a.featured ? 'btn-danger' : 'btn-primary' %> btn-sm" type="submit">

@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'মডারেটর প্যানেল — বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
+<%- include('../partials/header', { title: 'মডারেটর প্যানেল | বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
 <style>
   .mod-page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; font-family: 'Hind Siliguri', sans-serif !important; }
   .mod-hero {
@@ -188,6 +188,13 @@
         <div class="mod-tile-desc">কার্যনির্বাহী কমিটি ও উপদেষ্টাদের পদ, কার্যবর্ষ ও তথ্য আপডেট করুন</div>
       </div>
     </a>
+    <a href="/moderator/press" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
+      <div class="mod-tile-icon"><i class="fas fa-newspaper"></i></div>
+      <div>
+        <div class="mod-tile-label">পত্রিকা কাটিং ব্যবস্থাপনা</div>
+        <div class="mod-tile-desc">পত্রিকায় ফোরামকে নিয়ে প্রকাশিত নিউজের ছবি যোগ ও আপডেট করুন</div>
+      </div>
+    </a>
   </div>
 
   <% if (myScopes.length === 0 && user.role !== 'admin') { %>
@@ -202,7 +209,7 @@
   <div style="margin-top:24px; padding:16px 20px; background:rgba(5,150,105,0.08); border:1px solid rgba(5,150,105,0.2); border-radius:10px; display:flex; gap:10px; align-items:flex-start;">
     <i class="fas fa-info-circle" style="color:var(--accent,#059669); font-size:16px; margin-top:2px;"></i>
     <div style="font-size:13px; color:var(--text-soft,#475569); line-height:1.6;">
-      <strong>বিজ্ঞপ্তি:</strong> মডারেটর হিসেবে আপনি পোস্ট করলে স্বয়ংক্রিয়ভাবে সব সদস্যের কাছে নোটিফিকেশন যাবে। আপনার সব কার্যক্রম সেভ থাকে — লগআউট করে ফিরে এলে আগের অবস্থায় পাবেন।
+      <strong>বিজ্ঞপ্তি:</strong> মডারেটর হিসেবে আপনি পোস্ট করলে স্বয়ংক্রিয়ভাবে সব সদস্যের কাছে নোটিফিকেশন যাবে। আপনার সব কার্যক্রম সেভ থাকে। লগআউট করে ফিরে এলে আগের অবস্থায় পাবেন।
     </div>
   </div>
 </div>

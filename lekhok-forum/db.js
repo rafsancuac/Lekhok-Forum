@@ -260,6 +260,16 @@ const MIGRATION_SQL = `
     uploaded_by INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS press_clippings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    paper_name TEXT,
+    image_url TEXT NOT NULL,
+    published_date TEXT,
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
   CREATE TABLE IF NOT EXISTS conversations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_a INTEGER NOT NULL,
@@ -618,6 +628,24 @@ async function runMigrations() {
   // motto is a NEW key — old DBs don't have it; add it if missing.
   try {
     await backend.prepare("INSERT INTO settings (key, value) SELECT 'motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী' WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'motto')").run();
+  } catch (_) {}
+
+  // (1b) nav_json migration — /press page (পত্রিকায় আমাদের নিউজ) into the
+  //      পরিচিতি submenu of ANY customized menu, keeping admin edits intact.
+  //      Idempotent: skipped when /press already present anywhere.
+  try {
+    const navRow = await backend.prepare("SELECT value FROM settings WHERE key = 'nav_json' AND value != ''").get();
+    if (navRow && navRow.value && !String(navRow.value).includes('"/press"') && !String(navRow.value).includes("'\/press'")) {
+      const nav = JSON.parse(navRow.value);
+      const parent = nav.find(m => m.href === '/about' || m.label === 'পরিচিতি');
+      if (parent && Array.isArray(parent.children)) {
+        const magIdx = parent.children.findIndex(c => (c.href || '').startsWith('/about#magazine'));
+        const item = { label: 'পত্রিকায় আমাদের নিউজ', href: '/press', icon: 'fa-newspaper' };
+        if (magIdx >= 0) parent.children.splice(magIdx + 1, 0, item);
+        else parent.children.push(item);
+        await backend.prepare("UPDATE settings SET value = ? WHERE key = 'nav_json'").run(JSON.stringify(nav));
+      }
+    }
   } catch (_) {}
 
   // (2) committee: dedupe race-created duplicates first (serverless cold boots

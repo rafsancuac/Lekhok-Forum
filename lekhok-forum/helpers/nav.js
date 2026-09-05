@@ -12,6 +12,7 @@ const DEFAULT_NAV = [
       { label: 'সংগঠন পরিচিতি', href: '/about', icon: 'fa-info-circle' },
       { label: 'আমাদের কার্যাক্রম', href: '/about#activities', icon: 'fa-tasks' },
       { label: 'পত্রিকায় পাতায় লেখক ফোরাম', href: '/about#magazine', icon: 'fa-book' },
+      { label: 'পত্রিকায় আমাদের নিউজ', href: '/press', icon: 'fa-newspaper' },
       { label: 'গঠনতন্ত্র', href: '/constitution', icon: 'fa-scroll' },
       { label: 'কলম সৈনিক হতে চান?', href: '/about#soldier', icon: 'fa-fighter-jet' },
       { label: 'সদস্য হওয়ার শর্তাবলি', href: '/about#conditions', icon: 'fa-clipboard-list' }

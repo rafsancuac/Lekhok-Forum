@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'কমিটি সদস্য ব্যবস্থাপনা — মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<%- include('../partials/header', { title: 'কমিটি সদস্য ব্যবস্থাপনা | মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
 <style>
   .mod-page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; font-family: 'Hind Siliguri', sans-serif !important; }
   .mod-hero {
@@ -72,7 +72,7 @@
     <a href="/moderator" class="mod-back-btn"><i class="fas fa-arrow-left"></i> প্যানেলে ফিরুন</a>
   </div>
 
-  <% if (posted) { %><div class="mod-flash ok"><i class="fas fa-check-circle"></i> সফলভাবে সংরক্ষিত হয়েছে — সাইটে সাথে সাথে প্রযোজ্য।</div><% } %>
+  <% if (posted) { %><div class="mod-flash ok"><i class="fas fa-check-circle"></i> সফলভাবে সংরক্ষিত হয়েছে। সাইটে সাথে সাথে প্রযোজ্য।</div><% } %>
   <% if (removed) { %><div class="mod-flash ok"><i class="fas fa-trash-alt"></i> সদস্য মুছে ফেলা হয়েছে।</div><% } %>
   <% if (error) { %><div class="mod-flash err"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
 
@@ -80,7 +80,7 @@
   <div class="mod-card">
     <h2><i class="fas fa-user-plus"></i> নতুন সদস্য যোগ করুন</h2>
     <p class="mod-hint">
-      <strong>কার্যবর্ষ</strong> ঘরে যে বছরে সদস্য যুক্ত হয়েছেন সেটি লিখুন (যেমন <code>২০২৪-২৫</code>) —
+      <strong>কার্যবর্ষ</strong> ঘরে যে বছরে সদস্য যুক্ত হয়েছেন সেটি লিখুন (যেমন <code>২০২৪-২৫</code>)।
       এটি পাবলিক পেজ ও প্রোফাইলে দেখা যাবে। ঐচ্ছিক <strong>ইউজারনেম</strong> দিলে সদস্যের সাইট অ্যাকাউন্টের সাথে যুক্ত হবে।
     </p>
     <form method="POST" action="/moderator/members">
@@ -100,7 +100,7 @@
         <div class="mem-field"><label>ফেসবুক লিংক</label><input type="text" name="social_fb" maxlength="300" placeholder="https://facebook.com/… (ঐচ্ছিক)" /></div>
         <div class="mem-field"><label>ইমেইল</label><input type="text" name="social_email" maxlength="160" placeholder="ঐচ্ছিক" /></div>
         <div class="mem-field"><label>ইউজারনেম (অ্যাকাউন্ট লিংক)</label><input type="text" name="username" maxlength="60" placeholder="সাইট অ্যাকাউন্ট থাকলে (ঐচ্ছিক)" /></div>
-        <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200" placeholder="ঐচ্ছিক — সদস্যের সংক্ষিপ্ত বর্ণনা"></textarea></div>
+        <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200" placeholder="ঐচ্ছিক, সদস্যের সংক্ষিপ্ত বর্ণনা"></textarea></div>
       </div>
       <div class="mem-actions">
         <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-plus"></i> সদস্য যোগ করুন</button>
@@ -160,7 +160,7 @@
   <%# ── উপদেষ্টা পর্ষদ তালিকা ── %>
   <div class="mod-card">
     <h2><i class="fas fa-user-tie"></i> উপদেষ্টা পর্ষদ <span class="mem-section-count"><%= advisory.length %> জন</span></h2>
-    <p class="mod-hint">উপদেষ্টাদের তথ্য এখান থেকে সম্পাদনা করুন — /committee/advisory পেজে সাথে সাথে প্রযোজ্য হবে।</p>
+    <p class="mod-hint">উপদেষ্টাদের তথ্য এখান থেকে সম্পাদনা করুন। /committee/advisory পেজে সাথে সাথে প্রযোজ্য হবে।</p>
     <% if (!advisory.length) { %><p class="mod-hint"><i class="fas fa-info-circle"></i> এখনো কোনো উপদেষ্টা নেই।</p><% } %>
     <% advisory.forEach(m => { %>
       <details class="mem-row">

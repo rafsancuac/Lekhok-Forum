@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: (post.title) + ' — প্রশ্নোত্তর — বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/article.css'] }) %>
+<%- include('../partials/header', { title: (post.title) + ' | প্রশ্নোত্তর | বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/article.css'] }) %>
 
   <div class="article-wrap qa-wrap">
     <article class="article-main card">
@@ -46,7 +46,7 @@
         <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<%= answers.length %>)</h2>
 
         <% if (answers.length === 0) { %>
-          <div class="empty-state answers-empty"><i class="fas fa-reply-all"></i><p>এখনো কোনো উত্তর নেই — প্রথম উত্তরদাতা হোন!</p></div>
+          <div class="empty-state answers-empty"><i class="fas fa-reply-all"></i><p>এখনো কোনো উত্তর নেই। প্রথম উত্তরদাতা হোন!</p></div>
         <% } %>
 
         <% answers.forEach((a, idx) => { %>

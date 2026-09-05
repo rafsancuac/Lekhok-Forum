@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'সাবেক সভাপতি ও সাধারণ সম্পাদক — বাংলাদেশ তরুণ কলাম লেখক ফোরাম' }) %>
+<%- include('../partials/header', { title: 'সাবেক সভাপতি ও সাধারণ সম্পাদক | বাংলাদেশ তরুণ কলাম লেখক ফোরাম' }) %>
   <div class="page-wrap">
     <div class="page-header">
       <h1><i class="fas fa-history"></i> সাবেক সভাপতি ও সাধারণ সম্পাদক</h1>
@@ -20,7 +20,7 @@
                 <div class="leader-info">
                   <div class="leader-role">সভাপতি</div>
                   <h3><%= displayName %></h3>
-                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
                   <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
                 </div>
               </a>
@@ -30,7 +30,7 @@
                 <div class="leader-info">
                   <div class="leader-role">সভাপতি</div>
                   <h3><%= displayName %></h3>
-                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
                 </div>
               </div>
             <% } %>
@@ -50,7 +50,7 @@
                 <div class="leader-info">
                   <div class="leader-role">সাধারণ সম্পাদক</div>
                   <h3><%= displayName %></h3>
-                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
                   <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
                 </div>
               </a>
@@ -60,7 +60,7 @@
                 <div class="leader-info">
                   <div class="leader-role">সাধারণ সম্পাদক</div>
                   <h3><%= displayName %></h3>
-                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> — <%= l.term_end %><% } %></p>
+                  <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
                 </div>
               </div>
             <% } %>

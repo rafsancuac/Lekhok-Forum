@@ -10,7 +10,7 @@
     var seoTitle = (typeof title !== 'undefined' && title ? title : BRAND_FULL);
     var seoDesc = (typeof metaDesc !== 'undefined' && metaDesc)
       ? metaDesc
-      : BRAND_FULL + ' — একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।';
+      : BRAND_FULL + ', একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।';
     var seoType = (typeof ogType !== 'undefined' && ogType) ? ogType : 'website';
     var seoImg = (typeof ogImage !== 'undefined' && ogImage) ? ogImage : null;
     var seoPub = (typeof publishedTime !== 'undefined') ? publishedTime : null;
@@ -46,8 +46,8 @@
   <link rel="stylesheet" href="/assets/css/style.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/feed.css?v=<%= AV %>" />
-  <%# পেজ-নির্দিষ্ট স্টাইলশিট (HTML nesting fix-এর পর পেজের নিজস্ব head আর নেই —
-      সেখান থেকে এখানে এসেছে) —%>
+  <%# পেজ-নির্দিষ্ট স্টাইলশিট (HTML nesting fix-এর পর পেজের নিজস্ব head আর নেই,
+      সেখান থেকে এখানে এসেছে) -%>
   <% if (typeof extra_css !== 'undefined' && extra_css) { extra_css.forEach(function (href) { %>
   <link rel="stylesheet" href="<%= href %><%= href.indexOf('/') === 0 ? '?v=' + AV : '' %>" />
   <% }) } %>

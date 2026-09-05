@@ -1,5 +1,5 @@
 <%# সাংগঠনিক কার্যক্রম — পেশাদার টাইমলাইন লেআউট %>
-<%- include('../partials/header', { title: 'সাংগঠনিক কার্যক্রম — বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
+<%- include('../partials/header', { title: 'সাংগঠনিক কার্যক্রম | বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
   <div class="page-wrap">
     <div class="activities-hero">
       <div class="activities-hero-inner">
@@ -108,7 +108,7 @@
           <% if (a.image_url) { %><img loading="lazy" decoding="async" src="<%= a.image_url %>" alt="<%= a.title %>" class="agc-image" loading="lazy"><% } %>
           <div class="agc-body">
             <div class="agc-meta">
-              <span class="tc-date"><i class="far fa-calendar"></i> <%= a.scheduled_date || '—' %></span>
+              <span class="tc-date"><i class="far fa-calendar"></i> <%= a.scheduled_date || 'উল্লেখ নেই' %></span>
               <span class="badge badge-<%= isUpcoming ? 'success' : 'neutral' %> badge-sm"><%= cat %></span>
             </div>
             <h3 class="agc-title"><%= a.title %></h3>

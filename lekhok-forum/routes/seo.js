@@ -16,6 +16,7 @@ const STATIC_PAGES = [
   { path: '/committee/advisory',priority: '0.6', changefreq: 'monthly' },
   { path: '/members',           priority: '0.7', changefreq: 'weekly'  },
   { path: '/about',             priority: '0.7', changefreq: 'monthly' },
+  { path: '/press',             priority: '0.6', changefreq: 'monthly' },
   { path: '/constitution',      priority: '0.5', changefreq: 'yearly'  },
   { path: '/notices',           priority: '0.7', changefreq: 'daily'   },
   { path: '/events',            priority: '0.7', changefreq: 'weekly'  },

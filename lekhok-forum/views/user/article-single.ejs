@@ -1,6 +1,6 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', {
-  title: (post.title) + ' — বাংলাদেশ তরুণ কলাম লেখক ফোরাম',
+  title: (post.title) + ' | বাংলাদেশ তরুণ কলাম লেখক ফোরাম',
   extra_css: ['/assets/css/article.css'],
   metaDesc: (typeof metaDesc !== 'undefined') ? metaDesc : undefined,
   ogImage: (typeof ogImage !== 'undefined') ? ogImage : undefined,
@@ -29,7 +29,7 @@
       <% if (post.shared_from && post.shared_original) { %>
         <div class="shared-banner">
           <i class="fas fa-retweet"></i>
-          <span><a href="/profile/<%= author.username %>"><%= author.full_name %></a> শেয়ার করেছেন —
+          <span><a href="/profile/<%= author.username %>"><%= author.full_name %></a> শেয়ার করেছেন,
             <a href="/articles/<%= post.shared_original.id %>"><%= post.shared_original.orig_author %>-এর মূল পোস্ট</a></span>
         </div>
       <% } %>

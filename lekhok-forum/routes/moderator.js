@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { broadcastToAll } = require('./dashboard');
 const { validateNavJson, parseNav } = require('../helpers/nav');
+const { pressUpload, withUpload } = require('../middleware/upload');
 
 function ensureModerator(req, res, next) {
   if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
@@ -140,6 +141,64 @@ router.post('/members/:id', ensureModerator, async (req, res) => {
 router.post('/members/:id/delete', ensureModerator, async (req, res) => {
   await db.prepare('DELETE FROM members WHERE id = ?').run(req.params.id);
   res.redirect('/moderator/members?removed=1');
+});
+
+// ── Press clippings management (admin + moderators) ─────────────────────────
+// Drives the পত্রিকায় আমাদের নিউজ grid on /about (first 4) and the full
+// /press page. Image can be uploaded (auto-WebP) or given as a URL.
+function pressFormValues(b) {
+  return {
+    title: String(b.title || '').trim().slice(0, 200),
+    paper_name: String(b.paper_name || '').trim().slice(0, 120),
+    image_url: String(b.image_url || '').trim().slice(0, 600),
+    published_date: String(b.published_date || '').trim().slice(0, 40) || null,
+    sort_order: Math.max(0, parseInt(b.sort_order, 10) || 0),
+    is_active: b.is_active === '0' ? 0 : 1
+  };
+}
+
+router.get('/press', ensureModerator, async (req, res) => {
+  const clips = await db.prepare(
+    'SELECT * FROM press_clippings ORDER BY sort_order ASC, id DESC'
+  ).all();
+  res.render('user/moderator-press', {
+    clips,
+    posted: req.query.posted || null,
+    removed: req.query.removed || null,
+    error: req.query.error || null,
+    currentPath: '/moderator/press'
+  });
+});
+
+router.post('/press', ensureModerator, withUpload(pressUpload), async (req, res) => {
+  const v = pressFormValues(req.body);
+  const fileUrl = req.file ? (req.file.url || req.file.path) : null;
+  if (!fileUrl && !v.image_url) {
+    return res.redirect('/moderator/press?error=' + encodeURIComponent('ছবি আপলোড করুন অথবা ছবির URL দিন, সংরক্ষিত হয়নি।'));
+  }
+  await db.prepare(`
+    INSERT INTO press_clippings (title, paper_name, image_url, published_date, sort_order, is_active)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(v.title, v.paper_name, fileUrl || v.image_url, v.published_date, v.sort_order, v.is_active);
+  res.redirect('/moderator/press?posted=1');
+});
+
+router.post('/press/:id', ensureModerator, withUpload(pressUpload), async (req, res) => {
+  const row = await db.prepare('SELECT id FROM press_clippings WHERE id = ?').get(req.params.id);
+  if (!row) return res.redirect('/moderator/press?error=' + encodeURIComponent('কাটিংটি খুঁজে পাওয়া যায়নি।'));
+  const v = pressFormValues(req.body);
+  const fileUrl = req.file ? (req.file.url || req.file.path) : null;
+  await db.prepare(`
+    UPDATE press_clippings SET title = ?, paper_name = ?, image_url = ?,
+      published_date = ?, sort_order = ?, is_active = ?
+    WHERE id = ?
+  `).run(v.title, v.paper_name, fileUrl || v.image_url, v.published_date, v.sort_order, v.is_active, req.params.id);
+  res.redirect('/moderator/press?posted=1');
+});
+
+router.post('/press/:id/delete', ensureModerator, async (req, res) => {
+  await db.prepare('DELETE FROM press_clippings WHERE id = ?').run(req.params.id);
+  res.redirect('/moderator/press?removed=1');
 });
 
 // ── Moderator dashboard ──────────────────────────────────────────────────────

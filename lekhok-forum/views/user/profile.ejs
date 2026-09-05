@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: (profile.full_name) + ' — বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/profile.css'] }) %>
+<%- include('../partials/header', { title: (profile.full_name) + ' | বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/profile.css'] }) %>
 
   <% if (typeof req !== 'undefined' && req.query.ok === 'avatar') { %>
     <div class="profile-toast success" onclick="this.remove()"><i class="fas fa-check-circle"></i> প্রোফাইল ছবি সফলভাবে পরিবর্তন হয়েছে</div>
@@ -230,7 +230,7 @@
           <% if (followers.length === 0) { %>
             <div class="empty-state card"><i class="fas fa-users"></i><p>কোনো অনুসরণকারী নেই।</p></div>
           <% } else { %>
-            <% if (isOwner) { %><p class="manage-hint"><i class="fas fa-sliders-h"></i> আপনার অনুসরণকারী ব্যবস্থাপনা — সরান বা ব্লক করুন</p><% } %>
+            <% if (isOwner) { %><p class="manage-hint"><i class="fas fa-sliders-h"></i> আপনার অনুসরণকারী ব্যবস্থাপনা, সরান বা ব্লক করুন</p><% } %>
             <% followers.forEach(f => { %>
               <div class="user-row card">
                 <a href="/profile/<%= f.username %>" class="side-user-main">
@@ -307,7 +307,7 @@
 
         <!-- Tab: Categories (owner only) -->
         <div class="tab-content" id="tab-categories">
-          <p class="manage-hint"><i class="fas fa-tags"></i> আগ্রহের বিষয় নির্বাচন করুন — এগুলো আপনার ফিড ব্যক্তিগত করবে</p>
+          <p class="manage-hint"><i class="fas fa-tags"></i> আগ্রহের বিষয় নির্বাচন করুন, এগুলো আপনার ফিড ব্যক্তিগত করবে</p>
           <div class="card interest-picker">
             <div class="tag-cloud" id="interestPool">
               <% tagPool.forEach(t => { %>

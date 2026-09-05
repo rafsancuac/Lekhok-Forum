@@ -2,7 +2,7 @@
   <div class="container">
     <span class="eyebrow">নেতৃত্ব</span>
     <h1>কার্যনির্বাহী কমিটি</h1>
-    <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় — কার্যবর্ষভিত্তিক পূর্ণাঙ্গ কার্যনির্বাহী কমিটি</p>
+    <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়। কার্যবর্ষভিত্তিক পূর্ণাঙ্গ কার্যনির্বাহী কমিটি</p>
   </div>
 </header>
 
@@ -80,7 +80,7 @@
         <h2 class="section-title">পূর্ণাঙ্গ <span class="accent">কার্যনির্বাহী কমিটি</span></h2>
         <span class="accent-divider"></span>
         <p class="term-intro">
-          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের পূর্ণাঙ্গ কার্যনির্বাহী কমিটি<% if (termNote) { %> — <%= termNote %><% } %>.<% } else { %>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা।<% } %>
+          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের পূর্ণাঙ্গ কার্যনির্বাহী কমিটি<% if (termNote) { %> (<%= termNote %>)<% } %>.<% } else { %>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা।<% } %>
           <% if (countByYear[selectedYear]) { %>মোট সদস্য <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
         </p>
       </div>

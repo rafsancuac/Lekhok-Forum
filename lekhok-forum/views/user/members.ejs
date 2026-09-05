@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'সদস্য পরিচিতি — বাংলাদেশ তরুণ কলাম লেখক ফোরাম' }) %>
+<%- include('../partials/header', { title: 'সদস্য পরিচিতি | বাংলাদেশ তরুণ কলাম লেখক ফোরাম' }) %>
 
   <div class="page-wrap">
     <div class="page-header">
@@ -14,7 +14,7 @@
         <!-- ── সর্বশেষ কার্যবর্ষের কার্যনির্বাহী কমিটি ── -->
         <section class="member-section" id="executive-committee">
           <div class="section-head">
-            <h2 class="section-title"><i class="fas fa-crown"></i> কেন্দ্রীয় কার্যনির্বাহী কমিটি<% if (execTermYear) { %> — <%= execTermYear %><% } %></h2>
+            <h2 class="section-title"><i class="fas fa-crown"></i> কেন্দ্রীয় কার্যনির্বাহী কমিটি<% if (execTermYear) { %> (<%= execTermYear %>)<% } %></h2>
             <span class="badge"><%= grouped.central.length %> জন</span>
           </div>
           <div class="leaders-grid">

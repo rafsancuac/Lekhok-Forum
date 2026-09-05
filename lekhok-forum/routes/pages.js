@@ -76,10 +76,34 @@ router.get('/', async (req, res) => {
 
 // ── About ────────────────────────────────────────────────────────────────────
 router.get('/about', async (req, res) => {
+  // পত্রিকায় আমাদের নিউজ — পরিচিতি পেজে সর্বোচ্চ ৪টি, বাকিগুলো /press-এ
+  let pressClippings = [];
+  try {
+    pressClippings = await db.prepare(
+      'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 4'
+    ).all();
+  } catch (e) { pressClippings = []; }
   res.render('lekhok-about', {
     layout: 'layout',
     pageTitle: 'পরিচিতি',
-    currentPath: '/about'
+    currentPath: '/about',
+    pressClippings
+  });
+});
+
+// ── Press clippings — পত্রিকায় আমাদের নিউজ (সম্পূর্ণ তালিকা) ─────────────────
+router.get('/press', async (req, res) => {
+  let clippings = [];
+  try {
+    clippings = await db.prepare(
+      'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC'
+    ).all();
+  } catch (e) { clippings = []; }
+  res.render('lekhok-press', {
+    layout: 'layout',
+    pageTitle: 'পত্রিকায় আমাদের নিউজ',
+    currentPath: '/press',
+    clippings
   });
 });
 
