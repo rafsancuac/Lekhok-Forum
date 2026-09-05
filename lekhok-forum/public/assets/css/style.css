@@ -430,9 +430,9 @@ ul { list-style: none; padding: 0; margin: 0; }
 }
 
 /* Contact */
-.contact-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 30px; }
-.contact-list { list-style: none; padding: 0; margin: 20px 0 0; }
-.contact-list li { display: flex; gap: 11px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+.contact-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; }
+.contact-list { list-style: none; padding: 0; margin: 14px 0 0; }
+.contact-list li { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--border); }
 .contact-list li:last-child { border-bottom: 0; }
 .contact-list i {
   width: 36px; height: 36px; flex-shrink: 0;

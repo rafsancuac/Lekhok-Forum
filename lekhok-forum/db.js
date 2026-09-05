@@ -607,7 +607,7 @@ async function runMigrations() {
   const rebrand = [
     ['site_name',       'লেখক ফোরাম',            'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'],
     ['tagline',         'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।'],
-    ['contact_phone',   '০১XXXXXXXXX',           '০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)'],
+    ['contact_phone',   '০১XXXXXXXXX',           '০১********* (বিকাশ/নগদ)'],
     ['contact_address', 'আপনার ক্যাম্পাস ঠিকানা',   'চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম']
   ];
   for (const [k, oldV, newV] of rebrand) {
@@ -1131,7 +1131,7 @@ async function seedAdmin() {
     ['tagline', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।'],
     ['motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী'],
     ['contact_email', 'info@lekhokforum.org'],
-    ['contact_phone', '০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)'],
+    ['contact_phone', '০১********* (বিকাশ/নগদ)'],
     ['contact_address', 'চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম'],
     ['facebook_url', '#'],
     ['telegram_url', '#'],
