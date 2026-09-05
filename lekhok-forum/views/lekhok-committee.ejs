@@ -143,19 +143,11 @@
 
 
 <!-- উপদেষ্টা পরিষদ এখন আলাদা পেজে: /committee/advisory -->
-
-<!-- সকল সদস্য -->
-<section class="section reveal" style="text-align:center;padding:30px 0 60px">
-  <div class="container">
-    <a href="/members" class="btn btn-primary btn-lg"><i class="fas fa-users"></i> সকল সদস্য দেখুন</a>
-  </div>
-</section>
-
 <!-- সদস্যের বিস্তারিত মডাল (যাদের অ্যাকাউন্ট নেই) -->
 <div class="modal-overlay" id="memberModal" onclick="if(event.target===this) closeMemberModal()">
   <div class="modal-dialog">
     <div class="modal-head">
-      <h3>সদস্যের বিস্তারিত</h3>
+      <h3>বিস্তারিত</h3>
       <button class="modal-close" onclick="closeMemberModal()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-member-inner" id="modalBody"></div>

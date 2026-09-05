@@ -94,6 +94,7 @@ router.get('/articles', async (req, res) => {
   const tag = req.query.tag;
   const author = req.query.author;
   const filterFeatured = req.query.featured === '1';
+  const filterType = req.query.filter || ''; // column | letter
   let q = `SELECT p.*, u.full_name as author_name, u.username as author_username, u.avatar_url as author_avatar, u.gender as author_gender
            FROM posts p JOIN users u ON p.author_id = u.id
            WHERE p.type = 'article' AND p.status = 'published'`;
@@ -101,10 +102,18 @@ router.get('/articles', async (req, res) => {
   if (tag) { q += ' AND p.tags LIKE ?'; params.push('%' + tag + '%'); }
   if (author) { q += ' AND u.username = ?'; params.push(author); }
   if (filterFeatured) q += ' AND p.featured = 1';
+  if (filterType === 'column') { q += " AND (p.tags LIKE '%কলাম%' OR p.category = 'column')"; }
+  if (filterType === 'letter') { q += " AND (p.tags LIKE '%চিঠি%' OR p.category = 'letter')"; }
   q += ' ORDER BY p.published_at DESC';
   const articles = await db.prepare(q).all(...params);
   const popularTags = await db.prepare("SELECT tags FROM posts WHERE type='article' AND tags IS NOT NULL").all();
-  res.render('user/articles', { articles, tag, popularTags, currentPath: '/articles' });
+  res.render('lekhok-articles', {
+    layout: 'layout',
+    pageTitle: 'প্রকাশিত লেখা',
+    currentPath: '/articles',
+    articles, tag, popularTags,
+    filterType
+  });
 });
 
 // ── New article form ─────────────────────────────────────────────────────────
@@ -440,6 +449,7 @@ router.get('/members', async (req, res) => {
   const search     = req.query.q    || '';
   const roleFilter = req.query.role || '';
   const deptFilter = req.query.dept || '';
+  const termFilter = req.query.term || '';
 
   // Pull all active users to build the filter dropdowns AND the dept→raws reverse map
   const allUsers = await db.prepare('SELECT designation, role FROM users WHERE status = ?').all('active');
@@ -619,6 +629,10 @@ router.get('/members', async (req, res) => {
       raws.forEach(r => params.push('%' + r + '%'));
     }
   }
+  if (termFilter) {
+    q += ' AND id IN (SELECT user_id FROM members WHERE term_year = ?)';
+    params.push(termFilter);
+  }
   q += ' ORDER BY full_name ASC';
   const members = await db.prepare(q).all(...params);
 
@@ -634,6 +648,10 @@ router.get('/members', async (req, res) => {
     m.terms = (termMap[m.id] || []).sort((a, b) => bnTerm(b) - bnTerm(a));
   }
 
+  // Fetch all available term_years for filter dropdown
+  const allTermRows = await db.prepare('SELECT DISTINCT term_year FROM members WHERE term_year IS NOT NULL ORDER BY term_year DESC').all();
+  const allTerms = allTermRows.map(r => r.term_year).filter(Boolean);
+
   const totalUsers = (await db.prepare("SELECT COUNT(*) as c FROM users WHERE status='active'").get()).c;
   // পাবলিক হোম-সাইট পেজ (সোশ্যাল ফিড লেআউট নয় — ইউজারের অনুরোধ)
   res.render('lekhok-members', {
@@ -645,7 +663,9 @@ router.get('/members', async (req, res) => {
     deptSlugs: [...slugToCanon.keys()],
     slugToCanon,
     currentRole: roleFilter,
-    currentDept: deptFilter
+    currentDept: deptFilter,
+    allTerms,
+    currentTerm: termFilter
   });
 });
 

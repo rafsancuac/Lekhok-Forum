@@ -10,7 +10,7 @@
 /* কার্যবর্ষ চিপ */
 .member-term-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 .member-term-chip {
-  padding: 2px 9px; border-radius: 999px;
+  padding: 2px 9px; border-radius: 5px;
   background: rgba(10,31,68,.06); color: var(--brand, #0a1f44);
   font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(10,31,68,.12);
 }
@@ -32,7 +32,7 @@
 /* ফিল্টার বার */
 .members-filter { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .members-filter input[type="search"], .members-filter select {
-  padding: 10px 14px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 999px;
+  padding: 10px 14px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 5px;
   background: #fff; font-family: inherit; font-size: 0.92rem; color: var(--text, #334155);
   min-width: 170px;
 }
@@ -40,7 +40,7 @@
   outline: none; border-color: var(--accent, #059669);
 }
 .members-filter button {
-  padding: 10px 20px; border-radius: 999px; border: 0; cursor: pointer;
+  padding: 10px 20px; border-radius: 5px; border: 0; cursor: pointer;
   background: var(--accent, #059669); color: #fff; font-weight: 700; font-family: inherit; font-size: 0.92rem;
 }
 .members-filter a.mf-reset {
@@ -71,8 +71,16 @@
           <option value="<%= s %>" <%= s === currentDept ? 'selected' : '' %>><%= slugToCanon.get(s) || s %></option>
         <% }) %>
       </select>
+      <% if (allTerms && allTerms.length) { %>
+      <select name="term" aria-label="কার্যবর্ষ">
+        <option value="">সব কার্যবর্ষ</option>
+        <% allTerms.forEach(t => { %>
+          <option value="<%= t %>" <%= t === currentTerm ? 'selected' : '' %>><%= t %></option>
+        <% }) %>
+      </select>
+      <% } %>
       <button type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
-      <% if (search || currentRole || currentDept) { %>
+      <% if (search || currentRole || currentDept || currentTerm) { %>
         <a class="mf-reset" href="/members"><i class="fas fa-times"></i> ফিল্টার মুছুন</a>
       <% } %>
     </form>
@@ -87,7 +95,7 @@
         <span class="eyebrow">তালিকা</span>
         <h2 class="section-title">সকল <span class="accent">সদস্য</span></h2>
         <span class="accent-divider"></span>
-        <p class="term-intro">মোট <strong><%= bnNum(members.length) %></strong> জন সদস্য<% if (search || currentRole || currentDept) { %> (ফিল্টারকৃত)<% } %>, সর্বমোট নিবন্ধিত <strong><%= bnNum(totalUsers) %></strong> জন। কার্ডে ক্লিক করে প্রোফাইল দেখুন।</p>
+        <p class="term-intro">মোট <strong><%= bnNum(members.length) %></strong> জন সদস্য<% if (search || currentRole || currentDept || currentTerm) { %> (ফিল্টারকৃত)<% } %>, সর্বমোট নিবন্ধিত <strong><%= bnNum(totalUsers) %></strong> জন। কার্ডে ক্লিক করে প্রোফাইল দেখুন।</p>
       </div>
     </div>
 

@@ -236,6 +236,15 @@ router.get('/resources', async (req, res) => {
     categories,
     activeCategory: category
   });
+
+// ── Email list page ──────────────────────────────────────────────────────────
+router.get('/resources/emails', async (req, res) => {
+  res.render('lekhok-emails', {
+    layout: 'layout',
+    pageTitle: 'পত্রিকার ইমেইল তালিকা',
+    currentPath: '/resources/emails'
+  });
+});
 });
 
 // ── Team ─────────────────────────────────────────────────────────────────────
