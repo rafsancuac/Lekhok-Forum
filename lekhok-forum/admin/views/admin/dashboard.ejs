@@ -2,31 +2,104 @@
 <html lang="bn" dir="ltr">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ড্যাশবোর্ড — বাংলাদেশ তরুণ কলাম লেখক ফোরাম অ্যাডমিন</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/admin.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
 </head>
 <body>
   <%- include('partials/sidebar') %>
   <div class="admin-main">
-    <div class="admin-header">
-      <h1>ড্যাশবোর্ড</h1>
-      <p>স্বাগতম, <strong><%= (adminUser && adminUser.display_name) || (user && user.full_name) || 'স্টাফ' %></strong> | <a href="/admin/logout">লগআউট</a></p>
+
+    <div class="welcome-banner">
+      <h2>স্বাগতম, <span><%= (adminUser && adminUser.display_name) || (user && user.full_name) || 'স্টাফ' %></span></h2>
+      <p>ফোরামের সব কনটেন্ট, কমিউনিটি ও সাংগঠনিক তথ্য এক জায়গা থেকে ব্যবস্থাপনা করুন — নিচের পরিসংখ্যান ও সাম্প্রতিক কার্যক্রমে এক নজরে সবকিছু।</p>
+      <span class="wb-date"><i class="fas fa-calendar-day"></i> আজ: <%= new Date().toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+      <span class="wb-emoji">✒️</span>
     </div>
+
     <div class="stat-grid">
-      <a href="/admin/notices"   class="stat-box"><i class="fas fa-bell"></i><div><strong><%= counts.notices %></strong><span>বিজ্ঞপ্তি</span></div></a>
-      <a href="/admin/events"    class="stat-box"><i class="fas fa-calendar"></i><div><strong><%= counts.events %></strong><span>ইভেন্ট</span></div></a>
-      <a href="/admin/members"   class="stat-box"><i class="fas fa-users"></i><div><strong><%= counts.members %></strong><span>সদস্য</span></div></a>
-      <a href="/admin/gallery"   class="stat-box"><i class="fas fa-images"></i><div><strong><%= counts.gallery %></strong><span>গ্যালারি</span></div></a>
-      <a href="/admin/resources" class="stat-box"><i class="fas fa-book"></i><div><strong><%= counts.resources %></strong><span>রিসোর্স</span></div></a>
-      <a href="/admin/messages"  class="stat-box"><i class="fas fa-envelope"></i><div><strong><%= counts.messages %></strong><span>বার্তা</span></div></a>
+      <a href="/admin/users"       class="stat-box v-blue"><span class="stat-ico"><i class="fas fa-users-cog"></i></span><div><strong><%= counts.users %></strong><span>সক্রিয় ইউজার</span></div></a>
+      <a href="/admin/notices"     class="stat-box v-green"><span class="stat-ico"><i class="fas fa-bell"></i></span><div><strong><%= counts.notices %></strong><span>বিজ্ঞপ্তি</span></div></a>
+      <a href="/admin/events"      class="stat-box v-gold"><span class="stat-ico"><i class="fas fa-calendar"></i></span><div><strong><%= counts.events %></strong><span>ইভেন্ট</span></div></a>
+      <a href="/admin/members"     class="stat-box v-navy"><span class="stat-ico"><i class="fas fa-users"></i></span><div><strong><%= counts.members %></strong><span>সদস্য</span></div></a>
+      <a href="/admin/gallery"     class="stat-box v-violet"><span class="stat-ico"><i class="fas fa-images"></i></span><div><strong><%= counts.gallery %></strong><span>গ্যালারি</span></div></a>
+      <a href="/admin/daily"       class="stat-box v-cyan"><span class="stat-ico"><i class="fas fa-sun"></i></span><div><strong><%= counts.daily %></strong><span>ডেইলি কনটেন্ট</span></div></a>
+      <a href="/admin/resources"   class="stat-box v-amber"><span class="stat-ico"><i class="fas fa-book"></i></span><div><strong><%= counts.resources %></strong><span>রিসোর্স</span></div></a>
+      <a href="/admin/messages"    class="stat-box v-green"><span class="stat-ico"><i class="fas fa-envelope"></i></span><div><strong><%= counts.messages %></strong><span>বার্তা</span></div></a>
+      <a href="/admin/complaints"  class="stat-box v-rose"><span class="stat-ico"><i class="fas fa-flag"></i></span><div><strong><%= counts.complaints %></strong><span>নতুন অভিযোগ</span></div></a>
+    </div>
+
+    <div class="dash-cols">
+      <div class="card">
+        <h3 class="card-title"><i class="fas fa-bolt"></i> সাম্প্রতিক কনটেন্ট</h3>
+        <ul class="recent-list">
+          <% (recent.notices || []).forEach(n => { %>
+            <li><a href="/admin/notices/<%= n.id %>/edit" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+              <span class="rl-ico ico-green"><i class="fas fa-bell"></i></span>
+              <span class="rl-body"><span class="rl-title"><%= n.title %></span><span class="rl-meta">বিজ্ঞপ্তি<%= n.date ? ' • ' + n.date : '' %></span></span>
+            </a></li>
+          <% }) %>
+          <% (recent.events || []).forEach(ev => { %>
+            <li><a href="/admin/events/<%= ev.id %>/edit" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+              <span class="rl-ico ico-gold"><i class="fas fa-calendar"></i></span>
+              <span class="rl-body"><span class="rl-title"><%= ev.title %></span><span class="rl-meta">ইভেন্ট<%= ev.date ? ' • ' + ev.date : '' %></span></span>
+            </a></li>
+          <% }) %>
+          <% (recent.posts || []).forEach(p => { %>
+            <li><a href="/articles/<%= p.id %>" target="_blank" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+              <span class="rl-ico ico-violet"><i class="fas fa-pen-nib"></i></span>
+              <span class="rl-body"><span class="rl-title"><%= p.title %></span><span class="rl-meta">প্রকাশিত লেখা<%= p.published_at ? ' • ' + p.published_at : '' %></span></span>
+            </a></li>
+          <% }) %>
+          <% if (!(recent.notices || []).length && !(recent.events || []).length && !(recent.posts || []).length) { %>
+            <li style="color:#94a3b8; justify-content:center; padding:18px 0;">এখনো কোনো কনটেন্ট নেই</li>
+          <% } %>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title"><i class="fas fa-inbox"></i> সাম্প্রতিক বার্তা ও অভিযোগ</h3>
+        <ul class="recent-list">
+          <% (recent.messages || []).forEach(m => { %>
+            <li>
+              <span class="rl-ico ico-blue"><i class="fas fa-envelope"></i></span>
+              <span class="rl-body"><span class="rl-title"><%= m.subject || '(বিষয় নেই)' %></span><span class="rl-meta"><%= m.name %> • <%= m.created_at || '' %></span></span>
+            </li>
+          <% }) %>
+          <% (recent.complaints || []).forEach(c => { %>
+            <li>
+              <span class="rl-ico ico-rose"><i class="fas fa-flag"></i></span>
+              <span class="rl-body"><span class="rl-title"><%= c.subject %></span><span class="rl-meta"><%= c.created_at || '' %></span></span>
+              <span class="badge-soft status-<%= c.status || 'new' %>"><%= c.status === 'new' ? 'নতুন' : c.status === 'resolved' ? 'সমাধান' : c.status %></span>
+            </li>
+          <% }) %>
+          <% (recent.users || []).forEach(u => { %>
+            <li>
+              <span class="rl-ico ico-violet"><i class="fas fa-user-plus"></i></span>
+              <span class="rl-body"><span class="rl-title"><%= u.full_name %></span><span class="rl-meta">নতুন সদস্য @<%= u.username %> • <%= u.created_at || '' %></span></span>
+            </li>
+          <% }) %>
+          <% if (!(recent.messages || []).length && !(recent.complaints || []).length && !(recent.users || []).length) { %>
+            <li style="color:#94a3b8; justify-content:center; padding:18px 0;">কোনো নতুন বার্তা বা অভিযোগ নেই</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h2><i class="fas fa-bolt"></i> দ্রুত কার্যক্রম</h2>
     </div>
     <div class="quick-actions">
       <a href="/admin/notices/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন বিজ্ঞপ্তি</a>
-      <a href="/admin/events/new"    class="btn btn-primary"><i class="fas fa-plus"></i> নতুন ইভেন্ট</a>
-      <a href="/admin/members/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন সদস্য</a>
-      <a href="/admin/gallery/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন ছবি</a>
+      <a href="/admin/events/new"    class="btn"><i class="fas fa-plus"></i> নতুন ইভেন্ট</a>
+      <a href="/admin/gallery/new"   class="btn"><i class="fas fa-plus"></i> নতুন ছবি</a>
+      <a href="/admin/daily/new"     class="btn"><i class="fas fa-plus"></i> ডেইলি কনটেন্ট</a>
+      <% if (adminUser || (user && user.role === 'admin')) { %>
+      <a href="/admin/members/new"   class="btn"><i class="fas fa-plus"></i> নতুন সদস্য</a>
+      <a href="/admin/subscribers"   class="btn"><i class="fas fa-paper-plane"></i> নিউজলেটার</a>
+      <% } %>
     </div>
   </div>
 </body>

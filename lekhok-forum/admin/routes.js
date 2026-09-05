@@ -120,7 +120,20 @@ router.get('/', requireStaff, async (req, res) => {
     daily:     (await db.prepare('SELECT COUNT(*) as c FROM daily_content').get()).c,
     complaints: (await db.prepare("SELECT COUNT(*) as c FROM complaints WHERE status='new'").get()).c
   };
-  res.render('admin/dashboard', { counts, currentPath: '/admin' });
+  // সাম্প্রতিক কার্যক্রম — ড্যাশবোর্ডে সরাসরি এক নজরে (fail-safe প্রতিটি ব্লক)
+  const safe = async (label, sql) => {
+    try { return await db.prepare(sql).all(); }
+    catch (e) { console.error(`[admin:dashboard] ${label}:`, e.message); return []; }
+  };
+  const recent = {
+    notices:    await safe('notices',    'SELECT id, title, date FROM notices ORDER BY id DESC LIMIT 5'),
+    events:     await safe('events',     'SELECT id, title, date FROM events ORDER BY id DESC LIMIT 5'),
+    messages:   await safe('messages',   'SELECT id, name, subject, created_at FROM contact_submissions ORDER BY id DESC LIMIT 5'),
+    complaints: await safe('complaints', "SELECT id, subject, status, created_at FROM complaints ORDER BY id DESC LIMIT 5"),
+    users:      await safe('users',      'SELECT id, full_name, username, created_at FROM users ORDER BY id DESC LIMIT 5'),
+    posts:      await safe('posts',      "SELECT id, title, published_at FROM posts WHERE status='published' ORDER BY id DESC LIMIT 5")
+  };
+  res.render('admin/dashboard', { counts, recent, currentPath: '/admin' });
 });
 
 // ── Notices CRUD (scope: notices; create broadcasts to all users) ───────────
@@ -148,24 +161,24 @@ router.post('/notices', requireScope('notices'), async (req, res) => {
     });
     console.log(`[newsletter] notice: queued=${r.queued} sent=${r.sent} failed=${r.failed}`);
   } catch (e) { console.error('[newsletter] notice notify failed:', e.message); }
-  res.redirect('/admin/notices');
+  res.redirect('/admin/notices?saved=1');
 });
 
 router.get('/notices/:id/edit', requireScope('notices'), async (req, res) => {
   const notice = await db.prepare('SELECT * FROM notices WHERE id = ?').get(req.params.id);
-  if (!notice) return res.redirect('/admin/notices');
+  if (!notice) return res.redirect('/admin/notices?saved=1');
   res.render('admin/notices/form', { notice, error: null, currentPath: '/admin/notices' });
 });
 
 router.put('/notices/:id', requireScope('notices'), async (req, res) => {
   const { title, content, category, date } = req.body;
   await db.prepare('UPDATE notices SET title=?, content=?, category=?, date=? WHERE id=?').run(title, content || '', category || 'notice', date || '', req.params.id);
-  res.redirect('/admin/notices');
+  res.redirect('/admin/notices?saved=1');
 });
 
 router.delete('/notices/:id', requireScope('notices'), async (req, res) => {
   await db.prepare('DELETE FROM notices WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/notices');
+  res.redirect('/admin/notices?saved=1');
 });
 
 // ── Events CRUD (scope: events; create broadcasts to all users) ─────────────
@@ -184,24 +197,24 @@ router.post('/events', requireScope('events'), async (req, res) => {
   await db.prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?)').run(title, description || '', date || '', end_date || '', location || '', image_url || '', featured ? 1 : 0);
   // Auto-notify all users about the new event
   await broadcastToAll('event', 'নতুন ইভেন্ট', title, '/events', req.session.user ? req.session.user.id : 0);
-  res.redirect('/admin/events');
+  res.redirect('/admin/events?saved=1');
 });
 
 router.get('/events/:id/edit', requireScope('events'), async (req, res) => {
   const event = await db.prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
-  if (!event) return res.redirect('/admin/events');
+  if (!event) return res.redirect('/admin/events?saved=1');
   res.render('admin/events/form', { event, error: null, currentPath: '/admin/events' });
 });
 
 router.put('/events/:id', requireScope('events'), async (req, res) => {
   const { title, description, date, end_date, location, image_url, featured } = req.body;
   await db.prepare('UPDATE events SET title=?, description=?, date=?, end_date=?, location=?, image_url=?, featured=? WHERE id=?').run(title, description || '', date || '', end_date || '', location || '', image_url || '', featured ? 1 : 0, req.params.id);
-  res.redirect('/admin/events');
+  res.redirect('/admin/events?saved=1');
 });
 
 router.delete('/events/:id', requireScope('events'), async (req, res) => {
   await db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/events');
+  res.redirect('/admin/events?saved=1');
 });
 
 // ── Members CRUD ─────────────────────────────────────────────────────────────
@@ -232,12 +245,12 @@ router.post('/members', requireAdmin, async (req, res) => {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'এই নাম, কার্যবর্ষ ও ধরনে একজন সদস্য ইতিমধ্যে যোগ করা আছেন।', allUsers, currentPath: '/admin/members' });
   }
-  res.redirect('/admin/members');
+  res.redirect('/admin/members?saved=1');
 });
 
 router.get('/members/:id/edit', requireAdmin, async (req, res) => {
   const member = await db.prepare('SELECT * FROM members WHERE id = ?').get(req.params.id);
-  if (!member) return res.redirect('/admin/members');
+  if (!member) return res.redirect('/admin/members?saved=1');
   const allUsers = await fetchAllUsers();
   res.render('admin/members/form', { member, error: null, allUsers, currentPath: '/admin/members' });
 });
@@ -252,12 +265,12 @@ router.put('/members/:id', requireAdmin, async (req, res) => {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'এই নাম, কার্যবর্ষ ও ধরনে আরেকজন সদস্য ইতিমধ্যে আছেন।', allUsers, currentPath: '/admin/members' });
   }
-  res.redirect('/admin/members');
+  res.redirect('/admin/members?saved=1');
 });
 
 router.delete('/members/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM members WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/members');
+  res.redirect('/admin/members?saved=1');
 });
 
 // ── Gallery CRUD (scope: gallery; supports file upload or image URL) ────────
@@ -275,12 +288,12 @@ router.post('/gallery', requireScope('gallery'), withUpload(galleryUpload), asyn
   const img = req.file ? '/uploads/gallery/' + req.file.filename : image_url;
   if (!img) return res.render('admin/gallery/form', { item: req.body, error: 'ছবি আপলোড করুন বা URL দিন', currentPath: '/admin/gallery' });
   await db.prepare('INSERT INTO gallery (title, image_url, caption, category) VALUES (?, ?, ?, ?)').run(title || '', img, caption || '', category || 'general');
-  res.redirect('/admin/gallery');
+  res.redirect('/admin/gallery?saved=1');
 });
 
 router.get('/gallery/:id/edit', requireScope('gallery'), async (req, res) => {
   const item = await db.prepare('SELECT * FROM gallery WHERE id = ?').get(req.params.id);
-  if (!item) return res.redirect('/admin/gallery');
+  if (!item) return res.redirect('/admin/gallery?saved=1');
   res.render('admin/gallery/form', { item, error: null, currentPath: '/admin/gallery' });
 });
 
@@ -289,12 +302,12 @@ router.put('/gallery/:id', requireScope('gallery'), withUpload(galleryUpload), a
   const item = await db.prepare('SELECT * FROM gallery WHERE id = ?').get(req.params.id);
   const img = req.file ? '/uploads/gallery/' + req.file.filename : (image_url || item.image_url);
   await db.prepare('UPDATE gallery SET title=?, image_url=?, caption=?, category=? WHERE id=?').run(title || '', img, caption || '', category || 'general', req.params.id);
-  res.redirect('/admin/gallery');
+  res.redirect('/admin/gallery?saved=1');
 });
 
 router.delete('/gallery/:id', requireScope('gallery'), async (req, res) => {
   await db.prepare('DELETE FROM gallery WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/gallery');
+  res.redirect('/admin/gallery?saved=1');
 });
 
 // ── Resources CRUD ───────────────────────────────────────────────────────────
@@ -311,24 +324,24 @@ router.post('/resources', requireAdmin, async (req, res) => {
   const { title, content, category, author, tags, file_url, link_url, file_type } = req.body;
   if (!title) return res.render('admin/resources/form', { resource: req.body, error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources' });
   await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(title, content || '', category || 'general', author || '', tags || '', file_url || null, link_url || null, file_type || 'link');
-  res.redirect('/admin/resources');
+  res.redirect('/admin/resources?saved=1');
 });
 
 router.get('/resources/:id/edit', requireAdmin, async (req, res) => {
   const resource = await db.prepare('SELECT * FROM resources WHERE id = ?').get(req.params.id);
-  if (!resource) return res.redirect('/admin/resources');
+  if (!resource) return res.redirect('/admin/resources?saved=1');
   res.render('admin/resources/form', { resource, error: null, currentPath: '/admin/resources' });
 });
 
 router.put('/resources/:id', requireAdmin, async (req, res) => {
   const { title, content, category, author, tags, file_url, link_url, file_type } = req.body;
   await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=? WHERE id=?').run(title, content || '', category || 'general', author || '', tags || '', file_url || null, link_url || null, file_type || 'link', req.params.id);
-  res.redirect('/admin/resources');
+  res.redirect('/admin/resources?saved=1');
 });
 
 router.delete('/resources/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM resources WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/resources');
+  res.redirect('/admin/resources?saved=1');
 });
 
 // ── Settings ─────────────────────────────────────────────────────────────────
@@ -381,11 +394,11 @@ router.get('/subscribers/export', requireStaff, async (req, res) => {
 // Toggle active state / delete — admin only (moderators get view-only)
 router.post('/subscribers/:id/toggle', requireAdmin, async (req, res) => {
   await db.prepare('UPDATE newsletter_subscribers SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/subscribers');
+  res.redirect('/admin/subscribers?saved=1');
 });
 router.post('/subscribers/:id/delete', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM newsletter_subscribers WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/subscribers');
+  res.redirect('/admin/subscribers?saved=1');
 });
 
 // Retry pending/failed emails for a notification batch (admin only)
@@ -394,7 +407,7 @@ router.post('/subscribers/retry/:logId', requireAdmin, async (req, res) => {
     const r = await require('../helpers/mailer').retryLog(req.params.logId);
     if (!r.ok) console.error('[newsletter] retry:', r.error);
   } catch (e) { console.error('[newsletter] retry failed:', e.message); }
-  res.redirect('/admin/subscribers');
+  res.redirect('/admin/subscribers?saved=1');
 });
 
 // ── Moderators & permission scopes ────────────────────────────────────────────
@@ -420,12 +433,12 @@ router.post('/moderators/:userId/grant', requireAdmin, async (req, res) => {
   if (!Array.isArray(scopes)) scopes = [scopes];
   const granterId = req.session.adminUser ? req.session.adminUser.id : (req.session.user ? req.session.user.id : null);
   await db.grantModerator(parseInt(req.params.userId), scopes, granterId);
-  res.redirect('/admin/moderators');
+  res.redirect('/admin/moderators?saved=1');
 });
 
 router.post('/moderators/:userId/revoke', requireAdmin, async (req, res) => {
   await db.revokeModerator(parseInt(req.params.userId));
-  res.redirect('/admin/moderators');
+  res.redirect('/admin/moderators?saved=1');
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -462,12 +475,12 @@ router.post('/daily', requireScope('daily'), async (req, res) => {
     const meta = dailyTypeMeta(content_type);
     broadcastToAll('daily', meta.label + ' প্রকাশিত', title, meta.link, req.session.user ? req.session.user.id : 0);
   }
-  res.redirect('/admin/daily');
+  res.redirect('/admin/daily?saved=1');
 });
 
 router.get('/daily/:id/edit', requireScope('daily'), async (req, res) => {
   const item = await db.prepare('SELECT * FROM daily_content WHERE id = ?').get(req.params.id);
-  if (!item) return res.redirect('/admin/daily');
+  if (!item) return res.redirect('/admin/daily?saved=1');
   res.render('admin/daily/form', { item, error: null, DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
 });
 
@@ -478,12 +491,12 @@ router.put('/daily/:id', requireScope('daily'), async (req, res) => {
   const isPublished = published ? 1 : 0;
   await db.prepare('UPDATE daily_content SET content_type=?, title=?, body=?, image_url=?, link_url=?, scheduled_date=?, published=? WHERE id=?')
     .run(content_type, title, body || null, image_url || null, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.params.id);
-  res.redirect('/admin/daily');
+  res.redirect('/admin/daily?saved=1');
 });
 
 router.delete('/daily/:id', requireScope('daily'), async (req, res) => {
   await db.prepare('DELETE FROM daily_content WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/daily');
+  res.redirect('/admin/daily?saved=1');
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -506,12 +519,12 @@ router.put('/complaints/:id', requireScope('complaints'), async (req, res) => {
   const allowed = ['new', 'in_review', 'resolved', 'dismissed'];
   await db.prepare("UPDATE complaints SET status=?, admin_notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?")
     .run(allowed.includes(status) ? status : 'new', admin_notes || null, req.params.id);
-  res.redirect('/admin/complaints');
+  res.redirect('/admin/complaints?saved=1');
 });
 
 router.delete('/complaints/:id', requireScope('complaints'), async (req, res) => {
   await db.prepare('DELETE FROM complaints WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/complaints');
+  res.redirect('/admin/complaints?saved=1');
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -526,7 +539,7 @@ router.post('/users/:id/role', requireAdmin, async (req, res) => {
   const allowedRoles = ['user', 'moderator', 'admin'];
   const allowedStatus = ['active', 'pending', 'banned'];
   const target = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
-  if (!target) return res.redirect('/admin/moderators');
+  if (!target) return res.redirect('/admin/moderators?saved=1');
   if (role && allowedRoles.includes(role)) {
     await db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, req.params.id);
     if (role === 'moderator' && !await db.prepare('SELECT id FROM moderator_scopes WHERE user_id = ?').get(req.params.id)) {
@@ -540,7 +553,7 @@ router.post('/users/:id/role', requireAdmin, async (req, res) => {
   if (status && allowedStatus.includes(status)) {
     await db.prepare('UPDATE users SET status = ? WHERE id = ?').run(status, req.params.id);
   }
-  res.redirect('/admin/moderators');
+  res.redirect('/admin/moderators?saved=1');
 });
 
 // Reset a user's password (admin hands over committee accounts etc.)
@@ -574,7 +587,7 @@ router.get('/users', requireAdmin, async (req, res) => {
 
 router.get('/users/:id/edit', requireAdmin, async (req, res) => {
   const u = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
-  if (!u) return res.redirect('/admin/users');
+  if (!u) return res.redirect('/admin/users?saved=1');
   const rawScopes = (await db.prepare('SELECT scope FROM moderator_scopes WHERE user_id = ?').all(u.id)).map(r => r.scope);
   const scopes = expandScopes(rawScopes);
   const postCount = (await db.prepare('SELECT COUNT(*) AS c FROM posts WHERE author_id = ?').get(u.id)).c;
@@ -589,7 +602,7 @@ router.get('/users/:id/edit', requireAdmin, async (req, res) => {
 // Update a moderator's scopes
 router.post('/users/:id/scopes', requireAdmin, async (req, res) => {
   const target = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
-  if (!target) return res.redirect('/admin/moderators');
+  if (!target) return res.redirect('/admin/moderators?saved=1');
   await db.prepare('DELETE FROM moderator_scopes WHERE user_id = ?').run(req.params.id);
   const scopes = Array.isArray(req.body.scopes) ? req.body.scopes : (req.body.scopes ? [req.body.scopes] : []);
   for (const s of scopes) {
@@ -599,7 +612,7 @@ router.post('/users/:id/scopes', requireAdmin, async (req, res) => {
       await db.prepare('INSERT INTO moderator_scopes (user_id, scope, granted_by) VALUES (?, ?, ?)').run(req.params.id, s, granterId);
     }
   }
-  res.redirect('/admin/moderators');
+  res.redirect('/admin/moderators?saved=1');
 });
 
 // ── v2.2: Achievements CRUD ──────────────────────────────────────────────────
@@ -614,22 +627,22 @@ router.post('/achievements', requireAdmin, withUpload(attachmentUpload), async (
   const { title, recipient_name, year, description } = req.body;
   const image_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.image_url || null);
   await db.prepare('INSERT INTO achievements (title, recipient_name, year, description, image_url) VALUES (?, ?, ?, ?, ?)').run(title, recipient_name, parseInt(year) || null, description || null, image_url);
-  res.redirect('/admin/achievements');
+  res.redirect('/admin/achievements?saved=1');
 });
 router.get('/achievements/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM achievements WHERE id = ?').get(req.params.id);
-  if (!item) return res.redirect('/admin/achievements');
+  if (!item) return res.redirect('/admin/achievements?saved=1');
   res.render('admin/achievements/form', { item, error: null, currentPath: '/admin/achievements' });
 });
 router.put('/achievements/:id', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
   const { title, recipient_name, year, description } = req.body;
   const image_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.image_url || null);
   await db.prepare('UPDATE achievements SET title=?, recipient_name=?, year=?, description=?, image_url=? WHERE id=?').run(title, recipient_name, parseInt(year) || null, description || null, image_url, req.params.id);
-  res.redirect('/admin/achievements');
+  res.redirect('/admin/achievements?saved=1');
 });
 router.delete('/achievements/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM achievements WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/achievements');
+  res.redirect('/admin/achievements?saved=1');
 });
 
 // ── v2.2: Constitution CRUD ──────────────────────────────────────────────────
@@ -643,21 +656,21 @@ router.get('/constitution/new', requireAdmin, async (req, res) => {
 router.post('/constitution', requireAdmin, async (req, res) => {
   const { section_title, content, sort_order } = req.body;
   await db.prepare('INSERT INTO constitution (section_title, content, sort_order) VALUES (?, ?, ?)').run(section_title, content, parseInt(sort_order) || 0);
-  res.redirect('/admin/constitution');
+  res.redirect('/admin/constitution?saved=1');
 });
 router.get('/constitution/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM constitution WHERE id = ?').get(req.params.id);
-  if (!item) return res.redirect('/admin/constitution');
+  if (!item) return res.redirect('/admin/constitution?saved=1');
   res.render('admin/constitution/form', { item, error: null, currentPath: '/admin/constitution' });
 });
 router.put('/constitution/:id', requireAdmin, async (req, res) => {
   const { section_title, content, sort_order } = req.body;
   await db.prepare('UPDATE constitution SET section_title=?, content=?, sort_order=? WHERE id=?').run(section_title, content, parseInt(sort_order) || 0, req.params.id);
-  res.redirect('/admin/constitution');
+  res.redirect('/admin/constitution?saved=1');
 });
 router.delete('/constitution/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM constitution WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/constitution');
+  res.redirect('/admin/constitution?saved=1');
 });
 
 // ── v2.2: Past leaders CRUD ──────────────────────────────────────────────────
@@ -674,11 +687,11 @@ router.post('/past-leaders', requireAdmin, withUpload(attachmentUpload), async (
   const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   await db.prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, bio, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(name, role, term_start || null, term_end || null, photo_url, bio || null, parseInt(sort_order) || 0, userIdNum);
-  res.redirect('/admin/past-leaders');
+  res.redirect('/admin/past-leaders?saved=1');
 });
 router.get('/past-leaders/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM past_leaders WHERE id = ?').get(req.params.id);
-  if (!item) return res.redirect('/admin/past-leaders');
+  if (!item) return res.redirect('/admin/past-leaders?saved=1');
   const allUsers = await fetchAllUsers();
   res.render('admin/past-leaders/form', { item, error: null, allUsers, currentPath: '/admin/past-leaders' });
 });
@@ -687,11 +700,11 @@ router.put('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), asyn
   const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   await db.prepare('UPDATE past_leaders SET name=?, role=?, term_start=?, term_end=?, photo_url=?, bio=?, sort_order=?, user_id=? WHERE id=?').run(name, role, term_start || null, term_end || null, photo_url, bio || null, parseInt(sort_order) || 0, userIdNum, req.params.id);
-  res.redirect('/admin/past-leaders');
+  res.redirect('/admin/past-leaders?saved=1');
 });
 router.delete('/past-leaders/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM past_leaders WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/past-leaders');
+  res.redirect('/admin/past-leaders?saved=1');
 });
 
 module.exports = router;

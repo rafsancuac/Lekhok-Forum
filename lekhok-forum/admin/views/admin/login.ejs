@@ -2,41 +2,117 @@
 <html lang="bn" dir="ltr">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>লগইন — বাংলাদেশ তরুণ কলাম লেখক ফোরাম অ্যাডমিন</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Kalpurush', 'HindSiliguri', sans-serif; background: linear-gradient(135deg, #0a1f44 0%, #0B1121 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
-    .login-card { background:white; border-radius:12px; padding:40px; max-width:400px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
-    .login-card h1 { color:#0a1f44; margin-bottom:8px; font-size:1.8rem; }
-    .login-card p.sub { color:#666; margin-bottom:24px; font-size:0.9rem; }
-    .form-group { margin-bottom:16px; }
-    .form-group label { display:block; margin-bottom:6px; color:#0a1f44; font-weight:600; font-size:0.9rem; }
-    .form-group input { width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-size:1rem; font-family:inherit; }
-    .form-group input:focus { outline:none; border-color:#059669; }
-    .btn-login { width:100%; padding:12px; background:#0a1f44; color:white; border:none; border-radius:6px; font-size:1rem; font-weight:600; cursor:pointer; font-family:inherit; }
-    .btn-login:hover { background:#0B1121; }
-    .error { background:#fee; color:#c33; padding:10px; border-radius:6px; margin-bottom:16px; font-size:0.9rem; border:1px solid #fcc; }
-    .logo { text-align:center; margin-bottom:20px; }
+    body {
+      font-family: 'Kalpurush', 'HindSiliguri', sans-serif;
+      background:
+        radial-gradient(700px 340px at 85% -10%, rgba(232, 182, 76, 0.16), transparent 60%),
+        radial-gradient(600px 300px at -10% 110%, rgba(5, 150, 105, 0.18), transparent 60%),
+        linear-gradient(135deg, #0a1f44 0%, #0B1121 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, label { font-family: 'HindSiliguri', sans-serif; }
+    .login-card {
+      background: white; border-radius: 18px;
+      padding: 42px 38px 32px;
+      max-width: 420px; width: 100%;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+      position: relative;
+      animation: cardIn 0.5s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+    }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(18px) scale(0.98); } to { opacity: 1; transform: none; } }
+    .logo { text-align: center; margin-bottom: 22px; }
+    .logo .emblem {
+      width: 62px; height: 62px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e8b64c, #c98f1f);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.55rem; color: #081833;
+      box-shadow: 0 8px 24px rgba(232, 182, 76, 0.45);
+    }
+    .login-card h1 { color: #0a1f44; margin-bottom: 6px; font-size: 1.65rem; text-align: center; }
+    .login-card p.sub { color: #64748b; margin-bottom: 26px; font-size: 0.88rem; text-align: center; line-height: 1.6; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 7px; color: #0a1f44; font-weight: 600; font-size: 0.88rem; }
+    .input-wrap { position: relative; }
+    .input-wrap > i {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: #94a3b8; font-size: 0.9rem; pointer-events: none;
+    }
+    .form-group input {
+      width: 100%; padding: 12px 14px 12px 40px;
+      border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-size: 0.98rem; font-family: inherit; color: #0f172a;
+      background: #fbfcfe; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus { outline: none; border-color: #059669; background: #fff; box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.10); }
+    .btn-login {
+      width: 100%; padding: 13px; margin-top: 6px;
+      background: linear-gradient(135deg, #0e2a5c, #0a1f44);
+      color: white; border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+      box-shadow: 0 8px 20px rgba(10, 31, 68, 0.35);
+    }
+    .btn-login:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-login:active { transform: scale(0.98); }
+    .error {
+      background: #fee2e2; color: #991b1b;
+      padding: 11px 14px; border-radius: 10px; margin-bottom: 18px;
+      font-size: 0.88rem; border: 1px solid #fecaca;
+      display: flex; align-items: center; gap: 9px;
+      animation: shake 0.4s ease;
+    }
+    @keyframes shake { 20% { transform: translateX(-6px); } 45% { transform: translateX(5px); } 70% { transform: translateX(-3px); } 90% { transform: translateX(2px); } }
+    .login-foot {
+      margin-top: 24px; padding-top: 16px;
+      border-top: 1px dashed #e2e8f0;
+      text-align: center; color: #94a3b8; font-size: 0.76rem;
+      line-height: 1.7;
+    }
+    .login-foot a { color: #059669; font-weight: 600; }
+    .back-home { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div class="login-card">
-    <h1>অ্যাডমিন লগইন</h1>
-    <p class="sub">বাংলাদেশ তরুণ কলাম লেখক ফোরাম — কন্টেন্ট ম্যানেজমেন্ট</p>
+    <div class="logo">
+      <div class="emblem"><i class="fas fa-feather-alt"></i></div>
+      <h1>অ্যাডমিন লগইন</h1>
+      <p class="sub">বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়<br>কন্টেন্ট ও কমিউনিটি ব্যবস্থাপনা প্যানেল</p>
+    </div>
     <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
     <form method="POST">
       <div class="form-group">
         <label for="username">ব্যবহারকারী নাম</label>
-        <input type="text" id="username" name="username" required autofocus>
+        <div class="input-wrap">
+          <i class="fas fa-user"></i>
+          <input type="text" id="username" name="username" required autofocus autocomplete="username">
+        </div>
       </div>
       <div class="form-group">
         <label for="password">পাসওয়ার্ড</label>
-        <input type="password" id="password" name="password" required>
+        <div class="input-wrap">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
       </div>
-      <button type="submit" class="btn-login">লগইন</button>
+      <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> প্রবেশ করুন</button>
     </form>
+    <div class="login-foot">
+      © <%= new Date().getFullYear() %> বাংলাদেশ তরুণ কলাম লেখক ফোরাম — সর্বস্বত্ব সংরক্ষিত<br>
+      <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> মূল সাইটে ফিরে যান</a>
+    </div>
   </div>
 </body>
 </html>

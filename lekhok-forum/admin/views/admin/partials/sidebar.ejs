@@ -1,25 +1,148 @@
+<%
+  // সাইডবার — গ্রুপড নেভিগেশন + ইউজার কার্ড + মোবাইল ড্রয়ার + টোস্ট + ড্রাফট অটোসেভ
+  const _path = currentPath || '';
+  const _active = (p) => _path === p || _path.startsWith(p + '/') ? 'active' : '';
+  const _isAdmin = !!(adminUser || (user && user.role === 'admin'));
+  const _staffName = (adminUser && adminUser.display_name) || (user && user.full_name) || 'স্টাফ';
+  const _roleLabel = adminUser ? 'অ্যাডমিন' : (user && user.role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর');
+  const _initial = (_staffName || 'স').trim().charAt(0);
+  const _avatar = user ? '/avatar/' + user.id : null;
+%>
+<button class="admin-hamburger" id="adminHamburger" aria-label="মেনু" type="button"><i class="fas fa-bars"></i></button>
+<div class="admin-backdrop" id="adminBackdrop"></div>
 <aside class="admin-sidebar">
   <div class="logo">
+    <div class="brand-emblem"><i class="fas fa-feather-alt"></i></div>
     <strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong>
+    <span class="logo-sub"><%= _isAdmin ? 'অ্যাডমিন প্যানেল' : 'মডারেটর প্যানেল' %></span>
   </div>
   <nav>
-    <a href="/admin"         class="<%= currentPath === '/admin' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
-    <a href="/admin/users"     class="<%= currentPath.startsWith('/admin/users')     ? 'active' : '' %>"><i class="fas fa-users-cog"></i> ইউজার</a>
-    <a href="/admin/moderators" class="<%= currentPath.startsWith('/admin/moderators') ? 'active' : '' %>"><i class="fas fa-user-shield"></i> মডারেটর</a>
-    <a href="/admin/daily"     class="<%= currentPath.startsWith('/admin/daily')     ? 'active' : '' %>"><i class="fas fa-sun"></i> ডেইলি কনটেন্ট</a>
-    <a href="/admin/notices"   class="<%= currentPath.startsWith('/admin/notices')   ? 'active' : '' %>"><i class="fas fa-bell"></i> বিজ্ঞপ্তি</a>
-    <a href="/admin/events"    class="<%= currentPath.startsWith('/admin/events')    ? 'active' : '' %>"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
-    <a href="/admin/members"   class="<%= currentPath.startsWith('/admin/members')   ? 'active' : '' %>"><i class="fas fa-users"></i> কমিটি সদস্য</a>
-    <a href="/admin/gallery"   class="<%= currentPath.startsWith('/admin/gallery')   ? 'active' : '' %>"><i class="fas fa-images"></i> গ্যালারি</a>
-    <a href="/admin/achievements" class="<%= currentPath.startsWith('/admin/achievements') ? 'active' : '' %>"><i class="fas fa-trophy"></i> অর্জন</a>
-    <a href="/admin/constitution" class="<%= currentPath.startsWith('/admin/constitution') ? 'active' : '' %>"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
-    <a href="/admin/past-leaders" class="<%= currentPath.startsWith('/admin/past-leaders') ? 'active' : '' %>"><i class="fas fa-history"></i> প্রাক্তন নেতৃত্ব</a>
-    <a href="/admin/resources" class="<%= currentPath.startsWith('/admin/resources') ? 'active' : '' %>"><i class="fas fa-book"></i> রিসোর্স</a>
-    <a href="/admin/messages"  class="<%= currentPath.startsWith('/admin/messages')  ? 'active' : '' %>"><i class="fas fa-envelope"></i> বার্তা</a>
-    <a href="/admin/subscribers" class="<%= currentPath.startsWith('/admin/subscribers') ? 'active' : '' %>"><i class="fas fa-paper-plane"></i> নিউজলেটার</a>
-    <a href="/admin/complaints" class="<%= currentPath.startsWith('/admin/complaints') ? 'active' : '' %>"><i class="fas fa-flag"></i> অভিযোগ</a>
-    <a href="/admin/settings"  class="<%= currentPath.startsWith('/admin/settings')  ? 'active' : '' %>"><i class="fas fa-cog"></i> সেটিংস</a>
-    <a href="/" target="_blank"><i class="fas fa-external-link-alt"></i> সাইট দেখুন</a>
-    <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> লগআউট</a>
+    <div class="nav-group-label">মূল</div>
+    <a href="/admin" class="<%= _path === '/admin' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
+
+    <% if (_isAdmin) { %>
+    <div class="nav-group-label">সংগঠন</div>
+    <a href="/admin/members"        class="<%= _active('/admin/members') %>"><i class="fas fa-users"></i> কমিটি সদস্য</a>
+    <a href="/admin/achievements"   class="<%= _active('/admin/achievements') %>"><i class="fas fa-trophy"></i> অর্জন</a>
+    <a href="/admin/constitution"   class="<%= _active('/admin/constitution') %>"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
+    <a href="/admin/past-leaders"   class="<%= _active('/admin/past-leaders') %>"><i class="fas fa-history"></i> প্রাক্তন নেতৃত্ব</a>
+    <% } %>
+
+    <div class="nav-group-label">কনটেন্ট</div>
+    <a href="/admin/notices"        class="<%= _active('/admin/notices') %>"><i class="fas fa-bell"></i> বিজ্ঞপ্তি</a>
+    <a href="/admin/events"         class="<%= _active('/admin/events') %>"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
+    <a href="/admin/daily"          class="<%= _active('/admin/daily') %>"><i class="fas fa-sun"></i> ডেইলি কনটেন্ট</a>
+    <a href="/admin/gallery"        class="<%= _active('/admin/gallery') %>"><i class="fas fa-images"></i> গ্যালারি</a>
+    <% if (_isAdmin) { %>
+    <a href="/admin/resources"      class="<%= _active('/admin/resources') %>"><i class="fas fa-book"></i> রিসোর্স</a>
+    <% } %>
+
+    <div class="nav-group-label">কমিউনিটি</div>
+    <% if (_isAdmin) { %>
+    <a href="/admin/users"          class="<%= _active('/admin/users') %>"><i class="fas fa-users-cog"></i> ইউজার</a>
+    <a href="/admin/moderators"     class="<%= _active('/admin/moderators') %>"><i class="fas fa-user-shield"></i> মডারেটর</a>
+    <% } %>
+    <a href="/admin/messages"       class="<%= _active('/admin/messages') %>"><i class="fas fa-envelope"></i> বার্তা</a>
+    <a href="/admin/subscribers"    class="<%= _active('/admin/subscribers') %>"><i class="fas fa-paper-plane"></i> নিউজলেটার</a>
+    <a href="/admin/complaints"     class="<%= _active('/admin/complaints') %>"><i class="fas fa-flag"></i> অভিযোগ</a>
+
+    <div class="nav-group-label">সিস্টেম</div>
+    <% if (_isAdmin) { %>
+    <a href="/admin/settings"       class="<%= _active('/admin/settings') %>"><i class="fas fa-cog"></i> সেটিংস</a>
+    <% } %>
+    <a href="/" target="_blank" class="nav-external"><i class="fas fa-external-link-alt"></i> সাইট দেখুন</a>
   </nav>
+  <div class="sidebar-user">
+    <div class="su-avatar">
+      <% if (_avatar) { %><img src="<%= _avatar %>" alt=""><% } else { %><%= _initial %><% } %>
+    </div>
+    <div class="su-meta">
+      <div class="su-name"><%= _staffName %></div>
+      <div class="su-role"><i class="fas fa-shield-alt"></i> <%= _roleLabel %></div>
+    </div>
+    <a href="/admin/logout" class="su-logout" title="লগআউট"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
 </aside>
+
+<div class="toast-zone" id="toastZone"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── মোবাইল ড্রয়ার ─────────────────────────────────────────────── */
+  var hb = document.getElementById('adminHamburger');
+  var bd = document.getElementById('adminBackdrop');
+  function closeNav() { document.body.classList.remove('sidebar-open'); if (bd) bd.classList.remove('show'); }
+  if (hb) hb.addEventListener('click', function () {
+    var open = document.body.classList.toggle('sidebar-open');
+    if (bd) bd.classList.toggle('show', open);
+  });
+  if (bd) bd.addEventListener('click', closeNav);
+  document.querySelectorAll('.admin-sidebar nav a').forEach(function (a) {
+    a.addEventListener('click', closeNav);
+  });
+
+  /* ── টোস্ট ফিডব্যাক (?saved=1 / ?error=...) ─────────────────────── */
+  try {
+    var qs = new URLSearchParams(location.search);
+    var msg = qs.get('saved'), err = qs.get('error');
+    if (msg || err) {
+      var zone = document.getElementById('toastZone');
+      var t = document.createElement('div');
+      t.className = 'toast ' + (err ? 't-error' : 't-success');
+      t.innerHTML = (err
+        ? '<i class="fas fa-exclamation-circle t-ico"></i>'
+        : '<i class="fas fa-check-circle t-ico"></i>')
+        + '<span>' + (err || 'সফলভাবে সম্পন্ন হয়েছে') + '</span>'
+        + '<i class="fas fa-times t-close"></i>';
+      zone.appendChild(t);
+      var kill = function () { t.classList.add('t-out'); setTimeout(function () { t.remove(); }, 320); };
+      t.querySelector('.t-close').addEventListener('click', kill);
+      setTimeout(kill, 3800);
+      qs.delete('saved'); qs.delete('error');
+      var clean = location.pathname + (qs.toString() ? '?' + qs.toString() : '');
+      history.replaceState(null, '', clean);
+    }
+  } catch (e) {}
+
+  /* ── ফর্ম ড্রাফট অটোসেভ — লিখে রাখা সবকিছু ফিরে পাওয়া ────────────
+     ইউজার ফর্মে যা লিখে গেছে (সেভ না করে চলে গেলেও) পরের বার এসে
+     ঠিক সেভাবেই ফিরে পায়। সফল সাবমিটে খসড়া মুছে যায়।
+     নোট: স্ক্রিপ্টটি সাইডবারে (DOM-এর ঊর্ধ্বে) — ফর্ম পেতে DOMContentLoaded। */
+  var initDrafts = function () {
+    try {
+      var forms = document.querySelectorAll('.admin-main form');
+      if (!forms.length) return;
+      forms.forEach(function (form, fi) {
+        var fields = form.querySelectorAll('input[type=text],input[type=url],input[type=email],input[type=number],input[type=date],input[type=tel],textarea,select');
+        if (!fields.length) return;
+        var key = 'adminDraft:' + location.pathname + ':f' + fi + ':' + (form.getAttribute('action') || '');
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+        if (saved) {
+          fields.forEach(function (el) {
+            if (el.name && saved[el.name] !== undefined && saved[el.name] !== '') el.value = saved[el.name];
+          });
+        }
+        var timer;
+        fields.forEach(function (el) {
+          el.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+              var data = {};
+              fields.forEach(function (f) { if (f.name) data[f.name] = f.value; });
+              try { localStorage.setItem(key, JSON.stringify(data)); } catch (e) {}
+            }, 350);
+          });
+        });
+        form.addEventListener('submit', function () {
+          try { localStorage.removeItem(key); } catch (e) {}
+        });
+      });
+    } catch (e) {}
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDrafts);
+  else initDrafts();
+})();
+</script>
