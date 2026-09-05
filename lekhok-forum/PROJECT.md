@@ -294,6 +294,16 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৩০ (৬ সেপ্টেম্বর ২০২৬) — লিডারশিপ কার্ডের আসল বাগফিক্স: nested `<a>` + ২ সেকশনে বিভাজন
+
+- **ইউজার রিকোয়েস্ট**: 'নিচের ৪টার প্রথম ২টা কার্ড স্ট্রাকচার এখনো ব্রোকেন' — একটি প্রস্তাবিত প্যাচ-আইডিয়াসহ (nested `<a>` ডায়াগনোসিস); সেটি বাস্তবায়ন করে আরও শক্ত করা হয়েছে
+- **আসল কারণ**: `leaderCard()` প্রোফাইল-লিংকড সদস্যদের (user_username যাদের) কার্ড **পুরোটা** `<a href="/profile/...">`-তে মোড়াত, অথচ কার্ডের ভেতরের সোশ্যাল রো-তেও `<a>` ছিল (fb/email/profile আইকন)। `<a>`-র ভেতর `<a>` invalid HTML — ব্রাউজার পার্সার বাইরের `<a>` আগেই বন্ধ করে প্রতিটি আক্রান্ত কার্ডকে ৩টি বিচ্ছিন্ন DOM টুকরোতে ফেলত → কার্ডের flex/min-height/এলাইনমেন্ট সব ভেঙে যেত। ডেটায় এমন মাত্র ২ জন — বর্তমান সভাপতি (mahmudul_rahman) ও সা.সম্পাদক (mesbah_uddin_miris) — তাই ঠিক 'নিচের সারির প্রথম ২টা কার্ড' ভাঙা দেখাত, বাকি ৬টি div-কার্ড নিরপরাধ সুন্দরই থাকত
+- **ফিক্স (views/lekhok-home.ejs)**: কার্ড এখন **সবসময় `<div class="leader-card has-image leader-card-featured">`** — nested anchor সম্ভবই নেই; প্রোফাইল লিংক থাকে সোশ্যাল রো-এর fa-user আইকনে; পুরো কার্ড ক্লিকযোগ্য রাখতে `data-href="/profile/..."` + `title="প্রোফাইল দেখুন"`; `onclick="event.stopPropagation()"` অবশেষ বাদ; `hasSocial` এখন profileHref-সহ
+- **ফিক্স (main.js)**: delegated click হ্যান্ডলার — `.leader-card-featured[data-href]`-এর যেকোনো জায়গায় ক্লিকে প্রোফাইলে যায়, তবে ভেতরের `<a>`-এ ক্লিক (`e.target.closest('a')`) হলে স্বাভাবিক আচরণ
+- **ফিক্স (style.css)**: `.leader-card-featured` হার্ডেন — `min-height 680→760px`, `display:flex !important`, `align-items:center !important`, `text-align:center !important`, `overflow:visible !important` (`.leader-card.has-image`-এর `text-align:left; overflow:hidden; padding:0` আর `.linked-member`-এর `display:block` কখনো লিক করতে না পারে); `.leader-body { width:100% }` (align-items:center থাকলেও বক্তব্য পুরো প্রস্থে জাস্টিফাইড); `.leader-card-featured[data-href] { cursor:pointer }`
+- **বিভাজন**: ২টি আলাদা `<section>` — সেকশন ১ `#leadership` (প্রতিষ্ঠাতা সভাপতি+সা.সম্পাদক, প্রতিষ্ঠাকালীন উপদেষ্টা) মূল শিরোনাম 'যাঁদের হাতে গড়ে উঠেছে লেখক ফোরাম'-এর নিচে; সেকশন ২ `#current-leadership` (section-alt, বর্তমান সভাপতি+সা.সম্পাদক, বর্তমান উপদেষ্টা) নিজস্ব সেন্টার-হেডিং 'বর্তমান নেতৃত্ব'-সহ — origin-এ 49ebe77 দিয়ে আসা এই দুই-সেকশন কাঠামো রক্ষা করা হয়েছে
+- **টেস্ট**: verify-session30.sh 16/16 PASS (৮ div-কার্ড, `<a>`-র্যাপ ০, data-href ২, 'বর্তমান নেতৃত্ব' হেডিং, ২ ম্যাট্রিক্স, stopPropagation অবশেষ ০); Playwright হেডলেস DOM — ৮ কার্ড, উচ্চতা ৮/৮ = ঠিক 760px, img-প্রথম-সন্তান ৮/৮ (কার্ড টুকরো নয়), body-পূর্ণ-প্রস্থ ৮/৮, আইকন নিচে ২/২, ক্লিক-নেভিগেশন → /profile/mahmudul_rahman OK; test-lekhok.sh **77/77 PASS**
+
 ### সেশন ২৯ (৬ সেপ্টেম্বর ২০২৬) — হোম নেতৃত্ব সেকশন: ৮ কার্ডের পূর্ণ এলাইনমেন্ট + প্রত্যেকের ৫০-১০০ শব্দের বক্তব্য
 
 - **ইউজার রিকোয়েস্ট**: এলাইনমেন্ট হয়নি অভিযোগ; উপরের ৪ জনের জন্য হেডিং 'যাঁদের হাতে গড়ে উঠেছে লেখক ফোরাম' (সেন্টার); উপরের ও নিচের দলের সাব-হেডিং দুটি মুছে দিতে হবে; প্রতিটি কার্ডে ছবি/নাম/পদ/কার্যবর্ষ/সোশ্যাল আইকন সেন্টারে, বক্তব্য জাস্টিফাইড ও প্রত্যেকের জন্য ৫০-১০০ শব্দ; ৮টি কার্ডই সমান ও নিচের দিকে লম্বা

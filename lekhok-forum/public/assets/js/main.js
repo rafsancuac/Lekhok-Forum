@@ -720,3 +720,15 @@ document.addEventListener('click', async e => {
     btn.classList.remove('following');
   }
 });
+
+/* ============= Leadership cards: whole-card click → profile (সেশন ৩০) ============= */
+/* আগে linked কার্ড পুরোটা <a>-তে মোড়ানো হতো — ভেতরে সোশ্যাল আইকনের <a> থাকায়
+   nested anchor হয়ে ব্রাউজার কার্ড ভেঙে ফেলত (৩ টুকরো)। এখন কার্ড <div> +
+   data-href: কার্ডের যেকোনো জায়গায় ক্লিকে প্রোফাইলে যাওয়া, তবে ভেতরের কোনো
+   <a> (fb/email/profile আইকন)-এ ক্লিক হলে সেটার স্বাভাবিক আচরণই চলে। */
+document.addEventListener('click', function (e) {
+  const card = e.target.closest('.leader-card-featured[data-href]');
+  if (!card) return;
+  if (e.target.closest('a')) return;
+  location.href = card.getAttribute('data-href');
+});

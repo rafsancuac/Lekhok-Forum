@@ -130,7 +130,8 @@
         const displayBio = rawBio.substring(0, 700);
         const fb    = m.social_fb;
         const email = m.social_email;
-        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || m.user_username);
+        const profileHref = m.user_username ? '/profile/' + m.user_username : '';
+        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || profileHref);
         const inner = `
           <img loading="lazy" decoding="async" src="${displayImg}" alt="${displayName}" class="leader-photo" />
           <div class="leader-body">
@@ -140,17 +141,22 @@
             ${displayBio ? `<p class="leader-bani">${displayBio}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
             ${hasSocial ? `
             <div class="leader-social">
-              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Facebook"><i class="fab fa-facebook"></i></a>` : ''}
-              ${email ? `<a href="mailto:${email}" onclick="event.stopPropagation()" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
-              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
-              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>` : ''}
-              ${m.user_username ? `<a href="/profile/${m.user_username}" onclick="event.stopPropagation()" aria-label="প্রোফাইল"><i class="fas fa-user"></i></a>` : ''}
+              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook"></i></a>` : ''}
+              ${email ? `<a href="mailto:${email}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
+              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
+              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>` : ''}
+              ${profileHref ? `<a href="${profileHref}" aria-label="প্রোফাইল"><i class="fas fa-user"></i></a>` : ''}
             </div>` : ''}
           </div>
         `;
-        return m.user_username
-          ? `<a href="/profile/${m.user_username}" class="leader-card has-image linked-member leader-card-featured">${inner}</a>`
-          : `<div class="leader-card has-image leader-card-featured">${inner}</div>`;
+        // সেশন ৩০ (আসল বাগফিক্স): কার্ড সবসময় <div> — আগে linked কার্ড
+        // (user_username যাদের) পুরোটা <a href="/profile/...">-তে মোড়ানো হত,
+        // অথচ ভেতরের সোশ্যাল রো-তেও <a> ছিল। <a>-র ভেতর <a> invalid HTML —
+        // ব্রাউজার পার্সার বাইরের <a> আগেই বন্ধ করে দিয়ে কার্ডটাকে ৩টি বিচ্ছিন্ন
+        // DOM টুকরোতে ফেলত, ফলে বর্তমান সভাপতি/সা.সম্পাদক কার্ড ভেঙে যেত।
+        // এখন প্রোফাইল লিংক থাকে সোশ্যাল আইকনে + পুরো কার্ড ক্লিকযোগ্য
+        // data-href + main.js-এর delegated হ্যান্ডলারে — nested anchor সম্ভবই নেই।
+        return `<div class="leader-card has-image leader-card-featured"${profileHref ? ` data-href="${profileHref}" title="প্রোফাইল দেখুন"` : ''}>${inner}</div>`;
       }
       function leaderPair(members, roles, yearLabel, statements) {
         if (!members || !members.length) return '';
