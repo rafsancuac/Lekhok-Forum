@@ -581,9 +581,30 @@ async function runMigrations() {
     await backend.prepare("INSERT INTO settings (key, value) SELECT 'motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী' WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'motto')").run();
   } catch (_) {}
 
-  // (2) committee: drop the fake demo ২০২৫-২০২৬ central committee (exact
-  //     seed-list match only — admin-added real members are never touched),
-  //     then ensure the real ২০২১-২২ branch committee exists.
+  // (2) committee: dedupe race-created duplicates first (serverless cold boots
+  //     can run the old check-then-insert concurrently), merge any user_id the
+  //     duplicates carried onto the kept row, then enforce uniqueness with a
+  //     UNIQUE index so concurrent boots can never duplicate again.
+  try {
+    await backend.exec(`UPDATE members SET user_id = (
+      SELECT m2.user_id FROM members m2
+      WHERE m2.name = members.name AND IFNULL(m2.term_year,'') = IFNULL(members.term_year,'')
+        AND m2.member_type = members.member_type AND m2.user_id IS NOT NULL
+      LIMIT 1
+    ) WHERE user_id IS NULL`);
+  } catch (_) {}
+  try {
+    await backend.exec(`DELETE FROM members WHERE id NOT IN (
+      SELECT MIN(id) FROM members GROUP BY name, IFNULL(term_year,''), member_type
+    )`);
+  } catch (_) {}
+  try {
+    await backend.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_members_unique_name_term ON members(name, IFNULL(term_year,''), member_type)");
+  } catch (_) {}
+
+  //     drop the fake demo ২০২৫-২০২৬ central committee (exact seed-list match
+  //     only — admin-added real members are never touched), then ensure the
+  //     real ২০২১-২২ branch committee exists.
   const FAKE_DEMO_COMMITTEE = [
     'ইসমাইল হোসেন', 'মোনেম শাহরিয়ার শাওন', 'কারিশমা ইরিন এ্যামি', 'আজিজ ওয়েসি',
     'মোঃ রেজাউল করিম', 'মোঃ নাঈম মিজি', 'মাহফুজ রহমান', 'মাহমুদুল হাসান শাকিব',
@@ -611,14 +632,11 @@ async function runMigrations() {
   ];
   for (const [name, role, sort] of BRANCH_COMMITTEE) {
     try {
-      const row = await backend.prepare(
-        "SELECT id FROM members WHERE name = ? AND term_year = ? AND member_type = 'central'"
-      ).get(name, BRANCH_TERM);
-      if (!row || !row.id) {
-        await backend.prepare(
-          "INSERT INTO members (name, role, designation, member_type, term_year, sort_order) VALUES (?, ?, ?, 'central', ?, ?)"
-        ).run(name, role, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', BRANCH_TERM, sort);
-      }
+      // UNIQUE index (above) makes this race-safe: concurrent boots that lose
+      // the race simply no-op instead of inserting a duplicate row.
+      await backend.prepare(
+        "INSERT OR IGNORE INTO members (name, role, designation, member_type, term_year, sort_order) VALUES (?, ?, ?, 'central', ?, ?)"
+      ).run(name, role, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', BRANCH_TERM, sort);
     } catch (_) {}
   }
 }
@@ -824,7 +842,7 @@ async function seedDemoContent() {
   ];
   for (const [name, role, sort_order] of committee) {
     try {
-      await prepare(`INSERT INTO members (name, role, designation, member_type, term_year, sort_order)
+      await prepare(`INSERT OR IGNORE INTO members (name, role, designation, member_type, term_year, sort_order)
                VALUES (?, ?, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', 'central', ?, ?)`).run(name, role, CURRENT_TERM, sort_order);
     } catch(e) {}
   }

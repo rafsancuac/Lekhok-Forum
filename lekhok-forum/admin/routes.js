@@ -216,7 +216,12 @@ router.post('/members', requireAdmin, async (req, res) => {
     return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
   }
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
-  await db.prepare('INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum);
+  try {
+    await db.prepare('INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum);
+  } catch (e) {
+    const allUsers = await fetchAllUsers();
+    return res.render('admin/members/form', { member: req.body, error: 'এই নাম, কার্যবর্ষ ও ধরনে একজন সদস্য ইতিমধ্যে যোগ করা আছেন।', allUsers, currentPath: '/admin/members' });
+  }
   res.redirect('/admin/members');
 });
 
@@ -230,7 +235,12 @@ router.get('/members/:id/edit', requireAdmin, async (req, res) => {
 router.put('/members/:id', requireAdmin, async (req, res) => {
   const { name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id } = req.body;
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
-  await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, image_url=?, social_fb=?, social_email=?, member_type=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum, req.params.id);
+  try {
+    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, image_url=?, social_fb=?, social_email=?, member_type=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum, req.params.id);
+  } catch (e) {
+    const allUsers = await fetchAllUsers();
+    return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'এই নাম, কার্যবর্ষ ও ধরনে আরেকজন সদস্য ইতিমধ্যে আছেন।', allUsers, currentPath: '/admin/members' });
+  }
   res.redirect('/admin/members');
 });
 
