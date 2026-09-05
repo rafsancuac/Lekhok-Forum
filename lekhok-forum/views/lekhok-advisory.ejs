@@ -7,25 +7,29 @@
 </header>
 
 <style>
-.term-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.term-chip {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 16px; border-radius: 999px;
-  border: 1.5px solid var(--border, #e2e8f0);
-  background: #fff; color: var(--text, #334155);
-  font-size: 0.92rem; font-weight: 600; text-decoration: none;
-  transition: border-color .18s, background .18s, color .18s, transform .18s, box-shadow .18s;
+.adv-filter-bar {
+  display: flex; justify-content: flex-end; align-items: center;
+  gap: 10px; margin-bottom: 20px;
 }
-.term-chip:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); transform: translateY(-1px); }
-.term-chip.active {
-  background: var(--accent, #059669); border-color: var(--accent, #059669);
-  color: #fff; box-shadow: 0 6px 16px rgba(5,150,105,.25);
+.adv-filter-bar label {
+  font-size: 14px; font-weight: 600; color: var(--text-soft, #475569);
+  font-family: 'Hind Siliguri', sans-serif !important;
 }
-.term-chip .tc-count {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px;
-  background: rgba(5,150,105,.12); color: var(--accent, #059669);
-  font-size: 0.74rem; font-weight: 700;
+.adv-filter-bar select {
+  padding: 8px 16px; border: 1.5px solid var(--border, #e2e8f0);
+  border-radius: 5px; background: #fff; font-family: 'Hind Siliguri', sans-serif !important;
+  font-size: 14px; color: var(--text, #334155); cursor: pointer;
+  transition: border-color .15s;
+}
+.adv-filter-bar select:focus {
+  outline: none; border-color: var(--accent, #059669);
+}
+.adv-year-group { margin-bottom: 32px; }
+.adv-year-label {
+  font-size: 16px; font-weight: 700; color: var(--brand, #0a1f44);
+  margin-bottom: 12px; padding-bottom: 6px;
+  border-bottom: 2px solid var(--accent, #059669);
+  display: inline-block;
 }
 .leader-card { position: relative; overflow: hidden; }
 .leader-card img { transition: transform .35s ease; }
@@ -64,111 +68,127 @@
   // Group advisors by term_year
   const bnTermSort = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
   const yearGroups = {};
+  const noYearAdvisors = [];
   advisory.forEach(m => {
-    const terms = (m.terms && m.terms.length) ? m.terms : (m.term_year ? [m.term_year] : ['অনির্দিষ্ট']);
-    terms.forEach(t => {
-      if (!yearGroups[t]) yearGroups[t] = [];
-      yearGroups[t].push(m);
-    });
+    const terms = (m.terms && m.terms.length) ? m.terms : (m.term_year ? [m.term_year] : []);
+    if (terms.length === 0) {
+      noYearAdvisors.push(m);
+    } else {
+      terms.forEach(t => {
+        if (!yearGroups[t]) yearGroups[t] = [];
+        yearGroups[t].push(m);
+      });
+    }
   });
   const sortedYears = Object.keys(yearGroups).sort((a, b) => bnTermSort(b) - bnTermSort(a));
 %>
 
-<% if (advisory && advisory.length) { %>
-  <% sortedYears.forEach((year, gi) => { %>
-    <section class="section reveal" style="padding-top:<%= gi === 0 ? '20px' : '0' %>">
-      <div class="container">
-        <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:10px">
-          <div>
-            <span class="eyebrow"><i class="far fa-calendar"></i> <%= year %> কার্যবর্ষ</span>
-            <h2 class="section-title">উপদেষ্টা <span class="accent">পরিষদ</span> (<%= year %>)</h2>
-            <span class="accent-divider"></span>
-            <p class="term-intro">এই কার্যবর্ষে <strong><%= bnNum(yearGroups[year].length) %></strong> জন উপদেষ্টা।</p>
+<section class="section reveal">
+  <div class="container">
+
+    <% if (sortedYears.length > 0) { %>
+    <!-- কার্যবর্ষ ড্রপডাউন ফিল্টার -->
+    <div class="adv-filter-bar">
+      <label for="advYearFilter"><i class="fas fa-calendar-alt"></i> কার্যবর্ষ:</label>
+      <select id="advYearFilter" onchange="filterAdvisoryYear(this.value)">
+        <option value="all">সকল কার্যবর্ষ</option>
+        <% sortedYears.forEach(y => { %>
+          <option value="<%= y %>"><%= y %></option>
+        <% }) %>
+      </select>
+    </div>
+    <% } %>
+
+    <% if (advisory && advisory.length) { %>
+
+      <% // Render year-grouped advisors %>
+      <% sortedYears.forEach((year) => { %>
+        <div class="adv-year-group" data-year="<%= year %>">
+          <div class="adv-year-label"><i class="far fa-calendar"></i> <%= year %> কার্যবর্ষ — <%= bnNum(yearGroups[year].length) %> জন</div>
+          <div class="leaders-grid">
+            <% yearGroups[year].forEach(m => { %>
+              <% const displayName = m.user_full_name || m.name; %>
+              <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+              <% if (m.user_username) { %>
+                <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+                  <span class="member-term-tag"><%= year %></span>
+                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+                  <div class="leader-body">
+                    <h3><%= displayName %></h3>
+                    <p class="role"><%= m.role %></p>
+                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                  </div>
+                </a>
+              <% } else { %>
+                <div class="leader-card has-image clickable-card">
+                  <span class="member-term-tag"><%= year %></span>
+                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+                  <div class="leader-body">
+                    <h3><%= displayName %></h3>
+                    <p class="role"><%= m.role %></p>
+                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                  </div>
+                </div>
+              <% } %>
+            <% }) %>
           </div>
         </div>
-        <div class="leaders-grid" style="margin-top:20px">
-          <% yearGroups[year].forEach(m => { %>
-            <% const displayName = m.user_full_name || m.name; %>
-            <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
-            <% if (m.user_username) { %>
-              <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
-                <span class="member-term-tag"><%= year %></span>
-                <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
-                <div class="leader-body">
-                  <h3><%= displayName %></h3>
-                  <p class="role"><%= m.role %></p>
-                  <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+      <% }) %>
+
+      <% // Render advisors without term_year (no year header) %>
+      <% if (noYearAdvisors.length > 0) { %>
+        <div class="adv-year-group" data-year="no-year">
+          <% if (sortedYears.length > 0) { %>
+            <div class="adv-year-label"><i class="fas fa-users"></i> সাধারণ উপদেষ্টা — <%= bnNum(noYearAdvisors.length) %> জন</div>
+          <% } %>
+          <div class="leaders-grid">
+            <% noYearAdvisors.forEach(m => { %>
+              <% const displayName = m.user_full_name || m.name; %>
+              <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+              <% if (m.user_username) { %>
+                <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+                  <div class="leader-body">
+                    <h3><%= displayName %></h3>
+                    <p class="role"><%= m.role %></p>
+                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                  </div>
+                </a>
+              <% } else { %>
+                <div class="leader-card has-image clickable-card">
+                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+                  <div class="leader-body">
+                    <h3><%= displayName %></h3>
+                    <p class="role"><%= m.role %></p>
+                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                  </div>
                 </div>
-              </a>
-            <% } else { %>
-              <div class="leader-card has-image clickable-card"
-                   onclick="openMemberModal('adv-<%= m.id %>')"
-                   data-member="adv-<%= m.id %>"
-                   data-name="<%= String(m.name).replace(/'/g, '&#39;') %>"
-                   data-role="<%= String(m.role || '').replace(/'/g, '&#39;') %>"
-                   data-designation="<%= String(m.designation || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
-                   data-bio="<%= String(m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
-                   data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
-                <span class="member-term-tag"><%= year %></span>
-                <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
-                <div class="leader-body">
-                  <h3><%= displayName %></h3>
-                  <p class="role"><%= m.role %></p>
-                  <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
-                </div>
-              </div>
-            <% } %>
-          <% }) %>
+              <% } %>
+            <% }) %>
+          </div>
         </div>
-      </div>
-    </section>
-  <% }) %>
-<% } else { %>
-  <section class="section reveal">
-    <div class="container">
-      <div class="term-empty" style="margin-top:26px">
+      <% } %>
+
+    <% } else { %>
+      <div class="term-empty">
         <i class="far fa-folder-open"></i>
         <h3>উপদেষ্টাদের তালিকা এখনো সংরক্ষিত হয়নি</h3>
         <p>তথ্য পাওয়ামাত্র এখানে যুক্ত করা হবে, ইনশাআল্লাহ।</p>
       </div>
-    </div>
-  </section>
-<% } %>
+    <% } %>
 
-<!-- বিস্তারিত মডাল -->
-<div class="modal-overlay" id="memberModal" onclick="if(event.target===this) closeMemberModal()">
-  <div class="modal-dialog">
-    <div class="modal-head">
-      <h3>বিস্তারিত</h3>
-      <button class="modal-close" onclick="closeMemberModal()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-member-inner" id="modalBody"></div>
   </div>
-</div>
+</section>
 
 <script>
-function openMemberModal(id) {
-  const card = document.querySelector('[data-member="' + id + '"]');
-  if (!card) return;
-  const data = {
-    name: card.dataset.name,
-    role: card.dataset.role,
-    designation: card.dataset.designation,
-    bio: card.dataset.bio,
-    image: card.dataset.image
-  };
-  const body = document.getElementById('modalBody');
-  body.innerHTML = '<img loading="lazy" decoding="async" src="' + data.image + '" alt="' + data.name + '">'
-    + '<h3 class="mm-name">' + data.name + '</h3>'
-    + '<p class="mm-role">' + data.role + '</p>'
-    + (data.designation ? '<p class="mm-desig">' + data.designation + '</p>' : '')
-    + (data.bio ? '<p class="mm-bio">' + data.bio + '</p>' : '<p class="mm-bio" style="text-align:center;color:var(--text-muted)">বিস্তারিত বিবরণ শীঘ্রই যোগ করা হবে।</p>');
-  document.getElementById('memberModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+function filterAdvisoryYear(year) {
+  const groups = document.querySelectorAll('.adv-year-group');
+  groups.forEach(g => {
+    if (year === 'all' || g.dataset.year === year || (year === 'no-year' && g.dataset.year === 'no-year')) {
+      g.style.display = '';
+    } else {
+      g.style.display = 'none';
+    }
+  });
 }
-function closeMemberModal() {
-  document.getElementById('memberModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMemberModal(); });
 </script>
