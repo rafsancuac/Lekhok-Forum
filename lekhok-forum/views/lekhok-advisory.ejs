@@ -7,7 +7,6 @@
 </header>
 
 <style>
-/* কার্যবর্ষ চিপ (প্রোফাইল কার্ডের ভেতরে) */
 .term-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .term-chip {
   display: inline-flex; align-items: center; gap: 7px;
@@ -42,11 +41,12 @@
   transition: opacity .2s, transform .2s;
 }
 .leader-card.linked-member:hover::after { opacity: 1; transform: translate(0, 0); }
-.adv-term-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.adv-term-chip {
-  padding: 2px 9px; border-radius: 999px;
-  background: rgba(10,31,68,.06); color: var(--brand, #0a1f44);
-  font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(10,31,68,.12);
+.member-term-tag {
+  position: absolute; top: 12px; left: 12px; z-index: 1;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(10,31,68,.82); color: #fff;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: .02em;
+  backdrop-filter: blur(3px);
 }
 .term-empty {
   text-align: center; padding: 54px 24px;
@@ -60,72 +60,82 @@
 
 <% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
 
-<section class="section reveal">
-  <div class="container">
-    <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:14px">
-      <div>
-        <span class="eyebrow">পরামর্শদাতা</span>
-        <h2 class="section-title">উপদেষ্টা <span class="accent">পরিষদ</span></h2>
-        <span class="accent-divider"></span>
-        <p class="term-intro">সংগঠনের সর্বমোট <strong><%= bnNum(advisory.length) %></strong> জন উপদেষ্টা — প্রত্যেকের কার্যবর্ষ কার্ডেই উল্লেখ করা আছে।</p>
-      </div>
-    </div>
+<%
+  // Group advisors by term_year
+  const bnTermSort = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
+  const yearGroups = {};
+  advisory.forEach(m => {
+    const terms = (m.terms && m.terms.length) ? m.terms : (m.term_year ? [m.term_year] : ['অনির্দিষ্ট']);
+    terms.forEach(t => {
+      if (!yearGroups[t]) yearGroups[t] = [];
+      yearGroups[t].push(m);
+    });
+  });
+  const sortedYears = Object.keys(yearGroups).sort((a, b) => bnTermSort(b) - bnTermSort(a));
+%>
 
-    <% if (advisory && advisory.length) { %>
-      <div class="leaders-grid" style="margin-top:26px">
-        <% advisory.forEach(m => { %>
-          <% const displayName = m.user_full_name || m.name; %>
-          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
-          <% const terms = (m.terms && m.terms.length) ? m.terms : (m.term_year ? [m.term_year] : []); %>
-          <% if (m.user_username) { %>
-            <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= m.role %></p>
-                <% if (terms.length) { %>
-                  <div class="adv-term-chips">
-                    <% terms.forEach(t => { %><span class="adv-term-chip"><i class="far fa-calendar"></i> <%= t %> কার্যবর্ষ</span><% }) %>
-                  </div>
-                <% } %>
-                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+<% if (advisory && advisory.length) { %>
+  <% sortedYears.forEach((year, gi) => { %>
+    <section class="section reveal" style="padding-top:<%= gi === 0 ? '20px' : '0' %>">
+      <div class="container">
+        <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:10px">
+          <div>
+            <span class="eyebrow"><i class="far fa-calendar"></i> <%= year %> কার্যবর্ষ</span>
+            <h2 class="section-title">উপদেষ্টা <span class="accent">পরিষদ</span> — <%= year %></h2>
+            <span class="accent-divider"></span>
+            <p class="term-intro">এই কার্যবর্ষে <strong><%= bnNum(yearGroups[year].length) %></strong> জন উপদেষ্টা।</p>
+          </div>
+        </div>
+        <div class="leaders-grid" style="margin-top:20px">
+          <% yearGroups[year].forEach(m => { %>
+            <% const displayName = m.user_full_name || m.name; %>
+            <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+            <% if (m.user_username) { %>
+              <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+                <span class="member-term-tag"><%= year %></span>
+                <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+                <div class="leader-body">
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                  <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                </div>
+              </a>
+            <% } else { %>
+              <div class="leader-card has-image clickable-card"
+                   onclick="openMemberModal('adv-<%= m.id %>')"
+                   data-member="adv-<%= m.id %>"
+                   data-name="<%= String(m.name).replace(/'/g, '&#39;') %>"
+                   data-role="<%= String(m.role || '').replace(/'/g, '&#39;') %>"
+                   data-designation="<%= String(m.designation || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
+                   data-bio="<%= String(m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
+                   data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
+                <span class="member-term-tag"><%= year %></span>
+                <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+                <div class="leader-body">
+                  <h3><%= displayName %></h3>
+                  <p class="role"><%= m.role %></p>
+                  <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                </div>
               </div>
-            </a>
-          <% } else { %>
-            <div class="leader-card has-image clickable-card"
-                 onclick="openMemberModal('<%= m.id %>')"
-                 data-member="<%= m.id %>"
-                 data-name="<%= String(m.name).replace(/'/g, '&#39;') %>"
-                 data-role="<%= String(m.role || '').replace(/'/g, '&#39;') %>"
-                 data-designation="<%= String(m.designation || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
-                 data-bio="<%= String(m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
-                 data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= m.role %></p>
-                <% if (terms.length) { %>
-                  <div class="adv-term-chips">
-                    <% terms.forEach(t => { %><span class="adv-term-chip"><i class="far fa-calendar"></i> <%= t %> কার্যবর্ষ</span><% }) %>
-                  </div>
-                <% } %>
-                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
-              </div>
-            </div>
-          <% } %>
-        <% }) %>
+            <% } %>
+          <% }) %>
+        </div>
       </div>
-    <% } else { %>
+    </section>
+  <% }) %>
+<% } else { %>
+  <section class="section reveal">
+    <div class="container">
       <div class="term-empty" style="margin-top:26px">
         <i class="far fa-folder-open"></i>
         <h3>উপদেষ্টাদের তালিকা এখনো সংরক্ষিত হয়নি</h3>
         <p>তথ্য পাওয়ামাত্র এখানে যুক্ত করা হবে, ইনশাআল্লাহ।</p>
       </div>
-    <% } %>
-  </div>
-</section>
+    </div>
+  </section>
+<% } %>
 
-<!-- সদস্যের বিস্তারিত মডাল (যাদের অ্যাকাউন্ট নেই) -->
+<!-- বিস্তারিত মডাল -->
 <div class="modal-overlay" id="memberModal" onclick="if(event.target===this) closeMemberModal()">
   <div class="modal-dialog">
     <div class="modal-head">
