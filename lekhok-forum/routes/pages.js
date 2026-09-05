@@ -236,6 +236,7 @@ router.get('/resources', async (req, res) => {
     categories,
     activeCategory: category
   });
+});
 
 // ── Email list page ──────────────────────────────────────────────────────────
 router.get('/resources/emails', async (req, res) => {
@@ -244,7 +245,6 @@ router.get('/resources/emails', async (req, res) => {
     pageTitle: 'পত্রিকার ইমেইল তালিকা',
     currentPath: '/resources/emails'
   });
-});
 });
 
 // ── Team ─────────────────────────────────────────────────────────────────────
