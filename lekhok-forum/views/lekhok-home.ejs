@@ -114,13 +114,12 @@
 <!-- Leaders preview — restructured with current + founders + advisors -->
 <section class="section reveal" id="leadership">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
       <div>
         <span class="eyebrow">নেতৃত্বের ধারা</span>
-        <h2 class="section-title">যাঁদের হাতে গড়ে উঠেছে <span class="accent">লেখক ফোরাম</span></h2>
+        <h2 class="section-title">লেখক ফোরামের <span class="accent">বর্তমান নেতৃত্ব</span></h2>
         <span class="accent-divider"></span>
       </div>
-      <a href="/committee" class="link-more">সকল সদস্য দেখুন <i class="fas fa-arrow-right"></i></a>
     </div>
 
     <%
@@ -141,11 +140,14 @@
           <div class="leader-body">
             <h3 class="leader-name">${displayName}</h3>
             <p class="role leader-role">${displayRole}</p>
-            ${displayBio ? `<p class="leader-bani">${displayBio.substring(0, 160)}${displayBio.length > 160 ? '…' : ''}</p>` : ''}
+            ${displayBio ? `<p class="leader-bani" style="text-align:justify;">${displayBio.substring(0, 500)}${displayBio.length > 500 ? '…' : ''}</p>` : ''}
             ${(fb || email) ? `
-            <div class="leader-social">
-              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="fab fa-facebook"></i></a>` : ''}
-              ${email ? `<a href="mailto:${email}" onclick="event.stopPropagation()"><i class="fas fa-envelope"></i></a>` : ''}
+            <div class="leader-social" style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fab fa-facebook"></i></a>` : ''}
+              ${email ? `<a href="mailto:${email}" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fas fa-envelope"></i></a>` : ''}
+              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fab fa-twitter"></i></a>` : ''}
+              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fab fa-linkedin"></i></a>` : ''}
+              ${m.user_username ? `<a href="/profile/${m.user_username}" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fas fa-user"></i></a>` : ''}
             </div>` : ''}
           </div>
         `;
@@ -157,7 +159,7 @@
         if (!members || !members.length) return '';
         return `
           <div class="leadership-cell">
-            <h3 class="leadership-sub-title"><i class="fas ${icon}"></i> ${title}</h3>
+            <h3 class="leadership-sub-title" style="text-align:center;">${title}</h3>
             <div class="leaders-grid leaders-grid-pair">
               ${members.map(m => leaderCard(m, roleOverride)).join('')}
             </div>
@@ -166,10 +168,10 @@
     %>
 
     <div class="leadership-matrix">
-      <%- leaderGroup('fa-landmark', 'প্রতিষ্ঠাতা সভাপতি ও সাধারণ সম্পাদক', founders) %>
-      <%- leaderGroup('fa-user-tie', 'প্রতিষ্ঠাকালীন উপদেষ্টা', foundingAdvisors, 'প্রতিষ্ঠাকালীন উপদেষ্টা') %>
-      <%- leaderGroup('fa-star', 'বর্তমান সভাপতি ও সাধারণ সম্পাদক', currentLeaders) %>
-      <%- leaderGroup('fa-user-shield', 'বর্তমান উপদেষ্টা', currentAdvisors, 'বর্তমান উপদেষ্টা') %>
+      <%- leaderGroup('fa-landmark', 'প্রতিষ্ঠাতা সভাপতি ও সাধারণ সম্পাদক (২০২০-২১ কার্যবর্ষ)', founders) %>
+      <%- leaderGroup('fa-user-tie', 'প্রতিষ্ঠাকালীন উপদেষ্টা (২০২০-২১ কার্যবর্ষ)', foundingAdvisors, 'প্রতিষ্ঠাকালীন উপদেষ্টা') %>
+      <%- leaderGroup('fa-star', 'বর্তমান সভাপতি ও সাধারণ সম্পাদক (২০২৫-২৬ কার্যবর্ষ)', currentLeaders) %>
+      <%- leaderGroup('fa-user-shield', 'বর্তমান উপদেষ্টা (২০২৫-২৬ কার্যবর্ষ)', currentAdvisors, 'বর্তমান উপদেষ্টা') %>
     </div>
 
 

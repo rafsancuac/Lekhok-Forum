@@ -2348,12 +2348,12 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 /* Brand v2 — 2 lines, same size, both WHITE on dark bg */
 .logo-text-v2 { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; font-family: 'Hind Siliguri', sans-serif !important; }
 .logo-text-v2 strong {
-  font-size: 15px; font-weight: 700; color: #ffffff;
+  font-size: 13px; font-weight: 700; color: #ffffff;
   letter-spacing: -0.01em;
 }
 .logo-text-v2 .brand-line2 {
   color: #ffffff !important;
-  font-size: 15px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
 }
 
@@ -2446,7 +2446,7 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
   gap: 20px !important;
 }
-.leader-card-featured {
+.leader-card-featured { min-height: 380px; display: flex; flex-direction: column;
   padding: 24px !important;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   border: 1px solid var(--border, #e2e8f0) !important;
