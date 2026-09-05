@@ -22,6 +22,7 @@
     "express-session": "^1.17.3",
     "method-override": "^3.0.0",
     "multer": "^2.3.0",
+    "sharp": "^0.35.4",
     "slugify": "^1.6.9",
     "sql.js": "^1.10.3"
   }

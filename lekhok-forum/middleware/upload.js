@@ -1,8 +1,12 @@
 /**
- * middleware/upload.js — Dual-mode file storage.
+ * middleware/upload.js — Dual-mode file storage + automatic WebP conversion.
  *
  *  • Local dev (BLOB_READ_WRITE_TOKEN unset):  multer → disk at public/uploads/<subdir>
  *  • Vercel prod (BLOB_READ_WRITE_TOKEN set):  @vercel/blob → cloud, URL returned
+ *  • JPEG/PNG uploads are auto-converted to WebP (smaller → faster pages,
+ *    better Core Web Vitals). GIF/SVG/WebP pass through untouched. If sharp
+ *    is missing or conversion fails, the ORIGINAL file is stored — an upload
+ *    can never fail because of the optimiser.
  *
  * Routes keep using the same interface: req.file.path / req.file.filename / req.file.url.
  * The wrapper `withUpload()` catches errors and sets req.uploadError.
@@ -45,6 +49,38 @@ function makeFilenameSync(file) {
 }
 
 const IMAGE_TYPES = /^image\/(jpe?g|png|gif|webp|svg\+xml)$/;
+
+// ── Automatic WebP optimiser ─────────────────────────────────────────────────
+// Converts image/jpeg + image/png buffers to WebP in-place on req.file.
+//  • .rotate()            → honours EXIF orientation (phone photos)
+//  • resize 2000px inside → huge scans/photos are capped, never enlarged
+//  • quality 82           → visually lossless for photos, ~25-35% smaller
+//  • swap ONLY if smaller → pathological inputs (already-tiny files) keep original
+// Any error (sharp unavailable, corrupt image) → keep the original buffer.
+const WEBP_MAX_EDGE = 2000;
+
+async function optimizeToWebp(file) {
+  if (!file || !file.buffer) return;
+  const isJpegPng = /^image\/(jpe?g|png)$/.test(file.mimetype);
+  if (!isJpegPng) return;                    // gif/svg/webp/others → untouched
+  try {
+    const sharp = require('sharp');
+    const out = await sharp(file.buffer, { failOn: 'none' })
+      .rotate()
+      .resize({ width: WEBP_MAX_EDGE, height: WEBP_MAX_EDGE, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+    if (out.length < file.buffer.length) {   // never store a "compressed" file that is bigger
+      file.buffer      = out;
+      file.size        = out.length;
+      file.mimetype    = 'image/webp';
+      file.originalname = String(file.originalname || 'image').replace(/\.(jpe?g|png)$/i, '.webp');
+    }
+  } catch (e) {
+    // Optimisation is best-effort: log and keep the original file.
+    console.warn('[upload] WebP conversion skipped:', e.message);
+  }
+}
 
 // ── Storage factories ─────────────────────────────────────────────────────────
 function diskStorage(subdir) {
@@ -110,6 +146,10 @@ function makeUpload({ subdir, maxBytes, allowedTypes }) {
       const all = Object.values(req.files || {}).flat();
       req.file = all.length ? all[0] : undefined;
       if (!req.file) return next();
+
+      // Auto-optimise JPEG/PNG → WebP before storing (both Blob & disk paths
+      // consume req.file.buffer, so one call covers both).
+      await optimizeToWebp(req.file);
 
       if (USE_BLOB) {
         try {
