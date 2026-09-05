@@ -71,23 +71,33 @@
     <nav class="topbar-tabs">
       <a href="/" class="topbar-tab <%= currentPath === '/' ? 'active' : '' %>">হোম</a>
       <div class="topbar-dropdown">
-        <a href="/about" class="topbar-tab <%= currentPath === '/about' ? 'active' : '' %> <%= currentPath === '/constitution' ? 'active' : '' %>">পরিচিতি <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
+        <a href="/about" class="topbar-tab <%= currentPath === '/about' || currentPath === '/constitution' ? 'active' : '' %>">পরিচিতি <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
         <div class="topbar-dropdown-menu">
-          <a href="/about"><i class="fas fa-info-circle"></i> পরিচিতি</a>
+          <a href="/about"><i class="fas fa-info-circle"></i> সংগঠন পরিচিতি</a>
+          <a href="/about#activities"><i class="fas fa-tasks"></i> আমাদের কার্যাক্রম</a>
+          <a href="/about#magazine"><i class="fas fa-book"></i> পত্রিকায় পাতায় লেখক ফোরাম</a>
           <a href="/constitution"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
+          <a href="/about#soldier"><i class="fas fa-fighter-jet"></i> কলম সৈনিক হতে চান?</a>
+          <a href="/about#conditions"><i class="fas fa-clipboard-list"></i> সদস্য হওয়ার শর্তাবলি</a>
         </div>
       </div>
       <div class="topbar-dropdown">
-        <a href="/committee" class="topbar-tab <%= currentPath === '/committee' ? 'active' : '' %> <%= currentPath === '/members' ? 'active' : '' %>">কার্যনির্বাহী সদস্য <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
+        <a href="/committee" class="topbar-tab <%= currentPath === '/committee' || currentPath === '/members' || currentPath === '/committee/past' ? 'active' : '' %>">কার্যনির্বাহী পরিষদ <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
         <div class="topbar-dropdown-menu">
-          <a href="/committee"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
-          <a href="/committee/past"><i class="fas fa-landmark"></i> স্থায়ী পরিষদ</a>
-          <a href="/committee#advisory"><i class="fas fa-user-tie"></i> উপদেষ্টা পরিষদ</a>
-          <a href="/members"><i class="fas fa-users"></i> সকল সদস্য</a>
+          <a href="/committee#advisory"><i class="fas fa-user-tie"></i> উপদেষ্টাদের তালিকা</a>
+          <a href="/committee"><i class="fas fa-users-cog"></i> রানিং কমিটি</a>
+          <a href="/members"><i class="fas fa-users"></i> সদস্য পরিচিতি</a>
+        </div>
+      </div>
+      <div class="topbar-dropdown">
+        <a href="/articles" class="topbar-tab <%= currentPath === '/articles' ? 'active' : '' %>">প্রকাশিত লেখা <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
+        <div class="topbar-dropdown-menu">
+          <a href="/articles?filter=column"><i class="fas fa-pen-nib"></i> প্রকাশিত কলাম</a>
+          <a href="/articles?filter=letter"><i class="fas fa-envelope"></i> প্রকাশিত চিঠি</a>
         </div>
       </div>
       <a href="/gallery" class="topbar-tab <%= currentPath === '/gallery' ? 'active' : '' %>">গ্যালারি</a>
-      <a href="/activities" class="topbar-tab <%= currentPath === '/activities' ? 'active' : '' %>">কার্যক্রম</a>
+      <a href="/resources" class="topbar-tab <%= currentPath === '/resources' ? 'active' : '' %>">রিসোর্স</a>
       <a href="/contact" class="topbar-tab <%= currentPath === '/contact' ? 'active' : '' %>">যোগাযোগ</a>
     </nav>
     <% } %>
