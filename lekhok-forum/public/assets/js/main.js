@@ -174,6 +174,9 @@
 
   // ── v2: Reveal-on-scroll (IntersectionObserver) ───────────────────────────
   if ('IntersectionObserver' in window) {
+    // threshold 0 (any visible pixel) — a percentage threshold never fires for
+    // sections taller than the viewport (e.g. /members with dozens of cards),
+    // which left those sections permanently invisible.
     const revealIO = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
@@ -181,7 +184,7 @@
           revealIO.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    }, { threshold: 0, rootMargin: '0px 0px -60px 0px' });
 
     document.querySelectorAll('.reveal, .reveal-stagger').forEach(function (el) {
       revealIO.observe(el);

@@ -7,28 +7,20 @@
 </header>
 
 <style>
-/* ── কার্যবর্ষ ফিল্টার চিপসমূহ ─────────────────────────────────────────── */
-.term-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.term-chip {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 16px; border-radius: 999px;
-  border: 1.5px solid var(--border, #e2e8f0);
-  background: #fff; color: var(--text, #334155);
-  font-size: 0.92rem; font-weight: 600; text-decoration: none;
-  transition: border-color .18s, background .18s, color .18s, transform .18s, box-shadow .18s;
+/* ── কার্যবর্ষ নির্বাচন বার: ইনট্রো সেন্টারে, ড্রপডাউন একদম ডানে ── */
+.term-bar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; }
+.term-intro { margin: 0; text-align: center; }
+.term-select-wrap { justify-self: end; display: inline-flex; align-items: center; gap: 8px; }
+.term-select-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted, #64748b); white-space: nowrap; }
+#termSelect {
+  appearance: none; -webkit-appearance: none;
+  padding: 9px 36px 9px 14px; border-radius: 8px;
+  border: 1.5px solid var(--border, #e2e8f0); background-color: #fff; color: var(--text, #334155);
+  font-family: inherit; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;
 }
-.term-chip:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); transform: translateY(-1px); }
-.term-chip.active {
-  background: var(--accent, #059669); border-color: var(--accent, #059669);
-  color: #fff; box-shadow: 0 6px 16px rgba(5,150,105,.25);
-}
-.term-chip .tc-count {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px;
-  background: rgba(5,150,105,.12); color: var(--accent, #059669);
-  font-size: 0.74rem; font-weight: 700;
-}
-.term-chip.active .tc-count { background: rgba(255,255,255,.22); color: #fff; }
+#termSelect:focus { outline: none; border-color: var(--accent, #059669); box-shadow: 0 0 0 3px rgba(5,150,105,.12); }
 
 /* ── কার্ড: পুরোটাই ক্লিকেবল, আলাদা কোনো "ক্লিক করুন" লেখা নেই ────────── */
 .leader-card { position: relative; overflow: hidden; }
@@ -64,35 +56,26 @@
 .term-empty p { margin: 0; color: var(--text-muted, #64748b); font-size: .93rem; }
 
 @media (max-width: 576px) {
-  .term-chip { padding: 6px 12px; font-size: 0.85rem; }
-  .term-chips { gap: 6px; }
+  .term-select-wrap { gap: 6px; }
+  #termSelect { padding: 8px 32px 8px 12px; font-size: 0.88rem; }
 }
 </style>
 
 <% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
 
 <!-- কার্যবর্ষ ফিল্টার -->
-<section class="section reveal" style="padding-bottom:0">
-  <div class="container">
-    <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:14px">
-      <div>
-        <span class="eyebrow">নেতৃত্ব</span>
-        <h2 class="section-title">পূর্ণাঙ্গ <span class="accent">কার্যনির্বাহী কমিটি</span></h2>
-        <span class="accent-divider"></span>
-        <p class="term-intro">
+    <div class="term-bar">
+      <p class="term-intro">
           <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের পূর্ণাঙ্গ কার্যনির্বাহী কমিটি<% if (termNote) { %> (<%= termNote %>)<% } %>.<% } else { %>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা।<% } %>
           <% if (countByYear[selectedYear]) { %>মোট সদস্য <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
-        </p>
-      </div>
-      <div class="term-chips" role="tablist" aria-label="কার্যবর্ষ নির্বাচন">
-        <% years.forEach(y => { %>
-          <a href="/committee?year=<%= encodeURIComponent(y) %>"
-             class="term-chip <%= y === selectedYear ? 'active' : '' %>"
-             aria-pressed="<%= y === selectedYear ? 'true' : 'false' %>">
-            <%= y %>
-            <% if (countByYear[y]) { %><span class="tc-count"><%= bnNum(countByYear[y]) %></span><% } %>
-          </a>
-        <% }) %>
+      </p>
+      <div class="term-select-wrap">
+        <label class="term-select-label" for="termSelect"><i class="far fa-calendar"></i> কার্যবর্ষ</label>
+        <select id="termSelect" aria-label="কার্যবর্ষ নির্বাচন" onchange="if (this.value) window.location.href = '/committee?year=' + encodeURIComponent(this.value);">
+          <% years.forEach(y => { %>
+            <option value="<%= y %>" <%= y === selectedYear ? 'selected' : '' %>><%= y %><%= countByYear[y] ? ' (সদস্য ' + bnNum(countByYear[y]) + ' জন)' : '' %></option>
+          <% }) %>
+        </select>
       </div>
     </div>
 
@@ -147,7 +130,6 @@
 <div class="modal-overlay" id="memberModal" onclick="if(event.target===this) closeMemberModal()">
   <div class="modal-dialog">
     <div class="modal-head">
-      <h3>বিস্তারিত</h3>
       <button class="modal-close" onclick="closeMemberModal()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-member-inner" id="modalBody"></div>
