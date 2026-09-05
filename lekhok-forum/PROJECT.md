@@ -294,6 +294,16 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ২৩ (৫ সেপ্টেম্বর ২০২৬) — পূর্ণ SEO ব্যবস্থা: OG/Twitter মেটা + JSON-LD + sitemap.xml + robots.txt + lazy-loading
+
+- **ইউজার রিকোয়েস্ট**: "চালিয়ে যাও" — Task E (অ্যাডমিন প্যানেল) লাইভ-যাচাইয়ের পর বাকি থাকা SEO ব্লক (per-article meta/OG/Twitter Card, XML sitemap + robots.txt, schema.org Article, lazy-loading) সম্পন্ন করা
+- **per-page SEO মেটা**: `layout.ejs` + `partials/header.ejs`-এর head-ে গার্ডেড SEO ব্লক — description, canonical, OG (site_name/type/title/description/url/locale bn_BD), Twitter Card (ছবি থাকলে summary_large_image), `article:published_time`/`article:author`; সব ভ্যার `typeof`-গার্ডেড তাই কোনো পেজ ভাঙে না; `siteUrl` সার্ভার মিডলওয়্যারে (SITE_URL env অগ্রাধিকার, নইলে req host); `canonicalPath` ওভাররাইড (লিস্ট-অ্যাকটিভ ট্যাব রেখে per-content canonical)
+- **আর্টিকেল পেজ**: OG type=article + excerpt/বডি থেকে ১৯৭-অক্ষর metaDesc + cover_image অ্যাবসোলিউট og:image + schema.org **Article JSON-LD** (headline/description/image/author Person/profile-url/datePublished/publisher/mainEntityOfPage — `<` গুলো \u003c-এস্কেপড); বিজ্ঞপ্তি ডিটেইলেও metaDesc + article OG
+- **noindex হাইজিন**: dashboard/messages/me/settings/notifications/bookmarks/complaints/quiz — প্রাইভেট অ্যাপ পেজে `noindex, nofollow`
+- **sitemap.xml (ডাইনামিক)**: নতুন `routes/seo.js` — ১৭ স্ট্যাটিক পাবলিক পেজ + সব published লেখা/প্রশ্ন (২০০০ পর্যন্ত) + বিজ্ঞপ্তি ডিটেইল, lastmod=created_at; প্রতিটি ডাইনামিক সেকশন try/catch — টেবিল/কলাম না থাকলেও sitemap কখনো 500 দেয় না; robots.txt — /admin, /api/, /dashboard, /messages ইত্যাদি Disallow + Sitemap রেফ
+- **lazy-loading**: ২৬ ভিউ ফাইলে ৮০টি `<img>`-তে `loading="lazy" decoding="async"` (নেভি-হেডার পার্শিয়াল ও আর্টিকেল কভার LCP বাদ); Playwright যাচাই — home 6/6 lazy, feed 38 img (36 lazy), broken ০, JS এরর ০
+- **টেস্ট**: sitemap ৭২ URL, robots.txt OK, আর্টিকেল canonical=`/articles/<id>` + JSON-LD পার্স-যাচাই OK, dashboard noindex OK, test-lekhok.sh **77/77 PASS**; WebP কনভার্সন এই সেশনে বাদ (sharp নেটিভ ডিপেন্ডেন্সি — ভবিষ্যৎ ঐচ্ছিক)
+
 ### সেশন ২২ (৫ সেপ্টেম্বর ২০২৬) — অ্যাডমিন প্যানেল UI/UX সমৃদ্ধকরণ + ডেটা পার্সিস্টেন্স নিশ্চিতকরণ
 - **ইউজার রিকোয়েস্ট**: অ্যাডমিন প্যানেলের সব রুট (ড্যাশবোর্ড, বিজ্ঞপ্তি/ইভেন্ট/সদস্য/গ্যালারি/রিসোর্স/ডেইলি CRUD, ইউজার+মডারেটর+স্কোপ, প্রাইভেট অভিযোগ প্যানেল, সাইট সেটিংস, লগআউট) যাচাই + সবার সকল ইনপুট/ডাটা/মেসেজ/ছবি/প্রোফাইল ডিটেইলস স্থায়ীভাবে সেভ থাকবে যেন ইউজার ফিরে এসে সেভাবেই পায় + UI/UX আরও সমৃদ্ধ
 - **অডিট ফল**: সব রুট ও ফিচার আগেই ছিল ✅; সব ডেটা DB-ব্যাকড (users/posts/comments/messages/complaints/settings/newsletter — কোনো ইন-মেমোরি স্টোর নেই); ফর্ম ভ্যালিডেশন-এররেও টাইপ করা মান সংরক্ষিত হয় (`member: req.body` প্যাটার্ন); ছবি আপলোড ডুয়াল-মোড (লোকাল ডিস্ক / Vercel Blob)

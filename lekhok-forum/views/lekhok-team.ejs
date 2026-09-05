@@ -16,7 +16,7 @@
         <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
         <% if (m.user_username) { %>
           <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member">
-            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
             <div class="leader-body">
               <h3><%= displayName %></h3>
               <p class="role"><%= m.role %></p>
@@ -26,7 +26,7 @@
           </a>
         <% } else { %>
           <div class="leader-card has-image">
-            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
             <div class="leader-body">
               <h3><%= displayName %></h3>
               <p class="role"><%= m.role %></p>

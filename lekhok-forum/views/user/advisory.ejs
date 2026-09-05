@@ -14,7 +14,7 @@
           <% const displayImg  = a.user_avatar_url || a.image_url || ('/avatar/' + (a.user_id || a.id)); %>
           <% if (a.user_username) { %>
             <a href="/profile/<%= a.user_username %>" class="member-card advisor linked-member">
-              <img src="<%= displayImg %>" class="member-avatar advisor-avatar" alt="<%= displayName %>">
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" class="member-avatar advisor-avatar" alt="<%= displayName %>">
               <h3 class="member-name"><%= displayName %></h3>
               <p class="member-handle">@<%= a.user_username %></p>
               <% if (a.user_designation) { %>
@@ -27,7 +27,7 @@
             </a>
           <% } else { %>
             <div class="member-card advisor">
-              <img src="<%= displayImg %>" class="member-avatar advisor-avatar" alt="<%= displayName %>">
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" class="member-avatar advisor-avatar" alt="<%= displayName %>">
               <h3 class="member-name"><%= displayName %></h3>
               <p class="member-handle"><%= a.role %></p>
               <% if (a.bio) { %><p class="member-bio"><%= a.bio.substring(0, 80) %>...</p><% } %>

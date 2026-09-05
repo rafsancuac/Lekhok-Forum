@@ -4,7 +4,7 @@
   <div class="me-wrap">
     <header class="me-header">
       <div class="me-header-inner">
-        <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="avatar-xl" onerror="this.onerror=null;this.src='/avatar/<%= user.id %>'" style="border-radius:50%">
+        <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="avatar-xl" onerror="this.onerror=null;this.src='/avatar/<%= user.id %>'" style="border-radius:50%">
         <div class="me-id">
           <h1><%= user.full_name %></h1>
           <p class="me-handle">@<%= user.username %></p>
@@ -50,7 +50,7 @@
       <% } %>
       <% myPosts.forEach(p => { %>
         <article class="feed-card">
-          <% if (p.cover_image) { %><img src="<%= p.cover_image %>" class="feed-card-cover" alt=""> <% } %>
+          <% if (p.cover_image) { %><img loading="lazy" decoding="async" src="<%= p.cover_image %>" class="feed-card-cover" alt=""> <% } %>
           <div class="feed-card-body">
             <div class="feed-card-meta">
               <span class="badge <%= p.type === 'question' ? 'badge-muted' : '' %>"><%= p.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span>
@@ -96,7 +96,7 @@
       <% } %>
       <% myReactions.forEach(r => { %>
         <article class="feed-card">
-          <% if (r.cover_image) { %><img src="<%= r.cover_image %>" class="feed-card-cover" alt=""><% } %>
+          <% if (r.cover_image) { %><img loading="lazy" decoding="async" src="<%= r.cover_image %>" class="feed-card-cover" alt=""><% } %>
           <div class="feed-card-body">
             <div class="feed-card-meta">
               <span class="badge">
@@ -118,7 +118,7 @@
       <% } %>
       <% myBookmarks.forEach(b => { %>
         <article class="feed-card">
-          <% if (b.cover_image) { %><img src="<%= b.cover_image %>" class="feed-card-cover" alt=""><% } %>
+          <% if (b.cover_image) { %><img loading="lazy" decoding="async" src="<%= b.cover_image %>" class="feed-card-cover" alt=""><% } %>
           <div class="feed-card-body">
             <div class="feed-card-meta">
               <span class="badge <%= b.type === 'question' ? 'badge-muted' : '' %>"><%= b.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span>
@@ -139,7 +139,7 @@
       <div class="follow-grid">
         <% following.forEach(f => { %>
           <a href="/profile/<%= f.username %>" class="follow-card">
-            <img src="<%= f.avatar_url || '/avatar/' + f.id %>" class="avatar-md" style="border-radius:50%" onerror="this.onerror=null;this.src='/avatar/<%= f.id %>'">
+            <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="avatar-md" style="border-radius:50%" onerror="this.onerror=null;this.src='/avatar/<%= f.id %>'">
             <strong><%= f.full_name %></strong>
             <small>@<%= f.username %></small>
           </a>

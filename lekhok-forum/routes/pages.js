@@ -266,11 +266,17 @@ router.get('/notices/:id(\\d+)', async (req, res) => {
   if (!notice) {
     return res.status(404).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
   }
+  const _n = String(notice.content || '').replace(/\s+/g, ' ').trim();
+  const metaDesc = _n ? (_n.length > 197 ? _n.slice(0, 197) + '…' : _n) : null;
   res.render('lekhok-notice-detail', {
     layout: 'layout',
     pageTitle: notice.title || 'বিজ্ঞপ্তি',
     currentPath: '/notices',
-    notice
+    canonicalPath: `/notices/${notice.id}`,
+    notice,
+    metaDesc,
+    ogType: 'article',
+    authorName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম'
   });
 });
 

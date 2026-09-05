@@ -12,7 +12,7 @@
         <% items.forEach(a => { %>
           <div class="achievement-card">
             <% if (a.image_url) { %>
-              <img src="<%= a.image_url %>" alt="<%= a.title %>" class="achievement-img">
+              <img loading="lazy" decoding="async" src="<%= a.image_url %>" alt="<%= a.title %>" class="achievement-img">
             <% } else { %>
               <div class="achievement-icon"><i class="fas fa-trophy"></i></div>
             <% } %>

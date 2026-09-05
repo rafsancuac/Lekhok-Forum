@@ -104,7 +104,7 @@
           <% if (m.user_username) { %>
             <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
               <span class="member-term-tag"><%= selectedYear %></span>
-              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
@@ -121,7 +121,7 @@
                  data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
                  data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
               <span class="member-term-tag"><%= selectedYear %></span>
-              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
@@ -159,7 +159,7 @@
         <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
         <% if (m.user_username) { %>
           <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
-            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
             <div class="leader-body">
               <h3><%= displayName %></h3>
               <p class="role"><%= m.role %></p>
@@ -175,7 +175,7 @@
                data-designation="<%= (m.designation || '').replace(/'/g, '&#39;') %>"
                data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
                data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
-            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
             <div class="leader-body">
               <h3><%= displayName %></h3>
               <p class="role"><%= m.role %></p>
@@ -219,7 +219,7 @@ function openMemberModal(id) {
     image: card.dataset.image
   };
   const body = document.getElementById('modalBody');
-  body.innerHTML = '<img src="' + data.image + '" alt="' + data.name + '">'
+  body.innerHTML = '<img loading="lazy" decoding="async" src="' + data.image + '" alt="' + data.name + '">'
     + '<h3 class="mm-name">' + data.name + '</h3>'
     + '<p class="mm-role">' + data.role + '</p>'
     + (data.designation ? '<p class="mm-desig">' + data.designation + '</p>' : '')

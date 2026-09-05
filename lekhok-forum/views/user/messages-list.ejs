@@ -64,7 +64,7 @@
             <% conversations.forEach(c => { %>
               <a href="/messages/<%= c.other_username %>" class="conv-item" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username %>" data-id="<%= c.id %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>">
                 <div class="avatar avatar-md" style="position:relative">
-                  <img src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
+                  <img loading="lazy" decoding="async" src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
                   <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
                 </div>
                 <div class="conv-meta">
@@ -326,7 +326,7 @@
       msrUserCount.textContent = users.length;
       msrUserList.innerHTML = users.map(u => {
         const avatar = u.avatar_url
-          ? `<img class="msr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\\'msr-avatar\\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
+          ? `<img loading="lazy" decoding="async" class="msr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\\'msr-avatar\\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
           : `<div class="msr-avatar">${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>`;
         const sub = [u.designation, '@' + u.username].filter(Boolean).join(' • ');
         return `<a class="msr-row" href="/messages/${encodeURIComponent(u.username)}">

@@ -19,7 +19,7 @@
           <div class="gallery-grid">
             <% byCategory[cat].forEach(item => { %>
               <div class="gallery-card">
-                <img src="<%= item.image_url %>" alt="<%= item.title || 'gallery' %>" class="gallery-img" loading="lazy">
+                <img loading="lazy" decoding="async" src="<%= item.image_url %>" alt="<%= item.title || 'gallery' %>" class="gallery-img" loading="lazy">
                 <div class="gallery-caption">
                   <h3><%= item.title || 'ছবি' %></h3>
                   <p><%= item.caption || '' %></p>

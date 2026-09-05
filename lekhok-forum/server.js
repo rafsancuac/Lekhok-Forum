@@ -99,6 +99,8 @@ app.use(async (req, res, next) => {
     res.locals.adminUser = req.session.adminUser || null;
     res.locals.user      = req.session.user || null;          // social user session
     res.locals.currentPath = req.path;
+    // Canonical site URL for SEO (OG/canonical/sitemap) — SITE_URL env wins
+    res.locals.siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
 
     // Per-user display prefs (theme / font size) — consumed by header partial
     res.locals.displayPrefs = {};
@@ -169,6 +171,7 @@ app.use((req, res, next) => {
 });
 
 // ── Routes ──────────────────────────────────────────────────────────────────
+app.use('/',          require('./routes/seo'));      // sitemap.xml + robots.txt
 app.use('/',          require('./routes/auth'));    // login, register, logout, profile edit
 app.use('/',          require('./routes/social'));   // articles, qa, members, profile, follow, api
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.

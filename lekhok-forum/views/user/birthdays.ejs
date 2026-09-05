@@ -12,7 +12,7 @@
         <div class="birthday-list">
           <% todayList.forEach(m => { %>
             <div class="birthday-card">
-              <img src="<%= m.avatar_url || '/avatar/' + m.id %>" class="birthday-avatar">
+              <img loading="lazy" decoding="async" src="<%= m.avatar_url || '/avatar/' + m.id %>" class="birthday-avatar">
               <div class="birthday-info">
                 <h3><%= m.full_name %></h3>
                 <p>@<%= m.username %></p>
@@ -32,7 +32,7 @@
       <div class="birthday-list upcoming">
         <% upcoming.forEach(m => { %>
           <div class="birthday-card small">
-            <img src="<%= m.avatar_url || '/avatar/' + m.id %>" class="birthday-avatar">
+            <img loading="lazy" decoding="async" src="<%= m.avatar_url || '/avatar/' + m.id %>" class="birthday-avatar">
             <div class="birthday-info">
               <h3><%= m.full_name %></h3>
               <p><%= m.birth_date.substring(5, 10).replace('-', '/') %></p>

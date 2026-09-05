@@ -37,7 +37,7 @@
         <% conversations.forEach(c => { %>
           <a href="/messages/<%= c.other_username %>" class="conv-item <%= c.other_username === other.username ? 'active' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-id="<%= c.id %>">
             <div class="avatar avatar-md" style="position:relative">
-              <img src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
+              <img loading="lazy" decoding="async" src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
               <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
             </div>
             <div class="conv-meta">
@@ -61,7 +61,7 @@
             <i class="fas fa-arrow-left"></i>
           </button>
           <div class="avatar avatar-md" style="position:relative">
-            <img src="<%= other.avatar_url || ('/avatar/' + other.id) %>" alt="<%= other.full_name %>" onerror="this.onerror=null;this.src='/avatar/<%= other.id %>'" />
+            <img loading="lazy" decoding="async" src="<%= other.avatar_url || ('/avatar/' + other.id) %>" alt="<%= other.full_name %>" onerror="this.onerror=null;this.src='/avatar/<%= other.id %>'" />
             <span class="online-dot" id="otherOnlineDot" data-user-id="<%= other.id %>" style="display:none"></span>
           </div>
           <div class="info">
@@ -86,7 +86,7 @@
               <% if (m.file_url) { %>
                 <% var isImg = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(m.file_url); %>
                 <% if (isImg) { %>
-                  <a href="<%= m.file_url %>" target="_blank"><img src="<%= m.file_url %>" alt="<%= m.file_name || 'ছবি' %>" class="bubble-image" /></a>
+                  <a href="<%= m.file_url %>" target="_blank"><img loading="lazy" decoding="async" src="<%= m.file_url %>" alt="<%= m.file_name || 'ছবি' %>" class="bubble-image" /></a>
                 <% } else { %>
                   <a href="<%= m.file_url %>" class="bubble-file" download="<%= m.file_name || 'file' %>">
                     <i class="fas fa-paperclip"></i> <%= m.file_name || 'ফাইল' %>
@@ -241,7 +241,7 @@
         csrUserCount.textContent = users.length;
         csrUserList.innerHTML = users.map(u => {
           const avatar = u.avatar_url
-            ? `<img class="msr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\'msr-avatar\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
+            ? `<img loading="lazy" decoding="async" class="msr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\'msr-avatar\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
             : `<div class="msr-avatar">${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>`;
           const sub = [u.designation, '@' + u.username].filter(Boolean).join(' • ');
           return `<a class="msr-row" href="/messages/${encodeURIComponent(u.username)}">
@@ -329,7 +329,7 @@
       if (msg.body) html += '<div class="bubble-text"></div>';
       if (msg.file_url) {
         const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(msg.file_url);
-        if (isImg) html += '<a href="' + msg.file_url + '" target="_blank"><img src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
+        if (isImg) html += '<a href="' + msg.file_url + '" target="_blank"><img loading="lazy" decoding="async" src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
         else html += '<a href="' + msg.file_url + '" class="bubble-file" download><i class="fas fa-paperclip"></i> ' + (msg.file_name || 'ফাইল') + '</a>';
       }
       html += '<div class="bubble-meta"><span class="bubble-time"></span>';

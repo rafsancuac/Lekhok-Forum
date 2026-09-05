@@ -16,7 +16,7 @@
             <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg'; %>
             <% if (l.user_username) { %>
               <a href="/profile/<%= l.user_username %>" class="leader-card linked-member">
-                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
                 <div class="leader-info">
                   <div class="leader-role">সভাপতি</div>
                   <h3><%= displayName %></h3>
@@ -26,7 +26,7 @@
               </a>
             <% } else { %>
               <div class="leader-card">
-                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
                 <div class="leader-info">
                   <div class="leader-role">সভাপতি</div>
                   <h3><%= displayName %></h3>
@@ -46,7 +46,7 @@
             <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg'; %>
             <% if (l.user_username) { %>
               <a href="/profile/<%= l.user_username %>" class="leader-card linked-member">
-                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
                 <div class="leader-info">
                   <div class="leader-role">সাধারণ সম্পাদক</div>
                   <h3><%= displayName %></h3>
@@ -56,7 +56,7 @@
               </a>
             <% } else { %>
               <div class="leader-card">
-                <img src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
+                <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
                 <div class="leader-info">
                   <div class="leader-role">সাধারণ সম্পাদক</div>
                   <h3><%= displayName %></h3>

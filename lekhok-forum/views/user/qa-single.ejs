@@ -16,7 +16,7 @@
           </div>
         <% } } catch(e) {} %>
         <div class="question-meta">
-          <img src="<%= post.avatar_url || '/avatar/' + post.author_id %>" class="mini-avatar">
+          <img loading="lazy" decoding="async" src="<%= post.avatar_url || '/avatar/' + post.author_id %>" class="mini-avatar">
           <a href="/profile/<%= post.username %>" class="qa-author"><%= post.full_name %></a>
           <span>&middot;</span>
           <span><i class="far fa-clock"></i> <%= new Date(post.created_at).toLocaleDateString('bn-BD') %></span>
@@ -52,7 +52,7 @@
         <% answers.forEach((a, idx) => { %>
           <div class="answer-item card" id="answer-<%= a.id %>">
             <div class="answer-sidebar">
-              <img src="<%= a.avatar_url || '/avatar/' + a.author_id %>" class="answer-avatar">
+              <img loading="lazy" decoding="async" src="<%= a.avatar_url || '/avatar/' + a.author_id %>" class="answer-avatar">
               <% if (idx === 0 && a.like_count > 0) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>
             </div>
             <div class="answer-body">

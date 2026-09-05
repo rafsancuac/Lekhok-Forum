@@ -3,8 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <%
+    // ── SEO locals (guarded — every var optional) ──────────────────────────
+    var BRAND_FULL = 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়';
+    var seoTitle = (typeof pageTitle !== 'undefined' && pageTitle ? pageTitle : BRAND_FULL);
+    var seoDesc = (typeof metaDesc !== 'undefined' && metaDesc)
+      ? metaDesc
+      : BRAND_FULL + ' — একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।';
+    var seoType = (typeof ogType !== 'undefined' && ogType) ? ogType : 'website';
+    var seoImg = (typeof ogImage !== 'undefined' && ogImage) ? ogImage : null;
+    var seoPub = (typeof publishedTime !== 'undefined') ? publishedTime : null;
+    var seoAuth = (typeof authorName !== 'undefined') ? authorName : null;
+    var seoUrl = (typeof siteUrl !== 'undefined' ? siteUrl : '') + ((typeof canonicalPath !== 'undefined' && canonicalPath) ? canonicalPath : (typeof currentPath !== 'undefined' ? currentPath : '/'));
+  %>
   <title><%= pageTitle %> | বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</title>
-  <meta name="description" content="বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় — একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।" />
+  <meta name="description" content="<%= seoDesc %>" />
+  <link rel="canonical" href="<%= seoUrl %>" />
+  <meta property="og:site_name" content="<%= BRAND_FULL %>" />
+  <meta property="og:type" content="<%= seoType %>" />
+  <meta property="og:title" content="<%= seoTitle %>" />
+  <meta property="og:description" content="<%= seoDesc %>" />
+  <meta property="og:url" content="<%= seoUrl %>" />
+  <meta property="og:locale" content="bn_BD" />
+  <% if (seoImg) { %>
+  <meta property="og:image" content="<%= seoImg %>" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="<%= seoImg %>" />
+  <% } else { %>
+  <meta name="twitter:card" content="summary" />
+  <% } %>
+  <meta name="twitter:title" content="<%= seoTitle %>" />
+  <meta name="twitter:description" content="<%= seoDesc %>" />
+  <% if (seoType === 'article') { %>
+    <% if (seoPub) { %><meta property="article:published_time" content="<%= seoPub %>" /><% } %>
+    <% if (seoAuth) { %><meta property="article:author" content="<%= seoAuth %>" /><% } %>
+  <% } %>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a1f44'/><text x='50' y='72' font-size='70' text-anchor='middle' fill='%23059669' font-family='serif' font-weight='bold'>ল</text></svg>" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -214,7 +247,7 @@ async function doGlobalSearch(q) {
     }
     if (data.users && data.users.length) {
       html += '<div class="gs-section"><div class="gs-section-head"><i class="fas fa-users"></i> সদস্য <span class="gs-count">' + data.users.length + '</span></div>';
-      data.users.slice(0, 5).forEach(u => { html += '<a class="gs-row" href="/profile/' + encodeURIComponent(u.username) + '"><img class="gs-avatar" src="' + (u.avatar_url || '/avatar/' + u.id) + '" onerror="this.src=\'/assets/img/avatar-placeholder.svg\'" /><div class="gs-meta"><div class="gs-title">' + highlight(u.full_name, q) + '</div><div class="gs-sub">@' + highlight(u.username, q) + '</div></div></a>'; });
+      data.users.slice(0, 5).forEach(u => { html += '<a class="gs-row" href="/profile/' + encodeURIComponent(u.username) + '"><img loading="lazy" decoding="async" class="gs-avatar" src="' + (u.avatar_url || '/avatar/' + u.id) + '" onerror="this.src=\'/assets/img/avatar-placeholder.svg\'" /><div class="gs-meta"><div class="gs-title">' + highlight(u.full_name, q) + '</div><div class="gs-sub">@' + highlight(u.username, q) + '</div></div></a>'; });
       html += '</div>';
     }
     if (!html) html = '<div class="gs-empty"><i class="fas fa-search"></i><p>কোনো ফলাফল পাওয়া যায়নি</p></div>';

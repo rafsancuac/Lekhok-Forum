@@ -33,7 +33,7 @@
       <div class="form-group">
         <label>প্রোফাইল ছবি</label>
         <div style="display:flex; align-items:center; gap:12px;">
-          <img src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
+          <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
           <input type="file" name="avatar" accept="image/*" style="flex:1;">
         </div>
       </div>

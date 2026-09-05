@@ -56,7 +56,7 @@
                  class="album-photo album-photo--single"
                  data-caption="<%= items[0].caption || '' %>" data-category="<%= items[0].category || '' %>" data-id="<%= items[0].id %>"
                  data-lightbox="album-<%= cat %>">
-                <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
+                <img loading="lazy" decoding="async" src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
                 <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
               </a>
               <% if (items[0].caption) { %>
@@ -72,7 +72,7 @@
                    class="album-photo"
                    data-caption="<%= g.caption || '' %>"
                    data-lightbox="album-<%= cat %>">
-                  <img src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
+                  <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
                   <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
                 </a>
               <% }) %>
@@ -85,7 +85,7 @@
                  class="album-photo album-photo--wide"
                  data-caption="<%= items[0].caption || '' %>" data-category="<%= items[0].category || '' %>" data-id="<%= items[0].id %>"
                  data-lightbox="album-<%= cat %>">
-                <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
+                <img loading="lazy" decoding="async" src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
                 <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
               </a>
               <% items.slice(1).forEach((g, i) => { %>
@@ -94,7 +94,7 @@
                    <% if (i >= 15) { %>hidden<% } %>
                    data-caption="<%= g.caption || '' %>"
                    data-lightbox="album-<%= cat %>">
-                  <img src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
+                  <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
                   <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
                 </a>
               <% }) %>
@@ -127,7 +127,7 @@
   <button class="popup-back" id="popupBack" aria-label="ফিরে যান" title="ফিরে যান" style="display:none"><i class="fas fa-arrow-left"></i></button>
   <div class="popup-content">
     <div class="popup-image-wrap">
-      <img id="lightboxImg" src="" alt="" />
+      <img loading="lazy" decoding="async" id="lightboxImg" src="" alt="" />
     </div>
     <div class="popup-details" id="popupDetails">
       <div class="popup-caption" id="lightboxCaption"></div>

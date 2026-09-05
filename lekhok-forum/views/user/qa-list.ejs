@@ -27,7 +27,7 @@
               <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
               <% if (q.body) { %><p class="qa-excerpt"><%= q.body.substring(0, 150) %>...</p><% } %>
               <div class="qa-meta">
-                <img src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar">
+                <img loading="lazy" decoding="async" src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar">
                 <a href="/profile/<%= q.username %>" class="qa-author"><%= q.full_name %></a>
                 <span>&middot;</span>
                 <span><i class="far fa-comment"></i> <%= q.comment_count || 0 %> উত্তর</span>

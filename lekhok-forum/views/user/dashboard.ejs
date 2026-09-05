@@ -6,7 +6,7 @@
     <main class="dash-main">
       <% if (user) { %>
       <div class="dash-composer card">
-        <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
+        <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
         <a href="/articles/new" class="composer-input">আপনার লেখা শুরু করুন...</a>
         <div class="composer-actions">
           <a href="/articles/new" class="composer-action"><i class="fas fa-pen-nib"></i> লেখা</a>
@@ -57,7 +57,7 @@
           <% if (item.item_type === 'repost' && item.original) { %>
             <article class="feed-card card repost-card" data-repost-id="<%= item.id %>">
               <div class="feed-card-head">
-                <img src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
                 <div>
                   <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
                   <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
@@ -74,7 +74,7 @@
               <% } %>
               <div class="repost-original card-inner">
                 <div class="feed-card-head">
-                  <img src="<%= item.original.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                  <img loading="lazy" decoding="async" src="<%= item.original.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
                   <div>
                     <a href="/profile/<%= item.original.username %>" class="feed-author"><%= item.original.author_name %></a>
                     <% if (item.original.author_role === 'admin' || item.original.author_role === 'moderator') { %><span class="role-chip"><%= item.original.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
@@ -87,7 +87,7 @@
                   <% } %>
                 </div>
                 <% if (item.original.cover_image) { %>
-                  <a href="<%= item.original.link %>"><img src="<%= item.original.cover_image %>" class="feed-image" alt=""></a>
+                  <a href="<%= item.original.link %>"><img loading="lazy" decoding="async" src="<%= item.original.cover_image %>" class="feed-image" alt=""></a>
                 <% } %>
                 <div class="feed-card-body">
                   <h3 class="feed-title"><a href="<%= item.original.link %>"><%= item.original.title %></a></h3>
@@ -107,13 +107,13 @@
           <article class="feed-card card">
             <div class="feed-card-head">
               <% if (item.username === 'moderator') { %>
-                <img src="/assets/img/avatar-placeholder.svg" class="feed-avatar" alt="">
+                <img loading="lazy" decoding="async" src="/assets/img/avatar-placeholder.svg" class="feed-avatar" alt="">
                 <div>
                   <span class="feed-author">মডারেটর <span class="verified-badge"><i class="fas fa-check-circle"></i></span></span>
                   <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
                 </div>
               <% } else { %>
-                <img src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
                 <div>
                   <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
                   <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
@@ -138,7 +138,7 @@
               <% } %>
             </div>
             <% if (item.cover_image) { %>
-              <a href="<%= item.link %>"><img src="<%= item.cover_image %>" class="feed-image" alt=""></a>
+              <a href="<%= item.link %>"><img loading="lazy" decoding="async" src="<%= item.cover_image %>" class="feed-image" alt=""></a>
             <% } %>
             <div class="feed-card-body">
               <h3 class="feed-title"><a href="<%= item.link %>"><%= item.title %></a></h3>
@@ -165,7 +165,7 @@
         <% if (birthdays.length) { %>
           <% birthdays.forEach(b => { %>
             <a href="/profile/<%= b.username %>" class="side-user">
-              <img src="<%= b.avatar_url || '/avatar/' + b.id %>" class="side-avatar" alt="">
+              <img loading="lazy" decoding="async" src="<%= b.avatar_url || '/avatar/' + b.id %>" class="side-avatar" alt="">
               <span><strong><%= b.full_name %></strong><small>🎉 আজ তাঁর জন্মদিন</small></span>
             </a>
           <% }); %>
@@ -181,7 +181,7 @@
           <% suggested.forEach(s => { %>
             <div class="side-user">
               <a href="/profile/<%= s.username %>" class="side-user-main">
-                <img src="<%= s.avatar_url || '/avatar/' + s.id %>" class="side-avatar" alt="">
+                <img loading="lazy" decoding="async" src="<%= s.avatar_url || '/avatar/' + s.id %>" class="side-avatar" alt="">
                 <span><strong><%= s.full_name %></strong><small><%= s.follower_count %> অনুসরণকারী</small></span>
               </a>
               <button type="button" class="btn btn-ghost btn-sm follow-inline" data-user="<%= s.id %>"><i class="fas fa-plus"></i></button>
@@ -198,7 +198,7 @@
         <h4><i class="fas fa-user-friends"></i> আমি যাঁদের অনুসরণ করি</h4>
         <% myFollowing.forEach(f => { %>
           <a href="/profile/<%= f.username %>" class="side-user">
-            <img src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
+            <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
             <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
           </a>
         <% }); %>
@@ -252,7 +252,7 @@
                 </span>
                 <a href="/profile/<%= u.username %>" class="lb-name">
                   <% if (u.avatar_url) { %>
-                    <img src="<%= u.avatar_url %>" class="lb-avatar" onerror="this.onerror=null;this.src='/avatar/<%= u.id %>'">
+                    <img loading="lazy" decoding="async" src="<%= u.avatar_url %>" class="lb-avatar" onerror="this.onerror=null;this.src='/avatar/<%= u.id %>'">
                   <% } else { %>
                     <span class="lb-avatar lb-letter"><%= u.full_name.charAt(0).toUpperCase() %></span>
                   <% } %>

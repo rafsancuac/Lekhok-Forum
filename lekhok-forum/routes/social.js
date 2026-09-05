@@ -249,7 +249,22 @@ router.get('/articles/:id', async (req, res) => {
     bio: post.author_bio
   };
   const user = req.session.user || null;
-  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles' });
+
+  // ── SEO: per-article OG/Twitter/JSON-LD data ────────────────────────────────
+  const stripTags = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const _d = stripTags(post.excerpt || post.body);
+  const metaDesc = _d ? (_d.length > 197 ? _d.slice(0, 197) + '…' : _d) : null;
+  const _base = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
+  const ogImage = post.cover_image
+    ? (post.cover_image.startsWith('http') ? post.cover_image : _base + post.cover_image)
+    : null;
+  let publishedTime = null;
+  try {
+    const d = new Date(String(post.published_at || post.created_at || '').replace(' ', 'T') + 'Z');
+    publishedTime = isNaN(d) ? null : d.toISOString();
+  } catch (_) { publishedTime = null; }
+
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────

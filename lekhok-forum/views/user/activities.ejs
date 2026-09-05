@@ -81,7 +81,7 @@
           <div class="timeline-content">
             <div class="timeline-card">
               <% if (a.image_url) { %>
-                <div class="tc-image"><img src="<%= a.image_url %>" alt="<%= a.title %>" loading="lazy" /></div>
+                <div class="tc-image"><img loading="lazy" decoding="async" src="<%= a.image_url %>" alt="<%= a.title %>" loading="lazy" /></div>
               <% } %>
               <div class="tc-body">
                 <div class="tc-meta">
@@ -105,7 +105,7 @@
         const cat = isUpcoming ? 'upcoming' : 'past';
       %>
         <div class="act-grid-card" data-category="<%= cat %>">
-          <% if (a.image_url) { %><img src="<%= a.image_url %>" alt="<%= a.title %>" class="agc-image" loading="lazy"><% } %>
+          <% if (a.image_url) { %><img loading="lazy" decoding="async" src="<%= a.image_url %>" alt="<%= a.title %>" class="agc-image" loading="lazy"><% } %>
           <div class="agc-body">
             <div class="agc-meta">
               <span class="tc-date"><i class="far fa-calendar"></i> <%= a.scheduled_date || '—' %></span>

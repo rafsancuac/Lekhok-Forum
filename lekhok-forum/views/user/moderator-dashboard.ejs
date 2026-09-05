@@ -85,7 +85,7 @@
     </div>
     <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
       <div class="mod-hero-user">
-        <img class="mod-hero-avatar" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="<%= user.full_name %>" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+        <img loading="lazy" decoding="async" class="mod-hero-avatar" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="<%= user.full_name %>" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
         <div>
           <div class="mod-hero-name"><%= user.full_name %></div>
           <div class="mod-hero-role">@<%= user.username %> · <% if (user.role === 'admin') { %>অ্যাডমিন<% } else { %>মডারেটর<% } %></div>

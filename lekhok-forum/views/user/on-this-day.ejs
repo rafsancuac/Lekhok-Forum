@@ -11,7 +11,7 @@
         <div class="daily-card-badge history"><i class="fas fa-history"></i> ইতিহাস</div>
         <h2><%= today.title %></h2>
         <% if (today.image_url) { %>
-          <img src="<%= today.image_url %>" alt="image" style="max-width:100%;border-radius:8px;margin:12px 0">
+          <img loading="lazy" decoding="async" src="<%= today.image_url %>" alt="image" style="max-width:100%;border-radius:8px;margin:12px 0">
         <% } %>
         <p class="daily-body"><%= today.body %></p>
         <div class="daily-meta">প্রকাশ: <%= new Date(today.created_at).toLocaleDateString('bn-BD') %></div>

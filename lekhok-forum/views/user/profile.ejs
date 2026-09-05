@@ -15,7 +15,7 @@
       <div class="profile-banner"<% if (profile.cover_url) { %> style="background-image:url('<%= profile.cover_url %>'); background-size:cover; background-position:center;"<% } %>></div>
       <div class="profile-avatar-row">
         <div class="profile-avatar-wrap">
-          <img src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="profile-avatar profile-avatar-lg" onclick="<%= isOwner ? 'document.getElementById(\'avatarUpload\').click()' : '' %>" style="<%= isOwner ? 'cursor:pointer' : '' %>" title="<%= isOwner ? 'প্রোফাইল ছবি পরিবর্তন করুন' : '' %>">
+          <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="profile-avatar profile-avatar-lg" onclick="<%= isOwner ? 'document.getElementById(\'avatarUpload\').click()' : '' %>" style="<%= isOwner ? 'cursor:pointer' : '' %>" title="<%= isOwner ? 'প্রোফাইল ছবি পরিবর্তন করুন' : '' %>">
           <% if (isOwner) { %>
             <div class="avatar-change-hint"><i class="fas fa-camera"></i></div>
             <form method="POST" action="/settings/avatar" enctype="multipart/form-data" id="avatarForm" style="display:none">
@@ -138,7 +138,7 @@
           <% } else { %>
             <% posts.forEach(post => { %>
               <div class="post-card card">
-                <% if (post.cover_image) { %><img src="<%= post.cover_image %>" alt="cover" class="post-cover"><% } %>
+                <% if (post.cover_image) { %><img loading="lazy" decoding="async" src="<%= post.cover_image %>" alt="cover" class="post-cover"><% } %>
                 <div class="post-card-body">
                   <div class="post-meta-top">
                     <span class="post-tag"><%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %></span>
@@ -234,7 +234,7 @@
             <% followers.forEach(f => { %>
               <div class="user-row card">
                 <a href="/profile/<%= f.username %>" class="side-user-main">
-                  <img src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
+                  <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
                   <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
                 </a>
                 <% if (isOwner) { %>
@@ -256,7 +256,7 @@
             <% following.forEach(f => { %>
               <div class="user-row card">
                 <a href="/profile/<%= f.username %>" class="side-user-main">
-                  <img src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
+                  <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
                   <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
                 </a>
               </div>
