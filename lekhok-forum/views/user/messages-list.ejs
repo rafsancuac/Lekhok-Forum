@@ -1,142 +1,456 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
+<%# মেসেজ লিস্ট — উন্নত সার্চ UX সহ %>
 <%- include('../partials/header', { title: 'মেসেজ — লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
 
   <div class="page-wrap page-wrap--messenger">
-    <div class="messenger-shell" style="max-width:520px;margin:0 auto;grid-template-columns:1fr">-->
+    <div class="messenger-shell" style="max-width:560px;margin:0 auto;grid-template-columns:1fr">
 
       <aside class="messenger-list">
         <div class="messenger-list-head">
-          <h2><i class="fas fa-inbox"></i> মেসেজ</h2>
-          <p style="font-size:12px;color:var(--text-soft);margin:2px 0 8px">সবার সাথে কথা বলুন, ফাইল শেয়ার করুন</p>
-          <input type="search" class="messenger-search" placeholder="🔍 নাম খুঁজুন..." id="convSearch" oninput="filterConvs(this.value)" />
+          <div class="msg-head-row">
+            <h2><i class="fas fa-inbox"></i> মেসেজ</h2>
+            <span class="msg-count-badge" id="msgCountBadge"><%= conversations.length %></span>
+          </div>
+          <p style="font-size:12px;color:var(--text-soft);margin:2px 0 12px">সবার সাথে কথা বলুন, ফাইল শেয়ার করুন</p>
 
-          <%# ── নতুন কথোপকথন শুরু: যেকোনো সদস্যকে নাম লিখে খুঁজুন ── %>
-          <div class="new-conv-box">
-            <input type="search" class="messenger-search" id="userSearch" placeholder="➕ নতুন মেসেজ — নাম বা ইউজারনেম লিখুন..." autocomplete="off" />
-            <div class="user-search-results" id="userSearchResults" hidden></div>
+          <%# ── Unified search box ── %>
+          <div class="msg-search-wrap" id="msgSearchWrap">
+            <i class="fas fa-search msg-search-icon"></i>
+            <input type="search" class="messenger-search msg-search-input" id="msgSearch" placeholder="নাম, ইউজারনেম বা মেসেজ খুঁজুন..." autocomplete="off" />
+            <button type="button" class="msg-search-clear" id="msgSearchClear" hidden><i class="fas fa-times"></i></button>
+            <kbd class="msg-search-kbd" id="msgSearchKbd">/</kbd>
+          </div>
+
+          <%# ── Search results dropdown (fused: existing conversations + new user search) ── %>
+          <div class="msg-search-results" id="msgSearchResults" hidden>
+            <div class="msr-section" id="msrConversations" hidden>
+              <div class="msr-section-head">
+                <span><i class="fas fa-comments"></i> কথোপকথন</span>
+                <span class="msr-count" id="msrConvCount"></span>
+              </div>
+              <div id="msrConvList"></div>
+            </div>
+            <div class="msr-section" id="msrUsers" hidden>
+              <div class="msr-section-head">
+                <span><i class="fas fa-user-plus"></i> নতুন কথোপকথন শুরু করুন</span>
+                <span class="msr-count" id="msrUserCount"></span>
+              </div>
+              <div id="msrUserList"></div>
+            </div>
+            <div class="msr-empty" id="msrEmpty" hidden>
+              <i class="fas fa-search"></i>
+              <p>কোনো ফলাফল পাওয়া যায়নি</p>
+            </div>
           </div>
         </div>
-        <%# নতুন কথোপকথন: ইউজার-সার্চ UI উপরে new-conv-box-এ (userSearch + userSearchResults) — একক কপি %>
-        <% if (conversations.length === 0) { %>
-          <div class="empty-state-full">
-            <i class="fas fa-comment-slash"></i>
-            <p>কোনো কথোপকথন নেই।</p>
-            <a href="/members" class="btn btn-primary btn-sm">সদস্য খুঁজুন</a>
+
+        <%# ── Recent searches (when search is empty) ── %>
+        <div class="msg-recent" id="msgRecent" hidden>
+          <div class="msg-recent-head">
+            <span><i class="fas fa-clock-rotate-left"></i> সাম্প্রতিক সার্চ</span>
+            <button type="button" id="msgRecentClear" class="msg-recent-clear">মুছুন</button>
           </div>
-        <% } else { %>
-          <% conversations.forEach(c => { %>
-            <a href="/messages/<%= c.other_username %>" class="conv-item" data-name="<%= c.other_name.toLowerCase() %>" data-id="<%= c.id %>">
-              <div class="avatar avatar-md" style="position:relative">
-                <img src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
-                <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
-              </div>
-              <div class="conv-meta">
-                <div class="conv-name"><%= c.other_name %></div>
-                <div class="conv-snippet"><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 50) : 'নতুন কথোপকথন' %></div>
-              </div>
-              <div class="conv-meta-right">
-                <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
-              </div>
-            </a>
-          <% }); %>
-        <% } %>
+          <div id="msgRecentList"></div>
+        </div>
+
+        <%# ── Conversation list (default state) ── %>
+        <div id="convListDefault">
+          <% if (conversations.length === 0) { %>
+            <div class="empty-state-full">
+              <i class="fas fa-comment-slash"></i>
+              <p>কোনো কথোপকথন নেই।</p>
+              <p style="font-size:13px;color:var(--text-muted);margin-top:6px">উপরের সার্চ বক্সে নাম লিখে নতুন কথোপকথন শুরু করুন।</p>
+            </div>
+          <% } else { %>
+            <% conversations.forEach(c => { %>
+              <a href="/messages/<%= c.other_username %>" class="conv-item" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username %>" data-id="<%= c.id %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>">
+                <div class="avatar avatar-md" style="position:relative">
+                  <img src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
+                  <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
+                </div>
+                <div class="conv-meta">
+                  <div class="conv-name"><%= c.other_name %></div>
+                  <div class="conv-snippet"><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 50) : 'নতুন কথোপকথন' %></div>
+                </div>
+                <div class="conv-meta-right">
+                  <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
+                </div>
+              </a>
+            <% }); %>
+          <% } %>
+        </div>
       </aside>
     </div>
   </div>
 
   <style>
-    .new-conv-box { position: relative; margin-top: 8px; }
-    .user-search-results {
-      position: absolute; left: 0; right: 0; top: 100%;
+    .msg-head-row { display: flex; align-items: center; gap: 8px; }
+    .msg-head-row h2 { margin: 0; flex: 0 0 auto; }
+    .msg-count-badge {
+      background: var(--accent-soft, #dbeafe); color: var(--accent, #2563eb);
+      font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px;
+    }
+    .msg-search-wrap {
+      position: relative; margin-bottom: 8px;
+    }
+    .msg-search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); font-size: 13px; pointer-events: none;
+    }
+    .msg-search-input {
+      width: 100%; padding: 10px 36px 10px 34px !important;
+      font-size: 14px; border-radius: 9px !important;
+      border: 1.5px solid var(--border) !important;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .msg-search-input:focus {
+      outline: none; border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .msg-search-clear {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 13px; padding: 4px 7px; border-radius: 5px;
+    }
+    .msg-search-clear:hover { background: var(--surface-alt); color: var(--text); }
+    .msg-search-kbd {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: var(--surface-alt); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 7px; font-size: 11px;
+      font-family: monospace; color: var(--text-soft);
+    }
+    .msg-search-input:focus ~ .msg-search-kbd { display: none; }
+    .msg-search-input:not(:placeholder-shown) ~ .msg-search-kbd { display: none; }
+    .msg-search-clear[hidden] ~ .msg-search-kbd { display: block; }
+
+    .msg-search-results {
+      position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
       background: var(--card, #fff); border: 1px solid var(--border, #e5e7eb);
-      border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      max-height: 320px; overflow-y: auto; z-index: 50;
+      border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.16);
+      max-height: 400px; overflow-y: auto; z-index: 50;
     }
-    .user-search-results .usr-row {
+    .msr-section { border-bottom: 1px solid var(--border, #f1f5f9); }
+    .msr-section:last-child { border-bottom: 0; }
+    .msr-section-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px 6px; font-size: 11px; font-weight: 700;
+      color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.04em;
+      background: var(--surface-alt, #f9fafb);
+    }
+    .msr-section-head i { margin-right: 4px; }
+    .msr-count {
+      background: var(--accent-soft, #dbeafe); color: var(--accent, #2563eb);
+      padding: 1px 7px; border-radius: 999px; font-size: 10.5px;
+    }
+    .msr-row {
       display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; cursor: pointer; text-decoration: none; color: inherit;
-      border-bottom: 1px solid var(--border, #f1f5f9);
+      padding: 10px 14px; cursor: pointer; text-decoration: none; color: inherit;
+      border-bottom: 1px solid var(--border, #f8fafc);
+      transition: background 0.12s;
     }
-    .user-search-results .usr-row:last-child { border-bottom: 0; }
-    .user-search-results .usr-row:hover { background: var(--accent-soft, rgba(5,150,105,0.08)); }
-    .user-search-results .usr-avatar {
-      width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex: 0 0 36px;
-      background: var(--accent-soft, #e5e7eb); display:flex; align-items:center; justify-content:center;
-      font-weight: 600; color: var(--accent, #059669);
+    .msr-row:last-child { border-bottom: 0; }
+    .msr-row:hover, .msr-row.kb-active {
+      background: var(--accent-soft, rgba(37, 99, 235, 0.08));
     }
-    .user-search-results .usr-meta { flex: 1; min-width: 0; }
-    .user-search-results .usr-name { font-weight: 600; }
-    .user-search-results .usr-sub { font-size: 12px; color: var(--text-muted, #64748b); }
-    .user-search-results .empty { padding: 14px; color: var(--text-muted, #64748b); text-align: center; font-size: 14px; }
+    .msr-avatar {
+      width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex: 0 0 38px;
+      background: var(--surface-alt); display: flex; align-items: center; justify-content: center;
+      font-weight: 600; color: var(--accent); font-size: 14px;
+    }
+    .msr-meta { flex: 1; min-width: 0; }
+    .msr-name { font-weight: 600; font-size: 14px; color: var(--text); }
+    .msr-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .msr-name mark, .msr-sub mark {
+      background: #fef08a; color: #713f12; padding: 0 2px; border-radius: 2px;
+    }
+    .msr-right { flex-shrink: 0; color: var(--text-muted); font-size: 12px; }
+    .msr-right .conv-unread {
+      background: var(--accent); color: white; font-size: 11px; font-weight: 600;
+      padding: 1px 7px; border-radius: 999px;
+    }
+    .msr-empty { padding: 28px 14px; text-align: center; color: var(--text-muted); }
+    .msr-empty i { font-size: 28px; margin-bottom: 8px; display: block; opacity: 0.5; }
+    .msr-empty p { font-size: 13px; margin: 0; }
+
+    .msg-recent { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+    .msg-recent-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; font-weight: 600; color: var(--text-soft);
+      text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px;
+    }
+    .msg-recent-clear {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 11px; text-decoration: underline;
+    }
+    .msg-recent-clear:hover { color: var(--danger); }
+    .msg-recent-item {
+      display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+      border-radius: 6px; cursor: pointer; text-decoration: none; color: inherit;
+      font-size: 13px; transition: background 0.12s;
+    }
+    .msg-recent-item:hover { background: var(--surface-alt); }
+    .msg-recent-item i { color: var(--text-muted); font-size: 11px; }
+    .msg-recent-item .mr-remove {
+      margin-left: auto; opacity: 0; transition: opacity 0.12s;
+      background: transparent; border: none; cursor: pointer; color: var(--danger); padding: 2px 4px;
+    }
+    .msg-recent-item:hover .mr-remove { opacity: 1; }
+
+    #convListDefault.hidden { display: none; }
+    .conv-item { transition: background 0.12s; }
   </style>
 
   <script>
-    function filterConvs(q) {
-      q = (q || '').toLowerCase().trim();
-      document.querySelectorAll('.conv-item').forEach(el => {
-        el.style.display = !q || el.dataset.name.indexOf(q) !== -1 ? 'flex' : 'none';
-      });
-    }
+    // ── Unified message search ──────────────────────────────────────────
+    const msgSearch = document.getElementById('msgSearch');
+    const msgSearchClear = document.getElementById('msgSearchClear');
+    const msgSearchResults = document.getElementById('msgSearchResults');
+    const msgSearchKbd = document.getElementById('msgSearchKbd');
+    const msgRecent = document.getElementById('msgRecent');
+    const msgRecentList = document.getElementById('msgRecentList');
+    const msgRecentClearBtn = document.getElementById('msgRecentClear');
+    const convListDefault = document.getElementById('convListDefault');
+    const msrConversations = document.getElementById('msrConversations');
+    const msrUsers = document.getElementById('msrUsers');
+    const msrEmpty = document.getElementById('msrEmpty');
+    const msrConvList = document.getElementById('msrConvList');
+    const msrUserList = document.getElementById('msrUserList');
+    const msrConvCount = document.getElementById('msrConvCount');
+    const msrUserCount = document.getElementById('msrUserCount');
 
-    // ── User search (new conversation) ──────────────────────────────────
-    const userSearch = document.getElementById('userSearch');
-    const userResults = document.getElementById('userSearchResults');
     let searchTimer = null;
     let lastQuery = '';
+    let kbIndex = -1;
+    let kbRows = [];
+
+    // Load recent searches from localStorage
+    function loadRecent() {
+      try {
+        const r = JSON.parse(localStorage.getItem('msgRecentSearches') || '[]');
+        return Array.isArray(r) ? r.slice(0, 5) : [];
+      } catch { return []; }
+    }
+    function saveRecent(q) {
+      q = (q || '').trim();
+      if (!q) return;
+      let r = loadRecent().filter(x => x !== q);
+      r.unshift(q);
+      r = r.slice(0, 5);
+      localStorage.setItem('msgRecentSearches', JSON.stringify(r));
+    }
+    function renderRecent() {
+      const r = loadRecent();
+      if (!r.length) { msgRecent.hidden = true; return; }
+      msgRecentList.innerHTML = r.map(q => 
+        `<a class="msg-recent-item" data-q="${escapeHtml(q)}"><i class="fas fa-clock-rotate-left"></i> ${escapeHtml(q)}<button class="mr-remove" data-q="${escapeHtml(q)}"><i class="fas fa-times"></i></button></a>`
+      ).join('');
+      msgRecent.hidden = false;
+    }
+    msgRecentList.addEventListener('click', (e) => {
+      const remove = e.target.closest('.mr-remove');
+      if (remove) {
+        e.preventDefault(); e.stopPropagation();
+        const q = remove.dataset.q;
+        let r = loadRecent().filter(x => x !== q);
+        localStorage.setItem('msgRecentSearches', JSON.stringify(r));
+        renderRecent();
+        return;
+      }
+      const item = e.target.closest('.msg-recent-item');
+      if (item) {
+        msgSearch.value = item.dataset.q;
+        msgSearch.dispatchEvent(new Event('input'));
+      }
+    });
+    msgRecentClearBtn.addEventListener('click', () => {
+      localStorage.removeItem('msgRecentSearches');
+      renderRecent();
+    });
 
     function escapeHtml(s) {
       return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
-
-    function renderResults(users) {
-      if (!users || !users.length) {
-        userResults.innerHTML = '<div class="empty">কোনো সদস্য পাওয়া যায়নি</div>';
-        userResults.hidden = false;
-        return;
-      }
-      const html = users.map(u => {
-        const avatar = u.avatar_url
-          ? `<img class="usr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\\'usr-avatar\\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
-          : `<div class="usr-avatar">${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>`;
-        const sub = [u.designation, '@' + u.username].filter(Boolean).join(' • ');
-        return `<a class="usr-row" href="/messages/${encodeURIComponent(u.username)}">${avatar}<div class="usr-meta"><div class="usr-name">${escapeHtml(u.full_name || u.username)}</div><div class="usr-sub">${escapeHtml(sub)}</div></div><i class="fas fa-chevron-right" style="color:var(--text-muted)"></i></a>`;
-      }).join('');
-      userResults.innerHTML = html;
-      userResults.hidden = false;
+    function highlight(text, q) {
+      if (!q) return escapeHtml(text);
+      const safe = escapeHtml(text);
+      const qLower = q.toLowerCase();
+      const idx = text.toLowerCase().indexOf(qLower);
+      if (idx === -1) return safe;
+      return escapeHtml(text.substring(0, idx)) + '<mark>' + escapeHtml(text.substring(idx, idx + q.length)) + '</mark>' + escapeHtml(text.substring(idx + q.length));
     }
 
-    async function doUserSearch(q) {
-      q = (q || '').trim();
-      if (q === lastQuery) return;
-      lastQuery = q;
-      if (q.length < 1) { userResults.hidden = true; userResults.innerHTML = ''; return; }
+    // Build conversation results (client-side filter)
+    function searchConversations(q) {
+      const qLower = (q || '').toLowerCase().trim();
+      const items = [...document.querySelectorAll('#convListDefault .conv-item')];
+      if (!qLower) return items.map(el => ({ el, name: el.dataset.name, username: el.dataset.username, last: el.dataset.last }));
+      return items
+        .filter(el => el.dataset.name.indexOf(qLower) !== -1 || el.dataset.username.toLowerCase().indexOf(qLower) !== -1 || el.dataset.last.indexOf(qLower) !== -1)
+        .map(el => ({ el, name: el.dataset.name, username: el.dataset.username, last: el.dataset.last }));
+    }
+
+    // Server-side user search
+    async function searchUsers(q) {
       try {
         const r = await fetch('/api/users/search?q=' + encodeURIComponent(q));
         const data = await r.json();
-        renderResults(data.users || []);
-      } catch (e) {
-        userResults.innerHTML = '<div class="empty">অনুসন্ধান ব্যর্থ হয়েছে</div>';
-        userResults.hidden = false;
-      }
+        return data.users || [];
+      } catch { return []; }
     }
 
-    userSearch?.addEventListener('input', () => {
+    function renderConversationResults(results, q) {
+      if (!results.length) { msrConversations.hidden = true; return; }
+      msrConvCount.textContent = results.length;
+      msrConvList.innerHTML = results.map(({ el, name, username, last }) => {
+        const displayName = name; // original case from DOM
+        const origName = el.querySelector('.conv-name').textContent;
+        const origSnippet = el.querySelector('.conv-snippet').textContent;
+        const avatar = el.querySelector('img') ? el.querySelector('img').outerHTML : '';
+        const unread = el.querySelector('.conv-unread');
+        const unreadHtml = unread ? `<span class="conv-unread">${unread.textContent}</span>` : '';
+        return `<a class="msr-row" href="/messages/${encodeURIComponent(username)}">
+          ${avatar.replace('class="', 'class="msr-avatar ').replace('alt="', 'data-keep="1" alt="')}
+          <div class="msr-meta">
+            <div class="msr-name">${highlight(origName, q)}</div>
+            <div class="msr-sub">${highlight(origSnippet, q)}</div>
+          </div>
+          <div class="msr-right">${unreadHtml}</div>
+        </a>`;
+      }).join('');
+      msrConversations.hidden = false;
+    }
+
+    async function renderUserResults(q) {
+      if (!q || q.length < 1) { msrUsers.hidden = true; return; }
+      const users = await searchUsers(q);
+      if (!users.length) { msrUsers.hidden = true; return; }
+      msrUserCount.textContent = users.length;
+      msrUserList.innerHTML = users.map(u => {
+        const avatar = u.avatar_url
+          ? `<img class="msr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\\'msr-avatar\\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
+          : `<div class="msr-avatar">${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>`;
+        const sub = [u.designation, '@' + u.username].filter(Boolean).join(' • ');
+        return `<a class="msr-row" href="/messages/${encodeURIComponent(u.username)}">
+          ${avatar}
+          <div class="msr-meta">
+            <div class="msr-name">${highlight(u.full_name || u.username, q)}</div>
+            <div class="msr-sub">${highlight(sub, q)}</div>
+          </div>
+          <div class="msr-right"><i class="fas fa-chevron-right"></i></div>
+        </a>`;
+      }).join('');
+      msrUsers.hidden = false;
+    }
+
+    async function doSearch(q) {
+      q = (q || '').trim();
+      if (q === lastQuery) return;
+      lastQuery = q;
+      kbIndex = -1;
+
+      if (!q) {
+        msgSearchResults.hidden = true;
+        msgSearchClear.hidden = true;
+        convListDefault.classList.remove('hidden');
+        renderRecent();
+        return;
+      }
+
+      msgSearchClear.hidden = false;
+      convListDefault.classList.add('hidden');
+      msgRecent.hidden = true;
+
+      // Conversation results (instant, client-side)
+      const convResults = searchConversations(q);
+      renderConversationResults(convResults, q);
+
+      // User results (server-side, debounced)
+      await renderUserResults(q);
+
+      // Empty state
+      const hasConvs = !msrConversations.hidden;
+      const hasUsers = !msrUsers.hidden;
+      msrEmpty.hidden = hasConvs || hasUsers;
+
+      msgSearchResults.hidden = false;
+      kbRows = [...msgSearchResults.querySelectorAll('.msr-row')];
+    }
+
+    msgSearch.addEventListener('input', () => {
       if (searchTimer) clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => doUserSearch(userSearch.value), 200);
-    });
-    userSearch?.addEventListener('focus', () => {
-      if (userSearch.value.trim().length >= 1 && userResults.innerHTML) userResults.hidden = false;
-    });
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.new-conv-box')) userResults.hidden = true;
+      const v = msgSearch.value;
+      searchTimer = setTimeout(() => doSearch(v), 180);
     });
 
-    // 5s polling for unread counts + online dots
+    msgSearch.addEventListener('focus', () => {
+      if (msgSearch.value.trim()) {
+        msgSearchResults.hidden = false;
+      } else {
+        renderRecent();
+      }
+    });
+
+    msgSearchClear.addEventListener('click', () => {
+      msgSearch.value = '';
+      msgSearch.dispatchEvent(new Event('input'));
+      msgSearch.focus();
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.messenger-list-head')) {
+        msgSearchResults.hidden = true;
+      }
+    });
+
+    // Keyboard navigation
+    msgSearch.addEventListener('keydown', (e) => {
+      if (msgSearchResults.hidden || !kbRows.length) {
+        if (e.key === 'Enter' && kbRows.length === 1) kbRows[0].click();
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        kbIndex = Math.min(kbIndex + 1, kbRows.length - 1);
+        updateKbActive();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        kbIndex = Math.max(kbIndex - 1, 0);
+        updateKbActive();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (kbIndex >= 0 && kbRows[kbIndex]) kbRows[kbIndex].click();
+        else if (kbRows.length === 1) kbRows[0].click();
+      } else if (e.key === 'Escape') {
+        msgSearch.value = '';
+        msgSearch.dispatchEvent(new Event('input'));
+        msgSearch.blur();
+      }
+    });
+
+    function updateKbActive() {
+      kbRows.forEach((r, i) => r.classList.toggle('kb-active', i === kbIndex));
+      if (kbIndex >= 0 && kbRows[kbIndex]) kbRows[kbIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    // Save search on navigation away (when a result is clicked)
+    msgSearchResults.addEventListener('click', (e) => {
+      const row = e.target.closest('.msr-row');
+      if (row) saveRecent(msgSearch.value);
+    });
+
+    // Global "/" shortcut to focus search
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement !== msgSearch && !e.target.matches('input,textarea')) {
+        e.preventDefault();
+        msgSearch.focus();
+      }
+    });
+
+    // 8s polling for unread + online
     async function pollList() {
       try {
         const r1 = await fetch('/api/messages/unread');
         const data = await r1.json();
-        document.querySelectorAll('.conv-item').forEach(el => {
+        document.querySelectorAll('#convListDefault .conv-item').forEach(el => {
           const id = parseInt(el.dataset.id);
           const conv = data.conversations.find(c => c.id === id);
           let meta = el.querySelector('.conv-meta-right');
@@ -148,7 +462,6 @@
           } else if (badge) badge.remove();
         });
 
-        // Check online status for each visible user
         const userIds = [...document.querySelectorAll('.online-dot')].map(d => d.dataset.userId).filter(Boolean);
         const unique = [...new Set(userIds)];
         await Promise.all(unique.map(async uid => {
@@ -158,12 +471,15 @@
             document.querySelectorAll('.online-dot[data-user-id="' + uid + '"]').forEach(dot => {
               dot.style.display = d.online ? 'block' : 'none';
             });
-          } catch (e) {}
+          } catch {}
         }));
-      } catch (e) {}
+      } catch {}
     }
     setInterval(pollList, 8000);
     setTimeout(pollList, 1500);
+
+    // Init
+    renderRecent();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 </body>

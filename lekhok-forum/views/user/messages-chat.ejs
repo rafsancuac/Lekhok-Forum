@@ -6,9 +6,26 @@
       <%# ── Left: conversation list ──────────────────────────────────── %>
       <aside class="messenger-list" id="messengerList">
         <div class="messenger-list-head">
-          <h2><i class="fas fa-comment-dots"></i> কথোপকথন</h2>
-          <a href="/messages" class="btn-ghost btn-sm" style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;text-decoration:none"><i class="fas fa-arrow-left"></i> সব মেসেজ</a>
-          <input type="search" class="messenger-search" placeholder="🔍 নাম খুঁজুন..." id="convSearch" oninput="filterConvs(this.value)" />
+          <div class="msg-head-row">
+            <h2><i class="fas fa-comment-dots"></i> কথোপকথন</h2>
+            <a href="/messages" class="btn-ghost btn-sm" style="margin-left:auto;padding:4px 10px"><i class="fas fa-arrow-left"></i> সব</a>
+          </div>
+          <div class="msg-search-wrap" id="msgSearchWrap">
+            <i class="fas fa-search msg-search-icon"></i>
+            <input type="search" class="messenger-search msg-search-input" id="convSearch" placeholder="নাম, ইউজারনেম বা নতুন সদস্য খুঁজুন..." autocomplete="off" />
+            <button type="button" class="msg-search-clear" id="convSearchClear" hidden><i class="fas fa-times"></i></button>
+          </div>
+          <div class="msg-search-results" id="convSearchResults" hidden>
+            <div class="msr-section" id="csrConversations" hidden>
+              <div class="msr-section-head"><span><i class="fas fa-comments"></i> কথোপকথন</span><span class="msr-count" id="csrConvCount"></span></div>
+              <div id="csrConvList"></div>
+            </div>
+            <div class="msr-section" id="csrUsers" hidden>
+              <div class="msr-section-head"><span><i class="fas fa-user-plus"></i> নতুন কথোপকথন</span><span class="msr-count" id="csrUserCount"></span></div>
+              <div id="csrUserList"></div>
+            </div>
+            <div class="msr-empty" id="csrEmpty" hidden><i class="fas fa-search"></i><p>কোনো ফলাফল নেই</p></div>
+          </div>
         </div>
         <% if (!conversations.length) { %>
           <div class="empty-state-full">
@@ -118,6 +135,35 @@
     </div>
   </div>
 
+  <style>
+    .msg-head-row { display: flex; align-items: center; gap: 8px; }
+    .msg-head-row h2 { margin: 0; }
+    .msg-search-wrap { position: relative; margin-top: 8px; }
+    .msg-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none; }
+    .msg-search-input { width: 100%; padding: 10px 36px 10px 34px !important; font-size: 14px; border-radius: 9px !important; border: 1.5px solid var(--border) !important; transition: border-color 0.15s, box-shadow 0.15s; }
+    .msg-search-input:focus { outline: none; border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
+    .msg-search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: var(--text-muted); font-size: 13px; padding: 4px 7px; border-radius: 5px; }
+    .msg-search-clear:hover { background: var(--surface-alt); color: var(--text); }
+    .msg-search-results { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.16); max-height: 400px; overflow-y: auto; z-index: 50; }
+    .msr-section { border-bottom: 1px solid var(--border); }
+    .msr-section:last-child { border-bottom: 0; }
+    .msr-section-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 6px; font-size: 11px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-alt); }
+    .msr-section-head i { margin-right: 4px; }
+    .msr-count { background: var(--accent-soft); color: var(--accent); padding: 1px 7px; border-radius: 999px; font-size: 10.5px; }
+    .msr-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; text-decoration: none; color: inherit; border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    .msr-row:last-child { border-bottom: 0; }
+    .msr-row:hover, .msr-row.kb-active { background: var(--accent-soft); }
+    .msr-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex: 0 0 38px; background: var(--surface-alt); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--accent); font-size: 14px; }
+    .msr-meta { flex: 1; min-width: 0; }
+    .msr-name { font-weight: 600; font-size: 14px; color: var(--text); }
+    .msr-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .msr-name mark, .msr-sub mark { background: #fef08a; color: #713f12; padding: 0 2px; border-radius: 2px; }
+    .msr-right { flex-shrink: 0; color: var(--text-muted); font-size: 12px; }
+    .msr-right .conv-unread { background: var(--accent); color: white; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; }
+    .msr-empty { padding: 28px 14px; text-align: center; color: var(--text-muted); }
+    .msr-empty i { font-size: 28px; margin-bottom: 8px; display: block; opacity: 0.5; }
+    .msr-empty p { font-size: 13px; margin: 0; }
+  </style>
   <script>
     // ── helpers ────────────────────────────────────────────────────────
     const body = document.getElementById('chatBody');
@@ -129,11 +175,130 @@
 
     if (body) body.scrollTop = body.scrollHeight;
 
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function highlight(text, q) {
+      if (!q) return escapeHtml(text);
+      const qLower = q.toLowerCase();
+      const idx = text.toLowerCase().indexOf(qLower);
+      if (idx === -1) return escapeHtml(text);
+      return escapeHtml(text.substring(0, idx)) + '<mark>' + escapeHtml(text.substring(idx, idx + q.length)) + '</mark>' + escapeHtml(text.substring(idx + q.length));
+    }
+
+    // Unified search (conversations + new users)
+    const convSearch = document.getElementById('convSearch');
+    const convSearchClear = document.getElementById('convSearchClear');
+    const convSearchResults = document.getElementById('convSearchResults');
+    const csrConversations = document.getElementById('csrConversations');
+    const csrUsers = document.getElementById('csrUsers');
+    const csrEmpty = document.getElementById('csrEmpty');
+    const csrConvList = document.getElementById('csrConvList');
+    const csrUserList = document.getElementById('csrUserList');
+    const csrConvCount = document.getElementById('csrConvCount');
+    const csrUserCount = document.getElementById('csrUserCount');
+    let searchTimerC = null, lastQueryC = '', kbIndexC = -1, kbRowsC = [];
+
     function filterConvs(q) {
       q = (q || '').toLowerCase().trim();
-      document.querySelectorAll('.conv-item').forEach(el => {
+      // Hide/show sidebar items
+      document.querySelectorAll('.messenger-list .conv-item').forEach(el => {
         el.style.display = !q || el.dataset.name.indexOf(q) !== -1 ? 'flex' : 'none';
       });
+    }
+
+    function renderConvSearchResults(q) {
+      const qLower = (q || '').toLowerCase().trim();
+      const items = [...document.querySelectorAll('.messenger-list .conv-item')];
+      const matched = qLower ? items.filter(el => el.dataset.name.indexOf(qLower) !== -1) : items;
+      
+      if (!matched.length) { csrConversations.hidden = true; return; }
+      csrConvCount.textContent = matched.length;
+      csrConvList.innerHTML = matched.map(el => {
+        const origName = el.querySelector('.conv-name').textContent;
+        const origSnippet = el.querySelector('.conv-snippet').textContent;
+        const avatar = el.querySelector('img') ? el.querySelector('img').outerHTML : '';
+        const unread = el.querySelector('.conv-unread');
+        const unreadHtml = unread ? `<span class="conv-unread">${unread.textContent}</span>` : '';
+        return `<a class="msr-row" href="${el.getAttribute('href')}">
+          ${avatar.replace('class="', 'class="msr-avatar ')}
+          <div class="msr-meta"><div class="msr-name">${highlight(origName, q)}</div><div class="msr-sub">${highlight(origSnippet, q)}</div></div>
+          <div class="msr-right">${unreadHtml}</div>
+        </a>`;
+      }).join('');
+      csrConversations.hidden = false;
+    }
+
+    async function renderUserSearchResults(q) {
+      if (!q || q.length < 1) { csrUsers.hidden = true; return; }
+      try {
+        const r = await fetch('/api/users/search?q=' + encodeURIComponent(q));
+        const data = await r.json();
+        const users = data.users || [];
+        if (!users.length) { csrUsers.hidden = true; return; }
+        csrUserCount.textContent = users.length;
+        csrUserList.innerHTML = users.map(u => {
+          const avatar = u.avatar_url
+            ? `<img class="msr-avatar" src="${escapeHtml(u.avatar_url)}" onerror="this.onerror=null;this.outerHTML='<div class=\'msr-avatar\'>${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>'" />`
+            : `<div class="msr-avatar">${escapeHtml((u.full_name||u.username||'?').charAt(0).toUpperCase())}</div>`;
+          const sub = [u.designation, '@' + u.username].filter(Boolean).join(' • ');
+          return `<a class="msr-row" href="/messages/${encodeURIComponent(u.username)}">
+            ${avatar}
+            <div class="msr-meta"><div class="msr-name">${highlight(u.full_name || u.username, q)}</div><div class="msr-sub">${highlight(sub, q)}</div></div>
+            <div class="msr-right"><i class="fas fa-chevron-right"></i></div>
+          </a>`;
+        }).join('');
+        csrUsers.hidden = false;
+      } catch {}
+    }
+
+    async function doConvSearch(q) {
+      q = (q || '').trim();
+      if (q === lastQueryC) return;
+      lastQueryC = q;
+      kbIndexC = -1;
+      if (!q) {
+        convSearchResults.hidden = true;
+        convSearchClear.hidden = true;
+        filterConvs('');
+        return;
+      }
+      convSearchClear.hidden = false;
+      // Also filter sidebar items live
+      filterConvs(q);
+      renderConvSearchResults(q);
+      await renderUserSearchResults(q);
+      const hasC = !csrConversations.hidden, hasU = !csrUsers.hidden;
+      csrEmpty.hidden = hasC || hasU;
+      convSearchResults.hidden = false;
+      kbRowsC = [...convSearchResults.querySelectorAll('.msr-row')];
+    }
+
+    convSearch.addEventListener('input', () => {
+      if (searchTimerC) clearTimeout(searchTimerC);
+      searchTimerC = setTimeout(() => doConvSearch(convSearch.value), 180);
+    });
+    convSearch.addEventListener('focus', () => {
+      if (convSearch.value.trim()) convSearchResults.hidden = false;
+    });
+    convSearchClear.addEventListener('click', () => {
+      convSearch.value = '';
+      convSearch.dispatchEvent(new Event('input'));
+      convSearch.focus();
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.messenger-list-head')) convSearchResults.hidden = true;
+    });
+    convSearch.addEventListener('keydown', (e) => {
+      if (convSearchResults.hidden || !kbRowsC.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); kbIndexC = Math.min(kbIndexC + 1, kbRowsC.length - 1); updateKbActiveC(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); kbIndexC = Math.max(kbIndexC - 1, 0); updateKbActiveC(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (kbIndexC >= 0 && kbRowsC[kbIndexC]) kbRowsC[kbIndexC].click(); else if (kbRowsC.length === 1) kbRowsC[0].click(); }
+      else if (e.key === 'Escape') { convSearch.value = ''; convSearch.dispatchEvent(new Event('input')); convSearch.blur(); }
+    });
+    function updateKbActiveC() {
+      kbRowsC.forEach((r, i) => r.classList.toggle('kb-active', i === kbIndexC));
+      if (kbIndexC >= 0 && kbRowsC[kbIndexC]) kbRowsC[kbIndexC].scrollIntoView({ block: 'nearest' });
     }
 
     function insertEmoji(em) {

@@ -1,27 +1,159 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'সাংগঠনিক কার্যক্রম — লেখক ফোরাম' }) %>
+<%# সাংগঠনিক কার্যক্রম — পেশাদার টাইমলাইন লেআউট %>
+<%- include('../partials/header', { title: 'সাংগঠনিক কার্যক্রম — লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
   <div class="page-wrap">
-    <div class="page-header">
-      <h1><i class="fas fa-calendar-check"></i> সাংগঠনিক কার্যক্রম</h1>
+    <div class="activities-hero">
+      <div class="activities-hero-inner">
+        <div class="activities-hero-text">
+          <h1><i class="fas fa-calendar-check"></i> সাংগঠনিক কার্যক্রম</h1>
+          <p>লেখক ফোরামের সকল সাংগঠনিক কার্যক্রম, সেমিনার, আলোচনা সভা ও বিশেষ ইভেন্টের আর্কাইভ</p>
+        </div>
+        <div class="activities-hero-stats">
+          <div class="ah-stat"><div class="ah-stat-val"><%= items.length %></div><div class="ah-stat-lbl">মোট কার্যক্রম</div></div>
+          <% 
+            const now = new Date();
+            const upcoming = items.filter(a => a.scheduled_date && new Date(a.scheduled_date) >= now);
+            const past = items.filter(a => !a.scheduled_date || new Date(a.scheduled_date) < now);
+          %>
+          <div class="ah-stat"><div class="ah-stat-val"><%= upcoming.length %></div><div class="ah-stat-lbl">আসন্ন</div></div>
+          <div class="ah-stat"><div class="ah-stat-val"><%= past.length %></div><div class="ah-stat-lbl">সম্পন্ন</div></div>
+        </div>
+      </div>
     </div>
 
     <% if (items.length === 0) { %>
-      <div class="empty-state-full"><i class="fas fa-calendar-check"></i><p>কোনো কার্যক্রম প্রকাশ করা হয়নি।</p></div>
+      <div class="empty-state-full">
+        <i class="fas fa-calendar-check"></i>
+        <p>এখনো কোনো সাংগঠনিক কার্যক্রম প্রকাশ করা হয়নি।</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px">অনুগ্রহ করে পরে আবার দেখুন।</p>
+      </div>
     <% } else { %>
-      <div class="articles-grid">
-        <% items.forEach(a => { %>
-          <div class="post-card">
-            <% if (a.image_url) { %><img src="<%= a.image_url %>" alt="cover" class="post-cover"><% } %>
-            <div class="post-card-body">
-              <div class="post-meta-top"><span class="post-date"><i class="far fa-calendar"></i> <%= a.scheduled_date %></span></div>
-              <a href="/activities#item-<%= a.id %>" class="post-title"><%= a.title %></a>
-              <p class="post-excerpt"><%= a.body.substring(0, 200) %>...</p>
+
+    <%# ── Filter tabs ── %>
+    <div class="activities-filter-bar">
+      <button class="act-filter-btn active" data-filter="all"><i class="fas fa-list"></i> সকল (<%= items.length %>)</button>
+      <button class="act-filter-btn" data-filter="upcoming"><i class="fas fa-calendar-plus"></i> আসন্ন (<%= upcoming.length %>)</button>
+      <button class="act-filter-btn" data-filter="past"><i class="fas fa-history"></i> সম্পন্ন (<%= past.length %>)</button>
+      <div class="act-filter-spacer"></div>
+      <div class="act-view-toggle">
+        <button class="act-view-btn active" data-view="timeline" title="টাইমলাইন ভিউ"><i class="fas fa-stream"></i></button>
+        <button class="act-view-btn" data-view="grid" title="গ্রিড ভিউ"><i class="fas fa-th-large"></i></button>
+      </div>
+    </div>
+
+    <%# ── Featured (latest upcoming or latest overall) ── %>
+    <% 
+      const featured = upcoming.length ? upcoming[0] : items[0];
+      const rest = items.filter(a => a.id !== featured.id);
+    %>
+    <% if (featured) { %>
+    <div class="activities-featured" data-category="<%= (featured.scheduled_date && new Date(featured.scheduled_date) >= now) ? 'upcoming' : 'past' %>">
+      <% if (featured.image_url) { %>
+        <div class="af-image" style="background-image:url('<%= featured.image_url %>')"></div>
+      <% } else { %>
+        <div class="af-image af-image--placeholder"><i class="fas fa-calendar-check"></i></div>
+      <% } %>
+      <div class="af-content">
+        <div class="af-badge">
+          <% if (featured.scheduled_date && new Date(featured.scheduled_date) >= now) { %>
+            <span class="badge badge-success"><i class="fas fa-calendar-plus"></i> আসন্ন</span>
+          <% } else { %>
+            <span class="badge badge-neutral"><i class="fas fa-history"></i> সম্পন্ন</span>
+          <% } %>
+          <span class="af-date"><i class="far fa-calendar"></i> <%= featured.scheduled_date || 'তারিখ নির্ধারিত নয়' %></span>
+        </div>
+        <h2 class="af-title"><%= featured.title %></h2>
+        <p class="af-excerpt"><%= featured.body.substring(0, 280) %><% if (featured.body.length > 280) { %>...<% } %></p>
+        <a href="/activities#item-<%= featured.id %>" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> বিস্তারিত দেখুন</a>
+      </div>
+    </div>
+    <% } %>
+
+    <%# ── Timeline view ── %>
+    <div class="activities-timeline" id="timelineView">
+      <% rest.forEach((a, idx) => { 
+        const isUpcoming = a.scheduled_date && new Date(a.scheduled_date) >= now;
+        const cat = isUpcoming ? 'upcoming' : 'past';
+      %>
+        <div class="timeline-item" data-category="<%= cat %>" id="item-<%= a.id %>">
+          <div class="timeline-marker <%= cat %>">
+            <i class="fas <%= isUpcoming ? 'fa-calendar-plus' : 'fa-check' %>"></i>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-card">
+              <% if (a.image_url) { %>
+                <div class="tc-image"><img src="<%= a.image_url %>" alt="<%= a.title %>" loading="lazy" /></div>
+              <% } %>
+              <div class="tc-body">
+                <div class="tc-meta">
+                  <span class="tc-date"><i class="far fa-calendar"></i> <%= a.scheduled_date || 'তারিখ নির্ধারিত নয়' %></span>
+                  <% if (isUpcoming) { %><span class="badge badge-success badge-sm"><%= cat %></span><% } else { %><span class="badge badge-neutral badge-sm"><%= cat %></span><% } %>
+                </div>
+                <h3 class="tc-title"><%= a.title %></h3>
+                <p class="tc-excerpt"><%= a.body.substring(0, 200) %><% if (a.body.length > 200) { %>...<% } %></p>
+                <a href="/activities#item-<%= a.id %>" class="tc-link"><i class="fas fa-arrow-right"></i> বিস্তারিত</a>
+              </div>
             </div>
           </div>
-        <% }); %>
-      </div>
+        </div>
+      <% }); %>
+    </div>
+
+    <%# ── Grid view (hidden by default) ── %>
+    <div class="activities-grid-view" id="gridView" style="display:none">
+      <% rest.forEach(a => { 
+        const isUpcoming = a.scheduled_date && new Date(a.scheduled_date) >= now;
+        const cat = isUpcoming ? 'upcoming' : 'past';
+      %>
+        <div class="act-grid-card" data-category="<%= cat %>">
+          <% if (a.image_url) { %><img src="<%= a.image_url %>" alt="<%= a.title %>" class="agc-image" loading="lazy"><% } %>
+          <div class="agc-body">
+            <div class="agc-meta">
+              <span class="tc-date"><i class="far fa-calendar"></i> <%= a.scheduled_date || '—' %></span>
+              <span class="badge badge-<%= isUpcoming ? 'success' : 'neutral' %> badge-sm"><%= cat %></span>
+            </div>
+            <h3 class="agc-title"><%= a.title %></h3>
+            <p class="agc-excerpt"><%= a.body.substring(0, 120) %>...</p>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
     <% } %>
   </div>
+
+  <script>
+    // Filter tabs
+    document.querySelectorAll('.act-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.act-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.timeline-item, .act-grid-card').forEach(item => {
+          if (filter === 'all' || item.dataset.category === filter) {
+            item.style.display = '';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        // Also hide featured if it doesn't match
+        const featured = document.querySelector('.activities-featured');
+        if (featured) {
+          featured.style.display = (filter === 'all' || featured.dataset.category === filter) ? '' : 'none';
+        }
+      });
+    });
+
+    // View toggle
+    document.querySelectorAll('.act-view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.act-view-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const view = btn.dataset.view;
+        document.getElementById('timelineView').style.display = view === 'timeline' ? '' : 'none';
+        document.getElementById('gridView').style.display = view === 'grid' ? 'grid' : 'none';
+      });
+    });
+  </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 </body>
 </html>
