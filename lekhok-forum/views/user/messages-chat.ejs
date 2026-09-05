@@ -81,6 +81,9 @@
         <div class="chat-body" id="chatBody">
           <% messages.forEach(m => { %>
             <div class="bubble <%= m.sender_id === user.id ? 'me' : 'them' %>" data-id="<%= m.id %>">
+              <% if (m.sender_id === user.id) { %>
+                <button type="button" class="bubble-delete" data-msg-delete="<%= m.id %>" title="মুছে ফেলুন"><i class="fas fa-times"></i></button>
+              <% } %>
               <% if (m.body) { %><div class="bubble-text"><%= m.body %></div><% } %>
               <% if (m.file_url) { %>
                 <% var isImg = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(m.file_url); %>
@@ -170,6 +173,7 @@
     const convId = <%= conv ? conv.id : 0 %>;
     const myId = <%= user.id %>;
     const otherId = <%= other.id %>;
+    const otherUsername = <%- JSON.stringify(other.username) %>;
     let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
     let typingTimeout = null;
 
@@ -474,6 +478,28 @@
     document.getElementById('filePreviewRemove')?.addEventListener('click', () => {
       fileInput.value = '';
       filePreview.hidden = true;
+    });
+
+    // Delete a single message (own messages only — the route also enforces
+    // this server-side). The button was newly added to the bubble markup;
+    // the DELETE route already existed (POST /messages/:username/:msgId/delete)
+    // but had no UI trigger anywhere, so it was effectively unreachable.
+    body?.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-msg-delete]');
+      if (!btn) return;
+      if (!confirm('এই মেসেজটি মুছে ফেলতে চান?')) return;
+      const msgId = btn.dataset.msgDelete;
+      try {
+        const res = await fetch('/messages/' + encodeURIComponent(otherUsername) + '/' + msgId + '/delete', {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const bubble = body.querySelector('.bubble[data-id="' + msgId + '"]');
+          bubble?.remove();
+        }
+      } catch (_) {}
     });
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
