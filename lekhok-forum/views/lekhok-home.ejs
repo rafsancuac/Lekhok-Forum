@@ -116,112 +116,61 @@
   <div class="container">
     <div class="section-head">
       <div>
-        <span class="eyebrow">নেতৃত্ব পরিষদ</span>
-        <h2 class="section-title">যাঁরা <span class="accent">নেতৃত্ব</span> দিচ্ছেন</h2>
+        <span class="eyebrow">নেতৃত্বের ধারা</span>
+        <h2 class="section-title">যাঁদের হাতে গড়ে উঠেছে <span class="accent">লেখক ফোরাম</span></h2>
         <span class="accent-divider"></span>
       </div>
       <a href="/committee" class="link-more">সকল সদস্য দেখুন <i class="fas fa-arrow-right"></i></a>
     </div>
 
-    <%# ── Sub-section 1: Founding leadership (2 cards) ── %>
-    <% if (founders && founders.length) { %>
-    <div class="leadership-sub">
-      <h3 class="leadership-sub-title"><i class="fas fa-landmark"></i> প্রতিষ্ঠাতা সভাপতি ও সাধারণ সম্পাদক</h3>
-      <div class="leaders-grid leaders-grid-lg">
-        <% currentLeaders.forEach(m => { %>
-          <% const displayName = m.user_full_name || m.name; %>
-          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
-          <% const displayBio  = m.bio || ''; %>
-          <% if (m.user_username) { %>
-            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member leader-card-featured">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= m.role %></p>
-                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
-              </div>
-            </a>
-          <% } else { %>
-            <div class="leader-card has-image leader-card-featured">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= m.role %></p>
-                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
-              </div>
+    <%
+      // Renders one leadership card: name (center) / designation (center) /
+      // bio (justified) / social row (center). One function, reused for all
+      // 8 people across the 4 groups below instead of repeating this markup
+      // four times with copy-paste risk (which is how the old version ended
+      // up accidentally showing currentLeaders twice — see git history).
+      function leaderCard(m, roleOverride) {
+        const displayName = m.user_full_name || m.name;
+        const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg';
+        const displayBio  = m.bio || '';
+        const displayRole = roleOverride || m.role;
+        const fb    = m.social_fb;
+        const email = m.social_email;
+        const inner = `
+          <img loading="lazy" decoding="async" src="${displayImg}" alt="${displayName}" class="leader-photo" />
+          <div class="leader-body">
+            <h3 class="leader-name">${displayName}</h3>
+            <p class="role leader-role">${displayRole}</p>
+            ${displayBio ? `<p class="leader-bani">${displayBio.substring(0, 160)}${displayBio.length > 160 ? '…' : ''}</p>` : ''}
+            ${(fb || email) ? `
+            <div class="leader-social">
+              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="fab fa-facebook"></i></a>` : ''}
+              ${email ? `<a href="mailto:${email}" onclick="event.stopPropagation()"><i class="fas fa-envelope"></i></a>` : ''}
+            </div>` : ''}
+          </div>
+        `;
+        return m.user_username
+          ? `<a href="/profile/${m.user_username}" class="leader-card has-image linked-member leader-card-featured">${inner}</a>`
+          : `<div class="leader-card has-image leader-card-featured">${inner}</div>`;
+      }
+      function leaderGroup(icon, title, members, roleOverride) {
+        if (!members || !members.length) return '';
+        return `
+          <div class="leadership-cell">
+            <h3 class="leadership-sub-title"><i class="fas ${icon}"></i> ${title}</h3>
+            <div class="leaders-grid leaders-grid-pair">
+              ${members.map(m => leaderCard(m, roleOverride)).join('')}
             </div>
-          <% } %>
-        <% }) %>
-      </div>
-    </div>
-    <% } %>
+          </div>`;
+      }
+    %>
 
-    <%# ── Sub-section 2: Founding advisors ── %>
-    <% if (foundingAdvisors && foundingAdvisors.length) { %>
-    <div class="leadership-sub">
-      <h3 class="leadership-sub-title"><i class="fas fa-user-tie"></i> প্রতিষ্ঠাকালীন উপদেষ্টা</h3>
-      <div class="leaders-grid leaders-grid-lg">
-        <% foundingAdvisors.forEach(m => { %>
-          <% const displayName = m.user_full_name || m.name; %>
-          <% const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg'; %>
-          <% const displayBio  = m.bio || ''; %>
-          <% const displayRole = m.role === 'president' ? 'প্রতিষ্ঠাতা সভাপতি' : (m.role === 'general_secretary' ? 'প্রতিষ্ঠাতা সাধারণ সম্পাদক' : m.role); %>
-          <% if (m.user_username) { %>
-            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member leader-card-featured">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= displayRole %></p>
-                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
-              </div>
-            </a>
-          <% } else { %>
-            <div class="leader-card has-image leader-card-featured">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= displayRole %></p>
-                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
-              </div>
-            </div>
-          <% } %>
-        <% }) %>
-      </div>
+    <div class="leadership-matrix">
+      <%- leaderGroup('fa-landmark', 'প্রতিষ্ঠাতা সভাপতি ও সাধারণ সম্পাদক', founders) %>
+      <%- leaderGroup('fa-user-tie', 'প্রতিষ্ঠাকালীন উপদেষ্টা', foundingAdvisors, 'প্রতিষ্ঠাকালীন উপদেষ্টা') %>
+      <%- leaderGroup('fa-star', 'বর্তমান সভাপতি ও সাধারণ সম্পাদক', currentLeaders) %>
+      <%- leaderGroup('fa-user-shield', 'বর্তমান উপদেষ্টা', currentAdvisors, 'বর্তমান উপদেষ্টা') %>
     </div>
-    <% } %>
-
-    <%# ── Sub-section 3: Current leadership ── %>
-    <% if (currentLeaders && currentLeaders.length) { %>
-    <div class="leadership-sub">
-      <h3 class="leadership-sub-title"><i class="fas fa-star"></i> বর্তমান সভাপতি ও সাধারণ সম্পাদক</h3>
-      <div class="leaders-grid leaders-grid-lg">
-        <% currentLeaders.forEach(m => { %>
-          <% const displayName = m.user_full_name || m.name; %>
-          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
-          <% const displayBio  = m.bio || ''; %>
-          <% if (m.user_username) { %>
-            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member leader-card-featured">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= m.role %></p>
-                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
-              </div>
-            </a>
-          <% } else { %>
-            <div class="leader-card has-image leader-card-featured">
-              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-              <div class="leader-body">
-                <h3><%= displayName %></h3>
-                <p class="role"><%= m.role %></p>
-                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
-              </div>
-            </div>
-          <% } %>
-        <% }) %>
-      </div>
-    </div>
-    <% } %>
 
 
     <%# ── Q&A folding section ── %>

@@ -2396,6 +2396,51 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 }
 .leadership-sub-head .leadership-sub-title { margin: 0; }
 
+/* 2×2 layout: [প্রতিষ্ঠাতা সভাপতি+সা.স.] [প্রতিষ্ঠাকালীন উপদেষ্টা]
+               [বর্তমান সভাপতি+সা.স.]      [বর্তমান উপদেষ্টা]
+   Each cell holds its own 2-person pair, so founding/current line up as
+   rows and role (leadership vs advisory) lines up as columns — the pairing
+   the content itself suggests, instead of four sections stacked one after
+   another with no visual relationship between them. */
+.leadership-matrix {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px 28px;
+}
+@media (max-width: 860px) {
+  .leadership-matrix { grid-template-columns: 1fr; gap: 28px; }
+}
+.leadership-cell { min-width: 0; }
+.leaders-grid-pair {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 16px !important;
+}
+@media (max-width: 560px) {
+  .leaders-grid-pair { grid-template-columns: 1fr !important; }
+}
+
+/* Card content alignment, per spec: name/designation/social centered,
+   the bio/statement justified (it reads as running prose, not a label). */
+.leader-card-featured .leader-body { text-align: center; }
+.leader-card-featured .leader-name { margin: 0 0 4px; font-size: 17px; }
+.leader-card-featured .leader-role { margin: 0 0 10px; }
+.leader-card-featured .leader-bani {
+  text-align: justify; text-align-last: center;
+  font-size: 13.5px; line-height: 1.6; color: var(--text-muted, #64748b);
+  margin: 0 0 12px;
+}
+.leader-card-featured .leader-photo {
+  display: block; margin: 0 auto;
+}
+.leader-social {
+  display: flex; justify-content: center; gap: 12px;
+}
+.leader-social a {
+  color: var(--text-muted, #64748b); font-size: 15px;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg, #f1f5f9); transition: var(--transition);
+}
+.leader-social a:hover { background: var(--accent, #059669); color: #fff; }
+
 /* Large leader cards (for current + founders) */
 .leaders-grid-lg {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;

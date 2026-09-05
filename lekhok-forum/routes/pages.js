@@ -25,8 +25,12 @@ router.get('/', async (req, res) => {
     ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order LIMIT 2").all(latestTerm)
     : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
   const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all();
-  // Founding advisors (earliest term_year or sort_order)
+  // Founding advisors (earliest by term_year, falling back to sort_order — since
+  // advisory members rarely have term_year set) vs. current advisors (latest/
+  // most-recently-added, by the same fallback). Distinct LIMIT 2 slices so the
+  // two groups don't show the same people when there are enough advisors seeded.
   const foundingAdvisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year ASC, m.sort_order ASC LIMIT 2").all();
+  const currentAdvisors  = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year DESC, m.sort_order DESC LIMIT 2").all();
   const advisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all();
   // Fallback: if no founders seeded, use earliest past leaders (first president + first GS)
   let foundersFinal = founders;
@@ -67,6 +71,7 @@ router.get('/', async (req, res) => {
     currentLeaders,
     founders: foundersFinal,
     foundingAdvisors,
+    currentAdvisors,
     advisors,
     recentQA,
     todayByType,
