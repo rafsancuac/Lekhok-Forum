@@ -111,7 +111,7 @@
 
 <!-- Stats banner removed (moved to about page) -->
 
-<!-- Leaders preview — restructured with current + founders + advisors -->
+<!-- ═══ Section 1: Founding leaders ═══ -->
 <section class="section reveal" id="leadership">
   <div class="container">
     <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
@@ -123,18 +123,9 @@
     </div>
 
     <%
-      // সেশন ২৯ স্পেক: প্রতিটি কার্ডে ছবি / নাম / পদ / কার্যবর্ষ / বক্তব্য
-      // (৫০-১০০ শব্দ, জাস্টিফাইড) / সোশ্যাল আইকন — ছবি, নাম, পদ, কার্যবর্ষ
-      // ও আইকন কার্ডের মধ্যে সেন্টারে; বক্তব্য জাস্টিফাইড (এটি চলমান গদ্য,
-      // লেবেল নয়)। একটি ফাংশন, ৮ পাতায় পুনর্ব্যবহৃত — কপি-পেস্টের ঝুঁকি
-      // এড়াতে (পুরনো ভার্সনে এভাবেই currentLeaders দুবার দেখিয়েছিল, দেখুন
-      // git history)।
       function leaderCard(m, roleLabel, yearLabel, statement) {
         const displayName = m.user_full_name || m.name;
         const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg';
-        // বক্তব্য: অ্যাডমিন প্যানেলে bio দিলে সেটিই আগে; ফাঁকা হলে স্লট-ভিত্তিক
-        // leaderStatements (data/leaderStatements.js) — যাতে কার্ড কখনো ফাঁকা
-        // না দেখায়।
         const rawBio = (m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || '');
         const displayBio = rawBio.substring(0, 700);
         const fb    = m.social_fb;
@@ -146,7 +137,7 @@
             <h3 class="leader-name">${displayName}</h3>
             <p class="role leader-role">${roleLabel || m.role || ''}</p>
             ${yearLabel ? `<p class="leader-year">(${yearLabel})</p>` : ''}
-            ${displayBio ? `<p class="leader-bani" style="text-align:justify;">${displayBio}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
+            ${displayBio ? `<p class="leader-bani">${displayBio}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
             ${hasSocial ? `
             <div class="leader-social">
               ${fb ? `<a href="${fb}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Facebook"><i class="fab fa-facebook"></i></a>` : ''}
@@ -161,9 +152,6 @@
           ? `<a href="/profile/${m.user_username}" class="leader-card has-image linked-member leader-card-featured">${inner}</a>`
           : `<div class="leader-card has-image leader-card-featured">${inner}</div>`;
       }
-      // এক প্যানেল = দুটি কার্ডের জোড়া। সাব-হেডিং সেশন ২৯-এ সরানো হয়েছে —
-      // পদ এখন কার্ডের ভেতরের role লাইন বহন করে, তাই দুই প্যানেল পরিষ্কার
-      // কলাম হিসেবে সাজানো থাকে (বামে সভাপতি+সা.সম্পাদক, ডানে উপদেষ্টা)।
       function leaderPair(members, roles, yearLabel, statements) {
         if (!members || !members.length) return '';
         return `
@@ -178,9 +166,27 @@
     <div class="leadership-matrix">
       <%- leaderPair(founders, ['প্রতিষ্ঠাতা সভাপতি (১ম জন)', 'সাধারণ সম্পাদক (২য় জন)'], '২০২০-২১ কার্যবর্ষ', [leaderStatements.founder_president, leaderStatements.founder_general_secretary]) %>
       <%- leaderPair(foundingAdvisors, ['প্রতিষ্ঠাকালীন উপদেষ্টা (১ম জন)', 'প্রতিষ্ঠাকালীন উপদেষ্টা (২য় জন)'], '২০২০-২১ কার্যবর্ষ', [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2]) %>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Section 2: Current leaders ═══ -->
+<section class="section section-alt reveal" id="current-leadership">
+  <div class="container">
+    <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
+      <div>
+        <span class="eyebrow">বর্তমান</span>
+        <h2 class="section-title">বর্তমান <span class="accent">নেতৃত্ব</span></h2>
+        <span class="accent-divider"></span>
+      </div>
+    </div>
+
+    <div class="leadership-matrix">
       <%- leaderPair(currentLeaders, ['বর্তমান সভাপতি (১ম জন)', 'বর্তমান সাধারণ সম্পাদক (২য় জন)'], '২০২৫-২৬ কার্যবর্ষ', [leaderStatements.current_president, leaderStatements.current_general_secretary]) %>
       <%- leaderPair(currentAdvisors, ['বর্তমান উপদেষ্টা (১ম জন)', 'বর্তমান উপদেষ্টা (২য় জন)'], '২০২৫-২৬ কার্যবর্ষ', [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2]) %>
     </div>
+  </div>
+</section>
 
 
     <%# ── Q&A folding section ── %>
