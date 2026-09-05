@@ -433,14 +433,16 @@
 
       try {
         const res = await fetch('/messages/<%= other.username %>', { method: 'POST', body: fd, redirect: 'manual' });
-        if (res.ok || res.type === 'opaqueredirect') {
+        // redirect: 'manual' returns opaqueredirect (type) or 0 status — both mean success
+        if (res.type === 'opaqueredirect' || res.status === 0 || res.ok) {
           msgInput.value = '';
           fileInputEl.value = '';
           if (filePreviewEl) filePreviewEl.hidden = true;
           // Force immediate poll to fetch the real message from server
-          setTimeout(poll, 300);
+          setTimeout(poll, 200);
+          setTimeout(poll, 800);
         } else {
-          alert('মেসেজ পাঠানো যায়নি। আবার চেষ্টা করুন।');
+          alert('মেসেজ পাঠানো যায়নি (status ' + res.status + ')। আবার চেষ্টা করুন।');
         }
       } catch (err) {
         alert('নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।');

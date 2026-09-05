@@ -139,24 +139,31 @@ app.use(async (req, res, next) => {
 // Routes that already call req.session.save(cb) explicitly remain safe — the
 // express-session save is idempotent within a single request.
 app.use((req, res, next) => {
-  const original = res.redirect.bind(res);
-  res.redirect = function (url) {
-    // Skip re-save if a session save is already in flight for this request —
-    // avoids recursion when a route does `req.session.save(cb => res.redirect(...))`.
+  const origRedirect = res.redirect.bind(res);
+  const origJson = res.json.bind(res);
+  
+  function saveThen(cb) {
     if (req.session && typeof req.session.save === 'function' && !req._sessionSaving) {
       req._sessionSaving = true;
       try {
         return req.session.save((err) => {
           req._sessionSaving = false;
-          if (err) console.error('[session-save] before redirect:', err);
-          return original(url);
+          if (err) console.error('[session-save] before response:', err);
+          return cb();
         });
       } catch (e) {
         req._sessionSaving = false;
-        return original(url);
+        return cb();
       }
     }
-    return original(url);
+    return cb();
+  }
+  
+  res.redirect = function (url) {
+    return saveThen(() => origRedirect(url));
+  };
+  res.json = function (data) {
+    return saveThen(() => origJson(data));
   };
   next();
 });

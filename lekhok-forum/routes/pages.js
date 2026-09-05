@@ -52,6 +52,12 @@ router.get('/', async (req, res) => {
 
   // Recent Q&A for home page folding section
   const recentQA = await db.prepare("SELECT p.id, p.title, p.body, p.created_at, u.full_name as author_name, u.username as author_username FROM posts p JOIN users u ON p.author_id = u.id WHERE p.type = 'question' AND p.status = 'published' ORDER BY p.created_at DESC LIMIT 5").all();
+  // Fetch top answer for each question
+  for (const q of recentQA) {
+    try {
+      q.topAnswer = await db.prepare("SELECT c.body, u.full_name as author_name FROM comments c JOIN users u ON c.author_id = u.id WHERE c.post_id = ? ORDER BY c.like_count DESC, c.created_at ASC LIMIT 1").get(q.id);
+    } catch(e) { q.topAnswer = null; }
+  }
 
   res.render('lekhok-home', {
     layout: 'layout',

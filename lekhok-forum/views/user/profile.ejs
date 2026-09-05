@@ -1,9 +1,18 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: (profile.full_name) + ' — বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/profile.css'] }) %>
 
+  <% if (typeof req !== 'undefined' && req.query.ok === 'avatar') { %>
+    <div class="profile-toast success" onclick="this.remove()"><i class="fas fa-check-circle"></i> প্রোফাইল ছবি সফলভাবে পরিবর্তন হয়েছে</div>
+  <% } %>
+  <% if (typeof req !== 'undefined' && req.query.ok === 'cover') { %>
+    <div class="profile-toast success" onclick="this.remove()"><i class="fas fa-check-circle"></i> কভার ফটো সফলভাবে পরিবর্তন হয়েছে</div>
+  <% } %>
+  <% if (typeof req !== 'undefined' && req.query.err) { %>
+    <div class="profile-toast error" onclick="this.remove()"><i class="fas fa-exclamation-circle"></i> ত্রুটি: <%= req.query.err === 'upload' ? 'ফাইল আপলোড ব্যর্থ' : req.query.err === 'no_file' ? 'কোনো ফাইল নির্বাচিত হয়নি' : 'সংরক্ষণ ব্যর্থ' %></div>
+  <% } %>
   <div class="profile-wrap">
     <div class="profile-cover card">
-      <div class="profile-banner"></div>
+      <div class="profile-banner"<% if (profile.cover_url) { %> style="background-image:url('<%= profile.cover_url %>'); background-size:cover; background-position:center;"<% } %>></div>
       <div class="profile-avatar-row">
         <div class="profile-avatar-wrap">
           <img src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="profile-avatar profile-avatar-lg" onclick="<%= isOwner ? 'document.getElementById(\'avatarUpload\').click()' : '' %>" style="<%= isOwner ? 'cursor:pointer' : '' %>" title="<%= isOwner ? 'প্রোফাইল ছবি পরিবর্তন করুন' : '' %>">

@@ -2345,10 +2345,10 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
    v2.6: Nav dropdowns + Brand v2 + Leadership + Login buttons
    ============================================================ */
 
-/* Brand v2 — 2 lines, same size, 2 colors (gold + white on dark bg) */
+/* Brand v2 — 2 lines, same size, both WHITE on dark bg */
 .logo-text-v2 { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; font-family: 'Hind Siliguri', sans-serif !important; }
 .logo-text-v2 strong {
-  font-size: 15px; font-weight: 700; color: #d4a017;
+  font-size: 15px; font-weight: 700; color: #ffffff;
   letter-spacing: -0.01em;
 }
 .logo-text-v2 .brand-line2 {
@@ -2773,3 +2773,30 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 @media (max-width: 640px) {
   .global-search-dropdown { width: calc(100vw - 32px); right: -8px; }
 }
+
+/* ============================================================
+   v3.3: Footer credit + navbar gap
+   ============================================================ */
+.footer-credit {
+  font-size: 12.5px; color: var(--text-muted, #94a3b8);
+  margin-top: 4px; text-align: center;
+}
+.footer-credit a {
+  color: #d4a017; text-decoration: none; font-weight: 500;
+  transition: color 0.15s;
+}
+.footer-credit a:hover { color: #e6b422; text-decoration: underline; }
+
+/* Reduce navbar gap */
+.topbar-tabs { gap: 2px !important; }
+.topbar-tab { padding: 8px 10px !important; font-size: 14px !important; }
+
+/* Q&A folding — answers inline */
+.qa-fold-question { padding: 10px 0; border-bottom: 1px dashed var(--border, #e2e8f0); margin-bottom: 10px; }
+.qa-fold-question strong { color: var(--text, #0f172a); font-size: 13px; }
+.qa-fold-question p { font-size: 13.5px; color: var(--text-soft, #475569); line-height: 1.6; margin: 6px 0 0; }
+.qa-fold-answer { padding: 10px 12px; background: var(--surface-alt, #f8fafc); border-radius: 8px; border-left: 3px solid var(--accent, #059669); }
+.qa-fold-answer strong { color: var(--accent, #059669); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.qa-fold-answer p { font-size: 13.5px; color: var(--text, #0f172a); line-height: 1.7; margin: 6px 0; }
+.qa-fold-answerer { font-size: 12px; color: var(--text-muted, #64748b); display: flex; align-items: center; gap: 4px; }
+.qa-fold-no-answer { padding: 12px; text-align: center; color: var(--text-muted, #64748b); font-size: 13px; background: var(--surface-alt, #f8fafc); border-radius: 8px; }

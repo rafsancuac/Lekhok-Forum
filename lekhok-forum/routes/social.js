@@ -712,6 +712,7 @@ router.get('/profile/:username', async (req, res) => {
     followerCount, followingCount,
     isOwner, isFollowing, iBlockedHim,
     REACTION_META,
+    req,
     currentPath: '/profile/' + profile.username
   });
 });
@@ -984,25 +985,46 @@ router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), async 
 // ── Avatar upload (quick change from profile) ────────────────────────────────
 router.post('/settings/avatar', ensureLoggedIn, withUpload(avatarUpload), async (req, res) => {
   const me = req.session.user;
-  if (req.uploadError) return res.redirect('/profile/' + me.username + '?err=upload');
-  if (!req.file) return res.redirect('/profile/' + me.username);
+  if (req.uploadError) {
+    console.error('[avatar] upload error:', req.uploadError);
+    return res.redirect('/profile/' + encodeURIComponent(me.username) + '?err=' + encodeURIComponent(req.uploadError));
+  }
+  if (!req.file) {
+    return res.redirect('/profile/' + encodeURIComponent(me.username) + '?err=no_file');
+  }
   const avatarUrl = req.file.url || req.file.path;
-  await db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, me.id);
-  req.session.user.avatar_url = avatarUrl;
-  res.redirect('/profile/' + me.username);
+  try {
+    await db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, me.id);
+    // Refresh session user from DB
+    const fresh = await db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
+    if (fresh) req.session.user = { id: fresh.id, username: fresh.username, full_name: fresh.full_name, avatar_url: fresh.avatar_url, gender: fresh.gender, role: fresh.role || 'user' };
+    res.redirect('/profile/' + encodeURIComponent(me.username) + '?ok=avatar');
+  } catch(e) {
+    console.error('[avatar] save error:', e);
+    res.redirect('/profile/' + encodeURIComponent(me.username) + '?err=db');
+  }
 });
 
 // ── Cover photo upload ──────────────────────────────────────────────────────
 router.post('/settings/cover', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const me = req.session.user;
-  if (req.uploadError) return res.redirect('/profile/' + me.username + '?err=upload');
-  if (!req.file) return res.redirect('/profile/' + me.username);
+  if (req.uploadError) {
+    return res.redirect('/profile/' + encodeURIComponent(me.username) + '?err=' + encodeURIComponent(req.uploadError));
+  }
+  if (!req.file) {
+    return res.redirect('/profile/' + encodeURIComponent(me.username) + '?err=no_file');
+  }
   const coverUrl = req.file.url || req.file.path;
   try {
     await db.prepare('ALTER TABLE users ADD COLUMN cover_url TEXT').run();
   } catch(e) {}
-  await db.prepare('UPDATE users SET cover_url = ? WHERE id = ?').run(coverUrl, me.id);
-  res.redirect('/profile/' + me.username);
+  try {
+    await db.prepare('UPDATE users SET cover_url = ? WHERE id = ?').run(coverUrl, me.id);
+    res.redirect('/profile/' + encodeURIComponent(me.username) + '?ok=cover');
+  } catch(e) {
+    console.error('[cover] save error:', e);
+    res.redirect('/profile/' + encodeURIComponent(me.username) + '?err=db');
+  }
 });
 
 router.post('/settings/privacy', ensureLoggedIn, async (req, res) => {

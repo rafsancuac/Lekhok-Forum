@@ -232,15 +232,27 @@
         <a href="/qa" class="link-more">সকল প্রশ্ন <i class="fas fa-arrow-right"></i></a>
       </div>
       <div class="qa-folding-list">
-        <% recentQA.forEach((q, i) => { %>
-          <details class="qa-fold-item" <%= i === 0 ? 'open' : '' %>>
+        <% recentQA.forEach((q) => { %>
+          <details class="qa-fold-item">
             <summary class="qa-fold-summary">
               <span class="qa-fold-q"><i class="fas fa-chevron-right"></i> <%= q.title %></span>
               <span class="qa-fold-meta"><i class="far fa-user"></i> <%= q.author_name %> · <i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
             </summary>
             <div class="qa-fold-body">
-              <p><%= (q.body || '').substring(0, 300) %><%= q.body && q.body.length > 300 ? '…' : '' %></p>
-              <a href="/qa/<%= q.id %>" class="qa-fold-link">সম্পূর্ণ প্রশ্ন ও উত্তর দেখুন <i class="fas fa-arrow-right"></i></a>
+              <div class="qa-fold-question">
+                <strong>প্রশ্ন:</strong>
+                <p><%= (q.body || '').substring(0, 400) %><%= q.body && q.body.length > 400 ? '…' : '' %></p>
+              </div>
+              <% if (q.topAnswer) { %>
+                <div class="qa-fold-answer">
+                  <strong><i class="fas fa-comment-dots"></i> উত্তর:</strong>
+                  <p><%= q.topAnswer.body.substring(0, 500) %><%= q.topAnswer.body.length > 500 ? '…' : '' %></p>
+                  <span class="qa-fold-answerer"><i class="far fa-user"></i> <%= q.topAnswer.author_name %></span>
+                </div>
+              <% } else { %>
+                <div class="qa-fold-no-answer"><i class="fas fa-info-circle"></i> এখনো কোনো উত্তর নেই। প্রথম উত্তর দিন!</div>
+              <% } %>
+              <a href="/qa/<%= q.id %>" class="qa-fold-link">সম্পূর্ণ আলোচনায় অংশ নিন <i class="fas fa-arrow-right"></i></a>
             </div>
           </details>
         <% }) %>
