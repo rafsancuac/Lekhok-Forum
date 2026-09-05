@@ -581,6 +581,8 @@ async function runMigrations() {
     "ALTER TABLE users ADD COLUMN last_login DATETIME",
     "ALTER TABLE posts ADD COLUMN mentions TEXT",
     "ALTER TABLE posts ADD COLUMN shared_from INTEGER DEFAULT NULL",
+    "ALTER TABLE posts ADD COLUMN share_count INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN cover_url TEXT",
     "ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'",
     "ALTER TABLE posts ADD COLUMN reactions TEXT DEFAULT '{}'",
     "ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'",

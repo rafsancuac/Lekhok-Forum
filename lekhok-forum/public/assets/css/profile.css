@@ -131,3 +131,94 @@
 }
 .org-role-chip strong { color: var(--accent, #059669); font-weight: 700; }
 .org-role-chip small { color: var(--text-muted); font-size: 0.74rem; }
+
+/* ============================================================
+   v3.1: Profile — bigger avatar + clickable + 3-dot menu
+   ============================================================ */
+.profile-avatar-wrap { position: relative; display: inline-block; }
+.profile-avatar-lg {
+  width: 140px !important; height: 140px !important;
+  border: 5px solid white !important;
+  transition: transform 0.15s;
+}
+.profile-avatar-lg:hover { transform: scale(1.03); }
+.avatar-change-hint {
+  position: absolute; bottom: 8px; right: 8px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent, #059669); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.profile-3dot-wrap { position: relative; }
+.profile-3dot-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: transparent; border: 1px solid var(--border, #e2e8f0);
+  cursor: pointer; color: var(--text-soft, #475569);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.profile-3dot-btn:hover { background: var(--surface-alt, #f1f5f9); }
+.profile-3dot-menu {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: white; border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 200px; padding: 6px; z-index: 50;
+  display: none; flex-direction: column; gap: 2px;
+  font-family: 'Hind Siliguri', sans-serif !important;
+}
+.profile-3dot-menu.open { display: flex; }
+.profile-3dot-menu button, .profile-3dot-menu a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border: none; background: transparent;
+  border-radius: 6px; cursor: pointer; text-decoration: none;
+  color: var(--text, #0f172a); font-size: 13.5px; font-weight: 500;
+  font-family: 'Hind Siliguri', sans-serif !important;
+  transition: background 0.12s;
+}
+.profile-3dot-menu button:hover, .profile-3dot-menu a:hover {
+  background: var(--surface-alt, #f1f5f9); text-decoration: none;
+}
+.profile-3dot-menu i { color: var(--accent, #059669); width: 16px; }
+
+@media (max-width: 640px) {
+  .profile-avatar-lg { width: 110px !important; height: 110px !important; }
+  .profile-owner-actions { flex-wrap: wrap; gap: 6px; }
+}
+
+/* ============================================================
+   v3.2: Post 3-dot menu
+   ============================================================ */
+.post-3dot-wrap { position: relative; margin-left: auto; }
+.post-3dot-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-muted, #64748b);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.post-3dot-btn:hover { background: var(--surface-alt, #f1f5f9); color: var(--text, #0f172a); }
+.post-3dot-menu {
+  position: absolute; top: calc(100% + 4px); right: 0;
+  background: white; border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 180px; padding: 6px; z-index: 50;
+  display: none; flex-direction: column; gap: 2px;
+  font-family: 'Hind Siliguri', sans-serif !important;
+}
+.post-3dot-menu.open { display: flex; }
+.post-3dot-menu a, .post-3dot-menu button {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border: none; background: transparent;
+  border-radius: 6px; cursor: pointer; text-decoration: none;
+  color: var(--text, #0f172a); font-size: 13px; font-weight: 500;
+  font-family: 'Hind Siliguri', sans-serif !important;
+  transition: background 0.12s; width: 100%; text-align: left;
+}
+.post-3dot-menu a:hover, .post-3dot-menu button:hover {
+  background: var(--surface-alt, #f1f5f9); text-decoration: none;
+}
+.post-3dot-menu i { color: var(--accent, #059669); width: 14px; font-size: 12px; }
+.post-delete-btn { color: #ef4444 !important; }
+.post-delete-btn i { color: #ef4444 !important; }

@@ -5,12 +5,31 @@
     <div class="profile-cover card">
       <div class="profile-banner"></div>
       <div class="profile-avatar-row">
-        <img src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="profile-avatar">
+        <div class="profile-avatar-wrap">
+          <img src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="profile-avatar profile-avatar-lg" onclick="<%= isOwner ? 'document.getElementById(\'avatarUpload\').click()' : '' %>" style="<%= isOwner ? 'cursor:pointer' : '' %>" title="<%= isOwner ? 'প্রোফাইল ছবি পরিবর্তন করুন' : '' %>">
+          <% if (isOwner) { %>
+            <div class="avatar-change-hint"><i class="fas fa-camera"></i></div>
+            <form method="POST" action="/settings/avatar" enctype="multipart/form-data" id="avatarForm" style="display:none">
+              <input type="file" name="avatar" id="avatarUpload" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
+            </form>
+          <% } %>
+        </div>
         <% if (isOwner) { %>
           <div class="profile-owner-actions">
             <a href="/profile/edit" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
             <a href="/settings" class="btn btn-ghost btn-sm"><i class="fas fa-sliders-h"></i> সেটিংস</a>
             <a href="/articles/new" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> নতুন লেখা</a>
+            <div class="profile-3dot-wrap">
+              <button class="profile-3dot-btn" onclick="toggleProfile3Dot(event)" title="আরও"><i class="fas fa-ellipsis-v"></i></button>
+              <div class="profile-3dot-menu" id="profile3DotMenu">
+                <button type="button" onclick="document.getElementById('coverUpload').click()"><i class="fas fa-image"></i> কভার ফটো পরিবর্তন</button>
+                <button type="button" onclick="document.getElementById('avatarUpload').click()"><i class="fas fa-user-circle"></i> প্রোফাইল ছবি পরিবর্তন</button>
+                <a href="/settings"><i class="fas fa-cog"></i> সেটিংস</a>
+              </div>
+              <form method="POST" action="/settings/cover" enctype="multipart/form-data" id="coverForm" style="display:none">
+                <input type="file" name="cover" id="coverUpload" accept="image/*" onchange="document.getElementById('coverForm').submit()">
+              </form>
+            </div>
           </div>
         <% } else if (user) { %>
           <div class="profile-owner-actions">
@@ -115,6 +134,19 @@
                   <div class="post-meta-top">
                     <span class="post-tag"><%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %></span>
                     <span class="post-date"><i class="far fa-clock"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD') %></span>
+                    <% if (isOwner) { %>
+                    <div class="post-3dot-wrap">
+                      <button class="post-3dot-btn" onclick="togglePost3Dot(event, <%= post.id %>)" title="আরও"><i class="fas fa-ellipsis-v"></i></button>
+                      <div class="post-3dot-menu" id="post3dot-<%= post.id %>">
+                        <a href="/articles/<%= post.id %>/edit"><i class="fas fa-pen"></i> সম্পাদনা</a>
+                        <a href="/articles/<%= post.id %>"><i class="fas fa-eye"></i> দেখুন</a>
+                        <a href="#" onclick="sharePost(<%= post.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
+                        <form method="POST" action="/articles/<%= post.id %>/delete" onsubmit="return confirm('মুছে ফেলবেন?')" style="margin:0">
+                          <button type="submit" class="post-delete-btn"><i class="fas fa-trash"></i> মুছুন</button>
+                        </form>
+                      </div>
+                    </div>
+                    <% } %>
                   </div>
                   <a href="/articles/<%= post.id %>" class="post-title"><%= post.title %></a>
                   <p class="post-excerpt"><%= (post.excerpt || post.body || '').substring(0, 150) %>…</p>
@@ -122,6 +154,7 @@
                     <span><i class="far fa-heart"></i> <%= post.like_count || 0 %></span>
                     <span><i class="far fa-comment"></i> <%= post.comment_count || 0 %></span>
                     <span><i class="far fa-eye"></i> <%= post.view_count || 0 %></span>
+                    <span><i class="fas fa-share"></i> <%= post.share_count || 0 %></span>
                   </div>
                 </div>
               </div>
@@ -342,5 +375,43 @@
     });
     <% } %>
   </script>
+
+<script>
+function toggleProfile3Dot(e) {
+  e.stopPropagation();
+  const m = document.getElementById('profile3DotMenu');
+  m.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.profile-3dot-wrap')) {
+    document.getElementById('profile3DotMenu')?.classList.remove('open');
+  }
+});
+</script>
+
+<script>
+function togglePost3Dot(e, id) {
+  e.stopPropagation();
+  e.preventDefault();
+  const m = document.getElementById('post3dot-' + id);
+  // Close others
+  document.querySelectorAll('.post-3dot-menu.open').forEach(x => { if (x.id !== 'post3dot-' + id) x.classList.remove('open'); });
+  m.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.post-3dot-wrap')) {
+    document.querySelectorAll('.post-3dot-menu.open').forEach(x => x.classList.remove('open'));
+  }
+});
+function sharePost(id) {
+  const url = window.location.origin + '/articles/' + id;
+  if (navigator.share) {
+    navigator.share({ title: 'লেখক ফোরাম', url: url });
+  } else {
+    navigator.clipboard.writeText(url);
+    alert('লিংক কপি হয়েছে');
+  }
+}
+</script>
 </body>
 </html>

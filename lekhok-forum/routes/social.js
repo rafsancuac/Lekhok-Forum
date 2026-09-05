@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcryptjs');
-const { coverUpload, withUpload } = require('../middleware/upload');
+const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCurrentUser(req) {
@@ -979,6 +979,30 @@ router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), async 
   const fresh = await db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
   req.session.user = fresh;
   res.redirect('/settings?ok=profile');
+});
+
+// ── Avatar upload (quick change from profile) ────────────────────────────────
+router.post('/settings/avatar', ensureLoggedIn, withUpload(avatarUpload), async (req, res) => {
+  const me = req.session.user;
+  if (req.uploadError) return res.redirect('/profile/' + me.username + '?err=upload');
+  if (!req.file) return res.redirect('/profile/' + me.username);
+  const avatarUrl = req.file.url || req.file.path;
+  await db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, me.id);
+  req.session.user.avatar_url = avatarUrl;
+  res.redirect('/profile/' + me.username);
+});
+
+// ── Cover photo upload ──────────────────────────────────────────────────────
+router.post('/settings/cover', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
+  const me = req.session.user;
+  if (req.uploadError) return res.redirect('/profile/' + me.username + '?err=upload');
+  if (!req.file) return res.redirect('/profile/' + me.username);
+  const coverUrl = req.file.url || req.file.path;
+  try {
+    await db.prepare('ALTER TABLE users ADD COLUMN cover_url TEXT').run();
+  } catch(e) {}
+  await db.prepare('UPDATE users SET cover_url = ? WHERE id = ?').run(coverUrl, me.id);
+  res.redirect('/profile/' + me.username);
 });
 
 router.post('/settings/privacy', ensureLoggedIn, async (req, res) => {
