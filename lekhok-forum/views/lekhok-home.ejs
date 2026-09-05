@@ -101,24 +101,15 @@
       <div class="feature"><i class="fas fa-flag"></i><h3>দেশপ্রেমিক নাগরিক গঠন</h3><p>মুক্তিযুদ্ধের আদর্শ লালন করে তরুণ সমাজকে দেশপ্রেমী নাগরিক হিসেবে গড়ে তোলা</p></div>
       <div class="feature"><i class="fas fa-balance-scale"></i><h3>গঠনমূলক সমালোচনা</h3><p>কুসংস্কার, অন্যায়, শোষণ ও দুর্নীতিসহ সামাজিক সমস্যার গঠনমূলক সমালোচনা ও ইতিবাচক সমাধান লেখনীর মাধ্যমে তুলে ধরা</p></div>
       <div class="feature"><i class="fas fa-users"></i><h3>প্ল্যাটফর্ম একত্রিতকরণ</h3><p>তরুণ লেখকদের একটি প্ল্যাটফর্মে একত্রিত করে নিয়মিত কর্মশালা, ওয়েবিনার ও পাঠচক্রের আয়োজন</p></div>
+      <div class="feature"><i class="fas fa-book-reader"></i><h3>পঠন সংস্কৃতি বিকাশ</h3><p>তরুণ সমাজে নিয়মিত পড়ার অভ্যাস গড়ে তুলে মেধা ও মানসিক বিকাশ সাধন</p></div>
+      <div class="feature"><i class="fas fa-lightbulb"></i><h3>বুদ্ধিবৃত্তিক বিকাশ</h3><p>চিন্তন, গবেষণা ও বিশ্লেষণী ক্ষমতার বিকাশ ঘটিয়ে যুক্তিবাদী সমাজ গঠন</p></div>
+      <div class="feature"><i class="fas fa-hands-helping"></i><h3>সামাজিক দায়িত্ববোধ</h3><p>সমাজের প্রতি দায়িত্বশীল ও সংবেদনশীল নাগরিক হিসেবে গড়ে তোলা</p></div>
+      <div class="feature"><i class="fas fa-graduation-cap"></i><h3>নেতৃত্ব গড়ে তোলা</h3><p>তরুণদের সাংগঠনিক ও নেতৃত্ব গুণাবলি বিকাশে সহায়তা করা</p></div>
     </div>
   </div>
 </section>
 
-<!-- Stats banner — section-dark with reveal -->
-<section class="cta-banner reveal">
-  <div class="container">
-    <span class="eyebrow" style="background:rgba(5,150,105,0.18);border-color:rgba(5,150,105,0.32);">আমাদের সংখ্যা</span>
-    <h2>একটি প্রজন্ম, একটি <span class="accent">লক্ষ্য</span></h2>
-    <p>দেশের ৪৮টিরও বেশি বিশ্ববিদ্যালয়ে ছড়িয়ে আছে আমাদের সদস্য। প্রতিটি লেখক একেকটি গল্প, প্রতিটি গল্প একেকটি আন্দোলন।</p>
-    <div class="stat-grid reveal-stagger">
-      <div class="stat-card"><i class="stat-icon fas fa-user-friends"></i><span class="stat-num" data-count="1200">০</span><span class="stat-label">সক্রিয় সদস্য</span></div>
-      <div class="stat-card"><i class="stat-icon fas fa-university"></i><span class="stat-num" data-count="48">০</span><span class="stat-label">বিশ্ববিদ্যালয় শাখা</span></div>
-      <div class="stat-card"><i class="stat-icon fas fa-newspaper"></i><span class="stat-num" data-count="320">০</span><span class="stat-label">প্রকাশনা</span></div>
-      <div class="stat-card"><i class="stat-icon fas fa-calendar-check"></i><span class="stat-num" data-count="85">০</span><span class="stat-label">ইভেন্ট আয়োজিত</span></div>
-    </div>
-  </div>
-</section>
+<!-- Stats banner removed (moved to about page) -->
 
 <!-- Leaders preview — restructured with current + founders + advisors -->
 <section class="section reveal" id="leadership">
@@ -132,10 +123,10 @@
       <a href="/committee" class="link-more">সকল সদস্য দেখুন <i class="fas fa-arrow-right"></i></a>
     </div>
 
-    <%# ── Sub-section 1: Current leadership (2 cards) ── %>
-    <% if (currentLeaders && currentLeaders.length) { %>
+    <%# ── Sub-section 1: Founding leadership (2 cards) ── %>
+    <% if (founders && founders.length) { %>
     <div class="leadership-sub">
-      <h3 class="leadership-sub-title"><i class="fas fa-star"></i> বর্তমান নেতৃত্ব</h3>
+      <h3 class="leadership-sub-title"><i class="fas fa-landmark"></i> প্রতিষ্ঠাতা সভাপতি ও সাধারণ সম্পাদক</h3>
       <div class="leaders-grid leaders-grid-lg">
         <% currentLeaders.forEach(m => { %>
           <% const displayName = m.user_full_name || m.name; %>
@@ -165,12 +156,12 @@
     </div>
     <% } %>
 
-    <%# ── Sub-section 2: Founding leadership ── %>
-    <% if (founders && founders.length) { %>
+    <%# ── Sub-section 2: Founding advisors ── %>
+    <% if (foundingAdvisors && foundingAdvisors.length) { %>
     <div class="leadership-sub">
-      <h3 class="leadership-sub-title"><i class="fas fa-landmark"></i> প্রতিষ্ঠাতা নেতৃত্ব</h3>
+      <h3 class="leadership-sub-title"><i class="fas fa-user-tie"></i> প্রতিষ্ঠাকালীন উপদেষ্টা</h3>
       <div class="leaders-grid leaders-grid-lg">
-        <% founders.forEach(m => { %>
+        <% foundingAdvisors.forEach(m => { %>
           <% const displayName = m.user_full_name || m.name; %>
           <% const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg'; %>
           <% const displayBio  = m.bio || ''; %>
@@ -199,34 +190,59 @@
     </div>
     <% } %>
 
-    <%# ── Sub-section 3: Advisors ── %>
-    <% if (advisors && advisors.length) { %>
+    <%# ── Sub-section 3: Current leadership ── %>
+    <% if (currentLeaders && currentLeaders.length) { %>
     <div class="leadership-sub">
-      <div class="leadership-sub-head">
-        <h3 class="leadership-sub-title"><i class="fas fa-user-tie"></i> উপদেষ্টা পরিষদ</h3>
-        <a href="/committee#advisory" class="link-more">সকল উপদেষ্টা <i class="fas fa-arrow-right"></i></a>
-      </div>
-      <div class="leaders-grid">
-        <% advisors.forEach(m => { %>
+      <h3 class="leadership-sub-title"><i class="fas fa-star"></i> বর্তমান সভাপতি ও সাধারণ সম্পাদক</h3>
+      <div class="leaders-grid leaders-grid-lg">
+        <% currentLeaders.forEach(m => { %>
           <% const displayName = m.user_full_name || m.name; %>
           <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% const displayBio  = m.bio || ''; %>
           <% if (m.user_username) { %>
-            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member">
+            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member leader-card-featured">
               <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
+                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
               </div>
             </a>
           <% } else { %>
-            <div class="leader-card has-image">
+            <div class="leader-card has-image leader-card-featured">
               <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
+                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
               </div>
             </div>
           <% } %>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+
+    <%# ── Q&A folding section ── %>
+    <% if (recentQA && recentQA.length) { %>
+    <div class="leadership-sub" style="margin-top:36px">
+      <div class="leadership-sub-head">
+        <h3 class="leadership-sub-title"><i class="fas fa-question-circle"></i> সাধারণ জিজ্ঞাসা</h3>
+        <a href="/qa" class="link-more">সকল প্রশ্ন <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="qa-folding-list">
+        <% recentQA.forEach((q, i) => { %>
+          <details class="qa-fold-item" <%= i === 0 ? 'open' : '' %>>
+            <summary class="qa-fold-summary">
+              <span class="qa-fold-q"><i class="fas fa-chevron-right"></i> <%= q.title %></span>
+              <span class="qa-fold-meta"><i class="far fa-user"></i> <%= q.author_name %> · <i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
+            </summary>
+            <div class="qa-fold-body">
+              <p><%= (q.body || '').substring(0, 300) %><%= q.body && q.body.length > 300 ? '…' : '' %></p>
+              <a href="/qa/<%= q.id %>" class="qa-fold-link">সম্পূর্ণ প্রশ্ন ও উত্তর দেখুন <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </details>
         <% }) %>
       </div>
     </div>

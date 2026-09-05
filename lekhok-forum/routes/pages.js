@@ -25,6 +25,8 @@ router.get('/', async (req, res) => {
     ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order LIMIT 2").all(latestTerm)
     : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
   const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all();
+  // Founding advisors (earliest term_year or sort_order)
+  const foundingAdvisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year ASC, m.sort_order ASC LIMIT 2").all();
   const advisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all();
   // Fallback: if no founders seeded, use earliest past leaders (first president + first GS)
   let foundersFinal = founders;
@@ -48,6 +50,9 @@ router.get('/', async (req, res) => {
   };
   const hasToday = Object.values(todayByType).some(v => v);
 
+  // Recent Q&A for home page folding section
+  const recentQA = await db.prepare("SELECT p.id, p.title, p.body, p.created_at, u.full_name as author_name, u.username as author_username FROM posts p JOIN users u ON p.author_id = u.id WHERE p.type = 'question' AND p.status = 'published' ORDER BY p.created_at DESC LIMIT 5").all();
+
   res.render('lekhok-home', {
     layout: 'layout',
     pageTitle: 'হোম',
@@ -55,7 +60,9 @@ router.get('/', async (req, res) => {
     recentNotices,
     currentLeaders,
     founders: foundersFinal,
+    foundingAdvisors,
     advisors,
+    recentQA,
     todayByType,
     hasToday
   });
