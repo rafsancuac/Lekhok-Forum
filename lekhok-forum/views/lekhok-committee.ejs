@@ -2,7 +2,7 @@
   <div class="container">
     <span class="eyebrow">নেতৃত্ব</span>
     <h1>সংগঠন কমিটি</h1>
-    <p>লেখক ফোরাম — কার্যনির্বাহী কমিটি</p>
+    <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় — কার্যনির্বাহী কমিটি</p>
   </div>
 </header>
 
@@ -22,6 +22,8 @@
 .clickable-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
 .clickable-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
 .click-hint { display: block; text-align: center; color: var(--accent, #059669); font-size: 0.75rem; margin-top: 6px; opacity: 0.7; }
+.term-intro { color: var(--text-muted, #64748b); font-size: 0.95rem; margin: 10px 0 0; }
+.term-intro strong { color: var(--accent, #059669); }
 .profile-link-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 3px 10px; background: var(--accent-soft, rgba(5,150,105,0.1)); color: var(--accent, #059669); border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
 .leader-card.linked-member { text-decoration: none; color: inherit; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(10,31,68,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 20px; animation: fadeIn 0.2s ease; }
@@ -49,6 +51,7 @@
         <span class="eyebrow">নেতৃত্ব</span>
         <h2 class="section-title">কার্যনির্বাহী <span class="accent">কমিটি</span></h2>
         <span class="accent-divider"></span>
+        <p class="term-intro">বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখার <strong><%= selectedYear %></strong> কার্যবর্ষের নবনির্বাচিত নেতৃবৃন্দ।</p>
       </div>
       <div class="year-filter-wrap">
         <label for="yearFilter"><i class="fas fa-calendar-alt"></i> মেয়াদ:</label>

@@ -1,4 +1,4 @@
-/* লেখক ফোরাম — main.js */
+/* বাংলাদেশ তরুণ কলাম লেখক ফোরাম — main.js */
 (function () {
   // Mobile sidebar toggle
   const toggle = document.getElementById('menuToggle');
@@ -269,7 +269,7 @@ window.showToast = showToast;
 (function () {
   // Build marker — lets anyone verify in the DevTools console that the
   // browser is running THIS main.js (not a stale cached copy).
-  console.log('%cলেখক ফোরাম · main.js build 2026-09-04-r3 (hold+slide reactions)', 'color:#059669;font-weight:600');
+  console.log('%cবাংলাদেশ তরুণ কলাম লেখক ফোরাম · main.js build 2026-09-04-r3 (hold+slide reactions)', 'color:#059669;font-weight:600');
   const META = {
     like: { emoji: '👍', label: 'লাইক' },
     love: { emoji: '❤️', label: 'ভালোবাসা' },

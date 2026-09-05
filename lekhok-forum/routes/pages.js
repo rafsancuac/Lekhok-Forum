@@ -194,7 +194,7 @@ router.get('/team', async (req, res) => {
 router.get('/notices/:id(\\d+)', async (req, res) => {
   const notice = await db.prepare('SELECT * FROM notices WHERE id = ?').get(parseInt(req.params.id, 10));
   if (!notice) {
-    return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+    return res.status(404).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
   }
   res.render('lekhok-notice-detail', {
     layout: 'layout',

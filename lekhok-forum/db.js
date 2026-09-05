@@ -560,6 +560,67 @@ async function runMigrations() {
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}
   }
+
+  // ── Data migration — global rebrand to the real branch identity ───────────
+  // (1) settings: replace rows that still carry the old demo defaults. Only
+  //     exact old values are updated, so admin-customized values are never
+  //     clobbered. Idempotent — safe on every boot.
+  const rebrand = [
+    ['site_name',       'লেখক ফোরাম',            'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'],
+    ['tagline',         'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।'],
+    ['contact_phone',   '০১XXXXXXXXX',           '০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)'],
+    ['contact_address', 'আপনার ক্যাম্পাস ঠিকানা',   'চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম']
+  ];
+  for (const [k, oldV, newV] of rebrand) {
+    try {
+      await backend.prepare("UPDATE settings SET value = ? WHERE key = ? AND value = ?").run(newV, k, oldV);
+    } catch (_) {}
+  }
+  // motto is a NEW key — old DBs don't have it; add it if missing.
+  try {
+    await backend.prepare("INSERT INTO settings (key, value) SELECT 'motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী' WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'motto')").run();
+  } catch (_) {}
+
+  // (2) committee: drop the fake demo ২০২৫-২০২৬ central committee (exact
+  //     seed-list match only — admin-added real members are never touched),
+  //     then ensure the real ২০২১-২২ branch committee exists.
+  const FAKE_DEMO_COMMITTEE = [
+    'ইসমাইল হোসেন', 'মোনেম শাহরিয়ার শাওন', 'কারিশমা ইরিন এ্যামি', 'আজিজ ওয়েসি',
+    'মোঃ রেজাউল করিম', 'মোঃ নাঈম মিজি', 'মাহফুজ রহমান', 'মাহমুদুল হাসান শাকিব',
+    'জান্নাতুল ফেরদৌস ইকরা', 'নুসরাত সুলতানা', 'রাসেল হোসেন সাকিব', 'সানজিদা আফরোজ',
+    'আব্দুল্লাহ আল নাঈম', 'আবরার আহাদ রাফি', 'ঋতু আক্তার'
+  ];
+  try {
+    await backend.prepare(
+      `DELETE FROM members WHERE member_type = 'central' AND term_year = '২০২৫-২০২৬'
+       AND name IN (${FAKE_DEMO_COMMITTEE.map(() => '?').join(',')})`
+    ).run(...FAKE_DEMO_COMMITTEE);
+  } catch (_) {}
+
+  const BRANCH_TERM = '২০২১-২২';
+  const BRANCH_COMMITTEE = [
+    ['Md. Rafsan',              'সভাপতি',                 0],
+    ['K.M. Akij Mahmud',        'সাধারণ সম্পাদক',           1],
+    ['Mushfiqur Rahman Emon',   'সাংগঠনিক সম্পাদক',         2],
+    ['Rabby Hasan',             'অর্থ সম্পাদক',             3],
+    ['Jannatul Ferdous SaYma',  'দপ্তর সম্পাদক',             4],
+    ['Murad Hoshen',            'উপ দপ্তর সম্পাদক',          5],
+    ['আয়েশা সিদ্দিকা এ্যানি',      'প্রচার সম্পাদক',           6],
+    ['Tawhida Akter',           'উপ প্রচার সম্পাদক',         7],
+    ['Sk Rafiquzzaman',         'প্রশিক্ষণ বিষয়ক সম্পাদক',    8]
+  ];
+  for (const [name, role, sort] of BRANCH_COMMITTEE) {
+    try {
+      const row = await backend.prepare(
+        "SELECT id FROM members WHERE name = ? AND term_year = ? AND member_type = 'central'"
+      ).get(name, BRANCH_TERM);
+      if (!row || !row.id) {
+        await backend.prepare(
+          "INSERT INTO members (name, role, designation, member_type, term_year, sort_order) VALUES (?, ?, ?, 'central', ?, ?)"
+        ).run(name, role, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', BRANCH_TERM, sort);
+      }
+    } catch (_) {}
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -696,11 +757,12 @@ async function seedAdmin() {
     "INSERT INTO admin_users (username, password_hash, display_name) VALUES (?, ?, ?)"
   ).run('admin', hash, 'প্রশাসক');
   const defaults = [
-    ['site_name', 'লেখক ফোরাম'],
-    ['tagline', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়'],
+    ['site_name', 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'],
+    ['tagline', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।'],
+    ['motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী'],
     ['contact_email', 'info@lekhokforum.org'],
-    ['contact_phone', '০১XXXXXXXXX'],
-    ['contact_address', 'আপনার ক্যাম্পাস ঠিকানা'],
+    ['contact_phone', '০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)'],
+    ['contact_address', 'চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম'],
     ['facebook_url', '#'],
     ['telegram_url', '#'],
     ['youtube_url', '#']
@@ -749,23 +811,21 @@ async function seedDemoContent() {
   ];
   for (const e of events) { try { await prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?)').run(...e); } catch(e2) {} }
 
-  // Central committee (২০২৫-২০২৬ term) — names from db/seed-committee.js,
-  // with term_year set so the committee year-filter route has data to show.
-  const CURRENT_TERM = '২০২৫-২০২৬';
+  // Branch committee (২০২১-২২ কার্যবর্ষ) — the real elected leadership of
+  // বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা, with term_year
+  // set so the committee year-filter route has data to show.
+  const CURRENT_TERM = '২০২১-২২';
   const committee = [
-    ['ইসমাইল হোসেন', 'সভাপতি', 0], ['মোনেম শাহরিয়ার শাওন', 'সাধারণ সম্পাদক', 1],
-    ['কারিশমা ইরিন এ্যামি', 'সহ-সাংগঠনিক সম্পাদক', 2], ['আজিজ ওয়েসি', 'সাংগঠনিক সম্পাদক', 3],
-    ['মোঃ রেজাউল করিম', 'দপ্তর সম্পাদক', 4], ['মোঃ নাঈম মিজি', 'সাহিত্য ও প্রকাশনা সম্পাদক', 5],
-    ['মাহফুজ রহমান', 'প্রচার সম্পাদক', 6], ['মাহমুদুল হাসান শাকিব', 'তথ্য ও প্রযুক্তি সম্পাদক', 7],
-    ['জান্নাতুল ফেরদৌস ইকরা', 'অর্থ সম্পাদক', 8], ['নুসরাত সুলতানা', 'প্রশিক্ষণ বিষয়ক সম্পাদক', 9],
-    ['রাসেল হোসেন সাকিব', 'যুগ্ম সাধারণ সম্পাদক', 10], ['সানজিদা আফরোজ', 'সহ-দপ্তর সম্পাদক', 11],
-    ['আব্দুল্লাহ আল নাঈম', 'সম্পাদকীয় পর্ষদ সদস্য', 12], ['আবরার আহাদ রাফি', 'কার্যনির্বাহী সদস্য', 13],
-    ['ঋতু আক্তার', 'কার্যনির্বাহী সদস্য', 14]
+    ['Md. Rafsan', 'সভাপতি', 0], ['K.M. Akij Mahmud', 'সাধারণ সম্পাদক', 1],
+    ['Mushfiqur Rahman Emon', 'সাংগঠনিক সম্পাদক', 2], ['Rabby Hasan', 'অর্থ সম্পাদক', 3],
+    ['Jannatul Ferdous SaYma', 'দপ্তর সম্পাদক', 4], ['Murad Hoshen', 'উপ দপ্তর সম্পাদক', 5],
+    ['আয়েশা সিদ্দিকা এ্যানি', 'প্রচার সম্পাদক', 6], ['Tawhida Akter', 'উপ প্রচার সম্পাদক', 7],
+    ['Sk Rafiquzzaman', 'প্রশিক্ষণ বিষয়ক সম্পাদক', 8]
   ];
   for (const [name, role, sort_order] of committee) {
     try {
       await prepare(`INSERT INTO members (name, role, designation, member_type, term_year, sort_order)
-               VALUES (?, ?, 'কেন্দ্রীয় কমিটি', 'central', ?, ?)`).run(name, role, CURRENT_TERM, sort_order);
+               VALUES (?, ?, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', 'central', ?, ?)`).run(name, role, CURRENT_TERM, sort_order);
     } catch(e) {}
   }
 
@@ -901,7 +961,7 @@ async function seedDemoContent() {
   for (const p of pastSecretaries) { try { await prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...p); } catch(e) {} }
 
   const constitutionSections = [
-    ['ধারা ১: নাম ও সংজ্ঞা', 'এই সংগঠনের নাম "লেখক ফোরাম"। এটি একটি অরাজনৈতিক, অলাভজনক সাহিত্য ও সংস্কৃতি বিষয়ক সংগঠন।', 1],
+    ['ধারা ১: নাম ও সংজ্ঞা', 'এই সংগঠনের নাম "বাংলাদেশ তরুণ কলাম লেখক ফোরাম"। এটি একটি অরাজনৈতিক, অলাভজনক সাহিত্য ও সংস্কৃতি বিষয়ক সংগঠন।', 1],
     ['ধারা ২: উদ্দেশ্য', 'বাংলা ভাষা ও সাহিত্যের চর্চা, প্রচার ও সম্প্রসারণ। তরুণ লেখকদের পৃষ্ঠপোষকতা। সৃজনশীলতার বিকাশ।', 2],
     ['ধারা ৩: সদস্যপদ', 'যেকোনো লেখক এই সংগঠনের সদস্য হতে পারবেন। সদস্যপদ অর্জনের জন্য নির্ধারিত ফি প্রদান করতে হবে।', 3],
     ['ধারা ৪: সদস্যদের অধিকার', 'সাধারণ সভায় ভোটাধিকার, নির্বাচনে প্রার্থিতার অধিকার, সংগঠনের সকল কার্যক্রমে অংশগ্রহণের অধিকার।', 4],
@@ -919,7 +979,7 @@ async function seedDemoContent() {
     ['প্রবন্ধ রচনার পদ্ধতি', 'প্রবন্ধে যুক্তি ও অনুভূতির ভারসাম্য রক্ষা করতে হয়।', 'guide', 'প্রশাসন'],
     ['ফেলোশিপ ও গবেষণা অনুদান', 'দেশী-বিদেশী বিভিন্ন ফেলোশিপ ও গবেষণা অনুদান সম্পর্কে বিস্তারিত তথ্য।', 'scholarship', 'প্রশাসন'],
     ['অনলাইনে লেখালেখি ও প্রকাশনা', 'ডিজিটাল প্ল্যাটফর্মে লেখা প্রকাশ করার সুবিধা ও সতর্কতা।', 'guide', 'সম্পাদক'],
-    ['গঠনতন্ত্র সম্পূর্ণ কপি', 'লেখক ফোরামের সম্পূর্ণ গঠনতন্ত্র।', 'document', 'প্রশাসন'],
+    ['গঠনতন্ত্র সম্পূর্ণ কপি', 'বাংলাদেশ তরুণ কলাম লেখক ফোরামের সম্পূর্ণ গঠনতন্ত্র।', 'document', 'প্রশাসন'],
     ['বার্ষিক প্রতিবেদন ২০২৫', '২০২৫ সালের বার্ষিক প্রতিবেদন।', 'report', 'প্রশাসন'],
     ['সদস্যপদ ফর্ম', 'সদস্যপদের জন্য আবেদন ফর্ম।', 'form', 'প্রশাসন'],
     ['কবিতার সংকলন — ভলিউম ১', 'সেরা কবিতার সংকলন।', 'anthology', 'সম্পাদক'],
