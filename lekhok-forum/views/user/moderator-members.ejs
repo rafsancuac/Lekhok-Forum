@@ -1,0 +1,209 @@
+<%- include('../partials/header', { title: 'কমিটি সদস্য ব্যবস্থাপনা — মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<style>
+  .mod-page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; font-family: 'Hind Siliguri', sans-serif !important; }
+  .mod-hero {
+    background: linear-gradient(135deg, #0a1f44 0%, #1e293b 100%);
+    border-radius: 16px; padding: 28px 32px; color: white;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+  }
+  .mod-hero h1 { margin: 0 0 6px; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .mod-hero h1 i { color: #d4a017; }
+  .mod-hero p { margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+  .mod-back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18); color: #e2e8f0;
+    border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+  }
+  .mod-back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; text-decoration: none; }
+  .mod-card { background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 22px; margin-bottom: 18px; }
+  .mod-card h2 { margin: 0 0 6px; font-size: 17px; color: var(--text, #0f172a); display: flex; align-items: center; gap: 8px; }
+  .mod-card .mod-hint { color: #64748b; font-size: 13.5px; margin: 0 0 16px; line-height: 1.6; }
+  .mod-flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
+  .mod-flash.ok { background: #dcfce7; color: #15803d; }
+  .mod-flash.err { background: #fef2f2; color: #dc2626; }
+  .mem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .mem-field label { display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin: 0 0 4px; }
+  .mem-field input, .mem-field select, .mem-field textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px; font-size: 13.5px; font-family: inherit; background: var(--surface, #fff);
+    color: var(--text, #0f172a); box-sizing: border-box;
+  }
+  .mem-field textarea { min-height: 64px; resize: vertical; }
+  .mem-field input:focus, .mem-field select:focus, .mem-field textarea:focus {
+    outline: none; border-color: #0a1f44; box-shadow: 0 0 0 3px rgba(10, 31, 68, 0.08);
+  }
+  .mem-row { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+  .mem-row summary {
+    list-style: none; display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; cursor: pointer; background: var(--surface-alt, #f8fafc);
+  }
+  .mem-row summary::-webkit-details-marker { display: none; }
+  .mem-row summary:hover { background: #eef2f7; }
+  .mem-thumb { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; background: #e2e8f0; flex: 0 0 auto; }
+  .mem-name { font-weight: 600; font-size: 14px; color: var(--text, #0f172a); }
+  .mem-sub { font-size: 12px; color: #64748b; }
+  .mem-chip {
+    margin-left: auto; font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 999px; background: #e0e7ff; color: #3730a3; white-space: nowrap;
+  }
+  .mem-chip.adv { background: #fef3c7; color: #92400e; }
+  .mem-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .mem-del {
+    display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+    background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
+    border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
+  }
+  .mem-del:hover { background: #fee2e2; }
+  .mem-section-count { font-size: 12px; color: #64748b; font-weight: 500; margin-left: auto; }
+  details[open] > summary .mem-chevron { transform: rotate(90deg); }
+  .mem-chevron { transition: transform .15s ease; color: #94a3b8; }
+</style>
+
+<div class="mod-page">
+  <div class="mod-hero">
+    <div>
+      <h1><i class="fas fa-users-cog"></i> কমিটি সদস্য ব্যবস্থাপনা</h1>
+      <p>কার্যনির্বাহী কমিটি ও উপদেষ্টা পর্ষদের সদস্য, পদ ও কার্যবর্ষ যোগ / সম্পাদনা / মুছুন</p>
+    </div>
+    <a href="/moderator" class="mod-back-btn"><i class="fas fa-arrow-left"></i> প্যানেলে ফিরুন</a>
+  </div>
+
+  <% if (posted) { %><div class="mod-flash ok"><i class="fas fa-check-circle"></i> সফলভাবে সংরক্ষিত হয়েছে — সাইটে সাথে সাথে প্রযোজ্য।</div><% } %>
+  <% if (removed) { %><div class="mod-flash ok"><i class="fas fa-trash-alt"></i> সদস্য মুছে ফেলা হয়েছে।</div><% } %>
+  <% if (error) { %><div class="mod-flash err"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+
+  <%# ── নতুন সদস্য যোগ ── %>
+  <div class="mod-card">
+    <h2><i class="fas fa-user-plus"></i> নতুন সদস্য যোগ করুন</h2>
+    <p class="mod-hint">
+      <strong>কার্যবর্ষ</strong> ঘরে যে বছরে সদস্য যুক্ত হয়েছেন সেটি লিখুন (যেমন <code>২০২৪-২৫</code>) —
+      এটি পাবলিক পেজ ও প্রোফাইলে দেখা যাবে। ঐচ্ছিক <strong>ইউজারনেম</strong> দিলে সদস্যের সাইট অ্যাকাউন্টের সাথে যুক্ত হবে।
+    </p>
+    <form method="POST" action="/moderator/members">
+      <div class="mem-grid">
+        <div class="mem-field"><label>নাম *</label><input type="text" name="name" required maxlength="120" placeholder="সদস্যের পূর্ণ নাম" /></div>
+        <div class="mem-field"><label>পদ (রোল)</label><input type="text" name="role" maxlength="120" placeholder="যেমন: সভাপতি / সাধারণ সম্পাদক / উপদেষ্টা" /></div>
+        <div class="mem-field"><label>শ্রেণি / বিভাগ</label><input type="text" name="designation" maxlength="160" placeholder="যেমন: সদস্য / ডেপার্টমেন্ট" /></div>
+        <div class="mem-field"><label>কার্যবর্ষ</label><input type="text" name="term_year" maxlength="40" placeholder="যেমন: ২০২৪-২৫" /></div>
+        <div class="mem-field"><label>ধরন</label>
+          <select name="member_type">
+            <option value="central">কার্যনির্বাহী কমিটি</option>
+            <option value="advisory">উপদেষ্টা পর্ষদ</option>
+          </select>
+        </div>
+        <div class="mem-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="0" /></div>
+        <div class="mem-field"><label>ছবি URL</label><input type="text" name="image_url" maxlength="400" placeholder="https://… (ঐচ্ছিক)" /></div>
+        <div class="mem-field"><label>ফেসবুক লিংক</label><input type="text" name="social_fb" maxlength="300" placeholder="https://facebook.com/… (ঐচ্ছিক)" /></div>
+        <div class="mem-field"><label>ইমেইল</label><input type="text" name="social_email" maxlength="160" placeholder="ঐচ্ছিক" /></div>
+        <div class="mem-field"><label>ইউজারনেম (অ্যাকাউন্ট লিংক)</label><input type="text" name="username" maxlength="60" placeholder="সাইট অ্যাকাউন্ট থাকলে (ঐচ্ছিক)" /></div>
+        <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200" placeholder="ঐচ্ছিক — সদস্যের সংক্ষিপ্ত বর্ণনা"></textarea></div>
+      </div>
+      <div class="mem-actions">
+        <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-plus"></i> সদস্য যোগ করুন</button>
+      </div>
+    </form>
+  </div>
+
+  <% const central = members.filter(m => m.member_type === 'central');
+     const advisory = members.filter(m => m.member_type !== 'central'); %>
+
+  <%# ── কার্যনির্বাহী কমিটি তালিকা ── %>
+  <div class="mod-card">
+    <h2><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি <span class="mem-section-count"><%= central.length %> জন</span></h2>
+    <p class="mod-hint">যেকোনো সদস্যের নামে ক্লিক করে সম্পাদনা করুন। "কার্যবর্ষ" বদলালে সেই বছরের তালিকায় স্বয়ংক্রিয়ভাবে চলে যাবে।</p>
+    <% if (!central.length) { %><p class="mod-hint"><i class="fas fa-info-circle"></i> এখনো কোনো সদস্য নেই।</p><% } %>
+    <% central.forEach(m => { %>
+      <details class="mem-row">
+        <summary>
+          <i class="fas fa-chevron-right mem-chevron"></i>
+          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+          <div>
+            <div class="mem-name"><%= m.name %></div>
+            <div class="mem-sub"><%= [m.role, m.term_year].filter(Boolean).join(' · ') || 'পদ নেই' %></div>
+          </div>
+          <span class="mem-chip"><%= m.term_year || 'কার্যবর্ষ নেই' %></span>
+        </summary>
+        <div style="padding:16px 14px;">
+          <form method="POST" action="/moderator/members/<%= m.id %>">
+            <div class="mem-grid">
+              <div class="mem-field"><label>নাম *</label><input type="text" name="name" required maxlength="120" value="<%= m.name %>" /></div>
+              <div class="mem-field"><label>পদ (রোল)</label><input type="text" name="role" maxlength="120" value="<%= m.role || '' %>" /></div>
+              <div class="mem-field"><label>শ্রেণি / বিভাগ</label><input type="text" name="designation" maxlength="160" value="<%= m.designation || '' %>" /></div>
+              <div class="mem-field"><label>কার্যবর্ষ</label><input type="text" name="term_year" maxlength="40" value="<%= m.term_year || '' %>" /></div>
+              <div class="mem-field"><label>ধরন</label>
+                <select name="member_type">
+                  <option value="central" <%= m.member_type === 'central' ? 'selected' : '' %>>কার্যনির্বাহী কমিটি</option>
+                  <option value="advisory" <%= m.member_type !== 'central' ? 'selected' : '' %>>উপদেষ্টা পর্ষদ</option>
+                </select>
+              </div>
+              <div class="mem-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= m.sort_order || 0 %>" /></div>
+              <div class="mem-field"><label>ছবি URL</label><input type="text" name="image_url" maxlength="400" value="<%= m.image_url || '' %>" /></div>
+              <div class="mem-field"><label>ফেসবুক লিংক</label><input type="text" name="social_fb" maxlength="300" value="<%= m.social_fb || '' %>" /></div>
+              <div class="mem-field"><label>ইমেইল</label><input type="text" name="social_email" maxlength="160" value="<%= m.social_email || '' %>" /></div>
+              <div class="mem-field"><label>ইউজারনেম (অ্যাকাউন্ট লিংক)</label><input type="text" name="username" maxlength="60" value="<%= m.user_username || '' %>" placeholder="বদলাতে চাইলে নতুন ইউজারনেম" /></div>
+              <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200"><%= m.bio || '' %></textarea></div>
+            </div>
+            <div class="mem-actions">
+              <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+              <button type="submit" class="mem-del" formaction="/moderator/members/<%= m.id %>/delete" formnovalidate onclick="return confirm('নিশ্চিতভাবে <%= m.name %> মুছে ফেলবেন?');"><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
+            </div>
+          </form>
+        </div>
+      </details>
+    <% }) %>
+  </div>
+
+  <%# ── উপদেষ্টা পর্ষদ তালিকা ── %>
+  <div class="mod-card">
+    <h2><i class="fas fa-user-tie"></i> উপদেষ্টা পর্ষদ <span class="mem-section-count"><%= advisory.length %> জন</span></h2>
+    <p class="mod-hint">উপদেষ্টাদের তথ্য এখান থেকে সম্পাদনা করুন — /committee/advisory পেজে সাথে সাথে প্রযোজ্য হবে।</p>
+    <% if (!advisory.length) { %><p class="mod-hint"><i class="fas fa-info-circle"></i> এখনো কোনো উপদেষ্টা নেই।</p><% } %>
+    <% advisory.forEach(m => { %>
+      <details class="mem-row">
+        <summary>
+          <i class="fas fa-chevron-right mem-chevron"></i>
+          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+          <div>
+            <div class="mem-name"><%= m.name %></div>
+            <div class="mem-sub"><%= [m.role, m.term_year].filter(Boolean).join(' · ') || 'পদ নেই' %></div>
+          </div>
+          <span class="mem-chip adv"><%= m.term_year || 'কার্যবর্ষ নেই' %></span>
+        </summary>
+        <div style="padding:16px 14px;">
+          <form method="POST" action="/moderator/members/<%= m.id %>">
+            <div class="mem-grid">
+              <div class="mem-field"><label>নাম *</label><input type="text" name="name" required maxlength="120" value="<%= m.name %>" /></div>
+              <div class="mem-field"><label>পদ (রোল)</label><input type="text" name="role" maxlength="120" value="<%= m.role || '' %>" /></div>
+              <div class="mem-field"><label>শ্রেণি / বিভাগ</label><input type="text" name="designation" maxlength="160" value="<%= m.designation || '' %>" /></div>
+              <div class="mem-field"><label>কার্যবর্ষ</label><input type="text" name="term_year" maxlength="40" value="<%= m.term_year || '' %>" /></div>
+              <div class="mem-field"><label>ধরন</label>
+                <select name="member_type">
+                  <option value="central" <%= m.member_type === 'central' ? 'selected' : '' %>>কার্যনির্বাহী কমিটি</option>
+                  <option value="advisory" <%= m.member_type !== 'central' ? 'selected' : '' %>>উপদেষ্টা পর্ষদ</option>
+                </select>
+              </div>
+              <div class="mem-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= m.sort_order || 0 %>" /></div>
+              <div class="mem-field"><label>ছবি URL</label><input type="text" name="image_url" maxlength="400" value="<%= m.image_url || '' %>" /></div>
+              <div class="mem-field"><label>ফেসবুক লিংক</label><input type="text" name="social_fb" maxlength="300" value="<%= m.social_fb || '' %>" /></div>
+              <div class="mem-field"><label>ইমেইল</label><input type="text" name="social_email" maxlength="160" value="<%= m.social_email || '' %>" /></div>
+              <div class="mem-field"><label>ইউজারনেম (অ্যাকাউন্ট লিংক)</label><input type="text" name="username" maxlength="60" value="<%= m.user_username || '' %>" placeholder="বদলাতে চাইলে নতুন ইউজারনেম" /></div>
+              <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200"><%= m.bio || '' %></textarea></div>
+            </div>
+            <div class="mem-actions">
+              <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+              <button type="submit" class="mem-del" formaction="/moderator/members/<%= m.id %>/delete" formnovalidate onclick="return confirm('নিশ্চিতভাবে <%= m.name %> মুছে ফেলবেন?');"><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
+            </div>
+          </form>
+        </div>
+      </details>
+    <% }) %>
+  </div>
+</div>
+</main>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+</body>
+</html>

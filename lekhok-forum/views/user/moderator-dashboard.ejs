@@ -173,12 +173,19 @@
   </div>
 
   <%# ── সাইট মেনু ব্যবস্থাপনা (অ্যাডমিন + মডারেটর সবাই) ── %>
-  <div style="margin-top:20px;">
-    <a href="/moderator/navigation" class="mod-tile" style="display:flex;align-items:center;gap:14px;max-width:420px;">
+  <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:860px;">
+    <a href="/moderator/navigation" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
       <div class="mod-tile-icon"><i class="fas fa-bars"></i></div>
       <div>
         <div class="mod-tile-label">মেনু ব্যবস্থাপনা</div>
         <div class="mod-tile-desc">হোম পেজের মেনু ও সাব-মেনু এডিট করুন</div>
+      </div>
+    </a>
+    <a href="/moderator/members" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
+      <div class="mod-tile-icon"><i class="fas fa-users-cog"></i></div>
+      <div>
+        <div class="mod-tile-label">কমিটি সদস্য ব্যবস্থাপনা</div>
+        <div class="mod-tile-desc">কার্যনির্বাহী কমিটি ও উপদেষ্টাদের পদ, কার্যবর্ষ ও তথ্য আপডেট করুন</div>
       </div>
     </a>
   </div>

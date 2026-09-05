@@ -54,6 +54,94 @@ router.post('/navigation', ensureModerator, async (req, res) => {
   res.redirect('/moderator/navigation?saved=1');
 });
 
+// ── Committee members management (admin + moderators) ────────────────────────
+// Drives /committee (member_type='central') and /committee/advisory
+// (member_type='advisory') public pages. Each row carries কার্যবর্ষ (term_year).
+const MEMBER_TYPES = ['central', 'advisory'];
+
+async function resolveMemberUserId(username) {
+  const uname = String(username || '').trim();
+  if (!uname) return null;
+  const u = await db.prepare('SELECT id FROM users WHERE username = ?').get(uname);
+  return u ? u.id : null;
+}
+
+function memberFormValues(b) {
+  return {
+    name: String(b.name || '').trim().slice(0, 120),
+    role: String(b.role || '').trim().slice(0, 120),
+    designation: String(b.designation || '').trim().slice(0, 160),
+    bio: String(b.bio || '').trim().slice(0, 1200),
+    image_url: String(b.image_url || '').trim().slice(0, 400),
+    social_fb: String(b.social_fb || '').trim().slice(0, 300),
+    social_email: String(b.social_email || '').trim().slice(0, 160),
+    member_type: MEMBER_TYPES.includes(b.member_type) ? b.member_type : 'central',
+    term_year: String(b.term_year || '').trim().slice(0, 40),
+    sort_order: Math.max(0, parseInt(b.sort_order, 10) || 0)
+  };
+}
+
+router.get('/members', ensureModerator, async (req, res) => {
+  const members = await db.prepare(`
+    SELECT m.*, u.username AS user_username
+    FROM members m LEFT JOIN users u ON u.id = m.user_id
+    ORDER BY CASE m.member_type WHEN 'central' THEN 0 ELSE 1 END, m.sort_order ASC, m.id ASC
+  `).all();
+  res.render('user/moderator-members', {
+    members,
+    posted: req.query.posted || null,
+    removed: req.query.removed || null,
+    error: req.query.error || null,
+    currentPath: '/moderator/members'
+  });
+});
+
+router.post('/members', ensureModerator, async (req, res) => {
+  const v = memberFormValues(req.body);
+  if (!v.name) return res.redirect('/moderator/members?error=' + encodeURIComponent('নাম আবশ্যক — সদস্য যোগ হয়নি।'));
+  const user_id = await resolveMemberUserId(req.body.username);
+  try {
+    await db.prepare(`
+      INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, term_year, user_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(v.name, v.role, v.designation, v.bio, v.image_url, v.social_fb, v.social_email,
+           v.member_type, v.sort_order, v.term_year || null, user_id);
+  } catch (e) {
+    if (String(e.message || '').includes('idx_members_unique_name_term')) {
+      return res.redirect('/moderator/members?error=' + encodeURIComponent('এই নাম, কার্যবর্ষ ও ধরনের সদস্য ইতিমধ্যেই আছে — কার্যবর্ষ বদলে দিন বা বিদ্যমান সদস্য সম্পাদনা করুন।'));
+    }
+    throw e;
+  }
+  res.redirect('/moderator/members?posted=1');
+});
+
+router.post('/members/:id', ensureModerator, async (req, res) => {
+  const row = await db.prepare('SELECT id FROM members WHERE id = ?').get(req.params.id);
+  if (!row) return res.redirect('/moderator/members?error=' + encodeURIComponent('সদস্যটি খুঁজে পাওয়া যায়নি।'));
+  const v = memberFormValues(req.body);
+  if (!v.name) return res.redirect('/moderator/members?error=' + encodeURIComponent('নাম আবশ্যক — পরিবর্তন সংরক্ষিত হয়নি।'));
+  const user_id = await resolveMemberUserId(req.body.username);
+  try {
+    await db.prepare(`
+      UPDATE members SET name = ?, role = ?, designation = ?, bio = ?, image_url = ?,
+        social_fb = ?, social_email = ?, member_type = ?, sort_order = ?, term_year = ?, user_id = ?
+      WHERE id = ?
+    `).run(v.name, v.role, v.designation, v.bio, v.image_url, v.social_fb, v.social_email,
+           v.member_type, v.sort_order, v.term_year || null, user_id, req.params.id);
+  } catch (e) {
+    if (String(e.message || '').includes('idx_members_unique_name_term')) {
+      return res.redirect('/moderator/members?error=' + encodeURIComponent('এই নাম, কার্যবর্ষ ও ধরনের আরেকজন সদস্য আছে — নাম বা কার্যবর্ষ আলাদা করুন।'));
+    }
+    throw e;
+  }
+  res.redirect('/moderator/members?posted=1');
+});
+
+router.post('/members/:id/delete', ensureModerator, async (req, res) => {
+  await db.prepare('DELETE FROM members WHERE id = ?').run(req.params.id);
+  res.redirect('/moderator/members?removed=1');
+});
+
 // ── Moderator dashboard ──────────────────────────────────────────────────────
 router.get('/', ensureModerator, async (req, res) => {
   const myScopes = req.session.user.role === 'admin'
