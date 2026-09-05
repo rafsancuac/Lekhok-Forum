@@ -120,8 +120,8 @@
   </div>
 </section>
 
-<!-- Leaders preview — section with reveal -->
-<section class="section reveal">
+<!-- Leaders preview — restructured with current + founders + advisors -->
+<section class="section reveal" id="leadership">
   <div class="container">
     <div class="section-head">
       <div>
@@ -131,28 +131,114 @@
       </div>
       <a href="/committee" class="link-more">সকল সদস্য দেখুন <i class="fas fa-arrow-right"></i></a>
     </div>
-    <div class="leaders-grid reveal-stagger">
-      <% centralMembers.forEach(m => { %>
-        <% const displayName = m.user_full_name || m.name; %>
-        <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
-        <% if (m.user_username) { %>
-          <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member">
-            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-            <div class="leader-body">
-              <h3><%= displayName %></h3>
-              <p class="role"><%= m.role %></p>
+
+    <%# ── Sub-section 1: Current leadership (2 cards) ── %>
+    <% if (currentLeaders && currentLeaders.length) { %>
+    <div class="leadership-sub">
+      <h3 class="leadership-sub-title"><i class="fas fa-star"></i> বর্তমান নেতৃত্ব</h3>
+      <div class="leaders-grid leaders-grid-lg">
+        <% currentLeaders.forEach(m => { %>
+          <% const displayName = m.user_full_name || m.name; %>
+          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% const displayBio  = m.bio || ''; %>
+          <% if (m.user_username) { %>
+            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member leader-card-featured">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
+              </div>
+            </a>
+          <% } else { %>
+            <div class="leader-card has-image leader-card-featured">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
+              </div>
             </div>
-          </a>
-        <% } else { %>
-          <div class="leader-card has-image">
-            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
-            <div class="leader-body">
-              <h3><%= displayName %></h3>
-              <p class="role"><%= m.role %></p>
+          <% } %>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <%# ── Sub-section 2: Founding leadership ── %>
+    <% if (founders && founders.length) { %>
+    <div class="leadership-sub">
+      <h3 class="leadership-sub-title"><i class="fas fa-landmark"></i> প্রতিষ্ঠাতা নেতৃত্ব</h3>
+      <div class="leaders-grid leaders-grid-lg">
+        <% founders.forEach(m => { %>
+          <% const displayName = m.user_full_name || m.name; %>
+          <% const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% const displayBio  = m.bio || ''; %>
+          <% const displayRole = m.role === 'president' ? 'প্রতিষ্ঠাতা সভাপতি' : (m.role === 'general_secretary' ? 'প্রতিষ্ঠাতা সাধারণ সম্পাদক' : m.role); %>
+          <% if (m.user_username) { %>
+            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member leader-card-featured">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= displayRole %></p>
+                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
+              </div>
+            </a>
+          <% } else { %>
+            <div class="leader-card has-image leader-card-featured">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= displayRole %></p>
+                <% if (displayBio) { %><p class="leader-bani">"<%= displayBio.substring(0, 120) %><%= displayBio.length > 120 ? '…' : '' %>"</p><% } %>
+              </div>
             </div>
-          </div>
-        <% } %>
-      <% }) %>
+          <% } %>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <%# ── Sub-section 3: Advisors ── %>
+    <% if (advisors && advisors.length) { %>
+    <div class="leadership-sub">
+      <div class="leadership-sub-head">
+        <h3 class="leadership-sub-title"><i class="fas fa-user-tie"></i> উপদেষ্টা পরিষদ</h3>
+        <a href="/committee#advisory" class="link-more">সকল উপদেষ্টা <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="leaders-grid">
+        <% advisors.forEach(m => { %>
+          <% const displayName = m.user_full_name || m.name; %>
+          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% if (m.user_username) { %>
+            <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+              </div>
+            </a>
+          <% } else { %>
+            <div class="leader-card has-image">
+              <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+              </div>
+            </div>
+          <% } %>
+        <% }) %>
+      </div>
+    </div>
+    <% } %>
+
+    <%# ── User feed link (visitor-friendly) ── %>
+    <div class="user-feed-cta">
+      <div>
+        <h3><i class="fas fa-stream"></i> ইউজার ফিড</h3>
+        <p>সদস্যদের লেখা, প্রশ্নোত্তর ও আলোচনা দেখুন। লগইন ছাড়াই পড়তে পারবেন — অংশ নিতে রেজিস্ট্রেশন করুন।</p>
+      </div>
+      <a href="/dashboard" class="btn btn-primary btn-lg"><i class="fas fa-arrow-right"></i> ইউজার ফিডে যান</a>
     </div>
   </div>
 </section>

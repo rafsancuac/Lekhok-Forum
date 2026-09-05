@@ -51,8 +51,9 @@
         <span class="eyebrow">নেতৃত্ব</span>
         <h2 class="section-title">কার্যনির্বাহী <span class="accent">কমিটি</span></h2>
         <span class="accent-divider"></span>
-        <p class="term-intro">বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখার <strong><%= selectedYear %></strong> কার্যবর্ষের নবনির্বাচিত নেতৃবৃন্দ।</p>
+        <p class="term-intro">বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখার <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের<% } %> নেতৃবৃন্দ।</p>
       </div>
+      <% if (years && years.length) { %>
       <div class="year-filter-wrap">
         <label for="yearFilter"><i class="fas fa-calendar-alt"></i> মেয়াদ:</label>
         <select id="yearFilter" onchange="window.location.href='/committee?year=' + encodeURIComponent(this.value)">
@@ -61,9 +62,10 @@
           <% }); %>
         </select>
       </div>
+      <% } %>
     </div>
     <% if (central && central.length) { %>
-      <div class="leaders-grid reveal-stagger">
+      <div class="leaders-grid">
         <% central.forEach(m => { %>
           <% const displayName = m.user_full_name || m.name; %>
           <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
@@ -105,6 +107,63 @@
         <a href="/admin/members/new" class="btn btn-primary"><i class="fas fa-plus"></i> সদস্য যোগ করুন</a>
       </div>
     <% } %>
+  </div>
+</section>
+
+
+<!-- Advisory members -->
+<% if (advisory && advisory.length) { %>
+<section class="section reveal" id="advisory">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">পরামর্শদাতা</span>
+        <h2 class="section-title">উপদেষ্টা <span class="accent">পরিষদ</span></h2>
+        <span class="accent-divider"></span>
+      </div>
+    </div>
+    <div class="leaders-grid">
+      <% advisory.forEach(m => { %>
+        <% const displayName = m.user_full_name || m.name; %>
+        <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+        <% if (m.user_username) { %>
+          <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <div class="leader-body">
+              <h3><%= displayName %></h3>
+              <p class="role"><%= m.role %></p>
+              <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+              <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
+            </div>
+          </a>
+        <% } else { %>
+          <div class="leader-card has-image clickable-card"
+               onclick="openMemberModal('adv-<%= m.id %>')"
+               data-member="adv-<%= m.id %>"
+               data-name="<%= m.name.replace(/'/g, '&#39;') %>"
+               data-role="<%= m.role.replace(/'/g, '&#39;') %>"
+               data-designation="<%= (m.designation || '').replace(/'/g, '&#39;') %>"
+               data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
+               data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
+            <img src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
+            <div class="leader-body">
+              <h3><%= displayName %></h3>
+              <p class="role"><%= m.role %></p>
+              <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+              <small class="click-hint"><i class="fas fa-hand-pointer"></i> বিস্তারিত দেখুন</small>
+            </div>
+          </div>
+        <% } %>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- All members link -->
+<section class="section reveal" style="text-align:center;padding:30px 0 60px">
+  <div class="container">
+    <a href="/members" class="btn btn-primary btn-lg"><i class="fas fa-users"></i> সকল সদস্য দেখুন</a>
   </div>
 </section>
 

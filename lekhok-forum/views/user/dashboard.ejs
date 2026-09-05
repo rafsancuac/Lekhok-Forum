@@ -4,6 +4,7 @@
   <div class="dashboard-wrap two-col">
     <!-- Main Feed -->
     <main class="dash-main">
+      <% if (user) { %>
       <div class="dash-composer card">
         <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
         <a href="/articles/new" class="composer-input">আপনার লেখা শুরু করুন...</a>
@@ -12,6 +13,16 @@
           <a href="/qa/new" class="composer-action q"><i class="fas fa-question"></i> প্রশ্ন</a>
         </div>
       </div>
+      <% } else { %>
+      <div class="dash-composer card visitor-cta">
+        <div style="flex:1">
+          <strong style="display:block;margin-bottom:4px"><i class="fas fa-sign-in-alt"></i> সোস্যাল ফিডে অংশ নিন</strong>
+          <span style="font-size:13px;color:var(--text-soft)">লেখা শেয়ার, প্রশ্ন করা, মেসেজ ও অন্যান্য ইন্টারঅ্যাকশনের জন্য লগইন করুন বা রেজিস্ট্রেশন করুন।</span>
+        </div>
+        <a href="/login?next=/dashboard" class="btn btn-primary btn-sm"><i class="fas fa-sign-in-alt"></i> লগইন</a>
+        <a href="/register" class="btn btn-ghost btn-sm">রেজিস্ট্রেশন</a>
+      </div>
+      <% } %>
 
       <!-- Filter chips -->
       <div class="filter-chips">
@@ -19,10 +30,10 @@
         <a href="/dashboard?filter=article" class="filter-chip <%= filter === 'article' ? 'active' : '' %>"><i class="fas fa-pen-nib"></i> লেখা</a>
         <a href="/dashboard?filter=question" class="filter-chip <%= filter === 'question' ? 'active' : '' %>"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
         <a href="/dashboard?filter=activity" class="filter-chip <%= filter === 'activity' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> কার্যক্রম</a>
-        <a href="/dashboard?filter=following" class="filter-chip <%= filter === 'following' ? 'active' : '' %>"><i class="fas fa-user-friends"></i> অনুসরণ only</a>
+        <% if (user) { %><a href="/dashboard?filter=following" class="filter-chip <%= filter === 'following' ? 'active' : '' %>"><i class="fas fa-user-friends"></i> অনুসরণ only</a><% } %>
       </div>
 
-      <% if (filter === 'all' && myInterests.length === 0) { %>
+      <% if (user && filter === 'all' && myInterests.length === 0) { %>
         <div class="interest-hint card">
           <i class="fas fa-wand-magic-sparkles"></i>
           <div>

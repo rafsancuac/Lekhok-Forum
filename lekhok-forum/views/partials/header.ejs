@@ -43,9 +43,9 @@
 
     <a href="/" class="brand">
       <div class="logo-wrap">
-        <div class="logo-text">
+        <div class="logo-text logo-text-v2">
           <strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong>
-          <small>চট্টগ্রাম বিশ্ববিদ্যালয়</small>
+          <strong class="brand-line2">চট্টগ্রাম বিশ্ববিদ্যালয়</strong>
         </div>
       </div>
     </a>
@@ -70,12 +70,23 @@
     <% } else { %>
     <nav class="topbar-tabs">
       <a href="/" class="topbar-tab <%= currentPath === '/' ? 'active' : '' %>">হোম</a>
-      <a href="/about" class="topbar-tab <%= currentPath === '/about' ? 'active' : '' %>">পরিচিতি</a>
-      <a href="/committee" class="topbar-tab <%= currentPath === '/committee' ? 'active' : '' %>">কমিটি</a>
-      <a href="/constitution" class="topbar-tab <%= currentPath === '/constitution' ? 'active' : '' %>">গঠনতন্ত্র</a>
-      <a href="/members" class="topbar-tab <%= currentPath === '/members' ? 'active' : '' %>">সদস্য</a>
+      <div class="topbar-dropdown">
+        <a href="/about" class="topbar-tab <%= currentPath === '/about' ? 'active' : '' %> <%= currentPath === '/constitution' ? 'active' : '' %>">পরিচিতি <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
+        <div class="topbar-dropdown-menu">
+          <a href="/about"><i class="fas fa-info-circle"></i> পরিচিতি</a>
+          <a href="/constitution"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
+        </div>
+      </div>
+      <div class="topbar-dropdown">
+        <a href="/committee" class="topbar-tab <%= currentPath === '/committee' ? 'active' : '' %> <%= currentPath === '/members' ? 'active' : '' %>">কার্যনির্বাহী সদস্য <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
+        <div class="topbar-dropdown-menu">
+          <a href="/committee"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
+          <a href="/committee/past"><i class="fas fa-landmark"></i> স্থায়ী পরিষদ</a>
+          <a href="/committee#advisory"><i class="fas fa-user-tie"></i> উপদেষ্টা পরিষদ</a>
+          <a href="/members"><i class="fas fa-users"></i> সকল সদস্য</a>
+        </div>
+      </div>
       <a href="/gallery" class="topbar-tab <%= currentPath === '/gallery' ? 'active' : '' %>">গ্যালারি</a>
-      <a href="/epaper" class="topbar-tab <%= currentPath === '/epaper' ? 'active' : '' %>">ই-পেপার</a>
       <a href="/activities" class="topbar-tab <%= currentPath === '/activities' ? 'active' : '' %>">কার্যক্রম</a>
       <a href="/contact" class="topbar-tab <%= currentPath === '/contact' ? 'active' : '' %>">যোগাযোগ</a>
     </nav>
@@ -155,29 +166,24 @@
             <a href="/resources"><i class="fas fa-folder-open"></i> রিসোর্স ও ফাইল</a>
           </div>
           <div class="mega-col">
-            <h4>কার্যক্রম</h4>
-            <a href="/quiz"><i class="fas fa-brain"></i> আজকের কুইজ</a>
-            <a href="/on-this-day"><i class="fas fa-calendar-day"></i> এই দিনে</a>
+            <h4>ঘোষণা ও আয়োজন</h4>
+            <a href="/notices"><i class="fas fa-bullhorn"></i> ঘোষণা</a>
+            <a href="/events"><i class="fas fa-calendar-alt"></i> আয়োজন</a>
             <a href="/activities"><i class="fas fa-calendar-check"></i> সাংগঠনিক কার্যক্রম</a>
-            <a href="/epaper"><i class="fas fa-newspaper"></i> আজকের ই-পেপার</a>
             <a href="/best-writer"><i class="fas fa-star"></i> মাসিক সেরা লেখক</a>
-            <a href="/birthdays"><i class="fas fa-birthday-cake"></i> আজকের জন্মদিন</a>
           </div>
           <div class="mega-col">
             <h4>প্রতিষ্ঠান</h4>
             <a href="/achievements"><i class="fas fa-trophy"></i> অর্জন ও সম্মাননা</a>
-            <a href="/constitution"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
-            <a href="/committee"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
-            <a href="/committee/past"><i class="fas fa-landmark"></i> স্থায়ী পরিষদ</a>
             <a href="/notices"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি</a>
             <a href="/events"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
           </div>
           <div class="mega-col">
-            <h4>সম্প্রদায়</h4>
-            <a href="/members"><i class="fas fa-users"></i> সকল সদস্য</a>
-            <a href="/gallery"><i class="fas fa-images"></i> গ্যালারি</a>
-            <a href="/about"><i class="fas fa-info-circle"></i> পরিচিতি</a>
-            <a href="/contact"><i class="fas fa-envelope"></i> যোগাযোগ</a>
+            <h4>আরও</h4>
+            <a href="/birthdays"><i class="fas fa-birthday-cake"></i> আজকের জন্মদিন</a>
+            <a href="/on-this-day"><i class="fas fa-calendar-day"></i> এই দিনে</a>
+            <a href="/quiz"><i class="fas fa-brain"></i> আজকের কুইজ</a>
+            <a href="/epaper"><i class="fas fa-newspaper"></i> আজকের ই-পেপার</a>
           </div>
         </div>
       </div>

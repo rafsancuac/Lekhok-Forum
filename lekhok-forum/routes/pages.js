@@ -15,7 +15,17 @@ const MEMBER_JOIN = `
 
 router.get('/', async (req, res) => {
   const recentNotices = await db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all();
-  const centralMembers = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 4").all();
+  // Leadership: 2 current (president + GS) + 2 founders + 4 advisors
+  const currentLeaders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
+  const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all();
+  const advisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all();
+  // Fallback: if no founders seeded, use earliest past leaders (first president + first GS)
+  let foundersFinal = founders;
+  if (!founders.length) {
+    const pastPres = await db.prepare("SELECT * FROM past_leaders WHERE role='president' ORDER BY term_start ASC LIMIT 1").all();
+    const pastGS = await db.prepare("SELECT * FROM past_leaders WHERE role='general_secretary' ORDER BY term_start ASC LIMIT 1").all();
+    foundersFinal = [...pastPres, ...pastGS];
+  }
 
   // Today's daily content — split by content_type for the home page cards
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -36,7 +46,9 @@ router.get('/', async (req, res) => {
     pageTitle: 'হোম',
     currentPath: '/',
     recentNotices,
-    centralMembers,
+    currentLeaders,
+    founders: foundersFinal,
+    advisors,
     todayByType,
     hasToday
   });
@@ -53,18 +65,22 @@ router.get('/about', async (req, res) => {
 
 // ── Committee ────────────────────────────────────────────────────────────────
 router.get('/committee', async (req, res) => {
-  // Year filter — term_year column added via ensure-year-column.js
+  // Year filter — fallback gracefully if no term_year
   const yearRows = await db.prepare("SELECT DISTINCT term_year FROM members WHERE term_year IS NOT NULL ORDER BY term_year DESC").all();
   const years = yearRows.map(r => r.term_year).filter(Boolean);
-  const selectedYear = req.query.year && years.includes(req.query.year) ? req.query.year : (years[0] || '২০২৫-২০২৬');
-  // LEFT JOIN users so members linked to a user account show that user's
-  // avatar/username (and become clickable to their profile).
-  const central = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order").all(selectedYear);
+  const selectedYear = req.query.year && years.includes(req.query.year) ? req.query.year : (years[0] || null);
+  // Central committee — if selectedYear is null, get all (no filter)
+  const central = selectedYear
+    ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order").all(selectedYear)
+    : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order").all();
+  // Advisory members
+  const advisory = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order").all();
   res.render('lekhok-committee', {
     layout: 'layout',
     pageTitle: 'সংগঠন',
     currentPath: '/committee',
     central,
+    advisory,
     years,
     selectedYear
   });

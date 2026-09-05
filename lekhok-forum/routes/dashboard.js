@@ -33,9 +33,9 @@ router.use(async (req, res, next) => {
 
 
 // ── Dashboard (Facebook-style feed) ───────────────────────────────────────
-router.get('/dashboard', ensureAuth, async (req, res) => {
-  const me = req.session.user;
-  const filter = req.query.filter || 'all';   // all | article | question | activity | following
+router.get('/dashboard', async (req, res) => {
+  const me = req.session.user || null;
+  const filter = me && req.query.filter === 'following' ? 'following' : (req.query.filter || 'all');   // all | article | question | activity | following
 
   const ARTICLE_SQL = `
     SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
@@ -63,7 +63,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     sql = QUESTION_SQL + ' ORDER BY created_at DESC LIMIT 30';
   } else if (filter === 'activity') {
     sql = ACTIVITY_SQL + ' ORDER BY created_at DESC LIMIT 30';
-  } else if (filter === 'following') {
+  } else if (filter === 'following' && me) {
     sql = ARTICLE_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
       UNION ALL ` + QUESTION_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
       ORDER BY created_at DESC LIMIT 30`;
@@ -79,7 +79,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     ['like','love','haha','wow','sad'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
     item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
     // my current reaction on this item (activities have no reactions)
-    if (item.item_type !== 'activity') {
+    if (me && item.item_type !== 'activity') {
       const mine = await db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND post_id = ?').get(me.id, item.id);
       item.myReaction = mine ? (mine.reaction_type || 'like') : null;
     } else {
@@ -96,7 +96,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
     LIMIT 6
   `).all(mmdd);
 
-  const suggested = await db.prepare(`
+  const suggested = me ? await db.prepare(`
     SELECT id, username, full_name, avatar_url, designation,
       (SELECT COUNT(*) FROM follows WHERE following_id = u.id) AS follower_count
     FROM users u
@@ -105,13 +105,13 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
       AND u.id NOT IN (SELECT blocked_id FROM blocks WHERE blocker_id = ?)
       AND u.id NOT IN (SELECT blocker_id FROM blocks WHERE blocked_id = ?)
     ORDER BY follower_count DESC LIMIT 5
-  `).all(me.id, me.id, me.id, me.id);
+  `).all(me.id, me.id, me.id, me.id) : [];
 
-  const myFollowing = await db.prepare(`
+  const myFollowing = me ? await db.prepare(`
     SELECT u.id, u.username, u.full_name, u.avatar_url
     FROM follows f JOIN users u ON u.id = f.following_id
     WHERE f.follower_id = ? ORDER BY RANDOM() LIMIT 6
-  `).all(me.id);
+  `).all(me.id) : [];
 
   const tagRows = await db.prepare("SELECT tags FROM posts WHERE tags IS NOT NULL AND tags != '' AND status = 'published' ORDER BY published_at DESC LIMIT 100").all();
   const tagCounts = {};
@@ -143,7 +143,7 @@ router.get('/dashboard', ensureAuth, async (req, res) => {
   `).all();
 
   let myInterests = [];
-  try { myInterests = JSON.parse(await db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {}
+  if (me) { try { myInterests = JSON.parse(await db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {} }
 
   res.render('user/dashboard', {
     feed, filter, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,

@@ -2299,3 +2299,146 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
   .activities-timeline { padding-left: 28px; }
   .timeline-marker { left: -28px; width: 24px; height: 24px; font-size: 10px; }
 }
+
+/* ============================================================
+   v2.6: Nav dropdowns + Brand v2 + Leadership + Login buttons
+   ============================================================ */
+
+/* Brand v2 — 2 lines, same size, 2 colors */
+.logo-text-v2 { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
+.logo-text-v2 strong {
+  font-size: 15px; font-weight: 700; color: var(--brand, #0a1f44);
+  letter-spacing: -0.01em;
+}
+.logo-text-v2 .brand-line2 {
+  color: var(--accent, #059669) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+/* Topbar dropdown */
+.topbar-dropdown { position: relative; display: inline-block; }
+.topbar-dropdown-menu {
+  position: absolute; top: 100%; left: 0;
+  background: white; border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px; box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  min-width: 220px; padding: 8px; z-index: 100;
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+}
+.topbar-dropdown:hover .topbar-dropdown-menu,
+.topbar-dropdown:focus-within .topbar-dropdown-menu {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.topbar-dropdown-menu a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 7px;
+  color: var(--text, #0f172a); text-decoration: none;
+  font-size: 13.5px; font-weight: 500;
+  transition: background 0.12s;
+}
+.topbar-dropdown-menu a:hover { background: var(--surface-alt, #f1f5f9); }
+.topbar-dropdown-menu a i { width: 16px; color: var(--accent, #059669); font-size: 13px; }
+
+/* Leadership sub-sections */
+.leadership-sub { margin-bottom: 36px; }
+.leadership-sub:last-of-type { margin-bottom: 0; }
+.leadership-sub-title {
+  font-size: 18px; font-weight: 600; color: var(--brand, #0a1f44);
+  margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
+}
+.leadership-sub-title i { color: var(--accent, #059669); font-size: 16px; }
+.leadership-sub-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.leadership-sub-head .leadership-sub-title { margin: 0; }
+
+/* Large leader cards (for current + founders) */
+.leaders-grid-lg {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 20px !important;
+}
+.leader-card-featured {
+  padding: 24px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid var(--border, #e2e8f0) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+.leader-card-featured img {
+  width: 120px !important; height: 120px !important;
+  border: 4px solid white !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+.leader-card-featured h3 { font-size: 20px !important; }
+.leader-card-featured .role { font-size: 14px !important; }
+.leader-bani {
+  font-style: italic; color: var(--text-soft, #475569);
+  font-size: 13.5px; line-height: 1.6; margin: 10px 0 0;
+  padding-left: 12px; border-left: 3px solid var(--accent, #059669);
+}
+
+/* User feed CTA */
+.user-feed-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; flex-wrap: wrap;
+  margin-top: 36px; padding: 24px 28px;
+  background: linear-gradient(135deg, #0a1f44 0%, #1e293b 100%);
+  border-radius: 14px; color: white;
+}
+.user-feed-cta h3 {
+  margin: 0 0 4px; font-size: 18px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.user-feed-cta h3 i { color: var(--accent, #059669); }
+.user-feed-cta p {
+  margin: 0; font-size: 13.5px; color: #cbd5e1; line-height: 1.5;
+  max-width: 580px;
+}
+
+/* Login/Register buttons — professional */
+.topbar-right .nav-login,
+.topbar-right .nav-register {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; font-size: 13.5px; font-weight: 600;
+  border-radius: 8px; text-decoration: none;
+  transition: all 0.15s; font-family: inherit;
+}
+.topbar-right .nav-login {
+  color: var(--brand, #0a1f44);
+  border: 1.5px solid var(--border, #cbd5e1);
+  background: white;
+}
+.topbar-right .nav-login:hover {
+  border-color: var(--brand, #0a1f44);
+  background: var(--surface-alt, #f8fafc);
+  text-decoration: none;
+}
+.topbar-right .nav-register {
+  color: white;
+  background: linear-gradient(135deg, var(--brand, #0a1f44) 0%, var(--accent, #059669) 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+.topbar-right .nav-register:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  text-decoration: none;
+  color: white;
+}
+
+/* Visitor CTA in dashboard composer */
+.dash-composer.visitor-cta {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
+  border: 1px solid #bae6fd !important;
+}
+.dash-composer.visitor-cta strong { color: var(--brand, #0a1f44); }
+
+/* Responsive dropdowns */
+@media (max-width: 768px) {
+  .topbar-dropdown-menu { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: 0; padding: 0; min-width: 0; }
+  .topbar-dropdown-menu a { padding: 6px 0; font-size: 13px; }
+  .logo-text-v2 strong, .logo-text-v2 .brand-line2 { font-size: 13px !important; }
+  .user-feed-cta { flex-direction: column; align-items: flex-start; }
+}

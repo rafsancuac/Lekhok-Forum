@@ -72,9 +72,7 @@
           </div>
           <div style="margin-left:auto;display:flex;gap:6px">
             <a href="/profile/<%= other.username %>" class="btn-icon" title="প্রোফাইল"><i class="fas fa-user"></i></a>
-            <form method="POST" action="/messages/<%= other.username %>/delete" onsubmit="return confirm('এই কথোপকথনটি মুছে ফেলতে চান? সব মেসেজ মুছে যাবে।')" style="margin:0">
-              <button type="submit" class="btn-icon" title="কথোপকথন মুছুন" style="color:#ef4444"><i class="fas fa-trash"></i></button>
-            </form>
+            <button type="button" class="btn-icon" title="কথোপকথন মুছুন" style="color:#ef4444" onclick="deleteConversation('<%= other.username %>')"><i class="fas fa-trash"></i></button>
           </div>
         </header>
 
@@ -502,6 +500,25 @@
       } catch (_) {}
     });
   </script>
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/main.js?v=<%= AV %>">
+    // Delete entire conversation (AJAX)
+    async function deleteConversation(username) {
+      if (!confirm('এই কথোপকথনটি মুছে ফেলতে চান? সব মেসেজ মুছে যাবে।')) return;
+      try {
+        const res = await fetch('/messages/' + encodeURIComponent(username) + '/delete', {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (res.ok) {
+          window.location.href = '/messages';
+        } else {
+          alert('মুছতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+        }
+      } catch (e) {
+        alert('নেটওয়ার্ক সমস্যা।');
+      }
+    }
+
+</script>
 </body>
 </html>

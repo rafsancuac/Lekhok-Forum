@@ -22,17 +22,28 @@
     <div class="topbar-inner">
       <a href="/" class="brand">
         <div class="logo-wrap">
-          <span class="logo-text"><strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong><small>চট্টগ্রাম বিশ্ববিদ্যালয়</small></span>
+          <span class="logo-text logo-text-v2"><strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong><strong class="brand-line2">চট্টগ্রাম বিশ্ববিদ্যালয়</strong></span>
         </div>
       </a>
       <nav class="topbar-tabs">
         <a href="/" class="topbar-tab <%= currentPath === '/' ? 'active' : '' %>"><i class="fas fa-home"></i> হোম</a>
-        <a href="/about" class="topbar-tab <%= currentPath === '/about' ? 'active' : '' %>"><i class="fas fa-info-circle"></i> পরিচিতি</a>
-        <a href="/committee" class="topbar-tab <%= currentPath === '/committee' ? 'active' : '' %>"><i class="fas fa-users-cog"></i> কমিটি</a>
-        <a href="/constitution" class="topbar-tab <%= currentPath === '/constitution' ? 'active' : '' %>"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
-        <a href="/members" class="topbar-tab <%= currentPath === '/members' ? 'active' : '' %>"><i class="fas fa-users"></i> সদস্য</a>
+        <div class="topbar-dropdown">
+          <a href="/about" class="topbar-tab <%= currentPath === '/about' || currentPath === '/constitution' ? 'active' : '' %>"><i class="fas fa-info-circle"></i> পরিচিতি <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
+          <div class="topbar-dropdown-menu">
+            <a href="/about"><i class="fas fa-info-circle"></i> পরিচিতি</a>
+            <a href="/constitution"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
+          </div>
+        </div>
+        <div class="topbar-dropdown">
+          <a href="/committee" class="topbar-tab <%= currentPath === '/committee' || currentPath === '/members' ? 'active' : '' %>"><i class="fas fa-users-cog"></i> কার্যনির্বাহী সদস্য <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
+          <div class="topbar-dropdown-menu">
+            <a href="/committee"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
+            <a href="/committee/past"><i class="fas fa-landmark"></i> স্থায়ী পরিষদ</a>
+            <a href="/committee#advisory"><i class="fas fa-user-tie"></i> উপদেষ্টা পরিষদ</a>
+            <a href="/members"><i class="fas fa-users"></i> সকল সদস্য</a>
+          </div>
+        </div>
         <a href="/gallery" class="topbar-tab <%= currentPath === '/gallery' ? 'active' : '' %>"><i class="fas fa-images"></i> গ্যালারি</a>
-        <a href="/epaper" class="topbar-tab <%= currentPath === '/epaper' ? 'active' : '' %>"><i class="fas fa-newspaper"></i> ই-পেপার</a>
         <a href="/activities" class="topbar-tab <%= currentPath === '/activities' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> কার্যক্রম</a>
         <a href="/contact" class="topbar-tab <%= currentPath === '/contact' ? 'active' : '' %>"><i class="fas fa-envelope"></i> যোগাযোগ</a>
       </nav>
@@ -54,12 +65,11 @@
     <button class="close-btn" id="closeSidebar"><i class="fas fa-times"></i></button>
     <a href="/"><i class="fas fa-home"></i> হোম</a>
     <a href="/about"><i class="fas fa-info-circle"></i> পরিচিতি</a>
+    <a href="/constitution"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
     <a href="/committee"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
     <a href="/committee/past"><i class="fas fa-landmark"></i> স্থায়ী পরিষদ</a>
-    <a href="/constitution"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
     <a href="/members"><i class="fas fa-users"></i> সকল সদস্য</a>
     <a href="/gallery"><i class="fas fa-images"></i> গ্যালারি</a>
-    <a href="/epaper"><i class="fas fa-newspaper"></i> আজকের ই-পেপার</a>
     <a href="/activities"><i class="fas fa-calendar-check"></i> সাংগঠনিক কার্যক্রম</a>
     <a href="/contact"><i class="fas fa-envelope"></i> যোগাযোগ</a>
     <a href="/articles"><i class="fas fa-pen-nib"></i> সকল লেখা</a>
@@ -67,6 +77,7 @@
     <a href="/events"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
     <a href="/notices"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি</a>
     <a href="/resources"><i class="fas fa-folder-open"></i> রিসোর্স</a>
+    <a href="/epaper"><i class="fas fa-newspaper"></i> আজকের ই-পেপার</a>
     <% if (typeof user !== 'undefined' && user) { %>
       <a href="/dashboard" class="mobile-cta primary"><i class="fas fa-globe-asia"></i> ফিডে যান</a>
     <% } else { %>
@@ -85,7 +96,7 @@
     <div class="container footer-inner">
       <div class="footer-brand">
         <div class="logo-wrap">
-          <span class="logo-text"><strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong><small>চট্টগ্রাম বিশ্ববিদ্যালয়</small></span>
+          <span class="logo-text logo-text-v2"><strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong><strong class="brand-line2">চট্টগ্রাম বিশ্ববিদ্যালয়</strong></span>
         </div>
         <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা — একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।</p>
         <div class="f-socials">
