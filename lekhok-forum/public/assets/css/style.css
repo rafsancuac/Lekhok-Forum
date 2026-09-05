@@ -2511,3 +2511,17 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
   .qa-fold-summary { flex-direction: column; align-items: flex-start; gap: 4px; }
   .qa-fold-meta { font-size: 11px; }
 }
+
+/* ============================================================
+   v2.8: Contact page — map embed + compact layout
+   ============================================================ */
+.map-embed {
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--card, #fff);
+  padding: 8px;
+}
+.contact-grid { gap: 24px !important; align-items: start; }
+.contact-list li { padding: 10px 0 !important; }
+.contact-list i { width: 36px !important; height: 36px !important; font-size: 14px !important; }
+.section-split { gap: 24px !important; align-items: start; }
