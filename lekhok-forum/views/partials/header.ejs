@@ -72,7 +72,11 @@
       <a href="/" class="topbar-tab <%= currentPath === '/' ? 'active' : '' %>">হোম</a>
       <a href="/about" class="topbar-tab <%= currentPath === '/about' ? 'active' : '' %>">পরিচিতি</a>
       <a href="/committee" class="topbar-tab <%= currentPath === '/committee' ? 'active' : '' %>">কমিটি</a>
+      <a href="/constitution" class="topbar-tab <%= currentPath === '/constitution' ? 'active' : '' %>">গঠনতন্ত্র</a>
+      <a href="/members" class="topbar-tab <%= currentPath === '/members' ? 'active' : '' %>">সদস্য</a>
       <a href="/gallery" class="topbar-tab <%= currentPath === '/gallery' ? 'active' : '' %>">গ্যালারি</a>
+      <a href="/epaper" class="topbar-tab <%= currentPath === '/epaper' ? 'active' : '' %>">ই-পেপার</a>
+      <a href="/activities" class="topbar-tab <%= currentPath === '/activities' ? 'active' : '' %>">কার্যক্রম</a>
       <a href="/contact" class="topbar-tab <%= currentPath === '/contact' ? 'active' : '' %>">যোগাযোগ</a>
     </nav>
     <% } %>
@@ -138,7 +142,6 @@
         <a href="/register" class="topbar-nav a btn-ghost nav-register">রেজিস্ট্রেশন</a>
       <% } %>
 
-      <% if (user) { %>
       <!-- Mega menu trigger (desktop) -->
       <div class="mega-wrap" id="megaWrap">
         <button class="mega-trigger" onclick="toggleMega(event)">
@@ -165,7 +168,7 @@
             <a href="/achievements"><i class="fas fa-trophy"></i> অর্জন ও সম্মাননা</a>
             <a href="/constitution"><i class="fas fa-scroll"></i> গঠনতন্ত্র</a>
             <a href="/committee"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
-            <a href="/committee/past"><i class="fas fa-history"></i> প্রাক্তন নেতৃত্ব</a>
+            <a href="/committee/past"><i class="fas fa-landmark"></i> স্থায়ী পরিষদ</a>
             <a href="/notices"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি</a>
             <a href="/events"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
           </div>
@@ -178,7 +181,6 @@
           </div>
         </div>
       </div>
-      <% } %>
 
       <button class="menu-toggle" id="menuToggle" aria-label="মেনু খুলুন">
         <i class="fas fa-bars"></i>

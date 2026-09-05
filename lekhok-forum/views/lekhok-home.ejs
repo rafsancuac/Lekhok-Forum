@@ -39,7 +39,7 @@
     </div>
     <div class="today-grid reveal-stagger">
       <% if (todayByType.quiz) { %>
-        <a href="<%= todayByType.quiz.link_url || '/daily' %>" class="today-card today-quiz">
+        <a href="<%= todayByType.quiz.link_url || '/quiz' %>" class="today-card today-quiz">
           <div class="today-icon"><i class="fas fa-question-circle"></i></div>
           <h3>আজকের কুইজ</h3>
           <p class="today-title"><%= todayByType.quiz.title %></p>
@@ -48,7 +48,7 @@
         </a>
       <% } %>
       <% if (todayByType.this_day) { %>
-        <a href="/daily" class="today-card today-thisday">
+        <a href="/on-this-day" class="today-card today-thisday">
           <div class="today-icon"><i class="fas fa-history"></i></div>
           <h3>এই দিনে</h3>
           <p class="today-title"><%= todayByType.this_day.title %></p>
@@ -65,7 +65,7 @@
         </div>
       <% } %>
       <% if (todayByType.epaper) { %>
-        <a href="<%= todayByType.epaper.link_url || todayByType.epaper.file_url || '/daily' %>" target="_blank" rel="noopener" class="today-card today-epaper">
+        <a href="<%= todayByType.epaper.link_url || todayByType.epaper.file_url || '/quiz' %>" target="_blank" rel="noopener" class="today-card today-epaper">
           <div class="today-icon"><i class="far fa-newspaper"></i></div>
           <h3>আজকের ই-পেপার</h3>
           <p class="today-title"><%= todayByType.epaper.title %></p>

@@ -1,7 +1,7 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: (other.full_name) + ' — মেসেজ — লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
 
-  <div class="page-wrap">
+  <div class="page-wrap page-wrap--messenger">
     <div class="messenger-shell" id="messengerShell">
       <%# ── Left: conversation list ──────────────────────────────────── %>
       <aside class="messenger-list" id="messengerList">
@@ -20,12 +20,7 @@
         <% conversations.forEach(c => { %>
           <a href="/messages/<%= c.other_username %>" class="conv-item <%= c.other_username === other.username ? 'active' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-id="<%= c.id %>">
             <div class="avatar avatar-md" style="position:relative">
-              <% if (c.other_avatar) { %>
-                <img src="<%= c.other_avatar %>" alt="<%= c.other_name %>" />
-              <% } else { %>
-                <%= c.other_name.charAt(0).toUpperCase() %>
-              <% } %>
-              <%# Online dot populated via polling (best-effort) %>
+              <img src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
               <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
             </div>
             <div class="conv-meta">
@@ -41,16 +36,15 @@
 
       <%# ── Right: chat panel ────────────────────────────────────────── %>
       <section class="messenger-chat" id="messengerChat">
+        <% if (typeof err !== 'undefined' && err) { %>
+          <div class="chat-error"><i class="fas fa-exclamation-triangle"></i> <%= err %></div>
+        <% } %>
         <header class="chat-header">
           <button class="back-btn btn-icon" onclick="document.getElementById('messengerList').classList.remove('hidden'); document.getElementById('messengerChat').classList.add('hidden');" title="ফিরে যান">
             <i class="fas fa-arrow-left"></i>
           </button>
           <div class="avatar avatar-md" style="position:relative">
-            <% if (other.avatar_url) { %>
-              <img src="<%= other.avatar_url %>" alt="<%= other.full_name %>" />
-            <% } else { %>
-              <%= other.full_name.charAt(0).toUpperCase() %>
-            <% } %>
+            <img src="<%= other.avatar_url || ('/avatar/' + other.id) %>" alt="<%= other.full_name %>" onerror="this.onerror=null;this.src='/avatar/<%= other.id %>'" />
             <span class="online-dot" id="otherOnlineDot" data-user-id="<%= other.id %>" style="display:none"></span>
           </div>
           <div class="info">
@@ -61,6 +55,9 @@
           </div>
           <div style="margin-left:auto;display:flex;gap:6px">
             <a href="/profile/<%= other.username %>" class="btn-icon" title="প্রোফাইল"><i class="fas fa-user"></i></a>
+            <form method="POST" action="/messages/<%= other.username %>/delete" onsubmit="return confirm('এই কথোপকথনটি মুছে ফেলতে চান? সব মেসেজ মুছে যাবে।')" style="margin:0">
+              <button type="submit" class="btn-icon" title="কথোপকথন মুছুন" style="color:#ef4444"><i class="fas fa-trash"></i></button>
+            </form>
           </div>
         </header>
 
@@ -232,12 +229,67 @@
     // First poll after 1s
     setTimeout(poll, 1000);
 
-    // Form: prevent double submit + optimistic append
-    document.getElementById('chatForm').addEventListener('submit', function (e) {
-      const btn = document.getElementById('sendBtn');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      // Server returns redirect → just submit normally
+    // Form: AJAX send with re-entry guard (fixes multi-send bug)
+    let sending = false;
+    const chatForm = document.getElementById('chatForm');
+    const sendBtn = document.getElementById('sendBtn');
+    const msgInput = document.getElementById('msgInput');
+    const fileInputEl = document.getElementById('fileInput');
+    const filePreviewEl = document.getElementById('filePreview');
+
+    chatForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (sending) return;
+      const body_text = (msgInput.value || '').trim();
+      const file = fileInputEl.files[0];
+      if (!body_text && !file) return;
+      sending = true;
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      const fd = new FormData();
+      fd.append('body', body_text);
+      if (file) fd.append('attachment', file);
+
+      // Optimistic append — show my message immediately
+      if (body_text) {
+        const optimistic = {
+          id: 'tmp-' + Date.now(),
+          body: body_text,
+          file_url: file ? URL.createObjectURL(file) : null,
+          file_name: file ? file.name : null,
+          is_me: true,
+          created_at: new Date().toISOString()
+        };
+        appendMessage(optimistic);
+      }
+
+      try {
+        const res = await fetch('/messages/<%= other.username %>', { method: 'POST', body: fd, redirect: 'manual' });
+        if (res.ok || res.type === 'opaqueredirect') {
+          msgInput.value = '';
+          fileInputEl.value = '';
+          if (filePreviewEl) filePreviewEl.hidden = true;
+          // Force immediate poll to fetch the real message from server
+          setTimeout(poll, 300);
+        } else {
+          alert('মেসেজ পাঠানো যায়নি। আবার চেষ্টা করুন।');
+        }
+      } catch (err) {
+        alert('নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।');
+      } finally {
+        sending = false;
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      }
+    });
+
+    // Enter to send (without shift)
+    msgInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.requestSubmit();
+      }
     });
 
     // Mobile: hide list on load (show only chat) when convId is set

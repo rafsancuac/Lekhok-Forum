@@ -204,7 +204,7 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
     ORDER BY c.last_message_at DESC
   `).all(me, me, me, me, me, me);
 
-  res.render('user/messages-chat', { other, messages, conversations, conv, currentPath: '/messages' });
+  res.render('user/messages-chat', { other, messages, conversations, conv, currentPath: '/messages', err: req.query.err || null });
 });
 
 router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), async (req, res) => {
@@ -213,9 +213,14 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
   if (!other) return res.redirect('/messages');
   // Block check — a blocked pair cannot exchange messages
   if (await db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(me, other.id, other.id, me)) {
-    return res.redirect('/messages/' + req.params.username + '?err=' + encodeURIComponent('আপনি এই ব্যবহারকারীর সাথে মেসেজ করতে পারবেন না'));
+    const errMsg = 'আপনি এই ব্যবহারকারীর সাথে মেসেজ করতে পারবেন না';
+    if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.status(403).json({ ok: false, error: errMsg });
+    return res.redirect('/messages/' + req.params.username + '?err=' + encodeURIComponent(errMsg));
   }
-  if (req.uploadError) return res.redirect('/messages/' + req.params.username + '?err=' + encodeURIComponent(req.uploadError));
+  if (req.uploadError) {
+    if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.status(400).json({ ok: false, error: req.uploadError });
+    return res.redirect('/messages/' + req.params.username + '?err=' + encodeURIComponent(req.uploadError));
+  }
   const conv = await db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me, other.id, other.id, me);
   if (!conv) return res.redirect('/messages');
@@ -223,7 +228,10 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
   // req.file.url is correct in BOTH modes (local disk path or Vercel blob URL)
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   const fileName = req.file ? req.file.originalname : null;
-  if ((!body || !body.trim()) && !fileUrl) return res.redirect('/messages/' + req.params.username);
+  if ((!body || !body.trim()) && !fileUrl) {
+    if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.status(400).json({ ok: false, error: 'empty' });
+    return res.redirect('/messages/' + req.params.username);
+  }
   await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
     .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
@@ -232,7 +240,36 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
     await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
       .run(other.id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username);
   }
+  if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true });
   res.redirect('/messages/' + req.params.username);
+});
+
+
+// ── v2.4: Delete entire conversation ───────────────────────────────────
+router.post('/messages/:username/delete', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const other = await db.prepare('SELECT * FROM users WHERE username = ?').get(req.params.username);
+  if (!other) {
+    if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, redirect: '/messages' });
+    return res.redirect('/messages');
+  }
+  const conv = await db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
+    .get(me, other.id, other.id, me);
+  if (conv) {
+    try { await db.prepare('DELETE FROM messages WHERE conversation_id = ?').run(conv.id); } catch (e) {}
+    try { await db.prepare('DELETE FROM conversations WHERE id = ?').run(conv.id); } catch (e) {}
+  }
+  if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, redirect: '/messages' });
+  res.redirect('/messages');
+});
+
+// ── v2.4: Delete single message (sender only) ──────────────────────────
+router.post('/messages/:username/:msgId/delete', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const msg = await db.prepare('SELECT * FROM messages WHERE id = ?').get(parseInt(req.params.msgId, 10));
+  if (!msg || msg.sender_id !== me) return res.status(403).json({ ok: false });
+  await db.prepare('DELETE FROM messages WHERE id = ?').run(msg.id);
+  res.json({ ok: true });
 });
 
 // ── v2.3: Messenger — typing indicator (in-memory, 6s window) ──────────
