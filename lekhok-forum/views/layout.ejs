@@ -135,6 +135,15 @@
           <li><i class="fas fa-phone-alt"></i> <span>০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)</span></li>
         </ul>
       </div>
+      <div class="f-newsletter">
+        <h4 class="f-widget-title">নিউজলেটার</h4>
+        <p class="f-newsletter-desc">নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
+        <form class="newsletter-form" id="newsletterForm" action="/api/newsletter/subscribe" method="post">
+          <input type="email" name="email" id="newsletterEmail" placeholder="আপনার ইমেইল" required>
+          <button type="submit">সাবস্ক্রাইব</button>
+        </form>
+        <p class="f-newsletter-msg" id="newsletterMsg" role="status" aria-live="polite"></p>
+      </div>
     </div>
     <div class="footer-bottom">
       <div class="container"><p>© ২০২৬ বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</p></div>

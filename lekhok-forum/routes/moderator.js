@@ -89,6 +89,13 @@ router.post('/notices', ensureModerator, requireScope('notice'), async (req, res
   await db.prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)')
     .run(title, content || '', category || 'notice', date || today());
   await broadcastToAll('notice', 'নতুন বিজ্ঞপ্তি', title, '/notices', req.session.user.id);
+  // Newsletter — subscribers get an automatic email for every new notice
+  try {
+    const mailer = require('../helpers/mailer');
+    await mailer.notifySubscribers({
+      kind: 'notice', title, body: content || '', authorName: req.session.user.full_name || ''
+    });
+  } catch (e) { console.error('[newsletter] moderator notice notify failed:', e.message); }
   res.redirect('/moderator/notices?posted=1');
 });
 

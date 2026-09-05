@@ -302,6 +302,39 @@ const MIGRATION_SQL = `
     expires INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);
+  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT,
+    is_active INTEGER DEFAULT 1,
+    source TEXT DEFAULT 'footer',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    unsubscribed_at DATETIME
+  );
+  CREATE TABLE IF NOT EXISTS newsletter_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    log_id INTEGER,
+    post_id INTEGER,
+    to_email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    status TEXT DEFAULT 'pending',
+    error TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    sent_at DATETIME
+  );
+  CREATE TABLE IF NOT EXISTS newsletter_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT DEFAULT 'article',
+    ref_id INTEGER,
+    title TEXT,
+    author_name TEXT,
+    subscriber_count INTEGER DEFAULT 0,
+    sent_count INTEGER DEFAULT 0,
+    failed_count INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_nq_status ON newsletter_queue(status);
 `;
 
 // Columns added in later migrations — applied to existing installs during initDb().

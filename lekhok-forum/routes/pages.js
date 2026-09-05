@@ -268,5 +268,37 @@ router.get('/notices/:id(\\d+)', async (req, res) => {
   });
 });
 
+// ── Newsletter unsubscribe (link in every notification email) ────────────────
+// Asks for the email via a tiny form on the same URL (privacy-safe: a mailed
+// link alone cannot silently unsubscribe someone else's address).
+router.get('/newsletter/unsubscribe', async (req, res) => {
+  const email = String(req.query.email || '').trim().toLowerCase();
+  let done = false, notFound = false;
+  if (email && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    const r = await db.prepare('UPDATE newsletter_subscribers SET is_active = 0, unsubscribed_at = datetime(\'now\') WHERE email = ? AND is_active = 1').run(email);
+    const changes = (r && (r.changes != null ? r.changes : r.rowsAffected)) || 0;
+    if (changes > 0) done = true;
+    else notFound = true;
+  }
+  const html = `<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>সাবস্ক্রিপশন বাতিল</title></head>
+<body style="margin:0;font-family:'Noto Sans Bengali','Hind Siliguri',Arial,sans-serif;background:#f4f6f8;">
+<div style="max-width:480px;margin:60px auto;background:#fff;border-radius:12px;padding:36px 30px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.06);">
+  <div style="font-size:34px;">${done ? '✅' : '📬'}</div>
+  <h1 style="font-size:20px;color:#1a2233;margin:10px 0 8px;">${done ? 'সাবস্ক্রিপশন বাতিল হয়েছে' : 'সাবস্ক্রিপশন বাতিল করুন'}</h1>
+  ${done
+    ? `<p style="color:#6b7280;font-size:14px;line-height:1.8;">আপনার ইমেইল (${email}) নোটিফিকেশন তালিকা থেকে সরিয়ে নেওয়া হয়েছে।<br/>ভবিষ্যতে আবার যুক্ত হতে চাইলে ওয়েবসাইটের ফুটার থেকে সাবস্ক্রাইব করতে পারেন।</p>`
+    : notFound
+      ? `<p style="color:#6b7280;font-size:14px;line-height:1.8;">এই ইমেইলটি আমাদের সাবস্ক্রাইবার তালিকায় পাওয়া যায়নি অথবা আগেই বাতিল হয়েছে।</p>`
+      : `<p style="color:#6b7280;font-size:14px;line-height:1.8;">নোটিফিকেশন বন্ধ করতে আপনার সাবস্ক্রাইব করা ইমেইল ঠিকানা লিখুন।</p>
+         <form method="get" action="/newsletter/unsubscribe" style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+           <input type="email" name="email" required placeholder="আপনার ইমেইল" style="flex:1;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;">
+           <button type="submit" style="padding:10px 18px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">বাতিল করুন</button>
+         </form>`}
+  <p style="margin-top:22px;"><a href="/" style="color:#059669;font-size:13.5px;text-decoration:none;">← মূল সাইটে ফিরে যান</a></p>
+</div>
+</body></html>`;
+  res.status(done ? 200 : (notFound ? 404 : 200)).send(html);
+});
+
 module.exports = router;
 

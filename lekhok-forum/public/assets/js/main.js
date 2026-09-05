@@ -20,6 +20,43 @@
   if (closeBtn) closeBtn.addEventListener('click', closeMenu);
   if (overlay) overlay.addEventListener('click', closeMenu);
 
+  // ── Footer newsletter subscription (AJAX — graceful form-post fallback) ──
+  const nlForm = document.getElementById('newsletterForm');
+  if (nlForm) {
+    const nlMsg = document.getElementById('newsletterMsg');
+    async function onNlSubmit(e) {
+      e.preventDefault();
+      const input = nlForm.querySelector('input[name="email"]');
+      const btn = nlForm.querySelector('button');
+      const email = (input && input.value || '').trim();
+      if (!email) return;
+      if (nlMsg) { nlMsg.className = 'f-newsletter-msg show'; nlMsg.textContent = 'অপেক্ষা করুন…'; }
+      if (btn) btn.disabled = true;
+      try {
+        const resp = await fetch(nlForm.getAttribute('action'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (resp.ok && data.ok) {
+          if (nlMsg) { nlMsg.className = 'f-newsletter-msg show ok'; nlMsg.textContent = data.message || 'সাবস্ক্রিপশন সফল!'; }
+          if (input) input.value = '';
+        } else {
+          if (nlMsg) { nlMsg.className = 'f-newsletter-msg show err'; nlMsg.textContent = data.message || 'সাবস্ক্রিপশন ব্যর্থ — আবার চেষ্টা করুন।'; }
+        }
+      } catch (err) {
+        // Network failure → classic form post as fallback
+        nlForm.removeEventListener('submit', onNlSubmit);
+        nlForm.submit();
+        return;
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+    nlForm.addEventListener('submit', onNlSubmit);
+  }
+
   // Bengali numeral counter
   const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
   function toBn(n) { return String(n).replace(/[0-9]/g, d => bnDigits[d]); }

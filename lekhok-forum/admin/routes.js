@@ -139,6 +139,15 @@ router.post('/notices', requireScope('notices'), async (req, res) => {
   await db.prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)').run(title, content || '', category || 'notice', date || '');
   // Auto-notify all users about the new notice
   await broadcastToAll('notice', 'নতুন বিজ্ঞপ্তি', title, '/notices', req.session.user ? req.session.user.id : 0);
+  // Newsletter — email all active subscribers automatically (queued even
+  // without a mail provider, so the panel always shows the record).
+  try {
+    const mailer = require('../helpers/mailer');
+    const r = await mailer.notifySubscribers({
+      kind: 'notice', title, body: content || '', authorName: 'প্রশাসন'
+    });
+    console.log(`[newsletter] notice: queued=${r.queued} sent=${r.sent} failed=${r.failed}`);
+  } catch (e) { console.error('[newsletter] notice notify failed:', e.message); }
   res.redirect('/admin/notices');
 });
 
@@ -342,6 +351,50 @@ router.post('/settings', requireAdmin, async (req, res) => {
 router.get('/messages', requireAdmin, async (req, res) => {
   const messages = await db.prepare('SELECT * FROM contact_submissions ORDER BY id DESC').all();
   res.render('admin/messages', { messages, currentPath: '/admin/messages' });
+});
+
+// ── Newsletter subscribers (visible to admin AND moderators) ─────────────────
+router.get('/subscribers', requireStaff, async (req, res) => {
+  const subs = await db.prepare('SELECT * FROM newsletter_subscribers ORDER BY id DESC').all();
+  const logs = await db.prepare('SELECT * FROM newsletter_log ORDER BY id DESC LIMIT 30').all();
+  const stats = {
+    total: subs.length,
+    active: subs.filter(s => s.is_active).length,
+    sent: (await db.prepare("SELECT COUNT(*) as c FROM newsletter_queue WHERE status = 'sent'").get()).c,
+    pending: (await db.prepare("SELECT COUNT(*) as c FROM newsletter_queue WHERE status != 'sent'").get()).c,
+    mailConfigured: require('../helpers/mailer').isConfigured()
+  };
+  res.render('admin/subscribers', { subs, logs, stats, currentPath: '/admin/subscribers' });
+});
+
+// CSV export — full subscriber detail for offline records
+router.get('/subscribers/export', requireStaff, async (req, res) => {
+  const subs = await db.prepare('SELECT * FROM newsletter_subscribers ORDER BY id ASC').all();
+  const rows = [['id', 'email', 'name', 'active', 'source', 'created_at', 'unsubscribed_at']];
+  for (const s of subs) rows.push([s.id, s.email, s.name || '', s.is_active ? 'yes' : 'no', s.source || '', s.created_at || '', s.unsubscribed_at || '']);
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="newsletter-subscribers.csv"');
+  res.send('\ufeff' + csv); // BOM so Excel renders Bengali/UTF-8 correctly
+});
+
+// Toggle active state / delete — admin only (moderators get view-only)
+router.post('/subscribers/:id/toggle', requireAdmin, async (req, res) => {
+  await db.prepare('UPDATE newsletter_subscribers SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/subscribers');
+});
+router.post('/subscribers/:id/delete', requireAdmin, async (req, res) => {
+  await db.prepare('DELETE FROM newsletter_subscribers WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/subscribers');
+});
+
+// Retry pending/failed emails for a notification batch (admin only)
+router.post('/subscribers/retry/:logId', requireAdmin, async (req, res) => {
+  try {
+    const r = await require('../helpers/mailer').retryLog(req.params.logId);
+    if (!r.ok) console.error('[newsletter] retry:', r.error);
+  } catch (e) { console.error('[newsletter] retry failed:', e.message); }
+  res.redirect('/admin/subscribers');
 });
 
 // ── Moderators & permission scopes ────────────────────────────────────────────

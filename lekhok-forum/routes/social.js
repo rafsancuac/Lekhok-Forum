@@ -137,6 +137,24 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
     }
   } catch (e) {}
 
+  // Newsletter — when a staff member (admin/moderator) publishes an article,
+  // every active subscriber gets an automatic email notification.
+  // notifySubscribers() is fully awaited-safe, but wrapped here so a mail
+  // failure can never block the author's redirect.
+  try {
+    const author = req.session.user || {};
+    const isStaffAuthor = author.role === 'admin' || author.role === 'moderator' || req.session.adminUser;
+    if (isStaffAuthor) {
+      const mailer = require('../helpers/mailer');
+      const postRow = await db.prepare('SELECT * FROM posts WHERE id = ?').get(result.lastInsertRowid);
+      const r = await mailer.notifySubscribers({
+        kind: 'article', refId: result.lastInsertRowid,
+        title, body: excerpt || body, authorName: author.full_name || ''
+      });
+      console.log(`[newsletter] article #${result.lastInsertRowid}: queued=${r.queued} sent=${r.sent} failed=${r.failed}${r.configured ? '' : ' (RESEND_API_KEY নেই — কিউতে অপেক্ষমাণ)'}`);
+    }
+  } catch (e) { console.error('[newsletter] article notify failed:', e.message); }
+
   res.redirect('/articles/' + result.lastInsertRowid);
 });
 

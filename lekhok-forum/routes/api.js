@@ -58,5 +58,30 @@ router.post('/contact', async (req, res) => {
   res.json({ success: true, message: 'আপনার বার্তা পাঠানো হয়েছে।' });
 });
 
+// ── Newsletter subscribe (footer form) ───────────────────────────────────────
+router.post('/newsletter/subscribe', async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const name  = String(req.body.name || '').trim() || null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    return res.status(400).json({ ok: false, message: 'অনুগ্রহ করে সঠিক ইমেইল ঠিকানা দিন।' });
+  }
+  try {
+    const existing = await db.prepare('SELECT id, is_active FROM newsletter_subscribers WHERE email = ?').get(email);
+    if (existing) {
+      if (!existing.is_active) {
+        // Re-subscribe a previously unsubscribed address
+        await db.prepare("UPDATE newsletter_subscribers SET is_active = 1, unsubscribed_at = NULL WHERE id = ?").run(existing.id);
+        return res.json({ ok: true, message: 'আবার সাবস্ক্রাইব সফল হয়েছে! নতুন লেখার খবর আবার পাবেন।' });
+      }
+      return res.json({ ok: true, message: 'আপনি ইতিমধ্যেই সাবস্ক্রাইব করেছেন — ধন্যবাদ!' });
+    }
+    await db.prepare('INSERT INTO newsletter_subscribers (email, name, source) VALUES (?, ?, ?)').run(email, name, 'footer');
+    res.json({ ok: true, message: 'সাবস্ক্রিপশন সফল! এখন থেকে নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পাবেন।' });
+  } catch (e) {
+    console.error('[newsletter] subscribe error:', e.message);
+    res.status(500).json({ ok: false, message: 'সার্ভার সমস্যা — কিছুক্ষণ পর আবার চেষ্টা করুন।' });
+  }
+});
+
 module.exports = router;
 

@@ -15,27 +15,27 @@
         <li><a href="/articles"><i class="fas fa-circle"></i> প্রকাশিত লেখা</a></li>
         <li><a href="/qa"><i class="fas fa-circle"></i> প্রশ্নোত্তর</a></li>
         <li><a href="/members"><i class="fas fa-circle"></i> সদস্য তালিকা</a></li>
+        <li><a href="/committee"><i class="fas fa-circle"></i> কমিটি সদস্য</a></li>
         <li><a href="/constitution"><i class="fas fa-circle"></i> গঠনতন্ত্র</a></li>
         <li><a href="/about"><i class="fas fa-circle"></i> আমাদের সম্পর্কে</a></li>
       </ul>
     </div>
     <div>
-      <h4 class="f-widget-title">সেবাসমূহ</h4>
-      <ul class="f-links">
-        <li><a href="/quiz"><i class="fas fa-circle"></i> আজকের কুইজ</a></li>
-        <li><a href="/on-this-day"><i class="fas fa-circle"></i> আজকের এই দিনে</a></li>
-        <li><a href="/best-writer"><i class="fas fa-circle"></i> মাসিক সেরা লেখক</a></li>
-        <li><a href="/activities"><i class="fas fa-circle"></i> কার্যক্রম</a></li>
-        <li><a href="/events"><i class="fas fa-circle"></i> ইভেন্ট</a></li>
+      <h4 class="f-widget-title">যোগাযোগ</h4>
+      <ul class="f-contact">
+        <li><i class="fas fa-envelope"></i> <span>info@lekhokforum.org</span></li>
+        <li><i class="fas fa-phone"></i> <span>০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)</span></li>
+        <li><i class="fas fa-map-marker-alt"></i> <span>চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম, বাংলাদেশ</span></li>
       </ul>
     </div>
-    <div>
-      <h4 class="f-widget-title">যোগাযোগ</h4>
-      <ul class="f-links">
-        <li><i class="fas fa-envelope"></i> info@lekhokforum.org</li>
-        <li><i class="fas fa-phone"></i> ০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)</li>
-        <li><i class="fas fa-map-marker-alt"></i> চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম</li>
-      </ul>
+    <div class="f-newsletter">
+      <h4 class="f-widget-title">নিউজলেটার</h4>
+      <p class="f-newsletter-desc">নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
+      <form class="newsletter-form" id="newsletterForm" action="/api/newsletter/subscribe" method="post">
+        <input type="email" name="email" id="newsletterEmail" placeholder="আপনার ইমেইল" required>
+        <button type="submit">সাবস্ক্রাইব</button>
+      </form>
+      <p class="f-newsletter-msg" id="newsletterMsg" role="status" aria-live="polite"></p>
     </div>
   </div>
   <div class="footer-bottom">
