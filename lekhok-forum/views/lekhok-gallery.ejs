@@ -54,7 +54,7 @@
             <div class="album-single">
               <a href="<%= items[0].image_url %>"
                  class="album-photo album-photo--single"
-                 data-caption="<%= items[0].caption || '' %>"
+                 data-caption="<%= items[0].caption || '' %>" data-category="<%= items[0].category || '' %>" data-id="<%= items[0].id %>"
                  data-lightbox="album-<%= cat %>">
                 <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
                 <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
@@ -83,7 +83,7 @@
             <div class="album-grid album-grid--featured">
               <a href="<%= items[0].image_url %>"
                  class="album-photo album-photo--wide"
-                 data-caption="<%= items[0].caption || '' %>"
+                 data-caption="<%= items[0].caption || '' %>" data-category="<%= items[0].category || '' %>" data-id="<%= items[0].id %>"
                  data-lightbox="album-<%= cat %>">
                 <img src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
                 <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
@@ -122,10 +122,18 @@
 </section>
 
 <!-- Lightbox -->
-<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="ছবি দেখুন">
-  <button class="lightbox-close" id="lightboxClose" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
-  <img id="lightboxImg" src="" alt="" />
-  <div class="lightbox-caption" id="lightboxCaption"></div>
+<div class="lightbox gallery-popup" id="lightbox" role="dialog" aria-modal="true" aria-label="ছবি দেখুন">
+  <button class="lightbox-close popup-close" id="lightboxClose" aria-label="বন্ধ করুন" title="বন্ধ করুন (Esc)"><i class="fas fa-times"></i></button>
+  <button class="popup-back" id="popupBack" aria-label="ফিরে যান" title="ফিরে যান" style="display:none"><i class="fas fa-arrow-left"></i></button>
+  <div class="popup-content">
+    <div class="popup-image-wrap">
+      <img id="lightboxImg" src="" alt="" />
+    </div>
+    <div class="popup-details" id="popupDetails">
+      <div class="popup-caption" id="lightboxCaption"></div>
+      <div class="popup-meta" id="popupMeta"></div>
+    </div>
+  </div>
   <% if (albumKeys.length) { %>
   <div class="lightbox-nav">
     <button id="lbPrev" aria-label="আগের ছবি"><i class="fas fa-chevron-left"></i></button>
@@ -391,8 +399,13 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
   function collectPhotos() {
     allPhotos = [];
     document.querySelectorAll('[data-lightbox]').forEach(function(a) {
-      if (a.offsetParent === null) return; /* skip hidden (filtered-out album / unrevealed extras) */
-      allPhotos.push({ src: a.href, caption: a.dataset.caption || '' });
+      if (a.offsetParent === null) return;
+      allPhotos.push({
+        src: a.href,
+        caption: a.dataset.caption || '',
+        category: a.dataset.category || '',
+        id: a.dataset.id || ''
+      });
     });
   }
 
@@ -403,7 +416,7 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
       const idx = allPhotos.findIndex(function(p) { return p.src === a.href; });
       currentIdx = idx >= 0 ? idx : 0;
       showPhoto(currentIdx);
-      lb.classList.add('active');
+      lb.classList.add('open');
       document.body.style.overflow = 'hidden';
     });
   });
@@ -413,8 +426,16 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
     if (!photo) return;
     lbImg.src = photo.src;
     lbImg.alt = photo.caption;
-    lbCap.textContent = photo.caption;
+    lbCap.textContent = photo.caption || 'ক্যাপশন নেই';
     if (lbCounter) lbCounter.textContent = (idx + 1) + ' / ' + allPhotos.length;
+    // Populate popup meta
+    const meta = document.getElementById('popupMeta');
+    if (meta) {
+      const catLabel = photo.category ? photo.category.charAt(0).toUpperCase() + photo.category.slice(1) : '';
+      meta.innerHTML = (catLabel ? '<div class="popup-meta-item"><i class="fas fa-folder"></i><span class="popup-meta-badge">' + catLabel + '</span></div>' : '')
+        + '<div class="popup-meta-item"><i class="fas fa-image"></i> ছবি #' + (idx + 1) + '</div>'
+        + '<div class="popup-meta-item"><i class="fas fa-info-circle"></i> বিস্তারিত দেখুন</div>';
+    }
   }
 
   if (lbPrev) lbPrev.addEventListener('click', function() {
@@ -429,14 +450,14 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
   document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
   lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
   document.addEventListener('keydown', function(e) {
-    if (!lb.classList.contains('active')) return;
+    if (!lb.classList.contains('open')) return;
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowLeft') { currentIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length; showPhoto(currentIdx); }
     if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % allPhotos.length; showPhoto(currentIdx); }
   });
 
   function closeLightbox() {
-    lb.classList.remove('active');
+    lb.classList.remove('open');
     document.body.style.overflow = '';
     lbImg.src = '';
   }
