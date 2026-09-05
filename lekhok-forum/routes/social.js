@@ -622,32 +622,30 @@ router.get('/members', async (req, res) => {
   q += ' ORDER BY full_name ASC';
   const members = await db.prepare(q).all(...params);
 
-  // Group members of the organization (from members table) by member_type
-  const allCommittee = await db.prepare(`
-    SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
-           u.full_name AS user_full_name, u.designation AS user_designation
-    FROM members m
-    LEFT JOIN users u ON u.id = m.user_id
-    ORDER BY m.member_type, m.sort_order, m.name
-  `).all();
-  // কেন্দ্রীয় বিভাগে শুধু সর্বশেষ কার্যবর্ষের কমিটি (পুরো ইতিহাস /committee-তে)
+  // কার্যবর্ষ ম্যাপ (users → members টেবিল) — প্রত্যেক সদস্যের কার্ডে কার্যবর্ষ চিপ
+  const termRows = await db.prepare('SELECT user_id, term_year FROM members WHERE user_id IS NOT NULL AND term_year IS NOT NULL').all();
+  const termMap = {};
+  for (const r of termRows) {
+    if (!termMap[r.user_id]) termMap[r.user_id] = [];
+    if (!termMap[r.user_id].includes(r.term_year)) termMap[r.user_id].push(r.term_year);
+  }
   const bnTerm = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
-  const execTermYear = [...new Set(allCommittee.filter(m => m.member_type === 'central' && m.term_year).map(m => m.term_year))]
-    .sort((a, b) => bnTerm(b) - bnTerm(a))[0] || null;
-  const grouped = {
-    central:  allCommittee.filter(m => m.member_type === 'central' && (!execTermYear || m.term_year === execTermYear)),
-    branch:   allCommittee.filter(m => m.member_type === 'branch'),
-    advisory: allCommittee.filter(m => m.member_type === 'advisory'),
-    founder:  allCommittee.filter(m => m.member_type === 'founder')
-  };
+  for (const m of members) {
+    m.terms = (termMap[m.id] || []).sort((a, b) => bnTerm(b) - bnTerm(a));
+  }
+
   const totalUsers = (await db.prepare("SELECT COUNT(*) as c FROM users WHERE status='active'").get()).c;
-  res.render('user/members', {
-    members, search, totalUsers, grouped, currentPath: '/members',
+  // পাবলিক হোম-সাইট পেজ (সোশ্যাল ফিড লেআউট নয় — ইউজারের অনুরোধ)
+  res.render('lekhok-members', {
+    layout: 'layout',
+    pageTitle: 'সদস্য পরিচিতি',
+    currentPath: '/members',
+    members, search, totalUsers,
     departments, uniqueRoles, roleMap,
     deptSlugs: [...slugToCanon.keys()],
+    slugToCanon,
     currentRole: roleFilter,
-    currentDept: deptFilter,
-    selectedCanon, execTermYear
+    currentDept: deptFilter
   });
 });
 

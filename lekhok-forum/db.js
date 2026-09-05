@@ -1454,16 +1454,28 @@ async function getSetting(key) {
 // All settings in one query — used by server.js per-request middleware to
 // expose a synchronous getSetting() accessor to EJS templates (a template
 // cannot await). One cheap SELECT per request on Turso.
+// Settings read cache — every request reads settings via middleware; on Turso
+// that is a network round-trip per request. A short TTL cache (10s) removes it,
+// and setSetting() invalidates immediately so admin saves reflect instantly.
+let _settingsCache = null;
+let _settingsCacheAt = 0;
+const SETTINGS_CACHE_MS = 10000;
+
 async function getSettingsAll() {
+  const now = Date.now();
+  if (_settingsCache && now - _settingsCacheAt < SETTINGS_CACHE_MS) return _settingsCache;
   const rows = backend.type === 'sqljs'
     ? backend.prepare('SELECT key, value FROM settings').all()
     : await backend.prepare('SELECT key, value FROM settings').all();
   const map = {};
   for (const r of rows) map[r.key] = r.value;
+  _settingsCache = map;
+  _settingsCacheAt = now;
   return map;
 }
 
 function setSetting(key, value) {
+  _settingsCache = null;  // invalidate read cache — next read re-queries
   if (backend.type === 'sqljs') {
     backend.prepare(
       'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP'

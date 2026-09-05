@@ -83,15 +83,33 @@ router.get('/committee/past', async (req, res) => {
 });
 
 // ── Advisory Board ───────────────────────────────────────────────────────────
+// পাবলিক উপদেষ্টা পরিষদ পেজ — একই ব্যক্তি একাধিক কার্যবর্ষে থাকলে এক কার্ডে
+// মার্জ করে কার্যবর্ষগুলো চিপে দেখানো হয়
 router.get('/committee/advisory', async (req, res) => {
-  const advisory = await db.prepare(`
+  const rows = await db.prepare(`
     SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
            u.full_name AS user_full_name, u.designation AS user_designation
     FROM members m
     LEFT JOIN users u ON u.id = m.user_id
     WHERE m.member_type = 'advisory' ORDER BY m.sort_order
   `).all();
-  res.render('user/advisory', { advisory, currentPath: '/committee/advisory' });
+  const bnTerm = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
+  const seen = new Map();
+  for (const r of rows) {
+    const key = String(r.name || '').trim() || ('id-' + r.id);
+    if (!seen.has(key)) {
+      seen.set(key, { ...r, terms: [] });
+    }
+    const g = seen.get(key);
+    if (r.term_year && !g.terms.includes(r.term_year)) g.terms.push(r.term_year);
+  }
+  const advisory = [...seen.values()].map(g => ({ ...g, terms: g.terms.sort((a, b) => bnTerm(b) - bnTerm(a)) }));
+  res.render('lekhok-advisory', {
+    layout: 'layout',
+    pageTitle: 'উপদেষ্টা পরিষদ',
+    currentPath: '/committee/advisory',
+    advisory
+  });
 });
 
 // ── Birthdays ────────────────────────────────────────────────────────────────

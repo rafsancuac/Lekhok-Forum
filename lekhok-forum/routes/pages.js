@@ -119,13 +119,12 @@ router.get('/committee', async (req, res) => {
   const central = selectedYear
     ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order").all(selectedYear)
     : [];
-  const advisory = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order").all();
+  // উপদেষ্টা পরিষদ এখন আলাদা পাবলিক পেজে: /committee/advisory
   res.render('lekhok-committee', {
     layout: 'layout',
-    pageTitle: 'সংগঠন',
+    pageTitle: 'কার্যনির্বাহী কমিটি',
     currentPath: '/committee',
     central,
-    advisory,
     years,
     countByYear,
     selectedYear,

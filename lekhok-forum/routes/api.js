@@ -66,17 +66,19 @@ router.post('/newsletter/subscribe', async (req, res) => {
     return res.status(400).json({ ok: false, message: 'অনুগ্রহ করে সঠিক ইমেইল ঠিকানা দিন।' });
   }
   try {
-    const existing = await db.prepare('SELECT id, is_active FROM newsletter_subscribers WHERE email = ?').get(email);
-    if (existing) {
-      if (!existing.is_active) {
-        // Re-subscribe a previously unsubscribed address
-        await db.prepare("UPDATE newsletter_subscribers SET is_active = 1, unsubscribed_at = NULL WHERE id = ?").run(existing.id);
-        return res.json({ ok: true, message: 'আবার সাবস্ক্রাইব সফল হয়েছে! নতুন লেখার খবর আবার পাবেন।' });
-      }
-      return res.json({ ok: true, message: 'আপনি ইতিমধ্যেই সাবস্ক্রাইব করেছেন — ধন্যবাদ!' });
-    }
-    await db.prepare('INSERT INTO newsletter_subscribers (email, name, source) VALUES (?, ?, ?)').run(email, name, 'footer');
-    res.json({ ok: true, message: 'সাবস্ক্রিপশন সফল! এখন থেকে নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পাবেন।' });
+    // Single round-trip upsert (speed: was SELECT + INSERT/UPDATE = 2-3 queries):
+    //   • new address             → INSERT        (changes = 1)
+    //   • previously unsubscribed → re-activated  (changes = 1)
+    //   • already active          → WHERE fails   (changes = 0)
+    const r = await db.prepare(`
+      INSERT INTO newsletter_subscribers (email, name, source) VALUES (?, ?, 'footer')
+      ON CONFLICT(email) DO UPDATE SET is_active = 1, unsubscribed_at = NULL
+      WHERE newsletter_subscribers.is_active = 0
+    `).run(email, name);
+    const changed = !!(r && (r.changes ?? r.rows_affected ?? 0));
+    res.json({ ok: true, message: changed
+      ? 'সাবস্ক্রিপশন সফল! এখন থেকে নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পাবেন।'
+      : 'আপনি ইতিমধ্যেই সাবস্ক্রাইব করেছেন — ধন্যবাদ!' });
   } catch (e) {
     console.error('[newsletter] subscribe error:', e.message);
     res.status(500).json({ ok: false, message: 'সার্ভার সমস্যা — কিছুক্ষণ পর আবার চেষ্টা করুন।' });

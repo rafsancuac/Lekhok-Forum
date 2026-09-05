@@ -1,0 +1,60 @@
+<%- include('../partials/header', { title: 'মেনু ব্যবস্থাপনা — মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<style>
+  .mod-page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; font-family: 'Hind Siliguri', sans-serif !important; }
+  .mod-hero {
+    background: linear-gradient(135deg, #0a1f44 0%, #1e293b 100%);
+    border-radius: 16px; padding: 28px 32px; color: white;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+  }
+  .mod-hero h1 { margin: 0 0 6px; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .mod-hero h1 i { color: #d4a017; }
+  .mod-hero p { margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+  .mod-back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18); color: #e2e8f0;
+    border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500;
+  }
+  .mod-back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; text-decoration: none; }
+  .mod-card { background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 22px; }
+  .mod-card h2 { margin: 0 0 6px; font-size: 17px; color: var(--text, #0f172a); display: flex; align-items: center; gap: 8px; }
+  .mod-card .mod-hint { color: #64748b; font-size: 13.5px; margin: 0 0 16px; line-height: 1.6; }
+  .mod-flash { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
+  .mod-flash.ok { background: #dcfce7; color: #15803d; }
+  .mod-flash.err { background: #fef2f2; color: #dc2626; }
+</style>
+
+<div class="mod-page">
+  <div class="mod-hero">
+    <div>
+      <h1><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</h1>
+      <p>হোম পেজের টপ-বার ও মোবাইল মেনুর লেবেল, লিংক ও সাব-মেনু এডিট করুন</p>
+    </div>
+    <a href="/moderator" class="mod-back-btn"><i class="fas fa-arrow-left"></i> প্যানেলে ফিরুন</a>
+  </div>
+
+  <div class="mod-card">
+    <% if (typeof success !== 'undefined' && success) { %><div class="mod-flash ok"><i class="fas fa-check-circle"></i> <%= success %></div><% } %>
+    <% if (typeof error !== 'undefined' && error) { %><div class="mod-flash err"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+    <h2><i class="fas fa-sitemap"></i> সাইট মেনু</h2>
+    <p class="mod-hint">
+      প্রতিটি মেনু আইটেমে <strong>লেবেল</strong> ও <strong>লিংক</strong> দিন; ঐচ্ছিকভাবে FontAwesome আইকন (যেমন <code>fa-home</code>)।
+      সাব-মেনু যোগ করলে সেটি ড্রপডাউন হিসেবে দেখাবে। পরিবর্তন সাইটে সাথে সাথে প্রযোজ্য হবে।
+    </p>
+    <form method="POST" action="/moderator/navigation" id="navForm" onsubmit="return NavEditor.beforeSubmit()">
+      <input type="hidden" name="nav_json" id="navJsonInput" value="">
+      <div id="navEditor"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <button type="button" class="mod-back-btn" style="background:#0a1f44;border-color:#0a1f44;" onclick="NavEditor.addItem()"><i class="fas fa-plus"></i> মেনু আইটেম</button>
+        <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+        <button type="submit" class="mod-back-btn" name="reset" value="1" onclick="NavEditor.reset = true; document.getElementById('navJsonInput').value = '';"><i class="fas fa-undo"></i> ডিফল্ট মেনুতে ফেরান</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>window.NAV_DATA = <%- JSON.stringify(navConfig) %>;</script>
+<script src="/assets/js/nav-editor.js?v=<%= AV %>"></script>
+<script>NavEditor.init('navEditor', window.NAV_DATA);</script>

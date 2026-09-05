@@ -1,0 +1,121 @@
+<header class="page-header">
+  <div class="container">
+    <span class="eyebrow">আমাদের সদস্য</span>
+    <h1>সদস্য পরিচিতি</h1>
+    <p>আমাদের প্রতিষ্ঠানের নেতৃত্ব ও সকল সদস্য — প্রত্যেকের কার্যবর্ষ কার্ডেই উল্লেখ করা আছে</p>
+  </div>
+</header>
+
+<style>
+/* কার্যবর্ষ চিপ */
+.member-term-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.member-term-chip {
+  padding: 2px 9px; border-radius: 999px;
+  background: rgba(10,31,68,.06); color: var(--brand, #0a1f44);
+  font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(10,31,68,.12);
+}
+.leader-card { position: relative; overflow: hidden; }
+.leader-card img { transition: transform .35s ease; }
+.leader-card:hover img { transform: scale(1.06); }
+.leader-card.linked-member::after {
+  content: '\f061';
+  font-family: 'Font Awesome 6 Free'; font-weight: 900;
+  position: absolute; top: 12px; right: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent, #059669); color: #fff; font-size: 0.72rem;
+  opacity: 0; transform: translate(6px, -6px);
+  transition: opacity .2s, transform .2s;
+}
+.leader-card.linked-member:hover::after { opacity: 1; transform: translate(0, 0); }
+
+/* ফিল্টার বার */
+.members-filter { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.members-filter input[type="search"], .members-filter select {
+  padding: 10px 14px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 999px;
+  background: #fff; font-family: inherit; font-size: 0.92rem; color: var(--text, #334155);
+  min-width: 170px;
+}
+.members-filter input[type="search"]:focus, .members-filter select:focus {
+  outline: none; border-color: var(--accent, #059669);
+}
+.members-filter button {
+  padding: 10px 20px; border-radius: 999px; border: 0; cursor: pointer;
+  background: var(--accent, #059669); color: #fff; font-weight: 700; font-family: inherit; font-size: 0.92rem;
+}
+.members-filter a.mf-reset {
+  font-size: 0.85rem; color: var(--text-muted, #64748b); text-decoration: none;
+}
+.members-filter a.mf-reset:hover { color: var(--accent, #059669); }
+@media (max-width: 576px) {
+  .members-filter input[type="search"], .members-filter select { min-width: 0; flex: 1 1 45%; }
+}
+</style>
+
+<% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
+
+<!-- সার্চ + ফিল্টার -->
+<section class="section reveal" style="padding-bottom:0">
+  <div class="container">
+    <form class="members-filter" method="GET" action="/members">
+      <input type="search" name="q" value="<%= search %>" placeholder="নাম / ইউজারনেম খুঁজুন..." aria-label="সার্চ">
+      <select name="role" aria-label="রোল">
+        <option value="">সব রোল</option>
+        <% uniqueRoles.forEach(r => { %>
+          <option value="<%= r %>" <%= r === currentRole ? 'selected' : '' %>><%= roleMap[r] || r %></option>
+        <% }) %>
+      </select>
+      <select name="dept" aria-label="বিভাগ">
+        <option value="">সব বিভাগ</option>
+        <% deptSlugs.forEach(s => { %>
+          <option value="<%= s %>" <%= s === currentDept ? 'selected' : '' %>><%= slugToCanon.get(s) || s %></option>
+        <% }) %>
+      </select>
+      <button type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
+      <% if (search || currentRole || currentDept) { %>
+        <a class="mf-reset" href="/members"><i class="fas fa-times"></i> ফিল্টার মুছুন</a>
+      <% } %>
+    </form>
+  </div>
+</section>
+
+<!-- সদস্য গ্রিড -->
+<section class="section reveal">
+  <div class="container">
+    <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:10px">
+      <div>
+        <span class="eyebrow">তালিকা</span>
+        <h2 class="section-title">সকল <span class="accent">সদস্য</span></h2>
+        <span class="accent-divider"></span>
+        <p class="term-intro">মোট <strong><%= bnNum(members.length) %></strong> জন সদস্য<% if (search || currentRole || currentDept) { %> (ফিল্টারকৃত)<% } %>, সর্বমোট নিবন্ধিত <strong><%= bnNum(totalUsers) %></strong> জন। কার্ডে ক্লিক করে প্রোফাইল দেখুন।</p>
+      </div>
+    </div>
+
+    <% if (members && members.length) { %>
+      <div class="leaders-grid" style="margin-top:26px">
+        <% members.forEach(m => { %>
+          <a href="/profile/<%= m.username %>" class="leader-card has-image clickable-card linked-member">
+            <img loading="lazy" decoding="async" src="<%= m.avatar_url || '/avatar/' + m.id %>" alt="<%= m.full_name %>" loading="lazy"
+                 onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+            <div class="leader-body">
+              <h3><%= m.full_name %></h3>
+              <p class="role"><%= m.designation || (roleMap[m.role] || 'সদস্য') %></p>
+              <% if (m.terms && m.terms.length) { %>
+                <div class="member-term-chips">
+                  <% m.terms.forEach(t => { %><span class="member-term-chip"><i class="far fa-calendar"></i> <%= t %> কার্যবর্ষ</span><% }) %>
+                </div>
+              <% } %>
+              <% if (m.bio) { %><p class="leader-bio"><%= String(m.bio).substring(0, 90) %><%= String(m.bio).length > 90 ? '…' : '' %></p><% } %>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="term-empty" style="margin-top:26px">
+        <i class="fas fa-user-slash"></i>
+        <h3>কোনো সদস্য পাওয়া যায়নি</h3>
+        <p>সার্চ বা ফিল্টার পরিবর্তন করে আবার চেষ্টা করুন।</p>
+      </div>
+    <% } %>
+  </div>
+</section>

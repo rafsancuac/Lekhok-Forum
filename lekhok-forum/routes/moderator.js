@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { broadcastToAll } = require('./dashboard');
+const { validateNavJson, parseNav } = require('../helpers/nav');
 
 function ensureModerator(req, res, next) {
   if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
@@ -22,6 +23,36 @@ function requireScope(scope) {
 }
 
 function today() { return new Date().toISOString().split('T')[0]; }
+
+// ── Site menu management (admin + moderators) ────────────────────────────────
+router.get('/navigation', ensureModerator, async (req, res) => {
+  const settings = await db.getSettingsAll();
+  res.render('user/moderator-navigation', {
+    navConfig: parseNav(settings['nav_json']),
+    success: req.query.saved ? 'মেনু সংরক্ষিত হয়েছে — সাইটে সাথে সাথে প্রযোজ্য' : null,
+    error: null,
+    currentPath: '/moderator/navigation'
+  });
+});
+
+router.post('/navigation', ensureModerator, async (req, res) => {
+  if (req.body.reset) {
+    await db.setSetting('nav_json', '');
+    return res.redirect('/moderator/navigation?saved=1');
+  }
+  const v = validateNavJson(req.body.nav_json);
+  if (!v.ok) {
+    const settings = await db.getSettingsAll();
+    return res.status(400).render('user/moderator-navigation', {
+      navConfig: parseNav(settings['nav_json']),
+      success: null,
+      error: v.error,
+      currentPath: '/moderator/navigation'
+    });
+  }
+  await db.setSetting('nav_json', v.nav.length ? JSON.stringify(v.nav) : '');
+  res.redirect('/moderator/navigation?saved=1');
+});
 
 // ── Moderator dashboard ──────────────────────────────────────────────────────
 router.get('/', ensureModerator, async (req, res) => {

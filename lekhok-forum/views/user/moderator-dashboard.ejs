@@ -172,6 +172,17 @@
     <% }) %>
   </div>
 
+  <%# ── সাইট মেনু ব্যবস্থাপনা (অ্যাডমিন + মডারেটর সবাই) ── %>
+  <div style="margin-top:20px;">
+    <a href="/moderator/navigation" class="mod-tile" style="display:flex;align-items:center;gap:14px;max-width:420px;">
+      <div class="mod-tile-icon"><i class="fas fa-bars"></i></div>
+      <div>
+        <div class="mod-tile-label">মেনু ব্যবস্থাপনা</div>
+        <div class="mod-tile-desc">হোম পেজের মেনু ও সাব-মেনু এডিট করুন</div>
+      </div>
+    </a>
+  </div>
+
   <% if (myScopes.length === 0 && user.role !== 'admin') { %>
     <div class="mod-empty">
       <i class="fas fa-user-shield"></i>

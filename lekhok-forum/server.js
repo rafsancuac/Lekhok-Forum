@@ -6,6 +6,7 @@ const methodOverride = require('method-override');
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./db');
 const { runBirthdayCheck } = require('./helpers/notify');
+const { parseNav, navItemActive } = require('./helpers/nav');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -101,6 +102,9 @@ app.use(async (req, res, next) => {
     res.locals.currentPath = req.path;
     // Canonical site URL for SEO (OG/canonical/sitemap) — SITE_URL env wins
     res.locals.siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
+    // Public nav (editable from admin/moderator panel — settings key nav_json)
+    res.locals.navConfig = parseNav(settings['nav_json']);
+    res.locals.navItemActive = navItemActive;
 
     // Per-user display prefs (theme / font size) — consumed by header partial
     res.locals.displayPrefs = {};

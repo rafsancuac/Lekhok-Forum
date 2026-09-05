@@ -1,13 +1,13 @@
 <header class="page-header">
   <div class="container">
-    <span class="eyebrow">নেতৃত্ব</span>
-    <h1>কার্যনির্বাহী কমিটি</h1>
-    <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় — কার্যবর্ষভিত্তিক পূর্ণাঙ্গ কার্যনির্বাহী কমিটি</p>
+    <span class="eyebrow">পরামর্শদাতা</span>
+    <h1>উপদেষ্টা পরিষদ</h1>
+    <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় — সংগঠনের পরামর্শদাতামণ্ডলী</p>
   </div>
 </header>
 
 <style>
-/* ── কার্যবর্ষ ফিল্টার চিপসমূহ ─────────────────────────────────────────── */
+/* কার্যবর্ষ চিপ (প্রোফাইল কার্ডের ভেতরে) */
 .term-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .term-chip {
   display: inline-flex; align-items: center; gap: 7px;
@@ -28,14 +28,11 @@
   background: rgba(5,150,105,.12); color: var(--accent, #059669);
   font-size: 0.74rem; font-weight: 700;
 }
-.term-chip.active .tc-count { background: rgba(255,255,255,.22); color: #fff; }
-
-/* ── কার্ড: পুরোটাই ক্লিকেবল, আলাদা কোনো "ক্লিক করুন" লেখা নেই ────────── */
 .leader-card { position: relative; overflow: hidden; }
 .leader-card img { transition: transform .35s ease; }
 .leader-card:hover img { transform: scale(1.06); }
 .leader-card.linked-member::after {
-  content: '\f061'; /* fa-arrow-right */
+  content: '\f061';
   font-family: 'Font Awesome 6 Free'; font-weight: 900;
   position: absolute; top: 12px; right: 12px;
   width: 30px; height: 30px; border-radius: 50%;
@@ -45,15 +42,12 @@
   transition: opacity .2s, transform .2s;
 }
 .leader-card.linked-member:hover::after { opacity: 1; transform: translate(0, 0); }
-.member-term-tag {
-  position: absolute; top: 12px; left: 12px; z-index: 1;
-  padding: 3px 10px; border-radius: 999px;
-  background: rgba(10,31,68,.82); color: #fff;
-  font-size: 0.68rem; font-weight: 700; letter-spacing: .02em;
-  backdrop-filter: blur(3px);
+.adv-term-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.adv-term-chip {
+  padding: 2px 9px; border-radius: 999px;
+  background: rgba(10,31,68,.06); color: var(--brand, #0a1f44);
+  font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(10,31,68,.12);
 }
-
-/* খালি কার্যবর্ষের অবস্থা */
 .term-empty {
   text-align: center; padding: 54px 24px;
   background: var(--bg-soft, #f8fafc);
@@ -62,52 +56,38 @@
 .term-empty i { font-size: 2rem; color: var(--accent, #059669); margin-bottom: 12px; }
 .term-empty h3 { margin: 0 0 6px; color: var(--brand, #0a1f44); font-size: 1.15rem; }
 .term-empty p { margin: 0; color: var(--text-muted, #64748b); font-size: .93rem; }
-
-@media (max-width: 576px) {
-  .term-chip { padding: 6px 12px; font-size: 0.85rem; }
-  .term-chips { gap: 6px; }
-}
 </style>
 
 <% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
 
-<!-- কার্যবর্ষ ফিল্টার -->
-<section class="section reveal" style="padding-bottom:0">
+<section class="section reveal">
   <div class="container">
     <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:14px">
       <div>
-        <span class="eyebrow">নেতৃত্ব</span>
-        <h2 class="section-title">পূর্ণাঙ্গ <span class="accent">কার্যনির্বাহী কমিটি</span></h2>
+        <span class="eyebrow">পরামর্শদাতা</span>
+        <h2 class="section-title">উপদেষ্টা <span class="accent">পরিষদ</span></h2>
         <span class="accent-divider"></span>
-        <p class="term-intro">
-          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের পূর্ণাঙ্গ কার্যনির্বাহী কমিটি<% if (termNote) { %> — <%= termNote %><% } %>.<% } else { %>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা।<% } %>
-          <% if (countByYear[selectedYear]) { %>মোট সদস্য <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
-        </p>
-      </div>
-      <div class="term-chips" role="tablist" aria-label="কার্যবর্ষ নির্বাচন">
-        <% years.forEach(y => { %>
-          <a href="/committee?year=<%= encodeURIComponent(y) %>"
-             class="term-chip <%= y === selectedYear ? 'active' : '' %>"
-             aria-pressed="<%= y === selectedYear ? 'true' : 'false' %>">
-            <%= y %>
-            <% if (countByYear[y]) { %><span class="tc-count"><%= bnNum(countByYear[y]) %></span><% } %>
-          </a>
-        <% }) %>
+        <p class="term-intro">সংগঠনের সর্বমোট <strong><%= bnNum(advisory.length) %></strong> জন উপদেষ্টা — প্রত্যেকের কার্যবর্ষ কার্ডেই উল্লেখ করা আছে।</p>
       </div>
     </div>
 
-    <% if (central && central.length) { %>
+    <% if (advisory && advisory.length) { %>
       <div class="leaders-grid" style="margin-top:26px">
-        <% central.forEach(m => { %>
+        <% advisory.forEach(m => { %>
           <% const displayName = m.user_full_name || m.name; %>
           <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% const terms = (m.terms && m.terms.length) ? m.terms : (m.term_year ? [m.term_year] : []); %>
           <% if (m.user_username) { %>
             <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
-              <span class="member-term-tag"><%= selectedYear %></span>
               <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
+                <% if (terms.length) { %>
+                  <div class="adv-term-chips">
+                    <% terms.forEach(t => { %><span class="adv-term-chip"><i class="far fa-calendar"></i> <%= t %> কার্যবর্ষ</span><% }) %>
+                  </div>
+                <% } %>
                 <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
               </div>
             </a>
@@ -115,16 +95,20 @@
             <div class="leader-card has-image clickable-card"
                  onclick="openMemberModal('<%= m.id %>')"
                  data-member="<%= m.id %>"
-                 data-name="<%= m.name.replace(/'/g, '&#39;') %>"
-                 data-role="<%= m.role.replace(/'/g, '&#39;') %>"
-                 data-designation="<%= (m.designation || '').replace(/'/g, '&#39;') %>"
-                 data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
+                 data-name="<%= String(m.name).replace(/'/g, '&#39;') %>"
+                 data-role="<%= String(m.role || '').replace(/'/g, '&#39;') %>"
+                 data-designation="<%= String(m.designation || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
+                 data-bio="<%= String(m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
                  data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
-              <span class="member-term-tag"><%= selectedYear %></span>
               <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
+                <% if (terms.length) { %>
+                  <div class="adv-term-chips">
+                    <% terms.forEach(t => { %><span class="adv-term-chip"><i class="far fa-calendar"></i> <%= t %> কার্যবর্ষ</span><% }) %>
+                  </div>
+                <% } %>
                 <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
               </div>
             </div>
@@ -134,20 +118,10 @@
     <% } else { %>
       <div class="term-empty" style="margin-top:26px">
         <i class="far fa-folder-open"></i>
-        <h3><%= selectedYear || 'এই' %> কার্যবর্ষের কমিটির তথ্য এখনো সংরক্ষিত হয়নি</h3>
-        <p>অফিসিয়াল তালিকা পাওয়ামাত্র এখানে যুক্ত করা হবে, ইনশাআল্লাহ।</p>
+        <h3>উপদেষ্টাদের তালিকা এখনো সংরক্ষিত হয়নি</h3>
+        <p>তথ্য পাওয়ামাত্র এখানে যুক্ত করা হবে, ইনশাআল্লাহ।</p>
       </div>
     <% } %>
-  </div>
-</section>
-
-
-<!-- উপদেষ্টা পরিষদ এখন আলাদা পেজে: /committee/advisory -->
-
-<!-- সকল সদস্য -->
-<section class="section reveal" style="text-align:center;padding:30px 0 60px">
-  <div class="container">
-    <a href="/members" class="btn btn-primary btn-lg"><i class="fas fa-users"></i> সকল সদস্য দেখুন</a>
   </div>
 </section>
 
@@ -155,7 +129,7 @@
 <div class="modal-overlay" id="memberModal" onclick="if(event.target===this) closeMemberModal()">
   <div class="modal-dialog">
     <div class="modal-head">
-      <h3>সদস্যের বিস্তারিত</h3>
+      <h3>উপদেষ্টার বিস্তারিত</h3>
       <button class="modal-close" onclick="closeMemberModal()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-member-inner" id="modalBody"></div>

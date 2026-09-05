@@ -294,6 +294,17 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ২৪ (৫ সেপ্টেম্বর ২০২৬) — পাবলিক সদস্য/উপদেষ্টা পেজ + মেনু ব্যবস্থাপনা + UI পলিশ
+
+- **ইউজার রিকোয়েস্ট**: সদস্যরা সোশ্যাল ফিডে নয়, হোম পেজে আলাদা পেজ চাই; সাব-মেনুতে 'রানিং কমিটি' নয় 'কার্যনির্বাহী কমিটি'; প্রতিটি প্রোফাইলে কার্যবর্ষ; অ্যাডমিন+মডারেটর নিজেরা মেনু/সাব-মেনু এডিট করতে পারবেন; ফোন মাস্কিং; 'বিশ্ববিদ্যালয় সম্পর্কিত তথ্য'; কন্টাক্ট আইটেম কমপ্যাক্ট + 'কার্যালয়'; নিউজলেটার স্পিড + সাদা success মেসেজ
+- **পাবলিক পেজ বিভাজন**: `/committee` — h1 'কার্যনির্বাহী কমিটি' (আগে 'সংগঠন কমিটি'), উপদেষ্টা সেকশন বাদ (এখন আলাদা পেজে); **নতুন** `/committee/advisory` পাবলিক পেজ (lekhok-advisory.ejs — নাম-ভিত্তিক মার্জ, একাধিক কার্যবর্ষ এক কার্ডে চিপে); **নতুন পাবলিক** `/members` (lekhok-members.ejs — সোশ্যাল ফিড লেআউট থেকে হোম-সাইট লেআউটে, সার্চ+রোল+বিভাগ ফিল্টার অক্ষত, ৫৩ কার্ড + ৬৮ কার্যবর্ষ চিপ); তিন পেজেই কার্ড → /profile/:username
+- **কার্যবর্ষ**: members টেবিলের term_year থেকে প্রতি কার্ডে চিপ; প্রোফাইল পেজের 'সংগঠনে দায়িত্ব' চিপস আগেই ছিল (সেশন ১৯); উপদেষ্টাদের DB-তে term_year NULL — অ্যাডমিন প্যানেল থেকে সেট করলেই চিপ দেখাবে
+- **মেনু ব্যবস্থাপনা (নতুন সিস্টেম)**: `helpers/nav.js` — DEFAULT_NAV + parseNav/sanitizeNav/validateNavJson/navItemActive; settings কী `nav_json`; server.js মিডলওয়্যারে res.locals.navConfig; layout.ejs টপবার+মোবাইল সাইডবার ও header.ejs গেস্ট নেভ এখন কনফিগ-ড্রিভেন; **admin/navigation + moderator/navigation** (requireStaff/ensureModerator — দুজনেই এডিট করতে পারেন) — JS এডিটর (nav-editor.js): লেবেল/লিংক/আইকন + সাব-মেনু যোগ/মুছুন + 'ডিফল্ট মেনুতে ফেরান'; admin sidebar 'সিস্টেম' গ্রুপে লিংক, moderator dashboard-এ টাইল
+- **ফোন মাস্কিং**: সব পাবলিক জায়গায় '০১৭৯১১৮৭১৬৪ (বিকাশ/নগদ - পার্সোনাল)' → '০১********* (বিকাশ/নগদ)' — footer.ejs, layout.ejs, lekhok-about (পেমেন্ট), lekhok-contact (contact-list + মোবাইল কার্ড; tel: লিংকও সরানো — নম্বর আর সাইটে উন্মুক্ত নয়)
+- **কন্টাক্ট পেজ**: 'কেন্দ্রীয় কার্যালয়' → 'কার্যালয়', 'ফোন' → 'মোবাইল'; .contact-list li padding 14→8px, gap 14→11/16→12, icon 42→36 — আইটেমগুলো কমপ্যাক্ট; 'বিশ্ববিদ্যালয় সম্পদ' → 'বিশ্ববিদ্যালয় সম্পর্কিত তথ্য' (contact + resources দুটিতেই)
+- **নিউজলেটার স্পিড**: subscribe রুট ২-৩ কুয়েরি → **এক কুয়েরি** (INSERT … ON CONFLICT(email) DO UPDATE … WHERE is_active=0 — changes দিয়ে new/duplicate আলাদা); db.js getSettingsAll-এ ১০ সেকেন্ড TTL ক্যাশ + setSetting-এ ইনভ্যালিডেশন (প্রতি রিকোয়েস্টে একটি Turso round-trip বাঁচে — পুরো সাইট দ্রুত); .f-newsletter-msg.ok এখন **সাদা** + font-weight 600 (ডার্ক ফুটারে স্পষ্ট)
+- **টেস্ট**: সব পেজ 200; nav POST/reset e2e (admin+moderator দুজনেই, কাস্টম লেবেল সাইটে দেখা যায়, reset ডিফল্টে ফেরায়); newsletter new/duplicate/invalid বার্তা ঠিক; Playwright — nav ট্যাব কনফিগ থেকে, committee h1, advisory ১০ কার্ড, members ৫৩ কার্ড+৬৮ চিপ, nav editor ৭ আইটেম, JS এরর ০; test-lekhok.sh **77/77 PASS**
+
 ### সেশন ২৩ (৫ সেপ্টেম্বর ২০২৬) — পূর্ণ SEO ব্যবস্থা: OG/Twitter মেটা + JSON-LD + sitemap.xml + robots.txt + lazy-loading
 
 - **ইউজার রিকোয়েস্ট**: "চালিয়ে যাও" — Task E (অ্যাডমিন প্যানেল) লাইভ-যাচাইয়ের পর বাকি থাকা SEO ব্লক (per-article meta/OG/Twitter Card, XML sitemap + robots.txt, schema.org Article, lazy-loading) সম্পন্ন করা

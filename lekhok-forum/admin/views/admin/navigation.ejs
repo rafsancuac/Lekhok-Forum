@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>মেনু ব্যবস্থাপনা — বাংলাদেশ তরুণ কলাম লেখক ফোরাম</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>মেনু ব্যবস্থাপনা</h1>
+    <p>হোম পেজের টপ-বার ও মোবাইল মেনুর লেবেল, লিংক ও সাব-মেনু এডিট করুন</p>
+  </div>
+  <div class="card">
+    <% if (success) { %><div class="success"><%= success %></div><% } %>
+    <% if (error) { %><div class="error" style="background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;margin-bottom:14px;"><%= error %></div><% } %>
+    <p style="color:#64748b;font-size:13.5px;margin:0 0 14px;">
+      <i class="fas fa-info-circle"></i>
+      প্রতিটি মেনু আইটেমে <strong>লেবেল</strong> ও <strong>লিংক</strong> দিন; ঐচ্ছিকভাবে FontAwesome আইকন (যেমন <code>fa-home</code>)।
+      সাব-মেনু যোগ করলে সেটি ড্রপডাউন হিসেবে দেখাবে। পরিবর্তন সাইটে সাথে সাথে প্রযোজ্য হবে।
+    </p>
+    <form method="POST" action="<%= formAction %>" id="navForm" onsubmit="return NavEditor.beforeSubmit()">
+      <input type="hidden" name="nav_json" id="navJsonInput" value="">
+      <div id="navEditor"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <button type="button" class="btn" onclick="NavEditor.addItem()"><i class="fas fa-plus"></i> মেনু আইটেম</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+        <button type="submit" class="btn" name="reset" value="1" onclick="NavEditor.reset = true; document.getElementById('navJsonInput').value = '';"><i class="fas fa-undo"></i> ডিফল্ট মেনুতে ফেরান</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>window.NAV_DATA = <%- JSON.stringify(navConfig) %>;</script>
+<script src="/assets/js/nav-editor.js?v=<%= AV %>"></script>
+<script>NavEditor.init('navEditor', window.NAV_DATA);</script>
+</body>
+</html>

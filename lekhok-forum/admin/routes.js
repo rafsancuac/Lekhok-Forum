@@ -6,6 +6,7 @@ const { broadcastToAll } = require('../helpers/notify');
 const { galleryUpload, attachmentUpload, withUpload } = require('../middleware/upload');
 const getSetting = db.getSetting;
 const setSetting = db.setSetting;
+const { validateNavJson, parseNav } = require('../helpers/nav');
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 // Admin  = admin_users session OR user session with role='admin'  → full access
@@ -358,6 +359,39 @@ router.post('/settings', requireAdmin, async (req, res) => {
   const settings = {};
   for (const k of keys) { settings[k] = await getSetting(k) || ''; }
   res.render('admin/settings', { settings, success: 'সেটিংস সংরক্ষিত হয়েছে', currentPath: '/admin/settings' });
+});
+
+// ── Site menu management (admin + moderators) ────────────────────────────────
+// The public top-bar + mobile sidebar render from settings key nav_json.
+router.get('/navigation', requireStaff, async (req, res) => {
+  const settings = await db.getSettingsAll();
+  res.render('admin/navigation', {
+    navConfig: parseNav(settings['nav_json']),
+    success: req.query.saved ? 'মেনু সংরক্ষিত হয়েছে — সাইটে সাথে সাথে প্রযোজ্য' : null,
+    error: null,
+    formAction: '/admin/navigation',
+    currentPath: '/admin/navigation'
+  });
+});
+
+router.post('/navigation', requireStaff, async (req, res) => {
+  if (req.body.reset) {
+    await setSetting('nav_json', '');   // empty → parseNav falls back to DEFAULT_NAV
+    return res.redirect('/admin/navigation?saved=1');
+  }
+  const v = validateNavJson(req.body.nav_json);
+  if (!v.ok) {
+    const settings = await db.getSettingsAll();
+    return res.status(400).render('admin/navigation', {
+      navConfig: parseNav(settings['nav_json']),
+      success: null,
+      error: v.error,
+      formAction: '/admin/navigation',
+      currentPath: '/admin/navigation'
+    });
+  }
+  await setSetting('nav_json', v.nav.length ? JSON.stringify(v.nav) : '');
+  res.redirect('/admin/navigation?saved=1');
 });
 
 // ── Messages ─────────────────────────────────────────────────────────────────
