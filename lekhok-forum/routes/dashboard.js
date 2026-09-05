@@ -422,7 +422,7 @@ router.get('/api/messages/unread', ensureAuth, async (req, res) => {
 // ── Complaints (private) ──────────────────────────────────────────────────
 router.get('/complaints', ensureAuth, async (req, res) => {
   const mine = await db.prepare('SELECT * FROM complaints WHERE submitted_by = ? ORDER BY created_at DESC').all(req.session.user.id);
-  res.render('user/complaints', { mine, currentPath: '/complaints' });
+  res.render('user/complaints', { mine, sent: req.query.sent || null, currentPath: '/complaints' });
 });
 
 router.post('/complaints', ensureAuth, withUpload(attachmentUpload), async (req, res) => {

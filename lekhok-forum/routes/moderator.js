@@ -50,7 +50,7 @@ router.get('/daily/:type', ensureModerator, async (req, res, next) => {
   if (!meta) return next();
   requireScope(meta.scope)(req, res, async () => {
     const items = await db.prepare('SELECT * FROM daily_content WHERE content_type = ? ORDER BY scheduled_date DESC, id DESC LIMIT 30').all(req.params.type);
-    res.render('user/moderator-daily-form', { type: req.params.type, meta, items, todayDate: today(), currentPath: '/moderator' });
+    res.render('user/moderator-daily-form', { type: req.params.type, meta, items, todayDate: today(), posted: req.query.posted || null, currentPath: '/moderator' });
   });
 });
 
@@ -80,7 +80,7 @@ router.delete('/daily/:type/:id', ensureModerator, async (req, res, next) => {
 // ── Notices ──────────────────────────────────────────────────────────────────
 router.get('/notices', ensureModerator, requireScope('notice'), async (req, res) => {
   const notices = await db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 30').all();
-  res.render('user/moderator-notices', { notices, currentPath: '/moderator' });
+  res.render('user/moderator-notices', { notices, posted: req.query.posted || null, currentPath: '/moderator' });
 });
 
 router.post('/notices', ensureModerator, requireScope('notice'), async (req, res) => {
@@ -100,7 +100,7 @@ router.delete('/notices/:id', ensureModerator, requireScope('notice'), async (re
 // ── Events ───────────────────────────────────────────────────────────────────
 router.get('/events', ensureModerator, requireScope('event'), async (req, res) => {
   const events = await db.prepare('SELECT * FROM events ORDER BY date DESC LIMIT 30').all();
-  res.render('user/moderator-events', { events, currentPath: '/moderator' });
+  res.render('user/moderator-events', { events, posted: req.query.posted || null, currentPath: '/moderator' });
 });
 
 router.post('/events', ensureModerator, requireScope('event'), async (req, res) => {

@@ -115,9 +115,15 @@ app.use(async (req, res, next) => {
       res.locals.unread = row.c;
       const recent = await db.prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5").all(req.session.user.id);
       res.locals.recentNotifs = recent;
+      // Unread message conversations count
+      try {
+        const msgRow = await db.prepare("SELECT COUNT(*) as c FROM messages m JOIN conversations c ON m.conversation_id = c.id WHERE m.sender_id != ? AND m.is_read = 0 AND (c.user_a = ? OR c.user_b = ?)").get(req.session.user.id, req.session.user.id, req.session.user.id);
+        res.locals.msgBadge = msgRow.c;
+      } catch (_) { res.locals.msgBadge = 0; }
     } else {
       res.locals.unread = 0;
       res.locals.recentNotifs = [];
+      res.locals.msgBadge = 0;
     }
 
     next();

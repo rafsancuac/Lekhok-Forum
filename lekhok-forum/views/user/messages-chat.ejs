@@ -500,7 +500,8 @@
       } catch (_) {}
     });
   </script>
-  <script src="/assets/js/main.js?v=<%= AV %>">
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script>
     // Delete entire conversation (AJAX)
     async function deleteConversation(username) {
       if (!confirm('এই কথোপকথনটি মুছে ফেলতে চান? সব মেসেজ মুছে যাবে।')) return;

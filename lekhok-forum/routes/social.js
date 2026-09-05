@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const slugify = require('slugify');
 const db = require('../db');
+const bcrypt = require('bcryptjs');
 const { coverUpload, withUpload } = require('../middleware/upload');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -353,6 +353,34 @@ router.post(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
   } catch (e) {}
 
   res.redirect('/qa/' + r.lastInsertRowid);
+});
+
+// ── Edit question (GET) ─────────────────────────────────────────────────────
+router.get('/qa/:id/edit', ensureLoggedIn, async (req, res) => {
+  const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND type = ?').get(req.params.id, 'question');
+  if (!post || post.author_id !== req.session.user.id) return res.redirect('/qa/' + req.params.id);
+  res.render('user/qa-form', { post, error: null, currentPath: '/qa' });
+});
+
+// ── Update question (POST) ──────────────────────────────────────────────────
+router.post('/qa/:id/edit', ensureLoggedIn, async (req, res) => {
+  const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND type = ?').get(req.params.id, 'question');
+  if (!post || post.author_id !== req.session.user.id) return res.redirect('/qa/' + req.params.id);
+  const { title, body, category, tags } = req.body;
+  if (!title || !body) return res.render('user/qa-form', { post, error: 'শিরোনাম ও প্রশ্ন আবশ্যক', currentPath: '/qa' });
+  const mentions = await extractMentions(body);
+  await db.prepare('UPDATE posts SET title=?, body=?, category=?, tags=?, mentions=? WHERE id=?').run(title, body, category || 'general', tags || null, mentions, req.params.id);
+  res.redirect('/qa/' + req.params.id);
+});
+
+// ── Delete question ─────────────────────────────────────────────────────────
+router.post('/qa/:id/delete', ensureLoggedIn, async (req, res) => {
+  const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND type = ?').get(req.params.id, 'question');
+  if (!post || post.author_id !== req.session.user.id) return res.redirect('/qa');
+  await db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id);
+  await db.prepare('DELETE FROM comments WHERE post_id = ?').run(req.params.id);
+  await db.prepare('DELETE FROM likes WHERE post_id = ?').run(req.params.id);
+  res.redirect('/qa');
 });
 
 // ── Question detail with answers ────────────────────────────────────────────

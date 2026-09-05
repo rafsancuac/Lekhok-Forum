@@ -42,9 +42,12 @@
               <% if (r.content) { %><p><%= r.content.length > 110 ? r.content.substring(0, 110) + '…' : r.content %></p><% } %>
               <% if (r.author) { %><p class="res-meta"><i class="far fa-user"></i> <%= r.author %></p><% } %>
               <% if (r.tags) { %><p class="res-meta"><i class="fas fa-tags"></i> <%= r.tags %></p><% } %>
-              <a href="<%= r.file_url || '#' %>" class="btn btn-primary" target="_blank" rel="noopener">
-                <i class="fas fa-download"></i> ডাউনলোড / দেখুন
+              <% const resLink = r.link_url || r.file_url; %>
+              <% if (resLink) { %>
+              <a href="<%= resLink %>" class="btn btn-primary" target="_blank" rel="noopener">
+                <i class="fas fa-external-link-alt"></i> দেখুন
               </a>
+              <% } %>
             </div>
           </div>
         <% }) %>

@@ -299,9 +299,9 @@ router.get('/resources/new', requireAdmin, async (req, res) => {
 });
 
 router.post('/resources', requireAdmin, async (req, res) => {
-  const { title, content, category, author, tags } = req.body;
+  const { title, content, category, author, tags, file_url, link_url, file_type } = req.body;
   if (!title) return res.render('admin/resources/form', { resource: req.body, error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources' });
-  await db.prepare('INSERT INTO resources (title, content, category, author, tags) VALUES (?, ?, ?, ?, ?)').run(title, content || '', category || 'general', author || '', tags || '');
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(title, content || '', category || 'general', author || '', tags || '', file_url || null, link_url || null, file_type || 'link');
   res.redirect('/admin/resources');
 });
 
@@ -312,8 +312,8 @@ router.get('/resources/:id/edit', requireAdmin, async (req, res) => {
 });
 
 router.put('/resources/:id', requireAdmin, async (req, res) => {
-  const { title, content, category, author, tags } = req.body;
-  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=? WHERE id=?').run(title, content || '', category || 'general', author || '', tags || '', req.params.id);
+  const { title, content, category, author, tags, file_url, link_url, file_type } = req.body;
+  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=? WHERE id=?').run(title, content || '', category || 'general', author || '', tags || '', file_url || null, link_url || null, file_type || 'link', req.params.id);
   res.redirect('/admin/resources');
 });
 
@@ -365,7 +365,8 @@ router.get('/moderators', requireAdmin, async (req, res) => {
 router.post('/moderators/:userId/grant', requireAdmin, async (req, res) => {
   let scopes = req.body.scopes || [];
   if (!Array.isArray(scopes)) scopes = [scopes];
-  await db.grantModerator(parseInt(req.params.userId), scopes, req.session.adminUser.id);
+  const granterId = req.session.adminUser ? req.session.adminUser.id : (req.session.user ? req.session.user.id : null);
+  await db.grantModerator(parseInt(req.params.userId), scopes, granterId);
   res.redirect('/admin/moderators');
 });
 
@@ -415,6 +416,21 @@ router.get('/daily/:id/edit', requireScope('daily'), async (req, res) => {
   const item = await db.prepare('SELECT * FROM daily_content WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/daily');
   res.render('admin/daily/form', { item, error: null, DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
+});
+
+router.put('/daily/:id', requireScope('daily'), async (req, res) => {
+  const { content_type, title, body, image_url, link_url, scheduled_date, published } = req.body;
+  if (!DAILY_TYPES[content_type]) return res.render('admin/daily/form', { item: { ...req.body, id: req.params.id }, error: 'ধরন নির্বাচন করুন', DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
+  if (!title) return res.render('admin/daily/form', { item: { ...req.body, id: req.params.id }, error: 'শিরোনাম আবশ্যক', DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
+  const isPublished = published ? 1 : 0;
+  await db.prepare('UPDATE daily_content SET content_type=?, title=?, body=?, image_url=?, link_url=?, scheduled_date=?, published=? WHERE id=?')
+    .run(content_type, title, body || null, image_url || null, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.params.id);
+  res.redirect('/admin/daily');
+});
+
+router.delete('/daily/:id', requireScope('daily'), async (req, res) => {
+  await db.prepare('DELETE FROM daily_content WHERE id = ?').run(req.params.id);
+  res.redirect('/admin/daily');
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -539,7 +555,7 @@ router.get('/achievements', requireAdmin, async (req, res) => {
   res.render('admin/achievements/list', { items, currentPath: '/admin/achievements' });
 });
 router.get('/achievements/new', requireAdmin, async (req, res) => {
-  res.render('admin/achievements/form', { item: null, currentPath: '/admin/achievements' });
+  res.render('admin/achievements/form', { item: null, error: null, currentPath: '/admin/achievements' });
 });
 router.post('/achievements', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
   const { title, recipient_name, year, description } = req.body;
@@ -550,15 +566,15 @@ router.post('/achievements', requireAdmin, withUpload(attachmentUpload), async (
 router.get('/achievements/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM achievements WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/achievements');
-  res.render('admin/achievements/form', { item, currentPath: '/admin/achievements' });
+  res.render('admin/achievements/form', { item, error: null, currentPath: '/admin/achievements' });
 });
-router.post('/achievements/:id', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
+router.put('/achievements/:id', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
   const { title, recipient_name, year, description } = req.body;
   const image_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.image_url || null);
   await db.prepare('UPDATE achievements SET title=?, recipient_name=?, year=?, description=?, image_url=? WHERE id=?').run(title, recipient_name, parseInt(year) || null, description || null, image_url, req.params.id);
   res.redirect('/admin/achievements');
 });
-router.post('/achievements/:id/delete', requireAdmin, async (req, res) => {
+router.delete('/achievements/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM achievements WHERE id = ?').run(req.params.id);
   res.redirect('/admin/achievements');
 });
@@ -569,7 +585,7 @@ router.get('/constitution', requireAdmin, async (req, res) => {
   res.render('admin/constitution/list', { items, currentPath: '/admin/constitution' });
 });
 router.get('/constitution/new', requireAdmin, async (req, res) => {
-  res.render('admin/constitution/form', { item: null, currentPath: '/admin/constitution' });
+  res.render('admin/constitution/form', { item: null, error: null, currentPath: '/admin/constitution' });
 });
 router.post('/constitution', requireAdmin, async (req, res) => {
   const { section_title, content, sort_order } = req.body;
@@ -579,14 +595,14 @@ router.post('/constitution', requireAdmin, async (req, res) => {
 router.get('/constitution/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM constitution WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/constitution');
-  res.render('admin/constitution/form', { item, currentPath: '/admin/constitution' });
+  res.render('admin/constitution/form', { item, error: null, currentPath: '/admin/constitution' });
 });
-router.post('/constitution/:id', requireAdmin, async (req, res) => {
+router.put('/constitution/:id', requireAdmin, async (req, res) => {
   const { section_title, content, sort_order } = req.body;
   await db.prepare('UPDATE constitution SET section_title=?, content=?, sort_order=? WHERE id=?').run(section_title, content, parseInt(sort_order) || 0, req.params.id);
   res.redirect('/admin/constitution');
 });
-router.post('/constitution/:id/delete', requireAdmin, async (req, res) => {
+router.delete('/constitution/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM constitution WHERE id = ?').run(req.params.id);
   res.redirect('/admin/constitution');
 });
@@ -598,7 +614,7 @@ router.get('/past-leaders', requireAdmin, async (req, res) => {
 });
 router.get('/past-leaders/new', requireAdmin, async (req, res) => {
   const allUsers = await fetchAllUsers();
-  res.render('admin/past-leaders/form', { item: null, allUsers, currentPath: '/admin/past-leaders' });
+  res.render('admin/past-leaders/form', { item: null, error: null, allUsers, currentPath: '/admin/past-leaders' });
 });
 router.post('/past-leaders', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
   const { name, role, term_start, term_end, bio, sort_order, user_id } = req.body;
@@ -611,16 +627,16 @@ router.get('/past-leaders/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM past_leaders WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/past-leaders');
   const allUsers = await fetchAllUsers();
-  res.render('admin/past-leaders/form', { item, allUsers, currentPath: '/admin/past-leaders' });
+  res.render('admin/past-leaders/form', { item, error: null, allUsers, currentPath: '/admin/past-leaders' });
 });
-router.post('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
+router.put('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
   const { name, role, term_start, term_end, bio, sort_order, user_id } = req.body;
   const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   await db.prepare('UPDATE past_leaders SET name=?, role=?, term_start=?, term_end=?, photo_url=?, bio=?, sort_order=?, user_id=? WHERE id=?').run(name, role, term_start || null, term_end || null, photo_url, bio || null, parseInt(sort_order) || 0, userIdNum, req.params.id);
   res.redirect('/admin/past-leaders');
 });
-router.post('/past-leaders/:id/delete', requireAdmin, async (req, res) => {
+router.delete('/past-leaders/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM past_leaders WHERE id = ?').run(req.params.id);
   res.redirect('/admin/past-leaders');
 });

@@ -33,7 +33,7 @@
           <div class="complaint-item">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <h3 style="color:var(--brand);font-size:1rem"><%= c.subject %></h3>
-              <span class="complaint-status <%= c.status %>"><%= c.status === 'new' ? 'নতুন' : c.status === 'in_progress' ? 'প্রক্রিয়াধীন' : 'সমাধান' %></span>
+              <span class="complaint-status <%= c.status %>"><%= c.status === 'new' ? 'নতুন' : c.status === 'in_progress' ? 'প্রক্রিয়াধীন' : c.status === 'in_review' ? 'পর্যালোচনাধীন' : c.status === 'dismissed' ? 'বাতিল' : 'সমাধান' %></span>
             </div>
             <p style="color:var(--text);font-size:0.9rem"><%= c.body || '' %></p>
             <% if (c.file_url) { %>

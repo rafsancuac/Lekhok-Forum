@@ -40,8 +40,10 @@
       <div class="form-group">
         <label>ধরন</label>
         <select name="member_type">
-          <option value="central" <%= member && member.member_type === 'central' ? 'selected' : '' %>>কেন্দ্রীয় কমিটি</option>
-          <option value="branch"  <%= member && member.member_type === 'branch'  ? 'selected' : '' %>>বিশ্ববিদ্যালয় শাখা</option>
+          <option value="central"  <%= member && member.member_type === 'central'  ? 'selected' : '' %>>কেন্দ্রীয় কমিটি</option>
+          <option value="advisory" <%= member && member.member_type === 'advisory' ? 'selected' : '' %>>উপদেষ্টা পরিষদ</option>
+          <option value="founder"  <%= member && member.member_type === 'founder'  ? 'selected' : '' %>>প্রতিষ্ঠাতা সদস্য</option>
+          <option value="branch"   <%= member && member.member_type === 'branch'   ? 'selected' : '' %>>বিশ্ববিদ্যালয় শাখা</option>
         </select>
       </div>
       <div class="form-group">

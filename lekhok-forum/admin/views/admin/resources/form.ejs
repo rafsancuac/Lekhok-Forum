@@ -30,6 +30,16 @@
       </div>
       <div class="form-group"><label>লেখক</label><input type="text" name="author" value="<%= resource ? (resource.author || '') : '' %>"></div>
       <div class="form-group"><label>ট্যাগ (কমা দিয়ে আলাদা করুন)</label><input type="text" name="tags" value="<%= resource ? (resource.tags || '') : '' %>" placeholder="কবিতা, লেখালেখি, পরামর্শ"></div>
+      <div class="form-group">
+        <label>ধরন</label>
+        <select name="file_type">
+          <option value="link"     <%= resource && resource.file_type === 'link'     ? 'selected' : '' %>>লিংক</option>
+          <option value="document" <%= resource && resource.file_type === 'document' ? 'selected' : '' %>>ডকুমেন্ট (PDF/DOC)</option>
+          <option value="video"    <%= resource && resource.file_type === 'video'    ? 'selected' : '' %>>ভিডিও</option>
+        </select>
+      </div>
+      <div class="form-group"><label>লিংক URL (যদি লিংক হয়)</label><input type="url" name="link_url" value="<%= resource ? (resource.link_url || '') : '' %>" placeholder="https://..."></div>
+      <div class="form-group"><label>ফাইল URL (যদি ডকুমেন্ট হয়)</label><input type="url" name="file_url" value="<%= resource ? (resource.file_url || '') : '' %>" placeholder="https://... অথবা /uploads/..."></div>
       <button type="submit" class="btn btn-primary"><%= resource ? 'আপডেট' : 'তৈরি করুন' %></button>
     </form>
   </div>

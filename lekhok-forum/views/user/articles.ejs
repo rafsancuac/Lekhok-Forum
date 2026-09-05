@@ -32,7 +32,7 @@
                 <span class="post-date"><i class="far fa-clock"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD') %></span>
               </div>
               <a href="/articles/<%= post.id %>" class="post-title"><%= post.title %></a>
-              <p class="post-excerpt"><%= post.excerpt || post.body.substring(0, 200) %>...</p>
+              <p class="post-excerpt"><%= post.excerpt || (post.body || "").substring(0, 200) %>...</p>
               <div class="post-author-row">
                 <img src="<%= post.avatar_url || '/avatar/' + post.author_id %>" class="post-author-avatar">
                 <span class="post-author-name"><%= post.author_name %></span>

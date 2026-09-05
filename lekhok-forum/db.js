@@ -555,7 +555,11 @@ async function runMigrations() {
     "ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'",
     "ALTER TABLE users ADD COLUMN interests TEXT DEFAULT '[]'",
     "ALTER TABLE members ADD COLUMN term_year TEXT",
-    "ALTER TABLE members ADD COLUMN user_id INTEGER"
+    "ALTER TABLE members ADD COLUMN user_id INTEGER",
+    "ALTER TABLE resources ADD COLUMN file_url TEXT",
+    "ALTER TABLE resources ADD COLUMN link_url TEXT",
+    "ALTER TABLE resources ADD COLUMN file_type TEXT DEFAULT 'link'",
+    "ALTER TABLE resources ADD COLUMN description TEXT"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}
