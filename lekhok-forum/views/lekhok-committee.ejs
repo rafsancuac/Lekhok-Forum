@@ -80,9 +80,8 @@
         <h2 class="section-title">পূর্ণাঙ্গ <span class="accent">কার্যনির্বাহী কমিটি</span></h2>
         <span class="accent-divider"></span>
         <p class="term-intro">
-          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের<% } %>
-          নবনির্বাচিত নেতৃবিন্দগণ — বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা।
-          <% if (countByYear[selectedYear]) { %>মোট <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
+          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের পূর্ণাঙ্গ কার্যনির্বাহী কমিটি<% if (termNote) { %> — <%= termNote %><% } %>.<% } else { %>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা।<% } %>
+          <% if (countByYear[selectedYear]) { %>মোট সদস্য <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
         </p>
       </div>
       <div class="term-chips" role="tablist" aria-label="কার্যবর্ষ নির্বাচন">

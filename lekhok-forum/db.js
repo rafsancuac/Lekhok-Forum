@@ -623,26 +623,20 @@ async function runMigrations() {
   } catch (_) {}
 
   const BRANCH_TERM = '২০২১-২২';
-  const BRANCH_COMMITTEE = [
-    ['Md. Rafsan',              'সভাপতি',                 0],
-    ['K.M. Akij Mahmud',        'সাধারণ সম্পাদক',           1],
-    ['Mushfiqur Rahman Emon',   'সাংগঠনিক সম্পাদক',         2],
-    ['Rabby Hasan',             'অর্থ সম্পাদক',             3],
-    ['Jannatul Ferdous SaYma',  'দপ্তর সম্পাদক',             4],
-    ['Murad Hoshen',            'উপ দপ্তর সম্পাদক',          5],
-    ['আয়েশা সিদ্দিকা এ্যানি',      'প্রচার সম্পাদক',           6],
-    ['Tawhida Akter',           'উপ প্রচার সম্পাদক',         7],
-    ['Sk Rafiquzzaman',         'প্রশিক্ষণ বিষয়ক সম্পাদক',    8]
+  // v2 migration-এর পর ২০২১-২২ কমিটি অফিসিয়াল বাংলা তালিকায় সংশোধিত
+  // (নিচে committee-history v2 ব্লক)। পুরনো ইংরেজি ডেমো তালিকাটি প্রতি বুটে
+  // জোরপূর্বক মুছে ফেলা হয় — exact seed-list match, অ্যাডমিন-যোগকৃত সদস্য
+  // কখনো স্পর্ষ হয় না। ('আয়েশা সিদ্দিকা এ্যানি' নতুন তালিকাতেও আছেন, তাই বাদ।)
+  const LEGACY_BRANCH_ROWS = [
+    'Md. Rafsan', 'K.M. Akij Mahmud', 'Mushfiqur Rahman Emon', 'Rabby Hasan',
+    'Jannatul Ferdous SaYma', 'Murad Hoshen', 'Tawhida Akter', 'Sk Rafiquzzaman'
   ];
-  for (const [name, role, sort] of BRANCH_COMMITTEE) {
-    try {
-      // UNIQUE index (above) makes this race-safe: concurrent boots that lose
-      // the race simply no-op instead of inserting a duplicate row.
-      await backend.prepare(
-        "INSERT OR IGNORE INTO members (name, role, designation, member_type, term_year, sort_order) VALUES (?, ?, ?, 'central', ?, ?)"
-      ).run(name, role, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', BRANCH_TERM, sort);
-    } catch (_) {}
-  }
+  try {
+    await backend.prepare(
+      `DELETE FROM members WHERE member_type = 'central' AND term_year = ?
+       AND name IN (${LEGACY_BRANCH_ROWS.map(() => '?').join(',')})`
+    ).run(BRANCH_TERM, ...LEGACY_BRANCH_ROWS);
+  } catch (_) {}
 
   // ── Committee history (২০২১-২২ → ২০২৪-২৫) with a user account per member ──
   // The user asked for EVERY committee member to have a user id so the whole
@@ -763,6 +757,203 @@ async function runMigrations() {
       await backend.prepare("INSERT INTO settings (key, value) VALUES ('committee_history_seeded', '1')").run();
     } catch (_) {
       try { await backend.prepare("UPDATE settings SET value = '1' WHERE key = 'committee_history_seeded'").run(); } catch (_) {}
+    }
+  }
+
+  // ── Committee history v2 — official press-release data (ছবি ভিত্তিক) ──────
+  // Corrects the v1 seed against the four official প্রেস বিজ্ঞপ্তি:
+  //   • ২০২০-২১ (স্মারক বাতকলোকেশন-বিরি/৩-২১, ১ মার্চ ২০২১)   — ৮ জন   [NEW]
+  //   • ২০২১-২২ (গঠন ১২ আগস্ট ২০২১ + পুনর্গঠন ২০ মার্চ ২০২২) — ১৩ জন চূড়ান্ত
+  //   • ২০২২-২৩ (বিরি/চবি/কমিটি/৯-২২, ১৭ আগস্ট ২০২২)          — ১৫ জন   [v1-এ ভুল ছিল]
+  //   • ২০২৩-২৪ (বিরি/০১/২৩-২৪, ৩ সেপ্টেম্বর ২০২৩)            — ১৫ জন   [NEW]
+  //   • ২০২৪-২৫ stays as v1 seeded it (official ২৩/০১/২৫ notice).
+  // Every member keeps a linked user account: v1 accounts are RENAMED to the
+  // official Bengali names (usernames too, where the slug was wrong) and the
+  // missing people get fresh accounts with random passwords.
+  if (true) {
+    let v2Seeded = false;
+    try { v2Seeded = !!(await backend.prepare("SELECT value FROM settings WHERE key = 'committee_history_v2_seeded'").get()); }
+    catch (_) {}
+    if (!v2Seeded) {
+      const ORG_SUFFIX = 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম (চবি)';
+      const desig = (role) => `${role}, ${ORG_SUFFIX}`;
+
+      // [current username → new username, official Bengali full name]
+      const ACCOUNT_FIXES = [
+        ['md_rafsan',             'md_rakebul',          'মোঃ রাকেবুল'],
+        ['akij_mahmud',           'akij_mahmud',         'আকিজ মাহমুদ'],
+        ['mushfiqur_emon',        'mushfiqur_emon',      'মুশফিকুর রহমান ইমন'],
+        ['rabby_hasan',           'rabby_hasan',         'রাব্বি হাসান'],
+        ['jannatul_sayma',        'jannatul_sayma',      'জান্নাতুল ফেরদৌস সায়মা'],
+        ['murad_hoshen',          'murad_hossen',        'মোঃ মুরাদ হোসেন'],
+        ['ayesha_siddika_anny',   'ayesha_siddika_anny', 'আয়েশা সিদ্দিকা এ্যানি'],
+        ['tawhida_akter',         'tawhida_akter',       'তৌহিদা আক্তার'],
+        ['sk_rafiquzzaman',       'sk_rafiquzzaman',     'শেখ রফিকুজ্জামান'],
+        ['yousuful_islam_sikat',  'irashadul_sifat',     'মো. ইরেশাদুল ইসলাম সিফাত'],
+        ['saiful_mia',            'saiful_mira',         'মো. সাইফুল মিরা'],
+        ['redwan_ahmed',          'redwan_ahmed',        'রেডওয়ান আহমেদ'],
+        ['nibed_chakraborty',     'nibed_chakraborty',   'নিবেদ চক্রবর্তী'],
+        ['mahmudul_rahman',       'mahmudul_rahman',     'মাহমূদুল রহমান'],
+        ['asamuzzaman_chowdhury', 'asaduzzaman_toujuri', 'আসাদুজ্জামান তৌজুরী স্মার্ট'],
+        ['azizul_haq',            'azizul_haq',          'মো. আজিজুল হক'],
+        ['nasrin_sultana_riya',   'nasrin_sultana_riya', 'নাসরিন সুলতানা রিয়া'],
+        ['azizul_hoque_rahi',     'azizul_hoque_rahi',   'আজিজুল হক রাহি'],
+        ['mesbah_uddin_miris',    'mesbah_uddin_miris',  'মেসবাহ উদ্দিন মিরিস'],
+        ['abir_hasan',            'abir_hasan',          'আবির হাসান'],
+        ['mihaballa_jayat_tarin', 'mihaballa_jayat_tarin', 'মিহাবল্ল জায়াত তারিন'],
+        ['hridi_sorkar',          'hridi_sorkar',        'হৃদি সরকার'],
+        ['marjan_hossen',         'marjan_hossen',       'মারজান হোসেন'],
+        ['hasna_begum',           'hasna_begum',         'হাসনা বেগম']
+      ];
+
+      // [name, role, username-slug, gender] — অফিসিয়াল বিজ্ঞপ্তি অনুযায়ী
+      const V2_TERMS = [
+        { term: '২০২০-২১', members: [
+          ['আরমান শেখ',              'সভাপতি',                 'arman_sheikh',     'male'],
+          ['মোঃ রাকেবুল',             'সাধারণ সম্পাদক',           'md_rakebul',       'male'],
+          ['নেজাম উদ্দীন',             'সাংগঠনিক সম্পাদক',         'nezam_uddin',      'male'],
+          ['আকিজ মাহমুদ',             'দপ্তর সম্পাদক',            'akij_mahmud',      'male'],
+          ['মুশফিকুর রহমান ইমন',       'উপদপ্তর সম্পাদক',           'mushfiqur_emon',   'male'],
+          ['রাব্বি হাসান',             'অর্থ সম্পাদক',             'rabby_hasan',      'male'],
+          ['জান্নাতুল ফেরদৌস সায়মা',     'প্রচার সম্পাদিকা',           'jannatul_sayma',   'female'],
+          ['আয়েশা সিদ্দিকা এ্যানি',       'উপপ্রচার সম্পাদিকা',         'ayesha_siddika_anny', 'female']
+        ]},
+        { term: '২০২১-২২', members: [
+          ['মোঃ রাকেবুল',             'সভাপতি',                 'md_rakebul',       'male'],
+          ['আকিজ মাহমুদ',             'সাধারণ সম্পাদক',           'akij_mahmud',      'male'],
+          ['মোঃ মুরাদ হোসেন',          'সাংগঠনিক সম্পাদক',         'murad_hossen',     'male'],
+          ['আয়েশা সিদ্দিকা এ্যানি',       'সহ-সাংগঠনিক সম্পাদক',       'ayesha_siddika_anny', 'female'],
+          ['এম. আতহার নূর',           'অর্থ সম্পাদক',             'atihar_noor',      'male'],
+          ['রিয়ান চন্দ্র পাল',          'সহ-অর্থ সম্পাদক',           'rian_chandra_pal', 'male'],
+          ['তৌহিদা আক্তার',            'প্রচার সম্পাদক',            'tawhida_akter',    'female'],
+          ['মো. মারুফ মতুব্বর',         'উপ-প্রচার সম্পাদক',          'maruf_motubbar',   'male'],
+          ['জান্নাতুল ফেরদৌস সায়মা',     'দপ্তর সম্পাদক',            'jannatul_sayma',   'female'],
+          ['মো. সাইফুল মিরা',          'উপ-দপ্তর সম্পাদক',          'saiful_mira',      'male'],
+          ['শেখ রফিকুজ্জামান',          'প্রশিক্ষণ বিষয়ক সম্পাদক',     'sk_rafiquzzaman',  'male'],
+          ['মো. মিজানুর রহমান',        'উপ-প্রশিক্ষণ সম্পাদক',        'mijanur_rahman',   'male'],
+          ['মো. সিফাত তানুকানার',       'সাহিত্য ও পাঠচক্র সম্পাদক',    'sifat_tanukanar',  'male']
+        ]},
+        { term: '২০২২-২৩', members: [
+          ['আকিজ মাহমুদ',             'সভাপতি',                 'akij_mahmud',      'male'],
+          ['আয়েশা সিদ্দিকা এ্যানি',       'সহ-সভাপতি',               'ayesha_siddika_anny', 'female'],
+          ['মোঃ মুরাদ হোসেন',          'সাধারণ সম্পাদক',           'murad_hossen',     'male'],
+          ['মো. ইরেশাদুল ইসলাম সিফাত',   'যুগ্ম সাধারণ সম্পাদক',      'irashadul_sifat',  'male'],
+          ['শেখ রফিকুজ্জামান',          'সাংগঠনিক সম্পাদক',         'sk_rafiquzzaman',  'male'],
+          ['তৌহিদা আক্তার',            'সহ-সাংগঠনিক সম্পাদক',       'tawhida_akter',    'female'],
+          ['এম. আতহার নূর',           'অর্থ সম্পাদক',             'atihar_noor',      'male'],
+          ['মাহমূদুল রহমান',            'প্রশিক্ষণ বিষয়ক সম্পাদক',     'mahmudul_rahman',  'male'],
+          ['মো. মারুফ মতুব্বর',         'প্রচার ও প্রকাশনা সম্পাদক',    'maruf_motubbar',   'male'],
+          ['রোকসানা আক্তার',           'সাহিত্য ও পাঠচক্র সম্পাদক',    'roksana_akter',    'female'],
+          ['মো. সাইফুল মিরা',          'দপ্তর সম্পাদক',            'saiful_mira',      'male'],
+          ['মো. আজিজুল হক',           'উপ-দপ্তর সম্পাদক',          'azizul_haq',       'male'],
+          ['সনবুল আহমেদ',             'তথ্য প্রযুক্তি বিষয়ক সম্পাদক',  'sonbul_ahmed',     'male'],
+          ['আসাদুজ্জামান বুলবুল',        'সম্পাদকীয় পর্ষদ',           'asaduzzaman_bulbul', 'male'],
+          ['আসাদুজ্জামান তৌজুরী স্মার্ট',  'সম্পাদকীয় পর্ষদ',           'asaduzzaman_toujuri', 'male']
+        ]},
+        { term: '২০২৩-২৪', members: [
+          ['মো. ইরেশাদুল ইসলাম সিফাত',   'সভাপতি',                 'irashadul_sifat',  'male'],
+          ['মো. সাইফুল মিরা',          'সহ-সভাপতি',               'saiful_mira',      'male'],
+          ['রেডওয়ান আহমেদ',            'সাধারণ সম্পাদক',           'redwan_ahmed',     'male'],
+          ['নিবেদ চক্রবর্তী',           'যুগ্ম সাধারণ সম্পাদক',      'nibed_chakraborty', 'male'],
+          ['মাহমূদুল রহমান',            'সাংগঠনিক সম্পাদক',         'mahmudul_rahman',  'male'],
+          ['আসাদুজ্জামান তৌজুরী স্মার্ট',  'সহ-সাংগঠনিক সম্পাদক',       'asaduzzaman_toujuri', 'male'],
+          ['মো. আজিজুল হক',           'অর্থ সম্পাদক',             'azizul_haq',       'male'],
+          ['নাসরিন সুলতানা রিয়া',       'দপ্তর সম্পাদক',            'nasrin_sultana_riya', 'female'],
+          ['আজিজুল হক রাহি',           'উপ-দপ্তর সম্পাদক',          'azizul_hoque_rahi', 'male'],
+          ['মেসবাহ উদ্দিন মিরিস',       'প্রচার ও প্রকাশনা সম্পাদক',    'mesbah_uddin_miris', 'male'],
+          ['আবির হাসান',              'প্রশিক্ষণ বিষয়ক সম্পাদক',     'abir_hasan',       'male'],
+          ['মিহাবল্ল জায়াত তারিন',      'সাহিত্য ও পাঠচক্র বিষয়ক সম্পাদক', 'mihaballa_jayat_tarin', 'male'],
+          ['হৃদি সরকার',              'তথ্য ও প্রযুক্তি বিষয়ক সম্পাদক', 'hridi_sorkar',   'female'],
+          ['মারজান হোসেন',            'সম্পাদকীয় পর্ষদ',           'marjan_hossen',    'male'],
+          ['হাসনা বেগম',              'সম্পাদকীয় পর্ষদ',           'hasna_begum',      'female']
+        ]}
+      ];
+
+      // ensureAccount → reuse by username, else create with a random password
+      const ensureAccount = async (slug, name, gender) => {
+        let u = await backend.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get(slug);
+        if (u) return u.id;
+        let uname = slug, n = 1;
+        for (;;) {
+          const taken = await backend.prepare('SELECT id FROM users WHERE username = ?').get(uname);
+          if (!taken) break;
+          n += 1; uname = `${slug}_${n}`;
+        }
+        const pwd = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
+        try {
+          await backend.prepare(
+            "INSERT INTO users (username, password_hash, full_name, designation, gender, status, role) VALUES (?, ?, ?, ?, ?, 'active', 'user')"
+          ).run(uname, pwd, name, 'সদস্য, ' + ORG_SUFFIX, gender);
+        } catch (e) {
+          if (!/UNIQUE|duplicate/i.test(e.message || '')) throw e;
+        }
+        u = await backend.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get(uname);
+        return u ? u.id : null;
+      };
+
+      try {
+        // 1. Rename v1 accounts to the official Bengali names (username + full_name)
+        for (const [oldU, newU, newName] of ACCOUNT_FIXES) {
+          const row = await backend.prepare('SELECT id FROM users WHERE username = ? LIMIT 1').get(oldU);
+          if (!row) continue;
+          if (newU !== oldU) {
+            const clash = await backend.prepare('SELECT id FROM users WHERE username = ?').get(newU);
+            if (!clash || clash.id === row.id) {
+              try { await backend.prepare('UPDATE users SET username = ? WHERE id = ?').run(newU, row.id); }
+              catch (_) {}
+            }
+          }
+          await backend.prepare('UPDATE users SET full_name = ? WHERE id = ?').run(newName, row.id);
+        }
+
+        // 2. Drop the v1 central rows of the terms we are re-authoring
+        await backend.exec(
+          "DELETE FROM members WHERE member_type = 'central' AND term_year IN ('২০২১-২২','২০২২-২৩','২০২৩-২৪')"
+        );
+
+        // 3. Insert the corrected history; designation = latest term's role
+        for (const { term, members } of V2_TERMS) {
+          for (let i = 0; i < members.length; i++) {
+            const [name, role, slug, gender] = members[i];
+            try {
+              const uid = await ensureAccount(slug, name, gender);
+              await backend.prepare(
+                "INSERT OR IGNORE INTO members (name, role, designation, member_type, term_year, sort_order, user_id) VALUES (?, ?, ?, 'central', ?, ?, ?)"
+              ).run(name, role, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', term, i, uid);
+              if (uid) {
+                await backend.prepare(
+                  "UPDATE members SET user_id = ? WHERE name = ? AND IFNULL(term_year,'') = ? AND member_type = 'central' AND user_id IS NULL"
+                ).run(uid, name, term);
+                await backend.prepare(
+                  "UPDATE users SET designation = ? WHERE id = ? AND (designation IS NULL OR designation LIKE ?)"
+                ).run(desig(role), uid, `%${ORG_SUFFIX}%`);
+              }
+            } catch (e) {
+              console.warn(`[migrate] committee-v2 ${term} "${name}":`, (e.message || '').slice(0, 100));
+            }
+          }
+        }
+
+        // 4. Members who also serve in ২০২৪-২৫ get that (latest) role back
+        try {
+          const latest = await backend.prepare(
+            "SELECT m.role, m.user_id FROM members m WHERE m.member_type = 'central' AND m.term_year = '২০২৪-২৫' AND m.user_id IS NOT NULL"
+          ).all();
+          for (const r of latest) {
+            await backend.prepare(
+              "UPDATE users SET designation = ? WHERE id = ? AND (designation IS NULL OR designation LIKE ?)"
+            ).run(desig(r.role), r.user_id, `%${ORG_SUFFIX}%`);
+          }
+        } catch (_) {}
+
+        try {
+          await backend.prepare("INSERT INTO settings (key, value) VALUES ('committee_history_v2_seeded', '1')").run();
+        } catch (_) {
+          try { await backend.prepare("UPDATE settings SET value = '1' WHERE key = 'committee_history_v2_seeded'").run(); } catch (_) {}
+        }
+      } catch (e) {
+        console.warn('[migrate] committee-v2 skipped:', (e.message || '').slice(0, 140));
+      }
     }
   }
 }

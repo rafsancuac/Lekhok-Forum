@@ -11,10 +11,10 @@
 
       <!-- Categorized committee sections -->
       <% if (grouped.central.length > 0) { %>
-        <!-- ── ২০২৫-২০২৬ কার্যনির্বাহী কমিটি ── -->
+        <!-- ── সর্বশেষ কার্যবর্ষের কার্যনির্বাহী কমিটি ── -->
         <section class="member-section" id="executive-committee">
           <div class="section-head">
-            <h2 class="section-title"><i class="fas fa-crown"></i> কেন্দ্রীয় কার্যনির্বাহী কমিটি — ২০২৫-২০২৬</h2>
+            <h2 class="section-title"><i class="fas fa-crown"></i> কেন্দ্রীয় কার্যনির্বাহী কমিটি<% if (execTermYear) { %> — <%= execTermYear %><% } %></h2>
             <span class="badge"><%= grouped.central.length %> জন</span>
           </div>
           <div class="leaders-grid">

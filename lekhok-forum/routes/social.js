@@ -597,8 +597,12 @@ router.get('/members', async (req, res) => {
     LEFT JOIN users u ON u.id = m.user_id
     ORDER BY m.member_type, m.sort_order, m.name
   `).all();
+  // কেন্দ্রীয় বিভাগে শুধু সর্বশেষ কার্যবর্ষের কমিটি (পুরো ইতিহাস /committee-তে)
+  const bnTerm = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
+  const execTermYear = [...new Set(allCommittee.filter(m => m.member_type === 'central' && m.term_year).map(m => m.term_year))]
+    .sort((a, b) => bnTerm(b) - bnTerm(a))[0] || null;
   const grouped = {
-    central:  allCommittee.filter(m => m.member_type === 'central'),
+    central:  allCommittee.filter(m => m.member_type === 'central' && (!execTermYear || m.term_year === execTermYear)),
     branch:   allCommittee.filter(m => m.member_type === 'branch'),
     advisory: allCommittee.filter(m => m.member_type === 'advisory'),
     founder:  allCommittee.filter(m => m.member_type === 'founder')
@@ -610,7 +614,7 @@ router.get('/members', async (req, res) => {
     deptSlugs: [...slugToCanon.keys()],
     currentRole: roleFilter,
     currentDept: deptFilter,
-    selectedCanon
+    selectedCanon, execTermYear
   });
 });
 

@@ -16,7 +16,14 @@ const MEMBER_JOIN = `
 router.get('/', async (req, res) => {
   const recentNotices = await db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all();
   // Leadership: 2 current (president + GS) + 2 founders + 4 advisors
-  const currentLeaders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
+  // সর্বশেষ কার্যবর্ষের (সর্বোচ্চ term_year) সভাপতি ও সাধারণ সম্পাদক দেখাই
+  const homeTermYears = (await db.prepare(
+    "SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL"
+  ).all()).map(r => r.term_year).sort((a, b) => bnLead(b) - bnLead(a));
+  const latestTerm = homeTermYears[0] || null;
+  const currentLeaders = latestTerm
+    ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order LIMIT 2").all(latestTerm)
+    : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
   const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all();
   const advisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all();
   // Fallback: if no founders seeded, use earliest past leaders (first president + first GS)
@@ -75,15 +82,26 @@ router.get('/committee', async (req, res) => {
   const countByYear = {};
   yearRows.forEach(r => { countByYear[r.term_year] = r.c; });
 
-  // Canonical history ১৯-২০ → ২৪-২৫ + any extra terms admins add later.
-  const CANONICAL_YEARS = ['২০২৪-২৫', '২০২৩-২৪', '২০২২-২৩', '২০২১-২২', '২০২০-২১', '২০১৯-২০'];
-  const years = [...new Set([...CANONICAL_YEARS, ...Object.keys(countByYear)])].sort((a, b) => bnLead(b) - bnLead(a));
+  // Official history ২০২০-২১ → ২৪-২৫ (১৯-২০ কার্যবর্ষ ছিল না) + admin-added terms.
+  // Chips শুধু সেই বর্ষগুলোই, যেগুলোতে আসলে কমিটি আছে।
+  const CANONICAL_YEARS = ['২০২৪-২৫', '২০২৩-২৪', '২০২২-২৩', '২০২১-২২', '২০২০-২১'];
+  const years = [...new Set([...Object.keys(countByYear), ...CANONICAL_YEARS.filter(y => countByYear[y])])]
+    .sort((a, b) => bnLead(b) - bnLead(a));
+  // প্রতিটি কার্যবর্ষের অফিসিয়াল গঠন/পুনর্গঠন তারিখ (প্রেস বিজ্ঞপ্তি অনুযায়ী)
+  const TERM_NOTES = {
+    '২০২৪-২৫': 'গঠিত ২৩ জানুয়ারি ২০২৫',
+    '২০২৩-২৪': 'গঠিত ৩ সেপ্টেম্বর ২০২৩',
+    '২০২২-২৩': 'গঠিত ১৭ আগস্ট ২০২২',
+    '২০২১-২২': 'গঠিত ১২ আগস্ট ২০২১ • পুনর্গঠিত ২০ মার্চ ২০২২',
+    '২০২০-২১': 'গঠিত ১ মার্চ ২০২১'
+  };
 
   // Default: the LATEST term that actually has a committee.
   const latestWithData = Object.keys(countByYear).sort((a, b) => bnLead(b) - bnLead(a))[0];
   const selectedYear = req.query.year && years.includes(req.query.year)
     ? req.query.year
     : (latestWithData || years[0] || null);
+  const termNote = selectedYear ? (TERM_NOTES[selectedYear] || null) : null;
 
   const central = selectedYear
     ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order").all(selectedYear)
@@ -97,7 +115,8 @@ router.get('/committee', async (req, res) => {
     advisory,
     years,
     countByYear,
-    selectedYear
+    selectedYear,
+    termNote
   });
 });
 
@@ -209,7 +228,14 @@ router.get('/resources', async (req, res) => {
 
 // ── Team ─────────────────────────────────────────────────────────────────────
 router.get('/team', async (req, res) => {
-  const central  = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central'  ORDER BY m.sort_order").all();
+  // টিম পেজে সর্বশেষ কার্যবর্ষের কমিটি দেখাই (পুরো ইতিহাস /committee-তে)
+  const teamTermYears = (await db.prepare(
+    "SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL"
+  ).all()).map(r => r.term_year).sort((a, b) => bnLead(b) - bnLead(a));
+  const centralTerm = teamTermYears[0] || null;
+  const central  = centralTerm
+    ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order").all(centralTerm)
+    : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order").all();
   const advisory = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order").all();
   const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder'  ORDER BY m.sort_order").all();
   const branch   = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'branch'   ORDER BY m.sort_order").all();
@@ -217,7 +243,7 @@ router.get('/team', async (req, res) => {
     layout: 'layout',
     pageTitle: 'টিম',
     currentPath: '/team',
-    central, advisory, founders, branch
+    central, advisory, founders, branch, centralTerm
   });
 });
 
