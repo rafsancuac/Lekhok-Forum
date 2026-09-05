@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+// হোম নেতৃত্ব সেকশনের ৮ পাতার বক্তব্য (৫০-১০০ শব্দ) — স্লট-ভিত্তিক,
+// members.bio ফাঁকা হলে ভিউ এটি ব্যবহার করে (সেশন ২৯)
+const leaderStatements = require('../data/leaderStatements');
 
 // ── Home ─────────────────────────────────────────────────────────────────────
 // Member query with LEFT JOIN so any member linked to a user account inherits
@@ -21,9 +24,18 @@ router.get('/', async (req, res) => {
     "SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL"
   ).all()).map(r => r.term_year).sort((a, b) => bnLead(b) - bnLead(a));
   const latestTerm = homeTermYears[0] || null;
-  const currentLeaders = latestTerm
-    ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order LIMIT 2").all(latestTerm)
-    : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
+  // বর্তমান নেতৃত্ব = সর্বশেষ কার্যবর্ষের সভাপতি + সাধারণ সম্পাদক (সহ-সভাপতি নয় —
+  // সেশন ২৯: ব্যবহারকারীর স্পেক অনুযায়ী ২য় পাতা হবে সাধারণ সম্পাদক)।
+  // যেন সব কার্যবর্ষে এই দুই পদ না-ও থাকতে পারে, তাই ফলব্যাক রাখা হলো
+  // পুরনো sort_order-ভিত্তিক স্লাইসে।
+  let currentLeaders = latestTerm
+    ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? AND m.role IN ('সভাপতি','সাধারণ সম্পাদক') ORDER BY CASE m.role WHEN 'সভাপতি' THEN 0 ELSE 1 END, m.sort_order LIMIT 2").all(latestTerm)
+    : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.role IN ('সভাপতি','সাধারণ সম্পাদক') ORDER BY m.sort_order LIMIT 2").all();
+  if (!currentLeaders || currentLeaders.length < 2) {
+    currentLeaders = latestTerm
+      ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order LIMIT 2").all(latestTerm)
+      : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
+  }
   const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all();
   // Founding advisors (earliest by term_year, falling back to sort_order — since
   // advisory members rarely have term_year set) vs. current advisors (latest/
@@ -69,6 +81,7 @@ router.get('/', async (req, res) => {
     currentPath: '/',
     recentNotices,
     currentLeaders,
+    leaderStatements,
     founders: foundersFinal,
     foundingAdvisors,
     currentAdvisors,

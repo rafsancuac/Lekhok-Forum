@@ -2442,11 +2442,21 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
   .leaders-grid-pair { grid-template-columns: 1fr !important; }
 }
 
-/* Card content alignment, per spec: name/designation/social centered,
-   the bio/statement justified (it reads as running prose, not a label). */
-.leader-card-featured .leader-body { text-align: center; }
-.leader-card-featured .leader-name { margin: 0 0 4px; font-size: 17px; }
-.leader-card-featured .leader-role { margin: 0 0 10px; }
+/* Card content alignment, per সেশন ২৯ spec: photo/name/role/year/social
+   centered inside the card, the bio/statement justified (it reads as
+   running prose, not a label), social icons pinned to the card bottom so
+   all 8 cards read as equal-height panels. */
+.leader-card-featured { text-align: center; }
+.leader-card.leader-card-featured .leader-body {
+  padding: 0 !important; /* card padding (24px) যথেষ্ট — পুরনো 22px ডাবল হতো */
+  display: flex; flex-direction: column; flex: 1; text-align: center;
+}
+.leader-card-featured .leader-name { margin: 0 0 4px; }
+.leader-card-featured .leader-role { margin: 0 0 6px; }
+.leader-year {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+  color: var(--text-muted, #64748b); margin: 0 0 10px;
+}
 .leader-card-featured .leader-bani {
   text-align: justify; text-align-last: center;
   font-size: 13.5px; line-height: 1.6; color: var(--text-muted, #64748b);
@@ -2457,6 +2467,7 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 }
 .leader-social {
   display: flex; justify-content: center; gap: 12px;
+  margin-top: auto; padding-top: 14px;
 }
 .leader-social a {
   color: var(--text-muted, #64748b); font-size: 15px;
@@ -2471,7 +2482,10 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
   gap: 20px !important;
 }
-.leader-card-featured { min-height: 380px; display: flex; flex-direction: column;
+/* সেশন ২৯: ৮টি কার্ডই সমান ও লম্বা — নির্ধারিত min-height ৭০০px, বক্তব্য
+   (৭২-৭৭ শব্দ) এর সর্বোচ্চ রেন্ডার উচ্চতার চেয়ে বড়, তাই ৮টি কার্ডই ঠিক
+   সমান উচ্চতায় দেখায়; আইকন margin-top:auto-তে কার্ডের একদম নিচে বসে। */
+.leader-card-featured { min-height: 700px; display: flex; flex-direction: column;
   padding: 24px !important;
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   border: 1px solid var(--border, #e2e8f0) !important;

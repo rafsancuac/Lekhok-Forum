@@ -117,37 +117,43 @@
     <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
       <div>
         <span class="eyebrow">নেতৃত্বের ধারা</span>
-        <h2 class="section-title">লেখক ফোরামের <span class="accent">বর্তমান নেতৃত্ব</span></h2>
+        <h2 class="section-title">যাঁদের হাতে গড়ে উঠেছে <span class="accent">লেখক ফোরাম</span></h2>
         <span class="accent-divider"></span>
       </div>
     </div>
 
     <%
-      // Renders one leadership card: name (center) / designation (center) /
-      // bio (justified) / social row (center). One function, reused for all
-      // 8 people across the 4 groups below instead of repeating this markup
-      // four times with copy-paste risk (which is how the old version ended
-      // up accidentally showing currentLeaders twice — see git history).
-      function leaderCard(m, roleOverride) {
+      // সেশন ২৯ স্পেক: প্রতিটি কার্ডে ছবি / নাম / পদ / কার্যবর্ষ / বক্তব্য
+      // (৫০-১০০ শব্দ, জাস্টিফাইড) / সোশ্যাল আইকন — ছবি, নাম, পদ, কার্যবর্ষ
+      // ও আইকন কার্ডের মধ্যে সেন্টারে; বক্তব্য জাস্টিফাইড (এটি চলমান গদ্য,
+      // লেবেল নয়)। একটি ফাংশন, ৮ পাতায় পুনর্ব্যবহৃত — কপি-পেস্টের ঝুঁকি
+      // এড়াতে (পুরনো ভার্সনে এভাবেই currentLeaders দুবার দেখিয়েছিল, দেখুন
+      // git history)।
+      function leaderCard(m, roleLabel, yearLabel, statement) {
         const displayName = m.user_full_name || m.name;
         const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg';
-        const displayBio  = m.bio || '';
-        const displayRole = roleOverride || m.role;
+        // বক্তব্য: অ্যাডমিন প্যানেলে bio দিলে সেটিই আগে; ফাঁকা হলে স্লট-ভিত্তিক
+        // leaderStatements (data/leaderStatements.js) — যাতে কার্ড কখনো ফাঁকা
+        // না দেখায়।
+        const rawBio = (m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || '');
+        const displayBio = rawBio.substring(0, 700);
         const fb    = m.social_fb;
         const email = m.social_email;
+        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || m.user_username);
         const inner = `
           <img loading="lazy" decoding="async" src="${displayImg}" alt="${displayName}" class="leader-photo" />
           <div class="leader-body">
             <h3 class="leader-name">${displayName}</h3>
-            <p class="role leader-role">${displayRole}</p>
-            ${displayBio ? `<p class="leader-bani" style="text-align:justify;">${displayBio.substring(0, 500)}${displayBio.length > 500 ? '…' : ''}</p>` : ''}
-            ${(fb || email) ? `
-            <div class="leader-social" style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
-              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fab fa-facebook"></i></a>` : ''}
-              ${email ? `<a href="mailto:${email}" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fas fa-envelope"></i></a>` : ''}
-              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fab fa-twitter"></i></a>` : ''}
-              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fab fa-linkedin"></i></a>` : ''}
-              ${m.user_username ? `<a href="/profile/${m.user_username}" onclick="event.stopPropagation()" style="width:32px; height:32px; border-radius:50%; background:rgba(5,150,105,0.1); color:#059669; display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px;"><i class="fas fa-user"></i></a>` : ''}
+            <p class="role leader-role">${roleLabel || m.role || ''}</p>
+            ${yearLabel ? `<p class="leader-year">(${yearLabel})</p>` : ''}
+            ${displayBio ? `<p class="leader-bani" style="text-align:justify;">${displayBio}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
+            ${hasSocial ? `
+            <div class="leader-social">
+              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Facebook"><i class="fab fa-facebook"></i></a>` : ''}
+              ${email ? `<a href="mailto:${email}" onclick="event.stopPropagation()" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
+              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
+              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>` : ''}
+              ${m.user_username ? `<a href="/profile/${m.user_username}" onclick="event.stopPropagation()" aria-label="প্রোফাইল"><i class="fas fa-user"></i></a>` : ''}
             </div>` : ''}
           </div>
         `;
@@ -155,23 +161,25 @@
           ? `<a href="/profile/${m.user_username}" class="leader-card has-image linked-member leader-card-featured">${inner}</a>`
           : `<div class="leader-card has-image leader-card-featured">${inner}</div>`;
       }
-      function leaderGroup(icon, title, members, roleOverride) {
+      // এক প্যানেল = দুটি কার্ডের জোড়া। সাব-হেডিং সেশন ২৯-এ সরানো হয়েছে —
+      // পদ এখন কার্ডের ভেতরের role লাইন বহন করে, তাই দুই প্যানেল পরিষ্কার
+      // কলাম হিসেবে সাজানো থাকে (বামে সভাপতি+সা.সম্পাদক, ডানে উপদেষ্টা)।
+      function leaderPair(members, roles, yearLabel, statements) {
         if (!members || !members.length) return '';
         return `
           <div class="leadership-cell">
-            <h3 class="leadership-sub-title" style="text-align:center;">${title}</h3>
             <div class="leaders-grid leaders-grid-pair">
-              ${members.map(m => leaderCard(m, roleOverride)).join('')}
+              ${members.map((m, i) => leaderCard(m, roles[i], yearLabel, statements[i])).join('')}
             </div>
           </div>`;
       }
     %>
 
     <div class="leadership-matrix">
-      <%- leaderGroup('fa-landmark', 'প্রতিষ্ঠাতা সভাপতি ও সাধারণ সম্পাদক (২০২০-২১ কার্যবর্ষ)', founders) %>
-      <%- leaderGroup('fa-user-tie', 'প্রতিষ্ঠাকালীন উপদেষ্টা (২০২০-২১ কার্যবর্ষ)', foundingAdvisors, 'প্রতিষ্ঠাকালীন উপদেষ্টা') %>
-      <%- leaderGroup('fa-star', 'বর্তমান সভাপতি ও সাধারণ সম্পাদক (২০২৫-২৬ কার্যবর্ষ)', currentLeaders) %>
-      <%- leaderGroup('fa-user-shield', 'বর্তমান উপদেষ্টা (২০২৫-২৬ কার্যবর্ষ)', currentAdvisors, 'বর্তমান উপদেষ্টা') %>
+      <%- leaderPair(founders, ['প্রতিষ্ঠাতা সভাপতি (১ম জন)', 'সাধারণ সম্পাদক (২য় জন)'], '২০২০-২১ কার্যবর্ষ', [leaderStatements.founder_president, leaderStatements.founder_general_secretary]) %>
+      <%- leaderPair(foundingAdvisors, ['প্রতিষ্ঠাকালীন উপদেষ্টা (১ম জন)', 'প্রতিষ্ঠাকালীন উপদেষ্টা (২য় জন)'], '২০২০-২১ কার্যবর্ষ', [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2]) %>
+      <%- leaderPair(currentLeaders, ['বর্তমান সভাপতি (১ম জন)', 'বর্তমান সাধারণ সম্পাদক (২য় জন)'], '২০২৫-২৬ কার্যবর্ষ', [leaderStatements.current_president, leaderStatements.current_general_secretary]) %>
+      <%- leaderPair(currentAdvisors, ['বর্তমান উপদেষ্টা (১ম জন)', 'বর্তমান উপদেষ্টা (২য় জন)'], '২০২৫-২৬ কার্যবর্ষ', [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2]) %>
     </div>
 
 
