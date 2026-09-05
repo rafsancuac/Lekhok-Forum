@@ -90,13 +90,8 @@
 <!-- সদস্য গ্রিড -->
 <section class="section reveal">
   <div class="container">
-    <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:10px">
-      <div>
-        <span class="eyebrow">তালিকা</span>
-        <h2 class="section-title">সকল <span class="accent">সদস্য</span></h2>
-        <span class="accent-divider"></span>
-        <p class="term-intro">মোট <strong><%= bnNum(members.length) %></strong> জন সদস্য<% if (search || currentRole || currentDept || currentTerm) { %> (ফিল্টারকৃত)<% } %>, সর্বমোট নিবন্ধিত <strong><%= bnNum(totalUsers) %></strong> জন। কার্ডে ক্লিক করে প্রোফাইল দেখুন।</p>
-      </div>
+    <div style="text-align:center; margin-bottom:20px;">
+      <p class="term-intro" style="text-align:center;">মোট <strong><%= bnNum(members.length) %></strong> জন সদস্য<% if (search || currentRole || currentDept || currentTerm) { %> (ফিল্টারকৃত)<% } %>, সর্বমোট নিবন্ধিত <strong><%= bnNum(totalUsers) %></strong> জন। কার্ডে ক্লিক করে প্রোফাইল দেখুন।</p>
     </div>
 
     <% if (members && members.length) { %>

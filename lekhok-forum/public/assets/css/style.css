@@ -2373,12 +2373,12 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 /* Brand v2 — 2 lines, same size, both WHITE on dark bg */
 .logo-text-v2 { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; font-family: 'Hind Siliguri', sans-serif !important; }
 .logo-text-v2 strong {
-  font-size: 13px; font-weight: 700; color: #ffffff;
+  font-size: 11px; font-weight: 700; color: #ffffff;
   letter-spacing: -0.01em;
 }
 .logo-text-v2 .brand-line2 {
   color: #ffffff !important;
-  font-size: 13px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
 }
 
@@ -2613,7 +2613,7 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 @media (max-width: 768px) {
   .topbar-dropdown-menu { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: 0; padding: 0; min-width: 0; }
   .topbar-dropdown-menu a { padding: 6px 0; font-size: 13px; }
-  .logo-text-v2 strong, .logo-text-v2 .brand-line2 { font-size: 13px !important; }
+  .logo-text-v2 strong, .logo-text-v2 .brand-line2 { font-size: 11px !important; }
   .user-feed-cta { flex-direction: column; align-items: flex-start; }
   .topbar-right .nav-login, .topbar-right .nav-register { padding: 7px 14px; font-size: 12.5px; margin-left: 4px; }
 }
