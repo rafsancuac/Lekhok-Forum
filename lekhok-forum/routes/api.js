@@ -85,3 +85,37 @@ router.post('/newsletter/subscribe', async (req, res) => {
 
 module.exports = router;
 
+
+// ── Global search (public, no auth) ─────────────────────────────────────────
+router.get('/search', async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (q.length < 2) return res.json({ articles: [], questions: [], users: [] });
+  const like = '%' + q + '%';
+  try {
+    const articles = await db.prepare(`
+      SELECT p.id, p.title, u.full_name as author_name
+      FROM posts p JOIN users u ON p.author_id = u.id
+      WHERE p.type = 'article' AND p.status = 'published'
+        AND (p.title LIKE ? OR p.body LIKE ?)
+      ORDER BY p.published_at DESC LIMIT 10
+    `).all(like, like);
+    const questions = await db.prepare(`
+      SELECT p.id, p.title, u.full_name as author_name
+      FROM posts p JOIN users u ON p.author_id = u.id
+      WHERE p.type = 'question' AND p.status = 'published'
+        AND (p.title LIKE ? OR p.body LIKE ?)
+      ORDER BY p.created_at DESC LIMIT 10
+    `).all(like, like);
+    const users = await db.prepare(`
+      SELECT id, username, full_name, avatar_url
+      FROM users
+      WHERE status = 'active' AND (username LIKE ? OR full_name LIKE ?)
+      ORDER BY full_name LIMIT 10
+    `).all(like, like);
+    res.json({ articles, questions, users });
+  } catch (e) {
+    res.json({ articles: [], questions: [], users: [] });
+  }
+});
+
+module.exports = router;

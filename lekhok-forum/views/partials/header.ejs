@@ -102,6 +102,23 @@
     </nav>
     <% } %>
 
+    <!-- Global search -->
+    <div class="global-search-wrap" id="globalSearchWrap">
+      <button class="global-search-btn" onclick="toggleGlobalSearch()" aria-label="সার্চ" title="সার্চ (/)">
+        <i class="fas fa-search"></i>
+      </button>
+      <div class="global-search-dropdown" id="globalSearchDropdown" hidden>
+        <div class="gs-input-wrap">
+          <i class="fas fa-search"></i>
+          <input type="search" id="globalSearchInput" placeholder="লেখা, প্রশ্ন, সদস্য খুঁজুন..." autocomplete="off" />
+          <kbd class="gs-kbd">Esc</kbd>
+        </div>
+        <div class="gs-results" id="globalSearchResults">
+          <div class="gs-hint">সার্চ করতে টাইপ করুন...</div>
+        </div>
+      </div>
+    </div>
+
     <div class="topbar-right">
       <% if (user) { %>
         <!-- Notification bell -->
