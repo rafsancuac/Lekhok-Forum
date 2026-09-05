@@ -28,11 +28,17 @@ router.get('/', ensureModerator, async (req, res) => {
   const myScopes = req.session.user.role === 'admin'
     ? db.MODERATOR_SCOPES.map(s => s.key)
     : await db.getModeratorScopes(req.session.user.id);
+  // Stats for dashboard
+  let stats = { notices: 0, events: 0, daily: 0 };
+  try { stats.notices = (await db.prepare('SELECT COUNT(*) as c FROM notices').get()).c; } catch(e) {}
+  try { stats.events = (await db.prepare('SELECT COUNT(*) as c FROM events').get()).c; } catch(e) {}
+  try { stats.daily = (await db.prepare('SELECT COUNT(*) as c FROM daily_content WHERE published = 1').get()).c; } catch(e) {}
   res.render('user/moderator-dashboard', {
     scopes: db.MODERATOR_SCOPES,
     myScopes,
     scopeAliases: db.SCOPE_ALIASES,
     dailyContentScopes: db.DAILY_CONTENT_SCOPES,
+    stats,
     currentPath: '/moderator'
   });
 });

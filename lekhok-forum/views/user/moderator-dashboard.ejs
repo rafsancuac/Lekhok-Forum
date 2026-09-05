@@ -1,50 +1,194 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: 'মডারেটর প্যানেল — বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
 <style>
-    .mod-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; padding: 20px; }
-    .mod-tile { background:#fff; border-radius:12px; padding:20px; text-align:center; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); transition:.2s; }
-    .mod-tile:hover { transform:translateY(-3px); box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); }
-    .mod-tile i { font-size:28px; color:#059669; margin-bottom:10px; display:block; }
-    .mod-tile.locked { opacity:0.4; filter:grayscale(1); }
-  </style>
-  <div class="dashboard-wrap">
-    <main class="dash-main" style="flex:1;">
-      <div style="background:#fff; border-radius:12px; padding:20px; margin-bottom:16px;">
-        <h2 style="margin:0;"><i class="fas fa-user-shield"></i> মডারেটর প্যানেল</h2>
-        <p style="color:#666; margin:6px 0 0;">আপনি যে সেকশনগুলোর জন্য অনুমোদিত, শুধু সেগুলোই এখানে সক্রিয় থাকবে।</p>
+  .mod-page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; font-family: 'Hind Siliguri', sans-serif !important; }
+  .mod-hero {
+    background: linear-gradient(135deg, #0a1f44 0%, #1e293b 100%);
+    border-radius: 16px; padding: 28px 32px; color: white;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+  }
+  .mod-hero-text { flex: 1; min-width: 280px; }
+  .mod-hero h1 { margin: 0 0 6px; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .mod-hero h1 i { color: #d4a017; }
+  .mod-hero p { margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+  .mod-hero-user { display: flex; align-items: center; gap: 12px; }
+  .mod-hero-avatar { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #d4a017; object-fit: cover; }
+  .mod-hero-name { font-size: 15px; font-weight: 600; }
+  .mod-hero-role { font-size: 12px; color: #94a3b8; }
+  .mod-logout-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5;
+    border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500;
+    transition: all 0.15s;
+  }
+  .mod-logout-btn:hover { background: rgba(239, 68, 68, 0.25); color: #fff; text-decoration: none; }
+
+  .mod-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .mod-stat {
+    background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0);
+    border-radius: 10px; padding: 16px; text-align: center;
+  }
+  .mod-stat-val { font-size: 22px; font-weight: 700; color: var(--text, #0f172a); }
+  .mod-stat-lbl { font-size: 12px; color: var(--text-muted, #64748b); margin-top: 2px; }
+
+  .mod-section-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+  }
+  .mod-section-head h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text, #0f172a); }
+  .mod-scope-count { font-size: 12px; color: var(--text-muted, #64748b); }
+
+  .mod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .mod-tile {
+    background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px; padding: 22px 16px; text-align: center;
+    text-decoration: none; color: inherit; transition: all 0.18s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .mod-tile:hover {
+    transform: translateY(-3px); box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+    border-color: var(--accent, #059669); text-decoration: none;
+  }
+  .mod-tile-icon {
+    width: 52px; height: 52px; border-radius: 12px;
+    background: linear-gradient(135deg, #d4a017 0%, #e6b422 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #0a1f44;
+  }
+  .mod-tile-label { font-size: 14px; font-weight: 600; color: var(--text, #0f172a); }
+  .mod-tile-desc { font-size: 11.5px; color: var(--text-muted, #64748b); line-height: 1.4; }
+  .mod-tile.locked { opacity: 0.45; filter: grayscale(0.7); cursor: not-allowed; }
+  .mod-tile.locked .mod-tile-icon { background: var(--surface-alt, #e2e8f0); color: var(--text-muted, #64748b); }
+  .mod-tile.locked:hover { transform: none; box-shadow: none; border-color: var(--border, #e2e8f0); }
+
+  .mod-empty {
+    background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px; padding: 40px 20px; text-align: center; color: var(--text-muted, #64748b);
+  }
+  .mod-empty i { font-size: 40px; margin-bottom: 12px; display: block; opacity: 0.4; }
+
+  @media (max-width: 640px) {
+    .mod-hero { padding: 20px; }
+    .mod-hero h1 { font-size: 20px; }
+    .mod-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+
+<div class="mod-page">
+  <%# ── Hero ── %>
+  <div class="mod-hero">
+    <div class="mod-hero-text">
+      <h1><i class="fas fa-user-shield"></i> মডারেটর প্যানেল</h1>
+      <p>আপনি যে সেকশনগুলোর জন্য অনুমোদিত, শুধু সেগুলোই এখানে সক্রিয় থাকবে। মডারেটর হিসেবে পোস্ট করলে স্বয়ংক্রিয়ভাবে সব সদস্যকে নোটিফিকেশন যাবে।</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <div class="mod-hero-user">
+        <img class="mod-hero-avatar" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="<%= user.full_name %>" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+        <div>
+          <div class="mod-hero-name"><%= user.full_name %></div>
+          <div class="mod-hero-role">@<%= user.username %> · <% if (user.role === 'admin') { %>অ্যাডমিন<% } else { %>মডারেটর<% } %></div>
+        </div>
       </div>
-      <div class="mod-grid">
-        <% const links = {
-          quiz: '/moderator/daily/quiz', this_day: '/moderator/daily/this_day',
-          activity: '/moderator/daily/activity', epaper: '/moderator/daily/epaper',
-          notice: '/moderator/notices', event: '/moderator/events',
-          best_writer: '/moderator/best-writer', complaints: '/moderator/complaints'
-        }; %>
-        <% scopes.forEach(s => {
-          const aliased = scopeAliases[s.key];
-          const isDaily = dailyContentScopes.includes(s.key);
-          const allowed = myScopes.includes(s.key) || (aliased && myScopes.includes(aliased)) || (isDaily && myScopes.includes('daily'));
-        %>
-          <% if (allowed) { %>
-            <a href="<%= links[s.key] %>" class="mod-tile">
-              <i class="fas fa-check-circle"></i>
-              <strong><%= s.label %></strong>
-            </a>
-          <% } else { %>
-            <div class="mod-tile locked" title="এই সেকশনের অনুমতি আপনার নেই">
-              <i class="fas fa-lock"></i>
-              <strong><%= s.label %></strong>
-            </div>
-          <% } %>
-        <% }) %>
-      </div>
-      <% if (myScopes.length === 0) { %>
-        <div style="background:#fff; border-radius:12px; padding:20px; text-align:center; color:#999;">
-          এখনো আপনাকে কোনো সেকশনের অনুমতি দেওয়া হয়নি। এডমিনের সাথে যোগাযোগ করুন।
+      <a href="/logout" class="mod-logout-btn" onclick="return confirm('লগআউট করতে চান?')">
+        <i class="fas fa-sign-out-alt"></i> লগআউট
+      </a>
+    </div>
+  </div>
+
+  <%# ── Stats ── %>
+  <div class="mod-stats">
+    <div class="mod-stat">
+      <div class="mod-stat-val"><%= myScopes.length %></div>
+      <div class="mod-stat-lbl">অনুমোদিত স্কোপ</div>
+    </div>
+    <div class="mod-stat">
+      <div class="mod-stat-val"><%= scopes.length %></div>
+      <div class="mod-stat-lbl">মোট স্কোপ</div>
+    </div>
+    <div class="mod-stat">
+      <div class="mod-stat-val"><%= stats.notices %></div>
+      <div class="mod-stat-lbl">বিজ্ঞপ্তি</div>
+    </div>
+    <div class="mod-stat">
+      <div class="mod-stat-val"><%= stats.events %></div>
+      <div class="mod-stat-lbl">ইভেন্ট</div>
+    </div>
+    <div class="mod-stat">
+      <div class="mod-stat-val"><%= stats.daily %></div>
+      <div class="mod-stat-lbl">ডেইলি কনটেন্ট</div>
+    </div>
+  </div>
+
+  <%# ── Scope tiles ── %>
+  <div class="mod-section-head">
+    <h2><i class="fas fa-th-large"></i> কার্যক্রম</h2>
+    <span class="mod-scope-count"><%= myScopes.length %> / <%= scopes.length %> স্কোপ অনুমোদিত</span>
+  </div>
+
+  <% const links = {
+    quiz: '/moderator/daily/quiz', this_day: '/moderator/daily/this_day',
+    activity: '/moderator/daily/activity', epaper: '/moderator/daily/epaper',
+    notice: '/moderator/notices', event: '/moderator/events',
+    best_writer: '/moderator/best-writer', complaints: '/moderator/complaints'
+  };
+  const descs = {
+    quiz: 'আজকের কুইজ পোস্ট করুন',
+    this_day: 'আজকের এই দিনে',
+    activity: 'সাংগঠনিক কার্যক্রম',
+    epaper: 'আজকের ই-পেপার',
+    notice: 'বিজ্ঞপ্তি পোস্ট করুন',
+    event: 'ইভেন্ট পোস্ট করুন',
+    best_writer: 'মাসিক সেরা লেখক',
+    complaints: 'অভিযোগ দেখুন'
+  };
+  const icons = {
+    quiz: 'fa-brain', this_day: 'fa-calendar-day', activity: 'fa-calendar-check',
+    epaper: 'fa-newspaper', notice: 'fa-bullhorn', event: 'fa-calendar-alt',
+    best_writer: 'fa-star', complaints: 'fa-flag'
+  };
+  %>
+
+  <div class="mod-grid">
+    <% scopes.forEach(s => {
+      const aliased = scopeAliases[s.key];
+      const isDaily = dailyContentScopes.includes(s.key);
+      const allowed = myScopes.includes(s.key) || (aliased && myScopes.includes(aliased)) || (isDaily && myScopes.includes('daily')) || user.role === 'admin';
+    %>
+      <% if (allowed) { %>
+        <a href="<%= links[s.key] %>" class="mod-tile">
+          <div class="mod-tile-icon"><i class="fas <%= icons[s.key] || 'fa-cog' %>"></i></div>
+          <div class="mod-tile-label"><%= s.label %></div>
+          <div class="mod-tile-desc"><%= descs[s.key] || '' %></div>
+        </a>
+      <% } else { %>
+        <div class="mod-tile locked" title="এই সেকশনের অনুমতি আপনার নেই">
+          <div class="mod-tile-icon"><i class="fas fa-lock"></i></div>
+          <div class="mod-tile-label"><%= s.label %></div>
+          <div class="mod-tile-desc">অনুমতি নেই</div>
         </div>
       <% } %>
-    </main>
+    <% }) %>
   </div>
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+
+  <% if (myScopes.length === 0 && user.role !== 'admin') { %>
+    <div class="mod-empty">
+      <i class="fas fa-user-shield"></i>
+      <h3 style="margin:0 0 6px; font-size:16px;">এখনো কোনো স্কোপ অনুমোদিত নয়</h3>
+      <p style="margin:0; font-size:13px;">অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
+    </div>
+  <% } %>
+
+  <%# ── Info note ── %>
+  <div style="margin-top:24px; padding:16px 20px; background:rgba(5,150,105,0.08); border:1px solid rgba(5,150,105,0.2); border-radius:10px; display:flex; gap:10px; align-items:flex-start;">
+    <i class="fas fa-info-circle" style="color:var(--accent,#059669); font-size:16px; margin-top:2px;"></i>
+    <div style="font-size:13px; color:var(--text-soft,#475569); line-height:1.6;">
+      <strong>বিজ্ঞপ্তি:</strong> মডারেটর হিসেবে আপনি পোস্ট করলে স্বয়ংক্রিয়ভাবে সব সদস্যের কাছে নোটিফিকেশন যাবে। আপনার সব কার্যক্রম সেভ থাকে — লগআউট করে ফিরে এলে আগের অবস্থায় পাবেন।
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/main.js?v=<%= AV %>"></script>
 </body>
 </html>
