@@ -59,6 +59,23 @@
         <p class="hint">মডারেটর বানালে ডিফল্টভাবে daily/notices/events scopes যোগ হবে।</p>
       </form>
 
+      <!-- Password reset (hand over committee accounts etc.) -->
+      <form method="POST" action="/admin/users/<%= u.id %>/password" class="data-card card">
+        <h3><i class="fas fa-lock"></i> পাসওয়ার্ড রিসেট</h3>
+        <% if (typeof pwdStatus !== 'undefined' && pwdStatus === 'ok') { %>
+          <p class="hint" style="color:#059669"><i class="fas fa-check-circle"></i> পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে।</p>
+        <% } else if (typeof pwdStatus !== 'undefined' && pwdStatus === 'short') { %>
+          <p class="hint" style="color:#dc2626"><i class="fas fa-times-circle"></i> পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।</p>
+        <% } %>
+        <div class="form-row">
+          <label>নতুন পাসওয়ার্ড
+            <input type="text" name="new_password" class="form-input" minlength="6" placeholder="কমপক্ষে ৬ অক্ষর" required>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-key"></i> পাসওয়ার্ড সেট করুন</button>
+        <p class="hint">কমিটি সদস্যের অ্যাকাউন্ট হস্তান্তর বা পুনরুদ্ধারের জন্য। নতুন পাসওয়ার্ড সদস্যকে জানিয়ে দিন।</p>
+      </form>
+
       <!-- Scopes (if moderator) -->
       <% if (u.role === 'moderator' || u.role === 'admin') { %>
         <form method="POST" action="/admin/users/<%= u.id %>/scopes" class="data-card card">

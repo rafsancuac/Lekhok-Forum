@@ -31,6 +31,20 @@
           <% if (profile.designation) { %><p class="profile-designation"><i class="fas fa-briefcase"></i> <%= profile.designation %></p><% } %>
           <% if (profile.bio) { %><p class="profile-bio"><%= profile.bio %></p><% } %>
 
+          <% if (orgRoles && orgRoles.length) { %>
+            <div class="org-roles">
+              <h4><i class="fas fa-award"></i> সংগঠনে দায়িত্ব</h4>
+              <div class="org-role-chips">
+                <% orgRoles.forEach(r => { %>
+                  <span class="org-role-chip">
+                    <strong><%= r.role %></strong>
+                    <% if (r.term_year) { %><small><%= r.term_year %> কার্যবর্ষ</small><% } %>
+                  </span>
+                <% }) %>
+              </div>
+            </div>
+          <% } %>
+
           <div class="profile-stats">
             <button class="stat tab-jump" data-tab="posts"><span><%= postCount %></span><small>লেখা</small></button>
             <button class="stat tab-jump" data-tab="followers"><span><%= followerCount %></span><small>অনুসরণকারী</small></button>

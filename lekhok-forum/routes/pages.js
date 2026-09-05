@@ -64,16 +64,30 @@ router.get('/about', async (req, res) => {
 });
 
 // ── Committee ────────────────────────────────────────────────────────────────
+// Bengali-digit term sorting helper: '২০২৪-২৫' → 2024
+const bnLead = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
+
 router.get('/committee', async (req, res) => {
-  // Year filter — fallback gracefully if no term_year
-  const yearRows = await db.prepare("SELECT DISTINCT term_year FROM members WHERE term_year IS NOT NULL ORDER BY term_year DESC").all();
-  const years = yearRows.map(r => r.term_year).filter(Boolean);
-  const selectedYear = req.query.year && years.includes(req.query.year) ? req.query.year : (years[0] || null);
-  // Central committee — if selectedYear is null, get all (no filter)
+  // Term counts per year (central committee only)
+  const yearRows = await db.prepare(
+    "SELECT term_year, COUNT(*) AS c FROM members WHERE member_type = 'central' AND term_year IS NOT NULL GROUP BY term_year"
+  ).all();
+  const countByYear = {};
+  yearRows.forEach(r => { countByYear[r.term_year] = r.c; });
+
+  // Canonical history ১৯-২০ → ২৪-২৫ + any extra terms admins add later.
+  const CANONICAL_YEARS = ['২০২৪-২৫', '২০২৩-২৪', '২০২২-২৩', '২০২১-২২', '২০২০-২১', '২০১৯-২০'];
+  const years = [...new Set([...CANONICAL_YEARS, ...Object.keys(countByYear)])].sort((a, b) => bnLead(b) - bnLead(a));
+
+  // Default: the LATEST term that actually has a committee.
+  const latestWithData = Object.keys(countByYear).sort((a, b) => bnLead(b) - bnLead(a))[0];
+  const selectedYear = req.query.year && years.includes(req.query.year)
+    ? req.query.year
+    : (latestWithData || years[0] || null);
+
   const central = selectedYear
     ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order").all(selectedYear)
-    : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order").all();
-  // Advisory members
+    : [];
   const advisory = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order").all();
   res.render('lekhok-committee', {
     layout: 'layout',
@@ -82,6 +96,7 @@ router.get('/committee', async (req, res) => {
     central,
     advisory,
     years,
+    countByYear,
     selectedYear
   });
 });

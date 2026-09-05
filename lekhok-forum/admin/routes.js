@@ -200,7 +200,7 @@ router.delete('/events/:id', requireScope('events'), async (req, res) => {
 const fetchAllUsers = () => db.prepare("SELECT id, username, full_name FROM users ORDER BY full_name").all();
 
 router.get('/members', requireAdmin, async (req, res) => {
-  const members = await db.prepare('SELECT * FROM members ORDER BY sort_order').all();
+  const members = await db.prepare("SELECT * FROM members ORDER BY IFNULL(term_year,'') DESC, member_type, sort_order").all();
   res.render('admin/members/list', { members, currentPath: '/admin/members' });
 });
 
@@ -210,14 +210,15 @@ router.get('/members/new', requireAdmin, async (req, res) => {
 });
 
 router.post('/members', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id } = req.body;
+  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, term_year, sort_order, user_id } = req.body;
   if (!name) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
   }
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
+  const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
-    await db.prepare('INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum);
+    await db.prepare('INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, term_year, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'এই নাম, কার্যবর্ষ ও ধরনে একজন সদস্য ইতিমধ্যে যোগ করা আছেন।', allUsers, currentPath: '/admin/members' });
@@ -233,10 +234,11 @@ router.get('/members/:id/edit', requireAdmin, async (req, res) => {
 });
 
 router.put('/members/:id', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, sort_order, user_id } = req.body;
+  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, term_year, sort_order, user_id } = req.body;
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
+  const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
-    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, image_url=?, social_fb=?, social_email=?, member_type=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', parseInt(sort_order) || 0, userIdNum, req.params.id);
+    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, image_url=?, social_fb=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, req.params.id);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'এই নাম, কার্যবর্ষ ও ধরনে আরেকজন সদস্য ইতিমধ্যে আছেন।', allUsers, currentPath: '/admin/members' });
@@ -472,6 +474,17 @@ router.post('/users/:id/role', requireAdmin, async (req, res) => {
   res.redirect('/admin/moderators');
 });
 
+// Reset a user's password (admin hands over committee accounts etc.)
+router.post('/users/:id/password', requireAdmin, async (req, res) => {
+  const { new_password } = req.body;
+  if (!new_password || String(new_password).length < 6) {
+    return res.redirect('/admin/users/' + req.params.id + '/edit?pwd=short');
+  }
+  const hash = bcrypt.hashSync(String(new_password), 10);
+  await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, req.params.id);
+  res.redirect('/admin/users/' + req.params.id + '/edit?pwd=ok');
+});
+
 // ── v2.2: User management (full list + edit) ──────────────────────────────────
 router.get('/users', requireAdmin, async (req, res) => {
   const q = (req.query.q || '').trim();
@@ -499,7 +512,8 @@ router.get('/users/:id/edit', requireAdmin, async (req, res) => {
   const complaintCount = (await db.prepare('SELECT COUNT(*) AS c FROM complaints WHERE submitted_by = ?').get(u.id)).c;
   const followerCount = (await db.prepare('SELECT COUNT(*) AS c FROM follows WHERE following_id = ?').get(u.id)).c;
   res.render('admin/users/edit', {
-    u, scopes, postCount, complaintCount, followerCount, CANONICAL_SCOPES, currentPath: '/admin/users'
+    u, scopes, postCount, complaintCount, followerCount, CANONICAL_SCOPES,
+    pwdStatus: req.query.pwd || null, currentPath: '/admin/users'
   });
 });
 

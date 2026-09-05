@@ -44,6 +44,15 @@
           <option value="branch"  <%= member && member.member_type === 'branch'  ? 'selected' : '' %>>বিশ্ববিদ্যালয় শাখা</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>কার্যবর্ষ</label>
+        <input type="text" name="term_year" list="termYears" value="<%= member ? (member.term_year || '') : '' %>" placeholder="যেমন: ২০২৪-২৫">
+        <datalist id="termYears">
+          <option value="২০২৫-২৬"><option value="২০২৪-২৫"><option value="২০২৩-২৪">
+          <option value="২০২২-২৩"><option value="২০২১-২২"><option value="২০২০-২১"><option value="২০১৯-২০">
+        </datalist>
+        <small style="color:#64748b">কমিটি পেইজের কার্যবর্ষ ফিল্টারে দেখাতে এটা দিন (যেমন: ২০১৯-২০)।</small>
+      </div>
       <div class="form-group"><label>ক্রম (sort order)</label><input type="number" name="sort_order" value="<%= member ? member.sort_order : 0 %>"></div>
       <button type="submit" class="btn btn-primary"><%= member ? 'আপডেট' : 'তৈরি করুন' %></button>
     </form>

@@ -645,13 +645,19 @@ router.get('/profile/:username', async (req, res) => {
   try { interests = JSON.parse(profile.interests || '[]'); } catch (_) {}
   const tagPool = isOwner ? await getTagPool(24) : [];
 
+  // সংগঠনে দায়িত্ব — committee posts held by this user (any term), newest term first
+  const bnLead = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
+  const orgRoles = (await db.prepare(
+    "SELECT role, term_year FROM members WHERE user_id = ? AND role IS NOT NULL AND role != ''"
+  ).all(profile.id)).sort((a, b) => bnLead(b.term_year) - bnLead(a.term_year));
+
   res.render('user/profile', {
     profile,
     author: profile,
     posts: articles,
     questions, comments, reactions, bookmarks, drafts, myDaily,
     followers, following: followingList,
-    interests, tagPool,
+    interests, tagPool, orgRoles,
     postCount: articles.length,
     followerCount, followingCount,
     isOwner, isFollowing, iBlockedHim,

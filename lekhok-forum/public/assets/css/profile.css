@@ -117,3 +117,17 @@
   .profile-avatar-row { flex-direction: column; align-items: flex-start; gap: 10px; }
   .article-main { padding: 16px; }
 }
+
+/* ── সংগঠনে দায়িত্ব (committee roles) ────────────────────────────────── */
+.org-roles { margin: 14px 0 4px; }
+.org-roles h4 { display: flex; align-items: center; gap: 7px; margin: 0 0 9px; color: var(--brand); font-size: 0.86rem; text-transform: uppercase; letter-spacing: .04em; }
+.org-roles h4 i { color: var(--accent, #059669); }
+.org-role-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.org-role-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px;
+  background: rgba(5,150,105,.09); border: 1px solid rgba(5,150,105,.25);
+  font-size: 0.82rem; color: var(--text);
+}
+.org-role-chip strong { color: var(--accent, #059669); font-weight: 700; }
+.org-role-chip small { color: var(--text-muted); font-size: 0.74rem; }

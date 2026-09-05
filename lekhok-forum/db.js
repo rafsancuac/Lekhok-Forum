@@ -639,6 +639,128 @@ async function runMigrations() {
       ).run(name, role, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', BRANCH_TERM, sort);
     } catch (_) {}
   }
+
+  // ── Committee history (২০২১-২২ → ২০২৪-২৫) with a user account per member ──
+  // The user asked for EVERY committee member to have a user id so the whole
+  // committee page is clickable through to /profile/:username (social feed).
+  // Data source: the two official PDF notifications (smarok no.
+  // বাতকলোকেশন/বিরিব/০১/২০-২৪ dated ০৬/০৯/২০২৩ and /বিরিব/২৪-২৫ dated
+  // ২৩/০১/২৫) plus the already-seeded ২০২১-২২ list.
+  //   [name, role, username-slug, gender]
+  // Names already owning an account (exact full_name match — e.g. the karishma
+  // demo account) are LINKED, never duplicated. Fresh accounts get a random
+  // password (owner claims it later via admin password reset).
+  const ORG_DESIG_SUFFIX = 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম';
+  const COMMITTEE_HISTORY = [
+    { term: '২০২১-২২', members: [
+      ['Md. Rafsan',             'সভাপতি',              'md_rafsan',        'male'],
+      ['K.M. Akij Mahmud',       'সাধারণ সম্পাদক',         'akij_mahmud',      'male'],
+      ['Mushfiqur Rahman Emon',  'সাংগঠনিক সম্পাদক',       'mushfiqur_emon',   'male'],
+      ['Rabby Hasan',            'অর্থ সম্পাদক',           'rabby_hasan',      'male'],
+      ['Jannatul Ferdous SaYma', 'দপ্তর সম্পাদক',           'jannatul_sayma',   'female'],
+      ['Murad Hoshen',           'উপ দপ্তর সম্পাদক',        'murad_hoshen',     'male'],
+      ['আয়েশা সিদ্দিকা এ্যানি',       'প্রচার সম্পাদক',         'ayesha_siddika_anny', 'female'],
+      ['Tawhida Akter',          'উপ প্রচার সম্পাদক',       'tawhida_akter',    'female'],
+      ['Sk Rafiquzzaman',        'প্রশিক্ষণ বিষয়ক সম্পাদক',   'sk_rafiquzzaman',  'male']
+    ]},
+    { term: '২০২২-২৩', members: [
+      ['মো. ইউছাফুল ইসলাম সিকাত',   'সভাপতি',                 'yousuful_islam_sikat', 'male'],
+      ['মো. সাইফুল মিয়া',          'সহ-সভাপতি',               'saiful_mia',           'male'],
+      ['রেদওয়ান আহমেদ',            'সাধারণ সম্পাদক',           'redwan_ahmed',         'male'],
+      ['নিবেদ চক্রবর্তী',           'যুগ্ম সাধারণ সম্পাদক',      'nibed_chakraborty',    'male'],
+      ['মাহমূদুল রহমান',            'সাংগঠনিক সম্পাদক',         'mahmudul_rahman',      'male'],
+      ['আসামুজ্জামান চৌধুরী সহাট',   'সহ-সাংগঠনিক সম্পাদক',      'asamuzzaman_chowdhury', 'male'],
+      ['মো. আজিজুল হক',           'অর্থ সম্পাদক',             'azizul_haq',           'male'],
+      ['নাসরিন সুলতানা রিয়া',       'দপ্তর সম্পাদক',             'nasrin_sultana_riya',  'female'],
+      ['আজিজুল হক রাহি',           'উপ-দপ্তর সম্পাদক',          'azizul_hoque_rahi',    'male'],
+      ['মেসবাহ উদ্দিন মিরিস',       'প্রচার ও প্রকাশনা সম্পাদক',   'mesbah_uddin_miris',   'male'],
+      ['আবির হাসান',              'প্রশিক্ষণ বিষয়ক সম্পাদক',    'abir_hasan',           'male'],
+      ['মিহাবল্ল জায়াত তারিন',      'সাহিত্য ও পাঠচক্র বিষয়ক সম্পাদক', 'mihaballa_jayat_tarin', 'male'],
+      ['হৃদি সরকার',              'তথ্য ও প্রযুক্তি বিষয়ক সম্পাদক', 'hridi_sorkar',      'female'],
+      ['মারজান হোসেন',            'সম্পাদকীয় পর্ষদ',          'marjan_hossen',        'male'],
+      ['হাসনা বেগম',              'সম্পাদকীয় পর্ষদ',          'hasna_begum',          'female']
+    ]},
+    { term: '২০২৪-২৫', members: [
+      ['মাহমূদুল রহমান',            'সভাপতি',                 'mahmudul_rahman',      'male'],
+      ['মিহাবল্ল জায়াত তারিন',      'সহ-সভাপতি',               'mihaballa_jayat_tarin', 'male'],
+      ['মেসবাহ উদ্দিন মিরিস',       'সাধারণ সম্পাদক',           'mesbah_uddin_miris',   'male'],
+      ['সায়াওয়াত হোসাইন রিকাত',     'যুগ্ম-সাধারণ সম্পাদক',      'sayawat_hossain_rikat', 'male'],
+      ['আজিজুল হক রাহি',           'সাংগঠনিক সম্পাদক',         'azizul_hoque_rahi',    'male'],
+      ['হৃদি সরকার',              'সহ-সাংগঠনিক সম্পাদক',      'hridi_sorkar',         'female'],
+      ['সুমন চৌধুরী',             'অর্থ সম্পাদক',             'sumon_chowdhury',      'male'],
+      ['কারিশমা ইরিন এ্যামি',        'দপ্তর সম্পাদক',             'karishma_erin_anny',   'female'],
+      ['ইসমাইল হোসেন ইমন',         'উপ-দপ্তর সম্পাদক',          'ismail_hossen_emon',   'male'],
+      ['মুহাম্মাদ রিয়াদ উদ্দিন',     'সাহিত্য ও প্রকাশনা সম্পাদক',  'muhammad_riyad_uddin', 'male'],
+      ['মোজফ্ফা কামাল',            'প্রচার সম্পাদক',           'mojaffa_kamal',        'male'],
+      ['মো. রাকিব হোসেন',          'প্রশিক্ষণ বিষয়ক সম্পাদক',    'rakib_hossen',         'male'],
+      ['মো. জাহিদুল হক',           'তথ্য ও প্রযুক্তি বিষয়ক সম্পাদক', 'jahidul_haq',       'male'],
+      ['এনামুল হক',               'সম্পাদকীয় পর্ষদ',          'enamul_hoque',         'male'],
+      ['মোলেম শাহরিয়ার শাওন',       'সম্পাদকীয় পর্ষদ',          'molem_shahriar_shaon', 'male'],
+      ['জায়াতুল ফেরদাউস ইকরা',      'কার্যনির্বাহী সদস্য',        'jayatul_ferdaus_ikra', 'female'],
+      ['সাধী রানী',               'কার্যনির্বাহী সদস্য',        'sadhi_rani',           'female']
+    ]}
+  ];
+
+  // Fast path: skip entirely once a previous boot finished the seeding.
+  let historySeeded = false;
+  try { historySeeded = !!(await backend.prepare("SELECT value FROM settings WHERE key = 'committee_history_seeded'").get()); }
+  catch (_) {}
+
+  if (!historySeeded) {
+    // Chronological order → for multi-term members the LAST term's role wins
+    // in the user's designation (updated only where this migration owns it).
+    for (const { term, members } of COMMITTEE_HISTORY) {
+      for (let i = 0; i < members.length; i++) {
+        const [name, role, slug, gender] = members[i];
+        const desigText = `${role}, ${ORG_DESIG_SUFFIX} (চবি)`;
+        try {
+          // 1. Link to an existing account by exact full_name, else create one.
+          let user = await backend.prepare('SELECT id FROM users WHERE full_name = ? LIMIT 1').get(name);
+          if (!user) {
+            // unique username: base slug, then _2, _3 … on collision
+            let uname = slug, n = 1;
+            for (;;) {
+              const taken = await backend.prepare('SELECT id FROM users WHERE username = ?').get(uname);
+              if (!taken) break;
+              n += 1; uname = `${slug}_${n}`;
+            }
+            const pwd = bcrypt.hashSync(crypto.randomBytes(16).toString('hex'), 10);
+            try {
+              await backend.prepare(
+                "INSERT INTO users (username, password_hash, full_name, designation, gender, status, role) VALUES (?, ?, ?, ?, ?, 'active', 'user')"
+              ).run(uname, pwd, name, desigText, gender);
+            } catch (e) {
+              // concurrent cold boot lost the username race → reuse its row
+              if (!/UNIQUE|duplicate/i.test(e.message || '')) throw e;
+            }
+            user = await backend.prepare('SELECT id FROM users WHERE username = ?').get(uname)
+                  || await backend.prepare('SELECT id FROM users WHERE full_name = ? LIMIT 1').get(name);
+          }
+          if (!user) continue;
+          // keep the designation in sync for accounts THIS migration created;
+          // custom/demo designations are never clobbered.
+          await backend.prepare(
+            "UPDATE users SET designation = ? WHERE id = ? AND (designation IS NULL OR designation LIKE ?)"
+          ).run(desigText, user.id, `%${ORG_DESIG_SUFFIX}%`);
+          // 2. Ensure the member row exists (UNIQUE index makes it race-safe),
+          //    then attach the user id where still missing.
+          await backend.prepare(
+            "INSERT OR IGNORE INTO members (name, role, designation, member_type, term_year, sort_order, user_id) VALUES (?, ?, ?, 'central', ?, ?, ?)"
+          ).run(name, role, 'চট্টগ্রাম বিশ্ববিদ্যালয় শাখা কমিটি', term, i, user.id);
+          await backend.prepare(
+            "UPDATE members SET user_id = ? WHERE name = ? AND IFNULL(term_year,'') = ? AND member_type = 'central' AND user_id IS NULL"
+          ).run(user.id, name, term);
+        } catch (e) {
+          console.warn(`[migrate] committee-history ${term} "${name}":`, (e.message || '').slice(0, 100));
+        }
+      }
+    }
+    try {
+      await backend.prepare("INSERT INTO settings (key, value) VALUES ('committee_history_seeded', '1')").run();
+    } catch (_) {
+      try { await backend.prepare("UPDATE settings SET value = '1' WHERE key = 'committee_history_seeded'").run(); } catch (_) {}
+    }
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
