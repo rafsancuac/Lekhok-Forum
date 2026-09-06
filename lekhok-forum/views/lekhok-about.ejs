@@ -11,18 +11,18 @@
   <div class="container">
     <div class="section-split" style="grid-template-columns:1fr 1fr;">
       <div class="split-left">
-        <span class="eyebrow">আমাদের পরিচয়</span>
-        <h2 class="section-title">বাংলাদেশ তরুণ কলাম লেখক ফোরাম, <span class="accent">চট্টগ্রাম বিশ্ববিদ্যালয়</span></h2>
+        <span class="eyebrow"><%= getContent('about', 'identity', 'eyebrow', 'আমাদের পরিচয়') %></span>
+        <h2 class="section-title"><%= getContent('about', 'identity', 'title', 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়') %></h2>
         <span class="accent-divider"></span>
         <p style="text-align:justify;">বাংলাদেশ তরুণ কলাম লেখক ফোরাম একটি শিক্ষামূলক, অলাভজনক এবং অরাজনৈতিক সংগঠন, যা তরুণ সমাজকে লিখালিখির জগতে নিয়ে এসে তাদের বুদ্ধিবৃত্তিক বিকাশ ঘটিয়ে দেশ ও জাতির সমৃদ্ধির লক্ষ্যে তাদেরকে যোগ্য ও সুনাগরিক হিসেবে গড়ে তোলে। চট্টগ্রাম বিশ্ববিদ্যালয়ে যারা পত্রিকায় লিখেন কিংবা লিখতে চান, তাদেরকে সঠিকভাবে লিখার পদ্ধতি, কালাকৌশল এবং সংশ্লিষ্ট বিষয়ে পরামর্শ দিতে বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা দৃঢ়প্রত্যয়ী। সদস্যদের নিয়ে নিয়মিত কর্মশালা আয়োজন এবং লিখালিখির যাবতীয় সমস্যা সমাধানে অভিজ্ঞরা নিজ তত্ত্বাবধানে রেখে সদস্যদের দেখাশোনা করে থাকেন।</p>
         <div class="identity-chips">
           <div class="identity-chip">
             <span class="chip-label"><i class="fas fa-quote-left"></i> মূলমন্ত্র</span>
-            <span class="chip-text">তারুণ্যের শাণিত কলমে আলোকিত ধরনী</span>
+            <span class="chip-text"><%= getContent('about', 'identity', 'motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী') %></span>
           </div>
           <div class="identity-chip">
             <span class="chip-label"><i class="fas fa-bullhorn"></i> স্লোগান</span>
-            <span class="chip-text">সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।</span>
+            <span class="chip-text"><%= getContent('about', 'identity', 'slogan', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।') %></span>
           </div>
         </div>
         <a href="/committee" class="btn btn-primary" style="margin-top:18px;"><i class="fas fa-users-cog"></i> কমিটি দেখুন</a>
@@ -103,7 +103,7 @@
 <section class="cta-banner reveal" id="soldier">
   <div class="container">
     <span class="eyebrow" style="background:rgba(5,150,105,0.18);border-color:rgba(5,150,105,0.32);">সদস্য সংগ্রহ চলছে</span>
-    <h2>আপনি কি একজন <span class="accent">কলম সৈনিক</span> হতে চান?</h2>
+    <h2><%= getContent('about', 'soldier', 'title', 'আপনি কি একজন কলম সৈনিক হতে চান?') %></h2>
     <p style="text-align:justify; line-height:1.8; max-width:800px; margin:0 auto;">চট্টগ্রাম বিশ্ববিদ্যালয়ের লেখালেখিতে আগ্রহী তরুণ লেখকদের সুপ্ত প্রতিভা বিকশিত করার লক্ষ্যে বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা নতুন বছরে সদস্য সংগ্রহ কার্যক্রম শুরু করেছে। তুলে ধরতে চান সমাজ-রাষ্ট্রের অসংগতি? তাহলে বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা আপনাকেই খুঁজছে। আপনার লেখনির ধারাকে আরও শাণিত করতে একঝাঁক তরুণ লেখকের পতাকাতলে আপনাকে স্বাগতম। সংগঠনের পত্রিকায় নিয়মিত লেখার সুযোগ, অভিজ্ঞ লেখকদের পরামর্শ ও দিকনির্দেশনা, এবং লেখালেখির বিভিন্ন কর্মশালা ও সেমিনারে অংশগ্রহণের মাধ্যমে নিজের লেখনীকে আরও পরিণত করতে পারবেন। একইসাথে দেশের বিভিন্ন প্রান্তের তরুণ লেখকদের সাথে পরিচিত হওয়ার ও মতবিনিময়ের এক অনন্য সুযোগ এটি। আপনার চিন্তাকে শব্দের রূপ দিতে, আপনার লেখনীকে শাণিত করতে, এবং একটি সুস্থ সমাজ গঠনে নিজের অবদান রাখতে চাইলে, তাহলে আর দেরি কেন? এক্ষুনি শামিল হোন আমাদের অগ্রযাত্রায়।</p>
     <div style="margin-top:26px;">
       <a href="/register" class="btn btn-primary" style="margin-right:10px;"><i class="fas fa-user-plus"></i> নিবন্ধন করুন</a>
@@ -154,16 +154,9 @@
     <div class="card" style="margin-top:22px;">
       <h3 style="margin-top:0;"><i class="fas fa-scroll" style="color:var(--accent);"></i> অবশ্যপালনীয় শর্ত</h3>
       <ul class="bullet-list">
-        <li>সদস্য হওয়ার ক্ষেত্রে অবশ্যই মনে রাখবেন, সংগঠনের গঠনতন্ত্র মেনে চলতে হবে।</li>
-        <li>ফোরামের অন্যান্য সাংগঠনিক কর্মকাণ্ডে সক্রিয় অংশগ্রহণ থাকতে হবে।</li>
-        <li>রাষ্ট্র ও সংগঠন বিরোধী কোনো কর্মকাণ্ডে জড়িত হওয়া যাবে না।</li>
-        <li>প্রতি মাসে কমপক্ষে ১টি লেখা প্রকাশ করতে হবে।</li>
-        <li>সাপ্তাহিক আড্ডা ও মাসিক সভায় নিয়মিত উপস্থিত থাকতে হবে।</li>
-        <li>সংগঠনের পত্রিকায় নিয়মিত লেখা পাঠাতে হবে।</li>
-        <li>অন্য সদস্যদের লেখার প্রতি গঠনমূলক মন্তব্য ও পরামর্শ দিতে হবে।</li>
-        <li>সংগঠনের সম্মান ও ভাবমূর্তি রক্ষায় সচেতন থাকতে হবে।</li>
-        <li>যেকোনো ধরনের বৈষম্যমূলক আচরণ থেকে বিরত থাকতে হবে।</li>
-        <li>সংগঠনের গোপনীয়তা রক্ষা করতে হবে।</li>
+        <% for (let ci = 1; ci <= 10; ci++) { const condText = getContent('about', 'conditions', 'cond_' + ci, ''); if (condText) { %>
+        <li><%= condText %></li>
+        <% } } %>
       </ul>
     </div>
     <div class="card notice-warning">

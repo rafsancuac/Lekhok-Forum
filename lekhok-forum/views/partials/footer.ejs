@@ -1,8 +1,8 @@
 <footer class="btclf-footer site-footer">
   <div class="container footer-inner">
     <div class="footer-brand">
-      <h2>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</h2>
-      <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা, একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।</p>
+      <h2><%= getContent('footer', 'brand', 'name', 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়') %></h2>
+      <p><%= getContent('footer', 'brand', 'desc', 'একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন।') %></p>
       <div class="f-socials">
         <%# session33: placeholder (#) লিংক → settings-এর আসল URL (হেডারের dropdown-এর মতোই) %>
         <a href="<%= typeof getSetting === 'function' ? (getSetting('facebook_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>

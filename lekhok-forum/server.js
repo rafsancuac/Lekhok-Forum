@@ -97,6 +97,10 @@ app.use(async (req, res, next) => {
     res.locals.tagline    = settings['tagline']   || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।';
     res.locals.motto      = settings['motto']     || 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী';
     res.locals.getSetting = (k) => (k in settings ? settings[k] : null);
+    res.locals.getContent = (page, section, key, fallback) => {
+      const fullKey = 'content_' + page + '_' + section + '_' + key;
+      return (fullKey in settings) ? settings[fullKey] : (fallback !== undefined ? fallback : '');
+    };
     res.locals.adminUser = req.session.adminUser || null;
     res.locals.user      = req.session.user || null;          // social user session
     res.locals.currentPath = req.path;

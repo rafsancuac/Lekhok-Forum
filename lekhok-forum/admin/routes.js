@@ -742,3 +742,177 @@ router.delete('/past-leaders/:id', requireAdmin, async (req, res) => {
 });
 
 module.exports = router;
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── Content Management System — edit ALL page text from admin panel ──────────
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Content schema: organized by page → sections → fields
+const CONTENT_SCHEMA = {
+  home: {
+    label: 'হোম পেজ',
+    icon: 'fa-home',
+    sections: {
+      hero: {
+        label: 'হিরো সেকশন',
+        fields: {
+          eyebrow: { label: 'ইব্রো (উপরের ছোট লেখা)', type: 'text', default: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়' },
+          title: { label: 'প্রধান শিরোনাম', type: 'text', default: 'সুপ্ত প্রতিভা বিকশিত হোক' },
+          title_accent: { label: 'শিরোনামের হাইলাইট অংশ', type: 'text', default: 'লেখনীর ধারায়' },
+          subtitle: { label: 'সাব-টাইটেল (বিস্তারিত)', type: 'textarea', default: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় — একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন।' }
+        }
+      },
+      leadership_1: {
+        label: 'সেকশন ১: প্রতিষ্ঠাতা',
+        fields: {
+          eyebrow: { label: 'ইব্রো', type: 'text', default: 'নেতৃত্বের ধারা' },
+          title: { label: 'হেডিং', type: 'text', default: 'যাঁদের হাতে গড়ে উঠেছে লেখক ফোরাম' }
+        }
+      },
+      leadership_2: {
+        label: 'সেকশন ২: বর্তমান',
+        fields: {
+          eyebrow: { label: 'ইব্রো', type: 'text', default: 'বর্তমান' },
+          title: { label: 'হেডিং', type: 'text', default: 'বর্তমান নেতৃত্ব' }
+        }
+      },
+      user_feed: {
+        label: 'ইউজার ফিড সেকশন',
+        fields: {
+          title: { label: 'হেডিং', type: 'text', default: 'ইউজার ফিড' },
+          desc: { label: 'বিবরণ', type: 'textarea', default: 'সদস্যদের লেখা, প্রশ্নোত্তর ও আলোচনা দেখুন। লগইন ছাড়াই পড়তে পারবেন। অংশ নিতে রেজিস্ট্রেশন করুন।' }
+        }
+      }
+    }
+  },
+  about: {
+    label: 'পরিচিতি পেজ',
+    icon: 'fa-info-circle',
+    sections: {
+      identity: {
+        label: 'পরিচিতি',
+        fields: {
+          eyebrow: { label: 'ইব্রো', type: 'text', default: 'আমাদের পরিচয়' },
+          title: { label: 'শিরোনাম', type: 'text', default: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়' },
+          intro: { label: 'ভূমিকা প্যারাগ্রাফ', type: 'textarea', default: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম একটি শিক্ষামূলক, অলাভজনক এবং অরাজনৈতিক সংগঠন।' },
+          motto: { label: 'মূলমন্ত্র', type: 'text', default: 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী' },
+          slogan: { label: 'স্লোগান', type: 'text', default: 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।' }
+        }
+      },
+      goals: {
+        label: 'লক্ষ্য ও উদ্দেশ্য',
+        fields: {
+          goal_1: { label: 'লক্ষ্য ১', type: 'textarea', default: 'তরুণ সমাজকে লেখালেখিতে উদ্বুদ্ধ করে সৃষ্টিশীল গড়ে তুলতে সাহায্য করা।' },
+          goal_2: { label: 'লক্ষ্য ২', type: 'textarea', default: 'মুক্তিযুদ্ধের আদর্শ লালন করে তরুণ সমাজকে দেশপ্রেমী নাগরিক হিসেবে গড়ে তোলা।' },
+          goal_3: { label: 'লক্ষ্য ৩', type: 'textarea', default: 'সামাজিক সমস্যার গঠনমূলক সমালোচনা ও ইতিবাচক সমাধান লেখনীর মাধ্যমে তুলে ধরা।' },
+          goal_4: { label: 'লক্ষ্য ৪', type: 'textarea', default: 'নিয়মিত পঠন অভ্যাস গড়ে তুলে তরুণ সমাজের মেধা ও মানসিক বিকাশ সাধন করা।' },
+          goal_5: { label: 'লক্ষ্য ৫', type: 'textarea', default: 'চিন্তন, গবেষণা ও বিশ্লেষণী ক্ষমতার বিকাশ ঘটিয়ে যুক্তিবাদী সমাজ গঠনে ভূমিকা রাখা।' },
+          goal_6: { label: 'লক্ষ্য ৬', type: 'textarea', default: 'তরুণদের সাংগঠনিক ও নেতৃত্ব গুণাবলি বিকাশে সহায়তা করা।' },
+          goal_7: { label: 'লক্ষ্য ৭', type: 'textarea', default: 'সমাজের প্রতি দায়িত্বশীল ও সংবেদনশীল নাগরিক হিসেবে গড়ে তোলা।' },
+          goal_8: { label: 'লক্ষ্য ৮', type: 'textarea', default: 'দেশের স্বনামধন্য লেখকদের সাথে তরুণ লেখকদের সেতুবন্ধন তৈরি করা।' }
+        }
+      },
+      soldier: {
+        label: 'কলম সৈনিক সেকশন',
+        fields: {
+          title: { label: 'হেডিং', type: 'text', default: 'আপনি কি একজন কলম সৈনিক হতে চান?' },
+          body: { label: 'বিস্তারিত প্যারাগ্রাফ', type: 'textarea', default: 'চট্টগ্রাম বিশ্ববিদ্যালয়ের লেখালেখিতে আগ্রহী তরুণ লেখকদের সুপ্ত প্রতিভা বিকশিত করার লক্ষ্যে বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা নতুন বছরে সদস্য সংগ্রহ কার্যক্রম শুরু করেছে।' }
+        }
+      },
+      conditions: {
+        label: 'সদস্য হওয়ার শর্তাবলি',
+        fields: {
+          cond_1: { label: 'শর্ত ১', type: 'textarea', default: 'সংগঠনের গঠনতন্ত্র মেনে চলতে হবে।' },
+          cond_2: { label: 'শর্ত ২', type: 'textarea', default: 'সাংগঠনিক কর্মকাণ্ডে সক্রিয় অংশগ্রহণ থাকতে হবে।' },
+          cond_3: { label: 'শর্ত ৩', type: 'textarea', default: 'রাষ্ট্র ও সংগঠন বিরোধী কর্মকাণ্ডে জড়িত হওয়া যাবে না।' },
+          cond_4: { label: 'শর্ত ৪', type: 'textarea', default: 'প্রতি মাসে কমপক্ষে ১টি লেখা প্রকাশ করতে হবে।' },
+          cond_5: { label: 'শর্ত ৫', type: 'textarea', default: 'সাপ্তাহিক আড্ডা ও মাসিক সভায় নিয়মিত উপস্থিত থাকতে হবে।' },
+          cond_6: { label: 'শর্ত ৬', type: 'textarea', default: 'পত্রিকায় নিয়মিত লেখা পাঠাতে হবে।' },
+          cond_7: { label: 'শর্ত ৭', type: 'textarea', default: 'অন্য সদস্যদের লেখার প্রতি গঠনমূলক মন্তব্য দিতে হবে।' },
+          cond_8: { label: 'শর্ত ৮', type: 'textarea', default: 'সংগঠনের সম্মান ও ভাবমূর্তি রক্ষায় সচেতন থাকতে হবে।' },
+          cond_9: { label: 'শর্ত ৯', type: 'textarea', default: 'বৈষম্যমূলক আচরণ থেকে বিরত থাকতে হবে।' },
+          cond_10: { label: 'শর্ত ১০', type: 'textarea', default: 'সংগঠনের গোপনীয়তা রক্ষা করতে হবে।' }
+        }
+      }
+    }
+  },
+  contact: {
+    label: 'যোগাযোগ পেজ',
+    icon: 'fa-envelope',
+    sections: {
+      info: {
+        label: 'যোগাযোগের তথ্য',
+        fields: {
+          office: { label: 'কার্যালয়', type: 'text', default: 'চট্টগ্রাম বিশ্ববিদ্যালয় ক্যাম্পাস, হাটহাজারী, চট্টগ্রাম' },
+          email: { label: 'ইমেইল', type: 'text', default: 'info@lekhokforum.org' },
+          phone: { label: 'ফোন', type: 'text', default: '০১********* (বিকাশ/নগদ)' },
+          facebook: { label: 'ফেসবুক পেইজ লিংক', type: 'text', default: '#' },
+          telegram: { label: 'টেলিগ্রাম গ্রুপ লিংক', type: 'text', default: '#' },
+          youtube: { label: 'ইউটিউব চ্যানেল লিংক', type: 'text', default: '#' }
+        }
+      }
+    }
+  },
+  footer: {
+    label: 'ফুটার',
+    icon: 'fa-shoe-prints',
+    sections: {
+      brand: {
+        label: 'ব্র্যান্ড টেক্সট',
+        fields: {
+          name: { label: 'সংগঠনের নাম', type: 'text', default: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়' },
+          desc: { label: 'বিবরণ', type: 'textarea', default: 'একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন।' }
+        }
+      },
+      newsletter: {
+        label: 'নিউজলেটার',
+        fields: {
+          title: { label: 'হেডিং', type: 'text', default: 'নিউজলেটার' },
+          desc: { label: 'বিবরণ', type: 'textarea', default: 'নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।' }
+        }
+      }
+    }
+  }
+};
+
+router.get('/content', requireAdmin, async (req, res) => {
+  const settings = await db.getSettingsAll();
+  // Build content map from settings
+  const content = {};
+  for (const pageKey of Object.keys(CONTENT_SCHEMA)) {
+    content[pageKey] = {};
+    for (const [sectionKey, section] of Object.entries(CONTENT_SCHEMA[pageKey].sections)) {
+      content[pageKey][sectionKey] = {};
+      for (const [fieldKey, field] of Object.entries(section.fields)) {
+        const fullKey = 'content_' + pageKey + '_' + sectionKey + '_' + fieldKey;
+        content[pageKey][sectionKey][fieldKey] = (fullKey in settings) ? settings[fullKey] : field.default;
+      }
+    }
+  }
+  res.render('admin/content', {
+    content,
+    schema: CONTENT_SCHEMA,
+    currentPath: '/admin/content',
+    layout: false,
+    adminUser: req.session.adminUser || req.session.user,
+    saved: req.query.saved === '1'
+  });
+});
+
+router.post('/content', requireAdmin, async (req, res) => {
+  // Save all submitted fields
+  for (const pageKey of Object.keys(CONTENT_SCHEMA)) {
+    for (const [sectionKey, section] of Object.entries(CONTENT_SCHEMA[pageKey].sections)) {
+      for (const fieldKey of Object.keys(section.fields)) {
+        const fullKey = 'content_' + pageKey + '_' + sectionKey + '_' + fieldKey;
+        const value = req.body[fullKey];
+        if (value !== undefined) {
+          db.setContent(pageKey + '_' + sectionKey, fieldKey, value);
+        }
+      }
+    }
+  }
+  res.redirect('/admin/content?saved=1');
+});
+
+module.exports = router;

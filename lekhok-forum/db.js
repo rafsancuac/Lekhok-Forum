@@ -432,7 +432,25 @@ function makeSqlJsBackend(SQL, initialBuffer) {
     _sqlJsDb = new SQL.Database();
   }
 
-  function saveDb() {
+  // ── Content management helpers ──────────────────────────────────────────────
+// getContent(page, key) → reads from settings table with key 'content_<page>_<key>'
+// setContent(page, key, value) → writes to settings table
+// getAllContent() → returns all content_* keys as { page: { key: value } }
+function getContentSync(settingsMap, page, key, fallback) {
+  const fullKey = 'content_' + page + '_' + key;
+  return (settingsMap && fullKey in settingsMap) ? settingsMap[fullKey] : (fallback !== undefined ? fallback : '');
+}
+
+async function getContent(page, key, fallback) {
+  const val = await getSetting('content_' + page + '_' + key);
+  return val !== null ? val : (fallback !== undefined ? fallback : '');
+}
+
+function setContent(page, key, value) {
+  return setSetting('content_' + page + '_' + key, value);
+}
+
+function saveDb() {
     const data = Buffer.from(_sqlJsDb.export());
     if (USE_DB_SNAPSHOT) {
       // /tmp is writable on serverless — keeps the live instance consistent
@@ -1538,6 +1556,24 @@ function setSetting(key, value) {
   ).run(key, value);
 }
 
+// ── Content management helpers ──────────────────────────────────────────────
+// getContent(page, key) → reads from settings table with key 'content_<page>_<key>'
+// setContent(page, key, value) → writes to settings table
+// getAllContent() → returns all content_* keys as { page: { key: value } }
+function getContentSync(settingsMap, page, key, fallback) {
+  const fullKey = 'content_' + page + '_' + key;
+  return (settingsMap && fullKey in settingsMap) ? settingsMap[fullKey] : (fallback !== undefined ? fallback : '');
+}
+
+async function getContent(page, key, fallback) {
+  const val = await getSetting('content_' + page + '_' + key);
+  return val !== null ? val : (fallback !== undefined ? fallback : '');
+}
+
+function setContent(page, key, value) {
+  return setSetting('content_' + page + '_' + key, value);
+}
+
 function saveDb() {
   if (backend) backend.save();
 }
@@ -1675,5 +1711,8 @@ module.exports = {
   listModerators,
   searchPromotableUsers,
   IS_TURSO,
-  USE_DB_SNAPSHOT
+  USE_DB_SNAPSHOT,
+  getContent,
+  getContentSync,
+  setContent
 };

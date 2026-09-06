@@ -49,6 +49,7 @@
     <div class="nav-group-label">সিস্টেম</div>
     <a href="/admin/navigation"     class="<%= _active('/admin/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
     <% if (_isAdmin) { %>
+    <a href="/admin/content"        class="<%= _active('/admin/content') %>"><i class="fas fa-edit"></i> কন্টেন্ট ম্যানেজার</a>
     <a href="/admin/settings"       class="<%= _active('/admin/settings') %>"><i class="fas fa-cog"></i> সেটিংস</a>
     <% } %>
     <a href="/" target="_blank" class="nav-external"><i class="fas fa-external-link-alt"></i> সাইট দেখুন</a>
