@@ -25,6 +25,33 @@
       <div class="stat-card"><span class="stat-num" data-count="85">০</span><span class="stat-label">ইভেন্ট</span></div>
     </div>
   </div>
+
+  <%# session33: হিরো ক্যাম্পেইন ক্যারোসেল (§১৩) — মূল হিরো অপরিবর্তিত, নিচে অটো-ঘূর্ণায়মান প্রমো-স্লাইড %>
+  <div class="hero-carousel" id="heroCarousel" aria-roledescription="carousel" aria-label="ফোরামের সার-আকর্ষণ">
+    <div class="hc-track" id="hcTrack">
+      <a class="hc-slide" href="/quiz">
+        <span class="hc-icon"><i class="fas fa-brain"></i></span>
+        <span class="hc-body"><strong>আজকের কুইজ</strong><small>প্রতিদিন নতুন প্রশ্ন, মেধা যাচাই করুন</small></span>
+        <i class="fas fa-arrow-right hc-go"></i>
+      </a>
+      <a class="hc-slide" href="/on-this-day">
+        <span class="hc-icon"><i class="fas fa-calendar-day"></i></span>
+        <span class="hc-body"><strong>এই দিনে ইতিহাসে</strong><small>আজকের দিনের তাৎপর্য জেনে নিন</small></span>
+        <i class="fas fa-arrow-right hc-go"></i>
+      </a>
+      <a class="hc-slide" href="/epaper">
+        <span class="hc-icon"><i class="fas fa-newspaper"></i></span>
+        <span class="hc-body"><strong>আজকের ই-পেপার</strong><small>সাহিত্য ও মতামত পাতার নির্বাচন</small></span>
+        <i class="fas fa-arrow-right hc-go"></i>
+      </a>
+      <a class="hc-slide" href="/best-writer">
+        <span class="hc-icon"><i class="fas fa-crown"></i></span>
+        <span class="hc-body"><strong>মাসিক সেরা লেখক</strong><small>এই মাসের শ্রেষ্ঠ লেখক কে, দেখুন</small></span>
+        <i class="fas fa-arrow-right hc-go"></i>
+      </a>
+    </div>
+    <div class="hc-dots" id="hcDots" role="tablist" aria-label="স্লাইড নির্বাচন"></div>
+  </div>
 </section>
 
 <% if (hasToday) { %>

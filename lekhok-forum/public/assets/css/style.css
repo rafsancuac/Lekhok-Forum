@@ -3045,3 +3045,47 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
   .search-page-input .btn { padding: 9px 14px; font-size: 13px; }
   .search-result-head { flex-direction: column; gap: 6px; }
 }
+
+/* ══ session33: হিরো প্রমো ক্যারোসেল (§১৩) ═══════════════════════════════════ */
+.hero-carousel {
+  position: relative; z-index: 2;
+  max-width: 520px; margin: 26px auto 0; padding: 0 20px 26px;
+}
+.hc-track {
+  display: flex; transition: transform .55s cubic-bezier(.22,.61,.36,1);
+  will-change: transform;
+}
+.hc-slide {
+  flex: 0 0 100%; min-width: 0;
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.16);
+  backdrop-filter: blur(10px);
+  border-radius: 16px; padding: 14px 18px;
+  text-decoration: none; color: #fff;
+  transition: background .25s, border-color .25s, transform .25s;
+}
+.hc-slide:hover, .hc-slide:focus-visible {
+  background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.35);
+  transform: translateY(-2px);
+}
+.hc-icon {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-light, #047857); color: #fff; font-size: 18px;
+}
+.hc-body { flex: 1; min-width: 0; }
+.hc-body strong { display: block; font-size: 15.5px; }
+.hc-body small { display: block; margin-top: 2px; font-size: 12.5px; color: rgba(255,255,255,.65); }
+.hc-go { color: rgba(255,255,255,.55); transition: transform .25s, color .25s; }
+.hc-slide:hover .hc-go { transform: translateX(4px); color: #fff; }
+
+.hc-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.hc-dot {
+  width: 9px; height: 9px; padding: 0; border: 0; border-radius: 99px;
+  background: rgba(255,255,255,0.30); cursor: pointer;
+  transition: width .3s, background .3s;
+}
+.hc-dot.active { width: 26px; background: #fff; }
+@media (prefers-reduced-motion: reduce) { .hc-track { transition: none; } }
+@media (max-width: 560px) { .hero-carousel { max-width: 100%; } .hc-body small { display: none; } }

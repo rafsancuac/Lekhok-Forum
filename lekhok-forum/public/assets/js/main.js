@@ -772,6 +772,52 @@ window.showToast = showToast;
     });
   })();
 
+
+  // ── Hero promo carousel (session33, §১৩) — auto-rotate, dots, pause-on-hover ─
+  (function initHeroCarousel() {
+    const root = document.getElementById('heroCarousel');
+    const track = document.getElementById('hcTrack');
+    const dotsWrap = document.getElementById('hcDots');
+    if (!root || !track || !dotsWrap) return;
+    const slides = track.children;
+    const count = slides.length;
+    if (count < 2) return;
+    let idx = 0;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // build dots
+    const dots = [];
+    for (let i = 0; i < count; i++) {
+      const d = document.createElement('button');
+      d.type = 'button';
+      d.className = 'hc-dot' + (i === 0 ? ' active' : '');
+      d.setAttribute('aria-label', 'স্লাইড ' + (i + 1));
+      d.addEventListener('click', () => { go(i); restart(); });
+      dotsWrap.appendChild(d);
+      dots.push(d);
+    }
+    function go(i) {
+      idx = ((i % count) + count) % count;
+      track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      dots.forEach((d, j) => d.classList.toggle('active', j === idx));
+    }
+
+    let timer = null;
+    function start() {
+      if (reduce || timer) return;
+      timer = setInterval(() => { if (!document.hidden) go(idx + 1); }, 6000);
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function restart() { stop(); start(); }
+
+    root.addEventListener('mouseenter', stop);
+    root.addEventListener('mouseleave', start);
+    root.addEventListener('focusin', stop);
+    root.addEventListener('focusout', start);
+    go(0);
+    start();
+  })();
+
 })();
 
 /* ============= v3: Bookmark toggle ============= */
