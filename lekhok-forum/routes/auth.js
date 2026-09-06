@@ -78,7 +78,7 @@ router.post('/register', withUpload(avatarUpload), async (req, res) => {
     social_fb || null, social_twitter || null, social_linkedin || null, social_website || null, avatarPath
   );
   req.session.user = { id: result.lastInsertRowid, username, full_name, avatar_url: avatarPath, gender: gender || 'other', role: 'user' };
-  res.redirect('/profile/' + username + '?welcome=1');
+  req.session.save(() => res.redirect('/profile/' + username + '?welcome=1'));
 });
 
 // ── Logout ───────────────────────────────────────────────────────────────────
