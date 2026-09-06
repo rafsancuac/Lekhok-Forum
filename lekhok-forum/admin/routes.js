@@ -415,6 +415,27 @@ router.post('/content', requireAdmin, contentImageUpload, async (req, res) => {
   res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&saved=1');
 });
 
+// Image upload for content editor
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const contentUpload = multer({
+  dest: 'public/uploads/content/',
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('শুধু ছবি আপলোড করা যাবে'));
+  }
+});
+router.post('/content/upload', requireAdmin, (req, res) => {
+  contentUpload.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'কোনো ফাইল নেই' });
+    const url = '/uploads/content/' + req.file.filename;
+    res.json({ ok: true, url });
+  });
+});
+
 // ── Settings ─────────────────────────────────────────────────────────────────
 router.get('/settings', requireAdmin, async (req, res) => {
   const keys = ['site_name','tagline','contact_email','contact_phone','contact_address','facebook_url','telegram_url','youtube_url','twitter_url'];
@@ -809,6 +830,68 @@ router.put('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), asyn
 router.delete('/past-leaders/:id', requireAdmin, async (req, res) => {
   await db.prepare('DELETE FROM past_leaders WHERE id = ?').run(req.params.id);
   res.redirect('/admin/past-leaders?saved=1');
+});
+
+
+// ── Task assignment to moderators ─────────────────────────────────────────────
+router.get('/tasks', requireAdmin, async (req, res) => {
+  try {
+    const tasks = await db.prepare(`
+      SELECT t.*, u.full_name as assignee_name, u.avatar_url as assignee_avatar,
+             a.full_name as assigner_name
+      FROM moderator_tasks t
+      LEFT JOIN users u ON t.assignee_id = u.id
+      LEFT JOIN users a ON t.assigner_id = a.id
+      ORDER BY t.created_at DESC
+    `).all();
+    const moderators = await db.prepare("SELECT id, username, full_name, avatar_url FROM users WHERE role IN ('moderator','senior_moderator','junior_moderator','content_moderator') AND status='active'").all();
+    res.render('admin/tasks', { tasks, moderators, currentPath: '/admin/tasks' });
+  } catch(e) {
+    // Table might not exist yet — create it
+    try { await db.exec(`CREATE TABLE IF NOT EXISTS moderator_tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      assignee_id INTEGER,
+      assigner_id INTEGER,
+      status TEXT DEFAULT 'pending',
+      priority TEXT DEFAULT 'normal',
+      due_date TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`); } catch(_){}
+    res.render('admin/tasks', { tasks: [], moderators: [], currentPath: '/admin/tasks' });
+  }
+});
+
+router.post('/tasks', requireAdmin, async (req, res) => {
+  try { await db.exec(`CREATE TABLE IF NOT EXISTS moderator_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    assignee_id INTEGER,
+    assigner_id INTEGER,
+    status TEXT DEFAULT 'pending',
+    priority TEXT DEFAULT 'normal',
+    due_date TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`); } catch(_){}
+  const { title, description, assignee_id, priority, due_date } = req.body;
+  const assignerId = (req.session.adminUser || req.session.user).id;
+  await db.prepare('INSERT INTO moderator_tasks (title, description, assignee_id, assigner_id, priority, due_date) VALUES (?,?,?,?,?,?)')
+    .run(title, description || '', assignee_id || null, assignerId, priority || 'normal', due_date || null);
+  res.redirect('/admin/tasks');
+});
+
+router.post('/tasks/:id/status', requireAdmin, async (req, res) => {
+  try {
+    await db.prepare('UPDATE moderator_tasks SET status = ? WHERE id = ?').run(req.body.status, req.params.id);
+  } catch(e){}
+  res.redirect('/admin/tasks');
+});
+
+router.post('/tasks/:id/delete', requireAdmin, async (req, res) => {
+  try { await db.prepare('DELETE FROM moderator_tasks WHERE id = ?').run(req.params.id); } catch(e){}
+  res.redirect('/admin/tasks');
 });
 
 module.exports = router;

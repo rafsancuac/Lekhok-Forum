@@ -349,4 +349,22 @@ router.post('/complaints/:id/status', ensureModerator, requireScope('complaints'
   res.redirect('/moderator/complaints');
 });
 
+
+// ── Switch between user and moderator profile ────────────────────────────────
+router.get('/switch', ensureModerator, (req, res) => {
+  // Toggle: if currently in moderator mode, switch to user mode (and vice versa)
+  if (req.session.modMode === false) {
+    req.session.modMode = true;
+  } else {
+    req.session.modMode = false;
+  }
+  req.session.save(() => {
+    if (req.session.modMode) {
+      res.redirect('/moderator');
+    } else {
+      res.redirect('/dashboard');
+    }
+  });
+});
+
 module.exports = router;

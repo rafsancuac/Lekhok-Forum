@@ -260,6 +260,34 @@
   });
   refresh();
 })();
+
+function uploadImage(fieldKey) {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = async function() {
+    const file = input.files[0]; if (!file) return;
+    const fd = new FormData(); fd.append('file', file);
+    const btn = event.target.closest('.cm-upload-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    try {
+      const res = await fetch('/admin/content/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.ok) {
+        document.querySelector('input[name="' + fieldKey + '"]').value = data.url;
+        const preview = btn.parentElement.querySelector('.cm-image-preview');
+        if (preview) { preview.src = data.url; preview.style.display = 'block'; }
+        else {
+          const img = document.createElement('img');
+          img.src = data.url; img.className = 'cm-image-preview';
+          img.style.cssText = 'max-width:200px;max-height:120px;border-radius:8px;margin-top:8px;display:block;';
+          btn.parentElement.appendChild(img);
+        }
+      } else { alert(data.error || 'আপলোড ব্যর্থ'); }
+    } catch(e) { alert('নেটওয়ার্ক সমস্যা'); }
+    btn.innerHTML = '<i class="fas fa-upload"></i> আপলোড';
+  };
+  input.click();
+}
 </script>
 </body>
 </html>

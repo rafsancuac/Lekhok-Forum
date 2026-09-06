@@ -74,6 +74,15 @@
     .mod-hero h1 { font-size: 20px; }
     .mod-grid { grid-template-columns: 1fr 1fr; }
   }
+
+.mod-switch-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.3); color: #93c5fd;
+  border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 500;
+  transition: all 0.15s; font-family: 'Hind Siliguri', sans-serif !important;
+}
+.mod-switch-btn:hover { background: rgba(37, 99, 235, 0.25); color: #fff; text-decoration: none; }
 </style>
 
 <div class="mod-page">
@@ -91,6 +100,9 @@
           <div class="mod-hero-role">@<%= user.username %> · <% if (user.role === 'admin') { %>অ্যাডমিন<% } else { %>মডারেটর<% } %></div>
         </div>
       </div>
+      <a href="/moderator/switch" class="mod-switch-btn" title="ইউজার মোডে যান">
+        <i class="fas fa-exchange-alt"></i> ইউজার মোড
+      </a>
       <a href="/logout" class="mod-logout-btn" onclick="return confirm('লগআউট করতে চান?')">
         <i class="fas fa-sign-out-alt"></i> লগআউট
       </a>

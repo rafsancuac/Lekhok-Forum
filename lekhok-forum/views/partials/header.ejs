@@ -101,7 +101,10 @@
         <i class="fas fa-comments"></i> মেসেজ
         <% if (typeof msgBadge !== 'undefined' && msgBadge > 0) { %><span class="badge"><%= msgBadge %></span><% } %>
       </a>
-      <a href="/settings" class="topbar-tab <%= currentPath && currentPath.indexOf('/settings') === 0 ? 'active' : '' %>">
+      <% if (user && (user.role === 'moderator' || user.role === 'admin' || user.role === 'senior_moderator' || user.role === 'junior_moderator' || user.role === 'content_moderator')) { %>
+        <a href="/moderator/switch" style="color:#d4a017;"><i class="fas fa-shield-alt"></i> মডারেটর প্যানেল</a>
+        <% } %>
+        <a href="/settings" class="topbar-tab <%= currentPath && currentPath.indexOf('/settings') === 0 ? 'active' : '' %>">
         <i class="fas fa-sliders-h"></i> সেটিংস
       </a>
     </nav>
