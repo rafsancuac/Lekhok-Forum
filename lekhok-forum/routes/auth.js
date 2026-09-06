@@ -19,7 +19,7 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
-    if (user && bcrypt.compareSync(password, user.password_hash)) {
+    if (user && await bcrypt.compare(password, user.password_hash)) {
       if (user.status === 'banned') {
         return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', currentPath: '/login' });
       }
@@ -34,7 +34,7 @@ router.post('/login', async (req, res) => {
 
     // Admin-panel account fallback
     const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
-    if (admin && bcrypt.compareSync(password, admin.password_hash)) {
+    if (admin && await bcrypt.compare(password, admin.password_hash)) {
       req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
       return new Promise((resolve) => req.session.save((err) => {
         if (err) console.error('[auth] /login admin session save error:', err);
@@ -67,7 +67,7 @@ router.post('/register', withUpload(avatarUpload), async (req, res) => {
   const existing = await db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(username, email || '');
   if (existing) return back('এই ব্যবহারকারী নাম বা ইমেইল ইতিমধ্যে ব্যবহৃত');
 
-  const hash = bcrypt.hashSync(password, 10);
+  const hash = await bcrypt.hash(password, 10);
   // req.file.url is correct in BOTH modes: local → /uploads/avatars/…, Vercel → blob https URL
   const avatarPath = req.file ? (req.file.url || req.file.path) : null;
   const result = await db.prepare(
@@ -120,7 +120,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     if (new_password !== confirm_password) {
       return res.redirect('/profile/edit?err=' + encodeURIComponent('নতুন পাসওয়ার্ড ও নিশ্চিতকরণ মিলছে না'));
     }
-    passwordHash = bcrypt.hashSync(new_password, 10);
+    passwordHash = await bcrypt.hash(new_password, 10);
   }
 
   // Preserve current avatar unless a new file was uploaded.

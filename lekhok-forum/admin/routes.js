@@ -87,7 +87,7 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    if (!user || !await bcrypt.compare(password, user.password_hash)) {
       return res.render('admin/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', layout: false, currentPath: '/admin/login' });
     }
     req.session.adminUser = { id: user.id, username: user.username, display_name: user.display_name };
@@ -596,7 +596,7 @@ router.post('/users/:id/password', requireAdmin, async (req, res) => {
   if (!new_password || String(new_password).length < 6) {
     return res.redirect('/admin/users/' + req.params.id + '/edit?pwd=short');
   }
-  const hash = bcrypt.hashSync(String(new_password), 10);
+  const hash = await bcrypt.hash(String(new_password), 10);
   await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, req.params.id);
   res.redirect('/admin/users/' + req.params.id + '/edit?pwd=ok');
 });

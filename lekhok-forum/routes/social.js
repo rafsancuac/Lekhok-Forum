@@ -1091,10 +1091,10 @@ router.post('/settings/account/password', ensureLoggedIn, async (req, res) => {
   if (new_password !== confirm_password) return res.redirect('/settings?err=password_mismatch');
   if (new_password.length < 6) return res.redirect('/settings?err=password_short');
   const row = await db.prepare('SELECT password_hash FROM users WHERE id = ?').get(me.id);
-  if (!bcrypt.compareSync(current_password || '', row.password_hash)) {
+  if (!await bcrypt.compare(current_password || '', row.password_hash)) {
     return res.redirect('/settings?err=password_wrong');
   }
-  const newHash = bcrypt.hashSync(new_password, 10);
+  const newHash = await bcrypt.hash(new_password, 10);
   await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, me.id);
   res.redirect('/settings?ok=password');
 });

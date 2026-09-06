@@ -110,8 +110,22 @@ app.use(async (req, res, next) => {
     res.locals.displayPrefs = {};
     if (req.session.user) {
       try {
-        const row = await db.prepare('SELECT display_prefs FROM users WHERE id = ?').get(req.session.user.id);
+        const row = await db.prepare('SELECT username, full_name, role, status, avatar_url, gender, display_prefs FROM users WHERE id = ?').get(req.session.user.id);
         if (row && row.display_prefs) res.locals.displayPrefs = JSON.parse(row.display_prefs) || {};
+        // session33 fix — role পরিবর্তন এখন সঙ্গে সঙ্গে কার্যকর (আগে re-login লাগত; §১২)।
+        // প্রতি রিকোয়েস্টে ফ্রেশ role/নাম/অবতার সেশনে ফেরত; banned/inactive/ডিলিটেড
+        // অ্যাকাউন্টের সেশন এখানেই বাতিল হয়ে যায়, তাই ensureAuth পথেও নত traps।
+        if (!row || row.status === 'banned' || row.status === 'inactive') {
+          req.session.user = null;
+          res.locals.user = null;
+        } else {
+          req.session.user.username   = row.username;
+          req.session.user.full_name  = row.full_name;
+          req.session.user.avatar_url = row.avatar_url;
+          req.session.user.gender     = row.gender;
+          req.session.user.role       = row.role || 'user';
+          res.locals.user = req.session.user;
+        }
       } catch (_) {}
     }
 
