@@ -870,6 +870,73 @@ const CONTENT_SCHEMA = {
           title: { label: 'হেডিং', type: 'text', default: 'নিউজলেটার' },
           desc: { label: 'বিবরণ', type: 'textarea', default: 'নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।' }
         }
+      },
+      links: {
+        label: 'ফুটার লিংক',
+        fields: {
+          col2_title: { label: '২য় কলাম হেডিং', type: 'text', default: 'প্রয়োজনীয় লিংক' },
+          col3_title: { label: '৩য় কলাম হেডিং', type: 'text', default: 'যোগাযোগ' }
+        }
+      }
+    }
+  },
+  resources: {
+    label: 'রিসোর্স পেজ',
+    icon: 'fa-folder-open',
+    sections: {
+      header: {
+        label: 'পেজ হেডার',
+        fields: {
+          title: { label: 'পেজ টাইটেল', type: 'text', default: 'গুরুত্বপূর্ণ ফাইল ও রিসোর্স' },
+          subtitle: { label: 'সাব-টাইটেল', type: 'text', default: 'ফেলোশিপ, লেখালেখির টিপস ও বিভিন্ন গুরুত্বপূর্ণ ডকুমেন্ট' }
+        }
+      },
+      emails: {
+        label: 'পত্রিকার ইমেইল',
+        fields: {
+          editor_email: { label: 'সম্পাদক ইমেইল', type: 'text', default: 'editor@lekhokforum.org' },
+          info_email: { label: 'সাধারণ যোগাযোগ ইমেইল', type: 'text', default: 'info@lekhokforum.org' },
+          publish_email: { label: 'প্রকাশনা ইমেইল', type: 'text', default: 'publish@lekhokforum.org' }
+        }
+      }
+    }
+  },
+  committee: {
+    label: 'কমিটি পেজ',
+    icon: 'fa-users-cog',
+    sections: {
+      header: {
+        label: 'পেজ হেডার',
+        fields: {
+          title: { label: 'পেজ টাইটেল', type: 'text', default: 'কার্যনির্বাহী কমিটি' },
+          subtitle: { label: 'সাব-টাইটেল', type: 'text', default: 'কার্যবর্ষভিত্তিক পূর্ণাঙ্গ কার্যনির্বাহী কমিটি' }
+        }
+      }
+    }
+  },
+  members: {
+    label: 'সদস্য পেজ',
+    icon: 'fa-users',
+    sections: {
+      header: {
+        label: 'পেজ হেডার',
+        fields: {
+          title: { label: 'পেজ টাইটেল', type: 'text', default: 'সদস্য পরিচিতি' },
+          subtitle: { label: 'সাব-টাইটেল', type: 'text', default: 'আমাদের প্রতিষ্ঠানের নেতৃত্ব ও সকল সদস্য' }
+        }
+      }
+    }
+  },
+  gallery: {
+    label: 'গ্যালারি পেজ',
+    icon: 'fa-images',
+    sections: {
+      header: {
+        label: 'পেজ হেডার',
+        fields: {
+          title: { label: 'পেজ টাইটেল', type: 'text', default: 'ইমেজ গ্যালারি' },
+          subtitle: { label: 'সাব-টাইটেল', type: 'text', default: 'ইভেন্ট, সেমিনার, সাংস্কৃতিক কার্যক্রম — সব এক জায়গায়' }
+        }
       }
     }
   }

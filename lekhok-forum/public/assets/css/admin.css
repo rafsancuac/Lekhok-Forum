@@ -634,3 +634,87 @@ table td:last-child .btn { margin-left: 4px; }
   th, td { padding: 10px 12px; font-size: 0.86rem; }
   table td:last-child .btn { margin: 2px 0 2px 4px; }
 }
+
+/* ═══ v5.1: Content Manager Polish ═══ */
+.content-manager { padding: 24px; max-width: 960px; margin: 0 auto; }
+.cm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.cm-header h1 { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 10px; font-family: 'Hind Siliguri', sans-serif !important; }
+.cm-header h1 i { color: #2563eb; }
+.cm-save-btn {
+  padding: 9px 22px; background: #2563eb; color: white; border: none;
+  border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
+  font-family: 'Hind Siliguri', sans-serif !important;
+}
+.cm-save-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+.cm-tabs {
+  display: flex; gap: 2px; margin-bottom: 20px; flex-wrap: wrap;
+  border-bottom: 2px solid #e5e7eb; padding-bottom: 0; overflow-x: auto;
+}
+.cm-tab {
+  padding: 9px 16px; background: transparent; border: none;
+  border-bottom: 3px solid transparent; cursor: pointer;
+  font-size: 13.5px; font-weight: 600; color: #64748b;
+  transition: all 0.15s; font-family: 'Hind Siliguri', sans-serif !important;
+  margin-bottom: -2px; display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.cm-tab:hover { color: #0f172a; background: rgba(37,99,235,0.05); border-radius: 6px 6px 0 0; }
+.cm-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+.cm-tab i { font-size: 12px; }
+.cm-page { display: none; }
+.cm-page.active { display: block; animation: fadeIn 0.2s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.cm-section {
+  background: white; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.cm-section-title {
+  font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 14px;
+  padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Hind Siliguri', sans-serif !important;
+}
+.cm-section-title i { color: #2563eb; font-size: 13px; }
+.cm-field { margin-bottom: 14px; }
+.cm-field:last-child { margin-bottom: 0; }
+.cm-field label {
+  display: block; font-size: 12.5px; font-weight: 600; color: #475569;
+  margin-bottom: 4px; font-family: 'Hind Siliguri', sans-serif !important;
+}
+.cm-field input[type="text"] {
+  width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 14px; font-family: 'Hind Siliguri', sans-serif !important;
+  color: #0f172a; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.cm-field input[type="text"]:focus {
+  outline: none; border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.cm-field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 14px; font-family: 'Hind Siliguri', sans-serif !important;
+  color: #0f172a; min-height: 72px; resize: vertical; line-height: 1.6;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.cm-field textarea:focus {
+  outline: none; border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.cm-alert {
+  padding: 10px 16px; border-radius: 8px; margin-bottom: 16px;
+  font-size: 13.5px; display: flex; align-items: center; gap: 8px;
+  font-family: 'Hind Siliguri', sans-serif !important;
+}
+.cm-alert.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.cm-sticky-bar {
+  position: sticky; bottom: 0; background: white;
+  border-top: 1px solid #e5e7eb; padding: 14px 24px;
+  margin: 0 -24px -24px; display: flex; justify-content: flex-end;
+  gap: 10px; z-index: 10;
+}
+@media (max-width: 640px) {
+  .content-manager { padding: 16px; }
+  .cm-tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .cm-tab { white-space: nowrap; }
+}
