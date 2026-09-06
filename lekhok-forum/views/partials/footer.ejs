@@ -4,9 +4,10 @@
       <h2>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</h2>
       <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা, একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।</p>
       <div class="f-socials">
-        <a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+        <%# session33: placeholder (#) লিংক → settings-এর আসল URL (হেডারের dropdown-এর মতোই) %>
+        <a href="<%= typeof getSetting === 'function' ? (getSetting('facebook_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="<%= typeof getSetting === 'function' ? (getSetting('twitter_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+        <a href="<%= typeof getSetting === 'function' ? (getSetting('youtube_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
       </div>
     </div>
     <div>

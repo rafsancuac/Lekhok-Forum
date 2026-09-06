@@ -85,10 +85,11 @@ router.post('/newsletter/subscribe', async (req, res) => {
   }
 });
 
-module.exports = router;
 
 
-// ── Global search (public, no auth) ─────────────────────────────────────────
+
+// ── Global search (public, no auth) ─ session33: উপরের আকস্মিক module.exports টা সরানো হলো;
+// এখন সব রাউট রেজিস্টার হওয়ার পর একটিমাত্র এক্সপোর্ট (ফাইল শেষে)। ──
 router.get('/search', async (req, res) => {
   const q = (req.query.q || '').trim();
   if (q.length < 2) return res.json({ articles: [], questions: [], users: [] });

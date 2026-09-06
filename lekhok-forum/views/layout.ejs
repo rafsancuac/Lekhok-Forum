@@ -189,54 +189,6 @@
     <i class="fas fa-arrow-up"></i>
   </button>
 
-<script>
-let gsTimer = null, gsLast = '';
-function toggleGlobalSearch() {
-  const dd = document.getElementById('globalSearchDropdown');
-  if (dd.hidden) { dd.hidden = false; setTimeout(() => document.getElementById('globalSearchInput').focus(), 50); }
-  else { dd.hidden = true; }
-}
-function escapeHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function highlight(text, q) {
-  if (!q) return escapeHtml(text);
-  const idx = String(text).toLowerCase().indexOf(q.toLowerCase());
-  if (idx === -1) return escapeHtml(text);
-  return escapeHtml(text.substring(0, idx)) + '<mark>' + escapeHtml(text.substring(idx, idx + q.length)) + '</mark>' + escapeHtml(text.substring(idx + q.length));
-}
-async function doGlobalSearch(q) {
-  q = (q || '').trim();
-  if (q === gsLast) return;
-  gsLast = q;
-  const results = document.getElementById('globalSearchResults');
-  if (q.length < 2) { results.innerHTML = '<div class="gs-hint">অন্তত ২ অক্ষর লিখুন...</div>'; return; }
-  results.innerHTML = '<div class="gs-loading"><i class="fas fa-spinner fa-spin"></i> খুঁজছি...</div>';
-  try {
-    const r = await fetch('/api/search?q=' + encodeURIComponent(q));
-    const data = await r.json();
-    let html = '';
-    if (data.articles && data.articles.length) {
-      html += '<div class="gs-section"><div class="gs-section-head"><i class="fas fa-pen-nib"></i> লেখা <span class="gs-count">' + data.articles.length + '</span></div>';
-      data.articles.slice(0, 5).forEach(a => { html += '<a class="gs-row" href="/articles/' + a.id + '"><i class="fas fa-file-alt"></i><div class="gs-meta"><div class="gs-title">' + highlight(a.title, q) + '</div><div class="gs-sub">' + escapeHtml(a.author_name || '') + '</div></div></a>'; });
-      html += '</div>';
-    }
-    if (data.questions && data.questions.length) {
-      html += '<div class="gs-section"><div class="gs-section-head"><i class="fas fa-question-circle"></i> প্রশ্ন <span class="gs-count">' + data.questions.length + '</span></div>';
-      data.questions.slice(0, 5).forEach(qu => { html += '<a class="gs-row" href="/qa/' + qu.id + '"><i class="fas fa-question"></i><div class="gs-meta"><div class="gs-title">' + highlight(qu.title, q) + '</div><div class="gs-sub">' + escapeHtml(qu.author_name || '') + '</div></div></a>'; });
-      html += '</div>';
-    }
-    if (data.users && data.users.length) {
-      html += '<div class="gs-section"><div class="gs-section-head"><i class="fas fa-users"></i> সদস্য <span class="gs-count">' + data.users.length + '</span></div>';
-      data.users.slice(0, 5).forEach(u => { html += '<a class="gs-row" href="/profile/' + encodeURIComponent(u.username) + '"><img loading="lazy" decoding="async" class="gs-avatar" src="' + (u.avatar_url || '/avatar/' + u.id) + '" onerror="this.src=\'/assets/img/avatar-placeholder.svg\'" /><div class="gs-meta"><div class="gs-title">' + highlight(u.full_name, q) + '</div><div class="gs-sub">@' + highlight(u.username, q) + '</div></div></a>'; });
-      html += '</div>';
-    }
-    if (!html) html = '<div class="gs-empty"><i class="fas fa-search"></i><p>কোনো ফলাফল পাওয়া যায়নি</p></div>';
-    results.innerHTML = html;
-  } catch(e) { results.innerHTML = '<div class="gs-empty"><i class="fas fa-exclamation-circle"></i><p>সার্চ ব্যর্থ</p></div>'; }
-}
-document.getElementById('globalSearchInput')?.addEventListener('input', function() { if (gsTimer) clearTimeout(gsTimer); gsTimer = setTimeout(() => doGlobalSearch(this.value), 200); });
-document.getElementById('globalSearchInput')?.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.getElementById('globalSearchDropdown').hidden = true; this.blur(); } if (e.key === 'Enter') { const first = document.querySelector('#globalSearchResults .gs-row'); if (first) window.location = first.href; } });
-document.addEventListener('click', function(e) { if (!e.target.closest('#globalSearchWrap')) document.getElementById('globalSearchDropdown').hidden = true; });
-document.addEventListener('keydown', function(e) { if (e.key === '/' && !e.target.matches('input,textarea,search')) { e.preventDefault(); toggleGlobalSearch(); } });
-</script>
+<%# Global-search JS সরানো হয়েছে main.js-এ (session33): ডুপ্লিকেট রোধে এখানে আর inline কপি নেই। %>
 </body>
 </html>

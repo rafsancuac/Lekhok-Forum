@@ -2950,3 +2950,16 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 .topbar-right .btn-ghost:hover {
   background: rgba(255,255,255,0.1); text-decoration: none; color: #fff;
 }
+
+
+/* session33: global-search ড্রপডাউনের নিচের "সব ফলাফল" সারি */
+.gs-see-all {
+  margin-top: 6px;
+  justify-content: center;
+  background: var(--accent-light);
+  border-radius: 10px;
+  font-weight: 600;
+}
+.gs-see-all .gs-title { text-align: center; color: #fff; }
+.gs-see-all:hover { background: var(--accent); }
+.gs-see-all i { color: #fff !important; }

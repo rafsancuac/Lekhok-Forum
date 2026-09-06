@@ -125,7 +125,29 @@
   document.addEventListener('DOMContentLoaded', () => renderRelTimes());
 
   // ── v2: Sticky header shrink + scroll progress bar ────────────────────────
-  const header = document.getElementById('mainHeader');
+  // session33 fix: দুটো লেআউট সিস্টেম আছে — public পেজে layout.ejs (#mainHeader),
+  // ইউজার পেজে partials/header.ejs (#topbar)। আগে শুধু #mainHeader খোঁজা হতো, ফলে
+  // ৩৯টা ইউজার পেজে shrink/feature গুলো নীরবে মরে যেত। .btclf-topbar দুটোতেই আছে,
+  // তাই সেটাই এখন প্রাইমারি সিলেক্টর।
+  const header = document.querySelector('.btclf-topbar') || document.getElementById('mainHeader') || document.getElementById('topbar');
+  // session33 fix: progress-bar + back-to-top markup আগে শুধু layout.ejs-এ ছিল।
+  // এখন main.js নিজেই (idempotent) ইনজেক্ট করে — সব পেজে কাজ করে।
+  if (!document.getElementById('scrollProgress')) {
+    const sp = document.createElement('div');
+    sp.className = 'scroll-progress';
+    sp.id = 'scrollProgress';
+    if (document.body.firstChild) document.body.insertBefore(sp, document.body.firstChild);
+    else document.body.appendChild(sp);
+  }
+  if (!document.getElementById('backToTop')) {
+    const bt = document.createElement('button');
+    bt.className = 'back-to-top';
+    bt.id = 'backToTop';
+    bt.type = 'button';
+    bt.setAttribute('aria-label', 'উপরে ফিরে যান');
+    bt.innerHTML = '<i class="fas fa-arrow-up"></i>';
+    document.body.appendChild(bt);
+  }
   const progress = document.getElementById('scrollProgress');
   const backToTop = document.getElementById('backToTop');
   const heroBg = document.querySelector('.hero.brand-hero');
@@ -681,6 +703,75 @@ window.showToast = showToast;
       showToast(data.error === 'blocked' ? 'পাঠানো সম্ভব নয়' : 'পাঠানো যায়নি', 'error');
     }
   });
+
+  // ── Global search — session33: layout.ejs-এর inline স্ক্রিপ্ট থেকে main.js-এ
+  // সরানো হলো। আগে শুধু public পেজে কাজ করত; এখন দুটো হেডার সিস্টেমেই চলে।
+  // "সব ফলাফল" লিংক ড্রপডাউনের নিচে যোগ হয়েছে (/search?q= পূর্ণ পেজ)।
+  (function initGlobalSearch() {
+    const wrap = document.getElementById('globalSearchWrap');
+    const dd = document.getElementById('globalSearchDropdown');
+    const input = document.getElementById('globalSearchInput');
+    const results = document.getElementById('globalSearchResults');
+    if (!wrap || !dd || !input || !results) return;
+
+    let gsTimer = null, gsLast = '';
+    function openSearch() { dd.hidden = false; setTimeout(() => input.focus(), 50); }
+    function closeSearch() { dd.hidden = true; }
+    window.toggleGlobalSearch = function () { if (dd.hidden) openSearch(); else closeSearch(); };
+
+    function escapeHtml(t) { return String(t || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function highlight(text, q) {
+      if (!q) return escapeHtml(text);
+      const idx = String(text).toLowerCase().indexOf(q.toLowerCase());
+      if (idx === -1) return escapeHtml(text);
+      return escapeHtml(text.substring(0, idx)) + '<mark>' + escapeHtml(text.substring(idx, idx + q.length)) + '</mark>' + escapeHtml(text.substring(idx + q.length));
+    }
+    function seeAllRow(q) {
+      return '<a class="gs-row gs-see-all" href="/search?q=' + encodeURIComponent(q) + '"><i class="fas fa-arrow-right"></i><div class="gs-meta"><div class="gs-title">“' + escapeHtml(q) + '” এর সব ফলাফল দেখুন</div></div></a>';
+    }
+    async function doGlobalSearch(q) {
+      q = (q || '').trim();
+      if (q === gsLast) return;
+      gsLast = q;
+      if (q.length < 2) { results.innerHTML = '<div class="gs-hint">অন্তত ২ অক্ষর লিখুন...</div>'; return; }
+      results.innerHTML = '<div class="gs-loading"><i class="fas fa-spinner fa-spin"></i> খুঁজছি...</div>';
+      try {
+        const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+        const data = await r.json();
+        if (q !== gsLast || dd.hidden) return; // stale response guard
+        let html = '';
+        if (data.articles && data.articles.length) {
+          html += '<div class="gs-section"><div class="gs-section-head"><i class="fas fa-pen-nib"></i> লেখা <span class="gs-count">' + data.articles.length + '</span></div>';
+          data.articles.slice(0, 5).forEach(a => { html += '<a class="gs-row" href="/articles/' + a.id + '"><i class="fas fa-file-alt"></i><div class="gs-meta"><div class="gs-title">' + highlight(a.title, q) + '</div><div class="gs-sub">' + escapeHtml(a.author_name || '') + '</div></div></a>'; });
+          html += '</div>';
+        }
+        if (data.questions && data.questions.length) {
+          html += '<div class="gs-section"><div class="gs-section-head"><i class="fas fa-question-circle"></i> প্রশ্ন <span class="gs-count">' + data.questions.length + '</span></div>';
+          data.questions.slice(0, 5).forEach(qu => { html += '<a class="gs-row" href="/qa/' + qu.id + '"><i class="fas fa-question"></i><div class="gs-meta"><div class="gs-title">' + highlight(qu.title, q) + '</div><div class="gs-sub">' + escapeHtml(qu.author_name || '') + '</div></div></a>'; });
+          html += '</div>';
+        }
+        if (data.users && data.users.length) {
+          html += '<div class="gs-section"><div class="gs-section-head"><i class="fas fa-users"></i> সদস্য <span class="gs-count">' + data.users.length + '</span></div>';
+          data.users.slice(0, 5).forEach(u => { html += '<a class="gs-row" href="/profile/' + encodeURIComponent(u.username) + '"><img loading="lazy" decoding="async" class="gs-avatar" src="' + (u.avatar_url || '/avatar/' + u.id) + '" onerror="this.src=\'/assets/avatars/neutral.svg\'" /><div class="gs-meta"><div class="gs-title">' + highlight(u.full_name, q) + '</div><div class="gs-sub">@' + highlight(u.username, q) + '</div></div></a>'; });
+          html += '</div>';
+        }
+        if (!html) html = '<div class="gs-empty"><i class="fas fa-search"></i><p>কোনো ফলাফল পাওয়া যায়নি</p></div>';
+        else html += seeAllRow(q);
+        results.innerHTML = html;
+      } catch (e) { results.innerHTML = '<div class="gs-empty"><i class="fas fa-exclamation-circle"></i><p>সার্চ ব্যর্থ</p></div>'; }
+    }
+
+    input.addEventListener('input', function () { if (gsTimer) clearTimeout(gsTimer); gsTimer = setTimeout(() => doGlobalSearch(this.value), 220); });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeSearch(); this.blur(); }
+      if (e.key === 'Enter') { e.preventDefault(); window.location = '/search?q=' + encodeURIComponent(this.value.trim()); }
+    });
+    document.addEventListener('click', function (e) { if (!e.target.closest('#globalSearchWrap')) closeSearch(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/' && !e.target.matches('input, textarea, select, [contenteditable="true"]')) { e.preventDefault(); openSearch(); }
+    });
+  })();
+
 })();
 
 /* ============= v3: Bookmark toggle ============= */
