@@ -539,6 +539,7 @@ const BULK_TABLES = {
   'achievements': ['achievements',  requireAdmin],
   'constitution': ['constitution',  requireAdmin],
   'past-leaders': ['past_leaders',  requireAdmin],
+  'complaints':   ['complaints',    requireScope('complaints')], // সেশন ৩৯: মার্ক-অ্যান্ড-ডিলিট পারিটি
 };
 for (const slug of Object.keys(BULK_TABLES)) {
   const [table, guard] = BULK_TABLES[slug];

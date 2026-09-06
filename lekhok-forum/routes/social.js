@@ -128,6 +128,16 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
     return res.render('user/article-form', { post: req.body, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক', currentPath: '/articles/new' });
   }
   const cover = req.file ? (req.file.url || req.file.path) : (cover_image || null);
+  // সেশন ৩৯: সার্ভার-সাইড ডুপলিকেট গার্ড — গত ২ মিনিটে একই শিরোনামের আর্টিকেল
+  // আবার POST হলে নতুন সারি না বানিয়ে আগের আর্টিকেলে রিডাইরেক্ট।
+  const dupA = await db.prepare(`
+    SELECT id FROM posts WHERE author_id = ? AND type = 'article' AND title = ?
+      AND created_at > datetime('now', '-2 minutes') ORDER BY id DESC LIMIT 1
+  `).get(req.session.user.id, title);
+  if (dupA) {
+    console.log(`[social] article duplicate POST ignored (matched id ${dupA.id}, user ${req.session.user.id})`);
+    return res.redirect('/articles/' + dupA.id);
+  }
   const mentions = await extractMentions(body);
   const result = await db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?, ?)`).run(
     req.session.user.id, title, body, excerpt || body.substring(0, 200), cover, tags || null, mentions, category || 'general'
@@ -378,6 +388,16 @@ router.get(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
 router.post(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
   const { title, body, category, tags } = req.body;
   if (!title || !body) return res.render('user/qa-form', { post: req.body, error: 'শিরোনাম ও প্রশ্ন আবশ্যক', currentPath: '/qa/new' });
+  // সেশন ৩৯: সার্ভার-সাইড ডুপলিকেট গার্ড — গত ২ মিনিটে একই প্রশ্ন আবার POST হলে
+  // নতুন সারি না বানিয়ে আগেরটায় রিডাইরেক্ট (ডাবল-ক্লিক/রিট্রাই নিরাপদ)।
+  const dupQ = await db.prepare(`
+    SELECT id FROM posts WHERE author_id = ? AND type = 'question' AND title = ?
+      AND created_at > datetime('now', '-2 minutes') ORDER BY id DESC LIMIT 1
+  `).get(req.session.user.id, title);
+  if (dupQ) {
+    console.log(`[social] question duplicate POST ignored (matched id ${dupQ.id}, user ${req.session.user.id})`);
+    return res.redirect('/qa/' + dupQ.id);
+  }
   const mentions = await extractMentions(body);
   const r = await db.prepare(`INSERT INTO posts (author_id, type, title, body, category, tags, mentions) VALUES (?, 'question', ?, ?, ?, ?, ?)`).run(req.session.user.id, title, body, category || 'general', tags || null, mentions);
 

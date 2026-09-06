@@ -1,12 +1,15 @@
 <%
   // সাইডবার — গ্রুপড নেভিগেশন + সার্চ + ইউজার কার্ড + মোবাইল ড্রয়ার + টোস্ট + ড্রাফট অটোসেভ
-  const _path = currentPath || '';
+  // সেশন ৩৯: মডারেটর প্যানেলেও এই সাইডবার রেন্ডার হয় — তাই সব লোক্যাল typeof-গার্ডেড
+  const _path = (typeof currentPath !== 'undefined' && currentPath) || '';
   const _active = (p) => _path === p || _path.startsWith(p + '/') ? 'active' : '';
-  const _isAdmin = !!(adminUser || (user && user.role === 'admin'));
-  const _staffName = (adminUser && adminUser.display_name) || (user && user.full_name) || 'স্টাফ';
-  const _roleLabel = adminUser ? 'অ্যাডমিন' : (user && user.role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর');
+  const _au = (typeof adminUser !== 'undefined') ? adminUser : null;
+  const _usr = (typeof user !== 'undefined') ? user : null;
+  const _isAdmin = !!(_au || (_usr && _usr.role === 'admin'));
+  const _staffName = (_au && _au.display_name) || (_usr && _usr.full_name) || 'স্টাফ';
+  const _roleLabel = _au ? 'অ্যাডমিন' : (_usr && _usr.role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর');
   const _initial = (_staffName || 'স').trim().charAt(0);
-  const _avatar = user ? '/avatar/' + user.id : null;
+  const _avatar = _usr ? '/avatar/' + _usr.id : null;
 %>
 <button class="admin-hamburger" id="adminHamburger" aria-label="মেনু" aria-controls="adminSidebar" aria-expanded="false" type="button"><i class="fas fa-bars"></i></button>
 <div class="admin-backdrop" id="adminBackdrop"></div>
@@ -23,6 +26,21 @@
   </div>
   <div class="nav-search-empty" id="navSearchEmpty">কোনো মিল পাওয়া যায়নি</div>
   <nav>
+    <% if (_path.indexOf('/moderator') === 0) { %>
+    <div class="nav-group-label">মডারেটর প্যানেল</div>
+    <a href="/moderator"            class="<%= _path === '/moderator' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
+    <a href="/moderator/notices"    class="<%= _active('/moderator/notices') %>"><i class="fas fa-bell"></i> বিজ্ঞপ্তি</a>
+    <a href="/moderator/events"     class="<%= _active('/moderator/events') %>"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
+    <a href="/moderator/daily/quiz" class="<%= _active('/moderator/daily') %>"><i class="fas fa-sun"></i> ডেইলি কনটেন্ট</a>
+    <a href="/moderator/members"    class="<%= _active('/moderator/members') %>"><i class="fas fa-users"></i> কমিটি সদস্য</a>
+    <a href="/moderator/complaints" class="<%= _active('/moderator/complaints') %>"><i class="fas fa-flag"></i> অভিযোগ</a>
+    <a href="/moderator/best-writer" class="<%= _active('/moderator/best-writer') %>"><i class="fas fa-trophy"></i> সেরা লেখক</a>
+    <a href="/moderator/press"      class="<%= _active('/moderator/press') %>"><i class="fas fa-newspaper"></i> পত্রিকা কাটিং</a>
+    <a href="/moderator/navigation" class="<%= _active('/moderator/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
+    <div class="nav-group-label">সুইচ</div>
+    <% if (_isAdmin) { %><a href="/admin"><i class="fas fa-user-shield"></i> অ্যাডমিন প্যানেল</a><% } %>
+    <a href="/dashboard" class="nav-external"><i class="fas fa-external-link-alt"></i> কমিউনিটি ফিড</a>
+    <% } else { %>
     <div class="nav-group-label">মূল</div>
     <a href="/admin" class="<%= _path === '/admin' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
 
@@ -63,6 +81,7 @@
     <a href="/admin/settings"       class="<%= _active('/admin/settings') %>"><i class="fas fa-cog"></i> সেটিংস</a>
     <% } %>
     <a href="/" target="_blank" class="nav-external"><i class="fas fa-external-link-alt"></i> সাইট দেখুন</a>
+    <% } %>
   </nav>
   <div class="sidebar-user">
     <div class="su-avatar">
@@ -72,7 +91,7 @@
       <div class="su-name"><%= _staffName %></div>
       <div class="su-role"><i class="fas fa-shield-alt"></i> <%= _roleLabel %></div>
     </div>
-    <a href="/admin/logout" class="su-logout" title="লগআউট"><i class="fas fa-sign-out-alt"></i></a>
+    <a href="<%= _path.indexOf('/moderator') === 0 ? '/logout' : '/admin/logout' %>" class="su-logout" title="লগআউট"><i class="fas fa-sign-out-alt"></i></a>
   </div>
   <% if (!_isAdmin && typeof userScopeMeta !== 'undefined' && userScopeMeta && userScopeMeta.length) { %>
   <div class="su-scopes" title="আপনার সক্রিয় পারমিশন">

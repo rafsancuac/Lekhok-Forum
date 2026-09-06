@@ -896,3 +896,42 @@ document.addEventListener('click', function (e) {
   if (e.target.closest('a')) return;
   location.href = card.getAttribute('data-href');
 });
+
+/* ============= সেশন ৩৯: গ্লোবাল ডাবল-সাবমিট গার্ড =============
+   ফিডব্যাক না পেয়ে ইউজার বারবার ক্লিক করলে একই ফর্ম ১৮-২০ বার POST হতো
+   (১৮-২০ ফাইল/সারি)। এখন: সাবমিটে বাটন তাৎক্ষণিক disable + স্পিনার, ১০ সেকেন্ড
+   সেফটি-রিলিজ। যেসব ফর্ম JS-নিজে হ্যান্ডেল করে (action নেই / data-noguard) বাদ। */
+(function () {
+  document.addEventListener('submit', function (e) {
+    const f = e.target;
+    if (!f || f.tagName !== 'FORM') return;
+    if ((f.getAttribute('method') || 'get').toLowerCase() === 'get') return;
+    if (!f.getAttribute('action') || f.dataset.noguard !== undefined) return;
+    if (f.dataset.submitting === '1') { e.preventDefault(); e.stopImmediatePropagation(); return; }
+    f.dataset.submitting = '1';
+    const btn = (e.submitter && e.submitter.form === f) ? e.submitter : f.querySelector('[type="submit"]');
+    const btns = f.querySelectorAll('[type="submit"]');
+    btns.forEach(b => { b.disabled = true; });
+    if (btn) {
+      btn.dataset.origHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> প্রসেসিং...';
+    }
+    // নেভিগেশন ব্যর্থ/ধীর হলে যেন আটকে না থাকে
+    setTimeout(() => {
+      if (f.dataset.submitting === '1') {
+        f.dataset.submitting = '';
+        btns.forEach(b => { b.disabled = false; });
+        if (btn && btn.dataset.origHtml) btn.innerHTML = btn.dataset.origHtml;
+      }
+    }, 10000);
+  }, true); // capture — ফর্ম-লেভেল হ্যান্ডলারের আগে
+
+  // সাবমিট বাতিল হলে (confirm-এ না / preventDefault) গার্ড সাথে সাথে রিলিজ
+  document.addEventListener('submit', function (e) {
+    const f = e.target;
+    if (!f || f.tagName !== 'FORM' || f.dataset.submitting !== '1') return;
+    if (!e.defaultPrevented) return;
+    f.dataset.submitting = '';
+    f.querySelectorAll('[type="submit"]').forEach(b => { b.disabled = false; if (b.dataset.origHtml) b.innerHTML = b.dataset.origHtml; });
+  }, false);
+})();

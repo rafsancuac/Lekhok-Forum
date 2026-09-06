@@ -1,5 +1,17 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'ইভেন্ট | মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ইভেন্ট | মডারেটর প্যানেল</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('../../admin/views/admin/partials/sidebar') %>
+<div class="admin-main">
 <style>
     .mod-wrap { max-width: 760px; margin: 20px auto; padding: 0 16px; }
     .mod-form { background:#fff; border-radius:5px; padding:22px; margin-bottom:20px; }
@@ -25,10 +37,16 @@
       <input type="url" name="image_url">
       <button class="btn btn-primary" type="submit">পোস্ট করুন</button>
     </form>
-    <h3>সাম্প্রতিক ইভেন্ট</h3>
+    <h3>সাম্প্রতিক ইভেন্ট<label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:10px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label></h3>
+  <form method="POST" action="/moderator/events/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড ইভেন্টগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
+
     <% events.forEach(e => { %>
       <div class="mod-item">
-        <div><strong><%= e.title %></strong><div style="color:#999; font-size:0.85rem;"><%= e.date %></div></div>
+        <input type="checkbox" name="bulk_ids" value="<%= e.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:4px;">
+        <div style="flex:1;"><strong><%= e.title %></strong><div style="color:#999; font-size:0.85rem;"><%= e.date %></div></div>
         <form method="POST" action="/moderator/events/<%= e.id %>?_method=DELETE" onsubmit="return confirm('মুছে ফেলতে চান?')">
           <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
         </form>

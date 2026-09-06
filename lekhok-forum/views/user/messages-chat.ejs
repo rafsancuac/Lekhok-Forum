@@ -82,9 +82,43 @@
             <% if (!isGroup) { %>
             <a href="/profile/<%= other.username %>" class="btn-icon" title="প্রোফাইল"><i class="fas fa-user"></i></a>
             <button type="button" class="btn-icon" title="কথোপকথন মুছুন" style="color:#ef4444" onclick="deleteConversation('<%= other.username %>')"><i class="fas fa-trash"></i></button>
+            <% } else { %>
+            <button type="button" class="btn-icon" title="সদস্য ব্যবস্থাপনা" onclick="var p=document.getElementById('grpPanel');p.style.display=(p.style.display==='none'||!p.style.display)?'block':'none'"><i class="fas fa-users-cog"></i></button>
             <% } %>
           </div>
         </header>
+
+        <% if (isGroup) { %>
+        <% var _gAdmin = conv.user_a === user.id; %>
+        <div id="grpPanel" style="display:none;border-bottom:1px solid #e4e6eb;background:#fff;padding:10px 14px;">
+          <% if (note === 'added') { %><div style="color:#059669;font-size:13px;margin-bottom:6px;"><i class="fas fa-check-circle"></i> সদস্য যোগ করা হয়েছে।</div><% } %>
+          <% if (note === 'removed') { %><div style="color:#059669;font-size:13px;margin-bottom:6px;"><i class="fas fa-check-circle"></i> সদস্য বাদ দেওয়া হয়েছে।</div><% } %>
+          <% if (err === 'perm') { %><div style="color:#dc2626;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> শুধু গ্রুপ অ্যাডমিন সদস্য যোগ/বাদ করতে পারেন।</div><% } %>
+          <% if (err === 'self') { %><div style="color:#dc2626;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> নিজেকে বা অ্যাডমিনকে বাদ দেওয়া যাবে না।</div><% } %>
+          <% if (err === 'owner') { %><div style="color:#dc2626;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> গ্রুপ ক্রিয়েটর গ্রুপ ছাড়তে পারবেন না।</div><% } %>
+          <div style="font-size:12px;font-weight:700;color:#65676b;margin-bottom:6px;">সদস্য তালিকা (<%= members.length %>)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+            <% members.forEach(mm => { %>
+              <span style="display:inline-flex;align-items:center;gap:6px;background:#f0f2f5;border-radius:5px;padding:4px 10px;font-size:13px;">
+                <%= mm.full_name %><% if (mm.id === conv.user_a) { %><i class="fas fa-crown" style="color:#d4a017;font-size:10px" title="গ্রুপ অ্যাডমিন"></i><% } %>
+                <% if (_gAdmin && mm.id !== user.id && mm.id !== conv.user_a) { %>
+                <form method="POST" action="/messages/g/<%= conv.id %>/members/<%= mm.id %>/remove" style="display:inline" onsubmit="return confirm('<%= mm.full_name %> কে গ্রুপ থেকে বাদ দেবেন?')"><button type="submit" style="border:0;background:none;color:#dc2626;cursor:pointer;padding:0;font-size:12px" title="বাদ দিন"><i class="fas fa-times"></i></button></form>
+                <% } %>
+              </span>
+            <% }) %>
+          </div>
+          <% if (_gAdmin) { %>
+          <form method="POST" action="/messages/g/<%= conv.id %>/members/add" style="display:flex;gap:6px;">
+            <input type="text" name="members" placeholder="ইউজারনেম লিখুন (কমা দিয়ে একাধিক)" required style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-family:inherit;font-size:13px;" />
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> যোগ করুন</button>
+          </form>
+          <% } else { %>
+          <form method="POST" action="/messages/g/<%= conv.id %>/leave" onsubmit="return confirm('গ্রুপ ছেড়ে বের হবেন?')" style="display:inline">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-sign-out-alt"></i> গ্রুপ ছাড়ুন</button>
+          </form>
+          <% } %>
+        </div>
+        <% } %>
 
         <div class="chat-body" id="chatBody">
           <% messages.forEach(m => { %>

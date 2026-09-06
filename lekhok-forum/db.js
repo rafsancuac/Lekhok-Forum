@@ -41,6 +41,7 @@ const SNAPSHOT_PATH   = 'private/db-' + crypto.createHash('sha256')
   .update(process.env.SESSION_SECRET || 'lekhok-forum-snapshot')
   .digest('hex').slice(0, 16) + '.sqlite';
 let _uploadTimer   = null;
+let _snapshotDirty = false;   // সেশন ৩৮: আপলোড-বেকি রাইট থাকলে true
 let _bootRestored  = false;
 let _bootSeeded    = false;
 
@@ -515,8 +516,9 @@ function saveDb() {
       // /tmp is writable on serverless — keeps the live instance consistent
       try { fs.writeFileSync('/tmp/lekhok.db', data); } catch (_) {}
       // Debounced upload to Vercel Blob (survives cold starts)
+      _snapshotDirty = true;
       if (_uploadTimer) clearTimeout(_uploadTimer);
-      _uploadTimer = setTimeout(uploadSnapshot, 1500);
+      _uploadTimer = setTimeout(uploadSnapshot, 400);
       return;
     }
     // No Turso, no Blob token configured: best-effort local write. This path
@@ -533,6 +535,7 @@ function saveDb() {
   async function uploadSnapshot() {
     _uploadTimer = null;
     if (!USE_DB_SNAPSHOT) return;
+    _snapshotDirty = false;
     try {
       const { put } = require('@vercel/blob');
       const data = Buffer.from(_sqlJsDb.export());   // fresh state at upload time
@@ -1822,6 +1825,7 @@ module.exports = {
   saveDb,
   flushDb,
   get snapshotActive() { return USE_DB_SNAPSHOT; },  // Vercel Blob-snapshot mode কিনা
+  get snapshotDirty()  { return _snapshotDirty; },   // ফ্লাশ-না-হওয়া রাইট আছে কিনা
   MODERATOR_SCOPES,
   SCOPE_ALIASES,
   DAILY_CONTENT_SCOPES,

@@ -99,6 +99,13 @@ app.use((req, res, next) => {
       if (req.session && typeof req.session.save === 'function') req.session.save(() => flushThenGo());
       else flushThenGo();
     };
+    // JSON-রেসপন্স (API-সেভ) আগেও ফ্লাশ — নাহলে পরের ইনস্ট্যান্স পুরনো ডেটা দেখবে
+    const origJson = res.json.bind(res);
+    res.json = function (...args) {
+      if (req.method === 'GET') return origJson(...args);
+      const fin = () => origJson(...args);
+      Promise.resolve(db.flushDb()).then(fin, fin);
+    };
   }
   next();
 });
@@ -257,6 +264,11 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   // Direct run: init DB once, then listen.
   db.initDb().then(() => {
+    // সেশন ৩৮: স্ন্যাপশট সেফটি-নেট — ফ্লাশ-বেকি রাইট থাকলে ৫ সেকেন্ড পরপর আপলোড
+    const _snapGuard = setInterval(() => {
+      try { if (db.snapshotActive && db.snapshotDirty) db.flushDb(); } catch (e) {}
+    }, 5000);
+    if (_snapGuard && _snapGuard.unref) _snapGuard.unref();
     app.listen(PORT, () => {
       console.log(`\n  লেখক ফোরাম server running at http://localhost:${PORT}`);
       console.log(`  Admin panel:  http://localhost:${PORT}/admin`);

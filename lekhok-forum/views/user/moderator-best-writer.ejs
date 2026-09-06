@@ -1,5 +1,17 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'মাসিক সেরা লেখক | মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>মাসিক সেরা লেখক | মডারেটর প্যানেল</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('../../admin/views/admin/partials/sidebar') %>
+<div class="admin-main">
 <style>
     .mod-wrap { max-width: 760px; margin: 20px auto; padding: 0 16px; }
     .mod-item { background:#fff; border-radius:5px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }

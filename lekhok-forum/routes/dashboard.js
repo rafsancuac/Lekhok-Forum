@@ -331,7 +331,8 @@ router.get('/messages/g/:id', ensureAuth, async (req, res) => {
   const conversations = await convListFor(me);
   res.render('user/messages-chat', {
     other, messages, conversations, conv, isGroup: true, members, reactionMap,
-    currentPath: '/messages', err: req.query.err || null
+    currentPath: '/messages', err: req.query.err || null,
+    note: req.query.added ? 'added' : (req.query.removed ? 'removed' : null)
   });
 });
 
@@ -359,6 +360,54 @@ router.post('/messages/g/:id', ensureAuth, withUpload(attachmentUpload), async (
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
   res.redirect('/messages/g/' + conv.id);
+});
+
+// ── সেশন ৩৯: গ্রুপ সদস্য ব্যবস্থাপনা (সেশন-৩৮ বাকি কাজ) ──────────────────
+// অ্যাডমিন = ক্রিয়েটর (conversations.user_a)। সদস্য যোগ/বাদ শুধু অ্যাডমিন; লিভ শুধু নন-অ্যাডমিন।
+function _groupNames(raw) {
+  const arr = Array.isArray(raw) ? raw : String(raw || '').split(/[\s,]+/);
+  return [...new Set(arr.map(x => String(x).trim()).filter(Boolean))];
+}
+
+router.post('/messages/g/:id/members/add', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const conv = await convAccess(parseInt(req.params.id), me);
+  if (!conv || !conv.is_group) return res.redirect('/messages');
+  if (conv.user_a !== me) return res.redirect('/messages/g/' + conv.id + '?err=perm');
+  const names = _groupNames(req.body.members);
+  let added = 0;
+  for (const nm of names) {
+    const u = await db.prepare("SELECT id FROM users WHERE username = ? AND status = 'active'").get(nm);
+    if (!u) continue;
+    const ex = await db.prepare('SELECT 1 AS x FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(conv.id, u.id);
+    if (ex) continue;
+    try {
+      await db.prepare('INSERT INTO conversation_members (conversation_id, user_id, added_by) VALUES (?, ?, ?)').run(conv.id, u.id, me);
+      added++;
+      await notifyOnce(u.id, 'message', 'গ্রুপে যোগ', `${req.session.user.full_name} আপনাকে "${conv.title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + conv.id);
+    } catch (e) {}
+  }
+  res.redirect('/messages/g/' + conv.id + '?added=' + added);
+});
+
+router.post('/messages/g/:id/members/:uid/remove', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const conv = await convAccess(parseInt(req.params.id), me);
+  if (!conv || !conv.is_group) return res.redirect('/messages');
+  if (conv.user_a !== me) return res.redirect('/messages/g/' + conv.id + '?err=perm');
+  const uid = parseInt(req.params.uid);
+  if (!uid || uid === me || uid === conv.user_a) return res.redirect('/messages/g/' + conv.id + '?err=self');
+  await db.prepare('DELETE FROM conversation_members WHERE conversation_id = ? AND user_id = ?').run(conv.id, uid);
+  res.redirect('/messages/g/' + conv.id + '?removed=1');
+});
+
+router.post('/messages/g/:id/leave', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const conv = await convAccess(parseInt(req.params.id), me);
+  if (!conv || !conv.is_group) return res.redirect('/messages');
+  if (conv.user_a === me) return res.redirect('/messages/g/' + conv.id + '?err=owner');
+  await db.prepare('DELETE FROM conversation_members WHERE conversation_id = ? AND user_id = ?').run(conv.id, me);
+  res.redirect('/messages?left=1');
 });
 
 // মেসেজে রিয়েকশন (hover-ইমোজি)

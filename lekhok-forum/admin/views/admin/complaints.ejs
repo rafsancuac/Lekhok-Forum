@@ -22,11 +22,17 @@
     <a href="/admin/complaints?status=resolved" class="btn <%= status === 'resolved' ? 'btn-primary' : '' %> btn-sm">সমাধান হয়েছে</a>
     <a href="/admin/complaints?status=dismissed" class="btn <%= status === 'dismissed' ? 'btn-primary' : '' %> btn-sm">বাতিল</a>
   </div>
+  <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>
+  <form method="POST" action="/admin/complaints/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড অভিযোগগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <% if (complaints.length === 0) { %>
     <div class="card empty">কোনো অভিযোগ নেই</div>
   <% } else { %>
     <% complaints.forEach(c => { %>
     <div class="card" style="margin-bottom:14px;">
+      <label style="display:inline-flex;align-items:center;gap:8px;font-size:.8rem;color:#65676b;margin-bottom:6px;cursor:pointer;"><input type="checkbox" name="bulk_ids" value="<%= c.id %>" style="width:16px;height:16px;"> সিলেক্ট</label>
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
         <div>
           <strong style="font-size:1.05rem;"><%= c.subject %></strong>

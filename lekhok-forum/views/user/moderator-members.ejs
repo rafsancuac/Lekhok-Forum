@@ -1,24 +1,36 @@
-<%- include('../partials/header', { title: 'কমিটি সদস্য ব্যবস্থাপনা | মডারেটর প্যানেল', extra_css: ['/assets/css/dashboard.css'] }) %>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>কমিটি সদস্য ব্যবস্থাপনা | মডারেটর প্যানেল</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('../../admin/views/admin/partials/sidebar') %>
+<div class="admin-main">
 <style>
   .mod-page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; font-family: 'Hind Siliguri', sans-serif !important; }
-  .mod-hero {
-    background: linear-gradient(135deg, #0a1f44 0%, #1e293b 100%);
-    border-radius: 5px; padding: 28px 32px; color: white;
+  .mod-hero { border: 1px solid #e4e6eb;
+    background: #ffffff;
+    border-radius: 5px; padding: 28px 32px; color: #1c1e21;
     display: flex; justify-content: space-between; align-items: center;
     gap: 20px; flex-wrap: wrap; margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+    box-shadow: 0 1px 2px rgba(28,30,33,.06), 0 1px 3px rgba(28,30,33,.05);
   }
   .mod-hero h1 { margin: 0 0 6px; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-  .mod-hero h1 i { color: #d4a017; }
-  .mod-hero p { margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.5; }
+  .mod-hero h1 i { color: #059669; }
+  .mod-hero p { margin: 0; color: #65676b; font-size: 14px; line-height: 1.5; }
   .mod-back-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.18); color: #e2e8f0;
+    padding: 8px 16px; background: #f0f2f5;
+    border: 1px solid #e4e6eb; color: #1c1e21;
     border-radius: 5px; text-decoration: none; font-size: 13px; font-weight: 500;
     cursor: pointer; font-family: inherit;
   }
-  .mod-back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; text-decoration: none; }
+  .mod-back-btn:hover { background: #e4e6eb; color: #059669; text-decoration: none; }
   .mod-card { background: var(--card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 5px; padding: 22px; margin-bottom: 18px; }
   .mod-card h2 { margin: 0 0 6px; font-size: 17px; color: var(--text, #0f172a); display: flex; align-items: center; gap: 8px; }
   .mod-card .mod-hint { color: #64748b; font-size: 13.5px; margin: 0 0 16px; line-height: 1.6; }
@@ -34,7 +46,7 @@
   }
   .mem-field textarea { min-height: 64px; resize: vertical; }
   .mem-field input:focus, .mem-field select:focus, .mem-field textarea:focus {
-    outline: none; border-color: #0a1f44; box-shadow: 0 0 0 3px rgba(10, 31, 68, 0.08);
+    outline: none; border-color: #059669; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
   }
   .mem-row { border: 1px solid var(--border, #e2e8f0); border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
   .mem-row summary {
@@ -60,7 +72,7 @@
   .mem-del:hover { background: #fee2e2; }
   .mem-section-count { font-size: 12px; color: #64748b; font-weight: 500; margin-left: auto; }
   details[open] > summary .mem-chevron { transform: rotate(90deg); }
-  .mem-chevron { transition: transform .15s ease; color: #94a3b8; }
+  .mem-chevron { transition: transform .15s ease; color: #65676b; }
 </style>
 
 <div class="mod-page">
@@ -73,6 +85,11 @@
   </div>
 
   <% if (posted) { %><div class="mod-flash ok"><i class="fas fa-check-circle"></i> সফলভাবে সংরক্ষিত হয়েছে। সাইটে সাথে সাথে প্রযোজ্য।</div><% } %>
+  <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:10px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>
+  <form method="POST" action="/moderator/members/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড সদস্যদের মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <% if (removed) { %><div class="mod-flash ok"><i class="fas fa-trash-alt"></i> সদস্য মুছে ফেলা হয়েছে।</div><% } %>
   <% if (error) { %><div class="mod-flash err"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
 
@@ -119,6 +136,7 @@
     <% central.forEach(m => { %>
       <details class="mem-row">
         <summary>
+          <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:2px;">
           <i class="fas fa-chevron-right mem-chevron"></i>
           <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
           <div>
@@ -165,6 +183,7 @@
     <% advisory.forEach(m => { %>
       <details class="mem-row">
         <summary>
+          <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:2px;">
           <i class="fas fa-chevron-right mem-chevron"></i>
           <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
           <div>
@@ -203,7 +222,7 @@
     <% }) %>
   </div>
 </div>
-</main>
+</div><!-- /admin-main -->
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 </body>
 </html>

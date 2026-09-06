@@ -170,11 +170,45 @@ router.get('/press', ensureModerator, async (req, res) => {
   });
 });
 
+/* ── সেশন ৩৯: মডারেটর বাল্ক মার্ক-অ্যান্ড-ডিলিট (ইউজার রিকোয়েস্ট: mark / mark-all) ──
+   সাইডবারের জেনেরিক bulk JS (#bulkBar + name=bulk_ids + data-bulk-all) এখানেও কাজ করে।
+   নোট: এই রুটগুলো সংশ্লিষ্ট '/:id' রুটের আগে বসে, তাই 'bulk-delete' কখনো id ধরা পড়ে না। */
+function _bulkIds(body) {
+  let ids = body.ids;
+  if (!Array.isArray(ids)) ids = ids ? [ids] : [];
+  return [...new Set(ids.map(v => parseInt(v, 10)).filter(n => Number.isInteger(n) && n > 0))];
+}
+async function _bulkDelete(table, req, res, backPath) {
+  const ids = _bulkIds(req.body);
+  if (!ids.length) return res.redirect(backPath + '?bulk=0');
+  const ph = ids.map(() => '?').join(',');
+  await db.prepare(`DELETE FROM ${table} WHERE id IN (${ph})`).run(...ids);
+  console.log(`[moderator] bulk-delete ${table}: ${ids.length} item(s) by user ${req.session.userId} (${req.session.role})`);
+  res.redirect(backPath + '?bulk=' + ids.length);
+}
+router.post('/notices/bulk-delete', ensureModerator, requireScope('notice'), async (req, res) => { await _bulkDelete('notices', req, res, '/moderator/notices'); });
+router.post('/events/bulk-delete', ensureModerator, requireScope('event'), async (req, res) => { await _bulkDelete('events', req, res, '/moderator/events'); });
+router.post('/complaints/bulk-delete', ensureModerator, requireScope('complaints'), async (req, res) => { await _bulkDelete('complaints', req, res, '/moderator/complaints'); });
+router.post('/press/bulk-delete', ensureModerator, async (req, res) => { await _bulkDelete('press_clippings', req, res, '/moderator/press'); });
+router.post('/members/bulk-delete', ensureModerator, async (req, res) => { await _bulkDelete('members', req, res, '/moderator/members'); });
+
 router.post('/press', ensureModerator, withUpload(pressUpload), async (req, res) => {
   const v = pressFormValues(req.body);
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   if (!fileUrl && !v.image_url) {
     return res.redirect('/moderator/press?error=' + encodeURIComponent('ছবি আপলোড করুন অথবা ছবির URL দিন, সংরক্ষিত হয়নি।'));
+  }
+  // সেশন ৩৯: সার্ভার-সাইড ডুপলিকেট গার্ড — গত ২ মিনিটে একই শিরোনাম+পত্রিকা
+  // আগেই সেভ হয়ে থাকলে এই রিকোয়েস্ট উপেক্ষা (ডাবল-ক্লিক/রিট্রাই নিরাপদ)।
+  const dup = await db.prepare(`
+    SELECT id FROM press_clippings
+    WHERE title = ? AND COALESCE(paper_name, '') = COALESCE(?, '')
+      AND created_at > datetime('now', '-2 minutes')
+    ORDER BY id DESC LIMIT 1
+  `).get(v.title, v.paper_name);
+  if (dup) {
+    console.log(`[moderator] press: duplicate POST ignored (matched id ${dup.id}, user ${req.session.userId})`);
+    return res.redirect('/moderator/press?posted=dup');
   }
   await db.prepare(`
     INSERT INTO press_clippings (title, paper_name, image_url, published_date, sort_order, is_active)
