@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>মডারেটর ব্যবস্থাপনা — বাংলাদেশ তরুণ কলাম লেখক ফোরাম অ্যাডমিন</title>
+  <title>মডারেটর ব্যবস্থাপনা — লেখক ফোরাম অ্যাডমিন</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
@@ -13,7 +13,7 @@
 <div class="admin-main">
   <div class="admin-header">
     <div>
-      <h1><i class="fas fa-user-shield" style="color:#059669;margin-right:6px;"></i> মডারেটর ও ইউজার ব্যবস্থাপনা</h1>
+      <h1><i class="fas fa-user-shield"></i> মডারেটর ও ইউজার ব্যবস্থাপনা</h1>
       <p>কার্যের পরিধি নিয়ন্ত্রণ করুন — কোন মডারেটর কোন সেকশনে কাজ করবে</p>
     </div>
     <div class="header-actions">
@@ -60,8 +60,8 @@
       </form>
     </div>
     <% if (u.role === 'moderator') { %>
-      <form method="POST" action="/admin/users/<%= u.id %>/scopes" style="margin: -6px 0 16px 0; padding: 16px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm);">
-        <div style="font-weight:700;color:#0a1f44;font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+      <form method="POST" action="/admin/users/<%= u.id %>/scopes" style="margin: -6px 0 16px 0; padding: 16px 20px; background: #f7f8fa; border: 1px solid #e4e6eb; border-top: none; border-radius: 0 0 var(--ad-radius-sm) var(--ad-radius-sm);">
+        <div style="font-weight:700;color:#1c1e21;font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
           <i class="fas fa-key" style="color:#059669;"></i> কাজের পরিধি
         </div>
         <div class="scope-grid">

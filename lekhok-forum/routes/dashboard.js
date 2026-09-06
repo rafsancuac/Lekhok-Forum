@@ -175,7 +175,7 @@ router.get('/messages', ensureAuth, async (req, res) => {
 router.get('/messages/:username', ensureAuth, async (req, res) => {
   const me = req.session.user.id;
   const other = await db.prepare('SELECT * FROM users WHERE username = ?').get(req.params.username);
-  if (!other) return res.status(404).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
+  if (!other) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   if (other.id === me) return res.redirect('/messages');
 
   // Find or create conversation

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>টাস্ক — বাংলাদেশ তরুণ কলাম লেখক ফোরাম অ্যাডমিন</title>
+  <title>টাস্ক — লেখক ফোরাম অ্যাডমিন</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
@@ -13,20 +13,23 @@
 <%- include('partials/sidebar', { adminUser, currentPath }) %>
 <div class="admin-main">
   <div class="admin-topbar">
-    <h1><i class="fas fa-tasks"></i> মডারেটর টাস্ক</h1>
+    <div>
+      <h1><i class="fas fa-tasks"></i> মডারেটর টাস্ক</h1>
+      <p>মডারেটরদের কাজ বরাদ্দ দিন, অগ্রগতি ট্র্যাক করুন</p>
+    </div>
   </div>
-  <div style="padding:24px; max-width:900px; margin:0 auto;">
-    <div style="background:white; border:1px solid #e5e7eb; border-radius:12px; padding:24px; margin-bottom:20px;">
-      <h3 style="margin:0 0 16px; font-size:16px; color:#0f172a;"><i class="fas fa-plus-circle" style="color:#2563eb;"></i> নতুন টাস্ক তৈরি</h3>
+  <div style="max-width:900px; margin:0 auto;">
+    <div class="card" style="margin-bottom:18px;">
+      <h3 class="card-title"><i class="fas fa-plus-circle"></i> নতুন টাস্ক তৈরি</h3>
       <form method="POST" action="/admin/tasks">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <div>
-            <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:4px;">টাস্ক শিরোনাম</label>
-            <input type="text" name="title" required style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:'Hind Siliguri',sans-serif;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>টাস্ক শিরোনাম</label>
+            <input type="text" name="title" required>
           </div>
-          <div>
-            <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:4px;">মডারেটর</label>
-            <select name="assignee_id" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:'Hind Siliguri',sans-serif;">
+          <div class="form-group">
+            <label>মডারেটর</label>
+            <select name="assignee_id">
               <option value="">-- নির্বাচন করুন --</option>
               <% moderators.forEach(m => { %>
                 <option value="<%= m.id %>"><%= m.full_name %> (@<%= m.username %>)</option>
@@ -34,77 +37,79 @@
             </select>
           </div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <div>
-            <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:4px;">অগ্রাধিকার</label>
-            <select name="priority" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:'Hind Siliguri',sans-serif;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>অগ্রাধিকার</label>
+            <select name="priority">
               <option value="normal">সাধারণ</option>
               <option value="high">উচ্চ</option>
               <option value="urgent">জরুরি</option>
             </select>
           </div>
-          <div>
-            <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:4px;">ডেডলাইন</label>
-            <input type="date" name="due_date" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px;">
+          <div class="form-group">
+            <label>ডেডলাইন</label>
+            <input type="date" name="due_date">
           </div>
         </div>
-        <div style="margin-bottom:12px;">
-          <label style="display:block; font-size:13px; font-weight:600; color:#475569; margin-bottom:4px;">বিবরণ</label>
-          <textarea name="description" rows="3" style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:'Hind Siliguri',sans-serif;"></textarea>
+        <div class="form-group">
+          <label>বিবরণ</label>
+          <textarea name="description" rows="3"></textarea>
         </div>
-        <button type="submit" style="padding:9px 22px; background:#2563eb; color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:'Hind Siliguri',sans-serif;"><i class="fas fa-plus"></i> টাস্ক তৈরি করুন</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> টাস্ক তৈরি করুন</button>
       </form>
     </div>
 
-    <div style="background:white; border:1px solid #e5e7eb; border-radius:12px; padding:24px;">
-      <h3 style="margin:0 0 16px; font-size:16px; color:#0f172a;"><i class="fas fa-list" style="color:#2563eb;"></i> টাস্ক তালিকা</h3>
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-list"></i> টাস্ক তালিকা</h3>
       <% if (tasks && tasks.length) { %>
-        <table style="width:100%; border-collapse:collapse; font-size:13.5px;">
+        <div class="table-wrap">
+        <table>
           <thead>
-            <tr style="border-bottom:2px solid #e5e7eb;">
-              <th style="text-align:left; padding:10px;">টাস্ক</th>
-              <th style="text-align:left; padding:10px;">মডারেটর</th>
-              <th style="text-align:left; padding:10px;">অগ্রাধিকার</th>
-              <th style="text-align:left; padding:10px;">স্ট্যাটাস</th>
-              <th style="text-align:left; padding:10px;">ডেডলাইন</th>
-              <th style="text-align:right; padding:10px;">অ্যাকশন</th>
+            <tr>
+              <th>টাস্ক</th>
+              <th>মডারেটর</th>
+              <th>অগ্রাধিকার</th>
+              <th>স্ট্যাটাস</th>
+              <th>ডেডলাইন</th>
+              <th>অ্যাকশন</th>
             </tr>
           </thead>
           <tbody>
             <% tasks.forEach(t => { %>
-              <tr style="border-bottom:1px solid #f1f5f9;">
-                <td style="padding:10px;">
+              <tr>
+                <td>
                   <strong><%= t.title %></strong>
-                  <% if (t.description) { %><br><small style="color:#64748b;"><%= t.description.substring(0,60) %></small><% } %>
+                  <% if (t.description) { %><br><small style="color:#65676b;"><%= t.description.substring(0,60) %></small><% } %>
                 </td>
-                <td style="padding:10px;"><%= t.assignee_name || '—' %></td>
-                <td style="padding:10px;">
-                  <% if (t.priority === 'urgent') { %><span style="background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;">জরুরি</span><% } %>
-                  <% if (t.priority === 'high') { %><span style="background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;">উচ্চ</span><% } %>
-                  <% if (t.priority === 'normal') { %><span style="background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600;">সাধারণ</span><% } %>
+                <td><%= t.assignee_name || '—' %></td>
+                <td>
+                  <% if (t.priority === 'urgent') { %><span class="badge-soft status-banned">জরুরি</span><% } %>
+                  <% if (t.priority === 'high') { %><span class="badge-soft status-pending">উচ্চ</span><% } %>
+                  <% if (t.priority === 'normal') { %><span class="badge-soft status-new">সাধারণ</span><% } %>
                 </td>
-                <td style="padding:10px;">
+                <td>
                   <form method="POST" action="/admin/tasks/<%= t.id %>/status" style="display:inline;">
-                    <select name="status" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid #d1d5db; border-radius:4px; font-size:12px;">
+                    <select name="status" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid #ccd0d5; border-radius:6px; font-size:12px; font-family:inherit; background:#fff;">
                       <option value="pending" <%= t.status==='pending'?'selected':'' %>>বাকি</option>
                       <option value="in_progress" <%= t.status==='in_progress'?'selected':'' %>>চলমান</option>
                       <option value="done" <%= t.status==='done'?'selected':'' %>>সম্পন্ন</option>
                     </select>
                   </form>
                 </td>
-                <td style="padding:10px;"><%= t.due_date || '—' %></td>
-                <td style="padding:10px; text-align:right;">
+                <td><%= t.due_date || '—' %></td>
+                <td>
                   <form method="POST" action="/admin/tasks/<%= t.id %>/delete" style="display:inline;" onsubmit="return confirm('মুছবেন?')">
-                    <button type="submit" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px;"><i class="fas fa-trash"></i></button>
+                    <button type="submit" class="btn btn-danger btn-sm" title="মুছুন"><i class="fas fa-trash"></i></button>
                   </form>
                 </td>
               </tr>
             <% }) %>
           </tbody>
         </table>
+        </div>
       <% } else { %>
-        <div style="text-align:center; padding:32px; color:#94a3b8;">
-          <i class="fas fa-clipboard-list" style="font-size:36px; margin-bottom:10px; display:block;"></i>
+        <div class="empty-state-full">
+          <i class="fas fa-clipboard-list"></i>
           <p>কোনো টাস্ক নেই</p>
         </div>
       <% } %>

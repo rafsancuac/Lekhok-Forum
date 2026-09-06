@@ -70,7 +70,7 @@
 <!-- কার্যবর্ষ ফিল্টার -->
     <div class="term-bar">
       <p class="term-intro">
-          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের পূর্ণাঙ্গ কার্যনির্বাহী কমিটি<% if (termNote) { %> (<%= termNote %>)<% } %>.<% } else { %>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চবি শাখা।<% } %>
+          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের পূর্ণাঙ্গ কার্যনির্বাহী কমিটি<% if (termNote) { %> (<%= termNote %>)<% } %>.<% } else { %>লেখক ফোরাম, চবি শাখা।<% } %>
           <% if (countByYear[selectedYear]) { %>মোট সদস্য <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
       </p>
       <div class="term-select-wrap">

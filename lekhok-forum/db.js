@@ -358,11 +358,44 @@ const LATER_COLUMNS = [
   ['members',      'user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
   ['past_leaders', 'user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
 ];
+/* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
+   কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
+   থেকে যেত। এই মাইগ্রেশন প্রতি বুটে চলে, idempotent (২য় রানে কোনো রো ম্যাচ করে না),
+   Turso-সেফ (সাধারণ UPDATE+REPLACE), এবং শুধু যে রো-তে পুরনো নাম আছে সেগুলোই ছোঁয় —
+   অ্যাডমিনের নিজের কাস্টম লেখা (যেখানে পুরনো নাম নেই) অক্ষত থাকে। */
+const BRAND_OLD = 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম';
+const BRAND_NEW = 'লেখক ফোরাম';
+async function brandRenameMigration() {
+  const targets = [
+    ['settings', 'value', "(key = 'site_name' OR key GLOB 'content_*')"],
+    ['constitution', 'section_title', null],
+    ['constitution', 'content', null],
+    ['resources', 'title', null],
+    ['resources', 'content', null],
+    ['members', 'role', null],
+    ['members', 'designation', null],
+    ['members', 'bio', null],
+    ['past_leaders', 'role', null],
+    ['past_leaders', 'bio', null],
+  ];
+  for (const [t, c, extra] of targets) {
+    try {
+      const where = `${c} LIKE ?` + (extra ? ` AND ${extra}` : '');
+      await backend.prepare(
+        `UPDATE ${t} SET ${c} = REPLACE(${c}, ?, ?) WHERE ${where}`
+      ).run(BRAND_OLD, BRAND_NEW, '%' + BRAND_OLD + '%');
+    } catch (e) { /* টেবিল/কলাম এখনো নেই (পুরনো ডিপ্লয়) — পরের বুটে হবে */ }
+  }
+}
+
 async function applyLaterMigrations() {
   for (const [table, col, def] of LATER_COLUMNS) {
     try {
       await backend.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`).run();
     } catch (e) { /* duplicate column — fine */ }
+  }
+  try { await brandRenameMigration(); } catch (e) {
+    console.error('[db] brandRenameMigration failed:', e.message);
   }
   // After columns are guaranteed, auto-link members/past_leaders to users by
   // exact full_name match. Idempotent — only fills rows where user_id is null.
@@ -633,7 +666,7 @@ async function runMigrations() {
   //     exact old values are updated, so admin-customized values are never
   //     clobbered. Idempotent — safe on every boot.
   const rebrand = [
-    ['site_name',       'লেখক ফোরাম',            'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'],
+    ['site_name',       'লেখক ফোরাম',            'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'],
     ['tagline',         'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।'],
     ['contact_phone',   '০১XXXXXXXXX',           '০১********* (বিকাশ/নগদ)'],
     ['contact_address', 'আপনার ক্যাম্পাস ঠিকানা',   'চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম']
@@ -752,7 +785,7 @@ async function runMigrations() {
   // Names already owning an account (exact full_name match — e.g. the karishma
   // demo account) are LINKED, never duplicated. Fresh accounts get a random
   // password (owner claims it later via admin password reset).
-  const ORG_DESIG_SUFFIX = 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম';
+  const ORG_DESIG_SUFFIX = 'লেখক ফোরাম';
   const COMMITTEE_HISTORY = [
     { term: '২০২১-২২', members: [
       ['Md. Rafsan',             'সভাপতি',              'md_rafsan',        'male'],
@@ -879,7 +912,7 @@ async function runMigrations() {
     try { v2Seeded = !!(await backend.prepare("SELECT value FROM settings WHERE key = 'committee_history_v2_seeded'").get()); }
     catch (_) {}
     if (!v2Seeded) {
-      const ORG_SUFFIX = 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম (চবি)';
+      const ORG_SUFFIX = 'লেখক ফোরাম (চবি)';
       const desig = (role) => `${role}, ${ORG_SUFFIX}`;
 
       // [current username → new username, official Bengali full name]
@@ -1242,7 +1275,7 @@ async function seedAdmin() {
     "INSERT INTO admin_users (username, password_hash, display_name) VALUES (?, ?, ?)"
   ).run('admin', hash, 'প্রশাসক');
   const defaults = [
-    ['site_name', 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'],
+    ['site_name', 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'],
     ['tagline', 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।'],
     ['motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী'],
     ['contact_email', 'info@lekhokforum.org'],
@@ -1297,7 +1330,7 @@ async function seedDemoContent() {
   for (const e of events) { try { await prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?)').run(...e); } catch(e2) {} }
 
   // Branch committee (২০২১-২২ কার্যবর্ষ) — the real elected leadership of
-  // বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা, with term_year
+  // লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় শাখা, with term_year
   // set so the committee year-filter route has data to show.
   const CURRENT_TERM = '২০২১-২২';
   const committee = [
@@ -1446,7 +1479,7 @@ async function seedDemoContent() {
   for (const p of pastSecretaries) { try { await prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(...p); } catch(e) {} }
 
   const constitutionSections = [
-    ['ধারা ১: নাম ও সংজ্ঞা', 'এই সংগঠনের নাম "বাংলাদেশ তরুণ কলাম লেখক ফোরাম"। এটি একটি অরাজনৈতিক, অলাভজনক সাহিত্য ও সংস্কৃতি বিষয়ক সংগঠন।', 1],
+    ['ধারা ১: নাম ও সংজ্ঞা', 'এই সংগঠনের নাম "লেখক ফোরাম"। এটি একটি অরাজনৈতিক, অলাভজনক সাহিত্য ও সংস্কৃতি বিষয়ক সংগঠন।', 1],
     ['ধারা ২: উদ্দেশ্য', 'বাংলা ভাষা ও সাহিত্যের চর্চা, প্রচার ও সম্প্রসারণ। তরুণ লেখকদের পৃষ্ঠপোষকতা। সৃজনশীলতার বিকাশ।', 2],
     ['ধারা ৩: সদস্যপদ', 'যেকোনো লেখক এই সংগঠনের সদস্য হতে পারবেন। সদস্যপদ অর্জনের জন্য নির্ধারিত ফি প্রদান করতে হবে।', 3],
     ['ধারা ৪: সদস্যদের অধিকার', 'সাধারণ সভায় ভোটাধিকার, নির্বাচনে প্রার্থিতার অধিকার, সংগঠনের সকল কার্যক্রমে অংশগ্রহণের অধিকার।', 4],
@@ -1464,7 +1497,7 @@ async function seedDemoContent() {
     ['প্রবন্ধ রচনার পদ্ধতি', 'প্রবন্ধে যুক্তি ও অনুভূতির ভারসাম্য রক্ষা করতে হয়।', 'guide', 'প্রশাসন'],
     ['ফেলোশিপ ও গবেষণা অনুদান', 'দেশী-বিদেশী বিভিন্ন ফেলোশিপ ও গবেষণা অনুদান সম্পর্কে বিস্তারিত তথ্য।', 'scholarship', 'প্রশাসন'],
     ['অনলাইনে লেখালেখি ও প্রকাশনা', 'ডিজিটাল প্ল্যাটফর্মে লেখা প্রকাশ করার সুবিধা ও সতর্কতা।', 'guide', 'সম্পাদক'],
-    ['গঠনতন্ত্র সম্পূর্ণ কপি', 'বাংলাদেশ তরুণ কলাম লেখক ফোরামের সম্পূর্ণ গঠনতন্ত্র।', 'document', 'প্রশাসন'],
+    ['গঠনতন্ত্র সম্পূর্ণ কপি', 'লেখক ফোরামের সম্পূর্ণ গঠনতন্ত্র।', 'document', 'প্রশাসন'],
     ['বার্ষিক প্রতিবেদন ২০২৫', '২০২৫ সালের বার্ষিক প্রতিবেদন।', 'report', 'প্রশাসন'],
     ['সদস্যপদ ফর্ম', 'সদস্যপদের জন্য আবেদন ফর্ম।', 'form', 'প্রশাসন'],
     ['কবিতার সংকলন — ভলিউম ১', 'সেরা কবিতার সংকলন।', 'anthology', 'সম্পাদক'],

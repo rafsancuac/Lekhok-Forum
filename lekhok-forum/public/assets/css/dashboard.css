@@ -1,5 +1,5 @@
 /* ============================================
-   বাংলাদেশ তরুণ কলাম লেখক ফোরাম — Dashboard, Gallery, Messaging, Complaints
+   লেখক ফোরাম — Dashboard, Gallery, Messaging, Complaints
    ============================================ */
 
 .dashboard-wrap { display: grid; grid-template-columns: 220px 1fr 280px; gap: 20px; max-width: 1280px; margin: 0 auto; padding: 20px 16px; }

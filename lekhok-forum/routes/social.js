@@ -212,7 +212,7 @@ router.get('/articles/:id', async (req, res) => {
   const post = await db.prepare(`SELECT p.*, u.full_name as author_name, u.username as author_username, u.avatar_url as author_avatar, u.gender as author_gender, u.designation as author_designation, u.bio as author_bio
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.status = 'published'`).get(req.params.id);
-  if (!post) return res.status(404).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
+  if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
 
   // If this is a shared copy, resolve the ORIGINAL post + author for attribution
   if (post.shared_from) {
@@ -433,7 +433,7 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   const post = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender, u.designation
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.type = 'question' AND p.status = 'published'`).get(req.params.id);
-  if (!post) return res.status(404).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
+  if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   const answers = await db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
                               FROM comments c JOIN users u ON c.author_id = u.id
                               WHERE c.post_id = ? AND c.parent_id IS NULL
@@ -672,7 +672,7 @@ router.get('/members', async (req, res) => {
 // ── Public profile ───────────────────────────────────────────────────────────
 router.get('/profile/:username', async (req, res) => {
   const profile = await db.prepare('SELECT * FROM users WHERE username = ? AND status != ?').get(req.params.username, 'banned');
-  if (!profile) return res.status(404).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
+  if (!profile) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   const isOwner = req.session.user && req.session.user.id === profile.id;
   const myId = req.session.user ? req.session.user.id : null;
 

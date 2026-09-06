@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>বাংলাদেশ তরুণ কলাম লেখক ফোরাম — ইউজার সম্পাদনা</title>
+  <title>লেখক ফোরাম — ইউজার সম্পাদনা</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
@@ -38,7 +38,7 @@
     <div class="edit-forms">
       <!-- Role + Status -->
       <form method="POST" action="/admin/users/<%= u.id %>/role" class="data-card card">
-        <h3><i class="fas fa-user-tag"></i> রোল ও স্ট্যাটাস</h3>
+        <h3><i class="fas fa-user-tag" style="color:#059669;"></i> রোল ও স্ট্যাটাস</h3>
         <div class="form-row">
           <label>রোল
             <select name="role" class="form-input">
@@ -61,7 +61,7 @@
 
       <!-- Password reset (hand over committee accounts etc.) -->
       <form method="POST" action="/admin/users/<%= u.id %>/password" class="data-card card">
-        <h3><i class="fas fa-lock"></i> পাসওয়ার্ড রিসেট</h3>
+        <h3><i class="fas fa-lock" style="color:#059669;"></i> পাসওয়ার্ড রিসেট</h3>
         <% if (typeof pwdStatus !== 'undefined' && pwdStatus === 'ok') { %>
           <p class="hint" style="color:#059669"><i class="fas fa-check-circle"></i> পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে।</p>
         <% } else if (typeof pwdStatus !== 'undefined' && pwdStatus === 'short') { %>
@@ -79,7 +79,7 @@
       <!-- Scopes (if moderator) -->
       <% if (u.role === 'moderator' || u.role === 'admin') { %>
         <form method="POST" action="/admin/users/<%= u.id %>/scopes" class="data-card card">
-          <h3><i class="fas fa-key"></i> মডারেটর স্কোপ</h3>
+          <h3><i class="fas fa-key" style="color:#059669;"></i> মডারেটর স্কোপ</h3>
           <p class="hint">এই ইউজার কোন কোন কাজ করতে পারবে তা নির্বাচন করুন।</p>
           <div class="scope-grid">
             <% CANONICAL_SCOPES.forEach(s => { %>
@@ -110,30 +110,30 @@
 <style>
 .edit-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
 @media (max-width: 768px) { .edit-grid { grid-template-columns: 1fr; } }
-.profile-card { background: white; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.profile-avatar-lg { width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 12px; object-fit: cover; border: 4px solid #059669; }
-.profile-card h2 { margin: 6px 0 2px; color: #0a1f44; }
+.profile-card { background: #fff; border: 1px solid #f0f1f4; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 1px 2px rgba(28,30,33,0.06), 0 1px 3px rgba(28,30,33,0.05); }
+.profile-avatar-lg { width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 12px; object-fit: cover; border: 4px solid rgba(5,150,105,0.25); }
+.profile-card h2 { margin: 6px 0 2px; color: #1c1e21; font-family: 'HindSiliguri', sans-serif; }
 .muted { color: #94a3b8; font-size: 14px; }
 .bio { font-style: italic; color: #64748b; margin: 12px 0; font-size: 14px; }
 .stat-row { display: flex; gap: 8px; margin-top: 14px; }
-.stat-mini { flex: 1; background: #f1f5f9; padding: 10px 4px; border-radius: 8px; }
-.stat-mini strong { display: block; font-size: 20px; color: #0a1f44; }
+.stat-mini { flex: 1; background: #f7f8fa; border: 1px solid #e4e6eb; padding: 10px 4px; border-radius: 10px; }
+.stat-mini strong { display: block; font-size: 20px; color: #1c1e21; }
 .stat-mini span { font-size: 11px; color: #64748b; }
 .scope-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
-.scope-check { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; cursor: pointer; }
+.scope-check { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #f7f8fa; border: 1px solid #e4e6eb; border-radius: 8px; cursor: pointer; transition: all .18s; }
 .scope-check input { width: 18px; height: 18px; }
 .scope-check span { color: #1e293b; font-size: 14px; }
 .danger-zone { border-left: 4px solid #dc2626; background: #fef2f2; }
 .danger-zone h3 { color: #dc2626; }
-.data-card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
-.data-card h3 { color: #0a1f44; margin-bottom: 12px; }
+.data-card { background: #fff; border: 1px solid #f0f1f4; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(28,30,33,0.06), 0 1px 3px rgba(28,30,33,0.05); margin-bottom: 18px; }
+.data-card h3 { color: #1c1e21; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 .form-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
-.form-row label { display: block; color: #0a1f44; font-weight: 600; font-size: 0.9rem; }
-.btn-outline { border: 1px solid #059669; color: #059669; background: white; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 6px; }
-.btn-outline:hover { background: rgba(5,150,105,0.08); }
+.form-row label { display: block; color: #1c1e21; font-weight: 600; font-size: 0.9rem; }
+.btn-outline { border: 1px solid #059669; color: #0b6b4b; background: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-weight: 600; transition: all .18s; }
+.btn-outline:hover { background: rgba(5,150,105,0.12); }
 .user-cell { display: flex; align-items: center; gap: 10px; }
 .user-avatar-sm { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
-.user-name-link { color: #0a1f44; font-weight: 600; }
+.user-name-link { color: #1c1e21; font-weight: 600; }
 .user-username { font-size: 12px; color: #94a3b8; }
 .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
 .status-active  { background: #16a34a; }

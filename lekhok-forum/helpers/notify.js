@@ -33,7 +33,7 @@ async function runBirthdayCheck() {
     if (dup) continue;
     await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
       b.id, 'birthday', 'জন্মদিনের শুভেচ্ছা 🎉',
-      `শুভ জন্মদিন, ${b.full_name}! বাংলাদেশ তরুণ কলাম লেখক ফোরাম পরিবারের পক্ষ থেকে শুভকামনা।`,
+      `শুভ জন্মদিন, ${b.full_name}! লেখক ফোরাম পরিবারের পক্ষ থেকে শুভকামনা।`,
       '/profile/' + b.username
     );
   }

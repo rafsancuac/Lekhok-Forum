@@ -1,5 +1,5 @@
 <%
-  // সাইডবার — গ্রুপড নেভিগেশন + ইউজার কার্ড + মোবাইল ড্রয়ার + টোস্ট + ড্রাফট অটোসেভ
+  // সাইডবার — গ্রুপড নেভিগেশন + সার্চ + ইউজার কার্ড + মোবাইল ড্রয়ার + টোস্ট + ড্রাফট অটোসেভ
   const _path = currentPath || '';
   const _active = (p) => _path === p || _path.startsWith(p + '/') ? 'active' : '';
   const _isAdmin = !!(adminUser || (user && user.role === 'admin'));
@@ -8,14 +8,19 @@
   const _initial = (_staffName || 'স').trim().charAt(0);
   const _avatar = user ? '/avatar/' + user.id : null;
 %>
-<button class="admin-hamburger" id="adminHamburger" aria-label="মেনু" type="button"><i class="fas fa-bars"></i></button>
+<button class="admin-hamburger" id="adminHamburger" aria-label="মেনু" aria-controls="adminSidebar" aria-expanded="false" type="button"><i class="fas fa-bars"></i></button>
 <div class="admin-backdrop" id="adminBackdrop"></div>
-<aside class="admin-sidebar">
+<aside class="admin-sidebar" id="adminSidebar" aria-label="অ্যাডমিন নেভিগেশন">
   <div class="logo">
     <div class="brand-emblem"><i class="fas fa-feather-alt"></i></div>
-    <strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong>
+    <strong>লেখক ফোরাম</strong>
     <span class="logo-sub"><%= _isAdmin ? 'অ্যাডমিন প্যানেল' : 'মডারেটর প্যানেল' %></span>
   </div>
+  <div class="nav-search" role="search">
+    <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+    <input type="search" id="adminNavSearch" placeholder="সেটিংস খুঁজুন" aria-label="সেটিংস খুঁজুন" autocomplete="off" />
+  </div>
+  <div class="nav-search-empty" id="navSearchEmpty">কোনো মিল পাওয়া যায়নি</div>
   <nav>
     <div class="nav-group-label">মূল</div>
     <a href="/admin" class="<%= _path === '/admin' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
@@ -78,15 +83,102 @@
   /* ── মোবাইল ড্রয়ার ─────────────────────────────────────────────── */
   var hb = document.getElementById('adminHamburger');
   var bd = document.getElementById('adminBackdrop');
-  function closeNav() { document.body.classList.remove('sidebar-open'); if (bd) bd.classList.remove('show'); }
+  function closeNav() {
+    document.body.classList.remove('sidebar-open');
+    if (bd) bd.classList.remove('show');
+    if (hb) hb.setAttribute('aria-expanded', 'false');
+  }
   if (hb) hb.addEventListener('click', function () {
     var open = document.body.classList.toggle('sidebar-open');
     if (bd) bd.classList.toggle('show', open);
+    hb.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
   if (bd) bd.addEventListener('click', closeNav);
   document.querySelectorAll('.admin-sidebar nav a').forEach(function (a) {
     a.addEventListener('click', closeNav);
+    if (a.classList.contains('active')) a.setAttribute('aria-current', 'page');
   });
+
+  /* ── সাইডবার সার্চ — নেভ আইটেম ফিল্টার (ক্লায়েন্ট-সাইড) ────────── */
+  try {
+    var searchInput = document.getElementById('adminNavSearch');
+    var emptyHint = document.getElementById('navSearchEmpty');
+    if (searchInput) {
+      var navLinks = Array.prototype.slice.call(document.querySelectorAll('.admin-sidebar nav a'));
+      var groupLabels = Array.prototype.slice.call(document.querySelectorAll('.admin-sidebar nav .nav-group-label'));
+      searchInput.addEventListener('input', function () {
+        var q = searchInput.value.trim().toLowerCase();
+        var visible = 0;
+        navLinks.forEach(function (a) {
+          var hit = !q || a.textContent.toLowerCase().indexOf(q) !== -1;
+          a.classList.toggle('nav-hidden', !hit);
+          if (hit && !a.classList.contains('nav-external')) visible++;
+        });
+        /* খালি গ্রুপ-লেবেল লুকান */
+        groupLabels.forEach(function (lbl) {
+          var el = lbl.nextElementSibling, any = false;
+          while (el && !el.classList.contains('nav-group-label')) {
+            if (el.tagName === 'A' && !el.classList.contains('nav-hidden')) { any = true; break; }
+            el = el.nextElementSibling;
+          }
+          lbl.classList.toggle('nav-hidden', !any);
+        });
+        if (emptyHint) emptyHint.classList.toggle('show', q && visible === 0);
+      });
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); }
+      });
+    }
+  } catch (e) {}
+
+  /* ── ব্রেডক্রাম্ব ইনজেকশন — নেভ-ম্যাপ থেকে কেন্দ্রীয়ভাবে ────────────
+     নোট: সাইডবার স্ক্রিপ্ট .admin-main-এর আগে চলে — তাই DOM-রেডি গার্ড। */
+  var injectCrumbs = function () {
+    try {
+    var header = document.querySelector('.admin-main .admin-header') || document.querySelector('.admin-main .admin-topbar');
+    var prependTo = header || document.querySelector('.admin-main');
+    if (prependTo && !document.querySelector('.admin-main .crumbs')) {
+      var map = [];
+      var curGroup = 'মূল';
+      document.querySelectorAll('.admin-sidebar nav > *').forEach(function (el) {
+        if (el.classList.contains('nav-group-label')) curGroup = el.textContent.trim();
+        else if (el.tagName === 'A') map.push({ href: el.getAttribute('href'), group: curGroup, label: el.textContent.trim() });
+      });
+      var here = location.pathname;
+      var best = null;
+      map.forEach(function (m) {
+        if (m.href === '/admin') return;
+        if (here === m.href || here.indexOf(m.href + '/') === 0) {
+          if (!best || m.href.length > best.href.length) best = m;
+        }
+      });
+      if (!best) {
+        var dash = map.filter(function (m) { return m.href === '/admin'; })[0];
+        if (dash && (here === '/admin' || here === '/admin/')) best = dash;
+      }
+      if (best) {
+        var extra = here.replace(best.href, '').replace(/^\//, '');
+        var extraLabel = '';
+        if (extra === 'new') extraLabel = 'নতুন';
+        else if (extra.indexOf('edit') !== -1) extraLabel = 'সম্পাদনা';
+        else if (extra) extraLabel = 'বিস্তারিত';
+        var crumbs = document.createElement('div');
+        crumbs.className = 'crumbs';
+        crumbs.setAttribute('aria-label', 'ব্রেডক্রাম্ব');
+        var html = '<a href="/admin">অ্যাডমিন</a><i class="fas fa-chevron-right"></i>' +
+                   '<span>' + best.group + '</span><i class="fas fa-chevron-right"></i>';
+        html += extraLabel
+          ? '<a href="' + best.href + '">' + best.label + '</a><i class="fas fa-chevron-right"></i><span class="crumbs-here">' + extraLabel + '</span>'
+          : '<span class="crumbs-here">' + best.label + '</span>';
+        crumbs.innerHTML = html;
+        if (!header) crumbs.style.marginBottom = '14px';
+        prependTo.insertBefore(crumbs, prependTo.firstChild);
+      }
+    }
+    } catch (e) {}
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectCrumbs);
+  else injectCrumbs();
 
   /* ── টোস্ট ফিডব্যাক (?saved=1 / ?error=...) ─────────────────────── */
   try {
@@ -96,6 +188,7 @@
       var zone = document.getElementById('toastZone');
       var t = document.createElement('div');
       t.className = 'toast ' + (err ? 't-error' : 't-success');
+      t.setAttribute('role', 'status');
       t.innerHTML = (err
         ? '<i class="fas fa-exclamation-circle t-ico"></i>'
         : '<i class="fas fa-check-circle t-ico"></i>')

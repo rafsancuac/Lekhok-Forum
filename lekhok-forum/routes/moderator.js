@@ -8,7 +8,7 @@ const { pressUpload, withUpload } = require('../middleware/upload');
 function ensureModerator(req, res, next) {
   if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
   if (req.session.user.role !== 'moderator' && req.session.user.role !== 'admin') {
-    return res.status(403).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
+    return res.status(403).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   }
   next();
 }
@@ -17,7 +17,7 @@ function requireScope(scope) {
   return async (req, res, next) => {
     if (req.session.user.role === 'admin') return next(); // admin implicitly has every scope
     if (!(await db.hasScope(req.session.user.id, scope))) {
-      return res.status(403).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
+      return res.status(403).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
     }
     next();
   };

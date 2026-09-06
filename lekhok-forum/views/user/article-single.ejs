@@ -1,6 +1,6 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', {
-  title: (post.title) + ' | বাংলাদেশ তরুণ কলাম লেখক ফোরাম',
+  title: (post.title) + ' | লেখক ফোরাম',
   extra_css: ['/assets/css/article.css'],
   metaDesc: (typeof metaDesc !== 'undefined') ? metaDesc : undefined,
   ogImage: (typeof ogImage !== 'undefined') ? ogImage : undefined,
@@ -19,7 +19,7 @@
   image: (typeof ogImage !== 'undefined' && ogImage) ? [ogImage] : undefined,
   author: { '@type': 'Person', name: author.full_name, url: (typeof siteUrl !== 'undefined' && author.username) ? siteUrl + '/profile/' + author.username : undefined },
   datePublished: (typeof publishedTime !== 'undefined') ? publishedTime : undefined,
-  publisher: { '@type': 'Organization', name: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়' },
+  publisher: { '@type': 'Organization', name: 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়' },
   mainEntityOfPage: (typeof siteUrl !== 'undefined') ? siteUrl + '/articles/' + post.id : undefined
 }).replace(/</g, '\\u003c') %>
 </script>

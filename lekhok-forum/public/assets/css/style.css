@@ -1,5 +1,5 @@
 /* ============================================
-   বাংলাদেশ তরুণ কলাম লেখক ফোরাম — Stylesheet
+   লেখক ফোরাম — Stylesheet
    ============================================ */
 
 :root {
@@ -617,6 +617,7 @@ ul { list-style: none; padding: 0; margin: 0; }
   box-shadow: 0 4px 20px rgba(0,0,0,0.35);
 }
 .btclf-topbar.shrunk .logo-text strong { font-size: 15px; }
+.btclf-topbar.shrunk .logo-text-v2 strong { font-size: 15px !important; }
 .btclf-topbar.shrunk .logo-text small { font-size: 11px; }
 .btclf-topbar.shrunk .topbar-nav a { padding: 6px 11px; font-size: 14px; }
 
@@ -628,12 +629,11 @@ ul { list-style: none; padding: 0; margin: 0; }
   .btclf-topbar .logo-text small { font-size: 10px; }
 }
 
-/* সেশন ৩১ ফলো-আপ: টপবারের পুরো নাম দুই লাইন সমান 10px।
-   উপরের `.btclf-topbar .logo-text strong { font-size:16px }` রুলের specificity (0,2,1)
-   `.logo-text-v2 strong`-এর 10px (0,1,1)-কে হারায় — ফলে ১ম লাইন আজও 16px-এ
-   'বড় ছোট' দেখাত; !important দিয়ে দুই লাইন সমান বেঁধে দেওয়া হলো (shrunk + ≤480px সহ) */
-.btclf-topbar .logo-text-v2 strong,
-.btclf-topbar .logo-text-v2 .brand-line2 { font-size: 10px !important; }
+/* সেশন ৩৭: ব্র্যান্ড-রিনেম ("লেখক ফোরাম") — নাম ছোট হওয়ায় টপবার ব্র্যান্ড
+   আবার পাঠযোগ্য মাপে। ১ম লাইন ব্র্যান্ড (বড়), ২য় লাইন শাখা-পরিচিতি (ছোট)।
+   specificity-সংঘর্ষ এড়াতে !important (সেশন ৩১-এর প্যাটার্ন) */
+.btclf-topbar .logo-text-v2 strong { font-size: 17px !important; }
+.btclf-topbar .logo-text-v2 .brand-line2 { font-size: 11px !important; color: #9fb0c3; }
 
 /* Section alternation — subtle pattern */
 .section-alt {
@@ -2743,7 +2743,8 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 @media (max-width: 768px) {
   .topbar-dropdown-menu { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: 0; padding: 0; min-width: 0; }
   .topbar-dropdown-menu a { padding: 6px 0; font-size: 13px; }
-  .logo-text-v2 strong, .logo-text-v2 .brand-line2 { font-size: 10px !important; }
+  .logo-text-v2 strong { font-size: 14px !important; }
+  .logo-text-v2 .brand-line2 { font-size: 10px !important; }
   .topbar-right .nav-login, .topbar-right .nav-register { padding: 7px 14px; font-size: 12.5px; margin-left: 4px; }
 }
 /* Mobile sidebar compact */

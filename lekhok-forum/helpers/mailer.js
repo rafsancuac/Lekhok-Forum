@@ -20,7 +20,7 @@
 const db = require('../db');
 
 const SITE_URL = (process.env.SITE_URL || 'https://lekhok-forum.vercel.app').replace(/\/$/, '');
-const FROM = process.env.NEWSLETTER_FROM || 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম <onboarding@resend.dev>';
+const FROM = process.env.NEWSLETTER_FROM || 'লেখক ফোরাম <onboarding@resend.dev>';
 
 function isConfigured() { return !!process.env.RESEND_API_KEY; }
 
@@ -42,7 +42,7 @@ function buildHtml({ kind, title, excerpt, authorName, link }) {
 <html lang="bn"><body style="margin:0;padding:0;background:#f4f6f8;font-family:'Noto Sans Bengali','Hind Siliguri',Arial,sans-serif;">
 <div style="max-width:560px;margin:0 auto;padding:24px 16px;">
   <div style="background:#0a1f44;border-radius:12px 12px 0 0;padding:22px 28px;text-align:center;">
-    <div style="color:#ffffff;font-size:17px;font-weight:bold;">বাংলাদেশ তরুণ কলাম লেখক ফোরাম</div>
+    <div style="color:#ffffff;font-size:17px;font-weight:bold;">লেখক ফোরাম</div>
     <div style="color:#9fe1cb;font-size:12.5px;margin-top:4px;">চট্টগ্রাম বিশ্ববিদ্যালয়</div>
   </div>
   <div style="background:#ffffff;border-radius:0 0 12px 12px;padding:28px;">
@@ -57,7 +57,7 @@ function buildHtml({ kind, title, excerpt, authorName, link }) {
       নোটিফিকেশন বন্ধ করতে চাইলে <a href="${SITE_URL}/newsletter/unsubscribe" style="color:#059669;">এখানে সাবস্ক্রাইব বাতিল করুন</a>।
     </p>
   </div>
-  <p style="text-align:center;color:#9ca3af;font-size:11.5px;margin:14px 0 0;">তারুণ্যের শাণিত কলমে আলোকিত ধরনী — © ${new Date().getFullYear()} বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</p>
+  <p style="text-align:center;color:#9ca3af;font-size:11.5px;margin:14px 0 0;">তারুণ্যের শাণিত কলমে আলোকিত ধরনী — © ${new Date().getFullYear()} লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</p>
 </div>
 </body></html>`;
 }

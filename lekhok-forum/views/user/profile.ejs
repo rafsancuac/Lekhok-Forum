@@ -1,5 +1,5 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: (profile.full_name) + ' | বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/profile.css'] }) %>
+<%- include('../partials/header', { title: (profile.full_name) + ' | লেখক ফোরাম', extra_css: ['/assets/css/profile.css'] }) %>
 
   <% if (typeof req !== 'undefined' && req.query.ok === 'avatar') { %>
     <div class="profile-toast success" onclick="this.remove()"><i class="fas fa-check-circle"></i> প্রোফাইল ছবি সফলভাবে পরিবর্তন হয়েছে</div>

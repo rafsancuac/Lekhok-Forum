@@ -99,7 +99,7 @@ app.use(async (req, res, next) => {
     // res.locals.getSetting (templates cannot await) — identical behaviour
     // on the sql.js and Turso backends.
     const settings = await db.getSettingsAll();
-    res.locals.siteName   = settings['site_name'] || 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়';
+    res.locals.siteName   = settings['site_name'] || 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়';
     res.locals.tagline    = settings['tagline']   || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।';
     res.locals.motto      = settings['motto']     || 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী';
     res.locals.getSetting = (k) => (k in settings ? settings[k] : null);
@@ -215,7 +215,7 @@ app.use('/admin',    require('./admin/routes'));
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).render('404', { layout: false, siteName: 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম' });
+  res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
 });
 
 // ── Error middleware (async/Turso rejections land here) ─────────────────────
@@ -240,7 +240,7 @@ if (require.main === module) {
   // Direct run: init DB once, then listen.
   db.initDb().then(() => {
     app.listen(PORT, () => {
-      console.log(`\n  বাংলাদেশ তরুণ কলাম লেখক ফোরাম server running at http://localhost:${PORT}`);
+      console.log(`\n  লেখক ফোরাম server running at http://localhost:${PORT}`);
       console.log(`  Admin panel:  http://localhost:${PORT}/admin`);
       console.log(`  Login:        admin / admin123\n`);
     });
