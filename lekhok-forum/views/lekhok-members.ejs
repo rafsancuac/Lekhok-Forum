@@ -54,10 +54,10 @@
 
 <% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
 
-<!-- সার্চ + ফিল্টার -->
-<section class="section reveal" style="padding-bottom:0">
+<!-- সার্চ + ফিল্টার + গ্রিড (একসাথে, compact) -->
+<section class="section reveal" style="padding-top:16px; padding-bottom:32px;">
   <div class="container">
-    <form class="members-filter" method="GET" action="/members">
+    <form class="members-filter" method="GET" action="/members" style="margin-bottom:12px;">
       <input type="search" name="q" value="<%= search %>" placeholder="নাম / ইউজারনেম খুঁজুন..." aria-label="সার্চ">
       <select name="role" aria-label="রোল">
         <option value="">সব রোল</option>
@@ -84,15 +84,7 @@
         <a class="mf-reset" href="/members"><i class="fas fa-times"></i> ফিল্টার মুছুন</a>
       <% } %>
     </form>
-  </div>
-</section>
-
-<!-- সদস্য গ্রিড -->
-<section class="section reveal">
-  <div class="container">
-    <div style="text-align:center; margin-bottom:20px;">
-      <p class="term-intro" style="text-align:center;">মোট <strong><%= bnNum(members.length) %></strong> জন সদস্য<% if (search || currentRole || currentDept || currentTerm) { %> (ফিল্টারকৃত)<% } %>, সর্বমোট নিবন্ধিত <strong><%= bnNum(totalUsers) %></strong> জন। কার্ডে ক্লিক করে প্রোফাইল দেখুন।</p>
-    </div>
+    <p class="term-intro" style="text-align:center; margin-bottom:16px;">মোট <strong><%= bnNum(members.length) %></strong> জন সদস্য<% if (search || currentRole || currentDept || currentTerm) { %> (ফিল্টারকৃত)<% } %>, সর্বমোট নিবন্ধিত <strong><%= bnNum(totalUsers) %></strong> জন। কার্ডে ক্লিক করে প্রোফাইল দেখুন।</p>
 
     <% if (members && members.length) { %>
       <div class="leaders-grid" style="margin-top:26px">

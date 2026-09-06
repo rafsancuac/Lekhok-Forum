@@ -357,7 +357,7 @@ ul { list-style: none; padding: 0; margin: 0; }
    .container on .footer-inner keeps content inside the frame with equal side spacing. */
 .site-footer { margin-top: 48px; }
 .site-footer .footer-inner { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
-.site-footer .footer-brand h2 { color: #fff; font-size: 22px; margin: 0 0 6px; }
+.site-footer .footer-brand h2 { color: #fff; font-size: 17px; margin: 0 0 6px; }
 .site-footer .footer-brand p { max-width: 340px; }
 .site-footer .f-links li { color: #94a3b8; }
 @media (max-width: 992px) {
@@ -2373,12 +2373,12 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 /* Brand v2 — 2 lines, same size, both WHITE on dark bg */
 .logo-text-v2 { display: flex; flex-direction: column; gap: 1px; line-height: 1.2; font-family: 'Hind Siliguri', sans-serif !important; }
 .logo-text-v2 strong {
-  font-size: 11px; font-weight: 700; color: #ffffff;
+  font-size: 10px; font-weight: 700; color: #ffffff;
   letter-spacing: -0.01em;
 }
 .logo-text-v2 .brand-line2 {
   color: #ffffff !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
 }
 
@@ -2573,7 +2573,7 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 .topbar-right .nav-login,
 .topbar-right .nav-register {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 9px 20px; font-size: 13.5px; font-weight: 600;
+  padding: 7px 14px; font-size: 12.5px; font-weight: 600;
   border-radius: 8px; text-decoration: none;
   transition: all 0.18s ease;
   font-family: 'Hind Siliguri', sans-serif !important;
@@ -2618,7 +2618,7 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 @media (max-width: 768px) {
   .topbar-dropdown-menu { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; border: 0; padding: 0; min-width: 0; }
   .topbar-dropdown-menu a { padding: 6px 0; font-size: 13px; }
-  .logo-text-v2 strong, .logo-text-v2 .brand-line2 { font-size: 11px !important; }
+  .logo-text-v2 strong, .logo-text-v2 .brand-line2 { font-size: 10px !important; }
   .user-feed-cta { flex-direction: column; align-items: flex-start; }
   .topbar-right .nav-login, .topbar-right .nav-register { padding: 7px 14px; font-size: 12.5px; margin-left: 4px; }
 }
@@ -2931,3 +2931,15 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
 .qa-fold-answer p { font-size: 13.5px; color: var(--text, #0f172a); line-height: 1.7; margin: 6px 0; }
 .qa-fold-answerer { font-size: 12px; color: var(--text-muted, #64748b); display: flex; align-items: center; gap: 4px; }
 .qa-fold-no-answer { padding: 12px; text-align: center; color: var(--text-muted, #64748b); font-size: 13px; background: var(--surface-alt, #f8fafc); border-radius: 8px; }
+
+/* ফিডে যান button — compact, not touching border */
+.topbar-right .btn-ghost {
+  padding: 6px 14px !important; font-size: 12.5px !important;
+  border: 1px solid rgba(255,255,255,0.25); border-radius: 7px;
+  color: #fff; text-decoration: none; display: inline-flex;
+  align-items: center; gap: 5px; transition: all 0.15s;
+  font-family: 'Hind Siliguri', sans-serif !important;
+}
+.topbar-right .btn-ghost:hover {
+  background: rgba(255,255,255,0.1); text-decoration: none; color: #fff;
+}
