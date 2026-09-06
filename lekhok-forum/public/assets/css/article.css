@@ -34,7 +34,7 @@
 .answer-item { display: flex; gap: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); scroll-margin-top: 90px; }
 .answer-sidebar { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 44px; }
 .answer-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
-.top-answer-chip { font-size: 0.68rem; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+.top-answer-chip { font-size: 0.68rem; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
 .answer-body { flex: 1; }
 .answer-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
 .answer-author { color: var(--brand); font-weight: 700; text-decoration: none; }
@@ -92,10 +92,22 @@
   padding: 10px 14px;
   background: rgba(16, 163, 127, 0.08);
   border: 1px solid rgba(16, 163, 127, 0.25);
-  border-radius: 10px;
+  border-radius: 5px;
   color: var(--text-2, #555);
   font-size: 0.92rem;
 }
 .shared-banner .fa-retweet { color: #10a37f; }
 .shared-banner a { color: #0b7a5f; font-weight: 600; text-decoration: none; }
 .shared-banner a:hover { text-decoration: underline; }
+
+/* ══ সেশন ৩৮ — ফেসবুক-স্টাইল কম্প্যাক্ট কমেন্ট/রিপ্লাই ══ */
+.comments-section { padding: 4px 16px 8px; }
+.comments-list { gap: 8px; }
+.comment-item { gap: 8px; }
+.comment-avatar { width: 32px; height: 32px; }
+.comment-avatar.small { width: 26px; height: 26px; }
+.comment-bubble { background: var(--bg, #f0f2f5); border-radius: 5px; padding: 7px 12px; }
+.comment-item .comment-meta { font-size: .78rem; }
+.comment-input-wrap textarea { border-radius: 20px; padding: 8px 14px; font-size: .9rem; background: var(--bg, #f0f2f5); border-color: transparent; }
+.comment-input-wrap textarea:focus { background: #fff; border-color: var(--accent); }
+.reply-item { margin-top: 6px; }

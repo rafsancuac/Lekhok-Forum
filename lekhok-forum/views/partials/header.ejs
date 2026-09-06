@@ -160,14 +160,19 @@
             </div>
             <div id="notifList">
               <% if (typeof recentNotifs !== 'undefined' && recentNotifs && recentNotifs.length) { %>
+                <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle' }; %>
                 <% recentNotifs.forEach(n => { %>
                   <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>">
-                    <div class="notif-title"><%= n.title %></div>
-                    <div class="notif-body"><%= n.body %></div>
+                    <span class="notif-ico"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
+                    <span class="notif-text">
+                      <span class="notif-body"><%= n.body %></span>
+                      <span class="notif-time"><%= n.created_at %></span>
+                    </span>
+                    <% if (!n.is_read) { %><span class="notif-dot" title="অপঠিত"></span><% } %>
                   </a>
                 <% }); %>
               <% } else { %>
-                <div class="notif-empty">কোনো বিজ্ঞপ্তি নেই</div>
+                <div class="notif-empty"><i class="far fa-bell"></i><p>কোনো বিজ্ঞপ্তি নেই</p></div>
               <% } %>
             </div>
           </div>

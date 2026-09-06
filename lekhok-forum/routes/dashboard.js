@@ -3,6 +3,19 @@ const router = express.Router();
 const db = require('../db');
 const { messageUpload, complaintUpload, attachmentUpload, withUpload } = require('../middleware/upload');
 
+// ── ডুপ্লিকেট-নোটিফিকেশন গার্ড: একই ইউজার+টাইপ+বডি ১ মিনিটের মধ্যে দ্বিতীয়বার ঢোকে না ──
+async function notifyOnce(uid, type, title, body, link, windowMin) {
+  try {
+    const dup = await db.prepare(
+      "SELECT id FROM notifications WHERE user_id = ? AND type = ? AND body = ? AND created_at >= datetime('now', ?) LIMIT 1"
+    ).get(uid, type, body, '-' + (windowMin || 10) + ' minutes');
+    if (dup) return false;
+    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
+      .run(uid, type, title, body, link);
+    return true;
+  } catch (e) { return false; }
+}
+
 function ensureAuth(req, res, next) {
   if (!req.session.user) {
     // API endpoints (typing / poll / check / unread) must get JSON 401 —
@@ -39,19 +52,19 @@ router.get('/dashboard', async (req, res) => {
 
   const ARTICLE_SQL = `
     SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
-           p.published_at as created_at, p.like_count, p.comment_count, p.reactions,
+           p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions,
            u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
   const QUESTION_SQL = `
     SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
-           p.published_at as created_at, p.like_count, p.comment_count, p.reactions,
+           p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions,
            u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
   const ACTIVITY_SQL = `
     SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
-           NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, '{}' as reactions,
+           NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
     WHERE dc.content_type = 'activity' AND dc.published = 1`;
@@ -76,7 +89,7 @@ router.get('/dashboard', async (req, res) => {
   // (async migration) per-item reaction lookups moved from sync forEach to for..of
   for (const item of feed) {
     try { item.reactionCounts = JSON.parse(item.reactions || '{}'); } catch (_) { item.reactionCounts = {}; }
-    ['like','love','haha','wow','sad'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
+    ['like','love','care','haha','wow','sad'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
     item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
     // my current reaction on this item (activities have no reactions)
     if (me && item.item_type !== 'activity') {
@@ -232,15 +245,14 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
     if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.status(400).json({ ok: false, error: 'empty' });
     return res.redirect('/messages/' + req.params.username);
   }
-  await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
+  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
     .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
-  // Notify recipient
+  // Notify recipient (dedup: ১০ মিনিটে একই বডির দ্বিতীয় নোটিফিকেশন নয়)
   if (other.id !== me) {
-    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
-      .run(other.id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username);
+    await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username);
   }
-  if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true });
+  if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
   res.redirect('/messages/' + req.params.username);
 });
 
@@ -435,7 +447,7 @@ router.post('/complaints', ensureAuth, withUpload(attachmentUpload), async (req,
   // একই ব্যবহারকারীর হুবহু একই subject+body ভালা অভিযোগ ৫ মিনিটের মধ্যে আবার
   // এলে INSERT করা হয় না — ডাবল-ক্লিক / রিফ্রেশ-রিসাবমিটে একটাই থাকবে।
   const recent = await db.prepare(
-    "SELECT id FROM complaints WHERE submitted_by = ? AND subject = ? AND IFNULL(body,'') = IFNULL(?,'') AND created_at >= datetime('now', '-5 minutes') LIMIT 1"
+    "SELECT id FROM complaints WHERE submitted_by = ? AND subject = ? AND IFNULL(body,'') = IFNULL(?,'') AND created_at >= datetime('now', '-60 minutes') LIMIT 1"
   ).get(req.session.user.id, subject, body || '');
   if (recent) return res.redirect('/complaints?dup=1');
 
@@ -451,8 +463,7 @@ router.post('/complaints', ensureAuth, withUpload(attachmentUpload), async (req,
   (await db.prepare("SELECT id FROM users WHERE role IN ('admin','moderator')").all()).forEach(a => staff.add(a.id));
   staff.delete(req.session.user.id);
   for (const uid of staff) {
-    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
-      .run(uid, 'complaint', 'নতুন অভিযোগ', `${req.session.user.full_name} একটি অভিযোগ দিয়েছেন: ${subject}`, '/admin/complaints');
+    await notifyOnce(uid, 'complaint', 'নতুন অভিযোগ', `${req.session.user.full_name} একটি অভিযোগ দিয়েছেন: ${subject}`, '/admin/complaints');
   }
   res.redirect('/complaints?sent=1');
 });

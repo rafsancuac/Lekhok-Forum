@@ -1805,6 +1805,7 @@ module.exports = {
   setSetting,
   saveDb,
   flushDb,
+  get snapshotActive() { return USE_DB_SNAPSHOT; },  // Vercel Blob-snapshot mode কিনা
   MODERATOR_SCOPES,
   SCOPE_ALIASES,
   DAILY_CONTENT_SCOPES,

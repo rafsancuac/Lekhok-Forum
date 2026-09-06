@@ -89,7 +89,7 @@
                 </td>
                 <td>
                   <form method="POST" action="/admin/tasks/<%= t.id %>/status" style="display:inline;">
-                    <select name="status" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid #ccd0d5; border-radius:6px; font-size:12px; font-family:inherit; background:#fff;">
+                    <select name="status" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid #ccd0d5; border-radius:5px; font-size:12px; font-family:inherit; background:#fff;">
                       <option value="pending" <%= t.status==='pending'?'selected':'' %>>বাকি</option>
                       <option value="in_progress" <%= t.status==='in_progress'?'selected':'' %>>চলমান</option>
                       <option value="done" <%= t.status==='done'?'selected':'' %>>সম্পন্ন</option>

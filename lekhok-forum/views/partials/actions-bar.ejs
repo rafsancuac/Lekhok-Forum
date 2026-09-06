@@ -1,60 +1,74 @@
 <%
   // Shared reactions + share + bookmark actions bar.
   // Params: targetId, targetType ('post'|'comment'), counts {like..sad}, mine, link,
-  //         bookmarked (optional bool), showBookmark (optional, default true)
+  //         bookmarked (optional bool), showBookmark (optional, default true),
+  //         commentCount / shareCount (optional numbers — summary strip-এ দেখায়)
   if (typeof showBookmark === 'undefined') showBookmark = true;
   if (typeof showShare === 'undefined') showShare = true;
   if (typeof bookmarked === 'undefined') bookmarked = false;
-  var _meta = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' };
-  var _labels = { like: 'লাইক', love: 'ভালোবাসা', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
+  if (typeof commentCount === 'undefined') commentCount = 0;
+  if (typeof shareCount === 'undefined') shareCount = 0;
+  var _meta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
+  var _labels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
   var _mine = mine || 'like';
   var _topEmojis = Object.entries(counts || {}).filter(e => e[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => _meta[e[0]]);
   var _total = Object.values(counts || {}).reduce((a, b) => a + (b || 0), 0);
 %>
-<div class="actions-bar">
-  <div class="react-wrap" data-target-id="<%= targetId %>" data-target-type="<%= targetType %>">
-    <div class="reaction-picker" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন">
-      <% Object.keys(_meta).forEach(function (k) { %>
-        <button type="button" class="reaction-opt<%= mine === k ? ' selected' : '' %>" data-reaction="<%= k %>" title="<%= _labels[k] %>"><%= _meta[k] %></button>
-      <% }); %>
-    </div>
-    <button type="button" class="reaction-btn main-react <%= mine ? 'active' : '' %>" data-mine="<%= mine || '' %>" aria-label="প্রতিক্রিয়া দিন">
-      <span class="rb-emoji"><%= mine ? _meta[mine] : '👍' %></span>
-      <span class="rb-label"><%= mine ? _labels[mine] : 'লাইক' %></span>
-    </button>
-  </div>
-
-  <a class="reaction-btn" href="<%= link %>#comments"><i class="far fa-comment"></i> মন্তব্য</a>
-
-  <div class="reaction-summary" data-link="<%= link %>">
-    <span class="rs-emojis"><% _topEmojis.forEach(function (em) { %><%= em %><% }); %></span>
-    <span class="rs-count"><%= _total > 0 ? _total : '' %></span>
-  </div>
-
-  <span class="ab-spacer"></span>
-
-  <% if (showShare) { %>
-  <div class="share-wrap">
-    <button type="button" class="reaction-btn share-trigger"><i class="far fa-share-square"></i> শেয়ার</button>
-    <div class="share-menu" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>" data-share-post="<%= targetType === 'post' ? targetId : '' %>">
-      <% if (typeof user !== 'undefined' && user && targetType === 'post') { %>
-        <button type="button" data-share="timeline"><i class="fas fa-retweet"></i> নিজের টাইমলাইনে শেয়ার</button>
-      <% } %>
-      <button type="button" data-share="copy"><i class="fas fa-link"></i> লিংক কপি করুন</button>
-      <a data-share="whatsapp" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-      <a data-share="facebook" target="_blank" rel="noopener"><i class="fab fa-facebook"></i> Facebook</a>
-      <a data-share="telegram" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Telegram</a>
-      <a data-share="x" target="_blank" rel="noopener"><i class="fab fa-x-twitter"></i> X (Twitter)</a>
-      <% if (user) { %>
-        <button type="button" data-share="user"><i class="fas fa-user-friends"></i> ইউজারকে পাঠান</button>
-      <% } %>
-    </div>
+<div class="actions-block">
+  <% if (targetType === 'post') { %>
+  <div class="actions-summary">
+    <span class="as-left">
+      <% if (_total > 0) { %><span class="as-emojis"><% _topEmojis.forEach(function (em) { %><span><%= em %></span><% }); %></span><span class="as-count"><%= _total %></span><% } %>
+    </span>
+    <span class="as-right">
+      <a href="<%= link %>#comments" class="as-stat" title="মন্তব্য"><span><%= commentCount || 0 %></span><i class="far fa-comment"></i></a>
+      <% if (shareCount > 0) { %><span class="as-stat" title="শেয়ার"><span><%= shareCount %></span><i class="fas fa-share"></i></span><% } %>
+    </span>
   </div>
   <% } %>
+  <div class="actions-bar">
+    <div class="react-wrap" data-target-id="<%= targetId %>" data-target-type="<%= targetType %>">
+      <div class="reaction-picker" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন">
+        <% Object.keys(_meta).forEach(function (k) { %>
+          <button type="button" class="reaction-opt<%= mine === k ? ' selected' : '' %>" data-reaction="<%= k %>" title="<%= _labels[k] %>"><%= _meta[k] %></button>
+        <% }); %>
+      </div>
+      <button type="button" class="reaction-btn main-react <%= mine ? 'active' : '' %>" data-mine="<%= mine || '' %>" aria-label="প্রতিক্রিয়া দিন">
+        <span class="rb-emoji"><%= mine ? _meta[mine] : '👍' %></span>
+        <span class="rb-label"><%= mine ? _labels[mine] : 'লাইক' %></span>
+      </button>
+    </div>
 
-  <% if (showBookmark && user) { %>
+    <a class="reaction-btn" href="<%= link %>#comments"><i class="far fa-comment"></i> মন্তব্য</a>
+
+    <% if (showShare) { %>
+    <div class="share-wrap">
+      <% if (typeof user !== 'undefined' && user && targetType === 'post') { %>
+      <button type="button" class="reaction-btn share-now" data-share-post="<%= targetId %>" title="এক ক্লিকে নিজের টাইমলাইনে শেয়ার"><i class="fas fa-share"></i> শেয়ার</button>
+      <button type="button" class="reaction-btn share-trigger share-caret" aria-label="আরও শেয়ার অপশন"><i class="fas fa-caret-down"></i></button>
+      <% } else { %>
+      <button type="button" class="reaction-btn share-trigger"><i class="far fa-share-square"></i> শেয়ার</button>
+      <% } %>
+      <div class="share-menu" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>" data-share-post="<%= targetType === 'post' ? targetId : '' %>">
+        <% if (typeof user !== 'undefined' && user && targetType === 'post') { %>
+        <button type="button" data-share="timeline"><i class="fas fa-retweet"></i> নিজের টাইমলাইনে শেয়ার</button>
+        <% } %>
+        <button type="button" data-share="copy"><i class="fas fa-link"></i> লিংক কপি করুন</button>
+        <a data-share="whatsapp" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+        <a data-share="facebook" target="_blank" rel="noopener"><i class="fab fa-facebook"></i> Facebook</a>
+        <a data-share="telegram" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Telegram</a>
+        <a data-share="x" target="_blank" rel="noopener"><i class="fab fa-x-twitter"></i> X (Twitter)</a>
+        <% if (user) { %>
+        <button type="button" data-share="user"><i class="fas fa-user-friends"></i> ইউজারকে পাঠান</button>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (showBookmark && user) { %>
     <button type="button" class="reaction-btn bookmark-btn <%= bookmarked ? 'active' : '' %>" data-bookmark-id="<%= targetId %>" aria-label="সংরক্ষণ">
       <i class="<%= bookmarked ? 'fas' : 'far' %> fa-bookmark"></i>
     </button>
-  <% } %>
+    <% } %>
+  </div>
 </div>

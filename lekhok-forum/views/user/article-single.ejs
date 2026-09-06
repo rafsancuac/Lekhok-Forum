@@ -70,6 +70,8 @@
           counts: reaction.counts,
           mine: reaction.mine,
           link: '/articles/' + post.id,
+          commentCount: post.comment_count || 0,
+          shareCount: post.share_count || 0,
           bookmarked: userBookmarked
         }) %>
         <% if (user && user.id === post.author_id) { %>

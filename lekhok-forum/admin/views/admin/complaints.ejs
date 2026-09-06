@@ -40,7 +40,7 @@
             &middot; <%= c.created_at %>
           </div>
         </div>
-        <span style="padding:3px 10px; border-radius:12px; font-size:.8rem; font-weight:600;
+        <span style="padding:3px 10px; border-radius:5px; font-size:.8rem; font-weight:600;
           <%= c.status === 'new' ? 'background:#fdecea; color:#c41033;' : c.status === 'in_review' ? 'background:#fff7e0; color:#9a6b00;' : c.status === 'resolved' ? 'background:#e6f6ea; color:#0a7d33;' : 'background:#eee; color:#555;' %>">
           <%= c.status === 'new' ? 'নতুন' : c.status === 'in_review' ? 'পর্যালোচনাধীন' : c.status === 'resolved' ? 'সমাধান হয়েছে' : 'বাতিল' %>
         </span>

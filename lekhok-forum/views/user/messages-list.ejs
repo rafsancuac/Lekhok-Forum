@@ -87,7 +87,7 @@
     .msg-head-row h2 { margin: 0; flex: 0 0 auto; }
     .msg-count-badge {
       background: var(--accent-soft, #dbeafe); color: var(--accent, #2563eb);
-      font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 5px;
     }
     .msg-search-wrap {
       position: relative; margin-bottom: 8px;
@@ -98,7 +98,7 @@
     }
     .msg-search-input {
       width: 100%; padding: 10px 36px 10px 34px !important;
-      font-size: 14px; border-radius: 9px !important;
+      font-size: 14px; border-radius: 5px !important;
       border: 1.5px solid var(--border) !important;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
@@ -115,7 +115,7 @@
     .msg-search-kbd {
       position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
       background: var(--surface-alt); border: 1px solid var(--border);
-      border-radius: 4px; padding: 2px 7px; font-size: 11px;
+      border-radius: 5px; padding: 2px 7px; font-size: 11px;
       font-family: monospace; color: var(--text-soft);
     }
     .msg-search-input:focus ~ .msg-search-kbd { display: none; }
@@ -125,7 +125,7 @@
     .msg-search-results {
       position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px;
       background: var(--card, #fff); border: 1px solid var(--border, #e5e7eb);
-      border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.16);
+      border-radius: 5px; box-shadow: 0 12px 32px rgba(0,0,0,0.16);
       max-height: 400px; overflow-y: auto; z-index: 50;
     }
     .msr-section { border-bottom: 1px solid var(--border, #f1f5f9); }
@@ -139,7 +139,7 @@
     .msr-section-head i { margin-right: 4px; }
     .msr-count {
       background: var(--accent-soft, #dbeafe); color: var(--accent, #2563eb);
-      padding: 1px 7px; border-radius: 999px; font-size: 10.5px;
+      padding: 1px 7px; border-radius: 5px; font-size: 10.5px;
     }
     .msr-row {
       display: flex; align-items: center; gap: 10px;
@@ -160,12 +160,12 @@
     .msr-name { font-weight: 600; font-size: 14px; color: var(--text); }
     .msr-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .msr-name mark, .msr-sub mark {
-      background: #fef08a; color: #713f12; padding: 0 2px; border-radius: 2px;
+      background: #fef08a; color: #713f12; padding: 0 2px; border-radius: 5px;
     }
     .msr-right { flex-shrink: 0; color: var(--text-muted); font-size: 12px; }
     .msr-right .conv-unread {
       background: var(--accent); color: white; font-size: 11px; font-weight: 600;
-      padding: 1px 7px; border-radius: 999px;
+      padding: 1px 7px; border-radius: 5px;
     }
     .msr-empty { padding: 28px 14px; text-align: center; color: var(--text-muted); }
     .msr-empty i { font-size: 28px; margin-bottom: 8px; display: block; opacity: 0.5; }
@@ -184,7 +184,7 @@
     .msg-recent-clear:hover { color: var(--danger); }
     .msg-recent-item {
       display: flex; align-items: center; gap: 8px; padding: 6px 8px;
-      border-radius: 6px; cursor: pointer; text-decoration: none; color: inherit;
+      border-radius: 5px; cursor: pointer; text-decoration: none; color: inherit;
       font-size: 13px; transition: background 0.12s;
     }
     .msg-recent-item:hover { background: var(--surface-alt); }

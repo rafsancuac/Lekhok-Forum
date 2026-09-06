@@ -279,7 +279,7 @@ function uploadImage(fieldKey) {
         else {
           const img = document.createElement('img');
           img.src = data.url; img.className = 'cm-image-preview';
-          img.style.cssText = 'max-width:200px;max-height:120px;border-radius:8px;margin-top:8px;display:block;';
+          img.style.cssText = 'max-width:200px;max-height:120px;border-radius:5px;margin-top:8px;display:block;';
           btn.parentElement.appendChild(img);
         }
       } else { alert(data.error || 'আপলোড ব্যর্থ'); }

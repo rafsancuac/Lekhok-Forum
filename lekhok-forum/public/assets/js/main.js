@@ -335,6 +335,7 @@ window.showToast = showToast;
   const META = {
     like: { emoji: '👍', label: 'লাইক' },
     love: { emoji: '❤️', label: 'ভালোবাসা' },
+    care: { emoji: '🤗', label: 'কেয়ার' },
     haha: { emoji: '😂', label: 'হাহা' },
     wow:  { emoji: '😮', label: 'বিস্ময়' },
     sad:  { emoji: '😢', label: 'দুঃখ' }
@@ -562,6 +563,32 @@ window.showToast = showToast;
       wrap.dataset.initialized = '1';
       const trigger = wrap.querySelector('.share-trigger');
       const menu = wrap.querySelector('.share-menu');
+
+      // ── এক-ক্লিক শেয়ার: সরাসরি নিজের টাইমলাইনে (মেনু ছাড়া) ──
+      const now = wrap.querySelector('.share-now');
+      if (now) {
+        now.addEventListener('click', e => {
+          e.stopPropagation();
+          if (!LOGGED_IN()) return location.href = '/login';
+          const postId = now.dataset.sharePost;
+          if (!postId) { showToast('শেয়ার করা যাবে না', 'error'); return; }
+          now.disabled = true;
+          fetch('/articles/' + postId + '/share', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin'
+          }).then(r => r.json()).then(d => {
+            if (d.ok) {
+              showToast('নিজের টাইমলাইনে শেয়ার হয়েছে ✓', 'success');
+              const cnt = now.closest('.actions-block') && now.closest('.actions-block').querySelector('.as-right .as-stat:last-child');
+              setTimeout(() => { location.href = d.redirect || '/dashboard'; }, 600);
+            } else {
+              showToast(d.error || 'শেয়ার ব্যর্থ হয়েছে', 'error');
+              now.disabled = false;
+            }
+          }).catch(() => { showToast('শেয়ার ব্যর্থ হয়েছে', 'error'); now.disabled = false; });
+        });
+      }
 
       trigger.addEventListener('click', e => {
         e.stopPropagation();

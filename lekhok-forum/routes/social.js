@@ -45,7 +45,7 @@ async function extractMentions(text) {
 }
 
 // ── Reaction helpers (5-emoji system) ────────────────────────────────────────
-const REACTIONS = ['like', 'love', 'haha', 'wow', 'sad'];
+const REACTIONS = ['like', 'love', 'care', 'haha', 'wow', 'sad'];
 const REACTION_META = {
   like: { emoji: '👍', label: 'লাইক' },
   love: { emoji: '❤️', label: 'ভালোবাসা' },
@@ -1126,7 +1126,7 @@ router.post('/settings/display', ensureLoggedIn, async (req, res) => {
 router.post('/api/react', ensureLoggedIn, async (req, res) => {
   const me = req.session.user;
   const { target_id, target_type, reaction_type } = req.body;
-  const ALLOWED = ['like', 'love', 'haha', 'wow', 'sad'];
+  const ALLOWED = REACTIONS;
   if (!ALLOWED.includes(reaction_type)) return res.status(400).json({ error: 'invalid reaction' });
   if (!['post', 'comment'].includes(target_type)) return res.status(400).json({ error: 'invalid target_type' });
 

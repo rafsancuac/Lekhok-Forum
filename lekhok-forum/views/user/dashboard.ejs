@@ -33,17 +33,6 @@
         <% if (user) { %><a href="/dashboard?filter=following" class="filter-chip <%= filter === 'following' ? 'active' : '' %>"><i class="fas fa-user-friends"></i> অনুসরণ only</a><% } %>
       </div>
 
-      <% if (user && filter === 'all' && myInterests.length === 0) { %>
-        <div class="interest-hint card">
-          <i class="fas fa-wand-magic-sparkles"></i>
-          <div>
-            <strong>আপনার পছন্দের বিষয় বেছে নিন</strong>
-            <span>আগ্রহ নির্বাচন করলে ফিড আরও ব্যক্তিগত হবে।</span>
-          </div>
-          <a href="/me?tab=categories" class="btn btn-primary btn-sm">বিষয় বাছুন</a>
-        </div>
-      <% } %>
-
       <% if (feed.length === 0) { %>
         <div class="empty-state-full card">
           <i class="fas fa-newspaper"></i>
@@ -99,6 +88,8 @@
                   counts: item.original.reactionCounts,
                   mine: item.original.myReaction,
                   link: item.original.link,
+                  commentCount: item.original.comment_count || 0,
+                  shareCount: item.original.share_count || 0,
                   bookmarked: false
                 }) %>
               </div>
@@ -150,6 +141,8 @@
               counts: item.reactionCounts,
               mine: item.myReaction,
               link: item.link,
+              commentCount: item.comment_count || 0,
+              shareCount: item.share_count || 0,
               bookmarked: false
             }) %>
           </article>

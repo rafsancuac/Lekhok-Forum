@@ -85,6 +85,24 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
+// ── "সেভের পর ৪০৪"-এর পার্মানেন্ট ফিক্স (Vercel serverless) ──────────────────
+// স্ন্যাপশট-মোডে POST লেখে ইনস্ট্যান্স A-তে; রিডাইরেক্টের GET নামতে পারে ইনস্ট্যান্স B-তে,
+// তখনো স্ন্যাপশট আপলোড না হয়ে থাকলে B পুরনো DB দেখে → নতুন রো নেই → ৪০৪।
+// তাই রিডাইরেক্টের আগে স্ন্যাপশট ফ্লাশ করে নিই — পরের রিকোয়েস্ট সবসময় নতুন অবস্থা পায়।
+app.use((req, res, next) => {
+  if (db.snapshotActive) {
+    const origRedirect = res.redirect.bind(res);
+    res.redirect = function (...args) {
+      const fin = () => origRedirect(...args);
+      const flushThenGo = () => Promise.resolve(db.flushDb()).then(fin, fin);
+      // সেশন-রাইট (লগইন/রেজিস্টার) আগে DB-তে ঢুকিয়ে তারপর স্ন্যাপশট ফ্লাশ
+      if (req.session && typeof req.session.save === 'function') req.session.save(() => flushThenGo());
+      else flushThenGo();
+    };
+  }
+  next();
+});
+
 // ── সম্পাদনাযোগ্য কনটেন্ট (সেশন ৩৩) — রেজিস্ট্রি + ভিউ-হেল্পার ──────────────────
 // C(key)   → অ্যাডমিনের লেখা মান (settings 'content_'+key), খালি/না-থাকলে ডিফল্ট
 // Cbr(key) → C(key) + HTML-escape + নতুন লাইন → <br/> (textarea ফিল্ডের জন্য)
