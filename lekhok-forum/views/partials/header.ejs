@@ -82,8 +82,8 @@
     <a href="/" class="brand">
       <div class="logo-wrap">
         <div class="logo-text logo-text-v2">
-          <strong>বাংলাদেশ তরুণ কলাম লেখক ফোরাম</strong>
-          <strong class="brand-line2">চট্টগ্রাম বিশ্ববিদ্যালয়</strong>
+          <strong><%= C('header_brand_line1') %></strong>
+          <strong class="brand-line2"><%= C('header_brand_line2') %></strong>
         </div>
       </div>
     </a>
@@ -199,8 +199,8 @@
           </div>
         </div>
       <% } else { %>
-        <a href="/login" class="topbar-nav a nav-login"><i class="fas fa-sign-in-alt"></i> লগইন</a>
-        <a href="/register" class="topbar-nav a nav-register"><i class="fas fa-user-plus"></i> রেজিস্ট্রেশন</a>
+        <a href="/login" class="topbar-nav a nav-login"><i class="fas fa-sign-in-alt"></i> <%= C('header_btn_login') %></a>
+        <a href="/register" class="topbar-nav a nav-register"><i class="fas fa-user-plus"></i> <%= C('header_btn_register') %></a>
       <% } %>
 
       <!-- Mega menu trigger (desktop) -->

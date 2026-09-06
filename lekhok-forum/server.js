@@ -85,6 +85,12 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
+// ── সম্পাদনাযোগ্য কনটেন্ট (সেশন ৩৩) — রেজিস্ট্রি + ভিউ-হেল্পার ──────────────────
+// C(key)   → অ্যাডমিনের লেখা মান (settings 'content_'+key), খালি/না-থাকলে ডিফল্ট
+// Cbr(key) → C(key) + HTML-escape + নতুন লাইন → <br/> (textarea ফিল্ডের জন্য)
+const contentRegistry = require('./helpers/content-registry');
+const { C, Cbr } = require('./helpers/content-view-helpers')(contentRegistry);
+
 // ── Locals middleware (async — DB awaited; settings pre-loaded once) ────────
 app.use(async (req, res, next) => {
   try {
@@ -101,6 +107,9 @@ app.use(async (req, res, next) => {
       const fullKey = 'content_' + page + '_' + section + '_' + key;
       return (fullKey in settings) ? settings[fullKey] : (fallback !== undefined ? fallback : '');
     };
+    // কনটেন্ট হেল্পার — প্রতি রিকোয়েস্টে ফ্রেশ settings-এর সাথে বাঁধা (ক্যাশ-নিরাপদ)
+    res.locals.C   = (key) => C(key, settings);
+    res.locals.Cbr = (key) => Cbr(key, settings);
     res.locals.adminUser = req.session.adminUser || null;
     res.locals.user      = req.session.user || null;          // social user session
     res.locals.currentPath = req.path;

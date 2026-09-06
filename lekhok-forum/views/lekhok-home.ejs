@@ -10,19 +10,19 @@
   </div>
   <div class="container hero-inner">
     <div>
-      <div class="hero-eyebrow"><i class="fas fa-feather-alt"></i> বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
-      <h1 class="hero-title">সুপ্ত প্রতিভা বিকশিত হোক<br/><span class="accent">লেখনীর ধারায়</span></h1>
-      <p class="hero-sub">বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়, একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। তরুণ সমাজকে লিখালিখির জগতে নিয়ে এসে তাদের বুদ্ধিবৃত্তিক বিকাশ ঘটিয়ে দেশ ও জাতির সমৃদ্ধির লক্ষ্যে যোগ্য ও সুনাগরিক হিসেবে গড়ে তোলাই আমাদের প্রত্যয়।</p>
+      <div class="hero-eyebrow"><i class="fas fa-feather-alt"></i> <%= C('home_hero_eyebrow') %></div>
+      <h1 class="hero-title"><%= C('home_hero_title') %><br/><span class="accent"><%= C('home_hero_title_accent') %></span></h1>
+      <p class="hero-sub"><%= C('home_hero_sub') %></p>
       <div class="hero-cta">
-        <a href="/about" class="btn btn-primary"><i class="fas fa-book-open"></i> আরও জানুন</a>
-        <a href="/register" class="btn btn-outline"><i class="fas fa-user-plus"></i> সদস্য হোন</a>
+        <a href="/about" class="btn btn-primary"><i class="fas fa-book-open"></i> <%= C('home_hero_btn1') %></a>
+        <a href="/register" class="btn btn-outline"><i class="fas fa-user-plus"></i> <%= C('home_hero_btn2') %></a>
       </div>
     </div>
     <div class="hero-stats">
-      <div class="stat-card"><span class="stat-num" data-count="1200">০</span><span class="stat-label">সক্রিয় সদস্য</span></div>
-      <div class="stat-card"><span class="stat-num" data-count="48">০</span><span class="stat-label">বিশ্ববিদ্যালয় শাখা</span></div>
-      <div class="stat-card"><span class="stat-num" data-count="320">০</span><span class="stat-label">প্রকাশনা</span></div>
-      <div class="stat-card"><span class="stat-num" data-count="85">০</span><span class="stat-label">ইভেন্ট</span></div>
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat1_num') %>">০</span><span class="stat-label"><%= C('home_stat1_label') %></span></div>
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat2_num') %>">০</span><span class="stat-label"><%= C('home_stat2_label') %></span></div>
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat3_num') %>">০</span><span class="stat-label"><%= C('home_stat3_label') %></span></div>
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat4_num') %>">০</span><span class="stat-label"><%= C('home_stat4_label') %></span></div>
     </div>
   </div>
 
@@ -59,10 +59,10 @@
 <section class="section section-alt today-content reveal">
   <div class="container">
     <div class="section-head center">
-      <span class="eyebrow"><i class="far fa-calendar-alt"></i> আজকের কন্টেন্ট</span>
-      <h2 class="section-title">আজ <span class="accent">বিশেষ</span> কী আছে?</h2>
+      <span class="eyebrow"><i class="far fa-calendar-alt"></i> <%= C('home_today_eyebrow') %></span>
+      <h2 class="section-title"><%= C('home_today_t1') %> <span class="accent"><%= C('home_today_accent') %></span> <%= C('home_today_t2') %></h2>
       <span class="accent-divider center"></span>
-      <p class="lead">প্রতিদিনের জন্য নির্বাচিত কুইজ, এই দিনে ইতিহাস, ই-পেপার ও সেরা লেখক সব এক জায়গায়।</p>
+      <p class="lead"><%= C('home_today_lead') %></p>
     </div>
     <div class="today-grid reveal-stagger">
       <% if (todayByType.quiz) { %>
@@ -118,20 +118,20 @@
 <section class="section section-alt reveal">
   <div class="container">
     <div class="section-head center">
-      <span class="eyebrow">আমাদের পরিচয়</span>
-      <h2 class="section-title">লক্ষ্য ও <span class="accent">উদ্দেশ্য</span></h2>
+      <span class="eyebrow"><%= C('home_mission_eyebrow') %></span>
+      <h2 class="section-title"><%= C('home_mission_t1') %> <span class="accent"><%= C('home_mission_accent') %></span></h2>
       <span class="accent-divider center"></span>
-      <p class="lead">বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় একটি শিক্ষামূলক, অলাভজনক এবং অরাজনৈতিক সংগঠন, যা তরুণ সমাজকে লিখালিখির জগতে নিয়ে এসে তাদের বুদ্ধিবৃত্তিক বিকাশ ঘটিয়ে দেশ ও জাতির সমৃদ্ধির লক্ষ্যে তাদেরকে যোগ্য ও সুনাগরিক হিসেবে গড়ে তোলে।</p>
+      <p class="lead"><%= C('home_mission_lead') %></p>
     </div>
     <div class="feature-grid reveal-stagger">
-      <div class="feature"><i class="fas fa-pen-fancy"></i><h3>সৃষ্টিশীল লেখক গড়ে তোলা</h3><p>তরুণ সমাজকে লেখালেখিতে উদ্বুদ্ধ করে সৃষ্টিশীল গড়ে তুলতে সাহায্য করা</p></div>
-      <div class="feature"><i class="fas fa-flag"></i><h3>দেশপ্রেমিক নাগরিক গঠন</h3><p>মুক্তিযুদ্ধের আদর্শ লালন করে তরুণ সমাজকে দেশপ্রেমী নাগরিক হিসেবে গড়ে তোলা</p></div>
-      <div class="feature"><i class="fas fa-balance-scale"></i><h3>গঠনমূলক সমালোচনা</h3><p>কুসংস্কার, অন্যায়, শোষণ ও দুর্নীতিসহ সামাজিক সমস্যার গঠনমূলক সমালোচনা ও ইতিবাচক সমাধান লেখনীর মাধ্যমে তুলে ধরা</p></div>
-      <div class="feature"><i class="fas fa-users"></i><h3>প্ল্যাটফর্ম একত্রিতকরণ</h3><p>তরুণ লেখকদের একটি প্ল্যাটফর্মে একত্রিত করে নিয়মিত কর্মশালা, ওয়েবিনার ও পাঠচক্রের আয়োজন</p></div>
-      <div class="feature"><i class="fas fa-book-reader"></i><h3>পঠন সংস্কৃতি বিকাশ</h3><p>তরুণ সমাজে নিয়মিত পড়ার অভ্যাস গড়ে তুলে মেধা ও মানসিক বিকাশ সাধন</p></div>
-      <div class="feature"><i class="fas fa-lightbulb"></i><h3>বুদ্ধিবৃত্তিক বিকাশ</h3><p>চিন্তন, গবেষণা ও বিশ্লেষণী ক্ষমতার বিকাশ ঘটিয়ে যুক্তিবাদী সমাজ গঠন</p></div>
-      <div class="feature"><i class="fas fa-hands-helping"></i><h3>সামাজিক দায়িত্ববোধ</h3><p>সমাজের প্রতি দায়িত্বশীল ও সংবেদনশীল নাগরিক হিসেবে গড়ে তোলা</p></div>
-      <div class="feature"><i class="fas fa-graduation-cap"></i><h3>নেতৃত্ব গড়ে তোলা</h3><p>তরুণদের সাংগঠনিক ও নেতৃত্ব গুণাবলি বিকাশে সহায়তা করা</p></div>
+      <div class="feature"><i class="fas <%= C('home_feature1_icon') %>"></i><h3><%= C('home_feature1_title') %></h3><p><%= C('home_feature1_text') %></p></div>
+      <div class="feature"><i class="fas <%= C('home_feature2_icon') %>"></i><h3><%= C('home_feature2_title') %></h3><p><%= C('home_feature2_text') %></p></div>
+      <div class="feature"><i class="fas <%= C('home_feature3_icon') %>"></i><h3><%= C('home_feature3_title') %></h3><p><%= C('home_feature3_text') %></p></div>
+      <div class="feature"><i class="fas <%= C('home_feature4_icon') %>"></i><h3><%= C('home_feature4_title') %></h3><p><%= C('home_feature4_text') %></p></div>
+      <div class="feature"><i class="fas <%= C('home_feature5_icon') %>"></i><h3><%= C('home_feature5_title') %></h3><p><%= C('home_feature5_text') %></p></div>
+      <div class="feature"><i class="fas <%= C('home_feature6_icon') %>"></i><h3><%= C('home_feature6_title') %></h3><p><%= C('home_feature6_text') %></p></div>
+      <div class="feature"><i class="fas <%= C('home_feature7_icon') %>"></i><h3><%= C('home_feature7_title') %></h3><p><%= C('home_feature7_text') %></p></div>
+      <div class="feature"><i class="fas <%= C('home_feature8_icon') %>"></i><h3><%= C('home_feature8_title') %></h3><p><%= C('home_feature8_text') %></p></div>
     </div>
   </div>
 </section>
@@ -143,8 +143,8 @@
   <div class="container">
     <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
       <div>
-        <span class="eyebrow"><%= getContent('home', 'leadership_1', 'eyebrow', 'নেতৃত্বের ধারা') %></span>
-        <h2 class="section-title"><%= getContent('home', 'leadership_1', 'title', 'যাঁদের হাতে গড়ে উঠেছে লেখক ফোরাম') %></h2>
+        <span class="eyebrow"><%= C('home_lead1_eyebrow') %></span>
+        <h2 class="section-title"><%= C('home_lead1_t1') %> <span class="accent"><%= C('home_lead1_accent') %></span></h2>
         <span class="accent-divider"></span>
       </div>
     </div>
@@ -197,8 +197,8 @@
     %>
 
     <div class="leadership-matrix">
-      <%- leaderPair(founders, ['প্রতিষ্ঠাতা সভাপতি (১ম জন)', 'সাধারণ সম্পাদক (২য় জন)'], '২০২০-২১ কার্যবর্ষ', [leaderStatements.founder_president, leaderStatements.founder_general_secretary]) %>
-      <%- leaderPair(foundingAdvisors, ['প্রতিষ্ঠাকালীন উপদেষ্টা (১ম জন)', 'প্রতিষ্ঠাকালীন উপদেষ্টা (২য় জন)'], '২০২০-২১ কার্যবর্ষ', [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2]) %>
+      <%- leaderPair(founders, [C('home_role_founder_president'), C('home_role_founder_gs')], C('home_year_founding'), [leaderStatements.founder_president, leaderStatements.founder_general_secretary]) %>
+      <%- leaderPair(foundingAdvisors, [C('home_role_founding_advisor1'), C('home_role_founding_advisor2')], C('home_year_founding'), [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2]) %>
     </div>
   </div>
 </section>
@@ -208,15 +208,15 @@
   <div class="container">
     <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
       <div>
-        <span class="eyebrow"><%= getContent('home', 'leadership_2', 'eyebrow', 'বর্তমান') %></span>
-        <h2 class="section-title"><%= getContent('home', 'leadership_2', 'title', 'বর্তমান নেতৃত্ব') %></h2>
+        <span class="eyebrow"><%= C('home_lead2_eyebrow') %></span>
+        <h2 class="section-title"><%= C('home_lead2_t1') %> <span class="accent"><%= C('home_lead2_accent') %></span></h2>
         <span class="accent-divider"></span>
       </div>
     </div>
 
     <div class="leadership-matrix">
-      <%- leaderPair(currentLeaders, ['বর্তমান সভাপতি (১ম জন)', 'বর্তমান সাধারণ সম্পাদক (২য় জন)'], '২০২৫-২৬ কার্যবর্ষ', [leaderStatements.current_president, leaderStatements.current_general_secretary]) %>
-      <%- leaderPair(currentAdvisors, ['বর্তমান উপদেষ্টা (১ম জন)', 'বর্তমান উপদেষ্টা (২য় জন)'], '২০২৫-২৬ কার্যবর্ষ', [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2]) %>
+      <%- leaderPair(currentLeaders, [C('home_role_current_president'), C('home_role_current_gs')], C('home_year_current'), [leaderStatements.current_president, leaderStatements.current_general_secretary]) %>
+      <%- leaderPair(currentAdvisors, [C('home_role_current_advisor1'), C('home_role_current_advisor2')], C('home_year_current'), [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2]) %>
     </div>
   </div>
 </section>
@@ -226,8 +226,8 @@
     <% if (recentQA && recentQA.length) { %>
     <div class="leadership-sub" style="margin-top:36px">
       <div class="leadership-sub-head">
-        <h3 class="leadership-sub-title"><i class="fas fa-question-circle"></i> সাধারণ জিজ্ঞাসা</h3>
-        <a href="/qa" class="link-more">সকল প্রশ্ন <i class="fas fa-arrow-right"></i></a>
+        <h3 class="leadership-sub-title"><i class="fas fa-question-circle"></i> <%= C('home_qa_title') %></h3>
+        <a href="/qa" class="link-more"><%= C('home_qa_more') %> <i class="fas fa-arrow-right"></i></a>
       </div>
       <div class="qa-folding-list">
         <% recentQA.forEach((q) => { %>
@@ -261,10 +261,10 @@
     <%# ── User feed link (visitor-friendly) ── %>
     <div class="user-feed-cta">
       <div>
-        <h3><i class="fas fa-stream"></i> ইউজার ফিড</h3>
-        <p>সদস্যদের লেখা, প্রশ্নোত্তর ও আলোচনা দেখুন। লগইন ছাড়াই পড়তে পারবেন। অংশ নিতে রেজিস্ট্রেশন করুন।</p>
+        <h3><i class="fas fa-stream"></i> <%= C('home_feed_title') %></h3>
+        <p><%= C('home_feed_desc') %></p>
       </div>
-      <a href="/dashboard" class="btn btn-primary btn-lg"><i class="fas fa-arrow-right"></i> ইউজার ফিডে যান</a>
+      <a href="/dashboard" class="btn btn-primary btn-lg"><i class="fas fa-arrow-right"></i> <%= C('home_feed_btn') %></a>
     </div>
   </div>
 </section>
@@ -274,11 +274,11 @@
   <div class="container">
     <div class="section-head">
       <div>
-        <span class="eyebrow"><i class="fas fa-bullhorn"></i> সাম্প্রতিক বিজ্ঞপ্তি</span>
-        <h2 class="section-title">সর্বশেষ <span class="accent">আপডেট</span></h2>
+        <span class="eyebrow"><i class="fas fa-bullhorn"></i> <%= C('home_notices_eyebrow') %></span>
+        <h2 class="section-title"><%= C('home_notices_t1') %> <span class="accent"><%= C('home_notices_accent') %></span></h2>
         <span class="accent-divider"></span>
       </div>
-      <a href="/notices" class="link-more">সকল বিজ্ঞপ্তি <i class="fas fa-arrow-right"></i></a>
+      <a href="/notices" class="link-more"><%= C('home_notices_more') %> <i class="fas fa-arrow-right"></i></a>
     </div>
     <% if (recentNotices && recentNotices.length) { %>
       <div class="notice-list notice-list--home reveal-stagger">

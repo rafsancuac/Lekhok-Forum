@@ -92,6 +92,9 @@
       <h2><i class="fas fa-bolt"></i> দ্রুত কার্যক্রম</h2>
     </div>
     <div class="quick-actions">
+      <% if (adminUser || (user && user.role === 'admin')) { %>
+      <a href="/admin/content"       class="btn btn-gold"><i class="fas fa-pen-square"></i> কনটেন্ট সম্পাদক</a>
+      <% } %>
       <a href="/admin/notices/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন বিজ্ঞপ্তি</a>
       <a href="/admin/events/new"    class="btn"><i class="fas fa-plus"></i> নতুন ইভেন্ট</a>
       <a href="/admin/gallery/new"   class="btn"><i class="fas fa-plus"></i> নতুন ছবি</a>

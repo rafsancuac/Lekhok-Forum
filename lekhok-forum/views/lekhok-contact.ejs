@@ -1,8 +1,8 @@
 <header class="page-header">
   <div class="container">
-    <span class="eyebrow">যোগাযোগ</span>
-    <h1>আমাদের সাথে <span style="color:var(--accent);">যোগাযোগ</span></h1>
-    <p>যেকোনো প্রশ্ন, পরামর্শ বা সহযোগিতার জন্য আমরা সবসময় আছি আপনার পাশে</p>
+    <span class="eyebrow"><%= C('contact_header_eyebrow') %></span>
+    <h1><%= C('contact_header_t1') %> <span style="color:var(--accent);"><%= C('contact_header_accent') %></span></h1>
+    <p><%= C('contact_header_sub') %></p>
   </div>
 </header>
 
@@ -11,28 +11,28 @@
   <div class="container">
     <div class="section-split">
       <div>
-        <span class="eyebrow">যোগাযোগের তথ্য</span>
-        <h2 class="section-title">আমাদের <span class="accent">ঠিকানা</span></h2>
+        <span class="eyebrow"><%= C('contact_info_eyebrow') %></span>
+        <h2 class="section-title"><%= C('contact_info_t1') %> <span class="accent"><%= C('contact_info_accent') %></span></h2>
         <span class="accent-divider"></span>
-        <p>যেকোনো বিষয়ে যোগাযোগ করতে নির্দ্বিধায় নিচের যেকোনো মাধ্যম ব্যবহার করুন। আমরা যত দ্রুত সম্ভব উত্তর দেওয়ার চেষ্টা করব।</p>
+        <p><%= C('contact_info_text') %></p>
         <ul class="contact-list">
-          <li><i class="fas fa-map-marker-alt"></i><div><strong>কার্যালয়</strong><span><%= getContent('contact', 'info', 'office', 'চট্টগ্রাম বিশ্ববিদ্যালয় ক্যাম্পাস, হাটহাজারী, চট্টগ্রাম') %></span></div></li>
-          <li><i class="fas fa-envelope"></i><div><strong>ইমেইল</strong><span><%= getContent('contact', 'info', 'email', 'info@lekhokforum.org') %></span></div></li>
-          <li><i class="fas fa-phone-alt"></i><div><strong>মোবাইল</strong><span><%= getContent('contact', 'info', 'phone', '০১********* (বিকাশ/নগদ)') %></span></div></li>
-          <li><i class="fab fa-facebook-f"></i><div><strong>ফেসবুক পেজ</strong><span>আমাদের ফেসবুক পেজে লাইক দিন</span></div></li>
-          <li><i class="fab fa-telegram-plane"></i><div><strong>টেলিগ্রাম গ্রুপ</strong><span>আমাদের টেলিগ্রাম গ্রুপে যোগ দিন</span></div></li>
+          <li><i class="fas fa-map-marker-alt"></i><div><strong><%= C('contact_office_label') %></strong><span><%= (typeof getSetting === 'function' && getSetting('contact_address')) || (typeof getContent === 'function' ? getContent('contact', 'info', 'office', 'চট্টগ্রাম বিশ্ববিদ্যালয় ক্যাম্পাস, হাটহাজারী, চট্টগ্রাম') : 'চট্টগ্রাম বিশ্ববিদ্যালয় ক্যাম্পাস, হাটহাজারী, চট্টগ্রাম') %></span></div></li>
+          <li><i class="fas fa-envelope"></i><div><strong>ইমেইল</strong><span><%= (typeof getSetting === 'function' && getSetting('contact_email')) || (typeof getContent === 'function' ? getContent('contact', 'info', 'email', 'info@lekhokforum.org') : 'info@lekhokforum.org') %></span></div></li>
+          <li><i class="fas fa-phone-alt"></i><div><strong>মোবাইল</strong><span><%= (typeof getSetting === 'function' && getSetting('contact_phone')) || (typeof getContent === 'function' ? getContent('contact', 'info', 'phone', '০১********* (বিকাশ/নগদ)') : '০১********* (বিকাশ/নগদ)') %></span></div></li>
+          <li><i class="fab fa-facebook-f"></i><div><strong><%= C('contact_fb_label') %></strong><span><%= C('contact_fb_text') %></span></div></li>
+          <li><i class="fab fa-telegram-plane"></i><div><strong><%= C('contact_tg_label') %></strong><span><%= C('contact_tg_text') %></span></div></li>
         </ul>
       </div>
       <form class="contact-form card" method="POST" action="/api/contact">
-        <h3 style="margin-top:0;"><i class="fas fa-paper-plane" style="color:var(--accent);"></i> বার্তা পাঠান</h3>
-        <p style="color:var(--text-muted); margin-bottom:18px;">নিচের ফর্মে আপনার বার্তা লিখুন, আমরা শীঘ্রই যোগাযোগ করব।</p>
+        <h3 style="margin-top:0;"><i class="fas fa-paper-plane" style="color:var(--accent);"></i> <%= C('contact_form_title') %></h3>
+        <p style="color:var(--text-muted); margin-bottom:18px;"><%= C('contact_form_text') %></p>
         <div class="form-row">
           <input type="text" name="name" placeholder="আপনার নাম *" required>
           <input type="email" name="email" placeholder="ইমেইল *" required>
         </div>
         <input type="text" name="subject" placeholder="বিষয়">
         <textarea name="message" placeholder="আপনার বার্তা লিখুন... *" rows="6" required></textarea>
-        <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-paper-plane"></i> বার্তা পাঠান</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-paper-plane"></i> <%= C('contact_form_btn') %></button>
         <% if (success) { %>
           <p style="margin-top:14px;color:#15803d;background:#dcfce7;padding:10px 14px;border-radius:8px;">
             <i class="fas fa-check-circle"></i> <%= success %>
@@ -48,15 +48,15 @@
   <div class="container">
     <div class="section-split">
       <div>
-        <span class="eyebrow">আমাদের অবস্থান</span>
-        <h2 class="section-title">কোথায় <span class="accent">আমরা</span></h2>
+        <span class="eyebrow"><%= C('contact_loc_eyebrow') %></span>
+        <h2 class="section-title"><%= C('contact_loc_t1') %> <span class="accent"><%= C('contact_loc_accent') %></span></h2>
         <span class="accent-divider"></span>
-        <p>আমাদের কার্যালয়ে সরাসরি এসেও যোগাযোগ করতে পারেন। সাপ্তাহিক ছুটির দিন ব্যতীত সব সময় অফিস খোলা থাকে।</p>
+        <p><%= C('contact_loc_text') %></p>
         <ul class="bullet-list">
-          <li>সোমবার – বৃহস্পতিবার: সকাল ১০টা – সন্ধ্যা ৬টা</li>
-          <li>শুক্রবার: বন্ধ</li>
-          <li>শনিবার: সকাল ১০টা – বিকাল ৪টা</li>
-          <li>রবিবার: সকাল ১১টা – বিকাল ৫টা</li>
+          <li><%= C('contact_hours1') %></li>
+          <li><%= C('contact_hours2') %></li>
+          <li><%= C('contact_hours3') %></li>
+          <li><%= C('contact_hours4') %></li>
         </ul>
       </div>
       <div class="map-embed">
@@ -78,10 +78,10 @@
 <section class="section reveal">
   <div class="container">
     <div class="section-head center">
-      <span class="eyebrow">ক্যাম্পাস তথ্য</span>
-      <h2 class="section-title">চট্টগ্রাম বিশ্ববিদ্যালয় <span class="accent">ক্যাম্পাস</span></h2>
+      <span class="eyebrow"><%= C('contact_campus_eyebrow') %></span>
+      <h2 class="section-title"><%= C('contact_campus_t1') %> <span class="accent"><%= C('contact_campus_accent') %></span></h2>
       <span class="accent-divider center"></span>
-      <p class="lead">আমাদের কার্যক্রম চট্টগ্রাম বিশ্ববিদ্যালয় ক্যাম্পাসে পরিচালিত হয়। নিচে ক্যাম্পাসের গুরুত্বপূর্ণ যোগাযোগ ও সেবার তথ্য দেওয়া হলো।</p>
+      <p class="lead"><%= C('contact_campus_lead') %></p>
     </div>
 
     <!-- Campus social / digital channels -->
@@ -110,7 +110,7 @@
 
     <!-- University resources -->
     <div class="campus-resource-section">
-      <h3 class="crs-title"><i class="fas fa-university"></i> বিশ্ববিদ্যালয় সম্পর্কিত তথ্য</h3>
+      <h3 class="crs-title"><i class="fas fa-university"></i> <%= C('contact_crs_uni') %></h3>
       <div class="campus-grid reveal-stagger">
         <a class="campus-card" href="https://www.facebook.com/ictcu" target="_blank" rel="noopener">
           <span class="cc-icon"><i class="fab fa-facebook"></i></span>
@@ -138,7 +138,7 @@
 
     <!-- Transport & important contacts -->
     <div class="campus-resource-section">
-      <h3 class="crs-title"><i class="fas fa-bus-alt"></i> যাতায়াত ও গুরুত্বপূর্ণ নম্বর</h3>
+      <h3 class="crs-title"><i class="fas fa-bus-alt"></i> <%= C('contact_crs_transport') %></h3>
       <div class="campus-grid reveal-stagger">
         <div class="campus-card static">
           <span class="cc-icon"><i class="fas fa-shuttle-van"></i></span>

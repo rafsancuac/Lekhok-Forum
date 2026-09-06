@@ -3,126 +3,163 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex, nofollow" />
-  <title>কন্টেন্ট ম্যানেজার — বাংলাদেশ তরুণ কলাম লেখক ফোরাম</title>
+  <title>কনটেন্ট সম্পাদক | বাংলাদেশ তরুণ কলাম লেখক ফোরাম অ্যাডমিন</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
-  <style>
-    .content-manager { padding: 24px; max-width: 900px; margin: 0 auto; }
-    .cm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-    .cm-header h1 { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 10px; }
-    .cm-header h1 i { color: #2563eb; }
-    .cm-save-btn { padding: 10px 24px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s; font-family: 'Hind Siliguri', sans-serif; }
-    .cm-save-btn:hover { background: #1d4ed8; }
-
-    .cm-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 2px solid #e5e7eb; padding-bottom: 0; }
-    .cm-tab { padding: 10px 18px; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748b; transition: all 0.15s; font-family: 'Hind Siliguri', sans-serif; margin-bottom: -2px; display: flex; align-items: center; gap: 6px; }
-    .cm-tab:hover { color: #0f172a; }
-    .cm-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
-    .cm-tab i { font-size: 13px; }
-
-    .cm-page { display: none; }
-    .cm-page.active { display: block; }
-
-    .cm-section { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-    .cm-section-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px; }
-    .cm-section-title i { color: #2563eb; font-size: 14px; }
-
-    .cm-field { margin-bottom: 16px; }
-    .cm-field:last-child { margin-bottom: 0; }
-    .cm-field label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px; font-family: 'Hind Siliguri', sans-serif; }
-    .cm-field input[type="text"] { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: 'Hind Siliguri', sans-serif; color: #0f172a; transition: border-color 0.15s, box-shadow 0.15s; }
-    .cm-field input[type="text"]:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-    .cm-field textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: 'Hind Siliguri', sans-serif; color: #0f172a; min-height: 80px; resize: vertical; line-height: 1.6; transition: border-color 0.15s, box-shadow 0.15s; }
-    .cm-field textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-
-    .cm-alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; font-family: 'Hind Siliguri', sans-serif; }
-    .cm-alert.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-
-    .cm-sticky-bar { position: sticky; bottom: 0; background: white; border-top: 1px solid #e5e7eb; padding: 16px 24px; margin: 0 -24px -24px; display: flex; justify-content: flex-end; gap: 10px; z-index: 10; }
-
-    @media (max-width: 640px) {
-      .content-manager { padding: 16px; }
-      .cm-tabs { overflow-x: auto; flex-wrap: nowrap; }
-      .cm-tab { white-space: nowrap; }
-    }
-  </style>
 </head>
-<body>
-<%- include('partials/sidebar', { adminUser, currentPath }) %>
+<body class="ce-body">
+<%- include('partials/sidebar') %>
 <div class="admin-main">
-  <div class="admin-topbar">
-    <h1><i class="fas fa-edit"></i> কন্টেন্ট ম্যানেজার</h1>
-    <div class="topbar-right">
-      <span><i class="fas fa-user-shield"></i> <%= adminUser.display_name || adminUser.username %></span>
-    </div>
+  <div class="admin-header">
+    <h1><i class="fas fa-pen-square"></i> কনটেন্ট সম্পাদক</h1>
+    <p>সাইটের প্রতিটি পেজের প্রতিটি সেকশনের লেখা এখান থেকে বদলান | হোম পেইজসহ সব পেজ। ফিল্ড খালি রাখলে ডিফল্ট লেখাটিই দেখাবে।</p>
   </div>
 
-  <div class="content-manager">
-    <% if (saved) { %>
-      <div class="cm-alert success">
-        <i class="fas fa-check-circle"></i> সফলভাবে সংরক্ষিত হয়েছে! পরিবর্তনগুলো সাইটে দেখা যাবে।
-      </div>
-    <% } %>
+  <form method="POST" action="/admin/content" id="contentForm" autocomplete="off">
+    <input type="hidden" name="__page" id="ceActivePage" value="<%= activePage %>" />
 
-    <div class="cm-header">
-      <h1><i class="fas fa-file-alt"></i> সাইট কন্টেন্ট এডিটর</h1>
-      <button type="submit" form="contentForm" class="cm-save-btn">
-        <i class="fas fa-save"></i> সংরক্ষণ করুন
-      </button>
-    </div>
+    <div class="ce-wrap">
+      <!-- ── বাম: পেজ ট্যাব ── -->
+      <aside class="ce-tabs" id="ceTabs">
+        <div class="ce-tabs-title"><i class="fas fa-layer-group"></i> পেজসমূহ</div>
+        <% pages.forEach((p, pi) => { %>
+          <button type="button" class="ce-tab <%= p.key === activePage ? 'active' : '' %>" data-page="<%= p.key %>">
+            <span class="ce-tab-ico"><i class="<%= p.icon || 'fas fa-file-alt' %>"></i></span>
+            <span class="ce-tab-body">
+              <span class="ce-tab-label"><%= p.label %></span>
+              <span class="ce-tab-meta"><%= p.groups.reduce((n, g) => n + g.fields.length, 0) %> ফিল্ড</span>
+            </span>
+          </button>
+        <% }) %>
+      </aside>
 
-    <!-- Page tabs -->
-    <div class="cm-tabs">
-      <% Object.keys(schema).forEach((pageKey, i) => { %>
-        <button class="cm-tab <%= i === 0 ? 'active' : '' %>" onclick="switchPage('<%= pageKey %>')">
-          <i class="fas <%= schema[pageKey].icon %>"></i> <%= schema[pageKey].label %>
-        </button>
-      <% }) %>
-    </div>
+      <!-- ── ডান: প্যানেলসমূহ ── -->
+      <div class="ce-panels">
+        <% pages.forEach((p) => { %>
+        <section class="ce-panel <%= p.key === activePage ? 'active' : '' %>" data-page="<%= p.key %>">
+          <div class="ce-panel-head">
+            <div class="ce-panel-title">
+              <span class="ce-panel-ico"><i class="<%= p.icon || 'fas fa-file-alt' %>"></i></span>
+              <div>
+                <h2><%= p.label %></h2>
+                <p>নিচের ফিল্ডগুলো <%= p.path %> পেজে প্রদর্শিত হয়</p>
+              </div>
+            </div>
+            <a class="ce-view-link" href="<%= p.path %>" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> সাইটে দেখুন</a>
+          </div>
 
-    <form method="POST" action="/admin/content" id="contentForm">
-      <% Object.keys(schema).forEach((pageKey, i) => { %>
-        <div class="cm-page <%= i === 0 ? 'active' : '' %>" id="page-<%= pageKey %>">
-          <% Object.keys(schema[pageKey].sections).forEach(sectionKey => { %>
-            <% const section = schema[pageKey].sections[sectionKey]; %>
-            <div class="cm-section">
-              <h3 class="cm-section-title"><i class="fas fa-puzzle-piece"></i> <%= section.label %></h3>
-              <% Object.keys(section.fields).forEach(fieldKey => { %>
-                <% const field = section.fields[fieldKey]; %>
-                <% const fullKey = 'content_' + pageKey + '_' + sectionKey + '_' + fieldKey; %>
-                <% const value = content[pageKey][sectionKey][fieldKey]; %>
-                <div class="cm-field">
-                  <label><%= field.label %></label>
-                  <% if (field.type === 'textarea') { %>
-                    <textarea name="<%= fullKey %>"><%= value %></textarea>
-                  <% } else { %>
-                    <input type="text" name="<%= fullKey %>" value="<%= value %>">
-                  <% } %>
-                </div>
+          <% p.groups.forEach((g) => { %>
+          <div class="ce-group">
+            <h3 class="ce-group-title"><%= g.label %> <span class="ce-group-count"><%= g.fields.length %></span></h3>
+            <div class="ce-grid">
+              <% g.fields.forEach((f) => { %>
+              <div class="ce-field ce-t-<%= f.type %>">
+                <label for="f_<%= f.key %>"><%= f.label %></label>
+                <% if (f.type === 'textarea') { %>
+                  <textarea id="f_<%= f.key %>" name="<%= f.key %>" rows="<%= f.rows || 3 %>"><%= values[f.key] %></textarea>
+                <% } else { %>
+                  <input id="f_<%= f.key %>" name="<%= f.key %>" type="text" value="<%= values[f.key] %>"
+                         <%= f.type === 'number' ? 'inputmode="numeric"' : '' %> />
+                <% } %>
+                <% if (f.type === 'icon') { %>
+                  <span class="ce-icon-preview"><i class="fas <%= values[f.key] %>"></i></span>
+                <% } %>
+                <% if (f.hint) { %><small class="ce-hint"><%= f.hint %></small><% } %>
+                <% if (f.type === 'icon') { %><small class="ce-hint">Font Awesome ক্লাস | যেমন fa-pen-fancy</small><% } %>
+              </div>
               <% }) %>
             </div>
+          </div>
           <% }) %>
-        </div>
-      <% }) %>
-
-      <div class="cm-sticky-bar">
-        <button type="submit" class="cm-save-btn">
-          <i class="fas fa-save"></i> সংরক্ষণ করুন
-        </button>
+        </section>
+        <% }) %>
       </div>
-    </form>
-  </div>
+    </div>
+
+    <!-- ── স্টিকি সেভ বার ── -->
+    <div class="ce-savebar" id="ceSavebar">
+      <div class="ce-savebar-info">
+        <i class="fas fa-circle-info"></i>
+        <span><strong id="ceDirtyCount">০</strong>টি ফিল্ডে অসংরক্ষিত পরিবর্তন • সব পেজ একসাথে সংরক্ষিত হয়</span>
+      </div>
+      <button type="submit" class="btn btn-primary ce-save-btn" id="ceSaveBtn"><i class="fas fa-save"></i> সব সংরক্ষণ করুন</button>
+    </div>
+  </form>
 </div>
 
 <script>
-function switchPage(pageKey) {
-  document.querySelectorAll('.cm-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.cm-page').forEach(p => p.classList.remove('active'));
-  event.target.closest('.cm-tab').classList.add('active');
-  document.getElementById('page-' + pageKey).classList.add('active');
-}
+(function () {
+  'use strict';
+  var form = document.getElementById('contentForm');
+  if (!form) return;
+
+  /* ── ট্যাব সুইচিং ──────────────────────────────────────────────── */
+  var tabs = document.querySelectorAll('.ce-tab');
+  var panels = document.querySelectorAll('.ce-panel');
+  var activeInput = document.getElementById('ceActivePage');
+
+  function showPage(key, push) {
+    tabs.forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-page') === key); });
+    panels.forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-page') === key); });
+    if (activeInput) activeInput.value = key;
+    try { localStorage.setItem('ceTab', key); } catch (e) {}
+    if (push) {
+      var url = location.pathname + '?page=' + encodeURIComponent(key);
+      history.replaceState(null, '', url);
+    }
+    var panel = document.querySelector('.ce-panel.active');
+    if (panel) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { showPage(t.getAttribute('data-page'), true); });
+  });
+
+  // ডিফল্ট ট্যাব — ?page= > localStorage > প্রথমটি
+  try {
+    var saved = localStorage.getItem('ceTab');
+    var qs = new URLSearchParams(location.search).get('page');
+    var initial = qs || saved;
+    if (initial && !document.querySelector('.ce-panel.active[data-page="' + initial + '"]')) {
+      if (document.querySelector('.ce-panel[data-page="' + initial + '"]')) showPage(initial, false);
+    }
+  } catch (e) {}
+
+  /* ── অসংরক্ষিত পরিবর্তন গণনা ──────────────────────────────────── */
+  var dirty = {};
+  function bn(n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); }
+  function refresh() {
+    var n = Object.keys(dirty).length;
+    var el = document.getElementById('ceDirtyCount');
+    if (el) el.textContent = bn(n);
+    var btn = document.getElementById('ceSaveBtn');
+    if (btn) btn.classList.toggle('has-dirty', n > 0);
+  }
+  form.querySelectorAll('input[type=text], textarea').forEach(function (el) {
+    if (!el.name) return;
+    var orig = el.value;
+    el.addEventListener('input', function () {
+      if (el.value === orig) delete dirty[el.name];
+      else dirty[el.name] = true;
+      refresh();
+      // আইকন প্রিভিউ লাইভ আপডেট
+      var wrap = el.closest('.ce-field');
+      if (wrap && wrap.classList.contains('ce-t-icon')) {
+        var ic = wrap.querySelector('.ce-icon-preview i');
+        if (ic) ic.className = 'fas ' + el.value.trim();
+      }
+    });
+  });
+
+  /* ── সাবমিটে ডাবল-ক্লিক গার্ড ─────────────────────────────────── */
+  form.addEventListener('submit', function () {
+    var btn = document.getElementById('ceSaveBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে...'; }
+    try { localStorage.removeItem('adminDraft:' + location.pathname + ':f0:/admin/content'); } catch (e) {}
+  });
+  refresh();
+})();
 </script>
 </body>
 </html>

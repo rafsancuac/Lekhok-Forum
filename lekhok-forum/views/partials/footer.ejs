@@ -1,8 +1,8 @@
 <footer class="btclf-footer site-footer">
   <div class="container footer-inner">
     <div class="footer-brand">
-      <h2><%= getContent('footer', 'brand', 'name', 'বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়') %></h2>
-      <p><%= getContent('footer', 'brand', 'desc', 'একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন।') %></p>
+      <h2><%= C('header_brand_line1') %></h2>
+      <p><%= C('footer_brand_desc') %></p>
       <div class="f-socials">
         <%# session33: placeholder (#) লিংক → settings-এর আসল URL (হেডারের dropdown-এর মতোই) %>
         <a href="<%= typeof getSetting === 'function' ? (getSetting('facebook_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -11,7 +11,7 @@
       </div>
     </div>
     <div>
-      <h4 class="f-widget-title">প্রয়োজনীয় লিংক</h4>
+      <h4 class="f-widget-title"><%= C('footer_links_title') %></h4>
       <ul class="f-links">
         <li><a href="/articles"><i class="fas fa-circle"></i> প্রকাশিত লেখা</a></li>
         <li><a href="/qa"><i class="fas fa-circle"></i> প্রশ্নোত্তর</a></li>
@@ -22,27 +22,27 @@
       </ul>
     </div>
     <div>
-      <h4 class="f-widget-title">যোগাযোগ</h4>
+      <h4 class="f-widget-title"><%= C('footer_contact_title') %></h4>
       <ul class="f-contact">
-        <li><i class="fas fa-envelope"></i> <span>info@lekhokforum.org</span></li>
-        <li><i class="fas fa-phone"></i> <span>০১********* (বিকাশ/নগদ)</span></li>
-        <li><i class="fas fa-map-marker-alt"></i> <span>চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম, বাংলাদেশ</span></li>
+        <li><i class="fas fa-envelope"></i> <span><%= (typeof getSetting === 'function' && getSetting('contact_email')) || 'info@lekhokforum.org' %></span></li>
+        <li><i class="fas fa-phone"></i> <span><%= (typeof getSetting === 'function' && getSetting('contact_phone')) || '০১********* (বিকাশ/নগদ)' %></span></li>
+        <li><i class="fas fa-map-marker-alt"></i> <span><%= (typeof getSetting === 'function' && getSetting('contact_address')) || 'চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম, বাংলাদেশ' %></span></li>
       </ul>
     </div>
     <div class="f-newsletter">
-      <h4 class="f-widget-title">নিউজলেটার</h4>
-      <p class="f-newsletter-desc">নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
+      <h4 class="f-widget-title"><%= C('footer_newsletter_title') %></h4>
+      <p class="f-newsletter-desc"><%= C('footer_newsletter_desc') %></p>
       <form class="newsletter-form" id="newsletterForm" action="/api/newsletter/subscribe" method="post">
-        <input type="email" name="email" id="newsletterEmail" placeholder="আপনার ইমেইল" required>
-        <button type="submit">সাবস্ক্রাইব</button>
+        <input type="email" name="email" id="newsletterEmail" placeholder="<%= C('footer_newsletter_placeholder') %>" required>
+        <button type="submit"><%= C('footer_newsletter_btn') %></button>
       </form>
       <p class="f-newsletter-msg" id="newsletterMsg" role="status" aria-live="polite"></p>
     </div>
   </div>
   <div class="footer-bottom">
     <div class="container">
-      <p>&copy; <%= new Date().getFullYear() %> বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়। সর্বস্বত্ব সংরক্ষিত।</p>
-      <p class="footer-credit">ডিজাইন ও উন্নয়নে: <a href="https://rafsandaily.blogspot.com/p/blog-page_5.html" target="_blank" rel="noopener" title="প্রতিষ্ঠাতা ও সাধারণ সম্পাদক, বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়">মোঃ রাফছান</a></p>
+      <p>&copy; <%= new Date().getFullYear() %> <%= C('footer_copyright') %></p>
+      <p class="footer-credit"><%= C('footer_credit_label') %> <a href="https://rafsandaily.blogspot.com/p/blog-page_5.html" target="_blank" rel="noopener"><%= C('footer_credit_name') %></a></p>
     </div>
   </div>
 </footer>

@@ -1,8 +1,8 @@
 <header class="page-header">
   <div class="container">
-    <span class="eyebrow">নেতৃত্ব</span>
-    <h1>কার্যনির্বাহী কমিটি</h1>
-    <p>বাংলাদেশ তরুণ কলাম লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়। কার্যবর্ষভিত্তিক পূর্ণাঙ্গ কার্যনির্বাহী কমিটি</p>
+    <span class="eyebrow"><%= C('committee_header_eyebrow') %></span>
+    <h1><%= C('committee_header_title') %></h1>
+    <p><%= C('committee_header_sub') %></p>
   </div>
 </header>
 
@@ -70,7 +70,7 @@
           <% if (countByYear[selectedYear]) { %>মোট সদস্য <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
       </p>
       <div class="term-select-wrap">
-        <label class="term-select-label" for="termSelect"><i class="far fa-calendar"></i> কার্যবর্ষ</label>
+        <label class="term-select-label" for="termSelect"><i class="far fa-calendar"></i> <%= C('committee_term_label') %></label>
         <select id="termSelect" aria-label="কার্যবর্ষ নির্বাচন" onchange="if (this.value) window.location.href = '/committee?year=' + encodeURIComponent(this.value);">
           <% years.forEach(y => { %>
             <option value="<%= y %>" <%= y === selectedYear ? 'selected' : '' %>><%= y %><%= countByYear[y] ? ' (সদস্য ' + bnNum(countByYear[y]) + ' জন)' : '' %></option>
