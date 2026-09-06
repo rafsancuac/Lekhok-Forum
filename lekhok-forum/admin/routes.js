@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { broadcastToAll } = require('../helpers/notify');
 const { galleryUpload, attachmentUpload, withUpload } = require('../middleware/upload');
+const multer = require('multer');   // লেজি memoryStorage ব্যবহার — মডিউল-লোডে DiskStorage নিষিদ্ধ (সেশন ৩৬)
 const getSetting = db.getSetting;
 const setSetting = db.setSetting;
 const { validateNavJson, parseNav } = require('../helpers/nav');
@@ -415,24 +416,32 @@ router.post('/content', requireAdmin, contentImageUpload, async (req, res) => {
   res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&saved=1');
 });
 
-// Image upload for content editor
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const contentUpload = multer({
-  dest: 'public/uploads/content/',
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('শুধু ছবি আপলোড করা যাবে'));
-  }
-});
+// Image upload for content editor (editor's upload-button flow → returns URL)
+// ⚠️ সেশন ৩৬ হটফিক্স: আগের কোড মডিউল-লোডে `multer({ dest: 'public/uploads/content/' })`
+// তৈরি করত — multer-এর DiskStorage কনস্ট্রাক্টর লোডের সময়ই destination-এ mkdirSync
+// চালায়, আর Vercel-এর ল্যাম্বডা FS read-only (শুধু /tmp) → ENOENT/EROFS → প্রতিটি
+// কোল্ড বুট ক্র্যাশ → সাইটের সব পেইজ 500 (FUNCTION_INVOCATION_FAILED)। তাই multer
+// এখন রিকোয়েস্টের সময় memoryStorage-সহ তৈরি হয় এবং সংরক্ষণ হয়
+// storeBufferImage() দিয়ে (Blob/ডিস্ক দ্বৈত-মোড, middleware/upload.js-এর মতোই)।
 router.post('/content/upload', requireAdmin, (req, res) => {
-  contentUpload.single('file')(req, res, (err) => {
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('শুধু ছবি আপলোড করা যাবে'));
+    }
+  }).single('file')(req, res, async (err) => {
     if (err) return res.status(400).json({ ok: false, error: err.message });
     if (!req.file) return res.status(400).json({ ok: false, error: 'কোনো ফাইল নেই' });
-    const url = '/uploads/content/' + req.file.filename;
-    res.json({ ok: true, url });
+    try {
+      const { storeBufferImage } = require('../middleware/upload');
+      const stored = await storeBufferImage(req.file, 'content');
+      res.json({ ok: true, url: stored.url });
+    } catch (e) {
+      console.error('[admin:content] image upload failed:', e.message);
+      res.status(500).json({ ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+    }
   });
 });
 

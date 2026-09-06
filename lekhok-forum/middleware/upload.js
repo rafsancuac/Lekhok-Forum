@@ -291,9 +291,37 @@ function withUpload(mw) {
   };
 }
 
+/**
+ * সেশন ৩৬ হটফিক্স: একটি রেডি-করা ফাইল-অবজেক্ট (memoryStorage-এর req.file,
+ * buffer আকারে) দ্বৈত-মোডে সংরক্ষণ করে URL ফেরত দেয় — Blob (Vercel) বা ডিস্ক
+ * (লোকাল)। admin /content/upload-এর মতো JSON-আপলোড-এন্ডপয়েন্ট এটি ব্যবহার করে।
+ * ⚠️ এই ফাংশন কখনো মডিউল-লোডে নয়, রিকোয়েস্টের সময় ডাকতে হয় — Vercel-এর
+ * read-only ল্যাম্বডা FS-এ mkdir করলে পুরো বুট মরে যায় (সেশন ৩৬-এর ঘটনা)।
+ */
+async function storeBufferImage(file, subdir) {
+  await optimizeToWebp(file);
+  if (USE_BLOB) {
+    const result = await uploadToBlob(file, subdir);
+    return { url: result.url, filename: result.filename };
+  }
+  // লোকাল ডিস্ক — গার্ডেড mkdir (read-only FS হলে স্পষ্ট এরর-মেসেজ)
+  const dest = path.join(UPLOAD_ROOT, subdir);
+  try {
+    if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+  } catch (e) {
+    throw new Error('স্টোরেজ লেখাযোগ্য নয় (read-only FS) — Blob টোকেন কনফিগার করুন');
+  }
+  const filename = makeFilenameSync(file);
+  const destPath = path.join(dest, filename);
+  fs.writeFileSync(destPath, file.buffer);
+  return { url: `/uploads/${subdir}/${filename}`, filename };
+}
+
 module.exports = {
   avatarUpload, coverUpload, attachmentUpload, galleryUpload, pressUpload,
   messageUpload, complaintUpload, epaperUpload,
   makeContentImageUpload,
-  withUpload
+  withUpload,
+  optimizeToWebp,
+  storeBufferImage
 };
