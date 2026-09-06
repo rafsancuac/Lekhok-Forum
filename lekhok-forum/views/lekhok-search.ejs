@@ -1,0 +1,123 @@
+<%# /search?q= — session33: পূর্ণাঙ্গ সার্চ-ফলাফল পেজ %>
+<%
+  const DAILY_LABELS = { quiz: 'কুইজ', this_day: 'এই দিনে', epaper: 'ই-পেপার', best_writer: 'সেরা লেখক', activity: 'কার্যক্রম' };
+  const hasAny = total > 0;
+%>
+
+<header class="page-header">
+  <div class="container">
+    <span class="eyebrow">সার্চ</span>
+    <h1><% if (q) { %>&ldquo;<%= q %>&rdquo; — ফলাফল<% } else { %>সাইটে খুঁজুন<% } %></h1>
+    <p><% if (q && hasAny) { %>মোট <%= total %>টি ফলাফল পাওয়া গেছে — লেখা, প্রশ্ন, সদস্য, বিজ্ঞপ্তি ও দৈনিক কনটেন্ট থেকে।<% } else if (q) { %>দুঃখিত, &ldquo;<%= q %>&rdquo; এর জন্য কিছু পাওয়া যায়নি।<% } else { %>লেখা, প্রশ্ন, সদস্য, বিজ্ঞপ্তি — সব এক জায়গা থেকে খুঁজুন।<% } %></p>
+  </div>
+</header>
+
+<section class="section reveal">
+  <div class="container">
+
+    <form class="search-page-form" action="/search" method="get" role="search">
+      <div class="gs-input-wrap search-page-input">
+        <i class="fas fa-search"></i>
+        <input type="search" name="q" value="<%= q %>" placeholder="কী খুঁজছেন? লিখুন..." autocomplete="off" autofocus />
+        <button type="submit" class="btn btn-primary">খুঁজুন</button>
+      </div>
+    </form>
+
+    <% if (q && q.length < 2) { %>
+      <div class="empty-state" style="text-align:center; padding:50px 20px;">
+        <i class="fas fa-keyboard" style="font-size:2.6rem; color:var(--text-muted,#94a3b8);"></i>
+        <h3 style="margin:14px 0 8px;">অন্তত ২টা অক্ষর লিখুন</h3>
+        <p style="color:var(--text-muted,#64748b);">ছোট শব্দে সার্চ করা যায় না — একটু বড় করে লিখে আবার চেষ্টা করুন।</p>
+      </div>
+    <% } else if (q && !hasAny) { %>
+      <div class="empty-state" style="text-align:center; padding:50px 20px;">
+        <i class="fas fa-search" style="font-size:2.6rem; color:var(--text-muted,#94a3b8);"></i>
+        <h3 style="margin:14px 0 8px;">কোনো ফলাফল পাওয়া যায়নি</h3>
+        <p style="color:var(--text-muted,#64748b);">বানান বদলে বা অন্য কিছু লিখে দেখুন — লেখার শিরোনাম, লেখকের নাম বা বিজ্ঞপ্তির বিষয় দিয়ে চেষ্টা করুন।</p>
+        <a href="/articles" class="btn btn-primary" style="margin-top:14px;"><i class="fas fa-pen-nib"></i> সব লেখা দেখুন</a>
+      </div>
+    <% } %>
+
+    <% if (results.articles.length) { %>
+      <h2 class="search-group-title"><i class="fas fa-pen-nib"></i> প্রকাশিত লেখা <span class="gs-count"><%= results.articles.length %></span></h2>
+      <div class="search-result-list">
+        <% results.articles.forEach(a => { %>
+          <a class="search-result-card" href="/articles/<%= a.id %>">
+            <div class="search-result-head">
+              <strong><%= a.title %></strong>
+              <% if (a.category) { %><span class="chip"><%= a.category %></span><% } %>
+            </div>
+            <% if (a.excerpt) { %><p class="search-result-excerpt"><%= String(a.excerpt).slice(0, 150) %>&hellip;</p><% } %>
+            <span class="search-result-meta">
+              <i class="fas fa-user"></i> <%= a.author_name %>
+              &middot; <i class="fas fa-heart"></i> <%= a.like_count || 0 %>
+              &middot; <i class="fas fa-comment"></i> <%= a.comment_count || 0 %>
+            </span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (results.questions.length) { %>
+      <h2 class="search-group-title"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর <span class="gs-count"><%= results.questions.length %></span></h2>
+      <div class="search-result-list">
+        <% results.questions.forEach(qu => { %>
+          <a class="search-result-card" href="/qa/<%= qu.id %>">
+            <div class="search-result-head"><strong><%= qu.title %></strong></div>
+            <% if (qu.excerpt) { %><p class="search-result-excerpt"><%= String(qu.excerpt).slice(0, 150) %>&hellip;</p><% } %>
+            <span class="search-result-meta"><i class="fas fa-user"></i> <%= qu.author_name %></span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (results.users.length) { %>
+      <h2 class="search-group-title"><i class="fas fa-users"></i> সদস্য <span class="gs-count"><%= results.users.length %></span></h2>
+      <div class="search-user-grid">
+        <% results.users.forEach(u => { %>
+          <a class="search-user-card" href="/profile/<%= encodeURIComponent(u.username) %>">
+            <img src="<%= u.avatar_url || ('/avatar/' + u.id) %>" alt="<%= u.full_name %>" loading="lazy" decoding="async" onerror="this.src='/assets/avatars/neutral.svg'" />
+            <div>
+              <strong><%= u.full_name %></strong>
+              <small>@<%= u.username %><% if (u.designation) { %> &middot; <%= u.designation %><% } %></small>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (results.notices.length) { %>
+      <h2 class="search-group-title"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি <span class="gs-count"><%= results.notices.length %></span></h2>
+      <div class="search-result-list">
+        <% results.notices.forEach(n => { %>
+          <a class="search-result-card" href="/notices/<%= n.id %>">
+            <div class="search-result-head"><strong><%= n.title %></strong></div>
+            <span class="search-result-meta"><i class="fas fa-calendar"></i> <%= n.date %></span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <% if (results.dailies.length) { %>
+      <h2 class="search-group-title"><i class="fas fa-calendar-day"></i> দৈনিক কনটেন্ট <span class="gs-count"><%= results.dailies.length %></span></h2>
+      <div class="search-result-list">
+        <% results.dailies.forEach(d => {
+             const link = d.content_type === 'quiz' ? '/quiz'
+                        : d.content_type === 'this_day' ? '/on-this-day'
+                        : d.content_type === 'epaper' ? '/epaper'
+                        : d.content_type === 'best_writer' ? '/best-writer'
+                        : '/activities';
+        %>
+          <a class="search-result-card" href="<%= link %>">
+            <div class="search-result-head">
+              <strong><%= d.title || DAILY_LABELS[d.content_type] || 'দৈনিক কনটেন্ট' %></strong>
+              <span class="chip"><%= DAILY_LABELS[d.content_type] || d.content_type %></span>
+            </div>
+            <% if (d.body) { %><p class="search-result-excerpt"><%= String(d.body).slice(0, 150) %>&hellip;</p><% } %>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
+  </div>
+</section>

@@ -364,3 +364,58 @@ router.get('/newsletter/unsubscribe', async (req, res) => {
 
 module.exports = router;
 
+
+// ── Global search results page (/search?q=) — session33 (§১২ gap) ───────────
+// Header dropdown-এ Enter / "সব ফলাফল" লিংক এখানে আসে। আগে কোনো ফুল-পেজ সার্চ
+// ছিল না — শুধু ছোট API ড্রপডাউন ছিল।
+router.get('/search', async (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const results = { articles: [], questions: [], users: [], notices: [], dailies: [] };
+  let total = 0;
+  if (q.length >= 2) {
+    const like = '%' + q + '%';
+    try {
+      results.articles = await db.prepare(`
+        SELECT p.id, p.title, p.excerpt, p.category, p.like_count, p.comment_count,
+               u.full_name AS author_name
+        FROM posts p JOIN users u ON p.author_id = u.id
+        WHERE p.type = 'article' AND p.status = 'published'
+          AND (p.title LIKE ? OR p.body LIKE ?)
+        ORDER BY p.published_at DESC LIMIT 20
+      `).all(like, like);
+      results.questions = await db.prepare(`
+        SELECT p.id, p.title, p.body AS excerpt, u.full_name AS author_name
+        FROM posts p JOIN users u ON p.author_id = u.id
+        WHERE p.type = 'question' AND p.status = 'published'
+          AND (p.title LIKE ? OR p.body LIKE ?)
+        ORDER BY p.created_at DESC LIMIT 15
+      `).all(like, like);
+      results.users = await db.prepare(`
+        SELECT id, username, full_name, avatar_url, designation
+        FROM users WHERE status = 'active'
+          AND (username LIKE ? OR full_name LIKE ? OR IFNULL(bio, '') LIKE ?)
+        ORDER BY full_name LIMIT 15
+      `).all(like, like, like);
+      results.notices = await db.prepare(`
+        SELECT id, title, content, date FROM notices
+        WHERE title LIKE ? OR IFNULL(content, '') LIKE ?
+        ORDER BY id DESC LIMIT 10
+      `).all(like, like);
+      results.dailies = await db.prepare(`
+        SELECT id, content_type, title, body FROM daily_content
+        WHERE published = 1 AND (IFNULL(title, '') LIKE ? OR IFNULL(body, '') LIKE ?)
+        ORDER BY id DESC LIMIT 10
+      `).all(like, like);
+    } catch (e) { /* খালি ফলাফল দেখানো হবে */ }
+    total = Object.values(results).reduce((a, r) => a + r.length, 0);
+  }
+  res.render('lekhok-search', {
+    layout: 'layout',
+    pageTitle: q ? ('সার্চ: ' + q) : 'সার্চ',
+    metaDesc: q ? `"${q}" — লেখক ফোরামে সার্চ ফলাফল` : 'লেখা, প্রশ্ন, সদস্য ও বিজ্ঞপ্তি খুঁজুন',
+    currentPath: '/search',
+    q,
+    results,
+    total
+  });
+});
