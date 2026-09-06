@@ -104,7 +104,7 @@
       <% // Render year-grouped advisors %>
       <% sortedYears.forEach((year) => { %>
         <div class="adv-year-group" data-year="<%= year %>">
-          <div class="adv-year-label"><i class="far fa-calendar"></i> <%= year %> কার্যবর্ষ — <%= bnNum(yearGroups[year].length) %> জন</div>
+          <div class="adv-year-label"><i class="far fa-calendar"></i> <%= year %> কার্যবর্ষ, <%= bnNum(yearGroups[year].length) %> জন</div>
           <div class="leaders-grid">
             <% yearGroups[year].forEach(m => { %>
               <% const displayName = m.user_full_name || m.name; %>
@@ -139,7 +139,7 @@
       <% if (noYearAdvisors.length > 0) { %>
         <div class="adv-year-group" data-year="no-year">
           <% if (sortedYears.length > 0) { %>
-            <div class="adv-year-label"><i class="fas fa-users"></i> সাধারণ উপদেষ্টা — <%= bnNum(noYearAdvisors.length) %> জন</div>
+            <div class="adv-year-label"><i class="fas fa-users"></i> সাধারণ উপদেষ্টা, <%= bnNum(noYearAdvisors.length) %> জন</div>
           <% } %>
           <div class="leaders-grid">
             <% noYearAdvisors.forEach(m => { %>
