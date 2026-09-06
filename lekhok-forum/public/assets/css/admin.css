@@ -1150,3 +1150,13 @@ table td:last-child .btn { margin-left: 4px; }
 /* ── মডারেটর পেজে স্কোপ ব্যাজ চিপ ─────────────────────────────────────── */
 .scope-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .scope-mini { font-size: 0.72rem !important; display: inline-flex; align-items: center; gap: 5px; }
+
+/* ══ সেশন ৩৮ — URL-ফিল্ডের পাশে আপলোড বাটন ══ */
+.urlup-wrap { display: inline-flex; margin-left: 6px; vertical-align: middle; }
+.urlup-btn {
+  width: 34px; height: 34px; border-radius: 5px; border: 1px solid var(--ad-line);
+  background: var(--ad-card); color: var(--ad-accent-ink); cursor: pointer; font-size: 0.8rem;
+  display: inline-flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.urlup-btn:hover { background: var(--ad-accent); color: #fff; border-color: var(--ad-accent); }
+.urlup-btn:disabled { opacity: .6; cursor: wait; }

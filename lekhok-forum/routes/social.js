@@ -1028,6 +1028,11 @@ router.post('/settings/avatar', ensureLoggedIn, withUpload(avatarUpload), async 
   const avatarUrl = req.file.url || req.file.path;
   try {
     await db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, me.id);
+    // সেশন ৩৮: প্রোফাইল পিকচার পরিবর্তন = নিজের টাইমলাইন + মূল ফিডে অটো-পোস্ট
+    try {
+      await db.prepare("INSERT INTO posts (author_id, type, title, body, cover_image, status, published_at) VALUES (?, 'article', ?, ?, ?, 'published', CURRENT_TIMESTAMP)")
+        .run(me.id, me.full_name + ' প্রোফাইল পিকচার আপডেট করেছেন', '📷 নতুন প্রোফাইল পিকচার', avatarUrl);
+    } catch (e) { console.error('[avatar] autopost:', e.message); }
     // Refresh session user from DB
     const fresh = await db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
     if (fresh) req.session.user = { id: fresh.id, username: fresh.username, full_name: fresh.full_name, avatar_url: fresh.avatar_url, gender: fresh.gender, role: fresh.role || 'user' };
@@ -1053,6 +1058,11 @@ router.post('/settings/cover', ensureLoggedIn, withUpload(coverUpload), async (r
   } catch(e) {}
   try {
     await db.prepare('UPDATE users SET cover_url = ? WHERE id = ?').run(coverUrl, me.id);
+    // সেশন ৩৮: কভার ফটো পরিবর্তন = অটো-পোস্ট (টাইমলাইন + মূল ফিড)
+    try {
+      await db.prepare("INSERT INTO posts (author_id, type, title, body, cover_image, status, published_at) VALUES (?, 'article', ?, ?, ?, 'published', CURRENT_TIMESTAMP)")
+        .run(me.id, me.full_name + ' কভার ফটো আপডেট করেছেন', '🖼️ নতুন কভার ফটো', coverUrl);
+    } catch (e) { console.error('[cover] autopost:', e.message); }
     res.redirect('/profile/' + encodeURIComponent(me.username) + '?ok=cover');
   } catch(e) {
     console.error('[cover] save error:', e);

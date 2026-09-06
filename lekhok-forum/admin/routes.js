@@ -495,6 +495,18 @@ router.post('/content/upload', requireAdmin, (req, res) => {
 });
 
 // ── Settings ─────────────────────────────────────────────────────────────────
+// ── সেশন ৩৮: ছবির URL-ফিল্ডের পাশে ফাইল-আপলোড (সব স্টাফ) ──────────────────
+// admin-url-upload.js যেকোনো image/url-ইনপুটের পাশে "আপলোড" বাটন বসায়; ফাইল
+// সিলেক্ট করলে এখানে আপলোড হয়ে URL টেক্সটবক্সে বসে যায় — লিংক খোঁজার ঝামেলা নেই।
+router.post('/upload-image', requireStaff, (req, res) => {
+  const up = require('../middleware/upload');
+  up.withUpload(up.coverUpload)(req, res, async () => {
+    if (req.uploadError) return res.status(400).json({ ok: false, error: req.uploadError });
+    if (!req.file) return res.status(400).json({ ok: false, error: 'no file' });
+    res.json({ ok: true, url: req.file.url || req.file.path });
+  });
+});
+
 // ── গ্লোবাল সেটিংস-সার্চ ইনডেক্স (সেশন ৩) — সাইডবার সার্চ লেজি-লোড করে ─────
 router.get('/search-index', requireStaff, (req, res) => {
   const out = [];

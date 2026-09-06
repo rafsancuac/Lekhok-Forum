@@ -234,3 +234,37 @@
 .profile-toast.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
 .profile-toast.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ══ সেশন ৩৮ — ফেসবুক-অনুরূপ কভার/অ্যাভাটার সাইজ + পিক-মেনু ══ */
+.profile-banner { height: 350px; position: relative; border-radius: 0 0 5px 5px; }
+@media (max-width: 900px) { .profile-banner { height: 260px; } }
+@media (max-width: 600px) { .profile-banner { height: 200px; } }
+.profile-avatar-lg { width: 168px !important; height: 168px !important; border: 4px solid var(--card, #fff); }
+@media (max-width: 600px) { .profile-avatar-lg { width: 110px !important; height: 110px !important; } }
+.cover-cam-btn {
+  position: absolute; right: 16px; bottom: 16px;
+  background: rgba(255,255,255,.92); color: #1c1e21; border: none;
+  padding: 8px 14px; border-radius: 5px; font-weight: 600; font-size: 13px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; box-shadow: 0 1px 4px rgba(0,0,0,.25);
+}
+.cover-cam-btn:hover { background: #fff; }
+.avatar-cam-btn {
+  position: absolute; right: 6px; bottom: 10px;
+  width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--surface-alt, #e4e6eb); color: #1c1e21; font-size: 14px;
+  display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.avatar-cam-btn:hover { background: #d8dadf; }
+.pic-menu {
+  position: absolute; z-index: 40; min-width: 230px;
+  background: var(--card, #fff); border: 1px solid var(--border, #e4e6eb); border-radius: 5px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.18); padding: 6px; top: calc(100% + 6px); left: 0;
+}
+.cover-cam-btn + .pic-menu, .pic-menu#coverMenu { top: auto; bottom: calc(100% + 6px); left: auto; right: 0; }
+.pic-menu button, .pic-menu a {
+  display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+  padding: 9px 10px; border: none; background: none; border-radius: 5px; cursor: pointer;
+  font-size: 13.5px; font-weight: 600; color: var(--text, #1c1e21); text-decoration: none;
+}
+.pic-menu button:hover, .pic-menu a:hover { background: var(--surface-alt, #f0f2f5); }
+.pic-menu i { color: var(--text-soft, #65676b); width: 16px; }

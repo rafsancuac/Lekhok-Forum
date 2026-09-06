@@ -35,10 +35,14 @@
           </div>
         <% } %>
         <% conversations.forEach(c => { %>
-          <a href="/messages/<%= c.other_username %>" class="conv-item <%= c.other_username === other.username ? 'active' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-id="<%= c.id %>">
+          <a href="<%= c.conv_link || ('/messages/' + c.other_username) %>" class="conv-item <%= !isGroup && c.other_username === other.username ? 'active' : '' %> <%= isGroup && c.id === conv.id ? 'active' : '' %> <%= c.is_group_flag ? 'is-group' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-id="<%= c.id %>">
             <div class="avatar avatar-md" style="position:relative">
+              <% if (c.is_group_flag) { %>
+              <span class="group-avatar"><i class="fas fa-users"></i></span>
+              <% } else { %>
               <img loading="lazy" decoding="async" src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
               <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
+              <% } %>
             </div>
             <div class="conv-meta">
               <div class="conv-name"><%= c.other_name %></div>
@@ -65,20 +69,30 @@
             <span class="online-dot" id="otherOnlineDot" data-user-id="<%= other.id %>" style="display:none"></span>
           </div>
           <div class="info">
-            <h3><a href="/profile/<%= other.username %>" style="text-decoration:none;color:inherit"><%= other.full_name %></a></h3>
+            <h3><% if (isGroup) { %><i class="fas fa-users" style="color:var(--accent);font-size:14px"></i> <%= other.full_name %><% } else { %><a href="/profile/<%= other.username %>" style="text-decoration:none;color:inherit"><%= other.full_name %></a><% } %></h3>
             <div class="status" id="otherStatus">
-              <i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> <%= other.online_text || '@' + other.username %>
+              <% if (isGroup) { %><i class="fas fa-users" style="font-size:9px;vertical-align:middle"></i> <%= members.length %> সদস্য<% } else { %><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> <%= other.online_text || '@' + other.username %><% } %>
             </div>
           </div>
+          <div class="conv-insearch">
+            <i class="fas fa-search"></i>
+            <input type="search" id="convInSearch" placeholder="মেসেজ খুঁজুন..." autocomplete="off" />
+          </div>
           <div style="margin-left:auto;display:flex;gap:6px">
+            <% if (!isGroup) { %>
             <a href="/profile/<%= other.username %>" class="btn-icon" title="প্রোফাইল"><i class="fas fa-user"></i></a>
             <button type="button" class="btn-icon" title="কথোপকথন মুছুন" style="color:#ef4444" onclick="deleteConversation('<%= other.username %>')"><i class="fas fa-trash"></i></button>
+            <% } %>
           </div>
         </header>
 
         <div class="chat-body" id="chatBody">
           <% messages.forEach(m => { %>
+            <% var _sm = isGroup ? (members || []).find(x => x.id === m.sender_id) : null; %>
             <div class="bubble <%= m.sender_id === user.id ? 'me' : 'them' %>" data-id="<%= m.id %>">
+              <% if (isGroup && m.sender_id !== user.id) { %>
+              <div class="bubble-sender"><img src="<%= (_sm && _sm.avatar_url) || '/avatar/' + m.sender_id %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt=""><%= _sm ? _sm.full_name : 'সদস্য' %></div>
+              <% } %>
               <% if (m.sender_id === user.id) { %>
                 <button type="button" class="bubble-delete" data-msg-delete="<%= m.id %>" title="মুছে ফেলুন"><i class="fas fa-times"></i></button>
               <% } %>
@@ -93,6 +107,10 @@
                   </a>
                 <% } %>
               <% } %>
+              <% var _rx = (typeof reactionMap !== 'undefined' && reactionMap[m.id]) || []; %>
+              <% if (_rx.length) { %><div class="bubble-reacts"><% _rx.forEach(r => { %><span title="<%= r.c %>"><%= r.emoji %><% if (r.c > 1) { %> <%= r.c %><% } %></span><% }); %></div><% } %>
+              <button type="button" class="bubble-react-btn" data-msg-react="<%= m.id %>" title="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>
+              <div class="bubble-react-menu" hidden><% ['❤️','😂','😮','😢','👍'].forEach(e => { %><button type="button" data-emoji="<%= e %>"><%= e %></button><% }); %></div>
               <div class="bubble-meta">
                 <span class="bubble-time"><%= new Date(m.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) %></span>
                 <% if (m.sender_id === user.id) { %>
@@ -172,6 +190,7 @@
     const myId = <%= user.id %>;
     const otherId = <%= other.id %>;
     const otherUsername = <%- JSON.stringify(other.username) %>;
+    const sendUrl = <%- JSON.stringify(isGroup ? '/messages/g/' + conv.id : '/messages/' + other.username) %>;
     let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
     let typingTimeout = null;
 
@@ -338,6 +357,8 @@
         if (isImg) html += '<a href="' + msg.file_url + '" target="_blank"><img loading="lazy" decoding="async" src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
         else html += '<a href="' + msg.file_url + '" class="bubble-file" download><i class="fas fa-paperclip"></i> ' + (msg.file_name || 'ফাইল') + '</a>';
       }
+      html += '<button type="button" class="bubble-react-btn" data-msg-react="' + msg.id + '" title="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>';
+      html += '<div class="bubble-react-menu" hidden>' + ['❤️','😂','😮','😢','👍'].map(e => '<button type="button" data-emoji="' + e + '">' + e + '</button>').join('') + '</div>';
       html += '<div class="bubble-meta"><span class="bubble-time"></span>';
       if (msg.is_me) {
         html += '<span class="bubble-seen"><i class="fas fa-check" title="পৌঁছেছে"></i></span>';
@@ -359,7 +380,7 @@
 
     // Typing indicator — send signal + show theirs
     document.getElementById('msgInput').addEventListener('input', () => {
-      if (!convId) return;
+      if (!convId || <%= isGroup ? 'true' : 'false' %>) return;
       if (typingTimeout) clearTimeout(typingTimeout);
       fetch('/api/messages/typing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conv_id: convId }) });
       typingTimeout = setTimeout(() => {}, 6000);
@@ -389,18 +410,57 @@
 
         // Other user online status
         const dot = document.getElementById('otherOnlineDot');
-        const status = document.getElementById('otherStatus');
-        if (dot) dot.style.display = data.online ? 'block' : 'none';
-        if (status) {
-          status.innerHTML = data.online
-            ? '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle;color:var(--accent)"></i> এখনই অনলাইন'
-            : '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> @' + '<%= other.username %>';
+        const status = document.getElementById('otherOther') || document.getElementById('otherStatus');
+        if (!<%= isGroup ? 'true' : 'false' %>) {
+          if (dot) dot.style.display = data.online ? 'block' : 'none';
+          if (status) {
+            status.innerHTML = data.online
+              ? '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle;color:var(--accent)"></i> এখনই অনলাইন'
+              : '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> @' + '<%= other.username %>';
+          }
         }
       } catch (e) { /* silent */ }
     }
     setInterval(poll, 5000);
     // First poll after 1s
     setTimeout(poll, 1000);
+
+    // ── সেশন ৩৮: কথোপকথনের ভেতরে মেসেজ-সার্চ (ক্লায়েন্ট-সাইড ফিল্টার) ──
+    const cis = document.getElementById('convInSearch');
+    if (cis) cis.addEventListener('input', function () {
+      const q = cis.value.trim().toLowerCase();
+      document.querySelectorAll('#chatBody .bubble').forEach(b => {
+        const t = ((b.querySelector('.bubble-text') || {}).textContent || '');
+        b.style.display = (!q || t.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+      });
+    });
+
+    // ── সেশন ৩৮: মেসেজে রিয়েকশন (হোভার-মেনু) ──
+    function renderReacts(bubble, counts) {
+      let box = bubble.querySelector('.bubble-reacts');
+      if (!counts || !counts.length) { if (box) box.remove(); return; }
+      if (!box) { box = document.createElement('div'); box.className = 'bubble-reacts'; bubble.insertBefore(box, bubble.querySelector('.bubble-meta')); }
+      box.innerHTML = counts.map(c => '<span title="' + c.c + '">' + c.emoji + (c.c > 1 ? ' ' + c.c : '') + '</span>').join('');
+    }
+    body.addEventListener('click', async function (e) {
+      const rb = e.target.closest('[data-msg-react]');
+      if (rb) {
+        const menu = rb.parentElement.querySelector('.bubble-react-menu');
+        document.querySelectorAll('.bubble-react-menu:not([hidden])').forEach(m => { if (m !== menu) m.hidden = true; });
+        if (menu) menu.hidden = !menu.hidden;
+        return;
+      }
+      const em = e.target.closest('.bubble-react-menu [data-emoji]');
+      if (em) {
+        const bubble = em.closest('.bubble');
+        em.closest('.bubble-react-menu').hidden = true;
+        try {
+          const r = await fetch('/api/messages/react', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_id: bubble.dataset.id, emoji: em.dataset.emoji }) });
+          const d = await r.json();
+          if (d.ok) renderReacts(bubble, d.counts);
+        } catch (_) {}
+      }
+    });
 
     // Form: AJAX send with re-entry guard (fixes multi-send bug)
     let sending = false;
@@ -438,7 +498,7 @@
       }
 
       try {
-        const res = await fetch('/messages/<%= other.username %>', {
+        const res = await fetch(sendUrl, {
           method: 'POST', body: fd,
           headers: { 'Accept': 'application/json' },   // JSON-এ id ফেরত → optimistic বাবল swap, ডুপ্লিকেট নয়
           redirect: 'manual'

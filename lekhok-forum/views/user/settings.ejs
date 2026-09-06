@@ -194,21 +194,46 @@
         <section class="settings-section" data-pane="connected">
           <div class="card">
             <h2><i class="fas fa-link"></i> সংযুক্ত অ্যাকাউন্ট</h2>
-            <p style="color:var(--text-muted);">আপনার সোশ্যাল অ্যাকাউন্ট সংযুক্ত করে দ্রুত লগইন করুন।</p>
-            <div class="connected-list" style="margin-top:16px;">
-              <div class="connected-row">
-                <div><i class="fab fa-facebook" style="color:#1877f2;font-size:24px;"></i> <strong>Facebook</strong></div>
-                <button class="btn btn-ghost btn-sm">সংযুক্ত করুন</button>
+            <p style="color:var(--text-muted);">আপনার সোশ্যাল অ্যাকাউন্ট সংযুক্ত করে দ্রুত লগইন ও ক্রস-পোস্টিং করুন।</p>
+            <div class="connected-list ca-fb" style="margin-top:16px;">
+              <div class="ca-row">
+                <span class="ca-ico" style="--ca:#1877f2"><i class="fab fa-facebook-f"></i></span>
+                <span class="ca-meta">
+                  <strong>Facebook</strong>
+                  <small>পোস্ট স্বয়ংক্রিয়ভাবে পেজে শেয়ার ও এক-ক্লিক লগইন</small>
+                </span>
+                <span class="ca-state off">সংযুক্ত নয়</span>
+                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
               </div>
-              <div class="connected-row">
-                <div><i class="fab fa-google" style="color:#ea4335;font-size:22px;"></i> <strong>Google</strong></div>
-                <button class="btn btn-ghost btn-sm">সংযুক্ত করুন</button>
+              <div class="ca-row">
+                <span class="ca-ico" style="--ca:#ea4335"><i class="fab fa-google"></i></span>
+                <span class="ca-meta">
+                  <strong>Google</strong>
+                  <small>জিমেইল দিয়ে সাইন-ইন ও ক্যালেন্ডার রিমাইন্ডার</small>
+                </span>
+                <span class="ca-state off">সংযুক্ত নয়</span>
+                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
               </div>
-              <div class="connected-row">
-                <div><i class="fab fa-twitter" style="color:#1da1f2;font-size:22px;"></i> <strong>Twitter / X</strong></div>
-                <button class="btn btn-ghost btn-sm">সংযুক্ত করুন</button>
+              <div class="ca-row">
+                <span class="ca-ico" style="--ca:#111"><i class="fab fa-x-twitter"></i></span>
+                <span class="ca-meta">
+                  <strong>Twitter / X</strong>
+                  <small>লেখা প্রকাশমাত্র থ্রেড হিসেবে পোস্ট</small>
+                </span>
+                <span class="ca-state off">সংযুক্ত নয়</span>
+                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
+              </div>
+              <div class="ca-row">
+                <span class="ca-ico" style="--ca:#229ed9"><i class="fab fa-telegram-plane"></i></span>
+                <span class="ca-meta">
+                  <strong>Telegram</strong>
+                  <small>চ্যানেলে নোটিশ ও নতুন লেখার আপডেট</small>
+                </span>
+                <span class="ca-state off">সংযুক্ত নয়</span>
+                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
               </div>
             </div>
+            <div class="hint" style="margin-top:12px"><i class="fas fa-shield-alt"></i> সংযোগের অনুমতি শুধু আপনার প্রোফাইলের পাবলিক তথ্যের মধ্যে সীমাবদ্ধ থাকে।</div>
           </div>
         </section>
       </main>

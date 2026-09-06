@@ -9,7 +9,23 @@
           <div class="msg-head-row">
             <h2><i class="fas fa-inbox"></i> মেসেজ</h2>
             <span class="msg-count-badge" id="msgCountBadge"><%= conversations.length %></span>
+            <button type="button" class="btn btn-primary btn-sm" id="grpToggle" style="margin-left:auto"><i class="fas fa-users"></i> নতুন গ্রুপ</button>
           </div>
+          <div class="msg-filter-row">
+            <button type="button" class="filter-chip mf-all active" data-mfilter="all">সব</button>
+            <button type="button" class="filter-chip mf-unread" data-mfilter="unread"><i class="fas fa-circle" style="font-size:7px"></i> আনরিড</button>
+            <button type="button" class="filter-chip mf-groups" data-mfilter="groups"><i class="fas fa-users"></i> গ্রুপ</button>
+          </div>
+          <form method="POST" action="/messages/group/create" id="grpForm" class="grp-form" hidden>
+            <div class="grp-form-head"><i class="fas fa-users"></i> নতুন গ্রুপ কথোপকথন</div>
+            <input type="text" name="title" placeholder="গ্রুপের নাম (যেমন: কমিটি ২০২৬)" required maxlength="60" />
+            <div class="grp-members">
+              <% (typeof allUsers !== 'undefined' ? allUsers : []).forEach(u => { %>
+                <label class="grp-member"><input type="checkbox" name="members" value="<%= u.username %>"> <img src="<%= u.avatar_url || '/avatar/0' %>" onerror="this.src='/avatar/0'" alt=""> <%= u.full_name %></label>
+              <% }); %>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-check"></i> গ্রুপ তৈরি করুন</button>
+          </form>
           <p style="font-size:12px;color:var(--text-soft);margin:2px 0 12px">সবার সাথে কথা বলুন, ফাইল শেয়ার করুন</p>
 
           <%# ── Unified search box ── %>
@@ -62,14 +78,18 @@
             </div>
           <% } else { %>
             <% conversations.forEach(c => { %>
-              <a href="/messages/<%= c.other_username %>" class="conv-item" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username %>" data-id="<%= c.id %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>">
+              <a href="<%= c.conv_link || ('/messages/' + c.other_username) %>" class="conv-item <%= c.is_group_flag ? 'is-group' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username || '' %>" data-id="<%= c.id %>" data-group="<%= c.is_group_flag ? 1 : 0 %>" data-unread="<%= c.unread_count > 0 ? 1 : 0 %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>">
                 <div class="avatar avatar-md" style="position:relative">
+                  <% if (c.is_group_flag) { %>
+                  <span class="group-avatar"><i class="fas fa-users"></i></span>
+                  <% } else { %>
                   <img loading="lazy" decoding="async" src="<%= c.other_avatar || ('/avatar/' + (c.user_a === user.id ? c.user_b : c.user_a)) %>" alt="<%= c.other_name %>" onerror="this.onerror=null;this.src='/avatar/<%= c.user_a === user.id ? c.user_b : c.user_a %>'" />
                   <span class="online-dot" data-user-id="<%= c.user_a === user.id ? c.user_b : c.user_a %>" style="display:none"></span>
+                  <% } %>
                 </div>
                 <div class="conv-meta">
                   <div class="conv-name"><%= c.other_name %></div>
-                  <div class="conv-snippet"><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 50) : 'নতুন কথোপকথন' %></div>
+                  <div class="conv-snippet"><% if (c.is_group_flag) { %><i class="fas fa-users" style="font-size:10px"></i> <%= c.member_count %> সদস্য · <% } %><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 50) : 'নতুন কথোপকথন' %></div>
                 </div>
                 <div class="conv-meta-right">
                   <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
@@ -484,3 +504,21 @@
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 </body>
 </html>
+
+  <script>
+  (function () {
+    var t = document.getElementById('grpToggle'), f = document.getElementById('grpForm');
+    if (t && f) t.addEventListener('click', function () { f.hidden = !f.hidden; if (!f.hidden) f.querySelector('input[name=title]').focus(); });
+    document.querySelectorAll('[data-mfilter]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('[data-mfilter]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        var k = b.dataset.mfilter;
+        document.querySelectorAll('#convListDefault .conv-item').forEach(function (it) {
+          var show = k === 'all' || (k === 'unread' && it.dataset.unread === '1') || (k === 'groups' && it.dataset.group === '1');
+          it.style.display = show ? '' : 'none';
+        });
+      });
+    });
+  })();
+  </script>
