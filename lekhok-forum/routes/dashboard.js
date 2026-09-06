@@ -422,13 +422,23 @@ router.get('/api/messages/unread', ensureAuth, async (req, res) => {
 // ── Complaints (private) ──────────────────────────────────────────────────
 router.get('/complaints', ensureAuth, async (req, res) => {
   const mine = await db.prepare('SELECT * FROM complaints WHERE submitted_by = ? ORDER BY created_at DESC').all(req.session.user.id);
-  res.render('user/complaints', { mine, sent: req.query.sent || null, currentPath: '/complaints' });
+  // সেশন ৩৫: query সরাসরি পাস — আগে পাস হতো না, তাই সফল/ডুপ্লিকেট/ত্রুটি বার্তা দেখাত না
+  res.render('user/complaints', { mine, query: req.query, currentPath: '/complaints' });
 });
 
 router.post('/complaints', ensureAuth, withUpload(attachmentUpload), async (req, res) => {
   const { subject, body } = req.body;
   if (req.uploadError) return res.redirect('/complaints?err=' + encodeURIComponent(req.uploadError));
   if (!subject) return res.redirect('/complaints');
+
+  // ── সেশন ৩৫: ডুপ্লিকেট-সাবমিট গার্ড ─────────────────────────────────────
+  // একই ব্যবহারকারীর হুবহু একই subject+body ভালা অভিযোগ ৫ মিনিটের মধ্যে আবার
+  // এলে INSERT করা হয় না — ডাবল-ক্লিক / রিফ্রেশ-রিসাবমিটে একটাই থাকবে।
+  const recent = await db.prepare(
+    "SELECT id FROM complaints WHERE submitted_by = ? AND subject = ? AND IFNULL(body,'') = IFNULL(?,'') AND created_at >= datetime('now', '-5 minutes') LIMIT 1"
+  ).get(req.session.user.id, subject, body || '');
+  if (recent) return res.redirect('/complaints?dup=1');
+
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   const fileName = req.file ? req.file.originalname : null;
   await db.prepare('INSERT INTO complaints (submitted_by, subject, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')

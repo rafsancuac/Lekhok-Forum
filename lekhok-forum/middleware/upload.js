@@ -25,7 +25,7 @@ const USE_BLOB      = !!process.env.BLOB_READ_WRITE_TOKEN;  // true on Vercel wh
 // (FUNCTION_INVOCATION_FAILED, সব পেইজ 500)। তাই try/catch বাধ্যতামূলক।
 // প্রোডাকশনে আপলোডের আসল পথ Vercel Blob (BLOB_READ_WRITE_TOKEN) — diskStorage
 // শুধু লোকাল ডেভের জন্য; read-only হলে withUpload() সেটাই ধরে রিপোর্ট করে।
-['avatars', 'covers', 'attachments', 'gallery', 'epaper', 'press'].forEach(dir => {
+['avatars', 'covers', 'attachments', 'gallery', 'epaper', 'press', 'content'].forEach(dir => {
   try {
     const p = path.join(UPLOAD_ROOT, dir);
     if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
@@ -228,6 +228,57 @@ const epaperUpload = makeUpload({
   allowedTypes: null
 });
 
+/**
+ * সেশন ৩৫: কনটেন্ট এডিটরের ছবি/ব্যানার আপলোড — একাধিক নামাঙ্কিত ফিল্ড একসাথে।
+ * makeUpload() একটি মাত্র req.file নরমালাইজ করে; কনটেন্ট ফর্মে একাধিক ইমেজ-ফিল্ড
+ * (img_<key>) থাকতে পারে, তাই এই ভ্যারিয়েন্ট প্রতিটি ফাইল WebP-অপ্টিমাইজ +
+ * স্টোর করে req.filesContent[<key>] = file আকারে ফেরত দেয়।
+ * Blob/ডিস্ক — দুই মোডেই makeUpload-এর মতোই কাজ করে।
+ */
+function makeContentImageUpload({ subdir = 'content', maxBytes = 5 * 1024 * 1024, fieldNames = [] }) {
+  const dest = path.join(UPLOAD_ROOT, subdir);
+  return (req, res, next) => {
+    if (!fieldNames.length) return next();
+    multer({
+      storage: multer.memoryStorage(),
+      limits:  { fileSize: maxBytes, files: fieldNames.length },
+      fileFilter: (req, file, cb) => {
+        if (IMAGE_TYPES.test(file.mimetype)) cb(null, true);
+        else cb(new Error('শুধুমাত্র ছবি ফাইল (JPG/PNG/WebP/GIF/SVG) আপলোড করা যাবে'));
+      }
+    }).fields(fieldNames.map(n => ({ name: n, maxCount: 1 })))(req, res, async (err) => {
+      if (err) {
+        req.uploadError = err.message || 'ছবি আপলোড ব্যর্থ হয়েছে';
+        return next();
+      }
+      req.filesContent = {};
+      const all = Object.values(req.files || {}).flat();
+      for (const f of all) {
+        try {
+          await optimizeToWebp(f);
+          if (USE_BLOB) {
+            const result = await uploadToBlob(f, subdir);
+            f.url = result.url; f.path = result.url; f.filename = result.filename;
+          } else {
+            const filename = makeFilenameSync(f);
+            const destPath = path.join(dest, filename);
+            fs.writeFileSync(destPath, f.buffer);
+            f.path = destPath;
+            f.url  = `/uploads/${subdir}/${filename}`;
+            f.filename = filename;
+          }
+          // fieldname = 'img_<key>' → key বের করি
+          const key = (f.fieldname || '').replace(/^img_/, '');
+          if (key) req.filesContent[key] = f;
+        } catch (e) {
+          req.uploadError = req.uploadError || ('ছবি সংরক্ষণ ব্যর্থ: ' + (e.message || ''));
+        }
+      }
+      next();
+    });
+  };
+}
+
 // ── Error wrapper (keeps existing API) ────────────────────────────────────────
 function withUpload(mw) {
   return (req, res, next) => {
@@ -243,5 +294,6 @@ function withUpload(mw) {
 module.exports = {
   avatarUpload, coverUpload, attachmentUpload, galleryUpload, pressUpload,
   messageUpload, complaintUpload, epaperUpload,
+  makeContentImageUpload,
   withUpload
 };

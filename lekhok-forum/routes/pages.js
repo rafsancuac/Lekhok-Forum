@@ -284,7 +284,7 @@ router.get('/resources', async (req, res) => {
 router.get('/resources/emails', async (req, res) => {
   res.render('lekhok-emails', {
     layout: 'layout',
-    pageTitle: 'পত্রিকার ইমেইল তালিকা',
+    pageTitle: 'পত্রিকার ইমেইল',
     currentPath: '/resources/emails'
   });
 });

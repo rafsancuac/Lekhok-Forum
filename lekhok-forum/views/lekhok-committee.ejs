@@ -63,6 +63,10 @@
 
 <% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
 
+<%# সেশন ৩৫ ফিক্স: এই পেজের কনটেন্ট ব্লকটা আগে section/container ছাড়া খোলা ছিল —
+    তাই কার্ডগুলো দুই পাশে প্যাডিং ছাড়া কিনারায় লেগে যেত। এখন স্ট্যান্ডার্ড কাঠামো। %>
+<section class="section reveal">
+  <div class="container">
 <!-- কার্যবর্ষ ফিল্টার -->
     <div class="term-bar">
       <p class="term-intro">

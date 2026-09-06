@@ -773,11 +773,11 @@ window.showToast = showToast;
   })();
 
 
-  // ── Hero promo carousel (session33, §১৩) — auto-rotate, dots, pause-on-hover ─
-  (function initHeroCarousel() {
-    const root = document.getElementById('heroCarousel');
-    const track = document.getElementById('hcTrack');
-    const dotsWrap = document.getElementById('hcDots');
+  // ── ইউজার ফিড শোকেস ক্যারোসেল (সেশন ৩৫ — হিরো থেকে সরিয়ে ফিড সেকশনে ইন্টিগ্রেট) ─
+  (function initFeedCarousel() {
+    const root = document.getElementById('feedCarousel');
+    const track = document.getElementById('fcTrack');
+    const dotsWrap = document.getElementById('fcDots');
     if (!root || !track || !dotsWrap) return;
     const slides = track.children;
     const count = slides.length;
@@ -790,7 +790,7 @@ window.showToast = showToast;
     for (let i = 0; i < count; i++) {
       const d = document.createElement('button');
       d.type = 'button';
-      d.className = 'hc-dot' + (i === 0 ? ' active' : '');
+      d.className = 'fc-dot' + (i === 0 ? ' active' : '');
       d.setAttribute('aria-label', 'স্লাইড ' + (i + 1));
       d.addEventListener('click', () => { go(i); restart(); });
       dotsWrap.appendChild(d);

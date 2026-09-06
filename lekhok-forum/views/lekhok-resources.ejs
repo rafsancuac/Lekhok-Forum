@@ -6,6 +6,16 @@
   </div>
 </header>
 
+<%# সেশন ৩৫: রিসোর্স সাব-পেজ নেভিগেশন — 'গুরুত্বপূর্ণ ফাইল ও রিসোর্স' ও 'পত্রিকার ইমেইল' %>
+<div class="res-subnav-wrap">
+  <div class="container">
+    <nav class="res-subnav" aria-label="রিসোর্স সাব-পেজ">
+      <a href="/resources" class="active" aria-current="page"><i class="fas fa-folder-open"></i> গুরুত্বপূর্ণ ফাইল ও রিসোর্স</a>
+      <a href="/resources/emails"><i class="fas fa-envelope"></i> পত্রিকার ইমেইল</a>
+    </nav>
+  </div>
+</div>
+
 <section class="section reveal">
   <div class="container">
     <div class="notice-tabs">
@@ -62,12 +72,5 @@
     <% } %>
   </div>
 </section>
-
-
-
-<!-- Link to email list -->
-<section class="section reveal" style="text-align:center; padding:20px 0 40px;">
-  <div class="container">
-    <a href="/resources/emails" class="btn btn-primary btn-lg"><i class="fas fa-envelope"></i> পত্রিকার ইমেইল তালিকা</a>
-  </div>
-</section>
+<%# সেশন ৩৫: নিচের বড় 'পত্রিকার ইমেইল তালিকা' বাটন-সেকশন সরানো হয়েছে —
+    পত্রিকার ইমেইল এখন উপরের সাব-পেজ ট্যাব থেকেই যাওয়া যায় %>

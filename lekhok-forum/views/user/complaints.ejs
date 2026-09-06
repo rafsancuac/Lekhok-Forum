@@ -1,55 +1,187 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: 'অভিযোগ | বাংলাদেশ তরুণ কলাম লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
 
-  <div class="complaints-wrap">
-    <div class="page-header">
-      <h1><i class="fas fa-flag"></i> অভিযোগ</h1>
+<%# সেশন ৩৫: সম্পূর্ণ UX রিডিজাইন — প্রফেশনাল ফর্ম-কার্ড, কাস্টম ফাইল-ড্রপজোন,
+    স্টেপ-ভিত্তিক ফ্লো, স্ট্যাটাস চিপ, ডুপ্লিকেট-সাবমিট গার্ড (সার্ভার+ক্লায়েন্ট) %>
+<div class="complaints-wrap cmp35">
+  <div class="cmp35-hero">
+    <div class="cmp35-hero-icon"><i class="fas fa-shield-alt"></i></div>
+    <div>
+      <h1>অভিযোগ জানান</h1>
+      <p>কোনো সমস্যা বা অভিযোগ থাকলে নির্দ্বিধায় জানান, প্রতিটি অভিযোগ গুরুত্বসহ দেখা হয়।</p>
     </div>
-
-    <div class="complaint-privacy">
-      <i class="fas fa-shield-alt"></i> আপনার অভিযোগ <strong>সম্পূর্ণ গোপনীয়</strong>। শুধুমাত্র অ্যাডমিন ও বিশেষ কিছু মডারেটর দেখতে পারবেন।
-    </div>
-
-    <% if (typeof query !== 'undefined' && query.sent === '1') { %>
-      <div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px;margin-bottom:16px"><i class="fas fa-check-circle"></i> আপনার অভিযোগ সফলভাবে জমা হয়েছে।</div>
-    <% } %>
-
-    <form method="POST" class="complaint-form" enctype="multipart/form-data">
-      <div class="form-group"><label>বিষয় *</label><input type="text" name="subject" required></div>
-      <div class="form-group"><label>বিস্তারিত</label><textarea name="body" rows="4"></textarea></div>
-      <div class="form-group"><label>ফাইল (প্রমাণসহ)</label><input type="file" name="attachment"></div>
-      <button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> অভিযোগ জমা দিন</button>
-    </form>
-
-    <h2 style="color:var(--brand);margin:30px 0 14px"><i class="fas fa-list"></i> আমার অভিযোগসমূহ</h2>
-    <% if (mine.length === 0) { %>
-      <div class="empty-state-full">
-        <i class="fas fa-inbox"></i>
-        <p>আপনি এখনো কোনো অভিযোগ দেননি।</p>
-      </div>
-    <% } else { %>
-      <div class="complaint-list">
-        <% mine.forEach(c => { %>
-          <div class="complaint-item">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <h3 style="color:var(--brand);font-size:1rem"><%= c.subject %></h3>
-              <span class="complaint-status <%= c.status %>"><%= c.status === 'new' ? 'নতুন' : c.status === 'in_progress' ? 'প্রক্রিয়াধীন' : c.status === 'in_review' ? 'পর্যালোচনাধীন' : c.status === 'dismissed' ? 'বাতিল' : 'সমাধান' %></span>
-            </div>
-            <p style="color:var(--text);font-size:0.9rem"><%= c.body || '' %></p>
-            <% if (c.file_url) { %>
-              <a href="<%= c.file_url %>" class="message-file" style="display:inline-block;margin-top:6px"><i class="fas fa-paperclip"></i> <%= c.file_name || 'ফাইল' %></a>
-            <% } %>
-            <div style="color:var(--text-muted);font-size:0.78rem;margin-top:8px"><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleString('bn-BD') %></div>
-            <% if (c.admin_notes) { %>
-              <div style="background:#f0f6ff;padding:10px;border-radius:6px;margin-top:8px;font-size:0.88rem">
-                <strong>অ্যাডমিন নোট:</strong> <%= c.admin_notes %>
-              </div>
-            <% } %>
-          </div>
-        <% }); %>
-      </div>
-    <% } %>
   </div>
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+
+  <div class="cmp35-privacy">
+    <i class="fas fa-lock"></i>
+    <span>আপনার অভিযোগ <strong>সম্পূর্ণ গোপনীয়</strong>। শুধুমাত্র অ্যাডমিন ও নির্ধারিত মডারেটর দেখতে পারবেন, অভিযোগকারীর পরিচয় প্রকাশ করা হয় না।</span>
+  </div>
+
+  <% if (typeof query !== 'undefined' && query.sent === '1') { %>
+    <div class="cmp35-alert cmp35-alert-success">
+      <i class="fas fa-check-circle"></i>
+      <div><strong>সফল!</strong> আপনার অভিযোগ সফলভাবে জমা হয়েছে। অ্যাডমিন দ্রুত পর্যালোচনা করবেন।</div>
+      <button type="button" class="cmp35-alert-close" onclick="this.parentElement.remove()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
+    </div>
+  <% } %>
+  <% if (typeof query !== 'undefined' && query.dup === '1') { %>
+    <div class="cmp35-alert cmp35-alert-warn">
+      <i class="fas fa-info-circle"></i>
+      <div><strong>একই অভিযোগ ইতিমধ্যে জমা আছে।</strong> ডুপ্লিকেট এড়াতে এটি আবার যোগ করা হয়নি। নিচের তালিকায় দেখুন।</div>
+      <button type="button" class="cmp35-alert-close" onclick="this.parentElement.remove()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
+    </div>
+  <% } %>
+  <% if (typeof query !== 'undefined' && query.err) { %>
+    <div class="cmp35-alert cmp35-alert-error">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div><strong>সমস্যা হয়েছে:</strong> <%= query.err %></div>
+      <button type="button" class="cmp35-alert-close" onclick="this.parentElement.remove()" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
+    </div>
+  <% } %>
+
+  <div class="cmp35-form-card">
+    <div class="cmp35-form-head">
+      <h2><i class="fas fa-pen-nib"></i> নতুন অভিযোগ</h2>
+      <span class="cmp35-form-step"><i class="far fa-clock"></i> সাধারণত ২৪–৪৮ ঘণ্টায় পর্যালোচনা</span>
+    </div>
+    <form method="POST" class="cmp35-form" enctype="multipart/form-data" id="complaintForm">
+      <div class="cmp35-field">
+        <label for="cmpSubject"><i class="fas fa-heading"></i> বিষয় <span class="req">*</span></label>
+        <input type="text" id="cmpSubject" name="subject" required maxlength="150" placeholder="সংক্ষেপে অভিযোগের বিষয় লিখুন" autocomplete="off" />
+        <small class="cmp35-count"><span id="cmpSubjectCount">০</span>/১৫০ অক্ষর</small>
+      </div>
+      <div class="cmp35-field">
+        <label for="cmpBody"><i class="fas fa-align-left"></i> বিস্তারিত বিবরণ</label>
+        <textarea id="cmpBody" name="body" rows="5" maxlength="2000" placeholder="ঘটনার বিবরণ, সময় ও প্রাসঙ্গিক তথ্য লিখুন..."></textarea>
+        <small class="cmp35-count"><span id="cmpBodyCount">০</span>/২০০০ অক্ষর</small>
+      </div>
+      <div class="cmp35-field">
+        <label><i class="fas fa-paperclip"></i> প্রমাণক সংযুক্তি <span class="opt">(ঐচ্ছিক)</span></label>
+        <label class="cmp35-dropzone" id="cmpDropzone" for="cmpFile">
+          <input type="file" id="cmpFile" name="attachment" accept="image/*,.pdf,.doc,.docx" hidden />
+          <div class="cmp35-dz-inner" id="cmpDzInner">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <strong>ফাইল টেনে আনুন বা ক্লিক করুন</strong>
+            <small>ছবি, PDF বা Word ডকুমেন্ট • সর্বোচ্চ ১০ MB</small>
+          </div>
+        </label>
+        <div class="cmp35-file-chip" id="cmpFileChip" hidden>
+          <i class="fas fa-file-alt"></i>
+          <span id="cmpFileName"></span>
+          <button type="button" id="cmpFileClear" aria-label="ফাইল সরান"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+      <div class="cmp35-actions">
+        <p class="cmp35-note"><i class="fas fa-shield-alt"></i> ভিত্তিহীন বা পুনরাবৃত্ত অভিযোগ এড়াতে জমার আগে একবার পড়ে নিন।</p>
+        <button type="submit" class="cmp35-submit" id="cmpSubmit">
+          <i class="fas fa-paper-plane"></i> অভিযোগ জমা দিন
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="cmp35-list-head">
+    <h2><i class="fas fa-list-check"></i> আমার অভিযোগসমূহ <span class="cmp35-badge"><%= mine.length %></span></h2>
+  </div>
+  <% if (mine.length === 0) { %>
+    <div class="cmp35-empty">
+      <i class="fas fa-inbox"></i>
+      <h3>কোনো অভিযোগ নেই</h3>
+      <p>আপনি এখনো কোনো অভিযোগ জানাননি। উপরের ফর্ম থেকে প্রথম অভিযোগটি জমা দিন।</p>
+    </div>
+  <% } else { %>
+    <div class="cmp35-list">
+      <% mine.forEach(c => { %>
+        <article class="cmp35-item">
+          <div class="cmp35-item-top">
+            <div class="cmp35-item-title">
+              <span class="cmp35-item-ico"><i class="fas fa-flag"></i></span>
+              <div>
+                <h3><%= c.subject %></h3>
+                <time><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleString('bn-BD') %></time>
+              </div>
+            </div>
+            <span class="cmp35-status <%= c.status %>">
+              <i class="fas fa-<%= c.status === 'resolved' ? 'check-circle' : c.status === 'dismissed' ? 'times-circle' : c.status === 'in_review' ? 'eye' : c.status === 'in_progress' ? 'sync-alt' : 'envelope-open' %>"></i>
+              <%= c.status === 'new' ? 'নতুন' : c.status === 'in_progress' ? 'প্রক্রিয়াধীন' : c.status === 'in_review' ? 'পর্যালোচনাধীন' : c.status === 'dismissed' ? 'বাতিল' : 'সমাধান' %>
+            </span>
+          </div>
+          <% if (c.body) { %><p class="cmp35-item-body"><%= c.body %></p><% } %>
+          <% if (c.file_url) { %>
+            <a href="<%= c.file_url %>" class="cmp35-file" target="_blank" rel="noopener"><i class="fas fa-paperclip"></i> <%= c.file_name || 'সংযুক্ত ফাইল' %></a>
+          <% } %>
+          <% if (c.admin_notes) { %>
+            <div class="cmp35-admin-note">
+              <strong><i class="fas fa-user-shield"></i> অ্যাডমিন মন্তব্য:</strong>
+              <p><%= c.admin_notes %></p>
+            </div>
+          <% } %>
+        </article>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+<script>
+(function () {
+  'use strict';
+  var form = document.getElementById('complaintForm');
+  if (!form) return;
+
+  /* ক্যারেক্টার কাউন্টার (বাংলা সংখ্যায়) */
+  function bn(n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); }
+  var subject = document.getElementById('cmpSubject');
+  var body = document.getElementById('cmpBody');
+  function wire(el, out) {
+    if (!el || !out) return;
+    var upd = function () { out.textContent = bn(el.value.length); };
+    el.addEventListener('input', upd); upd();
+  }
+  wire(subject, document.getElementById('cmpSubjectCount'));
+  wire(body, document.getElementById('cmpBodyCount'));
+
+  /* কাস্টম ফাইল ড্রপজোন */
+  var file = document.getElementById('cmpFile');
+  var dz = document.getElementById('cmpDropzone');
+  var chip = document.getElementById('cmpFileChip');
+  var chipName = document.getElementById('cmpFileName');
+  var dzInner = document.getElementById('cmpDzInner');
+  if (file && dz && chip) {
+    file.addEventListener('change', function () {
+      if (file.files.length) {
+        chipName.textContent = file.files[0].name;
+        chip.hidden = false; dzInner.style.display = 'none'; dz.classList.add('has-file');
+      }
+    });
+    ['dragover', 'dragenter'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add('drag'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove('drag'); });
+    });
+    dz.addEventListener('drop', function (e) {
+      if (e.dataTransfer.files.length) {
+        file.files = e.dataTransfer.files;
+        file.dispatchEvent(new Event('change'));
+      }
+    });
+    var clearBtn = document.getElementById('cmpFileClear');
+    if (clearBtn) clearBtn.addEventListener('click', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      file.value = ''; chip.hidden = true;
+      dzInner.style.display = ''; dz.classList.remove('has-file');
+    });
+  }
+
+  /* ডুপ্লিকেট-সাবমিট গার্ড: একবার ক্লিকে বাটন নিষ্ক্রিয় + স্পিনার */
+  form.addEventListener('submit', function () {
+    var btn = document.getElementById('cmpSubmit');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> জমা হচ্ছে...';
+  });
+})();
+</script>
+<script src="/assets/js/main.js?v=<%= AV %>"></script>
 </body>
 </html>

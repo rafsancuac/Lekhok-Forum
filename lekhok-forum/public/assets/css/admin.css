@@ -719,6 +719,7 @@ table td:last-child .btn { margin-left: 4px; }
   .content-manager { padding: 16px; }
   .cm-tabs { overflow-x: auto; flex-wrap: nowrap; }
   .cm-tab { white-space: nowrap; }
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    কনটেন্ট সম্পাদক (সেশন ৩৩) — /admin/content
@@ -897,3 +898,85 @@ table td:last-child .btn { margin-left: 4px; }
   .ce-savebar { position: static; }
   .ce-save-btn { width: 100%; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ৩৫: কনটেন্ট এডিটর আপগ্রেড — ছবি/ব্যানার আপলোড + রিসেট-টু-ডিফল্ট + ব্যানার
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── সেভড / এরর ব্যানার ── */
+.ce-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 12px; margin-bottom: 14px;
+  font-size: 0.88rem; font-weight: 600;
+  animation: ceIn 0.25s ease both;
+}
+.ce-banner-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+.ce-banner-success i { color: #059669; font-size: 1rem; }
+.ce-banner-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.ce-banner-error i { color: #dc2626; font-size: 1rem; }
+
+/* ── লেবেল রো: লেবেল + রিসেট বাটন একই লাইনে ── */
+.ce-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.ce-label-row label { margin-bottom: 0 !important; }
+.ce-reset {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  background: #f1f5f9; border: 1px solid var(--ad-line);
+  color: var(--ad-muted); font-family: inherit; font-size: 0.68rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.18s ease;
+}
+.ce-reset:hover { border-color: var(--ad-green); color: var(--ad-green); background: rgba(5,150,105,0.07); }
+.ce-reset.flashed { background: var(--ad-green); border-color: var(--ad-green); color: #fff; }
+.ce-reset i { font-size: 0.62rem; }
+
+/* ── ছবি/ব্যানার আপলোড-ফিল্ড ── */
+.ce-img {
+  display: flex; flex-direction: column; gap: 10px;
+  border: 1.5px dashed var(--ad-line); border-radius: 12px;
+  padding: 12px; background: #fbfcfe;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ce-img:hover { border-color: rgba(5,150,105,0.45); }
+.ce-img.has-new { border-color: var(--ad-green); border-style: solid; background: rgba(5,150,105,0.04); }
+.ce-img.will-reset { border-color: #f59e0b; border-style: solid; background: rgba(245,158,11,0.05); }
+.ce-img-preview {
+  position: relative; width: 100%; min-height: 96px;
+  border-radius: 9px; overflow: hidden;
+  background: repeating-conic-gradient(#f1f5f9 0% 25%, #fff 0% 50%) 50% / 18px 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ce-img-preview img {
+  display: block; width: 100%; max-height: 190px; object-fit: cover;
+}
+.ce-img-set-badge {
+  position: absolute; bottom: 8px; right: 8px;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(5,150,105,0.92); color: #fff;
+  padding: 3px 10px; border-radius: 999px; font-size: 0.66rem; font-weight: 700;
+  backdrop-filter: blur(3px);
+}
+.ce-img-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  color: var(--ad-muted); font-size: 0.74rem; text-align: center; padding: 18px 10px;
+}
+.ce-img-empty i { font-size: 1.4rem; opacity: 0.65; }
+.ce-img-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ce-img-upload {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 9px; cursor: pointer;
+  background: var(--ad-green); color: #fff; font-size: 0.8rem; font-weight: 700;
+  transition: background 0.18s, transform 0.18s;
+}
+.ce-img-upload:hover { background: var(--ad-green-dark, #047857); transform: translateY(-1px); }
+.ce-img-upload input { display: none; }
+.ce-img-reset {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 9px; cursor: pointer;
+  background: #fff; border: 1.5px solid #f59e0b; color: #b45309;
+  font-family: inherit; font-size: 0.76rem; font-weight: 700;
+  transition: all 0.18s ease;
+}
+.ce-img-reset:hover { background: #fffbeb; transform: translateY(-1px); }
+.ce-img-fileinfo { font-size: 0.72rem; color: var(--ad-green-dark, #047857); font-weight: 600; }
+.ce-img .ce-hint { margin-top: 0; }

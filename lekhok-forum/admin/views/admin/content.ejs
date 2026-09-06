@@ -13,10 +13,17 @@
 <div class="admin-main">
   <div class="admin-header">
     <h1><i class="fas fa-pen-square"></i> কনটেন্ট সম্পাদক</h1>
-    <p>সাইটের প্রতিটি পেজের প্রতিটি সেকশনের লেখা এখান থেকে বদলান | হোম পেইজসহ সব পেজ। ফিল্ড খালি রাখলে ডিফল্ট লেখাটিই দেখাবে।</p>
+    <p>সাইটের প্রতিটি পেজের প্রতিটি সেকশনের লেখা ও ছবি এখান থেকে বদলান | হোম পেইজসহ সব পেজ। ফিল্ড খালি রাখলে ডিফল্ট লেখাটিই দেখাবে।</p>
   </div>
 
-  <form method="POST" action="/admin/content" id="contentForm" autocomplete="off">
+  <% if (saved) { %>
+    <div class="ce-banner ce-banner-success"><i class="fas fa-check-circle"></i> সব পরিবর্তন সফলভাবে সংরক্ষিত হয়েছে।</div>
+  <% } %>
+  <% if (error) { %>
+    <div class="ce-banner ce-banner-error"><i class="fas fa-exclamation-triangle"></i> <%= error %></div>
+  <% } %>
+
+  <form method="POST" action="/admin/content" id="contentForm" autocomplete="off" enctype="multipart/form-data">
     <input type="hidden" name="__page" id="ceActivePage" value="<%= activePage %>" />
 
     <div class="ce-wrap">
@@ -54,18 +61,53 @@
             <h3 class="ce-group-title"><%= g.label %> <span class="ce-group-count"><%= g.fields.length %></span></h3>
             <div class="ce-grid">
               <% g.fields.forEach((f) => { %>
+              <% const isImg = f.type === 'image'; %>
               <div class="ce-field ce-t-<%= f.type %>">
-                <label for="f_<%= f.key %>"><%= f.label %></label>
-                <% if (f.type === 'textarea') { %>
-                  <textarea id="f_<%= f.key %>" name="<%= f.key %>" rows="<%= f.rows || 3 %>"><%= values[f.key] %></textarea>
+                <div class="ce-label-row">
+                  <label for="f_<%= f.key %>"><%= f.label %></label>
+                  <% if (!isImg) { %>
+                  <button type="button" class="ce-reset" data-key="<%= f.key %>" title="ডিফল্ট লেখায় ফিরিয়ে আনুন">
+                    <i class="fas fa-rotate-left"></i> ডিফল্ট
+                  </button>
+                  <% } %>
+                </div>
+
+                <% if (isImg) { %>
+                  <%# ── সেশন ৩৫: ছবি/ব্যানার আপলোড-ফিল্ড ── %>
+                  <div class="ce-img" data-key="<%= f.key %>">
+                    <input type="hidden" name="reset_<%= f.key %>" value="0" class="ce-img-reset-flag" />
+                    <div class="ce-img-preview">
+                      <% if (values[f.key]) { %>
+                        <img src="<%= values[f.key] %>?v=<%= AV %>" alt="<%= f.label %>" />
+                        <span class="ce-img-set-badge"><i class="fas fa-check"></i> কাস্টম ছবি সেট আছে</span>
+                      <% } else { %>
+                        <span class="ce-img-empty"><i class="fas fa-image"></i> কোনো ছবি সেট করা নেই — ডিফল্ট ডিজাইন দেখাবে</span>
+                      <% } %>
+                    </div>
+                    <div class="ce-img-actions">
+                      <label class="ce-img-upload" for="f_<%= f.key %>">
+                        <i class="fas fa-cloud-upload-alt"></i> <%= values[f.key] ? 'ছবি বদলান' : 'ছবি আপলোড করুন' %>
+                        <input type="file" id="f_<%= f.key %>" name="img_<%= f.key %>" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" hidden />
+                      </label>
+                      <% if (values[f.key]) { %>
+                      <button type="button" class="ce-img-reset" data-key="<%= f.key %>">
+                        <i class="fas fa-rotate-left"></i> রিসেট টু ডিফল্ট
+                      </button>
+                      <% } %>
+                    </div>
+                    <small class="ce-img-fileinfo" hidden></small>
+                    <% if (f.hint) { %><small class="ce-hint"><%= f.hint %></small><% } %>
+                  </div>
+                <% } else if (f.type === 'textarea') { %>
+                  <textarea id="f_<%= f.key %>" name="<%= f.key %>" rows="<%= f.rows || 3 %>" data-default="<%= defaults[f.key] || '' %>"><%= values[f.key] %></textarea>
                 <% } else { %>
-                  <input id="f_<%= f.key %>" name="<%= f.key %>" type="text" value="<%= values[f.key] %>"
+                  <input id="f_<%= f.key %>" name="<%= f.key %>" type="text" value="<%= values[f.key] %>" data-default="<%= defaults[f.key] || '' %>"
                          <%= f.type === 'number' ? 'inputmode="numeric"' : '' %> />
                 <% } %>
                 <% if (f.type === 'icon') { %>
                   <span class="ce-icon-preview"><i class="fas <%= values[f.key] %>"></i></span>
                 <% } %>
-                <% if (f.hint) { %><small class="ce-hint"><%= f.hint %></small><% } %>
+                <% if (f.hint && !isImg) { %><small class="ce-hint"><%= f.hint %></small><% } %>
                 <% if (f.type === 'icon') { %><small class="ce-hint">Font Awesome ক্লাস | যেমন fa-pen-fancy</small><% } %>
               </div>
               <% }) %>
@@ -150,6 +192,64 @@
         if (ic) ic.className = 'fas ' + el.value.trim();
       }
     });
+  });
+
+  /* ── সেশন ৩৫: প্রতি-ফিল্ড "রিসেট টু ডিফল্ট" (টেক্সট/টেক্সটেরিয়া/সংখ্যা/আইকন) ── */
+  form.querySelectorAll('.ce-reset').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var key = btn.getAttribute('data-key');
+      var input = document.getElementById('f_' + key);
+      if (!input) return;
+      var def = input.getAttribute('data-default') || '';
+      input.value = def;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.focus();
+      btn.classList.add('flashed');
+      setTimeout(function () { btn.classList.remove('flashed'); }, 900);
+    });
+  });
+
+  /* ── সেশন ৩৫: ছবি/ব্যানার আপলোড-ফিল্ড ───────────────────────────── */
+  form.querySelectorAll('.ce-img').forEach(function (box) {
+    var key = box.getAttribute('data-key');
+    var fileInput = box.querySelector('input[type=file]');
+    var fileinfo = box.querySelector('.ce-img-fileinfo');
+    var resetFlag = box.querySelector('.ce-img-reset-flag');
+    var resetBtn = box.querySelector('.ce-img-reset');
+
+    if (fileInput && fileinfo) {
+      fileInput.addEventListener('change', function () {
+        if (!fileInput.files || !fileInput.files.length) return;
+        var f = fileInput.files[0];
+        fileinfo.hidden = false;
+        fileinfo.textContent = 'নির্বাচিত: ' + f.name + ' (' + bn(Math.round(f.size / 1024)) + ' KB)';
+        box.classList.add('has-new');
+        dirty['img_' + key] = true;
+        if (resetFlag) resetFlag.value = '0';   // নতুন আপলোড = রিসেট প্রয়োজন নেই
+        refresh();
+      });
+    }
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        // ফাইল-ইনপুট খালি + রিসেট-ফ্ল্যাগ চালু + UI আপডেট
+        if (fileInput) fileInput.value = '';
+        if (fileinfo) { fileinfo.hidden = true; fileinfo.textContent = ''; }
+        if (resetFlag) resetFlag.value = '1';
+        box.classList.remove('has-new');
+        box.classList.add('will-reset');
+        var prev = box.querySelector('.ce-img-preview');
+        if (prev) {
+          prev.innerHTML = '<span class="ce-img-empty"><i class="fas fa-rotate-left"></i> সেভ করলে ডিফল্ট ডিজাইনে ফিরে যাবে</span>';
+        }
+        var upLbl = box.querySelector('.ce-img-upload');
+        if (upLbl) {
+          var txt = upLbl.childNodes[upLbl.childNodes.length - 1];
+          if (txt && txt.nodeType === 3) txt.textContent = ' ছবি আপলোড করুন';
+        }
+        dirty['reset_' + key] = true;
+        refresh();
+      });
+    }
   });
 
   /* ── সাবমিটে ডাবল-ক্লিক গার্ড ─────────────────────────────────── */

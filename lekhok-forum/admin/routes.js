@@ -352,6 +352,15 @@ router.delete('/resources/:id', requireAdmin, async (req, res) => {
 // ══════════════════════════════════════════════════════════════════════════════
 const contentRegistry = require('../helpers/content-registry');
 
+// সেশন ৩৫: ইমেজ-টাইপ ফিল্ডগুলোর ফাইল-ইনপুট (img_<key>) multer-এ রেজিস্টার করি
+const { makeContentImageUpload } = require('../middleware/upload');
+const CONTENT_IMAGE_KEYS = Object.keys(contentRegistry.FIELDS).filter(k => contentRegistry.FIELDS[k].type === 'image');
+const contentImageUpload = makeContentImageUpload({
+  subdir: 'content',
+  maxBytes: 5 * 1024 * 1024,
+  fieldNames: CONTENT_IMAGE_KEYS.map(k => 'img_' + k)
+});
+
 router.get('/content', requireAdmin, async (req, res) => {
   const settings = await db.getSettingsAll();
   const values = {};
@@ -362,16 +371,34 @@ router.get('/content', requireAdmin, async (req, res) => {
   res.render('admin/content', {
     pages: contentRegistry.PAGES,
     values,
+    defaults: contentRegistry.DEFAULTS,
     activePage: req.query.page || 'home',
+    saved: req.query.saved || null,
+    error: req.query.error || null,
     currentPath: '/admin/content'
   });
 });
 
-router.post('/content', requireAdmin, async (req, res) => {
+router.post('/content', requireAdmin, contentImageUpload, async (req, res) => {
   try {
     let saved = 0;
     for (const key of Object.keys(contentRegistry.FIELDS)) {
       // ফর্মে থাকা সব ফিল্ড আসে; অজানা key এলেও উপেক্ষা করা নিরাপদ
+      // ── সেশন ৩৫: ইমেজ ফিল্ড ──
+      if (contentRegistry.FIELDS[key].type === 'image') {
+        // ১) নতুন আপলোড থাকলে সেটিই সর্বোচ্চ অগ্রাধিকার
+        if (req.filesContent && req.filesContent[key]) {
+          await setSetting('content_' + key, req.filesContent[key].url);
+          saved++;
+          continue;
+        }
+        // ২) "রিসেট টু ডিফল্ট" চিহ্নিত থাকলে সেটিং মুছে দিই (খালি = ডিফল্ট)
+        if (req.body['reset_' + key] === '1') {
+          await setSetting('content_' + key, '');
+          saved++;
+        }
+        continue;
+      }
       if (!(key in req.body)) continue;
       const val = typeof req.body[key] === 'string' ? req.body[key].replace(/\r\n/g, '\n').trim() : '';
       await setSetting('content_' + key, val);   // খালি = ডিফল্ট fallback
@@ -381,6 +408,9 @@ router.post('/content', requireAdmin, async (req, res) => {
   } catch (e) {
     console.error('[admin:content] save failed:', e.message);
     return res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&error=' + encodeURIComponent('সংরক্ষণ ব্যর্থ হয়েছে — আবার চেষ্টা করুন'));
+  }
+  if (req.uploadError) {
+    return res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&error=' + encodeURIComponent(req.uploadError));
   }
   res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&saved=1');
 });

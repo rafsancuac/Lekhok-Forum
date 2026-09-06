@@ -1,5 +1,6 @@
 <!-- Hero — brand-style full animated -->
 <section class="hero brand-hero">
+  <% if (C('home_hero_banner')) { %><div class="hero-banner-img" style="background-image:url('<%= C('home_hero_banner') %>')"></div><% } %>
   <div class="particles">
     <div class="particle p1"></div>
     <div class="particle p2"></div>
@@ -26,32 +27,8 @@
     </div>
   </div>
 
-  <%# session33: হিরো ক্যাম্পেইন ক্যারোসেল (§১৩) — মূল হিরো অপরিবর্তিত, নিচে অটো-ঘূর্ণায়মান প্রমো-স্লাইড %>
-  <div class="hero-carousel" id="heroCarousel" aria-roledescription="carousel" aria-label="ফোরামের সার-আকর্ষণ">
-    <div class="hc-track" id="hcTrack">
-      <a class="hc-slide" href="/quiz">
-        <span class="hc-icon"><i class="fas fa-brain"></i></span>
-        <span class="hc-body"><strong>আজকের কুইজ</strong><small>প্রতিদিন নতুন প্রশ্ন, মেধা যাচাই করুন</small></span>
-        <i class="fas fa-arrow-right hc-go"></i>
-      </a>
-      <a class="hc-slide" href="/on-this-day">
-        <span class="hc-icon"><i class="fas fa-calendar-day"></i></span>
-        <span class="hc-body"><strong>এই দিনে ইতিহাসে</strong><small>আজকের দিনের তাৎপর্য জেনে নিন</small></span>
-        <i class="fas fa-arrow-right hc-go"></i>
-      </a>
-      <a class="hc-slide" href="/epaper">
-        <span class="hc-icon"><i class="fas fa-newspaper"></i></span>
-        <span class="hc-body"><strong>আজকের ই-পেপার</strong><small>সাহিত্য ও মতামত পাতার নির্বাচন</small></span>
-        <i class="fas fa-arrow-right hc-go"></i>
-      </a>
-      <a class="hc-slide" href="/best-writer">
-        <span class="hc-icon"><i class="fas fa-crown"></i></span>
-        <span class="hc-body"><strong>মাসিক সেরা লেখক</strong><small>এই মাসের শ্রেষ্ঠ লেখক কে, দেখুন</small></span>
-        <i class="fas fa-arrow-right hc-go"></i>
-      </a>
-    </div>
-    <div class="hc-dots" id="hcDots" role="tablist" aria-label="স্লাইড নির্বাচন"></div>
-  </div>
+<%# সেশন ৩৫: হিরোর ডান পাশের স্লাইডিং উইজেট সরানো হয়েছে — এটি হিরোর লেখা ঢেকে দিত;
+এখন 'ইউজার ফিড' শোকেস সেকশনে ইন্টিগ্রেট করা হয়েছে (নিচে feed-showcase) %>
 </section>
 
 <% if (hasToday) { %>
@@ -221,50 +198,100 @@
   </div>
 </section>
 
-
-    <%# ── Q&A folding section ── %>
-    <% if (recentQA && recentQA.length) { %>
-    <div class="leadership-sub" style="margin-top:36px">
-      <div class="leadership-sub-head">
-        <h3 class="leadership-sub-title"><i class="fas fa-question-circle"></i> <%= C('home_qa_title') %></h3>
-        <a href="/qa" class="link-more"><%= C('home_qa_more') %> <i class="fas fa-arrow-right"></i></a>
-      </div>
-      <div class="qa-folding-list">
-        <% recentQA.forEach((q) => { %>
-          <details class="qa-fold-item">
-            <summary class="qa-fold-summary">
-              <span class="qa-fold-q"><i class="fas fa-chevron-right"></i> <%= q.title %></span>
-              <span class="qa-fold-meta"><i class="far fa-user"></i> <%= q.author_name %> · <i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
-            </summary>
-            <div class="qa-fold-body">
-              <div class="qa-fold-question">
-                <strong>প্রশ্ন:</strong>
-                <p><%= (q.body || '').substring(0, 400) %><%= q.body && q.body.length > 400 ? '…' : '' %></p>
-              </div>
-              <% if (q.topAnswer) { %>
-                <div class="qa-fold-answer">
-                  <strong><i class="fas fa-comment-dots"></i> উত্তর:</strong>
-                  <p><%= q.topAnswer.body.substring(0, 500) %><%= q.topAnswer.body.length > 500 ? '…' : '' %></p>
-                  <span class="qa-fold-answerer"><i class="far fa-user"></i> <%= q.topAnswer.author_name %></span>
-                </div>
-              <% } else { %>
-                <div class="qa-fold-no-answer"><i class="fas fa-info-circle"></i> এখনো কোনো উত্তর নেই। প্রথম উত্তর দিন!</div>
-              <% } %>
-              <a href="/qa/<%= q.id %>" class="qa-fold-link">সম্পূর্ণ আলোচনায় অংশ নিন <i class="fas fa-arrow-right"></i></a>
-            </div>
-          </details>
-        <% }) %>
-      </div>
-    </div>
-    <% } %>
-
-    <%# ── User feed link (visitor-friendly) ── %>
-    <div class="user-feed-cta">
+<%# ── সাধারণ জিজ্ঞাসা (সেশন ৩৫ ফিক্স: আগে এই ব্লকটা container/section-এর বাইরে ছিল —
+      তাই দুই পাশে প্যাডিং ছাড়া একদম কিনারায় লেগে যেত। এখন পূর্ণ সেকশন-কাঠামোয়) ── %>
+<% if (recentQA && recentQA.length) { %>
+<section class="section qa-section reveal" id="qa">
+  <div class="container">
+    <div class="section-head">
       <div>
-        <h3><i class="fas fa-stream"></i> <%= C('home_feed_title') %></h3>
-        <p><%= C('home_feed_desc') %></p>
+        <span class="eyebrow"><i class="fas fa-comments"></i> <%= C('home_qa_eyebrow') %></span>
+        <h2 class="section-title"><%= C('home_qa_title') %></h2>
+        <span class="accent-divider"></span>
       </div>
-      <a href="/dashboard" class="btn btn-primary btn-lg"><i class="fas fa-arrow-right"></i> <%= C('home_feed_btn') %></a>
+      <a href="/qa" class="link-more"><%= C('home_qa_more') %> <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="qa-folding-list">
+      <% recentQA.forEach((q) => { %>
+        <details class="qa-fold-item">
+          <summary class="qa-fold-summary">
+            <span class="qa-fold-q"><i class="fas fa-chevron-right"></i> <%= q.title %></span>
+            <span class="qa-fold-meta"><i class="far fa-user"></i> <%= q.author_name %> · <i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
+          </summary>
+          <div class="qa-fold-body">
+            <div class="qa-fold-question">
+              <strong>প্রশ্ন:</strong>
+              <p><%= (q.body || '').substring(0, 400) %><%= q.body && q.body.length > 400 ? '…' : '' %></p>
+            </div>
+            <% if (q.topAnswer) { %>
+              <div class="qa-fold-answer">
+                <strong><i class="fas fa-comment-dots"></i> উত্তর:</strong>
+                <p><%= q.topAnswer.body.substring(0, 500) %><%= q.topAnswer.body.length > 500 ? '…' : '' %></p>
+                <span class="qa-fold-answerer"><i class="far fa-user"></i> <%= q.topAnswer.author_name %></span>
+              </div>
+            <% } else { %>
+              <div class="qa-fold-no-answer"><i class="fas fa-info-circle"></i> এখনো কোনো উত্তর নেই। প্রথম উত্তর দিন!</div>
+            <% } %>
+            <a href="/qa/<%= q.id %>" class="qa-fold-link">সম্পূর্ণ আলোচনায় অংশ নিন <i class="fas fa-arrow-right"></i></a>
+          </div>
+        </details>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<%# ── ইউজার ফিড শোকেস (সেশন ৩৫: হিরোর স্লাইডিং উইজেট এখানেই ইন্টিগ্রেট) ── %>
+<section class="section feed-showcase-section reveal" id="user-feed">
+  <div class="container">
+    <div class="feed-showcase">
+      <% if (C('home_feed_banner')) { %><div class="fs-banner-img" style="background-image:url('<%= C('home_feed_banner') %>')"></div><% } %>
+      <div class="fs-decor fs-decor-1"></div>
+      <div class="fs-decor fs-decor-2"></div>
+      <div class="fs-grid">
+        <div class="fs-info">
+          <span class="fs-eyebrow"><i class="fas fa-stream"></i> <%= C('home_feed_eyebrow') %></span>
+          <h2 class="fs-title"><%= C('home_feed_title') %></h2>
+          <p class="fs-lead"><%= C('home_feed_desc') %></p>
+          <ul class="fs-points">
+            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point1') %></li>
+            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point2') %></li>
+            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point3') %></li>
+          </ul>
+          <div class="fs-cta">
+            <a href="/dashboard" class="btn fs-btn-main"><i class="fas fa-arrow-right"></i> <%= C('home_feed_btn') %></a>
+            <a href="/register" class="btn fs-btn-ghost"><i class="fas fa-user-plus"></i> <%= C('home_feed_btn2') %></a>
+          </div>
+        </div>
+        <div class="fs-side">
+          <div class="fs-side-label"><i class="fas fa-bolt"></i> <%= C('home_feed_widget_label') %></div>
+          <div class="fs-carousel" id="feedCarousel" aria-roledescription="carousel" aria-label="ফোরামের সার-আকর্ষণ">
+            <div class="fc-track" id="fcTrack">
+              <a class="fc-slide" href="/quiz">
+                <span class="fc-icon"><i class="fas fa-brain"></i></span>
+                <span class="fc-body"><strong>আজকের কুইজ</strong><small>প্রতিদিন নতুন প্রশ্ন, মেধা যাচাই করুন</small></span>
+                <i class="fas fa-arrow-right fc-go"></i>
+              </a>
+              <a class="fc-slide" href="/on-this-day">
+                <span class="fc-icon"><i class="fas fa-calendar-day"></i></span>
+                <span class="fc-body"><strong>এই দিনে ইতিহাসে</strong><small>আজকের দিনের তাৎপর্য জেনে নিন</small></span>
+                <i class="fas fa-arrow-right fc-go"></i>
+              </a>
+              <a class="fc-slide" href="/epaper">
+                <span class="fc-icon"><i class="fas fa-newspaper"></i></span>
+                <span class="fc-body"><strong>আজকের ই-পেপার</strong><small>সাহিত্য ও মতামত পাতার নির্বাচন</small></span>
+                <i class="fas fa-arrow-right fc-go"></i>
+              </a>
+              <a class="fc-slide" href="/best-writer">
+                <span class="fc-icon"><i class="fas fa-crown"></i></span>
+                <span class="fc-body"><strong>মাসিক সেরা লেখক</strong><small>এই মাসের শ্রেষ্ঠ লেখক কে, দেখুন</small></span>
+                <i class="fas fa-arrow-right fc-go"></i>
+              </a>
+            </div>
+            <div class="fc-dots" id="fcDots" role="tablist" aria-label="স্লাইড নির্বাচন"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

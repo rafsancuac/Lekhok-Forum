@@ -101,6 +101,7 @@
 
 <!-- Membership drive CTA -->
 <section class="cta-banner reveal" id="soldier">
+  <% if (C('about_cta_bg')) { %><div class="cta-banner-img" style="background-image:url('<%= C('about_cta_bg') %>')"></div><% } %>
   <div class="container">
     <span class="eyebrow" style="background:rgba(5,150,105,0.18);border-color:rgba(5,150,105,0.32);"><%= C('about_cta_eyebrow') %></span>
     <h2><%= C('about_cta_t1') %> <span class="accent"><%= C('about_cta_accent') %></span> <%= C('about_cta_t2') %></h2>

@@ -25,7 +25,8 @@ const PAGES = [
           { key: 'home_hero_title_accent', label: 'মূল শিরোনাম (সবুজ অংশ)', type: 'text' },
           { key: 'home_hero_sub', label: 'হিরো বিবরণ', type: 'textarea', rows: 4 },
           { key: 'home_hero_btn1', label: '১ম বাটনের লেখা', type: 'text' },
-          { key: 'home_hero_btn2', label: '২য় বাটনের লেখা', type: 'text' }
+          { key: 'home_hero_btn2', label: '২য় বাটনের লেখা', type: 'text' },
+          { key: 'home_hero_banner', label: 'হিরো ব্যানার ছবি', type: 'image', hint: 'হিরোর পটভূমিতে হালকা ভাবে দেখানো হবে (ওপাসিটি ~১৬%)। খালি রাখলে বর্তমান গ্র্যাডিয়েন্ট ডিজাইনই থাকবে।' }
         ]
       },
       {
@@ -107,11 +108,19 @@ const PAGES = [
       },
       {
         key: 'qa_feed', label: 'জিজ্ঞাসা ও ইউজার ফিড', fields: [
+          { key: 'home_qa_eyebrow', label: 'জিজ্ঞাসা ছোট লেখা (eyebrow)', type: 'text' },
           { key: 'home_qa_title', label: 'জিজ্ঞাসা সেকশন শিরোনাম', type: 'text' },
           { key: 'home_qa_more', label: '"সকল প্রশ্ন" লিংকের লেখা', type: 'text' },
+          { key: 'home_feed_eyebrow', label: 'ফিড ছোট লেখা (eyebrow)', type: 'text' },
           { key: 'home_feed_title', label: 'ইউজার ফিড শিরোনাম', type: 'text' },
           { key: 'home_feed_desc', label: 'ইউজার ফিড বিবরণ', type: 'textarea', rows: 2 },
-          { key: 'home_feed_btn', label: 'ইউজার ফিড বাটন', type: 'text' }
+          { key: 'home_feed_point1', label: 'ফিড সুবিধা ১', type: 'text' },
+          { key: 'home_feed_point2', label: 'ফিড সুবিধা ২', type: 'text' },
+          { key: 'home_feed_point3', label: 'ফিড সুবিধা ৩', type: 'text' },
+          { key: 'home_feed_btn', label: 'ফিডে যাওয়ার বাটন', type: 'text' },
+          { key: 'home_feed_btn2', label: 'রেজিস্ট্রেশন বাটন', type: 'text' },
+          { key: 'home_feed_widget_label', label: 'স্লাইডিং উইজেটের ছোট লেবেল', type: 'text' },
+          { key: 'home_feed_banner', label: 'ফিড শোকেস ব্যানার ছবি', type: 'image', hint: 'ফিড প্যানেলের পটভূমিতে হালকা ভাবে দেখানো হবে। খালি রাখলে গ্র্যাডিয়েন্ট ডিজাইনই থাকবে।' }
         ]
       },
       {
@@ -203,7 +212,8 @@ const PAGES = [
           { key: 'about_cta_t2', label: 'শিরোনাম (শেষ)', type: 'text' },
           { key: 'about_cta_text', label: 'ব্যানার বিবরণ', type: 'textarea', rows: 6 },
           { key: 'about_cta_btn1', label: '১ম বাটন', type: 'text' },
-          { key: 'about_cta_btn2', label: '২য় বাটন', type: 'text' }
+          { key: 'about_cta_btn2', label: '২য় বাটন', type: 'text' },
+          { key: 'about_cta_bg', label: 'ব্যানার পটভূমি ছবি', type: 'image', hint: 'ব্যানারের পটভূমিতে হালকা ভাবে দেখানো হবে। খালি রাখলে বর্তমান ডিজাইনই থাকবে।' }
         ]
       },
       {
@@ -503,9 +513,16 @@ const DEFAULTS = {
   // হোম — জিজ্ঞাসা ও ফিড
   home_qa_title: 'সাধারণ জিজ্ঞাসা',
   home_qa_more: 'সকল প্রশ্ন',
+  home_qa_eyebrow: 'প্রশ্ন ও উত্তর',
+  home_feed_eyebrow: 'সোশ্যাল ফিড',
   home_feed_title: 'ইউজার ফিড',
   home_feed_desc: 'সদস্যদের লেখা, প্রশ্নোত্তর ও আলোচনা দেখুন। লগইন ছাড়াই পড়তে পারবেন। অংশ নিতে রেজিস্ট্রেশন করুন।',
+  home_feed_point1: 'সদস্যদের সর্বশেষ লেখা, মতামত ও কলাম এক জায়গায়',
+  home_feed_point2: 'লাইভ প্রশ্নোত্তর, জরিপ ও আলোচনায় সরাসরি অংশগ্রহণ',
+  home_feed_point3: 'লগইন ছাড়াই পড়ার সুযোগ, অংশ নিতে শুধু রেজিস্ট্রেশন',
   home_feed_btn: 'ইউজার ফিডে যান',
+  home_feed_btn2: 'ফ্রি অ্যাকাউন্ট খুলুন',
+  home_feed_widget_label: 'এক নজরে',
   // হোম — বিজ্ঞপ্তি
   home_notices_eyebrow: 'সাম্প্রতিক বিজ্ঞপ্তি',
   home_notices_t1: 'সর্বশেষ', home_notices_accent: 'আপডেট',
