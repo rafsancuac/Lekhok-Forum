@@ -50,10 +50,18 @@
       <% } }); %>
     </div>
 
+
+  <form method="POST" action="/admin/daily/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" formaction="/admin/daily/bulk-publish" name="published" value="1" class="btn btn-primary btn-sm" data-bulk-msg="সিলেক্টেডগুলো প্রকাশ করতে চান?"><i class="fas fa-eye"></i> প্রকাশ করুন</button>
+    <button type="submit" formaction="/admin/daily/bulk-publish" name="published" value="0" class="btn btn-ghost btn-sm" data-bulk-msg="সিলেক্টেডগুলো আনপাবলিশ করতে চান?"><i class="fas fa-eye-slash"></i> আনপাবলিশ</button>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
     <div class="card" style="padding:0;overflow:hidden;">
     <table>
       <thead>
         <tr>
+          <th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th>
           <th style="width:60px;">ধরন</th>
           <th>শিরোনাম</th>
           <th style="width:120px;">তারিখ</th>
@@ -64,6 +72,7 @@
       <tbody>
         <% items.forEach(it => { %>
           <tr>
+            <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= it.id %>" aria-label="সিলেক্ট"></td>
             <td>
               <span class="chip" style="font-size:.78rem;padding:4px 10px;">
                 <i class="<%= DAILY_TYPES[it.content_type] ? DAILY_TYPES[it.content_type].icon : 'fas fa-circle' %>" style="color:#059669;"></i>

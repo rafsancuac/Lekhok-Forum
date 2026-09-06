@@ -49,6 +49,13 @@
           <% } %>
         </div>
         <div class="pmeta"><i class="far fa-file-alt"></i> <%= u.post_count %> পোস্ট &middot; <i class="fas fa-key"></i> <%= u.scope_count %> পারমিশন</div>
+        <% if (u.role === 'moderator' && (u.scopes || []).length) { %>
+        <div class="scope-badges">
+          <% CANONICAL_SCOPES.forEach(s => { if ((u.scopes || []).includes(s.key)) { %>
+          <span class="chip chip-accent scope-mini"><i class="<%= s.icon %>"></i> <%= s.label %></span>
+          <% } }); %>
+        </div>
+        <% } %>
       </div>
       <form method="POST" action="/admin/users/<%= u.id %>/role" class="row-actions">
         <select name="role" class="chip" style="border:none;cursor:pointer;padding:6px 10px;">

@@ -15,16 +15,22 @@
     <h1>বিজ্ঞপ্তি</h1>
     <p><%= notices.length %> টি বিজ্ঞপ্তি | <a href="/admin/notices/new">+ নতুন বিজ্ঞপ্তি</a></p>
   </div>
+
+  <form method="POST" action="/admin/notices/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <% if (notices.length === 0) { %>
     <div class="card empty">কোনো বিজ্ঞপ্তি নেই</div>
   <% } else { %>
   <table>
     <thead>
-      <tr><th>শিরোনাম</th><th>ক্যাটাগরি</th><th>তারিখ</th><th>কার্যক্রম</th></tr>
+      <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>ক্যাটাগরি</th><th>তারিখ</th><th>কার্যক্রম</th></tr>
     </thead>
     <tbody>
       <% notices.forEach(n => { %>
         <tr>
+          <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= n.id %>" aria-label="সিলেক্ট"></td>
           <td><strong><%= n.title %></strong></td>
           <td><%= n.category %></td>
           <td><%= n.date || '—' %></td>

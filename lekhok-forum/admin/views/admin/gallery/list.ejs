@@ -18,9 +18,15 @@
   <% if (items.length === 0) { %>
     <div class="card empty">কোনো ছবি নেই</div>
   <% } else { %>
+
+  <form method="POST" action="/admin/gallery/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
     <% items.forEach(g => { %>
-      <div class="card" style="padding:8px;">
+      <div class="card" style="padding:8px; position:relative;">
+        <label style="position:absolute; top:14px; left:14px; z-index:2; background:rgba(255,255,255,0.92); border:1px solid #ccd0d5; border-radius:6px; padding:4px 6px; cursor:pointer;"><input type="checkbox" name="bulk_ids" value="<%= g.id %>" style="margin:0; accent-color:#059669;"></label>
         <img src="<%= g.image_url %>" alt="<%= g.title || '' %>" style="width:100%; height:160px; object-fit:cover; border-radius:4px;" loading="lazy" />
         <p style="font-weight:600; margin:8px 0 4px;"><%= g.title || '(শিরোনাম নেই)' %></p>
         <p style="color:#666; font-size:0.85rem; min-height:30px;"><%= g.caption || '' %></p>

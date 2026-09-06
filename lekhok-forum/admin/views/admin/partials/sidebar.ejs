@@ -19,6 +19,7 @@
   <div class="nav-search" role="search">
     <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
     <input type="search" id="adminNavSearch" placeholder="সেটিংস খুঁজুন" aria-label="সেটিংস খুঁজুন" autocomplete="off" />
+    <div class="nav-search-results" id="navSearchResults" hidden></div>
   </div>
   <div class="nav-search-empty" id="navSearchEmpty">কোনো মিল পাওয়া যায়নি</div>
   <nav>
@@ -56,6 +57,7 @@
     <a href="/admin/content"     class="<%= _active('/admin/content') %>"><i class="fas fa-pen-square"></i> কনটেন্ট সম্পাদক</a>
     <% } %>
     <a href="/admin/navigation"     class="<%= _active('/admin/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
+    <a href="/admin/activity"       class="<%= _active('/admin/activity') %>"><i class="fas fa-clock-rotate-left"></i> অ্যাক্টিভিটি লগ</a>
     <% if (_isAdmin) { %>
     <a href="/admin/tasks"         class="<%= _active('/admin/tasks') %>"><i class="fas fa-tasks"></i> মডারেটর টাস্ক</a>
     <a href="/admin/settings"       class="<%= _active('/admin/settings') %>"><i class="fas fa-cog"></i> সেটিংস</a>
@@ -72,6 +74,13 @@
     </div>
     <a href="/admin/logout" class="su-logout" title="লগআউট"><i class="fas fa-sign-out-alt"></i></a>
   </div>
+  <% if (!_isAdmin && typeof userScopeMeta !== 'undefined' && userScopeMeta && userScopeMeta.length) { %>
+  <div class="su-scopes" title="আপনার সক্রিয় পারমিশন">
+    <% userScopeMeta.forEach(function (s) { %>
+    <span class="su-scope" title="<%= s.label %>"><i class="<%= s.icon || 'fas fa-check' %>"></i></span>
+    <% }); %>
+  </div>
+  <% } %>
 </aside>
 
 <div class="toast-zone" id="toastZone"></div>
@@ -130,6 +139,124 @@
       });
     }
   } catch (e) {}
+
+  /* ── গ্লোবাল সেটিংস-সার্চ (সেশন ৩৭) — কনটেন্ট-ফিল্ড/সেটিংস ইনডেক্স ড্রপডাউন ── */
+  try {
+    var si = document.getElementById('adminNavSearch');
+    var sr = document.getElementById('navSearchResults');
+    var _idx = null, _idxLoading = false, _selIdx = -1;
+    function _loadIdx() {
+      if (_idx || _idxLoading) return;
+      _idxLoading = true;
+      fetch('/admin/search-index', { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (d) { _idx = d; _idxLoading = false; _renderResults(si ? si.value : ''); })
+        .catch(function () { _idxLoading = false; });
+    }
+    function _hrefFor(it) {
+      return it.t === 'field'
+        ? '/admin/content?page=' + encodeURIComponent(it.page) + '#f_' + it.key
+        : '/admin/settings#set_' + it.key;
+    }
+    function _esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+    function _renderResults(q) {
+      if (!sr) return;
+      q = (q || '').trim().toLowerCase();
+      if (!q || !_idx || !_idx.length) { sr.hidden = true; sr.innerHTML = ''; _selIdx = -1; return; }
+      var hits = _idx.filter(function (it) {
+        return (it.label && it.label.toLowerCase().indexOf(q) !== -1) ||
+               (it.pageLabel && it.pageLabel.toLowerCase().indexOf(q) !== -1) ||
+               (it.group && it.group.toLowerCase().indexOf(q) !== -1) ||
+               (it.key && it.key.toLowerCase().indexOf(q) !== -1);
+      }).slice(0, 8);
+      if (!hits.length) { sr.hidden = true; sr.innerHTML = ''; _selIdx = -1; return; }
+      sr.innerHTML = hits.map(function (it, i) {
+        var icon = it.t === 'setting' ? 'fas fa-cog' : 'fas fa-align-left';
+        var sub = it.t === 'setting' ? 'সেটিংস' : (it.pageLabel + (it.group ? ' › ' + it.group : ''));
+        return '<a class="nsr-item' + (i === _selIdx ? ' sel' : '') + '" href="' + _hrefFor(it) + '">' +
+               '<i class="' + icon + '"></i><span class="nsr-text"><strong>' + _esc(it.label) + '</strong><small>' + _esc(sub) + '</small></span></a>';
+      }).join('');
+      sr.hidden = false;
+    }
+    if (si) {
+      si.addEventListener('focus', _loadIdx);
+      si.addEventListener('input', function () { _loadIdx(); _renderResults(si.value); });
+      si.addEventListener('keydown', function (e) {
+        var items = sr ? sr.querySelectorAll('.nsr-item') : [];
+        if (e.key === 'ArrowDown' && items.length) { e.preventDefault(); _selIdx = Math.min(_selIdx + 1, items.length - 1); _renderResults(si.value); }
+        else if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); _selIdx = Math.max(_selIdx - 1, 0); _renderResults(si.value); }
+        else if (e.key === 'Enter' && _selIdx >= 0 && items[_selIdx]) { e.preventDefault(); location.href = items[_selIdx].getAttribute('href'); }
+        else if (e.key === 'Escape') { if (sr) { sr.hidden = true; } _selIdx = -1; }
+      });
+      document.addEventListener('click', function (e) {
+        if (sr && !sr.contains(e.target) && e.target !== si) { sr.hidden = true; _selIdx = -1; }
+      });
+    }
+  } catch (e) {}
+
+  /* ── বাল্ক-অ্যাকশন বার (সেশন ৩৭) — লিস্ট-ভিউয়ের চেকবক্স সংগ্রহ ──────────
+     নোট: বারটি কনটেন্ট ডোমে (.admin-main) — সাইডবার স্ক্রিপ্ট তার আগে চলে, তাই DOM-রেডি গার্ড। */
+  function initBulkBar() {
+    try {
+      var bulkBar = document.getElementById('bulkBar');
+      if (!bulkBar) return;
+      var boxes = Array.prototype.slice.call(document.querySelectorAll('input[name="bulk_ids"]'));
+      var all = document.querySelector('[data-bulk-all]');
+      var cnt = bulkBar.querySelector('.bulk-count strong');
+      var BN = '০১২৩৪৫৬৭৮৯';
+      function bn(n) { return String(n).replace(/\d/g, function (d) { return BN[+d]; }); }
+      function sync() {
+        var sel = boxes.filter(function (b) { return b.checked; });
+        if (cnt) cnt.textContent = bn(sel.length);
+        bulkBar.classList.toggle('show', sel.length > 0);
+        if (all) all.checked = boxes.length > 0 && sel.length === boxes.length;
+        Array.prototype.slice.call(bulkBar.querySelectorAll('input[type="hidden"][name="ids"]')).forEach(function (h) { h.remove(); });
+        sel.forEach(function (b) {
+          var h = document.createElement('input');
+          h.type = 'hidden'; h.name = 'ids'; h.value = b.value;
+          bulkBar.appendChild(h);
+        });
+      }
+      boxes.forEach(function (b) { b.addEventListener('change', sync); });
+      if (all) all.addEventListener('change', function () {
+        boxes.forEach(function (b) { b.checked = all.checked; });
+        sync();
+      });
+      bulkBar.addEventListener('submit', function (e) {
+        var msg = (e.submitter && e.submitter.getAttribute('data-bulk-msg')) || 'সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?';
+        if (!bulkBar.querySelectorAll('input[type="hidden"][name="ids"]').length) { e.preventDefault(); return; }
+        if (!window.confirm(msg)) e.preventDefault();
+      });
+      sync();
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBulkBar);
+  else initBulkBar();
+
+  /* ── হ্যাশ-জাম্প (সেশন ৩৭) — সার্চ-রেজাল্ট থেকে সরাসরি ফিল্ডে #f_key / #set_key ── */
+  function flashFromHash() {
+    try {
+      var h = (location.hash || '').slice(1);
+      if (!h) return;
+      var el = null;
+      if (h.indexOf('f_') === 0) el = document.getElementById(h);
+      else if (h.indexOf('set_') === 0) el = document.querySelector('[name="' + h.slice(4) + '"]');
+      if (!el) return;
+      var panel = el.closest ? el.closest('.ce-panel') : null;
+      if (panel && !panel.classList.contains('active')) {
+        var pg = panel.getAttribute('data-page');
+        var tab = pg ? document.querySelector('.ce-tab[data-page="' + pg + '"]') : null;
+        if (tab) tab.click();
+      }
+      setTimeout(function () {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        el.classList.add('field-flash');
+        setTimeout(function () { el.classList.remove('field-flash'); }, 1800);
+      }, 150);
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', flashFromHash);
+  else flashFromHash();
 
   /* ── ব্রেডক্রাম্ব ইনজেকশন — নেভ-ম্যাপ থেকে কেন্দ্রীয়ভাবে ────────────
      নোট: সাইডবার স্ক্রিপ্ট .admin-main-এর আগে চলে — তাই DOM-রেডি গার্ড। */

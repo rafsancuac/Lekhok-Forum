@@ -344,7 +344,17 @@ const MIGRATION_SQL = `
     failed_count INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
-  CREATE INDEX IF NOT EXISTS idx_nq_status ON newsletter_queue(status);
+  CREATE TABLE IF NOT EXISTS activity_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    username TEXT,
+    role TEXT,
+    action TEXT,
+    target TEXT,
+    detail TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_actlog_recent ON activity_logs(id);
 `;
 
 // Columns added in later migrations — applied to existing installs during initDb().
@@ -1769,6 +1779,22 @@ function searchPromotableUsers(q) {
   `).all('%' + q + '%', '%' + q + '%');
 }
 
+// ── অ্যাক্টিভিটি লগ (সেশন ৩৭) — fire-and-forget; লগ ফেল করলে মূল কাজ যেন না ভাঙে ──
+async function logActivity(entry) {
+  try {
+    await prepare(
+      'INSERT INTO activity_logs (user_id, username, role, action, target, detail) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(
+      entry.user_id || null,
+      entry.username || null,
+      entry.role || null,
+      entry.action || null,
+      entry.target || null,
+      String(entry.detail || '').slice(0, 300)
+    );
+  } catch (e) { /* টেবিল নেই (পুরনো বুট) বা লেখ ব্যর্থ — নীরবে উপেক্ষা */ }
+}
+
 module.exports = {
   initDb,
   get db()       { return _sqlJsDb; },  // legacy direct access (sql.js only)
@@ -1785,6 +1811,7 @@ module.exports = {
   isModerator,
   getModeratorScopes,
   hasScope,
+  logActivity,
   grantModerator,
   revokeModerator,
   listModerators,

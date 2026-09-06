@@ -77,6 +77,55 @@ function requireStaff(req, res, next) {
   next();
 }
 
+// ── অ্যাক্টিভিটি লগ (সেশন ৩৭) — সব সফল মিউটেশন স্বয়ংক্রিয়ভাবে লগ হয় ──────
+// কেন per-route কল নয়: এক জায়গায়, ভবিষ্যৎ রুটও অটো-কভার্ড, কোনো হ্যান্ডলার ছুঁতে হয় না।
+// রেডাইরেক্ট (2xx-3xx) = সফল ধরা হয়; পাসওয়ার্ড-ফিল্ডের ভ্যালু কখনো লগ হয় না (শুধু কী-নাম)।
+function actorOf(req) {
+  if (req.session && req.session.adminUser) {
+    const a = req.session.adminUser;
+    return { id: a.id, username: a.username, role: 'admin' };
+  }
+  const u = req.session && req.session.user;
+  if (u) return { id: u.id, username: u.username, role: u.role };
+  return { id: null, username: 'unknown', role: 'none' };
+}
+router.use((req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE') {
+    res.on('finish', () => {
+      try {
+        if (res.statusCode >= 200 && res.statusCode < 400) {
+          const a = actorOf(req);
+          const routePath = (req.route && req.route.path) || req.path;
+          const SENS = ['password', 'passwd', 'pwd'];
+          const fields = Object.keys(req.body || {})
+            .filter(k => k !== '_method' && !SENS.some(s => k.toLowerCase().includes(s)));
+          const params = req.params && Object.keys(req.params).length ? JSON.stringify(req.params) + ' · ' : '';
+          db.logActivity({
+            user_id: a.id, username: a.username, role: a.role,
+            action: req.method, target: routePath,
+            detail: params + (fields.length ? 'fields: ' + fields.join(', ') : '')
+          });
+        }
+      } catch (e) { /* লগ কখনো মূল ফ্লো ভাঙবে না */ }
+    });
+  }
+  next();
+});
+
+// ── সাইডবার ইউজার-কার্ডে পারমিশন ব্যাজের মেটা (সেশন ৩) ──────────────────
+router.use(async (req, res, next) => {
+  try {
+    const u = req.session && req.session.user;
+    if (req.session && req.session.adminUser) res.locals.userScopeMeta = CANONICAL_SCOPES.slice();
+    else if (u && u.role === 'admin') res.locals.userScopeMeta = CANONICAL_SCOPES.slice();
+    else if (u && u.role === 'moderator') {
+      const sc = await db.getModeratorScopes(u.id);
+      res.locals.userScopeMeta = CANONICAL_SCOPES.filter(s => (sc || []).includes(s.key));
+    }
+  } catch (e) {}
+  next();
+});
+
 // ── Login (GET) ──────────────────────────────────────────────────────────────
 router.get('/login', async (req, res) => {
   if (req.session.adminUser) return res.redirect('/admin');
@@ -446,6 +495,66 @@ router.post('/content/upload', requireAdmin, (req, res) => {
 });
 
 // ── Settings ─────────────────────────────────────────────────────────────────
+// ── গ্লোবাল সেটিংস-সার্চ ইনডেক্স (সেশন ৩) — সাইডবার সার্চ লেজি-লোড করে ─────
+router.get('/search-index', requireStaff, (req, res) => {
+  const out = [];
+  try {
+    for (const p of contentRegistry.PAGES) {
+      for (const g of (p.groups || [])) {
+        for (const f of (g.fields || [])) {
+          out.push({ t: 'field', page: p.key, pageLabel: p.label, group: g.label, key: f.key, label: f.label });
+        }
+      }
+    }
+  } catch (e) {}
+  const SET = [
+    ['site_name', 'সাইটের নাম'], ['tagline', 'ট্যাগলাইন'], ['contact_address', 'ঠিকানা'],
+    ['contact_email', 'ইমেইল'], ['contact_phone', 'ফোন'], ['facebook_url', 'Facebook URL'],
+    ['telegram_url', 'Telegram URL'], ['youtube_url', 'YouTube URL'], ['twitter_url', 'Twitter/X URL']
+  ];
+  for (const [k, l] of SET) out.push({ t: 'setting', key: k, label: l });
+  res.json(out);
+});
+
+// ── বাল্ক অ্যাকশন (সেশন ৩৭) — লিস্ট-ভিউয়ের সিলেক্টেড সারিზე ডিলিট/পাবলিশ ────
+const BULK_TABLES = {
+  'notices':      ['notices',       requireScope('notices')],
+  'events':       ['events',        requireScope('events')],
+  'daily':        ['daily_content', requireScope('daily')],
+  'gallery':      ['gallery',       requireScope('gallery')],
+  'members':      ['members',       requireAdmin],
+  'resources':    ['resources',     requireAdmin],
+  'achievements': ['achievements',  requireAdmin],
+  'constitution': ['constitution',  requireAdmin],
+  'past-leaders': ['past_leaders',  requireAdmin],
+};
+for (const slug of Object.keys(BULK_TABLES)) {
+  const [table, guard] = BULK_TABLES[slug];
+  router.post(`/${slug}/bulk-delete`, guard, async (req, res) => {
+    const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+    let n = 0;
+    for (const id of ids) {
+      try { await db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(id); n++; } catch (e) {}
+    }
+    res.redirect(`/admin/${slug}?saved=1`);
+  });
+}
+router.post('/daily/bulk-publish', requireScope('daily'), async (req, res) => {
+  const pub = req.body.published === '1' ? 1 : 0;
+  const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+  for (const id of ids) {
+    try { await db.prepare('UPDATE daily_content SET published = ? WHERE id = ?').run(pub, id); } catch (e) {}
+  }
+  res.redirect('/admin/daily?saved=1');
+});
+
+// ── অ্যাক্টিভিটি লগ পেজ (সেশন ৩৭) ───────────────────────────────────────────
+router.get('/activity', requireStaff, async (req, res) => {
+  let rows = [];
+  try { rows = await db.prepare('SELECT * FROM activity_logs ORDER BY id DESC LIMIT 200').all(); } catch (e) {}
+  res.render('admin/activity', { rows, currentPath: '/admin/activity' });
+});
+
 router.get('/settings', requireAdmin, async (req, res) => {
   const keys = ['site_name','tagline','contact_email','contact_phone','contact_address','facebook_url','telegram_url','youtube_url','twitter_url'];
   const settings = {};

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>অ্যাক্টিভিটি লগ | লেখক ফোরাম</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-clock-rotate-left"></i> অ্যাক্টিভিটি লগ</h1>
+      <p class="subtitle">সর্বশেষ ২০০টি সফল পরিবর্তন — কে, কখন, কোথায় কী করল</p>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <% if (!rows.length) { %>
+    <div class="empty"><i class="fas fa-inbox"></i><p>এখনো কোনো অ্যাক্টিভিটি নেই — অ্যাডমিন প্যানেল থেকে কোনো সেভ/ডিলিট করলে এখানে দেখা যাবে।</p></div>
+    <% } else { %>
+    <table class="table">
+      <thead>
+        <tr><th style="width:170px;">সময়</th><th style="width:150px;">ব্যবহারকারী</th><th style="width:100px;">অ্যাকশন</th><th style="width:230px;">টার্গেট</th><th>বিস্তারিত</th></tr>
+      </thead>
+      <tbody>
+        <% rows.forEach(r => { %>
+        <tr>
+          <td style="white-space:nowrap;color:#65676b;font-size:.86rem;"><%= r.created_at %></td>
+          <td>
+            <strong><%= r.username || '—' %></strong>
+            <span class="chip <%= r.role === 'admin' ? 'chip-danger' : 'chip-accent' %>" style="margin-left:6px;font-size:.72rem;"><%= r.role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span>
+          </td>
+          <td>
+            <% if (r.action === 'DELETE') { %><span class="chip chip-danger" style="font-size:.74rem;"><i class="fas fa-trash"></i> DELETE</span>
+            <% } else if (r.action === 'POST') { %><span class="chip chip-accent" style="font-size:.74rem;"><i class="fas fa-plus"></i> POST</span>
+            <% } else { %><span class="chip chip-accent" style="font-size:.74rem;"><i class="fas fa-pen"></i> <%= r.action %></span><% } %>
+          </td>
+          <td><code style="font-size:.8rem;color:#374151;"><%= r.target %></code></td>
+          <td style="color:#65676b;font-size:.84rem;word-break:break-word;"><%= r.detail || '—' %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

@@ -15,16 +15,22 @@
     <h1>ইভেন্ট</h1>
     <p><%= events.length %> টি ইভেন্ট | <a href="/admin/events/new">+ নতুন ইভেন্ট</a></p>
   </div>
+
+  <form method="POST" action="/admin/events/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <% if (events.length === 0) { %>
     <div class="card empty">কোনো ইভেন্ট নেই</div>
   <% } else { %>
   <table>
     <thead>
-      <tr><th>শিরোনাম</th><th>তারিখ</th><th>স্থান</th><th>বিশেষ</th><th>কার্যক্রম</th></tr>
+      <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>তারিখ</th><th>স্থান</th><th>বিশেষ</th><th>কার্যক্রম</th></tr>
     </thead>
     <tbody>
       <% events.forEach(e => { %>
         <tr>
+          <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= e.id %>" aria-label="সিলেক্ট"></td>
           <td><strong><%= e.title %></strong></td>
           <td><%= e.date || '—' %></td>
           <td><%= e.location || '—' %></td>

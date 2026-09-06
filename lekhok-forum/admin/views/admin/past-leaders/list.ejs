@@ -15,16 +15,22 @@
     <h1>প্রাক্তন নেতৃত্ব</h1>
     <p><%= items.length %> জন প্রাক্তন নেতা | <a href="/admin/past-leaders/new">+ নতুন প্রাক্তন নেতা</a></p>
   </div>
+
+  <form method="POST" action="/admin/past-leaders/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <% if (items.length === 0) { %>
     <div class="card empty">কোনো প্রাক্তন নেতা যোগ করা হয়নি</div>
   <% } else { %>
   <table>
     <thead>
-      <tr><th>নাম</th><th>পদ</th><th>মেয়াদ</th><th>কার্যক্রম</th></tr>
+      <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>নাম</th><th>পদ</th><th>মেয়াদ</th><th>কার্যক্রম</th></tr>
     </thead>
     <tbody>
       <% items.forEach(p => { %>
         <tr>
+          <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= p.id %>" aria-label="সিলেক্ট"></td>
           <td>
             <% if (p.photo_url) { %><img src="<%= p.photo_url %>" style="width:30px;height:30px;border-radius:50%;vertical-align:middle;margin-right:6px;object-fit:cover;"><% } %>
             <strong><%= p.name %></strong>

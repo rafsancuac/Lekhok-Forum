@@ -15,16 +15,22 @@
     <h1>গঠনতন্ত্র</h1>
     <p><%= items.length %> টি ধারা | <a href="/admin/constitution/new">+ নতুন ধারা</a></p>
   </div>
+
+  <form method="POST" action="/admin/constitution/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <% if (items.length === 0) { %>
     <div class="card empty">কোনো ধারা যোগ করা হয়নি</div>
   <% } else { %>
   <table>
     <thead>
-      <tr><th>শিরোনাম</th><th>ক্রম</th><th>কার্যক্রম</th></tr>
+      <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>ক্রম</th><th>কার্যক্রম</th></tr>
     </thead>
     <tbody>
       <% items.forEach(c => { %>
         <tr>
+          <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= c.id %>" aria-label="সিলেক্ট"></td>
           <td><strong><%= c.section_title %></strong></td>
           <td><%= c.sort_order || 0 %></td>
           <td>
