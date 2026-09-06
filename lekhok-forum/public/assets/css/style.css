@@ -628,6 +628,13 @@ ul { list-style: none; padding: 0; margin: 0; }
   .btclf-topbar .logo-text small { font-size: 10px; }
 }
 
+/* সেশন ৩১ ফলো-আপ: টপবারের পুরো নাম দুই লাইন সমান 10px।
+   উপরের `.btclf-topbar .logo-text strong { font-size:16px }` রুলের specificity (0,2,1)
+   `.logo-text-v2 strong`-এর 10px (0,1,1)-কে হারায় — ফলে ১ম লাইন আজও 16px-এ
+   'বড় ছোট' দেখাত; !important দিয়ে দুই লাইন সমান বেঁধে দেওয়া হলো (shrunk + ≤480px সহ) */
+.btclf-topbar .logo-text-v2 strong,
+.btclf-topbar .logo-text-v2 .brand-line2 { font-size: 10px !important; }
+
 /* Section alternation — subtle pattern */
 .section-alt {
   background: #fafbfd;
