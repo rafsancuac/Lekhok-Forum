@@ -1063,6 +1063,26 @@ async function runMigrations() {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Boot fast-path (Turso only)
+// ────────────────────────────────────────────────────────────────────────────
+// প্রতিটি কোল্ড বুটে runMigrations + applyLaterMigrations + seed-চেক ≈ ১০০+
+// সিরিয়াল কোয়েরি চলে; দূরবর্তী Turso-তে প্রতি-কোয়েরি RTT ≈ ১০০-২০০ms হওয়ায়
+// বুট ১৫ সেকেন্ড+ হয়ে গেছে এবং Vercel-এর ফাংশন-টাইমআউট ভেঙে সাইট 500 দিচ্ছিল।
+// সমাধান: পূর্ণ ইনিট সফল হলে স্কিমা/মাইগ্রেশন/সিড-ফাংশনের সোর্স-হ্যাশ
+// (_boot_cache.init_fingerprint) সেভ করা হয়; পরের বুটে হ্যাশ মিললে সব স্কিপ —
+// বুট ১-২ কোয়েরিতে নামে। ফাংশন-সোর্স বদলালে (নতুন মাইগ্রেশন/সিড) হ্যাশ নিজেই
+// বদলায়, তাই নতুন মাইগ্রেশন সবসময় চলে।
+const BOOT_CACHE_VERSION = 'v1';
+function bootFingerprint() {
+  const crypto = require('crypto');
+  const fns = [runMigrations, applyLaterMigrations, seedAdmin, seedIfEmptyLocal,
+               seedDemoContent, ensureDemoModerator];
+  return crypto.createHash('md5')
+    .update(BOOT_CACHE_VERSION + '|' + fns.map(f => f.toString()).join('§'))
+    .digest('hex');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Public API (legacy-compatible)
 // ────────────────────────────────────────────────────────────────────────────
 async function initDb() {
@@ -1083,6 +1103,21 @@ async function initDb() {
     console.log(USE_DB_SNAPSHOT
       ? '[db] sql.js + Vercel Blob snapshot mode (no Turso configured)'
       : '[db] Using local sql.js at ' + DB_PATH);
+  }
+
+  // Turso ফাস্ট-পাথ: আগের পূর্ণ ইনিটের ফিঙ্গারপ্রিন্ট মিললে মাইগ্রেশন/সিড-চেক স্কিপ
+  if (IS_TURSO) {
+    try {
+      const row = await backend.prepare("SELECT value FROM _boot_cache WHERE key='init_fingerprint'").get();
+      if (row && row.value === bootFingerprint()) {
+        console.log('[db] Boot cache HIT — schema/migrations/seeds already applied, skipping checks');
+        return;
+      }
+      console.log('[db] Boot cache MISS or stale fingerprint — running full init');
+    } catch (_) {
+      // _boot_cache টেবিল এখনো নেই (প্রথম আপগ্রেড-বুট) → পূর্ণ পথ
+      console.log('[db] No boot cache table yet — running full init');
+    }
   }
 
   await runMigrations();
@@ -1136,6 +1171,17 @@ async function initDb() {
     await ensureDemoModerator();
   } catch (e) {
     console.error('[db] Demo moderator seeding failed (non-fatal):', e.message);
+  }
+
+  // পূর্ণ ইনিট সফল → Turso-তে ফিঙ্গারপ্রিন্ট সেভ (পরের কোল্ড বুট ফাস্ট-পাথে যাবে)
+  if (IS_TURSO) {
+    try {
+      await backend.exec("CREATE TABLE IF NOT EXISTS _boot_cache (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT DEFAULT (datetime('now')))");
+      await backend.prepare("INSERT INTO _boot_cache (key, value) VALUES ('init_fingerprint', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')").run(bootFingerprint());
+      console.log('[db] Boot fingerprint saved — next cold boot will use the fast path');
+    } catch (e) {
+      console.error('[db] Boot cache write failed (non-fatal):', e.message);
+    }
   }
 
   // Blob-snapshot mode: make sure the very first state (fresh seed or just
