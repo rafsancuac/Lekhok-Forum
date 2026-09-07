@@ -86,7 +86,7 @@
               <form method="post" action="/admin/subscribers/<%= s.id %>/toggle" style="display:inline;">
                 <button class="btn btn-secondary btn-sm" title="<%= s.is_active ? 'সাবস্ক্রিপশন বন্ধ করুন' : 'পুনরায় সক্রিয় করুন' %>"><i class="fas fa-power-off"></i></button>
               </form>
-              <form method="post" action="/admin/subscribers/<%= s.id %>/delete" style="display:inline;" onsubmit="return confirm('সত্যিই মুছে ফেলবেন?');">
+              <form method="post" action="/admin/subscribers/<%= s.id %>/delete" style="display:inline;">
                 <button class="btn btn-danger btn-sm" title="মুছে ফেলুন"><i class="fas fa-trash"></i></button>
               </form>
             <% } else { %>

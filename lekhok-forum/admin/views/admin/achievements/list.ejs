@@ -37,7 +37,7 @@
           <td><%= a.achievement_date || '—' %></td>
           <td>
             <a href="/admin/achievements/<%= a.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
-            <form method="POST" action="/admin/achievements/<%= a.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+            <form method="POST" action="/admin/achievements/<%= a.id %>?_method=DELETE" style="display:inline;">
               <button class="btn btn-danger btn-sm">মুছুন</button>
             </form>
           </td>

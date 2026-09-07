@@ -68,7 +68,7 @@
         <input type="text" name="admin_notes" placeholder="অভ্যন্তরীণ নোট" value="<%= c.admin_notes || '' %>" style="flex:1; min-width:180px;">
         <button type="submit" class="btn btn-primary btn-sm">সংরক্ষণ</button>
       </form>
-      <form method="POST" action="/admin/complaints/<%= c.id %>?_method=DELETE" style="margin-top:6px;" onsubmit="return confirm('অভিযোগটি মুছে ফেলতে চান?')">
+      <form method="POST" action="/admin/complaints/<%= c.id %>?_method=DELETE" style="margin-top:6px;">
         <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
       </form>
     </div>

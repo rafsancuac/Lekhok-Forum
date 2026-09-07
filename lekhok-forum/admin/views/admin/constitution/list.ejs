@@ -35,7 +35,7 @@
           <td><%= c.sort_order || 0 %></td>
           <td>
             <a href="/admin/constitution/<%= c.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
-            <form method="POST" action="/admin/constitution/<%= c.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+            <form method="POST" action="/admin/constitution/<%= c.id %>?_method=DELETE" style="display:inline;">
               <button class="btn btn-danger btn-sm">মুছুন</button>
             </form>
           </td>

@@ -119,3 +119,19 @@ Work Log:
 
 Stage Summary:
 - কমিট: session44 (বিস্তারিত PROJECT.md §১০)
+
+---
+Task ID: 8
+Agent: Main verification agent (Session 45)
+Task: ডিলিট ফাংশনালিটি — নেটিভ কনফার্মেশন পপ-আপ (confirm()) অপসারণ
+
+Work Log:
+- grep দিয়ে সব confirm()/window.confirm() চিহ্নিত (২৯ view ফাইল, ৩৯ কল)
+- Python স্ক্রিপ্টে onsubmit/onclick="return confirm(...)" অ্যাট্রিবিউট + if(!confirm(...)) return; লাইন অপসারণ
+- sidebar.ejs-এর বাল্ক-বার ও কীবোর্ড-ডিলিট window.confirm ম্যানুয়ালি সরানো
+- কসমেটিক আর্টিফ্যাক্ট ("> >") পরিষ্কার
+- grep যাচাই: পুরো রিপোতে confirm() = ০
+- smoke test: অ্যাডমিন ১৭ + মডারেটর ৮ পেজ ২৫/২৫ পাস
+
+Stage Summary:
+- কমিট: session45 (বিস্তারিত PROJECT.md §১০)

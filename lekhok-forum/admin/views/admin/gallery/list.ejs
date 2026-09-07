@@ -32,7 +32,7 @@
         <p style="color:#666; font-size:0.85rem; min-height:30px;"><%= g.caption || '' %></p>
         <div style="margin-top:8px; display:flex; gap:6px;">
           <a href="/admin/gallery/<%= g.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
-          <form method="POST" action="/admin/gallery/<%= g.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+          <form method="POST" action="/admin/gallery/<%= g.id %>?_method=DELETE" style="display:inline;">
             <button class="btn btn-danger btn-sm">মুছুন</button>
           </form>
         </div>

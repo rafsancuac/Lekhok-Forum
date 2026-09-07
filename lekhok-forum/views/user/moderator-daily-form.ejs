@@ -52,7 +52,7 @@
           <strong><%= it.title %></strong>
           <div style="color:#999; font-size:0.85rem;"><%= it.scheduled_date %></div>
         </div>
-        <form method="POST" action="/moderator/daily/<%= type %>/<%= it.id %>?_method=DELETE" onsubmit="return confirm('মুছে ফেলতে চান?')">
+        <form method="POST" action="/moderator/daily/<%= type %>/<%= it.id %>?_method=DELETE">
           <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
         </form>
       </div>

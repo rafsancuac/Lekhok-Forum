@@ -55,7 +55,7 @@
             <button class="btn btn-sm" type="submit" title="WebP-তে অপটিমাইজ করুন"><i class="fas fa-bolt"></i> WebP</button>
           </form>
           <% } %>
-          <form method="POST" action="/admin/media/delete" onsubmit="return confirm('ছবিটি মুছে ফেলবেন? যেসব জায়গায় ব্যবহার হয়েছে সেখানে ভাঙা দেখাবে।');">
+          <form method="POST" action="/admin/media/delete">
             <input type="hidden" name="url" value="<%= m.url %>">
             <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
           </form>

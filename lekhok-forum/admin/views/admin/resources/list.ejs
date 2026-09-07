@@ -34,7 +34,7 @@
           <td><%= r.author || '—' %></td>
           <td>
             <a href="/admin/resources/<%= r.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
-            <form method="POST" action="/admin/resources/<%= r.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+            <form method="POST" action="/admin/resources/<%= r.id %>?_method=DELETE" style="display:inline;">
               <button class="btn btn-danger btn-sm">মুছুন</button>
             </form>
           </td>

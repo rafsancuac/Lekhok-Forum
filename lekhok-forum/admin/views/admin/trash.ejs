@@ -36,13 +36,13 @@
   <% if (typeof restoredFlag !== 'undefined' && restoredFlag) { %><div class="flash ok"><i class="fas fa-undo"></i> <%= restoredFlag %> টি আইটেম ফেরত দেওয়া হয়েছে।</div><% } %>
 
   <div style="display:flex;gap:10px;margin:0 0 14px;flex-wrap:wrap;">
-    <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/trash/restore-all" onsubmit="return confirm('পুরো ট্র্যাশের সব আইটেম ফেরত নেবেন?');">
+    <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/trash/restore-all">
       <button class="btn btn-primary btn-sm" type="submit"><i class="fas fa-undo-alt"></i> সব ফেরত</button>
     </form>
     <% if (typeof tbl43 !== 'undefined' && tbl43) { %>
     <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/trash/restore-all">
       <input type="hidden" name="table" value="<%= tbl43 %>">
-      <button class="btn btn-sm" type="submit" onsubmit="return confirm('ফেরত নেবেন?');"><i class="fas fa-undo"></i> "<%= tbl43 %>"-এর সব ফেরত</button>
+      <button class="btn btn-sm" type="submit"><i class="fas fa-undo"></i> "<%= tbl43 %>"-এর সব ফেরত</button>
     </form>
     <% } %>
   </div>
@@ -83,7 +83,7 @@
               <button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-undo"></i> ফেরত</button>
             </form>
             <% if (!(typeof moderatorView !== 'undefined' && moderatorView)) { %>
-            <form method="POST" action="/admin/trash/<%= r.id %>/purge" style="display:inline;" onsubmit="return confirm('স্থায়ীভাবে মুছে ফেলবেন? আর ফেরত নেওয়া যাবে না।');">
+            <form method="POST" action="/admin/trash/<%= r.id %>/purge" style="display:inline;">
               <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-fire"></i> স্থায়ী</button>
             </form>
             <% } %>

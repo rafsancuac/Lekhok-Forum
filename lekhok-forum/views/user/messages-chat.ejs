@@ -102,7 +102,7 @@
               <span style="display:inline-flex;align-items:center;gap:6px;background:#f0f2f5;border-radius:5px;padding:4px 10px;font-size:13px;">
                 <%= mm.full_name %><% if (mm.id === conv.user_a) { %><i class="fas fa-crown" style="color:#d4a017;font-size:10px" title="গ্রুপ অ্যাডমিন"></i><% } %>
                 <% if (_gAdmin && mm.id !== user.id && mm.id !== conv.user_a) { %>
-                <form method="POST" action="/messages/g/<%= conv.id %>/members/<%= mm.id %>/remove" style="display:inline" onsubmit="return confirm('<%= mm.full_name %> কে গ্রুপ থেকে বাদ দেবেন?')"><button type="submit" style="border:0;background:none;color:#dc2626;cursor:pointer;padding:0;font-size:12px" title="বাদ দিন"><i class="fas fa-times"></i></button></form>
+                <form method="POST" action="/messages/g/<%= conv.id %>/members/<%= mm.id %>/remove" style="display:inline"><button type="submit" style="border:0;background:none;color:#dc2626;cursor:pointer;padding:0;font-size:12px" title="বাদ দিন"><i class="fas fa-times"></i></button></form>
                 <% } %>
               </span>
             <% }) %>
@@ -113,7 +113,7 @@
             <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> যোগ করুন</button>
           </form>
           <% } else { %>
-          <form method="POST" action="/messages/g/<%= conv.id %>/leave" onsubmit="return confirm('গ্রুপ ছেড়ে বের হবেন?')" style="display:inline">
+          <form method="POST" action="/messages/g/<%= conv.id %>/leave" style="display:inline">
             <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-sign-out-alt"></i> গ্রুপ ছাড়ুন</button>
           </form>
           <% } %>
@@ -603,7 +603,6 @@
     body?.addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-msg-delete]');
       if (!btn) return;
-      if (!confirm('এই মেসেজটি মুছে ফেলতে চান?')) return;
       const msgId = btn.dataset.msgDelete;
       try {
         const res = await fetch('/messages/' + encodeURIComponent(otherUsername) + '/' + msgId + '/delete', {
@@ -622,7 +621,6 @@
   <script>
     // Delete entire conversation (AJAX)
     async function deleteConversation(username) {
-      if (!confirm('এই কথোপকথনটি মুছে ফেলতে চান? সব মেসেজ মুছে যাবে।')) return;
       try {
         const res = await fetch('/messages/' + encodeURIComponent(username) + '/delete', {
           method: 'POST',

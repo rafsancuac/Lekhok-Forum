@@ -38,7 +38,7 @@
           <td><%= n.date || '—' %></td>
           <td>
             <a href="/admin/notices/<%= n.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
-            <form method="POST" action="/admin/notices/<%= n.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+            <form method="POST" action="/admin/notices/<%= n.id %>?_method=DELETE" style="display:inline;">
               <button class="btn btn-danger btn-sm">মুছুন</button>
             </form>
           </td>

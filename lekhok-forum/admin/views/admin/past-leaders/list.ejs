@@ -41,7 +41,7 @@
           </td>
           <td>
             <a href="/admin/past-leaders/<%= p.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
-            <form method="POST" action="/admin/past-leaders/<%= p.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('মুছে ফেলতে চান?')">
+            <form method="POST" action="/admin/past-leaders/<%= p.id %>?_method=DELETE" style="display:inline;">
               <button class="btn btn-danger btn-sm">মুছুন</button>
             </form>
           </td>

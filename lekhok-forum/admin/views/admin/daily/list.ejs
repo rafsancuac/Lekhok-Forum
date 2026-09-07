@@ -103,7 +103,7 @@
             <td>
               <div class="row-actions">
                 <a href="/admin/daily/<%= it.id %>/edit" class="btn btn-primary btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
-                <form method="POST" action="/admin/daily/<%= it.id %>?_method=DELETE" onsubmit="return confirm('মুছে ফেলতে চান?')">
+                <form method="POST" action="/admin/daily/<%= it.id %>?_method=DELETE">
                   <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                 </form>
               </div>

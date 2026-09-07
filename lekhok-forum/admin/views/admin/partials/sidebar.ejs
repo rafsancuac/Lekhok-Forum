@@ -270,9 +270,7 @@
         sync();
       });
       bulkBar.addEventListener('submit', function (e) {
-        var msg = (e.submitter && e.submitter.getAttribute('data-bulk-msg')) || 'সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?';
         if (!bulkBar.querySelectorAll('input[type="hidden"][name="ids"]').length) { e.preventDefault(); return; }
-        if (!window.confirm(msg)) e.preventDefault();
       });
       sync();
     } catch (e) {}
@@ -352,7 +350,7 @@
         if (!boxes.length) return;
         if (e.key === 'Delete') {
           var sel = boxes.filter(function (b) { return b.checked; });
-          if (sel.length && window.confirm(sel.length + 'টি সিলেক্টেড আইটেম মুছে ফেলবেন?')) {
+          if (sel.length) {
             var bar = document.getElementById('bulkBar');
             if (bar) bar.querySelector('button.btn-danger').click();
           }

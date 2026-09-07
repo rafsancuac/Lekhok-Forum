@@ -77,7 +77,7 @@
         <% if (user && user.id === post.author_id) { %>
           <div class="owner-actions">
             <a href="/articles/<%= post.id %>/edit" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
-            <form method="POST" action="/articles/<%= post.id %>?_method=DELETE" style="display:inline" onsubmit="return confirm('মুছে ফেলতে চান?')">
+            <form method="POST" action="/articles/<%= post.id %>?_method=DELETE" style="display:inline">
               <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
             </form>
           </div>

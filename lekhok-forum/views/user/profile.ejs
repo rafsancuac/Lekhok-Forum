@@ -162,7 +162,7 @@
                         <a href="/articles/<%= post.id %>/edit"><i class="fas fa-pen"></i> সম্পাদনা</a>
                         <a href="/articles/<%= post.id %>"><i class="fas fa-eye"></i> দেখুন</a>
                         <a href="#" onclick="sharePost(<%= post.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
-                        <form method="POST" action="/articles/<%= post.id %>/delete" onsubmit="return confirm('মুছে ফেলবেন?')" style="margin:0">
+                        <form method="POST" action="/articles/<%= post.id %>/delete" style="margin:0">
                           <button type="submit" class="post-delete-btn"><i class="fas fa-trash"></i> মুছুন</button>
                         </form>
                       </div>
@@ -367,7 +367,6 @@
     // Remove follower
     document.querySelectorAll('.remove-follower').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (!confirm('এই অনুসরণকারীকে সরাতে চান?')) return;
         const res = await fetch('/api/followers/' + btn.dataset.user + '/remove', { method: 'POST' });
         if (res.ok) btn.closest('.user-row').remove();
       });
@@ -375,7 +374,6 @@
     // Block user
     document.querySelectorAll('.block-user').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (!confirm('এই ব্যবহারকারীকে ব্লক করতে চান? দুই দিক থেকেই ফলো বাতিল হবে।')) return;
         const res = await fetch('/api/block/' + btn.dataset.user, { method: 'POST' });
         const data = await res.json();
         if (data.ok && data.blocked) showToast('ব্যবহারকারী ব্লক করা হয়েছে', 'success');

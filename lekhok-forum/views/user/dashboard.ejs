@@ -124,7 +124,7 @@
               <% if (user && (item.item_type === 'article' || item.item_type === 'question') && item.username === user.username) { %>
                 <span class="feed-owner-actions">
                   <a href="/articles/<%= item.id %>/edit" title="সম্পাদনা"><i class="fas fa-pen"></i> সম্পাদনা</a>
-                  <form method="POST" action="/articles/<%= item.id %>/delete" onsubmit="return confirm('মুছে ফেলতে চান?')"><button type="submit" title="মুছুন"><i class="fas fa-trash"></i></button></form>
+                  <form method="POST" action="/articles/<%= item.id %>/delete"><button type="submit" title="মুছুন"><i class="fas fa-trash"></i></button></form>
                 </span>
               <% } %>
             </div>

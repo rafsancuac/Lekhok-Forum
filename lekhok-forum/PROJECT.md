@@ -294,6 +294,14 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৪৫ (৮ সেপ্টেম্বর ২০২৬) — ডিলিট ফাংশনালিটি: নেটিভ কনফার্মেশন পপ-আপ অপসারণ
+
+- **উদ্দেশ্য:** ডিলিট/ডেস্ট্রাক্টিভ বাটনে ক্লিক করলে ব্রাউজারের `window.confirm()` পপ-আপ ছাড়াই সরাসরি রিকোয়েস্ট যাবে (ইউজার-রিকোয়েস্ট)।
+- **করণীয়:** কোডবেসের **সব** `confirm()` / `window.confirm()` কল সরানো হয়েছে — ২৯টি view ফাইলে ৩৯টি কল (অ্যাট্রিবিউট-ভিত্তিক `onsubmit`/`onclick="return confirm(...)"` + JS গার্ড `if (!confirm(...)) return;` + sidebar.ejs-এর বাল্ক-বার/কীবোর্ড-ডিলিট `window.confirm`)। `grep -rn "confirm("` → **০ ফল** (পুরো রিপোতে)।
+- **কভারেজ:** অ্যাডমিন (notices/events/members/gallery/resources/daily/achievements/constitution/past-leaders/complaints/subscribers/tasks/trash/media/sections/content-history) + মডারেটর (notices/events/press/members/daily) + ইউজার (article-single/dashboard/profile/qa-single/settings/messages-chat) + বাল্ক-ডিলিট কীবোর্ড-শর্টকাট (Delete key) ও বাল্ক-বার।
+- **নোট:** কনফার্মেশন সরানোর পরও নিরাপত্তা বহাল — সফট-ডিলিট/ট্র্যাশ + আন্ডু-টোস্ট (সেশন ৪২/৪৩) সেফটি-নেট হিসেবে আগে থেকেই আছে; CSRF গার্ড অপরিবর্তিত।
+- **টেস্ট:** smoke (অ্যাডমিন ১৭ পেজ + মডারেটর ৮ পেজ) **২৫/২৫** — সব 200, কোনো পেজে `confirm(` নেই; EJS/JS সিনট্যাক্স ভাঙেনি।
+
 ### সেশন ৪৪ (৮ সেপ্টেম্বর ২০২৬) — এডিট/আপডেট স্পিনার+৪০৪ ফিক্স, মিডিয়া WebP অপটিমাইজেশন, অ্যানালিটিক্স রিয়েকশন/ভিজিট ট্রেন্ড
 
 **১) এডিট/আপডেট ফর্ম — ইনফিনিট স্পিনার ও ভুল ৪০৪ রিডাইরেক্ট ফিক্স (ইউজার-রিপোর্ট):**

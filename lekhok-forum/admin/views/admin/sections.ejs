@@ -67,7 +67,7 @@
         <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/toggle" style="display:inline;">
           <button class="mini-btn" type="submit" title="লুকান/দেখান"><i class="fas <%= r.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i></button>
         </form>
-        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/delete" style="display:inline;" onsubmit="return confirm('আইটেমটি বাদ দেবেন? (ট্র্যাশে যাবে, ৩০ দিন ফেরত নেওয়া যাবে)');">
+        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/delete" style="display:inline;">
           <button class="mini-btn" type="submit" title="বাদ দিন" style="color:#b91c1c;"><i class="fas fa-trash"></i></button>
         </form>
       </summary>

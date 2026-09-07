@@ -49,7 +49,7 @@
       <div class="mod-item">
         <input type="checkbox" name="bulk_ids" value="<%= n.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:4px;">
         <div style="flex:1;"><strong><%= n.title %></strong><div style="color:#999; font-size:0.85rem;"><%= n.date %></div></div>
-        <form method="POST" action="/moderator/notices/<%= n.id %>?_method=DELETE" onsubmit="return confirm('মুছে ফেলতে চান?')">
+        <form method="POST" action="/moderator/notices/<%= n.id %>?_method=DELETE">
           <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
         </form>
       </div>

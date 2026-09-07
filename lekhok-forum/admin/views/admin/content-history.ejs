@@ -39,7 +39,7 @@
           <td><%= r.saved_by %></td>
           <td style="max-width:520px;"><%= String(r.value || '').slice(0, 220) %><% if (String(r.value || '').length > 220) { %>…<% } %></td>
           <td>
-            <form method="POST" action="/admin/content/restore" onsubmit="return confirm('এই সংস্করণটি ফেরত নেবেন?');">
+            <form method="POST" action="/admin/content/restore">
               <input type="hidden" name="rev_id" value="<%= r.id %>">
               <button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-undo"></i> ফেরত</button>
             </form>

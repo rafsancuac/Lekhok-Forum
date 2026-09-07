@@ -115,7 +115,7 @@
                 </td>
                 <td><%= t.due_date || '—' %></td>
                 <td>
-                  <form method="POST" action="/admin/tasks/<%= t.id %>/delete" style="display:inline;" onsubmit="return confirm('মুছবেন?')">
+                  <form method="POST" action="/admin/tasks/<%= t.id %>/delete" style="display:inline;">
                     <button type="submit" class="btn btn-danger btn-sm" title="মুছুন"><i class="fas fa-trash"></i></button>
                   </form>
                 </td>
