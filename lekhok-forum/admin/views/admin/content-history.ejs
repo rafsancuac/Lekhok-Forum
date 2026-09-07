@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>রিভিশন হিস্ট্রি | লেখক ফোরাম</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-history"></i> কনটেন্ট রিভিশন হিস্ট্রি</h1>
+      <p class="subtitle">প্রতিটি ফিল্ডের শেষ ১০টি পুরনো সংস্করণ — যেকোনোটি এক ক্লিকে ফেরত নিন</p>
+    </div>
+    <form method="GET" style="display:flex;gap:8px;">
+      <select name="key" style="padding:9px 10px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;max-width:340px;">
+        <option value="">ফিল্ড বাছুন…</option>
+        <% (keys43 || []).forEach(k => { %><option value="<%= k.key %>" <%= key === k.key ? 'selected' : '' %>><%= k.key %></option><% }); %>
+      </select>
+      <button class="btn btn-sm" type="submit"><i class="fas fa-eye"></i> দেখুন</button>
+    </form>
+  </div>
+  <% if (typeof saved !== 'undefined' && saved) { %><div class="flash ok"><i class="fas fa-undo"></i> পুরনো সংস্করণ ফেরত নেওয়া হয়েছে।</div><% } %>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <% if (!rows.length) { %>
+    <div class="empty"><i class="fas fa-history"></i><p>কোনো রিভিশন নেই — কনটেন্ট সম্পাদকে কিছু বদলালে এখানে পুরনো মান জমা হবে।</p></div>
+    <% } else { %>
+    <table class="table">
+      <thead><tr><th style="width:70px;">rev</th><th style="width:160px;">সময়</th><th style="width:120px;">কে</th><th>পুরনো মান</th><th style="width:110px;">অ্যাকশন</th></tr></thead>
+      <tbody>
+        <% rows.forEach(r => { %>
+        <tr>
+          <td>#<%= r.id %></td>
+          <td><%= r.saved_at %></td>
+          <td><%= r.saved_by %></td>
+          <td style="max-width:520px;"><%= String(r.value || '').slice(0, 220) %><% if (String(r.value || '').length > 220) { %>…<% } %></td>
+          <td>
+            <form method="POST" action="/admin/content/restore" onsubmit="return confirm('এই সংস্করণটি ফেরত নেবেন?');">
+              <input type="hidden" name="rev_id" value="<%= r.id %>">
+              <button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-undo"></i> ফেরত</button>
+            </form>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

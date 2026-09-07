@@ -50,3 +50,15 @@
 - **স্কোপ**: ফেসবুক Page Settings-স্টাইল হালকা রিথিম (admin.css v6 + sidebar.ejs কেন্দ্রীয়), কোনো রুট/ফিল্ড/শর্তসাপেক্ষ মেনু আইটেম মুছে ফেলা হয়নি
 - **প্রমাণ**: Playwright আগে/পরে ৩০ পেজ + ১৪ কনটেন্ট-ট্যাব স্ক্রিনশট × ২ সেট; ফিল্ড/বাটন/ফর্ম/টেবিল প্যারিটি হুবহু (একমাত্র members-list 86→78 = সিড-ডুপ্লিকেট dedupe, সেশন ২৪/৩৫-এর ক্যানন সংখ্যা); JS এরর ০; টোস্ট/ড্রাফট-অটোসেভ/মোবাইল ড্রয়ার/রোল-মেনু (এডমিন ২০, মডারেটর ১০) সব ফাংশনাল রি-টেস্টেড ✓
 - **নতুন ফিচার (ডিজাইন-টার্গেট)**: sidebar সার্চ-বক্স + কেন্দ্রীয় ব্রেডক্রাম্ব ইনজেকশন + a11y (aria-expanded/aria-current/role)
+
+---
+
+## ৬. সেশন ৪৩ অ্যাডেন্ডাম — ১২ আপগ্রেড ভেরিফিকেশন সারসংক্ষেপ
+
+- **স্কোপ**: ইউজার-কনফার্মড ১২ আইটেম (সব ১-১২; ছবি-ফিল্ড=আপলোড+URL; সব-ফেরত=গ্লোবাল+টেবিল-ভিত্তিক)। কোনো রুট/ফিল্ড/মেনু-আইটেম মুছে ফেলা হয়নি।
+- **নতুন রাউট**: `/admin/trash/restore-all`, `/moderator/trash/restore-all`, `/admin/audit/export.csv`, `/admin/sections/:id/undo`, `/admin/sections/reorder` (+মডারেটর মিরর), `/admin/content/history`, `/admin/content/restore`, `/admin/media`, `/admin/media/delete`, `/admin/analytics`, `/api/newsletter/confirm`।
+- **স্কিমা (idempotent মাইগ্রেশন ৪৩)**: `site_items.image`, `newsletter_subscribers.confirm_token`, `content_revisions` + ৯ ইনডেক্স (IDX43)।
+- **সিকিউরিটি**: লগিন রেট-লিমিট (১০ ব্যর্থ/IP+username/১৫মিনিট → ৪২৯, সফলে রিসেট), হেডার প্যাক (nosniff/X-Frame/Referrer/Permissions/HSTS), কুকি sameSite=lax + secure='auto' (VERCEL), ডাবল-অপ্ট-ইন (শুধু RESEND_API_KEY থাকলে)।
+- **পারফরম্যান্স**: compression (gzip ভেরিফাইড), ইনডেক্স, admin লোড ৩৪ms (টেস্টে <৩s গেট)।
+- **প্রমাণ**: session43.js ২৫/২৫ + রেগ্রেশন ৯৮/৯৮ (session42 ২০, session39 ২২, session41 ১১, session40 ৩৩, smoke38 ১২) = ১২৩/১২৩; শূন্য ৫০০/pageerror; স্ক্রিনশট `/home/user/screenshots/session43/01-06`।
+- **বিল্ডকালীন ফিক্স**: টোস্ট CSS কন্ডিশনাল-মুক্ত; মডারেটর ট্র্যাশ লোকালস (৫০০ ফিক্স); loginOk কাউন্টার-রিসেট; বাল্ক-টগল redirect-এ undo প্যারাম; টেস্ট-সাইড: reorder ডুপলিকেট-কী এনকোডিং, restore-all/সিঙ্গেল-restore সিলেক্টর পৃথকীকরণ, S41 টাস্ক ইউনিক-TS ফিল্টার, FAQ কাউন্ট ≥১৫ (DB-ড্রিফট টলারেন্ট)।

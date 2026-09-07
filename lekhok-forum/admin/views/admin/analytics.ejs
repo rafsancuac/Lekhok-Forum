@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>অ্যানালিটিক্স | লেখক ফোরাম</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    .an-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .an-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 5px; padding: 18px; }
+    .an-card h3 { margin: 0 0 4px; font-size: .95rem; }
+    .an-total { font-size: 1.7rem; font-weight: 800; color: #059669; }
+    .an-card svg { width: 100%; height: 70px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-chart-line"></i> অ্যানালিটিক্স</h1>
+      <p class="subtitle">শেষ ৩০ দিনের কার্যক্রম — সাবস্ক্রাইব, পোস্ট ও নোটিশ</p>
+    </div>
+  </div>
+  <div class="an-grid">
+    <%
+      const spark43 = (arr) => {
+        const max = Math.max(1, ...arr.map(a => a.c));
+        const pts = arr.map((a, i) => ((i / (arr.length - 1)) * 300).toFixed(1) + ',' + (60 - (a.c / max) * 55).toFixed(1)).join(' ');
+        return '<svg viewBox="0 0 300 70" preserveAspectRatio="none"><polyline points="' + pts + '" fill="none" stroke="#059669" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+      };
+      const cards43 = [
+        { t: 'নতুন সাবস্ক্রাইবার', icon: 'fa-paper-plane', tot: totSubs, arr: subs },
+        { t: 'নতুন পোস্ট', icon: 'fa-pen-nib', tot: totPosts, arr: posts },
+        { t: 'নতুন নোটিশ', icon: 'fa-bullhorn', tot: totNotices, arr: notices }
+      ];
+    %>
+    <% cards43.forEach(c => { %>
+    <div class="an-card">
+      <h3><i class="fas <%= c.icon %>" style="color:#059669;"></i> <%= c.t %></h3>
+      <div class="an-total"><%= c.tot %></div>
+      <%- spark43(c.arr) %>
+      <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#9ca3af;"><%= c.arr[0].d %> · <%= c.arr[c.arr.length - 1].d %></div>
+    </div>
+    <% }); %>
+  </div>
+</div>
+</body>
+</html>

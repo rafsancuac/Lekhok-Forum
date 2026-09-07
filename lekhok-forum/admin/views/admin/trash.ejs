@@ -7,6 +7,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    .tr-prev { margin: 6px 0 0; padding: 10px 14px; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 5px; font-size: .8rem; }
+    .tr-prev div { margin: 2px 0; }
+    .tr-prev b { color: #374151; }
+  </style>
 </head>
 <body>
 <%- include('partials/sidebar') %>
@@ -16,13 +21,31 @@
       <h1><i class="fas fa-trash-can"></i> ট্র্যাশ (সফট-ডিলিট)</h1>
       <p class="subtitle">মুছে ফেলা আইটেম ৩০ দিন পর্যন্ত এখানে থাকে — ফেরত নেওয়া বা স্থায়ীভাবে মুছে ফেলা যায়</p>
     </div>
-    <form method="GET" style="display:flex;gap:8px;">
-      <input type="search" name="q" value="<%= q42 %>" placeholder="টেবিল/নাম খুঁজুন" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
-      <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
+    <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;">
+      <input type="search" name="q" value="<%= q42 %>" placeholder="খুঁজুন…" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
+      <select name="table" style="padding:9px 10px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
+        <option value="">সব টেবিল</option>
+        <% ((typeof tables43 !== 'undefined' && tables43) || []).forEach(t => { %>
+        <option value="<%= t.table_name %>" <%= (typeof tbl43 !== 'undefined' && tbl43 === t.table_name) ? 'selected' : '' %>><%= t.table_name %> (<%= t.c %>)</option>
+        <% }); %>
+      </select>
+      <button class="btn btn-sm" type="submit"><i class="fas fa-filter"></i> ফিল্টার</button>
     </form>
   </div>
 
-  <% if (typeof restoredFlag !== 'undefined' && restoredFlag) { %><div class="flash ok"><i class="fas fa-undo"></i> আইটেম ফেরত দেওয়া হয়েছে।</div><% } %>
+  <% if (typeof restoredFlag !== 'undefined' && restoredFlag) { %><div class="flash ok"><i class="fas fa-undo"></i> <%= restoredFlag %> টি আইটেম ফেরত দেওয়া হয়েছে।</div><% } %>
+
+  <div style="display:flex;gap:10px;margin:0 0 14px;flex-wrap:wrap;">
+    <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/trash/restore-all" onsubmit="return confirm('পুরো ট্র্যাশের সব আইটেম ফেরত নেবেন?');">
+      <button class="btn btn-primary btn-sm" type="submit"><i class="fas fa-undo-alt"></i> সব ফেরত</button>
+    </form>
+    <% if (typeof tbl43 !== 'undefined' && tbl43) { %>
+    <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/trash/restore-all">
+      <input type="hidden" name="table" value="<%= tbl43 %>">
+      <button class="btn btn-sm" type="submit" onsubmit="return confirm('ফেরত নেবেন?');"><i class="fas fa-undo"></i> "<%= tbl43 %>"-এর সব ফেরত</button>
+    </form>
+    <% } %>
+  </div>
 
   <div class="card" style="padding:0;overflow:hidden;">
     <% if (!rows.length) { %>
@@ -31,19 +54,28 @@
     <div class="table-wrap">
     <table class="table">
       <thead>
-        <tr><th style="width:60px;">আইডি</th><th style="width:160px;">টেবিল</th><th style="width:80px;">আইটেম</th><th>স্ন্যাপশট</th><th style="width:150px;">মুছেছেন</th><th style="width:150px;">সময়</th><th style="width:170px;">অ্যাকশন</th></tr>
+        <tr><th style="width:60px;">আইডি</th><th style="width:150px;">টেবিল</th><th>স্ন্যাপশট</th><th style="width:130px;">মুছেছেন</th><th style="width:140px;">সময়</th><th style="width:170px;">অ্যাকশন</th></tr>
       </thead>
       <tbody>
         <% rows.forEach(r => {
-             let prev = '';
-             try { const o = JSON.parse(r.payload); prev = o.title || o.name || o.email || o.email_address || ''; } catch (e) {}
+             let o = {};
+             try { o = JSON.parse(r.payload); } catch (e) {}
+             const prev = o.title || o.name || o.email || '';
              const base = (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin';
         %>
         <tr>
           <td>#<%= r.id %></td>
           <td><code><%= r.table_name %></code></td>
-          <td>#<%= r.item_id %></td>
-          <td><%= String(prev).slice(0, 70) %></td>
+          <td>
+            <details>
+              <summary style="cursor:pointer;"><strong><%= String(prev).slice(0, 60) %></strong> <span style="color:#6b7280;font-size:.75rem;">(বিস্তারিত দেখুন)</span></summary>
+              <div class="tr-prev">
+                <% Object.keys(o).slice(0, 14).forEach(k => { %>
+                <div><b><%= k %>:</b> <%= String(o[k] == null ? '' : o[k]).slice(0, 120) %></div>
+                <% }); %>
+              </div>
+            </details>
+          </td>
           <td><%= r.deleted_by_name || '—' %></td>
           <td><%= r.deleted_at %></td>
           <td style="white-space:nowrap;">

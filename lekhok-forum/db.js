@@ -1350,6 +1350,29 @@ async function applySession42Migrations() {
     }
   } catch (e) { console.error('[db] site_items seed (non-fatal):', e.message); }
 
+  // (43a) সেশন ৪: site_items-এ ছবি কলাম + কনটেন্ট রিভিশন টেবিল + ইনডেক্স
+  try { await backend.prepare('ALTER TABLE site_items ADD COLUMN image TEXT').run(); } catch (e) {}
+  try { await backend.prepare('ALTER TABLE newsletter_subscribers ADD COLUMN confirm_token TEXT').run(); } catch (e) {}
+  await backend.prepare(`CREATE TABLE IF NOT EXISTS content_revisions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    key TEXT NOT NULL,
+    value TEXT,
+    saved_by TEXT,
+    saved_at TEXT NOT NULL
+  )`).run();
+  const IDX43 = [
+    'CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id)',
+    'CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id, created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_trash_deleted ON trash(deleted_at)',
+    'CREATE INDEX IF NOT EXISTS idx_trash_table ON trash(table_name)',
+    'CREATE INDEX IF NOT EXISTS idx_site_sec ON site_items(section, sort_order)',
+    'CREATE INDEX IF NOT EXISTS idx_subs_email ON newsletter_subscribers(email)',
+    'CREATE INDEX IF NOT EXISTS idx_subs_active ON newsletter_subscribers(is_active)'
+  ];
+  for (const q of IDX43) { try { await backend.prepare(q).run(); } catch (e) {} }
+
   // (42c) ৩০ দিনের পুরনো ট্র্যাশ পার্জ
   try {
     await backend.prepare(`DELETE FROM trash WHERE deleted_at < datetime('now', '-30 days', 'localtime')`).run();

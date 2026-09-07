@@ -73,25 +73,43 @@ app.use(expressLayouts);
 app.set('layout', false);
 
 // ── Middleware ───────────────────────────────────────────────────────────────
+// সেশন ৪৩: compression + সিকিউরিটি হেডার
+try { app.use(require('compression')()); } catch (e) {}
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  if (req.secure || req.get('x-forwarded-proto') === 'https') res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
+if (process.env.VERCEL) app.set('trust proxy', 1);
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lekhok-forum-secret-key-change-in-production',
   store: new (require('./session-store'))(),  // DB-backed — MemoryStore loses logins across serverless instances
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }
+  cookie: { maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.VERCEL ? 'auto' : false }
 }));
 
 // ── সেশন ৪২: CSRF প্রোটেকশন (ফর্ম-ভিত্তিক) + নিউজলেটার রেট-লিমিট + আন্ডু-লোকাল ──
 const crypto42 = require('crypto');
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   try {
     if (!req.session.csrfToken) req.session.csrfToken = crypto42.randomBytes(18).toString('hex');
     res.locals.csrfToken = req.session.csrfToken;
     res.locals.undoTrash = req.query.trashed || null;
+    res.locals.undoBulk42 = (req.query.undo_mode && req.query.undo_ids) ? { mode: req.query.undo_mode, ids: String(req.query.undo_ids).split(','), base: req.query.undo_base || '' } : null;
+    res.locals.undoSec42 = req.query.undo_sec || null;
+    // সেশন ৪৩: সাইডবার ট্র্যাশ ব্যাজ (স্টাফ পেজে, রেন্ডারের আগে)
+    const staff43 = req.session && (req.session.adminUser || (req.session.user && /moderator|admin/.test(req.session.user.role)));
+    if (staff43 && (req.path.startsWith('/admin') || req.path.startsWith('/moderator'))) {
+      try { const rc = await db.prepare('SELECT COUNT(*) AS c FROM trash').get(); res.locals.trashCount42 = rc ? rc.c : 0; } catch (e) {}
+    }
     res.locals.restoredFlag = req.query.restored || null;
   } catch (e) { return next(); }
   if (req.method === 'POST' && (req.is('urlencoded') || req.is('multipart'))) {

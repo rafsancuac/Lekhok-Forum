@@ -15,7 +15,20 @@ router.get('/login', async (req, res) => {
 // 2) Fallback: admin panel accounts (admin_users) — admins were previously
 //    shown a confusing "ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড" on /login; now the
 //    same credentials work here and land straight on /admin.
+// সেশন ৪৩: লগইন ব্রুট-ফোর্স গার্ড — IP+username-এ ১৫ মিনিটে ১০ ব্যর্থ চেষ্টা
+const _loginHits43 = new Map();
+function loginLimited(key) {
+  const now = Date.now();
+  const arr = (_loginHits43.get(key) || []).filter(t => now - t < 15 * 60 * 1000);
+  _loginHits43.set(key, arr);
+  return arr.length >= 10;
+}
+function loginFail(key) { const now = Date.now(); const arr = (_loginHits43.get(key) || []).filter(t => now - t < 15 * 60 * 1000); arr.push(now); _loginHits43.set(key, arr); }
+function loginOk(key) { _loginHits43.delete(key); }
+
 router.post('/login', async (req, res) => {
+  const lk43 = (req.ip || '') + '|' + String(req.body.username || '').toLowerCase();
+  if (loginLimited(lk43)) return res.status(429).render('user/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে — ১৫ মিনিট পর আবার চেষ্টা করুন।', currentPath: '/login' });
   try {
     const { username, password } = req.body;
     const user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
@@ -23,6 +36,7 @@ router.post('/login', async (req, res) => {
       if (user.status === 'banned') {
         return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', currentPath: '/login' });
       }
+      loginOk(lk43);
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
       return new Promise((resolve) => req.session.save((err) => {
@@ -35,6 +49,7 @@ router.post('/login', async (req, res) => {
     // Admin-panel account fallback
     const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     if (admin && await bcrypt.compare(password, admin.password_hash)) {
+      loginOk(lk43);
       req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
       return new Promise((resolve) => req.session.save((err) => {
         if (err) console.error('[auth] /login admin session save error:', err);
@@ -43,6 +58,7 @@ router.post('/login', async (req, res) => {
       }));
     }
 
+    loginFail((req.ip || '') + '|' + String(req.body.username || '').toLowerCase());
     return res.render('user/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', currentPath: '/login' });
   } catch (e) {
     console.error('[auth] /login error:', e);

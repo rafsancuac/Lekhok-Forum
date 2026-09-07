@@ -153,4 +153,21 @@ async function retryLog(logId) {
   return { ok: true, sent: r.sent, failed: r.failed, error: r.error };
 }
 
-module.exports = { notifySubscribers, retryLog, isConfigured, makeExcerpt };
+// ── সেশন ৪৩: একক ইমেইল পাঠানো (ডাবল-অপ্ট-ইন কনফার্মেশন ইত্যাদি) ──
+// RESEND_API_KEY না থাকলে চুপচাপ ব্যর্থ হয় (ডেভে সাবস্ক্রিপশন তখন তাৎক্ষণিকই সক্রিয় থাকে)।
+async function sendMail({ to, subject, text, html }) {
+  if (!isConfigured()) return { ok: false, error: 'ইমেইল সার্ভিস কনফিগার করা হয়নি (RESEND_API_KEY)' };
+  try {
+    const resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.RESEND_API_KEY },
+      body: JSON.stringify({ from: FROM, to: [to], subject, text, html: html || undefined })
+    });
+    if (!resp.ok) return { ok: false, error: 'Resend HTTP ' + resp.status };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+module.exports = { notifySubscribers, retryLog, isConfigured, makeExcerpt, sendMail };

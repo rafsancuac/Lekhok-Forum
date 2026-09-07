@@ -294,6 +294,31 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৪৩ (৭ সেপ্টেম্বর ২০২৬) — ১২ আপগ্রেড: সব-ফেরত, অডিট CSV, সেকশন ছবি/প্রিভিউ/রিঅর্ডার + সিকিউরিটি/পারফরম্যান্স প্যাক
+
+**আপগ্রেড (১২টিই সম্পন্ন — ইউজার কনফার্ম: সব ১-১২, ছবি=আপলোড+URL দুটোই, সব-ফেরত=গ্লোবাল+টেবিল-ভিত্তিক):**
+১) **ট্র্যাশে "সব ফেরত"** — `/admin/trash/restore-all` + `/moderator/trash/restore-all` (মডারেটর: স্কোপড টেবিল হোয়াইটলিস্ট); গ্লোবাল ও টেবিল-ভিত্তিক দুই বাটন; ক্যাপ ৫০০; সাইডবারে লাল ট্র্যাশ-কাউন্ট ব্যাজ।
+২) **অডিট CSV** — `/admin/audit/export.csv` (UTF-8 BOM, এক্সেল-বন্ধুত্বপূর্ণ); অ্যাকশন/তারিখ(from-to)/সার্চ ফিল্টার অডিট পেজ ও CSV দুটোতেই।
+৩) **সেকশন ম্যানেজারে ছবি** — `site_items.image` কলাম; ফাইল আপলোড (`/admin/upload-image`) + URL দুই পথ; লাইভ প্রিভিউ; পাবলিক কন্টাক্ট কার্ডে ছবি রেন্ডার (চ্যানেল/ইউনিভার্সিটি/ট্রান্সপোর্ট); ড্র্যাগ-অ্যান্ড-ড্রপ রিঅর্ডার (`/sections/reorder`)।
+৪) **ট্র্যাশ স্ন্যাপশট প্রিভিউ** — প্রতি সারিতে `<details>` "বিস্তারিত দেখুন" (payload ফিল্ডসহ); টেবিল-ফিল্টার ড্রপডাউন (?table=); মডারেটর ট্র্যাশেও ফিল্টার+সার্চ।
+৫) **আন্ডু টোস্ট সম্প্রসারিত** — বাল্ক পাবলিশ/লুকান (admin+moderator, redirect-এ undo_mode/ids/base প্যারাম) ও সেকশন-এডিট (`/sections/:id/undo`, session স্ন্যাপশট)।
+৬) **কীবোর্ড শর্টকাট** — Shift+ক্লিক রেঞ্জ-সিলেক্ট, Esc সিলেকশন-ক্লিয়ার, Delete বাল্ক-ডিলিট (confirm সহ) — সব অ্যাডমিন/মডারেটর লিস্টে।
+৭) **মিডিয়া লাইব্রেরি** — `/admin/media`: public/uploads ওয়াক (ছবি সাইজসহ), কপি-URL বাটন, প্রিভিউ, ডিলিট (`/media/delete`)।
+৮) **কনটেন্ট রিভিশন হিস্ট্রি** — `content_revisions` টেবিল (প্রতি সেভে পুরনো মান, কী-প্রতি শেষ ১০টি); `/admin/content/history?key=` + এক-ক্লিক রিস্টোর (`/content/restore`)।
+৯) **নিউজলেটার প্যাক** — এক্সপোর্ট CSV-তে ?status=active|inactive ফিল্টার; ডুপ সাবস্ক্রাইবে বন্ধুত্বপূর্ণ বার্তা; ডাবল-অপ্ট-ইন (লাইট) — `confirm_token` কলাম, `/api/newsletter/confirm`, শুধু RESEND_API_KEY থাকলে সক্রিয় (নাহলে আগের তাৎক্ষণিক আচরণ); mailer.js-এ নতুন `sendMail()` এক্সপোর্ট।
+১০) **সিকিউরিটি প্যাক** — লগইন ব্রুট-ফোর্স গার্ড (IP+username প্রতি ১০ ব্যর্থ/১৫মিনিট → ৪২৯; সফল লগইনে কাউন্টার রিসেট), সিকিউরিটি হেডার (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS), কুকি sameSite=lax + secure='auto' (VERCEL-এ trust proxy)।
+১১) **পারফরম্যান্স প্যাক** — `compression` (gzip), ৯টি নতুন DB ইনডেক্স (IDX43: posts created_at/author_id, notifications user_id, audit_log created_at, trash deleted_at/table_name, site_items section+sort_order, newsletter_subscribers email/is_active), locals মিডলওয়্যার async (ট্র্যাশ-কাউন্ট await)।
+১২) **অ্যাডমিন অ্যানালিটিক্স** — `/admin/analytics`: ৩০-দিনের সিরিজ (নতুন সাবস্ক্রাইবার/পোস্ট/নোটিশ) ইনলাইন SVG স্পার্কলাইন + মোট কার্ড।
+
+**নতুন ভিউ:** `content-history.ejs`, `media.ejs`, `analytics.ejs`; রিরাইট: `trash.ejs`; আপডেট: `audit.ejs`, `content.ejs`, `sections.ejs`, `sidebar.ejs` (ব্যাজ/লিংক/শর্টকাট/বাল্ক-আন্ডু), `lekhok-contact.ejs` (ছবি)।
+
+**মাইগ্রেশন ৪৩:** `site_items.image TEXT`, `newsletter_subscribers.confirm_token TEXT`, `content_revisions(id,key,value,saved_by,saved_at)` + ৯ ইনডেক্স — সব idempotent।
+
+**টেস্ট:** session43.js ২৫/২৫ (নতুন স্যুট) + রেগ্রেশন session42 ২০/২০, session39 ২২/২২, session41 ১১/১১, session40 ৩৩/৩৩, smoke38 ১২/১২ = **১২৩/১২৩ সবুজ**; শূন্য ৫০০/পেজ-এরর। স্ক্রিনশট: `/home/user/screenshots/session43/01-06`।
+
+**বাগ ফিক্স (বিল্ডকালীন):** (ক) টোস্ট CSS কন্ডিশনাল ব্লকে বন্দি ছিল → সব টোস্ট (বাল্ক/ট্র্যাশ/সেকশন) এখন স্টাইলড; (খ) মডারেটর ট্র্যাশ ৫০০ (নতুন ভিউ-লোকালস মিসিং) → রুটে tables43/tbl43/restoredFlag পাঠানো + ভিউ-গার্ড; (গ) সফল লগইনে রেট-লিমিট কাউন্টার রিসেট হয়নি → loginOk() দুই ব্র্যাঞ্চে; (ঘ) বাল্ক-টগল redirect-এ আন্ডু প্যারাম যোগ (admin+moderator ৩ স্লাগ)।
+
+
 ### সেশন ৪২ (৭ সেপ্টেম্বর ২০২৬) — ৮ আপগ্রেড + স্পিনার/৪০৪ ও শেয়ার বাগ ফিক্স
 
 **আপগ্রেড (৮টিই সম্পন্ন):**

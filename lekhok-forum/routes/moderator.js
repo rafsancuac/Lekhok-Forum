@@ -200,21 +200,21 @@ router.post('/press/bulk-toggle', ensureModerator, requireScope('epaper'), async
   const ids = _bulkIds(req.body);
   for (const id of ids) { try { await db.prepare('UPDATE press_clippings SET is_active = ? WHERE id = ?').run(on, id); } catch (e) {} }
   await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', 'press_clippings', null, ids.length + 'টি');
-  res.redirect('/moderator/press?saved=1');
+  res.redirect('/moderator/press?saved=1&undo_mode=' + (on ? 'publish' : 'hide') + '&undo_ids=' + ids.join(',') + '&undo_base=/moderator/press');
 });
 router.post('/notices/bulk-toggle', ensureModerator, requireScope('notice'), async (req, res) => {
   const on = req.body.mode === 'publish' ? 1 : 0;
   const ids = _bulkIds(req.body);
   for (const id of ids) { try { await db.prepare('UPDATE notices SET is_active = ? WHERE id = ?').run(on, id); } catch (e) {} }
   await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', 'notices', null, ids.length + 'টি');
-  res.redirect('/moderator/notices?saved=1');
+  res.redirect('/moderator/notices?saved=1&undo_mode=' + (on ? 'publish' : 'hide') + '&undo_ids=' + ids.join(',') + '&undo_base=/moderator/notices');
 });
 router.post('/events/bulk-toggle', ensureModerator, requireScope('event'), async (req, res) => {
   const on = req.body.mode === 'publish' ? 1 : 0;
   const ids = _bulkIds(req.body);
   for (const id of ids) { try { await db.prepare('UPDATE events SET is_active = ? WHERE id = ?').run(on, id); } catch (e) {} }
   await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', 'events', null, ids.length + 'টি');
-  res.redirect('/moderator/events?saved=1');
+  res.redirect('/moderator/events?saved=1&undo_mode=' + (on ? 'publish' : 'hide') + '&undo_ids=' + ids.join(',') + '&undo_base=/moderator/events');
 });
 
 router.post('/press', ensureModerator, withUpload(pressUpload), async (req, res) => {
@@ -435,9 +435,32 @@ router.get('/switch', ensureModerator, (req, res) => {
 
 // ═══ সেশন ৪২: মডারেটর ট্র্যাশ (নিজের স্কোপের টেবিল) ═══
 router.get('/trash', ensureModerator, async (req, res) => {
+  const allowed43 = ['notices', 'events', 'press_clippings', 'daily_content', 'members', 'complaints', 'site_items'];
+  const tbl43 = allowed43.includes(String(req.query.table || '')) ? String(req.query.table) : '';
+  const q43 = String(req.query.q || '').trim();
+  let rows = [], tables43 = [];
+  try {
+    tables43 = await db.prepare("SELECT table_name, COUNT(*) AS c FROM trash WHERE table_name IN ('notices','events','press_clippings','daily_content','members','complaints','site_items') GROUP BY table_name ORDER BY c DESC").all();
+    rows = tbl43
+      ? await db.prepare('SELECT * FROM trash WHERE table_name = ? ORDER BY id DESC LIMIT 300').all(tbl43)
+      : await db.prepare("SELECT * FROM trash WHERE table_name IN ('notices','events','press_clippings','daily_content','members','complaints','site_items') ORDER BY id DESC LIMIT 300").all();
+  } catch (e) {}
+  if (q43) rows = rows.filter(r => (r.table_name || '').includes(q43) || String(r.payload || '').includes(q43));
+  res.render('admin/trash', { rows, q42: q43, tbl43, tables43, restoredFlag: req.query.restored ? Number(req.query.restored) : 0, currentPath: '/moderator/trash', moderatorView: true });
+});
+router.post('/trash/restore-all', ensureModerator, async (req, res) => {
+  const tbl = (req.body.table || '').trim();
+  const allowed = ['notices', 'events', 'press_clippings', 'daily_content', 'members', 'complaints', 'site_items'];
   let rows = [];
-  try { rows = await db.prepare("SELECT * FROM trash WHERE table_name IN ('notices','events','press_clippings','daily_content','members','complaints','site_items') ORDER BY id DESC LIMIT 300").all(); } catch (e) {}
-  res.render('admin/trash', { rows, q42: '', currentPath: '/moderator/trash', moderatorView: true });
+  try {
+    rows = tbl && allowed.includes(tbl)
+      ? await db.prepare('SELECT id FROM trash WHERE table_name = ? ORDER BY id').all(tbl)
+      : await db.prepare(`SELECT id FROM trash WHERE table_name IN ('notices','events','press_clippings','daily_content','members','complaints','site_items') ORDER BY id`).all();
+  } catch (e) {}
+  let n = 0;
+  for (const r of rows.slice(0, 500)) { const rr = await TA42.restoreTrash(db, r.id, req); if (rr.ok) n++; }
+  await TA42.audit(db, req, 'restore-all', tbl || 'trash', null, n + 'টি আইটেম ফেরত');
+  res.redirect('/moderator/trash?restored=' + n);
 });
 router.post('/trash/:id/restore', ensureModerator, async (req, res) => {
   const r = await TA42.restoreTrash(db, req.params.id, req);
@@ -453,7 +476,7 @@ router.get('/sections', ensureModerator, requireScope('content'), async (req, re
   try { rows = await db.prepare('SELECT * FROM site_items WHERE section = ? ORDER BY sort_order, id').all(key); } catch (e) {}
   res.render('admin/sections', { SECTIONS: SECTIONS42, rows, active: key, saved: req.query.saved || null, currentPath: '/moderator/sections', moderatorView: true });
 });
-for (const act of ['add', ':id/save', ':id/toggle', ':id/move', ':id/delete']) {
+for (const act of ['add', ':id/save', ':id/toggle', ':id/move', ':id/delete', ':id/undo', 'reorder']) {
   router.post('/sections/' + act, ensureModerator, requireScope('content'), async (req, res) => {
     // অ্যাডমিন রুটের same লজিক — ছোট ডুপ্লিকেশন এড়াতে রি-ইউজ
     req.url42mod = true;

@@ -77,10 +77,12 @@
     <% } %>
     <a href="/admin/navigation"     class="<%= _active('/admin/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
     <a href="/admin/activity"       class="<%= _active('/admin/activity') %>"><i class="fas fa-clock-rotate-left"></i> অ্যাক্টিভিটি লগ</a>
-    <a href="<%= _isAdmin ? '/admin/trash' : '/moderator/trash' %>" class="<%= _active(_isAdmin ? '/admin/trash' : '/moderator/trash') %>"><i class="fas fa-trash-can"></i> ট্র্যাশ</a>
+    <a href="<%= _isAdmin ? '/admin/trash' : '/moderator/trash' %>" class="<%= _active(_isAdmin ? '/admin/trash' : '/moderator/trash') %>"><i class="fas fa-trash-can"></i> ট্র্যাশ<% if (typeof trashCount42 !== 'undefined' && trashCount42 > 0) { %> <span style="background:#dc2626;color:#fff;border-radius:8px;padding:1px 7px;font-size:.68rem;font-weight:700;"><%= trashCount42 %></span><% } %></a>
     <a href="<%= _isAdmin ? '/admin/sections' : '/moderator/sections' %>" class="<%= _active(_isAdmin ? '/admin/sections' : '/moderator/sections') %>"><i class="fas fa-layer-group"></i> সেকশন আইটেম</a>
     <% if (_isAdmin) { %>
     <a href="/admin/audit" class="<%= _active('/admin/audit') %>"><i class="fas fa-file-shield"></i> অডিট লগ</a>
+    <a href="/admin/media" class="<%= _active('/admin/media') %>"><i class="fas fa-photo-film"></i> মিডিয়া লাইব্রেরি</a>
+    <a href="/admin/analytics" class="<%= _active('/admin/analytics') %>"><i class="fas fa-chart-line"></i> অ্যানালিটিক্স</a>
     <% } %>
     <% if (_isAdmin) { %>
     <a href="/admin/tasks"         class="<%= _active('/admin/tasks') %>"><i class="fas fa-tasks"></i> মডারেটর টাস্ক</a>
@@ -108,18 +110,25 @@
   <% } %>
 </aside>
 
-<% if (typeof undoTrash !== 'undefined' && undoTrash) { %>
-<div class="undo-toast" id="undoToast" role="status">
-  <i class="fas fa-trash-restore"></i>
-  <span>আইটেমটি ট্র্যাশে সরানো হয়েছে (৩০ দিন পর্যন্ত ফেরত নেওয়া যাবে)।</span>
-  <button type="button" class="undo-btn" data-undo-restore="<%= _isAdmin ? '/admin' : '/moderator' %>/trash/<%= undoTrash %>/restore"><i class="fas fa-undo"></i> আন্ডু</button>
-</div>
 <style>
   .undo-toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 1200; display: flex; align-items: center; gap: 10px; background: #111827; color: #f9fafb; border-radius: 5px; padding: 12px 18px; box-shadow: 0 8px 28px rgba(0,0,0,.35); font-size: .9rem; transition: opacity .4s, transform .4s; }
   .undo-toast.gone { opacity: 0; transform: translateX(-50%) translateY(12px); pointer-events: none; }
   .undo-toast .undo-btn { background: #059669; color: #fff; border: 0; border-radius: 5px; padding: 7px 14px; font-family: inherit; font-weight: 700; cursor: pointer; }
   .undo-toast .undo-btn:hover { background: #047857; }
 </style>
+<% if (typeof undoBulk42 !== 'undefined' && undoBulk42) { %>
+<div class="undo-toast" id="undoToast" role="status">
+  <i class="fas fa-eye"></i>
+  <span>বাল্ক "<%= undoBulk42.mode === 'publish' ? 'প্রকাশ' : 'লুকান' %>" প্রযোজ্য হয়েছে (<%= undoBulk42.ids.length %>টি)।</span>
+  <button type="button" class="undo-btn" data-undo-bulk="<%= undoBulk42.base %>" data-undo-mode="<%= undoBulk42.mode === 'publish' ? 'hide' : 'publish' %>" data-undo-ids="<%= undoBulk42.ids.join(',') %>"><i class="fas fa-undo"></i> আন্ডু</button>
+</div>
+<% } %>
+<% if (typeof undoTrash !== 'undefined' && undoTrash) { %>
+<div class="undo-toast" id="undoToast" role="status">
+  <i class="fas fa-trash-restore"></i>
+  <span>আইটেমটি ট্র্যাশে সরানো হয়েছে (৩০ দিন পর্যন্ত ফেরত নেওয়া যাবে)।</span>
+  <button type="button" class="undo-btn" data-undo-restore="<%= _isAdmin ? '/admin' : '/moderator' %>/trash/<%= undoTrash %>/restore"><i class="fas fa-undo"></i> আন্ডু</button>
+</div>
 <% } %>
 <div class="toast-zone" id="toastZone"></div>
 
@@ -296,6 +305,63 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectCsrf42);
   else injectCsrf42();
+
+  /* ── সেশন ৪৩: বাল্ক-টগল আন্ডু টোস্ট ── */
+  function initUndoBulk43() {
+    try {
+      var b = document.querySelector('[data-undo-bulk]');
+      if (!b) return;
+      b.addEventListener('click', function () {
+        b.disabled = true;
+        var fd = new URLSearchParams();
+        fd.set('mode', b.getAttribute('data-undo-mode'));
+        b.getAttribute('data-undo-ids').split(',').forEach(function (id) { fd.append('ids', id); });
+        var m = document.querySelector('meta[name="csrf-token"]');
+        if (m) fd.set('_csrf', m.content);
+        fetch(b.getAttribute('data-undo-bulk') + '/bulk-toggle', { method: 'POST', body: fd, credentials: 'same-origin' })
+          .then(function () { location.href = b.getAttribute('data-undo-bulk') + '?saved=1'; });
+      });
+      setTimeout(function () { var t = b.closest('.undo-toast'); if (t) t.classList.add('gone'); }, 9000);
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initUndoBulk43);
+  else initUndoBulk43();
+
+  /* ── সেশন ৪৩: কীবোর্ড শর্টকাট — Shift+ক্লিক রেঞ্জ, Esc ক্লিয়ার, Delete বাল্ক-ডিলিট ── */
+  function initKeys43() {
+    try {
+      var lastIdx = -1;
+      document.addEventListener('click', function (e) {
+        var cb = e.target.closest ? e.target.closest('input[name="bulk_ids"]') : null;
+        if (!cb || !e.shiftKey || lastIdx < 0) { if (cb) lastIdx = Array.prototype.indexOf.call(document.querySelectorAll('input[name="bulk_ids"]'), cb); return; }
+        var boxes = Array.prototype.slice.call(document.querySelectorAll('input[name="bulk_ids"]'));
+        var cur = boxes.indexOf(cb);
+        var from = Math.min(lastIdx, cur), to = Math.max(lastIdx, cur);
+        for (var i = from; i <= to; i++) boxes[i].checked = cb.checked;
+        boxes.forEach(function (b) { b.dispatchEvent(new Event('change', { bubbles: true })); });
+      }, true);
+      document.addEventListener('keydown', function (e) {
+        var boxes = Array.prototype.slice.call(document.querySelectorAll('input[name="bulk_ids"]'));
+        if (e.key === 'Escape' && boxes.length) {
+          boxes.forEach(function (b) { b.checked = false; b.dispatchEvent(new Event('change', { bubbles: true })); });
+          var all = document.querySelector('[data-bulk-all]'); if (all) all.checked = false;
+          return;
+        }
+        var tag = (document.activeElement && document.activeElement.tagName) || '';
+        if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+        if (!boxes.length) return;
+        if (e.key === 'Delete') {
+          var sel = boxes.filter(function (b) { return b.checked; });
+          if (sel.length && window.confirm(sel.length + 'টি সিলেক্টেড আইটেম মুছে ফেলবেন?')) {
+            var bar = document.getElementById('bulkBar');
+            if (bar) bar.querySelector('button.btn-danger').click();
+          }
+        }
+      });
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initKeys43);
+  else initKeys43();
 
   /* ── সেশন ৪২: টেবিল ইনস্ট্যান্ট সার্চ-ফিল্টার (যেকোনো data-table-filter ইনপুট) ── */
   function initTableFilter() {

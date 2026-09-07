@@ -16,9 +16,16 @@
       <h1><i class="fas fa-file-shield"></i> অডিট লগ</h1>
       <p class="subtitle">কে, কখন, কোন টেবিলে কী করল — ডিলিট/এডিট/বাল্ক/রিস্টোর সবকিছোর হিসাব (<%= total42 %> টি)</p>
     </div>
-    <form method="GET" style="display:flex;gap:8px;">
-      <input type="search" name="q" value="<%= q42 %>" placeholder="নাম/অ্যাকশন/টেবিল" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
-      <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
+    <form method="GET" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="search" name="q" value="<%= q42 %>" placeholder="নাম/টেবিল" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
+      <select name="action" style="padding:9px 8px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
+        <option value="">সব অ্যাকশন</option>
+        <% (actions43 || []).forEach(a2 => { %><option value="<%= a2.action %>" <%= act43 === a2.action ? 'selected' : '' %>><%= a2.action %></option><% }); %>
+      </select>
+      <input type="date" name="from" value="<%= from43 %>" style="padding:8px;border:1px solid #d1d5db;border-radius:5px;" title="শুরু">
+      <input type="date" name="to" value="<%= to43 %>" style="padding:8px;border:1px solid #d1d5db;border-radius:5px;" title="শেষ">
+      <button class="btn btn-sm" type="submit"><i class="fas fa-filter"></i> ফিল্টার</button>
+      <a class="btn btn-primary btn-sm" href="/admin/audit/export.csv?q=<%= encodeURIComponent(q42) %>&action=<%= encodeURIComponent(act43) %>&from=<%= from43 %>&to=<%= to43 %>"><i class="fas fa-file-csv"></i> CSV</a>
     </form>
   </div>
 

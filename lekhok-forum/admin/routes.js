@@ -457,6 +457,15 @@ router.post('/content', requireAdmin, contentImageUpload, async (req, res) => {
       }
       if (!(key in req.body)) continue;
       const val = typeof req.body[key] === 'string' ? req.body[key].replace(/\r\n/g, '\n').trim() : '';
+      // সেশন ৪৩: রিভিশন হিস্ট্রি — overwrite-এর আগে পুরনো মান (সর্বশেষ ১০)
+      try {
+        const old43 = await db.getSetting('content_' + key);
+        if (old43 !== null && old43 !== val) {
+          await db.prepare("INSERT INTO content_revisions (key, value, saved_by, saved_at) VALUES (?,?,?, datetime('now','localtime'))")
+            .run('content_' + key, String(old43), req.session.adminUser ? req.session.adminUser.username : (req.session.user ? req.session.user.username : '?'));
+          await db.prepare('DELETE FROM content_revisions WHERE key = ? AND id NOT IN (SELECT id FROM content_revisions WHERE key = ? ORDER BY id DESC LIMIT 10)').run('content_' + key, 'content_' + key);
+        }
+      } catch (e) {}
       await setSetting('content_' + key, val);   // খালি = ডিফল্ট fallback
       saved++;
     }
@@ -575,7 +584,7 @@ for (const slug42 of Object.keys(TOGGLEABLE42)) {
       try { await db.prepare(`UPDATE ${table42} SET is_active = ? WHERE id = ?`).run(on, id); } catch (e) {}
     }
     await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', table42, null, ids.length + 'টি আইটেম');
-    res.redirect(`/admin/${slug42}?saved=1`);
+    res.redirect(`/admin/${slug42}?saved=1&undo_mode=${on ? 'publish' : 'hide'}&undo_ids=${ids.join(',')}&undo_base=/admin/${slug42}`);
   });
 }
 
@@ -652,7 +661,12 @@ router.get('/messages', requireAdmin, async (req, res) => {
 // ── Newsletter subscribers (visible to admin AND moderators) ─────────────────
 // সেশন ৪২: সাবস্ক্রাইবার CSV এক্সপোর্ট
 router.get('/subscribers/export.csv', requireAdmin, async (req, res) => {
-  const rows = await db.prepare('SELECT id, email, is_active, created_at FROM newsletter_subscribers ORDER BY id').all();
+  const st43 = (req.query.status || '').trim();
+  const rows = st43 === 'active'
+    ? await db.prepare('SELECT id, email, is_active, created_at FROM newsletter_subscribers WHERE is_active = 1 ORDER BY id').all()
+    : st43 === 'inactive'
+      ? await db.prepare('SELECT id, email, is_active, created_at FROM newsletter_subscribers WHERE is_active = 0 ORDER BY id').all()
+      : await db.prepare('SELECT id, email, is_active, created_at FROM newsletter_subscribers ORDER BY id').all();
   await TA42.audit(db, req, 'export-csv', 'newsletter_subscribers', null, rows.length + ' সারি');
   const esc = v => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
   const csv = '\uFEFF' + ['id,email,is_active,created_at'].concat(
@@ -1102,21 +1116,40 @@ router.post('/tasks/:id/delete', requireAdmin, async (req, res) => {
 // ═══ সেশন ৪২: ট্র্যাশ (সফট-ডিলিট, ৩০ দিন রিস্টোর) ═══
 router.get('/trash', requireStaff, async (req, res) => {
   const q42 = (req.query.q || '').trim();
+  const tbl43 = (req.query.table || '').trim();
   let rows = [];
   try {
-    rows = q42
+    if (tbl43) rows = await db.prepare('SELECT * FROM trash WHERE table_name = ? ORDER BY id DESC LIMIT 500').all(tbl43);
+    else rows = q42
       ? await db.prepare('SELECT * FROM trash WHERE table_name LIKE ? OR deleted_by_name LIKE ? ORDER BY id DESC LIMIT 300').all('%' + q42 + '%', '%' + q42 + '%')
       : await db.prepare('SELECT * FROM trash ORDER BY id DESC LIMIT 300').all();
   } catch (e) {}
+  let tables43 = [];
+  try { tables43 = await db.prepare('SELECT table_name, COUNT(*) AS c FROM trash GROUP BY table_name ORDER BY c DESC').all(); } catch (e) {}
   const left = await (async () => { try { return (await db.prepare("SELECT COUNT(*) AS c FROM trash WHERE deleted_at < datetime('now','-30 days','localtime')").get()).c; } catch (e) { return 0; } })();
   if (left) await TA42.purgeExpired(db);
-  res.render('admin/trash', { rows, q42, currentPath: '/admin/trash' });
+  res.render('admin/trash', { rows, q42, tbl43, tables43, currentPath: '/admin/trash' });
 });
 router.post('/trash/:id/restore', requireStaff, async (req, res) => {
   const r = await TA42.restoreTrash(db, req.params.id, req);
   if (req.is('json') || req.headers.accept === 'application/json') return res.json({ ok: r.ok, error: r.error || null, redirect: r.ok ? '?restored=1' : '?error=1' });
   res.redirect('/admin/trash' + (r.ok ? '?restored=1' : '?error=' + encodeURIComponent(r.error || 'ব্যর্থ')));
 });
+// সেশন ৪৩: সব ফেরত (গ্লোবাল বা টেবিল-ভিত্তিক)
+router.post('/trash/restore-all', requireStaff, async (req, res) => {
+  const tbl = (req.body.table || '').trim();
+  let rows = [];
+  try {
+    rows = tbl
+      ? await db.prepare('SELECT id FROM trash WHERE table_name = ? ORDER BY id').all(tbl)
+      : await db.prepare('SELECT id FROM trash ORDER BY id').all();
+  } catch (e) {}
+  let n = 0;
+  for (const r of rows.slice(0, 500)) { const rr = await TA42.restoreTrash(db, r.id, req); if (rr.ok) n++; }
+  await TA42.audit(db, req, 'restore-all', tbl || 'trash', null, n + 'টি আইটেম ফেরত');
+  res.redirect('/admin/trash?restored=' + n);
+});
+
 router.post('/trash/:id/purge', requireAdmin, async (req, res) => {
   await TA42.purgeTrash(db, req.params.id);
   await TA42.audit(db, req, 'purge', 'trash', req.params.id, 'স্থায়ী মুছে ফেলা');
@@ -1124,22 +1157,52 @@ router.post('/trash/:id/purge', requireAdmin, async (req, res) => {
 });
 
 // ═══ সেশন ৪২: অডিট লগ ═══
+// সেশন ৪৩: অডিট CSV এক্সপোর্ট (ফিল্টারসহ)
+router.get('/audit/export.csv', requireAdmin, async (req, res) => {
+  const { where43, args43 } = auditFilter43(req);
+  let rows = [];
+  try { rows = await db.prepare('SELECT * FROM audit_log ' + where43 + ' ORDER BY id DESC LIMIT 5000').all(...args43); } catch (e) {}
+  await TA42.audit(db, req, 'export-csv', 'audit_log', null, rows.length + ' সারি');
+  const esc = v => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const csv = '\uFEFF' + ['id,created_at,actor_name,action,table_name,item_id,detail'].concat(
+    rows.map(r => [r.id, r.created_at, r.actor_name, r.action, r.table_name, r.item_id, r.detail].map(esc).join(','))
+  ).join('\r\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="audit-log.csv"');
+  res.send(csv);
+});
+function auditFilter43(req) {
+  const conds = [], args = [];
+  const q = (req.query.q || '').trim();
+  if (q) { conds.push('(actor_name LIKE ? OR action LIKE ? OR table_name LIKE ?)'); args.push('%' + q + '%', '%' + q + '%', '%' + q + '%'); }
+  const act = (req.query.action || '').trim();
+  if (act) { conds.push('action = ?'); args.push(act); }
+  const from = (req.query.from || '').trim();
+  if (from) { conds.push("created_at >= ?"); args.push(from + ' 00:00:00'); }
+  const to = (req.query.to || '').trim();
+  if (to) { conds.push("created_at <= ?"); args.push(to + ' 23:59:59'); }
+  return { where43: conds.length ? 'WHERE ' + conds.join(' AND ') : '', args43: args };
+}
+
 router.get('/audit', requireAdmin, async (req, res) => {
   const q42 = (req.query.q || '').trim();
+  const f43 = auditFilter43(req);
   const page42 = Math.max(1, parseInt(req.query.page, 10) || 1);
   const PER42 = 30;
   let rows = [];
   let total42 = 0;
   try {
-    if (q42) {
-      rows = await db.prepare('SELECT * FROM audit_log WHERE actor_name LIKE ? OR action LIKE ? OR table_name LIKE ? ORDER BY id DESC LIMIT 300').all('%' + q42 + '%', '%' + q42 + '%', '%' + q42 + '%');
+    if (f43.where43) {
+      rows = await db.prepare('SELECT * FROM audit_log ' + f43.where43 + ' ORDER BY id DESC LIMIT 300').all(...f43.args43);
       total42 = rows.length;
     } else {
       total42 = (await db.prepare('SELECT COUNT(*) AS c FROM audit_log').get()).c;
       rows = await db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT ? OFFSET ?').all(PER42, (page42 - 1) * PER42);
     }
   } catch (e) {}
-  res.render('admin/audit', { rows, q42, page42, pages42: Math.max(1, Math.ceil(total42 / PER42)), total42, currentPath: '/admin/audit' });
+  let actions43 = [];
+  try { actions43 = await db.prepare('SELECT DISTINCT action FROM audit_log ORDER BY action').all(); } catch (e) {}
+  res.render('admin/audit', { rows, q42, page42, pages42: Math.max(1, Math.ceil(total42 / PER42)), total42, currentPath: '/admin/audit', act43: (req.query.action || ''), from43: (req.query.from || ''), to43: (req.query.to || ''), actions43 });
 });
 
 // ═══ সেশন ৪২: সেকশন আইটেম ম্যানেজার (সাইটের হার্ডকোডেড সেকশনগুলো এখন DB-চালিত) ═══
@@ -1153,19 +1216,40 @@ router.get('/sections', requireStaff, async (req, res) => {
 router.post('/sections/add', requireStaff, async (req, res) => {
   const sec = SECTIONS42[req.body.section] ? req.body.section : 'home_faq';
   const mx = await db.prepare('SELECT MAX(sort_order) AS m FROM site_items WHERE section = ?').get(sec);
-  await db.prepare(`INSERT INTO site_items (section, sort_order, title, subtitle, body, icon, extra, is_active, created_at) VALUES (?,?,?,?,?,?,?,?, datetime('now','localtime'))`)
-    .run(sec, (mx && mx.m || 0) + 1, req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', 1);
+  await db.prepare(`INSERT INTO site_items (section, sort_order, title, subtitle, body, icon, extra, image, is_active, created_at) VALUES (?,?,?,?,?,?,?,?,?, datetime('now','localtime'))`)
+    .run(sec, (mx && mx.m || 0) + 1, req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', req.body.image || '', 1);
   await TA42.audit(db, req, 'add', 'site_items:' + sec, null, req.body.title || '');
   res.redirect('/admin/sections?section=' + sec + '&saved=1');
 });
 router.post('/sections/:id/save', requireStaff, async (req, res) => {
   const row = await db.prepare('SELECT section FROM site_items WHERE id = ?').get(req.params.id);
   if (!row) return res.redirect('/admin/sections');
-  await db.prepare('UPDATE site_items SET title = ?, subtitle = ?, body = ?, icon = ?, extra = ? WHERE id = ?')
-    .run(req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', req.params.id);
+  const prev43 = await db.prepare('SELECT * FROM site_items WHERE id = ?').get(req.params.id);
+  await db.prepare('UPDATE site_items SET title = ?, subtitle = ?, body = ?, icon = ?, extra = ?, image = ? WHERE id = ?')
+    .run(req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', req.body.image || '', req.params.id);
   await TA42.audit(db, req, 'edit', 'site_items:' + row.section, req.params.id, req.body.title || '');
-  res.redirect('/admin/sections?section=' + row.section + '&saved=1');
+  req.session.undoSec43 = { id: Number(req.params.id), prev: prev43 };
+  res.redirect('/admin/sections?section=' + row.section + '&saved=1&undo_sec=' + req.params.id);
 });
+// সেশন ৪৩: সেকশন-এডিট আন্ডু (সেশন-স্ন্যাপশট) + ড্র্যাগ-রিঅর্ডার
+router.post('/sections/:id/undo', requireStaff, async (req, res) => {
+  const u = req.session.undoSec43;
+  if (!u || String(u.id) !== String(req.params.id)) return res.redirect('/admin/sections');
+  await db.prepare('UPDATE site_items SET title = ?, subtitle = ?, body = ?, icon = ?, extra = ?, image = ? WHERE id = ?')
+    .run(u.prev.title || '', u.prev.subtitle || '', u.prev.body || '', u.prev.icon || '', u.prev.extra || '', u.prev.image || '', u.id);
+  req.session.undoSec43 = null;
+  await TA42.audit(db, req, 'undo', 'site_items:' + (u.prev.section || ''), u.id, 'আগের সংস্করণে ফেরত');
+  res.redirect('/admin/sections?section=' + (u.prev.section || '') + '&saved=1');
+});
+router.post('/sections/reorder', requireStaff, async (req, res) => {
+  const sec = SECTIONS42[req.body.section] ? req.body.section : 'home_faq';
+  const ids = [].concat(req.body.ids || []).map(Number).filter(n => n > 0);
+  let i = 1;
+  for (const id of ids) { try { await db.prepare('UPDATE site_items SET sort_order = ? WHERE id = ? AND section = ?').run(i++, id, sec); } catch (e) {} }
+  await TA42.audit(db, req, 'reorder', 'site_items:' + sec, null, ids.length + 'টি আইটেম');
+  res.redirect('/admin/sections?section=' + sec + '&saved=1');
+});
+
 router.post('/sections/:id/toggle', requireStaff, async (req, res) => {
   const row = await db.prepare('SELECT section, is_active FROM site_items WHERE id = ?').get(req.params.id);
   if (row) {
@@ -1194,6 +1278,72 @@ router.post('/sections/:id/delete', requireStaff, async (req, res) => {
     await TA42.audit(db, req, 'delete', 'site_items:' + row.section, req.params.id, '');
   }
   res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1' + (tid42 ? '&trashed=' + tid42 : ''));
+});
+
+// ═══ সেশন ৪৩: কনটেন্ট রিভিশন হিস্ট্রি ═══
+router.get('/content/history', requireAdmin, async (req, res) => {
+  const key = (req.query.key || '').trim();
+  let rows = [];
+  let keys43 = [];
+  try { keys43 = await db.prepare('SELECT DISTINCT key FROM content_revisions ORDER BY key').all(); } catch (e) {}
+  if (key) { try { rows = await db.prepare('SELECT * FROM content_revisions WHERE key = ? ORDER BY id DESC LIMIT 10').all(key); } catch (e) {} }
+  res.render('admin/content-history', { rows, keys43, key, currentPath: '/admin/content' });
+});
+router.post('/content/restore', requireAdmin, async (req, res) => {
+  const rev = await db.prepare('SELECT * FROM content_revisions WHERE id = ?').get(req.body.rev_id);
+  if (!rev) return res.redirect('/admin/content/history?error=1');
+  await setSetting(rev.key, rev.value);
+  await TA42.audit(db, req, 'content-restore', 'settings', null, rev.key + ' → rev#' + rev.id);
+  res.redirect('/admin/content/history?key=' + encodeURIComponent(rev.key) + '&saved=1');
+});
+
+// ═══ সেশন ৪৩: মিডিয়া লাইব্রেরি ═══
+const fs43 = require('fs');
+const path43 = require('path');
+router.get('/media', requireAdmin, async (req, res) => {
+  const items = [];
+  const root = path43.join(__dirname, '..', 'public', 'uploads');
+  (function walk(dir, rel) {
+    let ents = [];
+    try { ents = fs43.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+    for (const en of ents) {
+      const p = path43.join(dir, en.name), r = rel + '/' + en.name;
+      if (en.isDirectory()) walk(p, r);
+      else if (/\.(png|jpe?g|webp|gif|svg|avif)$/i.test(en.name)) {
+        let st = null; try { st = fs43.statSync(p); } catch (e) {}
+        items.push({ url: '/uploads' + r, name: en.name, size: st ? st.size : 0, mtime: st ? new Date(st.mtime).toISOString().slice(0, 10) : '' });
+      }
+    }
+  })(root, '');
+  items.sort((a, b) => b.mtime.localeCompare(a.mtime));
+  res.render('admin/media', { items, currentPath: '/admin/media' });
+});
+router.post('/media/delete', requireAdmin, async (req, res) => {
+  const url = String(req.body.url || '');
+  if (!url.startsWith('/uploads/')) return res.redirect('/admin/media?error=1');
+  const p = path43.join(__dirname, '..', 'public', url);
+  try { fs43.unlinkSync(p); await TA42.audit(db, req, 'media-delete', 'uploads', null, url); } catch (e) {}
+  res.redirect('/admin/media?saved=1');
+});
+
+// ═══ সেশন ৪৩: অ্যাডমিন অ্যানালিটিক্স (৩০ দিন) ═══
+router.get('/analytics', requireAdmin, async (req, res) => {
+  const series43 = async (table, col) => {
+    const out = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      const ds = d.toISOString().slice(0, 10);
+      let c = 0;
+      try { c = (await db.prepare(`SELECT COUNT(*) AS c FROM ${table} WHERE substr(${col},1,10) = ?`).get(ds)).c; } catch (e) {}
+      out.push({ d: ds, c });
+    }
+    return out;
+  };
+  const subs = await series43('newsletter_subscribers', 'created_at');
+  const posts = await series43('posts', 'created_at');
+  const notices = await series43('notices', 'created_at');
+  const tot = a => a.reduce((x, y) => x + y.c, 0);
+  res.render('admin/analytics', { subs, posts, notices, totSubs: tot(subs), totPosts: tot(posts), totNotices: tot(notices), currentPath: '/admin/analytics' });
 });
 
 module.exports = router;
