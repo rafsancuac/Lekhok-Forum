@@ -75,7 +75,8 @@ router.get('/', async (req, res) => {
     } catch(e) { q.topAnswer = null; }
   }
 
-  res.render('lekhok-home', {
+  const faqItems42 = await db.getSectionItems('home_faq');
+  res.render('lekhok-home', { faqItems42,
     layout: 'layout',
     pageTitle: 'হোম',
     currentPath: '/',
@@ -205,7 +206,10 @@ router.get('/notices', async (req, res) => {
 
 // ── Contact ──────────────────────────────────────────────────────────────────
 router.get('/contact', async (req, res) => {
-  res.render('lekhok-contact', {
+  const ch42 = await db.getSectionItems('contact_channels');
+  const uni42 = await db.getSectionItems('contact_university');
+  const tr42 = await db.getSectionItems('contact_transport');
+  res.render('lekhok-contact', { ch42, uni42, tr42,
     layout: 'layout',
     pageTitle: 'যোগাযোগ',
     currentPath: '/contact',

@@ -160,6 +160,7 @@ router.get('/dashboard', async (req, res) => {
 
   res.render('user/dashboard', {
     feed, filter, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
+    user: req.session.user || null,
     currentPath: '/dashboard'
   });
 });

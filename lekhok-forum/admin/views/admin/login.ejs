@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="bn" dir="ltr">
 <head>
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>লগইন — লেখক ফোরাম অ্যাডমিন</title>
@@ -116,5 +117,21 @@
       <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> মূল সাইটে ফিরে যান</a>
     </div>
   </div>
+<script>
+  (function () {
+    function inj() {
+      var m = document.querySelector('meta[name="csrf-token"]');
+      if (!m || !m.content) return;
+      document.querySelectorAll('form').forEach(function (f) {
+        if ((f.getAttribute('method') || '').toLowerCase() !== 'post') return;
+        if (f.querySelector('input[name="_csrf"]')) return;
+        var i = document.createElement('input');
+        i.type = 'hidden'; i.name = '_csrf'; i.value = m.content;
+        f.prepend(i);
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inj); else inj();
+  })();
+</script>
 </body>
 </html>

@@ -465,7 +465,8 @@ const MODERATOR_SCOPES = [
   { key: 'notice',      label: 'বিজ্ঞপ্তি' },
   { key: 'epaper',      label: 'আজকের ই-পেপার' },
   { key: 'event',       label: 'ইভেন্ট পেইজ' },
-  { key: 'complaints',  label: 'অভিযোগ দেখা' }
+  { key: 'complaints',  label: 'অভিযোগ দেখা' },
+  { key: 'content',     label: 'সেকশন কন্টেন্ট (সেশন ৪২)' }
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1174,7 +1175,7 @@ async function runMigrations() {
 const BOOT_CACHE_VERSION = 'v1';
 function bootFingerprint() {
   const crypto = require('crypto');
-  const fns = [runMigrations, applyLaterMigrations, seedAdmin, seedIfEmptyLocal,
+  const fns = [runMigrations, applyLaterMigrations, applySession42Migrations, seedAdmin, seedIfEmptyLocal,
                seedDemoContent, ensureDemoModerator];
   return crypto.createHash('md5')
     .update(BOOT_CACHE_VERSION + '|' + fns.map(f => f.toString()).join('§'))
@@ -1221,6 +1222,7 @@ async function initDb() {
 
   await runMigrations();
   await applyLaterMigrations();
+  await applySession42Migrations();
 
   // Seed if empty (Turso + local)
   if (IS_TURSO) {
@@ -1297,6 +1299,63 @@ async function initDb() {
 // unify the old plural/split keys ('notices'/'events' on /admin vs
 // 'notice'/'event' on /moderator) — plural legacy keys are also granted so
 // older exact-match UI checks keep showing the right checkbox state.
+// ── সেশন ৪২ মাইগ্রেশন: ট্র্যাশ (সফট-ডিলিট), অডিট লগ, সাইট-সেকশন আইটেম ──
+async function applySession42Migrations() {
+  // (42a) টেবিল তৈরি
+  await backend.prepare(`CREATE TABLE IF NOT EXISTS trash (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    table_name TEXT NOT NULL,
+    item_id INTEGER NOT NULL,
+    payload TEXT NOT NULL,
+    deleted_by INTEGER,
+    deleted_by_name TEXT,
+    deleted_at TEXT NOT NULL
+  )`).run();
+  await backend.prepare(`CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_id INTEGER,
+    actor_name TEXT,
+    action TEXT NOT NULL,
+    table_name TEXT,
+    item_id INTEGER,
+    detail TEXT,
+    created_at TEXT NOT NULL
+  )`).run();
+  await backend.prepare(`CREATE TABLE IF NOT EXISTS site_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    section TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    title TEXT,
+    subtitle TEXT,
+    body TEXT,
+    icon TEXT,
+    extra TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT
+  )`).run();
+
+  // (42b) site_items সিড — রেজিস্ট্রির defaults থেকে (প্রতি সেকশনে একবারই)
+  try {
+    const { SECTIONS } = require('./helpers/sections-registry');
+    for (const key of Object.keys(SECTIONS)) {
+      const c = await backend.prepare('SELECT COUNT(*) AS c FROM site_items WHERE section = ?').get(key);
+      if (c && c.c === 0) {
+        let i = 1;
+        for (const d of SECTIONS[key].defaults) {
+          await backend.prepare(`INSERT INTO site_items (section, sort_order, title, subtitle, body, icon, extra, is_active, created_at)
+                                 VALUES (?,?,?,?,?,?,?,?, datetime('now','localtime'))`)
+            .run(key, i++, d.title || '', d.subtitle || '', d.body || '', d.icon || '', d.extra || '', 1);
+        }
+      }
+    }
+  } catch (e) { console.error('[db] site_items seed (non-fatal):', e.message); }
+
+  // (42c) ৩০ দিনের পুরনো ট্র্যাশ পার্জ
+  try {
+    await backend.prepare(`DELETE FROM trash WHERE deleted_at < datetime('now', '-30 days', 'localtime')`).run();
+  } catch (e) {}
+}
+
 async function ensureDemoModerator() {
   const DEMO_MOD = {
     username: 'moderator',
@@ -1308,6 +1367,7 @@ async function ensureDemoModerator() {
   const scopes = [
     // canonical (moderator panel + catalogue)
     'quiz', 'this_day', 'best_writer', 'activity', 'notice', 'epaper', 'event', 'complaints',
+    'content',
     // admin-panel feature scopes
     'daily', 'gallery',
     // legacy plural variants (kept so admin checkbox UI state stays accurate)
@@ -1851,10 +1911,21 @@ async function logActivity(entry) {
   } catch (e) { /* টেবিল নেই (পুরনো বুট) বা লেখ ব্যর্থ — নীরবে উপেক্ষা */ }
 }
 
+// সেশন ৪২: পাবলিক সেকশন আইটেম (DB → না থাকলে রেজিস্ট্রি defaults)
+async function getSectionItems(section) {
+  try {
+    const rows = await prepare('SELECT * FROM site_items WHERE section = ? AND is_active = 1 ORDER BY sort_order, id').all(section);
+    if (rows && rows.length) return rows;
+  } catch (e) {}
+  const { SECTIONS } = require('./helpers/sections-registry');
+  return ((SECTIONS[section] || {}).defaults || []).map((d, i) => ({ id: null, section, sort_order: i + 1, title: d.title || '', subtitle: d.subtitle || '', body: d.body || '', icon: d.icon || '', extra: d.extra || '', is_active: 1 }));
+}
+
 module.exports = {
   initDb,
   get db()       { return _sqlJsDb; },  // legacy direct access (sql.js only)
   prepare,
+  getSectionItems,
   exec,
   getSetting,
   getSettingsAll,

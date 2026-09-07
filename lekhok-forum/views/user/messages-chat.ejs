@@ -532,9 +532,10 @@
       }
 
       try {
+        const csrfM42 = document.querySelector('meta[name="csrf-token"]');
         const res = await fetch(sendUrl, {
           method: 'POST', body: fd,
-          headers: { 'Accept': 'application/json' },   // JSON-এ id ফেরত → optimistic বাবল swap, ডুপ্লিকেট নয়
+          headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrfM42 ? csrfM42.content : '' },   // JSON-এ id ফেরত → optimistic বাবল swap, ডুপ্লিকেট নয়
           redirect: 'manual'
         });
         // redirect: 'manual' returns opaqueredirect (type) or 0 status — both mean success

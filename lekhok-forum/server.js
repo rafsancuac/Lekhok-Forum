@@ -85,6 +85,39 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
+// ── সেশন ৪২: CSRF প্রোটেকশন (ফর্ম-ভিত্তিক) + নিউজলেটার রেট-লিমিট + আন্ডু-লোকাল ──
+const crypto42 = require('crypto');
+app.use((req, res, next) => {
+  try {
+    if (!req.session.csrfToken) req.session.csrfToken = crypto42.randomBytes(18).toString('hex');
+    res.locals.csrfToken = req.session.csrfToken;
+    res.locals.undoTrash = req.query.trashed || null;
+    res.locals.restoredFlag = req.query.restored || null;
+  } catch (e) { return next(); }
+  if (req.method === 'POST' && (req.is('urlencoded') || req.is('multipart'))) {
+    const tok = (req.body && req.body._csrf) || req.headers['x-csrf-token'] || req.query._csrf;
+    if (tok !== req.session.csrfToken) {
+      console.warn('[csrf] blocked', req.method, req.originalUrl);
+      return res.status(403).send('নিরাপত্তা যাচাই ব্যর্থ হয়েছে — পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।');
+    }
+  }
+  next();
+});
+
+// নিউজলেটার সাবস্ক্রাইব রেট-লিমিট: প্রতি IP-তে ১০ মিনিটে সর্বোচ্চ ৩বার
+const _nlHits42 = new Map();
+app.use('/api/newsletter/subscribe', (req, res, next) => {
+  if (req.method !== 'POST') return next();
+  const ip = req.ip || req.connection.remoteAddress || 'x';
+  const now = Date.now();
+  const arr = (_nlHits42.get(ip) || []).filter(t => now - t < 10 * 60 * 1000);
+  if (arr.length >= 3) {
+    return res.status(429).json({ ok: false, error: 'অনেকবার চেষ্টা হয়েছে — ১০ মিনিট পর আবার চেষ্টা করুন।' });
+  }
+  arr.push(now); _nlHits42.set(ip, arr);
+  next();
+});
+
 // ── "সেভের পর ৪০৪"-এর পার্মানেন্ট ফিক্স (Vercel serverless) ──────────────────
 // স্ন্যাপশট-মোডে POST লেখে ইনস্ট্যান্স A-তে; রিডাইরেক্টের GET নামতে পারে ইনস্ট্যান্স B-তে,
 // তখনো স্ন্যাপশট আপলোড না হয়ে থাকলে B পুরনো DB দেখে → নতুন রো নেই → ৪০৪।

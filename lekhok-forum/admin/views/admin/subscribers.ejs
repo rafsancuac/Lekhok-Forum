@@ -42,7 +42,17 @@
   <% const isAdmin = (typeof adminUser !== 'undefined' && adminUser) || (typeof user !== 'undefined' && user && user.role === 'admin'); %>
 
   <div class="admin-header" style="margin-top:8px;">
-    <h2 style="font-size:1.15rem;">সাবস্ক্রাইবার তালিকা</h2>
+    <h2 style="font-size:1.15rem;">সাবস্ক্রাইবার তালিকা <span style="font-size:.8rem;color:#6b7280;">(মোট <%= total42 %> টি)</span></h2>
+    <form method="GET" style="display:flex;gap:8px;align-items:center;">
+      <input type="search" name="q" value="<%= q42 %>" placeholder="ইমেইল খুঁজুন…" style="padding:8px 12px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
+      <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i></button>
+      <% if (q42) { %><a class="btn btn-sm" href="/admin/subscribers">রিসেট</a><% } %>
+    </form>
+    <span style="display:flex;gap:6px;align-items:center;font-size:.83rem;">
+      <% if (page42 > 1) { %><a class="btn btn-sm" href="?page=<%= page42 - 1 %>">←</a><% } %>
+      পেজ <%= page42 %>/<%= pages42 %>
+      <% if (page42 < pages42) { %><a class="btn btn-sm" href="?page=<%= page42 + 1 %>">→</a><% } %>
+    </span>
     <a class="btn btn-primary btn-sm" href="/admin/subscribers/export"><i class="fas fa-file-csv"></i> CSV ডাউনলোড</a>
   </div>
   <% if (subs.length === 0) { %>
@@ -52,6 +62,8 @@
   <form method="POST" action="/admin/subscribers/bulk-delete" class="bulk-bar" id="bulkBar">
     <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
     <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড সাবস্ক্রাইবারগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+    <button type="submit" name="mode" value="publish" formaction="/admin/subscribers/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড সাবস্ক্রাইবারগুলো প্রকাশ করবে?"><i class="fas fa-eye"></i> প্রকাশ</button>
+    <button type="submit" name="mode" value="hide" formaction="/admin/subscribers/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড সাবস্ক্রাইবারগুলো লুকাবে?"><i class="fas fa-eye-slash"></i> লুকান</button>
   </form>
   <table>
     <thead>

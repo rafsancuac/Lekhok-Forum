@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>সেকশন আইটেম | লেখক ফোরাম</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    .sec-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .sec-tab { padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 5px; font-size: .85rem; font-weight: 600; color: #374151; text-decoration: none; background: #fff; }
+    .sec-tab.active { background: #059669; border-color: #059669; color: #fff; }
+    .sec-item { border: 1px solid #e5e7eb; border-radius: 5px; margin-bottom: 10px; background: #fff; }
+    .sec-item summary { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; list-style: none; }
+    .sec-item summary::-webkit-details-marker { display: none; }
+    .sec-item .ord { font-size: .75rem; color: #6b7280; min-width: 30px; }
+    .sec-item .ttl { font-weight: 700; flex: 1; }
+    .sec-item .off { opacity: .5; }
+    .sec-body { padding: 0 14px 14px; border-top: 1px dashed #e5e7eb; }
+    .sec-body label { display: block; font-size: .8rem; font-weight: 600; margin: 10px 0 4px; color: #374151; }
+    .sec-body input[type=text], .sec-body textarea { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 5px; font-family: inherit; font-size: .9rem; }
+    .mini-btn { border: 1px solid #d1d5db; background: #f9fafb; border-radius: 5px; padding: 5px 10px; font-size: .78rem; cursor: pointer; font-family: inherit; }
+    .mini-btn:hover { background: #e5e7eb; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-layer-group"></i> সেকশন আইটেম ম্যানেজার</h1>
+      <p class="subtitle">সাইটের পাবলিক সেকশনগুলোর আইটেম/কার্ড যোগ, সম্পাদনা, লুকানো, সাজানো ও বাদ দেওয়া — সব পরিবর্তন সাথে সাথে পাবলিক পেজে</p>
+    </div>
+  </div>
+
+  <% if (saved) { %><div class="flash ok"><i class="fas fa-check-circle"></i> সংরক্ষিত হয়েছে — পাবলিক পেজে সাথে সাথে প্রযোজ্য।</div><% } %>
+
+  <div class="sec-tabs">
+    <% Object.keys(SECTIONS).forEach(k => { %>
+    <a class="sec-tab <%= k === active ? 'active' : '' %>" href="?section=<%= k %>"><%= SECTIONS[k].label %></a>
+    <% }); %>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 4px;"><%= SECTIONS[active].label %> <span style="font-size:.8rem;color:#6b7280;">(<%= rows.length %> টি আইটেম)</span></h3>
+    <p style="font-size:.8rem;color:#6b7280;margin:0 0 14px;"><%= SECTIONS[active].hint %></p>
+
+    <% rows.forEach((r, i) => { %>
+    <details class="sec-item">
+      <summary>
+        <span class="ord">#<%= r.sort_order %></span>
+        <span class="ttl <%= r.is_active ? '' : 'off' %>"><%= r.title || '(শিরোনামহীন)' %></span>
+        <% if (!r.is_active) { %><span class="badge" style="background:#fee2e2;color:#b91c1c;border-radius:5px;padding:2px 8px;font-size:.72rem;">লুকানো</span><% } %>
+        <form method="POST" action="?section=<%= active %>" style="display:none;"></form>
+        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/move" style="display:inline;" onsubmit="this.querySelector('[name=dir]').value='up'">
+          <input type="hidden" name="dir" value="up"><button class="mini-btn" type="submit" title="উপরে"><i class="fas fa-arrow-up"></i></button>
+        </form>
+        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/move" style="display:inline;" onsubmit="this.querySelector('[name=dir]').value='down'">
+          <input type="hidden" name="dir" value="down"><button class="mini-btn" type="submit" title="নিচে"><i class="fas fa-arrow-down"></i></button>
+        </form>
+        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/toggle" style="display:inline;">
+          <button class="mini-btn" type="submit" title="লুকান/দেখান"><i class="fas <%= r.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i></button>
+        </form>
+        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/delete" style="display:inline;" onsubmit="return confirm('আইটেমটি বাদ দেবেন? (ট্র্যাশে যাবে, ৩০ দিন ফেরত নেওয়া যাবে)');">
+          <button class="mini-btn" type="submit" title="বাদ দিন" style="color:#b91c1c;"><i class="fas fa-trash"></i></button>
+        </form>
+      </summary>
+      <div class="sec-body">
+        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/save">
+          <label>title (নাম/প্রশ্ন)</label>
+          <input type="text" name="title" value="<%= r.title %>">
+          <label>subtitle (সাব-টেক্সট, ঐচ্ছিক)</label>
+          <input type="text" name="subtitle" value="<%= r.subtitle || '' %>">
+          <label>body (বিবরণ/উত্তর)</label>
+          <textarea name="body" rows="4"><%= r.body || '' %></textarea>
+          <label>icon (Font Awesome ক্লাস, যেমন: fas fa-users)</label>
+          <input type="text" name="icon" value="<%= r.icon || '' %>">
+          <label>extra (লিংক, খালি = লিংক ছাড়া)</label>
+          <input type="text" name="extra" value="<%= r.extra || '' %>">
+          <div style="margin-top:12px;"><button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-save"></i> সংরক্ষণ</button></div>
+        </form>
+      </div>
+    </details>
+    <% }); %>
+
+    <details class="sec-item" style="border-style:dashed;">
+      <summary><span class="ttl"><i class="fas fa-plus" style="color:#059669;"></i> নতুন আইটেম যোগ করুন</span></summary>
+      <div class="sec-body">
+        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/add">
+          <input type="hidden" name="section" value="<%= active %>">
+          <label>title (নাম/প্রশ্ন)</label>
+          <input type="text" name="title" required>
+          <label>subtitle (সাব-টেক্সট, ঐচ্ছিক)</label>
+          <input type="text" name="subtitle">
+          <label>body (বিবরণ/উত্তর)</label>
+          <textarea name="body" rows="4"></textarea>
+          <label>icon (Font Awesome ক্লাস)</label>
+          <input type="text" name="icon" placeholder="fas fa-users">
+          <label>extra (লিংক)</label>
+          <input type="text" name="extra" placeholder="https://…">
+          <div style="margin-top:12px;"><button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-plus"></i> যোগ করুন</button></div>
+        </form>
+      </div>
+    </details>
+  </div>
+</div>
+</body>
+</html>

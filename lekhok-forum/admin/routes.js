@@ -228,8 +228,9 @@ router.put('/notices/:id', requireScope('notices'), async (req, res) => {
 });
 
 router.delete('/notices/:id', requireScope('notices'), async (req, res) => {
-  await db.prepare('DELETE FROM notices WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/notices?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'notices', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'notices', req.params.id, '');
+  res.redirect('/admin/notices?saved=1&trashed=' + tid42);
 });
 
 // ── Events CRUD (scope: events; create broadcasts to all users) ─────────────
@@ -264,8 +265,9 @@ router.put('/events/:id', requireScope('events'), async (req, res) => {
 });
 
 router.delete('/events/:id', requireScope('events'), async (req, res) => {
-  await db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/events?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'events', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'events', req.params.id, '');
+  res.redirect('/admin/events?saved=1&trashed=' + tid42);
 });
 
 // ── Members CRUD ─────────────────────────────────────────────────────────────
@@ -320,8 +322,9 @@ router.put('/members/:id', requireAdmin, async (req, res) => {
 });
 
 router.delete('/members/:id', requireAdmin, async (req, res) => {
-  await db.prepare('DELETE FROM members WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/members?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'members', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'members', req.params.id, '');
+  res.redirect('/admin/members?saved=1&trashed=' + tid42);
 });
 
 // ── Gallery CRUD (scope: gallery; supports file upload or image URL) ────────
@@ -357,8 +360,9 @@ router.put('/gallery/:id', requireScope('gallery'), withUpload(galleryUpload), a
 });
 
 router.delete('/gallery/:id', requireScope('gallery'), async (req, res) => {
-  await db.prepare('DELETE FROM gallery WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/gallery?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'gallery', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'gallery', req.params.id, '');
+  res.redirect('/admin/gallery?saved=1&trashed=' + tid42);
 });
 
 // ── Resources CRUD ───────────────────────────────────────────────────────────
@@ -391,8 +395,9 @@ router.put('/resources/:id', requireAdmin, async (req, res) => {
 });
 
 router.delete('/resources/:id', requireAdmin, async (req, res) => {
-  await db.prepare('DELETE FROM resources WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/resources?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'resources', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'resources', req.params.id, '');
+  res.redirect('/admin/resources?saved=1&trashed=' + tid42);
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -400,6 +405,7 @@ router.delete('/resources/:id', requireAdmin, async (req, res) => {
 // রেজিস্ট্রি: helpers/content-registry.js → settings টেবিলে 'content_' প্রিফিক্সে
 // সংরক্ষিত হয়; খালি ফিল্ড = ডিফল্ট (সাইট কখনো খালি লেখা দেখায় না)।
 // ══════════════════════════════════════════════════════════════════════════════
+const TA42 = require('../helpers/trash-audit'); // সেশন ৪২: ট্র্যাশ+অডিট
 const contentRegistry = require('../helpers/content-registry');
 
 // সেশন ৩৫: ইমেজ-টাইপ ফিল্ডগুলোর ফাইল-ইনপুট (img_<key>) multer-এ রেজিস্টার করি
@@ -455,6 +461,7 @@ router.post('/content', requireAdmin, contentImageUpload, async (req, res) => {
       saved++;
     }
     console.log(`[admin:content] ${saved} content field(s) saved by`, req.session.adminUser ? req.session.adminUser.username : (req.session.user ? req.session.user.username : '?'));
+    await TA42.audit(db, req, 'content-save', 'settings', null, saved + ' ফিল্ড');
   } catch (e) {
     console.error('[admin:content] save failed:', e.message);
     return res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&error=' + encodeURIComponent('সংরক্ষণ ব্যর্থ হয়েছে — আবার চেষ্টা করুন'));
@@ -547,13 +554,31 @@ for (const slug of Object.keys(BULK_TABLES)) {
   const [table, guard] = BULK_TABLES[slug];
   router.post(`/${slug}/bulk-delete`, guard, async (req, res) => {
     const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
-    let n = 0;
-    for (const id of ids) {
-      try { await db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(id); n++; } catch (e) {}
-    }
-    res.redirect(`/admin/${slug}?saved=1`);
+    const tids42 = await TA42.trashBulkDelete(db, table, ids, req);
+    await TA42.audit(db, req, 'bulk-delete', table, null, ids.length + 'টি আইটেম');
+    res.redirect(`/admin/${slug}?saved=1` + (tids42.length ? '&trashed=' + tids42[tids42.length - 1] : ''));
   });
 }
+// সেশন ৪২: বাল্ক পাবলিশ/লুকান — is_active থাকা টেবিলগুলোর জন্য জেনেরিক
+const TOGGLEABLE42 = {
+  'notices': 'notices', 'events': 'events', 'members': 'members', 'gallery': 'gallery',
+  'achievements': 'achievements', 'constitution': 'constitution', 'past-leaders': 'past_leaders',
+  'subscribers': 'newsletter_subscribers', 'tasks': null
+};
+for (const slug42 of Object.keys(TOGGLEABLE42)) {
+  const table42 = TOGGLEABLE42[slug42];
+  if (!table42 || !BULK_TABLES[slug42]) continue;
+  router.post(`/${slug42}/bulk-toggle`, BULK_TABLES[slug42][1], async (req, res) => {
+    const on = req.body.mode === 'publish' ? 1 : 0;
+    const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+    for (const id of ids) {
+      try { await db.prepare(`UPDATE ${table42} SET is_active = ? WHERE id = ?`).run(on, id); } catch (e) {}
+    }
+    await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', table42, null, ids.length + 'টি আইটেম');
+    res.redirect(`/admin/${slug42}?saved=1`);
+  });
+}
+
 router.post('/daily/bulk-publish', requireScope('daily'), async (req, res) => {
   const pub = req.body.published === '1' ? 1 : 0;
   const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
@@ -625,8 +650,32 @@ router.get('/messages', requireAdmin, async (req, res) => {
 });
 
 // ── Newsletter subscribers (visible to admin AND moderators) ─────────────────
+// সেশন ৪২: সাবস্ক্রাইবার CSV এক্সপোর্ট
+router.get('/subscribers/export.csv', requireAdmin, async (req, res) => {
+  const rows = await db.prepare('SELECT id, email, is_active, created_at FROM newsletter_subscribers ORDER BY id').all();
+  await TA42.audit(db, req, 'export-csv', 'newsletter_subscribers', null, rows.length + ' সারি');
+  const esc = v => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const csv = '\uFEFF' + ['id,email,is_active,created_at'].concat(
+    rows.map(r => [r.id, r.email, r.is_active ? 'active' : 'inactive', r.created_at || ''].map(esc).join(','))
+  ).join('\r\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="subscribers.csv"');
+  res.send(csv);
+});
+
 router.get('/subscribers', requireStaff, async (req, res) => {
-  const subs = await db.prepare('SELECT * FROM newsletter_subscribers ORDER BY id DESC').all();
+  const q42 = (req.query.q || '').trim();
+  const page42 = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const PER42 = 20;
+  let subs;
+  if (q42) {
+    subs = await db.prepare('SELECT * FROM newsletter_subscribers WHERE email LIKE ? ORDER BY id DESC').all('%' + q42 + '%');
+  } else {
+    const total42 = (await db.prepare('SELECT COUNT(*) AS c FROM newsletter_subscribers').get()).c;
+    subs = await db.prepare('SELECT * FROM newsletter_subscribers ORDER BY id DESC LIMIT ? OFFSET ?').all(PER42, (page42 - 1) * PER42);
+    subs.total42 = total42;
+  }
+  const total42 = q42 ? subs.length : (subs.total42 || 0);
   const logs = await db.prepare('SELECT * FROM newsletter_log ORDER BY id DESC LIMIT 30').all();
   const stats = {
     total: subs.length,
@@ -635,7 +684,8 @@ router.get('/subscribers', requireStaff, async (req, res) => {
     pending: (await db.prepare("SELECT COUNT(*) as c FROM newsletter_queue WHERE status != 'sent'").get()).c,
     mailConfigured: require('../helpers/mailer').isConfigured()
   };
-  res.render('admin/subscribers', { subs, logs, stats, currentPath: '/admin/subscribers' });
+  res.render('admin/subscribers', { subs, logs, stats, currentPath: '/admin/subscribers',
+    q42, page42, pages42: Math.max(1, Math.ceil(total42 / PER42)), total42, per42: PER42 });
 });
 
 // CSV export — full subscriber detail for offline records
@@ -655,8 +705,9 @@ router.post('/subscribers/:id/toggle', requireAdmin, async (req, res) => {
   res.redirect('/admin/subscribers?saved=1');
 });
 router.post('/subscribers/:id/delete', requireAdmin, async (req, res) => {
-  await db.prepare('DELETE FROM newsletter_subscribers WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/subscribers?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'newsletter_subscribers', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'newsletter_subscribers', req.params.id, '');
+  res.redirect('/admin/subscribers?saved=1&trashed=' + tid42);
 });
 
 // Retry pending/failed emails for a notification batch (admin only)
@@ -753,8 +804,9 @@ router.put('/daily/:id', requireScope('daily'), async (req, res) => {
 });
 
 router.delete('/daily/:id', requireScope('daily'), async (req, res) => {
-  await db.prepare('DELETE FROM daily_content WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/daily?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'daily_content', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'daily_content', req.params.id, '');
+  res.redirect('/admin/daily?saved=1&trashed=' + tid42);
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -781,8 +833,9 @@ router.put('/complaints/:id', requireScope('complaints'), async (req, res) => {
 });
 
 router.delete('/complaints/:id', requireScope('complaints'), async (req, res) => {
-  await db.prepare('DELETE FROM complaints WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/complaints?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'complaints', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'complaints', req.params.id, '');
+  res.redirect('/admin/complaints?saved=1&trashed=' + tid42);
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -899,8 +952,9 @@ router.put('/achievements/:id', requireAdmin, withUpload(attachmentUpload), asyn
   res.redirect('/admin/achievements?saved=1');
 });
 router.delete('/achievements/:id', requireAdmin, async (req, res) => {
-  await db.prepare('DELETE FROM achievements WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/achievements?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'achievements', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'achievements', req.params.id, '');
+  res.redirect('/admin/achievements?saved=1&trashed=' + tid42);
 });
 
 // ── v2.2: Constitution CRUD ──────────────────────────────────────────────────
@@ -927,8 +981,9 @@ router.put('/constitution/:id', requireAdmin, async (req, res) => {
   res.redirect('/admin/constitution?saved=1');
 });
 router.delete('/constitution/:id', requireAdmin, async (req, res) => {
-  await db.prepare('DELETE FROM constitution WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/constitution?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'constitution', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'constitution', req.params.id, '');
+  res.redirect('/admin/constitution?saved=1&trashed=' + tid42);
 });
 
 // ── v2.2: Past leaders CRUD ──────────────────────────────────────────────────
@@ -961,24 +1016,40 @@ router.put('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), asyn
   res.redirect('/admin/past-leaders?saved=1');
 });
 router.delete('/past-leaders/:id', requireAdmin, async (req, res) => {
-  await db.prepare('DELETE FROM past_leaders WHERE id = ?').run(req.params.id);
-  res.redirect('/admin/past-leaders?saved=1');
+  const tid42 = await TA42.trashDelete(db, 'past_leaders', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'past_leaders', req.params.id, '');
+  res.redirect('/admin/past-leaders?saved=1&trashed=' + tid42);
 });
 
 
 // ── Task assignment to moderators ─────────────────────────────────────────────
 router.get('/tasks', requireAdmin, async (req, res) => {
   try {
-    const tasks = await db.prepare(`
-      SELECT t.*, u.full_name as assignee_name, u.avatar_url as assignee_avatar,
-             a.full_name as assigner_name
-      FROM moderator_tasks t
-      LEFT JOIN users u ON t.assignee_id = u.id
-      LEFT JOIN users a ON t.assigner_id = a.id
-      ORDER BY t.created_at DESC
-    `).all();
+    const q42 = (req.query.q || '').trim();
+    const page42 = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const PER42 = 20;
+    let tasks;
+    if (q42) {
+      tasks = await db.prepare(`
+        SELECT t.*, u.full_name as assignee_name, u.avatar_url as assignee_avatar,
+               a.full_name as assigner_name
+        FROM moderator_tasks t
+        LEFT JOIN users u ON t.assignee_id = u.id
+        LEFT JOIN users a ON t.assigner_id = a.id
+        WHERE t.title LIKE ? ORDER BY t.created_at DESC`).all('%' + q42 + '%');
+    } else {
+      tasks = await db.prepare(`
+        SELECT t.*, u.full_name as assignee_name, u.avatar_url as assignee_avatar,
+               a.full_name as assigner_name
+        FROM moderator_tasks t
+        LEFT JOIN users u ON t.assignee_id = u.id
+        LEFT JOIN users a ON t.assigner_id = a.id
+        ORDER BY t.created_at DESC LIMIT ? OFFSET ?`).all(PER42, (page42 - 1) * PER42);
+    }
+    const total42 = q42 ? tasks.length : (await db.prepare('SELECT COUNT(*) AS c FROM moderator_tasks').get()).c;
     const moderators = await db.prepare("SELECT id, username, full_name, avatar_url FROM users WHERE role IN ('moderator','senior_moderator','junior_moderator','content_moderator') AND status='active'").all();
-    res.render('admin/tasks', { tasks, moderators, currentPath: '/admin/tasks' });
+    res.render('admin/tasks', { tasks, moderators, currentPath: '/admin/tasks',
+      q42: q42 || '', page42, pages42: Math.max(1, Math.ceil((total42 || 0) / PER42)), total42, per42: PER42 });
   } catch(e) {
     // Table might not exist yet — create it
     try { await db.exec(`CREATE TABLE IF NOT EXISTS moderator_tasks (
@@ -1023,8 +1094,106 @@ router.post('/tasks/:id/status', requireAdmin, async (req, res) => {
 });
 
 router.post('/tasks/:id/delete', requireAdmin, async (req, res) => {
-  try { await db.prepare('DELETE FROM moderator_tasks WHERE id = ?').run(req.params.id); } catch(e){}
-  res.redirect('/admin/tasks');
+  const tid42 = await TA42.trashDelete(db, 'moderator_tasks', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'moderator_tasks', req.params.id, '');
+  res.redirect('/admin/tasks?trashed=' + tid42);
+});
+
+// ═══ সেশন ৪২: ট্র্যাশ (সফট-ডিলিট, ৩০ দিন রিস্টোর) ═══
+router.get('/trash', requireStaff, async (req, res) => {
+  const q42 = (req.query.q || '').trim();
+  let rows = [];
+  try {
+    rows = q42
+      ? await db.prepare('SELECT * FROM trash WHERE table_name LIKE ? OR deleted_by_name LIKE ? ORDER BY id DESC LIMIT 300').all('%' + q42 + '%', '%' + q42 + '%')
+      : await db.prepare('SELECT * FROM trash ORDER BY id DESC LIMIT 300').all();
+  } catch (e) {}
+  const left = await (async () => { try { return (await db.prepare("SELECT COUNT(*) AS c FROM trash WHERE deleted_at < datetime('now','-30 days','localtime')").get()).c; } catch (e) { return 0; } })();
+  if (left) await TA42.purgeExpired(db);
+  res.render('admin/trash', { rows, q42, currentPath: '/admin/trash' });
+});
+router.post('/trash/:id/restore', requireStaff, async (req, res) => {
+  const r = await TA42.restoreTrash(db, req.params.id, req);
+  if (req.is('json') || req.headers.accept === 'application/json') return res.json({ ok: r.ok, error: r.error || null, redirect: r.ok ? '?restored=1' : '?error=1' });
+  res.redirect('/admin/trash' + (r.ok ? '?restored=1' : '?error=' + encodeURIComponent(r.error || 'ব্যর্থ')));
+});
+router.post('/trash/:id/purge', requireAdmin, async (req, res) => {
+  await TA42.purgeTrash(db, req.params.id);
+  await TA42.audit(db, req, 'purge', 'trash', req.params.id, 'স্থায়ী মুছে ফেলা');
+  res.redirect('/admin/trash?saved=1');
+});
+
+// ═══ সেশন ৪২: অডিট লগ ═══
+router.get('/audit', requireAdmin, async (req, res) => {
+  const q42 = (req.query.q || '').trim();
+  const page42 = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const PER42 = 30;
+  let rows = [];
+  let total42 = 0;
+  try {
+    if (q42) {
+      rows = await db.prepare('SELECT * FROM audit_log WHERE actor_name LIKE ? OR action LIKE ? OR table_name LIKE ? ORDER BY id DESC LIMIT 300').all('%' + q42 + '%', '%' + q42 + '%', '%' + q42 + '%');
+      total42 = rows.length;
+    } else {
+      total42 = (await db.prepare('SELECT COUNT(*) AS c FROM audit_log').get()).c;
+      rows = await db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT ? OFFSET ?').all(PER42, (page42 - 1) * PER42);
+    }
+  } catch (e) {}
+  res.render('admin/audit', { rows, q42, page42, pages42: Math.max(1, Math.ceil(total42 / PER42)), total42, currentPath: '/admin/audit' });
+});
+
+// ═══ সেশন ৪২: সেকশন আইটেম ম্যানেজার (সাইটের হার্ডকোডেড সেকশনগুলো এখন DB-চালিত) ═══
+const SECTIONS42 = require('../helpers/sections-registry').SECTIONS;
+router.get('/sections', requireStaff, async (req, res) => {
+  const key = SECTIONS42[req.query.section] ? req.query.section : 'home_faq';
+  let rows = [];
+  try { rows = await db.prepare('SELECT * FROM site_items WHERE section = ? ORDER BY sort_order, id').all(key); } catch (e) {}
+  res.render('admin/sections', { SECTIONS: SECTIONS42, rows, active: key, saved: req.query.saved || null, currentPath: '/admin/sections' });
+});
+router.post('/sections/add', requireStaff, async (req, res) => {
+  const sec = SECTIONS42[req.body.section] ? req.body.section : 'home_faq';
+  const mx = await db.prepare('SELECT MAX(sort_order) AS m FROM site_items WHERE section = ?').get(sec);
+  await db.prepare(`INSERT INTO site_items (section, sort_order, title, subtitle, body, icon, extra, is_active, created_at) VALUES (?,?,?,?,?,?,?,?, datetime('now','localtime'))`)
+    .run(sec, (mx && mx.m || 0) + 1, req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', 1);
+  await TA42.audit(db, req, 'add', 'site_items:' + sec, null, req.body.title || '');
+  res.redirect('/admin/sections?section=' + sec + '&saved=1');
+});
+router.post('/sections/:id/save', requireStaff, async (req, res) => {
+  const row = await db.prepare('SELECT section FROM site_items WHERE id = ?').get(req.params.id);
+  if (!row) return res.redirect('/admin/sections');
+  await db.prepare('UPDATE site_items SET title = ?, subtitle = ?, body = ?, icon = ?, extra = ? WHERE id = ?')
+    .run(req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', req.params.id);
+  await TA42.audit(db, req, 'edit', 'site_items:' + row.section, req.params.id, req.body.title || '');
+  res.redirect('/admin/sections?section=' + row.section + '&saved=1');
+});
+router.post('/sections/:id/toggle', requireStaff, async (req, res) => {
+  const row = await db.prepare('SELECT section, is_active FROM site_items WHERE id = ?').get(req.params.id);
+  if (row) {
+    await db.prepare('UPDATE site_items SET is_active = ? WHERE id = ?').run(row.is_active ? 0 : 1, req.params.id);
+    await TA42.audit(db, req, row.is_active ? 'hide' : 'publish', 'site_items:' + row.section, req.params.id, '');
+  }
+  res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1');
+});
+router.post('/sections/:id/move', requireStaff, async (req, res) => {
+  const row = await db.prepare('SELECT * FROM site_items WHERE id = ?').get(req.params.id);
+  if (row) {
+    const dir = req.body.dir === 'up' ? -1 : 1;
+    const sib = await db.prepare('SELECT * FROM site_items WHERE section = ? AND sort_order ' + (dir === -1 ? '<' : '>') + ' ? ORDER BY sort_order ' + (dir === -1 ? 'DESC' : 'ASC') + ' LIMIT 1').get(row.section, row.sort_order);
+    if (sib) {
+      await db.prepare('UPDATE site_items SET sort_order = ? WHERE id = ?').run(sib.sort_order, row.id);
+      await db.prepare('UPDATE site_items SET sort_order = ? WHERE id = ?').run(row.sort_order, sib.id);
+    }
+  }
+  res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1');
+});
+router.post('/sections/:id/delete', requireStaff, async (req, res) => {
+  const row = await db.prepare('SELECT section FROM site_items WHERE id = ?').get(req.params.id);
+  let tid42 = '';
+  if (row) {
+    tid42 = await TA42.trashDelete(db, 'site_items', req.params.id, req);
+    await TA42.audit(db, req, 'delete', 'site_items:' + row.section, req.params.id, '');
+  }
+  res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1' + (tid42 ? '&trashed=' + tid42 : ''));
 });
 
 module.exports = router;

@@ -934,4 +934,43 @@ document.addEventListener('click', function (e) {
     f.dataset.submitting = '';
     f.querySelectorAll('[type="submit"]').forEach(b => { b.disabled = false; if (b.dataset.origHtml) b.innerHTML = b.dataset.origHtml; });
   }, false);
+
+  // সেশন ৪২: bfcache/ব্যাক-বাটনে ফেরত এলে আটকে-থাকা স্পিনার রিলিজ
+  function releaseAllGuards() {
+    document.querySelectorAll('form[data-submitting="1"]').forEach(f => {
+      f.dataset.submitting = '';
+      f.querySelectorAll('[type="submit"]').forEach(b => { b.disabled = false; if (b.dataset.origHtml) b.innerHTML = b.dataset.origHtml; });
+    });
+  }
+  window.addEventListener('pageshow', releaseAllGuards);
+  window.addEventListener('load', releaseAllGuards);
+})();
+
+/* ============= সেশন ৪২: CSRF টোকেন অটো-ইনজেকশন =============
+   সার্ভার মিডলওয়্যার POST ফর্মে _csrf চায়; প্রতিটি ফর্মে আলাদা করে hidden
+   ইনপুট না লিখে ক্লায়েন্ট-সাইডে ঢুকিয়ে দিই (multipart-এ action-এ কুয়েরি)। */
+(function () {
+  function injectCsrf() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (!meta || !meta.content) return;
+    document.querySelectorAll('form').forEach(f => {
+      const m = (f.getAttribute('method') || 'get').toLowerCase();
+      if (m !== 'post') return;
+      if ((f.getAttribute('enctype') || '').indexOf('multipart') !== -1) {
+        // multipart: বডি মিডলওয়্যারের আগে পার্স হয় না → action-এ কুয়েরি টোকেন
+        let act = f.getAttribute('action') || '';
+        if (!act) act = location.pathname + location.search;
+        if (act.indexOf('_csrf=') === -1 && act.indexOf('http') !== 0) {
+          f.setAttribute('action', act + (act.indexOf('?') === -1 ? '?' : '&') + '_csrf=' + encodeURIComponent(meta.content));
+        }
+        return;
+      }
+      if (f.querySelector('input[name="_csrf"]')) return;
+      const i = document.createElement('input');
+      i.type = 'hidden'; i.name = '_csrf'; i.value = meta.content;
+      f.prepend(i);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectCsrf);
+  else injectCsrf();
 })();

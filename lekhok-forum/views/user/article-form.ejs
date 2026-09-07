@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="bn" dir="ltr">
 <head>
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+
   <meta charset="UTF-8" />
   <title><%= !!post && post.id ? 'লেখা সম্পাদনা' : 'নতুন লেখা' %> | লেখক ফোরাম</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />

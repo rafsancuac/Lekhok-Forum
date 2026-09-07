@@ -139,8 +139,9 @@ router.post('/members/:id', ensureModerator, async (req, res) => {
 });
 
 router.post('/members/:id/delete', ensureModerator, async (req, res) => {
-  await db.prepare('DELETE FROM members WHERE id = ?').run(req.params.id);
-  res.redirect('/moderator/members?removed=1');
+  const tid42 = await TA42.trashDelete(db, 'members', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'members', req.params.id, '');
+  res.redirect('/moderator/members?removed=1&trashed=' + tid42);
 });
 
 // ── Press clippings management (admin + moderators) ─────────────────────────
@@ -178,19 +179,43 @@ function _bulkIds(body) {
   if (!Array.isArray(ids)) ids = ids ? [ids] : [];
   return [...new Set(ids.map(v => parseInt(v, 10)).filter(n => Number.isInteger(n) && n > 0))];
 }
+const TA42 = require('../helpers/trash-audit'); // সেশন ৪২
 async function _bulkDelete(table, req, res, backPath) {
   const ids = _bulkIds(req.body);
   if (!ids.length) return res.redirect(backPath + '?bulk=0');
-  const ph = ids.map(() => '?').join(',');
-  await db.prepare(`DELETE FROM ${table} WHERE id IN (${ph})`).run(...ids);
+  const tids42 = await TA42.trashBulkDelete(db, table, ids, req);
+  await TA42.audit(db, req, 'bulk-delete', table, null, ids.length + 'টি আইটেম');
   console.log(`[moderator] bulk-delete ${table}: ${ids.length} item(s) by user ${(req.session.user && req.session.user.id)} (${req.session.role})`);
-  res.redirect(backPath + '?bulk=' + ids.length);
+  res.redirect(backPath + '?bulk=' + ids.length + (tids42.length ? '&trashed=' + tids42[tids42.length - 1] : ''));
 }
 router.post('/notices/bulk-delete', ensureModerator, requireScope('notice'), async (req, res) => { await _bulkDelete('notices', req, res, '/moderator/notices'); });
 router.post('/events/bulk-delete', ensureModerator, requireScope('event'), async (req, res) => { await _bulkDelete('events', req, res, '/moderator/events'); });
 router.post('/complaints/bulk-delete', ensureModerator, requireScope('complaints'), async (req, res) => { await _bulkDelete('complaints', req, res, '/moderator/complaints'); });
 router.post('/press/bulk-delete', ensureModerator, async (req, res) => { await _bulkDelete('press_clippings', req, res, '/moderator/press'); });
 router.post('/members/bulk-delete', ensureModerator, async (req, res) => { await _bulkDelete('members', req, res, '/moderator/members'); });
+
+// সেশন ৪২: বাল্ক পাবলিশ/লুকান (মডারেটর)
+router.post('/press/bulk-toggle', ensureModerator, requireScope('epaper'), async (req, res) => {
+  const on = req.body.mode === 'publish' ? 1 : 0;
+  const ids = _bulkIds(req.body);
+  for (const id of ids) { try { await db.prepare('UPDATE press_clippings SET is_active = ? WHERE id = ?').run(on, id); } catch (e) {} }
+  await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', 'press_clippings', null, ids.length + 'টি');
+  res.redirect('/moderator/press?saved=1');
+});
+router.post('/notices/bulk-toggle', ensureModerator, requireScope('notice'), async (req, res) => {
+  const on = req.body.mode === 'publish' ? 1 : 0;
+  const ids = _bulkIds(req.body);
+  for (const id of ids) { try { await db.prepare('UPDATE notices SET is_active = ? WHERE id = ?').run(on, id); } catch (e) {} }
+  await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', 'notices', null, ids.length + 'টি');
+  res.redirect('/moderator/notices?saved=1');
+});
+router.post('/events/bulk-toggle', ensureModerator, requireScope('event'), async (req, res) => {
+  const on = req.body.mode === 'publish' ? 1 : 0;
+  const ids = _bulkIds(req.body);
+  for (const id of ids) { try { await db.prepare('UPDATE events SET is_active = ? WHERE id = ?').run(on, id); } catch (e) {} }
+  await TA42.audit(db, req, on ? 'bulk-publish' : 'bulk-hide', 'events', null, ids.length + 'টি');
+  res.redirect('/moderator/events?saved=1');
+});
 
 router.post('/press', ensureModerator, withUpload(pressUpload), async (req, res) => {
   const v = pressFormValues(req.body);
@@ -231,8 +256,9 @@ router.post('/press/:id', ensureModerator, withUpload(pressUpload), async (req, 
 });
 
 router.post('/press/:id/delete', ensureModerator, async (req, res) => {
-  await db.prepare('DELETE FROM press_clippings WHERE id = ?').run(req.params.id);
-  res.redirect('/moderator/press?removed=1');
+  const tid42 = await TA42.trashDelete(db, 'press_clippings', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'press_clippings', req.params.id, '');
+  res.redirect('/moderator/press?removed=1&trashed=' + tid42);
 });
 
 // ── Moderator dashboard ──────────────────────────────────────────────────────
@@ -293,8 +319,9 @@ router.delete('/daily/:type/:id', ensureModerator, async (req, res, next) => {
   const meta = DAILY_TYPES[req.params.type];
   if (!meta) return next();
   requireScope(meta.scope)(req, res, async () => {
-    await db.prepare('DELETE FROM daily_content WHERE id = ? AND content_type = ?').run(req.params.id, req.params.type);
-    res.redirect('/moderator/daily/' + req.params.type);
+    const tid42 = await TA42.trashDelete(db, 'daily_content', req.params.id, req);
+    await TA42.audit(db, req, 'delete', 'daily_content', req.params.id, '');
+    res.redirect('/moderator/daily/' + req.params.type + '?trashed=' + tid42);
   });
 });
 
@@ -321,8 +348,9 @@ router.post('/notices', ensureModerator, requireScope('notice'), async (req, res
 });
 
 router.delete('/notices/:id', ensureModerator, requireScope('notice'), async (req, res) => {
-  await db.prepare('DELETE FROM notices WHERE id = ?').run(req.params.id);
-  res.redirect('/moderator/notices');
+  const tid42 = await TA42.trashDelete(db, 'notices', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'notices', req.params.id, '');
+  res.redirect('/moderator/notices?trashed=' + tid42);
 });
 
 // ── Events ───────────────────────────────────────────────────────────────────
@@ -341,8 +369,9 @@ router.post('/events', ensureModerator, requireScope('event'), async (req, res) 
 });
 
 router.delete('/events/:id', ensureModerator, requireScope('event'), async (req, res) => {
-  await db.prepare('DELETE FROM events WHERE id = ?').run(req.params.id);
-  res.redirect('/moderator/events');
+  const tid42 = await TA42.trashDelete(db, 'events', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'events', req.params.id, '');
+  res.redirect('/moderator/events?trashed=' + tid42);
 });
 
 // ── Best Writer (toggle featured on an existing article) ────────────────────
@@ -403,5 +432,33 @@ router.get('/switch', ensureModerator, (req, res) => {
     }
   });
 });
+
+// ═══ সেশন ৪২: মডারেটর ট্র্যাশ (নিজের স্কোপের টেবিল) ═══
+router.get('/trash', ensureModerator, async (req, res) => {
+  let rows = [];
+  try { rows = await db.prepare("SELECT * FROM trash WHERE table_name IN ('notices','events','press_clippings','daily_content','members','complaints','site_items') ORDER BY id DESC LIMIT 300").all(); } catch (e) {}
+  res.render('admin/trash', { rows, q42: '', currentPath: '/moderator/trash', moderatorView: true });
+});
+router.post('/trash/:id/restore', ensureModerator, async (req, res) => {
+  const r = await TA42.restoreTrash(db, req.params.id, req);
+  if ((req.headers.accept || '').indexOf('application/json') !== -1) return res.json({ ok: r.ok, error: r.error || null, redirect: r.ok ? '?restored=1' : '?error=1' });
+  res.redirect('/moderator/trash' + (r.ok ? '?restored=1' : '?error=1'));
+});
+
+// ═══ সেশন ৪২: সেকশন আইটেম ম্যানেজার (মডারেটর — content স্কোপ) ═══
+const SECTIONS42 = require('../helpers/sections-registry').SECTIONS;
+router.get('/sections', ensureModerator, requireScope('content'), async (req, res) => {
+  const key = SECTIONS42[req.query.section] ? req.query.section : 'home_faq';
+  let rows = [];
+  try { rows = await db.prepare('SELECT * FROM site_items WHERE section = ? ORDER BY sort_order, id').all(key); } catch (e) {}
+  res.render('admin/sections', { SECTIONS: SECTIONS42, rows, active: key, saved: req.query.saved || null, currentPath: '/moderator/sections', moderatorView: true });
+});
+for (const act of ['add', ':id/save', ':id/toggle', ':id/move', ':id/delete']) {
+  router.post('/sections/' + act, ensureModerator, requireScope('content'), async (req, res) => {
+    // অ্যাডমিন রুটের same লজিক — ছোট ডুপ্লিকেশন এড়াতে রি-ইউজ
+    req.url42mod = true;
+    return require('./_sections-actions')(db, TA42, SECTIONS42, req, res, act, req.params.id);
+  });
+}
 
 module.exports = router;

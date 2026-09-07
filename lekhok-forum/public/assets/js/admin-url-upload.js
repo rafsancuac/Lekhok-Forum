@@ -28,7 +28,8 @@
         fd.append('image', file.files[0]);
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        fetch('/admin/upload-image', { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
+        var csrfMeta42 = document.querySelector('meta[name="csrf-token"]');
+        fetch('/admin/upload-image', { method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrfMeta42 ? csrfMeta42.content : '' } })
           .then(function (r) { return r.json(); })
           .then(function (d) {
             if (d && d.ok) {

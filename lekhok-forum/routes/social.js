@@ -194,6 +194,11 @@ router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
     ? await db.prepare('SELECT p.*, u.full_name as orig_author FROM posts p JOIN users u ON p.author_id = u.id WHERE p.id = ?').get(sourceId)
     : orig;
 
+  // সেশন ৪২: ডুপ-শেয়ার গার্ড — একই ইউজার ১২০ সেকেন্ডের মধ্যে একই সোর্স আবার শেয়ার করলে বার্তা
+  try {
+    const dup42 = await db.prepare(`SELECT id FROM posts WHERE author_id = ? AND shared_from = ? AND created_at >= datetime('now','-2 minutes','localtime')`).get(req.session.user.id, sourceId);
+    if (dup42) return res.json({ ok: false, error: 'এই পোস্টটি আপনি এইমাত্র শেয়ার করেছেন — ডুপ্লিকেট এড়াতে কিছুক্ষণ অপেক্ষা করুন।', redirect: '/articles/' + dup42.id });
+  } catch (e) {}
   const title = source.title;
   const body = source.body || '';
   const excerpt = (source.excerpt || body.substring(0, 200));

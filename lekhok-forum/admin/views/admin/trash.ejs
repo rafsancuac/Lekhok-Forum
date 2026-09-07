@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ট্র্যাশ | লেখক ফোরাম</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-trash-can"></i> ট্র্যাশ (সফট-ডিলিট)</h1>
+      <p class="subtitle">মুছে ফেলা আইটেম ৩০ দিন পর্যন্ত এখানে থাকে — ফেরত নেওয়া বা স্থায়ীভাবে মুছে ফেলা যায়</p>
+    </div>
+    <form method="GET" style="display:flex;gap:8px;">
+      <input type="search" name="q" value="<%= q42 %>" placeholder="টেবিল/নাম খুঁজুন" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
+      <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
+    </form>
+  </div>
+
+  <% if (typeof restoredFlag !== 'undefined' && restoredFlag) { %><div class="flash ok"><i class="fas fa-undo"></i> আইটেম ফেরত দেওয়া হয়েছে।</div><% } %>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <% if (!rows.length) { %>
+    <div class="empty"><i class="fas fa-trash-can"></i><p>ট্র্যাশ খালি — ডিলিট করা আইটেম এখানে ৩০ দিন থাকবে।</p></div>
+    <% } else { %>
+    <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th style="width:60px;">আইডি</th><th style="width:160px;">টেবিল</th><th style="width:80px;">আইটেম</th><th>স্ন্যাপশট</th><th style="width:150px;">মুছেছেন</th><th style="width:150px;">সময়</th><th style="width:170px;">অ্যাকশন</th></tr>
+      </thead>
+      <tbody>
+        <% rows.forEach(r => {
+             let prev = '';
+             try { const o = JSON.parse(r.payload); prev = o.title || o.name || o.email || o.email_address || ''; } catch (e) {}
+             const base = (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin';
+        %>
+        <tr>
+          <td>#<%= r.id %></td>
+          <td><code><%= r.table_name %></code></td>
+          <td>#<%= r.item_id %></td>
+          <td><%= String(prev).slice(0, 70) %></td>
+          <td><%= r.deleted_by_name || '—' %></td>
+          <td><%= r.deleted_at %></td>
+          <td style="white-space:nowrap;">
+            <form method="POST" action="<%= base %>/trash/<%= r.id %>/restore" style="display:inline;">
+              <button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-undo"></i> ফেরত</button>
+            </form>
+            <% if (!(typeof moderatorView !== 'undefined' && moderatorView)) { %>
+            <form method="POST" action="/admin/trash/<%= r.id %>/purge" style="display:inline;" onsubmit="return confirm('স্থায়ীভাবে মুছে ফেলবেন? আর ফেরত নেওয়া যাবে না।');">
+              <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-fire"></i> স্থায়ী</button>
+            </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

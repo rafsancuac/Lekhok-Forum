@@ -41,6 +41,8 @@
   <form method="POST" action="/moderator/notices/bulk-delete" class="bulk-bar" id="bulkBar">
     <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
     <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড বিজ্ঞপ্তিগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+    <button type="submit" name="mode" value="publish" formaction="/moderator/notices/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড নোটিশগুলো প্রকাশ করবে?"><i class="fas fa-eye"></i> প্রকাশ</button>
+    <button type="submit" name="mode" value="hide" formaction="/moderator/notices/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড নোটিশগুলো লুকাবে?"><i class="fas fa-eye-slash"></i> লুকান</button>
   </form>
 
     <% notices.forEach(n => { %>

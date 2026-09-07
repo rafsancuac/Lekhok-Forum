@@ -60,7 +60,17 @@
     </div>
 
     <div class="card">
-      <h3 class="card-title"><i class="fas fa-list"></i> টাস্ক তালিকা</h3>
+      <h3 class="card-title" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><i class="fas fa-list"></i> টাস্ক তালিকা
+        <form method="GET" style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+          <input type="search" name="q" value="<%= typeof q42 !== 'undefined' ? q42 : '' %>" placeholder="টাস্ক খুঁজুন…" style="padding:7px 10px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;font-size:.85rem;">
+          <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i></button>
+        </form>
+        <span style="font-size:.8rem;color:#6b7280;">
+          <% if (typeof page42 !== 'undefined' && page42 > 1) { %><a class="btn btn-sm" href="?page=<%= page42 - 1 %>">←</a><% } %>
+          পেজ <%= typeof page42 !== 'undefined' ? page42 : 1 %>/<%= typeof pages42 !== 'undefined' ? pages42 : 1 %>
+          <% if (typeof page42 !== 'undefined' && page42 < pages42) { %><a class="btn btn-sm" href="?page=<%= page42 + 1 %>">→</a><% } %>
+        </span>
+      </h3>
       <% if (tasks && tasks.length) { %>
         <div class="table-wrap">
   <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>

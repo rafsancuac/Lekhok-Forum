@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>অডিট লগ | লেখক ফোরাম</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-file-shield"></i> অডিট লগ</h1>
+      <p class="subtitle">কে, কখন, কোন টেবিলে কী করল — ডিলিট/এডিট/বাল্ক/রিস্টোর সবকিছোর হিসাব (<%= total42 %> টি)</p>
+    </div>
+    <form method="GET" style="display:flex;gap:8px;">
+      <input type="search" name="q" value="<%= q42 %>" placeholder="নাম/অ্যাকশন/টেবিল" style="padding:9px 12px;border:1px solid #d1d5db;border-radius:5px;font-family:inherit;">
+      <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i> খুঁজুন</button>
+    </form>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <% if (!rows.length) { %>
+    <div class="empty"><i class="fas fa-file-shield"></i><p>এখনো কোনো অডিট এন্ট্রি নেই।</p></div>
+    <% } else { %>
+    <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th style="width:160px;">সময়</th><th style="width:140px;">ব্যবহারকারী</th><th style="width:130px;">অ্যাকশন</th><th style="width:200px;">টেবিল</th><th style="width:80px;">আইটেম</th><th>বিস্তারিত</th></tr>
+      </thead>
+      <tbody>
+        <% rows.forEach(r => { %>
+        <tr>
+          <td><%= r.created_at %></td>
+          <td><%= r.actor_name || '—' %></td>
+          <td><span class="badge"><%= r.action %></span></td>
+          <td><code><%= r.table_name || '—' %></code></td>
+          <td><%= r.item_id ? '#' + r.item_id : '—' %></td>
+          <td><%= r.detail || '' %></td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;padding:14px;">
+      <% if (page42 > 1) { %><a class="btn btn-sm" href="?page=<%= page42 - 1 %>&q=<%= encodeURIComponent(q42) %>">← আগের</a><% } %>
+      <span style="align-self:center;font-size:.85rem;">পেজ <%= page42 %> / <%= pages42 %></span>
+      <% if (page42 < pages42) { %><a class="btn btn-sm" href="?page=<%= page42 + 1 %>&q=<%= encodeURIComponent(q42) %>">পরের →</a><% } %>
+    </div>
+    <% } %>
+  </div>
+</div>
+</body>
+</html>

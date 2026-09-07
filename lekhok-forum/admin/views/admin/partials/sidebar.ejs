@@ -12,6 +12,7 @@
   const _avatar = _usr ? '/avatar/' + _usr.id : null;
 %>
 <button class="admin-hamburger" id="adminHamburger" aria-label="মেনু" aria-controls="adminSidebar" aria-expanded="false" type="button"><i class="fas fa-bars"></i></button>
+<meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
 <div class="admin-backdrop" id="adminBackdrop"></div>
 <aside class="admin-sidebar" id="adminSidebar" aria-label="অ্যাডমিন নেভিগেশন">
   <div class="logo">
@@ -76,6 +77,11 @@
     <% } %>
     <a href="/admin/navigation"     class="<%= _active('/admin/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
     <a href="/admin/activity"       class="<%= _active('/admin/activity') %>"><i class="fas fa-clock-rotate-left"></i> অ্যাক্টিভিটি লগ</a>
+    <a href="<%= _isAdmin ? '/admin/trash' : '/moderator/trash' %>" class="<%= _active(_isAdmin ? '/admin/trash' : '/moderator/trash') %>"><i class="fas fa-trash-can"></i> ট্র্যাশ</a>
+    <a href="<%= _isAdmin ? '/admin/sections' : '/moderator/sections' %>" class="<%= _active(_isAdmin ? '/admin/sections' : '/moderator/sections') %>"><i class="fas fa-layer-group"></i> সেকশন আইটেম</a>
+    <% if (_isAdmin) { %>
+    <a href="/admin/audit" class="<%= _active('/admin/audit') %>"><i class="fas fa-file-shield"></i> অডিট লগ</a>
+    <% } %>
     <% if (_isAdmin) { %>
     <a href="/admin/tasks"         class="<%= _active('/admin/tasks') %>"><i class="fas fa-tasks"></i> মডারেটর টাস্ক</a>
     <a href="/admin/settings"       class="<%= _active('/admin/settings') %>"><i class="fas fa-cog"></i> সেটিংস</a>
@@ -102,6 +108,19 @@
   <% } %>
 </aside>
 
+<% if (typeof undoTrash !== 'undefined' && undoTrash) { %>
+<div class="undo-toast" id="undoToast" role="status">
+  <i class="fas fa-trash-restore"></i>
+  <span>আইটেমটি ট্র্যাশে সরানো হয়েছে (৩০ দিন পর্যন্ত ফেরত নেওয়া যাবে)।</span>
+  <button type="button" class="undo-btn" data-undo-restore="<%= _isAdmin ? '/admin' : '/moderator' %>/trash/<%= undoTrash %>/restore"><i class="fas fa-undo"></i> আন্ডু</button>
+</div>
+<style>
+  .undo-toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 1200; display: flex; align-items: center; gap: 10px; background: #111827; color: #f9fafb; border-radius: 5px; padding: 12px 18px; box-shadow: 0 8px 28px rgba(0,0,0,.35); font-size: .9rem; transition: opacity .4s, transform .4s; }
+  .undo-toast.gone { opacity: 0; transform: translateX(-50%) translateY(12px); pointer-events: none; }
+  .undo-toast .undo-btn { background: #059669; color: #fff; border: 0; border-radius: 5px; padding: 7px 14px; font-family: inherit; font-weight: 700; cursor: pointer; }
+  .undo-toast .undo-btn:hover { background: #047857; }
+</style>
+<% } %>
 <div class="toast-zone" id="toastZone"></div>
 
 <script>
@@ -251,6 +270,74 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBulkBar);
   else initBulkBar();
+
+  /* ── সেশন ৪২: CSRF টোকেন ইনজেকশন (অ্যাডমিন/মডারেটর পেজে main.js লোড হয় না) ── */
+  function injectCsrf42() {
+    try {
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      if (!meta || !meta.content) return;
+      document.querySelectorAll('form').forEach(function (f) {
+        var m = (f.getAttribute('method') || 'get').toLowerCase();
+        if (m !== 'post') return;
+        if ((f.getAttribute('enctype') || '').indexOf('multipart') !== -1) {
+          var act = f.getAttribute('action') || '';
+          if (!act) act = location.pathname + location.search;
+          if (act.indexOf('_csrf=') === -1 && act.indexOf('http') !== 0) {
+            f.setAttribute('action', act + (act.indexOf('?') === -1 ? '?' : '&') + '_csrf=' + encodeURIComponent(meta.content));
+          }
+          return;
+        }
+        if (f.querySelector('input[name="_csrf"]')) return;
+        var i = document.createElement('input');
+        i.type = 'hidden'; i.name = '_csrf'; i.value = meta.content;
+        f.prepend(i);
+      });
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectCsrf42);
+  else injectCsrf42();
+
+  /* ── সেশন ৪২: টেবিল ইনস্ট্যান্ট সার্চ-ফিল্টার (যেকোনো data-table-filter ইনপুট) ── */
+  function initTableFilter() {
+    try {
+      document.querySelectorAll('input[data-table-filter]').forEach(function (inp) {
+        if (inp.dataset.tfInit) return; inp.dataset.tfInit = '1';
+        inp.addEventListener('input', function () {
+          var q = inp.value.trim().toLowerCase();
+          var scope = document.querySelector(inp.getAttribute('data-table-filter') || 'table');
+          if (!scope) return;
+          scope.querySelectorAll('tbody tr').forEach(function (tr) {
+            tr.style.display = !q || tr.textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+          });
+        });
+      });
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initTableFilter);
+  else initTableFilter();
+
+  /* ── সেশন ৪২: আন্ডু-টোস্ট (ডিলিটের পর ?trashed=ID এলে) ── */
+  function initUndoToast() {
+    try {
+      var t = document.getElementById('undoToast');
+      if (!t) return;
+      var btn = t.querySelector('[data-undo-restore]');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        var fd = new URLSearchParams();
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) fd.set('_csrf', meta.content);
+        fetch(btn.getAttribute('data-undo-restore'), { method: 'POST', body: fd, credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { location.href = d.redirect || location.pathname; })
+          .catch(function () { btn.disabled = false; });
+      });
+      setTimeout(function () { t.classList.add('gone'); }, 9000);
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initUndoToast);
+  else initUndoToast();
 
   /* ── হ্যাশ-জাম্প (সেশন ৩৭) — সার্চ-রেজাল্ট থেকে সরাসরি ফিল্ডে #f_key / #set_key ── */
   function flashFromHash() {
