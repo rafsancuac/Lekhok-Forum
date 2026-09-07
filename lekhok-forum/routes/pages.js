@@ -98,7 +98,7 @@ router.get('/about', async (req, res) => {
   let pressClippings = [];
   try {
     pressClippings = await db.prepare(
-      'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 4'
+      'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 8'
     ).all();
   } catch (e) { pressClippings = []; }
   res.render('lekhok-about', {
@@ -171,6 +171,17 @@ router.get('/committee', async (req, res) => {
     countByYear,
     selectedYear,
     termNote
+  });
+});
+
+// ── স্থায়ী পরিষদ (সেশন ৪০) — user-linked ফটো কার্ড ─────────────────────────
+router.get('/committee/permanent', async (req, res) => {
+  const rows = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'permanent' ORDER BY m.sort_order, m.id").all();
+  res.render('lekhok-permanent', {
+    layout: 'layout',
+    pageTitle: 'স্থায়ী পরিষদ',
+    currentPath: '/committee/permanent',
+    permanent: rows
   });
 });
 
@@ -285,7 +296,8 @@ router.get('/resources/emails', async (req, res) => {
   res.render('lekhok-emails', {
     layout: 'layout',
     pageTitle: 'পত্রিকার ইমেইল',
-    currentPath: '/resources/emails'
+    currentPath: '/resources/emails',
+    paperEmails: require('../helpers/paper-emails')
   });
 });
 

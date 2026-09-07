@@ -50,26 +50,28 @@
     <div class="card" style="text-align:center; padding:32px;">
       <i class="fas fa-book" style="font-size:2.5rem; color:var(--accent); margin-bottom:12px;"></i>
       <h2 style="margin:0 0 8px;"><%= C('about_magazine_title') %></h2>
-      <p style="max-width:600px; margin:0 auto; color:var(--text-soft); line-height:1.7;"><%= C('about_magazine_text') %></p>
+      <p style="max-width:1000px; margin:0 auto; color:var(--text-soft); line-height:1.85; text-align:justify; font-size:1.02rem;"><%= C('about_magazine_text') %></p>
     </div>
     <% if (pressClippings && pressClippings.length) { %>
-      <div class="press-grid" style="margin-top:26px;">
-        <% pressClippings.forEach(c => { %>
-          <div class="press-card">
-            <a href="<%= c.image_url %>" target="_blank" rel="noopener" class="press-img-wrap">
-              <img src="<%= c.image_url %>" alt="<%= c.title || 'পত্রিকায় আমাদের নিউজ' %>" loading="lazy" decoding="async" onerror="this.closest('.press-card').style.display='none'" />
+      <%
+        // সেশন ৪০: ডুয়াল-মার্কি স্লাইডার — উপরের সারি বাম→ডান, নিচের সারি ডান→বাম।
+        // ৩টির কম থাকলে সাইকেল করে প্যাড করা হয় যাতে লুপ নিরবচ্ছিন্ন থাকে।
+        const pad3 = (arr) => { const out = arr.slice(0, 3); let k = 0; while (out.length < 3 && arr.length) { out.push(arr[k % arr.length]); k++; } return out; };
+        const rowA = pad3(pressClippings.slice(0, 3));
+        const rowB = pad3(pressClippings.slice(3, 6).length ? pressClippings.slice(3, 6) : pressClippings.slice(1, 4));
+        const slide = (c) => `
+          <figure class="press-slide">
+            <a href="${c.image_url}" target="_blank" rel="noopener" class="press-slide-img" tabindex="-1">
+              <img src="${c.image_url}" alt="${String(c.title || 'পত্রিকায় আমাদের নিউজ').replace(/"/g, '&quot;')}" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.opacity=.25;this.src='/assets/img/avatar-placeholder.svg'" />
             </a>
-            <div class="press-body">
-              <% if (c.title) { %><h3 class="press-title"><%= c.title %></h3><% } %>
-              <% if (c.paper_name || c.published_date) { %>
-                <p class="press-meta">
-                  <% if (c.paper_name) { %><span><i class="far fa-newspaper"></i> <%= c.paper_name %></span><% } %>
-                  <% if (c.published_date) { %><span><i class="far fa-calendar"></i> <%= c.published_date %></span><% } %>
-                </p>
-              <% } %>
-            </div>
-          </div>
-        <% }) %>
+            ${(c.title || c.paper_name) ? `<figcaption>${c.title ? `<strong>${c.title}</strong>` : ''}${c.paper_name ? `<span><i class="far fa-newspaper"></i> ${c.paper_name}</span>` : ''}</figcaption>` : ''}
+          </figure>`;
+      %>
+      <div class="press-mq" aria-label="পত্রিকার কাটিং — উপরের সারি (বাম থেকে ডানে)">
+        <div class="press-track ltr"><%- rowA.concat(rowA).map(slide).join('') %></div>
+      </div>
+      <div class="press-mq" aria-label="পত্রিকার কাটিং — নিচের সারি (ডান থেকে বামে)">
+        <div class="press-track rtl"><%- rowB.concat(rowB).map(slide).join('') %></div>
       </div>
       <div style="text-align:center; margin-top:22px;">
         <a href="/press" class="link-more">সব কাটিং দেখুন <i class="fas fa-arrow-right"></i></a>
@@ -105,7 +107,8 @@
   <div class="container">
     <span class="eyebrow" style="background:rgba(5,150,105,0.18);border-color:rgba(5,150,105,0.32);"><%= C('about_cta_eyebrow') %></span>
     <h2><%= C('about_cta_t1') %> <span class="accent"><%= C('about_cta_accent') %></span> <%= C('about_cta_t2') %></h2>
-    <p style="text-align:justify; line-height:1.8; max-width:800px; margin:0 auto;"><%= C('about_cta_text') %></p>
+    <span class="accent-divider center"></span>
+    <p style="text-align:justify; line-height:1.9; max-width:1040px; margin:14px auto 0; font-size:1.02rem;"><%= C('about_cta_text') %></p>
     <div style="margin-top:26px;">
       <a href="/register" class="btn btn-primary" style="margin-right:10px;"><i class="fas fa-user-plus"></i> <%= C('about_cta_btn1') %></a>
       <a href="/contact" class="btn btn-outline"><i class="fas fa-envelope"></i> <%= C('about_cta_btn2') %></a>
@@ -151,10 +154,41 @@
           <p><%= C('about_step4_text') %></p>
         </div>
       </div>
+      <div class="join-step">
+        <span class="step-num">৫</span>
+        <div>
+          <h3><%= C('about_step5_title') %></h3>
+          <p><%= C('about_step5_text') %></p>
+        </div>
+      </div>
+      <div class="join-step">
+        <span class="step-num">৬</span>
+        <div>
+          <h3><%= C('about_step6_title') %></h3>
+          <p><%= C('about_step6_text') %></p>
+        </div>
+      </div>
+      <div class="join-step">
+        <span class="step-num">৭</span>
+        <div>
+          <h3><%= C('about_step7_title') %></h3>
+          <p><%= C('about_step7_text') %></p>
+        </div>
+      </div>
+      <div class="join-step">
+        <span class="step-num">৮</span>
+        <div>
+          <h3><%= C('about_step8_title') %></h3>
+          <p><%= C('about_step8_text') %></p>
+        </div>
+      </div>
     </div>
-    <div class="card" style="margin-top:22px;">
-      <h3 style="margin-top:0;"><i class="fas fa-scroll" style="color:var(--accent);"></i> <%= C('about_rules_title') %></h3>
-      <ul class="bullet-list">
+    <div class="section-head center" style="margin-top:40px;">
+      <h2 class="section-title" style="font-size:1.55rem;"><i class="fas fa-scroll" style="color:var(--accent);"></i> <%= C('about_rules_title') %></h2>
+      <span class="accent-divider center"></span>
+    </div>
+    <div class="card rules-card" style="margin-top:18px;">
+      <ul class="bullet-list rules-list">
         <li><%= C('about_rule1') %></li>
         <li><%= C('about_rule2') %></li>
         <li><%= C('about_rule3') %></li>
@@ -183,7 +217,7 @@
 .goal-list li strong { color: var(--accent, #059669); margin-right: 4px; }
 .cu-note { display: flex; gap: 18px; align-items: flex-start; }
 .cu-note-icon { font-size: 1.9rem; color: var(--accent, #059669); margin-top: 4px; }
-.join-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.join-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
 .join-step { background: #fff; border: 1px solid var(--border, #e2e8f0); border-radius: 5px; padding: 20px; display: flex; gap: 14px; box-shadow: 0 2px 10px rgba(10,31,68,0.04); }
 .join-step .step-num { flex: 0 0 42px; width: 42px; height: 42px; border-radius: 50%; background: var(--brand, #0a1f44); color: #fff; font-weight: 700; font-size: 1.15rem; display: inline-flex; align-items: center; justify-content: center; }
 .join-step h3 { margin: 4px 0 8px; font-size: 1.02rem; color: var(--brand, #0a1f44); }
@@ -191,6 +225,31 @@
 .join-step .step-pay { display: inline-block; background: #ecfdf5; border: 1px dashed rgba(5,150,105,0.4); color: #065f46; border-radius: 5px; padding: 8px 12px; font-size: 0.95rem; }
 .notice-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
 .notice-warning p { color: #78350f; }
+/* ── সেশন ৪: ডুয়াল-মার্কি প্রেস-স্লাইডার ── */
+.press-mq { overflow: hidden; position: relative; margin-top: 22px; padding: 6px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
+.press-track { display: flex; width: max-content; will-change: transform; }
+.press-track.ltr { animation: mqLTR 42s linear infinite; }
+.press-track.rtl { animation: mqRTL 42s linear infinite; }
+.press-mq:hover .press-track { animation-play-state: paused; }
+@keyframes mqLTR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+@keyframes mqRTL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.press-slide { flex: 0 0 auto; width: 380px; margin-right: 20px; background: #fff; border: 1px solid var(--border, #e2e8f0);
+  border-radius: 5px; overflow: hidden; box-shadow: 0 3px 14px rgba(10,31,68,0.07); margin-top: 0; margin-bottom: 0;
+  transition: transform .22s ease, box-shadow .22s ease; }
+.press-slide:hover { transform: translateY(-5px); box-shadow: 0 14px 32px rgba(10,31,68,0.15); }
+.press-slide-img { display: block; aspect-ratio: 4 / 3; overflow: hidden; background: #f1f5f9; }
+.press-slide-img img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; transition: transform .45s ease; }
+.press-slide:hover .press-slide-img img { transform: scale(1.05); }
+.press-slide figcaption { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+.press-slide figcaption strong { font-size: .95rem; color: var(--brand, #0a1f44); line-height: 1.5; }
+.press-slide figcaption span { font-size: .8rem; color: var(--text-muted, #64748b); display: inline-flex; align-items: center; gap: 6px; }
+.rules-card { padding: 26px 30px; }
+.rules-list li { font-size: 1.06rem; line-height: 1.9; margin-bottom: 14px; color: var(--text, #1e293b); }
+.rules-list li:last-child { margin-bottom: 0; }
+@media (max-width: 768px) { .press-slide { width: 290px; margin-right: 14px; } .rules-card { padding: 20px 18px; } }
+@media (prefers-reduced-motion: reduce) { .press-track.ltr, .press-track.rtl { animation: none; } }
 .press-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
 .press-card { background: #fff; border: 1px solid var(--border, #e2e8f0); border-radius: 5px; overflow: hidden; box-shadow: 0 2px 10px rgba(10,31,68,0.05); transition: transform .18s ease, box-shadow .18s ease; display: flex; flex-direction: column; }
 .press-card:hover { transform: translateY(-4px); box-shadow: 0 10px 26px rgba(10,31,68,0.12); }

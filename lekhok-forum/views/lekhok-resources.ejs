@@ -6,25 +6,17 @@
   </div>
 </header>
 
-<%# সেশন ৩৫: রিসোর্স সাব-পেজ নেভিগেশন — 'গুরুত্বপূর্ণ ফাইল ও রিসোর্স' ও 'পত্রিকার ইমেইল' %>
-<div class="res-subnav-wrap">
-  <div class="container">
-    <nav class="res-subnav" aria-label="রিসোর্স সাব-পেজ">
-      <a href="/resources" class="active" aria-current="page"><i class="fas fa-folder-open"></i> গুরুত্বপূর্ণ ফাইল ও রিসোর্স</a>
-      <a href="/resources/emails"><i class="fas fa-envelope"></i> পত্রিকার ইমেইল</a>
-    </nav>
-  </div>
-</div>
-
 <section class="section reveal">
   <div class="container">
+    <% const CAT_BN = { guide: 'গাইড', document: 'ডকুমেন্ট', report: 'প্রতিবেদন', form: 'ফর্ম', anthology: 'সংকলন', reference: 'রেফারেন্স', scholarship: 'ফেলোশিপ', 'writing-tips': 'লেখালেখির টিপস' }; const catBn = (c) => CAT_BN[c] || c; %>
+    <% const FT_BN = { pdf: 'পিডিএফ', doc: 'ওয়ার্ড', docx: 'ওয়ার্ড', image: 'ছবি', jpg: 'ছবি', png: 'ছবি' }; %>
     <div class="notice-tabs">
       <a href="?category=all"          class="<%= activeCategory === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সকল</a>
       <% if (categories && categories.length) { %>
         <% categories.forEach(c => { %>
           <% if (c.category) { %>
             <a href="?category=<%= c.category %>" class="<%= activeCategory === c.category ? 'active' : '' %>">
-              <i class="fas fa-folder"></i> <%= c.category === 'scholarship' ? 'ফেলোশিপ' : c.category === 'writing-tips' ? 'লেখালেখির টিপস' : c.category %>
+              <i class="fas fa-folder"></i> <%= catBn(c.category) %>
             </a>
           <% } %>
         <% }) %>
@@ -44,7 +36,7 @@
         %>
           <div class="resource-card has-image">
             <div class="res-icon-wrap" style="position:relative;">
-              <span class="res-badge"><%= r.category === 'scholarship' ? 'ফেলোশিপ' : r.category === 'writing-tips' ? 'টিপস' : (r.file_type || 'FILE') %></span>
+              <span class="res-badge"><%= FT_BN[(r.file_type || '').toLowerCase()] || catBn(r.category) %></span>
               <i class="<%= iconClass %>"></i>
             </div>
             <div class="res-body">
@@ -72,5 +64,8 @@
     <% } %>
   </div>
 </section>
-<%# সেশন ৩৫: নিচের বড় 'পত্রিকার ইমেইল তালিকা' বাটন-সেকশন সরানো হয়েছে —
-    পত্রিকার ইমেইল এখন উপরের সাব-পেজ ট্যাব থেকেই যাওয়া যায় %>
+<div class="container" style="padding-bottom:34px;">
+  <div style="text-align:center;">
+    <a href="/resources/emails" class="link-more"><i class="fas fa-envelope"></i> পত্রিকার ইমেইল ডিরেক্টরি দেখুন</a>
+  </div>
+</div>

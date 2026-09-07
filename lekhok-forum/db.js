@@ -710,6 +710,43 @@ async function runMigrations() {
     await backend.prepare("INSERT INTO settings (key, value) SELECT 'motto', 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী' WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = 'motto')").run();
   } catch (_) {}
 
+  // ── সেশন ৪০ মাইগ্রেশন ────────────────────────────────────────────────────
+  // (40a) nav_json: কার্যনির্বাহী পরিষদে 'স্থায়ী পরিষদ' + রিসোর্সে ২ সাব-পেজ ড্রপডাউন
+  try {
+    const navRow40 = await backend.prepare("SELECT value FROM settings WHERE key = 'nav_json' AND value != ''").get();
+    if (navRow40 && navRow40.value) {
+      let nav40 = JSON.parse(navRow40.value); let changed40 = false;
+      const com40 = (nav40 || []).find(i => i && i.href === '/committee');
+      if (com40 && Array.isArray(com40.children) && !com40.children.some(c => c.href === '/committee/permanent')) {
+        const at = com40.children.findIndex(c => c.href === '/committee');
+        com40.children.splice(at + 1, 0, { label: 'স্থায়ী পরিষদ', href: '/committee/permanent', icon: 'fa-award' });
+        changed40 = true;
+      }
+      const res40 = (nav40 || []).find(i => i && i.href === '/resources');
+      if (res40 && !res40.children) {
+        res40.children = [
+          { label: 'গুরুত্বপূর্ণ ফাইল ও রিসোর্স', href: '/resources', icon: 'fa-folder-open' },
+          { label: 'পত্রিকার ইমেইল', href: '/resources/emails', icon: 'fa-envelope' }
+        ];
+        changed40 = true;
+      }
+      if (changed40) await backend.prepare("UPDATE settings SET value = ? WHERE key = 'nav_json'").run(JSON.stringify(nav40));
+    }
+  } catch (e) { console.error('[db] nav 40 migration (non-fatal):', e.message); }
+  // (40b) স্থায়ী পরিষদ সিড — ৫ সদস্য, ইউজার-আইডি লিংকড (ফটো কার্ড পাবলিক পেজে)
+  try {
+    const pc40 = await backend.prepare("SELECT COUNT(*) AS c FROM members WHERE member_type = 'permanent'").get();
+    if (!pc40 || pc40.c === 0) {
+      const pu40 = await backend.prepare("SELECT id, full_name FROM users WHERE status = 'active' AND role = 'user' ORDER BY id LIMIT 5").all();
+      const proles40 = ['আহ্বায়ক', 'সদস্য সচিব', 'স্থায়ী সদস্য', 'স্থায়ী সদস্য', 'স্থায়ী সদস্য'];
+      for (let i = 0; i < pu40.length; i++) {
+        await backend.prepare("INSERT INTO members (name, role, member_type, user_id, sort_order) VALUES (?, ?, 'permanent', ?, ?)")
+          .run(pu40[i].full_name, proles40[i], pu40[i].id, i + 1);
+      }
+      if (pu40.length) console.log(`[db] ✓ স্থায়ী পরিষদ seeded: ${pu40.length} সদস্য (user-linked)`);
+    }
+  } catch (e) { console.error('[db] permanent seed (non-fatal):', e.message); }
+
   // (1b) nav_json migration — /press page (পত্রিকায় আমাদের নিউজ) into the
   //      পরিচিতি submenu of ANY customized menu, keeping admin edits intact.
   //      Idempotent: skipped when /press already present anywhere.

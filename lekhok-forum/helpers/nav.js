@@ -23,6 +23,7 @@ const DEFAULT_NAV = [
     children: [
       { label: 'উপদেষ্টাদের তালিকা', href: '/committee/advisory', icon: 'fa-user-tie' },
       { label: 'কার্যনির্বাহী কমিটি', href: '/committee', icon: 'fa-users-cog' },
+      { label: 'স্থায়ী পরিষদ', href: '/committee/permanent', icon: 'fa-award' },
       { label: 'সদস্য পরিচিতি', href: '/members', icon: 'fa-users' }
     ]
   },
@@ -34,7 +35,13 @@ const DEFAULT_NAV = [
     ]
   },
   { label: 'গ্যালারি', href: '/gallery', icon: 'fa-images' },
-  { label: 'রিসোর্স', href: '/resources', icon: 'fa-folder-open' },
+  {
+    label: 'রিসোর্স', href: '/resources', icon: 'fa-folder-open',
+    children: [
+      { label: 'গুরুত্বপূর্ণ ফাইল ও রিসোর্স', href: '/resources', icon: 'fa-folder-open' },
+      { label: 'পত্রিকার ইমেইল', href: '/resources/emails', icon: 'fa-envelope' }
+    ]
+  },
   { label: 'যোগাযোগ', href: '/contact', icon: 'fa-envelope' }
 ];
 

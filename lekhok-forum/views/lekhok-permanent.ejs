@@ -1,0 +1,45 @@
+<header class="page-header">
+  <div class="container">
+    <span class="eyebrow">নেতৃত্বের ধারা</span>
+    <h1>স্থায়ী <span style="color:var(--accent);">পরিষদ</span></h1>
+    <p>সংগঠনের স্থায়ী পরিষদের সদস্যবৃন্দ — যাঁদের দীর্ঘমেয়াদি অভিজ্ঞতা ও দিকনির্দেশনায় এগিয়ে চলে লেখক ফোরাম</p>
+  </div>
+</header>
+
+<section class="section reveal">
+  <div class="container">
+    <div class="section-head center">
+      <span class="eyebrow"><i class="fas fa-award"></i> স্থায়ী পরিষদ</span>
+      <h2 class="section-title">যাঁদের অভিজ্ঞতায় <span class="accent">এগিয়ে চলেছি</span></h2>
+      <span class="accent-divider center"></span>
+    </div>
+
+    <% if (!permanent || !permanent.length) { %>
+      <div class="empty-state">
+        <i class="fas fa-award"></i>
+        <h3>এখনো সদস্য যোগ করা হয়নি</h3>
+        <p>অ্যাডমিন প্যানেল → কমিটির সদস্য → ধরন: স্থায়ী পরিষদ — থেকে সদস্য যোগ করুন।</p>
+      </div>
+    <% } else { %>
+      <div class="perm-grid">
+        <% permanent.forEach(m => {
+             const name = m.user_full_name || m.name;
+             const img = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg';
+             const desig = m.designation || m.user_designation || '';
+        %>
+          <div class="perm-card">
+            <img src="<%= img %>" alt="<%= name %>" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+            <h3><%= name %></h3>
+            <div class="perm-role"><%= m.role || 'স্থায়ী সদস্য' %></div>
+            <% if (desig) { %><div class="perm-desig"><%= desig %></div><% } %>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <div style="text-align:center; margin-top:30px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+      <a href="/committee" class="link-more"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
+      <a href="/committee/advisory" class="link-more"><i class="fas fa-user-tie"></i> উপদেষ্টা পরিষদ</a>
+    </div>
+  </div>
+</section>

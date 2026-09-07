@@ -32,7 +32,7 @@
           <td><strong><%= m.name %></strong></td>
           <td><%= m.role || '—' %></td>
           <td><%= m.term_year || '—' %></td>
-          <td><%= m.member_type === 'central' ? 'কেন্দ্রীয়' : 'বিশ্ববিদ্যালয়' %></td>
+          <td><%= m.member_type === 'central' ? 'কেন্দ্রীয়' : m.member_type === 'advisory' ? 'উপদেষ্টা' : m.member_type === 'permanent' ? 'স্থায়ী পরিষদ' : m.member_type === 'founder' ? 'প্রতিষ্ঠাতা' : 'বিশ্ববিদ্যালয়' %></td>
           <td><%= m.sort_order %></td>
           <td>
             <a href="/admin/members/<%= m.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>

@@ -1,47 +1,151 @@
 <header class="page-header">
   <div class="container">
-    <span class="eyebrow">যোগাযোগ</span>
+    <span class="eyebrow">যোগাযোগ ডিরেক্টরি</span>
     <h1>পত্রিকার <span style="color:var(--accent);">ইমেইল</span></h1>
-    <p>লেখা পাঠাতে অথবা যোগাযোগের জন্য নিচের ইমেইলগুলো ব্যবহার করুন</p>
+    <p>দেশের সকল দৈনিক পত্রিকায় কলাম, চিঠিপত্র, ফিচার, গল্প-কবিতা প্রেরণের জন্য প্রদানকৃত ইমেইল আইডিগুলো</p>
   </div>
 </header>
 
-<%# সেশন ৩৫: রিসোর্স সাব-পেজ নেভিগেশন %>
-<div class="res-subnav-wrap">
-  <div class="container">
-    <nav class="res-subnav" aria-label="রিসোর্স সাব-পেজ">
-      <a href="/resources"><i class="fas fa-folder-open"></i> গুরুত্বপূর্ণ ফাইল ও রিসোর্স</a>
-      <a href="/resources/emails" class="active" aria-current="page"><i class="fas fa-envelope"></i> পত্রিকার ইমেইল</a>
-    </nav>
-  </div>
-</div>
-
 <section class="section reveal">
   <div class="container">
-    <div class="email-list-card" style="max-width:700px; margin:0 auto; background:var(--card); border:1px solid var(--border); border-radius:5px; padding:32px;">
-      <div class="email-list-grid" style="display:flex; flex-direction:column; gap:12px;">
-        <div class="email-item" style="display:flex; align-items:center; gap:12px; padding:14px 18px; background:var(--surface-alt); border-radius:5px;">
-          <i class="fas fa-envelope" style="color:var(--accent); font-size:18px;"></i>
-          <div style="flex:1;">
-            <div style="font-weight:600; font-size:15px;">editor@lekhokforum.org</div>
-            <small style="color:var(--text-muted);">সম্পাদক</small>
-          </div>
+    <div class="pe-intro card">
+      <i class="fas fa-envelope-open-text" style="color:var(--accent); font-size:1.6rem;"></i>
+      <p><%= paperEmails.intro %></p>
+    </div>
+
+    <div class="pe-toolbar">
+      <div class="pe-search">
+        <i class="fas fa-search"></i>
+        <input type="search" id="peSearch" placeholder="পত্রিকা বা ইমেইল খুঁজুন…" autocomplete="off" aria-label="ইমেইল খুঁজুন" />
+      </div>
+      <span class="pe-count" id="peCount"></span>
+    </div>
+
+    <nav class="pe-tabs" aria-label="ইমেইল বিভাগ">
+      <% paperEmails.groups.forEach((g, i) => { %>
+        <a href="#pe-<%= g.id %>" class="pe-tab <%= i === 0 ? 'active' : '' %>"><i class="fas <%= g.icon %>"></i> <%= g.label %></a>
+      <% }) %>
+    </nav>
+
+    <% const BN = '০১২৩৪৫৬৭৮৯'; const bn = n => String(n).replace(/\d/g, d => BN[+d]); %>
+    <% paperEmails.groups.forEach(g => { %>
+      <div class="pe-group" id="pe-<%= g.id %>" data-pe-group>
+        <div class="pe-group-head">
+          <span class="pe-group-ico"><i class="fas <%= g.icon %>"></i></span>
+          <h2><%= g.label %></h2>
+          <span class="pe-group-count"><%= bn(g.items.length) %>টি</span>
         </div>
-        <div class="email-item" style="display:flex; align-items:center; gap:12px; padding:14px 18px; background:var(--surface-alt); border-radius:5px;">
-          <i class="fas fa-envelope" style="color:var(--accent); font-size:18px;"></i>
-          <div style="flex:1;">
-            <div style="font-weight:600; font-size:15px;">info@lekhokforum.org</div>
-            <small style="color:var(--text-muted);">সাধারণ যোগাযোগ</small>
-          </div>
-        </div>
-        <div class="email-item" style="display:flex; align-items:center; gap:12px; padding:14px 18px; background:var(--surface-alt); border-radius:5px;">
-          <i class="fas fa-envelope" style="color:var(--accent); font-size:18px;"></i>
-          <div style="flex:1;">
-            <div style="font-weight:600; font-size:15px;">publish@lekhokforum.org</div>
-            <small style="color:var(--text-muted);">প্রকাশনা</small>
-          </div>
+        <div class="pe-grid">
+          <% g.items.forEach(it => { %>
+            <div class="pe-card" data-pe-search="<%= (it.paper + ' ' + (it.note || '') + ' ' + it.emails.join(' ')).toLowerCase() %>">
+              <div class="pe-card-head">
+                <h3><%= it.paper %></h3>
+                <% if (it.note) { %><span class="pe-note"><%= it.note %></span><% } %>
+              </div>
+              <ul class="pe-mails">
+                <% it.emails.forEach(em => { %>
+                  <li>
+                    <a href="mailto:<%= em %>" class="pe-mail"><i class="far fa-envelope"></i> <%= em %></a>
+                    <button type="button" class="pe-copy" data-copy="<%= em %>" title="কপি করুন" aria-label="<%= em %> কপি করুন"><i class="far fa-copy"></i></button>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          <% }) %>
         </div>
       </div>
+    <% }) %>
+
+    <div class="card pe-footnote">
+      <i class="fas fa-lightbulb" style="color:var(--accent);"></i>
+      <p><%= paperEmails.note %></p>
+    </div>
+    <div style="text-align:center; margin-top:20px;">
+      <a href="/resources" class="link-more"><i class="fas fa-folder-open"></i> গুরুত্বপূর্ণ ফাইল ও রিসোর্স</a>
     </div>
   </div>
 </section>
+
+<style>
+.pe-intro { display: flex; gap: 16px; align-items: flex-start; padding: 22px 26px; margin-bottom: 20px; }
+.pe-intro p { margin: 0; color: var(--text-soft, #475569); line-height: 1.85; text-align: justify; }
+.pe-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+.pe-search { position: relative; flex: 1; min-width: 240px; max-width: 460px; }
+.pe-search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted, #64748b); font-size: 14px; }
+.pe-search input { width: 100%; padding: 11px 16px 11px 38px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 5px; font-family: inherit; font-size: .95rem; background: #fff; }
+.pe-search input:focus { outline: none; border-color: var(--accent, #059669); box-shadow: 0 0 0 3px rgba(5,150,105,.12); }
+.pe-count { color: var(--text-muted, #64748b); font-size: .88rem; font-weight: 600; }
+.pe-tabs { position: sticky; top: 62px; z-index: 20; display: flex; gap: 8px; overflow-x: auto; padding: 10px 4px; background: linear-gradient(180deg, var(--bg, #f4f6f8) 82%, transparent); scrollbar-width: thin; }
+.pe-tab { flex: 0 0 auto; padding: 8px 15px; border-radius: 5px; border: 1px solid var(--border, #e2e8f0); background: #fff; color: var(--text-soft, #475569); font-size: .88rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; transition: all .18s ease; }
+.pe-tab:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); }
+.pe-tab.active { background: linear-gradient(135deg, #059669, #047857); border-color: transparent; color: #fff; box-shadow: 0 4px 12px rgba(5,150,105,.3); }
+.pe-group { margin-top: 34px; scroll-margin-top: 120px; }
+.pe-group-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.pe-group-ico { width: 42px; height: 42px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; background: linear-gradient(135deg, #059669, #0a1f44); box-shadow: 0 5px 14px rgba(5,150,105,.3); }
+.pe-group-head h2 { margin: 0; font-size: 1.3rem; color: var(--brand, #0a1f44); }
+.pe-group-count { background: #ecfdf5; color: #065f46; border: 1px solid rgba(5,150,105,.25); font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 5px; }
+.pe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.pe-card { background: #fff; border: 1px solid var(--border, #e2e8f0); border-left: 4px solid var(--accent, #059669); border-radius: 5px; padding: 16px 18px; box-shadow: 0 2px 10px rgba(10,31,68,.05); transition: transform .2s ease, box-shadow .2s ease, border-color .2s; }
+.pe-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(10,31,68,.12); border-color: rgba(5,150,105,.5); }
+.pe-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.pe-card-head h3 { margin: 0; font-size: 1rem; color: var(--brand, #0a1f44); line-height: 1.5; }
+.pe-note { background: linear-gradient(135deg, #ecfdf5, #f0fdf4); color: #065f46; border: 1px solid rgba(5,150,105,.22); font-size: .74rem; font-weight: 700; padding: 3px 9px; border-radius: 5px; white-space: nowrap; }
+.pe-mails { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.pe-mails li { display: flex; align-items: center; gap: 8px; }
+.pe-mail { flex: 1; display: inline-flex; align-items: center; gap: 8px; color: var(--accent, #059669); font-weight: 600; font-size: .88rem; text-decoration: none; background: var(--surface-alt, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 5px; padding: 7px 11px; word-break: break-all; transition: background .15s, border-color .15s; }
+.pe-mail:hover { background: #ecfdf5; border-color: rgba(5,150,105,.4); }
+.pe-copy { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 5px; border: 1px solid var(--border, #e2e8f0); background: #fff; color: var(--text-muted, #64748b); cursor: pointer; transition: all .15s; }
+.pe-copy:hover { color: var(--accent, #059669); border-color: var(--accent, #059669); }
+.pe-copy.done { color: #fff; background: var(--accent, #059669); border-color: var(--accent, #059669); }
+.pe-group.pe-hidden, .pe-card.pe-hidden { display: none; }
+.pe-footnote { display: flex; gap: 12px; align-items: flex-start; margin-top: 34px; padding: 18px 22px; background: #fffbeb; border: 1px solid #fde68a; }
+.pe-footnote p { margin: 0; color: #78350f; line-height: 1.7; }
+</style>
+
+<script>
+(function () {
+  var search = document.getElementById('peSearch');
+  var count = document.getElementById('peCount');
+  var BN = '০১২৩৪৫৬৭৮৯';
+  function bn(n) { return String(n).replace(/\d/g, function (d) { return BN[+d]; }); }
+  function total() { return document.querySelectorAll('.pe-card').length; }
+  function syncCount(shown) { count.textContent = bn(shown) + '/' + bn(total()) + ' এন্ট্রি'; }
+  syncCount(total());
+  if (search) search.addEventListener('input', function () {
+    var q = search.value.trim().toLowerCase();
+    var shown = 0;
+    document.querySelectorAll('[data-pe-group]').forEach(function (g) {
+      var gShown = 0;
+      g.querySelectorAll('.pe-card').forEach(function (c) {
+        var hit = !q || (c.getAttribute('data-pe-search') || '').indexOf(q) !== -1;
+        c.classList.toggle('pe-hidden', !hit);
+        if (hit) gShown++;
+      });
+      g.classList.toggle('pe-hidden', gShown === 0);
+      shown += gShown;
+    });
+    syncCount(shown);
+  });
+  document.querySelectorAll('.pe-tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('.pe-tab').forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.pe-copy').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var em = b.getAttribute('data-copy');
+      function done() {
+        b.classList.add('done');
+        b.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(function () { b.classList.remove('done'); b.innerHTML = '<i class="far fa-copy"></i>'; }, 1400);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(em).then(done, done);
+      else {
+        var ta = document.createElement('textarea'); ta.value = em; document.body.appendChild(ta);
+        ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); done();
+      }
+    });
+  });
+})();
+</script>

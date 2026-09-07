@@ -122,7 +122,7 @@
       <div>
         <span class="eyebrow"><%= C('home_lead1_eyebrow') %></span>
         <h2 class="section-title"><%= C('home_lead1_t1') %> <span class="accent"><%= C('home_lead1_accent') %></span></h2>
-        <span class="accent-divider"></span>
+        <span class="accent-divider center"></span>
       </div>
     </div>
 
@@ -134,8 +134,7 @@
         const displayBio = rawBio.substring(0, 700);
         const fb    = m.social_fb;
         const email = m.social_email;
-        const profileHref = m.user_username ? '/profile/' + m.user_username : '';
-        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || profileHref);
+        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin);
         const inner = `
           <img loading="lazy" decoding="async" src="${displayImg}" alt="${displayName}" class="leader-photo" />
           <div class="leader-body">
@@ -149,7 +148,6 @@
               ${email ? `<a href="mailto:${email}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
               ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
               ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>` : ''}
-              ${profileHref ? `<a href="${profileHref}" aria-label="প্রোফাইল"><i class="fas fa-user"></i></a>` : ''}
             </div>` : ''}
           </div>
         `;
@@ -160,7 +158,7 @@
         // DOM টুকরোতে ফেলত, ফলে বর্তমান সভাপতি/সা.সম্পাদক কার্ড ভেঙে যেত।
         // এখন প্রোফাইল লিংক থাকে সোশ্যাল আইকনে + পুরো কার্ড ক্লিকযোগ্য
         // data-href + main.js-এর delegated হ্যান্ডলারে — nested anchor সম্ভবই নেই।
-        return `<div class="leader-card has-image leader-card-featured"${profileHref ? ` data-href="${profileHref}" title="প্রোফাইল দেখুন"` : ''}>${inner}</div>`;
+        return `<div class="leader-card has-image leader-card-featured">${inner}</div>`;
       }
       function leaderPair(members, roles, yearLabel, statements) {
         if (!members || !members.length) return '';
@@ -187,7 +185,7 @@
       <div>
         <span class="eyebrow"><%= C('home_lead2_eyebrow') %></span>
         <h2 class="section-title"><%= C('home_lead2_t1') %> <span class="accent"><%= C('home_lead2_accent') %></span></h2>
-        <span class="accent-divider"></span>
+        <span class="accent-divider center"></span>
       </div>
     </div>
 
@@ -200,46 +198,53 @@
 
 <%# ── সাধারণ জিজ্ঞাসা (সেশন ৩৫ ফিক্স: আগে এই ব্লকটা container/section-এর বাইরে ছিল —
       তাই দুই পাশে প্যাডিং ছাড়া একদম কিনারায় লেগে যেত। এখন পূর্ণ সেকশন-কাঠামোয়) ── %>
-<% if (recentQA && recentQA.length) { %>
+<%# ── সেশন ৪০: সাধারণ জিজ্ঞাসা — এলিগ্যান্ট +/− অ্যাকর্ডিয়ন (কারেটেড ১৫ প্রশ্ন; ইউজার-লিংক বাদ) ── %>
 <section class="section qa-section reveal" id="qa">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head center">
       <div>
         <span class="eyebrow"><i class="fas fa-comments"></i> <%= C('home_qa_eyebrow') %></span>
         <h2 class="section-title"><%= C('home_qa_title') %></h2>
-        <span class="accent-divider"></span>
+        <span class="accent-divider center"></span>
       </div>
-      <a href="/qa" class="link-more"><%= C('home_qa_more') %> <i class="fas fa-arrow-right"></i></a>
     </div>
-    <div class="qa-folding-list">
-      <% recentQA.forEach((q) => { %>
-        <details class="qa-fold-item">
-          <summary class="qa-fold-summary">
-            <span class="qa-fold-q"><i class="fas fa-chevron-right"></i> <%= q.title %></span>
-            <span class="qa-fold-meta"><i class="far fa-user"></i> <%= q.author_name %> · <i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
+    <%
+      const FAQ40 = [
+        ['পত্রিকায় লেখা পাঠাতে হলে প্রথমে কী করতে হয়?', 'প্রথমে পত্রিকার নীতিমালা (submission guidelines) দেখে নিতে হয় — কোন বিভাগে (মতামত/উপসম্পাদকীয়/ফিচার) লেখা পাঠানো হচ্ছে, শব্দসীমা কত, আর কোন ইমেইলে পাঠাতে হবে। বেশিরভাগ পত্রিকার ওয়েবসাইটে "যোগাযোগ" বা "লেখা পাঠান" নামে আলাদা পাতা থাকে।'],
+        ['লেখার আদর্শ শব্দসংখ্যা কত হওয়া উচিত?', 'সাধারণত কলাম/মতামত বিভাগের জন্য ৬০০-৯০০ শব্দ, ফিচারের জন্য ৮০০-১২০০ শব্দ যথেষ্ট ধরা হয়। খুব দীর্ঘ লেখা সম্পাদক প্রথমেই বাদ দিতে পারেন, তাই সংক্ষিপ্ত ও গোছানো রাখাই ভালো।'],
+        ['লেখা কীভাবে ফরম্যাট করে পাঠাতে হয়?', 'সাধারণত Word ফাইল (.docx) বা প্লেইন টেক্সটে, ইউনিকোড ফন্টে (অভ্র/বিজয় না, সরাসরি ইউনিকোড বাংলা), সাথে লেখকের নাম, পরিচয় (শিক্ষার্থী/পেশা), মোবাইল নম্বর ও ইমেইল যোগ করে পাঠানো উচিত।'],
+        ['লেখা প্রকাশিত হতে কতদিন সময় লাগে?', 'এটা পত্রিকাভেদে ভিন্ন — কিছু পত্রিকা ৩-৭ দিনের মধ্যে জানায়, কিছু পত্রিকা কয়েক সপ্তাহ সময় নেয়। নির্দিষ্ট সময়ের মধ্যে উত্তর না পেলে ভদ্রভাবে ফলো-আপ ইমেইল করা যায়।'],
+        ['লেখা প্রত্যাখ্যাত (reject) হলে কী করণীয়?', 'হতাশ না হয়ে লেখাটা আরেকবার পড়ে দেখা উচিত — বিষয়বস্তু কতটা টাইমলি (সাম্প্রতিক প্রাসঙ্গিক), যুক্তি কতটা সুসংগঠিত। প্রয়োজনে অন্য পত্রিকায় পাঠানো যায়, তবে ভাষা/অ্যাঙ্গেল একটু পরিমার্জন করে নেওয়া ভালো।'],
+        ['একই লেখা একসাথে একাধিক পত্রিকায় পাঠানো যাবে কি?', 'না, এটা লেখালেখির জগতে অশোভন (unethical) ধরা হয় এবং কিছু পত্রিকা এ কারণে ভবিষ্যতে লেখা ছাপাতে অস্বীকৃতি জানাতে পারে। একটাতে পাঠিয়ে উত্তরের জন্য অপেক্ষা করাই নিয়ম।'],
+        ['ছদ্মনামে (pen name) লেখা যায় কি?', 'হ্যাঁ, অনেক পত্রিকা ছদ্মনাম গ্রহণ করে, তবে প্রকৃত পরিচয় ও যোগাযোগের তথ্য সম্পাদকীয় বিভাগকে জানাতে হয় (যাচাইয়ের জন্য) — সেটা প্রকাশিত হয় না।'],
+        ['লেখার জন্য সম্মানী (honorarium) দেওয়া হয় কি?', 'কিছু বড় জাতীয় পত্রিকা প্রকাশিত লেখার জন্য সামান্য সম্মানী দেয়, তবে অনেক পত্রিকা বিশেষ করে ছাত্র-লেখকদের জন্য দেয় না। এটা প্রতিটি পত্রিকার নিজস্ব নীতির উপর নির্ভর করে — প্রকাশের আগেই জিজ্ঞাসা করে নেওয়া ভালো।'],
+        ['কলাম আর প্রবন্ধের মধ্যে পার্থক্য কী?', 'কলাম সাধারণত ব্যক্তিগত মতামত/দৃষ্টিভঙ্গি নিয়ে লেখা, তুলনামূলক সংক্ষিপ্ত ও কথোপকথনধর্মী। প্রবন্ধ (essay) বেশি বিশ্লেষণাত্মক, তথ্যভিত্তিক এবং কাঠামোবদ্ধ (ভূমিকা-মূলবক্তব্য-উপসংহার)।'],
+        ['লেখার মৌলিকত্ব (originality) নিয়ে নিয়ম কী?', 'লেখা অবশ্যই স্বরচিত হতে হবে — অন্য কোথাও প্রকাশিত বা কপি-করা অংশ থাকলে তা উল্লেখ (উদ্ধৃতি/তথ্যসূত্র) দিয়ে দিতে হয়। plagiarism ধরা পড়লে লেখকের বিশ্বাসযোগ্যতা স্থায়ীভাবে ক্ষতিগ্রস্ত হতে পারে।'],
+        ['তথ্য-উপাত্ত ব্যবহার করলে সূত্র উল্লেখ করতে হয় কি?', 'হ্যাঁ, পরিসংখ্যান, গবেষণার ফলাফল বা উদ্ধৃতি ব্যবহার করলে সূত্র (কোথা থেকে নেওয়া) স্পষ্টভাবে উল্লেখ করা উচিত — এটা লেখার নির্ভরযোগ্যতা বাড়ায় এবং সম্পাদকীয় বিভাগের আস্থা অর্জনে সাহায্য করে।'],
+        ['অনলাইন পোর্টাল ও প্রিন্ট পত্রিকায় লেখা পাঠানোর পার্থক্য কী?', 'অনলাইন পোর্টালে সাধারণত দ্রুত সিদ্ধান্ত হয় এবং তুলনামূলক নমনীয় শব্দসীমা থাকে। প্রিন্ট পত্রিকায় জায়গা সীমিত থাকায় সম্পাদনার প্রক্রিয়া কড়াকড়ি ও সময়সাপেক্ষ হতে পারে।'],
+        ['লেখার সাথে ছবি/ইলাস্ট্রেশন পাঠানো যায় কি?', 'অনেক পত্রিকা নিজস্ব গ্রাফিক্স/ছবি ব্যবহার করে, তবে প্রাসঙ্গিক (কপিরাইট-মুক্ত) ছবি পাঠানো গেলে তা গৃহীত হতে পারে। নিশ্চিত না হলে সম্পাদকীয় বিভাগকে জিজ্ঞেস করে নেওয়া ভালো।'],
+        ['প্রথমবার লেখা পাঠাতে যাওয়া নতুন লেখকদের জন্য পরামর্শ কী?', 'ছোট, স্পষ্ট বিষয় নিয়ে শুরু করা ভালো — নিজের অভিজ্ঞতা বা আশেপাশের সমসাময়িক বিষয় নিয়ে লিখলে স্বাভাবিকতা বজায় থাকে। জমা দেওয়ার আগে অন্তত দুইবার নিজে পড়ে ও কাউকে দিয়ে যাচাই করিয়ে নেওয়া উচিত।'],
+        ['আমাদের ফোরাম (লেখক ফোরাম) এক্ষেত্রে কীভাবে সাহায্য করতে পারে?', 'আমরা সদস্যদের লেখা পর্যালোচনা (review), বানান-ব্যাকরণ সংশোধন এবং পত্রিকার উপযোগী কাঠামোয় লেখা গোছাতে সাহায্য করি। এছাড়া নিয়মিত কর্মশালা ও পিয়ার-ফিডব্যাক সেশনের মাধ্যমে নতুন লেখকদের প্রথম প্রকাশনার পথ সহজ করার চেষ্টা করি।']
+      ];
+      const BN40 = '০১২৩৪৫৬৭৮৯';
+      const bn40 = (n) => String(n).replace(/\d/g, d => BN40[+d]);
+    %>
+    <div class="faq-accordion">
+      <% FAQ40.forEach((f, i) => { %>
+        <details class="faq-item" <%= i === 0 ? 'open' : '' %>>
+          <summary class="faq-summary">
+            <span class="faq-q"><span class="faq-num"><%= bn40(i + 1) %></span><span><%= f[0] %></span></span>
+            <span class="faq-icon" aria-hidden="true"></span>
           </summary>
-          <div class="qa-fold-body">
-            <div class="qa-fold-question">
-              <strong>প্রশ্ন:</strong>
-              <p><%= (q.body || '').substring(0, 400) %><%= q.body && q.body.length > 400 ? '…' : '' %></p>
-            </div>
-            <% if (q.topAnswer) { %>
-              <div class="qa-fold-answer">
-                <strong><i class="fas fa-comment-dots"></i> উত্তর:</strong>
-                <p><%= q.topAnswer.body.substring(0, 500) %><%= q.topAnswer.body.length > 500 ? '…' : '' %></p>
-                <span class="qa-fold-answerer"><i class="far fa-user"></i> <%= q.topAnswer.author_name %></span>
-              </div>
-            <% } else { %>
-              <div class="qa-fold-no-answer"><i class="fas fa-info-circle"></i> এখনো কোনো উত্তর নেই। প্রথম উত্তর দিন!</div>
-            <% } %>
-            <a href="/qa/<%= q.id %>" class="qa-fold-link">সম্পূর্ণ আলোচনায় অংশ নিন <i class="fas fa-arrow-right"></i></a>
-          </div>
+          <div class="faq-a"><p><%= f[1] %></p></div>
         </details>
       <% }) %>
     </div>
+    <div style="text-align:center; margin-top:22px;">
+      <a href="/qa" class="link-more"><%= C('home_qa_more') %> <i class="fas fa-arrow-right"></i></a>
+    </div>
   </div>
 </section>
-<% } %>
 
 <%# ── ইউজার ফিড শোকেস (সেশন ৩৫: হিরোর স্লাইডিং উইজেট এখানেই ইন্টিগ্রেট) ── %>
 <section class="section feed-showcase-section reveal" id="user-feed">
