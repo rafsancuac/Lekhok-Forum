@@ -294,6 +294,26 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৪৬ (৮ সেপ্টেম্বর ২০২৬) — লগইন/অথেনটিকেশন/রিডাইরেক্ট ফ্লো ফিক্স (সব রোল)
+
+**সমস্যা (ইউজার-রিপোর্ট):** লগইনের পর মাঝে মাঝে ভুল/অস্তিত্বহীন পেজে ৪০৪, বা লোডিং শেষ হয় না, অথচ ইউজার আসলে লগইন হয়েই থাকে। রুট-কজ বিশ্লেষণে পাওয়া গেল:
+
+- **রোল-বেজড রিডাইরেক্ট ছিল না:** `POST /login`-এ সব ইউজারকে হার্ডকোড করা `/dashboard`-এ পাঠানো হতো — মডারেটর (`role='moderator'`) তার নিজস্ব `/moderator` ড্যাশবোর্ডে না গিয়ে নিয়মিত ফিডে পড়ত।
+- **`next` প্যারামিটার তৈরি হয় কিন্তু কখনো ব্যবহার হতো না:** প্রোটেক্টেড পেজ থেকে `/login?next=...`-এ এলে লগইনের পর সবসময় ডিফল্ট ড্যাশবোর্ডে যেত, আসল গন্তব্যে ফিরত না।
+- **ইতিমধ্যে লগইন থাকলে** `GET /login`/`GET /register` সবাইকে `/dashboard`-এ পাঠাত (রোল ভেদে নয়)।
+- **মডারেটর RBAC:** `requireAdmin` লগইন-করা নন-অ্যাডমিনকে `/admin/login`-এ বাউন্স করত (মডারেটর সেখানে admin_users-এ না থাকায় আটকে যেত) — সঠিক আচরণ ৪০৩ "অনুমতি নেই"।
+- **সেশন-সেভ হ্যাং ঝুঁকি:** Vercel/Turso-তে সেশন-রাইট ধীর/হ্যাং হলে `res.redirect`-এর আগের session.save কলব্যাক কখনো ফায়ার না হতে পারত → "লোডিং শেষ হয় না"।
+
+**ফিক্স:**
+- `routes/auth.js` — নতুন হেল্পার `dashboardFor(role)` (admin→/admin, moderator→/moderator, user→/dashboard) + `safeNextPath(raw)` (শুধু same-origin রিলেটিভ পাথ; `//` ও scheme:// ব্লক — open-redirect গার্ড)।
+- `POST /login` — রোল-বেজড গন্তব্য + সেফ `next` (body/query) প্রায়োরিটি; admin-fallback-এও `next`+`/admin`।
+- `GET /login` ও `GET /register` — ইতিমধ্যে লগইন থাকলে রোল-অনুযায়ী সঠিক ড্যাশবোর্ডে রিডাইরেক্ট (adminUser→/admin)।
+- `views/user/login.ejs` — `next` hidden ইনপুট (ব্যর্থ লগইনেও গন্তব্য টিকে থাকে)।
+- `admin/routes.js` `requireAdmin` — লগইন-করা নন-অ্যাডমিন → ৪০৩ `admin/denied` (homePath রোল-অনুযায়ী), `/admin/login`-এ বাউন্স নয়; অপ্রমাণিত → `/admin/login`।
+- `server.js` — গ্লোবাল session-save-before-redirect wrapper-এ **১.৫সে সেফটি-টাইমআউট**: সেশন-রাইট হ্যাং করলেও রিডাইরেক্ট সর্বদা ঘটে (লোডিং আর চিরতরে আটকে থাকে না)।
+
+**টেস্ট:** session46.js **১৩/১৩** — রোল-বেজড রিডাইরেক্ট (admin/moderator/user), admin-fallback, `next`→/messages, ইতিমধ্যে-লগইন GET /login, মডারেটর /admin/members→403+denied, সেশন-পারসিস্টেন্স (refresh), ইউজার /moderator→403। রিগ্রেশন: session44 ১০/১০ + smoke ১৮/১৮ + ৯/৯ = সবুজ।
+
 ### সেশন ৪৫ (৮ সেপ্টেম্বর ২০২৬) — ডিলিট ফাংশনালিটি: নেটিভ কনফার্মেশন পপ-আপ অপসারণ
 
 - **উদ্দেশ্য:** ডিলিট/ডেস্ট্রাক্টিভ বাটনে ক্লিক করলে ব্রাউজারের `window.confirm()` পপ-আপ ছাড়াই সরাসরি রিকোয়েস্ট যাবে (ইউজার-রিকোয়েস্ট)।

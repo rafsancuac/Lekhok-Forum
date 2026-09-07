@@ -266,15 +266,20 @@ app.use((req, res, next) => {
   function saveThen(cb) {
     if (req.session && typeof req.session.save === 'function' && !req._sessionSaving) {
       req._sessionSaving = true;
+      // সেশন ৪৬: সেফটি-নেট — সেশন-রাইট (Turso/DB) ধীর বা হ্যাং করলেও রিডাইরেক্ট
+      // সর্বোচ্চ ~১.৫ সেকেন্ডে ঘটে; নাহলে ইউজার "লোডিং শেষ হয় না" অবস্থায় আটকে যায়।
+      let finished = false;
+      const finish = () => { if (!finished) { finished = true; req._sessionSaving = false; return cb(); } };
+      const t = setTimeout(finish, 1500);
       try {
         return req.session.save((err) => {
-          req._sessionSaving = false;
           if (err) console.error('[session-save] before response:', err);
-          return cb();
+          clearTimeout(t);
+          finish();
         });
       } catch (e) {
-        req._sessionSaving = false;
-        return cb();
+        clearTimeout(t);
+        finish();
       }
     }
     return cb();

@@ -16,6 +16,7 @@
     <p class="sub">স্বাগতম! আপনার অ্যাকাউন্টে লগইন করুন</p>
     <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
     <form method="POST">
+      <% if (typeof next !== 'undefined' && next) { %><input type="hidden" name="next" value="<%= next %>"><% } %>
       <div class="form-group">
         <label>ব্যবহারকারী নাম বা ইমেইল</label>
         <input type="text" name="username" required autofocus>

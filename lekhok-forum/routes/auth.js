@@ -4,10 +4,28 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { avatarUpload, withUpload } = require('../middleware/upload');
 
+// ── সেশন ৪৬: রোল-বেজড রিডাইরেক্ট হেল্পার ─────────────────────────────────────
+// প্রতিটি রোলের নিজস্ব ড্যাশবোর্ড — admin→/admin, moderator→/moderator, user→/dashboard।
+function dashboardFor(user) {
+  const role = (user && user.role) || 'user';
+  if (role === 'admin') return '/admin';
+  if (role === 'moderator') return '/moderator';
+  return '/dashboard';
+}
+
+// শুধু সেফ, same-origin রিলেটিভ পাথ গ্রহণ করি (// বা scheme:// ব্লক — open-redirect গার্ড)।
+function safeNextPath(raw) {
+  if (typeof raw !== 'string' || !raw) return null;
+  if (!raw.startsWith('/') || raw.startsWith('//')) return null;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw)) return null;
+  return raw;
+}
+
 // ── Login (GET) ──────────────────────────────────────────────────────────────
 router.get('/login', async (req, res) => {
-  if (req.session.user) return res.redirect('/dashboard');
-  res.render('user/login', { error: null, currentPath: '/login' });
+  if (req.session.adminUser) return res.redirect('/admin');
+  if (req.session.user) return res.redirect(dashboardFor(req.session.user));
+  res.render('user/login', { error: null, next: safeNextPath(req.query.next), currentPath: '/login' });
 });
 
 // ── Login (POST) ─────────────────────────────────────────────────────────────
@@ -28,20 +46,22 @@ function loginOk(key) { _loginHits43.delete(key); }
 
 router.post('/login', async (req, res) => {
   const lk43 = (req.ip || '') + '|' + String(req.body.username || '').toLowerCase();
-  if (loginLimited(lk43)) return res.status(429).render('user/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে — ১৫ মিনিট পর আবার চেষ্টা করুন।', currentPath: '/login' });
+  if (loginLimited(lk43)) return res.status(429).render('user/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে — ১৫ মিনিট পর আবার চেষ্টা করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
   try {
     const { username, password } = req.body;
     const user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
     if (user && await bcrypt.compare(password, user.password_hash)) {
       if (user.status === 'banned') {
-        return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', currentPath: '/login' });
+        return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
       }
       loginOk(lk43);
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+      // রোল-বেজড গন্তব্য + (সেফ) `next` — প্রোটেক্টেড পেজ থেকে এলে সেখানেই ফিরে যাই
+      const dest = safeNextPath(req.body.next || req.query.next) || dashboardFor(user);
       return new Promise((resolve) => req.session.save((err) => {
         if (err) console.error('[auth] /login session save error:', err);
-        res.redirect('/dashboard');
+        res.redirect(dest);
         resolve();
       }));
     }
@@ -51,24 +71,26 @@ router.post('/login', async (req, res) => {
     if (admin && await bcrypt.compare(password, admin.password_hash)) {
       loginOk(lk43);
       req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
+      const dest = safeNextPath(req.body.next || req.query.next) || '/admin';
       return new Promise((resolve) => req.session.save((err) => {
         if (err) console.error('[auth] /login admin session save error:', err);
-        res.redirect('/admin');
+        res.redirect(dest);
         resolve();
       }));
     }
 
     loginFail((req.ip || '') + '|' + String(req.body.username || '').toLowerCase());
-    return res.render('user/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', currentPath: '/login' });
+    return res.render('user/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
   } catch (e) {
     console.error('[auth] /login error:', e);
-    return res.status(500).render('user/login', { error: 'লগইন ব্যর্থ: ' + e.message, currentPath: '/login' });
+    return res.status(500).render('user/login', { error: 'লগইন ব্যর্থ: ' + e.message, next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
   }
 });
 
 // ── Register (GET) ───────────────────────────────────────────────────────────
 router.get('/register', async (req, res) => {
-  if (req.session.user) return res.redirect('/dashboard');
+  if (req.session.adminUser) return res.redirect('/admin');
+  if (req.session.user) return res.redirect(dashboardFor(req.session.user));
   res.render('user/register', { error: null, form: {}, currentPath: '/register' });
 });
 

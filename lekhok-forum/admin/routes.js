@@ -41,6 +41,11 @@ function expandScopes(list) {
 function requireAdmin(req, res, next) {
   if (req.session && req.session.adminUser) return next();
   if (req.session && req.session.user && req.session.user.role === 'admin') return next();
+  // সেশন ৪৬: ইতিমধ্যে লগইন-করা নন-অ্যাডমিন (মডারেটর/ইউজার) → ৪০৩ "অনুমতি নেই",
+  // /admin/login-এ বাউন্স নয় (মডারেটর সেখানে ঢুকেই আটকে যেত — admin_users-এ নেই)।
+  if (req.session && req.session.user) {
+    return res.status(403).render('admin/denied', { currentPath: '/admin', homePath: (req.session.user.role === 'moderator') ? '/moderator' : '/dashboard' });
+  }
   return res.redirect('/admin/login');
 }
 

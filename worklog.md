@@ -135,3 +135,18 @@ Work Log:
 
 Stage Summary:
 - কমিট: session45 (বিস্তারিত PROJECT.md §১০)
+
+---
+Task ID: 9
+Agent: Main verification agent (Session 46)
+Task: লগইন/অথেনটিকেশন/রিডাইরেক্ট ফ্লো ফিক্স (সব রোল: admin/moderator/user)
+
+Work Log:
+- রুট-কজ: রোল-বেজড রিডাইরেক্ট নেই (মডারেটর /dashboard-এ যেত), next প্যারাম তৈরি হয় কিন্তু ব্যবহৃত হয় না, GET /login রোল-নির্বিশেষে /dashboard, requireAdmin নন-অ্যাডমিনকে /admin/login-এ বাউন্স, সেশন-সেভ হ্যাং ঝুঁকি
+- auth.js: dashboardFor() + safeNextPath() হেল্পার; POST /login রোল+next; GET /login /register রোল-বেজড; login.ejs hidden next
+- admin/routes.js: requireAdmin → 403 denied (হোমপাথ রোল-অনুযায়ী)
+- server.js: session-save wrapper-এ 1.5s সেফটি-টাইমআউট
+- session46.js 13/13 + রিগ্রেশন 44/45/স্মোক সবুজ
+
+Stage Summary:
+- কমিট: session46 (বিস্তারিত PROJECT.md §১০)
