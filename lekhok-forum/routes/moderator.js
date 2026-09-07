@@ -5,10 +5,13 @@ const { broadcastToAll } = require('./dashboard');
 const { validateNavJson, parseNav } = require('../helpers/nav');
 const { pressUpload, withUpload } = require('../middleware/upload');
 
+// সেশন ৪৪: পারমিশন-ত্রুটিতে আগে `404` টেমপ্লেট রেন্ডার হতো — সেভ/এডিটের পর
+// রিডাইরেক্টে ভুল স্কোপ/রোল পেলে ইউজার "ভুল ৪০৪ পেজ" দেখত। এখন সঠিক "অনুমতি নেই"
+// পেজ দেখাই (admin/denied), ৪০৪ নয়।
 function ensureModerator(req, res, next) {
   if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
   if (req.session.user.role !== 'moderator' && req.session.user.role !== 'admin') {
-    return res.status(403).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+    return res.status(403).render('admin/denied', { currentPath: '/moderator', homePath: '/moderator' });
   }
   next();
 }
@@ -17,7 +20,7 @@ function requireScope(scope) {
   return async (req, res, next) => {
     if (req.session.user.role === 'admin') return next(); // admin implicitly has every scope
     if (!(await db.hasScope(req.session.user.id, scope))) {
-      return res.status(403).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+      return res.status(403).render('admin/denied', { currentPath: '/moderator', homePath: '/moderator' });
     }
     next();
   };

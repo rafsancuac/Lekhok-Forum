@@ -86,7 +86,19 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(methodOverride('_method'));
+// সেশন ৪৪: method-override-এর ডিফল্ট getter শুধু কুয়েরি-স্ট্রিং থেকে `_method`
+// পড়ে (non-"X-" prefix → createQueryGetter) — বডিতে hidden `_method` ফিল্ড পাঠালে
+// সেটি উপেক্ষা হয়, ফলে PUT/DELETE এডিট-ফর্ম POST হিসেবেই থেকে যায় এবং রাউট না
+// মেলায় ৪০৪ দেয়। এখন কুয়েরি ও বডি দুটোই চেক করি যাতে এডিট/আপডেট ফর্ম কখনো
+// ৪০৪ না পায়। (req.body.urlencoded পার্সের পরে আসে বলে বডি এখানে পাওয়া যায়।)
+app.use(methodOverride(function (req) {
+  if (req.body && typeof req.body === 'object' && req.body._method) {
+    const m = req.body._method;
+    delete req.body._method;
+    return m;
+  }
+  return req.query._method;
+}));
 if (process.env.VERCEL) app.set('trust proxy', 1);
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lekhok-forum-secret-key-change-in-production',
@@ -274,6 +286,25 @@ app.use((req, res, next) => {
   res.json = function (data) {
     return saveThen(() => origJson(data));
   };
+  next();
+});
+
+// ── সেশন ৪৪: পেজ-ভিজিট ট্র্যাকিং (অ্যানালিটিক্স ভিজিট ট্রেন্ড) ────────────────
+// শুধু পাবলিক HTML পেজ-ভিউ গণনা করি (স্ট্যাটিক অ্যাসেট/API/অ্যাডমিন-মডারেটর বাদ)।
+// page_visits(path, day) → count+1 (UNIQUE path+day upsert)। ফায়ার-অ্যান্ড-ফরগেট:
+// রেসপন্স কখনো ব্লক হয় না (Turso-তে নেটওয়ার্ক RTT যোগ করি না); best-effort কাউন্টার।
+app.use((req, res, next) => {
+  try {
+    if (req.method === 'GET' && !/^\/(api|assets|uploads|avatar|admin|moderator)\b/.test(req.path) && !/\.[a-zA-Z0-9]{2,5}$/.test(req.path)) {
+      const day = new Date().toISOString().slice(0, 10);
+      const r = db.prepare(
+        `INSERT INTO page_visits (path, day, count) VALUES (?, ?, 1)
+         ON CONFLICT(path, day) DO UPDATE SET count = count + 1`
+      ).run(req.path, day);
+      // sql.js → sync result; Turso → promise (fire-and-forget, no unhandled rejection)
+      if (r && typeof r.catch === 'function') r.catch(() => {});
+    }
+  } catch (e) {}
   next();
 });
 

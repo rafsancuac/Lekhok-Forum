@@ -161,7 +161,10 @@
       var fd = new URLSearchParams(); fd.set('section', new URLSearchParams(location.search).get('section') || 'home_faq');
       ids.forEach(function (id) { fd.append('ids', id); });
       fd.set('_csrf', csrf());
-      fetch(BASE + '/sections/reorder', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function () { location.reload(); });
+      fetch(BASE + '/sections/reorder', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) {
+        if (r.status === 401) return location.href = '/login';
+        location.reload();
+      }).catch(function () { location.reload(); });
     });
   });
   // সেকশন-এডিট আন্ডু টোস্ট
@@ -172,7 +175,10 @@
   document.body.appendChild(t);
   document.getElementById('secUndoBtn').addEventListener('click', function () {
     var fd = new URLSearchParams(); fd.set('_csrf', csrf());
-    fetch(BASE + '/sections/<%= undoSec42 %>/undo', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function () { location.reload(); });
+    fetch(BASE + '/sections/<%= undoSec42 %>/undo', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) {
+      if (r.status === 401) return location.href = '/login';
+      location.reload();
+    }).catch(function () { location.reload(); });
   });
   setTimeout(function () { t.style.opacity = '0'; }, 9000);
   <% } %>

@@ -1316,7 +1316,16 @@ router.get('/media', requireAdmin, async (req, res) => {
     }
   })(root, '');
   items.sort((a, b) => b.mtime.localeCompare(a.mtime));
-  res.render('admin/media', { items, currentPath: '/admin/media' });
+  res.render('admin/media', {
+    items,
+    saved: req.query.saved || null,
+    deleted: req.query.deleted || null,
+    optimized: req.query.optimized || null,
+    delta: req.query.delta || null,
+    skipped: req.query.skipped || null,
+    err: req.query.error || null,
+    currentPath: '/admin/media'
+  });
 });
 router.post('/media/delete', requireAdmin, async (req, res) => {
   const url = String(req.body.url || '');
@@ -1326,7 +1335,47 @@ router.post('/media/delete', requireAdmin, async (req, res) => {
   res.redirect('/admin/media?saved=1');
 });
 
+// ═══ সেশন ৪৪: মিডিয়া লাইব্রেরি — WebP অপটিমাইজেশন ═══
+// JPEG/PNG → WebP (sharp, quality 82, max-edge 2000) — ছোট হলে .webp ফাইল তৈরি;
+// বড়/সমান হলে মূল ফাইলই রাখা হয় (অপটিমাইজড সংস্করণ কখনো বড় হবে না)। GIF/SVG/WebP
+// স্কিপ। মূল ফাইল মুছে ফেলা হয় না — যেসব কনটেন্টে পুরনো URL ব্যবহৃত সেগুলো অক্ষত।
+router.post('/media/optimize', requireAdmin, async (req, res) => {
+  const url = String(req.body.url || '');
+  if (!url.startsWith('/uploads/')) return res.redirect('/admin/media?error=1');
+  const srcPath = path43.join(__dirname, '..', 'public', url);
+  const ext = path43.extname(srcPath).toLowerCase();
+  if (ext === '.webp' || ext === '.gif' || ext === '.svg' || ext === '.avif') {
+    return res.redirect('/admin/media?skipped=' + encodeURIComponent(path43.basename(srcPath)));
+  }
+  try {
+    const buf = fs43.readFileSync(srcPath);
+    const sharp = require('sharp');
+    const out = await sharp(buf, { failOn: 'none' })
+      .rotate()
+      .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+    if (!out.length || out.length >= buf.length) {
+      // আর ছোট করা সম্ভব নয় — মূল ফাইলই রাখি
+      return res.redirect('/admin/media?optimized=' + encodeURIComponent(path43.basename(srcPath)) + '&delta=0');
+    }
+    const webpName = path43.basename(srcPath, ext) + '.webp';
+    const webpPath = path43.join(path43.dirname(srcPath), webpName);
+    // নাম-সংঘর্ষ এড়াই (একই বেস-নামের .webp থাকলে 1/2/... সাফিক্স)
+    let finalName = webpName, finalPath = webpPath, i = 1;
+    while (fs43.existsSync(finalPath)) { finalName = path43.basename(srcPath, ext) + '-' + (i++) + '.webp'; finalPath = path43.join(path43.dirname(srcPath), finalName); }
+    fs43.writeFileSync(finalPath, out);
+    const saved = Math.round((1 - out.length / buf.length) * 100);
+    await TA42.audit(db, req, 'media-optimize', 'uploads', null, url + ' → ' + finalName + ' (' + saved + '% ছোট)');
+    res.redirect('/admin/media?optimized=' + encodeURIComponent(finalName) + '&delta=' + saved);
+  } catch (e) {
+    console.error('[media] optimize failed:', e.message);
+    res.redirect('/admin/media?error=opt_failed');
+  }
+});
+
 // ═══ সেশন ৪৩: অ্যাডমিন অ্যানালিটিক্স (৩০ দিন) ═══
+// সেশন ৪৪: + রিয়েকশন ট্রেন্ড (likes) ও ভিজিট ট্রেন্ড (page_visits)
 router.get('/analytics', requireAdmin, async (req, res) => {
   const series43 = async (table, col) => {
     const out = [];
@@ -1339,11 +1388,43 @@ router.get('/analytics', requireAdmin, async (req, res) => {
     }
     return out;
   };
+  // দিনভিত্তিক ভিজিট: page_visits-এ প্রতি (path, day) সারি → দিনের মোট count যোগ
+  const visitSeries = async () => {
+    const out = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      const ds = d.toISOString().slice(0, 10);
+      let c = 0;
+      try {
+        const row = await db.prepare('SELECT COALESCE(SUM(count), 0) AS c FROM page_visits WHERE day = ?').get(ds);
+        c = row ? row.c : 0;
+      } catch (e) {}
+      out.push({ d: ds, c });
+    }
+    return out;
+  };
   const subs = await series43('newsletter_subscribers', 'created_at');
   const posts = await series43('posts', 'created_at');
   const notices = await series43('notices', 'created_at');
+  const reactions = await series43('likes', 'created_at');
+  const visits = await visitSeries();
   const tot = a => a.reduce((x, y) => x + y.c, 0);
-  res.render('admin/analytics', { subs, posts, notices, totSubs: tot(subs), totPosts: tot(posts), totNotices: tot(notices), currentPath: '/admin/analytics' });
+  // রিয়েকশন-ধরন ব্রেকডাউন (৩০ দিন) — টোটাল কার্ডে ছোট চিপ দেখাতে
+  let reactionBreakdown = [];
+  try {
+    const rb = await db.prepare(
+      `SELECT COALESCE(reaction_type, 'like') AS rt, COUNT(*) AS c FROM likes
+       WHERE created_at >= datetime('now', '-30 days') GROUP BY rt ORDER BY c DESC`
+    ).all();
+    reactionBreakdown = (rb || []).map(r => ({ rt: r.rt, c: r.c }));
+  } catch (e) {}
+  res.render('admin/analytics', {
+    subs, posts, notices, reactions, visits,
+    totSubs: tot(subs), totPosts: tot(posts), totNotices: tot(notices),
+    totReactions: tot(reactions), totVisits: tot(visits),
+    reactionBreakdown,
+    currentPath: '/admin/analytics'
+  });
 });
 
 module.exports = router;

@@ -258,6 +258,11 @@
     var btn = document.getElementById('ceSaveBtn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে...'; }
     try { localStorage.removeItem('adminDraft:' + location.pathname + ':f0:/admin/content'); } catch (e) {}
+    // সেশন ৪৪: সেফটি-রিলিজ — নেভিগেশন না ঘটলে (নেটওয়ার্ক হ্যাং/সাবমিট ব্লক) স্পিনার
+    // যেন কখনো ইনফিনিট আটকে না থাকে; রেসপন্স আসার সাথে সাথে (redirect) পেজ আনলোড হয়।
+    setTimeout(function () {
+      if (btn && btn.disabled) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> সব সংরক্ষণ করুন'; }
+    }, 15000);
   });
   refresh();
 })();

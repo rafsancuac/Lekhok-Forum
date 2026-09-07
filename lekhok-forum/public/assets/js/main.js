@@ -577,7 +577,12 @@ window.showToast = showToast;
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin'
-          }).then(r => r.json()).then(d => {
+          }).then(r => {
+            if (r.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return null; }
+            if (!r.ok) throw new Error('share ' + r.status);
+            return r.json();
+          }).then(d => {
+            if (!d) return;
             if (d.ok) {
               showToast('নিজের টাইমলাইনে শেয়ার হয়েছে ✓', 'success');
               const cnt = now.closest('.actions-block') && now.closest('.actions-block').querySelector('.as-right .as-stat:last-child');
@@ -633,7 +638,12 @@ window.showToast = showToast;
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin'
-          }).then(r => r.json()).then(d => {
+          }).then(r => {
+            if (r.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return null; }
+            if (!r.ok) throw new Error('share ' + r.status);
+            return r.json();
+          }).then(d => {
+            if (!d) return;
             if (d.ok) {
               showToast('নিজের টাইমলাইনে শেয়ার হয়েছে ✓', 'success');
               setTimeout(() => { location.href = d.redirect || '/dashboard'; }, 700);

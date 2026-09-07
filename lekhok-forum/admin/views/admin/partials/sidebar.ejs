@@ -395,9 +395,13 @@
         var meta = document.querySelector('meta[name="csrf-token"]');
         if (meta) fd.set('_csrf', meta.content);
         fetch(btn.getAttribute('data-undo-restore'), { method: 'POST', body: fd, credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
-          .then(function (r) { return r.json(); })
-          .then(function (d) { location.href = d.redirect || location.pathname; })
-          .catch(function () { btn.disabled = false; });
+          .then(function (r) {
+            if (r.status === 401) { location.href = '/login'; return null; }
+            if (!r.ok) throw new Error('restore failed: ' + r.status);
+            return r.json();
+          })
+          .then(function (d) { if (d) location.href = d.redirect || location.pathname; })
+          .catch(function () { btn.disabled = false; btn.innerHTML = 'আবার চেষ্টা করুন'; });
       });
       setTimeout(function () { t.classList.add('gone'); }, 9000);
     } catch (e) {}

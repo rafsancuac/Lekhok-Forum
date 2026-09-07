@@ -1360,6 +1360,15 @@ async function applySession42Migrations() {
     saved_by TEXT,
     saved_at TEXT NOT NULL
   )`).run();
+  // (44a) সেশন ৪৪: পেজ-ভিজিট কাউন্টার (অ্যানালিটিক্স ভিজিট ট্রেন্ড)
+  await backend.prepare(`CREATE TABLE IF NOT EXISTS page_visits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path TEXT NOT NULL,
+    day TEXT NOT NULL,
+    count INTEGER DEFAULT 0,
+    UNIQUE(path, day)
+  )`).run();
+  try { await backend.prepare('CREATE INDEX IF NOT EXISTS idx_visits_day ON page_visits(day)').run(); } catch (e) {}
   const IDX43 = [
     'CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at)',
     'CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id)',

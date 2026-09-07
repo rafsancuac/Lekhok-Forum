@@ -13,7 +13,10 @@
     .media-card img { width: 100%; height: 110px; object-fit: cover; display: block; background: #f3f4f6; }
     .media-card .mc-body { padding: 8px 10px; font-size: .75rem; color: #6b7280; }
     .media-card .mc-name { font-weight: 700; color: #111827; font-size: .78rem; word-break: break-all; }
-    .media-card .mc-actions { display: flex; gap: 6px; padding: 0 10px 10px; }
+    .media-card .mc-actions { display: flex; gap: 6px; padding: 0 10px 10px; flex-wrap: wrap; }
+    .mc-badge { display: inline-block; font-size: .65rem; font-weight: 700; padding: 1px 6px; border-radius: 3px; margin-left: 4px; vertical-align: 1px; }
+    .mc-badge.webp { background: #d1fae5; color: #047857; }
+    .mc-badge.opt { background: #fef3c7; color: #b45309; }
   </style>
 </head>
 <body>
@@ -22,24 +25,36 @@
   <div class="admin-header">
     <div>
       <h1><i class="fas fa-photo-film"></i> মিডিয়া লাইব্রেরি</h1>
-      <p class="subtitle">আপলোড করা সব ছবি — URL কপি, প্রিভিউ ও ডিলিট (<%= items.length %> টি)</p>
+      <p class="subtitle">আপলোড করা সব ছবি — URL কপি, WebP অপটিমাইজ, প্রিভিউ ও ডিলিট (<%= items.length %> টি)</p>
     </div>
   </div>
-  <% if (typeof saved !== 'undefined' && saved) { %><div class="flash ok"><i class="fas fa-check-circle"></i> ছবি মুছে ফেলা হয়েছে।</div><% } %>
+  <% if (saved) { %><div class="flash ok"><i class="fas fa-check-circle"></i> ছবি মুছে ফেলা হয়েছে।</div><% } %>
+  <% if (optimized && delta === '0') { %><div class="flash ok"><i class="fas fa-check-circle"></i> <strong><%= optimized %></strong> ইতিমধ্যে যথেষ্ট অপটিমাইজড — আর ছোট করা যায়নি।</div><% } %>
+  <% if (optimized && delta && delta !== '0') { %><div class="flash ok"><i class="fas fa-bolt"></i> <strong><%= optimized %></strong> তৈরি হয়েছে — সাইজ <strong><%= delta %>% কমেছে</strong> (WebP)। মূল ফাইল অক্ষত রাখা হয়েছে।</div><% } %>
+  <% if (skipped) { %><div class="flash warn"><i class="fas fa-info-circle"></i> <strong><%= skipped %></strong> — শুধু JPEG/PNG অপটিমাইজ করা যায় (WebP/GIF/SVG বাদ)।</div><% } %>
+  <% if (err === 'opt_failed') { %><div class="flash error"><i class="fas fa-exclamation-circle"></i> অপটিমাইজেশন ব্যর্থ হয়েছে — ছবিটি সম্ভবত ক্ষতিগ্রস্ত।</div><% } %>
+  <% if (err === '1') { %><div class="flash error"><i class="fas fa-exclamation-circle"></i> অবৈধ ফাইল পাথ।</div><% } %>
   <div class="card" style="padding:0;">
     <% if (!items.length) { %>
     <div class="empty"><i class="fas fa-photo-film"></i><p>কোনো আপলোড নেই।</p></div>
     <% } else { %>
     <div class="media-grid">
       <% items.forEach(m => { %>
+      <% const ext = (m.name || '').split('.').pop().toLowerCase(); const optable = (ext === 'jpg' || ext === 'jpeg' || ext === 'png'); %>
       <div class="media-card">
         <img src="<%= m.url %>" loading="lazy" alt="">
         <div class="mc-body">
-          <div class="mc-name"><%= m.name %></div>
+          <div class="mc-name"><%= m.name %><% if (ext === 'webp') { %><span class="mc-badge webp">WebP</span><% } else if (optable) { %><span class="mc-badge opt">JPEG/PNG</span><% } %></div>
           <div><%= (m.size / 1024).toFixed(0) %> KB · <%= m.mtime %></div>
         </div>
         <div class="mc-actions">
           <button class="btn btn-sm" type="button" onclick="navigator.clipboard.writeText(location.origin + '<%= m.url %>').then(()=>alert('URL কপি হয়েছে ✓'))"><i class="fas fa-link"></i> URL</button>
+          <% if (optable) { %>
+          <form method="POST" action="/admin/media/optimize">
+            <input type="hidden" name="url" value="<%= m.url %>">
+            <button class="btn btn-sm" type="submit" title="WebP-তে অপটিমাইজ করুন"><i class="fas fa-bolt"></i> WebP</button>
+          </form>
+          <% } %>
           <form method="POST" action="/admin/media/delete" onsubmit="return confirm('ছবিটি মুছে ফেলবেন? যেসব জায়গায় ব্যবহার হয়েছে সেখানে ভাঙা দেখাবে।');">
             <input type="hidden" name="url" value="<%= m.url %>">
             <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
