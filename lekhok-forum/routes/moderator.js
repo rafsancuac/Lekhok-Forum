@@ -28,6 +28,22 @@ function requireScope(scope) {
 
 function today() { return new Date().toISOString().split('T')[0]; }
 
+// ── সেশন ৪৭: মডারেটর প্যানেলেও স্কোপ-মেটা (সাইডবার ব্যাজ + লিংক-গেটিং) ─────
+// আগে userScopeMeta শুধু /admin রাউটার সেট করত — মডারেটর প্যানেলে সাইডবারের
+// স্কোপ-ব্যাজ ও স্কোপ-ভিত্তিক লিংক-লুকানো কাজ করত না। এখন এখানেও সেট হয়।
+router.use(async (req, res, next) => {
+  try {
+    const u = req.session && req.session.user;
+    if (u && u.role === 'admin') {
+      res.locals.userScopeMeta = db.MODERATOR_SCOPES.map(s => ({ key: s.key, label: s.label }));
+    } else if (u && u.role === 'moderator') {
+      const sc = await db.getModeratorScopes(u.id);
+      res.locals.userScopeMeta = db.MODERATOR_SCOPES.filter(s => (sc || []).includes(s.key));
+    }
+  } catch (e) {}
+  next();
+});
+
 // ── Site menu management (admin + moderators) ────────────────────────────────
 router.get('/navigation', ensureModerator, async (req, res) => {
   const settings = await db.getSettingsAll();
@@ -161,7 +177,7 @@ function pressFormValues(b) {
   };
 }
 
-router.get('/press', ensureModerator, async (req, res) => {
+router.get('/press', ensureModerator, requireScope('epaper'), async (req, res) => {
   const clips = await db.prepare(
     'SELECT * FROM press_clippings ORDER BY sort_order ASC, id DESC'
   ).all();
@@ -194,7 +210,7 @@ async function _bulkDelete(table, req, res, backPath) {
 router.post('/notices/bulk-delete', ensureModerator, requireScope('notice'), async (req, res) => { await _bulkDelete('notices', req, res, '/moderator/notices'); });
 router.post('/events/bulk-delete', ensureModerator, requireScope('event'), async (req, res) => { await _bulkDelete('events', req, res, '/moderator/events'); });
 router.post('/complaints/bulk-delete', ensureModerator, requireScope('complaints'), async (req, res) => { await _bulkDelete('complaints', req, res, '/moderator/complaints'); });
-router.post('/press/bulk-delete', ensureModerator, async (req, res) => { await _bulkDelete('press_clippings', req, res, '/moderator/press'); });
+router.post('/press/bulk-delete', ensureModerator, requireScope('epaper'), async (req, res) => { await _bulkDelete('press_clippings', req, res, '/moderator/press'); });
 router.post('/members/bulk-delete', ensureModerator, async (req, res) => { await _bulkDelete('members', req, res, '/moderator/members'); });
 
 // সেশন ৪২: বাল্ক পাবলিশ/লুকান (মডারেটর)
@@ -220,7 +236,7 @@ router.post('/events/bulk-toggle', ensureModerator, requireScope('event'), async
   res.redirect('/moderator/events?saved=1&undo_mode=' + (on ? 'publish' : 'hide') + '&undo_ids=' + ids.join(',') + '&undo_base=/moderator/events');
 });
 
-router.post('/press', ensureModerator, withUpload(pressUpload), async (req, res) => {
+router.post('/press', ensureModerator, requireScope('epaper'), withUpload(pressUpload), async (req, res) => {
   const v = pressFormValues(req.body);
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   if (!fileUrl && !v.image_url) {
@@ -245,7 +261,7 @@ router.post('/press', ensureModerator, withUpload(pressUpload), async (req, res)
   res.redirect('/moderator/press?posted=1');
 });
 
-router.post('/press/:id', ensureModerator, withUpload(pressUpload), async (req, res) => {
+router.post('/press/:id', ensureModerator, requireScope('epaper'), withUpload(pressUpload), async (req, res) => {
   const row = await db.prepare('SELECT id FROM press_clippings WHERE id = ?').get(req.params.id);
   if (!row) return res.redirect('/moderator/press?error=' + encodeURIComponent('কাটিংটি খুঁজে পাওয়া যায়নি।'));
   const v = pressFormValues(req.body);
@@ -258,7 +274,7 @@ router.post('/press/:id', ensureModerator, withUpload(pressUpload), async (req, 
   res.redirect('/moderator/press?posted=1');
 });
 
-router.post('/press/:id/delete', ensureModerator, async (req, res) => {
+router.post('/press/:id/delete', ensureModerator, requireScope('epaper'), async (req, res) => {
   const tid42 = await TA42.trashDelete(db, 'press_clippings', req.params.id, req);
   await TA42.audit(db, req, 'delete', 'press_clippings', req.params.id, '');
   res.redirect('/moderator/press?removed=1&trashed=' + tid42);

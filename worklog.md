@@ -150,3 +150,21 @@ Work Log:
 
 Stage Summary:
 - কমিট: session46 (বিস্তারিত PROJECT.md §১০)
+
+---
+Task ID: 10
+Agent: Main verification agent (Session 47)
+Task: RBAC কঠোর বাস্তবায়ন (permission matrix + frontend/backend enforcement)
+
+Work Log:
+- সম্পূর্ণ রুট-ম্যাপ অডিট করে permission matrix তৈরি (RBAC.md)
+- ফাঁক: মডারেটর প্যানেলে userScopeMeta সেট হয়নি, press CRUD গার্ডহীন (bulk-toggle-এ epaper), requireScope denied-এ homePath নেই, সাইডবার/ড্যাশবোর্ডে স্কোপ-গেটিং নেই, সেশন rolling নেই
+- moderator.js: userScopeMeta router.use + press CRUD-এ requireScope('epaper')
+- admin/routes.js: requireScope denied homePath (মডারেটর→/moderator)
+- sidebar.ejs: _hasScope() হেল্পার দিয়ে মডারেটর-লিংক স্কোপ-গেটিং
+- moderator-dashboard.ejs: পত্রিকা-কাটিং টাইল epaper-গেটেড
+- server.js: rolling:true (অহেতুক লগআউট বন্ধ)
+- টেস্ট: ফুল/লিমিটেড মডারেটর + অ্যাডমিন + ইউজার — 403/200/denied/সাইডবার-গেটিং/rolling সবুজ
+
+Stage Summary:
+- কমিট: session47 (বিস্তারিত PROJECT.md §১০ + RBAC.md)

@@ -105,6 +105,9 @@ app.use(session({
   store: new (require('./session-store'))(),  // DB-backed — MemoryStore loses logins across serverless instances
   resave: false,
   saveUninitialized: false,
+  // সেশন ৪৭: rolling — সক্রিয় রিকোয়েস্টে কুকি/সেশন মেয়াদ রিসেট হয়, ফলে সক্রিয়
+  // ইউজার ২৪ ঘণ্টার সীমায় অহেতুক লগআউট হয় না (মেয়াদ = নিষ্ক্রিয়তার ২৪ ঘণ্টা পরে)।
+  rolling: true,
   cookie: { maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.VERCEL ? 'auto' : false }
 }));
 

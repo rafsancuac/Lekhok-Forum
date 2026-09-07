@@ -71,7 +71,9 @@ function requireScope(scope) {
   return async (req, res, next) => {
     if (!isStaff(req)) return res.redirect('/admin/login');
     if (!(await hasScope(req, scope))) {
-      return res.status(403).render('admin/denied', { currentPath: '/admin' });
+      // সেশন ৪৭: মডারেটরকে "ফিরে যান" তার নিজের প্যানেলে (/moderator) নেয়, /admin-এ নয়।
+      const home = (req.session.user && req.session.user.role === 'moderator') ? '/moderator' : '/admin';
+      return res.status(403).render('admin/denied', { currentPath: '/admin', homePath: home });
     }
     next();
   };

@@ -212,6 +212,7 @@
         <div class="mod-tile-desc">কার্যনির্বাহী কমিটি ও উপদেষ্টাদের পদ, কার্যবর্ষ ও তথ্য আপডেট করুন</div>
       </div>
     </a>
+    <% if (myScopes.includes('epaper') || user.role === 'admin') { %>
     <a href="/moderator/press" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
       <div class="mod-tile-icon"><i class="fas fa-newspaper"></i></div>
       <div>
@@ -219,6 +220,7 @@
         <div class="mod-tile-desc">পত্রিকায় ফোরামকে নিয়ে প্রকাশিত নিউজের ছবি যোগ ও আপডেট করুন</div>
       </div>
     </a>
+    <% } %>
   </div>
 
   <% if (myScopes.length === 0 && user.role !== 'admin') { %>
