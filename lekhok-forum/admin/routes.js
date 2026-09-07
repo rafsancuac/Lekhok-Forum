@@ -540,6 +540,8 @@ const BULK_TABLES = {
   'constitution': ['constitution',  requireAdmin],
   'past-leaders': ['past_leaders',  requireAdmin],
   'complaints':   ['complaints',    requireScope('complaints')], // সেশন ৩৯: মার্ক-অ্যান্ড-ডিলিট পারিটি
+  'subscribers':  ['newsletter_subscribers', requireAdmin], // সেশন ৪১
+  'tasks':        ['moderator_tasks',        requireAdmin], // সেশন ৪১
 };
 for (const slug of Object.keys(BULK_TABLES)) {
   const [table, guard] = BULK_TABLES[slug];

@@ -63,9 +63,15 @@
       <h3 class="card-title"><i class="fas fa-list"></i> টাস্ক তালিকা</h3>
       <% if (tasks && tasks.length) { %>
         <div class="table-wrap">
+  <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>
+  <form method="POST" action="/admin/tasks/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড টাস্কগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
         <table>
           <thead>
             <tr>
+              <th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট"></th>
               <th>টাস্ক</th>
               <th>মডারেটর</th>
               <th>অগ্রাধিকার</th>
@@ -77,6 +83,7 @@
           <tbody>
             <% tasks.forEach(t => { %>
               <tr>
+                <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= t.id %>" aria-label="সিলেক্ট"></td>
                 <td>
                   <strong><%= t.title %></strong>
                   <% if (t.description) { %><br><small style="color:#65676b;"><%= t.description.substring(0,60) %></small><% } %>

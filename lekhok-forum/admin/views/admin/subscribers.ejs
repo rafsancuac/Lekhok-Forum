@@ -48,13 +48,19 @@
   <% if (subs.length === 0) { %>
     <div class="card empty">এখনো কোনো সাবস্ক্রাইবার নেই — ফুটারের নিউজলেটার ফর্মে সাবস্ক্রাইব করলে এখানে দেখা যাবে।</div>
   <% } else { %>
+  <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>
+  <form method="POST" action="/admin/subscribers/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড সাবস্ক্রাইবারগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
   <table>
     <thead>
-      <tr><th>#</th><th>ইমেইল</th><th>নাম</th><th>সাবস্ক্রিপশনের তারিখ</th><th>অবস্থা</th><th>অ্যাকশন</th></tr>
+      <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট"></th><th>#</th><th>ইমেইল</th><th>নাম</th><th>সাবস্ক্রিপশনের তারিখ</th><th>অবস্থা</th><th>অ্যাকশন</th></tr>
     </thead>
     <tbody>
       <% subs.forEach(s => { %>
         <tr>
+          <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= s.id %>" aria-label="সিলেক্ট"></td>
           <td><%= s.id %></td>
           <td><strong><%= s.email %></strong></td>
           <td><%= s.name || '—' %></td>

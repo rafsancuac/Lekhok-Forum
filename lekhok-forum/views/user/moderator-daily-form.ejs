@@ -38,10 +38,17 @@
       <button class="btn btn-primary" type="submit">পোস্ট করুন</button>
     </form>
 
-    <h3>সাম্প্রতিক পোস্ট</h3>
+    <h3>সাম্প্রতিক পোস্ট<label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:10px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label></h3>
+  <form method="POST" action="/moderator/daily/bulk-delete" class="bulk-bar" id="bulkBar">
+    <input type="hidden" name="back_type" value="<%= type %>">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড পোস্টগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+  </form>
+
     <% items.forEach(it => { %>
       <div class="mod-item">
-        <div>
+        <input type="checkbox" name="bulk_ids" value="<%= it.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:4px;">
+        <div style="flex:1;">
           <strong><%= it.title %></strong>
           <div style="color:#999; font-size:0.85rem;"><%= it.scheduled_date %></div>
         </div>

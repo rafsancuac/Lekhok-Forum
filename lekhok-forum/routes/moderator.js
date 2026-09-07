@@ -183,7 +183,7 @@ async function _bulkDelete(table, req, res, backPath) {
   if (!ids.length) return res.redirect(backPath + '?bulk=0');
   const ph = ids.map(() => '?').join(',');
   await db.prepare(`DELETE FROM ${table} WHERE id IN (${ph})`).run(...ids);
-  console.log(`[moderator] bulk-delete ${table}: ${ids.length} item(s) by user ${req.session.userId} (${req.session.role})`);
+  console.log(`[moderator] bulk-delete ${table}: ${ids.length} item(s) by user ${(req.session.user && req.session.user.id)} (${req.session.role})`);
   res.redirect(backPath + '?bulk=' + ids.length);
 }
 router.post('/notices/bulk-delete', ensureModerator, requireScope('notice'), async (req, res) => { await _bulkDelete('notices', req, res, '/moderator/notices'); });
@@ -207,7 +207,7 @@ router.post('/press', ensureModerator, withUpload(pressUpload), async (req, res)
     ORDER BY id DESC LIMIT 1
   `).get(v.title, v.paper_name);
   if (dup) {
-    console.log(`[moderator] press: duplicate POST ignored (matched id ${dup.id}, user ${req.session.userId})`);
+    console.log(`[moderator] press: duplicate POST ignored (matched id ${dup.id}, user ${(req.session.user && req.session.user.id)})`);
     return res.redirect('/moderator/press?posted=dup');
   }
   await db.prepare(`
@@ -271,6 +271,9 @@ router.get('/daily/:type', ensureModerator, async (req, res, next) => {
     res.render('user/moderator-daily-form', { type: req.params.type, meta, items, todayDate: today(), posted: req.query.posted || null, currentPath: '/moderator' });
   });
 });
+
+// সেশন ৪১: ডেইলি কনটেন্ট বাল্ক ডিলিট (মার্ক/মার্ক-অল) — create রুট '/daily/:type'-এর আগে
+router.post('/daily/bulk-delete', ensureModerator, async (req, res) => { await _bulkDelete('daily_content', req, res, '/moderator/daily/' + (req.body.back_type || 'quiz')); });
 
 router.post('/daily/:type', ensureModerator, async (req, res, next) => {
   const meta = DAILY_TYPES[req.params.type];
