@@ -323,7 +323,9 @@ router.post('/forgot-password', async (req, res) => {
   ).run(user.id, tokenHash);
 
   const mailer = require('../helpers/mailer');
-  const resetUrl = (process.env.BASE_URL || 'http://localhost:8080') + '/reset-password?token=' + token;
+  // রিসেট লিংকের বেস = আসল রিকোয়েস্ট অরিজিন (Vercel-এ BASE_URL ছাড়াই সঠিক)
+  const origin = (process.env.BASE_URL || (req.protocol + '://' + req.get('host')));
+  const resetUrl = origin + '/reset-password?token=' + token;
   if (mailer.isConfigured()) {
     try {
       await mailer.sendMail({

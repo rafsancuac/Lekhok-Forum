@@ -352,7 +352,9 @@ router.get('/members', requireAdmin, async (req, res) => {
 
 router.get('/members/new', requireAdmin, async (req, res) => {
   const allUsers = await fetchAllUsers();
-  res.render('admin/members/form', { member: null, error: null, allUsers, currentPath: '/admin/members' });
+  // টাস্ক ১৪: অটো-সাজেস্টেড মেম্বার আইডি (পরবর্তী MEM-XXXXX) — ফর্মে প্রি-ফিল হয়
+  const suggestedMemberId = await db.nextMemberId();
+  res.render('admin/members/form', { member: null, error: null, allUsers, suggestedMemberId, currentPath: '/admin/members' });
 });
 
 router.post('/members', requireAdmin, async (req, res) => {
@@ -422,6 +424,27 @@ router.delete('/members/:id', requireAdmin, async (req, res) => {
   const tid42 = await TA42.trashDelete(db, 'members', req.params.id, req);
   await TA42.audit(db, req, 'delete', 'members', req.params.id, '');
   res.redirect('/admin/members?saved=1&trashed=' + tid42);
+});
+
+// ── টাস্ক ১৪: সদস্য অ্যাকাউন্ট স্থগিত / পুনঃসক্রিয় (suspend/deactivate/restore) ──
+// স্থগিত = প্রোফাইল suspended + (লিংক থাকলে) ইউজার লগইন ব্লক। পুনঃসক্রিয় = ফেরত।
+router.post('/members/:id/suspend', requireAdmin, async (req, res) => {
+  const m = await db.prepare('SELECT * FROM members WHERE id = ?').get(req.params.id);
+  if (!m) return res.redirect('/admin/members?saved=1');
+  await db.prepare("UPDATE members SET account_status = 'suspended' WHERE id = ?").run(m.id);
+  if (m.user_id) await db.prepare("UPDATE users SET status = 'banned' WHERE id = ?").run(m.user_id);
+  await TA42.audit(db, req, 'member-suspend', 'members', m.id, m.member_id || '');
+  res.redirect('/admin/members?saved=1&suspend=1');
+});
+
+router.post('/members/:id/restore', requireAdmin, async (req, res) => {
+  const m = await db.prepare('SELECT * FROM members WHERE id = ?').get(req.params.id);
+  if (!m) return res.redirect('/admin/members?saved=1');
+  const status = m.user_id ? 'active' : 'unclaimed';
+  await db.prepare('UPDATE members SET account_status = ? WHERE id = ?').run(status, m.id);
+  if (m.user_id) await db.prepare("UPDATE users SET status = 'active' WHERE id = ?").run(m.user_id);
+  await TA42.audit(db, req, 'member-restore', 'members', m.id, m.member_id || '');
+  res.redirect('/admin/members?saved=1&restore=1');
 });
 
 // ══════════════════════════════════════════════════════════════════════════════

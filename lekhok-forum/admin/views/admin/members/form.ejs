@@ -26,8 +26,8 @@
           <input type="text" value="<%= member.member_id %>" readonly disabled>
           <small style="color:#64748b">মেম্বার আইডি স্থায়ী — পরিবর্তনযোগ্য নয়।</small>
         <% } else { %>
-          <input type="text" name="member_id" value="<%= member && member.member_id ? member.member_id : '' %>" placeholder="MEM-XXXXX (খালি রাখলে স্বয়ংক্রিয়)">
-          <small style="color:#64748b">খালি রাখলে স্বয়ংক্রিয়ভাবে ইউনিক MEM-XXXXX তৈরি হবে।</small>
+          <input type="text" name="member_id" value="<%= (member && member.member_id) ? member.member_id : (typeof suggestedMemberId !== 'undefined' ? suggestedMemberId : '') %>" placeholder="MEM-XXXXX">
+          <small style="color:#64748b">সাজেস্টেড আইডি আগে থেকে বসানো আছে — ইচ্ছে করলে বদলে নিন; খালি রাখলে স্বয়ংক্রিয়ভাবে পরবর্তী ইউনিক আইডি তৈরি হবে।</small>
         <% } %>
       </div>
       <div class="form-group"><label>পদ</label><input type="text" name="role" value="<%= member ? (member.role || '') : '' %>" placeholder="যেমন: সভাপতি"></div>

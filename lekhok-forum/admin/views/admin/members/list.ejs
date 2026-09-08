@@ -47,6 +47,15 @@
           </td>
           <td>
             <a href="/admin/members/<%= m.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
+            <% if (st === 'suspended') { %>
+              <form method="POST" action="/admin/members/<%= m.id %>/restore" style="display:inline;">
+                <button class="btn btn-sm" title="পুনঃসক্রিয়"><i class="fas fa-rotate-left"></i> পুনঃসক্রিয়</button>
+              </form>
+            <% } else { %>
+              <form method="POST" action="/admin/members/<%= m.id %>/suspend" style="display:inline;" onsubmit="return confirm('এই সদস্যের অ্যাকাউন্ট স্থগিত করবেন?');">
+                <button class="btn btn-sm" title="স্থগিত"><i class="fas fa-pause"></i> স্থগিত</button>
+              </form>
+            <% } %>
             <form method="POST" action="/admin/members/<%= m.id %>?_method=DELETE" style="display:inline;">
               <button class="btn btn-danger btn-sm">মুছুন</button>
             </form>
