@@ -1,0 +1,61 @@
+<%# ── স্যান্ডবক্স-প্রিভিউ গার্ড (env-gated: SANDBOX_PORT সেট থাকলেই শুধু তখনই রেন্ডার হয়) ──
+    প্রোডাকশনে (Vercel) SANDBOX_PORT থাকে না → এই স্ক্রিপ্ট ডিপ্লয় হয় না, শূন্য-প্রভাব।
+    কাজ: প্রিভিউ-গেটওয়ের ইফ্রেমে চললে সব লিংক/ফর্ম/fetch-এ XTransformPort ধরে রাখা,
+    যাতে iframe-নেভিগেশন পোর্ট-৩০০০-এ (Next.js) না পড়ে এই অ্যাপেই থাকে। %>
+<% if (typeof SANDBOX_PORT !== 'undefined' && SANDBOX_PORT) { %>
+<script>
+(function () {
+  'use strict';
+  try {
+    if (window.self === window.top) return; /* শুধু ইফ্রেমের ভেতরে চলুক */
+    var PORT = '<%= SANDBOX_PORT %>';
+    var mark = 'XTransformPort=' + PORT;
+
+    function fixUrl(u) {
+      if (!u || typeof u !== 'string') return u;
+      if (u.charAt(0) === '#') return u;
+      if (u.indexOf(mark) !== -1) return u;
+      var abs = /^https?:/i.test(u);
+      if (abs && u.indexOf(location.origin) !== 0) return u; /* বাইরের লিংক অক্ষত */
+      var path = abs ? u.slice(location.origin.length) : u;
+      var hash = '', q = '';
+      var hi = path.indexOf('#'); if (hi > -1) { hash = path.slice(hi); path = path.slice(0, hi); }
+      var qi = path.indexOf('?'); if (qi > -1) { q = path.slice(qi + 1); path = path.slice(0, qi); }
+      return path + (q ? '?' + q + '&' : '?') + mark + hash;
+    }
+
+    function patch() {
+      var links = document.querySelectorAll('a[href]');
+      for (var i = 0; i < links.length; i++) {
+        var h = links[i].getAttribute('href');
+        if (h && h.charAt(0) !== '#') links[i].setAttribute('href', fixUrl(h));
+      }
+      var forms = document.querySelectorAll('form[action]');
+      for (var j = 0; j < forms.length; j++) {
+        var a = forms[j].getAttribute('action');
+        if (a) forms[j].setAttribute('action', fixUrl(a));
+      }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', patch);
+    else patch();
+    setInterval(patch, 1500); /* ডাইনামিক DOM (ফিড-লোড, মেনু ইত্যাদি) */
+
+    var origFetch = window.fetch;
+    if (origFetch) {
+      window.fetch = function (input, init) {
+        try {
+          var url = (typeof input === 'string') ? input : (input && input.url);
+          if (url && !/^https?:/i.test(url) && url.indexOf(mark) === -1) {
+            url = fixUrl(url);
+            if (typeof input === 'string') input = url;
+            else if (input && input.url) { input = new Request(url, input); }
+          }
+        } catch (e) { }
+        return origFetch.call(this, input, init);
+      };
+    }
+  } catch (e) { }
+})();
+</script>
+<% } %>

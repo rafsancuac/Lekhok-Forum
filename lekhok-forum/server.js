@@ -69,6 +69,11 @@ function computeAssetVersion() {
 }
 app.locals.AV = computeAssetVersion();
 
+// ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
+// লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।
+// প্রোডাকশনে SANDBOX_PORT সেট না থাকায় স্ক্রিপ্ট রেন্ডারই হয় না।
+app.locals.SANDBOX_PORT = process.env.SANDBOX_PORT || '';
+
 // ── Async-handler safety net ─────────────────────────────────────────────────
 // The async/Turso migration turned every route handler into an async function.
 // Express 4 does not catch rejected promises from handlers, so wrap every
