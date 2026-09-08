@@ -603,7 +603,7 @@ body.auth-split .mfa-code-wrap label{
   display:none;
   margin:8px auto 0; max-width:360px;
   font-size:.78rem; color:var(--text-muted); line-height:1.6;
-  background:#f6f8fb; border:1px dashed #d3dbe6; border-radius:8px;
+  background:rgba(2,30,22,.6); border:1px dashed rgba(110,231,183,.35); border-radius:8px;
   padding:10px 14px;
   animation:fadeSlideIn .25s ease both;
 }
