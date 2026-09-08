@@ -115,13 +115,6 @@
     </div>
     <a href="<%= _path.indexOf('/moderator') === 0 ? '/logout' : '/admin/logout' %>" class="su-logout" title="লগআউট"><i class="fas fa-sign-out-alt"></i></a>
   </div>
-  <% if (!_isAdmin && typeof userScopeMeta !== 'undefined' && userScopeMeta && userScopeMeta.length) { %>
-  <div class="su-scopes" title="আপনার সক্রিয় পারমিশন">
-    <% userScopeMeta.forEach(function (s) { %>
-    <span class="su-scope" title="<%= s.label %>"><i class="<%= s.icon || 'fas fa-check' %>"></i></span>
-    <% }); %>
-  </div>
-  <% } %>
 </aside>
 
 <style>

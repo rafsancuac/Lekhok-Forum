@@ -372,3 +372,10 @@ Stage Summary:
 - `notices/events/daily/form.ejs` + `moderator-press.ejs` → এডিট মোড সেকশনাইজড, অ্যাড মোড অপরিবর্তিত।
 
 **যাচাই (curl):** সেকশন-সেভ শুধু সেই সেকশন আপডেট; খালি শিরোনাম → 400; সেকশন-এডিটর add/save/toggle/move/delete/reorder/undo সব JSON OK; মডারেটর প্রেস সেকশন-সেভ OK; অ্যাড ফর্ম ও পাবলিক পেজ রিগ্রেশন 200।
+
+## টাস্ক ১৩ (পর্ব ৪) — অংশ গ: মডারেটর প্যানেল UI/UX ✅
+
+- ৯টি মডারেটর ভিউয়ের ইনলাইন `<style>` মুছে `.mod-*`/`.mem-*`/`.clip-*` admin.css-এ একত্র (--ad-* টোকেন)।
+- `html{scrollbar-gutter:stable}` + হোভার translateY ট্রান্সফর্ম সরানো + min-height (stat/tile/empty/item/clip-row/mem-row)।
+- সাইডবারের নিচে `.su-scopes` টিক-আইকন ব্যাজ ব্লক + CSS সরানো (লগইন/লগআউটের পাশে)।
+- যাচাই: ৯ মডারেটর পেজ + অ্যাডমিন পেজ 200; লগইন/লগআউট 302; nav গেটিং (userScopeMeta) অক্ষত।
