@@ -64,3 +64,23 @@
 .ts-cards-head{display:flex;align-items:center;gap:10px;margin:34px 0 16px;font-weight:800;font-size:1rem;color:var(--brand,#0a1f44)}
 .ts-cards-head i{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:#fff;background:linear-gradient(135deg,var(--accent,#059669),#0a1f44)}
 .ts-cards-head::after{content:'';flex:1;height:1px;background:var(--border,#e2e8f0)}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   পোস্ট মাল্টি-ইমেজ গ্যালারি (টাস্ক ১৩, পর্ব ৪, অংশ ক)
+   ───────────────────────────────────────────────────────────────────────────── */
+.pg-gallery{position:relative}
+.pg-main{position:relative;overflow:hidden;border-radius:var(--radius-sm,5px);cursor:zoom-in;background:var(--bg,#f8fafc)}
+.pg-main img{width:100%;height:220px;object-fit:cover;display:block}
+.pg-count{position:absolute;top:10px;left:10px;background:rgba(10,31,68,.8);color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:5px;display:inline-flex;align-items:center;gap:5px}
+.pg-zoom{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);color:#fff;font-size:1.3rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.pg-main:hover .pg-zoom{opacity:1}
+.pg-thumbs{display:flex;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:2px}
+.pg-thumbs img{width:56px;height:56px;object-fit:cover;border-radius:5px;border:2px solid transparent;cursor:pointer;flex:0 0 56px;opacity:.65;transition:opacity .18s,border-color .18s}
+.pg-thumbs img:hover{opacity:1}
+.pg-thumbs img.active{border-color:var(--accent,#059669);opacity:1}
+
+/* ── shared lightbox nav (post-gallery + গ্যালারি পেজ) ── */
+.lightbox-nav{display:flex;align-items:center;gap:16px;margin-top:16px}
+.lightbox-nav button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.lightbox-nav button:hover{background:var(--accent,#059669)}
+.lightbox-nav span{color:#cbd5e1;font-size:.85rem;min-width:60px;text-align:center}

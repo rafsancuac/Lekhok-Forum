@@ -10,8 +10,8 @@
       <div class="daily-card history-card">
         <div class="daily-card-badge history"><i class="fas fa-history"></i> ইতিহাস</div>
         <h2><%= today.title %></h2>
-        <% if (today.image_url) { %>
-          <img loading="lazy" decoding="async" src="<%= today.image_url %>" alt="image" style="max-width:100%;border-radius:5px;margin:12px 0">
+        <% if (today.images && today.images.length) { %>
+          <div style="margin:12px 0;"><%- include('../partials/post-gallery', { images: today.images, alt: today.title, height: '300px', group: 'otd-' + today.id }) %></div>
         <% } %>
         <p class="daily-body"><%= today.body %></p>
         <div class="daily-meta">প্রকাশ: <%= new Date(today.created_at).toLocaleDateString('bn-BD') %></div>
@@ -24,5 +24,6 @@
     <% } %>
   </div>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
 </body>
 </html>

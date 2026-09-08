@@ -128,8 +128,8 @@
                 </span>
               <% } %>
             </div>
-            <% if (item.cover_image) { %>
-              <a href="<%= item.link %>"><img loading="lazy" decoding="async" src="<%= item.cover_image %>" class="feed-image" alt=""></a>
+            <% if (item.images && item.images.length) { %>
+              <%- include('../partials/post-gallery', { images: item.images, alt: item.title, height: '260px', group: 'feed-' + item.item_type + '-' + item.id }) %>
             <% } %>
             <div class="feed-card-body">
               <h3 class="feed-title"><a href="<%= item.link %>"><%= item.title %></a></h3>
@@ -267,5 +267,6 @@
 
   <%- include('../partials/share-modal') %>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
 </body>
 </html>

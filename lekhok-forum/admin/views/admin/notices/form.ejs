@@ -38,6 +38,7 @@
         <label>তারিখ (বাংলা বা ISO)</label>
         <input type="text" name="date" value="<%= notice ? (notice.date || '') : '' %>" placeholder="যেমন: ২০২৬ সালের ১৫ ফেব্রুয়ারি">
       </div>
+      <%- include('../partials/multi-image', { images: images || [] }) %>
       <button type="submit" class="btn btn-primary"><%= notice ? 'আপডেট' : 'তৈরি করুন' %></button>
     </form>
   </div>

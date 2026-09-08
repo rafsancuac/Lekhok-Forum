@@ -15,10 +15,23 @@ async function getDailyAll(type, limit = 20) {
   return await db.prepare("SELECT * FROM daily_content WHERE content_type = ? AND published = 1 ORDER BY scheduled_date DESC, created_at DESC LIMIT ?").all(type, limit);
 }
 
+// টাস্ক ১৩ (পর্ব ৪, অংশ ক): প্রতিটি daily আইটেমে post_images যোগ (ক্রম অনুযায়ী)
+async function attachImages(items) {
+  const list = Array.isArray(items) ? items : (items ? [items] : []);
+  for (const it of list) {
+    if (it) {
+      it.images = (await db.getPostImages('daily', it.id)).map(i => i.image_url);
+      if (!it.images.length && it.image_url) it.images = [it.image_url];
+    }
+  }
+  return items;
+}
+
 // ── Quiz ─────────────────────────────────────────────────────────────────────
 router.get('/quiz', async (req, res) => {
   const today = await getDailyFor('quiz');
   const archive = await getDailyAll('quiz', 30);
+  await attachImages([today, ...archive]);
   res.render('user/quiz', { today, archive, currentPath: '/quiz' });
 });
 
@@ -26,6 +39,7 @@ router.get('/quiz', async (req, res) => {
 router.get('/on-this-day', async (req, res) => {
   const today = await getDailyFor('this_day');
   const archive = await getDailyAll('this_day', 30);
+  await attachImages([today, ...archive]);
   res.render('user/on-this-day', { today, archive, currentPath: '/on-this-day' });
 });
 
@@ -33,12 +47,14 @@ router.get('/on-this-day', async (req, res) => {
 router.get('/epaper', async (req, res) => {
   const today = await getDailyFor('epaper');
   const archive = await getDailyAll('epaper', 30);
+  await attachImages([today, ...archive]);
   res.render('user/epaper', { today, archive, currentPath: '/epaper' });
 });
 
 // ── Activities ───────────────────────────────────────────────────────────────
 router.get('/activities', async (req, res) => {
   const items = await getDailyAll('activity', 50);
+  await attachImages(items);
   res.render('user/activities', { items, currentPath: '/activities' });
 });
 

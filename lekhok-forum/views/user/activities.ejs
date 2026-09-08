@@ -47,8 +47,8 @@
     %>
     <% if (featured) { %>
     <div class="activities-featured" data-category="<%= (featured.scheduled_date && new Date(featured.scheduled_date) >= now) ? 'upcoming' : 'past' %>">
-      <% if (featured.image_url) { %>
-        <div class="af-image" style="background-image:url('<%= featured.image_url %>')"></div>
+      <% if (featured.images && featured.images.length) { %>
+        <div class="af-image" style="background-image:url('<%= featured.images[0] %>')"></div>
       <% } else { %>
         <div class="af-image af-image--placeholder"><i class="fas fa-calendar-check"></i></div>
       <% } %>
@@ -80,8 +80,8 @@
           </div>
           <div class="timeline-content">
             <div class="timeline-card">
-              <% if (a.image_url) { %>
-                <div class="tc-image"><img loading="lazy" decoding="async" src="<%= a.image_url %>" alt="<%= a.title %>" loading="lazy" /></div>
+              <% if (a.images && a.images.length) { %>
+                <div class="tc-image"><%- include('../partials/post-gallery', { images: a.images, alt: a.title, height: '100%', group: 'act-' + a.id }) %></div>
               <% } %>
               <div class="tc-body">
                 <div class="tc-meta">
@@ -105,7 +105,7 @@
         const cat = isUpcoming ? 'upcoming' : 'past';
       %>
         <div class="act-grid-card" data-category="<%= cat %>">
-          <% if (a.image_url) { %><img loading="lazy" decoding="async" src="<%= a.image_url %>" alt="<%= a.title %>" class="agc-image" loading="lazy"><% } %>
+          <% if (a.images && a.images.length) { %><div class="agc-image"><%- include('../partials/post-gallery', { images: a.images, alt: a.title, height: '100%', group: 'actg-' + a.id }) %></div><% } %>
           <div class="agc-body">
             <div class="agc-meta">
               <span class="tc-date"><i class="far fa-calendar"></i> <%= a.scheduled_date || 'উল্লেখ নেই' %></span>
@@ -155,5 +155,6 @@
     });
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
 </body>
 </html>

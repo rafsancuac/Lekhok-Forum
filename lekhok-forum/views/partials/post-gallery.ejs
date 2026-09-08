@@ -1,0 +1,20 @@
+<%# পোস্ট মাল্টি-ইমেজ গ্যালারি (টাস্ক ১৩, পর্ব ৪, অংশ ক) — images(URL অ্যারে), alt, height, group %>
+<% if (Array.isArray(images) && images.length) { %>
+  <% const _h = height || '220px'; %>
+  <% if (images.length === 1) { %>
+    <img loading="lazy" decoding="async" src="<%= images[0] %>" alt="<%= alt || '' %>" style="width:100%;height:<%= _h %>;object-fit:cover;display:block;" />
+  <% } else { %>
+    <div class="pg-gallery" data-post-lightbox="<%= group || ('pg-' + String(alt || '').replace(/[^a-zA-Z0-9\u0980-\u09FF]+/g, '-')) %>">
+      <div class="pg-main" data-post-lightbox="1">
+        <img class="pg-main-img" loading="lazy" decoding="async" src="<%= images[0] %>" data-full="<%= images[0] %>" data-index="0" alt="<%= alt || '' %>" />
+        <span class="pg-count"><i class="fas fa-images"></i> <%= images.length %></span>
+        <span class="pg-zoom"><i class="fas fa-search-plus"></i></span>
+      </div>
+      <div class="pg-thumbs">
+        <% images.forEach((u, i) => { %>
+          <img loading="lazy" decoding="async" src="<%= u %>" data-full="<%= u %>" data-index="<%= i %>" alt="<%= (alt || '') + ' ' + (i + 1) %>" class="<%= i === 0 ? 'active' : '' %>" />
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+<% } %>

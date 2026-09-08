@@ -31,8 +31,9 @@
         <label>ই-পেপার লিংক (PDF)</label>
         <input type="url" name="link_url" placeholder="https://example.com/epaper.pdf">
       <% } %>
-      <label>ছবি URL (ঐচ্ছিক)</label>
+      <label>কভার ছবি URL (ঐচ্ছিক)</label>
       <input type="url" name="image_url" placeholder="https://...">
+      <%- include('../../admin/views/admin/partials/multi-image', { images: [] }) %>
       <label>তারিখ</label>
       <input type="date" name="scheduled_date" value="<%= todayDate %>">
       <button class="btn btn-primary" type="submit">পোস্ট করুন</button>

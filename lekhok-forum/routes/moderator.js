@@ -101,6 +101,15 @@ function memberFormValues(b) {
   };
 }
 
+// টাস্ক ১৩ (পর্ব ৪, অংশ ক): ফর্ম থেকে images (JSON স্ট্রিং) → URL অ্যারে
+function parseImages(v) {
+  if (Array.isArray(v)) return v.filter(x => x && String(x).trim());
+  if (typeof v === 'string' && v.trim()) {
+    try { const a = JSON.parse(v); if (Array.isArray(a)) return a.filter(x => x && String(x).trim()); } catch (e) {}
+  }
+  return [];
+}
+
 // টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয় কমিটিতে "উপদেষ্টা" role নিষিদ্ধ —
 // উপদেষ্টারা কেবল উপদেষ্টা পরিষদ (advisory) টাইপে থাকবেন (ব্যাকএন্ড গার্ড)।
 function advisorRoleError(v) {
@@ -194,6 +203,9 @@ router.get('/press', ensureModerator, requireScope('epaper'), async (req, res) =
   const clips = await db.prepare(
     'SELECT * FROM press_clippings ORDER BY sort_order ASC, id DESC'
   ).all();
+  for (const c of clips) {
+    c._images = (await db.getPostImages('news', c.id)).map(i => i.image_url);
+  }
   res.render('user/moderator-press', {
     clips,
     posted: req.query.posted || null,
@@ -252,7 +264,8 @@ router.post('/events/bulk-toggle', ensureModerator, requireScope('event'), async
 router.post('/press', ensureModerator, requireScope('epaper'), withUpload(pressUpload), async (req, res) => {
   const v = pressFormValues(req.body);
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
-  if (!fileUrl && !v.image_url) {
+  const images = parseImages(req.body.images);
+  if (!fileUrl && !v.image_url && !images.length) {
     return res.redirect('/moderator/press?error=' + encodeURIComponent('ছবি আপলোড করুন অথবা ছবির URL দিন, সংরক্ষিত হয়নি।'));
   }
   // সেশন ৩৯: সার্ভার-সাইড ডুপলিকেট গার্ড — গত ২ মিনিটে একই শিরোনাম+পত্রিকা
@@ -267,10 +280,13 @@ router.post('/press', ensureModerator, requireScope('epaper'), withUpload(pressU
     console.log(`[moderator] press: duplicate POST ignored (matched id ${dup.id}, user ${(req.session.user && req.session.user.id)})`);
     return res.redirect('/moderator/press?posted=dup');
   }
-  await db.prepare(`
+  if (fileUrl && !images.includes(fileUrl)) images.unshift(fileUrl);
+  const cover = fileUrl || v.image_url || images[0] || '';
+  const r = await db.prepare(`
     INSERT INTO press_clippings (title, paper_name, image_url, published_date, sort_order, is_active)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(v.title, v.paper_name, fileUrl || v.image_url, v.published_date, v.sort_order, v.is_active);
+  `).run(v.title, v.paper_name, cover, v.published_date, v.sort_order, v.is_active);
+  await db.setPostImages('news', r.lastInsertRowid, images);
   res.redirect('/moderator/press?posted=1');
 });
 
@@ -279,11 +295,19 @@ router.post('/press/:id', ensureModerator, requireScope('epaper'), withUpload(pr
   if (!row) return res.redirect('/moderator/press?error=' + encodeURIComponent('কাটিংটি খুঁজে পাওয়া যায়নি।'));
   const v = pressFormValues(req.body);
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
+  let images = parseImages(req.body.images);
+  if (fileUrl && !images.includes(fileUrl)) images.unshift(fileUrl);
+  // ফর্মে images ফিল্ড না থাকলে (পুরনো ক্লায়েন্ট) আগের গ্যালারি ধরে রাখুন
+  if (req.body.images === undefined && !fileUrl) {
+    images = (await db.getPostImages('news', req.params.id)).map(i => i.image_url);
+  }
+  const cover = fileUrl || v.image_url || images[0] || '';
   await db.prepare(`
     UPDATE press_clippings SET title = ?, paper_name = ?, image_url = ?,
       published_date = ?, sort_order = ?, is_active = ?
     WHERE id = ?
-  `).run(v.title, v.paper_name, fileUrl || v.image_url, v.published_date, v.sort_order, v.is_active, req.params.id);
+  `).run(v.title, v.paper_name, cover, v.published_date, v.sort_order, v.is_active, req.params.id);
+  await db.setPostImages('news', req.params.id, images);
   res.redirect('/moderator/press?posted=1');
 });
 
@@ -339,9 +363,12 @@ router.post('/daily/:type', ensureModerator, async (req, res, next) => {
   requireScope(meta.scope)(req, res, async () => {
     const { title, body, image_url, link_url, scheduled_date } = req.body;
     if (!title) return res.redirect('/moderator/daily/' + req.params.type);
-    await db.prepare(`INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, author_id, published)
+    const images = parseImages(req.body.images);
+    const cover = image_url || images[0] || '';
+    const r = await db.prepare(`INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, author_id, published)
                 VALUES (?, ?, ?, ?, ?, ?, ?, 1)`)
-      .run(req.params.type, title, body || '', image_url || '', link_url || '', scheduled_date || today(), req.session.user.id);
+      .run(req.params.type, title, body || '', cover, link_url || '', scheduled_date || today(), req.session.user.id);
+    await db.setPostImages('daily', r.lastInsertRowid, images);
     await broadcastToAll('daily_' + req.params.type, meta.label, `নতুন আপডেট: ${title}`, '/' + (req.params.type === 'this_day' ? 'on-this-day' : req.params.type), req.session.user.id);
     res.redirect('/moderator/daily/' + req.params.type + '?posted=1');
   });
@@ -366,8 +393,9 @@ router.get('/notices', ensureModerator, requireScope('notice'), async (req, res)
 router.post('/notices', ensureModerator, requireScope('notice'), async (req, res) => {
   const { title, content, category, date } = req.body;
   if (!title) return res.redirect('/moderator/notices');
-  await db.prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)')
+  const r = await db.prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)')
     .run(title, content || '', category || 'notice', date || today());
+  await db.setPostImages('notice', r.lastInsertRowid, parseImages(req.body.images));
   await broadcastToAll('notice', 'নতুন বিজ্ঞপ্তি', title, '/notices', req.session.user.id);
   // Newsletter — subscribers get an automatic email for every new notice
   try {
@@ -394,8 +422,11 @@ router.get('/events', ensureModerator, requireScope('event'), async (req, res) =
 router.post('/events', ensureModerator, requireScope('event'), async (req, res) => {
   const { title, description, date, end_date, location, image_url } = req.body;
   if (!title) return res.redirect('/moderator/events');
-  await db.prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, 0)')
-    .run(title, description || '', date || '', end_date || '', location || '', image_url || '');
+  const images = parseImages(req.body.images);
+  const cover = image_url || images[0] || '';
+  const r = await db.prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, 0)')
+    .run(title, description || '', date || '', end_date || '', location || '', cover);
+  await db.setPostImages('event', r.lastInsertRowid, images);
   await broadcastToAll('event', 'নতুন ইভেন্ট', title, '/events', req.session.user.id);
   res.redirect('/moderator/events?posted=1');
 });

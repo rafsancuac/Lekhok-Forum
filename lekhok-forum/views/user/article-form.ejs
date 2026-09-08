@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/auth.css" />
+  <link rel="stylesheet" href="/assets/css/multi-image.css?v=<%= AV %>" />
   <style>
     .editor-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
     .editor-toolbar button { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 5px; cursor: pointer; font-family: inherit; }
@@ -29,6 +30,11 @@
         <div class="form-group"><label>ট্যাগ</label><input type="text" name="tags" value="<%= post?.tags || '' %>" placeholder="কবিতা, উপন্যাস,প্রবন্ধ"><small class="tag-hint">কমা দিয়ে আলাদা করুন</small></div>
         <div class="form-group"><label>কভার ছবি আপলোড</label><input type="file" name="cover" accept="image/*"></div>
         <div class="form-group"><label>অথবা কভার ছবি URL</label><input type="url" name="cover_image" value="<%= post?.cover_image || '' %>"></div>
+      </div>
+      <div class="form-group">
+        <label>আরও ছবি (একাধিক, টেনে সাজান)</label>
+        <input type="hidden" name="images" value='<%= JSON.stringify(post?.images || []) %>'>
+        <div class="mi-widget" data-field="images" data-upload-url="/upload-images"></div>
       </div>
       <div class="form-group"><label>সংক্ষিপ্ত সারাংশ</label><textarea name="excerpt" rows="2"><%= post?.excerpt || '' %></textarea></div>
       <div class="form-group">
@@ -74,5 +80,11 @@
     })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/multi-image.js?v=<%= AV %>"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      try { window.LekhokMultiImage && window.LekhokMultiImage.init(); } catch (e) {}
+    });
+  </script>
 </body>
 </html>

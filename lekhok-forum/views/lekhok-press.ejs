@@ -12,9 +12,9 @@
       <div class="press-grid">
         <% clippings.forEach(c => { %>
           <div class="press-card">
-            <a href="<%= c.image_url %>" target="_blank" rel="noopener" class="press-img-wrap">
-              <img src="<%= c.image_url %>" alt="<%= c.title || 'পত্রিকায় আমাদের নিউজ' %>" loading="lazy" decoding="async" onerror="this.closest('.press-card').style.display='none'" />
-            </a>
+            <div class="press-img-wrap">
+              <%- include('partials/post-gallery', { images: c.images, alt: c.title || 'পত্রিকায় আমাদের নিউজ', height: '100%', group: 'press-' + c.id }) %>
+            </div>
             <div class="press-body">
               <% if (c.title) { %><h3 class="press-title"><%= c.title %></h3><% } %>
               <% if (c.paper_name || c.published_date) { %>

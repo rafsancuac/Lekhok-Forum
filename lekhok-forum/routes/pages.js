@@ -64,6 +64,7 @@ router.get('/', async (req, res) => {
     epaper:      todayRows.find(r => r.content_type === 'epaper')      || null,
     best_writer: todayRows.find(r => r.content_type === 'best_writer') || null
   };
+  for (const r of todayRows) { r.images = (await db.getPostImages('daily', r.id)).map(i => i.image_url); if (!r.images.length && r.image_url) r.images = [r.image_url]; }
   const hasToday = Object.values(todayByType).some(v => v);
 
   // Recent Q&A for home page folding section
@@ -114,6 +115,7 @@ router.get('/about', async (req, res) => {
       'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 8'
     ).all();
   } catch (e) { pressClippings = []; }
+  for (const c of pressClippings) { c.images = (await db.getPostImages('news', c.id)).map(i => i.image_url); if (!c.images.length && c.image_url) c.images = [c.image_url]; }
   // সদস্য হওয়ার শর্তাবলি ধাপ-কার্ড (সেশন ৫১: এখন DB-চালিত — Add/Edit/Delete/Reorder)
   const condSteps = await db.getSectionItems('conditions_steps');
   res.render('lekhok-about', {
@@ -133,6 +135,7 @@ router.get('/press', async (req, res) => {
       'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC'
     ).all();
   } catch (e) { clippings = []; }
+  for (const c of clippings) { c.images = (await db.getPostImages('news', c.id)).map(i => i.image_url); if (!c.images.length && c.image_url) c.images = [c.image_url]; }
   res.render('lekhok-press', {
     layout: 'layout',
     pageTitle: 'পত্রিকায় আমাদের নিউজ',
@@ -210,6 +213,7 @@ router.get('/notices', async (req, res) => {
   } else {
     notices = await db.prepare('SELECT * FROM notices WHERE category = ? ORDER BY id DESC').all(category);
   }
+  for (const n of notices) n.images = (await db.getPostImages('notice', n.id)).map(i => i.image_url);
   res.render('lekhok-notices', {
     layout: 'layout',
     pageTitle: 'বিজ্ঞপ্তি',
@@ -238,6 +242,10 @@ router.get('/events', async (req, res) => {
   const today = new Date().toISOString().split('T')[0];
   const upcoming = await db.prepare('SELECT * FROM events WHERE date >= ? ORDER BY date ASC').all(today);
   const past     = await db.prepare('SELECT * FROM events WHERE date <  ? ORDER BY date DESC').all(today);
+  // টাস্ক ১৩ (পর্ব ৪, অংশ ক): প্রতিটি ইভেন্টে post_images যোগ (ক্রম অনুযায়ী)
+  const _evImg = async (e) => { e.images = (await db.getPostImages('event', e.id)).map(i => i.image_url); if (!e.images.length && e.image_url) e.images = [e.image_url]; };
+  for (const e of upcoming) await _evImg(e);
+  for (const e of past)     await _evImg(e);
   res.render('lekhok-events', {
     layout: 'layout',
     pageTitle: 'ইভেন্ট',
@@ -348,6 +356,7 @@ router.get('/notices/:id(\\d+)', async (req, res) => {
   if (!notice) {
     return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   }
+  notice.images = (await db.getPostImages('notice', notice.id)).map(i => i.image_url);
   const _n = String(notice.content || '').replace(/\s+/g, ' ').trim();
   const metaDesc = _n ? (_n.length > 197 ? _n.slice(0, 197) + '…' : _n) : null;
   res.render('lekhok-notice-detail', {

@@ -1371,6 +1371,41 @@ async function runMigrations() {
   } catch (e) {
     console.warn('[migrate] council-separation-v5 skipped:', (e.message || '').slice(0, 140));
   }
+
+  // ── টাস্ক ১৩ (পর্ব ৪, অংশ ক): মাল্টি-ইমেজ ──
+  // এক পোস্টে একাধিক ছবি — generic post_images টেবিল (সব ৬ পোস্ট টাইপের জন্য এক টেবিল;
+  // sort_order → reorder)। বিদ্যমান single-image ডেটা কপি হয় (মূল কলাম অক্ষত)।
+  try {
+    await backend.prepare(`CREATE TABLE IF NOT EXISTS post_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entity_type TEXT NOT NULL,
+      entity_id INTEGER NOT NULL,
+      image_url TEXT NOT NULL,
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`).run();
+    try { await backend.prepare("CREATE INDEX IF NOT EXISTS idx_post_images ON post_images(entity_type, entity_id, sort_order)").run(); } catch (_) {}
+
+    const v6 = await backend.prepare("SELECT value FROM settings WHERE key = 'post_images_v6_seeded'").get();
+    if (!v6) {
+      const migrateOne = async (type, table, col) => {
+        const rows = await backend.prepare(`SELECT id, ${col} AS img FROM ${table} WHERE ${col} IS NOT NULL AND ${col} != ''`).all();
+        for (const r of rows || []) {
+          try {
+            await backend.prepare("INSERT INTO post_images (entity_type, entity_id, image_url, sort_order) VALUES (?, ?, ?, 0)").run(type, r.id, r.img);
+          } catch (_) {}
+        }
+      };
+      await migrateOne('event', 'events', 'image_url');
+      await migrateOne('daily', 'daily_content', 'image_url');
+      await migrateOne('news', 'press_clippings', 'image_url');
+      await migrateOne('post', 'posts', 'cover_image');
+      try { await backend.prepare("INSERT INTO settings (key, value) VALUES ('post_images_v6_seeded', '1')").run(); }
+      catch (_) { try { await backend.prepare("UPDATE settings SET value = '1' WHERE key = 'post_images_v6_seeded'").run(); } catch (_) {} }
+    }
+  } catch (e) {
+    console.warn('[migrate] post-images-v6 skipped:', (e.message || '').slice(0, 140));
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -2190,6 +2225,26 @@ async function getSectionItems(section) {
 }
 
 // টাস্ক ১৩: যাতায়াত সময়সূচি — DB (settings JSON) প্রথম; না থাকলে হেল্পার ডিফল্ট
+// টাস্ক ১৩ (পর্ব ৪, অংশ ক): মাল্টি-ইমেজ হেল্পার
+async function getPostImages(entityType, entityId) {
+  try {
+    const rows = await prepare(
+      'SELECT id, image_url, sort_order FROM post_images WHERE entity_type = ? AND entity_id = ? ORDER BY sort_order, id'
+    ).all(entityType, entityId);
+    return rows || [];
+  } catch (e) { return []; }
+}
+
+// images = array of URL strings (ক্রম অনুযায়ী) → পুরনো মুছে নতুন ক্রমে লিখে
+async function setPostImages(entityType, entityId, images) {
+  const list = Array.isArray(images) ? images.filter(u => u && String(u).trim()) : [];
+  await prepare('DELETE FROM post_images WHERE entity_type = ? AND entity_id = ?').run(entityType, entityId);
+  for (let i = 0; i < list.length; i++) {
+    await prepare('INSERT INTO post_images (entity_type, entity_id, image_url, sort_order) VALUES (?, ?, ?, ?)').run(entityType, entityId, list[i], i);
+  }
+  return list.length;
+}
+
 async function getTransportSchedule() {
   try {
     const raw = await getSetting('transport_schedule');
@@ -2207,6 +2262,8 @@ module.exports = {
   prepare,
   getSectionItems,
   getTransportSchedule,
+  getPostImages,
+  setPostImages,
   exec,
   getSetting,
   getSettingsAll,

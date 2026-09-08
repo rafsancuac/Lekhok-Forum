@@ -294,6 +294,27 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৫৫ (৮ সেপ্টেম্বর ২০২৬) — মাল্টি-ইমেজ আপলোড ও গ্যালারি ডিসপ্লে (টাস্ক ১৩, পর্ব ৪, অংশ ক)
+
+**উদ্দেশ্য:** ৬ পোস্ট টাইপে (Notice, Event, Daily, News/press, Social Feed, User Feed) একাধিক ছবি — multi-select + drag&drop + preview + reorder + রিমুভ + গ্যালারি/লাইটবক্স ডিসপ্লে।
+
+**ডেটা মডেল:**
+- `db.js` — জেনেরিক `post_images(entity_type, entity_id, image_url, sort_order, created_at)` টেবিল (সব ৬ টাইপ এক টেবিলে; sort_order → reorder)।
+- মাইগ্রেশন `post_images_v6_seeded` (আইডেম্পোটেন্ট): বিদ্যমান `events.image_url`/`daily_content.image_url`/`press_clippings.image_url`/`posts.cover_image` → `post_images` (sort_order 0); মূল single-image কলাম অক্ষত (backward-compat, ডেটা-লস শূন্য)।
+- হেল্পার `getPostImages`/`setPostImages` (ডুয়াল sql.js + Turso) এক্সপোর্ট।
+
+**আপলোড এন্ডপয়েন্ট:** `/admin/upload-images` (staff) + `/upload-images` (লগইন-করা ইউজার, লেখা-ফর্মের জন্য) — JSON, সর্বোচ্চ ২০ ফাইল/রিকোয়েস্ট, WebP-অপটিমাইজ (existing `storeBufferImage` pipeline reuse)।
+
+**পারসিস্টেন্স (create + edit, সব ৬ টাইপ):** Notice/Event/Daily/News + Social/User Feed (posts) — অ্যাডমিন ও মডারেটর রুটে `setPostImages`; শেয়ার (share) করলে মূল পোস্টের ছবিও কপি; trashDelete-এ `post_images` অরফান-ক্লিনআপ।
+
+**আপলোড UI:** reusable `admin/views/admin/partials/multi-image.ejs` + `public/assets/js/multi-image.js` + `multi-image.css` — multi-select, drag&drop, preview-grid, drag-reorder, ব্যক্তিগত রিমুভ, লোডিং/সাকসেস/এরর স্ট্যাটাস। অ্যাডমিন (events/notices/daily) + মডারেটর (events/daily/notices/press) + ইউজার লেখা-ফর্মে বসানো।
+
+**ফ্রন্টএন্ড ডিসপ্লে:** reusable `views/partials/post-gallery.ejs` + `public/assets/js/post-gallery.js` — ১ ছবি → আগের মতো একক `<img>` (গ্যালারি UI নেই); ১+ → main + thumbnail strip (অ্যাডমিন-সেট ক্রম) + shared lightbox (prev/next/Esc, ক্লিক-করা থাম্বের ইনডেক্স থেকে খোলে) + lazy-loading। ইভেন্ট/প্রেস/নোটিশ-বিস্তারিত/লেখা-তালিকা/লেখা-বিস্তারিত/ফিড(dashboard)/ডেইলি(epaper/on-this-day/activities)-এ লাগানো। `.lightbox-nav` স্টাইল যোগ (গ্যালারি পেজের আনস্টাইলড nav-ও ঠিক)।
+
+**যাচাই:** মাইগ্রেশন সিড ৩৪ সারি (event 4 + daily 30); E2E — ২ ছবি আপলোড → মাল্টি-ইমেজ ইভেন্ট/প্রেস তৈরি → পাবলিক পেজে pg-gallery + count + ক্রম অনুযায়ী থাম্ব; পাবলিক ১২ পেজ + অ্যাডমিন/মডারেটর/লেখা-ফর্ম ২০০; প্রেস images-only POST (ভ্যালিডেশন ফিক্স) ৩০২।
+
+---
+
 ### সেশন ৫৪ (৮ সেপ্টেম্বর ২০২৬) — লগইন/রেজিস্ট্রেশন UI: স্থিতিশীলতা + প্রিমিয়াম রিডিজাইন (টাস্ক ১১)
 
 **উদ্দেশ্য (ইউজার-রিকোয়েস্ট):** ভাসমান আপ-অ্যারো বাটন সরানো; স্ক্রল/টাচপ্যাডে লগইন/রেজিস্ট্রেশন/মডাল নড়া বন্ধ; লগইন/রেজিস্ট্রেশন UI প্রিমিয়াম — কোনো ফাংশনালিটি না ভেঙে।

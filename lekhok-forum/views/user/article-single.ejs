@@ -33,8 +33,8 @@
             <a href="/articles/<%= post.shared_original.id %>"><%= post.shared_original.orig_author %>-এর মূল পোস্ট</a></span>
         </div>
       <% } %>
-      <% if (post.cover_image) { %>
-        <img src="<%= post.cover_image %>" alt="cover" class="article-cover">
+      <% if (post.images && post.images.length) { %>
+        <%- include('../partials/post-gallery', { images: post.images, alt: post.title, height: '320px', group: 'artsingle-' + post.id }) %>
       <% } %>
       <div class="article-header">
         <div class="article-tags">
@@ -153,6 +153,7 @@
 
   <%- include('../partials/share-modal') %>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
   <script>
     // Reply toggle
     document.querySelectorAll('.reply-btn').forEach(btn => {

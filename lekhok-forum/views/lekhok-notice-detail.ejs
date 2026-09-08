@@ -22,6 +22,9 @@
       </div>
       <div class="card">
         <h3 style="margin-top:0;">বিজ্ঞপ্তির বিষয়বস্তু</h3>
+        <% if (notice.images && notice.images.length) { %>
+          <div style="margin:0 0 16px;"><%- include('partials/post-gallery', { images: notice.images, alt: notice.title, height: '280px', group: 'notice-' + notice.id }) %></div>
+        <% } %>
         <% if (notice.content) { %>
           <p style="white-space:pre-wrap;line-height:1.8;color:var(--text);font-size:16px;"><%= notice.content %></p>
         <% } else { %>

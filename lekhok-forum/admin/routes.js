@@ -84,6 +84,15 @@ function requireStaff(req, res, next) {
   next();
 }
 
+// টাস্ক ১৩ (পর্ব ৪, অংশ ক): ফর্ম থেকে images (JSON স্ট্রিং) → URL অ্যারে
+function parseImages(v) {
+  if (Array.isArray(v)) return v.filter(x => x && String(x).trim());
+  if (typeof v === 'string' && v.trim()) {
+    try { const a = JSON.parse(v); if (Array.isArray(a)) return a.filter(x => x && String(x).trim()); } catch (e) {}
+  }
+  return [];
+}
+
 // ── অ্যাক্টিভিটি লগ (সেশন ৩৭) — সব সফল মিউটেশন স্বয়ংক্রিয়ভাবে লগ হয় ──────
 // কেন per-route কল নয়: এক জায়গায়, ভবিষ্যৎ রুটও অটো-কভার্ড, কোনো হ্যান্ডলার ছুঁতে হয় না।
 // রেডাইরেক্ট (2xx-3xx) = সফল ধরা হয়; পাসওয়ার্ড-ফিল্ডের ভ্যালু কখনো লগ হয় না (শুধু কী-নাম)।
@@ -201,13 +210,14 @@ router.get('/notices', requireScope('notices'), async (req, res) => {
 });
 
 router.get('/notices/new', requireScope('notices'), async (req, res) => {
-  res.render('admin/notices/form', { notice: null, error: null, currentPath: '/admin/notices' });
+  res.render('admin/notices/form', { notice: null, error: null, images: [], currentPath: '/admin/notices' });
 });
 
 router.post('/notices', requireScope('notices'), async (req, res) => {
   const { title, content, category, date } = req.body;
   if (!title) return res.render('admin/notices/form', { notice: req.body, error: 'শিরোনাম আবশ্যক', currentPath: '/admin/notices' });
-  await db.prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)').run(title, content || '', category || 'notice', date || '');
+  const r = await db.prepare('INSERT INTO notices (title, content, category, date) VALUES (?, ?, ?, ?)').run(title, content || '', category || 'notice', date || '');
+  await db.setPostImages('notice', r.lastInsertRowid, parseImages(req.body.images));
   // Auto-notify all users about the new notice
   await broadcastToAll('notice', 'নতুন বিজ্ঞপ্তি', title, '/notices', req.session.user ? req.session.user.id : 0);
   // Newsletter — email all active subscribers automatically (queued even
@@ -225,12 +235,14 @@ router.post('/notices', requireScope('notices'), async (req, res) => {
 router.get('/notices/:id/edit', requireScope('notices'), async (req, res) => {
   const notice = await db.prepare('SELECT * FROM notices WHERE id = ?').get(req.params.id);
   if (!notice) return res.redirect('/admin/notices?saved=1');
-  res.render('admin/notices/form', { notice, error: null, currentPath: '/admin/notices' });
+  const images = (await db.getPostImages('notice', req.params.id)).map(i => i.image_url);
+  res.render('admin/notices/form', { notice, error: null, images, currentPath: '/admin/notices' });
 });
 
 router.put('/notices/:id', requireScope('notices'), async (req, res) => {
   const { title, content, category, date } = req.body;
   await db.prepare('UPDATE notices SET title=?, content=?, category=?, date=? WHERE id=?').run(title, content || '', category || 'notice', date || '', req.params.id);
+  await db.setPostImages('notice', req.params.id, parseImages(req.body.images));
   res.redirect('/admin/notices?saved=1');
 });
 
@@ -247,13 +259,16 @@ router.get('/events', requireScope('events'), async (req, res) => {
 });
 
 router.get('/events/new', requireScope('events'), async (req, res) => {
-  res.render('admin/events/form', { event: null, error: null, currentPath: '/admin/events' });
+  res.render('admin/events/form', { event: null, error: null, images: [], currentPath: '/admin/events' });
 });
 
 router.post('/events', requireScope('events'), async (req, res) => {
   const { title, description, date, end_date, location, image_url, featured } = req.body;
   if (!title) return res.render('admin/events/form', { event: req.body, error: 'শিরোনাম আবশ্যক', currentPath: '/admin/events' });
-  await db.prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?)').run(title, description || '', date || '', end_date || '', location || '', image_url || '', featured ? 1 : 0);
+  const images = parseImages(req.body.images);
+  const cover = image_url || images[0] || '';
+  const r = await db.prepare('INSERT INTO events (title, description, date, end_date, location, image_url, featured) VALUES (?, ?, ?, ?, ?, ?, ?)').run(title, description || '', date || '', end_date || '', location || '', cover, featured ? 1 : 0);
+  await db.setPostImages('event', r.lastInsertRowid, images);
   // Auto-notify all users about the new event
   await broadcastToAll('event', 'নতুন ইভেন্ট', title, '/events', req.session.user ? req.session.user.id : 0);
   res.redirect('/admin/events?saved=1');
@@ -262,12 +277,16 @@ router.post('/events', requireScope('events'), async (req, res) => {
 router.get('/events/:id/edit', requireScope('events'), async (req, res) => {
   const event = await db.prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
   if (!event) return res.redirect('/admin/events?saved=1');
-  res.render('admin/events/form', { event, error: null, currentPath: '/admin/events' });
+  const images = (await db.getPostImages('event', req.params.id)).map(i => i.image_url);
+  res.render('admin/events/form', { event, error: null, images, currentPath: '/admin/events' });
 });
 
 router.put('/events/:id', requireScope('events'), async (req, res) => {
   const { title, description, date, end_date, location, image_url, featured } = req.body;
-  await db.prepare('UPDATE events SET title=?, description=?, date=?, end_date=?, location=?, image_url=?, featured=? WHERE id=?').run(title, description || '', date || '', end_date || '', location || '', image_url || '', featured ? 1 : 0, req.params.id);
+  const images = parseImages(req.body.images);
+  const cover = image_url || images[0] || '';
+  await db.prepare('UPDATE events SET title=?, description=?, date=?, end_date=?, location=?, image_url=?, featured=? WHERE id=?').run(title, description || '', date || '', end_date || '', location || '', cover, featured ? 1 : 0, req.params.id);
+  await db.setPostImages('event', req.params.id, images);
   res.redirect('/admin/events?saved=1');
 });
 
@@ -540,6 +559,35 @@ router.post('/upload-image', requireStaff, (req, res) => {
   });
 });
 
+// ── টাস্ক ১৩ (পর্ব ৪, অংশ ক): মাল্টি-ইমেজ আপলোড এন্ডপয়েন্ট ────────────────
+// একাধিক ছবি (field name "images", সর্বোচ্চ 20) → WebP-অপ্টিমাইজ + স্টোর →
+// { ok, urls: [...] }। অ্যাডমিন + মডারেটর দুজনের জন্যই (requireStaff)।
+router.post('/upload-images', requireStaff, (req, res) => {
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 8 * 1024 * 1024, files: 20 },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('শুধু ছবি ফাইল আপলোড করা যাবে'));
+    }
+  }).array('images', 20)(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.files || !req.files.length) return res.status(400).json({ ok: false, error: 'কোনো ফাইল নেই' });
+    try {
+      const { storeBufferImage } = require('../middleware/upload');
+      const urls = [];
+      for (const f of req.files) {
+        const stored = await storeBufferImage(f, 'content');
+        urls.push(stored.url);
+      }
+      res.json({ ok: true, urls });
+    } catch (e) {
+      console.error('[upload-images] failed:', e.message);
+      res.status(500).json({ ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+    }
+  });
+});
+
 // ── গ্লোবাল সেটিংস-সার্চ ইনডেক্স (সেশন ৩) — সাইডবার সার্চ লেজি-লোড করে ─────
 router.get('/search-index', requireStaff, (req, res) => {
   const out = [];
@@ -800,7 +848,7 @@ router.get('/daily', requireScope('daily'), async (req, res) => {
 });
 
 router.get('/daily/new', requireScope('daily'), async (req, res) => {
-  res.render('admin/daily/form', { item: null, error: null, DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
+  res.render('admin/daily/form', { item: null, error: null, images: [], DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
 });
 
 router.post('/daily', requireScope('daily'), async (req, res) => {
@@ -808,8 +856,11 @@ router.post('/daily', requireScope('daily'), async (req, res) => {
   if (!DAILY_TYPES[content_type]) return res.render('admin/daily/form', { item: req.body, error: 'ধরন নির্বাচন করুন', DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
   if (!title) return res.render('admin/daily/form', { item: req.body, error: 'শিরোনাম আবশ্যক', DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
   const isPublished = published ? 1 : 0;
-  await db.prepare('INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, published, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(content_type, title, body || null, image_url || null, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.session.user ? req.session.user.id : null);
+  const images = parseImages(req.body.images);
+  const cover = image_url || images[0] || null;
+  const r = await db.prepare('INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, published, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(content_type, title, body || null, cover, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.session.user ? req.session.user.id : null);
+  await db.setPostImages('daily', r.lastInsertRowid, images);
   // Auto-notify ALL users when a moderator/admin publishes daily content
   if (isPublished) {
     const meta = dailyTypeMeta(content_type);
@@ -821,7 +872,8 @@ router.post('/daily', requireScope('daily'), async (req, res) => {
 router.get('/daily/:id/edit', requireScope('daily'), async (req, res) => {
   const item = await db.prepare('SELECT * FROM daily_content WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/daily?saved=1');
-  res.render('admin/daily/form', { item, error: null, DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
+  const images = (await db.getPostImages('daily', req.params.id)).map(i => i.image_url);
+  res.render('admin/daily/form', { item, error: null, images, DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
 });
 
 router.put('/daily/:id', requireScope('daily'), async (req, res) => {
@@ -829,8 +881,11 @@ router.put('/daily/:id', requireScope('daily'), async (req, res) => {
   if (!DAILY_TYPES[content_type]) return res.render('admin/daily/form', { item: { ...req.body, id: req.params.id }, error: 'ধরন নির্বাচন করুন', DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
   if (!title) return res.render('admin/daily/form', { item: { ...req.body, id: req.params.id }, error: 'শিরোনাম আবশ্যক', DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
   const isPublished = published ? 1 : 0;
+  const images = parseImages(req.body.images);
+  const cover = image_url || images[0] || null;
   await db.prepare('UPDATE daily_content SET content_type=?, title=?, body=?, image_url=?, link_url=?, scheduled_date=?, published=? WHERE id=?')
-    .run(content_type, title, body || null, image_url || null, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.params.id);
+    .run(content_type, title, body || null, cover, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.params.id);
+  await db.setPostImages('daily', req.params.id, images);
   res.redirect('/admin/daily?saved=1');
 });
 

@@ -19,6 +19,35 @@ function ensureLoggedIn(req, res, next) {
   next();
 }
 
+// টাস্ক ১৩ (পর্ব ৪, অংশ ক): ইউজার-ফেসিং মাল্টি-ইমেজ আপলোড (লেখা/প্রশ্ন ফর্ম) —
+// অ্যাডমিন-এন্ডপয়েন্টের মতোই, কিন্তু এখানে লগইন করা যেকোনো ইউজার ব্যবহার করতে পারে।
+router.post('/upload-images', ensureLoggedIn, (req, res) => {
+  const multer = require('multer');
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 8 * 1024 * 1024, files: 20 },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('শুধু ছবি ফাইল আপলোড করা যাবে'));
+    }
+  }).array('images', 20)(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.files || !req.files.length) return res.status(400).json({ ok: false, error: 'কোনো ফাইল নেই' });
+    try {
+      const { storeBufferImage } = require('../middleware/upload');
+      const urls = [];
+      for (const f of req.files) {
+        const stored = await storeBufferImage(f, 'content');
+        urls.push(stored.url);
+      }
+      res.json({ ok: true, urls });
+    } catch (e) {
+      console.error('[social upload-images] failed:', e.message);
+      res.status(500).json({ ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+    }
+  });
+});
+
 // Auto-linkify @mentions and #hashtags in post bodies
 function linkify(text) {
   if (!text) return '';
@@ -106,6 +135,10 @@ router.get('/articles', async (req, res) => {
   if (filterType === 'letter') { q += " AND (p.tags LIKE '%চিঠি%' OR p.category = 'letter')"; }
   q += ' ORDER BY p.published_at DESC';
   const articles = await db.prepare(q).all(...params);
+  for (const a of articles) {
+    a.images = (await db.getPostImages('post', a.id)).map(i => i.image_url);
+    if (!a.images.length && a.cover_image) a.images = [a.cover_image];
+  }
   const popularTags = await db.prepare("SELECT tags FROM posts WHERE type='article' AND tags IS NOT NULL").all();
   res.render('lekhok-articles', {
     layout: 'layout',
@@ -121,13 +154,25 @@ router.get('/articles/new', ensureLoggedIn, async (req, res) => {
   res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new' });
 });
 
+// টাস্ক ১৩ (পর্ব ৪, অংশ ক): ইউজার লেখা/প্রশ্ন ফর্মে বিদ্যমান একাধিক ছবি লোড
+async function attachPostImages(post) {
+  if (post && post.id) {
+    const imgs = (await db.getPostImages('post', post.id)).map(i => i.image_url);
+    post.images = imgs.length ? imgs : (post.cover_image ? [post.cover_image] : []);
+  }
+  return post;
+}
+
 // ── Submit article (with optional cover image upload) ────────────────────────
 router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const { title, body, excerpt, cover_image, tags, category } = req.body;
   if (!title || !body) {
     return res.render('user/article-form', { post: req.body, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক', currentPath: '/articles/new' });
   }
-  const cover = req.file ? (req.file.url || req.file.path) : (cover_image || null);
+  const images = Array.isArray(req.body.images)
+    ? req.body.images
+    : (typeof req.body.images === 'string' && req.body.images.trim() ? (() => { try { const a = JSON.parse(req.body.images); return Array.isArray(a) ? a : []; } catch (e) { return []; } })() : []);
+  const cover = req.file ? (req.file.url || req.file.path) : (cover_image || images[0] || null);
   // সেশন ৩৯: সার্ভার-সাইড ডুপলিকেট গার্ড — গত ২ মিনিটে একই শিরোনামের আর্টিকেল
   // আবার POST হলে নতুন সারি না বানিয়ে আগের আর্টিকেলে রিডাইরেক্ট।
   const dupA = await db.prepare(`
@@ -142,6 +187,7 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
   const result = await db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?, ?)`).run(
     req.session.user.id, title, body, excerpt || body.substring(0, 200), cover, tags || null, mentions, category || 'general'
   );
+  await db.setPostImages('post', result.lastInsertRowid, images);
 
   // Send notifications to mentioned users
   try {
@@ -207,6 +253,12 @@ router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
     VALUES (?, 'article', ?, ?, ?, ?, NULL, NULL, 'general', ?)
   `).run(req.session.user.id, title, body, excerpt, source.cover_image || null, sourceId);
   const newIdInt = result && result.lastInsertRowid;
+  // টাস্ক ১৩ (পর্ব ৪, অংশ ক): শেয়ার করা কপিতেও মূল পোস্টের সব ছবি কপি করি
+  if (newIdInt) {
+    const srcImgs = (await db.getPostImages('post', sourceId)).map(i => i.image_url);
+    if (!srcImgs.length && source.cover_image) srcImgs.push(source.cover_image);
+    if (srcImgs.length) await db.setPostImages('post', newIdInt, srcImgs);
+  }
 
   // Notify the original author (not when sharing your own post)
   const origAuthorId = orig.author_id;
@@ -228,6 +280,9 @@ router.get('/articles/:id', async (req, res) => {
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.status = 'published'`).get(req.params.id);
   if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  // টাস্ক ১৩ (পর্ব ৪, অংশ ক): পোস্টের একাধিক ছবি (post_images) — না থাকলে কভার দিয়ে
+  post.images = (await db.getPostImages('post', post.id)).map(i => i.image_url);
+  if (!post.images.length && post.cover_image) post.images = [post.cover_image];
 
   // If this is a shared copy, resolve the ORIGINAL post + author for attribution
   if (post.shared_from) {
@@ -295,6 +350,7 @@ router.get('/articles/:id', async (req, res) => {
 router.get('/articles/:id/edit', ensureLoggedIn, async (req, res) => {
   const post = await db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
   if (!post || post.author_id !== req.session.user.id) return res.redirect('/articles/' + req.params.id);
+  await attachPostImages(post);
   res.render('user/article-form', { post, error: null, currentPath: '/articles' });
 });
 
@@ -304,9 +360,13 @@ router.post('/articles/:id/edit', ensureLoggedIn, withUpload(coverUpload), async
   if (!post || post.author_id !== req.session.user.id) return res.redirect('/articles/' + req.params.id);
   if (req.uploadError) return res.render('user/article-form', { post, error: req.uploadError, currentPath: '/articles' });
   const { title, body, excerpt, cover_image, tags, category } = req.body;
+  const images = Array.isArray(req.body.images)
+    ? req.body.images
+    : (typeof req.body.images === 'string' && req.body.images.trim() ? (() => { try { const a = JSON.parse(req.body.images); return Array.isArray(a) ? a : []; } catch (e) { return []; } })() : []);
   // New upload wins; else keep the submitted URL; else keep the existing cover
   const cover = req.file ? (req.file.url || req.file.path) : (cover_image !== undefined ? (cover_image || null) : post.cover_image);
   await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?').run(title, body, excerpt || body.substring(0, 200), cover, tags || null, category || 'general', req.params.id);
+  await db.setPostImages('post', req.params.id, images.length ? images : (post.cover_image ? [post.cover_image] : []));
   res.redirect('/articles/' + req.params.id);
 });
 

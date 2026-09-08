@@ -1,0 +1,7 @@
+<%# মাল্টি-ইমেজ আপলোড উইজেট — যেকোনো ফর্মে include করুন, images অ্যারে পাস করতে হয় %>
+<div class="form-group">
+  <label>ছবি (একাধিক, টেনে সাজান)</label>
+  <div class="mi-widget" data-field="images">
+    <input type="hidden" name="images" value='<%= JSON.stringify(images || []) %>'>
+  </div>
+</div>

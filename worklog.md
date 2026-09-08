@@ -338,3 +338,17 @@ Stage Summary:
 - **ব্যাকএন্ড ভ্যালিডেশন:** মডারেটর (`routes/moderator.js` POST/PUT) + অ্যাডমিন (`admin/routes.js` POST/PUT) — central + role-এ "উপদেষ্টা" → ব্লক (এরর মেসেজসহ)।
 - **UI হিন্ট:** মডারেটর ফর্মের role প্লেসহোল্ডার আপডেট।
 - **যাচাই:** কমিটি ২০২২-২৩=১৫ (রাফছান নেই), advisory ২০২২-২৩=মো. রাফছান ১ জন, কেন্দ্রীয় উপদেষ্টা=০; API-টেস্ট: central+উপদেষ্টা POST → রিজেক্ট (DB-তে ঢোকেনি); পাবলিক ১১ পেজ 200।
+
+---
+
+### টাস্ক ১৩ (পর্ব ৪) — অংশ ক: মাল্টি-ইমেজ আপলোড + গ্যালারি ডিসপ্লে
+
+- **অডিট** (`audit-content-mgmt.md`): ৬ পোস্ট টাইপের single-image অবস্থা, স্টোরেজ/সার্ভ পাইপলাইন, reuse-যোগ্য আপলোড প্যাটার্ন, `post_images` ডিজাইন।
+- **ডেটা:** db.js — `post_images` জেনেরিক টেবিল + মাইগ্রেশন `post_images_v6_seeded` (বিদ্যমান image_url/cover_image → post_images, sort_order 0, মূল কলাম অক্ষত); `getPostImages`/`setPostImages` হেল্পার।
+- **আপলোড:** `/admin/upload-images` (staff) + `/upload-images` (user) — JSON, ≤২০ ফাইল, WebP-অপটিমাইজ।
+- **পারসিস্টেন্স:** ৬ টাইপে create/edit `setPostImages`; share-কপিতে ছবি কপি; trashDelete-এ post_images ক্লিনআপ।
+- **UI:** `multi-image.ejs` partial + `multi-image.js` + `multi-image.css` (multi-select/drag&drop/preview/reorder/remove) — admin+moderator+user ফর্মে।
+- **ডিসপ্লে:** `post-gallery.ejs` partial + `post-gallery.js` (1→single img, 1+→main+thumbs+lightbox, lazy) — ইভেন্ট/প্রেস/নোটিশ/লেখা/ফিড/ডেইলি পেজে।
+- **যাচাই:** মাইগ্রেশন সিড ৩৪ সারি; E2E মাল্টি-ইমেজ ইভেন্ট+প্রেস; পাবলিক ১২ পেজ + ফর্ম ২০০।
+- **পরিদর্শনে ধরা ও ঠিক করা বাগ:** getTransportSchedule-এ হারানো `try{`; EJS `<%#`-কমেন্টে `%>` (500); press images-only POST ভ্যালিডেশন; শেয়ারে ছবি-ক্ষতি; লাইটবক্স থাম্ব-ইনডেক্স; `.lightbox-nav` CSS; single-image ডিসপ্লে-ফলব্যাক।
+- ⏳ অংশ খ (সেকশন-ভিত্তিক সেভ) ও অংশ গ (মডারেটর UI/UX) এখনো বাকি।

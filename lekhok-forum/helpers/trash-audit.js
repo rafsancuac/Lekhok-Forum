@@ -26,9 +26,16 @@ async function snapshot(db, table, id, req) {
 }
 
 // স্ন্যাপশট + ডিলিট (সফট-ডিলিট ফ্লো)
+// টাস্ক ১৩ (পর্ব ৪, অংশ ক): সংশ্লিষ্ট post_images সারি-ও মুছি যাতে অরফান না থাকে।
+const POST_IMAGES_MAP = {
+  events: 'event', daily_content: 'daily', press_clippings: 'news',
+  posts: 'post', notices: 'notice'
+};
 async function trashDelete(db, table, id, req) {
   const tid = await snapshot(db, table, id, req);
   await db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(id);
+  const et = POST_IMAGES_MAP[table];
+  if (et) { try { await db.prepare('DELETE FROM post_images WHERE entity_type = ? AND entity_id = ?').run(et, id); } catch (_) {} }
   return tid;
 }
 

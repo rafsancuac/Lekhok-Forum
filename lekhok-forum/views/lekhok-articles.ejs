@@ -19,8 +19,8 @@
       <div class="articles-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;">
         <% articles.forEach(post => { %>
           <div class="post-card card" style="padding:0; overflow:hidden;">
-            <% if (post.cover_image) { %>
-              <img src="<%= post.cover_image %>" alt="cover" style="width:100%; height:180px; object-fit:cover;" loading="lazy">
+            <% if (post.images && post.images.length) { %>
+              <%- include('partials/post-gallery', { images: post.images, alt: post.title, height: '180px', group: 'art-' + post.id }) %>
             <% } %>
             <div style="padding:16px 18px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">

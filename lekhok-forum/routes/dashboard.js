@@ -104,6 +104,9 @@ router.get('/dashboard', async (req, res) => {
     item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
     // my current reaction on this item (activities have no reactions)
     item.myReaction = (me && item.item_type !== 'activity') ? (myReactions[item.id] || null) : null;
+    // টাস্ক ১৩ (পর্ব ৪, অংশ ক): feed-আইটেমের একাধিক ছবি (post / daily)
+    item.images = (await db.getPostImages(item.item_type === 'activity' ? 'daily' : 'post', item.id)).map(i => i.image_url);
+    if (!item.images.length && item.cover_image) item.images = [item.cover_image];
   }
 
   // Right sidebar data
