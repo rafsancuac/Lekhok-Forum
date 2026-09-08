@@ -168,3 +168,20 @@ Work Log:
 
 Stage Summary:
 - কমিট: session47 (বিস্তারিত PROJECT.md §১০ + RBAC.md)
+
+---
+Task ID: 11
+Agent: Main verification agent (Session 48)
+Task: গ্লোবাল টাইপোগ্রাফি সিস্টেম (কেন্দ্রীয় ফন্ট টোকেন)
+
+Work Log:
+- fonts.css-এ ক্যানোনিকাল --font-heading (Hind Siliguri) ও --font-body (Kalpurush) টোকেন + fallback stack (Noto Sans Bengali + sans-serif); legacy --font-hs/--font-kp alias ধরে রাখা
+- ১১টি ফাইল-এ hardcoded ফন্ট-স্ট্যাক → টোকেন (admin.css, auth.css, profile.css, style.css, lekhok-advisory.ejs, ৪ মডারেটর view, admin login, admin users/edit)
+- ১৬টি view-এ Google Fonts link → স্থানীয় fonts.css?v=<%=AV%>
+- monospace → var(--font-body) (messages-list.ejs + style.css)
+- semantic চেক: .mod-page ও .adv-filter-bar (label/select) → var(--font-body)
+- grep অডিট: Google Fonts ০, non-token font-family ০ (@font-face ছাড়া)
+- টেস্ট: ৪৬/৪৬ (fonts.css টোকেন+fallback, admin/moderator/home/about fonts.css-লোড+Google-মুক্ত, served CSS-এ hardcoded স্ট্যাক ০); রিগ্রেশন smoke ১৮/১৮+৯/৯ + RBAC ১০/১০ সবুজ
+
+Stage Summary:
+- কমিট: session48 (বিস্তারিত PROJECT.md §১০)

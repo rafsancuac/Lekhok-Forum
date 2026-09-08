@@ -294,6 +294,24 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৪৮ (৮ সেপ্টেম্বর ২০২৬) — গ্লোবাল টাইপোগ্রাফি সিস্টেম (কেন্দ্রীয় ফন্ট টোকেন)
+
+**উদ্দেশ্য (ইউজার-রিকোয়েস্ট):** সাইট-ব্যাপী একটাই টাইপোগ্রাফি নিয়ম — হেডিং/মেনু/বাটন/টেবল-হেডার/নেভ = Hind Siliguri, প্যারাগ্রাফ/ফর্ম/বডি/কমেন্ট/টেবল-কনটেন্ট = Kalpurush; কোনো hardcoded `font-family` অবশিষ্ট নেই। বিদ্যমান ফন্ট অ্যাসেট (`public/assets/fonts/HindSiliguri-*.ttf` + `kalpurush.ttf`) রিইউজ, নতুন ডাউনলোড নেই।
+
+**কেন্দ্রীয় টোকেন (`public/assets/css/fonts.css`):**
+- `--font-heading: 'HindSiliguri','Hind Siliguri','Noto Sans Bengali',sans-serif`
+- `--font-body: 'Kalpurush','HindSiliguri','Noto Sans Bengali',sans-serif`
+- fallback stack-এ `Noto Sans Bengali` + generic `sans-serif` — ফন্ট লোড ব্যর্থ হলেও বাংলা সঠিকভাবে রেন্ডার হয়।
+- legacy alias `--font-hs`→heading, `--font-kp`→body ধরে রাখা হয়েছে (পশ্চাৎ-সামঞ্জস্য)।
+
+**পরিবর্তনের পরিসর:**
+- **১১টি ফাইল**-এ hardcoded ফন্ট-স্ট্যাক টোকেনে রূপান্তর: `admin.css`, `auth.css`, `profile.css`, `style.css`, `lekhok-advisory.ejs`, ৪টি মডারেটর view, admin login, admin users/edit।
+- **১৬টি view**-এ Google Fonts `<link>` সরিয়ে স্থানীয় `fonts.css?v=<%= AV %>` — কোনো network dependency নেই।
+- `messages-list.ejs` + `style.css`-এ `font-family: monospace` → `var(--font-body)` (কনসিস্টেন্সি)।
+- semantic চেক: `.mod-page` ও `.adv-filter-bar` (label/select) → `var(--font-body)` (এগুলো বডি-কনটেন্ট, হেডিং নয়)।
+
+**টেস্ট (session48 typography):** **৪৬/৪৬** — fonts.css 200 + উভয় টোকেন + fallback stack; ৭টি অ্যাডমিন পেজ + ৫টি মডারেটর পেজ + home/about সবই `fonts.css` লোড করে ও Google Fonts মুক্ত; served CSS-এ hardcoded `'Hind Siliguri'`/`'Kalpurush'` স্ট্যাক ০। রিগ্রেশন: smoke ১৮/১৮ + ৯/৯ + RBAC ১০/১০ = সবুজ।
+
 ### সেশন ৪৭ (৮ সেপ্টেম্বর ২০২৬) — RBAC কঠোর বাস্তবায়ন (permission matrix + frontend/backend enforcement)
 
 **উদ্দেশ্য (ইউজার-রিকোয়েস্ট):** অ্যাডমিন ও মডারেটরের জন্য লঙ্ঘন-অযোগ্য অ্যাক্সেস-সীমারেখা — মডারেটর শুধু নির্ধারিত মডিউলে, অ্যাডমিন সবকিছুতে; UI (hide/disable) ও API (middleware) দুই স্তরেই enforce।

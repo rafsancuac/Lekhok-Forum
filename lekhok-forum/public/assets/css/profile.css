@@ -166,7 +166,7 @@
   border-radius: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   min-width: 200px; padding: 6px; z-index: 50;
   display: none; flex-direction: column; gap: 2px;
-  font-family: 'Hind Siliguri', sans-serif !important;
+  font-family: var(--font-heading) !important;
 }
 .profile-3dot-menu.open { display: flex; }
 .profile-3dot-menu button, .profile-3dot-menu a {
@@ -174,7 +174,7 @@
   padding: 9px 12px; border: none; background: transparent;
   border-radius: 5px; cursor: pointer; text-decoration: none;
   color: var(--text, #0f172a); font-size: 13.5px; font-weight: 500;
-  font-family: 'Hind Siliguri', sans-serif !important;
+  font-family: var(--font-heading) !important;
   transition: background 0.12s;
 }
 .profile-3dot-menu button:hover, .profile-3dot-menu a:hover {
@@ -205,7 +205,7 @@
   border-radius: 5px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   min-width: 180px; padding: 6px; z-index: 50;
   display: none; flex-direction: column; gap: 2px;
-  font-family: 'Hind Siliguri', sans-serif !important;
+  font-family: var(--font-heading) !important;
 }
 .post-3dot-menu.open { display: flex; }
 .post-3dot-menu a, .post-3dot-menu button {
@@ -213,7 +213,7 @@
   padding: 8px 12px; border: none; background: transparent;
   border-radius: 5px; cursor: pointer; text-decoration: none;
   color: var(--text, #0f172a); font-size: 13px; font-weight: 500;
-  font-family: 'Hind Siliguri', sans-serif !important;
+  font-family: var(--font-heading) !important;
   transition: background 0.12s; width: 100%; text-align: left;
 }
 .post-3dot-menu a:hover, .post-3dot-menu button:hover {
@@ -228,7 +228,7 @@
   max-width: 1100px; margin: 16px auto 0; padding: 12px 20px;
   border-radius: 5px; font-size: 14px; font-weight: 500;
   display: flex; align-items: center; gap: 10px; cursor: pointer;
-  font-family: 'Hind Siliguri', sans-serif !important;
+  font-family: var(--font-heading) !important;
   animation: slideDown 0.3s ease;
 }
 .profile-toast.success { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
