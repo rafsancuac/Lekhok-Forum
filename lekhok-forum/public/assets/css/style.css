@@ -234,3 +234,56 @@ img{filter:none}
 
 /* ── প্রিন্ট-সেফটি ── */
 @media print{body::before{display:none}body{background:#fff;color:#000}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ৫৯ — কুইজ-আর্কাইভ + ব্যাক-টু-টপ + ফোকাস-রিং পলিশ
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── কুইজ-আর্কাইভ ── */
+.quiz-archive{margin-top:34px}
+.quiz-archive .section-head{margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quiz-archive .section-title{font-size:1.15rem;color:#F0FBF6;margin:0;display:flex;align-items:center;gap:10px}
+.quiz-archive .section-title i{color:#34D399}
+.quiz-archive-count{font-size:.74rem;font-weight:700;color:#A9C4B5;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);padding:3px 11px;border-radius:99px}
+.quiz-archive-list{display:flex;flex-direction:column;gap:9px}
+.quiz-arch-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .18s,box-shadow .18s}
+.quiz-arch-item:hover{border-color:rgba(52,211,153,.4);box-shadow:0 8px 22px -10px rgba(0,0,0,.5)}
+.quiz-arch-item[open]{border-color:rgba(52,211,153,.45)}
+.quiz-arch-item summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 16px;user-select:none}
+.quiz-arch-item summary::-webkit-details-marker{display:none}
+.quiz-arch-item .qa-date{flex:0 0 auto;font-size:.74rem;color:#A9C4B5;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);padding:3px 9px;border-radius:99px;white-space:nowrap}
+.quiz-arch-item .qa-title{flex:1;min-width:0;font-size:.92rem;font-weight:600;color:#E6F4EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.quiz-arch-item .qa-chev{flex:0 0 auto;font-size:.72rem;color:#8FAEA0;transition:transform .2s}
+.quiz-arch-item[open] .qa-chev{transform:rotate(180deg);color:#34D399}
+.quiz-arch-item .qa-body{padding:2px 16px 16px;border-top:1px dashed rgba(52,211,153,.25)}
+.quiz-arch-item .qa-body p{margin:12px 0 8px;font-size:.9rem;line-height:1.75;color:#C9DAD1}
+.quiz-arch-item .qa-link{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#34D399;text-decoration:none;border:1px solid rgba(52,211,153,.4);border-radius:8px;padding:6px 13px;transition:background .15s,color .15s}
+.quiz-arch-item .qa-link:hover{background:rgba(52,211,153,.12)}
+@media (max-width:560px){.quiz-arch-item summary{flex-wrap:wrap;gap:8px}.quiz-arch-item .qa-title{white-space:normal}}
+
+/* ── ব্যাক-টু-টপ ফ্লোটিং বাটন ── */
+.back-to-top{
+  position:fixed;right:22px;bottom:24px;z-index:80;
+  width:46px;height:46px;border-radius:50%;
+  border:1px solid rgba(52,211,153,.5);
+  background:rgba(11,51,39,.9);
+  color:#34D399;font-size:1.05rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 28px -8px rgba(0,0,0,.6),0 0 0 0 rgba(52,211,153,.4);
+  opacity:0;visibility:hidden;transform:translateY(14px);
+  transition:opacity .25s,transform .25s,visibility .25s,box-shadow .25s;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.back-to-top.is-visible{opacity:1;visibility:visible;transform:none}
+.back-to-top:hover{background:rgba(16,74,56,.95);box-shadow:0 12px 32px -8px rgba(0,0,0,.7),0 0 0 5px rgba(52,211,153,.18)}
+.back-to-top:active{transform:scale(.94)}
+.back-to-top:focus-visible{outline:2px solid #34D399;outline-offset:3px}
+@media (max-width:560px){.back-to-top{right:14px;bottom:16px;width:42px;height:42px}}
+
+/* ── গ্লোবাল ফোকাস-রিং (কীবোর্ড অ্যাক্সেসিবিলিটি) ── */
+a:focus-visible,button:focus-visible,details summary:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid #34D399;outline-offset:2px;border-radius:6px;
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:none;border-color:#34D399;
+}

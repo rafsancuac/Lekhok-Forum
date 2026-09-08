@@ -13,7 +13,7 @@
     <div class="leaders-grid reveal-stagger">
       <% members.forEach(m => { %>
         <% const displayName = m.user_full_name || m.name; %>
-        <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+        <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg?v=2'; %>
         <% if (m.user_username) { %>
           <a href="/profile/<%= m.user_username %>" class="leader-card has-image linked-member">
             <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />

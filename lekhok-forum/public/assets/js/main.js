@@ -46,3 +46,24 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run57);
   else run57();
 }();
+
+/* ── সেশন ৫৯: ব্যাক-টু-টপ ফ্লোটিং বাটন ───────────────────────────────────── */
+(function () {
+  var btn = document.getElementById('backToTop');
+  if (!btn) return;
+  var ticking = false;
+  function upd() {
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    if (y > 420) btn.classList.add('is-visible');
+    else btn.classList.remove('is-visible');
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { window.requestAnimationFrame(upd); ticking = true; }
+  }, { passive: true });
+  upd();
+  btn.addEventListener('click', function () {
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    catch (e) { window.scrollTo(0, 0); }
+  });
+})();

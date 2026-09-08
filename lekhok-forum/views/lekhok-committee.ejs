@@ -98,7 +98,7 @@
            } %>
         <% central.forEach(m => { %>
           <% const displayName = m.name || m.user_full_name; %>
-          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg?v=2'; %>
           <% const displayBani = (m.message && String(m.message).trim()) ? String(m.message) : (m.bio || ''); %>
           <% if (m.user_username) { %>
             <div class="leader-card has-image clickable-card linked-member" data-href="/profile/<%= m.user_username %>">
@@ -119,7 +119,7 @@
                  data-role="<%= m.role.replace(/'/g, '&#39;') %>"
                  data-designation="<%= (m.designation || '').replace(/'/g, '&#39;') %>"
                  data-bio="<%= (m.bio || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;') %>"
-                 data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>">
+                 data-image="<%= m.image_url || '/assets/img/avatar-placeholder.svg?v=2' %>">
               <span class="member-term-tag"><%= selectedYear %></span>
               <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">

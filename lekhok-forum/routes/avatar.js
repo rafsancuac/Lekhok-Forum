@@ -7,12 +7,12 @@ router.get('/:userId', async (req, res) => {
   // Short cache: avatar changes must appear everywhere quickly (user report)
   res.set('Cache-Control', 'public, max-age=60');
   const user = await db.prepare('SELECT gender, avatar_url FROM users WHERE id = ?').get(req.params.userId);
-  if (!user) return res.redirect('/assets/avatars/neutral.svg');
+  if (!user) return res.redirect('/assets/avatars/neutral.svg?v=2');
   if (user.avatar_url) return res.redirect(user.avatar_url);
   const gender = user.gender || 'other';
-  if (gender === 'male') return res.redirect('/assets/avatars/male.svg');
-  if (gender === 'female') return res.redirect('/assets/avatars/female.svg');
-  return res.redirect('/assets/avatars/neutral.svg');
+  if (gender === 'male') return res.redirect('/assets/avatars/male.svg?v=2');
+  if (gender === 'female') return res.redirect('/assets/avatars/female.svg?v=2');
+  return res.redirect('/assets/avatars/neutral.svg?v=2');
 });
 
 module.exports = router;

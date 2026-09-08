@@ -74,7 +74,7 @@
         <summary>
           <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:2px;">
           <i class="fas fa-chevron-right mem-chevron"></i>
-          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg?v=2' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'" />
           <div>
             <div class="mem-name"><%= m.name %></div>
             <div class="mem-sub"><%= [m.role, m.term_year].filter(Boolean).join(' · ') || 'পদ নেই' %></div>
@@ -121,7 +121,7 @@
         <summary>
           <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:2px;">
           <i class="fas fa-chevron-right mem-chevron"></i>
-          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg?v=2' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'" />
           <div>
             <div class="mem-name"><%= m.name %></div>
             <div class="mem-sub"><%= [m.role, m.term_year].filter(Boolean).join(' · ') || 'পদ নেই' %></div>

@@ -46,7 +46,7 @@
           <% if (item.item_type === 'repost' && item.original) { %>
             <article class="feed-card card repost-card" data-repost-id="<%= item.id %>">
               <div class="feed-card-head">
-                <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
                 <div>
                   <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
                   <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
@@ -63,7 +63,7 @@
               <% } %>
               <div class="repost-original card-inner">
                 <div class="feed-card-head">
-                  <img loading="lazy" decoding="async" src="<%= item.original.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                  <img loading="lazy" decoding="async" src="<%= item.original.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
                   <div>
                     <a href="/profile/<%= item.original.username %>" class="feed-author"><%= item.original.author_name %></a>
                     <% if (item.original.author_role === 'admin' || item.original.author_role === 'moderator') { %><span class="role-chip"><%= item.original.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
@@ -104,7 +104,7 @@
                   <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
                 </div>
               <% } else { %>
-                <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'">
+                <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
                 <div>
                   <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
                   <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>

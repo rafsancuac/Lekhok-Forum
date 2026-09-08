@@ -62,7 +62,7 @@
         const slide = (c) => `
           <figure class="press-slide">
             <a href="${c.image_url}" target="_blank" rel="noopener" class="press-slide-img" tabindex="-1">
-              <img src="${c.image_url}" alt="${String(c.title || 'পত্রিকায় আমাদের নিউজ').replace(/"/g, '&quot;')}" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.opacity=.25;this.src='/assets/img/avatar-placeholder.svg'" />
+              <img src="${c.image_url}" alt="${String(c.title || 'পত্রিকায় আমাদের নিউজ').replace(/"/g, '&quot;')}" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.opacity=.25;this.src='/assets/img/avatar-placeholder.svg?v=2'" />
             </a>
             ${(c.title || c.paper_name) ? `<figcaption>${c.title ? `<strong>${c.title}</strong>` : ''}${c.paper_name ? `<span><i class="far fa-newspaper"></i> ${c.paper_name}</span>` : ''}</figcaption>` : ''}
           </figure>`;

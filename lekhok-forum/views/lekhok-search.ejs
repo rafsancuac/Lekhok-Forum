@@ -76,7 +76,7 @@
       <div class="search-user-grid">
         <% results.users.forEach(u => { %>
           <a class="search-user-card" href="/profile/<%= encodeURIComponent(u.username) %>">
-            <img src="<%= u.avatar_url || ('/avatar/' + u.id) %>" alt="<%= u.full_name %>" loading="lazy" decoding="async" onerror="this.src='/assets/avatars/neutral.svg'" />
+            <img src="<%= u.avatar_url || ('/avatar/' + u.id) %>" alt="<%= u.full_name %>" loading="lazy" decoding="async" onerror="this.src='/assets/avatars/neutral.svg?v=2'" />
             <div>
               <strong><%= u.full_name %></strong>
               <small>@<%= u.username %><% if (u.designation) { %> &middot; <%= u.designation %><% } %></small>

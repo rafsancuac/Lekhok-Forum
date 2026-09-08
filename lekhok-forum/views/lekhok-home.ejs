@@ -137,7 +137,7 @@
       }
       function leaderCard(m, roleLabel, yearLabel, statement) {
         const displayName = m.user_full_name || m.name;
-        const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg';
+        const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg?v=2';
         // সেশন ৫৭: আইডির ইউয়ারএল (অ্যাডমিন-সেট profile_url) → প্রাধিকার;
         // না থাকলে লিংকড অ্যাকাউন্টের সাইট-প্রোফাইল।
         const profileHref = safeLeaderUrl(m.profile_url) || (m.user_username ? '/profile/' + m.user_username : '');

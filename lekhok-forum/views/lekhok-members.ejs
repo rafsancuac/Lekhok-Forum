@@ -93,7 +93,7 @@
         <% members.forEach(m => { %>
           <a href="/profile/<%= m.username %>" class="leader-card has-image clickable-card linked-member">
             <img loading="lazy" decoding="async" src="<%= m.avatar_url || '/avatar/' + m.id %>" alt="<%= m.full_name %>" loading="lazy"
-                 onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+                 onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'" />
             <div class="leader-body">
               <h3><%= m.full_name %></h3>
               <p class="role"><%= m.designation || (roleMap[m.role] || 'সদস্য') %></p>
