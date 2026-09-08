@@ -344,7 +344,13 @@ router.get('/articles/:id', async (req, res) => {
     publishedTime = isNaN(d) ? null : d.toISOString();
   } catch (_) { publishedTime = null; }
 
-  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name });
+  // ── সেশন ৬৩: পড়ার-অভিজ্ঞতা — আনুমানিক পড়ার সময় (বাংলা গড় ~১৩০ শব্দ/মিনিট) ──
+  const _wordCount = (String(post.body || '').trim().match(/\S+/g) || []).length;
+  const readingMinutes = Math.max(1, Math.round(_wordCount / 130));
+  const BN_D63 = '০১২৩৪৫৬৭৮৯';
+  const bn63 = (n) => String(n).replace(/\d/g, (d) => BN_D63[+d]);
+
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount) });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────

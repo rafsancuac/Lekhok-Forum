@@ -25,7 +25,9 @@
 </script>
 
   <div class="article-wrap">
-    <article class="article-main card">
+    <%# ── সেশন ৬৩: পড়ার-অভিজ্ঞতা — আগের অবস্থান থেকে শুরুর ব্যানার (JS localStorage থেকে বানায়) ── %>
+    <div class="read-resume" id="readResume" hidden></div>
+    <article class="article-main card" data-post-id="<%= post.id %>" data-read-min="<%= readingMinutes %>" id="articleCard">
       <% if (post.shared_from && post.shared_original) { %>
         <div class="shared-banner">
           <i class="fas fa-retweet"></i>
@@ -47,7 +49,7 @@
           <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="author-avatar">
           <div>
             <a href="/profile/<%= author.username %>" class="author-name"><%= author.full_name %></a>
-            <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত</div>
+            <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত &middot; <i class="far fa-clock"></i> <span title="<%= wordCountBn %> শব্দ">≈ <%= readingMinutesBn %> মিনিট পড়া</span></div>
           </div>
         </div>
       </div>
@@ -152,9 +154,18 @@
   </div>
 
   <%- include('../partials/share-modal') %>
+  <%# ── সেশন ৬৩: পড়ার-অভিজ্ঞতা টুলবার (ফন্ট-সাইজ + অগ্রগতি + অবশিষ্ট সময়) ── %>
+  <div class="read-tools" id="readTools" role="group" aria-label="পড়ার সহায়ক টুলস">
+    <div class="rt-time" id="rtTime" hidden></div>
+    <button type="button" class="rt-btn" id="rtPlus" aria-label="লেখা বড় করুন" title="লেখা বড়">A+</button>
+    <button type="button" class="rt-btn" id="rtMinus" aria-label="লেখা ছোট করুন" title="লেখা ছোট">A−</button>
+    <div class="rt-track" aria-hidden="true"><span class="rt-fill" id="rtFill"></span></div>
+    <div class="rt-pct" id="rtPct">০%</div>
+  </div>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
+  <script src="/assets/js/article-reading.js?v=<%= AV %>"></script>
   <script>
     // Reply toggle
     document.querySelectorAll('.reply-btn').forEach(btn => {
