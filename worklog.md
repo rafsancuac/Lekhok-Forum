@@ -220,3 +220,11 @@ Work Log:
 
 Stage Summary:
 - কমিট: session50 (বিস্তারিত PROJECT.md §১০ + PERFORMANCE-REPORT.md)
+
+## Task 9 — স্থায়ী পরিষদ পেজ: উপদেষ্টা-তালিকার সাথে ১০০% ডিজাইন কনসিসটেন্সি (সেশন ৫২)
+
+- রেফারেন্স কার্ড = `leader-card has-image clickable-card [linked-member]` (style.css গ্লোবাল কম্পোনেন্ট; কমিটি/উপদেষ্টা পেজে ব্যবহৃত)। ডকুমেন্ট করা ভিজুয়াল প্রপার্টি: গ্রিড minmax(240px,1fr) gap 20px; img 200px কভার; বডি padding 22px (h3 19px / role 13px accent uppercase / bio 0.9rem); radius 5px; hover translateY(-4px)+scale(1.06)+accent বর্ডার; linked-member ফাঁ-অ্যারো ব্যাজ।
+- `lekhok-permanent.ejs`-এর পুরনো `perm-card`/`perm-grid` বাদ → হুবহু `leader-card has-image` মার্কআপ + একই ইনলাইন স্টাইল রিইউজ।
+- নিচের ২ `link-more` লিঙ্ক সরানো (কার্যনির্বাহী কমিটি / উপদেষ্টা পরিষদ)।
+- ডাইনামিক: আগে থেকেই `/admin/members` (member_type=permanent) দিয়ে Add/Edit/Delete — যাচাই করা (add→দেখা→delete 302)।
+- টেস্ট: পাবলিক ১৫/১৫ 200; permanent পেজে ৫ কার্ড leader-card, ০ link-more।

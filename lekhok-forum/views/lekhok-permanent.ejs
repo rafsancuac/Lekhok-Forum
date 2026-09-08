@@ -6,6 +6,32 @@
   </div>
 </header>
 
+<style>
+/* ── কার্ড: 'উপদেষ্টাদের তালিকা' পেজের leader-card has-image কম্পোনেন্টের হুবহু ── */
+.leader-card { position: relative; overflow: hidden; }
+.leader-card img { transition: transform .35s ease; }
+.leader-card:hover img { transform: scale(1.06); }
+.leader-card.linked-member::after {
+  content: '\f061'; /* fa-arrow-right */
+  font-family: 'Font Awesome 6 Free'; font-weight: 900;
+  position: absolute; top: 12px; right: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent, #059669); color: #fff; font-size: 0.72rem;
+  opacity: 0; transform: translate(6px, -6px);
+  transition: opacity .2s, transform .2s;
+}
+.leader-card.linked-member:hover::after { opacity: 1; transform: translate(0, 0); }
+.term-empty {
+  text-align: center; padding: 54px 24px;
+  background: var(--bg-soft, #f8fafc);
+  border: 1.5px dashed var(--border, #cbd5e1); border-radius: 5px;
+}
+.term-empty i { font-size: 2rem; color: var(--accent, #059669); margin-bottom: 12px; }
+.term-empty h3 { margin: 0 0 6px; color: var(--brand, #0a1f44); font-size: 1.15rem; }
+.term-empty p { margin: 0; color: var(--text-muted, #64748b); font-size: .93rem; }
+</style>
+
 <section class="section reveal">
   <div class="container">
     <div class="section-head center">
@@ -15,31 +41,38 @@
     </div>
 
     <% if (!permanent || !permanent.length) { %>
-      <div class="empty-state">
-        <i class="fas fa-award"></i>
-        <h3>এখনো সদস্য যোগ করা হয়নি</h3>
+      <div class="term-empty">
+        <i class="far fa-folder-open"></i>
+        <h3>স্থায়ী পরিষদে এখনো সদস্য যোগ করা হয়নি</h3>
         <p>অ্যাডমিন প্যানেল → কমিটির সদস্য → ধরন: স্থায়ী পরিষদ — থেকে সদস্য যোগ করুন।</p>
       </div>
     <% } else { %>
-      <div class="perm-grid">
+      <div class="leaders-grid">
         <% permanent.forEach(m => {
-             const name = m.user_full_name || m.name;
-             const img = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg';
-             const desig = m.designation || m.user_designation || '';
+             const displayName = m.user_full_name || m.name;
+             const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg';
         %>
-          <div class="perm-card">
-            <img src="<%= img %>" alt="<%= name %>" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
-            <h3><%= name %></h3>
-            <div class="perm-role"><%= m.role || 'স্থায়ী সদস্য' %></div>
-            <% if (desig) { %><div class="perm-desig"><%= desig %></div><% } %>
-          </div>
+          <% if (m.user_username) { %>
+            <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role || 'স্থায়ী সদস্য' %></p>
+                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+              </div>
+            </a>
+          <% } else { %>
+            <div class="leader-card has-image clickable-card">
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role || 'স্থায়ী সদস্য' %></p>
+                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+              </div>
+            </div>
+          <% } %>
         <% }) %>
       </div>
     <% } %>
-
-    <div style="text-align:center; margin-top:30px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
-      <a href="/committee" class="link-more"><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি</a>
-      <a href="/committee/advisory" class="link-more"><i class="fas fa-user-tie"></i> উপদেষ্টা পরিষদ</a>
-    </div>
   </div>
 </section>
