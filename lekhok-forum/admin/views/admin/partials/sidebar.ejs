@@ -561,3 +561,22 @@
 </script>
 
 <script src="/assets/js/admin-url-upload.js"></script>
+
+<!-- সেশন ৪৪-পরিপূরক: সেভ-ব্যর্থতায় ফেরত পাঠানো হলে এরর-টোস্ট (?saveerr=1) -->
+<script>
+(function () {
+  try {
+    var qs44 = new URLSearchParams(location.search);
+    if (!qs44.has('saveerr')) return;
+    qs44.delete('saveerr');
+    var clean44 = location.pathname + (qs44.toString() ? '?' + qs44.toString() : '') + location.hash;
+    if (history.replaceState) history.replaceState(null, '', clean44);
+    var t44 = document.createElement('div');
+    t44.setAttribute('role', 'alert');
+    t44.style.cssText = 'position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:2000;background:#b91c1c;color:#fff;border-radius:5px;padding:13px 20px;font-size:.92rem;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.35);max-width:92vw;text-align:center;transition:opacity .5s;';
+    t44.textContent = '⚠️ সংরক্ষণ সম্পন্ন হয়নি — আবার চেষ্টা করুন। সমস্যা চললে সার্ভার লগ দেখুন।';
+    document.body.appendChild(t44);
+    setTimeout(function () { t44.style.opacity = '0'; setTimeout(function () { t44.remove(); }, 600); }, 7000);
+  } catch (e) {}
+})();
+</script>

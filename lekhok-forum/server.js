@@ -8,6 +8,39 @@ const db = require('./db');
 const { runBirthdayCheck } = require('./helpers/notify');
 const { parseNav, visibleNav, navItemActive } = require('./helpers/nav');
 
+// ── সেশন ৪৪-পরিপূরক: async রুট-এরর অটো-ক্যাচ (ইনফিনিট স্পিনারের মূল ফিক্স) ──
+// Express 4 async হ্যান্ডলার/মিডলওয়্যারের ভেতরে throw হওয়া এরর ক্যাচ করে না —
+// তখন রেসপন্স কখনো পাঠানো হয় না, রিকোয়েস্ট হ্যাং করে (ব্রাউজারে স্পিনার ঘুরতেই
+// থাকে) এবং শেষে প্রক্সি/Vercel টাইমআউটে ভুল পেজ দেখায়। নিচের প্যাচটি বুটের
+// শুরুতেই Express-এর Route.prototype ভার্ভ মেথড ও Router.prototype.use প্যাচ করে —
+// যেকোনো AsyncFunction অটো `.catch(next)` পাবে, এরর গ্লোবাল এরর-মিডলওয়্যারে
+// গিয়ে দ্রুত সঠিক ৫০০/এরর রেসপন্স দেবে। রুট কোড/আর্কিটেকচার অপরিবর্তিত,
+// নতুন ডিপেন্ডেন্সি নেই। sync হ্যান্ডলার আগের মতোই Express নিজে ক্যাচ করে।
+(function patchAsyncErrors44() {
+  try {
+    const probe = express.Router();
+    const routeProto = Object.getPrototypeOf(probe.route('/__probe44'));
+    const wrap44 = (fn) => (fn && fn.constructor && fn.constructor.name === 'AsyncFunction')
+      ? function (req, res, next) { return fn.call(this, req, res, next).catch(next); }
+      : fn;
+    ['get', 'post', 'put', 'patch', 'delete', 'all'].forEach(function (verb) {
+      const orig = routeProto[verb];
+      if (typeof orig !== 'function') return;
+      routeProto[verb] = function () {
+        const args = Array.prototype.slice.call(arguments).map(wrap44);
+        return orig.apply(this, args);
+      };
+    });
+    // router.use()/app.use()-এর async মিডলওয়্যারও কভার (লোকালস/CSRF/ভিজিট-ট্র্যাকিং)
+    const routerProto = Object.getPrototypeOf(probe);
+    const origUse = routerProto.use;
+    routerProto.use = function () {
+      const args = Array.prototype.slice.call(arguments).map(wrap44);
+      return origUse.apply(this, args);
+    };
+  } catch (e) { console.error('[async44] patch failed:', e.message); }
+})();
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -355,7 +388,21 @@ app.use('/api',      require('./routes/api'));
 app.use('/admin',    require('./admin/routes'));
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
+// সেশন ৪৪-পরিপূরক: ফর্ম-সেভ (POST) কখনো ৪০৪ পেজে শেষ হবে না — আনম্যাচড POST
+// হলে রেফারার পেজেই ?saveerr=1 দিয়ে ফেরত পাঠানো হয়, সেখানে এরর-টোস্ট দেখায়।
 app.use((req, res) => {
+  if (req.method === 'POST') {
+    let back = '/';
+    try {
+      const ref = req.get('referer');
+      if (ref) {
+        const u = new URL(ref, 'http://_local_');
+        if (u.pathname && u.pathname !== req.path) back = u.pathname + (u.search || '');
+      }
+    } catch (e) {}
+    back += (back.includes('?') ? '&' : '?') + 'saveerr=1';
+    return res.redirect(back);
+  }
   res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
 });
 

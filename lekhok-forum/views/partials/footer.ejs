@@ -46,3 +46,23 @@
     </div>
   </div>
 </footer>
+
+<!-- সেশন ৪৪-পরিপূরক: আনম্যাচড POST/সেভ-ব্যর্থতায় রেফারারে ফেরত পাঠানো হলে এরর-টোস্ট (?saveerr=1) -->
+<script>
+(function () {
+  try {
+    if (window.__saveerr44) return; window.__saveerr44 = 1;
+    var qs = new URLSearchParams(location.search);
+    if (!qs.has('saveerr')) return;
+    qs.delete('saveerr');
+    var clean = location.pathname + (qs.toString() ? '?' + qs.toString() : '') + location.hash;
+    if (history.replaceState) history.replaceState(null, '', clean);
+    var t = document.createElement('div');
+    t.setAttribute('role', 'alert');
+    t.style.cssText = 'position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:2000;background:#b91c1c;color:#fff;border-radius:5px;padding:13px 20px;font-size:.92rem;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.35);max-width:92vw;text-align:center;transition:opacity .5s;';
+    t.textContent = '⚠️ সংরক্ষণ সম্পন্ন হয়নি — ফর্মটি আবার পূরণ করে চেষ্টা করুন। সমস্যা চললে অ্যাডমিনকে জানান।';
+    document.body.appendChild(t);
+    setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 600); }, 7000);
+  } catch (e) {}
+})();
+</script>
