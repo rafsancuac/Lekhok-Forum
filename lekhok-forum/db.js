@@ -1537,13 +1537,20 @@ async function runMigrations() {
 // (_boot_cache.init_fingerprint) সেভ করা হয়; পরের বুটে হ্যাশ মিললে সব স্কিপ —
 // বুট ১-২ কোয়েরিতে নামে। ফাংশন-সোর্স বদলালে (নতুন মাইগ্রেশন/সিড) হ্যাশ নিজেই
 // বদলায়, তাই নতুন মাইগ্রেশন সবসময় চলে।
-const BOOT_CACHE_VERSION = 'v1';
+// সেশন ৫৮-ফিক্স: শুধু ফাংশন-সোর্স যথেষ্ট নয় — LATER_COLUMNS-অ্যারে বা
+// runMigrations-এর SQL-তালিকায় নতুন কলাম/স্টেটমেন্ট যোগ হলে ফাংশন-বডি
+// অপরিবর্তিত থাকে → পুরনো ফিঙ্গারপ্রিন্টে cache-HIT → ALTER কখনোই চলে না
+// (লাইভে users-totp কলাম না-হওয়ায় 2FA-confirm 500 — এই ঘটনাই এটা ধরিয়েছে)।
+// এখন ডেটা-তালিকাগুলোও হ্যাশে ঢুকেছে; ভবিষ্যতের যেকোনো কলাম-যোগ নিরাপদে
+// ফুল-ইনিট ট্রিগার করবে।
+const BOOT_CACHE_VERSION = 'v2';
 function bootFingerprint() {
   const crypto = require('crypto');
   const fns = [runMigrations, applyLaterMigrations, applySession42Migrations, seedAdmin, seedIfEmptyLocal,
                seedDemoContent, ensureDemoModerator];
   return crypto.createHash('md5')
-    .update(BOOT_CACHE_VERSION + '|' + fns.map(f => f.toString()).join('§'))
+    .update(BOOT_CACHE_VERSION + '|' + fns.map(f => f.toString()).join('§')
+            + '|' + JSON.stringify(LATER_COLUMNS))
     .digest('hex');
 }
 
