@@ -127,16 +127,27 @@
     </div>
 
     <%
+      // সেশন ৫৭: প্রোফাইল-লিংক স্যানিটাইজার — শুধু http(s)/সাইট-রিলেটিভ পাথ গ্রহণ
+      // (javascript: ইত্যাদি ইনজেকশন রোধ)।
+      function safeLeaderUrl(u) {
+        if (!u) return '';
+        const s = String(u).trim();
+        if (/^https?:\/\//i.test(s) || s.startsWith('/')) return s;
+        return '';
+      }
       function leaderCard(m, roleLabel, yearLabel, statement) {
         const displayName = m.user_full_name || m.name;
         const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg';
+        // সেশন ৫৭: আইডির ইউয়ারএল (অ্যাডমিন-সেট profile_url) → প্রাধিকার;
+        // না থাকলে লিংকড অ্যাকাউন্টের সাইট-প্রোফাইল।
+        const profileHref = safeLeaderUrl(m.profile_url) || (m.user_username ? '/profile/' + m.user_username : '');
         // সেশন ৪৯: বাণী প্রাধিকার — message (আলাদা বাণী ফিল্ড) → bio → slot statement
         const rawBio = (m.message && String(m.message).trim()) ? String(m.message)
                      : ((m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || ''));
         const displayBio = rawBio.substring(0, 700);
-        const fb    = m.social_fb;
+        const fb    = safeLeaderUrl(m.social_fb);
         const email = m.social_email;
-        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin);
+        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || profileHref);
         const inner = `
           <img loading="lazy" decoding="async" src="${displayImg}" alt="${displayName}" class="leader-photo" />
           <div class="leader-body">
@@ -146,6 +157,7 @@
             ${displayBio ? `<p class="leader-bani">${displayBio}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
             ${hasSocial ? `
             <div class="leader-social">
+              ${profileHref ? `<a href="${profileHref}" ${/^https?:\/\//i.test(profileHref) ? 'target="_blank" rel="noopener noreferrer"' : ''} class="leader-soc-id" aria-label="প্রোফাইল / আইডি"><i class="fas fa-id-card"></i></a>` : ''}
               ${fb ? `<a href="${fb}" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>` : ''}
               ${email ? `<a href="mailto:${email}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
               ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener noreferrer" class="leader-soc-tw" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
@@ -160,7 +172,9 @@
         // DOM টুকরোতে ফেলত, ফলে বর্তমান সভাপতি/সা.সম্পাদক কার্ড ভেঙে যেত।
         // এখন প্রোফাইল লিংক থাকে সোশ্যাল আইকনে + পুরো কার্ড ক্লিকযোগ্য
         // data-href + main.js-এর delegated হ্যান্ডলারে — nested anchor সম্ভবই নেই।
-        return `<div class="leader-card has-image leader-card-featured">${inner}</div>`;
+        // সেশন ৫৭: profileHref থাকলে কার্ডে data-href — main.js ক্লিকে নেভিগেট করে
+        // (ভেতরের <a>-তে ক্লিক হলে সেটাই প্রাধিন্য পায়)।
+        return `<div class="leader-card has-image leader-card-featured${profileHref ? ' is-linked' : ''}"${profileHref ? ` data-href="${profileHref}"` : ''}>${inner}</div>`;
       }
       function leaderPair(members, roles, yearLabel, statements) {
         if (!members || !members.length) return '';

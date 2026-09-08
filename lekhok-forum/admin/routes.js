@@ -395,7 +395,7 @@ router.get('/members/new', requireAdmin, async (req, res) => {
 });
 
 router.post('/members', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department } = req.body;
+  const { name, role, designation, bio, message, image_url, profile_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department } = req.body;
   if (!name) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
@@ -424,7 +424,7 @@ router.post('/members', requireAdmin, async (req, res) => {
   }
   const acctStatus = userIdNum ? 'active' : 'unclaimed';
   try {
-    await db.prepare('INSERT INTO members (name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, mid, department || '', acctStatus);
+    await db.prepare('INSERT INTO members (name, role, designation, bio, message, image_url, profile_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', message || '', image_url || '', String(profile_url || '').trim(), social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, mid, department || '', acctStatus);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'এই নাম, কার্যবর্ষ ও ধরনে একজন সদস্য ইতিমধ্যে যোগ করা আছেন।', allUsers, currentPath: '/admin/members' });
@@ -440,7 +440,7 @@ router.get('/members/:id/edit', requireAdmin, async (req, res) => {
 });
 
 router.put('/members/:id', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, department } = req.body;
+  const { name, role, designation, bio, message, image_url, profile_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, department } = req.body;
   // টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয়তে উপদেষ্টা role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
   if ((member_type || 'central') === 'central' && /উপদেষ্টা/.test(role || '')) {
     const allUsers = await fetchAllUsers();
@@ -449,7 +449,7 @@ router.put('/members/:id', requireAdmin, async (req, res) => {
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
-    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, message=?, image_url=?, social_fb=?, social_linkedin=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=?, department=? WHERE id=?').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, department || '', req.params.id);
+    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, message=?, image_url=?, profile_url=?, social_fb=?, social_linkedin=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=?, department=? WHERE id=?').run(name, role || '', designation || '', bio || '', message || '', image_url || '', String(profile_url || '').trim(), social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, department || '', req.params.id);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'এই নাম, কার্যবর্ষ ও ধরনে আরেকজন সদস্য ইতিমধ্যে আছেন।', allUsers, currentPath: '/admin/members' });

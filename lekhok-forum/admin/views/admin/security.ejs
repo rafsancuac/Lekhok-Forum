@@ -25,8 +25,8 @@
   <% if (success === 'enrolled') { %><div class="success"><i class="fas fa-shield-halved"></i> 2FA সক্রিয় হয়েছে — নিচের ব্যাকআপ কোডগুলো সংরক্ষণ করুন।</div><% } %>
   <% if (success === 'backup') { %><div class="success"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড তৈরি হয়েছে — পুরনো কোডগুলো বাতিল।</div><% } %>
   <% if (success === 'disabled') { %><div class="success">2FA বন্ধ করা হয়েছে।</div><% } %>
-  <% if (error === 'bad_code') { %><div class="error">ভুল কোড — অ্যাপের বর্তমান ৬-অঙ্কের কোড দিন।</div><% } %>
-  <% if (error === 'no_pending') { %><div class="error">এনরোল প্রথমে শুরু করুন।</div><% } %>
+  <% if (error === 'bad_code') { %><div class="error"><i class="fas fa-circle-exclamation"></i> কোড মিলছে না। অ্যাপে দেখানো <b>বর্তমান</b> ৬-অঙ্কের কোড দিন — কোড ৩০ সেকেন্ড পর বদলে যায়, নতুন কোড আসা মাত্র সামান্য অপেক্ষা করে আবার চেষ্টা করুন। বারবার ব্যর্থ হলে "2FA চালু করুন" দিয়ে নতুন সিক্রেট নিয়ে অ্যাপে আবার যোগ করুন।</div><% } %>
+  <% if (error === 'no_pending') { %><div class="error"><i class="fas fa-circle-info"></i> কোনো অপেক্ষমাণ এনরোল নেই (সেশন শেষ হয়ে গিয়েছিল)। নিচের "2FA চালু করুন" বোতামে ক্লিক করে নতুন করে শুরু করুন।</div><% } %>
 
   <% if (backupCodes && backupCodes.length) { %>
   <div class="card" style="border-left:4px solid #f59e0b;">

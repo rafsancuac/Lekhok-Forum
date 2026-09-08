@@ -84,3 +84,7 @@
 .lightbox-nav button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .lightbox-nav button:hover{background:var(--accent,#059669)}
 .lightbox-nav span{color:#cbd5e1;font-size:.85rem;min-width:60px;text-align:center}
+/* সেশন ৫৭: নেতৃত্ব কার্ড — আইডি/প্রোফাইল লিংক আইকন + ক্লিকযোগ্য কার্ড */
+.leader-social a.leader-soc-id{color:#0a1f44;background:rgba(10,31,68,.08)}
+.leader-social a.leader-soc-id:hover{background:#0a1f44;color:#fff}
+.leader-card.is-linked{cursor:pointer}

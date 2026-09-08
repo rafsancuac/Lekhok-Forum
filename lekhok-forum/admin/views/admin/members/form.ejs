@@ -35,7 +35,16 @@
       <div class="form-group"><label>ডিপার্টমেন্ট</label><input type="text" name="department" value="<%= member ? (member.department || '') : '' %>" placeholder="যেমন: বাংলা বিভাগ"></div>
       <div class="form-group"><label>বায়ো</label><textarea name="bio" rows="3"><%= member ? (member.bio || '') : '' %></textarea></div>
       <div class="form-group"><label>বাণী (message/quote)</label><textarea name="message" rows="3" placeholder="কার্ডে দেখানো সংক্ষিপ্ত বাণী — খালি রাখলে বায়ো দেখাবে"><%= member ? (member.message || '') : '' %></textarea></div>
-      <div class="form-group"><label>ছবির URL</label><input type="url" name="image_url" value="<%= member ? (member.image_url || '') : '' %>"></div>
+      <div class="form-group">
+        <label>ছবির URL</label>
+        <input type="url" name="image_url" value="<%= member ? (member.image_url || '') : '' %>" placeholder="https://… (না দিলে প্লেসহোল্ডার অবতার)">
+        <small style="color:#64748b">সদস্যের ছবির সরাসরি লিংক — কমিটি/হোম-পেজের নেতৃত্ব কার্ডে দেখাবে। সিডি-র ইউআরএল দিলে ডান পাশের আপলোড বোতামে সরাসরি ছবি বসানো যায়।</small>
+      </div>
+      <div class="form-group">
+        <label>আইডির ইউয়ারএল (প্রোফাইল লিংক)</label>
+        <input type="url" name="profile_url" value="<%= member ? (member.profile_url || '') : '' %>" placeholder="যেমন: https://facebook.com/… বা /profile/username">
+        <small style="color:#64748b">হোম-পেজের নেতৃত্ব কার্ডে ক্লিক/আইডি-আইকনে এই লিংক খোলে। ফেসবুক প্রোফাইল বা সাইটের প্রোফাইল — যেকোনো লিংক দেওয়া যায়; অ্যাকাউন্ট লিংক করা থাকলে খালি রাখলেও সাইট-প্রোফাইলে যাবে।</small>
+      </div>
       <div class="form-group">
         <label>সদস্যের অ্যাকাউন্ট লিংক</label>
         <%# সেশন ৪০: নাম/ইউজারনেম/আইডি দিয়ে খুঁজে নির্দিষ্ট ইউজার লিংক করার সার্চ-ফিল্টার %>
@@ -90,6 +99,7 @@
           <option value="branch"   <%= member && member.member_type === 'branch'   ? 'selected' : '' %>>বিশ্ববিদ্যালয় শাখা</option>
           <option value="permanent" <%= member && member.member_type === 'permanent' ? 'selected' : '' %>>স্থায়ী পরিষদ</option>
         </select>
+        <small style="color:#64748b">হোম-পেজের ৮টি নেতৃত্ব কার্ড এখান থেকেই তৈরি: “প্রতিষ্ঠাতা সদস্য” ২টি + “উপদেষ্টা পরিষদ” ৪টি (পুরনো ২ + বর্তমান ২) + সর্বশেষ কার্যবর্ষের কেন্দ্রীয় “সভাপতি” ও “সাধারণ সম্পাদক” ২টি। প্রতিটি কার্ডে উপরের ছবির URL ও আইডির ইউয়ারএল কাজ করে।</small>
       </div>
       <div class="form-group">
         <label>কার্যবর্ষ</label>

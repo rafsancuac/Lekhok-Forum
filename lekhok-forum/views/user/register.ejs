@@ -34,7 +34,7 @@
         <h1 class="as-title">স্বাগতম</h1>
         <p class="as-sub">নতুন অ্যাকাউন্ট। লিখুন, শেয়ার করুন, সংযুক্ত হোন</p>
         <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
-        <form method="POST" enctype="multipart/form-data" class="as-loading-form" data-submit-label='<i class="fas fa-user-plus"></i> রেজিস্ট্রেশন সম্পন্ন করুন'>
+        <form method="POST" enctype="multipart/form-data" action="/register<%= (typeof csrfToken !== 'undefined' && csrfToken) ? '?_csrf=' + csrfToken : '' %>" class="as-loading-form" data-submit-label='<i class="fas fa-user-plus"></i> রেজিস্ট্রেশন সম্পন্ন করুন'>
           <div class="form-row">
             <div class="ff">
               <input type="text" id="regUser" name="username" value="<%= form.username || '' %>" required placeholder=" " autocomplete="username">

@@ -419,6 +419,14 @@ const LATER_COLUMNS = [
   ['members', 'account_status',"TEXT DEFAULT 'unclaimed'"],
   ['members', 'claimed_at',    'DATETIME'],
   ['members', 'verified_at',   'DATETIME'],
+  // সেশন ৫৭: নেতৃত্ব কার্ডে "আইডির ইউয়ারএল" (প্রোফাইল-লিংক) + ফ্রেশ-DB সেফটি —
+  // schema.sql-এর members টেবিলে designation/social_fb/social_email/term_year
+  // নেই (পুরনো ডিবিতে ঐতিহাসিকভাবে ছিল); নতুন ডিপ্লয়ে INSERT ভেঙে যেত।
+  ['members', 'profile_url',   'TEXT'],
+  ['members', 'designation',   'TEXT'],
+  ['members', 'social_fb',     'TEXT'],
+  ['members', 'social_email',  'TEXT'],
+  ['members', 'term_year',     'TEXT'],
   // সিকিউরিটি টাস্ক: অ্যাডমিন MFA (TOTP) + ব্যাকআপ কোড
   ['admin_users', 'totp_secret',    'TEXT'],
   ['admin_users', 'totp_enabled',   'INTEGER DEFAULT 0'],

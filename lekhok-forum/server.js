@@ -135,8 +135,10 @@ app.use((req, res, next) => {
 });
 
 // সিকিউরিটি টাস্ক (§63): অথেনটিকেটেড/প্রাইভেট পেজ কখনো পাবলিক ক্যাশ হবে না।
+// সেশন ৫৭: login/register-ও যোগ — স্টেল-ক্যাশড অথ-পেজ পুরনো CSRF-টোকেন বহন
+// করে, সাবমিটে 403 আসত (লাইভ-রিপোর্ট)।
 app.use((req, res, next) => {
-  if (/^\/(admin|moderator|dashboard|profile|settings|claim|reset-password|forgot-password)\b/.test(req.path)) {
+  if (/^\/(admin|moderator|dashboard|profile|settings|claim|login|logout|register|reset-password|forgot-password)\b/.test(req.path)) {
     res.setHeader('Cache-Control', 'no-store');
   }
   next();
@@ -181,12 +183,40 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.VERCEL ? 'auto' : false }
 }));
 
-// ── সেশন ৪২: CSRF প্রোটেকশন (ফর্ম-ভিত্তিক) + নিউজলেটার রেট-লিমিট + আন্ডু-লোকাল ──
+// ── সেশন ৫৭: CSRF — ডাবল-সাবমিট কুকি + গ্রেসফুল ফেইল ──────────────────────────
+// লাইভ-রিপোর্টেড বাগ: async সেশন-স্টোর (Turso) + Vercel lambda-freeze-এ
+// csrfToken-এর সেশন-রাইট মাঝে মাঝে হারিয়ে যায় → ফর্মে রেন্ডার-হওয়া টোকেন
+// সেশনের সাথে আর মেলে না → প্রতিটি POST কাঁচা 403 টেক্সে মরে যেত (লগইন,
+// 2FA-কনফার্ম, ট্র্যাশ-অ্যাকশন সবকিছু)। ফিক্স দুই স্তরে:
+//   ১) টোকেন এখন রেসপন্স-কুকিতেও যায় (_csrfTok) — কুকি যেই রেসপন্সে ফর্ম
+//      রেন্ডার হয় ঠিক সেই রেসপন্সেই সেট হয়, তাই স্টোর-রেস/ল্যাম্বডা-ফ্রিজ
+//      থাকুক-না-থাকুক ফর্ম+কুকি ব্রাউজারে সবসময় সিঙ্কড থাকে।
+//      যাচাই: সেশন-টোকেন অথবা কুকি-টোকেন — যেকোনোটির সাথে মিললেই পাস।
+//   ২) ব্যর্থ হলে কাঁচা 403 নয় — ফর্ম-পেজে 303 রিডাইরেক্ট (?csrf=1; main.js
+//      টোস্ট দেখায়)। নতুন পেজে নতুন বৈধ টোকেন, রিট্রাই সফল হয়।
 const crypto42 = require('crypto');
+const CSRF_COOKIE57 = '_csrfTok';
+function parseCookies57(headerVal) {
+  const out = {};
+  if (!headerVal) return out;
+  for (const part of String(headerVal).split(';')) {
+    const i = part.indexOf('=');
+    if (i > 0) {
+      try { out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim()); }
+      catch (e) { out[part.slice(0, i).trim()] = part.slice(i + 1).trim(); }
+    }
+  }
+  return out;
+}
 app.use(async (req, res, next) => {
   try {
-    if (!req.session.csrfToken) req.session.csrfToken = crypto42.randomBytes(18).toString('hex');
-    res.locals.csrfToken = req.session.csrfToken;
+    if (!req.cookies) req.cookies = parseCookies57(req.headers.cookie);
+    // টোকেন-উৎস: সেশন → কুকি → নতুন জেনারেট
+    let tok57 = req.session.csrfToken || req.cookies[CSRF_COOKIE57];
+    if (!tok57 || !/^[a-f0-9]{20,}$/i.test(String(tok57))) tok57 = crypto42.randomBytes(18).toString('hex');
+    req.session.csrfToken = tok57;   // সেশন-কপি best-effort; নির্ভরযোগ্য উৎস কুকি
+    res.locals.csrfToken = tok57;
+    res.cookie(CSRF_COOKIE57, tok57, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 60 * 60 * 1000, secure: process.env.VERCEL ? 'auto' : false });
     res.locals.undoTrash = req.query.trashed || null;
     res.locals.undoBulk42 = (req.query.undo_mode && req.query.undo_ids) ? { mode: req.query.undo_mode, ids: String(req.query.undo_ids).split(','), base: req.query.undo_base || '' } : null;
     res.locals.undoSec42 = req.query.undo_sec || null;
@@ -196,12 +226,27 @@ app.use(async (req, res, next) => {
       try { const rc = await db.prepare('SELECT COUNT(*) AS c FROM trash').get(); res.locals.trashCount42 = rc ? rc.c : 0; } catch (e) {}
     }
     res.locals.restoredFlag = req.query.restored || null;
-  } catch (e) { return next(); }
+  } catch (e) { /* কুকি-পার্স ব্যর্থ হলেও রুট চালু থাকে */ }
   if (req.method === 'POST' && (req.is('urlencoded') || req.is('multipart'))) {
-    const tok = (req.body && req.body._csrf) || req.headers['x-csrf-token'] || req.query._csrf;
-    if (tok !== req.session.csrfToken) {
+    const sent57 = (req.body && req.body._csrf) || req.headers['x-csrf-token'] || req.query._csrf;
+    const sess57 = req.session ? req.session.csrfToken : null;
+    const cookie57 = req.cookies ? req.cookies[CSRF_COOKIE57] : null;
+    if (!sent57 || (String(sent57) !== String(sess57) && String(sent57) !== String(cookie57))) {
       console.warn('[csrf] blocked', req.method, req.originalUrl);
-      return res.status(403).send('নিরাপত্তা যাচাই ব্যর্থ হয়েছে — পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।');
+      if (req.is('json') || String(req.headers.accept || '').includes('application/json')) {
+        return res.status(403).json({ ok: false, error: 'নিরাপত্তা যাচাই পুরনো হয়ে গিয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।' });
+      }
+      // গ্রেসফুল রিকভারি: যেখান থেকে এসেছে সেই ফর্ম-পেজে ফেরত (?csrf=1 টোস্ট-সহ)
+      let back57 = '/';
+      try {
+        const ref57 = req.get('referer');
+        if (ref57) {
+          const u57 = new URL(ref57, 'http://_csrf57_');
+          if (u57.pathname && u57.pathname !== req.path) back57 = u57.pathname + (u57.search || '');
+        }
+      } catch (e) {}
+      back57 += (back57.includes('?') ? '&' : '?') + 'csrf=1';
+      return res.redirect(303, back57);
     }
   }
   next();
@@ -346,9 +391,14 @@ app.use(async (req, res, next) => {
 // wraps res.redirect so every redirect awaits the session write first.
 // Routes that already call req.session.save(cb) explicitly remain safe — the
 // express-session save is idempotent within a single request.
+// সেশন ৫৭: render/send-ও র‍্যাপ — Vercel lambda রেসপন্সের পরে ফ্রিজ করে; রেন্ডার-
+// রেসপন্সের অসম্পূর্ণ সেশন-রাইট (যেমন নতুন csrfToken বা session.user) হারিয়ে গিয়ে
+// ইনকনসিস্টেন্ট সেশন-স্টেট (redirect-loop, CSRF-ব্যর্থতা) তৈরি করত।
 app.use((req, res, next) => {
   const origRedirect = res.redirect.bind(res);
   const origJson = res.json.bind(res);
+  const origRender = res.render.bind(res);
+  const origSend = res.send.bind(res);
   
   function saveThen(cb) {
     if (req.session && typeof req.session.save === 'function' && !req._sessionSaving) {
@@ -377,6 +427,12 @@ app.use((req, res, next) => {
   };
   res.json = function (data) {
     return saveThen(() => origJson(data));
+  };
+  res.render = function (...args) {
+    return saveThen(() => origRender(...args));
+  };
+  res.send = function (body) {
+    return saveThen(() => origSend(body));
   };
   next();
 });

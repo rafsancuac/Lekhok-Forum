@@ -25,3 +25,24 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run44);
   else run44();
 })();
+!function () {
+  // সেশন ৫৭: CSRF/সেভ-ব্যর্থতার গ্রেসফুল টোস্ট — server এখন 403-র বদলে
+  // ফর্ম-পেজে ?csrf=1 (বা 404-হ্যান্ডলারের ?saveerr=1) দিয়ে ফেরত পাঠায়।
+  // টোকেন পুরনো থাকলে নতুন পেজে নতুন টোকেন আসে; ইউজার শুধু আবার সাবমিট করে।
+  function run57() {
+    try {
+      var p = new URLSearchParams(location.search);
+      var isCsrf = p.get('csrf') === '1';
+      var isSaveErr = p.get('saveerr') === '1';
+      if (!isCsrf && !isSaveErr) return;
+      p.delete('csrf'); p.delete('saveerr');
+      var rest = p.toString();
+      history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+      showToast(isCsrf
+        ? 'নিরাপত্তা যাচাই পুরনো হয়ে গিয়েছিল। পেজ নতুন করে লোড হয়েছে, আবার চেষ্টা করুন।'
+        : 'সেভ করা যায়নি। আবার চেষ্টা করুন।', 'error');
+    } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run57);
+  else run57();
+}();
