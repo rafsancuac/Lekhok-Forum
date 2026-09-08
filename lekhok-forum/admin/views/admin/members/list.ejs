@@ -13,7 +13,11 @@
 <div class="admin-main">
   <div class="admin-header">
     <h1>কমিটি সদস্য</h1>
-    <p><%= members.length %> জন সদস্য | <a href="/admin/members/new">+ নতুন সদস্য</a></p>
+    <p><%= members.length %> জন সদস্য |
+      <a href="/admin/members/new">+ নতুন সদস্য</a> |
+      <a href="/admin/members/import"><i class="fas fa-upload"></i> বাল্ক ইমপোর্ট</a> |
+      <a href="/admin/members/export.csv"><i class="fas fa-download"></i> এক্সপোর্ট</a>
+    </p>
   </div>
 
   <form method="POST" action="/admin/members/bulk-delete" class="bulk-bar" id="bulkBar">
@@ -24,16 +28,23 @@
     <div class="card empty">কোনো সদস্য নেই</div>
   <% } else { %>
   <table>
-    <thead><tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>নাম</th><th>পদ</th><th>কার্যবর্ষ</th><th>ধরন</th><th>ক্রম</th><th>কার্যক্রম</th></tr></thead>
+    <thead><tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>মেম্বার আইডি</th><th>নাম</th><th>পদ</th><th>ডিপার্টমেন্ট</th><th>কার্যবর্ষ</th><th>ধরন</th><th>স্ট্যাটাস</th><th>কার্যক্রম</th></tr></thead>
     <tbody>
       <% members.forEach(m => { %>
         <tr>
           <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট"></td>
+          <td><code><%= m.member_id || '—' %></code></td>
           <td><strong><%= m.name %></strong></td>
           <td><%= m.role || '—' %></td>
+          <td><%= m.department || '—' %></td>
           <td><%= m.term_year || '—' %></td>
           <td><%= m.member_type === 'central' ? 'কেন্দ্রীয়' : m.member_type === 'advisory' ? 'উপদেষ্টা' : m.member_type === 'permanent' ? 'স্থায়ী পরিষদ' : m.member_type === 'founder' ? 'প্রতিষ্ঠাতা' : 'বিশ্ববিদ্যালয়' %></td>
-          <td><%= m.sort_order %></td>
+          <td>
+            <% const st = m.account_status || (m.user_id ? 'active' : 'unclaimed'); %>
+            <span class="badge badge-<%= st === 'active' ? 'success' : st === 'pending' ? 'info' : st === 'suspended' ? 'danger' : 'warn' %>">
+              <%= st === 'active' ? 'অ্যাক্টিভ' : st === 'pending' ? 'পেন্ডিং' : st === 'suspended' ? 'স্থগিত' : 'আনক্লেইমড' %>
+            </span>
+          </td>
           <td>
             <a href="/admin/members/<%= m.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
             <form method="POST" action="/admin/members/<%= m.id %>?_method=DELETE" style="display:inline;">

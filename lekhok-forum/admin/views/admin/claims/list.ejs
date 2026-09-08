@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ক্লেইম রিভিউ | লেখক ফোরাম — অ্যাডমিন</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>অ্যাকাউন্ট ক্লেইম ও নিবন্ধন রিভিউ</h1>
+    <p>মেম্বার ক্লেইম ও নতুন নিবন্ধন — অনুমোদন / প্রত্যাখ্যান / আরও তথ্য</p>
+  </div>
+
+  <div class="tabs" style="margin-bottom:16px;">
+    <% [['pending','অপেক্ষমাণ'],['approved','অনুমোদিত'],['rejected','প্রত্যাখ্যাত'],['more_info','আরও তথ্য']].forEach(([k,l]) => { %>
+      <a href="/admin/claims?status=<%= k %>" class="tab <%= status === k ? 'active' : '' %>"><%= l %> (<%= counts[k] || 0 %>)</a>
+    <% }) %>
+  </div>
+
+  <% if (typeof q !== 'undefined' && q) { %><p>অনুসন্ধান: <strong><%= q %></strong> — <a href="/admin/claims?status=<%= status %>">মুছুন</a></p><% } %>
+
+  <% if (!claims.length) { %>
+    <div class="card empty">কোনো <%= CLAIM_STATUS_LABEL[status] || status %> ক্লেইম নেই</div>
+  <% } else { %>
+    <% claims.forEach(c => { %>
+      <% const sd = (() => { try { return JSON.parse(c.submitted_data || '{}'); } catch(e){ return {}; } })(); %>
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:flex-start;">
+          <div>
+            <strong style="font-size:1.05rem;"><%= c.member_name || (sd.name || '—') %></strong>
+            <span class="badge" style="margin-left:8px;"><%= c.member_id || '—' %></span>
+            <span class="badge badge-neutral" style="margin-left:6px;"><%= CLAIM_KIND_LABEL[c.kind] || c.kind %></span>
+            <span class="badge badge-<%= c.claim_status === 'approved' ? 'success' : c.claim_status === 'rejected' ? 'danger' : c.claim_status === 'more_info' ? 'warn' : 'info' %>"><%= CLAIM_STATUS_LABEL[c.claim_status] || c.claim_status %></span>
+          </div>
+          <div style="font-size:.8rem;color:#64748b;">ক্লেইম #<%= c.id %> · <%= c.created_at %></div>
+        </div>
+
+        <table style="margin:12px 0 0;font-size:.88rem;">
+          <tbody>
+            <tr><th style="width:160px;">মেম্বার আইডি</th><td><%= c.member_id || '—' %></td></tr>
+            <tr><th>বিদ্যমান নাম</th><td><%= c.member_name || '—' %></td></tr>
+            <tr><th>জমাকৃত নাম</th><td><%= c.submitted_name || sd.name || '—' %></td></tr>
+            <tr><th>ইমেইল</th><td><%= c.submitted_email || sd.email || '—' %></td></tr>
+            <tr><th>ফোন</th><td><%= c.submitted_phone || sd.phone || '—' %></td></tr>
+            <tr><th>ডিপার্টমেন্ট</th><td><%= sd.department || '—' %></td></tr>
+            <tr><th>কার্যবর্ষ</th><td><%= sd.session || '—' %></td></tr>
+            <tr><th>প্রোফাইল স্ট্যাটাস</th><td><%= ACCT_STATUS_LABEL[c.account_status] || c.account_status || '—' %></td></tr>
+            <% if (c.reviewed_by) { %><tr><th>রিভিউ</th><td><%= c.reviewed_by %> · <%= c.reviewed_at %></td></tr><% } %>
+            <% if (c.admin_notes) { %><tr><th>নোট</th><td><%= c.admin_notes %></td></tr><% } %>
+          </tbody>
+        </table>
+
+        <% if (c.claim_status === 'pending' || c.claim_status === 'more_info') { %>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <form method="POST" action="/admin/claims/<%= c.id %>/approve" style="display:flex;gap:8px;flex:1;min-width:260px;align-items:center;">
+            <input type="text" name="admin_notes" placeholder="নোট (ঐচ্ছিক)" style="flex:1;">
+            <button class="btn btn-primary btn-sm"><i class="fas fa-check"></i> অনুমোদন</button>
+          </form>
+          <form method="POST" action="/admin/claims/<%= c.id %>/more-info" style="display:flex;gap:8px;min-width:240px;align-items:center;">
+            <input type="text" name="admin_notes" placeholder="কী তথ্য লাগবে" style="flex:1;">
+            <button class="btn btn-sm"><i class="fas fa-question"></i> আরও তথ্য</button>
+          </form>
+          <form method="POST" action="/admin/claims/<%= c.id %>/reject" style="display:flex;gap:8px;min-width:240px;align-items:center;" onsubmit="return confirm('এই আবেদন প্রত্যাখ্যান করবেন?');">
+            <input type="text" name="admin_notes" placeholder="কারণ (ঐচ্ছিক)" style="flex:1;">
+            <button class="btn btn-danger btn-sm"><i class="fas fa-times"></i> প্রত্যাখ্যান</button>
+          </form>
+        </div>
+        <% } %>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
+</body>
+</html>

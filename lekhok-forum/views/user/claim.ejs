@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+  <meta charset="UTF-8" />
+  <title>আইডি ক্লেইম | লেখক ফোরাম</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/auth.css" />
+  <link rel="stylesheet" href="/assets/css/member-accounts.css" />
+</head>
+<body>
+  <div class="auth-card mc-wrap">
+    <a href="/login" class="back-home"><i class="fas fa-arrow-left"></i> ফিরে যান</a>
+    <div class="auth-brand">
+      <span class="auth-logo"><i class="fas fa-feather-alt"></i></span>
+      <span class="auth-brand-name">লেখক ফোরাম</span>
+    </div>
+    <h1 class="auth-title">আইডি ক্লেইম করুন</h1>
+
+    <% if (alreadyClaimed) { %>
+      <div class="mc-msg warn"><i class="fas fa-lock"></i> এই প্রোফাইলটি ইতিমধ্যে সক্রিয় করা হয়েছে। অনুগ্রহ করে লগইন করুন অথবা পাসওয়ার্ড রিসেট ব্যবহার করুন।</div>
+      <p class="mc-foot"><a href="/login">লগইন পেজে ফিরে যান</a></p>
+    <% } else { %>
+      <p class="auth-sub">আপনার প্রোফাইলটি নিশ্চিত করুন। জমা দিলে যাচাইয়ের জন্য অ্যাডমিনের কাছে যাবে — অনুমোদনের পর লগইন করতে পারবেন।</p>
+
+      <div class="mc-card">
+        <div class="mc-meta">
+          <div class="mc-name"><%= member.name %></div>
+          <div class="mc-id">মেম্বার আইডি: <%= member.memberId %></div>
+          <% if (categoryLabel) { %><div class="mc-line"><%= categoryLabel %></div><% } %>
+          <% if (member.position) { %><div class="mc-line"><%= member.position %></div><% } %>
+          <% if (member.department) { %><div class="mc-line"><%= member.department %></div><% } %>
+          <% if (member.session) { %><div class="mc-line">কার্যবর্ষ: <%= member.session %></div><% } %>
+        </div>
+      </div>
+
+      <form id="claimForm">
+        <input type="hidden" name="memberId" value="<%= member.memberId %>">
+        <input type="hidden" name="name" value="<%= member.name %>">
+        <div class="form-group">
+          <label>মেম্বার আইডি (শুধুমাত্র পড়া)</label>
+          <input type="text" value="<%= member.memberId %>" readonly disabled>
+        </div>
+        <div class="form-group">
+          <label>পূর্ণ নাম</label>
+          <input type="text" name="full_name" value="<%= member.name %>">
+        </div>
+        <div class="form-group">
+          <label>ইমেইল ঠিকানা *</label>
+          <input type="email" name="email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>ফোন নম্বর</label>
+          <input type="text" name="phone" autocomplete="tel">
+        </div>
+        <div class="form-group">
+          <label>ডিপার্টমেন্ট / প্রতিষ্ঠান</label>
+          <input type="text" name="department" value="<%= member.department %>">
+        </div>
+        <div class="form-group">
+          <label>কার্যবর্ষ</label>
+          <input type="text" name="session" value="<%= member.session %>">
+        </div>
+        <div class="form-group">
+          <label>পাসওয়ার্ড *</label>
+          <input type="password" name="password" required autocomplete="new-password" minlength="6">
+        </div>
+        <div class="form-group">
+          <label>পাসওয়ার্ড নিশ্চিত করুন *</label>
+          <input type="password" name="confirmPassword" required autocomplete="new-password" minlength="6">
+        </div>
+        <div id="claimMsg" class="mc-result" role="status" aria-live="polite"></div>
+        <button type="submit" id="claimBtn" class="btn-primary"><i class="fas fa-check"></i> জমা দিন</button>
+      </form>
+    <% } %>
+  </div>
+
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script>
+  (function () {
+    var form = document.getElementById('claimForm');
+    if (!form) return;
+    var msg = document.getElementById('claimMsg');
+    var btn = document.getElementById('claimBtn');
+    function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var pw = form.password.value, cp = form.confirmPassword.value;
+      if (pw.length < 6) { msg.innerHTML = '<div class="mc-msg err"><i class="fas fa-exclamation-circle"></i> পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে</div>'; return; }
+      if (pw !== cp) { msg.innerHTML = '<div class="mc-msg err"><i class="fas fa-exclamation-circle"></i> পাসওয়ার্ড ও নিশ্চিতকরণ মিলছে না</div>'; return; }
+      var payload = {
+        memberId: form.memberId.value, name: form.name.value, email: form.email.value,
+        phone: form.phone.value, department: form.department.value, session: form.session.value,
+        password: pw, confirmPassword: cp
+      };
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> জমা হচ্ছে...';
+      fetch('/api/member-accounts/claim', { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body: JSON.stringify(payload) })
+        .then(function(r){ return r.json().catch(function(){ return { ok:false, error:'অপ্রত্যাশিত রেসপন্স' }; }); })
+        .then(function(d){
+          if (d && d.ok) {
+            msg.innerHTML = '<div class="mc-msg ok"><i class="fas fa-check-circle"></i> ' + esc(d.message || 'আপনার আবেদন জমা হয়েছে।') + '</div>';
+            form.reset();
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-check"></i> জমা দেওয়া হয়েছে';
+          } else {
+            msg.innerHTML = '<div class="mc-msg err"><i class="fas fa-exclamation-triangle"></i> ' + esc((d && d.error) || 'জমা দেওয়া যায়নি') + '</div>';
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> জমা দিন';
+          }
+        })
+        .catch(function(){ msg.innerHTML = '<div class="mc-msg err"><i class="fas fa-exclamation-triangle"></i> নেটওয়ার্ক সমস্যা</div>'; btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> জমা দিন'; });
+    });
+  })();
+  </script>
+</body>
+</html>

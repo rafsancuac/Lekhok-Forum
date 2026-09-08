@@ -370,6 +370,29 @@ const MIGRATION_SQL = `
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS idx_actlog_recent ON activity_logs(id);
+  CREATE TABLE IF NOT EXISTS account_claims (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_profile_id INTEGER,
+    submitted_user_id INTEGER,
+    kind TEXT DEFAULT 'claim',
+    claim_status TEXT DEFAULT 'pending',
+    submitted_data TEXT DEFAULT '{}',
+    admin_notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at DATETIME,
+    reviewed_by INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS idx_claims_status ON account_claims(claim_status);
+  CREATE INDEX IF NOT EXISTS idx_claims_member ON account_claims(member_profile_id);
+  CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_pwd_resets_token ON password_resets(token_hash);
 `;
 
 // Columns added in later migrations — applied to existing installs during initDb().
@@ -390,6 +413,12 @@ const LATER_COLUMNS = [
   ['past_leaders', 'message', 'TEXT'],
   ['conversations', 'is_group', 'INTEGER DEFAULT 0'],
   ['conversations', 'title', 'TEXT'],
+  // টাস্ক ১৪: মেম্বার অ্যাকাউন্ট ক্লেইম/অ্যাক্টিভেশন
+  ['members', 'member_id',     'TEXT'],
+  ['members', 'department',    'TEXT'],
+  ['members', 'account_status',"TEXT DEFAULT 'unclaimed'"],
+  ['members', 'claimed_at',    'DATETIME'],
+  ['members', 'verified_at',   'DATETIME'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
@@ -435,6 +464,61 @@ async function applyLaterMigrations() {
   try { await autoLinkMembersToUsers(); } catch (e) {
     console.error('[db] autoLinkMembersToUsers failed:', e.message);
   }
+  // টাস্ক ১৪: মেম্বার আইডি (MEM-XXXXX) backfill + account_status সিঙ্ক
+  try { await backfillMemberIds(); } catch (e) {
+    console.error('[db] backfillMemberIds failed:', e.message);
+  }
+}
+
+// ── টাস্ক ১৪: মেম্বার আইডি ব্যবস্থাপনা ──────────────────────────────────────
+// MEM-XXXXX ফরম্যাটে ইউনিক মেম্বার আইডি। আইডি একটি identifier — সিক্রেট নয়।
+function formatMemberId(n) { return 'MEM-' + String(n).padStart(5, '0'); }
+
+// পরবর্তী সিকোয়েন্স নাম্বার (বিদ্যমান MEM-XXXXX গুলোর সর্বোচ্চ + ১)
+async function nextMemberSeq() {
+  try {
+    const row = await backend.prepare(
+      "SELECT MAX(CAST(SUBSTR(member_id, 5) AS INTEGER)) AS m FROM members WHERE member_id LIKE 'MEM-%'"
+    ).get();
+    return ((row && row.m) ? Number(row.m) : 0) + 1;
+  } catch (e) { return 1; }
+}
+
+async function nextMemberId() {
+  const seq = await nextMemberSeq();
+  return formatMemberId(seq);
+}
+
+// বিদ্যমান মেম্বারদের MEM-XXXXX দিন (শুধু যাদের এখনো নেই) + account_status ডিফল্ট।
+// ইউজার-সিদ্ধান্ত: "unclaimed_keep_link" — সব বিদ্যমান প্রোফাইল fresh claim ফ্লো দিয়ে
+// শুরু করবে (account_status='unclaimed'), কিন্তু user_id লিংক অক্ষত থাকবে (বিদ্যমান
+// লগইন ভাঙবে না; ডুপ্লিকেট প্রোফাইল তৈরি হবে না)। account_status এখন claim-state
+// (unclaimed/pending/active/suspended), user_id নয়।
+// Idempotent — প্রতি বুটে নিরাপদ; অনুমোদিত (claimed_at set) প্রোফাইল কখনো রিসেট হয় না।
+async function backfillMemberIds() {
+  try {
+    await backend.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_members_member_id ON members(member_id)");
+  } catch (e) {}
+  const rows = await backend.prepare('SELECT id, user_id FROM members ORDER BY id').all();
+  let seq = await nextMemberSeq();
+  for (const r of (rows || [])) {
+    const has = await backend.prepare('SELECT member_id FROM members WHERE id = ?').get(r.id);
+    if (has && has.member_id) continue; // আগেই আছে
+    const mid = formatMemberId(seq++);
+    try { await backend.prepare('UPDATE members SET member_id = ? WHERE id = ?').run(mid, r.id); } catch (e) {}
+  }
+  // ১) ডিফল্ট: খালি account_status → 'unclaimed'
+  await backend.exec("UPDATE members SET account_status = 'unclaimed' WHERE account_status IS NULL OR account_status = ''");
+  // ২) এক-কালীন রিসেট (টাস্ক ১৪): আগের ভুল backfill লিংকড মেম্বারদের 'active' করে
+  //    দিয়েছিল। claimed_at NOT NULL হলে = সত্যিকারের অনুমোদিত (অ্যাডমিন ফ্লো) — সেগুলো
+  //    অক্ষত থাকবে। শুধু লিগ্যাসি অটো-লিংক (claimed_at NULL) গুলো 'unclaimed' হয়।
+  try {
+    const done = await backend.prepare("SELECT value FROM settings WHERE key = 't14_unclaimed_reset'").get();
+    if (!done) {
+      await backend.exec("UPDATE members SET account_status = 'unclaimed' WHERE account_status = 'active' AND claimed_at IS NULL");
+      await backend.prepare("INSERT INTO settings (key, value) VALUES ('t14_unclaimed_reset', '1')").run();
+    }
+  } catch (e) { /* settings টেবিল না থাকলে স্কিপ */ }
 }
 
 // Auto-link committee / advisory / past leaders to their registered user
@@ -2287,5 +2371,8 @@ module.exports = {
   USE_DB_SNAPSHOT,
   getContent,
   getContentSync,
-  setContent
+  setContent,
+  formatMemberId,
+  nextMemberId,
+  nextMemberSeq
 };

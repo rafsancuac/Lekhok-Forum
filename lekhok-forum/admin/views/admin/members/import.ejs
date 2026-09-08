@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>বাল্ক ইমপোর্ট | লেখক ফোরাম — অ্যাডমিন</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>সদস্য বাল্ক ইমপোর্ট</h1>
+    <p><a href="/admin/members">← সদস্য তালিকায় ফিরে যান</a></p>
+  </div>
+
+  <% if (error) { %><div class="error"><%= error %></div><% } %>
+
+  <% if (summary) { %>
+    <div class="card" style="border-left:4px solid #059669;">
+      <h3 style="margin:0 0 8px;"><i class="fas fa-check-circle" style="color:#059669;"></i> ইমপোর্ট সম্পন্ন</h3>
+      <p>মোট সারি: <strong><%= summary.total %></strong> · তৈরি: <strong><%= summary.created %></strong> · বাদ: <strong><%= summary.skipped.length %></strong></p>
+      <% if (summary.skipped.length) { %>
+        <table>
+          <thead><tr><th>সারি</th><th>কারণ</th></tr></thead>
+          <tbody><% summary.skipped.forEach(s => { %><tr><td><%= s.row %></td><td><%= s.reason %></td></tr><% }) %></tbody>
+        </table>
+      <% } %>
+    </div>
+  <% } %>
+
+  <div class="card">
+    <h3>CSV ফাইল আপলোড করুন</h3>
+    <p style="color:#64748b;">কলাম (যেকোনো ক্রমে): <code>Name</code>, <code>Member ID</code> (ঐচ্ছিক — খালি থাকলে অটো-জেনারেট), <code>Department</code>, <code>Session/কার্যবর্ষ</code>, <code>Category</code>, <code>Position</code>।</p>
+    <p style="color:#b91c1c;"><i class="fas fa-shield-halved"></i> <strong>পাসওয়ার্ড কলাম কখনো রাখা যাবে না</strong> — পাসওয়ার্ড-জাতীয় কলাম থাকলে পুরো ফাইল প্রত্যাখ্যান করা হবে।</p>
+    <form method="POST" action="/admin/members/import" enctype="multipart/form-data">
+      <div class="form-group"><input type="file" name="file" accept=".csv,text/csv" required></div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> ইমপোর্ট করুন</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

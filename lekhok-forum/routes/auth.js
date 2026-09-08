@@ -49,10 +49,21 @@ router.post('/login', async (req, res) => {
   if (loginLimited(lk43)) return res.status(429).render('user/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে — ১৫ মিনিট পর আবার চেষ্টা করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
   try {
     const { username, password } = req.body;
-    const user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username);
+    const ident = String(username || '').trim();
+    // টাস্ক ১৪: Member ID / Email / username — তিনটিই লগইন আইডেন্টিফায়ার
+    // (Section 13: Member ID বা Email; username ব্যাকওয়ার্ড-কম্প্যাট)
+    let user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(ident, ident);
+    if (!user && /^MEM-/i.test(ident)) {
+      user = await db.prepare(
+        'SELECT u.* FROM users u JOIN members m ON m.user_id = u.id WHERE UPPER(m.member_id) = ?'
+      ).get(ident.toUpperCase());
+    }
     if (user && await bcrypt.compare(password, user.password_hash)) {
       if (user.status === 'banned') {
         return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
+      }
+      if (user.status === 'pending') {
+        return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট এখনও যাচাইয়ের অপেক্ষায় — অ্যাডমিন অনুমোদনের পর লগইন করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
       }
       loginOk(lk43);
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
@@ -95,28 +106,62 @@ router.get('/register', async (req, res) => {
 });
 
 // ── Register (POST, with optional avatar upload) ────────────────────────────
+// টাস্ক ১৪: নিবন্ধনে অটো Member ID + (ঐচ্ছিক) অ্যাডমিন অনুমোদন গেট।
+// ডিফল্ট: তাৎক্ষণিক active (আগের মতো)। settings-এ `require_registration_approval`
+// = 1 হলে → PENDING_REVIEW (অ্যাডমিন অনুমোদনের আগে active নয়)।
 router.post('/register', withUpload(avatarUpload), async (req, res) => {
-  const { username, password, full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website } = req.body;
+  const { username, password, full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, member_id, department, session } = req.body;
   const back = (err) => res.render('user/register', { error: err, form: req.body, currentPath: '/register' });
 
   if (req.uploadError) return back(req.uploadError);
-  if (!username || !password || !full_name) return back('ব্যবহারকারী নাম, পাসওয়ার্ড ও নাম আবশ্যক');
+  if (!password || !full_name) return back('পাসওয়ার্ড ও নাম আবশ্যক');
   if (password.length < 6) return back('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে');
-  const existing = await db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(username, email || '');
+  if (!username && !email) return back('ব্যবহারকারী নাম অথবা ইমেইল আবশ্যক');
+
+  // username ঐচ্ছিক — না দিলে email লোকাল-পার্ট থেকে বানাই
+  let uname = String(username || '').trim();
+  if (!uname) {
+    const base = String(email || '').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
+    uname = base || ('m' + Date.now().toString(36));
+  }
+  const existing = await db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(uname, email || '');
   if (existing) return back('এই ব্যবহারকারী নাম বা ইমেইল ইতিমধ্যে ব্যবহৃত');
 
+  // অ্যাডমিন অনুমোদন গেট (ডিফল্ট off — ব্যাকওয়ার্ড-কম্প্যাট)
+  let requireApproval = false;
+  try { requireApproval = await db.getSetting('require_registration_approval') === '1'; } catch (e) {}
+
   const hash = await bcrypt.hash(password, 10);
-  // req.file.url is correct in BOTH modes: local → /uploads/avatars/…, Vercel → blob https URL
   const avatarPath = req.file ? (req.file.url || req.file.path) : null;
+  const status = requireApproval ? 'pending' : 'active';
   const result = await db.prepare(
-    `INSERT INTO users (username, password_hash, full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO users (username, password_hash, full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, avatar_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
-    username, hash, full_name, email || null, phone || null, bio || null, designation || null, address || null,
+    uname, hash, full_name, email || null, phone || null, bio || null, designation || null, address || null,
     birth_date || null, gender || 'other',
-    social_fb || null, social_twitter || null, social_linkedin || null, social_website || null, avatarPath
+    social_fb || null, social_twitter || null, social_linkedin || null, social_website || null, avatarPath, status
   );
-  req.session.user = { id: result.lastInsertRowid, username, full_name, avatar_url: avatarPath, gender: gender || 'other', role: 'user' };
-  req.session.save(() => res.redirect('/profile/' + username + '?welcome=1'));
+  const uid = result.lastInsertRowid;
+
+  // টাস্ক ১৪: প্রতিটি নিবন্ধনে একটি Member Profile + অটো Member ID
+  try {
+    const mid = await db.nextMemberId();
+    await db.prepare(
+      "INSERT INTO members (name, role, designation, member_type, term_year, department, user_id, member_id, account_status, sort_order) VALUES (?, 'সদস্য', ?, 'general', ?, ?, ?, ?, ?, 0)"
+    ).run(full_name, designation || null, session || null, department || null, uid, mid, requireApproval ? 'pending' : 'active');
+    // পেন্ডিং হলে ক্লেইম-রেকর্ড (kind=registration) — অ্যাডমিন রিভিউ ড্যাশবোর্ডে দেখাবে
+    if (requireApproval) {
+      await db.prepare(
+        "INSERT INTO account_claims (member_profile_id, submitted_user_id, kind, claim_status, submitted_data) SELECT id, ?, 'registration', 'pending', ? FROM members WHERE user_id = ?"
+      ).run(uid, JSON.stringify({ name: full_name, email: email || '', phone: phone || '', department: department || '', session: session || '' }), uid);
+    }
+  } catch (e) { console.error('[auth] register member-profile create failed:', e.message); }
+
+  if (requireApproval) {
+    return res.render('user/register-pending', { email, currentPath: '/register' });
+  }
+  req.session.user = { id: uid, username: uname, full_name, avatar_url: avatarPath, gender: gender || 'other', role: 'user' };
+  req.session.save(() => res.redirect('/profile/' + uname + '?welcome=1'));
 });
 
 // ── Logout ───────────────────────────────────────────────────────────────────
@@ -240,6 +285,86 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     console.error('[auth] /profile/edit error:', e && e.stack || e);
     res.status(500).send('প্রোফাইল সম্পাদনায় সমস্যা: ' + (e && e.message || 'অজানা'));
   }
+});
+
+// ── টাস্ক ১৪ (Section 24): ফরগট/রিসেট পাসওয়ার্ড ─────────────────────────────
+// Member ID বা Name একা রিকভারি নয় (কোনোটাই সিক্রেট নয়) — শুধু verified email।
+// টোকেন random 32-বাইট, SHA-256 হ্যাশ করে সংরক্ষণ; ৬০ মিনিট মেয়াদ; একবারই ব্যবহারযোগ্য।
+const cryptoAuth = require('crypto');
+
+function findUserByIdentifier(ident) {
+  return db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(ident, ident);
+}
+
+router.get('/forgot-password', (req, res) => {
+  res.render('user/forgot-password', { error: null, done: false, currentPath: '/forgot-password' });
+});
+
+router.post('/forgot-password', async (req, res) => {
+  const ident = String(req.body.identifier || '').trim();
+  const back = (err) => res.render('user/forgot-password', { error: err, done: false, currentPath: '/forgot-password' });
+  if (!ident) return back('ইমেইল বা ব্যবহারকারী নাম দিন');
+  // Member ID দিয়ে চাইলে → লিংকড ইউজারের ইমেইল খুঁজি
+  let user = findUserByIdentifier(ident);
+  if (!user && /^MEM-/i.test(ident)) {
+    const row = await db.prepare(
+      'SELECT u.* FROM users u JOIN members m ON m.user_id = u.id WHERE UPPER(m.member_id) = ?'
+    ).get(ident.toUpperCase());
+    user = row || null;
+  }
+  // ইউজার এনিউমারেশন রোধ: পাওয়া না গেলেও একই বার্তা
+  if (!user || !user.email) {
+    return res.render('user/forgot-password', { error: null, done: true, currentPath: '/forgot-password' });
+  }
+  const token = cryptoAuth.randomBytes(32).toString('hex');
+  const tokenHash = cryptoAuth.createHash('sha256').update(token).digest('hex');
+  await db.prepare(
+    "INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, datetime('now', '+60 minutes'))"
+  ).run(user.id, tokenHash);
+
+  const mailer = require('../helpers/mailer');
+  const resetUrl = (process.env.BASE_URL || 'http://localhost:8080') + '/reset-password?token=' + token;
+  if (mailer.isConfigured()) {
+    try {
+      await mailer.sendMail({
+        to: user.email,
+        subject: 'পাসওয়ার্ড রিসেট — লেখক ফোরাম',
+        text: 'পাসওয়ার্ড রিসেট করতে এই লিংকে যান: ' + resetUrl + '\nলিংকটি ৬০ মিনিটের মধ্যে মেয়াদোত্তীর্ণ হবে।',
+        html: '<p>পাসওয়ার্ড রিসেট করতে <a href="' + resetUrl + '">এখানে ক্লিক করুন</a>। লিংকটি ৬০ মিনিটের মধ্যে মেয়াদোত্তীর্ণ হবে।</p>'
+      });
+    } catch (e) { console.error('[auth] forgot-password email failed:', e.message); }
+  } else {
+    // ইমেইল সার্ভিস কনফিগার হয়নি (ডেভ/ডেমো) — রিসেট লিংক কনসোলে দেখাই
+    console.log('[auth] (no email service) password reset link:', resetUrl);
+  }
+  res.render('user/forgot-password', { error: null, done: true, currentPath: '/forgot-password' });
+});
+
+router.get('/reset-password', async (req, res) => {
+  const token = String(req.query.token || '');
+  const tokenHash = token ? cryptoAuth.createHash('sha256').update(token).digest('hex') : '';
+  const rec = tokenHash ? await db.prepare("SELECT * FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > datetime('now')").get(tokenHash) : null;
+  if (!rec) return res.render('user/reset-password', { error: 'এই লিংকটি মেয়াদোত্তীর্ণ বা ইতিমধ্যে ব্যবহৃত — আবার অনুরোধ করুন।', token: null, currentPath: '/reset-password' });
+  res.render('user/reset-password', { error: null, token, currentPath: '/reset-password' });
+});
+
+router.post('/reset-password', async (req, res) => {
+  const token = String(req.body.token || '');
+  const password = String(req.body.password || '');
+  const confirm = String(req.body.confirmPassword || '');
+  const back = (err) => res.render('user/reset-password', { error: err, token, currentPath: '/reset-password' });
+  if (!token) return back('রিসেট টোকেন নেই — আবার অনুরোধ করুন');
+  if (password.length < 6) return back('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে');
+  if (password !== confirm) return back('পাসওয়ার্ড ও নিশ্চিতকরণ মিলছে না');
+  const tokenHash = cryptoAuth.createHash('sha256').update(token).digest('hex');
+  const rec = await db.prepare("SELECT * FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > datetime('now')").get(tokenHash);
+  if (!rec) return back('এই লিংকটি মেয়াদোত্তীর্ণ বা ইতিমধ্যে ব্যবহৃত');
+  const hash = await bcrypt.hash(password, 10);
+  await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, rec.user_id);
+  await db.prepare('UPDATE password_resets SET used = 1 WHERE id = ?').run(rec.id);
+  // অ্যাডমিন-অ্যাকশন হিসেবে অডিট (পাসওয়ার্ড কখনো লগ হয় না)
+  try { await db.logActivity({ user_id: rec.user_id, username: null, role: 'user', action: 'password-reset', target: 'users', detail: 'self-service' }); } catch (e) {}
+  res.redirect('/login?reset=1');
 });
 
 module.exports = router;

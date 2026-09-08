@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <title>আবেদন জমা হয়েছে | লেখক ফোরাম</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/auth.css" />
+  <link rel="stylesheet" href="/assets/css/member-accounts.css" />
+</head>
+<body>
+  <div class="auth-card mc-wrap">
+    <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> হোম</a>
+    <div class="auth-brand">
+      <span class="auth-logo"><i class="fas fa-feather-alt"></i></span>
+      <span class="auth-brand-name">লেখক ফোরাম</span>
+    </div>
+    <h1 class="auth-title"><i class="fas fa-hourglass-half"></i> আবেদন জমা হয়েছে</h1>
+    <div class="mc-msg ok"><i class="fas fa-check-circle"></i> আপনার আবেদন জমা হয়েছে এবং যাচাইয়ের অপেক্ষায় আছে। অ্যাডমিন অনুমোদনের পর আপনি লগইন করতে পারবেন।</div>
+    <% if (typeof email !== 'undefined' && email) { %><p class="mc-hint">আপনার ইমেইল: <%= email %> — অনুমোদনের পর এই ইমেইল (বা মেম্বার আইডি) দিয়ে লগইন করুন।</p><% } %>
+    <p class="mc-foot"><a href="/login">লগইন পেজে ফিরে যান</a></p>
+  </div>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+</body>
+</html>

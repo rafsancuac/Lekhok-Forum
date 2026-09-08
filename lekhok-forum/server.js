@@ -378,6 +378,7 @@ app.use((req, res, next) => {
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/',          require('./routes/seo'));      // sitemap.xml + robots.txt
 app.use('/',          require('./routes/auth'));    // login, register, logout, profile edit
+app.use('/',          require('./routes/member-accounts')); // টাস্ক ১৪: find/claim মেম্বার অ্যাকাউন্ট
 app.use('/',          require('./routes/social'));   // articles, qa, members, profile, follow, api
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
 app.use('/',          require('./routes/pages'));     // public pages: home, about, gallery, committee, contact, events, resources, notices

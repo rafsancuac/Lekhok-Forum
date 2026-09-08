@@ -1,0 +1,31 @@
+/* ── টাস্ক ১৪: মেম্বার অ্যাকাউন্ট (unified entry / find / claim) ────────────── */
+.mc-wrap{max-width:560px}
+.mc-divider{display:flex;align-items:center;gap:12px;margin:22px 0;color:#8a8f98;font-size:.8rem}
+.mc-divider::before,.mc-divider::after{content:'';flex:1;height:1px;background:#e4e6eb}
+.mc-section{border-top:1px dashed #e4e6eb;padding-top:4px}
+.mc-section-title{font-size:1.02rem;font-weight:700;color:#1c1e21;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.mc-section-title i{color:#059669}
+.mc-hint{color:#65676b;font-size:.84rem;margin:0 0 14px;line-height:1.5}
+.mc-foot{margin-top:14px;font-size:.85rem;color:#65676b;text-align:center}
+.mc-foot a{color:#059669;font-weight:600}
+.mc-forgot{margin-top:12px;font-size:.82rem;text-align:right}
+.mc-forgot a{color:#059669}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;justify-content:center;width:100%;padding:12px 16px;border-radius:6px;border:1px solid #059669;background:#fff;color:#059669;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .15s,color .15s}
+.btn-secondary:hover{background:rgba(5,150,105,.08)}
+.btn-secondary:disabled{opacity:.6;cursor:wait}
+.mc-result{margin-top:16px}
+.mc-msg{padding:12px 14px;border-radius:6px;font-size:.88rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.mc-msg.ok{background:#e6f6ef;border:1px solid #b5e3d0;color:#065f46}
+.mc-msg.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.mc-msg.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+.mc-found{border:1px solid #e4e6eb;border-radius:8px;padding:16px;margin-top:14px;background:#fff}
+.mc-found-title{font-weight:700;color:#1c1e21;margin-bottom:12px;font-size:.95rem}
+.mc-card{display:flex;gap:14px;align-items:flex-start;border:1px solid #e4e6eb;border-radius:8px;padding:14px;background:#fafbfc;margin-bottom:14px}
+.mc-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#e9ebef}
+.mc-avatar-empty{display:flex;align-items:center;justify-content:center;color:#8a8f98;font-size:1.3rem}
+.mc-meta{min-width:0}
+.mc-name{font-weight:700;font-size:1rem;color:#1c1e21}
+.mc-id{font-size:.82rem;color:#059669;font-weight:700;margin:2px 0 6px}
+.mc-line{font-size:.84rem;color:#444950;line-height:1.5}
+.mc-question{font-weight:600;color:#1c1e21;margin:6px 0 10px;font-size:.92rem}
+.mc-btn{display:flex;width:100%;justify-content:center}

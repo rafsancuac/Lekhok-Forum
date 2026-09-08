@@ -4,35 +4,113 @@
   <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
 
   <meta charset="UTF-8" />
-  <title>লগইন | লেখক ফোরাম</title>
+  <title>লগইন ও প্রোফাইল খুঁজুন | লেখক ফোরাম</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/auth.css" />
+  <link rel="stylesheet" href="/assets/css/member-accounts.css" />
 </head>
 <body>
-  <div class="auth-card">
+  <div class="auth-card mc-wrap">
     <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> হোম</a>
     <div class="auth-brand">
       <span class="auth-logo"><i class="fas fa-feather-alt"></i></span>
       <span class="auth-brand-name">লেখক ফোরাম</span>
     </div>
     <h1 class="auth-title">স্বাগতম</h1>
-    <p class="auth-sub">আপনার অ্যাকাউন্টে লগইন করুন</p>
+
     <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+
+    <!-- ── A. স্ট্যান্ডার্ড লগইন ── -->
     <form method="POST">
       <% if (typeof next !== 'undefined' && next) { %><input type="hidden" name="next" value="<%= next %>"><% } %>
       <div class="form-group">
-        <label>ব্যবহারকারী নাম বা ইমেইল</label>
-        <input type="text" name="username" required autofocus>
+        <label>মেম্বার আইডি, ইমেইল বা ব্যবহারকারী নাম</label>
+        <input type="text" name="username" required autofocus autocomplete="username">
       </div>
       <div class="form-group">
         <label>পাসওয়ার্ড</label>
-        <input type="password" name="password" required>
+        <input type="password" name="password" required autocomplete="current-password">
       </div>
-      <button type="submit" class="btn-primary"><i class="fas fa-sign-in-alt"></i> লগইন</button>
+      <button type="submit" class="btn-primary"><i class="fas fa-sign-in-alt"></i> লগ ইন</button>
+      <p class="mc-forgot">পাসওয়ার্ড ভুলে গেছেন? <a href="/forgot-password">রিসেট করুন</a></p>
     </form>
-    <p class="auth-foot">অ্যাকাউন্ট নেই? <a href="/register">রেজিস্ট্রেশন করুন</a></p>
+
+    <div class="mc-divider"><span>অথবা</span></div>
+
+    <!-- ── B. প্রোফাইল খুঁজুন / তৈরি করুন ── -->
+    <div class="mc-section">
+      <h2 class="mc-section-title"><i class="fas fa-search"></i> আপনার আইডি খুঁজুন</h2>
+      <p class="mc-hint">আগে থেকে আপনার একটা প্রোফাইল থাকতে পারে। নাম ও মেম্বার আইডি দিয়ে খুঁজুন।</p>
+      <div class="form-group">
+        <label>নাম</label>
+        <input type="text" id="mcName" placeholder="আপনার পুরো নাম">
+      </div>
+      <div class="form-group">
+        <label>মেম্বার আইডি</label>
+        <input type="text" id="mcId" placeholder="MEM-00000" style="text-transform:uppercase;">
+      </div>
+      <button type="button" id="mcFindBtn" class="btn-secondary"><i class="fas fa-magnifying-glass"></i> আপনার আইডি খুঁজুন</button>
+      <div id="mcResult" class="mc-result" role="status" aria-live="polite"></div>
+      <p class="mc-foot">প্রি-ক্রিয়েটেড আইডি নেই? <a href="/register">নতুন করে প্রোফাইল তৈরী করুন</a></p>
+    </div>
   </div>
+
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script>
+  (function () {
+    var btn = document.getElementById('mcFindBtn');
+    if (!btn) return;
+    var result = document.getElementById('mcResult');
+    function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+    function busy(b){ btn.disabled = b; btn.innerHTML = b ? '<i class="fas fa-spinner fa-spin"></i> খুঁজছি...' : '<i class="fas fa-magnifying-glass"></i> আপনার আইডি খুঁজুন'; }
+    btn.addEventListener('click', function () {
+      var name = document.getElementById('mcName').value.trim();
+      var mid = document.getElementById('mcId').value.trim();
+      if (!mid) { result.innerHTML = '<div class="mc-msg err"><i class="fas fa-exclamation-circle"></i> মেম্বার আইডি দিন</div>'; return; }
+      busy(true);
+      fetch('/api/member-accounts/find', { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'}, body: JSON.stringify({ name: name, memberId: mid }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d || d.ok === false) throw new Error((d && d.error) || 'খুঁজতে সমস্যা হয়েছে');
+          if (!d.found) {
+            result.innerHTML = '<div class="mc-msg warn"><i class="fas fa-circle-info"></i> ' + esc(d.error || 'এই মেম্বার আইডির জন্য কোনো প্রি-ক্রিয়েটেড প্রোফাইল পাওয়া যায়নি।') + '</div>' +
+              '<p class="mc-foot">প্রি-ক্রিয়েটেড প্রোফাইল নেই? <a href="/register">নতুন করে প্রোফাইল তৈরী করুন</a></p>';
+            return;
+          }
+          if (d.nameMatches === false) {
+            result.innerHTML = '<div class="mc-msg warn"><i class="fas fa-user-slash"></i> ' + esc(d.error || 'নাম মিলছে না') + '</div>';
+            return;
+          }
+          var m = d.member;
+          var html = '<div class="mc-found">' +
+            '<div class="mc-found-title"><i class="fas fa-id-card"></i> আমরা একটা প্রোফাইল খুঁজে পেয়েছি যেটা আপনার হতে পারে।</div>' +
+            '<div class="mc-card">' +
+              (m.photo ? '<img class="mc-avatar" src="'+esc(m.photo)+'" alt="">' : '<span class="mc-avatar mc-avatar-empty"><i class="fas fa-user"></i></span>') +
+              '<div class="mc-meta">' +
+                '<div class="mc-name">'+esc(m.name)+'</div>' +
+                '<div class="mc-id">মেম্বার আইডি: '+esc(m.memberId)+'</div>' +
+                (d.categoryLabel ? '<div class="mc-line">'+esc(d.categoryLabel)+'</div>' : '') +
+                (m.position ? '<div class="mc-line">'+esc(m.position)+'</div>' : '') +
+                (m.department ? '<div class="mc-line">'+esc(m.department)+'</div>' : '') +
+                (m.session ? '<div class="mc-line">কার্যবর্ষ: '+esc(m.session)+'</div>' : '') +
+              '</div>' +
+            '</div>';
+          if (d.status === 'claimed' || d.alreadyClaimed) {
+            html += '<div class="mc-msg warn"><i class="fas fa-lock"></i> এই প্রোফাইলটি ইতিমধ্যে সক্রিয় করা হয়েছে। অনুগ্রহ করে লগইন করুন অথবা পাসওয়ার্ড রিসেট ব্যবহার করুন।</div>';
+          } else if (d.status === 'pending') {
+            html += '<div class="mc-msg warn"><i class="fas fa-hourglass-half"></i> এই প্রোফাইলের জন্য একটি আবেদন পর্যালোচনায় আছে।</div>';
+          } else {
+            html += '<div class="mc-question">এটা কি আপনার প্রোফাইল?</div>' +
+              '<a class="btn-primary mc-btn" href="/claim?memberId='+encodeURIComponent(m.memberId)+'&name='+encodeURIComponent(m.name)+'"><i class="fas fa-check"></i> হ্যাঁ, এটা আমি — আইডি ক্লেইম করুন</a>';
+          }
+          html += '</div>';
+          result.innerHTML = html;
+        })
+        .catch(function(e){ result.innerHTML = '<div class="mc-msg err"><i class="fas fa-exclamation-triangle"></i> ' + esc(e.message || 'নেটওয়ার্ক সমস্যা') + '</div>'; })
+        .finally(function(){ busy(false); });
+    });
+  })();
+  </script>
 </body>
 </html>

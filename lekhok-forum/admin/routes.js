@@ -356,7 +356,7 @@ router.get('/members/new', requireAdmin, async (req, res) => {
 });
 
 router.post('/members', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id } = req.body;
+  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department } = req.body;
   if (!name) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
@@ -368,8 +368,24 @@ router.post('/members', requireAdmin, async (req, res) => {
   }
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
+  // টাস্ক ১৪: Member ID — দেওয়া থাকলে যাচাই+ইউনিক; খালি হলে অটো-জেনারেট
+  let mid = String(member_id || '').trim().toUpperCase();
+  if (mid) {
+    if (!/^MEM-\d{5}$/.test(mid)) {
+      const allUsers = await fetchAllUsers();
+      return res.render('admin/members/form', { member: req.body, error: 'মেম্বার আইডি ফরম্যাট ভুল — MEM-XXXXX (যেমন MEM-00001)', allUsers, currentPath: '/admin/members' });
+    }
+    const clash = await db.prepare('SELECT id FROM members WHERE UPPER(member_id) = ?').get(mid);
+    if (clash) {
+      const allUsers = await fetchAllUsers();
+      return res.render('admin/members/form', { member: req.body, error: 'এই মেম্বার আইডি ইতিমধ্যে ব্যবহৃত — খালি রাখলে স্বয়ংক্রিয়ভাবে তৈরি হবে', allUsers, currentPath: '/admin/members' });
+    }
+  } else {
+    mid = await db.nextMemberId();
+  }
+  const acctStatus = userIdNum ? 'active' : 'unclaimed';
   try {
-    await db.prepare('INSERT INTO members (name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum);
+    await db.prepare('INSERT INTO members (name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, mid, department || '', acctStatus);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'এই নাম, কার্যবর্ষ ও ধরনে একজন সদস্য ইতিমধ্যে যোগ করা আছেন।', allUsers, currentPath: '/admin/members' });
@@ -385,7 +401,7 @@ router.get('/members/:id/edit', requireAdmin, async (req, res) => {
 });
 
 router.put('/members/:id', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id } = req.body;
+  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, department } = req.body;
   // টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয়তে উপদেষ্টা role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
   if ((member_type || 'central') === 'central' && /উপদেষ্টা/.test(role || '')) {
     const allUsers = await fetchAllUsers();
@@ -394,7 +410,7 @@ router.put('/members/:id', requireAdmin, async (req, res) => {
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
-    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, message=?, image_url=?, social_fb=?, social_linkedin=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, req.params.id);
+    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, message=?, image_url=?, social_fb=?, social_linkedin=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=?, department=? WHERE id=?').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, department || '', req.params.id);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'এই নাম, কার্যবর্ষ ও ধরনে আরেকজন সদস্য ইতিমধ্যে আছেন।', allUsers, currentPath: '/admin/members' });
@@ -406,6 +422,188 @@ router.delete('/members/:id', requireAdmin, async (req, res) => {
   const tid42 = await TA42.trashDelete(db, 'members', req.params.id, req);
   await TA42.audit(db, req, 'delete', 'members', req.params.id, '');
   res.redirect('/admin/members?saved=1&trashed=' + tid42);
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── টাস্ক ১৪: মেম্বার অ্যাকাউন্ট ক্লেইম / রেজিস্ট্রেশন রিভিউ ড্যাশবোর্ড ──────
+// ══════════════════════════════════════════════════════════════════════════════
+const CLAIM_STATUS_LABEL = { pending: 'অপেক্ষমাণ', approved: 'অনুমোদিত', rejected: 'প্রত্যাখ্যাত', more_info: 'আরও তথ্য চাওয়া হয়েছে' };
+const CLAIM_KIND_LABEL = { claim: 'ক্লেইম (বিদ্যমান প্রোফাইল)', registration: 'নতুন নিবন্ধন' };
+const ACCT_STATUS_LABEL = { unclaimed: 'আনক্লেইমড', pending: 'পেন্ডিং', active: 'অ্যাক্টিভ', suspended: 'স্থগিত' };
+
+router.get('/claims', requireAdmin, async (req, res) => {
+  const status = req.query.status || 'pending';
+  const q = (req.query.q || '').trim();
+  let sql = `SELECT c.*, m.name AS member_name, m.member_id, m.member_type, m.account_status,
+                    u.email AS submitted_email, u.full_name AS submitted_name, u.phone AS submitted_phone, u.username
+             FROM account_claims c
+             LEFT JOIN members m ON m.id = c.member_profile_id
+             LEFT JOIN users u ON u.id = c.submitted_user_id WHERE 1=1`;
+  const params = [];
+  if (status) { sql += ' AND c.claim_status = ?'; params.push(status); }
+  if (q) { sql += ' AND (m.name LIKE ? OR m.member_id LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)'; params.push('%' + q + '%', '%' + q + '%', '%' + q + '%', '%' + q + '%'); }
+  sql += ' ORDER BY c.id DESC LIMIT 300';
+  let claims = [];
+  try { claims = await db.prepare(sql).all(...params); } catch (e) { console.error('[admin:claims]', e.message); }
+  const counts = {};
+  for (const s of ['pending', 'approved', 'rejected', 'more_info']) {
+    try { counts[s] = (await db.prepare('SELECT COUNT(*) AS c FROM account_claims WHERE claim_status = ?').get(s)).c; } catch (e) { counts[s] = 0; }
+  }
+  res.render('admin/claims/list', { claims, status, q, counts, CLAIM_STATUS_LABEL, CLAIM_KIND_LABEL, ACCT_STATUS_LABEL, currentPath: '/admin/claims' });
+});
+
+function reviewerOf(req) {
+  if (req.session && req.session.adminUser) return req.session.adminUser.username;
+  if (req.session && req.session.user) return req.session.user.username;
+  return 'unknown';
+}
+
+// অনুমোদন: প্রোফাইল ↔ ইউজার লিংক, active, টাইমস্ট্যাম্প, ডুপ্লিকেট প্রোফাইল নয়
+router.post('/claims/:id/approve', requireAdmin, async (req, res) => {
+  const claim = await db.prepare('SELECT * FROM account_claims WHERE id = ?').get(req.params.id);
+  if (!claim) return res.redirect('/admin/claims?saved=0');
+  const member = await db.prepare('SELECT * FROM members WHERE id = ?').get(claim.member_profile_id);
+  if (!member) return res.redirect('/admin/claims?saved=0');
+  const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(claim.submitted_user_id);
+
+  // ইউজার অ্যাকাউন্ট active
+  if (user) await db.prepare("UPDATE users SET status = 'active' WHERE id = ?").run(user.id);
+  // প্রোফাইল লিংক (ক্লেইমে user_id খালি থাকলে; রেজিস্ট্রেশনে আগেই লিংকড)
+  await db.prepare("UPDATE members SET user_id = COALESCE(user_id, ?), account_status = 'active', claimed_at = COALESCE(claimed_at, datetime('now','localtime')), verified_at = datetime('now','localtime') WHERE id = ?").run(claim.submitted_user_id, member.id);
+  // ক্লেইম রেকর্ড আপডেট
+  await db.prepare("UPDATE account_claims SET claim_status = 'approved', reviewed_at = datetime('now','localtime'), reviewed_by = ?, admin_notes = COALESCE(?, admin_notes) WHERE id = ?").run(reviewerOf(req), req.body.admin_notes || null, claim.id);
+  await TA42.audit(db, req, 'claim-approve', 'account_claims', claim.id, member.member_id + ' → ' + (user ? user.username : ''));
+  res.redirect('/admin/claims?saved=1');
+});
+
+// প্রত্যাখ্যান: পরিষ্কার বার্তা + admin_notes; প্রোফাইল আনক্লেইমড থাকে
+router.post('/claims/:id/reject', requireAdmin, async (req, res) => {
+  const claim = await db.prepare('SELECT * FROM account_claims WHERE id = ?').get(req.params.id);
+  if (!claim) return res.redirect('/admin/claims?saved=0');
+  await db.prepare("UPDATE account_claims SET claim_status = 'rejected', reviewed_at = datetime('now','localtime'), reviewed_by = ?, admin_notes = ? WHERE id = ?").run(reviewerOf(req), req.body.admin_notes || null, claim.id);
+  // রেজিস্ট্রেশন-ধরনের হলে প্রোফাইল পেন্ডিংই থাকবে; ক্লেইম হলে আনক্লেইমড
+  if (claim.kind !== 'registration') {
+    await db.prepare("UPDATE members SET account_status = 'unclaimed' WHERE id = ? AND account_status != 'active'").run(claim.member_profile_id);
+  }
+  await TA42.audit(db, req, 'claim-reject', 'account_claims', claim.id, '');
+  res.redirect('/admin/claims?saved=1');
+});
+
+// আরও তথ্য চাওয়া
+router.post('/claims/:id/more-info', requireAdmin, async (req, res) => {
+  const claim = await db.prepare('SELECT * FROM account_claims WHERE id = ?').get(req.params.id);
+  if (!claim) return res.redirect('/admin/claims?saved=0');
+  await db.prepare("UPDATE account_claims SET claim_status = 'more_info', reviewed_at = datetime('now','localtime'), reviewed_by = ?, admin_notes = ? WHERE id = ?").run(reviewerOf(req), req.body.admin_notes || null, claim.id);
+  await TA42.audit(db, req, 'claim-more-info', 'account_claims', claim.id, '');
+  res.redirect('/admin/claims?saved=1');
+});
+
+// ── টাস্ক ১৪: সদস্য এক্সপোর্ট (পাসওয়ার্ড-মুক্ত, শুধু নন-সিক্রেট ফিল্ড) ────────
+router.get('/members/export.csv', requireAdmin, async (req, res) => {
+  const members = await db.prepare('SELECT member_id, name, role, designation, member_type, term_year, department, account_status FROM members ORDER BY member_id').all();
+  await TA42.audit(db, req, 'export-csv', 'members', null, members.length + ' সারি (পাসওয়ার্ড-মুক্ত)');
+  const esc = v => { v = String(v == null ? '' : v); return /[\",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const csv = '\uFEFF' + ['member_id,name,role,designation,member_type,term_year,department,account_status'].concat(
+    members.map(m => [m.member_id, m.name, m.role, m.designation, m.member_type, m.term_year, m.department, m.account_status].map(esc).join(','))
+  ).join('\r\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="members.csv"');
+  res.send(csv);
+});
+
+// ── টাস্ক ১৪: বাল্ক ইমপোর্ট (CSV) — পাসওয়ার্ড-কলাম থাকলে পুরো ফাইল প্রত্যাখ্যান ──
+const PASSWORD_LIKE = /password|passwd|pwd|পাসওয়ার্ড|গোপন|secret/i;
+function parseCSV(text) {
+  const rows = [];
+  let cur = '', row = [], inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+      else cur += ch;
+    } else {
+      if (ch === '"') inQ = true;
+      else if (ch === ',') { row.push(cur); cur = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); cur = ''; if (row.some(c => c.trim() !== '')) rows.push(row); row = []; }
+      else cur += ch;
+    }
+  }
+  if (cur !== '' || row.length) { row.push(cur); if (row.some(c => c.trim() !== '')) rows.push(row); }
+  return rows;
+}
+function normalizeHeader(h) {
+  return String(h || '').trim().toLowerCase().replace(/[\s\/_-]+/g, '');
+}
+
+router.post('/members/import', requireAdmin, (req, res) => {
+  multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } }).single('file')(req, res, async (err) => {
+    const render = (e) => res.render('admin/members/import', { summary: null, error: e, currentPath: '/admin/members' });
+    if (err) return render(err.message);
+    if (!req.file) return render('ফাইল আপলোড করুন (CSV)');
+    let text;
+    try { text = req.file.buffer.toString('utf8'); } catch (e) { return render('ফাইল পড়া যায়নি'); }
+    // BOM strip
+    text = text.replace(/^\uFEFF/, '');
+    const rows = parseCSV(text);
+    if (!rows.length) return render('ফাইলে কোনো সারি নেই');
+    const header = rows[0].map(normalizeHeader);
+    // ── নিরাপত্তা: পাসওয়ার্ড-জাতীয় কলাম থাকলে পুরো ফাইল প্রত্যাখ্যান ──
+    const badCol = rows[0].find((h, i) => PASSWORD_LIKE.test(String(h)));
+    if (badCol) return render('এই ফাইলে পাসওয়ার্ড-জাতীয় কলাম "' + badCol + '" আছে — পাসওয়ার্ড কখনো স্প্রেডশিটে রাখা যাবে না। পুরো ফাইল প্রত্যাখ্যান করা হয়েছে।');
+    const idx = {};
+    header.forEach((h, i) => { if (!(h in idx)) idx[h] = i; });
+    const col = (keys) => { for (const k of keys) { if (idx[k] !== undefined) return idx[k]; } return -1; };
+    const iName = col(['name', 'নাম', 'fullname', 'পূর্ণনাম']);
+    const iMid = col(['memberid', 'memberid', 'id', 'আইডি', 'মেম্বারআইডি']);
+    const iDept = col(['department', 'dept', 'ডিপার্টমেন্ট', 'বিভাগ']);
+    const iSession = col(['session', 'term_year', 'termyear', 'কার্যবর্ষ', 'সেশন']);
+    const iCategory = col(['category', 'member_type', 'membertype', 'ধরন', 'ক্যাটাগরি']);
+    const iPosition = col(['position', 'role', 'designation', 'পদ', 'পজিশন']);
+    if (iName < 0) return render('প্রয়োজনীয় কলাম "Name" পাওয়া যায়নি');
+    const CATEGORY_MAP = { 'কেন্দ্রীয়': 'central', 'কেন্দ্রীয় কমিটি': 'central', 'central': 'central', 'উপদেষ্টা': 'advisory', 'উপদেষ্টা পরিষদ': 'advisory', 'advisory': 'advisory', 'permanent': 'permanent', 'স্থায়ী': 'permanent', 'স্থায়ী পরিষদ': 'permanent', 'founder': 'founder', 'প্রতিষ্ঠাতা': 'founder', 'branch': 'branch', 'বিশ্ববিদ্যালয়': 'branch', 'general': 'general', 'সাধারণ': 'general' };
+    let created = 0; const skipped = [];
+    let seq = await db.nextMemberSeq();
+    const seen = new Set();
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      const name = String(row[iName] || '').trim();
+      if (!name) { skipped.push({ row: r + 1, reason: 'নাম খালি' }); continue; }
+      let mid = String(iMid >= 0 ? (row[iMid] || '') : '').trim().toUpperCase();
+      if (mid && !/^MEM-\d{5}$/.test(mid)) { skipped.push({ row: r + 1, reason: 'ভুল মেম্বার আইডি ফরম্যাট (' + mid + ')' }); continue; }
+      // ফাইলের ভেতরে ডুপ্লিকেট
+      if (mid && seen.has(mid)) { skipped.push({ row: r + 1, reason: 'ফাইলের ভেতরে ডুপ্লিকেট আইডি ' + mid }); continue; }
+      // DB-তে ডুপ্লিকেট
+      if (mid) {
+        const clash = await db.prepare('SELECT id FROM members WHERE UPPER(member_id) = ?').get(mid);
+        if (clash) { skipped.push({ row: r + 1, reason: 'আইডি ' + mid + ' ইতিমধ্যে ব্যবহৃত' }); continue; }
+      }
+      if (!mid) mid = db.formatMemberId(seq++);
+      seen.add(mid);
+      const category = CATEGORY_MAP[String(iCategory >= 0 ? (row[iCategory] || '') : '').trim()] || 'general';
+      const position = iPosition >= 0 ? String(row[iPosition] || '').trim() : '';
+      const dept = iDept >= 0 ? String(row[iDept] || '').trim() : '';
+      const session = iSession >= 0 ? String(row[iSession] || '').trim() : '';
+      try {
+        await db.prepare("INSERT INTO members (name, role, designation, member_type, term_year, department, member_id, account_status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, 'unclaimed', 0)")
+          .run(name, position, '', category, session || null, dept, mid);
+        created++;
+      } catch (e) { skipped.push({ row: r + 1, reason: e.message }); }
+    }
+    await TA42.audit(db, req, 'import-csv', 'members', null, created + ' তৈরি, ' + skipped.length + ' স্কিপ');
+    res.render('admin/members/import', { summary: { created, skipped, total: rows.length - 1 }, error: null, currentPath: '/admin/members' });
+  });
+});
+
+router.get('/members/import', requireAdmin, async (req, res) => {
+  res.render('admin/members/import', { summary: null, error: null, currentPath: '/admin/members' });
+});
+
+// ── টাস্ক ১৪: রেজিস্ট্রেশন-অনুমোদন সেটিং (অ্যাডমিন টগল) ─────────────────────
+// ডিফল্ট off (তাৎক্ষণিক active — ব্যাকওয়ার্ড-কম্প্যাট); on হলে সব নতুন নিবন্ধন
+// PENDING_REVIEW হয়ে অ্যাডমিন অনুমোদনের আগে active হয় না।
+router.post('/settings/registration', requireAdmin, async (req, res) => {
+  await setSetting('require_registration_approval', req.body.require_registration_approval === '1' ? '1' : '0');
+  res.redirect('/admin/settings?saved=registration');
 });
 
 // ── Gallery CRUD (scope: gallery; supports file upload or image URL) ────────
@@ -774,7 +972,11 @@ router.get('/settings', requireAdmin, async (req, res) => {
   const keys = ['site_name','tagline','contact_email','contact_phone','contact_address','facebook_url','telegram_url','youtube_url','twitter_url'];
   const settings = {};
   for (const k of keys) { settings[k] = await getSetting(k) || ''; }
-  res.render('admin/settings', { settings, success: null, currentPath: '/admin/settings' });
+  // টাস্ক ১৪: রেজিস্ট্রেশন-অনুমোদন টগল
+  settings.require_registration_approval = await getSetting('require_registration_approval') || '0';
+  const saved = req.query.saved;
+  const success = saved === 'registration' ? 'রেজিস্ট্রেশন অনুমোদন সেটিং সংরক্ষিত হয়েছে' : (saved ? 'সেটিংস সংরক্ষিত হয়েছে' : null);
+  res.render('admin/settings', { settings, success, currentPath: '/admin/settings' });
 });
 
 router.post('/settings', requireAdmin, async (req, res) => {
