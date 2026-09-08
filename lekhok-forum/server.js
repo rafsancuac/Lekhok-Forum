@@ -470,6 +470,98 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── স্যান্ডবক্স-গেটওয়ে: সার্ভার-রিডাইরেক্টে XTransformPort ধরে রাখা ──────────
+// প্রিভিউ-ইফ্রেমে ফর্ম-POST সফল হলে res.redirect('/admin') → Location: /admin
+// (রিলেটিভ) → ব্রাউজার গেটওয়ে-অরিজিনে ফলো করে কোয়েরি-ছাড়া → Caddy ডিফল্ট-হ্যান্ডলে
+// Next.js:3000-এ পড়ে → স্ক্যাফোল্ড-404! লগইন/লগআউট/সেভ-ফর্ম সব ভাঙত।
+// ফিক্স: রিকোয়েস্ট যদি XTransformPort কোয়েরি নিয়ে গেটওয়ে দিয়ে এসেছে (মানে ইফ্রেম-প্রিভিউ),
+// তাহলে রিলেটিভ Location-পাথে XTransformPort যোগ করে দিই — ব্রাউজার আবার গেটওয়ে-হ্যান্ডলে
+// ঠিক এই অ্যাপেই ফিরে আসবে। env-gated (SANDBOX_PORT) — লাইভে (Vercel) জিরো-ইমপ্যাক্ট।
+if (process.env.SANDBOX_PORT) {
+  app.use((req, res, next) => {
+    const SB_PORT = String(process.env.SANDBOX_PORT);
+    if (String(req.query.XTransformPort || '') !== SB_PORT) return next();
+    const origRedirect = res.redirect.bind(res);
+    res.redirect = function (...args) {
+      try {
+        let urlArg = null;
+        if (args.length === 1) urlArg = args[0];
+        else if (args.length >= 2) urlArg = args[1];
+        // শুধু রিলেটিভ পথ-প্যাচ করি: '/x' বা '/x?a=1' — absolute/অন্য-অরিজিন অক্ষত।
+        if (typeof urlArg === 'string' && urlArg.charAt(0) === '/') {
+          let hash = '';
+          let u = urlArg;
+          const hi = u.indexOf('#'); if (hi > -1) { hash = u.slice(hi); u = u.slice(0, hi); }
+          if (u.indexOf('XTransformPort=') === -1) {
+            u += (u.indexOf('?') > -1 ? '&' : '?') + 'XTransformPort=' + SB_PORT;
+            if (args.length === 1) args[0] = u + hash;
+            else args[1] = u + hash;
+          }
+        }
+      } catch (e) { /* প্যাচ-ব্যর্থতা রিডাইরেক্টকে ভাঙবে না */ }
+      return origRedirect(...args);
+    };
+    next();
+  });
+
+  // ── স্যান্ডবক্স-গেটওয়ে: রেন্ডার-HTML-এ অ্যাসেট-URL-এ XTransformPort ইনজেকশন ──
+  // প্রিভিউ-ইফ্রেমে <script src="/assets/js/main.js"> ব্রাউজার কোয়েরি-ছাড়াই ফেচ
+  // করে → Next.js-এ 404 → ক্লায়েন্ট-গার্ডের পরের src-রিরাইট স্ক্রিপ্টের ক্ষেত্রে
+  // কাজ করে না (ব্রাউজার ফেইলড-স্ক্রিপ্টের src বদলালে পুনঃএক্সিকিউট করে না —
+  // CSS লিংকে হ্যাঁ, স্ক্রিপ্টে না!)। ফলে ইফ্রেমে main.js/quiz.js/premium.js
+  // সম্পূর্ণ মৃত ছিল — মেনু/কুইজ/রিঅ্যাকশন/সার্চ সব বন্ধ।
+  // সমাধান: সার্ভারেই HTML-আউটপুটে src/href/action/poster + inline url() পথে
+  // XTransformPort বসিয়ে দিই — ব্রাউজারের প্রথম ফেচেই সঠিক গেটওয়ে-রুট।
+  // শুধু তখনই চলে যখন রিকোয়েস্ট নিজেই XTransformPort নিয়ে এসেছে — env-gated।
+  app.use((req, res, next) => {
+    const SB_PORT = String(process.env.SANDBOX_PORT);
+    if (String(req.query.XTransformPort || '') !== SB_PORT) return next();
+    const mark = 'XTransformPort=' + SB_PORT;
+
+    function patchAssetPath(u) {
+      // শুধু পথ-অ্যাবসোলিউট ('/x') — বাইরের/ডেটা/# স্কিপ
+      if (typeof u !== 'string' || u.charAt(0) !== '/' || u.charAt(1) === '/') return u;
+      if (u.indexOf('XTransformPort=') > -1) return u;
+      var path = u, hash = '';
+      var hi = path.indexOf('#'); if (hi > -1) { hash = path.slice(hi); path = path.slice(0, hi); }
+      return path + (path.indexOf('?') > -1 ? '&' : '?') + mark + hash;
+    }
+
+    function patchHtml(html) {
+      if (typeof html !== 'string') return html;
+      try {
+        // অ্যাট্রিবিউট: src/href/action/poster/formaction — মান পথ-অ্যাবসোলিউট হলে
+        html = html.replace(/(\s(?:src|href|action|poster|formaction)\s*=\s*["'])([^"']*)(["'])/g,
+          function (m, pre, val, post) { return pre + patchAssetPath(val) + post; });
+        // ইনলাইন style/CSS url(/...)
+        html = html.replace(/url\((['"]?)(\/[^'")\s]+)\1\)/g,
+          function (m, q, u) { return 'url(' + q + patchAssetPath(u) + q + ')'; });
+      } catch (e) { /* HTML-প্যাচ ফেইল হলে অরিজিনাল অক্ষত থাকবে */ }
+      return html;
+    }
+
+    const origRender = res.render.bind(res);
+    res.render = function (...args) {
+      const last = args[args.length - 1];
+      if (typeof last === 'function') {
+        // রুট-প্রদত্ত কলব্যাক — মোড়াই দিই (html পেয়ে প্যাচ করে ফেরত)
+        args[args.length - 1] = function (err, html) {
+          if (err) return last(err);
+          last(null, patchHtml(html));
+        };
+        return origRender(...args);
+      }
+      // সাধারণ রেন্ডার — নিজস্ব কলব্যাক: প্যাচ করে send (সেশন-সেভ র‍্যাপার সক্রিয় থাকবে)
+      args.push(function (err, html) {
+        if (err) return next(err);
+        res.send(patchHtml(html));
+      });
+      return origRender(...args);
+    };
+    next();
+  });
+}
+
 // ── সেশন ৪৪: পেজ-ভিজিট ট্র্যাকিং (অ্যানালিটিক্স ভিজিট ট্রেন্ড) ────────────────
 // শুধু পাবলিক HTML পেজ-ভিউ গণনা করি (স্ট্যাটিক অ্যাসেট/API/অ্যাডমিন-মডারেটর বাদ)।
 // page_visits(path, day) → count+1 (UNIQUE path+day upsert)। ফায়ার-অ্যান্ড-ফরগেট:
