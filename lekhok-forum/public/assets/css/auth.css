@@ -1,1 +1,139 @@
-.char-counter{text-align:right;font-size:12px;color:#888;margin-top:4px;padding:0 4px;transition:color .2s}.char-counter.is-warn{color:#e07b00;font-weight:600}.char-counter.is-error{color:#c0392b;font-weight:700}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-body);background:linear-gradient(135deg,#0a1f44 0,#0b1121 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}.auth-card{background:#fff;border-radius:var(--radius-sm);padding:40px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}.back-home{position:absolute;top:16px;left:16px;color:#0a1f44;text-decoration:none;font-size:.9rem}.back-home:hover{color:#059669}.auth-card h1{text-align:center;color:#0a1f44;margin-bottom:6px}.sub{text-align:center;color:#666;margin-bottom:24px;font-size:.95rem}.error{background:#fee;color:#c33;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:.9rem;border:1px solid #fcc}.success{background:#d4edda;color:#155724;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:.9rem}.form-group{margin-bottom:14px}.form-group label{display:block;margin-bottom:6px;color:#0a1f44;font-weight:600;font-size:.9rem}.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px;border:1px solid #ddd;border-radius:var(--radius-sm);font-family:inherit;font-size:1rem}.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:0;border-color:#059669}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media (max-width:480px){.form-row{grid-template-columns:1fr}}.btn-primary{width:100%;padding:12px;background:#0a1f44;color:#fff;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;margin-top:8px}.btn-primary:hover{background:#0b1121}.auth-foot{text-align:center;margin-top:20px;color:#666;font-size:.9rem}.auth-foot a{color:#059669;font-weight:600}.checkbox-group{display:flex;align-items:center;gap:8px;margin:8px 0}.checkbox-group input{width:auto}.checkbox-group label{margin:0;font-weight:400}
+/* ==========================================================================
+   লেখক ফোরাম — অথেনটিকেশন UI (লগইন / রেজিস্ট্রেশন)
+   সেশন ৫৪: ডিজাইন-সিস্টেম টোকেন + স্ট্যাবল সেন্টারিং + প্রিমিয়াম রিডিজাইন
+   ========================================================================== */
+
+:root{
+  --bg-main:#0B1121; --bg-secondary:#131B2F;
+  --brand:#0a1f44; --brand-light:#1E3A8A;
+  --accent:#059669; --accent-light:#10B981; --accent-dark:#047857;
+  --accent-soft:rgba(5,150,105,0.10);
+  --accent-glow:rgba(5,150,105,0.25);
+  --text:#1e293b; --text-muted:#64748b; --border:#e2e8f0;
+  --radius-sm:5px; --radius:5px;
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);
+  --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:var(--font-body);
+  background:
+    radial-gradient(ellipse at top right, rgba(5,150,105,.16), transparent 55%),
+    linear-gradient(135deg, #0a1f44 0%, #0b1121 100%);
+  min-height:100vh;
+  display:flex;
+  padding:32px 20px;
+}
+
+/* স্ট্যাবল সেন্টারিং: ছোট হলে দুই অক্ষে কেন্দ্রে; কার্ড লম্বা হলে (রেজিস্ট্রেশন)
+   auto-margin শূন্য হয়ে উপরে লেগে যায় — স্ক্রলে উপরের অংশ আর কাটা পড়ে না। */
+.auth-card{
+  background:#fff;
+  border-radius:var(--radius);
+  padding:40px 36px;
+  max-width:480px;
+  width:100%;
+  margin:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  position:relative;
+}
+
+.back-home{
+  position:absolute; top:16px; left:16px;
+  color:var(--text-muted); text-decoration:none;
+  font-size:.85rem; display:inline-flex; align-items:center; gap:6px;
+  transition:color .15s;
+}
+.back-home:hover{ color:var(--accent); }
+
+/* ── ব্র্যান্ড + শিরোনাম ── */
+.auth-brand{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:22px; }
+.auth-logo{
+  width:42px; height:42px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:#fff; font-size:18px;
+  background:linear-gradient(135deg, var(--accent), var(--brand));
+  box-shadow:0 5px 14px var(--accent-glow);
+}
+.auth-brand-name{ font-weight:800; font-size:1.05rem; color:var(--brand); letter-spacing:.2px; }
+.auth-title{ text-align:center; color:var(--brand); font-size:1.7rem; margin:0 0 6px; font-weight:800; line-height:1.25; }
+.auth-sub, .sub{ text-align:center; color:var(--text-muted); margin-bottom:26px; font-size:.95rem; }
+/* backward-compat: যেসব ফর্ম-পেজ (article-form/qa-form/edit) এখনো plain h1 ব্যবহার করে */
+.auth-card h1{ text-align:center; color:var(--brand); margin-bottom:6px; }
+
+/* ── এরর / সাকসেস ── */
+.error{
+  background:#fef2f2; color:#b91c1c;
+  padding:11px 14px; border-radius:var(--radius-sm);
+  margin-bottom:18px; font-size:.9rem;
+  border:1px solid #fecaca;
+  display:flex; align-items:center; gap:8px; line-height:1.5;
+}
+.error i{ flex:0 0 auto; }
+.success{
+  background:#ecfdf5; color:#065f46;
+  padding:11px 14px; border-radius:var(--radius-sm);
+  margin-bottom:18px; font-size:.9rem;
+  border:1px solid rgba(5,150,105,.3);
+  display:flex; align-items:center; gap:8px;
+}
+
+/* ── ফর্ম ── */
+.form-group{ margin-bottom:16px; }
+.form-group label{ display:block; margin-bottom:7px; color:var(--brand); font-weight:600; font-size:.86rem; }
+.form-group input, .form-group select, .form-group textarea{
+  width:100%; padding:11px 14px;
+  border:1.5px solid var(--border); border-radius:var(--radius-sm);
+  font-family:inherit; font-size:1rem; color:var(--text); background:#fff;
+  transition:border-color .15s, box-shadow .15s;
+}
+.form-group input::placeholder{ color:#9ca3af; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus{
+  outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);
+}
+/* এরর স্টেট (ভ্যালিডেশন/সার্ভার এরর হলে) */
+.form-group.has-error input,
+.form-group.has-error select,
+.form-group.has-error textarea{
+  border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.12);
+}
+
+.form-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:480px){ .form-row{ grid-template-columns:1fr; } }
+
+.auth-section-title{
+  color:var(--brand); margin:16px 0 8px; font-size:1rem;
+  font-weight:700; display:flex; align-items:center; gap:8px;
+}
+
+/* ── প্রাইমারি বাটন (সাইটের accent-gradient প্রাইমারির সাথে হুবহু) ── */
+.btn-primary{
+  width:100%; padding:12px;
+  background:linear-gradient(135deg, var(--accent), var(--accent-dark));
+  color:#fff; border:none; border-radius:var(--radius-sm);
+  font-family:inherit; font-size:1rem; font-weight:700;
+  cursor:pointer; margin-top:6px;
+  box-shadow:0 4px 12px var(--accent-glow);
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  transition:transform .15s, box-shadow .15s;
+}
+.btn-primary:hover{
+  background:linear-gradient(135deg, var(--accent-dark), var(--accent));
+  transform:translateY(-2px); box-shadow:0 6px 18px var(--accent-glow);
+}
+.btn-primary:active{ transform:translateY(0); box-shadow:0 2px 8px var(--accent-glow); }
+
+/* ── নিচের লিংক ── */
+.auth-foot{ text-align:center; margin-top:22px; color:var(--text-muted); font-size:.92rem; }
+.auth-foot a{ color:var(--accent); font-weight:700; }
+.auth-foot a:hover{ color:var(--accent-dark); text-decoration:underline; }
+
+.checkbox-group{ display:flex; align-items:center; gap:8px; margin:8px 0; }
+.checkbox-group input{ width:auto; }
+.checkbox-group label{ margin:0; font-weight:400; }
+
+.char-counter{ text-align:right; font-size:12px; color:#888; margin-top:4px; padding:0 4px; transition:color .2s; }
+.char-counter.is-warn{ color:#e07b00; font-weight:600; }
+.char-counter.is-error{ color:#c0392b; font-weight:700; }

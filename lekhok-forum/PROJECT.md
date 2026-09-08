@@ -294,6 +294,33 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৫৪ (৮ সেপ্টেম্বর ২০২৬) — লগইন/রেজিস্ট্রেশন UI: স্থিতিশীলতা + প্রিমিয়াম রিডিজাইন (টাস্ক ১১)
+
+**উদ্দেশ্য (ইউজার-রিকোয়েস্ট):** ভাসমান আপ-অ্যারো বাটন সরানো; স্ক্রল/টাচপ্যাডে লগইন/রেজিস্ট্রেশন/মডাল নড়া বন্ধ; লগইন/রেজিস্ট্রেশন UI প্রিমিয়াম — কোনো ফাংশনালিটি না ভেঙে।
+
+**১) ভাসমান আপ-অ্যারো (scroll-to-top) অপসারিত:**
+- `views/layout.ejs` — হার্ডকোডেড `<button class="back-to-top">` ব্লক সরানো।
+- `public/assets/js/main.js` (minified) — ডাইনামিক back-to-top ইনজেকশন + স্ক্রল-হ্যান্ডলারে `f.classList.toggle("show")` + ক্লিক-হ্যান্ডলার — ৪টি স্নিপেট সার্জিক্যালি সরানো (node --check পাস; `backToTop`/`back-to-top` ref ০)।
+- `public/assets/css/style.css` (minified) — `.back-to-top` (৪টি নিয়ম) সরানো (ব্রেস ব্যালান্স ১২৫৫/১২৫৫)।
+
+**২) স্ক্রল-লিংকড মুভমেন্ট স্থির:**
+- লগইন/রেজিস্ট্রেশন পেজ ছিল স্ট্যান্ডঅ্যালোন (`body{display:flex;align-items:center;min-height:100vh}`) — লম্বা রেজিস্টার ফর্মে flexbox-centering overflow বাগে উপরের অংশ কাটা পড়ত। এখন `body{display:flex}` + `.auth-card{margin:auto}` — ছোট হলে দুই অক্ষে কেন্দ্রে, লম্বা হলে উপরে লেগে স্ক্রলযোগ্য (এক পিক্সেলও নড়ে না)।
+- মডাল/পপ-আপ (`modal-overlay`, `modal-backdrop`) ইতিমধ্যে `position:fixed;inset:0` — যাচাই, অপরিবর্তিত।
+
+**৩) প্রিমিয়াম UI রিডিজাইন (ডিজাইন-সিস্টেম টোকেনে):**
+- `auth.css`-এ `:root` টোকেন (brand/accent/radius/shadow — style.css-এর সাথে মিল) যোগ। আগে auth পেজে style.css লোড হতো না বলে `var(--radius-sm)` অপার্য → কার্ডে radius 0 (বর্গাকার) পড়ছিল; এখন ঠিক।
+- ব্র্যান্ড: গোলাকার লোগো-মার্ক (accent→brand গ্র্যাডিয়েন্ট) + "লেখক ফোরাম" ওয়ার্ডমার্ক।
+- হেডিং: `h1.auth-title` "স্বাগতম" + `p.auth-sub` "আপনার অ্যাকাউন্টে লগইন করুন" (সাবহেডিং)।
+- ইনপুট: label + focus ring (`box-shadow` accent-soft) + এরর স্টেট (`.has-error` লাল বর্ডার/রিং)।
+- বাটন: সাইটের accent-gradient প্রাইমারির হুবহু (`linear-gradient(accent→accent-dark)` + glow + hover translateY(-2px)/active) — আগে ভুলভাবে নেভি `#0a1f44` ছিল।
+- লিংক: `.auth-foot a` accent + hover underline।
+- রেজিস্টার/এডিট পেজের ইনলাইন `h3` → `.auth-section-title` ক্লাস (এলোমেলো ইনলাইন স্টাইল সরানো)।
+- backward-compat: `.sub` ও `.auth-card h1` নিয়ম রাখা হয়েছে (article-form/qa-form/edit পেজের জন্য)।
+
+**৪) ফাংশনালিটি অক্ষত (রিগ্রেশন):** লগইন সাকসেস/এরর/রিডাইরেক্ট, রেজিস্ট্রেশন (তৈরি→`/profile/:u?welcome=1`, লগইন→`/dashboard`), wrong-password এরর, ভ্যালিডেশন — সব ২০০/৩০২ আগের মতো। পাবলিক ১৫ পেজ 200; `/profile/edit`, `/articles/new`, `/qa/new` (রেগুলার ইউজারে) 200 + auth-card রেন্ডার।
+
+---
+
 ### সেশন ৫৩ (৮ সেপ্টেম্বর ২০২৬) — Resources মেনু: ক্রস-লিঙ্ক অপসারণ + 'পত্রিকার ই-মেইল' পেজ যাচাই (টাস্ক ১০)
 
 **উদ্দেশ্য (ইউজার-রিকোয়েস্ট):** দুই সাবমেনু পেজের নিচ থেকে একে অপরের ক্রস-লিঙ্ক সরানো + 'পত্রিকার ই-মেইল' পেজ প্রফেশনাল রিডিজাইন (বিদ্যমান ডিজাইন সিস্টেমে)।

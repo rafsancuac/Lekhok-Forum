@@ -12,8 +12,12 @@
 <body>
   <div class="auth-card">
     <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> হোম</a>
-    <h1>লেখক ফোরাম</h1>
-    <p class="sub">স্বাগতম! আপনার অ্যাকাউন্টে লগইন করুন</p>
+    <div class="auth-brand">
+      <span class="auth-logo"><i class="fas fa-feather-alt"></i></span>
+      <span class="auth-brand-name">লেখক ফোরাম</span>
+    </div>
+    <h1 class="auth-title">স্বাগতম</h1>
+    <p class="auth-sub">আপনার অ্যাকাউন্টে লগইন করুন</p>
     <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
     <form method="POST">
       <% if (typeof next !== 'undefined' && next) { %><input type="hidden" name="next" value="<%= next %>"><% } %>
@@ -25,7 +29,7 @@
         <label>পাসওয়ার্ড</label>
         <input type="password" name="password" required>
       </div>
-      <button type="submit" class="btn-primary">লগইন</button>
+      <button type="submit" class="btn-primary"><i class="fas fa-sign-in-alt"></i> লগইন</button>
     </form>
     <p class="auth-foot">অ্যাকাউন্ট নেই? <a href="/register">রেজিস্ট্রেশন করুন</a></p>
   </div>
