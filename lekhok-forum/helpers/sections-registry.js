@@ -44,12 +44,9 @@ const SECTIONS = {
     ]
   },
   contact_transport: {
-    label: 'যোগাযোগ: ট্রান্সপোর্ট ও জরুরি', kind: 'card',
+    label: 'যোগাযোগ: গুরুত্বপূর্ণ নম্বর', kind: 'card',
     hint: 'title = নাম, body = সাব-টেক্সট, icon = FA আইকন ক্লাস, extra = লিংক (খালি = স্ট্যাটিক কার্ড)',
     defaults: [
-      { title: 'শাটল ট্রেন স্কেজিউল', body: 'চবি ক্যাম্পাস ⇄ শহর (সকাল ও বিকেল)', icon: 'fas fa-shuttle-van', extra: '' },
-      { title: 'বিশ্ববিদ্যালয় বাস সার্ভিস', body: 'ক্যাম্পাস থেকে শহরগামী রুট', icon: 'fas fa-bus', extra: '' },
-      { title: 'নাজিরহাট ট্রেন স্কেজিউল', body: 'চবি স্টেশন (ঢাকা/চট্টগ্রাম রুট)', icon: 'fas fa-train', extra: '' },
       { title: 'প্রক্টর অফিস', body: 'প্রক্টর নম্বর ও জরুরি যোগাযোগ', icon: 'fas fa-user-shield', extra: '' },
       { title: 'গুরুত্বপূর্ণ অফিস ও ব্যক্তি', body: 'রেজিস্ট্রার, কোষাধ্যক্ষ, বিভাগীয় প্রধানগণ', icon: 'fas fa-briefcase', extra: '' },
       { title: 'বিশ্ববিদ্যালয় মেডিকেল', body: 'চিকিৎসা সেবা ও অ্যাম্বুলেন্স', icon: 'fas fa-first-aid', extra: '' }

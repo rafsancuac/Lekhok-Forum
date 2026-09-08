@@ -117,12 +117,118 @@
       </div>
     </div>
 
-    <!-- Transport & important contacts -->
+    <!-- Transport & important numbers -->
     <div class="campus-resource-section">
       <div class="section-head center" style="margin:40px 0 0;">
         <h2 class="section-title" style="font-size:1.45rem;"><i class="fas fa-bus-alt" style="color:var(--accent);"></i> <%= C('contact_crs_transport') %></h2>
         <span class="accent-divider center"></span>
       </div>
+
+      <% if (typeof ts !== 'undefined' && ts) { %>
+      <div class="ts-board reveal">
+
+        <!-- ১. শাটল ট্রেন -->
+        <div class="ts-panel">
+          <div class="ts-panel-head">
+            <span class="ts-ico"><i class="fas <%= ts.shuttle.icon %>"></i></span>
+            <div class="ts-head-meta">
+              <h3><%= ts.shuttle.title %></h3>
+              <p><%= ts.shuttle.subtitle %></p>
+            </div>
+            <span class="ts-source"><i class="fas fa-check-circle"></i> <%= ts.shuttle.source %></span>
+          </div>
+          <div class="ts-panel-body">
+            <div class="ts-tabs">
+              <% ts.shuttle.tabs.forEach((tab, ti) => { %>
+              <input type="radio" name="ts-shuttle" id="ts-shuttle-<%= ti %>" <%= ti === 0 ? 'checked' : '' %>>
+              <% }); %>
+              <div class="ts-tabbar" role="tablist">
+                <% ts.shuttle.tabs.forEach((tab, ti) => { %>
+                <label for="ts-shuttle-<%= ti %>" role="tab"><%= tab.label %></label>
+                <% }); %>
+              </div>
+              <% ts.shuttle.tabs.forEach((tab, ti) => { %>
+              <div class="ts-pane ts-pane-<%= ti %>">
+                <% tab.directions.forEach(dir => { %>
+                <div class="ts-dir-wrap">
+                  <div class="ts-dir">
+                    <span class="ts-dir-badge"><i class="fas <%= dir.icon %>"></i></span>
+                    <span><%= dir.title %></span>
+                  </div>
+                  <table class="ts-table">
+                    <thead><tr><% dir.head.forEach(h => { %><th><%= h %></th><% }); %></tr></thead>
+                    <tbody>
+                      <% dir.rows.forEach(row => { %>
+                      <tr><% row.forEach(cell => { %><td><%= cell %></td><% }); %></tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+                <% }); %>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+
+        <!-- ২ ও ৩: বাস + নাজিরহাট ট্রেন -->
+        <div class="ts-grid2">
+          <div class="ts-panel">
+            <div class="ts-panel-head">
+              <span class="ts-ico"><i class="fas <%= ts.bus.icon %>"></i></span>
+              <div class="ts-head-meta">
+                <h3><%= ts.bus.title %></h3>
+                <p><%= ts.bus.subtitle %></p>
+              </div>
+              <span class="ts-source"><i class="fas fa-check-circle"></i> <%= ts.bus.source %></span>
+            </div>
+            <div class="ts-panel-body">
+              <% ts.bus.groups.forEach(g => { %>
+              <div class="ts-dir-wrap">
+                <div class="ts-dir"><span class="ts-dir-badge"><i class="fas fa-bus"></i></span><span><%= g.title %></span></div>
+                <table class="ts-table">
+                  <thead><tr><% g.head.forEach(h => { %><th><%= h %></th><% }); %></tr></thead>
+                  <tbody>
+                    <% g.rows.forEach(row => { %>
+                    <tr>
+                      <td><span class="ts-period <%= row[0] === 'সকাল' ? 'ts-am' : (row[0] === 'সন্ধ্যা' ? 'ts-pm' : 'ts-night') %>"><%= row[0] %></span></td>
+                      <td><%= row[1] %></td>
+                    </tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+
+          <div class="ts-panel">
+            <div class="ts-panel-head">
+              <span class="ts-ico"><i class="fas <%= ts.train.icon %>"></i></span>
+              <div class="ts-head-meta">
+                <h3><%= ts.train.title %></h3>
+                <p><%= ts.train.subtitle %></p>
+              </div>
+              <span class="ts-source"><i class="fas fa-check-circle"></i> <%= ts.train.source %></span>
+            </div>
+            <div class="ts-panel-body">
+              <table class="ts-table ts-table-route">
+                <thead><tr><% ts.train.head.forEach(h => { %><th><%= h %></th><% }); %></tr></thead>
+                <tbody>
+                  <% ts.train.rows.forEach(row => { %>
+                  <tr><% row.forEach(cell => { %><td><%= cell %></td><% }); %></tr>
+                  <% }); %>
+                </tbody>
+              </table>
+              <p class="ts-note"><i class="fas fa-info-circle"></i> সময়সূচি মাঝেমধ্যে পরিবর্তিত হতে পারে — যাত্রার আগে নিশ্চিত হয়ে নিন।</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- গুরুত্বপূর্ণ নম্বর (দ্রুত যোগাযোগ) -->
+      <div class="ts-cards-head"><i class="fas fa-phone-alt"></i><span>জরুরি ও গুরুত্বপূর্ণ যোগাযোগ</span></div>
       <div class="campus-grid reveal-stagger">
         <% (typeof tr42 !== 'undefined' ? tr42 : []).forEach(c => { %>
         <% if (c.extra) { %><a class="campus-card" href="<%= c.extra %>" target="_blank" rel="noopener">
