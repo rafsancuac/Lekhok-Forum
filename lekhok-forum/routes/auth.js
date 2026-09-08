@@ -28,7 +28,13 @@ function safeNextPath(raw) {
 router.get('/login', async (req, res) => {
   if (req.session.adminUser) return res.redirect('/admin');
   if (req.session.user) return res.redirect(dashboardFor(req.session.user));
-  res.render('user/login', { error: null, next: safeNextPath(req.query.next), currentPath: '/login' });
+  // সেশন ৬২: 2FA-ধাপ ৫-বার ভুল কোডে লক হলে এখানে ফেরে — কারণ জানাই।
+  const locked62 = req.query.e === 'mfa_locked';
+  res.render('user/login', {
+    error: locked62 ? 'নিরাপত্তার কারণে দুই-ধাপ যাচাই বন্ধ করা হয়েছে (একাধিক ভুল কোড)। আবার লগইন করুন।' : null,
+    next: safeNextPath(req.query.next),
+    currentPath: '/login'
+  });
 });
 
 // ── Login (POST) ─────────────────────────────────────────────────────────────
@@ -120,9 +126,14 @@ router.post('/login', async (req, res) => {
 
 // ── সেশন ৫৮: লগইন ধাপ-২ (2FA কোড যাচাই) ─────────────────────────────────────
 // লগইন-ফর্মে 2FA-ফিল্ড নেই (ইউজার-নির্দেশনা); পাসওয়ার্ড মিললে এই ধাপটি আসে।
-// mfaPending: { kind: 'user'|'admin', uid, dest, hint, ts } — ১০ মিনিট মেয়াদী;
+// mfaPending: { kind: 'user'|'admin', uid, dest, hint, ts, fails } — ১০ মিনিট মেয়াদী;
 // পাসওয়ার্ড কখনো সেশনে রাখা হয় না।
+// সেশন ৬২: ব্রুট-ফোর্স গার্ড — `fails`-কাউন্টার; ৫ বার ভুল কোডে mfaPending
+// বাতিল + লগইনে ফেরত (আবার পাসওয়ার্ড দিতে হবে); প্রতিটি ব্যর্থতায় ক্রমবর্ধমান
+// দেরি (৩০০ms × ব্যর্থতা-সংখ্যা) — স্বয়ংক্রিয় চেষ্টা ধীর করে।
 const MFA_TTL_MS = 10 * 60 * 1000;
+const MFA_MAX_FAILS = 5;
+const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
 function mfaOf(req) {
   const m = req.session && req.session.mfaPending;
   if (!m || !m.kind || !m.uid) return null;
@@ -146,6 +157,21 @@ router.post('/login/2fa', async (req, res) => {
   const render2fa = (error) => res.status(200).render('user/login-2fa', { error, hint: m.hint || '', currentPath: '/login/2fa' });
   if (!code) return render2fa('অ্যাপে দেখানো ৬-অঙ্কের কোড দিন।');
 
+  // সেশন ৬২: ব্যর্থ-উত্তর গণনা + লক — ৫ম ব্যর্থতায় ধাপ বাতিল, লগইনে ফেরত।
+  const failAndRender = async (baseMsg) => {
+    m.fails = (m.fails || 0) + 1;
+    const left = MFA_MAX_FAILS - m.fails;
+    await sleepMs(300 * m.fails); // ক্রমবর্ধমান দেরি — অটোমেটেড চেষ্টা ধীর
+    if (m.fails >= MFA_MAX_FAILS) {
+      req.session.mfaPending = null;
+      return new Promise((resolve) => req.session.save(() => {
+        res.redirect('/login?e=mfa_locked');
+        resolve();
+      }));
+    }
+    render2fa(baseMsg + ' (আর ' + left + ' বার চেষ্টা করতে পারবেন)');
+  };
+
   try {
     if (m.kind === 'user') {
       const user = await db.prepare('SELECT id, username, full_name, avatar_url, gender, role, status, totp_secret, totp_enabled, backup_codes FROM users WHERE id = ?').get(m.uid);
@@ -164,7 +190,7 @@ router.post('/login/2fa', async (req, res) => {
           }
         } catch (e) {}
       }
-      if (!ok) return render2fa('কোড মিলছে না। অ্যাপে নতুন কোড দেখে আবার চেষ্টা করুন (কোড ৩০ সেকেন্ডে বদলায়)।');
+      if (!ok) return failAndRender('কোড মিলছে না। অ্যাপে নতুন কোড দেখে আবার চেষ্টা করুন (কোড ৩০ সেকেন্ডে বদলায়)।');
       req.session.mfaPending = null;
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
@@ -192,7 +218,7 @@ router.post('/login/2fa', async (req, res) => {
         }
       } catch (e) {}
     }
-    if (!ok) return render2fa('কোড মিলছে না। অ্যাপে নতুন কোড দেখে আবার চেষ্টা করুন (কোড ৩০ সেকেন্ডে বদলায়)।');
+    if (!ok) return failAndRender('কোড মিলছে না। অ্যাপে নতুন কোড দেখে আবার চেষ্টা করুন (কোড ৩০ সেকেন্ডে বদলায়)।');
     req.session.mfaPending = null;
     return new Promise((resolve) => req.session.regenerate((err) => {
       if (err) console.error('[auth] /login/2fa admin session regenerate error:', err);

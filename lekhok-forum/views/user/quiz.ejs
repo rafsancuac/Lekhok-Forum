@@ -6,7 +6,8 @@
       <span class="today-date"><i class="far fa-calendar"></i> <%= new Date().toLocaleDateString('bn-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
     </div>
 
-    <%# ── সেশন ৬০: স্কোর-সামারি বার (localStorage-ভিত্তিক, লগইন-ছাড়াই) ── %>
+    <%# ── সেশন ৬০: স্কোর-সামারি বার (localStorage-ভিত্তিক, লগইন-ছাড়াই);
+        সেশন ৬২: লগইন-ইউজারের স্কোর সার্ভারে (DB) থাকে — ডিভাইস-বদলেও বহাল ── %>
     <div class="quiz-score-bar" id="quizScoreBar" data-today-id="<%= today ? today.id : '' %>" hidden>
       <div class="qs-stat"><i class="fas fa-bullseye"></i><span class="qs-label">আজকের স্কোর</span><strong id="qsToday">—</strong></div>
       <div class="qs-sep"></div>
@@ -14,6 +15,9 @@
       <div class="qs-sep"></div>
       <div class="qs-stat"><i class="fas fa-fire"></i><span class="qs-label">ধারাবাহিকতা</span><strong id="qsStreak">—</strong></div>
     </div>
+    <% if (!user) { %>
+      <p class="quiz-sync-hint"><i class="fas fa-cloud-arrow-up"></i> লগইন করলে আপনার স্কোর ও ধারাবাহিকতা সার্ভারে সংরক্ষিত হবে — যেকোনো ডিভাইস থেকে ফিরে পাবেন। <a href="/login?next=%2Fquiz">লগইন করুন</a></p>
+    <% } %>
 
     <% if (today) { %>
       <div class="daily-card quiz-card<%= today.options ? ' has-options' : '' %>" data-quiz="<%= today.id %>">
@@ -92,6 +96,37 @@
           <% }) %>
         </div>
       </section>
+    <% } %>
+    <%# ── সেশন ৬২: কুইজ লিডারবোর্ড — সার্ভার-স্কোরভিত্তিক টপ ১০ ── %>
+    <% if (board && board.length) { %>
+      <% const bn62 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
+      <section class="quiz-board">
+        <div class="section-head">
+          <h2 class="section-title"><i class="fas fa-ranking-star"></i> কুইজ লিডারবোর্ড</h2>
+          <span class="quiz-archive-count"><%= bn62(board.length) %> জন</span>
+        </div>
+        <ol class="quiz-board-list">
+          <% board.forEach(function(p, i) { %>
+            <li class="qb-row<%= user && user.id === p.id ? ' is-me' : '' %><%= i === 0 ? ' is-top' : '' %>">
+              <span class="qb-rank"><i class="<%= i === 0 ? 'fas fa-crown' : 'fas fa-medal' %>"></i> <%= ['১ম','২য়','৩য়','৪র্থ','৫ম','৬ষ্ঠ','৭ম','৮ম','৯ম','১০ম'][i] || bn62(i + 1) %></span>
+              <a class="qb-user" href="/profile/<%= encodeURIComponent(p.username) %>">
+                <img src="/avatar/<%= p.id %>?v=2" alt="<%= p.full_name || p.username %>" loading="lazy" class="qb-avatar">
+                <span class="qb-name"><%= p.full_name || p.username %><% if (user && user.id === p.id) { %><em class="qb-you">আপনি</em><% } %></span>
+              </a>
+              <span class="qb-stats">
+                <span class="qb-correct"><i class="fas fa-circle-check"></i> <strong><%= bn62(p.correct_n) %></strong>/<%= bn62(p.answered) %></span>
+                <span class="qb-streak<%= p.streak > 0 ? ' has-streak' : '' %>"><i class="fas fa-fire"></i> <%= bn62(p.streak) %></span>
+              </span>
+            </li>
+          <% }) %>
+        </ol>
+        <p class="qb-note"><i class="fas fa-circle-info"></i> প্রথম উত্তরই চূড়ান্ত গণ্য হয় — এক প্রতিযোগী, এক সুযোগ।</p>
+      </section>
+    <% } %>
+
+    <%# ── সেশন ৬২: সার্ভার-স্কোর (লগইন-ইউজার) — quiz.js মার্জ করে ── %>
+    <% if (mine) { %>
+      <script id="quizServerState" type="application/json"><%- JSON.stringify({ attempts: mine.map, stats: { answered: mine.answered, correct: mine.correct, streak: mine.streak } }) %></script>
     <% } %>
   </div>
   <script src="/assets/js/quiz.js?v=<%= AV %>"></script>

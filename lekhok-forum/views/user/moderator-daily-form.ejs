@@ -14,7 +14,9 @@
 <div class="mod-wrap">
     <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
     <h2><i class="fas fa-plus-circle"></i> <%= meta.label %> পোস্ট করুন</h2>
-    <% if (typeof posted !== 'undefined') { %><p style="color:#166534;">✓ সফলভাবে পোস্ট হয়েছে এবং সব ইউজারকে নোটিফিকেশন পাঠানো হয়েছে।</p><% } %>
+    <% if (typeof posted !== 'undefined' && posted) { %><p class="mod-flash ok"><i class="fas fa-circle-check"></i> সফলভাবে পোস্ট হয়েছে এবং সব ইউজারকে নোটিফিকেশন পাঠানো হয়েছে।</p><% } %>
+    <% if (typeof edited !== 'undefined' && edited && edited !== 'empty') { %><p class="mod-flash ok"><i class="fas fa-pen-to-square"></i> পোস্ট #<%= edited %> সফলভাবে আপডেট হয়েছে।</p><% } %>
+    <% if (typeof edited !== 'undefined' && edited === 'empty') { %><p class="mod-flash err"><i class="fas fa-triangle-exclamation"></i> শিরোনাম ফাঁকা — কিছু সেভ হয়নি।</p><% } %>
 
     <form method="POST" action="/moderator/daily/<%= type %>" class="mod-form">
       <label>শিরোনাম</label>
@@ -63,9 +65,48 @@
     <% items.forEach(it => { %>
       <div class="mod-item">
         <input type="checkbox" name="bulk_ids" value="<%= it.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:4px;">
-        <div style="flex:1;">
-          <strong><%= it.title %></strong>
-          <div style="color:#999; font-size:0.85rem;"><%= it.scheduled_date %></div>
+        <div style="flex:1;min-width:0;">
+          <strong class="mod-item-title"><%= it.title %></strong>
+          <div class="mod-item-meta">
+            <span><i class="far fa-calendar"></i> <%= it.scheduled_date %></span>
+            <% if (type === 'quiz') { %>
+              <% if (it.parsedOptions && it.parsedOptions.length >= 2) { %>
+                <span class="mod-badge is-interactive"><i class="fas fa-list-check"></i> ইন্টারঅ্যাক্টিভ — <%= it.parsedOptions.length %>টি বিকল্প</span>
+              <% } else { %>
+                <span class="mod-badge is-static"><i class="fas fa-file-lines"></i> স্ট্যাটিক (বিকল্প নেই)</span>
+              <% } %>
+            <% } %>
+          </div>
+          <%# সেশন ৬২: এডিট-ফর্ম — কলাপ্সিবল; কুইজে বিকল্প+সঠিক-উত্তর এডিট %>
+          <details class="mod-edit-box">
+            <summary><i class="fas fa-pen-to-square"></i> এডিট করুন</summary>
+            <form method="POST" action="/moderator/daily/<%= type %>/edit/<%= it.id %>" class="mod-edit-form">
+              <label>শিরোনাম</label>
+              <input type="text" name="title" value="<%= it.title || '' %>" maxlength="300" required>
+              <label>ব্যাখ্যা</label>
+              <textarea name="body" rows="3"><%= it.body || '' %></textarea>
+              <% if (type === 'quiz') { %>
+                <label><i class="fas fa-list-check"></i> বিকল্প (২+ দিলে ইন্টারঅ্যাক্টিভ; সব ফাঁকা দিলে স্ট্যাটিক)</label>
+                <div class="quiz-opt-grid">
+                  <input type="text" name="opt_0" placeholder="বিকল্প ক" maxlength="200" value="<%= it.parsedOptions && it.parsedOptions[0] ? it.parsedOptions[0] : '' %>">
+                  <input type="text" name="opt_1" placeholder="বিকল্প খ" maxlength="200" value="<%= it.parsedOptions && it.parsedOptions[1] ? it.parsedOptions[1] : '' %>">
+                  <input type="text" name="opt_2" placeholder="বিকল্প গ" maxlength="200" value="<%= it.parsedOptions && it.parsedOptions[2] ? it.parsedOptions[2] : '' %>">
+                  <input type="text" name="opt_3" placeholder="বিকল্প ঘ" maxlength="200" value="<%= it.parsedOptions && it.parsedOptions[3] ? it.parsedOptions[3] : '' %>">
+                </div>
+                <label><i class="fas fa-check-double"></i> সঠিক উত্তর</label>
+                <select name="correct_answer">
+                  <% const curAns = (typeof it.answer === 'number') ? it.answer : 0; %>
+                  <option value="0" <%= curAns === 0 ? 'selected' : '' %>>ক — বিকল্প ১</option>
+                  <option value="1" <%= curAns === 1 ? 'selected' : '' %>>খ — বিকল্প ২</option>
+                  <option value="2" <%= curAns === 2 ? 'selected' : '' %>>গ — বিকল্প ৩</option>
+                  <option value="3" <%= curAns === 3 ? 'selected' : '' %>>ঘ — বিকল্প ৪</option>
+                </select>
+              <% } %>
+              <label>তারিখ</label>
+              <input type="date" name="scheduled_date" value="<%= it.scheduled_date || todayDate %>">
+              <button class="btn btn-primary btn-sm" type="submit"><i class="fas fa-floppy-disk"></i> সেভ করুন</button>
+            </form>
+          </details>
         </div>
         <form method="POST" action="/moderator/daily/<%= type %>/<%= it.id %>?_method=DELETE">
           <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>

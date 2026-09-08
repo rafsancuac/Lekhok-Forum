@@ -85,6 +85,19 @@
             </div>
           <% } %>
 
+          <%# সেশন ৬২: কুইজ-স্কোর কার্ড — সার্ভার-পার্সিস্টেন্ট স্কোর (সবার দেখা যায়) %>
+          <% if (quizStats) { %>
+            <div class="quiz-profile-card">
+              <h4><i class="fas fa-bullseye"></i> কুইজ পারফরম্যান্স</h4>
+              <div class="qpc-row">
+                <span class="qpc-item"><i class="fas fa-circle-check"></i> সঠিক <strong><%= quizStats.correct %>/<%= quizStats.answered %></strong></span>
+                <span class="qpc-item"><i class="fas fa-bullseye"></i> নির্ভুলতা <strong><%= quizStats.accuracy %>%</strong></span>
+                <span class="qpc-item<%= quizStats.streak > 0 ? ' has-fire' : '' %>"><i class="fas fa-fire"></i> ধারাবাহিক <strong><%= quizStats.streak %></strong></span>
+              </div>
+              <a href="/quiz" class="qpc-link"><i class="fas fa-arrow-left"></i> আজকের কুইজ খেলুন</a>
+            </div>
+          <% } %>
+
           <div class="profile-stats">
             <button class="stat tab-jump" data-tab="posts"><span><%= postCount %></span><small>লেখা</small></button>
             <button class="stat tab-jump" data-tab="followers"><span><%= followerCount %></span><small>অনুসরণকারী</small></button>

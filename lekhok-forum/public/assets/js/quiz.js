@@ -2,7 +2,9 @@
  * • অপশন-ক্লিকে POST /quiz/check (উত্তর সার্ভারে, view-source-এ নেই)
  * • সাথে সাথে ফিডব্যাক: সঠিক=সবুজ, ভুল=লালচে + সঠিকটি হাইলাইট + ব্যাখ্যা-বক্স
  * • স্কোর localStorage-এ (lf_quiz_v1) — রিলোডে পূর্বের উত্তর-স্টেট ফিরে আসে
- * • স্কোর-বার: আজকের স্কোর / মোট সঠিক / ধারাবাহিকতা (স্ট্রিক) — বাংলা সংখ্যায়
+ * • সেশন ৬২: লগইন-ইউজারের স্কোর সার্ভারেও (quiz_attempts টেবিল) —
+ *   #quizServerState JSON থেকে মার্জ; সার্ভার-স্টেট প্রাধান্য পায়। ডিভাইস-
+ *   বদলেও আগের উত্তর-স্টেট ফিরে আসে (localStorage খালি হলেও)।
  */
 (function () {
   'use strict';
@@ -22,10 +24,41 @@
 
   var store = loadStore();
 
+  /* ── সেশন ৬২: সার্ভার-স্টেট মার্জ (লগইন-ইউজার) ── */
+  var server = null, serverStats = null;
+  (function loadServerState() {
+    var el = document.getElementById('quizServerState');
+    if (!el) return;
+    try {
+      var d = JSON.parse(el.textContent || '{}');
+      if (d && d.attempts) {
+        server = d.attempts;
+        serverStats = d.stats || null;
+        // localStorage-এ না-থাকা সার্ভার-উত্তর বসিয়ে দিই (ক্রস-ডিভাইস রিস্টোর)
+        Object.keys(server).forEach(function (k) {
+          var sv = server[k];
+          if (sv && (!store[k] || !store[k].answered)) {
+            store[k] = { answered: true, choice: sv.choice, correct: !!sv.correct, ts: 0 };
+          }
+        });
+        saveStore(store);
+      }
+    } catch (e) { /* খারাপ JSON — লোকাল-অনলি মোড */ }
+  })();
+
   /* ── স্কোর-বার আপডেট ── */
   function updateScoreBar() {
     var bar = document.getElementById('quizScoreBar');
     if (!bar) return;
+    // সেশন ৬২: লগইন-ইউজারের সার্ভার-স্ট্যাট প্রাধান্য পায় (DB-সত্য)
+    if (serverStats) {
+      var todayId = bar.getAttribute('data-today-id');
+      var todayVal = '—';
+      if (todayId && server[todayId]) todayVal = server[todayId].correct ? '১/১' : '০/১';
+      bar.hidden = false;
+      setVals(todayVal, bn(serverStats.correct) + '/' + bn(serverStats.answered), bn(serverStats.streak));
+      return;
+    }
     var entries = Object.keys(store)
       .map(function (k) { return store[k]; })
       .filter(function (v) { return v && v.answered; })
@@ -132,11 +165,26 @@
             .then(function (d) {
               block.classList.remove('quiz-busy');
               if (!d || !d.ok) { showError(block); return; }
-              paint(block, choice, !!d.correct, d.answer, d.body);
+              // সেশন ৬২: সার্ভারে আগের চূড়ান্ত উত্তর থাকলে (অন্য ডিভাইস/ট্যাবে
+              // দেওয়া) সেটিই দেখাই — প্রথম উত্তরই চূড়ান্ত।
+              var shown = { choice: choice, correct: !!d.correct };
+              if (d.final) shown = { choice: d.final.choice, correct: !!d.final.correct };
+              paint(block, shown.choice, shown.correct, d.answer, d.body);
               store[id] = {
-                answered: true, choice: choice, correct: !!d.correct,
+                answered: true, choice: shown.choice, correct: shown.correct,
                 answer: d.answer, body: d.body, ts: Date.now()
               };
+              // সার্ভার-স্ট্যাট রিফ্রেশ (recorded হলে লাইভ-আপডেট)
+              if (serverStats && d.recorded) {
+                serverStats.answered++;
+                if (shown.correct) {
+                  serverStats.correct++;
+                  serverStats.streak++;
+                } else {
+                  serverStats.streak = 0;
+                }
+                server[id] = { choice: shown.choice, correct: shown.correct, ts: 0 };
+              }
               saveStore(store);
               updateScoreBar();
             })

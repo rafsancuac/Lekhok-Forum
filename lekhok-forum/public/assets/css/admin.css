@@ -179,3 +179,28 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
 .quiz-hint{margin:2px 0 0;font-size:12px;color:var(--ad-muted);line-height:1.6}
 .quiz-hint i{color:var(--ad-icon-ink);margin-left:4px}
 @media (max-width:640px){.quiz-opt-grid{grid-template-columns:1fr}}
+
+/* ── সেশন ৬২: ডেইলি-লিস্ট আপগ্রেড — স্ট্যাটাস-ব্যাজ + এডিট-বক্স + ফ্ল্যাশ ── */
+.mod-item{flex-wrap:nowrap;align-items:flex-start}
+.mod-item-title{display:block;color:var(--ad-ink);line-height:1.45;word-break:break-word}
+.mod-item-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:.8rem;color:var(--ad-muted)}
+.mod-item-meta i{margin-right:4px;font-size:.74rem}
+.mod-badge{display:inline-flex;align-items:center;gap:5px;padding:2.5px 9px;border-radius:5px;font-size:.72rem;font-weight:600}
+.mod-badge.is-interactive{background:var(--ad-accent-soft);color:var(--ad-icon-ink);border:1px solid rgba(52,211,153,.3)}
+.mod-badge.is-static{background:rgba(143,173,160,.12);color:var(--ad-muted);border:1px solid var(--ad-line)}
+.mod-flash{display:flex;align-items:center;gap:9px;padding:11px 15px;border-radius:var(--ad-radius);font-size:.9rem;font-weight:600;margin-bottom:16px}
+.mod-flash.ok{background:rgba(16,185,129,.13);border:1px solid rgba(52,211,153,.35);color:#6EE7B7}
+.mod-flash.err{background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.4);color:#FCA5A5}
+.mod-edit-box{margin-top:10px;border:1px solid var(--ad-line);border-radius:var(--ad-radius);background:rgba(4,21,15,.5);overflow:hidden}
+.mod-edit-box>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:8px 13px;cursor:pointer;font-size:.8rem;font-weight:700;color:var(--ad-icon-ink);user-select:none;transition:background .14s}
+.mod-edit-box>summary::-webkit-details-marker{display:none}
+.mod-edit-box>summary:hover{background:rgba(52,211,153,.09)}
+.mod-edit-box>summary i{font-size:.76rem;transition:transform .18s}
+.mod-edit-box[open]>summary i{transform:rotate(90deg)}
+.mod-edit-form{padding:6px 14px 15px;border-top:1px solid var(--ad-line)}
+.mod-edit-form label{display:block;font-size:.78rem;font-weight:600;color:var(--ad-ink-2);margin:10px 0 5px}
+.mod-edit-form input[type=text],.mod-edit-form textarea,.mod-edit-form input[type=date],.mod-edit-form select{width:100%;padding:9px 12px;border:1px solid var(--ad-line);border-radius:var(--ad-radius);font-family:inherit;font-size:.88rem;color:var(--ad-ink);background:var(--ad-card);transition:border-color .15s}
+.mod-edit-form input:focus,.mod-edit-form textarea:focus,.mod-edit-form select:focus{outline:0;border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-accent-ring)}
+.mod-edit-form textarea{min-height:76px;resize:vertical}
+.mod-edit-form .quiz-opt-grid{margin-bottom:6px}
+.mod-edit-form .btn{margin-top:12px}

@@ -820,13 +820,29 @@ router.get('/profile/:username', async (req, res) => {
     "SELECT role, term_year FROM members WHERE user_id = ? AND role IS NOT NULL AND role != ''"
   ).all(profile.id)).sort((a, b) => bnLead(b.term_year) - bnLead(a.term_year));
 
+  // সেশন ৬২: কুইজ-স্কোর কার্ড (পাবলিক — লিডারবোর্ডের সাথে সামঞ্জস্য)।
+  // quiz_attempts টেবিল না-থাকা পুরনো ডিপ্লয়ে চুপচাপ স্কিপ।
+  let quizStats = null;
+  try {
+    const qa = await db.prepare(
+      'SELECT quiz_id, correct FROM quiz_attempts WHERE user_id = ? ORDER BY answered_at ASC'
+    ).all(profile.id);
+    if (qa.length) {
+      const answered = qa.length;
+      const correct = qa.filter(r => r.correct).length;
+      let streak = 0;
+      for (let i = qa.length - 1; i >= 0; i--) { if (qa[i].correct) streak++; else break; }
+      quizStats = { answered, correct, streak, accuracy: Math.round((correct / answered) * 100) };
+    }
+  } catch (e) { /* টেবিল নেই — কার্ড বাদ */ }
+
   res.render('user/profile', {
     profile,
     author: profile,
     posts: articles,
     questions, comments, reactions, bookmarks, drafts, myDaily,
     followers, following: followingList,
-    interests, tagPool, orgRoles,
+    interests, tagPool, orgRoles, quizStats,
     postCount: articles.length,
     followerCount, followingCount,
     isOwner, isFollowing, iBlockedHim,

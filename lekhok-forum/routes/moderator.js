@@ -372,7 +372,54 @@ router.get('/daily/:type', ensureModerator, async (req, res, next) => {
   if (!meta) return next();
   requireScope(meta.scope)(req, res, async () => {
     const items = await db.prepare('SELECT * FROM daily_content WHERE content_type = ? ORDER BY scheduled_date DESC, id DESC LIMIT 30').all(req.params.type);
-    res.render('user/moderator-daily-form', { type: req.params.type, meta, items, todayDate: today(), posted: req.query.posted || null, currentPath: '/moderator' });
+    // সেশন ৬২: এডিট-UI-র জন্য options পার্স করা অবস্থায় পাঠাই (answer-সহ —
+    // মডারেটর-প্যানেল ভিউ; /quiz-এর পাবলিক রুটে answer যায় না)।
+    const withOpts = items.map(it => {
+      const o = Object.assign({}, it);
+      o.parsedOptions = null;
+      if (o.options) {
+        try {
+          const arr = JSON.parse(o.options);
+          if (Array.isArray(arr) && arr.length) o.parsedOptions = arr.map(String);
+        } catch (e) { /* খারাপ JSON — স্ট্যাটিক */ }
+      }
+      return o;
+    });
+    res.render('user/moderator-daily-form', { type: req.params.type, meta, items: withOpts, todayDate: today(), posted: req.query.posted || null, edited: req.query.edited || null, currentPath: '/moderator' });
+  });
+});
+
+// সেশন ৬২: ডেইলি-কনটেন্ট এডিট — শিরোনাম/ব্যাখ্যা/তারিখ + কুইজ হলে বিকল্প ও
+// সঠিক-উত্তর। পুরনো কুইজের বিকল্প এডিট করা যায় না-পারা ছিল সেশন ৬১-এর পেন্ডিং।
+router.post('/daily/:type/edit/:id', ensureModerator, async (req, res, next) => {
+  const meta = DAILY_TYPES[req.params.type];
+  if (!meta) return next();
+  requireScope(meta.scope)(req, res, async () => {
+    const id = parseInt(req.params.id, 10);
+    const row = await db.prepare('SELECT * FROM daily_content WHERE id = ? AND content_type = ?').get(id, req.params.type);
+    if (!row) return res.redirect('/moderator/daily/' + req.params.type);
+
+    const title = String(req.body.title || '').trim();
+    if (!title) return res.redirect('/moderator/daily/' + req.params.type + '/?edited=empty');
+
+    // কুইজ: বিকল্প-ওয়ালা ফর্ম এলে পুনর্গঠন; ফাঁকা বিকল্প-ফর্ম এলে আগেরটাই থাকে
+    let optionsVal = row.options, answerVal = row.answer;
+    if (req.params.type === 'quiz' && req.body.opt_0 !== undefined) {
+      const opts = [0, 1, 2, 3].map(i => String(req.body['opt_' + i] || '').trim()).filter(Boolean);
+      if (opts.length >= 2) {
+        optionsVal = JSON.stringify(opts);
+        const sel = parseInt(req.body.correct_answer, 10);
+        answerVal = (Number.isInteger(sel) && sel >= 0 && sel < opts.length) ? sel : 0;
+      } else if (opts.length === 0) {
+        // সব ফাঁকা = স্ট্যাটিকে ফেরানোর ইচ্ছা
+        optionsVal = null; answerVal = null;
+      }
+    }
+
+    await db.prepare('UPDATE daily_content SET title = ?, body = ?, scheduled_date = ?, options = ?, answer = ? WHERE id = ?')
+      .run(title, String(req.body.body || '').trim(), String(req.body.scheduled_date || row.scheduled_date || today()).trim(), optionsVal, answerVal, id);
+    await TA42.audit(db, req, 'update', 'daily_content', id, title);
+    res.redirect('/moderator/daily/' + req.params.type + '?edited=' + id);
   });
 });
 

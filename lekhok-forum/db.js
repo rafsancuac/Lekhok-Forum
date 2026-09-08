@@ -217,6 +217,15 @@ const MIGRATION_SQL = `
     author_id INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS quiz_attempts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    quiz_id INTEGER NOT NULL,
+    choice INTEGER,
+    correct INTEGER DEFAULT 0,
+    answered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, quiz_id)
+  );
   CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -479,6 +488,24 @@ async function applyLaterMigrations() {
       await backend.prepare(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`).run();
     } catch (e) { /* duplicate column — fine */ }
   }
+  // সেশন ৬২: কুইজ-স্কোর সার্ভার-পার্সিস্টেন্স — লগইন-ইউজারের প্রতিটি কুইজ-
+  // উত্তর DB-তে থাকে (UNIQUE(user_id, quiz_id) → প্রথম উত্তরই চূড়ান্ত,
+  // localStorage-নির্ভরতা দূর — ডিভাইস-বদলেও স্কোর থাকে)। MIGRATION_SQL-ও
+  // আপডেট করা; এখানে আবার CREATE করা fingerprint-বাস্টিং নিশ্চিত করে (ফাংশন-
+  // সোর্স বদলায় → লাইভ Turso-তে ফুল-ইনিট চলবে)।
+  try {
+    await backend.exec(`CREATE TABLE IF NOT EXISTS quiz_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      quiz_id INTEGER NOT NULL,
+      choice INTEGER,
+      correct INTEGER DEFAULT 0,
+      answered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, quiz_id)
+    )`);
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON quiz_attempts(user_id, answered_at)');
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id)');
+  } catch (e) { /* already exists — fine */ }
   try { await brandRenameMigration(); } catch (e) {
     console.error('[db] brandRenameMigration failed:', e.message);
   }

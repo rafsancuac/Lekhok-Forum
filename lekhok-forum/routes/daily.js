@@ -45,14 +45,67 @@ function withQuizOptions(item) {
   return out;
 }
 
+// সেশন ৬২: কুইজ-স্কোর সার্ভার-পার্সিস্টেন্স হেল্পার —
+// লগইন-ইউজারের চেষ্টাগুলো (quiz_id → {choice, correct}) + স্ট্যাট।
+// UNIQUE(user_id, quiz_id) — প্রথম উত্তরই চূড়ান্ত; স্ট্রিক = সর্বশেষ ধারাবাহিক সঠিক।
+function quizStreakFrom(rowsAsc) {
+  let s = 0;
+  for (let i = rowsAsc.length - 1; i >= 0; i--) {
+    if (rowsAsc[i].correct) s++; else break;
+  }
+  return s;
+}
+
+async function myQuizState(userId) {
+  const rows = await db.prepare(
+    'SELECT quiz_id, choice, correct, answered_at FROM quiz_attempts WHERE user_id = ? ORDER BY answered_at ASC'
+  ).all(userId);
+  const map = {};
+  rows.forEach(r => { map[r.quiz_id] = { choice: r.choice, correct: !!r.correct, ts: r.answered_at }; });
+  const answered = rows.length;
+  const correctN = rows.filter(r => r.correct).length;
+  return { map, answered, correct: correctN, streak: quizStreakFrom(rows) };
+}
+
+// লিডারবোর্ড — সর্বাধিক সঠিক-উত্তরদাতা টপ ১০ (৫+ উত্তর দেওয়া যাদের)।
+async function quizLeaderboard(limit = 10) {
+  const rows = await db.prepare(`
+    SELECT u.id, u.username, u.full_name, u.avatar_url, u.gender,
+           COUNT(*) AS answered, SUM(a.correct) AS correct_n
+    FROM quiz_attempts a JOIN users u ON u.id = a.user_id
+    WHERE u.status = 'active'
+    GROUP BY u.id ORDER BY correct_n DESC, answered ASC LIMIT ?
+  `).all(limit);
+  // প্রতি ইউজারের স্ট্রিক আলাদা কোয়েরি-তে (গ্রুপ-বাই করা সারি-ক্রম পাওয়া যায় না)
+  for (const r of rows) {
+    try {
+      const mine = await db.prepare(
+        'SELECT correct FROM quiz_attempts WHERE user_id = ? ORDER BY answered_at ASC'
+      ).all(r.id);
+      r.streak = quizStreakFrom(mine);
+    } catch (e) { r.streak = 0; }
+  }
+  return rows;
+}
+
 router.get('/quiz', async (req, res) => {
   const today = await getDailyFor('quiz');
   const archive = await getDailyAll('quiz', 30);
   await attachImages([today, ...archive]);
   const todayId = today ? today.id : null;
+
+  // সেশন ৬২: লগইন-ইউজারের সার্ভার-স্কোর + লিডারবোর্ড
+  let mine = null;
+  if (req.session.user) {
+    try { mine = await myQuizState(req.session.user.id); } catch (e) { mine = null; }
+  }
+  let board = null;
+  try { board = await quizLeaderboard(10); } catch (e) { board = null; }
+
   res.render('user/quiz', {
     today: withQuizOptions(today),
     archive: (archive || []).filter(a => a && a.id !== todayId).map(withQuizOptions),
+    mine, board,
     currentPath: '/quiz'
   });
 });
@@ -76,12 +129,33 @@ router.post('/quiz/check', async (req, res) => {
     }
     const hasAnswer = row.answer !== null && row.answer !== undefined;
     const correct = hasAnswer && choice === row.answer;
+
+    // সেশন ৬২: লগইন-ইউজারের উত্তর DB-তে রেকর্ড — প্রথম উত্তরই চূড়ান্ত
+    // (INSERT OR IGNORE → UNIQUE(user_id, quiz_id) দ্বিতীয় রেকর্ড বাতিল)।
+    // `recorded` = এই রেসপন্সে নতুন রেকর্ড হয়েছে কি না; `final` = ইউজারের
+    // আগের (চূড়ান্ত) উত্তর — ক্লায়েন্ট লোকাল-স্টোরেজ মার্জ করতে ব্যবহার করে।
+    let recorded = false, final = null;
+    if (req.session.user && hasAnswer) {
+      try {
+        const r = await db.prepare(
+          'INSERT OR IGNORE INTO quiz_attempts (user_id, quiz_id, choice, correct) VALUES (?, ?, ?, ?)'
+        ).run(req.session.user.id, id, choice, correct ? 1 : 0);
+        recorded = !!(r.changes || r.rowsAffected);
+        const prev = await db.prepare(
+          'SELECT choice, correct FROM quiz_attempts WHERE user_id = ? AND quiz_id = ?'
+        ).get(req.session.user.id, id);
+        if (prev) final = { choice: prev.choice, correct: !!prev.correct };
+      } catch (e) { /* রেকর্ড-ব্যর্থ হলেও উত্তর-যাচাই দেওয়া হবে */ }
+    }
+
     return res.json({
       ok: true,
       correct: !!correct,
       answer: hasAnswer ? row.answer : null,
       correctText: hasAnswer ? String(options[row.answer] || '') : '',
-      body: row.body || ''
+      body: row.body || '',
+      recorded: recorded,
+      final: final
     });
   } catch (e) {
     console.error('[quiz] /quiz/check error:', e.message);
