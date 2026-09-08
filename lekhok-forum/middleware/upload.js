@@ -48,7 +48,24 @@ function makeFilenameSync(file) {
   return `${Date.now()}-${base}${ext}`;
 }
 
-const IMAGE_TYPES = /^image\/(jpe?g|png|gif|webp|svg\+xml)$/;
+// সিকিউরিটি টাস্ক (§29/§30): SVG বাদ — SVG-তে <script> এমবেড করা যায় (stored XSS)।
+// শুধু রাস্টার ফরম্যাট (jpeg/png/gif/webp) অনুমোদিত, যেগুলো WebP-রিঅ্যানকোডে স্যানিটাইজ হয়।
+const IMAGE_TYPES = /^image\/(jpe?g|png|gif|webp)$/;
+const IMAGE_EXT = /\.(jpe?g|png|gif|webp)$/i;
+const DOC_EXT   = /\.(pdf|docx?|xlsx?|zip|txt|jpe?g|png|gif|webp)$/i;
+const EPAPER_EXT = /\.(pdf|jpe?g|png|gif|webp)$/i;
+
+// ── ম্যাজিক-বাইট যাচাই (MIME-spoofing গার্ড) ────────────────────────────────
+// ক্লায়েন্টের দেওয়া mimetype/এক্সটেনশন বিশ্বাস করা হয় না — আসল ফাইল-সিগনেচার দেখি।
+function detectImageType(buf) {
+  if (!buf || buf.length < 12) return null;
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpeg';
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'png';
+  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38) return 'gif';
+  if (buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
+      buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) return 'webp';
+  return null;
+}
 
 // ── Automatic WebP optimiser ─────────────────────────────────────────────────
 // Converts image/jpeg + image/png buffers to WebP in-place on req.file.
@@ -122,7 +139,7 @@ async function uploadToBlob(file, subdir) {
 // normalized to req.file so routes keep working unchanged.
 const UPLOAD_FIELDS = ['file', 'avatar', 'attachment', 'cover', 'image', 'epaper', 'photo'];
 
-function makeUpload({ subdir, maxBytes, allowedTypes }) {
+function makeUpload({ subdir, maxBytes, allowedTypes, allowedExts }) {
   const dest = path.join(UPLOAD_ROOT, subdir);
 
   return (req, res, next) => {
@@ -130,12 +147,14 @@ function makeUpload({ subdir, maxBytes, allowedTypes }) {
       storage: multer.memoryStorage(),
       limits:  { fileSize: maxBytes },
       fileFilter: (req, file, cb) => {
-        if (!allowedTypes || allowedTypes.test(file.mimetype) ||
-            /\.(pdf|docx?|xlsx?|zip|jpe?g|png|gif|webp|txt)$/i.test(file.originalname)) {
-          cb(null, true);
-        } else {
-          cb(new Error('এই ধরনের ফাইল অনুমোদিত নয়'));
+        // সিকিউরিটি টাস্ক: mimetype + এক্সটেনশন দুটোই স্ট্রিক্ট ভ্যালিডেট
+        const ext = (path.extname(file.originalname) || '').toLowerCase();
+        const extOk = allowedExts ? allowedExts.test(ext) : true;
+        const mimeOk = allowedTypes ? allowedTypes.test(file.mimetype) : true;
+        if (!extOk || !mimeOk) {
+          return cb(new Error('এই ধরনের ফাইল অনুমোদিত নয়'));
         }
+        cb(null, true);
       }
     }).fields(UPLOAD_FIELDS.map(n => ({ name: n, maxCount: 1 })))(req, res, async (err) => {
       if (err) {
@@ -146,6 +165,17 @@ function makeUpload({ subdir, maxBytes, allowedTypes }) {
       const all = Object.values(req.files || {}).flat();
       req.file = all.length ? all[0] : undefined;
       if (!req.file) return next();
+
+      // সিকিউরিটি টাস্ক: ছবির ম্যাজিক-বাইট যাচাই (MIME-spoofing ব্লক) —
+      // এক্সটেনশন/mimetype যাই বলুক, আসল বাইটস দেখে image কিনা নিশ্চিত হই।
+      if (allowedTypes === IMAGE_TYPES && req.file.buffer) {
+        const real = detectImageType(req.file.buffer);
+        if (!real) {
+          req.uploadError = 'ফাইলটি একটি সঠিক ছবি নয় (ফাইল-সিগনেচার যাচাই ব্যর্থ)';
+          req.file = undefined;
+          return next();
+        }
+      }
 
       // Auto-optimise JPEG/PNG → WebP before storing (both Blob & disk paths
       // consume req.file.buffer, so one call covers both).
@@ -185,22 +215,25 @@ function makeUpload({ subdir, maxBytes, allowedTypes }) {
 const avatarUpload = makeUpload({
   subdir:      'avatars',
   maxBytes:    2 * 1024 * 1024,
-  allowedTypes: IMAGE_TYPES
+  allowedTypes: IMAGE_TYPES,
+  allowedExts:  IMAGE_EXT
 });
 
 // Cover image for posts: images only, max 5MB
 const coverUpload = makeUpload({
   subdir:      'covers',
   maxBytes:    5 * 1024 * 1024,
-  allowedTypes: IMAGE_TYPES
+  allowedTypes: IMAGE_TYPES,
+  allowedExts:  IMAGE_EXT
 });
 
 // Attachments (messages/complaints): docs + images, max 10MB
-const DOC_TYPES = /^((image|application|text)\/(jpe?g|png|gif|webp|pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|plain|x-zip-compressed|zip|octet-stream))$/;
+const DOC_TYPES = /^((image|application|text)\/(jpe?g|png|gif|webp|pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|plain|x-zip-compressed|zip))$/;
 const attachmentUpload = makeUpload({
   subdir:      'attachments',
   maxBytes:    10 * 1024 * 1024,
   allowedTypes: DOC_TYPES,
+  allowedExts:  DOC_EXT,
   fieldName:    'attachment'  // matches name="attachment" in form fields
 });
 
@@ -211,21 +244,26 @@ const complaintUpload = attachmentUpload;
 const galleryUpload = makeUpload({
   subdir:      'gallery',
   maxBytes:    8 * 1024 * 1024,
-  allowedTypes: IMAGE_TYPES
+  allowedTypes: IMAGE_TYPES,
+  allowedExts:  IMAGE_EXT
 });
 
 // Press clippings (newspaper news about the forum): max 8MB, images only
 const pressUpload = makeUpload({
   subdir:      'press',
   maxBytes:    8 * 1024 * 1024,
-  allowedTypes: IMAGE_TYPES
+  allowedTypes: IMAGE_TYPES,
+  allowedExts:  IMAGE_EXT
 });
 
-// e-Paper: any file type, max 20MB
+// e-Paper: PDF + images only (সিকিউরিটি টাস্ক: আগে "যেকোনো ফাইল" ছিল — HTML/SVG
+// আপলোড করে stored-XSS সম্ভব ছিল)। max 20MB
+const EPAPER_TYPES = /^((image|application)\/(jpe?g|png|gif|webp|pdf))$/;
 const epaperUpload = makeUpload({
-  subdir:   'epaper',
-  maxBytes: 20 * 1024 * 1024,
-  allowedTypes: null
+  subdir:      'epaper',
+  maxBytes:    20 * 1024 * 1024,
+  allowedTypes: EPAPER_TYPES,
+  allowedExts:  EPAPER_EXT
 });
 
 /**

@@ -107,13 +107,38 @@ app.set('layout', false);
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 // সেশন ৪৩: compression + সিকিউরিটি হেডার
+// সিকিউরিটি টাস্ক: + Content-Security-Policy (frame-ancestors/object-src/base-uri/
+// form-action) + ক্যাশ-কন্ট্রোল। CSP-তে script-src 'unsafe-inline' আছে কারণ অ্যাপে
+// বহু inline <script> ব্যবহৃত (nonce-মাইগ্রেশন ভবিষ্যৎ উন্নতি হিসেবে ডকুমেন্ট করা)।
 try { app.use(require('compression')()); } catch (e) {}
+const CSP_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+  "font-src 'self' https://cdnjs.cloudflare.com data:",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self'",
+  "upgrade-insecure-requests"
+].join('; ');
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  res.setHeader('Content-Security-Policy', CSP_POLICY);
   if (req.secure || req.get('x-forwarded-proto') === 'https') res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
+// সিকিউরিটি টাস্ক (§63): অথেনটিকেটেড/প্রাইভেট পেজ কখনো পাবলিক ক্যাশ হবে না।
+app.use((req, res, next) => {
+  if (/^\/(admin|moderator|dashboard|profile|settings|claim|reset-password|forgot-password)\b/.test(req.path)) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
   next();
 });
 // সেশন ৫০ (পারফরম্যান্স): স্ট্যাটিক অ্যাসেটে দীর্ঘ Cache-Control।

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সিকিউরিটি | লেখক ফোরাম — অ্যাডমিন</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    .secret-box { font-family: ui-monospace, monospace; letter-spacing: 2px; background:#0f172a; color:#a7f3d0; padding:12px 14px; border-radius:6px; word-break: break-all; }
+    .codes-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap:8px; margin:10px 0; }
+    .code-chip { font-family:ui-monospace,monospace; background:#f1f5f9; border:1px dashed #94a3b8; border-radius:6px; padding:8px; text-align:center; }
+    .step-num { display:inline-flex; width:22px; height:22px; border-radius:50%; background:#059669; color:#fff; align-items:center; justify-content:center; font-size:.8rem; margin-right:8px; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <h1>সিকিউরিটি</h1>
+    <p>অ্যাডমিন অ্যাকাউন্টের দ্বি-স্তর যাচাইকরণ (2FA / TOTP)</p>
+  </div>
+
+  <% if (success === 'enrolled') { %><div class="success"><i class="fas fa-shield-halved"></i> 2FA সক্রিয় হয়েছে — নিচের ব্যাকআপ কোডগুলো সংরক্ষণ করুন।</div><% } %>
+  <% if (success === 'backup') { %><div class="success"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড তৈরি হয়েছে — পুরনো কোডগুলো বাতিল।</div><% } %>
+  <% if (success === 'disabled') { %><div class="success">2FA বন্ধ করা হয়েছে।</div><% } %>
+  <% if (error === 'bad_code') { %><div class="error">ভুল কোড — অ্যাপের বর্তমান ৬-অঙ্কের কোড দিন।</div><% } %>
+  <% if (error === 'no_pending') { %><div class="error">এনরোল প্রথমে শুরু করুন।</div><% } %>
+
+  <% if (backupCodes && backupCodes.length) { %>
+  <div class="card" style="border-left:4px solid #f59e0b;">
+    <h3><i class="fas fa-key"></i> ব্যাকআপ কোড (একবারই দেখানো হয়)</h3>
+    <p style="color:#64748b;">ফোন/অ্যাপ না থাকলে লগইনের সময় এই কোড ব্যবহার করুন। প্রতিটি কোড একবারই কাজ করে। নিরাপদ জায়গায় সংরক্ষণ করুন।</p>
+    <div class="codes-grid"><% backupCodes.forEach(c => { %><div class="code-chip"><%= c %></div><% }) %></div>
+    <form method="POST" action="/admin/security/backup-regen" style="margin-top:10px;"><button class="btn btn-sm"><i class="fas fa-rotate"></i> নতুন কোড তৈরি করুন</button></form>
+  </div>
+  <% } %>
+
+  <% if (totp_enabled && !pending) { %>
+    <div class="card">
+      <h3><i class="fas fa-shield-halved" style="color:#059669;"></i> 2FA সক্রিয় আছে</h3>
+      <p>আপনার অ্যাকাউন্ট দ্বি-স্তর যাচাইকরণে সুরক্ষিত। লগইনে অ্যাপ থেকে ৬-অঙ্কের কোড লাগবে।</p>
+      <form method="POST" action="/admin/security/disable" onsubmit="return confirm('2FA বন্ধ করবেন? এতে অ্যাকাউন্ট কম সুরক্ষিত হবে।');">
+        <button class="btn btn-danger"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</button>
+      </form>
+    </div>
+  <% } else if (pending) { %>
+    <div class="card">
+      <h3><i class="fas fa-mobile-screen"></i> 2FA এনরোল — ধাপ ২</h3>
+      <p style="color:#64748b;"><span class="step-num">1</span>Google Authenticator / Authy / 1Password-এ "ম্যানুয়ালি কী দিন" দিয়ে নিচের সিক্রেট বসান (বা otpauth লিংক স্ক্যান করুন)।</p>
+      <p style="color:#64748b;"><span class="step-num">2</span>তারপর নিচে অ্যাপে দেখানো বর্তমান ৬-অঙ্কের কোড দিন।</p>
+      <div class="form-group">
+        <label>সিক্রেট কী</label>
+        <div class="secret-box"><%= pending %></div>
+      </div>
+      <div class="form-group">
+        <label>otpauth URI (QR/ম্যানুয়াল)</label>
+        <div class="secret-box" style="font-size:.85rem;"><%= otpauthUri %></div>
+      </div>
+      <form method="POST" action="/admin/security/confirm">
+        <div class="form-group"><label>৬-অঙ্কের কোড</label><input type="text" name="totp_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus></div>
+        <button class="btn btn-primary"><i class="fas fa-check"></i> সক্রিয় করুন</button>
+      </form>
+    </div>
+  <% } else { %>
+    <div class="card">
+      <h3><i class="fas fa-shield"></i> 2FA সক্রিয় নয়</h3>
+      <p style="color:#64748b;">অ্যাডমিন অ্যাকাউন্ট সুরক্ষিত রাখতে দ্বি-স্তর যাচাইকরণ (TOTP) চালু করুন — Google Authenticator বা যেকোনো অ্যাপে কাজ করবে, কোনো খরচ বা ডোমেইন লাগে না।</p>
+      <form method="POST" action="/admin/security/enroll"><button class="btn btn-primary"><i class="fas fa-shield-halved"></i> 2FA চালু করুন</button></form>
+    </div>
+  <% } %>
+</div>
+</body>
+</html>

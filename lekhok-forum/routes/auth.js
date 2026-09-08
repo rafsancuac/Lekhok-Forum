@@ -3,6 +3,9 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { avatarUpload, withUpload } = require('../middleware/upload');
+const security = require('../helpers/security-config');
+const { loginLimiter, forgotLimiter, registerLimiter, clientIp } = require('../helpers/rate-limit');
+const totp = require('../helpers/totp');
 
 // ── সেশন ৪৬: রোল-বেজড রিডাইরেক্ট হেল্পার ─────────────────────────────────────
 // প্রতিটি রোলের নিজস্ব ড্যাশবোর্ড — admin→/admin, moderator→/moderator, user→/dashboard।
@@ -80,13 +83,33 @@ router.post('/login', async (req, res) => {
     // Admin-panel account fallback
     const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     if (admin && await bcrypt.compare(password, admin.password_hash)) {
+      // সিকিউরিটি: MFA সক্রিয় থাকলে এই পথ দিয়েও যাচাই বাধ্যতামূলক
+      // (অন্যথায় /login দিয়ে 2FA এড়িয়ে যাওয়া যেত)।
+      if (admin.totp_enabled) {
+        const code = String(req.body.totp_code || '').trim();
+        let mfaOk = totp.verifyTotp(admin.totp_secret, code);
+        if (!mfaOk && admin.backup_codes) {
+          try {
+            const codes = JSON.parse(admin.backup_codes);
+            const consumed = totp.consumeBackupCode(code, codes);
+            if (consumed.ok) { mfaOk = true; await db.prepare('UPDATE admin_users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(consumed.remaining), admin.id); }
+          } catch (e) {}
+        }
+        if (!mfaOk) {
+          return res.render('user/login', { error: 'এই অ্যাকাউন্টে 2FA সক্রিয় — অ্যাপ থেকে বর্তমান কোড দিন (অথবা অ্যাডমিন লগইন ব্যবহার করুন)।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
+        }
+      }
       loginOk(lk43);
       req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
       const dest = safeNextPath(req.body.next || req.query.next) || '/admin';
-      return new Promise((resolve) => req.session.save((err) => {
-        if (err) console.error('[auth] /login admin session save error:', err);
-        res.redirect(dest);
-        resolve();
+      return new Promise((resolve) => req.session.regenerate((err) => {
+        if (err) console.error('[auth] /login admin session regenerate error:', err);
+        req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
+        req.session.save((err2) => {
+          if (err2) console.error('[auth] /login admin session save error:', err2);
+          res.redirect(dest);
+          resolve();
+        });
       }));
     }
 
@@ -110,6 +133,9 @@ router.get('/register', async (req, res) => {
 // ডিফল্ট: তাৎক্ষণিক active (আগের মতো)। settings-এ `require_registration_approval`
 // = 1 হলে → PENDING_REVIEW (অ্যাডমিন অনুমোদনের আগে active নয়)।
 router.post('/register', withUpload(avatarUpload), async (req, res) => {
+  const rk = clientIp(req) + '|register';
+  if (registerLimiter.isLimited(rk)) return res.status(429).render('user/register', { error: 'অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পর আবার চেষ্টা করুন।', form: req.body, currentPath: '/register' });
+  registerLimiter.hit(rk);
   const { username, password, full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, member_id, department, session } = req.body;
   const back = (err) => res.render('user/register', { error: err, form: req.body, currentPath: '/register' });
 
@@ -127,9 +153,8 @@ router.post('/register', withUpload(avatarUpload), async (req, res) => {
   const existing = await db.prepare('SELECT id FROM users WHERE username = ? OR email = ?').get(uname, email || '');
   if (existing) return back('এই ব্যবহারকারী নাম বা ইমেইল ইতিমধ্যে ব্যবহৃত');
 
-  // অ্যাডমিন অনুমোদন গেট (ডিফল্ট off — ব্যাকওয়ার্ড-কম্প্যাট)
-  let requireApproval = false;
-  try { requireApproval = await db.getSetting('require_registration_approval') === '1'; } catch (e) {}
+  // অ্যাডমিন অনুমোদন গেট (কেন্দ্রীভূত কনফিগ; ডিফল্ট off — ব্যাকওয়ার্ড-কম্প্যাট)
+  const requireApproval = await security.isRegistrationApprovalRequired();
 
   const hash = await bcrypt.hash(password, 10);
   const avatarPath = req.file ? (req.file.url || req.file.path) : null;
@@ -301,6 +326,9 @@ router.get('/forgot-password', (req, res) => {
 });
 
 router.post('/forgot-password', async (req, res) => {
+  const fk = clientIp(req) + '|forgot';
+  if (forgotLimiter.isLimited(fk)) return res.status(429).render('user/forgot-password', { error: 'অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পর আবার চেষ্টা করুন।', done: false, currentPath: '/forgot-password' });
+  forgotLimiter.hit(fk);
   const ident = String(req.body.identifier || '').trim();
   const back = (err) => res.render('user/forgot-password', { error: err, done: false, currentPath: '/forgot-password' });
   if (!ident) return back('ইমেইল বা ব্যবহারকারী নাম দিন');

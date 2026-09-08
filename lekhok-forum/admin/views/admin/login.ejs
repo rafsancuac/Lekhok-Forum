@@ -110,6 +110,13 @@
           <input type="password" id="password" name="password" required autocomplete="current-password">
         </div>
       </div>
+      <div class="form-group">
+        <label for="totp_code">2FA কোড <small style="color:#8a8d93;font-weight:400;">(সক্রিয় থাকলে)</small></label>
+        <div class="input-wrap">
+          <i class="fas fa-shield-halved"></i>
+          <input type="text" id="totp_code" name="totp_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" placeholder="6-অঙ্কের কোড">
+        </div>
+      </div>
       <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> প্রবেশ করুন</button>
     </form>
     <div class="login-foot">

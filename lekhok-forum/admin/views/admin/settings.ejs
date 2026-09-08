@@ -38,8 +38,20 @@
   </div>
 
   <div class="card" style="margin-top:16px;">
-    <h3 class="form-section-title" style="margin-bottom:12px;"><i class="fas fa-user-check"></i> নিবন্ধন অনুমোদন (টাস্ক ১৪)</h3>
-    <p style="color:#64748b;font-size:.88rem;">চালু করলে <strong>সব নতুন নিবন্ধন ও ক্লেইম</strong> অ্যাডমিন অনুমোদনের আগে অ্যাকাউন্ট active হবে না (PENDING_REVIEW)। বন্ধ থাকলে নতুন নিবন্ধন তাৎক্ষণিক active হয়।</p>
+    <h3 class="form-section-title" style="margin-bottom:12px;"><i class="fas fa-id-card"></i> মেম্বার ক্লেইম অনুমোদন</h3>
+    <p style="color:#64748b;font-size:.88rem;">চালু করলে ক্লেইম <strong>PENDING_REVIEW</strong> হয়ে অ্যাডমিন অনুমোদনের আগে active হয় না। বন্ধ থাকলে নাম-যাচাই সফল হলে ক্লেইম সাথেসাথে active হয় (অডিট-রেকর্ডসহ)।</p>
+    <form method="POST" action="/admin/settings/claim-approval">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <input type="checkbox" name="account_claim_requires_admin_approval" value="1" <%= settings.account_claim_requires_admin_approval === '1' ? 'checked' : '' %> style="width:18px;height:18px;">
+        <span>ক্লেইমের জন্য অ্যাডমিন অনুমোদন আবশ্যক করুন</span>
+      </label>
+      <button type="submit" class="btn btn-primary" style="margin-top:12px;">সংরক্ষণ করুন</button>
+    </form>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3 class="form-section-title" style="margin-bottom:12px;"><i class="fas fa-user-check"></i> নিবন্ধন অনুমোদন</h3>
+    <p style="color:#64748b;font-size:.88rem;">চালু করলে <strong>সব নতুন নিবন্ধন</strong> অ্যাডমিন অনুমোদনের আগে অ্যাকাউন্ট active হবে না (PENDING_REVIEW)। বন্ধ থাকলে নতুন নিবন্ধন তাৎক্ষণিক active হয়।</p>
     <form method="POST" action="/admin/settings/registration">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
         <input type="checkbox" name="require_registration_approval" value="1" <%= settings.require_registration_approval === '1' ? 'checked' : '' %> style="width:18px;height:18px;">
@@ -47,6 +59,7 @@
       </label>
       <button type="submit" class="btn btn-primary" style="margin-top:12px;">সংরক্ষণ করুন</button>
     </form>
+    <p style="margin-top:14px;"><a href="/admin/security"><i class="fas fa-shield-halved"></i> অ্যাডমিন 2FA (দ্বি-স্তর যাচাইকরণ) সেটআপ →</a></p>
   </div>
 </div>
 </body>

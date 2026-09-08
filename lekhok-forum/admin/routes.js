@@ -8,6 +8,9 @@ const multer = require('multer');   // লেজি memoryStorage ব্যব�
 const getSetting = db.getSetting;
 const setSetting = db.setSetting;
 const { validateNavJson, parseNav } = require('../helpers/nav');
+const claimService = require('../helpers/claim-service');
+const { adminLoginLimiter, clientIp } = require('../helpers/rate-limit');
+const totp = require('../helpers/totp');
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 // Admin  = admin_users session OR user session with role='admin'  → full access
@@ -149,19 +152,53 @@ router.get('/login', async (req, res) => {
 });
 
 // ── Login (POST) ─────────────────────────────────────────────────────────────
+// সিকিউরিটি: রেট-লিমিট + (ঐচ্ছিক) TOTP MFA + ব্যাকআপ-কোড + সেশন-রোটেশন।
 router.post('/login', async (req, res) => {
+  const lk = clientIp(req) + '|' + String(req.body.username || '').toLowerCase();
+  if (adminLoginLimiter.isLimited(lk)) {
+    return res.render('admin/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে — ১৫ মিনিট পর আবার চেষ্টা করুন।', layout: false, currentPath: '/admin/login' });
+  }
   try {
-    const { username, password } = req.body;
+    const { username, password, totp_code } = req.body;
     const user = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     if (!user || !await bcrypt.compare(password, user.password_hash)) {
+      adminLoginLimiter.hit(lk);
       return res.render('admin/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', layout: false, currentPath: '/admin/login' });
     }
-    req.session.adminUser = { id: user.id, username: user.username, display_name: user.display_name };
-    return new Promise((resolve) => req.session.save((err) => {
-      if (err) console.error('[admin] /admin/login session save error:', err);
-      res.redirect('/admin');
-      resolve();
-    }));
+
+    // MFA (TOTP) — সক্রিয় থাকলে ৬-অঙ্কের কোড বাধ্যতামূলক; ব্যাকআপ কোড ফলব্যাক
+    if (user.totp_enabled) {
+      const code = String(totp_code || '').trim();
+      let ok = totp.verifyTotp(user.totp_secret, code);
+      if (!ok && user.backup_codes) {
+        try {
+          const codes = JSON.parse(user.backup_codes);
+          const consumed = totp.consumeBackupCode(code, codes);
+          if (consumed.ok) {
+            ok = true;
+            await db.prepare('UPDATE admin_users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(consumed.remaining), user.id);
+          }
+        } catch (e) {}
+      }
+      if (!ok) {
+        adminLoginLimiter.hit(lk);
+        return res.render('admin/login', { error: 'ভুল যাচাই কোড (2FA) — অ্যাপ থেকে বর্তমান কোড দিন', layout: false, currentPath: '/admin/login' });
+      }
+    }
+
+    adminLoginLimiter.reset(lk);
+    // সেশন রোটেশন — লগইনের পর নতুন সেশন আইডি (session-fixation গার্ড)
+    return new Promise((resolve) => {
+      req.session.regenerate((err) => {
+        if (err) console.error('[admin] /admin/login session regenerate error:', err);
+        req.session.adminUser = { id: user.id, username: user.username, display_name: user.display_name };
+        req.session.save((err2) => {
+          if (err2) console.error('[admin] /admin/login session save error:', err2);
+          res.redirect('/admin');
+          resolve();
+        });
+      });
+    });
   } catch (e) {
     console.error('[admin] /admin/login error:', e);
     return res.status(500).render('admin/login', { error: 'লগইন ব্যর্থ: ' + e.message, layout: false, currentPath: '/admin/login' });
@@ -483,42 +520,28 @@ function reviewerOf(req) {
 
 // অনুমোদন: প্রোফাইল ↔ ইউজার লিংক, active, টাইমস্ট্যাম্প, ডুপ্লিকেট প্রোফাইল নয়
 router.post('/claims/:id/approve', requireAdmin, async (req, res) => {
-  const claim = await db.prepare('SELECT * FROM account_claims WHERE id = ?').get(req.params.id);
-  if (!claim) return res.redirect('/admin/claims?saved=0');
-  const member = await db.prepare('SELECT * FROM members WHERE id = ?').get(claim.member_profile_id);
-  if (!member) return res.redirect('/admin/claims?saved=0');
-  const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(claim.submitted_user_id);
-
-  // ইউজার অ্যাকাউন্ট active
-  if (user) await db.prepare("UPDATE users SET status = 'active' WHERE id = ?").run(user.id);
-  // প্রোফাইল লিংক (ক্লেইমে user_id খালি থাকলে; রেজিস্ট্রেশনে আগেই লিংকড)
-  await db.prepare("UPDATE members SET user_id = COALESCE(user_id, ?), account_status = 'active', claimed_at = COALESCE(claimed_at, datetime('now','localtime')), verified_at = datetime('now','localtime') WHERE id = ?").run(claim.submitted_user_id, member.id);
-  // ক্লেইম রেকর্ড আপডেট
-  await db.prepare("UPDATE account_claims SET claim_status = 'approved', reviewed_at = datetime('now','localtime'), reviewed_by = ?, admin_notes = COALESCE(?, admin_notes) WHERE id = ?").run(reviewerOf(req), req.body.admin_notes || null, claim.id);
-  await TA42.audit(db, req, 'claim-approve', 'account_claims', claim.id, member.member_id + ' → ' + (user ? user.username : ''));
-  res.redirect('/admin/claims?saved=1');
+  const claim = await db.prepare('SELECT id, member_profile_id, submitted_user_id, admin_notes FROM account_claims WHERE id = ?').get(req.params.id);
+  const r = await claimService.approveClaim(req.params.id, reviewerOf(req));
+  if (r.ok) {
+    const member = await db.prepare('SELECT member_id FROM members WHERE id = ?').get(claim ? claim.member_profile_id : 0);
+    const user = await db.prepare('SELECT username FROM users WHERE id = ?').get(claim ? claim.submitted_user_id : 0);
+    await TA42.audit(db, req, 'claim-approve', 'account_claims', req.params.id, (member && member.member_id || '') + ' → ' + (user && user.username || ''));
+  }
+  res.redirect('/admin/claims?saved=' + (r.ok ? 1 : 0));
 });
 
 // প্রত্যাখ্যান: পরিষ্কার বার্তা + admin_notes; প্রোফাইল আনক্লেইমড থাকে
 router.post('/claims/:id/reject', requireAdmin, async (req, res) => {
-  const claim = await db.prepare('SELECT * FROM account_claims WHERE id = ?').get(req.params.id);
-  if (!claim) return res.redirect('/admin/claims?saved=0');
-  await db.prepare("UPDATE account_claims SET claim_status = 'rejected', reviewed_at = datetime('now','localtime'), reviewed_by = ?, admin_notes = ? WHERE id = ?").run(reviewerOf(req), req.body.admin_notes || null, claim.id);
-  // রেজিস্ট্রেশন-ধরনের হলে প্রোফাইল পেন্ডিংই থাকবে; ক্লেইম হলে আনক্লেইমড
-  if (claim.kind !== 'registration') {
-    await db.prepare("UPDATE members SET account_status = 'unclaimed' WHERE id = ? AND account_status != 'active'").run(claim.member_profile_id);
-  }
-  await TA42.audit(db, req, 'claim-reject', 'account_claims', claim.id, '');
-  res.redirect('/admin/claims?saved=1');
+  const r = await claimService.rejectClaim(req.params.id, reviewerOf(req), req.body.admin_notes);
+  if (r.ok) await TA42.audit(db, req, 'claim-reject', 'account_claims', req.params.id, '');
+  res.redirect('/admin/claims?saved=' + (r.ok ? 1 : 0));
 });
 
 // আরও তথ্য চাওয়া
 router.post('/claims/:id/more-info', requireAdmin, async (req, res) => {
-  const claim = await db.prepare('SELECT * FROM account_claims WHERE id = ?').get(req.params.id);
-  if (!claim) return res.redirect('/admin/claims?saved=0');
-  await db.prepare("UPDATE account_claims SET claim_status = 'more_info', reviewed_at = datetime('now','localtime'), reviewed_by = ?, admin_notes = ? WHERE id = ?").run(reviewerOf(req), req.body.admin_notes || null, claim.id);
-  await TA42.audit(db, req, 'claim-more-info', 'account_claims', claim.id, '');
-  res.redirect('/admin/claims?saved=1');
+  const r = await claimService.requestMoreInfo(req.params.id, reviewerOf(req), req.body.admin_notes);
+  if (r.ok) await TA42.audit(db, req, 'claim-more-info', 'account_claims', req.params.id, '');
+  res.redirect('/admin/claims?saved=' + (r.ok ? 1 : 0));
 });
 
 // ── টাস্ক ১৪: সদস্য এক্সপোর্ট (পাসওয়ার্ড-মুক্ত, শুধু নন-সিক্রেট ফিল্ড) ────────
@@ -627,6 +650,71 @@ router.get('/members/import', requireAdmin, async (req, res) => {
 router.post('/settings/registration', requireAdmin, async (req, res) => {
   await setSetting('require_registration_approval', req.body.require_registration_approval === '1' ? '1' : '0');
   res.redirect('/admin/settings?saved=registration');
+});
+
+// ── টাস্ক ১৪: ক্লেইম-অনুমোদন সেটিং (ACCOUNT_CLAIM_REQUIRES_ADMIN_APPROVAL) ────
+router.post('/settings/claim-approval', requireAdmin, async (req, res) => {
+  await setSetting('account_claim_requires_admin_approval', req.body.account_claim_requires_admin_approval === '1' ? '1' : '0');
+  res.redirect('/admin/settings?saved=claim');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── সিকিউরিটি টাস্ক: অ্যাডমিন MFA (TOTP) + ব্যাকআপ কোড ────────────────────────
+// টাকা/ডোমেইন/বহিরাগত সার্ভিস ছাড়া — Node built-in crypto দিয়ে TOTP।
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/security', requireAdmin, async (req, res) => {
+  const admin = await db.prepare('SELECT id, username, totp_enabled, backup_codes FROM admin_users WHERE id = ?').get(req.session.adminUser.id);
+  const pending = req.session.pendingTotpSecret || null;
+  res.render('admin/security', {
+    admin,
+    totp_enabled: !!(admin && admin.totp_enabled),
+    pending,
+    otpauthUri: pending ? totp.otpauthUri(pending, admin.username, 'লেখক ফোরাম') : null,
+    backupCodes: req.session.newBackupCodes || null,
+    success: req.query.saved || null,
+    error: req.query.error || null,
+    currentPath: '/admin/security'
+  });
+});
+
+// ১) এনরোল শুরু — নতুন সিক্রেট জেনারেট করে সেশনে রাখি (কোড কনফার্ম পর্যন্ত pending)
+router.post('/security/enroll', requireAdmin, async (req, res) => {
+  req.session.pendingTotpSecret = totp.generateSecret();
+  req.session.newBackupCodes = null;
+  req.session.save(() => res.redirect('/admin/security'));
+});
+
+// ২) কোড কনফার্ম → সক্রিয় + ব্যাকআপ কোড
+router.post('/security/confirm', requireAdmin, async (req, res) => {
+  const secret = req.session.pendingTotpSecret;
+  if (!secret) return res.redirect('/admin/security?error=no_pending');
+  const code = String(req.body.totp_code || '').trim();
+  if (!totp.verifyTotp(secret, code)) {
+    return res.redirect('/admin/security?error=bad_code');
+  }
+  const plain = totp.generateBackupCodes(10);
+  await db.prepare('UPDATE admin_users SET totp_secret = ?, totp_enabled = 1, backup_codes = ? WHERE id = ?')
+    .run(secret, JSON.stringify(totp.hashBackupCodes(plain)), req.session.adminUser.id);
+  req.session.pendingTotpSecret = null;
+  req.session.newBackupCodes = plain;
+  await TA42.audit(db, req, 'mfa-enable', 'admin_users', req.session.adminUser.id, '');
+  req.session.save(() => res.redirect('/admin/security?saved=enrolled'));
+});
+
+// MFA বন্ধ
+router.post('/security/disable', requireAdmin, async (req, res) => {
+  await db.prepare('UPDATE admin_users SET totp_enabled = 0, totp_secret = NULL, backup_codes = NULL WHERE id = ?').run(req.session.adminUser.id);
+  await TA42.audit(db, req, 'mfa-disable', 'admin_users', req.session.adminUser.id, '');
+  res.redirect('/admin/security?saved=disabled');
+});
+
+// নতুন ব্যাকআপ কোড (পুরনো সব বাতিল)
+router.post('/security/backup-regen', requireAdmin, async (req, res) => {
+  const plain = totp.generateBackupCodes(10);
+  await db.prepare('UPDATE admin_users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(totp.hashBackupCodes(plain)), req.session.adminUser.id);
+  req.session.newBackupCodes = plain;
+  await TA42.audit(db, req, 'mfa-backup-regen', 'admin_users', req.session.adminUser.id, '');
+  req.session.save(() => res.redirect('/admin/security?saved=backup'));
 });
 
 // ── Gallery CRUD (scope: gallery; supports file upload or image URL) ────────
@@ -995,10 +1083,13 @@ router.get('/settings', requireAdmin, async (req, res) => {
   const keys = ['site_name','tagline','contact_email','contact_phone','contact_address','facebook_url','telegram_url','youtube_url','twitter_url'];
   const settings = {};
   for (const k of keys) { settings[k] = await getSetting(k) || ''; }
-  // টাস্ক ১৪: রেজিস্ট্রেশন-অনুমোদন টগল
+  // টাস্ক ১৪: রেজিস্ট্রেশন-অনুমোদন টগল + ক্লেইম-অনুমোদন টগল
   settings.require_registration_approval = await getSetting('require_registration_approval') || '0';
+  settings.account_claim_requires_admin_approval = await getSetting('account_claim_requires_admin_approval') || '0';
   const saved = req.query.saved;
-  const success = saved === 'registration' ? 'রেজিস্ট্রেশন অনুমোদন সেটিং সংরক্ষিত হয়েছে' : (saved ? 'সেটিংস সংরক্ষিত হয়েছে' : null);
+  const success = saved === 'registration' ? 'রেজিস্ট্রেশন অনুমোদন সেটিং সংরক্ষিত হয়েছে'
+    : saved === 'claim' ? 'ক্লেইম অনুমোদন সেটিং সংরক্ষিত হয়েছে'
+    : (saved ? 'সেটিংস সংরক্ষিত হয়েছে' : null);
   res.render('admin/settings', { settings, success, currentPath: '/admin/settings' });
 });
 

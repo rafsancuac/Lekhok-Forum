@@ -419,6 +419,10 @@ const LATER_COLUMNS = [
   ['members', 'account_status',"TEXT DEFAULT 'unclaimed'"],
   ['members', 'claimed_at',    'DATETIME'],
   ['members', 'verified_at',   'DATETIME'],
+  // সিকিউরিটি টাস্ক: অ্যাডমিন MFA (TOTP) + ব্যাকআপ কোড
+  ['admin_users', 'totp_secret',    'TEXT'],
+  ['admin_users', 'totp_enabled',   'INTEGER DEFAULT 0'],
+  ['admin_users', 'backup_codes',   'TEXT'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
@@ -467,6 +471,23 @@ async function applyLaterMigrations() {
   // টাস্ক ১৪: মেম্বার আইডি (MEM-XXXXX) backfill + account_status সিঙ্ক
   try { await backfillMemberIds(); } catch (e) {
     console.error('[db] backfillMemberIds failed:', e.message);
+  }
+  // সিকিউরিটি টাস্ক: নিরাপদ ডিফল্টসহ সিকিউরিটি সেটিংস সিড (idempotent)
+  try { await seedSecuritySettings(); } catch (e) {
+    console.error('[db] seedSecuritySettings failed:', e.message);
+  }
+}
+
+// সিকিউরিটি সেটিংস — ডিফল্ট নিরাপদ মান (fail-closed)। অ্যাডমিন পরে টগল করতে পারে।
+async function seedSecuritySettings() {
+  const defaults = [
+    ['account_claim_requires_admin_approval', '0'],  // ক্লেইম অটো-অনুমোদন (ডিফল্ট)
+    ['require_registration_approval', '0'],          // রেজিস্ট্রেশন অটো-অ্যাক্টিভ
+    // নোট: REQUIRE_MFA_FOR_ADMIN সিড করি না — ডিফল্ট true (fail-closed) থাকে;
+    // MFA প্রয়োগ হয় totp_enabled কলামের উপর (এনরোলড হলেই বাধ্যতামূলক)।
+  ];
+  for (const [k, v] of defaults) {
+    try { await backend.prepare("INSERT INTO settings (key, value) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM settings WHERE key = ?)").run(k, v, k); } catch (e) {}
   }
 }
 
