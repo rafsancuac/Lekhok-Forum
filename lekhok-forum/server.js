@@ -74,6 +74,22 @@ app.locals.AV = computeAssetVersion();
 // প্রোডাকশনে SANDBOX_PORT সেট না থাকায় স্ক্রিপ্ট রেন্ডারই হয় না।
 app.locals.SANDBOX_PORT = process.env.SANDBOX_PORT || '';
 
+// ── স্যান্ডবক্স-প্রিভিউ: fonts.css-এর ভেতরের url(/assets/fonts/…) → ?XTransformPort সহ ──
+// প্রিভিউ-গেটওয়েতে ইফ্রেমে CSS-ফন্ট-রিকোয়েস্ট কোয়েরি-ছাড়া যায় (Next.js-এ 404);
+// env-gated — প্রোডাকশনে এই মিডলওয়্যার রেন্ডারই হয় না।
+if (process.env.SANDBOX_PORT) {
+  const SB_PORT = String(process.env.SANDBOX_PORT);
+  const FONTS_CSS_PATH = path.join(__dirname, 'public', 'assets', 'css', 'fonts.css');
+  app.get('/assets/css/fonts.css', function (req, res, next) {
+    try {
+      let css = fs.readFileSync(FONTS_CSS_PATH, 'utf8');
+      css = css.replace(/url\((['"]?)(\/assets\/fonts\/[^?'"()]+)\1\)/g,
+        function (m, q, u) { return 'url(' + q + u + '?XTransformPort=' + SB_PORT + q + ')'; });
+      res.type('text/css').set('Cache-Control', 'no-cache').send(css);
+    } catch (e) { next(); }
+  });
+}
+
 // ── Async-handler safety net ─────────────────────────────────────────────────
 // The async/Turso migration turned every route handler into an async function.
 // Express 4 does not catch rejected promises from handlers, so wrap every

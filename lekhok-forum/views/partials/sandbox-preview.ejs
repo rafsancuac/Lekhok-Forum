@@ -14,6 +14,7 @@
     function fixUrl(u) {
       if (!u || typeof u !== 'string') return u;
       if (u.charAt(0) === '#') return u;
+      if (/^(data:|blob:|about:|mailto:|tel:|javascript:)/i.test(u)) return u; /* নন-HTTP স্কিম অক্ষত */
       if (u.indexOf(mark) !== -1) return u;
       var abs = /^https?:/i.test(u);
       if (abs && u.indexOf(location.origin) !== 0) return u; /* বাইরের লিংক অক্ষত */
@@ -25,6 +26,7 @@
     }
 
     function patch() {
+      /* লিংক + ফর্ম */
       var links = document.querySelectorAll('a[href]');
       for (var i = 0; i < links.length; i++) {
         var h = links[i].getAttribute('href');
@@ -35,11 +37,26 @@
         var a = forms[j].getAttribute('action');
         if (a) forms[j].setAttribute('action', fixUrl(a));
       }
+      /* অ্যাসেট: stylesheet / script / img / source / iframe (link rel=stylesheet বাদে বাকি rel-এও নিরাপদ) */
+      var attrs = ['link[href]', 'script[src]', 'img[src]', 'source[src]', 'video[src]', 'audio[src]', 'iframe[src]'];
+      for (var k = 0; k < attrs.length; k++) {
+        var els = document.querySelectorAll(attrs[k]);
+        for (var m = 0; m < els.length; m++) {
+          var el = els[m];
+          var attrName = attrs[k].indexOf('[href]') > -1 ? 'href' : 'src';
+          var u = el.getAttribute(attrName);
+          if (!u) continue;
+          if (el.tagName === 'LINK' && el.rel && /preload|preconnect|dns-prefetch|canonical|icon|alternate|manifest/i.test(el.rel)) continue;
+          var fixed = fixUrl(u);
+          if (fixed !== u) el.setAttribute(attrName, fixed);
+        }
+      }
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', patch);
-    else patch();
-    setInterval(patch, 1500); /* ডাইনামিক DOM (ফিড-লোড, মেনু ইত্যাদি) */
+    patch(); /* সঙ্গে সঙ্গে — স্ক্রিপ্টের আগের DOM (হেডের লিংক/স্ক্রিপ্ট) এমনিতেই পাওয়া যায়;
+                href/src রিরাইট করলে ব্রাউজার নতুন URL-এ রিফেচ করে */
+    document.addEventListener('DOMContentLoaded', patch);
+    setInterval(patch, 1500); /* ডাইনামিক DOM (ফিড-লোড, লেজি-ইমেজ ইত্যাদি) */
 
     var origFetch = window.fetch;
     if (origFetch) {
