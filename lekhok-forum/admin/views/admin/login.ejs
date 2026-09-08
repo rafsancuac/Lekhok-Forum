@@ -7,6 +7,7 @@
   <title>লগইন — লেখক ফোরাম অ্যাডমিন</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -84,6 +85,12 @@
     }
     .login-foot a { color: #059669; font-weight: 600; }
     .back-home { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; }
+    .mfa-note {
+      margin-top: 14px; padding: 10px 12px; border-radius: 5px;
+      background: #ecfdf5; border: 1px dashed #a7f3d0; color: #047857;
+      font-size: 0.8rem; text-align: center; line-height: 1.6;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
   </style>
 </head>
@@ -110,15 +117,9 @@
           <input type="password" id="password" name="password" required autocomplete="current-password">
         </div>
       </div>
-      <div class="form-group">
-        <label for="totp_code">2FA কোড <small style="color:#8a8d93;font-weight:400;">(সক্রিয় থাকলে)</small></label>
-        <div class="input-wrap">
-          <i class="fas fa-shield-halved"></i>
-          <input type="text" id="totp_code" name="totp_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="8" placeholder="6-অঙ্কের কোড">
-        </div>
-      </div>
       <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> প্রবেশ করুন</button>
     </form>
+    <p class="mfa-note"><i class="fas fa-shield-halved"></i> অ্যাকাউন্টে 2FA সক্রিয় থাকলে পরের ধাপে কোড চাওয়া হবে।</p>
     <div class="login-foot">
       © <%= new Date().getFullYear() %> লেখক ফোরাম — সর্বস্বত্ব সংরক্ষিত<br>
       <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> মূল সাইটে ফিরে যান</a>
@@ -140,5 +141,6 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', inj); else inj();
   })();
 </script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </body>
 </html>

@@ -443,8 +443,20 @@ app.use((req, res, next) => {
     return cb();
   }
   
-  res.redirect = function (url) {
-    return saveThen(() => origRedirect(url));
+  // সেশন ৫৮: POST-এর পরের রিডাইরেক্ট সবসময় 303 (See Other)।
+  // লাইভ-রিপোর্ট: লগইন সফল হয়েও প্যানেল/ফিডে যাওয়া হয় না, হার্ড-রিফ্রেশ লাগে;
+  // পরে ERR_TOO_MANY_REDIRECTS। কারণ: Vercel (রিরাইট-স্তরে) ফাংশনের ৩০২-কে ৩০৭-এ
+  // বদলে দেয়; ৩০৭ মেথড+বডি সংরক্ষণ করে → ব্রাউজার লগইন-ফর্মের বডি নিয়ে
+  // গন্তব্য-পেজে (যেমন /dashboard) পুনঃPOST → 404-ক্যাচ-অল → ?saveerr=1 →
+  // বডি-সহ পুনঃলগইন → অসীম লুপ। ৩০৩ ব্রাউজারকে বাধ্য করে GET-এ যেতে (বডি-শূন্য)
+  // এবং Vercel-ও ৩০৩ অপরিবর্তিত পাঠায় (সেশন ৫৭-এর CSRF-303 লাইভ-প্রমাণিত)।
+  // GET/HEAD-এ ডিফল্ট ৩০২ থাকে (Vercel-এ GET-৩০৭ নিরীহ — বডি নেই)।
+  res.redirect = function (...args58) {
+    let call58 = args58;
+    if (req.method !== 'GET' && req.method !== 'HEAD' && (call58.length === 1 || call58[0] === 302)) {
+      call58 = call58.length === 1 ? [303, call58[0]] : [303, call58[1]];
+    }
+    return saveThen(() => origRedirect(...call58));
   };
   res.json = function (data) {
     return saveThen(() => origJson(data));

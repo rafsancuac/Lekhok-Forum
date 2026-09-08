@@ -407,3 +407,14 @@ Stage Summary:
 - views: 404/contact ইনলাইন-কালার ফিক্স।
 
 **যাচাই (agent-browser @ :3030):** ভিজ্যুয়াল-অডিট সব পেজে OK (VLM-ক্রস-চেক); ডার্ক-অন-ডার্ক টেক্সট ০; রেজিস্ট্রেশন E2E ✓ (testtheme); লগইন-এরর ডার্ক-রেড ✓; অ্যাডমিন প্যানেল ✓; মোবাইল 390px ওভারফ্লো-মুক্ত ✓।
+
+## সেশন ৫৭ — লাইভ-রিপোর্টেড অথ-বাগফিক্স + নেতৃত্ব-কার্ড ফিচার ✅
+
+- রিপোর্ট: লগইনের পর "নিরাপত্তা যাচাই ব্যর্থ" কাঁচা 403; অ্যাডমিন 2FA-কনফার্ম ফেইল; ERR_TOO_MANY_REDIRECTS; ট্র্যাশ-ভিজিটের পরও লাল-ব্যাজ; ৮ নেতৃত্ব-কার্ডে ছবি+আইডির ইউয়ারএল-অপশন।
+- রোগনির্ণয়: Vercel lambda-freeze + async সেশন-স্টোরে হারানো csrfToken-রাইট → ফর্ম-টোকেন/সেশন মিসম্যাচ → সব POST কাঁচা 403; সেশন-ইনকনসিস্টেন্সি = রিডাইরেক্ট-লুপ।
+- ফিক্স (server.js): CSRF ডাবল-সাবমিট কুকি (_csrfTok httpOnly; ফর্ম+কুকি একই রেসপন্সে সিঙ্কড); গ্রেসফুল ফেইল (303 ?csrf=1 / JSON 403); res.render/res.send-ও session-save-await র‍্যাপ; /login//logout/register-এ no-store।
+- main.js: ?csrf=1/?saveerr=1 → বাংলা টোস্ট + URL পরিষ্কার। অথ-ফর্মে সার্ভার-রেন্ডার্ড _csrf (login/forgot/reset; register-এ action-কোয়েরি)।
+- 2FA UX: bad_code/no_pending-এ কার্যকর নির্দেশনা; security.ejs।
+- ফিচার: members.profile_url কলাম + অ্যাডমিন-ফর্মে "আইডির ইউয়ারএল" + হোম-কার্ডে data-href ক্লিক + fa-id-card আইকন (safeLeaderUrl গার্ড; fallback /profile/:username) + ফর্মে হোম-কার্ড ম্যাপিং-হিন্ট।
+- db.js: members-এর designation/social_fb/social_email/term_year ensure-লিস্টে (ফ্রেশ-DB সেফটি)।
+- যাচাই: verify-session57.js ৪১/৪১; Playwright verify-session57-browser.js ৮/৮; রিগ্রেশন verify-session56.js ৫৪/৫৪। লাইভ-যাচাই পুশের পরে।

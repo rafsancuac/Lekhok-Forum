@@ -554,3 +554,67 @@ input:-webkit-autofill{
   border-radius:8px;
 }
 @media (max-width:767px){ .as-brand-points{ display:none; } }
+
+/* ═══ সেশন ৫৮ — লগইন ধাপ-২: দ্বি-স্তর যাচাই (2FA) পেজ ═══
+   লগইন-ফর্ম পরিষ্কার (কোনো 2FA-ফিল্ড নেই); 2FA-সক্রিয় অ্যাকাউন্টে পাসওয়ার্ডের
+   পরে এই পেজ আসে — বড় কোড-ইনপুট, অটো-ফোকাস, ৬-অঙ্কে অটো-সাবমিট। */
+body.auth-split .as-mfa{ text-align:left; }
+
+.mfa-badge{
+  display:flex; align-items:center; justify-content:center;
+  width:56px; height:56px; margin:4px auto 14px;
+  border-radius:16px;
+  background:linear-gradient(135deg, #10b981, #047857);
+  color:#fff; font-size:1.35rem;
+  box-shadow:0 10px 26px rgba(5,150,105,.35);
+  animation:mfaPop .5s cubic-bezier(.21,1.02,.73,1) both;
+}
+@keyframes mfaPop{ from{ opacity:0; transform:scale(.7) rotate(-6deg); } to{ opacity:1; transform:none; } }
+
+body.auth-split .mfa-code-wrap input{
+  text-align:center;
+  font-size:1.65rem;
+  letter-spacing:.55em;
+  font-weight:800;
+  padding:16px 10px 16px 18px;
+  font-variant-numeric:tabular-nums;
+}
+body.auth-split .mfa-code-wrap label{
+  text-align:center;
+  width:100%;
+  left:0;
+}
+.mfa-hint{
+  margin:10px 2px 4px;
+  font-size:.8rem; color:var(--text-muted); line-height:1.65;
+}
+.mfa-hint i{ color:var(--accent); margin-right:4px; }
+
+.mfa-alt{ margin-top:18px; text-align:center; }
+.mfa-alt-btn{
+  background:none; border:none; cursor:pointer; font-family:inherit;
+  color:var(--text-muted); font-size:.84rem; padding:4px 8px;
+  border-radius:6px; transition:background .15s, color .15s;
+}
+.mfa-alt-btn b{ color:var(--accent); }
+.mfa-alt-btn:hover{ background:rgba(16,185,129,.08); }
+.mfa-alt-btn.is-open{ color:var(--accent); }
+.mfa-alt-note{
+  display:none;
+  margin:8px auto 0; max-width:360px;
+  font-size:.78rem; color:var(--text-muted); line-height:1.6;
+  background:#f6f8fb; border:1px dashed #d3dbe6; border-radius:8px;
+  padding:10px 14px;
+  animation:fadeSlideIn .25s ease both;
+}
+@keyframes fadeSlideIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+
+.mfa-foot{ margin-top:22px; }
+
+/* প্রিমিয়াম এন্ট্রি-অ্যানিমেশন (সব অথ-পেজে, reduced-motion-সেফ) */
+@media (prefers-reduced-motion: no-preference){
+  body.auth-split .as-form-card{ animation:asCardIn .5s cubic-bezier(.21,1.02,.73,1) both; }
+  body.auth-split .as-brand{ animation:asBrandIn .6s ease both; }
+}
+@keyframes asCardIn{ from{ opacity:0; transform:translateY(16px) scale(.985); } to{ opacity:1; transform:none; } }
+@keyframes asBrandIn{ from{ opacity:0; } to{ opacity:1; } }

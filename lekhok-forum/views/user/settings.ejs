@@ -20,6 +20,7 @@
         <a href="#" data-section="privacy"><i class="fas fa-shield-alt"></i> গোপনীয়তা</a>
         <a href="#" data-section="notifications"><i class="fas fa-bell"></i> বিজ্ঞপ্তি</a>
         <a href="#" data-section="account"><i class="fas fa-key"></i> অ্যাকাউন্ট</a>
+        <a href="#" data-section="security"><i class="fas fa-shield-halved"></i> নিরাপত্তা (2FA)</a>
         <a href="#" data-section="display"><i class="fas fa-palette"></i> প্রদর্শন</a>
         <a href="#" data-section="connected"><i class="fas fa-link"></i> সংযুক্ত অ্যাকাউন্ট</a>
       </aside>
@@ -144,6 +145,76 @@
           </div>
         </section>
 
+        <!-- Security (2FA) — সেশন ৫৮ -->
+        <section class="settings-section" data-pane="security">
+          <div class="card">
+            <h2><i class="fas fa-shield-halved"></i> নিরাপত্তা (2FA)</h2>
+
+            <% if (secMsg === 'enrolled') { %><div class="badge save-ok"><i class="fas fa-check"></i> 2FA সক্রিয় হয়েছে। নিচের ব্যাকআপ কোডগুলো এখনই সংরক্ষণ করুন।</div><% } %>
+            <% if (secMsg === 'disabled') { %><div class="badge save-ok"><i class="fas fa-check"></i> 2FA বন্ধ করা হয়েছে।</div><% } %>
+            <% if (secMsg === 'backup') { %><div class="badge save-ok"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড তৈরি হয়েছে। পুরনো কোডগুলো বাতিল।</div><% } %>
+            <% if (secErr === 'bad_code') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> কোড মিলছে না। অ্যাপে দেখানো বর্তমান ৬-অঙ্কের কোড দিন (৩০ সেকেন্ডে বদলায়)।</div><% } %>
+            <% if (secErr === 'no_pending') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> কোনো অপেক্ষমাণ সেটআপ নেই। "2FA চালু করুন" দিয়ে নতুন করে শুরু করুন।</div><% } %>
+            <% if (secErr === 'password_wrong') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> বর্তমান পাসওয়ার্ড ভুল।</div><% } %>
+            <% if (secErr === 'no_2fa') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> 2FA সক্রিয় নেই।</div><% } %>
+
+            <% if (backupFlash && backupFlash.length) { %>
+              <div class="sec-backup-box">
+                <h3><i class="fas fa-key"></i> ব্যাকআপ কোড (একবারই দেখানো হয়)</h3>
+                <p>ফোন হারিয়ে গেলে বা অ্যাপে ঢুকতে না পারলে লগইনের দ্বিতীয় ধাপে এই কোডগুলোর একটি ব্যবহার করুন। প্রতিটি কোড একবারই কাজ করে — নিরাপদ জায়গায় সংরক্ষণ করুন (লিখে রাখুন বা কপি করে রাখুন)।</p>
+                <div class="sec-codes-grid"><% backupFlash.forEach(function (c) { %><div class="sec-code-chip"><%= c %></div><% }) %></div>
+                <button type="button" class="btn btn-sm sec-copy-btn" id="secCopyCodes"><i class="fas fa-copy"></i> সব কোড কপি করুন</button>
+              </div>
+            <% } %>
+
+            <% if (totpEnabled && !secPending) { %>
+              <div class="sec-status on">
+                <span class="sec-status-ico"><i class="fas fa-shield-halved"></i></span>
+                <span class="sec-status-meta">
+                  <strong>2FA সক্রিয় আছে</strong>
+                  <small>লগইনে পাসওয়ার্ডের পরে অ্যাপের ৬-অঙ্কের কোড চাওয়া হয় — অ্যাকাউন্ট দ্বি-স্তরে সুরক্ষিত।</small>
+                </span>
+              </div>
+              <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
+              <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড</h3>
+              <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">পুরনো ব্যাকআপ কোড হারিয়ে গেলে বা শেষ হয়ে গেলে নতুন সেট তৈরি করুন (পুরনোগুলো বাতিল হয়ে যায়)।</p>
+              <form method="POST" action="/settings/security/backup-regen" class="sec-inline-form">
+                <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-rotate"></i> নতুন কোড তৈরি করুন</button>
+              </form>
+              <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
+              <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</h3>
+              <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">এতে অ্যাকাউন্ট কম সুরক্ষিত হবে — লগইনে শুধু পাসওয়ার্ড লাগবে। নিশ্চিত হতে বর্তমান পাসওয়ার্ড দিতে হবে।</p>
+              <form method="POST" action="/settings/security/disable" class="sec-inline-form" onsubmit="return confirm('2FA বন্ধ করবেন? অ্যাকাউন্ট কম সুরক্ষিত হবে।');">
+                <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</button>
+              </form>
+            <% } else if (secPending) { %>
+              <div class="sec-enroll">
+                <p class="sec-step"><span class="sec-step-num">১</span> Google Authenticator / Authy / 1Password-এ "ম্যানুয়ালি কী দিন" (Setup key) বেছে নিয়ে নিচের সিক্রেট বসান।</p>
+                <div class="sec-secret-box"><%= secPending %></div>
+                <p class="sec-step"><span class="sec-step-num">২</span> এরপর অ্যাপে দেখানো <b>বর্তমান</b> ৬-অঙ্কের কোড নিচে দিন — মিললেই 2FA সক্রিয় হয়ে যাবে।</p>
+                <form method="POST" action="/settings/security/confirm" class="sec-inline-form">
+                  <div class="field"><label>৬-অঙ্কের কোড</label><input class="input" type="text" name="totp_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus placeholder="যেমন: ৪৫৮২১৩"></div>
+                  <button type="submit" class="btn btn-primary"><i class="fas fa-shield-halved"></i> সক্রিয় করুন</button>
+                </form>
+                <p class="hint" style="margin-top:10px;"><i class="fas fa-circle-info"></i> otpauth লিংক (কিউআর/ম্যানুয়াল): <span class="sec-otp"><%= secOtpauth %></span></p>
+              </div>
+            <% } else { %>
+              <div class="sec-status">
+                <span class="sec-status-ico"><i class="fas fa-shield"></i></span>
+                <span class="sec-status-meta">
+                  <strong>2FA সক্রিয় নয়</strong>
+                  <small>দ্বি-স্তর যাচাইকরণ (TOTP) চালু করে আপনার আইডি আরও সুরক্ষিত করুন — Google Authenticator-সহ যেকোনো অথেনটিকেটর অ্যাপে বিনামূল্যে কাজ করে।</small>
+                </span>
+              </div>
+              <form method="POST" action="/settings/security/enroll" style="margin-top:14px;">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-shield-halved"></i> 2FA চালু করুন</button>
+              </form>
+            <% } %>
+          </div>
+        </section>
+
         <!-- Display -->
         <section class="settings-section" data-pane="display">
           <div class="card">
@@ -243,18 +314,42 @@
   <%- include('../partials/footer') %>
 
   <script>
-    document.querySelectorAll('.settings-nav a').forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const target = link.dataset.section;
+    (function () {
+      function activate(target) {
         document.querySelectorAll('.settings-nav a').forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
+        const link = document.querySelector('.settings-nav a[data-section="' + target + '"]');
+        if (link) link.classList.add('active');
         document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
-        document.querySelector('[data-pane="' + target + '"]').classList.add('active');
+        const pane = document.querySelector('[data-pane="' + target + '"]');
+        if (pane) pane.classList.add('active');
+      }
+      document.querySelectorAll('.settings-nav a').forEach(link => {
+        link.addEventListener('click', e => {
+          e.preventDefault();
+          activate(link.dataset.section);
+          if (history.replaceState) history.replaceState(null, '', '#' + link.dataset.section);
+        });
       });
-    });
+      // সেশন ৫৮: #security হ্যাশ বা ?sec=/secerr= কোয়েরিতে নিরাপত্তা-ট্যাব স্বয়ংক্রিয়ভাবে খোলে
+      var q = new URLSearchParams(location.search);
+      var autoSec = (location.hash === '#security') || q.has('sec') || q.has('secerr');
+      if (autoSec) activate('security');
+      else if (location.hash && document.querySelector('[data-pane="' + location.hash.slice(1) + '"]')) activate(location.hash.slice(1));
+      // ব্যাকআপ-কোড কপি বাটন
+      var cp = document.getElementById('secCopyCodes');
+      if (cp) cp.addEventListener('click', function () {
+        var codes = Array.from(document.querySelectorAll('.sec-code-chip')).map(function (c) { return c.textContent.trim(); }).join('\n');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(codes).then(function () {
+            cp.innerHTML = '<i class="fas fa-check"></i> কপি হয়েছে';
+            setTimeout(function () { cp.innerHTML = '<i class="fas fa-copy"></i> সব কোড কপি করুন'; }, 1800);
+          }).catch(function () {});
+        }
+      });
+    })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </body>
 </html>

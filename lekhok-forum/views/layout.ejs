@@ -52,6 +52,8 @@
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/feed.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<%= AV %>" />
+  <%# সেশন ৫৮: প্রিমিয়াম-রেস্পন্সিভ-অ্যানিমেটেড পলিশ-লেয়ার (additive) -%>
+  <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
 </head>
 <body class="<%= currentPath === '/' ? 'home-page' : '' %>">
   <!-- Scroll progress bar -->
@@ -190,6 +192,7 @@
 
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 
 <%# Global-search JS সরানো হয়েছে main.js-এ (session33): ডুপ্লিকেট রোধে এখানে আর inline কপি নেই। %>
 <%- include('partials/sandbox-preview') %>

@@ -27,6 +27,8 @@
 %>
 <button class="admin-hamburger" id="adminHamburger" aria-label="মেনু" aria-controls="adminSidebar" aria-expanded="false" type="button"><i class="fas fa-bars"></i></button>
 <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+<%# সেশন ৫৮: প্রিমিয়াম-পলিশ লেয়ার — বডিতে ইনজেক্ট, পরের কনটেন্ট আসার আগেই লোড-ব্লক করে (FOUC-নিরাপদ) %>
+<link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
 <div class="admin-backdrop" id="adminBackdrop"></div>
 <aside class="admin-sidebar" id="adminSidebar" aria-label="অ্যাডমিন নেভিগেশন">
   <div class="logo">
@@ -582,3 +584,4 @@ document.addEventListener('DOMContentLoaded', function () {
   } catch (e) {}
 })();
 </script>
+<script src="/assets/js/premium.js?v=<%= AV %>"></script>

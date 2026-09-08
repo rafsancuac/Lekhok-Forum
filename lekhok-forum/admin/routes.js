@@ -152,38 +152,26 @@ router.get('/login', async (req, res) => {
 });
 
 // ── Login (POST) ─────────────────────────────────────────────────────────────
-// সিকিউরিটি: রেট-লিমিট + (ঐচ্ছিক) TOTP MFA + ব্যাকআপ-কোড + সেশন-রোটেশন।
+// সিকিউরিটি: রেট-লিমিট + সেশন-রোটেশন। সেশন ৫৮: 2FA-কোড আর এই ফর্মে নেই
+// (ইউজার-নির্দেশনা — লগইন-ইন্টারফেস পরিষ্কার); পাসওয়ার্ড মিললে 2FA-সক্রিয়
+// হলে দ্বিতীয় ধাপে (/login/2fa — ইউজার-অ্যাকাউন্টের সেটিংসে সেটআপ করা TOTP) যায়।
 router.post('/login', async (req, res) => {
   const lk = clientIp(req) + '|' + String(req.body.username || '').toLowerCase();
   if (adminLoginLimiter.isLimited(lk)) {
-    return res.render('admin/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে — ১৫ মিনিট পর আবার চেষ্টা করুন।', layout: false, currentPath: '/admin/login' });
+    return res.render('admin/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে। ১৫ মিনিট পর আবার চেষ্টা করুন।', layout: false, currentPath: '/admin/login' });
   }
   try {
-    const { username, password, totp_code } = req.body;
+    const { username, password } = req.body;
     const user = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     if (!user || !await bcrypt.compare(password, user.password_hash)) {
       adminLoginLimiter.hit(lk);
       return res.render('admin/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', layout: false, currentPath: '/admin/login' });
     }
 
-    // MFA (TOTP) — সক্রিয় থাকলে ৬-অঙ্কের কোড বাধ্যতামূলক; ব্যাকআপ কোড ফলব্যাক
-    if (user.totp_enabled) {
-      const code = String(totp_code || '').trim();
-      let ok = totp.verifyTotp(user.totp_secret, code);
-      if (!ok && user.backup_codes) {
-        try {
-          const codes = JSON.parse(user.backup_codes);
-          const consumed = totp.consumeBackupCode(code, codes);
-          if (consumed.ok) {
-            ok = true;
-            await db.prepare('UPDATE admin_users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(consumed.remaining), user.id);
-          }
-        } catch (e) {}
-      }
-      if (!ok) {
-        adminLoginLimiter.hit(lk);
-        return res.render('admin/login', { error: 'ভুল যাচাই কোড (2FA) — অ্যাপ থেকে বর্তমান কোড দিন', layout: false, currentPath: '/admin/login' });
-      }
+    // MFA (TOTP) — সক্রিয় থাকলে দ্বিতীয় ধাপে পাঠাই (কোড সেখানে যাচাই হয়)
+    if (user.totp_enabled && user.totp_secret) {
+      req.session.mfaPending = { kind: 'admin', uid: user.id, dest: '/admin', hint: user.display_name || user.username, ts: Date.now() };
+      return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
     }
 
     adminLoginLimiter.reset(lk);

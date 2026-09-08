@@ -69,10 +69,17 @@ router.post('/login', async (req, res) => {
         return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট এখনও যাচাইয়ের অপেক্ষায়। অ্যাডমিন অনুমোদনের পর লগইন করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
       }
       loginOk(lk43);
+      // সেশন ৫৮: 2FA-সক্রিয় অ্যাকাউন্টে দ্বিতীয় ধাপ — পাসওয়ার্ড ঠিক মেলেছে,
+      // এখন অ্যাপের ৬-অঙ্কের কোড চাই (লগইন-ফর্মে কোনো 2FA-ফিল্ড নেই; সেটআপ
+      // ইউজারের সেটিংস-পেজে)। পাসওয়ার্ড সেশনে রাখি না — শুধু মেয়াদী পেন্ডিং-স্টেট।
+      const dest = safeNextPath(req.body.next || req.query.next) || dashboardFor(user);
+      if (user.totp_enabled && user.totp_secret) {
+        req.session.mfaPending = { kind: 'user', uid: user.id, dest, hint: user.full_name || user.username, ts: Date.now() };
+        return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
+      }
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
       // রোল-বেজড গন্তব্য + (সেফ) `next` — প্রোটেক্টেড পেজ থেকে এলে সেখানেই ফিরে যাই
-      const dest = safeNextPath(req.body.next || req.query.next) || dashboardFor(user);
       return new Promise((resolve) => req.session.save((err) => {
         if (err) console.error('[auth] /login session save error:', err);
         res.redirect(dest);
@@ -83,25 +90,15 @@ router.post('/login', async (req, res) => {
     // Admin-panel account fallback
     const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     if (admin && await bcrypt.compare(password, admin.password_hash)) {
-      // সিকিউরিটি: MFA সক্রিয় থাকলে এই পথ দিয়েও যাচাই বাধ্যতামূলক
-      // (অন্যথায় /login দিয়ে 2FA এড়িয়ে যাওয়া যেত)।
-      if (admin.totp_enabled) {
-        const code = String(req.body.totp_code || '').trim();
-        let mfaOk = totp.verifyTotp(admin.totp_secret, code);
-        if (!mfaOk && admin.backup_codes) {
-          try {
-            const codes = JSON.parse(admin.backup_codes);
-            const consumed = totp.consumeBackupCode(code, codes);
-            if (consumed.ok) { mfaOk = true; await db.prepare('UPDATE admin_users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(consumed.remaining), admin.id); }
-          } catch (e) {}
-        }
-        if (!mfaOk) {
-          return res.render('user/login', { error: 'এই অ্যাকাউন্টে 2FA সক্রিয়। অ্যাপ থেকে বর্তমান কোড দিন (অথবা অ্যাডমিন লগইন ব্যবহার করুন)।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
-        }
-      }
       loginOk(lk43);
-      req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
       const dest = safeNextPath(req.body.next || req.query.next) || '/admin';
+      // সেশন ৫৮: 2FA-সক্রিয় অ্যাডমিনও একই দ্বিতীয় ধাপে যায় (কোডের ফিল্ড
+      // লগইন-ফর্মে নেই — ইউজার-নির্দেশনা)। পাসওয়ার্ড-মিল হলেই পেন্ডিং হয়।
+      if (admin.totp_enabled && admin.totp_secret) {
+        req.session.mfaPending = { kind: 'admin', uid: admin.id, dest, hint: admin.display_name || admin.username, ts: Date.now() };
+        return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
+      }
+      req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
       return new Promise((resolve) => req.session.regenerate((err) => {
         if (err) console.error('[auth] /login admin session regenerate error:', err);
         req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
@@ -118,6 +115,97 @@ router.post('/login', async (req, res) => {
   } catch (e) {
     console.error('[auth] /login error:', e);
     return res.status(500).render('user/login', { error: 'লগইন ব্যর্থ: ' + e.message, next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
+  }
+});
+
+// ── সেশন ৫৮: লগইন ধাপ-২ (2FA কোড যাচাই) ─────────────────────────────────────
+// লগইন-ফর্মে 2FA-ফিল্ড নেই (ইউজার-নির্দেশনা); পাসওয়ার্ড মিললে এই ধাপটি আসে।
+// mfaPending: { kind: 'user'|'admin', uid, dest, hint, ts } — ১০ মিনিট মেয়াদী;
+// পাসওয়ার্ড কখনো সেশনে রাখা হয় না।
+const MFA_TTL_MS = 10 * 60 * 1000;
+function mfaOf(req) {
+  const m = req.session && req.session.mfaPending;
+  if (!m || !m.kind || !m.uid) return null;
+  if (Date.now() - (m.ts || 0) > MFA_TTL_MS) {
+    req.session.mfaPending = null;
+    return null;
+  }
+  return m;
+}
+
+router.get('/login/2fa', async (req, res) => {
+  const m = mfaOf(req);
+  if (!m) return res.redirect('/login');
+  res.render('user/login-2fa', { error: null, hint: m.hint || '', currentPath: '/login/2fa' });
+});
+
+router.post('/login/2fa', async (req, res) => {
+  const m = mfaOf(req);
+  if (!m) return res.redirect('/login');
+  const code = String(req.body.totp_code || '').trim();
+  const render2fa = (error) => res.status(200).render('user/login-2fa', { error, hint: m.hint || '', currentPath: '/login/2fa' });
+  if (!code) return render2fa('অ্যাপে দেখানো ৬-অঙ্কের কোড দিন।');
+
+  try {
+    if (m.kind === 'user') {
+      const user = await db.prepare('SELECT id, username, full_name, avatar_url, gender, role, status, totp_secret, totp_enabled, backup_codes FROM users WHERE id = ?').get(m.uid);
+      if (!user || !user.totp_enabled || !user.totp_secret || user.status === 'banned') {
+        req.session.mfaPending = null;
+        return res.redirect('/login');
+      }
+      let ok = totp.verifyTotp(user.totp_secret, code);
+      if (!ok && user.backup_codes) {
+        try {
+          const codes = JSON.parse(user.backup_codes);
+          const consumed = totp.consumeBackupCode(code, codes);
+          if (consumed.ok) {
+            ok = true;
+            await db.prepare('UPDATE users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(consumed.remaining), user.id);
+          }
+        } catch (e) {}
+      }
+      if (!ok) return render2fa('কোড মিলছে না। অ্যাপে নতুন কোড দেখে আবার চেষ্টা করুন (কোড ৩০ সেকেন্ডে বদলায়)।');
+      req.session.mfaPending = null;
+      req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
+      await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+      return new Promise((resolve) => req.session.save((err) => {
+        if (err) console.error('[auth] /login/2fa session save error:', err);
+        res.redirect(m.dest || dashboardFor(user));
+        resolve();
+      }));
+    }
+
+    // kind === 'admin'
+    const admin = await db.prepare('SELECT id, username, display_name, totp_secret, totp_enabled, backup_codes FROM admin_users WHERE id = ?').get(m.uid);
+    if (!admin || !admin.totp_enabled || !admin.totp_secret) {
+      req.session.mfaPending = null;
+      return res.redirect('/login');
+    }
+    let ok = totp.verifyTotp(admin.totp_secret, code);
+    if (!ok && admin.backup_codes) {
+      try {
+        const codes = JSON.parse(admin.backup_codes);
+        const consumed = totp.consumeBackupCode(code, codes);
+        if (consumed.ok) {
+          ok = true;
+          await db.prepare('UPDATE admin_users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(consumed.remaining), admin.id);
+        }
+      } catch (e) {}
+    }
+    if (!ok) return render2fa('কোড মিলছে না। অ্যাপে নতুন কোড দেখে আবার চেষ্টা করুন (কোড ৩০ সেকেন্ডে বদলায়)।');
+    req.session.mfaPending = null;
+    return new Promise((resolve) => req.session.regenerate((err) => {
+      if (err) console.error('[auth] /login/2fa admin session regenerate error:', err);
+      req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
+      req.session.save((err2) => {
+        if (err2) console.error('[auth] /login/2fa admin session save error:', err2);
+        res.redirect(m.dest || '/admin');
+        resolve();
+      });
+    }));
+  } catch (e) {
+    console.error('[auth] /login/2fa error:', e);
+    return render2fa('যাচাই করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
   }
 });
 

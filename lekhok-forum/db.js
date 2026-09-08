@@ -431,6 +431,12 @@ const LATER_COLUMNS = [
   ['admin_users', 'totp_secret',    'TEXT'],
   ['admin_users', 'totp_enabled',   'INTEGER DEFAULT 0'],
   ['admin_users', 'backup_codes',   'TEXT'],
+  // সেশন ৫৮: ইউজার-লেভেল 2FA (TOTP) — লগইন-ফর্ম পরিষ্কার থাকে, 2FA সেটআপ/
+  // ব্যবস্থাপনা ইউজারের নিজের সেটিংস-পেজে; লগইনে 2FA-সক্রিয় হলে দ্বিতীয় ধাপ
+  // (/login/2fa) এসে কোড চায় (Google Authenticator-সামঞ্জস্যপূর্ণ)।
+  ['users', 'totp_secret',    'TEXT'],
+  ['users', 'totp_enabled',   'INTEGER DEFAULT 0'],
+  ['users', 'backup_codes',   'TEXT'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

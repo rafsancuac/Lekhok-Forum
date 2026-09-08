@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcryptjs');
+const totp = require('../helpers/totp');
 const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1066,19 +1067,75 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// /settings — full settings page (profile, privacy, notifications, account, display, connected)
+// /settings — full settings page (profile, privacy, notifications, account, security, display, connected)
 // ────────────────────────────────────────────────────────────────────────────
+// সেশন ৫৮: "নিরাপত্তা" অংশ — ইউজার-লেভেল 2FA (TOTP)। লগইন-ফর্মে 2FA নেই;
+// সেটআপ/বন্ধ এখানেই — ইউজারের নিজের আইডির ভেতরে (ইউজার-নির্দেশনা)।
 router.get('/settings', ensureLoggedIn, async (req, res) => {
   const me = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.user.id);
   let notifyPrefs = {}, displayPrefs = {};
   try { notifyPrefs = JSON.parse(me.notify_prefs || '{}'); } catch (_) {}
   try { displayPrefs = JSON.parse(me.display_prefs || '{}'); } catch (_) {}
+  // 2FA অবস্থা + (থাকলে) এনরোল-পেন্ডিং সিক্রেট + ব্যাকআপ-কোড ফ্ল্যাশ (একবারই দেখানো হয়)
+  const secPending = req.session.pendingUserTotpSecret || null;
+  const backupFlash = req.session.backupCodesShown || null;
+  if (backupFlash) req.session.backupCodesShown = null;
   res.render('user/settings', {
     currentPath: '/settings',
     profileUser: me,
     notifyPrefs, displayPrefs,
-    ok: req.query.ok || null, err: req.query.err || null
+    ok: req.query.ok || null, err: req.query.err || null,
+    totpEnabled: !!(me.totp_enabled && me.totp_secret),
+    secPending,
+    secOtpauth: secPending ? totp.otpauthUri(secPending, me.username, 'লেখক ফোরাম') : null,
+    backupFlash,
+    secMsg: req.query.sec || null, secErr: req.query.secerr || null
   });
+});
+
+// ── সেশন ৫৮: ইউজার 2FA — এনরোল শুরু (ধাপ ১) ──
+router.post('/settings/security/enroll', ensureLoggedIn, async (req, res) => {
+  req.session.pendingUserTotpSecret = totp.generateSecret();
+  req.session.backupCodesShown = null;
+  req.session.save(() => res.redirect('/settings?sec=pending#security'));
+});
+
+// ── ইউজার 2FA — কোড কনফার্ম (ধাপ ২) → 2FA সক্রিয়, ব্যাকআপ-কোড একবার দেখানো ──
+router.post('/settings/security/confirm', ensureLoggedIn, async (req, res) => {
+  const secret = req.session.pendingUserTotpSecret;
+  if (!secret) return res.redirect('/settings?secerr=no_pending#security');
+  const code = String(req.body.totp_code || '').trim();
+  if (!totp.verifyTotp(secret, code)) return res.redirect('/settings?secerr=bad_code#security');
+  const plain = totp.generateBackupCodes(10);
+  await db.prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1, backup_codes = ? WHERE id = ?')
+    .run(secret, JSON.stringify(totp.hashBackupCodes(plain)), req.session.user.id);
+  req.session.pendingUserTotpSecret = null;
+  req.session.backupCodesShown = plain;  // ফ্ল্যাশ — রেন্ডারের পর মুছে যায়
+  req.session.save(() => res.redirect('/settings?sec=enrolled#security'));
+});
+
+// ── ইউজার 2FA — বন্ধ (বর্তমান পাসওয়ার্ড লাগে) ──
+router.post('/settings/security/disable', ensureLoggedIn, async (req, res) => {
+  const me = await db.prepare('SELECT id, password_hash FROM users WHERE id = ?').get(req.session.user.id);
+  if (!me || !await bcrypt.compare(String(req.body.current_password || ''), me.password_hash)) {
+    return res.redirect('/settings?secerr=password_wrong#security');
+  }
+  await db.prepare('UPDATE users SET totp_enabled = 0, totp_secret = NULL, backup_codes = NULL WHERE id = ?').run(me.id);
+  req.session.pendingUserTotpSecret = null;
+  req.session.save(() => res.redirect('/settings?sec=disabled#security'));
+});
+
+// ── ইউজার 2FA — নতুন ব্যাকআপ-কোড (বর্তমান পাসওয়ার্ড লাগে) ──
+router.post('/settings/security/backup-regen', ensureLoggedIn, async (req, res) => {
+  const me = await db.prepare('SELECT id, password_hash, totp_enabled FROM users WHERE id = ?').get(req.session.user.id);
+  if (!me || !me.totp_enabled) return res.redirect('/settings?secerr=no_2fa#security');
+  if (!await bcrypt.compare(String(req.body.current_password || ''), me.password_hash)) {
+    return res.redirect('/settings?secerr=password_wrong#security');
+  }
+  const plain = totp.generateBackupCodes(10);
+  await db.prepare('UPDATE users SET backup_codes = ? WHERE id = ?').run(JSON.stringify(totp.hashBackupCodes(plain)), me.id);
+  req.session.backupCodesShown = plain;
+  req.session.save(() => res.redirect('/settings?sec=backup#security'));
 });
 
 router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
