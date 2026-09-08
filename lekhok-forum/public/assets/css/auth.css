@@ -137,3 +137,230 @@ body{
 .char-counter{ text-align:right; font-size:12px; color:#888; margin-top:4px; padding:0 4px; transition:color .2s; }
 .char-counter.is-warn{ color:#e07b00; font-weight:600; }
 .char-counter.is-error{ color:#c0392b; font-weight:700; }
+
+/* ==========================================================================
+   সেশন ৫৬ — "Confident Split" (split-screen ৪৫:৫৫) — শুধু body.auth-split-স্কোপড
+   (login / register / claim / forgot / reset / register-pending পেজ)
+   বাকি পেজ (article-form / qa-form / edit) পুরনো .auth-card সেন্টার্ড স্টাইলেই থাকে।
+   ========================================================================== */
+
+/* ── শেল: ২-কলাম গ্রিড ── */
+body.auth-split{
+  display:block;
+  min-height:100vh;
+  padding:0;
+  background:#FAFAFA;
+}
+.as-shell{
+  display:grid;
+  grid-template-columns:45fr 55fr;
+  min-height:100vh;
+}
+
+/* ── বাম ব্র্যান্ড-প্যানেল ── */
+.as-brand{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:28px;
+  padding:52px 44px;
+  color:#fff;
+  background:
+    radial-gradient(ellipse at 18% -8%, rgba(5,150,105,0.30), transparent 58%),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 26px),
+    linear-gradient(160deg, #0a1f44 0%, #0B1121 100%);
+  overflow:hidden;
+}
+.as-brand::after{ /* সূক্ষ্ম কোণা-জ্যামিতি */
+  content:''; position:absolute; right:-90px; bottom:-90px;
+  width:260px; height:260px; border-radius:50%;
+  border:1px solid rgba(255,255,255,0.07);
+  pointer-events:none;
+}
+.as-brand-top{ display:flex; align-items:center; gap:12px; }
+.as-logo{
+  width:46px; height:46px; border-radius:12px;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:#fff; font-size:19px;
+  background:linear-gradient(135deg, var(--accent), var(--accent-dark));
+  box-shadow:0 6px 18px rgba(0,0,0,0.30);
+}
+.as-brand-name{
+  font-family:var(--font-heading);
+  font-weight:700; font-size:1.12rem; color:#fff; letter-spacing:.3px;
+}
+.as-brand-mid{ position:relative; }
+.as-eyebrow{
+  font-family:var(--font-body);
+  font-size:.82rem; font-weight:700; letter-spacing:1.5px;
+  color:#34d399; margin-bottom:10px;
+}
+.as-tagline{
+  font-family:var(--font-heading);
+  font-size:1.62rem; font-weight:700; line-height:1.32;
+  color:#fff; margin:0 0 12px;
+}
+.as-intro{
+  font-family:var(--font-body);
+  font-size:.9rem; line-height:1.7;
+  color:rgba(226,232,240,0.82);
+  max-width:34ch; margin:0;
+}
+.as-brand-bottom{
+  font-size:.78rem; color:rgba(148,163,184,0.75); letter-spacing:.4px;
+}
+
+/* ── ডান ফর্ম-প্যানেল ── */
+.as-form-panel{
+  display:flex;
+  padding:40px 24px;
+  overflow-y:auto;
+  background:#FAFAFA;
+}
+.as-form-card{
+  margin:auto;               /* স্ট্যাবল সেন্টারিং (সেশন ৫৪-নীতি): ছোট হলে কেন্দ্রে, লম্বা হলে উপরে */
+  width:100%;
+  max-width:400px;
+}
+.as-form-card.wide{ max-width:470px; }
+body.auth-split .back-home{
+  position:static;
+  display:inline-flex;
+  margin:0 0 18px;
+}
+
+/* ── হেডিং (টাইপোগ্রাফি-অ্যাঙ্কর, বাম-অ্যালাইন্ড) ── */
+.as-title{
+  font-family:var(--font-heading);
+  color:var(--brand); font-size:1.66rem; font-weight:700;
+  line-height:1.22; margin:0;
+}
+.as-sub{
+  font-family:var(--font-body);
+  color:var(--text-muted); font-size:.94rem; line-height:1.6;
+  margin:7px 0 24px;
+}
+
+/* ── ট্যাব (লগইন | আইডি খুঁজুন) ── */
+.as-tabs{
+  display:grid; grid-template-columns:1fr 1fr; gap:4px;
+  background:#eceff4; padding:4px;
+  border-radius:10px; margin-bottom:24px;
+}
+.as-tab{
+  padding:9px 10px; border:none; background:transparent;
+  border-radius:8px; cursor:pointer;
+  font-family:var(--font-body); font-size:.9rem; font-weight:700;
+  color:var(--text-muted);
+  transition:background .15s, color .15s, box-shadow .15s;
+}
+.as-tab:hover{ color:var(--brand); }
+.as-tab.is-active{
+  background:#fff; color:var(--brand);
+  box-shadow:0 1px 3px rgba(15,23,42,0.10);
+}
+.as-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.as-tabpanel{ display:none; }
+.as-tabpanel.is-active{ display:block; animation:asFade .18s ease; }
+@keyframes asFade{ from{opacity:0} to{opacity:1} }
+
+/* ── ফ্লোটিং লেবেল ── */
+.ff{ position:relative; margin-bottom:16px; }
+.ff input{
+  width:100%; padding:24px 14px 8px;
+  border:1.5px solid var(--border); border-radius:8px;
+  font-family:var(--font-body); font-size:1rem; color:var(--text); background:#fff;
+  transition:border-color .15s, box-shadow .15s;
+}
+.ff input:focus{
+  outline:none; border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.ff label{
+  position:absolute; left:14px; top:15px;
+  font-family:var(--font-body); font-size:.95rem; color:#64748b;
+  pointer-events:none;
+  transition:top .16s ease, font-size .16s ease, color .16s ease;
+}
+.ff input:focus ~ label,
+.ff input:not(:placeholder-shown) ~ label{
+  top:7px; font-size:.72rem; color:var(--brand); font-weight:700;
+}
+.ff.is-error input{
+  border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.12);
+}
+.ff.is-error label{ color:#b91c1c; }
+
+/* স্ট্যাটিক-লেবেল ভ্যারিয়েন্ট (select / date / file / textarea / readonly) */
+.ff-static label{
+  display:block; margin-bottom:6px;
+  font-size:.8rem; font-weight:700; color:var(--brand);
+}
+.ff-static input, .ff-static select, .ff-static textarea{
+  width:100%; padding:11px 14px;
+  border:1.5px solid var(--border); border-radius:8px;
+  font-family:var(--font-body); font-size:1rem; color:var(--text); background:#fff;
+  transition:border-color .15s, box-shadow .15s;
+}
+.ff-static input:focus, .ff-static select:focus, .ff-static textarea:focus{
+  outline:none; border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+
+/* ── পাসওয়ার্ড শো/হাইড ── */
+.ff.has-toggle input{ padding-right:46px; }
+.pw-toggle{
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer;
+  color:#64748b; padding:8px; border-radius:6px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.pw-toggle:hover{ color:var(--accent); background:var(--accent-soft); }
+.pw-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+
+/* ── split-স্কোপে বাটন: কোনো transform-নয় (layout-shift-মুক্ত, কনসেপ্ট-নীতি) ── */
+body.auth-split .btn-primary{
+  border-radius:8px; min-height:48px;
+  transition:box-shadow .15s, background .15s;
+}
+body.auth-split .btn-primary:hover,
+body.auth-split .btn-primary:active{ transform:none; }
+body.auth-split .btn-secondary{ border-radius:8px; }
+
+/* ── লিংক-সারি ── */
+.as-row{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:10px; margin-top:14px; font-size:.86rem;
+}
+.as-row a{ color:var(--accent); font-weight:700; text-decoration:none; }
+.as-row a:hover{ color:var(--accent-dark); text-decoration:underline; }
+.as-foot{
+  text-align:center; margin-top:24px;
+  color:var(--text-muted); font-size:.92rem;
+}
+.as-foot a{ color:var(--accent); font-weight:700; }
+.as-foot a:hover{ color:var(--accent-dark); text-decoration:underline; }
+
+/* ── বাটন লোডিং-স্টেট (সাইজ ফিক্সড) ── */
+.btn-primary.is-busy{ opacity:.85; pointer-events:none; }
+
+/* ── মোবাইল: বাম প্যানেল → কম্প্যাক্ট হেডার-ব্যান্ড ── */
+@media (max-width:767px){
+  .as-shell{ grid-template-columns:1fr; min-height:100vh; }
+  .as-brand{
+    padding:22px 20px 26px;
+    gap:12px;
+    background:
+      radial-gradient(ellipse at 85% -30%, rgba(5,150,105,0.28), transparent 55%),
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 26px),
+      linear-gradient(160deg, #0a1f44 0%, #0B1121 100%);
+  }
+  .as-brand::after{ width:150px; height:150px; right:-55px; bottom:-95px; }
+  .as-eyebrow{ margin-bottom:6px; font-size:.76rem; }
+  .as-tagline{ font-size:1.12rem; margin-bottom:6px; }
+  .as-intro{ display:none; }
+  .as-brand-bottom{ font-size:.7rem; }
+  .as-form-panel{ padding:28px 20px 40px; overflow:visible; }
+  .as-form-card, .as-form-card.wide{ max-width:none; }
+}

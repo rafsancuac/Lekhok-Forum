@@ -9,61 +9,126 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/auth.css" />
 </head>
-<body>
-  <div class="auth-card" style="max-width: 600px;">
-    <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> হোম</a>
-    <div class="auth-brand">
-      <span class="auth-logo"><i class="fas fa-feather-alt"></i></span>
-      <span class="auth-brand-name">লেখক ফোরাম</span>
-    </div>
-    <h1 class="auth-title">স্বাগতম</h1>
-    <p class="auth-sub">নতুন অ্যাকাউন্ট। লিখুন, শেয়ার করুন, সংযুক্ত হোন</p>
-    <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
-    <form method="POST" enctype="multipart/form-data">
-      <div class="form-row">
-        <div class="form-group"><label>ব্যবহারকারী নাম *</label><input type="text" name="username" value="<%= form.username || '' %>" required></div>
-        <div class="form-group"><label>পাসওয়ার্ড * (কমপক্ষে ৬ অক্ষর)</label><input type="password" name="password" required minlength="6"></div>
+<body class="auth-split">
+  <div class="as-shell">
+
+    <!-- ── বাম ব্র্যান্ড-প্যানেল ── -->
+    <aside class="as-brand">
+      <div class="as-brand-top">
+        <span class="as-logo"><i class="fas fa-feather-alt"></i></span>
+        <span class="as-brand-name">লেখক ফোরাম</span>
       </div>
-      <div class="form-group"><label>পূর্ণ নাম *</label><input type="text" name="full_name" value="<%= form.full_name || '' %>" required></div>
-      <div class="form-row">
-        <div class="form-group"><label>ইমেইল</label><input type="email" name="email" value="<%= form.email || '' %>"></div>
-        <div class="form-group"><label>মোবাইল</label><input type="tel" name="phone" value="<%= form.phone || '' %>"></div>
+      <div class="as-brand-mid">
+        <p class="as-eyebrow">চট্টগ্রাম বিশ্ববিদ্যালয়</p>
+        <h2 class="as-tagline">বাংলাদেশ তরুণ কলাম লেখক ফোরাম</h2>
+        <p class="as-intro">শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। তরুণ সমাজকে লিখালিখির জগতে নিয়ে এসে তাদের বুদ্ধিবৃত্তিক বিকাশ ঘটানোই আমাদের প্রত্যয়।</p>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>লিঙ্গ</label>
-          <select name="gender">
-            <option value="male">পুরুষ</option>
-            <option value="female">নারী</option>
-            <option value="other">অন্যান্য</option>
-          </select>
-        </div>
-        <div class="form-group"><label>জন্ম তারিখ</label><input type="date" name="birth_date" value="<%= form.birth_date || '' %>"></div>
+      <div class="as-brand-bottom">© ২০২৬ লেখক ফোরাম। সর্বস্বত্ব সংরক্ষিত।</div>
+    </aside>
+
+    <!-- ── ডান ফর্ম-প্যানেল ── -->
+    <main class="as-form-panel">
+      <div class="as-form-card wide">
+        <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> হোম</a>
+
+        <h1 class="as-title">স্বাগতম</h1>
+        <p class="as-sub">নতুন অ্যাকাউন্ট। লিখুন, শেয়ার করুন, সংযুক্ত হোন</p>
+        <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+        <form method="POST" enctype="multipart/form-data" class="as-loading-form" data-submit-label='<i class="fas fa-user-plus"></i> রেজিস্ট্রেশন সম্পন্ন করুন'>
+          <div class="form-row">
+            <div class="ff">
+              <input type="text" id="regUser" name="username" value="<%= form.username || '' %>" required placeholder=" " autocomplete="username">
+              <label for="regUser">ব্যবহারকারী নাম *</label>
+            </div>
+            <div class="ff has-toggle">
+              <input type="password" id="regPass" name="password" required minlength="6" placeholder=" " autocomplete="new-password">
+              <label for="regPass">পাসওয়ার্ড * (কমপক্ষে ৬ অক্ষর)</label>
+              <button type="button" class="pw-toggle" aria-label="পাসওয়ার্ড দেখান"><i class="far fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="ff">
+            <input type="text" id="regName" name="full_name" value="<%= form.full_name || '' %>" required placeholder=" " autocomplete="name">
+            <label for="regName">পূর্ণ নাম *</label>
+          </div>
+          <div class="form-row">
+            <div class="ff">
+              <input type="email" id="regEmail" name="email" value="<%= form.email || '' %>" placeholder=" " autocomplete="email">
+              <label for="regEmail">ইমেইল</label>
+            </div>
+            <div class="ff">
+              <input type="tel" id="regPhone" name="phone" value="<%= form.phone || '' %>" placeholder=" " autocomplete="tel">
+              <label for="regPhone">মোবাইল</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="ff-static">
+              <label for="regGender">লিঙ্গ</label>
+              <select id="regGender" name="gender">
+                <option value="male">পুরুষ</option>
+                <option value="female">নারী</option>
+                <option value="other">অন্যান্য</option>
+              </select>
+            </div>
+            <div class="ff-static">
+              <label for="regBirth">জন্ম তারিখ</label>
+              <input type="date" id="regBirth" name="birth_date" value="<%= form.birth_date || '' %>">
+            </div>
+          </div>
+          <div class="ff-static">
+            <label for="regAvatar">প্রোফাইল ছবি (ঐচ্ছিক, না দিলে লিঙ্গ অনুযায়ী ডেমো ফেইস বসবে)</label>
+            <input type="file" id="regAvatar" name="avatar" accept="image/*">
+          </div>
+          <div class="ff">
+            <input type="text" id="regDesig" name="designation" value="<%= form.designation || '' %>" placeholder=" " >
+            <label for="regDesig">পদবি / সংক্ষিপ্ত পরিচয়</label>
+          </div>
+          <div class="form-row">
+            <div class="ff">
+              <input type="text" id="regDept" name="department" value="<%= form.department || '' %>" placeholder=" ">
+              <label for="regDept">ডিপার্টমেন্ট / প্রতিষ্ঠান</label>
+            </div>
+            <div class="ff">
+              <input type="text" id="regSession" name="session" value="<%= form.session || '' %>" placeholder=" ">
+              <label for="regSession">কার্যবর্ষ / সেশন</label>
+            </div>
+          </div>
+          <div class="ff">
+            <input type="text" id="regAddr" name="address" value="<%= form.address || '' %>" placeholder=" " autocomplete="street-address">
+            <label for="regAddr">ঠিকানা</label>
+          </div>
+          <div class="ff-static">
+            <label for="regBio">সংক্ষিপ্ত বায়ো</label>
+            <textarea id="regBio" name="bio" rows="3"><%= form.bio || '' %></textarea>
+          </div>
+          <h3 class="auth-section-title">সোশ্যাল মিডিয়া (ঐচ্ছিক)</h3>
+          <div class="form-row">
+            <div class="ff">
+              <input type="url" id="regFb" name="social_fb" value="<%= form.social_fb || '' %>" placeholder=" ">
+              <label for="regFb"><i class="fab fa-facebook"></i> Facebook</label>
+            </div>
+            <div class="ff">
+              <input type="url" id="regTw" name="social_twitter" value="<%= form.social_twitter || '' %>" placeholder=" ">
+              <label for="regTw"><i class="fab fa-twitter"></i> Twitter / X</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="ff">
+              <input type="url" id="regLi" name="social_linkedin" value="<%= form.social_linkedin || '' %>" placeholder=" ">
+              <label for="regLi"><i class="fab fa-linkedin"></i> LinkedIn</label>
+            </div>
+            <div class="ff">
+              <input type="url" id="regWeb" name="social_website" value="<%= form.social_website || '' %>" placeholder=" ">
+              <label for="regWeb"><i class="fas fa-globe"></i> ওয়েবসাইট</label>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary"><i class="fas fa-user-plus"></i> রেজিস্ট্রেশন সম্পন্ন করুন</button>
+        </form>
+        <p class="as-foot">ইতিমধ্যে অ্যাকাউন্ট আছে? <a href="/login">লগইন করুন</a></p>
       </div>
-      <div class="form-group">
-        <label>প্রোফাইল ছবি (ঐচ্ছিক, না দিলে লিঙ্গ অনুযায়ী ডেমো ফেইস বসবে)</label>
-        <input type="file" name="avatar" accept="image/*">
-      </div>
-      <div class="form-group"><label>পদবি / সংক্ষিপ্ত পরিচয়</label><input type="text" name="designation" value="<%= form.designation || '' %>" placeholder="যেমন: কবি, ছাত্র, সাংবাদিক"></div>
-      <div class="form-row">
-        <div class="form-group"><label>ডিপার্টমেন্ট / প্রতিষ্ঠান</label><input type="text" name="department" value="<%= form.department || '' %>" placeholder="যেমন: বাংলা বিভাগ"></div>
-        <div class="form-group"><label>কার্যবর্ষ / সেশন</label><input type="text" name="session" value="<%= form.session || '' %>" placeholder="যেমন: ২০২৫-২৬"></div>
-      </div>
-      <div class="form-group"><label>ঠিকানা</label><input type="text" name="address" value="<%= form.address || '' %>"></div>
-      <div class="form-group"><label>সংক্ষিপ্ত বায়ো</label><textarea name="bio" rows="3"><%= form.bio || '' %></textarea></div>
-      <h3 class="auth-section-title">সোশ্যাল মিডিয়া (ঐচ্ছিক)</h3>
-      <div class="form-row">
-        <div class="form-group"><label><i class="fab fa-facebook"></i> Facebook</label><input type="url" name="social_fb" value="<%= form.social_fb || '' %>"></div>
-        <div class="form-group"><label><i class="fab fa-twitter"></i> Twitter / X</label><input type="url" name="social_twitter" value="<%= form.social_twitter || '' %>"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label><i class="fab fa-linkedin"></i> LinkedIn</label><input type="url" name="social_linkedin" value="<%= form.social_linkedin || '' %>"></div>
-        <div class="form-group"><label><i class="fas fa-globe"></i> ওয়েবসাইট</label><input type="url" name="social_website" value="<%= form.social_website || '' %>"></div>
-      </div>
-      <button type="submit" class="btn-primary"><i class="fas fa-user-plus"></i> রেজিস্ট্রেশন সম্পন্ন করুন</button>
-    </form>
-    <p class="auth-foot">ইতিমধ্যে অ্যাকাউন্ট আছে? <a href="/login">লগইন করুন</a></p>
+    </main>
   </div>
+
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/auth.js?v=<%= AV %>"></script>
 </body>
 </html>

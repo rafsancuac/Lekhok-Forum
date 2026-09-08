@@ -379,3 +379,11 @@ Stage Summary:
 - `html{scrollbar-gutter:stable}` + হোভার translateY ট্রান্সফর্ম সরানো + min-height (stat/tile/empty/item/clip-row/mem-row)।
 - সাইডবারের নিচে `.su-scopes` টিক-আইকন ব্যাজ ব্লক + CSS সরানো (লগইন/লগআউটের পাশে)।
 - যাচাই: ৯ মডারেটর পেজ + অ্যাডমিন পেজ 200; লগইন/লগআউট 302; nav গেটিং (userScopeMeta) অক্ষত।
+
+## সেশন ৫৬ — অথ-পেজ "Confident Split" রিডিজাইন ✅
+
+- আপলোডকৃত ডিজাইন-কনসেপ্ট অনুযায়ী (ইউজার-কনফার্মড অপশনসহ) ৬টি অথ-পেজে split-screen ৪৫:৫৫ লেআউট: login (ট্যাব: লগইন | আইডি খুঁজুন), register (এক-পেজ), claim, forgot, reset, register-pending।
+- auth.css: নতুন `body.auth-split` স্কোপ (as-shell/as-brand/as-form-panel/as-tabs/ff ফ্লোটিং-লেবেল/pw-toggle/মোবাইল ব্যান্ড); পুরনো .auth-card সেন্টার্ড স্টাইল অক্ষত (article-form/qa-form/edit)।
+- নতুন `public/assets/js/auth.js`: ফ্লোটিং-লেবেল autofill-গার্ড, পাসওয়ার্ড শো/হাইড, ট্যাব-সুইচ (#find হ্যাশ), সাবমিট লোডিং-স্টেট (সাইজ-ফিক্সড), মোবাইল scrollIntoView।
+- routes/auth.js: ৬টি দৃশ্যমান এরর-মেসেজের em dash → । ; claim/register-pending ভিউতেও em-dash পরিচ্ছন্ন।
+- যাচাই: verify-session56.js ৫৪/৫৪ PASS (ফ্লো+DOM+রিগ্রেশন+em-dash ০+ব্রেস 99/99); Playwright verify-session56-browser.js ১০/১০ PASS; স্ক্রিনশট ৬টি download/-এ; লাইভ-যাচাই পুশের পরে।

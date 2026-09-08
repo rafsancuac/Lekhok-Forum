@@ -49,7 +49,7 @@ function loginOk(key) { _loginHits43.delete(key); }
 
 router.post('/login', async (req, res) => {
   const lk43 = (req.ip || '') + '|' + String(req.body.username || '').toLowerCase();
-  if (loginLimited(lk43)) return res.status(429).render('user/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে — ১৫ মিনিট পর আবার চেষ্টা করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
+  if (loginLimited(lk43)) return res.status(429).render('user/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে। ১৫ মিনিট পর আবার চেষ্টা করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
   try {
     const { username, password } = req.body;
     const ident = String(username || '').trim();
@@ -66,7 +66,7 @@ router.post('/login', async (req, res) => {
         return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
       }
       if (user.status === 'pending') {
-        return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট এখনও যাচাইয়ের অপেক্ষায় — অ্যাডমিন অনুমোদনের পর লগইন করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
+        return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট এখনও যাচাইয়ের অপেক্ষায়। অ্যাডমিন অনুমোদনের পর লগইন করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
       }
       loginOk(lk43);
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
@@ -96,7 +96,7 @@ router.post('/login', async (req, res) => {
           } catch (e) {}
         }
         if (!mfaOk) {
-          return res.render('user/login', { error: 'এই অ্যাকাউন্টে 2FA সক্রিয় — অ্যাপ থেকে বর্তমান কোড দিন (অথবা অ্যাডমিন লগইন ব্যবহার করুন)।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
+          return res.render('user/login', { error: 'এই অ্যাকাউন্টে 2FA সক্রিয়। অ্যাপ থেকে বর্তমান কোড দিন (অথবা অ্যাডমিন লগইন ব্যবহার করুন)।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
         }
       }
       loginOk(lk43);
@@ -134,7 +134,7 @@ router.get('/register', async (req, res) => {
 // = 1 হলে → PENDING_REVIEW (অ্যাডমিন অনুমোদনের আগে active নয়)।
 router.post('/register', withUpload(avatarUpload), async (req, res) => {
   const rk = clientIp(req) + '|register';
-  if (registerLimiter.isLimited(rk)) return res.status(429).render('user/register', { error: 'অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পর আবার চেষ্টা করুন।', form: req.body, currentPath: '/register' });
+  if (registerLimiter.isLimited(rk)) return res.status(429).render('user/register', { error: 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।', form: req.body, currentPath: '/register' });
   registerLimiter.hit(rk);
   const { username, password, full_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, member_id, department, session } = req.body;
   const back = (err) => res.render('user/register', { error: err, form: req.body, currentPath: '/register' });
@@ -327,7 +327,7 @@ router.get('/forgot-password', (req, res) => {
 
 router.post('/forgot-password', async (req, res) => {
   const fk = clientIp(req) + '|forgot';
-  if (forgotLimiter.isLimited(fk)) return res.status(429).render('user/forgot-password', { error: 'অনেকবার চেষ্টা হয়েছে — কিছুক্ষণ পর আবার চেষ্টা করুন।', done: false, currentPath: '/forgot-password' });
+  if (forgotLimiter.isLimited(fk)) return res.status(429).render('user/forgot-password', { error: 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।', done: false, currentPath: '/forgot-password' });
   forgotLimiter.hit(fk);
   const ident = String(req.body.identifier || '').trim();
   const back = (err) => res.render('user/forgot-password', { error: err, done: false, currentPath: '/forgot-password' });
@@ -374,7 +374,7 @@ router.get('/reset-password', async (req, res) => {
   const token = String(req.query.token || '');
   const tokenHash = token ? cryptoAuth.createHash('sha256').update(token).digest('hex') : '';
   const rec = tokenHash ? await db.prepare("SELECT * FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > datetime('now')").get(tokenHash) : null;
-  if (!rec) return res.render('user/reset-password', { error: 'এই লিংকটি মেয়াদোত্তীর্ণ বা ইতিমধ্যে ব্যবহৃত — আবার অনুরোধ করুন।', token: null, currentPath: '/reset-password' });
+  if (!rec) return res.render('user/reset-password', { error: 'এই লিংকটি মেয়াদোত্তীর্ণ বা ইতিমধ্যে ব্যবহৃত। আবার অনুরোধ করুন।', token: null, currentPath: '/reset-password' });
   res.render('user/reset-password', { error: null, token, currentPath: '/reset-password' });
 });
 
