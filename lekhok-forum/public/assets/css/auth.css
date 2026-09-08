@@ -4,15 +4,16 @@
    ========================================================================== */
 
 :root{
-  --bg-main:#0B1121; --bg-secondary:#131B2F;
-  --brand:#0a1f44; --brand-light:#1E3A8A;
-  --accent:#059669; --accent-light:#10B981; --accent-dark:#047857;
-  --accent-soft:rgba(5,150,105,0.10);
-  --accent-glow:rgba(5,150,105,0.25);
-  --text:#1e293b; --text-muted:#64748b; --border:#e2e8f0;
+  --bg-main:#04150F; --bg-secondary:#0A2E23;
+  --brand:#0a1f44; --brand-light:#34D399; --brand-text:#F0FBF6;
+  --accent:#34D399; --accent-light:#6EE7B7; --accent-dark:#10B981;
+  --accent-soft:rgba(52,211,153,0.12); --accent-glow:rgba(52,211,153,0.30);
+  --on-accent:#052B1F;
+  --text:#E6F4EC; --text-muted:#A9C4B5; --border:#1F4A3A;
+  --bg:#04231B; --card:#0B3327; --surface-alt:rgba(255,255,255,0.04);
   --radius-sm:5px; --radius:5px;
-  --shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);
-  --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.3),0 2px 4px -1px rgba(0,0,0,0.25);
+  --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.45),0 10px 10px -5px rgba(0,0,0,0.35);
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -20,24 +21,34 @@
 body{
   font-family:var(--font-body);
   background:
-    radial-gradient(ellipse at top right, rgba(5,150,105,.16), transparent 55%),
-    linear-gradient(135deg, #0a1f44 0%, #0b1121 100%);
+    radial-gradient(ellipse at 85% -10%, rgba(16,185,129,.14), transparent 52%),
+    radial-gradient(ellipse at -8% 108%, rgba(5,150,105,.12), transparent 55%),
+    linear-gradient(132deg, #04251c 0%, #064e3b 48%, #0a1f44 100%);
+  background-attachment:fixed;
   min-height:100vh;
   display:flex;
   padding:32px 20px;
 }
 
+/* ডার্ক-থিমে নেটিভ উইজেট */
+input,select,textarea,button{color-scheme:dark}
+input[type=checkbox],input[type=radio]{accent-color:#34D399}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.85) sepia(.2) saturate(2) hue-rotate(80deg)}
+
 /* স্ট্যাবল সেন্টারিং: ছোট হলে দুই অক্ষে কেন্দ্রে; কার্ড লম্বা হলে (রেজিস্ট্রেশন)
    auto-margin শূন্য হয়ে উপরে লেগে যায় — স্ক্রলে উপরের অংশ আর কাটা পড়ে না। */
 .auth-card{
-  background:#fff;
+  background:rgba(11,51,39,.92);
+  border:1px solid rgba(52,211,153,.22);
   border-radius:var(--radius);
   padding:40px 36px;
   max-width:480px;
   width:100%;
   margin:auto;
-  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
   position:relative;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
 }
 
 .back-home{
@@ -57,41 +68,41 @@ body{
   background:linear-gradient(135deg, var(--accent), var(--brand));
   box-shadow:0 5px 14px var(--accent-glow);
 }
-.auth-brand-name{ font-weight:800; font-size:1.05rem; color:var(--brand); letter-spacing:.2px; }
-.auth-title{ text-align:center; color:var(--brand); font-size:1.7rem; margin:0 0 6px; font-weight:800; line-height:1.25; }
+.auth-brand-name{ font-weight:800; font-size:1.05rem; color:var(--brand-text); letter-spacing:.2px; }
+.auth-title{ text-align:center; color:var(--brand-text); font-size:1.7rem; margin:0 0 6px; font-weight:800; line-height:1.25; }
 .auth-sub, .sub{ text-align:center; color:var(--text-muted); margin-bottom:26px; font-size:.95rem; }
 /* backward-compat: যেসব ফর্ম-পেজ (article-form/qa-form/edit) এখনো plain h1 ব্যবহার করে */
-.auth-card h1{ text-align:center; color:var(--brand); margin-bottom:6px; }
+.auth-card h1{ text-align:center; color:var(--brand-text); margin-bottom:6px; }
 
 /* ── এরর / সাকসেস ── */
 .error{
-  background:#fef2f2; color:#b91c1c;
+  background:rgba(239,68,68,.13); color:#FCA5A5;
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
-  border:1px solid #fecaca;
+  border:1px solid rgba(248,113,113,.4);
   display:flex; align-items:center; gap:8px; line-height:1.5;
 }
 .error i{ flex:0 0 auto; }
 .success{
-  background:#ecfdf5; color:#065f46;
+  background:rgba(16,185,129,.13); color:#A7F3D0;
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
-  border:1px solid rgba(5,150,105,.3);
+  border:1px solid rgba(52,211,153,.38);
   display:flex; align-items:center; gap:8px;
 }
 
 /* ── ফর্ম ── */
 .form-group{ margin-bottom:16px; }
-.form-group label{ display:block; margin-bottom:7px; color:var(--brand); font-weight:600; font-size:.86rem; }
+.form-group label{ display:block; margin-bottom:7px; color:#C9DAD1; font-weight:600; font-size:.86rem; }
 .form-group input, .form-group select, .form-group textarea{
   width:100%; padding:11px 14px;
   border:1.5px solid var(--border); border-radius:var(--radius-sm);
-  font-family:inherit; font-size:1rem; color:var(--text); background:#fff;
+  font-family:inherit; font-size:1rem; color:#E6F4EC; background:rgba(255,255,255,.05);
   transition:border-color .15s, box-shadow .15s;
 }
-.form-group input::placeholder{ color:#9ca3af; }
+.form-group input::placeholder{ color:#7E9C8E; }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{
-  outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);
+  outline:none; border-color:#34D399; box-shadow:0 0 0 3px rgba(52,211,153,.16);
 }
 /* এরর স্টেট (ভ্যালিডেশন/সার্ভার এরর হলে) */
 .form-group.has-error input,
@@ -104,39 +115,42 @@ body{
 @media (max-width:480px){ .form-row{ grid-template-columns:1fr; } }
 
 .auth-section-title{
-  color:var(--brand); margin:16px 0 8px; font-size:1rem;
+  color:var(--brand-text); margin:16px 0 8px; font-size:1rem;
   font-weight:700; display:flex; align-items:center; gap:8px;
 }
+
+/* ── সেকশন-গ্রুপিং (রেজিস্ট্রেশন UX) ── */
+.auth-section-title i{color:#34D399}
 
 /* ── প্রাইমারি বাটন (সাইটের accent-gradient প্রাইমারির সাথে হুবহু) ── */
 .btn-primary{
   width:100%; padding:12px;
-  background:linear-gradient(135deg, var(--accent), var(--accent-dark));
-  color:#fff; border:none; border-radius:var(--radius-sm);
-  font-family:inherit; font-size:1rem; font-weight:700;
+  background:linear-gradient(135deg, #34D399, #10B981);
+  color:var(--on-accent); border:none; border-radius:var(--radius-sm);
+  font-family:inherit; font-size:1rem; font-weight:800;
   cursor:pointer; margin-top:6px;
-  box-shadow:0 4px 12px var(--accent-glow);
+  box-shadow:0 6px 20px rgba(16,185,129,.35);
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  transition:transform .15s, box-shadow .15s;
+  transition:transform .15s, box-shadow .15s, filter .15s;
 }
 .btn-primary:hover{
-  background:linear-gradient(135deg, var(--accent-dark), var(--accent));
-  transform:translateY(-2px); box-shadow:0 6px 18px var(--accent-glow);
+  background:linear-gradient(135deg, #10B981, #34D399);
+  transform:translateY(-2px); box-shadow:0 8px 26px rgba(16,185,129,.45);
 }
-.btn-primary:active{ transform:translateY(0); box-shadow:0 2px 8px var(--accent-glow); }
+.btn-primary:active{ transform:translateY(0); box-shadow:0 2px 8px rgba(16,185,129,.3); }
 
 /* ── নিচের লিংক ── */
 .auth-foot{ text-align:center; margin-top:22px; color:var(--text-muted); font-size:.92rem; }
 .auth-foot a{ color:var(--accent); font-weight:700; }
-.auth-foot a:hover{ color:var(--accent-dark); text-decoration:underline; }
+.auth-foot a:hover{ color:#6EE7B7; text-decoration:underline; }
 
 .checkbox-group{ display:flex; align-items:center; gap:8px; margin:8px 0; }
-.checkbox-group input{ width:auto; }
-.checkbox-group label{ margin:0; font-weight:400; }
+.checkbox-group input{ width:auto; accent-color:#34D399; }
+.checkbox-group label{ margin:0; font-weight:400; color:#C9DAD1; }
 
-.char-counter{ text-align:right; font-size:12px; color:#888; margin-top:4px; padding:0 4px; transition:color .2s; }
-.char-counter.is-warn{ color:#e07b00; font-weight:600; }
-.char-counter.is-error{ color:#c0392b; font-weight:700; }
+.char-counter{ text-align:right; font-size:12px; color:#8FAEA0; margin-top:4px; padding:0 4px; transition:color .2s; }
+.char-counter.is-warn{ color:#FDBA74; font-weight:600; }
+.char-counter.is-error{ color:#FCA5A5; font-weight:700; }
 
 /* ==========================================================================
    সেশন ৫৬ — "Confident Split" (split-screen ৪৫:৫৫) — শুধু body.auth-split-স্কোপড
@@ -149,7 +163,11 @@ body.auth-split{
   display:block;
   min-height:100vh;
   padding:0;
-  background:#FAFAFA;
+  background:
+    radial-gradient(ellipse at 85% -10%, rgba(16,185,129,.13), transparent 52%),
+    radial-gradient(ellipse at -8% 108%, rgba(5,150,105,.12), transparent 55%),
+    linear-gradient(132deg, #04251c 0%, #064e3b 48%, #0a1f44 100%);
+  background-attachment:fixed;
 }
 .as-shell{
   display:grid;
@@ -216,14 +234,20 @@ body.auth-split{
   display:flex;
   padding:40px 24px;
   overflow-y:auto;
-  background:#FAFAFA;
+  background:rgba(2,13,9,.35);
+  backdrop-filter:blur(2px);
 }
 .as-form-card{
   margin:auto;               /* স্ট্যাবল সেন্টারিং (সেশন ৫৪-নীতি): ছোট হলে কেন্দ্রে, লম্বা হলে উপরে */
   width:100%;
   max-width:400px;
+  padding:28px;
+  background:rgba(11,51,39,.85);
+  border:1px solid rgba(52,211,153,.2);
+  border-radius:14px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45);
 }
-.as-form-card.wide{ max-width:470px; }
+.as-form-card.wide{ max-width:500px; }
 body.auth-split .back-home{
   position:static;
   display:inline-flex;
@@ -233,7 +257,7 @@ body.auth-split .back-home{
 /* ── হেডিং (টাইপোগ্রাফি-অ্যাঙ্কর, বাম-অ্যালাইন্ড) ── */
 .as-title{
   font-family:var(--font-heading);
-  color:var(--brand); font-size:1.66rem; font-weight:700;
+  color:var(--brand-text); font-size:1.66rem; font-weight:700;
   line-height:1.22; margin:0;
 }
 .as-sub{
@@ -245,7 +269,8 @@ body.auth-split .back-home{
 /* ── ট্যাব (লগইন | আইডি খুঁজুন) ── */
 .as-tabs{
   display:grid; grid-template-columns:1fr 1fr; gap:4px;
-  background:#eceff4; padding:4px;
+  background:rgba(255,255,255,.07); padding:4px;
+  border:1px solid rgba(255,255,255,.09);
   border-radius:10px; margin-bottom:24px;
 }
 .as-tab{
@@ -255,10 +280,10 @@ body.auth-split .back-home{
   color:var(--text-muted);
   transition:background .15s, color .15s, box-shadow .15s;
 }
-.as-tab:hover{ color:var(--brand); }
+.as-tab:hover{ color:#E6F4EC; }
 .as-tab.is-active{
-  background:#fff; color:var(--brand);
-  box-shadow:0 1px 3px rgba(15,23,42,0.10);
+  background:rgba(52,211,153,.18); color:#6EE7B7;
+  box-shadow:inset 0 0 0 1px rgba(52,211,153,.4);
 }
 .as-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 .as-tabpanel{ display:none; }
@@ -270,62 +295,95 @@ body.auth-split .back-home{
 .ff input{
   width:100%; padding:24px 14px 8px;
   border:1.5px solid var(--border); border-radius:8px;
-  font-family:var(--font-body); font-size:1rem; color:var(--text); background:#fff;
-  transition:border-color .15s, box-shadow .15s;
+  font-family:var(--font-body); font-size:1rem; color:#E6F4EC; background:rgba(255,255,255,.05);
+  transition:border-color .15s, box-shadow .15s, background .15s;
 }
+.ff input:hover{ border-color:#2A6650; }
 .ff input:focus{
-  outline:none; border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-soft);
+  outline:none; border-color:#34D399;
+  background:rgba(255,255,255,.07);
+  box-shadow:0 0 0 3px rgba(52,211,153,.16);
 }
 .ff label{
   position:absolute; left:14px; top:15px;
-  font-family:var(--font-body); font-size:.95rem; color:#64748b;
+  font-family:var(--font-body); font-size:.95rem; color:#A9C4B5;
   pointer-events:none;
   transition:top .16s ease, font-size .16s ease, color .16s ease;
 }
 .ff input:focus ~ label,
 .ff input:not(:placeholder-shown) ~ label{
-  top:7px; font-size:.72rem; color:var(--brand); font-weight:700;
+  top:7px; font-size:.72rem; color:#6EE7B7; font-weight:700;
 }
 .ff.is-error input{
-  border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.12);
+  border-color:#F87171; box-shadow:0 0 0 3px rgba(248,113,113,.14);
 }
-.ff.is-error label{ color:#b91c1c; }
+.ff.is-error label{ color:#FCA5A5; }
 
 /* স্ট্যাটিক-লেবেল ভ্যারিয়েন্ট (select / date / file / textarea / readonly) */
 .ff-static label{
   display:block; margin-bottom:6px;
-  font-size:.8rem; font-weight:700; color:var(--brand);
+  font-size:.8rem; font-weight:700; color:#C9DAD1;
 }
 .ff-static input, .ff-static select, .ff-static textarea{
   width:100%; padding:11px 14px;
   border:1.5px solid var(--border); border-radius:8px;
-  font-family:var(--font-body); font-size:1rem; color:var(--text); background:#fff;
-  transition:border-color .15s, box-shadow .15s;
+  font-family:var(--font-body); font-size:1rem; color:#E6F4EC; background:rgba(255,255,255,.05);
+  transition:border-color .15s, box-shadow .15s, background .15s;
 }
+.ff-static input:hover, .ff-static select:hover, .ff-static textarea:hover{ border-color:#2A6650; }
 .ff-static input:focus, .ff-static select:focus, .ff-static textarea:focus{
-  outline:none; border-color:var(--accent);
-  box-shadow:0 0 0 3px var(--accent-soft);
+  outline:none; border-color:#34D399;
+  background:rgba(255,255,255,.07);
+  box-shadow:0 0 0 3px rgba(52,211,153,.16);
 }
+.ff-static select{
+  appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2334D399' d='M1.5 1.5 6 6l4.5-4.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  padding-right:38px;
+  cursor:pointer;
+}
+.ff-static select option{ background:#0B2E23; color:#E6F4EC; }
+.ff-static textarea{ resize:vertical; min-height:84px; }
+
+/* ── ফাইল-আপলোড (কাস্টম, ডার্ক) ── */
+.file-field{position:relative;}
+.file-field input[type=file]{
+  position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+  z-index:1; border:none; padding:0; margin:0; font-size:0;
+}
+.file-drop{
+  display:flex; align-items:center; gap:12px;
+  border:1.5px dashed rgba(52,211,153,.45);
+  background:rgba(52,211,153,.06);
+  border-radius:8px; padding:13px 14px;
+  color:#C9DAD1; font-size:.88rem; line-height:1.5;
+  transition:border-color .15s, background .15s;
+  cursor:pointer;
+}
+.file-drop:hover{ border-color:#34D399; background:rgba(52,211,153,.1); }
+.file-drop i{ color:#34D399; font-size:1.15rem; }
+.file-drop .fd-name{ color:#E6F4EC; font-weight:600; }
 
 /* ── পাসওয়ার্ড শো/হাইড ── */
 .ff.has-toggle input{ padding-right:46px; }
 .pw-toggle{
   position:absolute; right:6px; top:50%; transform:translateY(-50%);
   background:none; border:none; cursor:pointer;
-  color:#64748b; padding:8px; border-radius:6px;
+  color:#8FAEA0; padding:8px; border-radius:6px;
   display:inline-flex; align-items:center; justify-content:center;
 }
-.pw-toggle:hover{ color:var(--accent); background:var(--accent-soft); }
+.pw-toggle:hover{ color:#34D399; background:rgba(52,211,153,.12); }
 .pw-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
 
 /* ── split-স্কোপে বাটন: কোনো transform-নয় (layout-shift-মুক্ত, কনসেপ্ট-নীতি) ── */
 body.auth-split .btn-primary{
   border-radius:8px; min-height:48px;
-  transition:box-shadow .15s, background .15s;
+  transition:box-shadow .15s, background .15s, filter .15s;
 }
 body.auth-split .btn-primary:hover,
-body.auth-split .btn-primary:active{ transform:none; }
+body.auth-split .btn-primary:active{ transform:none; filter:brightness(1.08); }
 body.auth-split .btn-secondary{ border-radius:8px; }
 
 /* ── লিংক-সারি ── */
@@ -334,13 +392,13 @@ body.auth-split .btn-secondary{ border-radius:8px; }
   gap:10px; margin-top:14px; font-size:.86rem;
 }
 .as-row a{ color:var(--accent); font-weight:700; text-decoration:none; }
-.as-row a:hover{ color:var(--accent-dark); text-decoration:underline; }
+.as-row a:hover{ color:#6EE7B7; text-decoration:underline; }
 .as-foot{
   text-align:center; margin-top:24px;
   color:var(--text-muted); font-size:.92rem;
 }
 .as-foot a{ color:var(--accent); font-weight:700; }
-.as-foot a:hover{ color:var(--accent-dark); text-decoration:underline; }
+.as-foot a:hover{ color:#6EE7B7; text-decoration:underline; }
 
 /* ── বাটন লোডিং-স্টেট (সাইজ ফিক্সড) ── */
 .btn-primary.is-busy{ opacity:.85; pointer-events:none; }
@@ -361,6 +419,138 @@ body.auth-split .btn-secondary{ border-radius:8px; }
   .as-tagline{ font-size:1.12rem; margin-bottom:6px; }
   .as-intro{ display:none; }
   .as-brand-bottom{ font-size:.7rem; }
-  .as-form-panel{ padding:28px 20px 40px; overflow:visible; }
+  .as-form-panel{ padding:28px 20px 40px; overflow:visible; background:rgba(2,13,9,.5); }
   .as-form-card, .as-form-card.wide{ max-width:none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ৫৮ — ডার্ক-গ্রিন থিম + রেজিস্ট্রেশন UX আপগ্রেড
+   (সেকশন-গ্রুপিং | পাসওয়ার্ড-মিটার | কাস্টম ফাইল-ড্রপ | কলাপ্সিবল সোশ্যাল)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* অটোফিল-ব্যাকআপ: JS is-filled ক্লাস দিলে লেবেল ভেসে থাকবে */
+.ff input.is-filled ~ label{
+  top:7px; font-size:.72rem; color:#6EE7B7; font-weight:700;
+}
+/* ক্রোম অটোফিলে হলুদ ব্যাকগ্রাউন্ড যেন না আসে */
+input:-webkit-autofill{
+  -webkit-box-shadow:0 0 0 1000px #0E332A inset;
+  -webkit-text-fill-color:#E6F4EC;
+  transition:background-color 9999s ease-in-out 0s;
+}
+
+/* ── রেজিস্ট্রেশন: প্রয়োজনীয়-হিন্ট ব্যানার ── */
+.reg-required-hint{
+  display:flex; align-items:center; gap:9px;
+  background:rgba(52,211,153,.08); border:1px dashed rgba(52,211,153,.35);
+  color:#C9DAD1; font-size:.84rem; line-height:1.5;
+  padding:10px 14px; border-radius:8px; margin:-10px 0 18px;
+}
+.reg-required-hint i{color:#34D399; flex:0 0 auto;}
+.reg-required-hint b{color:#6EE7B7;}
+
+/* ── সেকশন-টাইটেল (রেজিস্ট্রেশন গ্রুপিং) ── */
+.auth-section-title{
+  display:flex; align-items:center; gap:9px;
+  font-size:.92rem; font-weight:700; color:#F0FBF6;
+  margin:26px 0 14px; padding-bottom:9px;
+  border-bottom:1px solid rgba(52,211,153,.22);
+}
+.auth-section-title:first-of-type{margin-top:4px;}
+.auth-section-title i{
+  width:28px; height:28px; flex:0 0 28px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:rgba(52,211,153,.14); border:1px solid rgba(52,211,153,.35);
+  border-radius:8px; font-size:.8rem;
+}
+.opt-tag{
+  font-size:.68rem; font-weight:700; color:#A9C4B5;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14);
+  padding:2px 8px; border-radius:99px; letter-spacing:.3px;
+}
+
+/* ── ফিল্ড-হিন্ট ── */
+.field-hint{
+  font-size:.76rem; color:#8FAEA0; margin:-8px 0 14px;
+  display:flex; align-items:center; gap:6px; line-height:1.5;
+}
+.field-hint i{color:#6EE7B7; font-size:.72rem;}
+
+/* ── পাসওয়ার্ড স্ট্রেংথ-মিটার ── */
+.pw-meter{margin:-6px 0 12px;}
+.pw-meter-bar{
+  height:4px; border-radius:99px; background:rgba(255,255,255,.1);
+  overflow:hidden;
+}
+.pw-meter-bar span{
+  display:block; height:100%; width:0%;
+  border-radius:99px; background:#F87171;
+  transition:width .25s ease, background .25s ease;
+}
+.pw-meter.is-weak .pw-meter-bar span{width:33%; background:#F87171;}
+.pw-meter.is-mid  .pw-meter-bar span{width:66%; background:#FCD34D;}
+.pw-meter.is-ok   .pw-meter-bar span{width:100%; background:#34D399;}
+.pw-meter-txt{font-size:.74rem; color:#8FAEA0; margin-top:5px;}
+.pw-meter.is-weak .pw-meter-txt{color:#FCA5A5;}
+.pw-meter.is-mid  .pw-meter-txt{color:#FCD34D;}
+.pw-meter.is-ok   .pw-meter-txt{color:#6EE7B7;}
+
+/* ── char-counter (বায়ো) ── */
+.char-counter{margin-top:5px;}
+.char-counter.is-warn{color:#FDBA74;}
+
+/* ── কলাপ্সিবল সোশ্যাল সেকশন ── */
+.social-details{margin:20px 0 6px;}
+.social-details summary{
+  list-style:none; cursor:pointer;
+  display:flex; align-items:center; gap:10px;
+  font-size:.92rem; font-weight:700; color:#F0FBF6;
+  padding:13px 16px; border-radius:10px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+  transition:background .15s, border-color .15s;
+  user-select:none;
+}
+.social-details summary::-webkit-details-marker{display:none;}
+.social-details summary:hover{background:rgba(52,211,153,.08); border-color:rgba(52,211,153,.35);}
+.social-details summary i:first-child{color:#34D399;}
+.social-details summary .chev{
+  margin-left:auto; font-size:.72rem; color:#A9C4B5;
+  transition:transform .2s ease;
+}
+.social-details[open] summary .chev{transform:rotate(180deg);}
+.social-details-body{padding:14px 2px 2px;}
+
+/* ── ফাইল-ড্রপ ফাইলনেম ── */
+.file-drop .fd-name{color:#E6F4EC; font-weight:700;}
+.file-drop.is-loaded{
+  border-style:solid; border-color:rgba(52,211,153,.6);
+  background:rgba(52,211,153,.1);
+}
+
+/* ── লোডিং-স্পিনার বাটনে ── */
+.btn-primary.is-busy .fa-spinner{margin-right:4px;}
+
+/* ── মোবাইল ফাইন-টিউন ── */
+@media (max-width:480px){
+  .as-form-card{padding:20px 16px;}
+  .auth-section-title{font-size:.86rem;}
+  .reg-required-hint{font-size:.78rem;}
+}
+
+/* ── ব্র্যান্ড-প্যানেল বেনিফিট-লিস্ট (রেজিস্ট্রেশন) ── */
+.as-brand-points{
+  margin:22px 0 0; padding:0; list-style:none;
+  display:flex; flex-direction:column; gap:11px;
+}
+.as-brand-points li{
+  display:flex; align-items:center; gap:11px;
+  font-size:.86rem; color:rgba(226,232,240,.85); line-height:1.5;
+}
+.as-brand-points li i{
+  flex:0 0 30px; width:30px; height:30px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:.78rem; color:#6EE7B7;
+  background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.3);
+  border-radius:8px;
+}
+@media (max-width:767px){ .as-brand-points{ display:none; } }

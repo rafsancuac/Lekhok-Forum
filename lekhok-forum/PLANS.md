@@ -429,3 +429,14 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 - admin.css: body → Kalpurush + h1–h6/th + sidebar logo/nav → HindSiliguri; auth.css body → Kalpurush
 - অপ্রয়োজনীয় ৮ ফন্ট ফাইল git rm (AkhandBengali×3, BenSen, Durnibar, LipiMollika, Olibrick, RushfordPrinted) — git হিস্টোরিতে সংরক্ষিত
 **ভেরিফাই**: ১৩-পেইজ Playwright অডিট — সব পেইজে h1/nav=HindSiliguri, p=Kalpurush; লোড হয় শুধু HindSiliguri×4 + kalpurush.ttf; 404/JS-এরর ০; ৭৭/৭৭ রিগ্রেশন; admin ১৬ রুট 200
+
+
+## Cross-Agent Note: Session 58 — সাইট-ওয়াইড ডার্ক-গ্রিন থিম (৯ সেপ্টেম্বর ২০২৬)
+
+**⚠️ সব এজেন্ট পড়ুন:** পুরো সাইট এখন ডার্ক-গ্রিন গ্র্যাডিয়েন্ট থিমে।
+- **প্যালেট (:root):** `--bg:#04231B`, `--card:#0B3327`, `--surface-alt:rgba(255,255,255,.04)`, `--text:#E6F4EC`, `--text-muted:#A9C4B5`, `--border:#1F4A3A`, `--accent:#34D399` (লাইট-সবুজ), `--accent-light:#6EE7B7`, `--accent-dark:#10B981`, `--on-accent:#052B1F`, `--brand-text:#F0FBF6`।
+- **নিয়ম:** নতুন ভিউ/CSS-এ লাইট সারফেস (`#fff`, `#f8fafc`, `#fafbfd`) ও গাড়-সবুজ টেক্সট (`#059669`) নিষিদ্ধ — টেক্সট-অ্যাকসেন্ট `var(--accent)`, হেডিং `var(--brand-text)`, কার্ড `var(--card)` ব্যবহার করুন। সবুজ-ব্যাকগ্রাউন্ড বাটনে টেক্সট `var(--on-accent)`।
+- `color:var(--brand)` (নেভি) টেক্সট-হিসেবে ব্যবহার হতো — সেটা এখন `var(--brand-text)`। `--brand` শুধু গ্রেডিয়েন্ট-স্টপে।
+- নেটিভ ইনপুট উইজেটে `color-scheme:dark` সেট আছে (style.css + auth.css) — নতুন স্টাইলশিটে ভুলে গেলে date-picker সাদা আসবে।
+- অথ-পেজ (auth.css) ডার্ক-গ্লাস; রেজিস্ট্রেশন-ফর্ম নতুন `auth-section-title`/`file-drop`/`social-details` ক্লাস ব্যবহার করে।
+- admin.css `--ad-*` টোকেনও ডার্ক-গ্রিন-এ রি-টিউন করা।

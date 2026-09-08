@@ -96,4 +96,88 @@
       }, 240);
     }
   });
+
+  /* ৬) সেশন ৫৮ — কাস্টম ফাইল-ড্রপ: ফাইল বাছাইলে নাম + প্রিভিউ-স্টেট */
+  doc.addEventListener('change', function (e) {
+    var inp = e.target;
+    if (!inp || inp.type !== 'file') return;
+    var drop = inp.parentElement.querySelector('.file-drop');
+    if (!drop) return;
+    var txt = drop.querySelector('span');
+    if (inp.files && inp.files.length) {
+      var f = inp.files[0];
+      var kb = Math.round(f.size / 1024);
+      if (txt) txt.innerHTML = '<span class="fd-name"></span>';
+      if (txt) txt.querySelector('.fd-name').textContent = f.name + ' (' + kb + ' KB)';
+      drop.classList.add('is-loaded');
+    } else {
+      if (txt) txt.textContent = 'ছবি বাছাই করুন বা এখানে ক্লিক করুন — না দিলে লিঙ্গ অনুযায়ী ডেমো ছবি বসবে';
+      drop.classList.remove('is-loaded');
+    }
+  });
+
+  /* ৭) সেশন ৫৮ — পাসওয়ার্ড স্ট্রেংথ-মিটার */
+  function pwScore(v) {
+    if (!v) return 0;
+    var s = 0;
+    if (v.length >= 6) s++;
+    if (v.length >= 10) s++;
+    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+    if (/\d/.test(v)) s++;
+    if (/[^A-Za-z0-9]/.test(v)) s++;
+    return Math.min(s, 5);
+  }
+  function pwUpdate(inp) {
+    var wrap = doc.getElementById('pwMeter');
+    if (!wrap || !inp.hasAttribute('data-strength')) return;
+    var txt = doc.getElementById('pwMeterTxt');
+    var v = inp.value;
+    wrap.classList.remove('is-weak', 'is-mid', 'is-ok');
+    if (!v) { if (txt) txt.textContent = 'কমপক্ষে ৬ অক্ষর'; return; }
+    var sc = pwScore(v);
+    if (v.length > 0 && v.length < 6) {
+      wrap.classList.add('is-weak');
+      if (txt) txt.textContent = 'খুব ছোট — কমপক্ষে ৬ অক্ষর দিন';
+    } else if (sc <= 2) {
+      wrap.classList.add('is-weak');
+      if (txt) txt.textContent = 'দুর্বল পাসওয়ার্ড';
+    } else if (sc <= 3) {
+      wrap.classList.add('is-mid');
+      if (txt) txt.textContent = 'মাঝারি মানের পাসওয়ার্ড';
+    } else {
+      wrap.classList.add('is-ok');
+      if (txt) txt.textContent = 'শক্তিশালী পাসওয়ার্ড ✓';
+    }
+  }
+  doc.querySelectorAll('.ff input[data-strength]').forEach(function (inp) {
+    inp.addEventListener('input', function () { pwUpdate(inp); });
+    pwUpdate(inp);
+  });
+
+  /* ৮) সেশন ৫৮ — বায়ো char-counter (বাংলা সংখ্যায়) */
+  var bio = doc.getElementById('regBio');
+  var bioC = doc.getElementById('bioCounter');
+  if (bio && bioC) {
+    var bn = function (n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); };
+    var upd = function () {
+      var len = bio.value.length;
+      bioC.textContent = bn(len) + ' / ' + bn(bio.maxLength || 500);
+      bioC.classList.toggle('is-warn', len > (bio.maxLength || 500) - 50);
+    };
+    bio.addEventListener('input', upd);
+    upd();
+  }
+
+  /* ৯) সেশন ৫৮ — ইউজারনেম রিয়েল-টাইম ছোট-হাতের করা */
+  var regUser = doc.getElementById('regUser');
+  if (regUser) {
+    regUser.addEventListener('input', function () {
+      var pos = regUser.selectionStart;
+      var low = regUser.value.toLowerCase().replace(/\s+/g, '');
+      if (low !== regUser.value) {
+        regUser.value = low;
+        try { regUser.setSelectionRange(pos, pos); } catch (err) { }
+      }
+    });
+  }
 })();
