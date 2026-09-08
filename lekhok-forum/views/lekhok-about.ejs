@@ -125,63 +125,19 @@
       <span class="accent-divider center"></span>
     </div>
     <div class="join-steps">
+      <% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
+      <% condSteps.forEach((step, idx) => { %>
       <div class="join-step">
-        <span class="step-num">১</span>
+        <span class="step-num"><%= bnNum(idx + 1) %></span>
         <div>
-          <h3><%= C('about_step1_title') %></h3>
-          <p><%= C('about_step1_text') %></p>
-          <p class="step-pay"><i class="fas fa-mobile-alt"></i> <strong><%= C('about_pay_number') %></strong></p>
+          <h3><%= step.title %></h3>
+          <p><%= step.body %></p>
+          <% if (step.extra) { %>
+          <p class="step-pay"><i class="fas fa-mobile-alt"></i> <strong><%= step.extra %></strong></p>
+          <% } %>
         </div>
       </div>
-      <div class="join-step">
-        <span class="step-num">২</span>
-        <div>
-          <h3><%= C('about_step2_title') %></h3>
-          <p><%= C('about_step2_text') %></p>
-        </div>
-      </div>
-      <div class="join-step">
-        <span class="step-num">৩</span>
-        <div>
-          <h3><%= C('about_step3_title') %></h3>
-          <p><%= C('about_step3_text') %></p>
-        </div>
-      </div>
-      <div class="join-step">
-        <span class="step-num">৪</span>
-        <div>
-          <h3><%= C('about_step4_title') %></h3>
-          <p><%= C('about_step4_text') %></p>
-        </div>
-      </div>
-      <div class="join-step">
-        <span class="step-num">৫</span>
-        <div>
-          <h3><%= C('about_step5_title') %></h3>
-          <p><%= C('about_step5_text') %></p>
-        </div>
-      </div>
-      <div class="join-step">
-        <span class="step-num">৬</span>
-        <div>
-          <h3><%= C('about_step6_title') %></h3>
-          <p><%= C('about_step6_text') %></p>
-        </div>
-      </div>
-      <div class="join-step">
-        <span class="step-num">৭</span>
-        <div>
-          <h3><%= C('about_step7_title') %></h3>
-          <p><%= C('about_step7_text') %></p>
-        </div>
-      </div>
-      <div class="join-step">
-        <span class="step-num">৮</span>
-        <div>
-          <h3><%= C('about_step8_title') %></h3>
-          <p><%= C('about_step8_text') %></p>
-        </div>
-      </div>
+      <% }); %>
     </div>
     <div class="section-head center" style="margin-top:40px;">
       <h2 class="section-title" style="font-size:1.55rem;"><i class="fas fa-scroll" style="color:var(--accent);"></i> <%= C('about_rules_title') %></h2>
@@ -217,7 +173,7 @@
 .goal-list li strong { color: var(--accent, #059669); margin-right: 4px; }
 .cu-note { display: flex; gap: 18px; align-items: flex-start; }
 .cu-note-icon { font-size: 1.9rem; color: var(--accent, #059669); margin-top: 4px; }
-.join-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.join-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .join-step { background: #fff; border: 1px solid var(--border, #e2e8f0); border-radius: 5px; padding: 20px; display: flex; gap: 14px; box-shadow: 0 2px 10px rgba(10,31,68,0.04); }
 .join-step .step-num { flex: 0 0 42px; width: 42px; height: 42px; border-radius: 50%; background: var(--brand, #0a1f44); color: #fff; font-weight: 700; font-size: 1.15rem; display: inline-flex; align-items: center; justify-content: center; }
 .join-step h3 { margin: 4px 0 8px; font-size: 1.02rem; color: var(--brand, #0a1f44); }

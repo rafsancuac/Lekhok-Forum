@@ -114,11 +114,14 @@ router.get('/about', async (req, res) => {
       'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 8'
     ).all();
   } catch (e) { pressClippings = []; }
+  // সদস্য হওয়ার শর্তাবলি ধাপ-কার্ড (সেশন ৫১: এখন DB-চালিত — Add/Edit/Delete/Reorder)
+  const condSteps = await db.getSectionItems('conditions_steps');
   res.render('lekhok-about', {
     layout: 'layout',
     pageTitle: 'পরিচিতি',
     currentPath: '/about',
-    pressClippings
+    pressClippings,
+    condSteps
   });
 });
 
