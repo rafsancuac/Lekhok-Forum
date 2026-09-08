@@ -7,9 +7,9 @@
   <title>দ্বি-স্তর যাচাই | লেখক ফোরাম</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/auth.css" />
+  <link rel="stylesheet" href="/assets/css/auth.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="/assets/css/member-accounts.css" />
+  <link rel="stylesheet" href="/assets/css/member-accounts.css?v=<%= AV %>" />
 </head>
 <body class="auth-split">
   <div class="as-shell">
@@ -42,8 +42,8 @@
         <form method="POST" action="/login/2fa" class="as-loading-form" data-submit-label='<i class="fas fa-shield-halved"></i> যাচাই করুন'>
           <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
           <div class="ff mfa-code-wrap">
-            <input type="text" id="mfaCode" name="totp_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder=" " autofocus required aria-label="৬-অঙ্কের যাচাই কোড">
-            <label for="mfaCode">অ্যাপে দেখানো ৬-অঙ্কের কোড</label>
+            <input type="text" id="mfaCode" name="totp_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9A-Za-z]{6,8}" maxlength="8" placeholder=" " autofocus required aria-label="৬-অঙ্কের কোড বা ৮-অঙ্কের ব্যাকআপ কোড" autocapitalize="characters" style="text-transform:uppercase">
+            <label for="mfaCode">অ্যাপের ৬-অঙ্কের কোড / ব্যাকআপ কোড</label>
           </div>
           <p class="mfa-hint"><i class="fas fa-mobile-screen-button"></i> Google Authenticator / Authy / 1Password-এ বর্তমান কোডটি দেখুন। কোড ৩০ সেকেন্ড পর বদলে যায়।</p>
           <button type="submit" class="btn-primary"><i class="fas fa-shield-halved"></i> যাচাই করুন</button>
@@ -66,22 +66,28 @@
   (function () {
     var inp = document.getElementById('mfaCode');
     if (!inp) return;
-    // শুধু সংখ্যা রাখি
+    var wrap = inp.closest('.mfa-code-wrap');
+    /* TOTP = ৬-অঙ্কের সংখ্যা; ব্যাকআপ কোড = ৮-অঙ্কের অ্যালফানিউমেরিক —
+       দুটোই গ্রহণযোগ্য (সার্ভার uppercase করে মেলায়)। ডিজিট-স্ট্রিপ করা যাবে না,
+       কারণ তাতে ব্যাকআপ কোড (যেমন C0566884) ভেঙে যায়। */
     inp.addEventListener('input', function () {
-      this.value = this.value.replace(/\D/g, '').slice(0, 8);
+      this.value = this.value.replace(/[^0-9A-Za-z]/g, '').slice(0, 8);
       var f = this.closest('.ff');
       if (f) { if (this.value) { f.classList.add('is-filled'); } else { f.classList.remove('is-filled'); } }
-      // ৬ অঙ্ক পূর্ণ হলে অটো-সাবমিট (প্রিমিয়াম টাচ)
-      if (this.value.length === 6) {
+      // ৬ ডিজিটের বিশুদ্ধ TOTP হলে অটো-সাবমিট (ব্যাকআপ-মোড বা মিশ্র-অক্ষরে নয়)
+      var isTotp6 = this.value.length === 6 && /^[0-9]{6}$/.test(this.value);
+      if (isTotp6 && !this.dataset.backupMode) {
         var form = this.form;
         if (form && !form.dataset.autoSent) {
           form.dataset.autoSent = '1';
-          setTimeout(function () { if (inp.value.length === 6) form.submit(); }, 380);
+          var val = this.value;
+          setTimeout(function () { if (inp.value === val && /^[0-9]{6}$/.test(inp.value)) form.submit(); }, 380);
         }
       }
     });
     setTimeout(function () { try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); } }, 220);
-    // ব্যাকআপ-কোড নোট টগল
+    /* ব্যাকআপ-কোড নোট টগল — খোলা থাকলে ইনপুট ব্যাকআপ-মোডে যায়:
+       অটো-সাবমিট বন্ধ, টেক্সট-কিবোর্ড, ভিজ্যুয়াল হাইলাইট */
     var alt = document.getElementById('mfaAltBtn');
     var note = document.getElementById('mfaAltNote');
     if (alt && note) {
@@ -90,9 +96,23 @@
         var open = note.style.display !== 'none';
         note.style.display = open ? 'none' : 'block';
         alt.classList.toggle('is-open', !open);
-        if (!open) { try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); } }
+        if (wrap) wrap.classList.toggle('is-backup', !open);
+        if (inp) {
+          inp.dataset.backupMode = open ? '' : '1';
+          inp.setAttribute('inputmode', open ? 'numeric' : 'text');
+          inp.focus({ preventScroll: true });
+        }
       });
     }
+    // পেস্ট করা ব্যাকআপ কোডও পুরো ধরতে দিই (ব্রাউজার ট্রিম করে দিলে input-ইভেন্ট আগেই স্যানিটাইজ করে)
+    inp.addEventListener('paste', function (e) {
+      var t = (e.clipboardData || window.clipboardData).getData('text') || '';
+      if (/[0-9A-Za-z]{6,8}/.test(t.trim())) {
+        e.preventDefault();
+        this.value = t.trim().replace(/[^0-9A-Za-z]/g, '').slice(0, 8);
+        this.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
   })();
   </script>
 </body>

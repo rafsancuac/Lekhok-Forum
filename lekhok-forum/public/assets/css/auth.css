@@ -609,6 +609,30 @@ body.auth-split .mfa-code-wrap label{
 }
 @keyframes fadeSlideIn{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
 
+/* ── ব্যাকআপ-কোড মোড (Session 61): ইনপুট অ্যালফানিউমেরিক কোড নিচ্ছে —
+   ভিজ্যুয়াল ফিডব্যাক + অক্ষর-ব্যবধান ডিজিটের চেয়ে খানিকটা কম ── */
+.mfa-code-wrap.is-backup input{
+  letter-spacing:.32em;
+  font-size:1.45rem;
+  border-color:rgba(110,231,183,.65);
+  background:rgba(16,185,129,.10);
+  box-shadow:0 0 0 3px rgba(16,185,129,.14);
+}
+.mfa-code-wrap.is-backup label{
+  color:var(--accent-light);
+}
+.mfa-code-wrap.is-backup::after{
+  content:"ব্যাকআপ মোড";
+  position:absolute; top:-11px; right:10px;
+  font-size:.6rem; font-weight:700; letter-spacing:.08em;
+  color:var(--on-accent);
+  background:var(--accent);
+  border-radius:99px; padding:2px 8px;
+  animation:mfaPop .35s ease both;
+}
+.mfa-code-wrap{ position:relative; }
+
+
 .mfa-foot{ margin-top:22px; }
 
 /* প্রিমিয়াম এন্ট্রি-অ্যানিমেশন (সব অথ-পেজে, reduced-motion-সেফ) */

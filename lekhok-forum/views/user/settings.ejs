@@ -191,14 +191,21 @@
               </form>
             <% } else if (secPending) { %>
               <div class="sec-enroll">
-                <p class="sec-step"><span class="sec-step-num">১</span> Google Authenticator / Authy / 1Password-এ "ম্যানুয়ালি কী দিন" (Setup key) বেছে নিয়ে নিচের সিক্রেট বসান।</p>
-                <div class="sec-secret-box"><%= secPending %></div>
-                <p class="sec-step"><span class="sec-step-num">২</span> এরপর অ্যাপে দেখানো <b>বর্তমান</b> ৬-অঙ্কের কোড নিচে দিন — মিললেই 2FA সক্রিয় হয়ে যাবে।</p>
+                <div class="sec-qr-row">
+                  <a href="<%= secOtpauth %>" class="sec-qr-box" title="অথেনটিকেটর অ্যাপে খুলুন">
+                    <img src="/settings/security/qr" alt="2FA QR কোড — Google Authenticator-এ স্ক্যান করুন" width="172" height="172" onerror="this.parentElement.style.display='none'">
+                  </a>
+                  <div class="sec-qr-steps">
+                    <p class="sec-step"><span class="sec-step-num">১</span> Google Authenticator / Authy / 1Password-এ <b>+ নতুন অ্যাকাউন্ট</b> → <b>QR স্ক্যান</b> বেছে নিয়ে বাঁয়ের কোড স্ক্যান করুন। স্ক্যান করতে না পারলে "Setup key" অপশনে নিচের সিক্রেটটি বসান।</p>
+                    <div class="sec-secret-box"><%= secPending %></div>
+                    <p class="sec-step"><span class="sec-step-num">২</span> এরপর অ্যাপে দেখানো <b>বর্তমান</b> ৬-অঙ্কের কোড নিচে দিন — মিললেই 2FA সক্রিয় হয়ে যাবে।</p>
+                  </div>
+                </div>
                 <form method="POST" action="/settings/security/confirm" class="sec-inline-form">
                   <div class="field"><label>৬-অঙ্কের কোড</label><input class="input" type="text" name="totp_code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus placeholder="যেমন: ৪৫৮২১৩"></div>
                   <button type="submit" class="btn btn-primary"><i class="fas fa-shield-halved"></i> সক্রিয় করুন</button>
                 </form>
-                <p class="hint" style="margin-top:10px;"><i class="fas fa-circle-info"></i> otpauth লিংক (কিউআর/ম্যানুয়াল): <span class="sec-otp"><%= secOtpauth %></span></p>
+                <p class="hint" style="margin-top:10px;"><i class="fas fa-circle-info"></i> otpauth লিংক (ম্যানুয়াল): <span class="sec-otp"><%= secOtpauth %></span></p>
               </div>
             <% } else { %>
               <div class="sec-status">

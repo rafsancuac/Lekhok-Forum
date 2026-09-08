@@ -195,14 +195,14 @@
 .gallery-tabs .gtab-count {
   font-size: 0.76rem;
   font-weight: 700;
-  color: #8FADA0;
+  color: #B9D8CB; /* লাইট-মিন্ট — ডারক-গ্রিনে ৭:১+ কনট্রাস্ট (আগের #8FADA0 ~৪:১ ছিল) */
   background: rgba(255,255,255,.06);
   padding: 1px 8px;
   border-radius: 99px;
-  transition: color 0.18s;
+  transition: color 0.18s, background 0.18s;
 }
-.gallery-tabs .gtab:hover .gtab-count,
-.gallery-tabs .gtab.active .gtab-count { color: #34D399; }
+.gallery-tabs .gtab:hover .gtab-count { color: #D3F4E7; background: rgba(255,255,255,.10); }
+.gallery-tabs .gtab.active .gtab-count { color: #34D399; background: rgba(52,211,153,.14); }
 
 @media (max-width: 640px) {
   .gallery-tabs {

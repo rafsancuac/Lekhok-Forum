@@ -159,6 +159,31 @@
   word-break: break-all; color: var(--text-muted, #94a3b8);
 }
 
+/* ── সেশন ৬১: 2FA এনরোলে QR — স্ক্যান-বান্ধব থিম-ম্যাচড লেআউট ── */
+.sec-qr-row {
+  display: flex; gap: 18px; align-items: flex-start;
+  margin: 4px 0 8px; flex-wrap: wrap;
+}
+.sec-qr-box {
+  flex: 0 0 auto; display: block;
+  padding: 10px; border-radius: 14px;
+  background: #6EE7B7; /* QR লাইট-ক্যানভাস — স্ক্যানার-কনট্রাস্ট নিশ্চিত */
+  border: 1px solid rgba(110, 231, 183, .5);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, .22), inset 0 0 0 4px rgba(5, 43, 31, .08);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.sec-qr-box:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(16, 185, 129, .32), inset 0 0 0 4px rgba(5, 43, 31, .08);
+}
+.sec-qr-box img { display: block; width: 172px; height: 172px; border-radius: 8px; }
+.sec-qr-steps { flex: 1 1 260px; min-width: 240px; }
+@media (max-width: 560px) {
+  .sec-qr-row { flex-direction: column; align-items: center; }
+  .sec-qr-steps { width: 100%; }
+}
+
+
 .sec-backup-box {
   margin: 16px 0 22px; padding: 18px;
   border-radius: 10px;

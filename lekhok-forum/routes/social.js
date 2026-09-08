@@ -1100,6 +1100,28 @@ router.post('/settings/security/enroll', ensureLoggedIn, async (req, res) => {
   req.session.save(() => res.redirect('/settings?sec=pending#security'));
 });
 
+// ── সেশন ৬১: এনরোল-পেন্ডিং otpauth-এর QR (SVG) — অথেনটিকেটর অ্যাপে স্ক্যান করা যায় ──
+// ম্যানুয়াল-কি কপির বদলে স্ক্যান = স্ট্যান্ডার্ড 2FA UX। থিম-ম্যাচড রঙে SVG।
+router.get('/settings/security/qr', ensureLoggedIn, async (req, res) => {
+  const secret = req.session.pendingUserTotpSecret;
+  if (!secret) return res.status(404).type('text/plain').send('no pending enrollment');
+  try {
+    const uri = totp.otpauthUri(secret, req.session.user.username, 'লেখক ফোরাম');
+    const QR = require('qrcode');
+    // ডার্ক-মডিউল #052B1F লাইট-সবুজ ক্যানভাসে — স্ক্যানার-সেফ কনট্রাস্ট + ডার্ক-গ্রিন থিম
+    const svg = await QR.toString(uri, {
+      type: 'svg', margin: 2, width: 200, errorCorrectionLevel: 'M',
+      color: { dark: '#052B1F', light: '#6EE7B7' }
+    });
+    res.set('Cache-Control', 'no-store'); // সিক্রেট-নির্ভর — ক্যাশে জমুক না
+    res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+    res.set('X-Content-Type-Options', 'nosniff');
+    return res.send(svg);
+  } catch (e) {
+    return res.status(500).type('text/plain').send('qr error');
+  }
+});
+
 // ── ইউজার 2FA — কোড কনফার্ম (ধাপ ২) → 2FA সক্রিয়, ব্যাকআপ-কোড একবার দেখানো ──
 router.post('/settings/security/confirm', ensureLoggedIn, async (req, res) => {
   const secret = req.session.pendingUserTotpSecret;
