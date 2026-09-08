@@ -1316,6 +1316,23 @@ async function runMigrations() {
       }
     }
   }
+
+  // ── টাস্ক ১২ (পর্ব ৩, অংশ ক): উপদেষ্টা পরিষদে কার্যবর্ষ বসানো ──
+  // আগে advisory এন্ট্রিগুলোর term_year খালি ছিল — কার্যবর্ষ ফিল্টারের জন্য
+  // সব উপদেষ্টার একটা বছর থাকা দরকার। ডিফল্ট = সর্বশেষ কার্যবর্ষ ২০২৪-২৫
+  // (ইউজার পরে অ্যাডমিন থেকে ইডিট করবেন)। নতুন ফ্ল্যাগ → ঠিক একবার চলে।
+  try {
+    const v4Seeded = await backend.prepare("SELECT value FROM settings WHERE key = 'advisory_term_v4_seeded'").get();
+    if (!v4Seeded) {
+      await backend.prepare(
+        "UPDATE members SET term_year = '২০২৪-২৫' WHERE member_type = 'advisory' AND (term_year IS NULL OR term_year = '')"
+      ).run();
+      try { await backend.prepare("INSERT INTO settings (key, value) VALUES ('advisory_term_v4_seeded', '1')").run(); }
+      catch (_) { try { await backend.prepare("UPDATE settings SET value = '1' WHERE key = 'advisory_term_v4_seeded'").run(); } catch (_) {} }
+    }
+  } catch (e) {
+    console.warn('[migrate] advisory-term-v4 skipped:', (e.message || '').slice(0, 140));
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1695,7 +1712,7 @@ async function seedDemoContent() {
   ];
   for (const [name, designation, sort_order] of advisors) {
     try {
-      await prepare(`INSERT INTO members (name, role, designation, member_type, sort_order) VALUES (?, 'উপদেষ্টা', ?, 'advisory', ?)`)
+      await prepare(`INSERT INTO members (name, role, designation, member_type, term_year, sort_order) VALUES (?, 'উপদেষ্টা', ?, 'advisory', '২০২৪-২৫', ?)`)
         .run(name, designation, sort_order);
     } catch(e) {}
   }

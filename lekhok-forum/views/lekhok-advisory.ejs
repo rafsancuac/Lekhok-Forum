@@ -7,30 +7,21 @@
 </header>
 
 <style>
-.adv-filter-bar {
-  display: flex; justify-content: flex-end; align-items: center;
-  gap: 10px; margin-bottom: 20px;
+/* ── কার্যবর্ষ নির্বাচন বার (কমিটি পেজের হুবহু স্টাইল) ── */
+.term-bar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; }
+.term-intro { margin: 0; text-align: center; }
+.term-select-wrap { justify-self: end; display: inline-flex; align-items: center; gap: 8px; }
+.term-select-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted, #64748b); white-space: nowrap; }
+#termSelect {
+  appearance: none; -webkit-appearance: none;
+  padding: 9px 36px 9px 14px; border-radius: 5px;
+  border: 1.5px solid var(--border, #e2e8f0); background-color: #fff; color: var(--text, #334155);
+  font-family: inherit; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;
 }
-.adv-filter-bar label {
-  font-size: 14px; font-weight: 600; color: var(--text-soft, #475569);
-  font-family: var(--font-body) !important;
-}
-.adv-filter-bar select {
-  padding: 8px 16px; border: 1.5px solid var(--border, #e2e8f0);
-  border-radius: 5px; background: #fff; font-family: var(--font-body) !important;
-  font-size: 14px; color: var(--text, #334155); cursor: pointer;
-  transition: border-color .15s;
-}
-.adv-filter-bar select:focus {
-  outline: none; border-color: var(--accent, #059669);
-}
-.adv-year-group { margin-bottom: 32px; }
-.adv-year-label {
-  font-size: 16px; font-weight: 700; color: var(--brand, #0a1f44);
-  margin-bottom: 12px; padding-bottom: 6px;
-  border-bottom: 2px solid var(--accent, #059669);
-  display: inline-block;
-}
+#termSelect:focus { outline: none; border-color: var(--accent, #059669); box-shadow: 0 0 0 3px rgba(5,150,105,.12); }
+
 .leader-card { position: relative; overflow: hidden; }
 .leader-card img { transition: transform .35s ease; }
 .leader-card:hover img { transform: scale(1.06); }
@@ -60,135 +51,67 @@
 .term-empty i { font-size: 2rem; color: var(--accent, #059669); margin-bottom: 12px; }
 .term-empty h3 { margin: 0 0 6px; color: var(--brand, #0a1f44); font-size: 1.15rem; }
 .term-empty p { margin: 0; color: var(--text-muted, #64748b); font-size: .93rem; }
+
+@media (max-width: 576px) {
+  .term-select-wrap { gap: 6px; }
+  #termSelect { padding: 8px 32px 8px 12px; font-size: 0.88rem; }
+}
 </style>
 
 <% const bnNum = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]); %>
 
-<%
-  // Group advisors by term_year
-  const bnTermSort = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
-  const yearGroups = {};
-  const noYearAdvisors = [];
-  advisory.forEach(m => {
-    const terms = (m.terms && m.terms.length) ? m.terms : (m.term_year ? [m.term_year] : []);
-    if (terms.length === 0) {
-      noYearAdvisors.push(m);
-    } else {
-      terms.forEach(t => {
-        if (!yearGroups[t]) yearGroups[t] = [];
-        yearGroups[t].push(m);
-      });
-    }
-  });
-  const sortedYears = Object.keys(yearGroups).sort((a, b) => bnTermSort(b) - bnTermSort(a));
-%>
-
 <section class="section reveal">
   <div class="container">
-
-    <% if (sortedYears.length > 0) { %>
-    <!-- কার্যবর্ষ ড্রপডাউন ফিল্টার -->
-    <div class="adv-filter-bar">
-      <label for="advYearFilter"><i class="fas fa-calendar-alt"></i> কার্যবর্ষ:</label>
-      <select id="advYearFilter" onchange="filterAdvisoryYear(this.value)">
-        <option value="all">সকল কার্যবর্ষ</option>
-        <% sortedYears.forEach(y => { %>
-          <option value="<%= y %>"><%= y %></option>
-        <% }) %>
-      </select>
+    <!-- কার্যবর্ষ ফিল্টার (কমিটি পেজের হুবহু) -->
+    <div class="term-bar">
+      <p class="term-intro">
+          <% if (selectedYear) { %><strong><%= selectedYear %></strong> কার্যবর্ষের উপদেষ্টা পরিষদ.<% } else { %>লেখক ফোরাম, চবি শাখা।<% } %>
+          <% if (countByYear[selectedYear]) { %>মোট <strong><%= bnNum(countByYear[selectedYear]) %></strong> জন।<% } %>
+      </p>
+      <div class="term-select-wrap">
+        <label class="term-select-label" for="termSelect"><i class="far fa-calendar"></i> কার্যবর্ষ</label>
+        <select id="termSelect" aria-label="কার্যবর্ষ নির্বাচন" onchange="if (this.value) window.location.href = '/committee/advisory?year=' + encodeURIComponent(this.value);">
+          <% years.forEach(y => { %>
+            <option value="<%= y %>" <%= y === selectedYear ? 'selected' : '' %>><%= y %><%= countByYear[y] ? ' (সদস্য ' + bnNum(countByYear[y]) + ' জন)' : '' %></option>
+          <% }) %>
+        </select>
+      </div>
     </div>
-    <% } %>
 
     <% if (advisory && advisory.length) { %>
-
-      <% // Render year-grouped advisors %>
-      <% sortedYears.forEach((year) => { %>
-        <div class="adv-year-group" data-year="<%= year %>">
-          <div class="adv-year-label"><i class="far fa-calendar"></i> <%= year %> কার্যবর্ষ, <%= bnNum(yearGroups[year].length) %> জন</div>
-          <div class="leaders-grid">
-            <% yearGroups[year].forEach(m => { %>
-              <% const displayName = m.user_full_name || m.name; %>
-              <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
-              <% if (m.user_username) { %>
-                <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
-                  <span class="member-term-tag"><%= year %></span>
-                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
-                  <div class="leader-body">
-                    <h3><%= displayName %></h3>
-                    <p class="role"><%= m.role %></p>
-                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
-                  </div>
-                </a>
-              <% } else { %>
-                <div class="leader-card has-image clickable-card">
-                  <span class="member-term-tag"><%= year %></span>
-                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
-                  <div class="leader-body">
-                    <h3><%= displayName %></h3>
-                    <p class="role"><%= m.role %></p>
-                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
-                  </div>
-                </div>
-              <% } %>
-            <% }) %>
-          </div>
-        </div>
-      <% }) %>
-
-      <% // Render advisors without term_year (no year header) %>
-      <% if (noYearAdvisors.length > 0) { %>
-        <div class="adv-year-group" data-year="no-year">
-          <% if (sortedYears.length > 0) { %>
-            <div class="adv-year-label"><i class="fas fa-users"></i> সাধারণ উপদেষ্টা, <%= bnNum(noYearAdvisors.length) %> জন</div>
+      <div class="leaders-grid" style="margin-top:26px">
+        <% advisory.forEach(m => { %>
+          <% const displayName = m.name || m.user_full_name; %>
+          <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% if (m.user_username) { %>
+            <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+              <span class="member-term-tag"><%= selectedYear %></span>
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+                <% if (m.designation && m.designation !== m.role) { %><p class="leader-bio"><%= m.designation %></p><% } %>
+              </div>
+            </a>
+          <% } else { %>
+            <div class="leader-card has-image clickable-card">
+              <span class="member-term-tag"><%= selectedYear %></span>
+              <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
+              <div class="leader-body">
+                <h3><%= displayName %></h3>
+                <p class="role"><%= m.role %></p>
+                <% if (m.designation && m.designation !== m.role) { %><p class="leader-bio"><%= m.designation %></p><% } %>
+              </div>
+            </div>
           <% } %>
-          <div class="leaders-grid">
-            <% noYearAdvisors.forEach(m => { %>
-              <% const displayName = m.user_full_name || m.name; %>
-              <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
-              <% if (m.user_username) { %>
-                <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
-                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
-                  <div class="leader-body">
-                    <h3><%= displayName %></h3>
-                    <p class="role"><%= m.role %></p>
-                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
-                  </div>
-                </a>
-              <% } else { %>
-                <div class="leader-card has-image clickable-card">
-                  <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" />
-                  <div class="leader-body">
-                    <h3><%= displayName %></h3>
-                    <p class="role"><%= m.role %></p>
-                    <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
-                  </div>
-                </div>
-              <% } %>
-            <% }) %>
-          </div>
-        </div>
-      <% } %>
-
+        <% }) %>
+      </div>
     <% } else { %>
-      <div class="term-empty">
+      <div class="term-empty" style="margin-top:26px">
         <i class="far fa-folder-open"></i>
-        <h3>উপদেষ্টাদের তালিকা এখনো সংরক্ষিত হয়নি</h3>
+        <h3><%= selectedYear || 'এই' %> কার্যবর্ষের উপদেষ্টা তথ্য এখনো সংরক্ষিত হয়নি</h3>
         <p>তথ্য পাওয়ামাত্র এখানে যুক্ত করা হবে, ইনশাআল্লাহ।</p>
       </div>
     <% } %>
-
   </div>
 </section>
-
-<script>
-function filterAdvisoryYear(year) {
-  const groups = document.querySelectorAll('.adv-year-group');
-  groups.forEach(g => {
-    if (year === 'all' || g.dataset.year === year || (year === 'no-year' && g.dataset.year === 'no-year')) {
-      g.style.display = '';
-    } else {
-      g.style.display = 'none';
-    }
-  });
-}
-</script>
