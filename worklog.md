@@ -201,3 +201,22 @@ Work Log:
 
 Stage Summary:
 - কমিট: session49 (বিস্তারিত PROJECT.md §১০ + CMS-AUDIT.md)
+
+---
+Task ID: 13
+Agent: Main verification agent (Session 50)
+Task: সম্পূর্ণ টেকনিক্যাল পারফরম্যান্স অডিট (টাস্ক ৭)
+
+Work Log:
+- বেসলাইন মাপা (before): ফন্ট 1.64MB TTF, CSS+JS 355KB (unminified), কোনো স্ট্যাটিক ক্যাশ হেডার নেই, N+1 (ফিড ৩০, হোম ৫), ৮৬/৯৭ ইমেজ lazy
+- ফন্ট → WOFF2 (fontTools, ৬ ফাইল, −66%); fonts.css-এ WOFF2+TTF fallback
+- CSS minify (clean-css) + JS minify (terser) → −28%; টপ-লেভেল গ্লোবাল সংরক্ষিত যাচাই
+- express.static setHeaders: /assets/*, /uploads/* → immutable 30d (AV bust)
+- N+1 ফিক্স: dashboard.js ফিড batch, pages.js top-answer batch
+- db.js +৯ ইনডেক্স (comments/likes/messages/bookmarks/follows/posts/conv_members)
+- lazy loading +৭ ইমেজ (contact/article comment avatars)
+- PERFORMANCE-REPORT.md (before/after)
+- রিগ্রেশন: smoke ১৮/১৮+৯/৯, RBAC ১০/১০, typography ৪৬/৪৬, media ৫/৫, পাবলিক ১৬ পেজ 200
+
+Stage Summary:
+- কমিট: session50 (বিস্তারিত PROJECT.md §১০ + PERFORMANCE-REPORT.md)

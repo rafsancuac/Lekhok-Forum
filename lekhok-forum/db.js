@@ -1388,6 +1388,21 @@ async function applySession42Migrations() {
   ];
   for (const q of IDX43) { try { await backend.prepare(q).run(); } catch (e) {} }
 
+  // (50) পারফরম্যান্স: hot-query পাথে missing indexes (comments/likes/messages/
+  // bookmarks/follows)। sql.js-এ ছোট ডেটায় মাইনর, Turso-তে (প্রোডাকশন) বড় লাভ।
+  const IDX50 = [
+    'CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)',
+    'CREATE INDEX IF NOT EXISTS idx_likes_post ON likes(post_id)',
+    'CREATE INDEX IF NOT EXISTS idx_likes_comment ON likes(comment_id)',
+    'CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id, created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id, post_id)',
+    'CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id)',
+    'CREATE INDEX IF NOT EXISTS idx_posts_type_status ON posts(type, status)',
+    'CREATE INDEX IF NOT EXISTS idx_conv_members_conv ON conversation_members(conversation_id)',
+    'CREATE INDEX IF NOT EXISTS idx_conv_members_user ON conversation_members(user_id)'
+  ];
+  for (const q of IDX50) { try { await backend.prepare(q).run(); } catch (e) {} }
+
   // (42c) ৩০ দিনের পুরনো ট্র্যাশ পার্জ
   try {
     await backend.prepare(`DELETE FROM trash WHERE deleted_at < datetime('now', '-30 days', 'localtime')`).run();

@@ -86,18 +86,24 @@ router.get('/dashboard', async (req, res) => {
   }
 
   const feed = await db.prepare(sql).all(...params);
-  // (async migration) per-item reaction lookups moved from sync forEach to for..of
+  // (সেশন ৫০) N+1 ফিক্স: আগে প্রতি feed-আইটেমে এক করে `likes` কুয়ারি হতো
+  // (৩০ আইটেম = ৩০ কুয়ারি)। এখন এক batch কুয়ারিতে আমার সব রিয়েকশন আনি।
+  const postIds = feed.filter(i => i.item_type !== 'activity').map(i => i.id);
+  const myReactions = {};
+  if (me && postIds.length) {
+    try {
+      const likes = await db.prepare(
+        `SELECT post_id, reaction_type FROM likes WHERE user_id = ? AND post_id IN (${postIds.map(() => '?').join(',')})`
+      ).all(me.id, ...postIds);
+      for (const l of likes) myReactions[l.post_id] = l.reaction_type || 'like';
+    } catch (_) {}
+  }
   for (const item of feed) {
     try { item.reactionCounts = JSON.parse(item.reactions || '{}'); } catch (_) { item.reactionCounts = {}; }
     ['like','love','care','haha','wow','sad'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
     item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
     // my current reaction on this item (activities have no reactions)
-    if (me && item.item_type !== 'activity') {
-      const mine = await db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND post_id = ?').get(me.id, item.id);
-      item.myReaction = mine ? (mine.reaction_type || 'like') : null;
-    } else {
-      item.myReaction = null;
-    }
+    item.myReaction = (me && item.item_type !== 'activity') ? (myReactions[item.id] || null) : null;
   }
 
   // Right sidebar data

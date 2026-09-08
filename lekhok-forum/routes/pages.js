@@ -68,12 +68,24 @@ router.get('/', async (req, res) => {
 
   // Recent Q&A for home page folding section
   const recentQA = await db.prepare("SELECT p.id, p.title, p.body, p.created_at, u.full_name as author_name, u.username as author_username FROM posts p JOIN users u ON p.author_id = u.id WHERE p.type = 'question' AND p.status = 'published' ORDER BY p.created_at DESC LIMIT 5").all();
-  // Fetch top answer for each question
-  for (const q of recentQA) {
+  // (সেশন ৫০) N+1 ফিক্স: আগে প্রতি প্রশ্নে ১ করে top-answer কুয়ারি (৫ কুয়ারি);
+  // এখন এক batch কুয়ারিতে সব প্রশ্নের শীর্ষ উত্তর আনি।
+  const qids = recentQA.map(q => q.id);
+  const topByQid = {};
+  if (qids.length) {
     try {
-      q.topAnswer = await db.prepare("SELECT c.body, u.full_name as author_name FROM comments c JOIN users u ON c.author_id = u.id WHERE c.post_id = ? ORDER BY c.like_count DESC, c.created_at ASC LIMIT 1").get(q.id);
-    } catch(e) { q.topAnswer = null; }
+      const rows = await db.prepare(
+        `SELECT c.post_id, c.body, u.full_name AS author_name
+         FROM comments c JOIN users u ON c.author_id = u.id
+         WHERE c.post_id IN (${qids.map(() => '?').join(',')})
+         ORDER BY c.post_id, c.like_count DESC, c.created_at ASC`
+      ).all(...qids);
+      for (const r of rows) {
+        if (!(r.post_id in topByQid)) topByQid[r.post_id] = { body: r.body, author_name: r.author_name };
+      }
+    } catch (_) {}
   }
+  for (const q of recentQA) q.topAnswer = topByQid[q.id] || null;
 
   const faqItems42 = await db.getSectionItems('home_faq');
   res.render('lekhok-home', { faqItems42,

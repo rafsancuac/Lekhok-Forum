@@ -88,7 +88,7 @@
         <h3><i class="far fa-comment"></i> মন্তব্য (<%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %>)</h3>
         <% if (user) { %>
           <form method="POST" class="comment-form" id="commentForm">
-            <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar">
+            <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar">
             <div class="comment-input-wrap">
               <textarea name="body" placeholder="আপনার মন্তব্য লিখুন... (@ব্যবহারকারী নাম লিখে ম্যানশন করুন)" rows="3" required></textarea>
               <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> পাঠান</button>
@@ -104,7 +104,7 @@
           <% } %>
           <% comments.forEach(c => { %>
             <div class="comment-item" id="c<%= c.id %>">
-              <img src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
+              <img loading="lazy" decoding="async" src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
               <div class="comment-bubble">
                 <a href="/profile/<%= c.username %>" class="comment-author"><%= c.full_name %></a>
                 <p class="comment-body"><%= c.body %></p>
@@ -124,7 +124,7 @@
                 </div>
                 <% c.replies && c.replies.forEach(r => { %>
                   <div class="reply-item" id="c<%= r.id %>">
-                    <img src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
+                    <img loading="lazy" decoding="async" src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
                     <div class="comment-bubble small">
                       <a href="/profile/<%= r.username %>" class="comment-author"><%= r.full_name %></a>
                       <p class="comment-body"><%= r.body %></p>
@@ -136,7 +136,7 @@
                 <% }); %>
                 <% if (user) { %>
                   <form class="reply-form" data-parent="<%= c.id %>" hidden>
-                    <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar small">
+                    <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar small">
                     <div class="comment-input-wrap">
                       <textarea name="body" rows="2" placeholder="<%= c.full_name %>-কে উত্তর দিন..." required></textarea>
                       <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i></button>

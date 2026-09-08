@@ -83,7 +83,19 @@ app.use((req, res, next) => {
   if (req.secure || req.get('x-forwarded-proto') === 'https') res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
-app.use(express.static(path.join(__dirname, 'public')));
+// সেশন ৫০ (পারফরম্যান্স): স্ট্যাটিক অ্যাসেটে দীর্ঘ Cache-Control।
+// /assets/* (CSS/JS/ফন্ট) `?v=<AV>` দিয়ে bust হয়; /uploads/* timestamp-ফাইলনামে
+// কনটেন্ট-অ্যাড্রেসড — তাই immutable (৩০ দিন) নিরাপদ। অন্য স্ট্যাটিক ১ দিন।
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    let rel = filePath.replace(path.join(__dirname, 'public'), '').replace(/\\/g, '/');
+    if (rel.startsWith('/assets/') || rel.startsWith('/uploads/')) {
+      res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // সেশন ৪৪: method-override-এর ডিফল্ট getter শুধু কুয়েরি-স্ট্রিং থেকে `_method`
