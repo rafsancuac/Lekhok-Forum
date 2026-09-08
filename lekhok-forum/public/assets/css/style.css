@@ -2552,6 +2552,35 @@ html.theme-dark .logo-text strong { color: #e7eefc; }
   background: var(--accent, #059669);
   color: #fff;
 }
+/* সেশন ৪৯: জেনেরিক .leader-social লেআউট (কমিটি/প্রাক্তন-নেতা কার্ডেও প্রযোজ্য) */
+.leader-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.leader-social a {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--accent, #059669);
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.leader-social a:hover { background: var(--accent, #059669); color: #fff; }
+
+/* সেশন ৪৯: সোশ্যাল আইকনের অফিসিয়াল ব্র্যান্ড কালার (Facebook ব্লু / LinkedIn ব্লু) */
+.leader-social a.leader-soc-fb { color: #1877F2; background: rgba(24, 119, 242, 0.1); }
+.leader-social a.leader-soc-fb:hover { background: #1877F2; color: #fff; }
+.leader-social a.leader-soc-in { color: #0A66C2; background: rgba(10, 102, 194, 0.1); }
+.leader-social a.leader-soc-in:hover { background: #0A66C2; color: #fff; }
+.leader-social a.leader-soc-tw { color: #1DA1F2; background: rgba(29, 161, 242, 0.1); }
+.leader-social a.leader-soc-tw:hover { background: #1DA1F2; color: #fff; }
 .leader-bani {
   font-style: italic; color: var(--text-soft, #475569);
   font-size: 13.5px; line-height: 1.6; margin: 10px 0 0;

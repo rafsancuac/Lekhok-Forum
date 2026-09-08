@@ -130,7 +130,9 @@
       function leaderCard(m, roleLabel, yearLabel, statement) {
         const displayName = m.user_full_name || m.name;
         const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg';
-        const rawBio = (m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || '');
+        // সেশন ৪৯: বাণী প্রাধিকার — message (আলাদা বাণী ফিল্ড) → bio → slot statement
+        const rawBio = (m.message && String(m.message).trim()) ? String(m.message)
+                     : ((m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || ''));
         const displayBio = rawBio.substring(0, 700);
         const fb    = m.social_fb;
         const email = m.social_email;
@@ -144,10 +146,10 @@
             ${displayBio ? `<p class="leader-bani">${displayBio}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
             ${hasSocial ? `
             <div class="leader-social">
-              ${fb ? `<a href="${fb}" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook"></i></a>` : ''}
+              ${fb ? `<a href="${fb}" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>` : ''}
               ${email ? `<a href="mailto:${email}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
-              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
-              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>` : ''}
+              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener noreferrer" class="leader-soc-tw" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
+              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>` : ''}
             </div>` : ''}
           </div>
         `;

@@ -901,7 +901,7 @@ document.addEventListener('click', async e => {
    data-href: কার্ডের যেকোনো জায়গায় ক্লিকে প্রোফাইলে যাওয়া, তবে ভেতরের কোনো
    <a> (fb/email/profile আইকন)-এ ক্লিক হলে সেটার স্বাভাবিক আচরণই চলে। */
 document.addEventListener('click', function (e) {
-  const card = e.target.closest('.leader-card-featured[data-href]');
+  const card = e.target.closest('.leader-card[data-href]');
   if (!card) return;
   if (e.target.closest('a')) return;
   location.href = card.getAttribute('data-href');

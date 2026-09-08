@@ -5,6 +5,17 @@
       <h1><i class="fas fa-history"></i> সাবেক সভাপতি ও সাধারণ সম্পাদক</h1>
     </div>
 
+    <%# সেশন ৪৯: শর্তসাপেক্ষ সোশ্যাল আইকন (ফেসবুক/লিংকডইন) + বাণী %>
+    <% function leaderSocialRow(l) {
+         const fb = l.social_fb, li = l.social_linkedin;
+         if (!fb && !li) return '';
+         let h = '<div class="leader-social">';
+         if (fb) h += '<a href="' + fb + '" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>';
+         if (li) h += '<a href="' + li + '" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>';
+         h += '</div>';
+         return h;
+       } %>
+
     <% if ((presidents || []).length === 0 && (secretaries || []).length === 0) { %>
       <div class="empty-state-full"><i class="fas fa-history"></i><p>কোনো তথ্য যোগ করা হয়নি।</p></div>
     <% } else { %>
@@ -14,16 +25,19 @@
           <% presidents.forEach(l => { %>
             <% const displayName = l.user_full_name || l.name; %>
             <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg'; %>
+            <% const displayBani = (l.message && String(l.message).trim()) ? String(l.message) : (l.bio || ''); %>
             <% if (l.user_username) { %>
-              <a href="/profile/<%= l.user_username %>" class="leader-card linked-member">
+              <div class="leader-card linked-member" data-href="/profile/<%= l.user_username %>">
                 <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
                 <div class="leader-info">
                   <div class="leader-role">সভাপতি</div>
                   <h3><%= displayName %></h3>
                   <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
+                  <% if (displayBani) { %><p class="leader-bani"><%= displayBani.substring(0, 120) %><%= displayBani.length > 120 ? '…' : '' %></p><% } %>
+                  <%- leaderSocialRow(l) %>
                   <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
                 </div>
-              </a>
+              </div>
             <% } else { %>
               <div class="leader-card">
                 <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
@@ -31,6 +45,8 @@
                   <div class="leader-role">সভাপতি</div>
                   <h3><%= displayName %></h3>
                   <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
+                  <% if (displayBani) { %><p class="leader-bani"><%= displayBani.substring(0, 120) %><%= displayBani.length > 120 ? '…' : '' %></p><% } %>
+                  <%- leaderSocialRow(l) %>
                 </div>
               </div>
             <% } %>
@@ -44,16 +60,19 @@
           <% secretaries.forEach(l => { %>
             <% const displayName = l.user_full_name || l.name; %>
             <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg'; %>
+            <% const displayBani = (l.message && String(l.message).trim()) ? String(l.message) : (l.bio || ''); %>
             <% if (l.user_username) { %>
-              <a href="/profile/<%= l.user_username %>" class="leader-card linked-member">
+              <div class="leader-card linked-member" data-href="/profile/<%= l.user_username %>">
                 <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
                 <div class="leader-info">
                   <div class="leader-role">সাধারণ সম্পাদক</div>
                   <h3><%= displayName %></h3>
                   <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
+                  <% if (displayBani) { %><p class="leader-bani"><%= displayBani.substring(0, 120) %><%= displayBani.length > 120 ? '…' : '' %></p><% } %>
+                  <%- leaderSocialRow(l) %>
                   <span class="profile-link-badge"><i class="fas fa-external-link-alt"></i> প্রোফাইল দেখুন</span>
                 </div>
-              </a>
+              </div>
             <% } else { %>
               <div class="leader-card">
                 <img loading="lazy" decoding="async" src="<%= displayImg %>" class="leader-photo" alt="<%= displayName %>">
@@ -61,6 +80,8 @@
                   <div class="leader-role">সাধারণ সম্পাদক</div>
                   <h3><%= displayName %></h3>
                   <p class="leader-term"><i class="far fa-calendar"></i> <%= l.term_start %><% if (l.term_end) { %> থেকে <%= l.term_end %><% } %></p>
+                  <% if (displayBani) { %><p class="leader-bani"><%= displayBani.substring(0, 120) %><%= displayBani.length > 120 ? '…' : '' %></p><% } %>
+                  <%- leaderSocialRow(l) %>
                 </div>
               </div>
             <% } %>

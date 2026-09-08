@@ -382,6 +382,12 @@ const LATER_COLUMNS = [
   //  name, and a link to /profile/:username everywhere they appear).
   ['members',      'user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
   ['past_leaders', 'user_id', 'INTEGER REFERENCES users(id) ON DELETE SET NULL'],
+  // সেশন ৪৯: লিডারশিপ কার্ডে LinkedIn লিংক + আলাদা "বাণী" (message/quote)
+  ['members',      'social_linkedin', 'TEXT'],
+  ['members',      'message', 'TEXT'],
+  ['past_leaders', 'social_fb', 'TEXT'],
+  ['past_leaders', 'social_linkedin', 'TEXT'],
+  ['past_leaders', 'message', 'TEXT'],
   ['conversations', 'is_group', 'INTEGER DEFAULT 0'],
   ['conversations', 'title', 'TEXT'],
 ];

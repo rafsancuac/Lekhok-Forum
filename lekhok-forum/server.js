@@ -6,7 +6,7 @@ const methodOverride = require('method-override');
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./db');
 const { runBirthdayCheck } = require('./helpers/notify');
-const { parseNav, navItemActive } = require('./helpers/nav');
+const { parseNav, visibleNav, navItemActive } = require('./helpers/nav');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -201,13 +201,27 @@ app.use(async (req, res, next) => {
     // কনটেন্ট হেল্পার — প্রতি রিকোয়েস্টে ফ্রেশ settings-এর সাথে বাঁধা (ক্যাশ-নিরাপদ)
     res.locals.C   = (key) => C(key, settings);
     res.locals.Cbr = (key) => Cbr(key, settings);
+    // সেশন ৪৯: প্রতি পেজের SEO meta title/description (content-registry-র seo গ্রুপ)
+    // path→page ম্যাপিং: EXACT ম্যাচ (ডিটেইল-পেজে ভিউ-এর নিজস্ব টাইটেল প্রাধান্য পায়)।
+    // layout ('/') বাদ — হেডার/ফুটার নিজস্ব পেজ নয়; হোম = '/'-এ exact।
+    res.locals.seoTitle = '';
+    res.locals.seoDesc  = '';
+    try {
+      const path0 = (req.path || '/').replace(/\/+$/, '') || '/';
+      let matched = (contentRegistry.PAGES || []).find(p => p.key !== 'layout' && String(p.path || '') === path0);
+      if (!matched && path0 === '/') matched = (contentRegistry.PAGES || []).find(p => p.key === 'home');
+      if (matched) {
+        res.locals.seoTitle = C(matched.key + '_meta_title', settings);
+        res.locals.seoDesc  = C(matched.key + '_meta_desc', settings);
+      }
+    } catch (_) { /* SEO defaults optional — never break rendering */ }
     res.locals.adminUser = req.session.adminUser || null;
     res.locals.user      = req.session.user || null;          // social user session
     res.locals.currentPath = req.path;
     // Canonical site URL for SEO (OG/canonical/sitemap) — SITE_URL env wins
     res.locals.siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
     // Public nav (editable from admin/moderator panel — settings key nav_json)
-    res.locals.navConfig = parseNav(settings['nav_json']);
+    res.locals.navConfig = visibleNav(parseNav(settings['nav_json']));
     res.locals.navItemActive = navItemActive;
 
     // Per-user display prefs (theme / font size) — consumed by header partial

@@ -25,15 +25,35 @@
   <div class="admin-header">
     <div>
       <h1><i class="fas fa-photo-film"></i> মিডিয়া লাইব্রেরি</h1>
-      <p class="subtitle">আপলোড করা সব ছবি — URL কপি, WebP অপটিমাইজ, প্রিভিউ ও ডিলিট (<%= items.length %> টি)</p>
+      <p class="subtitle">আপলোড করা সব ছবি — আপলোড, রিপ্লেস, URL কপি, WebP অপটিমাইজ, প্রিভিউ ও ডিলিট (<%= items.length %> টি)</p>
     </div>
   </div>
   <% if (saved) { %><div class="flash ok"><i class="fas fa-check-circle"></i> ছবি মুছে ফেলা হয়েছে।</div><% } %>
+  <% if (uploaded) { %><div class="flash ok"><i class="fas fa-cloud-upload-alt"></i> আপলোড হয়েছে (অটো-অপটিমাইজড): <strong><%= uploaded %></strong></div><% } %>
+  <% if (replaced) { %><div class="flash ok"><i class="fas fa-sync-alt"></i> রিপ্লেস হয়েছে: <strong><%= replaced %></strong><% if (old && old !== replaced) { %> (আগের: <%= old %>)<% } %></div><% } %>
   <% if (optimized && delta === '0') { %><div class="flash ok"><i class="fas fa-check-circle"></i> <strong><%= optimized %></strong> ইতিমধ্যে যথেষ্ট অপটিমাইজড — আর ছোট করা যায়নি।</div><% } %>
   <% if (optimized && delta && delta !== '0') { %><div class="flash ok"><i class="fas fa-bolt"></i> <strong><%= optimized %></strong> তৈরি হয়েছে — সাইজ <strong><%= delta %>% কমেছে</strong> (WebP)। মূল ফাইল অক্ষত রাখা হয়েছে।</div><% } %>
   <% if (skipped) { %><div class="flash warn"><i class="fas fa-info-circle"></i> <strong><%= skipped %></strong> — শুধু JPEG/PNG অপটিমাইজ করা যায় (WebP/GIF/SVG বাদ)।</div><% } %>
   <% if (err === 'opt_failed') { %><div class="flash error"><i class="fas fa-exclamation-circle"></i> অপটিমাইজেশন ব্যর্থ হয়েছে — ছবিটি সম্ভবত ক্ষতিগ্রস্ত।</div><% } %>
   <% if (err === '1') { %><div class="flash error"><i class="fas fa-exclamation-circle"></i> অবৈধ ফাইল পাথ।</div><% } %>
+  <% if (err && err !== '1' && err !== 'opt_failed') { %><div class="flash error"><i class="fas fa-exclamation-circle"></i> <%= err %></div><% } %>
+  <div class="card" style="padding:18px;margin-bottom:16px;">
+    <h3 style="margin:0 0 4px;font-size:15px;"><i class="fas fa-cloud-upload-alt"></i> নতুন ছবি আপলোড</h3>
+    <p style="color:#64748b;font-size:13px;margin:0 0 12px;">JPEG/PNG অটো-WebP-তে অপটিমাইজ হয়ে সেভ হবে।</p>
+    <form method="POST" action="/admin/media/upload" enctype="multipart/form-data" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input type="file" name="file" accept="image/*" required style="border:1px solid #cbd5e1;border-radius:5px;padding:8px;background:#fff;">
+      <select name="subdir" style="border:1px solid #cbd5e1;border-radius:5px;padding:8px;background:#fff;">
+        <option value="content">কনটেন্ট</option>
+        <option value="gallery">গ্যালারি</option>
+        <option value="avatars">অ্যাভাটার</option>
+        <option value="covers">কভার</option>
+        <option value="attachments">অ্যাটাচমেন্ট</option>
+        <option value="press">প্রেস কাটিং</option>
+        <option value="epaper">ই-পেপার</option>
+      </select>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> আপলোড করুন</button>
+    </form>
+  </div>
   <div class="card" style="padding:0;">
     <% if (!items.length) { %>
     <div class="empty"><i class="fas fa-photo-film"></i><p>কোনো আপলোড নেই।</p></div>
@@ -58,6 +78,11 @@
           <form method="POST" action="/admin/media/delete">
             <input type="hidden" name="url" value="<%= m.url %>">
             <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-trash"></i></button>
+          </form>
+          <form method="POST" action="/admin/media/replace" enctype="multipart/form-data" style="display:flex;gap:4px;align-items:center;width:100%;">
+            <input type="hidden" name="url" value="<%= m.url %>">
+            <input type="file" name="file" accept="image/*" required title="একই URL-এ নতুন ছবি বসান" style="flex:1;min-width:0;font-size:11px;border:1px solid #cbd5e1;border-radius:3px;background:#fff;">
+            <button class="btn btn-sm" type="submit" title="এই ছবি রিপ্লেস করুন (URL অপরিবর্তিত)"><i class="fas fa-sync-alt"></i> রিপ্লেস</button>
           </form>
         </div>
       </div>

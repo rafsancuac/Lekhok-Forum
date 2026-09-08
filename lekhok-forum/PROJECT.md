@@ -294,6 +294,31 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৪৯ (৮ সেপ্টেম্বর ২০২৬) — ডাইনামিক CMS-গ্রেড অ্যাডমিন প্যানেল (টাস্ক ৬)
+
+**উদ্দেশ্য (ইউজার-রিকোয়েস্ট):** কোড না ছুঁয়ে অ্যাডমিন থেকে নেভিগেশন, কনটেন্ট, মিডিয়া ও লিডারশিপ ম্যানেজ। প্রথম ধাপে পূর্ণাঙ্গ অডিট (`CMS-AUDIT.md`) — বিদ্যমান ফিচার রিইউজ/ইমপ্রুভ, ফাঁক শুধু নতুন করে।
+
+**১) ডাইনামিক নেভিগেশন — রি-অর্ডার + enable/disable:**
+- `helpers/nav.js`: `sanitizeNav()` এখন `enabled` ফিল্ড সংরক্ষণ করে; নতুন `visibleNav()` (disabled আইটেম বাদ)।
+- `server.js`: পাবলিক `navConfig` = `visibleNav(parseNav(...))` — disabled মেনু সাইটে দেখায় না, কিন্তু এডিটরে থেকে যায় (আবার চালু করা যায়)।
+- `nav-editor.js`: প্রতি আইটেম/সাব-আইটেমে **drag-and-drop** (HTML5) + **উপরে/নিচে বাটন** + **enable/disable toggle** (চোখ আইকন, disabled আইটেম ধূসর)।
+
+**২) পেজ কনটেন্ট — SEO meta title/description:**
+- `content-registry.js`: ১৩টি রিয়েল পেজে (layout বাদ) `seo` গ্রুপ যোগ — `{page}_meta_title` + `{page}_meta_desc` (মোট ২৬ নতুন ফিল্ড, মোট ২৭৫); `SEO_DEFAULTS` সহ।
+- `server.js` + `layout.ejs` + `header.ejs`: path→page (exact match) ম্যাপিং — পেজের meta title `<title>`/og:title ও meta description-এ প্রতিফলিত হয়; ডিটেইল-পেজ (নোটিশ/আর্টিকেল) নিজস্ব টাইটেলই পায়।
+
+**৩) ইমেজ ম্যানেজমেন্ট — আপলোড + রিপ্লেস:**
+- `admin/routes.js`: `POST /admin/media/upload` (সাব-ডিরেক্টরি নির্বাচন, অটো-WebP) + `POST /admin/media/replace` (একই URL-এ ইন-প্লেস ওভাররাইট — সব রেফারেন্স অক্ষত; Blob-মোডে নতুন URL ফলব্যাক)।
+- `media.ejs`: আপলোড ফর্ম (ফাইল + ডিরেক্টরি) + প্রতি কার্ডে "রিপ্লেস" বাটন।
+
+**৪) লিডারশিপ — LinkedIn + বাণী + ব্র্যান্ড-কালার আইকন:**
+- `db.js` (LATER_COLUMNS): `members.social_linkedin`, `members.message`; `past_leaders.social_fb`, `social_linkedin`, `message` (idempotent মাইগ্রেশন)।
+- অ্যাডমিন members ও past-leaders ফর্ম + রুট: LinkedIn ও বাণী (message/quote) ফিল্ড।
+- রেন্ডারিং: হোম (`lekhok-home.ejs`), কমিটি (`lekhok-committee.ejs`), প্রাক্তন নেতা (`past-leaders.ejs`) কার্ডে **শর্তসাপেক্ষ** সোশ্যাল আইকন (লিংক থাকলেই), `target="_blank" rel="noopener noreferrer"`, অফিসিয়াল ব্র্যান্ড কালার (Facebook #1877F2, LinkedIn #0A66C2); বাণী প্রাধিকার message → bio → slot-statement।
+- `main.js`: `.leader-card[data-href]` ক্লিক-হ্যান্ডলার জেনারেলাইজ (nested-anchor বাগ প্রতিরোধ)।
+
+**টেস্ট (session49 CMS):** নেভ (save/reorder/disabled-hide/editor-retain), SEO (title/desc লাইভ-রিফ্লেক্ট), মিডিয়া (আপলোড→WebP, রিপ্লেস), লিডারশিপ (LinkedIn ফিল্ড/আইকন/ব্র্যান্ড-কালার/rel/বাণী) — **সবুজ**। রিগ্রেশন: smoke ১৮/১৮ + ৯/৯, RBAC ১০/১০, typography ৪৬/৪৬ = সবুজ।
+
 ### সেশন ৪৮ (৮ সেপ্টেম্বর ২০২৬) — গ্লোবাল টাইপোগ্রাফি সিস্টেম (কেন্দ্রীয় ফন্ট টোকেন)
 
 **উদ্দেশ্য (ইউজার-রিকোয়েস্ট):** সাইট-ব্যাপী একটাই টাইপোগ্রাফি নিয়ম — হেডিং/মেনু/বাটন/টেবল-হেডার/নেভ = Hind Siliguri, প্যারাগ্রাফ/ফর্ম/বডি/কমেন্ট/টেবল-কনটেন্ট = Kalpurush; কোনো hardcoded `font-family` অবশিষ্ট নেই। বিদ্যমান ফন্ট অ্যাসেট (`public/assets/fonts/HindSiliguri-*.ttf` + `kalpurush.ttf`) রিইউজ, নতুন ডাউনলোড নেই।

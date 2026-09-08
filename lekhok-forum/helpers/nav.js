@@ -46,6 +46,9 @@ const DEFAULT_NAV = [
 ];
 
 // Defensive sanitizer — every field trimmed + length-capped; bad shapes dropped
+// সেশন ৪৯: `enabled` ফিল্ড সংরক্ষণ করে (ডিফল্ট true) — অ্যাডমিন মেনু আইটেম
+// enable/disable করতে পারে; disabled আইটেম সাইটে দেখায় না (visibleNav) কিন্তু
+// এডিটরে থেকে যায় যাতে আবার চালু করা যায়।
 function sanitizeNav(arr) {
   const clean = [];
   for (const item of (Array.isArray(arr) ? arr : [])) {
@@ -56,6 +59,8 @@ function sanitizeNav(arr) {
     const out = { label, href };
     const icon = String(item.icon || '').trim().slice(0, 60);
     if (icon) out.icon = icon;
+    // সেশন ৪৯: enabled সংরক্ষণ (শুধু explicit false-কে false ধরি)
+    if (item.enabled === false) out.enabled = false;
     if (Array.isArray(item.children) && item.children.length) {
       const kids = [];
       for (const c of item.children) {
@@ -66,6 +71,7 @@ function sanitizeNav(arr) {
         const co = { label: cl, href: ch };
         const ci = String(c.icon || '').trim().slice(0, 60);
         if (ci) co.icon = ci;
+        if (c.enabled === false) co.enabled = false;
         kids.push(co);
         if (kids.length >= 12) break;   // sanity cap per dropdown
       }
@@ -75,6 +81,24 @@ function sanitizeNav(arr) {
     if (clean.length >= 12) break;      // sanity cap for top level
   }
   return clean;
+}
+
+// সেশন ৪৯: disabled আইটেম (enabled === false) বাদ দিয়ে ভিউ-রেডি নেভ ফেরত।
+// parseNav-এর আউটপুটে এটি চালালে সাইটে কেবল চালু আইটেম দেখায়; এডিটর (admin/
+// moderator) parseNav-এর সরাসরি আউটপুট ব্যবহার করে যাতে সব আইটেম এডিটযোগ্য থাকে।
+function visibleNav(arr) {
+  const out = [];
+  for (const item of (Array.isArray(arr) ? arr : [])) {
+    if (item.enabled === false) continue;
+    const cp = { ...item };
+    if (Array.isArray(cp.children)) {
+      const kids = cp.children.filter(c => c.enabled !== false);
+      if (kids.length) cp.children = kids;
+      else delete cp.children;
+    }
+    out.push(cp);
+  }
+  return out;
 }
 
 // Parse the stored nav_json; fall back to DEFAULT_NAV when missing/invalid
@@ -114,4 +138,4 @@ function navItemActive(item, currentPath) {
          (item.children || []).some(c => navIsActive(c.href, currentPath));
 }
 
-module.exports = { DEFAULT_NAV, parseNav, sanitizeNav, validateNavJson, navIsActive, navItemActive };
+module.exports = { DEFAULT_NAV, parseNav, sanitizeNav, validateNavJson, visibleNav, navIsActive, navItemActive };

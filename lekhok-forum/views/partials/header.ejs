@@ -8,10 +8,10 @@
   <%
     // ── SEO locals (guarded — every var optional; passed via include params) ─
     var BRAND_FULL = 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়';
-    var seoTitle = (typeof title !== 'undefined' && title ? title : BRAND_FULL);
+    var seoTitle = (typeof title !== 'undefined' && title ? title : (typeof seoTitle !== 'undefined' && seoTitle ? seoTitle : BRAND_FULL));
     var seoDesc = (typeof metaDesc !== 'undefined' && metaDesc)
       ? metaDesc
-      : BRAND_FULL + ', একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।';
+      : (typeof seoDesc !== 'undefined' && seoDesc ? seoDesc : BRAND_FULL + ', একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।');
     var seoType = (typeof ogType !== 'undefined' && ogType) ? ogType : 'website';
     var seoImg = (typeof ogImage !== 'undefined' && ogImage) ? ogImage : null;
     var seoPub = (typeof publishedTime !== 'undefined') ? publishedTime : null;
@@ -20,7 +20,7 @@
     // Private app areas must never be indexed
     var seoNoindex = /\/(admin|dashboard|messages|me|settings|notifications|bookmarks|complaints|quiz)/.test(typeof currentPath !== 'undefined' ? currentPath : '/');
   %>
-  <title><%= typeof title !== 'undefined' && title ? title : BRAND_FULL %></title>
+  <title><%= seoTitle %></title>
   <meta name="description" content="<%= seoDesc %>" />
   <% if (seoNoindex) { %><meta name="robots" content="noindex, nofollow" /><% } %>
   <link rel="canonical" href="<%= seoUrl %>" />

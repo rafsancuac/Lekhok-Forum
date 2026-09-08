@@ -185,3 +185,19 @@ Work Log:
 
 Stage Summary:
 - কমিট: session48 (বিস্তারিত PROJECT.md §১০)
+
+---
+Task ID: 12
+Agent: Main verification agent (Session 49)
+Task: ডাইনামিক CMS-গ্রেড অ্যাডমিন প্যানেল (টাস্ক ৬)
+
+Work Log:
+- প্রথম ধাপ: পূর্ণাঙ্গ অডিট CMS-AUDIT.md — বিদ্যমান (nav editor, ১৪-পেজ content editor, section CRUD, media WebP optimize, members/past-leaders CRUD, home social icons) বনাম ফাঁক চিহ্নিত
+- ১) নেভিগেশন: helpers/nav.js-এ enabled সংরক্ষণ + visibleNav(); server.js-এ public navConfig = visibleNav(parseNav()); nav-editor.js-এ drag-and-drop + up/down + enable/disable toggle
+- ২) SEO: content-registry.js-এ ১৩ পেজে seo গ্রুপ (meta_title/desc) + SEO_DEFAULTS; server.js path→page exact-match; layout.ejs/header.ejs-এ meta title/desc প্রতিফলন
+- ৩) মিডিয়া: POST /admin/media/upload + /replace (ইন-প্লেস ওভাররাইট, অটো-WebP); media.ejs-এ আপলোড ফর্ম + রিপ্লেস বাটন
+- ৪) লিডারশিপ: db.js LATER_COLUMNS-এ social_linkedin/message; members ও past_leaders ফর্ম+রুটে LinkedIn+বাণী; হোম/কমিটি/প্রাক্তন-নেতা কার্ডে শর্তসাপেক্ষ ব্র্যান্ড-কালার আইকন + rel=noopener noreferrer; main.js data-href জেনারেলাইজ
+- টেস্ট: session49 CMS সবুজ; রিগ্রেশন smoke ১৮/১৮+৯/৯, RBAC ১০/১০, typography ৪৬/৪৬
+
+Stage Summary:
+- কমিট: session49 (বিস্তারিত PROJECT.md §১০ + CMS-AUDIT.md)

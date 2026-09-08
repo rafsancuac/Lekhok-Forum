@@ -85,19 +85,32 @@
 
     <% if (central && central.length) { %>
       <div class="leaders-grid" style="margin-top:26px">
+        <%# সেশন ৪৯: বাণী (message) প্রাধিকার + শর্তসাপেক্ষ সোশ্যাল আইকন %>
+        <% function leaderSocialRow(m) {
+             const fb = m.social_fb, li = m.social_linkedin, em = m.social_email;
+             if (!fb && !li && !em) return '';
+             let h = '<div class="leader-social">';
+             if (fb) h += '<a href="' + fb + '" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>';
+             if (li) h += '<a href="' + li + '" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>';
+             if (em) h += '<a href="mailto:' + em + '" aria-label="Email"><i class="fas fa-envelope"></i></a>';
+             h += '</div>';
+             return h;
+           } %>
         <% central.forEach(m => { %>
           <% const displayName = m.user_full_name || m.name; %>
           <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
+          <% const displayBani = (m.message && String(m.message).trim()) ? String(m.message) : (m.bio || ''); %>
           <% if (m.user_username) { %>
-            <a href="/profile/<%= m.user_username %>" class="leader-card has-image clickable-card linked-member">
+            <div class="leader-card has-image clickable-card linked-member" data-href="/profile/<%= m.user_username %>">
               <span class="member-term-tag"><%= selectedYear %></span>
               <img loading="lazy" decoding="async" src="<%= displayImg %>" alt="<%= displayName %>" loading="lazy" />
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
-                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                <% if (displayBani) { %><p class="leader-bio"><%= displayBani.substring(0, 90) %><%= displayBani.length > 90 ? '…' : '' %></p><% } %>
+                <%- leaderSocialRow(m) %>
               </div>
-            </a>
+            </div>
           <% } else { %>
             <div class="leader-card has-image clickable-card"
                  onclick="openMemberModal('<%= m.id %>')"
@@ -112,7 +125,8 @@
               <div class="leader-body">
                 <h3><%= displayName %></h3>
                 <p class="role"><%= m.role %></p>
-                <% if (m.bio) { %><p class="leader-bio"><%= m.bio.substring(0, 90) %><%= m.bio.length > 90 ? '…' : '' %></p><% } %>
+                <% if (displayBani) { %><p class="leader-bio"><%= displayBani.substring(0, 90) %><%= displayBani.length > 90 ? '…' : '' %></p><% } %>
+                <%- leaderSocialRow(m) %>
               </div>
             </div>
           <% } %>

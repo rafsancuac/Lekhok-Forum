@@ -292,7 +292,7 @@ router.get('/members/new', requireAdmin, async (req, res) => {
 });
 
 router.post('/members', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, term_year, sort_order, user_id } = req.body;
+  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id } = req.body;
   if (!name) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
@@ -300,7 +300,7 @@ router.post('/members', requireAdmin, async (req, res) => {
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
-    await db.prepare('INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email, member_type, term_year, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum);
+    await db.prepare('INSERT INTO members (name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'এই নাম, কার্যবর্ষ ও ধরনে একজন সদস্য ইতিমধ্যে যোগ করা আছেন।', allUsers, currentPath: '/admin/members' });
@@ -316,11 +316,11 @@ router.get('/members/:id/edit', requireAdmin, async (req, res) => {
 });
 
 router.put('/members/:id', requireAdmin, async (req, res) => {
-  const { name, role, designation, bio, image_url, social_fb, social_email, member_type, term_year, sort_order, user_id } = req.body;
+  const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id } = req.body;
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
-    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, image_url=?, social_fb=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', image_url || '', social_fb || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, req.params.id);
+    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, message=?, image_url=?, social_fb=?, social_linkedin=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=? WHERE id=?').run(name, role || '', designation || '', bio || '', message || '', image_url || '', social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, req.params.id);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'এই নাম, কার্যবর্ষ ও ধরনে আরেকজন সদস্য ইতিমধ্যে আছেন।', allUsers, currentPath: '/admin/members' });
@@ -1017,10 +1017,10 @@ router.get('/past-leaders/new', requireAdmin, async (req, res) => {
   res.render('admin/past-leaders/form', { item: null, error: null, allUsers, currentPath: '/admin/past-leaders' });
 });
 router.post('/past-leaders', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
-  const { name, role, term_start, term_end, bio, sort_order, user_id } = req.body;
+  const { name, role, term_start, term_end, bio, message, social_fb, social_linkedin, sort_order, user_id } = req.body;
   const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
-  await db.prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, bio, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(name, role, term_start || null, term_end || null, photo_url, bio || null, parseInt(sort_order) || 0, userIdNum);
+  await db.prepare('INSERT INTO past_leaders (name, role, term_start, term_end, photo_url, bio, message, social_fb, social_linkedin, sort_order, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role, term_start || null, term_end || null, photo_url, bio || null, message || null, social_fb || null, social_linkedin || null, parseInt(sort_order) || 0, userIdNum);
   res.redirect('/admin/past-leaders?saved=1');
 });
 router.get('/past-leaders/:id/edit', requireAdmin, async (req, res) => {
@@ -1030,10 +1030,10 @@ router.get('/past-leaders/:id/edit', requireAdmin, async (req, res) => {
   res.render('admin/past-leaders/form', { item, error: null, allUsers, currentPath: '/admin/past-leaders' });
 });
 router.put('/past-leaders/:id', requireAdmin, withUpload(attachmentUpload), async (req, res) => {
-  const { name, role, term_start, term_end, bio, sort_order, user_id } = req.body;
+  const { name, role, term_start, term_end, bio, message, social_fb, social_linkedin, sort_order, user_id } = req.body;
   const photo_url = req.file ? '/uploads/attachments/' + req.file.filename : (req.body.photo_url || null);
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
-  await db.prepare('UPDATE past_leaders SET name=?, role=?, term_start=?, term_end=?, photo_url=?, bio=?, sort_order=?, user_id=? WHERE id=?').run(name, role, term_start || null, term_end || null, photo_url, bio || null, parseInt(sort_order) || 0, userIdNum, req.params.id);
+  await db.prepare('UPDATE past_leaders SET name=?, role=?, term_start=?, term_end=?, photo_url=?, bio=?, message=?, social_fb=?, social_linkedin=?, sort_order=?, user_id=? WHERE id=?').run(name, role, term_start || null, term_end || null, photo_url, bio || null, message || null, social_fb || null, social_linkedin || null, parseInt(sort_order) || 0, userIdNum, req.params.id);
   res.redirect('/admin/past-leaders?saved=1');
 });
 router.delete('/past-leaders/:id', requireAdmin, async (req, res) => {
@@ -1330,6 +1330,9 @@ router.get('/media', requireAdmin, async (req, res) => {
     optimized: req.query.optimized || null,
     delta: req.query.delta || null,
     skipped: req.query.skipped || null,
+    uploaded: req.query.uploaded || null,
+    replaced: req.query.replaced || null,
+    old: req.query.old || null,
     err: req.query.error || null,
     currentPath: '/admin/media'
   });
@@ -1379,6 +1382,74 @@ router.post('/media/optimize', requireAdmin, async (req, res) => {
     console.error('[media] optimize failed:', e.message);
     res.redirect('/admin/media?error=opt_failed');
   }
+});
+
+// ═══ সেশন ৪৯: মিডিয়া লাইব্রেরি — সরাসরি আপলোড + রিপ্লেস ═══
+// আপলোড: নির্বাচিত সাব-ডিরেক্টরিতে নতুন ছবি (storeBufferImage → অটো-WebP)।
+// রিপ্লেস: বিদ্যমান ফাইল একই URL-এ ওভাররাইট (সব রেফারেন্স অক্ষত থাকে)।
+const MEDIA_SUBDIRS = ['avatars', 'covers', 'attachments', 'gallery', 'epaper', 'press', 'content'];
+function mediaUploadHandler(subdir) {
+  return (req, res) => {
+    multer({
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) cb(null, true);
+        else cb(new Error('শুধু ছবি আপলোড করা যাবে'));
+      }
+    }).single('file')(req, res, async (err) => {
+      if (err) return res.redirect('/admin/media?error=' + encodeURIComponent(err.message));
+      if (!req.file) return res.redirect('/admin/media?error=' + encodeURIComponent('কোনো ফাইল নেই'));
+      try {
+        const { storeBufferImage } = require('../middleware/upload');
+        const stored = await storeBufferImage(req.file, subdir);
+        await TA42.audit(db, req, 'media-upload', 'uploads', null, stored.url);
+        res.redirect('/admin/media?uploaded=' + encodeURIComponent(stored.url));
+      } catch (e) {
+        console.error('[media] upload failed:', e.message);
+        res.redirect('/admin/media?error=' + encodeURIComponent('সংরক্ষণ ব্যর্থ: ' + e.message));
+      }
+    });
+  };
+}
+router.post('/media/upload', requireAdmin, (req, res) => {
+  const subdir = MEDIA_SUBDIRS.includes(req.body.subdir) ? req.body.subdir : 'content';
+  return mediaUploadHandler(subdir)(req, res);
+});
+// রিপ্লেস: একই URL-এ ওভাররাইট (ডিস্ক)। Blob-মোডে (Vercel) URL content-addressed
+// বলে ইন-প্লেস ওভাররাইট সম্ভব নয় — সেক্ষেত্রে নতুন ফাইল + নতুন URL ফেরত দিই।
+router.post('/media/replace', requireAdmin, (req, res) => {
+  const url = String(req.body.url || '');
+  if (!url.startsWith('/uploads/')) return res.redirect('/admin/media?error=1');
+  const target = path43.join(__dirname, '..', 'public', url);
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('শুধু ছবি আপলোড করা যাবে'));
+    }
+  }).single('file')(req, res, async (err) => {
+    if (err) return res.redirect('/admin/media?error=' + encodeURIComponent(err.message));
+    if (!req.file) return res.redirect('/admin/media?error=' + encodeURIComponent('কোনো ফাইল নেই'));
+    try {
+      const up = require('../middleware/upload');
+      await up.optimizeToWebp(req.file);
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        // Blob-মোড: ইন-প্লেস ওভাররাইট নেই — নতুন আপলোড + URL ফেরত
+        const stored = await up.storeBufferImage(req.file, path43.dirname(url).split('/').pop() || 'content');
+        await TA42.audit(db, req, 'media-replace', 'uploads', url, stored.url);
+        return res.redirect('/admin/media?replaced=' + encodeURIComponent(stored.url) + '&old=' + encodeURIComponent(url));
+      }
+      // ডিস্ক: একই পাথে ওভাররাইট (রেফারেন্স-সেফ রিপ্লেস)
+      fs43.writeFileSync(target, req.file.buffer);
+      await TA42.audit(db, req, 'media-replace', 'uploads', url, url);
+      res.redirect('/admin/media?replaced=' + encodeURIComponent(url));
+    } catch (e) {
+      console.error('[media] replace failed:', e.message);
+      res.redirect('/admin/media?error=' + encodeURIComponent('রিপ্লেস ব্যর্থ: ' + e.message));
+    }
+  });
 });
 
 // ═══ সেশন ৪৩: অ্যাডমিন অ্যানালিটিক্স (৩০ দিন) ═══

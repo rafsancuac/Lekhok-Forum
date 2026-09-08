@@ -55,6 +55,18 @@
         <textarea name="bio" rows="5" placeholder="নেতার সংক্ষিপ্ত পরিচিতি লিখুন..."><%= item ? (item.bio || '') : '' %></textarea>
       </div>
       <div class="form-group">
+        <label>বাণী (message/quote)</label>
+        <textarea name="message" rows="3" placeholder="কার্ডে দেখানো সংক্ষিপ্ত বাণী — খালি রাখলে পরিচিতি দেখাবে"><%= item ? (item.message || '') : '' %></textarea>
+      </div>
+      <div class="form-group">
+        <label>ফেসবুক লিংক</label>
+        <input type="url" name="social_fb" value="<%= item ? (item.social_fb || '') : '' %>" placeholder="https://facebook.com/...">
+      </div>
+      <div class="form-group">
+        <label>LinkedIn লিংক</label>
+        <input type="url" name="social_linkedin" value="<%= item ? (item.social_linkedin || '') : '' %>" placeholder="https://linkedin.com/in/...">
+      </div>
+      <div class="form-group">
         <label>প্রদর্শন ক্রম</label>
         <input type="number" name="sort_order" value="<%= item ? (item.sort_order || 0) : 0 %>" min="0">
         <small style="color:#777;">ছোট সংখ্যা আগে দেখানো হবে</small>

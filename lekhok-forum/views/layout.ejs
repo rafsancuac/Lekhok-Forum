@@ -8,17 +8,22 @@
   <%
     // ── SEO locals (guarded — every var optional) ──────────────────────────
     var BRAND_FULL = 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়';
-    var seoTitle = (typeof pageTitle !== 'undefined' && pageTitle ? pageTitle : BRAND_FULL);
+    // সেশন ৪৯: পেজের SEO meta title/description (server.js-এ path→page ম্যাপিং)
+    var _pageSeoTitle = (typeof locals.seoTitle !== 'undefined' && locals.seoTitle) ? locals.seoTitle : '';
+    var _pageSeoDesc  = (typeof locals.seoDesc  !== 'undefined' && locals.seoDesc)  ? locals.seoDesc  : '';
+    // সেশন ৪৯: পেজের meta title থাকলে (exact path ম্যাচ) সেটিই <title>/og:title;
+    // নাহলে pageTitle (ডিটেইল/সার্চ পেজ) বা ব্র্যান্ড ফলব্যাক।
+    var seoTitle = _pageSeoTitle || (typeof pageTitle !== 'undefined' && pageTitle ? pageTitle : BRAND_FULL);
     var seoDesc = (typeof metaDesc !== 'undefined' && metaDesc)
       ? metaDesc
-      : BRAND_FULL + ', একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।';
+      : (_pageSeoDesc || BRAND_FULL + ', একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সংগঠন। মূলমন্ত্র: তারুণ্যের শাণিত কলমে আলোকিত ধরনী।');
     var seoType = (typeof ogType !== 'undefined' && ogType) ? ogType : 'website';
     var seoImg = (typeof ogImage !== 'undefined' && ogImage) ? ogImage : null;
     var seoPub = (typeof publishedTime !== 'undefined') ? publishedTime : null;
     var seoAuth = (typeof authorName !== 'undefined') ? authorName : null;
     var seoUrl = (typeof siteUrl !== 'undefined' ? siteUrl : '') + ((typeof canonicalPath !== 'undefined' && canonicalPath) ? canonicalPath : (typeof currentPath !== 'undefined' ? currentPath : '/'));
   %>
-  <title><%= pageTitle %> | লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</title>
+  <title><%= _pageSeoTitle ? _pageSeoTitle : (typeof pageTitle !== 'undefined' && pageTitle ? pageTitle + ' | ' + BRAND_FULL : BRAND_FULL) %></title>
   <meta name="description" content="<%= seoDesc %>" />
   <link rel="canonical" href="<%= seoUrl %>" />
   <meta property="og:site_name" content="<%= BRAND_FULL %>" />
