@@ -224,7 +224,7 @@ router.get('/contact', async (req, res) => {
   const ch42 = await db.getSectionItems('contact_channels');
   const uni42 = await db.getSectionItems('contact_university');
   const tr42 = await db.getSectionItems('contact_transport');
-  const ts = require('../helpers/transport-schedule');
+  const ts = await db.getTransportSchedule();
   res.render('lekhok-contact', { ch42, uni42, tr42, ts,
     layout: 'layout',
     pageTitle: 'যোগাযোগ',

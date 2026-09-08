@@ -1506,6 +1506,16 @@ async function applySession42Migrations() {
     }
   } catch (e) { console.error('[db] site_items seed (non-fatal):', e.message); }
 
+  // (42c) টাস্ক ১৩: যাতায়াত সময়সূচি — settings JSON-এ সিড (প্রতি ইনস্টলে একবারই;
+  // আগে থেকে থাকলে (যেমন অ্যাডমিন আপডেট করলে) ওভাররাইট হয় না)
+  try {
+    const existing = await backend.prepare("SELECT value FROM settings WHERE key = 'transport_schedule'").get();
+    if (!existing) {
+      const ts = require('./helpers/transport-schedule');
+      await backend.prepare("INSERT INTO settings (key, value) VALUES ('transport_schedule', ?)").run(JSON.stringify(ts));
+    }
+  } catch (e) { console.error('[db] transport_schedule seed (non-fatal):', e.message); }
+
   // (43a) সেশন ৪: site_items-এ ছবি কলাম + কনটেন্ট রিভিশন টেবিল + ইনডেক্স
   try { await backend.prepare('ALTER TABLE site_items ADD COLUMN image TEXT').run(); } catch (e) {}
   try { await backend.prepare('ALTER TABLE newsletter_subscribers ADD COLUMN confirm_token TEXT').run(); } catch (e) {}
@@ -2124,11 +2134,24 @@ async function getSectionItems(section) {
   return ((SECTIONS[section] || {}).defaults || []).map((d, i) => ({ id: null, section, sort_order: i + 1, title: d.title || '', subtitle: d.subtitle || '', body: d.body || '', icon: d.icon || '', extra: d.extra || '', is_active: 1 }));
 }
 
+// টাস্ক ১৩: যাতায়াত সময়সূচি — DB (settings JSON) প্রথম; না থাকলে হেল্পার ডিফল্ট
+async function getTransportSchedule() {
+  try {
+    const raw = await getSetting('transport_schedule');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.shuttle && parsed.bus && parsed.train) return parsed;
+    }
+  } catch (e) { /* নীরবে হেল্পার ফলব্যাকে যাই */ }
+  return require('./helpers/transport-schedule');
+}
+
 module.exports = {
   initDb,
   get db()       { return _sqlJsDb; },  // legacy direct access (sql.js only)
   prepare,
   getSectionItems,
+  getTransportSchedule,
   exec,
   getSetting,
   getSettingsAll,
