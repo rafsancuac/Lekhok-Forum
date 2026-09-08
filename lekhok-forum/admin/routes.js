@@ -297,6 +297,11 @@ router.post('/members', requireAdmin, async (req, res) => {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
   }
+  // টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয়তে উপদেষ্টা role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
+  if ((member_type || 'central') === 'central' && /উপদেষ্টা/.test(role || '')) {
+    const allUsers = await fetchAllUsers();
+    return res.render('admin/members/form', { member: req.body, error: 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।', allUsers, currentPath: '/admin/members' });
+  }
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
@@ -317,6 +322,11 @@ router.get('/members/:id/edit', requireAdmin, async (req, res) => {
 
 router.put('/members/:id', requireAdmin, async (req, res) => {
   const { name, role, designation, bio, message, image_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id } = req.body;
+  // টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয়তে উপদেষ্টা role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
+  if ((member_type || 'central') === 'central' && /উপদেষ্টা/.test(role || '')) {
+    const allUsers = await fetchAllUsers();
+    return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।', allUsers, currentPath: '/admin/members' });
+  }
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {

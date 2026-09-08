@@ -101,6 +101,15 @@ function memberFormValues(b) {
   };
 }
 
+// টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয় কমিটিতে "উপদেষ্টা" role নিষিদ্ধ —
+// উপদেষ্টারা কেবল উপদেষ্টা পরিষদ (advisory) টাইপে থাকবেন (ব্যাকএন্ড গার্ড)।
+function advisorRoleError(v) {
+  if (v.member_type === 'central' && /উপদেষ্টা/.test(v.role)) {
+    return 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।';
+  }
+  return null;
+}
+
 router.get('/members', ensureModerator, async (req, res) => {
   const members = await db.prepare(`
     SELECT m.*, u.username AS user_username
@@ -119,6 +128,8 @@ router.get('/members', ensureModerator, async (req, res) => {
 router.post('/members', ensureModerator, async (req, res) => {
   const v = memberFormValues(req.body);
   if (!v.name) return res.redirect('/moderator/members?error=' + encodeURIComponent('নাম আবশ্যক — সদস্য যোগ হয়নি।'));
+  const roleErr = advisorRoleError(v);
+  if (roleErr) return res.redirect('/moderator/members?error=' + encodeURIComponent(roleErr));
   const user_id = await resolveMemberUserId(req.body.username);
   try {
     await db.prepare(`
@@ -140,6 +151,8 @@ router.post('/members/:id', ensureModerator, async (req, res) => {
   if (!row) return res.redirect('/moderator/members?error=' + encodeURIComponent('সদস্যটি খুঁজে পাওয়া যায়নি।'));
   const v = memberFormValues(req.body);
   if (!v.name) return res.redirect('/moderator/members?error=' + encodeURIComponent('নাম আবশ্যক — পরিবর্তন সংরক্ষিত হয়নি।'));
+  const roleErr = advisorRoleError(v);
+  if (roleErr) return res.redirect('/moderator/members?error=' + encodeURIComponent(roleErr));
   const user_id = await resolveMemberUserId(req.body.username);
   try {
     await db.prepare(`

@@ -1045,7 +1045,6 @@ async function runMigrations() {
           ['মো. সিফাত তালুকদার',       'সাহিত্য ও পাঠচক্র সম্পাদক',    'sifat_tanukanar',  'male']
         ]},
         { term: '২০২২-২৩', members: [
-          ['মো. রাফছান',              'উপদেষ্টা',                'md_rafsan',        'male'],
           ['আকিজ মাহমুদ',             'সভাপতি',                 'akij_mahmud',      'male'],
           ['আয়েশা সিদ্দিকা',       'সহ-সভাপতি',               'ayesha_siddika_anny', 'female'],
           ['মোঃ মুরাদ হোসেন',          'সাধারণ সম্পাদক',           'murad_hossen',     'male'],
@@ -1244,7 +1243,6 @@ async function runMigrations() {
             ['মো. সিফাত তালুকদার', 'সাহিত্য ও পাঠচক্র সম্পাদক', 'sifat_tanukanar']
           ]},
           { term: '২০২২-২৩', members: [
-            ['মো. রাফছান', 'উপদেষ্টা', 'md_rafsan'],
             ['আকিজ মাহমুদ', 'সভাপতি', 'akij_mahmud'],
             ['আয়েশা সিদ্দিকা', 'সহ-সভাপতি', 'ayesha_siddika_anny'],
             ['মোঃ মুরাদ হোসেন', 'সাধারণ সম্পাদক', 'murad_hossen'],
@@ -1332,6 +1330,46 @@ async function runMigrations() {
     }
   } catch (e) {
     console.warn('[migrate] advisory-term-v4 skipped:', (e.message || '').slice(0, 140));
+  }
+
+  // ── টাস্ক ১২ (পর্ব ৩, অংশ খ): মডিউল সেপারেশন ──
+  // কেন্দ্রীয় কমিটিতে ভুলভাবে থাকা "উপদেষ্টা" role-এর এন্ট্রিগুলো (যেমন ২০২২-২৩-এ
+  // মো. রাফছান) উপদেষ্টা পরিষদে স্থানান্তর। এছাড়া ভবিষ্যতে কেন্দ্রীয়তে উপদেষ্টা
+  // আর ঢুকবে না (ব্যাকএন্ড ভ্যালিডেশন) — এটা শুধু বিদ্যমান ডেটা ঠিক করে।
+  try {
+    const v5Seeded = await backend.prepare("SELECT value FROM settings WHERE key = 'council_separation_v5_seeded'").get();
+    if (!v5Seeded) {
+      const centralAdvisors = await backend.prepare(
+        "SELECT * FROM members WHERE member_type = 'central' AND role LIKE '%উপদেষ্টা%'"
+      ).all();
+      for (const r of centralAdvisors || []) {
+        try {
+          // একই ডেটায় advisory-তে কপি (user_id লিংকসহ) — নাম/পদ/বছর/বায়ো/ছবি/সোশ্যাল
+          // সব হুবহু সংরক্ষিত; designation-এ উপদেষ্টা-কনটেক্সটে রাখা হয়
+          await backend.prepare(
+            `INSERT INTO members (name, role, designation, bio, image_url, social_fb, social_email,
+               social_linkedin, message, member_type, term_year, sort_order, user_id, created_at)
+             VALUES (?, ?, 'উপদেষ্টা', ?, ?, ?, ?, ?, ?, 'advisory', ?, ?, ?, ?)`
+          ).run(r.name, r.role, r.bio, r.image_url, r.social_fb, r.social_email,
+                r.social_linkedin, r.message, r.term_year, r.sort_order, r.user_id, r.created_at);
+          await backend.prepare("DELETE FROM members WHERE id = ?").run(r.id);
+        } catch (e) {
+          console.warn('[migrate] council-v5 move member', r.id, ':', (e.message || '').slice(0, 120));
+        }
+      }
+      // নিশ্চিত সিড: মো. রাফছান উপদেষ্টা (২০২২-২৩) — fresh install-এও যেন থাকে,
+      // md_rafsan অ্যাকাউন্ট থাকলে তার সাথে লিংক হবে
+      try {
+        const rafsan = await backend.prepare("SELECT id FROM users WHERE username = 'md_rafsan' LIMIT 1").get();
+        await backend.prepare(
+          "INSERT OR IGNORE INTO members (name, role, designation, member_type, term_year, sort_order, user_id) VALUES (?, 'উপদেষ্টা', 'উপদেষ্টা', 'advisory', '২০২২-২৩', 0, ?)"
+        ).run('মো. রাফছান', rafsan ? rafsan.id : null);
+      } catch (_) {}
+      try { await backend.prepare("INSERT INTO settings (key, value) VALUES ('council_separation_v5_seeded', '1')").run(); }
+      catch (_) { try { await backend.prepare("UPDATE settings SET value = '1' WHERE key = 'council_separation_v5_seeded'").run(); } catch (_) {} }
+    }
+  } catch (e) {
+    console.warn('[migrate] council-separation-v5 skipped:', (e.message || '').slice(0, 140));
   }
 }
 
