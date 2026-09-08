@@ -97,3 +97,20 @@
 - **74 জন লিংকড মেম্বার** ইতিমধ্যেই সক্রিয় অ্যাকাউন্ট — এদের profile কে `claimed/active` ধরে backfill করতে হবে (নতুন ক্লেইম নয়)।
 - **10 জন আনলিংকড উপদেষ্টা** — এইগুলিই আসল "প্রি-ক্রিয়েটেড + আনক্লেইমড" প্রোফাইল।
 - কমিটি/মেম্বার পাবলিক পেজ (`/committee`, `/members`) অবশ্যই অক্ষত থাকতে হবে।
+
+---
+
+## ✅ বাস্তবায়ন সম্পন্ন (টাস্ক ১৪ — আপডেট)
+
+**কমিট:** `d70e81d` — pushed & live-verified on Vercel.
+
+**ইউজার-সিদ্ধান্ত (ask_user):** `unclaimed_keep_link` — সব ৮৪ প্রোফাইল `account_status='unclaimed'` (fresh claim ফ্লো), কিন্তু `user_id` লিংক অক্ষত (বিদ্যমান লগইন ভাঙে না, ডুপ্লিকেট প্রোফাইল হয় না)। এক-কালীন রিসেট `claimed_at IS NULL` গার্ডসহ, তাই অ্যাডমিন-অনুমোদিত প্রোফাইল কখনো রিসেট হয় না।
+
+**যা যা যোগ হয়েছে:**
+- `db.js` — `account_claims`, `password_resets` টেবিল; `members.member_id/department/account_status/claimed_at/verified_at`; `formatMemberId/nextMemberSeq/nextMemberId/backfillMemberIds`।
+- `routes/member-accounts.js` — `POST /api/member-accounts/find` (authoritative member_id + name secondary, রেট-লিমিট), `POST /api/member-accounts/claim` (bcrypt, duplicate guards, pending), `GET /claim`।
+- `routes/auth.js` — member_id/email/username লগইন; নিবন্ধনে অটো MEM ID + ঐচ্ছিক অ্যাডমিন-অনুমোদন গেট; forgot/reset password (SHA-256 টোকেন, ৬০ মিনিট)।
+- `admin/routes.js` — `/admin/claims` রিভিউ (approve/reject/more-info), সদস্য তৈরিতে অটো member_id, বাল্ক CSV ইমপোর্ট (পাসওয়ার্ড-কলাম পুরো-ফাইল প্রত্যাখ্যান, ডুপ্লিকেট স্কিপ), পাসওয়ার্ড-মুক্ত এক্সপোর্ট, `/admin/settings/registration` টগল।
+- ভিউ — unified `/login` (লগইন + খুঁজুন/তৈরি), `/claim`, `/register-pending`, forgot/reset পেজ; অ্যাডমিন ক্লেইম লিস্ট/ইমপোর্ট/সদস্য ফর্ম/সাইডবার/সেটিংস টগল।
+
+**টেস্ট (সব পাস):** find (found/name-mismatch/not-found), claim (success/pending/dup/password-mismatch), approve → active → MEM ID লগইন, রেজিস্ট্রেশন (instant-active + approval-gated pending → approve → লগইন), বাল্ক ইমপোর্ট (2 তৈরি/1 ডুপ স্কিপ + পাসওয়ার্ড-কলাম প্রত্যাখ্যান), এক্সপোর্ট, forgot→reset→নতুন পাসওয়ার্ডে লগইন, রিগ্রেশন (/ /login /register /committee /about /members /admin/*)।
