@@ -17,17 +17,63 @@
   </div>
   <div class="card">
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <form method="POST" action="<%= event ? '/admin/events/' + event.id + '?_method=PUT' : '/admin/events' %>">
-      <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= event ? event.title : '' %>" required></div>
-      <div class="form-group"><label>বিবরণ</label><textarea name="description" rows="4"><%= event ? (event.description || '') : '' %></textarea></div>
-      <div class="form-group"><label>তারিখ</label><input type="text" name="date" value="<%= event ? (event.date || '') : '' %>" placeholder="YYYY-MM-DD"></div>
-      <div class="form-group"><label>শেষ তারিখ</label><input type="text" name="end_date" value="<%= event ? (event.end_date || '') : '' %>" placeholder="YYYY-MM-DD"></div>
-      <div class="form-group"><label>স্থান</label><input type="text" name="location" value="<%= event ? (event.location || '') : '' %>"></div>
-      <div class="form-group"><label>কভার ছবির URL</label><input type="url" name="image_url" value="<%= event ? (event.image_url || '') : '' %>" placeholder="https://..."></div>
-      <%- include('../partials/multi-image', { images: images || [] }) %>
-      <div class="form-group"><label><input type="checkbox" name="featured" value="1" <%= event && event.featured ? 'checked' : '' %>> বিশেষ ইভেন্ট (Featured)</label></div>
-      <button type="submit" class="btn btn-primary"><%= event ? 'আপডেট' : 'তৈরি করুন' %></button>
-    </form>
+    <% if (event) { %>
+      <div class="sf-section" data-save-url="/admin/events/<%= event.id %>/section">
+        <div class="sf-head">
+          <h3>মূল তথ্য <span class="sf-count">৫</span></h3>
+          <div class="sf-actions">
+            <span class="sf-status" role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+            <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+            <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+          </div>
+        </div>
+        <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= event.title %>" readonly required></div>
+        <div class="form-group"><label>তারিখ</label><input type="text" name="date" value="<%= event.date || '' %>" readonly placeholder="YYYY-MM-DD"></div>
+        <div class="form-group"><label>শেষ তারিখ</label><input type="text" name="end_date" value="<%= event.end_date || '' %>" readonly placeholder="YYYY-MM-DD"></div>
+        <div class="form-group"><label>স্থান</label><input type="text" name="location" value="<%= event.location || '' %>" readonly></div>
+        <div class="form-group"><label><input type="checkbox" name="featured" value="1" <%= event.featured ? 'checked' : '' %> disabled> বিশেষ ইভেন্ট (Featured)</label></div>
+      </div>
+
+      <div class="sf-section" data-save-url="/admin/events/<%= event.id %>/section">
+        <div class="sf-head">
+          <h3>বিবরণ <span class="sf-count">১</span></h3>
+          <div class="sf-actions">
+            <span class="sf-status" role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+            <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+            <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+          </div>
+        </div>
+        <div class="form-group"><label>বিবরণ</label><textarea name="description" rows="5" readonly><%= event.description || '' %></textarea></div>
+      </div>
+
+      <div class="sf-section" data-save-url="/admin/events/<%= event.id %>/section">
+        <div class="sf-head">
+          <h3>ছবি ও কভার <span class="sf-count"><%= (images || []).length %></span></h3>
+          <div class="sf-actions">
+            <span class="sf-status" role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+            <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+            <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+          </div>
+        </div>
+        <div class="form-group"><label>কভার ছবির URL</label><input type="url" name="image_url" value="<%= event.image_url || '' %>" readonly placeholder="https://..."></div>
+        <%- include('../partials/multi-image', { images: images || [] }) %>
+      </div>
+    <% } else { %>
+      <form method="POST" action="/admin/events">
+        <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" required></div>
+        <div class="form-group"><label>বিবরণ</label><textarea name="description" rows="4"></textarea></div>
+        <div class="form-group"><label>তারিখ</label><input type="text" name="date" placeholder="YYYY-MM-DD"></div>
+        <div class="form-group"><label>শেষ তারিখ</label><input type="text" name="end_date" placeholder="YYYY-MM-DD"></div>
+        <div class="form-group"><label>স্থান</label><input type="text" name="location"></div>
+        <div class="form-group"><label>কভার ছবির URL</label><input type="url" name="image_url" placeholder="https://..."></div>
+        <%- include('../partials/multi-image', { images: images || [] }) %>
+        <div class="form-group"><label><input type="checkbox" name="featured" value="1"> বিশেষ ইভেন্ট (Featured)</label></div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> তৈরি করুন</button>
+      </form>
+    <% } %>
   </div>
 </div>
 </body>

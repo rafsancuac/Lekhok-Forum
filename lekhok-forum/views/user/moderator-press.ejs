@@ -144,27 +144,50 @@
           <button type="button" class="clip-edit-btn" title="সম্পাদনা ও সংরক্ষণ ফর্ম খুলুন" onclick="var d=this.closest('details'); d.open=true; d.scrollIntoView({behavior:'smooth', block:'center'});"><i class="fas fa-pen"></i> সম্পাদনা / সংরক্ষণ</button>
         </summary>
         <div style="padding:16px 14px;">
-          <form method="POST" action="/moderator/press/<%= c.id %>" enctype="multipart/form-data">
+          <%# ── টাস্ক ১৩ খ: সেকশন-ভিত্তিক সম্পাদনা (প্রতি সেকশন আলাদা সেভ) ── %>
+          <div class="sf-section" data-save-url="/moderator/press/<%= c.id %>/section">
+            <div class="sf-head">
+              <h3>মূল তথ্য <span class="sf-count">৫</span></h3>
+              <div class="sf-actions">
+                <span class="sf-status" role="status" aria-live="polite"></span>
+                <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+                <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+                <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+              </div>
+            </div>
             <div class="clip-grid">
-              <div class="clip-field"><label>শিরোনাম</label><input type="text" name="title" maxlength="200" value="<%= c.title || '' %>" /></div>
-              <div class="clip-field"><label>পত্রিকার নাম</label><input type="text" name="paper_name" maxlength="120" value="<%= c.paper_name || '' %>" /></div>
-              <div class="clip-field"><label>প্রকাশের তারিখ</label><input type="text" name="published_date" maxlength="40" value="<%= c.published_date || '' %>" /></div>
-              <div class="clip-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= c.sort_order || 0 %>" /></div>
-              <div class="clip-field"><label>নতুন ছবি আপলোড (ঐচ্ছিক)</label><input type="file" name="image" accept="image/*" /></div>
-              <div class="clip-field"><label>অথবা ছবির URL</label><input type="text" name="image_url" maxlength="600" value="<%= c.image_url %>" /></div>
-              <div class="clip-field" style="grid-column:1/-1;"><label>একাধিক ছবি (টেনে সাজান)</label><%- include('../../admin/views/admin/partials/multi-image', { images: c._images || [] }) %></div>
+              <div class="clip-field"><label>শিরোনাম</label><input type="text" name="title" maxlength="200" value="<%= c.title || '' %>" readonly /></div>
+              <div class="clip-field"><label>পত্রিকার নাম</label><input type="text" name="paper_name" maxlength="120" value="<%= c.paper_name || '' %>" readonly /></div>
+              <div class="clip-field"><label>প্রকাশের তারিখ</label><input type="text" name="published_date" maxlength="40" value="<%= c.published_date || '' %>" readonly /></div>
+              <div class="clip-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= c.sort_order || 0 %>" readonly /></div>
               <div class="clip-field"><label>প্রদর্শন অবস্থা</label>
-                <select name="is_active">
+                <select name="is_active" disabled>
                   <option value="1" <%= c.is_active ? 'selected' : '' %>>দৃশ্যমান</option>
                   <option value="0" <%= c.is_active ? '' : 'selected' %>>লুকানো</option>
                 </select>
               </div>
             </div>
-            <div class="clip-actions">
-              <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
-              <button type="submit" class="clip-del" formaction="/moderator/press/<%= c.id %>/delete" formnovalidate><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
+          </div>
+
+          <div class="sf-section" data-save-url="/moderator/press/<%= c.id %>/section">
+            <div class="sf-head">
+              <h3>ছবি <span class="sf-count"><%= (c._images || []).length %></span></h3>
+              <div class="sf-actions">
+                <span class="sf-status" role="status" aria-live="polite"></span>
+                <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+                <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+                <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+              </div>
             </div>
-          </form>
+            <div class="clip-field"><label>কভার ছবির URL</label><input type="text" name="image_url" maxlength="600" value="<%= c.image_url %>" readonly /></div>
+            <div class="clip-field" style="margin-top:10px;"><label>একাধিক ছবি (টেনে সাজান)</label><%- include('../../admin/views/admin/partials/multi-image', { images: c._images || [] }) %></div>
+          </div>
+
+          <div class="clip-actions">
+            <form method="POST" action="/moderator/press/<%= c.id %>/delete">
+              <button type="submit" class="clip-del"><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
+            </form>
+          </div>
         </div>
       </details>
     <% }) %>

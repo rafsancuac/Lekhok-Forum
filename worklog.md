@@ -352,3 +352,23 @@ Stage Summary:
 - **যাচাই:** মাইগ্রেশন সিড ৩৪ সারি; E2E মাল্টি-ইমেজ ইভেন্ট+প্রেস; পাবলিক ১২ পেজ + ফর্ম ২০০।
 - **পরিদর্শনে ধরা ও ঠিক করা বাগ:** getTransportSchedule-এ হারানো `try{`; EJS `<%#`-কমেন্টে `%>` (500); press images-only POST ভ্যালিডেশন; শেয়ারে ছবি-ক্ষতি; লাইটবক্স থাম্ব-ইনডেক্স; `.lightbox-nav` CSS; single-image ডিসপ্লে-ফলব্যাক।
 - ⏳ অংশ খ (সেকশন-ভিত্তিক সেভ) ও অংশ গ (মডারেটর UI/UX) এখনো বাকি।
+
+## টাস্ক ১৩ (পর্ব ৪) — অংশ খ: সেকশন-ভিত্তিক Edit & Save ✅
+
+**স্কোপ (ইউজার কনফার্মড: "both"):** কনটেন্ট এডিটর + site_items সেকশন এডিটর + পোস্ট এডিট ফর্ম (নোটিশ/ইভেন্ট/ডেইলি/নিউজ)।
+
+**কনটেন্ট এডিটর (`/admin/content`):**
+- `admin/routes.js` → `POST /admin/content/section` (AJAX): একটি গ্রুপের ফিল্ড+ছবি সেভ; রিভিশন+অডিট+ইমেজ-মিডলওয়্যার রি-ইউজ।
+- `admin/views/admin/content.ejs` → প্রতি সেকশনে সম্পাদনা/সেভ/বাতিল; readonly লক; fetch+X-CSRF-Token; স্ন্যাপশট-রিস্টোর বাতিল।
+
+**site_items সেকশন এডিটর (`/admin/sections` + `/moderator/sections`):**
+- নতুন partial `admin/partials/sections-list.ejs` + `?partial=1` GET ফ্র্যাগমেন্ট।
+- `admin/routes.js` + `routes/_sections-actions.js` + `routes/moderator.js` → সব POST JSON (wantsJson42 / _ajax=1)।
+- `sections.ejs` → ফর্ম-ইন্টারসেপ্ট fetch + partial রি-রেন্ডার + টোস্ট + আন্ডু।
+
+**পোস্ট এডিট ফর্ম:**
+- নতুন এন্ডপয়েন্ট: `POST /admin/{notices,events,daily}/:id/section` + `POST /moderator/press/:id/section` (আংশিক-আপডেট + JSON)।
+- শেয়ার্ড `public/assets/js/section-form.js` + `.sf-*` CSS (admin.css) + sidebar-এ লোড।
+- `notices/events/daily/form.ejs` + `moderator-press.ejs` → এডিট মোড সেকশনাইজড, অ্যাড মোড অপরিবর্তিত।
+
+**যাচাই (curl):** সেকশন-সেভ শুধু সেই সেকশন আপডেট; খালি শিরোনাম → 400; সেকশন-এডিটর add/save/toggle/move/delete/reorder/undo সব JSON OK; মডারেটর প্রেস সেকশন-সেভ OK; অ্যাড ফর্ম ও পাবলিক পেজ রিগ্রেশন 200।

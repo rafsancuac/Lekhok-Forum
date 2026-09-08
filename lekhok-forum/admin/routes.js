@@ -246,6 +246,25 @@ router.put('/notices/:id', requireScope('notices'), async (req, res) => {
   res.redirect('/admin/notices?saved=1');
 });
 
+// টাস্ক ১৩ খ: সেকশন-ভিত্তিক সেভ — শুধু পাঠানো ফিল্ড আপডেট হয়
+router.post('/notices/:id/section', requireScope('notices'), async (req, res) => {
+  const row = await db.prepare('SELECT id FROM notices WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ ok: false, error: 'বিজ্ঞপ্তিটি পাওয়া যায়নি' });
+  const upd = {};
+  if (req.body.title !== undefined) upd.title = String(req.body.title).trim();
+  if (req.body.content !== undefined) upd.content = String(req.body.content);
+  if (req.body.category !== undefined) upd.category = String(req.body.category);
+  if (req.body.date !== undefined) upd.date = String(req.body.date).trim();
+  if (req.body.images !== undefined) await db.setPostImages('notice', req.params.id, parseImages(req.body.images));
+  const cols = Object.keys(upd);
+  if (cols.length) {
+    if (cols.includes('title') && !upd.title) return res.status(400).json({ ok: false, error: 'শিরোনাম আবশ্যক' });
+    await db.prepare('UPDATE notices SET ' + cols.map(c => c + ' = ?').join(', ') + ' WHERE id = ?').run(...cols.map(c => upd[c]), req.params.id);
+  }
+  await TA42.audit(db, req, 'edit-section', 'notices', req.params.id, cols.join(',') || 'images');
+  res.json({ ok: true });
+});
+
 router.delete('/notices/:id', requireScope('notices'), async (req, res) => {
   const tid42 = await TA42.trashDelete(db, 'notices', req.params.id, req);
   await TA42.audit(db, req, 'delete', 'notices', req.params.id, '');
@@ -288,6 +307,32 @@ router.put('/events/:id', requireScope('events'), async (req, res) => {
   await db.prepare('UPDATE events SET title=?, description=?, date=?, end_date=?, location=?, image_url=?, featured=? WHERE id=?').run(title, description || '', date || '', end_date || '', location || '', cover, featured ? 1 : 0, req.params.id);
   await db.setPostImages('event', req.params.id, images);
   res.redirect('/admin/events?saved=1');
+});
+
+// টাস্ক ১৩ খ: সেকশন-ভিত্তিক সেভ
+router.post('/events/:id/section', requireScope('events'), async (req, res) => {
+  const row = await db.prepare('SELECT id FROM events WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ ok: false, error: 'ইভেন্টটি পাওয়া যায়নি' });
+  const upd = {};
+  if (req.body.title !== undefined) upd.title = String(req.body.title).trim();
+  if (req.body.description !== undefined) upd.description = String(req.body.description);
+  if (req.body.date !== undefined) upd.date = String(req.body.date).trim();
+  if (req.body.end_date !== undefined) upd.end_date = String(req.body.end_date).trim();
+  if (req.body.location !== undefined) upd.location = String(req.body.location);
+  if (req.body.featured !== undefined) upd.featured = req.body.featured === '1' ? 1 : 0;
+  if (req.body.image_url !== undefined || req.body.images !== undefined) {
+    const images = parseImages(req.body.images);
+    const cover = (req.body.image_url !== undefined ? String(req.body.image_url).trim() : '') || images[0] || '';
+    upd.image_url = cover;
+    await db.setPostImages('event', req.params.id, images);
+  }
+  const cols = Object.keys(upd);
+  if (cols.length) {
+    if (cols.includes('title') && !upd.title) return res.status(400).json({ ok: false, error: 'শিরোনাম আবশ্যক' });
+    await db.prepare('UPDATE events SET ' + cols.map(c => c + ' = ?').join(', ') + ' WHERE id = ?').run(...cols.map(c => upd[c]), req.params.id);
+  }
+  await TA42.audit(db, req, 'edit-section', 'events', req.params.id, cols.join(',') || 'images');
+  res.json({ ok: true });
 });
 
 router.delete('/events/:id', requireScope('events'), async (req, res) => {
@@ -515,6 +560,62 @@ router.post('/content', requireAdmin, contentImageUpload, async (req, res) => {
     return res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&error=' + encodeURIComponent(req.uploadError));
   }
   res.redirect('/admin/content?page=' + encodeURIComponent(req.body.__page || 'home') + '&saved=1');
+});
+
+// ── টাস্ক ১৩ (পর্ব ৪, অংশ খ): সেকশন-ভিত্তিক সেভ ────────────────────────────
+// একটি পেজের একটি মাত্র গ্রুপ (সেকশন) সেভ করে — পুরো পেজ নয়। AJAX/ফেচ থেকে আসে।
+// ফিল্ড-সেভ লজিক সম্পূর্ণ পেজ-সেভের সাথে অভিন্ন (ইমেজ আপলোড/রিসেট + রিভিশন হিস্ট্রি)।
+async function saveContentGroup(group, req) {
+  let saved = 0;
+  for (const f of group.fields) {
+    const key = f.key;
+    if (f.type === 'image') {
+      // ১) নতুন আপলোড (multipart img_<key>)
+      if (req.filesContent && req.filesContent[key]) {
+        await setSetting('content_' + key, req.filesContent[key].url);
+        saved++;
+        continue;
+      }
+      // ২) রিসেট টু ডিফল্ট
+      if (req.body['reset_' + key] === '1') {
+        await setSetting('content_' + key, '');
+        saved++;
+      }
+      continue;
+    }
+    if (!(key in req.body)) continue;
+    const val = typeof req.body[key] === 'string' ? req.body[key].replace(/\r\n/g, '\n').trim() : '';
+    // রিভিশন হিস্ট্রি (overwrite-এর আগে পুরনো মান, সর্বশেষ ১০)
+    try {
+      const old = await db.getSetting('content_' + key);
+      if (old !== null && old !== val) {
+        await db.prepare("INSERT INTO content_revisions (key, value, saved_by, saved_at) VALUES (?,?,?, datetime('now','localtime'))")
+          .run('content_' + key, String(old), req.session.adminUser ? req.session.adminUser.username : (req.session.user ? req.session.user.username : '?'));
+        await db.prepare('DELETE FROM content_revisions WHERE key = ? AND id NOT IN (SELECT id FROM content_revisions WHERE key = ? ORDER BY id DESC LIMIT 10)').run('content_' + key, 'content_' + key);
+      }
+    } catch (e) {}
+    await setSetting('content_' + key, val);
+    saved++;
+  }
+  return saved;
+}
+
+router.post('/content/section', requireAdmin, contentImageUpload, async (req, res) => {
+  const pageKey = String(req.body.__page || '');
+  const groupKey = String(req.body.__group || '');
+  const page = contentRegistry.PAGES.find(p => p.key === pageKey);
+  if (!page) return res.status(400).json({ ok: false, error: 'পেজটি পাওয়া যায়নি' });
+  const group = page.groups.find(g => g.key === groupKey);
+  if (!group) return res.status(400).json({ ok: false, error: 'সেকশনটি পাওয়া যায়নি' });
+  if (req.uploadError) return res.status(400).json({ ok: false, error: req.uploadError });
+  try {
+    const saved = await saveContentGroup(group, req);
+    await TA42.audit(db, req, 'content-save-section', 'settings', null, group.label + ' → ' + saved + ' ফিল্ড');
+    res.json({ ok: true, saved, group: groupKey });
+  } catch (e) {
+    console.error('[admin:content:section] save failed:', e.message);
+    res.status(500).json({ ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+  }
 });
 
 // Image upload for content editor (editor's upload-button flow → returns URL)
@@ -887,6 +988,32 @@ router.put('/daily/:id', requireScope('daily'), async (req, res) => {
     .run(content_type, title, body || null, cover, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.params.id);
   await db.setPostImages('daily', req.params.id, images);
   res.redirect('/admin/daily?saved=1');
+});
+
+// টাস্ক ১৩ খ: সেকশন-ভিত্তিক সেভ
+router.post('/daily/:id/section', requireScope('daily'), async (req, res) => {
+  const row = await db.prepare('SELECT id FROM daily_content WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ ok: false, error: 'কনটেন্টটি পাওয়া যায়নি' });
+  const upd = {};
+  if (req.body.content_type !== undefined) upd.content_type = String(req.body.content_type);
+  if (req.body.title !== undefined) upd.title = String(req.body.title).trim();
+  if (req.body.body !== undefined) upd.body = String(req.body.body) || null;
+  if (req.body.link_url !== undefined) upd.link_url = String(req.body.link_url) || null;
+  if (req.body.scheduled_date !== undefined) upd.scheduled_date = String(req.body.scheduled_date) || new Date().toISOString().split('T')[0];
+  if (req.body.published !== undefined) upd.published = req.body.published === '1' ? 1 : 0;
+  if (req.body.image_url !== undefined || req.body.images !== undefined) {
+    const images = parseImages(req.body.images);
+    const cover = (req.body.image_url !== undefined ? String(req.body.image_url).trim() : '') || images[0] || null;
+    upd.image_url = cover;
+    await db.setPostImages('daily', req.params.id, images);
+  }
+  const cols = Object.keys(upd);
+  if (cols.length) {
+    if (cols.includes('title') && !upd.title) return res.status(400).json({ ok: false, error: 'শিরোনাম আবশ্যক' });
+    await db.prepare('UPDATE daily_content SET ' + cols.map(c => c + ' = ?').join(', ') + ' WHERE id = ?').run(...cols.map(c => upd[c]), req.params.id);
+  }
+  await TA42.audit(db, req, 'edit-section', 'daily_content', req.params.id, cols.join(',') || 'images');
+  res.json({ ok: true });
 });
 
 router.delete('/daily/:id', requireScope('daily'), async (req, res) => {
@@ -1279,38 +1406,45 @@ router.get('/audit', requireAdmin, async (req, res) => {
 
 // ═══ সেশন ৪২: সেকশন আইটেম ম্যানেজার (সাইটের হার্ডকোডেড সেকশনগুলো এখন DB-চালিত) ═══
 const SECTIONS42 = require('../helpers/sections-registry').SECTIONS;
+const wantsJson42 = (req) => (req.body && req.body._ajax === '1') || ((req.headers.accept || '').indexOf('application/json') !== -1);
 router.get('/sections', requireStaff, async (req, res) => {
   const key = SECTIONS42[req.query.section] ? req.query.section : 'home_faq';
   let rows = [];
   try { rows = await db.prepare('SELECT * FROM site_items WHERE section = ? ORDER BY sort_order, id').all(key); } catch (e) {}
+  if (req.query.partial === '1') {
+    return res.render('admin/partials/sections-list', { SECTIONS: SECTIONS42, rows, active: key, BASE: '/admin' });
+  }
   res.render('admin/sections', { SECTIONS: SECTIONS42, rows, active: key, saved: req.query.saved || null, currentPath: '/admin/sections' });
 });
 router.post('/sections/add', requireStaff, async (req, res) => {
   const sec = SECTIONS42[req.body.section] ? req.body.section : 'home_faq';
   const mx = await db.prepare('SELECT MAX(sort_order) AS m FROM site_items WHERE section = ?').get(sec);
-  await db.prepare(`INSERT INTO site_items (section, sort_order, title, subtitle, body, icon, extra, image, is_active, created_at) VALUES (?,?,?,?,?,?,?,?,?, datetime('now','localtime'))`)
+  const r = await db.prepare(`INSERT INTO site_items (section, sort_order, title, subtitle, body, icon, extra, image, is_active, created_at) VALUES (?,?,?,?,?,?,?,?,?, datetime('now','localtime'))`)
     .run(sec, (mx && mx.m || 0) + 1, req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', req.body.image || '', 1);
   await TA42.audit(db, req, 'add', 'site_items:' + sec, null, req.body.title || '');
+  if (wantsJson42(req)) return res.json({ ok: true, action: 'add', section: sec, id: r.lastInsertRowid });
   res.redirect('/admin/sections?section=' + sec + '&saved=1');
 });
 router.post('/sections/:id/save', requireStaff, async (req, res) => {
   const row = await db.prepare('SELECT section FROM site_items WHERE id = ?').get(req.params.id);
-  if (!row) return res.redirect('/admin/sections');
+  if (!row) return wantsJson42(req) ? res.status(404).json({ ok: false, error: 'আইটেমটি পাওয়া যায়নি' }) : res.redirect('/admin/sections');
   const prev43 = await db.prepare('SELECT * FROM site_items WHERE id = ?').get(req.params.id);
   await db.prepare('UPDATE site_items SET title = ?, subtitle = ?, body = ?, icon = ?, extra = ?, image = ? WHERE id = ?')
     .run(req.body.title || '', req.body.subtitle || '', req.body.body || '', req.body.icon || '', req.body.extra || '', req.body.image || '', req.params.id);
   await TA42.audit(db, req, 'edit', 'site_items:' + row.section, req.params.id, req.body.title || '');
   req.session.undoSec43 = { id: Number(req.params.id), prev: prev43 };
+  if (wantsJson42(req)) return res.json({ ok: true, action: 'save', section: row.section, id: Number(req.params.id) });
   res.redirect('/admin/sections?section=' + row.section + '&saved=1&undo_sec=' + req.params.id);
 });
 // সেশন ৪৩: সেকশন-এডিট আন্ডু (সেশন-স্ন্যাপশট) + ড্র্যাগ-রিঅর্ডার
 router.post('/sections/:id/undo', requireStaff, async (req, res) => {
   const u = req.session.undoSec43;
-  if (!u || String(u.id) !== String(req.params.id)) return res.redirect('/admin/sections');
+  if (!u || String(u.id) !== String(req.params.id)) return wantsJson42(req) ? res.json({ ok: false, error: 'আন্ডু করার মতো কিছু নেই' }) : res.redirect('/admin/sections');
   await db.prepare('UPDATE site_items SET title = ?, subtitle = ?, body = ?, icon = ?, extra = ?, image = ? WHERE id = ?')
     .run(u.prev.title || '', u.prev.subtitle || '', u.prev.body || '', u.prev.icon || '', u.prev.extra || '', u.prev.image || '', u.id);
   req.session.undoSec43 = null;
   await TA42.audit(db, req, 'undo', 'site_items:' + (u.prev.section || ''), u.id, 'আগের সংস্করণে ফেরত');
+  if (wantsJson42(req)) return res.json({ ok: true, action: 'undo', section: u.prev.section || '' });
   res.redirect('/admin/sections?section=' + (u.prev.section || '') + '&saved=1');
 });
 router.post('/sections/reorder', requireStaff, async (req, res) => {
@@ -1319,6 +1453,7 @@ router.post('/sections/reorder', requireStaff, async (req, res) => {
   let i = 1;
   for (const id of ids) { try { await db.prepare('UPDATE site_items SET sort_order = ? WHERE id = ? AND section = ?').run(i++, id, sec); } catch (e) {} }
   await TA42.audit(db, req, 'reorder', 'site_items:' + sec, null, ids.length + 'টি আইটেম');
+  if (wantsJson42(req)) return res.json({ ok: true, action: 'reorder', section: sec });
   res.redirect('/admin/sections?section=' + sec + '&saved=1');
 });
 
@@ -1328,6 +1463,7 @@ router.post('/sections/:id/toggle', requireStaff, async (req, res) => {
     await db.prepare('UPDATE site_items SET is_active = ? WHERE id = ?').run(row.is_active ? 0 : 1, req.params.id);
     await TA42.audit(db, req, row.is_active ? 'hide' : 'publish', 'site_items:' + row.section, req.params.id, '');
   }
+  if (wantsJson42(req)) return res.json({ ok: true, action: 'toggle', section: row ? row.section : '', id: Number(req.params.id) });
   res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1');
 });
 router.post('/sections/:id/move', requireStaff, async (req, res) => {
@@ -1340,6 +1476,7 @@ router.post('/sections/:id/move', requireStaff, async (req, res) => {
       await db.prepare('UPDATE site_items SET sort_order = ? WHERE id = ?').run(row.sort_order, sib.id);
     }
   }
+  if (wantsJson42(req)) return res.json({ ok: true, action: 'move', section: row ? row.section : '', id: Number(req.params.id) });
   res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1');
 });
 router.post('/sections/:id/delete', requireStaff, async (req, res) => {
@@ -1349,6 +1486,7 @@ router.post('/sections/:id/delete', requireStaff, async (req, res) => {
     tid42 = await TA42.trashDelete(db, 'site_items', req.params.id, req);
     await TA42.audit(db, req, 'delete', 'site_items:' + row.section, req.params.id, '');
   }
+  if (wantsJson42(req)) return res.json({ ok: true, action: 'delete', section: row ? row.section : '', id: Number(req.params.id) });
   res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1' + (tid42 ? '&trashed=' + tid42 : ''));
 });
 

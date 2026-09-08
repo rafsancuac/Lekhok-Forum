@@ -1,0 +1,75 @@
+<% /* সেকশন-আইটেম লিস্ট (admin/sections.ejs ও partial-রিফেচ উভয়ে ব্যবহৃত) */ %>
+<div class="card" id="secList">
+  <h3 style="margin:0 0 4px;"><%= SECTIONS[active].label %> <span style="font-size:.8rem;color:#6b7280;">(<%= rows.length %> টি আইটেম)</span></h3>
+  <p style="font-size:.8rem;color:#6b7280;margin:0 0 14px;"><%= SECTIONS[active].hint %></p>
+
+  <% rows.forEach((r, i) => { %>
+  <details class="sec-item" draggable="true" data-sec-id="<%= r.id %>">
+    <summary>
+      <span class="ord">#<%= r.sort_order %></span>
+      <% if (r.image) { %><img class="sec-prev-img" src="<%= r.image %>" alt=""><% } %>
+      <span class="ttl <%= r.is_active ? '' : 'off' %>"><%= r.title || '(শিরোনামহীন)' %></span>
+      <% if (!r.is_active) { %><span class="badge" style="background:#fee2e2;color:#b91c1c;border-radius:5px;padding:2px 8px;font-size:.72rem;">লুকানো</span><% } %>
+      <form method="POST" class="sec-ajax" action="<%= BASE %>/sections/<%= r.id %>/move" data-dir-form="1">
+        <input type="hidden" name="dir" value="up"><button class="mini-btn" type="submit" title="উপরে"><i class="fas fa-arrow-up"></i></button>
+      </form>
+      <form method="POST" class="sec-ajax" action="<%= BASE %>/sections/<%= r.id %>/move" data-dir-form="1">
+        <input type="hidden" name="dir" value="down"><button class="mini-btn" type="submit" title="নিচে"><i class="fas fa-arrow-down"></i></button>
+      </form>
+      <form method="POST" class="sec-ajax" action="<%= BASE %>/sections/<%= r.id %>/toggle">
+        <button class="mini-btn" type="submit" title="লুকান/দেখান"><i class="fas <%= r.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i></button>
+      </form>
+      <form method="POST" class="sec-ajax" action="<%= BASE %>/sections/<%= r.id %>/delete">
+        <button class="mini-btn" type="submit" title="বাদ দিন" style="color:#b91c1c;"><i class="fas fa-trash"></i></button>
+      </form>
+    </summary>
+    <div class="sec-body">
+      <form method="POST" class="sec-ajax" action="<%= BASE %>/sections/<%= r.id %>/save">
+        <label>title (নাম/প্রশ্ন)</label>
+        <input type="text" name="title" value="<%= r.title %>">
+        <label>subtitle (সাব-টেক্সট, ঐচ্ছিক)</label>
+        <input type="text" name="subtitle" value="<%= r.subtitle || '' %>">
+        <label>body (বিবরণ/উত্তর)</label>
+        <textarea name="body" rows="4"><%= r.body || '' %></textarea>
+        <label>icon (Font Awesome ক্লাস, যেমন: fas fa-users)</label>
+        <input type="text" name="icon" value="<%= r.icon || '' %>">
+        <label>extra (লিংক, খালি = লিংক ছাড়া)</label>
+        <input type="text" name="extra" value="<%= r.extra || '' %>">
+        <label>image (ছবির URL বা আপলোড)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" name="image" class="sec-img-url" value="<%= r.image || '' %>" placeholder="https://… বা আপলোড">
+          <input type="file" accept="image/*" class="sec-img-file" style="font-size:.78rem;">
+        </div>
+        <img class="sec-img-prev" src="<%= r.image || '' %>" alt="" <%= r.image ? '' : 'style="display:none;"' %>>
+        <div style="margin-top:12px;"><button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-save"></i> সংরক্ষণ</button></div>
+      </form>
+    </div>
+  </details>
+  <% }); %>
+
+  <details class="sec-item" style="border-style:dashed;">
+    <summary><span class="ttl"><i class="fas fa-plus" style="color:#059669;"></i> নতুন আইটেম যোগ করুন</span></summary>
+    <div class="sec-body">
+      <form method="POST" class="sec-ajax" action="<%= BASE %>/sections/add" data-add-form="1">
+        <input type="hidden" name="section" value="<%= active %>">
+        <label>title (নাম/প্রশ্ন)</label>
+        <input type="text" name="title" required>
+        <label>subtitle (সাব-টেক্সট, ঐচ্ছিক)</label>
+        <input type="text" name="subtitle">
+        <label>body (বিবরণ/উত্তর)</label>
+        <textarea name="body" rows="4"></textarea>
+        <label>icon (Font Awesome ক্লাস)</label>
+        <input type="text" name="icon" placeholder="fas fa-users">
+        <label>extra (লিংক)</label>
+        <input type="text" name="extra" placeholder="https://…">
+        <label>image (ছবির URL বা আপলোড)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" name="image" class="sec-img-url" placeholder="https://… বা আপলোড">
+          <input type="file" accept="image/*" class="sec-img-file" style="font-size:.78rem;">
+        </div>
+        <img class="sec-img-prev" alt="" style="display:none;">
+        <div style="margin-top:12px;"><button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-plus"></i> যোগ করুন</button></div>
+      </form>
+    </div>
+  </details>
+</div>

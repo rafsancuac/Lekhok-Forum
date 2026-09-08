@@ -22,10 +22,14 @@
     .sec-body input[type=text], .sec-body textarea { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 5px; font-family: inherit; font-size: .9rem; }
     .mini-btn { border: 1px solid #d1d5db; background: #f9fafb; border-radius: 5px; padding: 5px 10px; font-size: .78rem; cursor: pointer; font-family: inherit; }
     .mini-btn:hover { background: #e5e7eb; }
+    .mini-btn:disabled { opacity: .55; cursor: wait; }
     .sec-item[draggable="true"] { cursor: grab; }
     .sec-item.drag-over { outline: 2px dashed #059669; outline-offset: 2px; }
     .sec-prev-img { width: 34px; height: 34px; object-fit: cover; border-radius: 5px; border: 1px solid #e5e7eb; }
     .sec-img-prev { max-width: 120px; max-height: 80px; border-radius: 5px; border: 1px solid #e5e7eb; margin-top: 8px; display: block; }
+    .sec-toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; align-items: center; gap: 10px; background: #065f46; color: #fff; padding: 11px 16px; border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.22); font-size: .86rem; }
+    .sec-toast.err { background: #991b1b; }
+    .sec-toast button { background: rgba(255,255,255,.18); border: none; color: #fff; border-radius: 4px; padding: 5px 10px; font-size: .78rem; font-weight: 700; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -34,11 +38,9 @@
   <div class="admin-header">
     <div>
       <h1><i class="fas fa-layer-group"></i> সেকশন আইটেম ম্যানেজার</h1>
-      <p class="subtitle">সাইটের পাবলিক সেকশনগুলোর আইটেম/কার্ড যোগ, সম্পাদনা, লুকানো, সাজানো ও বাদ দেওয়া — সব পরিবর্তন সাথে সাথে পাবলিক পেজে</p>
+      <p class="subtitle">সাইটের পাবলিক সেকশনগুলোর আইটেম/কার্ড যোগ, সম্পাদনা, লুকানো, সাজানো ও বাদ দেওয়া — প্রতিটি সেভ পেজ রিলোড ছাড়াই সংরক্ষিত হয়</p>
     </div>
   </div>
-
-  <% if (saved) { %><div class="flash ok"><i class="fas fa-check-circle"></i> সংরক্ষিত হয়েছে — পাবলিক পেজে সাথে সাথে প্রযোজ্য।</div><% } %>
 
   <div class="sec-tabs">
     <% Object.keys(SECTIONS).forEach(k => { %>
@@ -46,142 +48,139 @@
     <% }); %>
   </div>
 
-  <div class="card">
-    <h3 style="margin:0 0 4px;"><%= SECTIONS[active].label %> <span style="font-size:.8rem;color:#6b7280;">(<%= rows.length %> টি আইটেম)</span></h3>
-    <p style="font-size:.8rem;color:#6b7280;margin:0 0 14px;"><%= SECTIONS[active].hint %></p>
-
-    <% rows.forEach((r, i) => { %>
-    <details class="sec-item" draggable="true" data-sec-id="<%= r.id %>">
-      <summary>
-        <span class="ord">#<%= r.sort_order %></span>
-        <% if (r.image) { %><img class="sec-prev-img" src="<%= r.image %>" alt=""><% } %>
-        <span class="ttl <%= r.is_active ? '' : 'off' %>"><%= r.title || '(শিরোনামহীন)' %></span>
-        <% if (!r.is_active) { %><span class="badge" style="background:#fee2e2;color:#b91c1c;border-radius:5px;padding:2px 8px;font-size:.72rem;">লুকানো</span><% } %>
-        <form method="POST" action="?section=<%= active %>" style="display:none;"></form>
-        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/move" style="display:inline;" onsubmit="this.querySelector('[name=dir]').value='up'">
-          <input type="hidden" name="dir" value="up"><button class="mini-btn" type="submit" title="উপরে"><i class="fas fa-arrow-up"></i></button>
-        </form>
-        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/move" style="display:inline;" onsubmit="this.querySelector('[name=dir]').value='down'">
-          <input type="hidden" name="dir" value="down"><button class="mini-btn" type="submit" title="নিচে"><i class="fas fa-arrow-down"></i></button>
-        </form>
-        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/toggle" style="display:inline;">
-          <button class="mini-btn" type="submit" title="লুকান/দেখান"><i class="fas <%= r.is_active ? 'fa-eye-slash' : 'fa-eye' %>"></i></button>
-        </form>
-        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/delete" style="display:inline;">
-          <button class="mini-btn" type="submit" title="বাদ দিন" style="color:#b91c1c;"><i class="fas fa-trash"></i></button>
-        </form>
-      </summary>
-      <div class="sec-body">
-        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/<%= r.id %>/save">
-          <label>title (নাম/প্রশ্ন)</label>
-          <input type="text" name="title" value="<%= r.title %>">
-          <label>subtitle (সাব-টেক্সট, ঐচ্ছিক)</label>
-          <input type="text" name="subtitle" value="<%= r.subtitle || '' %>">
-          <label>body (বিবরণ/উত্তর)</label>
-          <textarea name="body" rows="4"><%= r.body || '' %></textarea>
-          <label>icon (Font Awesome ক্লাস, যেমন: fas fa-users)</label>
-          <input type="text" name="icon" value="<%= r.icon || '' %>">
-          <label>extra (লিংক, খালি = লিংক ছাড়া)</label>
-          <input type="text" name="extra" value="<%= r.extra || '' %>">
-          <label>image (ছবির URL বা আপলোড)</label>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" name="image" class="sec-img-url" value="<%= r.image || '' %>" placeholder="https://… বা আপলোড">
-            <input type="file" accept="image/*" class="sec-img-file" style="font-size:.78rem;">
-          </div>
-          <img class="sec-img-prev" src="<%= r.image || '' %>" alt="" <%= r.image ? '' : 'style="display:none;"' %>>
-          <div style="margin-top:12px;"><button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-save"></i> সংরক্ষণ</button></div>
-        </form>
-      </div>
-    </details>
-    <% }); %>
-
-    <details class="sec-item" style="border-style:dashed;">
-      <summary><span class="ttl"><i class="fas fa-plus" style="color:#059669;"></i> নতুন আইটেম যোগ করুন</span></summary>
-      <div class="sec-body">
-        <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/sections/add">
-          <input type="hidden" name="section" value="<%= active %>">
-          <label>title (নাম/প্রশ্ন)</label>
-          <input type="text" name="title" required>
-          <label>subtitle (সাব-টেক্সট, ঐচ্ছিক)</label>
-          <input type="text" name="subtitle">
-          <label>body (বিবরণ/উত্তর)</label>
-          <textarea name="body" rows="4"></textarea>
-          <label>icon (Font Awesome ক্লাস)</label>
-          <input type="text" name="icon" placeholder="fas fa-users">
-          <label>extra (লিংক)</label>
-          <input type="text" name="extra" placeholder="https://…">
-          <label>image (ছবির URL বা আপলোড)</label>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <input type="text" name="image" class="sec-img-url" placeholder="https://… বা আপলোড">
-            <input type="file" accept="image/*" class="sec-img-file" style="font-size:.78rem;">
-          </div>
-          <img class="sec-img-prev" alt="" style="display:none;">
-          <div style="margin-top:12px;"><button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-plus"></i> যোগ করুন</button></div>
-        </form>
-      </div>
-    </details>
-  </div>
+  <%- include('partials/sections-list', { rows: rows, active: active, SECTIONS: SECTIONS, BASE: (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' }) %>
 </div>
 <script>
 (function () {
-  var BASE = '<%=(typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin'%>';
+  'use strict';
+  var BASE = '<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>';
+  var ACTIVE = '<%= active %>';
   var csrf = function () { var m = document.querySelector('meta[name="csrf-token"]'); return m ? m.content : ''; };
-  // ছবি আপলোড + প্রিভিউ
-  document.querySelectorAll('.sec-img-file').forEach(function (file) {
-    file.addEventListener('change', function () {
-      if (!file.files || !file.files[0]) return;
-      var fd = new FormData(); fd.append('image', file.files[0]);
-      fetch(BASE === '/moderator' ? '/admin/upload-image' : '/admin/upload-image', { method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrf() } })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          var urlInp = file.closest('div').parentElement.querySelector('.sec-img-url');
-          var prev = file.closest('div').parentElement.querySelector('.sec-img-prev');
-          if (d && d.ok) { if (urlInp) urlInp.value = d.url; if (prev) { prev.src = d.url; prev.style.display = 'block'; } }
-          else alert((d && d.error) || 'আপলোড ব্যর্থ');
-        });
+
+  function toast(html, isErr) {
+    var t = document.createElement('div');
+    t.className = 'sec-toast' + (isErr ? ' err' : '');
+    t.innerHTML = html;
+    document.body.appendChild(t);
+    setTimeout(function () { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 9000);
+    setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 9500);
+    return t;
+  }
+
+  function reRenderList(section) {
+    return fetch(BASE + '/sections?section=' + encodeURIComponent(section) + '&partial=1', { headers: { 'Accept': 'text/html' } })
+      .then(function (r) { if (!r.ok) throw new Error('রিফ্রেশ ব্যর্থ'); return r.text(); })
+      .then(function (html) {
+        var list = document.getElementById('secList');
+        if (list) list.outerHTML = html;
+        initList();
+      });
+  }
+
+  // ── ছবি আপলোড + প্রিভিউ ──
+  function bindImages(scope) {
+    scope.querySelectorAll('.sec-img-file').forEach(function (file) {
+      file.addEventListener('change', function () {
+        if (!file.files || !file.files[0]) return;
+        var fd = new FormData(); fd.append('image', file.files[0]);
+        fetch('/admin/upload-image', { method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrf() } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var urlInp = file.closest('div').parentElement.querySelector('.sec-img-url');
+            var prev = file.closest('div').parentElement.querySelector('.sec-img-prev');
+            if (d && d.ok) { if (urlInp) urlInp.value = d.url; if (prev) { prev.src = d.url; prev.style.display = 'block'; } }
+            else toast('<i class="fas fa-exclamation-triangle"></i> ' + ((d && d.error) || 'আপলোড ব্যর্থ'), true);
+          })
+          .catch(function () { toast('<i class="fas fa-exclamation-triangle"></i> আপলোড ব্যর্থ', true); });
+      });
     });
-  });
-  document.querySelectorAll('.sec-img-url').forEach(function (inp) {
-    inp.addEventListener('input', function () {
-      var prev = inp.closest('div').parentElement.querySelector('.sec-img-prev');
-      if (prev) { prev.src = inp.value || ''; prev.style.display = inp.value ? 'block' : 'none'; }
+    scope.querySelectorAll('.sec-img-url').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var prev = inp.closest('div').parentElement.querySelector('.sec-img-prev');
+        if (prev) { prev.src = inp.value || ''; prev.style.display = inp.value ? 'block' : 'none'; }
+      });
     });
-  });
-  // ড্র্যাগ-রিঅর্ডার
-  var dragEl = null;
-  document.querySelectorAll('.sec-item[draggable="true"]').forEach(function (el) {
-    el.addEventListener('dragstart', function () { dragEl = el; });
-    el.addEventListener('dragover', function (e) { e.preventDefault(); if (dragEl && dragEl !== el) el.classList.add('drag-over'); });
-    el.addEventListener('dragleave', function () { el.classList.remove('drag-over'); });
-    el.addEventListener('drop', function (e) {
-      e.preventDefault(); el.classList.remove('drag-over');
-      if (!dragEl || dragEl === el) return;
-      el.parentNode.insertBefore(dragEl, el);
-      var ids = Array.prototype.map.call(document.querySelectorAll('.sec-item[data-sec-id]'), function (x) { return x.getAttribute('data-sec-id'); });
-      var fd = new URLSearchParams(); fd.set('section', new URLSearchParams(location.search).get('section') || 'home_faq');
-      ids.forEach(function (id) { fd.append('ids', id); });
-      fd.set('_csrf', csrf());
-      fetch(BASE + '/sections/reorder', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) {
-        if (r.status === 401) return location.href = '/login';
-        location.reload();
-      }).catch(function () { location.reload(); });
+  }
+
+  // ── AJAX ফর্ম সাবমিট (সেভ/অ্যাড/টগল/মুভ/ডিলিট) ──
+  function bindForms(scope) {
+    scope.querySelectorAll('form.sec-ajax').forEach(function (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var btn = form.querySelector('button[type=submit]');
+        if (btn && btn.disabled) return;
+        var data = new URLSearchParams(new FormData(form));
+        data.set('_csrf', csrf()); data.set('_ajax', '1');
+        if (btn) { btn.disabled = true; var old = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
+        fetch(form.getAttribute('action'), { method: 'POST', body: data, headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'অপ্রত্যাশিত রেসপন্স' }; }); })
+          .then(function (d) {
+            if (btn) { btn.disabled = false; btn.innerHTML = old; }
+            if (!d || !d.ok) throw new Error((d && d.error) || 'কাজটি ব্যর্থ হয়েছে');
+            return d;
+          })
+          .then(function (d) {
+            if (d.action === 'save' && d.id) {
+              // সেভ সফল — আন্ডু টোস্ট + লিস্ট রিফ্রেশ
+              var t = toast('<i class="fas fa-check-circle"></i> সংরক্ষিত হয়েছে। <button type="button" id="secUndoBtn"><i class="fas fa-undo"></i> আন্ডু</button>');
+              var ub = t.querySelector('#secUndoBtn');
+              if (ub) ub.addEventListener('click', function () {
+                var fd = new URLSearchParams(); fd.set('_csrf', csrf()); fd.set('_ajax', '1');
+                fetch(BASE + '/sections/' + d.id + '/undo', { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
+                  .then(function () { reRenderList(d.section || ACTIVE); });
+                if (t.parentNode) t.parentNode.removeChild(t);
+              });
+            } else if (d.action === 'delete') {
+              toast('<i class="fas fa-trash"></i> আইটেমটি ট্র্যাশে সরানো হয়েছে।');
+            } else if (d.action === 'add') {
+              toast('<i class="fas fa-plus"></i> নতুন আইটেম যোগ হয়েছে।');
+            } else if (d.action === 'toggle') {
+              toast('<i class="fas fa-eye"></i> দৃশ্যমানতা পরিবর্তিত হয়েছে।');
+            }
+            return reRenderList(d.section || ACTIVE);
+          })
+          .catch(function (err) {
+            if (btn) { btn.disabled = false; btn.innerHTML = old; }
+            toast('<i class="fas fa-exclamation-triangle"></i> ' + (err.message || 'কাজটি ব্যর্থ হয়েছে'), true);
+          });
+      });
     });
-  });
-  // সেকশন-এডিট আন্ডু টোস্ট
-  <% if (typeof undoSec42 !== 'undefined' && undoSec42) { %>
-  var t = document.createElement('div');
-  t.className = 'undo-toast'; t.id = 'undoToast';
-  t.innerHTML = '<i class="fas fa-pen"></i><span>সেকশন আইটেম সম্পাদনা সংরক্ষিত হয়েছে।</span><button type="button" class="undo-btn" id="secUndoBtn"><i class="fas fa-undo"></i> আন্ডু</button>';
-  document.body.appendChild(t);
-  document.getElementById('secUndoBtn').addEventListener('click', function () {
-    var fd = new URLSearchParams(); fd.set('_csrf', csrf());
-    fetch(BASE + '/sections/<%= undoSec42 %>/undo', { method: 'POST', body: fd, credentials: 'same-origin' }).then(function (r) {
-      if (r.status === 401) return location.href = '/login';
-      location.reload();
-    }).catch(function () { location.reload(); });
-  });
-  setTimeout(function () { t.style.opacity = '0'; }, 9000);
-  <% } %>
+  }
+
+  // ── ড্র্যাগ-রিঅর্ডার ──
+  function bindDrag(scope) {
+    var dragEl = null;
+    scope.querySelectorAll('.sec-item[draggable="true"]').forEach(function (el) {
+      el.addEventListener('dragstart', function () { dragEl = el; });
+      el.addEventListener('dragover', function (e) { e.preventDefault(); if (dragEl && dragEl !== el) el.classList.add('drag-over'); });
+      el.addEventListener('dragleave', function () { el.classList.remove('drag-over'); });
+      el.addEventListener('drop', function (e) {
+        e.preventDefault(); el.classList.remove('drag-over');
+        if (!dragEl || dragEl === el) return;
+        el.parentNode.insertBefore(dragEl, el);
+        var ids = Array.prototype.map.call(scope.querySelectorAll('.sec-item[data-sec-id]'), function (x) { return x.getAttribute('data-sec-id'); });
+        var fd = new URLSearchParams();
+        fd.set('section', ACTIVE);
+        ids.forEach(function (id) { fd.append('ids', id); });
+        fd.set('_csrf', csrf()); fd.set('_ajax', '1');
+        fetch(BASE + '/sections/reorder', { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+          .then(function (d) {
+            if (d && d.ok) toast('<i class="fas fa-arrows-alt-v"></i> ক্রম সংরক্ষিত হয়েছে।');
+            else toast('<i class="fas fa-exclamation-triangle"></i> ক্রম সংরক্ষণ ব্যর্থ', true);
+          })
+          .catch(function () { toast('<i class="fas fa-exclamation-triangle"></i> ক্রম সংরক্ষণ ব্যর্থ', true); });
+      });
+    });
+  }
+
+  function initList() {
+    var list = document.getElementById('secList');
+    if (!list) return;
+    bindImages(list); bindForms(list); bindDrag(list);
+  }
+
+  initList();
 })();
 </script>
 </body>

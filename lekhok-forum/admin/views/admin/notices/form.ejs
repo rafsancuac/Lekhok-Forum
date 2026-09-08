@@ -17,30 +17,90 @@
   </div>
   <div class="card">
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <form method="POST" action="<%= notice ? '/admin/notices/' + notice.id + '?_method=PUT' : '/admin/notices' %>">
-      <div class="form-group">
-        <label>শিরোনাম *</label>
-        <input type="text" name="title" value="<%= notice ? notice.title : '' %>" required>
+    <% if (notice) { %>
+      <%# ── টাস্ক ১৩ খ: সেকশন-ভিত্তিক সম্পাদনা (প্রতি সেকশন আলাদা সেভ, রিলোড নেই) ── %>
+      <div class="sf-section" data-save-url="/admin/notices/<%= notice.id %>/section">
+        <div class="sf-head">
+          <h3>মূল তথ্য <span class="sf-count">৩</span></h3>
+          <div class="sf-actions">
+            <span class="sf-status" role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+            <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+            <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>শিরোনাম *</label>
+          <input type="text" name="title" value="<%= notice.title %>" readonly required>
+        </div>
+        <div class="form-group">
+          <label>ক্যাটাগরি</label>
+          <select name="category" disabled>
+            <% ['notice','press','event'].forEach(c => { %>
+              <option value="<%= c %>" <%= notice.category === c ? 'selected' : '' %>><%= c === 'press' ? 'প্রেস বিজ্ঞপ্তি' : c === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>তারিখ (বাংলা বা ISO)</label>
+          <input type="text" name="date" value="<%= notice.date || '' %>" readonly placeholder="যেমন: ২০২৬ সালের ১৫ ফেব্রুয়ারি">
+        </div>
       </div>
-      <div class="form-group">
-        <label>বিষয়বস্তু</label>
-        <textarea name="content" rows="5"><%= notice ? (notice.content || '') : '' %></textarea>
+
+      <div class="sf-section" data-save-url="/admin/notices/<%= notice.id %>/section">
+        <div class="sf-head">
+          <h3>বিষয়বস্তু <span class="sf-count">১</span></h3>
+          <div class="sf-actions">
+            <span class="sf-status" role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+            <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+            <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>বিষয়বস্তু</label>
+          <textarea name="content" rows="6" readonly><%= notice.content || '' %></textarea>
+        </div>
       </div>
-      <div class="form-group">
-        <label>ক্যাটাগরি</label>
-        <select name="category">
-          <% ['notice','press','event'].forEach(c => { %>
-            <option value="<%= c %>" <%= notice && notice.category === c ? 'selected' : '' %>><%= c === 'press' ? 'প্রেস বিজ্ঞপ্তি' : c === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></option>
-          <% }) %>
-        </select>
+
+      <div class="sf-section" data-save-url="/admin/notices/<%= notice.id %>/section">
+        <div class="sf-head">
+          <h3>ছবি <span class="sf-count"><%= (images || []).length %></span></h3>
+          <div class="sf-actions">
+            <span class="sf-status" role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+            <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+            <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+          </div>
+        </div>
+        <%- include('../partials/multi-image', { images: images || [] }) %>
       </div>
-      <div class="form-group">
-        <label>তারিখ (বাংলা বা ISO)</label>
-        <input type="text" name="date" value="<%= notice ? (notice.date || '') : '' %>" placeholder="যেমন: ২০২৬ সালের ১৫ ফেব্রুয়ারি">
-      </div>
-      <%- include('../partials/multi-image', { images: images || [] }) %>
-      <button type="submit" class="btn btn-primary"><%= notice ? 'আপডেট' : 'তৈরি করুন' %></button>
-    </form>
+    <% } else { %>
+      <form method="POST" action="/admin/notices">
+        <div class="form-group">
+          <label>শিরোনাম *</label>
+          <input type="text" name="title" required>
+        </div>
+        <div class="form-group">
+          <label>বিষয়বস্তু</label>
+          <textarea name="content" rows="5"></textarea>
+        </div>
+        <div class="form-group">
+          <label>ক্যাটাগরি</label>
+          <select name="category">
+            <% ['notice','press','event'].forEach(c => { %>
+              <option value="<%= c %>"><%= c === 'press' ? 'প্রেস বিজ্ঞপ্তি' : c === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>তারিখ (বাংলা বা ISO)</label>
+          <input type="text" name="date" placeholder="যেমন: ২০২৬ সালের ১৫ ফেব্রুয়ারি">
+        </div>
+        <%- include('../partials/multi-image', { images: images || [] }) %>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> তৈরি করুন</button>
+      </form>
+    <% } %>
   </div>
 </div>
 </body>

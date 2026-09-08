@@ -311,6 +311,28 @@ router.post('/press/:id', ensureModerator, requireScope('epaper'), withUpload(pr
   res.redirect('/moderator/press?posted=1');
 });
 
+// টাস্ক ১৩ খ: সেকশন-ভিত্তিক সেভ (নিউজ/প্রেস কাটিং এডিট)
+router.post('/press/:id/section', ensureModerator, requireScope('epaper'), async (req, res) => {
+  const row = await db.prepare('SELECT id FROM press_clippings WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ ok: false, error: 'কাটিংটি পাওয়া যায়নি' });
+  const upd = {};
+  if (req.body.title !== undefined) upd.title = String(req.body.title).trim().slice(0, 200);
+  if (req.body.paper_name !== undefined) upd.paper_name = String(req.body.paper_name).trim().slice(0, 120);
+  if (req.body.published_date !== undefined) upd.published_date = String(req.body.published_date).trim().slice(0, 40) || null;
+  if (req.body.sort_order !== undefined) upd.sort_order = Math.max(0, parseInt(req.body.sort_order, 10) || 0);
+  if (req.body.is_active !== undefined) upd.is_active = req.body.is_active === '0' ? 0 : 1;
+  if (req.body.image_url !== undefined || req.body.images !== undefined) {
+    const images = parseImages(req.body.images);
+    const cover = (req.body.image_url !== undefined ? String(req.body.image_url).trim() : '') || images[0] || '';
+    if (cover) upd.image_url = cover;
+    await db.setPostImages('news', req.params.id, images);
+  }
+  const cols = Object.keys(upd);
+  if (cols.length) await db.prepare('UPDATE press_clippings SET ' + cols.map(c => c + ' = ?').join(', ') + ' WHERE id = ?').run(...cols.map(c => upd[c]), req.params.id);
+  await TA42.audit(db, req, 'edit-section', 'press_clippings', req.params.id, cols.join(',') || 'images');
+  res.json({ ok: true });
+});
+
 router.post('/press/:id/delete', ensureModerator, requireScope('epaper'), async (req, res) => {
   const tid42 = await TA42.trashDelete(db, 'press_clippings', req.params.id, req);
   await TA42.audit(db, req, 'delete', 'press_clippings', req.params.id, '');
@@ -537,6 +559,9 @@ router.get('/sections', ensureModerator, requireScope('content'), async (req, re
   const key = SECTIONS42[req.query.section] ? req.query.section : 'home_faq';
   let rows = [];
   try { rows = await db.prepare('SELECT * FROM site_items WHERE section = ? ORDER BY sort_order, id').all(key); } catch (e) {}
+  if (req.query.partial === '1') {
+    return res.render('admin/partials/sections-list', { SECTIONS: SECTIONS42, rows, active: key, BASE: '/moderator' });
+  }
   res.render('admin/sections', { SECTIONS: SECTIONS42, rows, active: key, saved: req.query.saved || null, currentPath: '/moderator/sections', moderatorView: true });
 });
 for (const act of ['add', ':id/save', ':id/toggle', ':id/move', ':id/delete', ':id/undo', 'reorder']) {

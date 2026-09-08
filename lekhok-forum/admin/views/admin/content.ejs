@@ -14,7 +14,7 @@
   <div class="admin-header">
     <h1><i class="fas fa-pen-square"></i> কনটেন্ট সম্পাদক</h1>
     <a class="btn btn-sm" href="/admin/content/history" style="margin-left:10px;"><i class="fas fa-history"></i> রিভিশন হিস্ট্রি</a>
-    <p>সাইটের প্রতিটি পেজের প্রতিটি সেকশনের লেখা ও ছবি এখান থেকে বদলান | হোম পেইজসহ সব পেজ। ফিল্ড খালি রাখলে ডিফল্ট লেখাটিই দেখাবে।</p>
+    <p>সাইটের প্রতিটি পেজের প্রতিটি সেকশনের লেখা ও ছবি এখান থেকে বদলান। সেকশনে <b>সম্পাদনা</b> চেপে শুধু সেই সেকশনটি বদলে <b>সেভ করুন</b> — পুরো পেজ রিলোড হয় না। ফিল্ড খালি রাখলে ডিফল্ট লেখাটিই দেখাবে।</p>
   </div>
 
   <% if (saved) { %>
@@ -58,8 +58,16 @@
           </div>
 
           <% p.groups.forEach((g) => { %>
-          <div class="ce-group">
-            <h3 class="ce-group-title"><%= g.label %> <span class="ce-group-count"><%= g.fields.length %></span></h3>
+          <div class="ce-group is-locked" data-group="<%= g.key %>">
+            <div class="ce-group-head">
+              <h3 class="ce-group-title"><%= g.label %> <span class="ce-group-count"><%= g.fields.length %></span></h3>
+              <div class="ce-group-actions">
+                <span class="ce-group-status" role="status" aria-live="polite"></span>
+                <button type="button" class="btn btn-sm ce-edit-btn"><i class="fas fa-pen"></i> সম্পাদনা</button>
+                <button type="button" class="btn btn-sm btn-primary ce-save-section-btn" hidden><i class="fas fa-check"></i> সেভ করুন</button>
+                <button type="button" class="btn btn-sm ce-cancel-btn" hidden><i class="fas fa-times"></i> বাতিল</button>
+              </div>
+            </div>
             <div class="ce-grid">
               <% g.fields.forEach((f) => { %>
               <% const isImg = f.type === 'image'; %>
@@ -100,9 +108,9 @@
                     <% if (f.hint) { %><small class="ce-hint"><%= f.hint %></small><% } %>
                   </div>
                 <% } else if (f.type === 'textarea') { %>
-                  <textarea id="f_<%= f.key %>" name="<%= f.key %>" rows="<%= f.rows || 3 %>" data-default="<%= defaults[f.key] || '' %>"><%= values[f.key] %></textarea>
+                  <textarea id="f_<%= f.key %>" name="<%= f.key %>" rows="<%= f.rows || 3 %>" readonly data-default="<%= defaults[f.key] || '' %>"><%= values[f.key] %></textarea>
                 <% } else { %>
-                  <input id="f_<%= f.key %>" name="<%= f.key %>" type="text" value="<%= values[f.key] %>" data-default="<%= defaults[f.key] || '' %>"
+                  <input id="f_<%= f.key %>" name="<%= f.key %>" type="text" readonly value="<%= values[f.key] %>" data-default="<%= defaults[f.key] || '' %>"
                          <%= f.type === 'number' ? 'inputmode="numeric"' : '' %> />
                 <% } %>
                 <% if (f.type === 'icon') { %>
@@ -120,13 +128,13 @@
       </div>
     </div>
 
-    <!-- ── স্টিকি সেভ বার ── -->
+    <!-- ── স্টিকি সেভ বার (সব পেজ একসাথে সেভ করার ফলব্যাক) ── -->
     <div class="ce-savebar" id="ceSavebar">
       <div class="ce-savebar-info">
         <i class="fas fa-circle-info"></i>
-        <span><strong id="ceDirtyCount">০</strong>টি ফিল্ডে অসংরক্ষিত পরিবর্তন • সব পেজ একসাথে সংরক্ষিত হয়</span>
+        <span><strong id="ceDirtyCount">০</strong>টি ফিল্ডে অসংরক্ষিত পরিবর্তন • সাধারণত সেকশন-ভিত্তিক সেভ ব্যবহার করুন</span>
       </div>
-      <button type="submit" class="btn btn-primary ce-save-btn" id="ceSaveBtn"><i class="fas fa-save"></i> সব সংরক্ষণ করুন</button>
+      <button type="submit" class="btn btn-primary ce-save-btn" id="ceSaveBtn"><i class="fas fa-save"></i> সব পেজ একসাথে সংরক্ষণ</button>
     </div>
   </form>
 </div>
@@ -136,6 +144,7 @@
   'use strict';
   var form = document.getElementById('contentForm');
   if (!form) return;
+  var AV = '<%= AV || "" %>';
 
   /* ── ট্যাব সুইচিং ──────────────────────────────────────────────── */
   var tabs = document.querySelectorAll('.ce-tab');
@@ -159,7 +168,6 @@
     t.addEventListener('click', function () { showPage(t.getAttribute('data-page'), true); });
   });
 
-  // ডিফল্ট ট্যাব — ?page= > localStorage > প্রথমটি
   try {
     var saved = localStorage.getItem('ceTab');
     var qs = new URLSearchParams(location.search).get('page');
@@ -186,7 +194,6 @@
       if (el.value === orig) delete dirty[el.name];
       else dirty[el.name] = true;
       refresh();
-      // আইকন প্রিভিউ লাইভ আপডেট
       var wrap = el.closest('.ce-field');
       if (wrap && wrap.classList.contains('ce-t-icon')) {
         var ic = wrap.querySelector('.ce-icon-preview i');
@@ -226,13 +233,12 @@
         fileinfo.textContent = 'নির্বাচিত: ' + f.name + ' (' + bn(Math.round(f.size / 1024)) + ' KB)';
         box.classList.add('has-new');
         dirty['img_' + key] = true;
-        if (resetFlag) resetFlag.value = '0';   // নতুন আপলোড = রিসেট প্রয়োজন নেই
+        if (resetFlag) resetFlag.value = '0';
         refresh();
       });
     }
     if (resetBtn) {
       resetBtn.addEventListener('click', function () {
-        // ফাইল-ইনপুট খালি + রিসেট-ফ্ল্যাগ চালু + UI আপডেট
         if (fileInput) fileInput.value = '';
         if (fileinfo) { fileinfo.hidden = true; fileinfo.textContent = ''; }
         if (resetFlag) resetFlag.value = '1';
@@ -253,15 +259,146 @@
     }
   });
 
+  /* ── টাস্ক ১৩ খ: সেকশন-ভিত্তিক সম্পাদনা ও সেভ ───────────────────── */
+  var groups = document.querySelectorAll('.ce-group');
+
+  function setStatus(group, kind, html) {
+    var s = group.querySelector('.ce-group-status');
+    if (!s) return;
+    s.className = 'ce-group-status' + (kind ? ' ' + kind : '');
+    s.innerHTML = html || '';
+  }
+
+  function enterEdit(group) {
+    if (group.classList.contains('is-editing')) return;
+    var snapshot = [];
+    group.querySelectorAll('input[type=text], textarea').forEach(function (el) {
+      snapshot.push({ el: el, val: el.value });
+    });
+    group.querySelectorAll('.ce-img').forEach(function (box) {
+      snapshot.push({ img: box, preview: box.querySelector('.ce-img-preview').innerHTML });
+    });
+    group._snapshot = snapshot;
+    group.classList.remove('is-locked');
+    group.classList.add('is-editing');
+    group.querySelectorAll('input[type=text], textarea').forEach(function (el) { el.removeAttribute('readonly'); });
+    group.querySelector('.ce-edit-btn').hidden = true;
+    group.querySelector('.ce-save-section-btn').hidden = false;
+    group.querySelector('.ce-cancel-btn').hidden = false;
+    setStatus(group, '', '');
+    var first = group.querySelector('input[type=text], textarea');
+    if (first) first.focus();
+  }
+
+  function exitEdit(group) {
+    group.classList.add('is-locked');
+    group.classList.remove('is-editing');
+    group.querySelectorAll('input[type=text], textarea').forEach(function (el) { el.setAttribute('readonly', ''); });
+    group.querySelector('.ce-edit-btn').hidden = false;
+    group.querySelector('.ce-save-section-btn').hidden = true;
+    group.querySelector('.ce-cancel-btn').hidden = true;
+  }
+
+  function cancelEdit(group) {
+    (group._snapshot || []).forEach(function (s) {
+      if (s.el) s.el.value = s.val;
+      if (s.img) {
+        s.img.querySelector('.ce-img-preview').innerHTML = s.preview;
+        s.img.classList.remove('has-new', 'will-reset');
+      }
+    });
+    group.querySelectorAll('.ce-img').forEach(function (box) {
+      var fi = box.querySelector('input[type=file]'); if (fi) fi.value = '';
+      var rf = box.querySelector('.ce-img-reset-flag'); if (rf) rf.value = '0';
+      var info = box.querySelector('.ce-img-fileinfo'); if (info) { info.hidden = true; info.textContent = ''; }
+    });
+    group.querySelectorAll('.ce-t-icon input').forEach(function (el) {
+      var ic = el.closest('.ce-field').querySelector('.ce-icon-preview i');
+      if (ic) ic.className = 'fas ' + el.value.trim();
+    });
+    group.querySelectorAll('input[type=text], textarea').forEach(function (el) { if (el.name) delete dirty[el.name]; });
+    exitEdit(group);
+    refresh();
+  }
+
+  function saveSection(group) {
+    var page = group.closest('.ce-panel').getAttribute('data-page');
+    var gkey = group.getAttribute('data-group');
+    var fd = new FormData();
+    fd.append('__page', page);
+    fd.append('__group', gkey);
+    group.querySelectorAll('input[type=text], textarea').forEach(function (el) {
+      if (el.name) fd.append(el.name, el.value);
+    });
+    group.querySelectorAll('.ce-img').forEach(function (box) {
+      var key = box.getAttribute('data-key');
+      var fi = box.querySelector('input[type=file]');
+      if (fi && fi.files && fi.files.length) fd.append('img_' + key, fi.files[0]);
+      var rf = box.querySelector('.ce-img-reset-flag');
+      if (rf && rf.value === '1') fd.append('reset_' + key, '1');
+    });
+
+    var saveBtn = group.querySelector('.ce-save-section-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সেভ হচ্ছে...'; }
+    setStatus(group, '', '');
+
+    var CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    fetch('/admin/content/section', { method: 'POST', body: fd, headers: { 'Accept': 'application/json', 'X-CSRF-Token': CSRF } })
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (res) {
+        if (res.status >= 400 || !res.data.ok) throw new Error(res.data.error || 'সংরক্ষণ ব্যর্থ');
+        var imgs = res.data.images || {};
+        group.querySelectorAll('.ce-img').forEach(function (box) {
+          var key = box.getAttribute('data-key');
+          var fi = box.querySelector('input[type=file]'); if (fi) fi.value = '';
+          var rf = box.querySelector('.ce-img-reset-flag'); if (rf) rf.value = '0';
+          var info = box.querySelector('.ce-img-fileinfo'); if (info) { info.hidden = true; info.textContent = ''; }
+          box.classList.remove('has-new', 'will-reset');
+          var url = imgs[key];
+          var preview = box.querySelector('.ce-img-preview');
+          var upLbl = box.querySelector('.ce-img-upload');
+          var setTxt = function (t) {
+            if (!upLbl) return;
+            var node = upLbl.childNodes[upLbl.childNodes.length - 1];
+            if (node && node.nodeType === 3) node.textContent = t;
+          };
+          if (preview) {
+            if (url) {
+              preview.innerHTML = '<img src="' + url + '?v=' + AV + '" alt=""/>' +
+                '<span class="ce-img-set-badge"><i class="fas fa-check"></i> কাস্টম ছবি সেট আছে</span>';
+              setTxt(' ছবি বদলান');
+            } else {
+              preview.innerHTML = '<span class="ce-img-empty"><i class="fas fa-image"></i> কোনো ছবি সেট করা নেই — ডিফল্ট ডিজাইন দেখাবে</span>';
+              setTxt(' ছবি আপলোড করুন');
+            }
+          }
+        });
+        exitEdit(group);
+        setStatus(group, 'ok', '<i class="fas fa-check-circle"></i> সংরক্ষিত হয়েছে');
+        group.querySelectorAll('input[type=text], textarea').forEach(function (el) { if (el.name) delete dirty[el.name]; });
+        refresh();
+      })
+      .catch(function (err) {
+        setStatus(group, 'err', '<i class="fas fa-exclamation-triangle"></i> ' + (err.message || 'নেটওয়ার্ক সমস্যা'));
+      })
+      .finally(function () {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> সেভ করুন'; }
+      });
+  }
+
+  groups.forEach(function (group) {
+    group.querySelector('.ce-edit-btn').addEventListener('click', function () { enterEdit(group); });
+    group.querySelector('.ce-cancel-btn').addEventListener('click', function () { cancelEdit(group); });
+    group.querySelector('.ce-save-section-btn').addEventListener('click', function () { saveSection(group); });
+  });
+
   /* ── সাবমিটে ডাবল-ক্লিক গার্ড ─────────────────────────────────── */
   form.addEventListener('submit', function () {
     var btn = document.getElementById('ceSaveBtn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে...'; }
     try { localStorage.removeItem('adminDraft:' + location.pathname + ':f0:/admin/content'); } catch (e) {}
-    // সেশন ৪৪: সেফটি-রিলিজ — নেভিগেশন না ঘটলে (নেটওয়ার্ক হ্যাং/সাবমিট ব্লক) স্পিনার
-    // যেন কখনো ইনফিনিট আটকে না থাকে; রেসপন্স আসার সাথে সাথে (redirect) পেজ আনলোড হয়।
     setTimeout(function () {
-      if (btn && btn.disabled) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> সব সংরক্ষণ করুন'; }
+      if (btn && btn.disabled) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> সব পেজ একসাথে সংরক্ষণ'; }
     }, 15000);
   });
   refresh();
