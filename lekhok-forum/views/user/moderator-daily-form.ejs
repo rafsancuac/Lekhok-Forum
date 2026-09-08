@@ -19,8 +19,28 @@
     <form method="POST" action="/moderator/daily/<%= type %>" class="mod-form">
       <label>শিরোনাম</label>
       <input type="text" name="title" required placeholder="শিরোনাম লিখুন">
-      <label>বিস্তারিত</label>
-      <textarea name="body" rows="4" placeholder="বিস্তারিত লিখুন"></textarea>
+      <label>বিস্তারিত (ব্যাখ্যা — উত্তর যাচাইয়ের পরে দেখাবে)</label>
+      <textarea name="body" rows="4" placeholder="সঠিক উত্তরের ব্যাখ্যা লিখুন"></textarea>
+      <% if (type === 'quiz') { %>
+        <%# সেশন ৬০: ইন্টারঅ্যাক্টিভ কুইজ-অপশন — ৪টি বিকল্প + সঠিক উত্তর %>
+        <div class="quiz-fields">
+          <label><i class="fas fa-list-check"></i> কুইজের বিকল্প (ইন্টারঅ্যাক্টিভ কুইজ)</label>
+          <div class="quiz-opt-grid">
+            <input type="text" name="opt_0" placeholder="বিকল্প ক" maxlength="200">
+            <input type="text" name="opt_1" placeholder="বিকল্প খ" maxlength="200">
+            <input type="text" name="opt_2" placeholder="বিকল্প গ" maxlength="200">
+            <input type="text" name="opt_3" placeholder="বিকল্প ঘ" maxlength="200">
+          </div>
+          <label><i class="fas fa-check-double"></i> সঠিক উত্তর</label>
+          <select name="correct_answer">
+            <option value="0">ক — বিকল্প ১</option>
+            <option value="1">খ — বিকল্প ২</option>
+            <option value="2">গ — বিকল্প ৩</option>
+            <option value="3">ঘ — বিকল্প ৪</option>
+          </select>
+          <p class="quiz-hint"><i class="fas fa-circle-info"></i> কমপক্ষে ২টি বিকল্প দিলে কুইজ ইন্টারঅ্যাক্টিভ হবে; না দিলে সাধারণ পোস্টের মতো দেখাবে।</p>
+        </div>
+      <% } %>
       <% if (type === 'epaper') { %>
         <label>ই-পেপার লিংক (PDF)</label>
         <input type="url" name="link_url" placeholder="https://example.com/epaper.pdf">

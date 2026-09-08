@@ -387,9 +387,22 @@ router.post('/daily/:type', ensureModerator, async (req, res, next) => {
     if (!title) return res.redirect('/moderator/daily/' + req.params.type);
     const images = parseImages(req.body.images);
     const cover = image_url || images[0] || '';
-    const r = await db.prepare(`INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, author_id, published)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 1)`)
-      .run(req.params.type, title, body || '', cover, link_url || '', scheduled_date || today(), req.session.user.id);
+
+    // সেশন ৬০: ইন্টারঅ্যাক্টিভ কুইজ-অপশন — কমপক্ষে ২টি খোঁজা বিকল্প লাগবে;
+    // সঠিক-ইনডেক্স ফাঁকা বিকল্প এড়িয়ে ভ্যালিডেট হয় (বিকল্প-সংখ্যার ভেতরে)।
+    let optionsJson = null, answer = null;
+    if (req.params.type === 'quiz') {
+      const opts = [0, 1, 2, 3].map(i => String(req.body['opt_' + i] || '').trim()).filter(Boolean);
+      if (opts.length >= 2) {
+        optionsJson = JSON.stringify(opts);
+        const sel = parseInt(req.body.correct_answer, 10);
+        answer = (Number.isInteger(sel) && sel >= 0 && sel < opts.length) ? sel : 0;
+      }
+    }
+
+    const r = await db.prepare(`INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, author_id, published, options, answer)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`)
+      .run(req.params.type, title, body || '', cover, link_url || '', scheduled_date || today(), req.session.user.id, optionsJson, answer);
     await db.setPostImages('daily', r.lastInsertRowid, images);
     await broadcastToAll('daily_' + req.params.type, meta.label, `নতুন আপডেট: ${title}`, '/' + (req.params.type === 'this_day' ? 'on-this-day' : req.params.type), req.session.user.id);
     res.redirect('/moderator/daily/' + req.params.type + '?posted=1');

@@ -144,45 +144,40 @@
 </div>
 
 <style>
-/* ── Gallery hero (light theme override) ── */
+/* ── সেশন ৬০-ফিক্স: গ্যালারি হিরো ডার্ক-গ্রিন থিমে (আগে জোর-করে লাইট ওভাররাইড ছিল —
+   সাইট-ওয়াইড গ্রেডিয়েন্টের সাথে অমিল, PLANS.md-র প্যালেট-নিয়ম ভাঙছিল) ── */
 .page-header {
-  background: linear-gradient(180deg, #f0fdf4 0%, #ecfeff 100%) !important;
-  color: var(--brand, #0a1f44) !important;
-  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: linear-gradient(135deg, var(--bg-main, #04150F) 0%, var(--bg-secondary, #0A2E23) 100%) !important;
+  color: #fff !important;
+  border-bottom: 1px solid var(--border, #1F4A3A);
 }
-.page-header h1, .page-header .eyebrow { color: var(--brand, #0a1f44) !important; }
-.page-header p, .page-header .header-sub { color: var(--text-muted, #475569) !important; }
+.page-header h1, .page-header .eyebrow { color: #fff !important; }
+.page-header p, .page-header .header-sub { color: #A9C4B5 !important; }
 .page-header .eyebrow {
-  background: rgba(5,150,105,0.12) !important;
-  color: var(--accent, #059669) !important;
-  border: none !important;
+  background: rgba(52, 211, 153, 0.12) !important;
+  color: #34D399 !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
 }
-html.theme-dark .page-header {
-  background: linear-gradient(180deg, #ecfdf5 0%, #eff6ff 100%) !important;
-  color: var(--brand, #0a1f44) !important;
-}
-html.theme-dark .page-header h1,
-html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
 
-/* ── Category filter bar (white, link-style) ── */
+/* ── ক্যাটাগরি-ফিল্টার বার (ডার্ক-প্যানেল) ── */
 .gallery-tabs {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
   gap: 0 26px;
-  background: #fff;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: var(--radius, 5px);
+  background: var(--card, #0B3327);
+  border: 1px solid var(--border, #1F4A3A);
+  border-radius: 10px;
   padding: 0 20px;
   margin-bottom: 30px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.55);
 }
 .gallery-tabs .gtab {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 14px 2px 12px;
-  color: var(--text-muted, #64748b);
+  color: #A9C4B5;
   text-decoration: none;
   font-size: 0.93rem;
   font-weight: 600;
@@ -190,21 +185,24 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
   transition: color 0.18s, border-color 0.18s;
 }
 .gallery-tabs .gtab i { font-size: 0.95em; opacity: 0.75; transition: opacity 0.18s; }
-.gallery-tabs .gtab:hover { color: var(--accent, #059669); }
+.gallery-tabs .gtab:hover { color: #E6F4EC; }
 .gallery-tabs .gtab:hover i { opacity: 1; }
 .gallery-tabs .gtab.active {
-  color: var(--accent, #059669);
-  border-bottom-color: var(--accent, #059669);
+  color: #34D399;
+  border-bottom-color: #34D399;
 }
 .gallery-tabs .gtab.active i { opacity: 1; }
 .gallery-tabs .gtab-count {
   font-size: 0.76rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: #8FADA0;
+  background: rgba(255,255,255,.06);
+  padding: 1px 8px;
+  border-radius: 99px;
   transition: color 0.18s;
 }
 .gallery-tabs .gtab:hover .gtab-count,
-.gallery-tabs .gtab.active .gtab-count { color: inherit; }
+.gallery-tabs .gtab.active .gtab-count { color: #34D399; }
 
 @media (max-width: 640px) {
   .gallery-tabs {
@@ -219,7 +217,7 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
   .gallery-tabs .gtab { white-space: nowrap; padding: 12px 2px 10px; }
 }
 
-/* ── Album layout ── */
+/* ── অ্যালবাম লেআউট (সেশন ৬০-ফিক্স: শিরোনাম নেভি→লাইট, সীমানা/গণনা ডার্ক-সেফ) ── */
 .gallery-album { margin-bottom: 40px; }
 .gallery-album:last-child { margin-bottom: 0; }
 
@@ -228,21 +226,22 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-  border-bottom: 2px solid var(--border, #e2e8f0);
+  border-bottom: 2px solid var(--border, #1F4A3A);
   padding-bottom: 10px;
 }
 .album-title {
   font-size: 1.1rem;
-  color: var(--brand, #0a1f44);
+  color: var(--brand-text, #F0FBF6);
   margin: 0;
   font-weight: 700;
 }
-.album-title i { color: var(--accent, #059669); margin-right: 8px; }
+.album-title i { color: #34D399; margin-right: 8px; }
 .album-count {
-  background: rgba(5,150,105,0.1);
-  color: var(--accent, #059669);
+  background: rgba(52, 211, 153, 0.12);
+  color: #34D399;
   padding: 3px 12px;
-  border-radius: var(--radius-sm, 5px);
+  border-radius: 99px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -275,15 +274,16 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
   aspect-ratio: 4/3;
 }
 
-/* Shared photo styles */
+/* Shared photo styles (সেশন ৬০-ফিক্স: ডার্ক-ব্যাকগ্রাউন্ড) */
 .album-photo {
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: var(--radius-sm, 5px);
   display: block;
-  background: var(--bg, #f8fafc);
+  background: var(--bg-secondary, #0A2E23);
   max-height: 240px;
+  border: 1px solid var(--border, #1F4A3A);
 }
 .album-photo img {
   width: 100%;
@@ -319,25 +319,25 @@ html.theme-dark .page-header p { color: var(--brand, #0a1f44) !important; }
 .album-more {
   aspect-ratio: 1;
   max-height: 240px;
-  background: var(--bg, #f8fafc);
-  border: 2px dashed var(--border, #e2e8f0);
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px dashed var(--border, #1F4A3A);
   border-radius: var(--radius-sm, 5px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted, #64748b);
+  color: #A9C4B5;
   font-family: inherit;
   text-decoration: none;
   transition: all 0.2s;
   cursor: pointer;
 }
-.album-more:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); }
+.album-more:hover { border-color: #34D399; color: #34D399; }
 .album-more span { font-size: 1.6rem; font-weight: 700; }
 .album-more small { font-size: 0.78rem; }
 
 .album-caption-text {
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted, #A9C4B5);
   font-size: 0.85rem;
   text-align: center;
   max-width: 640px;

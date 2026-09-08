@@ -28,11 +28,65 @@ async function attachImages(items) {
 }
 
 // ── Quiz ─────────────────────────────────────────────────────────────────────
+// সেশন ৬০: ইন্টারঅ্যাক্টিভ কুইজ — options JSON পার্স করে ভিউতে পাঠানো হয়, কিন্তু
+// `answer` কখনো ভিউতে যায় না (view-source চিটিং আটকাতে); যাচাই হয়
+// POST /quiz/check-এ সার্ভার-সাইড।
+function withQuizOptions(item) {
+  if (!item) return item;
+  const out = Object.assign({}, item);
+  out.options = null;
+  if (item.options) {
+    try {
+      const arr = JSON.parse(item.options);
+      if (Array.isArray(arr) && arr.length >= 2) out.options = arr.map(String);
+    } catch (e) { /* খারাপ JSON — স্ট্যাটিক ফলব্যাক */ }
+  }
+  delete out.answer;
+  return out;
+}
+
 router.get('/quiz', async (req, res) => {
   const today = await getDailyFor('quiz');
   const archive = await getDailyAll('quiz', 30);
   await attachImages([today, ...archive]);
-  res.render('user/quiz', { today, archive, currentPath: '/quiz' });
+  const todayId = today ? today.id : null;
+  res.render('user/quiz', {
+    today: withQuizOptions(today),
+    archive: (archive || []).filter(a => a && a.id !== todayId).map(withQuizOptions),
+    currentPath: '/quiz'
+  });
+});
+
+// সেশন ৬০: কুইজ-উত্তর সার্ভার-সাইড যাচাই (JSON POST — স্টেটলেস রিড-চেক,
+// CSRF-মিডলওয়্যার urlencoded/multipart গার্ড করে বলে JSON পাথ উপযুক্ত)।
+// `answer` ভিউতে পাঠানো হয় না (view-source চিটিং আটকাতে) — যাচাই এখানেই।
+router.post('/quiz/check', async (req, res) => {
+  try {
+    const id = parseInt(req.body && req.body.id, 10);
+    const choice = parseInt(req.body && req.body.choice, 10);
+    if (!Number.isInteger(id) || !Number.isInteger(choice)) {
+      return res.json({ ok: false, error: 'bad_request' });
+    }
+    const row = await db.prepare("SELECT id, options, answer, body FROM daily_content WHERE id = ? AND content_type = 'quiz' AND published = 1").get(id);
+    if (!row || !row.options) return res.json({ ok: false, error: 'not_found' });
+    let options;
+    try { options = JSON.parse(row.options); } catch (e) { return res.json({ ok: false, error: 'not_found' }); }
+    if (!Array.isArray(options) || choice < 0 || choice >= options.length) {
+      return res.json({ ok: false, error: 'bad_choice' });
+    }
+    const hasAnswer = row.answer !== null && row.answer !== undefined;
+    const correct = hasAnswer && choice === row.answer;
+    return res.json({
+      ok: true,
+      correct: !!correct,
+      answer: hasAnswer ? row.answer : null,
+      correctText: hasAnswer ? String(options[row.answer] || '') : '',
+      body: row.body || ''
+    });
+  } catch (e) {
+    console.error('[quiz] /quiz/check error:', e.message);
+    return res.status(500).json({ ok: false, error: 'server_error' });
+  }
 });
 
 // ── On This Day ──────────────────────────────────────────────────────────────
