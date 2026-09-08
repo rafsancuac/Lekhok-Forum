@@ -97,7 +97,7 @@
              return h;
            } %>
         <% central.forEach(m => { %>
-          <% const displayName = m.user_full_name || m.name; %>
+          <% const displayName = m.name || m.user_full_name; %>
           <% const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg'; %>
           <% const displayBani = (m.message && String(m.message).trim()) ? String(m.message) : (m.bio || ''); %>
           <% if (m.user_username) { %>
