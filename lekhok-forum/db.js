@@ -509,6 +509,23 @@ async function applyLaterMigrations() {
     await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON quiz_attempts(user_id, answered_at)');
     await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id)');
   } catch (e) { /* already exists — fine */ }
+  // সেশন ৬৭: bookmarks-স্কিমা-হার্ডেনিং — (১) ঐতিহাসিক ডুপ্লিকেট-রো ডিডুপ
+  // (earliest MIN(id) থাকিয়ে) + UNIQUE INDEX uq_bookmarks_user_post — টগল-
+  // রেস/ডাবল-ক্লিকে ডুপ্লিকেট রো আর জমবে না (টেবিলে আগে কোনো UNIQUE-ই ছিল না);
+  // (২) orphan-self-heal — মুছে-ফেলা পোস্টের সংরক্ষণ-রো প্রতি বুটে পরিষ্কার
+  // (/bookmarks স্ট্যাটাস-ফিল্টারে অদৃশ্য থাকত কিন্তু DB-তে জমা ছিল; ডিলিট-
+  // রুটে এখন ক্লিনআপ-আছে — এটি রেট্রো-হেলিং)।
+  try {
+    await backend.exec('DELETE FROM bookmarks WHERE id NOT IN (SELECT MIN(id) FROM bookmarks GROUP BY user_id, post_id)');
+    await backend.exec('CREATE UNIQUE INDEX IF NOT EXISTS uq_bookmarks_user_post ON bookmarks(user_id, post_id)');
+    await backend.exec('DELETE FROM bookmarks WHERE post_id NOT IN (SELECT id FROM posts)');
+  } catch (e) { console.error('[db] bookmarks hardening (session 67):', e.message); }
+  // সেশন ৬৭: cover_image-ডেটা-হিল — QA/লেগেসি-সেভে '[]' (মাল্টি-ইমেজ-JSON স্ট্রিং)
+  // ঢুকে গিয়েছিল; <input type=url> HTML5-ভ্যালিডেশনে এই মান ফর্ম-সেভই
+  // নীরবে ব্লক করে দেয় (এডিট-পেজ আটকে যাওয়ার আসল কারণ)। খালি/অবৈধ মান → NULL।
+  try {
+    await backend.exec("UPDATE posts SET cover_image = NULL WHERE TRIM(COALESCE(cover_image,'')) IN ('[]', 'null', 'Null', 'NULL', '{}', '')");
+  } catch (e) { console.error('[db] cover_image heal (session 67):', e.message); }
   try { await brandRenameMigration(); } catch (e) {
     console.error('[db] brandRenameMigration failed:', e.message);
   }
@@ -534,6 +551,10 @@ async function applyLaterMigrations() {
   // Idempotent + non-destructive (নিয়ম নিচের ফাংশন-কমেন্টে)।
   try { await quizDemoAttemptsBackfill64(); } catch (e) {
     console.error('[db] quizDemoAttemptsBackfill64 failed:', e.message);
+  }
+  // সেশন ৬৭: TOC-ডেমো-লেখা (লাইভে সূচিপত্র-ফিচার দৃশ্যমান করতে)।
+  try { await tocDemoArticle67(); } catch (e) {
+    console.error('[db] tocDemoArticle67 failed:', e.message);
   }
 }
 
@@ -630,6 +651,64 @@ async function quizDemoAttemptsBackfill64() {
     }
   }
   if (inserted) console.log('[db] quizDemoAttemptsBackfill64: seeded', inserted, 'demo attempt(s) — leaderboard visible');
+}
+
+// সেশন ৬৭: TOC-ডেমো-লেখা — সেশন ৬৫-এর অটো-সূচিপত্র (##/### হেডিং) এখনো লাইভে
+// কোনো লেখায় দৃশ্যমান ছিল না (কনটেন্ট-নির্ভর ফিচার; লাইভে কেউ ## লেখেনি)।
+// এই এককালীন ব্যাকফিল নতুন লেখকদের জন্য একটি সহায়িকা-ধরনের ডেমো-লেখা যোগ
+// করে যাতে ৫টি ## + ২টি ### সেকশন আছে — ফলে লাইভে সূচিপত্র-কার্ড, স্ক্রলস্পাই,
+// H2/H3 এডিটর-টুলবারের ব্যবহার-উদাহরণ সবই দৃশ্যমান হয়। শিরোনাম-ম্যাচে
+// idempotent — ডেমো-লেখা মুছে ফেললেও আর ফিরে আসে না।
+async function tocDemoArticle67() {
+  const TITLE67 = 'লেখার হাতে খড়ি: নতুন লেখকদের জন্য ধাপে ধাপে সহায়িকা';
+  const existing = await backend.prepare("SELECT id FROM posts WHERE title = ?").get(TITLE67);
+  if (existing) return;
+  // ডেমো-অথর: সাধারণ ইউজার-রোল (monem), না থাকলে karishma, শেষ ফলব্যাক ismail।
+  const author = (await backend.prepare("SELECT id, username FROM users WHERE username = 'monem' AND status = 'active'").get())
+               || (await backend.prepare("SELECT id, username FROM users WHERE username = 'karishma' AND status = 'active'").get())
+               || (await backend.prepare("SELECT id, username FROM users WHERE username = 'ismail' AND status = 'active'").get());
+  if (!author) return; // ডেমো-ইউজার নেই — খালি ইনস্টলে seedDemoContent পরে চলবে
+  const body67 = [
+    'লেখা শেখার কোনো শর্টকাট নেই — আছে শুধু নিয়মিত চর্চার দীর্ঘ পথ। এই সহায়িকায় সেই পথের প্রথম কয়েকটি ধাপ ধরে ধরে দেখানো হলো, যেন নতুন যে-কোনো লেখক আজই শুরু করতে পারেন। লেখক ফোরামের সম্মুখভাগে নিয়মিত যে-প্রশ্নগুলো আসে — “কীভাবে শুরু করব?”, “কোথা থেকে শিখব?” — তারই সমাধান-সূত্র এখানে।',
+    '',
+    '## প্রথম ধাপ: পাঠের ভিত গড়া',
+    '',
+    'ভালো লেখক হওয়ার আগে ভালো পাঠক হতে হয়। প্রতিদিন অন্তত বিশ মিনিট গুণগতভাবে পড়ুন — কবিতা, গল্প, প্রবন্ধ যা-ই হোক। পড়ার সময় লক্ষ্য করুন লেখক কীভাবে বাক্য সাজাচ্ছেন, কোথায় থামছেন, কোথায় ছুটছেন। এই নিঃশব্দ পর্যবেক্ষণই আপনার নিজের লেখার ভিত তৈরি করবে।',
+    '',
+    '### বই বাছাইয়ের সূত্র',
+    '',
+    'যুগ ধরে টিকে থাকা লেখা দিয়ে শুরু করুন; পাশাপাশি সমকালীন লেখকদেরও পড়ুন, যেন ভাষার চলতি স্রোতটাও ধরা পড়ে। একই ধরনের দুটি বই পাশাপাশি পড়লে রীতির তুলনা নিজেই স্পষ্ট হয়।',
+    '',
+    '### পড়ার খাতা রাখুন',
+    '',
+    'যে-বাক্য, যে-উপমা আপনাকে থামিয়ে দেয়, সেটি খাতায় টুকে রাখুন। মাসের শেষে খাতাটি পুনরায় পড়লে দেখবেন আপনার নিজের রুচির একটি মানচিত্র তৈরি হয়ে গেছে — সেটিই আপনার লেখার দিকনির্দেশ।',
+    '',
+    '## দ্বিতীয় ধাপ: নিয়মিত লেখার অভ্যাস',
+    '',
+    'অনুপ্রেরণার জন্য অপেক্ষা করবেন না — অভ্যাসই অনুপ্রেরণাকে ডেকে আনে। প্রতিদিন নির্দিষ্ট সময়ে, সম্ভব হলে একই জায়গায় বসে লিখুন। প্রথম দিকে দিনে দুই-তিন অনুচ্ছেদই যথেষ্ট। মোটা খাতায় লিখলে ফের মুছে লেখার ভয়টাও কমে যায়।',
+    '',
+    '## তৃতীয় ধাপ: খসড়া থেকে পরিমার্জন',
+    '',
+    'প্রথম খসড়ার কাজ শুধু হাঁটু ছোঁড়া — মানে নিখুঁত হওয়া নয়, প্রবাহিত হওয়া। লেখা শেষ হলে এক রাত পুরোনো করে রাখুন; পরদিন জোরে জোরে পড়ে শুনুন — যেখানে নিঃশ্বাস আটকায়, সেখানেই বাক্য কাটা দরকার। বিশেষণ আর খাঁটি শব্দ যাচাই করুন: প্রতিটি শব্দ যেন মাইনে রাখে।',
+    '',
+    '## চতুর্থ ধাপ: প্রতিক্রিয়া নিয়ে বাড়ানো জ্ঞান',
+    '',
+    'লেখা একা-ঘরে বন্ধ থাকলে বাড়ে না। লেখক ফোরামের মতো সম্প্রদায়ে নিজের লেখা প্রকাশ করুন, অন্যের লেখায় মন্তব্য করুন — অন্যকে দেওয়া সৎ সমালোচনা নিজের চোখও ধারালো করে। প্রতিক্রিয়া যত আগে, বৃদ্ধি তত দ্রুত।',
+    '',
+    '## প্রকাশের সাহস',
+    '',
+    'নিখুঁত হওয়ার অপেক্ষায় প্রকাশ করা যায় না — নিখুঁতি আসে প্রকাশের পরেই। আজই ছোট একটা লেখা সাজিয়ে ফেলুন, সম্প্রদায়ে দিন, প্রতিক্রিয়া নিন। কলম যত বাহিরে বেরোবে, তত শাণ পাবে। শুভকামনা — আপনার প্রথম লাইনটি এখনই লেখা হোক।'
+  ].join('\n');
+  await backend.prepare(
+    `INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, status, category, featured, view_count, published_at)
+     VALUES (?, 'article', ?, ?, ?, ?, ?, 'published', 'column', 1, 0, datetime('now'))`
+  ).run(
+    author.id, TITLE67, body67,
+    'লেখা শেখার কোনো শর্টকাট নেই — আছে শুধু নিয়মিত চর্চার দীর্ঘ পথ। নতুন লেখকদের জন্য ধাপে ধাপে সহায়িকা: পাঠের ভিত, দৈনিক অভ্যাস, পরিমার্জন, সম্প্রদায়ের প্রতিক্রিয়া আর প্রকাশের সাহস।',
+    'https://picsum.photos/seed/tocguide67/800/400',
+    'সহায়িকা,লেখালেখি,নতুন লেখক'
+  );
+  console.log('[db] tocDemoArticle67: seeded TOC demo article (5×H2 + 2×H3) by @' + author.username);
 }
 
 // সিকিউরিটি সেটিংস — ডিফল্ট নিরাপদ মান (fail-closed)। অ্যাডমিন পরে টগল করতে পারে।
@@ -1784,6 +1863,15 @@ async function initDb() {
     await ensureDemoModerator();
   } catch (e) {
     console.error('[db] Demo moderator seeding failed (non-fatal):', e.message);
+  }
+
+  // সেশন ৬৭: TOC-ডেমো-লেখা — applyLaterMigrations-এ চালানো হয়েছে পুরনো
+  // ইনস্টলের জন্য; কিন্তু ফ্রেশ-ইনস্টলে users তখনো তৈরি হয়নি (seed পরে চলে)
+  // — তাই সিডের পরেও একবার (idempotent — শিরোনাম-ম্যাচে স্কিপ)।
+  try {
+    await tocDemoArticle67();
+  } catch (e) {
+    console.error('[db] tocDemoArticle67 (post-seed pass) failed:', e.message);
   }
 
   // পূর্ণ ইনিট সফল → Turso-তে ফিঙ্গারপ্রিন্ট সেভ (পরের কোল্ড বুট ফাস্ট-পাথে যাবে)

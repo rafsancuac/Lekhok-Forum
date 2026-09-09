@@ -167,6 +167,34 @@
         </div>
       </div>
     </article>
+
+    <%# ── সেশন ৬৭: "আরও পড়ুন" — ট্যাগ/ক্যাটাগরি/লেখক-ভিত্তিক সম্পর্কিত লেখা (route-স্কোর্ড) ── %>
+    <% if (typeof related !== 'undefined' && related && related.length) { %>
+    <section class="related-articles" aria-label="আরও পড়ুন">
+      <h3 class="ra-title"><i class="fas fa-book-open"></i> আরও পড়ুন <span class="ra-count"><%= (related.length + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %>টি সম্পর্কিত লেখা</span></h3>
+      <div class="ra-grid">
+        <% related.forEach(r => { %>
+          <a href="/articles/<%= r.id %>" class="ra-card">
+            <% if (r.cover_image) { %>
+              <img src="<%= r.cover_image %>" alt="<%= r.title %> — প্রচ্ছদ" loading="lazy" decoding="async" class="ra-img" onerror="this.outerHTML='<div class=&quot;ra-img ra-img-empty&quot; aria-hidden=&quot;true&quot;><i class=&quot;fas fa-feather-alt&quot;></i></div>'">
+            <% } else { %>
+              <div class="ra-img ra-img-empty" aria-hidden="true"><i class="fas fa-feather-alt"></i></div>
+            <% } %>
+            <div class="ra-body">
+              <% if (r.first_tag) { %><span class="ra-tag">#<%= r.first_tag %></span><% } %>
+              <h4 class="ra-h"><%= r.title %></h4>
+              <% if (r.excerpt) { %><p class="ra-ex"><%= r.excerpt %>…</p><% } %>
+              <div class="ra-meta">
+                <span class="ra-author"><i class="far fa-user"></i> <%= r.author_name %></span>
+                <span><i class="far fa-comment"></i> <%= (r.comment_count + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></span>
+                <span><i class="far fa-eye"></i> <%= (r.view_count + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></span>
+              </div>
+            </div>
+          </a>
+        <% }) %>
+      </div>
+    </section>
+    <% } %>
   </div>
 
   <%- include('../partials/share-modal') %>

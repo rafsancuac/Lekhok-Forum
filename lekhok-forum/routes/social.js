@@ -180,7 +180,11 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
   const images = Array.isArray(req.body.images)
     ? req.body.images
     : (typeof req.body.images === 'string' && req.body.images.trim() ? (() => { try { const a = JSON.parse(req.body.images); return Array.isArray(a) ? a : []; } catch (e) { return []; } })() : []);
-  const cover = req.file ? (req.file.url || req.file.path) : (cover_image || images[0] || null);
+  // সেশন ৬৭: cover_image-স্যানিটাইজ — http(s)-URL বা সাইট-পাথ ছাড়া যেকোনো মান
+  // (যেমন '[]' জেএসওএন-স্ট্রিং) NULL হয়; নাহলে সেট DB-এ ঢেকে পরের এডিট-সেভেই
+  // <input type=url> নীরব-ভ্যালিডেশনে আটকে যায়।
+  const cleanCover67 = (v) => { const s = String(v || '').trim(); return (/^https?:\/.+$/i.test(s) || s.startsWith('/')) ? s : null; };
+  const cover = req.file ? (req.file.url || req.file.path) : (cleanCover67(cover_image) || images[0] || null);
   // সেশন ৩৯: সার্ভার-সাইড ডুপলিকেট গার্ড — গত ২ মিনিটে একই শিরোনামের আর্টিকেল
   // আবার POST হলে নতুন সারি না বানিয়ে আগের আর্টিকেলে রিডাইরেক্ট।
   const dupA = await db.prepare(`
@@ -383,7 +387,37 @@ router.get('/articles/:id', async (req, res) => {
     return inline65(line);
   }).join('<br>');
 
-  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc });
+  // ── সেশন ৬৭: "আরও পড়ুন" — ট্যাগ/ক্যাটাগরি/লেখক-ভিত্তিক সম্পর্কিত লেখা ──
+  // স্কোরিং: শেয়ার্ড-ট্যাগ ×৩ + একই ক্যাটাগরি ×২ + একই লেখক ×১; টাই-এ নত লেখা
+  // আগে। শূন্য-স্কোর কার্ড বাদ (অসম্পর্কিত লেখা দেখানোর চেয়ে সেকশন লুকানো ভালো)।
+  const _tags67 = String(post.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+  const _cand67 = await db.prepare(
+    `SELECT p.id, p.title, p.excerpt, p.body, p.cover_image, p.tags, p.category, p.author_id,
+            p.published_at, p.view_count, p.comment_count,
+            u.full_name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar
+     FROM posts p JOIN users u ON p.author_id = u.id
+     WHERE p.id != ? AND p.type = 'article' AND p.status = 'published'
+     ORDER BY p.published_at DESC LIMIT 24`
+  ).all(post.id);
+  const stripHash67 = (s) => String(s || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim();
+  for (const r of _cand67) {
+    const rt67 = String(r.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+    r.score67 = rt67.filter(t => _tags67.includes(t)).length * 3
+              + (r.category && post.category && r.category === post.category ? 2 : 0)
+              + (r.author_id === post.author_id ? 1 : 0);
+  }
+  const related = _cand67.filter(r => r.score67 > 0)
+    .sort((a, b) => b.score67 - a.score67 || String(b.published_at || '').localeCompare(String(a.published_at || '')))
+    .slice(0, 3)
+    .map(r => ({
+      id: r.id, title: r.title, cover_image: r.cover_image,
+      excerpt: stripHash67(r.excerpt || r.body).slice(0, 130),
+      author_name: r.author_name, author_username: r.author_username, author_avatar: r.author_avatar,
+      comment_count: r.comment_count || 0, view_count: r.view_count || 0,
+      first_tag: (String(r.tags || '').split(',')[0] || '').trim()
+    }));
+
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc, related });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────
@@ -404,7 +438,9 @@ router.post('/articles/:id/edit', ensureLoggedIn, withUpload(coverUpload), async
     ? req.body.images
     : (typeof req.body.images === 'string' && req.body.images.trim() ? (() => { try { const a = JSON.parse(req.body.images); return Array.isArray(a) ? a : []; } catch (e) { return []; } })() : []);
   // New upload wins; else keep the submitted URL; else keep the existing cover
-  const cover = req.file ? (req.file.url || req.file.path) : (cover_image !== undefined ? (cover_image || null) : post.cover_image);
+  // সেশন ৬৭: cleanCover67 — খালি/অবৈধ ('[]' ইত্যাদি) URL-মান NULL হয় (নতুন-রুটের মিরর)।
+  const cleanCover67 = (v) => { const s = String(v || '').trim(); return (/^https?:\/\/.+$/i.test(s) || s.startsWith('/')) ? s : null; };
+  const cover = req.file ? (req.file.url || req.file.path) : (cover_image !== undefined ? cleanCover67(cover_image) : post.cover_image);
   await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?').run(title, body, excerpt || body.replace(/^#{1,6}[ \t]+/gm, '').substring(0, 200), cover, tags || null, category || 'general', req.params.id);
   await db.setPostImages('post', req.params.id, images.length ? images : (post.cover_image ? [post.cover_image] : []));
   res.redirect('/articles/' + req.params.id);
@@ -417,6 +453,9 @@ router.post('/articles/:id/delete', ensureLoggedIn, async (req, res) => {
   await db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id);
   await db.prepare('DELETE FROM comments WHERE post_id = ?').run(req.params.id);
   await db.prepare('DELETE FROM likes WHERE post_id = ?').run(req.params.id);
+  // সেশন ৬৭: মুছে-ফেলা পোস্টের অরফান-সংরক্ষণ রো আর জমে না (আগে থেকে যেত —
+  // /bookmarks-এ অদৃশ্য কিন্তু DB-তে মৃত-ওজন)।
+  await db.prepare('DELETE FROM bookmarks WHERE post_id = ?').run(req.params.id);
   res.redirect('/articles');
 });
 
@@ -451,7 +490,9 @@ async function toggleBookmark(req, res) {
   if (existing) {
     await db.prepare('DELETE FROM bookmarks WHERE id = ?').run(existing.id);
   } else {
-    await db.prepare('INSERT INTO bookmarks (user_id, post_id) VALUES (?, ?)').run(req.session.user.id, req.params.id);
+    // সেশন ৬৭: INSERT OR IGNORE — UNIQUE-ইনডেক্সের বিপরীতে ডাবল-ক্লিক-রেসে
+    // ক্র্যাশ নয়, নীরব-ইডেম্পটেন্ট।
+    await db.prepare('INSERT OR IGNORE INTO bookmarks (user_id, post_id) VALUES (?, ?)').run(req.session.user.id, req.params.id);
   }
   res.redirect(back);
 }
@@ -547,6 +588,8 @@ router.post('/qa/:id/delete', ensureLoggedIn, async (req, res) => {
   await db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id);
   await db.prepare('DELETE FROM comments WHERE post_id = ?').run(req.params.id);
   await db.prepare('DELETE FROM likes WHERE post_id = ?').run(req.params.id);
+  // সেশন ৬৭: অরফান-সংরক্ষণ ক্লিনআপ (article-delete-এর মিরর)।
+  await db.prepare('DELETE FROM bookmarks WHERE post_id = ?').run(req.params.id);
   res.redirect('/qa');
 });
 
@@ -955,7 +998,9 @@ router.post('/api/bookmark', async (req, res) => {
     await db.prepare('DELETE FROM bookmarks WHERE id = ?').run(existing.id);
     return res.json({ saved: false });
   } else {
-    await db.prepare('INSERT INTO bookmarks (user_id, post_id) VALUES (?, ?)').run(req.session.user.id, post_id);
+    // সেশন ৬৭: INSERT OR IGNORE — UNIQUE-ইনডেক্সের বিপরীতে ডাবল-ক্লিক-রেসে
+    // ৫০০-এরর নয়, নীরব-ইডেম্পটেন্ট (saved:true সত্যই সেভ-হওয়া অবস্থা)।
+    await db.prepare('INSERT OR IGNORE INTO bookmarks (user_id, post_id) VALUES (?, ?)').run(req.session.user.id, post_id);
     return res.json({ saved: true });
   }
 });

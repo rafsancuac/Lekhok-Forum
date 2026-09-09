@@ -55,7 +55,8 @@
   <%# সেশন ৫৮: প্রিমিয়াম-রেস্পন্সিভ-অ্যানিমেটেড পলিশ-লেয়ার (additive) -%>
   <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
 </head>
-<body class="<%= currentPath === '/' ? 'home-page' : '' %>">
+<body class="<%= currentPath === '/' ? 'home-page' : '' %>" data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>">
+  <%# সেশন ৬৭: data-auth — পাবলিক-লেআউটেও main.js-এর লগইন-গার্ড নির্ভরযোগ্য (আগে .topbar-tabs a[href="/settings"] শুধু মেম্বার-হেডারে ছিল → /articles-এর সেভ-বাটনে লগইন-ইউজারও /login→/dashboard-এ বাউন্স করত) -%>
   <!-- Scroll progress bar -->
   <div class="scroll-progress" id="scrollProgress"></div>
 

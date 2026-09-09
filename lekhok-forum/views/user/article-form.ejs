@@ -117,6 +117,21 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       try { window.LekhokMultiImage && window.LekhokMultiImage.init(); } catch (e) {}
+      // সেশন ৬৭: HTML5-ভ্যালিডেশন-ফিডব্যাক — 'invalid' ইভেন্ট বাবল করে না
+      // (capture-ফেজে ধরতে হয়); আগে অবৈধ URL-মান ফর্ম-সেভ নীরবে ব্লক করত —
+      // ব্যবহারকারী বুঝতই না কীসের জন্য সেভ হচ্ছে না। এখন ক্ষেত্রের লেবেলসহ
+      // টোস্ট দেখায় + ক্ষেত্রে ফোকাস।
+      var form67 = document.querySelector('form[enctype]');
+      if (form67) {
+        form67.addEventListener('invalid', function (e) {
+          var f = e.target;
+          if (!f || !f.name) return;
+          var lbl = f.closest('.form-group')?.querySelector('label');
+          var what = lbl ? lbl.textContent.trim() : (f.name === 'cover_image' ? 'কভার ছবি URL' : f.name);
+          if (window.showToast) showToast('“' + what + '” ক্ষেত্রটি সঠিক নয় — ঠিক করে আবার সংরক্ষণ করুন', 'error');
+          try { f.focus(); } catch (_) {}
+        }, true);
+      }
     });
   </script>
 <%- include('../partials/sandbox-preview') %>

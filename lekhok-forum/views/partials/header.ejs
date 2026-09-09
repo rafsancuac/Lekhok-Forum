@@ -55,7 +55,8 @@
   <link rel="stylesheet" href="<%= href %><%= href.indexOf('/') === 0 ? '?v=' + AV : '' %>" />
   <% }) } %>
 </head>
-<body>
+<body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>">
+<%# সেশন ৬৭: data-auth — main.js লগইন-গার্ডের নির্ভরযোগ্য সোর্স (যেকোনো লেআউটে) -%>
   <!-- Back to top (session 59) -->
   <button type="button" class="back-to-top" id="backToTop" aria-label="উপরে ফিরে যান" title="উপরে ফিরে যান"><i class="fas fa-chevron-up"></i></button>
 <%# Apply per-user display preferences (theme / font size / font family) early to avoid flash %>
