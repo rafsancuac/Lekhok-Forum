@@ -125,7 +125,7 @@
               <span><i class="far fa-clock"></i> <%= new Date(b.bookmarked_at).toLocaleDateString('bn-BD') %></span>
             </div>
             <h3 class="feed-card-title"><a href="<%= b.type === 'question' ? '/qa/' + b.id : '/articles/' + b.id %>"><%= b.title %></a></h3>
-            <% if (b.body) { %><p class="feed-card-excerpt"><%= b.body.substring(0, 200) %><%= b.body.length > 200 ? '…' : '' %></p><% } %>
+            <% if (b.display_excerpt) { %><p class="feed-card-excerpt"><%= b.display_excerpt %><%= b.display_excerpt.length >= 200 ? '…' : '' %></p><% } %>
           </div>
         </article>
       <% }) %>

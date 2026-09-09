@@ -276,6 +276,8 @@
       <a href="/dashboard" class="<%= currentPath === '/dashboard' ? 'active' : '' %>"><i class="fas fa-globe-asia"></i> কমিউনিটি ফিড</a>
       <a href="/me" class="<%= currentPath === '/me' ? 'active' : '' %>"><i class="fas fa-user-circle"></i> ব্যক্তিগত ফিড</a>
       <a href="/messages" class="<%= currentPath && currentPath.indexOf('/messages') === 0 ? 'active' : '' %>"><i class="fas fa-comments"></i> মেসেজ</a>
+      <%# সেশন ৬৬: মোবাইল-সাইডবারে সংরক্ষিত-লেখার সরাসরি লিংক (আগে শুধু ড্রপডাউনে ছিল) %>
+      <a href="/bookmarks" class="<%= currentPath === '/bookmarks' ? 'active' : '' %>"><i class="fas fa-bookmark"></i> সংরক্ষিত লেখা</a>
       <a href="/settings" class="<%= currentPath && currentPath.indexOf('/settings') === 0 ? 'active' : '' %>"><i class="fas fa-sliders-h"></i> সেটিংস</a>
     </div>
 

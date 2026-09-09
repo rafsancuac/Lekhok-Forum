@@ -80,7 +80,7 @@
                 <% } %>
                 <div class="feed-card-body">
                   <h3 class="feed-title"><a href="<%= item.original.link %>"><%= item.original.title %></a></h3>
-                  <p class="feed-text"><%= (item.original.body || '').substring(0, 280) %><% if ((item.original.body || '').length > 280) { %>…<a href="<%= item.original.link %>"> আরও পড়ুন</a><% } %></p>
+                  <p class="feed-text"><%= String(item.original.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 280) %><% if ((item.original.body || '').length > 280) { %>…<a href="<%= item.original.link %>"> আরও পড়ুন</a><% } %></p>
                 </div>
                 <%- include('../partials/actions-bar', {
                   targetId: item.original.id,
@@ -90,7 +90,7 @@
                   link: item.original.link,
                   commentCount: item.original.comment_count || 0,
                   shareCount: item.original.share_count || 0,
-                  bookmarked: false
+                  bookmarked: myBookmarkedIds && myBookmarkedIds.indexOf(item.original.id) !== -1
                 }) %>
               </div>
             </article>
@@ -133,7 +133,7 @@
             <% } %>
             <div class="feed-card-body">
               <h3 class="feed-title"><a href="<%= item.link %>"><%= item.title %></a></h3>
-              <p class="feed-text"><%= (item.body || '').substring(0, 280) %><% if ((item.body || '').length > 280) { %>…<a href="<%= item.link %>"> আরও পড়ুন</a><% } %></p>
+              <p class="feed-text"><%= String(item.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 280) %><% if ((item.body || '').length > 280) { %>…<a href="<%= item.link %>"> আরও পড়ুন</a><% } %></p>
             </div>
             <%- include('../partials/actions-bar', {
               targetId: item.id,
@@ -143,7 +143,7 @@
               link: item.link,
               commentCount: item.comment_count || 0,
               shareCount: item.share_count || 0,
-              bookmarked: false
+              bookmarked: myBookmarkedIds && myBookmarkedIds.indexOf(item.id) !== -1
             }) %>
           </article>
           <% } %>

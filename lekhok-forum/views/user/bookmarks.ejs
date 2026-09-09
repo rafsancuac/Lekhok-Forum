@@ -1,0 +1,162 @@
+<%# সেশন ৬৬: ডেডিকেটেড "সংরক্ষিত লেখা" পেজ — আগে generic articles-ভিউ
+    (ভুল শিরোনাম + আনসেভড-আইকন + অপ্রাসঙ্গিক বাটন) দেখাত। %>
+<%- include('../partials/header', { title: 'সংরক্ষিত লেখা | লেখক ফোরাম', extra_css: ['/assets/css/bookmarks.css'] }) %>
+
+  <div class="bm-wrap">
+    <header class="bm-hero">
+      <div class="bm-hero-inner">
+        <div class="bm-hero-icon"><i class="fas fa-bookmark"></i></div>
+        <div class="bm-hero-text">
+          <span class="bm-eyebrow"><i class="fas fa-thumbtack"></i> আপনার ব্যক্তিগত পড়ার তালিকা</span>
+          <h1>সংরক্ষিত লেখা</h1>
+          <p class="bm-hero-sub">
+            <% if (items.length) { %>
+              <span class="bm-live-count"><%= bn(items.length) %></span>টি লেখা সংরক্ষিত আছে · সর্বশেষ সংরক্ষণ:
+              <span data-ts="<%= items[0].saved_at %>"><i class="far fa-clock"></i> </span>
+            <% } else { %>
+              পছন্দের লেখা 📌 করে রাখুন — পরে এখান থেকে এক-ক্লিকে ফিরে পড়ুন।
+            <% } %>
+          </p>
+        </div>
+        <% if (items.length) { %>
+        <a href="/articles" class="bm-browse-btn"><i class="fas fa-compass"></i> আরও লেখা খুঁজুন</a>
+        <% } %>
+      </div>
+    </header>
+
+    <% if (items.length === 0) { %>
+      <div class="bm-empty">
+        <div class="bm-empty-icon"><i class="far fa-bookmark"></i><span class="bm-empty-pulse"></span></div>
+        <h3>কোনো লেখা সংরক্ষিত নেই</h3>
+        <p>লেখা পড়ার সময় <strong><i class="far fa-bookmark"></i> সংরক্ষণ</strong> বাটনে চাপ দিলে সেটি এখানে জমা হবে — অফলাইন-মুহূর্তের জন্য নিজের পাঠ-তালিকা।</p>
+        <a href="/articles" class="bm-empty-cta"><i class="fas fa-book-open"></i> লেখা ব্রাউজ করুন</a>
+      </div>
+    <% } else { %>
+      <div class="bm-grid">
+        <% items.forEach(it => { %>
+          <% const isQA = it.type === 'question'; %>
+          <article class="bm-card">
+            <% if (it.cover_image) { %>
+              <a href="<%= isQA ? '/qa/' + it.id : '/articles/' + it.id %>" class="bm-cover-link" tabindex="-1" aria-hidden="true">
+                <img loading="lazy" decoding="async" src="<%= it.cover_image %>" alt="<%= it.title %> — কভার" class="bm-cover">
+              </a>
+            <% } %>
+            <div class="bm-body">
+              <div class="bm-meta-row">
+                <span class="bm-type-badge <%= isQA ? 'qa' : '' %>">
+                  <i class="<%= isQA ? 'fas fa-question-circle' : 'fas fa-pen-nib' %>"></i> <%= isQA ? 'প্রশ্ন' : 'লেখা' %>
+                </span>
+                <% if (it.tags) { %>
+                  <span class="bm-tag">#<%= it.tags.split(',')[0].trim() %></span>
+                <% } %>
+                <span class="bm-saved-chip" title="যখন সংরক্ষণ করেছিলেন">
+                  <i class="fas fa-thumbtack"></i> সংরক্ষণ <span data-ts="<%= it.saved_at %>"><i class="far fa-clock"></i> </span>
+                </span>
+              </div>
+              <h2 class="bm-title">
+                <a href="<%= isQA ? '/qa/' + it.id : '/articles/' + it.id %>"><%= it.title %></a>
+              </h2>
+              <% if (it.display_excerpt) { %>
+                <p class="bm-excerpt"><%= it.display_excerpt %>…</p>
+              <% } %>
+              <div class="bm-stats-row">
+                <span class="bm-stat" title="পড়ার আনুমানিক সময়"><i class="far fa-clock"></i> ≈ <%= bn(it.read_min) %> মিনিট</span>
+                <span class="bm-stat"><i class="far fa-heart"></i> <%= bn(it.like_count || 0) %></span>
+                <span class="bm-stat"><i class="far fa-comment"></i> <%= bn(it.comment_count || 0) %></span>
+                <span class="bm-stat"><i class="far fa-eye"></i> <%= bn(it.view_count || 0) %></span>
+              </div>
+              <div class="bm-footer">
+                <a href="/profile/<%= it.author_username %>" class="bm-author">
+                  <img loading="lazy" decoding="async" src="<%= it.author_avatar || '/avatar/' + it.author_id %>" alt="" class="bm-author-avatar"
+                       onerror="this.onerror=null;this.src='/avatar/<%= it.author_id %>'">
+                  <span class="bm-author-name"><%= it.author_name %></span>
+                </a>
+                <button type="button" class="bm-remove active" data-bookmark-id="<%= it.id %>"
+                        aria-label="সংরক্ষণ থেকে সরান" title="সংরক্ষণ থেকে সরান">
+                  <i class="fas fa-bookmark"></i> সরান
+                </button>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+
+      <p class="bm-foot-note">
+        <i class="fas fa-info-circle"></i>
+        সংরক্ষণ কেবল আপনি দেখতে পারেন — লেখক বা অন্য সদস্যরা জানতে পারে না।
+      </p>
+    <% } %>
+  </div>
+
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script>
+  // সেশন ৬৬: সংরক্ষিত-তালিকার সরান-বাটন — /api/bookmark-টগল + কার্ড-এক্সিট অ্যানিমেশন +
+  // হিরো-কাউন্ট/সর্বশেষ-সংরক্ষণ লাইভ-আপডেট। (main.js-এর গ্লোবাল .bookmark-btn হ্যান্ডলার
+  // সচেতনভাবে ব্যবহার করা হয়নি — ডাবল-ফেচ এড়াতে; টোস্ট showToast রিইউজ করে।)
+  (function () {
+    document.addEventListener('click', async function (e) {
+      const btn = e.target.closest('.bm-remove');
+      if (!btn) return;
+      if (btn.disabled) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/bookmark', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ post_id: btn.dataset.bookmarkId })
+        });
+        if (res.status === 401) { location.href = '/login?next=/bookmarks'; return; }
+        const data = await res.json();
+        if (!data.saved) {
+          if (window.showToast) showToast('সংরক্ষণ থেকে সরানো হয়েছে', 'success');
+          const card = btn.closest('.bm-card');
+          if (card) {
+            card.classList.add('bm-removing');
+            setTimeout(function () { card.remove(); syncCounts(); }, 380);
+          } else { btn.remove(); syncCounts(); }
+        } else {
+          // রি-সেভ (রেসপন্সে কখনো আসবে না এই পেজে — তবে সেফ-গার্ড)
+          btn.classList.add('active');
+          btn.querySelector('i').className = 'fas fa-bookmark';
+        }
+      } catch (err) {
+        if (window.showToast) showToast('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন', 'error');
+      } finally { btn.disabled = false; }
+    });
+    // সর্বশেষ-সংরক্ষণ টাইমস্ট্যাম্প প্রথম কার্ডের সাথে সিঙ্ক (LekhokRelTime ফরম্যাট রিইউজ)
+    function syncCounts() {
+      var n = document.querySelectorAll('.bm-card').length;
+      var sub = document.querySelector('.bm-hero-sub');
+      if (n === 0) {
+        var grid = document.querySelector('.bm-grid'), note = document.querySelector('.bm-foot-note'),
+            browse = document.querySelector('.bm-browse-btn');
+        grid && grid.remove(); note && note.remove(); browse && browse.remove();
+        if (sub) sub.textContent = 'পছন্দের লেখা 📌 করে রাখুন — পরে এখান থেকে এক-ক্লিকে ফিরে পড়ুন।';
+        var wrap = document.querySelector('.bm-wrap');
+        var empty = document.createElement('div');
+        empty.className = 'bm-empty';
+        empty.innerHTML = '<div class="bm-empty-icon"><i class="far fa-bookmark"></i><span class="bm-empty-pulse"></span></div>' +
+          '<h3>কোনো লেখা সংরক্ষিত নেই</h3>' +
+          '<p>লেখা পড়ার সময় <strong><i class="far fa-bookmark"></i> সংরক্ষণ</strong> বাটনে চাপ দিলে সেটি এখানে জমা হবে।</p>' +
+          '<a href="/articles" class="bm-empty-cta"><i class="fas fa-book-open"></i> লেখা ব্রাউজ করুন</a>';
+        wrap && wrap.appendChild(empty);
+      } else if (sub) {
+        var countSpan = sub.querySelector('.bm-live-count');
+        if (countSpan) {
+          var bnD = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+          countSpan.textContent = String(n).replace(/[0-9]/g, function (d) { return bnD[+d]; });
+        }
+        var latestCard = document.querySelector('.bm-card .bm-saved-chip [data-ts]');
+        var heroTs = sub.querySelector('[data-ts]');
+        if (latestCard && heroTs && heroTs !== latestCard) {
+          heroTs.dataset.ts = latestCard.dataset.ts;
+          if (window.LekhokRelTime) window.LekhokRelTime.render(sub);
+        }
+      }
+    }
+  })();
+  </script>
+  <%- include('../partials/sandbox-preview') %>
+</body>
+</html>

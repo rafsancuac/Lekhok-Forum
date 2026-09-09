@@ -141,12 +141,19 @@ router.get('/articles', async (req, res) => {
     if (!a.images.length && a.cover_image) a.images = [a.cover_image];
   }
   const popularTags = await db.prepare("SELECT tags FROM posts WHERE type='article' AND tags IS NOT NULL").all();
+  // সেশন ৬৬: লিস্ট-কার্ডে সংরক্ষণ-স্টেট প্রিফিল — লগইন-ইউজারের সেভ-করা আইডি-সেট
+  // (আগে কার্ডে বাটনই ছিল না; সেভ-করা থাকলেও far-আইকন দেখাত)
+  let bookmarkedIds = [];
+  if (req.session.user) {
+    const rows = await db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(req.session.user.id);
+    bookmarkedIds = rows.map(r => r.post_id);
+  }
   res.render('lekhok-articles', {
     layout: 'layout',
     pageTitle: 'প্রকাশিত লেখা',
     currentPath: '/articles',
     articles, tag, popularTags,
-    filterType
+    filterType, bookmarkedIds
   });
 });
 
@@ -1016,12 +1023,33 @@ router.get('/notifications/mark-all-read', async (req, res) => {
   res.redirect('/notifications');
 });
 
+// ── সেশন ৬৬: সংরক্ষিত লেখা — ডেডিকেটেড পেজ ──
+// আগে generic user/articles-ভিউ রেন্ডার হতো: ভুল শিরোনাম "প্রকাশিত লেখা",
+// সেভ-করা কার্ডেও আনসেভড-আইকন, অপ্রাসঙ্গিক "নতুন লেখা" বাটন। এখন নিজস্ব ভিউ।
 router.get('/bookmarks', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
-  const items = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender
-    FROM bookmarks b JOIN posts p ON b.post_id = p.id JOIN users u ON p.author_id = u.id
-    WHERE b.user_id = ? AND p.status = 'published' ORDER BY b.created_at DESC`).all(req.session.user.id);
-  res.render('user/articles', { posts: items, articles: items, tag: null, currentPath: '/bookmarks' });
+  const items = await db.prepare(`
+    SELECT p.id, p.type, p.title, p.body, p.excerpt, p.cover_image, p.tags,
+           p.like_count, p.comment_count, p.view_count, p.published_at,
+           u.id AS author_id, u.full_name AS author_name, u.username AS author_username,
+           u.avatar_url AS author_avatar, u.gender AS author_gender,
+           b.created_at AS saved_at
+    FROM bookmarks b
+    JOIN posts p ON b.post_id = p.id
+    JOIN users u ON p.author_id = u.id
+    WHERE b.user_id = ? AND p.status = 'published'
+    ORDER BY b.created_at DESC`).all(req.session.user.id);
+  // সেশন-৬৫ প্যারিটি: ## / ### হেডিং-মার্কার বডি-ফলব্যাক-এক্সারপ্টে ঢুকে যেত —
+  // article-single-এ যেমন স্ট্রিপ হয়, এখানেও (সাদা-স্পেস কোলাপ্সসহ)।
+  for (const it of items) {
+    const src = it.excerpt || it.body || '';
+    it.display_excerpt = src.replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().slice(0, 150);
+    // পড়ার-সময় (~১৩০ শব্দ/মিনিট — article-single-এর হিসাবের মিরর)
+    const words = (it.body || '').trim() ? (it.body || '').trim().split(/\s+/).length : 0;
+    it.read_min = Math.max(1, Math.round(words / 130));
+  }
+  const bn = n => String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[+d]);
+  res.render('user/bookmarks', { items, currentPath: '/bookmarks', bn });
 });
 
 // ── API: Notifications ───────────────────────────────────────────────────────
@@ -1079,6 +1107,11 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
     FROM bookmarks b JOIN posts p ON p.id = b.post_id
     WHERE b.user_id = ? ORDER BY b.created_at DESC LIMIT 30
   `).all(me.id);
+  // সেশন ৬৬-বাগফিক্স: /me-র সংরক্ষিত-ট্যাবের এক্সারপ্টে কাঁচা ## / ### হেডিং-মার্কার
+  // দেখা যেত (সেশন ৬৫ শুধু article-single-এ স্ট্রিপ করেছিল) — এখানেও পরিষ্কার।
+  for (const b of myBookmarks) {
+    b.display_excerpt = (b.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  }
 
   // Following — users + their recent activity
   const following = await db.prepare(`

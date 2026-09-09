@@ -167,8 +167,18 @@ router.get('/dashboard', async (req, res) => {
   let myInterests = [];
   if (me) { try { myInterests = JSON.parse(await db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {} }
 
+  // সেশন ৬৬: ড্যাশবোর্ড-ফিডের actions-bar-এ bookmarked-স্টেট প্রিফিল —
+  // আগে হার্ডকোড false ছিল, সেভ-করা পোস্টও আনসেভড-আইকন দেখাত।
+  let myBookmarkedIds = [];
+  if (me) {
+    try {
+      myBookmarkedIds = (await db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(me.id)).map(r => r.post_id);
+    } catch (_) {}
+  }
+
   res.render('user/dashboard', {
     feed, filter, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
+    myBookmarkedIds,
     user: req.session.user || null,
     currentPath: '/dashboard'
   });
