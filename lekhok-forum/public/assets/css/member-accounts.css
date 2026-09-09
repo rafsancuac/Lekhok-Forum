@@ -10,17 +10,17 @@
 .mc-foot a{color:#059669;font-weight:600}
 .mc-forgot{margin-top:12px;font-size:.82rem;text-align:right}
 .mc-forgot a{color:#059669}
-.btn-secondary{display:inline-flex;align-items:center;gap:8px;justify-content:center;width:100%;padding:12px 16px;border-radius:6px;border:1px solid rgba(5,150,105,.55);background:rgba(15,23,42,.04);color:#059669;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;justify-content:center;width:100%;padding:12px 16px;border-radius:6px;border:1px solid #059669;background:#fff;color:#059669;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
 .btn-secondary:hover{background:rgba(5,150,105,.08)}
 .btn-secondary:disabled{opacity:.6;cursor:wait}
 .mc-result{margin-top:16px}
 .mc-msg{padding:12px 14px;border-radius:6px;font-size:.88rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px}
-.mc-msg.ok{background:rgba(16,185,129,.13);border:1px solid rgba(5,150,105,.38);color:#047857}
-.mc-msg.err{background:rgba(239,68,68,.13);border:1px solid rgba(248,113,113,.4);color:#FCA5A5}
-.mc-msg.warn{background:rgba(251,146,60,.13);border:1px solid rgba(251,146,60,.4);color:#FDBA74}
+.mc-msg.ok{background:#e6f6ef;border:1px solid #b5e3d0;color:#047857}
+.mc-msg.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.mc-msg.warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
 .mc-found{border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:14px;background:var(--card)}
 .mc-found-title{font-weight:700;color:#1e293b;margin-bottom:12px;font-size:.95rem}
-.mc-card{display:flex;gap:14px;align-items:flex-start;border:1px solid #e2e8f0;border-radius:8px;padding:14px;background:var(--surface-alt);margin-bottom:14px}
+.mc-card{display:flex;gap:14px;align-items:flex-start;border:1px solid #e2e8f0;border-radius:8px;padding:14px;background:#fafbfc;margin-bottom:14px}
 .mc-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#e9ebef}
 .mc-avatar-empty{display:flex;align-items:center;justify-content:center;color:#8FAEA0;font-size:1.3rem}
 .mc-meta{min-width:0}

@@ -76,7 +76,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 /* সেশন ৬৮: লাইট-থিম-কনট্রাস্ট-ফিক্স — #FCA5A5/#6EE7B7 ছিল ডার্ক-ব্যাকগ্রাউন্ডের
    লাইট-টেক্সট; সাদা auth-card-এ ~২:১ অপাঠ্য হয়ে যেত (৮টি ভিউয়ের error-বক্স!)। */
 .error{
-  background:rgba(239,68,68,.08); color:#b91c1c;
+  background:#fef2f2; color:#b91c1c;
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
   border:1px solid rgba(220,38,38,.35);
@@ -84,7 +84,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 }
 .error i{ flex:0 0 auto; color:#dc2626; }
 .success{
-  background:rgba(16,185,129,.1); color:#047857;
+  background:#ecfdf5; color:#047857;
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
   border:1px solid rgba(5,150,105,.38);
@@ -261,7 +261,7 @@ body.auth-split .back-home{
 /* ── ট্যাব (লগইন | আইডি খুঁজুন) ── */
 .as-tabs{
   display:grid; grid-template-columns:1fr 1fr; gap:4px;
-  background:rgba(15,23,42,.05); padding:4px;
+  background:#eceff4; padding:4px;
   border:1px solid rgba(15,23,42,.1);
   border-radius:10px; margin-bottom:24px;
 }
@@ -274,7 +274,7 @@ body.auth-split .back-home{
 }
 .as-tab:hover{ color:#1e293b; }
 .as-tab.is-active{
-  background:rgba(5,150,105,.18); color:#047857;
+  background:#ffffff; color:#047857;
   box-shadow:inset 0 0 0 1px rgba(5,150,105,.4);
 }
 .as-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
@@ -366,7 +366,7 @@ body.auth-split .back-home{
   color:#94a3b8; padding:8px; border-radius:6px;
   display:inline-flex; align-items:center; justify-content:center;
 }
-.pw-toggle:hover{ color:#059669; background:rgba(5,150,105,.12); }
+.pw-toggle:hover{ color:#059669; background:var(--accent-soft); }
 .pw-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
 
 /* ── split-স্কোপে বাটন: কোনো transform-নয় (layout-shift-মুক্ত, কনসেপ্ট-নীতি) ── */
@@ -411,7 +411,7 @@ body.auth-split .btn-secondary{ border-radius:8px; }
   .as-tagline{ font-size:1.12rem; margin-bottom:6px; }
   .as-intro{ display:none; }
   .as-brand-bottom{ font-size:.7rem; }
-  .as-form-panel{ padding:28px 20px 40px; overflow:visible; background:none; }
+  .as-form-panel{ padding:28px 20px 40px; overflow:visible; }
   .as-form-card, .as-form-card.wide{ max-width:none; }
 }
 

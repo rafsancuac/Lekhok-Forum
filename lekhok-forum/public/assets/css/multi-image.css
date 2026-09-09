@@ -2,14 +2,14 @@
    ───────────────────────────────────────────────────────────────────────────── */
 .mi-widget { max-width: 760px; }
 .mi-drop {
-  border: 2px dashed var(--border, #cdd2d8); border-radius: 8px;
+  border: 2px dashed var(--border, #cbd5e1); border-radius: 8px;
   padding: 22px 18px; text-align: center; color: #64748b;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
-  background:var(--surface-alt); transition: border-color .15s, background .15s;
+  background: #f8fafc; transition: border-color .15s, background .15s;
   cursor: pointer;
 }
 .mi-drop i { font-size: 1.6rem; color: var(--accent, #059669); }
-.mi-drop.mi-over { border-color: var(--accent, #059669); background:rgba(16,185,129,.10); }
+.mi-drop.mi-over { border-color: var(--accent, #059669); background:#ecfdf5; }
 .mi-add {
   border: 0; background: var(--accent, #059669); color: #fff; font-weight: 700;
   padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: .86rem;
