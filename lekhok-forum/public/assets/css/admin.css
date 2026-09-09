@@ -189,9 +189,9 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
 .mod-badge.is-interactive{background:var(--ad-accent-soft);color:var(--ad-icon-ink);border:1px solid rgba(5,150,105,.3)}
 .mod-badge.is-static{background:rgba(143,173,160,.12);color:var(--ad-muted);border:1px solid var(--ad-line)}
 .mod-flash{display:flex;align-items:center;gap:9px;padding:11px 15px;border-radius:var(--ad-radius);font-size:.9rem;font-weight:600;margin-bottom:16px}
-.mod-flash.ok{background:rgba(16,185,129,.13);border:1px solid rgba(5,150,105,.35);color:#10B981}
-.mod-flash.err{background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.4);color:#FCA5A5}
-.mod-edit-box{margin-top:10px;border:1px solid var(--ad-line);border-radius:var(--ad-radius);background:rgba(4,21,15,.5);overflow:hidden}
+.mod-flash.ok{background:rgba(16,185,129,.13);border:1px solid rgba(5,150,105,.35);color:#047857}
+.mod-flash.err{background:rgba(239,68,68,.12);border:1px solid rgba(248,113,113,.4);color:#b91c1c}
+.mod-edit-box{margin-top:10px;border:1px solid var(--ad-line);border-radius:var(--ad-radius);background:#f8fafc;overflow:hidden}
 .mod-edit-box>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:8px 13px;cursor:pointer;font-size:.8rem;font-weight:700;color:var(--ad-icon-ink);user-select:none;transition:background .14s}
 .mod-edit-box>summary::-webkit-details-marker{display:none}
 .mod-edit-box>summary:hover{background:rgba(5,150,105,.09)}
