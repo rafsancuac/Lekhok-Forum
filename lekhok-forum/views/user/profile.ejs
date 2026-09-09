@@ -67,7 +67,7 @@
       <div class="profile-left">
         <div class="card profile-info-card">
           <h2><%= profile.full_name %></h2>
-          <p class="profile-username">@<%= profile.username %></p>
+          <p class="profile-username"><%= profile.designation || 'সদস্য' %></p>
           <% if (profile.designation) { %><p class="profile-designation"><i class="fas fa-briefcase"></i> <%= profile.designation %></p><% } %>
           <% if (profile.bio) { %><p class="profile-bio"><%= profile.bio %></p><% } %>
 
@@ -119,12 +119,24 @@
             <% } %>
           </div>
 
+          <%# সেশন ৬০: সংযুক্ত সোশ্যাল লিংক — শুধু http/https রেন্ডার (নিরাপত্তা-গার্ড) %>
+          <%
+            const safeUrl60 = u => (typeof u === 'string' && /^https?:\/\//i.test(u.trim())) ? u.trim() : null;
+            const socials60 = [
+              { u: safeUrl60(profile.social_fb),       ico: 'fab fa-facebook-f',     lbl: 'Facebook' },
+              { u: safeUrl60(profile.social_twitter),  ico: 'fab fa-x-twitter',      lbl: 'Twitter / X' },
+              { u: safeUrl60(profile.social_linkedin), ico: 'fab fa-linkedin-in',    lbl: 'LinkedIn' },
+              { u: safeUrl60(profile.social_telegram), ico: 'fab fa-telegram-plane', lbl: 'Telegram' },
+              { u: safeUrl60(profile.social_website),  ico: 'fas fa-globe',          lbl: 'ওয়েবসাইট' },
+            ].filter(s => s.u);
+          %>
+          <% if (socials60.length) { %>
           <div class="profile-social">
-            <% if (profile.social_fb) { %><a href="<%= profile.social_fb %>" target="_blank" rel="noopener" class="social-link"><i class="fab fa-facebook"></i></a><% } %>
-            <% if (profile.social_twitter) { %><a href="<%= profile.social_twitter %>" target="_blank" rel="noopener" class="social-link"><i class="fab fa-twitter"></i></a><% } %>
-            <% if (profile.social_linkedin) { %><a href="<%= profile.social_linkedin %>" target="_blank" rel="noopener" class="social-link"><i class="fab fa-linkedin"></i></a><% } %>
-            <% if (profile.social_website) { %><a href="<%= profile.social_website %>" target="_blank" rel="noopener" class="social-link"><i class="fas fa-globe"></i></a><% } %>
+            <% socials60.forEach(function (s) { %>
+              <a href="<%= s.u %>" target="_blank" rel="noopener" class="social-link" aria-label="<%= s.lbl %>" title="<%= s.lbl %>"><i class="<%= s.ico %>"></i></a>
+            <% }) %>
           </div>
+          <% } %>
 
           <% if (interests.length) { %>
             <div class="interests-row">
@@ -260,7 +272,7 @@
               <div class="user-row card">
                 <a href="/profile/<%= f.username %>" class="side-user-main">
                   <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
-                  <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
+                  <span><strong><%= f.full_name %></strong><small><%= f.designation || 'সদস্য' %></small></span>
                 </a>
                 <% if (isOwner) { %>
                   <span class="user-row-actions">
@@ -282,7 +294,7 @@
               <div class="user-row card">
                 <a href="/profile/<%= f.username %>" class="side-user-main">
                   <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
-                  <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
+                  <span><strong><%= f.full_name %></strong><small><%= f.designation || 'সদস্য' %></small></span>
                 </a>
               </div>
             <% }); %>

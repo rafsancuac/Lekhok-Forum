@@ -833,12 +833,12 @@ router.get('/profile/:username', async (req, res) => {
 
   // Followers / Following lists (with follow-date)
   const followers = await db.prepare(`
-    SELECT u.id, u.username, u.full_name, u.avatar_url, f.created_at AS since
+    SELECT u.id, u.username, u.full_name, u.designation, u.avatar_url, f.created_at AS since
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.following_id = ? ORDER BY f.created_at DESC LIMIT 50
   `).all(profile.id);
   const followingList = await db.prepare(`
-    SELECT u.id, u.username, u.full_name, u.avatar_url, f.created_at AS since
+    SELECT u.id, u.username, u.full_name, u.designation, u.avatar_url, f.created_at AS since
     FROM follows f JOIN users u ON u.id = f.following_id
     WHERE f.follower_id = ? ORDER BY f.created_at DESC LIMIT 50
   `).all(profile.id);
@@ -1115,7 +1115,7 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
 
   // Following — users + their recent activity
   const following = await db.prepare(`
-    SELECT u.id, u.username, u.full_name, u.avatar_url, u.bio
+    SELECT u.id, u.username, u.full_name, u.designation, u.avatar_url, u.bio
     FROM follows f JOIN users u ON u.id = f.following_id
     WHERE f.follower_id = ? ORDER BY u.full_name LIMIT 50
   `).all(me.id);
@@ -1243,21 +1243,56 @@ router.post('/settings/security/backup-regen', ensureLoggedIn, async (req, res) 
 
 router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const me = req.session.user;
-  const { full_name, bio, designation, address, gender, birth_date, social_fb, social_twitter, social_linkedin, social_website } = req.body;
+  const { full_name, bio, designation, address, gender, birth_date } = req.body;
   await db.prepare(`
     UPDATE users SET
       full_name = COALESCE(?, full_name),
       bio = ?, designation = ?, address = ?,
       gender = COALESCE(?, gender),
-      birth_date = ?,
-      social_fb = ?, social_twitter = ?, social_linkedin = ?, social_website = ?
+      birth_date = ?
     WHERE id = ?
-  `).run(full_name ?? null, bio || null, designation || null, address || null, gender ?? null, birth_date || null,
-         social_fb || null, social_twitter || null, social_linkedin || null, social_website || null, me.id);
+  `).run(full_name ?? null, bio || null, designation || null, address || null, gender ?? null, birth_date || null, me.id);
+  // নোট (সেশন ৬০): social_* ফিল্ড এখন "সংযুক্ত অ্যাকাউন্ট" সেকশনের
+  // /settings/social রুট থেকেই পরিচালিত হয় — এখানে আর ছোঁয় না, নাহলে
+  // ফর্ম-সাবমিটে সংযোগ মুছে যেত।
   // Refresh session
   const fresh = await db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
   req.session.user = fresh;
   res.redirect('/settings?ok=profile');
+});
+
+// ── সেশন ৬০: সংযুক্ত অ্যাকাউন্ট — সত্যিকারের কার্যকর সোশ্যাল-লিংক ──
+// একটাই রুট: value খালি রাখলে বিচ্ছিন্ন, নাহলে সংযোগ/পরিবর্তন।
+const SOCIAL_PROVIDERS_60 = {
+  fb:       { col: 'social_fb',       label: 'Facebook' },
+  twitter:  { col: 'social_twitter',  label: 'Twitter / X' },
+  linkedin: { col: 'social_linkedin', label: 'LinkedIn' },
+  telegram: { col: 'social_telegram', label: 'Telegram' },
+  website:  { col: 'social_website',  label: 'ওয়েবসাইট' },
+};
+router.post('/settings/social', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const prov = String(req.body.provider || '').trim();
+  const conf = SOCIAL_PROVIDERS_60[prov];
+  if (!conf) return res.redirect('/settings?err=social_bad#connected');
+  let value = String(req.body.value || '').trim();
+  if (value) {
+    // https:// না থাকলে যোগ করি (ব্যবহারকারী শুধু ইউজারনেম/ডোমেইন লিখলেও চলবে)
+    if (!/^https?:\/\//i.test(value)) value = 'https://' + value.replace(/^\/+/, '');
+    // শুধু http/https অনুমোদিত — javascript: ইত্যাদি প্রোফাইল-পেজের href-এ বিপজ্জনক
+    try {
+      const u = new URL(value);
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('bad protocol');
+      if (value.length > 300) throw new Error('too long');
+    } catch (e) {
+      return res.redirect('/settings?err=social_url#connected');
+    }
+  }
+  await db.prepare(`UPDATE users SET ${conf.col} = ? WHERE id = ?`).run(value || null, me.id);
+  // সেশন-ইউজার রিফ্রেশ (হেডার/প্রোফাইল সাথে সাথে আপডেট দেখাক)
+  const fresh = await db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
+  req.session.user = fresh;
+  req.session.save(() => res.redirect(value ? '/settings?ok=social#connected' : '/settings?ok=unlinked#connected'));
 });
 
 // ── Avatar upload (quick change from profile) ────────────────────────────────

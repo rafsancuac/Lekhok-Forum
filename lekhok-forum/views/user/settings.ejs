@@ -9,7 +9,7 @@
         <span class="badge save-ok"><i class="fas fa-check"></i> সংরক্ষিত</span>
       <% } else if (err) { %>
         <span class="badge save-err"><i class="fas fa-exclamation-triangle"></i>
-          <%= err === 'password_mismatch' ? 'পাসওয়ার্ড মেলেনি' : err === 'password_short' ? 'পাসওয়ার্ড খুব ছোट' : err === 'password_wrong' ? 'বর্তমান পাসওয়ার্ড ভুল' : 'সমস্যা হয়েছে' %>
+          <%= err === 'password_mismatch' ? 'পাসওয়ার্ড মেলেনি' : err === 'password_short' ? 'পাসওয়ার্ড খুব ছোट' : err === 'password_wrong' ? 'বর্তমান পাসওয়ার্ড ভুল' : err === 'social_url' ? 'লিংকটি বৈধ নয়, http/https দিয়ে শুরু করুন' : err === 'social_bad' ? 'অপরিচিত সংযোগ-ধরন' : 'সমস্যা হয়েছে' %>
         </span>
       <% } %>
     </div>
@@ -62,13 +62,7 @@
                   <input class="input" type="date" name="birth_date" value="<%= profileUser.birth_date || '' %>">
                 </div>
               </div>
-              <h3 style="margin:20px 0 8px;font-size:15px;">সোশ্যাল লিংক</h3>
-              <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <input class="input" name="social_fb"      value="<%= profileUser.social_fb || '' %>"      placeholder="Facebook URL">
-                <input class="input" name="social_twitter"  value="<%= profileUser.social_twitter || '' %>"  placeholder="Twitter URL">
-                <input class="input" name="social_linkedin" value="<%= profileUser.social_linkedin || '' %>" placeholder="LinkedIn URL">
-                <input class="input" name="social_website"  value="<%= profileUser.social_website || '' %>"  placeholder="ওয়েবসাইট URL">
-              </div>
+              <%# সোশ্যাল লিংক এখন নিচের "সংযুক্ত অ্যাকাউন্ট" সেকশনে পরিচালিত (সেশন ৬০) %>
               <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
             </form>
           </div>
@@ -161,7 +155,7 @@
             <% if (backupFlash && backupFlash.length) { %>
               <div class="sec-backup-box">
                 <h3><i class="fas fa-key"></i> ব্যাকআপ কোড (একবারই দেখানো হয়)</h3>
-                <p>ফোন হারিয়ে গেলে বা অ্যাপে ঢুকতে না পারলে লগইনের দ্বিতীয় ধাপে এই কোডগুলোর একটি ব্যবহার করুন। প্রতিটি কোড একবারই কাজ করে — নিরাপদ জায়গায় সংরক্ষণ করুন (লিখে রাখুন বা কপি করে রাখুন)।</p>
+                <p>ফোন হারিয়ে গেলে বা অ্যাপে ঢুকতে না পারলে লগইনের দ্বিতীয় ধাপে এই কোডগুলোর একটি ব্যবহার করুন। প্রতিটি কোড একবারই কাজ করে, নিরাপদ জায়গায় সংরক্ষণ করুন (লিখে রাখুন বা কপি করে রাখুন)।</p>
                 <div class="sec-codes-grid"><% backupFlash.forEach(function (c) { %><div class="sec-code-chip"><%= c %></div><% }) %></div>
                 <button type="button" class="btn btn-sm sec-copy-btn" id="secCopyCodes"><i class="fas fa-copy"></i> সব কোড কপি করুন</button>
               </div>
@@ -172,7 +166,7 @@
                 <span class="sec-status-ico"><i class="fas fa-shield-halved"></i></span>
                 <span class="sec-status-meta">
                   <strong>2FA সক্রিয় আছে</strong>
-                  <small>লগইনে পাসওয়ার্ডের পরে অ্যাপের ৬-অঙ্কের কোড চাওয়া হয় — অ্যাকাউন্ট দ্বি-স্তরে সুরক্ষিত।</small>
+                  <small>লগইনে পাসওয়ার্ডের পরে অ্যাপের ৬-অঙ্কের কোড চাওয়া হয়, অ্যাকাউন্ট দ্বি-স্তরে সুরক্ষিত।</small>
                 </span>
               </div>
               <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
@@ -184,7 +178,7 @@
               </form>
               <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
               <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</h3>
-              <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">এতে অ্যাকাউন্ট কম সুরক্ষিত হবে — লগইনে শুধু পাসওয়ার্ড লাগবে। নিশ্চিত হতে বর্তমান পাসওয়ার্ড দিতে হবে।</p>
+              <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">এতে অ্যাকাউন্ট কম সুরক্ষিত হবে, লগইনে শুধু পাসওয়ার্ড লাগবে। নিশ্চিত হতে বর্তমান পাসওয়ার্ড দিতে হবে।</p>
               <form method="POST" action="/settings/security/disable" class="sec-inline-form" onsubmit="return confirm('2FA বন্ধ করবেন? অ্যাকাউন্ট কম সুরক্ষিত হবে।');">
                 <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
                 <button type="submit" class="btn btn-danger"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</button>
@@ -193,12 +187,12 @@
               <div class="sec-enroll">
                 <div class="sec-qr-row">
                   <a href="<%= secOtpauth %>" class="sec-qr-box" title="অথেনটিকেটর অ্যাপে খুলুন">
-                    <img src="/settings/security/qr" alt="2FA QR কোড — Google Authenticator-এ স্ক্যান করুন" width="172" height="172" onerror="this.parentElement.style.display='none'">
+                    <img src="/settings/security/qr" alt="2FA QR কোড, Google Authenticator-এ স্ক্যান করুন" width="172" height="172" onerror="this.parentElement.style.display='none'">
                   </a>
                   <div class="sec-qr-steps">
                     <p class="sec-step"><span class="sec-step-num">১</span> Google Authenticator / Authy / 1Password-এ <b>+ নতুন অ্যাকাউন্ট</b> → <b>QR স্ক্যান</b> বেছে নিয়ে বাঁয়ের কোড স্ক্যান করুন। স্ক্যান করতে না পারলে "Setup key" অপশনে নিচের সিক্রেটটি বসান।</p>
                     <div class="sec-secret-box"><%= secPending %></div>
-                    <p class="sec-step"><span class="sec-step-num">২</span> এরপর অ্যাপে দেখানো <b>বর্তমান</b> ৬-অঙ্কের কোড নিচে দিন — মিললেই 2FA সক্রিয় হয়ে যাবে।</p>
+                    <p class="sec-step"><span class="sec-step-num">২</span> এরপর অ্যাপে দেখানো <b>বর্তমান</b> ৬-অঙ্কের কোড নিচে দিন, মিললেই 2FA সক্রিয় হয়ে যাবে।</p>
                   </div>
                 </div>
                 <form method="POST" action="/settings/security/confirm" class="sec-inline-form">
@@ -212,7 +206,7 @@
                 <span class="sec-status-ico"><i class="fas fa-shield"></i></span>
                 <span class="sec-status-meta">
                   <strong>2FA সক্রিয় নয়</strong>
-                  <small>দ্বি-স্তর যাচাইকরণ (TOTP) চালু করে আপনার আইডি আরও সুরক্ষিত করুন — Google Authenticator-সহ যেকোনো অথেনটিকেটর অ্যাপে বিনামূল্যে কাজ করে।</small>
+                  <small>দ্বি-স্তর যাচাইকরণ (TOTP) চালু করে আপনার আইডি আরও সুরক্ষিত করুন, Google Authenticator-সহ যেকোনো অথেনটিকেটর অ্যাপে বিনামূল্যে কাজ করে।</small>
                 </span>
               </div>
               <form method="POST" action="/settings/security/enroll" style="margin-top:14px;">
@@ -268,50 +262,55 @@
           </div>
         </section>
 
-        <!-- Connected -->
+        <!-- Connected (সেশন ৬০: সত্যিকারের কার্যকর — users.social_* কলামে সংরক্ষিত, প্রোফাইল-পেজে আইকন) -->
         <section class="settings-section" data-pane="connected">
           <div class="card">
             <h2><i class="fas fa-link"></i> সংযুক্ত অ্যাকাউন্ট</h2>
-            <p style="color:var(--text-muted);">আপনার সোশ্যাল অ্যাকাউন্ট সংযুক্ত করে দ্রুত লগইন ও ক্রস-পোস্টিং করুন।</p>
-            <div class="connected-list ca-fb" style="margin-top:16px;">
-              <div class="ca-row">
-                <span class="ca-ico" style="--ca:#1877f2"><i class="fab fa-facebook-f"></i></span>
+            <p style="color:var(--text-muted);">আপনার সোশ্যাল প্রোফাইল যুক্ত করুন, সংযুক্ত লিংকগুলো আপনার প্রোফাইল পেজে আইকন হিসেবে দেখা যাবে।</p>
+            <div class="connected-list" style="margin-top:16px;">
+              <%
+                const providers60 = [
+                  { key: 'fb',       ico: 'fab fa-facebook-f',    brand: '#1877f2', name: 'Facebook',    desc: 'প্রোফাইল বা পেজের লিংক',        val: profileUser.social_fb },
+                  { key: 'twitter',  ico: 'fab fa-x-twitter',     brand: '#111',     name: 'Twitter / X', desc: 'এক্স-প্রোফাইলের লিংক',           val: profileUser.social_twitter },
+                  { key: 'linkedin', ico: 'fab fa-linkedin-in',   brand: '#0a66c2',  name: 'LinkedIn',    desc: 'প্রফেশনাল প্রোফাইলের লিংক',     val: profileUser.social_linkedin },
+                  { key: 'telegram', ico: 'fab fa-telegram-plane', brand: '#229ed9',  name: 'Telegram',    desc: 'চ্যানেল বা ইউজারনেমের লিংক',    val: profileUser.social_telegram },
+                  { key: 'website',  ico: 'fas fa-globe',         brand: '#059669',  name: 'ওয়েবসাইট',    desc: 'নিজের ব্লগ বা পোর্টফোলিও',       val: profileUser.social_website },
+                ];
+              %>
+              <% providers60.forEach(function (p) { const on = p.val && /^https?:\/\//i.test(p.val); %>
+              <div class="ca-row <%= on ? 'is-on' : '' %>" data-provider="<%= p.key %>">
+                <span class="ca-ico" style="--ca:<%= p.brand %>"><i class="<%= p.ico %>"></i></span>
                 <span class="ca-meta">
-                  <strong>Facebook</strong>
-                  <small>পোস্ট স্বয়ংক্রিয়ভাবে পেজে শেয়ার ও এক-ক্লিক লগইন</small>
+                  <strong><%= p.name %></strong>
+                  <small><%= p.desc %></small>
                 </span>
-                <span class="ca-state off">সংযুক্ত নয়</span>
-                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
+                <% if (on) { %>
+                  <a class="ca-link" href="<%= p.val %>" target="_blank" rel="noopener" title="<%= p.val %>"><i class="fas fa-external-link-alt"></i> খুলুন</a>
+                <% } %>
+                <span class="ca-state <%= on ? 'on' : 'off' %>"><i class="fas <%= on ? 'fa-check-circle' : 'fa-circle' %>"></i> <%= on ? 'সংযুক্ত' : 'সংযুক্ত নয়' %></span>
+                <% if (on) { %>
+                  <form method="POST" action="/settings/social" class="ca-inline-form" data-confirm="সংযোগ বিচ্ছিন্ন করবেন?">
+                    <input type="hidden" name="provider" value="<%= p.key %>">
+                    <input type="hidden" name="value" value="">
+                    <button type="submit" class="btn btn-ghost btn-sm ca-btn ca-unlink"><i class="fas fa-unlink"></i> বিচ্ছিন্ন</button>
+                  </form>
+                <% } %>
+                <button type="button" class="btn btn-primary btn-sm ca-btn ca-edit"><i class="fas <%= on ? 'fa-pen' : 'fa-plus' %>"></i> <%= on ? 'পরিবর্তন' : 'সংযুক্ত করুন' %></button>
+                <form method="POST" action="/settings/social" class="ca-editor" hidden>
+                  <input type="hidden" name="provider" value="<%= p.key %>">
+                  <div class="ca-editor-field">
+                    <i class="<%= p.ico %>" style="color:<%= p.brand %>"></i>
+                    <input class="input" type="text" inputmode="url" name="value" value="<%= on ? p.val : '' %>" placeholder="https://… বা t.me/ইউজারনেম" autocomplete="off" spellcheck="false" required>
+                  </div>
+                  <div class="ca-editor-actions">
+                    <button type="button" class="btn btn-ghost btn-sm ca-cancel"><i class="fas fa-times"></i> বাতিল</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-check"></i> সংরক্ষণ</button>
+                  </div>
+                </form>
               </div>
-              <div class="ca-row">
-                <span class="ca-ico" style="--ca:#ea4335"><i class="fab fa-google"></i></span>
-                <span class="ca-meta">
-                  <strong>Google</strong>
-                  <small>জিমেইল দিয়ে সাইন-ইন ও ক্যালেন্ডার রিমাইন্ডার</small>
-                </span>
-                <span class="ca-state off">সংযুক্ত নয়</span>
-                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
-              </div>
-              <div class="ca-row">
-                <span class="ca-ico" style="--ca:#111"><i class="fab fa-x-twitter"></i></span>
-                <span class="ca-meta">
-                  <strong>Twitter / X</strong>
-                  <small>লেখা প্রকাশমাত্র থ্রেড হিসেবে পোস্ট</small>
-                </span>
-                <span class="ca-state off">সংযুক্ত নয়</span>
-                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
-              </div>
-              <div class="ca-row">
-                <span class="ca-ico" style="--ca:#229ed9"><i class="fab fa-telegram-plane"></i></span>
-                <span class="ca-meta">
-                  <strong>Telegram</strong>
-                  <small>চ্যানেলে নোটিশ ও নতুন লেখার আপডেট</small>
-                </span>
-                <span class="ca-state off">সংযুক্ত নয়</span>
-                <button class="btn btn-primary btn-sm ca-btn">সংযুক্ত করুন</button>
-              </div>
+              <% }) %>
             </div>
-            <div class="hint" style="margin-top:12px"><i class="fas fa-shield-alt"></i> সংযোগের অনুমতি শুধু আপনার প্রোফাইলের পাবলিক তথ্যের মধ্যে সীমাবদ্ধ থাকে।</div>
+            <div class="hint" style="margin-top:12px"><i class="fas fa-shield-alt"></i> শুধু http/https লিংক গ্রহণযোগ্য, সংযোগ যেকোনো সময় বিচ্ছিন্ন করা যায়।</div>
           </div>
         </section>
       </main>
@@ -353,6 +352,54 @@
           }).catch(function () {});
         }
       });
+    })();
+
+    // ── সেশন ৬০: সংযুক্ত অ্যাকাউন্ট — সম্প্রসারণযোগ্য এডিটর + বিচ্ছিন্ন-নিশ্চিতকরণ ──
+    (function () {
+      function closeEditors(exceptRow) {
+        document.querySelectorAll('.ca-row').forEach(function (row) {
+          if (row === exceptRow) return;
+          var ed = row.querySelector('.ca-editor');
+          if (ed && !ed.hidden) { ed.hidden = true; row.classList.remove('editing'); }
+        });
+      }
+      document.addEventListener('click', function (e) {
+        var editBtn = e.target.closest('.ca-edit');
+        if (editBtn) {
+          var row = editBtn.closest('.ca-row');
+          var ed = row && row.querySelector('.ca-editor');
+          if (ed) {
+            var opening = ed.hidden;
+            closeEditors(row);
+            ed.hidden = !opening;
+            row.classList.toggle('editing', opening);
+            if (opening) {
+              var inp = ed.querySelector('input[name="value"]');
+              if (inp) setTimeout(function () { inp.focus(); inp.select && inp.select(); }, 60);
+            }
+          }
+          return;
+        }
+        var cancelBtn = e.target.closest('.ca-cancel');
+        if (cancelBtn) {
+          var row = cancelBtn.closest('.ca-row');
+          var ed = row && row.querySelector('.ca-editor');
+          if (ed) { ed.hidden = true; row.classList.remove('editing'); }
+          return;
+        }
+      });
+      // বিচ্ছিন্ন-ফর্মে নিশ্চিতকরণ
+      document.addEventListener('submit', function (e) {
+        var f = e.target;
+        if (f.classList && f.classList.contains('ca-inline-form')) {
+          var msg = f.getAttribute('data-confirm');
+          if (msg && !window.confirm(msg)) { e.preventDefault(); return; }
+          var btn = f.querySelector('button[type="submit"]');
+          if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> বিচ্ছিন্ন হচ্ছে…'; }
+        }
+      }, true);
+      // #connected হ্যাশে ট্যাব খোলা থাকে (রিডাইরেক্টের পর সঠিক জায়গায় ফেরা)
+      if (location.hash === '#connected') activate('connected');
     })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>

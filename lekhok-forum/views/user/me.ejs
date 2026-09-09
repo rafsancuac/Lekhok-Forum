@@ -7,7 +7,7 @@
         <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="avatar-xl" onerror="this.onerror=null;this.src='/avatar/<%= user.id %>'" style="border-radius:50%">
         <div class="me-id">
           <h1><%= user.full_name %></h1>
-          <p class="me-handle">@<%= user.username %></p>
+          <p class="me-handle"><%= user.designation || 'লেখক ফোরাম সদস্য' %></p>
           <% if (user.bio) { %><p class="me-bio"><%= user.bio %></p><% } %>
         </div>
         <div class="me-actions">
@@ -141,7 +141,7 @@
           <a href="/profile/<%= f.username %>" class="follow-card">
             <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="avatar-md" style="border-radius:50%" onerror="this.onerror=null;this.src='/avatar/<%= f.id %>'">
             <strong><%= f.full_name %></strong>
-            <small>@<%= f.username %></small>
+            <small><%= f.designation || 'সদস্য' %></small>
           </a>
         <% }) %>
       </div>

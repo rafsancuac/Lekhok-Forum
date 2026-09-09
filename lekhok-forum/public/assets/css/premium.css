@@ -141,11 +141,11 @@
 .sec-secret-box {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: 2.5px; word-break: break-all;
-  background: rgba(2, 30, 22, .92); color: #6EE7B7;
+  background: rgba(2, 30, 22, .92); color: #047857;
   padding: 13px 16px; border-radius: 8px;
   margin: 10px 0;
   font-size: .95rem;
-  border: 1px solid rgba(52, 211, 153, .25);
+  border: 1px solid rgba(5, 150, 105, .25);
 }
 .sec-step { color: var(--text-muted, #64748b); font-size: .88rem; line-height: 1.7; margin: 8px 0; }
 .sec-step-num {
@@ -167,7 +167,7 @@
 .sec-qr-box {
   flex: 0 0 auto; display: block;
   padding: 10px; border-radius: 14px;
-  background: #6EE7B7; /* QR লাইট-ক্যানভাস — স্ক্যানার-কনট্রাস্ট নিশ্চিত */
+  background: #10B981; /* QR লাইট-ক্যানভাস — স্ক্যানার-কনট্রাস্ট নিশ্চিত */
   border: 1px solid rgba(110, 231, 183, .5);
   box-shadow: 0 8px 24px rgba(16, 185, 129, .22), inset 0 0 0 4px rgba(5, 43, 31, .08);
   transition: transform .18s ease, box-shadow .18s ease;

@@ -186,7 +186,7 @@
                 <% } %>
                 <h3 style="font-size:15px;"><%= m.full_name %></h3>
                 <% if (m.designation) { %><p class="role" style="font-size:12px;"><%= m.designation %></p><% } %>
-                <small style="color:var(--text-muted);">@<%= m.username %></small>
+                <small style="color:var(--text-muted);"><%= m.designation || 'সদস্য' %></small>
               </a>
             <% }); %>
           </div>

@@ -304,11 +304,11 @@ router.get('/birthdays', async (req, res) => {
   const todayDate = new Date();
   const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
   const dd = String(todayDate.getDate()).padStart(2, '0');
-  const todayList = await db.prepare(`SELECT id, username, full_name, avatar_url, gender, birth_date FROM users
+  const todayList = await db.prepare(`SELECT id, username, full_name, designation, avatar_url, gender, birth_date FROM users
                                 WHERE show_birth = 1 AND status = 'active'
                                 AND substr(birth_date, 6, 5) = ?`).all(`${mm}-${dd}`);
   // Upcoming this week
-  const upcoming = await db.prepare(`SELECT id, username, full_name, avatar_url, gender, birth_date FROM users
+  const upcoming = await db.prepare(`SELECT id, username, full_name, designation, avatar_url, gender, birth_date FROM users
                                WHERE show_birth = 1 AND status = 'active'
                                AND substr(birth_date, 6, 5) != ?
                                ORDER BY substr(birth_date, 6, 5) ASC LIMIT 20`).all(`${mm}-${dd}`);

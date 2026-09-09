@@ -1,31 +1,31 @@
 /* ── টাস্ক ১৪: মেম্বার অ্যাকাউন্ট (unified entry / find / claim) ────────────── */
 .mc-wrap{max-width:560px}
 .mc-divider{display:flex;align-items:center;gap:12px;margin:22px 0;color:#8FAEA0;font-size:.8rem}
-.mc-divider::before,.mc-divider::after{content:'';flex:1;height:1px;background:#1F4A3A}
-.mc-section{border-top:1px dashed #1F4A3A;padding-top:4px}
-.mc-section-title{font-size:1.02rem;font-weight:700;color:#E6F4EC;margin:0 0 4px;display:flex;align-items:center;gap:8px}
-.mc-section-title i{color:#34D399}
-.mc-hint{color:#A9C4B5;font-size:.84rem;margin:0 0 14px;line-height:1.5}
-.mc-foot{margin-top:14px;font-size:.85rem;color:#A9C4B5;text-align:center}
-.mc-foot a{color:#34D399;font-weight:600}
+.mc-divider::before,.mc-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+.mc-section{border-top:1px dashed #e2e8f0;padding-top:4px}
+.mc-section-title{font-size:1.02rem;font-weight:700;color:#1e293b;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.mc-section-title i{color:#059669}
+.mc-hint{color:#64748b;font-size:.84rem;margin:0 0 14px;line-height:1.5}
+.mc-foot{margin-top:14px;font-size:.85rem;color:#64748b;text-align:center}
+.mc-foot a{color:#059669;font-weight:600}
 .mc-forgot{margin-top:12px;font-size:.82rem;text-align:right}
-.mc-forgot a{color:#34D399}
-.btn-secondary{display:inline-flex;align-items:center;gap:8px;justify-content:center;width:100%;padding:12px 16px;border-radius:6px;border:1px solid rgba(52,211,153,.55);background:rgba(255,255,255,.04);color:#34D399;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-.btn-secondary:hover{background:rgba(52,211,153,.08)}
+.mc-forgot a{color:#059669}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;justify-content:center;width:100%;padding:12px 16px;border-radius:6px;border:1px solid rgba(5,150,105,.55);background:rgba(15,23,42,.04);color:#059669;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.btn-secondary:hover{background:rgba(5,150,105,.08)}
 .btn-secondary:disabled{opacity:.6;cursor:wait}
 .mc-result{margin-top:16px}
 .mc-msg{padding:12px 14px;border-radius:6px;font-size:.88rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px}
-.mc-msg.ok{background:rgba(16,185,129,.13);border:1px solid rgba(52,211,153,.38);color:#A7F3D0}
+.mc-msg.ok{background:rgba(16,185,129,.13);border:1px solid rgba(5,150,105,.38);color:#6EE7B7}
 .mc-msg.err{background:rgba(239,68,68,.13);border:1px solid rgba(248,113,113,.4);color:#FCA5A5}
 .mc-msg.warn{background:rgba(251,146,60,.13);border:1px solid rgba(251,146,60,.4);color:#FDBA74}
-.mc-found{border:1px solid #1F4A3A;border-radius:8px;padding:16px;margin-top:14px;background:var(--card)}
-.mc-found-title{font-weight:700;color:#E6F4EC;margin-bottom:12px;font-size:.95rem}
-.mc-card{display:flex;gap:14px;align-items:flex-start;border:1px solid #1F4A3A;border-radius:8px;padding:14px;background:var(--surface-alt);margin-bottom:14px}
-.mc-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#123F30}
+.mc-found{border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:14px;background:var(--card)}
+.mc-found-title{font-weight:700;color:#1e293b;margin-bottom:12px;font-size:.95rem}
+.mc-card{display:flex;gap:14px;align-items:flex-start;border:1px solid #e2e8f0;border-radius:8px;padding:14px;background:var(--surface-alt);margin-bottom:14px}
+.mc-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#e9ebef}
 .mc-avatar-empty{display:flex;align-items:center;justify-content:center;color:#8FAEA0;font-size:1.3rem}
 .mc-meta{min-width:0}
-.mc-name{font-weight:700;font-size:1rem;color:#E6F4EC}
-.mc-id{font-size:.82rem;color:#34D399;font-weight:700;margin:2px 0 6px}
-.mc-line{font-size:.84rem;color:#A9C4B5;line-height:1.5}
-.mc-question{font-weight:600;color:#E6F4EC;margin:6px 0 10px;font-size:.92rem}
+.mc-name{font-weight:700;font-size:1rem;color:#1e293b}
+.mc-id{font-size:.82rem;color:#059669;font-weight:700;margin:2px 0 6px}
+.mc-line{font-size:.84rem;color:#64748b;line-height:1.5}
+.mc-question{font-weight:600;color:#1e293b;margin:6px 0 10px;font-size:.92rem}
 .mc-btn{display:flex;width:100%;justify-content:center}

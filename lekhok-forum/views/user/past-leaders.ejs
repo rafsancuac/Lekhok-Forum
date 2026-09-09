@@ -24,7 +24,7 @@
         <div class="past-leaders-grid">
           <% presidents.forEach(l => { %>
             <% const displayName = l.user_full_name || l.name; %>
-            <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg?v=2'; %>
+            <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg?v=3'; %>
             <% const displayBani = (l.message && String(l.message).trim()) ? String(l.message) : (l.bio || ''); %>
             <% if (l.user_username) { %>
               <div class="leader-card linked-member" data-href="/profile/<%= l.user_username %>">
@@ -59,7 +59,7 @@
         <div class="past-leaders-grid">
           <% secretaries.forEach(l => { %>
             <% const displayName = l.user_full_name || l.name; %>
-            <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg?v=2'; %>
+            <% const displayImg  = l.user_avatar_url || l.photo_url || '/assets/avatars/male.svg?v=3'; %>
             <% const displayBani = (l.message && String(l.message).trim()) ? String(l.message) : (l.bio || ''); %>
             <% if (l.user_username) { %>
               <div class="leader-card linked-member" data-href="/profile/<%= l.user_username %>">

@@ -451,6 +451,9 @@ const LATER_COLUMNS = [
   // ভিউতে answer পাঠানো হয় না।
   ['daily_content', 'options', 'TEXT'],
   ['daily_content', 'answer',  'INTEGER'],
+  // সেশন ৬০ (theme-session): "সংযুক্ত অ্যাকাউন্ট" সেকশনকে সত্যিকারের কার্যকর করতে —
+  // users.social_telegram (fb/twitter/linkedin/website আগেই আছে)।
+  ['users', 'social_telegram', 'TEXT'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

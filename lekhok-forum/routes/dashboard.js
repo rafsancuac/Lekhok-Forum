@@ -130,7 +130,7 @@ router.get('/dashboard', async (req, res) => {
   `).all(me.id, me.id, me.id, me.id) : [];
 
   const myFollowing = me ? await db.prepare(`
-    SELECT u.id, u.username, u.full_name, u.avatar_url
+    SELECT u.id, u.username, u.full_name, u.designation, u.avatar_url
     FROM follows f JOIN users u ON u.id = f.following_id
     WHERE f.follower_id = ? ORDER BY RANDOM() LIMIT 6
   `).all(me.id) : [];

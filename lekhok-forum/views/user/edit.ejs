@@ -13,7 +13,7 @@
   <div class="auth-card" style="max-width: 600px;">
     <a href="/profile/<%= user.username %>" class="back-home"><i class="fas fa-arrow-left"></i> প্রোফাইলে ফিরে যান</a>
     <h1>প্রোফাইল সম্পাদনা</h1>
-    <p class="sub">@<%= user.username %></p>
+    <p class="sub"><%= user.designation || 'লেখক ফোরাম সদস্য' %></p>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
     <form method="POST" enctype="multipart/form-data">
       <div class="form-group"><label>পূর্ণ নাম *</label><input type="text" name="full_name" value="<%= user.full_name %>" required></div>

@@ -145,7 +145,7 @@ router.get('/search', async (req, res) => {
       ORDER BY p.created_at DESC LIMIT 10
     `).all(like, like);
     const users = await db.prepare(`
-      SELECT id, username, full_name, avatar_url
+      SELECT id, username, full_name, designation, avatar_url
       FROM users
       WHERE status = 'active' AND (username LIKE ? OR full_name LIKE ?)
       ORDER BY full_name LIMIT 10

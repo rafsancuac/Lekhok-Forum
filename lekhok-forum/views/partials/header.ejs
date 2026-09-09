@@ -186,8 +186,8 @@
         <!-- User avatar dropdown -->
         <div class="user-menu-wrap">
           <button class="user-menu-btn" onclick="toggleUserMenu()">
-            <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="user-mini-avatar" alt="" onerror="this.onerror=null;this.src='/assets/avatars/neutral.svg?v=2'">
-            <span><%= user.username %></span>
+            <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="user-mini-avatar" alt="" onerror="this.onerror=null;this.src='/assets/avatars/neutral.svg?v=3'">
+            <span><%= user.full_name %></span>
             <i class="fas fa-chevron-down"></i>
           </button>
           <div class="user-dropdown" id="userDropdown">
@@ -268,7 +268,7 @@
       <img src="<%= user.avatar_url || '/avatar/' + user.id %>" class="avatar-md" style="border-radius:50%" alt="" onerror="this.onerror=null;this.src='/assets/avatars/neutral.svg?v=2'">
       <div>
         <strong><%= user.full_name %></strong>
-        <small>@<%= user.username %></small>
+        <small><%= user.designation || 'সদস্য' %></small>
       </div>
     </div>
 

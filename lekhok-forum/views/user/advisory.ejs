@@ -16,7 +16,7 @@
             <a href="/profile/<%= a.user_username %>" class="member-card advisor linked-member">
               <img loading="lazy" decoding="async" src="<%= displayImg %>" class="member-avatar advisor-avatar" alt="<%= displayName %>">
               <h3 class="member-name"><%= displayName %></h3>
-              <p class="member-handle">@<%= a.user_username %></p>
+              <p class="member-handle"><%= a.designation || a.user_designation || 'সদস্য' %></p>
               <% if (a.user_designation) { %>
                 <p class="member-desig"><i class="fas fa-award"></i> <%= a.user_designation %></p>
               <% } else if (a.role) { %>

@@ -192,7 +192,7 @@
         <% myFollowing.forEach(f => { %>
           <a href="/profile/<%= f.username %>" class="side-user">
             <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
-            <span><strong><%= f.full_name %></strong><small>@<%= f.username %></small></span>
+            <span><strong><%= f.full_name %></strong><small><%= f.designation || 'সদস্য' %></small></span>
           </a>
         <% }); %>
         <a href="/me?tab=following" class="side-link">সব দেখুন →</a>

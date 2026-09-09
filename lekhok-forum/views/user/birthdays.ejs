@@ -15,7 +15,7 @@
               <img loading="lazy" decoding="async" src="<%= m.avatar_url || '/avatar/' + m.id %>" class="birthday-avatar">
               <div class="birthday-info">
                 <h3><%= m.full_name %></h3>
-                <p>@<%= m.username %></p>
+                <p><%= m.designation || 'সদস্য' %></p>
                 <% if (m.designation) { %><p class="birthday-desig"><%= m.designation %></p><% } %>
               </div>
               <div class="birthday-cake">🎂</div>
