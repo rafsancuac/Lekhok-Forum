@@ -9,7 +9,7 @@
     <%# ── সেশন ৬০: স্কোর-সামারি বার (localStorage-ভিত্তিক, লগইন-ছাড়াই);
         সেশন ৬২: লগইন-ইউজারের স্কোর সার্ভারে (DB) থাকে — ডিভাইস-বদলেও বহাল ── %>
     <div class="quiz-score-bar" id="quizScoreBar" data-today-id="<%= today ? today.id : '' %>" hidden>
-      <div class="qs-stat"><i class="fas fa-bullseye"></i><span class="qs-label">আজকের স্কোর</span><strong id="qsToday">—</strong></div>
+      <div class="qs-stat"><i class="fas fa-bullseye"></i><span class="qs-label" id="qsTodayLabel">আজকের স্কোর</span><strong id="qsToday">—</strong></div>
       <div class="qs-sep"></div>
       <div class="qs-stat"><i class="fas fa-trophy"></i><span class="qs-label">মোট সঠিক</span><strong id="qsTotal">—</strong></div>
       <div class="qs-sep"></div>

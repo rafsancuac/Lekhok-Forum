@@ -53,8 +53,22 @@
           </div>
         </div>
       </div>
+      <%# ── সেশন ৬৫: অটো-সূচিপত্র — ৩+ হেডিং (##/###) থাকলে; স্ক্রলস্পাই-সহ (article-reading.js) ── %>
+      <% if (toc && toc.length >= 3) { %>
+      <nav class="article-toc" id="articleToc" aria-label="সূচিপত্র">
+        <button type="button" class="toc-head" id="tocToggle" aria-expanded="true" aria-controls="tocList">
+          <span class="toc-head-title"><i class="fas fa-list-ul"></i> সূচিপত্র</span>
+          <span class="toc-head-meta"><%= (toc.length + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %>টি অংশ <i class="fas fa-chevron-down toc-chev"></i></span>
+        </button>
+        <ol class="toc-list" id="tocList">
+          <% toc.forEach(s => { %>
+            <li class="toc-l<%= s.level %>"><a href="#<%= s.id %>" data-toc-for="<%= s.id %>"><%= s.text %></a></li>
+          <% }) %>
+        </ol>
+      </nav>
+      <% } %>
       <div class="article-body">
-        <%- post.body.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>').replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>') %>
+        <%- bodyHtml %>
       </div>
       <% try { const mentions = JSON.parse(post.mentions || '[]'); if (mentions.length) { %>
         <div class="mentions-row">
@@ -79,7 +93,9 @@
         <% if (user && user.id === post.author_id) { %>
           <div class="owner-actions">
             <a href="/articles/<%= post.id %>/edit" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
-            <form method="POST" action="/articles/<%= post.id %>?_method=DELETE" style="display:inline">
+            <%# সেশন ৬৫-বাগফিক্স: আগে action-এ '?_method=DELETE' ছিল — DELETE /articles/:id
+                রুট নেই, তাই মালিকের 'মুছুন' বাটন ৪০৪ খেতো (কিছুই হতো না)। সঠিক POST-রুটে পাঠানো হলো। %>
+            <form method="POST" action="/articles/<%= post.id %>/delete" style="display:inline">
               <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
             </form>
           </div>

@@ -86,6 +86,17 @@
                   <%= it.body %>
                 </div>
               <% } %>
+              <% if (it.content_type === 'quiz') { %>
+                <% var _po = (function () { try { var _a = JSON.parse(it.options || 'null'); return Array.isArray(_a) ? _a.length : 0; } catch (e) { return 0; } })();
+                   var _poBn = String(_po).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); %>
+                <div style="margin-top:5px;">
+                  <% if (_po >= 2) { %>
+                    <span class="badge-soft is-interactive" title="পাঠক উত্তর বাছলে সার্ভার যাচাই করে"><i class="fas fa-list-check"></i> ইন্টারঅ্যাক্টিভ · <%= _poBn %>টি বিকল্প</span>
+                  <% } else { %>
+                    <span class="badge-soft is-static" title="বিকল্প নেই — সাধারণ কুইজ"><i class="fas fa-align-left"></i> স্ট্যাটিক</span>
+                  <% } %>
+                </div>
+              <% } %>
               <% if (it.image_url) { %>
                 <div style="margin-top:6px;"><img src="<%= it.image_url %>" alt="" style="width:48px;height:32px;object-fit:cover;border-radius:5px;border:1px solid #e2e8f0;"></div>
               <% } %>

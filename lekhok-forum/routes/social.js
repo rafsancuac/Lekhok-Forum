@@ -186,7 +186,7 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
   }
   const mentions = await extractMentions(body);
   const result = await db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?, ?)`).run(
-    req.session.user.id, title, body, excerpt || body.substring(0, 200), cover, tags || null, mentions, category || 'general'
+    req.session.user.id, title, body, excerpt || body.replace(/^#{1,6}[ \t]+/gm, '').substring(0, 200), cover, tags || null, mentions, category || 'general'
   );
   await db.setPostImages('post', result.lastInsertRowid, images);
 
@@ -331,7 +331,11 @@ router.get('/articles/:id', async (req, res) => {
   const user = req.session.user || null;
 
   // ── SEO: per-article OG/Twitter/JSON-LD data ────────────────────────────────
-  const stripTags = (s) => String(s || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const stripTags = (s) => String(s || '')
+    .replace(/^#{1,6}[ \t]+/gm, '')   /* সেশন ৬৫: হেডিং-মার্কার meta-বর্ণনায় না-যাওয়ার জন্য (নতুন-লাইনের-আগে!) */
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   const _d = stripTags(post.excerpt || post.body);
   const metaDesc = _d ? (_d.length > 197 ? _d.slice(0, 197) + '…' : _d) : null;
   const _base = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
@@ -350,7 +354,29 @@ router.get('/articles/:id', async (req, res) => {
   const BN_D63 = '০১২৩৪৫৬৭৮৯';
   const bn63 = (n) => String(n).replace(/\d/g, (d) => BN_D63[+d]);
 
-  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount) });
+  // ── সেশন ৬৫: হেডিং-সাপোর্টেড বডি — '## '/'### ' দিয়ে শুরু হওয়া লাইন h2/h3 হয়;
+  // ৩+ হেডিং থাকলে অটো-সূচিপত্র (TOC)। আগের ইনলাইন-ট্রান্সফর্ম হুবহু রক্ষিত —
+  // শুধু লাইন-স্তরে ভাগ করে হেডিং-ডিটেকশন আগে বসানো হয়েছে। ──
+  const escHtml65 = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const inline65 = (s) => s
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    .replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>')
+    .replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>');
+  const toc = [];
+  const bodyHtml = String(post.body || '').replace(/\r\n/g, '\n').split('\n').map((line) => {
+    const m = line.match(/^(#{2,3})\s+(.+?)\s*$/);
+    if (m) {
+      const lv = m[1].length;
+      const txt = m[2].trim();
+      const hid = 'asec-' + (toc.length + 1);
+      toc.push({ level: lv, text: txt, id: hid });
+      return '<h' + lv + ' id="' + hid + '" class="a-heading a-h' + lv + '" data-toc-id="' + hid + '">' + escHtml65(txt) + '</h' + lv + '>';
+    }
+    return inline65(line);
+  }).join('<br>');
+
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────
@@ -372,7 +398,7 @@ router.post('/articles/:id/edit', ensureLoggedIn, withUpload(coverUpload), async
     : (typeof req.body.images === 'string' && req.body.images.trim() ? (() => { try { const a = JSON.parse(req.body.images); return Array.isArray(a) ? a : []; } catch (e) { return []; } })() : []);
   // New upload wins; else keep the submitted URL; else keep the existing cover
   const cover = req.file ? (req.file.url || req.file.path) : (cover_image !== undefined ? (cover_image || null) : post.cover_image);
-  await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?').run(title, body, excerpt || body.substring(0, 200), cover, tags || null, category || 'general', req.params.id);
+  await db.prepare('UPDATE posts SET title=?, body=?, excerpt=?, cover_image=?, tags=?, category=? WHERE id=?').run(title, body, excerpt || body.replace(/^#{1,6}[ \t]+/gm, '').substring(0, 200), cover, tags || null, category || 'general', req.params.id);
   await db.setPostImages('post', req.params.id, images.length ? images : (post.cover_image ? [post.cover_image] : []));
   res.redirect('/articles/' + req.params.id);
 });

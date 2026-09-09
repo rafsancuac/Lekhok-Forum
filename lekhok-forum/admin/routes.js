@@ -1247,6 +1247,25 @@ const DAILY_TYPES = {
 
 function dailyTypeMeta(type) { return DAILY_TYPES[type] || { label: type, link: '/' }; }
 
+// সেশন ৬৫: ইন্টারঅ্যাক্টিভ-কুইজ বিকল্প — মডারেটর-প্যানেলের সাথে প্যারিটি।
+// opt_0..opt_3 + correct_answer → (optionsJson, answer); মডারেটর-লজিকের মিরর:
+//   ২+ বিকল্প = ইন্টারঅ্যাক্টিভ, সব-ফাঁকা = স্ট্যাটিকে ফেরানো, ১টি = আগেরটাই থাকে।
+function rebuildQuizOpts(body, prevOptions, prevAnswer) {
+  if (body.opt_0 === undefined) return [prevOptions, prevAnswer];
+  const opts = [0, 1, 2, 3].map(i => String(body['opt_' + i] || '').trim()).filter(Boolean);
+  if (opts.length >= 2) {
+    const sel = parseInt(body.correct_answer, 10);
+    return [JSON.stringify(opts), (Number.isInteger(sel) && sel >= 0 && sel < opts.length) ? sel : 0];
+  }
+  if (opts.length === 0) return [null, null];
+  return [prevOptions, prevAnswer];
+}
+
+// সেশন ৬৫: options-কলাম থেকে নিরাপদে পার্স — ভিউ-প্রিফিলের জন্য।
+function parseDailyOptions(raw) {
+  try { const a = JSON.parse(raw || 'null'); return Array.isArray(a) ? a.map(String).slice(0, 4) : []; } catch (e) { return []; }
+}
+
 router.get('/daily', requireScope('daily'), async (req, res) => {
   const items = await db.prepare('SELECT * FROM daily_content ORDER BY scheduled_date DESC, id DESC LIMIT 100').all();
   res.render('admin/daily/list', { items, DAILY_TYPES, currentPath: '/admin/daily' });
@@ -1263,8 +1282,10 @@ router.post('/daily', requireScope('daily'), async (req, res) => {
   const isPublished = published ? 1 : 0;
   const images = parseImages(req.body.images);
   const cover = image_url || images[0] || null;
-  const r = await db.prepare('INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, published, author_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(content_type, title, body || null, cover, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.session.user ? req.session.user.id : null);
+  // সেশন ৬৫: ইন্টারঅ্যাক্টিভ-কুইজ বিকল্প (মডারেটর-প্যানেল প্যারিটি)
+  const [optionsJson, answerVal] = content_type === 'quiz' ? rebuildQuizOpts(req.body, null, null) : [null, null];
+  const r = await db.prepare('INSERT INTO daily_content (content_type, title, body, image_url, link_url, scheduled_date, published, author_id, options, answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(content_type, title, body || null, cover, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.session.user ? req.session.user.id : null, optionsJson, answerVal);
   await db.setPostImages('daily', r.lastInsertRowid, images);
   // Auto-notify ALL users when a moderator/admin publishes daily content
   if (isPublished) {
@@ -1278,7 +1299,9 @@ router.get('/daily/:id/edit', requireScope('daily'), async (req, res) => {
   const item = await db.prepare('SELECT * FROM daily_content WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/daily?saved=1');
   const images = (await db.getPostImages('daily', req.params.id)).map(i => i.image_url);
-  res.render('admin/daily/form', { item, error: null, images, DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
+  // সেশন ৬৫: কুইজ-বিকল্প প্রিফিল (ইন্টারঅ্যাক্টিভ-এডিট প্যারিটি)
+  const parsedOptions = item.content_type === 'quiz' ? parseDailyOptions(item.options) : [];
+  res.render('admin/daily/form', { item, parsedOptions, error: null, images, DAILY_TYPES, today: new Date().toISOString().split('T')[0], currentPath: '/admin/daily' });
 });
 
 router.put('/daily/:id', requireScope('daily'), async (req, res) => {
@@ -1288,15 +1311,18 @@ router.put('/daily/:id', requireScope('daily'), async (req, res) => {
   const isPublished = published ? 1 : 0;
   const images = parseImages(req.body.images);
   const cover = image_url || images[0] || null;
-  await db.prepare('UPDATE daily_content SET content_type=?, title=?, body=?, image_url=?, link_url=?, scheduled_date=?, published=? WHERE id=?')
-    .run(content_type, title, body || null, cover, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, req.params.id);
+  // সেশন ৬৫: ইন্টারঅ্যাক্টিভ-কুইজ বিকল্প-আপডেট (মডারেটর-লজিক মিরর)
+  const prev = await db.prepare('SELECT options, answer FROM daily_content WHERE id = ?').get(req.params.id) || {};
+  const [optionsVal, answerVal] = content_type === 'quiz' ? rebuildQuizOpts(req.body, prev.options, prev.answer) : [null, null];
+  await db.prepare('UPDATE daily_content SET content_type=?, title=?, body=?, image_url=?, link_url=?, scheduled_date=?, published=?, options=?, answer=? WHERE id=?')
+    .run(content_type, title, body || null, cover, link_url || null, scheduled_date || new Date().toISOString().split('T')[0], isPublished, optionsVal, answerVal, req.params.id);
   await db.setPostImages('daily', req.params.id, images);
   res.redirect('/admin/daily?saved=1');
 });
 
 // টাস্ক ১৩ খ: সেকশন-ভিত্তিক সেভ
 router.post('/daily/:id/section', requireScope('daily'), async (req, res) => {
-  const row = await db.prepare('SELECT id FROM daily_content WHERE id = ?').get(req.params.id);
+  const row = await db.prepare('SELECT id, options, answer FROM daily_content WHERE id = ?').get(req.params.id);
   if (!row) return res.status(404).json({ ok: false, error: 'কনটেন্টটি পাওয়া যায়নি' });
   const upd = {};
   if (req.body.content_type !== undefined) upd.content_type = String(req.body.content_type);
@@ -1305,6 +1331,12 @@ router.post('/daily/:id/section', requireScope('daily'), async (req, res) => {
   if (req.body.link_url !== undefined) upd.link_url = String(req.body.link_url) || null;
   if (req.body.scheduled_date !== undefined) upd.scheduled_date = String(req.body.scheduled_date) || new Date().toISOString().split('T')[0];
   if (req.body.published !== undefined) upd.published = req.body.published === '1' ? 1 : 0;
+  // সেশন ৬৫: কুইজ-বিকল্প সেকশন-সেভ — মডারেটর-লজিকের মিরর
+  if (req.body.opt_0 !== undefined) {
+    const [o, a] = rebuildQuizOpts(req.body, row.options, row.answer);
+    upd.options = o;
+    upd.answer = a;
+  }
   if (req.body.image_url !== undefined || req.body.images !== undefined) {
     const images = parseImages(req.body.images);
     const cover = (req.body.image_url !== undefined ? String(req.body.image_url).trim() : '') || images[0] || null;

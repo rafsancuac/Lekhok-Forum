@@ -55,6 +55,25 @@
   })();
 
   /* ── স্কোর-বার আপডেট ── */
+  // সেশন ৬৫: আজকের কুইজ না-থাকলে/উত্তর-না-দিলে সর্বশেষ উত্তরের ফল দেখাও —
+  // লেবেল 'সর্বশেষ স্কোর' হয়; '—' আর কনফিউজিং নয়।
+  function lastAnsweredVal(server, todayId) {
+    var best = null, bestTs = '';
+    Object.keys(server || {}).forEach(function (k) {
+      var sv = server[k];
+      if (!sv) return;
+      if (todayId && k === String(todayId)) return; /* আজকেরটা আলাদা */
+      var ts = String(sv.ts || ''); /* 'YYYY-MM-DD HH:MM:SS' — স্ট্রিং-তুলনা কালানুক্রমিক */
+      if (ts >= bestTs) { bestTs = ts; best = sv; }
+    });
+    return best ? (best.correct ? '১/১' : '০/১') : null;
+  }
+
+  function setTodayLabel(fallback) {
+    var l = document.getElementById('qsTodayLabel');
+    if (l) l.textContent = fallback ? 'সর্বশেষ স্কোর' : 'আজকের স্কোর';
+  }
+
   function updateScoreBar() {
     var bar = document.getElementById('quizScoreBar');
     if (!bar) return;
@@ -63,6 +82,10 @@
       var todayId = bar.getAttribute('data-today-id');
       var todayVal = '—';
       if (todayId && server[todayId]) todayVal = server[todayId].correct ? '১/১' : '০/১';
+      if (todayVal === '—') {
+        var lastVal = lastAnsweredVal(server, todayId);
+        if (lastVal) { todayVal = lastVal; setTodayLabel(true); } else setTodayLabel(false);
+      } else setTodayLabel(false);
       bar.hidden = false;
       setVals(todayVal, bn(serverStats.correct) + '/' + bn(serverStats.answered), bn(serverStats.streak));
       return;
@@ -83,6 +106,11 @@
     if (todayId && store[todayId] && store[todayId].answered) {
       todayVal = store[todayId].correct ? '১/১' : '০/১';
     }
+    if (todayVal === '—' && entries.length) {
+      var lastE = entries[entries.length - 1];
+      todayVal = lastE.correct ? '১/১' : '০/১';
+      setTodayLabel(true);
+    } else setTodayLabel(false);
     bar.hidden = false;
     setVals(todayVal, bn(totalCorrect) + '/' + bn(entries.length), bn(streak));
     function setVals(a, b, c) {

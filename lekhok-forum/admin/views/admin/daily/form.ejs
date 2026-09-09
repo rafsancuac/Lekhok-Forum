@@ -18,6 +18,36 @@
   <div class="card">
     <% if (error) { %><div class="error"><%= error %></div><% } %>
     <% if (item) { %>
+      <% if (item.content_type === 'quiz') { %>
+      <%# সেশন ৬৫: ইন্টারঅ্যাক্টিভ-কুইজ বিকল্প — মডারেটর-প্যানেল প্যারিটি %>
+      <div class="sf-section quiz-opts-sec" data-save-url="/admin/daily/<%= item.id %>/section">
+        <div class="sf-head">
+          <h3><i class="fas fa-list-check"></i> কুইজ বিকল্প <span class="sf-count"><%= (parsedOptions || []).length ? ((parsedOptions.length + '').replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }) + 'টি') : 'স্ট্যাটিক' %></span></h3>
+          <div class="sf-actions">
+            <span class="sf-status" role="status" aria-live="polite"></span>
+            <button type="button" class="btn btn-sm sf-edit"><i class="fas fa-pen"></i> সম্পাদনা</button>
+            <button type="button" class="btn btn-sm btn-primary sf-save" hidden><i class="fas fa-check"></i> সেভ</button>
+            <button type="button" class="btn btn-sm sf-cancel" hidden><i class="fas fa-times"></i> বাতিল</button>
+          </div>
+        </div>
+        <p class="quiz-opts-hint"><i class="fas fa-circle-info"></i> কমপক্ষে ২টি বিকল্প দিলে কুইজটি <strong>ইন্টারঅ্যাক্টিভ</strong> হবে — পাঠক উত্তর বাছলে সার্ভার যাচাই করে সঠিক/ভুল ও ব্যাখ্যা দেখায়। সব বিকল্প মুছে দিলে সাধারণ (স্ট্যাটিক) কুইজে ফিরে যাবে।</p>
+        <div class="quiz-opt-grid">
+          <input type="text" name="opt_0" placeholder="বিকল্প ক" maxlength="200" value="<%= (parsedOptions || [])[0] || '' %>" readonly>
+          <input type="text" name="opt_1" placeholder="বিকল্প খ" maxlength="200" value="<%= (parsedOptions || [])[1] || '' %>" readonly>
+          <input type="text" name="opt_2" placeholder="বিকল্প গ" maxlength="200" value="<%= (parsedOptions || [])[2] || '' %>" readonly>
+          <input type="text" name="opt_3" placeholder="বিকল্প ঘ" maxlength="200" value="<%= (parsedOptions || [])[3] || '' %>" readonly>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>সঠিক উত্তর *</label>
+          <select name="correct_answer" disabled>
+            <option value="0" <%= (item.answer === 0 || item.answer === null) && (parsedOptions || []).length ? 'selected' : '' %>>ক — <%= (parsedOptions || [])[0] || 'প্রথম বিকল্প' %></option>
+            <option value="1" <%= item.answer === 1 ? 'selected' : '' %>>খ — <%= (parsedOptions || [])[1] || 'দ্বিতীয় বিকল্প' %></option>
+            <option value="2" <%= item.answer === 2 ? 'selected' : '' %>>গ — <%= (parsedOptions || [])[2] || 'তৃতীয় বিকল্প' %></option>
+            <option value="3" <%= item.answer === 3 ? 'selected' : '' %>>ঘ — <%= (parsedOptions || [])[3] || 'চতুর্থ বিকল্প' %></option>
+          </select>
+        </div>
+      </div>
+      <% } %>
       <div class="sf-section" data-save-url="/admin/daily/<%= item.id %>/section">
         <div class="sf-head">
           <h3>মূল তথ্য <span class="sf-count">৫</span></h3>
@@ -73,7 +103,7 @@
       <form method="POST" action="/admin/daily">
         <div class="form-group">
           <label>ধরন *</label>
-          <select name="content_type" required>
+          <select name="content_type" id="adContentType" required>
             <option value="">— নির্বাচন করুন —</option>
             <% Object.keys(DAILY_TYPES).forEach(t => { %>
               <option value="<%= t %>"><%= DAILY_TYPES[t].label %></option>
@@ -82,6 +112,25 @@
         </div>
         <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" required></div>
         <div class="form-group"><label>বিষয়বস্তু</label><textarea name="body" rows="6"></textarea></div>
+        <div class="form-group quiz-opts-form" id="adQuizOpts" hidden>
+          <label><i class="fas fa-list-check"></i> কুইজ বিকল্প (ইন্টারঅ্যাক্টিভ)</label>
+          <p class="quiz-opts-hint"><i class="fas fa-circle-info"></i> কমপক্ষে ২টি বিকল্প দিলে পাঠক উত্তর বাছতে পারবে — সার্ভার সঠিক/ভুল যাচাই করে। সব ফাঁকা রাখলে সাধারণ (স্ট্যাটিক) কুইজ হবে।</p>
+          <div class="quiz-opt-grid">
+            <input type="text" name="opt_0" placeholder="বিকল্প ক" maxlength="200">
+            <input type="text" name="opt_1" placeholder="বিকল্প খ" maxlength="200">
+            <input type="text" name="opt_2" placeholder="বিকল্প গ" maxlength="200">
+            <input type="text" name="opt_3" placeholder="বিকল্প ঘ" maxlength="200">
+          </div>
+          <div class="form-group" style="margin-top:12px;">
+            <label>সঠিক উত্তর</label>
+            <select name="correct_answer">
+              <option value="0">ক — প্রথম বিকল্প</option>
+              <option value="1">খ — দ্বিতীয় বিকল্প</option>
+              <option value="2">গ — তৃতীয় বিকল্প</option>
+              <option value="3">ঘ — চতুর্থ বিকল্প</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group"><label>কভার ছবির URL (ঐচ্ছিক)</label><input type="url" name="image_url" placeholder="https://..."></div>
         <%- include('../partials/multi-image', { images: images || [] }) %>
         <div class="form-group"><label>লিংক URL (ঐচ্ছিক — যেমন ই-পেপার PDF লিংক)</label><input type="url" name="link_url" placeholder="https://..."></div>
@@ -92,5 +141,37 @@
     <% } %>
   </div>
 </div>
+<script>
+/* সেশন ৬৫: নতুন-ফর্মে ধরন=কুইজ হলে বিকল্প-ক্ষেত্র দেখাও; সঠিক-উত্তর লেবেল লাইভ-সিঙ্ক */
+(function () {
+  var typeSel = document.getElementById('adContentType');
+  var optsBox = document.getElementById('adQuizOpts');
+  if (!typeSel || !optsBox) return;
+  function sync() { optsBox.hidden = typeSel.value !== 'quiz'; }
+  typeSel.addEventListener('change', sync);
+  sync();
+
+  var keys = ['ক', 'খ', 'গ', 'ঘ'];
+  var ins = [0, 1, 2, 3].map(function (i) { return optsBox.querySelector('[name="opt_' + i + '"]'); });
+  var ansSel = optsBox.querySelector('[name="correct_answer"]');
+  function refresh() {
+    if (!ansSel) return;
+    var filled = ins.map(function (el) { return el ? el.value.trim() : ''; });
+    var hasAny = filled.some(function (v) { return v; });
+    for (var i = 0; i < ansSel.options.length; i++) {
+      ansSel.options[i].textContent = keys[i] + ' — ' + (filled[i] || ((i + 1) + '').replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }) + 'ম বিকল্প');
+      // অন্য কোনো বিকল্প পূরণ থাকলে ফাঁকা বিকল্পটি বাছাই-যোগ্য নয়
+      ansSel.options[i].disabled = hasAny && !filled[i];
+    }
+    // নির্বাচিত বিকল্প ফাঁকা হয়ে গেলে প্রথম পূর্ণ বিকল্পে ফিরে যাও
+    if (!filled[ansSel.selectedIndex]) {
+      var first = filled.findIndex(function (v) { return v; });
+      if (first >= 0) ansSel.selectedIndex = first;
+    }
+  }
+  ins.forEach(function (el) { if (el) el.addEventListener('input', refresh); });
+  refresh();
+})();
+</script>
 </body>
 </html>

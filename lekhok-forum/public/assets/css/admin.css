@@ -204,3 +204,11 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
 .mod-edit-form textarea{min-height:76px;resize:vertical}
 .mod-edit-form .quiz-opt-grid{margin-bottom:6px}
 .mod-edit-form .btn{margin-top:12px}
+
+/* ── সেশন ৬৫: অ্যাডমিন ডেইলি-ফর্মে কুইজ-বিকল্প (প্যারিটি) + লিস্ট-ব্যাজ ── */
+.quiz-opts-hint{margin:0 0 10px;padding:9px 13px;border-radius:var(--ad-radius);background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.22);color:var(--ad-muted);font-size:.78rem;line-height:1.65}
+.quiz-opts-hint i{color:var(--ad-icon-ink);margin-right:2px}
+.quiz-opts-hint strong{color:var(--ad-icon-ink);font-weight:600}
+.quiz-opts-sec .sf-head h3 i{margin-right:6px;color:var(--ad-icon-ink)}
+.badge-soft.is-interactive{background:rgba(52,211,153,.13);color:#6EE7B7;border:1px solid rgba(52,211,153,.32);font-size:.72rem}
+.badge-soft.is-static{background:rgba(143,173,160,.12);color:var(--ad-muted);border:1px solid var(--ad-line);font-size:.72rem}

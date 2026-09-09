@@ -13,10 +13,15 @@
     .editor-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
     .editor-toolbar button { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 5px; cursor: pointer; font-family: inherit; }
     .editor-toolbar button:hover { background: #f0f0f0; }
+    .editor-toolbar button[title] { font-weight: 700; }
+    .heading-hint { margin: 0 0 10px; padding: 9px 13px; border-radius: 8px; background: rgba(52,211,153,.07); border: 1px solid rgba(52,211,153,.22); color: #B9D8CB; font-size: .8rem; line-height: 1.65; }
+    .heading-hint i { color: #34D399; margin-right: 3px; }
+    .heading-hint code { background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.28); border-radius: 4px; padding: 1px 6px; font-size: .76rem; color: #6EE7B7; }
+    .heading-hint strong { color: #6EE7B7; }
     textarea#body { min-height: 300px; font-size: 1.1rem; }
     .tag-hint { font-size: 0.85rem; color: #888; }
     .form-group.full { grid-column: 1 / -1; }
-    @media (max-width: 600px) { .editor-toolbar { display: none; } }
+    @media (max-width: 600px) { .editor-toolbar { display: none; } .heading-hint { display: none; } }
   </style>
 </head>
 <body>
@@ -42,9 +47,12 @@
         <div class="editor-toolbar">
           <button type="button" onclick="wrap('**','**')"><b>B</b></button>
           <button type="button" onclick="wrap('_','_')"><i>I</i></button>
+          <button type="button" onclick="headingWrap('## ')" title="বড় শিরোনাম">H2</button>
+          <button type="button" onclick="headingWrap('### ')" title="উপশিরোনাম">H3</button>
           <button type="button" onclick="wrap('\n- ','\n')">&#8226; List</button>
           <button type="button" onclick="insertLink()">🔗 Link</button>
         </div>
+        <p class="heading-hint"><i class="fas fa-list-ul"></i> লাইনের শুরুতে <code>## </code> দিলে বড় শিরোনাম, <code>### </code> দিলে উপশিরোনাম — ৩টির বেশি হলে পাঠক স্বয়ংক্রিয় <strong>সূচিপত্র</strong> পাবেন।</p>
         <textarea id="body" name="body" required><%= post?.body || '' %></textarea>
         <div class="char-counter" id="charCounter" aria-live="polite"></div>
       </div>
@@ -57,6 +65,30 @@
       const s = ta.selectionStart, e = ta.selectionEnd;
       ta.value = ta.value.substring(0, s) + before + ta.value.substring(s, e) + after + ta.value.substring(e);
       ta.focus();
+    }
+    /* সেশন ৬৫: হেডিং-ইনসার্ট — সিলেকশন থাকলে সেটি হেডিং-টেক্সট হয়, নয়তো
+       কার্সর-লাইনের শুরুতে প্রিফিক্স বসে (আগে থেকে ## থাকলে টগল-করে সরায়)। */
+    function headingWrap(prefix) {
+      const ta = document.getElementById('body');
+      const s = ta.selectionStart, e = ta.selectionEnd;
+      if (s !== e) { wrap('\n' + prefix, '\n'); return; }
+      const v = ta.value;
+      let ls = v.lastIndexOf('\n', s - 1) + 1;
+      const le = (v.indexOf('\n', s) === -1) ? v.length : v.indexOf('\n', s);
+      const line = v.substring(ls, le);
+      const m = line.match(/^(#{2,3})\s+/);
+      if (m && m[1] === prefix.trim()) {
+        ta.value = v.substring(0, ls) + line.replace(/^#{2,3}\s+/, '') + v.substring(le);
+        ta.selectionStart = ta.selectionEnd = ls;
+      } else if (m) {
+        ta.value = v.substring(0, ls) + line.replace(/^#{2,3}\s+/, prefix) + v.substring(le);
+        ta.selectionStart = ta.selectionEnd = ls + prefix.length;
+      } else {
+        ta.value = v.substring(0, ls) + prefix + line + v.substring(le);
+        ta.selectionStart = ta.selectionEnd = ls + prefix.length + line.length;
+      }
+      ta.focus();
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
     }
     function insertLink() {
       const url = prompt('URL:');
