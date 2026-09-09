@@ -21,8 +21,9 @@
 body{
   font-family:var(--font-body);
   background:
-    radial-gradient(ellipse at top right, rgba(5,150,105,.16), transparent 55%),
-    linear-gradient(135deg, #0a1f44 0%, #0b1121 100%);
+    radial-gradient(ellipse at top right, rgba(5,150,105,.12), transparent 55%),
+    radial-gradient(ellipse at bottom left, rgba(30,58,138,.07), transparent 55%),
+    linear-gradient(135deg, #f8fafc 0%, #eafaf1 100%);
   min-height:100vh;
   display:flex;
   padding:32px 20px;
@@ -172,6 +173,7 @@ body.auth-split{
 }
 
 /* ── বাম ব্র্যান্ড-প্যানেল ── */
+/* লাইট-থিম: গাঢ় নেভি → হালকা সফট-গ্র্যাডিয়েন্ট (ইউজার-অনুরোধ) */
 .as-brand{
   position:relative;
   display:flex;
@@ -179,17 +181,17 @@ body.auth-split{
   justify-content:space-between;
   gap:28px;
   padding:52px 44px;
-  color:#fff;
+  color:#1e293b;
   background:
-    radial-gradient(ellipse at 18% -8%, rgba(5,150,105,0.30), transparent 58%),
-    repeating-linear-gradient(115deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 26px),
-    linear-gradient(160deg, #0a1f44 0%, #0B1121 100%);
+    radial-gradient(ellipse at 18% -8%, rgba(5,150,105,0.16), transparent 58%),
+    repeating-linear-gradient(115deg, rgba(15,23,42,0.03) 0 1px, transparent 1px 26px),
+    linear-gradient(160deg, #ffffff 0%, #f0fdf7 58%, #e6f7ef 100%);
   overflow:hidden;
 }
 .as-brand::after{ /* সূক্ষ্ম কোণা-জ্যামিতি */
   content:''; position:absolute; right:-90px; bottom:-90px;
   width:260px; height:260px; border-radius:50%;
-  border:1px solid rgba(255,255,255,0.07);
+  border:1px solid rgba(15,23,42,0.08);
   pointer-events:none;
 }
 .as-brand-top{ display:flex; align-items:center; gap:12px; }
@@ -198,31 +200,31 @@ body.auth-split{
   display:inline-flex; align-items:center; justify-content:center;
   color:#fff; font-size:19px;
   background:linear-gradient(135deg, var(--accent), var(--accent-dark));
-  box-shadow:0 6px 18px rgba(0,0,0,0.30);
+  box-shadow:0 6px 18px rgba(5,150,105,0.30);
 }
 .as-brand-name{
   font-family:var(--font-heading);
-  font-weight:700; font-size:1.12rem; color:#fff; letter-spacing:.3px;
+  font-weight:700; font-size:1.12rem; color:#0B1121; letter-spacing:.3px;
 }
 .as-brand-mid{ position:relative; }
 .as-eyebrow{
   font-family:var(--font-body);
   font-size:.82rem; font-weight:700; letter-spacing:1.5px;
-  color:#34d399; margin-bottom:10px;
+  color:#047857; margin-bottom:10px;
 }
 .as-tagline{
   font-family:var(--font-heading);
   font-size:1.62rem; font-weight:700; line-height:1.32;
-  color:#fff; margin:0 0 12px;
+  color:#0B1121; margin:0 0 12px;
 }
 .as-intro{
   font-family:var(--font-body);
   font-size:.9rem; line-height:1.7;
-  color:rgba(226,232,240,0.82);
+  color:#475569;
   max-width:34ch; margin:0;
 }
 .as-brand-bottom{
-  font-size:.78rem; color:rgba(148,163,184,0.75); letter-spacing:.4px;
+  font-size:.78rem; color:#64748b; letter-spacing:.4px;
 }
 
 /* ── ডান ফর্ম-প্যানেল ── */
@@ -402,9 +404,9 @@ body.auth-split .btn-secondary{ border-radius:8px; }
     padding:22px 20px 26px;
     gap:12px;
     background:
-      radial-gradient(ellipse at 85% -30%, rgba(5,150,105,0.28), transparent 55%),
-      repeating-linear-gradient(115deg, rgba(15,23,42,0.04) 0 1px, transparent 1px 26px),
-      linear-gradient(160deg, #0a1f44 0%, #0B1121 100%);
+      radial-gradient(ellipse at 85% -30%, rgba(5,150,105,0.16), transparent 55%),
+      repeating-linear-gradient(115deg, rgba(15,23,42,0.03) 0 1px, transparent 1px 26px),
+      linear-gradient(160deg, #ffffff 0%, #f0fdf7 58%, #e6f7ef 100%);
   }
   .as-brand::after{ width:150px; height:150px; right:-55px; bottom:-95px; }
   .as-eyebrow{ margin-bottom:6px; font-size:.76rem; }
@@ -536,7 +538,7 @@ input:-webkit-autofill{
 }
 .as-brand-points li{
   display:flex; align-items:center; gap:11px;
-  font-size:.86rem; color:rgba(226,232,240,.85); line-height:1.5;
+  font-size:.86rem; color:#475569; line-height:1.5;
 }
 .as-brand-points li i{
   flex:0 0 30px; width:30px; height:30px;
@@ -595,7 +597,7 @@ body.auth-split .mfa-code-wrap label{
   display:none;
   margin:8px auto 0; max-width:360px;
   font-size:.78rem; color:var(--text-muted); line-height:1.6;
-  background:rgba(2,8,20,.6); border:1px dashed rgba(110,231,183,.35); border-radius:8px;
+  background:rgba(5,150,105,.06); border:1px dashed rgba(5,150,105,.35); border-radius:8px;
   padding:10px 14px;
   animation:fadeSlideIn .25s ease both;
 }
