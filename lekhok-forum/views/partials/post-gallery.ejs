@@ -1,5 +1,9 @@
-<%# পোস্ট মাল্টি-ইমেজ গ্যালারি (টাস্ক ১৩, পর্ব ৪, অংশ ক) — images(URL অ্যারে), alt, height, group %>
-<% if (Array.isArray(images) && images.length) { %>
+<%# পোস্ট মাল্টি-ইমেজ গ্যালারি (টাস্ক ১৩, পর্ব ৪, অংশ ক) — images(URL অ্যারে), alt, height, group
+    সেশন ৬৮: রেন্ডার-গার্ড — DB-জাঙ্ক ('[]' ইত্যাদি) কখনো img-src হয়ে 404-রিকোয়েস্ট
+    বানাত না পারে; বৈধ = http(s):// বা /-প্রিফিক্স। (স্যানিটাইজ রুট/DB-স্তরেও আছে —
+    এটি শুধু শেষ-রেখার ডিফেন্স।) %>
+<% images = (Array.isArray(images) ? images : []).filter(function (u) { var s = String(u == null ? '' : u).trim(); return s && (/^https?:\/\//i.test(s) || s.startsWith('/')); }); %>
+<% if (images.length) { %>
   <% const _h = height || '220px'; %>
   <% if (images.length === 1) { %>
     <img loading="lazy" decoding="async" src="<%= images[0] %>" alt="<%= alt || '' %>" style="width:100%;height:<%= _h %>;object-fit:cover;display:block;" />

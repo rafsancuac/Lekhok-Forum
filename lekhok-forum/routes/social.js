@@ -159,7 +159,8 @@ router.get('/articles', async (req, res) => {
 
 // ── New article form ─────────────────────────────────────────────────────────
 router.get('/articles/new', ensureLoggedIn, async (req, res) => {
-  res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new' });
+  // Session 68: me — editor draft-autosave key (per-user, shared-browser safe)
+  res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new', me: req.session.user });
 });
 
 // টাস্ক ১৩ (পর্ব ৪, অংশ ক): ইউজার লেখা/প্রশ্ন ফর্মে বিদ্যমান একাধিক ছবি লোড
@@ -175,7 +176,7 @@ async function attachPostImages(post) {
 router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const { title, body, excerpt, cover_image, tags, category } = req.body;
   if (!title || !body) {
-    return res.render('user/article-form', { post: req.body, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক', currentPath: '/articles/new' });
+    return res.render('user/article-form', { post: req.body, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক', currentPath: '/articles/new', me: req.session.user });
   }
   const images = Array.isArray(req.body.images)
     ? req.body.images
@@ -425,14 +426,14 @@ router.get('/articles/:id/edit', ensureLoggedIn, async (req, res) => {
   const post = await db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
   if (!post || post.author_id !== req.session.user.id) return res.redirect('/articles/' + req.params.id);
   await attachPostImages(post);
-  res.render('user/article-form', { post, error: null, currentPath: '/articles' });
+  res.render('user/article-form', { post, error: null, currentPath: '/articles', me: req.session.user });
 });
 
 // ── Update article ───────────────────────────────────────────────────────────
 router.post('/articles/:id/edit', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const post = await db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
   if (!post || post.author_id !== req.session.user.id) return res.redirect('/articles/' + req.params.id);
-  if (req.uploadError) return res.render('user/article-form', { post, error: req.uploadError, currentPath: '/articles' });
+  if (req.uploadError) return res.render('user/article-form', { post, error: req.uploadError, currentPath: '/articles', me: req.session.user });
   const { title, body, excerpt, cover_image, tags, category } = req.body;
   const images = Array.isArray(req.body.images)
     ? req.body.images

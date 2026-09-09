@@ -43,7 +43,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
   max-width:480px;
   width:100%;
   margin:auto;
-  box-shadow:0 30px 80px rgba(0,0,0,.5);
+  box-shadow:0 24px 48px -12px rgba(2,44,34,.16);
   position:relative;
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -73,16 +73,18 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 .auth-card h1{ text-align:center; color:var(--brand-text); margin-bottom:6px; }
 
 /* ── এরর / সাকসেস ── */
+/* সেশন ৬৮: লাইট-থিম-কনট্রাস্ট-ফিক্স — #FCA5A5/#6EE7B7 ছিল ডার্ক-ব্যাকগ্রাউন্ডের
+   লাইট-টেক্সট; সাদা auth-card-এ ~২:১ অপাঠ্য হয়ে যেত (৮টি ভিউয়ের error-বক্স!)। */
 .error{
-  background:rgba(239,68,68,.13); color:#FCA5A5;
+  background:rgba(239,68,68,.08); color:#b91c1c;
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
-  border:1px solid rgba(248,113,113,.4);
+  border:1px solid rgba(220,38,38,.35);
   display:flex; align-items:center; gap:8px; line-height:1.5;
 }
-.error i{ flex:0 0 auto; }
+.error i{ flex:0 0 auto; color:#dc2626; }
 .success{
-  background:rgba(16,185,129,.13); color:#6EE7B7;
+  background:rgba(16,185,129,.1); color:#047857;
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
   border:1px solid rgba(5,150,105,.38);
@@ -146,9 +148,9 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 .checkbox-group input{ width:auto; accent-color:#059669; }
 .checkbox-group label{ margin:0; font-weight:400; color:#475569; }
 
-.char-counter{ text-align:right; font-size:12px; color:#8FAEA0; margin-top:4px; padding:0 4px; transition:color .2s; }
-.char-counter.is-warn{ color:#FDBA74; font-weight:600; }
-.char-counter.is-error{ color:#FCA5A5; font-weight:700; }
+.char-counter{ text-align:right; font-size:12px; color:#64748b; margin-top:4px; padding:0 4px; transition:color .2s; }
+.char-counter.is-warn{ color:#b45309; font-weight:600; }
+.char-counter.is-error{ color:#dc2626; font-weight:700; }
 
 /* ==========================================================================
    সেশন ৫৬ — "Confident Split" (split-screen ৪৫:৫৫) — শুধু body.auth-split-স্কোপড
@@ -307,7 +309,7 @@ body.auth-split .back-home{
 .ff.is-error input{
   border-color:#F87171; box-shadow:0 0 0 3px rgba(248,113,113,.14);
 }
-.ff.is-error label{ color:#FCA5A5; }
+.ff.is-error label{ color:#b91c1c; }
 
 /* স্ট্যাটিক-লেবেল ভ্যারিয়েন্ট (select / date / file / textarea / readonly) */
 .ff-static label{
@@ -361,7 +363,7 @@ body.auth-split .back-home{
 .pw-toggle{
   position:absolute; right:6px; top:50%; transform:translateY(-50%);
   background:none; border:none; cursor:pointer;
-  color:#8FAEA0; padding:8px; border-radius:6px;
+  color:#94a3b8; padding:8px; border-radius:6px;
   display:inline-flex; align-items:center; justify-content:center;
 }
 .pw-toggle:hover{ color:#059669; background:rgba(5,150,105,.12); }
@@ -461,7 +463,7 @@ input:-webkit-autofill{
 
 /* ── ফিল্ড-হিন্ট ── */
 .field-hint{
-  font-size:.76rem; color:#8FAEA0; margin:-8px 0 14px;
+  font-size:.76rem; color:#64748b; margin:-8px 0 14px;
   display:flex; align-items:center; gap:6px; line-height:1.5;
 }
 .field-hint i{color:#047857; font-size:.72rem;}
@@ -469,7 +471,7 @@ input:-webkit-autofill{
 /* ── পাসওয়ার্ড স্ট্রেংথ-মিটার ── */
 .pw-meter{margin:-6px 0 12px;}
 .pw-meter-bar{
-  height:4px; border-radius:99px; background:rgba(255,255,255,.1);
+  height:4px; border-radius:99px; background:rgba(15,23,42,.08);
   overflow:hidden;
 }
 .pw-meter-bar span{
@@ -480,14 +482,14 @@ input:-webkit-autofill{
 .pw-meter.is-weak .pw-meter-bar span{width:33%; background:#F87171;}
 .pw-meter.is-mid  .pw-meter-bar span{width:66%; background:#FCD34D;}
 .pw-meter.is-ok   .pw-meter-bar span{width:100%; background:#059669;}
-.pw-meter-txt{font-size:.74rem; color:#8FAEA0; margin-top:5px;}
-.pw-meter.is-weak .pw-meter-txt{color:#FCA5A5;}
-.pw-meter.is-mid  .pw-meter-txt{color:#FCD34D;}
+.pw-meter-txt{font-size:.74rem; color:#64748b; margin-top:5px;}
+.pw-meter.is-weak .pw-meter-txt{color:#b91c1c;}
+.pw-meter.is-mid  .pw-meter-txt{color:#b45309;}
 .pw-meter.is-ok   .pw-meter-txt{color:#047857;}
 
 /* ── char-counter (বায়ো) ── */
-.char-counter{margin-top:5px;}
-.char-counter.is-warn{color:#FDBA74;}
+.char-counter{margin-top:5px; color:#64748b;}
+.char-counter.is-warn{color:#b45309;}
 
 /* ── কলাপ্সিবল সোশ্যাল সেকশন ── */
 .social-details{margin:20px 0 6px;}

@@ -10,18 +10,93 @@
   <link rel="stylesheet" href="/assets/css/auth.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/multi-image.css?v=<%= AV %>" />
   <style>
-    .editor-toolbar { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-    .editor-toolbar button { padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 5px; cursor: pointer; font-family: inherit; }
-    .editor-toolbar button:hover { background: #f0f0f0; }
+    /* ── সেশন ৬৮: লাইট-থিম এডিটর-পলিশ (PLANS.md Session 67 revert-নিয়ম মেনে) ── */
+    body { background: linear-gradient(180deg, #f8fafc 0%, #eef6f1 60%, #f8fafc 100%); min-height: 100vh; }
+    .editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .editor-toolbar button {
+      padding: 5px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px;
+      cursor: pointer; font-family: inherit; color: #334155; line-height: 1.4;
+      transition: background .16s, border-color .16s, box-shadow .16s, transform .06s;
+    }
+    .editor-toolbar button:hover { background: #ecfdf5; border-color: rgba(5,150,105,.45); }
+    .editor-toolbar button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(5,150,105,.25); }
+    .editor-toolbar button:active { transform: translateY(1px); }
     .editor-toolbar button[title] { font-weight: 700; }
-    .heading-hint { margin: 0 0 10px; padding: 9px 13px; border-radius: 8px; background: rgba(52,211,153,.07); border: 1px solid rgba(52,211,153,.22); color: #B9D8CB; font-size: .8rem; line-height: 1.65; }
-    .heading-hint i { color: #34D399; margin-right: 3px; }
-    .heading-hint code { background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.28); border-radius: 4px; padding: 1px 6px; font-size: .76rem; color: #6EE7B7; }
-    .heading-hint strong { color: #6EE7B7; }
+    .heading-hint {
+      margin: 0 0 10px; padding: 9px 13px; border-radius: 8px;
+      background: rgba(5,150,105,.06); border: 1px solid rgba(5,150,105,.22);
+      color: #3f6212; color: #065f46; font-size: .8rem; line-height: 1.65;
+    }
+    .heading-hint i { color: #059669; margin-right: 3px; }
+    .heading-hint code { background: rgba(5,150,105,.1); border: 1px solid rgba(5,150,105,.26); border-radius: 4px; padding: 1px 6px; font-size: .76rem; color: #047857; }
+    .heading-hint strong { color: #047857; }
     textarea#body { min-height: 300px; font-size: 1.1rem; }
-    .tag-hint { font-size: 0.85rem; color: #888; }
+    .tag-hint { font-size: 0.85rem; color: #94a3b8; }
     .form-group.full { grid-column: 1 / -1; }
-    @media (max-width: 600px) { .editor-toolbar { display: none; } .heading-hint { display: none; } }
+
+    /* ── সেশন ৬৮: লাইভ-স্ট্যাটস-বার (শব্দ · পড়ার-সময় · অক্ষর) ── */
+    .editor-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
+    .editor-stats .st-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 999px;
+      padding: 3px 12px; font-size: .78rem; color: #64748b; line-height: 1.6;
+    }
+    .editor-stats .st-chip i { color: #059669; font-size: .72rem; }
+    .editor-stats .st-chip strong { color: #047857; font-weight: 700; }
+    .editor-stats .st-chip.is-error { border-color: rgba(220,38,38,.4); background: #fef2f2; }
+    .editor-stats .st-chip.is-error, .editor-stats .st-chip.is-error strong { color: #b91c1c; }
+    .editor-stats .st-chip.is-warn strong { color: #b45309; }
+    .char-counter { margin-right: auto; }
+
+    /* ── সেশন ৬৮: খসড়া-অটোসেভ ব্যানার + সেভ-ইন্ডিকেটর ── */
+    .draft-banner {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #059669;
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(2,44,34,.06); animation: draftIn .45s cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes draftIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .draft-banner .db-icon {
+      width: 36px; height: 36px; border-radius: 10px; flex: 0 0 auto;
+      background: rgba(5,150,105,.1); color: #059669; font-size: 1rem;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .draft-banner .db-text { flex: 1 1 220px; min-width: 0; }
+    .draft-banner .db-text strong { display: block; color: #0f172a; font-size: .92rem; }
+    .draft-banner .db-text span { display: block; color: #64748b; font-size: .78rem; margin-top: 2px; }
+    .draft-banner .db-actions { display: flex; gap: 8px; }
+    .btn-draft-restore, .btn-draft-discard {
+      border-radius: 8px; padding: 7px 16px; font-size: .82rem; font-family: inherit;
+      cursor: pointer; transition: background .16s, border-color .16s, box-shadow .16s;
+    }
+    .btn-draft-restore { background: #059669; color: #fff; border: 1px solid #047857; font-weight: 600; }
+    .btn-draft-restore:hover { background: #047857; }
+    .btn-draft-restore:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(5,150,105,.3); }
+    .btn-draft-discard { background: #fff; color: #64748b; border: 1px solid #e2e8f0; }
+    .btn-draft-discard:hover { color: #b91c1c; border-color: rgba(220,38,38,.4); background: #fef2f2; }
+    .btn-draft-discard:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(100,116,139,.25); }
+    .autosave-note {
+      display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
+      font-size: .76rem; color: #64748b; opacity: 0; transition: opacity .3s;
+    }
+    .autosave-note.on { opacity: 1; }
+    .autosave-note .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #059669; flex: 0 0 auto;
+      box-shadow: 0 0 0 0 rgba(5,150,105,.5); animation: dotPulse 2.4s infinite;
+    }
+    @keyframes dotPulse {
+      0% { box-shadow: 0 0 0 0 rgba(5,150,105,.45); }
+      70% { box-shadow: 0 0 0 7px rgba(5,150,105,0); }
+      100% { box-shadow: 0 0 0 0 rgba(5,150,105,0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .draft-banner, .autosave-note .dot { animation: none; }
+    }
+    @media (max-width: 600px) {
+      .editor-toolbar { display: none; } .heading-hint { display: none; }
+      .draft-banner .db-text { flex-basis: 100%; }
+      .draft-banner .db-actions { flex: 1 1 100%; justify-content: flex-end; }
+    }
   </style>
 </head>
 <body>
@@ -29,6 +104,10 @@
     <a href="/articles" class="back-home"><i class="fas fa-arrow-left"></i> লেখার তালিকায় ফিরে যান</a>
     <h1><%= !!post && post.id ? 'লেখা সম্পাদনা' : 'নতুন লেখা লিখুন' %></h1>
     <% if (error) { %><div class="error"><%= error %></div><% } %>
+
+    <!-- সেশন ৬৮: খসড়া-পুনরুদ্ধার ব্যানার (নতুন-লেখা ফর্মেই, JS প্রয়োজনে বসায়) -->
+    <div id="draftBanner" hidden role="alert" aria-live="assertive"></div>
+
     <form method="POST" enctype="multipart/form-data">
       <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= post?.title || '' %>" required></div>
       <div class="form-row">
@@ -38,8 +117,13 @@
       </div>
       <div class="form-group">
         <label>আরও ছবি (একাধিক, টেনে সাজান)</label>
-        <input type="hidden" name="images" value='<%= JSON.stringify(post?.images || []) %>'>
-        <div class="mi-widget" data-field="images" data-upload-url="/upload-images"></div>
+        <%# সেশন ৬৮-ফিক্স: hidden input এখন উইজেটের ভেতরে — আগে বাইরের hidden +
+             উইজেটের নিজস্ব input দুটোই সাবমিট হতো (dual-input বাগ: req.body.images
+             অ্যারে-অফ-JSON-স্ট্রিং হয়ে '[]'-জাঙ্ক post_images-এ ঢুকত)। উইজেট
+             নিজেই এই input খুঁজে sync করে — এখন ঠিক একটাই সাবমিট হয়। %>
+        <div class="mi-widget" data-field="images" data-upload-url="/upload-images">
+          <input type="hidden" name="images" value='<%= JSON.stringify(post?.images || []) %>'>
+        </div>
       </div>
       <div class="form-group"><label>সংক্ষিপ্ত সারাংশ</label><textarea name="excerpt" rows="2"><%= post?.excerpt || '' %></textarea></div>
       <div class="form-group">
@@ -54,9 +138,10 @@
         </div>
         <p class="heading-hint"><i class="fas fa-list-ul"></i> লাইনের শুরুতে <code>## </code> দিলে বড় শিরোনাম, <code>### </code> দিলে উপশিরোনাম — ৩টির বেশি হলে পাঠক স্বয়ংক্রিয় <strong>সূচিপত্র</strong> পাবেন।</p>
         <textarea id="body" name="body" required><%= post?.body || '' %></textarea>
-        <div class="char-counter" id="charCounter" aria-live="polite"></div>
+        <div class="editor-stats" id="editorStats" aria-live="polite"></div>
       </div>
       <button type="submit" class="btn-primary"><%= !!post && post.id ? 'সংরক্ষণ করুন' : 'প্রকাশ করুন' %></button>
+      <p class="autosave-note" id="autosaveNote" role="status"><span class="dot"></span><span id="autosaveText">খসড়া সংরক্ষিত</span></p>
     </form>
   </div>
   <script>
@@ -94,21 +179,123 @@
       const url = prompt('URL:');
       if (url) wrap('[', '](' + url + ')');
     }
-    // ── Bengali character counter ─────────────────────────────────────────
+
+    /* ═══════ সেশন ৬৮: এডিটর লাইভ-স্ট্যাটস + খসড়া-অটোসেভ ═══════ */
     (function () {
-      const ta = document.getElementById('body');
-      const counter = document.getElementById('charCounter');
-      const MAX = 5000, WARN = 4500;
       const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
       const toBn = n => String(n).replace(/[0-9]/g, d => bnDigits[d]);
+      const ta = document.getElementById('body');
+      const stats = document.getElementById('editorStats');
+      const MAX = 5000, WARN = 4500;
+      const isNew = !(<%- JSON.stringify(!!post && !!post.id) %>);
+      const draftKey = 'lekhok_draft_art_new_' + String(<%- JSON.stringify(me ? me.username : 'anon') %> || 'anon');
+      const FIELDS = ['title', 'body', 'tags', 'excerpt'];
+
+      /* ── স্ট্যাটস-বার: শব্দ · পড়ার-সময় · অক্ষর (~১৩০ শব্দ/মিনিট — article-single-চিপের মিরর) ── */
+      function chipHTML(icon, label, value, cls) {
+        return '<span class="st-chip' + (cls ? ' ' + cls : '') + '"><i class="' + icon + '"></i>' + label +
+               ' <strong>' + value + '</strong></span>';
+      }
       function update() {
-        const len = ta.value.length;
-        counter.textContent = toBn(len) + ' / ' + toBn(MAX) + ' অক্ষর';
-        counter.className = 'char-counter' + (len > MAX ? ' is-error' : len > WARN ? ' is-warn' : '');
-        if (len > MAX) counter.textContent += ' (সীমা অতিক্রম!)';
+        const v = ta.value || '';
+        const len = v.length;
+        const words = (v.trim() ? v.trim().split(/\s+/).length : 0);
+        const mins = words ? Math.max(1, Math.round(words / 130)) : 0;
+        let html = chipHTML('fas fa-pen-nib', 'শব্দ', toBn(words));
+        if (words) html += chipHTML('fas fa-clock', 'পড়তে ≈', toBn(mins) + ' মিনিট');
+        html += chipHTML('fas fa-keyboard', 'অক্ষর', toBn(len) + ' / ' + toBn(MAX),
+          len > MAX ? 'is-error' : (len > WARN ? 'is-warn' : ''));
+        stats.innerHTML = html;
       }
       ta.addEventListener('input', update);
       update();
+
+      /* ── খসড়া-অটোসেভ: নতুন-লেখা ফর্মেই (এডিট-পেজ সার্ভারেই সেভ হয়)।
+         প্রতি-ইউজার কী (শেয়ার্ড-ব্রাউজার-সেফ), ১.২সে ডিবাউন্স। ── */
+      if (!isNew) return;
+      const form = ta.closest('form');
+      const note = document.getElementById('autosaveNote');
+      const noteText = document.getElementById('autosaveText');
+      const banner = document.getElementById('draftBanner');
+      let saveTimer = null, noteTimer = null;
+      const getVal = n => { const el = form.querySelector('[name="' + n + '"]'); return el ? el.value : ''; };
+
+      function readDraft() {
+        try { const d = JSON.parse(localStorage.getItem(draftKey) || 'null'); return (d && typeof d === 'object') ? d : null; }
+        catch (e) { return null; }
+      }
+      function draftHasText(d) { return d && FIELDS.some(f => (d[f] || '').trim()); }
+
+      function saveDraft() {
+        const d = { savedAt: Date.now() };
+        FIELDS.forEach(f => d[f] = getVal(f));
+        const imgs = form.querySelector('input[name="images"]');
+        if (imgs) d.images = imgs.value;
+        try { localStorage.setItem(draftKey, JSON.stringify(d)); } catch (e) {}
+        noteText.textContent = 'খসড়া সংরক্ষিত · ' + relTime(d.savedAt);
+        note.classList.add('on');
+        clearTimeout(noteTimer);
+        noteTimer = setTimeout(() => note.classList.remove('on'), 2600);
+      }
+      function scheduleSave() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(saveDraft, 1200);
+      }
+      FIELDS.forEach(f => {
+        const el = form.querySelector('[name="' + f + '"]');
+        if (el) el.addEventListener('input', scheduleSave);
+      });
+
+      /* প্রকাশ/সেভ সফল হলে খসড়া মুছে দিন (সাবমিট-নির্বিশেষে — ভ্যালিডেশন-ফেইল হলে
+         'invalid'-হ্যান্ডলার পরের স্ক্রিপ্টে আছে, কিন্তু সাবমিট তখনও ঘটে না — নিরাপদ) */
+      form.addEventListener('submit', function () {
+        try { localStorage.removeItem(draftKey); } catch (e) {}
+      });
+
+      function relTime(ts) {
+        const s = Math.max(1, Math.floor((Date.now() - ts) / 1000));
+        if (s < 60) return 'এইমাত্র';
+        const m = Math.floor(s / 60);
+        if (m < 60) return toBn(m) + ' মিনিট আগে';
+        const h = Math.floor(m / 60);
+        if (h < 24) return toBn(h) + ' ঘণ্টা আগে';
+        return toBn(Math.floor(h / 24)) + ' দিন আগে';
+      }
+
+      /* ── রিস্টোর-ব্যানার: ফর্ম খালি + ৩০ দিনের ভেতরের খসড়া থাকলে ── */
+      const draft = readDraft();
+      const formEmpty = FIELDS.every(f => !getVal(f).trim());
+      if (draft && draftHasText(draft) && formEmpty && Date.now() - (draft.savedAt || 0) < 30 * 86400e3) {
+        const w = (draft.body || '').trim() ? (draft.body.trim().split(/\s+/).length) : 0;
+        banner.innerHTML =
+          '<span class="db-icon"><i class="fas fa-file-lines"></i></span>' +
+          '<span class="db-text"><strong>অসম্পূর্ণ খসড়া পাওয়া গেছে</strong>' +
+          '<span>শেষ সংরক্ষণ ' + relTime(draft.savedAt) + ' · ' + toBn(w) + ' শব্দ — ব্রাউজারে সংরক্ষিত (শুধু আপনি দেখতে পারবেন)</span></span>' +
+          '<span class="db-actions">' +
+          '<button type="button" class="btn-draft-restore" id="draftRestore"><i class="fas fa-rotate-left"></i> পুনরুদ্ধার করুন</button>' +
+          '<button type="button" class="btn-draft-discard" id="draftDiscard"><i class="fas fa-trash-can"></i> মুছে ফেলুন</button>' +
+          '</span>';
+        banner.hidden = false;
+        banner.querySelector('#draftRestore').addEventListener('click', function () {
+          FIELDS.forEach(f => {
+            const el = form.querySelector('[name="' + f + '"]');
+            if (el && typeof draft[f] === 'string') el.value = draft[f];
+          });
+          if (draft.images) {
+            const imgs = form.querySelector('input[name="images"]');
+            if (imgs) imgs.value = draft.images; /* মাল্টি-ইমেজ-উইজেট DOMContentLoaded-init এটা পড়বে */
+          }
+          update();
+          banner.hidden = true;
+          if (window.showToast) showToast('খসড়া পুনরুদ্ধার হয়েছে — লেখা চালিয়ে যান', 'success');
+          ta.focus();
+        });
+        banner.querySelector('#draftDiscard').addEventListener('click', function () {
+          try { localStorage.removeItem(draftKey); } catch (e) {}
+          banner.hidden = true;
+          if (window.showToast) showToast('খসড়াটি মুছে ফেলা হয়েছে', 'success');
+        });
+      }
     })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>

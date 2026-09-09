@@ -526,6 +526,24 @@ async function applyLaterMigrations() {
   try {
     await backend.exec("UPDATE posts SET cover_image = NULL WHERE TRIM(COALESCE(cover_image,'')) IN ('[]', 'null', 'Null', 'NULL', '{}', '')");
   } catch (e) { console.error('[db] cover_image heal (session 67):', e.message); }
+  // Session 68: post_images junk heal — the dual-input form bug stored '[]' /
+  // '["[]","[]"]'-style junk as image_url rows (rendered as broken /[] img-src
+  // on feed/articles/press pages). Anything that is not an http(s):// or
+  // /-prefixed URL was already rendering broken, so delete it outright. Also
+  // broad-cover-heal posts.cover_image with the same URL pattern (the exact-
+  // match heal above misses nested junk like '["[]","[]"]').
+  try {
+    await backend.exec(`DELETE FROM post_images
+      WHERE image_url IS NULL OR TRIM(image_url) = ''
+         OR (TRIM(image_url) NOT LIKE 'http://%'
+             AND TRIM(image_url) NOT LIKE 'https://%'
+             AND TRIM(image_url) NOT LIKE '/%')`);
+    await backend.exec(`UPDATE posts SET cover_image = NULL
+      WHERE TRIM(COALESCE(cover_image,'')) != ''
+        AND TRIM(cover_image) NOT LIKE 'http://%'
+        AND TRIM(cover_image) NOT LIKE 'https://%'
+        AND TRIM(cover_image) NOT LIKE '/%'`);
+  } catch (e) { console.error('[db] post_images heal (session 68):', e.message); }
   try { await brandRenameMigration(); } catch (e) {
     console.error('[db] brandRenameMigration failed:', e.message);
   }
@@ -2591,8 +2609,33 @@ async function getPostImages(entityType, entityId) {
 }
 
 // images = array of URL strings (ক্রম অনুযায়ী) → পুরনো মুছে নতুন ক্রমে লিখে
+// Session 68: central image-list sanitizer — dual-input bug sent array-of-JSON-strings
+// ('["..."]') and '[]'-junk straight into image_url rows (rendered as /[] 404-src).
+// (a) string elements that are themselves JSON arrays get flattened; (b) every URL
+// must be http(s):// or /-prefixed; (c) dedupe. All writers go through this.
+function normalizeImageList68(v) {
+  const out = [];
+  const seen = new Set();
+  const push = (x) => {
+    const s = String(x == null ? '' : x).trim();
+    if (!s) return;
+    if (s.startsWith('[')) {
+      try {
+        const a = JSON.parse(s);
+        if (Array.isArray(a)) { a.forEach(push); return; }
+      } catch (e) { /* plain string — falls through to pattern check */ }
+    }
+    if (/^https?:\/\//i.test(s) || s.startsWith('/')) {
+      if (!seen.has(s)) { seen.add(s); out.push(s); }
+    }
+  };
+  if (Array.isArray(v)) v.forEach(push);
+  else push(v);
+  return out;
+}
+
 async function setPostImages(entityType, entityId, images) {
-  const list = Array.isArray(images) ? images.filter(u => u && String(u).trim()) : [];
+  const list = normalizeImageList68(images);
   await prepare('DELETE FROM post_images WHERE entity_type = ? AND entity_id = ?').run(entityType, entityId);
   for (let i = 0; i < list.length; i++) {
     await prepare('INSERT INTO post_images (entity_type, entity_id, image_url, sort_order) VALUES (?, ?, ?, ?)').run(entityType, entityId, list[i], i);
