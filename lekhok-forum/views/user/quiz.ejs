@@ -97,6 +97,35 @@
         </div>
       </section>
     <% } %>
+    <%# ── সেশন ৬৪: আমার কুইজ-ইতিহাস — লগইন-ইউজারের উত্তরের সময়রেখা ── %>
+    <% if (user && myHistory && myHistory.length) { %>
+      <% const bn64 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]);
+         const hc = myHistory.filter(h => h.correct).length;
+         const acc = Math.round((hc / myHistory.length) * 100); %>
+      <section class="quiz-history">
+        <div class="section-head">
+          <h2 class="section-title"><i class="fas fa-clock-rotate-left"></i> আমার কুইজ-ইতিহাস</h2>
+          <span class="quiz-archive-count"><%= bn64(hc) %>/<%= bn64(myHistory.length) %> সঠিক · <%= bn64(acc) %>%</span>
+        </div>
+        <div class="qh-acc-bar" role="img" aria-label="নির্ভুলতা <%= bn64(acc) %> শতাংশ">
+          <div class="qh-acc-fill" style="width:<%= acc %>%"></div>
+        </div>
+        <ol class="qh-list">
+          <% myHistory.forEach(function(h) { %>
+            <li class="qh-row<%= h.correct ? ' was-right' : ' was-wrong' %>">
+              <span class="qh-status"><i class="fas <%= h.correct ? 'fa-circle-check' : 'fa-circle-xmark' %>"></i></span>
+              <div class="qh-main">
+                <span class="qh-title"><%= h.title %></span>
+                <% if (h.chosen) { %>
+                  <span class="qh-choice">আপনার উত্তর: <em><%= h.chosen %></em></span>
+                <% } %>
+              </div>
+              <span class="qh-when" data-ts="<%= h.when %>" title="<%= h.when %>"><i class="far fa-clock"></i> <%= h.when %></span>
+            </li>
+          <% }) %>
+        </ol>
+      </section>
+    <% } %>
     <%# ── সেশন ৬২: কুইজ লিডারবোর্ড — সার্ভার-স্কোরভিত্তিক টপ ১০ ── %>
     <% if (board && board.length) { %>
       <% const bn62 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>

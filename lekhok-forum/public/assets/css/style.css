@@ -316,6 +316,34 @@ img{filter:none}
 
 /* ── কুইজ লিডারবোর্ড (সেশন ৬২ — সার্ভার-স্কোরভিত্তিক টপ ১০) ── */
 .quiz-board{margin-top:26px}
+
+/* ── আমার কুইজ-ইতিহাস (সেশন ৬৪ — লগইন-ইউজারের উত্তর-সময়রেখা) ── */
+.quiz-history{margin-top:30px}
+.quiz-history .section-head{margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quiz-history .section-title{font-size:1.15rem;color:#F0FBF6;margin:0;display:flex;align-items:center;gap:10px}
+.quiz-history .section-title i{color:#34D399}
+.qh-acc-bar{height:7px;border-radius:99px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.09);overflow:hidden;margin-bottom:12px}
+.qh-acc-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#065F46,#34D399 70%,#6EE7B7);box-shadow:0 0 12px rgba(52,211,153,.4);transition:width .5s ease}
+.qh-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.qh-row{display:flex;align-items:center;gap:12px;background:rgba(11,51,39,.78);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:12px 14px;transition:border-color .18s,transform .18s,box-shadow .18s}
+.qh-row:hover{border-color:rgba(52,211,153,.42);transform:translateX(3px);box-shadow:0 8px 22px -12px rgba(0,0,0,.55)}
+.qh-row.was-right{border-left:3px solid #34D399}
+.qh-row.was-wrong{border-left:3px solid #F87171}
+.qh-status{flex-shrink:0;font-size:1.05rem;display:flex;align-items:center;justify-content:center;width:26px}
+.qh-row.was-right .qh-status{color:#34D399;filter:drop-shadow(0 0 6px rgba(52,211,153,.5))}
+.qh-row.was-wrong .qh-status{color:#F87171;filter:drop-shadow(0 0 6px rgba(248,113,113,.35))}
+.qh-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.qh-title{font-size:.92rem;font-weight:600;color:#E6F4EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qh-choice{font-size:.76rem;color:#A9C4B5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qh-choice em{font-style:normal;color:#6EE7B7;font-weight:600}
+.qh-row.was-wrong .qh-choice em{color:#FCA5A5}
+.qh-when{flex-shrink:0;font-size:.72rem;color:#8FAEA0;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.qh-when i{font-size:.68rem;opacity:.7}
+@media (max-width:520px){
+  .qh-row{flex-wrap:wrap;gap:8px;padding:10px 11px}
+  .qh-when{margin-left:38px;order:3}
+  .qh-title{font-size:.87rem;white-space:normal}
+}
 .quiz-board-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
 .qb-row{display:flex;align-items:center;gap:12px;background:rgba(11,51,39,.78);border:1px solid rgba(52,211,153,.16);border-radius:10px;padding:10px 14px;transition:border-color .18s,transform .18s,box-shadow .18s}
 .qb-row:hover{border-color:rgba(52,211,153,.45);transform:translateX(3px);box-shadow:0 8px 22px -12px rgba(0,0,0,.55)}

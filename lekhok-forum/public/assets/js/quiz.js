@@ -34,11 +34,19 @@
       if (d && d.attempts) {
         server = d.attempts;
         serverStats = d.stats || null;
-        // localStorage-এ না-থাকা সার্ভার-উত্তর বসিয়ে দিই (ক্রস-ডিভাইস রিস্টোর)
+        // সার্ভার-উত্তর বসাই — ক্রস-ডিভাইস রিস্টোর + (সেশন ৬৪-ফিক্স) শেয়ারড-
+        // ব্রাউজারে আগের-ইউজারের পুরনো localStorage-উত্তর উপেক্ষা। সার্ভারে রেকর্ড
+        // থাকলে সেটিই চূড়ান্ত (DB-সত্য): choice/correct সার্ভার থেকে নেই; answer/body
+        // কুইজ-স্কোপড (ইউজার-নিরপেক্ষ) বলে লোকাল থেকে রাখলে রাউন্ডট্রিপ বাঁচে।
         Object.keys(server).forEach(function (k) {
           var sv = server[k];
-          if (sv && (!store[k] || !store[k].answered)) {
-            store[k] = { answered: true, choice: sv.choice, correct: !!sv.correct, ts: 0 };
+          if (!sv) return;
+          var old = store[k];
+          if (!old || !old.answered || old.choice !== sv.choice || !!old.correct !== !!sv.correct) {
+            store[k] = {
+              answered: true, choice: sv.choice, correct: !!sv.correct,
+              answer: old && old.answer, body: old && old.body, ts: 0
+            };
           }
         });
         saveStore(store);

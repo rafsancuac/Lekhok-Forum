@@ -527,6 +527,11 @@ async function applyLaterMigrations() {
   try { await quizInteractiveBackfill60(); } catch (e) {
     console.error('[db] quizInteractiveBackfill60 failed:', e.message);
   }
+  // সেশন ৬৪: কুইজ-লিডারবোর্ড ডেমো-ব্যাকফিল — বোর্ড যেন খালি না দেখায়।
+  // Idempotent + non-destructive (নিয়ম নিচের ফাংশন-কমেন্টে)।
+  try { await quizDemoAttemptsBackfill64(); } catch (e) {
+    console.error('[db] quizDemoAttemptsBackfill64 failed:', e.message);
+  }
 }
 
 // সেশন ৬০: পরিচিত সিড-কুইজগুলোর বিকল্প-সেট (শিরোনাম/বডির ইউনিক অংশ দিয়ে ম্যাচ)।
@@ -561,6 +566,67 @@ async function quizInteractiveBackfill60() {
     }
   }
   if (filled) console.log('[db] quizInteractiveBackfill60: enriched', filled, 'quiz row(s) with options/answer');
+}
+
+// সেশন ৬৪: কুইজ-লিডারবোর্ড ডেমো-ব্যাকফিল — সেশন ৬২-৬৩-এর টপ-পেন্ডিং।
+// লিডারবোর্ড quiz_attempts-ডেটার উপর দাঁড়ায়; ডেমো-সাইটে প্রায় কেউ উত্তর
+// দেয়নি বলে বোর্ড অদৃশ্য থাকত। ৫ ডেমো-সদস্যের (seed-ইউজার — ismail/monem/
+// karishma/mahfuz/nusrat) জন্য বাস্তবসঙ্গত ইতিহাস বসানো হয়।
+// নিরাপত্তা-নিয়ম:
+//   • শুধু পরিচিত ৫ ডেমো-username (role='user', status='active') ছোঁয়া হয় —
+//     রিয়েল ইউজার/মডারেটর/অ্যাডমিন কখনো স্পর্শ হয় না
+//   • প্রতি ইউজারের ইতিমধ্যে ৩+ আটেম্প্ট থাকলে স্কিপ (আসল খেলোয়াড় স্পর্শ-মুক্ত)
+//   • INSERT OR IGNORE + UNIQUE(user_id, quiz_id) → আসল উত্তর কখনো ওভাররাইট নয়
+//   • শুধু answer+options-সহ পাবলিশড কুইজ — correct/choice সার্ভার-সত্য
+//   • আজকের কুইজ বাদ — ডেমো-ইউজারের আজকের-উত্তর আজই না দেখায়
+//   • answered_at অতীতে ছড়ানো (ক্রমবর্ধমান) — স্ট্রিক-গণনা সঙ্গতিপূর্ণ
+const QUIZ_DEMO_USERS_64 = [
+  // [username, কতটি, সময়-ক্রমে সঠিক-প্যাটার্ন (১=সঠিক)]
+  ['karishma', 8, [1, 1, 1, 0, 1, 1, 1, 1]], // ৭/৮ — শীর্ষ
+  ['ismail',   7, [1, 0, 1, 1, 0, 1, 1]],    // ৫/৭
+  ['mahfuz',   6, [1, 1, 0, 0, 1, 1]],       // ৪/৬
+  ['nusrat',   6, [0, 1, 0, 1, 1, 0]],       // ৩/৬
+  ['monem',    5, [0, 1, 0, 0, 1]],          // ২/৫
+];
+async function quizDemoAttemptsBackfill64() {
+  // উত্তরযোগ্য কুইজ — আজকেরটি বাদ, নতুন→পুরনো ক্রমে
+  const quizzes = await backend.prepare(
+    "SELECT id, answer, options FROM daily_content WHERE content_type = 'quiz' AND published = 1 AND options IS NOT NULL AND options != '' AND answer IS NOT NULL AND (scheduled_date IS NULL OR scheduled_date < date('now')) ORDER BY scheduled_date DESC, created_at DESC LIMIT 12"
+  ).all();
+  if (!quizzes.length) return;
+  const fmt = (ms) => new Date(ms).toISOString().replace('T', ' ').slice(0, 19);
+  let inserted = 0;
+  for (const [username, want, pattern] of QUIZ_DEMO_USERS_64) {
+    const u = await backend.prepare(
+      "SELECT id FROM users WHERE username = ? AND role = 'user' AND status = 'active'"
+    ).get(username);
+    if (!u) continue;
+    const mine = await backend.prepare(
+      'SELECT COUNT(*) AS c FROM quiz_attempts WHERE user_id = ?'
+    ).get(u.id);
+    if (mine && mine.c >= 3) continue;
+    // সবচেয়ে সাম্প্রতিক want-টি কুইজ, কালানুক্রমিক (পুরনো→নতুন) উত্তর
+    const picks = quizzes.slice(0, Math.min(want, quizzes.length)).reverse();
+    for (let i = 0; i < picks.length; i++) {
+      const q = picks[i];
+      const correct = pattern[i % pattern.length] ? 1 : 0;
+      let opts = [];
+      try { opts = JSON.parse(q.options); } catch (e) { opts = []; }
+      let choice = q.answer;
+      if (!correct && Array.isArray(opts) && opts.length > 1) {
+        choice = (q.answer + 1 + i) % opts.length;
+        if (choice === q.answer) choice = (q.answer + 1) % opts.length;
+      }
+      const when = fmt(Date.now() - (picks.length - i) * 36 * 3600000 - (username.length * 777) * 60000);
+      try {
+        const r = await backend.prepare(
+          'INSERT OR IGNORE INTO quiz_attempts (user_id, quiz_id, choice, correct, answered_at) VALUES (?, ?, ?, ?, ?)'
+        ).run(u.id, q.id, choice, correct, when);
+        inserted += (r.changes || r.rowsAffected || 0);
+      } catch (e) { /* UNIQUE-সংঘর্ষ/ইত্যাদি — চলমান থাকুক */ }
+    }
+  }
+  if (inserted) console.log('[db] quizDemoAttemptsBackfill64: seeded', inserted, 'demo attempt(s) — leaderboard visible');
 }
 
 // সিকিউরিটি সেটিংস — ডিফল্ট নিরাপদ মান (fail-closed)। অ্যাডমিন পরে টগল করতে পারে।

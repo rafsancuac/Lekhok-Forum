@@ -67,6 +67,30 @@ async function myQuizState(userId) {
   return { map, answered, correct: correctN, streak: quizStreakFrom(rows) };
 }
 
+// সেশন ৬৪: "আমার কুইজ-ইতিহাস" — লগইন-ইউজারের রেকর্ড-করা উত্তরের সময়রেখা।
+// নিরাপত্তা: `answer` ভিউতে যায় না — শুধু ইউজারের নিজের চয়েস-টেক্সট (options
+// ভিউতে মূলতই দৃশ্যমান) + সঠিক/ভুল স্ট্যাটাস + তারিখ।
+async function myQuizHistory(userId, limit = 15) {
+  const rows = await db.prepare(`
+    SELECT a.quiz_id, a.choice, a.correct, a.answered_at, d.title, d.scheduled_date, d.options
+    FROM quiz_attempts a JOIN daily_content d ON d.id = a.quiz_id
+    WHERE a.user_id = ? ORDER BY a.answered_at DESC LIMIT ?
+  `).all(userId, limit);
+  return rows.map(r => {
+    let chosen = null;
+    try {
+      const opts = JSON.parse(r.options || '[]');
+      if (Array.isArray(opts) && r.choice !== null && r.choice >= 0 && r.choice < opts.length) {
+        chosen = String(opts[r.choice]);
+      }
+    } catch (e) { /* খারাপ JSON — chosen খালি */ }
+    return {
+      quiz_id: r.quiz_id, title: r.title, correct: !!r.correct, chosen,
+      when: r.answered_at, scheduled: r.scheduled_date
+    };
+  });
+}
+
 // লিডারবোর্ড — সর্বাধিক সঠিক-উত্তরদাতা টপ ১০ (৫+ উত্তর দেওয়া যাদের)।
 async function quizLeaderboard(limit = 10) {
   const rows = await db.prepare(`
@@ -102,10 +126,16 @@ router.get('/quiz', async (req, res) => {
   let board = null;
   try { board = await quizLeaderboard(10); } catch (e) { board = null; }
 
+  // সেশন ৬৪: আমার কুইজ-ইতিহাস (লগইন-ইউজারের উত্তর-সময়রেখা)
+  let myHistory = null;
+  if (req.session.user) {
+    try { myHistory = await myQuizHistory(req.session.user.id); } catch (e) { myHistory = null; }
+  }
+
   res.render('user/quiz', {
     today: withQuizOptions(today),
     archive: (archive || []).filter(a => a && a.id !== todayId).map(withQuizOptions),
-    mine, board,
+    mine, board, myHistory,
     currentPath: '/quiz'
   });
 });
