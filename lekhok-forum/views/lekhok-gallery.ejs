@@ -147,16 +147,16 @@
 /* ── সেশন ৬০-ফিক্স: গ্যালারি হিরো ডার্ক-গ্রিন থিমে (আগে জোর-করে লাইট ওভাররাইড ছিল —
    সাইট-ওয়াইড গ্রেডিয়েন্টের সাথে অমিল, PLANS.md-র প্যালেট-নিয়ম ভাঙছিল) ── */
 .page-header {
-  background: linear-gradient(135deg, var(--bg-main, #04150F) 0%, var(--bg-secondary, #0A2E23) 100%) !important;
-  color: #fff !important;
-  border-bottom: 1px solid var(--border, #1F4A3A);
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf7 60%, #e8f8f0 100%) !important;
+  color: #1e293b !important;
+  border-bottom: 1px solid rgba(5, 150, 105, 0.18);
 }
-.page-header h1, .page-header .eyebrow { color: #fff !important; }
-.page-header p, .page-header .header-sub { color: #A9C4B5 !important; }
+.page-header h1, .page-header .eyebrow { color: #1e293b !important; }
+.page-header p, .page-header .header-sub { color: #475569 !important; }
 .page-header .eyebrow {
-  background: rgba(52, 211, 153, 0.12) !important;
-  color: #34D399 !important;
-  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+  background: rgba(5, 150, 105, 0.12) !important;
+  color: #047857 !important;
+  border: 1px solid rgba(5, 150, 105, 0.3) !important;
 }
 
 /* ── ক্যাটাগরি-ফিল্টার বার (ডার্ক-প্যানেল) ── */
@@ -165,19 +165,19 @@
   flex-wrap: wrap;
   align-items: stretch;
   gap: 0 26px;
-  background: var(--card, #0B3327);
-  border: 1px solid var(--border, #1F4A3A);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 0 20px;
   margin-bottom: 30px;
-  box-shadow: 0 10px 26px -14px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 10px 26px -18px rgba(15, 23, 42, 0.15);
 }
 .gallery-tabs .gtab {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 14px 2px 12px;
-  color: #A9C4B5;
+  color: #475569;
   text-decoration: none;
   font-size: 0.93rem;
   font-weight: 600;
@@ -185,24 +185,24 @@
   transition: color 0.18s, border-color 0.18s;
 }
 .gallery-tabs .gtab i { font-size: 0.95em; opacity: 0.75; transition: opacity 0.18s; }
-.gallery-tabs .gtab:hover { color: #E6F4EC; }
+.gallery-tabs .gtab:hover { color: #1e293b; }
 .gallery-tabs .gtab:hover i { opacity: 1; }
 .gallery-tabs .gtab.active {
-  color: #34D399;
-  border-bottom-color: #34D399;
+  color: #047857;
+  border-bottom-color: #047857;
 }
 .gallery-tabs .gtab.active i { opacity: 1; }
 .gallery-tabs .gtab-count {
   font-size: 0.76rem;
   font-weight: 700;
-  color: #B9D8CB; /* লাইট-মিন্ট — ডারক-গ্রিনে ৭:১+ কনট্রাস্ট (আগের #8FADA0 ~৪:১ ছিল) */
-  background: rgba(255,255,255,.06);
+  color: #047857;
+  background: rgba(5,150,105,.1);
   padding: 1px 8px;
   border-radius: 99px;
   transition: color 0.18s, background 0.18s;
 }
-.gallery-tabs .gtab:hover .gtab-count { color: #D3F4E7; background: rgba(255,255,255,.10); }
-.gallery-tabs .gtab.active .gtab-count { color: #34D399; background: rgba(52,211,153,.14); }
+.gallery-tabs .gtab:hover .gtab-count { color: #047857; background: rgba(5,150,105,.14); }
+.gallery-tabs .gtab.active .gtab-count { color: #047857; background: rgba(5,150,105,.16); }
 
 @media (max-width: 640px) {
   .gallery-tabs {
@@ -226,7 +226,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-  border-bottom: 2px solid var(--border, #1F4A3A);
+  border-bottom: 2px solid #e2e8f0;
   padding-bottom: 10px;
 }
 .album-title {
@@ -235,13 +235,13 @@
   margin: 0;
   font-weight: 700;
 }
-.album-title i { color: #34D399; margin-right: 8px; }
+.album-title i { color: #059669; margin-right: 8px; }
 .album-count {
-  background: rgba(52, 211, 153, 0.12);
-  color: #34D399;
+  background: rgba(5, 150, 105, 0.1);
+  color: #047857;
   padding: 3px 12px;
   border-radius: 99px;
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  border: 1px solid rgba(5, 150, 105, 0.3);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -281,9 +281,9 @@
   overflow: hidden;
   border-radius: var(--radius-sm, 5px);
   display: block;
-  background: var(--bg-secondary, #0A2E23);
+  background: #f1f5f9;
   max-height: 240px;
-  border: 1px solid var(--border, #1F4A3A);
+  border: 1px solid #e2e8f0;
 }
 .album-photo img {
   width: 100%;
@@ -319,20 +319,20 @@
 .album-more {
   aspect-ratio: 1;
   max-height: 240px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 2px dashed var(--border, #1F4A3A);
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
   border-radius: var(--radius-sm, 5px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #A9C4B5;
+  color: #475569;
   font-family: inherit;
   text-decoration: none;
   transition: all 0.2s;
   cursor: pointer;
 }
-.album-more:hover { border-color: #34D399; color: #34D399; }
+.album-more:hover { border-color: #059669; color: #059669; }
 .album-more span { font-size: 1.6rem; font-weight: 700; }
 .album-more small { font-size: 0.78rem; }
 

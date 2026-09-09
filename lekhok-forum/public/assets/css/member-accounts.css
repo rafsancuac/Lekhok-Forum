@@ -15,7 +15,7 @@
 .btn-secondary:disabled{opacity:.6;cursor:wait}
 .mc-result{margin-top:16px}
 .mc-msg{padding:12px 14px;border-radius:6px;font-size:.88rem;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px}
-.mc-msg.ok{background:rgba(16,185,129,.13);border:1px solid rgba(5,150,105,.38);color:#6EE7B7}
+.mc-msg.ok{background:rgba(16,185,129,.13);border:1px solid rgba(5,150,105,.38);color:#047857}
 .mc-msg.err{background:rgba(239,68,68,.13);border:1px solid rgba(248,113,113,.4);color:#FCA5A5}
 .mc-msg.warn{background:rgba(251,146,60,.13);border:1px solid rgba(251,146,60,.4);color:#FDBA74}
 .mc-found{border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-top:14px;background:var(--card)}
