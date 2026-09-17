@@ -6,8 +6,12 @@ const rolePolicy = require('../helpers/role-policy');
 const { displayName } = require('../helpers/display-name');
 
 // ── ডুপ্লিকেট-নোটিফিকেশন গার্ড: একই ইউজার+টাইপ+বডি ১ মিনিটের মধ্যে দ্বিতীয়বার ঢোকে না ──
-async function notifyOnce(uid, type, title, body, link, windowMin) {
+// সেশন ৯১ (B4): ঐচ্ছিক prefsKind — প্রাপকের notify_prefs[kind]===false হলে নোটিফিকেশনই হয় না
+// (মেসেজ-পরিবারে 'notify_messages'; মিউট-চেক আলাদাই আছে — প্রেফ = স্থায়ী, মিউট = প্রতি-কথোপকথন)।
+const { prefAllows } = require('../helpers/notify');
+async function notifyOnce(uid, type, title, body, link, windowMin, prefsKind) {
   try {
+    if (prefsKind && !(await prefAllows(uid, prefsKind))) return false;
     const dup = await db.prepare(
       "SELECT id FROM notifications WHERE user_id = ? AND type = ? AND body = ? AND created_at >= datetime('now', ?) LIMIT 1"
     ).get(uid, type, body, '-' + (windowMin || 10) + ' minutes');
@@ -472,7 +476,7 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   // Notify recipient (dedup: ১০ মিনিটে একই বডির দ্বিতীয় নোটিফিকেশন নয়; মিউট-হলে নয়)
   if (other.id !== me && !(await isConvMuted(conv.id, other.id))) {
-    await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username);
+    await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username, 10, 'notify_messages');
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
   res.redirect('/messages/' + req.params.username);
@@ -520,7 +524,7 @@ router.post('/messages/group/create', ensureAuth, async (req, res) => {
     try { await db.prepare('INSERT INTO conversation_members (conversation_id, user_id, added_by) VALUES (?, ?, ?)').run(convId, uid, me); } catch (e) {}
   }
   for (const uid of all) {
-    if (uid !== me) await notifyOnce(uid, 'message', 'নতুন গ্রুপ', `${req.session.user.full_name} আপনাকে "${title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + convId);
+    if (uid !== me) await notifyOnce(uid, 'message', 'নতুন গ্রুপ', `${req.session.user.full_name} আপনাকে "${title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + convId, 10, 'notify_messages');
   }
   res.redirect('/messages/g/' + convId + (blockedCount ? ('?blocked=' + blockedCount) : ''));
 });
@@ -574,7 +578,7 @@ router.post('/messages/g/:id', ensureAuth, withUpload(attachmentUpload), async (
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   const members = await db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(conv.id);
   for (const m of members) {
-    if (m.user_id !== me && !(await isConvMuted(conv.id, m.user_id))) await notifyOnce(m.user_id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} (${conv.title}): ${(body || '📎').slice(0, 60)}`, '/messages/g/' + conv.id);
+    if (m.user_id !== me && !(await isConvMuted(conv.id, m.user_id))) await notifyOnce(m.user_id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} (${conv.title}): ${(body || '📎').slice(0, 60)}`, '/messages/g/' + conv.id, 10, 'notify_messages');
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
   res.redirect('/messages/g/' + conv.id);

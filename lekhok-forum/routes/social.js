@@ -6,6 +6,7 @@ const totp = require('../helpers/totp');
 const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload');
 const rolePolicy = require('../helpers/role-policy');
 const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
+const { notifyIfAllowed } = require('../helpers/notify'); // সেশন ৯১ (B4): প্রেফ-গেটেড নোটিফিকেশন
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCurrentUser(req) {
@@ -333,9 +334,8 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
     const postId = result.lastInsertRowid;
     for (const m of mentioned) {
       if (m.id !== req.session.user.id) {
-        await db.prepare(`INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, 'mention', ?, ?, ?)`).run(
-          m.id, 'ম্যানশন', req.session.user.full_name + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId
-        );
+        // B4: প্রাপকের notify_comments প্রেফ সম্মান করি (ম্যানশন = কমেন্ট-পরিবার)
+        await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', req.session.user.full_name + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId);
       }
     }
   } catch (e) {}
@@ -614,12 +614,10 @@ async function toggleLike(req, res) {
   } else {
     await db.prepare('INSERT INTO likes (user_id, post_id) VALUES (?, ?)').run(userId, postId);
     await db.prepare('UPDATE posts SET like_count = like_count + 1 WHERE id = ?').run(postId);
-    // notify post author
+    // notify post author — B4: notify_reactions প্রেফ-গেট (type 'like' = রিঅ্যাকশন-পরিবার)
     const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(postId);
     if (post && post.author_id !== userId) {
-      await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-        post.author_id, 'like', 'নতুন লাইক', `${req.session.user.full_name} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + postId
-      );
+      await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${req.session.user.full_name} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + postId);
     }
   }
   res.redirect(back);
@@ -649,12 +647,10 @@ router.post('/articles/:id/comment', ensureLoggedIn, async (req, res) => {
     req.params.id, req.session.user.id, body.trim(), parent_id || null
   );
   await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(req.params.id);
-  // notify
+  // notify — B4: প্রাপকের notify_comments প্রেফ-গেট
   const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(req.params.id);
   if (post && post.author_id !== req.session.user.id) {
-    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-      post.author_id, 'comment', 'নতুন মন্তব্য', `${req.session.user.full_name} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + req.params.id
-    );
+    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${req.session.user.full_name} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + req.params.id);
   }
   res.redirect('/articles/' + req.params.id + '#comments');
 });
@@ -701,9 +697,8 @@ router.post(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
     const postId = r.lastInsertRowid;
     for (const m of mentioned) {
       if (m.id !== req.session.user.id) {
-        await db.prepare(`INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, 'mention', ?, ?, ?)`).run(
-          m.id, 'ম্যানশন', req.session.user.full_name + ' আপনাকে একটি প্রশ্নে ম্যানশন করেছেন', '/qa/' + postId
-        );
+        // B4: প্রাপকের notify_comments প্রেফ সম্মান করি (প্রশ্ন-ম্যানশন)
+        await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', req.session.user.full_name + ' আপনাকে একটি প্রশ্নে ম্যানশন করেছেন', '/qa/' + postId);
       }
     }
   } catch (e) {}
@@ -1271,6 +1266,51 @@ router.get('/profile/:username', async (req, res) => {
   });
 });
 
+// ── D2 (সেশন ৯১): পাবলিক সংরক্ষণ-তালিকা — /profile/:username/bookmarks ─────
+// bookmarks_public টগল (সেটিংস → গোপনীয়তা) চালু থাকলে যে-কেউ দেখতে পারে;
+// বন্ধ থাকলে শুধু মালিক (বাকিরা স্টাইলড লক-স্ক্রিন দেখে — কাঁচা 403 নয়)।
+router.get('/profile/:username/bookmarks', async (req, res) => {
+  const profile = await db.prepare('SELECT * FROM users WHERE username = ? AND status != ?').get(req.params.username, 'banned');
+  if (!profile) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  const isOwner = req.session.user && req.session.user.id === profile.id;
+  const isPublic = Number(profile.bookmarks_public) === 1;
+  const privacyBlocked = !isOwner && !isPublic;
+
+  let items = [];
+  if (!privacyBlocked) {
+    items = await db.prepare(`
+      SELECT p.id, p.type, p.title, p.body, p.excerpt, p.cover_image, p.tags,
+             p.like_count, p.comment_count, p.view_count, p.published_at,
+             u.id AS author_id, u.full_name AS author_name, u.username AS author_username,
+             u.avatar_url AS author_avatar,
+             b.created_at AS saved_at
+      FROM bookmarks b
+      JOIN posts p ON b.post_id = p.id
+      JOIN users u ON p.author_id = u.id
+      WHERE b.user_id = ? AND p.status = 'published'
+      ORDER BY b.created_at DESC LIMIT 60`).all(profile.id);
+    for (const it of items) {
+      it.display_excerpt = mdPlain85(it.excerpt || it.body || '', 150); // মার্কডাউন-স্ট্রিপ প্যারিটি
+      const words = (it.body || '').trim() ? (it.body || '').trim().split(/\s+/).length : 0;
+      it.read_min = Math.max(1, Math.round(words / 130));
+    }
+  }
+
+  // মিনি-হিরো স্ট্যাট (প্রোফাইলের সাথে সংগতি)
+  const totalPosts = (await db.prepare("SELECT COUNT(*) c FROM posts WHERE author_id = ? AND status = 'published'").get(profile.id)).c;
+  const followerCount = (await db.prepare('SELECT COUNT(*) c FROM follows WHERE following_id = ?').get(profile.id)).c;
+
+  const BN91 = '০১২৩৪৫৬৭৮৯';
+  const bn91 = (n) => String(n).replace(/\d/g, d => BN91[+d]);
+  res.render('user/profile-bookmarks', {
+    profile, items, isOwner, isPublic, privacyBlocked,
+    totalPosts, followerCount,
+    bn: bn91,
+    req,
+    currentPath: '/profile/' + profile.username + '/bookmarks'
+  });
+});
+
 // ── সেশন ৮৩: পিনড-পোস্ট টগল (মালিক-অনলি) — একসাথে একটি লেখা পিন থাকে ──────────
 router.post('/profile/:username/pin', ensureLoggedIn, async (req, res) => {
   const target = await db.prepare('SELECT id FROM users WHERE username = ?').get(req.params.username);
@@ -1338,9 +1378,7 @@ router.post('/api/like', async (req, res) => {
       await db.prepare('UPDATE posts SET like_count = like_count + 1 WHERE id = ?').run(id);
       const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(id);
       if (post && post.author_id !== userId) {
-        await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-          post.author_id, 'like', 'নতুন লাইক', `${req.session.user.full_name} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + id
-        );
+        await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${req.session.user.full_name} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + id);
       }
     }
     const p = await db.prepare('SELECT like_count FROM posts WHERE id = ?').get(id);
@@ -1373,9 +1411,7 @@ router.post('/api/comment', async (req, res) => {
   await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(post_id);
   const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(post_id);
   if (post && post.author_id !== req.session.user.id) {
-    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-      post.author_id, 'comment', 'নতুন মন্তব্য', `${req.session.user.full_name} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + post_id
-    );
+    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${req.session.user.full_name} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + post_id);
   }
   // Return the new comment id so callers (inline reply UI, tests) can chain
   // follow-ups like /api/comment with parent_id.
@@ -1407,9 +1443,7 @@ router.post('/follow/:userId', async (req, res) => {
   } else {
     await db.prepare('INSERT INTO follows (follower_id, following_id) VALUES (?, ?)').run(req.session.user.id, targetId);
     const target = await db.prepare('SELECT username FROM users WHERE id = ?').get(targetId);
-    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-      targetId, 'follow', 'নতুন ফলোয়ার', `${req.session.user.full_name} আপনাকে ফলো করেছেন`, '/profile/' + (target?.username || '')
-    );
+    await notifyIfAllowed(targetId, 'notify_follows', 'follow', 'নতুন ফলোয়ার', `${req.session.user.full_name} আপনাকে ফলো করেছেন`, '/profile/' + (target?.username || ''));
     return res.json({ following: true });
   }
 });
@@ -1553,7 +1587,36 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
   try { myInterests = JSON.parse(await db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {}
   const tagPool = await getTagPool(24);
 
-  res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, stats, activity, myInterests, tagPool, REACTION_META, currentPath: '/me' });
+  // ── D3 (সেশন ৯১): লেখা-স্ট্যাটিসটিক্স — মোট-পাঠ/প্রতিক্রিয়া/মন্তব্য + ৬-মাসিক
+  // প্রকাশনা-গ্রাফ (হাতে-বানানো SVG-বার, নতুন লাইব্রেরি নয়) + সেরা-লেখা। ──
+  let totals91 = { views: 0, likes: 0, comments: 0 };
+  try {
+    const agg = await db.prepare("SELECT COALESCE(SUM(view_count),0) v, COALESCE(SUM(like_count),0) l, COALESCE(SUM(comment_count),0) c FROM posts WHERE author_id = ? AND status = 'published'").get(me.id);
+    totals91 = { views: agg.v || 0, likes: agg.l || 0, comments: agg.c || 0 };
+  } catch (_) {}
+  let monthly91 = [];
+  try {
+    const rows91 = await db.prepare(`
+      SELECT strftime('%Y-%m', COALESCE(published_at, created_at)) AS ym, COUNT(*) AS c
+      FROM posts
+      WHERE author_id = ? AND status = 'published'
+        AND COALESCE(published_at, created_at) >= datetime('now', '-5 months', 'start of month')
+      GROUP BY ym`).all(me.id);
+    const byYm91 = {}; rows91.forEach(r => { byYm91[r.ym] = r.c; });
+    const BN_MONTHS91 = ['জানু', 'ফেব', 'মার্চ', 'এপ্রি', 'মে', 'জুন', 'জুলা', 'আগ', 'সেপ্ট', 'অক্টো', 'নভে', 'ডিসে'];
+    const now91 = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d91 = new Date(now91.getFullYear(), now91.getMonth() - i, 1);
+      const ym91 = d91.getFullYear() + '-' + String(d91.getMonth() + 1).padStart(2, '0');
+      monthly91.push({ label: BN_MONTHS91[d91.getMonth()], count: byYm91[ym91] || 0 });
+    }
+  } catch (_) { /* পুরনো স্কিমা — চার্ট বাদ */ }
+  let bestPost91 = null;
+  try {
+    bestPost91 = await db.prepare("SELECT id, title, type, view_count FROM posts WHERE author_id = ? AND status = 'published' ORDER BY view_count DESC LIMIT 1").get(me.id) || null;
+  } catch (_) {}
+
+  res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, stats, activity, myInterests, tagPool, REACTION_META, totals91, monthly91, bestPost91, bn91: (n) => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]), currentPath: '/me' });
 });
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -2081,9 +2144,8 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
         const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(target_id);
         if (post && post.author_id !== me.id) {
           const labels = { love: '❤️ ভালোবাসা', haha: '😂 হাসি', wow: '😮 বিস্ময়' };
-          await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
-            .run(post.author_id, 'reaction', labels[reaction_type] || 'প্রতিক্রিয়া',
-                 me.full_name + ' আপনার পোস্টে প্রতিক্রিয়া জানিয়েছেন', '/articles/' + target_id);
+          await notifyIfAllowed(post.author_id, 'notify_reactions', 'reaction', labels[reaction_type] || 'প্রতিক্রিয়া',
+            me.full_name + ' আপনার পোস্টে প্রতিক্রিয়া জানিয়েছেন', '/articles/' + target_id);
         }
       }
     }
@@ -2176,11 +2238,10 @@ router.post('/qa/:id/answer', ensureLoggedIn, async (req, res) => {
   if (!body || !body.trim()) return res.redirect('/qa/' + qid + '?err=empty');
   const r = await db.prepare('INSERT INTO comments (post_id, author_id, body) VALUES (?, ?, ?)').run(qid, me.id, body.trim());
   await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(qid);
-  // Notify question author
+  // Notify question author — B4: প্রাপকের notify_comments প্রেফ-গেট
   const q = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(qid);
   if (q && q.author_id !== me.id) {
-    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
-      .run(q.author_id, 'comment', 'নতুন উত্তর', me.full_name + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid);
+    await notifyIfAllowed(q.author_id, 'notify_comments', 'comment', 'নতুন উত্তর', me.full_name + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid);
   }
   res.redirect('/qa/' + qid + '#answer-' + r.lastInsertRowid);
 });

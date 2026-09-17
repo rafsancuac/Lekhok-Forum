@@ -58,8 +58,12 @@ router.post('/login', async (req, res) => {
   const lk43 = (req.ip || '') + '|' + String(req.body.username || '').toLowerCase();
   if (loginLimited(lk43)) return res.status(429).render('user/login', { error: 'অনেকবার ব্যর্থ চেষ্টা হয়েছে। ১৫ মিনিট পর আবার চেষ্টা করুন।', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
   try {
-    const { username, password } = req.body;
-    const ident = String(username || '').trim();
+    // সেশন ৯১-ফিক্স: ফিল্ড-বাইন্ড ক্র্যাশ-গার্ড — username/password অনুপস্থিত (বা
+    // নন-স্ট্রিং) হলে sql.js "bind a value of an unknown type (undefined)"-500 হতো;
+    // এখন সবসময় স্ট্রিং-কোয়ার্স → গ্রেসফুল "ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড"।
+    const username = String(req.body && req.body.username || '');
+    const password = String(req.body && req.body.password || '');
+    const ident = username.trim();
     // টাস্ক ১৪: Member ID / Email / username — তিনটিই লগইন আইডেন্টিফায়ার
     // (Section 13: Member ID বা Email; username ব্যাকওয়ার্ড-কম্প্যাট)
     let user = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(ident, ident);
@@ -109,7 +113,7 @@ router.post('/login', async (req, res) => {
     // ── সেশন ৮৩: admin_users-অ্যাকাউন্ট /login থেকে আর লগইন করতে পারে না ──
     // আগের "fallback" (সেশন ৮-এর সুবিধা) সরানো হলো — ইউজার/স্টাফ লগইন
     // ইন্টারফেস সম্পূর্ণ আলাদা (নিরাপত্তা-নির্দেশ)। স্টাফ যাবে /admin/login-এ।
-    const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
+    const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username.trim());
     if (admin && await bcrypt.compare(password, admin.password_hash)) {
       loginOk(lk43);
       return res.render('user/login', {

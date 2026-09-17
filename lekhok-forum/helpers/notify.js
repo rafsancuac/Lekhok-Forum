@@ -22,6 +22,40 @@ async function notifyUser(userId, type, title, body, link) {
   } catch (e) { console.error('[notify] notifyUser:', e.message); return false; }
 }
 
+// ── B4 (সেশন ৯১): নোটিফিকেশন-প্রেফ এনফোর্সমেন্ট ────────────────────────────────
+// সেটিংস-ম্যাট্রিক্সের ৫টি in-app কী (notify_reactions / notify_comments /
+// notify_follows / notify_messages / weekly_digest) আগে শুধু সেভ হতো —
+// নোটিফিকেশন-তৈরির পাথ চেক করত না। prefAllows() = কেন্দ্রীয় চেক:
+//   • প্রেফ আনসেট/পার্স-ফেইল → true (ব্যাক-কম্প্যাট: পুরনো ইউজার সব পান)
+//   • prefs[key] === false → false (ইউজার বন্ধ করেছে)
+// সিস্টেম/মডারেশন-নোটিফিকেশন (ব্যান/রিস্টোর ইত্যাদি) সবসময় যাবে — এসব
+// অ্যাকাউন্ট-স্টেটের গুরুত্বপূর্ণ নোটিশ, প্রেফের অধীন নয়।
+async function getNotifyPrefs(userId) {
+  try {
+    const row = await db.prepare('SELECT notify_prefs FROM users WHERE id = ?').get(userId);
+    if (!row) return {};
+    const p = JSON.parse(row.notify_prefs || '{}');
+    return (p && typeof p === 'object' && !Array.isArray(p)) ? p : {};
+  } catch (_) { return {}; }
+}
+
+async function prefAllows(userId, key) {
+  try {
+    const prefs = await getNotifyPrefs(userId);
+    return prefs[key] !== false;
+  } catch (_) { return true; }
+}
+
+// এক ধাপে: প্রেফ-চেক পাস করলেই নোটিফিকেশন লিখে দেয় (never-throws)।
+// kind = notify_prefs-কী (যেমন 'notify_reactions'); system-নোটিশে ব্যবহার করবেন না।
+async function notifyIfAllowed(userId, kind, type, title, body, link) {
+  try {
+    if (!userId) return false;
+    if (!(await prefAllows(userId, kind))) return false;
+    return await notifyUser(userId, type, title, body, link);
+  } catch (_) { return false; }
+}
+
 // ── Birthday auto-greeting ───────────────────────────────────────────────────
 // Once per day: create a 'birthday' notification for every user whose
 // birthday is today (and show_birth=1), so followers + the user get greeted.
@@ -52,4 +86,4 @@ async function runBirthdayCheck() {
   }
 }
 
-module.exports = { broadcastToAll, notifyUser, runBirthdayCheck };
+module.exports = { broadcastToAll, notifyUser, runBirthdayCheck, getNotifyPrefs, prefAllows, notifyIfAllowed };

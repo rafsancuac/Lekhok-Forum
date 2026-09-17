@@ -33,6 +33,7 @@
           <div class="card">
             <h2><i class="fas fa-user"></i> প্রোফাইল</h2>
             <form method="POST" action="/settings/profile" enctype="multipart/form-data">
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
               
               <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div>
@@ -97,6 +98,7 @@
           <div class="card">
             <h2><i class="fas fa-shield-alt"></i> গোপনীয়তা</h2>
             <form method="POST" action="/settings/privacy">
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
               <div class="field-row">
                 <div class="label-block"><strong>ইমেইল দেখান</strong><span>অন্যরা আপনার ইমেইল দেখতে পারবে</span></div>
                 <label class="toggle-switch"><input type="checkbox" name="show_email" value="1" <%= profileUser.show_email ? 'checked' : '' %>><span class="toggle-slider"></span></label>
@@ -130,7 +132,9 @@
                 </div>
               </div>
               <div class="field-row">
-                <div class="label-block"><strong>বুকমার্ক-তালিকা পাবলিক</strong><span>আপনার সংরক্ষিত লেখার তালিকা অন্যরা দেখতে পাবে</span></div>
+                <div class="label-block"><strong>বুকমার্ক-তালিকা পাবলিক</strong><span>আপনার সংরক্ষিত লেখার তালিকা অন্যরা দেখতে পাবে
+                  <%# D2 (সেশন ৯১): পাবলিক ভিউ-লিঙ্ক %>
+                  — <a href="/profile/<%= profileUser.username %>/bookmarks" target="_blank" rel="noopener">পাবলিক ভিউ দেখুন <i class="fas fa-external-link-alt" style="font-size:.7em"></i></a></span></div>
                 <label class="toggle-switch"><input type="checkbox" name="bookmarks_public" value="1" <%= profileUser.bookmarks_public ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
 <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
@@ -216,6 +220,7 @@
 
             <h3 style="margin:0 0 12px;font-size:15px;">পাসওয়ার্ড পরিবর্তন</h3>
             <form method="POST" action="/settings/account/password">
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
               <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required></div>
               <div class="field"><label>নতুন পাসওয়ার্ড</label><input class="input" type="password" name="new_password" required minlength="6"></div>
               <div class="field"><label>পুনরায় নতুন পাসওয়ার্ড</label><input class="input" type="password" name="confirm_password" required minlength="6"></div>
@@ -236,6 +241,7 @@
             <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;"><i class="fas fa-triangle-exclamation"></i> বিপজ্জনক অঞ্চল</h3>
             <p style="color:var(--text-muted);font-size:14px;">এই কার্যগুলো ফিরিয়ে আনা যাবে না — আগে ব্যাকআপ নিন।</p>
             <form method="POST" action="/settings/account/deactivate" style="display:inline">
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
               <button type="submit" class="btn btn-danger"><i class="fas fa-pause"></i> অ্যাকাউন্ট নিষ্ক্রিয় করুন</button>
             </form>
 
@@ -250,7 +256,8 @@
                 <input class="input dz-del-confirm" type="text" placeholder="নিশ্চিত করতে DELETE লিখুন" required autocomplete="off" style="text-transform:uppercase;">
                 <button type="button" class="btn btn-danger"><i class="fas fa-trash-can"></i> চিরতরে মুছুন</button>
               </div>
-              <form method="POST" action="/settings/account/delete" id="permDeleteForm80" hidden></form>
+              <form method="POST" action="/settings/account/delete" id="permDeleteForm80" hidden>
+                <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %></form>
             </div>
           </div>
         </section>

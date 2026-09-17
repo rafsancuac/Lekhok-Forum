@@ -126,6 +126,31 @@ router.post('/newsletter/subscribe', async (req, res) => {
 
 
 
+// ── E1 (সেশন ৯১): হেলথ-এন্ডপয়েন্ট (কোনো-অথ-নয়, লাইট) — সুপারভাইজার-হ্যাং-চেক
+// ও আপটাইম-মনিটরের জন্য। db-ok = একটি ট্রিভিয়াল SELECT; uptime/memory সহ।
+// ক্যাশ-নীতি: no-store (মনিটর সবসময় লাইভ-মান দেখুক)।
+router.get('/health', async (req, res) => {
+  let dbOk = false, dbLatencyMs = null;
+  const t0 = Date.now();
+  try {
+    await db.prepare('SELECT 1 AS ok').get();
+    dbOk = true;
+    dbLatencyMs = Date.now() - t0;
+  } catch (e) { /* db-ডাউনেও 503-এ কাঠামোবদ্ধ বডি দিই */ }
+  const mem = process.memoryUsage();
+  res.set('Cache-Control', 'no-store');
+  res.status(dbOk ? 200 : 503).json({
+    ok: dbOk,
+    status: dbOk ? 'healthy' : 'degraded',
+    db: { ok: dbOk, latency_ms: dbLatencyMs },
+    uptime_s: Math.round(process.uptime()),
+    memory: { rss_mb: Math.round(mem.rss / 1048576), heap_used_mb: Math.round(mem.heapUsed / 1048576) },
+    node: process.version,
+    env: process.env.VERCEL ? 'vercel' : 'local',
+    ts: new Date().toISOString()
+  });
+});
+
 // ── Global search (public, no auth) ─ session33: উপরের আকস্মিক module.exports টা সরানো হলো;
 // এখন সব রাউট রেজিস্টার হওয়ার পর একটিমাত্র এক্সপোর্ট (ফাইল শেষে)। ──
 router.get('/search', async (req, res) => {

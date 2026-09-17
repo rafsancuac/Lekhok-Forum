@@ -137,6 +137,10 @@
         <button type="button" class="pf-tab" data-tab="followers" role="tab" aria-selected="false"><i class="fas fa-users"></i> অনুসরণকারী</button>
         <button type="button" class="pf-tab" data-tab="following" role="tab" aria-selected="false"><i class="fas fa-user-friends"></i> অনুসরণ</button>
         <button type="button" class="pf-tab" data-tab="photos" role="tab" aria-selected="false"><i class="far fa-images"></i> ছবি</button>
+        <% if (isOwner || Number(profile.bookmarks_public) === 1) { %>
+          <%# D2 (সেশন ৯১): পাবলিক সংরক্ষণ-তালিকা লিংক-ট্যাব (মালিক সবসময়; অন্যরা bookmarks_public=1 হলে) %>
+          <a class="pf-tab pf-tab-href" href="/profile/<%= profile.username %>/bookmarks" role="tab" aria-selected="false"><i class="fas fa-bookmark"></i> সংরক্ষণ</a>
+        <% } %>
         <% if (isOwner) { %>
           <button type="button" class="pf-tab" data-tab="bookmarks" role="tab" aria-selected="false"><i class="fas fa-bookmark"></i> সংরক্ষিত</button>
           <button type="button" class="pf-tab" data-tab="drafts" role="tab" aria-selected="false"><i class="fas fa-file"></i> ড্রাফট</button>

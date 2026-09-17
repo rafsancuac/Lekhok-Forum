@@ -642,3 +642,7 @@
 @media (max-width:600px){
   .pf-role-badge{padding:3px 9px;font-size:11px}
 }
+
+/* ── সেশন ৯১ (D2): পাবলিক সংরক্ষণ-তালিকা লিংক-ট্যাব (anchor-সংস্করণ) ── */
+.pf-tab.pf-tab-href{ text-decoration:none; color:inherit; display:inline-flex; align-items:center; gap:6px; }
+.pf-tab.pf-tab-href:hover{ color:var(--pf-blue); }

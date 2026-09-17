@@ -27,6 +27,67 @@
       <div class="stat-tile"><div class="num"><%= stats.followers %></div><div class="lbl">অনুসরণকারী</div></div>
     </div>
 
+    <%# ═══ D3 (সেশন ৯১): লেখা-স্ট্যাটিসটিক্স — KPI + ৬-মাসিক SVG-গ্রাফ + সেরা-লেখা ═══ %>
+    <div class="ws91-card" aria-label="লেখা-স্ট্যাটিসটিক্স">
+      <div class="ws91-head">
+        <h2><i class="fas fa-chart-column"></i> লেখা-স্ট্যাটিসটিক্স</h2>
+        <span class="ws91-sub">প্রকাশিত লেখার সামগ্রিক পারফরম্যান্স · শেষ ৬ মাস</span>
+      </div>
+      <div class="ws91-kpis">
+        <div class="ws91-kpi">
+          <span class="ws91-kpi-ico v"><i class="far fa-eye"></i></span>
+          <div><b><%= bn91(totals91.views) %></b><span>মোট পাঠ</span></div>
+        </div>
+        <div class="ws91-kpi">
+          <span class="ws91-kpi-ico l"><i class="fas fa-heart"></i></span>
+          <div><b><%= bn91(totals91.likes) %></b><span>প্রতিক্রিয়া পেয়েছেন</span></div>
+        </div>
+        <div class="ws91-kpi">
+          <span class="ws91-kpi-ico c"><i class="far fa-comments"></i></span>
+          <div><b><%= bn91(totals91.comments) %></b><span>মন্তব্য পেয়েছেন</span></div>
+        </div>
+        <% if (bestPost91) { %>
+          <a class="ws91-kpi ws91-best" href="/<%= bestPost91.type === 'question' ? 'qa' : 'articles' %>/<%= bestPost91.id %>" title="<%= bestPost91.title %>">
+            <span class="ws91-kpi-ico b"><i class="fas fa-trophy"></i></span>
+            <div><b><%= bn91(bestPost91.view_count || 0) %></b><span class="ws91-best-label">সেরা লেখা: <%= bestPost91.title.length > 34 ? bestPost91.title.slice(0, 34) + '…' : bestPost91.title %></span></div>
+          </a>
+        <% } %>
+      </div>
+      <% if (monthly91.length) {
+           const maxC91 = Math.max.apply(null, monthly91.map(m => m.count).concat([1]));
+           const W91 = 560, H91 = 120, PAD91 = 6, GAP91 = 18;
+           const bw91 = (W91 - PAD91 * 2 - GAP91 * (monthly91.length - 1)) / monthly91.length;
+      %>
+      <div class="ws91-chart-wrap">
+        <svg class="ws91-chart" viewBox="0 0 <%= W91 %> <%= H91 + 22 %>" preserveAspectRatio="none" role="img" aria-label="মাসিক প্রকাশনা-গ্রাফ">
+          <defs>
+            <linearGradient id="ws91bar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#10B981"/>
+              <stop offset="100%" stop-color="#047857"/>
+            </linearGradient>
+          </defs>
+          <% monthly91.forEach(function (m91, i91) {
+               const h91 = Math.max(m91.count > 0 ? 10 : 3, Math.round((m91.count / maxC91) * (H91 - 14)));
+               const x91 = PAD91 + i91 * (bw91 + GAP91);
+               const y91 = H91 - h91;
+               const cx91 = x91 + bw91 / 2;
+          %>
+            <g class="ws91-bar-g">
+              <rect class="ws91-bar" x="<%= x91 %>" y="<%= y91 %>" width="<%= bw91 %>" height="<%= h91 %>" rx="6"
+                    fill="url(#ws91bar)" style="animation-delay:<%= i91 * 70 %>ms">
+                <title><%= m91.label %>: <%= bn91(m91.count) %>টি লেখা</title>
+              </rect>
+              <% if (m91.count > 0) { %>
+                <text class="ws91-bar-num" x="<%= cx91 %>" y="<%= y91 - 5 %>" text-anchor="middle"><%= bn91(m91.count) %></text>
+              <% } %>
+              <text class="ws91-bar-lbl" x="<%= cx91 %>" y="<%= H91 + 15 %>" text-anchor="middle"><%= m91.label %></text>
+            </g>
+          <% }); %>
+        </svg>
+      </div>
+      <% } %>
+    </div>
+
     <div class="personal-tabs" role="tablist">
       <button class="personal-tab active" data-tab="posts"><i class="fas fa-pen-nib"></i> আমার পোস্ট (<%= stats.posts %>)</button>
       <button class="personal-tab" data-tab="comments"><i class="fas fa-comment"></i> মন্তব্য (<%= stats.comments %>)</button>

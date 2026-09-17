@@ -941,3 +941,51 @@ html.theme-sepia .genre-badge{color:#7c5c2e;background:rgba(124,92,46,.1);border
 @keyframes feedcard-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .feed-card{animation:feedcard-in .4s ease both}
 @media (prefers-reduced-motion: reduce){.feed-card,.rsf-new{animation:none}}
+/* ═══ সেশন ৯১ (D3): লেখা-স্ট্যাটিসটিক্স কার্ড — /me ═══ */
+.ws91-card{
+  background:#fff;border:1px solid #e5e9ef;border-radius:16px;padding:18px 20px 16px;
+  margin:0 0 22px;box-shadow:0 1px 2px rgba(16,24,40,.04);
+}
+.ws91-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.ws91-head h2{margin:0;font-size:1.02rem;color:#111827;display:flex;align-items:center;gap:8px}
+.ws91-head h2 i{color:#059669}
+.ws91-sub{font-size:.78rem;color:#6b7280}
+.ws91-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.ws91-kpi{
+  display:flex;align-items:center;gap:10px;background:#F9FAFB;border:1px solid #EEF1F4;
+  border-radius:12px;padding:10px 12px;text-decoration:none;color:inherit;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.ws91-kpi:hover{transform:translateY(-2px);border-color:#A7F3D0;box-shadow:0 6px 16px rgba(6,95,70,.08)}
+.ws91-kpi-ico{
+  width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;flex:0 0 auto;
+}
+.ws91-kpi-ico.v{background:#ECFDF5;color:#059669}
+.ws91-kpi-ico.l{background:#FEF2F2;color:#DC2626}
+.ws91-kpi-ico.c{background:#EFF6FF;color:#2563EB}
+.ws91-kpi-ico.b{background:#FEFCE8;color:#A16207}
+.ws91-kpi b{display:block;font-size:1.02rem;color:#111827;line-height:1.2}
+.ws91-kpi div span{font-size:.72rem;color:#6b7280;display:block;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+a.ws91-best:hover .ws91-best-label{color:#065F46}
+.ws91-chart-wrap{background:linear-gradient(180deg,#FAFCFB,#F4F8F6);border:1px solid #EEF1F4;border-radius:12px;padding:12px 14px 6px}
+.ws91-chart{width:100%;height:auto;display:block}
+.ws91-bar{
+  transform-origin:bottom;animation:ws91grow .5s cubic-bezier(.22,1,.36,1) backwards;
+}
+@keyframes ws91grow{from{transform:scaleY(0);opacity:.3}to{transform:scaleY(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.ws91-bar{animation:none}}
+.ws91-bar:hover{filter:brightness(1.08)}
+.ws91-bar-num{font-size:11px;font-weight:700;fill:#065F46}
+.ws91-bar-lbl{font-size:11px;fill:#6b7280}
+@media (max-width:520px){
+  .ws91-card{padding:14px 12px 12px}
+  .ws91-bar-num{font-size:9px}
+  .ws91-bar-lbl{font-size:9px}
+}
+
+/* ═══ সেশন ৯১ ফিক্স: /me হিরো — .me-header-এর gradient-ব্যান্ডের উপর inner
+   সাদা-কার্ড বসে যায় → সাদা নাম/handle অদৃশ্য হয়ে যেত (light-on-light)।
+   ডিজাইন-ইনটেন্ট gradient-হিরো — inner transparent হলেই সঠিক লুক ফেরে। ═══ */
+.me-header-inner{background:transparent;border:0;box-shadow:none}
+.me-header{background:linear-gradient(120deg,#0f4c46 0,#059669 100%)}
