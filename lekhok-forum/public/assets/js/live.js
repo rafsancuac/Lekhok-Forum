@@ -97,6 +97,10 @@
       var icoHtml = n.actor_id
         ? '<span class="notif-ico has-avatar"><img class="notif-avatar" src="' + esc(n.actor_avatar || ('/avatar/' + n.actor_id)) + '" alt="" loading="lazy" onerror="this.parentNode.classList.remove(\'has-avatar\');this.remove()"><i class="fas ' + ico + '"></i></span>'
         : '<span class="notif-ico ico-' + esc(n.type) + '"><i class="fas ' + ico + '"></i></span>';
+      /* সেশন ১২৫: paintList-মিরর — header.ejs-canonical-শেলের (সেশন ১২১) হুবহু প্রতিরূপ।
+         আগের পেইন্ট এক-এঞ্চর-মার্কআপে ফেরত যেত — প্রতি-বেল-ওপেন রিফ্রেশে ডিসমিস-✕
+         মুছে যেত (E2E-ধরা-বাগ: "stale-repaint" ছিল আসলে এই মার্কআপ-ড্রিফট)।
+         ✕-আচরণ header.ejs-এর ডেলিগেটেড list121-লিসেনারে — পেইন্টেড-রোতেও স্বয়ংক্রিয়। */
       return '<a href="' + esc(n.link || '/notifications') + '" class="notif-item ' + (n.is_read ? '' : 'unread') + '">' +
         icoHtml +
         '<span class="notif-text">' +
@@ -105,7 +109,6 @@
         (n.type === 'call' ? '<span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span>' : '') + /* সেশন ৯৭-মার্জ: মিসড-কল-চিপ (সার্ভার-রেন্ডারড ড্রপডাউনের সাথে অভিন্ন) */
         '</span>' +
         (n.is_read ? '' : '<span class="notif-dot" title="অপঠিত"></span>') +
-        /* সেশন ১২১: ড্রপডাউন dismiss ✕ (header.ejs-সার্ভার-মার্কআপের সাথে অভিন্ন; হ্যান্ডলারও সেখানেই — ডেলিগেটেড) */
         '<button type="button" class="notif-x" data-dismiss="' + esc(n.id) + '" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>' +
         '</a>';
     }).join('');
