@@ -132,13 +132,36 @@ router.get('/', async (req, res) => {
   };
   const activity = await safe('activity', `SELECT id, username, role, action, target, detail, created_at FROM activity_logs ORDER BY id DESC LIMIT 12`);
   const audit = await safe('audit', `SELECT id, actor_name, action, table_name, item_id, detail, created_at FROM audit_log ORDER BY id DESC LIMIT 12`);
+
+  // ── সেশন ৮৬: রোল-হায়ারার্কি ও নজরদারি সারসংক্ষেপ (সুপার-এডমিনের চেইন-দৃশ্যমানতা) ──
+  // ① চেইন-গণনা (সুপার › এডমিন › মডারেটর › ইউজার) ② user_mgmt-স্কোপধারী মডারেটররা
+  // ③ নিষিদ্ধ ইউজার ④ মডারেটর-তদারকির সাম্প্রতিক অ্যাকশন (audit_log)।
+  const oversight = {
+    superadmins: (await safeOne('o-super', `SELECT COUNT(*) as c FROM users WHERE role='superadmin' AND status='active'`)).c
+      + admins.filter(a => a.role === 'superadmin').length,
+    adminsUsers: (await safeOne('o-admin', `SELECT COUNT(*) as c FROM users WHERE role='admin' AND status='active'`)).c,
+    adminPanel: admins.filter(a => a.role !== 'superadmin').length,
+    moderators: stats.moderators,
+    users: stats.users,
+    banned: (await safeOne('o-ban', `SELECT COUNT(*) as c FROM users WHERE status='banned'`)).c,
+    userMgmtMods: [],
+    recentActions: await safe('o-actions', `SELECT id, actor_name, action, detail, created_at FROM audit_log WHERE table_name='users' AND action='status' AND detail LIKE 'moderator-oversight%' ORDER BY id DESC LIMIT 8`)
+  };
+  try {
+    const umRows = await db.prepare(`
+      SELECT u.id, u.username, u.full_name, u.avatar_url, u.last_login,
+        (SELECT COUNT(*) FROM users WHERE status='banned') AS banned_total
+      FROM moderator_scopes ms JOIN users u ON u.id = ms.user_id
+      WHERE ms.scope = 'user_mgmt' AND u.status = 'active' LIMIT 12`).all();
+    oversight.userMgmtMods = umRows;
+  } catch (e) { console.error('[super:dashboard] userMgmtMods:', e.message); }
   const siteStatus = {
     maintenance: (await getSetting('maintenance_mode')) === '1',
     regApproval: (await getSetting('require_registration_approval')) === '1',
     claimApproval: (await getSetting('account_claim_requires_admin_approval')) === '1'
   };
   res.render('admin/super/dashboard', {
-    admins, stats, activity, audit, siteStatus, SUPER_AREAS,
+    admins, stats, activity, audit, siteStatus, SUPER_AREAS, oversight,
     flash: req.query.saved ? (FLASH[req.query.saved] || 'পরিবর্তন সফল') : null,
     flashErr: req.query.err === '1' ? 'অনুরোধ সম্পূর্ন হয়নি — আবার চেষ্টা করুন' : null,
     currentPath: '/admin/super'

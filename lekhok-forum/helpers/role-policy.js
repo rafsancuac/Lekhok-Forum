@@ -76,6 +76,11 @@ function connectionBlocked(roleA, roleB) {
   return isAdjacentControlPair(roleA, roleB);
 }
 
+// গ্রুপ-সংযোজন নীতি — ১:১ DM-এর মতোই, গ্রুপের মাধ্যমেও adjacent জোড়া সংযোগ তৈরি হতে দেওয়া হয় না
+// (অ্যাক্টর নিজের adjacent control-pair সদস্যকে গ্রুপে যুক্ত করতে পারবেন না)।
+const GROUP_PAIR_MESSAGE =
+  'রোল-নীতি: পাশাপাশি পদের (ইউজার↔মডারেটর, মডারেটর↔এডমিন, এডমিন↔সুপার-এডমিন) সদস্য গ্রুপে যুক্ত করা যায় না — সরাসরি সংযোগ-নীতি।';
+
 // স্টাফ-পোর্টালে সাধারণ ইউজারের প্রত্যাখ্যান-বার্তা
 const STAFF_PORTAL_USER_MESSAGE =
   'এটি স্টাফ লগইন পোর্টাল (সুপার এডমিন, এডমিন ও মডারেটরদের জন্য)। সাধারণ ব্যবহারকারীরা অনুগ্রহ করে মূল সাইটের লগইন ব্যবহার করুন।';
@@ -96,6 +101,7 @@ module.exports = {
   connectionBlocked,
   isAdjacentControlPair,
   DIRECT_PAIR_MESSAGE,
+  GROUP_PAIR_MESSAGE,
   STAFF_PORTAL_USER_MESSAGE,
   USER_PORTAL_STAFF_MESSAGE
 };

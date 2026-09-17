@@ -227,6 +227,42 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
 .super-manage-link:hover { text-decoration:underline; }
 .super-admin-summary { display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 10px; }
 
+/* ── সেশন ৮৬: রোল-হায়ারার্কি ও নজরদারি কার্ড (সুপার-এডমিন ড্যাশবোর্ড) ── */
+.super-oversight .card-title { display:flex; align-items:center; }
+.ov-chain { display:flex; align-items:stretch; gap:10px; flex-wrap:wrap; margin:10px 0 8px; }
+.ov-node { flex:1; min-width:120px; border:1px solid var(--ad-line); border-radius:var(--ad-radius-sm); background:#fff; padding:12px 14px; display:flex; flex-direction:column; gap:3px; text-align:center; transition:transform .15s, border-color .15s; }
+.ov-node:hover { transform:translateY(-2px); border-color:var(--su-violet-line); }
+.ov-node i { font-size:1.15rem; color:var(--su-violet); }
+.ov-node strong { font-size:.9rem; color:var(--ad-ink); font-family:var(--font-heading); }
+.ov-node span { font-size:.78rem; color:var(--ad-muted); }
+.ov-node.ov-super { background:var(--su-violet-soft); border-color:var(--su-violet-line); }
+.ov-node.ov-super i { color:var(--su-violet-ink); }
+.ov-arrow { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:74px; }
+.ov-arrow span { font-size:.68rem; font-weight:700; color:var(--su-violet-ink); white-space:nowrap; }
+.ov-arrow i { font-size:.95rem; color:var(--su-violet); opacity:.65; }
+.ov-note { font-size:.78rem; color:var(--ad-muted); background:var(--su-violet-soft); border:1px dashed var(--su-violet-line); border-radius:var(--ad-radius-sm); padding:8px 12px; line-height:1.65; display:flex; gap:8px; align-items:flex-start; margin:0 0 14px; }
+.ov-note i { color:var(--su-violet-ink); margin-top:2px; }
+.ov-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.ov-box { border:1px solid var(--ad-line); border-radius:var(--ad-radius-sm); padding:14px; background:#fdfdfc; }
+.ov-box h4 { font-size:.86rem; color:var(--ad-ink); display:flex; align-items:center; gap:8px; margin:0 0 10px; font-family:var(--font-heading); }
+.ov-box h4 i { color:var(--su-violet); }
+.ov-ban-chip { margin-left:auto; font-size:.7rem; font-weight:700; color:#991b1b; background:#fee2e2; border:1px solid #fecaca; padding:2px 9px; border-radius:999px; white-space:nowrap; }
+.ov-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; max-height:210px; overflow-y:auto; }
+.ov-list li { display:flex; gap:10px; align-items:center; border:1px solid var(--ad-line); border-radius:var(--ad-radius-sm); background:#fff; padding:8px 10px; }
+.ov-list li img { width:32px; height:32px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+.ov-list li i.fa-right-left { width:32px; height:32px; border-radius:50%; background:var(--su-violet-soft); color:var(--su-violet-ink); display:flex; align-items:center; justify-content:center; font-size:.8rem; flex-shrink:0; }
+.ov-list li strong { display:block; font-size:.84rem; color:var(--ad-ink); }
+.ov-list li span { display:block; font-size:.72rem; color:var(--ad-muted); margin-top:1px; }
+.ov-list.ov-actions li strong { font-family:var(--font-body); font-weight:600; }
+.ov-empty { font-size:.8rem; color:var(--ad-muted); margin:0; line-height:1.6; }
+.ov-empty a { color:var(--ad-accent-ink); font-weight:700; }
+@media (max-width: 860px) {
+  .ov-chain { flex-direction:column; }
+  .ov-arrow { flex-direction:row; justify-content:flex-start; padding:0 4px; }
+  .ov-node { flex-direction:row; text-align:left; align-items:center; gap:10px; }
+  .ov-grid { grid-template-columns:1fr; }
+}
+
 /* ── সাইট-স্ট্যাটাস টাইল ── */
 .site-status-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
 .status-tile { border:1px solid var(--ad-line); border-radius:var(--ad-radius); padding:16px; display:flex; flex-direction:column; gap:12px; background:#fff; }

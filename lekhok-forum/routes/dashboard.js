@@ -396,9 +396,18 @@ router.post('/messages/group/create', ensureAuth, async (req, res) => {
   const convId = r.lastInsertRowid;
   const mine = await db.prepare('SELECT id FROM users WHERE id = ?').get(me);
   const all = new Set([me]);
+  let blockedCount = 0;
   for (const nm of names) {
-    const u = await db.prepare('SELECT id FROM users WHERE username = ? AND status = ?').get(nm, 'active');
-    if (u) all.add(u.id);
+    const u = await db.prepare('SELECT id, role FROM users WHERE username = ? AND status = ?').get(nm, 'active');
+    if (!u) continue;
+    // সেশন ৮৬: সরাসরি-কানেকশন নীতি — গ্রুপের মাধ্যমেও adjacent জোড়া সংযোগ নয়
+    if (rolePolicy.connectionBlocked(req.session.user.role, u.role)) { blockedCount++; continue; }
+    all.add(u.id);
+  }
+  if (all.size < 2) {
+    // শুধু নির্মাতা — কোনো অনুমোদিত সদস্য নেই
+    try { await db.prepare('DELETE FROM conversations WHERE id = ?').run(convId); } catch (e) {}
+    return res.redirect('/messages?err=' + encodeURIComponent(rolePolicy.GROUP_PAIR_MESSAGE));
   }
   for (const uid of all) {
     try { await db.prepare('INSERT INTO conversation_members (conversation_id, user_id, added_by) VALUES (?, ?, ?)').run(convId, uid, me); } catch (e) {}
@@ -406,7 +415,7 @@ router.post('/messages/group/create', ensureAuth, async (req, res) => {
   for (const uid of all) {
     if (uid !== me) await notifyOnce(uid, 'message', 'নতুন গ্রুপ', `${req.session.user.full_name} আপনাকে "${title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + convId);
   }
-  res.redirect('/messages/g/' + convId);
+  res.redirect('/messages/g/' + convId + (blockedCount ? ('?blocked=' + blockedCount) : ''));
 });
 
 // গ্রুপ চ্যাট ভিউ
@@ -427,7 +436,8 @@ router.get('/messages/g/:id', ensureAuth, async (req, res) => {
   res.render('user/messages-chat', {
     other, messages, conversations, conv, isGroup: true, members, reactionMap, myFlags,
     currentPath: '/messages', err: req.query.err || null,
-    note: req.query.added ? 'added' : (req.query.removed ? 'removed' : null)
+    note: req.query.added ? 'added' : (req.query.removed ? 'removed' : null),
+    blocked: req.query.blocked || null
   });
 });
 
@@ -476,10 +486,12 @@ router.post('/messages/g/:id/members/add', ensureAuth, async (req, res) => {
   if (!conv || !conv.is_group) return res.redirect('/messages');
   if (conv.user_a !== me) return res.redirect('/messages/g/' + conv.id + '?err=perm');
   const names = _groupNames(req.body.members);
-  let added = 0;
+  let added = 0, blocked81 = 0;
   for (const nm of names) {
-    const u = await db.prepare("SELECT id FROM users WHERE username = ? AND status = 'active'").get(nm);
+    const u = await db.prepare("SELECT id, role FROM users WHERE username = ? AND status = 'active'").get(nm);
     if (!u) continue;
+    // সেশন ৮৬: গ্রুপ-সদস্য সংযোজনেও সরাসরি-কানেকশন নীতি (অ্যাক্টর↔টার্গেট adjacent হলে বাদ)
+    if (rolePolicy.connectionBlocked(req.session.user.role, u.role)) { blocked81++; continue; }
     const ex = await db.prepare('SELECT 1 AS x FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(conv.id, u.id);
     if (ex) continue;
     try {
@@ -488,7 +500,7 @@ router.post('/messages/g/:id/members/add', ensureAuth, async (req, res) => {
       await notifyOnce(u.id, 'message', 'গ্রুপে যোগ', `${req.session.user.full_name} আপনাকে "${conv.title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + conv.id);
     } catch (e) {}
   }
-  res.redirect('/messages/g/' + conv.id + '?added=' + added);
+  res.redirect('/messages/g/' + conv.id + '?added=' + added + (blocked81 ? ('&blocked=' + blocked81) : ''));
 });
 
 router.post('/messages/g/:id/members/:uid/remove', ensureAuth, async (req, res) => {

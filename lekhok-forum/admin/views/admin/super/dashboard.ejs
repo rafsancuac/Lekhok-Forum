@@ -71,6 +71,52 @@
     <a href="/admin/claims"       class="stat-box v-amber"><span class="stat-ico"><i class="fas fa-id-card"></i></span><div><strong><%= stats.pendingClaims %></strong><span>অপেক্ষমাণ ক্লেইম</span></div></a>
   </div>
 
+  <!-- সেশন ৮৬: রোল-হায়ারার্কি ও নজরদারি সারসংক্ষেপ -->
+  <div class="card super-oversight">
+    <h3 class="card-title"><i class="fas fa-sitemap"></i> রোল-হায়ারার্কি ও নজরদারি <span style="font-size:.72rem;font-weight:600;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);padding:3px 10px;border-radius:999px;margin-left:8px;">সেশন ৮৩-নীতি</span></h3>
+
+    <%# চেইন-ভিজ্যুয়াল: প্রতিটি স্তর পরবর্তী স্তরকে নিয়ন্ত্রণ করে — পাশাপাশি পদের মধ্যে সরাসরি সংযোগ নেই %>
+    <div class="ov-chain">
+      <div class="ov-node ov-super"><i class="fas fa-crown"></i><strong>সুপার এডমিন</strong><span><%= oversight.superadmins %> জন</span></div>
+      <div class="ov-arrow"><span>নিয়ন্ত্রণ ›</span><i class="fas fa-user-shield"></i></div>
+      <div class="ov-node"><i class="fas fa-user-shield"></i><strong>এডমিন</strong><span><%= oversight.adminsUsers + oversight.adminPanel %> জন</span></div>
+      <div class="ov-arrow"><span>নিয়ন্ত্রণ ›</span><i class="fas fa-users-cog"></i></div>
+      <div class="ov-node"><i class="fas fa-users-cog"></i><strong>মডারেটর</strong><span><%= oversight.moderators %> জন</span></div>
+      <div class="ov-arrow"><span>তদারকি ›</span><i class="fas fa-users"></i></div>
+      <div class="ov-node"><i class="fas fa-users"></i><strong>ইউজার</strong><span><%= oversight.users %> জন</span></div>
+    </div>
+    <p class="ov-note"><i class="fas fa-circle-info"></i> নীতি: ঊর্ধ্বতন নিম্নতনের কাজ নিয়ন্ত্রণ করেন, কিন্তু পাশাপাশি পদের মধ্যে (ইউজার↔মডারেটর, মডারেটর↔এডমিন, এডমিন↔সুপার-এডমিন) সরাসরি মেসেজ/ফলো/গ্রুপ-সংযোগ বন্ধ — রোল-সুইচ কেবল নিয়োগে।</p>
+
+    <div class="ov-grid">
+      <div class="ov-box">
+        <h4><i class="fas fa-users-cog"></i> তদারকি-স্কোপধারী মডারেটর (ইউজার তদারকি)</h4>
+        <% if (oversight.userMgmtMods.length) { %>
+        <ul class="ov-list">
+          <% oversight.userMgmtMods.forEach(m => { %>
+          <li>
+            <img src="<%= m.avatar_url || '/avatar/' + m.id %>" alt="" loading="lazy">
+            <div><strong><%= m.full_name || m.username %></strong><span>@<%= m.username %><%= m.last_login ? ' · শেষ লগইন ' + (m.last_login + '').split(' ')[0] : '' %></span></div>
+          </li>
+          <% }) %>
+        </ul>
+        <% } else { %><p class="ov-empty">কোনো মডারেটরের 'ইউজার তদারকি' স্কোপ নেই — <a href="/admin/moderators">মডারেটর ব্যবস্থাপনা</a> থেকে দিন।</p><% } %>
+      </div>
+      <div class="ov-box">
+        <h4><i class="fas fa-gavel"></i> তদারকি-কার্যক্রম <span class="ov-ban-chip"><i class="fas fa-ban"></i> <%= oversight.banned %> নিষিদ্ধ ইউজার</span></h4>
+        <% if (oversight.recentActions.length) { %>
+        <ul class="ov-list ov-actions">
+          <% oversight.recentActions.forEach(a => { %>
+          <li>
+            <i class="fas fa-right-left"></i>
+            <div><strong><%= (a.detail || '').replace('moderator-oversight: ', '') %></strong><span><%= a.actor_name || 'স্টাফ' %> · <%= new Date(a.created_at).toLocaleDateString('bn-BD') %></span></div>
+          </li>
+          <% }) %>
+        </ul>
+        <% } else { %><p class="ov-empty">এখনো কোনো মডারেটর-তদারকি অ্যাকশন নেই।</p><% } %>
+      </div>
+    </div>
+  </div>
+
   <!-- অ্যাডমিন সারসংক্ষেপ -->
   <div class="card">
     <h3 class="card-title"><i class="fas fa-user-shield"></i> অ্যাডমিন অ্যাকাউন্ট <a href="/admin/super/admins" class="super-manage-link">ব্যবস্থাপনা করুন <i class="fas fa-arrow-right"></i></a></h3>
