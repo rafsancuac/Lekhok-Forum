@@ -342,3 +342,38 @@
     <% } %>
   </div>
 </section>
+
+<%# ── সেশন ৭২ (GSC-ফিক্স): সাম্প্রতিক লেখা — হোম থেকে আর্টিকেল-ক্রল-পাথ
+    (আগে হোমে কোনো আর্টিকেল-লিংক ছিল না; /articles/22-30 GSC-তে 'Discovered' ছিল) ── %>
+<% if (typeof recentArticles !== 'undefined' && recentArticles && recentArticles.length) { %>
+<section class="section reveal">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow"><i class="fas fa-pen-nib"></i> লেখকদের কালি</span>
+        <h2 class="section-title">সাম্প্রতিক <span class="accent">লেখা</span></h2>
+        <span class="accent-divider"></span>
+      </div>
+      <a href="/articles" class="link-more">সব লেখা দেখুন <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="notice-list notice-list--home reveal-stagger">
+      <% recentArticles.forEach(a => { %>
+        <a href="/articles/<%= a.id %>" class="notice-row notice-row--compact">
+          <span class="notice-row-icon cat-general">
+            <i class="fas fa-feather-alt"></i>
+          </span>
+          <span class="notice-row-main">
+            <span class="notice-row-top">
+              <span class="notice-row-title"><%= a.title %></span>
+            </span>
+          </span>
+          <span class="notice-row-meta">
+            <span class="notice-row-date"><i class="far fa-user"></i><%= a.author_name %></span>
+            <i class="fas fa-chevron-right notice-row-arrow"></i>
+          </span>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>

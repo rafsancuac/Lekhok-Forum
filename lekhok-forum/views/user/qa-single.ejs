@@ -1,6 +1,28 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: (post.title) + ' | প্রশ্নোত্তর | লেখক ফোরাম', extra_css: ['/assets/css/article.css'] }) %>
 
+<%# ── সেশন ৭২ (GSC-ফিক্স): QAPage JSON-LD — Google-এ সমৃদ্ধ ফলাফল + কনটেন্ট-সিগন্যাল ── %>
+<%
+  var _qText72 = (s) => String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  var _qaLd72 = {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    "mainEntity": {
+      "@type": "Question",
+      "name": post.title,
+      "text": _qText72(post.body),
+      "answerCount": (answers || []).length,
+      "author": { "@type": "Person", "name": post.full_name },
+      "datePublished": post.published_at || post.created_at || undefined,
+      "acceptedAnswer": undefined,
+      "suggestedAnswer": (answers || []).map(function (a) {
+        return { "@type": "Answer", "text": _qText72(a.body), "datePublished": a.created_at || undefined, "author": { "@type": "Person", "name": a.full_name } };
+      })
+    }
+  };
+%>
+<script type="application/ld+json"><%- JSON.stringify(_qaLd72) %></script>
+
   <div class="article-wrap qa-wrap">
     <article class="article-main card">
       <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
@@ -87,6 +109,30 @@
         <% } %>
       </div>
     </article>
+
+    <%# ── সেশন ৭২ (GSC-ফিক্স): সম্পর্কিত প্রশ্ন — অন্য qa-পেজে ইন্টারনাল লিংক ── %>
+    <% if (typeof relatedQ !== 'undefined' && relatedQ && relatedQ.length) { %>
+      <div class="card" style="margin-top:24px; padding:22px;">
+        <h3 style="margin:0 0 14px; font-size:17px;"><i class="fas fa-layer-group" style="color:var(--accent,#059669)"></i> আরও প্রশ্ন</h3>
+        <div class="notice-list">
+          <% relatedQ.forEach(q => { %>
+            <a href="/qa/<%= q.id %>" class="notice-row notice-row--compact">
+              <span class="notice-row-icon cat-general"><i class="fas fa-question"></i></span>
+              <span class="notice-row-main">
+                <span class="notice-row-top"><span class="notice-row-title"><%= q.title %></span></span>
+              </span>
+              <span class="notice-row-meta">
+                <span class="notice-row-date"><i class="far fa-user"></i><%= q.author_name %></span>
+                <i class="fas fa-chevron-right notice-row-arrow"></i>
+              </span>
+            </a>
+          <% }) %>
+        </div>
+        <div style="text-align:center; margin-top:14px;">
+          <a href="/qa" class="link-more">সব প্রশ্ন দেখুন <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    <% } %>
   </div>
 
   <%- include('../partials/share-modal') %>

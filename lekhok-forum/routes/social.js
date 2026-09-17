@@ -135,19 +135,23 @@ router.get('/articles', async (req, res) => {
   if (filterType === 'column') { q += " AND (p.tags LIKE '%কলাম%' OR p.category = 'column')"; }
   if (filterType === 'letter') { q += " AND (p.tags LIKE '%চিঠি%' OR p.category = 'letter')"; }
   q += ' ORDER BY p.published_at DESC';
-  const articles = await db.prepare(q).all(...params);
-  for (const a of articles) {
+  // সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স): মূল কুয়েরি + ট্যাগ-পুল + বুকমার্ক প্যারালাল
+  // (আগে সিরিয়াল ৩টি + প্রতি-আর্টিকেল ইমেজ N+1 — Turso-তে সামগ্রিক TTFB ৩-৫ সেকেন্ড)।
+  const [articles, popularTags, bookmarkedIds72] = await Promise.all([
+    db.prepare(q).all(...params),
+    db.prepare("SELECT tags FROM posts WHERE type='article' AND tags IS NOT NULL").all(),
+    req.session.user
+      ? db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(req.session.user.id).then(r => r.map(x => x.post_id))
+      : Promise.resolve([]),
+  ]);
+  // ইমেজ-অ্যাটাচ N+1 → প্যারালাল (প্রতি পোস্টে একটি কুয়েরি, কিন্তু একসাথে ছোড়া)
+  await Promise.all(articles.map(async a => {
     a.images = (await db.getPostImages('post', a.id)).map(i => i.image_url);
     if (!a.images.length && a.cover_image) a.images = [a.cover_image];
-  }
-  const popularTags = await db.prepare("SELECT tags FROM posts WHERE type='article' AND tags IS NOT NULL").all();
+  }));
   // সেশন ৬৬: লিস্ট-কার্ডে সংরক্ষণ-স্টেট প্রিফিল — লগইন-ইউজারের সেভ-করা আইডি-সেট
   // (আগে কার্ডে বাটনই ছিল না; সেভ-করা থাকলেও far-আইকন দেখাত)
-  let bookmarkedIds = [];
-  if (req.session.user) {
-    const rows = await db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(req.session.user.id);
-    bookmarkedIds = rows.map(r => r.post_id);
-  }
+  const bookmarkedIds = bookmarkedIds72;
   res.render('lekhok-articles', {
     layout: 'layout',
     pageTitle: 'প্রকাশিত লেখা',
@@ -313,15 +317,16 @@ router.get('/articles/:id', async (req, res) => {
                                FROM comments c JOIN users u ON c.author_id = u.id
                                WHERE c.post_id = ? ORDER BY c.created_at ASC`).all(req.params.id);
   const myId = req.session.user ? req.session.user.id : null;
-  // (async migration) nested per-comment reaction lookups moved from sync
-  // .map() callbacks into a for..of loop awaiting each summary.
+  // সেশন ৭২: per-comment রিঅ্যাকশন N+1 সিরিয়াল for..of → এক প্যারালাল ব্যাচে
+  // (জনপ্রিয় আর্টিকেলে ২০+ কমেন্ট = ২০+ সিরিয়াল নেটওয়ার্ক রাউন্ড-ট্রিপ ছিল)।
+  const _rx72 = new Map();
+  await Promise.all(flatComments.map(c =>
+    getReactionSummary('comment_id', c.id, myId).then(r => _rx72.set(c.id, r))));
   const comments = [];
   for (const c of flatComments.filter(c => !c.parent_id)) {
-    const replies = [];
-    for (const r of flatComments.filter(r => r.parent_id === c.id)) {
-      replies.push({ ...r, reaction: await getReactionSummary('comment_id', r.id, myId) });
-    }
-    comments.push({ ...c, reaction: await getReactionSummary('comment_id', c.id, myId), replies });
+    const replies = flatComments.filter(r => r.parent_id === c.id)
+      .map(r => ({ ...r, reaction: _rx72.get(r.id) }));
+    comments.push({ ...c, reaction: _rx72.get(c.id), replies });
   }
 
   // check if current user liked/bookmarked
@@ -524,7 +529,10 @@ router.get('/qa', async (req, res) => {
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.type = 'question' AND p.status = 'published'
     ORDER BY p.published_at DESC`).all();
-  res.render('user/qa-list', { questions, currentPath: '/qa' });
+  res.render('user/qa-list', {
+    questions, currentPath: '/qa',
+    metaDesc: 'লেখক ফোরামের প্রশ্নোত্তর কর্নার — সদস্যদের লেখালেখি, সাহিত্য, শিক্ষা ও সংগঠন সংক্রান্ত প্রশ্ন করুন এবং অভিজ্ঞদের কাছ থেকে উত্তর পান।',
+  });
 });
 
 // ── New question ─────────────────────────────────────────────────────────────
@@ -599,18 +607,40 @@ router.post('/qa/:id/delete', ensureLoggedIn, async (req, res) => {
 // /qa/:id route existed → every question link on the site 404'd. Added the
 // missing /questions/:id alias (also /questions/new already exists).
 router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
-  const post = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender, u.designation
+  // সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স): post + answers + related একসাথে (আগে সিরিয়াল —
+  // Turso-তে প্রতিটি await একটি নেটওয়ার্ক রাউন্ড-ট্রিপ ছিল)।
+  const [post, answers, relatedQ72] = await Promise.all([
+    db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender, u.designation
                            FROM posts p JOIN users u ON p.author_id = u.id
-                           WHERE p.id = ? AND p.type = 'question' AND p.status = 'published'`).get(req.params.id);
-  if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
-  const answers = await db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
+                           WHERE p.id = ? AND p.type = 'question' AND p.status = 'published'`).get(req.params.id),
+    db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
                               FROM comments c JOIN users u ON c.author_id = u.id
                               WHERE c.post_id = ? AND c.parent_id IS NULL
-                              ORDER BY c.like_count DESC, c.created_at ASC`).all(req.params.id);
+                              ORDER BY c.like_count DESC, c.created_at ASC`).all(req.params.id),
+    // ইন্টারনাল লিংকিং: একই পেজ থেকে অন্য প্রশ্নের লিংক (ক্রল-পাথ তৈরি করে)
+    db.prepare(`SELECT p.id, p.title, u.full_name AS author_name FROM posts p
+                JOIN users u ON p.author_id = u.id
+                WHERE p.type = 'question' AND p.status = 'published' AND p.id != ?
+                ORDER BY p.published_at DESC LIMIT 5`).all(req.params.id),
+  ]);
+  if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   const myId = req.session.user ? req.session.user.id : null;
-  for (const a of answers) { a.reaction = await getReactionSummary('comment_id', a.id, myId); }
-  const reaction = await getReactionSummary('post_id', req.params.id, myId);
-  res.render('user/qa-single', { post, answers, reaction, REACTION_META, currentPath: '/qa' });
+  // সেশন ৭২: per-answer রিঅ্যাকশন-সামারি N+1 সিরিয়াল → প্যারালাল
+  await Promise.all([
+    ...answers.map(a => getReactionSummary('comment_id', a.id, myId).then(r => { a.reaction = r; })),
+    getReactionSummary('post_id', req.params.id, myId).then(r => { res.locals._qReaction72 = r; }),
+  ]);
+  const reaction = res.locals._qReaction72;
+  // সেশন ৭২ (GSC 'Alternate page with proper canonical tag' ফিক্স):
+  // আগে canonicalPath ছিল না → header.ejs-এর fallback currentPath('/qa') ব্যবহার হত,
+  // অর্থাৎ প্রতিটি qa-ডিটেইল পেজ নিজেকে /qa লিস্ট-পেজের ডুপ্লিকেট ঘোষণা করত!
+  const _md72 = String(post.body || post.excerpt || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  res.render('user/qa-single', {
+    post, answers, reaction, REACTION_META, currentPath: '/qa',
+    canonicalPath: '/qa/' + post.id,
+    metaDesc: _md72 ? (_md72.length > 197 ? _md72.slice(0, 197) + '…' : _md72) : null,
+    relatedQ: relatedQ72,
+  });
 });
 
 // ── Members directory ────────────────────────────────────────────────────────

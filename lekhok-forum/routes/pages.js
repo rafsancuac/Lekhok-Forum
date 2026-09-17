@@ -17,12 +17,27 @@ const MEMBER_JOIN = `
 `;
 
 router.get('/', async (req, res) => {
-  const recentNotices = await db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all();
+  // সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স — ক্রল-স্পিড): আগে ~১২টি সিরিয়াল await ছিল;
+  // Turso-তে প্রতিটি await = ১টি নেটওয়ার্ক রাউন্ড-ট্রিপ → ওয়ার্ম TTFB-ই ৩-৭ সেকেন্ড,
+  // যা Googlebot-এর ক্রল-রেট কমিয়ে দিত (GSC: "Discovered – currently not indexed")।
+  // এখন স্বাধীন কুয়েরিগুলো এক প্যারালাল ব্যাচে ছোড়া হয়।
+  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, recentArticles, faqItems42] = await Promise.all([
+    db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all(),
+    db.prepare("SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL").all(),
+    db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all(),
+    db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year ASC, m.sort_order ASC LIMIT 2").all(),
+    db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year DESC, m.sort_order DESC LIMIT 2").all(),
+    db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all(),
+    db.prepare("SELECT * FROM daily_content WHERE scheduled_date = ? AND published = 1 ORDER BY id").all(new Date().toISOString().slice(0, 10)),
+    // সেশন ৭২: আগের recentQA কুয়েরি ভিউতে অব্যবহৃত ছিল (ডেড কুয়েরি) — এখন
+    // "সাম্প্রতিক লেখা" সেকশনে রূপান্তর (হোম থেকে আর্টিকেল-ক্রল-পাথ তৈরি হয়)।
+    db.prepare("SELECT p.id, p.title, p.excerpt, u.full_name AS author_name, u.username AS author_username FROM posts p JOIN users u ON p.author_id = u.id WHERE p.type = 'article' AND p.status = 'published' ORDER BY p.published_at DESC LIMIT 4").all(),
+    db.getSectionItems('home_faq'),
+  ]);
+
   // Leadership: 2 current (president + GS) + 2 founders + 4 advisors
   // সর্বশেষ কার্যবর্ষের (সর্বোচ্চ term_year) সভাপতি ও সাধারণ সম্পাদক দেখাই
-  const homeTermYears = (await db.prepare(
-    "SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL"
-  ).all()).map(r => r.term_year).sort((a, b) => bnLead(b) - bnLead(a));
+  const homeTermYears = homeTermYearRows.map(r => r.term_year).sort((a, b) => bnLead(b) - bnLead(a));
   const latestTerm = homeTermYears[0] || null;
   // বর্তমান নেতৃত্ব = সর্বশেষ কার্যবর্ষের সভাপতি + সাধারণ সম্পাদক (সহ-সভাপতি নয় —
   // সেশন ২৯: ব্যবহারকারীর স্পেক অনুযায়ী ২য় পাতা হবে সাধারণ সম্পাদক)।
@@ -36,27 +51,17 @@ router.get('/', async (req, res) => {
       ? await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order LIMIT 2").all(latestTerm)
       : await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
   }
-  const founders = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all();
-  // Founding advisors (earliest by term_year, falling back to sort_order — since
-  // advisory members rarely have term_year set) vs. current advisors (latest/
-  // most-recently-added, by the same fallback). Distinct LIMIT 2 slices so the
-  // two groups don't show the same people when there are enough advisors seeded.
-  const foundingAdvisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year ASC, m.sort_order ASC LIMIT 2").all();
-  const currentAdvisors  = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year DESC, m.sort_order DESC LIMIT 2").all();
-  const advisors = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all();
   // Fallback: if no founders seeded, use earliest past leaders (first president + first GS)
   let foundersFinal = founders;
   if (!founders.length) {
-    const pastPres = await db.prepare("SELECT * FROM past_leaders WHERE role='president' ORDER BY term_start ASC LIMIT 1").all();
-    const pastGS = await db.prepare("SELECT * FROM past_leaders WHERE role='general_secretary' ORDER BY term_start ASC LIMIT 1").all();
+    const [pastPres, pastGS] = await Promise.all([
+      db.prepare("SELECT * FROM past_leaders WHERE role='president' ORDER BY term_start ASC LIMIT 1").all(),
+      db.prepare("SELECT * FROM past_leaders WHERE role='general_secretary' ORDER BY term_start ASC LIMIT 1").all(),
+    ]);
     foundersFinal = [...pastPres, ...pastGS];
   }
 
   // Today's daily content — split by content_type for the home page cards
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const todayRows = await db.prepare(
-    "SELECT * FROM daily_content WHERE scheduled_date = ? AND published = 1 ORDER BY id"
-  ).all(today);
   const todayByType = {
     quiz:        todayRows.find(r => r.content_type === 'quiz')        || null,
     this_day:    todayRows.find(r => r.content_type === 'this_day')    || null,
@@ -64,31 +69,13 @@ router.get('/', async (req, res) => {
     epaper:      todayRows.find(r => r.content_type === 'epaper')      || null,
     best_writer: todayRows.find(r => r.content_type === 'best_writer') || null
   };
-  for (const r of todayRows) { r.images = (await db.getPostImages('daily', r.id)).map(i => i.image_url); if (!r.images.length && r.image_url) r.images = [r.image_url]; }
+  // সেশন ৭২: প্রতি-রো ইমেজ-অ্যাটাচ সিরিয়াল লুপ → প্যারালাল
+  await Promise.all(todayRows.map(async r => {
+    r.images = (await db.getPostImages('daily', r.id)).map(i => i.image_url);
+    if (!r.images.length && r.image_url) r.images = [r.image_url];
+  }));
   const hasToday = Object.values(todayByType).some(v => v);
 
-  // Recent Q&A for home page folding section
-  const recentQA = await db.prepare("SELECT p.id, p.title, p.body, p.created_at, u.full_name as author_name, u.username as author_username FROM posts p JOIN users u ON p.author_id = u.id WHERE p.type = 'question' AND p.status = 'published' ORDER BY p.created_at DESC LIMIT 5").all();
-  // (সেশন ৫০) N+1 ফিক্স: আগে প্রতি প্রশ্নে ১ করে top-answer কুয়ারি (৫ কুয়ারি);
-  // এখন এক batch কুয়ারিতে সব প্রশ্নের শীর্ষ উত্তর আনি।
-  const qids = recentQA.map(q => q.id);
-  const topByQid = {};
-  if (qids.length) {
-    try {
-      const rows = await db.prepare(
-        `SELECT c.post_id, c.body, u.full_name AS author_name
-         FROM comments c JOIN users u ON c.author_id = u.id
-         WHERE c.post_id IN (${qids.map(() => '?').join(',')})
-         ORDER BY c.post_id, c.like_count DESC, c.created_at ASC`
-      ).all(...qids);
-      for (const r of rows) {
-        if (!(r.post_id in topByQid)) topByQid[r.post_id] = { body: r.body, author_name: r.author_name };
-      }
-    } catch (_) {}
-  }
-  for (const q of recentQA) q.topAnswer = topByQid[q.id] || null;
-
-  const faqItems42 = await db.getSectionItems('home_faq');
   res.render('lekhok-home', { faqItems42,
     layout: 'layout',
     pageTitle: 'হোম',
@@ -100,7 +87,7 @@ router.get('/', async (req, res) => {
     foundingAdvisors,
     currentAdvisors,
     advisors,
-    recentQA,
+    recentArticles,
     todayByType,
     hasToday
   });
@@ -115,7 +102,8 @@ router.get('/about', async (req, res) => {
       'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC LIMIT 8'
     ).all();
   } catch (e) { pressClippings = []; }
-  for (const c of pressClippings) { c.images = (await db.getPostImages('news', c.id)).map(i => i.image_url); if (!c.images.length && c.image_url) c.images = [c.image_url]; }
+  // সেশন ৭২: প্রেস-ক্লিপিং ইমেজ N+1 → প্যারালাল
+  await Promise.all(pressClippings.map(async c => { c.images = (await db.getPostImages('news', c.id)).map(i => i.image_url); if (!c.images.length && c.image_url) c.images = [c.image_url]; }));
   // সদস্য হওয়ার শর্তাবলি ধাপ-কার্ড (সেশন ৫১: এখন DB-চালিত — Add/Edit/Delete/Reorder)
   const condSteps = await db.getSectionItems('conditions_steps');
   res.render('lekhok-about', {
@@ -135,7 +123,7 @@ router.get('/press', async (req, res) => {
       'SELECT * FROM press_clippings WHERE is_active = 1 ORDER BY sort_order ASC, id DESC'
     ).all();
   } catch (e) { clippings = []; }
-  for (const c of clippings) { c.images = (await db.getPostImages('news', c.id)).map(i => i.image_url); if (!c.images.length && c.image_url) c.images = [c.image_url]; }
+  await Promise.all(clippings.map(async c => { c.images = (await db.getPostImages('news', c.id)).map(i => i.image_url); if (!c.images.length && c.image_url) c.images = [c.image_url]; }));
   res.render('lekhok-press', {
     layout: 'layout',
     pageTitle: 'পত্রিকায় আমাদের নিউজ',
@@ -213,7 +201,9 @@ router.get('/notices', async (req, res) => {
   } else {
     notices = await db.prepare('SELECT * FROM notices WHERE category = ? ORDER BY id DESC').all(category);
   }
-  for (const n of notices) n.images = (await db.getPostImages('notice', n.id)).map(i => i.image_url);
+  // সেশন ৭২: প্রতি-নোটিশ ইমেজ N+1 সিরিয়াল → প্যারালাল (GSC-তে /notices 'Discovered' ছিল —
+  // ২০+ নোটিশ = ২০+ সিরিয়াল Turso রাউন্ড-ট্রিপ ক্রল-স্পিড কমাত)
+  await Promise.all(notices.map(async n => { n.images = (await db.getPostImages('notice', n.id)).map(i => i.image_url); }));
   res.render('lekhok-notices', {
     layout: 'layout',
     pageTitle: 'বিজ্ঞপ্তি',
@@ -225,10 +215,13 @@ router.get('/notices', async (req, res) => {
 
 // ── Contact ──────────────────────────────────────────────────────────────────
 router.get('/contact', async (req, res) => {
-  const ch42 = await db.getSectionItems('contact_channels');
-  const uni42 = await db.getSectionItems('contact_university');
-  const tr42 = await db.getSectionItems('contact_transport');
-  const ts = await db.getTransportSchedule();
+  // সেশন ৭২: যোগাযোগ-পেজের ৪টি স্বাধীন কুয়েরি প্যারালাল
+  const [ch42, uni42, tr42, ts] = await Promise.all([
+    db.getSectionItems('contact_channels'),
+    db.getSectionItems('contact_university'),
+    db.getSectionItems('contact_transport'),
+    db.getTransportSchedule(),
+  ]);
   res.render('lekhok-contact', { ch42, uni42, tr42, ts,
     layout: 'layout',
     pageTitle: 'যোগাযোগ',
@@ -240,12 +233,14 @@ router.get('/contact', async (req, res) => {
 // ── Events ───────────────────────────────────────────────────────────────────
 router.get('/events', async (req, res) => {
   const today = new Date().toISOString().split('T')[0];
-  const upcoming = await db.prepare('SELECT * FROM events WHERE date >= ? ORDER BY date ASC').all(today);
-  const past     = await db.prepare('SELECT * FROM events WHERE date <  ? ORDER BY date DESC').all(today);
+  const [upcoming, past] = await Promise.all([
+    db.prepare('SELECT * FROM events WHERE date >= ? ORDER BY date ASC').all(today),
+    db.prepare('SELECT * FROM events WHERE date <  ? ORDER BY date DESC').all(today),
+  ]);
   // টাস্ক ১৩ (পর্ব ৪, অংশ ক): প্রতিটি ইভেন্টে post_images যোগ (ক্রম অনুযায়ী)
+  // সেশন ৭২: সিরিয়াল লুপ → প্যারালাল
   const _evImg = async (e) => { e.images = (await db.getPostImages('event', e.id)).map(i => i.image_url); if (!e.images.length && e.image_url) e.images = [e.image_url]; };
-  for (const e of upcoming) await _evImg(e);
-  for (const e of past)     await _evImg(e);
+  await Promise.all([...upcoming, ...past].map(_evImg));
   res.render('lekhok-events', {
     layout: 'layout',
     pageTitle: 'ইভেন্ট',

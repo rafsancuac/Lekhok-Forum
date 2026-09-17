@@ -204,6 +204,30 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.VERCEL ? 'auto' : false }
 }));
 
+// ── সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স): পাবলিক পেজে অ্যানোনিমাস CDN-ক্যাশ ──────────
+// সমস্যা: প্রতিটি রেসপন্সে _csrfTok + connect.sid সেট হত → Vercel Edge কখনো HTML
+// ক্যাশ করতে পারত না → প্রতিটি পেজভিউ = কোল্ড/ওয়ার্ম ল্যাম্বডা + ১২+ সিরিয়াল
+// Turso কুয়ারি (ওয়ার্ম TTFB ৩-৭s)। Googlebot ধীর হোস্টে ক্রল-রেট কমায় → GSC-তে
+// ৩২টি পেজ "Discovered – currently not indexed"।
+// সমাধান: লগ-আউট ভিজিটরের জন্য নির্দিষ্ট পাবলিক GET পেজে (কুয়েরি-স্ট্রিং ছাড়া)
+//  ১) s-maxage=300 + stale-while-revalidate — Vercel Edge ক্যাশ করে (~50ms TTFB)
+//  ২) ঐ রিকোয়েস্টে CSRF-কুকি/সেশন-রাইট স্কিপ — Set-Cookie-ই থাকে না
+// নিরাপত্তা-নোট: অ্যানোনিমাস পাবলিক পেজের ইন্টারঅ্যাকটিভ এন্ডপয়েন্ট (রিঅ্যাকশন/
+// বুকমার্ক/শেয়ার/নিউজলেটার) সব JSON/fetch — CSRF-মিডলওয়্যার শুধু urlencoded/
+// multipart গার্ড করে, তাই এপিমেরাল টোকেন যথেষ্ট; নেটিভ ফর্মের বিরল ক্ষেত্রে
+// আগের থেকেই গ্রেসফুল 303-রিকভারি (?csrf=1) আছে। লগইন-ইউজারের রেসপন্স
+// কখনো ক্যাশ-হেডার পায় না।
+const PUBLIC_CACHE_RE72 = /^\/$|^\/(about|articles|qa|notices|events|gallery|members|committee|team|press|constitution|resources|activities|achievements|contact|best-writer|birthdays|on-this-day|epaper|quiz)(\/(\d+|past|advisory|permanent))?\/?$/;
+app.use((req, res, next) => {
+  const _hasQuery72 = req.url && req.url.indexOf('?') !== -1;
+  const _anon72 = !(req.session && (req.session.user || req.session.adminUser));
+  if ((req.method === 'GET' || req.method === 'HEAD') && !_hasQuery72 && _anon72 && PUBLIC_CACHE_RE72.test(req.path)) {
+    res.locals._cacheablePublic72 = true;
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+  }
+  next();
+});
+
 // ── সেশন ৫৭: CSRF — ডাবল-সাবমিট কুকি + গ্রেসফুল ফেইল ──────────────────────────
 // লাইভ-রিপোর্টেড বাগ: async সেশন-স্টোর (Turso) + Vercel lambda-freeze-এ
 // csrfToken-এর সেশন-রাইট মাঝে মাঝে হারিয়ে যায় → ফর্মে রেন্ডার-হওয়া টোকেন
@@ -235,9 +259,17 @@ app.use(async (req, res, next) => {
     // টোকেন-উৎস: সেশন → কুকি → নতুন জেনারেট
     let tok57 = req.session.csrfToken || req.cookies[CSRF_COOKIE57];
     if (!tok57 || !/^[a-f0-9]{20,}$/i.test(String(tok57))) tok57 = crypto42.randomBytes(18).toString('hex');
-    req.session.csrfToken = tok57;   // সেশন-কপি best-effort; নির্ভরযোগ্য উৎস কুকি
-    res.locals.csrfToken = tok57;
-    res.cookie(CSRF_COOKIE57, tok57, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 60 * 60 * 1000, secure: process.env.VERCEL ? 'auto' : false });
+    // সেশন ৭২: ক্যাশেবল অ্যানোনিমাস পাবলিক GET — কুকিও নয়, সেশন-রাইটও নয়
+    // (দুটোর যেকোনো একটিই Set-Cookie বহন করে → Vercel Edge-ক্যাশ বাতিল হত)।
+    // এপিমেরাল টোকেন যথেষ্ট: ঐ পেজের ইন্টারঅ্যাকটিভ এন্ডপয়েন্ট JSON/fetch —
+    // CSRF-গার্ড urlencoded/multipart-এ সীমাবদ্ধ।
+    if (res.locals._cacheablePublic72) {
+      res.locals.csrfToken = tok57;
+    } else {
+      req.session.csrfToken = tok57;   // সেশন-কপি best-effort; নির্ভরযোগ্য উৎস কুকি
+      res.locals.csrfToken = tok57;
+      res.cookie(CSRF_COOKIE57, tok57, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 7 * 24 * 60 * 60 * 1000, secure: process.env.VERCEL ? 'auto' : false });
+    }
     res.locals.undoTrash = req.query.trashed || null;
     res.locals.undoBulk42 = (req.query.undo_mode && req.query.undo_ids) ? { mode: req.query.undo_mode, ids: String(req.query.undo_ids).split(','), base: req.query.undo_base || '' } : null;
     res.locals.undoSec42 = req.query.undo_sec || null;
@@ -319,13 +351,37 @@ const contentRegistry = require('./helpers/content-registry');
 const { C, Cbr } = require('./helpers/content-view-helpers')(contentRegistry);
 
 // ── Locals middleware (async — DB awaited; settings pre-loaded once) ────────
+// সেশন ৭২: settings-এর ১০-সেকেন্ড ইন-প্রসেস TTL ক্যাশ — প্রতি রিকোয়েস্টে একটি
+// Turso রাউন্ড-ট্রিপ বাঁচে (অ্যাডমিন-এডিট সর্বোচ্চ ১০s দেরিতে দেখায় — গ্রহণযোগ্য)।
+const _settingsCache72 = { at: 0, data: null };
+// সেশন ৭২ (GSC-ফিক্স): registry-তে নেই-এমন পাবলিক পেজের ইউনিক মেটা —
+// /constitution "Crawled – not indexed" ও বাকিদের ডুপ্লিকেট-ডেসক্রিপশন রোধে।
+const PATH_SEO_FALLBACK72 = {
+  '/qa':          { title: 'প্রশ্নোত্তর | লেখক ফোরাম', desc: 'লেখক ফোরামের প্রশ্নোত্তর কর্নার — লেখালেখি, সাহিত্য, শিক্ষা ও সংগঠন সংক্রান্ত প্রশ্ন করুন, অভিজ্ঞদের কাছ থেকে উত্তর পান।' },
+  '/quiz':        { title: 'আজকের কুইজ | লেখক ফোরাম', desc: 'লেখক ফোরামের দৈনিক কুইজ — প্রতিদিন নতুন প্রশ্ন, সঠিক উত্তরে স্ট্রিক ও লিডারবোর্ড।' },
+  '/constitution':{ title: 'গঠনতন্ত্র | লেখক ফোরাম', desc: 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়ের পূর্ণাঙ্গ গঠনতন্ত্র — নাম, লক্ষ্য, সদস্যতা, কমিটি ও কার্যবিধির ধারাসমূহ।' },
+  '/achievements':{ title: 'অর্জন ও সম্মাননা | লেখক ফোরাম', desc: 'লেখক ফোরামের জাতীয় প্রতিযোগিতায় অর্জন, ফেলোশিপ ও সম্মাননার সময়রেখা।' },
+  '/best-writer': { title: 'মাসিক সেরা লেখক | লেখক ফোরাম', desc: 'লেখক ফোরামের এই মাসের সেরা লেখক ও পূর্ববর্তী মাসের বিজয়ীদের তালিকা।' },
+  '/activities':  { title: 'সাংগঠনিক কার্যক্রম | লেখক ফোরাম', desc: 'লেখক ফোরামের সাংগঠনিক কার্যক্রমের আর্কাইভ — সভা, প্রশিক্ষণ ও বিশেষ আয়োজন।' },
+  '/on-this-day': { title: 'এই দিনে ইতিহাসে | লেখক ফোরাম', desc: 'আজকের দিনে ঘটে যাওয়া উল্লেখযোগ্য ঐতিহাসিক ঘটনাবলি — প্রতিদিন নতুন।' },
+  '/epaper':      { title: 'আজকের ই-পেপার | লেখক ফোরাম', desc: 'লেখক ফোরামের দৈনিক ই-পেপার — সাহিত্য ও মতামত পাতার নির্বাচিত সংকলন।' },
+  '/birthdays':   { title: 'আজকের জন্মদিন | লেখক ফোরাম', desc: 'লেখক ফোরামের আজকের ও আসন্ন জন্মদিনের সদস্যদের শুভেচ্ছা-তালিকা।' },
+};
 app.use(async (req, res, next) => {
   try {
     runBirthdayCheck().catch(() => {});  // cheap date-guarded check, once per day per process
     // One settings query per request; EJS templates get a SYNC accessor via
     // res.locals.getSetting (templates cannot await) — identical behaviour
-    // on the sql.js and Turso backends.
-    const settings = await db.getSettingsAll();
+    // on the sql.js and Turso backends. (সেশন ৭২: ১০s TTL)
+    let settings;
+    const _now72 = Date.now();
+    if (_settingsCache72.data && (_now72 - _settingsCache72.at) < 10000) {
+      settings = _settingsCache72.data;
+    } else {
+      settings = await db.getSettingsAll();
+      _settingsCache72.at = _now72;
+      _settingsCache72.data = settings;
+    }
     res.locals.siteName   = settings['site_name'] || 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়';
     res.locals.tagline    = settings['tagline']   || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।';
     res.locals.motto      = settings['motto']     || 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী';
@@ -349,6 +405,13 @@ app.use(async (req, res, next) => {
       if (matched) {
         res.locals.seoTitle = C(matched.key + '_meta_title', settings);
         res.locals.seoDesc  = C(matched.key + '_meta_desc', settings);
+      }
+      // সেশন ৭২: registry-বহির্ভূত পাবলিক পেজে ফলব্যাক মেটা (আগে এদের সবার
+      // description একই সাইট-ওয়াইড টেক্সট ছিল — ডুপ্লিকেট-মেটা ইনডেক্সিং-গুণ কমায়)
+      const _fb72 = PATH_SEO_FALLBACK72[path0];
+      if (_fb72) {
+        if (!res.locals.seoTitle) res.locals.seoTitle = _fb72.title;
+        if (!res.locals.seoDesc)  res.locals.seoDesc  = _fb72.desc;
       }
     } catch (_) { /* SEO defaults optional — never break rendering */ }
     res.locals.adminUser = req.session.adminUser || null;
@@ -422,6 +485,10 @@ app.use((req, res, next) => {
   const origSend = res.send.bind(res);
   
   function saveThen(cb) {
+    // সেশন ৭২: ক্যাশেবল অ্যানোনিমাস পাবলিক GET — সেশনে কোনো রাইটই হয়নি (CSRF-
+    // মিডলওয়্যার স্কিপ করেছে), তাই সেভও হবে না; req.session.save() নতুন সেশনে
+    // connect.sid Set-Cookie বহন করত → Vercel Edge-ক্যাশ বাতিল হয়ে যেত।
+    if (res.locals._cacheablePublic72) return cb();
     if (req.session && typeof req.session.save === 'function' && !req._sessionSaving) {
       req._sessionSaving = true;
       // সেশন ৪৬: সেফটি-নেট — সেশন-রাইট (Turso/DB) ধীর বা হ্যাং করলেও রিডাইরেক্ট

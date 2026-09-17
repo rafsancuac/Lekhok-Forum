@@ -16,14 +16,13 @@ async function getDailyAll(type, limit = 20) {
 }
 
 // টাস্ক ১৩ (পর্ব ৪, অংশ ক): প্রতিটি daily আইটেমে post_images যোগ (ক্রম অনুযায়ী)
+// সেশন ৭২: সিরিয়াল লুপ → প্যারালাল (কুইজ/ই-পেপার আর্কাইভ ৩০টি = ৩০ রাউন্ড-ট্রিপ ছিল)
 async function attachImages(items) {
   const list = Array.isArray(items) ? items : (items ? [items] : []);
-  for (const it of list) {
-    if (it) {
-      it.images = (await db.getPostImages('daily', it.id)).map(i => i.image_url);
-      if (!it.images.length && it.image_url) it.images = [it.image_url];
-    }
-  }
+  await Promise.all(list.filter(Boolean).map(async it => {
+    it.images = (await db.getPostImages('daily', it.id)).map(i => i.image_url);
+    if (!it.images.length && it.image_url) it.images = [it.image_url];
+  }));
   return items;
 }
 
@@ -113,30 +112,25 @@ async function quizLeaderboard(limit = 10) {
 }
 
 router.get('/quiz', async (req, res) => {
-  const today = await getDailyFor('quiz');
-  const archive = await getDailyAll('quiz', 30);
+  // সেশন ৭২: today + archive প্যারালাল; লগইন-ইউজারের অংশগুলোও প্যারালাল
+  const [today, archive] = await Promise.all([getDailyFor('quiz'), getDailyAll('quiz', 30)]);
   await attachImages([today, ...archive]);
   const todayId = today ? today.id : null;
 
   // সেশন ৬২: লগইন-ইউজারের সার্ভার-স্কোর + লিডারবোর্ড
-  let mine = null;
-  if (req.session.user) {
-    try { mine = await myQuizState(req.session.user.id); } catch (e) { mine = null; }
-  }
-  let board = null;
-  try { board = await quizLeaderboard(10); } catch (e) { board = null; }
-
   // সেশন ৬৪: আমার কুইজ-ইতিহাস (লগইন-ইউজারের উত্তর-সময়রেখা)
-  let myHistory = null;
-  if (req.session.user) {
-    try { myHistory = await myQuizHistory(req.session.user.id); } catch (e) { myHistory = null; }
-  }
+  const [mine, board, myHistory] = await Promise.all([
+    req.session.user ? myQuizState(req.session.user.id).catch(() => null) : Promise.resolve(null),
+    quizLeaderboard(10).catch(() => null),
+    req.session.user ? myQuizHistory(req.session.user.id).catch(() => null) : Promise.resolve(null),
+  ]);
 
   res.render('user/quiz', {
     today: withQuizOptions(today),
     archive: (archive || []).filter(a => a && a.id !== todayId).map(withQuizOptions),
     mine, board, myHistory,
-    currentPath: '/quiz'
+    currentPath: '/quiz',
+    metaDesc: 'লেখক ফোরামের আজকের কুইজ — প্রতিদিন নতুন প্রশ্ন, সঠিক উত্তরে স্ট্রিক ও লিডারবোর্ড। মেধা যাচাই করুন এখনই।',
   });
 });
 
