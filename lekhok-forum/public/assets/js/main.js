@@ -248,3 +248,20 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
     }, { passive: true });
   } catch (e) {}
 })();
+
+/* ── সেশন ৯৪ (রোডম্যাপ-০১): লাইভ-পুশ ক্লায়েন্ট (live.js) লোডার ────────────────────
+ * লগড-ইন পেজে (body[data-uid]) live.js ডায়নামিক-লোড — ৪৮টি ভিউতে আলাদা <script>
+ * ট্যাগ এডিট না-করে এক-জায়গা-থেকে। ক্যাশ-বাস্ট: এই main.js-ট্যাগের ?v= পুনঃব্যবহার। */
+(function () {
+  try {
+    if (!document.body || !document.body.getAttribute('data-uid')) return;
+    var mine = null;
+    try { mine = document.querySelector('script[src*="main.js"]'); } catch (e) {}
+    var v = '94';
+    if (mine && mine.src) { var m = mine.src.match(/[?&]v=([^&]+)/); if (m) v = m[1]; }
+    var s = document.createElement('script');
+    s.src = '/assets/js/live.js?v=' + encodeURIComponent(v);
+    s.defer = true;
+    (document.body || document.head).appendChild(s);
+  } catch (e) {}
+})();

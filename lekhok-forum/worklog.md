@@ -497,3 +497,22 @@ session93: ইউজার-প্রদত্ত অডিট-স্ক্রি
 - **ডুয়াল-স্যুট:** `verify-session93-calls.js` **৪৫/৪৫ ALL GREEN** (নোট: ismail/monem/karishma demo123 সিড দরকার; CALL_RING_TIMEOUT_S=4 **সার্ভার-প্রসেসে** দিতে হয় — ক্লায়েন্টে নয়) + `test-role-policy.sh` **৯৯/৯৯ ALL GREEN** ✓
 - **টেস্ট-ডেটা সংযোজন:** ismail/monem/karishma (demo123) সিড — পরের এজেন্টদের জন্য প্রস্তুত।
 - push: 87dd9a4 → origin/main (session94)
+
+---
+## সেশন ৯৯ (১৮ সেপ্টেম্বর ২০২৬) — ক্রন-রাউন্ড → SSE রিয়েল-টাইম হাব (রোডম্যাপ-০১ 🔴) + লাইভ-বেল + টাইটেল-কাউন্টার
+
+**প্রবেশ-অবস্থা:** origin/main @ 244f5ad (session93-c) — git fetch ক্লিন; QA: ১৬-পেজ 200, 390px-০, কনসোল-০, করাপশন-স্ক্যান-রিগ্রেশন-০, মেসেঞ্জার ৬০-বাবল+উইন্ডোিং অক্ষত → স্থিতিশীল-রায় → রোডম্যাপের 🔴-কোর আইটেম-০১ নির্বাচিত।
+
+**যা হলো:**
+- **helpers/sse.js (নতুন):** uid→Set(res) রেজিস্ট্রি + publishToUser(s)/publishToAll + ২৫সে-হার্টবিট(unref) + মৃত-সংযোগ-পরিষ্কার।
+- **GET /api/events (dashboard.js):** ensureAuth SSE স্ট্রিম; `Cache-Control: no-cache, no-transform` (compression-বাইপাস — বাফারিং SSE আটকে দেয়) + X-Accel-Buffering + retry:3000।
+- **পুশ-হুক:** ১:১+গ্রুপ সেন্ডে 'message' ইভেন্ট (প্রেরক-বাদ — optimistic-append-ডুপ্লিকেট-রেস এড়াতে); notifyOnce-এ 'notification' (মিউট/প্রেফ/ডিডাপ-গার্ড-পাস-করাই টোস্ট-যোগ্য); notify.js-এর notifyUser/broadcastToAll-এও পুশ।
+- **নতুন API:** /api/notifications/recent (বেল-লাইভ-রিফ্রেশ) + **/api/health পুনর্নির্মাণ** (session89-এ ছিল, মার্জে হারিয়েছিল — dbLatency/memory + sse-স্ট্যাট)।
+- **public/assets/js/live.js (নতুন):** main.js-লোডার-থেকে ডায়নামিক-লোড (৪৮-ভিউ-এডিট এড়াতে; ?v= পুনঃব্যবহার)। 'notification'→ব্যাজ(বাংলা-৯+)+badge-pop+বেল-ping+FB-নীল-টোস্ট+ড্রপডাউন-লাইভ-পেইন্ট(relTime); 'message'→lfMsgSSEKick (messages-chat.ejs-এ নতুন-হুক)+টাইটেল-কাউন্টার '(২) লেখক ফোরাম' (focus-এ রিসেট); ৩+ফেইলে ৪৫সে-ব্যাজ-পোল-ফলব্যাক। window.lfSSEState/lfSSELog ডায়গনস্টিক।
+- **স্টাইল:** notif-ping94 (FB-নীল-রিং ×২) + badge-pop94 + .toast.info (#1877F2) — সব reduced-motion-সচেতন।
+
+**E2E (agent-browser + curl দুই-ইউজার):** ক্রস-ইউজার-পুশে বাবল ৬০→৬১ তাৎক্ষণিক ✓ উভয়-ইভেন্ট এক-ms ✓ টোস্ট toast-info-show ✓ ব্যাজ ১ ✓ ping:true ✓ 401-গার্ড ✓ স্ট্রিম-হেডার ✓ ড্রপডাউন-লাইভ ("এইমাত্র") ✓ ১৬-পেজ ✓ 390px-০ ✓ কনসোল-০ ✓ রিঅ্যাক্ট-রিগ্রেশন ✓
+
+**হারনেস-লেসন (PLANS.md-এ বিস্তারিত):** স্ট্যান্ডঅ্যালোন DB-এডিটে `db.saveDb()` — `flushDb()` লোকাল-মোডে no-op; pkill-এর গ্রেসফুল-ফ্লাশ পুরনো-স্টেট ফেরত-লেখে (pkill -9 আগে); notifyOnce-ডিডাপ টোস্ট-টেস্ট-বিভ্রান্তি। ডিসপ্লে-গোটচা আবারও ২ ভুয়া-পজিটিভ (char-code-যাচাই-নিয়ম অপরিবর্তিত)।
+
+**পরবর্তী:** ০৫-ইনফিনিট-স্ক্রল-কার্সার-পলিশ → ১৩-WebRTC (🔴) → ০৮-এনগেজমেন্ট-র‍্যাংকড-ফিড → ০৭-কম্পোজার-মোডাল (🔴)।

@@ -1,0 +1,186 @@
+/* ── সেশন ৯৯ (রোডম্যাপ-আইটেম ০১): লাইভ-পুশ ক্লায়েন্ট (SSE) ─────────────────────────
+ * EventSource('/api/events') → দুই ইভেন্ট:
+ *   'notification' → বেল-ব্যাজ ইনক্রিমেন্ট + FB-টোস্ট + ড্রপডাউন-খোলা থাকলে লাইভ-রিফ্রেশ
+ *   'message'      → ওই কথোপকথন-পেজ খোলা থাকলে তাৎক্ষণিক poll-কিক (lfMsgSSEKick)
+ *                    + ট্যাব-লুকানো অবস্থায় টাইটেল-কাউন্টার '(২) লেখক ফোরাম'
+ * ফলব্যাক: EventSource বারবার ফেইল করলে (প্রক্সি-সংযত পরিবেশ) ৪৫সে-ব্যাজ-পোল।
+ * সত্যের-উৎস আগের মতোই সার্ভার-রেন্ডার + পোলিং-ইঞ্জিন — এটা শুধু লেটেন্সি কমায়। */
+(function () {
+  'use strict';
+  var body = document.body;
+  var myUid = body ? body.getAttribute('data-uid') : null;
+  if (!myUid || typeof window.EventSource !== 'function') return;
+
+  /* ডায়গনস্টিক হ্যান্ডেল — E2E যাচাই window.lfSSEState.events পড়ে */
+  var state = { ok: false, events: 0, lastAt: 0, fails: 0, fallback: false };
+  window.lfSSEState = state;
+  /* E2E-ডায়গনস্টিক: সর্বশেষ ১০ ইভেন্টের টাইপ-লগ */
+  var evLog = [];
+  window.lfSSELog = evLog;
+  function logEv(t) { evLog.push({ t: t, at: Date.now() }); if (evLog.length > 10) evLog.shift(); }
+
+  var baseTitle = document.title;
+  var hiddenUnread = 0;
+  var badgeCount = null; /* null = সার্ভার-রেন্ডারড মান এখনো অজানা */
+
+  /* ── বেল-ব্যাজ ─────────────────────────────────────────────────────────── */
+  function bnNum(n) {
+    return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; });
+  }
+  function setBadge(n) {
+    badgeCount = Math.max(0, n);
+    var b = document.getElementById('notifBadge');
+    var btn = document.querySelector('.notif-bell-btn');
+    if (badgeCount > 0) {
+      if (!b && btn) {
+        b = document.createElement('span');
+        b.className = 'notif-badge';
+        b.id = 'notifBadge';
+        btn.appendChild(b);
+      }
+      if (b) {
+        b.textContent = badgeCount > 9 ? '৯+' : bnNum(badgeCount);
+        /* সেশন ৯৪: নতুন-ব্যাজ-পপ (প্রতি-আপডেটে রিস্টার্ট) */
+        b.classList.remove('badge-pop');
+        void b.offsetWidth;
+        b.classList.add('badge-pop');
+      }
+    } else if (b) {
+      b.remove();
+    }
+    return badgeCount;
+  }
+  function bumpBadge(delta) { setBadge((badgeCount === null ? 0 : badgeCount) + delta); }
+
+  function pulseBell() {
+    var wrap = document.getElementById('notifBell');
+    if (!wrap) return;
+    wrap.classList.remove('notif-ping');
+    /* reflow ছাড়া পরপর-ইভেন্টে অ্যানিমেশন রিস্টার্ট হয় না */
+    void wrap.offsetWidth;
+    wrap.classList.add('notif-ping');
+  }
+
+  /* ── ড্রপডাউন লাইভ-রিফ্রেশ (সার্ভার-মার্কআপের হুবহু শেপ) ──────────────────── */
+  var ICONS = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle' };
+  function relTime(raw) {
+    if (!raw) return '';
+    var t = new Date(String(raw).replace(' ', 'T')).getTime();
+    if (isNaN(t)) return String(raw);
+    var min = Math.floor((Date.now() - t) / 60000);
+    if (min < 1) return 'এইমাত্র';
+    if (min < 60) return bnNum(min) + ' মিনিট আগে';
+    var hr = Math.floor(min / 60);
+    if (hr < 24) return bnNum(hr) + ' ঘণ্টা আগে';
+    var day = Math.floor(hr / 24);
+    if (day === 1) return 'গতকাল';
+    if (day < 7) return bnNum(day) + ' দিন আগে';
+    return String(raw).slice(0, 10);
+  }
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function paintList(items) {
+    var box = document.getElementById('notifList');
+    if (!box) return;
+    if (!items || !items.length) {
+      box.innerHTML = '<div class="notif-empty"><i class="far fa-bell"></i><p>কোনো বিজ্ঞপ্তি নেই</p></div>';
+      return;
+    }
+    box.innerHTML = items.map(function (n) {
+      var ico = ICONS[n.type] || 'fa-bell';
+      return '<a href="' + esc(n.link || '/notifications') + '" class="notif-item ' + (n.is_read ? '' : 'unread') + '">' +
+        '<span class="notif-ico"><i class="fas ' + ico + '"></i></span>' +
+        '<span class="notif-text">' +
+        '<span class="notif-body">' + esc(n.body) + '</span>' +
+        '<span class="notif-time">' + esc(relTime(n.created_at)) + '</span>' +
+        '</span>' +
+        (n.is_read ? '' : '<span class="notif-dot" title="অপঠিত"></span>') +
+        '</a>';
+    }).join('');
+  }
+  var refreshBusy = false;
+  function refreshDropdown() {
+    if (refreshBusy || !document.getElementById('notifList')) return;
+    refreshBusy = true;
+    fetch('/api/notifications/recent', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.ok) { paintList(d.items); setBadge(d.unread); }
+      })
+      .catch(function () {})
+      .finally(function () { refreshBusy = false; });
+  }
+  /* ড্রপডাউন খোলার মুহূর্তে ফ্রেশ-ডেটা (main.js-এর toggleNotifs অক্ষত — আমরা শুধু শোনি) */
+  var bell = document.getElementById('notifBell');
+  if (bell) bell.addEventListener('click', function () { setTimeout(refreshDropdown, 80); }, true);
+
+  /* ── টাইটেল-কাউন্টার (FB-প্যাটার্ন: ট্যাব-লুকানো অবস্থায় '(২) লেখক ফোরাম') ───── */
+  function resetTitle() {
+    hiddenUnread = 0;
+    if (document.title !== baseTitle) document.title = baseTitle;
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') resetTitle();
+  });
+  window.addEventListener('focus', resetTitle);
+
+  /* ── ইভেন্ট-হ্যান্ডলার ────────────────────────────────────────────────────── */
+  function onNotification(d) {
+    logEv("notification"); state.events++; state.lastAt = Date.now();
+    bumpBadge(1);
+    pulseBell();
+    if (d && d.body && typeof window.showToast === 'function') {
+      window.showToast(d.body, 'info');
+    }
+    var dd = document.getElementById('notifDropdown');
+    if (dd && dd.classList.contains('open')) refreshDropdown();
+    document.dispatchEvent(new CustomEvent('lf:sse-notification', { detail: d }));
+  }
+  function onMessage(d) {
+    logEv("message"); state.events++; state.lastAt = Date.now();
+    /* ১) এই কথোপকথন-পেজ খোলা থাকলে → তাৎক্ষণিক poll-কিক (append/seen/সব-লজিক পোলেই) */
+    if (typeof window.lfMsgSSEKick === 'function' &&
+        String(window.lfMsgConvId || '') === String(d && d.conv_id)) {
+      try { window.lfMsgSSEKick(); } catch (_) {}
+    }
+    /* ২) ট্যাব-লুকানো → টাইটেল-কাউন্টার */
+    if (document.visibilityState !== 'visible' || !document.hasFocus()) {
+      hiddenUnread++;
+      document.title = '(' + bnNum(hiddenUnread) + ') ' + baseTitle;
+    }
+    /* ৩) অন্য-ইঞ্জিন (মেসেঞ্জার-লিস্ট ইত্যাদি) শুনতে পারে */
+    try { document.dispatchEvent(new CustomEvent('lf:sse-message', { detail: d })); } catch (_) {}
+  }
+
+  /* ── সংযোগ + ফলব্যাক ────────────────────────────────────────────────────── */
+  var es = null, fallbackTimer = null;
+  function startFallback() {
+    if (fallbackTimer || state.fallback) return;
+    state.fallback = true;
+    fallbackTimer = setInterval(function () {
+      fetch('/api/notifications/count', { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (d && typeof d.unread === 'number') setBadge(d.unread); })
+        .catch(function () {});
+    }, 45000);
+  }
+  function connect() {
+    try { es = new EventSource('/api/events'); } catch (_) { startFallback(); return; }
+    es.onopen = function () { state.ok = true; state.fails = 0; };
+    es.onerror = function () {
+      state.ok = false; state.fails++;
+      /* EventSource নিজে auto-reconnect করে; ৩+ ফেইলে ব্যাজ-ফলব্যাক-পোল চালু */
+      if (state.fails >= 3) startFallback();
+    };
+    es.addEventListener('notification', function (e) {
+      try { onNotification(JSON.parse(e.data)); } catch (_) {}
+    });
+    es.addEventListener('message', function (e) {
+      try { onMessage(JSON.parse(e.data)); } catch (_) {}
+    });
+  }
+  connect();
+})();

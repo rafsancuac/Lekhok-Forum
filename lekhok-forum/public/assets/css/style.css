@@ -1101,7 +1101,6 @@ a.ws91-best:hover .ws91-best-label{color:#065F46}
   .fc-list{max-height:300px}
   .fcp-bubble,.fc-bubble{max-width:calc(100% - 4px)}
 }
-=======
 /* ── সেশন ৯৩ (রোডম্যাপ-১৪ D1): কলমী-নাম চিপ — pen_name প্রধান-নামের পাশে 'কলমে' ট্যাগ ──
  * বাইলাইনে 'কলমে: আসল-নাম' (টুলটিপসহ), কমেন্ট/উত্তর-বাবলে কমপ্যাক্ট 'কলমে' (টুলটিপে আসল-নাম)। */
 .pen-chip{display:inline-flex;align-items:center;margin-left:8px;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:600;line-height:1.5;letter-spacing:.01em;color:#92400e;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fcd34d;vertical-align:middle;white-space:nowrap;transition:box-shadow .18s,transform .18s}
@@ -1117,3 +1116,27 @@ a.ws91-best:hover .ws91-best-label{color:#065F46}
  * restore চলাকালীন পেজটি নরম-লক (স্ক্রল-জাম্প এড়াতে) ক্লাস টগল হয়। */
 html.lf-restoring{scroll-behavior:auto}
 html.lf-restoring .feed-more-sentinel{margin:0}
+
+/* ── সেশন ৯৯ (রোডম্যাপ-০১): লাইভ-পুশ স্টাইল-পাস ─────────────────────────────────
+ * SSE নোটিফিকেশন-পুশে বেল-পালস + FB-নীল ইনফো-টোস্ট + নতুন-ব্যাজ-পপ।
+ * prefers-reduced-motion সচেতন (সাইট-ব্যাপী নিয়ম অনুসরণ)। */
+@keyframes notif-ping94 {
+  0%   { box-shadow: 0 0 0 0 rgba(24, 119, 242, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(24, 119, 242, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(24, 119, 242, 0); }
+}
+.notif-bell-wrap.notif-ping .notif-bell-btn {
+  animation: notif-ping94 0.9s cubic-bezier(0.16, 1, 0.3, 1) 2;
+  border-radius: 50%;
+}
+.toast.info { background: #1877F2; } /* FB-টোকেন (messenger.css-এর সাথে সামঞ্জস্য) */
+@keyframes badge-pop94 {
+  0%   { transform: scale(0.4); }
+  60%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.notif-badge.badge-pop { animation: badge-pop94 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .notif-bell-wrap.notif-ping .notif-bell-btn,
+  .notif-badge.badge-pop { animation: none; }
+}

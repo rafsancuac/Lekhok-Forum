@@ -1,4 +1,5 @@
 const db = require('../db');
+const sseHub = require('./sse'); // সেশন ৯৯: নোটিফিকেশন-তৈরি → SSE পুশ (রোডম্যাপ-০১)
 
 // ── Broadcast a notification to every active user ───────────────────────────
 // Used when a moderator/admin publishes daily content, notices, events.
@@ -6,6 +7,8 @@ async function broadcastToAll(type, title, body, link, excludeUserId) {
   const users = await db.prepare("SELECT id FROM users WHERE status = 'active' AND id != ?").all(excludeUserId || 0);
   const stmt = db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)');
   for (const u of users) await stmt.run(u.id, type, title, body, link);
+  // সেশন ৯৯: সংযুক্ত-ক্লায়েন্টদের তাৎক্ষণিক পুশ (ব্যাজ+টোস্ট+ড্রপডাউন-রিফ্রেশ)
+  try { sseHub.publishToAll('notification', { type, title, body, link }, excludeUserId || 0); } catch (_) {}
   return users.length;
 }
 
@@ -18,6 +21,8 @@ async function notifyUser(userId, type, title, body, link) {
     if (!userId) return false;
     await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
       .run(userId, type || 'system', title || '', body || '', link || '/notifications');
+    // সেশন ৯৯: তাৎক্ষণিক পুশ — ব্যাজ + বডি-টোস্ট (প্রেফ-চেক notifyIfAllowed-এ আগেই হয়)
+    try { sseHub.publishToUser(userId, 'notification', { type: type || 'system', title: title || '', body: body || '', link: link || '/notifications' }); } catch (_) {}
     return true;
   } catch (e) { console.error('[notify] notifyUser:', e.message); return false; }
 }

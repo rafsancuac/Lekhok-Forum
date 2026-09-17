@@ -4,6 +4,7 @@ const db = require('../db');
 const { messageUpload, complaintUpload, attachmentUpload, withUpload } = require('../middleware/upload');
 const rolePolicy = require('../helpers/role-policy');
 const { displayName } = require('../helpers/display-name');
+const sseHub = require('../helpers/sse'); // সেশন ৯৯ (রোডম্যাপ-০১): SSE রিয়েল-টাইম হাব
 
 // ── ডুপ্লিকেট-নোটিফিকেশন গার্ড: একই ইউজার+টাইপ+বডি ১ মিনিটের মধ্যে দ্বিতীয়বার ঢোকে না ──
 // সেশন ৯১ (B4): ঐচ্ছিক prefsKind — প্রাপকের notify_prefs[kind]===false হলে নোটিফিকেশনই হয় না
@@ -18,6 +19,8 @@ async function notifyOnce(uid, type, title, body, link, windowMin, prefsKind) {
     if (dup) return false;
     await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
       .run(uid, type, title, body, link);
+    // সেশন ৯৯: SSE পুশ — মিউট/প্রেফ/ডিডাপ-গার্ড-পাস-করা নোটিফিকেশনই টোস্ট-যোগ্য
+    try { sseHub.publishToUser(uid, 'notification', { type, title, body, link }); } catch (_) {}
     return true;
   } catch (e) { return false; }
 }
@@ -555,6 +558,10 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
   const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, reply_to_id) VALUES (?, ?, ?, ?, ?, ?)')
     .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, replyToId);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
+  // সেশন ৯৯: SSE পুশ — প্রাপক তাৎক্ষণিক জানবে (পোলিং-ফলব্যাক অক্ষত; এটা শুধু
+  // লেটেন্সি ২.৫সে → ~০ করে)। প্রেরকের ট্যাবগুলো ইচ্ছাকৃতভাবে বাদ — optimistic-
+  // append-রেসে ডুপ্লিকেট-বাবল ঝুঁকি; সেখানে ২.৫সে-পোলই যথেষ্ট।
+  try { sseHub.publishToUsers([other.id], 'message', { conv_id: conv.id, id: Number(ins.lastInsertRowid), from: me, at: Date.now() }, me); } catch (_) {}
   // Notify recipient (dedup: ১০ মিনিটে একই বডির দ্বিতীয় নোটিফিকেশন নয়; মিউট-হলে নয়)
   if (other.id !== me && !(await isConvMuted(conv.id, other.id))) {
     await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${displayName(req.session.user)} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username, 10, 'notify_messages');
@@ -668,6 +675,8 @@ router.post('/messages/g/:id', ensureAuth, withUpload(attachmentUpload), async (
     .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, replyToId);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   const members = await db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(conv.id);
+  // সেশন ৯৯: SSE পুশ — গ্রুপ-সদস্যরা তাৎক্ষণিক জানবে (প্রেরক বাদ — ওপরের নীতি)
+  try { sseHub.publishToUsers(members.map(m => m.user_id), 'message', { conv_id: conv.id, id: Number(ins.lastInsertRowid), from: me, at: Date.now() }, me); } catch (_) {}
   for (const m of members) {
     if (m.user_id !== me && !(await isConvMuted(conv.id, m.user_id))) await notifyOnce(m.user_id, 'message', 'নতুন বার্তা', `${displayName(req.session.user)} (${conv.title}): ${(body || '📎').slice(0, 60)}`, '/messages/g/' + conv.id, 10, 'notify_messages');
   }
@@ -1030,6 +1039,50 @@ router.get('/api/messages/unread', ensureAuth, async (req, res) => {
   `).all(me, me, me);
   const totalUnread = rows.reduce((a, r) => a + r.unread, 0);
   res.json({ totalUnread, conversations: rows });
+});
+
+// ── সেশন ৯৯ (রোডম্যাপ-আইটেম ০১): SSE রিয়েল-টাইম হাব এন্ডপয়েন্ট ─────────────────
+// লগইন-গার্ডেড ইভেন্ট-স্ট্রিম। নোটিফিকেশন-বেল + মেসেঞ্জার পুশ-গন্তব্য।
+// হেডার নোট: 'no-transform' → compression মিডলওয়্যার এই রেসপন্স স্কিপ করে
+// (বাফারিং করলে ইভেন্ট আটকে যেত); X-Accel-Buffering → nginx-স্টাইল প্রক্সি।
+router.get('/api/events', ensureAuth, (req, res) => {
+  const uid = req.session.user.id;
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+  res.write('retry: 3000\n: connected\n\n');
+  sseHub.addClient(uid, res);
+  req.on('close', () => sseHub.removeClient(uid, res));
+});
+
+// হেলথ-প্রোব (সেশন-৮৯-এ ছিল, মার্জে হারিয়েছিল — SSE-স্ট্যাটসহ পুনর্নির্মাণ):
+// সুপারভাইজার/আপটাইম-মনিটর + সংযুক্ত-ক্লায়েন্ট ডায়গনস্টিক। no-store।
+router.get('/api/health', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  let dbOk = false, dbLatencyMs = -1;
+  try {
+    const t0 = Date.now();
+    await db.prepare('SELECT 1 AS x').get();
+    dbOk = true; dbLatencyMs = Date.now() - t0;
+  } catch (_) {}
+  const m = process.memoryUsage();
+  res.json({ ok: dbOk, status: dbOk ? 'healthy' : 'degraded', db: dbOk, dbLatencyMs,
+    uptime: Math.round(process.uptime()), memory: { rss: Math.round(m.rss / 1048576), heapUsed: Math.round(m.heapUsed / 1048576) },
+    sse: sseHub.stats(), version: '99' });
+});
+
+// ── সেশন ৯৯: বেল-ড্রপডাউন লাইভ-রিফ্রেশ ডেটা (live.js দ্বারা ব্যবহৃত) ──────────
+// সার্ভার-রেন্ডারড বেলের হুবহু শেপ; SSE 'notification'-ইভেন্টে বা ড্রপডাউন-খোলায় ফেচ হয়।
+router.get('/api/notifications/recent', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  try {
+    const items = await db.prepare('SELECT id, type, body, link, is_read, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 8').all(me);
+    const c = await db.prepare('SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0').get(me);
+    res.json({ ok: true, unread: c.c, items });
+  } catch (e) { res.status(500).json({ ok: false, error: 'db' }); }
 });
 
 // ── সেশন ৭৬: মেসেজিং প্রো-ফিচার ──────────────────────────────────────────────

@@ -1221,6 +1221,10 @@
     window.addEventListener('blur', schedulePoll);
     schedulePoll();
     setTimeout(poll, 800);
+    /* সেশন ৯৯ (রোডম্যাপ-০১): SSE পুশ-হুক — live.js 'message'-ইভেন্টে এই কথোপকথন
+       খোলা থাকলে তাৎক্ষণিক kick (লেটেন্সি ২.৫সে-পোল → ~০; পোলিং ফলব্যাক অক্ষত) */
+    window.lfMsgSSEKick = kickPollNow;
+    window.lfMsgConvId = convId || null;
 
     // ── কথোপকথনের ভেতরে মেসেজ-সার্চ (সেশন ৮২ বেসিক-ফিল্টার → সেশন ৮৯ C2-আপগ্রেড:
     //    <mark> হাইলাইট + ম্যাচ-কাউন্টার + Enter/Shift+Enter ↑↓ নেভিগেশন + Esc-ক্লিয়ার) ──
