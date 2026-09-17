@@ -296,6 +296,17 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৭৭ (১৭ সেপ্টেম্বর ২০২৬) — স্যান্ডবক্স-প্রিভিউ: ক্লায়েন্ট-fetch গেটওয়ে-ফিক্স (fetch/XHR-গার্ড)
+
+**সমস্যা:** স্যান্ডবক্স-প্রিভিউ ইফ্রেমে ক্লায়েন্ট-সাইড `fetch()`-গুলো (`auth-sync.js`-এর `/api/whoami`, `quiz.js`-এর `/quiz/check`, `admin-url-upload.js`-এর `/admin/upload-image`) পথ-অ্যাবসোলিউট কোয়েরি-ছাড়া যেত → প্রিভিউ-গেটওয়ের ডিফল্ট-হ্যান্ডলে (Next.js:3000) 404 — কুইজ-উত্তর, অথ-রিসিঙ্ক, ইমেজ-আপলোড ইফ্রেমে মৃত (সার্ভার-সাইড `res.redirect`/HTML-অ্যাসেট ইনজেকশন session63-এ ছিল, কিন্তু JS-fetch কভার হয়নি)।
+
+**ফিক্স (commit `9c47d14`, env-gated `SANDBOX_PORT` — প্রোডাকশনে জিরো-ইমপ্যাক্ট):**
+- `server.js` patchHtml-এ `<head>`-ইনজেক্টেড **fetch+XMLHttpRequest গার্ড** — সব বর্তমান+ভবিষ্যৎ ক্লায়েন্ট-fetch এক জায়গায় কভার; রিলেটিভ (`/x`) URL-এ `XTransformPort` যোগ, `Request`-অবজেক্ট ইনপুটও হ্যান্ডেল।
+- `auth-sync.js`-এ whoami-fetch URL-এ পেজ-search-থেকে `XTransformPort` (গার্ডের-আগে-চলা edge-caseে স্বয়ংসম্পূর্ণ)।
+
+**E2E (agent-browser @ গেটওয়ে :81):** কুইজ-ক্লিক → `POST /quiz/check?XTransformPort=3030` → 200 ✓ quiz-done ✓ whoami-404 লগ-শূন্য ✓ কনসোল-এরর ০ ✓।
+
+
 ### সেশন ৭২ (১৭ সেপ্টেম্বর ২০২৬) — GSC কভারেজ-ড্রিলডাউন ইস্যু চারটির মূল ফিক্স + এজ-ক্যাশ (TTFB ৩-৭s → ~৪০ms)
 
 **ইনপুট:** ইউজার-আপলোড GSC Coverage Drilldown (৪টি zip): ① 'Discovered – currently not indexed' ৩২ পেজ (সব আর্টিকেল/নোটিশ/qa-ডিটেইল + committee/events/gallery/members/press/resources...) ② 'Crawled – not indexed' /constitution ③ 'Excluded by noindex' /quiz ④ 'Alternate page with proper canonical tag' /qa/14।
