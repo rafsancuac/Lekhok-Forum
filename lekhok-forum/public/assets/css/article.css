@@ -185,12 +185,6 @@
   .article-footer{padding:6px 18px 12px}
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   সেশন ১১১-নোট: qa-উত্তর FB-প্যারিটি এখন session113/114-ক্যানোনিকাল-স্তরে
-   (views/shared/comment/CommentItem + shared.css qa-slot) — এই ফাইলে আলাদা
-   উত্তর-স্টাইল যোগ করার আগে shared.css-চুক্তি দেখুন (ডুপ্লিকেশন-নীতি)।
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 /* ═══ Session 113 — Q&A answer-thread comment-parity (ক্যানোনিকাল CommentItem) ═══
    উত্তর-কার্ড (answer-item/sidebar/text/form) অপসারিত — উত্তর এখন আর্টিকেল-কমেন্টের
    মতোই ক্যানোনিকাল FB-বাবল (views/shared/comment/CommentItem.ejs)। নিচের রুলগুলো
@@ -210,3 +204,12 @@
   .qa-answer-composer{margin-top:14px;padding-top:12px}
 }
 
+/* ═══ Session 113 — session114-ইন্টারপ: noscript-ফর্ম + শীর্ষ-উত্তর-চিপ পুনঃস্থাপন ═══
+   ১১৩-ব্লকের dead-rule-অপসারণের পরেও ১১৪-ভিউ যেগুলো ব্যবহার করে সেগুলো টিকছে:
+   .top-answer-chip (qa-answer-slot-এর ভেতরে), .answer-form-wrap/.answer-form
+   (noscript ফলব্যাক-ফর্ম — JS-ব্যর্থতায় একমাত্র উত্তর-পথ)। */
+.top-answer-chip{font-size:.68rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:5px;padding:2px 8px;white-space:nowrap}
+.answer-form-wrap{margin-top:16px;padding:16px;background:var(--bg-main,#f6f8fb);border-radius:var(--radius-sm)}
+.answer-form-wrap h3{color:var(--brand-text);margin:0 0 12px;font-size:1.05rem}
+.answer-form textarea{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:inherit;font-size:.98rem;resize:vertical;background:var(--card)}
+.answer-form textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}

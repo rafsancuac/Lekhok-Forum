@@ -647,30 +647,6 @@
   });
 
   // ── সেশন ১০৪+১০৭: ইনলাইন-সম্পাদনা (ফিড + আর্টিকেল-পেজ দুই-সারফেস) ──────
-  // সেশন ১১১-ফিক্স: আর্টিকেল/প্রশ্ন-বাবলে .fc-edit-slot বাবলের ভেতরেই থাকে —
-  // পুরো-বাবল display:none করলে এডিটর-স্লটও ০×০ হয়ে অদৃশ্য হত (লাইভ-জিওমেট্রি
-  // টেস্টে ধরা — DOM-attr চেকে ঢাকা পড়ত)। বাবল-লুকানোর বদলে slot বাদে বাবলের
-  // সন্তান-সারিগুলো লুকাও (fc-editing); ফিডে slot বাবলের বাইরে — পুরোনো-পথ অক্ষুণ্ণ।
-  function hideBubbleForEdit(bubble, slot) {
-    if (slot.parentElement === bubble) {
-      bubble.classList.add('fc-editing');
-      Array.prototype.forEach.call(bubble.children, function (ch) {
-        if (ch !== slot) ch.style.display = 'none';
-      });
-    } else {
-      bubble.style.display = 'none';
-    }
-  }
-  function restoreBubbleAfterEdit(bubble, slot) {
-    if (bubble.classList.contains('fc-editing')) {
-      Array.prototype.forEach.call(bubble.children, function (ch) {
-        if (ch !== slot) ch.style.display = '';
-      });
-      bubble.classList.remove('fc-editing');
-    } else {
-      bubble.style.display = '';
-    }
-  }
   function startEdit(item, cid) {
     var slot = item.querySelector('.fc-edit-slot');
     var bubble = bubbleOf(item);
@@ -688,14 +664,14 @@
     var ta = slot.querySelector('.fc-edit-input');
     ta.value = raw;
     slot.hidden = false;
-    hideBubbleForEdit(bubble, slot);
+    bubble.style.display = 'none';
     ta.addEventListener('input', function () {
       ta.style.height = 'auto';
       ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
     });
     setTimeout(function () { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 50);
     slot.querySelector('.fc-edit-cancel').addEventListener('click', function () {
-      slot.hidden = true; slot.innerHTML = ''; restoreBubbleAfterEdit(bubble, slot);
+      slot.hidden = true; slot.innerHTML = ''; bubble.style.display = '';
     });
     slot.querySelector('.fc-edit-save').addEventListener('click', function () {
       var body = ta.value.trim();
@@ -723,7 +699,7 @@
         }
         RAW_CACHE[cid] = body;
         slot.hidden = true; slot.innerHTML = '';
-        restoreBubbleAfterEdit(bubble, slot);
+        bubble.style.display = '';
         if (window.showToast) showToast('মন্তব্য সম্পাদিত হয়েছে ✓', 'success');
       }).catch(function (err) {
         if (err && err.message === 'login') return;
@@ -770,14 +746,6 @@
               var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
               if (stat) stat.textContent = total;
             }
-            // সেশন ১১১: জেনেরিক DOM-রিকাউন্ট-হুক — data-cm-count="<selector>"।
-            // qa-উত্তরসমূহ: j.total = comment_count (রিপ্লাইসহ) — টপ-লেভেল উত্তর-গণনা
-            // নয়; তাই অপসারণ-পরবর্তী দৃশ্যমান-আইটেম গুনে সিঙ্ক (রিপ্লাই-ডিলিটেও নিরাপদ —
-            // রিকাউন্ট অপরিবর্তিত থাকে)।
-            document.querySelectorAll('[data-cm-count]').forEach(function (cEl) {
-              var sel = cEl.getAttribute('data-cm-count');
-              if (sel) cEl.textContent = bnNum(document.querySelectorAll(sel).length);
-            });
           } catch (_) {}
         }
         if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
@@ -803,20 +771,21 @@
     var item = itemOf(rBtn);
     var slot = item && item.querySelector('.fc-reply-slot');
     if (!slot) return;
-    var postId = rBtn.closest('.fc-drawer') && rBtn.closest('.fc-drawer').getAttribute('data-comments-for');
-    /* ── সেশন ১১৭-ফিক্স: ফিড-ড্রয়ারের বাইরে (আর্টিকেল/qa একক-পোস্ট) postId=null
-          হত → রিপ্লাই /api/comment-এ post_id="null" যেত → অনাথ-কমেন্ট (কোনো
-          থ্রেডে অদৃশ্য, E2E-তে ধরা)। ফলব্যাক-চেইন: নিকটতম .comments-list[data-
-          post-link]-এর পাথ → পেজের প্রধান .cc-form[data-post-id]। ── */
+    // সেশন ১১৩ (বাগ-ফিক্স): আগে postId শুধু ফিড-ড্রয়ার থেকে আসত — ড্রয়ারের
+    // বাইরে (আর্টিকেল/QA-সিঙ্গেল) না-পাওয়া গেলে data-post-id="null" হত →
+    // POST /api/comment নীরবে অনাথ-কমেন্ট-রো (post_id='null' TEXT) বানাত।
+    // এখন: ড্রয়ার → ড্রয়ারের data-comments-for; নইলে পেজের মেইন-কম্পোজার
+    // (.cc-form[data-post-id], স্লট/ড্রয়ারের বাইরের প্রথমটি)।
+    var drawer113 = rBtn.closest('.fc-drawer');
+    var postId = drawer113 ? drawer113.getAttribute('data-comments-for') : null;
     if (!postId) {
-      var _cl117 = rBtn.closest('.comments-list[data-post-link]');
-      var _pl117 = _cl117 ? String(_cl117.getAttribute('data-post-link') || '') : '';
-      var _pm117 = _pl117.match(/\/(?:articles|qa|questions)\/(\d+)/);
-      if (_pm117) postId = _pm117[1];
-    }
-    if (!postId) {
-      var _pc117 = document.querySelector('.cc-form[data-post-id]');
-      if (_pc117 && _pc117.getAttribute('data-post-id')) postId = _pc117.getAttribute('data-post-id');
+      var _forms113 = document.querySelectorAll('.cc-form[data-post-id]');
+      for (var _i113 = 0; _i113 < _forms113.length; _i113++) {
+        if (!_forms113[_i113].closest('.fc-reply-slot') && !_forms113[_i113].closest('.fc-drawer')) {
+          postId = _forms113[_i113].getAttribute('data-post-id');
+          break;
+        }
+      }
     }
     var authorMeta = document.querySelector('meta[name="lf-me-avatar"]');
     if (slot.hidden) {
@@ -983,7 +952,6 @@
         }).then(function (r) { return r.json(); }).then(function (j) {
           if (j && j.ok) {
             bodyEl.innerHTML = j.bodyHtml;
-            bodyEl.setAttribute('data-raw', val); /* session113-ফিক্স: স্টেল-প্রিফিল — দ্বিতীয়-সম্পাদনায় নতুন-রক টেক্সটই দেখুক */
             var ed = item.querySelector('.fc-edited');
             if (!ed) { ed = document.createElement('span'); ed.className = 'fc-edited'; ed.textContent = 'সম্পাদিত'; bodyEl.parentNode.appendChild(ed); }
             box.remove(); bodyEl.hidden = false;
@@ -1005,20 +973,6 @@
           if (j && j.ok) {
             var it = document.getElementById('fc-c' + cidD);
             if (it) it.remove();
-            try {
-              // সেশন ১১১: কাউন্টার-সিঙ্ক — পুরনো-ইঞ্জিন deleteComment-এর মতোই
-              // ([data-cmt-total]/.comments-total + data-cm-count-রিকাউন্ট) —
-              // আগে ক্যানোনিকাল-পথে ডিলিটে হেডার-কাউন্টার স্টেল থাকত।
-              var totD = (typeof j.total === 'number') ? j.total : null;
-              if (totD !== null) {
-                var cSpanD = document.querySelector('[data-cmt-total]') || document.querySelector('.comments-total');
-                if (cSpanD) cSpanD.textContent = bnNum(totD);
-              }
-              document.querySelectorAll('[data-cm-count]').forEach(function (cEl) {
-                var sel = cEl.getAttribute('data-cm-count');
-                if (sel) cEl.textContent = bnNum(document.querySelectorAll(sel).length);
-              });
-            } catch (_) {}
             if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
           } else if (window.showToast) showToast('মোছা যায়নি', 'error');
         })

@@ -397,9 +397,7 @@ router.post('/api/articles/quick', ensureLoggedIn, async (req, res) => {
       const mentioned = JSON.parse(mentions);
       for (const m of mentioned) {
         if (m.id !== me.id) {
-          // সেশন ১১৪-ফিক্স: actorId অনুপস্থিত ছিল — quick-কম্পোজারের ম্যানশন-নোটিফিকেশনে
-          // actor-avatar আসত না (আইকন-ফলব্যাক পড়ত); /articles/new-পথের সাথে সামঞ্জস্য
-          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId, me.id);
+          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId);
         }
       }
     } catch (_) {}
@@ -925,8 +923,19 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   ]);
   const reaction = res.locals._qReaction72;
   // সেশন ১১৪: রিপ্লাই-থ্রেড অ্যাট্যাচ (article-single-মডেল) + bodyHtml রেন্ডার
+  // সেশন ১১৩-ফলোআপ: রিপ্লাই-টু-রিপ্লাই (parent = অন্য-রিপ্লাই) সরাসরি অ্যাট্যাচ
+  // হলে root-উত্তরের replies113-এ পৌঁছাতেই পারে না — নীরবে অদৃশ্য হত। এখন
+  // parent-chain walk-up করে যে-উত্তর থেকে নেমে এসেছে সেই root-এ যুক্ত হয়
+  // (ভিউ ফ্ল্যাট-compact রেন্ডার রাখে, ডেটা-ক্ষয় শূন্য; guard≤১০-স্তর)।
+  const _allCmtById113 = {};
+  answers.forEach(a => { _allCmtById113[a.id] = a; });
+  (answerReplies113 || []).forEach(r => { _allCmtById113[r.id] = r; });
   const _repliesByAnswer113 = {};
-  (answerReplies113 || []).forEach(r => { (_repliesByAnswer113[r.parent_id] = _repliesByAnswer113[r.parent_id] || []).push(r); });
+  (answerReplies113 || []).forEach(r => {
+    let _root = r.parent_id, _guard = 0;
+    while (_allCmtById113[_root] && _allCmtById113[_root].parent_id && _guard++ < 10) _root = _allCmtById113[_root].parent_id;
+    (_repliesByAnswer113[_root] = _repliesByAnswer113[_root] || []).push(r);
+  });
   answers.forEach(a => { a.replies113 = _repliesByAnswer113[a.id] || []; });
   // সেশন ৭২ (GSC 'Alternate page with proper canonical tag' ফিক্স):
   // আগে canonicalPath ছিল না → header.ejs-এর fallback currentPath('/qa') ব্যবহার হত,
@@ -1571,27 +1580,38 @@ router.post('/api/comment', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   const { post_id, body, parent_id } = req.body;
   if (!body || !body.trim()) return res.status(400).json({ error: 'empty' });
-  // সেশন ১১৭-গার্ড: post_id বাধ্যতামূলক-ধনাত্মক-পূর্ণসংখ্যা — নইলে অনাথ-কমেন্ট
-  // তৈরি হয় (কোনো থ্রেডে অদৃশ্য; E2E-তে post_id="null" ফাঁক ধরা পড়েছে)।
-  const _pid117 = parseInt(post_id, 10);
-  if (!Number.isInteger(_pid117) || _pid117 <= 0) return res.status(400).json({ error: 'bad_post_id' });
+  // সেশন ১১৩ (হার্ডেনিং): post_id/parent_id কখনো টেক্সট ('null' ইত্যাদি)-রূপে
+  // ঢুকতে পারবে না — আগে স্ট্রিং-পেলোড sql.js-এর INTEGER-অ্যাফিনিটিতে TEXT-রো
+  // হয়ে নীরবে অনাথ-কমেন্ট তৈরি করত (ক্লায়েন্ট-বাগ প্রমাণিত — রিপ্লাই-স্লট)।
+  const pid = parseInt(post_id, 10);
+  if (!Number.isInteger(pid) || pid <= 0) return res.status(400).json({ error: 'bad_post_id' });
+  const _postEx113 = await db.prepare('SELECT id, author_id, title, type FROM posts WHERE id = ?').get(pid);
+  if (!_postEx113) return res.status(404).json({ error: 'post_not_found' });
+  let _parentId113 = null;
+  if (parent_id !== undefined && parent_id !== null && String(parent_id) !== '') {
+    const pv = parseInt(parent_id, 10);
+    if (!Number.isInteger(pv) || pv <= 0) return res.status(400).json({ error: 'bad_parent_id' });
+    const _pc113 = await db.prepare('SELECT id, post_id FROM comments WHERE id = ?').get(pv);
+    if (!_pc113 || Number(_pc113.post_id) !== pid) return res.status(400).json({ error: 'bad_parent_id' });
+    _parentId113 = pv;
+  }
   const ins = await db.prepare('INSERT INTO comments (post_id, author_id, body, parent_id) VALUES (?, ?, ?, ?)').run(
-    _pid117, req.session.user.id, body.trim(), parent_id || null
+    pid, req.session.user.id, body.trim(), _parentId113
   );
-  await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(_pid117);
-  const post = await db.prepare('SELECT author_id, title, type FROM posts WHERE id = ?').get(_pid117);
-  // সেশন ১১১: নোটিফিকেশন-লিংক ছিল শক্ত-কোডড '/articles/' — প্রশ্নের উত্তর/মন্তব্যে
-  // ক্লিক করলে ভুল-পেজে যেত; post.type-সচেতন লিংক + প্রসঙ্গ-সচেতন বার্তা।
-  const isQ111 = post && post.type === 'question';
-  const link111 = isQ111 ? '/qa/' + _pid117 : '/articles/' + _pid117;
+  await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(pid);
+  const post = _postEx113;
   if (post && post.author_id !== req.session.user.id) {
-    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার ${isQ111 ? 'প্রশ্নে' : 'লেখায়'} মন্তব্য করেছেন`, link111, req.session.user.id);
+    // সেশন ১১৩ (বাগ-ফিক্স): প্রশ্নের উত্তরে বিজ্ঞপ্তি-লিংক আগে সর্বদা /articles/N
+    // হতো → ক্লিকে ভুল-পেজ (প্রশ্ন 404)। format=html-হ্যান্ডলারের মতোই টাইপ-ভিত্তিক।
+    const _nLink113 = post.type === 'question' ? '/qa/' + pid : '/articles/' + pid;
+    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার লেখায় মন্তব্য করেছেন`, _nLink113, req.session.user.id);
   }
   // সেশন ১১৪: রিপ্লাই-নোটিফিকেশন — প্যারেন্ট-মন্তব্যের লেখককেও (নিজে/পোস্ট-লেখক-ডুপ্লিকেট বাদ)
-  if (parent_id) {
-    const parent = await db.prepare('SELECT id, author_id FROM comments WHERE id = ?').get(parent_id);
+  if (_parentId113) {
+    const parent = await db.prepare('SELECT id, author_id FROM comments WHERE id = ?').get(_parentId113);
     if (parent && parent.author_id !== req.session.user.id && parent.author_id !== (post && post.author_id)) {
-      await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, link111, req.session.user.id);
+      const _pLink113 = post.type === 'question' ? '/qa/' + pid : '/articles/' + pid;
+      await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, _pLink113, req.session.user.id);
     }
   }
   // Return the new comment id so callers (inline reply UI, tests) can chain
@@ -1733,10 +1753,10 @@ router.delete('/api/comments/:id', ensureLoggedIn, async (req, res) => {
     await db.prepare(`DELETE FROM likes WHERE comment_id IN (${ph})`).run(...del);
     await db.prepare(`DELETE FROM comments WHERE id IN (${ph})`).run(...del);
     await db.prepare(`UPDATE posts SET comment_count = MAX(0, comment_count - ${del.length}) WHERE id = ?`).run(c.post_id);
-    // সেশন ১১১: এই রুট session104-এর DELETE-কে শ্যাডো করে (first-match) — আগে total
-    // ফেরত হত না বলে ক্লায়েন্ট-কাউন্টার-সিঙ্ক (.comments-total/[data-cmt-total]) অসম্ভব ছিল।
-    const postAfter = await db.prepare('SELECT comment_count AS total FROM posts WHERE id = ?').get(c.post_id);
-    res.json({ ok: true, removed: del.length, total: postAfter ? postAfter.total : 0 });
+    // সেশন ১১৩: অবশিষ্ট-মন্তব্য-সংখ্যা ফেরত — [data-cmt-total]/.comments-total
+    // কাউন্টার-সিঙ্কের একমাত্র সত্য-উৎস (এটা-ই না-থাকলে ১১৪-র সিঙ্ক dead-code)
+    const _rem113 = await db.prepare('SELECT COUNT(*) AS c FROM comments WHERE post_id = ?').get(c.post_id);
+    res.json({ ok: true, removed: del.length, total: _rem113.c });
   } catch (e) {
     res.status(500).json({ error: 'server' });
   }
@@ -1841,16 +1861,6 @@ router.post('/api/notifications/read/:id', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   await db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?').run(req.params.id, req.session.user.id);
   res.json({ ok: true });
-});
-
-// ── সেশন ১১৪: বিজ্ঞপ্তি-সরানো (FB-প্যারিটি "remove this notification") ──
-// নিজের-সারি-ইনভ্যারিয়েন্ট (user_id = আমি) — অন্যের বিজ্ঞপ্তি স্পর্শ অসম্ভব।
-// পুরনো-লিঙ্ক-মৃত (মুছে-ফেলা লেখা/পোস্ট) বিজ্ঞপ্তি ইউজার নিজের হাতে পরিষ্কার
-// করতে পারেন — এই-রাউন্ডের QA-সিড-নোটিশগুলোও এই-পথেই পরিষ্কার হবে (product-first)।
-router.post('/api/notifications/:id/dismiss', async (req, res) => {
-  if (!req.session.user) return res.status(401).json({ error: 'login' });
-  const del = await db.prepare('DELETE FROM notifications WHERE id = ? AND user_id = ?').run(req.params.id, req.session.user.id);
-  res.json({ ok: true, removed: del.changes > 0 });
 });
 
 router.get('/notifications/mark-all-read', async (req, res) => {
@@ -2647,22 +2657,8 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const prev101 = await db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND comment_id = ?').get(me.id, target_id);
     const del101 = await db.prepare('DELETE FROM likes WHERE user_id = ? AND comment_id = ?').run(me.id, target_id);
     const toggledOff101 = del101.changes > 0 && ((prev101 && prev101.reaction_type) || 'like') === reaction_type;
-    // সেশন ১১১: কমেন্ট-রিঅ্যাকশনে লেখক-নোটিফিকেশন — পোস্ট-ব্রাঞ্চ-সিমেট্রিক নীতি
-    // (কেবল নতুন-যোগে + love/haha/wow-ডিবাউন্স; টগল-অফ/সুইচ/like-স্প্যামে নয়)।
-    // লিংক post.type-সচেতন — প্রশ্ন-উত্তরের রিঅ্যাকশনে /qa/-তেই নিয়ে যায়।
-    let addedC111 = false;
     if (!toggledOff101) {
-      const insC111 = await db.prepare('INSERT OR IGNORE INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
-      addedC111 = insC111.changes > 0;
-    }
-    if (addedC111 && ['love', 'haha', 'wow'].includes(reaction_type)) {
-      const cOwn111 = await db.prepare('SELECT c.author_id AS ca, c.post_id AS pid, p.type AS ptype FROM comments c JOIN posts p ON p.id = c.post_id WHERE c.id = ?').get(target_id);
-      if (cOwn111 && cOwn111.ca !== me.id) {
-        const cLink111 = cOwn111.ptype === 'question' ? '/qa/' + cOwn111.pid : '/articles/' + cOwn111.pid;
-        const labels111 = { love: '❤️ ভালোবাসা', haha: '😂 হাসি', wow: '😮 বিস্ময়' };
-        await notifyIfAllowed(cOwn111.ca, 'notify_reactions', 'reaction', labels111[reaction_type] || 'প্রতিক্রিয়া',
-          displayName(me) + ' আপনার মন্তব্যে প্রতিক্রিয়া জানিয়েছেন', cLink111, me.id);
-      }
+      await db.prepare('INSERT OR IGNORE INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
     }
     const mine101 = toggledOff101 ? null : reaction_type;
     const counts = await db.prepare(`

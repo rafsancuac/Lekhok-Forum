@@ -84,12 +84,13 @@
           counts: reaction.counts,
           mine: reaction.mine,
           link: '/qa/' + post.id,
+          commentCount: (answers.reduce((a, a2) => a + 1 + (a2.replies113 || []).length, 0)) || 0,
           showBookmark: false
         }) %>
       </div>
 
       <div class="answers-section">
-        <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<span class="comments-total"><%= answers.reduce((a, a2) => a + 1 + (a2.replies113 || []).length, 0) %></span>)</h2>
+        <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<span class="comments-total" data-cmt-total><%= (answers.reduce((a, a2) => a + 1 + (a2.replies113 || []).length, 0) + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></span>)</h2>
 
         <% if (answers.length === 0) { %>
           <div class="empty-state answers-empty"><i class="fas fa-reply-all"></i><p>এখনো কোনো উত্তর নেই। প্রথম উত্তরদাতা হোন!</p></div>
@@ -98,7 +99,10 @@
         <%# ── সেশন ১১৪: ক্যানোনিকাল CommentItem — উত্তর-থ্রেড এখন ফিড/আর্টিকেলের
             কমেন্টের সাথে হুবহু একই বাবল (হোভার ৩-ডট: সম্পাদনা/মুছুন-নিজের/রিপোর্ট-অন্যের,
             হোভার ৬-ইমোজি প্যালেট, বাবল-কোণায় রিঅ্যাকশন-ব্যাজ)। ইঞ্জিন comment-tools.js। ── %>
-        <div class="qa-answers-list">
+        <%# সেশন ১১৩: data-post-link → সাবমিটের পরে রিলোড-নেই থ্রেড-রিফ্রেশ
+            (refreshArticleThread — format=html ক্যানোনিকাল-HTML সোয়াপ + কাউন্টার-সিঙ্ক);
+            রিফ্রেশের পরে স্লট-র‍্যাপার/চিপ না-থাকলেও কমেন্ট-বাবলগুলো অক্ষত থাকে। ── %>
+        <div class="qa-answers-list" data-post-link="/qa/<%= post.id %>">
         <% answers.forEach((a, idx) => { %>
           <div class="qa-answer-slot" id="answer-<%= a.id %>">
             <% if (idx === 0 && a.like_count > 0) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>
