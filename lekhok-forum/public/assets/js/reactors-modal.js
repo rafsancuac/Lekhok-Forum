@@ -255,6 +255,16 @@
       openFor(trigger.getAttribute('data-reactors-type') || 'post', trigger.getAttribute('data-reactors-for'));
       return;
     }
+    // সেশন ১১২-মার্জ: নতুন ক্যানোনিকাল কনট্র্যাক্ট (session108-খ PostFooterActions —
+    // data-rx-open/data-rx-id)। তাদের lf-rxm মডাল (#reactorsModal) যে-পেজে আছে
+    // (dashboard/profile/me) সেখানে তারাই হ্যান্ডল করে (comment-tools.js) — আমরা
+    // স্থগিত; বাকি পেজে (article/qa…) আমাদের গ্লোবাল মডাল-ই ফেসপাইল দেখায়।
+    var trig2 = e.target.closest('[data-rx-open][data-rx-id]');
+    if (trig2 && !document.getElementById('reactorsModal')) {
+      e.preventDefault();
+      openFor(trig2.getAttribute('data-rx-open') || 'post', trig2.getAttribute('data-rx-id'));
+      return;
+    }
     if (!backdrop && !q('#rxModal')) return;
     var modeBtn = e.target.closest('[data-rx_mode]');
     if (modeBtn && modeSeg && modeSeg.contains(modeBtn)) {

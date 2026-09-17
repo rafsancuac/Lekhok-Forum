@@ -5,12 +5,22 @@
   রুল-১: PostFooterActions-এর কাউন্টার-বারে ক্লিক করলে কারা কী রিঅ্যাকশন
   দিয়েছেন তার তালিকা। প্রতি পেজে একবার include করতে হয় (ডেটা লেজি-ফেচ:
   GET /api/reactions/:type/:id → {users:[...]} — comment-tools.js পপুলেট করে)।
+  ───────────────────────────────────────────────────────────────────────────
+  সেশন ১১২ (ইউজার-স্পেসিফিকেশন — Facepile-অ্যাভাটার-মোড): হেডে ভিউ-মোড
+  সুইচার [👥 ফেসপাইল | 📋 তালিকা] (localStorage 'rxm110view' — গ্লোবাল
+  reactors-modal.js-এর সাথে শেয়ার্ড-পছন্দ) + `.rxm-fgrid` কনটেইনার (ক্লাস
+  style.css session110-ব্লক থেকেই রিইউজ — ডুপ্লিকেট-CSS-শূন্য)। মোড-লজিক
+  comment-tools.js-এর renderRxList-পথে (additive)।
   ═══════════════════════════════════════════════════════════════════════════ %>
 <div class="lf-rxm" id="reactorsModal" hidden role="dialog" aria-modal="true" aria-label="রিঅ্যাক্টরগণ">
   <div class="lf-rxm-backdrop" data-rxm-close></div>
   <div class="lf-rxm-card">
     <header class="lf-rxm-head">
       <h3 class="lf-rxm-title">প্রতিক্রিয়া</h3>
+      <div class="rxm-modeseg lf-rxm-modeseg" role="group" aria-label="ভিউ-মোড">
+        <button type="button" class="rxm-modebtn" data-lfmode="facepile" aria-pressed="true" title="ফেসপাইল গ্রিড">👥 <span>ফেসপাইল</span></button>
+        <button type="button" class="rxm-modebtn" data-lfmode="list" aria-pressed="false" title="বিস্তারিত তালিকা">📋 <span>তালিকা</span></button>
+      </div>
       <button type="button" class="lf-rxm-close" data-rxm-close aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
     </header>
     <div class="lf-rxm-tabs" role="tablist">
@@ -19,5 +29,6 @@
     <div class="lf-rxm-list" aria-live="polite">
       <div class="lf-rxm-empty"><i class="fas fa-spinner fa-spin"></i></div>
     </div>
+    <div class="rxm-fgrid lf-rxm-fgrid" data-lffacepile hidden></div>
   </div>
 </div>

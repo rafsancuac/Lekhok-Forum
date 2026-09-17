@@ -979,6 +979,54 @@
     }).join('');
   }
 
+  /* ═══ সেশন ১১২: Facepile-অ্যাভাটার-মোড (ইউজার-স্পেসিফিকেশন — additive) ═══
+     localStorage 'rxm110view' গ্লোবাল reactors-modal.js-এর সাথে শেয়ার্ড;
+     গ্রিড-মার্কআপ .rxm-fgrid/.rxm-fcell (style.css session110-ব্লক) রিইউজ। */
+  var LF_VIEW_KEY = 'rxm110view';
+  function lfStoredMode() {
+    try { var v = localStorage.getItem(LF_VIEW_KEY); return v === 'list' ? 'list' : 'facepile'; } catch (e) { return 'facepile'; }
+  }
+  function lfSaveMode(m) { try { localStorage.setItem(LF_VIEW_KEY, m); } catch (e) { /* নিরীহ */ } }
+  var lfRxMode = lfStoredMode();
+  var lfRxUsers = [];
+  var lfRxFilter = 'all';
+
+  function lfFirstName(u) {
+    var d = String(u.pen_name || u.name || '').trim();
+    return d ? d.split(' ')[0] : 'ইউজার';
+  }
+  function lfPaintMode() {
+    var modal = document.getElementById('reactorsModal');
+    if (!modal) return;
+    var fp = modal.querySelector('[data-lffacepile]');
+    var list = modal.querySelector('.lf-rxm-list');
+    var seg = modal.querySelector('.lf-rxm-modeseg');
+    if (seg) seg.querySelectorAll('.rxm-modebtn').forEach(function (b) {
+      var on = (b.getAttribute('data-lfmode') || '') === lfRxMode;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    if (fp && list) {
+      fp.hidden = lfRxMode !== 'facepile';
+      list.hidden = lfRxMode === 'facepile';
+      if (lfRxMode === 'facepile') lfRenderFacepile(fp, lfRxUsers, lfRxFilter);
+    }
+  }
+  function lfRenderFacepile(fp, users, filter) {
+    var rows = users.filter(function (u) { return filter === 'all' || u.reaction === filter; });
+    if (!rows.length) { fp.innerHTML = '<div class="lf-rxm-empty" style="grid-column:1/-1">এই প্রতিক্রিয়া এখনো নেই</div>'; return; }
+    fp.innerHTML = rows.map(function (u) {
+      return '<a class="rxm-fcell" href="/profile/' + esc(u.username) + '" tabindex="0">' +
+        '<span class="rxm-favwrap">' +
+          '<img class="rxm-fav" loading="lazy" decoding="async" src="' + esc(u.avatar_url) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
+          '<span class="rxm-fbadge">' + (RX_META[u.reaction] || '👍') + '</span>' +
+        '</span>' +
+        '<span class="rxm-fname">' + esc(lfFirstName(u)) + '</span>' +
+        '<span class="rxm-ftip" role="tooltip"><strong>' + esc(u.name || '') + '</strong></span>' +
+      '</a>';
+    }).join('');
+  }
+
   function openReactorsModal(type, id) {
     var modal = document.getElementById('reactorsModal');
     if (!modal) return;
@@ -992,17 +1040,21 @@
       .then(function (j) {
         var users = j.users || [];
         var counts = j.counts || {};
+        lfRxUsers = users;
         var tabsHtml = '<button type="button" class="lf-rxm-tab active" data-rx-filter="all">সব <span>' + bnNum(j.total || users.length) + '</span></button>';
         Object.keys(counts).forEach(function (k) {
           if (counts[k] > 0) tabsHtml += '<button type="button" class="lf-rxm-tab" data-rx-filter="' + k + '">' + (RX_META[k] || '👍') + ' <span>' + bnNum(counts[k]) + '</span></button>';
         });
         tabs.innerHTML = tabsHtml;
         renderRxList(list, users, 'all');
+        lfPaintMode(); // সেশন ১১২: সংরক্ষিত-মোডে ফেসপাইল/তালিকা পেইন্ট
         tabs.onclick = function (ev) {
           var b = ev.target.closest('.lf-rxm-tab');
           if (!b) return;
           tabs.querySelectorAll('.lf-rxm-tab').forEach(function (x) { x.classList.toggle('active', x === b); });
-          renderRxList(list, users, b.getAttribute('data-rx-filter'));
+          lfRxFilter = b.getAttribute('data-rx-filter') || 'all';
+          renderRxList(list, users, lfRxFilter);
+          lfPaintMode();
         };
       })
       .catch(function () { list.innerHTML = '<div class="lf-rxm-empty">লোড করা যায়নি — আবার চেষ্টা করুন</div>'; });
@@ -1018,6 +1070,16 @@
     if (!t) return;
     e.preventDefault();
     openReactorsModal(t.getAttribute('data-rx-open'), t.getAttribute('data-rx-id'));
+  });
+  // সেশন ১১২: মোড-সুইচার ডেলিগেশন (এই মডালের ভেতরের বাটন)
+  document.addEventListener('click', function (e) {
+    var mb = e.target.closest('[data-lfmode]');
+    if (!mb) return;
+    var seg = mb.closest('.lf-rxm-modeseg');
+    if (!seg) return;
+    lfRxMode = mb.getAttribute('data-lfmode') === 'list' ? 'list' : 'facepile';
+    lfSaveMode(lfRxMode);
+    lfPaintMode();
   });
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;

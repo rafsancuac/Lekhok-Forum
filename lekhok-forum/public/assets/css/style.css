@@ -1885,3 +1885,14 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .notice-row:hover .notice-row-icon.inkc110{transform:scale(1.05)}
 .notice-row-icon{transition:transform .18s ease}
 @media (prefers-reduced-motion: reduce){ .notice-row-icon{transition:none} }
+
+/* ── সেশন ১১২-মার্জ: lf-rxm মডালে Facepile-মোড (shared ReactorsModal) —
+   .rxm-fgrid/.rxm-fcell ক্লাস session110-ব্লক থেকেই রিইউজ; এখানে শুধু
+   তাদের head-লেআউটে বসানোর অ্যাডাপ্টেশন ── */
+.lf-rxm-head .lf-rxm-title{flex-shrink:0}
+.lf-rxm-head .lf-rxm-modeseg{flex:1;margin:0 10px;min-width:0}
+.lf-rxm-head .lf-rxm-modeseg .rxm-modebtn{padding:5px 8px}
+.lf-rxm-fgrid{overflow-y:auto;flex:1;padding:12px}
+@media (max-width:640px){
+  .lf-rxm-head .lf-rxm-modeseg .rxm-modebtn span{display:none}
+}
