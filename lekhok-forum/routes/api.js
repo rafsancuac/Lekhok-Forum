@@ -2,27 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// ── সেশন ৮৯ (E1): হেলথ-এন্ডপয়েন্ট — অথ-হীন, লাইটওয়েট। সুপারভাইজার-হ্যাং-চেক,
-//    আপটাইম-মনিটর ও লোডব্যালেন্সার-প্রোবের জন্য। db-ok = একটি ট্রিভিয়াল কুয়েরি চালিয়ে।
-router.get('/health', async (req, res) => {
-  let dbOk = false, dbLatencyMs = null;
-  const t0 = Date.now();
-  try {
-    await db.prepare('SELECT 1 AS ok').get();
-    dbOk = true;
-    dbLatencyMs = Date.now() - t0;
-  } catch (_) { /* db ডাউন — 503 */ }
-  const mem = process.memoryUsage();
-  res.status(dbOk ? 200 : 503).json({
-    ok: dbOk,
-    db: { ok: dbOk, latencyMs: dbLatencyMs },
-    uptimeSec: Math.round(process.uptime()),
-    memory: { rssMb: Math.round(mem.rss / 1048576), heapUsedMb: Math.round(mem.heapUsed / 1048576) },
-    node: process.version,
-    version: 'session-89',
-    timestamp: new Date().toISOString()
-  });
-});
+// ── সেশন ৮৯ (E1): হেলথ-এন্ডপয়েন্ট সেশন-৯১-এ ফেইল-সেফ-ফিল্ডসহ ফাইলের শেষে একত্রিত
+//    (no-store ক্যাশ-হেডার + status/database ফিল্ড) — এখানকার ডুপ্লিকেট-রুট সরানো।
 
 // ── Public read endpoints (no auth) ─────────────────────────────────────────
 router.get('/notices', async (req, res) => {
