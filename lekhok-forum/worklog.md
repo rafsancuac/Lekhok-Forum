@@ -1039,3 +1039,19 @@ Stage Summary:
 - গ্রুপ-কল এখন FB-প্যারিটি স্পিকার-হাইলাইটসহ — কে বলছে এক-নজেই; ডায়াগনস্টিকসে ভিডিও-রেজোলিউশন/FPS (TURN-রিলে-থ্রুপুট-যাচাই-সহায়ক)
 - session113-পরবর্তী কল-রোডম্যাপে অবশিষ্ট: Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, প্রতি-পিয়ার-স্ট্যাট-সাব-প্যানেল
 - পরবর্তী-এজেন্ট: session121 লেবেল থেকে (118=/me-রিডিজাইন, 119=Q&A-ফিল্টার — সমান্তরাল-এজেন্ট, 120=স্পিকার-হাইলাইট) (সর্বোচ্চ+১)
+Task ID: 12 (root-worklog session12)
+Agent: Main agent (cron QA রাউন্ড — অপটিমিস্টিক-কমেন্ট + মার্জ-ডুপ্লিকেট-ফিক্স)
+Task: প্রজেক্ট-স্টেটাস মূল্যায়ন → agent-browser QA → বাগ-ফিক্স/ফিচার-নির্বাচন → session104-সুপারিশ-③ (article-কমেন্টে optimistic-UI) সমাপ্তি + বেসলাইনে ধরা মার্জ-ডুপ্লিকেট-বাগ ফিক্স
+
+Work Log:
+- pull --rebase (af372de-বেসলাইন, শূন্য-behind) → agent-browser QA: ফিড/QA-পেজ গ্রিন; আর্টিকেল-পেজে **union-মার্জ-অ্যাক্সিডেন্ট**: `<h3 class="comments-h">` ×২ — সাবমিটের পর "মন্তব্য (২)" ও "মন্তব্য (1)" অসামঞ্জস্য-যুগল (একটি স্টেল)
+- **ফিক্স-১:** ডুপ্লিকেট-হেডার-ডেলিট (article-single.ejs) + কাউন্টার-স্প্যান বাংলা-অঙ্কে (article + qa + notif-badge + refreshDrawer-stat ×২ — ASCII-লিক-পরিষ্কার)
+- **ফিচার (optimistic-কমেন্ট):** comment-tools.js — insertOptimistic/buildOptimisticItem (ক্যানোনিকাল-চুক্তি বাবল: ৭-প্যালেট+৩-ডট+রিপ্লাই, j.id-বাস্তব) + optMd (markdown-lite ক্লায়েন্ট-মিরর, esc-ফার্স্ট) + optParseBn (বাংলা-অঙ্ক-পার্স — ASCII-regex "৩"→NaN-ফাঁদ ভাঙা) + opt-fresh-অ্যানিমেশন (style.css, reduced-motion) + body[data-uname] (layout+header — /profile/-লিংক-সোর্স)
+- **ফিক্স-২ (ডিলিট-সিঙ্ক):** ড্রয়ার-ডিলিটে ফিড-কার্ড as-stat স্টেল — সব [data-cmt-total]/.comments-total + card as-stat + লোডেড-ড্রয়ার refreshDrawer (প্রিভিউ-স্টেল-প্রতিরোধ)
+- E2E (agent-browser, refetch-ডিলেই-হুক): আর্টিকেল-সাবমিট ৬৮ms-এ opt-বাবল+`<strong>`+কাউন্টার"৬"+৭-প্যালেট+৩-ডট ✓ reconcile-পরে canonical-মাত্র+কাউন্টার-অপরিবর্তিত ✓ নেস্টেড-রিপ্লাই opt(.cmt-replies-এ fc-reply)→reconcile ✓ রিঅ্যাকশন 👍১-ব্যাজ ✓ ডিলিট-ক্যাসকেড ৬→৩+সিঙ্ক ✓ ড্রয়ার as-stat-বাম্প/ডিলিট-সিঙ্ক ✓ 390px-overflow-০ ✓ কনসোল-০ ✓ role-policy 103✓/13✗-প্রি-এক্সিস্টিং-বেসলাইন-অভিন্ন ✓ নোটিফিকেশন-E2E (riya-কমেন্ট → ismail-ব্যাজ "৪" → dismiss-পরিষ্কার) ✓ টেস্ট-ডেটা-ক্লিনআপ ✓
+- গোটচা-নোট (PLANS-এ): test-fetch-hook-এর arguments-closure-ভুল → fetch(undefined) → r.json() throw → catch → location.reload() — ভান-করা "ফেইল" (হুকে args-capture বাধ্যতামূলক); সার্ভার-রিস্টার্ট ×৪ (প্রতি-স্ট্যাটিক-এডিটে — AV-হ্যাশ)
+
+Stage Summary:
+- **অর্জন:** session104-সুপারিশ-③ (optimistic-UI) সমাপ্ত — কমেন্ট-সিরিজের শেষ-বাকি আইটেম; মার্জ-অ্যাক্সিডেন্ট-বাগ ফিক্স; সাইট-ব্যাপী বাংলা-অঙ্ক-সামঞ্জস্য
+- **পরবর্তী:** qa-উত্তর-পাথেও optimistic · edit/delete মৃত্যু-অ্যানিমেশন · view-template ডুপ্লিকেট-নোড-অডিট-স্ক্রিপ্ট · hall-provost সার্চ/ফিল্টার (session111 ④ অগ্রাহীত)
+- **ঝুঁকি:** union-মার্জে ভিউ-টেমপ্লেটে ডুপ্লিকেট-নোড আবারও ঢুকতে পারে — মার্জ-পরে grep-count-অডিট প্রস্তাবিত

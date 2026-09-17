@@ -457,7 +457,7 @@
         var card = drawer.closest('.feed-card, article');
         if (card) {
           var stat = card.querySelector('.as-stat[title="মন্তব্য"] span:first-child');
-          if (stat) stat.textContent = total;
+          if (stat) stat.textContent = bnNum(total); // সেশন ১২: বাংলা-সংখ্যা (ASCII-লিক-ফিক্স)
         }
       })
       .catch(function () {
@@ -751,7 +751,7 @@
                 if (hCount) hCount.innerHTML = '<i class="far fa-comment"></i> মন্তব্য (' + bnNum(total) + ')';
               }
               var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
-              if (stat) stat.textContent = total;
+              if (stat) stat.textContent = bnNum(total); // সেশন ১২: বাংলা-সংখ্যা (ASCII-লিক-ফিক্স)
             }
           } catch (_) {}
         }
@@ -807,6 +807,144 @@
     }
   });
 
+  /* ── ৫.ব সেশন ১২: অপটিমিস্টিক-কমেন্ট ইঞ্জিন (session104-সুপারিশ-③ — শেষ-বাকি) ──
+     সাবমিট-সফল হলে সার্ভার-রিফেচের অপেক্ষা নয় — ক্যানোনিকাল-চুক্তির বাবল তাৎক্ষণিক
+     DOM-এ বসে (POST-রেসপন্সের j.id বাস্তব, তাই data-cmt-id/প্যালেট/৩-ডট সঙ্গে সঙ্গেই
+     সক্রিয়)। এরপর background-রিফেচ ক্যানোনিকাল-HTML-এ reconcile করে (markdown/সময়
+     পূর্ণরূপে সার্ভার-নির্ভুল)। বিলম্ব-পরিমাপ (E2E): আগে ~২.৬সে শূন্য-অপেক্ষা → এখন ০মিসে। */
+  function optMd(raw) {
+    // markdown-lite-এর ক্লায়েন্ট-মিরর (ইনলাইন-সাবসেট) — esc-ফার্স্ট (XSS-নিরাপদ);
+    // সম্পূর্ণ-নির্ভুলতা দরকার নেই: reconcile-সোয়াপ সঙ্গে সঙ্গেই ক্যানোনিকাল-HTML বসায়।
+    var s = esc(raw);
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+         .replace(/_(.+?)_/g, '<em>$1</em>')
+         .replace(/~~(.+?)~~/g, '<del>$1</del>')
+         .replace(/\[([^\]]+)\]\(\s*((?:https?:\/\/|\/)[^\s)"]+)\s*\)/g,
+           '<a href="$2" class="a-link" target="_blank" rel="noopener nofollow">$1</a>')
+         .replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>')
+         .replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>');
+    return s.split(/\r?\n/).map(function (l) { return l; }).join('<br>');
+  }
+
+  function optMe() {
+    var b = document.body;
+    if (!b || b.getAttribute('data-auth') !== '1') return null;
+    return {
+      id: b.getAttribute('data-uid') || '',
+      name: b.getAttribute('data-name') || 'সদস্য',
+      uname: b.getAttribute('data-uname') || '',
+      avatar: b.getAttribute('data-avatar') || ''
+    };
+  }
+
+  function optPaletteHtml(cid) {
+    var opts = Object.keys(R_META).map(function (k) {
+      return '<button type="button" class="cmt-palette-opt" data-cmt-react="' + k + '" data-cmt-id="' + esc(cid) + '" title="' + R_LABEL[k] + '" aria-label="' + R_LABEL[k] + '">' + R_META[k] + '</button>';
+    }).join('');
+    return '<span class="cmt-palette" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন">' + opts + '</span>';
+  }
+
+  function buildOptimisticItem(id, raw, parentId) {
+    var me = optMe();
+    if (!me) return null;
+    var compact = !!parentId;
+    var cls = compact ? 'fc-item cmt-item fc-reply cmt-reply' : 'fc-item cmt-item';
+    var author = me.uname
+      ? '<a class="fc-author" href="/profile/' + esc(me.uname) + '">' + esc(me.name) + '</a>'
+      : '<span class="fc-author">' + esc(me.name) + '</span>';
+    return '<div class="' + cls + '" id="fc-c' + esc(id) + '" data-cmt-id="' + esc(id) + '" data-opt="1">' +
+      '<img class="fc-av' + (compact ? ' small' : '') + '" src="' + esc(me.avatar || ('/avatar/' + me.id)) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
+      '<div class="fc-main">' +
+        '<div class="fc-bubble">' + author +
+          '<div class="fc-body" data-raw="' + esc(raw) + '">' + optMd(raw) + '</div>' +
+          '<span class="cmt-badge" hidden title="প্রতিক্রিয়া"></span>' +
+        '</div>' +
+        '<div class="fc-meta">' +
+          '<span class="fc-time" data-ts="' + new Date().toISOString() + '">এইমাত্র</span>' +
+          '<span class="cmt-like-wrap">' +
+            '<button type="button" class="fc-act cmt-like" data-cmt-react-toggle="' + esc(id) + '" data-mine="" aria-label="প্রতিক্রিয়া দিন">লাইক</button>' +
+            optPaletteHtml(id) +
+          '</span>' +
+          '<button type="button" class="fc-act cmt-reply-btn" data-reply-to="' + esc(id) + '" data-reply-name="' + esc(me.name) + '">উত্তর</button>' +
+        '</div>' +
+        '<div class="pm-wrap cmt-more" data-pm-comment="' + esc(id) + '">' +
+          '<button type="button" class="pm-btn" aria-haspopup="menu" aria-expanded="false" aria-label="মন্তব্য অপশন" title="মন্তব্য অপশন"><i class="fas fa-ellipsis-h"></i></button>' +
+          '<div class="pm-menu" role="menu" hidden>' +
+            '<button type="button" class="pm-item" role="menuitem" data-cmt-edit="' + esc(id) + '"><i class="fas fa-pen"></i> সম্পাদনা করুন</button>' +
+            '<button type="button" class="pm-item pm-danger" role="menuitem" data-cmt-delete="' + esc(id) + '"><i class="fas fa-trash"></i> মুছে ফেলুন</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="fc-reply-slot" data-slot-for="' + esc(id) + '" hidden></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function optParseBn(txt) {
+    // বাংলা-সংখ্যা-সচেতন পার্স (কাউন্টার "৩"-এ থাকলে ASCII-regex-এ NaN হয়)
+    var t = String(txt || '').replace(/[^০-৯0-9]/g, '');
+    return parseInt(t.replace(/[০-৯]/g, function (d) { return String('০১২৩৪৫৬৭৮৯'.indexOf(d)); }), 10);
+  }
+
+  function optBumpCounters(delta) {
+    var seen = [];
+    document.querySelectorAll('[data-cmt-total], .comments-total').forEach(function (el) {
+      if (seen.indexOf(el) !== -1) return;
+      seen.push(el);
+      var cur = optParseBn(el.textContent);
+      if (Number.isNaN(cur)) return;
+      el.textContent = bnNum(cur + delta);
+    });
+  }
+
+  function insertOptimistic(id, raw, parentId, postId) {
+    // লিস্ট-সনাক্ত: আর্টিকেল-থ্রেড (data-post-link মিল) → ফিড-ড্রয়ার (data-comments-for মিল)
+    var list = null;
+    document.querySelectorAll('.comments-list[data-post-link]').forEach(function (el) {
+      var p = String(el.getAttribute('data-post-link') || '').replace(/^.*\//, '');
+      if (!list && p === String(postId)) list = el;
+    });
+    if (!list && postId) {
+      var drawer = document.querySelector('.fc-drawer[data-comments-for="' + String(postId).replace(/"/g, '') + '"]');
+      if (drawer) list = drawer.querySelector('.fc-list');
+    }
+    if (!list) return false;
+    var html = buildOptimisticItem(id, raw, parentId);
+    if (!html) return false;
+    var wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    var node = wrap.firstElementChild;
+    if (!node) return false;
+    if (parentId) {
+      var parent = list.querySelector('.cmt-item[data-cmt-id="' + String(parentId).replace(/"/g, '') + '"]');
+      if (parent) {
+        var nest = parent.querySelector('.cmt-replies');
+        if (!nest) {
+          nest = document.createElement('div');
+          nest.className = 'cmt-replies';
+          parent.querySelector('.fc-main').appendChild(nest);
+        }
+        nest.appendChild(node);
+        if (nest.hidden !== undefined) nest.hidden = false;
+      } else {
+        list.appendChild(node); // প্যারেন্ট-না-মেললে টপ-লেভেলে — reconcile ঠিক করবে
+      }
+    } else {
+      list.appendChild(node);
+    }
+    node.classList.add('opt-fresh');
+    optBumpCounters(1);
+    // সেশন ১২: ফিড-কার্ডের as-stat-ও তাৎক্ষণিক বাম্প (reconcile-এ refreshDrawer-সিঙ্কও আছে)
+    var card12 = node.closest('.feed-card, article');
+    if (card12) {
+      var stat12 = card12.querySelector('.as-stat[title="মন্তব্য"] span:first-child');
+      if (stat12) {
+        var cur12 = optParseBn(stat12.textContent);
+        if (!Number.isNaN(cur12)) stat12.textContent = bnNum(cur12 + 1);
+      }
+    }
+    return true;
+  }
+
   /* ── ৬. কম্পোজার-সাবমিট (ডেলিগেটেড — ফিড-ড্রয়ার + আর্টিকেল-পেজ) ─────── */
   document.addEventListener('submit', function (e) {
     var form = e.target;
@@ -840,6 +978,13 @@
         if (bubble) closeMention(bubble);
         if (send) { send.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
 
+        /* সেশন ১২ (অপটিমিস্টিক-UI): সার্ভার-রিফেচের আগেই বাবল তাৎক্ষণিক বসে —
+           j.id বাস্তব তাই প্যালেট/৩-ডট/রিপ্লাই সঙ্গে সঙ্গেই সক্রিয়;
+           পরক্ষণে ক্যানোনিকাল-HTML reconcile করে (নিচের refresh*)।
+           টোস্ট এখানেই একবার — refresh*-এ ডাবল-টোস্ট হয় না। */
+        var shown = insertOptimistic(j.id, body, parentId, form.getAttribute('data-post-id'));
+        if (window.showToast) showToast('মন্তব্য প্রকাশিত হয়েছে ✓', 'success');
+
         var drawer = form.closest('.fc-drawer');
         if (drawer) {
           // ফিড-ড্রয়ার: লিস্ট-রিফ্রেশ (ক্যানোনিকাল CommentItem-HTML) — রিলোড নেই
@@ -848,9 +993,8 @@
           if (slot) { slot.hidden = true; slot.innerHTML = ''; }
         } else if (refreshArticleThread(form)) {
           // আর্টিকেল-পেজ (সেশন ১০৫): রিলোড-নেই — ক্যানোনিকাল-HTML থ্রেড-সোয়াপ
-        } else {
+        } else if (!shown) {
           // লিগ্যাসি থ্রেড-পেজ ফলব্যাক: সার্ভার-রেন্ডার্ড রিলোড
-          if (window.showToast) showToast('মন্তব্য প্রকাশিত হয়েছে ✓', 'success');
           setTimeout(function () { location.reload(); }, 450);
         }
       })
@@ -863,6 +1007,7 @@
   /* ── ৬. সেশন ১০৫: ক্যানোনিকাল CommentItem-আচরণ (রুল-২) + রিঅ্যাক্টরস-মডাল ── */
 
   // ৬.a আর্টিকেল-থ্রেড-রিফ্রেশ (রিলোড-নেই) — .comments-list[data-post-link] থাকলে
+  // (টোস্ট নেই — সেশন ১২: সাবমিট-হ্যান্ডলারে অপটিমিস্টিক-ইনসার্টের সাথেই একবার দেখানো হয়)
   function refreshArticleThread(form) {
     var list = document.querySelector('.comments-list[data-post-link]');
     if (!list) return false;
@@ -872,9 +1017,15 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (j && j.html) list.innerHTML = j.html;
-        var tot = document.querySelector('.comments-total');
-        if (tot && typeof (j && j.total) === 'number') tot.textContent = bnNum(j.total);
-        if (window.showToast) showToast('মন্তব্য প্রকাশিত হয়েছে ✓', 'success');
+        // সেশন ১২: সব-কাউন্টার-স্প্যান সিঙ্ক (উভয়-হুক: data-cmt-total + .comments-total)
+        if (typeof (j && j.total) === 'number') {
+          var seen12 = [];
+          document.querySelectorAll('[data-cmt-total], .comments-total').forEach(function (el) {
+            if (seen12.indexOf(el) !== -1) return;
+            seen12.push(el);
+            el.textContent = bnNum(j.total);
+          });
+        }
       })
       .catch(function () { location.reload(); });
     return true;
@@ -979,7 +1130,34 @@
         .then(function (j) {
           if (j && j.ok) {
             var it = document.getElementById('fc-c' + cidD);
+            var cardD = it ? it.closest('.feed-card, article') : null;
             if (it) it.remove();
+            try {
+              // সেশন ১১১: কাউন্টার-সিঙ্ক — পুরনো-ইঞ্জিন deleteComment-এর মতোই
+              // ([data-cmt-total]/.comments-total + data-cm-count-রিকাউন্ট) —
+              // আগে ক্যানোনিকাল-পথে ডিলিটে হেডার-কাউন্টার স্টেল থাকত।
+              // সেশন ১২: উভয়-হুকেই সিঙ্ক + ফিড-কার্ডের as-stat-ও (স্টেল-বাগ)।
+              var totD = (typeof j.total === 'number') ? j.total : null;
+              if (totD !== null) {
+                document.querySelectorAll('[data-cmt-total], .comments-total').forEach(function (el) {
+                  el.textContent = bnNum(totD);
+                });
+                if (cardD) {
+                  var statD = cardD.querySelector('.as-stat[title="মন্তব্য"] span:first-child');
+                  if (statD) statD.textContent = bnNum(totD);
+                }
+              }
+              document.querySelectorAll('[data-cm-count]').forEach(function (cEl) {
+                var sel = cEl.getAttribute('data-cm-count');
+                if (sel) cEl.textContent = bnNum(document.querySelectorAll(sel).length);
+              });
+              // সেশন ১২: খোলা-ড্রয়ারে ডিলিট হলে প্রিভিউ-বাবলও স্টেল থাকত —
+              // লোডেড-ড্রয়ার রিফ্রেশ (ক্যানোনিকাল-HTML + syncPreview + as-stat)।
+              if (cardD) {
+                var dwD = cardD.querySelector('.fc-drawer[data-comments-for]');
+                if (dwD && dwD.dataset.loaded) refreshDrawer(dwD, dwD.getAttribute('data-comments-for'));
+              }
+            } catch (_) {}
             if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
           } else if (window.showToast) showToast('মোছা যায়নি', 'error');
         })

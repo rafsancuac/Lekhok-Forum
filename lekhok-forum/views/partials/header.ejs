@@ -126,7 +126,7 @@
   })();
   </script>
 </head>
-<body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= ((user.pen_name || user.full_name) || '').replace(/"/g, '&quot;') %>"<% } %>>
+<body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= ((user.pen_name || user.full_name) || '').replace(/"/g, '&quot;') %>" data-uname="<%= user.username %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
   <script src="/assets/js/auth-sync.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>"></script>
   <%# সেশন ৯৪: গ্লোবাল কল-রিংগার — লগড-ইন ইউজার মেসেঞ্জারের বাইরেও (ড্যাশবোর্ড/প্রোফাইল/
@@ -270,7 +270,7 @@
         <div class="notif-bell-wrap" id="notifBell">
           <button class="notif-bell-btn" onclick="toggleNotifs()">
             <i class="fas fa-bell"></i>
-            <% if (unread > 0) { %><span class="notif-badge" id="notifBadge"><%= unread > 9 ? '9+' : unread %></span><% } %>
+            <% if (unread > 0) { %><span class="notif-badge" id="notifBadge"><%= unread > 9 ? '৯+' : String(unread).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></span><% } %>
           </button>
           <div class="notif-dropdown" id="notifDropdown">
             <div class="notif-header">

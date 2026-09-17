@@ -121,8 +121,10 @@
       </div>
 
       <div class="comments-section">
-        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<span class="comments-total" data-cmt-total><%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %></span>)</h3>
-        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<span data-cmt-total><%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %></span>)</h3>
+        <%# সেশন ১২ (QA-ফিক্স): এই হেডার দুইবার ছিল (union-মার্জ-অ্যাক্সিডেন্ট) —
+            সাবমিটের পর "মন্তব্য (২)" ও "মন্তব্য (1)" অসামঞ্জস্য-যুগল দেখাত;
+            একটি রাখা হলো (.comments-total + data-cmt-total — উভয়-হুক-সহ) %>
+        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<span class="comments-total" data-cmt-total><%= String(comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0)).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></span>)</h3>
         <%# সেশন ৯৩: কম্প্যাক্ট FB-স্টাইল কম্পোজার — কার্যকর টুলবার + @ম্যানশন
             (পুরনো cf-hint ড্যাশড-চিপ + 'প্রথম মন্তব্যকারী হোন' বিশাল-কার্ড অপসারিত) %>
         <% if (user) { %>

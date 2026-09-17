@@ -2072,3 +2072,12 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
    গার্ড-ছাড়া ফিল্টার-রো লুকাত না; আমার notif-tabs-ব্লক প্রত্যাহৃত (ডুপ্লিকেট-শূন্য-নীতি) */
 .notif-page-item[hidden]{display:none!important}
 .notif-filter-empty[hidden]{display:none!important}
+/* ═══ সেশন ১২ — অপটিমিস্টিক-কমেন্ট (session104-সুপারিশ-③ সমাপ্তি) ═══
+   সাবমিটের সাথে সাথেই ক্যানোনিকাল-চুক্তির বাবল DOM-এ বসে (comment-tools.js
+   insertOptimistic) → নরম উপস্থিতি-অ্যানিমেশন; ক্যানোনিকাল-HTML reconcile-এ
+   প্রতিস্থাপিত হয়। reduced-motion সম্মানিত। */
+.opt-fresh{animation:optIn12 .34s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes optIn12{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media (prefers-reduced-motion:reduce){.opt-fresh{animation:none}}
+/* অপটিমিস্টিক-বাবলের রিঅ্যাকশন-ব্যাজ শূন্য-অবস্থায় লুকানো থাকে (canonical-এর মতোই) */
+.cmt-item[data-opt="1"] .cmt-badge[hidden]{display:none}

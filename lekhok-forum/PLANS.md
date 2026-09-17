@@ -1326,3 +1326,23 @@ push-রেস-এ abhi-asol: উপরের session113-নোট লেখা�
 **⚠️ Session119-পোস্ট-মার্জ-সংশোধন: নোটিফ-ফিল্টার সমান্তরাল-ডুপ্লিকেট — session117(চিপ)-ক্যানোনিকাল (১৮ সেপ্টেম্বর ২০২৬)**
 
 push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক প্যারালাল-এজেন্ট (CSS-লেবেল "সেশন ১১৯" — লেবেল-রেস পঞ্চমবার!) **একই /notifications ফিল্টার session117-চিপ-ঘরানায়** ইমপ্ল করেছে (`.notif-filter-bar` + `.nft-chip` + `data-g117` + `nftRecount117`-dismiss-সিঙ্ক) — session105-প্রেসিডেন্সি অনুযায়ী **তাদেরটাই ক্যানোনিকাল**; আমার notif-tabs-ভিউ/JS/CSS-ব্লক প্রত্যাহৃত (ডুপ্লিকেট-শূন্য)। **অনন্য-রক্ষিত (আমার):** ① বাংলা আপেক্ষিক-সময় rel119 (তাদের নেই — cron-r4-প্যারিটি) ② `.notif-page-item[hidden]` + **`.notif-filter-empty[hidden]`** {display:none!important}-গার্ড ×২ — তাদের JS `it.hidden=!show` ব্যবহার করে কিন্তু তাদের CSS-এ গার্ড ছিল না (display:flex/block UA-[hidden] ছাপিয়ে যেত — cron-r6-গোটচা; গার্ড-ছাড়া চিপ-ফিল্টার-রো ও খালি-নোট লুকাত না) ③ header.ejs fetch-প্যাচ + XTPQ ④ dismiss-route-রিস্টোর। **শিক্ষা:** একই session113-⑤-রেকমেন্ডেশন দুই-এজেন্ট একসাথে নিয়েছিল — ভবিষ্যতে কাজ-শুরুর আগে PLANS-এ intent-নোট দেওয়া ছাড়া বিকল্প নেই।
+
+
+## Cross-Agent Note: session12 — অপটিমিস্টিক-কমেন্ট + মার্জ-ডুপ্লিকেট-QA-ফিক্স (১৮ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** comment-tools.js (অপটিমিস্টিক-ইঞ্জিন + কাউন্টার-সিঙ্ক-সম্প্রসারণ + বাংলা-সংখ্যা-পার্স) + style.css (opt-fresh ব্লক) + layout/header.ejs (data-uname + ব্যাজ-বাংলা) + article-single.ejs (ডুপ্লিকেট-হেডার-ফিক্স + কাউন্টার-বাংলা) + qa-single.ejs (কাউন্টার-বাংলা)। ফিড-র‍্যাংকিং/মেসেঞ্জার/গ্যালারি/admin লক-জোন অস্পৃশ্য।
+
+**বেসলাইন-QA-তে ধরা (union-মার্জ-অ্যাক্সিডেন্ট):** article-single.ejs-এ `<h3 class="comments-h">` **দুইবার** (মন্তব্য (N) যুগল) — সাবমিটের পর একটি স্টেল থেকে যেত ("মন্তব্য (২)" ও "মন্তব্য (1)" একসাথে)। এক-লাইন-ডেলিট ফিক্স; **মার্জ-পরে ভিউ-টেমপ্লেটে ডুপ্লিকেট-নোড-অডিট করুন** (grep-count একই id/class-হুক)।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+- **অপটিমিস্টিক-কমেন্ট (session104-সুপারিশ-③ সমাপ্ত):** submit-সফলে `insertOptimistic(j.id, body, parentId, postId)` — ক্যানোনিকাল-চুক্তির বাবল তাৎক্ষণিক DOM-এ (j.id বাস্তব → প্যালেট/৩-ডট/রিপ্লাই ডেলিগেশন সঙ্গে-সঙ্গেই সক্রিয়), তারপর background-রিফেচ reconcile। ড্রয়ার ও আর্টিকেল-উভয়-পাথে। **নতুন কমেন্ট-সারফেস যোগ করলে insertOptimistic-এর লিস্ট-সনাক্তকরণ (data-post-link-পাথ-পার্স / data-comments-for) সমর্থন করুন।**
+- **body data-uname:** layout + header `<body>`-তে যোগ — optimistic-বাবলের /profile/ লিংক-সোর্স। নতুন লেআউটেও রাখুন।
+- **optBumpCounters/optParseBn:** বাংলা-অঙ্ক-সচেতন কাউন্টার-বাম্প ("৩"→"৪") — ASCII-regex-এ NaN-ফাঁদ ছিল।
+- **delete-handler সিঙ্ক-সম্প্রসারণ:** সব [data-cmt-total]/.comments-total + ফিড-কার্ডের .as-stat[title="মন্তব্য"] + লোডেড-ড্রয়ারে refreshDrawer (প্রিভিউ-বাবল-স্টেল-প্রতিরোধ)।
+- **ASCII-অঙ্ক-লিক-ফিক্স:** refreshDrawer-এর stat.textContent = total → bnNum(total) ×২; article/qa কাউন্টার-হেডার ও notif-badge এখন সার্ভার-সাইডেই বাংলা।
+
+**E2E-প্রমাণ (agent-browser, hook-based-লেটেন্সি-সিমুলেশন):** আর্টিকেল-সাবমিট → ৬৮ms-এ opt-বাবল+`<strong>`-মিরর+কাউন্টার"৬"+৭-প্যালেট+৩-ডট ✓ → reconcile-পরে canonical×6+কাউন্টার-অপরিবর্তিত ✓; নেস্টেড-রিপ্লাই opt (fc-reply.cmt-reply, .cmt-replies-এ) ✓ reconcile ✓; রিঅ্যাকশন opt-বাবলে 👍১-ব্যাজ ✓; ডিলিট-ক্যাসকেড ৬→৩ (nested-সহ) + কাউন্টার-সিঙ্ক ✓; ড্রয়ার opt + as-stat-বাম্প/ডিলিট-সিঙ্ক ✓; 390px-overflow-০ ✓; role-policy 103✓/13✗-প্রি-এক্সিস্টিং (বেসলাইন-অভিন্ন) ✓; নোটিফিকেশন E2E (riya-কমেন্ট → ismail-ব্যাজ "৪", dismiss-সিঙ্ক) ✓।
+
+**গোটচা:** টেস্ট-হুকে fetch-arguments closure-ভুল হলে fetch(undefined) → HTML → r.json() throw → catch → location.reload() — ভান-করা "ফেইল"; hook-লিখলে `function(u){ const args=arguments; ... }`-ধরা বাধ্যতামূলক।
+
+**পরবর্তী:** ① qa-উত্তর-পাথেও optimistic (qa-reply-btn-ইঞ্জিন) ② edit/delete-ও optimistic-স্টাইলে মৃত্যু-অ্যানিমেশন ③ ডুপ্লিকেট-নোড-অডিট-স্ক্রিপ্ট (view-template grep-count) ④ hall-provost সার্চ/ফিল্টার (session111 ④ — অগ্রাহীত)।
