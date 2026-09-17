@@ -16,13 +16,15 @@ async function broadcastToAll(type, title, body, link, excludeUserId) {
 // One user, one row. Used by moderator-oversight (ban/restore with reason),
 // and any future per-user system event. Never throws to the caller's flow —
 // a failed notification must not break the primary action.
-async function notifyUser(userId, type, title, body, link) {
+async function notifyUser(userId, type, title, body, link, actorId) {
   try {
     if (!userId) return false;
-    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
-      .run(userId, type || 'system', title || '', body || '', link || '/notifications');
+    // সেশন ১০২: actorId (ঐচ্ছিক, ৬ষ্ঠ প্যারাম) — ড্রপডাউনে actor-avatar দেখাতে;
+    // পুরনো কল-সাইট (actor ছাড়া) অক্ষত — actor_id NULL থাকলে আইকন-ফলব্যাক।
+    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link, actor_id) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(userId, type || 'system', title || '', body || '', link || '/notifications', actorId || null);
     // সেশন ৯৯: তাৎক্ষণিক পুশ — ব্যাজ + বডি-টোস্ট (প্রেফ-চেক notifyIfAllowed-এ আগেই হয়)
-    try { sseHub.publishToUser(userId, 'notification', { type: type || 'system', title: title || '', body: body || '', link: link || '/notifications' }); } catch (_) {}
+    try { sseHub.publishToUser(userId, 'notification', { type: type || 'system', title: title || '', body: body || '', link: link || '/notifications', actor_id: actorId || null }); } catch (_) {}
     return true;
   } catch (e) { console.error('[notify] notifyUser:', e.message); return false; }
 }
@@ -53,11 +55,11 @@ async function prefAllows(userId, key) {
 
 // এক ধাপে: প্রেফ-চেক পাস করলেই নোটিফিকেশন লিখে দেয় (never-throws)।
 // kind = notify_prefs-কী (যেমন 'notify_reactions'); system-নোটিশে ব্যবহার করবেন না।
-async function notifyIfAllowed(userId, kind, type, title, body, link) {
+async function notifyIfAllowed(userId, kind, type, title, body, link, actorId) {
   try {
     if (!userId) return false;
     if (!(await prefAllows(userId, kind))) return false;
-    return await notifyUser(userId, type, title, body, link);
+    return await notifyUser(userId, type, title, body, link, actorId);
   } catch (_) { return false; }
 }
 

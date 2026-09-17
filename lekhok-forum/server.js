@@ -561,7 +561,7 @@ app.use(async (req, res, next) => {
     if (req.session.user) {
       const row = await db.prepare("SELECT COUNT(*) as c FROM notifications WHERE user_id = ? AND is_read = 0").get(req.session.user.id);
       res.locals.unread = row.c;
-      const recent = await db.prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5").all(req.session.user.id);
+      const recent = await db.prepare("SELECT n.*, a.avatar_url AS actor_avatar, a.full_name AS actor_name FROM notifications n LEFT JOIN users a ON a.id = n.actor_id WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT 5").all(req.session.user.id);
       res.locals.recentNotifs = recent;
       // Unread message conversations count
       try {

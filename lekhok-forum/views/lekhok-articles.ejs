@@ -17,6 +17,34 @@
   // ট্যাগ-টগলে type-ফিল্টার (filter=) টিক থাকে; type-ট্যাবে ক্লিকে ট্যাগ রিসেট
   const keepFilter99 = filterType ? '&filter=' + encodeURIComponent(filterType) : '';
   const allUrl99 = '/articles' + (filterType ? '?filter=' + encodeURIComponent(filterType) : '');
+
+  // ── সেশন ১০২ (রোডম্যাপ-০৮): এনগেজমেন্ট-র‍্যাংকড ফিড UI — সর্ট-সুইচ + র‍্যাংক-চিপ ──
+  const sort102 = sort === 'top' ? 'top' : 'new';
+  // সর্ট-টগলে tag/author/featured/filter সব সংরক্ষিত থাকে
+  const sortUrl102 = (s) => {
+    const p = new URLSearchParams();
+    if (tag) p.set('tag', tag);
+    if (typeof author !== 'undefined' && author) p.set('author', author);
+    if (typeof filterFeatured !== 'undefined' && filterFeatured) p.set('featured', '1');
+    if (filterType) p.set('filter', filterType);
+    if (s === 'top') p.set('sort', 'top');
+    const qs = p.toString();
+    return '/articles' + (qs ? '?' + qs : '');
+  };
+  const bn102 = (n) => String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+  // বাংলা আপেক্ষিক সময় — ৭ দিনের কম হলে "৩ ঘণ্টা আগে", নাহলে তারিখ
+  const relTime102 = (iso) => {
+    const t = new Date(iso).getTime();
+    if (!isFinite(t)) return '';
+    const m = Math.floor((Date.now() - t) / 60000);
+    if (m < 1) return 'এইমাত্র';
+    if (m < 60) return bn102(m) + ' মিনিট আগে';
+    const h = Math.floor(m / 60);
+    if (h < 24) return bn102(h) + ' ঘণ্টা আগে';
+    const d = Math.floor(h / 24);
+    if (d < 7) return bn102(d) + ' দিন আগে';
+    return new Date(iso).toLocaleDateString('bn-BD');
+  };
 %>
 <header class="page-header">
   <div class="container">
@@ -49,6 +77,20 @@
       </div>
     <% } %>
 
+    <%# সেশন ১০২ (রোডম্যাপ-০৮): সর্ট-সুইচ — নতুন (published_at) | জনপ্রিয় (এনগেজমেন্ট+time-decay) %>
+    <div class="feed-sort-bar" role="group" aria-label="ফিড সাজানোর ভিত্তি">
+      <span class="feed-sort-label"><i class="fas fa-arrow-down-wide-short" aria-hidden="true"></i> সাজান</span>
+      <div class="sort-switch">
+        <a href="<%= sortUrl102('new') %>" class="sort-opt<%= sort102 === 'new' ? ' active' : '' %>"<%= sort102 === 'new' ? ' aria-current="true"' : '' %>>
+          <i class="fas fa-clock" aria-hidden="true"></i> নতুন</a>
+        <a href="<%= sortUrl102('top') %>" class="sort-opt<%= sort102 === 'top' ? ' active' : '' %>"<%= sort102 === 'top' ? ' aria-current="true"' : '' %>>
+          <i class="fas fa-fire" aria-hidden="true"></i> জনপ্রিয়</a>
+      </div>
+      <% if (sort102 === 'top') { %>
+        <span class="sort-explain">লাইক · কমেন্ট · সংরক্ষণ · ভিউ + সময়-ক্ষয় স্কোর অনুসারে</span>
+      <% } %>
+    </div>
+
     <% if (tag) { %>
       <div class="tag-filter-note" role="status">
         <i class="fas fa-filter" aria-hidden="true"></i>
@@ -60,18 +102,36 @@
     <% if (articles && articles.length) { %>
       <div class="articles-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;">
         <% articles.forEach(post => { %>
-          <div class="post-card card" style="padding:0; overflow:hidden;">
+          <div class="post-card card<%= sort102 === 'top' ? ' ranked' : '' %>" style="padding:0; overflow:hidden;">
+          <%# সেশন ১০২: জনপ্রিয়-ফিডে র‍্যাংক-ব্যাজ (টপ-৩ হট);
+              ছবি-আছে → কার্ড-কোণায় ভাসমান, ছবি-নেই → মেটা-রোতে ইনলাইন (ওভারল্যাপ-বিহীন) %>
+          <% const hasImg102 = post.images && post.images.length; %>
+          <% if (sort102 === 'top' && post._rank && hasImg102) { %>
+            <span class="rank-chip<%= post._rank <= 3 ? ' hot' : '' %>" aria-label="র‍্যাংক <%= bn102(post._rank) %>">
+              <% if (post._rank <= 3) { %><i class="fas fa-fire" aria-hidden="true"></i><% } %>
+              <%= bn102(post._rank) %>
+            </span>
+          <% } %>
             <% if (post.images && post.images.length) { %>
               <%- include('partials/post-gallery', { images: post.images, alt: post.title, height: '180px', group: 'art-' + post.id }) %>
             <% } %>
             <div style="padding:16px 18px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <%# সেশন ৯৯: প্রথম-ট্যাগ এখন ক্লিকেবল ফিল্টার-লিঙ্ক (আগে নিষ্ক্রিয় span) %>
-                <a class="card-tag" href="/articles?tag=<%= encodeURIComponent(post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ') %><%= keepFilter99 %>">
-                  <%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %>
-                </a>
-                <span style="font-size:11px; color:var(--text-muted);">
-                  <i class="far fa-clock"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD') %>
+                <span style="display:inline-flex; align-items:center; gap:6px; min-width:0;">
+                  <%# সেশন ১০২: ছবি-নেই-কার্ডের র‍্যাংক-ব্যাজ — মেটা-রোর প্রথম আইটেম %>
+                  <% if (sort102 === 'top' && post._rank && !hasImg102) { %>
+                    <span class="rank-chip inline<%= post._rank <= 3 ? ' hot' : '' %>" aria-label="র‍্যাংক <%= bn102(post._rank) %>">
+                      <% if (post._rank <= 3) { %><i class="fas fa-fire" aria-hidden="true"></i><% } %>
+                      <%= bn102(post._rank) %>
+                    </span>
+                  <% } %>
+                  <%# সেশন ৯৯: প্রথম-ট্যাগ এখন ক্লিকেবল ফিল্টার-লিঙ্ক (আগে নিষ্ক্রিয় span) %>
+                  <a class="card-tag" href="/articles?tag=<%= encodeURIComponent(post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ') %><%= keepFilter99 %>">
+                    <%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %>
+                  </a>
+                </span>
+                <span style="font-size:11px; color:var(--text-muted);" title="<%= new Date(post.published_at).toLocaleDateString('bn-BD') %>">
+                  <i class="far fa-clock"></i> <%= relTime102(post.published_at) %>
                 </span>
               </div>
               <a href="/articles/<%= post.id %>" style="text-decoration:none; color:inherit;">
@@ -87,6 +147,10 @@
                   <span style="font-size:12px; font-weight:500;"><%= post.author_name %></span>
                 </a>
                 <div style="display:flex; gap:10px; font-size:12px; color:var(--text-muted); align-items:center;">
+                  <%# সেশন ১০২: জনপ্রিয়-ফিডে স্কোর-চিপ (এক-দশমিক, বাংলা-ডিজিট) %>
+                  <% if (sort102 === 'top' && typeof post._score === 'number') { %>
+                    <span class="score-chip" title="এনগেজমেন্ট-স্কোর (সময়-ক্ষয়সহ)"><i class="fas fa-bolt" aria-hidden="true"></i> <%= bn102(post._score.toFixed(1)) %></span>
+                  <% } %>
                   <span><i class="far fa-heart"></i> <%= post.like_count || 0 %></span>
                   <span><i class="far fa-comment"></i> <%= post.comment_count || 0 %></span>
                   <%# সেশন ৬৬: কার্ডে সংরক্ষণ-বাটন (main.js গ্লোবাল .bookmark-btn হ্যান্ডলার,

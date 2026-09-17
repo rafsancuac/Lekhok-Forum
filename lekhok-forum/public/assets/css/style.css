@@ -1406,3 +1406,38 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
   .cx102 .cx-tb-dot,.cx102 .cx-fs-free::before{animation:none}
   .cx102 .cx-ch-card::after{display:none}
 }
+/* ── সেশন ১০২ (রোডম্যাপ-০৮): এনগেজমেন্ট-র‍্যাংকড ফিড — সর্ট-সুইচ + র‍্যাংক/স্কোর-চিপ ── */
+.feed-sort-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:10px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.feed-sort-label{font-size:.8rem;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.sort-switch{display:inline-flex;align-items:center;background:var(--surface-alt);border:1px solid var(--border);border-radius:999px;padding:3px;gap:2px}
+.sort-opt{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;font-size:.84rem;font-weight:700;color:var(--text-soft,#475569);text-decoration:none;line-height:1.5;transition:all .18s ease}
+.sort-opt i{font-size:.78rem}
+.sort-opt:hover{color:var(--accent);background:var(--accent-soft)}
+.sort-opt.active{color:#fff;background:var(--accent);box-shadow:0 2px 8px rgba(5,150,105,.28)}
+.sort-opt.active:hover{background:var(--accent);color:#fff}
+.sort-explain{font-size:.76rem;color:var(--text-muted);margin-left:auto;line-height:1.5}
+/* র‍্যাংক-ব্যাজ — কার্ডের কোণায় ভাসমান; টপ-৩ হট (অ্যাম্বার-গ্রেডিয়েন্ট), বাকি নিরপেক্ষ */
+.post-card.ranked{position:relative}
+.rank-chip{position:absolute;top:10px;left:10px;z-index:6;display:inline-flex;align-items:center;gap:5px;min-width:30px;justify-content:center;padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:800;color:#0f172a;background:rgba(255,255,255,.92);border:1px solid rgba(15,23,42,.14);box-shadow:0 2px 8px rgba(15,23,42,.18);backdrop-filter:blur(4px);line-height:1.4}
+.rank-chip.hot{color:#fff;background:linear-gradient(135deg,#f59e0b,#ef4444);border-color:rgba(255,255,255,.35);box-shadow:0 3px 12px rgba(239,68,68,.35)}
+.rank-chip.hot i{font-size:.7rem}
+/* ছবি-নেই-কার্ডে ইনলাইন-ভ্যারিয়েন্ট (মেটা-রোতে বসে, ওভারল্যাপ নেই) */
+.rank-chip.inline{position:static;padding:1px 8px;font-size:.72rem;box-shadow:none}
+/* স্কোর-চিপ — মেটা-রোতে বোল্ট; emerald-টোন (সাইট-অ্যাকসেন্টের সাথে সামঞ্জস্য) */
+.score-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:800;color:#047857;background:var(--accent-soft);border:1px solid rgba(5,150,105,.25);line-height:1.5}
+.score-chip i{font-size:.64rem}
+@media (max-width:640px){
+  .sort-explain{margin-left:0;width:100%;flex-basis:100%}
+  .sort-opt{padding:6px 12px;font-size:.8rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .sort-opt,.rank-chip{transition:none}
+}
+
+/* ── সেশন ১০২: নোটিফিকেশন-ড্রপডাউন actor-avatar ── */
+.notif-ico{overflow:hidden}
+.notif-ico .notif-avatar{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.notif-ico{position:relative}
+.notif-ico.has-avatar i{display:none}
+.notif-ico.has-avatar{background:var(--surface-alt);box-shadow:0 0 0 2px var(--bg-card),0 0 0 3.5px var(--accent-soft)}
+.notif-item.unread .notif-ico.has-avatar{box-shadow:0 0 0 2px var(--bg-card),0 0 0 3.5px rgba(5,150,105,.45)}

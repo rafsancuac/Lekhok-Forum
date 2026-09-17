@@ -547,6 +547,9 @@ const LATER_COLUMNS = [
   ['resources', 'downloads',     'INTEGER DEFAULT 0'],
   ['resources', 'views',         'INTEGER DEFAULT 0'],
   ['resources', 'created_by',    'TEXT'],
+  // সেশন ১০২: নোটিফিকেশন-ড্রপডাউন actor-avatar — কে ট্রিগার করেছে তার রেফারেন্স
+  // (nullable — সিস্টেম/মডারেশন-নোটিফিকেশনে actor নেই, আইকন-ফলব্যাক থাকবে)।
+  ['notifications', 'actor_id', 'INTEGER'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

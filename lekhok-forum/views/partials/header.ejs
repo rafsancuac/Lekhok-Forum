@@ -252,7 +252,12 @@
                 <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', call: 'fa-phone-slash' }; %>
                 <% recentNotifs.forEach(n => { %>
                   <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>">
-                    <span class="notif-ico"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
+                    <%# সেশন ১০২: actor-avatar — actor থাকলে ছবি, নাহলে টাইপ-আইকন (live.js-এর সাথে সমান) %>
+                    <% if (n.actor_id) { %>
+                      <span class="notif-ico has-avatar"><img class="notif-avatar" src="<%= n.actor_avatar || ('/avatar/' + n.actor_id) %>" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-avatar');this.remove()"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
+                    <% } else { %>
+                      <span class="notif-ico"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
+                    <% } %>
                     <span class="notif-text">
                       <span class="notif-body"><%= n.body %></span>
                       <span class="notif-time"><%= n.created_at %></span>
