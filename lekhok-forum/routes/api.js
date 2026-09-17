@@ -126,28 +126,32 @@ router.post('/newsletter/subscribe', async (req, res) => {
 
 
 
-// ── E1 (সেশন ৯১): হেলথ-এন্ডপয়েন্ট (কোনো-অথ-নয়, লাইট) — সুপারভাইজার-হ্যাং-চেক
-// ও আপটাইম-মনিটরের জন্য। db-ok = একটি ট্রিভিয়াল SELECT; uptime/memory সহ।
-// ক্যাশ-নীতি: no-store (মনিটর সবসময় লাইভ-মান দেখুক)।
+// ── E1 (সেশন ৯১, মার্জ): হেলথ-এন্ডপয়েন্ট (কোনো-অথ-নয়, লাইট) — সুপারভাইজার-হ্যাং-চেক,
+// আপটাইম-মনিটর ও ক্রন-এজেন্টের পারফরম্যান্স-অডিটে ব্যবহৃত। রিবেজ-মার্জ: দুই-এজেন্টের
+// ভার্সন এক-হুকে — session90-এর কী-নাম (status/database/latency/uptimeSeconds —
+// কনজিউমার-সামঞ্জস্য) + session91-এর ok/env বুলিয়ান-ফিল্ড।
 router.get('/health', async (req, res) => {
-  let dbOk = false, dbLatencyMs = null;
-  const t0 = Date.now();
-  try {
-    await db.prepare('SELECT 1 AS ok').get();
-    dbOk = true;
-    dbLatencyMs = Date.now() - t0;
-  } catch (e) { /* db-ডাউনেও 503-এ কাঠামোবদ্ধ বডি দিই */ }
+  const start = Date.now();
+  let dbOk = false, dbError = null;
+  try { await db.prepare('SELECT 1').get(); dbOk = true; }
+  catch (e) { dbError = e.message; }
+  const latency = Date.now() - start;
   const mem = process.memoryUsage();
-  res.set('Cache-Control', 'no-store');
-  res.status(dbOk ? 200 : 503).json({
+  res.status(dbOk ? 200 : 503).set('Cache-Control', 'no-store').json({
     ok: dbOk,
-    status: dbOk ? 'healthy' : 'degraded',
-    db: { ok: dbOk, latency_ms: dbLatencyMs },
-    uptime_s: Math.round(process.uptime()),
-    memory: { rss_mb: Math.round(mem.rss / 1048576), heap_used_mb: Math.round(mem.heapUsed / 1048576) },
+    status: dbOk ? 'healthy' : 'unhealthy',
+    database: dbOk ? 'connected' : ('failed' + (dbError ? ': ' + dbError : '')),
+    latency: latency + 'ms',
+    uptimeSeconds: Math.round(process.uptime()),
+    memory: {
+      rssMb: Math.round(mem.rss / 1048576),
+      heapUsedMb: Math.round(mem.heapUsed / 1048576),
+      heapTotalMb: Math.round(mem.heapTotal / 1048576)
+    },
     node: process.version,
+    app: 'lekhok-forum',
     env: process.env.VERCEL ? 'vercel' : 'local',
-    ts: new Date().toISOString()
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -182,32 +186,6 @@ router.get('/search', async (req, res) => {
   } catch (e) {
     res.json({ articles: [], questions: [], users: [] });
   }
-});
-
-// ── সেশন ৯০ (রোডম্যাপ-আইটেম ১৮): সিস্টেম-হেলথ-চেক ────────────────────────────
-// অথ-মুক্ত, লাইটওয়েট — সুপারভাইজার-হ্যাং-চেক, আপটাইম-মনিটর ও ক্রন-এজেন্টের
-// পারফরম্যান্স-অডিট (মিনিট ৮-১১) এই এন্ডপয়েন্ট ব্যবহার করবে।
-router.get('/health', async (req, res) => {
-  const start = Date.now();
-  let dbOk = false, dbError = null;
-  try { await db.prepare('SELECT 1').get(); dbOk = true; }
-  catch (e) { dbError = e.message; }
-  const latency = Date.now() - start;
-  const mem = process.memoryUsage();
-  res.status(dbOk ? 200 : 503).set('Cache-Control', 'no-store').json({
-    status: dbOk ? 'healthy' : 'unhealthy',
-    database: dbOk ? 'connected' : ('failed' + (dbError ? ': ' + dbError : '')),
-    latency: latency + 'ms',
-    uptimeSeconds: Math.round(process.uptime()),
-    memory: {
-      rssMb: Math.round(mem.rss / 1048576),
-      heapUsedMb: Math.round(mem.heapUsed / 1048576),
-      heapTotalMb: Math.round(mem.heapTotal / 1048576)
-    },
-    node: process.version,
-    app: 'lekhok-forum',
-    timestamp: new Date().toISOString()
-  });
 });
 
 module.exports = router;

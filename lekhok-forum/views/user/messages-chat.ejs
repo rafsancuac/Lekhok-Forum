@@ -1188,7 +1188,7 @@
       const rb = e.target.closest('[data-msg-react]');
       if (rb) {
         const menu = rb.parentElement.querySelector('.bubble-react-menu');
-        document.querySelectorAll('.bubble-react-menu:not([h[h[hidden])').forEach(m => { if (m !== menu) m.hidden = true; });
+        document.querySelectorAll('.bubble-react-menu:not([hidden])').forEach(m => { if (m !== menu) m.hidden = true; });
         if (menu) {
           menu.hidden = !menu.hidden;
           /* সেশন ৭৮: চ্যাটের একদম উপরের মেসেজে ক্যাপসুল ক্লিপ হলে নিচে-ফ্লিপ */

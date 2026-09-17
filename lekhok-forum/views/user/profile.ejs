@@ -777,7 +777,7 @@
         if (!b || !m) return;
         b.addEventListener('click', function (e) {
           e.stopPropagation();
-          document.querySelectorAll('.pic-menu:not([h[h[hidden])').forEach(x => { if (x !== m) x.hidden = true; });
+          document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => { if (x !== m) x.hidden = true; });
           m.hidden = !m.hidden;
         });
         m.addEventListener('click', function (e) {
@@ -787,7 +787,7 @@
       }
       wire('avatarCamBtn', 'avatarMenu');
       wire('coverCamBtn', 'coverMenu');
-      document.addEventListener('click', function () { document.querySelectorAll('.pic-menu:not([h[h[hidden])').forEach(x => x.hidden = true); });
+      document.addEventListener('click', function () { document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => x.hidden = true); });
     })();
   </script>
 
