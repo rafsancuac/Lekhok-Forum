@@ -735,6 +735,8 @@ router.post('/best-writer/:id/toggle', ensureModerator, requireScope('best_write
 // মডারেটর/এডমিন এখান থেকে চেকবক্স/টগলে নিয়ন্ত্রণ করেন। অ্যাভাটার/কভার-
 // আপডেট অটো-পোস্ট (post_kind≠writing) প্যানেলে দেখা যায় (চিপসহ) কিন্তু
 // হোম-নির্বাচনযোগ্য নয় — সোশ্যাল-অ্যাক্টিভিটি কখনোই সাহিত্য-তালিকায় ঢুকবে না।
+// সেশন ৯৪: শেয়ার-কপি (shared_from NOT NULL) প্যানেল-তালিকাতেই আসে না —
+// এডমিন ভুল করেও অন্যের লেখার শেয়ার-কপি হোমে নির্বাচন করতে পারবেন না।
 const MAX_HOME_FEATURED_90 = 6;
 const TA42_90 = require('../helpers/trash-audit');
 
@@ -747,7 +749,7 @@ router.get('/curation', ensureModerator, async (req, res) => {
            p.like_count, p.comment_count, p.view_count,
            u.full_name AS author_name, u.username AS author_username, u.id AS author_id
       FROM posts p JOIN users u ON p.author_id = u.id
-     WHERE p.type = 'article'`;
+     WHERE p.type = 'article' AND p.shared_from IS NULL /* সেশন ৯৪: শেয়ার-কপি প্যানেলেই নেই */`;
   const params90 = [];
   if (kind90 && ['writing', 'avatar_update', 'cover_update'].includes(kind90)) {
     sql90 += ' AND p.post_kind = ?'; params90.push(kind90);
@@ -759,9 +761,9 @@ router.get('/curation', ensureModerator, async (req, res) => {
   sql90 += ` ORDER BY p.home_featured DESC, p.home_featured_at DESC, p.published_at DESC LIMIT 300`;
   const [writings, featuredCount90, totalWritings90, hiddenCount90] = await Promise.all([
     db.prepare(sql90).all(...params90),
-    db.prepare('SELECT COUNT(*) AS c FROM posts WHERE home_featured = 1').get(),
-    db.prepare("SELECT COUNT(*) AS c FROM posts WHERE type='article' AND post_kind='writing' AND status='published'").get(),
-    db.prepare("SELECT COUNT(*) AS c FROM posts WHERE type='article' AND archive_visible = 0").get(),
+    db.prepare('SELECT COUNT(*) AS c FROM posts WHERE home_featured = 1 AND shared_from IS NULL').get(),
+    db.prepare("SELECT COUNT(*) AS c FROM posts WHERE type='article' AND post_kind='writing' AND status='published' AND shared_from IS NULL").get(),
+    db.prepare("SELECT COUNT(*) AS c FROM posts WHERE type='article' AND archive_visible = 0 AND shared_from IS NULL").get(),
   ]);
   res.render('user/moderator-curation', {
     writings,
@@ -784,11 +786,16 @@ router.post('/curation/toggle', ensureModerator, async (req, res) => {
   if (!id90 || !['home_featured', 'archive_visible'].includes(field90)) {
     return res.status(400).json({ ok: false, error: 'অবৈধ অনুরোধ' });
   }
-  const post90 = await db.prepare("SELECT id, title, post_kind, author_id, home_featured, archive_visible FROM posts WHERE id = ? AND type = 'article'").get(id90);
+  const post90 = await db.prepare("SELECT id, title, post_kind, author_id, home_featured, archive_visible, shared_from FROM posts WHERE id = ? AND type = 'article'").get(id90);
   if (!post90) return res.status(404).json({ ok: false, error: 'লেখাটি পাওয়া যায়নি' });
 
   if (field90 === 'home_featured') {
     if (value90) {
+      // কঠোর-নিয়ম ০ (সেশন ৯৪): শেয়ার-কপি কখনোই হোমে নির্বাচনযোগ্য নয় —
+      // কেবল মূল লেখকের অরিজিনাল পোস্ট (হোমপেজ-তালিকার ইউজার-নির্দেশ)
+      if (post90.shared_from) {
+        return res.status(422).json({ ok: false, error: 'শেয়ার-করা পোস্ট — হোমপেজের লেখা-তালিকায় নির্বাচনযোগ্য নয়। মূল লেখাটি নির্বাচন করুন।' });
+      }
       // কঠোর-নিয়ম ১: অটো-পোস্ট (avatar/cover ইত্যাদি) কখনোই হোমে নির্বাচনযোগ্য নয়
       if ((post90.post_kind || 'writing') !== 'writing') {
         return res.status(422).json({ ok: false, error: 'এটি সোশ্যাল-অ্যাক্টিভিটি পোস্ট — হোমপেজের লেখা-তালিকায় নির্বাচনযোগ্য নয়।' });
@@ -835,6 +842,7 @@ router.post('/curation/quick', ensureModerator, async (req, res) => {
   const rows90 = await db.prepare(`
     SELECT id, author_id, title FROM posts
      WHERE type='article' AND status='published' AND post_kind='writing' AND archive_visible=1
+       AND shared_from IS NULL /* সেশন ৯৪: শেয়ার-কপি বাদ */
      ORDER BY published_at DESC LIMIT ${MAX_HOME_FEATURED_90}
   `).all();
   for (const r90 of rows90) {

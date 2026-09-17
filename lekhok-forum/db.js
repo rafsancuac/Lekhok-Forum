@@ -1186,6 +1186,7 @@ async function runMigrations() {
     "ALTER TABLE admin_users ADD COLUMN last_login DATETIME",
     // সেশন ৯০: হোম-কিউরেশন — পোস্টের প্রকৃত শ্রেণি + এডমিন/মডারেটর নিয়ন্ত্রণ-ফ্ল্যাগ।
     // post_kind: 'writing' (আসল সাহিত্য) | 'question' | 'avatar_update' | 'cover_update'
+    // | 'share' (অন্যের লেখার শেয়ার-কপি — সেশন ৯৪)
     // — type='article' এখনো সোশ্যাল-ফিডে অটো-পোস্ট দেখাতে ব্যবহৃত, তাই শ্রেণি-বিভাজন
     //   আলাদা কলামে; হোমপেজ/লেখা-তালিকা/সার্চ কেবল post_kind='writing' নেবে।
     "ALTER TABLE posts ADD COLUMN post_kind TEXT DEFAULT 'writing'",
@@ -1241,6 +1242,24 @@ async function runMigrations() {
     await backend.exec(`
       UPDATE posts SET post_kind = 'question'
        WHERE post_kind = 'writing' AND type = 'question';
+    `);
+    // ── সেশন ৯৪: শেয়ার-কপি পুনঃশ্রেণিবদ্ধ ──
+    // ইউজার-নির্দেশ: হোমপেজের 'লেখকদের কালি / সাম্প্রতিক লেখা' ও 'সব লেখা
+    // দেখুন' তালিকায় কেবল মূল লেখকের অরিজিনাল পোস্ট আসবে — কোনো ইউজার অন্যের
+    // পোস্ট নিজের টাইমলাইনে শেয়ার করলে সেই কপি কখনোই এই তালিকায় ঢুকবে না।
+    // shared_from IS NOT NULL = শেয়ার-কপি (Prisma-প্ল্যানের isShared/originalPostId
+    // → এখানে একটাই কলাম shared_from)। post_kind='share' মার্ক + লেখা-সারফেসের
+    // দুই ফ্ল্যাগ রিসেট; সোশাল-ফিড/প্রোফাইল-টাইমলাইনে দৃশ্যমানতা অক্ষুণ্ণ।
+    // Idempotent — একবার 'share' হলে post_kind='writing'-গার্ড আর মেলে না।
+    await backend.exec(`
+      UPDATE posts SET post_kind = 'share', archive_visible = 0, home_featured = 0
+       WHERE shared_from IS NOT NULL AND post_kind = 'writing';
+    `);
+    // নিরাপত্তা-জাল: যেকোনো শেয়ার-কপি (post_kind যাই হোক) কখনোই হোম-নির্বাচিত/
+    // আর্কাইভ-দৃশ্যমান থাকতে পারবে না — ঐতিহাসিক ভুল-নির্বাচন থাকলে পরিষ্কার।
+    await backend.exec(`
+      UPDATE posts SET home_featured = 0, archive_visible = 0
+       WHERE shared_from IS NOT NULL AND (home_featured = 1 OR archive_visible = 1);
     `);
   } catch (e) {
     console.warn('[migrate] post-kind backfill:', (e.message || '').slice(0, 120));

@@ -581,7 +581,9 @@
     (আগে হোমে কোনো আর্টিকেল-লিংক ছিল না; /articles/22-30 GSC-তে 'Discovered' ছিল)
     সেশন ৯০ (হোম-কিউরেশন): তালিকা এখন মডারেটর/এডমিন-নির্বাচিত
     (home_featured) — অ্যাভাটার/কভার-আপডেট বা প্রশ্নের মতো সোশ্যাল-
-    অ্যাক্টিভিটি কখনোই এখানে আসতে পারে না (post_kind='writing' ফিল্টার)। ── %>
+    অ্যাক্টিভিটি কখনোই এখানে আসতে পারে না (post_kind='writing' ফিল্টার)।
+    সেশন ৯৪: শেয়ার-করা পোস্টও কঠোরভাবে বাদ (shared_from IS NULL) —
+    কেবল মূল লেখকের অরিজিনাল পোস্টই এই সারিতে আসে। ── %>
 <% if (typeof recentArticles !== 'undefined' && recentArticles && recentArticles.length) { %>
 <section class="section reveal">
   <div class="container">

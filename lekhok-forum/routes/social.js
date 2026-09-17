@@ -250,7 +250,9 @@ router.get('/articles', async (req, res) => {
     // সেশন ৯০ (হোম-কিউরেশন): 'সব লেখা দেখুন' তালিকা এখন মডারেটর/এডমিন-
     // নিয়ন্ত্রিত — শুধু খাঁটি সাহিত্য-লেখা (post_kind='writing') আর যেগুলো
     // archive_visible=1; অ্যাভাটার/কভার-আপডেট অটো-পোস্ট কঠোরভাবে বাদ।
-    + " AND p.post_kind = 'writing' AND p.archive_visible = 1";
+    // সেশন ৯৪: শেয়ার-কপিও কঠোরভাবে বাদ — কেবল মূল লেখকের
+    // অরিজিনাল পোস্ট (shared_from IS NULL) এই তালিকায় আসবে।
+    + " AND p.post_kind = 'writing' AND p.archive_visible = 1 AND p.shared_from IS NULL";
   const params = [];
   if (tag) { q += ' AND p.tags LIKE ?'; params.push('%' + tag + '%'); }
   if (author) { q += ' AND u.username = ?'; params.push(author); }
@@ -263,7 +265,8 @@ router.get('/articles', async (req, res) => {
   const [articles, popularTags, bookmarkedIds72] = await Promise.all([
     db.prepare(q).all(...params),
     // সেশন ৯০: ট্যাগ-পুলেও খাঁটি writing-ফিল্টার (বাদ-দেওয়া/অটো-পোস্টের ট্যাগ নয়)।
-    db.prepare("SELECT tags FROM posts WHERE type='article' AND post_kind='writing' AND archive_visible=1 AND tags IS NOT NULL").all(),
+    // সেশন ৯৪: শেয়ার-কপির ট্যাগও নয় (অরিজিনাল-কেবল)।
+    db.prepare("SELECT tags FROM posts WHERE type='article' AND post_kind='writing' AND archive_visible=1 AND shared_from IS NULL AND tags IS NOT NULL").all(),
     // নোট: db.prepare(...).all(...) sql.js-এ sync, Turso-তে promise — তাই শুধু
     // await-প্যাটার্ন (async-IIFE), .then() নয়।
     (async () => {
@@ -392,9 +395,14 @@ router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
   const title = source.title;
   const body = source.body || '';
   const excerpt = (source.excerpt || body.substring(0, 200));
+  // সেশন ৯৪: শেয়ার-কপি সৃষ্টির সময়ই শ্রেণি+ফ্ল্যাগ স্পষ্ট — post_kind='share'
+  // (Prisma-প্ল্যানের isShared=true সমতুল্য), home_featured=0 (শেয়ার কখনোই
+  // হোম-নির্বাচিত হবে না — মূল পোস্টের ফ্ল্যাগ কপি হওয়ার সুযোগ নেই),
+  // archive_visible=0 (/articles 'সব লেখা' তালিকায় শেয়ার-কপি বাদ)।
+  // সোশাল-ফিড/টাইমলাইন দৃশ্যমানতা অক্ষুণ্ণ (type='article')।
   const result = await db.prepare(`
-    INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category, shared_from)
-    VALUES (?, 'article', ?, ?, ?, ?, NULL, NULL, 'general', ?)
+    INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category, shared_from, post_kind, home_featured, archive_visible)
+    VALUES (?, 'article', ?, ?, ?, ?, NULL, NULL, 'general', ?, 'share', 0, 0)
   `).run(req.session.user.id, title, body, excerpt, source.cover_image || null, sourceId);
   const newIdInt = result && result.lastInsertRowid;
   // টাস্ক ১৩ (পর্ব ৪, অংশ ক): শেয়ার করা কপিতেও মূল পোস্টের সব ছবি কপি করি
@@ -546,6 +554,7 @@ router.get('/articles/:id', async (req, res) => {
             u.full_name AS author_name, u.username AS author_username, u.avatar_url AS author_avatar
      FROM posts p JOIN users u ON p.author_id = u.id
      WHERE p.id != ? AND p.type = 'article' AND p.status = 'published'
+       AND p.post_kind = 'writing' AND p.shared_from IS NULL /* সেশন ৯৪: অরিজিনাল-কেবল */
      ORDER BY p.published_at DESC LIMIT 24`
   ).all(post.id);
   const stripHash67 = (s) => String(s || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim();
