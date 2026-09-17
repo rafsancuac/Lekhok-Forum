@@ -2024,3 +2024,20 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .me-wrap .personal-tab{padding:10px 12px;font-size:.78rem}
   .me-wrap .me-actions{width:100%;justify-content:center}
 }
+
+/* ═══ Session 117 — notifications ফিল্টার-ট্যাব (টাইপ-গ্রুপ চিপ) ═══ */
+.notif-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+.nft-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-pill);border:1px solid var(--border);background:var(--card);color:var(--text);font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;line-height:1.25;transition:var(--transition)}
+.nft-chip i{font-size:.72rem;color:var(--text-muted);transition:var(--transition)}
+.nft-chip b{min-width:20px;height:18px;padding:0 5px;border-radius:999px;background:var(--bg);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:var(--text-muted)}
+.nft-chip:hover{border-color:var(--accent);color:var(--accent)}
+.nft-chip:hover i{color:var(--accent)}
+.nft-chip.is-active{background:var(--accent);border-color:var(--accent);color:#fff}
+.nft-chip.is-active i{color:rgba(255,255,255,.85)}
+.nft-chip.is-active b{background:rgba(255,255,255,.18);border-color:transparent;color:#fff}
+.nft-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.notif-filter-empty{display:flex;align-items:center;gap:10px;margin-top:12px;padding:18px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text-muted);font-size:.85rem}
+.notif-filter-empty i{color:var(--accent)}
+@media (max-width:640px){.notif-filter-bar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}.nft-chip{flex-shrink:0;white-space:nowrap}}
+@media (prefers-reduced-motion:reduce){.nft-chip,.nft-chip i{transition:none}}
+/* ═══ EOF-MARKER session117 (nft) ═══ */

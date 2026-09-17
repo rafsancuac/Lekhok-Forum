@@ -1,0 +1,41 @@
+<%# সেশন ১১৭: 'পড়া চালিয়ে যান' ফুল-পেজ — ড্যাশবোর্ড-উইজেটের 'সব দেখুন' এক্সটেনশন।
+    শূন্য-API: তালিকা আঁকে continue-reading.js localStorage 'lf_read_pos' থেকে
+    (ব্রাউজার-লোকাল, প্রাইভেসি-সেফ — session112-দর্শনের পূর্ণ-তালিকা-সংস্করণ)। %>
+<%- include('../partials/header', { title: 'পড়া চালিয়ে যান | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
+  <div class="page-wrap crx-page">
+    <div class="crx-page-head">
+      <h1><i class="fas fa-book-reader" aria-hidden="true"></i>পড়া চালিয়ে যান
+        <span id="crxTotalChip" class="crx-count-chip" hidden></span>
+      </h1>
+      <button type="button" id="crxClearAll" class="crx-clear" hidden>
+        <i class="fas fa-broom" aria-hidden="true"></i> সব সরান
+      </button>
+    </div>
+    <p class="crx-page-sub">
+      <i class="fas fa-shield-halved" aria-hidden="true"></i>
+      পড়ার অগ্রগতি শুধু এই ব্রাউজারে সংরক্ষিত থাকে — সার্ভারে কিছু পাঠানো হয় না।
+    </p>
+
+    <noscript>
+      <div class="crx-noscript" role="note">
+        <i class="fas fa-circle-info" aria-hidden="true"></i>
+        এই পেজের তালিকা আপনার ব্রাউজারের নিজস্ব ডেটা থেকে আঁকা হয় — দেখতে JavaScript চালু করুন।
+      </div>
+    </noscript>
+
+    <%# খালি-অবস্থা — no-JS/শূন্য-তালিকা উভয়েই দৃশ্যমান থাকতে পারে; JS স্টেট-সিঙ্ক করে %>
+    <div id="crxEmpty" class="crx-empty">
+      <i class="fas fa-mug-hot" aria-hidden="true"></i>
+      <h3>কোনো অসমাপ্ত পড়া নেই</h3>
+      <p>কোনো লেখা পড়তে পড়তে থেমে গেলে সেটি এখানে জমা হবে।</p>
+      <a href="/articles" class="crx-empty-cta">লেখাগুলো ব্রাউজ করুন <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+    </div>
+
+    <div id="crxFullMount" class="crx-grid" hidden></div>
+  </div>
+  <script src="/assets/js/continue-reading.js?v=<%= AV %>" defer></script>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+<%- include('../partials/sandbox-preview') %>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+</body>
+</html>

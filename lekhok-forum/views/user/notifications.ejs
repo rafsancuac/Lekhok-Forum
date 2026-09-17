@@ -1,4 +1,19 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
+<%# সেশন ১১৭: টাইপ→গ্রুপ-ম্যাপ + বাংলা-সংখ্যা — ফিল্টার-চিপ এখান থেকেই গণনা হয় %>
+<%
+  const bn117 = (n) => String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[+d]);
+  const G117 = [
+    { key: 'mention',  label: 'ম্যানশন',         icon: 'fa-at',       types: ['mention'] },
+    { key: 'reply',    label: 'উত্তর ও মন্তব্য', icon: 'fa-comments', types: ['reply', 'comment'] },
+    { key: 'reaction', label: 'প্রতিক্রিয়া',      icon: 'fa-heart',    types: ['like', 'reaction'] },
+    { key: 'message',  label: 'বার্তা',           icon: 'fa-envelope', types: ['message'] },
+    /* 'other' = বাকি-সব (follow/complaint/birthday/call/system/...) */
+    { key: 'other',    label: 'অন্যান্য',         icon: 'fa-bell',     types: [] }
+  ];
+  const gKeyOf117 = (t) => (G117.find(g => g.types.indexOf(t) !== -1) || G117[G117.length - 1]).key;
+  const gCount117 = {};
+  items.forEach(n => { const k = gKeyOf117(n.type); gCount117[k] = (gCount117[k] || 0) + 1; });
+%>
 <%- include('../partials/header', { title: 'বিজ্ঞপ্তিসমূহ | লেখক ফোরাম' }) %>
   <div class="page-wrap" style="max-width:700px">
     <div class="notif-page-header">
@@ -6,7 +21,7 @@
         <i class="fas fa-bell" style="color:var(--accent);margin-right:8px;"></i>বিজ্ঞপ্তিসমূহ
         <% const unreadCount = items.filter(n => !n.is_read).length; %>
         <% if (unreadCount > 0) { %>
-          <span class="notif-count-chip"><%= unreadCount %> টি নতুন</span>
+          <span class="notif-count-chip"><%= bn117(unreadCount) %> টি নতুন</span>
         <% } %>
       </h1>
       <% if (unreadCount > 0) { %>
@@ -17,6 +32,17 @@
     <% if (items.length === 0) { %>
       <div class="notif-empty"><i class="fas fa-bell-slash"></i><p>এখনও কোনো বিজ্ঞপ্তি আসেনি।</p><small style="color:var(--text-muted);">নতুন কার্যকলাপ এখানে দেখা যাবে।</small></div>
     <% } else { %>
+      <%# সেশন ১১৭: ফিল্টার-ট্যাব — 'সব' + গণনা-সহ গ্রুপ-চিপ (শূন্য-গ্রুপ আঁকা হয় না) %>
+      <div class="notif-filter-bar" role="group" aria-label="বিজ্ঞপ্তি ফিল্টার">
+        <button type="button" class="nft-chip is-active" data-nft="all" aria-pressed="true">সব <b><%= bn117(items.length) %></b></button>
+        <% G117.forEach(g => { const c = gCount117[g.key] || 0; if (!c) return; %>
+          <button type="button" class="nft-chip" data-nft="<%= g.key %>" aria-pressed="false"><i class="fas <%= g.icon %>" aria-hidden="true"></i><%= g.label %> <b><%= bn117(c) %></b></button>
+        <% }) %>
+      </div>
+      <%# ফিল্টার-শূন্য-অবস্থা (JS টগল করে) %>
+      <div id="notifFilterEmpty" class="notif-filter-empty" hidden>
+        <i class="fas fa-inbox" aria-hidden="true"></i><span>এই ধরনের কোনো বিজ্ঞপ্তি নেই।</span>
+      </div>
       <div class="notif-page-list">
         <% items.forEach(n => { %>
           <%# সেশন ১১৬: reaction/reply/mention টাইপ-আইকন — হেডার-ড্রপডাউনের _ico-ম্যাপের
@@ -24,7 +50,7 @@
               reply/mention = comment-পরিবার — feed.css-এর .icon-* প্যালেট পুনঃব্যবহার) %>
           <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' || n.type === 'reaction' ? 'icon-like' : (n.type === 'comment' || n.type === 'reply' || n.type === 'mention' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : 'icon-system')))); %>
           <% const _ico = n.type === 'birthday' ? 'fa-birthday-cake' : (n.type === 'like' || n.type === 'reaction' ? 'fa-heart' : (n.type === 'comment' ? 'fa-comment' : (n.type === 'reply' ? 'fa-reply' : (n.type === 'mention' ? 'fa-at' : (n.type === 'follow' ? 'fa-user-plus' : (n.type === 'call' ? 'fa-phone-slash' : 'fa-bell')))))); %>
-          <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" onclick="markRead('<%= n.id %>')">
+          <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" data-type="<%= n.type %>" data-g117="<%= gKeyOf117(n.type) %>" onclick="markRead('<%= n.id %>')">
             <%# সেশন ১০৮: actor-avatar — হেডার-ড্রপডাউন (সেশন ১০২) ও একই শেপ; actor না থাকলে টাইপ-আইকন %>
             <% if (n.actor_id) { %>
               <div class="notif-page-icon <%= iconClass %> has-avatar"><img class="notif-avatar" src="<%= n.actor_avatar || ('/avatar/' + n.actor_id) %>" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-avatar');this.remove()"><i class="fas <%= _ico %>"></i></div>
@@ -83,11 +109,69 @@
                 if (left > 0) chip.textContent = String(left).replace(/[0-9]/g, function (d) { return bnDigits[+d]; }) + ' টি নতুন';
                 else chip.remove();
               }
+              if (window.nftRecount117) window.nftRecount117();
               if (!rest) location.reload();
             }, 260);
           })
           .catch(function () { row.removeAttribute('data-dismiss-busy'); });
       });
+    })();
+    /* ── সেশন ১১৭: ফিল্টার-ট্যাব — চিপ-ক্লিকে DOM-ফিল্টার (শূন্য-API);
+         সরানোর পরে nftRecount117() চিপ-কাউন্ট-সিঙ্ক + সক্রিয়-চিপ-শূন্যে 'সব'-ফেরত ── */
+    (function () {
+      var bar = document.querySelector('.notif-filter-bar');
+      var list = document.querySelector('.notif-page-list');
+      if (!bar || !list) return;
+      var emptyRow = document.getElementById('notifFilterEmpty');
+      var emptyText = emptyRow ? emptyRow.querySelector('span') : null;
+      var bnDigits = '০১২৩৪৫৬৭৮৯';
+      function bn(n) { return String(n).replace(/[0-9]/g, function (d) { return bnDigits[+d]; }); }
+      function applyFilter(key) {
+        var vis = 0;
+        list.querySelectorAll('.notif-page-item').forEach(function (it) {
+          var show = key === 'all' || it.getAttribute('data-g117') === key;
+          it.hidden = !show;
+          if (show) vis++;
+        });
+        if (emptyRow) {
+          emptyRow.hidden = vis > 0;
+          if (emptyText && !vis) {
+            var chip = bar.querySelector('.nft-chip[data-nft="' + key + '"]');
+            var label = chip ? (chip.textContent || '').replace(/[০-৯]/g, '').trim() : '';
+            emptyText.textContent = '"' + label + '" ধরনের কোনো বিজ্ঞপ্তি নেই।';
+          }
+        }
+      }
+      bar.addEventListener('click', function (e) {
+        var chip = e.target.closest('.nft-chip');
+        if (!chip) return;
+        bar.querySelectorAll('.nft-chip').forEach(function (c) {
+          var on = c === chip;
+          c.classList.toggle('is-active', on);
+          c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        applyFilter(chip.getAttribute('data-nft'));
+      });
+      /* সরানোর পরে কাউন্ট-সিঙ্ক — সক্রিয়-চিপ শূন্য হলে 'সব'-এ ফেরত */
+      window.nftRecount117 = function () {
+        bar.querySelectorAll('.nft-chip').forEach(function (c) {
+          var k = c.getAttribute('data-nft');
+          var n = k === 'all'
+            ? list.querySelectorAll('.notif-page-item').length
+            : list.querySelectorAll('.notif-page-item[data-g117="' + k + '"]').length;
+          var bEl = c.querySelector('b');
+          if (bEl) bEl.textContent = bn(n);
+          if (!n && k !== 'all') c.remove();
+        });
+        var act = bar.querySelector('.nft-chip.is-active');
+        if (!act) {
+          var all = bar.querySelector('.nft-chip[data-nft="all"]');
+          if (all) { all.classList.add('is-active'); all.setAttribute('aria-pressed', 'true'); }
+          applyFilter('all');
+        } else {
+          applyFilter(act.getAttribute('data-nft'));
+        }
+      };
     })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>

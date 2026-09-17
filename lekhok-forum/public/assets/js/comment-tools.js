@@ -175,6 +175,13 @@
     var bubble = ta.closest('.cc-bubble');
     var dd = bubble && bubble.querySelector('.cc-mention');
     if (!dd || dd.hidden || !dd.children.length) {
+      /* সেশন ১১৭: Ctrl/⌘+Enter → সাবমিট (ড্রপডাউন-বন্ধ অবস্থায়);
+         ডিসেবলড-সেন্ড সম্মান করে — খালি-বডিতে অপাঠানো */
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        var form117 = ta.closest('.cc-form');
+        var send117 = form117 && form117.querySelector('.cc-send');
+        if (send117 && !send117.disabled) { e.preventDefault(); form117.requestSubmit(); }
+      }
       // Esc-এ সাধারণ-কেস: ড্রপডাউন না থাকলে কিছু না
       return;
     }

@@ -2030,6 +2030,13 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
   res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, myFollowers, stats, activity, myInterests, tagPool, REACTION_META, totals91, monthly91, bestPost91, bn91: (n) => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]), currentPath: '/me' });
 });
 
+// সেশন ১১৭: 'পড়া চালিয়ে যান' ফুল-পেজ — ড্যাশবোর্ড-উইজেটের 'সব দেখুন' এক্সটেনশন।
+// শূন্য-API: সার্ভার শুধু অথ-গেট + শেল রেন্ডার করে; তালিকা আঁকে continue-reading.js
+// localStorage 'lf_read_pos' থেকে (ব্রাউজার-লোকাল, প্রাইভেসি-সেফ)।
+router.get('/me/reading', ensureLoggedIn, (req, res) => {
+  res.render('user/reading', { currentPath: '/me' });
+});
+
 // ────────────────────────────────────────────────────────────────────────────
 // /settings — full settings page (profile, privacy, notifications, account, security, display, connected)
 // ────────────────────────────────────────────────────────────────────────────
