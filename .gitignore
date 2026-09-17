@@ -46,3 +46,29 @@ skills/
 
 # user-uploaded files (session screenshots etc.)
 upload/
+
+# ── Sandbox Next.js scaffold / env (lekhok-forum প্রজেক্টের অংশ নয় — root-অ্যাংকড) ──
+/.next/
+/src/
+/prisma/
+/db/
+/tests/
+/examples/
+/mini-services/
+/tool-results/
+/download/
+/upload/
+/agent-ctx/
+/.zscripts/
+/bun.lock
+/components.json
+/postcss.config.mjs
+/tailwind.config.ts
+/tsconfig.json
+/next.config.ts
+/package.json
+/Caddyfile
+
+/eslint.config.mjs
+/next-env.d.ts
+/public
