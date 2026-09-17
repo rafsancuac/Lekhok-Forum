@@ -523,3 +523,78 @@
   .lc-tile { animation: none; }
 }
 /* EOF-MARKER: session113-group-call-grid */
+
+/* ═══════════════ সেশন ১১৮: স্পিকার-হাইলাইট + ভিডিও-স্ট্যাট ═══════════════
+   ① সক্রিয়-স্পিকার টাইল (.lc-tile.is-speaking) — সবুজ-রিং + পালস-ডট + ওয়েভ-বার
+      (.lc-spkbars — tile-meta-র ভেতরে, JS টগল করে); 1:1-এ .lc-audioface-এ
+      অ্যাভাটার-রিং। ② ডায়াগনস্টিকস-প্যানেলে ভিডিও-সেকশন (.lc-stats-section +
+      .is-video সারি) — রেজোলিউশন/FPS বাংলা-সংখ্যায়। ═══════════════════════ */
+.lc-tile.is-speaking {
+  border-color: rgba(16, 185, 129, .78);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, .32), 0 6px 26px rgba(5, 150, 105, .3);
+}
+.lc-tile.is-speaking .lc-tile-face {
+  border-color: var(--lc-green, #10B981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .3);
+}
+.lc-tile.is-speaking .lc-tile-name::before {
+  background: var(--lc-green, #10B981);
+  box-shadow: 0 0 6px rgba(16, 185, 129, .8);
+  animation: lc-spk-dot 1.2s ease-in-out infinite;
+}
+@keyframes lc-spk-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .45; transform: scale(.78); }
+}
+.lc-spkbars {
+  display: inline-flex; align-items: flex-end; gap: 1.5px;
+  height: 10px; flex: 0 0 auto;
+}
+.lc-spkbars[hidden] { display: none; } /* display:inline-flex hidden-অ্যাট্রিবিউট ওভাররাইড করে — স্পষ্ট-গার্ড */
+.lc-spkbars i {
+  width: 2.5px; border-radius: 1.5px;
+  background: var(--lc-green, #10B981);
+  box-shadow: 0 0 4px rgba(16, 185, 129, .6);
+}
+.lc-spkbars i:nth-child(1) { height: 4px; }
+.lc-spkbars i:nth-child(2) { height: 7px; }
+.lc-spkbars i:nth-child(3) { height: 10px; }
+.lc-tile.is-speaking .lc-spkbars i { animation: lc-spk-bounce .9s ease-in-out infinite; transform-origin: bottom; }
+.lc-tile.is-speaking .lc-spkbars i:nth-child(2) { animation-delay: .15s; }
+.lc-tile.is-speaking .lc-spkbars i:nth-child(3) { animation-delay: .3s; }
+@keyframes lc-spk-bounce {
+  0%, 100% { transform: scaleY(.55); }
+  50% { transform: scaleY(1); }
+}
+
+/* ১:১ অডিও-ফেস — স্পিকার-রিং + দ্রুত-রিপল (কে বলছে তা স্পষ্ট) */
+.lc-audioface.is-speaking .lc-avatar {
+  border-color: var(--lc-green, #10B981);
+  box-shadow: 0 0 0 5px rgba(16, 185, 129, .28), 0 16px 50px rgba(0, 0, 0, .5);
+}
+.lc-audioface.is-speaking .lc-aura span { animation-duration: 1.4s; border-color: rgba(16, 185, 129, .7); }
+
+/* ভিডিও-স্ট্যাট সেকশন (ডায়াগনস্টিকস-প্যানেল) */
+.lc-stats-section {
+  margin-top: 6px; padding: 8px 2px 3px;
+  border-top: 1px solid rgba(233, 237, 239, .12);
+  color: var(--lc-green, #10B981);
+  font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.lc-stats-section .fas { font-size: 10px; }
+.lc-stats-row.is-video b { color: var(--lc-green, #10B981); }
+
+@media (max-width: 640px) {
+  .lc-spkbars { height: 9px; }
+  .lc-spkbars i:nth-child(1) { height: 3.5px; }
+  .lc-spkbars i:nth-child(2) { height: 6px; }
+  .lc-spkbars i:nth-child(3) { height: 9px; }
+  .lc-stats-section { font-size: 10.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lc-tile.is-speaking .lc-tile-name::before,
+  .lc-tile.is-speaking .lc-spkbars i { animation: none; }
+  .lc-audioface.is-speaking .lc-aura span { animation-duration: 2.4s; }
+}
+/* EOF-MARKER: session118-speaker-highlight-video-stats */

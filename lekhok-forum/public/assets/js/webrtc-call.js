@@ -149,6 +149,79 @@
     beep(ac, 880, ac.currentTime, 0.08, 0.05);
   }
 
+  /* ── সেশন ১১৮: স্পিকার-হাইলাইট (WebAudio লেভেল-মিটার) ──────────────────
+     প্রতি-অডিও-স্ট্রিমে AnalyserNode (MediaStreamSource → analyser —
+     destination-এ যায় না, নীরব-বিশ্লেষণ) → ২৫০ms-অন্তর RMS-নমুনা →
+     থ্রেশহোল্ডের-উপরে সর্বোচ্চ-লেভেল পিয়ার = সক্রিয়-স্পিকার → গ্রিড-টাইলে
+     .is-speaking (সবুজ-রিং + ওয়েভ-বার), 1:1-এ .lc-audioface-রিং।
+     হাইস্টেরেসিস: ৮০০ms-হোল্ড — ফ্লিকার-প্রতিরোধ; মিউটে লেভেল-শূন্যে
+     অটো-নিভে (track.enabled=false → RMS=0)। যেকোনো-স্ট্রিম-ব্যর্থতায়
+     graceful — হাইলাইট ছাড়াই কল চলবে। ═══ */
+  var SPK = { nodes: {}, tid: null, active: null, activeAt: 0 };
+  function spkEnsure(uid, stream) {
+    if (!stream || SPK.nodes[uid]) return;
+    var ac = audioCtx(); if (!ac) return;
+    try {
+      var src = ac.createMediaStreamSource(stream);
+      var an = ac.createAnalyser();
+      an.fftSize = 512; an.smoothingTimeConstant = 0.6;
+      src.connect(an);
+      SPK.nodes[uid] = { src: src, an: an, arr: new Uint8Array(an.fftSize) };
+    } catch (_) { /* স্ট্রিম-অবস্থা-ভুল — নীরব */ }
+  }
+  function spkDrop(uid) {
+    var n = SPK.nodes[uid]; if (!n) return;
+    try { n.src.disconnect(); } catch (_) {}
+    try { n.an.disconnect(); } catch (_) {}
+    delete SPK.nodes[uid];
+    if (SPK.active === uid) { SPK.active = null; spkPaint(null); }
+  }
+  function spkLevel(n) {
+    n.an.getByteTimeDomainData(n.arr);
+    var sum = 0;
+    for (var i = 0; i < n.arr.length; i++) { var v = (n.arr[i] - 128) / 128; sum += v * v; }
+    return Math.sqrt(sum / n.arr.length) * 140; /* ০-১০০-স্কেলে */
+  }
+  function spkTick() {
+    var best = null, bestL = 0;
+    var keys = Object.keys(SPK.nodes);
+    for (var i = 0; i < keys.length; i++) {
+      var n = SPK.nodes[keys[i]];
+      if (!n || !n.an) continue;
+      var l = spkLevel(n);
+      if (l > bestL) { bestL = l; best = keys[i]; }
+    }
+    var cand = (best && bestL > 5.5) ? best : null; /* থ্রেশহোল্ড — পরিবেশ-শব্দ-বাদ */
+    var now = Date.now();
+    if (cand !== SPK.active && now - SPK.activeAt < 800) cand = SPK.active; /* হোল্ড */
+    if (cand !== SPK.active) { SPK.active = cand; SPK.activeAt = now; spkPaint(cand); }
+  }
+  function spkPaint(uid) {
+    if (!root) return;
+    root.querySelectorAll('.lc-grid .lc-tile').forEach(function (t) {
+      var on = uid != null && t.getAttribute('data-uid') === String(uid);
+      t.classList.toggle('is-speaking', on);
+      var b = t.querySelector('.lc-spkbars');
+      if (b) b.hidden = !on;
+    });
+    var af = root.querySelector('.lc-audioface');
+    if (af) af.classList.toggle('is-speaking', uid === 'peer');
+  }
+  function spkStart() {
+    spkStop();
+    SPK.active = null; SPK.activeAt = 0;
+    spkTick();
+    SPK.tid = setInterval(spkTick, 250);
+  }
+  function spkStop() {
+    if (SPK.tid) { clearInterval(SPK.tid); SPK.tid = null; }
+  }
+  function spkTeardown() {
+    spkStop();
+    Object.keys(SPK.nodes).forEach(spkDrop);
+    SPK.active = null; SPK.activeAt = 0;
+  }
+
   /* ── API হেল্পার ───────────────────────────────────────────────────────── */
   function api(method, url, body) {
     var opt = { method: method, headers: { 'Content-Type': 'application/json' } };
@@ -290,6 +363,7 @@
       var stream = e.streams && e.streams[0];
       if (!stream) return;
       S.remote = stream;
+      spkEnsure('peer', stream); /* সেশন ১১৮: ১:১-স্পিকার-হাইলাইট */
       if (root) {
         var rv = root.querySelector('.lc-remote-video');
         var ra = root.querySelector('.lc-remote-video--audio');
@@ -377,6 +451,7 @@
     S.poorStreak = 0; S.poorNotified = false;
     S.lastBytes = 0; S.lastBytesAt = 0;
     statsTick();
+    spkStart(); /* সেশন ১১৮: স্পিকার-হাইলাইট টিকারও সংযুক্ত-অবস্থায় চালু */
   }
   async function statsTick() {
     clearTimeout(S.qPollT);
@@ -384,15 +459,16 @@
     if (!pc || (S.state !== 'connected' && S.state !== 'connecting')) return;
     try {
       var st = await pc.getStats();
-      var pair = null, lcMap = {}, rcMap = {}, inbound = null;
+      var pair = null, lcMap = {}, rcMap = {}, inbound = null, vInbound = null;
       st.forEach(function (r) {
         if (r.type === 'candidate-pair' && (r.selected || r.state === 'succeeded')) {
           if (!pair || (r.selected && !pair.selected)) pair = r;
         } else if (r.type === 'local-candidate') { lcMap[r.id] = r; }
         else if (r.type === 'remote-candidate') { rcMap[r.id] = r; }
         else if (r.type === 'inbound-rtp' && !r.isRemote && r.kind === 'audio') { inbound = r; }
+        else if (r.type === 'inbound-rtp' && !r.isRemote && r.kind === 'video') { vInbound = r; } /* সেশন ১১৮ */
       });
-      var d = { at: Date.now(), rtt: null, path: null, local: null, remote: null, jitter: null, lost: null, kbps: null };
+      var d = { at: Date.now(), rtt: null, path: null, local: null, remote: null, jitter: null, lost: null, kbps: null, vw: null, vh: null, vfps: null, lw: null, lh: null };
       if (pair) {
         if (typeof pair.currentRoundTripTime === 'number') d.rtt = Math.round(pair.currentRoundTripTime * 1000);
         var l = lcMap[pair.localCandidateId], r2 = rcMap[pair.remoteCandidateId];
@@ -411,6 +487,21 @@
             d.kbps = Math.max(0, Math.round(((inbound.bytesReceived - S.lastBytes) * 8) / (d.at - S.lastBytesAt) / 1000));
           }
           S.lastBytes = inbound.bytesReceived; S.lastBytesAt = d.at;
+        }
+      }
+      /* সেশন ১১১-③ (সেশন ১১৮-বাস্তবায়ন): ভিডিও-track-স্ট্যাট — রিসিভ-রেজোলিউশন + FPS
+         (inbound-rtp video; Chrome/Firefox দুটোতেই) + আমার-ভিডিও (local-track settings) */
+      if (vInbound) {
+        if (typeof vInbound.frameWidth === 'number') d.vw = vInbound.frameWidth;
+        if (typeof vInbound.frameHeight === 'number') d.vh = vInbound.frameHeight;
+        if (typeof vInbound.framesPerSecond === 'number') d.vfps = Math.round(vInbound.framesPerSecond);
+      }
+      if (S.local) {
+        var vt = S.local.getVideoTracks()[0];
+        if (vt && vt.getSettings) {
+          var vs = vt.getSettings() || {};
+          if (typeof vs.width === 'number') d.lw = vs.width;
+          if (typeof vs.height === 'number') d.lh = vs.height;
         }
       }
       S.lastStats = d;
@@ -445,7 +536,13 @@
       statsRow('RTT (রাউন্ড-ট্রিপ)', d.rtt != null ? bn(d.rtt) + ' ms' : null) +
       statsRow('জিটার', d.jitter != null ? bn(d.jitter) + ' ms' : null) +
       statsRow('হারানো প্যাকেট (মোট)', d.lost != null ? bn(d.lost) : null) +
-      statsRow('গতি (রিসিভ)', d.kbps != null ? bn(d.kbps) + ' kbps' : null);
+      statsRow('গতি (রিসিভ)', d.kbps != null ? bn(d.kbps) + ' kbps' : null) +
+      /* সেশন ১১৮: ভিডিও-track-স্ট্যাট (শুধু ভিডিও-কলে) */
+      (S.kind === 'video' ?
+        '<div class="lc-stats-section">' + icon('fa-video') + ' ভিডিও</div>' +
+        statsRow('আমার ভিডিও', d.lw != null ? bn(d.lw) + '×' + bn(d.lh) : null, 'is-video') +
+        statsRow('রিসিভ ভিডিও', d.vw != null ? bn(d.vw) + '×' + bn(d.vh) + (d.vfps ? ' @ ' + bn(d.vfps) + ' fps' : '') : null, 'is-video')
+        : '');
   }
   function toggleStats(force) {
     if (!root) return;
@@ -506,6 +603,7 @@
 
   function attachLocal(stream) {
     S.local = stream;
+    spkEnsure('self', stream); /* সেশন ১১৮: নিজের-মাইক লেভেল (মিউটে অটো-নিভে) */
     if (root) {
       var lv = root.querySelector('.lc-local-video');
       if (lv) lv.srcObject = stream;
@@ -586,6 +684,7 @@
       var stream = e.streams && e.streams[0];
       if (!stream) return;
       p.stream = stream;
+      spkEnsure(uid, stream); /* সেশন ১১৮: প্রতি-পিয়ার লেভেল-মিটার */
       gridAttachStream(uid, stream);
       tryPlayGrid();
       status('সংযুক্ত', 'is-live');
@@ -616,6 +715,7 @@
     var p = S.peers[uid];
     if (!p) return;
     if (p.pc) { try { p.pc.close(); } catch (_) {} }
+    spkDrop(uid); /* সেশন ১১৮: লেভেল-মিটার-নোডও সরাও */
     if (root) {
       var t = root.querySelector('.lc-grid [data-uid="' + uid + '"]');
       if (t) t.remove();
@@ -671,7 +771,7 @@
       /* অডিও-মোডে দৃশ্যমান টাইলের ভেতরে hidden video-element — remote-অডিও-বাহক */
       if (!isSelf) inner += '<video class="lc-tile-audio" autoplay playsinline></video>';
     }
-    inner += '<div class="lc-tile-meta"><span class="lc-tile-name"></span><span class="lc-tile-state"></span></div>';
+    inner += '<div class="lc-tile-meta"><span class="lc-tile-name"></span><span class="lc-spkbars" hidden><i></i><i></i><i></i></span><span class="lc-tile-state"></span></div>'; /* সেশন ১১৮: স্পিকার-ওয়েভ-বার */
     t.innerHTML = inner;
     var nm = t.querySelector('.lc-tile-name');
     if (nm) nm.textContent = isSelf ? 'আপনি' : ((pinfo && (pinfo.name || pinfo.username)) || 'সদস্য');
@@ -1089,6 +1189,7 @@
     clearTimeout(S.flushT); S.flushT = null;
     clearTimeout(S.pollT); S.pollT = null;
     clearTimeout(S.qPollT); S.qPollT = null; /* সেশন ১১১ */
+    spkTeardown(); /* সেশন ১১৮: লেভেল-মিটার-নোড + টিকার পরিষ্কার */
     if (S.incT) { clearTimeout(S.incT); S.incT = null; }
     S.statsOpen = false; S.lastStats = null; S.poorStreak = 0; S.poorNotified = false;
     S.lastBytes = 0; S.lastBytesAt = 0;
@@ -1293,6 +1394,19 @@
     /* সেশন ১১১ QA-হুক — রুট/কোয়ালিটি-UI যাচাই (কল ছাড়াই) */
     _qaEnsureRoot: function () { ensureRoot(); return !!root; },
     _qaSetQuality: function (lvl, rtt) { setQuality(lvl, rtt, 'QA-নমুনা'); },
+    /* সেশন ১১৮ QA-হুক: স্পিকার-হাইলাইট + ভিডিও-স্ট্যাট (হেডলেস-যাচাই — কল/মাইক ছাড়াই) */
+    _qaSetSpeaking: function (uid) { spkPaint(uid == null ? null : String(uid)); return true; },
+    _qaSpeaking: function () { return SPK.active; },
+    _qaSetVideoStats: function (o) {
+      S.lastStats = S.lastStats || { at: Date.now() };
+      if (o && typeof o === 'object') { for (var k in o) S.lastStats[k] = o[k]; }
+      if (!S.statsOpen) toggleStats(true);
+      var wasIdle = S.state === 'idle';
+      if (wasIdle) S.state = 'connected'; /* QA-নমুনা — খালি-স্টেট-বাইপাস */
+      renderStats();
+      if (wasIdle) S.state = 'idle';
+      return true;
+    },
     /* সেশন ১১৩ QA-হুক: কল ছাড়াই গ্রুপ-গ্রিড DOM নির্মাণ (হেডলেস-যাচাই) —
        ফেক-অংশগ্রহণকারী টাইল + অবস্থা-ক্লাস; রিয়েল-কল-স্টেট অপরিবর্তিত থাকে */
     _qaEnsureGroupGrid: function () {

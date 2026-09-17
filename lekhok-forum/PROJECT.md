@@ -298,6 +298,21 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ১২০ (১৮ সেপ্টেম্বর ২০২৬) — গ্রুপ-কল স্পিকার-হাইলাইট (কে বলছে) + ডায়াগনস্টিকসে ভিডিও-track-স্ট্যাট + QA-হুক ×৩ (ক্রন-রিভিউ রাউন্ড)
+
+**প্রসঙ্গ:** session117-পরবর্তী স্টেবল-ফেজ — QA-ফেজে role-policy 125/125 + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard:design + ব্রাউজার-ম্যাট্রিক্স (হোম/ড্যাশ/মেসেঞ্জার/গ্রুপ-চ্যাট) কনসোল-০, ৩৯০px-ওভারফ্লো-০ — বাগ-শূন্য → রোডম্যাপ-অবশিষ্ট "স্পিকার-হাইলাইট + প্রতি-পিয়ার-স্ট্যাট" (session113-পরবর্তী তালিকা) নেওয়া হলো।
+
+**নতুন ফিচার (webrtc-call.js + calls.css — ২-ফাইল-স্কোপ, Agent-Chat-লক-জোন অস্পৃশ্য):**
+1. **স্পিকার-হাইলাইট (কে বলছে — FB-প্যারিটি):** WebAudio `MediaStreamSource → AnalyserNode` প্রতি-অডিও-স্ট্রিমে (destination-এ যায় না — নীরব-বিশ্লেষণ); ২৫০ms-অন্তর RMS-নমুনা (`getByteTimeDomainData`), থ্রেশহোল্ড (RMS>5.5) ছাড়িয়ে সর্বোচ্চ-লেভেল = সক্রিয়-স্পিকার; **৮০০ms-হাইস্টেরেসিস-হোল্ড** — ফ্লিকার-প্রতিরোধ। গ্রুপ-গ্রিডে টাইলে `.is-speaking` (সবুজ-বর্ডার-গ্লো + অ্যাভাটার-রিং + পালস-ডট + `.lc-spkbars` ৩-বার-ওয়েভ-অ্যানিমেশন); ১:১-তে `.lc-audioface` অ্যাভাটার-সবুজ-রিং + দ্রুত-রিপল। মিউটে `track.enabled=false` → RMS=০ → অটো-নিভে (নিজের-মাইক-স্বাস্থ্য-ফিডব্যাক)। যেকোনো-স্ট্রিম-ব্যর্থতায় graceful (হাইলাইট ছাড়াই কল)।
+2. **ভিডিও-track-স্ট্যাট (session111-③ বাস্তবায়ন):** ডায়াগনস্টিকস-প্যানেলে শুধু ভিডিও-কলে "ভিডিও" সেকশন (`.lc-stats-section`) — 'আমার ভিডিও' (local-track `getSettings()` width×height) + 'রিসিভ ভিডিও' (inbound-rtp video frameWidth×frameHeight @ framesPerSecond) — সব বাংলা-সংখ্যায়, `.is-video` সবুজ-ভ্যালু। গ্রুপে activePC (প্রথম connected পিয়ার)।
+3. **QA-হুক ×৩:** `_qaSetSpeaking(uid|null)` (স্পিকার-পেইন্ট ইনজেকশন), `_qaSpeaking()` (active-পিয়ার), `_qaSetVideoStats({vw,vh,vfps,lw,lh})` (স্ট্যাট-স্যাম্পল ইনজেকশন + idle-বাইপাস রেন্ডার) — হেডলেস-যাচাইয়ে কল/মাইক ছাড়াই।
+
+**ইন্টিগ্রেশন-পয়েন্ট:** SPK-ইঞ্জিন মডিউল-লেভেল (`SPK.nodes` uid→analyser); ওয়্যারিং — `attachLocal`→spkEnsure('self'), ১:১-`createPC.ontrack`→spkEnsure('peer'), গ্রুপ-`peerPC.ontrack`→spkEnsure(uid), `peerDrop`→spkDrop, `startStatsTicker`→spkStart, `cleanup`→spkTeardown; `gridTile`-মার্কআপে `.lc-spkbars[hidden]` নতুন (কাস্টমাইজ-করলে hidden-ওভাররাইড-গার্ড `.lc-spkbars[hidden]{display:none}` রাখুন)।
+
+**যাচাই:** node --check ✓ CSS brace-depth-০ ✓; agent-browser (গ্রুপ-চ্যাট @ QA-হুক): টাইল-is-speaking+বার-দৃশ্যমান ✓ অন্য-টাইল-পরিষ্কার ✓ null-ক্লিয়ার ✓ ১:১-অডিওফেস-রিং টগল ✓ ভিডিও-সেকশন ('ভিডিও' + 'আমার ভিডিও ১২৮০×৭২০' + 'রিসিভ ভিডিও ৬৪০×৪৮০ @ ২৫ fps' — বাংলা) ✓ ডেস্কটপ+390px-স্ক্রিনশট (s118-speaker-desktop/s118-speaking-bars/s118-speaking-mobile.png) ✓ ওভারফ্লো-০ ✓ কনসোল-০ ✓; রিগ্রেশন: role-policy ১২৫/১২৫ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard:design — **২৫৫-চেক ALL GREEN** ✓। গোটচা (QA-অর্ডারিং): `document.querySelectorAll('.lc-root').forEach(remove)` করলে ক্লোজার-`root` ডিট্যাচড-থাকে → পরবর্তী `_qaEnsureGroupGrid` অদৃশ্য-নোডে কাজ করে — স্ক্রিনশট-রাউন্ডে ফ্রেশ-পেজ-লোডে করুন।
+
+**পরবর্তী:** Metered.ca-TURN (ইউজার-অ্যাকাউন্ট — env-পথ প্রস্তুত) · quality-ভিত্তিক অটো-ভিডিও-ডিগ্রেড · গ্রুপে প্রতি-পিয়ার স্ট্যাট-সাব-প্যানেল (টাইল-ক্লিকে) · স্পিকার-ভিত্তিক অডিও-লেভেল শেয়ার্ড-ডিসপ্লে।
+
 ### সেশন ১১৬ (১৮ সেপ্টেম্বর ২০২৬) — কমেন্ট-রিঅ্যাকশন নোটিফিকেশন (প্যারিটি) + নোটিফিকেশন আইকন-রেজিস্ট্রি + QA-অ্যাঙ্কর-ফিক্স + inspect-audit ক্যানোনিকাল-যুগ-আপডেট (cron-QA-রাউন্ড)
 
 **স্কোপ:** QA-ফার্স্ট অ্যাসেসমেন্ট (:3130 আইসোলেটেড — ১৪-রুট-স্মোক, লগইন-E2E, গ্যালেরি-পেজিনেশন, session115-2FA-সারফেস, 390px ×৬-০, কনসোল-০ → বাগ-শূন্য-প্রায়) → session-১১৪-নোটের অবশিষ্ট-সুপারিশ ③ বাস্তবায়ন + পর্যবেক্ষিত-গ্যাপ-ফিক্স।

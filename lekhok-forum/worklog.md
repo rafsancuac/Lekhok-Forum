@@ -1016,3 +1016,26 @@ Stage Summary:
 - push: session119-ফিচার (9ef2154) + লেবেল-রিনাম (d11af7e) + docs — মার্জড-/me: session118-ডিজাইন + আমার rt-chip ×৪
 - যাচাই (মার্জড-কোডে): role-policy **১২৫/১২৫** ✓ cursor ২৫/২৫ ✓ guard:design গ্রিন ✓ /qa ফিল্টার-সাইকেল (temp-প্রশ্ন→unanswered→ডিলিট) ✓ 390px-০ ✓ কনসোল-০ ✓ রিকনসিল-ক্লিন ✓
 - পরবর্তী-প্রার্থী: ① role-policy §১৭-এ /qa-ফিল্টার-রুট-কভারেজ ② reconcile-কে সার্ভার-বুট-হুকে (অটো-রিকনসিল) ③ notification-পেজে পার-টাইপ ফিল্টার-চিপ (session118-সুপারিশ-বহমান) ④ optimistic-থ্রেড-ইনসার্ট (১১৪-নোট ② এখনো-খোলা)
+---
+Task ID: cron-r120 (সেশন ১২০ — webDevReview রাউন্ড; origin/main @ b59f038 থেকে)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-শূন্যতায় স্বাধীন-ফোকাস → গ্রুপ-কল স্পিকার-হাইলাইট + ভিডিও-track-স্ট্যাট ইমপ্ল + push
+
+Work Log:
+- সিঙ্ক: git fetch/pull --rebase (session117-প্লেলিস্ট গৃহীত — role-policy এখন ১২৫-চেক)
+- QA-ফেজ: pkill → port-free → seed (qa-users + test-users + qa-113) → সার্ভার (PORT=8080 CALL_RING_TIMEOUT_S=4) → role-policy ১২৫/১২৫ ✓ + calls ৫৫/৫৫ ✓ + groupcalls ৫০/৫০ ✓ + cursor ২৫/২৫ ✓ + guard:design ✓
+- ব্রাউজার-QA: হোম/লগইন-রিডাইরেক্ট/ড্যাশ/মেসেজ-ইনবক্স/গ্রুপ-চ্যাট-১০৭ (গ্রুপ-কল-বাটন ×২ ✓) — কনসোল-০ ✓ 390px-ওভারফ্লো-০ ✓ → বাগ-শূন্য
+- গোটচা: verify-session93-calls.js ডিফল্ট-বেস localhost:3030 — এক্সপ্লিসিট http://127.0.0.1:8080 আর্গ দিতে হয় (groupcalls-স্ক্রিপ্ট 8080-ডিফল্ট); প্রথম-রানে ECONNREFUSED-মিথ্যা-ফেইল এ কারণেই
+- ফোকাস-নির্বাচন: রোডম্যাপ-অবশিষ্টের "স্পিকার-হাইলাইট + প্রতি-পিয়ার-স্ট্যাট" (session113-পরবর্তী তালিকা) — ২-ফাইল-স্কোপ (webrtc-call.js + calls.css), সার্ভার-কোড-শূন্য
+- **ইমপ্ল ① স্পিকার-হাইলাইট:** SPK-ইঞ্জিন (WebAudio MediaStreamSource→AnalyserNode প্রতি-স্ট্রিম, নীরব-বিশ্লেষণ) + ২৫০ms RMS-টিক + থ্রেশহোল্ড 5.5 + ৮০০ms-হাইস্টেরেসিস + spkPaint (গ্রিড-টাইল .is-speaking + .lc-spkbars ওয়েভ-বার + 1:1 অডিওফেস-রিং); ওয়্যারিং ×৬-পাথ (attachLocal/ontrack×২/peerDrop/startStatsTicker/cleanup); মিউটে অটো-নিভে
+- **ইমপ্ল ② ভিডিও-স্ট্যাট:** statsTick-এ inbound-rtp video (frameWidth/Height/FPS) + local-track getSettings → renderStats-এ শুধু ভিডিও-কলে "ভিডিও"-সেকশন (বাংলা-সংখ্যা, .is-video সবুজ)
+- **ইমপ্ল ③ QA-হুক:** _qaSetSpeaking/_qaSpeaking/_qaSetVideoStats (idle-বাইপাস)
+- **CSS:** calls.css session118-ব্লক (is-speaking-টাইল-ফ্যামিলি + spkbars + stats-section + 640px + reduced-motion) — [hidden]-display-গার্ডসহ; EOF-মার্কার session118-এ আপডেট
+- যাচাই: node --check ✓ brace-depth-০ ✓ agent-browser: টাইল-হাইলাইট+বার ✓ ক্লিয়ার ✓ 1:1-রিং ✓ ভিডিও-সেকশন '১২৮০×৭২০'/'৬৪০×৪৮০ @ ২৫ fps' ✓ স্ক্রিনশট ×৩ (desktop/bars/mobile) ✓ ওভারফ্লো-০ ✓ কনসোল-০ ✓
+- রিগ্রেশন-পোস্ট-ইমপ্ল: role-policy ১২৫/১২৫ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard — **২৫৫-চেক ALL GREEN**
+- নতুন-QA-গোটচা: .lc-root-ম্যানুয়াল-DOM-রিমুভ → ক্লোজার-root ডিট্যাচড → পরবর্তী _qaEnsureGroupGrid অদৃশ্য — ফ্রেশ-পেজ-লোডেই রাউন্ড-করুন (PLANS-নোটে ডকুমেন্টেড)
+
+Stage Summary:
+- গ্রুপ-কল এখন FB-প্যারিটি স্পিকার-হাইলাইটসহ — কে বলছে এক-নজেই; ডায়াগনস্টিকসে ভিডিও-রেজোলিউশন/FPS (TURN-রিলে-থ্রুপুট-যাচাই-সহায়ক)
+- session113-পরবর্তী কল-রোডম্যাপে অবশিষ্ট: Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, প্রতি-পিয়ার-স্ট্যাট-সাব-প্যানেল
+- পরবর্তী-এজেন্ট: session121 লেবেল থেকে (118=/me-রিডিজাইন, 119=Q&A-ফিল্টার — সমান্তরাল-এজেন্ট, 120=স্পিকার-হাইলাইট) (সর্বোচ্চ+১)

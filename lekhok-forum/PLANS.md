@@ -1284,3 +1284,19 @@ push-রেস-এ abhi-asol: উপরের session113-নোট লেখা�
 3. **স্যান্ডবক্স-প্রসেস-রিপ:** Bash-কলের-মাঝে ব্যাকগ্রাউন্ড-নোড নীরবে মরে — প্রতি-টেস্ট-ব্লকের-শুরুতে `bash ensure-server.sh` (রিপো-রুট, untracked) + suite একই-কলে।
 
 **E2E-প্রমাণ (মার্জড-কোড @8094):** /me = session118-ডিজাইন (৯-ট্যাব/৭-ব্যাজ/মেটা-স্ট্রিপ/ws118-চার্ট/পূর্ণাঙ্গ-মাস) + rt-chip ×৪ ✓ /qa ফিল্টার-সাইকেল ✓ role-policy ১২৫/১২৫ ✓ cursor ২৫/২৫ ✓ guard:design ✓ 390px-০ ✓ কনসোল-০ ✓ brace-depth ০ ✓
+
+## Cross-Agent Note: Session 120 — গ্রুপ-কল স্পিকার-হাইলাইট + ভিডিও-track-স্ট্যাট (১৮ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** webrtc-call.js + calls.css — মাত্র ২-ফাইল (Agent-Chat-লক-জোন অস্পৃশ্য); রোডম্যাপের "স্পিকার-হাইলাইট + প্রতি-পিয়ার-স্ট্যাট" (session113-পরবর্তী তালিকা) বাস্তবায়ন। সার্ভার-কোড শূন্য-পরিবর্তন।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (কল-ডোমেইনে কাজ করা-এজেন্টদের জন্য):**
+1. **SPK-ইঞ্জিন (মডিউল-লেভেল, `SPK.nodes` uid→{src,an,arr}):** প্রতি-অডিও-স্ট্রিমে WebAudio AnalyserNode — নীরব-বিশ্লেষণ (destination-এ connect হয় না)। **নতুন স্ট্রিম-অ্যাটাচ-পাথ যোগ করলে `spkEnsure(uid, stream)` ডাকুন, ড্রপ-পাথে `spkDrop(uid)`** — নইলে ওই-পিয়ার কখনো স্পিকার-হাইলাইট পাবে না (বা মৃত-নোড-লিক হবে)। বর্তমান-ওয়্যারিং: attachLocal→'self' · 1:1-createPC.ontrack→'peer' · group-peerPC.ontrack→uid · peerDrop→spkDrop · startStatsTicker→spkStart · cleanup→spkTeardown।
+2. **স্পিকার-চুক্তি:** একসময়ে একজনই active (সর্বোচ্চ-RMS, থ্রেশহোল্ড 5.5, ৮০০ms-হোল্ড) — `spkPaint(uid)` গ্রিড-টাইলে `.is-speaking` + `.lc-spkbars`-টগল + 1:1-এ `.lc-audioface.is-speaking`। QA-হুক: `LekhokCall._qaSetSpeaking(uid|null)` / `_qaSpeaking()` / `_qaSetVideoStats({vw,vh,vfps,lw,lh})` (idle-বাইপাসসহ) — হেডলেসে কল/মাইক-ছাড়াই যাচাই।
+3. **টাইল-মার্কআপ-পরিবর্তন:** `gridTile`-এ `.lc-tile-meta`-র ভেতরে এখন `<span class="lc-spkbars" hidden><i>×৩</i></span>` আছে — tile-meta-র DOM-অবলম্বনকারী কোড (querySelector-অর্ডার) হলে যাচাই করুন। **hidden-ওভাররাইড-গার্ড নীতি:** display:inline-flex ক্লাসে `[hidden]{display:none}` স্পষ্ট-রুল রাখা বাধ্যতামূলক (session111-র `.lc-qualityidden]`-গোটচার পুনরাবৃত্তি-প্রতিরোধ)।
+4. **ভিডিও-স্ট্যাট:** `S.lastStats`-এ নতুন-ফিল্ড `vw/vh/vfps` (inbound-rtp video) + `lw/lh` (local-track getSettings) — renderStats শুধু `S.kind==='video'`-তে "ভিডিও" সেকশন (`.lc-stats-section` + `.is-video`-সারি) রেন্ডার করে; অডিও-কলে সেকশন-ই-নেই (ডেল্টা-শূন্য)। গ্রুপে গ্রুপ-মোডের প্রথম connected পিয়ার-PC (activePC-চুক্তি অপরিবর্তিত)।
+
+**E2E-প্রমাণ:** node --check + brace-depth-০ ✓; agent-browser (গ্রুপ-চ্যাট @ QA-হুক): is-speaking-টাইল+বার ✓ অন্য-টাইল-পরিষ্কার ✓ null-ক্লিয়ার ✓ 1:1-অডিওফেস-রিং ✓ ভিডিও-সেকশন '১২৮০×৭২০'/'৬৪০×৪৮০ @ ২৫ fps' (বাংলা-অঙ্ক) ✓ ডেস্কটপ+390px-স্ক্রিনশট ✓ ওভারফ্লো-০ ✓ কনসোল-০ ✓; রিগ্রেশন role-policy ১২৫/১২৫ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard:design = **২৫৫-চেক ALL GREEN**। স্ক্রিনশট: s118-speaker-desktop.png / s118-speaking-bars.png / s118-speaking-mobile.png।
+
+**QA-অর্ডারিং-গোটচা (নতুন):** হেডলেস-টেস্টে `document.querySelectorAll('.lc-root').forEach(r=>r.remove())` করলে IIFE-ক্লোজারের `root` ভেরিয়েবল ডিট্যাচড-নোডেই থেকে যায় → পরবর্তী `_qaEnsureGroupGrid()` "সফল" কিন্তু অদৃশ্য — প্রতিকার: প্রতি-রাউন্ডে `agent-browser open` দিয়ে ফ্রেশ-পেজ-লোড (ক্লোজার-স্টেট-রিসেট)।
+
+**পরবর্তী:** Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) · অটো-ভিডিও-ডিগ্রেড · টাইল-ক্লিকে প্রতি-পিয়ার-স্ট্যাট · থ্রেড-সাবমিটে optimistic-ইনসার্ট (session116-সুপারিশ-অবশিষ্ট)।
