@@ -95,6 +95,9 @@
               <span class="badge <%= p.type === 'question' ? 'badge-muted' : '' %>"><%= p.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span>
               <span><i class="far fa-clock"></i> <%= new Date(p.created_at).toLocaleDateString('bn-BD') %></span>
               <span><i class="far fa-eye"></i> <%= p.view_count || 0 %></span>
+              <%# সেশন ১১০: আনুমানিক পড়ার-সময় %>
+              <% const rm110 = Math.max(1, Math.round(String(p.body || '').replace(/<[^>]*>/g, ' ').replace(/[#*_>`~\[\]()!]/g, '').replace(/\s+/g, ' ').trim().length / 950) || 1); %>
+              <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= String(rm110).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> মিনিট</span>
             </div>
             <h3 class="feed-card-title"><a href="<%= p.type === 'question' ? '/qa/' + p.id : '/articles/' + p.id %>"><%= p.title %></a></h3>
             <% if (p.excerpt) { %><p class="feed-card-excerpt"><%= mdPlain(p.excerpt, 200) %></p><% } %>

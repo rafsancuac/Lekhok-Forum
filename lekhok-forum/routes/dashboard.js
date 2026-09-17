@@ -288,6 +288,15 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
       if (!item.images.length && item.cover_image) item.images = [item.cover_image];
     }
     item.reactorFaces = facesByPost[item.id] || [];
+    // সেশন ১১০: আনুমানিক পড়ার-সময় — মার্কডাউন/HTML-মার্কার-স্ট্রিপ → ~৯৫০ অক্ষর/মিনিট
+    // (বাংলা ~২০০ wpm × ~৪.৭ অক্ষর/শব্দ), ফ্লোর ১ — /dashboard + /dashboard/more দুটোতেই চলে
+    if (item.item_type === 'article' || item.item_type === 'question') {
+      const plain110 = String(item.body || '')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/[#*_>`~\[\]()!]/g, '')
+        .replace(/\s+/g, ' ').trim();
+      item.read_mins = Math.max(1, Math.round(plain110.length / 950) || 1);
+    }
     // (৯২) FB-স্টাইল প্রিভিউ-বাবল ×২ — কম্প্যাক্ট রেন্ডারের জন্য মার্কার-স্ট্রিপড
     const cpList = cmtByPost[item.id] || [];
     if (cpList.length) {
@@ -384,6 +393,17 @@ router.get('/dashboard', async (req, res) => {
   let myInterests = [];
   if (me) { try { myInterests = JSON.parse(await db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {} }
 
+  // সেশন ১১০: সাইডবারের কমপ্যাক্ট 'আমার সারসংক্ষেপ' উইজেট — ৪ লাইট-কুয়েরি (লগড-ইনে)
+  let myStats = null;
+  if (me) {
+    try {
+      const aggP = await db.prepare("SELECT COUNT(*) c, COALESCE(SUM(view_count),0) v FROM posts WHERE author_id = ? AND status = 'published'").get(me.id);
+      const aggC = await db.prepare('SELECT COUNT(*) c FROM comments WHERE author_id = ?').get(me.id);
+      const aggR = await db.prepare("SELECT COALESCE(SUM(like_count),0) l FROM posts WHERE author_id = ? AND status = 'published'").get(me.id);
+      myStats = { posts: aggP.c || 0, views: aggP.v || 0, reactions: aggR.l || 0, comments: aggC.c || 0 };
+    } catch (_) { myStats = { posts: 0, views: 0, reactions: 0, comments: 0 }; }
+  }
+
   // সেশন ৬৬+৮৯: bookmarked-প্রিফিল এখন decorateFeed()-এর সাথেই (উপরে myBookmarkedIds)
 
   // সেশন ১০৪ (রোডম্যাপ-০৫): পেজ-১-এর শেষ-আইটেম থেকে প্রাথমিক keyset-কার্সার —
@@ -394,7 +414,7 @@ router.get('/dashboard', async (req, res) => {
 
   res.render('user/dashboard', {
     feed, filter, sort, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
-    myBookmarkedIds, cursor,
+    myBookmarkedIds, cursor, myStats,
     user: req.session.user || null,
     currentPath: '/dashboard'
   });

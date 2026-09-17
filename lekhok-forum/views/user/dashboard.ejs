@@ -65,6 +65,19 @@
 
     <!-- Right Sidebar -->
     <aside class="dash-right">
+      <%# সেশন ১১০: কমপ্যাক্ট 'আমার সারসংক্ষেপ' — ৪ চিপ (বড়-কার্ড নয়, ইউজারের কমপ্যাক্ট-এসথেটিক) %>
+      <% if (user && myStats) { const bn110 = n => String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); %>
+      <div class="side-card card msx-card" aria-label="আমার সারসংক্ষেপ">
+        <h4><i class="fas fa-user" style="color:var(--accent)"></i> আমার সারসংক্ষেপ</h4>
+        <div class="msx-grid">
+          <a href="/me?tab=posts" class="msx-chip" title="আমার পোস্ট"><b><%= bn110(myStats.posts) %></b><span>প্রকাশিত লেখা</span></a>
+          <a href="/me" class="msx-chip" title="লেখা-স্ট্যাটিসটিক্স"><b><%= bn110(myStats.views) %></b><span>মোট পাঠ</span></a>
+          <a href="/me?tab=reactions" class="msx-chip" title="প্রাপ্ত প্রতিক্রিয়া"><b><%= bn110(myStats.reactions) %></b><span>প্রতিক্রিয়া</span></a>
+          <a href="/me?tab=comments" class="msx-chip" title="আমার মন্তব্য"><b><%= bn110(myStats.comments) %></b><span>মন্তব্য</span></a>
+        </div>
+        <a href="/me" class="side-link">বিস্তারিত অ্যানালিটিক্স →</a>
+      </div>
+      <% } %>
       <div class="side-card card">
         <h4><i class="fas fa-birthday-cake"></i> আজকের জন্মদিন</h4>
         <% if (birthdays.length) { %>

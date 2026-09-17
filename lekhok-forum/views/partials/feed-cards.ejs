@@ -52,7 +52,7 @@
           }) %>
         </div>
         <% if (item.original.cover_image) { %>
-          <a href="<%= item.original.link %>"><img loading="lazy" decoding="async" src="<%= item.original.cover_image %>" class="feed-image" alt=""></a>
+          <a href="<%= item.original.link %>"><img loading="lazy" decoding="async" onload="this.classList.add('ld')" src="<%= item.original.cover_image %>" class="feed-image img-skel" alt=""></a>
         <% } %>
         <div class="feed-card-body">
           <h3 class="feed-title"><a href="<%= item.original.link %>"><%= item.original.title %></a></h3>
@@ -100,6 +100,10 @@
         <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
       <% } else { %>
         <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+      <% } %>
+      <%# সেশন ১১০: আনুমানিক পড়ার-সময় (decorateFeed-গণিত) — স্লিম চিপ %>
+      <% if (item.read_mins) { %>
+        <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= String(item.read_mins).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> মিনিট</span>
       <% } %>
       <%# সেশন ১০২ (০৮-ইউনিয়ন): র‍্যাংকড-মোড "কেন-দেখছেন" চিপ — অ্যাফিনিটি/এনগেজমেন্ট-সংকেত (ranked-এ শুধু) %>
       <% if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge) { %>

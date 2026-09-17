@@ -1772,3 +1772,29 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
   .fb-meta107{gap:10px}
   .fb-meta107 .fc-menu{min-width:158px;right:-4px}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১১০ — ফিড-এনরিচমেন্ট: পড়ার-সময়-চিপ + cover-skeleton + ড্যাশবোর্ড
+   'আমার সারসংক্ষেপ' কমপ্যাক্ট-উইজেট (ইউজার-এসথেটিক: বড়-কার্ড নয়, স্লিম-চিপ)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ১. পড়ার-সময় চিপ (ফিড-হেড + /me মেটা-রো) ── */
+.rt-chip{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;color:#5b7a6d;background:var(--accent-soft,rgba(5,150,105,.10));border:1px solid rgba(5,150,105,.18);padding:2px 8px;border-radius:999px;white-space:nowrap;line-height:1.5;vertical-align:middle}
+.rt-chip i{font-size:.58rem;opacity:.85}
+.feed-card-head .rt-chip{margin-left:6px}
+.feed-card-meta .rt-chip{margin-left:2px}
+
+/* ── ২. cover-skeleton (session103-শিমার-প্যাটার্নের ফিড-পোর্ট) ── */
+.img-skel{background:linear-gradient(100deg,#EEF2F0 40%,#F8FAF9 50%,#EEF2F0 60%);background-size:200% 100%;animation:sk110shim 1.15s linear infinite}
+.img-skel.ld{background:none;animation:none}
+@keyframes sk110shim{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.img-skel{animation:none;background:#EEF2F0}}
+
+/* ── ৩. 'আমার সারসংক্ষেপ' কমপ্যাক্ট-উইজেট (ড্যাশবোর্ড সাইডবার) ── */
+.msx-card h4{display:flex;align-items:center;gap:7px}
+.msx-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:10px 0 4px}
+.msx-chip{display:flex;align-items:center;gap:8px;background:#F8FAF9;border:1px solid var(--border,#e2e8f0);border-radius:10px;padding:7px 10px;text-decoration:none;min-width:0;transition:border-color .15s,background .15s}
+.msx-chip:hover{border-color:#B7DCCE;background:#F2F8F5}
+.msx-chip b{font-size:.98rem;color:var(--accent-dark,#047857);line-height:1;flex:0 0 auto;min-width:20px;text-align:center}
+.msx-chip span{font-size:.66rem;color:var(--text-muted,#64748b);line-height:1.25;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:640px){.msx-grid{gap:6px}.msx-chip{padding:6px 9px}}
