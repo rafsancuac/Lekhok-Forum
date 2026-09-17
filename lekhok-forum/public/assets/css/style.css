@@ -2129,7 +2129,6 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   }
 }
 
-<<<<<<< HEAD
 /* ═══════════ সেশন ১২১: হেডার-ড্রপডাউন dismiss ✕ + nft-চিপ পলিশ (cron-r10) ═══════════
    ① .notif-x — ড্রপডাউন-আইটেমে সরান-বাটন (ফুল-পেজের .notif-dismiss-প্যারিটি):
       হোভারে প্রকাশ, টাচ-ডিভাইসে সর্বদা অর্ধ-দৃশ্যমান (হোভার-নেই-ডিভাইসে লুকানো = অপ্রাপ্য), ফোকাস-রিং */
@@ -2159,4 +2158,14 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 .notif-see-all{transition:color .14s ease}
 .notif-see-all:hover{color:var(--accent-dark)}
 .notif-header{border-bottom:1px solid var(--border)}
-=======
+
+/* ═══════ সেশন ১২৩: কমেন্ট-মাইক্রোইন্টারঅ্যাকশন — ডিলিট-মৃত্যু-অ্যানিমেশন গার্ড +
+   সম্পাদনা-সেভ-পালস (killItem/pulseSaved, comment-tools.js) ═══════ */
+/* মৃত্যু-অ্যানিমেশন-চলাকালীন আইটেম অদৃশ্য-হওয়ার পথে — ক্লিক-ধরা-বন্ধ + লেআউট-স্থিতি */
+.cmt-dying{pointer-events:none}
+.cmt-dying .cmt-palette,.cmt-dying .pm-menu,.cmt-dying .fc-edit-slot{display:none!important}
+/* সফল-সম্পাদনার স্বীকৃতি: বাবলে এক-বারের সবুজ-রিং ফ্ল্যাশ (১.২সে) — keyframe-নামে
+   ১২১-প্রত্যয় মূল-স্ট্যাশ-যুগের (লেবেল-রেস-পুনঃনামকরণের আগে); JS-সিঙ্ক-অক্ষত */
+@keyframes cmtSavedPulse121{0%{box-shadow:0 0 0 0 rgba(5,150,105,.38);background-color:rgba(5,150,105,.07)}60%{box-shadow:0 0 0 6px rgba(5,150,105,.12)}100%{box-shadow:0 0 0 0 rgba(5,150,105,0);background-color:transparent}}
+.cmt-saved-pulse{animation:cmtSavedPulse121 1.15s cubic-bezier(.3,.8,.4,1) both;border-radius:18px}
+@media (prefers-reduced-motion:reduce){.cmt-saved-pulse{animation:none}.cmt-dying{transition:none}}

@@ -286,6 +286,49 @@
     return ME_ID && String(c.author_id) === String(ME_ID);
   }
 
+  // ── সেশন ১২১: মৃত্যু-অ্যানিমেশন — ডিলিটে তাৎক্ষণিক remove-এর বদলে মসৃণ
+  // collapse+fade (উচ্চতা→০, opacity→০, পাশে-সরে-যাওয়া) — session12-সুপারিশ।
+  // reduced-motion বা লুকানো-আইটেমে সরাসরি remove (শূন্য-জিওমেট্রি-ঝুঁকি)।
+  function killItem(item, done) {
+    if (!item) { if (done) done(); return; }
+    var reduced = false;
+    try { reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
+    var h = item.offsetHeight;
+    if (reduced || !h) {
+      item.remove();
+      if (done) done();
+      return;
+    }
+    if (item.dataset.dying) { if (done) done(); return; }
+    item.dataset.dying = '1';
+    item.style.boxSizing = 'border-box';
+    item.style.overflow = 'hidden';
+    item.style.height = h + 'px';
+    item.style.transition = 'height .3s cubic-bezier(.4,0,.2,1), opacity .24s ease, transform .3s cubic-bezier(.4,0,.2,1), margin .3s ease, padding .3s ease';
+    // reflow-কমিট শুরু-মান, তারপর লক্ষ্য-মান → ট্রানজিশন নিশ্চিত
+    void item.offsetHeight;
+    item.classList.add('cmt-dying');
+    item.style.height = '0px';
+    item.style.opacity = '0';
+    item.style.transform = 'translateX(-14px) scale(.985)';
+    item.style.marginTop = '0';
+    item.style.marginBottom = '0';
+    item.style.paddingTop = '0';
+    item.style.paddingBottom = '0';
+    setTimeout(function () { item.remove(); if (done) done(); }, 330);
+  }
+
+  // ── সেশন ১২১: সম্পাদনা-সেভ-পালস — সফল-সেভে বাবলে হালকা সবুজ-রিং ফ্ল্যাশ
+  // (পরিবর্তন-স্বীকৃতি; reduced-motion-এ শূন্য — CSS-এ গার্ড)।
+  function pulseSaved(item) {
+    var b = bubbleOf(item) || bodyOf(item);
+    if (!b) return;
+    b.classList.remove('cmt-saved-pulse');
+    void b.offsetWidth; // পুনঃ-ট্রিগারে রিস্টার্ট
+    b.classList.add('cmt-saved-pulse');
+    setTimeout(function () { b.classList.remove('cmt-saved-pulse'); }, 1200);
+  }
+
   function renderCommentItem(c, postId, opts) {
     opts = opts || {};
     var mine = c.my_reaction || null;
@@ -705,6 +748,7 @@
           (bodyEl || bubble).insertAdjacentElement('afterend', ed);
         }
         RAW_CACHE[cid] = body;
+        pulseSaved(item); // সেশন ১২১: সেভ-স্বীকৃতি-পালস
         slot.hidden = true; slot.innerHTML = '';
         bubble.style.display = '';
         if (window.showToast) showToast('মন্তব্য সম্পাদিত হয়েছে ✓', 'success');
@@ -734,22 +778,25 @@
       return;
     }
     if (swapQaThread('', null)) return;
-    if (it) it.remove();
-    try {
-      var total = (typeof j.total === 'number') ? j.total : null;
-      if (total !== null) {
-        // সেশন ১১৪: লেবেল-নিরপেক্ষ কাউন্টার-স্প্যান ([data-cmt-total]) প্রথমে —
-        // 'উত্তরসমূহ (N)' হেডিং .comments-h-র হার্ডকোডেড innerHTML-রিরাইট থেকে নিরাপদ
-        var cSpan = document.querySelector('[data-cmt-total]') || document.querySelector('.comments-total');
-        if (cSpan) cSpan.textContent = bnNum(total);
-        else {
-          var hCount = document.querySelector('.comments-h');
-          if (hCount) hCount.innerHTML = '<i class="far fa-comment"></i> মন্তব্য (' + bnNum(total) + ')';
+    // সেশন ১২৩: তাৎক্ষণিক remove-এর বদলে মৃত্যু-অ্যানিমেশন — কাউন্টার-সিঙ্ক
+    // অ্যানিমেশন-শেষে (session12-সুপারিশ; reduced-motion/লুকানো-আইটেমে তাৎক্ষণিক)
+    killItem(it, function () {
+      try {
+        var total = (typeof j.total === 'number') ? j.total : null;
+        if (total !== null) {
+          // সেশন ১১৪: লেবেল-নিরপেক্ষ কাউন্টার-স্প্যান ([data-cmt-total]) প্রথমে —
+          // 'উত্তরসমূহ (N)' হেডিং .comments-h-র হার্ডকোডেড innerHTML-রিরাইট থেকে নিরাপদ
+          var cSpan = document.querySelector('[data-cmt-total]') || document.querySelector('.comments-total');
+          if (cSpan) cSpan.textContent = bnNum(total);
+          else {
+            var hCount = document.querySelector('.comments-h');
+            if (hCount) hCount.innerHTML = '<i class="far fa-comment"></i> মন্তব্য (' + bnNum(total) + ')';
+          }
+          var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
+          if (stat) stat.textContent = bnNum(total); // সেশন ১২: বাংলা-সংখ্যা (ASCII-লিক-ফিক্স)
         }
-        var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
-        if (stat) stat.textContent = bnNum(total); // সেশন ১২: বাংলা-সংখ্যা (ASCII-লিক-ফিক্স)
-      }
-    } catch (_) {}
+      } catch (_) {}
+    });
   }
 
   function deleteComment(item, cid) {
@@ -762,6 +809,8 @@
       })
       .then(function (j) {
         if (!j || !j.ok) throw new Error('failed');
+        // সেশন ১২২-রিফ্যাক্টর: afterDeleteSuccess-এ ড্রয়ার/QA-থ্রেড/ইন-প্লেস তিন-পথ ঐক্যবদ্ধ;
+        // সেশন ১২৩: ইন-প্লেস-পথে মৃত্যু-অ্যানিমেশন (নিচের ফাংশনে killItem-ইনজেক্টেড)
         afterDeleteSuccess(j, item);
         if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
       })
@@ -1142,7 +1191,13 @@
           body: JSON.stringify({ body: val })
         }).then(function (r) { return r.json(); }).then(function (j) {
           if (j && j.ok) {
-            bodyEl.innerHTML = j.bodyHtml;
+            bodyEl.innerHTML = j.bodyHtml || esc(val);
+            // সেশন ১২১ 🚨ডেটা-লস-ফিক্স: সেভের পর data-raw/RAW_CACHE আপডেট ছিল না —
+            // পুনঃ-এডিটে প্রথম-সংস্করণ প্রি-ফিল হয়ে প্রথম-সম্পাদনা নীরবে হারাত।
+            // পুরনো-ইঞ্জিন startEdit (লাইন ~৬৯৯/৭০৭) এটা করত — ক্যানোনিকাল-পথেও সমতা।
+            bodyEl.setAttribute('data-raw', val);
+            try { RAW_CACHE[edBtn.getAttribute('data-cmt-edit')] = val; } catch (_) {}
+            pulseSaved(item); // সেশন ১২১: সেভ-স্বীকৃতি-পালস (ক্যানোনিকাল-পথেও)
             var ed = item.querySelector('.fc-edited');
             if (!ed) { ed = document.createElement('span'); ed.className = 'fc-edited'; ed.textContent = 'সম্পাদিত'; bodyEl.parentNode.appendChild(ed); }
             box.remove(); bodyEl.hidden = false;
@@ -1163,13 +1218,16 @@
         .then(function (j) {
           if (j && j.ok) {
             var it = document.getElementById('fc-c' + cidD);
+            // সেশন ১২৩: cardD/ড্রয়ার অ্যানিমেশন-শুরুর আগেই ক্যাপচার (killItem-এর remove-পরে closest ব্যর্থ)
             var cardD = it ? it.closest('.feed-card, article') : null;
             if (swapQaThread('', null)) {
-              // সেশন ১২১: QA-উত্তর-পেজ — সার্ভার-সত্য সোয়াপ; হাতে-সিঙ্ক অপ্রয়োজনীয়
+              // সেশন ১২২: QA-উত্তর-পেজ — সার্ভার-সত্য সোয়াপ; হাতে-সিঙ্ক অপ্রয়োজনীয়
               // (empty-slot-অবশেষ নেই, চিপ/অর্ডার like_count-DESC-এ পুনর্বিন্যস্ত)
             } else {
-            if (it) it.remove();
-            try {
+            var dwD = cardD ? cardD.querySelector('.fc-drawer[data-comments-for]') : null;
+            // সেশন ১২৩: তাৎক্ষণিক remove-এর বদলে মৃত্যু-অ্যানিমেশন — কাউন্টার-সিঙ্ক অ্যানিমেশন-শেষে
+            killItem(it, function () {
+              try {
               // সেশন ১১১: কাউন্টার-সিঙ্ক — পুরনো-ইঞ্জিন deleteComment-এর মতোই
               // ([data-cmt-total]/.comments-total + data-cm-count-রিকাউন্ট) —
               // আগে ক্যানোনিকাল-পথে ডিলিটে হেডার-কাউন্টার স্টেল থাকত।
@@ -1190,11 +1248,10 @@
               });
               // সেশন ১২: খোলা-ড্রয়ারে ডিলিট হলে প্রিভিউ-বাবলও স্টেল থাকত —
               // লোডেড-ড্রয়ার রিফ্রেশ (ক্যানোনিকাল-HTML + syncPreview + as-stat)।
-              if (cardD) {
-                var dwD = cardD.querySelector('.fc-drawer[data-comments-for]');
-                if (dwD && dwD.dataset.loaded) refreshDrawer(dwD, dwD.getAttribute('data-comments-for'));
-              }
-            } catch (_) {}
+              // সেশন ১২৩: ড্রয়ার-রেফারেন্স অ্যানিমেশন-আগে-ক্যাপচারকৃত (dwD)।
+              if (dwD && dwD.dataset.loaded) refreshDrawer(dwD, dwD.getAttribute('data-comments-for'));
+              } catch (_) {}
+            });
             }
             if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
           } else if (window.showToast) showToast('মোছা যায়নি', 'error');

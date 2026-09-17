@@ -1119,3 +1119,27 @@ Work Log:
 Stage Summary:
 - **কোড-ল্যান্ড = শূন্য (৫-ফিচার-ই প্যারালাল-এজেন্টদের দ্বারা ল্যান্ডেড); আমার-অবদান = P0-স্বাধীন-প্রমাণ-চেইন + মার্জ-পরবর্তী সম্পূর্ণ-সহাবস্থান-E2E + ডক-গোটচা ×৪** — ডুপ্লিকেশন-শূন্য-ইউনিয়ন-সম্পন্ন
 - পরের-এজেন্ট: session124 থেকে
+- origin/main @ ffb9176 (session122 on session121/120/119 চেইন) — সব-স্যুট-গ্রিন, guard গ্রিন
+- QA-থ্রেড-সোয়াপ চুক্তি: ?format=qa-html (slot-র‍্যাপার+চিপ-সহ) — slot-লাগবে-সোয়াপে format=html নিষিদ্ধ
+- পরবর্তী-প্রার্থী: ① ডিসমিসে undo-টোস্ট ② live.js paintList-এ data-ts-চুক্তি ③ swapQaThread-optimistic-ইনসার্ট ④ crx-টাইলে কভার-থাম্বনেইল ⑤ role-policy §১৮: qa-html-কন্ট্র্যাক্ট-চেক
+
+---
+Task ID: session123 (cron QA রাউন্ড — sandbox web-6f1a6533, "Project Status & QA Process")
+Agent: Z.ai Main agent (baseline a565a42/session118-পরবর্তী থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-ফিক্স (🚨 পুনঃ-এডিট data-raw স্টেল = ডেটা-লস) + মাইক্রোইন্টারঅ্যাকশন (ডিলিট-মৃত্যু-অ্যানিমেশন + সেভ-পালস) + role-policy সিড-রিসেট + ইউনিয়ন-মার্জ ×২
+
+Work Log:
+- **বেসলাইন:** pull --rebase (c07ef14→a565a42, session118-প্লেলিস্ট) → রিস্টার্ট → agent-browser QA: ফিড ১২-কার্ড ✓ ডুপ্লিকেট-কমেন্ট-ফিক্স অক্ষত (ড্রয়ার-খোলা→প্রিভিউ-লুকানো, dup-০) ✓ প্যালেট ৭-ইমোজি (focus-within-পথসহ) ✓ love→'❤️১'-ব্যাজ+টগল-অফ ✓ optimistic ~২০০ms-দৃশ্যমান+markdown-lite ✓ মেনু-পলিসি সঠিক (অন্যের=রিপোর্ট, নিজের=এডিট/ডিলিট) ✓
+- **🚨 বাগ-আবিষ্কার (জিওমেট্রি-সচেতন E2E):** সম্পাদনা→সেভ→পুনঃ-এডিটে প্রি-ফিল **পুরনো-টেক্সট** দেখায় — ক্যানোনিকাল-এডিট-ইঞ্জিন (PUT [data-cmt-edit], লাইন ~১১০৪) সেভ-সফলে bodyEl.innerHTML আপডেট করলেও **data-raw/RAW_CACHE আপডেট করে না** → পরের-এডিটে প্রথম-সংস্করণ ফিরে আসে → সেভ করলে প্রথম-সম্পাদনা নীরবে হারায় (ডেটা-লস; পুরনো-ইঞ্জিন startEdit করত — দুই-ইঞ্জিন-অসমতা)
+- **ফিক্স:** ক্যানোনিকাল save-হ্যান্ডলারে `bodyEl.setAttribute('data-raw', val)` + `RAW_CACHE[cid]=val` + bodyHtml-fallback `|| esc(val)` — E2E: সেভ→raw-আপডেট ✓ পুনঃ-এডিট-প্রি-ফিল=নতুন-টেক্সট ✓ (ফিড+আর্টিকেল দুই-সারফেসে)
+- **ফিচার ① ডিলিট-মৃত্যু-অ্যানিমেশন (session12-সুপারিশ):** killItem() — উচ্চতা-কমিট-reflow→height-0 + opacity→০ + translateX-slip, ৩০০ms cubic-bezier; reduced-motion/০-জিওমেট্রিতে তাৎক্ষণিক; `.cmt-dying` গার্ড (pointer-events-none + প্যালেট/মেনু/এডিটর-লুকানো); কাউন্টার-সিঙ্ক অ্যানিমেশন-শেষে (cardD/dwD আগে-ক্যাপচার — remove-পরে closest-ব্যর্থ-গোটচা এড়াতে); E2E মিড-ফ্লাইট-ক্যাপচার: ৮৪px→২৫.৩px@op-০.১৫ (ফিড) + ১৮.৬px@op-০.১০ (আর্টিকেল) ✓
+- **ফিচার ② সেভ-পালস:** pulseSaved() — সফল-সেভে বাবলে ১.২সে-সবুজ-রিং ফ্ল্যাশ (cmtSavedPulse121, reduced-motion-গার্ডসহ) — উভয়-ইঞ্জিনে
+- **session104-সুপারিশ-⑤ role-policy সিড-রিসেট:** kill→seed-test-users.js→boot (run-order-চুক্তি) → **১০৩✓/১৩✗ → ১২৫/১২৫ ALL GREEN** (testadmin banned→active + testuser role-ফিক্স)
+- **🚨 `[h`-ট্রান্সপোর্ট-গোটচা (নিজস্ব-আবিষ্কার+প্রমাণ):** আউটপুটে `.notif-page-item[hidden]` 'itemidden]' দেখায় — ফাইল-বাইট অক্ষত (od -c প্রমাণ: 'item[hidden]', ESC-বাইট-০); session122-র chr(91)+'h'-নোটের স্বীকৃতি — **সন্দেহে সরাসরি od -c, grep-লিটারাল প্রোব নয়**
+- **ইউনিয়ন-মার্জ ×২:** pull --rebase-এ session121(notif-dismiss/nft-chip)+session122(QA-সোয়াপ swapQaThread+afterDeleteSuccess-রিফ্যাক্টর) আসে → stash-pop-কনফ্লিক্ট ×২-ফাইল: comment-tools.js-৩-হাংক (upstream-এর afterDeleteSuccess/QA-শাখা + আমার killItem-ইনজেকশন union; dwD-ক্যাপচার QA-শাখার-বাইরে-তবু-অ্যানিমেশন-আগে) + style.css-নেস্টেড-হাংক (session120-সার্চ + session121-notif-x + আমার ১২৩-ব্লক ত্রি-ইউনিয়ন); লেবেল-রেস ×২ (আমার প্রাথমিক ১২১→ ১২৩-এ রিলেবেল, max+1 রীতি)
+- **রিগ্রেশন (মার্জড-স্টেট):** role-policy ১২৫/১২৫ ✓ cursor ২৫/২৫ ✓ guard:design ✓ 390px-ওভারফ্লো-০ ✓ কনসোল-০ ✓ node --check ✓ CSS brace-০ ✓ টেস্ট-ডেটা-ক্লিনআপ (id29/id30/id34 + আর্টিকেল-কমেন্ট মূল-টেক্সট-রিস্টোর) ✓
+
+Stage Summary:
+- origin/main-এ push: 🚨 ডেটা-লস-ফিক্স (পুনঃ-এডিট data-raw স্টেল) + ডিলিট-মৃত্যু-অ্যানিমেশন + সেভ-পালস + role-policy সিড-রিসেট (১৩-ফেল-হেরিটেজ-শূন্য)
+- দুই-ইঞ্জিন-সমতা: data-raw/RAW_CACHE/পালস এখন পুরনো-ইঞ্জিন (startEdit) ও ক্যানোনিকাল ([data-cmt-edit]) উভয়ে; killItem afterDeleteSuccess-রিফ্যাক্টরের ভেতরেও (session122-র QA-সোয়াপ-শাখা অক্ষত)
+- পরবর্তী-প্রায়োরিটি: ① swapQaThread-optimistic-ইনসার্ট (session122 ③) ② ডিসমিসে undo-টোস্ট (session122 ①) ③ hall-provost সার্চ/ফিল্টার (session111 ④) ④ পুরনো-চুক্তি-মার্কআপ→canonical-মাইগ্রেশন
