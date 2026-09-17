@@ -1119,3 +1119,23 @@ Stage Summary:
 
 **পুশ-সমাপ্তি (session-121):** প্যারালাল-রেস ×৪ (১১৯-চিপস/ডিসমিস → ১২০-সার্চ → ১২-অপটিমিস্টিক → ১২১-দ্বিতীয়-এজেন্ট db726c0) — চূড়ান্ত push **c57777d** (মূল-ফিচার) + **51502e4** (inspect-audit stat-tile-রুল → ক্যানোনিকাল-প্রথম, 48/48)। union-চূড়ান্ত: server-side ?type= (আমার) + client-side setUrl121 (তাদের) + dismiss-সিঙ্ক — ৩-স্তরে সম্পূর্ণ। QA-ইনস্ট্যান্স :3140 পরবর্তী-এজেন্টের জন্য রেখে-দেওয়া (পিড রিসেট-লগইন প্রয়োজনে scripts/reset-qa-logins.js)।
 (docs(session121): repo-worklog পুশ-সমাপ্তি-এন্ট্রি (c57777d + 51502e4, রেস×৪-ইতিহাস))
+
+---
+Task ID: session122 (cron webDevReview রাউন্ড — sandbox web-68dcf7c4, "Project Status & Development Plan")
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ c57777d/session121-পরবর্তী থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-অভিযান → অনন্য-ফিচার (মিনি-বাবল unread-ডট + QA-থ্রেড qa-html সোয়াপ + ড্রপডাউন reltime) + প্যারালাল-ইউনিয়ন ×৪ + push
+
+Work Log:
+- **অবস্থা-যাচাই:** git fetch (3a234b6) → PLANS/PROJECT/ওয়ার্কলগ-রিভিউ → guard গ্রিন → :3030 লাইভ → বেসলাইন নির্ধারণ
+- **QA-ফেজ (agent-browser):** ড্যাশবোর্ড/নোটিফিকেশন-ড্রপডাউন/মেসেজ/QA-পেজ ভিজ্যুয়াল + localStorage-seed — **বাগ-১ ধরা পড়ে:** session112-র continue-reading উইজেটের .crx-* CSS ছিলই না (unstyled rows) → ফিক্স-প্রস্তুতির-মাঝে প্যারালাল-এজেন্টের dashboard.css .crx-* ক্যানোনিকল পাওয়া গেল → ইউনিয়নে আমার ডুপ্লিকেট প্রত্যাহার
+- **ফিচার ① মিনি-বাবল অপঠিত-ডট:** MiniBubblePreview.ejs — না-পড়া-ইনকামিং-এ .mnp-dot (messenger-নীল + blue-light হ্যালো) + .mnp-bubble--unread বোল্ড; মিউট-রোতে ডট-লুকানো; convListFor-unread_count-সোর্স (শূন্য-নতুন-API) — session117-সুপারিশ ⑤ সম্পন্ন
+- **ফিচার ② QA-উত্তর-থ্রেড সার্ভার-সত্য সোয়াপ (session113-বকেয়া ③):** GET /api/comments?format=qa-html → qa-single-সত্য (like_count DESC + slot-র‍্যাপার + idx-0 top-answer-chip + compact-রিপ্লাই, একই CommentItem) → comment-tools.js swapQaThread (রিলোড-নেই; চিপ AJAX-পরেও টেকনামী); ক্যানোনিকাল delete-হ্যান্ডলারে QA-শাখা (empty-slot-শূন্য + চিপ-পুনর্বিন্যাস)
+- **ফিচার ③ ড্রপডাউন আপেক্ষিক-সময়:** header.ejs notif-time [data-ts] → LekhokRelTime (বাংলা-রিলেটিভ + টুলটিপে পূর্ণ-তারিখ) + clearNotifBadge-বাসি-ডট-পরিষ্কার
+- **ফিচার ④ ড্রপডাউন-ডিসমিস (পরিণতি):** আমার .notif-dismiss--dd+main.js-ইমপ্ল E2E-প্রমাণিত হলেও প্যারালাল session121-র .notif-x (header-IIFE + /api/count-ব্যাজ + Enter-কি) আরও-বিবর্তিত → তাদেরটা ক্যানোনিকল গৃহীত, আমার প্রত্যাহার (ডুপ্লিকেট-শূন্য)
+- **🚨 rebase-গোটচা (আবার-প্রমাণিত):** skip-করা wip-কমিটের কোড-পরিবর্তন ফেরত-আনতে হয়েছে (feat-কমিট docs-only নেমে গিয়েছিল); transport '[h'-স্ট্রিপ বাইপাসে python-এ chr(91)+'h'-নির্মাণ; দুই-সার্ভার-এক-DB-রেসে role-policy মিথ্যা-ফেইল (১০৬/১) — একক-সার্ভারে ১২৫/১২৫ ✓
+- **রিগ্রেশন (ফ্রেশ-সার্ভার এক-পাস):** role-policy ১২৫/১২৫ ✓ cursor ২৬/২৬ ✓ groupcalls ৫০/৫০ (CALL_RING_TIMEOUT_S=4-পূর্বশর্ত) ✓ calls ৫৫/৫৫ ✓ guard ✓ 390px-ওভারফ্লো-০ ×৬ ✓ কনসোল-০ ✓
+
+Stage Summary:
+- origin/main @ ffb9176 (session122 on session121/120/119 চেইন) — সব-স্যুট-গ্রিন, guard গ্রিন
+- QA-থ্রেড-সোয়াপ চুক্তি: ?format=qa-html (slot-র‍্যাপার+চিপ-সহ) — slot-লাগবে-সোয়াপে format=html নিষিদ্ধ
+- পরবর্তী-প্রার্থী: ① ডিসমিসে undo-টোস্ট ② live.js paintList-এ data-ts-চুক্তি ③ swapQaThread-optimistic-ইনসার্ট ④ crx-টাইলে কভার-থাম্বনেইল ⑤ role-policy §১৮: qa-html-কন্ট্র্যাক্ট-চেক
