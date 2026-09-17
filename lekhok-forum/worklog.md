@@ -294,3 +294,37 @@ Stage Summary:
 **E2E**: ৮১/৮১ + Turso-মোড-রেপ্লিকা (dashboard/profile/home 200, এরর-০) + লাইভ (dashboard/profile/home 200, db-latency 4ms) + test-role-policy ফেইল-সেট clean-HEAD-এর সাথে হুবহু-অভিন্ন (৫৭/৯৯ ড্রিফট পূর্ব-বিদ্যমান — আমার ডেল্টা-শূন্য)
 
 **পরবর্তী**: ① ইউজারের ৪-সিক্রেট-রোটেশন ② test-role-policy.sh-এর ৪২-ড্রিফটেড-চেক রিপেয়ার ③ DB-ভারী অন্য রুটে all91/get91-প্যাটার্ন ④ পূর্ণ রিপোর্ট+রোডম্যাপ: /home/z/my-project/download/lekhok-session91-audit-and-upgrade-plan.md
+
+---
+
+## সেশন ৯২-খ (২য় এজেন্ট) — QA→ফিক্স ×৩ + রোডম্যাপ-০৬ স্ক্রল-রিস্টোর + লাইভ-মিডিয়া-রিফ্রেশ API + স্টাইলিং-ডিটেইল
+
+**প্রবেশ-অবস্থা:** origin/main @ 7d70187 (session92: ভয়েস-নোট C1 + শেয়ার্ড-ট্যাব C12 + idden-রিপেয়ার) — worklog পড়ে শুরু; :3030-স্টেল-ইনস্ট্যান্স রিস্টার্ট; ৯-পেজ ম্যাট্রিক্স 200।
+
+### বাগফিক্স (QA-রাউন্ডে ধরা)
+1. **🚨 SW-প্রাইভেসি-লিক:** session90-এর PWA sw.js-এর HTML-ক্যাশ-ব্ল্যাকলিস্ট-রেজেক্স `/me` ও `/profile/:username` ধরত না → ব্যক্তিগত HTML (হেডারে ইউজার-নাম, মালিক-কন্ট্রোল) SW-ক্যাশে জমত — ব্রাউজার-ক্যাশে `lekhok-shell-v1`-এ `/me` প্রমাণিত। **ফিক্স:** HTML এখন কখনো ক্যাশ হয় না (network-only + offline.html ফলব্যাক) + `CACHE_VERSION='lekhok-shell-v2'` (activate পুরনো-ক্যাশ পার্জ)। ব্রাউজার-E2E: ক্যাশে `/me` নেই ✓
+2. **স্টাফ-লগইন CSRF-ভাঙা:** `/admin/login` ফর্মে সার্ভার-রেন্ডার্ড `_csrf` ছিল না (JS-ইনজেক্টর-অনলি — session57-হার্ডেনিং ইউজার-লগইনে হয়েছিল, এখানে বাদ গিয়েছিল) → নো-জেএস/পাসওয়ার্ড-ম্যানেজার স্টাফ-লগইন 303→`?csrf=1` দিয়ে ব্যর্থ। **ফিক্স:** hidden input যোগ (session57-প্যাটার্ন)। E2E: curl স্টাফ-লগইন 303→/admin ✓, /moderator/curation 200 ✓
+3. **স্টেল-ব্যানার:** minified main.js-এ পুরনো r4-ব্যানার-স্ট্রিং অবশিষ্ট (r5-অ্যাপেন্ডের সময়) → প্রতি-পেজে ডাবল-লগ। **ফিক্স:** byte-precise `console.log`→`void 0`; ব্যানার ১ ✓ (নোট: ব্যানার ২-বার দেখানো আসলে ডাবল-এক্সিকিউশন ছিল না — এক-ফাইলে দুই IIFE-ব্যানার)
+
+### ফিচার
+- **রোডম্যাপ-০৬ (ফিড স্ক্রল-পজিশন-রিস্টোর):** main.js-এ IIFE — `/`+`/dashboard`-এ scrollY pathname+query-keyed sessionStorage-এ (160ms ডিবাউন্স); back-nav-এ রিস্টোর + ডাবল-rAF + load-রিফ্লো-রিচেক (clamp-সহ); saved≤120 হলে স্কিপ; ফিল্টার-ট্যাব আলাদা-কী। **E2E:** scroll 1200→saved 1208 → away → history.back() → `scrollY===1208` এক্স্যাক্ট ✓
+- **মিডিয়া-ট্যাব লাইভ-রিফ্রেশ (C12-বৃদ্ধি):** নতুন `GET /api/messages/conv/:id/media` (convAccess-গার্ড; img/aud/doc শ্রেণিবিভাগ = তাদের _isImg/_isAud-চিত্র; ফাইল dedupe; লিংক-এক্সট্র্যাক্ট URL-ছাড়া প্রিভিউ-টেক্সট+host, ১২০-বার্তা স্ক্যান)। messages-chat.ejs-এ initSharedRefresh: ডিটেইলস-খুললেই ফেচ→paint (তাদের সার্ভার-রেন্ডারড মার্কআপের হুবহু রেপ্লিকা — voice-row seeded-waveform সহ), count-ব্যাজ লাইভ, রিফ্রেশ-বাটন (AbortController, স্কেলেটন-শিমার, is-loading-স্পিন)। **E2E:** badge [3,1,1] লাইভ (img+2voice), ফাইল/লিংক-রো রেন্ডার, ট্যাব-টগল, micBtn অক্ষত ✓
+- **স্টাইলিং-ডিটেইল:** md-tab কাউন্ট-ব্যাজ (:empty-hide), রিফ্রেশ-বাটন margin-left:auto (flex h4-তে float কাজ করে না — ধরা-পড়া-ফিক্স), h4 আইকন-চিপ (22px রাউন্ডেড soft-blue), ডিটেইলস-প্যানেল থিমড থিন-স্ক্রলবার (webkit+firefox), md-fade/md-shimmer অ্যানিমেশন (prefers-reduced-motion-সচেতন), :focus-visible রিং রিফ্রেশে।
+
+### ক্রস-এজেন্ট রিবেস-মার্জ (7d70187-এর উপর)
+- দুই এজেন্টই রোডম্যাপ-১২ (মিডিয়া-ট্যাব) করেছিল → conflicts: messenger.css + messages-chat.ejs। **মার্জ-নীতি:** তাদের মার্কআপ/CSS বেস (voice-integrated ৩-পেইন সার্ভার-রেন্ডার + .md-tabpane/.md-linkrow স্টাইল), আমার বৃদ্ধি তার উপর (count-ব্যাজ + রিফ্রেশ + লাইভ-API + স্কেলেটন + স্টাইল-ডিটেইল); আমার ডুপ্লিকেট .md-tab/.md-file/.mdl-* বেস-রুল বাদ। API-তে voice-অ্যারে যোগ (তাদের _isAud-মিলিয়ে)। rebase ক্লিন → 3c47030।
+
+### 🔬 গুরুত্বপূর্ণ ডায়গনস্টিক-আবিষ্কার (ভবিষ্যৎ-এজেন্টদের জন্য)
+- **`idden]`-ভয়া-পজিটিভ-ট্র্যাপ:** `grep "idden]"` সঠিক `[hidden]`-লাইনও ধরে (`idden]` হলো `[hidden]`-এর substring!) — এবং **terminal-ডিসপ্লে-পাইপলাইন প্রতিটি আউটপুট থেকে `[h`-জোড়া খেয়ে ফেলে** → সঠিক `.foo[hidden]`-ও `.fooidden]` দেখায়! আমি নিজেও ১২টি 'নতুন-করাপশন' ভেবেছিলাম; MultiEdit-মিসম্যাচ + **hex-যাচাই** (747261795b68... = `tray[h`...) দেখিয়েছিল সবই ফাইলে সঠিক। **নিয়ম:** করাপশন-সন্দেহে শুধু hex/charcode-কাউন্টে বিশ্বাস করুন: `broken = count('idden]') − count('[hidden]' via fromCharCode)`; grep/কনসোল-প্রিন্টে `[h`-ম্যানগলিং = ডিসপ্লে-আর্টিফ্যাক্ট।
+- **হেডলেস audio.play():** agent-browser-এ `NotAllowedError` (user-activation নেই) — ভয়েস-প্লেয়ারের `is-playing`-টগল হেডলেসে যাচাই অসম্ভব; eval-`.click()` ট্রাস্টেড-অ্যাক্টিভেশন দেয় না। প্রোডাকশনে আসল-ক্লিকে চলে। fake-wav-বাইটেও play() reject করে — রিয়েল-PCM wav দিয়ে টেস্ট করুন (node স্ক্রিপ্ট worklog-এ নেই, সহজে পুনর্লিখনযোগ্য)।
+- **AV ক্যাশ-বাস্টিং-চক্র:** assets সম্পাদনার পর সার্ভার-রিস্টার্ট না-করলে AV অপরিবর্তিত থাকে → ব্রাউজার immutable-cache পুরনো-ফাইল ধরে রাখে ("আমার CSS কেন প্রয়োগ হচ্ছে না" = এটা)। এডিট→রিস্টার্ট→যাচাই প্যাটার্ন।
+- **local lekhok.db-তে `admin` নেই** — স্টাফ-QA চাইলে `scripts/seed-qa-users.js` (testadmin/demo123, role=admin) + **স্টাফ-পোর্টাল /admin/login দিয়ে** লগইন (ইউজার-পোর্টাল স্টাফকে ব্লক করে — ফিচার, বাগ নয়)।
+
+### যাচাই-ফলাফল
+- `scripts/test-role-policy.sh` **৯৯/৯৯ ALL GREEN** (একক-ইনস্ট্যান্স :8080) ✓ রিবেজ-পরবর্তী ✓
+- ১৯-পেজ ম্যাট্রিক্স 200/302 ✓ কনসোল-এরর ০ (dashboard/messages/chat) ✓ 390px-ওভারফ্লো ০ ✓
+- মেসেজিং-রিগ্রেশন (curl): reply-link, edit+poll-edits, edit-not-mine 403, forward-same-conv invalid, unsend-absent — সব ✓ (session76-ফিচার অক্ষত)
+- `test-login-fixes.sh` → **DEPRECATED-ব্যানার** বসানো হয়েছে (পুরনো-নীতির প্রত্যাশা: staff-on-/login + meta-csrf — সবসময় false-fail; অথরাইটেটিভ: test-role-policy.sh)
+
+**কমিট:** 3c47030 (rebase on 7d70187) → pushed।
+**পরবর্তী সুপারিশ:** ① ১৪-pen_name (কমেন্ট-বাবল/নোটিফিকেশন-ভিউ) ② ০৫-ইনফিনিট-স্ক্রল-পলিশ (রিস্টোর-সাথে cursor-পেজিং লোড-অন-রিস্টোর) ③ ০১-SSE-হাব (🔴-কোর) ④ শেয়ার্ড-ট্যাবে pagination/আরও-বাটন (API-বর্তমানে ৬০/২৪/৪০-ক্যাপ) ⑤ /api/messages/conv/:id/media-তে ETag/If-None-Match (রিফ্রেশ-খরচ কমাতে)
