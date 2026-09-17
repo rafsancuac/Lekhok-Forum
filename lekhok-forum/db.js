@@ -1082,10 +1082,15 @@ async function runMigrations() {
   // আপলোড অটো-শিডিউল হয়।
   try {
     const picsumTables = [
-      ['posts',        'cover_image'],
-      ['events',       'image_url'],
-      ['gallery',      'image_url'],
-      ['daily_content','image_url'],
+      ['posts',         'cover_image'],
+      ['post_images',   'image_url'],   // লিস্ট-রুট আগে এটা দেখে — art1-10 এখানেই ছিল
+      ['events',        'image_url'],
+      ['gallery',       'image_url'],
+      ['daily_content', 'image_url'],
+      ['press_clippings','image_url'],
+      ['members',       'image_url'],
+      ['achievements',  'image_url'],
+      ['past_leaders',  'photo_url'],
     ];
     let picsumFixed = 0;
     for (const [tbl, col] of picsumTables) {
