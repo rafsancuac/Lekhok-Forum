@@ -22,6 +22,38 @@
         <p>আজকের জন্য কোনো তথ্য নেই।</p>
       </div>
     <% } %>
+
+    <%# ── সেশন ৭৪: পূর্বের 'এই দিনে' আর্কাইভ — রুট এতদিন ৩০টি আইটেম এনে ব্যবহার করত না ── %>
+    <% const otArch = (archive || []).filter(a => !today || a.id !== today.id); %>
+    <% if (otArch.length) { %>
+      <section class="daily-archive">
+        <div class="section-head">
+          <h2 class="section-title"><i class="fas fa-clock-rotate-left"></i> আগের দিনগুলোতে ইতিহাস</h2>
+          <span class="daily-arch-count"><%= otArch.length %>টি দিন</span>
+        </div>
+        <div class="daily-arch-list">
+          <% otArch.forEach(function(it, i) { %>
+            <details class="daily-arch-item history-arch"<%= i === 0 && !today ? ' open' : '' %>>
+              <summary>
+                <span class="da-date"><i class="far fa-calendar"></i> <%= new Date(it.scheduled_date || it.created_at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>
+                <span class="da-title"><%= it.title %></span>
+                <i class="fas fa-chevron-down da-chev"></i>
+              </summary>
+              <div class="da-body">
+                <% if (it.images && it.images.length) { %>
+                  <div class="da-thumbs">
+                    <% it.images.slice(0, 3).forEach(function(src) { %>
+                      <img src="<%= src %>" alt="<%= it.title %>" loading="lazy" class="da-thumb" />
+                    <% }) %>
+                  </div>
+                <% } %>
+                <p class="da-text"><%= it.body %></p>
+              </div>
+            </details>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
   </div>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>

@@ -12,7 +12,7 @@
         <h2><%= today.title %></h2>
         <p class="daily-body"><%= today.body %></p>
         <% if (today.link_url) { %>
-          <a href="<%= today.link_url %>" class="btn-primary-sm" target="_blank">
+          <a href="<%= today.link_url %>" class="btn-primary-sm" target="_blank" rel="noopener">
             <i class="fas fa-external-link-alt"></i> ই-পেপার পড়ুন
           </a>
         <% } %>
@@ -26,6 +26,41 @@
         <i class="fas fa-newspaper"></i>
         <p>আজকের ই-পেপার এখনো যোগ করা হয়নি।</p>
       </div>
+    <% } %>
+
+    <%# ── সেশন ৭৪: পূর্বের ই-পেপার আর্কাইভ — রুট এতদিন ৩০টি আইটেম এনে ব্যবহার করত না ── %>
+    <% const epArch = (archive || []).filter(a => !today || a.id !== today.id); %>
+    <% if (epArch.length) { %>
+      <section class="daily-archive">
+        <div class="section-head">
+          <h2 class="section-title"><i class="fas fa-clock-rotate-left"></i> পূর্বের ই-পেপার</h2>
+          <span class="daily-arch-count"><%= epArch.length %>টি সংখ্যা</span>
+        </div>
+        <div class="daily-arch-list">
+          <% epArch.forEach(function(it, i) { %>
+            <details class="daily-arch-item epaper-arch"<%= i === 0 && !today ? ' open' : '' %>>
+              <summary>
+                <span class="da-date"><i class="far fa-calendar"></i> <%= new Date(it.scheduled_date || it.created_at).toLocaleDateString('bn-BD') %></span>
+                <span class="da-title"><%= it.title %></span>
+                <i class="fas fa-chevron-down da-chev"></i>
+              </summary>
+              <div class="da-body">
+                <% if (it.images && it.images.length) { %>
+                  <div class="da-thumbs">
+                    <% it.images.slice(0, 3).forEach(function(src) { %>
+                      <img src="<%= src %>" alt="<%= it.title %>" loading="lazy" class="da-thumb" />
+                    <% }) %>
+                  </div>
+                <% } %>
+                <p class="da-text"><%= it.body %></p>
+                <% if (it.link_url) { %>
+                  <a href="<%= it.link_url %>" class="da-link" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> সেই সংখ্যাটি পড়ুন</a>
+                <% } %>
+              </div>
+            </details>
+          <% }) %>
+        </div>
+      </section>
     <% } %>
   </div>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
