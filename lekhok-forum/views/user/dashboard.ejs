@@ -52,7 +52,7 @@
       <% } else { %>
         <%# সেশন ৮৯: ফিড-কার্ড-লুপ পার্টিয়ালে সরানো হয়েছে (partials/feed-cards.ejs) —
              /dashboard ও /dashboard/more (ইনফিনিট-স্ক্রল) দুই জায়গাতেই একই মার্কআপ %>
-        <%- include('../partials/feed-cards', { feed, user, myBookmarkedIds }) %>
+        <%- include('../partials/feed-cards', { feed, user, myBookmarkedIds, sort }) %>
       <% } %>
       <%# সেশন ৮৯ (B1): ইনফিনিট-স্ক্রল সেন্টিনেল — main.js-এর feed-more ইঞ্জিন এটি দেখে
           /dashboard/more কল করে; JS-বিহীন ব্রাউজারে ফলব্যাক 'আরও দেখুন' বাটন %>

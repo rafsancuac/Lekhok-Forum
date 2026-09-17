@@ -101,6 +101,16 @@
       <% } else { %>
         <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
       <% } %>
+      <%# সেশন ১০২ (০৮-ইউনিয়ন): র‍্যাংকড-মোড "কেন-দেখছেন" চিপ — অ্যাফিনিটি/এনগেজমেন্ট-সংকেত (ranked-এ শুধু) %>
+      <% if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge) { %>
+        <% if (item.rank_badge === 'followed') { %>
+          <span class="fd-rank-chip is-followed" title="আপনি এই লেখককে অনুসরণ করেন — সামঞ্জস্য-বোনাস"><i class="fas fa-user-check"></i> অনুসৃত লেখক</span>
+        <% } else if (item.rank_badge === 'hot') { %>
+          <span class="fd-rank-chip is-hot" title="উচ্চ-এনগেজমেন্ট: রিঅ়াকশন+মন্তব্য+শেয়ার ≥ ১০"><i class="fas fa-fire"></i> আলোচিত</span>
+        <% } else if (item.rank_badge === 'fresh') { %>
+          <span class="fd-rank-chip is-fresh" title="গত ২৪ ঘণ্টায় প্রকাশিত"><i class="fas fa-bolt"></i> নতুন</span>
+        <% } %>
+      <% } %>
       <% if (item.shared_from) { %>
         <span class="shared-chip"><i class="fas fa-retweet"></i> শেয়ারকৃত পোস্ট · <a href="/articles/<%= item.shared_from %>">মূল পোস্ট</a></span>
       <% } %>

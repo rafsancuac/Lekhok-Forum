@@ -113,3 +113,15 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .cpm-restore button:hover{background:#92400E;color:#fff;border-color:#92400E}
 .cpm-restore button:focus-visible{outline:2px solid #F59E0B;outline-offset:1px}
 @media (prefers-reduced-motion:reduce){.cpm-restore{animation:none}}
+
+/* ═══ সেশন ১০২ (০৮-ইউনিয়ন): র‍্যাংকড-ফিড "কেন-দেখছেন" চিপ (feed-sort-bar-এর পরিপূরক) ═══ */
+.fd-rank-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.68rem;font-weight:700;letter-spacing:.01em;vertical-align:middle;animation:fdrankIn .25s ease both}
+.fd-rank-chip i{font-size:.62rem}
+.fd-rank-chip.is-followed{background:#e6f6ef;color:#065f46;border:1px solid #a7f3d0}
+.fd-rank-chip.is-hot{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.fd-rank-chip.is-fresh{background:#ecfeff;color:#0e7490;border:1px solid #a5f3fc}
+.fd-rank-chip.is-hot i{animation:fdrankFlicker 2.8s ease-in-out infinite}
+@keyframes fdrankIn{from{opacity:0;transform:translateY(-3px) scale(.92)}to{opacity:1;transform:none}}
+@keyframes fdrankFlicker{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.75}}
+@media (prefers-reduced-motion:reduce){.fd-rank-chip,.fd-rank-chip.is-hot i{animation:none}}
+@media print{.fd-rank-chip{display:none}}

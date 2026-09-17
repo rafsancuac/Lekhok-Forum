@@ -5,6 +5,7 @@ const { messageUpload, complaintUpload, attachmentUpload, withUpload } = require
 const rolePolicy = require('../helpers/role-policy');
 const { displayName } = require('../helpers/display-name');
 const sseHub = require('../helpers/sse'); // সেশন ৯৯ (রোডম্যাপ-০১): SSE রিয়েল-টাইম হাব
+const FR = require('../helpers/feed-ranking'); // সেশন ১০২ (০৮-ইউনিয়ন): অ্যাফিনিটি + র‍্যাংক-ব্যাজ
 
 // ── ডুপ্লিকেট-নোটিফিকেশন গার্ড: একই ইউজার+টাইপ+বডি ১ মিনিটের মধ্যে দ্বিতীয়বার ঢোকে না ──
 // সেশন ৯১ (B4): ঐচ্ছিক prefsKind — প্রাপকের notify_prefs[kind]===false হলে নোটিফিকেশনই হয় না
@@ -76,16 +77,19 @@ function buildFeedSql(filter, me, limit, offset, ranked) {
     : ` ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`;
   const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
+           p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
   const QUESTION_SQL = `\n    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
+           p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
   const ACTIVITY_SQL = `\n    SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
            NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
+           NULL as author_id,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, NULL as pen_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
     WHERE dc.content_type = 'activity' AND dc.published = 1`;
@@ -117,7 +121,7 @@ function buildFeedSql(filter, me, limit, offset, ranked) {
 //   • কমেন্ট-ওজন সর্বোচ্চ (FB-প্যাটার্ন: কথোপকথন > রিঅ্যাকশন > শেয়ার)
 //   • ageHours+2 ফ্লোর নতুন-পোস্টকে সুস্পষ্ট-সুবিধা দেয়; ^1.15 = ধীর-ক্ষয় (৭২ঘ→÷৫.৪)
 //   • view_count ×০.২ — পড়া গণনায় সামান্য-ওজন (র‍্যাংক-ইঞ্জিনের প্রত্যাশা-মতো)
-function rankScoreOf(item, nowMs) {
+function rankScoreOf(item, nowMs, aff) {
   const raw = String(item.created_at || '');
   const t = Date.parse(raw.includes('T') || raw.includes('Z') ? raw : raw.replace(' ', 'T'));
   const ageH = Number.isFinite(t) ? Math.max(0, (nowMs - t) / 3.6e6) : 0;
@@ -126,24 +130,31 @@ function rankScoreOf(item, nowMs) {
     (item.comment_count | 0) * 3 +
     (item.share_count | 0) * 2.5 +
     (item.view_count | 0) * 0.2;
-  return engagement / Math.pow(ageH + 2, 1.15);
+  // সেশন-১০২ (০৮-ইউনিয়ন): + অ্যাফিনিটি-বোনাস (follow×3 + reaction-মিল×2) —
+  // PLANS.md-স্পেকের "সামঞ্জস্য-স্কোর"; গেস্টে/aff-শূন্যে আগের-মতোই নিরপেক্ষ-গ্লোবাল
+  return (engagement + FR.affinityBonus(item, aff)) / Math.pow(ageH + 2, 1.15);
 }
-function applyRankedSort(pool, nowMs) {
+function applyRankedSort(pool, nowMs, aff) {
   const now = nowMs || Date.now();
   return pool
-    .map(i => ({ i, s: rankScoreOf(i, now) }))
-    .sort((a, b) => (b.s - a.s) || String(b.i.created_at).localeCompare(String(a.i.created_at)))
+    .map(i => ({ i, s: rankScoreOf(i, now, aff) }))
+    // সেশন-১০২: ৩ম-টাই-ব্রেক (score → created_at → id) — সম্পূর্ণ-ডিটারমিনিস্টিক
+    // ক্রম → /dashboard/more-এর অফসেট-স্লাইসিং স্থির
+    .sort((a, b) => (b.s - a.s)
+      || String(b.i.created_at).localeCompare(String(a.i.created_at))
+      || ((b.i.id | 0) - (a.i.id | 0)))
     .map(x => x.i);
 }
 // ranked ফিড-পেজ: পুল এনে স্কোর-সাজিয়ে offset..offset+limit স্লাইস
-async function rankedFeedSlice(filter, me, limit, offset) {
+async function rankedFeedSlice(filter, me, limit, offset, aff) {
   const lim = Math.max(1, Math.min(30, limit | 0 || 30));
   const off = Math.max(0, offset | 0);
   if (off > 300) return { items: [], hasMore: false }; // রানওয়ে-গার্ড (recent-মোডের সমান)
   const { sql, params } = buildFeedSql(filter, me, lim, off, true);
   const pool = await db.prepare(sql).all(...params);
-  const ranked = applyRankedSort(pool);
+  const ranked = applyRankedSort(pool, undefined, aff);
   const items = ranked.slice(off, off + lim);
+  items.forEach(i => { i.rank_badge = FR.rankBadge(i, aff); }); // সেশন-১০২: "কেন-দেখছেন" চিপ
   return { items, hasMore: off + lim < ranked.length && off + lim <= 300 };
 }
 
@@ -257,11 +268,13 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
 router.get('/dashboard', async (req, res) => {
   const me = req.session.user || null;
   const filter = me && req.query.filter === 'following' ? 'following' : (req.query.filter || 'all');   // all | article | question | activity | following
-  const sort = req.query.sort === 'ranked' ? 'ranked' : 'recent'; // সেশন ১০০ (০৮): জনপ্রিয়|সর্বশেষ
+  const sort = (req.query.sort === 'ranked' || req.query.sort === 'relevant') ? 'ranked' : 'recent'; // সেশন-১০০ (০৮) + ১০২-ইউনিয়ন ('relevant' অ্যালায়াস)
 
   let feed;
   if (sort === 'ranked') {
-    feed = (await rankedFeedSlice(filter, me, 30, 0)).items;
+    // সেশন-১০২: লগড-ইন হলে অ্যাফিনিটি-সেট (২-কুয়েরি) → ব্যক্তিগত-র‍্যাংকিং + ব্যাজ
+    const aff = me ? await FR.buildAffinity(me) : FR.blankAffinity();
+    feed = (await rankedFeedSlice(filter, me, 30, 0, aff)).items;
   } else {
     const { sql, params } = buildFeedSql(filter, me, 30, 0);
     feed = await db.prepare(sql).all(...params);
@@ -345,21 +358,24 @@ router.get('/dashboard/more', async (req, res) => {
   const me = req.session.user || null;
   const filter = me && req.query.filter === 'following' ? 'following' : (['article', 'question', 'activity'].includes(req.query.filter) ? req.query.filter : 'all');
   const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
-  const sort = req.query.sort === 'ranked' ? 'ranked' : 'recent'; // সেশন ১০০ (০৮)
+  const sort = (req.query.sort === 'ranked' || req.query.sort === 'relevant') ? 'ranked' : 'recent'; // সেশন-১০০ (০৮) + ১০২ ('relevant' অ্যালায়াস)
   if (offset > 300) return res.json({ ok: true, html: '', hasMore: false, nextOffset: offset }); // রানওয়ে-গার্ড
   try {
-    let feed;
+    let feed, rankedHasMore = false;
     if (sort === 'ranked') {
-      feed = (await rankedFeedSlice(filter, me, 10, offset)).items;
+      const aff = me ? await FR.buildAffinity(me) : FR.blankAffinity(); // সেশন-১০২: অ্যাফিনিটি
+      const r = await rankedFeedSlice(filter, me, 10, offset, aff);
+      feed = r.items; rankedHasMore = r.hasMore;
     } else {
       const { sql, params } = buildFeedSql(filter, me, 10, offset);
       feed = await db.prepare(sql).all(...params);
     }
     await decorateFeed(feed, me);
     const myBookmarkedIds = me ? ((await decorateFeed([], me, { withBookmarks: true })) || []) : [];
-    res.render('partials/feed-cards', { feed, user: req.session.user || null, myBookmarkedIds }, function (err, html) {
+    res.render('partials/feed-cards', { feed, user: req.session.user || null, myBookmarkedIds, sort }, function (err, html) {
       if (err) return res.status(500).json({ ok: false, error: 'render' });
-      res.json({ ok: true, html, hasMore: feed.length >= 10, nextOffset: offset + feed.length });
+      // সেশন-১০২: ranked-মোডে rankedFeedSlice-এর সঠিক hasMore (পুল-শেষ-সীমা) ব্যবহার
+      res.json({ ok: true, html, hasMore: sort === 'ranked' ? rankedHasMore : feed.length >= 10, nextOffset: offset + feed.length });
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'server' });
