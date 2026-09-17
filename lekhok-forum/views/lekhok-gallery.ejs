@@ -22,6 +22,29 @@
          achievement: 'fas fa-medal', achievements: 'fas fa-medal',
          others: 'fas fa-folder'
        }; %>
+
+    <%# ── সেশন ৭৬: সাম্প্রতিক সংযোজন-স্ট্রিপ (আনুভূমিক স্ক্রল, লাইটবক্স-সংযুক্ত) ── %>
+    <% if (typeof recent !== 'undefined' && recent.length > 3) { %>
+      <div class="gallery-recent reveal">
+        <div class="gr-head">
+          <h3><i class="fas fa-wand-magic-sparkles"></i> সাম্প্রতিক সংযোজন</h3>
+          <span class="gr-hint">সর্বশেষ যোগ হওয়া <%= recent.length %>টি ছবি</span>
+        </div>
+        <div class="gr-strip" role="list">
+          <% recent.forEach(g => { %>
+            <a href="<%= g.image_url %>" class="gr-photo" role="listitem"
+               data-caption="<%= g.caption || '' %>" data-category="<%= g.category || '' %>"
+               data-lightbox="recent">
+              <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || 'গ্যালারির ছবি' %>" />
+              <% if (g.caption) { %>
+                <span class="gr-cap"><%= g.caption.length > 28 ? g.caption.slice(0, 28) + '…' : g.caption %></span>
+              <% } %>
+            </a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+
     <% if (albumKeys.length) { %>
 
       <!-- Category filter — white bar, link-style items -->
@@ -157,6 +180,68 @@
   background: rgba(5, 150, 105, 0.12) !important;
   color: #047857 !important;
   border: 1px solid rgba(5, 150, 105, 0.3) !important;
+}
+
+/* ── সেশন ৭৬: সাম্প্রতিক সংযোজন-স্ট্রিপ ── */
+.gallery-recent {
+  margin-bottom: 34px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 18px 12px;
+  box-shadow: 0 10px 26px -18px rgba(15, 23, 42, 0.15);
+}
+.gr-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.gr-head h3 {
+  margin: 0; font-size: .98rem; color: #1e293b;
+  display: flex; align-items: center; gap: 8px;
+}
+.gr-head h3 i { color: #059669; }
+.gr-hint { font-size: .76rem; color: #64748b; }
+.gr-strip {
+  display: flex; gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.gr-strip::-webkit-scrollbar { height: 6px; }
+.gr-strip::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+.gr-strip::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 99px; }
+.gr-photo {
+  position: relative;
+  flex: 0 0 132px; height: 98px;
+  border-radius: 9px; overflow: hidden;
+  border: 1px solid #e2e8f0;
+  scroll-snap-align: start;
+  background: #f1f5f9;
+  display: block;
+}
+.gr-photo img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform .25s;
+  display: block;
+}
+.gr-photo:hover img { transform: scale(1.07); }
+.gr-photo::after {
+  content: ''; position: absolute; inset: 0;
+  box-shadow: inset 0 0 0 2px rgba(5, 150, 105, 0);
+  transition: box-shadow .18s;
+}
+.gr-photo:hover::after { box-shadow: inset 0 0 0 2px rgba(5, 150, 105, .55); }
+.gr-cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(transparent, rgba(15, 23, 42, .78));
+  color: #fff; font-size: .64rem; font-weight: 600;
+  padding: 14px 7px 5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .gr-photo { flex-basis: 108px; height: 82px; }
+  .gallery-recent { padding: 12px 12px 8px; }
 }
 
 /* ── ক্যাটাগরি-ফিল্টার বার (ডার্ক-প্যানেল) ── */

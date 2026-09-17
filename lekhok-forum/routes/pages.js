@@ -283,12 +283,15 @@ router.get('/gallery', async (req, res) => {
     if (!albums[cat]) albums[cat] = [];
     albums[cat].push(g);
   }
+  // সেশন ৭৬: সাম্প্রতিক সংযোজন-স্ট্রিপ (সর্বশেষ ১০টি ছবি, id DESC এমনই নতুন-প্রথম)
+  const recent = all.slice(0, 10);
   res.render('lekhok-gallery', {
     layout: 'layout',
     pageTitle: 'গ্যালারি',
     currentPath: '/gallery',
     items: all,
     albums,
+    recent,
     categoryLabels,
     getSetting
   });

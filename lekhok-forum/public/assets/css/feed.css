@@ -44,3 +44,18 @@
 .daily-card.epaper-card{background:linear-gradient(180deg,#f4fdf8 0%,var(--card) 150px)}
 .daily-card.history-card{background:linear-gradient(180deg,#faf8fe 0%,var(--card) 150px)}
 @media (max-width:600px){.daily-arch-item summary{padding:11px 12px;gap:8px}.da-body{padding:2px 12px 14px}.da-thumbs{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}}
+/* ── সেশন ৭৬: জন্মদিন-চিপ ফ্যামিলি (.bd-chip) + 'এই সপ্তাহে' হাইলাইট — লাইট-মিন্ট ── */
+.birthday-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.bd-chip{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid transparent;white-space:nowrap;line-height:1.5}
+.bd-chip i{font-size:.68rem;opacity:.85}
+.bd-chip--today{color:#b45309;background:#fffbeb;border-color:rgba(217,119,6,.3)}
+.bd-chip--age{color:#6d28d9;background:#f5f3ff;border-color:rgba(124,58,237,.22)}
+.bd-chip--date{color:#047857;background:#ecfdf5;border-color:rgba(5,150,105,.22)}
+.bd-chip--count{color:#475569;background:#f1f5f9;border-color:#e2e8f0}
+.bd-chip--soon{color:#be185d;background:#fdf2f8;border-color:rgba(219,39,119,.28)}
+.birthday-card.is-today{border-color:#fde68a;background:linear-gradient(180deg,#fffdf5 0%,var(--card) 120px);position:relative;overflow:hidden}
+.birthday-card.is-today::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 90% 12%,rgba(217,119,6,.09) 0,transparent 40%);pointer-events:none}
+.birthday-card.is-soon{border-color:#fbcfe8;background:linear-gradient(180deg,#fff8fc 0%,var(--card) 110px)}
+.birthday-card .birthday-cake.soon{font-size:1.6rem}
+.birthday-list.upcoming .birthday-card.is-soon .birthday-avatar{width:52px;height:52px;border:2px solid #f9a8d4}
+@media (max-width:600px){.bd-chip{font-size:.68rem;padding:2px 8px}.birthday-list{grid-template-columns:1fr}}

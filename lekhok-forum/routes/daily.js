@@ -294,18 +294,49 @@ router.get('/committee/advisory', async (req, res) => {
 });
 
 // ── Birthdays ────────────────────────────────────────────────────────────────
+// সেশন ৭৬: 'আসন্ন জন্মদিন'-এর ক্রম ঠিক করা — আগে substr(birth_date,6,5) ASC
+// সাজাত (জানুয়ারি-প্রথম), ফলে জুন মাসে গত জানুয়ারির জন্মদিনও 'আসন্ন' তালিকার
+// একেবারে ওপরে চলে আসত। এখন আজ থেকে দিন-গণনা (বছর ঘুরে আসে) করে কাছেরটা আগে;
+// সাথে কাউন্টডাউন-চিপ, বয়স ও 'এই সপ্তাহে' ফ্ল্যাগ ভিউতে পাঠানো হয়।
 router.get('/birthdays', async (req, res) => {
-  const todayDate = new Date();
-  const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
-  const dd = String(todayDate.getDate()).padStart(2, '0');
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayMd = `${mm}-${dd}`;
   const todayList = await db.prepare(`SELECT id, username, full_name, designation, avatar_url, gender, birth_date FROM users
                                 WHERE show_birth = 1 AND status = 'active'
-                                AND substr(birth_date, 6, 5) = ?`).all(`${mm}-${dd}`);
-  // Upcoming this week
-  const upcoming = await db.prepare(`SELECT id, username, full_name, designation, avatar_url, gender, birth_date FROM users
+                                AND substr(birth_date, 6, 5) = ?`).all(todayMd);
+  // আজকের তালিকাতেও বয়স-গণনা যোগ ("আজ ৫২ বছর পূর্ণ করছেন")
+  const yearNow = now.getFullYear();
+  const ageOf = (bd) => {
+    const y = parseInt(String(bd || '').substring(0, 4), 10);
+    return (y > 1900 && y <= yearNow) ? (yearNow - y) : null;
+  };
+  todayList.forEach(m => { m.age = ageOf(m.birth_date); });
+
+  // বাকি সবাই (আজকেরটা বাদে) — দিন-গণনা করে সাজানো হয় JS-এ
+  const rows = await db.prepare(`SELECT id, username, full_name, designation, avatar_url, gender, birth_date FROM users
                                WHERE show_birth = 1 AND status = 'active'
-                               AND substr(birth_date, 6, 5) != ?
-                               ORDER BY substr(birth_date, 6, 5) ASC LIMIT 20`).all(`${mm}-${dd}`);
+                               AND substr(birth_date, 6, 5) != ?`).all(todayMd);
+  const today0 = new Date(yearNow, now.getMonth(), now.getDate());
+  const daysUntil = (md) => {
+    const [m, d] = String(md).split('-').map(Number);
+    let t = new Date(yearNow, m - 1, d);
+    if (t < today0) t = new Date(yearNow + 1, m - 1, d);
+    return Math.round((t - today0) / 86400000);
+  };
+  const upcoming = rows.map(m => {
+    const md = String(m.birth_date || '').substring(5, 10);
+    const du = daysUntil(md);
+    const [m2, d2] = md.split('-').map(Number);
+    return Object.assign({}, m, {
+      days_until: du,
+      this_week: du <= 7,
+      age: ageOf(m.birth_date),
+      date_bn: (m2 && d2) ? new Date(yearNow, m2 - 1, d2).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long' }) : ''
+    });
+  }).sort((a, b) => a.days_until - b.days_until).slice(0, 20);
+
   res.render('user/birthdays', { todayList, upcoming, currentPath: '/birthdays' });
 });
 

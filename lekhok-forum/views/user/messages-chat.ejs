@@ -74,6 +74,8 @@
             </div>
             <div class="conv-meta-right">
               <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
+              <span class="conv-mute-tag" hidden title="মিউট করা"><i class="fas fa-bell-slash"></i></span>
+              <span class="conv-menu-btn" role="button" tabindex="0" aria-label="কথোপকথন-অপশন" data-conv-menu="<%= c.id %>"><i class="fas fa-ellipsis"></i></span>
             </div>
           </a>
         <% }); %>
@@ -110,6 +112,9 @@
             <button type="button" class="fb-icon-btn" id="fbInfoBtn" title="তথ্য প্যানেল"><i class="fas fa-circle-info"></i></button>
           </div>
         </header>
+
+        <%# ── সেশন ৭৬: থিম-স্ট্রিপ (চ্যাট-হেডারের নিচে রঙিন ৩px ব্যান্ড, FB-থিমের মতো) ── %>
+        <div class="chat-theme-strip" aria-hidden="true"></div>
 
         <% if (isGroup) { %>
         <% var _gAdmin = conv.user_a === user.id; %>
@@ -256,6 +261,18 @@
           <% } %>
         </div>
         <div class="md-section">
+          <h4><i class="fas fa-palette"></i> চ্যাট থিম</h4>
+          <div class="md-themes" id="mdThemes">
+            <button type="button" class="md-theme" data-theme="default" title="ডিফল্ট"><span class="mdt-dot" style="background:#0084FF"></span>ডিফল্ট</button>
+            <button type="button" class="md-theme" data-theme="mint" title="মিন্ট"><span class="mdt-dot" style="background:linear-gradient(135deg,#059669,#14b8a6)"></span>মিন্ট</button>
+            <button type="button" class="md-theme" data-theme="rose" title="গোলাপি"><span class="mdt-dot" style="background:linear-gradient(135deg,#e11d48,#fb7185)"></span>গোলাপি</button>
+            <button type="button" class="md-theme" data-theme="sunset" title="সূর্যাস্ত"><span class="mdt-dot" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"></span>সূর্যাস্ত</button>
+            <button type="button" class="md-theme" data-theme="violet" title="বেগুনি"><span class="mdt-dot" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)"></span>বেগুনি</button>
+            <button type="button" class="md-theme" data-theme="forest" title="অরণ্য"><span class="mdt-dot" style="background:linear-gradient(135deg,#15803d,#22c55e)"></span>অরণ্য</button>
+          </div>
+          <div class="md-theme-note" id="mdThemeNote">নিজের ডিভাইসে প্রযোজ্য</div>
+        </div>
+        <div class="md-section">
           <h4><i class="fas fa-images"></i> শেয়ার করা ছবি</h4>
           <% if (_sharedImgs.length) { %>
             <div class="md-media">
@@ -291,6 +308,14 @@
         </div>
       </aside>
     </div>
+  </div>
+
+  <%# ── সেশন ৭৬: সাইডবার-সারির ৩-ডট কনটেক্সট-মেনু (মিউট/আর্কাইভ) ── %>
+  <div class="conv-menu" id="convMenu" hidden role="menu" aria-label="কথোপকথন অপশন">
+    <button type="button" role="menuitem" data-act="mute"><i class="fas fa-bell-slash"></i> <span>মিউট করুন</span></button>
+    <button type="button" role="menuitem" data-act="unmute"><i class="fas fa-bell"></i> <span>আনমিউট করুন</span></button>
+    <button type="button" role="menuitem" data-act="archive"><i class="fas fa-box-archive"></i> <span>আর্কাইভ করুন</span></button>
+    <button type="button" role="menuitem" data-act="unarchive"><i class="fas fa-box-open"></i> <span>আর্কাইভ থেকে সরান</span></button>
   </div>
 
   <script>
@@ -352,6 +377,104 @@
       document.getElementById('messengerList').classList.remove('hidden');
       document.getElementById('messengerChat').classList.add('hidden');
     });
+
+    // ── সেশন ৭৬: সাইডবার-সারির মিউট/আর্কাইভ (localStorage-পেসিস্টেন্ট) ──
+    const convPrefs = (() => { try { return JSON.parse(localStorage.getItem('lfConvPrefs') || '{}'); } catch (e) { return {}; } })();
+    function savePrefs() { try { localStorage.setItem('lfConvPrefs', JSON.stringify(convPrefs)); } catch (e) {} }
+    function prefOf(id) {
+      const k = String(id);
+      if (!convPrefs[k]) convPrefs[k] = { muted: false, archived: false };
+      return convPrefs[k];
+    }
+    function applySidePrefs() {
+      document.querySelectorAll('.messenger-list .conv-item').forEach(el => {
+        const p = prefOf(el.dataset.id);
+        el.classList.toggle('is-muted', !!p.muted);
+        el.classList.toggle('is-archived', !!p.archived);
+        const tag = el.querySelector('.conv-mute-tag');
+        if (tag) tag.hidden = !p.muted;
+        el.style.display = p.archived ? 'none' : '';
+      });
+    }
+    const convMenu = document.getElementById('convMenu');
+    let menuTarget = null;
+    function openConvMenu(btn) {
+      if (!convMenu) return;
+      menuTarget = btn.closest('.conv-item');
+      if (!menuTarget) return;
+      const p = prefOf(menuTarget.dataset.id);
+      convMenu.querySelector('[data-act="mute"]').style.display = p.muted ? 'none' : 'flex';
+      convMenu.querySelector('[data-act="unmute"]').style.display = p.muted ? 'flex' : 'none';
+      convMenu.querySelector('[data-act="archive"]').style.display = p.archived ? 'none' : 'flex';
+      convMenu.querySelector('[data-act="unarchive"]').style.display = p.archived ? 'flex' : 'none';
+      const r = btn.getBoundingClientRect();
+      convMenu.hidden = false;
+      const mw = convMenu.offsetWidth || 200;
+      convMenu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - mw - 8)) + 'px';
+      convMenu.style.top = Math.min(r.bottom + 6, window.innerHeight - convMenu.offsetHeight - 8) + 'px';
+    }
+    function closeConvMenu() { if (convMenu) convMenu.hidden = true; menuTarget = null; }
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('[data-conv-menu]');
+      if (btn) {
+        e.preventDefault(); e.stopPropagation();
+        if (!convMenu.hidden && menuTarget && menuTarget.dataset.id === btn.dataset.convMenu) { closeConvMenu(); return; }
+        openConvMenu(btn);
+        return;
+      }
+      if (!e.target.closest('#convMenu')) closeConvMenu();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeConvMenu();
+      const btn = e.target.closest && e.target.closest('[data-conv-menu]');
+      if (btn && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openConvMenu(btn); }
+    });
+    if (convMenu) convMenu.addEventListener('click', e => {
+      const act = e.target.closest('[data-act]');
+      if (!act || !menuTarget) return;
+      const p = prefOf(menuTarget.dataset.id);
+      if (act.dataset.act === 'mute') p.muted = true;
+      if (act.dataset.act === 'unmute') p.muted = false;
+      if (act.dataset.act === 'archive') p.archived = true;
+      if (act.dataset.act === 'unarchive') p.archived = false;
+      savePrefs();
+      applySidePrefs();
+      closeConvMenu();
+    });
+    applySidePrefs();
+
+    // ── সেশন ৭৬: চ্যাট-থিম (নিজের বাবল + সেন্ড-বাটন + থিম-স্ট্রিপ) ──
+    const CHAT_THEMES = {
+      default: { name: 'ডিফল্ট',   bubble: '#0084FF', grad: 'linear-gradient(90deg,#1877F2,#0084FF)' },
+      mint:    { name: 'মিন্ট',     bubble: '#0d9488', grad: 'linear-gradient(90deg,#059669,#14b8a6)' },
+      rose:    { name: 'গোলাপি',    bubble: '#e11d48', grad: 'linear-gradient(90deg,#e11d48,#fb7185)' },
+      sunset:  { name: 'সূর্যাস্ত', bubble: '#ea580c', grad: 'linear-gradient(90deg,#f59e0b,#ef4444)' },
+      violet:  { name: 'বেগুনি',    bubble: '#7c3aed', grad: 'linear-gradient(90deg,#7c3aed,#a78bfa)' },
+      forest:  { name: 'অরণ্য',     bubble: '#16a34a', grad: 'linear-gradient(90deg,#15803d,#22c55e)' }
+    };
+    const themeStoreKey = 'lfChatTheme:' + (isGroupChat ? 'g' + convId : 'u:' + otherUsername);
+    function applyChatTheme(key) {
+      const t = CHAT_THEMES[key] || CHAT_THEMES.default;
+      const shell = document.getElementById('messengerShell');
+      if (shell) {
+        shell.style.setProperty('--fb-msg', t.bubble);
+        shell.style.setProperty('--lf-theme-grad', t.grad);
+      }
+      document.querySelectorAll('#mdThemes .md-theme').forEach(b => b.classList.toggle('active', b.dataset.theme === key));
+      const note = document.getElementById('mdThemeNote');
+      if (note) note.textContent = 'বর্তমান থিম: ' + t.name + ' — শুধু আপনার ডিভাইসে';
+    }
+    const mdThemes = document.getElementById('mdThemes');
+    if (mdThemes) mdThemes.addEventListener('click', e => {
+      const b = e.target.closest('.md-theme');
+      if (!b) return;
+      try { localStorage.setItem(themeStoreKey, b.dataset.theme); } catch (err) {}
+      applyChatTheme(b.dataset.theme);
+      fbToast('চ্যাট-থিম পরিবর্তন হয়েছে');
+    });
+    let savedTheme = 'default';
+    try { savedTheme = localStorage.getItem(themeStoreKey) || 'default'; } catch (e) {}
+    applyChatTheme(savedTheme);
 
     // ── সাইডবার-সার্চ (কথোপকথন + নতুন ইউজার) ───────────────────────────
     const convSearch = document.getElementById('convSearch');
@@ -574,7 +697,7 @@
       fetch('/api/messages/seen-all', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conv_id: convId }) });
     }
 
-    // ── পোলিং (৫সে): নতুন মেসেজ + টাইপিং + অনলাইন + সিন ────────────────
+    // ── পোলিং (সেশন ৭৬: অ্যাডাপটিভ — ফোকাসড উইন্ডোতে ২.৫সে, লুকানো হলে ১০সে) ──
     async function poll() {
       if (!convId) return;
       try {
@@ -619,8 +742,21 @@
         }));
       } catch (e) { /* silent */ }
     }
-    setInterval(poll, 5000);
-    setTimeout(poll, 1000);
+    let pollTimer = null;
+    function isTabActive() { return document.visibilityState === 'visible' && document.hasFocus(); }
+    function schedulePoll() {
+      clearTimeout(pollTimer);
+      pollTimer = setTimeout(async () => { await poll(); schedulePoll(); }, isTabActive() ? 2500 : 10000);
+    }
+    function kickPollNow() {
+      clearTimeout(pollTimer);
+      pollTimer = setTimeout(async () => { await poll(); schedulePoll(); }, 400);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') kickPollNow(); else schedulePoll(); });
+    window.addEventListener('focus', kickPollNow);
+    window.addEventListener('blur', schedulePoll);
+    schedulePoll();
+    setTimeout(poll, 800);
 
     // ── কথোপকথনের ভেতরে মেসেজ-সার্চ ────────────────────────────────────
     const cis = document.getElementById('convInSearch');

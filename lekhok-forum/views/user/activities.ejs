@@ -42,8 +42,12 @@
 
     <%# ── Featured (latest upcoming or latest overall) ── %>
     <% 
+      // সেশন ৭৬: টাইমলাইনে সাম্প্রতিক ৮টি; পুরোনোগুলো নিচের কল্যাপ্সিবল আর্কাইভে
+      const TL_LIMIT = 8;
       const featured = upcoming.length ? upcoming[0] : items[0];
       const rest = items.filter(a => a.id !== featured.id);
+      const archItems = rest.slice(TL_LIMIT);
+      rest.length = Math.min(rest.length, TL_LIMIT);
     %>
     <% if (featured) { %>
     <div class="activities-featured" data-category="<%= (featured.scheduled_date && new Date(featured.scheduled_date) >= now) ? 'upcoming' : 'past' %>">
@@ -118,16 +122,52 @@
       <% }); %>
     </div>
 
+    <%# ── সেশন ৭৬: পূর্বের কার্যক্রম আর্কাইভ (কল্যাপ্সিবল, .daily-archive প্যাটার্ন) ── %>
+    <% if (archItems.length) { %>
+    <section class="daily-archive activities-arch" id="actArchive">
+      <div class="section-head">
+        <h2 class="section-title"><i class="fas fa-clock-rotate-left"></i> পূর্বের কার্যক্রম</h2>
+        <span class="daily-arch-count"><%= archItems.length %>টি কার্যক্রম</span>
+      </div>
+      <div class="daily-arch-list">
+        <% archItems.forEach(a => {
+          const isUpcoming = a.scheduled_date && new Date(a.scheduled_date) >= now;
+          const cat = isUpcoming ? 'upcoming' : 'past';
+        %>
+          <details class="daily-arch-item" data-category="<%= cat %>">
+            <summary>
+              <span class="da-date"><i class="far fa-calendar"></i> <%= a.scheduled_date ? new Date(a.scheduled_date + 'T00:00:00').toLocaleDateString('bn-BD') : 'তারিখ নেই' %></span>
+              <span class="da-title"><%= a.title %></span>
+              <i class="fas fa-chevron-down da-chev"></i>
+            </summary>
+            <div class="da-body">
+              <% if (a.images && a.images.length) { %>
+                <div class="da-thumbs">
+                  <% a.images.slice(0, 3).forEach(src => { %>
+                    <img src="<%= src %>" alt="<%= a.title %>" loading="lazy" class="da-thumb" />
+                  <% }) %>
+                </div>
+              <% } %>
+              <p class="da-text"><%= a.body %></p>
+            </div>
+          </details>
+        <% }); %>
+      </div>
+    </section>
+    <% } %>
+
     <% } %>
   </div>
 
   <script>
-    // Filter tabs
+    // Filter tabs — আর্কাইভ-আইটেমও data-category বহন করে, তাই একই ফিল্টারে চলে
+    const actArchive = document.getElementById('actArchive');
     document.querySelectorAll('.act-filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.act-filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const filter = btn.dataset.filter;
+        let visArch = 0;
         document.querySelectorAll('.timeline-item, .act-grid-card').forEach(item => {
           if (filter === 'all' || item.dataset.category === filter) {
             item.style.display = '';
@@ -135,6 +175,13 @@
             item.style.display = 'none';
           }
         });
+        if (actArchive) {
+          actArchive.querySelectorAll('.daily-arch-item').forEach(item => {
+            const show = filter === 'all' || item.dataset.category === filter;
+            if (show) { item.style.display = ''; visArch++; } else { item.style.display = 'none'; }
+          });
+          actArchive.style.display = visArch ? '' : 'none';
+        }
         // Also hide featured if it doesn't match
         const featured = document.querySelector('.activities-featured');
         if (featured) {
