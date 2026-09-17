@@ -499,3 +499,28 @@ Stage Summary:
 ### Addendum (post-push cross-agent catch)
 - Parallel agent's `3b9a246` (deep-audit security batch: secrets scrub + jesc XSS-guard + leader-card escaping) landed while this round was wrapping. Its `app.locals.jesc` (server.js) requires a **process restart** — a stale dev server 500s on any view calling `jesc()` (`jesc is not defined` on / and /articles/1 was observed live). Restart fixed it; final tree verified: role-policy 99/99 ALL GREEN, 19-page matrix 200, console 0. Vercel redeploys are fresh processes (unaffected).
 - Local servers left running: :3030 (SANDBOX_PORT, my QA instance) + :8080 (suite target). If another agent needs a clean DB state, stop instances before seeding (in-memory DB overwrites file seeds).
+
+---
+Task ID: sub-cta-contrast (সেশন ৯৮ — ইউজার-রিপোর্টেড UI ফিক্স)
+Agent: Z.ai sub-agent (CTA text-contrast fix)
+Task: পরিচিতি পেইজের "সদস্য সংগ্রহ চলছে / আপনি কি একজন কলম সৈনিক হতে চান?" CTA-ব্যানারের প্যারাগ্রাফ ও "যোগাযোগ করুন" আউটলাইন-বাটনের টেক্সট ডার্ক-নেভি ব্যাকগ্রাউন্ডে কালো/অস্পষ্ট দেখাচ্ছিল — সাদা (slate-200/white) টেক্সট + বর্ডার-কনট্রাস্ট বাড়ানো
+
+Work Log:
+- ফ্রেশ ক্লোন + parallel-agent স্টেট যাচাই (remote মাথায় session94/97) → রুট-কজ নির্ণয়:
+  1. `.cta-banner p{color:#64748b}` — ডার্ক নেভি গ্রেডিয়েন্ট (var(--brand) #0a1f44 → var(--bg-main) #0B1121)-এর ওপর ডার্ক-গ্রে প্যারাগ্রাফ
+  2. `.btn-outline`-এর পরবর্তী গ্লোবাল রুল `color:#1e293b` (কালো) — ডার্ক ব্যানারে বাটন-লেখা মিশে যাচ্ছিল
+- ফিক্স (public/assets/css/style.css, মাত্র ১ লাইন — স্কোপড, মিনিফাইড-সেফ node রিপ্লেস):
+  - `.cta-banner p` → `color:#e2e8f0` (slate-200)
+  - নতুন স্কোপড রুল: `.cta-banner .btn-outline{color:#fff;border:1.5px solid rgba(148,163,184,.6)}` + hover `bg-white/10 + border-white` (গ্লোবাল .btn-outline অক্ষত — হোম-হিরো লাইট-থিম রক্ষা)
+  - `.cta-banner .accent/.eyebrow` → emerald-400 #34d399; `.accent-divider` → emerald-400 গ্রেডিয়েন্ট
+- ভেরিফিকেশন (এনভায়রনমেন্ট-কোয়ার্ক বাইপাস করে):
+  - সার্ভার :3030 (double-fork setsid); agent-browser Caddy-গেটওয়ে `:81/about?XTransformPort=3030` দিয়ে
+  - কম্পিউটেড-স্টাইল প্রমাণ: para rgb(226,232,240)=#e2e8f0 ✓ btn rgb(255,255,255) ✓ border rgba(148,163,184,.6) ✓ hover bg rgba(255,255,255,.1)+border white ✓ accent #34d399 ✓
+  - ভিজ্যুয়াল স্ক্রিনশট (সম্পূর্ণ রেন্ডার): প্যারাগ্রাফ স্পষ্ট পাঠযোগ্য, বাটন সাদা-টেক্সট+দৃশ্যমান-বর্ডার ✓
+  - রিগ্রেশন: হোম-হিরো `.btn-outline` আগের মতোই #1e293b/লাইট-বর্ডার (লাইট ব্যাকগ্রাউন্ডে) ✓; CSS brace-balance 0 ✓
+- ক্লিন-আপ: নিজের :3030 ইনস্ট্যান্স বন্ধ + নিজের agent-browser সেশন close (শেয়ার্ড-DB রেস এড়াতে)
+
+Stage Summary:
+- কমিট: ca4ce27 (7a34dee-এর ওপর rebase) → pushed ✓ — Vercel ফ্রেশ-প্রসেসে AV-ক্যাশ-বাস্টসহ ডিপ্লয় হবে
+- ফাইল চেঞ্জ: lekhok-forum/public/assets/css/style.css (+স্কোপড রুল যুক্ত, গ্লোবাল কিছু ভাঙেনি)
+- নোট: এই স্যান্ডবক্সে site-JS/CSS গেটওয়ে-কুয়েরি ছাড়া 404 খায়; reveal-অ্যানিমেশনের `.in` ক্লাস ম্যানুয়াল ট্রিগার করতে হয় — ফিক্সের সাথে সম্পর্কহীন, শুধু ভেরিফিকেশন-পদ্ধতি
