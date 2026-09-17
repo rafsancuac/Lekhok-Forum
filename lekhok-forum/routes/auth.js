@@ -6,6 +6,7 @@ const { avatarUpload, withUpload } = require('../middleware/upload');
 const security = require('../helpers/security-config');
 const { loginLimiter, forgotLimiter, registerLimiter, clientIp } = require('../helpers/rate-limit');
 const totp = require('../helpers/totp');
+const rolePolicy = require('../helpers/role-policy');
 
 // ── সেশন ৪৬: রোল-বেজড রিডাইরেক্ট হেল্পার ─────────────────────────────────────
 // প্রতিটি রোলের নিজস্ব ড্যাশবোর্ড — admin→/admin, moderator→/moderator, user→/dashboard।
@@ -68,6 +69,18 @@ router.post('/login', async (req, res) => {
       ).get(ident.toUpperCase());
     }
     if (user && await bcrypt.compare(password, user.password_hash)) {
+      // ── সেশন ৮৩: লগইন-পোর্টাল বিভাজন (নিরাপত্তা) ─────────────────────────
+      // /login = শুধু সাধারণ ইউজার। স্টাফ (মডারেটর/এডমিন/সুপার-এডমিন)
+      // অ্যাকাউন্ট এখানে প্রত্যাখ্যাত — তাদের জায়গা স্টাফ পোর্টাল (/admin/login)।
+      if (rolePolicy.isStaffRole(user.role)) {
+        loginOk(lk43);
+        return res.render('user/login', {
+          error: rolePolicy.USER_PORTAL_STAFF_MESSAGE + ' <a href="/admin/login">স্টাফ পোর্টালে লগইন করুন</a>',
+          next: safeNextPath(req.body.next || req.query.next),
+          currentPath: '/login',
+          staffNotice: true
+        });
+      }
       if (user.status === 'banned') {
         return res.render('user/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে', next: safeNextPath(req.body.next || req.query.next), currentPath: '/login' });
       }
@@ -93,27 +106,18 @@ router.post('/login', async (req, res) => {
       }));
     }
 
-    // Admin-panel account fallback
+    // ── সেশন ৮৩: admin_users-অ্যাকাউন্ট /login থেকে আর লগইন করতে পারে না ──
+    // আগের "fallback" (সেশন ৮-এর সুবিধা) সরানো হলো — ইউজার/স্টাফ লগইন
+    // ইন্টারফেস সম্পূর্ণ আলাদা (নিরাপত্তা-নির্দেশ)। স্টাফ যাবে /admin/login-এ।
     const admin = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     if (admin && await bcrypt.compare(password, admin.password_hash)) {
       loginOk(lk43);
-      const dest = safeNextPath(req.body.next || req.query.next) || '/admin';
-      // সেশন ৫৮: 2FA-সক্রিয় অ্যাডমিনও একই দ্বিতীয় ধাপে যায় (কোডের ফিল্ড
-      // লগইন-ফর্মে নেই — ইউজার-নির্দেশনা)। পাসওয়ার্ড-মিল হলেই পেন্ডিং হয়।
-      if (admin.totp_enabled && admin.totp_secret) {
-        req.session.mfaPending = { kind: 'admin', uid: admin.id, dest, hint: admin.display_name || admin.username, ts: Date.now() };
-        return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
-      }
-      req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
-      return new Promise((resolve) => req.session.regenerate((err) => {
-        if (err) console.error('[auth] /login admin session regenerate error:', err);
-        req.session.adminUser = { id: admin.id, username: admin.username, display_name: admin.display_name };
-        req.session.save((err2) => {
-          if (err2) console.error('[auth] /login admin session save error:', err2);
-          res.redirect(dest);
-          resolve();
-        });
-      }));
+      return res.render('user/login', {
+        error: rolePolicy.USER_PORTAL_STAFF_MESSAGE + ' <a href="/admin/login">স্টাফ পোর্টালে লগইন করুন</a>',
+        next: safeNextPath(req.body.next || req.query.next),
+        currentPath: '/login',
+        staffNotice: true
+      });
     }
 
     loginFail((req.ip || '') + '|' + String(req.body.username || '').toLowerCase());

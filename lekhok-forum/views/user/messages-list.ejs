@@ -4,6 +4,13 @@
   <div class="page-wrap page-wrap--messenger">
     <div class="messenger-shell" id="messengerShell">
 
+      <%# সেশন ৮৩: রোল-নীতি/অন্য গার্ডের বার্তা (redirect ?err=) %>
+      <% if (typeof err !== 'undefined' && err) { %>
+      <div style="grid-column:1/-1;align-self:start;background:#fee2e2;border:1px solid #fecaca;color:#991b1b;padding:11px 16px;border-radius:10px;font-size:.88rem;line-height:1.6;display:flex;gap:10px;align-items:flex-start;">
+        <i class="fas fa-shield-halved" style="margin-top:3px;"></i><span><%= err %></span>
+      </div>
+      <% } %>
+
       <aside class="messenger-list" id="messengerList">
         <%# সেশন ৮০: মেসেজ-পারমিশন গেটের ত্রুটি-ব্যানার (followers/none) %>
         <% if (err) { %>

@@ -759,4 +759,40 @@ for (const act of ['add', ':id/save', ':id/toggle', ':id/move', ':id/delete', ':
   });
 }
 
+// ═══ সেশন ৮৩: ইউজার তদারকি (মডারেটর — user_mgmt স্কোপ) ═══════════════════════
+// হায়ারার্কি-নীতি: ইউজারের কাজ মডারেটর নিয়ন্ত্রণ/তদারকি করবেন — তবে রোল
+// বদলানো তার কাজ নয় (সেটি কেবল এডমিন/সুপার-এডমিন)। তাই মডারেটর এখানে:
+//   • ইউজার-তালিকা/সার্চ দেখবেন (রোল/স্ট্যাটাস সহ)
+//   • নিয়ম-ভঙ্গকারীকে নিষেধ (banned) করতে ও ফেরত (active) আনতে পারবেন
+//   • রোল-কলাম শুধু-দেখা — পরিবর্তনের কোনো কন্ট্রোল নেই
+router.get('/users', ensureModerator, requireScope('user_mgmt'), async (req, res) => {
+  const q81 = String(req.query.q || '').trim();
+  let users = [];
+  try {
+    if (q81) {
+      users = await db.prepare("SELECT id, username, full_name, avatar_url, gender, role, status, created_at, last_login FROM users WHERE (username LIKE ? OR full_name LIKE ?) AND role != 'superadmin' ORDER BY id DESC LIMIT 200")
+        .all('%' + q81 + '%', '%' + q81 + '%');
+    } else {
+      users = await db.prepare("SELECT id, username, full_name, avatar_url, gender, role, status, created_at, last_login FROM users WHERE role != 'superadmin' ORDER BY id DESC LIMIT 200").all();
+    }
+  } catch (e) {}
+  res.render('user/moderator-users', { users, q81, currentPath: '/moderator/users', saved: req.query.saved || null, err: req.query.err || null });
+});
+
+// নিষেধ/ফেরত — শুধু status টগল; role এখানে অপরিবর্তনীয় (হায়ারার্কি)
+router.post('/users/:id/status', ensureModerator, requireScope('user_mgmt'), async (req, res) => {
+  const status81 = String(req.body.status || '');
+  if (!['active', 'banned'].includes(status81)) return res.redirect('/moderator/users?err=1');
+  const target = await db.prepare("SELECT id, username, role, status FROM users WHERE id = ?").get(req.params.id);
+  if (!target) return res.redirect('/moderator/users?err=1');
+  // স্টাফ-অ্যাকাউন্ট (moderator/admin/superadmin) মডারেটর ছুঁতে পারবেন না —
+  // সেটি ঊর্ধ্বতন-স্তরের (এডমিন/সুপার-এডমিন) এখতিয়ার।
+  if (target.role && target.role !== 'user') return res.redirect('/moderator/users?err=staff');
+  if (target.status !== status81) {
+    await db.prepare('UPDATE users SET status = ? WHERE id = ?').run(status81, req.params.id);
+    await TA42.audit(db, req, 'status', 'users', req.params.id, 'moderator-oversight: ' + target.username + ' → ' + status81);
+  }
+  res.redirect('/moderator/users?saved=1');
+});
+
 module.exports = router;

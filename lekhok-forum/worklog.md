@@ -69,3 +69,23 @@ Stage Summary:
 **E2E:** পেস্ট/রিমুভ/ড্র্যাগ/ওভারলে/হার্ট-টগল/মাল্টি-লাইন-সেন্ড/সাউন্ড-টগল/জ্যামিতি(৩৩-৯১px)/রিয়েক্ট-নিচ-ডান/সিন-অ্যাভাটার/মোবাইল-390px/কনসোল-০ — সব ✓; রিগ্রেশন: স্মোক + admin/mod-লগইন + API ✓
 
 **কমিট:** বর্তমান (session82, 82a0ffa-র উপর রিবেজ)। **পরবর্তী সুপারিশ:** ① WebRTC-কল-এজেন্টের সিগন্যালিং এলে ⋯-মেনুতে 'কলে উত্তর' ② মেসেজ soft-delete tombstone (লাইভ-রিমুভাল) ③ ভয়েস-মেসেজ (MediaRecorder → attachment) ④ messenger-actions.js-এ ইনলাইন-স্ক্রিপ্ট রিফ্যাক্টর (সেশন-৭৬ সুপারিশ এখনো খোলা)।
+Task ID: 14 (Session 83)
+Agent: Role-Hierarchy agent (Main)
+Task: ইউজার-নির্দেশ — রোল-হায়ারার্কি (সুপার-এডমিন›এডমিন›মডারেটর›ইউজার), পাশাপাশি পদের মধ্যে সরাসরি-কানেকশন বন্ধ, সোয়াপ-নিয়ম, আলাদা লগইন-ইন্টারফেস
+
+Work Log:
+- origin/main সিঙ্ক (a6ecacb — session80 রিচ-এডিটর/ XSS-ফিক্স অন্য এজেন্টের; social.js/dashboard.js-এর তাদের এরিয়া এড়িয়ে কনফ্লিক্ট-মুক্ত ইমপ্লিমেন্টেশন)
+- নতুন helpers/role-policy.js — ROLE_RANK, STAFF_ROLES, connectionBlocked, canSwapToUserMode, dashboardForRole + বাংলা নীতি-বার্তা
+- লগইন-বিভাজন: /login শুধু ইউজার (স্টাফ + admin_users-ফলব্যাক অপসারণ, স্টাফ-পোর্টাল লিংকসহ বার্তা); /admin/login শুধু স্টাফ (users-টেবিল moderator/admin/superadmin ফলব্যাক + 2FA; ইউজার প্রত্যাখ্যাত)
+- সোয়াপ: নতুন /admin/switch (admMode); সাইডবারে "ইউজার ইন্টারফেসে সোয়াপ"; হেডার ৩-জায়গায় রোল-সচেতন প্যানেল-লিংক
+- সরাসরি-কানেকশন বন্ধ: /messages/:username GET+POST ও /follow/:id — adjacent জোড়া (user↔moderator, moderator↔admin, admin↔superadmin) ব্লক; মেসেঞ্জার-লিস্টে নীতি-ব্যানার; follow-এ বাংলা টোস্ট (main.js প্যাচ)
+- নিয়োগ-হায়ারার্কি: /admin/users/:id/role — admin/superadmin নিয়োগ শুধু সুপার-অ্যাক্টর; moderators.ejs ড্রপডাউন-গেটিং (actorSuper)
+- মডারেটর ইউজার-তদারকি: user_mgmt স্কোপ (db.MODERATOR_SCOPES + CANONICAL_SCOPES), GET /moderator/users + POST /moderator/users/:id/status (নিষেধ/ফেরত, স্টাফ-টার্গেট-লক, audit-লগ), নতুন moderator-users.ejs, সাইডবার-লিংক
+- বুট-বাগফিক্স: ensureDemoModerator-এর SELECT id → SELECT id, role (আগে প্রতি বুটে কাস্টম-স্কোপ মুছে যেত)
+- টেস্ট: scripts/seed-test-users.js + scripts/test-role-policy.sh — ৭৩/৭৩ ALL GREEN; agent-browser ভিজ্যুয়াল-QA (লগইন-পোর্টাল দুটি, প্রত্যাখ্যান-বার্তা, তদারকি-পেজ, সোয়াপ, DM-ব্যানার, মোবাইল 390px, কনসোল-এরর 0)
+
+Stage Summary:
+- কমিট: session83 — বিস্তারিত PROJECT.md §সেশন ৮৩ + RBAC.md §০
+- ক্রেডেনশিয়াল: admin/admin123 → শুধু /admin/login; moderator/moderator123 → শুধু /admin/login; সাধারণ ইউজার → শুধু /login (আগে admin /login থেকেও ঢুকত — বন্ধ)
+- testuser/testadmin (demo123) শুধু টেস্ট-অ্যাকাউন্ট (scripts/seed-test-users.js)
+- pending-session78-tombstone.patch (আগের এজেন্টের অসম্পূর্ণ টম্বস্টোন-আনসেন্ড WIP) রিপো-রুটে সংরক্ষিত — কমিট করা হয়নি

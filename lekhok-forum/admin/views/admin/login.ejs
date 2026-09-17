@@ -97,11 +97,11 @@
 <body>
   <div class="login-card">
     <div class="logo">
-      <div class="emblem"><i class="fas fa-feather-alt"></i></div>
-      <h1>অ্যাডমিন লগইন</h1>
-      <p class="sub">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়<br>কন্টেন্ট ও কমিউনিটি ব্যবস্থাপনা প্যানেল</p>
+      <div class="emblem"><i class="fas fa-user-shield"></i></div>
+      <h1>স্টাফ লগইন</h1>
+      <p class="sub">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়<br>শুধুমাত্র সুপার এডমিন, এডমিন ও মডারেটরদের জন্য<br>(নিরাপত্তার জন্য সাধারণ ইউজার-লগইন আলাদা)</p>
     </div>
-    <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+    <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%- error %></div><% } %>
     <form method="POST">
       <div class="form-group">
         <label for="username">ব্যবহারকারী নাম</label>
@@ -122,6 +122,7 @@
     <p class="mfa-note"><i class="fas fa-shield-halved"></i> অ্যাকাউন্টে 2FA সক্রিয় থাকলে পরের ধাপে কোড চাওয়া হবে।</p>
     <div class="login-foot">
       © <%= new Date().getFullYear() %> লেখক ফোরাম — সর্বস্বত্ব সংরক্ষিত<br>
+      সাধারণ ব্যবহারকারী? <a href="/login">ইউজার লগইন</a><br>
       <a href="/" class="back-home"><i class="fas fa-arrow-left"></i> মূল সাইটে ফিরে যান</a>
     </div>
   </div>

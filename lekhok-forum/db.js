@@ -871,7 +871,9 @@ const MODERATOR_SCOPES = [
   { key: 'epaper',      label: 'আজকের ই-পেপার' },
   { key: 'event',       label: 'ইভেন্ট পেইজ' },
   { key: 'complaints',  label: 'অভিযোগ দেখা' },
-  { key: 'content',     label: 'সেকশন কন্টেন্ট (সেশন ৪২)' }
+  { key: 'content',     label: 'সেকশন কন্টেন্ট (সেশন ৪২)' },
+  // সেশন ৮৩: ইউজার তদারকি — মডারেটর ইউজার-নিষেধ/ফেরত (রোল নয়) পরিচালনা করবে
+  { key: 'user_mgmt',   label: 'ইউজার তদারকি' }
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -2142,12 +2144,16 @@ async function ensureDemoModerator() {
     // legacy plural variants (kept so admin checkbox UI state stays accurate)
     'notices', 'events'
   ];
-  const existing = await prepare('SELECT id FROM users WHERE username = ?').get(DEMO_MOD.username);
+  // সেশন ৮৩ বাগফিক্স: আগে শুধু `SELECT id` হতো — existing.role সবসময় undefined
+  // থাকত, ফলে `existing.role !== 'moderator'` প্রতি বুটেই সত্য হয়ে টপআপ চলত এবং
+  // অ্যাডমিন-মঞ্জুরকৃত কাস্টম স্কোপ (যেমন user_mgmt) প্রতি বুটে মুছে যেত। এখন role
+  // সহ সেলেক্ট — টপআপ কেবল তখনই, যখন রোল মডারেটর নয় বা স্কোপ-সারি সত্যিই নেই।
+  const existing = await prepare('SELECT id, role FROM users WHERE username = ?').get(DEMO_MOD.username);
   if (existing) {
     // Already present — only top up scopes if a moderator has none (e.g. the
     // user was promoted manually with the old broken default grant).
     const cnt = await prepare('SELECT COUNT(*) AS c FROM moderator_scopes WHERE user_id = ?').get(existing.id);
-    if (existing.role !== 'moderator' || !cnt || cnt.c === 0) {
+    if ((existing.role || 'user') !== 'moderator' || !cnt || cnt.c === 0) {
       await grantModerator(existing.id, scopes, null);
       saveDb();
       console.log('[db] ✓ Demo moderator scopes topped up');

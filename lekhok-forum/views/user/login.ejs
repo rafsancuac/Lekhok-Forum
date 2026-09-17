@@ -35,8 +35,9 @@
 
         <h1 class="as-title">স্বাগতম</h1>
         <p class="as-sub">আপনার অ্যাকাউন্টে লগইন করুন</p>
+        <p style="margin:-6px 0 14px;display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:#0f766e;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.35);padding:6px 12px;border-radius:999px;"><i class="fas fa-user"></i> সাধারণ ব্যবহারকারীদের লগইন — স্টাফ (মডারেটর/এডমিন) পোর্টাল আলাদা</p>
 
-        <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%= error %></div><% } %>
+        <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <% if (typeof staffNotice !== 'undefined' && staffNotice) { %><%- error %><% } else { %><%= error %><% } %></div><% } %>
 
         <div class="as-tabs" role="tablist" aria-label="লগইন বা আইডি খুঁজুন">
           <button type="button" class="as-tab is-active" data-tab="login" role="tab" aria-selected="true" aria-controls="tabpanel-login">লগইন</button>

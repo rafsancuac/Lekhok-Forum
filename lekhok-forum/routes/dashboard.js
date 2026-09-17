@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { messageUpload, complaintUpload, attachmentUpload, withUpload } = require('../middleware/upload');
+const rolePolicy = require('../helpers/role-policy');
 
 // ── ডুপ্লিকেট-নোটিফিকেশন গার্ড: একই ইউজার+টাইপ+বডি ১ মিনিটের মধ্যে দ্বিতীয়বার ঢোকে না ──
 async function notifyOnce(uid, type, title, body, link, windowMin) {
@@ -273,6 +274,16 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
   if (!other) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   if (other.id === me) return res.redirect('/messages');
 
+  // ── সেশন ৮৩: সরাসরি-কানেকশন নীতি — ইউজার↔মডারেটর, মডারেটর↔এডমিন,
+  // এডমিন↔সুপার-এডমিন জোড়া ১:১ চ্যাট খুলতে/চালাতে পারবে না (উভয় দিক থেকে)।
+  if (rolePolicy.connectionBlocked(req.session.user.role, other.role)) {
+    const errMsg81 = rolePolicy.DIRECT_PAIR_MESSAGE;
+    const _api81 = req.xhr || (req.headers.accept || '').includes('application/json') ||
+      String(req.headers['content-type'] || '').includes('application/json');
+    if (_api81) return res.status(403).json({ ok: false, error: errMsg81 });
+    return res.redirect('/messages?err=' + encodeURIComponent(errMsg81));
+  }
+
   // Find or create conversation
   let conv = await db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me, other.id, other.id, me);
@@ -314,6 +325,14 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
   const me = req.session.user.id;
   const other = await db.prepare('SELECT * FROM users WHERE username = ?').get(req.params.username);
   if (!other) return res.redirect('/messages');
+  // ── সেশন ৮৩: সরাসরি-কানেকশন নীতি — পাশাপাশি পদের জোড়ায় ১:১ মেসেজ বন্ধ
+  if (rolePolicy.connectionBlocked(req.session.user.role, other.role)) {
+    const errMsg81 = rolePolicy.DIRECT_PAIR_MESSAGE;
+    const _api81 = req.xhr || (req.headers.accept || '').includes('application/json') ||
+      String(req.headers['content-type'] || '').includes('application/json');
+    if (_api81) return res.status(403).json({ ok: false, error: errMsg81 });
+    return res.redirect('/messages?err=' + encodeURIComponent(errMsg81));
+  }
   // Block check — a blocked pair cannot exchange messages
   if (await db.prepare('SELECT 1 FROM blocks WHERE (blocker_id = ? AND blocked_id = ?) OR (blocker_id = ? AND blocked_id = ?)').get(me, other.id, other.id, me)) {
     const errMsg = 'আপনি এই ব্যবহারকারীর সাথে মেসেজ করতে পারবেন না';

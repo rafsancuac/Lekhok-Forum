@@ -11,6 +11,7 @@ const { validateNavJson, parseNav } = require('../helpers/nav');
 const claimService = require('../helpers/claim-service');
 const { adminLoginLimiter, clientIp } = require('../helpers/rate-limit');
 const totp = require('../helpers/totp');
+const rolePolicy = require('../helpers/role-policy');
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 // Admin  = admin_users session OR user session with role='admin'  → full access
@@ -29,7 +30,10 @@ const CANONICAL_SCOPES = [
   { key: 'this_day',    label: 'আজকের এই দিনে',    icon: 'fas fa-history' },
   { key: 'best_writer', label: 'মাসিক সেরা লেখক',  icon: 'fas fa-pen-fancy' },
   { key: 'activity',    label: 'সাংগঠনিক কার্যক্রম', icon: 'fas fa-running' },
-  { key: 'epaper',      label: 'আজকের ই-পেপার',   icon: 'fas fa-newspaper' }
+  { key: 'epaper',      label: 'আজকের ই-পেপার',   icon: 'fas fa-newspaper' },
+  // সেশন ৮৩: ইউজার তদারকি — মডারেটর ইউজার-তালিকা দেখে নিষেধ/ফেরত দিতে পারবেন
+  // (রোল বদল নয় — সেটি কেবল এডমিন/সুপার-এডমিন)।
+  { key: 'user_mgmt',   label: 'ইউজার তদারকি',     icon: 'fas fa-users-cog' }
 ];
 const VALID_SCOPE_KEYS = CANONICAL_SCOPES.map(s => s.key).concat(ADMIN_SCOPES); // canonical + legacy plural
 
@@ -196,8 +200,11 @@ router.use(async (req, res, next) => {
 });
 
 // ── Login (GET) ──────────────────────────────────────────────────────────────
+// সেশন ৮৩: স্টাফ-পোর্টাল — লগইন-করা যে-কেউ (ইউজার/অ্যাডমিন) তার নিজের
+// ইন্টারফেসেই ফিরে যাবে; ফর্ম দেখাবে শুধু অনামী ভিজিটরকে।
 router.get('/login', async (req, res) => {
   if (req.session.adminUser) return res.redirect('/admin');
+  if (req.session.user) return res.redirect(rolePolicy.dashboardForRole(req.session.user.role));
   res.render('admin/login', { error: null, layout: false, currentPath: '/admin/login' });
 });
 
@@ -214,6 +221,43 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const user = await db.prepare('SELECT * FROM admin_users WHERE username = ?').get(username);
     if (!user || !await bcrypt.compare(password, user.password_hash)) {
+      // ── সেশন ৮৩: স্টাফ-পোর্টালে কমিউনিটি-স্টাফ (users-টেবিল) ফলব্যাক ──────
+      // মডারেটর/এডমিন/সুপার-এডমিন users-টেবিলে থাকে (admin_users-এ নয়) —
+      // আগে তারা /admin/login দিয়ে লগইন করতেই পারত না। এখন স্টাফ-রোল
+      // হলে এখান থেকেই নিজের ড্যাশবোর্ডে যায়; সাধারণ ইউজার প্রত্যাখ্যাত।
+      const _cu81 = await db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(String(username || '').trim(), String(username || '').trim());
+      if (_cu81 && await bcrypt.compare(password, _cu81.password_hash)) {
+        if (rolePolicy.isStaffRole(_cu81.role)) {
+          if (_cu81.status === 'banned') {
+            return res.render('admin/login', { error: 'আপনার অ্যাকাউন্ট নিষিদ্ধ করা হয়েছে।', layout: false, currentPath: '/admin/login' });
+          }
+          if (_cu81.status === 'pending') {
+            return res.render('admin/login', { error: 'আপনার অ্যাকাউন্ট এখনও যাচাইয়ের অপেক্ষায়।', layout: false, currentPath: '/admin/login' });
+          }
+          adminLoginLimiter.reset(lk);
+          // 2FA-সক্রিয় স্টাফ একই দ্বিতীয় ধাপে যায় (kind: 'user')
+          const dest81 = rolePolicy.dashboardForRole(_cu81.role);
+          if (_cu81.totp_enabled && _cu81.totp_secret) {
+            req.session.mfaPending = { kind: 'user', uid: _cu81.id, dest: dest81, hint: _cu81.full_name || _cu81.username, ts: Date.now() };
+            return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
+          }
+          return new Promise((resolve) => {
+            req.session.regenerate((err) => {
+              if (err) console.error('[admin] /admin/login user-staff regenerate error:', err);
+              req.session.user = { id: _cu81.id, username: _cu81.username, full_name: _cu81.full_name, avatar_url: _cu81.avatar_url, gender: _cu81.gender, role: _cu81.role || 'user' };
+              req.session.modMode = true;
+              req.session.save((err2) => {
+                if (err2) console.error('[admin] /admin/login user-staff save error:', err2);
+                res.redirect(dest81);
+                resolve();
+              });
+            });
+          });
+        }
+        // সাধারণ ইউজার স্টাফ-পোর্টালে ঢুকতে পারবে না (পোর্টাল-বিভাজন)
+        adminLoginLimiter.hit(lk);
+        return res.render('admin/login', { error: rolePolicy.STAFF_PORTAL_USER_MESSAGE + ' <a href="/login">ইউজার লগইন</a>', layout: false, currentPath: '/admin/login' });
+      }
       adminLoginLimiter.hit(lk);
       return res.render('admin/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', layout: false, currentPath: '/admin/login' });
     }
@@ -254,6 +298,26 @@ router.post('/login', async (req, res) => {
 // ── Logout ───────────────────────────────────────────────────────────────────
 router.get('/logout', async (req, res) => {
   req.session.destroy(() => res.redirect('/admin/login'));
+});
+
+// ── সেশন ৮৩: সোয়াপ (user-role এডমিন) — অ্যাডমিন প্যানেল ↔ ইউজার ইন্টারফেস ──
+// নিয়ম: এডমিন/মডারেটর কেবল নিজের ইউজার-আইডির সাথে সোয়াপ করতে পারবেন —
+// অন্য কোনো রোলের প্যানেলে সরাসরি সুইচ নেই। সুপার-এডমিন স্টাফ-মোডেই থাকেন।
+router.get('/switch', (req, res) => {
+  const u = req.session && req.session.user;
+  if (!u) return res.redirect('/admin/login');
+  if (!rolePolicy.canSwapToUserMode(u.role)) {
+    // সুপার-এডমিন/অন্য রোলের জন্য সোয়াপ নেই — নিজের ড্যাশবোর্ডেই ফেরত
+    return res.redirect(rolePolicy.dashboardForRole(u.role));
+  }
+  if (req.session.admMode === false) {
+    req.session.admMode = true; // ইউজার-মোড থেকে প্যানেলে ফেরা
+  } else {
+    req.session.admMode = false; // প্যানেল → ইউজার ইন্টারফেস
+  }
+  req.session.save(() => {
+    res.redirect(req.session.admMode ? '/admin' : '/dashboard');
+  });
 });
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
@@ -1276,8 +1340,14 @@ router.get('/moderators', requireAdmin, async (req, res) => {
     // Expand aliases so checkbox state is accurate whichever variant is stored
     staff.push({ ...u, scopes: expandScopes(scopes.map(r => r.scope)) });
   }
-  res.render('admin/moderators', { users, staff, CANONICAL_SCOPES, currentPath: '/admin/moderators' });
+  res.render('admin/moderators', { users, staff, CANONICAL_SCOPES, currentPath: '/admin/moderators', actorSuper: _actorIsSuper81(req) });
 });
+
+// সেশন ৮৩: ভিউতে অ্যাক্টর সুপার-এডমিন কি-না (রোল-ড্রপডাউন গেটিং)
+function _actorIsSuper81(req) {
+  return !!(req.session && ((req.session.adminUser && req.session.adminUser.role === 'superadmin') ||
+    (req.session.user && req.session.user.role === 'superadmin')));
+}
 
 router.post('/moderators/:userId/grant', requireAdmin, async (req, res) => {
   let scopes = req.body.scopes || [];
@@ -1454,12 +1524,15 @@ router.delete('/complaints/:id', requireScope('complaints'), async (req, res) =>
 // Change a user's role (user / moderator / admin / banned)
 // সেশন ৭৭: superadmin-রোল শুধু সুপার-এডমিন অ্যাক্টর সেট করতে পারে — আর সর্বশেষ
 // সুপার-এডমিনকে অবনমন করা যায় না (admin_users-এ অন্তত একজন সুপার থাকতেই হবে)।
+// সেশন ৮৩ (হায়ারার্কি-নীতি): রোল-নিয়োগ কেবল এক-ধাপ ঊর্ধ্বতন থেকে —
+//   সুপার-এডমিন → এডমিন নিয়োগ/অপসারণ; এডমিন → মডারেটর/ইউজার।
+//   সাধারণ এডমিন আর কাউকে 'admin' বানাতে পারবে না (আগে পারত — ফাঁক)।
 router.post('/users/:id/role', requireAdmin, async (req, res) => {
   const { role, status } = req.body;
-  let allowedRoles = ['user', 'moderator', 'admin'];
+  let allowedRoles = ['user', 'moderator'];
   const _actorSuper77 = (req.session.adminUser && req.session.adminUser.role === 'superadmin') ||
                         (req.session.user && req.session.user.role === 'superadmin');
-  if (_actorSuper77) allowedRoles = allowedRoles.concat('superadmin');
+  if (_actorSuper77) allowedRoles = allowedRoles.concat('admin', 'superadmin');
   const allowedStatus = ['active', 'pending', 'banned'];
   const target = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
   if (!target) return res.redirect('/admin/moderators?saved=1');

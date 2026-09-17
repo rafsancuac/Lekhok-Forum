@@ -4,6 +4,7 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const totp = require('../helpers/totp');
 const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload');
+const rolePolicy = require('../helpers/role-policy');
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCurrentUser(req) {
@@ -1206,6 +1207,12 @@ router.post('/follow/:userId', async (req, res) => {
   const targetExists = await db.prepare('SELECT id FROM users WHERE id = ?').get(targetId);
   if (!targetExists) return res.status(404).json({ error: 'not_found' });
   if (targetId === req.session.user.id) return res.json({ following: false });
+  // ── সেশন ৮৩: সরাসরি-কানেকশন নীতি — ইউজার↔মডারেটর, মডারেটর↔এডমিন,
+  // এডমিন↔সুপার-এডমিন একে অন্যকে ফলো করতে পারবেন না (উভয় দিক থেকে)।
+  const _target81 = await db.prepare('SELECT role FROM users WHERE id = ?').get(targetId);
+  if (rolePolicy.connectionBlocked(req.session.user.role, _target81 && _target81.role)) {
+    return res.status(403).json({ error: 'role_policy', message: rolePolicy.DIRECT_PAIR_MESSAGE });
+  }
   if (await isBlockedBetween(req.session.user.id, targetId)) return res.status(403).json({ error: 'blocked' });
   const existing = await db.prepare('SELECT id FROM follows WHERE follower_id = ? AND following_id = ?').get(req.session.user.id, targetId);
   if (existing) {

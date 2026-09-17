@@ -53,15 +53,23 @@
     <% if (_hasAnyDaily) { %><a href="/moderator/daily/quiz" class="<%= _active('/moderator/daily') %>"><i class="fas fa-sun"></i> ডেইলি কনটেন্ট</a><% } %>
     <a href="/moderator/members"    class="<%= _active('/moderator/members') %>"><i class="fas fa-users"></i> কমিটি সদস্য</a>
     <% if (_hasScope('complaints')) { %><a href="/moderator/complaints" class="<%= _active('/moderator/complaints') %>"><i class="fas fa-flag"></i> অভিযোগ</a><% } %>
+    <% if (_hasScope('user_mgmt')) { %><a href="/moderator/users" class="<%= _active('/moderator/users') %>"><i class="fas fa-users-cog"></i> ইউজার তদারকি</a><% } %>
     <% if (_hasScope('best_writer')) { %><a href="/moderator/best-writer" class="<%= _active('/moderator/best-writer') %>"><i class="fas fa-trophy"></i> সেরা লেখক</a><% } %>
     <% if (_hasScope('epaper')) { %><a href="/moderator/press"      class="<%= _active('/moderator/press') %>"><i class="fas fa-newspaper"></i> পত্রিকা কাটিং</a><% } %>
     <a href="/moderator/navigation" class="<%= _active('/moderator/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
     <div class="nav-group-label">সুইচ</div>
     <% if (_isAdmin) { %><a href="/admin"><i class="fas fa-user-shield"></i> অ্যাডমিন প্যানেল</a><% } %>
+    <% if (typeof user !== 'undefined' && user && (user.role === 'moderator' || user.role === 'admin')) { %>
+    <a href="<%= user.role === 'moderator' ? '/moderator/switch' : '/admin/switch' %>" class="nav-external"><i class="fas fa-exchange-alt"></i> ইউজার ইন্টারফেসে সোয়াপ</a>
+    <% } else { %>
     <a href="/dashboard" class="nav-external"><i class="fas fa-external-link-alt"></i> কমিউনিটি ফিড</a>
+    <% } %>
     <% } else { %>
     <div class="nav-group-label">মূল</div>
     <a href="/admin" class="<%= _path === '/admin' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
+    <% if (typeof user !== 'undefined' && user && (user.role === 'admin' || user.role === 'moderator')) { %>
+    <a href="<%= user.role === 'moderator' ? '/moderator/switch' : '/admin/switch' %>" class="nav-external"><i class="fas fa-exchange-alt"></i> ইউজার ইন্টারফেসে সোয়াপ</a>
+    <% } %>
 
     <% if (_isSuper) { %>
     <div class="nav-group-label nav-label-super">সুপার এডমিন</div>

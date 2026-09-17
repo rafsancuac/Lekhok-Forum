@@ -150,8 +150,14 @@
         <i class="fas fa-comments"></i> মেসেজ
         <% if (typeof msgBadge !== 'undefined' && msgBadge > 0) { %><span class="badge"><%= msgBadge %></span><% } %>
       </a>
-      <% if (user && (user.role === 'moderator' || user.role === 'admin' || user.role === 'senior_moderator' || user.role === 'junior_moderator' || user.role === 'content_moderator')) { %>
+      <% if (user && (user.role === 'moderator' || user.role === 'admin' || user.role === 'superadmin' || user.role === 'senior_moderator' || user.role === 'junior_moderator' || user.role === 'content_moderator')) { %>
+        <% if (user.role === 'admin') { %>
+        <a href="/admin/switch" style="color:#d4a017;"><i class="fas fa-user-shield"></i> অ্যাডমিন প্যানেল</a>
+        <% } else if (user.role === 'superadmin') { %>
+        <a href="/admin" style="color:#d4a017;"><i class="fas fa-crown"></i> অ্যাডমিন প্যানেল</a>
+        <% } else { %>
         <a href="/moderator/switch" style="color:#d4a017;"><i class="fas fa-shield-alt"></i> মডারেটর প্যানেল</a>
+        <% } %>
         <% } %>
         <a href="/settings" class="topbar-tab <%= currentPath && currentPath.indexOf('/settings') === 0 ? 'active' : '' %>">
         <i class="fas fa-sliders-h"></i> সেটিংস
@@ -249,7 +255,9 @@
             <a href="/complaints"><i class="fas fa-user-shield"></i> অভিযোগ</a>
             <hr style="border:none;border-top:1px solid #eee;margin:6px 0">
             <a href="/settings"><i class="fas fa-cog"></i> সেটিংস</a>
-            <% if (user.role === 'admin' || user.role === 'moderator') { %>
+            <% if (user.role === 'moderator') { %>
+              <a href="/moderator/switch" class="admin-link"><i class="fas fa-shield-alt"></i> মডারেটর প্যানেল</a>
+            <% } else if (user.role === 'admin' || user.role === 'superadmin') { %>
               <a href="/admin" class="admin-link"><i class="fas fa-shield-alt"></i> অ্যাডমিন প্যানেল</a>
             <% } %>
             <a href="/logout" class="logout-link"><i class="fas fa-sign-out-alt"></i> লগআউট</a>
@@ -364,7 +372,9 @@
       <a href="/articles/new"><i class="fas fa-plus"></i> নতুন লেখা</a>
       <a href="/qa/new"><i class="fas fa-plus"></i> নতুন প্রশ্ন</a>
       <a href="/profile/<%= user.username %>"><i class="fas fa-user"></i> প্রোফাইল</a>
-      <% if (user.role === 'admin' || user.role === 'moderator') { %>
+      <% if (user.role === 'moderator') { %>
+        <a href="/moderator/switch"><i class="fas fa-shield-alt"></i> মডারেটর প্যানেল</a>
+      <% } else if (user.role === 'admin' || user.role === 'superadmin') { %>
         <a href="/admin"><i class="fas fa-shield-alt"></i> অ্যাডমিন প্যানেল</a>
       <% } %>
       <a href="/logout" class="mobile-logout"><i class="fas fa-sign-out-alt"></i> লগআউট</a>
