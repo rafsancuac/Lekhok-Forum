@@ -7,7 +7,9 @@
 
     <%# সেশন ৪৯: শর্তসাপেক্ষ সোশ্যাল আইকন (ফেসবুক/লিংকডইন) + বাণী %>
     <% function leaderSocialRow(l) {
-         const fb = l.social_fb, li = l.social_linkedin;
+         // সেশন ৯১: স্কিম-গার্ড + অ্যাট্রিবিউট-এস্কেপ (javascript:/কোট-ব্রেক ইনজেকশন রোধ)
+         const gu = (u) => { const s = String(u || '').trim(); if (!(/^https?:\/\//i.test(s) || s.startsWith('/'))) return ''; return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+         const fb = gu(l.social_fb), li = gu(l.social_linkedin);
          if (!fb && !li) return '';
          let h = '<div class="leader-social">';
          if (fb) h += '<a href="' + fb + '" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>';

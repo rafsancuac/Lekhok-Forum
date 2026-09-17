@@ -103,7 +103,7 @@
 <script>
 (function () {
   try {
-    var prefs = <%- JSON.stringify(typeof displayPrefs !== 'undefined' ? displayPrefs : {}) %>;
+    var prefs = <%- jesc(typeof displayPrefs !== 'undefined' ? displayPrefs : {}) %>;
     var c = document.documentElement.classList;
     if (prefs.theme === 'dark') c.add('theme-dark');
     if (prefs.theme === 'light') c.add('theme-light');

@@ -145,8 +145,8 @@
       const ta = document.getElementById('body');
       const stats = document.getElementById('editorStats');
       const MAX = 5000, WARN = 4500;
-      const isNew = !(<%- JSON.stringify(!!post && !!post.id) %>);
-      const draftKey = 'lekhok_draft_art_new_' + String(<%- JSON.stringify(me ? me.username : 'anon') %> || 'anon');
+      const isNew = !(<%- jesc(!!post && !!post.id) %>);
+      const draftKey = 'lekhok_draft_art_new_' + String(<%- jesc(me ? me.username : 'anon') %> || 'anon');
       const FIELDS = ['title', 'body', 'tags', 'excerpt'];
 
       /* ── স্ট্যাটস-বার: শব্দ · পড়ার-সময় · অক্ষর (~১৩০ শব্দ/মিনিট — article-single-চিপের মিরর) ── */

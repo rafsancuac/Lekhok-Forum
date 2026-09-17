@@ -11,7 +11,7 @@
 
 <%# ── schema.org Article — Google rich results / better indexing ── %>
 <script type="application/ld+json">
-<%- JSON.stringify({
+<%- jesc({
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: String(post.title || '').slice(0, 110),

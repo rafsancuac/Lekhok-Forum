@@ -74,6 +74,15 @@ app.locals.AV = computeAssetVersion();
 // সীমা দিলে শব্দ-সীমায় কেটে '…' দেয়। মিরর: helpers/markdown-lite.js plainText()।
 app.locals.mdPlain = require('./helpers/markdown-lite').plainText;
 
+// ── সেশন ৯১: JSON-in-<script> XSS-গার্ড — সব EJS-ভিউতে jesc(ভ্যালু) ডাকা যায় ──
+// `<%- JSON.stringify(x) %>` ব্যবহারে ইউজার-কনটেন্টে `</script>` থাকলে স্ক্রিপ্ট-
+// কনটেক্সট ভেঙে stored-XSS হয় (উদা: প্রশ্নের টাইটেল/আর্টিকেল হেডলাইন/কুইজ-উত্তর)।
+// jesc `<` → \u003c + U+2028/2029 এস্কেপ করে — JSON অর্থ অপরিবর্তিত থাকে।
+app.locals.jesc = (v) => String(JSON.stringify(v === undefined ? null : v))
+  .replace(/</g, '\\u003c')
+  .replace(/\u2028/g, '\\u2028')
+  .replace(/\u2029/g, '\\u2029');
+
 // ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
 // লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।
 // প্রোডাকশনে SANDBOX_PORT সেট না থাকায় স্ক্রিপ্ট রেন্ডারই হয় না।

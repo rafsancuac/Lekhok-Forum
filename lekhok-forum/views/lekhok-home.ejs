@@ -202,10 +202,10 @@
     if (shareBtn) shareBtn.hidden = false;
   }
   var qid = parseInt(wrap.getAttribute('data-qid'), 10);
-  var myAttempt = <%- JSON.stringify(quizChallenge.myAttempt) %>;
+  var myAttempt = <%- jesc(quizChallenge.myAttempt) %>;
   /* সার্ভার-সত্য (res.locals.user) — main.js-এর LekhokAuthed-এর লোড-টাইমিং
      নির্ভরতা এড়াতে ইনলাইন-স্ক্রিপ্ট চলার সময়েই নিশ্চিত মান */
-  var authed = <%- JSON.stringify(!!(typeof user !== 'undefined' && user)) %>;
+  var authed = <%- jesc(!!(typeof user !== 'undefined' && user)) %>;
 
   /* সেশন ৮৪: অ্যাননিমাস localStorage-পারসিস্ট — /quiz পেজের quiz.js-এর
      সাথে একই স্টোর (lf_quiz_v1) শেয়ার করে: হোম-ব্যান্ডে উত্তর দিলে সেটি
@@ -362,6 +362,13 @@
         if (/^https?:\/\//i.test(s) || s.startsWith('/')) return s;
         return '';
       }
+      // সেশন ৯১: HTML-অ্যাট্রিবিউট-এস্কেপ — leaderCard-এর টেমপ্লেট-লিটারালে
+      // ইউজার-কনটেন্ট (full_name/avatar_url/bio/সোশ্যাল-ইউআরএল) কাঁচা বসানো
+      // stored-XSS দেয়; সব ইন্টারপোলেশন এখন esc() দিয়ে যায়।
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
       function leaderCard(m, roleLabel, yearLabel, statement) {
         const displayName = m.user_full_name || m.name;
         const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg?v=2';
@@ -376,19 +383,19 @@
         const email = m.social_email;
         const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || profileHref);
         const inner = `
-          <img loading="lazy" decoding="async" src="${displayImg}" alt="${displayName}" class="leader-photo" />
+          <img loading="lazy" decoding="async" src="${esc(displayImg)}" alt="${esc(displayName)}" class="leader-photo" />
           <div class="leader-body">
-            <h3 class="leader-name">${displayName}</h3>
-            <p class="role leader-role">${roleLabel || m.role || ''}</p>
-            ${yearLabel ? `<p class="leader-year">(${yearLabel})</p>` : ''}
-            ${displayBio ? `<p class="leader-bani">${displayBio}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
+            <h3 class="leader-name">${esc(displayName)}</h3>
+            <p class="role leader-role">${esc(roleLabel || m.role || '')}</p>
+            ${yearLabel ? `<p class="leader-year">(${esc(yearLabel)})</p>` : ''}
+            ${displayBio ? `<p class="leader-bani">${esc(displayBio)}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
             ${hasSocial ? `
             <div class="leader-social">
-              ${profileHref ? `<a href="${profileHref}" ${/^https?:\/\//i.test(profileHref) ? 'target="_blank" rel="noopener noreferrer"' : ''} class="leader-soc-id" aria-label="প্রোফাইল / আইডি"><i class="fas fa-id-card"></i></a>` : ''}
-              ${fb ? `<a href="${fb}" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>` : ''}
-              ${email ? `<a href="mailto:${email}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
-              ${m.social_twitter ? `<a href="${m.social_twitter}" target="_blank" rel="noopener noreferrer" class="leader-soc-tw" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
-              ${m.social_linkedin ? `<a href="${m.social_linkedin}" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>` : ''}
+              ${profileHref ? `<a href="${esc(profileHref)}" ${/^https?:\/\//i.test(profileHref) ? 'target="_blank" rel="noopener noreferrer"' : ''} class="leader-soc-id" aria-label="প্রোফাইল / আইডি"><i class="fas fa-id-card"></i></a>` : ''}
+              ${fb ? `<a href="${esc(fb)}" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>` : ''}
+              ${email ? `<a href="mailto:${esc(email)}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
+              ${m.social_twitter ? `<a href="${esc(safeLeaderUrl(m.social_twitter))}" target="_blank" rel="noopener noreferrer" class="leader-soc-tw" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
+              ${m.social_linkedin ? `<a href="${esc(safeLeaderUrl(m.social_linkedin))}" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>` : ''}
             </div>` : ''}
           </div>
         `;

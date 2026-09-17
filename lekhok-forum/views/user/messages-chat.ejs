@@ -426,9 +426,9 @@
     const convId = <%= conv ? conv.id : 0 %>;
     const myId = <%= user.id %>;
     const otherId = <%= other.id %>;
-    const otherUsername = <%- JSON.stringify(other.username) %>;
-    const otherAvatar = <%- JSON.stringify(other.avatar_url || ('/avatar/' + other.id)) %>;
-    const sendUrl = <%- JSON.stringify(isGroup ? '/messages/g/' + conv.id : '/messages/' + other.username) %>;
+    const otherUsername = <%- jesc(other.username) %>;
+    const otherAvatar = <%- jesc(other.avatar_url || ('/avatar/' + other.id)) %>;
+    const sendUrl = <%- jesc(isGroup ? '/messages/g/' + conv.id : '/messages/' + other.username) %>;
     const isGroupChat = <%= isGroup ? 'true' : 'false' %>;
     let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
     let seenUpto = <%= _lastOwnRead ? _lastOwnRead.id : 0 %>;

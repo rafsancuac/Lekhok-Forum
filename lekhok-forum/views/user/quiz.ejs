@@ -155,7 +155,7 @@
 
     <%# ── সেশন ৬২: সার্ভার-স্কোর (লগইন-ইউজার) — quiz.js মার্জ করে ── %>
     <% if (mine) { %>
-      <script id="quizServerState" type="application/json"><%- JSON.stringify({ attempts: mine.map, stats: { answered: mine.answered, correct: mine.correct, streak: mine.streak } }) %></script>
+      <script id="quizServerState" type="application/json"><%- jesc({ attempts: mine.map, stats: { answered: mine.answered, correct: mine.correct, streak: mine.streak } }) %></script>
     <% } %>
   </div>
   <script src="/assets/js/quiz.js?v=<%= AV %>"></script>

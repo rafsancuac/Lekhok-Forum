@@ -87,12 +87,15 @@
       <div class="leaders-grid" style="margin-top:26px">
         <%# সেশন ৪৯: বাণী (message) প্রাধিকার + শর্তসাপেক্ষ সোশ্যাল আইকন %>
         <% function leaderSocialRow(m) {
-             const fb = m.social_fb, li = m.social_linkedin, em = m.social_email;
+             // সেশন ৯১: স্কিম-গার্ড + অ্যাট্রিবিউট-এস্কেপ (javascript:/কোট-ব্রেক ইনজেকশন রোধ)
+             const gu = (u) => { const s = String(u || '').trim(); if (!(/^https?:\/\//i.test(s) || s.startsWith('/'))) return ''; return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+             const ge = (s) => String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+             const fb = gu(m.social_fb), li = gu(m.social_linkedin), em = ge(m.social_email);
              if (!fb && !li && !em) return '';
              let h = '<div class="leader-social">';
              if (fb) h += '<a href="' + fb + '" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>';
              if (li) h += '<a href="' + li + '" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>';
-             if (em) h += '<a href="mailto:' + em + '" aria-label="Email"><i class="fas fa-envelope"></i></a>';
+             if (em) h += '<a href="mailto:' + ge(m.social_email) + '" aria-label="Email"><i class="fas fa-envelope"></i></a>';
              h += '</div>';
              return h;
            } %>

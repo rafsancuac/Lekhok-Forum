@@ -21,18 +21,27 @@ Write-Host "`n=== Step 3: Link to existing project ===" -ForegroundColor Cyan
 & vercel link --yes
 
 Write-Host "`n=== Step 4: Set environment variables ===" -ForegroundColor Cyan
+# ── সেশন ৯১ নিরাপত্তা-সংশোধন (CRITICAL) ─────────────────────────────────────
+# আগে এই ফাইলে প্রোডাকশন সিক্রেট (TURSO_AUTH_TOKEN / SESSION_SECRET /
+# BLOB_READ_WRITE_TOKEN) হার্ডকোড করা ছিল — পাবলিক রিপোতে কমিট হয়ে ফাঁস হয়েছে।
+# এখন আর কোনো আসল মান এখানে রাখা হয় না; ভ্যালু এনভায়রনমেন্ট/সিক্রেট-ম্যানেজার
+# থেকে আসে। ⚠️ ফাঁস হওয়া ৩টি সিক্রেট অবশ্যই রোটেট করতে হবে:
+#   ১) Turso: `turso db tokens invalidate <db>` + নতুন টোকেন → Vercel env
+#   ২) SESSION_SECRET: নতুন র‍্যান্ডম ভ্যালু → Vercel env (সব সেশন রিসেট হবে)
+#   ৩) Vercel Blob: ড্যাশবোর্ডে টোকেন রোল → Vercel env
 $envVars = @{
-    'BLOB_READ_WRITE_TOKEN'   = 'vercel_blob_rw_AaB4xR38BNW6yQDo_rOMJqXkofSNjIkPswPf0b0OoMEA8pI'
-    'SESSION_SECRET'          = '8Qfa4mS0QfSa2yv_uLDBSM_6Bvxshu98mZWaN8E9'
-    'TURSO_AUTH_TOKEN'        = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODg1MzA3ODIsImlkIjoiMDFhMDZiM2ItNzgwMS03N2IyLWFhNDQtOWNkZTlhZGFjZGQyIiwia2lkIjoibzNVRWN4SmlfeGdNR0FrNThwQldsd3VmdGZxNGk4X3hWZWNQbWZxNTl4MCIsInJpZCI6ImJiNmRmZGQ0LWFiYjMtNDEyMS1iYWI3LTk5ZGQzZjFjYjZkMiJ9.CTt4pDz1QyFHdI4mdBRtNDKK3YJVivp5DOA6umJMApK7XGKegZhTuZ2JHZ8ADiI7zaBZfJ5Z4I75zzjs3XfVCQ'
+    'BLOB_READ_WRITE_TOKEN'   = $env:LEKHOK_BLOB_TOKEN        # রান-টাইমে দিন
+    'SESSION_SECRET'          = $env:LEKHOK_SESSION_SECRET    # রান-টাইমে দিন
+    'TURSO_AUTH_TOKEN'        = $env:LEKHOK_TURSO_TOKEN       # রান-টাইমে দিন
     'TURSO_DATABASE_URL'      = 'libsql://lekhok-forum-rafsancuac.aws-ap-south-1.turso.io'
-    'BLOB_STORE_ID'           = 'store_AaB4xR38BNW6yQDo'
-    'BLOB_WEBHOOK_PUBLIC_KEY' = "-----BEGIN PUBLIC KEY-----`nMCowBQYDK2VwAyEA4TuJd8CcdYYdEOEWIFDRyDn0p48YobT9PHoveBTWY1o=`n-----END PUBLIC KEY-----"
+    'BLOB_STORE_ID'           = $env:LEKHOK_BLOB_STORE_ID     # রান-টাইমে দিন
+    'BLOB_WEBHOOK_PUBLIC_KEY' = $env:LEKHOK_BLOB_WEBHOOK_KEY  # রান-টাইমে দিন
 }
 
 foreach ($key in $envVars.Keys) {
     Write-Host "  Setting $key..." -ForegroundColor Gray
     $value = $envVars[$key]
+    if (-not $value) { Write-Host "  SKIP $key (env-ভ্যালু নেই)" -ForegroundColor Yellow; continue }
     # Pipe value in to avoid shell-escape issues
     $value | & vercel env add $key production --yes 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
