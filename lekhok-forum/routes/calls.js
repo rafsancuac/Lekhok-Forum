@@ -247,6 +247,44 @@ router.post('/api/calls/:id/signal', ensureAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── কল-ইতিহাস (চ্যাট-ডিটেইলস-প্যানেলের "কল" ট্যাব — সেশন ৯৪) ──────────────
+router.get('/api/calls/history', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.query.conv_id);
+  const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+  if (!convId) return res.status(400).json({ ok: false, error: 'invalid' });
+  const conv = await convAccess(convId, me);
+  if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+  if (conv.is_group) return res.status(400).json({ ok: false, error: 'group_call_unsupported' });
+
+  const peer = await publicUser(peerOf(conv, me));
+  const rows = await db.prepare(
+    `SELECT id, caller_id, callee_id, kind, status, answered_at, ended_at, ended_reason, created_at
+       FROM call_sessions WHERE conversation_id = ?
+       ORDER BY id DESC LIMIT ?`
+  ).all(convId, limit);
+
+  const calls = rows.map(function (r) {
+    let durS = null;
+    if (r.answered_at && r.ended_at) {
+      const t0 = new Date(r.answered_at.replace(' ', 'T') + 'Z').getTime();
+      const t1 = new Date(r.ended_at.replace(' ', 'T') + 'Z').getTime();
+      if (!isNaN(t0) && !isNaN(t1) && t1 >= t0) durS = Math.round((t1 - t0) / 1000);
+    }
+    return {
+      id: r.id,
+      kind: r.kind === 'video' ? 'video' : 'audio',
+      status: r.status,
+      direction: r.caller_id === me ? 'outgoing' : 'incoming',
+      duration_s: durS,
+      reason: r.ended_reason || '',
+      created_at: r.created_at
+    };
+  });
+
+  res.json({ ok: true, peer, calls });
+});
+
 // ── পোল: incoming + outgoing + active + ended + নতুন signals (এক-কল-সব) ──
 router.get('/api/calls/poll', ensureAuth, async (req, res) => {
   const me = req.session.user.id;

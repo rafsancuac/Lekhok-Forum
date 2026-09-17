@@ -235,6 +235,26 @@ async function login(username, password) {
   const outsiderSig = await req(C, 'POST', '/api/calls/' + (cid4 || 1) + '/signal', { signals: [CAND()] });
   check('outsider signal → 403', outsiderSig.status === 403, { status: outsiderSig.status });
 
+  /* ── ১১. কল-ইতিহাস API (সেশন ৯৪ — চ্যাট-ডিটেইলস "কল" ট্যাব) ── */
+  console.log('\n— কল-ইতিহাস —');
+  const hist401 = await req(null, 'GET', '/api/calls/history?conv_id=' + convId);
+  check('history (অ-লগড-ইন) → 401', hist401.status === 401, { status: hist401.status });
+  const hist = await req(A, 'GET', '/api/calls/history?conv_id=' + convId);
+  check('history → ok + calls অ্যারে', hist.status === 200 && hist.json.ok && Array.isArray(hist.json.calls), hist.json && { n: hist.json.calls && hist.json.calls.length });
+  const hlist = (hist.json && hist.json.calls) || [];
+  check('history: ≥৪ রো (এই-রাউন্ডের ফ্লোগুলো)', hlist.length >= 4, { n: hlist.length });
+  check('history: peer সঠিক (' + U_B + ')', hist.json && hist.json.peer && hist.json.peer.username === U_B);
+  check('history: ended-রোতে duration_s', hlist.some(c => c.status === 'ended' && typeof c.duration_s === 'number' && c.duration_s >= 0), { sample: hlist[0] });
+  check('history: A-দৃষ্টিতে outgoing আছে', hlist.some(c => c.direction === 'outgoing'));
+  const histB = await req(B, 'GET', '/api/calls/history?conv_id=' + convId);
+  check('history: B-দৃষ্টিতে incoming আছে', ((histB.json && histB.json.calls) || []).some(c => c.direction === 'incoming'));
+  if (groupConvId) {
+    const histG = await req(A, 'GET', '/api/calls/history?conv_id=' + groupConvId);
+    check('history: গ্রুপ-conv → 400', histG.status === 400 && histG.json && histG.json.error === 'group_call_unsupported', histG.json);
+  }
+  const histF = await req(A, 'GET', '/api/calls/history?conv_id=999999');
+  check('history: অজানা-conv → 403', histF.status === 403, { status: histF.status });
+
   /* ── সারসংক্ষেপ ── */
   console.log('\n════════════════════════════════');
   console.log('  PASS: ' + pass + '   FAIL: ' + fail);

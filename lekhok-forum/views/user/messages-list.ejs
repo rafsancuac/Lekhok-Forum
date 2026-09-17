@@ -621,7 +621,8 @@
     if (typeof applyFilterChip === 'function') applyFilterChip();
   })();
 </script>
-<%# সেশন ৯৩: WebRTC কল — লিস্ট-ভিউতে আসন্ন-কল-রিং (শুরু চ্যাট-ভিউ থেকেই হয়) %>
+<%# সেশন ৯৩: WebRTC কল — লিস্ট-ভিউতে আসন্ন-কল-রিং (শুরু চ্যাট-ভিউ থেকেই হয়);
+    মডিউল এখন header.ejs-এ গ্লোবালি লোড হয় (সেশন ৯৪), তাই এখানে শুধু ctx %>
 <script>
   window.LekhokCallCtx = {
     me: <%- parseInt(user.id, 10) %>,
@@ -633,7 +634,6 @@
     peer: null
   };
 </script>
-<script src="/assets/js/webrtc-call.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>

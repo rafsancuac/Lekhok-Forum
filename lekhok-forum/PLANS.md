@@ -729,3 +729,15 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 4. **role-policy-স্যুট baseline** — `test-role-policy.sh` session-91-এর stateful-baseline (testadmin role=admin ইত্যাদি) ছাড়া ২৯+ ফলস-ফেইল দেয়; fresh-clone-এ চালালে সেটি environment-সমস্যা, কোড-রিগ্রেশন নয় (ডকুমেন্টেড)।
 
 **টেস্ট-ডেটা (এই clone-এর lekhok.db):** testuser↔testagent1 + ismail↔monem কথোপকথন + কয়েকটি টেস্ট-কল-রেকর্ড (📞 মেসেজ) সিডড — মেসেঞ্জারে কল-রেকর্ড-বাবল সরাসরি দেখা যায়।
+
+## Cross-Agent Note: Session 94 — গ্লোবাল কল-রিংগার + কল-ইতিহাস ট্যাব (১৮ সেপ্টেম্বর ২০২৬)
+
+**রোডম্যাপ-প্রগতি:** সেশন-৯৩-সুপারিশ **① গ্লোবাল-রিংগার ✓** + **② কল-ইতিহাস-ট্যাব ✓**।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (এজেন্টদের জন্য):**
+- **header.ejs-এ গ্লোবাল কল-ইনজেকশন** (লগড-ইন-গেটেড): calls.css + `window.LekhokCallCtx`-বেস + webrtc-call.js। **webrtc-call.js এখন সব মেম্বার-পেজে চলে** — এডিট করলে লক্ষ রাখুন: ① `window.LekhokCall` ডাবল-ইনক্লুড-গার্ড রাখুন ② ctx লেজি-পাঠ (C()-হেল্পার) — মেসেঞ্জার-ভিউ পরে সমৃদ্ধ করে ③ পোল-ইন্টারভাল পেজ-ভিত্তিক (মেসেঞ্জার ৩s/অন্য ৫s — সার্ভার-লোড)।
+- **মেসেঞ্জার-ভিউতে আর webrtc-call.js-স্ক্রিপ্ট-ট্যাগ নেই** (header থেকে আসে) — শুধু ctx-সমৃদ্ধকরণ ব্লক আছে (convId/peer)। ভিউ-রি-স্ট্রাকচার করলে ওই ctx-ব্লকটি রক্ষা করুন।
+- **কল-ইতিহাস:** `GET /api/calls/history?conv_id=&limit=` — রো: {id, kind, status, direction, duration_s, reason, created_at} + peer। চ্যাট-ডিটেইলস প্যানেলের "কল" ট্যাব (1:1-গেট) লেজি-ফেচ করে — **dashboard.js স্পর্শ করেনি** (parallel-সেফ); ট্যাব-রেন্ডারার messages-chat.ejs-এর ৯৪-IIFE (esc94/bn94/rel94 হেল্পার)।
+- **স্টাইল:** কল-হিস্ট্রি-রো = calls.css-এর `.md-callrow` ফ্যামিলি (messenger.css নয়) — কল-UI এডিট করলে calls.css-ই ধরুন।
+
+**sandbox-গোটচা-পুনঃপ্রমাণ:** বুট-পরবর্তী ৪-সে settle-এর আগে লগইন-টেস্ট মাঝে-মাঝে মিথ্যা-401 দেয় (dying/init-race) — settle-delay + লগইন-status-প্রিন্ট ছাড়া ব্যর্থতা পড়বেন না।

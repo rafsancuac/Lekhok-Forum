@@ -242,3 +242,45 @@
   .lc-aura span, .lc-incoming-avatarwrap span { animation: none; opacity: .35; }
   .lc-ctl, .lc-act { transition: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   সেশন ৯৪ — কল-ইতিহাস ট্যাব (চ্যাট-ডিটেইলস প্যানেলে .md-callrow ফ্যামিলি)
+   FB-কল-লগ-ধাঁচ: দিক-আইকন + ধরন + স্ট্যাটাস-ব্যাজ (মিসড/প্রত্যাখ্যাত = লাল)
+   ═══════════════════════════════════════════════════════════════════════ */
+.md-calls { display: flex; flex-direction: column; gap: 6px; }
+.md-callrow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: var(--fb-surface, #fff);
+  border: 1px solid var(--fb-border, #E4E6EB);
+  transition: background .15s ease, transform .15s ease;
+}
+.md-callrow:hover { background: var(--fb-hover, #F2F2F2); transform: translateY(-1px); }
+.md-callrow:focus-within { outline: 2px solid rgba(24, 119, 242, .4); outline-offset: 1px; }
+.mdc-ic {
+  flex: 0 0 auto;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(5, 150, 105, .1);
+  color: var(--lc-green-deep, #059669);
+  font-size: 13px;
+}
+.md-callrow.is-missed .mdc-ic { background: rgba(228, 64, 95, .1); color: var(--lc-danger, #E4405F); }
+.mdc-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mdc-dir { font-size: 13px; font-weight: 600; color: var(--fb-text, #050505); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mdc-dir .fas { font-size: 10px; margin-right: 3px; color: var(--fb-text2, #65676B); }
+.mdc-sub { font-size: 12px; color: var(--fb-text2, #65676B); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mdc-st {
+  flex: 0 0 auto;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+}
+.mdc-st.is-ok { background: rgba(49, 162, 76, .12); color: var(--fb-green, #31A24C); }
+.mdc-st.is-bad { background: rgba(228, 64, 95, .12); color: var(--lc-danger, #E4405F); }
+@media (max-width: 640px) {
+  .md-callrow { padding: 8px; gap: 8px; }
+  .mdc-ic { width: 30px; height: 30px; font-size: 12px; }
+  .mdc-dir { font-size: 12.5px; }
+  .mdc-sub { font-size: 11.5px; }
+}

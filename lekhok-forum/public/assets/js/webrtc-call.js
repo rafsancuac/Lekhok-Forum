@@ -19,8 +19,12 @@
 (function () {
   'use strict';
 
-  var ctx = window.LekhokCallCtx || {};
-  if (!ctx.me) return; /* লগড-আউট পেজে মডিউল নিষ্ক্রিয় */
+  /* সেশন ৯৪: গ্লোবাল-রিংগার — মডিউল এখন header.ejs থেকে সব লগড-ইন পেজে লোড হয়।
+     ctx আর লোড-টাইমে স্থির করা হয় না — প্রতিবার পড়া হয় (মেসেঞ্জার-ভিউগুলো পরে
+     window.LekhokCallCtx সমৃদ্ধ করে দেয় — convId/peer)। ডাবল-ইনক্লুড নিরাপদ। */
+  if (window.LekhokCall) return; /* ডাবল-ইনক্লুড গার্ড — দ্বিতীয় পোল-লুপ নয় */
+  function C() { return window.LekhokCallCtx || {}; }
+  if (!C().me) return; /* অতিথি-পেজে মডিউল নিষ্ক্রিয় */
 
   var RTC_CFG = {
     iceServers: [
@@ -345,8 +349,9 @@
 
   /* ── কল শুরু (caller) ─────────────────────────────────────────────────── */
   async function start(kind) {
+    var ctx = C(); /* লেজি-পাঠ — মেসেঞ্জার-ভিউ পরে সমৃদ্ধ করলেও ধরা পড়বে */
     if (S.state !== 'idle') { toast('একটি কল ইতিমধ্যে চলছে', true); return; }
-    if (!ctx.convId || !ctx.peer) { toast('এই ভিউ থেকে কল করা যায় না', true); return; }
+    if (!ctx.convId || !ctx.peer) { toast('কল দিতে কথোপকথন খুলুন', true); return; }
 
     S.state = 'outgoing';
     S.role = 'caller';
@@ -564,7 +569,8 @@
     else if (S.state === 'connecting') interval = 800;
     else if (S.state === 'outgoing' || S.state === 'incoming') interval = 1000;
     else if (S.state === 'connected') interval = 1500;
-    else interval = 3000;
+    /* মেসেঞ্জার-পেজে ৩সে, অন্য-পেজে ৫সে (সার্ভার-লোড-বান্ধব) */
+    else interval = C().convId ? 3000 : 5000;
     S.pollT = setTimeout(poll, interval);
   }
 

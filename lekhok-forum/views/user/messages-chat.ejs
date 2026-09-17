@@ -319,6 +319,10 @@
             <button type="button" class="md-tab is-active" role="tab" aria-selected="true" data-mtab="media">মিডিয়া <span class="md-tab-count"><%= (_sharedImgs.length + _sharedVn.length) || '' %></span></button>
             <button type="button" class="md-tab" role="tab" aria-selected="false" data-mtab="files">ফাইল <span class="md-tab-count"><%= _sharedDocs.length || '' %></span></button>
             <button type="button" class="md-tab" role="tab" aria-selected="false" data-mtab="links">লিংক <span class="md-tab-count"><%= _sharedLinks.length || '' %></span></button>
+            <%# সেশন ৯৪: কল-ইতিহাস ট্যাব (শুধু 1:1) — ট্যাব-ক্লিকে /api/calls/history থেকে লেজি-রেন্ডার %>
+            <% if (!isGroup) { %>
+            <button type="button" class="md-tab" role="tab" aria-selected="false" data-mtab="calls" id="mdCallsTab">কল <span class="md-tab-count" id="mdCallsCount"></span></button>
+            <% } %>
           </div>
           <div class="md-tabpane" data-pane="media">
             <% if (_sharedImgs.length || _sharedVn.length) { %>
@@ -372,6 +376,12 @@
             <% } else { %>
               <div class="md-media-empty">কোনো লিংক শেয়ার করা হয়নি।</div>
             <% } %>
+          </div>
+          <%# সেশন ৯৪: কল-ইতিহাস pane — প্রথম সক্রিয়নে লেজি-ফেচ %>
+          <div class="md-tabpane" data-pane="calls" hidden>
+            <div id="mdCallsBody">
+              <div class="md-media-empty">লোড হচ্ছে…</div>
+            </div>
           </div>
         </div>
         <% if (isGroup) { %>
@@ -1697,6 +1707,72 @@
       document.querySelectorAll('.md-tabpane').forEach(function (p) { p.hidden = p.dataset.pane !== t.dataset.mtab; });
     });
 
+    // ── সেশন ৯৪: কল-ইতিহাস ট্যাব (লেজি-ফেচ + রেন্ডার — /api/calls/history) ──
+    (function () {
+      const callsTab = document.getElementById('mdCallsTab');
+      if (!callsTab) return; /* গ্রুপ-চ্যাটে ট্যাব নেই */
+      const body = document.getElementById('mdCallsBody');
+      const count = document.getElementById('mdCallsCount');
+      let loaded = false, loading = false;
+      const BN94 = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      const bn94 = (n) => String(n).replace(/[0-9]/g, (d) => BN94[+d]);
+      function dur94(s) {
+        if (s == null) return '';
+        const m = Math.floor(s / 60), ss = s % 60;
+        return m > 0 ? (bn94(m) + ' মি ' + bn94(ss) + ' সে') : (bn94(ss) + ' সে');
+      }
+      function rel94(ts) {
+        const t = new Date(String(ts).replace(' ', 'T') + 'Z').getTime();
+        if (isNaN(t)) return '';
+        const m = Math.floor((Date.now() - t) / 60000);
+        if (m < 1) return 'এইমাত্র';
+        if (m < 60) return bn94(m) + ' মিনিট আগে';
+        const h = Math.floor(m / 60);
+        if (h < 24) return bn94(h) + ' ঘণ্টা আগে';
+        const d = Math.floor(h / 24);
+        if (d === 1) return 'গতকাল';
+        if (d < 7) return bn94(d) + ' দিন আগে';
+        return new Date(t).toLocaleDateString('bn-BD');
+      }
+      const ST94 = { ended: 'সম্পন্ন', declined: 'প্রত্যাখ্যাত', cancelled: 'বাতিল', missed: 'মিসড' };
+      function esc94(x) { return String(x || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+      function row94(c) {
+        const missed = c.status === 'missed' || c.status === 'declined' || c.status === 'cancelled';
+        const dirIc = c.direction === 'outgoing' ? 'fa-arrow-up-right' : 'fa-arrow-down-left';
+        const st = ST94[c.status] || esc94(c.status);
+        const subTxt = c.status === 'ended' && c.duration_s != null ? dur94(c.duration_s) : st;
+        return '<div class="md-callrow' + (missed ? ' is-missed' : '') + '">' +
+          '<span class="mdc-ic"><i class="fas ' + (c.kind === 'video' ? 'fa-video' : 'fa-phone') + '"></i></span>' +
+          '<span class="mdc-body"><span class="mdc-dir"><i class="fas ' + dirIc + '"></i> ' + (c.direction === 'outgoing' ? 'আউটগোয়িং' : 'ইনকামিং') + ' ' + (c.kind === 'video' ? 'ভিডিও' : 'অডিও') + ' কল</span>' +
+          '<span class="mdc-sub">' + esc94(subTxt) + ' · ' + esc94(rel94(c.created_at)) + '</span></span>' +
+          '<span class="mdc-st ' + (missed ? 'is-bad' : 'is-ok') + '">' + esc94(ST94[c.status] || c.status) + '</span>' +
+          '</div>';
+      }
+      async function loadCalls(force) {
+        if ((loaded && !force) || loading || !convId) return;
+        loading = true;
+        try {
+          const res = await fetch('/api/calls/history?conv_id=' + convId);
+          const data = await res.json();
+          if (data && data.ok) {
+            const list = data.calls || [];
+            if (count) count.textContent = list.length ? bn94(list.length) : '';
+            body.innerHTML = list.length
+              ? ('<div class="md-calls">' + list.map(row94).join('') + '</div>')
+              : '<div class="md-media-empty">কোনো কল-ইতিহাস নেই।</div>';
+            loaded = true;
+          } else {
+            body.innerHTML = '<div class="md-media-empty">কল-ইতিহাস লোড করা যায়নি।</div>';
+          }
+        } catch (_) {
+          body.innerHTML = '<div class="md-media-empty">নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন।</div>';
+        }
+        loading = false;
+      }
+      mdTabs?.addEventListener('click', function (e) { if (e.target.closest('#mdCallsTab')) loadCalls(false); });
+      document.getElementById('mdMediaRefresh')?.addEventListener('click', function () { loaded = false; if (callsTab.classList.contains('is-active')) loadCalls(true); });
+    })();
+
     // ── রেকর্ডার ──
     const micBtn = document.getElementById('micBtn');
     const voiceRec = document.getElementById('voiceRec');
@@ -1804,7 +1880,8 @@
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/messenger-actions.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
-  <%# সেশন ৯৩: WebRTC কল — bootstrap-কনটেক্সট (me/peer/conv) + মডিউল %>
+  <%# সেশন ৯৩: WebRTC কল — bootstrap-কনটেক্সট (me/peer/conv); মডিউল নিজে এখন
+      header.ejs থেকে গ্লোবালি লোড হয় (সেশন ৯৪) — এখানে ctx-সমৃদ্ধকরণই যথেষ্ট %>
   <script>
     window.LekhokCallCtx = {
       me: <%- parseInt(user.id, 10) %>,
@@ -1816,7 +1893,7 @@
       peer: <% if (isGroup) { %>null<% } else { %>{ id: <%- parseInt(other.id, 10) %>, name: <%- jesc(other.full_name) %>, username: <%- jesc(other.username) %>, avatar: <%- jesc(other.avatar_url || ('/avatar/' + other.id)) %> }<% } %>
     };
   </script>
-  <script src="/assets/js/webrtc-call.js?v=<%= AV %>"></script>
+  <%# (webrtc-call.js — header.ejs-এ গ্লোবালি লোড হয়, সেশন ৯৪) %>
   <script>
     // পুরো কথোপকথন মুছুন (AJAX)
     async function deleteConversation(username) {

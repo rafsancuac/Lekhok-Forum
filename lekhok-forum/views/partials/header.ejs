@@ -91,10 +91,31 @@
   <% if (typeof extra_css !== 'undefined' && extra_css) { extra_css.forEach(function (href) { %>
   <link rel="stylesheet" href="<%= href %><%= href.indexOf('/') === 0 ? '?v=' + AV : '' %>" />
   <% }) } %>
+  <%# সেশন ৯৪: গ্লোবাল কল-রিংগার-স্টাইল — লগড-ইন ইউজারের যেকোনো পেজে আসন্ন-কল-মোডাল রেন্ডার হতে পারে %>
+  <% if (typeof user !== 'undefined' && user) { %>
+  <link rel="stylesheet" href="/assets/css/calls.css?v=<%= AV %>" />
+  <% } %>
 </head>
 <body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= ((user.pen_name || user.full_name) || '').replace(/"/g, '&quot;') %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
   <script src="/assets/js/auth-sync.js?v=<%= AV %>"></script>
+  <%# সেশন ৯৪: গ্লোবাল কল-রিংগার — লগড-ইন ইউজার মেসেঞ্জারের বাইরেও (ড্যাশবোর্ড/প্রোফাইল/
+      লেখা ইত্যাদি সব মেম্বার-পেজে) আসন্ন কলের রিং শোনেন ও গ্রহণ/প্রত্যাখ্যান করতে পারেন।
+      মেসেঞ্জার-ভিউগুলো পরে window.LekhokCallCtx সমৃদ্ধ করে (convId/peer) — মডিউল লেজি-পাঠ করে। %>
+  <% if (typeof user !== 'undefined' && user) { %>
+  <script>
+    window.LekhokCallCtx = {
+      me: <%- parseInt(user.id, 10) %>,
+      meName: <%- jesc(user.full_name || user.username) %>,
+      meAvatar: <%- jesc(user.avatar_url || ('/avatar/' + user.id)) %>,
+      convId: 0,
+      convUsername: null,
+      isGroup: false,
+      peer: null
+    };
+  </script>
+  <script src="/assets/js/webrtc-call.js?v=<%= AV %>"></script>
+  <% } %>
 <%# সেশন ৬৭: data-auth — main.js লগইন-গার্ডের নির্ভরযোগ্য সোর্স (যেকোনো লেআউটে) -%>
   <!-- Back to top (session 59) -->
   <button type="button" class="back-to-top" id="backToTop" aria-label="উপরে ফিরে যান" title="উপরে ফিরে যান"><i class="fas fa-chevron-up"></i></button>
