@@ -661,8 +661,11 @@ function humanFileSizeMod101(bytes) {
 }
 router.get('/resources', ensureModerator, requireScope('resources'), async (req, res) => {
   const resources = await db.prepare('SELECT * FROM resources ORDER BY id DESC').all();
+  // সেশন ১০৭: সিরিজ-নামের তালিকা (ফর্মে datalist)
+  const seriesList = (await db.prepare("SELECT DISTINCT TRIM(series) AS s FROM resources WHERE series IS NOT NULL AND TRIM(series) != '' ORDER BY s COLLATE NOCASE").all()).map(x => x.s).filter(Boolean);
   res.render('user/moderator-resources', {
     resources, RES_TYPE_META: require('../helpers/resource-types'),
+    seriesList,
     posted: req.query.posted || null, removed: req.query.removed || null, currentPath: '/moderator'
   });
 });
@@ -682,11 +685,15 @@ router.post('/resources', ensureModerator, requireScope('resources'), withUpload
   // সেশন ১০১-গ: থাম্বনেইল স্যানিটাইজ (http(s)/সাইট-পাথ)
   let thumb = String(req.body.thumbnail_url || '').trim() || null;
   if (thumb && !/^(https?:\/\/.+|\/)/i.test(thumb)) thumb = null;
-  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by, thumbnail_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+  // সেশন ১০৭: সিরিজ/সংকলন — নাম ≤৮০ ক্যারেক্টার; পর্ব-ক্রম ১..৯৯৯
+  const ser = String(req.body.series || '').trim().slice(0, 80) || null;
+  const soRaw = parseInt(req.body.series_order, 10);
+  const serOrd = (Number.isFinite(soRaw) && soRaw >= 1 && soRaw <= 999) ? soRaw : null;
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by, thumbnail_url, series, series_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
     String(title).trim(), content || '', category || 'general',
     author || (req.session.user.username || req.session.user.full_name || ''),
     tags || '', fUrl, link_url || null, type, type, fSize, (duration || '').trim() || null,
-    req.session.user.username || null, thumb
+    req.session.user.username || null, thumb, ser, serOrd
   );
   res.redirect('/moderator/resources?posted=1');
 });

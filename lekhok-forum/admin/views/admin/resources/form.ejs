@@ -102,6 +102,19 @@
         <p class="rt-hint"><i class="fas fa-circle-info"></i> ই-বুক/গাইডবুকের প্রচ্ছদ, অডিও-লেকচারের পোস্টার — দিলে রিসোর্স-কার্ডে কভার হিসেবে দেখানো হবে (ছবি-টাইপে না-দিলেও অটো)।</p>
       </div>
 
+      <%# সেশন ১০৭: সিরিজ/সংকলন — একই নাম = এক সিরিজ; পর্ব-ক্রমে ডিটেইল-পেজে
+          পর্ব-নেভিগেটর + লিস্টে ?series= ফিল্টার + কার্ডে পর্ব-ব্যাজ %>
+      <div class="form-group">
+        <label>সিরিজ / সংকলনের নাম (ঐচ্ছিক)</label>
+        <% if (seriesList && seriesList.length) { %><datalist id="seriesOptions"><% seriesList.forEach(s => { %><option value="<%= s %>"></option><% }) %></datalist><% } %>
+        <input type="text" name="series" list="seriesOptions" maxlength="80" value="<%= resource ? (resource.series || '') : '' %>" placeholder="যেমন: নবীন লেখক কর্মশালা">
+        <p class="rt-hint"><i class="fas fa-circle-info"></i> একই নামের রিসোর্সগুলো এক সিরিজে যুক্ত হবে — ডিটেইল-পেজে পর্ব-নেভিগেটর, লিস্টে সিরিজ-ফিল্টার। খালি রাখলে সিরিজ-বহির্ভূত।</p>
+      </div>
+      <div class="form-group">
+        <label>পর্ব-ক্রম (ঐচ্ছিক — সিরিজের ভেতরে কত-নম্বর পর্ব)</label>
+        <input type="number" name="series_order" min="1" max="999" value="<%= resource && resource.series_order ? resource.series_order : '' %>" placeholder="যেমন: 2">
+      </div>
+
       <button type="submit" class="btn btn-primary"><%= resource ? 'আপডেট' : 'তৈরি করুন' %></button>
     </form>
   </div>

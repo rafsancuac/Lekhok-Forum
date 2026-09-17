@@ -31,11 +31,12 @@
       </div>
     <% } %>
 
-    <%# ── সেশন ১০৫: ইউনিফাইড-ফিল্টার — ক্যাটাগরি-ট্যাবে type/q/sort প্যারামও বহন হয়
+    <%# ── সেশন ১০৫: ইউনিফাইড-ফিল্টার — ক্যাটাগরি-ট্যাবে type/q/sort/series প্যারামও বহন হয়
          (শেয়ারড স্টেট; সার্ভারে হোয়াইটলিস্ট-ভ্যালিডেটেড initial* ভ্যার) ── %>
     <% const rsxExtra = (initialType && initialType !== 'all' ? '&type=' + encodeURIComponent(initialType) : '')
                       + (initialSort && initialSort !== 'new' ? '&sort=' + encodeURIComponent(initialSort) : '')
-                      + (initialQ ? '&q=' + encodeURIComponent(initialQ) : ''); %>
+                      + (initialQ ? '&q=' + encodeURIComponent(initialQ) : '')
+                      + (initialSeries ? '&series=' + encodeURIComponent(initialSeries) : ''); %>
     <div class="notice-tabs">
       <a href="?category=all<%= rsxExtra %>"          class="<%= activeCategory === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সকল</a>
       <% if (categories && categories.length) { %>
@@ -50,6 +51,24 @@
     </div>
 
     <%# ── সেশন ১০৪: ডিসকভারি-বার — টাইপ-পিল + লাইভ-সার্চ + সর্ট + লাইভ-কাউন্ট (ক্লায়েন্ট-সাইড, তাৎক্ষণিক) ── %>
+    <%# ── সেশন ১০৭: সিরিজ/সংকলন চিপ-রো — সার্ভার-সাইড ফিল্টার (?series=),
+         শেয়ারেবল-URL; সিরিজ-থাকলেই রেন্ডার; "সব" চিপ = ফিল্টার-ক্লিয়ার ── %>
+    <% if (seriesList && seriesList.length) { %>
+      <div class="rsx-seriesrow" role="navigation" aria-label="সিরিজ ফিল্টার">
+        <span class="rsx-serieslabel"><i class="fas fa-layer-group"></i> সিরিজ</span>
+        <a href="?category=<%= encodeURIComponent(activeCategory || 'all') %><%= rsxExtra.replace(/&series=[^&]*/, '') %>"
+           class="rsx-serichip <%= !initialSeries ? 'active' : '' %>">সব</a>
+        <% seriesList.forEach(s => { %>
+          <a href="?category=<%= encodeURIComponent(activeCategory || 'all') %>&series=<%= encodeURIComponent(s.series) %><%= rsxExtra.replace(/&series=[^&]*/, '') %>"
+             class="rsx-serichip <%= initialSeries === s.series ? 'active' : '' %>"
+             title="<%= s.series %> — <%= bn(s.n) %>টি পর্ব">
+            <i class="fas fa-book-open"></i> <%= s.series %>
+            <span class="rsx-sericount"><%= bn(s.n) %></span>
+          </a>
+        <% }) %>
+      </div>
+    <% } %>
+
     <% if (resources && resources.length) { %>
       <div class="rsx-controls" id="rsxControls">
         <div class="rsx-pills" role="group" aria-label="টাইপ ফিল্টার">
@@ -89,12 +108,20 @@
              // সেশন ১০৪: কভার — ছবি-টাইপে ফাইল-ইউআরএল, অন্য টাইপে thumbnail_url (যদি থাকে)
              var cover = (r.res_type === 'image') ? url : (r.thumbnail_url || null);
         %>
+          <% var rSeries = String(r.series || '').trim(); %>
           <div class="rsx-card" role="button" tabindex="0" aria-label="<%= r.title %> — <%= t.label %>"
                data-id="<%= r.id %>" data-type="<%= r.res_type %>" data-url="<%= url %>"
                data-views="<%= r.views || 0 %>" data-dl="<%= r.downloads || 0 %>"
-               data-search="<%= String(r.title + ' ' + (r.content || '') + ' ' + (r.tags || '') + ' ' + (r.author || '') + ' ' + catBn(r.category)).toLowerCase() %>">
+               data-search="<%= String(r.title + ' ' + (r.content || '') + ' ' + (r.tags || '') + ' ' + (r.author || '') + ' ' + catBn(r.category) + ' ' + rSeries).toLowerCase() %>">
             <% if (cover) { %>
               <div class="rsx-cover"><img src="<%= cover %>" alt="<%= r.title %>" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+            <% } %>
+            <% if (rSeries) { %>
+              <a class="rsx-epband" href="?series=<%= encodeURIComponent(rSeries) %>" title="সিরিজ: <%= rSeries %>" data-rsx-seri>
+                <i class="fas fa-book-open"></i>
+                <span class="rsx-epband-name"><%= rSeries %></span>
+                <% if (r.series_order) { %><span class="rsx-epband-pos"><%= bn(r.series_order) %> নং পর্ব</span><% } %>
+              </a>
             <% } %>
             <div class="rsx-body">
               <div class="rsx-top">
@@ -169,6 +196,25 @@
 .rsx-staffbtn { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, #059669, #047857); color: #fff !important; border-radius: 9px; padding: 8px 16px; font-size: .82rem; font-weight: 700; box-shadow: 0 3px 10px rgba(5,150,105,.25); transition: transform .15s ease, box-shadow .15s ease; }
 .rsx-staffbtn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(5,150,105,.35); }
 
+/* ═══ সেশন ১০৭: সিরিজ/সংকলন — চিপ-রো + কার্ড-পর্ব-ব্যান্ড ═══ */
+.rsx-seriesrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 16px 0 2px; padding: 10px 14px; background: linear-gradient(120deg, #f0fdf4 0%, var(--bg-card, #fff) 55%); border: 1px solid rgba(5,150,105,.22); border-radius: 14px; }
+.rsx-serieslabel { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 900; color: var(--accent, #059669); text-transform: uppercase; letter-spacing: .06em; }
+.rsx-serieslabel i { font-size: .78rem; }
+.rsx-serichip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; border: 1.5px solid var(--border, #e2e8f0); background: var(--bg-card, #fff); color: var(--text, #1e293b); font-size: .76rem; font-weight: 700; text-decoration: none; transition: all .15s ease; max-width: 260px; }
+.rsx-serichip i { font-size: .7rem; color: #94a3b8; transition: color .15s ease; }
+.rsx-serichip:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); background: #ecfdf5; transform: translateY(-1px); }
+.rsx-serichip:hover i { color: var(--accent, #059669); }
+.rsx-serichip.active { background: linear-gradient(135deg, #059669, #047857); border-color: #047857; color: #fff; box-shadow: 0 3px 10px -3px rgba(5,150,105,.45); }
+.rsx-serichip.active i { color: rgba(255,255,255,.9); }
+.rsx-sericount { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: rgba(5,150,105,.12); color: var(--accent, #059669); font-size: .64rem; font-weight: 900; }
+.rsx-serichip.active .rsx-sericount { background: rgba(255,255,255,.22); color: #fff; }
+/* কার্ডে সিরিজ-ব্যান্ড (কভার ও বডির মাঝে) */
+.rsx-epband { display: flex; align-items: center; gap: 7px; padding: 7px 16px; background: linear-gradient(90deg, rgba(5,150,105,.10), rgba(5,150,105,.02) 70%); border-bottom: 1px solid var(--border, #e2e8f0); text-decoration: none; transition: background .15s ease; }
+.rsx-epband i { font-size: .68rem; color: var(--accent, #059669); }
+.rsx-epband-name { font-size: .7rem; font-weight: 800; color: var(--accent, #059669); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rsx-epband-pos { margin-left: auto; flex: none; font-size: .62rem; font-weight: 900; color: #fff; background: var(--accent, #059669); border-radius: 999px; padding: 2px 8px; letter-spacing: .02em; }
+.rsx-card:hover .rsx-epband { background: linear-gradient(90deg, rgba(5,150,105,.18), rgba(5,150,105,.05) 70%); }
+
 .rsx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-top: 22px; }
 .rsx-card { position: relative; display: flex; flex-direction: column; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; outline: none; }
 .rsx-card[hidden] { display: none !important; } /* সেশন ১০৪: display:flex CSS hidden-অ্যাট্রিবিউটকে ওভাররাইড করে না — ফিল্টারে জরুরি */
@@ -237,6 +283,9 @@
   .rsx-pill { padding: 5px 10px; font-size: .72rem; }
   .rsx-sortwrap { flex: 1; }
   .rsx-sort { flex: 1; }
+  .rsx-seriesrow { padding: 9px 10px; }
+  .rsx-serichip { max-width: 190px; }
+  .rsx-epband-pos { padding: 2px 7px; }
 }
 
 /* ভিডিও মোডাল */
@@ -349,15 +398,15 @@
       }
     }
 
-    /* সেশন ১০৫: টাইটেল-লিংক (ডিটেইল-পেজ) / অডিও-কন্ট্রোল / কপি-বাটনের ক্লিক
-       কার্ড-অ্যাক্টিভেটে বাবল করবে না — নিজস্ব আচরণ (নেভিগেশন/প্লেয়ার) থাকবে। */
+    /* সেশন ১০৫/১০৭: টাইটেল-লিংক (ডিটেইল-পেজ) / অডিও-কন্ট্রোল / কপি-বাটন /
+       সিরিজ-ব্যান্ড-লিংকের ক্লিক কার্ড-অ্যাক্টিভেটে বাবল করবে না — নিজস্ব আচরণ। */
     function guarded(e) {
-      if (e.target.closest('.rsx-copy, .rsx-audio, a[data-rsx-detail]')) return;
+      if (e.target.closest('.rsx-copy, .rsx-audio, a[data-rsx-detail], a[data-rsx-seri]')) return;
       activate();
     }
     card.addEventListener('click', guarded);
     card.addEventListener('keydown', function (e) {
-      if (e.target.closest('a[data-rsx-detail]')) return; // লিংকে Enter = নেভিগেশন
+      if (e.target.closest('a[data-rsx-detail], a[data-rsx-seri]')) return; // লিংকে Enter = নেভিগেশন
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
     });
   });

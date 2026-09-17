@@ -91,6 +91,9 @@
         <div class="form-group mr-pane" data-pane="duration" style="margin-bottom:8px;"><label>সময়সীমা (ঐচ্ছিক)</label><input type="text" name="duration" placeholder="যেমন: 22:45" /></div>
         <div class="form-group mr-pane" data-pane="size" style="margin-bottom:8px;"><label>ফাইলের আকার (ঐচ্ছিক — আপলোডে অটো)</label><input type="text" name="file_size" placeholder="যেমন: 5.2 MB" /></div>
         <div class="form-group" style="margin-bottom:8px;"><label>থাম্বনেইল / কভার-ছবির URL (ঐচ্ছিক)</label><input type="url" name="thumbnail_url" placeholder="https://... অথবা /uploads/content/..." /></div>
+        <%# সেশন ১০৭: সিরিজ/সংকলন — একই নাম = এক সিরিজ (ডিটেইল-পেজে পর্ব-নেভিগেটর) %>
+        <div class="form-group" style="margin-bottom:8px;"><label>সিরিজ / সংকলনের নাম (ঐচ্ছিক)</label><input type="text" name="series" maxlength="80" list="mrSeriesOptions" placeholder="যেমন: নবীন লেখক কর্মশালা" /><% if (seriesList && seriesList.length) { %><datalist id="mrSeriesOptions"><% seriesList.forEach(function(s) { %><option value="<%= s %>"></option><% }) %></datalist><% } %></div>
+        <div class="form-group" style="margin-bottom:8px;"><label>পর্ব-ক্রম (ঐচ্ছিক)</label><input type="number" name="series_order" min="1" max="999" placeholder="যেমন: 2" /></div>
         <div class="form-group" style="margin-bottom:8px;"><label>লেখক / প্রকাশক (খালি রাখলে আপনার নাম)</label><input type="text" name="author" /></div>
       </div>
       <div class="clip-actions">
@@ -108,7 +111,7 @@
         <span class="mr-badge" style="background:<%= t.bg %>;color:<%= t.color %>;border:1px solid <%= t.border %>;"><i class="fas <%= t.icon %>"></i> <%= t.short %></span>
         <div style="min-width:0;">
           <div class="mr-title"><%= r.title %></div>
-          <div class="mr-sub"><%= [r.author, r.file_size, r.duration].filter(Boolean).join(' · ') || '—' %><% if (r.created_by) { %> · আপলোড: <%= r.created_by %><% } %></div>
+          <div class="mr-sub"><%= [r.author, r.file_size, r.duration].filter(Boolean).join(' · ') || '—' %><% if (r.series) { %> · <i class="fas fa-book-open" title="সিরিজ"></i> <%= r.series %><% if (r.series_order) { %> #<%= r.series_order %><% } %><% } %><% if (r.created_by) { %> · আপলোড: <%= r.created_by %><% } %></div>
         </div>
         <div class="mr-stat">
           <span title="পাঠ"><i class="far fa-eye"></i> <%= r.views || 0 %></span>

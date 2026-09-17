@@ -25,8 +25,15 @@
     <a href="/resources?category=<%= encodeURIComponent(r.category || 'general') %>"><i class="fas fa-folder"></i> <%= catBn(r.category) %></a>
     <span class="rsxd-crumb-sep"><i class="fas fa-chevron-right"></i></span>
     <span class="rsxd-crumb-here"><%= r.title %></span>
-    <% if (isStaff) { %>
-      <a href="/admin/resources" class="rsxd-manage" title="অ্যাডমিন রিসোর্স-প্যানেল"><i class="fas fa-sliders"></i> ম্যানেজ</a>
+    <%# সেশন ১০৭: স্টাফ-অ্যাকশন — অ্যাডমিনে এডিট/মুছুন-শর্টকাট, মডারেটরে প্যানেল-লিংক।
+        মুছুন = fetch-DELETE (X-CSRF-Token, ?_u= fresh-token-রিফ্রেশ — session103 চুক্তি)। %>
+    <% if (isStaff && (staffRole === 'admin' || staffRole === 'superadmin')) { %>
+      <span class="rsxd-staffacts">
+        <a href="/admin/resources/<%= r.id %>/edit" class="rsxd-sact rsxd-sact-edit" title="অ্যাডমিন-প্যানেলে সম্পাদনা"><i class="fas fa-pen-to-square"></i> এডিট</a>
+        <button type="button" class="rsxd-sact rsxd-sact-del" id="rsxdDel" title="ট্র্যাশে পাঠিয়ে মুছুন"><i class="fas fa-trash-can"></i> মুছুন</button>
+      </span>
+    <% } else if (isStaff) { %>
+      <a href="/moderator/resources" class="rsxd-manage" title="মডারেটর রিসোর্স-প্যানেল"><i class="fas fa-sliders"></i> ম্যানেজ</a>
     <% } %>
   </nav>
 
@@ -64,6 +71,11 @@
           <i class="fas <%= T.icon %>"></i> <%= T.label %>
         </span>
         <span class="rsxd-cat"><i class="fas fa-folder-open"></i> <%= catBn(r.category) %></span>
+        <% if (seriesName) { %>
+          <a class="rsxd-seribadge" href="/resources?series=<%= encodeURIComponent(seriesName) %>" title="সিরিজের সব পর্ব">
+            <i class="fas fa-book-open"></i> <%= seriesName %><% if (seriesPos) { %> · পর্ব <%= bn(seriesPos) %>/<%= bn(seriesItems.length) %><% } %>
+          </a>
+        <% } %>
       </div>
 
       <h1 class="rsxd-title"><%= r.title %></h1>
@@ -114,6 +126,43 @@
     </div>
   </article>
 
+  <%# ── সেশন ১০৭: সিরিজ-নেভিগেটর — আগের/পরের পর্ব + পর্ব-তালিকা (বর্তমান হাইলাইট) ── %>
+  <% if (seriesName && seriesItems && seriesItems.length > 1) { %>
+  <section class="rsxd-series rsxd-card" aria-label="সিরিজ নেভিগেশন">
+    <div class="rsxd-serihead">
+      <h2 class="rsxd-sechead"><i class="fas fa-layer-group"></i> সিরিজ: <%= seriesName %></h2>
+      <span class="rsxd-seripos">পর্ব <%= bn(seriesPos) %> / <%= bn(seriesItems.length) %></span>
+    </div>
+    <% if (seriesPrev || seriesNext) { %>
+    <div class="rsxd-serinav">
+      <% if (seriesPrev) { %>
+        <a class="rsxd-seristep" href="/resources/<%= seriesPrev.id %>">
+          <i class="fas fa-chevron-left"></i>
+          <span class="rsxd-seristep-txt"><em>আগের পর্ব</em><strong><%= seriesPrev.title %></strong></span>
+        </a>
+      <% } else { %><span class="rsxd-seristep rsxd-seristep-off"><i class="fas fa-ban"></i><span class="rsxd-seristep-txt"><em>এটিই প্রথম পর্ব</em></span></span><% } %>
+      <% if (seriesNext) { %>
+        <a class="rsxd-seristep rsxd-seristep-next" href="/resources/<%= seriesNext.id %>">
+          <span class="rsxd-seristep-txt"><em>পরের পর্ব</em><strong><%= seriesNext.title %></strong></span>
+          <i class="fas fa-chevron-right"></i>
+        </a>
+      <% } else { %><span class="rsxd-seristep rsxd-seristep-off rsxd-seristep-next"><i class="fas fa-flag-checkered"></i><span class="rsxd-seristep-txt"><em>সর্বশেষ পর্ব</em></span></span><% } %>
+    </div>
+    <% } %>
+    <ol class="rsxd-serilist">
+      <% seriesItems.forEach((x, i) => { %>
+        <li>
+          <a class="rsxd-seriep <%= x.id === r.id ? 'here' : '' %>" href="/resources/<%= x.id %>" <%= x.id === r.id ? 'aria-current="step"' : '' %>>
+            <span class="rsxd-seriep-num"><%= bn(i + 1) %></span>
+            <span class="rsxd-seriep-title"><%= x.title %></span>
+            <% if (x.id === r.id) { %><span class="rsxd-seriep-now"><i class="fas fa-circle-play"></i> চলছে</span><% } else { %><i class="fas fa-chevron-right rsxd-seriep-go"></i><% } %>
+          </a>
+        </li>
+      <% }) %>
+    </ol>
+  </section>
+  <% } %>
+
   <%# ── পূর্ণ-বিবরণ (লিড-অংশের চেয়ে লম্বা হলেই দেখাই — ডুপ্লিকেট-এড়ানো) ── %>
   <% if ((r.content || r.description) && mdPlain(r.content || r.description).length > 190) { %>
   <section class="rsxd-desc rsxd-card">
@@ -162,6 +211,50 @@
 .rsxd-crumb-sep { font-size: .62rem; color: #cbd5e1; }
 .rsxd-crumb-here { color: var(--text, #1e293b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
 .rsxd-manage { margin-left: auto; color: var(--accent, #059669) !important; border-color: rgba(5,150,105,.35) !important; background: #ecfdf5 !important; }
+/* সেশন ১০৭: স্টাফ-অ্যাকশন (এডিট/মুছুন) */
+.rsxd-staffacts { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
+.rsxd-sact { display: inline-flex; align-items: center; gap: 6px; font-size: .76rem; font-weight: 800; font-family: inherit; padding: 5px 13px; border-radius: 9px; border: 1.5px solid var(--border, #e2e8f0); background: var(--bg-card, #fff); color: #475569; cursor: pointer; transition: all .15s ease; }
+.rsxd-sact-edit:hover { color: var(--accent, #059669); border-color: var(--accent, #059669); background: #ecfdf5; transform: translateY(-1px); }
+.rsxd-sact-del { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+.rsxd-sact-del:hover { background: #fee2e2; border-color: #fca5a5; transform: translateY(-1px); }
+.rsxd-sact-del:disabled { opacity: .55; cursor: wait; transform: none; }
+/* সিরিজ-ব্যাজ (ব্যাজ-রো-তে) */
+.rsxd-seribadge { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 800; color: #065f46; background: linear-gradient(120deg, #ecfdf5, #f0fdf4); border: 1.5px solid rgba(5,150,105,.4); border-radius: 8px; padding: 4px 11px; transition: all .15s ease; }
+.rsxd-seribadge i { font-size: .66rem; }
+.rsxd-seribadge:hover { background: #d1fae5; transform: translateY(-1px); box-shadow: 0 4px 10px -4px rgba(5,150,105,.35); }
+/* সিরিজ-নেভিগেটর কার্ড */
+.rsxd-series { border-color: rgba(5,150,105,.28); background: linear-gradient(155deg, #f0fdf4 0%, var(--bg-card, #fff) 42%); }
+.rsxd-serihead { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.rsxd-seripos { font-size: .72rem; font-weight: 900; color: #fff; background: linear-gradient(135deg, var(--accent, #059669), var(--accent-dark, #047857)); border-radius: 999px; padding: 4px 13px; letter-spacing: .02em; box-shadow: 0 4px 12px -4px rgba(5,150,105,.5); }
+.rsxd-serinav { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 14px; }
+.rsxd-seristep { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 12px; border: 1.5px solid var(--border, #e2e8f0); background: var(--bg-card, #fff); text-decoration: none; transition: all .16s ease; min-width: 0; }
+.rsxd-seristep i { flex: none; font-size: .78rem; color: var(--accent, #059669); transition: transform .16s ease; }
+.rsxd-seristep-next { text-align: right; }
+.rsxd-seristep-next .rsxd-seristep-txt { margin-left: auto; }
+.rsxd-seristep:hover { border-color: var(--accent, #059669); background: #ecfdf5; transform: translateY(-2px); box-shadow: 0 8px 18px -8px rgba(5,150,105,.35); }
+.rsxd-seristep:hover i:first-child { transform: translateX(-2px); }
+.rsxd-seristep-next:hover i { transform: translateX(2px); }
+.rsxd-seristep-off { opacity: .6; cursor: default; border-style: dashed; background: var(--bg, #f8fafc); }
+.rsxd-seristep-off:hover { transform: none; box-shadow: none; border-color: var(--border, #e2e8f0); background: var(--bg, #f8fafc); }
+.rsxd-seristep-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rsxd-seristep-txt em { font-style: normal; font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; }
+.rsxd-seristep-txt strong { font-size: .8rem; font-weight: 800; color: var(--text, #1e293b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rsxd-serilist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; counter-reset: none; }
+.rsxd-seriep { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; border: 1px solid transparent; text-decoration: none; transition: all .14s ease; }
+.rsxd-seriep:hover { background: var(--bg-card, #fff); border-color: var(--border, #e2e8f0); transform: translateX(3px); }
+.rsxd-seriep-num { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 8px; background: rgba(5,150,105,.10); color: var(--accent, #059669); font-size: .68rem; font-weight: 900; }
+.rsxd-seriep-title { font-size: .82rem; font-weight: 700; color: #334155; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rsxd-seriep-go { margin-left: auto; flex: none; font-size: .64rem; color: #cbd5e1; }
+.rsxd-seriep.here { background: var(--bg-card, #fff); border-color: var(--accent, #059669); box-shadow: 0 4px 12px -6px rgba(5,150,105,.4); }
+.rsxd-seriep.here .rsxd-seriep-num { background: linear-gradient(135deg, var(--accent, #059669), var(--accent-dark, #047857)); color: #fff; }
+.rsxd-seriep.here .rsxd-seriep-title { color: var(--text, #1e293b); font-weight: 800; }
+.rsxd-seriep-now { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: .66rem; font-weight: 900; color: var(--accent, #059669); }
+@media (max-width: 640px) {
+  .rsxd-serinav { grid-template-columns: 1fr; }
+  .rsxd-seristep-next { text-align: left; }
+  .rsxd-seristep-next .rsxd-seristep-txt { margin-left: 0; }
+  .rsxd-staffacts { margin-left: 0; }
+}
 
 /* হিরো */
 .rsxd-hero { display: grid; grid-template-columns: minmax(0, 460px) 1fr; gap: 26px; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 20px; padding: 22px; box-shadow: 0 10px 34px -18px rgba(2,6,23,.16); position: relative; overflow: hidden; }
@@ -271,7 +364,10 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .rsxd-audiohero-wv span { animation: none; }
-  .rsxd-act, .rsxd-relcard, .rsxd-crumbs a, .rsxd-cover-cta, .rsxd-relarrow { transition: none; transform: none; }
+  .rsxd-act, .rsxd-relcard, .rsxd-crumbs a, .rsxd-cover-cta, .rsxd-relarrow, .rsxd-sact, .rsxd-seristep, .rsxd-seriep, .rsxd-seribadge { transition: none; transform: none; }
+}
+@media print {
+  .rsxd-series, .rsxd-staffacts, .rsxd-manage { display: none !important; }
 }
 </style>
 
@@ -325,6 +421,39 @@
     playBtn.addEventListener('click', function () {
       var a = document.querySelector('.rsxd-audiobar audio');
       if (a) { a.scrollIntoView({ behavior: 'smooth', block: 'center' }); a.play().catch(function () {}); }
+    });
+  }
+
+  /* সেশন ১০৭: স্টাফ-মুছুন (fetch-DELETE) — ক্যাশেবল-পাবলিক-পেজে রেন্ডার-টোকেন
+     এফেমেরাল হতে পারে (session103 চুক্তি) → ?_u= fresh-GET থেকে মেটা-টোকেন
+     রিফ্রেশ, তারপর X-CSRF-Token হেডারসহ DELETE (method-override)। */
+  var delBtn = document.getElementById('rsxdDel');
+  if (delBtn) {
+    delBtn.addEventListener('click', function () {
+      if (!window.confirm('এই রিসোর্সটি ট্র্যাশে পাঠানো হবে — নিশ্চিত?')) return;
+      delBtn.disabled = true;
+      var done = function (ok) {
+        delBtn.disabled = false;
+        if (ok) {
+          if (typeof window.showToast === 'function') window.showToast('রিসোর্সটি ট্র্যাশে পাঠানো হয়েছে ✓', 'success');
+          setTimeout(function () { location.href = sbx('/resources'); }, 700);
+        } else {
+          if (typeof window.showToast === 'function') window.showToast('মুছতে ব্যর্থ — আবার চেষ্টা করুন', 'error');
+        }
+      };
+      var freshGet = fetch(sbx(location.pathname + '?_u=' + Date.now()), { headers: { Accept: 'text/html' } })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          var m = html.match(/csrf-token" content="([^"]+)"/);
+          return m ? m[1] : '';
+        })
+        .catch(function () { return ''; });
+      freshGet.then(function (tok) {
+        return fetch(sbx('/admin/resources/' + ID + '?_method=DELETE'), {
+          method: 'POST',
+          headers: { 'X-CSRF-Token': tok }
+        }).then(function (r) { return r.ok; });
+      }).then(done).catch(function () { done(false); });
     });
   }
 

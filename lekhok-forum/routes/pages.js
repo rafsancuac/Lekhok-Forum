@@ -454,7 +454,17 @@ router.get('/resources', async (req, res) => {
   const initialType = RSX_TYPE_RE.test(String(req.query.type || '')) ? String(req.query.type) : 'all';
   const initialSort = RSX_SORT_RE.test(String(req.query.sort || '')) ? String(req.query.sort) : 'new';
   const initialQ = String(req.query.q || '').slice(0, 120);
+  // সেশন ১০৭: সিরিজ-ফিল্টার (?series=) — সার্ভার-সাইড (ক্যাটাগরির মতোই); নাম ≤৮০
+  // ক্যারেক্টার হোয়াইটলিস্ট; শূন্য/অনুপস্থিত = সব। শেয়ারেবল-URL-স্টেট।
+  const initialSeries = String(req.query.series || '').trim().slice(0, 80);
+  if (initialSeries) {
+    resources = resources.filter(r => (r.series || '').trim() === initialSeries);
+  }
   const categories = await db.prepare('SELECT DISTINCT category FROM resources').all();
+  // সেশন ১০৭: সিরিজ-তালিকা + প্রতি-সিরিজে রিসোর্স-সংখ্যা (চিপ-রো-তে ব্যবহৃত)
+  const seriesList = (await db.prepare(
+    "SELECT series, COUNT(*) AS n FROM resources WHERE series IS NOT NULL AND TRIM(series) != '' GROUP BY TRIM(series) ORDER BY series COLLATE NOCASE"
+  ).all()).map(x => ({ series: String(x.series).trim(), n: x.n }));
   const u = req.session && req.session.user;
   const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
   res.render('lekhok-resources', {
@@ -467,7 +477,8 @@ router.get('/resources', async (req, res) => {
     isStaff,
     RES_TYPE_META: RT,
     videoEmbedUrl: RT.videoEmbedUrl,
-    initialType, initialSort, initialQ
+    initialType, initialSort, initialQ,
+    initialSeries, seriesList
   });
 });
 
@@ -493,6 +504,19 @@ router.get('/resources/:id(\\d+)', async (req, res) => {
     related = related.concat(extra);
   }
   related = related.map(x => Object.assign({}, x, { res_type: RT.normalizeResType(x) }));
+  // সেশন ১০৭: সিরিজ-নেভিগেটর — এই রিসোর্সের সিরিজ-থাকলে পর্ব-তালিকা (order→id ক্রমে),
+  // আগের/পরের পর্ব + অবস্থান (পর্ব N/মোট M)। সিরিজ-শূন্য হলে পুরো ব্লক রেন্ডার-ই হয় না।
+  let seriesItems = null, seriesPrev = null, seriesNext = null, seriesPos = 0;
+  const seriesName = String(r.series || '').trim();
+  if (seriesName) {
+    seriesItems = (await db.prepare(
+      "SELECT id, title, res_type, series_order, thumbnail_url, link_url, file_url FROM resources WHERE TRIM(COALESCE(series,'')) = ? ORDER BY COALESCE(series_order, 1000000), id"
+    ).all(seriesName)).map(x => Object.assign({}, x, { res_type: RT.normalizeResType(x) }));
+    const pos = seriesItems.findIndex(x => x.id === r.id);
+    seriesPos = pos + 1;
+    if (pos > 0) seriesPrev = seriesItems[pos - 1];
+    if (pos > -1 && pos < seriesItems.length - 1) seriesNext = seriesItems[pos + 1];
+  }
   const descHtml = require('../helpers/markdown-lite').renderBody(r.content || r.description || '', { toc: false });
   const u = req.session && req.session.user;
   const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
@@ -501,6 +525,8 @@ router.get('/resources/:id(\\d+)', async (req, res) => {
     pageTitle: r.title || 'রিসোর্স',
     currentPath: '/resources',
     r, related, descHtml, isStaff,
+    staffRole: isStaff ? u.role : null,
+    seriesName, seriesItems, seriesPrev, seriesNext, seriesPos,
     RES_TYPE_META: RT,
     videoEmbedUrl: RT.videoEmbedUrl
   });

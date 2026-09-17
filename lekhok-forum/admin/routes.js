@@ -977,7 +977,14 @@ function resourceFormPayload101(req, existing) {
     file_size: b.file_size || null,
     duration:  (b.duration || '').trim() || null,
     thumbnail_url: (b.thumbnail_url || '').trim() || null,
+    // সেশন ১০৭: সিরিজ/সংকলন — নাম ≤৮০ ক্যারেক্টার, খালি = null; পর্ব-ক্রম ১..৯৯৯
+    series:       null,
+    series_order: null,
   };
+  const _ser = String(b.series || '').trim().slice(0, 80);
+  if (_ser) out.series = _ser;
+  const _so = parseInt(b.series_order, 10);
+  if (Number.isFinite(_so) && _so >= 1 && _so <= 999) out.series_order = _so;
   // সেশন ১০১-গ: thumbnail_url স্যানিটাইজ (http(s)/সাইট-পাথ ছাড়া → null)
   if (out.thumbnail_url && !(/^(https?:\/\/.+|\/)/i.test(out.thumbnail_url))) out.thumbnail_url = null;
   if (f) {
@@ -994,16 +1001,21 @@ router.get('/resources', requireAdmin, async (req, res) => {
   res.render('admin/resources/list', { resources, currentPath: '/admin/resources', RES_TYPE_META });
 });
 
+// সেশন ১০৭: সিরিজ-নামের তালিকা (ফর্মে datalist-অটোকমপ্লিট)
+async function seriesNames107() {
+  return (await db.prepare("SELECT DISTINCT TRIM(series) AS s FROM resources WHERE series IS NOT NULL AND TRIM(series) != '' ORDER BY s COLLATE NOCASE").all()).map(x => x.s).filter(Boolean);
+}
+
 router.get('/resources/new', requireAdmin, async (req, res) => {
-  res.render('admin/resources/form', { resource: null, error: null, currentPath: '/admin/resources', RES_TYPE_META });
+  res.render('admin/resources/form', { resource: null, error: null, currentPath: '/admin/resources', RES_TYPE_META, seriesList: await seriesNames107() });
 });
 
 router.post('/resources', requireAdmin, withUpload(resourceUpload), async (req, res) => {
   const p = resourceFormPayload101(req, null);
-  if (!p.title) return res.render('admin/resources/form', { resource: Object.assign({}, req.body, req.file ? { res_type: detectResType101(req.file) } : {}), error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources', RES_TYPE_META });
-  if (req.uploadError) return res.render('admin/resources/form', { resource: req.body, error: req.uploadError, currentPath: '/admin/resources', RES_TYPE_META });
-  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by, thumbnail_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
-    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, (req.session.user && req.session.user.username) || null, p.thumbnail_url
+  if (!p.title) return res.render('admin/resources/form', { resource: Object.assign({}, req.body, req.file ? { res_type: detectResType101(req.file) } : {}), error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources', RES_TYPE_META, seriesList: await seriesNames107() });
+  if (req.uploadError) return res.render('admin/resources/form', { resource: req.body, error: req.uploadError, currentPath: '/admin/resources', RES_TYPE_META, seriesList: await seriesNames107() });
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by, thumbnail_url, series, series_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, (req.session.user && req.session.user.username) || null, p.thumbnail_url, p.series, p.series_order
   );
   res.redirect('/admin/resources?saved=1');
 });
@@ -1011,14 +1023,14 @@ router.post('/resources', requireAdmin, withUpload(resourceUpload), async (req, 
 router.get('/resources/:id/edit', requireAdmin, async (req, res) => {
   const resource = await db.prepare('SELECT * FROM resources WHERE id = ?').get(req.params.id);
   if (!resource) return res.redirect('/admin/resources?saved=1');
-  res.render('admin/resources/form', { resource, error: null, currentPath: '/admin/resources', RES_TYPE_META });
+  res.render('admin/resources/form', { resource, error: null, currentPath: '/admin/resources', RES_TYPE_META, seriesList: await seriesNames107() });
 });
 
 router.put('/resources/:id', requireAdmin, withUpload(resourceUpload), async (req, res) => {
   const existing = await db.prepare('SELECT * FROM resources WHERE id = ?').get(req.params.id);
   const p = resourceFormPayload101(req, existing);
-  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=?, res_type=?, file_size=?, duration=?, thumbnail_url=? WHERE id=?').run(
-    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, p.thumbnail_url, req.params.id
+  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=?, res_type=?, file_size=?, duration=?, thumbnail_url=?, series=?, series_order=? WHERE id=?').run(
+    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, p.thumbnail_url, p.series, p.series_order, req.params.id
   );
   res.redirect('/admin/resources?saved=1');
 });

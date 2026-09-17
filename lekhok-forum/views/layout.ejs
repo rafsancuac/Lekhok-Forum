@@ -112,6 +112,27 @@
     } catch (e) { /* নীরব */ }
   })();
   </script>
+  <%# সেশন ১০৭: স্যান্ডবক্স-প্রিভিউ লিংক-পোর্ট-সংরক্ষণ — গেটওয়েতে (XTransformPort-কুয়েরিসহ)
+      খোলা পেজের সব অভ্যন্তরীণ <a href>-ক্লিকে পোর্ট-প্যারাম অটো-যোগ (ক্যাপচার-ফেজ)।
+      এতে query-only হ্রেফ (?category=…, ?series=…) ও পাথ-হ্রেফ (/notices) প্রিভিউতে
+      Next.js-ডিফল্ট-পোর্টে না গিয়ে সঠিক অ্যাপেই থাকে। লাইভ/প্রোডাকশনে পেজ-URL-এ
+      XTransformPort নেই → সম্পূর্ণ নো-অপ। বাহ্যিক/#/mailto/tel/javascript স্পর্শ-ই হয় না। %>
+  <script>
+  (function () {
+    var m = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+    if (!m) return;
+    var qp = 'XTransformPort=' + m[1];
+    document.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a) return;
+      var href = a.getAttribute('href') || '';
+      if (!href || href.indexOf('XTransformPort=') !== -1) return;
+      if (!/^\/(?!\/)/.test(href) && href.charAt(0) !== '?') return; // শুধু সেইম-অ্যাপ পাথ/কোয়েরি
+      a.setAttribute('href', href + (href.indexOf('?') > -1 ? '&' : '?') + qp);
+    }, true);
+  })();
+  </script>
 </head>
 <body class="<%= currentPath === '/' ? 'home-page' : '' %>" data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= (user.pen_name || user.full_name || '').replace(/"/g, '&quot;') %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
