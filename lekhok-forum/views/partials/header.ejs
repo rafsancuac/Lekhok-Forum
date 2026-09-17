@@ -92,7 +92,7 @@
   <link rel="stylesheet" href="<%= href %><%= href.indexOf('/') === 0 ? '?v=' + AV : '' %>" />
   <% }) } %>
 </head>
-<body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>">
+<body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= ((user.pen_name || user.full_name) || '').replace(/"/g, '&quot;') %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
   <script src="/assets/js/auth-sync.js?v=<%= AV %>"></script>
 <%# সেশন ৬৭: data-auth — main.js লগইন-গার্ডের নির্ভরযোগ্য সোর্স (যেকোনো লেআউটে) -%>

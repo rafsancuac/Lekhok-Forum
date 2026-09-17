@@ -296,7 +296,7 @@
               <% if (pinnedPost.cover_image) { %><a href="/articles/<%= pinnedPost.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= pinnedPost.cover_image %>" alt="<%= pinnedPost.title %>" class="pf-post-cover"></a><% } %>
               <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
               <div class="pf-actions-host">
-                <%- include('../partials/actions-bar', { targetId: pinnedPost.id, targetType: 'post', counts: pinnedPost.reactCounts, mine: pinnedPost.myReaction, link: '/articles/' + pinnedPost.id, showBookmark: false, showShare: true, commentCount: bn(pinnedPost.comment_count || 0), shareCount: pinnedPost.share_count || 0, viewCount: bn(pinnedPost.view_count || 0) }) %>
+                <%- include('../partials/actions-bar', { targetId: pinnedPost.id, targetType: 'post', counts: pinnedPost.reactCounts, mine: pinnedPost.myReaction, link: '/articles/' + pinnedPost.id, showBookmark: false, showShare: true, commentCount: bn(pinnedPost.comment_count || 0), shareCount: pinnedPost.share_count || 0, viewCount: bn(pinnedPost.view_count || 0), reactorFaces: pinnedPost.reactorFaces || [] }) %>
               </div>
             </article>
           <% } %>
@@ -346,7 +346,7 @@
                   <% if (post.cover_image) { %><a href="/articles/<%= post.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= post.cover_image %>" alt="<%= post.title %>" class="pf-post-cover"></a><% } %>
                   <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
                   <div class="pf-actions-host">
-                    <%- include('../partials/actions-bar', { targetId: post.id, targetType: 'post', counts: post.reactCounts, mine: post.myReaction, link: '/articles/' + post.id, showBookmark: false, showShare: true, commentCount: bn(post.comment_count || 0), shareCount: post.share_count || 0, viewCount: bn(post.view_count || 0) }) %>
+                    <%- include('../partials/actions-bar', { targetId: post.id, targetType: 'post', counts: post.reactCounts, mine: post.myReaction, link: '/articles/' + post.id, showBookmark: false, showShare: true, commentCount: bn(post.comment_count || 0), shareCount: post.share_count || 0, viewCount: bn(post.view_count || 0), reactorFaces: post.reactorFaces || [] }) %>
                   </div>
                 </article>
               <% }); %>
@@ -773,7 +773,7 @@
         if (!b || !m) return;
         b.addEventListener('click', function (e) {
           e.stopPropagation();
-          document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => { if (x !== m) x.hidden = true; });
+          document.querySelectorAll('.pic-menu:not([h[h[hidden])').forEach(x => { if (x !== m) x.hidden = true; });
           m.hidden = !m.hidden;
         });
         m.addEventListener('click', function (e) {
@@ -783,7 +783,7 @@
       }
       wire('avatarCamBtn', 'avatarMenu');
       wire('coverCamBtn', 'coverMenu');
-      document.addEventListener('click', function () { document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => x.hidden = true); });
+      document.addEventListener('click', function () { document.querySelectorAll('.pic-menu:not([h[h[hidden])').forEach(x => x.hidden = true); });
     })();
   </script>
 

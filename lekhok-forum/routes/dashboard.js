@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { messageUpload, complaintUpload, attachmentUpload, withUpload } = require('../middleware/upload');
 const rolePolicy = require('../helpers/role-policy');
+const { displayName } = require('../helpers/display-name');
 
 // ── ডুপ্লিকেট-নোটিফিকেশন গার্ড: একই ইউজার+টাইপ+বডি ১ মিনিটের মধ্যে দ্বিতীয়বার ঢোকে না ──
 async function notifyOnce(uid, type, title, body, link, windowMin) {
@@ -50,49 +51,60 @@ router.use(async (req, res, next) => {
 
 
 // ── Dashboard (Facebook-style feed) ───────────────────────────────────────
-router.get('/dashboard', async (req, res) => {
-  const me = req.session.user || null;
-  const filter = me && req.query.filter === 'following' ? 'following' : (req.query.filter || 'all');   // all | article | question | activity | following
 
-  const ARTICLE_SQL = `
-    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+// সেশন ৮৯: ফিড-কুয়েরি বিল্ডার — /dashboard ও /dashboard/more (ইনফিনিট-স্ক্রল)
+// দুই রুটই একই SQL শেয়ার করে (ডুপ্লিকেট-লজিক এড়াতে)। ইউজার না-থাকলে
+// 'following' ফিল্টার স্বয়ংক্রিয়ভাবে 'all'-এ নামে।
+function buildFeedSql(filter, me, limit, offset) {
+  const lim = Math.max(1, Math.min(30, limit | 0 || 30));
+  const off = Math.max(0, offset | 0);
+  const limOff = ` ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`;
+  const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions,
-           u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
+           u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
-  const QUESTION_SQL = `
-    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+  const QUESTION_SQL = `\n    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions,
-           u.full_name as author_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
+           u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
-  const ACTIVITY_SQL = `
-    SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
+  const ACTIVITY_SQL = `\n    SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
            NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions,
-           '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
+           '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, NULL as pen_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
     WHERE dc.content_type = 'activity' AND dc.published = 1`;
 
   let sql, params = [];
   if (filter === 'article') {
-    sql = ARTICLE_SQL + ' ORDER BY created_at DESC LIMIT 30';
+    sql = ARTICLE_SQL + limOff;
   } else if (filter === 'question') {
-    sql = QUESTION_SQL + ' ORDER BY created_at DESC LIMIT 30';
+    sql = QUESTION_SQL + limOff;
   } else if (filter === 'activity') {
-    sql = ACTIVITY_SQL + ' ORDER BY created_at DESC LIMIT 30';
+    sql = ACTIVITY_SQL + limOff;
   } else if (filter === 'following' && me) {
     sql = ARTICLE_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-      UNION ALL ` + QUESTION_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-      ORDER BY created_at DESC LIMIT 30`;
+      UNION ALL ` + QUESTION_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)` + limOff;
     params = [me.id, me.id];
   } else {
-    sql = ARTICLE_SQL + ' UNION ALL ' + QUESTION_SQL + ' UNION ALL ' + ACTIVITY_SQL + ' ORDER BY created_at DESC LIMIT 30';
+    sql = ARTICLE_SQL + ' UNION ALL ' + QUESTION_SQL + ' UNION ALL ' + ACTIVITY_SQL + limOff;
   }
+  return { sql, params };
+}
 
-  const feed = await db.prepare(sql).all(...params);
-  // (সেশন ৫০) N+1 ফিক্স: আগে প্রতি feed-আইটেমে এক করে `likes` কুয়ারি হতো
-  // (৩০ আইটেম = ৩০ কুয়ারি)। এখন এক batch কুয়ারিতে আমার সব রিয়েকশন আনি।
-  const postIds = feed.filter(i => i.item_type !== 'activity').map(i => i.id);
+// সেশন ৮৯: ফিড-ডেকোরেশন — /dashboard ও /dashboard/more-এর শেয়ার্ড পাইপলাইন।
+//   • reactionCounts/myReaction/link/display_name (D1 — pen_name-প্রধান নাম)
+//   • ছবি: (A2) N+1 ফিক্স — আগে প্রতি-আইটেমে getPostImages() কল হতো (৩০ আইটেম =
+//     ৩০+ কুয়ারি); এখন দুটি batch কুয়ারিতে (post + daily) সব ছবি এনে মেমোরিতে গ্রুপ
+//   • reactorFaces: FB-২০২৪ ফেসপাইল — প্রতি-পোস্টে সর্বশেষ ৩ রিঅ্যাক্টরের মিনি-অ্যাভাটার (১ batch)
+//   • commentPreview: ফিড-কার্ডের নিচে সর্বশেষ মন্তব্যের প্রিভিউ-লাইন (১ batch)
+async function decorateFeed(feed, me, { withBookmarks } = {}) {
+  const postItems = feed.filter(i => i.item_type !== 'activity');
+  const postIds = postItems.map(i => i.id);
+  const dailyIds = feed.filter(i => i.item_type === 'activity').map(i => i.id);
+  const ph = (n) => n ? '(' + n.map(() => '?').join(',') + ')' : null;
+
+  // (৫০) আমার রিঅ্যাকশন — এক batch
   const myReactions = {};
   if (me && postIds.length) {
     try {
@@ -102,16 +114,95 @@ router.get('/dashboard', async (req, res) => {
       for (const l of likes) myReactions[l.post_id] = l.reaction_type || 'like';
     } catch (_) {}
   }
+
+  // (A2) ছবি-ব্যাচ — post + daily দুই এন্টিটি-টাইপে দুটি কুয়ারি (আগে ছিল N কুয়ারি)
+  const imgsByEntity = {};
+  try {
+    if (postIds.length) {
+      (await db.prepare(`SELECT entity_id, image_url FROM post_images WHERE entity_type = 'post' AND entity_id IN ${ph(postIds)} ORDER BY sort_order, id`).all(...postIds))
+        .forEach(r => { (imgsByEntity['post:' + r.entity_id] = imgsByEntity['post:' + r.entity_id] || []).push(r.image_url); });
+    }
+    if (dailyIds.length) {
+      (await db.prepare(`SELECT entity_id, image_url FROM post_images WHERE entity_type = 'daily' AND entity_id IN ${ph(dailyIds)} ORDER BY sort_order, id`).all(...dailyIds))
+        .forEach(r => { (imgsByEntity['daily:' + r.entity_id] = imgsByEntity['daily:' + r.entity_id] || []).push(r.image_url); });
+    }
+  } catch (_) { /* post_images টেবিল না থাকলে পুরনো-পথ */
+    for (const item of feed) {
+      item.images = (await db.getPostImages(item.item_type === 'activity' ? 'daily' : 'post', item.id)).map(i => i.image_url);
+    }
+  }
+
+  // (৮৯) ফেসপাইল-ব্যাচ — প্রতি-পোস্টে সর্বশেষ ৩ রিঅ্যাক্টর (ডিস্টিঙ্ক্ট ইউজার)
+  const facesByPost = {};
+  if (postIds.length) {
+    try {
+      (await db.prepare(`
+        SELECT l.post_id, u.id, u.username, u.full_name, u.avatar_url, u.pen_name
+        FROM likes l JOIN users u ON u.id = l.user_id
+        WHERE l.post_id IN ${ph(postIds)} AND IFNULL(l.reaction_type, '') != ''
+        ORDER BY l.created_at DESC, l.id DESC
+      `).all(...postIds)).forEach(r => {
+        const arr = (facesByPost[r.post_id] = facesByPost[r.post_id] || []);
+        if (arr.length < 3 && !arr.some(x => x.id === r.id)) arr.push(r);
+      });
+    } catch (_) {}
+  }
+
+  // (৮৯) কমেন্ট-প্রিভিউ-ব্যাচ — প্রতি-পোস্টের সর্বশেষ ১ মন্তব্য
+  const cmtByPost = {};
+  if (postIds.length) {
+    try {
+      (await db.prepare(`
+        SELECT c.post_id, c.body, c.created_at, u.id AS author_uid, u.username, u.full_name, u.avatar_url, u.pen_name
+        FROM comments c JOIN users u ON u.id = c.author_id
+        WHERE c.post_id IN ${ph(postIds)}
+        ORDER BY c.created_at DESC, c.id DESC
+        LIMIT 400
+      `).all(...postIds)).forEach(r => {
+        if (!cmtByPost[r.post_id]) cmtByPost[r.post_id] = r;
+      });
+    } catch (_) {}
+  }
+
   for (const item of feed) {
     try { item.reactionCounts = JSON.parse(item.reactions || '{}'); } catch (_) { item.reactionCounts = {}; }
     ['like','love','care','haha','wow','sad'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
     item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
-    // my current reaction on this item (activities have no reactions)
     item.myReaction = (me && item.item_type !== 'activity') ? (myReactions[item.id] || null) : null;
-    // টাস্ক ১৩ (পর্ব ৪, অংশ ক): feed-আইটেমের একাধিক ছবি (post / daily)
-    item.images = (await db.getPostImages(item.item_type === 'activity' ? 'daily' : 'post', item.id)).map(i => i.image_url);
-    if (!item.images.length && item.cover_image) item.images = [item.cover_image];
+    // (D1) কলমী-নাম-প্রধান প্রদর্শন-নাম (ফিড-কার্ডের লেখক-লাইনে)
+    item.display_name = item.item_type === 'activity' ? item.author_name : displayName(item, item.author_name);
+    if (!item.images) {
+      item.images = (imgsByEntity[(item.item_type === 'activity' ? 'daily' : 'post') + ':' + item.id] || []);
+      if (!item.images.length && item.cover_image) item.images = [item.cover_image];
+    }
+    item.reactorFaces = facesByPost[item.id] || [];
+    const cp = cmtByPost[item.id];
+    if (cp) {
+      item.commentPreview = {
+        authorName: displayName(cp, cp.full_name),
+        username: cp.username,
+        avatar: cp.avatar_url || '/avatar/' + cp.author_uid,
+        body: String(cp.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 110)
+      };
+    }
   }
+
+  if (withBookmarks && me) {
+    try {
+      return (await db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(me.id)).map(r => r.post_id);
+    } catch (_) { return []; }
+  }
+  return null; // myBookmarkedIds প্রত্যাশা করলে রিটার্ন-ভ্যালু হিসেবে পাঠায়
+}
+
+router.get('/dashboard', async (req, res) => {
+  const me = req.session.user || null;
+  const filter = me && req.query.filter === 'following' ? 'following' : (req.query.filter || 'all');   // all | article | question | activity | following
+
+  const { sql, params } = buildFeedSql(filter, me, 30, 0);
+  const feed = await db.prepare(sql).all(...params);
+  await decorateFeed(feed, me);
+  const myBookmarkedIds = (await decorateFeed([], me, { withBookmarks: true })) || [];
 
   // Right sidebar data
   const mmdd = new Date().toISOString().slice(5, 10); // MM-DD
@@ -171,14 +262,7 @@ router.get('/dashboard', async (req, res) => {
   let myInterests = [];
   if (me) { try { myInterests = JSON.parse(await db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {} }
 
-  // সেশন ৬৬: ড্যাশবোর্ড-ফিডের actions-bar-এ bookmarked-স্টেট প্রিফিল —
-  // আগে হার্ডকোড false ছিল, সেভ-করা পোস্টও আনসেভড-আইকন দেখাত।
-  let myBookmarkedIds = [];
-  if (me) {
-    try {
-      myBookmarkedIds = (await db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(me.id)).map(r => r.post_id);
-    } catch (_) {}
-  }
+  // সেশন ৬৬+৮৯: bookmarked-প্রিফিল এখন decorateFeed()-এর সাথেই (উপরে myBookmarkedIds)
 
   res.render('user/dashboard', {
     feed, filter, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
@@ -186,6 +270,29 @@ router.get('/dashboard', async (req, res) => {
     user: req.session.user || null,
     currentPath: '/dashboard'
   });
+});
+
+// ── সেশন ৮৯ (B1): ইনফিনিট-স্ক্রল — পরবর্তী ফিড-পেজ সার্ভার-রেন্ডার করে HTML ফেরত।
+// ক্লায়েন্ট (main.js-এর feed-more ইঞ্জিন) IntersectionObserver-সেন্টিনেলে এই এন্ডপয়েন্ট
+// ডেকে ফলাফল ফিডের শেষে append করে। OFFSET-ভিত্তিক (এই স্কেলে পর্যাপ্ত ও প্রেডিক্টেবল);
+// per-page ১০, প্রথম পেজ ৩০ (/dashboard রুট)। গেস্ট-ও ব্যবহার করতে পারে (ফিড পাবলিক)।
+router.get('/dashboard/more', async (req, res) => {
+  const me = req.session.user || null;
+  const filter = me && req.query.filter === 'following' ? 'following' : (['article', 'question', 'activity'].includes(req.query.filter) ? req.query.filter : 'all');
+  const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+  if (offset > 300) return res.json({ ok: true, html: '', hasMore: false, nextOffset: offset }); // রানওয়ে-গার্ড
+  try {
+    const { sql, params } = buildFeedSql(filter, me, 10, offset);
+    const feed = await db.prepare(sql).all(...params);
+    await decorateFeed(feed, me);
+    const myBookmarkedIds = me ? ((await decorateFeed([], me, { withBookmarks: true })) || []) : [];
+    res.render('partials/feed-cards', { feed, user: req.session.user || null, myBookmarkedIds }, function (err, html) {
+      if (err) return res.status(500).json({ ok: false, error: 'render' });
+      res.json({ ok: true, html, hasMore: feed.length >= 10, nextOffset: offset + feed.length });
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'server' });
+  }
 });
 
 // ── Messages (Messenger-like) ─────────────────────────────────────────────

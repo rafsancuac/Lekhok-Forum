@@ -206,3 +206,28 @@ Stage Summary:
 - **E2E:** সেকশন-১২ = ১৯ নতুন চেক → **৯৯/৯৯ ALL GREEN** (কারণ→বিজ্ঞপ্তি→প্রত্যাহার→রিভোক→পুনঃপ্রদান পুরো চেইন); agent-browser ভিজ্যুয়াল: তদারকি-পেজ ডেস্কটপ+390px-ওভারফ্লো-০+কনসোল-০, সুপার-কার্ড রিভোক-বাটন+ফ্ল্যাশ, প্রোফাইল-ব্যাজ
 
 **পরবর্তী সুপারিশ:** ① ব্যান-স্ক্রিনে ইউজারকে কারণ-দেখানো (এখন শুধু বিজ্ঞপ্তিতে — লগইন-গেটের আগে পড়া যায় না) ② মডারেটর-তদারকিতে soft-evidence লিংক (ইউজারের সাম্প্রতি পোস্ট/কমেন্ট কিউ) ③ user_mgmt পুনঃপ্রদান UI সুপার-কার্ডেই (এখন /admin/users/:id/scopes-এ) ④ notifyUser()-কে complaint-resolution-এও (এখন শুধু তদারকি) ⑤ WebRTC-কল-এরিয়া (আরেক এজেন্টের জন্য খোলা — messenger-ফাইল স্পর্শ করলে হালকা ডিফ)
+
+---
+Task ID: 18 (Session 89)
+Agent: Cron webDevReview round — Feed FB-2024 + Infinite-scroll + Messenger-search C2
+Task: বর্তমান-স্টেট QA (agent-browser) → বাগ-ফিক্স অথবা নতুন-ফিচার স্বাধীন-নির্বাচন → সেশন-৮৭-রোডম্যাপ + ৮৮-সুপারিশ বাস্তবায়ন + স্টাইল-ডিটেইল পাস
+
+Work Log:
+- ক্রস-এজেন্ট-সিঙ্ক: worklog/PROJECT.md/PLANS.md পড়ে session88-অবস্থা বুঝলাম; git fetch+rebase-প্রস্তুত
+- QA-পাস: ২০+ পেজ HTTP-ম্যাট্রিক্স + agent-browser লগইন-ফ্লো (fbtest1) — সব 200/302, কনসোল-এরর ০, 390px-ওভারফ্লো ০ → স্থিতিশীল; ১টি ছোট-গ্যাপ পাওয়া গেল (/questions 404)
+- ফিক্স: /questions অ্যালিয়াস + UNION-কলাম-কাউন্ট ফিক্স (ACTIVITY_SQL-এ NULL as pen_name — E2E-তে ধরা)
+- ফিচার ① রিঅ্যাক্টর-ফেসপাইল (site-wide actions-bar): .rs-faces + লাইভ-আপডেট (lf:reactupdate ডিসপ্যাচ-অ্যাঙ্কর প্যাচ + body[data-uid/avatar] দুই লেআউটে — header.ejs-বাদ E2E-তে ধরা)
+- ফিচার ② কমেন্ট-প্রিভিউ-লাইন + 'সব N টি মন্তব্য' লিংক (batch কুয়েরি, বাংলা-সংখ্যা)
+- ফিচার ③ ইনফিনিট-স্ক্রল (B1): feed-cards.ejs পার্টিয়াল + /dashboard/more + IO-সেন্টিনেল + ফলব্যাক-বাটন + re-init
+- ফিচার ④ মেসেঞ্জার-সার্চ C2: mark-হাইলাইট + বাংলা কাউন্টার + ↑↓ নেভ + Esc + poll-রিফ্রেশ-হুক
+- ফিচার ⑤ /api/health (E1) ⑥ helpers/display-name.js (D1 — ফিডে কলমী-নাম 'নীলকণ্ঠ' প্রধান)
+- পারফ (A2): ফিড-ছবি N+1 → ২-ব্যাচ; decorateFeed()/buildFeedSql() শেয়ার্ড-পাইপলাইন
+- স্টাইল-পাস: facepile-রিং/hover-lift/pop, cpreview-বাবল+hover-অ্যাকসেন্ট, feed-more-স্পিনার/ডান-বাটন, msg-hl-হাইলাইট/অ্যাকটিভ-flash, feedcard-in ফেড-ইন (reduced-motion-সচেতন)
+- E2E: facepile লাইভ-অ্যাড/রিমুভ ✓ infinite-scroll-append+done ✓ সার্চ ৪-ম্যাচ+কাউন্টার+নেভ+Esc ✓ cpreview+more-লিংক ✓ প্রোফাইল-ফেসপাইল ✓ ২৩-পেজ-ম্যাট্রিক্স ✓ 390px ✓ কনসোল-০ ✓
+- ডকুমেন্টেশন: PROJECT.md চেঞ্জলog + PLANS.md ক্রস-এজেন্ট-নোট (নতুন-ইন্টিগ্রেশন-পয়েন্টসহ)
+
+Stage Summary:
+- origin/main @ <commit> — session89
+- নতুন-সারফেস: /dashboard/more, /api/health; নতুন-পার্টিয়াল feed-cards.ejs; নতুন-হেল্পার display-name.js
+- পরবর্তী-প্রথম-পছন্দ: A3 (ক্যাশ-হেডার) + B4 (নোটিফ-এনফোর্স) + C1 (ভয়েস-নোট) + D2 (পাবলিক-বুকমার্ক) + কমেন্ট/নোটিফিকেশনে display-name গ্রহণ
+- ঝুঁকি-নোট: main.js মিনিফায়েড-অংশে lf:reactupdate-ডিসপ্যাচ অ্যাঙ্কর — পরবর্তী মিনিফায়েড-এডিটে রক্ষা করতে হবে

@@ -653,3 +653,19 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 - ✅ সেশন-৯১-এ সম্পন্ন: **১৮ (/api/health — db-ping/latency/uptime/memory, no-store)**, **২০ (sw.js অফলাইন-শেল + offline.html + স্যান্ডবক্স-সচেতন রেজিস্ট্রেশন)**, **০৩-টিউন (sw.js→no-cache, ফন্ট→১-বছর-ইমিউটেবল)**
 - ✅ পূর্ব-নির্মিত-ছিল (সেশন-৯১-এ যাচাই): **১৯ (অডিট-CSV `/admin/audit/export.csv` — ফিল্টার+BOM+পারমিশন-গার্ডসহ, সেশন-৪৩-নির্মিত)**
 - ⏳ পরবর্তী-ক্রন-রাউন্ডে: ০৯-নোটিফ-এনফোর্সমেন্ট → ১১+১২-মেসেঞ্জার-ট্যাব → ০৬-স্ক্রল-রিস্টোর → ১৪-pen_name-এভরিহেয়ার → ০৫-ইনফিনিট-স্ক্রল
+
+## Cross-Agent Note: Session 89 — ফিড FB-২০২৪ ফেসপাইল/কমেন্ট-প্রিভিউ + ইনফিনিট-স্ক্রল + মেসেঞ্জার-সার্চ C2 (১৮ সেপ্টেম্বর ২০২৬)
+
+**রোডম্যাপ-প্রগতি:** ফেজ-A2 ✓ (N+1 ব্যাচ), B1 ✓ (ইনফিনিট-স্ক্রল), C2 ✓ (সার্চ-আপগ্রেড), D1 ✓ (আংশিক — display-name হেল্পার + ফিড-কার্ড; কমেন্ট-বাবল/নোটিফিকেশন এখনো বাকি), E1 ✓ (/api/health)। ৮৮-সুপারিশের ① ফেসপাইল ✓ ④ কমেন্ট-প্রিভিউ ✓। রোডম্যাপের পরবর্তী-প্রথম-পছন্দ: A3 (ক্যাশ-হেডার), B4 (নোটিফ-এনফোর্স), C1 (ভয়েস-নোট), D2 (পাবলিক-বুকমার্ক)।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (এজেন্টদের জন্য):**
+- **actions-bar.ejs নতুন ঐচ্ছিক প্যারাম `reactorFaces`** (অ্যারে: {id, username, full_name, pen_name, avatar_url}) — না-দিলে ডিফল্ট `[]` (অদৃশ্য, পিছনে-সামঞ্জস্যপূর্ণ)। যে পেজে রিঅ্যাকশন-ইঞ্জিন আছে সেখানে ফেসপাইল চাইলে রুটে ১ IN-কুয়ারিতে সর্বশেষ-৩-রিঅ্যাক্টর এনে প্যারামে দিন (নমুনা: routes/social.js প্রোফাইল-রুটের facesByPost89 ব্লক)।
+- **ফেসপাইল লাইভ-আপডেট চ্যানেল:** মিনিফায়েড রিঅ্যাকশন-আপডেটার এখন `.reaction-summary`-তে `lf:reactupdate` CustomEvent ছড়ায় (`detail:{reactions,total,mine}`) — exact-anchor প্যাচ (`.rs-count").textContent=o>0?o:"";try{...}`)। **আবার মিনিফায়েড main.js-এর ওই অংশ এডিট করলে এই ডিসপ্যাচ রক্ষা করুন।** লিসেনার main.js শেষ-ব্লকে (r5); আমার-অ্যাভাটার চেনে `body[data-uid]` দিয়ে।
+- **⚠️ `<body>` দুই জায়গায়:** `views/layout.ejs` (পাবলিক লেআউট) **এবং** `views/partials/header.ejs:95` (মেম্বার-লেআউট — dashboard/messenger/profile/settings সব)। body-অ্যাট্রিবিউট যোগ করতে হলে **দুটোতেই** দিন — শুধু একটায় দিলে member-পেজে undefined (৮৯-এ E2E-তে ধরা)।
+- **ফিড-কার্ড-মার্কআপ এখন `views/partials/feed-cards.ejs`-এ** — /dashboard ও /dashboard/more (ইনফিনিট-স্ক্রল) দুই জায়গাতেই include হয়। ফিড-কার্ড এডিট করলে আর dashboard.ejs-এ খুঁজবেন না। ডেকোরেশন (reactionCounts/myReaction/images/display_name/reactorFaces/commentPreview) `routes/dashboard.js decorateFeed()`-এ কেন্দ্রীভূত — /dashboard/more-ও এটিই ব্যবহার করে।
+- **`GET /dashboard/more?filter=&offset=`** সার্ভার-রেন্ডার HTML ফেরত `{ok, html, hasMore, nextOffset}` — OFFSET-পেজিনেশন (per-page ১০), রানওয়ে-গার্ড offset>300। ক্লায়েন্ট-ইঞ্জিন main.js শেষ-ব্লকে (`#feedMore` সেন্টিনেল, rootMargin 600px)।
+- **মেসেঞ্জার সার্চ:** `#convInSearch`-এ এখন পূর্ণাঙ্গ ইঞ্জিন (mark-হাইলাইট+কাউন্টার+↑↓) — messages-chat.ejs IIFE। বাবল-টেক্সটে `<mark class="msg-hl">` থাকতে পারে — **appendMessage/এডিট-প্রোপাগেশন কোডে bubble-text.innerHTML ধরে কাজ করলে মার্ক-স্টেট ভাঙার ঝুঁকি**; poll-নতুন-বাবল এলে `window.lfMsgSearchRefresh()` কল করা হয়।
+- **D1 হেল্পার:** `helpers/display-name.js` — `displayName(row)` (pen_name প্রধান, fallback full_name)। কমেন্ট-বাবল/নোটিফিকেশন-ভিউতেও গ্রহণ করা বাকি।
+- **টেস্ট-ডেটা (এই clone-এর lekhok.db):** fbtest1/2/3 (demo123) + fbtest2-র পোস্ট id=5 + ৭ likes (সবাই 'love') + ৩ comments + comment_count সিঙ্কড — ফেসপাইল/প্রিভিউ-ডেমো সরাসরি দেখা যায়।
+
+**গোটচা-পুনরাবৃত্তি:** messenger.css-এর raw brace-কাউন্ট ১ বেশি দেখায় — লাইন ~১০২৩-এর কমেন্ট-টেক্সটের লিটারেল `}` (প্রি-একজিস্টিং false-positive; ডেপথ-স্ক্যানে final depth 0)। UNION-কুয়েরিতে কলাম যোগ করলে **সব UNION-শাখায়** যোগ করুন (৮৯-এ ACTIVITY_SQL-এ `NULL as pen_name` বাদ গেলে "SELECTs do not have the same number of result columns" — ফিড খালি)।

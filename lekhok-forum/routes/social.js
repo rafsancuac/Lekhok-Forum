@@ -660,7 +660,9 @@ router.post('/articles/:id/comment', ensureLoggedIn, async (req, res) => {
 });
 
 // ── Q&A list ─────────────────────────────────────────────────────────────────
-router.get('/qa', async (req, res) => {
+// সেশন ৮৯: '/questions' বেয়ার-লিস্ট অ্যালিয়াস — আগে শুধু '/qa' ছিল, '/questions/new'
+// ও '/questions/:id' থাকলেও '/questions' 404 খেত (QA-রাউন্ডে ধরা)।
+router.get(['/qa', '/questions'], async (req, res) => {
   const questions = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender,
     (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as ans_count
     FROM posts p JOIN users u ON p.author_id = u.id
@@ -1228,6 +1230,25 @@ router.get('/profile/:username', async (req, res) => {
   }
   if (pinnedPost) { pinnedPost.reactCounts = parseReacts87(pinnedPost.reactions); pinnedPost.myReaction = myReacts87[pinnedPost.id] || ''; }
   articles.forEach(p => { p.reactCounts = parseReacts87(p.reactions); p.myReaction = myReacts87[p.id] || ''; });
+
+  // (৮৯) ফেসপাইল — প্রতি-পোস্টে সর্বশেষ ৩ রিঅ্যাক্টরের মিনি-অ্যাভাটার (FB-২০২৪ সামারি;
+  // এক IN-কুয়েরি — actions-bar-এর নতুন reactorFaces প্যারামে যায়)
+  const facesByPost89 = {};
+  if (feedIds87.length) {
+    try {
+      (await db.prepare(`
+        SELECT l.post_id, u.id, u.username, u.full_name, u.avatar_url, u.pen_name
+        FROM likes l JOIN users u ON u.id = l.user_id
+        WHERE l.post_id IN (${feedIds87.map(() => '?').join(',')}) AND IFNULL(l.reaction_type, '') != ''
+        ORDER BY l.created_at DESC, l.id DESC
+      `).all(...feedIds87)).forEach(r => {
+        const arr = (facesByPost89[r.post_id] = facesByPost89[r.post_id] || []);
+        if (arr.length < 3 && !arr.some(x => x.id === r.id)) arr.push(r);
+      });
+    } catch (_) {}
+  }
+  if (pinnedPost) pinnedPost.reactorFaces = facesByPost89[pinnedPost.id] || [];
+  articles.forEach(p => { p.reactorFaces = facesByPost89[p.id] || []; });
 
   res.render('user/profile', {
     profile,

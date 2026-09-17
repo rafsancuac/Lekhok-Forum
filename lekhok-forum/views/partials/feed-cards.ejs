@@ -1,0 +1,124 @@
+<%#
+  সেশন ৮৯ (B1): শেয়ার্ড ফিড-কার্ড পার্টিয়াল — /dashboard ও /dashboard/more
+  (ইনফিনিট-স্ক্রল) দুই জায়গাতেই একই মার্কআপ রেন্ডার করে।
+  প্রত্যাশিত ভেরিয়েবল: feed (ডেকোরেটেড), user, myBookmarkedIds
+  ডেকোরেশন (routes/dashboard.js decorateFeed): reactionCounts, myReaction, link,
+  images, display_name (D1 কলমী-নাম), reactorFaces (ফেসপাইল), commentPreview।
+%>
+<% feed.forEach(item => {
+     if (item._orphan) return; // skip reposts whose original was deleted
+%>
+  <% if (item.item_type === 'repost' && item.original) { %>
+    <article class="feed-card card repost-card" data-repost-id="<%= item.id %>">
+      <div class="feed-card-head">
+        <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+        <div>
+          <a href="/profile/<%= item.username %>" class="feed-author"><%= item.author_name %></a>
+          <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
+          <span class="repost-tag"><i class="fas fa-share"></i> নিজের টাইমলাইনে শেয়ার করেছেন</span>
+          <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
+        </div>
+        <span class="feed-type-badge repost"><i class="fas fa-share"></i> শেয়ার</span>
+        <% if (user && item.username === user.username) { %>
+          <button type="button" class="btn-icon repost-undo" data-repost-id="<%= item.id %>" title="শেয়ার প্রত্যাহার"><i class="fas fa-times"></i></button>
+        <% } %>
+      </div>
+      <% if (item.repost_note) { %>
+        <div class="repost-note"><%= item.repost_note %></div>
+      <% } %>
+      <div class="repost-original card-inner">
+        <div class="feed-card-head">
+          <img loading="lazy" decoding="async" src="<%= item.original.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+          <div>
+            <a href="/profile/<%= item.original.username %>" class="feed-author"><%= item.original.author_name %></a>
+            <% if (item.original.author_role === 'admin' || item.original.author_role === 'moderator') { %><span class="role-chip"><%= item.original.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
+            <div class="feed-time" data-ts="<%= new Date(item.original.published_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.original.published_at).toLocaleString('bn-BD') %></div>
+          </div>
+          <% if (item.original.type === 'question') { %>
+            <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
+          <% } else { %>
+            <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+          <% } %>
+        </div>
+        <% if (item.original.cover_image) { %>
+          <a href="<%= item.original.link %>"><img loading="lazy" decoding="async" src="<%= item.original.cover_image %>" class="feed-image" alt=""></a>
+        <% } %>
+        <div class="feed-card-body">
+          <h3 class="feed-title"><a href="<%= item.original.link %>"><%= item.original.title %></a></h3>
+          <p class="feed-text"><%= mdPlain(item.original.body || '', 280) %><% if ((item.original.body || '').length > 280) { %> <a href="<%= item.original.link %>">আরও পড়ুন</a><% } %></p>
+        </div>
+        <%- include('./actions-bar', {
+          targetId: item.original.id,
+          targetType: 'post',
+          counts: item.original.reactionCounts,
+          mine: item.original.myReaction,
+          link: item.original.link,
+          commentCount: item.original.comment_count || 0,
+          shareCount: item.original.share_count || 0,
+          bookmarked: myBookmarkedIds && myBookmarkedIds.indexOf(item.original.id) !== -1
+        }) %>
+      </div>
+    </article>
+  <% } else { %>
+  <article class="feed-card card">
+    <div class="feed-card-head">
+      <% if (item.username === 'moderator') { %>
+        <img loading="lazy" decoding="async" src="/assets/img/avatar-placeholder.svg" class="feed-avatar" alt="">
+        <div>
+          <span class="feed-author">মডারেটর <span class="verified-badge"><i class="fas fa-check-circle"></i></span></span>
+          <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
+        </div>
+      <% } else { %>
+        <img loading="lazy" decoding="async" src="<%= item.avatar_url || '/avatar/0' %>" class="feed-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+        <div>
+          <a href="/profile/<%= item.username %>" class="feed-author"><%= item.display_name || item.author_name %></a>
+          <% if (item.author_role === 'admin' || item.author_role === 'moderator') { %><span class="role-chip"><%= item.author_role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
+          <div class="feed-time" data-ts="<%= new Date(item.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(item.created_at).toLocaleString('bn-BD') %></div>
+        </div>
+      <% } %>
+      <% if (item.item_type === 'activity') { %>
+        <span class="feed-type-badge activity"><i class="fas fa-calendar-check"></i> কার্যক্রম</span>
+      <% } else if (item.item_type === 'question') { %>
+        <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
+      <% } else { %>
+        <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+      <% } %>
+      <% if (item.shared_from) { %>
+        <span class="shared-chip"><i class="fas fa-retweet"></i> শেয়ারকৃত পোস্ট · <a href="/articles/<%= item.shared_from %>">মূল পোস্ট</a></span>
+      <% } %>
+      <% if (user && (item.item_type === 'article' || item.item_type === 'question') && item.username === user.username) { %>
+        <span class="feed-owner-actions">
+          <a href="/articles/<%= item.id %>/edit" title="সম্পাদনা"><i class="fas fa-pen"></i> সম্পাদনা</a>
+          <form method="POST" action="/articles/<%= item.id %>/delete"><button type="submit" title="মুছুন"><i class="fas fa-trash"></i></button></form>
+        </span>
+      <% } %>
+    </div>
+    <% if (item.images && item.images.length) { %>
+      <%- include('./post-gallery', { images: item.images, alt: item.title, height: '260px', group: 'feed-' + item.item_type + '-' + item.id }) %>
+    <% } %>
+    <div class="feed-card-body">
+      <h3 class="feed-title"><a href="<%= item.link %>"><%= item.title %></a></h3>
+      <p class="feed-text"><%= mdPlain(item.body || '', 280) %><% if ((item.body || '').length > 280) { %> <a href="<%= item.link %>">আরও পড়ুন</a><% } %></p>
+    </div>
+    <%- include('./actions-bar', {
+      targetId: item.id,
+      targetType: 'post',
+      counts: item.reactionCounts,
+      mine: item.myReaction,
+      link: item.link,
+      commentCount: item.comment_count || 0,
+      shareCount: item.share_count || 0,
+      bookmarked: myBookmarkedIds && myBookmarkedIds.indexOf(item.id) !== -1,
+      reactorFaces: item.reactorFaces || []
+    }) %>
+    <%# সেশন ৮৯: সর্বশেষ মন্তব্যের প্রিভিউ-লাইন (FB-ফিড-আচরণ) — ক্লিক করলে লেখার কমেন্ট-অ্যাংকরে %>
+    <% if (item.commentPreview && item.commentPreview.body) { %>
+      <a class="feed-cpreview" href="<%= item.link %>#comments">
+        <img loading="lazy" decoding="async" src="<%= item.commentPreview.avatar %>" class="fcp-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+        <span class="fcp-bubble"><strong><%= item.commentPreview.authorName %></strong> <%= item.commentPreview.body %></span>
+        <% if ((item.comment_count || 0) > 1) { %><span class="fcp-more">সব <%= String(item.comment_count).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> টি মন্তব্য দেখুন →</span><% } %>
+      </a>
+    <% } %>
+  </article>
+  <% } %>
+<% }); %>

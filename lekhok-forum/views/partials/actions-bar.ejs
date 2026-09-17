@@ -12,6 +12,7 @@
   if (typeof bookmarked === 'undefined') bookmarked = false;
   if (typeof commentCount === 'undefined') commentCount = 0;
   if (typeof shareCount === 'undefined') shareCount = 0;
+  if (typeof reactorFaces === 'undefined') reactorFaces = [];
   var _meta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
   var _labels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
   var _mine = mine || 'like';
@@ -27,7 +28,7 @@
         + ডম-পজিশন দুটোই ঠিক)। সবসময় রেন্ডার (০-তে খালি-অদৃশ্য) — ০→১-এও কাজ করে। %>
     <div class="actions-summary">
       <span class="as-left">
-        <span class="reaction-summary"><span class="as-emojis rs-emojis"><% if (_total > 0) { _topEmojis.forEach(function (em) { %><span><%= em %></span><% }); } %></span><span class="as-count rs-count"><% if (_total > 0) { %><%= _total %><% } %></span></span>
+        <span class="reaction-summary"><%# সেশন ৮৯: FB-২০২৪ ফেসপাইল — রিঅ্যাক্টরদের মিনি-অ্যাভাটার (main.js lf:reactupdate-এ লাইভ-আপডেট) %><span class="rs-faces"<% if (!reactorFaces.length) { %> hidden<% } %>><% reactorFaces.forEach(function (f) { %><img loading="lazy" decoding="async" class="rsf-av" src="<%= f.avatar_url || '/avatar/' + f.id %>" alt="" data-uid="<%= f.id %>" title="<%= (f.pen_name || f.full_name || '') %>" onerror="this.style.display='none'"><% }); %></span><span class="as-emojis rs-emojis"><% if (_total > 0) { _topEmojis.forEach(function (em) { %><span><%= em %></span><% }); } %></span><span class="as-count rs-count"><% if (_total > 0) { %><%= _total %><% } %></span></span>
       </span>
       <span class="as-right">
         <a href="<%= link %>#comments" class="as-stat" title="মন্তব্য"><span><%= commentCount || 0 %></span><i class="far fa-comment"></i></a>
