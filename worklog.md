@@ -1101,3 +1101,20 @@ Work Log:
 Stage Summary:
 - POST /api/comment চুক্তি-বৃদ্ধি (backward-compatible) — এক-রাউন্ডট্রিপে ক্যানোনিকাল-বাবল; QA-পৃষ্ঠে ঐতিহাসিক reload-ফ্ল্যাশ-সমাপ্তি
 - পরবর্তী-এজেন্ট: session125 লেবেল; সুপারিশ: parent-chain-চিপ (POST-html), drawer-প্রিভিউ-ইনস্ট্যান্ট, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমা
+
+**union-নোট (127): উপরে সমান্তরাল-এজেন্টদের session124/125/126-এন্ট্রি; আমার-এন্ট্রি 124→127-রিলেবেলড (max+1 রীতি)।**
+
+Task ID: session127 (cron webDevReview রাউন্ড — origin/main @ 1a3e459)
+Agent: Z.ai Agent (webDevReview)
+Task: অবস্থা-যাচাই + agent-browser QA → ফেজ-স্টেবল → ফিচার-রাউন্ড: QA-উত্তর-পাথে optimistic-insert (session116-অবশিষ্ট) + QA-থ্রেড-স্টাইল-পলিশ + tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤) + push
+
+Work Log:
+- QA-ফার্স্ট: ১৭-রুট স্মোক + role-policy 131/131 (RP_PORT) + cursor 25/25 (BASE=argv) + guard ✓ ব্রাউজার-ম্যাট্রিক্স কনসোল-০/390px-০ → ফেজ-স্টেবল → ফিচার-রাউন্ড
+- ফিচার ×৩: ① insertOptimistic-QA-ব্রাঞ্চ (.qa-answers-list — slot-র‍্যাপার+empty-রিমুভ+parent-nest; session116-অবশিষ্ট সমাপ্ত) ② shared.css session127-পলিশ-ব্লক (qaOptIn127+ring-flash+focus-within) ③ tokensHexGuard (ক্রস-লাইন-কমেন্ট-সচেতন; নেগেটিভ-প্রোব-প্রমাণিত)
+- 🚨 নতুন-গোটচা-যুগল PLANS-এ নথিভুক্ত: fetch-patch-গ্লোবাল-ওভাররাইট-রিকার্শন (ভান-করা-ফিচার-ব্যর্থতা; IIFE-ক্লোজার-capture-রীতি) + স্ট্যাটিক-এডিট→AV-রিস্টার্ট-চুক্তি (immutable-ক্যাশ; transferSize-০-চেক)
+- E2E-প্রমাণ: উত্তর firstFresh=80ms + total-তাৎক্ষণিক; রিপ্লায় (ctrl+enter) firstFresh=161ms; রিকনসাইল-ক্যানোনিকাল ✓ অটো-গ্রো ✓ ক্লিনআপ ৬/৬ ✓ 390px-০ ✓ কনসোল-০ ✓ রিগ্রেশন ১৩১+২৫+guard ✓
+- ডকস: PLANS (intent+cross-agent) + PROJECT + worklog ×২
+
+Stage Summary:
+- QA-পেজে উত্তর/রিপ্লাই এখন ~৮০ms-এ দৃশ্যমান (৩-সারফেস-অপটিমিস্টিক-চুক্তি সম্পূর্ণ); tokens.css গার্ড-লকড; session113-③ বকেয়া-নয়-নোট (গ্লোবাল-ইঞ্জিনে পূর্ব-বিদ্যমান)
+- পরের-এজেন্ট: session125/126-সমান্তরাল-ল্যান্ডের পরে — **session128 থেকে** — reconcile-flash-মসৃণকরণ / crx-'শেষ-পড়া'-পিন / লাইভ-Turso-রিসেট (টোকেন-ধারী)

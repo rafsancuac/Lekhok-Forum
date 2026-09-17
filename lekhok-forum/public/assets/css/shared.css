@@ -157,15 +157,27 @@
 .qa-answer-slot .cmt-replies .cmt-item .fc-av{width:26px;height:26px}
 .qa-answer-slot .cmt-replies .cmt-item .fc-bubble{padding:7px 11px;background:var(--lf-brand-light,#eef7f3)}
 .qa-answer-slot .cmt-replies .cmt-item .fc-body{font-size:.84rem}
-/* নতুন-উত্তর-স্লটে মৃদু-হাইলাইট (opt-fresh-এর সাথে সহাবস্থান — বাবলেই অ্যানিমেট হয়) */
-.qa-answer-slot:has(.opt-fresh){animation:optIn12 .34s cubic-bezier(.2,.9,.3,1.2) both}
 /* রিপ্লাই-কম্পোজার স্লট (qa-উত্তরের ভেতরে খোলা অবস্থায়) ব্রিদ-স্পেসিং */
 .qa-answer-slot .fc-reply-slot{margin-top:8px}
 @media (max-width: 640px){
   .qa-answer-slot .cmt-replies{padding-left:18px}
 }
-@media (prefers-reduced-motion: reduce){
-  .qa-answer-slot:has(.opt-fresh){animation:none}
-}
-
 /* EOF-MARKER: session125 */
+
+/* union-নোট (128): উপরের session125-ব্লকের .qa-answer-slot:has(.opt-fresh)-রুল বাদ —
+   (ক) নিচের .qa-answer-slot.opt-fresh direct-class-রুলের সাথে হুবহু-ডুপ্লিকেট (QA-ফলব্যাকে
+   opt-fresh slot-এই বসে), (খ) PLANS-গোটচা: :has() নিষিদ্ধ (cron-r6 পুনরাবৃত্তি-নিষেধ)। */
+/* ── session128: QA-উত্তর optimistic-এন্ট্রি + থ্রেড-পলিশ (var(--lf-*)-শুধু) ──
+   এন্ট্রি: slot-স্লাইড-আপ (opt-fresh র‍্যাপারে — optIn12-প্যারিটি) + বাবলে
+   ব্র্যান্ড-রিং-ফ্ল্যাশ (রিকনসাইল-সোয়াপের পরে চোখ ধরিয়ে না-থাকায় অ্যানিমেশনই নিভে যায়);
+   কম্পোজার: answer-form-wrap focus-within ব্র্যান্ড-রিং; reduced-motion-সম্মানিত। */
+.qa-answer-slot.opt-fresh{animation:qaOptIn128 .38s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes qaOptIn128{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+.qa-answer-slot.opt-fresh .fc-bubble{animation:qaOptRing128 1.5s ease .3s both}
+@keyframes qaOptRing128{0%{box-shadow:0 0 0 3px var(--lf-brand-light)}100%{box-shadow:0 0 0 3px transparent}}
+.answer-form-wrap{transition:border-color .2s ease,box-shadow .2s ease}
+.answer-form-wrap:focus-within{border-color:var(--lf-brand-primary);box-shadow:0 0 0 3px var(--lf-brand-light)}
+@media (prefers-reduced-motion: reduce){
+  .qa-answer-slot.opt-fresh,.qa-answer-slot.opt-fresh .fc-bubble{animation:none}
+  .answer-form-wrap{transition:none}
+}

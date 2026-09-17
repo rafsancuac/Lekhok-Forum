@@ -1521,3 +1521,33 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **QA-বেসলাইন (এ-রাউন্ড):** ১৮-রুট-স্মোক + home/articles/qa ভিজ্যুয়াল + 390px-০ ×২ + কনসোল-০ — বাগ-শূন্য; home-এর `.reveal` opacity:0 = IntersectionObserver-স্ক্রল-আর্টিফ্যাক্ট (headless full-page-স্ক্রিনশট-রেস), নয়-বাগ — **কেবল CSSOM-যাচাইয়ের প্রয়োজনে `.reveal/.reveal-stagger`-এ synthetic `.in` দিন**।
 
 **পরবর্তী-প্রথম-পছন্দ:** QA-ডিলিটে স্লট-স্তরের মৃত্যু-অ্যানিমেশন (swapQaThread-এর-আগে killItem-প্যারিটি — ইচ্ছাকৃত-বর্জিত, উপযোগ-যাচাই করে) → tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤, এখনো-বকেয়া) → crx 'শেষ-পড়া'-অগ্রাধিকার-পিন → contact_hours 'এখন খোলা?' লাইভ-ইন্ডিকেটর (session111 ⑤-অংশ, কেবল-এটাই-বাকি)।
+
+**union-নোট-২ (128): এ-রাউন্ড push-পূর্ব দ্বিতীয় rebase-এ সমান্তরাল 220b53d (docs-session127 — চতুর্থ-স্বাধীন QA-optimistic-প্রচেষ্টার সম্পূর্ণ-প্রত্যাহার-নোট) ল্যান্ডড — লেবেল-কলিশনে আমার-এন্ট্রি আবার max+1 → **127→128**। **ফলব্যাক-ব্রাঞ্চ-বিতর্ক (সিদ্ধান্ত-নোট):** session125/220b53d-রেখা = insertCanonical124-ই সব-গ্রাউন্ড (প্রত্যাহার); কিন্তু 7ad5fb3-canonical-লেখকের নিজের union-নোট insertOptimistic-এর qa-টার্গেটকে 'অনন্য-রক্ষিত' + swapQaThread-ফ্লোর তাৎক্ষণিক-বাবল-উৎস বলে রেখেছে, আর j.html-অনুপস্থিতি-ফলব্যাকে QA-পেজ একমাত্র ব্রাঞ্চ-বিহীন সারফেস হয়ে থাকত — তাই ব্রাঞ্চ fallback-সম্পূর্ণতার জন্য রক্ষিত (প্রাইমারি-পাথ অস্পৃশ্য, E2E-যাচাইকৃত qaFetchCalls=0)। ভবিষ্যৎ-এজেন্ট: canonical-API অপসারণ/পরিবর্তন না-করা পর্যন্ত এ-ব্রাঞ্চ নিরীহ-fallback।**
+
+**union-নোট (127→128): উপরের session124/125/126-নোট = সমান্তরাল-এজেন্টদের (canonical-insert ইঞ্জিন + qa-নেস্ট-পলিশ + paintList-মিরর/audit:views); এ-রাউন্ডের (আমার) মূল-এন্ট্রি max+1 রীতিতে 124→127→**128**-রিলেবেলড। কোড-ইউনিয়ন-ফলাফল:** insertCanonical124 = j.html-প্রাইমারি (তাদের); আমার insertOptimistic QA-ব্রাঞ্চ = j.html-অনুপস্থিতি-ফলব্যাক (session124-canonical-এজেন্টের swapQaThread-নোটে "অনন্য-রক্ষিত" — এ-ভাবেই সমাধান); session125-এর :has(.opt-fresh)-রুল বাদ (ডুপ্লিকেট + :has()-নিষেধাজ্ঞা); tokensHexGuard সম্পূর্ণ-অনন্য।**
+
+## ⚡ Intent Note — Session 128 (রিলেবেলড, max+1 রীতি — সমান্তরাল-এজেন্ট session124/125/126 আগে-ল্যান্ডড) (webDevReview রাউন্ড; intent-চুক্তি অনুযায়ী) (১৮ সেপ্টেম্বর ২০২৬)
+
+**এই-রাউন্ডে নিচ্ছি (claim):** ① **QA-উত্তর-পাথে optimistic-insert (session116-অবশিষ্ট)** — insertOptimistic-এ `.qa-answers-list[data-post-link]`-লিস্ট-ডিটেকশন-ব্রাঞ্চ: টপ-লেভেল উত্তর `.qa-answer-slot#answer-<id>`-র‍্যাপারে (`.answers-empty`-রিমুভ-সহ), রিপ্লাই বিদ্যমান parent-nest-পথে; এরপর swapQaThread-রিকনসাইল আগের মতোই ② **QA-থ্রেড স্টাইল-পলিশ** — shared.css session128-ব্লক: slot-এন্ট্রি-অ্যানিমেশন + বাবল-রিং-ফ্ল্যাশ + answer-form-wrap focus-within + answers-empty transition (সব var(--lf-*), reduced-motion-সম্মানিত) ③ **tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤ সমাপ্তি)** — guard-design-system.js-এ নতুন-সেকশন: tokens.css-এ হেক্স-লিটারাল কেবল `--lf-*` টোকেন-সংজ্ঞা-লাইনে বৈধ (নতুন-রঙ-ব্যাকডোর-প্রতিরোধ)।
+
+**স্পর্শ-ফাইল:** public/assets/js/comment-tools.js · public/assets/css/shared.css (EOF-ব্লক) · scripts/guard-design-system.js · PLANS.md/PROJECT.md/worklog ×২। **route/db শূন্য-পরিবর্তন।**
+
+**আবিষ্কার-নোট (ডক-সংশোধন):** PLANS-এর "session113 ③ qa-কম্পোজার FB-অটো-গ্রো + ctrl+enter" বকেয়া-তালিকাভুক্ত ছিল কিন্তু **আসলে ইতোমধ্য সম্পূর্ণ** — comment-tools.js-এর গ্লোবাল .cc-input-ইঞ্জিনে auto-grow (max-160px) + Ctrl/⌘+Enter-সাবমিট আছে, আর QA-কম্পোজারও ক্যানোনিকাল CommentComposer-ই ব্যবহার করে। অন্য-এজেন্ট এটি নতুন-করে নেবেন না (ডুপ্লিকেট-বিরোধী-নোট)। অন্য-এজেন্ট ①②③-এর কোনোটায় কাজ শুরু করলে এ-নোট দেখে বিকল্প নিন।
+
+## Cross-Agent Note — Session 128 (রিলেবেলড) (webDevReview রাউন্ড; QA-optimistic + tokens-গার্ড) (১৮ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** comment-tools.js (insertOptimistic-QA-ব্রাঞ্চ) · shared.css (EOF session128-ব্লক) · scripts/guard-design-system.js (tokensHexGuard)। route/db শূন্য।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+- **insertOptimistic এখন ৩-লিস্ট-চুক্তি:** `.comments-list[data-post-link]` (আর্টিকেল) → `.fc-drawer` (ফিড) → `.qa-answers-list[data-post-link]` (QA)। QA-টপ-লেভেল উত্তর `.qa-answer-slot#answer-<id>`-র‍্যাপারে বসে + `.answers-empty`-রিমুভ; opt-fresh র‍্যাপারে (নোডে নয়) — CSS টার্গেট `.qa-answer-slot.opt-fresh`। **নতুন কমেন্ট-সারফেস যোগলে এই ফাংশনেই চতুর্থ-ব্রাঞ্চ** (লিস্ট-সনাক্তকরণ + র‍্যাপার-নীতি এক-জায়গায়)।
+- **tokens.css-হেক্স-গার্ড (session113-⑤ সমাপ্ত):** tokens.css-এ হেক্স-লিটারাল কেবল `--lf-*` সংজ্ঞা-লাইনে বৈধ — সিলেক্টর-বডিতে হেক্স লিখলে guard:design ফেইল। নতুন-রঙ = tokens.css-এ `--lf-*` সংজ্ঞা → সেখানেই ব্যবহার (ব্যাকডোর-বন্ধ)।
+
+**ডক-সংশোধন (ডুপ্লিকেট-বিরোধী):** "session113-③ qa-কম্পোজার FB-অটো-গ্রো + ctrl+enter" **বকেয়া নয়** — গ্লোবাল .cc-input-ইঞ্জিনে (comment-tools.js) auto-grow + Ctrl/⌘+Enter আগে-থেকেই আছে; QA-কম্পোজার ক্যানোনিকাল CommentComposer-ই ব্যবহার করে। ভবিষ্যৎ-এজেন্ট এটি নতুন-করে ইমপ্ল করবেন না।
+
+**🚨 গোটচা-যুগল (E2E-তে দুই-ঘণ্টা-খরচের শিক্ষা):**
+1. **fetch-patch গ্লোবাল-ওভাররাইট-রিকার্শন:** `window._of=window.fetch; window.fetch=…_of.apply…` প্যাটার্ন **একই-পেজে দ্বিতীয়বার** চালালে আগের প্যাচ closure-by-name-এ নিজেকে কল কেয়ে `RangeError: Maximum call stack` → সাবমিট-হ্যান্ডলারে সিঙ্ক্রোনাস-থ্রো → send-disabled-আটকে + "ফিচার ভাঙা" ভান-করা-নেগেটিভ। ক্লিন-প্যাচ = IIFE-ক্লোজারে `var orig=window.fetch.bind(window)` ক্যাপচার; পুনঃপ্যাচের আগে রিলোড। (session12-র closure-গোটচার সম্প্রসারণ।)
+2. **স্ট্যাটিক-এডিট → AV-রিস্টার্ট বাধ্যতামূলক:** AV (অ্যাসেট-ভার্সন) **বুট-টাইমে** কম্পিউট + ৩০-দিন immutable-ক্যাশ — চলমান-সার্ভারে JS/CSS-এডিট করলে ব্রাউজার পুরনো `?v=<old-AV>` চালাতেই থাকে (SW-আনরেজিস্টার+caches.delete-ও কাজ করে না — HTTP-ক্যাশ)। রীতি: ফাইল-এডিট → `lf-boot.sh`-রিস্টার্ট → নতুন-AV → যাচাই। "নতুন-কোড কাজ করছে না" দেখলে প্রথমে `performance.getEntriesByType('resource')`-এ সেই-স্ক্রিপ্টের transferSize-০ চেক (০ = ক্যাশ)।
+
+**E2E-প্রমাণ (agent-browser, ismail, /questions/5):** ইন-পেজ-টাইমলাইন-প্রোব (৮০ms-স্যাম্পলার + format=qa-html-ফেচ-ডিলে): উত্তর firstFresh=**৮০ms** (freshSlotId=answer-15 + total ৫→৬ তাৎক্ষণিক), gone=২৫৬১ms (২.৫সে-ইনজেক্টেড-সোয়াপ); রিপ্লায় (Ctrl+Enter): firstFresh=**১৬১ms**, gone=২৩৯৯ms, total ৭; রিকনসাইল-পরে সার্ভার-সত্য রিপ্লাই slot-এ flat-compact ✓ অটো-গ্রো ৬৯px/৩-লাইন ✓ ক্লিনআপ ৬/৬ (৫ API-ডিলিট + ১ ক্যাসকেড not_found-প্রত্যাশিত) ✓ 390px-০ ✓ কনসোল-০ ✓ রিগ্রেশন role-policy 131/131 + cursor 25/25 + guard ✓। স্ক্রিনশট: s124-qa-desktop.png।
+
+**পরবর্তী-প্রথম-পছন্দ:** optimistic-থ্রেডে reconcile-flash-মসৃণকরণ (swapping-ফেড) → tokens-হেক্স-গার্ডের সুযোগ-বর্ধন (article.css-QA-ব্লক) → crx-এ 'শেষ-পড়া'-অগ্রাধিকার-পিন → লাইভ-Turso-রিসেট/সিক্রেট-রোটেশন ×৪ (টোকেন-ধারী-এজেন্ট)। **পরের-এজেন্ট: session125/126-সমান্তরাল-ল্যান্ডের পরে — **session129 থেকে**।**

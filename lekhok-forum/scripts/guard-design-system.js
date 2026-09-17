@@ -144,6 +144,46 @@ function scanHex(file, label) {
   scanHex(SHARED_CSS, 'public/assets/css/shared.css');
 })();
 
+/* ── সেশন ১২৪: tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤ সমাপ্তি) ──────────
+   চুক্তি: tokens.css = Single Source of Truth — এখানে হেক্স-লিটারাল কেবল
+   `--lf-*` টোকেন-সংজ্ঞা-লাইনে অনুমোদিত। সিলেক্টর-বডি/লিগ্যাসি-রিম্যাপ-লাইনে
+   হেক্স লিখলে গার্ড ফেইল — tokens.css যেন নতুন-রঙের ব্যাকডোর না হয়। */
+(function tokensHexGuard() {
+  const TOKENS_CSS = path.join(ROOT, 'public', 'assets', 'css', 'tokens.css');
+  const HEX_ANY = /#[0-9a-fA-F]{3,8}\b/g;
+  const raw124 = fs.readFileSync(TOKENS_CSS, 'utf8').split('\n');
+  // ক্রস-লাইন /* */-কমেন্ট-সচেতন স্ট্রিপার — লাইন-নম্বর অক্ষত রেখে
+  let inBlock124 = false;
+  const lines124 = raw124.map(line => {
+    let out = '';
+    let rest = line;
+    while (rest.length) {
+      if (!inBlock124) {
+        const open = rest.indexOf('/*');
+        if (open === -1) { out += rest; rest = ''; }
+        else {
+          const close = rest.indexOf('*/', open + 2);
+          if (close !== -1) { out += rest.slice(0, open); rest = rest.slice(close + 2); }
+          else { out += rest.slice(0, open); rest = ''; inBlock124 = true; }
+        }
+      } else {
+        const close = rest.indexOf('*/');
+        if (close === -1) { rest = ''; }
+        else { rest = rest.slice(close + 2); inBlock124 = false; }
+      }
+    }
+    return out;
+  });
+  lines124.forEach((clean, idx) => {
+    HEX_ANY.lastIndex = 0;
+    if (!HEX_ANY.test(clean)) return;
+    if (!/^\s*--lf-[a-z0-9-]+\s*:/.test(clean)) {
+      console.error(`✗ public/assets/css/tokens.css:${idx + 1}: হেক্স কেবল --lf-* টোকেন-সংজ্ঞায় অনুমোদিত — "${raw124[idx].trim().slice(0, 90)}"`);
+      fail++;
+    }
+  });
+})();
+
 if (fail) {
   console.error(`\n[guard] ${fail}টি লঙ্ঘন — ডিজাইন-সিস্টেম ভাঙা (বিস্তারিত: lekhok-forum/PLANS.md "ডিজাইন-সিস্টেম" নোট)`);
   process.exit(1);

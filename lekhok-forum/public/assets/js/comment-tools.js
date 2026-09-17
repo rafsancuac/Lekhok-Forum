@@ -955,7 +955,10 @@
 
   function insertOptimistic(id, raw, parentId, postId) {
     // লিস্ট-সনাক্ত: আর্টিকেল-থ্রেড (data-post-link মিল) → ফিড-ড্রয়ার (data-comments-for মিল)
+    // → সেশন ১২৪: QA-উত্তর-থ্রেড (.qa-answers-list — session116-অবশিষ্ট সমাপ্তি;
+    //   সাবমিট-মুহূর্তে বাবল বসে, swapQaThread-রিকনসাইল ক্যানোনিকাল-বিন্যাসে সাজায়)
     var list = null;
+    var isQaList = false;
     document.querySelectorAll('.comments-list[data-post-link]').forEach(function (el) {
       var p = String(el.getAttribute('data-post-link') || '').replace(/^.*\//, '');
       if (!list && p === String(postId)) list = el;
@@ -964,10 +967,18 @@
       var drawer = document.querySelector('.fc-drawer[data-comments-for="' + String(postId).replace(/"/g, '') + '"]');
       if (drawer) list = drawer.querySelector('.fc-list');
     }
-    /* session125-union-নোট: আমার সমান্তরাল .qa-answers-list-টার্গেট-ব্লক প্রত্যাহৃত —
-       session124-ক্যানোনিকালের insertCanonical124 (j.html প্রাইমারি-পাথ) qa-লিস্ট
-       সনাক্তকরণ + স্লট-র‍্যাপ + answers-empty-সরানো সবই করে; এই session12-ফলব্যাক
-       পাথ অপরিবর্তিত (j.html-অনুপস্থিতিতেই চলে — swapQaThread ব্যাকস্টপ)। */
+    /* union-নোট (session124×125): সমান্তরাল session125-এন্ট্রি নিজের .qa-answers-list-
+       টার্গেট-কপি প্রত্যাহার করেছিল (canonical-প্রাইমারি-যুক্তি); কিন্তু session124-canonical-
+       এজেন্টের swapQaThread-union-নোট নিজেই insertOptimistic-এর qa-টার্গেটকে "সোয়াপ-পূর্ব
+       তাৎক্ষণিক-বাবলের" উৎস বলে বর্ণনা করে + "অনন্য-রক্ষিত" তালিকাভুক্ত — তাই ব্রাঞ্চটি বজায়:
+       j.html-প্রাইমারি-পাথে অস্পৃশ্য (insertCanonical124 আগেই return), শুধু j.html-অনুপস্থিতি-
+       ফলব্যাকে QA-বাবলও তাৎক্ষণিক বসে (আর্টিকেল-প্যাটার্ন প্যারিটি)। */
+    if (!list && postId) {
+      document.querySelectorAll('.qa-answers-list[data-post-link]').forEach(function (el) {
+        var p = String(el.getAttribute('data-post-link') || '').replace(/^.*\//, '');
+        if (!list && p === String(postId)) { list = el; isQaList = true; }
+      });
+    }
     if (!list) return false;
     var html = buildOptimisticItem(id, raw, parentId);
     if (!html) return false;
@@ -975,6 +986,15 @@
     wrap.innerHTML = html;
     var node = wrap.firstElementChild;
     if (!node) return false;
+    // সেশন ১২৪: QA-টপ-লেভেল উত্তর — সার্ভার-সত্যের মতোই .qa-answer-slot#answer-<id>
+    // র‍্যাপারে; প্রথম-উত্তরে খালি-স্টেট (.answers-empty) সঙ্গে সঙ্গেই সরে।
+    var slotNode = null;
+    if (isQaList && !parentId) {
+      slotNode = document.createElement('div');
+      slotNode.className = 'qa-answer-slot';
+      slotNode.id = 'answer-' + String(id).replace(/"/g, '');
+      slotNode.appendChild(node);
+    }
     if (parentId) {
       var parent = list.querySelector('.cmt-item[data-cmt-id="' + String(parentId).replace(/"/g, '') + '"]');
       if (parent) {
@@ -987,12 +1007,16 @@
         nest.appendChild(node);
         if (nest.hidden !== undefined) nest.hidden = false;
       } else {
-        list.appendChild(node); // প্যারেন্ট-না-মেললে টপ-লেভেলে — reconcile ঠিক করবে
+        list.appendChild(slotNode || node); // প্যারেন্ট-না-মেললে টপ-লেভেলে — reconcile ঠিক করবে
       }
     } else {
-      list.appendChild(node);
+      list.appendChild(slotNode || node);
     }
-    node.classList.add('opt-fresh');
+    (slotNode || node).classList.add('opt-fresh');
+    if (isQaList && !parentId) {
+      var empty124 = list.querySelector('.answers-empty');
+      if (empty124) empty124.remove();
+    }
     optBumpCounters(1);
     // সেশন ১২: ফিড-কার্ডের as-stat-ও তাৎক্ষণিক বাম্প (reconcile-এ refreshDrawer-সিঙ্কও আছে)
     var card12 = node.closest('.feed-card, article');

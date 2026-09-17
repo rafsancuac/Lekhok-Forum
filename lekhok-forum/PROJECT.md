@@ -2562,3 +2562,16 @@ git push origin main
 
 **যাচাই:** role-policy **১৩১/১৩১** ✓ cursor ২৫/২৫ ✓ guard:design ✓ audit:views ✓ brace-depth ০/০ ✓; E2E: বেল→repaint→✕ ৪/৪ ✓ painted-row-dismiss (row-remove + empty121 + badge121-server-truth) ✓ canonical-insert-API-চুক্তি-লাইভ (html/total) ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ ✓। **গোটচা-নতুন:** SW-ক্যাশে পুরনো-HTML — fetch-নেটওয়ার্ক-সত্য ও DOM-পুরনো-মার্কআপ মিশ্র-পাঠ হতে পারে → সন্দেহে আগে SW-unregister + caches-purge, নইলে "বাগ" আসলে বাসি-পেজ।
 
+## session127 — QA-উত্তর-পাথে optimistic-insert (session116-অবশিষ্ট সমাপ্ত) + QA-থ্রেড-পলিশ + tokens.css-হেক্স-গার্ড (session113-⑤ সমাপ্ত)
+
+**ফিচার-① QA-অপটিমিস্টিক (session116-অবশিষ্ট):** comment-tools.js-এর insertOptimistic এখন ৩-লিস্ট-চুক্তি — আর্টিকেল `.comments-list` / ফিড-ড্রয়ার `.fc-drawer` / **নতুন QA `.qa-answers-list[data-post-link]`**। QA-টপ-লেভেল উত্তর সার্ভার-সত্যের মতোই `.qa-answer-slot#answer-<id>`-র‍্যাপারে তাৎক্ষণিক বসে + প্রথম-উত্তরে `.answers-empty`-রিমুভ; রিপ্লায় parent-nest (`.cmt-replies`); এরপর swapQaThread-রিকনসাইল অপরিবর্তিত (ক্যানোনিকাল like_count-DESC + চিপ)। সাবমিট→দেখা-বিলম্বন এখন QA-পেজেও ~৮০ms (আগে POST+GET-সোয়াপ পর্যন্ত শূন্য-অপেক্ষা)।
+
+**ফিচার-② স্টাইল-পলিশ (shared.css session127-ব্লক, var(--lf-*)-শুধু):** `.qa-answer-slot.opt-fresh` স্লাইড-আপ-এন্ট্রি (qaOptIn127) + বাবল ব্র্যান্ড-রিং-ফ্ল্যাশ (qaOptRing127 — রিকনসাইলে নিভে যায়) + `.answer-form-wrap:focus-within` ব্র্যান্ড-রিং + reduced-motion-গার্ড।
+
+**ফিচার-③ tokens.css-হেক্স-গার্ড (session113-⑤ সমাপ্ত):** guard-design-system.js-এ tokensHexGuard — tokens.css-এ হেক্স-লিটারাল কেবল `--lf-*` টোকেন-সংজ্ঞা-লাইনে বৈধ (ক্রস-লাইন-কমেন্ট-সচেতন স্ট্রিপার, লাইন-নম্বর অক্ষত); নেগেটিভ-প্রোব-প্রমাণিত (injected `#DEADBEEF` ধরা পড়ে, রিস্টোর-পরে গ্রিন)।
+
+**ডক-সংশোধন:** "session113-③ qa-কম্পোজার অটো-গ্রো+ctrl+enter" বকেয়া ছিল না — গ্লোবাল .cc-input-ইঞ্জিনেই আছে (ডুপ্লিকেট-বিরোধী নোট PLANS-এ)।
+
+**যাচাই:** ইন-পেজ-টাইমলাইন-প্রোব: উত্তর firstFresh=80ms + total-তাৎক্ষণিক-বাম্প, gone=২৫৬১ms (সোয়াপ-ডিলে-ইনজেকশনে); রিপ্লায় (Ctrl+Enter) firstFresh=161ms, রিকনসাইল-পরে সার্ভার-সত্য flat-compact ✓ অটো-গ্রো ✓ ক্লিনআপ ✓ 390px-০ ✓ কনসোল-০ ✓ role-policy 131/131 ✓ cursor 25/25 ✓ guard ✓। **গোটচা ×২ (PLANS-এ বিস্তারিত):** fetch-patch-গ্লোবাল-ওভাররাইট-রিকার্শন (ভান-করা-ব্যর্থতা) + স্ট্যাটিক-এডিটের-পরে AV-রিস্টার্ট-চুক্তি (immutable-ক্যাশ পুরনো-কোড চালায়; transferSize-০-চেক রীতি)।
+
+---
