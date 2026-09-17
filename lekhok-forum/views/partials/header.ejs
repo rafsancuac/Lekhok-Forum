@@ -107,8 +107,12 @@
     var c = document.documentElement.classList;
     if (prefs.theme === 'dark') c.add('theme-dark');
     if (prefs.theme === 'light') c.add('theme-light');
+    // সেশন ৮০: সেপিয়া (বইয়ের পাতার আভা) + লাইন-স্পেসিং ক্লাস
+    if (prefs.theme === 'sepia') c.add('theme-sepia');
     if (prefs.font_size === 'small') c.add('fs-small');
     if (prefs.font_size === 'large') c.add('fs-large');
+    if (prefs.line_height === 'compact') c.add('lh-compact');
+    if (prefs.line_height === 'relaxed') c.add('lh-relaxed');
     // Apply font family class to body as soon as DOM is ready
     var ALLOWED_FF = ['bn','serif','sans','mixed','hand','display','durnibar','lipi'];
     var ff = ALLOWED_FF.indexOf(prefs.font_family) >= 0 ? prefs.font_family : 'bn';

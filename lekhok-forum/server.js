@@ -207,6 +207,26 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000, sameSite: 'lax', secure: process.env.VERCEL ? 'auto' : false }
 }));
 
+// ── সেশন ৮০: ডিভাইস-স্ট্যাম্প — প্রথম অথেনটিকেটেড রিকোয়েস্টেই (লগইনের ঠিক
+// পরের রিডাইরেক্ট) UA+IP সেশনে জমা হয়। DbStore সেশন-JSON-টা sessions-টেবিলে
+// লিখে রাখে, তাই সেটিংস > নিরাপত্তায় "অ্যাক্টিভ সেশন"-তালিকা এখান থেকেই বানে।
+// সব লগইন-পথ (সাধারণ/2FA/রেজিস্ট্রেশন-অটো-লগইন) এক জায়গায় কভার হয়।
+const { parseDeviceUA } = require('./helpers/device');
+const SESSION_TTL_MS80 = 24 * 60 * 60 * 1000; // cookie maxAge-এর সাথে সিঙ্ক
+app.use((req, res, next) => {
+  if (req.session && req.session.user && !req.session.device80) {
+    try {
+      const d = parseDeviceUA(req.headers['user-agent']);
+      req.session.device80 = {
+        label: d.label, kind: d.kind, icon: d.icon,
+        ip: (req.ip || '').replace(/^::ffff:/, '') || null,
+        loginAt: Date.now()
+      };
+    } catch (e) { /* ডিভাইস-স্ট্যাম্প ব্যর্থ হলে সেশন কাজ করা বন্ধ হবে না */ }
+  }
+  next();
+});
+
 // ── সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স): পাবলিক পেজে অ্যানোনিমাস CDN-ক্যাশ ──────────
 // সমস্যা: প্রতিটি রেসপন্সে _csrfTok + connect.sid সেট হত → Vercel Edge কখনো HTML
 // ক্যাশ করতে পারত না → প্রতিটি পেজভিউ = কোল্ড/ওয়ার্ম ল্যাম্বডা + ১২+ সিরিয়াল

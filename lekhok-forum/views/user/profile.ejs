@@ -66,8 +66,12 @@
     <div class="profile-body">
       <div class="profile-left">
         <div class="card profile-info-card">
-          <h2><%= profile.full_name %></h2>
+          <h2><%= profile.pen_name || profile.full_name %></h2>
+          <% if (profile.pen_name) { %><p class="pen-name-chip"><i class="fas fa-feather-pointed"></i> কলমে: <%= profile.pen_name %></p><% } %>
           <p class="profile-username"><%= profile.designation || 'সদস্য' %></p>
+          <% if (typeof profile.genres === 'string' && profile.genres) { try { var _g80 = JSON.parse(profile.genres); if (Array.isArray(_g80) && _g80.length) { %>
+          <div class="genre-badges"><% _g80.forEach(function (g) { %><span class="genre-badge"><i class="fas fa-feather"></i> <%= g %></span><% }) %></div>
+          <% } } catch (e) {} } %>
           <% if (profile.designation) { %><p class="profile-designation"><i class="fas fa-briefcase"></i> <%= profile.designation %></p><% } %>
           <% if (profile.bio) { %><p class="profile-bio"><%= profile.bio %></p><% } %>
 

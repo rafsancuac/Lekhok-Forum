@@ -6,10 +6,12 @@
       <a href="/me" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> ফিডে ফিরুন</a>
       <h1 style="margin:0;font-size:24px;">সেটিংস</h1>
       <% if (ok) { %>
-        <span class="badge save-ok"><i class="fas fa-check"></i> সংরক্ষিত</span>
+        <span class="badge save-ok"><i class="fas fa-check"></i>
+          <%= ok === 'unblocked' ? 'ব্লক সরানো হয়েছে' : ok === 'session_revoked' ? 'ডিভাইস লগআউট হয়েছে' : ok === 'sessions_revoked' ? 'অন্য সব ডিভাইস লগআউট হয়েছে' : 'সংরক্ষিত' %>
+        </span>
       <% } else if (err) { %>
         <span class="badge save-err"><i class="fas fa-exclamation-triangle"></i>
-          <%= err === 'password_mismatch' ? 'পাসওয়ার্ড মেলেনি' : err === 'password_short' ? 'পাসওয়ার্ড খুব ছোट' : err === 'password_wrong' ? 'বর্তমান পাসওয়ার্ড ভুল' : err === 'social_url' ? 'লিংকটি বৈধ নয়, http/https দিয়ে শুরু করুন' : err === 'social_bad' ? 'অপরিচিত সংযোগ-ধরন' : 'সমস্যা হয়েছে' %>
+          <%= err === 'delete_password' ? 'পাসওয়ার্ড ভুল — অ্যাকাউন্ট মুছা হয়নি' : err === 'delete_confirm' ? 'নিশ্চিত করতে ঠিক DELETE শব্দটি লিখুন' : err === 'export' ? 'ডেটা এক্সপোর্টে সমস্যা হয়েছে' : 'সমস্যা হয়েছে' %>
         </span>
       <% } %>
     </div>
@@ -31,9 +33,31 @@
           <div class="card">
             <h2><i class="fas fa-user"></i> প্রোফাইল</h2>
             <form method="POST" action="/settings/profile" enctype="multipart/form-data">
+              
+              <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label>পুরো নাম</label>
+                  <input class="input" name="full_name" value="<%= profileUser.full_name %>" required>
+                                  <div class="hint" style="margin-top:6px;">নথি-সদস্যের আসল নাম (গোপন থাকবে)</div>
+                </div>
+                <div>
+                  <label>ছদ্মনাম / কলমী নাম (ঐচ্ছিক)</label>
+                  <input class="input" name="pen_name" value="<%= profileUser.pen_name || '' %>" maxlength="60" placeholder="যেমন: বনফুল, সুনন্দ…">
+                  <div class="hint">আসল নাম না বাহর করে এই নামেই লেখক-পরিচয় দেখাবে</div>
+                </div>
+              </div>
+              <%# সেশন ৮০: সাহিত্য-ধারা চিপ-পিকার (সর্বোচ্চ ৫) — জেএস হিডেন-ইনপুটে JSON রাখে %>
               <div class="field">
-                <label>পুরো নাম</label>
-                <input class="input" name="full_name" value="<%= profileUser.full_name %>" required>
+                <label>পছন্দের সাহিত্য-ধারা <span class="genre-count" id="genreCount"><%= genres.length %>/৫</span></label>
+                <div class="genre-chip-wrap" id="genreChips">
+                  <%
+                    const GENRE_LIST_80 = ['কবিতা','ছোটগল্প','উপন্যাস','কল্পবিজ্ঞান','গোয়েন্দা ও থ্রিলার','প্রবন্ধ ও গবেষণা','অনুবাদ সাহিত্য','ভ্রমণকাহিনী','ইতিহাস','নাটক ও নাটিকা','শিশুসাহিত্য'];
+                    GENRE_LIST_80.forEach(function (g) { %>
+                    <button type="button" class="genre-chip<%= genres.includes(g) ? ' selected' : '' %>" data-genre="<%= g %>"><%= genres.includes(g) ? '✓ ' : '+ ' %><%= g %></button>
+                  <% }) %>
+                </div>
+                <input type="hidden" name="genres" id="genreInput" value="<%= JSON.stringify(genres) %>">
+                <div class="hint">আপনি কোন ধারার লেখক — প্রোফাইল-পেজে ব্যাজ হিসেবে দেখাবে</div>
               </div>
               <div class="field">
                 <label>পরিচিতি (Bio)</label>
@@ -85,31 +109,100 @@
                 <div class="label-block"><strong>জন্ম তারিখ দেখান</strong><span>অন্যরা আপনার জন্ম তারিখ দেখতে পারবে</span></div>
                 <label class="toggle-switch"><input type="checkbox" name="show_birth" value="1" <%= profileUser.show_birth ? 'checked' : '' %>><span class="toggle-slider"></span></label>
               </div>
-              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+              
+              <%# সেশন ৮০: ইনবক্সে মেসেজ পাঠানোর অনুমতি — নতুন কথোপকথনে কার্যকর %>
+              <div class="perm-box">
+                <div class="perm-title"><i class="fas fa-comment-dots"></i> ইনবক্সে বার্তা পাঠানোর অনুমতি</div>
+                <p class="perm-desc">কে আপনাকে নতুন প্রাইভেট-বার্তা পাঠাতে পারবে — অবাঞ্ছিত স্প্যাম থেকে বাঁচতে নিয়ন্ত্রণ করুন।</p>
+                <div class="perm-options">
+                  <label class="perm-opt">
+                    <input type="radio" name="allow_messages_from" value="everyone" <%= (profileUser.allow_messages_from || 'everyone') === 'everyone' ? 'checked' : '' %>>
+                    <span><strong>সবাই</strong><small>ফোরামের যে কেউ সরাসরি বার্তা দিতে পারবে</small></span>
+                  </label>
+                  <label class="perm-opt">
+                    <input type="radio" name="allow_messages_from" value="followers" <%= profileUser.allow_messages_from === 'followers' ? 'checked' : '' %>>
+                    <span><strong>শুধুমাত্র অনুসরণকারী</strong><small>যাঁরা আপনাকে ফলো করছেন কেবল তাঁরাই</small></span>
+                  </label>
+                  <label class="perm-opt">
+                    <input type="radio" name="allow_messages_from" value="none" <%= profileUser.allow_messages_from === 'none' ? 'checked' : '' %>>
+                    <span><strong>সম্পূর্ণ বন্ধ</strong><small>কেউ নতুন প্রাইভেট-বার্তা পাঠাতে পারবে না</small></span>
+                  </label>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="label-block"><strong>বুকমার্ক-তালিকা পাবলিক</strong><span>আপনার সংরক্ষিত লেখার তালিকা অন্যরা দেখতে পাবে</span></div>
+                <label class="toggle-switch"><input type="checkbox" name="bookmarks_public" value="1" <%= profileUser.bookmarks_public ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+              </div>
+<button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
             </form>
           </div>
-        </section>
+        
+        <%# সেশন ৮০: ব্লক-তালিকা ব্যবস্থাপনা %>
+        <div class="card" style="margin-top:20px;">
+          <h2><i class="fas fa-ban"></i> ব্লক করা সদস্য</h2>
+          <p style="color:var(--text-muted);font-size:14px;">ব্লক করা সদস্যরা আপনাকে বার্তা দিতে বা আপনার কনটেন্ট শেয়ার করতে পারবে না।</p>
+          <% if (!blockedUsers.length) { %>
+            <p class="hint" style="margin-top:10px;"><i class="fas fa-circle-info"></i> কাউকে ব্লক করা নেই — যেকোনো প্রোফাইল-পেজের বাটন থেকে কাউকে ব্লক করা যায়।</p>
+          <% } else { %>
+            <div class="blk-list" style="margin-top:14px;">
+              <% blockedUsers.forEach(function (b) { %>
+                <div class="blk-row">
+                  <img class="blk-avatar" src="<%= b.avatar_url || '/avatar/' + b.id %>" onerror="this.onerror=null;this.src='/avatar/0'" alt="">
+                  <span class="blk-meta">
+                    <strong><%= b.full_name %></strong>
+                    <small>@<%= b.username %><% if (b.designation) { %> · <%= b.designation %><% } %></small>
+                  </span>
+                  <a href="/profile/<%= encodeURIComponent(b.username) %>" class="btn btn-ghost btn-sm"><i class="fas fa-user"></i> প্রোফাইল</a>
+                  <form method="POST" action="/settings/unblock" class="blk-form">
+                    <input type="hidden" name="user_id" value="<%= b.id %>">
+                    <button type="submit" class="btn btn-ghost btn-sm blk-unblock"><i class="fas fa-unlock"></i> ব্লক সরান</button>
+                  </form>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+</section>
 
         <!-- Notifications -->
         <section class="settings-section" data-pane="notifications">
           <div class="card">
             <h2><i class="fas fa-bell"></i> বিজ্ঞপ্তি</h2>
-            <form method="POST" action="/settings/notifications">
-              <div class="field-row">
-                <div class="label-block"><strong>মেনশনে ইমেইল</strong><span>কেউ @উল্লেখ করলে ইমেইল পাঠান</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="email_mention" value="1" <%= notifyPrefs.email_mention ? 'checked' : '' %>><span class="toggle-slider"></span></label>
-              </div>
-              <div class="field-row">
-                <div class="label-block"><strong>নতুন মন্তব্যে ইমেইল</strong><span>আপনার পোস্টে মন্তব্য হলে ইমেইল পাঠান</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="email_comment" value="1" <%= notifyPrefs.email_comment ? 'checked' : '' %>><span class="toggle-slider"></span></label>
-              </div>
-              <div class="field-row">
-                <div class="label-block"><strong>প্রতিক্রিয়া পুশ</strong><span>❤️ বা 😂 পেলে পুশ নোটিফিকেশন</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="push_like" value="1" <%= notifyPrefs.push_like ? 'checked' : '' %>><span class="toggle-slider"></span></label>
-              </div>
-              <div class="field-row">
-                <div class="label-block"><strong>দৈনিক ডাইজেস্ট</strong><span>প্রতিদিন সকালে আপনার ফিডের সারাংশ</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="daily_digest" value="1" <%= notifyPrefs.daily_digest ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+            <%
+  /* সেশন ৮০: ব্যাক-কম্প্যাট ডিফল্ট — পুরনো কী থাকলে তা, না থাকলে ইন-অ্যাপ=চালু/ইমেইল=বন্ধ */
+  const np80 = notifyPrefs || {};
+  const inAppDef = function (k, legacy) { return np80[k] !== undefined ? !!np80[k] : (legacy !== undefined ? !!legacy : true); };
+  const emailDef = function (k, legacy) { return np80[k] !== undefined ? !!np80[k] : (legacy !== undefined ? !!legacy : false); };
+%>
+              <div class="notif-matrix">
+                <div class="nm-head">
+                  <div>ঘটনা</div><div><i class="fas fa-desktop"></i> ইন-অ্যাপ</div><div><i class="fas fa-envelope"></i> ইমেইল</div>
+                </div>
+                <label class="nm-row">
+                  <span class="nm-event"><strong>লেখায় প্রতিক্রিয়া</strong><small>কেউ আপনার লেখায় লাইক/ভালোবাসা দিলে</small></span>
+                  <input type="checkbox" name="notify_reactions" value="1" <%= inAppDef('notify_reactions', np80.push_like) ? 'checked' : '' %>>
+                  <input type="checkbox" name="email_reactions" value="1" <%= emailDef('email_reactions') ? 'checked' : '' %>>
+                </label>
+                <label class="nm-row">
+                  <span class="nm-event"><strong>নতুন মন্তব্য ও মেনশন</strong><small>পোস্টে মন্তব্য বা @উল্লেখ হলে</small></span>
+                  <input type="checkbox" name="notify_comments" value="1" <%= inAppDef('notify_comments') ? 'checked' : '' %>>
+                  <input type="checkbox" name="email_comment" value="1" <%= emailDef('email_comment', np80.email_comment) ? 'checked' : '' %>>
+                </label>
+                <label class="nm-row">
+                  <span class="nm-event"><strong>নতুন অনুসরণকারী</strong><small>কেউ আপনাকে ফলো করা শুরু করলে</small></span>
+                  <input type="checkbox" name="notify_follows" value="1" <%= inAppDef('notify_follows') ? 'checked' : '' %>>
+                  <input type="checkbox" name="email_follows" value="1" <%= emailDef('email_follows') ? 'checked' : '' %>>
+                </label>
+                <label class="nm-row">
+                  <span class="nm-event"><strong>প্রাইভেট বার্তা</strong><small>ইনবক্সে নতুন বার্তা এলে</small></span>
+                  <input type="checkbox" name="notify_messages" value="1" <%= inAppDef('notify_messages') ? 'checked' : '' %>>
+                  <input type="checkbox" name="email_messages" value="1" <%= emailDef('email_messages') ? 'checked' : '' %>>
+                </label>
+                <label class="nm-row">
+                  <span class="nm-event"><strong>সাপ্তাহিক সাহিত্য-ডাইজেস্ট</strong><small>ফোরামের সেরা নির্বাচিত লেখার ইমেইল-সংকলন</small></span>
+                  <span class="nm-dash">—</span>
+                  <input type="checkbox" name="weekly_digest" value="1" <%= np80.weekly_digest !== undefined ? (np80.weekly_digest ? 'checked' : '') : (np80.daily_digest ? 'checked' : '') %>>
+                </label>
               </div>
               <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
             </form>
@@ -128,14 +221,37 @@
               <div class="field"><label>পুনরায় নতুন পাসওয়ার্ড</label><input class="input" type="password" name="confirm_password" required minlength="6"></div>
               <button type="submit" class="btn btn-primary">পাসওয়ার্ড পরিবর্তন</button>
             </form>
-
+            <%# সেশন ৮০: ডেটা-এক্সপোর্ট — লেখকের স্বত্ব-ব্যাকআপ %>
             <hr style="margin:30px 0;border:none;border-top:1px solid var(--border)">
+            <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-cloud-arrow-down"></i> ডেটা ব্যাকআপ</h3>
+            <div class="dz-card">
+              <div class="dz-meta">
+                <strong>সব লেখার ব্যাকআপ ডাউনলোড (JSON)</strong>
+                <span>আপনার প্রকাশিত লেখা, মন্তব্য, বুকমার্ক ও বার্তা — এক ক্লিকে নিরাপদ ব্যাকআপ।</span>
+              </div>
+              <a href="/settings/export" class="btn btn-primary" download><i class="fas fa-download"></i> ডাউনলোড করুন</a>
+            </div>
 
-            <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;">বিপজ্জনক জোন</h3>
-            <p style="color:var(--text-muted);font-size:14px;">এই কার্যগুলো ফিরিয়ে আনা যাবে না।</p>
+            <hr style="margin:30px 0;border:none;border-top:1px solid rgba(220,38,38,.35)">
+            <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;"><i class="fas fa-triangle-exclamation"></i> বিপজ্জনক অঞ্চল</h3>
+            <p style="color:var(--text-muted);font-size:14px;">এই কার্যগুলো ফিরিয়ে আনা যাবে না — আগে ব্যাকআপ নিন।</p>
             <form method="POST" action="/settings/account/deactivate" style="display:inline">
               <button type="submit" class="btn btn-danger"><i class="fas fa-pause"></i> অ্যাকাউন্ট নিষ্ক্রিয় করুন</button>
             </form>
+
+            <%# সেশন ৮০: স্থায়ী ডিলিট — পাসওয়ার্ড + DELETE-টাইপ কনফার্ম %>
+            <div class="dz-card danger" style="margin-top:16px;">
+              <div class="dz-meta">
+                <strong>অ্যাকাউন্ট স্থায়ীভাবে মুছে ফেলুন</strong>
+                <span>প্রোফাইল, সব লেখা, মন্তব্য, বার্তা চিরতরে মুছে যাবে। নিচে পাসওয়ার্ড দিয়ে <b>DELETE</b> লিখে নিশ্চিত করুন।</span>
+              </div>
+              <div class="dz-del-form">
+                <input class="input" type="password" name="current_password" placeholder="বর্তমান পাসওয়ার্ড" required autocomplete="current-password">
+                <input class="input dz-del-confirm" type="text" placeholder="নিশ্চিত করতে DELETE লিখুন" required autocomplete="off" style="text-transform:uppercase;">
+                <button type="button" class="btn btn-danger"><i class="fas fa-trash-can"></i> চিরতরে মুছুন</button>
+              </div>
+              <form method="POST" action="/settings/account/delete" id="permDeleteForm80" hidden></form>
+            </div>
           </div>
         </section>
 
@@ -214,7 +330,39 @@
               </form>
             <% } %>
           </div>
-        </section>
+        
+        <%# সেশন ৮০: অ্যাক্টিভ-সেশন ট্র্যাকার %>
+        <div class="card" style="margin-top:20px;">
+          <h2><i class="fas fa-laptop"></i> অ্যাক্টিভ সেশন</h2>
+          <p style="color:var(--text-muted);font-size:14px;">আপনার অ্যাকাউন্ট কোন কোন ডিভাইসে লগইন করা আছে — চেনা-যায় না এমন ডিভাইস দেখলে সঙ্গে সঙ্গে লগআউট করুন।</p>
+          <div class="sess-list" style="margin-top:14px;">
+            <% activeSessions.forEach(function (s) { %>
+              <div class="sess-row<%= s.current ? ' current' : '' %>">
+                <span class="sess-ico"><i class="fas <%= s.icon %>"></i></span>
+                <span class="sess-meta">
+                  <strong><%= s.label %><% if (s.current) { %> <span class="sess-badge">এই ডিভাইস</span><% } %></strong>
+                  <small>
+                    <% if (s.ip) { %>আইপি: <%= s.ip %> · <% } %>
+                    <% if (s.loginAt) { %>লগইন: <time data-ts="<%= s.loginAt %>"></time> · <% } %>
+                    <% if (s.lastActive) { %>সর্বশেষ সক্রিয়: <time data-ts="<%= s.lastActive %>"></time><% } %>
+                  </small>
+                </span>
+                <% if (!s.current) { %>
+                  <form method="POST" action="/settings/sessions/revoke" class="sess-form" data-confirm="এই ডিভাইস থেকে লগআউট করবেন?">
+                    <input type="hidden" name="sid" value="<%= s.sid %>">
+                    <button type="submit" class="btn btn-ghost btn-sm sess-revoke"><i class="fas fa-right-from-bracket"></i> লগআউট</button>
+                  </form>
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+          <% if (activeSessions.length > 1) { %>
+            <form method="POST" action="/settings/sessions/revoke-all" style="margin-top:16px;" data-confirm="অন্য সব ডিভাইস থেকে লগআউট করবেন?">
+              <button type="submit" class="btn btn-danger-outline"><i class="fas fa-power-off"></i> অন্য সব ডিভাইস থেকে লগআউট করুন</button>
+            </form>
+          <% } %>
+        </div>
+</section>
 
         <!-- Display -->
         <section class="settings-section" data-pane="display">
@@ -227,6 +375,7 @@
                   <option value="auto" <%= (displayPrefs.theme || 'auto') === 'auto' ? 'selected' : '' %>>অটো (সিস্টেম অনুসারে)</option>
                   <option value="light" <%= displayPrefs.theme === 'light' ? 'selected' : '' %>>হালকা</option>
                   <option value="dark" <%= displayPrefs.theme === 'dark' ? 'selected' : '' %>>গাঢ়</option>
+                  <option value="sepia" <%= displayPrefs.theme === 'sepia' ? 'selected' : '' %>>সেপিয়া (বইয়ের পাতার আভা)</option>
                 </select>
               </div>
               <div class="field">
@@ -251,13 +400,28 @@
                 </select>
               </div>
               <div class="field">
+                <label>লাইন-স্পেসিং</label>
+                <select class="select" name="line_height" id="lhSelect">
+                  <option value="compact" <%= (displayPrefs.line_height || 'normal') === 'compact' ? 'selected' : '' %>>ঘন (১.৫)</option>
+                  <option value="normal"  <%= (displayPrefs.line_height || 'normal') === 'normal'  ? 'selected' : '' %>>স্বাভাবিক (১.৭)</option>
+                  <option value="relaxed" <%= (displayPrefs.line_height || 'normal') === 'relaxed' ? 'selected' : '' %>>আরামদায়ক (১.৯)</option>
+                </select>
+                <div class="hint">দীর্ঘ পড়ার সময় চোখের আরাম বাড়াতে লাইনের ব্যবধান</div>
+              </div>
+              <div class="field">
                 <label>ভাষা</label>
                 <select class="select" name="language">
                   <option value="bn" <%= (displayPrefs.language || 'bn') === 'bn' ? 'selected' : '' %>>বাংলা</option>
                   <option value="en" <%= displayPrefs.language === 'en' ? 'selected' : '' %>>English</option>
                 </select>
               </div>
-              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+              
+              <%# সেশন ৮০: রিয়েল-টাইম টাইপোগ্রাফি প্রিভিউ %>
+              <div class="dp-preview-wrap">
+                <div class="dp-preview-label"><i class="fas fa-eye"></i> লাইভ প্রিভিউ</div>
+                <div class="dp-preview" id="dpPreview">সাহিত্য আসলে আয়নার মতো — যা আমাদের না বলা ব্যথা ও আনন্দকে নতুন করে ভাষা দেয়। বইয়ের পাতা উল্টানোর মতো আনন্দ আর কিছুতেই নেই।</div>
+              </div>
+<button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
             </form>
           </div>
         </section>
@@ -341,6 +505,11 @@
       var autoSec = (location.hash === '#security') || q.has('sec') || q.has('secerr');
       if (autoSec) activate('security');
       else if (location.hash && document.querySelector('[data-pane="' + location.hash.slice(1) + '"]')) activate(location.hash.slice(1));
+      // সেশন ৮০: একই-ডকুমেন্ট hash-বদলেও ট্যাব-অ্যাক্টিভেশন (ব্যাক/ফরওয়ার্ড-নেভিগেশনসহ)
+      window.addEventListener('hashchange', function () {
+        var t = location.hash.slice(1);
+        if (t && document.querySelector('[data-pane="' + t + '"]')) activate(t);
+      });
       // ব্যাকআপ-কোড কপি বাটন
       var cp = document.getElementById('secCopyCodes');
       if (cp) cp.addEventListener('click', function () {
@@ -402,7 +571,102 @@
       if (location.hash === '#connected') activate('connected');
     })();
   </script>
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  
+  <script>
+  /* ── সেশন ৮০: সেটিংস-পেজ নতুন ইন্টারঅ্যাকশন ── */
+  (function () {
+    /* ১) সাহিত্য-ধারা চিপ-পিকার — সর্বোচ্চ ৫টি, হিডেন-ইনপুটে JSON */
+    var wrap = document.getElementById('genreChips');
+    var input = document.getElementById('genreInput');
+    var count = document.getElementById('genreCount');
+    if (wrap && input) {
+      var read = function () { try { return JSON.parse(input.value) || []; } catch (e) { return []; } };
+      var write = function (arr) { input.value = JSON.stringify(arr); if (count) count.textContent = arr.length + '/৫'; };
+      wrap.addEventListener('click', function (e) {
+        var chip = e.target.closest('.genre-chip');
+        if (!chip) return;
+        var g = chip.getAttribute('data-genre');
+        var cur = read();
+        if (cur.indexOf(g) >= 0) cur = cur.filter(function (x) { return x !== g; });
+        else if (cur.length >= 5) { wrap.classList.add('shake'); setTimeout(function () { wrap.classList.remove('shake'); }, 400); return; }
+        else cur.push(g);
+        write(cur);
+        chip.classList.toggle('selected', cur.indexOf(g) >= 0);
+        chip.firstChild.nodeValue = (cur.indexOf(g) >= 0 ? '✓ ' : '+ ');
+      });
+    }
+
+    /* ২) ডিসপ্লে-ট্যাব লাইভ প্রিভিউ — ফন্ট/সাইজ/লাইন-হাইট/সেপিয়া */
+    var dp = document.getElementById('dpPreview');
+    if (dp) {
+      var form = dp.closest('form');
+      var fSel = form && form.querySelector('select[name="font_family"]');
+      var sSel = form && form.querySelector('select[name="font_size"]');
+      var lSel = form && form.querySelector('select[name="line_height"]');
+      var tSel = form && form.querySelector('select[name="theme"]');
+      var SIZES = { small: '14px', medium: '16.5px', large: '18.5px' };
+      var LHS = { compact: '1.5', normal: '1.7', relaxed: '1.9' };
+      var FFCLASS = { bn: 'font-bn', serif: 'font-serif', sans: 'font-sans', mixed: 'font-mixed', hand: 'font-hand', display: 'font-display', durnibar: 'font-durnibar', lipi: 'font-lipi' };
+      function sync() {
+        if (sSel) dp.style.fontSize = SIZES[sSel.value] || '16.5px';
+        if (lSel) dp.style.lineHeight = LHS[lSel.value] || '1.7';
+        if (fSel) { Object.keys(FFCLASS).forEach(function (k) { dp.classList.remove(FFCLASS[k]); }); dp.classList.add(FFCLASS[fSel.value] || 'font-bn'); }
+        if (tSel) { dp.classList.toggle('is-sepia', tSel.value === 'sepia'); dp.classList.toggle('is-dark', tSel.value === 'dark'); }
+      }
+      [fSel, sSel, lSel, tSel].forEach(function (el) { if (el) el.addEventListener('change', sync); });
+      sync();
+    }
+
+    /* ৩) সেশন-তালিকার সময় — বাংলা রিলেটিভ-টাইম */
+    function relTime80(ts) {
+      var d = Date.now() - Number(ts);
+      if (d < 0) d = 0;
+      var m = Math.floor(d / 60000);
+      if (m < 1) return 'এই মুহূর্তে';
+      if (m < 60) return m + ' মিনিট আগে';
+      var h = Math.floor(m / 60);
+      if (h < 24) return h + ' ঘণ্টা আগে';
+      var dd = Math.floor(h / 24);
+      if (dd < 30) return dd + ' দিন আগে';
+      return new Date(Number(ts)).toLocaleDateString('bn-BD');
+    }
+    document.querySelectorAll('time[data-ts]').forEach(function (t) { t.textContent = relTime80(t.getAttribute('data-ts')); });
+
+    /* ৪) সেশন-রিভোক/আনব্লক/রিভোক-অল কনফার্ম + বাটন-স্পিনার */
+    document.addEventListener('submit', function (e) {
+      var f = e.target;
+      if (f && (f.classList.contains('sess-form') || f.classList.contains('blk-form') || f.getAttribute('data-confirm'))) {
+        var msg = f.getAttribute('data-confirm');
+        if (msg && !window.confirm(msg)) { e.preventDefault(); return; }
+        var btn = f.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.insertAdjacentHTML('afterbegin', '<i class="fas fa-spinner fa-spin" style="margin-right:5px"></i>'); }
+      }
+    }, true);
+
+    /* ৫) স্থায়ী-ডিলিট — ভিজ্যুয়াল-ফর্ম → হিডেন-ফর্মে মান বসিয়ে সাবমিট */
+    var pd = document.getElementById('permDeleteForm80');
+    var pdb = document.querySelector('.dz-del-form button.btn-danger');
+    if (pd && pdb) {
+      var vPwd = document.querySelector('.dz-del-form input[name="current_password"]');
+      var vDel = document.querySelector('.dz-del-form input.dz-del-confirm');
+      pdb.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        var pwd = vPwd && vPwd.value;
+        var del = vDel && vDel.value.trim().toUpperCase();
+        if (!pwd || del !== 'DELETE') {
+          alert('অ্যাকাউন্ট মুছতে: পাসওয়ার্ড দিন এবং নিশ্চিত-ঘরে ঠিক DELETE লিখুন।');
+          return;
+        }
+        if (!window.confirm('সত্যিই চিরতরে মুছে ফেলবেন? এটি ফেরানো যাবে না!')) return;
+        var i1 = document.createElement('input'); i1.type = 'hidden'; i1.name = 'current_password'; i1.value = pwd;
+        var i2 = document.createElement('input'); i2.type = 'hidden'; i2.name = 'confirm_delete'; i2.value = del;
+        pd.appendChild(i1); pd.appendChild(i2);
+        pd.submit();
+      });
+    }
+  })();
+  </script>
+<script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </body>

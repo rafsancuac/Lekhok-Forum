@@ -1369,10 +1369,67 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
 // সেশন ৫৮: "নিরাপত্তা" অংশ — ইউজার-লেভেল 2FA (TOTP)। লগইন-ফর্মে 2FA নেই;
 // সেটআপ/বন্ধ এখানেই — ইউজারের নিজের আইডির ভেতরে (ইউজার-নির্দেশনা)।
 router.get('/settings', ensureLoggedIn, async (req, res) => {
+  // সেশন ৮০: নতুন কলামগুলো (pen_name, genres, allow_messages_from,
+  // bookmarks_public) স্কিমা-মাইগ্রেশনে যোগ হয় — পুরনো DB-তে না থাকলে
+  // নিরাপদ ALTER (idempotent, ব্যর্থ হলে চুপচাপ এগিয়ে যাই)।
+  for (const col of ['pen_name TEXT', "genres TEXT DEFAULT '[]'", "allow_messages_from TEXT DEFAULT 'everyone'", 'bookmarks_public INTEGER DEFAULT 0']) {
+    try { await db.exec('ALTER TABLE users ADD COLUMN ' + col); } catch (_) {}
+  }
   const me = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.user.id);
   let notifyPrefs = {}, displayPrefs = {};
   try { notifyPrefs = JSON.parse(me.notify_prefs || '{}'); } catch (_) {}
   try { displayPrefs = JSON.parse(me.display_prefs || '{}'); } catch (_) {}
+  let genres = [];
+  try { genres = JSON.parse(me.genres || '[]'); if (!Array.isArray(genres)) genres = []; } catch (_) {}
+
+  // ── সেশন ৮০: ব্লক-তালিকা (গোপনীয়তা-ট্যাবে ব্যবস্থাপনা) ──
+  let blockedUsers = [];
+  try {
+    blockedUsers = await db.prepare(`
+      SELECT u.id, u.username, u.full_name, u.avatar_url, u.designation, b.created_at AS blocked_at
+      FROM blocks b JOIN users u ON u.id = b.blocked_id
+      WHERE b.blocker_id = ? ORDER BY b.created_at DESC
+    `).all(req.session.user.id);
+  } catch (e) {}
+
+  // ── সেশন ৮০: অ্যাক্টিভ-সেশন তালিকা — sessions-টেবিলের ডেটা-JSON পার্স করে
+  // আমার (user.id) সেশনগুলোই বের করি। rolling-cookie-র কারণে expires =
+  // শেষ-কার্যকলাপ + ২৪ঘ — তাই lastActive = expires − TTL। ──
+  const activeSessions = [];
+  try {
+    const rows = await db.prepare('SELECT sid, data, expires FROM sessions').all();
+    for (const r of rows) {
+      let sd = null;
+      try { sd = JSON.parse(r.data); } catch (_) { continue; }
+      if (!sd || !sd.user || sd.user.id !== req.session.user.id) continue;
+      const dev = sd.device80 || {};
+      const lastActive = Math.max(Number(r.expires) - 24 * 60 * 60 * 1000, (dev.loginAt || 0));
+      activeSessions.push({
+        sid: r.sid,
+        current: r.sid === req.sessionID,
+        label: dev.label || 'অজানা ডিভাইস',
+        icon: dev.icon || 'fa-laptop',
+        ip: dev.ip || null,
+        loginAt: dev.loginAt || null,
+        lastActive: lastActive > 0 ? lastActive : null
+      });
+    }
+    activeSessions.sort((a, b) => (b.current ? 1 : 0) - (a.current ? 1 : 0) || (b.lastActive || 0) - (a.lastActive || 0));
+    // বর্তমান সেশনের ডিভাইস-স্ট্যাম্প রেসপন্স-শেষে সেভ হয় — তাই প্রথম-ভিউতে
+    // DB-রো-তে এখনো না-থাকলে মেমোরির লাইভ device80 দিয়ে বদলে দিই।
+    const live80 = req.session.device80;
+    if (live80 && activeSessions.length && activeSessions[0] && activeSessions[0].current && (!activeSessions[0].label || activeSessions[0].label === 'অজানা ডিভাইস')) {
+      activeSessions[0] = {
+        ...activeSessions[0],
+        label: live80.label || activeSessions[0].label,
+        icon: live80.icon || activeSessions[0].icon,
+        ip: live80.ip || activeSessions[0].ip,
+        loginAt: live80.loginAt || activeSessions[0].loginAt,
+        lastActive: Date.now()
+      };
+    }
+  } catch (e) { console.error('[settings] sessions list:', e.message); }
+
   // 2FA অবস্থা + (থাকলে) এনরোল-পেন্ডিং সিক্রেট + ব্যাকআপ-কোড ফ্ল্যাশ (একবারই দেখানো হয়)
   const secPending = req.session.pendingUserTotpSecret || null;
   const backupFlash = req.session.backupCodesShown || null;
@@ -1380,7 +1437,10 @@ router.get('/settings', ensureLoggedIn, async (req, res) => {
   res.render('user/settings', {
     currentPath: '/settings',
     profileUser: me,
+    genres,
     notifyPrefs, displayPrefs,
+    blockedUsers,
+    activeSessions,
     ok: req.query.ok || null, err: req.query.err || null,
     totpEnabled: !!(me.totp_enabled && me.totp_secret),
     secPending,
@@ -1457,17 +1517,34 @@ router.post('/settings/security/backup-regen', ensureLoggedIn, async (req, res) 
   req.session.save(() => res.redirect('/settings?sec=backup#security'));
 });
 
+// সেশন ৮০: অনুমোদিত সাহিত্য-ধারার হোয়াইটলিস্ট (চিপ-পিকার UI-এর অপশনগুলোই)
+const GENRE_WHITELIST_80 = [
+  'কবিতা', 'ছোটগল্প', 'উপন্যাস', 'কল্পবিজ্ঞান', 'গোয়েন্দা ও থ্রিলার',
+  'প্রবন্ধ ও গবেষণা', 'অনুবাদ সাহিত্য', 'ভ্রমণকাহিনী', 'ইতিহাস', 'নাটক ও নাটিকা', 'শিশুসাহিত্য'
+];
+
 router.post('/settings/profile', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const me = req.session.user;
   const { full_name, bio, designation, address, gender, birth_date } = req.body;
+
+  // ── সেশন ৮০: ছদ্মনাম + সাহিত্য-ধারা (সর্বোচ্চ ৫টি, হোয়াইটলিস্ট-থেকেই) ──
+  const penName = String(req.body.pen_name || '').trim().slice(0, 60) || null;
+  let genres = [];
+  if (typeof req.body.genres === 'string') {
+    try { genres = JSON.parse(req.body.genres); } catch (_) { genres = []; }
+  } else if (Array.isArray(req.body.genres)) { genres = req.body.genres; }
+  if (!Array.isArray(genres)) genres = [];
+  genres = [...new Set(genres)].filter(g => GENRE_WHITELIST_80.includes(g)).slice(0, 5);
+
   await db.prepare(`
     UPDATE users SET
       full_name = COALESCE(?, full_name),
       bio = ?, designation = ?, address = ?,
       gender = COALESCE(?, gender),
-      birth_date = ?
+      birth_date = ?,
+      pen_name = ?, genres = ?
     WHERE id = ?
-  `).run(full_name ?? null, bio || null, designation || null, address || null, gender ?? null, birth_date || null, me.id);
+  `).run(full_name ?? null, bio || null, designation || null, address || null, gender ?? null, birth_date || null, penName, JSON.stringify(genres), me.id);
   // নোট (সেশন ৬০): social_* ফিল্ড এখন "সংযুক্ত অ্যাকাউন্ট" সেকশনের
   // /settings/social রুট থেকেই পরিচালিত হয় — এখানে আর ছোঁয় না, নাহলে
   // ফর্ম-সাবমিটে সংযোগ মুছে যেত।
@@ -1569,9 +1646,30 @@ router.post('/settings/cover', ensureLoggedIn, withUpload(coverUpload), async (r
 router.post('/settings/privacy', ensureLoggedIn, async (req, res) => {
   const me = req.session.user;
   const { show_email, show_phone, show_birth } = req.body;
-  await db.prepare('UPDATE users SET show_email = ?, show_phone = ?, show_birth = ? WHERE id = ?')
-    .run(show_email === '1' ? 1 : 0, show_phone === '1' ? 1 : 0, show_birth === '1' ? 1 : 0, me.id);
-  res.redirect('/settings?ok=privacy');
+  // ── সেশন ৮০: মেসেজ-পারমিশন (everyone|followers|none) + বুকমার্ক-ভিজিবিলিটি ──
+  const ALLOWED_MSG_FROM = ['everyone', 'followers', 'none'];
+  const allowMessagesFrom = ALLOWED_MSG_FROM.includes(req.body.allow_messages_from)
+    ? req.body.allow_messages_from : 'everyone';
+  await db.prepare(`
+    UPDATE users SET
+      show_email = ?, show_phone = ?, show_birth = ?,
+      allow_messages_from = ?, bookmarks_public = ?
+    WHERE id = ?
+  `).run(
+    show_email === '1' ? 1 : 0, show_phone === '1' ? 1 : 0, show_birth === '1' ? 1 : 0,
+    allowMessagesFrom, req.body.bookmarks_public === '1' ? 1 : 0,
+    me.id
+  );
+  res.redirect('/settings?ok=privacy#privacy');
+});
+
+// ── সেশন ৮০: ব্লক-তালিকা থেকে কাউকে আনব্লক ──
+router.post('/settings/unblock', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const targetId = Number(req.body.user_id || 0);
+  if (!targetId || targetId === me.id) return res.redirect('/settings#privacy');
+  await db.prepare('DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?').run(me.id, targetId);
+  res.redirect('/settings?ok=unblocked#privacy');
 });
 
 router.post('/settings/notifications', ensureLoggedIn, async (req, res) => {
@@ -1581,14 +1679,26 @@ router.post('/settings/notifications', ensureLoggedIn, async (req, res) => {
   try {
     await db.exec("ALTER TABLE users ADD COLUMN notify_prefs TEXT DEFAULT '{}'");
   } catch (_) {}
+  // ── সেশন ৮০: গ্র্যানুলার নোটিফিকেশন-ম্যাট্রিক্স — ৫টি ইভেন্ট × (ইন-অ্যাপ/ইমেইল)।
+  // পুরনো কীগুলো (email_mention, email_comment, push_like, daily_digest)
+  // ব্যাক-কম্প্যাটে রাখা হয়েছে — নতুন কীগুলোর সাথে ম্যাপ করা। ──
+  const b = (k) => req.body[k] === '1' ? true : false;
   const prefs = {
-    email_mention: req.body.email_mention === '1',
-    email_comment: req.body.email_comment === '1',
-    push_like:     req.body.push_like === '1',
-    daily_digest:  req.body.daily_digest === '1'
+    // প্রতিক্রিয়া (লাইক/ভালোবাসা)
+    notify_reactions: b('notify_reactions'), email_reactions: b('email_reactions'),
+    // মন্তব্য ও মেনশন
+    notify_comments: b('notify_comments'), email_comment: b('email_comment'), email_mention: b('email_comment'),
+    // নতুন অনুসরণকারী
+    notify_follows: b('notify_follows'), email_follows: b('email_follows'),
+    // প্রাইভেট মেসেজ
+    notify_messages: b('notify_messages'), email_messages: b('email_messages'),
+    // সাপ্তাহিক ডাইজেস্ট (ইমেইল-চ্যানেলই যথেষ্ট)
+    weekly_digest: b('weekly_digest'), daily_digest: b('weekly_digest'),
+    // লেগেসি-কী (আগের কোড যদি পড়ে) — push_like ≈ notify_reactions
+    push_like: b('notify_reactions')
   };
   await db.prepare('UPDATE users SET notify_prefs = ? WHERE id = ?').run(JSON.stringify(prefs), me.id);
-  res.redirect('/settings?ok=notifications');
+  res.redirect('/settings?ok=notifications#notifications');
 });
 
 router.post('/settings/account/password', ensureLoggedIn, async (req, res) => {
@@ -1611,6 +1721,127 @@ router.post('/settings/account/deactivate', ensureLoggedIn, async (req, res) => 
   req.session.destroy(() => res.redirect('/'));
 });
 
+// ── সেশন ৮০: ফুল ডেটা-এক্সপোর্ট (JSON ব্যাকআপ) ──────────────────────────────
+// লেখকের স্বত্ব-নিশ্চয়তা: নিজের সব লেখা/মন্তব্য/বুকমার্ক/বার্তা এক ক্লিকে ডাউনলোড।
+router.get('/settings/export', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  try {
+    const profile = await db.prepare(`
+      SELECT username, email, full_name, pen_name, bio, designation, address, gender,
+             birth_date, social_fb, social_twitter, social_linkedin, social_telegram, social_website,
+             created_at
+      FROM users WHERE id = ?
+    `).get(me.id);
+    let genres = [];
+    try { genres = JSON.parse((await db.prepare('SELECT genres FROM users WHERE id = ?').get(me.id)).genres || '[]'); } catch (_) {}
+    profile.genres = Array.isArray(genres) ? genres : [];
+
+    const posts = await db.prepare(`
+      SELECT id, type, title, body, excerpt, cover_image, tags, status, view_count, like_count, comment_count, published_at, created_at
+      FROM posts WHERE author_id = ? ORDER BY created_at DESC
+    `).all(me.id);
+    const comments = await db.prepare(`
+      SELECT c.body, c.created_at, p.title AS post_title
+      FROM comments c JOIN posts p ON p.id = c.post_id
+      WHERE c.author_id = ? ORDER BY c.created_at DESC
+    `).all(me.id);
+    const bookmarks = await db.prepare(`
+      SELECT p.title, p.type, b.created_at
+      FROM bookmarks b JOIN posts p ON p.id = b.post_id
+      WHERE b.user_id = ? ORDER BY b.created_at DESC
+    `).all(me.id);
+    const messages = await db.prepare(`
+      SELECT m.body, m.created_at,
+             CASE WHEN m.sender_id = ? THEN 'আমি' ELSE u.username END AS direction
+      FROM messages m
+      JOIN conversations cv ON cv.id = m.conversation_id
+      LEFT JOIN users u ON u.id = CASE WHEN cv.user_a = ? THEN cv.user_b ELSE cv.user_a END
+      WHERE (cv.user_a = ? OR cv.user_b = ?)
+      ORDER BY m.created_at DESC LIMIT 5000
+    `).all(me.id, me.id, me.id, me.id);
+
+    const payload = {
+      exported_at: new Date().toISOString(),
+      platform: 'লেখক ফোরাম (Lekhok-Forum)',
+      profile, posts, comments, bookmarks, messages,
+      counts: { posts: posts.length, comments: comments.length, bookmarks: bookmarks.length, messages: messages.length }
+    };
+    const fname = 'lekhok-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + fname + '"');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(JSON.stringify(payload, null, 2));
+  } catch (e) {
+    console.error('[settings/export]', e.message);
+    return res.redirect('/settings?err=export#account');
+  }
+});
+
+// ── সেশন ৮০: স্থায়ী অ্যাকাউন্ট-ডিলিট (Danger Zone) ──────────────────────────
+// পাসওয়ার্ড-যাচাই + টাইপ-কনফার্ম ("DELETE") — দুই স্তরের নিশ্চয়তা। আগে
+// ডেটা-এক্সপোর্ট সুপারিশ করা হয়; তারপর ইউজার-সম্পর্কিত সব রেকর্ড মুছে যায়।
+router.post('/settings/account/delete', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const row = await db.prepare('SELECT password_hash, username FROM users WHERE id = ?').get(me.id);
+  if (!row || !await bcrypt.compare(String(req.body.current_password || ''), row.password_hash)) {
+    return res.redirect('/settings?err=delete_password#account');
+  }
+  if (String(req.body.confirm_delete || '').trim().toUpperCase() !== 'DELETE') {
+    return res.redirect('/settings?err=delete_confirm#account');
+  }
+  const uid = me.id;
+  // স্ট্রাকচার-নির্ভর মুছে ফেলা — প্রতিটা ধাপ আলাদা try-তে: একটা টেবিল-স্কিমা
+  // বদলালেও বাকি ডেটা মুছতে বাধা না খেয়ে ইউজার-রো-মুছা নিশ্চিত হয়।
+  const steps = [
+    () => db.prepare('DELETE FROM posts WHERE author_id = ?').run(uid),
+    () => db.prepare('DELETE FROM comments WHERE author_id = ?').run(uid),
+    () => db.prepare('DELETE FROM likes WHERE user_id = ?').run(uid),
+    () => db.prepare('DELETE FROM bookmarks WHERE user_id = ?').run(uid),
+    () => db.prepare('DELETE FROM follows WHERE follower_id = ? OR following_id = ?').run(uid, uid),
+    () => db.prepare('DELETE FROM blocks WHERE blocker_id = ? OR blocked_id = ?').run(uid, uid),
+    () => db.prepare('DELETE FROM conversation_members WHERE user_id = ?').run(uid),
+    () => db.prepare("DELETE FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE user_a = ? OR user_b = ?)").run(uid, uid),
+    () => db.prepare('DELETE FROM conversations WHERE user_a = ? OR user_b = ?').run(uid, uid),
+    () => db.prepare('DELETE FROM notifications WHERE user_id = ?').run(uid),
+  ];
+  for (const s of steps) { try { await s(); } catch (e) { console.error('[delete-step]', e.message); } }
+  // সেশনগুলো (যেই ডিভাইস থেকেই লগইন) বাতিল — তারপর নিজের সেশন ধ্বংস
+  try {
+    const rows = await db.prepare('SELECT sid, data FROM sessions').all();
+    for (const r of rows) {
+      try { const sd = JSON.parse(r.data); if (sd && sd.user && sd.user.id === uid) await db.prepare('DELETE FROM sessions WHERE sid = ?').run(r.sid); } catch (_) {}
+    }
+  } catch (e) { console.error('[delete-sessions]', e.message); }
+  try { await db.prepare('DELETE FROM users WHERE id = ?').run(uid); } catch (e) { console.error('[delete-user]', e.message); }
+  req.session.destroy(() => res.redirect('/?deleted=1'));
+});
+
+// ── সেশন ৮০: অ্যাক্টিভ-সেশন রিভোকেশন ───────────────────────────────────────
+// sid-ভিত্তিক একক লগআউট + "অন্য সব ডিভাইস থেকে লগআউট"। রিভোকের আগে সেশনের
+// মালিক আমিই কিনা তা data-JSON পার্স করে যাচাই — অন্যের সেশন কেউ মুছতে না পারে।
+async function mySessionIds80(uid, exceptSid) {
+  const out = [];
+  const rows = await db.prepare('SELECT sid, data FROM sessions').all();
+  for (const r of rows) {
+    if (exceptSid && r.sid === exceptSid) continue;
+    try { const sd = JSON.parse(r.data); if (sd && sd.user && sd.user.id === uid) out.push(r.sid); } catch (_) {}
+  }
+  return out;
+}
+router.post('/settings/sessions/revoke', ensureLoggedIn, async (req, res) => {
+  const sid = String(req.body.sid || '');
+  if (sid && sid !== req.sessionID) {
+    const mine = await mySessionIds80(req.session.user.id, null);
+    if (mine.includes(sid)) await db.prepare('DELETE FROM sessions WHERE sid = ?').run(sid);
+  }
+  res.redirect('/settings?ok=session_revoked#security');
+});
+router.post('/settings/sessions/revoke-all', ensureLoggedIn, async (req, res) => {
+  const sids = await mySessionIds80(req.session.user.id, req.sessionID);
+  for (const s of sids) { try { await db.prepare('DELETE FROM sessions WHERE sid = ?').run(s); } catch (_) {} }
+  res.redirect('/settings?ok=sessions_revoked#security');
+});
+
 router.post('/settings/display', ensureLoggedIn, async (req, res) => {
   const me = req.session.user;
   const { theme, font_size, language, font_family } = req.body;
@@ -1618,14 +1849,18 @@ router.post('/settings/display', ensureLoggedIn, async (req, res) => {
     await db.exec("ALTER TABLE users ADD COLUMN display_prefs TEXT DEFAULT '{}'");
   } catch (_) {}
   const ALLOWED_FONT = ['bn', 'serif', 'sans', 'mixed', 'hand', 'display', 'durnibar', 'lipi'];
+  // সেশন ৮০: sepia-থিম (বইয়ের পাতার আভা) + লাইন-স্পেসিং যোগ
+  const ALLOWED_THEME = ['auto', 'light', 'dark', 'sepia'];
+  const ALLOWED_LH = ['compact', 'normal', 'relaxed'];
   const prefs = {
-    theme:       theme       || 'auto',
+    theme:       ALLOWED_THEME.includes(theme) ? theme : 'auto',
     font_size:   font_size   || 'medium',
     language:    language    || 'bn',
     font_family: ALLOWED_FONT.includes(font_family) ? font_family : 'bn',
+    line_height: ALLOWED_LH.includes(req.body.line_height) ? req.body.line_height : 'normal',
   };
   await db.prepare('UPDATE users SET display_prefs = ? WHERE id = ?').run(JSON.stringify(prefs), me.id);
-  res.redirect('/settings?ok=display');
+  res.redirect('/settings?ok=display#display');
 });
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1718,6 +1953,13 @@ router.post('/api/share-to-user', ensureLoggedIn, async (req, res) => {
   let conv = await db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me.id, other.id, other.id, me.id);
   if (!conv) {
+    // সেশন ৮০: নতুন কথোপকথনে মেসেজ-পারমিশন সম্মান (গোপনীয়তা-সেটিংস)
+    const amf = (other.allow_messages_from || 'everyone');
+    if (amf === 'none') return res.status(403).json({ error: 'msg_none' });
+    if (amf === 'followers') {
+      const following = await db.prepare('SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?').get(me.id, other.id);
+      if (!following) return res.status(403).json({ error: 'msg_followers' });
+    }
     const a = Math.min(me.id, other.id), b = Math.max(me.id, other.id);
     const r = await db.prepare('INSERT INTO conversations (user_a, user_b) VALUES (?, ?)').run(a, b);
     conv = { id: r.lastInsertRowid };

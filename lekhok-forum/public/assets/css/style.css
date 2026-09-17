@@ -724,3 +724,101 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   .hid81-banner{padding:12px 13px}
   .hid81-unhide{width:100%;justify-content:center}
 }
+
+/* ═══ সেশন ৮০: সেটিংস-পেজ আপগ্রেড — লেখক-পরিচয়, গোপনীয়তা, সেশন, এক্সপোর্ট ═══ */
+
+/* ── ধারা-চিপ (Genre picker) ── */
+.genre-count{display:inline-block;margin-left:6px;font-size:.7rem;color:var(--text-muted);background:var(--surface-alt,rgba(0,0,0,.04));border:1px solid var(--border);padding:1px 8px;border-radius:999px;vertical-align:middle}
+.genre-chip-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.genre-chip{appearance:none;-webkit-appearance:none;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:6px 13px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .18s;font-family:inherit}
+.genre-chip:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.genre-chip.selected{background:var(--accent);border-color:var(--accent);color:var(--on-accent);box-shadow:0 3px 10px -3px var(--accent-glow,rgba(5,150,105,.4))}
+.genre-chip-wrap.shake{animation:lfShake80 .4s}
+@keyframes lfShake80{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* ── মেসেজ-পারমিশন রেডিও-কার্ড (গোপনীয়তা) ── */
+.perm-box{border:1px solid var(--border);border-radius:var(--radius);padding:16px;background:var(--card);margin-bottom:8px}
+.perm-title{font-size:.95rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.perm-title i{color:var(--accent)}
+.perm-desc{margin:4px 0 12px;font-size:.8rem;color:var(--text-muted)}
+.perm-options{display:grid;grid-template-columns:1fr;gap:8px}
+.perm-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .18s;background:var(--bg,#f8fafc)}
+.perm-opt:hover{border-color:var(--accent)}
+.perm-opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft,rgba(5,150,105,.08));box-shadow:0 0 0 1px var(--accent) inset}
+.perm-opt input{margin-top:3px;accent-color:var(--accent);flex-shrink:0}
+.perm-opt strong{display:block;font-size:.8rem;color:var(--text)}
+.perm-opt small{font-size:.72rem;color:var(--text-muted)}
+@media(min-width:640px){.perm-options{grid-template-columns:repeat(3,1fr)}.perm-opt{align-items:center}}
+
+/* ── ব্লক-তালিকা ব্যবস্থাপনা ── */
+.blk-list{display:flex;flex-direction:column;gap:10px}
+.blk-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg,#f8fafc);flex-wrap:wrap}
+.blk-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.blk-meta{flex:1;min-width:140px}
+.blk-meta strong{display:block;font-size:.82rem;color:var(--text)}
+.blk-meta small{font-size:.72rem;color:var(--text-muted)}
+.blk-unblock:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ── নোটিফিকেশন-ম্যাট্রিক্স (৫ ইভেন্ট × ২ চ্যানেল) ── */
+.notif-matrix{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+.nm-head{display:grid;grid-template-columns:1fr 86px 86px;padding:10px 16px;background:var(--bg,#f8fafc);border-bottom:1px solid var(--border);font-size:.72rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.nm-head div:not(:first-child){text-align:center}
+.nm-row{display:grid;grid-template-columns:1fr 86px 86px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.nm-row:last-child{border-bottom:none}
+.nm-row:hover{background:var(--surface-alt,rgba(0,0,0,.02))}
+.nm-event strong{display:block;font-size:.8rem;color:var(--text)}
+.nm-event small{font-size:.72rem;color:var(--text-muted)}
+.nm-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);cursor:pointer;justify-self:center}
+.nm-dash{justify-self:center;color:var(--text-muted)}
+@media(max-width:520px){.nm-head{grid-template-columns:1fr 64px 64px}.nm-row{grid-template-columns:1fr 64px 64px;padding:12px}.nm-event strong{font-size:.75rem}.nm-event small{display:none}.nm-head div:not(:first-child){font-size:.62rem}}
+
+/* ── অ্যাক্টিভ-সেশন ট্র্যাকার ── */
+.sess-list{display:flex;flex-direction:column;gap:10px}
+.sess-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg,#f8fafc);flex-wrap:wrap}
+.sess-row.current{border-color:var(--accent);background:var(--accent-soft,rgba(5,150,105,.07))}
+.sess-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-alt,rgba(0,0,0,.05));color:var(--text);flex-shrink:0;font-size:1rem}
+.sess-row.current .sess-ico{background:var(--accent);color:var(--on-accent)}
+.sess-meta{flex:1;min-width:160px}
+.sess-meta strong{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.82rem;color:var(--text)}
+.sess-badge{font-size:.62rem;font-weight:800;background:var(--accent);color:var(--on-accent);padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px}
+.sess-meta small{font-size:.72rem;color:var(--text-muted);display:block;margin-top:2px}
+.sess-revoke:hover{color:#dc2626;border-color:rgba(220,38,38,.5)}
+.btn-danger-outline{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(220,38,38,.55);color:#dc2626;background:transparent;padding:8px 16px;border-radius:var(--radius);font-size:.78rem;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-danger-outline:hover{background:#dc2626;color:#fff;border-color:#dc2626}
+
+/* ── Danger-zone / এক্সপোর্ট-কার্ড ── */
+.dz-card{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;background:var(--bg,#f8fafc);margin-top:10px}
+.dz-meta{flex:1;min-width:220px}
+.dz-meta strong{display:block;font-size:.82rem;color:var(--text)}
+.dz-meta span{font-size:.73rem;color:var(--text-muted);line-height:1.5;display:block;margin-top:3px}
+.dz-card.danger{border-color:rgba(220,38,38,.45);background:rgba(220,38,38,.05)}
+.dz-del-form{display:grid;grid-template-columns:1fr;gap:8px;width:100%}
+@media(min-width:640px){.dz-del-form{grid-template-columns:1fr 1fr auto;width:100%;max-width:540px}}
+.dz-del-form .input{background:var(--card)}
+
+/* ── ডিসপ্লে লাইভ-প্রিভিউ ── */
+.dp-preview-wrap{margin-top:4px}
+.dp-preview-label{font-size:.72rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;gap:6px;align-items:center}
+.dp-preview{border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;background:var(--card);color:var(--text);transition:all .25s;font-size:16.5px;line-height:1.7}
+.dp-preview.is-sepia{background:#f5ecd7;border-color:#e0d0a8;color:#5b4636}
+.dp-preview.is-dark{background:#131b2f;border-color:#1e293b;color:#e2e8f0}
+
+/* ── সেপিয়া-থিম (সাইট-ওয়াইড, বইয়ের পাতার আভা) ── */
+html.theme-sepia body{background:#efe4cc;color:#43352a}
+html.theme-sepia .card,html.theme-sepia .settings-nav{background:#faf1dd;border-color:#e2d3ae}
+html.theme-sepia .input,html.theme-sepia .select,html.theme-sepia .textarea{background:#f4ead2;border-color:#d8c69c;color:#43352a}
+html.theme-sepia .hint{color:#8a795f}
+html.theme-sepia .btn-ghost{color:#6b5b40}
+html.theme-sepia .btclf-topbar{background:#40311d}
+html.theme-sepia a{color:#7c5c2e}
+html.theme-sepia .field-row{border-color:#e2d3ae}
+
+/* ── লাইন-স্পেসিং (রিডিং-কমফোর্ট) ── */
+html.lh-compact .article-body,html.lh-compact .feed-text,html.lh-compact .post-body,html.lh-compact .qa-body{line-height:1.5}
+html.lh-relaxed .article-body,html.lh-relaxed .feed-text,html.lh-relaxed .post-body,html.lh-relaxed .qa-body{line-height:1.9}
+
+/* ── প্রোফাইল-পেজ ধারা-ব্যাজ ── */
+.genre-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.genre-badge{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--accent-soft,rgba(5,150,105,.1));color:var(--accent-dark,#047857);border:1px solid var(--accent-glow,rgba(5,150,105,.3))}
+html.theme-sepia .genre-badge{color:#7c5c2e;background:rgba(124,92,46,.1);border-color:rgba(124,92,46,.3)}
+.pen-name-chip{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:var(--accent);margin-top:2px}

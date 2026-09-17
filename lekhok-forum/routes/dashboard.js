@@ -276,7 +276,19 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
   // Find or create conversation
   let conv = await db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me, other.id, other.id, me);
+
+  // ── সেশন ৮০: মেসেজ-পারমিশন গেট — শুধু *নতুন* কথোপকথন শুরুতে প্রযোজ্য।
+  // আগের কথোপকথন থাকলে চলতে থাকে (চলমান আলাপ হঠাৎ বন্ধ হয় না)।
   if (!conv) {
+    let permError = null;
+    const amf = (other.allow_messages_from || 'everyone');
+    if (amf === 'none') {
+      permError = 'এই সদস্য কারও কাছ থেকেই নতুন বার্তা গ্রহণ করেন না।';
+    } else if (amf === 'followers') {
+      const following = await db.prepare('SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?').get(me, other.id);
+      if (!following) permError = 'এই সদস্য শুধুমাত্র অনুসরণকারীদের কাছ থেকেই বার্তা গ্রহণ করেন। আগে ফলো করুন।';
+    }
+    if (permError) return res.redirect('/messages?err=' + encodeURIComponent(permError));
     const a = Math.min(me, other.id), b = Math.max(me, other.id);
     const r = await db.prepare('INSERT INTO conversations (user_a, user_b) VALUES (?, ?)').run(a, b);
     conv = await db.prepare('SELECT * FROM conversations WHERE id = ?').get(r.lastInsertRowid);
