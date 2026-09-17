@@ -343,12 +343,33 @@ router.get('/birthdays', async (req, res) => {
 // ── Notifications page ──────────────────────────────────────────────────────
 router.get('/notifications', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
-  // সেশন ১০৮: ফুল-পেজ তালিকাতেও actor-avatar — ড্রপডাউন (recent-API) ও একই শেপ;
-  // actor_id NULL (সিস্টেম-নোটিশ) হলে ভিউ আইকন-ফলব্যাক দেখায়।
+  // সেশন ১০৭: ফুল-পেজ তালিকাতেও actor-avatar — ড্রপডাউন (recent-API, সেশন-১০২/১০৫)
+  // একই শেপ: LEFT JOIN + legacy link-fallback (actor_id-NULL পুরনো রোতে
+  // /profile/<u> লিংক থেকে অ্যাক্টর-শনাক্ত); দুই জায়গাতেই আউটপুট-ফিল্ড এক।
+  const meId = req.session.user.id;
   const items = await db.prepare(`SELECT n.*, a.avatar_url AS actor_avatar, a.full_name AS actor_name
                                   FROM notifications n LEFT JOIN users a ON a.id = n.actor_id
-                                  WHERE n.user_id = ? ORDER BY n.created_at DESC, n.id DESC LIMIT 50`).all(req.session.user.id);
-  await db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.session.user.id);
+                                  WHERE n.user_id = ? ORDER BY n.created_at DESC, n.id DESC LIMIT 50`).all(meId);
+  try {
+    const legacy = items.filter(n => !n.actor_id && n.link);
+    const unames = [...new Set(legacy.map(n => {
+      const m = /^(?:\/messages|\/profile)\/([^\/?#]+)/.exec(n.link || '');
+      return m ? decodeURIComponent(m[1]) : null;
+    }).filter(Boolean))];
+    if (unames.length) {
+      const ph = unames.map(() => '?').join(',');
+      const urows = await db.prepare("SELECT username, avatar_url, id, full_name FROM users WHERE username IN (" + ph + ")").all(...unames);
+      const umap = {}; urows.forEach(u => { umap[u.username] = u; });
+      legacy.forEach(n => {
+        const m = /^(?:\/messages|\/profile)\/([^\/?#]+)/.exec(n.link || '');
+        if (m) {
+          const u = umap[decodeURIComponent(m[1])];
+          if (u) { n.actor_id = u.id; n.actor_avatar = u.avatar_url || ('/avatar/' + u.id); n.actor_name = n.actor_name || u.full_name; }
+        }
+      });
+    }
+  } catch (_) {}
+  await db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(meId);
   res.render('user/notifications', { items, currentPath: '/notifications' });
 });
 
