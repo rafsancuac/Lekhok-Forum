@@ -85,15 +85,15 @@
   <%# সেশন ৭২: preconnect ডোমেইন-ফিক্স — আসল CSS-উৎস cdnjs (আগে ভুলে jsdelivr ছিল) %>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/style.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="/assets/css/feed.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/style.css?v=<%= AV %><%= XTPQ %>" />
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %><%= XTPQ %>" />
+  <link rel="stylesheet" href="/assets/css/feed.css?v=<%= AV %><%= XTPQ %>" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=<%= AV %><%= XTPQ %>" />
   <%# সেশন ৫৮: প্রিমিয়াম-রেস্পন্সিভ-অ্যানিমেটেড পলিশ-লেয়ার (additive) -%>
-  <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %><%= XTPQ %>" />
   <%# সেশন ৯৭: চিত্রশালা (/gallery) — গ্যালারি-এক্সক্লুসিভ স্টাইল (হিরো/মেসনারি/অ্যালবাম/লাইটবক্স) %>
   <% if (currentPath === '/gallery') { %>
-  <link rel="stylesheet" href="/assets/css/gallery.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/gallery.css?v=<%= AV %><%= XTPQ %>" />
   <% } %>
   <%# ── সেশন ১০৫: গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) — পাবলিক-লেআউট টুইন।
       tokens.css সর্বশেষ লোড (ক্যাসকেদ-গ্যারান্টি); ক্রম বদলানো নিষিদ্ধ (guard)। %>
@@ -137,10 +137,55 @@
     }, true);
   })();
   </script>
+
+  <%# সেশন ১১৬: গেটওয়ে-সচেতন fetch-প্যাচ — প্রিভিউতে পেজ ?XTransformPort=3030 দিয়ে
+      খুললেও JS-এর fetch('/api/…') কলে প্যারাম থাকে না → গেটওয়ে ডিফল্ট-অ্যাপে ফেলে
+      404-HTML দেয় → JSON-পার্স-ব্যর্থ (বাল্ক-ইমপোর্ট/ডিলিট-সহ সব fetch-API আক্রান্ত ছিল)।
+      window.fetch একবারই মোড়া হয়: relative-path URL-এ প্যারাম জুড়ে দেয়; অ্যাবসোলিউট/
+      ক্রস-অরিজিন/প্যারাম-যুক্ত URL অক্ষত। প্রোডাকশনে (প্যারাম নেই) নো-অপ। %>
+  <script>
+  (function () {
+    var m = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+    if (!m || window.__xtpFetchPatched) return;
+    window.__xtpFetchPatched = true;
+    var qp = 'XTransformPort=' + m[1];
+    var _fetch = window.fetch ? window.fetch.bind(window) : null;
+    if (!_fetch) return;
+    window.fetch = function (input, init) {
+      try {
+        var url = (input && typeof input === 'object' && input.url) ? input.url : String(input || '');
+        if (url.charAt(0) === '/' && url.indexOf('XTransformPort=') === -1) {
+          input = url + (url.indexOf('?') > -1 ? '&' : '?') + qp;
+        }
+      } catch (e) {}
+      return _fetch(input, init);
+    };
+  })();
+  </script>
+  <%# সেশন ১১৬: স্যান্ডবক্স-সাবরিসোর্স img-এরর-রিট্রাই — কোল্ড-স্টার্টে (SW-নিবন্ধনের
+      আগে) ডাইনামিক কনটেন্ট-ইমেজ (/uploads/…, /avatar/…) পোর্ট-প্যারাম-বিহীন হয়ে
+      404 খায় (গেটওয়ে ডিফল্ট-অ্যাপে যায়)। ক্যাপচার-ফেজ error-ডেলিগেশনে একবার
+      প্যারাম-সহ src দিয়ে রিট্রাই। প্রোডাকশনে (পেজে XTransformPort নেই) নো-অপ। %>
+  <script>
+  (function () {
+    var m = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+    if (!m) return;
+    var qp = 'XTransformPort=' + m[1];
+    document.addEventListener('error', function (e) {
+      var t = e.target;
+      if (!t || t.tagName !== 'IMG' || t.dataset.xtpRetry) return;
+      var src = t.getAttribute('src') || '';
+      if (!src || src.indexOf('//') > -1 || src.indexOf('XTransformPort=') > -1) return;
+      if (!/^\/(?!\/)/.test(src)) return; // শুধু same-origin পাথ
+      t.dataset.xtpRetry = '1';
+      t.setAttribute('src', src + (src.indexOf('?') > -1 ? '&' : '?') + qp);
+    }, true);
+  })();
+  </script>
 </head>
 <body class="<%= currentPath === '/' ? 'home-page' : '' %>" data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= (user.pen_name || user.full_name || '').replace(/"/g, '&quot;') %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
-  <script src="/assets/js/auth-sync.js?v=<%= AV %>"></script>
+  <script src="/assets/js/auth-sync.js?v=<%= AV %><%= XTPQ %>"></script>
   <%# সেশন ৬৭: data-auth — পাবলিক-লেআউটেও main.js-এর লগইন-গার্ড নির্ভরযোগ্য (আগে .topbar-tabs a[href="/settings"] শুধু মেম্বার-হেডারে ছিল → /articles-এর সেভ-বাটনে লগইন-ইউজারও /login→/dashboard-এ বাউন্স করত) -%>
   <!-- Scroll progress bar -->
   <div class="scroll-progress" id="scrollProgress"></div>
@@ -309,15 +354,15 @@
   <!-- Back to top (session 59) -->
   <button type="button" class="back-to-top" id="backToTop" aria-label="উপরে ফিরে যান" title="উপরে ফিরে যান"><i class="fas fa-chevron-up"></i></button>
 
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/main.js?v=<%= AV %><%= XTPQ %>"></script>
   <%# সেশন ১০৫: FB-স্টাইল রিঅ্যাক্টরস-মডাল ("কে কোন প্রতিক্রিয়া দিয়েছে") — গ্লোবাল শেল + JS %>
   <%- include('partials/reactors-modal') %>
-  <script src="/assets/js/reactors-modal.js?v=<%= AV %>" defer></script>
-  <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
-  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+  <script src="/assets/js/reactors-modal.js?v=<%= AV %><%= XTPQ %>" defer></script>
+  <script src="/assets/js/post-gallery.js?v=<%= AV %><%= XTPQ %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %><%= XTPQ %>"></script>
   <%# সেশন ৯৭: চিত্রশালা-ইন্টারঅ্যাকশন (ভিউ-টগল/ফিল্টার/লাইটবক্স) — শুধু /gallery-তে %>
   <% if (currentPath === '/gallery') { %>
-  <script src="/assets/js/gallery.js?v=<%= AV %>" defer></script>
+  <script src="/assets/js/gallery.js?v=<%= AV %><%= XTPQ %>" defer></script>
   <% } %>
 
 <%# Global-search JS সরানো হয়েছে main.js-এ (session33): ডুপ্লিকেট রোধে এখানে আর inline কপি নেই। %>

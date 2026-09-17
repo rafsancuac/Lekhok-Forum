@@ -1020,6 +1020,21 @@ router.post('/resources', requireAdmin, withUpload(resourceUpload), async (req, 
   res.redirect('/admin/resources?saved=1');
 });
 
+/* সেশন ১১৬: CSV বাল্ক-ইমপোর্ট — অ্যাডমিন। JSON {csv} বডি + X-CSRF-Token
+   (গ্লোবাল CSRF-গার্ড urlencoded/multipart-সীমিত — JSON-পথে নিজস্ব-যাচাই)।
+   শেয়ার্ড-ইঞ্জিন: helpers/resource-bulk.js (মডারেটর-রুটও এটাই ডাকে)। */
+const resourceBulk116 = require('../helpers/resource-bulk');
+router.post('/resources/bulk', requireAdmin, express.json({ limit: '1mb' }), async (req, res) => {
+  const sent112 = req.headers['x-csrf-token'] || (req.body && req.body._csrf);
+  const sess112 = req.session ? req.session.csrfToken : null;
+  const cookie112 = req.cookies ? req.cookies._csrfTok : null;
+  if (!sent112 || (String(sent112) !== String(sess112) && String(sent112) !== String(cookie112))) {
+    return res.status(403).json({ ok: false, error: 'নিরাপত্তা যাচাই পুরনো হয়ে গিয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।' });
+  }
+  const out = await resourceBulk116.bulkImport(String((req.body || {}).csv || ''), (req.session.user && req.session.user.username) || 'admin', db);
+  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, total: out.total, errors: out.errors });
+});
+
 router.get('/resources/:id/edit', requireAdmin, async (req, res) => {
   const resource = await db.prepare('SELECT * FROM resources WHERE id = ?').get(req.params.id);
   if (!resource) return res.redirect('/admin/resources?saved=1');

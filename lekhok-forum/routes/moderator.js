@@ -663,9 +663,18 @@ router.get('/resources', ensureModerator, requireScope('resources'), async (req,
   const resources = await db.prepare('SELECT * FROM resources ORDER BY id DESC').all();
   // সেশন ১০৭: সিরিজ-নামের তালিকা (ফর্মে datalist)
   const seriesList = (await db.prepare("SELECT DISTINCT TRIM(series) AS s FROM resources WHERE series IS NOT NULL AND TRIM(series) != '' ORDER BY s COLLATE NOCASE").all()).map(x => x.s).filter(Boolean);
+  // সেশন ১১৬: ?edit=<id> — মডারেটরের নিজের-আপলোড এডিট-মোড (ফর্ম-প্রিফিল);
+  // অন্যের আপলোড হলে নীরবে উপেক্ষা (admin-ই সব এডিট করতে পারে)।
+  let editRes = null;
+  const editId = parseInt(req.query.edit, 10);
+  if (Number.isFinite(editId) && editId > 0) {
+    const row = await db.prepare('SELECT * FROM resources WHERE id = ?').get(editId);
+    if (row && String(row.created_by || '') === String(req.session.user.username || '')) editRes = row;
+  }
   res.render('user/moderator-resources', {
     resources, RES_TYPE_META: require('../helpers/resource-types'),
-    seriesList,
+    seriesList, editRes,
+    meUsername: req.session.user.username || '',
     posted: req.query.posted || null, removed: req.query.removed || null, currentPath: '/moderator'
   });
 });
@@ -696,6 +705,54 @@ router.post('/resources', ensureModerator, requireScope('resources'), withUpload
     req.session.user.username || null, thumb, ser, serOrd
   );
   res.redirect('/moderator/resources?posted=1');
+});
+
+/* সেশন ১১৬: CSV বাল্ক-ইমপোর্ট — মডারেটর (resources-স্কোপ-গেটেড)। JSON {csv} +
+   X-CSRF-Token (গ্লোবাল CSRF-গার্ড urlencoded/multipart-সীমিত — JSON-পথে নিজস্ব-যাচাই)। */
+const resourceBulk116 = require('../helpers/resource-bulk');
+function csrfOk116(req) {
+  const sent = req.headers['x-csrf-token'] || (req.body && req.body._csrf);
+  const sess = req.session ? req.session.csrfToken : null;
+  const cookie = req.cookies ? req.cookies._csrfTok : null;
+  return !!sent && (String(sent) === String(sess) || String(sent) === String(cookie));
+}
+router.post('/resources/bulk', ensureModerator, requireScope('resources'), express.json({ limit: '1mb' }), async (req, res) => {
+  if (!csrfOk116(req)) return res.status(403).json({ ok: false, error: 'নিরাপত্তা যাচাই পুরনো হয়ে গিয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।' });
+  const out = await resourceBulk116.bulkImport(String((req.body || {}).csv || ''), req.session.user.username || 'moderator', db);
+  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, total: out.total, errors: out.errors });
+});
+
+/* সেশন ১১৬: মডারেটরের নিজের-আপলোড আপডেট — মালিকানা-গার্ড (created_by === নিজের-username);
+   অ্যাডমিন-আপলোড হলে 403 (তা অ্যাডমিন-প্যানেলের কাজ)। multipart (ফাইল-রি-আপলোড-সহ)। */
+router.post('/resources/:id(\\d+)/update', ensureModerator, requireScope('resources'), withUpload(resourceUpload), async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const existing = await db.prepare('SELECT * FROM resources WHERE id = ?').get(id);
+  if (!existing) return res.redirect('/moderator/resources');
+  if (String(existing.created_by || '') !== String(req.session.user.username || '')) {
+    return res.status(403).render('admin/denied', { currentPath: '/moderator', homePath: '/moderator' });
+  }
+  const { title, content, category, author, tags, link_url, res_type, file_size, duration } = req.body;
+  if (!title || !String(title).trim()) return res.redirect('/moderator/resources?edit=' + id + '&posted=err2');
+  if (req.uploadError) return res.redirect('/moderator/resources?edit=' + id + '&posted=err');
+  const RT = require('../helpers/resource-types');
+  let type = res_type || existing.res_type || 'link', fUrl = existing.file_url, fSize = file_size || existing.file_size;
+  if (req.file) {
+    fUrl = req.file.url || req.file.path;
+    type = RT.detectResType(req.file);
+    fSize = humanFileSizeMod101(req.file.size);
+  }
+  let thumb = String(req.body.thumbnail_url || '').trim() || null;
+  if (thumb && !/^(https?:\/\/.+|\/)/i.test(thumb)) thumb = null;
+  const ser = String(req.body.series || '').trim().slice(0, 80) || null;
+  const soRaw = parseInt(req.body.series_order, 10);
+  const serOrd = (Number.isFinite(soRaw) && soRaw >= 1 && soRaw <= 999) ? soRaw : null;
+  const newType = RT.normalizeResType({ res_type: type, file_type: type });
+  await db.prepare('UPDATE resources SET title = ?, content = ?, category = ?, author = ?, tags = ?, file_url = ?, link_url = ?, file_type = ?, res_type = ?, file_size = ?, duration = ?, thumbnail_url = ?, series = ?, series_order = ? WHERE id = ?').run(
+    String(title).trim(), content || '', category || existing.category || 'general',
+    author || existing.author || '', tags || '', fUrl, link_url || existing.link_url || null,
+    newType, newType, fSize, (duration || '').trim() || null, thumb, ser, serOrd, id
+  );
+  res.redirect('/moderator/resources?posted=2');
 });
 
 router.post('/resources/:id/delete', ensureModerator, requireScope('resources'), async (req, res) => {

@@ -1,0 +1,186 @@
+<%# ═══ সেশন ১১৬: রিসোর্স বাল্ক-ইমপোর্ট (CSV) মোডাল — শেয়ার্ড পার্শিয়াল ═══
+    ব্যবহার-প্যারাম: bulkAction (POST-URL), bulkCsrf (res.locals.csrfToken)।
+    অ্যাডমিন (/admin/resources) ও মডারেটর (/moderator/resources) — দুই-প্যানেলেই
+    include হয়। সেলফ-কন্টেইন্ড rbm-* স্কোপ (অন্য-পেজে প্রভাব শূন্য); JSON-POST +
+    X-CSRF-Token; সফল ইমপোর্টে কাউন্ট-টোস্ট + তালিকা-রিলোড। %>
+<div class="rbm-backdrop" id="rbmBackdrop" hidden>
+  <div class="rbm-modal" role="dialog" aria-modal="true" aria-labelledby="rbmTitle">
+    <div class="rbm-head">
+      <h3 id="rbmTitle"><i class="fas fa-file-import"></i> CSV বাল্ক-ইমপোর্ট</h3>
+      <button type="button" class="rbm-x" id="rbmClose" aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="rbm-body">
+      <p class="rbm-hint">হেডার-রোসহ CSV পেস্ট করুন অথবা .csv ফাইল বাছুন — প্রতি-রো একটি রিসোর্স। একই <strong>সিরিজ</strong> নামের রো-গুলো এক সংকলনে যাবে; <strong>series_order</strong> ফাঁকা হলে স্বয়ংক্রিয় ক্রম বসবে। সর্বোচ্চ ২০০ রো/ব্যাচ।</p>
+      <div class="rbm-tools">
+        <label class="rbm-filebtn"><i class="fas fa-folder-open"></i> .csv ফাইল বাছুন
+          <input type="file" id="rbmFile" accept=".csv,text/csv" hidden>
+        </label>
+        <button type="button" class="rbm-tplbtn" id="rbmTpl"><i class="fas fa-download"></i> নমুনা CSV</button>
+      </div>
+      <textarea id="rbmCsv" rows="8" spellcheck="false" placeholder="title,res_type,category,file_url,link_url,description,tags,author,series,series_order&#10;বাংলা বানান রীতি,পিডিএফ,গাইড,https://…,,বিবরণ…,&quot;বানান, নির্দেশিকা&quot;,রাফসান,নবীন লেখক কর্মশালা,1"></textarea>
+      <div class="rbm-preview" id="rbmPreview" hidden>
+        <div class="rbm-pv-head"><i class="fas fa-table-list"></i> প্রিভিউ <span id="rbmPvCount"></span></div>
+        <div class="rbm-pv-wrap"><table id="rbmPvTable"></table></div>
+      </div>
+      <div class="rbm-result" id="rbmResult" hidden></div>
+    </div>
+    <div class="rbm-foot">
+      <button type="button" class="rbm-btn rbm-ghost" id="rbmCancel">বাতিল</button>
+      <button type="button" class="rbm-btn rbm-primary" id="rbmImport" disabled><i class="fas fa-cloud-arrow-up"></i> ইমপোর্ট করুন</button>
+    </div>
+  </div>
+</div>
+<style>
+  .rbm-backdrop { position: fixed; inset: 0; background: rgba(11,21,40,.55); backdrop-filter: blur(3px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .rbm-backdrop[hidden] { display: none; }
+  .rbm-modal { background: #fff; border-radius: 16px; width: min(720px, 100%); max-height: min(86vh, 760px); display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(11,21,40,.35); overflow: hidden; animation: rbmIn .18s ease; }
+  @keyframes rbmIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .rbm-modal { animation: none; } }
+  .rbm-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: linear-gradient(135deg, #064e3b, #059669); color: #fff; }
+  .rbm-head h3 { margin: 0; font-size: 1rem; font-weight: 800; display: flex; gap: 8px; align-items: center; }
+  .rbm-x { background: rgba(255,255,255,.14); border: 0; color: #fff; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: .9rem; }
+  .rbm-x:hover { background: rgba(255,255,255,.26); }
+  .rbm-body { padding: 14px 18px; overflow-y: auto; }
+  .rbm-hint { margin: 0 0 10px; font-size: .8rem; color: #475569; line-height: 1.55; }
+  .rbm-tools { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .rbm-filebtn, .rbm-tplbtn { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; padding: 7px 13px; border-radius: 9px; border: 1.5px dashed #059669; color: #059669; background: #ecfdf5; cursor: pointer; }
+  .rbm-tplbtn { border-style: solid; border-color: #cbd5e1; color: #475569; background: #f8fafc; }
+  .rbm-filebtn:hover, .rbm-tplbtn:hover { filter: brightness(.97); }
+  #rbmCsv { width: 100%; box-sizing: border-box; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; font: 12.5px/1.6 ui-monospace, "SFMono-Regular", Menlo, monospace; color: #0f172a; resize: vertical; min-height: 130px; }
+  #rbmCsv:focus { outline: none; border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,.14); }
+  .rbm-preview { margin-top: 12px; }
+  .rbm-pv-head { font-size: .78rem; font-weight: 800; color: #065f46; margin-bottom: 6px; display: flex; gap: 6px; align-items: center; }
+  .rbm-pv-wrap { max-height: 190px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+  .rbm-pv-wrap table { border-collapse: collapse; width: 100%; font-size: .74rem; }
+  .rbm-pv-wrap th { position: sticky; top: 0; background: #f1f5f9; text-align: left; padding: 6px 9px; white-space: nowrap; color: #334155; border-bottom: 1px solid #e2e8f0; }
+  .rbm-pv-wrap td { padding: 5px 9px; border-bottom: 1px dashed #eef2f7; color: #0f172a; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rbm-pv-wrap tr.rbm-bad td { background: #fef2f2; color: #b91c1c; }
+  .rbm-pv-wrap td.rbm-cell-bad { color: #b91c1c; font-weight: 700; }
+  .rbm-result { margin-top: 12px; border-radius: 10px; padding: 10px 13px; font-size: .8rem; line-height: 1.6; }
+  .rbm-result.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+  .rbm-result.err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; }
+  .rbm-result ul { margin: 6px 0 0; padding-left: 18px; }
+  .rbm-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 13px 18px; border-top: 1px solid #eef2f7; background: #f8fafc; }
+  .rbm-btn { border: 0; border-radius: 10px; padding: 9px 18px; font-weight: 800; font-size: .82rem; cursor: pointer; font-family: inherit; }
+  .rbm-ghost { background: #e2e8f0; color: #334155; }
+  .rbm-ghost:hover { background: #cbd5e1; }
+  .rbm-primary { background: linear-gradient(135deg, #059669, #047857); color: #fff; }
+  .rbm-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .rbm-primary:not(:disabled):hover { filter: brightness(1.06); }
+</style>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var backdrop = $('rbmBackdrop'), csv = $('rbmCsv'), preview = $('rbmPreview'),
+      pvTable = $('rbmPvTable'), pvCount = $('rbmPvCount'), result = $('rbmResult'),
+      importBtn = $('rbmImport');
+  if (!backdrop) return;
+  var ACTION = '<%= bulkAction %>', CSRF = '<%= bulkCsrf %>';
+
+  function open() { backdrop.hidden = false; result.hidden = true; document.body.style.overflow = 'hidden'; }
+  function close() { backdrop.hidden = true; document.body.style.overflow = ''; }
+  $('rbmClose').addEventListener('click', close);
+  $('rbmCancel').addEventListener('click', close);
+  backdrop.addEventListener('click', function (e) { if (e.target === backdrop) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !backdrop.hidden) close(); });
+
+  /* সেশন ১১৬: window.rsxOpenBulkImport() — বাইরের বাটন থেকে খোলা */
+  window.rsxOpenBulkImport = open;
+
+  $('rbmFile').addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () { csv.value = String(reader.result || '').slice(0, 400000); renderPreview(); };
+    reader.readAsText(f, 'utf-8');
+    this.value = '';
+  });
+
+  $('rbmTpl').addEventListener('click', function () {
+    var sample = 'title,res_type,category,file_url,link_url,description,tags,author,series,series_order\r\n' +
+      'বাংলা বানান রীতি নির্দেশিকা,পিডিএফ,গাইড,https://example.com/banan.pdf,,বানান-নির্দেশিকা,"বানান, নির্দেশিকা",রাফসান,নবীন লেখক কর্মশালা,1\r\n' +
+      'প্রবন্ধ-লেখার কাঠামো,ডক,লেখালেখির টিপস,https://example.com/p.docx,,প্রবন্ধ-কাঠামো,প্রবন্ধ,,নবীন লেখক কর্মশালা,2\r\n' +
+      'কবিতা আবৃত্তি,ভিডিও,ভিডিও ক্লাস,,https://youtu.be/xxxx,আবৃত্তি-টিপস,আবৃত্তি,,\r\n';
+    csv.value = sample;
+    renderPreview();
+  });
+
+  /* হালকা ক্লায়েন্ট-প্রিভিউ: কলাম-হেডার + প্রথম ৬ রো; পূর্ণ-ভ্যালিডেশন সার্ভারে */
+  function parseRows(text) {
+    var rows = [], row = [], field = '', inQ = false, s = String(text || '').replace(/^\uFEFF/, '');
+    for (var i = 0; i < s.length; i++) {
+      var c = s[i];
+      if (inQ) {
+        if (c === '"') { if (s[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+        else field += c;
+      } else if (c === '"') inQ = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && s[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0].trim() !== '') rows.push(row);
+        row = [];
+      } else field += c;
+    }
+    row.push(field);
+    if (row.length > 1 || row[0].trim() !== '') rows.push(row);
+    return rows;
+  }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function renderPreview() {
+    result.hidden = true;
+    var rows = parseRows(csv.value);
+    if (rows.length < 2) { preview.hidden = true; importBtn.disabled = true; return; }
+    var head = rows[0].map(function (h) { return String(h).trim().toLowerCase(); });
+    var ti = head.indexOf('title'), tiBn = head.indexOf('শিরোনাম');
+    if (ti < 0) ti = tiBn;
+    var bad = ti < 0;
+    var dataRows = rows.slice(1).filter(function (r) { return r.some(function (c) { return String(c).trim() !== ''; }); });
+    var html = '<thead><tr>' + rows[0].map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    dataRows.slice(0, 6).forEach(function (r) {
+      var emptyTitle = !bad && String(r[ti] || '').trim() === '';
+      html += '<tr' + (emptyTitle ? ' class="rbm-bad"' : '') + '>' + rows[0].map(function (h, ci) {
+        var v = r[ci] == null ? '' : r[ci];
+        var cls = (emptyTitle && ci === ti) ? ' class="rbm-cell-bad"' : '';
+        return '<td' + cls + '>' + esc(v) + '</td>';
+      }).join('') + '</tr>';
+    });
+    html += '</tbody>';
+    pvTable.innerHTML = html;
+    pvCount.textContent = '— ' + dataRows.length + ' ডেটা-রো' + (dataRows.length > 6 ? ' (প্রথম ৬টি দেখানো)' : '') + (bad ? ' · ⚠️ "title/শিরোনাম" হেডার নেই' : '');
+    preview.hidden = false;
+    importBtn.disabled = bad || !dataRows.length;
+  }
+  csv.addEventListener('input', renderPreview);
+
+  importBtn.addEventListener('click', function () {
+    importBtn.disabled = true;
+    result.hidden = false;
+    result.className = 'rbm-result ok';
+    result.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ইমপোর্ট চলছে…';
+    fetch(ACTION, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF, 'Accept': 'application/json' },
+      body: JSON.stringify({ csv: csv.value })
+    }).then(function (r) { return r.json().catch(function () { throw new Error('সার্ভার অপ্রত্যাশিত উত্তর দিয়েছে'); }); })
+      .then(function (out) {
+        if (!out || out.ok !== true) throw new Error((out && out.error) || 'ইমপোর্ট ব্যর্থ');
+        var msgs = ['<strong>' + out.inserted + 'টি রিসোর্স যোগ হয়েছে</strong>' + (out.skipped ? ' · ' + out.skipped + 'টি ডুপ্লিকেট বাদ' : '')];
+        if (out.errors && out.errors.length) {
+          msgs.push('<ul>' + out.errors.slice(0, 8).map(function (e) {
+            return '<li>লাইন ' + esc(e.line) + (e.title ? ' (' + esc(e.title) + ')' : '') + ': ' + esc(e.error) + '</li>';
+          }).join('') + '</ul>');
+        }
+        result.className = 'rbm-result ' + (out.inserted ? 'ok' : 'err');
+        result.innerHTML = msgs.join('');
+        if (out.inserted > 0) setTimeout(function () { location.reload(); }, 1600);
+        else importBtn.disabled = false;
+      })
+      .catch(function (e) {
+        result.className = 'rbm-result err';
+        result.textContent = '⚠️ ' + (e.message || 'ইমপোর্ট ব্যর্থ');
+        importBtn.disabled = false;
+      });
+  });
+})();
+</script>

@@ -16,7 +16,7 @@
  */
 'use strict';
 
-var CACHE_VERSION = 'lekhok-shell-v2';
+var CACHE_VERSION = 'lekhok-shell-v3';
 
 /* স্যান্ডবক্স-সচেতনতা: SW-স্ক্রিপ্ট URL-এ XTransformPort থাকলে (গেটওয়ে-প্রিভিউ)
  * প্রি-ক্যাশ-ও অফলাইন-ফলব্যাক-URL-এ সেই-কী যোগ করতে হয় — নাহলে গেটওয়ে
@@ -75,6 +75,18 @@ self.addEventListener('fetch', function (e) {
 
   var path = url.pathname;
 
+  /* সেশন ১১৬: স্যান্ডবক্স-গেটওয়ে সাবরিসোর্স-পোর্ট-সংরক্ষণ — SW যদি পোর্ট-প্যারাম-সহ
+     রেজিস্টার হয় (SB সেট) অথচ সাবরিসোর্স-রিকোয়েস্টে প্যারাম না থাকে (পুরনো HTML
+     ক্যাশ/প্যারাম-বিহীন ডাইনামিক <img> ইনসার্ট), তাহলে fetch-এর আগেই প্যারাম জুড়ে নিই —
+     নাহলে গেটওয়ে রিকোয়েস্টটা ডিফল্ট-অ্যাপে (Next.js) ফেলে 404-HTML ফেরত দেয় এবং
+     nosniff-এর কারণে ব্রাউজার CSS/JS পুরো বাতিল করে। প্রোডাকশনে SB='' → no-op।
+     নেভিগেশন-রিকোয়েস্ট বাদ (পেজ-URL নিজেই প্যারাম বহন করে — ইউজার-দেখা URL
+     পরিষ্কার রাখতে, এবং অফলাইন-শেল-কী অপরিবর্তিত রাখতে)। */
+  var fixed = null;
+  if (SB && req.mode !== 'navigate' && url.search.indexOf('XTransformPort=') === -1) {
+    fixed = sbUrl(req.url);
+  }
+
   // /api/* → নেটওয়ার্ক-অনলি (লাইভ-ডেটা; অফলাইনে নিঃশব্দে ব্যর্থ)
   if (path.indexOf('/api/') === 0) return;
 
@@ -83,10 +95,10 @@ self.addEventListener('fetch', function (e) {
     e.respondWith(
       caches.match(req).then(function (hit) {
         if (hit) return hit;
-        return fetch(req).then(function (resp) {
+        return fetch(fixed || req).then(function (resp) {
           if (resp && resp.ok) {
             var clone = resp.clone();
-            caches.open(CACHE_VERSION).then(function (c) { c.put(req, clone); });
+            caches.open(CACHE_VERSION).then(function (c) { c.put(resp.url || req, clone); });
           }
           return resp;
         }).catch(function () { return new Response('', { status: 504 }); });
@@ -99,15 +111,27 @@ self.addEventListener('fetch', function (e) {
   if (path.indexOf('/uploads/') === 0) {
     e.respondWith(
       caches.match(req).then(function (hit) {
-        var net = fetch(req).then(function (resp) {
+        var net = fetch(fixed || req).then(function (resp) {
           if (resp && resp.ok) {
             var clone = resp.clone();
-            caches.open(CACHE_VERSION).then(function (c) { c.put(req, clone); });
+            caches.open(CACHE_VERSION).then(function (c) { c.put(resp.url || req, clone); });
           }
           return resp;
         }).catch(function () { return hit || new Response('', { status: 504 }); });
         return hit || net;
       })
+    );
+    return;
+  }
+
+  // সেশন ১১৬: /avatar/* ও অন্য প্যারাম-বিহীন same-origin ইমেজ-সাবরিসোর্স →
+  // নেটওয়ার্ক-পাসথ্রু (রিরাইট-সহ, ক্যাশ নয় — পার্সোনাল-এন্ডপয়েন্ট)। SB-বিহীন
+  // প্রোডাকশনে fixed=null → এই শাখাতেই ঢুকে না-ও পারে; ঢুকলেও req নিজেই ফেরত।
+  if (fixed && (path.indexOf('/avatar/') === 0 ||
+                /\.(png|jpe?g|gif|webp|svg|ico|woff2?)$/i.test(path))) {
+    e.respondWith(
+      fetch(fixed).then(function (resp) { return resp; })
+        .catch(function () { return new Response('', { status: 504 }); })
     );
     return;
   }

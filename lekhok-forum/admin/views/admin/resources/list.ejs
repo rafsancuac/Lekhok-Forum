@@ -13,7 +13,7 @@
 <div class="admin-main">
   <div class="admin-header">
     <h1>রিসোর্স</h1>
-    <p><%= resources.length %> টি রিসোর্স | <a href="/admin/resources/new">+ নতুন রিসোর্স</a></p>
+    <p><%= resources.length %> টি রিসোর্স | <a href="/admin/resources/new">+ নতুন রিসোর্স</a> | <button type="button" id="rsxBulkBtn" class="btn btn-sm" style="background:#ecfdf5;color:#059669;border:1.5px solid #059669;font-weight:700;"><i class="fas fa-file-import"></i> বাল্ক ইমপোর্ট (CSV)</button></p>
   </div>
 
   <form method="POST" action="/admin/resources/bulk-delete" class="bulk-bar" id="bulkBar">
@@ -45,5 +45,8 @@
   </table>
   <% } %>
 </div>
+<%# সেশন ১১৬: CSV বাল্ক-ইমপোর্ট মোডাল (শেয়ার্ড পার্শিয়াল — মডারেটর-প্যানেলও এটাই ব্যবহার করে) %>
+<%- include('../partials/resource-bulk-modal', { bulkAction: '/admin/resources/bulk', bulkCsrf: csrfToken }) %>
+<script>document.getElementById('rsxBulkBtn').addEventListener('click', function(){ window.rsxOpenBulkImport(); });</script>
 </body>
 </html>

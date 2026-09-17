@@ -32,6 +32,11 @@
         <a href="/admin/resources/<%= r.id %>/edit" class="rsxd-sact rsxd-sact-edit" title="অ্যাডমিন-প্যানেলে সম্পাদনা"><i class="fas fa-pen-to-square"></i> এডিট</a>
         <button type="button" class="rsxd-sact rsxd-sact-del" id="rsxdDel" title="ট্র্যাশে পাঠিয়ে মুছুন"><i class="fas fa-trash-can"></i> মুছুন</button>
       </span>
+    <% } else if (isStaff && staffRole === 'moderator' && staffName && String(r.created_by || '') === String(staffName)) { %>
+      <span class="rsxd-staffacts">
+        <a href="/moderator/resources?edit=<%= r.id %>" class="rsxd-sact rsxd-sact-edit" title="আপনার আপলোড — মডারেটর-প্যানেলে সম্পাদনা"><i class="fas fa-pen-to-square"></i> এডিট</a>
+        <a href="/moderator/resources" class="rsxd-manage" title="মডারেটর রিসোর্স-প্যানেল"><i class="fas fa-sliders"></i> ম্যানেজ</a>
+      </span>
     <% } else if (isStaff) { %>
       <a href="/moderator/resources" class="rsxd-manage" title="মডারেটর রিসোর্স-প্যানেল"><i class="fas fa-sliders"></i> ম্যানেজ</a>
     <% } %>

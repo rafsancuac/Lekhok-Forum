@@ -470,9 +470,17 @@ router.get('/resources', async (req, res) => {
   }
   const categories = await db.prepare('SELECT DISTINCT category FROM resources').all();
   // সেশন ১০৭: সিরিজ-তালিকা + প্রতি-সিরিজে রিসোর্স-সংখ্যা (চিপ-রো-তে ব্যবহৃত)
+  // সেশন ১১৬: প্রতি-সিরিজে কভার-থাম্ব — পর্ব-ক্রম-অনুসারে প্রথম থাম্বনেইল-যুক্ত
+  // পর্বের thumbnail_url (চিপে ২৮px মিনি-প্রিভিউ; থাম্বনেইল-শূন্য সিরিজে icon-ফলব্যাক)
   const seriesList = (await db.prepare(
-    "SELECT series, COUNT(*) AS n FROM resources WHERE series IS NOT NULL AND TRIM(series) != '' GROUP BY TRIM(series) ORDER BY series COLLATE NOCASE"
-  ).all()).map(x => ({ series: String(x.series).trim(), n: x.n }));
+    `SELECT s.series, s.n,
+            (SELECT r2.thumbnail_url FROM resources r2
+              WHERE TRIM(COALESCE(r2.series,'')) = s.series AND TRIM(COALESCE(r2.thumbnail_url,'')) != ''
+              ORDER BY COALESCE(r2.series_order, 1000000), r2.id LIMIT 1) AS cover
+       FROM (SELECT TRIM(series) AS series, COUNT(*) AS n FROM resources
+              WHERE series IS NOT NULL AND TRIM(series) != '' GROUP BY TRIM(series)) s
+      ORDER BY s.series COLLATE NOCASE`
+  ).all()).map(x => ({ series: String(x.series).trim(), n: x.n, cover: x.cover || null }));
   const u = req.session && req.session.user;
   const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
   res.render('lekhok-resources', {
@@ -534,6 +542,7 @@ router.get('/resources/:id(\\d+)', async (req, res) => {
     currentPath: '/resources',
     r, related, descHtml, isStaff,
     staffRole: isStaff ? u.role : null,
+    staffName: isStaff ? (u.username || '') : '',
     seriesName, seriesItems, seriesPrev, seriesNext, seriesPos,
     RES_TYPE_META: RT,
     videoEmbedUrl: RT.videoEmbedUrl

@@ -540,6 +540,16 @@ app.use(async (req, res, next) => {
       } catch (_) { /* অ্যাডমিন-রিফ্রেশ ব্যর্থ হলে সেশন যেমন ছিল তেমনই */ }
     }
     res.locals.currentPath = req.path;
+    /* সেশন ১১৬: স্যান্ডবক্স-গেটওয়ে সাবরিসোর্স-পোর্ট-সংরক্ষণ — প্রিভিউ-গেটওয়েতে
+       পেজ ?XTransformPort=3030 দিয়ে খুললেও <link>/<script> সাবরিসোর্স-URL-এ
+       প্যারাম থাকে না → গেটওয়ে ডিফল্ট-পোর্টে (Next.js-অ্যাপ) ফরওয়ার্ড করে 404-HTML
+       দেয় → nosniff-এ ব্রাউজার পুরো style.css বাতিল করে (cssRules=0 → সাইট
+       আনস্টাইলড)। সমাধান: রেন্ডার-টাইমেই layout-এর অ্যাসেট-ট্যাগগুলোতে প্যারাম
+       বসিয়ে দেওয়া (XTPQ)। শুধু-ডিজিট ভ্যালিডেশন (হেডার/কুয়েরি-ইনজেকশন-নিরাপদ);
+       প্রোডাকশনে প্যারাম অনুপস্থিত → XTPQ='' → আউটপুট বাইট-অভিন্ন। ডাইনামিক
+       সাবরিসোর্স (feed-img/uploads) SW-রিরাইট + img-error-রিট্রাইট-প্যাচার দেখে (layout.ejs)। */
+    res.locals.XTPQ = /^[0-9]{1,5}$/.test(String((req.query && req.query.XTransformPort) || ''))
+      ? '&XTransformPort=' + req.query.XTransformPort : '';
     // Canonical site URL for SEO (OG/canonical/sitemap) — SITE_URL env wins
     res.locals.siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
     // Public nav (editable from admin/moderator panel — settings key nav_json)

@@ -1,3 +1,25 @@
+  <%# সেশন ১১৬: গেটওয়ে-সচেতন fetch-প্যাচ — স্ট্যান্ডঅ্যালোন অ্যাডমিন/মডারেটর-প্যানেল
+      (layout.ejs ব্যবহার করে না) — fetch('/admin/…', '/api/…') কলে পোর্ট-প্যারাম
+      থাকে না → প্রিভিউ-গেটওয়েতে ৪০৪-HTML। layout.ejs-এর সম-প্যাচের মিরর। %>
+  <script>
+  (function () {
+    var m = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+    if (!m || window.__xtpFetchPatched) return;
+    window.__xtpFetchPatched = true;
+    var qp = 'XTransformPort=' + m[1];
+    var _fetch = window.fetch ? window.fetch.bind(window) : null;
+    if (!_fetch) return;
+    window.fetch = function (input, init) {
+      try {
+        var url = (input && typeof input === 'object' && input.url) ? input.url : String(input || '');
+        if (url.charAt(0) === '/' && url.indexOf('XTransformPort=') === -1) {
+          input = url + (url.indexOf('?') > -1 ? '&' : '?') + qp;
+        }
+      } catch (e) {}
+      return _fetch(input, init);
+    };
+  })();
+  </script>
 <%
   // সাইডবার — গ্রুপড নেভিগেশন + সার্চ + ইউজার কার্ড + মোবাইল ড্রয়ার + টোস্ট + ড্রাফট অটোসেভ
   // সেশন ৩৯: মডারেটর প্যানেলেও এই সাইডবার রেন্ডার হয় — তাই সব লোক্যাল typeof-গার্ডেড
