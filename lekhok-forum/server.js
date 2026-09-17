@@ -620,6 +620,22 @@ if (process.env.SANDBOX_PORT) {
         // ইনলাইন style/CSS url(/...)
         html = html.replace(/url\((['"]?)(\/[^'")\s]+)\1\)/g,
           function (m, q, u) { return 'url(' + q + patchAssetPath(u) + q + ')'; });
+        // fetch-guard: <head>-এ একবার ইনজেক্ট — ক্লায়েন্ট-সাইড fetch('/x')
+        // (quiz.js / admin-url-upload.js / auth-sync.js / ভবিষ্যৎ) কোয়েরি-ছাড়া
+        // গেটওয়ে-ডিফল্টে (Next.js:3000) পড়ে 404 হওয়া রোধ। XMLHttpRequest-ও কভার।
+        var FETCH_GUARD = '<script>(function(){var SB="' + SB_PORT + '";'
+          + 'function qp(u){try{if(typeof u==="string"&&u.charAt(0)==="/"&&u.charAt(1)!=="/"&&u.indexOf("XTransformPort=")===-1)'
+          + '{u+=((u.indexOf("?")>-1)?"&":"?")+"XTransformPort="+SB;}}catch(e){}return u;}'
+          + 'if(window.fetch&&!window.__lfSbFetch){window.__lfSbFetch=1;'
+          + 'var of=window.fetch;window.fetch=function(u,o){try{if(u&&u.url){var c=new Request(qp(u.url),u);return of.call(window,c,o);}u=qp(typeof u==="string"?u:String(u&&u.url||u));}catch(e){}'
+          + 'return of.call(window,u,o);};}'
+          + 'if(window.XMLHttpRequest&&!window.__lfSbXhr){window.__lfSbXhr=1;'
+          + 'var oo=XMLHttpRequest.prototype.open;'
+          + 'XMLHttpRequest.prototype.open=function(m,u){arguments[1]=qp(u);return oo.apply(this,arguments);};}'
+          + '})();</scr' + 'ipt>';
+        if (html.indexOf('__lfSbFetch') === -1 && /<\/head>/i.test(html)) {
+          html = html.replace(/<\/head>/i, FETCH_GUARD + '</head>');
+        }
       } catch (e) { /* HTML-প্যাচ ফেইল হলে অরিজিনাল অক্ষত থাকবে */ }
       return html;
     }

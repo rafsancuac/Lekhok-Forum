@@ -40,7 +40,15 @@
     if (lastPath === location.pathname) return; // একই URL-এ লুপ-রোধ
     try { sessionStorage.setItem('_lekhokAuthSync', location.pathname); } catch (e) {}
 
-    fetch('/api/whoami', { cache: 'no-store' })
+    // স্যান্ডবক্স-গেটওয়ে: পেজ-URL-এ XTransformPort থাকলে fetch-ও সেই পোর্টে যাবে —
+    // নয়তো কোয়েরি-ছাড়া রিকোয়েস্ট ডিফল্ট-হ্যান্ডলে (Next.js:3000) পড়ে 404 দেয়।
+    // প্রোডাকশনে প্যারাম থাকে না — আচরণ অপরিবর্তিত।
+    var whoamiUrl = '/api/whoami';
+    try {
+      var sbm = location.search.match(/[?&]XTransformPort=(\d+)/);
+      if (sbm) whoamiUrl += '?XTransformPort=' + sbm[1];
+    } catch (e) {}
+    fetch(whoamiUrl, { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (d && d.authed) {
