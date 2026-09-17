@@ -820,3 +820,40 @@ Work Log:
 Stage Summary:
 - পুশড: feat(session112) + docs — পাঠকের অসমাপ্ত-লেখা এখন ড্যাশবোর্ড থেকেই ধরা পড়ে (ব্রাউজার-লোকাল, প্রাইভেসি-সেফ)
 - পরবর্তী-প্রার্থী: ① crx-উইজেটে 'সব দেখুন' এক্সটেনশন (৩০-এন্ট্রি ম্যাপের পূর্ণ-তালিকা-পেজ) ② /qa-single-উত্তরে CommentItem (session105-সুপারিশ) ③ role-policy-স্যুটে comment-API-চেক ④ /notifications actor-avatar ⑤ tokens.css-হার্ডকোড-স্ক্যান-গার্ড
+Task ID: cron-r6 (সেশন ১১০ — webDevReview রাউন্ড)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → মাস্টার-টেবিল শেষ-২ আইটেম (০৫ কার্সার-পলিশ + ১৭ হোম-কিউরেশন) → ইউনিয়ন-মার্জ + push
+
+Work Log:
+- worklog/PROJECT/PLANS রিভিউ + git fetch (HEAD=2e36960 থেকে শুরু) → QA-ফেজ: pkill → port-ভেরিফাই → seed-qa-users (সার্ভার-বন্ধ) → সার্ভার (SANDBOX_PORT=8080 CALL_RING_TIMEOUT_S=4) + role-policy ১০৭/১০৭ + calls-E2E ৫৪/৫৪ — সব-গ্রিন
+- ব্রাউজার-QA: হোম/লগইন(ismail)/ড্যাশ(১৫-কার্ড)/মেসেঞ্জার-চ্যাট/রিসোর্স-ডিটেইল/আর্টিকেল — কনসোল-০; ৩৯০px (`agent-browser set viewport 390 844`) ৪-পেজ ওভারফ্লো-০; /article/2→404 মিথ্যা-অ্যালার্ম (সঠিক রুট /articles/:id)
+- ফোকাস-নির্বাচন: মাস্টার-টেবিল শেষ-২ — ০৫ (keyset) + ১৭ (হোম-কিউরেশন)
+- **০৫ দুই-এজেন্টে স্বাধীন-ইমপ্ল হয়েছিল:** আমার ইমপ্ল (single pipe-কার্সার + অর্ডিনাল-ORDER 8,1,2 + 400-bad_cursor) হাতে-কোরা অবস্থায় git fetch-এ 9c53cab (তাদের keyset-ইমপ্ল) পাওয়া গেল — session105-প্রেসিডেন্ট অনুযায়ী **তাদেরটাই ক্যানোনিকাল গৃহীত**, আমার সার্ভার/ক্লায়েন্ট-ইমপ্ল প্রত্যাহৃত
+- **স্বতন্ত্র-আবিষ্কার-প্রমাণ:** দুই-ইমপ্লই একই ২-SQL-গোটচা ধরেছে — JOIN-শাখায় ORDER BY id ambiguous (p.id/u.id) + UNION-compound-এ ৩য়-টার্ম-নাম-কোয়ার্ক; সমাধান-দুটি (p.id-as-id-অ্যালিয়াস বনাম অর্ডিনাল-ORDER) PLANS-নোটে রেফারেন্স-সংরক্ষিত
+- **অনন্য-অবদান রক্ষা:** ① E2E verify-session107-cursor.js ক্যানোনিকাল-চুক্তিতে (cursor=<ts>&cursorType&cursorId → nextCursor:{ts,type,id}) অ্যাডাপটেড — ২২/২২ ALL GREEN **ক্যানোনিকাল-ইমপ্লের বিরুদ্ধে** (২৬-পোস্ট টাই-ব্যাচ · চেইন-ডুপ্লিকেট-শূন্য · অ্যান্টি-ড্রিফট-প্রমাণ + OFFSET-ডুপ্লিকেট-প্যারিটি · ভাঙা-কার্সার→graceful-ফলব্যাক · ক্লিনআপ HTTP-API-ভিত্তিক ২৭/২৭) ② dashboard.css session107-লোডিং-পলিশ (স্কেলেটন-শিমার + গ্লাস-পিল + done-টিন্ট) ③ ১৭-যাচাই (সেশন-৯০-ই সম্পন্ন; হোমে AVATAR/COVER_UPDATE-লিক-শূন্য) — মাস্টার-টেবিল ০৫+১৭ ✅ → **২০/২০**
+- rebase ×২ + push-রেস ×২ (ed8744c → 4381ef6 মাঝ-পথে এসেছে) — PLANS-ইউনিয়ন-মার্জ ×২; final push 2a8d411 ✓; push-পরবর্তী HEAD-এ role-policy ১০৭/১০৭ + calls ৫৪/৫৪ + cursor ২২/২২ পুনঃনিশ্চিত
+
+Stage Summary:
+- origin/main @ 2a8d411 — মাস্টার-টেবিল **২০/২০ সম্পূর্ণ** (০৫+১৭ ✅)
+- ক্যানোনিকাল keyset-চুক্তি: ?cursor=<ts>&cursorType=<type>&cursorId=<id> → nextCursor:{ts,type,id}; ভাঙা-কার্সারে OFFSET-ফলব্যাক (never-500)
+- নতুন টেস্ট: scripts/verify-session107-cursor.js (ক্যানোনিকাল-চুক্তি; ভবিষ্যৎ-রিগ্রেশনে চালানো যায়)
+- পরবর্তী: শেয়ার্ড-ট্যাব pagination (Agent-Chat-লক) → প্রোফাইল-টাইমলাইন স্ক্রল-রিস্টোর → Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) → গ্রুপ-কল
+
+---
+Task ID: 11 (Session 111 — cron review round: কল-UX পলিশ প্যাকেজ — কোয়ালিটি-পিল + ডায়াগনস্টিকস)
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ 9bb2a98 থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-শূন্যতায় স্বাধীন-ফোকাস নির্বাচন → কল-UX পলিশ ইমপ্ল + push
+
+Work Log:
+- প্রি-যাচাই: git fetch (2a8d411→9bb2a98) → pull --ff-only → worklog/PROJECT/PLANS রিভিউ (মাস্টার-টেবিল ২০/২০-পরবর্তী অবস্থা)
+- QA-ফেজ: pkill → port-free → seed-qa-users (সার্ভার-বন্ধ) → সার্ভার (PORT=8080 SANDBOX_PORT=8080 CALL_RING_TIMEOUT_S=4) → role-policy ১০৭/১০৭ ✓ + calls-E2E ৫৪/৫৪ ✓ + cursor-E2E ২২/২২ ✓
+- ব্রাউজার-QA: হোম/লগইন(ismail/secret123)/ড্যাশ/মেসেঞ্জার-চ্যাট (LekhokCall-ctx ✓, calls-ট্যাব ২০-রো ✓)/resources/articles/lekhok-home/gallery/resources/1/quiz/notifications — কনসোল-০ ✓; 390px ×৪-পেজ ওভারফ্লো-০ ✓ → বাগ-শূন্য
+- ফোকাস: কল-ডোমেইন পলিশ — গ্রুপ-কল ভারী (নিজস্ব-রাউন্ড), Metered-TURN ইউজার-অ্যাকাউন্ট-নির্ভর → **নেটওয়ার্ক-কোয়ালিটি পিল + ডায়াগনস্টিকস + অটো-হিন্ট** (webrtc-call.js + calls.css মাত্র ২-ফাইল; Agent-Chat-লক-জোন অস্পৃশ্য)
+- ইমপ্ল: .lc-quality 4-বার পিল (getStats-RTT-গ্রেডেড, top-LEFT-পিন) + .lc-stats প্যানেল (ℹ️-বাটন; সংযোগ-পথ/ক্যান্ডিডেট-টাইপ/RTT/jitter/loss/kbps — বাংলা-সংখ্যা; relay=অ্যাম্বার → TURN-যাচাই-সহায়ক) + টানা-৩-দুর্বল-নমুনায় একবারী টোস্ট + QA-হুক (_qaEnsureRoot/_qaSetQuality/toggleStats) + S-স্টেট ৭-ফিল্ড + onConnected/cleanup-ওয়্যারিং + CSS (৩-গ্রেড/গ্লাস-প্যানেল/640px/reduced-motion/[hidden]-display-গার্ড)
+- যাচাই: node --check ✓ node-fs byte-যাচাই ([hidden]-করাপশন-০) ✓ রিস্টার্ট-পরবর্তী role-policy ১০৭/১০৭ ✓ calls ৫৪/৫৪ ✓ agent-browser: পিল good/bad ✓ প্যানেল empty→৭-রো+is-relay ✓ ডেস্কটপ+390px-স্ক্রিনশট ✓ overflow-০ ✓ কনসোল-০ ✓
+- docs: PLANS session111-নোট + PROJECT চেঞ্জলজ + repo-worklog; push-সময় প্যারালল-এজেন্টের ৪-কমিট (f736fc1/036677b — তারাও session111-লেবেল নিয়েছে: লেবেল-রেস) পাওয়া গেল → rebase-ইউনিয়ন
+
+Stage Summary:
+- কল-UI এখন FB-প্যারিটি নেটওয়ার্ক-মিটার + ডায়াগনস্টিকসসহ; লাইভ-কলে প্যানেল থেকেই TURN-রিলে-যাচাই সম্ভব (রোডম্যাপ-③-সহায়ক)
+- স্কোপ-শৃঙ্খলা: calls.css/webrtc-call.js-২-ফাইল — অন্য-এজেন্টের style.css/media-query-splice-গোটচা (f736fc1) আমার স্কোপে প্রাসঙ্গিক-নয়
+- পরবর্তী: গ্রুপ-কল (mesh, নিজস্ব-বড়-রাউন্ড) → Metered.ca-অ্যাকাউন্ট → ভিডিও-স্ট্যাট → অটো-ভিডিও-ডিগ্রেড
