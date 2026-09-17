@@ -261,7 +261,8 @@
           <label for="fileInput" class="ci-icon" title="ছবি বা ফাইল যুক্ত করুন"><i class="fas fa-plus"></i></label>
           <input type="file" id="fileInput" name="attachment" style="display:none" />
           <div class="chat-input-wrap">
-            <input type="text" name="body" id="msgInput" placeholder="Aa" autocomplete="off" />
+            <%# সেশন ৮০: input → auto-grow textarea — Shift+Enter এখন আসলেই নতুন লাইন (FB-আচরণ), পেস্ট-টার্গেট %>
+            <textarea name="body" id="msgInput" rows="1" placeholder="Aa" autocomplete="off"></textarea>
             <button type="button" class="emoji-trigger" id="emojiBtn" title="ইমোজি"><i class="far fa-smile"></i></button>
             <div class="emoji-picker" id="emojiPicker">
               <% ['😀','😃','😄','😁','😆','😂','🤣','😊','😇','🙂','😉','😍','🥰','😘','😋','😜','🤔','😎','👍','👎','👏','🙏','💪','❤️','🔥','✨','🎉','📝','📚','✍️'].forEach(em => { %>
@@ -277,6 +278,14 @@
           <i class="fas fa-chevron-down"></i>
           <span class="jump-badge"></span>
         </button>
+
+        <%# ── সেশন ৮০: ড্র্যাগ-অ্যান্ড-ড্রপ ওভারলে (ফাইল টেনে এনে ছাড়লে পুরো চ্যাটে নীল ড্যাশড জোন) ── %>
+        <div class="drop-overlay" id="dropOverlay" aria-hidden="true">
+          <div class="drop-inner">
+            <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
+            <span>ছবি বা ফাইল এখানে ছেড়ে দিন</span>
+          </div>
+        </div>
       </section>
 
       <%# ── ডান: ডিটেইলস-প্যানেল (≥১০২৪px) ─────────────────────────────── %>
@@ -310,6 +319,18 @@
             <button type="button" class="md-theme" data-theme="forest" title="অরণ্য"><span class="mdt-dot" style="background:linear-gradient(135deg,#15803d,#22c55e)"></span>অরণ্য</button>
           </div>
           <div class="md-theme-note" id="mdThemeNote">নিজের ডিভাইসে প্রযোজ্য</div>
+        </div>
+        <%# ── সেশন ৮০: মেসেজ-সাউন্ড টগল (Web Audio — কোনো ফাইল লোড নেই) ── %>
+        <div class="md-section">
+          <h4><i class="fas fa-volume-high"></i> মেসেজ সাউন্ড</h4>
+          <label class="md-switch-row" for="soundToggle">
+            <span class="md-switch-label">পাঠানো/গ্রহণের শব্দ</span>
+            <span class="md-switch">
+              <input type="checkbox" id="soundToggle" role="switch" aria-label="মেসেজ সাউন্ড চালু বা বন্ধ" />
+              <span class="md-switch-slider" aria-hidden="true"></span>
+            </span>
+          </label>
+          <div class="md-theme-note">শুধু এই ডিভাইসে প্রযোজ্য</div>
         </div>
         <div class="md-section">
           <h4><i class="fas fa-images"></i> শেয়ার করা ছবি</h4>
@@ -711,12 +732,123 @@
     function saveDraft() { try { localStorage.setItem(draftKey, msgInput.value); } catch (e) {} }
     function clearDraft() { try { localStorage.removeItem(draftKey); } catch (e) {} }
     try { const _draft = localStorage.getItem(draftKey); if (_draft) msgInput.value = _draft; } catch (e) {}
+    if (msgInput.value) { autogrowInput(); updateSendBtn(); } /* সেশন ৮০: রিস্টোর-করা মাল্টি-লাইন ড্রাফটেও উচ্চতা ঠিক */
 
     msgInput.addEventListener('input', () => {
       updateSendBtn();
+      autogrowInput();
       if (msgInput.value.trim()) saveDraft(); else clearDraft();
     });
     updateSendBtn();
+
+    // ── সেশন ৮০: অটো-গ্রো টেক্সটএরিয়া (FB-কম্পোজার — লেখা বাড়লে ইনপুট লম্বা হয়, Shift+Enter নতুন লাইন) ──
+    function autogrowInput() {
+      msgInput.style.height = 'auto';
+      msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+      msgInput.style.overflowY = msgInput.scrollHeight > 120 ? 'auto' : 'hidden';
+    }
+    function resetInputHeight() {
+      msgInput.style.height = '';
+      msgInput.style.overflowY = 'hidden';
+    }
+
+    // ── সেশন ৮০: মেসেঞ্জার সাউন্ড এফেক্ট (Web Audio API — কোনো অডিও-ফাইল লোড হয় না) ──
+    // সেন্ড = হালকা পপ (D5→A5), রিসিভ = নরম ডিং (E5→B4); localStorage lfMsgSound-এ পেসিস্টেন্ট।
+    const SoundFX = (() => {
+      let ctx = null;
+      let enabled = (() => { try { return localStorage.getItem('lfMsgSound') !== '0'; } catch (e) { return true; } })();
+      function ac() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!ctx) ctx = new AC();
+        if (ctx.state === 'suspended') { ctx.resume().catch(() => {}); }
+        return ctx;
+      }
+      function blip(f1, f2, dur, vol, type) {
+        if (!enabled) return;
+        const c = ac(); if (!c) return;
+        try {
+          const o = c.createOscillator(), g = c.createGain();
+          o.type = type || 'sine';
+          o.frequency.setValueAtTime(f1, c.currentTime);
+          o.frequency.exponentialRampToValueAtTime(f2, c.currentTime + dur);
+          g.gain.setValueAtTime(vol, c.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+          o.connect(g); g.connect(c.destination);
+          o.start(); o.stop(c.currentTime + dur);
+        } catch (e) {}
+      }
+      return {
+        send() { blip(587.33, 880, 0.09, 0.12, 'sine'); },
+        receive() { blip(659.25, 493.88, 0.16, 0.10, 'triangle'); },
+        toggle(v) { enabled = !!v; try { localStorage.setItem('lfMsgSound', v ? '1' : '0'); } catch (e) {} },
+        isOn() { return enabled; }
+      };
+    })();
+    const soundToggle = document.getElementById('soundToggle');
+    if (soundToggle) {
+      soundToggle.checked = SoundFX.isOn();
+      soundToggle.addEventListener('change', () => {
+        SoundFX.toggle(soundToggle.checked);
+        if (soundToggle.checked) SoundFX.send(); /* চালু-কনফার্মেশন পপ */
+        fbToast(soundToggle.checked ? '🔔 মেসেজ সাউন্ড চালু' : '🔕 মেসেজ সাউন্ড বন্ধ');
+      });
+    }
+
+    // ── সেশন ৮০: ক্লিপবোর্ড-পেস্ট (Ctrl+V — স্ক্রিনশট/ছবি/ফাইল সরাসরি অ্যাটাচমেন্টে) ──
+    msgInput.addEventListener('paste', (e) => {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      const pasted = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+          const f = items[i].getAsFile();
+          if (f) pasted.push(f);
+        }
+      }
+      if (!pasted.length) return;
+      e.preventDefault();
+      const dt = new DataTransfer();
+      [...fileInputEl.files].forEach(f => dt.items.add(f));   /* আগে থেকে নির্বাচিত থাকলে ধরে রাখি */
+      pasted.forEach(f => dt.items.add(f));
+      fileInputEl.files = dt.files;
+      fileInputEl.dispatchEvent(new Event('change'));
+      fbToast('📎 ক্লিপবোর্ড থেকে ফাইল যোগ হয়েছে');
+      msgInput.focus();
+    });
+
+    // ── সেশন ৮০: ফুল-উইন্ডো ড্র্যাগ-অ্যান্ড-ড্রপ জোন ──
+    const dropOverlay = document.getElementById('dropOverlay');
+    let dragDepth = 0;
+    function hasFiles(e) { return e.dataTransfer && [...(e.dataTransfer.types || [])].indexOf('Files') !== -1; }
+    window.addEventListener('dragenter', (e) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragDepth++;
+      if (dropOverlay) dropOverlay.classList.add('show');
+    });
+    window.addEventListener('dragover', (e) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      if (dropOverlay) dropOverlay.classList.add('show');
+    });
+    window.addEventListener('dragleave', (e) => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0 && dropOverlay && (!e.relatedTarget || e.relatedTarget === document.documentElement)) dropOverlay.classList.remove('show');
+    });
+    window.addEventListener('drop', (e) => {
+      dragDepth = 0;
+      if (dropOverlay) dropOverlay.classList.remove('show');
+      if (!hasFiles(e) || !e.dataTransfer.files.length) return;
+      e.preventDefault();
+      const dt = new DataTransfer();
+      [...fileInputEl.files].forEach(f => dt.items.add(f));
+      [...e.dataTransfer.files].forEach(f => dt.items.add(f));
+      fileInputEl.files = dt.files;
+      fileInputEl.dispatchEvent(new Event('change'));
+      fbToast('📎 ফাইল যোগ হয়েছে — পাঠাতে সেন্ড চাপুন');
+    });
+    window.addEventListener('dragend', () => { dragDepth = 0; if (dropOverlay) dropOverlay.classList.remove('show'); });
 
     // ── সেশন ৭৮: স্ক্রল-টু-বটম FAB + নতুন-মেসেজ ব্যাজ + স্মার্ট-অটোস্ক্রল ──
     const jumpBtn = document.getElementById('jumpBtn');
@@ -871,7 +1003,9 @@
           /* সেশন ৭৮: ব্যাচ-অ্যারাইভালে প্রথম মেসেজের আগের অবস্থান মানি — নইলে
              smooth-scroll-রেসে মাঝের মেসেজগুলো ভুলভাবে 'স্ক্রল-আপ' ধরে FAB-ব্যাজ বাড়ায় */
           const wasNearBottom78 = isNearBottom();
-          data.messages.forEach(m => { lastMsgId = Math.max(lastMsgId, m.id); appendMessage(m, wasNearBottom78); });
+          let gotOthers = false; /* সেশন ৮০: রিসিভ-ডিং ব্যাচে একবারই */
+          data.messages.forEach(m => { lastMsgId = Math.max(lastMsgId, m.id); appendMessage(m, wasNearBottom78); if (!m.is_me) gotOthers = true; });
+          if (gotOthers) SoundFX.receive();
           markConvSeen();
         }
 
@@ -984,6 +1118,23 @@
       }
     });
 
+    // ── সেশন ৮০: ডাবল-ক্লিক / ডাবল-ট্যাপ = ❤️ রিয়েক্ট (FB-আচরণ; আবার ডাবল-ক্লিকে টগল-অফ) ──
+    body.addEventListener('dblclick', async function (e) {
+      const bubble = e.target.closest('.bubble');
+      if (!bubble) return;
+      if (e.target.closest('button, a, .bubble-react-menu, .bubble-quote')) return; /* কন্ট্রোলে ডাবল-ক্লিক নয় */
+      const msgId = bubble.dataset.id;
+      if (!msgId || String(msgId).indexOf('tmp-') === 0) return;
+      try {
+        const r = await fetch('/api/messages/react', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message_id: msgId, emoji: '❤️' }) });
+        const d = await r.json();
+        if (d.ok) {
+          renderReacts(bubble, d.counts);
+          bubble.classList.remove('is-flash'); void bubble.offsetWidth; bubble.classList.add('is-flash');
+        }
+      } catch (_) {}
+    });
+
     // ── ফর্ম: AJAX সেন্ড + optimistic ───────────────────────────────────
     let sending = false;
     chatForm.addEventListener('submit', async function (e) {
@@ -1015,6 +1166,7 @@
         const curRep = (window.MSA && window.MSA.currentReply) ? window.MSA.currentReply() : null;
         if (curRep) { optimistic.reply_to_id = curRep.id; optimistic.reply_body = curRep.text; optimistic.reply_sender_name = curRep.name; }
         appendMessage(optimistic);
+        SoundFX.send(); /* সেশন ৮০: সেন্ড-পপ (optimistic পাথেই — জিরো-ল্যাগ ফিডব্যাক) */
       }
 
       /* সেশন ৭৮-ফিক্স (ইউজার-অভিযোগ): সেন্ড চাপলেই ইনপুট সাথে সাথে খালি — আগে
@@ -1024,6 +1176,7 @@
       fileInputEl.value = '';
       if (filePreviewEl) filePreviewEl.hidden = true;
       resetFilePreviewUI();
+      resetInputHeight(); /* সেশন ৮০: টেক্সটএরিয়া উচ্চতা রিসেট */
       clearDraft();
       updateSendBtn();
 
@@ -1047,6 +1200,7 @@
           const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
           if (tmp) tmp.remove();
           msgInput.value = body_text; /* ব্যর্থ মেসেজ ফিরিয়ে দিই */
+          autogrowInput(); /* সেশন ৮০ */
           saveDraft();
           fbToast((data && data.error) || 'মেসেজ পাঠানো যায়নি — আবার চেষ্টা করুন');
         }
@@ -1054,6 +1208,7 @@
         const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
         if (tmp) tmp.remove();
         msgInput.value = body_text;
+        autogrowInput(); /* সেশন ৮০ */
         saveDraft();
         fbToast('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন');
       } finally {
