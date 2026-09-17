@@ -135,7 +135,7 @@
             <div class="comment-item" id="c<%= c.id %>">
               <img loading="lazy" decoding="async" src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
               <div class="comment-bubble">
-                <a href="/profile/<%= c.username %>" class="comment-author"><%= c.full_name %></a>
+                <a href="/profile/<%= c.username %>" class="comment-author"><%= displayName(c, c.full_name) %></a>
                 <div class="comment-body"><%- c.bodyHtml %></div>
                 <div class="comment-meta">
                   <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
@@ -155,7 +155,7 @@
                   <div class="reply-item" id="c<%= r.id %>">
                     <img loading="lazy" decoding="async" src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
                     <div class="comment-bubble small">
-                      <a href="/profile/<%= r.username %>" class="comment-author"><%= r.full_name %></a>
+                      <a href="/profile/<%= r.username %>" class="comment-author"><%= displayName(r, r.full_name) %></a>
                       <div class="comment-body"><%- r.bodyHtml %></div>
                       <div class="comment-meta">
                         <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
@@ -166,7 +166,7 @@
                 <% if (user) { %>
                   <%# সেশন ৯৩: রিপ্লাই-কম্পোজার (কম্প্যাক্ট) — টুলবার+ম্যানশনসহ %>
                   <div class="reply-form cc-slot" hidden>
-                    <%- include('../partials/comment-composer', { user, postId: post.id, parentId: c.id, compact: true, placeholder: c.full_name + '-কে উত্তর দিন…' }) %>
+                    <%- include('../partials/comment-composer', { user, postId: post.id, parentId: c.id, compact: true, placeholder: displayName(c, c.full_name) + '-কে উত্তর দিন…' }) %>
                   </div>
                 <% } %>
               </div>

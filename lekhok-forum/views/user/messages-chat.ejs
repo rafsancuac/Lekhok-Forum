@@ -21,28 +21,12 @@
   var _isImg = function (u) { return u && /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(u); };
   /* সেশন ৯২: ভয়েস/অডিও ফাইল শনাক্তকারী — voice-note বাবল-প্লেয়ারের ভিত্তি */
   var _isAud = function (u) { return u && /\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i.test(u); };
-  var _sharedImgs = messages.filter(function (m) { return _isImg(m.file_url); }).slice(-9).reverse();
-  /* সেশন ৯২: ডিটেইলস-প্যানেল ট্যাবের ডেটা — ফাইল (নন-ইমেজ/নন-অডিও) + বার্তার ভেতরের লিংক */
-  var _sharedDocs = messages.filter(function (m) { return m.file_url && !_isImg(m.file_url) && !_isAud(m.file_url); }).slice(-12).reverse();
-  var _sharedVn = messages.filter(function (m) { return _isAud(m.file_url); }).slice(-12).reverse();
-  var _sharedLinks = (function () {
-    var seen = {}, out = [];
-    for (var i = messages.length - 1; i >= 0 && out.length < 12; i--) {
-      var b = messages[i].body || '';
-      var re = /(https?:\/\/[^\s<>"']+)/gi; var mm;
-      while ((mm = re.exec(b)) !== null) {
-        var url = mm[1].replace(/[.,;:!)\]]+$/, '');
-        if (seen[url]) continue;
-        seen[url] = 1;
-        var host = url.replace(/^https?:\/\//i, '').split('/')[0];
-        out.push({ url: url, host: host });
-        if (out.length >= 12) break;
-      }
-    }
-    return out;
-  })();
-  var _lastOwnRead = null;
-  messages.forEach(function (m) { if (m.sender_id === user.id && m.is_read) _lastOwnRead = m; });
+  /* সেশন ৯৩: ডিটেইলস-প্যানেল + সিন-মার্কার এখন রুট-লেভেলে পূর্ণ-ইতিহাস থেকে গণনা হয়
+     (উইন্ডোিং চালু — প্রাথমিক রেন্ডার সর্বশেষ ৬০টি; ডিটেইলস-ট্যাব তবুও সম্পূর্ণ) */
+  var _sharedImgs = chatShared.imgs;
+  var _sharedDocs = chatShared.docs;
+  var _sharedVn = chatShared.voice;
+  var _sharedLinks = chatShared.links;
 %>
 
   <div class="page-wrap page-wrap--messenger">
@@ -137,6 +121,12 @@
             <span class="cis-counter" id="cisCounter">০/০</span>
             <button type="button" class="cis-nav" id="cisPrev" title="আগের ম্যাচ (Shift+Enter)"><i class="fas fa-chevron-up"></i></button>
             <button type="button" class="cis-nav" id="cisNext" title="পরের ম্যাচ (Enter)"><i class="fas fa-chevron-down"></i></button>
+            <button type="button" class="cis-nav" id="cisServerBtn" title="পুরনো বার্তাসহ সব ম্যাচ (সার্ভার-সার্চ)"><i class="fas fa-list"></i></button>
+          </div>
+          <%# সেশন ৯৩: সার্ভার-সাইড সার্চ-ফলাফল ড্রপডাউন (রোডম্যাপ-১১ — উইন্ডোর-বাইরের পুরনো বার্তা) %>
+          <div class="cis-server" id="cisServer" hidden>
+            <div class="css-head"><span id="cisServerTitle">পুরনো বার্তায় ম্যাচ</span><button type="button" id="cisServerClose" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button></div>
+            <div class="css-list" id="cisServerList"></div>
           </div>
           <div class="fb-chat-actions">
             <% if (!isGroup) { %>
@@ -182,83 +172,15 @@
         <% } %>
 
         <div class="chat-body" id="chatBody">
-          <%
-            var _prevDate = null;
-          %>
-          <% messages.forEach(function(m, idx) { %>
-            <%
-              var _cl = clusterInfo(messages, idx);
-              var _mdate = new Date(m.created_at); _mdate.setHours(0,0,0,0);
-              var _showDate = !_prevDate || _mdate.getTime() !== _prevDate.getTime();
-              _prevDate = _mdate;
-              var _sm = isGroup ? (members || []).find(x => x.id === m.sender_id) : null;
-              var _cls = 'bubble ' + (m.sender_id === user.id ? 'me' : 'them');
-              if (!_cl.samePrev) _cls += ' first-of-cluster';
-              if (!_cl.sameNext) _cls += ' last-of-cluster';
-              else if (_cl.samePrev) _cls += ' mid-cluster';
-              var _rx = (typeof reactionMap !== 'undefined' && reactionMap[m.id]) || [];
-            %>
-            <% if (_showDate) { %><div class="date-sep"><span><%= dateLabel(m.created_at) %></span></div><% } %>
-            <div class="<%= _cls %>" data-id="<%= m.id %>" data-own="<%= m.sender_id === user.id ? 1 : 0 %>">
-              <% if (m.sender_id !== user.id && !_cl.sameNext) { %>
-                <img class="b-av" loading="lazy" src="<%= isGroup ? ((_sm && _sm.avatar_url) || ('/avatar/' + m.sender_id)) : (other.avatar_url || ('/avatar/' + other.id)) %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt="" />
-              <% } %>
-              <div class="b-content">
-                <% if (isGroup && m.sender_id !== user.id && !_cl.samePrev) { %>
-                <div class="bubble-sender"><img src="<%= (_sm && _sm.avatar_url) || ('/avatar/' + m.sender_id) %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt=""><%= _sm ? _sm.full_name : 'সদস্য' %></div>
-                <% } %>
-                <% if (m.reply_to_id && (m.reply_body || m.reply_file_name)) { %>
-                <%# সেশন ৭৬: রিপ্লাই-কোট (FB-স্টাইল রঙিন বার + প্রিভিউ) %>
-                <div class="bubble-quote" data-quote-id="<%= m.reply_to_id %>">
-                  <span class="bq-name"><%= m.reply_sender_name || 'মেসেজ' %></span>
-                  <span class="bq-text"><%= (m.reply_body || ((m.reply_file_name || '').match(/\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i) ? '🎙️ ভয়েস মেসেজ' : ('📎 ' + (m.reply_file_name || 'ফাইল')))).slice(0, 120) %></span>
-                </div>
-                <% } %>
-                <% if (m.body) { %><div class="bubble-text"><%= m.body %></div><% if (m.edited_at) { %><span class="bubble-edited" title="সম্পাদিত মেসেজ">সম্পাদিত</span><% } %><% } %>
-                <% if (m.file_url) { %>
-                  <% if (_isImg(m.file_url)) { %>
-                    <a href="<%= m.file_url %>" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="<%= m.file_url %>" alt="<%= m.file_name || 'ছবি' %>" class="bubble-image" /></a>
-                  <% } else if (_isAud(m.file_url)) { %>
-                    <%# সেশন ৯২: ভয়েস-নোট প্লেয়ার (FB-স্টাইল ওয়েভফর্ম) %>
-                    <div class="bubble-voice" data-src="<%= m.file_url %>">
-                      <button type="button" class="bv-play" aria-label="প্লে করুন"><i class="fas fa-play"></i></button>
-                      <div class="bv-wave" aria-hidden="true"><% (function(){ var seed = String(m.id); var x = 7; for (var i = 0; i < 22; i++) { x = (x * 31 + 17) % 97; var h = 22 + (x % 78); %><span style="--h:<%= h %>%"></span><% } })(); %></div>
-                      <span class="bv-time">০:০০</span>
-                    </div>
-                  <% } else { %>
-                    <a href="<%= m.file_url %>" class="bubble-file" download="<%= m.file_name || 'file' %>">
-                      <i class="fas fa-paperclip"></i> <%= m.file_name || 'ফাইল' %>
-                    </a>
-                  <% } %>
-                <% } %>
-                <% if (_rx.length) { %><div class="bubble-reacts"><% _rx.forEach(r => { %><span title="<%= r.c %>"><%= r.emoji %><% if (r.c > 1) { %> <%= r.c %><% } %></span><% }); %></div><% } %>
-              </div>
-              <%# ── সেশন ৯৩: FB-স্টাইল সাইড-অ্যাকশন-রেল — বাবলের বাইরে পাশে (লেখার ওপর কখনোই নয়);
-                   ⋮-মেনুতেই আনসেন্ড (আলাদা ✕-বাটন বাদ); হোভার/ফোকাসেই দৃশ্যমান; me-বাবলে বামে, them-এ ডানে ── %>
-              <div class="bubble-actions">
-                <button type="button" class="bubble-react-btn" data-msg-react="<%= m.id %>" title="রিয়েক্ট করুন" aria-label="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>
-                <button type="button" class="bubble-reply-btn" data-msg-reply="<%= m.id %>" title="উত্তর দিন" aria-label="উত্তর দিন"><i class="fas fa-reply"></i></button>
-                <button type="button" class="bubble-more" data-msg-more="<%= m.id %>" title="আরও অপশন" aria-haspopup="true" aria-label="আরও অপশন"><i class="fas fa-ellipsis-vertical"></i></button>
-                <div class="bubble-react-menu" hidden><% ['👍','❤️','🤗','😂','😮','😢','😡'].forEach(e => { %><button type="button" data-emoji="<%= e %>"><%= e %></button><% }); %></div>
-              </div>
-              <div class="bubble-meta">
-                <span class="bubble-time"><%= new Date(m.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) %></span>
-                <% if (m.sender_id === user.id) { %>
-                  <span class="bubble-seen" data-msg-id="<%= m.id %>">
-                    <% if (_lastOwnRead && _lastOwnRead.id === m.id) { %>
-                      <img src="<%= other.avatar_url || ('/avatar/' + other.id) %>" alt="পড়া হয়েছে" title="পড়া হয়েছে" />
-                    <% } else if (m.is_read) { %>
-                      <i class="fas fa-check-double" title="পড়া হয়েছে"></i>
-                    <% } else { %>
-                      <i class="fas fa-check" title="পৌঁছেছে"></i>
-                    <% } %>
-                  </span>
-                <% } %>
-              </div>
-            </div>
-          <% }); %>
-
-          <%# ── টাইপিং-ইন্ডিকেটর (FB ৩-ডট) ── %>
+          <%# ── সেশন ৯৩: আগের-বার্তা লোডার (রোডম্যাপ-১১ উইন্ডোিং — FB/WhatsApp-প্যাটার্ন) ── %>
+          <div class="older-wrap" id="olderWrap" data-has="<%= olderState.hasOlder ? 1 : 0 %>" data-oldest="<%= olderState.oldestId || 0 %>">
+            <button type="button" class="older-btn" id="olderBtn" <%= olderState.hasOlder ? '' : 'hidden' %>>
+              <i class="fas fa-arrow-up"></i> আগের বার্তা দেখুন
+            </button>
+            <span class="older-spinner" id="olderSpinner" hidden><i class="fas fa-circle-notch fa-spin"></i> লোড হচ্ছে…</span>
+            <span class="older-end" id="olderEnd" <%= olderState.hasOlder ? 'hidden' : '' %>><i class="fas fa-flag"></i> চ্যাটের শুরু</span>
+          </div>
+          <%- include('../partials/chat-bubbles', { cbList: messages, cbPrev: null, cbNext: null, cbLastOwnReadId: (typeof lastOwnReadId !== 'undefined' && lastOwnReadId) || 0, clusterInfo, dateLabel, _isImg, _isAud }) %>
           <div class="typing-indicator" id="typingIndicator">
             <img class="ti-av" src="<%= isGroup ? '/avatar/0' : (other.avatar_url || ('/avatar/' + other.id)) %>" alt="" />
             <div class="ti-bubble">
@@ -287,6 +209,11 @@
           </div>
           <button type="button" id="filePreviewRemove" aria-label="সরান" title="সরান">&times;</button>
         </div>
+
+        <%# সেশন ৯৩: around-মোড (সার্চ-জাম্প) — সর্বশেষ বার্তায় ফেরার পিল %>
+        <% if (typeof aroundMode !== 'undefined' && aroundMode) { %>
+        <div class="jump-now-wrap"><a class="jump-now-btn" href="<%= isGroup ? ('/messages/g/' + conv.id) : ('/messages/' + other.username) %>"><i class="fas fa-arrow-down"></i> সর্বশেষ বার্তায় ফিরুন</a></div>
+        <% } %>
 
         <form method="POST" class="chat-input-bar" enctype="multipart/form-data" id="chatForm">
           <%# সেশন ৭৬: রিপ্লাই/এডিট বার (ইনপুট-বারের উপরে FB-স্টাইল) %>
@@ -521,7 +448,7 @@
     const sendUrl = <%- jesc(isGroup ? '/messages/g/' + conv.id : '/messages/' + other.username) %>;
     const isGroupChat = <%= isGroup ? 'true' : 'false' %>;
     let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
-    let seenUpto = <%= _lastOwnRead ? _lastOwnRead.id : 0 %>;
+    let seenUpto = <%= (typeof lastOwnReadId !== 'undefined' && lastOwnReadId) ? lastOwnReadId : 0 %>;
     let typingTimeout = null;
 
     function escapeHtml(s) {
@@ -1357,9 +1284,14 @@
         const okBubbles = new Set(matches.map((m) => m.closest('.bubble')));
         bubbles.forEach((b) => { b.style.display = okBubbles.has(b) ? '' : 'none'; });
         if (clearBtn) clearBtn.hidden = false;
-        if (tools) tools.hidden = !matches.length;
+        if (tools) tools.hidden = false; /* সেশন ৯৩: ০-ম্যাচেও দৃশ্যমান — সার্ভার-সার্চ বাটন দরকার */
         if (matches.length) scrollToMatch(0);
         else if (counter) counter.textContent = '০/০';
+        /* সেশন ৯৩: ক্লায়েন্ট-ম্যাচ ০ হলে সার্ভার-সার্চ অটো-ট্রিগার (উইন্ডোর-বাইরের পুরনো বার্তা) */
+        if (window.lfMsgServerSearch) {
+          if (!matches.length && query.length >= 2) window.lfMsgServerSearch(query);
+          else if (matches.length && window.lfMsgServerHide) window.lfMsgServerHide();
+        }
       }
       let t89 = null;
       cis.addEventListener('input', function () { clearTimeout(t89); t89 = setTimeout(apply, 160); });
@@ -1374,6 +1306,110 @@
       if (clearBtn) clearBtn.addEventListener('click', function () { cis.value = ''; apply(); cis.focus(); });
       /* poll-নতুন বাবল এলে সার্চ-স্টেট রিফ্রেশ (poll() থেকে কল হয়) */
       window.lfMsgSearchRefresh = function () { if (query) apply(); };
+    })();
+
+    // ── সেশন ৯৩ (রোডম্যাপ-১১): আগের-বার্তা লোডার + জাম্প-হাইলাইট + সার্ভার-সার্চ + রিপ্লাই-জাম্প ──
+    (function () {
+      const olderWrap = document.getElementById('olderWrap');
+      if (!olderWrap) return;
+      const olderBtn = document.getElementById('olderBtn');
+      const olderSpin = document.getElementById('olderSpinner');
+      const olderEnd = document.getElementById('olderEnd');
+      const bn93 = (n) => String(n).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
+      let olderState = { hasOlder: olderWrap.dataset.has === '1', oldestId: parseInt(olderWrap.dataset.oldest, 10) || 0, busy: false };
+
+      function pulse93(el) {
+        if (!el) return;
+        el.classList.add('msg-jump-hl');
+        try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) { el.scrollIntoView({ block: 'center' }); }
+        setTimeout(() => el.classList.remove('msg-jump-hl'), 3400);
+      }
+      function jumpToMsg(id) {
+        const t = body.querySelector('.bubble[data-id="' + id + '"]');
+        if (t) { pulse93(t); return true; }
+        /* উইন্ডোর-বাইরে — around-উইন্ডো-রিলোড (সার্ভার কনটেক্সটসহ রেন্ডার করবে) */
+        location.href = location.pathname + '?around=' + id + '&hl=' + id;
+        return false;
+      }
+      window.lfMsgJump93 = jumpToMsg;
+
+      async function loadOlder() {
+        if (!olderState.hasOlder || olderState.busy || !convId) return;
+        olderState.busy = true;
+        if (olderBtn) olderBtn.hidden = true;
+        if (olderSpin) olderSpin.hidden = false;
+        try {
+          const res = await fetch('/api/messages/older?conv_id=' + convId + '&before=' + olderState.oldestId);
+          const d = await res.json();
+          if (d.ok && d.html) {
+            const st = body.scrollTop, sh = body.scrollHeight;
+            body.insertAdjacentHTML('afterbegin', d.html);
+            body.scrollTop = body.scrollHeight - sh + st; /* স্ক্রল-অ্যাংকর মানি (ব্যাচ-অ্যারাইভাল-নীতি) */
+            olderState.hasOlder = !!d.hasOlder;
+            if (d.oldestId) olderState.oldestId = d.oldestId;
+            olderWrap.dataset.has = olderState.hasOlder ? '1' : '0';
+            olderWrap.dataset.oldest = String(olderState.oldestId);
+            if (window.lfMsgSearchRefresh) try { window.lfMsgSearchRefresh(); } catch (_) {}
+          } else { olderState.hasOlder = false; }
+        } catch (_) { /* নেটওয়ার্ক-ব্যর্থতায় বাটন ফেরত */ }
+        if (olderSpin) olderSpin.hidden = true;
+        if (olderState.hasOlder) { if (olderBtn) olderBtn.hidden = false; }
+        else if (olderEnd) olderEnd.hidden = false;
+        olderState.busy = false;
+      }
+      if (olderBtn) olderBtn.addEventListener('click', loadOlder);
+      /* উপরে-স্ক্রলে অটো-লোড (সার্চ-সক্রিয় অবস্থায় নয় — ফিল্টার-ভাঙা এড়াতে) */
+      body.addEventListener('scroll', function () {
+        const si = document.getElementById('convInSearch');
+        if (si && si.value.trim()) return;
+        if (body.scrollTop < 90 && olderState.hasOlder && !olderState.busy) loadOlder();
+      }, { passive: true });
+
+      /* রিপ্লাই-কোট ক্লিকে মূল-বার্তায় জাম্প (FB/WhatsApp-প্যাটার্ন) */
+      body.addEventListener('click', function (e) {
+        const q = e.target.closest('.bubble-quote');
+        if (!q) return;
+        const id = q.getAttribute('data-quote-id');
+        if (id) { e.preventDefault(); jumpToMsg(id); }
+      });
+
+      /* ?hl= — around-রিলোডের পরে টার্গেট-বাবল পালস */
+      const _hl93 = parseInt(new URLSearchParams(location.search).get('hl'), 10);
+      if (_hl93) setTimeout(() => pulse93(body.querySelector('.bubble[data-id="' + _hl93 + '"]')), 260);
+
+      /* সার্ভার-সাইড সার্চ-ড্রপডাউন */
+      const sBtn = document.getElementById('cisServerBtn');
+      const sPanel = document.getElementById('cisServer');
+      const sList = document.getElementById('cisServerList');
+      const sTitle = document.getElementById('cisServerTitle');
+      const sClose = document.getElementById('cisServerClose');
+      const sInput = document.getElementById('convInSearch');
+      const esc93 = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      function sHide() { if (sPanel) sPanel.hidden = true; }
+      window.lfMsgServerHide = sHide;
+      async function serverSearch(q) {
+        if (!sPanel || !q || q.length < 2 || !convId) { sHide(); return; }
+        try {
+          const r = await fetch('/api/messages/search?conv_id=' + convId + '&q=' + encodeURIComponent(q));
+          const d = await r.json();
+          if (!d.ok) return;
+          const rs = d.results || [];
+          sTitle.textContent = 'পুরনো বার্তায় ' + bn93(rs.length) + ' ম্যাচ';
+          sList.innerHTML = rs.length ? rs.map((m) =>
+            '<button type="button" class="css-row" data-jump="' + m.id + '">' +
+            '<span class="css-av"><i class="fas fa-comment"></i></span>' +
+            '<span class="css-body"><span class="css-name">' + esc93(m.sender) + '</span>' +
+            '<span class="css-snip">' + esc93(m.snippet) + '</span></span>' +
+            '<span class="css-time">' + esc93(new Date(m.at).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short' })) + '</span></button>'
+          ).join('') : '<div class="css-empty">কোনো ম্যাচ পাওয়া যায়নি</div>';
+          sPanel.hidden = false;
+        } catch (_) { /* silent */ }
+      }
+      window.lfMsgServerSearch = serverSearch;
+      if (sBtn) sBtn.addEventListener('click', () => { if (sPanel.hidden) serverSearch(sInput.value.trim()); else sHide(); });
+      if (sClose) sClose.addEventListener('click', sHide);
+      if (sList) sList.addEventListener('click', (e) => { const b = e.target.closest('[data-jump]'); if (b) { sHide(); jumpToMsg(b.dataset.jump); } });
+      document.addEventListener('click', (e) => { if (sPanel && !sPanel.hidden && !e.target.closest('#cisServer,#cisServerBtn')) sHide(); });
     })();
 
     // ── রিয়েকশন (হোভার-ক্যাপসুল) ───────────────────────────────────────

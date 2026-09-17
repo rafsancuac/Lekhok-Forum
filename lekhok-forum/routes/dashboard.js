@@ -341,6 +341,73 @@ async function chatMessagesFor(convId) {
   }
 }
 
+// সেশন ৯৩: চ্যাট-উইন্ডোিং (রোডম্যাপ-১১ ভিত্তি) — সম্পূর্ণ-ইতিহাস রেন্ডার বন্ধ।
+// ডিফল্ট প্রাথমিক-রেন্ডার সর্বশেষ ৬০টি; ?all=1 পূর্ণ-ইতিহাস; ?around=<id> নির্দিষ্ট-বার্তা-কেন্দ্রিক
+// উইন্ডো (সার্চ/রিপ্লাই-জাম্পে কনটেক্সটসহ রিলোড)। ডিটেইলস-ট্যাব ডেটা রুটে পূর্ণ-তালিকা থেকে গণনা হয়।
+const CHAT_PER_PAGE = 60;       // প্রাথমিক + আগের-বার্তা ব্যাচ-সাইজ
+const CHAT_AROUND_BEFORE = 25;  // around-মোডে টার্গেটের আগে কনটেক্সট-বার্তা
+
+function buildChatWindow(allRows, opts) {
+  opts = opts || {};
+  let slice, aroundMode = false;
+  if (opts.all) {
+    slice = allRows;
+  } else if (opts.aroundId && allRows.some(r => r.id === opts.aroundId)) {
+    aroundMode = true;
+    const i = allRows.findIndex(r => r.id === opts.aroundId);
+    const start = Math.max(0, i - CHAT_AROUND_BEFORE);
+    const end = Math.min(allRows.length, i + 1 + Math.round(CHAT_PER_PAGE / 2));
+    slice = allRows.slice(start, end);
+  } else {
+    slice = allRows.slice(Math.max(0, allRows.length - CHAT_PER_PAGE));
+  }
+  const oldestId = slice.length ? slice[0].id : 0;
+  const hasOlder = !opts.all && oldestId > 0 && allRows.some(r => r.id < oldestId);
+  return { slice, hasOlder, oldestId, aroundMode };
+}
+
+// সেশন ৯৩: ডিটেইলস-প্যানেল ডেটা (মিডিয়া/ফাইল/ভয়েস/লিংক) — পূর্ণ-ইতিহাস থেকে (উইন্ডো নয়)
+function buildChatShared(rows) {
+  const isImg = (u) => u && /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(u);
+  const isAud = (u) => u && /\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i.test(u);
+  const seen = {}; const links = [];
+  for (let i = rows.length - 1; i >= 0 && links.length < 12; i--) {
+    const b = String(rows[i].body || ''); const re = /(https?:\/\/[^\s<>"']+)/gi; let mm;
+    while ((mm = re.exec(b)) !== null) {
+      const url = mm[1].replace(/[.,;:!)\]]+$/, '');
+      if (seen[url]) continue; seen[url] = 1;
+      links.push({ url, host: url.replace(/^https?:\/\//i, '').split('/')[0] });
+      if (links.length >= 12) break;
+    }
+  }
+  return {
+    imgs: rows.filter(m => isImg(m.file_url)).slice(-9).reverse(),
+    docs: rows.filter(m => m.file_url && !isImg(m.file_url) && !isAud(m.file_url)).slice(-12).reverse(),
+    voice: rows.filter(m => isAud(m.file_url)).slice(-12).reverse(),
+    links
+  };
+}
+
+// সেশন ৯৩: আগের-বার্তা ব্যাচ (id-কার্সার — সন্নিবেশ-ক্রমে মনোটোনিক, created_at-ক্রমের সমতুল্য)
+async function chatOlderBatch(convId, beforeId) {
+  const rows = await db.prepare(`
+    SELECT m.*,
+      rb.body AS reply_body, rb.file_url AS reply_file_url, rb.file_name AS reply_file_name,
+      ru.full_name AS reply_sender_name, ru.username AS reply_sender_username
+    FROM messages m
+    LEFT JOIN messages rb ON rb.id = m.reply_to_id
+    LEFT JOIN users ru ON ru.id = rb.sender_id
+    WHERE m.conversation_id = ? AND m.id < ?
+    ORDER BY m.id DESC LIMIT ?
+  `).all(convId, beforeId, CHAT_PER_PAGE);
+  rows.reverse();
+  let hasOlder = false;
+  if (rows.length) {
+    hasOlder = !!(await db.prepare('SELECT 1 AS x FROM messages WHERE conversation_id = ? AND id < ? LIMIT 1').get(convId, rows[0].id));
+  }
+  return { rows, hasOlder, oldestId: rows.length ? rows[0].id : 0 };
+}
+
 // সেশন ৩৮: 1-on-1 + গ্রুপ — একত্রে কথোপথন তালিকা (সাইডবার/লিস্ট দুই জায়গাতেই)
 async function convListFor(me) {
   const one = await db.prepare(`
@@ -423,8 +490,17 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
   // Mark as read
   await db.prepare('UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?').run(conv.id, me);
 
-  const messages = await chatMessagesFor(conv.id);
+  /* সেশন ৯৩: উইন্ডোিং — ডিফল্ট সর্বশেষ ৬০, ?all=1 পূর্ণ, ?around= জাম্প-কনটেক্সট; ডিটেইলস-ডেটা পূর্ণ-তালিকা থেকে */
+  const _all93 = req.query.all === '1';
+  const _around93 = parseInt(req.query.around, 10) || 0;
+  const _hl93 = parseInt(req.query.hl, 10) || 0;
+  const allRows93 = await chatMessagesFor(conv.id);
+  const _win93 = buildChatWindow(allRows93, { all: _all93, aroundId: _around93 });
+  const messages = _win93.slice;
   const reactionMap = await reactionMapFor(messages);
+  const chatShared = buildChatShared(allRows93);
+  let lastOwnReadId = 0;
+  for (const m of allRows93) { if (m.sender_id === me && m.is_read) lastOwnReadId = m.id; }
 
   // Refresh list of conversations for sidebar (1-on-1 + groups)
   const conversations = await convListFor(me);
@@ -433,7 +509,8 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
   let myFlags = { muted: 0, pinned: 0 };
   try { myFlags = await db.prepare('SELECT muted, pinned FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(conv.id, me) || myFlags; } catch (e) {}
 
-  res.render('user/messages-chat', { other, messages, conversations, conv, isGroup: false, members: [], reactionMap, myFlags, currentPath: '/messages', err: req.query.err || null });
+  res.render('user/messages-chat', { other, messages, conversations, conv, isGroup: false, members: [], reactionMap, myFlags, currentPath: '/messages', err: req.query.err || null,
+    olderState: { hasOlder: _win93.hasOlder, oldestId: _win93.oldestId }, aroundMode: _win93.aroundMode, hlMsgId: _hl93, chatShared, lastOwnReadId });
 });
 
 router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), async (req, res) => {
@@ -539,8 +616,17 @@ router.get('/messages/g/:id', ensureAuth, async (req, res) => {
   const conv = await convAccess(parseInt(req.params.id), me);
   if (!conv || !conv.is_group) return res.redirect('/messages');
   await db.prepare('UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?').run(conv.id, me);
-  const messages = await chatMessagesFor(conv.id);
+  /* সেশন ৯৩: উইন্ডোিং (গ্রুপ-রুট) — ১:১-রুটের সমতুল্য */
+  const _all93 = req.query.all === '1';
+  const _around93 = parseInt(req.query.around, 10) || 0;
+  const _hl93 = parseInt(req.query.hl, 10) || 0;
+  const allRows93 = await chatMessagesFor(conv.id);
+  const _win93 = buildChatWindow(allRows93, { all: _all93, aroundId: _around93 });
+  const messages = _win93.slice;
   const reactionMap = await reactionMapFor(messages);
+  const chatShared = buildChatShared(allRows93);
+  let lastOwnReadId = 0;
+  for (const m of allRows93) { if (m.sender_id === me && m.is_read) lastOwnReadId = m.id; }
   const members = await db.prepare(`
     SELECT u.id, u.username, u.full_name, u.avatar_url FROM conversation_members cm JOIN users u ON u.id = cm.user_id WHERE cm.conversation_id = ?
   `).all(conv.id);
@@ -552,7 +638,8 @@ router.get('/messages/g/:id', ensureAuth, async (req, res) => {
     other, messages, conversations, conv, isGroup: true, members, reactionMap, myFlags,
     currentPath: '/messages', err: req.query.err || null,
     note: req.query.added ? 'added' : (req.query.removed ? 'removed' : null),
-    blocked: req.query.blocked || null
+    blocked: req.query.blocked || null,
+    olderState: { hasOlder: _win93.hasOlder, oldestId: _win93.oldestId }, aroundMode: _win93.aroundMode, hlMsgId: _hl93, chatShared, lastOwnReadId
   });
 });
 
@@ -753,6 +840,69 @@ router.get('/api/messages/online', ensureAuth, async (req, res) => {
 });
 
 // ── v2.3: Messenger ── combined poll
+// ── সেশন ৯৩ (রোডম্যাপ-১১): আগের-বার্তা HTML-ফ্র্যাগমেন্ট — চ্যাট-উইন্ডোইং লোডার ──
+router.get('/api/messages/older', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.query.conv_id, 10);
+  const before = parseInt(req.query.before, 10) || 0;
+  const conv = await convAccess(convId, me);
+  if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+  if (!before) return res.json({ ok: true, html: '', hasOlder: false, oldestId: 0 });
+  const { rows, hasOlder, oldestId } = await chatOlderBatch(convId, before);
+  if (!rows.length) return res.json({ ok: true, html: '', hasOlder: false, oldestId: before });
+  const reactionMap = await reactionMapFor(rows);
+  /* বাউন্ডারি-কনটেক্সট: prev = ব্যাচের-আগের বার্তা (ক্লাস্টার/ডেট-ধারাবাহিকতা), next = আগে-রেন্ডারড প্রথম বাবল */
+  const prevMsg = await db.prepare('SELECT id, sender_id, created_at FROM messages WHERE conversation_id = ? AND id < ? ORDER BY id DESC LIMIT 1').get(convId, rows[0].id) || null;
+  const nextMsg = await db.prepare('SELECT id, sender_id, created_at FROM messages WHERE id = ?').get(before) || null;
+  let partner = { id: 0, full_name: conv.title || 'কথোপকথন', avatar_url: null };
+  if (!conv.is_group) {
+    const pid = conv.user_a === me ? conv.user_b : conv.user_a;
+    partner = await db.prepare('SELECT id, full_name, avatar_url FROM users WHERE id = ?').get(pid) || partner;
+  }
+  const members = await db.prepare('SELECT u.id, u.username, u.full_name, u.avatar_url FROM conversation_members cm JOIN users u ON u.id = cm.user_id WHERE cm.conversation_id = ?').all(convId);
+  const html = await new Promise((resolve, reject) => {
+    req.app.render('user/chat-fragment', {
+      user: req.session.user, conv, isGroup: !!conv.is_group, other: partner, members,
+      batch: rows, prevMsg, nextMsg, reactionMap
+    }, (err, out) => err ? reject(err) : resolve(out));
+  });
+  res.json({ ok: true, html, hasOlder, oldestId, count: rows.length });
+});
+
+// ── সেশন ৯৩ (রোডম্যাপ-১১): সার্ভার-সাইড ইন-চ্যাট সার্চ (LIKE) — উইন্ডোর-বাইরের পুরনো বার্তাসহ ──
+router.get('/api/messages/search', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.query.conv_id, 10);
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const conv = await convAccess(convId, me);
+  if (!conv || q.length < 2) return res.json({ ok: true, results: [] });
+  const needle = '%' + q.replace(/[\\%_]/g, (ch) => '\\' + ch) + '%';
+  let rows = [];
+  try {
+    rows = await db.prepare(`
+      SELECT m.id, m.body, m.created_at, m.sender_id, u.full_name, u.username
+      FROM messages m JOIN users u ON u.id = m.sender_id
+      WHERE m.conversation_id = ? AND m.body LIKE ? ESCAPE '\\'
+      ORDER BY m.id DESC LIMIT 30
+    `).all(convId, needle);
+  } catch (e) { rows = []; }
+  const lq = q.toLowerCase();
+  const results = rows.map((r) => {
+    const bodyTxt = String(r.body || '');
+    const i = bodyTxt.toLowerCase().indexOf(lq);
+    const s = Math.max(0, i - 30);
+    const e2 = Math.min(bodyTxt.length, (i >= 0 ? i + q.length : 60) + 50);
+    return {
+      id: r.id,
+      sender: r.full_name,
+      username: r.username,
+      snippet: (s > 0 ? '…' : '') + bodyTxt.slice(s, e2) + (e2 < bodyTxt.length ? '…' : ''),
+      at: r.created_at
+    };
+  });
+  res.json({ ok: true, results });
+});
+
 router.get('/api/messages/poll', ensureAuth, async (req, res) => {
   const me = req.session.user.id;
   const convId = parseInt(req.query.conv_id);

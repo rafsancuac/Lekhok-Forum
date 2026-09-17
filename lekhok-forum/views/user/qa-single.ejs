@@ -103,7 +103,7 @@
             </div>
             <div class="answer-body">
               <div class="answer-header">
-                <a href="/profile/<%= a.username %>" class="answer-author"><%= a.full_name %></a>
+                <a href="/profile/<%= a.username %>" class="answer-author"><%= displayName(a, a.full_name) %></a>
                 <span class="answer-date"><i class="far fa-clock"></i> <%= new Date(a.created_at).toLocaleDateString('bn-BD') %></span>
               </div>
               <div class="answer-text"><%- a.html %></div>

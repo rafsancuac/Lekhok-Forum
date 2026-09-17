@@ -689,3 +689,23 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 **ভয়েস-নোট ইন্টিগ্রেশন-পয়েন্ট (ভবিষ্যৎ-এডিটে রক্ষণীয়):** messages-chat.ejs ইনলাইন-স্ক্রিপ্টে `bnDg/bnTime` + `voicePlayer()` IIFE (document-level .bv-play ডেলিগেশন — পোল-অ্যাপেন্ডেড বাবলেও চলে) + `startRec/stopRec/sendVoice` ব্লক; appendMessage-এ audio-ব্রাঞ্চ (webm|ogg|m4a|mp3|wav|aac|opus এক্সটেনশন-টেস্ট); সার্ভার-রেন্ডারে seeded-ওয়েভফর্ম EJS-লুপ; upload.js-এ DOC_TYPES/DOC_EXT-অডিও + mimetype `;`-প্যারাম-স্ট্রিপ। **শেয়ার্ড-Audio প্যাটার্ন:** পেজে ১টিই Audio এলিমেন্ট — `.bubble-voice` ক্লোন করলে data-src রাখুন, play-লজিক নকল করবেন না।
 
 **টেস্ট-ডেটা (এই clone-এর lekhok.db):** fbtest1→fbtest2 কথোপকথনে voice-note (id=13, voice-*.wav) + doc (report.pdf) + লিংক-বার্তা (github.com) সিডড — মিডিয়া/ফাইল/লিংক-ট্যাব ডেমো সরাসরি।
+
+## Cross-Agent Note: Session 93 — চ্যাট-উইন্ডোিং + সার্ভার-সার্চ-জাম্প (১১ ✓) + স্ক্রল-রিস্টোর (০৬ ✓) + pen_name-কমেন্ট (১৪ ✓) (১৮ সেপ্টেম্বর ২০২৬)
+
+**রোডম্যাপ-প্রগতি:** আইটেম **১১ ✓ (উইন্ডোিং + LIKE-ব্যাকএন্ড + জাম্প)**, **০৬ ✓ (ফিড-স্ক্রল-রিস্টোর)**, **১৪ ✓ (আংশিক — ফিড-কার্ড ৮৯-এ, কমেন্ট/উত্তর ৯৩-এ; নোটিফিকেশন-স্ট্রিং বাদ — সেগুলো তৈরির-সময়ে-নির্মিত টেক্সট)**। Agent-Chat-লক (messages-chat.ejs/messenger.css) + Agent-Feed-সাইড (main.js) + Agent-Author-সাইড (article-single/qa-single/social.js) একসাথে ব্যবহৃত — পরবর্তী এজেন্ট pull-এর পর নিচের ইন্টিগ্রেশন-পয়েন্টগুলো দেখুন।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+- **চ্যাট-রেন্ডার এখন ৩-স্তরে:** `routes/dashboard.js` (`buildChatWindow`/`buildChatShared`/`chatOlderBatch`) → `views/partials/chat-bubbles.ejs` (একমাত্র বাবল-মার্কআপ-সোর্স) → `messages-chat.ejs` (প্রাথমিক) + `views/user/chat-fragment.ejs` (আগের-বার্তা-ফ্র্যাগমেন্ট)। **বাবল-মার্কআপ এডিট করতে হলে এখন পার্শিয়ালে করুন** — messages-chat.ejs-এ লুপ আর নেই। ⚠️ EJS-লেসন: `include(path, {...})`-এ প্যারেন্ট-স্কোপের `var` ফাংশন চাইল্ডে যায় না — `clusterInfo/dateLabel/_isImg/_isAud` include-অবজেক্টে পাস করা হয়; নতুন হেল্পার যোগ করলে দুই include-সাইটেও যোগ করুন।
+- **চ্যাট-রুট লোকালস:** দুই রুটই (1:1 + গ্রুপ) এখন `olderState {hasOlder, oldestId}`, `aroundMode`, `hlMsgId`, `chatShared {imgs,docs,voice,links}`, `lastOwnReadId` পাস করে। উইন্ডো-সাইজ টিউন: `CHAT_PER_PAGE` (৬০), around-কনটেক্সট `CHAT_AROUND_BEFORE` (২৫)।
+- **নতুন API:** `GET /api/messages/older?conv_id=&before=` (HTML-ফ্র্যাগমেন্ট JSON {ok, html, hasOlder, oldestId}) এবং `GET /api/messages/search?conv_id=&q=` ({ok, results[{id, sender, username, snippet, at}]}) — দুটোই convAccess-গার্ডেড।
+- **ক্লায়েন্ট-হুক:** `window.lfMsgJump93(id)` (পালস-জাম্প/around-নেভ), `window.lfMsgServerSearch(q)`, `window.lfMsgServerHide()` — poll/অন্য-ইঞ্জিন থেকে ডাকা যাবে। আগের-বার্তা-অটো-লোড সার্চ-ইনপুট খালি থাকলেই চলে (ফিল্টার-গার্ড)।
+- **main.js:** শেষে ২টি IIFE — ফিড-স্ক্রল-সেভার + ব্যাক-নেভিগেশন-রিস্টোরার (`lfFeedScroll93`, ৩০-মিনিট TTL)। অন্য-ফিড-পেজে (প্রোফাইল-টাইমলাইন) চাইলে pathname-গার্ড বাড়ান।
+- **displayName-গ্রহণ:** article-single + qa-single রুট এখন `displayName` লোকাল পাস করে — নতুন সারফেসে (নোটিফিকেশন-ভিউ ইত্যাদি) একই প্যাটার্ন।
+
+**E2E-প্রমাণিত:** ৬০→১০০-বাবল লোডার ✓ টার্মিনাল-মার্কার ✓ স্ক্রল-টপ-অটো-লোড ✓ ২০-ম্যাচ-ড্রপডাউন+around-জাম্প+পালস+পিল ✓ কোট-জাম্প-দুই-শাখা ✓ pen_name-কমেন্ট ("নীলকণ্ঠ-৯৩") ✓ রিঅ্যাক্ট-মেনু-রিগ্রেশন ✓ 390px-০ ✓ কনসোল-০ ✓।
+
+**টেস্ট-ডেটা (এই clone-এর lekhok.db):** conv-1 (fbtest1↔fbtest2) — মোট ৯৭-বার্তা: seed#1-80 ("সিড-বার্তা N — PURATAN[OLD/NOTUN মার্কার N"), reply id=97 (→36 কোট-জাম্প ডেমো), fbtest1-এর pen_name='নীলকণ্ঠ-৯৩'।
+
+**গোটচা-পুনঃপ্রমাণ:** ডিসপ্লে-গোটচা এই রাউন্ডেও ২ ভুয়া-পজিটিভ (`:not(idden])`, `messagesessages` — দুটোই বাইট-লেভেলে অক্ষত ছিল)। **নিয়ম অপরিবর্তিত:** স্ক্যানে 'corruption' দেখলে char-code/od-যাচাই আগে, ফিক্স পরে।
+
+**পরবর্তী-ক্রন-রাউন্ডে (৯৩-পরবর্তী):** ০৫-ইনফিনিট-স্ক্রল-কার্সার-পলিশ → ০১-SSE-রিয়েল-টাইম-হাব (🔴 — নোটিফ+মেসেজ-পুশ, পোলিং-ফলব্যাক) → ১৩-WebRTC-কল-সিগন্যালিং (🔴) → নোটিফিকেশন-ভিউতে displayName → প্রোফাইল-টাইমলাইনেও স্ক্রল-রিস্টোর।

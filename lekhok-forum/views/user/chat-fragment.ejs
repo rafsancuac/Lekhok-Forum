@@ -1,0 +1,30 @@
+<%# ── সেশন ৯৩: আগের-বার্তা HTML-ফ্র্যাগমেন্ট (GET /api/messages/older) ──
+  স্ট্যান্ডঅ্যালোন টেমপ্লেট — হেডার/লেআউট ছাড়া কেবল বাবল-মার্কআপ (chat-bubbles পার্শিয়াল-পুনঃব্যবহার)।
+  লোকাল: user, conv (is_group), other, members, batch, prevMsg, nextMsg, reactionMap
+%>
+<%
+  function clusterInfo(list, idx) {
+    var m = list[idx], p = list[idx - 1] || null, n = list[idx + 1] || null;
+    var t = function (x) { return new Date(x.created_at).getTime(); };
+    var samePrev = p && p.sender_id === m.sender_id && (t(m) - t(p) < 3 * 60 * 1000);
+    var sameNext = n && n.sender_id === m.sender_id && (t(n) - t(m) < 3 * 60 * 1000);
+    return { samePrev: !!samePrev, sameNext: !!sameNext };
+  }
+  function dateLabel(ds) {
+    var d = new Date(ds); d.setHours(0, 0, 0, 0);
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var diff = Math.round((today - d) / 86400000);
+    if (diff === 0) return 'আজ';
+    if (diff === 1) return 'গতকাল';
+    return d.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  var _isImg = function (u) { return u && /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(u); };
+  var _isAud = function (u) { return u && /\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i.test(u); };
+%>
+<%- include('../partials/chat-bubbles', {
+  cbList: batch,
+  cbPrev: prevMsg || null,
+  cbNext: nextMsg || null,
+  cbLastOwnReadId: 0,
+  clusterInfo, dateLabel, _isImg, _isAud
+}) %>

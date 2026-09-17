@@ -173,6 +173,7 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
   }
 })();
 
+
 /* ── সেশন ৯২ (রোডম্যাপ B1/০৬): ফিড স্ক্রল-পজিশন রিস্টোর — ব্যাক-নেভিগেশনে যেখানে ছিলেন সেখানেই ফেরা ──
  * /dashboard ও / (ফিড-পেজ) এ scrollY প্রতি-pathname+query-key sessionStorage-এ সেভ হয়;
  * পোস্ট পড়তে গিয়ে গেলে/ফিরে এলে সেভ-অবস্থানে রিস্টোর (ফন্ট/ইমেজ-রিফলোর পরেও পুনঃনিশ্চিত)।

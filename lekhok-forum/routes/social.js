@@ -7,6 +7,7 @@ const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload'
 const rolePolicy = require('../helpers/role-policy');
 const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
 const { notifyIfAllowed } = require('../helpers/notify'); // সেশন ৯১ (B4): প্রেফ-গেটেড নোটিফিকেশন
+const { displayName } = require('../helpers/display-name'); // সেশন ৯৩ (D1/রোডম্যাপ-১৪): কলমী-নাম প্রাধান্য — কমেন্ট/উত্তর-সারফেস
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCurrentUser(req) {
@@ -458,8 +459,8 @@ router.get('/articles/:id', async (req, res) => {
   // increment view
   await db.prepare('UPDATE posts SET view_count = view_count + 1 WHERE id = ?').run(req.params.id);
 
-  // comments — threaded (top-level + replies), with reaction info
-  const flatComments = await db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
+  // comments — threaded (top-level + replies), with reaction info (সেশন ৯৩: pen_name-ও নেওয়া হলো — কলমী-নাম প্রাধান্য)
+  const flatComments = await db.prepare(`SELECT c.*, u.full_name, u.pen_name, u.username, u.avatar_url, u.gender
                                FROM comments c JOIN users u ON c.author_id = u.id
                                WHERE c.post_id = ? ORDER BY c.created_at ASC`).all(req.params.id);
   const myId = req.session.user ? req.session.user.id : null;
@@ -565,7 +566,7 @@ router.get('/articles/:id', async (req, res) => {
       first_tag: (String(r.tags || '').split(',')[0] || '').trim()
     }));
 
-  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc, related, postHidden81, isOwner81, canMod81, myOpenReport81, hiddenToast81: req.query.hidden === '1', unhiddenToast81: req.query.unhidden === '1' });
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc, related, postHidden81, isOwner81, canMod81, myOpenReport81, hiddenToast81: req.query.hidden === '1', unhiddenToast81: req.query.unhidden === '1', displayName });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────
@@ -754,7 +755,7 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
     db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender, u.designation
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.type = 'question'`).get(req.params.id),
-    db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
+    db.prepare(`SELECT c.*, u.full_name, u.pen_name, u.username, u.avatar_url, u.gender
                               FROM comments c JOIN users u ON c.author_id = u.id
                               WHERE c.post_id = ? AND c.parent_id IS NULL
                               ORDER BY c.like_count DESC, c.created_at ASC`).all(req.params.id),
@@ -807,6 +808,7 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
     relatedQ: relatedQ72,
     postHidden81, isOwner81, canMod81, myOpenReport81,
     hiddenToast81: req.query.hidden === '1', unhiddenToast81: req.query.unhidden === '1',
+    displayName,
   });
 });
 
