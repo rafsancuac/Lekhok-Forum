@@ -1246,6 +1246,9 @@ async function runMigrations() {
     "ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'",
     "ALTER TABLE users ADD COLUMN allow_messages_from TEXT DEFAULT 'everyone'",
     "ALTER TABLE users ADD COLUMN bookmarks_public INTEGER DEFAULT 0",
+    // সেশন ১১২: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ — JSON {type:'preset'|'typo'|'custom', value}
+    // (helpers/covers.js একক-উৎস; হোমের 'লেখকদের কালি' রো-তে মিনি-প্রচ্ছদ রেন্ডার)
+    ['posts', 'home_cover', 'TEXT'],
     // সেশন ৯৫: অ্যাকাউন্ট-রিকভারি — পাসওয়ার্ড-ট্র্যাকিং কলাম (LATER_COLUMNS-এর
     // প্রতিচ্ছবি; উভয় তালিকায় থাকা নিরাপদ — duplicate-column নিরীহ catch)।
     "ALTER TABLE users ADD COLUMN password_changed_at DATETIME",
@@ -1267,7 +1270,10 @@ async function runMigrations() {
     "ALTER TABLE posts ADD COLUMN home_featured_at TEXT",
     // archive_visible: 'সব লেখা দেখুন' (/articles) তালিকায় দৃশ্যমান কিনা —
     // মডারেটর/এডমিন যেকোনো লেখা তালিকা থেকে সরিয়ে রাখতে পারবেন (ডিফল্ট: দৃশ্যমান)
-    "ALTER TABLE posts ADD COLUMN archive_visible INTEGER DEFAULT 1"
+    "ALTER TABLE posts ADD COLUMN archive_visible INTEGER DEFAULT 1",
+    // সেশন ১১২: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ (LATER_COLUMNS-এর প্রতিচ্ছবি —
+    // উভয় তালিকায় থাকা নিরাপদ — duplicate-column নিরীহ catch)
+    "ALTER TABLE posts ADD COLUMN home_cover TEXT"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}

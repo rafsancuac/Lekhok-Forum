@@ -671,173 +671,30 @@ Work Log:
 - ডক: PLANS.md ক্রস-এজেন্ট-নোট + PROJECT.md changelog
 
 Stage Summary:
-- origin/main @ 9c836ac — session101 (a0b1bb7 + 101-g; মার্জ: session102/103/104 union)
-- নতুন-সারফেস: /moderator/resources, POST /api/resources/:id/stat, helpers/resource-types.js
-- টেস্ট-ডেটা: resources-টেবিলে ১৬-রো (৫ ডেমো-মাল্টিমিডিয়া + ১ মডারেটর-আপলোড); ডেমো-ফাইল public/uploads/resources/ (gitignored)
-- ⚠️ নতুন-গোটচা: sql.js সিড-স্ক্রিপ্টে prepare().run() → ২০০ms-ডিবাউন্ড — saveDb() ম্যানুয়াল-কল+৫০০ms-অপেক্ষা নইলে ডেটা-হারানি (দুইবার-প্রমাণিত)
-- পরবর্তী-প্রথম-পছন্দ: ① রিসোর্স-বাল্ক-আপলোড/সংকলন-সিরিজ ② মাস্টার-টেবিলের শেষ-২: ০৫-কার্সর-পলিশ, ১৭-হোম-কিউরেশন-সোশ্যাল-ফিল্টার ③ ইমেইল-ডিরেক্টরিতে অ্যাডমিন-সম্পাদনাযোগ্য ডেটা (এখন helpers-হার্ডকোড)
+- origin/main @ **4615a74** — fix(session109); messenger.css-১-ফাইল-কমিট, অন্য-কোনো ফাইল স্পর্শ-নেই
+- স্ক্রিনশট-আর্টিফ্যাক্ট: sandbox /home/z/my-project/tests/lf109-{desktop,mobile}.png + হারনেস lf109-e2e.sh
+- **সতর্কতা পরবর্তী-এজেন্টের জন্য:** এই sandbox-clone-এ `stash@{0}` = অসমাপ্ত-রাউন্ডের স্টেল-WIP (style.css/main.js/dashboard.js/pages.js/social.js + helpers/bn63.js-আনট্র্যাকড) — upstream-এ সমতুল্য-ফিচার আগেই মার্জড; পুনঃস্থাপন নয়, প্রয়োজনে চেরি-পিক করুন
+- গোটচা-পুনঃপ্রমাণ: node-সার্ভার টুল-কলের মাঝে মরে → সার্ভার+পূর্ণ-E2E এক-ইনভোকেশনে; `agent-browser open`-এর পরে স্পষ্ট `wait <sel>` আবশ্যক (নইলে fill before-load ব্যর্থ)
 
 ---
-Task ID: cron-r103 (সেশন ১০৩ — webDevReview রাউন্ড)
-Agent: Z.ai Contact-Page Agent (cron)
-Task: QA-সুইপ → ফর্ম-ব্রেকেজ-ফিক্স (CSRF!) + প্রভোস্ট-সার্চ/কপি + আজ-খোলা-ব্যাজ + JSON-LD + স্টাইল-পলিশ
+Task ID: 22 (Session 112 — Lekhok-Forum; সর্বোচ্চ+১ রীতি — প্যারালাল-এজেন্টদের ১১০/১১১-লেবেলের পরে)
+Agent: Z.ai (cron webDevReview — same sandbox)
+Task: ইউজারের ৪-সুপারিশ — ① রিঅ্যাক্টরস-মডালে Facepile-অ্যাভাটার-মোড ② শেয়ার-মেনুতে রিসেন্ট-চ্যাট-শর্টকাট ③ অ্যাডমিন প্রচ্ছদ-সিলেক্টর ④ ১৭-হোম-কিউরেশন-ফিল্টার (মাস্টার-টেবিল শেষ-আইটেম)
 
 Work Log:
-- **git-হাইজিন:** sandbox অটো-কমিট (d3fc7e7) ৪৭৬-ফাইল Next.js-স্ক্যাফোল্ড+.next-ক্যাশ রিপো-তে ঢুকে যাচ্ছিল — রিসেট + root .gitignore-এ রুট-অ্যাংকড স্যান্ডবক্স-ডির ইগনোর (2f8a6a6 push); parallel session100-b-এর ওপর rebase ✓
-- QA: ১৩-পেজ ২০০ + /api/health + contact ব্রাউজার-চেক — বেসলাইন গ্রিন; rg -r ফ্ল্যাগ (replace) ভুয়া-'করাপশন'-অ্যালার্ম ডিবাংক (md5-মিল)
-- 🚨 **বড়-বাগ-আবিষ্কার:** যোগাযোগ-ফর্ম **কখনোই কাজ করত না** — ① ফর্মে _csrf-ফিল্ডই ছিল না ② /contact ক্যাশেবল-পাবলিক (PUBLIC_CACHE_RE72) → রেন্ডার-টোকেন এফেমেরাল (সেশন/কুকি-তে নেই) → urlencoded-POST সবসময় 403/303-?csrf=1-বাউন্স (success-strip ডেড-কোড)
-- **ফিক্স (routes/api.js + view):** ফর্মে _csrf-হিডেন-ইনপুট (res.locals.csrfToken) + fetch-ইন্টারসেপ্ট (FormData→URLSearchParams, meta-fallback) + **CSRF-অটোরিকভারি**: 403-নিরাপত্তা-এররে fresh ?_u= GET (ক্যাশ-বাইপাস → Set-Cookie+বৈধ-টোকেন; XTransformPort-প্রিজার্ভ) → রিট্রায় ② হ্যান্ডলারে ইন-মেমরি রেট-লিমিট (৫/১০মি/IP + ৫০০-কী-প্রুন) + wantsHtml-ডিটেক্ট (Accept:text/html → 303 ?success=|error=; fetch → JSON {ok}) + ইনপুট-ক্ল্যাম্প (120/200/4000)
-- **ফিচার:** প্রভোস্ট-সার্চ (হল/প্রভোস্ট/বিভাগ, কাউন্ট+empty-state+clear, সার্চে auto-এক্সপ্যান্ড) + কপি-টু-ক্লিপবোর্ড (execCommand-fallback, ✓-ফিডব্যাক) + মোনোগ্রাম-টাইল (প্রথম-অক্ষর, tint-সাইকেল) + 'আজ খোলা' লাইভ-ব্যাজ (data-days/data-closed-পার্স, রেঞ্জ-সাপোর্ট, is-today-রো + বর্ডার-টপে 'আজ' চিপ) + ContactPoint JSON-LD (+880-নরমালাইজ)
-- **স্টাইল:** session103-ব্লক — শাইন-সুইপ (ch-card), গ্রেডিয়েন্ট-ট্রিম (sec-head), জেব্রা+ইনসেট-অ্যাকসেন্ট (ts-table), পালস-ডট (fs-free/tb-dot), focus-visible-রিং ×৮, 640px+reduced-motion
-- E2E: fetch-সাবমিট → inline-success + form-reset + DB-রো ✓; no-JS ২-স্টেপ (csrf=1-রিকভারি → success-রিডাইরেক্ট) ✓; রেট-লিমিট [200,200,200,429...] ✓; সার্চ 'শাহ'→২ ✓ এম্পটি ✓ ক্লিয়ার→১৫ ✓; কপি-ক্লাস ✓; আজ-ব্যাজ সোমবার-রো ✓; JSON-LD ✓; 390px-০ ✓ কনসোল-০ ✓
-- 🚨 গোটচা-নতুন: **style.css-এডিটের পর সার্ভার-রিস্টার্ট না করলে AV-ক্যাশ-বাস্ট স্টেল থাকে** — ব্রাউজার পুরনো ?v= URL ক্যাশ থেকে দেখায় (ভিজ্যুয়াল-QA-র আগে রিস্টার্ট বাধ্যতামূলক)
+- git fetch+rebase: origin/main 11-কমিট এগিয়ে ছিল (session107-articles/109-এর /me+messenger+inbox) — ক্লিন রিবেজ, সংঘর্ষ-শূন্য
+- QA-বেসলাইন: সার্ভার-রিস্টার্ট+health 200 + ৯-পেজ-ম্যাট্রিক্স 200 ✓
+- ① Facepile-মোড: reactors-modal.ejs-এ হেডে rxm-modeseg সুইচার+rxm-tabrow+rxm-fgrid; reactors-modal.js-এ মোড-স্টেট+localStorage 'rxm110view'+renderFacepile (ব্যাজ+প্রথম-নাম+rxm-ftip টুলটিপ); style.css ব্লক
+- ② রিসেন্ট-চ্যাট: dashboard.js-এ GET /api/messages/recent-chats (MAX(id)-ক্রম+isOnline); actions-bar.ejs-এ smxr110 স্ট্রিপ (স্কেলেটন-শিমার); main.js-EOF IIFE (লেজি-লোড capture-phase + ১-ট্যাপ পাঠান = /api/share-to-user, নেভিগেশন-শূন্য, sent-ম্যাপ-পার্সিসটেন্ট)
+- ③+④ প্রচ্ছদ-নির্বাচক: helpers/covers.js (৬-প্রিসেট+validate/parse+initialOf, একক-উৎস); db.js-এ posts.home_cover (LATER_COLUMNS+alt দুই-তালিকা); moderator.js curation-SELECT+POST /curation/cover (scope+URL-গার্ড+TA42-অডিট); moderator-curation.ejs-এ cur-coverbtn+cov110-মোডাল (লাইভ ১৬:৯ প্রিভিউ, ৩-মোড, সেভ/সরান); pages.js home-কুয়েরি+parseCover; lekhok-home.ejs-এ .inkc110 মিনি-প্রচ্ছদ; admin.css/style.css স্টাইল
+- **E2E-ধরা বাগফিক্স ×৩:** ① faceEl.hidden ইনভার্টেড (ফেসপাইল-মোডেই লুকাচ্ছিল) ② লেগেসি শেয়ার-হ্যান্ডলারের stopPropagation বাবল-ডেলিগেশন ভেদ করত না → capture-phase ③ `<%= JSON.stringify %>`-escape→ইনলাইন-IIFE-মৃত্যু → `<%- %>`
+- যাচাই: ফেসপাইল সেল+ব্যাজ❤️+টুলটিপ+মোড-পার্সিসটেন্স+Escape+৩৯০px-৫-কলাম ✓; স্ট্রিপ লেজি-লোড+অনলাইন-ডট+'✓ পাঠানো'+টোস্ট+DB-মেসেজ-প্রমাণিত ✓; প্রচ্ছদ প্রিসেট/টাইপো('ল')/কাস্টম+URL-এরর+সরান+চিপ+অডিট ×৫ ✓; হোমে গ্রেডিয়েন্ট-কভার ✓; ৩৯০px-ওভারফ্লো-০ ✓; কনসোল-০ ✓; **role-policy ১০৭/১০৭ ALL GREEN** ✓
 
 Stage Summary:
-- কমিট: session103 push ✓ — ফাইল: api.js (contact-হ্যান্ডলার), lekhok-contact.ejs (ফর্ম+টুলস+JSON-LD+স্ক্রিপ্ট), style.css (session103-ব্লক), routes/pages.js (error-লোকাল)
-- ফর্ম এখন দুই-পথেই কাজ করে (JS: inline+auto-CSRF-রিকভারি; no-JS: ২-স্টেপ প্ল্যাটফর্ম-রিকভারি → success-strip) — আগে ০%-ও সেভ হতো না
-- পরবর্তী: contact_submissions অ্যাডমিন-ভিউ (ইনবক্স), ম্যাপে মাল্টি-পিন, hCaptcha-টার্ন (রেট-লিমিট ভলিউম বাড়লে)
-
----
-Task ID: cron-r4 (সেশন ১০৫ — webDevReview রাউন্ড ৫)
-Agent: Z.ai Cron Agent (webDevReview)
-Task: প্রজেক্ট-স্টেটাস অ্যাসেসমেন্ট + agent-browser QA → বাগ-ফিক্স/ফিচার-নির্বাচন → ইউনিয়ন-মার্জ (actor-avatar legacy-fallback + EventSource-গার্ড) + ডক-সিঙ্ক
-
-Work Log:
-- worklog/PROJECT/PLANS রিভিউ + git fetch → QA-ফেজ: pkill → port-ভেরিফাই → seed-qa-users (সার্ভার-বন্ধ) → সার্ভার+টেস্ট এক-ইনভোকেশনে
-- calls-E2E ২-ফেইল পরিবেশ-ত্রুটি (CALL_RING_TIMEOUT_S ছাড়া বুট) → env-সহ ৫৪/৫৪; role-policy ১৩-ফেইল বেসলাইন-করাপশন (testadmin banned) → pkill -9 + DB-রিপেয়ার → গ্রিন
-- ব্রাউজার-QA-তে ৩টি নতুন স্যান্ডবক্স-গোটচা আবিষ্কৃত: ① SANDBOX_PORT-হীন বুটে `<script src>`-404-পরে src-প্যাচে পুনঃএক্সিকিউশন-অসম্ভব (CSS-এ সম্ভব) → main.js-নীরব-মৃত্যু ② agent-browser-প্রোফাইলে পুরনো SW টিকে থাকে (unregister+cache-clear রেসিপি) ③ wc -c বনাম JS .length (বাংলা ৩-বাইট) মিথ্যা stale-তত্ত্ব
-- ফোকাস: মাস্টার-টেবিল ০৭+০৮ নিয়ে কাজ শুরু করেছিলাম — মাঝ-রাউন্ডে git fetch-এ সমান্তরাল session100/102-কমিট (6489f32/4007e95) পাওয়া গেল যাতে ০৭ (কম্পোজার-মোডাল), ০৮ (র‍্যাংকড-ফিড), actor-avatar **ইতোমধ্যেই ইমপ্লিমেন্টেড**
-- **ইউনিয়ন-সিদ্ধান্ত:** তাদের ইমপ্ল ক্যানোনিকাল (already-E2E'd+pushed); আমার প্যারালাল-ইমপ্ল (composer-modal.ejs + composer-modal.js + .lf-cmodal + data-cmodal-open + popularTags102) বাদ; stash→rebase→pop-কনফ্লিক্ট ৮-ফাইল হাতে-রিজলভ (docs-union, কোড-তাদের+আমার-অনন্য)
-- **অনন্য-অবদান রক্ষা:** ① server.js FETCH_GUARD-এ EventSource-র‍্যাপ (SSE গেটওয়ে-টপলেভেলে 404→ফলব্যাক-পোল হতো) ② actor-avatar legacy-row-ফলব্যাক — actor_id-NULL রোতে link-prefix থেকে হুবহু actor_id/actor_avatar-শেপে ভরা (server.js + dashboard.js, এক IN-কুয়েরি) ③ টাইপ-রঙা ico-<type> আইকন ×৯ + has-avatar hover-zoom (style.css)
-- reset-qa-logins.js চালানো (ismail=secret123 বেসলাইন — 9824dd6-চুক্তি); রানিং-সার্ভারের ইন-মেমরি-DB ফাইল-সিড ওভাররাইট করে — রিসেট-পরে রিস্টার্ট আবশ্যক (পুনঃপ্রমাণিত)
-- যাচাই: role-policy ১০৭/১০৭ + calls ৫৪/৫৪ + EJS-কম্পাইল ×২ + node --check ×৪ + ব্রাউজার (their-modal ওপেন/ক্লোজ ✓ অ্যাভাটার-ফলব্যাক ✓ insert-path actor_id=53 ✓ ico-রঙা ✓ SSE-open ✓ কনসোল-০)
-- PROJECT.md §১০-তে সেশন-১০৫-এন্ট্রি + PLANS.md-এ Cross-Agent-Note (session102-নোট প্রতিস্থাপন করে)
-
-Stage Summary:
-- মূল-কমিটের সাথে pushed ✓ — মাস্টার-টেবিলে খালি: ০৫-কার্সার-পলিশ + ১৭-হোম-কিউরেশন
-- ফাইল: server.js (EventSource-গার্ড + legacy-fallback), routes/dashboard.js (recent-enrichment), header.ejs/live.js/style.css (মার্কআপ+রঙ-ইউনিয়ন), PROJECT.md/PLANS.md
-- পরবর্তী: ০৫-কার্সার-পলিশ → ১৭-হোম-কিউরেশন → শেয়ার্ড-ট্যাব pagination → Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) → গ্রুপ-কল
-
----
-Task ID: cron-r5 (সেশন ১০৮ — webDevReview রাউন্ড ৬; ১০৭-লেবেল-রেস: ৭a23401+keyset-এজেন্টদের সাথে সংঘর্ষ)
-Agent: Z.ai Cron Agent (webDevReview)
-Task: QA-সুইপ → কন্টাক্ট-ইনবক্স-আপগ্রেড (/admin/messages) + /notifications ফুল-পেজ actor-avatar → rebase (session104-১০৫ ইউনিয়ন) → push
-
-Work Log:
-- worklog/PLANS রিভিউ + QA: ১৪-পেজ ২০০ + health 0ms + ট্যাগ-বার/rank-chip/sort-bar লাইভ → বাগ-শূন্য
-- ইনবক্স: contact_submissions.status মাইগ্রেশন + সার্চ/ফিল্টার/পেজিনেশন/CSV/স্ট্যাটাস-ট্রানজিশন/ট্র্যাশ-ডিলিট + ibx-* ফুল-স্টাইলিং; E2E curl+agent-browser সম্পূর্ণ ওয়ার্কফ্লো
-- ফুল-পেজ avatar: daily.js JOIN + session105-legacy-fallback-মিরর + has-avatar ভিউ-ব্রাঞ্চ + পেজ-ভ্যারিয়েন্ট CSS
-- rebase-কালে আবিষ্কার: origin-এর style.css-এ session104-কমেন্ট-ব্লকের /*-ওপেনার হারানো ছিল → পুনঃস্থাপনসহ union-মার্জ
-- সেশন-নাম্বার-সংঘর্ষ এড়াতে push-এর আগে origin-worklog-চেক → ১০৭ লেবেল
-
-Stage Summary:
-- /contact-সাবমিশন এখন অ্যাডমিনে দৃশ্যমান (ওয়ার্কফ্লো-সহ) — session103-এর "কেউ দেখে না" অনুরোধ পূরণ
-- রোডম্যাপ ২০/২০ সম্পূর্ণ (keyset-এজেন্টের session107); আমার স্বাধীন ইনবক্স-ইমপ্ল session107-ক্যানোনিকালের কাছে প্রত্যাহৃত — অনন্য রক্ষিত: ফুল-পেজ avatar + CSV (তাদের স্কিমায়) + style.css-ওপেনার-রিপেয়ার
-- পরবর্তী: ০৫ → ১৭ → ইনবক্স-বাল্ক/রিপ্লাই
-
----
-Task ID: cron-r5-পুশ-নোট (সেশন ১০৮ — পুশ-রেস-লগ)
-Agent: Z.ai Cron Agent (webDevReview)
-Task: পুশ-সময়ে দুই-রাউন্ড rebase (প্রতিটি পুশ-প্রচেষ্টার মাঝেই নতুন origin-কমিট ঢুকেছে)
-
-Work Log:
-- পুশ-চেষ্টা ১ → 7a23401 (ইনবক্স session107) + keyset-session107 আবিষ্কৃত → ক্যানোনিকাল-গ্রহণ (ইনবক্স-ফাইল ×৪ --ours) + CSV-ডোনেশন (তাদের স্কিমায় অ adapt) + style.css-ওপেনার-রিপেয়ার + worklog/PLANS-ইউনিয়ন
-- পুশ-চেষ্টা ২ → 236ac3f (docs) ঢুকল → আবার rebase; style.css-এ তৃতীয় "session108" (FB-পোস্ট-ফুটার এজেন্ট) union — মার্কার-মুক্ত, brace-0, ওপেনার-সমান
-- ফাইনাল: a8adbf9 (docs) + e8c6fbb + 94bc1d2 + 4351f13 → origin/main ✓; পুশ-পরে smoke: health + / + /articles + /admin/messages ২০০ ✓
-
-Stage Summary:
-- মোট পুশ: ৪-কমিট; এক-রাউন্ডে ৩-বার সেশন-লেবেল-সংঘর্ষ (১০৭×২, ১০৮×২) — ভবিষ্যতে লেবেলের বদলে কনটেন্ট-ফিঙ্গারপ্রিন্ট/টাইমস্ট্যাম্প-স্টাইল আইডি ভাবনা
-- ইনবক্স-ফিচার এখন ডুয়াল-উৎস: 7a23401-কোর (bulk/ব্যাজ/মোডাল) + আমার CSV/ফুল-পেজ-avatar/ওপেনার-রিপেয়ার
-
----
-Task ID: session109 (ইউজার-রিপোর্ট: ব্যক্তিগত-ফিড ডিজাইন)
-Agent: Z.ai Main Agent (ইউজার-সেশন)
-Task: /me পেজের প্রফেশনাল রিডিজাইন — ৭-ডুপ্লিকেট-স্ট্যাট-বক্স, বাটন-কনট্রাস্ট, টেক্সট-ওভারফ্লো, বিশাল-ফাঁকা-চার্ট
-
-Work Log:
-- রিপো fresh-ক্লোন → sql.js লোকাল বুট → md_rafsan QA-পাসওয়ার্ড + ডেমো-পোস্ট/লাইক/বুকমার্ক সিড (তারিখ-স্প্রেড: এপ্রি/জুন/সেপ্ট) → agent-browser before-স্ক্রিনশটে ইউজারের ৪-অভিযোগই পুনরুৎপাদিত
-- me.ejs: stats-grid(৭ টাইল) বিলুপ্ত → ট্যাব-ব্যাজ (tb-badge, FB-প্যারিটি অর্ডার: পোস্ট→ড্রাফট→সংরক্ষিত→মন্তব্য→প্রতিক্রিয়া→অনুসরণ→অ্যাক্টিভিটি→ক্যাটাগরি), ড্রাফট-ট্যাব সর্বদা দৃশ্যমান + ০-তে empty-state; হিরো-কমপ্যাক্ট (রোল-চিপ + অনুসারী/অনুসরণ-লাইন); SVG-চার্ট → HTML flex-বার (৮৪px, শূন্য-মাসে ৬px স্টাব, ভ্যালু>০ লেবেল) + ws91Toggle (লুকান/চার্ট, aria-expanded); KPI-চিপে min-width:0-truncate-গার্ড
-- style.css EOF (সেশন-১০৯-ব্লক): হিরো-বাটন !important-ওভাররাইড — আবিষ্কার: লিগ্যাসি .btn-primary{color:...!important} সাদা-অন-সাদা বানাচ্ছিল; 'নতুন লেখা'=emerald-গ্রেডিয়েন্ট+সাদা, 'প্রোফাইল'=সাদা-সলিড+গাঢ়#0a3d34; ট্যাব-পিল + ≤640px (হিরো-কলাম, KPI×২, চার্ট-৭২px)
-- E2E: ডেস্কটপ+৩৯০px স্ক্রিনশট ✓ টগল-দুই-দিক ✓ ট্যাব-সুইচ×৩ ✓ ?tab=ডিপ-লিংক ✓ কনসোল-০ ✓ ৫-পেজ-রিগ্রেশন ২০০ ✓
-- push-রেস: 564a2fc কমিটের পরে origin-এ নতুন ৪-কমিট → rebase-কনফ্লিক্ট (style.css EOF) → ইউনিয়ন-মার্জ (session108-FB-ফুটার-ব্লক + আমার ব্লক) → 6fdf34c pushed ✓ post-merge smoke ✓
-
-Stage Summary:
-- /me এখন FB-প্যারিটি কমপ্যাক্ট: ডুপ্লিকেট-গ্রিড-শূন্য, দুই-বাটনই AA-কনট্রাস্ট, চার্ট ~৩০০px→৮৪px, লম্বা-টাইটেল-ওভারফ্লো-শূন্য
-- গোটচা-নোট ভবিষ্যৎ-এজেন্টদের জন্য: style.css-এ !important-লিগ্যাসি আছে — /me-স্কোপ ওভাররাইডেও !important লাগবে; AV মাই-টাইম-ভিত্তিক তাই CSS-এডিটের পরে সার্ভার-রিস্টার্ট অপরিহার্য
-- পরবর্তী প্রার্থী: ফিড-কার্ডে cover-image-হাইড্রেশন-স্কেলেটন, /dashboard-এ ws109-স্টাইল স্ট্যাট-চিপ বহন
-
----
-Task ID: cron-r1 (session110+111 — webDevReview রাউন্ড)
-Agent: Z.ai Cron Agent (webDevReview)
-Task: QA-সুইপ → ফিড-এনরিচমেন্ট (পড়ার-সময় + skeleton + আমার-সারসংক্ষেপ) → union-মার্জ CSS-ব্রেক-রিপেয়ার
-
-Work Log:
-- worklog/PLANS রিভিউ + QA-সুইপ: ১০-পেজ ২০০, কনসোল-০ → বাগ-শূন্য, তাই ফিচার-রাউন্ড
-- ① পড়ার-সময়: decorateFeed-এ read_mins (মার্কডাউন-স্ট্রিপ ÷৯৫০ অক্ষর/মিনিট) → rt-chip ফিড-হেড + /me মেটা; /dashboard/more-অ্যাপেন্ড-পাথে অটো (more-পার্স: cards:10 rt:3) ② img-skel শিমার (post-gallery solo/main + repost feed-image, onload→ld, reduced-motion-সেফ) ③ ড্যাশবোর্ড-সাইডবারে 'আমার সারসংক্ষেপ' — myStats ৪-লাইট-কুয়েরি → ২×২ স্লিম-চিপ (/me?tab=ডিপ-লিংক); E2E: ডেস্কটপ+ranked+390px+কনসোল-০ ✓
-- push-রেস: 4868b07 কমিটের পরে origin-এ 2a8d411 (অন্য-এজেন্টের session110-লেবেল!) + 9bb2a98 ঢুকেছে → rebase-পরে আবিষ্কৃত: তাদের EOF-ব্লক আমার @media-ব্লকের ক্লোজিং }-এর আগে splice হয়েছিল → ১০৭/১১০-ব্লক ডেস্কটপে ডেড → f736fc1 রিপেয়ার (comment-stripped brace-depth ২৬০২/২৬০২ ✓ + লাইভ-যাচাই rt-chip:flex ✓)
-- /resources-500 তদন্ত: ভিউ-নতুন/রাউট-পুরনো = স্টেল-সার্ভার-প্রসেস; রিস্টার্টে ২০০ — রিপো-বাগ নয়
-
-Stage Summary:
-- ফিড এখন ধনী: পড়ার-সময়-চিপ + লোডিং-শিমার + ড্যাশবোর্ডে ব্যক্তিগত-স্ট্যাট-শর্টকাট (৪৮৬৮b07→rebase→0442f44 + f736fc1)
-- 🚨 প্যারালাল-এজেন্ট-শিক্ষা: (ক) EOF-ব্লক append করলে আগের-ব্লকের ক্লোজিং-ব্রেস নষ্ট হতে পারে — মার্জ-পরে comment-stripped brace-depth-চেক বাধ্যতামূলক (খ) সেশন-লেবেল-রেস আবার (১১০×২) — টাইমস্ট্যাম্প-স্টাইল-আইডি প্রয়োজনীয় (গ) CSS-এডিট-পরে সার্ভার-রিস্টার্ট + স্টেল-প্রসেস-সন্দেহে রুট-কজ-বিচারের-আগে রিস্টার্ট
-- পরবর্তী: /article-single-এও rt-chip + পড়া-অগ্রগতি-বার, msx-উইজেটে drafts-চিপ, ws91-পুরনো-SVG-রুল-পরিষ্কার
-
-Task ID: session-105
-Agent: Z.ai (Design-System Agent — sandbox web-68dcf7c4, channel zai-web)
-Task: Lekhok-Forum — সেন্ট্রালাইজড গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) প্রতিষ্ঠা: ডিজাইন-টোকেন + ক্যানোনিকাল কম্পোনেন্ট-ম্যাট্রিক্স + ৫ অপরিবর্তনীয় নিয়ম + মাল্টি-এজেন্ট গার্ড-লিন্ট + E2E QA + ক্রন-হ্যান্ডওভার
-
-Work Log:
-- **অবস্থা-যাচাই:** GitHub (ghp_…KSHO) থেকে fresh clone @ 1704998 (session-104-docs) → sandbox-রুটে রিপো-ইনস্টল (Next.js-scaffold root-.gitignore-ইগনোরড, আগের এজেন্ট-কনভেনশন অনুযায়ী) → bun install → Express :3030 বুট (SANDBOX_PORT=3030, gateway XTransformPort-প্রিভিউ) — স্মোক ২০০
-- **ম্যাপিং:** পোস্ট-কার্ড ৪-আইডিওম, কমেন্ট ২-রেন্ডারার, মেসেঞ্জার JS-ডুপ — অসামঞ্জস্য-তালিকা → ক্যানোনিকালাইজেশন-প্ল্যান
-- **Design Tokens:** lekhok-forum/public/assets/css/tokens.css (ইউজারের tailwind-config-স্পেকের CSS-ভেরিয়েবল-অ্যাডাপ্টেশন: brand #006A4E, social #1877F2, ui #F0F2F5/#FFFFFF/#E4E6EB, text #050505/#65676B, reaction ×৪, radius 16/18/9999) + লিগ্যাসি-ভেরিয়েবল-রিম্যাপ (style.css/auth.css অক্ষত) + :root:root + head-শেষ-লোড (header.ejs + layout.ejs দুই-হেডেই) + html-ক্যানভাস-লক
-- **Shared কম্পোনেন্ট:** lekhok-forum/views/shared/{post,comment,user,messenger}/ — FeedPostCard, PostFooterActions (৩-ফিক্সড শেয়ার + রিঅ্যাক্টরস-মডাল-ট্রিগার), PostActionMenu, ReactorsModal, CommentItem (হোভার ৩-ডট/৬-ইমোজি প্যালেট/কর্নার-ব্যাজ), CommentComposer, MessengerBubble; পুরনো partials → delegate-শিম
-- **রিফ্যাক্টর:** /dashboard, /profile/[id] (pin-মেনু + bookmark-ডেকোরেশন), /me, /articles/[id] (রিলোড-নেই থ্রেড), /articles তালিকা (AuthorLabel + লিগ্যাসি-/api/like-বাদ), /messages/[username] (JS-বাবল-বিল্ডার → /api/messages/render)
-- **API:** /api/comments?format=html · PUT/DELETE /api/comments/:id · /api/reactions/:type/:id +users · /api/messages/render
-- **গার্ড:** lekhok-forum/scripts/guard-design-system.js + npm run guard:design — shared/-বহির্ভূত ক্যানোনিকাল-মার্কআপ/লিগ্যাসি-ইঞ্জিন/শিম-দূষণ/CSS-ক্রম-লঙ্ঘনে ফেইল
-- **E2E (agent-browser):** ফিড-কার্ড কাউন্টার-বার ✓ ড্রয়ার-প্রিভিউ-সোয়াপ ✓ প্যালেট-রিঅ্যাক্ট (❤️৪) ✓ টগল-অফ ✓ কমেন্ট-এডিট/ডিলিট (সার্ভার-প্রমাণসহ) ✓ রিঅ্যাক্টরস-মডাল ✓ শেয়ার-মেনু = ৩-অ্যাকশন ✓ চ্যাট optimistic→ক্যানোনিকাল-প্রতিস্থাপন ✓ ৩৯০px-ওভারফ্লো-০ ✓ কনসোল-০ ✓
-- ডকস: PROJECT.md Changelog সেশন ১০৫ + §৮-টোকেন-নোট; PLANS.md Cross-Agent Note; lekhok-forum/worklog.md সেশন-১০৫
-- **ক্রন:** webDevReview ১৫-মিনিট টাস্ক সেট (এই-সেশনে)
-
-Stage Summary:
-- প্ল্যাটফর্মের পোস্ট/কমেন্ট/মেসেঞ্জার-মার্কআপ ও রঙ — এক-সোর্স-লকড; এক-প্রান্তের আপডেট এখন সর্বত্র সমানভাবে প্রতিফলিত (ইউজারের মূল-লক্ষ্য)
-- পরবর্তী-এজেন্টের প্রথম-কাজ: `git fetch` → lekhok-forum/PLANS.md-এর Cross-Agent Note Session 105 পড়ুন → `npm run guard:design` গ্রিন-রাখুন
-- রিস্ক/অবশিষ্ট: qa-single-উত্তর এখনো নিজস্ব-আইডিওম; role-policy-স্যুটে নতুন comment-API-চেক যোগ হয়নি; লাইভ-Turso-ডিপ্লয়ে seed-স্ক্রিপ্ট প্রযোজ্য নয় (ডেমো-ডেটা sandbox-ক্লোন-লোকাল)
-
----
-Task ID: cron-r2 (session112 — রাউন্ড-৩: QA-সুইপ → পড়া-চালিয়ে-যান-উইজেট)
-Agent: Z.ai Cron Agent (webDevReview)
-Task: QA-সুইপ → স্টেবল-ফেজ প্রমাণিত → নতুন-ফিচার রাউন্ড ('পড়া চালিয়ে যান' + খসড়া-চিপ + ws91-হাইজিন)
-
-Work Log:
-- QA-সুইপ: ১২-পেজ ২০০ (৩০২=অথ-গেট, সঠিক) + কনসোল-০ → বাগ-শূন্য → ফিচার-রাউন্ড (ম্যান্ডেট ৪+৫)
-- ① **'পড়া চালিয়ে যান' উইজেট (নতুন):** article-reading.js-এর lf_read_pos-এ ti(টাইটেল)+u(পাথ) যোগ → নতুন continue-reading.js ড্যাশবোর্ড-সাইডবারে সর্বশেষ-৩ অসমাপ্ত-লেখা আঁকে (শূন্য-API, খালি-তালিকায় কার্ড-লুকানো, ৪px প্রগ্রেস-বার+×-সরান) → লিঙ্কে-গেলে session৬৩ রিজিউম-ব্যানার অবস্থান-ফেরায়
-- ② **msx খসড়া-চিপ:** ফুল-উইডথ ৫ম চিপ (.msx-chip.wide) → /me?tab=drafts; myStats-এ drafts-কুয়েরি
-- ③ **ws91-হাইজিন:** SVG-যুগের মৃত-রুল সরানো (.ws91-chart/.ws91-bar/ws91grow/bar-num/bar-lbl); ⚠️ 'idden]-ভাঙা-সিলেক্টর' সন্দেহ মিথ্যা-অ্যালার্ম ছিল — od-bytes-যাচাইয়ে [hidden] অক্ষত (টুল-আউটপুটে [h খাওয়ার ডিসপ্লে-আর্টিফ্যাক্ট); শিক্ষা: সন্দেহে আগে raw-bytes দেখুন
-- E2E: seed-long-article-112 (২৯০১-অক্ষর, সার্ভার-বন্ধে) → ৫৭%-স্ক্রল→r/ti/u-সেভ ✓ উইজেট-রেন্ডার ✓ রিজিউম-ব্যানার→স্ক্রল-১২৫৩px ✓ ×-সরান→লুকান ✓ 390px-০ ✓ /me-টগল+৮-ট্যাব ✓ কনসোল-০ ✓ guard:design গ্রিন ✓
-- 🚨 নতুন এনভ-গোটচা: এই-স্যান্ডবক্সে Bash-টুল-কলের-মাঝে ব্যাকগ্রাউন্ড-সার্ভার-প্রসেস মারা যায় (nohup+setsid-ও ব্যর্থ) → রিপো-রুটে আনট্র্যাকড ensure-server.sh হেল্পার রাখা হল (curl-হেলথ-চেক→না-থাকলে setsid-বুট; প্রতিটি টেস্ট-ব্লকের শুরুতে কল করুন)
-- push-রেস: stash→rebase (session105 ডিজাইন-সিস্টেম + session109-যোগাযোগ + PLANS-ডকস) → stash-pop-এ style.css EOF-কনফ্লিক্ট → union-মার্জ (দুই-ব্লক সহ-সংরক্ষিত) + brace-চেক + guard:design + লাইভ-রি-যাচাই
-
-Stage Summary:
-- পুশড: feat(session112) + docs — পাঠকের অসমাপ্ত-লেখা এখন ড্যাশবোর্ড থেকেই ধরা পড়ে (ব্রাউজার-লোকাল, প্রাইভেসি-সেফ)
-- পরবর্তী-প্রার্থী: ① crx-উইজেটে 'সব দেখুন' এক্সটেনশন (৩০-এন্ট্রি ম্যাপের পূর্ণ-তালিকা-পেজ) ② /qa-single-উত্তরে CommentItem (session105-সুপারিশ) ③ role-policy-স্যুটে comment-API-চেক ④ /notifications actor-avatar ⑤ tokens.css-হার্ডকোড-স্ক্যান-গার্ড
-Task ID: cron-r6 (সেশন ১১০ — webDevReview রাউন্ড)
-Agent: Z.ai Cron Agent (webDevReview)
-Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → মাস্টার-টেবিল শেষ-২ আইটেম (০৫ কার্সার-পলিশ + ১৭ হোম-কিউরেশন) → ইউনিয়ন-মার্জ + push
-
-Work Log:
-- worklog/PROJECT/PLANS রিভিউ + git fetch (HEAD=2e36960 থেকে শুরু) → QA-ফেজ: pkill → port-ভেরিফাই → seed-qa-users (সার্ভার-বন্ধ) → সার্ভার (SANDBOX_PORT=8080 CALL_RING_TIMEOUT_S=4) + role-policy ১০৭/১০৭ + calls-E2E ৫৪/৫৪ — সব-গ্রিন
-- ব্রাউজার-QA: হোম/লগইন(ismail)/ড্যাশ(১৫-কার্ড)/মেসেঞ্জার-চ্যাট/রিসোর্স-ডিটেইল/আর্টিকেল — কনসোল-০; ৩৯০px (`agent-browser set viewport 390 844`) ৪-পেজ ওভারফ্লো-০; /article/2→404 মিথ্যা-অ্যালার্ম (সঠিক রুট /articles/:id)
-- ফোকাস-নির্বাচন: মাস্টার-টেবিল শেষ-২ — ০৫ (keyset) + ১৭ (হোম-কিউরেশন)
-- **০৫ দুই-এজেন্টে স্বাধীন-ইমপ্ল হয়েছিল:** আমার ইমপ্ল (single pipe-কার্সার + অর্ডিনাল-ORDER 8,1,2 + 400-bad_cursor) হাতে-কোরা অবস্থায় git fetch-এ 9c53cab (তাদের keyset-ইমপ্ল) পাওয়া গেল — session105-প্রেসিডেন্ট অনুযায়ী **তাদেরটাই ক্যানোনিকাল গৃহীত**, আমার সার্ভার/ক্লায়েন্ট-ইমপ্ল প্রত্যাহৃত
-- **স্বতন্ত্র-আবিষ্কার-প্রমাণ:** দুই-ইমপ্লই একই ২-SQL-গোটচা ধরেছে — JOIN-শাখায় ORDER BY id ambiguous (p.id/u.id) + UNION-compound-এ ৩য়-টার্ম-নাম-কোয়ার্ক; সমাধান-দুটি (p.id-as-id-অ্যালিয়াস বনাম অর্ডিনাল-ORDER) PLANS-নোটে রেফারেন্স-সংরক্ষিত
-- **অনন্য-অবদান রক্ষা:** ① E2E verify-session107-cursor.js ক্যানোনিকাল-চুক্তিতে (cursor=<ts>&cursorType&cursorId → nextCursor:{ts,type,id}) অ্যাডাপটেড — ২২/২২ ALL GREEN **ক্যানোনিকাল-ইমপ্লের বিরুদ্ধে** (২৬-পোস্ট টাই-ব্যাচ · চেইন-ডুপ্লিকেট-শূন্য · অ্যান্টি-ড্রিফট-প্রমাণ + OFFSET-ডুপ্লিকেট-প্যারিটি · ভাঙা-কার্সার→graceful-ফলব্যাক · ক্লিনআপ HTTP-API-ভিত্তিক ২৭/২৭) ② dashboard.css session107-লোডিং-পলিশ (স্কেলেটন-শিমার + গ্লাস-পিল + done-টিন্ট) ③ ১৭-যাচাই (সেশন-৯০-ই সম্পন্ন; হোমে AVATAR/COVER_UPDATE-লিক-শূন্য) — মাস্টার-টেবিল ০৫+১৭ ✅ → **২০/২০**
-- rebase ×২ + push-রেস ×২ (ed8744c → 4381ef6 মাঝ-পথে এসেছে) — PLANS-ইউনিয়ন-মার্জ ×২; final push 2a8d411 ✓; push-পরবর্তী HEAD-এ role-policy ১০৭/১০৭ + calls ৫৪/৫৪ + cursor ২২/২২ পুনঃনিশ্চিত
-
-Stage Summary:
-- origin/main @ 2a8d411 — মাস্টার-টেবিল **২০/২০ সম্পূর্ণ** (০৫+১৭ ✅)
-- ক্যানোনিকাল keyset-চুক্তি: ?cursor=<ts>&cursorType=<type>&cursorId=<id> → nextCursor:{ts,type,id}; ভাঙা-কার্সারে OFFSET-ফলব্যাক (never-500)
-- নতুন টেস্ট: scripts/verify-session107-cursor.js (ক্যানোনিকাল-চুক্তি; ভবিষ্যৎ-রিগ্রেশনে চালানো যায়)
-- পরবর্তী: শেয়ার্ড-ট্যাব pagination (Agent-Chat-লক) → প্রোফাইল-টাইমলাইন স্ক্রল-রিস্টোর → Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) → গ্রুপ-কল
+- মাস্টার-টেবিল: **১৭-হোম-কিউরেশন ✓ সমাপ্ত** — ২০-আইটেমে অবশিষ্ট মাত্র ০৫-কার্সার-পলিশ
+- নতুন-সারফেস: posts.home_cover · GET /api/messages/recent-chats · POST /moderator/curation/cover · helpers/covers.js · rxm-fgrid/smxr110/inkc110/cov110 ক্লাস-পরিবার
+- পরবর্তী-প্রথম-পছন্দ: ① ০৫-কার্সার-পলিশ (শেষ-আইটেম) ② ফেসপাইল ১০০+-রিঅ্যাক্টর-ভার্চুয়ালাইজেশন ③ প্রচ্ছদ-মোডালে ইমেজ-আপলোড (/upload-image হুক) ④ রিসেন্ট-চ্যাটে গ্রুপ-কনভ ⑤ টাইপো-প্যাটার্ন ভ্যারিয়েন্ট
+- ঝুঁকি-নোট: EJS-ইনলাইন-স্ক্রিপ্টে `<%= %>`-escape IIFE মারে (নীরব) — `<%- %>` রীতি; stopPropagation-আচ্ছাদিত ট্রিগারে capture-phase-ডেলিগেশন; style.css/admin.css EOF-ঘনত্ব — ইউনিয়ন-মার্জ রীতি অব্যাহত
 
 ---
 Task ID: 11 (Session 111 — cron review round: কল-UX পলিশ প্যাকেজ — কোয়ালিটি-পিল + ডায়াগনস্টিকস)

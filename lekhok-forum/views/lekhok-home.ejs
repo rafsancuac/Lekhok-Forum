@@ -602,9 +602,20 @@
     <div class="notice-list notice-list--home reveal-stagger">
       <% recentArticles.forEach(a => { %>
         <a href="/articles/<%= a.id %>" class="notice-row notice-row--compact">
+          <%# সেশন ১১০: শৈল্পিক প্রচ্ছদ (posts.home_cover) — প্রিসেট=গ্রেডিয়েন্ট+কলম, টাইপোগ্রাফি=আদ্যক্ষর, কাস্টম=ইমেজ %>
+          <% if (a.cover) { %>
+          <span class="notice-row-icon inkc110<%= a.cover.type === 'typo' ? ' inkc110-typo' : '' %>" <% if (a.cover.grad) { %>style="background:<%= a.cover.grad %>"<% } %><% if (a.cover.type === 'typo' && a.cover.initial) { %> data-initial="<%= a.cover.initial %>"<% } %>>
+            <% if (a.cover.type === 'custom') { %>
+              <img class="inkc110-img" src="<%= a.cover.url %>" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('inkc110-fallback');this.remove()">
+            <% } else if (a.cover.type === 'preset') { %>
+              <i class="fas fa-feather-alt"></i>
+            <% } %>
+          </span>
+          <% } else { %>
           <span class="notice-row-icon cat-general">
             <i class="fas fa-feather-alt"></i>
           </span>
+          <% } %>
           <span class="notice-row-main">
             <span class="notice-row-top">
               <span class="notice-row-title"><%= a.title %></span>

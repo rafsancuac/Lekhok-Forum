@@ -83,6 +83,7 @@
           <div class="cur-item-top">
             <a class="cur-item-title" href="/articles/<%= a.id %>" target="_blank" rel="noopener"><%= a.title %></a>
             <% if (a.home_featured) { %><span class="cur-chip cur-chip-home"><i class="fas fa-home"></i> হোম</span><% } %>
+            <% if (a.home_cover) { %><span class="cur-chip cur-chip-cov" data-covchip-<%= a.id %>><i class="fas fa-image"></i> প্রচ্ছদ</span><% } %>
             <% if (a.featured) { %><span class="cur-chip cur-chip-bw"><i class="fas fa-trophy"></i> সেরা লেখক</span><% } %>
             <% if (a.status === 'hidden') { %><span class="cur-chip cur-chip-hidden"><i class="fas fa-eye-slash"></i> লুকানো</span><% } %>
             <% if (!a.archive_visible) { %><span class="cur-chip cur-chip-hidden"><i class="fas fa-list-slash"></i> তালিকায় বাদ</span><% } %>
@@ -96,6 +97,13 @@
             <span><i class="far fa-comment"></i> <%= a.comment_count || 0 %></span>
           </div>
         </div>
+        <%# সেশন ১১০: শৈল্পিক প্রচ্ছদ-নির্বাচক (AdminCoverSelector) — কেবল মূল writing-রোতে;
+            data-cover-এ সেভড JSON (HTML-escaped — JS-এ parse নিরাপদ) %>
+        <% if (isWriting90) { %>
+        <button type="button" class="cur-coverbtn<%= a.home_cover ? ' has-cov' : '' %>" data-coverbtn data-id="<%= a.id %>" data-title="<%= a.title %>" data-author="<%= a.author_name %>" data-cover="<%= a.home_cover || '' %>" title="হোমপেজ প্রচ্ছদ নির্বাচন করুন">
+          <i class="fas fa-image"></i> প্রচ্ছদ
+        </button>
+        <% } %>
         <label class="cur-arch <%= !a.archive_visible ? 'is-off' : '' %>" title="<%= a.archive_visible ? 'সব লেখা তালিকায় দৃশ্যমান' : 'সব লেখা তালিকা থেকে বাদ' %>">
           <input type="checkbox" class="cur-arch-input" data-field="archive_visible" <%= a.archive_visible ? 'checked' : '' %> aria-label="'সব লেখা' তালিকায় দেখান: <%= a.title %>" />
           <span class="cur-arch-track"><i class="fas fa-eye cur-arch-eye"></i><i class="fas fa-eye-slash cur-arch-eyeoff"></i></span>
@@ -108,6 +116,62 @@
 </div>
 
 <div class="cur-toast" id="curToast" role="status" aria-live="polite" hidden></div>
+
+<%# ── সেশন ১১০: শৈল্পিক প্রচ্ছদ-নির্বাচক মোডাল (AdminCoverSelector) ──
+    ৩ মাধ্যম: 🎨 প্রিসেট (সাহিত্যিক কালার-প্যালেট) | ✍️ টাইপোগ্রাফি (আদ্যক্ষর) |
+    📤 ইমেজ লিংক (কাস্টম URL) — লাইভ ১৬:৯ প্রিভিউ-কার্ডসহ (শিরোনাম+কলমে-লেখক)। %>
+<div class="cov110-backdrop" id="covModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="হোমপেজ প্রচ্ছদ নির্বাচন">
+  <div class="cov110-box">
+    <header class="cov110-head">
+      <div>
+        <h3><i class="fas fa-image"></i> হোমপেজ ফিচার্ড প্রচ্ছদ নির্বাচন</h3>
+        <p>লেখকদের কালি সেকশনের কার্ড প্রদর্শনের জন্য</p>
+      </div>
+      <button type="button" class="cov110-x" id="covClose" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
+    </header>
+
+    <div class="cov110-body">
+      <div class="cov110-preview" id="covPreview">
+        <div class="cov110-pvbg" id="covPvBg"></div>
+        <img class="cov110-pvimg" id="covPvImg" alt="" hidden>
+        <div class="cov110-pvtop">
+          <span class="cov110-pvchip" id="covPvChip">সাহিত্য</span>
+          <span class="cov110-pvbrand">লেখক ফোরাম • চবি</span>
+        </div>
+        <div class="cov110-pvbot">
+          <h4 id="covPvTitle">শিরোনাম</h4>
+          <p id="covPvAuthor">কলমে: লেখক</p>
+        </div>
+      </div>
+
+      <div class="cov110-modes" role="group" aria-label="প্রচ্ছদ-মাধ্যম">
+        <button type="button" class="cov110-mode is-on" data-covmode="preset">🎨 প্রিসেট</button>
+        <button type="button" class="cov110-mode" data-covmode="typo">✍️ টাইপোগ্রাফি</button>
+        <button type="button" class="cov110-mode" data-covmode="custom">📤 ইমেজ লিংক</button>
+      </div>
+
+      <div class="cov110-pane" id="covPanePreset">
+        <div class="cov110-grid" id="covGrid"></div>
+      </div>
+      <div class="cov110-pane" id="covPaneTypo" hidden>
+        <p class="cov110-note"><i class="fas fa-pen-nib"></i> শিরোনামের আদ্যক্ষর দিয়ে টাইপোগ্রাফিক প্রচ্ছদ — নিচের প্যালেট থেকে রঙ বাছুন।</p>
+        <div class="cov110-grid" id="covGridTypo"></div>
+      </div>
+      <div class="cov110-pane" id="covPaneCustom" hidden>
+        <label class="cov110-lbl" for="covUrl">কাস্টম ইমেজ URL</label>
+        <input type="url" id="covUrl" class="cov110-url" placeholder="https://images.unsplash.com/…" autocomplete="off" />
+        <p class="cov110-err" id="covErr" hidden></p>
+      </div>
+    </div>
+
+    <footer class="cov110-foot">
+      <button type="button" class="cov110-btn cov110-btn-ghost" id="covClear"><i class="fas fa-eraser"></i> সরান</button>
+      <span class="cov110-footgap"></span>
+      <button type="button" class="cov110-btn cov110-btn-dim" id="covCancel">বাতিল</button>
+      <button type="button" class="cov110-btn cov110-btn-save" id="covSave"><i class="fas fa-check"></i> সংরক্ষণ করুন</button>
+    </footer>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -239,6 +303,173 @@
   // ফ্ল্যাশ-টোস্ট (quick-অ্যাকশন রিডাইরেক্টের পরে)
   <% if (savedFlash === 'latest6') { %>toast('সর্বশেষ ৬টি লেখা হোমপেজে নির্বাচিত হয়েছে');<% } %>
   <% if (savedFlash === 'clear') { %>toast('হোমপেজ-নির্বাচন খালি করা হয়েছে');<% } %>
+
+  // ═══ সেশন ১১০: প্রচ্ছদ-নির্বাচক (AdminCoverSelector) ═══════════════════
+  var PRESETS = <%- JSON.stringify(coverPresets) %>;
+  var covModal = document.getElementById('covModal');
+  var covErr = document.getElementById('covErr');
+  var covUrl = document.getElementById('covUrl');
+  var covGrid = document.getElementById('covGrid');
+  var covGridTypo = document.getElementById('covGridTypo');
+  var covPvBg = document.getElementById('covPvBg');
+  var covPvImg = document.getElementById('covPvImg');
+  var covPvChip = document.getElementById('covPvChip');
+  var covPvTitle = document.getElementById('covPvTitle');
+  var covPvAuthor = document.getElementById('covPvAuthor');
+  var curRow = null;
+  var covState = { id: null, mode: 'preset', presetId: (PRESETS[0] && PRESETS[0].id) || 'rokto', savedRaw: '' };
+
+  function gradCss(p) { return 'linear-gradient(135deg, ' + p.from + ', ' + p.to + ')'; }
+  function presetById(id) { for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === id) return PRESETS[i]; return null; }
+
+  function paintGrids() {
+    var html = PRESETS.map(function (p) {
+      return '<button type="button" class="cov110-pre' + (covState.presetId === p.id ? ' is-sel' : '') + '" data-preid="' + p.id + '">' +
+        '<span class="cov110-presw" style="background:' + gradCss(p) + '"></span>' +
+        '<span class="cov110-pretx"><strong>' + p.name + '</strong><small>' + p.cat + '</small></span>' +
+      '</button>';
+    }).join('');
+    covGrid.innerHTML = html;
+    covGridTypo.innerHTML = html;
+  }
+
+  function paintPreview() {
+    var p = presetById(covState.presetId) || PRESETS[0];
+    covPvTitle.textContent = (curRow && curRow.getAttribute('data-title')) || '';
+    covPvAuthor.textContent = 'কলমে: ' + ((curRow && curRow.getAttribute('data-author')) || 'লেখক');
+    covPvChip.textContent = p ? p.cat : 'সাহিত্য';
+    if (covState.mode === 'custom' && covUrl.value.trim()) {
+      covPvImg.src = covUrl.value.trim();
+      covPvImg.hidden = false;
+      covPvBg.style.background = '#111827';
+    } else {
+      covPvImg.hidden = true;
+      covPvBg.style.background = p ? gradCss(p) : '#111827';
+      covPvBg.classList.toggle('is-typo', covState.mode === 'typo');
+      if (covState.mode === 'typo') {
+        var t = (curRow && curRow.getAttribute('data-title')) || '';
+        covPvBg.setAttribute('data-initial', t.trim() ? t.trim()[0] : 'ল');
+      } else {
+        covPvBg.removeAttribute('data-initial');
+      }
+    }
+  }
+
+  function setMode(m) {
+    covState.mode = m;
+    document.querySelectorAll('.cov110-mode').forEach(function (b) {
+      b.classList.toggle('is-on', b.getAttribute('data-covmode') === m);
+    });
+    document.getElementById('covPanePreset').hidden = m !== 'preset';
+    document.getElementById('covPaneTypo').hidden = m !== 'typo';
+    document.getElementById('covPaneCustom').hidden = m !== 'custom';
+    covErr.hidden = true;
+    paintPreview();
+  }
+
+  function openCover(btn) {
+    curRow = btn.closest('.cur-item');
+    covState.id = btn.getAttribute('data-id');
+    covState.savedRaw = btn.getAttribute('data-cover') || '';
+    var saved = null;
+    try { saved = covState.savedRaw ? JSON.parse(covState.savedRaw) : null; } catch (e) { saved = null; }
+    covState.mode = saved && saved.type ? saved.type : 'preset';
+    covState.presetId = (saved && (saved.type === 'preset' || saved.type === 'typo') && presetById(saved.value)) ? saved.value : ((PRESETS[0] && PRESETS[0].id) || 'rokto');
+    covUrl.value = saved && saved.type === 'custom' ? saved.value : '';
+    covErr.hidden = true;
+    paintGrids();
+    setMode(covState.mode);
+    covModal.classList.add('is-open');
+    covModal.setAttribute('aria-hidden', 'false');
+  }
+  function closeCover() {
+    covModal.classList.remove('is-open');
+    covModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function postCover(payload) {
+    var p = new URLSearchParams(payload);
+    return fetch('/moderator/curation/cover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': csrf() },
+      body: p.toString(),
+      credentials: 'same-origin'
+    }).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'সার্ভার-উত্তর বোঝা যায়নি' }; }); });
+  }
+
+  function applySaved(btn, raw) {
+    btn.setAttribute('data-cover', raw || '');
+    btn.classList.toggle('has-cov', !!raw);
+    var chip = curRow ? curRow.querySelector('[data-covchip-' + btn.getAttribute('data-id') + ']') : null;
+    if (raw && !chip && curRow) {
+      var top = curRow.querySelector('.cur-item-top');
+      if (top) {
+        var s = document.createElement('span');
+        s.className = 'cur-chip cur-chip-cov';
+        s.setAttribute('data-covchip-' + btn.getAttribute('data-id'), '');
+        s.innerHTML = '<i class="fas fa-image"></i> প্রচ্ছদ';
+        top.appendChild(s);
+      }
+    } else if (!raw && chip) { chip.remove(); }
+  }
+
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('[data-coverbtn]');
+    if (btn) { openCover(btn); return; }
+    if (ev.target.closest('#covClose') || ev.target.closest('#covCancel')) { closeCover(); return; }
+    if (ev.target === covModal) { closeCover(); return; }
+    var modeBtn = ev.target.closest('[data-covmode]');
+    if (modeBtn) { setMode(modeBtn.getAttribute('data-covmode')); return; }
+    var pre = ev.target.closest('[data-preid]');
+    if (pre) {
+      covState.presetId = pre.getAttribute('data-preid');
+      paintGrids();
+      paintPreview();
+      return;
+    }
+    if (ev.target.closest('#covSave')) {
+      var type = covState.mode;
+      var value = type === 'custom' ? covUrl.value.trim() : covState.presetId;
+      if (type === 'custom' && !/^https?:\/\/\S+$/i.test(value)) {
+        covErr.textContent = 'প্রচ্ছদ-লিংকটি http(s) দিয়ে শুরু হওয়া সম্পূর্ণ URL হতে হবে';
+        covErr.hidden = false;
+        return;
+      }
+      var saveBtn = document.getElementById('covSave');
+      saveBtn.disabled = true;
+      postCover({ id: covState.id, type: type, value: value })
+        .then(function (r) {
+          saveBtn.disabled = false;
+          if (!r.ok) { covErr.textContent = r.error || 'সংরক্ষণ করা যায়নি'; covErr.hidden = false; return; }
+          var btn110 = curRow ? curRow.querySelector('[data-coverbtn]') : null;
+          if (btn110) applySaved(btn110, r.home_cover || '');
+          closeCover();
+          toast(r.home_cover ? 'প্রচ্ছদ সংরক্ষিত — হোমপেজে প্রদর্শিত হবে' : 'প্রচ্ছদ সরানো হয়েছে');
+        })
+        .catch(function () {
+          saveBtn.disabled = false;
+          covErr.textContent = 'নেটওয়ার্ক-সমস্যা — আবার চেষ্টা করুন';
+          covErr.hidden = false;
+        });
+      return;
+    }
+    if (ev.target.closest('#covClear')) {
+      postCover({ id: covState.id, type: '', value: '' })
+        .then(function (r) {
+          if (!r.ok) { covErr.textContent = r.error || 'সরানো যায়নি'; covErr.hidden = false; return; }
+          var btn110 = curRow ? curRow.querySelector('[data-coverbtn]') : null;
+          if (btn110) applySaved(btn110, '');
+          closeCover();
+          toast('প্রচ্ছদ সরানো হয়েছে');
+        })
+        .catch(function () { covErr.textContent = 'নেটওয়ার্ক-সমস্যা'; covErr.hidden = false; });
+      return;
+    }
+  });
+  covUrl.addEventListener('input', function () { covErr.hidden = true; paintPreview(); });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && covModal.classList.contains('is-open')) closeCover();
+  });
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>

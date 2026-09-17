@@ -6,21 +6,35 @@
     · ট্যাব-ফিল্টার [সব · 👍 · ❤️ · …] (শুধু যেগুলোতে কাউন্ট>০)
     · নামে/প্রোফাইল-বাটনে ক্লিকে /profile/:username
   ─ EJS-ভেরিয়েবল-নিরপেক্ষ (ভ্যানিলা মার্কআপ) — যে-কোনো পেজে নিরাপদ।
+  সেশন ১১০: Facepile-অ্যাভাটার-মোড (ইউজার-স্পেসিফিকেশন) —
+    · হেডে ভিউ-মোড সুইচার [👥 ফেসপাইল গ্রিড | 📋 বিস্তারিত তালিকা]
+      (পছন্দ localStorage 'rxm110view'-এ মনে থাকে; ডিফল্ট ফেসপাইল)
+    · ফেসপাইল মোড: কমপ্যাক্ট অ্যাভাটার-গ্রিড — কোণে মিনি রিঅ্যাকশন-ব্যাজ,
+      নিচে প্রথম-নাম, হোভারে কালো ফ্লোটিং-কার্ডে পূর্ণ-নাম + ছদ্মনাম
+    · তালিকা-মোড: আগের বিস্তারিত রো (অক্ষত)
+    · ট্যাব-ফিল্টার উভয় মোডেই কাজ করে
 %>
 <div class="rxm-backdrop" id="rxModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="প্রতিক্রিয়াকারীরা">
   <div class="rxm-box">
     <header class="rxm-head">
-      <div class="rxm-tabs" id="rxTabs" role="tablist" aria-label="প্রতিক্রিয়া-ফিল্টার">
-        <button type="button" class="rxm-tab is-active" data-rx-tab="ALL" role="tab" aria-selected="true">সব <span class="rxm-tabcount" id="rxTabAllCount">০</span></button>
+      <div class="rxm-modeseg" id="rxModeSeg" role="group" aria-label="ভিউ-মোড">
+        <button type="button" class="rxm-modebtn" id="rxModeFacepile" data-rx_mode="facepile" aria-pressed="true" title="ফেসপাইল গ্রিড">👥 <span>ফেসপাইল</span></button>
+        <button type="button" class="rxm-modebtn" id="rxModeList" data-rx_mode="list" aria-pressed="false" title="বিস্তারিত তালিকা">📋 <span>তালিকা</span></button>
       </div>
       <button type="button" class="rxm-close" id="rxClose" aria-label="বন্ধ করুন" title="বন্ধ করুন"><i class="fas fa-times"></i></button>
     </header>
+    <div class="rxm-tabrow">
+      <div class="rxm-tabs" id="rxTabs" role="tablist" aria-label="প্রতিক্রিয়া-ফিল্টার">
+        <button type="button" class="rxm-tab is-active" data-rx_tab="ALL" role="tab" aria-selected="true">সব <span class="rxm-tabcount" id="rxTabAllCount">০</span></button>
+      </div>
+    </div>
     <div class="rxm-body" id="rxBody" aria-live="polite">
       <div class="rxm-empty" id="rxEmpty" hidden>
         <i class="far fa-smile" aria-hidden="true"></i>
         <p>এখনো কোনো প্রতিক্রিয়া নেই।</p>
       </div>
       <div class="rxm-loading" id="rxLoading" hidden><span class="rxm-spin" aria-hidden="true"></span> লোড হচ্ছে…</div>
+      <div class="rxm-fgrid" id="rxFacepile" hidden></div>
       <ul class="rxm-list" id="rxList"></ul>
     </div>
   </div>

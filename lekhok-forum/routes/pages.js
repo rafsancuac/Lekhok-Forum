@@ -4,6 +4,8 @@ const db = require('../db');
 // হোম নেতৃত্ব সেকশনের ৮ পাতার বক্তব্য (৫০-১০০ শব্দ) — স্লট-ভিত্তিক,
 // members.bio ফাঁকা হলে ভিউ এটি ব্যবহার করে (সেশন ২৯)
 const leaderStatements = require('../data/leaderStatements');
+// সেশন ১১০: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ (একক-উৎস — moderator.js-এর COVERS110-এরই মিরর)
+const COVERS110 = require('../helpers/covers');
 
 // ── Home ─────────────────────────────────────────────────────────────────────
 // Member query with LEFT JOIN so any member linked to a user account inherits
@@ -37,7 +39,7 @@ router.get('/', async (req, res) => {
     //   মূল লেখকের অরিজিনাল পোস্টই এই সারিতে আসবে
     // • archive-নির্বাচনের ক্রম featured_at DESC (সদ্য-নির্বাচিত আগে)
     // নির্বাচন না থাকলে ফলব্যাক-কুয়েরি নিচে (homeCurated=false সহ)।
-    db.prepare(`SELECT p.id, p.title, p.excerpt, u.full_name AS author_name, u.username AS author_username
+    db.prepare(`SELECT p.id, p.title, p.excerpt, p.home_cover, u.full_name AS author_name, u.username AS author_username
                   FROM posts p JOIN users u ON p.author_id = u.id
                  WHERE p.type = 'article' AND p.status = 'published'
                    AND p.post_kind = 'writing' AND p.home_featured = 1
@@ -51,13 +53,19 @@ router.get('/', async (req, res) => {
   // পার্থক্য দেখায়। সেশন ৯৪: শেয়ার-কপিও কঠোরভাবে বাদ (shared_from IS NULL)।
   let homeCurated = recentArticles.length > 0;
   if (!recentArticles.length) {
-    recentArticles.push(...await db.prepare(`SELECT p.id, p.title, p.excerpt, u.full_name AS author_name, u.username AS author_username
+    recentArticles.push(...await db.prepare(`SELECT p.id, p.title, p.excerpt, p.home_cover, u.full_name AS author_name, u.username AS author_username
                   FROM posts p JOIN users u ON p.author_id = u.id
                  WHERE p.type = 'article' AND p.status = 'published'
                    AND p.post_kind = 'writing' AND p.archive_visible = 1
                    AND p.shared_from IS NULL
                  ORDER BY p.published_at DESC LIMIT 6`).all());
   }
+  // সেশন ১১০: প্রতি-রো শৈল্পিক প্রচ্ছদ পার্স (posts.home_cover JSON →
+  // {type:'preset'|'typo', grad, initial} | {type:'custom', url}; করাপ্ট/অনুপস্থিত → null)
+  recentArticles.forEach(a => {
+    const c110 = COVERS110.parseCover(a.home_cover);
+    a.cover = c110 ? { type: c110.type, grad: c110.grad || '', url: c110.url || '', initial: c110.type === 'typo' ? COVERS110.initialOf(a.title) : '' } : null;
+  });
 
   // Leadership: 2 current (president + GS) + 2 founders + 4 advisors
   // সর্বশেষ কার্যবর্ষের (সর্বোচ্চ term_year) সভাপতি ও সাধারণ সম্পাদক দেখাই

@@ -84,6 +84,23 @@
         <i class="fas fa-share"></i> <span>শেয়ার</span>
       </button>
       <div class="share-menu share-menu--fb" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>" data-share-post="<%= targetType === 'post' ? targetId : '' %>">
+        <%# সেশন ১১০: রিসেন্ট-চ্যাট-শর্টকাট (ShareWithRecentChats — ইউজার-স্পেসিফিকেশন) —
+            FB-শেয়ার-শীটের শীর্ষে অনুভূমিক কন্টাক্ট-স্ট্রিপ: ১-ট্যাপে সাম্প্রতিক চ্যাটে
+            পোস্ট ইনবক্সে পাঠান। লেজি-লোড GET /api/messages/recent-chats (main.js
+            capture-phase IIFE); পাঠানো = POST /api/share-to-user (নেভিগেশন-শূন্য,
+            বাটনে ✓-স্টেট)। শুধু লগইন + পোস্ট-টার্গেটে। %>
+        <% if (_me && targetType === 'post') { %>
+        <div class="smxr110" data-recent-chats data-share-post="<%= targetId %>">
+          <div class="smxr110-head"><i class="far fa-clock" aria-hidden="true"></i> সাম্প্রতিক চ্যাটে পাঠান</div>
+          <div class="smxr110-row" aria-live="polite">
+            <span class="smxr110-skel"><span class="smxr110-skav"></span><span class="smxr110-skline"></span></span>
+            <span class="smxr110-skel"><span class="smxr110-skav"></span><span class="smxr110-skline"></span></span>
+            <span class="smxr110-skel"><span class="smxr110-skav"></span><span class="smxr110-skline"></span></span>
+            <span class="smxr110-skel"><span class="smxr110-skav"></span><span class="smxr110-skline"></span></span>
+          </div>
+        </div>
+        <div class="smxr110-sep" role="separator"></div>
+        <% } %>
         <% if (_me && targetType === 'post') { %>
         <button type="button" class="smx-item" data-share="timeline" role="menuitem">
           <span class="smx-ico"><i class="fas fa-retweet"></i></span>

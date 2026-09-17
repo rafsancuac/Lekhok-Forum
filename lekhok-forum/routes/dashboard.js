@@ -1537,3 +1537,42 @@ async function broadcastToAll(type, title, body, link, excludeUserId) {
 
 module.exports = router;
 module.exports.broadcastToAll = broadcastToAll;
+
+// ═══ সেশন ১১০: শেয়ার-মেনু রিসেন্ট-চ্যাট-শর্টকাট (ShareWithRecentChats) ═══
+// GET /api/messages/recent-chats — লগইন-ইউজারের সর্বশেষ ১:১ কথোপকথন ৮টি
+// (FB-শেয়ার-শীটের শীর্ষ-কন্টাক্ট-স্ট্রিপ)। ক্রম = সর্বশেষ-মেসেজ id DESC
+// (conversations.last_message_at লেগেসি-সারিতে ফাঁকা থাকতে পারে — MAX(id)
+// সর্বদা সঠিক)। online = isOnline() (৫-মিনিট lastSeen-ম্যাপ — এই মডিউলেই)।
+// নিরাপত্তা: ensureAuth; কেবল নিজের কথোপকথন; গ্রুপ-বাদ (1:1-শর্টকাট)।
+router.get('/api/messages/recent-chats', ensureAuth, async (req, res) => {
+  try {
+    const me110 = req.session.user.id;
+    const rows110 = await db.prepare(`
+      SELECT u.id AS uid, u.full_name AS name, u.username AS username,
+             u.avatar_url AS avatar_url, u.pen_name AS pen_name,
+             (SELECT MAX(id) FROM messages WHERE conversation_id = c.id) AS last_mid
+        FROM conversations c
+        JOIN users u ON u.id = (CASE WHEN c.user_a = ? THEN c.user_b ELSE c.user_a END)
+       WHERE (c.user_a = ? OR c.user_b = ?) AND IFNULL(c.is_group, 0) = 0
+       ORDER BY last_mid DESC
+       LIMIT 8
+    `).all(me110, me110, me110);
+    const seen110 = new Set();
+    const chats110 = [];
+    for (const r of rows110) {
+      if (seen110.has(r.uid)) continue; // বিরল-ডুপ্লিকেট-কনভ-গার্ড
+      seen110.add(r.uid);
+      chats110.push({
+        id: r.uid,
+        name: r.name || ('ইউজার-' + r.uid),
+        pen_name: r.pen_name || '',
+        username: r.username || ('user-' + r.uid),
+        avatar_url: r.avatar_url || '',
+        online: isOnline(r.uid)
+      });
+    }
+    res.json({ ok: true, chats: chats110 });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'recent-chats failed' });
+  }
+});

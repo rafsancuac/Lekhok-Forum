@@ -791,6 +791,8 @@ router.post('/best-writer/:id/toggle', ensureModerator, requireScope('best_write
 // এডমিন ভুল করেও অন্যের লেখার শেয়ার-কপি হোমে নির্বাচন করতে পারবেন না।
 const MAX_HOME_FEATURED_90 = 6;
 const TA42_90 = require('../helpers/trash-audit');
+// সেশন ১১০: শৈল্পিক প্রচ্ছদ-রেজিস্ট্রি (একক-উৎস — হোম-রেন্ডার pages.js-ও এটিই পড়ে)
+const COVERS110 = require('../helpers/covers');
 
 router.get('/curation', ensureModerator, async (req, res) => {
   const q90 = String(req.query.q || '').trim();
@@ -798,7 +800,7 @@ router.get('/curation', ensureModerator, async (req, res) => {
   let sql90 = `
     SELECT p.id, p.title, p.excerpt, p.status, p.post_kind, p.home_featured,
            p.home_featured_at, p.archive_visible, p.featured, p.published_at,
-           p.like_count, p.comment_count, p.view_count,
+           p.like_count, p.comment_count, p.view_count, p.home_cover,
            u.full_name AS author_name, u.username AS author_username, u.id AS author_id
       FROM posts p JOIN users u ON p.author_id = u.id
      WHERE p.type = 'article' AND p.shared_from IS NULL /* সেশন ৯৪: শেয়ার-কপি প্যানেলেই নেই */`;
@@ -824,6 +826,7 @@ router.get('/curation', ensureModerator, async (req, res) => {
     hiddenCount: hiddenCount90 ? hiddenCount90.c : 0,
     maxFeatured: MAX_HOME_FEATURED_90,
     searchQ: q90, kindFilter: kind90,
+    coverPresets: COVERS110.COVER_PRESETS,
     savedFlash: req.query.saved ? String(req.query.saved) : '',
     currentPath: '/moderator/curation'
   });
@@ -906,6 +909,27 @@ router.post('/curation/quick', ensureModerator, async (req, res) => {
   }
   await TA42_90.audit(db, req, 'home-quick-latest6', 'posts', null, 'সর্বশেষ ৬ লেখা স্বয়ংক্রিয়-নির্বাচন');
   res.json({ ok: true, featuredCount: rows90.length });
+});
+
+// সেশন ১১০: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ-নির্বাচন (AdminCoverSelector) —
+// POST /curation/cover {id, type: 'preset'|'typo'|'custom', value}
+// value ফাঁকা → সরান (NULL)। যাচাই helpers/covers.validateCoverInput (একক-উৎস);
+// স্কোপ: কেবল অরিজিনাল writing (শেয়ার-কপি/সোশ্যাল-অটোপোস্টে প্রচ্ছদ অর্থহীন)।
+// অডিট: TA42 'home-cover-set'/'home-cover-clear'। JSON উত্তর — ভিউ অপটিমিস্টিক।
+router.post('/curation/cover', ensureModerator, async (req, res) => {
+  const id110 = parseInt(req.body.id, 10);
+  if (!id110) return res.status(400).json({ ok: false, error: 'অবৈধ অনুরোধ' });
+  const post110 = await db.prepare("SELECT id, title, post_kind, shared_from FROM posts WHERE id = ? AND type = 'article'").get(id110);
+  if (!post110) return res.status(404).json({ ok: false, error: 'লেখাটি পাওয়া যায়নি' });
+  if (post110.shared_from || (post110.post_kind || 'writing') !== 'writing') {
+    return res.status(422).json({ ok: false, error: 'কেবল মূল সাহিত্য-লেখার প্রচ্ছদ নির্বাচন করা যায়' });
+  }
+  const v110 = COVERS110.validateCoverInput(req.body.type, req.body.value);
+  if (!v110.ok) return res.status(422).json({ ok: false, error: v110.error });
+  await db.prepare('UPDATE posts SET home_cover = ? WHERE id = ?').run(v110.value, id110);
+  await TA42_90.audit(db, req, v110.value ? 'home-cover-set' : 'home-cover-clear', 'posts', id110,
+    (v110.value ? 'হোম-প্রচ্ছদ সেট (' + String(req.body.type) + ')' : 'হোম-প্রচ্ছদ সরানো') + ': ' + String(post110.title).slice(0, 50));
+  res.json({ ok: true, home_cover: v110.value || null });
 });
 
 // ── Complaints (read + status update; visible only to scoped moderators) ────

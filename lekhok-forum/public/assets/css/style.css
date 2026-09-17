@@ -1769,143 +1769,72 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
   .fb-meta107 .fc-menu{min-width:158px;right:-4px}
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   সেশন ১১০ — ফিড-এনরিচমেন্ট: পড়ার-সময়-চিপ + cover-skeleton + ড্যাশবোর্ড
-   'আমার সারসংক্ষেপ' কমপ্যাক্ট-উইজেট (ইউজার-এসথেটিক: বড়-কার্ড নয়, স্লিম-চিপ)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════ সেশন ১১০ (EOF-ইউনিয়ন) ═══════════════
+   ① রিঅ্যাক্টরস-মডাল Facepile-অ্যাভাটার-মোড  ② শেয়ার-মেনু রিসেন্ট-চ্যাট-স্ট্রিপ
+   ③ হোম 'লেখকদের কালি' শৈল্পিক প্রচ্ছদ — স্কোপড ক্লাস, লেগেসি-অক্ষত */
 
-/* ── ১. পড়ার-সময় চিপ (ফিড-হেড + /me মেটা-রো) ── */
-.rt-chip{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;color:#5b7a6d;background:var(--accent-soft,rgba(5,150,105,.10));border:1px solid rgba(5,150,105,.18);padding:2px 8px;border-radius:999px;white-space:nowrap;line-height:1.5;vertical-align:middle}
-.rt-chip i{font-size:.58rem;opacity:.85}
-.feed-card-head .rt-chip{margin-left:6px}
-.feed-card-meta .rt-chip{margin-left:2px}
-
-/* ── ২. cover-skeleton (session103-শিমার-প্যাটার্নের ফিড-পোর্ট) ── */
-.img-skel{background:linear-gradient(100deg,#EEF2F0 40%,#F8FAF9 50%,#EEF2F0 60%);background-size:200% 100%;animation:sk110shim 1.15s linear infinite}
-.img-skel.ld{background:none;animation:none}
-@keyframes sk110shim{to{background-position:-200% 0}}
-@media (prefers-reduced-motion:reduce){.img-skel{animation:none;background:#EEF2F0}}
-
-/* ── ৩. 'আমার সারসংক্ষেপ' কমপ্যাক্ট-উইজেট (ড্যাশবোর্ড সাইডবার) ── */
-.msx-card h4{display:flex;align-items:center;gap:7px}
-.msx-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:10px 0 4px}
-.msx-chip{display:flex;align-items:center;gap:8px;background:#F8FAF9;border:1px solid var(--border,#e2e8f0);border-radius:10px;padding:7px 10px;text-decoration:none;min-width:0;transition:border-color .15s,background .15s}
-.msx-chip:hover{border-color:#B7DCCE;background:#F2F8F5}
-.msx-chip b{font-size:.98rem;color:var(--accent-dark,#047857);line-height:1;flex:0 0 auto;min-width:20px;text-align:center}
-.msx-chip span{font-size:.66rem;color:var(--text-muted,#64748b);line-height:1.25;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-width:640px){.msx-grid{gap:6px}.msx-chip{padding:6px 9px}}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   SESSION 109 — যোগাযোগ-পেজ: টাইম-লেভেল 'এখন খোলা' ব্যাজ + প্রভোস্ট প্রিন্ট
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── ১. টাইম-লেভেল ব্যাজ স্টেট (is-live = এখন খোলা, is-idle = এখন বন্ধ) ── */
-.cx102 .cx-today-badge.is-live{background:linear-gradient(160deg,rgba(16,185,129,.18),rgba(5,150,105,.12));color:#065F46;border-color:rgba(5,150,105,.55);box-shadow:0 2px 10px rgba(5,150,105,.22)}
-.cx102 .cx-today-badge.is-live .cx-tb-dot{background:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.2);animation:cxPulse103 1.8s ease-out infinite}
-.cx102 .cx-today-badge.is-idle{background:rgba(100,116,139,.1);color:#475569;border-color:rgba(100,116,139,.35)}
-.cx102 .cx-today-badge.is-idle .cx-tb-dot{background:#94A3B8;box-shadow:0 0 0 3px rgba(148,163,184,.16);animation:none}
-/* আজকের-রোর লাইভ-চিপ ভেরিয়েন্ট (খোলা → এখন খোলা) */
-.cx102 .cx-hour-state.live{background:rgba(5,150,105,.14);color:#065F46;border-color:rgba(5,150,105,.45);position:relative;padding-left:22px}
-.cx102 .cx-hour-state.idle{background:rgba(100,116,139,.1);color:#475569;border-color:rgba(100,116,139,.32)}
-.cx102 .cx-hour-state.live::before{content:'';position:absolute;left:9px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:#059669;animation:cxPulse103 1.8s ease-out infinite}
-
-/* ── ২. প্রভোস্ট-তালিকা প্রিন্ট-বাটন (cx-prov-tools-এর তৃতীয়-আইটেম) ── */
-.cx102 .cx-prov-print{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:999px;border:1px solid rgba(5,150,105,.35);background:#fff;color:#047857;font-size:.82rem;font-weight:800;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s,transform .2s}
-.cx102 .cx-prov-print:hover{background:var(--accent,#059669);color:#fff;box-shadow:0 8px 20px rgba(5,150,105,.3);transform:translateY(-1px)}
-.cx102 .cx-prov-print:focus-visible{outline:3px solid rgba(5,150,105,.45);outline-offset:2px;border-radius:999px}
-@media (max-width:640px){.cx102 .cx-prov-print{padding:8px 15px;font-size:.78rem}}
-
-/* ── ৩. প্রিন্ট-স্টাইলশিট: কেবল প্রভোস্ট-তালিকা কাগজে আসে ──
-   হেডার/ফুটার/ফর্ম/ম্যাপ/অন্য-ব্লক বাদ; সব হল প্রসারিত (JS-ব্যর্থতায়ও);
-   reveal-অদৃশ্যতা ও শ্যাডো নির্মূল — কালি-বান্ধব দুই-কলাম গ্রিড */
-@media print{
-  @page{margin:14mm}
-  body{background:#fff !important}
-  .scroll-progress,.btclf-topbar,.btclf-footer,.back-to-top,iframe,.cx102 .cx-prov-tools,.cx102 .cx-prov-toggle{display:none !important}
-  .cx102 .reveal,.reveal{opacity:1 !important;transform:none !important}
-  .cx102 section{display:none !important}
-  .cx102 section.cx-print-keep{display:block !important}
-  .cx102 .cx-sub-block{display:none !important}
-  .cx102 #cxProvBlock{display:block !important}
-  .cx102 .section-head.center{display:none !important}
-  .cx102 #cxProvBlock .cx-sec-head{margin-bottom:14px}
-  .cx102 #cxProvBlock .cx-sec-title{font-size:16pt;color:#0a1f44}
-  .cx102 #cxProvBlock .cx-sec-sub{font-size:10pt;color:#333}
-  .cx102 #cxProvBlock .cx-sec-ico{border:1px solid #ccc}
-  .cx102 #cxProvBlock .cx-prov-grid{grid-template-columns:1fr 1fr;gap:8px}
-  .cx102 #cxProvBlock .cx-prov-grid[data-collapsed="1"] .cx-prov-item{display:flex !important}
-  .cx102 #cxProvBlock .cx-prov-item{border:1px solid #d0d5dd !important;box-shadow:none !important;background:#fff !important;break-inside:avoid}
-  .cx102 #cxProvBlock .cx-prov-call{color:#0a1f44 !important;font-weight:700;text-decoration:none}
-  .cx102 #cxProvBlock .cx-prov-copy{display:none !important}
-  .cx102 #cxProvBlock .cx-prov-empty{display:none !important}
-  #cxTodayBadge{display:none !important}
+/* ── ① ফেসপাইল মোড-সুইচার + গ্রিড ─────────────────────────────── */
+.rxm-modeseg{display:inline-flex;gap:2px;background:rgba(15,23,42,.05);border-radius:var(--radius-pill,999px);padding:3px;flex:1;min-width:0}
+.rxm-modebtn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:0;background:transparent;color:var(--text-soft,#65676b);font-family:inherit;font-size:12px;font-weight:700;padding:6px 10px;border-radius:var(--radius-pill,999px);cursor:pointer;transition:background .15s ease,color .15s ease;white-space:nowrap}
+.rxm-modebtn:hover{color:var(--text,#0f172a)}
+.rxm-modebtn.is-active{background:var(--card,#fff);color:var(--text,#0f172a);box-shadow:0 1px 3px rgba(15,23,42,.14)}
+.rxm-tabrow{display:flex;padding:8px 12px;border-bottom:1px solid var(--border)}
+.rxm-tabrow .rxm-tabs{flex:1}
+.rxm-fgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px 8px;padding:14px 12px}
+@supports (display:grid){ .rxm-fgrid{list-style:none;margin:0} }
+@media (min-width:480px){ .rxm-fgrid{grid-template-columns:repeat(6,1fr)} }
+.rxm-fcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;text-decoration:none;border-radius:12px;padding:4px 2px;transition:background .15s ease}
+.rxm-fcell:hover{background:rgba(15,23,42,.045)}
+.rxm-favwrap{position:relative;width:48px;height:48px}
+.rxm-fav{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid transparent;box-shadow:0 1px 3px rgba(15,23,42,.14);transition:border-color .15s ease,transform .15s ease}
+.rxm-fcell:hover .rxm-fav{border-color:var(--accent,#059669);transform:scale(1.05)}
+.rxm-fbadge{position:absolute;bottom:-3px;right:-5px;background:var(--card,#fff);border:1px solid var(--border);border-radius:50%;font-size:11px;line-height:1;padding:2px;box-shadow:0 1px 2px rgba(15,23,42,.16);pointer-events:none}
+.rxm-fname{max-width:100%;font-size:10.5px;font-weight:700;color:var(--text,#0f172a);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s ease}
+.rxm-fcell:hover .rxm-fname{color:var(--accent,#059669)}
+/* হোভার ফ্লোটিং-কার্ড (পূর্ণ-নাম + ছদ্মনাম) — CSS-only */
+.rxm-ftip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);z-index:30;background:#0f172a;color:#fff;border-radius:10px;padding:6px 11px;white-space:nowrap;flex-direction:column;align-items:center;box-shadow:0 10px 26px rgba(0,0,0,.3);pointer-events:none}
+.rxm-ftip strong{font-size:11.5px;font-weight:700;line-height:1.35}
+.rxm-ftip em{font-style:normal;font-size:10px;color:#cbd5e1;line-height:1.35}
+@media (hover:hover){
+  .rxm-fcell:hover .rxm-ftip,.rxm-fcell:focus-visible .rxm-ftip{display:flex;animation:rxmTip .16s ease}
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Session 112 — 'পড়া চালিয়ে যান' উইজেট (crx) + msx খসড়া-চিপ
-   • crx: ড্যাশবোর্ড সাইডবারে অসমাপ্ত-পঠন তালিকা (localStorage lf_read_pos;
-     continue-reading.js রেন্ডার করে) — কমপ্যাক্ট-সারি, ৪px প্রগ্রেস-বার,
-     খালি-তালিকায় কার্ড-আঁকা-ই-হয়-না (ইউজারের কমপ্যাক্ট-এসথেটিক)
-   • msx-chip.wide: ৫ম (ফুল-উইডথ) খসড়া-চিপ — grid-column:1/-1                ═══ */
-.crx-mount[hidden]{display:none}
-.crx-card h4{display:flex;align-items:center;gap:7px}
-.crx-list{display:flex;flex-direction:column;gap:8px;margin:10px 0 4px}
-.crx-row{display:flex;align-items:stretch;gap:6px;min-width:0}
-.crx-link{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;background:#F8FAF9;border:1px solid var(--border,#e2e8f0);border-radius:10px;padding:8px 10px;text-decoration:none;transition:border-color .15s,background .15s}
-.crx-link:hover{border-color:#B7DCCE;background:#F2F8F5}
-.crx-link:focus-visible{outline:2px solid #059669;outline-offset:1px}
-.crx-title{font-size:.74rem;font-weight:600;color:var(--text,#0f172a);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}
-.crx-bar{display:block;height:4px;border-radius:999px;background:#E2E8F0;overflow:hidden}
-.crx-bar-fill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#10B981,#047857);transition:width .4s cubic-bezier(.22,1,.36,1)}
-@media (prefers-reduced-motion:reduce){.crx-bar-fill{transition:none}}
-.crx-meta{font-size:.64rem;color:var(--text-muted,#64748b);display:flex;align-items:center;gap:4px}
-.crx-x{border:0;background:transparent;color:#94A3B8;font-size:1rem;line-height:1;cursor:pointer;padding:2px 6px;border-radius:6px;align-self:center;transition:color .15s,background .15s}
-.crx-x:hover{color:#DC2626;background:#FEF2F2}
+@keyframes rxmTip{from{opacity:0;transform:translateX(-50%) translateY(3px) scale(.96)}to{opacity:1;transform:translateX(-50%)}}
+/* শীর্ষ-সারির টিপ ক্লিপ-গার্ড: মোডাল-বডি overflow-x:clip, overflow-y:auto */
+.rxm-body{overflow-x:clip}
 @media (max-width:640px){
-  .crx-list{gap:6px}
-  .crx-title{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
+  .rxm-fgrid{gap:12px 6px;padding:12px 10px}
+  .rxm-favwrap,.rxm-fav{width:44px;height:44px}
+  .rxm-modeseg .rxm-modebtn span{display:none} /* সংক্ষিপ্ত: শুধু আইকন */
 }
-.msx-chip.wide{grid-column:1/-1}
-/* ═══ Session 112 সমাপ্ত ═══ */
+@media (prefers-reduced-motion: reduce){
+  .rxm-modebtn,.rxm-fav,.rxm-ftip{transition:none;animation:none}
+}
 
-@media (max-width:640px){.msx-grid{gap:6px}.msx-chip{padding:6px 9px}}
-
-/* ═══════════════ সেশন ১০৮: যোগাযোগ — মাল্টি-পিন ম্যাপ-চিপ + প্রভোস্ট প্রিন্ট/শেয়ার ═══════════════
-   স্কোপ: .cx102 (session102-কনটেইনার) + 108-প্রত্যয়-ক্লাস — EOF-অ্যাপেন্ড-রীতি */
-
-/* ── ম্যাপ-জায়গা-চিপ (মাল্টি-পিন নির্বাচক) ── */
-.cx102 .cx-map-chips108{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
-.cx102 .cx-chip108{display:inline-flex;align-items:center;gap:7px;border:1px solid #e4e6eb;background:#fff;color:#4b5563;border-radius:999px;padding:8px 14px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:border-color .18s,color .18s,background .18s,box-shadow .18s,transform .18s}
-.cx102 .cx-chip108 i{font-size:.74rem;color:#9ca3af;transition:color .18s}
-.cx102 .cx-chip108:hover{border-color:rgba(5,150,105,.45);color:#065f46;transform:translateY(-1px);box-shadow:0 3px 10px rgba(5,150,105,.1)}
-.cx102 .cx-chip108:hover i{color:#059669}
-.cx102 .cx-chip108:focus-visible{outline:2px solid #059669;outline-offset:2px}
-.cx102 .cx-chip108.active{background:linear-gradient(135deg,#059669,#047857);border-color:#047857;color:#fff;box-shadow:0 3px 12px rgba(5,150,105,.3)}
-.cx102 .cx-chip108.active i{color:rgba(255,255,255,.85)}
-
-/* ── বর্তমান-পিন ক্যাপশন ── */
-.cx102 .cx-pin-caption108{display:flex;align-items:center;gap:7px;margin:-2px 0 10px;font-size:.76rem;font-weight:600;color:#6b7280}
-.cx102 .cx-pin-caption108 i{color:#059669;font-size:.72rem}
-.cx102 .cx-pin-caption108 strong{color:#065f46;font-weight:800}
-
-/* ── প্রভোস্ট-টুল বাটন (প্রিন্ট/শেয়ার) ── */
-.cx102 .cx-prov-actions-108{display:inline-flex;align-items:center;gap:8px;margin-left:auto}
-.cx102 .cx-prov-tool108{display:inline-flex;align-items:center;gap:6px;border:1px solid #e4e6eb;background:#fff;color:#4b5563;border-radius:8px;padding:8px 13px;font:inherit;font-size:.76rem;font-weight:700;cursor:pointer;transition:border-color .18s,color .18s,transform .18s,box-shadow .18s}
-.cx102 .cx-prov-tool108 i{font-size:.72rem}
-.cx102 .cx-prov-tool108:hover{border-color:rgba(5,150,105,.5);color:#065f46;transform:translateY(-1px);box-shadow:0 3px 10px rgba(5,150,105,.12)}
-.cx102 .cx-prov-tool108:focus-visible{outline:2px solid #059669;outline-offset:2px}
-.cx102 .cx-prov-tool108.done{background:linear-gradient(135deg,#059669,#047857);border-color:#047857;color:#fff}
-
-/* ── প্রভোস্ট-প্রিন্ট-শিট (স্ক্রিনে অদৃশ্য, প্রিন্টে একমাত্র দৃশ্যমান) ── */
-
-/* ── মোবাইল + reduced-motion — সেশন-রীতি ── */
+/* ── ② শেয়ার-মেনু রিসেন্ট-চ্যাট-স্ট্রিপ (smxr110) ───────────────── */
+.share-menu--fb .smxr110{padding:2px 4px 6px}
+.smxr110-head{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text-soft,#65676b);padding:2px 8px 6px}
+.smxr110-head i{font-size:10.5px}
+.smxr110-row{display:flex;gap:10px;overflow-x:auto;padding:2px 4px 4px;scrollbar-width:none}
+.smxr110-row::-webkit-scrollbar{display:none}
+.smxr110-chip{flex:0 0 auto;width:64px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.smxr110-avwrap{position:relative;width:40px;height:40px}
+.smxr110-av{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+.smxr110-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;background:#31a24c;border:2px solid var(--card,#fff);border-radius:50%}
+.smxr110-name{font-size:10px;font-weight:600;color:var(--text,#0f172a);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.smxr110-send{margin-top:4px;border:0;border-radius:999px;background:var(--accent,#059669);color:#fff;font-family:inherit;font-size:10px;font-weight:700;padding:3px 10px;cursor:pointer;transition:background .15s ease,transform .12s ease;box-shadow:0 1px 2px rgba(15,23,42,.18)}
+.smxr110-send:hover:not(:disabled){background:#047857;transform:translateY(-1px)}
+.smxr110-send.is-sent{background:#d1fae5;color:#065f46;cursor:default;box-shadow:none}
+.smxr110-sep{height:1px;background:var(--border);margin:2px 8px 4px}
+.smxr110-empty{display:block;width:100%;text-align:center;font-size:11px;color:var(--text-soft,#65676b);padding:8px 4px}
+/* স্কেলেটন-শিমার (লোড-চলাকালীন) */
+.smxr110-skel{flex:0 0 auto;width:56px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.smxr110-skav{width:36px;height:36px;border-radius:50%;background:linear-gradient(90deg,rgba(15,23,42,.07) 25%,rgba(15,23,42,.13) 50%,rgba(15,23,42,.07) 75%);background-size:200% 100%;animation:smxr110Shim 1.15s infinite}
+.smxr110-skline{width:44px;height:8px;border-radius:4px;background:linear-gradient(90deg,rgba(15,23,42,.07) 25%,rgba(15,23,42,.13) 50%,rgba(15,23,42,.07) 75%);background-size:200% 100%;animation:smxr110Shim 1.15s infinite}
+@keyframes smxr110Shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media (prefers-reduced-motion: reduce){ .smxr110-skav,.smxr110-skline{animation:none} }
 @media (max-width:640px){
-  .cx102 .cx-chip108{padding:7px 12px;font-size:.74rem}
-  .cx102 .cx-prov-actions-108{margin-left:0;width:100%;justify-content:space-between}
-}
-@media (prefers-reduced-motion:reduce){
-  .cx102 .cx-chip108,.cx102 .cx-prov-tool108{transition:none}
-  .cx102 .cx-chip108:hover,.cx102 .cx-prov-tool108:hover{transform:none}
+  .smxr110-chip{width:58px}
+  .smxr110-avwrap,.smxr110-av{width:36px;height:36px}
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1944,3 +1873,15 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 @media (prefers-reduced-motion: reduce){
   .answers-section .comment-item{transition:none}
 }
+
+/* ── ③ হোম 'লেখকদের কালি' শৈল্পিক প্রচ্ছদ (inkc110) ──────────────── */
+.notice-row-icon.inkc110{position:relative;overflow:hidden;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 2px 6px rgba(15,23,42,.18)}
+.notice-row-icon.inkc110 i{color:rgba(255,255,255,.92);text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.notice-row-icon.inkc110 .inkc110-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* টাইপোগ্রাফি: আদ্যক্ষর + সূক্ষ্ম ডট-প্যাটার্ন */
+.notice-row-icon.inkc110-typo::before{content:attr(data-initial);position:relative;z-index:1;font-size:1.25rem;font-weight:800;line-height:1;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.35)}
+.notice-row-icon.inkc110-typo::after{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.16) 1px,transparent 1px);background-size:7px 7px;pointer-events:none}
+.notice-row-icon.inkc110-fallback{background:var(--accent,#059669)!important}
+.notice-row:hover .notice-row-icon.inkc110{transform:scale(1.05)}
+.notice-row-icon{transition:transform .18s ease}
+@media (prefers-reduced-motion: reduce){ .notice-row-icon{transition:none} }

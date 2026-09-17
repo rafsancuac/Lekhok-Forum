@@ -280,3 +280,132 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
     (document.body || document.head).appendChild(s);
   } catch (e) {}
 })();
+/* ═══ সেশন ১১০: শেয়ার-মেনু রিসেন্ট-চ্যাট-শর্টকাট (ShareWithRecentChats) ═══
+   · .share-trigger-ক্লিকে মেনু খুললে (আগের হ্যান্ডলার .open টগল করে) পরের-টিকে
+     স্ট্রিপ [data-recent-chats] দেখে লেজি-ফেচ GET /api/messages/recent-chats
+   · চিপ: অ্যাভাটার (+অনলাইন-ডট) + প্রথম-নাম + 'পাঠান'-পিল
+   · ১-ট্যাপ পাঠান: POST /api/share-to-user {to_username, post_id} — নেভিগেশন-নেই;
+     বাটন ✓ 'পাঠানো হয়েছে' (এমারল্ড) + টোস্ট; ব্যর্থলে রিভার্ট
+   · প্রতি-মেনু একবারই লোড; sent-স্টেট strip-dataset-এ টিকে থাকে (রি-ওপেনেও) */
+(function () {
+  'use strict';
+  if (window.LekhokRecentChats110) return;
+  window.LekhokRecentChats110 = true;
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function firstName(n) {
+    var d = String(n || '').trim();
+    return d ? d.split(' ')[0] : 'ইউজার';
+  }
+  function markSent(strip, uid) {
+    try {
+      var m = {};
+      if (strip.dataset.sentMap) m = JSON.parse(strip.dataset.sentMap);
+      m[uid] = 1;
+      strip.dataset.sentMap = JSON.stringify(m);
+    } catch (e) { /* নিরীহ */ }
+  }
+  function wasSent(strip, uid) {
+    try {
+      return !!(strip.dataset.sentMap && JSON.parse(strip.dataset.sentMap)[uid]);
+    } catch (e) { return false; }
+  }
+
+  function render(strip, chats) {
+    var row = strip.querySelector('.smxr110-row');
+    if (!row) return;
+    if (!chats.length) {
+      row.innerHTML = '<span class="smxr110-empty">এখনো কোনো চ্যাট নেই — “মেসেজে পাঠান” দিয়ে খুঁজুন</span>';
+      return;
+    }
+    var html = '';
+    chats.forEach(function (c) {
+      var sent = wasSent(strip, c.id);
+      html += '<span class="smxr110-chip" data-uid="' + esc(c.id) + '" data-username="' + esc(c.username) + '" data-name="' + esc(c.name) + '">' +
+        '<span class="smxr110-avwrap">' +
+          '<img loading="lazy" decoding="async" class="smxr110-av" src="' + esc(c.avatar_url || '/avatar/' + encodeURIComponent(c.id)) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
+          (c.online ? '<span class="smxr110-dot" title="অনলাইন"></span>' : '') +
+        '</span>' +
+        '<span class="smxr110-name" title="' + esc(c.name) + '">' + esc(firstName(c.pen_name || c.name)) + '</span>' +
+        '<button type="button" class="smxr110-send' + (sent ? ' is-sent' : '') + '"' + (sent ? ' disabled' : '') + ' data-uid="' + esc(c.id) + '">' + (sent ? '✓ পাঠানো' : 'পাঠান') + '</button>' +
+      '</span>';
+    });
+    row.innerHTML = html;
+  }
+
+  function load(strip) {
+    if (strip.dataset.loaded === '1' || strip.dataset.loading === '1') return;
+    strip.dataset.loading = '1';
+    fetch('/api/messages/recent-chats', { credentials: 'same-origin' })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function (j) {
+        strip.dataset.loaded = '1';
+        strip.dataset.loading = '';
+        render(strip, (j && j.chats) || []);
+      })
+      .catch(function () {
+        strip.dataset.loading = '';
+        var row = strip.querySelector('.smxr110-row');
+        if (row) row.innerHTML = '<span class="smxr110-empty">লোড করা যায়নি</span>';
+      });
+  }
+
+  // মেনু-ওপেন-ওয়াচার: শেয়ার-ট্রিগার ক্লিকে পরের-টিকে open-মেনুর স্ট্রিপ লোড।
+  // ⚠ ক্যাপচার-ফেজ (capture:true) — লেগেসি শেয়ার-হ্যান্ডলার টার্গেট-ফেজে
+  // e.stopPropagation() করে; বাবল-ফেজ-ডেলিগেশন তখন কখনোই ট্রিগার-ক্লিক দেখে না।
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.share-trigger')) return;
+    setTimeout(function () {
+      document.querySelectorAll('.share-menu--fb.open').forEach(function (menu) {
+        var strip = menu.querySelector('[data-recent-chats]');
+        if (strip) load(strip);
+      });
+    }, 0);
+  }, true);
+
+  // ১-ট্যাপ পাঠান (ডেলিগেশন — রেন্ডার-পরবর্তী চিপগুলোও ধরে)
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.smxr110-send');
+    if (!btn || btn.disabled) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.LekhokAuthed && !window.LekhokAuthed()) return void (location.href = '/login?next=' + encodeURIComponent(location.pathname));
+    var chip = btn.closest('.smxr110-chip');
+    var strip = btn.closest('[data-recent-chats]');
+    if (!chip || !strip) return;
+    var postId = strip.getAttribute('data-share-post');
+    if (!postId) return;
+    var orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+    fetch('/api/share-to-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ to_username: chip.getAttribute('data-username'), post_id: postId, message: '' })
+    })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (j) {
+        if (j && j.ok) {
+          markSent(strip, chip.getAttribute('data-uid'));
+          btn.classList.add('is-sent');
+          btn.textContent = '✓ পাঠানো';
+          if (window.showToast) window.showToast(firstName(chip.getAttribute('data-name')) + '-কে পাঠানো হয়েছে ✓', 'success');
+        } else {
+          btn.disabled = false;
+          btn.textContent = orig;
+          var errMap = { blocked: 'পাঠানো সম্ভব নয়', self: 'নিজেকে পাঠানো যায় না', msg_none: 'এই ইউজার বার্তা গ্রহণ করছেন না', msg_followers: 'শুধু অনুসারীরা বার্তা পাঠাতে পারেন' };
+          if (window.showToast) window.showToast(errMap[j && j.error] || 'পাঠানো যায়নি', 'error');
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = orig;
+        if (window.showToast) window.showToast('নেটওয়ার্ক-সমস্যা — আবার চেষ্টা করুন', 'error');
+      });
+  });
+})();

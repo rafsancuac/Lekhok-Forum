@@ -6,7 +6,13 @@
    · নাম/প্রোফাইল-বাটনে ক্লিকে সরাসরি /profile/:username
    ডেটা: GET /api/reactions/:type/:id/reactors (পাবলিক — সেশন ১০৫)
    সংঘর্ষ-নোট: main.js-এর lf:reactupdate-শৃঙ্খল ও hold+slide প্যালেট অক্ষত —
-   এই ফাইল শুধু .reaction-summary[data-reactors-for]-ক্লিক শোনে (delegation)। */
+   এই ফাইল শুধু .reaction-summary[data-reactors-for]-ক্লিক শোনে (delegation)।
+   ═══ সেশন ১১০: Facepile-অ্যাভাটার-মোড (ইউজার-স্পেসিফিকেশন) ═══
+   · ভিউ-মোড সুইচার: 👥 ফেসপাইল গ্রিড / 📋 বিস্তারিত তালিকা (localStorage
+     'rxm110view'-এ মনে থাকে; ডিফল্ট ফেসপাইল)
+   · ফেসপাইল: প্রতি-সেল = অ্যাভাটার + কোণে মিনি রিঅ্যাকশন-ব্যাজ + প্রথম-নাম;
+     হোভারে কালো ফ্লোটিং-কার্ডে পূর্ণ-নাম + ছদ্মনাম (CSS :hover — JS-নিরপেক্ষ)
+   · ট্যাব-ফিল্টার উভয় মোডেই কাজ করে; Escape/backdrop-বন্ধ অক্ষত */
 (function () {
   'use strict';
   if (window.LekhokReactors) return; // ডাবল-ইনক্লুড-গার্ড
@@ -23,11 +29,17 @@
   };
   var BN = '০১২৩৪৫৬৭৮৯';
   function bn(n) { return String(n).replace(/\d/g, function (d) { return BN[+d]; }); }
+  var VIEW_KEY = 'rxm110view';
 
-  var backdrop, tabsEl, listEl, emptyEl, loadingEl, allCountEl;
-  var current = { type: 'post', id: null, data: null, tab: 'ALL', reqSeq: 0 };
+  var backdrop, tabsEl, listEl, emptyEl, loadingEl, allCountEl, faceEl, modeSeg;
+  var current = { type: 'post', id: null, data: null, tab: 'ALL', reqSeq: 0, mode: 'facepile' };
 
   function q(sel) { return document.querySelector(sel); }
+
+  function storedMode() {
+    try { var v = localStorage.getItem(VIEW_KEY); return v === 'list' ? 'list' : 'facepile'; } catch (e) { return 'facepile'; }
+  }
+  function saveMode(m) { try { localStorage.setItem(VIEW_KEY, m); } catch (e) { /* প্রাইভেট-মোড নিরীহ */ } }
 
   function cacheEls() {
     backdrop = q('#rxModal');
@@ -37,6 +49,8 @@
     emptyEl = q('#rxEmpty');
     loadingEl = q('#rxLoading');
     allCountEl = q('#rxTabAllCount');
+    faceEl = q('#rxFacepile');
+    modeSeg = q('#rxModeSeg');
     return true;
   }
 
@@ -70,6 +84,18 @@
     return u.pen_name || u.name || ('ইউজার-' + u.id);
   }
 
+  function firstName(u) {
+    var d = displayName(u);
+    return d.split(' ')[0] || d;
+  }
+
+  function reactionOf(u) { return META[u.reaction || 'like'] || META.like; }
+
+  function rowsFor(tab) {
+    var data = current.data || [];
+    return tab === 'ALL' ? data : data.filter(function (u) { return (u.reaction || 'like') === tab; });
+  }
+
   function renderTabs() {
     var data = current.data || [];
     var counts = {};
@@ -77,35 +103,57 @@
       var k = u.reaction || 'like';
       counts[k] = (counts[k] || 0) + 1;
     });
-    var html = '<button type="button" class="rxm-tab is-active" data-rx-tab="ALL" role="tab" aria-selected="true">সব <span class="rxm-tabcount">' + bn(data.length) + '</span></button>';
+    var html = '<button type="button" class="rxm-tab is-active" data-rx_tab="ALL" role="tab" aria-selected="true">সব <span class="rxm-tabcount">' + bn(data.length) + '</span></button>';
     Object.keys(META).forEach(function (k) {
       if (!counts[k]) return;
-      html += '<button type="button" class="rxm-tab" data-rx-tab="' + k + '" role="tab" aria-selected="false" title="' + META[k].label + '">' +
+      html += '<button type="button" class="rxm-tab" data-rx_tab="' + k + '" role="tab" aria-selected="false" title="' + META[k].label + '">' +
         '<span class="rxm-tabemoji">' + META[k].emoji + '</span> <span class="rxm-tabcount">' + bn(counts[k]) + '</span></button>';
     });
     tabsEl.innerHTML = html;
   }
 
-  function renderList() {
-    var data = current.data || [];
-    var tab = current.tab;
-    var rows = tab === 'ALL' ? data : data.filter(function (u) { return (u.reaction || 'like') === tab; });
-    if (!data.length) {
-      emptyEl.hidden = false;
-      listEl.innerHTML = '';
-      return;
-    }
-    emptyEl.hidden = true;
+  /* ── সেশন ১১০: ফেসপাইল-গ্রিড ── */
+  function renderFacepile() {
+    var rows = rowsFor(current.tab);
     if (!rows.length) {
-      listEl.innerHTML = '<li class="rxm-none">এই ফিল্টারে কেউ নেই।</li>';
+      faceEl.hidden = true;
+      faceEl.innerHTML = '';
       return;
     }
     var html = '';
     rows.forEach(function (u) {
       var uname = u.username || ('user-' + u.id);
       var href = '/profile/' + encodeURIComponent(uname);
-      var em = (META[u.reaction || 'like'] || META.like).emoji;
-      var lbl = (META[u.reaction || 'like'] || META.like).label;
+      var em = reactionOf(u).emoji;
+      var lbl = reactionOf(u).label;
+      var sub = (u.pen_name && u.name) ? u.pen_name : '';
+      html += '<a class="rxm-fcell" href="' + esc(href) + '" tabindex="0">' +
+        '<span class="rxm-favwrap">' +
+          '<img class="rxm-fav" loading="lazy" decoding="async" src="' + esc(avatarSrc(u)) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
+          '<span class="rxm-fbadge" title="' + esc(lbl) + '">' + em + '</span>' +
+        '</span>' +
+        '<span class="rxm-fname">' + esc(firstName(u)) + '</span>' +
+        '<span class="rxm-ftip" role="tooltip"><strong>' + esc(displayName(u)) + '</strong>' +
+          (sub ? '<em>' + esc(sub) + '</em>' : '') +
+        '</span>' +
+      '</a>';
+    });
+    faceEl.innerHTML = html;
+    faceEl.hidden = false;
+  }
+
+  function renderList() {
+    var rows = rowsFor(current.tab);
+    if (!rows.length) {
+      listEl.innerHTML = '';
+      return;
+    }
+    var html = '';
+    rows.forEach(function (u) {
+      var uname = u.username || ('user-' + u.id);
+      var href = '/profile/' + encodeURIComponent(uname);
+      var em = reactionOf(u).emoji;
+      var lbl = reactionOf(u).label;
       html += '<li class="rxm-row">' +
         '<a class="rxm-user" href="' + esc(href) + '">' +
           '<span class="rxm-avwrap">' +
@@ -124,10 +172,39 @@
     listEl.innerHTML = html;
   }
 
+  function paintMode() {
+    var isFace = current.mode === 'facepile';
+    if (modeSeg) {
+      modeSeg.querySelectorAll('.rxm-modebtn').forEach(function (b) {
+        var on = (b.getAttribute('data-rx_mode') || '') === current.mode;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+    if (faceEl) { faceEl.hidden = !isFace; }
+    listEl.hidden = isFace;
+    if (isFace) { renderFacepile(); listEl.innerHTML = ''; }
+    else { faceEl.innerHTML = ''; renderList(); }
+  }
+
   function paint() {
+    var data = current.data || [];
     renderTabs();
-    renderList();
-    if (allCountEl) allCountEl.textContent = bn((current.data || []).length);
+    if (!data.length) {
+      if (faceEl) { faceEl.hidden = true; faceEl.innerHTML = ''; }
+      listEl.innerHTML = '';
+      emptyEl.hidden = false;
+    } else {
+      emptyEl.hidden = true;
+      paintMode();
+    }
+    if (allCountEl) allCountEl.textContent = bn(data.length);
+  }
+
+  function setMode(m, persist) {
+    current.mode = (m === 'list') ? 'list' : 'facepile';
+    if (persist) saveMode(current.mode);
+    if (current.data && (current.data || []).length) paintMode();
   }
 
   function load(type, id) {
@@ -135,7 +212,8 @@
     loadingEl.hidden = false;
     emptyEl.hidden = true;
     listEl.innerHTML = '';
-    tabsEl.innerHTML = '<button type="button" class="rxm-tab is-active" data-rx-tab="ALL" role="tab" aria-selected="true">সব</button>';
+    if (faceEl) { faceEl.hidden = true; faceEl.innerHTML = ''; }
+    tabsEl.innerHTML = '<button type="button" class="rxm-tab is-active" data-rx_tab="ALL" role="tab" aria-selected="true">সব</button>';
     fetch('/api/reactions/' + type + '/' + id + '/reactors', { credentials: 'same-origin' })
       .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
       .then(function (j) {
@@ -158,6 +236,8 @@
     current.type = type || 'post';
     current.id = id;
     current.tab = 'ALL';
+    current.mode = storedMode(); // সেশন ১১০: মোড প্রতি-ওপেনে মনে-রাখা-পছন্দ থেকে
+    paintMode();
     current.data = current.type === (window.__rxLastType) && current.id === (window.__rxLastId) ? current.data : null;
     // সর্বদা ফ্রেশ-ফেচ (রিঅ্যাকশন লাইভ বদলায়) — তবে আগের-ডেটা দিয়েই তাৎক্ষণিক পেইন্ট
     if (current.data) paint();
@@ -176,15 +256,20 @@
       return;
     }
     if (!backdrop && !q('#rxModal')) return;
-    var tab = e.target.closest('[data-rx-tab]');
+    var modeBtn = e.target.closest('[data-rx_mode]');
+    if (modeBtn && modeSeg && modeSeg.contains(modeBtn)) {
+      setMode(modeBtn.getAttribute('data-rx_mode'), true);
+      return;
+    }
+    var tab = e.target.closest('[data-rx_tab]');
     if (tab && tabsEl && tabsEl.contains(tab)) {
-      current.tab = tab.getAttribute('data-rx-tab') || 'ALL';
+      current.tab = tab.getAttribute('data-rx_tab') || 'ALL';
       tabsEl.querySelectorAll('.rxm-tab').forEach(function (t) {
         var on = t === tab;
         t.classList.toggle('is-active', on);
         t.setAttribute('aria-selected', on ? 'true' : 'false');
       });
-      renderList();
+      if ((current.data || []).length) paintMode();
       return;
     }
     if (e.target.closest('#rxClose')) { closeModal(); return; }
