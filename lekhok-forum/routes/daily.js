@@ -343,7 +343,11 @@ router.get('/birthdays', async (req, res) => {
 // ── Notifications page ──────────────────────────────────────────────────────
 router.get('/notifications', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
-  const items = await db.prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50').all(req.session.user.id);
+  // সেশন ১০৮: ফুল-পেজ তালিকাতেও actor-avatar — ড্রপডাউন (recent-API) ও একই শেপ;
+  // actor_id NULL (সিস্টেম-নোটিশ) হলে ভিউ আইকন-ফলব্যাক দেখায়।
+  const items = await db.prepare(`SELECT n.*, a.avatar_url AS actor_avatar, a.full_name AS actor_name
+                                  FROM notifications n LEFT JOIN users a ON a.id = n.actor_id
+                                  WHERE n.user_id = ? ORDER BY n.created_at DESC, n.id DESC LIMIT 50`).all(req.session.user.id);
   await db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.session.user.id);
   res.render('user/notifications', { items, currentPath: '/notifications' });
 });

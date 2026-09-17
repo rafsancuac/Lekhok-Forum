@@ -1417,6 +1417,34 @@ router.get('/messages', requireAdmin, async (req, res) => {
     pages105: Math.max(1, Math.ceil(total105 / MSG_PER105)), counts105 });
 });
 
+// ── সেশন ১০৮-ইউনিয়ন: ফিল্টার-সংরক্ষণকারী CSV-এক্সপোর্ট (session107-এর স্কিমা-চুক্তি:
+// is_read/is_archived) — f=all → অনার্কাইভড; f=archived → শুধু আর্কাইভ; q থাকলে সার্চ-মিলও।
+// BOM-সহ (বাংলা UTF-8 Excel-সেফ); অফলাইন-রেকর্ড/মেইলমার্জ উৎস।
+router.get('/messages/export', requireAdmin, async (req, res) => {
+  const qX = String(req.query.q || '').trim().slice(0, 80);
+  const fX = ['all', 'unread', 'read', 'archived'].includes(req.query.f) ? req.query.f : 'all';
+  const whereX = [];
+  const argsX = [];
+  if (fX === 'unread')   { whereX.push('is_archived = 0 AND is_read = 0'); }
+  if (fX === 'read')     { whereX.push('is_archived = 0 AND is_read = 1'); }
+  if (fX === 'archived') { whereX.push('is_archived = 1'); }
+  if (fX === 'all')      { whereX.push('is_archived = 0'); }
+  if (qX) {
+    whereX.push('(name LIKE ? OR email LIKE ? OR subject LIKE ? OR message LIKE ?)');
+    const likeX = '%' + qX + '%';
+    argsX.push(likeX, likeX, likeX, likeX);
+  }
+  const rowsX = await db.prepare(
+    `SELECT * FROM contact_submissions ${whereX.length ? 'WHERE ' + whereX.join(' AND ') : ''} ORDER BY id ASC`
+  ).all(...argsX);
+  const outX = [['id', 'name', 'email', 'subject', 'message', 'read', 'archived', 'created_at']];
+  for (const m of rowsX) outX.push([m.id, m.name || '', m.email || '', m.subject || '', m.message || '', m.is_read ? 'yes' : 'no', m.is_archived ? 'yes' : 'no', m.created_at || '']);
+  const csvX = outX.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="contact-messages.csv"');
+  res.send('\ufeff' + csvX);
+});
+
 // সেশন ১০৫: এক-বার্তা অ্যাকশন — read/unread/archive/unarchive/delete
 // সব POST (sidebar-এর injectCsrf42 অটো-_csrf বসায়) + 303-ফেরত (ফিল্টার/সার্চ/পেজ ধরে রেখে) + অডিট
 function msgBack105(req, extraParam) {

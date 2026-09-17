@@ -20,15 +20,16 @@
       <div class="notif-page-list">
         <% items.forEach(n => { %>
           <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' ? 'icon-like' : (n.type === 'comment' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : 'icon-system')))); %>
+          <% const _ico = n.type === 'birthday' ? 'fa-birthday-cake' : (n.type === 'like' ? 'fa-heart' : (n.type === 'comment' ? 'fa-comment' : (n.type === 'follow' ? 'fa-user-plus' : (n.type === 'call' ? 'fa-phone-slash' : 'fa-bell')))); %>
           <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" onclick="markRead('<%= n.id %>')">
+            <%# সেশন ১০৮: actor-avatar — হেডার-ড্রপডাউন (সেশন ১০২) ও একই শেপ; actor না থাকলে টাইপ-আইকন %>
+            <% if (n.actor_id) { %>
+              <div class="notif-page-icon <%= iconClass %> has-avatar"><img class="notif-avatar" src="<%= n.actor_avatar || ('/avatar/' + n.actor_id) %>" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-avatar');this.remove()"><i class="fas <%= _ico %>"></i></div>
+            <% } else { %>
             <div class="notif-page-icon <%= iconClass %>">
-              <% if (n.type === 'birthday') { %><i class="fas fa-birthday-cake"></i>
-              <% } else if (n.type === 'like') { %><i class="fas fa-heart"></i>
-              <% } else if (n.type === 'comment') { %><i class="fas fa-comment"></i>
-              <% } else if (n.type === 'follow') { %><i class="fas fa-user-plus"></i>
-              <% } else if (n.type === 'call') { %><i class="fas fa-phone-slash"></i><% }
-              else { %><i class="fas fa-bell"></i><% } %>
+              <i class="fas <%= _ico %>"></i>
             </div>
+            <% } %>
             <div class="notif-page-body">
               <div class="notif-page-title"><%= n.title %><% if (n.type === 'call') { %> <span class="notif-missed notif-missed--page"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %></div>
               <div class="notif-page-text"><%= n.body %></div>

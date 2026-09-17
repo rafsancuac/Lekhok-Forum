@@ -39,6 +39,8 @@
       <% if (q105) { %><a class="clr105" href="/admin/messages<%= filter105 !== 'all' ? '?f=' + filter105 : '' %>" aria-label="সার্চ মুছুন"><i class="fas fa-xmark"></i></a><% } %>
       <button class="btn btn-primary btn-sm" type="submit">খুঁজুন</button>
     </form>
+    <% /* সেশন ১০৮-ইউনিয়ন: ফিল্টার-সংরক্ষণকারী CSV-এক্সপোর্ট (BOM — বাংলা UTF-8) */ %>
+    <a class="btn btn-sm csv108" href="/admin/messages/export?f=<%= encodeURIComponent(filter105) %><%= q105 ? '&q=' + encodeURIComponent(q105) : '' %>" title="বর্তমান ফিল্টার ধরে রেখে CSV ডাউনলোড"><i class="fas fa-file-csv"></i> CSV</a>
   </div>
 
   <p class="inbox-meta105"><%= total105 %> টি বার্তা<% if (q105) { %> — “<%= q105 %>” এর জন্য<% } %><% if (pages105 > 1) { %> · পেজ <%= page105 %>/<%= pages105 %><% } %></p>
