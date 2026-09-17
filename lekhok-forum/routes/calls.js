@@ -172,6 +172,14 @@ async function activeCallOf(me) {
     }
   }
   await healGroupStale(me);
+  /* সেশন ১২২ self-heal: ব্রাউজার ক্র্যাশ/নেট-বিচ্ছিন্নতায় 'accepted' কল কখনোই
+     'ended' না-হয়ে ঝুলে থাকলে দুই-পক্ষই চিরকাল busy (409) — নতুন কলই নেওয়া যায় না।
+     সক্রিয়-উইন্ডো (২ ঘণ্টা) পেরিয়ে গেলে সার্ভার নিজেই 'ended'-মার্ক করে দিই। */
+  await db.prepare(
+    `UPDATE call_sessions SET status='ended', ended_reason='stale_cleanup', ended_at=CURRENT_TIMESTAMP
+      WHERE status = 'accepted' AND answered_at IS NOT NULL
+        AND answered_at < datetime('now', ?)`
+  ).run('-' + ACTIVE_WINDOW_S + ' seconds');
   const one = await db.prepare(
     `SELECT * FROM call_sessions
       WHERE status IN ('ringing','accepted') AND (caller_id = ? OR callee_id = ?)

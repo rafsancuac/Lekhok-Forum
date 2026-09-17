@@ -86,7 +86,15 @@
     /* সেশন ১১৩: গ্রুপ-কল (mesh) — প্রতি-পিয়ার PC + গ্রিড-UI */
     group: false,           // এই-কল গ্রুপ-কল কি-না (1:1 পুরনো-পথ অক্ষুণ্ণ)
     peers: {},              // uid → {pc, info, queue, madeOffer, stream}
-    meJoinedAt: null        // আমার জয়েন-টাইমস্ট্যাম্প (গ্লেয়ার-টাই-ব্রেকে ব্যবহৃত)
+    meJoinedAt: null,       // আমার জয়েন-টাইমস্ট্যাম্প (গ্লেয়ার-টাই-ব্রেকে ব্যবহৃত)
+    /* সেশন ১২২: UI-ফার্স্ট পারমিশন-ফ্লো + ব্যাকগ্রাউন্ড-পোল */
+    permRetry: null,        // অনুমতি পেলে যে-ফাংশন থেকে কল-ফ্লো পুনঃশুরু হবে
+    permBusy: false,        // রিট্রাই-চলাকালীন ডাবল-ক্লিক-গার্ড
+    pollBusy: false,        // পোল-ইন-ফ্লাইট গার্ড (হার্টবিট+লুপ উভয় ট্রিগারের জন্য)
+    auth401: 0,             // টানা 401-পোল-কাউন্ট (লগআউট/মেয়াদোত্তীর্ণ → ব্যাকঅফ)
+    hbWorker: null,         // ব্যাকগ্রাউন্ড-ট্যাব হার্টবিট (Worker-টাইমার থ্রটল-হয় না)
+    notifT: null,           // আসন্ন-কল title-flash টাইমার
+    titleBase: null         // মূল document.title (ফ্ল্যাশ-শেষে পুনঃস্থাপন)
   };
 
   /* ── DOM হেল্পার ───────────────────────────────────────────────────────── */
@@ -267,6 +275,24 @@
       '      <button type="button" class="lc-retrybar-btn lc-retrybar-btn--retry" data-lc="retry">' + icon('fa-rotate-right') + ' আবার চেষ্টা করুন</button>' +
       '      <button type="button" class="lc-retrybar-btn lc-retrybar-btn--end" data-lc="end">' + icon('fa-phone-slash') + ' কল শেষ করুন</button>' +
       '    </div>' +
+      '    <div class="lc-perm" hidden role="alertdialog" aria-modal="true" aria-label="অনুমতি প্রয়োজন">' +
+      '      <div class="lc-perm-card">' +
+      '        <div class="lc-perm-ico">' + icon('fa-microphone-slash') + '</div>' +
+      '        <h3 class="lc-perm-title">মাইক্রোফোন/ক্যামেরা-অনুমতি প্রয়োজন</h3>' +
+      '        <p class="lc-perm-msg"></p>' +
+      '        <ol class="lc-perm-steps">' +
+      '          <li>অ্যাড্রেস-বারের বাঁ পাশের <b>তালা (🔒)</b> আইকনে চাপ দিন।</li>' +
+      '          <li><b>Microphone</b> ও <b>Camera</b> — দুটোই <b>Allow</b> করুন।</li>' +
+      '          <li>নিচের “আবার চেষ্টা করুন” বোতামে চাপ দিন — কল পুনঃশুরু হবে।</li>' +
+      '        </ol>' +
+      '        <div class="lc-perm-hint" hidden></div>' +
+      '        <div class="lc-perm-actions">' +
+      '          <button type="button" class="lc-btn lc-btn--retry" data-lc="perm-retry">' + icon('fa-rotate-right') + ' আবার চেষ্টা করুন</button>' +
+      '          <button type="button" class="lc-btn lc-btn--tab" data-lc="perm-newtab" hidden>' + icon('fa-up-right-from-square') + ' নতুন ট্যাবে খুলুন</button>' +
+      '          <button type="button" class="lc-btn lc-btn--cancel" data-lc="perm-cancel">কল বাতিল করুন</button>' +
+      '        </div>' +
+      '      </div>' +
+      '    </div>' +
       '    <div class="lc-controls">' +
       '      <button type="button" class="lc-ctl lc-ctl--info" data-lc="stats" title="সংযোগ-তথ্য (নেটওয়ার্ক)">' + icon('fa-circle-info') + '</button>' +
       '      <button type="button" class="lc-ctl lc-ctl--mic" data-lc="mic" title="মাইক বন্ধ/চালু">' + icon('fa-microphone') + '</button>' +
@@ -302,6 +328,10 @@
       else if (a === 'decline') { click(); declineCall(); }
       else if (a === 'stats') toggleStats();
       else if (a === 'stats-close') toggleStats(false);
+      /* সেশন ১২২: পারমিশন-প্যানেল-অ্যাকশন */
+      else if (a === 'perm-retry') retryPermission();
+      else if (a === 'perm-cancel') { click(); cancelFromPermPanel(); }
+      else if (a === 'perm-newtab') { try { window.open(location.href, '_blank'); } catch (_) {} }
       else if (a === 'retry') {
         click();
         var rb = root && root.querySelector('.lc-retrybar');
@@ -319,6 +349,84 @@
       Promise.resolve(p).then(function () { tp.hidden = true; }).catch(function () {});
     });
     return root;
+  }
+
+  /* ── সেশন ১২২: UI-ফার্স্ট পারমিশন-প্যানেল (FB-নীতি: আগে ইন্টারফেস, পরে হার্ডওয়্যার) ──
+     আগের-আচরণে মাইক/ক্যামেরা-অনুমতি ব্লক থাকলে মোডাল মুহূর্তেই গায়েব + টোস্ট —
+     ইউজার বুঝতেই পারত না কী হলো। এখন মোডাল খোলাই থাকে, ভেতরে সমাধান-গাইড
+     + "আবার চেষ্টা করুন" + (প্রয়োজনে) "নতুন ট্যাবে খুলুন" দেখায় — অনুমতি দিলে
+     সেই-মুহূর্তে কল-ফ্লো স্বয়ংক্রিয়ভাবে পুনঃশুরু হয় (কল হাতছাড়া হয় না)। */
+  function humanMediaError(err) {
+    var m = (err && err.message) || '';
+    var name = (err && err.name) || '';
+    if (m.indexOf('permission:') === 0) return m.split(':').slice(1).join(':').trim();
+    if (m.indexOf('insecure:') === 0) return m.split(':').slice(1).join(':').trim();
+    if (m.indexOf('device:') === 0) return m.split(':').slice(1).join(':').trim();
+    if (m.indexOf('busy:') === 0) return m.split(':').slice(1).join(':').trim();
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') return 'ব্রাউজারে এই সাইটের মাইক্রোফোন/ক্যামেরার অনুমতি ব্লক করা আছে।';
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') return 'কোনো মাইক্রোফোন/ক্যামেরা পাওয়া যায়নি — ডিভাইস যুক্ত করে আবার চেষ্টা করুন।';
+    if (name === 'NotReadableError' || name === 'TrackStartError') return 'মাইক/ক্যামেরা অন্য অ্যাপ (Zoom/Meet/Teams) দখলে রেখেছে — সেগুলো বন্ধ করে আবার চেষ্টা করুন।';
+    if (name === 'OverconstrainedError') return 'নির্ধারিত ক্যামেরা-মান এই ডিভাইসে মেলেনি।';
+    return 'মাইক/ক্যামেরা চালু করা যায়নি' + (m ? (' — ' + m) : '') + '।';
+  }
+  function showPermPanel(msg) {
+    if (!root) return;
+    var p = root.querySelector('.lc-perm');
+    if (!p) return;
+    p.querySelector('.lc-perm-msg').textContent = msg || 'মাইক্রোফোন/ক্যামেরার অনুমতি প্রয়োজন।';
+    var inIframe = false;
+    try { inIframe = (window.self !== window.top); } catch (_) { inIframe = true; }
+    var insecure = !window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+    var hint = p.querySelector('.lc-perm-hint');
+    var tabBtn = p.querySelector('[data-lc="perm-newtab"]');
+    if (insecure) {
+      hint.textContent = '💡 এই পেজটি HTTPS-ছাড়া খোলা — ব্রাউজারের নিরাপত্তা-নীতিতে মাইক/ক্যামেরা সম্পূর্ণ বন্ধ। নিরাপদ (https) ঠিকানায় খুলুন।';
+      hint.hidden = false; if (tabBtn) tabBtn.hidden = false;
+    } else if (inIframe) {
+      hint.textContent = '💡 প্রিভিউ-ফ্রেমের ভেতরে অনুমতি-ডায়ালগ আসতে পারে না — “নতুন ট্যাবে খুলুন” চেপে পূর্ণ ব্রাউজার-ট্যাবে কল চালিয়ে যান।';
+      hint.hidden = false; if (tabBtn) tabBtn.hidden = false;
+    } else {
+      hint.hidden = true; if (tabBtn) tabBtn.hidden = true;
+    }
+    p.hidden = false;
+    status('অনুমতি প্রয়োজন', 'is-warn');
+  }
+  function hidePermPanel() {
+    if (!root) return;
+    var p = root.querySelector('.lc-perm');
+    if (p) p.hidden = true;
+  }
+  async function retryPermission() {
+    if (!S.permRetry || S.permBusy) return;
+    S.permBusy = true;
+    var b = root && root.querySelector('[data-lc="perm-retry"]');
+    if (b) { b.disabled = true; b.innerHTML = icon('fa-spinner fa-spin') + ' চেষ্টা চলছে…'; }
+    try {
+      var fn = S.permRetry; S.permRetry = null;
+      await fn();
+    } catch (err) {
+      S.permRetry = fn; /* আবারও ব্যর্থ — রিজিউম-হুক ফেরত রাখো */
+      showPermPanel(humanMediaError(err));
+    } finally {
+      S.permBusy = false;
+      if (b) { b.disabled = false; b.innerHTML = icon('fa-rotate-right') + ' আবার চেষ্টা করুন'; }
+    }
+  }
+  async function cancelFromPermPanel() {
+    var id = S.callId;
+    var role = S.role;
+    cleanup(true);
+    if (!id) return;
+    try {
+      if (role === 'callee') await api('POST', '/api/calls/' + id + '/decline'); /* উত্তর-দেওয়ার-আগে বাতিল = প্রত্যাখ্যান */
+      else await api('POST', '/api/calls/' + id + '/end', { reason: 'failed' });
+    } catch (_) {}
+  }
+  /* মিডিয়া-ব্যর্থতাকে UI-ফার্স্ট প্যানেলে রূপান্তর — কল-ফ্লো মেরে না-ফেলে */
+  function handleMediaError(err, resumeFn) {
+    S.permRetry = resumeFn || null;
+    stopRing();
+    showPermPanel(humanMediaError(err));
   }
 
   function setPeerUI() {
@@ -576,8 +684,17 @@
   }, { once: false });
 
   async function getMedia(kind) {
+    /* সেশন ১২২: নিরাপদ-প্রসঙ্গ প্রি-ফ্লাইট — HTTP/আইপি-ঠিকানায় ব্রাউজার-নীতিতে
+       getUserMedia নিষিদ্ধ; আগেই মানব-পাঠযোগ্য বার্তা (ক্র্যাশ-টোস্ট নয়) */
+    if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      var ie = new Error('insecure: এই পেজটি নিরাপদ (HTTPS) সংযোগে নেই — ব্রাউজার-নীতিতে মাইক/ক্যামেরা সম্পূর্ণ বন্ধ।');
+      ie.name = 'NotAllowedError';
+      throw ie;
+    }
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('insecure: মাইক/ক্যামেরার জন্য HTTPS (বা localhost) প্রয়োজন');
+      var ne = new Error('insecure: এই ব্রাউজারে মাইক/ক্যামেরা-API নেই (HTTPS ছাড়া API-ই বন্ধ থাকে)।');
+      ne.name = 'NotAllowedError';
+      throw ne;
     }
     try {
       return await navigator.mediaDevices.getUserMedia({
@@ -586,18 +703,16 @@
       });
     } catch (err) {
       if (kind === 'video') {
-        /* ক্যামেরা নেই/ব্লকড → অডিও-অনলি-ফলব্যাক */
+        /* ক্যামেরা নেই/দখলে → অডিও-অনলি-ফলব্যাক (অনুমতি-ব্লক ছাড়া) */
         var st = (err && err.name) || '';
-        if (st === 'NotFoundError' || st === 'OverconstrainedError' || st === 'NotReadableError' || st === 'NotAllowedError') {
+        if (st === 'NotFoundError' || st === 'OverconstrainedError' || st === 'NotReadableError') {
           var s2 = await navigator.mediaDevices.getUserMedia({ audio: true });
           toast('ক্যামেরা পাওয়া যায়নি — অডিও-কল হিসেবে চলছে', true);
           S.kind = 'audio';
           return s2;
         }
       }
-      if (err && err.name === 'NotAllowedError') throw new Error('permission: মাইক্রোফোন/ক্যামেরা-অনুমতি দেওয়া হয়নি');
-      if (err && err.name === 'NotFoundError') throw new Error('device: কোনো মাইক্রোফোন পাওয়া যায়নি');
-      throw err;
+      throw err; /* মানব-বার্তা humanMediaError()-এ নাম-ভিত্তিক ম্যাপ হয় */
     }
   }
 
@@ -616,7 +731,12 @@
     S.flushT = setTimeout(function () { S.flushT = null; flushSignals(); }, 250);
   }
   async function flushSignals() {
-    if (!S.callId || !S.outBuf.length) return;
+    /* সেশন ১২২-বাগফিক্স: অফার-পোস্টের আগেই ICE-gathering শুরু হয় (setLocalDescription
+       → onicecandidate) — কল-আইডি না-থাকায় আগের early-return-এ ব্যাচ আটকে পড়ত ও
+       আর কখনো পাঠানো হত না → পিয়ার ক্যান্ডিডেট-শূন্য → ICE 'connecting'-এ আটকে যেত।
+       এখন: কল-আইডি না-এলে রি-শিডিউল (কল-আইডি সেট হলেই পাঠানো হবে)। */
+    if (!S.callId) { if (S.outBuf.length) scheduleFlush(); return; }
+    if (!S.outBuf.length) return;
     var batch = S.outBuf.splice(0, 24);
     try { await api('POST', '/api/calls/' + S.callId + '/signal', { signals: batch }); } catch (_) {}
     if (S.outBuf.length) scheduleFlush();
@@ -939,7 +1059,7 @@
     S.kind = kind;
     S.group = true;
     S.peer = null;
-    S.queue = []; S.outBuf = []; S.after = 0;
+    S.queue = []; S.outBuf = []; /* সেশন ১২২: S.after রিসেট নয় (গায়েব-বাগ) */
     S.peers = {}; S.meJoinedAt = null;
 
     ensureRoot();
@@ -1018,7 +1138,7 @@
 
   /* ═══ সেশন ১১৩ শেষ ═══════════════════════════════════════════════════ */
 
-  /* ── কল শুরু (caller) ─────────────────────────────────────────────────── */
+  /* ── কল শুরু (caller) — সেশন ১২২ UI-ফার্স্ট পুনর্গঠন ────────────────── */
   async function start(kind) {
     var ctx = C(); /* লেজি-পাঠ — মেসেঞ্জার-ভিউ পরে সমৃদ্ধ করলেও ধরা পড়বে */
     if (S.state !== 'idle') { toast('একটি কল ইতিমধ্যে চলছে', true); return; }
@@ -1032,20 +1152,33 @@
     S.peer = ctx.peer;
     S.queue = [];
     S.outBuf = [];
-    S.after = 0;
+    /* সেশন ১২২-বাগফিক্স: S.after=0 রিসেট নয় — কার্সার গ্লোবাল (call_signals-id);
+       রিসেট করলে শুরুর প্রথম পোলেই ১০-মিনিট-উইন্ডোর পুরনো অন্য-কলের 'ended'/'cancelled'
+       সিগন্যাল রিপ্লে হত → কল-UI নিজে-ই নিজেকে কেটে ফেলত (মডাল গায়েব-বাগ)। */
 
+    /* ধাপ-১ (UI-ফার্স্ট): ইন্টারফেস তাৎক্ষণিক সামনে — মিডিয়া/নেটওয়ার্ক পরে */
     ensureRoot();
     root.querySelector('.lc-ctl--cam').style.display = kind === 'video' ? '' : 'none';
     root.querySelector('.lc-incoming').hidden = true;
+    hidePermPanel();
     root.classList.remove('lc-root--min'); minimize(false);
     setPeerUI();
     showVideos(false);
     status(kind === 'video' ? icon('fa-video') + ' ভিডিও কল দেওয়া হচ্ছে…' : icon('fa-phone') + ' অডিও কল দেওয়া হচ্ছে…');
     startRing('outgoing');
     schedulePoll(900);
+    /* কল-ইন্টেন্ট-জেসচারেই নোটিফিকেশন-অনুমতি জেনেলি চাওয়া */
+    try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (_) {}
 
+    /* ধাপ-২: মিডিয়া + অফার — ব্যর্থ হলে প্যানেল, মোডাল খোলাই থাকে */
+    await acquireAndOffer();
+  }
+
+  async function acquireAndOffer() {
+    status(S.kind === 'video' ? icon('fa-video') + ' ভিডিও কল দেওয়া হচ্ছে…' : icon('fa-phone') + ' অডিও কল দেওয়া হচ্ছে…');
     try {
-      var stream = await getMedia(kind);
+      var stream = await getMedia(S.kind);
+      hidePermPanel();
       attachLocal(stream);
       var pc = createPC();
       S.pc = pc;
@@ -1055,7 +1188,7 @@
       await pc.setLocalDescription(offer);
 
       var r = await api('POST', '/api/calls/start', {
-        conv_id: ctx.convId,
+        conv_id: C().convId,
         kind: S.kind,
         offer: { type: offer.type, sdp: offer.sdp }
       });
@@ -1067,13 +1200,11 @@
       }
       S.callId = r.call_id;
       status('রিং হচ্ছে…');
+      startRing('outgoing');
+      scheduleFlush(); /* সেশন ১২২: অফার-পূর্ব জমা-করা ICE-ব্যাচ তাৎক্ষণিক পাঠাও */
     } catch (err) {
-      var m = (err && err.message) || '';
-      var _fid = S.callId; /* cleanup-এর আগে — নাহলে end-কল হারায় */
-      if (m.indexOf('permission:') === 0 || m.indexOf('device:') === 0 || m.indexOf('insecure:') === 0) toast(m.split(':').slice(1).join(':').trim(), true);
-      else toast('মাইক/ক্যামেরা চালু করা যায়নি', true);
-      cleanup(true);
-      if (_fid) { try { await api('POST', '/api/calls/' + _fid + '/end', { reason: 'failed' }); } catch (_) {} }
+      /* মিডিয়া/অফার-ব্যর্থতা → UI খোলা রেখে সমাধান-গাইড; রিট্রাইয়ে এখান থেকেই পুনঃশুরু */
+      handleMediaError(err, acquireAndOffer);
     }
   }
 
@@ -1089,8 +1220,8 @@
     S.pendingOffer = inc.offer;
     S.queue = [];
     S.outBuf = [];
-    S.after = 0;
     S.peers = {}; S.meJoinedAt = null;
+    /* সেশন ১২২: S.after রিসেট নয় (গায়েব-বাগ — উপরের নোট দ্রষ্টব্য) */
 
     ensureRoot();
     root.querySelector('.lc-ctl--cam').style.display = inc.kind === 'video' ? '' : 'none';
@@ -1113,6 +1244,30 @@
       S.incT = null;
       if (S.state === 'incoming') { toast('সাড়া পাওয়া যায়নি — কলটি মিসড ধরা হলো', true); cleanup(true); }
     }, Math.max(rtS * 1000 + 6000, 12000));
+    /* সেশন ১২২: হিডেন-ট্যাব-সচেতনতা — টাইটেল-ফ্ল্যাশ + (অনুমতি থাকলে) নোটিফিকেশন */
+    startIncomingAttention(inc);
+  }
+  /* সেশন ১২২: আসন্ন-কল দৃষ্টি-আকর্ষণ — FB-প্যারিটি (ট্যাব-শিরোনাম ফ্ল্যাশ + OS-নোটিফিকেশন) */
+  function startIncomingAttention(inc) {
+    stopIncomingAttention();
+    S.titleBase = document.title;
+    var kindBn = inc.kind === 'video' ? 'ভিডিও' : 'অডিও';
+    var pname = (inc.caller && inc.caller.name) || '';
+    var flip = false;
+    S.notifT = setInterval(function () {
+      flip = !flip;
+      try { document.title = flip ? ('📞 ' + pname + ' — ' + kindBn + ' কল!') : (S.titleBase || ''); } catch (_) {}
+    }, 1100);
+    try {
+      if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+        var n = new Notification('📞 ' + kindBn + ' কল আসছে', { body: pname + ' আপনাকে কল দিচ্ছেন — উত্তর দিতে চাপ দিন', tag: 'lf-call' });
+        n.onclick = function () { try { window.focus(); n.close(); } catch (_) {} };
+      }
+    } catch (_) {}
+  }
+  function stopIncomingAttention() {
+    if (S.notifT) { clearInterval(S.notifT); S.notifT = null; }
+    if (S.titleBase != null) { try { document.title = S.titleBase; } catch (_) {} S.titleBase = null; }
   }
   function hideIncoming() {
     if (root) root.querySelector('.lc-incoming').hidden = true;
@@ -1125,11 +1280,18 @@
     if (!S.pendingOffer) return;
     click();
     hideIncoming();
+    stopIncomingAttention();
     if (S.incT) { clearTimeout(S.incT); S.incT = null; }
     S.state = 'connecting';
     status('সংযোগ করা হচ্ছে…');
+    await acceptResume();
+  }
+  /* সেশন ১২২: গ্রহণ-ফ্লো আলাদা — অনুমতি-ব্লক হলে প্যানেল + রিট্রাইয়ে এখান থেকেই
+     পুনঃশুরু; এই-পর্যায়ে সার্ভার-সাইড কল কেটে দেওয়া হয় না (কলার তখনও রিং পান) */
+  async function acceptResume() {
     try {
       var stream = await getMedia(S.kind);
+      hidePermPanel();
       attachLocal(stream);
       var pc = createPC();
       S.pc = pc;
@@ -1142,15 +1304,15 @@
       var answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       var r = await api('POST', '/api/calls/' + S.callId + '/answer', { answer: { type: answer.type, sdp: answer.sdp } });
-      if (!r.ok) { toast('কল গ্রহণ করা যায়নি (' + (r.error || '?') + ')', true); cleanup(true); return; }
+      if (!r.ok) {
+        if (r.error === 'expired' || r.error === 'not_ringing') toast('কলটির মেয়াদ শেষ — মিসড ধরা হয়েছে', true);
+        else toast('কল গ্রহণ করা যায়নি (' + (r.error || '?') + ')', true);
+        cleanup(true);
+        return;
+      }
       showVideos(S.kind === 'video');
     } catch (err) {
-      var m = (err && err.message) || '';
-      var _aid = S.callId; /* cleanup-এর আগে */
-      if (m.indexOf('permission:') === 0 || m.indexOf('device:') === 0 || m.indexOf('insecure:') === 0) toast(m.split(':').slice(1).join(':').trim(), true);
-      else toast('কল গ্রহণে সমস্যা', true);
-      cleanup(true);
-      if (_aid) { api('POST', '/api/calls/' + _aid + '/end', { reason: 'failed' }).catch(function () {}); }
+      handleMediaError(err, acceptResume);
     }
   }
 
@@ -1185,6 +1347,7 @@
   /* ── শেষ/ক্লিনআপ ──────────────────────────────────────────────────────── */
   function cleanup(silent) {
     stopRing();
+    stopIncomingAttention(); /* সেশন ১২২ */
     clearInterval(S.tickT); S.tickT = null;
     clearTimeout(S.flushT); S.flushT = null;
     clearTimeout(S.pollT); S.pollT = null;
@@ -1206,6 +1369,7 @@
     S.queue = []; S.outBuf = [];
     S.callId = null; S.pendingOffer = null; S.role = null;
     S.muted = false; S.camOff = false;
+    S.permRetry = null; S.permBusy = false; /* সেশন ১২২: পারমিশন-ফ্লো রিসেট */
     S.state = 'idle';
     if (root) {
       root.remove();
@@ -1276,15 +1440,23 @@
     else if (S.state === 'connecting') interval = 800;
     else if (S.state === 'outgoing' || S.state === 'incoming') interval = 1000;
     else if (S.state === 'connected') interval = 1500;
-    /* মেসেঞ্জার-পেজে ৩সে, অন্য-পেজে ৫সে (সার্ভার-লোড-বান্ধব) */
+    /* মেসেঞ্জার-পেজে ৩সে, অন্য-পেজে ৫সে (সার্ভার-লোড-বান্ধব);
+       মেয়াদোত্তীর্ণ সেশন (টানা 401) → ১৫সে নিঃশব্দ ব্যাকঅফ (সেশন ১২২) */
+    else if (S.auth401 > 2) interval = 15000;
     else interval = C().convId ? 3000 : 5000;
     S.pollT = setTimeout(poll, interval);
   }
 
   async function poll() {
+    /* সেশন ১২২: হার্টবিট+ভিজিবিলিটি+লুপ — একাধিক ট্রিগারে ডাবল-পোল-গার্ড */
+    if (S.pollBusy) return;
+    S.pollBusy = true;
     var nextState = S.state;
     try {
       var r = await api('GET', '/api/calls/poll?after=' + S.after);
+      /* মেয়াদোত্তীর্ণ সেশন (401) — নিঃশব্দ ব্যাকঅফ (schedulePoll-এ ব্যবহৃত) */
+      if (r && r.__status === 401) S.auth401 = Math.min(S.auth401 + 1, 9);
+      else if (r && r.ok) S.auth401 = 0;
       if (r && r.ok) {
         S.after = r.after || S.after;
 
@@ -1306,8 +1478,10 @@
           }
         }
 
-        /* (গ) সিগন্যাল-ডেলিভারি (ICE + লাইফসাইকেল) — গ্রুপে from-ভিত্তিক মেশ-রাউটিং (সেশন ১১৩) */
-        if (r.signals && r.signals.length) {
+        /* (গ) সিগন্যাল-ডেলিভারি (ICE + লাইফসাইকেল) — গ্রুপে from-ভিত্তিক মেশ-রাউটিং (সেশন ১১৩)
+           সেশন ১২২: S.callId ছাড়া প্রসেস-নয় — callId-null অবস্থায় পুরনো-সিগন্যাল-রিপ্লেতে
+           cleanup-সুইসাইড-বাগ বন্ধ (গায়েব-বাগের অর্ধেক এখানেই) */
+        if (r.signals && r.signals.length && S.callId) {
           for (var i = 0; i < r.signals.length; i++) {
             var sg = r.signals[i];
             if (S.callId && sg.call_id !== S.callId) continue;
@@ -1377,8 +1551,41 @@
         if (isGroup() && r.group && r.group.id === S.callId) groupReconcile(r.group);
       }
     } catch (_) { /* নেটওয়ার্ক-ঝাঁকুনি — পরের টিকে আবার */ }
-    schedulePoll();
+    finally {
+      S.pollBusy = false;
+      schedulePoll();
+    }
   }
+
+  /* সেশন ১২২: ব্যাকগ্রাউন্ড-ট্যাব পোল-হার্টবিট + দৃশ্যমানতা-সচেতন পোল ─────
+     Chrome হিডেন-ট্যাবে DOM-টাইমার ১-মিনিট-পর-পর থ্রটল করে — ফলে কল-পপআপ
+     দেরিতে/না-ও আসত (রিং-টাইমআউট ৪৫সে < থ্রটল ৬০সে)। Worker-টাইমার থ্রটল-হয়
+     না — তাই হার্টবিট-টিকে দৃশ্যমানতা-নির্বিশেষে পোল ট্রিগার করাই (CSP-ক্লিন,
+     same-origin /assets/js/call-heartbeat.js — blob: দরকার নেই)। */
+  function startHeartbeat() {
+    if (S.hbWorker) return;
+    try {
+      /* স্যান্ডবক্স-গেটওয়ে (XTransformPort) প্রসঙ্গে Worker-URL-এও কোয়েরি দরকার —
+         নইলে গেটওয়ে ডিফল্ট-পোর্টে পাঠায় → 404 → হার্টবিট মৃত। প্রোডাকশনে কোয়েরি
+         নেই → URL অপরিবর্তিত। */
+      var wUrl = '/assets/js/call-heartbeat.js';
+      try {
+        var sbm = location.search.match(/XTransformPort=(\d+)/);
+        if (sbm && wUrl.indexOf('XTransformPort') === -1) wUrl += '?XTransformPort=' + sbm[1];
+      } catch (_) {}
+      S.hbWorker = new Worker(wUrl);
+      S.hbWorker.onerror = function () { try { S.hbWorker.terminate(); } catch (_) {} S.hbWorker = null; };
+      S.hbWorker.onmessage = function () {
+        if (document.hidden) { clearTimeout(S.pollT); poll(); }
+      };
+    } catch (_) { S.hbWorker = null; }
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { clearTimeout(S.pollT); poll(); }
+  });
+  window.addEventListener('focus', function () { clearTimeout(S.pollT); poll(); });
+  window.addEventListener('pageshow', function (e) { if (e && e.persisted) { clearTimeout(S.pollT); poll(); } });
+  startHeartbeat();
 
   /* ── এক্সপোজ ──────────────────────────────────────────────────────────── */
   window.LekhokCall = {
@@ -1427,7 +1634,11 @@
       S.group = false;
       if (root) { groupUI(false); var g = root.querySelector('.lc-grid'); if (g) g.remove(); }
       return true;
-    }
+    },
+    /* সেশন ১২২ QA-হুক — পারমিশন-প্যানেল/হার্টবিট/পোল যাচাই */
+    _qaShowPerm: function (msg) { ensureRoot(); showPermPanel(msg || 'ব্রাউজারে এই সাইটের মাইক্রোফোন/ক্যামেরার অনুমতি ব্লক করা আছে।'); return !!root && !root.querySelector('.lc-perm').hidden; },
+    _qaPermState: function () { return { retryHooked: !!S.permRetry, busy: S.permBusy, worker: !!S.hbWorker, auth401: S.auth401, state: S.state }; },
+    _qaPollNow: function () { clearTimeout(S.pollT); poll(); return true; }
   };
 
   /* আইডল-অবস্থাতেও পোল-লুপ চালু — ক্যালি হিসেবে আসন্ন-কল দেখতে হলে

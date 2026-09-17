@@ -598,3 +598,89 @@
   .lc-audioface.is-speaking .lc-aura span { animation-duration: 2.4s; }
 }
 /* EOF-MARKER: session118-speaker-highlight-video-stats */
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১২২ — UI-ফার্স্ট পারমিশন-প্যানেল (.lc-perm) + অ্যাকশন-বোতাম (.lc-btn)
+   FB/WhatsApp-নীতি: আগে ইন্টারফেস, পরে হার্ডওয়্যার — অনুমতি-ব্লক হলে মোডাল
+   মেরে না-ফেলে ভেতরে সমাধান-গাইড + রিট্রাই + (প্রয়োজনে) নতুন-ট্যাব পথ দেখায়।
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lc-perm {
+  position: absolute; inset: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(6, 12, 15, .88);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: lc-pop .22s ease;
+}
+.lc-perm-card {
+  width: min(430px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--lc-surface2), var(--lc-surface));
+  border: 1px solid rgba(228, 64, 95, .35);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+  padding: 22px 20px 18px;
+  text-align: center;
+}
+.lc-perm-ico {
+  width: 58px; height: 58px; margin: 0 auto 10px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  color: var(--lc-danger);
+  background: rgba(228, 64, 95, .14);
+  border: 1px solid rgba(228, 64, 95, .3);
+}
+.lc-perm-title { margin: 0 0 6px; font-size: 15.5px; font-weight: 700; color: #FF8DA1; }
+.lc-perm-msg { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--lc-text); overflow-wrap: anywhere; }
+.lc-perm-steps {
+  margin: 0 0 12px; padding: 12px 14px 12px 30px;
+  text-align: left;
+  list-style: bengali;
+  background: rgba(0, 0, 0, .28);
+  border: 1px solid rgba(233, 237, 239, .07);
+  border-radius: 12px;
+  font-size: 12.5px; line-height: 1.75;
+  color: var(--lc-text2);
+}
+.lc-perm-steps b { color: var(--lc-text); }
+.lc-perm-hint {
+  margin: 0 0 12px; padding: 9px 12px;
+  font-size: 12px; line-height: 1.6; text-align: left;
+  color: #FBBF24;
+  background: rgba(251, 191, 36, .09);
+  border: 1px dashed rgba(251, 191, 36, .35);
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+.lc-perm-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.lc-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 15px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-size: 12.5px; font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease, transform .1s ease, box-shadow .15s ease;
+  min-height: 40px;
+}
+.lc-btn:active { transform: scale(.97); }
+.lc-btn:focus-visible { outline: 2px solid var(--lc-ring); outline-offset: 2px; }
+.lc-btn:disabled { opacity: .65; cursor: progress; }
+.lc-btn--retry { background: var(--lc-green-deep); color: #fff; box-shadow: 0 6px 18px rgba(5, 150, 105, .35); }
+.lc-btn--retry:hover { background: var(--lc-green); }
+.lc-btn--tab { background: rgba(233, 237, 239, .1); color: var(--lc-text); border-color: rgba(233, 237, 239, .16); }
+.lc-btn--tab:hover { background: rgba(233, 237, 239, .17); }
+.lc-btn--cancel { background: rgba(228, 64, 95, .12); color: #FF8DA1; border-color: rgba(228, 64, 95, .28); }
+.lc-btn--cancel:hover { background: rgba(228, 64, 95, .22); }
+
+@media (max-width: 640px) {
+  .lc-perm { padding: 10px; }
+  .lc-perm-card { padding: 18px 14px 14px; border-radius: 15px; }
+  .lc-perm-actions .lc-btn { flex: 1 1 auto; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lc-perm { animation: none; }
+}
+/* ════════ EOF-MARKER session122 ════════ */

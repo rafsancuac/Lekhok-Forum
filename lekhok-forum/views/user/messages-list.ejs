@@ -98,7 +98,7 @@
             </div>
           <% } else { %>
             <% conversations.forEach(c => { %>
-              <a href="<%= c.conv_link || ('/messages/' + c.other_username) %>" class="conv-item <%= c.is_group_flag ? 'is-group' : '' %><%= c.pinned ? ' is-pinned' : '' %><%= c.muted ? ' is-muted' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username || '' %>" data-id="<%= c.id %>" data-group="<%= c.is_group_flag ? 1 : 0 %>" data-unread="<%= c.unread_count > 0 ? 1 : 0 %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>" data-lm="<%= c.last_message_at || '' %>">
+              <a href="<%= c.conv_link || ('/messages/' + c.other_username) %>" class="conv-item <%= c.is_group_flag ? 'is-group' : '' %><%= c.pinned ? ' is-pinned' : '' %><%= c.muted ? ' is-muted' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username || '' %>" data-id="<%= c.id %>" data-group="<%= c.is_group_flag ? 1 : 0 %>" data-peer-id="<%= (c.user_a === user.id ? c.user_b : c.user_a) %>" data-unread="<%= c.unread_count > 0 ? 1 : 0 %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>" data-lm="<%= c.last_message_at || '' %>">
                 <div class="avatar avatar-md" style="position:relative">
                   <% if (c.is_group_flag) { %>
                   <span class="group-avatar"><i class="fas fa-users"></i></span>
@@ -145,6 +145,9 @@
     <button type="button" role="menuitem" data-act="unmute"><i class="fas fa-bell"></i> <span>আনমিউট করুন</span></button>
     <button type="button" role="menuitem" data-act="archive"><i class="fas fa-box-archive"></i> <span>আর্কাইভ করুন</span></button>
     <button type="button" role="menuitem" data-act="unarchive"><i class="fas fa-box-open"></i> <span>আর্কাইভ থেকে সরান</span></button>
+    <%# সেশন ১২২: ইনবক্স থেকেই সরাসরি কল (শুধু 1:1 — গ্রুপে লুকানো; ওপেন-মেনুতে ভিসিবিলিটি সেট হয়) %>
+    <button type="button" role="menuitem" data-act="call-audio" hidden><i class="fas fa-phone" style="color:var(--fb-blue,#0084FF)"></i> <span>অডিও কল দিন</span></button>
+    <button type="button" role="menuitem" data-act="call-video" hidden><i class="fas fa-video" style="color:var(--fb-blue,#0084FF)"></i> <span>ভিডিও কল দিন</span></button>
   </div>
 
   <script>
@@ -208,6 +211,10 @@
       const isPinned76 = menuTarget.classList.contains('is-pinned');
       convMenu.querySelector('[data-act="pin"]').style.display = isPinned76 ? 'none' : 'flex';
       convMenu.querySelector('[data-act="unpin"]').style.display = isPinned76 ? 'flex' : 'none';
+      /* সেশন ১২২: কল-অ্যাকশন শুধু 1:1 কথোপকথনে */
+      const isGrp116 = menuTarget.dataset.group === '1';
+      convMenu.querySelector('[data-act="call-audio"]').style.display = isGrp116 ? 'none' : 'flex';
+      convMenu.querySelector('[data-act="call-video"]').style.display = isGrp116 ? 'none' : 'flex';
       const r = btn.getBoundingClientRect();
       convMenu.hidden = false;
       const mw = convMenu.offsetWidth || 200;
@@ -237,6 +244,26 @@
       const p = prefOf(menuTarget.dataset.id);
       const rowConvId76 = parseInt(menuTarget.dataset.id, 10);
       const csrf76 = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+      /* সেশন ১২২: ইনবক্স-সারি থেকে সরাসরি কল — ctx সমৃদ্ধ করে LekhokCall.start() */
+      if (act.dataset.act === 'call-audio' || act.dataset.act === 'call-video') {
+        const row116 = menuTarget; /* বাগফিক্স: closeConvMenu() menuTarget=null করে — আগেই ধরে রাখো */
+        closeConvMenu();
+        if (!window.LekhokCall || window.LekhokCall.state() !== 'idle') { if (window.fbToast) fbToast('একটি কল ইতিমধ্যে চলছে', true); return; }
+        const nameEl116 = row116.querySelector('.conv-name');
+        const img116 = row116.querySelector('.avatar img');
+        const ctx116 = window.LekhokCallCtx || (window.LekhokCallCtx = {});
+        ctx116.convId = parseInt(row116.dataset.id, 10);
+        ctx116.convUsername = row116.dataset.username || null;
+        ctx116.isGroup = false;
+        ctx116.peer = {
+          id: parseInt(row116.dataset.peerId || '0', 10),
+          username: row116.dataset.username || '',
+          name: (nameEl116 && nameEl116.textContent.trim()) || row116.dataset.username || '',
+          avatar: img116 ? img116.getAttribute('src') : ''
+        };
+        window.LekhokCall.start(act.dataset.act === 'call-video' ? 'video' : 'audio');
+        return;
+      }
       // সেশন ৭৬-মার্জ: পিন = DB-ব্যাকড (তালিকা রি-সর্টের জন্য রিলোড)
       if (act.dataset.act === 'pin' || act.dataset.act === 'unpin') {
         const want = act.dataset.act === 'pin';

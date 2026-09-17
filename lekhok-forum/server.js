@@ -178,7 +178,12 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  /* সেশন ১২১-বাগফিক্স (মূল-কারণ): আগের হেডারে microphone=(), camera=() ছিল —
+     এর মানে ব্রাউজার এই-অরিজিনে মাইক/ক্যামেরা সম্পূর্ণ নিষিদ্ধ ঘোষণা করছিল!
+     ফলে getUserMedia() অনুমতি-ডায়ালগ দেখানোর আগেই NotAllowedError ছুঁড়ত —
+     "মাইক্রোফোন অনুমতি দেওয়া হয়নি / মাইক-ক্যামেরা চালু করা যায়নি" রিপোর্টের
+     একক-বৃহত্তম কারণ। এখন same-origin ব্যবহারে Allow (ক্রস-অরিজিন এখনো বন্ধ)। */
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(self), camera=(self)');
   res.setHeader('Content-Security-Policy', CSP_POLICY);
   if (req.secure || req.get('x-forwarded-proto') === 'https') res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
@@ -540,7 +545,7 @@ app.use(async (req, res, next) => {
       } catch (_) { /* অ্যাডমিন-রিফ্রেশ ব্যর্থ হলে সেশন যেমন ছিল তেমনই */ }
     }
     res.locals.currentPath = req.path;
-    /* সেশন ১১৬: স্যান্ডবক্স-গেটওয়ে সাবরিসোর্স-পোর্ট-সংরক্ষণ — প্রিভিউ-গেটওয়েতে
+    /* সেশন ১২১: স্যান্ডবক্স-গেটওয়ে সাবরিসোর্স-পোর্ট-সংরক্ষণ — প্রিভিউ-গেটওয়েতে
        পেজ ?XTransformPort=3030 দিয়ে খুললেও <link>/<script> সাবরিসোর্স-URL-এ
        প্যারাম থাকে না → গেটওয়ে ডিফল্ট-পোর্টে (Next.js-অ্যাপ) ফরওয়ার্ড করে 404-HTML
        দেয় → nosniff-এ ব্রাউজার পুরো style.css বাতিল করে (cssRules=0 → সাইট
