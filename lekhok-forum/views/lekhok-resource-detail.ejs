@@ -1,0 +1,356 @@
+<%#
+  সেশন ১০৫: রিসোর্স-ডিটেইল পেজ (/resources/:id)
+  ═══════════════════════════════════════════════════════════════════════════
+  ?r=<id> ডিপ-লিংকের পূর্ণ-পেজ রূপ — টাইপ-টিন্টেড প্রিভিউ-হিরো + পূর্ণ-বিবরণ
+  (markdown-lite) + ইনফো-স্ট্রিপ + সম্পর্কিত-রিসোর্স। স্কোপড ক্লাস rsxd-*
+  (অন্য-পেজে প্রভাব শূন্য); সম্পর্কিত-গ্রিডে rsx-কার্ড-স্টাইলের মিনি-সাবসেট কপি।
+%><% const BN = '০১২৩৪৫৬৭৮৯'; const bn = n => String(n).replace(/\d/g, d => BN[+d]); %><%
+  const CAT_BN = { guide: 'গাইড', document: 'ডকুমেন্ট', report: 'প্রতিবেদন', form: 'ফর্ম', anthology: 'সংকলন', reference: 'রেফারেন্স', scholarship: 'ফেলোশিপ', 'writing-tips': 'লেখালেখির টিপস', general: 'সাধারণ', 'audio-lecture': 'অডিও লেকচার', 'video-class': 'ভিডিও ক্লাস', ebook: 'ই-বুক' };
+  const catBn = (c) => CAT_BN[c] || c;
+  const T = RES_TYPE_META.RES_TYPES[r.res_type] || RES_TYPE_META.RES_TYPES.link;
+  const rUrl = r.link_url || r.file_url || '';
+  const embed = (r.res_type === 'video') ? videoEmbedUrl(rUrl) : null;
+  const isImg = r.res_type === 'image';
+  const cover = isImg ? rUrl : (r.thumbnail_url || null);
+  const BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  const bnDate = (d) => { try { const dt = new Date(d); if (isNaN(dt)) return ''; return bn(dt.getDate()) + ' ' + BN_MONTHS[dt.getMonth()] + ', ' + bn(dt.getFullYear()); } catch (e) { return ''; } };
+%>
+
+<div class="rsxd-wrap">
+
+  <%# ── ব্রেডক্রাম্ব-বার ── %>
+  <nav class="rsxd-crumbs" aria-label="ব্রেডক্রাম্ব">
+    <a href="/resources"><i class="fas fa-arrow-left"></i> সব রিসোর্স</a>
+    <span class="rsxd-crumb-sep"><i class="fas fa-chevron-right"></i></span>
+    <a href="/resources?category=<%= encodeURIComponent(r.category || 'general') %>"><i class="fas fa-folder"></i> <%= catBn(r.category) %></a>
+    <span class="rsxd-crumb-sep"><i class="fas fa-chevron-right"></i></span>
+    <span class="rsxd-crumb-here"><%= r.title %></span>
+    <% if (isStaff) { %>
+      <a href="/admin/resources" class="rsxd-manage" title="অ্যাডমিন রিসোর্স-প্যানেল"><i class="fas fa-sliders"></i> ম্যানেজ</a>
+    <% } %>
+  </nav>
+
+  <%# ── হিরো: টাইপ-টিন্টেড প্রিভিউ + মেটা ── %>
+  <article class="rsxd-hero" data-type="<%= r.res_type %>" style="--rt-color:<%= T.color %>;--rt-bg:<%= T.bg %>;--rt-border:<%= T.border %>;">
+    <div class="rsxd-media rsxd-media-<%= r.res_type %>">
+      <% if (r.res_type === 'video' && embed && rUrl) { %>
+        <iframe src="<%= embed %>" title="<%= r.title %>" allow="encrypted-media; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      <% } else if (r.res_type === 'video' && rUrl) { %>
+        <video controls preload="metadata" src="<%= rUrl %>"></video>
+      <% } else if (cover) { %>
+        <img src="<%= cover %>" alt="<%= r.title %>" onerror="this.closest('.rsxd-media').classList.add('rsxd-media-fallback')">
+        <% if (!isImg && rUrl) { %><a class="rsxd-cover-cta" href="<%= rUrl %>" target="_blank" rel="noopener" data-rsxd-open><i class="fas <%= T.icon %>"></i> ফাইল খুলুন</a><% } %>
+      <% } else if (r.res_type === 'audio' && rUrl) { %>
+        <div class="rsxd-audiohero">
+          <div class="rsxd-audiohero-ic"><i class="fas fa-headphones"></i></div>
+          <div class="rsxd-audiohero-wv" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <p class="rsxd-audiohero-t">অডিও লেকচার</p>
+        </div>
+      <% } else { %>
+        <div class="rsxd-noimg">
+          <i class="fas <%= T.icon %>"></i>
+          <p>এই রিসোর্সের প্রিভিউ নেই</p>
+          <% if (rUrl) { %><span>খুলতে/ডাউনলোডে নিচের বাটন</span><% } %>
+        </div>
+      <% } %>
+      <% if (r.res_type === 'audio' && rUrl) { %>
+        <div class="rsxd-audiobar"><audio controls preload="metadata" src="<%= rUrl %>"></audio></div>
+      <% } %>
+    </div>
+
+    <div class="rsxd-body">
+      <div class="rsxd-badges">
+        <span class="rsx-badge" style="background:<%= T.bg %>;color:<%= T.color %>;border-color:<%= T.border %>;">
+          <i class="fas <%= T.icon %>"></i> <%= T.label %>
+        </span>
+        <span class="rsxd-cat"><i class="fas fa-folder-open"></i> <%= catBn(r.category) %></span>
+      </div>
+
+      <h1 class="rsxd-title"><%= r.title %></h1>
+
+      <div class="rsxd-byline">
+        <% if (r.author) { %><span><i class="far fa-user"></i> <%= r.author %></span><% } %>
+        <% if (r.created_at) { %><span><i class="far fa-calendar"></i> <%= bnDate(r.created_at) %></span><% } %>
+      </div>
+
+      <% if (r.content) { %><p class="rsxd-lead"><%= mdPlain(r.content, 190) %></p><% } %>
+
+      <div class="rsxd-statsrow" aria-live="polite">
+        <span class="rsxd-stat" title="পাঠ"><i class="far fa-eye"></i> <strong id="rsxdViews"><%= bn(r.views || 0) %></strong> পাঠ</span>
+        <span class="rsxd-stat" title="ডাউনলোড/খোলা"><i class="fas fa-download"></i> <strong id="rsxDl"><%= bn(r.downloads || 0) %></strong> ডাউনলোড</span>
+        <% if (r.file_size) { %><span class="rsxd-stat" title="ফাইল-আকার"><i class="far fa-save"></i> <%= r.file_size %></span><% } %>
+        <% if (r.duration) { %><span class="rsxd-stat" title="সময়"><i class="fas fa-hourglass-half"></i> <%= r.duration %></span><% } %>
+      </div>
+
+      <div class="rsxd-actions">
+        <% if (r.res_type === 'pdf' || r.res_type === 'doc' || r.res_type === 'link') { %>
+          <% if (rUrl) { %>
+            <a class="rsxd-act rsxd-act-main" href="<%= rUrl %>" target="_blank" rel="noopener" data-rsxd-dl id="rsxdAct">
+              <i class="fas <%= r.res_type === 'link' ? 'fa-arrow-up-right-from-square' : 'fa-file-arrow-down' %>"></i>
+              <%= r.res_type === 'link' ? 'লিংক খুলুন' : 'খুলুন / ডাউনলোড' %>
+            </a>
+          <% } %>
+        <% } else if (r.res_type === 'audio') { %>
+          <button type="button" class="rsxd-act rsxd-act-main" id="rsxdAct" data-rsxd-play>
+            <i class="fas fa-circle-play"></i> শুনুন
+          </button>
+        <% } else if (r.res_type === 'video') { %>
+          <% if (rUrl) { %><a class="rsxd-act rsxd-act-main" href="<%= rUrl %>" target="_blank" rel="noopener" data-rsxd-open id="rsxdAct"><i class="fas fa-arrow-up-right-from-square"></i> উৎস খুলুন</a><% } %>
+        <% } else if (r.res_type === 'image') { %>
+          <% if (rUrl) { %><a class="rsxd-act rsxd-act-main" href="<%= rUrl %>" target="_blank" rel="noopener" data-rsxd-open id="rsxdAct"><i class="fas fa-image"></i> পূর্ণ-আকারে দেখুন</a><% } %>
+        <% } %>
+        <button type="button" class="rsxd-act rsxd-act-ghost" id="rsxdCopy" title="লিংক কপি করুন">
+          <i class="fas fa-link"></i> লিংক কপি
+        </button>
+      </div>
+
+      <% if (r.tags) { %>
+        <div class="rsxd-tags">
+          <% String(r.tags).split(/[,،]/).map(s => s.trim()).filter(Boolean).forEach(tag => { %>
+            <a class="rsxd-tag" href="/resources?q=<%= encodeURIComponent(tag) %>"><i class="fas fa-hashtag"></i> <%= tag %></a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </article>
+
+  <%# ── পূর্ণ-বিবরণ (লিড-অংশের চেয়ে লম্বা হলেই দেখাই — ডুপ্লিকেট-এড়ানো) ── %>
+  <% if ((r.content || r.description) && mdPlain(r.content || r.description).length > 190) { %>
+  <section class="rsxd-desc rsxd-card">
+    <h2 class="rsxd-sechead"><i class="fas fa-align-left"></i> বিস্তারিত বিবরণ</h2>
+    <div class="rsxd-descbody"><%- descHtml %></div>
+  </section>
+  <% } %>
+
+  <%# ── সম্পর্কিত রিসোর্স ── %>
+  <% if (related && related.length) { %>
+  <section class="rsxd-related">
+    <div class="rsxd-relhead">
+      <h2 class="rsxd-sechead"><i class="fas fa-layer-group"></i> সম্পর্কিত রিসোর্স</h2>
+      <a href="/resources" class="rsxd-all">সব দেখুন <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="rsxd-relgrid">
+      <% related.forEach(x => {
+           const xt = RES_TYPE_META.RES_TYPES[x.res_type] || RES_TYPE_META.RES_TYPES.link;
+           const xUrl = x.link_url || x.file_url || '';
+           const xCover = (x.res_type === 'image') ? xUrl : (x.thumbnail_url || null);
+      %>
+        <a class="rsxd-relcard" href="/resources/<%= x.id %>">
+          <span class="rsxd-relthumb rsxd-relthumb-<%= x.res_type %>" style="--rt-color:<%= xt.color %>;--rt-bg:<%= xt.bg %>;">
+            <% if (xCover) { %><img src="<%= xCover %>" alt="<%= x.title %>" loading="lazy" onerror="this.remove()"><% } else { %><i class="fas <%= xt.icon %>"></i><% } %>
+          </span>
+          <span class="rsxd-relbody">
+            <span class="rsxd-reltype" style="color:<%= xt.color %>;"><i class="fas <%= xt.icon %>"></i> <%= xt.short %></span>
+            <span class="rsxd-reltitle"><%= x.title %></span>
+            <span class="rsxd-relmeta"><i class="far fa-eye"></i> <%= bn(x.views || 0) %> · <i class="fas fa-download"></i> <%= bn(x.downloads || 0) %></span>
+          </span>
+          <i class="fas fa-chevron-right rsxd-relarrow"></i>
+        </a>
+      <% }) %>
+    </div>
+  </section>
+  <% } %>
+
+</div>
+
+<style>
+/* ═══ সেশন ১০৫: রিসোর্স-ডিটেইল (rsxd-* স্কোপ) ═══ */
+.rsxd-wrap { max-width: 1000px; margin: 0 auto; padding: 22px 20px 40px; }
+.rsxd-crumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; font-size: .8rem; font-weight: 700; color: #64748b; margin-bottom: 16px; }
+.rsxd-crumbs a { display: inline-flex; align-items: center; gap: 6px; color: #475569; padding: 5px 11px; border-radius: 9px; border: 1px solid var(--border, #e2e8f0); background: var(--bg-card, #fff); transition: all .15s ease; }
+.rsxd-crumbs a:hover { color: var(--accent, #059669); border-color: var(--accent, #059669); background: #ecfdf5; transform: translateY(-1px); }
+.rsxd-crumb-sep { font-size: .62rem; color: #cbd5e1; }
+.rsxd-crumb-here { color: var(--text, #1e293b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.rsxd-manage { margin-left: auto; color: var(--accent, #059669) !important; border-color: rgba(5,150,105,.35) !important; background: #ecfdf5 !important; }
+
+/* হিরো */
+.rsxd-hero { display: grid; grid-template-columns: minmax(0, 460px) 1fr; gap: 26px; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 20px; padding: 22px; box-shadow: 0 10px 34px -18px rgba(2,6,23,.16); position: relative; overflow: hidden; }
+.rsxd-hero::before { content: ''; position: absolute; top: -120px; right: -120px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, var(--rt-bg, #ecfdf5) 0%, transparent 70%); opacity: .9; pointer-events: none; }
+
+.rsxd-media { position: relative; border-radius: 14px; overflow: hidden; background: #f1f5f9; min-height: 240px; display: flex; flex-direction: column; border: 1px solid var(--border, #e2e8f0); }
+.rsxd-media img { width: 100%; height: 100%; object-fit: cover; flex: 1; }
+.rsxd-media iframe, .rsxd-media video { width: 100%; aspect-ratio: 16/9; border: 0; display: block; flex: 1; }
+.rsxd-cover-cta { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 7px; background: rgba(2,6,23,.72); color: #fff !important; font-size: .78rem; font-weight: 700; padding: 8px 14px; border-radius: 999px; backdrop-filter: blur(4px); transition: all .15s ease; }
+.rsxd-cover-cta:hover { background: var(--accent, #059669); transform: translateY(-2px); }
+.rsxd-media-fallback img { display: none; }
+
+/* অডিও-হিরো (কভার-শূন্য অডিও) */
+.rsxd-audiohero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 28px 18px 14px; background: linear-gradient(150deg, var(--rt-bg, #fffbeb) 0%, #fff 78%); }
+.rsxd-audiohero-ic { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; font-size: 1.7rem; color: var(--rt-color, #b45309); background: #fff; border: 1.5px solid var(--rt-border, #fde68a); box-shadow: 0 10px 24px -10px rgba(2,6,23,.18); }
+.rsxd-audiohero-t { margin: 0; font-size: .78rem; font-weight: 800; color: var(--rt-color, #b45309); letter-spacing: .02em; }
+.rsxd-audiohero-wv { display: flex; align-items: flex-end; gap: 3px; height: 34px; }
+.rsxd-audiohero-wv span { width: 3.5px; border-radius: 2px; background: var(--rt-color, #b45309); opacity: .32; animation: rsxdWv 1.6s ease-in-out infinite; }
+.rsxd-audiohero-wv span:nth-child(3n)   { height: 46%; animation-delay: .18s; }
+.rsxd-audiohero-wv span:nth-child(3n+1) { height: 88%; animation-delay: .36s; }
+.rsxd-audiohero-wv span:nth-child(3n+2) { height: 64%; animation-delay: .54s; }
+@keyframes rsxdWv { 0%, 100% { transform: scaleY(.45); } 50% { transform: scaleY(1); } }
+.rsxd-audiobar { padding: 12px 14px; background: #fff; border-top: 1px dashed var(--rt-border, #e2e8f0); }
+.rsxd-audiobar audio { width: 100%; height: 40px; border-radius: 9px; }
+
+/* প্রিভিউ-শূন্য প্লেসহোল্ডার */
+.rsxd-noimg { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 30px 16px; background: linear-gradient(150deg, var(--rt-bg, #ecfdf5) 0%, #fff 80%); }
+.rsxd-noimg i { font-size: 2.4rem; color: var(--rt-color, #059669); opacity: .55; }
+.rsxd-noimg p { margin: 0; font-weight: 800; font-size: .92rem; color: var(--text, #1e293b); }
+.rsxd-noimg span { font-size: .76rem; color: #64748b; }
+
+/* বডি */
+.rsxd-body { position: relative; display: flex; flex-direction: column; gap: 13px; min-width: 0; }
+.rsxd-badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rsx-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid; border-radius: 8px; padding: 3px 10px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.rsxd-cat { display: inline-flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 700; color: #475569; background: var(--bg, #f8fafc); border: 1px solid var(--border, #e2e8f0); padding: 4px 10px; border-radius: 8px; }
+.rsxd-title { margin: 0; font-size: 1.5rem; line-height: 1.4; font-weight: 900; color: var(--text, #1e293b); }
+.rsxd-byline { display: flex; flex-wrap: wrap; gap: 14px; font-size: .78rem; font-weight: 600; color: #64748b; }
+.rsxd-byline span { display: inline-flex; align-items: center; gap: 6px; }
+.rsxd-lead { margin: 0; font-size: .92rem; line-height: 1.8; color: #475569; }
+
+.rsxd-statsrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.rsxd-stat { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 700; color: #64748b; background: var(--bg, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 999px; padding: 5px 12px; }
+.rsxd-stat strong { color: var(--accent, #059669); font-weight: 800; }
+.rsxd-stat i { opacity: .7; }
+
+.rsxd-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 2px; }
+.rsxd-act { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 12px; font-size: .88rem; font-weight: 800; cursor: pointer; border: 1.5px solid transparent; transition: all .16s ease; font-family: inherit; }
+.rsxd-act-main { background: linear-gradient(135deg, var(--accent, #059669), var(--accent-dark, #047857)); color: #fff !important; box-shadow: 0 6px 16px -6px rgba(5,150,105,.5); }
+.rsxd-act-main:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -6px rgba(5,150,105,.55); }
+.rsxd-act-ghost { background: var(--bg-card, #fff); color: #475569; border-color: var(--border, #e2e8f0); }
+.rsxd-act-ghost:hover { color: var(--accent, #059669); border-color: var(--accent, #059669); background: #ecfdf5; transform: translateY(-2px); }
+.rsxd-act-ghost.copied { color: var(--accent, #059669); border-color: var(--accent, #059669); background: #ecfdf5; }
+
+.rsxd-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 2px; }
+.rsxd-tag { display: inline-flex; align-items: center; gap: 4px; font-size: .72rem; font-weight: 700; color: #0369a1; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 999px; padding: 4px 11px; transition: all .15s ease; }
+.rsxd-tag:hover { background: #e0f2fe; transform: translateY(-1px); }
+.rsxd-tag i { font-size: .62rem; opacity: .7; }
+
+/* কার্ড-সেকশন (বিবরণ) */
+.rsxd-card { background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 22px 24px; margin-top: 20px; box-shadow: 0 6px 20px -14px rgba(2,6,23,.14); }
+.rsxd-sechead { margin: 0 0 14px; font-size: 1.02rem; font-weight: 900; color: var(--text, #1e293b); display: flex; align-items: center; gap: 9px; }
+.rsxd-sechead i { color: var(--accent, #059669); font-size: .9rem; }
+.rsxd-descbody { font-size: .92rem; line-height: 1.9; color: #334155; overflow-wrap: break-word; }
+.rsxd-descbody h1, .rsxd-descbody h2, .rsxd-descbody h3 { color: var(--text, #1e293b); margin: 18px 0 8px; line-height: 1.4; }
+.rsxd-descbody h1 { font-size: 1.2rem; } .rsxd-descbody h2 { font-size: 1.08rem; } .rsxd-descbody h3 { font-size: .98rem; }
+.rsxd-descbody ul, .rsxd-descbody ol { padding-left: 22px; list-style: disc; margin: 8px 0; }
+.rsxd-descbody ol { list-style: decimal; }
+.rsxd-descbody li { margin: 4px 0; }
+.rsxd-descbody blockquote { margin: 10px 0; padding: 10px 16px; border-left: 3.5px solid var(--accent, #059669); background: #f8fafc; border-radius: 0 10px 10px 0; color: #475569; }
+.rsxd-descbody code { background: #f1f5f9; border: 1px solid var(--border, #e2e8f0); border-radius: 6px; padding: 1px 7px; font-size: .82em; font-family: var(--font-mono, monospace); color: #b91c1c; }
+.rsxd-descbody a { color: var(--accent, #059669); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.rsxd-descbody img { border-radius: 10px; margin: 10px 0; }
+.rsxd-descbody hr { border: 0; border-top: 1px dashed var(--border, #e2e8f0); margin: 16px 0; }
+
+/* সম্পর্কিত */
+.rsxd-related { margin-top: 28px; }
+.rsxd-relhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.rsxd-relhead .rsxd-sechead { margin: 0; }
+.rsxd-all { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 800; color: var(--accent, #059669); padding: 6px 12px; border-radius: 9px; transition: all .15s ease; }
+.rsxd-all:hover { background: #ecfdf5; gap: 9px; }
+.rsxd-relgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 13px; }
+.rsxd-relcard { display: flex; align-items: center; gap: 12px; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px; padding: 11px 13px; transition: all .16s ease; position: relative; }
+.rsxd-relcard:hover { transform: translateY(-3px); border-color: var(--accent, #059669); box-shadow: 0 12px 26px -12px rgba(2,6,23,.16); }
+.rsxd-relthumb { flex: none; width: 58px; height: 58px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: var(--rt-bg, #f1f5f9); border: 1px solid var(--border, #e2e8f0); }
+.rsxd-relthumb img { width: 100%; height: 100%; object-fit: cover; }
+.rsxd-relthumb i { font-size: 1.25rem; color: var(--rt-color, #64748b); opacity: .8; }
+.rsxd-relbody { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rsxd-reltype { font-size: .66rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+.rsxd-reltitle { font-size: .84rem; font-weight: 800; color: var(--text, #1e293b); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rsxd-relmeta { font-size: .68rem; font-weight: 600; color: #94a3b8; display: inline-flex; gap: 8px; align-items: center; }
+.rsxd-relarrow { margin-left: auto; flex: none; font-size: .72rem; color: #cbd5e1; transition: all .16s ease; }
+.rsxd-relcard:hover .rsxd-relarrow { color: var(--accent, #059669); transform: translateX(3px); }
+
+@media (max-width: 860px) {
+  .rsxd-hero { grid-template-columns: 1fr; }
+  .rsxd-title { font-size: 1.28rem; }
+}
+@media (max-width: 560px) {
+  .rsxd-wrap { padding: 16px 14px 34px; }
+  .rsxd-hero { padding: 14px; border-radius: 16px; }
+  .rsxd-card { padding: 16px; }
+  .rsxd-media { min-height: 190px; }
+  .rsxd-act { flex: 1; justify-content: center; padding: 11px 12px; font-size: .82rem; }
+  .rsxd-crumb-here { max-width: 130px; }
+  .rsxd-manage { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rsxd-audiohero-wv span { animation: none; }
+  .rsxd-act, .rsxd-relcard, .rsxd-crumbs a, .rsxd-cover-cta, .rsxd-relarrow { transition: none; transform: none; }
+}
+</style>
+
+<script>
+(function () {
+  /* ═══ সেশন ১০৫: ডিটেইল-পেজ JS — ভিউ-স্ট্যাট + কপি + অ্যাকশন-কাউন্ট ═══ */
+  var BN = '০১২৩৪৫৬৭৮৯';
+  function bn(n) { return String(n).replace(/\d/g, function (d) { return BN[+d]; }); }
+  /* sandbox-গেটওয়ে: পেজ-URL-এ XTransformPort থাকলে fetch/open-এও বহন (লাইভে নো-অপ) */
+  var SBX = (/XTransformPort=/.test(location.search)) ? location.search.replace(/^\?/, '') : '';
+  function sbx(u) {
+    if (!SBX || !u || /^(https?:)?\/\//i.test(u)) return u;
+    return u + (u.indexOf('?') > -1 ? '&' : '?') + SBX;
+  }
+  var ID = '<%= r.id %>';
+
+  /* ভিউ-কাউন্ট (সার্ভারে ৩০সে-ডিডুপ) — স্ট্যাট-চিপ লাইভ-আপডেট */
+  try {
+    fetch(sbx('/api/resources/' + ID + '/stat'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'view' })
+    }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j || !j.ok || j.deduped) return;
+      var v = document.getElementById('rsxdViews');
+      if (v && j.views != null) v.textContent = bn(j.views);
+    }).catch(function () {});
+  } catch (e) {}
+
+  /* ডাউনলোড/খোলা-কাউন্ট — প্রধান-অ্যাকশন ক্লিকে (নেভিগেশন আটকাই না) */
+  var act = document.getElementById('rsxdAct');
+  if (act && act.hasAttribute('data-rsxd-dl')) {
+    act.addEventListener('click', function () {
+      try {
+        fetch(sbx('/api/resources/' + ID + '/stat'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: 'download' })
+        }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+          if (!j || !j.ok) return;
+          var d = document.getElementById('rsxDl');
+          if (d && j.downloads != null) d.textContent = bn(j.downloads);
+        }).catch(function () {});
+      } catch (e) {}
+    });
+  }
+
+  /* শুনুন-বাটন → অডিও-প্লেয়ারে স্ক্রল + প্লে */
+  var playBtn = document.querySelector('[data-rsxd-play]');
+  if (playBtn) {
+    playBtn.addEventListener('click', function () {
+      var a = document.querySelector('.rsxd-audiobar audio');
+      if (a) { a.scrollIntoView({ behavior: 'smooth', block: 'center' }); a.play().catch(function () {}); }
+    });
+  }
+
+  /* কপি-লিংক */
+  var copyBtn = document.getElementById('rsxdCopy');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      var link = location.origin + sbx('/resources/' + ID);
+      var done = function () {
+        copyBtn.classList.add('copied');
+        var ic = copyBtn.querySelector('i');
+        if (ic) { ic.className = 'fas fa-check'; setTimeout(function () { ic.className = 'fas fa-link'; }, 1600); }
+        setTimeout(function () { copyBtn.classList.remove('copied'); }, 1600);
+        if (typeof window.showToast === 'function') window.showToast('লিংক কপি হয়েছে ✓', 'success');
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(done).catch(function () { fallbackCopy(link); done(); });
+      } else { fallbackCopy(link); done(); }
+      function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        ta.remove();
+      }
+    });
+  }
+})();
+</script>

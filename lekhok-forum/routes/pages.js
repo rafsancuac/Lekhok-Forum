@@ -402,6 +402,14 @@ router.get('/resources', async (req, res) => {
   }
   // ভিউ-রেন্ডারে ধরণ-নরমালাইজড রো দরকার (res_type ফাঁক হলে legacy file_type থেকে)
   resources = resources.map(r => Object.assign({}, r, { res_type: RT.normalizeResType(r) }));
+  // সেশন ১০৫: ইউনিফাইড শেয়ারেবল-ফিল্টার — ?type=&q=&sort= এখন URL-স্টেট; সার্ভার
+  // হোয়াইটলিস্ট-ভ্যালিডেট করে ভিউতে বসায় (JS প্রথম-পেইন্টেই ফিল্টার-স্টেট হাইড্রেট করে,
+  // ক্লায়েন্টে বদলালে history.replaceState-এ URL সিঙ্ক হয় — লিংক শেয়ার-সমীহ)।
+  const RSX_TYPE_RE = /^(all|pdf|audio|video|image|doc|link)$/;
+  const RSX_SORT_RE = /^(new|popular|title)$/;
+  const initialType = RSX_TYPE_RE.test(String(req.query.type || '')) ? String(req.query.type) : 'all';
+  const initialSort = RSX_SORT_RE.test(String(req.query.sort || '')) ? String(req.query.sort) : 'new';
+  const initialQ = String(req.query.q || '').slice(0, 120);
   const categories = await db.prepare('SELECT DISTINCT category FROM resources').all();
   const u = req.session && req.session.user;
   const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
@@ -413,6 +421,42 @@ router.get('/resources', async (req, res) => {
     categories,
     activeCategory: category,
     isStaff,
+    RES_TYPE_META: RT,
+    videoEmbedUrl: RT.videoEmbedUrl,
+    initialType, initialSort, initialQ
+  });
+});
+
+// ── Resource detail (সেশন ১০৫) ────────────────────────────────────────────
+// ?r=<id> ডিপ-লিংকের পূর্ণ-পেজ রূপ: /resources/<id> — প্রিভিউ-হিরো + পূর্ণ-বিবরণ +
+// সম্পর্কিত-রিসোর্স। হোয়াইটলিস্ট: শুধু সংখ্যা-id (emails-রুট আগেই ম্যাচ হয়, কনফ্লিক্ট-শূন্য)।
+router.get('/resources/:id(\\d+)', async (req, res) => {
+  const RT = require('../helpers/resource-types');
+  const id = parseInt(req.params.id, 10);
+  const row = id ? await db.prepare('SELECT * FROM resources WHERE id = ?').get(id) : null;
+  if (!row) {
+    return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  }
+  const r = Object.assign({}, row, { res_type: RT.normalizeResType(row) });
+  // সম্পর্কিত: এক-ক্যাটাগরি আগে (জনপ্রিয়তা-অর্ডার), কম পড়লে এক-টাইপ দিয়ে পূরণ
+  let related = await db.prepare(
+    'SELECT * FROM resources WHERE COALESCE(category, \'\') = ? AND id != ? ORDER BY COALESCE(views,0) DESC, id DESC LIMIT 6'
+  ).all(String(r.category || ''), id);
+  if (related.length < 4) {
+    const extra = await db.prepare(
+      'SELECT * FROM resources WHERE res_type = ? AND COALESCE(category,\'\') != ? AND id != ? ORDER BY id DESC LIMIT ?'
+    ).all(r.res_type, String(r.category || ''), id, 6 - related.length);
+    related = related.concat(extra);
+  }
+  related = related.map(x => Object.assign({}, x, { res_type: RT.normalizeResType(x) }));
+  const descHtml = require('../helpers/markdown-lite').renderBody(r.content || r.description || '', { toc: false });
+  const u = req.session && req.session.user;
+  const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
+  res.render('lekhok-resource-detail', {
+    layout: 'layout',
+    pageTitle: r.title || 'রিসোর্স',
+    currentPath: '/resources',
+    r, related, descHtml, isStaff,
     RES_TYPE_META: RT,
     videoEmbedUrl: RT.videoEmbedUrl
   });

@@ -31,12 +31,17 @@
       </div>
     <% } %>
 
+    <%# ── সেশন ১০৫: ইউনিফাইড-ফিল্টার — ক্যাটাগরি-ট্যাবে type/q/sort প্যারামও বহন হয়
+         (শেয়ারড স্টেট; সার্ভারে হোয়াইটলিস্ট-ভ্যালিডেটেড initial* ভ্যার) ── %>
+    <% const rsxExtra = (initialType && initialType !== 'all' ? '&type=' + encodeURIComponent(initialType) : '')
+                      + (initialSort && initialSort !== 'new' ? '&sort=' + encodeURIComponent(initialSort) : '')
+                      + (initialQ ? '&q=' + encodeURIComponent(initialQ) : ''); %>
     <div class="notice-tabs">
-      <a href="?category=all"          class="<%= activeCategory === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সকল</a>
+      <a href="?category=all<%= rsxExtra %>"          class="<%= activeCategory === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সকল</a>
       <% if (categories && categories.length) { %>
         <% categories.forEach(c => { %>
           <% if (c.category) { %>
-            <a href="?category=<%= c.category %>" class="<%= activeCategory === c.category ? 'active' : '' %>">
+            <a href="?category=<%= encodeURIComponent(c.category) %><%= rsxExtra %>" class="<%= activeCategory === c.category ? 'active' : '' %>">
               <i class="fas fa-folder"></i> <%= catBn(c.category) %>
             </a>
           <% } %>
@@ -102,7 +107,7 @@
                   <% if (r.file_size) { %><span title="ফাইল-আকার"><i class="far fa-save"></i> <%= r.file_size %></span><% } %>
                 </span>
               </div>
-              <h3 class="rsx-title"><%= r.title %></h3>
+              <h3 class="rsx-title"><a class="rsx-titlelink" href="/resources/<%= r.id %>" data-rsx-detail title="বিস্তারিত দেখুন"><%= r.title %></a></h3>
               <% if (r.content) { %><p class="rsx-desc"><%= mdPlain(r.content, 130) %></p><% } %>
               <%# ── ইনলাইন অডিও-প্লেয়ার (অডিও-কার্ডে শুনুন-ক্লিকে টগল) ── %>
               <% if (r.res_type === 'audio' && url) { %>
@@ -179,6 +184,9 @@
 .rsx-meta span { display: inline-flex; align-items: center; gap: 4px; }
 .rsx-title { margin: 0; font-size: 1rem; font-weight: 800; color: var(--text, #1e293b); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color .15s ease; }
 .rsx-card:hover .rsx-title { color: var(--accent, #059669); }
+/* সেশন ১০৫: টাইটেল-লিংক → ডিটেইল-পেজ */
+.rsx-titlelink { color: inherit; text-decoration: none; }
+.rsx-titlelink:hover { text-decoration: underline; text-decoration-color: rgba(5,150,105,.45); text-underline-offset: 3px; }
 .rsx-desc { margin: 0; font-size: .8rem; color: var(--text-muted, #64748b); line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .rsx-audio { margin-top: 2px; }
 .rsx-audio audio { width: 100%; height: 36px; border-radius: 8px; }
@@ -340,8 +348,16 @@
         window.open(sbx(url), '_blank', 'noopener');
       }
     }
-    card.addEventListener('click', activate);
+
+    /* সেশন ১০৫: টাইটেল-লিংক (ডিটেইল-পেজ) / অডিও-কন্ট্রোল / কপি-বাটনের ক্লিক
+       কার্ড-অ্যাক্টিভেটে বাবল করবে না — নিজস্ব আচরণ (নেভিগেশন/প্লেয়ার) থাকবে। */
+    function guarded(e) {
+      if (e.target.closest('.rsx-copy, .rsx-audio, a[data-rsx-detail]')) return;
+      activate();
+    }
+    card.addEventListener('click', guarded);
     card.addEventListener('keydown', function (e) {
+      if (e.target.closest('a[data-rsx-detail]')) return; // লিংকে Enter = নেভিগেশন
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
     });
   });
@@ -357,8 +373,34 @@
     var clearEl = document.getElementById('rsxSearchClear');
     var sortEl = document.getElementById('rsxSort');
     var resetEl = document.getElementById('rsxReset');
-    var activeType = 'all';
-    var query = '';
+    /* ═══ সেশন ১০৫: ইউনিফাইড শেয়ারেবল-ফিল্টার — ?type=&q=&sort= URL-স্টেট ═══
+       প্রথম-পেইন্টে URL থেকে হাইড্রেট (সার্ভারও হোয়াইটলিস্ট-ভ্যালিডেট করে), পরিবর্তনে
+       history.replaceState-এ সিঙ্ক — লিংক শেয়ার/রিলোডে ফিল্টার-স্টেট টিকে থাকে। */
+    function urlGet(k) { try { return (new URLSearchParams(location.search)).get(k) || ''; } catch (e) { return ''; } }
+    var TYPE_RE = /^(all|pdf|audio|video|image|doc|link)$/;
+    var SORT_RE = /^(new|popular|title)$/;
+    var _t = urlGet('type');
+    var activeType = TYPE_RE.test(_t) ? _t : 'all';
+    var query = (urlGet('q') || '').trim().toLowerCase();
+    var _s = urlGet('sort');
+    var initialSort = SORT_RE.test(_s) ? _s : 'new';
+    function syncUrl() {
+      try {
+        var p = new URLSearchParams(location.search);
+        ['type', 'q', 'sort'].forEach(function (k) { p.delete(k); });
+        if (activeType && activeType !== 'all') p.set('type', activeType);
+        if (query) p.set('q', query);
+        if (sortEl && sortEl.value && sortEl.value !== 'new') p.set('sort', sortEl.value);
+        var qs = p.toString();
+        history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+      } catch (e) {}
+    }
+    /* হাইড্রেট — UI নিয়ন্ত্রণে URL-স্টেট বসাই */
+    if (sortEl) sortEl.value = initialSort;
+    if (searchEl && query) { searchEl.value = query; if (clearEl) clearEl.hidden = false; }
+    pillWrap.querySelectorAll('.rsx-pill').forEach(function (p) {
+      p.classList.toggle('active', (p.getAttribute('data-tpill') || 'all') === activeType);
+    });
 
     function bnNum(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
     function paintCount(shown) {
@@ -402,7 +444,7 @@
         pillWrap.querySelectorAll('.rsx-pill').forEach(function (p) { p.classList.remove('active'); });
         pill.classList.add('active');
         activeType = pill.getAttribute('data-tpill') || 'all';
-        apply();
+        apply(); syncUrl();
       });
     });
     if (searchEl) {
@@ -412,22 +454,22 @@
         tId = setTimeout(function () {
           query = (searchEl.value || '').trim().toLowerCase();
           if (clearEl) clearEl.hidden = !query;
-          apply();
+          apply(); syncUrl();
         }, 140);
       });
     }
     if (clearEl) clearEl.addEventListener('click', function () {
-      searchEl.value = ''; query = ''; clearEl.hidden = true; apply(); searchEl.focus();
+      searchEl.value = ''; query = ''; clearEl.hidden = true; apply(); syncUrl(); searchEl.focus();
     });
-    if (sortEl) sortEl.addEventListener('change', sortCards);
+    if (sortEl) sortEl.addEventListener('change', function () { sortCards(); syncUrl(); });
     if (resetEl) resetEl.addEventListener('click', function () {
       activeType = 'all'; query = '';
       if (searchEl) { searchEl.value = ''; if (clearEl) clearEl.hidden = true; }
       if (sortEl) sortEl.value = 'new';
       pillWrap.querySelectorAll('.rsx-pill').forEach(function (p) { p.classList.toggle('active', p.getAttribute('data-tpill') === 'all'); });
-      sortCards();
+      sortCards(); syncUrl();
     });
-    paintCount(cards.length);
+    sortCards(); /* সেশন ১০৫: হাইড্রেট-স্টেটসহ প্রথম পেইন্ট (sort=popular হলে সর্টও চলে) */
   }
 
   /* ═══ সেশন ১০৪: কপি-লিংক (ডিপ-লিংক ?r=<id>) — কার্ড-ক্লিক থেকে আলাদা ═══ */
@@ -445,7 +487,9 @@
     if (!btn) return;
     e.stopPropagation();
     var id = btn.getAttribute('data-copy');
-    var link = location.origin + location.pathname + '?r=' + encodeURIComponent(id);
+    /* সেশন ১০৫: শেয়ার-টার্গেট এখন ডিটেইল-পেজ (/resources/<id>) — প্রিভিউ+সম্পর্কিত-সহ
+       সমৃদ্ধ প্রাপক-অভিজ্ঞতা; sbx() স্যান্ডবক্স-গেটওয়েতে কুয়েরি বহন করে (লাইভে নো-অপ)। */
+    var link = location.origin + sbx('/resources/' + id);
     var done = function () {
       btn.classList.add('copied');
       var ic = btn.querySelector('i');
