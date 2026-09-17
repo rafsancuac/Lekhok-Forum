@@ -1047,11 +1047,28 @@ async function runMigrations() {
     "ALTER TABLE resources ADD COLUMN file_url TEXT",
     "ALTER TABLE resources ADD COLUMN link_url TEXT",
     "ALTER TABLE resources ADD COLUMN file_type TEXT DEFAULT 'link'",
-    "ALTER TABLE resources ADD COLUMN description TEXT"
+    "ALTER TABLE resources ADD COLUMN description TEXT",
+    // সেশন ৭৭: সুপার-এডমিন প্যানেল — অ্যাডমিন অ্যাকাউন্টে কাজের-পরিধি (scopes),
+    // লক-স্টেট ও শেষ-লগইন ট্র্যাকিং
+    "ALTER TABLE admin_users ADD COLUMN scopes TEXT",
+    "ALTER TABLE admin_users ADD COLUMN locked INTEGER DEFAULT 0",
+    "ALTER TABLE admin_users ADD COLUMN last_login DATETIME"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}
   }
+
+  // ── সেশন ৭৭: সুপার-এডমিন বুটস্ট্র্যাপ ──────────────────────────────────────
+  // সাইটে যদি কোনো সুপার-এডমিন না থাকে, প্রথম (প্রাচীনতম) অ্যাডমিন অ্যাকাউন্টকে
+  // একবার superadmin-এ উন্নীত করা হয় — idempotent, প্রতি বুটে নিরাপদ।
+  try {
+    await backend.exec(`
+      UPDATE admin_users
+         SET role = 'superadmin'
+       WHERE id = (SELECT MIN(id) FROM admin_users)
+         AND NOT EXISTS (SELECT 1 FROM admin_users WHERE role = 'superadmin')
+    `);
+  } catch (_) {}
 
   // ── Data migration — global rebrand to the real branch identity ───────────
   // (1) settings: replace rows that still carry the old demo defaults. Only

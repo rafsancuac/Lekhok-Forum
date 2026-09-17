@@ -11,7 +11,7 @@ const totp = require('../helpers/totp');
 // প্রতিটি রোলের নিজস্ব ড্যাশবোর্ড — admin→/admin, moderator→/moderator, user→/dashboard।
 function dashboardFor(user) {
   const role = (user && user.role) || 'user';
-  if (role === 'admin') return '/admin';
+  if (role === 'admin' || role === 'superadmin') return '/admin';
   if (role === 'moderator') return '/moderator';
   return '/dashboard';
 }

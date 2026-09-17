@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>অ্যাডমিন ব্যবস্থাপনা — সুপার এডমিন</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-user-shield super-ico"></i> অ্যাডমিন ব্যবস্থাপনা</h1>
+      <p>অ্যাডমিন যুক্ত ও রিমুভ, পাসওয়ার্ড রিসেট, লক/আনলক এবং কাজের-এরিয়ার অনুমোদন</p>
+    </div>
+    <div class="header-actions">
+      <span class="chip chip-super"><i class="fas fa-user-shield"></i> <%= admins.length %> অ্যাকাউন্ট</span>
+      <span class="chip chip-accent"><i class="fas fa-crown"></i> <%= superCount %> সুপার</span>
+    </div>
+  </div>
+
+  <% if (flash) { %><div class="success"><%= flash %></div><% } %>
+  <% if (flashErr) { %><div class="error"><%= flashErr %></div><% } %>
+
+  <%#
+    ── অ্যাডমিন তালিকা — প্রতিটি কার্ডে: পরিচয়, রোল-ব্যাজ, 2FA, শেষ-লগইন,
+    ─ কাজের-এরিয়ার অনুমোদন-ফর্ম (চেকবক্স গ্রিড), পাসওয়ার্ড-রিসেট, লক, রিমুভ
+  %>
+  <div class="section-head"><h2>অ্যাডমিন অ্যাকাউন্ট</h2></div>
+
+  <% admins.forEach(a => {
+       const isSelf = (meAdminId === a.id);
+       const aScopes = (a.scopes && (() => { try { const x = JSON.parse(a.scopes); return Array.isArray(x) ? x : null; } catch (_) { return null; } })()) || null;
+  %>
+    <div class="card super-admin-card <%= a.locked ? 'is-locked' : '' %>">
+      <div class="sac-head">
+        <span class="sac-avatar <%= a.role === 'superadmin' ? 'sa-super' : 'sa-admin' %>">
+          <i class="fas <%= a.role === 'superadmin' ? 'fa-crown' : 'fa-user-shield' %>"></i>
+        </span>
+        <div class="sac-id">
+          <div class="sac-name">
+            <%= a.display_name || a.username %>
+            <small>@<%= a.username %></small>
+            <% if (a.role === 'superadmin') { %><span class="badge-soft role-superadmin"><i class="fas fa-crown"></i> সুপার এডমিন</span><% } else { %><span class="badge-soft role-admin">অ্যাডমিন</span><% } %>
+            <% if (a.locked) { %><span class="badge-soft status-banned"><i class="fas fa-lock"></i> লকড</span><% } %>
+            <% if (a.totp_enabled) { %><span class="badge-soft" title="দুই-স্তর যাচাই সক্রিয়"><i class="fas fa-mobile-screen"></i> 2FA</span><% } %>
+            <% if (isSelf) { %><span class="badge-soft status-active"><i class="fas fa-circle-user"></i> আপনি</span><% } %>
+          </div>
+          <div class="sac-meta">
+            <span><i class="fas fa-calendar-day"></i> যুক্ত: <%= String(a.created_at || '').slice(0, 10) %></span>
+            <span><i class="fas fa-right-to-bracket"></i> শেষ লগইন: <%= a.last_login ? String(a.last_login).slice(0, 16) : 'কখনো নয়' %></span>
+            <span><i class="fas fa-key"></i>
+              <% if (a.role === 'superadmin') { %>পূর্ণ নিয়ন্ত্রণ (সীমাহীন)<% } else if (aScopes === null) { %>পূর্ণ প্যানেল (সীমাহীন)<% } else { %>সীমিত: <%= aScopes.length %>টি এরিয়া<% } %>
+            </span>
+          </div>
+        </div>
+        <div class="sac-actions">
+          <% if (!isSelf) { %>
+            <% if (a.locked) { %>
+              <form method="POST" action="/admin/super/admins/<%= a.id %>/unlock"><button class="btn btn-outline btn-sm" title="আনলক"><i class="fas fa-lock-open"></i> আনলক</button></form>
+            <% } else { %>
+              <form method="POST" action="/admin/super/admins/<%= a.id %>/lock" class="js-confirm" data-msg="এই অ্যাডমিনকে লক করবেন? সক্রিয় সেশনও বাতিল হবে।"><button class="btn btn-outline btn-sm" title="লক"><i class="fas fa-lock"></i> লক</button></form>
+            <% } %>
+            <form method="POST" action="/admin/super/admins/<%= a.id %>/remove" class="js-confirm" data-msg="এই অ্যাডমিন অ্যাকাউন্ট স্থায়ীভাবে সরানো হবে। নিশ্চিত?"><button class="btn btn-danger btn-sm"><i class="fas fa-trash-can"></i> রিমুভ</button></form>
+          <% } %>
+        </div>
+      </div>
+
+      <% if (!isSelf) { %>
+      <div class="sac-body">
+        <%# ── কাজের-এরিয়ার অনুমোদন + রোল + নাম ── %>
+        <form method="POST" action="/admin/super/admins/<%= a.id %>/update" class="sac-form">
+          <div class="sac-form-row">
+            <div class="form-group sac-fg-name">
+              <label>প্রদর্শন-নাম</label>
+              <input type="text" name="display_name" value="<%= a.display_name || a.username %>">
+            </div>
+            <div class="form-group sac-fg-role">
+              <label>রোল</label>
+              <select name="role">
+                <option value="admin" <%= a.role !== 'superadmin' ? 'selected' : '' %>>অ্যাডমিন</option>
+                <option value="superadmin" <%= a.role === 'superadmin' ? 'selected' : '' %>>সুপার এডমিন</option>
+              </select>
+            </div>
+          </div>
+          <div class="sac-scopes">
+            <div class="sac-scopes-title">
+              <i class="fas fa-key"></i> কাজের-এরিয়ার অনুমোদন
+              <span class="sac-scopes-hint">— কোনোটি না বাছলে অ্যাডমিন পুরো প্যানেল পাবে (সীমাহীন)</span>
+            </div>
+            <% SUPER_AREAS.forEach(g => { %>
+              <div class="sac-scope-group">
+                <div class="sac-scope-group-label"><%= g.group %></div>
+                <div class="scope-grid">
+                  <% g.items.forEach(s => { %>
+                    <label class="scope-toggle">
+                      <input type="checkbox" name="scopes" value="<%= s.key %>" <%= (aScopes && aScopes.includes(s.key)) ? 'checked' : '' %>>
+                      <i class="<%= s.icon %>"></i>
+                      <span><%= s.label %></span>
+                    </label>
+                  <% }) %>
+                </div>
+              </div>
+            <% }) %>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> সংরক্ষণ</button>
+          </div>
+        </form>
+
+        <%# ── পাসওয়ার্ড রিসেট ── %>
+        <form method="POST" action="/admin/super/admins/<%= a.id %>/password" class="sac-pwd-form js-confirm" data-msg="নতুন পাসওয়ার্ড সেট হবে — পুরনোটি আর কাজ করবে না।">
+          <div class="form-group">
+            <label><i class="fas fa-key"></i> নতুন পাসওয়ার্ড (৮+ অক্ষর)</label>
+            <input type="text" name="new_password" minlength="8" placeholder="নতুন পাসওয়ার্ড" required autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm"><i class="fas fa-rotate"></i> রিসেট</button>
+        </form>
+
+        <% if (a.totp_enabled) { %>
+          <form method="POST" action="/admin/super/admins/<%= a.id %>/2fa-clear" class="js-confirm" data-msg="এই অ্যাডমিনের 2FA বন্ধ হবে — পরের লগইনে কোড লাগবে না।">
+            <button type="submit" class="btn btn-outline btn-sm sac-2fa-btn"><i class="fas fa-mobile-screen"></i> 2FA বন্ধ করুন</button>
+          </form>
+        <% } %>
+      </div>
+      <% } else { %>
+      <div class="sac-body sac-self-note">
+        <i class="fas fa-circle-info"></i> নিজের অ্যাকাউন্টের রোল, পাসওয়ার্ড বা লক এখান থেকে বদলানো যায় না — নিরাপত্তার জন্য <a href="/admin/security">সিকিউরিটি পেজ</a> ব্যবহার করুন।
+      </div>
+      <% } %>
+    </div>
+  <% }) %>
+
+  <%# ── নতুন অ্যাডমিন যুক্ত ── %>
+  <div class="section-head" style="margin-top:28px;"><h2>নতুন অ্যাডমিন যুক্ত করুন</h2></div>
+  <div class="card">
+    <form method="POST" action="/admin/super/admins/add" class="super-add-form">
+      <div class="form-group"><label>ইউজারনেম <small>(ইংরেজি ছোট-হাতের, ৩-৩০ অক্ষর)</small></label>
+        <input type="text" name="username" pattern="[a-z0-9_]{3,30}" placeholder="new_admin" required></div>
+      <div class="form-group"><label>প্রদর্শন-নাম</label>
+        <input type="text" name="display_name" placeholder="নতুন অ্যাডমিনের নাম"></div>
+      <div class="form-group"><label>পাসওয়ার্ড <small>(৮+ অক্ষর)</small></label>
+        <input type="text" name="password" minlength="8" placeholder="আরম্ভিক পাসওয়ার্ড" required autocomplete="off"></div>
+      <div class="form-group"><label>রোল</label>
+        <select name="role">
+          <option value="admin">অ্যাডমিন</option>
+          <option value="superadmin">সুপার এডমিন</option>
+        </select></div>
+      <div class="sac-scopes" style="margin-top:4px;">
+        <div class="sac-scopes-title">
+          <i class="fas fa-key"></i> কাজের-এরিয়া (ঐচ্ছিক — খালি রাখলে পূর্ণ প্যানেল)
+        </div>
+        <% SUPER_AREAS.forEach(g => { %>
+          <div class="sac-scope-group">
+            <div class="sac-scope-group-label"><%= g.group %></div>
+            <div class="scope-grid">
+              <% g.items.forEach(s => { %>
+                <label class="scope-toggle">
+                  <input type="checkbox" name="scopes" value="<%= s.key %>">
+                  <i class="<%= s.icon %>"></i>
+                  <span><%= s.label %></span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> অ্যাডমিন তৈরি করুন</button>
+    </form>
+  </div>
+
+</div>
+<script>
+(function () {
+  // ধ্বংসাত্মক অ্যাকশনে কনফার্ম
+  document.querySelectorAll('form.js-confirm').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      if (!window.confirm(f.dataset.msg || 'নিশ্চিত?')) { e.preventDefault(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -94,6 +94,19 @@
   <!-- Scroll progress bar -->
   <div class="scroll-progress" id="scrollProgress"></div>
 
+  <%# সেশন ৭৭: রক্ষণাবেক্ষণ-মোডে স্টাফ-সতর্কবার্তা (দর্শকরা দেখছেন না) %>
+  <% if (typeof maintenanceOn !== 'undefined' && maintenanceOn &&
+        ((typeof adminUser !== 'undefined' && adminUser) ||
+         (typeof user !== 'undefined' && user && /admin|moderator/.test(user.role || '')))) { %>
+    <div class="maintenance-banner" role="alert">
+      <i class="fas fa-triangle-exclamation"></i>
+      <span>রক্ষণাবেক্ষণ-মোড চালু — সাধারণ দর্শকরা সাইটটি এখন দেখতে পাচ্ছেন না।</span>
+      <% if (typeof adminUser !== 'undefined' && adminUser) { %>
+        <a href="/admin/super">সুপার-এডমিন প্যানেলে বন্ধ করুন</a>
+      <% } %>
+    </div>
+  <% } %>
+
   <!-- Topbar (public) -->
   <div class="btclf-topbar topbar" id="mainHeader">
     <div class="topbar-inner">
@@ -198,9 +211,12 @@
           <li><a href="/gallery"><i class="fas fa-circle"></i> গ্যালারি</a></li>
           <li><a href="/resources"><i class="fas fa-circle"></i> রিসোর্স</a></li>
         </ul>
-        <%# সেশন ৭২ (GSC-ফিক্স): ফুটার-সাইটম্যাপ — প্রতি পেজ থেকেই গভীর পাবলিক পেজের
-            ইন্টারনাল লিংক (Googlebot-এর ক্রল-পাথ ও লিংক-ইকুইটি প্রবাহ) %>
-        <h4 class="f-widget-title" style="margin-top:18px;">আরও দেখুন</h4>
+      </div>
+      <%# সেশন ৭২ (GSC-ফিক্স): ফুটার-সাইটম্যাপ — প্রতি পেজ থেকেই গভীর পাবলিক পেজের
+          ইন্টারনাল লিংক (Googlebot-এর ক্রল-পাথ ও লিংক-ইকুইটি প্রবাহ)
+          সেশন ৭৭: ইউজার-নির্দেশ — 'আরও দেখুন' এখন নিজস্ব ৩য় কলামে %>
+      <div>
+        <h4 class="f-widget-title">আরও দেখুন</h4>
         <ul class="f-links">
           <li><a href="/articles"><i class="fas fa-circle"></i> সকল লেখা</a></li>
           <li><a href="/qa"><i class="fas fa-circle"></i> প্রশ্নোত্তর</a></li>
@@ -212,22 +228,23 @@
           <li><a href="/contact"><i class="fas fa-circle"></i> যোগাযোগ</a></li>
         </ul>
       </div>
-      <div>
+      <%# সেশন ৭৭: 'যোগাযোগ' ৪র্থ কলামে নিউজলেটারের উপরে (ইউজার-নির্দেশ) %>
+      <div class="f-col-contact">
         <h4 class="f-widget-title">যোগাযোগ</h4>
         <ul class="f-contact">
           <li><i class="fas fa-map-marker-alt"></i> <span>চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম</span></li>
           <li><i class="fas fa-envelope"></i> <span>info@lekhokforum.org</span></li>
           <li><i class="fas fa-phone-alt"></i> <span>০১********* (বিকাশ/নগদ)</span></li>
         </ul>
-      </div>
-      <div class="f-newsletter">
-        <h4 class="f-widget-title">নিউজলেটার</h4>
-        <p class="f-newsletter-desc">নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
-        <form class="newsletter-form" id="newsletterForm" action="/api/newsletter/subscribe" method="post">
-          <input type="email" name="email" id="newsletterEmail" placeholder="আপনার ইমেইল" required>
-          <button type="submit">সাবস্ক্রাইব</button>
-        </form>
-        <p class="f-newsletter-msg" id="newsletterMsg" role="status" aria-live="polite"></p>
+        <div class="f-newsletter">
+          <h4 class="f-widget-title f-newsletter-title">নিউজলেটার</h4>
+          <p class="f-newsletter-desc">নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
+          <form class="newsletter-form" id="newsletterForm" action="/api/newsletter/subscribe" method="post">
+            <input type="email" name="email" id="newsletterEmail" placeholder="আপনার ইমেইল" required>
+            <button type="submit">সাবস্ক্রাইব</button>
+          </form>
+          <p class="f-newsletter-msg" id="newsletterMsg" role="status" aria-live="polite"></p>
+        </div>
       </div>
     </div>
     <div class="footer-bottom">

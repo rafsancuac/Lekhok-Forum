@@ -45,6 +45,8 @@
               <option value="user"      <%= u.role === 'user' ? 'selected' : '' %>>ইউজার</option>
               <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>মডারেটর</option>
               <option value="admin"     <%= u.role === 'admin' ? 'selected' : '' %>>এডমিন</option>
+              <%# সেশন ৭৭: সুপার-এডমিনই কেবল কমিউনিটি-অ্যাকাউন্টকে superadmin বানাতে পারে %>
+              <option value="superadmin" <%= u.role === 'superadmin' ? 'selected' : '' %> <% if (!((adminUser && adminUser.role === 'superadmin') || (user && user.role === 'superadmin'))) { %>disabled hidden<% } %>>সুপার এডমিন</option>
             </select>
           </label>
           <label>স্ট্যাটাস
@@ -56,7 +58,7 @@
           </label>
         </div>
         <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
-        <p class="hint">মডারেটর বানালে ডিফল্টভাবে daily/notices/events scopes যোগ হবে।</p>
+        <p class="hint">মডারেটর বানালে ডিফল্টভাবে daily/notices/events scopes যোগ হবে। সুপার এডমিন-অপশন শুধু সুপার-এডমিন দেখতে পান।</p>
       </form>
 
       <!-- Password reset (hand over committee accounts etc.) -->

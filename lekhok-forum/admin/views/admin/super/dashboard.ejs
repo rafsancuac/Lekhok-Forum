@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সুপার এডমিন ড্যাশবোর্ড — লেখক ফোরাম</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-crown super-ico"></i> সুপার এডমিন ড্যাশবোর্ড</h1>
+      <p>পুরো ওয়েবসাইটের সর্বোচ্চ নিয়ন্ত্রণ — অ্যাডমিন, মডারেটর, সংবেদনশীল তথ্য ও সাইট-স্ট্যাটাস এক জায়গায়</p>
+    </div>
+    <div class="header-actions">
+      <span class="chip chip-super"><i class="fas fa-crown"></i> সুপার এডমিন</span>
+    </div>
+  </div>
+
+  <% if (flash) { %><div class="success"><%= flash %></div><% } %>
+  <% if (flashErr) { %><div class="error"><%= flashErr %></div><% } %>
+
+  <!-- সাইট-স্ট্যাটাস: রক্ষণাবেক্ষণ + টগল -->
+  <div class="card super-site-status">
+    <h3 class="card-title"><i class="fas fa-tower-broadcast"></i> সাইট স্ট্যাটাস</h3>
+    <div class="site-status-grid">
+      <div class="status-tile <%= siteStatus.maintenance ? 'st-danger' : 'st-ok' %>">
+        <div class="st-head">
+          <i class="fas <%= siteStatus.maintenance ? 'fa-triangle-exclamation' : 'fa-circle-check' %>"></i>
+          <div>
+            <strong><%= siteStatus.maintenance ? 'রক্ষণাবেক্ষণ-মোড চালু' : 'সাইট স্বাভাবিক' %></strong>
+            <span><%= siteStatus.maintenance ? 'সাধারণ দর্শকরা এখন সাইট দেখতে পাচ্ছেন না' : 'সব দর্শকের জন্য সাইট খোলা' %></span>
+          </div>
+        </div>
+        <form method="POST" action="/admin/super/maintenance" class="st-form">
+          <button type="submit" class="btn <%= siteStatus.maintenance ? 'btn-primary' : 'btn-danger' %> st-btn">
+            <i class="fas <%= siteStatus.maintenance ? 'fa-play' : 'fa-power-off' %>"></i>
+            <%= siteStatus.maintenance ? 'সাইট আবার চালু করুন' : 'রক্ষণাবেক্ষণ-মোড চালু করুন' %>
+          </button>
+        </form>
+      </div>
+      <div class="status-tile st-neutral">
+        <div class="st-head"><i class="fas fa-user-plus"></i>
+          <div><strong>রেজিস্ট্রেশন-অনুমোদন</strong><span><%= siteStatus.regApproval ? 'নতুন অ্যাকাউন্ট অনুমোদন ছাড়া সক্রিয় হয় না' : 'রেজিস্ট্রেশন সরাসরি সক্রিয় হয়' %></span></div>
+        </div>
+        <a href="/admin/super/settings" class="btn btn-outline st-btn"><i class="fas fa-sliders"></i> বদলান</a>
+      </div>
+      <div class="status-tile st-neutral">
+        <div class="st-head"><i class="fas fa-id-card"></i>
+          <div><strong>ক্লেইম-অনুমোদন</strong><span><%= siteStatus.claimApproval ? 'ক্লেইম অ্যাডমিন-অনুমোদনের অপেক্ষায়' : 'ক্লেইম যাচাই সফল হলেই সক্রিয়' %></span></div>
+        </div>
+        <a href="/admin/super/settings" class="btn btn-outline st-btn"><i class="fas fa-sliders"></i> বদলান</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- পরিসংখ্যান -->
+  <div class="stat-grid">
+    <a href="/admin/super/admins" class="stat-box v-violet"><span class="stat-ico"><i class="fas fa-user-shield"></i></span><div><strong><%= stats.admins %></strong><span>অ্যাডমিন অ্যাকাউন্ট</span></div></a>
+    <a href="/admin/moderators"   class="stat-box v-blue"><span class="stat-ico"><i class="fas fa-users-cog"></i></span><div><strong><%= stats.moderators %></strong><span>মডারেটর</span></div></a>
+    <a href="/admin/users"        class="stat-box v-green"><span class="stat-ico"><i class="fas fa-users"></i></span><div><strong><%= stats.users %></strong><span>সক্রিয় ইউজার</span></div></a>
+    <a href="/admin/users?status=pending" class="stat-box v-gold"><span class="stat-ico"><i class="fas fa-user-clock"></i></span><div><strong><%= stats.pendingUsers %></strong><span>অপেক্ষমাণ রেজিস্ট্রেশন</span></div></a>
+    <a href="/articles" target="_blank" class="stat-box v-navy"><span class="stat-ico"><i class="fas fa-pen-nib"></i></span><div><strong><%= stats.posts %></strong><span>প্রকাশিত লেখা</span></div></a>
+    <a href="/admin/complaints"   class="stat-box v-rose"><span class="stat-ico"><i class="fas fa-flag"></i></span><div><strong><%= stats.complaints %></strong><span>নতুন অভিযোগ</span></div></a>
+    <a href="/admin/subscribers"  class="stat-box v-cyan"><span class="stat-ico"><i class="fas fa-paper-plane"></i></span><div><strong><%= stats.subscribers %></strong><span>নিউজলেটার সাবস্ক্রাইবার</span></div></a>
+    <a href="/admin/claims"       class="stat-box v-amber"><span class="stat-ico"><i class="fas fa-id-card"></i></span><div><strong><%= stats.pendingClaims %></strong><span>অপেক্ষমাণ ক্লেইম</span></div></a>
+  </div>
+
+  <!-- অ্যাডমিন সারসংক্ষেপ -->
+  <div class="card">
+    <h3 class="card-title"><i class="fas fa-user-shield"></i> অ্যাডমিন অ্যাকাউন্ট <a href="/admin/super/admins" class="super-manage-link">ব্যবস্থাপনা করুন <i class="fas fa-arrow-right"></i></a></h3>
+    <div class="super-admin-summary">
+      <span class="chip chip-super"><i class="fas fa-crown"></i> <%= stats.superadmins %> সুপার এডমিন</span>
+      <span class="chip chip-accent"><i class="fas fa-user-shield"></i> <%= stats.admins - stats.superadmins %> সাধারণ অ্যাডমিন</span>
+      <% if (stats.restricted > 0) { %><span class="chip"><i class="fas fa-key"></i> <%= stats.restricted %> সীমিত কাজের-পরিধি</span><% } %>
+      <% if (stats.lockedAdmins > 0) { %><span class="chip chip-danger"><i class="fas fa-lock"></i> <%= stats.lockedAdmins %> লকড</span><% } %>
+    </div>
+    <ul class="recent-list">
+      <% admins.slice(0, 6).forEach(a => { %>
+        <li>
+          <span class="rl-ico <%= a.role === 'superadmin' ? 'ico-violet' : 'ico-blue' %>"><i class="fas <%= a.role === 'superadmin' ? 'fa-crown' : 'fa-user-shield' %>"></i></span>
+          <span class="rl-body">
+            <span class="rl-title"><%= a.display_name || a.username %> <small style="color:#94a3b8;">(@<%= a.username %>)</small></span>
+            <span class="rl-meta">শেষ লগইন: <%= a.last_login ? String(a.last_login).slice(0, 16) : 'কখনো নয়' %></span>
+          </span>
+          <% if (a.locked) { %><span class="badge-soft status-banned"><i class="fas fa-lock"></i> লকড</span><% } else if (a.role === 'superadmin') { %><span class="badge-soft role-superadmin">সুপার এডমিন</span><% } else { %><span class="badge-soft role-admin">অ্যাডমিন</span><% } %>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+
+  <!-- লগ দুই-কলাম -->
+  <div class="dash-cols">
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-clock-rotate-left"></i> সাম্প্রতিক কার্যক্রম</h3>
+      <ul class="recent-list">
+        <% activity.forEach(l => { %>
+          <li>
+            <span class="rl-ico ico-green"><i class="fas fa-bolt"></i></span>
+            <span class="rl-body">
+              <span class="rl-title"><%= l.username %> — <%= l.action %></span>
+              <span class="rl-meta"><%= l.target || '' %> <%= l.detail ? '• ' + String(l.detail).slice(0, 60) : '' %> • <%= String(l.created_at || '').slice(0, 16) %></span>
+            </span>
+          </li>
+        <% }) %>
+        <% if (!activity.length) { %><li style="color:#94a3b8;justify-content:center;padding:18px 0;">কোনো কার্যক্রম নেই</li><% } %>
+      </ul>
+      <a href="/admin/activity" class="super-manage-link" style="margin-top:8px;">সম্পূর্ণ লগ <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="card">
+      <h3 class="card-title"><i class="fas fa-file-shield"></i> সাম্প্রতিক অডিট</h3>
+      <ul class="recent-list">
+        <% audit.forEach(l => { %>
+          <li>
+            <span class="rl-ico ico-rose"><i class="fas fa-shield-halved"></i></span>
+            <span class="rl-body">
+              <span class="rl-title"><%= l.actor_name %> — <%= l.action %></span>
+              <span class="rl-meta"><%= l.table_name || '' %> <%= l.item_id ? '#' + l.item_id : '' %> • <%= String(l.created_at || '').slice(0, 16) %></span>
+            </span>
+          </li>
+        <% }) %>
+        <% if (!audit.length) { %><li style="color:#94a3b8;justify-content:center;padding:18px 0;">কোনো অডিট-রেকর্ড নেই</li><% } %>
+      </ul>
+      <a href="/admin/audit" class="super-manage-link" style="margin-top:8px;">সম্পূর্ণ অডিট <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

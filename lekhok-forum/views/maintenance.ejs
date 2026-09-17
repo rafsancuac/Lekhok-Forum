@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>রক্ষণাবেক্ষণ চলছে | লেখক ফোরাম</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root { --mint: #f0fdf7; --accent: #059669; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+      background: linear-gradient(180deg, #ffffff 0%, var(--mint) 100%);
+      min-height: 100vh; display: flex; flex-direction: column;
+      color: #1e293b; -webkit-font-smoothing: antialiased;
+    }
+    .m-top {
+      background: #0B1121; color: #fff; padding: 14px 20px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-weight: 700; font-size: 1rem;
+    }
+    .m-top i { color: #34d399; }
+    main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+    .m-card { max-width: 560px; width: 100%; text-align: center; background: #fff; border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(5, 150, 105, .10); border: 1px solid #e6f7ef; padding: 56px 32px; }
+    .m-icon {
+      width: 84px; height: 84px; margin: 0 auto 22px; border-radius: 50%;
+      background: #ecfdf5; display: grid; place-items: center; font-size: 2.1rem; color: var(--accent);
+      box-shadow: 0 8px 24px rgba(5, 150, 105, .18);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    h1 { font-size: 1.65rem; margin-bottom: 10px; color: #0f172a; }
+    p { color: #64748b; line-height: 1.85; font-size: 1rem; }
+    .m-chip {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 22px;
+      background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+      padding: 8px 16px; border-radius: 999px; font-size: .88rem; font-weight: 600;
+    }
+    .m-note { margin-top: 26px; font-size: .82rem; color: #94a3b8; }
+    footer {
+      background: #0B1121; color: #94a3b8; text-align: center;
+      padding: 16px 20px; font-size: .82rem;
+    }
+    footer strong { color: #fff; }
+    @media (max-width: 480px) { .m-card { padding: 40px 20px; } h1 { font-size: 1.35rem; } }
+  </style>
+</head>
+<body>
+  <div class="m-top"><i class="fas fa-feather-alt"></i> লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+  <main>
+    <div class="m-card" role="main">
+      <div class="m-icon"><i class="fas fa-screwdriver-wrench"></i></div>
+      <h1>আমরা কিছুক্ষণের জন্য বন্ধ আছি</h1>
+      <p>সাইটের রক্ষণাবেক্ষণ-কাজ চলছে — খুব শীঘ্রই আমরা আবার ফিরে আসছি।<br>
+      ইতোমধ্যে আপনার সব লেখা ও তথ্য সুরক্ষিত আছে। অপেক্ষার জন্য দুঃখিত।</p>
+      <span class="m-chip"><i class="fas fa-clock"></i> শীঘ্রই ফিরছি</span>
+      <p class="m-note">জরুরি প্রয়োজনে: info@lekhokforum.org</p>
+    </div>
+  </main>
+  <footer>© <%= new Date().getFullYear() %> <strong>লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</strong> — তারুণ্যের শাণিত কলমে আলোকিত ধরনী</footer>
+</body>
+</html>

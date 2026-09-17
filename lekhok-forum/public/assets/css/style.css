@@ -395,3 +395,18 @@ a:focus-visible,button:focus-visible,details summary:focus-visible,[tabindex]:fo
 input:focus-visible,select:focus-visible,textarea:focus-visible{
   outline:none;border-color:#059669;
 }
+
+/* ── সেশন ৭৭: ফুটার-কলাম পুনর্বিন্যাস — ৪র্থ কলামে যোগাযোগ + নিউজলেটার ── */
+.f-col-contact .f-newsletter{margin-top:22px}
+.f-col-contact .f-newsletter .f-widget-title{margin-bottom:12px}
+.f-col-contact .f-contact{margin-bottom:0}
+@media (max-width:992px) and (min-width:601px){
+  .footer-inner .f-col-contact{grid-column:auto}
+}
+/* সেশন ৭৭: রক্ষণাবেক্ষণ-মোড স্টাফ-ব্যানার */
+.maintenance-banner{
+  background:#7c2d12;color:#ffedd5;display:flex;align-items:center;gap:10px;
+  padding:10px 20px;font-size:.9rem;font-weight:600;
+}
+.maintenance-banner i{flex:none}
+.maintenance-banner a{color:#fff;text-decoration:underline;margin-inline-start:auto;flex:none;font-weight:700}

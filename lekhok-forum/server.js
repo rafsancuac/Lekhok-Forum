@@ -433,6 +433,21 @@ app.use(async (req, res, next) => {
     } catch (_) { /* SEO defaults optional — never break rendering */ }
     res.locals.adminUser = req.session.adminUser || null;
     res.locals.user      = req.session.user || null;          // social user session
+    // সেশন ৭৭: অ্যাডমিন-সেশনের লাইভ-রোল/লক-রিফ্রেশ — সুপার-এডমিন রোল বদলালে বা
+    // লক করলে পরের রিকোয়েস্টেই কার্যকর (পুরনো সেশনে role-না-থাকলে সেটাও বসে যায়)।
+    if (req.session.adminUser) {
+      try {
+        const _ar77 = await db.prepare('SELECT role, scopes, locked FROM admin_users WHERE id = ?').get(req.session.adminUser.id);
+        if (!_ar77 || _ar77.locked) {
+          req.session.adminUser = null;
+          res.locals.adminUser = null;
+        } else {
+          req.session.adminUser.role = _ar77.role || 'admin';
+          req.session.adminUser.scopes = _ar77.scopes || null;
+          res.locals.adminUser = req.session.adminUser;
+        }
+      } catch (_) { /* অ্যাডমিন-রিফ্রেশ ব্যর্থ হলে সেশন যেমন ছিল তেমনই */ }
+    }
     res.locals.currentPath = req.path;
     // Canonical site URL for SEO (OG/canonical/sitemap) — SITE_URL env wins
     res.locals.siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
@@ -482,6 +497,25 @@ app.use(async (req, res, next) => {
 
     next();
   } catch (e) { next(e); }
+});
+
+// ── সেশন ৭৭: রক্ষণাবেক্ষণ-মোড (সাইট-লক) ───────────────────────────────────────
+// সুপার-এডমিন চালু করলে সাধারণ দর্শক ৫০৩ রক্ষণাবেক্ষণ-পেজ দেখে; স্টাফ
+// (অ্যাডমিন/মডারেটর/সুপার-এডমিন) স্বাভাবিক ব্রাউজ করে + উপরে সতর্ক-ব্যানার।
+// প্যানেল (/admin, /moderator), লগইন, API, অ্যাসেট ও SEO-ফাইল সবসময় খোলা।
+app.use((req, res, next) => {
+  try {
+    const on = res.locals.getSetting && res.locals.getSetting('maintenance_mode') === '1';
+    res.locals.maintenanceOn = !!on;
+    if (!on || req.method !== 'GET') return next();
+    const p = req.path;
+    if (/^\/(admin|moderator|login|logout|api|assets|avatar|img|uploads)(\/|$)/.test(p)) return next();
+    if (/^\/(favicon\.ico|robots\.txt|sitemap\.xml|manifest\.json)$/.test(p)) return next();
+    const staff = req.session && (req.session.adminUser ||
+      (req.session.user && /admin|moderator/.test(req.session.user.role || '')));
+    if (staff) return next(); // স্টাফ স্বাভাবিক দেখবেন (ব্যানারসহ)
+    return res.status(503).render('maintenance', { layout: false });
+  } catch (e) { next(); }
 });
 
 // ── Global session-save-before-redirect middleware ────────────────────────────

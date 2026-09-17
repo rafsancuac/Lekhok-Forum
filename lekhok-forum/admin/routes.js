@@ -41,9 +41,35 @@ function expandScopes(list) {
   return [...out];
 }
 
+// সেশন ৭৭: অ্যাডমিনের কাজের-পরিধি — পাথ→এরিয়া ম্যাপ (requireAdmin-এ যাচাই)।
+// সীমাহীন/সুপার-এডমিন সর্বদা পাস; সীমিত অ্যাডমিন শুধু অনুমোদিত এরিয়ায় ঢোকে।
+const ADMIN_PATH_AREAS = [
+  { re: /^\/(notices)(\/|$)/,            key: 'notice' },
+  { re: /^\/(events)(\/|$)/,             key: 'event' },
+  { re: /^\/gallery(\/|$)/,              key: 'gallery' },
+  { re: /^\/daily(\/|$)/,                key: 'daily' },
+  { re: /^\/complaints(\/|$)/,           key: 'complaints' },
+  { re: /^\/(members|claims|members\b)(\/|$)/, key: 'members' },
+  { re: /^\/(users|moderators)(\/|$)/,    key: 'users' },
+  { re: /^\/(settings|security)(\/|$)/,  key: 'settings' },
+  { re: /^\/resources(\/|$)/,            key: 'resources' },
+  { re: /^\/(content|sections|navigation|search-index)(\/|$)/, key: 'content' },
+  { re: /^\/(achievements|constitution|past-leaders)(\/|$)/,   key: 'organization' },
+  { re: /^\/media(\/|$)/,                key: 'media' },
+  { re: /^\/(analytics|activity|audit|trash)(\/|$)/,            key: 'oversight' },
+  { re: /^\/(messages|subscribers|tasks)(\/|$)/,                key: 'community' }
+];
+
 function requireAdmin(req, res, next) {
-  if (req.session && req.session.adminUser) return next();
-  if (req.session && req.session.user && req.session.user.role === 'admin') return next();
+  const _au77 = req.session && req.session.adminUser;
+  if (_au77) {
+    const _allowed77 = adminSessionScopes(req);
+    if (_allowed77 === null) return next(); // সীমাহীন / সুপার-এডমিন
+    const _area77 = ADMIN_PATH_AREAS.find(a => a.re.test(req.path));
+    if (!_area77 || _allowed77.includes(_area77.key)) return next();
+    return res.status(403).render('admin/denied', { currentPath: '/admin' + req.path, homePath: '/admin' });
+  }
+  if (req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin')) return next();
   // সেশন ৪৬: ইতিমধ্যে লগইন-করা নন-অ্যাডমিন (মডারেটর/ইউজার) → ৪০৩ "অনুমতি নেই",
   // /admin/login-এ বাউন্স নয় (মডারেটর সেখানে ঢুকেই আটকে যেত — admin_users-এ নেই)।
   if (req.session && req.session.user) {
@@ -55,15 +81,36 @@ function requireAdmin(req, res, next) {
 function isStaff(req) {
   if (req.session && req.session.adminUser) return true;
   const u = req.session && req.session.user;
-  return !!(u && (u.role === 'admin' || u.role === 'moderator'));
+  return !!(u && (u.role === 'admin' || u.role === 'superadmin' || u.role === 'moderator'));
 }
 
-// Scope check: admin always true; moderator must have a moderator_scopes row
+// সেশন ৭৭: অ্যাডমিন-সেশনের কাজের-পরিধি — admin_users.scopes (JSON-অ্যারে)।
+// null/খালি = সীমাহীন (পুরো প্যানেল); সুপার-এডমিন সর্বদা সীমাহীন।
+function adminSessionScopes(req) {
+  const au = req.session && req.session.adminUser;
+  if (!au || au.role === 'superadmin') return null; // unrestricted
+  if (!au.scopes) return null; // পুরনো সেশন / সীমাহীন অ্যাডমিন
+  try {
+    const arr = JSON.parse(au.scopes);
+    return Array.isArray(arr) && arr.length ? arr : null;
+  } catch (_) { return null; }
+}
+
+// Scope check: superadmin/unrestricted-admin always true; scope-restricted
+// admin must have the area in admin_users.scopes; moderator must have a
+// moderator_scopes row (alias-aware).
 async function hasScope(req, scope) {
-  if (req.session && req.session.adminUser) return true;
+  const au = req.session && req.session.adminUser;
+  if (au) {
+    const allowed = adminSessionScopes(req);
+    if (allowed === null) return true; // unrestricted / superadmin
+    const variants = [scope];
+    if (db.SCOPE_ALIASES && db.SCOPE_ALIASES[scope]) variants.push(db.SCOPE_ALIASES[scope]);
+    return variants.some(v => allowed.includes(v));
+  }
   const u = req.session && req.session.user;
   if (!u) return false;
-  if (u.role === 'admin') return true;
+  if (u.role === 'admin' || u.role === 'superadmin') return true;
   if (u.role !== 'moderator') return false;
   // Delegate to db.hasScope — alias-aware (notice/notices, event/events)
   // and cross-backend (sql.js + Turso).
@@ -87,6 +134,9 @@ function requireStaff(req, res, next) {
   next();
 }
 
+// সেশন ৭৭: সুপার-এডমিন প্যানেল — /admin/super/* (নিজস্ব গার্ডেড সাব-রাউটার)
+router.use('/super', require('./routes-super'));
+
 // টাস্ক ১৩ (পর্ব ৪, অংশ ক): ফর্ম থেকে images (JSON স্ট্রিং) → URL অ্যারে
 function parseImages(v) {
   if (Array.isArray(v)) return v.filter(x => x && String(x).trim());
@@ -102,7 +152,7 @@ function parseImages(v) {
 function actorOf(req) {
   if (req.session && req.session.adminUser) {
     const a = req.session.adminUser;
-    return { id: a.id, username: a.username, role: 'admin' };
+    return { id: a.id, username: a.username, role: a.role || 'admin' };
   }
   const u = req.session && req.session.user;
   if (u) return { id: u.id, username: u.username, role: u.role };
@@ -167,6 +217,11 @@ router.post('/login', async (req, res) => {
       adminLoginLimiter.hit(lk);
       return res.render('admin/login', { error: 'ভুল ব্যবহারকারী নাম বা পাসওয়ার্ড', layout: false, currentPath: '/admin/login' });
     }
+    // সেশন ৭৭: সুপার-এডমিন কর্তৃক লক-করা অ্যাকাউন্ট লগইন করতে পারে না
+    if (user.locked) {
+      adminLoginLimiter.hit(lk);
+      return res.render('admin/login', { error: 'এই অ্যাডমিন অ্যাকাউন্টটি সুপার-এডমিন কর্তৃক লক করা হয়েছে।', layout: false, currentPath: '/admin/login' });
+    }
 
     // MFA (TOTP) — সক্রিয় থাকলে দ্বিতীয় ধাপে পাঠাই (কোড সেখানে যাচাই হয়)
     if (user.totp_enabled && user.totp_secret) {
@@ -175,11 +230,14 @@ router.post('/login', async (req, res) => {
     }
 
     adminLoginLimiter.reset(lk);
+    // সেশন ৭৭: শেষ-লগইন ট্র্যাকিং (সুপার-এডমিন ড্যাশবোর্ডে দেখায়)
+    try { await db.prepare('UPDATE admin_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id); } catch (e) {}
     // সেশন রোটেশন — লগইনের পর নতুন সেশন আইডি (session-fixation গার্ড)
+    // সেশন ৭৭: সেশনে role-ও থাকে (সুপার-এডমিন নেভিগেশন + লাইভ রোল-চেক)
     return new Promise((resolve) => {
       req.session.regenerate((err) => {
         if (err) console.error('[admin] /admin/login session regenerate error:', err);
-        req.session.adminUser = { id: user.id, username: user.username, display_name: user.display_name };
+        req.session.adminUser = { id: user.id, username: user.username, display_name: user.display_name, role: user.role || 'admin' };
         req.session.save((err2) => {
           if (err2) console.error('[admin] /admin/login session save error:', err2);
           res.redirect('/admin');
@@ -1394,13 +1452,26 @@ router.delete('/complaints/:id', requireScope('complaints'), async (req, res) =>
 // Express only ever used the first one, so it was dead code. Removed in v2.6.
 
 // Change a user's role (user / moderator / admin / banned)
+// সেশন ৭৭: superadmin-রোল শুধু সুপার-এডমিন অ্যাক্টর সেট করতে পারে — আর সর্বশেষ
+// সুপার-এডমিনকে অবনমন করা যায় না (admin_users-এ অন্তত একজন সুপার থাকতেই হবে)।
 router.post('/users/:id/role', requireAdmin, async (req, res) => {
   const { role, status } = req.body;
-  const allowedRoles = ['user', 'moderator', 'admin'];
+  let allowedRoles = ['user', 'moderator', 'admin'];
+  const _actorSuper77 = (req.session.adminUser && req.session.adminUser.role === 'superadmin') ||
+                        (req.session.user && req.session.user.role === 'superadmin');
+  if (_actorSuper77) allowedRoles = allowedRoles.concat('superadmin');
   const allowedStatus = ['active', 'pending', 'banned'];
   const target = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
   if (!target) return res.redirect('/admin/moderators?saved=1');
   if (role && allowedRoles.includes(role)) {
+    // শেষ সুপার-এডমিন অবনমন-রোধ: admin_users-এ সুপার আছে → নিরাপদ
+    if (target.role === 'superadmin' && role !== 'superadmin') {
+      const _auCnt = (await db.prepare("SELECT COUNT(*) as c FROM admin_users WHERE role='superadmin' AND locked=0").get()).c;
+      if (_auCnt === 0) {
+        const _uuCnt = (await db.prepare("SELECT COUNT(*) as c FROM users WHERE role='superadmin' AND status='active' AND id != ?").get(req.params.id)).c;
+        if (_uuCnt === 0) return res.redirect('/admin/users/' + req.params.id + '/edit?err=1');
+      }
+    }
     await db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, req.params.id);
     if (role === 'moderator' && !await db.prepare('SELECT id FROM moderator_scopes WHERE user_id = ?').get(req.params.id)) {
       // New moderators get the full canonical scope set by default (v2.6).

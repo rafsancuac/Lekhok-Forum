@@ -229,7 +229,7 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
   // failure can never block the author's redirect.
   try {
     const author = req.session.user || {};
-    const isStaffAuthor = author.role === 'admin' || author.role === 'moderator' || req.session.adminUser;
+    const isStaffAuthor = author.role === 'admin' || author.role === 'superadmin' || author.role === 'moderator' || req.session.adminUser;
     if (isStaffAuthor) {
       const mailer = require('../helpers/mailer');
       const postRow = await db.prepare('SELECT * FROM posts WHERE id = ?').get(result.lastInsertRowid);

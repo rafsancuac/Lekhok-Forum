@@ -10,7 +10,7 @@ const { pressUpload, withUpload } = require('../middleware/upload');
 // পেজ দেখাই (admin/denied), ৪০৪ নয়।
 function ensureModerator(req, res, next) {
   if (!req.session.user) return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
-  if (req.session.user.role !== 'moderator' && req.session.user.role !== 'admin') {
+  if (req.session.user.role !== 'moderator' && req.session.user.role !== 'admin' && req.session.user.role !== 'superadmin') {
     return res.status(403).render('admin/denied', { currentPath: '/moderator', homePath: '/moderator' });
   }
   next();
@@ -18,7 +18,7 @@ function ensureModerator(req, res, next) {
 
 function requireScope(scope) {
   return async (req, res, next) => {
-    if (req.session.user.role === 'admin') return next(); // admin implicitly has every scope
+    if (req.session.user.role === 'admin' || req.session.user.role === 'superadmin') return next(); // admin/superadmin implicitly has every scope
     if (!(await db.hasScope(req.session.user.id, scope))) {
       return res.status(403).render('admin/denied', { currentPath: '/moderator', homePath: '/moderator' });
     }
@@ -34,7 +34,7 @@ function today() { return new Date().toISOString().split('T')[0]; }
 router.use(async (req, res, next) => {
   try {
     const u = req.session && req.session.user;
-    if (u && u.role === 'admin') {
+    if (u && (u.role === 'admin' || u.role === 'superadmin')) {
       res.locals.userScopeMeta = db.MODERATOR_SCOPES.map(s => ({ key: s.key, label: s.label }));
     } else if (u && u.role === 'moderator') {
       const sc = await db.getModeratorScopes(u.id);
@@ -341,7 +341,7 @@ router.post('/press/:id/delete', ensureModerator, requireScope('epaper'), async 
 
 // ── Moderator dashboard ──────────────────────────────────────────────────────
 router.get('/', ensureModerator, async (req, res) => {
-  const myScopes = req.session.user.role === 'admin'
+  const myScopes = (req.session.user.role === 'admin' || req.session.user.role === 'superadmin')
     ? db.MODERATOR_SCOPES.map(s => s.key)
     : await db.getModeratorScopes(req.session.user.id);
   // Stats for dashboard

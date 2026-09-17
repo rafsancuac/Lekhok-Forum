@@ -5,9 +5,11 @@
   const _active = (p) => _path === p || _path.startsWith(p + '/') ? 'active' : '';
   const _au = (typeof adminUser !== 'undefined') ? adminUser : null;
   const _usr = (typeof user !== 'undefined') ? user : null;
-  const _isAdmin = !!(_au || (_usr && _usr.role === 'admin'));
+  const _isAdmin = !!(_au || (_usr && (_usr.role === 'admin' || _usr.role === 'superadmin')));
+  // সেশন ৭৭: সুপার-এডমিন শনাক্তের ও নেভ-গ্রুপের ফ্ল্যাগ
+  const _isSuper = !!((_au && _au.role === 'superadmin') || (_usr && _usr.role === 'superadmin'));
   const _staffName = (_au && _au.display_name) || (_usr && _usr.full_name) || 'স্টাফ';
-  const _roleLabel = _au ? 'অ্যাডমিন' : (_usr && _usr.role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর');
+  const _roleLabel = _isSuper ? 'সুপার এডমিন' : (_au ? 'অ্যাডমিন' : (_usr && _usr.role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর'));
   const _initial = (_staffName || 'স').trim().charAt(0);
   const _avatar = _usr ? '/avatar/' + _usr.id : null;
   // সেশন ৪৭: মডারেটর প্যানেলের লিংক স্কোপ-অনুযায়ী লুকানো (backend guard-এর সাথে মিল রেখে)।
@@ -60,6 +62,13 @@
     <% } else { %>
     <div class="nav-group-label">মূল</div>
     <a href="/admin" class="<%= _path === '/admin' ? 'active' : '' %>"><i class="fas fa-tachometer-alt"></i> ড্যাশবোর্ড</a>
+
+    <% if (_isSuper) { %>
+    <div class="nav-group-label nav-label-super">সুপার এডমিন</div>
+    <a href="/admin/super"           class="<%= _path === '/admin/super' ? 'active' : '' %>"><i class="fas fa-crown"></i> সুপার ড্যাশবোর্ড</a>
+    <a href="/admin/super/admins"    class="<%= _active('/admin/super/admins') %>"><i class="fas fa-user-shield"></i> অ্যাডমিন ব্যবস্থাপনা</a>
+    <a href="/admin/super/settings"  class="<%= _active('/admin/super/settings') %>"><i class="fas fa-shield-halved"></i> সংবেদনশীল তথ্য</a>
+    <% } %>
 
     <% if (_isAdmin) { %>
     <div class="nav-group-label">সংগঠন</div>
