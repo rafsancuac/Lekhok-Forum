@@ -322,6 +322,134 @@
 }
 .pf-count-emoji{letter-spacing:-3px;margin-right:2px}
 .pf-spacer{flex:1}
+.pf-count-link{color:var(--pf-text2);text-decoration:none}
+.pf-count-link:hover{text-decoration:underline;color:var(--pf-blue)}
+/* FB-ইমোজি-ফেসপাইল (সেশন ৮৭) */
+.pf-facepile{display:inline-flex;align-items:center}
+.pf-facepile span{font-size:13px;margin-left:-3px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12));transition:transform .15s}
+.pf-facepile span:first-child{margin-left:0}
+.pf-post-counts:hover .pf-facepile span{transform:translateY(-1px)}
+.pf-facepile-count{font-weight:600;color:var(--pf-text2)}
+.pf-facepile-muted{color:#8A8D91;font-size:13px}
+
+/* সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন হোস্ট — গ্লোবাল actions-bar-কে FB ৩-কলামে রূপান্তর */
+.pf-actions-host .actions-summary{
+  grid-column:1/-1; /* গ্রিডে নিজস্ব-রো (flex-basis গ্রিডে কাজ করে না) */
+  display:flex;align-items:center;gap:6px;
+  margin:8px 16px 0;padding:9px 0 8px;
+  border-top:1px solid var(--pf-border);
+  font-size:13.5px;color:var(--pf-text2);
+}
+.pf-actions-host .as-left{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.pf-actions-host .reaction-summary{display:inline-flex;align-items:center;gap:6px}
+.pf-actions-host .as-emojis span{font-size:13px;margin-left:-3px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12));transition:transform .15s}
+.pf-actions-host .as-emojis span:first-child{margin-left:0}
+.pf-actions-host .actions-summary:hover .as-emojis span{transform:translateY(-1px)}
+.pf-actions-host .as-count{font-weight:600}
+.pf-actions-host .as-right{margin-left:auto;display:inline-flex;align-items:center;gap:10px}
+.pf-actions-host .as-stat{display:inline-flex;align-items:center;gap:5px;color:var(--pf-text2);text-decoration:none;font-size:13.5px}
+.pf-actions-host .as-stat:hover{color:var(--pf-blue);text-decoration:underline}
+.pf-actions-host .as-stat i{font-size:12.5px}
+.pf-actions-host .actions-bar{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:4px;padding:4px 8px 6px;
+  align-items:stretch;
+}
+.pf-actions-host .react-wrap{position:relative;display:flex}
+.pf-actions-host .reaction-btn{
+  flex:1;justify-content:center;gap:8px;
+  padding:9px 4px;border-radius:6px;
+  font-weight:600;font-size:14px;color:var(--pf-text2);
+}
+.pf-actions-host .reaction-btn:hover{background:var(--pf-hover)}
+.pf-actions-host .main-react{position:relative}
+.pf-actions-host .main-react.active{color:var(--pf-blue)}
+.pf-actions-host .main-react.active .rb-label{color:var(--pf-blue)}
+.pf-actions-host .reaction-picker{
+  bottom:100%;left:50%;transform:translateX(-50%);
+  background:#fff;border:1px solid var(--pf-border);
+  border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.18);
+}
+.pf-actions-host .share-wrap{display:flex;flex:1}
+.pf-actions-host .share-trigger{flex:1}
+.pf-actions-host .share-caret{flex:0 0 auto;padding:9px 6px}
+.pf-actions-host .reaction-opt{font-size:22px;padding:4px 6px;transition:transform .12s}
+.pf-actions-host .reaction-opt:hover{transform:scale(1.28) translateY(-4px)}
+.pf-actions-host .reaction-opt.selected{background:var(--pf-bg);border-radius:50%}
+
+/* সব-লেখা লিংক (ফিল্টার-বার ডানে) */
+.pf-all-posts{
+  display:inline-flex;align-items:center;gap:6px;align-self:center;
+  margin-left:auto;padding:8px 12px;border-radius:8px;
+  color:var(--pf-blue);font-size:13px;font-weight:600;text-decoration:none;
+  transition:background .12s;
+}
+.pf-all-posts:hover{background:#EBF0FF}
+
+/* পোস্ট-কার্ড হোভার-লিফট (স্টাইল-ডিটেইল পাস) */
+.pf-post{transition:box-shadow .18s,transform .18s,border-color .18s}
+.pf-post:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:#DADDE1}
+
+/* ছবি-টাইল হোভার-ক্যাপশন */
+.pf-photo-tile{position:relative}
+.pf-photo-tile::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.42),transparent 55%);
+  opacity:0;transition:opacity .18s;pointer-events:none;
+}
+.pf-photo-tile img{position:relative;z-index:1}
+.pf-photo-tile:hover::after{opacity:1}
+.pf-photo-tile .pf-photo-cap{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;
+  padding:6px 8px;color:#fff;font-size:11px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  opacity:0;transform:translateY(4px);transition:.18s;pointer-events:none;
+}
+.pf-photo-tile:hover .pf-photo-cap{opacity:1;transform:none}
+
+/* ছবি লোড-হওয়া পর্যন্ত শিমার-স্কেলেটন */
+.pf-photo-tile{background:linear-gradient(100deg,#E9EBEE 30%,#F5F6F7 50%,#E9EBEE 70%);background-size:200% 100%;animation:pfShimmer 1.4s infinite linear}
+@keyframes pfShimmer{to{background-position:-200% 0}}
+.pf-photo-tile img{background:transparent;animation:none}
+
+/* অনুসারী-টাইল হোভার-রিং */
+.pf-follower-tile img{transition:box-shadow .15s,transform .15s}
+.pf-follower-tile:hover img{box-shadow:0 0 0 3px rgba(24,119,242,.45);transform:translateY(-2px)}
+
+/* কীবোর্ড-অ্যাক্সেসিবিলিটি ফোকাস-রিং */
+.pf-btn:focus-visible,.pf-tab:focus-visible,.pf-pill:focus-visible,
+.pf-photo-tile:focus-visible,.pf-follower-tile:focus-visible,.pf-meta-link:focus-visible,
+.post-3dot-btn:focus-visible,.pf-card-more:focus-visible{
+  outline:2px solid var(--pf-blue);outline-offset:2px;border-radius:6px;
+}
+
+/* সেশন ৮৭: কভার-প্রিভিউ মোডাল */
+.pf-modal{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.55);
+  display:none;align-items:center;justify-content:center;
+  padding:20px;
+}
+.pf-modal.open{display:flex}
+.pf-modal-card{
+  width:min(680px,100%);background:#fff;border-radius:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+  padding:20px;animation:pfModalIn .18s ease-out;
+}
+@keyframes pfModalIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.pf-modal-card h3{
+  margin:0 0 4px;font-size:17px;font-weight:700;color:var(--pf-text);
+  display:flex;align-items:center;gap:8px;
+}
+.pf-modal-card h3 i{color:var(--pf-blue)}
+.pf-modal-sub{margin:0 0 12px;font-size:13px;color:var(--pf-text2)}
+.pf-modal-cover{
+  aspect-ratio:3/1;width:100%;
+  border-radius:10px;overflow:hidden;
+  background:var(--pf-bg);border:1px solid var(--pf-border);
+}
+.pf-modal-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
 .pf-post-actions{
   display:grid;grid-template-columns:repeat(3,1fr);
   padding:4px 8px 6px;border-top:1px solid var(--pf-border);

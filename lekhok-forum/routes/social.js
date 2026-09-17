@@ -1182,6 +1182,32 @@ router.get('/profile/:username', async (req, res) => {
   // (৬) ভেরিফায়েড-টিক — সংগঠনের অ্যাডমিন/মডারেটর পদবি থেকে
   const isVerified = profile.role === 'admin' || profile.role === 'moderator';
 
+  // (৭) সেশন ৮৭: প্রোফাইল-ফিডে FB-রিঅ্যাকশন-ইঞ্জিন — প্রতিটি ফিড-কার্ডে
+  // actions-bar পার্টিয়ালের জন্য per-post ডেটা ডেকোরেশন:
+  //   post.reactCounts = {like:0,love:0,care:0,haha:0,wow:0,sad:0} (posts.reactions JSON থেকে)
+  //   post.myReaction  = ভিউয়ারের বর্তমান রিঅ্যাকশন (likes টেবিল — এক IN-কোয়েরিতে)
+  const RN87 = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0 };
+  const parseReacts87 = (raw) => {
+    const out = { ...RN87 };
+    try {
+      const o = typeof raw === 'string' ? JSON.parse(raw || '{}') : (raw || {});
+      Object.keys(out).forEach(k => { out[k] = Number(o[k]) || 0; });
+    } catch (_) {}
+    return out;
+  };
+  const feedIds87 = [...articles.map(p => p.id)];
+  if (pinnedPost) feedIds87.push(pinnedPost.id);
+  const myReacts87 = {};
+  if (myId && feedIds87.length) {
+    const ph87 = feedIds87.map(() => '?').join(',');
+    try {
+      (await db.prepare(`SELECT post_id, reaction_type FROM likes WHERE user_id = ? AND post_id IN (${ph87})`).all(myId, ...feedIds87))
+        .forEach(r => { if (r.reaction_type) myReacts87[r.post_id] = r.reaction_type; });
+    } catch (_) {}
+  }
+  if (pinnedPost) { pinnedPost.reactCounts = parseReacts87(pinnedPost.reactions); pinnedPost.myReaction = myReacts87[pinnedPost.id] || ''; }
+  articles.forEach(p => { p.reactCounts = parseReacts87(p.reactions); p.myReaction = myReacts87[p.id] || ''; });
+
   res.render('user/profile', {
     profile,
     author: profile,

@@ -205,7 +205,7 @@
           <div class="pf-photo-grid">
             <% photos.slice(0, 9).forEach(p => { %>
               <% if (p.postId) { %>
-                <a href="/articles/<%= p.postId %>" class="pf-photo-tile" title="<%= p.title || 'ছবি' %>"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="<%= p.title || 'ছবি' %>"></a>
+                <a href="/articles/<%= p.postId %>" class="pf-photo-tile" title="<%= p.title || 'ছবি' %>"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="<%= p.title || 'ছবি' %>"><% if (p.title) { %><span class="pf-photo-cap"><%= p.title %></span><% } %></a>
               <% } else { %>
                 <a href="<%= p.url %>" target="_blank" rel="noopener" class="pf-photo-tile"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="ছবি"></a>
               <% } %>
@@ -292,27 +292,20 @@
               <h3 class="pf-post-title"><a href="/articles/<%= pinnedPost.id %>"><%= pinnedPost.title %></a></h3>
               <% if (pinnedPost.excerpt || pinnedPost.body) { %><p class="pf-post-excerpt"><%= (pinnedPost.excerpt || pinnedPost.body || '').substring(0, 180) %><%= (pinnedPost.excerpt || pinnedPost.body || '').length > 180 ? '…' : '' %></p><% } %>
               <% if (pinnedPost.cover_image) { %><a href="/articles/<%= pinnedPost.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= pinnedPost.cover_image %>" alt="<%= pinnedPost.title %>" class="pf-post-cover"></a><% } %>
-              <div class="pf-post-counts">
-                <span class="pf-count-emoji">👍❤️</span><span><%= bn(pinnedPost.like_count || 0) %></span>
-                <span class="pf-spacer"></span>
-                <span><%= bn(pinnedPost.comment_count || 0) %> মন্তব্য</span>
-                <span class="pf-dot-sep">•</span>
-                <span><%= bn(pinnedPost.view_count || 0) %> পঠিত</span>
-              </div>
-              <div class="pf-post-actions">
-                <a href="/articles/<%= pinnedPost.id %>"><i class="far fa-thumbs-up"></i> লাইক</a>
-                <a href="/articles/<%= pinnedPost.id %>#comments"><i class="far fa-comment"></i> মন্তব্য</a>
-                <a href="#" onclick="sharePost(<%= pinnedPost.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
+              <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
+              <div class="pf-actions-host">
+                <%- include('../partials/actions-bar', { targetId: pinnedPost.id, targetType: 'post', counts: pinnedPost.reactCounts, mine: pinnedPost.myReaction, link: '/articles/' + pinnedPost.id, showBookmark: false, showShare: true, commentCount: bn(pinnedPost.comment_count || 0), shareCount: pinnedPost.share_count || 0, viewCount: bn(pinnedPost.view_count || 0) }) %>
               </div>
             </article>
           <% } %>
 
-          <%# ফিল্টার-পিল: লেখা/প্রশ্ন/মন্তব্য/প্রতিক্রিয়া (ট্যাব-প্যানেল সুইচ) %>
+          <%# ফিল্টার-পিল: লেখা/প্রশ্ন/মন্তব্য/প্রতিক্রিয়া (ট্যাব-প্যানেল সুইচ) + সব-লেখা লিংক %>
           <div class="pf-filter-bar pf-card">
             <button type="button" class="pf-pill active" data-tab="posts"><i class="fas fa-pen-nib"></i> লেখা</button>
             <button type="button" class="pf-pill" data-tab="questions"><i class="fas fa-question-circle"></i> প্রশ্ন</button>
             <button type="button" class="pf-pill" data-tab="comments"><i class="far fa-comment"></i> মন্তব্য</button>
             <button type="button" class="pf-pill" data-tab="reactions"><i class="far fa-heart"></i> প্রতিক্রিয়া</button>
+            <a href="/articles?author=<%= encodeURIComponent(profile.username) %>" class="pf-all-posts" title="<%= profile.full_name %> এর সব লেখা"><i class="fas fa-layer-group"></i> সব লেখা</a>
           </div>
 
           <% if (posts.length === 0) { %>
@@ -349,17 +342,9 @@
                   <h3 class="pf-post-title"><a href="/articles/<%= post.id %>"><%= post.title %></a></h3>
                   <% if (post.excerpt || post.body) { %><p class="pf-post-excerpt"><%= (post.excerpt || post.body || '').substring(0, 180) %><%= (post.excerpt || post.body || '').length > 180 ? '…' : '' %></p><% } %>
                   <% if (post.cover_image) { %><a href="/articles/<%= post.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= post.cover_image %>" alt="<%= post.title %>" class="pf-post-cover"></a><% } %>
-                  <div class="pf-post-counts">
-                    <span class="pf-count-emoji">👍❤️</span><span><%= bn(post.like_count || 0) %></span>
-                    <span class="pf-spacer"></span>
-                    <span><%= bn(post.comment_count || 0) %> মন্তব্য</span>
-                    <span class="pf-dot-sep">•</span>
-                    <span><%= bn(post.view_count || 0) %> পঠিত</span>
-                  </div>
-                  <div class="pf-post-actions">
-                    <a href="/articles/<%= post.id %>"><i class="far fa-thumbs-up"></i> লাইক</a>
-                    <a href="/articles/<%= post.id %>#comments"><i class="far fa-comment"></i> মন্তব্য</a>
-                    <a href="#" onclick="sharePost(<%= post.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
+                  <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
+                  <div class="pf-actions-host">
+                    <%- include('../partials/actions-bar', { targetId: post.id, targetType: 'post', counts: post.reactCounts, mine: post.myReaction, link: '/articles/' + post.id, showBookmark: false, showShare: true, commentCount: bn(post.comment_count || 0), shareCount: post.share_count || 0, viewCount: bn(post.view_count || 0) }) %>
                   </div>
                 </article>
               <% }); %>
@@ -471,7 +456,7 @@
               <div class="pf-photo-grid big">
                 <% photos.forEach(p => { %>
                   <% if (p.postId) { %>
-                    <a href="/articles/<%= p.postId %>" class="pf-photo-tile"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="<%= p.title || 'ছবি' %>"></a>
+                    <a href="/articles/<%= p.postId %>" class="pf-photo-tile" title="<%= p.title || 'ছবি' %>"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="<%= p.title || 'ছবি' %>"><% if (p.title) { %><span class="pf-photo-cap"><%= p.title %></span><% } %></a>
                   <% } else { %>
                     <a href="<%= p.url %>" target="_blank" rel="noopener" class="pf-photo-tile"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="ছবি"></a>
                   <% } %>
@@ -540,6 +525,21 @@
     </div>
   </div>
   </div><%# /.pf-shell %>
+
+  <%# সেশন ৮৭: কভার-পরিবর্তন প্রিভিউ-মোডাল (মালিক) — আপলোডের আগে ৩:১ প্রিভিউ %>
+  <% if (isOwner) { %>
+  <div class="pf-modal" id="pfCoverModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="pfCoverTitle">
+    <div class="pf-modal-card">
+      <h3 id="pfCoverTitle"><i class="fas fa-image"></i> কভার প্রিভিউ</h3>
+      <p class="pf-modal-sub">নতুন কভার এভাবেই দেখাবে — ডেস্কটপে ৩:১ রেশিও, মোবাইলে উপর-নিচ সামান্য কাটা যাবে।</p>
+      <div class="pf-modal-cover"><img id="pfCoverPreview" alt="নতুন কভারের প্রিভিউ"></div>
+      <div class="pf-modal-btns">
+        <button type="button" class="pf-btn gray" id="pfCoverCancel">বাতিল</button>
+        <button type="button" class="pf-btn primary" id="pfCoverConfirm"><i class="fas fa-upload"></i> কভার স্থাপন করুন</button>
+      </div>
+    </div>
+  </div>
+  <% } %>
 
   <%- include('../partials/share-modal') %>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
@@ -726,6 +726,43 @@
       setTimeout(measure, 300);
       measure();
     })();
+
+    // ── সেশন ৮৭: কভার-প্রিভিউ মোডাল — ফাইল-নির্বাচন → ৩:১ প্রিভিউ → নিশ্চিত-সাবমিট ──
+    <% if (isOwner) { %>
+    (function () {
+      var inp = document.getElementById('coverUpload');
+      var modal = document.getElementById('pfCoverModal');
+      if (!inp || !modal) return;
+      // লিগেসি inline onchange="coverForm.submit()" সরাও — নইলে প্রিভিউ-মোডালের
+      // আগেই ফর্ম সাবমিট হয়ে যায় (JS-বিহীন ব্রাউজারে অ্যাট্রিবিউট ততক্ষণে অক্ষত)
+      inp.removeAttribute('onchange');
+      var img = document.getElementById('pfCoverPreview');
+      var form = document.getElementById('coverForm');
+      function close() { modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true'); document.body.style.overflow = ''; inp.value = ''; }
+      inp.addEventListener('change', function () {
+        var f = this.files && this.files[0];
+        if (!f) return;
+        if (!/^image\//.test(f.type)) { showToast('শুধু ছবি-ফাইল নির্বাচন করুন', 'error'); inp.value = ''; return; }
+        var r = new FileReader();
+        r.onload = function (e) {
+          img.src = e.target.result;
+          modal.classList.add('open');
+          modal.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        };
+        r.readAsDataURL(f);
+      });
+      document.getElementById('pfCoverCancel').addEventListener('click', close);
+      document.getElementById('pfCoverConfirm').addEventListener('click', function () {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if (form) form.submit();
+      });
+      modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modal.classList.contains('open')) close(); });
+    })();
+    <% } %>
 
     // ── ক্যামেরা-মেনু ওয়্যারিং (কভার/অ্যাভাটার) ──
     (function () {

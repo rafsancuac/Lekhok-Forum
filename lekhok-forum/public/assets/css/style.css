@@ -826,3 +826,8 @@ html.theme-sepia .genre-badge{color:#7c5c2e;background:rgba(124,92,46,.1);border
 .qc-result-txt a.qc-ls-login{color:#047857;font-weight:700;text-decoration:none;border-bottom:2px solid rgba(5,150,105,.4);padding-bottom:1px;white-space:nowrap}
 .qc-result-txt a.qc-ls-login:hover{color:#059669;border-bottom-color:#059669;background:rgba(5,150,105,.06);border-radius:4px}
 .qc-result.is-correct .qc-result-txt p,.qc-result.is-wrong .qc-result-txt p{color:#3f5346}
+/* ── সেশন ৮৭: actions-summary এখন actions-bar-এর ভেতরে থাকে (main.js লাইভ-আপডেট
+   সমর্থন — আগে ক্লাস-মিসম্যাচ (.reaction-summary বনাম .actions-summary) ও ডম-পজিশন
+   দুটোতেই ভেঙে ছিল) — flex-basis:100% দিয়ে নিজস্ব-রো গ্যারান্টি, ভিজ্যুয়াল অপরিবর্তিত */
+.actions-bar .actions-summary{flex-basis:100%;padding:8px 2px 4px}
+.reaction-summary{display:inline-flex;align-items:center;gap:6px;min-width:0}
