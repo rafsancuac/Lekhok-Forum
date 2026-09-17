@@ -290,7 +290,7 @@
                 <% } %>
               </header>
               <h3 class="pf-post-title"><a href="/articles/<%= pinnedPost.id %>"><%= pinnedPost.title %></a></h3>
-              <% if (pinnedPost.excerpt || pinnedPost.body) { %><p class="pf-post-excerpt"><%= (pinnedPost.excerpt || pinnedPost.body || '').substring(0, 180) %><%= (pinnedPost.excerpt || pinnedPost.body || '').length > 180 ? '…' : '' %></p><% } %>
+              <% if (pinnedPost.excerpt || pinnedPost.body) { %><p class="pf-post-excerpt"><%= mdPlain(pinnedPost.excerpt || pinnedPost.body || '', 180) %></p><% } %>
               <% if (pinnedPost.cover_image) { %><a href="/articles/<%= pinnedPost.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= pinnedPost.cover_image %>" alt="<%= pinnedPost.title %>" class="pf-post-cover"></a><% } %>
               <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
               <div class="pf-actions-host">
@@ -340,7 +340,7 @@
                     <% } %>
                   </header>
                   <h3 class="pf-post-title"><a href="/articles/<%= post.id %>"><%= post.title %></a></h3>
-                  <% if (post.excerpt || post.body) { %><p class="pf-post-excerpt"><%= (post.excerpt || post.body || '').substring(0, 180) %><%= (post.excerpt || post.body || '').length > 180 ? '…' : '' %></p><% } %>
+                  <% if (post.excerpt || post.body) { %><p class="pf-post-excerpt"><%= mdPlain(post.excerpt || post.body || '', 180) %></p><% } %>
                   <% if (post.cover_image) { %><a href="/articles/<%= post.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= post.cover_image %>" alt="<%= post.title %>" class="pf-post-cover"></a><% } %>
                   <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
                   <div class="pf-actions-host">

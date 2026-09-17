@@ -69,6 +69,11 @@ function computeAssetVersion() {
 }
 app.locals.AV = computeAssetVersion();
 
+// ── সেশন ৮৫: এক্সসার্পট-হেল্পার — সব EJS-ভিউতে mdPlain(বডি, সীমা) ডাকা যায় ──
+// মার্কডাউন-মার্কার (** **, _ _, লিংক-সিনট্যাক্স) সরিয়ে পরিষ্কার প্লেইন-টেক্সট;
+// সীমা দিলে শব্দ-সীমায় কেটে '…' দেয়। মিরর: helpers/markdown-lite.js plainText()।
+app.locals.mdPlain = require('./helpers/markdown-lite').plainText;
+
 // ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
 // লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।
 // প্রোডাকশনে SANDBOX_PORT সেট না থাকায় স্ক্রিপ্ট রেন্ডারই হয় না।

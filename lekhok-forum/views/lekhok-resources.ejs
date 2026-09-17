@@ -41,7 +41,7 @@
             </div>
             <div class="res-body">
               <h3><%= r.title %></h3>
-              <% if (r.content) { %><p><%= r.content.length > 110 ? r.content.substring(0, 110) + '…' : r.content %></p><% } %>
+              <% if (r.content) { %><p><%= mdPlain(r.content, 110) %></p><% } %>
               <% if (r.author) { %><p class="res-meta"><i class="far fa-user"></i> <%= r.author %></p><% } %>
               <% if (r.tags) { %><p class="res-meta"><i class="fas fa-tags"></i> <%= r.tags %></p><% } %>
               <% const resLink = r.link_url || r.file_url; %>

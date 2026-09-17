@@ -36,7 +36,7 @@
               </a>
               <p style="font-size:13px; color:var(--text-soft); line-height:1.6; margin:0 0 10px;">
                 <%# সেশন ৬৬: এক্সারপ্ট-ফলব্যাকে ## হেডিং-মার্কার যেত — স্ট্রিপ + হোয়াইটস্পেস-কোলাপ্স %>
-                <%= String(post.excerpt || post.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 120) %>…
+                <%= mdPlain(post.excerpt || post.body || '', 120) %>
               </p>
               <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border);">
                 <a href="/profile/<%= post.author_username %>" style="display:flex; align-items:center; gap:6px; text-decoration:none; color:inherit;">

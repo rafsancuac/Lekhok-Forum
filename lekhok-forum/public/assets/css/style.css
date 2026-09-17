@@ -831,3 +831,50 @@ html.theme-sepia .genre-badge{color:#7c5c2e;background:rgba(124,92,46,.1);border
    দুটোতেই ভেঙে ছিল) — flex-basis:100% দিয়ে নিজস্ব-রো গ্যারান্টি, ভিজ্যুয়াল অপরিবর্তিত */
 .actions-bar .actions-summary{flex-basis:100%;padding:8px 2px 4px}
 .reaction-summary{display:inline-flex;align-items:center;gap:6px;min-width:0}
+
+/* ══ সেশন ৮৫: রিপোর্ট-কিউ বাল্ক-অ্যাকশন + রিপোর্টার-হিস্ট্রি ════════════════
+   কাস্টম-চেকবক্স (২০px টাচ-টার্গেটসহ), নিচে-স্টিকি গ্লাস-বাল্ক-বার,
+   নির্বাচিত-কার্ড হাইলাইট, স্প্যাম-হিউরিস্টিক অ্যাম্বার-চিপ। */
+[hidden]{display:none!important}
+.mrq85-check{display:inline-flex;align-items:center;margin-right:10px;cursor:pointer;flex-shrink:0}
+.mrq85-cb{position:absolute;opacity:0;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.mrq85-box{width:20px;height:20px;border-radius:6px;border:2px solid #cbd5e1;background:#f8fafc;display:inline-flex;align-items:center;justify-content:center;transition:all .18s ease;color:transparent;font-size:.65rem}
+.mrq85-box i{transform:scale(.4);transition:transform .18s ease}
+.mrq85-cb:hover+.mrq85-box{border-color:#64748b}
+.mrq85-cb:focus-visible+.mrq85-box{outline:2px solid var(--accent);outline-offset:2px}
+.mrq85-cb:checked+.mrq85-box{background:linear-gradient(135deg,#059669,#047857);border-color:#047857;color:#fff}
+.mrq85-cb:checked+.mrq85-box i{transform:scale(1)}
+.mrq85-selectable{transition:box-shadow .2s ease,transform .2s ease}
+.mrq85-selectable.mrq85-sel,.mrq85-has-sel .mrq85-selectable:has(.mrq85-cb:checked){box-shadow:inset 3px 0 0 #059669,0 4px 14px rgba(5,150,105,.10);transform:translateX(2px)}
+.mrq85-hist{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 9px;border-radius:99px;font-size:.66rem;font-weight:600;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;white-space:nowrap;vertical-align:middle}
+.mrq85-hist i{font-size:.6rem}
+.mrq85-hist b{color:#334155}
+.mrq85-hist.spam{color:#92400e;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.45);animation:mrq85-pulse 2.4s ease-in-out infinite}
+.mrq85-hist.spam b{color:#b45309}
+@keyframes mrq85-pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.25)}50%{box-shadow:0 0 0 5px rgba(245,158,11,0)}}
+.mrq85-bulkbar{position:fixed;left:0;right:0;bottom:0;z-index:120;padding:10px 14px env(safe-area-inset-bottom);background:rgba(15,23,42,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid rgba(148,163,184,.25);animation:mrq85-slideup .28s cubic-bezier(.21,1.02,.55,1)}
+@keyframes mrq85-slideup{from{transform:translateY(105%);opacity:0}to{transform:translateY(0);opacity:1}}
+.mrq85-bulkbar form{max-width:900px;margin:0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mrq85-bulk-count{color:#fff;font-size:.78rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;min-width:110px}
+.mrq85-bulk-count i{color:#34d399}
+.mrq85-bulk-count b{color:#34d399;font-variant-numeric:tabular-nums}
+.mrq85-bulk-tool{background:rgba(255,255,255,.08);color:#e2e8f0;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 11px;font-size:.72rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .15s ease}
+.mrq85-bulk-tool:hover{background:rgba(255,255,255,.18)}
+.mrq85-bulk-sep{width:1px;height:22px;background:rgba(255,255,255,.2);flex-shrink:0}
+.mrq85-bulk-act{border:none;border-radius:8px;padding:8px 15px;font-size:.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}
+.mrq85-bulk-act:hover{transform:translateY(-1px)}
+.mrq85-bulk-act:active{transform:translateY(0)}
+.mrq85-bulk-act.primary{background:linear-gradient(135deg,#b91c1c,#991b1b);color:#fff;box-shadow:0 3px 10px rgba(153,27,27,.35)}
+.mrq85-bulk-act.primary:hover{filter:brightness(1.12)}
+.mrq85-bulk-act.ok{background:linear-gradient(135deg,#059669,#047857);color:#fff;box-shadow:0 3px 10px rgba(4,120,87,.35)}
+.mrq85-bulk-act.ok:hover{filter:brightness(1.12)}
+.mrq85-bulk-act.ghost{background:rgba(255,255,255,.9);color:#334155;box-shadow:0 3px 10px rgba(0,0,0,.15)}
+.mrq85-bulk-act.ghost:hover{background:#fff}
+@media(max-width:640px){
+  .mrq85-bulkbar{padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+  .mrq85-bulk-count{min-width:0;font-size:.72rem}
+  .mrq85-bulk-tool{padding:5px 8px;font-size:.68rem}
+  .mrq85-bulk-act{padding:7px 11px;font-size:.7rem;flex:1;justify-content:center}
+  .mrq85-bulk-sep{display:none}
+  .mrq85-hist{margin-left:4px;font-size:.62rem;padding:2px 7px}
+}

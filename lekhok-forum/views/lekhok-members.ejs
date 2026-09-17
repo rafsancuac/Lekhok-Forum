@@ -102,7 +102,7 @@
                   <% m.terms.forEach(t => { %><span class="member-term-chip"><i class="far fa-calendar"></i> <%= t %> কার্যবর্ষ</span><% }) %>
                 </div>
               <% } %>
-              <% if (m.bio) { %><p class="leader-bio"><%= String(m.bio).substring(0, 90) %><%= String(m.bio).length > 90 ? '…' : '' %></p><% } %>
+              <% if (m.bio) { %><p class="leader-bio"><%= mdPlain(m.bio, 90) %></p><% } %>
             </div>
           </a>
         <% }) %>

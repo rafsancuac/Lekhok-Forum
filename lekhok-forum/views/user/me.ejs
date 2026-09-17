@@ -58,7 +58,7 @@
               <span><i class="far fa-eye"></i> <%= p.view_count || 0 %></span>
             </div>
             <h3 class="feed-card-title"><a href="<%= p.type === 'question' ? '/qa/' + p.id : '/articles/' + p.id %>"><%= p.title %></a></h3>
-            <% if (p.excerpt) { %><p class="feed-card-excerpt"><%= p.excerpt.substring(0, 200) %><%= p.excerpt.length > 200 ? '…' : '' %></p><% } %>
+            <% if (p.excerpt) { %><p class="feed-card-excerpt"><%= mdPlain(p.excerpt, 200) %></p><% } %>
           </div>
           <div class="feed-card-actions">
             <span class="feed-action"><i class="far fa-heart"></i> <%= p.like_count || 0 %></span>
@@ -83,7 +83,7 @@
               <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
             </div>
             <h3 class="feed-card-title"><a href="<%= c.post_type === 'question' ? '/qa/' + c.post_id : '/articles/' + c.post_id %>"><%= c.post_title %></a></h3>
-            <p class="feed-card-excerpt"><%= c.body.substring(0, 200) %><%= c.body.length > 200 ? '…' : '' %></p>
+            <p class="feed-card-excerpt"><%= mdPlain(c.body, 200) %></p>
           </div>
         </article>
       <% }) %>
@@ -125,7 +125,7 @@
               <span><i class="far fa-clock"></i> <%= new Date(b.bookmarked_at).toLocaleDateString('bn-BD') %></span>
             </div>
             <h3 class="feed-card-title"><a href="<%= b.type === 'question' ? '/qa/' + b.id : '/articles/' + b.id %>"><%= b.title %></a></h3>
-            <% if (b.display_excerpt) { %><p class="feed-card-excerpt"><%= b.display_excerpt %><%= b.display_excerpt.length >= 200 ? '…' : '' %></p><% } %>
+            <% if (b.display_excerpt) { %><p class="feed-card-excerpt"><%= b.display_excerpt %></p><% } %>
           </div>
         </article>
       <% }) %>
@@ -172,7 +172,7 @@
               <span><i class="far fa-clock"></i> <%= new Date(a.at).toLocaleString('bn-BD') %></span>
             </div>
             <h3 class="feed-card-title"><a href="<%= a.type === 'question' ? '/qa/' + a.id : '/articles/' + a.id %>"><%= a.title %></a></h3>
-            <% if (a.body) { %><p class="feed-card-excerpt"><%= a.body.substring(0, 140) %><%= a.body.length > 140 ? '…' : '' %></p><% } %>
+            <% if (a.body) { %><p class="feed-card-excerpt"><%= mdPlain(a.body, 140) %></p><% } %>
           </div>
         </article>
       <% }) %>

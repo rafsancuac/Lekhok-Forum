@@ -47,7 +47,7 @@
               <strong><%= a.title %></strong>
               <% if (a.category) { %><span class="chip"><%= a.category %></span><% } %>
             </div>
-            <% if (a.excerpt) { %><p class="search-result-excerpt"><%= String(a.excerpt).slice(0, 150) %>&hellip;</p><% } %>
+            <% if (a.excerpt) { %><p class="search-result-excerpt"><%= mdPlain(a.excerpt, 150) %></p><% } %>
             <span class="search-result-meta">
               <i class="fas fa-user"></i> <%= a.author_name %>
               &middot; <i class="fas fa-heart"></i> <%= a.like_count || 0 %>
@@ -64,7 +64,7 @@
         <% results.questions.forEach(qu => { %>
           <a class="search-result-card" href="/qa/<%= qu.id %>">
             <div class="search-result-head"><strong><%= qu.title %></strong></div>
-            <% if (qu.excerpt) { %><p class="search-result-excerpt"><%= String(qu.excerpt).slice(0, 150) %>&hellip;</p><% } %>
+            <% if (qu.excerpt) { %><p class="search-result-excerpt"><%= mdPlain(qu.excerpt, 150) %></p><% } %>
             <span class="search-result-meta"><i class="fas fa-user"></i> <%= qu.author_name %></span>
           </a>
         <% }) %>
@@ -113,7 +113,7 @@
               <strong><%= d.title || DAILY_LABELS[d.content_type] || 'দৈনিক কনটেন্ট' %></strong>
               <span class="chip"><%= DAILY_LABELS[d.content_type] || d.content_type %></span>
             </div>
-            <% if (d.body) { %><p class="search-result-excerpt"><%= String(d.body).slice(0, 150) %>&hellip;</p><% } %>
+            <% if (d.body) { %><p class="search-result-excerpt"><%= mdPlain(d.body, 150) %></p><% } %>
           </a>
         <% }) %>
       </div>

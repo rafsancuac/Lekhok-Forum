@@ -4,6 +4,7 @@ const db = require('../db');
 const { broadcastToAll } = require('./dashboard');
 const { validateNavJson, parseNav } = require('../helpers/nav');
 const { pressUpload, withUpload } = require('../middleware/upload');
+const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
 
 // সেশন ৪৪: পারমিশন-ত্রুটিতে আগে `404` টেমপ্লেট রেন্ডার হতো — সেভ/এডিটের পর
 // রিডাইরেক্টে ভুল স্কোপ/রোল পেলে ইউজার "ভুল ৪০৪ পেজ" দেখত। এখন সঠিক "অনুমতি নেই"
@@ -399,21 +400,41 @@ router.get('/reports', ensureModerator, async (req, res) => {
       const ph = postIds.map(() => '?').join(',');
       const pr = await db.prepare(`SELECT id, body, excerpt FROM posts WHERE id IN (${ph})`).all(...postIds);
       pr.forEach(p => {
-        const txt = String(p.excerpt || p.body || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const txt = mdPlain85(p.excerpt || p.body || ''); // সেশন ৮৫: মার্কডাউন-মার্কার-সহ স্ট্রিপ
         excerpts.set(p.id, txt.slice(0, 220));
       });
+    }
+    // ── সেশন ৮৫: রিপোর্টার-ইতিহাস (স্প্যাম-হিউরিস্টিক) ──────────────────────────
+    // কিউ-কার্ডে রিপোর্টকারীর পাশে ছোট-চিপ: মোট/খারিজ/সমাধান গণনা। ≥৩ খারিজ ও
+    // ০ সমাধান হলে 'স্প্যাম-প্রবণ' অ্যাম্বার-চিপ — মডারেটর এক-নজরে সিগন্যাল পান।
+    const hist85 = new Map();
+    const repIds85 = [...new Set(rows81.map(r => r.reporter_id).filter(Boolean))];
+    if (repIds85.length) {
+      const ph85 = repIds85.map(() => '?').join(',');
+      const rows85 = await db.prepare(
+        `SELECT reporter_id, COUNT(*) total,
+                SUM(CASE WHEN status = 'dismissed' THEN 1 ELSE 0 END) dismissed,
+                SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) resolved
+         FROM reports WHERE reporter_id IN (${ph85}) GROUP BY reporter_id`
+      ).all(...repIds85);
+      rows85.forEach(h => hist85.set(h.reporter_id, {
+        total: h.total || 0, dismissed: h.dismissed || 0, resolved: h.resolved || 0
+      }));
     }
     const reports = rows81.map(r => ({
       ...r,
       reasonMeta: REPORT_REASONS_81[r.reason] || REPORT_REASONS_81.other,
-      targetExcerpt: r.comment_id ? String(r.comment_body || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 220) : (excerpts.get(r.post_id) || ''),
+      targetExcerpt: r.comment_id ? mdPlain85(r.comment_body, 220) : (excerpts.get(r.post_id) || ''),
       targetPath: r.post_id ? ((r.post_type === 'question' ? '/qa/' : '/articles/') + r.post_id) : null,
       targetLabel: r.comment_id ? 'মন্তব্য' : (r.post_type === 'question' ? 'প্রশ্ন' : 'লেখা'),
+      reporterHist: hist85.get(r.reporter_id) || null,
     }));
     res.render('user/moderator-reports', {
       reports, tab81, counts: counts81, hiddenCount: hidden81.c,
       reasons: REPORT_REASONS_81, esc: esc81,
       done81: req.query.done || null,
+      bulkN85: parseInt(req.query.n, 10) || 0,
+      bulkSk85: parseInt(req.query.sk, 10) || 0,
       currentPath: '/moderator/reports'
     });
   } catch (e) {
@@ -422,6 +443,61 @@ router.get('/reports', ensureModerator, async (req, res) => {
   }
 });
 
+// ── সেশন ৮৫: শেয়ার্ড রিপোর্ট-অ্যাকশন লজিক ──────────────────────────────────
+// একক-রুট (POST /reports/:id/action) ও বাল্ক-রুট (POST /reports/bulk) উভয়েই
+// একই কোর-ফ্লো চালায় — নোটিফিকেশন-চেইন (লেখক + রিপোর্টার) অক্ষত রেখে।
+// রিটার্ন: { ok:true } | { ok:false, why:'missing'|'already' } — অন্যথা থ্রো।
+async function applyReportAction85(reportId, action, me) {
+  const report = await db.prepare('SELECT * FROM reports WHERE id = ?').get(reportId);
+  if (!report) return { ok: false, why: 'missing' };
+  if (report.status !== 'open' && action !== 'unhide') return { ok: false, why: 'already' };
+  let postTitle81 = '';
+  if (report.post_id) {
+    const p = await db.prepare('SELECT id, title, author_id, type, status FROM posts WHERE id = ?').get(report.post_id);
+    if (p) {
+      postTitle81 = String(p.title || '').slice(0, 80);
+      if (action === 'hide' && p.status !== 'hidden') {
+        await db.prepare("UPDATE posts SET status = 'hidden' WHERE id = ?").run(p.id);
+        // লেখককে জানানো (রিপোর্টার নয় — কনফিডেনশিয়ালিটি)
+        if (p.author_id !== me.id) {
+          await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
+            p.author_id, 'system', 'আপনার লেখা লুকানো হয়েছে',
+            'মডারেটর-নির্বাচনে "' + postTitle81 + '" সাময়িকভাবে লুকানো হয়েছে। প্রয়োজনে সম্পাদনা করে আবার প্রকাশ করতে পারেন।',
+            (p.type === 'question' ? '/qa/' : '/articles/') + p.id
+          );
+        }
+      }
+      if (action === 'unhide' && p.status === 'hidden') {
+        await db.prepare("UPDATE posts SET status = 'published' WHERE id = ?").run(p.id);
+        if (p.author_id !== me.id) {
+          await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
+            p.author_id, 'system', 'আপনার লেখা পুনরায় প্রকাশিত হয়েছে',
+            '"' + postTitle81 + '" আবার সবার জন্য দৃশ্যমান করা হয়েছে।',
+            (p.type === 'question' ? '/qa/' : '/articles/') + p.id
+          );
+        }
+      }
+    }
+  }
+  if (action !== 'unhide') {
+    const newStatus = action === 'hide' || action === 'resolve' ? 'resolved' : 'dismissed';
+    await db.prepare('UPDATE reports SET status = ?, action = ?, resolved_by = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(newStatus, action, me.id, report.id);
+    // রিপোর্টকারীকে ফলাফল-জানানো
+    const msg81 = action === 'hide'
+      ? { title: 'আপনার রিপোর্টে ব্যবস্থা নেওয়া হয়েছে ✓', body: 'রিপোর্ট করা কনটেন্টটি লুকানো হয়েছে। সহযোগিতার জন্য ধন্যবাদ।' }
+      : action === 'resolve'
+      ? { title: 'আপনার রিপোর্ট সমাধান করা হয়েছে ✓', body: 'মডারেটররা বিষয়টি দেখে প্রয়োজনীয় ব্যবস্থা নিয়েছেন।' }
+      : { title: 'আপনার রিপোর্ট পর্যালোচনা করা হয়েছে', body: 'এবারের রিপোর্টে কোনো নিয়মভঙ্গ পাওয়া যায়নি। তবুও জানানোর জন্য ধন্যবাদ।' };
+    if (report.reporter_id !== me.id) {
+      await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
+        report.reporter_id, 'system', msg81.title, msg81.body, '/moderator/reports'
+      );
+    }
+  }
+  return { ok: true };
+}
+
 // সেশন ৮১: রিপোর্টে মডারেটর-অ্যাকশন — hide (পোস্ট লুকানো+সমাধান) / dismiss / resolve
 router.post('/reports/:id/action', ensureModerator, async (req, res) => {
   const action = String(req.body.action || '');
@@ -429,59 +505,41 @@ router.post('/reports/:id/action', ensureModerator, async (req, res) => {
     return res.status(400).redirect('/moderator/reports');
   }
   try {
-    const report = await db.prepare('SELECT * FROM reports WHERE id = ?').get(req.params.id);
-    if (!report) return res.redirect('/moderator/reports?done=missing');
-    if (report.status !== 'open' && action !== 'unhide') {
-      return res.redirect('/moderator/reports?done=already');
-    }
-    const me = req.session.user;
-    let postTitle81 = '';
-    if (report.post_id) {
-      const p = await db.prepare('SELECT id, title, author_id, type, status FROM posts WHERE id = ?').get(report.post_id);
-      if (p) {
-        postTitle81 = String(p.title || '').slice(0, 80);
-        if (action === 'hide' && p.status !== 'hidden') {
-          await db.prepare("UPDATE posts SET status = 'hidden' WHERE id = ?").run(p.id);
-          // লেখককে জানানো (রিপোর্টার নয় — কনফিডেনশিয়ালিটি)
-          if (p.author_id !== me.id) {
-            await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-              p.author_id, 'system', 'আপনার লেখা লুকানো হয়েছে',
-              'মডারেটর-নির্বাচনে "' + postTitle81 + '" সাময়িকভাবে লুকানো হয়েছে। প্রয়োজনে সম্পাদনা করে আবার প্রকাশ করতে পারেন।',
-              (p.type === 'question' ? '/qa/' : '/articles/') + p.id
-            );
-          }
-        }
-        if (action === 'unhide' && p.status === 'hidden') {
-          await db.prepare("UPDATE posts SET status = 'published' WHERE id = ?").run(p.id);
-          if (p.author_id !== me.id) {
-            await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-              p.author_id, 'system', 'আপনার লেখা পুনরায় প্রকাশিত হয়েছে',
-              '"' + postTitle81 + '" আবার সবার জন্য দৃশ্যমান করা হয়েছে।',
-              (p.type === 'question' ? '/qa/' : '/articles/') + p.id
-            );
-          }
-        }
-      }
-    }
-    if (action !== 'unhide') {
-      const newStatus = action === 'hide' || action === 'resolve' ? 'resolved' : 'dismissed';
-      await db.prepare('UPDATE reports SET status = ?, action = ?, resolved_by = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?')
-        .run(newStatus, action, me.id, report.id);
-      // রিপোর্টকারীকে ফলাফল-জানানো
-      const msg81 = action === 'hide'
-        ? { title: 'আপনার রিপোর্টে ব্যবস্থা নেওয়া হয়েছে ✓', body: 'রিপোর্ট করা কনটেন্টটি লুকানো হয়েছে। সহযোগিতার জন্য ধন্যবাদ।' }
-        : action === 'resolve'
-        ? { title: 'আপনার রিপোর্ট সমাধান করা হয়েছে ✓', body: 'মডারেটররা বিষয়টি দেখে প্রয়োজনীয় ব্যবস্থা নিয়েছেন।' }
-        : { title: 'আপনার রিপোর্ট পর্যালোচনা করা হয়েছে', body: 'এবারের রিপোর্টে কোনো নিয়মভঙ্গ পাওয়া যায়নি। তবুও জানানোর জন্য ধন্যবাদ।' };
-      if (report.reporter_id !== me.id) {
-        await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
-          report.reporter_id, 'system', msg81.title, msg81.body, '/moderator/reports'
-        );
-      }
-    }
+    const r85 = await applyReportAction85(req.params.id, action, req.session.user);
+    if (!r85.ok) return res.redirect('/moderator/reports?done=' + r85.why);
     res.redirect('/moderator/reports?done=' + action);
   } catch (e) {
     console.error('[reports-action:81]', e.message);
+    res.redirect('/moderator/reports?done=error');
+  }
+});
+
+// ── সেশন ৮৫: বাল্ক-অ্যাকশন — নির্বাচিত খোলা-রিপোর্টে একবারে hide/dismiss/resolve ──
+// বড়-কিউ পরিষ্কারের গতি; unhide বাল্কে নেই — পুনঃপ্রকাশ সবসময় কেস-বাই-কেস।
+// সর্বোচ্চ ৫০-আইডি (অ্যাবিউজ-গার্ড), ইতিমধ্যে-প্রক্রিয়াকৃত স্কিপ-হিসেবে গণনা হয়।
+router.post('/reports/bulk', ensureModerator, async (req, res) => {
+  const action = String(req.body.action || '');
+  if (!['hide', 'dismiss', 'resolve'].includes(action)) {
+    return res.status(400).redirect('/moderator/reports');
+  }
+  let ids = [];
+  try {
+    ids = (Array.isArray(req.body.ids) ? req.body.ids : [req.body.ids])
+      .map(Number).filter(Number.isFinite);
+  } catch (e) { ids = []; }
+  ids = [...new Set(ids)].slice(0, 50);
+  if (!ids.length) return res.redirect('/moderator/reports?done=bulk-none');
+  let applied = 0, skipped = 0;
+  try {
+    for (const id of ids) {
+      try {
+        const r85 = await applyReportAction85(id, action, req.session.user);
+        if (r85.ok) applied++; else skipped++;
+      } catch (e) { skipped++; console.error('[reports-bulk-item:85]', id, e.message); }
+    }
+    res.redirect('/moderator/reports?done=bulk-' + action + '&n=' + applied + (skipped ? '&sk=' + skipped : ''));
+  } catch (e) {
+    console.error('[reports-bulk:85]', e.message);
     res.redirect('/moderator/reports?done=error');
   }
 });

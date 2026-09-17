@@ -27,7 +27,7 @@
                 <span class="notice-row-title"><%= n.title %></span>
                 <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
               </span>
-              <% if (n.content) { %><span class="notice-row-excerpt"><%= n.content.length > 140 ? n.content.substring(0, 140) + '…' : n.content %></span><% } %>
+              <% if (n.content) { %><span class="notice-row-excerpt"><%= mdPlain(n.content, 140) %></span><% } %>
             </span>
             <span class="notice-row-meta">
               <span class="notice-row-date"><i class="far fa-calendar"></i><%= n.date || '' %></span>

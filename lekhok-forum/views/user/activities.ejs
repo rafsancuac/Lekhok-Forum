@@ -66,7 +66,7 @@
           <span class="af-date"><i class="far fa-calendar"></i> <%= featured.scheduled_date || 'তারিখ নির্ধারিত নয়' %></span>
         </div>
         <h2 class="af-title"><%= featured.title %></h2>
-        <p class="af-excerpt"><%= featured.body.substring(0, 280) %><% if (featured.body.length > 280) { %>...<% } %></p>
+        <p class="af-excerpt"><%= mdPlain(featured.body, 280) %></p>
         <a href="/activities#item-<%= featured.id %>" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> বিস্তারিত দেখুন</a>
       </div>
     </div>
@@ -93,7 +93,7 @@
                   <% if (isUpcoming) { %><span class="badge badge-success badge-sm"><%= cat %></span><% } else { %><span class="badge badge-neutral badge-sm"><%= cat %></span><% } %>
                 </div>
                 <h3 class="tc-title"><%= a.title %></h3>
-                <p class="tc-excerpt"><%= a.body.substring(0, 200) %><% if (a.body.length > 200) { %>...<% } %></p>
+                <p class="tc-excerpt"><%= mdPlain(a.body, 200) %></p>
                 <a href="/activities#item-<%= a.id %>" class="tc-link"><i class="fas fa-arrow-right"></i> বিস্তারিত</a>
               </div>
             </div>
@@ -116,7 +116,7 @@
               <span class="badge badge-<%= isUpcoming ? 'success' : 'neutral' %> badge-sm"><%= cat %></span>
             </div>
             <h3 class="agc-title"><%= a.title %></h3>
-            <p class="agc-excerpt"><%= a.body.substring(0, 120) %>...</p>
+            <p class="agc-excerpt"><%= mdPlain(a.body, 120) %></p>
           </div>
         </div>
       <% }); %>

@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const totp = require('../helpers/totp');
 const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload');
 const rolePolicy = require('../helpers/role-policy');
+const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCurrentUser(req) {
@@ -163,6 +164,22 @@ router.post('/report', ensureLoggedIn, async (req, res) => {
       (targetType === 'comment' ? 'comment_id = ?' : 'post_id = ? AND comment_id IS NULL')
     ).get(me.id, targetId);
     if (dup) return res.status(409).json({ ok: false, error: 'আপনি ইতিমধ্যে এটি রিপোর্ট করেছেন — মডারেটররা দেখছেন।' });
+    // ── সেশন ৮৫: রিপোর্টার-রেট-লিমিট (স্প্যাম-গার্ড) ──────────────────────────
+    // দুই-স্তর: ১০-মিনিটে সর্বোচ্চ ৩টি (বার্স্ট) + ২৪-ঘণ্টায় সর্বোচ্চ ৬টি (দৈনিক)।
+    // সাধারণ সদস্য কখনোই ছুঁবেন না; র‍্যান্ডম-স্প্যামার এখানেই থামে। ডুপ্লিকেট-গার্ডের
+    // পরে — একই-টার্গেটের রিপিট-রিপোর্ট আগে ৪০৯-এ ধরা পড়ে, ভিন্ন-টার্গেট-স্প্যাম এখানে।
+    const burst85 = await db.prepare(
+      "SELECT COUNT(*) c FROM reports WHERE reporter_id = ? AND created_at >= datetime('now', '-10 minutes')"
+    ).get(me.id);
+    if (burst85.c >= 3) {
+      return res.status(429).json({ ok: false, error: 'খুব দ্রুত পরপর একাধিক রিপোর্ট যাচ্ছে — কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।' });
+    }
+    const day85 = await db.prepare(
+      "SELECT COUNT(*) c FROM reports WHERE reporter_id = ? AND created_at >= datetime('now', '-24 hours')"
+    ).get(me.id);
+    if (day85.c >= 6) {
+      return res.status(429).json({ ok: false, error: '২৪ ঘণ্টায় সর্বোচ্চ ৬টি রিপোর্ট পাঠানো যায়। একাধিক সমস্যা একসাথে দেখলে একটি বিস্তারিত রিপোর্টে সব উল্লেখ করুন।' });
+    }
     await db.prepare(
       targetType === 'comment'
         ? 'INSERT INTO reports (reporter_id, comment_id, post_id, reason, details) VALUES (?, ?, ?, ?, ?)'
@@ -306,7 +323,7 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
   }
   const mentions = await extractMentions(body);
   const result = await db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?, ?)`).run(
-    req.session.user.id, title, body, excerpt || body.replace(/^#{1,6}[ \t]+/gm, '').substring(0, 200), cover, tags || null, mentions, category || 'general'
+    req.session.user.id, title, body, excerpt || mdPlain85(body, 200), cover, tags || null, mentions, category || 'general'
   );
   await db.setPostImages('post', result.lastInsertRowid, images);
 
@@ -480,12 +497,9 @@ router.get('/articles/:id', async (req, res) => {
   const user = req.session.user || null;
 
   // ── SEO: per-article OG/Twitter/JSON-LD data ────────────────────────────────
-  const stripTags = (s) => String(s || '')
-    .replace(/^#{1,6}[ \t]+/gm, '')   /* সেশন ৬৫: হেডিং-মার্কার meta-বর্ণনায় না-যাওয়ার জন্য (নতুন-লাইনের-আগে!) */
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const _d = stripTags(post.excerpt || post.body);
+  /* সেশন ৮৫: হেডিং-মার্কারের সাথে বোল্ড-ইটালিক-লিংক মার্কারও মেটা-বর্ণনা থেকে সরে —
+     mdPlain85 (markdown-lite প্লেইন-টেক্সট) — সোশ্যাল-ক্রলারে পরিষ্কার বাংলা। */
+  const _d = mdPlain85(post.excerpt || post.body);
   const metaDesc = _d ? (_d.length > 197 ? _d.slice(0, 197) + '…' : _d) : null;
   const _base = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
   const ogImage = post.cover_image
@@ -1410,7 +1424,7 @@ router.get('/bookmarks', async (req, res) => {
   // article-single-এ যেমন স্ট্রিপ হয়, এখানেও (সাদা-স্পেস কোলাপ্সসহ)।
   for (const it of items) {
     const src = it.excerpt || it.body || '';
-    it.display_excerpt = src.replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().slice(0, 150);
+    it.display_excerpt = mdPlain85(src, 150); // সেশন ৮৫: মার্কডাউন-মার্কার-স্ট্রিপ
     // পড়ার-সময় (~১৩০ শব্দ/মিনিট — article-single-এর হিসাবের মিরর)
     const words = (it.body || '').trim() ? (it.body || '').trim().split(/\s+/).length : 0;
     it.read_min = Math.max(1, Math.round(words / 130));
@@ -1477,7 +1491,7 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
   // সেশন ৬৬-বাগফিক্স: /me-র সংরক্ষিত-ট্যাবের এক্সারপ্টে কাঁচা ## / ### হেডিং-মার্কার
   // দেখা যেত (সেশন ৬৫ শুধু article-single-এ স্ট্রিপ করেছিল) — এখানেও পরিষ্কার।
   for (const b of myBookmarks) {
-    b.display_excerpt = (b.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    b.display_excerpt = mdPlain85(b.body, 200); // সেশন ৮৫: মার্কডাউন-মার্কার-স্ট্রিপ
   }
 
   // Following — users + their recent activity

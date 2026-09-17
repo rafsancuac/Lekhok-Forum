@@ -22,11 +22,15 @@
   </div>
 
   <% if (done81) { %>
-  <div class="mrq81-flash <%= ['hide','resolve','unhide'].includes(done81) ? 'ok' : (done81 === 'dismiss' ? 'info' : 'warn') %>">
+  <div class="mrq81-flash <%= ['hide','resolve','unhide','bulk-hide','bulk-resolve'].includes(done81) ? 'ok' : (done81 === 'dismiss' || done81 === 'bulk-dismiss' ? 'info' : 'warn') %>">
     <% if (done81 === 'hide') { %><i class="fas fa-check-circle"></i> রিপোর্টটি সমাধান হয়েছে — কনটেন্ট লুকানো হলো, লেখক ও রিপোর্টকারী দুজনেই নোটিফিকেশন পেয়েছেন।
     <% } else if (done81 === 'dismiss') { %><i class="fas fa-info-circle"></i> রিপোর্টটি খারিজ হয়েছে — রিপোর্টকারীকে জানানো হয়েছে।
     <% } else if (done81 === 'resolve') { %><i class="fas fa-check-circle"></i> রিপোর্টটি সমাধান-চিহ্নিত হয়েছে।
     <% } else if (done81 === 'unhide') { %><i class="fas fa-eye"></i> কনটেন্টটি পুনঃপ্রকাশিত হয়েছে।
+    <% } else if (done81 === 'bulk-hide' || done81 === 'bulk-dismiss' || done81 === 'bulk-resolve') { %>
+      <i class="fas fa-layer-group"></i> <strong>বাল্ক-অ্যাকশন সম্পন্ন:</strong>
+      <%= bulkN85 %>টি রিপোর্টে '<%= done81 === 'bulk-hide' ? 'লুকানো+সমাধান' : (done81 === 'bulk-dismiss' ? 'খারিজ' : 'সমাধান') %>' প্রয়োগ হয়েছে<%= bulkSk85 ? (' — ' + bulkSk85 + 'টি ইতিমধ্যে প্রক্রিয়াকৃত ছিল (স্কিপ)') : '' %>।
+    <% } else if (done81 === 'bulk-none') { %><i class="fas fa-exclamation-circle"></i> কোনো রিপোর্ট নির্বাচন করা হয়নি।
     <% } else if (done81 === 'already') { %><i class="fas fa-exclamation-circle"></i> রিপোর্টটি আগেই প্রক্রিয়াকরণ হয়েছে।
     <% } else if (done81 === 'missing') { %><i class="fas fa-exclamation-triangle"></i> রিপোর্টটি খুঁজে পাওয়া যায়নি।
     <% } else { %><i class="fas fa-exclamation-triangle"></i> কিছু একটা সমস্যা হয়েছে — আবার চেষ্টা করুন। <% } %>
@@ -87,8 +91,14 @@
   <% } %>
 
   <% reports.forEach(r => { %>
-    <div class="mrq81-card st-<%= r.status %>">
+    <div class="mrq81-card st-<%= r.status %> <%= r.status === 'open' ? 'mrq85-selectable' : '' %>" data-id85="<%= r.status === 'open' ? r.id : '' %>">
       <div class="mrq81-card-head">
+        <% if (r.status === 'open') { %>
+        <label class="mrq85-check" title="বাল্ক-অ্যাকশনের জন্য নির্বাচন">
+          <input type="checkbox" class="mrq85-cb" value="<%= r.id %>">
+          <span class="mrq85-box"><i class="fas fa-check"></i></span>
+        </label>
+        <% } %>
         <span class="mrq81-reason" title="<%= r.reasonMeta.label %>">
           <i class="<%= r.reasonMeta.icon %>"></i> <%= r.reasonMeta.label %>
         </span>
@@ -117,7 +127,14 @@
           <% } else { %>
             <span>লেখক: <%= r.post_author_name ? ('<a href="/profile/' + r.post_author_username + '">' + r.post_author_name + '</a>') : '—' %></span>
           <% } %>
-          <span>রিপোর্টকারী: <strong><%= r.reporter_name %></strong> (@<%= r.reporter_username %>)</span>
+          <span>রিপোর্টকারী: <strong><%= r.reporter_name %></strong> (@<%= r.reporter_username %>)
+            <% if (r.reporterHist && r.reporterHist.total >= 2) { %>
+            <span class="mrq85-hist <%= (r.reporterHist.dismissed >= 3 && r.reporterHist.resolved === 0) ? 'spam' : '' %>" title="এই রিপোর্টকারীর সব রিপোর্টের পরিণতি">
+              <i class="fas fa-chart-simple"></i> <%= r.reporterHist.total %>টি: <b><%= r.reporterHist.dismissed %></b> খারিজ / <b><%= r.reporterHist.resolved %></b> সমাধান
+              <% if (r.reporterHist.dismissed >= 3 && r.reporterHist.resolved === 0) { %><i class="fas fa-triangle-exclamation"></i> স্প্যাম-প্রবণ<% } %>
+            </span>
+            <% } %>
+          </span>
         </div>
       </div>
 
@@ -163,15 +180,72 @@
   <% }) %>
 
   <% if (reports.length > 0) { %>
-  <p class="mrq81-footnote"><i class="fas fa-lightbulb"></i> টিপ: লেখক-নিজেও পারেন নিজের লেখা লুকাতে/ফেরাতে — সেক্ষেত্রে নোটিফিকেশন যায় না। মডারেটর-লুকালে লেখক জানতে পারেন (কিন্তু কে রিপোর্ট করেছে জানতে পারেন না)।</p>
+  <p class="mrq81-footnote"><i class="fas fa-lightbulb"></i> টিপ: একাধিক রিপোর্ট একসাথে সামলাতে কার্ডের চেকবক্স নির্বাচন করে নিচের বাল্ক-বার ব্যবহার করুন। লেখক-নিজেও পারেন নিজের লেখা লুকাতে/ফেরাতে — সেক্ষেত্রে নোটিফিকেশন যায় না। মডারেটর-লুকালে লেখক জানতে পারেন (কিন্তু কে রিপোর্ট করেছে জানতে পারেন না)।</p>
   <% } %>
 </div>
+
+<%# ── সেশন ৮৫: বাল্ক-অ্যাকশন বার (নিচে-স্টিকি) ── %>
+<% if (tab81 === 'open' && reports.some(r => r.status === 'open')) { %>
+<div class="mrq85-bulkbar" id="mrq85BulkBar" hidden>
+  <form method="POST" action="/moderator/reports/bulk" id="mrq85BulkForm">
+    <%# সেশন-৮৫-লেসন: action-মান বাটনের নামে নয় — হিডেন-ইনপুটে! main.js-এর ডাবল-সাবমিট-গার্ড
+        সাবমিট-ইভেন্টেই সব বাটন disabled করে → disabled-বাটনের name=value পেলোডে যায় না →
+        req.body.action খালি → 400। একক-অ্যাকশন-ফর্মগুলোও এ কারণেই হিডেন-ইনপুট ব্যবহার করে। %>
+    <input type="hidden" name="action" id="mrq85Action" value="">
+    <span class="mrq85-bulk-count"><i class="fas fa-check-double"></i> <b id="mrq85SelN">0</b>টি নির্বাচিত</span>
+    <button type="button" class="mrq85-bulk-tool" id="mrq85All"><i class="fas fa-square-check"></i> সব নির্বাচন</button>
+    <button type="button" class="mrq85-bulk-tool" id="mrq85None"><i class="fas fa-square"></i> বাদ</button>
+    <span class="mrq85-bulk-sep"></span>
+    <button type="submit" class="mrq85-bulk-act primary" data-action85="hide" data-confirm85="নির্বাচিত সব কনটেন্ট লুকিয়ে দিবেন? প্রতিটি লেখক ও রিপোর্টকারী নোটিফিকেশন পাবেন।"><i class="fas fa-low-vision"></i> সব লুকান</button>
+    <button type="submit" class="mrq85-bulk-act ok" data-action85="resolve"><i class="fas fa-check"></i> সব সমাধান</button>
+    <button type="submit" class="mrq85-bulk-act ghost" data-action85="dismiss" data-confirm85="নির্বাচিত সব রিপোর্ট খারিজ হবে — রিপোর্টকারীরা জানতে পারবেন। ঠিক আছে?"><i class="fas fa-times"></i> সব খারিজ</button>
+  </form>
+</div>
+<% } %>
 
 <script>
   (function () {
     document.querySelectorAll('form[data-confirm81]').forEach(function (f) {
       f.addEventListener('submit', function (e) {
         if (!window.confirm(f.getAttribute('data-confirm81'))) { e.preventDefault(); }
+      });
+    });
+    /* ── সেশন ৮৫: বাল্ক-বার লজিক ── */
+    var bar85 = document.getElementById('mrq85BulkBar');
+    if (!bar85) return;
+    var form85 = document.getElementById('mrq85BulkForm');
+    var nEl85 = document.getElementById('mrq85SelN');
+    var cbs85 = Array.prototype.slice.call(document.querySelectorAll('.mrq85-cb'));
+    function sync85() {
+      var sel = cbs85.filter(function (c) { return c.checked; });
+      nEl85.textContent = String(sel.length);
+      bar85.hidden = sel.length === 0;
+      /* নির্বাচিত-আইডি হিডেন-ইনপুট হিসেবে ফর্মে রাখা — সাবমিটে ids[] যায় */
+      form85.querySelectorAll('input[name="ids"]').forEach(function (i) { i.remove(); });
+      sel.forEach(function (c) {
+        var h = document.createElement('input');
+        h.type = 'hidden'; h.name = 'ids'; h.value = c.value;
+        form85.appendChild(h);
+      });
+      document.body.classList.toggle('mrq85-has-sel', sel.length > 0);
+    }
+    cbs85.forEach(function (c) { c.addEventListener('change', sync85); });
+    document.getElementById('mrq85All').addEventListener('click', function () { cbs85.forEach(function (c) { c.checked = true; }); sync85(); });
+    document.getElementById('mrq85None').addEventListener('click', function () { cbs85.forEach(function (c) { c.checked = false; }); sync85(); });
+    form85.addEventListener('submit', function (e) {
+      /* অ্যাকশন-মান হিডেন-ইনপুটে বসাই (বাটন disabled হলেও পেলোডে যাবে) */
+      var btn = e.submitter;
+      var act = btn && btn.getAttribute ? btn.getAttribute('data-action85') : null;
+      if (!act) { e.preventDefault(); return; }
+      document.getElementById('mrq85Action').value = act;
+      if (btn.getAttribute('data-confirm85') && !window.confirm(btn.getAttribute('data-confirm85'))) { e.preventDefault(); }
+    });
+    /* কার্ড-বডি ক্লিকেও টগল (চেকবক্স-লেবেল ছাড়া জায়গায়) — কার্ড-হেডে সীমিত */
+    document.querySelectorAll('.mrq85-selectable .mrq81-card-head').forEach(function (h) {
+      h.addEventListener('click', function (e) {
+        if (e.target.closest('.mrq85-cb, .mrq85-check, a, button, form')) return;
+        var cb = h.querySelector('.mrq85-cb');
+        if (cb) { cb.checked = !cb.checked; sync85(); }
       });
     });
   })();

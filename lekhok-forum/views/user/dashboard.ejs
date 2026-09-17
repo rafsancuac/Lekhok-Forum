@@ -80,7 +80,7 @@
                 <% } %>
                 <div class="feed-card-body">
                   <h3 class="feed-title"><a href="<%= item.original.link %>"><%= item.original.title %></a></h3>
-                  <p class="feed-text"><%= String(item.original.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 280) %><% if ((item.original.body || '').length > 280) { %>…<a href="<%= item.original.link %>"> আরও পড়ুন</a><% } %></p>
+                  <p class="feed-text"><%= mdPlain(item.original.body || '', 280) %><% if ((item.original.body || '').length > 280) { %> <a href="<%= item.original.link %>">আরও পড়ুন</a><% } %></p>
                 </div>
                 <%- include('../partials/actions-bar', {
                   targetId: item.original.id,
@@ -133,7 +133,7 @@
             <% } %>
             <div class="feed-card-body">
               <h3 class="feed-title"><a href="<%= item.link %>"><%= item.title %></a></h3>
-              <p class="feed-text"><%= String(item.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 280) %><% if ((item.body || '').length > 280) { %>…<a href="<%= item.link %>"> আরও পড়ুন</a><% } %></p>
+              <p class="feed-text"><%= mdPlain(item.body || '', 280) %><% if ((item.body || '').length > 280) { %> <a href="<%= item.link %>">আরও পড়ুন</a><% } %></p>
             </div>
             <%- include('../partials/actions-bar', {
               targetId: item.id,

@@ -25,7 +25,7 @@
             </div>
             <div class="qa-content">
               <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
-              <% if (q.body) { %><p class="qa-excerpt"><%= q.body.substring(0, 150) %>...</p><% } %>
+              <% if (q.body) { %><p class="qa-excerpt"><%= mdPlain(q.body, 150) %></p><% } %>
               <div class="qa-meta">
                 <img loading="lazy" decoding="async" src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar">
                 <a href="/profile/<%= q.username %>" class="qa-author"><%= q.full_name %></a>
