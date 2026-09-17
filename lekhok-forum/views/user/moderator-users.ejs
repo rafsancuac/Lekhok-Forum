@@ -1,4 +1,5 @@
 <%# সেশন ৮৩: ইউজার তদারকি (মডারেটর — user_mgmt স্কোপ) %>
+<%# সেশন ৯০: কারণসহ নিষেধ/ফেরত + টার্গেট-বিজ্ঞপ্তি + স্ট্যাট-চিপ + তদারকি-ফিড + .mu-* CSS %>
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -7,84 +8,126 @@
   <title>ইউজার তদারকি | মডারেটর প্যানেল</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>">
 </head>
 <body>
 <%- include('../../admin/views/admin/partials/sidebar') %>
 <div class="admin-main">
-<div class="mod-wrap">
+<div class="mod-wrap mu-wrap">
     <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
     <h2><i class="fas fa-users-cog"></i> ইউজার তদারকি</h2>
-    <p style="color:#65676b;font-size:.9rem;line-height:1.7;">
+    <p class="mu-sub">
       হায়ারার্কি-নীতি: ইউজারের কাজ মডারেটর নিয়ন্ত্রণ ও তদারকি করতে পারেন — নিয়ম-ভঙ্গকারীকে
       <strong>নিষেধ</strong> করা ও <strong>ফেরত</strong> আনা এখানেই করুন। রোল-পরিবর্তন (মডারেটর/এডমিন নিয়োগ) এখানে সম্ভব নয় —
       সেটি কেবল এডমিন ও সুপার-এডমিনের এখতিয়ার।
     </p>
 
-    <% if (typeof saved !== 'undefined' && saved) { %><div class="alert alert-success" style="background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;padding:10px 14px;border-radius:5px;margin:12px 0;"><i class="fas fa-check-circle"></i> সফলভাবে আপডেট হয়েছে।</div><% } %>
-    <% if (typeof err !== 'undefined' && err === 'staff') { %><div class="alert alert-error" style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;padding:10px 14px;border-radius:5px;margin:12px 0;"><i class="fas fa-exclamation-triangle"></i> স্টাফ অ্যাকাউন্ট (মডারেটর/এডমিন) মডারেটর পরিবর্তন করতে পারবেন না — এটি ঊর্ধ্বতন-স্তরের কাজ।</div><% } else if (typeof err !== 'undefined' && err) { %><div class="alert alert-error" style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b;padding:10px 14px;border-radius:5px;margin:12px 0;"><i class="fas fa-exclamation-circle"></i> অনুরোধ প্রক্রিয়া করা যায়নি।</div><% } %>
+    <%# সেশন ৯০: স্ট্যাট-চিপ সারি %>
+    <%
+      var muTotal = users.length;
+      var muActive = users.filter(u => u.status === 'active').length;
+      var muBanned = users.filter(u => u.status === 'banned').length;
+      var muPending = users.filter(u => u.status === 'pending').length;
+      var muStaff = users.filter(u => u.role && u.role !== 'user').length;
+    %>
+    <div class="mu-stats">
+      <span class="mu-chip mu-chip-all"><i class="fas fa-users"></i> মোট <%= muTotal %></span>
+      <span class="mu-chip mu-chip-ok"><i class="fas fa-circle-check"></i> সক্রিয় <%= muActive %></span>
+      <span class="mu-chip mu-chip-ban"><i class="fas fa-ban"></i> নিষিদ্ধ <%= muBanned %></span>
+      <% if (muPending > 0) { %><span class="mu-chip mu-chip-warn"><i class="fas fa-user-clock"></i> অপেক্ষমাণ <%= muPending %></span><% } %>
+      <span class="mu-chip mu-chip-staff"><i class="fas fa-user-shield"></i> স্টাফ <%= muStaff %></span>
+    </div>
 
-    <form method="GET" action="/moderator/users" style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap;">
-      <input type="search" name="q" value="<%= q81 %>" placeholder="নাম বা ইউজারনেম খুঁজুন…" aria-label="ইউজার খুঁজুন"
-             style="flex:1;min-width:200px;padding:10px 14px;border:1px solid #ccd0d5;border-radius:5px;font-family:inherit;">
-      <button class="btn btn-primary"><i class="fas fa-search"></i> খুঁজুন</button>
-      <% if (q81) { %><a class="btn btn-sm" href="/moderator/users" style="padding:10px 14px;display:inline-flex;align-items:center;"><i class="fas fa-times"></i> বাতিল</a><% } %>
+    <% if (typeof saved !== 'undefined' && saved) { %><div class="alert alert-success mu-alert-ok"><i class="fas fa-check-circle"></i> সফলভাবে আপডেট হয়েছে — টার্গেট-ইউজার বিজ্ঞপ্তি পেয়েছেন।</div><% } %>
+    <% if (typeof err !== 'undefined' && err === 'staff') { %><div class="alert alert-error mu-alert-err"><i class="fas fa-exclamation-triangle"></i> স্টাফ অ্যাকাউন্ট (মডারেটর/এডমিন) মডারেটর পরিবর্তন করতে পারবেন না — এটি ঊর্ধ্বতন-স্তরের কাজ।</div>
+    <% } else if (typeof err !== 'undefined' && err === 'reason') { %><div class="alert alert-error mu-alert-err"><i class="fas fa-exclamation-circle"></i> কারণ খুব দীর্ঘ — ৩০০ অক্ষরের মধ্যে লিখুন।</div>
+    <% } else if (typeof err !== 'undefined' && err) { %><div class="alert alert-error mu-alert-err"><i class="fas fa-exclamation-circle"></i> অনুরোধ প্রক্রিয়া করা যায়নি।</div><% } %>
+
+    <form method="GET" action="/moderator/users" class="mu-search">
+      <div class="mu-search-box">
+        <i class="fas fa-search"></i>
+        <input type="search" name="q" value="<%= q81 %>" placeholder="নাম বা ইউজারনেম খুঁজুন…" aria-label="ইউজার খুঁজুন">
+      </div>
+      <button class="btn btn-primary mu-btn-find"><i class="fas fa-search"></i> খুঁজুন</button>
+      <% if (q81) { %><a class="btn mu-btn-clear" href="/moderator/users"><i class="fas fa-times"></i> বাতিল</a><% } %>
     </form>
 
+    <div class="mu-layout">
+      <div class="mu-main">
     <% if (!users.length) { %>
-      <p style="color:#999;"><i class="fas fa-inbox"></i> কোনো ইউজার পাওয়া যায়নি।</p>
+      <p class="mu-empty"><i class="fas fa-inbox"></i> কোনো ইউজার পাওয়া যায়নি।</p>
     <% } else { %>
-    <div style="overflow-x:auto;">
-    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e4e6eb;border-radius:5px;overflow:hidden;">
+    <div class="mu-table-scroll">
+    <table class="mu-table">
       <thead>
-        <tr style="background:#f0f2f5;text-align:left;font-size:.85rem;">
-          <th style="padding:12px 14px;">ইউজার</th>
-          <th style="padding:12px 14px;">রোল</th>
-          <th style="padding:12px 14px;">স্ট্যাটাস</th>
-          <th style="padding:12px 14px;">যোগদান</th>
-          <th style="padding:12px 14px;">শেষ লগইন</th>
-          <th style="padding:12px 14px;">কার্যক্রম</th>
+        <tr>
+          <th>ইউজার</th>
+          <th>রোল</th>
+          <th>স্ট্যাটাস</th>
+          <th class="mu-col-join">যোগদান</th>
+          <th>শেষ লগইন</th>
+          <th>কার্যক্রম</th>
         </tr>
       </thead>
       <tbody>
-      <% users.forEach(u => { %>
-        <tr style="border-top:1px solid #e4e6eb;">
-          <td style="padding:10px 14px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <img src="<%= u.avatar_url || '/avatar/' + u.id %>" alt="" width="36" height="36" style="border-radius:50%;object-fit:cover;" loading="lazy">
+      <% users.forEach((u, uIdx) => { %>
+        <tr class="<%= u.status === 'banned' ? 'is-banned-row' : '' %>">
+          <td>
+            <div class="mu-user">
+              <img src="<%= u.avatar_url || '/avatar/' + u.id %>" alt="" width="38" height="38" loading="lazy">
               <div>
-                <strong style="font-size:.92rem;"><%= u.full_name || u.username %></strong>
-                <div style="font-size:.78rem;color:#65676b;">@<%= u.username %></div>
+                <strong><%= u.full_name || u.username %></strong>
+                <span>@<%= u.username %></span>
               </div>
             </div>
           </td>
-          <td style="padding:10px 14px;">
+          <td>
             <% if (u.role === 'moderator') { %><span class="badge-soft role-moderator">মডারেটর</span>
             <% } else if (u.role === 'admin') { %><span class="badge-soft role-admin">এডমিন</span>
             <% } else { %><span class="badge-soft role-user">ইউজার</span><% } %>
           </td>
-          <td style="padding:10px 14px;">
+          <td>
             <% if (u.status === 'banned') { %><span class="badge-soft status-banned">নিষিদ্ধ</span>
             <% } else if (u.status === 'pending') { %><span class="badge-soft status-pending">অপেক্ষমাণ</span>
-            <% } else { %><span class="badge-soft" style="color:#047857;">সক্রিয়</span><% } %>
+            <% } else { %><span class="badge-soft mu-badge-active">সক্রিয়</span><% } %>
           </td>
-          <td style="padding:10px 14px;font-size:.82rem;color:#65676b;"><%= (u.created_at || '').split(' ')[0] %></td>
-          <td style="padding:10px 14px;font-size:.82rem;color:#65676b;"><%= u.last_login ? (u.last_login + '').split(' ')[0] : '—' %></td>
-          <td style="padding:10px 14px;">
+          <td class="mu-dim mu-col-join"><%= (u.created_at || '').split(' ')[0] %></td>
+          <td class="mu-dim"><%= u.last_login ? (u.last_login + '').split(' ')[0] : '—' %></td>
+          <td>
             <% if (u.role === 'user' && u.status !== 'pending') { %>
-            <form method="POST" action="/moderator/users/<%= u.id %>/status" style="display:flex;gap:6px;align-items:center;">
+            <div class="mu-actions">
               <% if (u.status === 'banned') { %>
-                <input type="hidden" name="status" value="active">
-                <button class="btn btn-sm" style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:6px 12px;"><i class="fas fa-undo"></i> ফেরত আনুন</button>
+                <form method="POST" action="/moderator/users/<%= u.id %>/status" class="mu-quick">
+                  <input type="hidden" name="status" value="active">
+                  <button class="mu-btn mu-btn-restore" type="submit"><i class="fas fa-undo"></i> ফেরত আনুন</button>
+                </form>
+                <details class="mu-reason">
+                  <summary><i class="fas fa-pen"></i> নোটসহ ফেরত</summary>
+                  <form method="POST" action="/moderator/users/<%= u.id %>/status" class="mu-reason-form">
+                    <input type="hidden" name="status" value="active">
+                    <textarea name="reason" maxlength="300" rows="2" placeholder="প্রত্যাহার-নোট (ঐচ্ছিক, ≤৩০০ অক্ষর) — ইউজার বিজ্ঞপ্তিতে দেখবেন"></textarea>
+                    <button class="mu-btn mu-btn-restore" type="submit"><i class="fas fa-paper-plane"></i> নোটসহ ফেরত আনুন</button>
+                  </form>
+                </details>
               <% } else { %>
-                <input type="hidden" name="status" value="banned">
-                <button class="btn btn-sm btn-danger" style="padding:6px 12px;"><i class="fas fa-ban"></i> নিষেধ করুন</button>
+                <form method="POST" action="/moderator/users/<%= u.id %>/status" class="mu-quick" data-mu-confirm="নিশ্চিতভাবে <%= u.full_name || u.username %>-কে নিষেধ করবেন?">
+                  <input type="hidden" name="status" value="banned">
+                  <button class="mu-btn mu-btn-ban" type="submit"><i class="fas fa-ban"></i> নিষেধ করুন</button>
+                </form>
+                <details class="mu-reason">
+                  <summary><i class="fas fa-pen"></i> কারণসহ নিষেধ</summary>
+                  <form method="POST" action="/moderator/users/<%= u.id %>/status" class="mu-reason-form">
+                    <input type="hidden" name="status" value="banned">
+                    <textarea name="reason" maxlength="300" rows="2" placeholder="নিষেধের কারণ (ঐচ্ছিক, ≤৩০০ অক্ষর) — ইউজার বিজ্ঞপ্তিতে দেখবেন"></textarea>
+                    <button class="mu-btn mu-btn-ban" type="submit"><i class="fas fa-paper-plane"></i> কারণসহ নিষেধ করুন</button>
+                  </form>
+                </details>
               <% } %>
-            </form>
+            </div>
             <% } else if (u.role !== 'user') { %>
-              <span style="font-size:.78rem;color:#8a8d93;"><i class="fas fa-lock"></i> ঊর্ধ্বতন-এখতিয়ার</span>
+              <span class="mu-lock"><i class="fas fa-lock"></i> ঊর্ধ্বতন-এখতিয়ার</span>
             <% } else { %>
-              <span style="font-size:.78rem;color:#8a8d93;">অপেক্ষমাণ — এডমিন অনুমোদন করবেন</span>
+              <span class="mu-lock mu-lock-pending">অপেক্ষমাণ — এডমিন অনুমোদন করবেন</span>
             <% } %>
           </td>
         </tr>
@@ -92,10 +135,50 @@
       </tbody>
     </table>
     </div>
-    <p style="font-size:.8rem;color:#8a8d93;margin-top:10px;">সর্বশেষ ২০০ জন দেখানো হচ্ছে। প্রতিটি নিষেধ/ফেরত অডিট-লগে রেকর্ড হয়।</p>
+    <p class="mu-foot"><i class="fas fa-shield-halved"></i> সর্বশেষ ২০০ জন দেখানো হচ্ছে। প্রতিটি নিষেধ/ফেরত অডিট-লগে রেকর্ড হয়; টার্গেট-ইউজার কারণসহ বিজ্ঞপ্তি পান (সেশন ৯০)।</p>
     <% } %>
+      </div>
+
+      <%# সেশন ৯০: সাম্প্রতিক তদারকি-অ্যাকশন ফিড (সুপার-ড্যাশবোর্ডের মিরর) %>
+      <aside class="mu-side">
+        <div class="mu-feed">
+          <h4><i class="fas fa-clock-rotate-left"></i> সাম্প্রতিক তদারকি</h4>
+          <% if (typeof recentAudit !== 'undefined' && recentAudit.length) { %>
+          <ul>
+            <% recentAudit.forEach(a => { %>
+            <li>
+              <i class="fas fa-right-left"></i>
+              <div>
+                <strong><%= (a.detail || '').replace('moderator-oversight: ', '') %></strong>
+                <span><%= a.actor_name || 'স্টাফ' %> · <%= new Date(a.created_at).toLocaleDateString('bn-BD') %></span>
+              </div>
+            </li>
+            <% }) %>
+          </ul>
+          <% } else { %>
+          <p class="mu-feed-empty">এখনো কোনো তদারকি-অ্যাকশন নেই।</p>
+          <% } %>
+        </div>
+        <div class="mu-tip">
+          <h5><i class="fas fa-lightbulb"></i> স্মরণী</h5>
+          <ul>
+            <li>নিষেধের <strong>কারণ</strong> লিখলে ইউজার বিজ্ঞপ্তিতে কারণটি পান।</li>
+            <li>স্টাফ-অ্যাকাউন্ট নিষেধ এই প্যানেলে নয় — ঊর্ধ্বতন স্তরের কাজ।</li>
+            <li>সব সিদ্ধান্ত অডিট-লগে সংরক্ষিত হয়।</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
 </div>
 </div>
+<script>
+// সেশন ৯০: দ্রুত-নিষেধে নিশ্চিতকরণ (কারণসহ ফর্মে নেই — সেখানে ইচ্ছাকৃত ধাপই আছে)
+document.querySelectorAll('form[data-mu-confirm]').forEach(function (f) {
+  f.addEventListener('submit', function (e) {
+    if (!window.confirm(f.getAttribute('data-mu-confirm'))) e.preventDefault();
+  });
+});
+</script>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>

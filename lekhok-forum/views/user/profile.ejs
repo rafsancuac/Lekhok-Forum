@@ -61,6 +61,8 @@
             <%= profile.full_name %>
             <% if (profile.pen_name) { %><span class="pf-pen-name">(<%= profile.pen_name %>)</span><% } %>
             <% if (isVerified) { %><span class="pf-verified" title="যাচাইকৃত সংগঠন-পদাধিকারী" aria-label="ভেরিফায়েড"><i class="fas fa-check"></i></span><% } %>
+            <%# সেশন ৯০: স্টাফ-রোল ব্যাজ — সুস্পষ্ট পদ-চিপ (মডারেটর/এডমিন/সুপার এডমিন) %>
+            <% if (typeof roleBadge !== 'undefined' && roleBadge) { %><span class="pf-role-badge <%= roleBadge.cls %>" title="ফোরাম-দায়িত্ব: <%= roleBadge.label %>"><i class="fas <%= roleBadge.icon %>"></i> <%= roleBadge.label %></span><% } %>
           </h1>
           <p class="pf-sub-line">
             <button type="button" class="pf-meta-link" data-tab="followers"><strong><%= bn(followerCount) %></strong> জন অনুসারী</button>

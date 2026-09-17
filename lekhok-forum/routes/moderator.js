@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { broadcastToAll } = require('./dashboard');
+const { notifyUser } = require('../helpers/notify'); // সেশন ৯০: তদারকি-বিজ্ঞপ্তি
 const { validateNavJson, parseNav } = require('../helpers/nav');
 const { pressUpload, withUpload } = require('../middleware/upload');
 const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
@@ -823,6 +824,9 @@ for (const act of ['add', ':id/save', ':id/toggle', ':id/move', ':id/delete', ':
 //   • ইউজার-তালিকা/সার্চ দেখবেন (রোল/স্ট্যাটাস সহ)
 //   • নিয়ম-ভঙ্গকারীকে নিষেধ (banned) করতে ও ফেরত (active) আনতে পারবেন
 //   • রোল-কলাম শুধু-দেখা — পরিবর্তনের কোনো কন্ট্রোল নেই
+// সেশন ৯০: প্রতিটি নিষেধ/ফেরতে "কারণ" নেওয়া হয় (ঐচ্ছিক, ≤৩০০ অক্ষর) —
+//   টার্গেট-ইউজার বিজ্ঞপ্তি পান (notifications.type='moderation') এবং audit_log-এ
+//   কারণটি সংরক্ষিত হয়। GET পেজে সাম্প্রতিক তদারকি-ফিডও দেখানো হয়।
 router.get('/users', ensureModerator, requireScope('user_mgmt'), async (req, res) => {
   const q81 = String(req.query.q || '').trim();
   let users = [];
@@ -834,13 +838,21 @@ router.get('/users', ensureModerator, requireScope('user_mgmt'), async (req, res
       users = await db.prepare("SELECT id, username, full_name, avatar_url, gender, role, status, created_at, last_login FROM users WHERE role != 'superadmin' ORDER BY id DESC LIMIT 200").all();
     }
   } catch (e) {}
-  res.render('user/moderator-users', { users, q81, currentPath: '/moderator/users', saved: req.query.saved || null, err: req.query.err || null });
+  // সেশন ৯০: সাম্প্রতিক তদারকি-অ্যাকশন ফিড (সুপার-ড্যাশবোর্ডের ফিডের মিরর)
+  let recentAudit = [];
+  try {
+    recentAudit = await db.prepare("SELECT actor_name, detail, created_at FROM audit_log WHERE table_name='users' AND action='status' AND detail LIKE 'moderator-oversight%' ORDER BY id DESC LIMIT 8").all();
+  } catch (e) {}
+  res.render('user/moderator-users', { users, q81, recentAudit, currentPath: '/moderator/users', saved: req.query.saved || null, err: req.query.err || null });
 });
 
 // নিষেধ/ফেরত — শুধু status টগল; role এখানে অপরিবর্তনীয় (হায়ারার্কি)
+// সেশন ৯০: কারণ (ঐচ্ছিক, ≤৩০০ অক্ষর) + টার্গেট-ইউজার বিজ্ঞপ্তি + audit-এ কারণ
 router.post('/users/:id/status', ensureModerator, requireScope('user_mgmt'), async (req, res) => {
   const status81 = String(req.body.status || '');
   if (!['active', 'banned'].includes(status81)) return res.redirect('/moderator/users?err=1');
+  const reason90 = String(req.body.reason || '').trim().slice(0, 300);
+  if (reason90.length >= 300) return res.redirect('/moderator/users?err=reason');
   const target = await db.prepare("SELECT id, username, role, status FROM users WHERE id = ?").get(req.params.id);
   if (!target) return res.redirect('/moderator/users?err=1');
   // স্টাফ-অ্যাকাউন্ট (moderator/admin/superadmin) মডারেটর ছুঁতে পারবেন না —
@@ -848,7 +860,19 @@ router.post('/users/:id/status', ensureModerator, requireScope('user_mgmt'), asy
   if (target.role && target.role !== 'user') return res.redirect('/moderator/users?err=staff');
   if (target.status !== status81) {
     await db.prepare('UPDATE users SET status = ? WHERE id = ?').run(status81, req.params.id);
-    await TA42.audit(db, req, 'status', 'users', req.params.id, 'moderator-oversight: ' + target.username + ' → ' + status81);
+    const auditDetail = 'moderator-oversight: ' + target.username + ' → ' + status81 + (reason90 ? ' — কারণ: ' + reason90 : '');
+    await TA42.audit(db, req, 'status', 'users', req.params.id, auditDetail);
+    // টার্গেট-ইউজারকে বিজ্ঞপ্তি (নিষেধ হলে ফেরত-এলে পড়তে পারবেন; ফেরতেও জানবেন)
+    const isBan = status81 === 'banned';
+    await notifyUser(
+      target.id,
+      'moderation',
+      isBan ? 'আপনার অ্যাকাউন্ট সাময়িক নিষেধ করা হয়েছে' : 'আপনার অ্যাকাউন্টের নিষেধ প্রত্যাহৃত হয়েছে',
+      isBan
+        ? ('ফোরাম-নিয়ম ভঙ্গের তদারকি-সিদ্ধান্তে আপনার অ্যাকাউন্ট সাময়িক নিষেধ (banned) করা হয়েছে।' + (reason90 ? ' কারণ: ' + reason90 : ' কারণ উল্লেখ করা হয়নি — বিস্তারিত জানতে অভিযোগ/যোগাযোগ চ্যানেল ব্যবহার করুন।'))
+        : ('তদারকি-পর্যালোচনায় আপনার অ্যাকাউন্ট আবার সক্রিয় (active) করা হয়েছে — ফোরামে অংশগ্রহণ চালিয়ে যেতে পারেন।' + (reason90 ? ' নোট: ' + reason90 : '')),
+      '/notifications'
+    );
   }
   res.redirect('/moderator/users?saved=1');
 });

@@ -324,7 +324,7 @@
 .pf-spacer{flex:1}
 .pf-count-link{color:var(--pf-text2);text-decoration:none}
 .pf-count-link:hover{text-decoration:underline;color:var(--pf-blue)}
-/* FB-ইমোজি-ফেসপাইল (সেশন ৮৭) */
+/* FB-ইমোজি-ফেসপাইল (সেশন ৯০) */
 .pf-facepile{display:inline-flex;align-items:center}
 .pf-facepile span{font-size:13px;margin-left:-3px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12));transition:transform .15s}
 .pf-facepile span:first-child{margin-left:0}
@@ -332,7 +332,7 @@
 .pf-facepile-count{font-weight:600;color:var(--pf-text2)}
 .pf-facepile-muted{color:#8A8D91;font-size:13px}
 
-/* সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন হোস্ট — গ্লোবাল actions-bar-কে FB ৩-কলামে রূপান্তর */
+/* সেশন ৯০: FB-রিঅ্যাকশন-ইঞ্জিন হোস্ট — গ্লোবাল actions-bar-কে FB ৩-কলামে রূপান্তর */
 .pf-actions-host .actions-summary{
   grid-column:1/-1; /* গ্রিডে নিজস্ব-রো (flex-basis গ্রিডে কাজ করে না) */
   display:flex;align-items:center;gap:6px;
@@ -423,7 +423,7 @@
   outline:2px solid var(--pf-blue);outline-offset:2px;border-radius:6px;
 }
 
-/* সেশন ৮৭: কভার-প্রিভিউ মোডাল */
+/* সেশন ৯০: কভার-প্রিভিউ মোডাল */
 .pf-modal{
   position:fixed;inset:0;z-index:200;
   background:rgba(0,0,0,.55);
@@ -625,4 +625,20 @@
   .pf-post-title{font-size:16px}
   .pf-user-row{flex-wrap:wrap}
   .pf-user-actions{width:100%;justify-content:flex-end}
+}
+
+/* সেশন ৯০: স্টাফ-রোল ব্যাজ — ভেরিফায়েড-টিকের পাশে সুস্পষ্ট পদ-চিপ */
+.pf-role-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:999px;
+  font-size:12px;font-weight:700;line-height:1.4;
+  border:1px solid transparent;flex-shrink:0;
+  position:relative;top:1px;
+}
+.pf-role-badge i{font-size:10px}
+.pf-role-mod{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
+.pf-role-admin{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+.pf-role-super{background:#fefce8;color:#a16207;border-color:#fde68a}
+@media (max-width:600px){
+  .pf-role-badge{padding:3px 9px;font-size:11px}
 }

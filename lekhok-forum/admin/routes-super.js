@@ -100,7 +100,8 @@ const FLASH = {
   settings: 'সংবেদনশীল তথ্য সংরক্ষিত হয়েছে',
   maint_on: 'রক্ষণাবেক্ষণ-মোড চালু হয়েছে — দর্শকরা সাইট দেখছেন না',
   maint_off: 'রক্ষণাবেক্ষণ-মোড বন্ধ — সাইট স্বাভাবিক',
-  user_role: 'ইউজারের রোল পরিবর্তিত হয়েছে'
+  user_role: 'ইউজারের রোল পরিবর্তিত হয়েছে',
+  scope_revoke: "মডারেটরের 'ইউজার তদারকি' স্কোপ প্রত্যাহার হয়েছে — সে এখন /moderator/users-এ ঢুকতে পারবে না" // সেশন ৯০
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -383,6 +384,25 @@ router.post('/users/:id/role', async (req, res) => {
   } catch (e) {
     console.error('[super] users/role:', e);
     res.redirect('/admin/users?err=1');
+  }
+});
+
+// ═══ সেশন ৯০: user_mgmt স্কোপ প্রত্যাহার (সুপার-এডমিনের সরাসরি নিয়ন্ত্রণ) ═══
+// নজরদারি-কার্ডের মডারেটর-তালিকা থেকেই এক-ক্লিকে 'ইউজার তদারকি' স্কোপ বাতিল —
+// মডারেটর সঙ্গে সঙ্গে /moderator/users-এ অ্যাক্সেস হারান (requireScope লাইভ-চেক)।
+// রোল অপরিবর্তিত থাকে — শুধু স্কোপটাই প্রত্যাহার হয় (নিয়োগ/অপসারণ এডমিনের এরিয়া)।
+router.post('/moderators/:id/revoke-user-mgmt', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const target = await db.prepare("SELECT id, username, role FROM users WHERE id = ?").get(id);
+    if (!target || target.role !== 'moderator') return res.redirect('/admin/super?err=1');
+    const r = await db.prepare("DELETE FROM moderator_scopes WHERE user_id = ? AND scope = 'user_mgmt'").run(id);
+    if (r && r.changes === 0) return res.redirect('/admin/super?err=1');
+    await TA42.audit(db, req, 'scope-revoke', 'users', id, 'user_mgmt স্কোপ প্রত্যাহার: ' + target.username);
+    res.redirect('/admin/super?saved=scope_revoke');
+  } catch (e) {
+    console.error('[super] revoke-user-mgmt:', e);
+    res.redirect('/admin/super?err=1');
   }
 });
 

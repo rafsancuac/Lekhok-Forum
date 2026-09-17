@@ -1155,6 +1155,13 @@ router.get('/profile/:username', async (req, res) => {
   const lastLoginMs = profile.last_login ? new Date(String(profile.last_login).replace(' ', 'T') + (String(profile.last_login).includes('Z') ? '' : 'Z')).getTime() : 0;
   const isOnline = !!lastLoginMs && (Date.now() - lastLoginMs) < 5 * 60 * 1000;
   const lastSeenBn = lastLoginMs && !isOnline ? bnRelTime83(profile.last_login) : '';
+  // সেশন ৯০: স্টাফ-রোল ব্যাজ (ভেরিফায়েড-টিকের পাশে সুস্পষ্ট পদ-চিপ)
+  const ROLE_BADGE90 = {
+    moderator:  { label: 'মডারেটর',   icon: 'fa-users-cog', cls: 'pf-role-mod' },
+    admin:      { label: 'এডমিন',      icon: 'fa-user-shield', cls: 'pf-role-admin' },
+    superadmin: { label: 'সুপার এডমিন', icon: 'fa-crown', cls: 'pf-role-super' }
+  };
+  const roleBadge = (profile.role && ROLE_BADGE90[profile.role]) || null;
 
   // (৩) ছবি-গ্রিড — পোস্টের কভার + পোস্ট-ইমেজ, কম হলে ডিটারমিনিস্টিক লোকাল কভার-আর্ট
   const photos = [];
@@ -1235,7 +1242,7 @@ router.get('/profile/:username', async (req, res) => {
     REACTION_META,
     // সেশন ৮৩: ফেসবুক-প্যারিটি এক্সট্রা
     pinnedPost, photos, mutuals, isOnline, lastSeenBn,
-    totalPosts, totalLikes, isVerified,
+    totalPosts, totalLikes, isVerified, roleBadge,
     joinedBn: bnDate83(profile.created_at),
     bn: bn83, bnRelTime: bnRelTime83,
     req,

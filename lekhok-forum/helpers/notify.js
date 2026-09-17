@@ -9,6 +9,19 @@ async function broadcastToAll(type, title, body, link, excludeUserId) {
   return users.length;
 }
 
+// ── Targeted notification (session 90) ───────────────────────────────────────
+// One user, one row. Used by moderator-oversight (ban/restore with reason),
+// and any future per-user system event. Never throws to the caller's flow —
+// a failed notification must not break the primary action.
+async function notifyUser(userId, type, title, body, link) {
+  try {
+    if (!userId) return false;
+    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
+      .run(userId, type || 'system', title || '', body || '', link || '/notifications');
+    return true;
+  } catch (e) { console.error('[notify] notifyUser:', e.message); return false; }
+}
+
 // ── Birthday auto-greeting ───────────────────────────────────────────────────
 // Once per day: create a 'birthday' notification for every user whose
 // birthday is today (and show_birth=1), so followers + the user get greeted.
@@ -39,4 +52,4 @@ async function runBirthdayCheck() {
   }
 }
 
-module.exports = { broadcastToAll, runBirthdayCheck };
+module.exports = { broadcastToAll, notifyUser, runBirthdayCheck };

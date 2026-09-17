@@ -96,9 +96,14 @@
           <li>
             <img src="<%= m.avatar_url || '/avatar/' + m.id %>" alt="" loading="lazy">
             <div><strong><%= m.full_name || m.username %></strong><span>@<%= m.username %><%= m.last_login ? ' · শেষ লগইন ' + (m.last_login + '').split(' ')[0] : '' %></span></div>
+            <%# সেশন ৯০: এক-ক্লিকে user_mgmt স্কোপ প্রত্যাহার (সুপার-এডমিন নিয়ন্ত্রণ) %>
+            <form method="POST" action="/admin/super/moderators/<%= m.id %>/revoke-user-mgmt" class="ov-revoke-form" data-ov-confirm="<%= m.full_name || m.username %>-এর 'ইউজার তদারকি' স্কোপ প্রত্যাহার করবেন? সে সঙ্গে সঙ্গে তদারকি-প্যানেলের অ্যাক্সেস হারাবে।">
+              <button type="submit" class="ov-revoke" title="'ইউজার তদারকি' স্কোপ প্রত্যাহার" aria-label="<%= m.full_name || m.username %>-এর স্কোপ প্রত্যাহার"><i class="fas fa-user-slash"></i></button>
+            </form>
           </li>
           <% }) %>
         </ul>
+        <span class="ov-revoke-hint"><i class="fas fa-circle-info"></i> <i class="fas fa-user-slash"></i> = স্কোপ প্রত্যাহার (রোল অপরিবর্তিত — শুধু তদারকি-অনুমতি বাতিল)</span>
         <% } else { %><p class="ov-empty">কোনো মডারেটরের 'ইউজার তদারকি' স্কোপ নেই — <a href="/admin/moderators">মডারেটর ব্যবস্থাপনা</a> থেকে দিন।</p><% } %>
       </div>
       <div class="ov-box">
@@ -177,5 +182,13 @@
   </div>
 
 </div>
+<script>
+// সেশন ৯০: স্কোপ-প্রত্যাহারে নিশ্চিতকরণ
+document.querySelectorAll('form[data-ov-confirm]').forEach(function (f) {
+  f.addEventListener('submit', function (e) {
+    if (!window.confirm(f.getAttribute('data-ov-confirm'))) e.preventDefault();
+  });
+});
+</script>
 </body>
 </html>
