@@ -857,3 +857,26 @@ Stage Summary:
 - কল-UI এখন FB-প্যারিটি নেটওয়ার্ক-মিটার + ডায়াগনস্টিকসসহ; লাইভ-কলে প্যানেল থেকেই TURN-রিলে-যাচাই সম্ভব (রোডম্যাপ-③-সহায়ক)
 - স্কোপ-শৃঙ্খলা: calls.css/webrtc-call.js-২-ফাইল — অন্য-এজেন্টের style.css/media-query-splice-গোটচা (f736fc1) আমার স্কোপে প্রাসঙ্গিক-নয়
 - পরবর্তী: গ্রুপ-কল (mesh, নিজস্ব-বড়-রাউন্ড) → Metered.ca-অ্যাকাউন্ট → ভিডিও-স্ট্যাট → অটো-ভিডিও-ডিগ্রেড
+
+---
+---
+Task ID: session-107 (সেশন ১০৭ — cron webDevReview রাউন্ড)
+Agent: Z.ai Contact-Inbox Agent (cron webDevReview)
+Task: প্রজেক্ট-অবস্থা-মূল্যায়ন + agent-browser QA → স্বাধীন-কাজ-নির্বাচন: session103-সুপারিশের শীর্ষ-আইটেম "contact_submissions-এর অ্যাডমিন-ইনবক্স-ভিউ (সাবমিশন কেউ দেখে না!)" পূর্ণাঙ্গ বাস্তবায়ন + স্টাইলিং-বিস্তারিত + ফিচার-বিস্তার
+
+Work Log:
+- **অবস্থা-মূল্যায়ন:** git fetch → HEAD=origin/main (8dfb729, session103-docs); সার্ভার :3030 লাইভ (uptime-স্বাস্থ্য ✓); ৭-পেজ স্মোক ২০০; /contact ভিজ্যুয়াল যাচাই (ম্যাপ-রেন্ডার ✓ 'আজ খোলা'-ব্যাজ ✓ — session102/103-ফিক্স স্থায়ী); /admin/messages বেসলাইন-স্ক্রিনশট: খালি-লিস্ট (read/unread-নেই, অ্যাকশন-নেই, ইনলাইন-স্টাইল); DB-তে ৫টি সাবমিশন অদেখা → কাজ-নির্বাচন: ইনবক্স-আধুনিকায়ন
+- **db.js:** contact_submissions-এ is_read/is_archived (MIGRATION_SQL CREATE TABLE + LATER_COLUMNS — sql.js ও লাইভ-Turso উভয়ে বুটে মাইগ্রেশন-ছাড়া কলাম-পৌঁছায়; schema.sql-এ টেবিলটি নেই — যাচাইকৃত)
+- **admin/routes.js:** GET /admin/messages পূর্ণাঙ্গ (q-সার্চ LIKE×৪-কলাম + f=all|unread|read|archived + ১৫/পেজ-পেজিনেশন + counts105 (মোট/অপঠিত/পঠিত/আর্কাইভড/আজকের) + ORDER BY is_read ASC,id DESC); POST /:id/read|unread|archive|unarchive|delete (delete=TA42.trashDelete→ট্র্যাশ+আন্ডু-টোস্ট-ফ্রি) + bulk-read/archive/unarchive + BULK_TABLES-এ 'messages' (generic bulk-delete); সব 303-ফেরত f/q/page-সংরক্ষণ (msgBack105) + TA42.audit
+- **server.js:** স্টাফ-লোকালসে unreadMsg105 (শুধু adminUser-সেশন, fail-safe try/catch) → sidebar 'বার্তা' লাল-অপঠিত-ব্যাজ; dashboard.ejs বার্তা-কার্ডে dash-unread105 ব্যাজ (counts.unreadMessages)
+- **messages.ejs পূর্ণ-রিরাইট:** স্ট্যাট-স্ট্রিপ + ফিল্টার-পিল (কাউন্ট-ব্যাজ, অপঠিত=লাল) + পিল-সার্চ + বাল্ক-বার (sidebar initBulkBar/injectCsrf42-চুক্তি পুনঃব্যবহার) + কার্ড-লিস্ট (মোনোগ্রাম-টাইল tint-সাইকেল ×৫, অপঠিত=বাম-বর্ডার+গ্রেডিয়েন্ট+পালস-ডট, ২-লাইন-clamp→এক্সপ্যান্ড-টগল, সাবজেক্ট-চিপ, mailto Re:-সাবজেক্টসহ-উত্তর) + পেজিনেশন + প্রতি-ফিল্টার-এম্পটি-স্টেট ×৪ + **কাস্টম কনফার্ম-মোডাল** (নেটিভ confirm() নিষিদ্ধ-নীতি — card-delete ও bulkBar উভয়ে)
+- **admin.css:** session107-ব্লক EOF-অ্যাপেন্ড (.msg105/.pill105/.act-btn105/.cmodal105/.pg105/.msg-badge105/.dash-unread105 স্কোপড + focus-visible-রিং + 640px-মোবাইল + reduced-motion)
+
+Stage Summary:
+- **🚨 নতুন-গোটচা ×২ (আসল-ঘটনা থেকে শেখা):**
+  1. **form.submit() সাবমিটার-বাটনের formaction অগ্রাহ্য করে** — বাল্ক-বারে কনফার্ম-মোডাল→submit() করলে ফর্মের ডিফল্ট-action (bulk-delete) চলে যায়, বাটনের bulk-read/archive নয়! QA-রাউন্ডে ২-বার্তা ভুলে-ডিলিট হয়েছিল। ফিক্স: skip-flag (dataset.skipConfirm105) + কনফার্মের পরে বাটনেই .click() রি-ট্রিগার — messages.ejs ১০৫-খ-ব্লকে রেফারেন্স-ইমপ্লিমেন্টেশন
+  2. **চলমান-সার্ভারের বাইরে সরাসরি lekhok.db-INSERT → সার্ভারের পরবর্তী যেকোনো লেখায় স্টেল ইন-মেমরি-স্টেট flush হয়ে সিড-রো মুছে যায়** (আগের-গোটচার বিস্তারিত-রূপ: শুধু exit-flush নয়, যেকোনো UPDATE-ও clobber করে) — টেস্ট/ডেমো-ডেটা সর্বদা চলমান-সার্ভারের মধ্য-দিয়ে (HTTP POST /api/contact) ঢোকান
+- **E2E (agent-browser, সব ✓):** expand-টগল; পঠিত/অপঠিত-টগল (stat+পিল-কাউন্টার-সিঙ্ক); আর্কাইভ→ভিউ→ইনবক্সে-ফেরত; card-delete→মোডাল→?trashed=1+আন্ডু-টোস্ট; বাল্ক-সিলেক্ট→বাল্ক-রিড→saved-টোস্ট; বাল্ক-আর্কাইভ+আন-আর্কাইভ (re-click-ফিক্স-পরে audit-প্রমাণিত bulk-archive/bulk-unarchive); বাংলা-সার্চ 'তানভীর'→১-ম্যাচ + mark-read-পরেও ?q=-সংরক্ষণ; এম্পটি-স্টেট ×৩; ব্যাজ ×২ (sidebar+dashboard); public /contact POST ×৩ → ইনবক্সে অপঠিত-৩ (ফুল-পাইপলাইন); 390px-ওভারফ্লো-০; কনসোল-০; role-policy ৮০/১০৭-পাস (২৭-ফেল = PLANS-ডকুমেন্টেড প্রাক-বিদ্যমান QA-সিড-স্টেট, বার্তা-অসম্পর্কিত; GET /contact ✓)
+- **মাল্টি-এজেন্ট-সমন্বয়:** push-সময় ২-দফা রেস — ① ৭-কমিট (session102/104/105/106 অন্যদের) stash→pull-rebase→pop, db.js+PLANS.md conflict (union-রিসলভ, উভয়-এন্ট্রি-রক্ষা) ② আরেক-কমিট (session107 keyset-cursor, অন্য-এজেন্ট) pull-rebase-clean→push ✓ (9c53cab..7a23401)। **নাম্বার-রেস-নোট:** session105 লেবেল ×২ + 106 + 107 অন্য-এজেন্টদের — আমার-কাজ মূলত ১০৫-পরিকল্পিত, সর্বোচ্চ+১-রীতিতে ১০৭-তে রিলেবেল (কোড-আইডেন্টিফায়ার 105-প্রত্যয় অক্ষত — নাম-মাত্র); **পরের-এজেন্ট: session108 থেকে শুরু করুন**
+- কমিট: 7a23401 (9 ফাইল, +471/-18) — PROJECT.md সেশন-১০৭-চেঞ্জলগ + PLANS.md Session-107-ক্রস-এজেন্ট-নোট
+- **পরবর্তী-সুপারিশ:** ম্যাপে মাল্টি-পিন (হল/ডিপার্টমেন্ট) · ইনবক্সে প্রিন্ট/PDF + অ্যাডমিন-রিপ্লাই-নোট (reply_note কলাম) · pagination-লাইভ-টেস্ট (১৬+ বার্তা) · রেট-লিমিট-ভলিউম বাড়লে hCaptcha/Turnstile · প্রভোস্ট-তালিকায় প্রিন্ট/শেয়ার
