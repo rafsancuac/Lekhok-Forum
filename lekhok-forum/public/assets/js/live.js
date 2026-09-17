@@ -105,6 +105,8 @@
         (n.type === 'call' ? '<span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span>' : '') + /* সেশন ৯৭-মার্জ: মিসড-কল-চিপ (সার্ভার-রেন্ডারড ড্রপডাউনের সাথে অভিন্ন) */
         '</span>' +
         (n.is_read ? '' : '<span class="notif-dot" title="অপঠিত"></span>') +
+        /* সেশন ১২১: ড্রপডাউন dismiss ✕ (header.ejs-সার্ভার-মার্কআপের সাথে অভিন্ন; হ্যান্ডলারও সেখানেই — ডেলিগেটেড) */
+        '<button type="button" class="notif-x" data-dismiss="' + esc(n.id) + '" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>' +
         '</a>';
     }).join('');
   }

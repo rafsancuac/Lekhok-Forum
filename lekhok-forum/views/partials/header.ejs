@@ -294,6 +294,9 @@
                       <% if (n.type === 'call') { %><span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %>
                     </span>
                     <% if (!n.is_read) { %><span class="notif-dot" title="অপঠিত"></span><% } %>
+                    <%# সেশন ১২১: ড্রপডাউনেও dismiss ✕ (session117-①; ফুল-পেজের .notif-dismiss-প্যারিটি) —
+                        বাটন-ইন-অ্যাঙ্কর = session114-প্রেসিডেন্সি; preventDefault-এ নেভিগেশন-বন্ধ %>
+                    <button type="button" class="notif-x" data-dismiss="<%= n.id %>" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>
                   </a>
                 <% }); %>
               <% } else { %>
@@ -302,6 +305,63 @@
             </div>
           </div>
         </div>
+        <%# সেশন ১২১: ড্রপডাউন dismiss-হ্যান্ডলার — #notifList-এ ডেলিগেটেড (live.js-রি-রেন্ডারেও টিকে থাকে);
+            সার্ভার-সত্য-ব্যাজ /api/notifications/count দিয়ে; খালি-হলে empty-state। main.js (মিনিফাইড) অস্পৃশ্য %>
+        <script>
+          (function () {
+            var list121 = document.getElementById('notifList');
+            if (!list121 || list121.dataset.xBound121) return;
+            list121.dataset.xBound121 = '1';
+            function badge121() {
+              fetch('/api/notifications/count', { credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                  if (!d || typeof d.unread !== 'number') return;
+                  var b = document.getElementById('notifBadge');
+                  if (d.unread <= 0) { if (b) b.remove(); return; }
+                  if (!b) {
+                    var btn = document.querySelector('.notif-bell-btn');
+                    if (!btn) return;
+                    b = document.createElement('span'); b.className = 'notif-badge'; b.id = 'notifBadge';
+                    btn.appendChild(b);
+                  }
+                  b.textContent = d.unread > 9 ? '9+' : String(d.unread);
+                }).catch(function () {});
+            }
+            function empty121() {
+              if (list121.querySelector('.notif-item')) return;
+              list121.innerHTML = '<div class="notif-empty"><i class="far fa-bell"></i><p>কোনো বিজ্ঞপ্তি নেই</p></div>';
+            }
+            function dismiss121(btn) {
+              var row = btn.closest('.notif-item');
+              if (!row || row.dataset.xBusy121) return;
+              row.dataset.xBusy121 = '1';
+              fetch('/api/notifications/' + encodeURIComponent(btn.getAttribute('data-dismiss')) + '/dismiss', { method: 'POST', credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                  if (d && d.ok) {
+                    row.classList.add('dx-out');
+                    setTimeout(function () { row.remove(); empty121(); }, 200);
+                    badge121();
+                  } else { delete row.dataset.xBusy121; }
+                })
+                .catch(function () { delete row.dataset.xBusy121; });
+            }
+            list121.addEventListener('click', function (e) {
+              var x = e.target.closest('.notif-x');
+              if (!x) return;
+              e.preventDefault(); e.stopPropagation();
+              dismiss121(x);
+            });
+            list121.addEventListener('keydown', function (e) {
+              if (e.key !== 'Enter' && e.key !== ' ') return;
+              var x = e.target.closest('.notif-x');
+              if (!x) return;
+              e.preventDefault(); e.stopPropagation();
+              dismiss121(x);
+            });
+          })();
+        </script>
 
         <!-- User avatar dropdown -->
         <div class="user-menu-wrap">

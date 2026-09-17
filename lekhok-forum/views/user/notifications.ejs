@@ -169,7 +169,28 @@
           c.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
         applyFilter(chip.getAttribute('data-nft'));
+        /* সেশন ১২১: চিপ-অবস্থা URL-এ পার্সিস্ট (?type=; 'সব' = পরিষ্কার-URL) —
+           রিলোড/শেয়ার-লিংকে ফিল্টার টিকে থাকে; replaceState = ইতিহাস-পলিউশন-শূন্য */
+        setUrl121(chip.getAttribute('data-nft'));
       });
+      /* সেশন ১২১: URL-সিঙ্ক হেল্পার — pathname+search+hash সংরক্ষণ (ভবিষ্যতে ?page= এলেও নিরাপদ) */
+      function setUrl121(key) {
+        try {
+          var u = new URL(location.href);
+          if (key && key !== 'all') u.searchParams.set('type', key);
+          else u.searchParams.delete('type');
+          history.replaceState(null, '', u.pathname + (u.search || '') + (u.hash || ''));
+        } catch (eU121) {}
+      }
+      /* সেশন ১২১: init — ?type= পড়ে মিলে-যাওয়া চিপ সক্রিয় করা (অ-বিদ্যমান/অবৈধ মান = নিরীহ-নো-অপ;
+         synthetic .click() bar-ডেলিগেশনেই পড়ে — ডুপ্লিকেট-লজিক শূন্য) */
+      try {
+        var q121 = new URLSearchParams(location.search).get('type');
+        if (q121 && q121 !== 'all') {
+          var qc121 = bar.querySelector('.nft-chip[data-nft="' + q121 + '"]');
+          if (qc121 && !qc121.classList.contains('is-active')) qc121.click();
+        }
+      } catch (eQ121) {}
       /* সরানোর পরে কাউন্ট-সিঙ্ক — সক্রিয়-চিপ শূন্য হলে 'সব'-এ ফেরত */
       window.nftRecount117 = function () {
         bar.querySelectorAll('.nft-chip').forEach(function (c) {
@@ -186,6 +207,7 @@
           var all = bar.querySelector('.nft-chip[data-nft="all"]');
           if (all) { all.classList.add('is-active'); all.setAttribute('aria-pressed', 'true'); }
           applyFilter('all');
+          setUrl121('all'); /* সেশন ১২১: 'সব'-ফেরত = URL-ও পরিষ্কার */
         } else {
           applyFilter(act.getAttribute('data-nft'));
         }

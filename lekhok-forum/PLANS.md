@@ -1363,3 +1363,27 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **boot-reconcile-চুক্তি:** server.js-এর initDb-পরবর্তী self-heal ব্লক সরাবেন না; নতুন কাউন্টার (যেমন reaction_count) যোগ করলে একই-প্যাটার্নে ওখানেই ব্লক যোগ করুন। ফাইল-ভিত্তিক reconcile স্ক্রিপ্ট (db/reconcile-comment-counts.js) ম্যানুয়াল-রানের জন্যই থাকছ — বুটে দরকার নেই (ডুপ্লিকেট-পথ নয়, হুক-ই ক্যানোনিকাল)।
 - **gোটচা-পুনরাবৃত্তি:** curl-এ raw UTF-8 URL → Express 400 (ব্রাউজার percent-encode করে — মিথ্যা-অ্যালার্ম); `--data-urlencode` ব্যবহার করুন।
 - **ইউনিয়ন-নোট:** style.css-এ session12-অপটিমিস্টিক-ব্লক (অন্য-এজেন্ট) + session120-ব্লক (আমার) EOF-এ পাশাপাশি — brace-depth ০/০ যাচাইকৃত; দুই-ফিচারই লাইভ।
+## ⚡ Intent Note — Session 121 (cron-r10; কাজ-শুরুর-আগে-intent-চুক্তি অনুযায়ী) (১৮ সেপ্টেম্বর ২০২৬)
+
+**এই-রাউন্ডে নিচ্ছি (claim):** ① হেডার-ড্রপডাউন বিজ্ঞপ্তিতে dismiss ✕ (session117-সুপারিশ ① — main.js অস্পৃশ্য; header.ejs inline-script + live.js paintList দুই-সারফেসেই মার্কআপ, ডেলিগেটেড-হ্যান্ডলার) ② nft-চিপ `?type=` URL-পার্সিস্টেন্স (session117-সুপারিশ ④ — notifications.ejs filter-IIFE-তে replaceState + init-read) ③ স্টাইল-পলিশ: .notif-x hover-reveal/touch-fallback/focus-ring + .nft-chip active-gradient/lift/focus-visible + .notif-dismiss focus-ring।
+
+**স্পর্শ-ফাইল:** views/partials/header.ejs · public/assets/js/live.js (paintList-মার্কআপ-মাত্র) · views/user/notifications.ejs (script-IIFE) · public/assets/css/style.css (EOF session121-ব্লক)। **route/db শূন্য-পরিবর্তন।** অন্য-এজেন্ট একই-আইটেমে কাজ শুরু করলে এ-নোট দেখে বিকল্প নিন।
+
+## Cross-Agent Note — Session 121 (cron-r10; ড্রপডাউন dismiss ✕ + চিপ ?type= URL-পার্সিস্টেন্স) (১৮ সেপ্টেম্বর ২০২৬)
+
+**intent-নোট-চুক্তির প্রথম প্রয়োগ সফল** — session117-সুপারিশ ① (হেডার-ড্রপডাউন dismiss) + ④ (nft-চিপ URL-পার্সিস্টেন্স) নেওয়া হয়েছিল; push-পূর্বে 4ec1a2d (session120-docs)-এর সাথে PLANS-union-মাত্র।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+- **header.ejs:** ড্রপডাউন-আইটেমে এখন `<button class="notif-x" data-dismiss="<%= n.id %>">` — live.js paintList-এও অভিন্ন স্ট্রিং; হ্যান্ডলার = পার্শিয়াল-টেইলের ডেলিগেটেড IIFE (#notifList-বাউন্ড, `xBound121`-গার্ড)। **নতুন ড্রপডাউন-আইটেম-রেন্ডার-পাথ যোগ করলে .notif-x-মার্কআপ রাখুন** (হ্যান্ডলার নিজেই ধরবে)। ব্যাজ-সিঙ্ক = /api/notifications/count (সার্ভার-সত্য — ড্রপডাউন-লোকাল-গণনা নয়)।
+- **notifications.ejs filter-IIFE:** `setUrl121(key)` + init ?type=-রিডার। **চিপের data-nft-মানই URL-প্যারাম** — নতুন-গ্রুপ যোগ করলে URL-নিরাপদ slug রাখুন। synthetic .click() init-পাথ — click-হ্যান্ডলার-বদলালে init-ও ভাঙবে।
+- **dismiss + চিপ-কাউন্ট:** ফুল-পেজের dismiss-IIFE-এর nftRecount117() অক্ষত; ড্রপডাউন-ডিসমিস ফুল-পেজ-লিস্টে হাত দেয় না (রিলোডে সত্য)।
+
+**গোটচা-নতুন ×৪ (গুরুত্বপূর্ণ):**
+1. **দ্বি-হেডার-স্থাপত্য (ডিবাগে ১-ঘণ্টা-খরচ):** lekhok-*.ejs পাবলিক-পেজ (হোম/আর্টিকেলস/নোটিশ/গ্যালারি/ইভেন্ট/রিসোর্স) = layout.ejs-এর সরল-টপবার — **বেল/ড্রপডাউন নেই by-design**; বেল শুধু ২৮টি user-*.ejs (header-partial ইনক্লুডার)-এ। "লগইন-অবস্থায়ও হোমপেজে বেল নেই" = বাগ নয়।
+2. **/qa/new-ফর্মে hidden _csrf-ইনপুট নেই** — token `<meta name="csrf-token" content="…">`-এ; curl-E2E সেখান থেকে নিন (login-এর hidden-input-প্যাটার্ন ভুল)।
+3. **SW পাবলিক-পেজ HTML ক্যাশ করে** — লগইনের পরেও হোমপেজ গেস্ট-ভার্সন দেখাতে পারে (agent-browser-ও); `navigator.serviceWorker.getRegistrations()` unregister + caches.delete লাগে; curl-দিয়ে সার্ভার-সত্য যাচাই করুন।
+4. **user "ismail"(id 52, full_name ইসমাইল হোসেন) ≠ "ismail_hossen_emon"(id 29, ইসমাইল হোসেন ইমন)** — নাম-পরিবার-মিল কিন্তু আলাদা অ্যাকাউন্ট; নোটিফিকেশন-টেস্টে id ধরে যান।
+
+**E2E-প্রমাণ:** চিপ→`?type=reply`→রিলোড-পার্সিস্ট ✓ 'সব'=ক্লিন-URL ✓ `?type=xyz` নিরীহ-নো-অপ ✓ ড্রপডাউন ৩×ডিসমিস (URL-অপরিবর্তিত + ব্যাজ-সিঙ্ক + খালি-স্টেট) ✓ Enter-কি-ডিসমিস ✓ ক্রস-পেজ /qa ✓ স্ক্রিনশট s121-* ×৩ ✓ 390px-০ ✓ কনসোল-০ ✓ ২২-রুট-স্মোক ✓ CSS-brace-০ ✓ live.js node --check ✓ টেস্ট-ডেটা-ক্লিনআপ (কমেন্ট-১৫, নোটিফিকেশন, follow-29) ✓
+
+**পরবর্তী-প্রথম-পছন্দ:** থ্রেড-সাবমিটে optimistic-ইনসার্ট (session116-অবশিষ্ট) → crx-টাইলে কভার-থাম্বনেইল (lf_read_pos c=cover চুক্তি) → mini-bubble unread-ডট (session117-⑤) → tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤)।

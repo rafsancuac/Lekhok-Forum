@@ -1042,3 +1042,17 @@ Stage Summary:
 - QA-সুইপ: ১৫-route ম্যাট্রিক্স + /me-রিডিজাইন-মার্কার + notifications/qa-ফিল্টার + continue-reading + 390px ×৩ + কনসোল — বাগ-শূন্য (মিথ্যা-অ্যালার্ম ×২ নিষ্পত্তি: সার্চ-রিভিল-অ্যানিমেশন-ধরা-স্ক্রিনশট, curl raw-UTF8 400)
 - ফিচার: সার্চ-ফলাফল `<mark>` হাইলাইট (escape-first, XSS-E2E ×৩) + ≈N মিনিট চিপ + boot-reconcile self-heal (করাপ্ট→heal→idempotent-প্রমাণ)
 - ইউনিয়ন: style.css-EOF session12-ব্লকের সাথে (depth ০/০); push f982b82 (docs-আগে)
+
+---
+
+## cron-r10 — Session 121 (নোটিফিকেশন-UX-সম্পূর্ণতা: ড্রপডাউন dismiss ✕ + চিপ URL-পার্সিস্টেন্স)
+
+**স্কোপ:** header.ejs (+inline dismiss-হ্যান্ডলার IIFE) · live.js (paintList ✕-প্যারিটি) · notifications.ejs (setUrl121 + init) · style.css (session121-ব্লক) · PLANS.md (intent-নোট)। route/db শূন্য।
+
+**মূল-পরিবর্তন:** ① হেডার-ড্রপডাউন বিজ্ঞপ্তিতে ✕ (ফুল-পেজের .notif-dismiss-প্যারিটি): ডেলিগেটেড #notifList-লিসেনার (live.js-রিরেন্ডার-সহজীবী), click+Enter/Space, preventDefault (অ্যাঙ্কর-নেভিগেশন-বন্ধ), সার্ভার-সত্য-ব্যাজ /api/notifications/count, খালিতে empty-state ② nft-চিপ ?type= replaceState-পার্সিস্টেন্স: রিলোড/শেয়ারে ফিল্টার টিকে থাকে, 'সব' = ক্লিন-URL, অবৈধ-মান নিরীহ ③ স্টাইল: ✕ hover-reveal/touch-fallback/focus-ring/dx-out, চিপ active-গ্রেডিয়েন্ট+lift+badge-পিল, ড্রপডাউন-হোভার পলিশ, reduced-motion।
+
+**E2E:** চিপ→?type=reply→রিলোড-পার্সিস্ট→'সব'-ক্লিন ✓ xyz-নো-অপ ✓ ৩×ডিসমিস+ব্যাজ+খালি-স্টেট ✓ Enter-কি ✓ ক্রস-পেজ(/qa) ✓ 390px-০ ✓ কনসোল-০ ✓ ২২-রুট ✓ টেস্ট-ডেটা-ক্লিনআপ ✓
+
+**গোটচা-রেজিস্টার (নতুন):** ① lekhok-*.ejs পাবলিক-পেজ = layout.ejs-সরল-টপবার, বেল নেই by-design (২৮টি user-*.ejs-ই বেল-বাহক) — নতুন-এজেন্ট "হোমপেজে বেল নেই" দেখে বাগ ভাববেন না ② /qa/new CSRF meta-tag-এ (hidden input নেই) ③ SW পাবলিক-HTML ক্যাশে লগইন-স্টেট আটকে থাকে — unregister+caches.delete ④ user ismail(52) ≠ ismail_hossen_emon(29)।
+
+**পরবর্তী:** thread-submit optimistic-insert → crx-কভার-থাম্বনেইল → mini-bubble unread-ডট → tokens.css হেক্স-স্ক্যান-গার্ড।

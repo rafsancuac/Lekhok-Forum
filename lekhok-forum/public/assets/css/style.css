@@ -2128,3 +2128,33 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
     transform: none;
   }
 }
+
+/* ═══════════ সেশন ১২১: হেডার-ড্রপডাউন dismiss ✕ + nft-চিপ পলিশ (cron-r10) ═══════════
+   ① .notif-x — ড্রপডাউন-আইটেমে সরান-বাটন (ফুল-পেজের .notif-dismiss-প্যারিটি):
+      হোভারে প্রকাশ, টাচ-ডিভাইসে সর্বদা অর্ধ-দৃশ্যমান (হোভার-নেই-ডিভাইসে লুকানো = অপ্রাপ্য), ফোকাস-রিং */
+.notif-bell-wrap .notif-item{position:relative;padding-right:38px}
+.notif-bell-wrap .notif-item{transition:opacity .18s ease,transform .18s ease}
+.notif-x{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:.78rem;line-height:1;opacity:0;z-index:3;transition:opacity .14s ease,background .14s ease,color .14s ease,transform .14s ease}
+.notif-item:hover .notif-x,.notif-item:focus-within .notif-x{opacity:1}
+.notif-x:hover{background:#fee2e2;color:#dc2626;transform:translateY(-50%) scale(1.08)}
+.notif-x:focus-visible{opacity:1;outline:2px solid var(--accent);outline-offset:1px}
+.notif-x:active{transform:translateY(-50%) scale(.92)}
+@media (hover:none){.notif-x{opacity:.5;width:32px;height:32px}.notif-item:hover .notif-x{opacity:1}}
+.notif-x[hidden]{display:none!important}
+.notif-item.dx-out{opacity:0;transform:translateX(28px);pointer-events:none}
+/* ② নিজের-সরান-অ্যানিমেশনে ফুল-পেজ .notif-dismiss-এও ফোকাস-রিং (a11y-প্যারিটি) */
+.notif-dismiss:focus-visible{opacity:1;transform:none;outline:2px solid var(--accent);outline-offset:1px}
+/* ③ nft-চিপ পলিশ — active-এ সূক্ষ্ম গ্রেডিয়েন্ট+ছায়া, hover-এ লিফট, count-ব্যাজে পিল-ট্রিটমেন্ট */
+.nft-chip{box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.nft-chip:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(15,23,42,.08);border-color:var(--accent-light)}
+.nft-chip.is-active{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-dark) 100%);box-shadow:0 2px 8px var(--accent-glow)}
+.nft-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nft-chip b{font-weight:700;background:rgba(15,23,42,.06);border-radius:999px;padding:1px 7px;font-size:.72rem;transition:background .14s ease}
+.nft-chip.is-active b{background:rgba(255,255,255,.22)}
+@media (prefers-reduced-motion:reduce){.notif-x,.notif-item.dx-out,.nft-chip{transition:none;transform:none}}
+/* ④ ড্রপডাউন আইটেম-হোভার পলিশ + 'সব দেখুন' হোভার — ✕-প্রকাশের সাথে ভিজ্যুয়াল সমন্বয় */
+#notifList .notif-item{transition:background .14s ease}
+#notifList .notif-item:hover{background:rgba(5,150,105,.05)}
+.notif-see-all{transition:color .14s ease}
+.notif-see-all:hover{color:var(--accent-dark)}
+.notif-header{border-bottom:1px solid var(--border)}
