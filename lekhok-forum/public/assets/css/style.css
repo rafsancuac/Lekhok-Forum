@@ -1441,3 +1441,124 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .notif-ico.has-avatar i{display:none}
 .notif-ico.has-avatar{background:var(--surface-alt);box-shadow:0 0 0 2px var(--bg-card),0 0 0 3.5px var(--accent-soft)}
 .notif-item.unread .notif-ico.has-avatar{box-shadow:0 0 0 2px var(--bg-card),0 0 0 3.5px rgba(5,150,105,.45)}
+   সেশন ১০৪: FB-প্যারিটি কমেন্ট-সিস্টেম আপগ্রেড
+   ① ডুপ্লিকেট-ফিক্স: ড্রয়ার খোলা (.fc-open) অবস্থায় .fc-preview সম্পূর্ণ লুকানো —
+      একই কমেন্ট আর দুই-স্টাইলে দুইবার দেখাবে না
+   ② কমেন্ট-রিঅ্যাকশন প্যালেট (.fcr-*) — 'লাইক'-এ hover/ট্যাপে ৬-ইমোজি পিল
+   ③ বাবল-কোণে রিঅ্যাকশন-ব্যাজ (.fc-react-badge) — শীর্ষ-ইমোজি + মোট-গণনা
+   ④ হোভার ৩-ডট-মেনু (.fc-menu-*) — সম্পাদনা/মুছে-ফেলা/রিপোর্ট
+   ⑤ ইনলাইন-সম্পাদনা (.fc-edit-*) — textarea + সংরক্ষণ/বাতিল
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① ডুপ্লিকেশন-ফিক্স: ড্রয়ার খোলা = প্রিভিউ বন্ধ ────────────────────────── */
+.feed-card.fc-open .fc-preview{display:none}
+
+/* ── ② কমেন্ট-রিঅ্যাকশন প্যালেট ───────────────────────────────────────────── */
+.fc-meta{position:relative;align-items:center}
+.fc-react-wrap{position:relative;display:inline-flex;align-items:center}
+.fc-react-btn{background:0 0;border:0;color:var(--text-soft,#65676b);font-family:inherit;font-size:.7rem;font-weight:600;cursor:pointer;padding:0;transition:color .15s}
+.fc-react-btn:hover{text-decoration:underline;color:var(--accent,#059669)}
+.fc-react-btn.active{color:var(--accent,#059669);font-weight:700}
+.fc-react-btn:disabled{opacity:.55;cursor:default}
+.fcr-palette{
+  position:absolute;bottom:calc(100% + 8px);left:-8px;z-index:55;
+  display:flex;align-items:center;gap:2px;padding:5px 7px;
+  background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);
+  border-radius:999px;box-shadow:0 8px 28px -6px rgba(15,23,42,.28);
+  white-space:nowrap;animation:fcr-in .16s cubic-bezier(.16,1,.3,1);
+}
+.fcr-palette::after{ /* পিলের নিচে ছোট তীর — FB-লুক */
+  content:'';position:absolute;bottom:-5px;left:22px;width:8px;height:8px;
+  background:var(--card,#fff);border-right:1px solid var(--border,#e2e8f0);
+  border-bottom:1px solid var(--border,#e2e8f0);transform:rotate(45deg);
+}
+@keyframes fcr-in{from{opacity:0;transform:translateY(5px) scale(.92)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.fcr-palette{animation:none}}
+.fcr-opt{
+  width:34px;height:34px;border:0;background:0 0;border-radius:50%;
+  font-size:1.15rem;cursor:pointer;line-height:1;padding:0;
+  transition:transform .14s cubic-bezier(.34,1.56,.64,1),background .14s;
+}
+.fcr-opt:hover{transform:scale(1.32) translateY(-3px);background:var(--accent-soft,rgba(5,150,105,.12))}
+.fcr-opt:active{transform:scale(.95)}
+.fcr-opt.selected{background:var(--accent-soft,rgba(5,150,105,.14));box-shadow:inset 0 0 0 1.5px var(--accent,#059669)}
+
+/* ── ③ বাবল-কোণে রিঅ্যাকশন-ব্যাজ (FB-স্ট্যাম্প) ────────────────────────────── */
+.fc-main .fc-bubble{position:relative}
+.fc-react-badge{
+  position:absolute;right:6px;bottom:-9px;z-index:3;
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);
+  border-radius:999px;padding:1px 6px 1px 3px;line-height:1;
+  box-shadow:0 1px 3px rgba(15,23,42,.14);
+  font-size:.66rem;font-weight:700;color:var(--text-soft,#65676b);
+  user-select:none;pointer-events:auto;cursor:default;
+}
+.fc-react-badge .fcrb-emoji{font-size:.72rem;line-height:1}
+.fc-react-badge .fcrb-count{letter-spacing:.2px}
+
+/* ── ④ হোভার ৩-ডট-মেনু ───────────────────────────────────────────────────── */
+.fc-menu-wrap{position:relative;margin-left:auto;flex-shrink:0}
+.fc-meta .fc-menu-wrap{margin-left:auto}
+.fc-menu-btn{
+  width:22px;height:22px;border:0;background:0 0;border-radius:50%;
+  color:var(--text-soft,#65676b);font-size:.68rem;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;padding:0;
+  opacity:0;transition:opacity .15s,background .15s;
+}
+.fc-item:hover .fc-menu-btn,.fc-menu-btn:focus-visible,.fc-menu-wrap.open .fc-menu-btn{opacity:1}
+.fc-menu-btn:hover,.fc-menu-btn[aria-expanded="true"]{background:rgba(15,23,42,.08);color:var(--brand-text,#1e293b)}
+.fc-menu{
+  position:absolute;right:0;top:calc(100% + 4px);z-index:60;min-width:172px;
+  background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);
+  border-radius:10px;box-shadow:0 10px 32px -8px rgba(15,23,42,.24);
+  padding:4px;animation:pm-in92 .13s ease;
+}
+.fc-menu-item{
+  display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;
+  border:0;background:0 0;color:var(--text,#1e293b);font-family:inherit;
+  font-size:.8rem;font-weight:600;text-align:left;border-radius:7px;
+  cursor:pointer;line-height:1.35;
+}
+.fc-menu-item i{width:15px;text-align:center;color:var(--text-soft,#65676b);font-size:.78rem;flex-shrink:0}
+.fc-menu-item:hover{background:var(--bg,#f1f5f9)}
+.fc-menu-item.fc-menu-danger,.fc-menu-item.fc-menu-danger i{color:#dc2626}
+.fc-menu-item.fc-menu-danger:hover{background:#fee2e2}
+
+/* টাচ-ডিভাইসে ৩-ডট সবসময় দৃশ্যমান (hover: none → হোভার-নির্ভর আবিষ্কার অসম্ভব) */
+@media (hover: none){
+  .fc-menu-btn{opacity:1;width:26px;height:26px}
+}
+
+/* ── ⑤ ইনলাইন-সম্পাদনা ───────────────────────────────────────────────────── */
+.fc-edit-slot{margin-top:5px;width:100%}
+.fc-edit-box{background:var(--card,#fff);border:1.5px solid var(--accent,#059669);border-radius:12px;padding:8px 10px;box-shadow:0 0 0 3px rgba(5,150,105,.09)}
+.fc-edit-input{
+  width:100%;border:0;outline:0;resize:none;background:0 0;
+  font-family:inherit;font-size:.85rem;line-height:1.55;color:var(--text,#0f172a);
+  min-height:44px;max-height:200px;
+}
+.fc-edit-actions{display:flex;align-items:center;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--border,#e2e8f0)}
+.fc-edit-save{
+  display:inline-flex;align-items:center;gap:5px;border:0;cursor:pointer;
+  background:var(--accent,#059669);color:#fff;font-family:inherit;
+  font-size:.74rem;font-weight:700;padding:5px 12px;border-radius:8px;
+  transition:background .15s,transform .12s;
+}
+.fc-edit-save:hover{background:var(--accent-dark,#047857)}
+.fc-edit-save:active{transform:scale(.96)}
+.fc-edit-save:disabled{opacity:.6;cursor:default}
+.fc-edit-cancel{
+  border:0;background:0 0;cursor:pointer;color:var(--text-soft,#65676b);
+  font-family:inherit;font-size:.74rem;font-weight:600;padding:5px 10px;border-radius:8px;
+}
+.fc-edit-cancel:hover{background:rgba(15,23,42,.07);color:var(--brand-text,#1e293b)}
+
+/* রিপ্লাই-বাবলে ব্যাজ-সামঞ্জস্য + মোবাইল-টিউনিং */
+.fc-item.fc-reply .fc-react-badge{right:4px}
+@media (max-width:640px){
+  .fcr-palette{left:-4px;padding:4px 5px;gap:1px}
+  .fcr-opt{width:31px;height:31px;font-size:1.05rem}
+  .fc-menu{min-width:158px;right:-4px}
+  .fc-meta{gap:10px}
+}

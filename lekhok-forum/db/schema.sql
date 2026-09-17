@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS comments (
   body       TEXT    NOT NULL,
   like_count INTEGER DEFAULT 0,
   reactions  TEXT    DEFAULT '{}',
+  edited_at  DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (post_id)   REFERENCES posts(id)    ON DELETE CASCADE,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE

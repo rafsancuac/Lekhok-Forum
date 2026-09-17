@@ -1,21 +1,28 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   সেশন ৯৩: comment-tools.js — কমেন্ট-অভিজ্ঞতার গ্লোবাল ইঞ্জিন
+   সেশন ৯৩ → ১০৪: comment-tools.js — কমেন্ট-অভিজ্ঞতার গ্লোবাল ইঞ্জিন
    ─────────────────────────────────────────────────────────────────────────
    ১. মার্কডাউন-টুলবার (.cc-fmt) — selectionStart/End-ভিত্তিক সিনট্যাক্স-র‍্যাপ
-      (আগের cf-hint চিপগুলো স্ট্যাটিক ছিল — ক্লিকে কিছুই হতো না)
-   ২. @ম্যানশন-অটোকমপ্লিট — কার্সরের আগে @কোয়েরি ডিটেক্ট → /api/users/search
-      ডিবাউন্স-ফেচ → ড্রপডাউন → সিলেক্টে @username ইনসার্ট
+   ২. @ম্যানশন-অটোকমপ্লিট — /api/users/search ডিবাউন্স-ফেচ
    ৩. পোস্ট-৩-ডট-মেনু (.pm-wrap) — খোলা/বন্ধ + আউটসাইড-ক্লিক + কনফার্ম
-   ৪. ফিড-ইনলাইন-কমেন্ট ([data-toggle-comments]) — আলাদা পেজে না গিয়ে
-      একই কার্ডে ড্রয়ার-টগল; প্রথম-ওপেনে GET /api/comments-ফেচ
-   ৫. কমেন্ট-রেন্ডার (renderCommentItem) — FB-বাবল: অ্যাভাটার+গ্রে-বাবল+মেটা+উত্তর
+   ৪. ফিড-ইনলাইন-কমেন্ট ([data-toggle-comments]) — ড্রয়ার-টগল; খোলা অবস্থায়
+      .fc-open-ক্লাস → .fc-preview লুকানো (ডুপ্লিকেট-কমেন্ট-ফিক্স, সেশন ১০৪)
+   ৫. FB-প্যারিটি কমেন্ট-আইটেম (সেশন ১০৪):
+      • রিঅ্যাকশন-প্যালেট (👍❤️🤗😂😮😢) — 'লাইক'-এ hover/ট্যাপে ভাসে
+      • বাবলের কোণে রিঅ্যাকশন-ব্যাজ (শীর্ষ-ইমোজি + মোট-সংখ্যা)
+      • হোভার ৩-ডট-মেনু — নিজের মন্তব্যে সম্পাদনা/মুছে-ফেলা, অন্যের জন্য রিপোর্ট
+      • ইনলাইন-সম্পাদনা (textarea + সংরক্ষণ/বাতিল) + 'সম্পাদিত' মার্কার
    সব হ্যান্ডলার ডেলিগেটেড — /dashboard/more-এর ডায়নামিক-HTML-এও কাজ করে।
-   ═══════════════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
   var AUTHED = document.body && document.body.getAttribute('data-auth') === '1';
+  var ME_ID = AUTHED && document.body ? (document.body.getAttribute('data-uid') || '') : '';
+
+  /* ── সেশন ১০৪: রিঅ্যাকশন-কনস্ট্যান্ট (server REACTIONS-চুক্তি: ৬ টাইপ) ────── */
+  var R_META = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
+  var R_LABEL = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
 
   /* ── ১. মার্কডাউন-টুলবার ─────────────────────────────────────────────── */
   var FMT_SYNTAX = {
@@ -233,6 +240,7 @@
   var bnNum = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); };
   function relTime(iso) {
     var diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (isNaN(diff)) return '';
     if (diff < 60) return 'এইমাত্র';
     if (diff < 3600) return bnNum(Math.floor(diff / 60)) + ' মিনিট';
     if (diff < 86400) return bnNum(Math.floor(diff / 3600)) + ' ঘণ্টা';
@@ -240,19 +248,75 @@
     return new Date(iso).toLocaleDateString('bn-BD');
   }
 
-  function renderCommentItem(c, postId) {
-    var html = '<div class="fc-item" id="fc-c' + c.id + '">' +
-      '<img class="fc-av" src="' + esc(c.avatar_url || ('/avatar/' + c.author_id)) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
+  function topEmojiOf(reactions) {
+    var best = null, bestC = -1;
+    Object.keys(reactions || {}).forEach(function (k) {
+      var c = reactions[k] || 0;
+      if (c > bestC && R_META[k]) { best = k; bestC = c; }
+    });
+    return best ? R_META[best] : '👍';
+  }
+
+  // ── সেশন ১০৪: FB-প্যারিটি কমেন্ট-আইটেম-রেন্ডারার ─────────────────────────
+  // প্রত্যাশা (GET /api/comments চুক্তি): c.{id, author_id, username, author_name,
+  // avatar_url, body, bodyHtml, created_at, edited_at, like_count, reactions,
+  // my_reaction, replies[]}
+  var RAW_CACHE = {}; // cid → raw-markdown (ইনলাইন-এডিটর প্রি-ফিল)
+  function isOwnComment(c) {
+    return ME_ID && String(c.author_id) === String(ME_ID);
+  }
+
+  function renderCommentItem(c, postId, opts) {
+    opts = opts || {};
+    var mine = c.my_reaction || null;
+    var total = 0;
+    Object.keys(c.reactions || {}).forEach(function (k) { total += (c.reactions[k] || 0); });
+    var edited = !!c.edited_at;
+    var own = isOwnComment(c);
+    RAW_CACHE[c.id] = c.body || ''; // ইনলাইন-এডিটরের প্রি-ফিল-সোর্স
+
+    var html = '<div class="fc-item' + (opts.reply ? ' fc-reply' : '') + '" id="fc-c' + c.id + '"' +
+      ' data-cid="' + c.id + '" data-author-id="' + esc(c.author_id) + '">' +
+      '<img class="fc-av' + (opts.reply ? ' small' : '') + '" src="' + esc(c.avatar_url || ('/avatar/' + c.author_id)) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
       '<div class="fc-main">' +
-        '<div class="fc-bubble"><a class="fc-author" href="/profile/' + esc(c.username) + '">' + esc(c.author_name) + '</a>' +
+        '<div class="fc-bubble">' +
+          '<a class="fc-author" href="/profile/' + esc(c.username) + '">' + esc(c.author_name) + '</a>' +
           '<div class="fc-body">' + (c.bodyHtml || esc(c.body)) + '</div>' +
-          (c.edited ? '<span class="fc-edited">সম্পাদিত</span>' : '') +
+          (edited ? '<span class="fc-edited">সম্পাদিত</span>' : '') +
+          (total > 0
+            ? '<div class="fc-react-badge" title="প্রতিক্রিয়া"><span class="fcrb-emoji">' + topEmojiOf(c.reactions) + '</span><span class="fcrb-count">' + bnNum(total) + '</span></div>'
+            : '') +
         '</div>' +
-        '<div class="fc-meta">' +
-          '<span class="fc-time">' + relTime(c.created_at) + '</span>' +
-          (AUTHED ? '<button type="button" class="fc-reply-btn" data-reply-to="' + c.id + '" data-reply-name="' + esc(c.author_name) + '">উত্তর দিন</button>' : '') +
-        '</div>';
+        '<div class="fc-meta">';
+
     if (AUTHED) {
+      html += '<span class="fc-react-wrap">' +
+            '<button type="button" class="fc-react-btn' + (mine ? ' active' : '') + '" data-mine="' + esc(mine || '') + '">' + (mine ? esc(R_LABEL[mine] || 'লাইক') : 'লাইক') + '</button>' +
+            '<div class="fcr-palette" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন" hidden>';
+      Object.keys(R_META).forEach(function (k) {
+        html += '<button type="button" class="fcr-opt' + (mine === k ? ' selected' : '') + '" data-reaction="' + k + '" title="' + R_LABEL[k] + '" aria-label="' + R_LABEL[k] + '">' + R_META[k] + '</button>';
+      });
+      html += '</div></span>' +
+            '<button type="button" class="fc-reply-btn" data-reply-to="' + c.id + '" data-reply-name="' + esc(c.author_name) + '">উত্তর দিন</button>';
+    }
+    html += '<span class="fc-time">' + relTime(c.created_at) + '</span>';
+
+    if (AUTHED) {
+      html += '<span class="fc-menu-wrap">' +
+            '<button type="button" class="fc-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="মন্তব্য অপশন" title="মন্তব্য অপশন"><i class="fas fa-ellipsis-h"></i></button>' +
+            '<div class="fc-menu" role="menu" hidden>';
+      if (own) {
+        html += '<button type="button" class="fc-menu-item" data-cact="edit" role="menuitem"><i class="fas fa-pen"></i> সম্পাদনা করুন</button>' +
+                '<button type="button" class="fc-menu-item fc-menu-danger" data-cact="delete" role="menuitem"><i class="fas fa-trash"></i> মুছে ফেলুন</button>';
+      } else {
+        html += '<button type="button" class="fc-menu-item fc-menu-danger" data-cact="report" role="menuitem"><i class="far fa-flag"></i> রিপোর্ট করুন</button>';
+      }
+      html += '</div></span>';
+    }
+    html += '</div>';
+
+    if (AUTHED) {
+      html += '<div class="fc-edit-slot" hidden></div>';
       html += '<div class="fc-reply-slot" data-slot-for="' + c.id + '" hidden></div>';
     }
     html += '</div></div>';
@@ -269,17 +333,54 @@
     list.innerHTML = comments.map(function (c) {
       var out = renderCommentItem(c, postId);
       if (c.replies && c.replies.length) {
-        out += c.replies.map(function (r) {
-          return '<div class="fc-item fc-reply" id="fc-c' + r.id + '">' +
-            '<img class="fc-av small" src="' + esc(r.avatar_url || ('/avatar/' + r.author_id)) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
-            '<div class="fc-main"><div class="fc-bubble"><a class="fc-author" href="/profile/' + esc(r.username) + '">' + esc(r.author_name) + '</a>' +
-              '<div class="fc-body">' + (r.bodyHtml || esc(r.body)) + '</div></div>' +
-            '<div class="fc-meta"><span class="fc-time">' + relTime(r.created_at) + '</span></div>' +
-            '</div></div>';
-        }).join('');
+        out += c.replies.map(function (r) { return renderCommentItem(r, postId, { reply: true }); }).join('');
       }
       return out;
     }).join('');
+  }
+
+  // ── সেশন ১০৪: প্রিভিউ-সিঙ্ক — ফেচ-পরবর্তী সর্বশেষ-২ কমেন্ট থেকে .fc-preview
+  // পুনর্নির্মাণ (সার্ভার-রেন্ডারড প্রিভিউ এডিট/ডিলিট/নতুন-কমেন্টে স্টেল হয় না)।
+  function syncPreview(drawer, comments, total) {
+    var card = drawer.closest('.feed-card') || drawer.closest('article');
+    if (!card) return;
+    var prev = card.querySelector('.fc-preview');
+    if (!prev) {
+      // ০-কমেন্ট পোস্টে সার্ভার-সাইডে প্রিভিউ-ব্লক রেন্ডারই হয়নি — পরে কমেন্ট
+      // হলে ড্রয়ার-বন্ধ-অবস্থায় FB-প্রিভিউ দেখাতে ব্লকটি তৈরি করে নিতে হয়
+      if (!(comments || []).length) return;
+      prev = document.createElement('div');
+      prev.className = 'fc-preview';
+      var drawerEl = card.querySelector('.fc-drawer');
+      drawerEl && drawerEl.parentElement.insertBefore(prev, drawerEl);
+    }
+    var flat = [];
+    (comments || []).forEach(function (c) {
+      flat.push(c);
+      (c.replies || []).forEach(function (r) { flat.push(r); });
+    });
+    var postId = drawer.getAttribute('data-comments-for');
+    var latest = flat.slice(-2); // ASC-ক্রম → শেষ ২টিই সর্বশেষ
+    var html = '';
+    if (total > latest.length) {
+      html += '<button type="button" class="fc-more" data-toggle-comments="' + postId + '">সব ' + bnNum(total) + ' টি মন্তব্য দেখুন</button>';
+    }
+    latest.forEach(function (cp) {
+      html += '<div class="fcp-row">' +
+        '<a href="/profile/' + esc(cp.username) + '" class="fcp-av-link" aria-hidden="true" tabindex="-1">' +
+          '<img loading="lazy" decoding="async" src="' + esc(cp.avatar_url || ('/avatar/' + cp.author_id)) + '" class="fcp-avatar" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
+        '</a>' +
+        '<div class="fcp-main">' +
+          '<div class="fcp-bubble"><a href="/profile/' + esc(cp.username) + '" class="fcp-author">' + esc(cp.author_name) + '</a>' +
+          '<span class="fcp-body">' + esc(String(cp.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 110)) + '</span></div>' +
+          '<div class="fcp-actions">' +
+            '<button type="button" class="fcp-act" data-toggle-comments="' + postId + '">মন্তব্য করুন</button>' +
+            '<span class="fcp-act muted">' + relTime(cp.created_at) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    prev.innerHTML = html;
   }
 
   function buildComposerHtml(postId, avatar) {
@@ -301,7 +402,7 @@
     var drawer = card.querySelector('.fc-drawer');
     if (!drawer) return false;
     drawer.hidden = false;
-    card.classList.add('fc-open');
+    card.classList.add('fc-open'); // → CSS: .fc-open .fc-preview{display:none} (ডুপ্লিকেট-ফিক্স)
     if (!drawer.dataset.loaded) {
       drawer.dataset.loaded = '1';
       var postId = drawer.getAttribute('data-comments-for');
@@ -312,16 +413,25 @@
     return true;
   }
 
+  function closeDrawer(card) {
+    var drawer = card.querySelector('.fc-drawer');
+    if (drawer) drawer.hidden = true;
+    card.classList.remove('fc-open'); // প্রিভিউ ফিরে আসে
+  }
+
   function refreshDrawer(drawer, postId) {
     return fetch('/api/comments?post_id=' + postId)
       .then(function (r) { return r.json(); })
       .then(function (j) {
-        renderCommentList((j && j.comments) || [], postId, drawer);
+        var comments = (j && j.comments) || [];
+        var total = typeof (j && j.total) === 'number' ? j.total : comments.length;
+        renderCommentList(comments, postId, drawer);
+        syncPreview(drawer, comments, total);
         // কাউন্টার-আপডেট (actions-summary-র as-stat)
         var card = drawer.closest('.feed-card, article');
-        if (card && typeof (j && j.total) === 'number') {
+        if (card) {
           var stat = card.querySelector('.as-stat[title="মন্তব্য"] span:first-child');
-          if (stat) stat.textContent = j.total;
+          if (stat) stat.textContent = total;
         }
       })
       .catch(function () {
@@ -344,10 +454,260 @@
       var input = drawer.querySelector('.cc-input');
       if (input) setTimeout(function () { input.focus(); }, 120);
     } else {
-      drawer.hidden = true;
-      card.classList.remove('fc-open');
+      closeDrawer(card);
     }
   });
+
+  /* ── ৫. কমেন্ট-রিঅ্যাকশন (সেশন ১০৪, FB-প্যালেট) ─────────────────────────── */
+  function closeAllPalettes(except) {
+    document.querySelectorAll('.fcr-palette:not([hidden])').forEach(function (p) {
+      if (p !== except) p.hidden = true;
+    });
+  }
+  function closeAllFcMenus(except) {
+    document.querySelectorAll('.fc-menu:not([hidden])').forEach(function (m) {
+      if (m !== except) {
+        m.hidden = true;
+        var b = m.closest('.fc-menu-btn');
+        if (b) b.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  function applyBadge(item, reactions, total, mine) {
+    var bubble = item.querySelector('.fc-bubble');
+    if (!bubble) return;
+    var badge = bubble.querySelector('.fc-react-badge');
+    if (total > 0) {
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'fc-react-badge';
+        badge.title = 'প্রতিক্রিয়া';
+        bubble.appendChild(badge);
+      }
+      badge.innerHTML = '<span class="fcrb-emoji">' + topEmojiOf(reactions) + '</span><span class="fcrb-count">' + bnNum(total) + '</span>';
+      badge.hidden = false;
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+
+  function applyMine(item, mine) {
+    var btn = item.querySelector('.fc-react-btn');
+    if (!btn) return;
+    btn.dataset.mine = mine || '';
+    btn.classList.toggle('active', !!mine);
+    btn.textContent = mine ? (R_LABEL[mine] || 'লাইক') : 'লাইক';
+    item.querySelectorAll('.fcr-opt').forEach(function (o) {
+      o.classList.toggle('selected', o.getAttribute('data-reaction') === mine);
+    });
+  }
+
+  function reactComment(item, cid, type) {
+    if (!AUTHED) return location.href = '/login?next=' + encodeURIComponent(location.pathname);
+    var btn = item.querySelector('.fc-react-btn');
+    if (btn) btn.disabled = true;
+    fetch('/api/react', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_id: cid, target_type: 'comment', reaction_type: type })
+    }).then(function (r) {
+      if (r.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname); throw new Error('login'); }
+      return r.json();
+    }).then(function (j) {
+      if (!j || !j.ok) throw new Error('failed');
+      applyMine(item, j.mine);
+      applyBadge(item, j.reactions || {}, j.total || 0, j.mine);
+      if (window.showToast) showToast(j.mine ? (R_LABEL[j.mine] + ' দেওয়া হয়েছে') : 'প্রতিক্রিয়া সরানো হয়েছে', 'success');
+    }).catch(function (err) {
+      if (err && err.message === 'login') return;
+      if (window.showToast) showToast('প্রতিক্রিয়া জানানো যায়নি', 'error');
+    }).finally(function () {
+      if (btn) btn.disabled = false;
+    });
+  }
+
+  // প্যালেট-হোভার (ডেস্কটপ): ৩৫০ms ডিলে → ওপেন; বাইরে গেলে বন্ধ (টাচে ক্লিকে টগল)
+  var paletteTimer = null, paletteOpenByHover = false;
+  document.addEventListener('mouseover', function (e) {
+    var wrap = e.target.closest && e.target.closest('.fc-react-wrap');
+    if (!wrap || !window.matchMedia('(hover: hover)').matches) return;
+    clearTimeout(paletteTimer);
+    paletteTimer = setTimeout(function () {
+      var pal = wrap.querySelector('.fcr-palette');
+      if (pal) { pal.hidden = false; paletteOpenByHover = true; }
+    }, 300);
+  });
+  document.addEventListener('mouseout', function (e) {
+    var wrap = e.target.closest && e.target.closest('.fc-react-wrap');
+    if (!wrap) return;
+    var to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.fc-react-wrap');
+    if (to === wrap) return;
+    clearTimeout(paletteTimer);
+    paletteTimer = setTimeout(function () {
+      var pal = wrap.querySelector('.fcr-palette');
+      if (pal && paletteOpenByHover) { pal.hidden = true; paletteOpenByHover = false; }
+    }, 220);
+  });
+
+  // কমেন্ট-ক্লিক-হাব: রিঅ্যাক্ট-বাটন/প্যালেট-অপশন/৩-ডট-মেনু/এডিট/ডিলিট/রিপোর্ট
+  document.addEventListener('click', function (e) {
+    // (ক) প্যালেট-ইমোজি
+    var opt = e.target.closest('.fcr-opt');
+    if (opt) {
+      e.preventDefault();
+      var item = opt.closest('.fc-item');
+      var wrap = opt.closest('.fc-react-wrap');
+      var pal = wrap && wrap.querySelector('.fcr-palette');
+      if (pal) pal.hidden = true;
+      if (item) reactComment(item, item.getAttribute('data-cid'), opt.getAttribute('data-reaction'));
+      return;
+    }
+    // (খ) 'লাইক'-লেবেল — টগল (mine থাকলে সরাও, নাহলে like); টাচ-ডিভাইসে প্যালেট খোলে
+    var rBtn = e.target.closest('.fc-react-btn');
+    if (rBtn) {
+      e.preventDefault();
+      var item2 = rBtn.closest('.fc-item');
+      var pal2 = rBtn.parentElement.querySelector('.fcr-palette');
+      var touch = !window.matchMedia('(hover: hover)').matches;
+      if (touch && pal2) { // টাচ: প্রথম ট্যাপে প্যালেট (FB-মোবাইল-আচরণ)
+        var wasHidden = pal2.hidden;
+        closeAllPalettes(pal2);
+        pal2.hidden = !wasHidden;
+        return;
+      }
+      if (item2) {
+        var mineNow = rBtn.dataset.mine || '';
+        reactComment(item2, item2.getAttribute('data-cid'), mineNow || 'like'); // টগল-অফ সার্ভার-সাইডে
+      }
+      return;
+    }
+    // (গ) ৩-ডট-মেনু-টগল
+    var mBtn = e.target.closest('.fc-menu-btn');
+    if (mBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      var mMenu = mBtn.parentElement.querySelector('.fc-menu');
+      if (mMenu) {
+        var opening = mMenu.hidden;
+        closeAllFcMenus(mMenu);
+        closeAllPalettes(null);
+        mMenu.hidden = !opening;
+        mBtn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      }
+      return;
+    }
+    // (ঘ) মেনুর বাইরে ক্লিক → সব বন্ধ
+    if (!e.target.closest('.fc-menu')) closeAllFcMenus(null);
+    if (!e.target.closest('.fc-react-wrap')) closeAllPalettes(null);
+
+    // (ঙ) মেনু-অ্যাকশন: সম্পাদনা/মুছে-ফেলা/রিপোর্ট
+    var act = e.target.closest('.fc-menu-item');
+    if (act) {
+      e.preventDefault();
+      var item3 = act.closest('.fc-item');
+      var cid = item3 && item3.getAttribute('data-cid');
+      var kind = act.getAttribute('data-cact');
+      var menuWrap = act.closest('.fc-menu');
+      if (menuWrap) menuWrap.hidden = true;
+      if (!item3 || !cid) return;
+      if (kind === 'edit') startEdit(item3, cid);
+      else if (kind === 'delete') deleteComment(item3, cid);
+      else if (kind === 'report' && window.openReport81) {
+        var name = (item3.querySelector('.fc-author') || {}).textContent || '';
+        window.openReport81('comment', cid, 'মন্তব্য: ' + String(name).trim());
+      }
+    }
+  });
+
+  // ── সেশন ১০৪: ইনলাইন-সম্পাদনা ────────────────────────────────────────────
+  function startEdit(item, cid) {
+    var slot = item.querySelector('.fc-edit-slot');
+    var bubble = item.querySelector('.fc-bubble');
+    if (!slot || !bubble || !slot.hidden) return;
+    var raw = RAW_CACHE[cid] || bubble.querySelector('.fc-body').textContent;
+    slot.innerHTML = '<div class="fc-edit-box">' +
+      '<textarea class="fc-edit-input" rows="2" maxlength="2000" aria-label="মন্তব্য সম্পাদনা"></textarea>' +
+      '<div class="fc-edit-actions">' +
+        '<button type="button" class="fc-edit-save"><i class="fas fa-check"></i> সংরক্ষণ</button>' +
+        '<button type="button" class="fc-edit-cancel">বাতিল</button>' +
+      '</div></div>';
+    var ta = slot.querySelector('.fc-edit-input');
+    ta.value = raw;
+    slot.hidden = false;
+    bubble.style.display = 'none';
+    ta.addEventListener('input', function () {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+    });
+    setTimeout(function () { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 50);
+    slot.querySelector('.fc-edit-cancel').addEventListener('click', function () {
+      slot.hidden = true; slot.innerHTML = ''; bubble.style.display = '';
+    });
+    slot.querySelector('.fc-edit-save').addEventListener('click', function () {
+      var body = ta.value.trim();
+      if (!body) return;
+      var saveBtn = slot.querySelector('.fc-edit-save');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে…';
+      fetch('/api/comments/' + cid, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: body })
+      }).then(function (r) {
+        if (r.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname); throw new Error('login'); }
+        return r.json();
+      }).then(function (j) {
+        if (!j || !j.ok) throw new Error('failed');
+        bubble.querySelector('.fc-body').innerHTML = j.bodyHtml || esc(body);
+        var ed = bubble.querySelector('.fc-edited');
+        if (!ed) {
+          ed = document.createElement('span');
+          ed.className = 'fc-edited';
+          ed.textContent = 'সম্পাদিত';
+          bubble.appendChild(ed);
+        }
+        RAW_CACHE[cid] = body;
+        slot.hidden = true; slot.innerHTML = '';
+        bubble.style.display = '';
+        if (window.showToast) showToast('মন্তব্য সম্পাদিত হয়েছে ✓', 'success');
+      }).catch(function (err) {
+        if (err && err.message === 'login') return;
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-check"></i> সংরক্ষণ';
+        if (window.showToast) showToast('সম্পাদনা সংরক্ষণ করা যায়নি', 'error');
+      });
+    });
+    ta.addEventListener('keydown', function (ev) {
+      if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') slot.querySelector('.fc-edit-save').click();
+      if (ev.key === 'Escape') slot.querySelector('.fc-edit-cancel').click();
+    });
+  }
+
+  // ── সেশন ১০৪: মুছে-ফেলা (রিপ্লাইসহ) ─────────────────────────────────────
+  function deleteComment(item, cid) {
+    if (!window.confirm('নিশ্চিত? এই মন্তব্যটি মুছে ফেলতে চান?')) return;
+    item.style.opacity = '0.45';
+    fetch('/api/comments/' + cid, { method: 'DELETE' })
+      .then(function (r) {
+        if (r.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname); throw new Error('login'); }
+        return r.json();
+      })
+      .then(function (j) {
+        if (!j || !j.ok) throw new Error('failed');
+        var drawer = item.closest('.fc-drawer');
+        if (drawer) {
+          // পূর্ণ-রিফ্রেশ: লিস্ট + কাউন্টার + প্রিভিউ-সিঙ্ক (রিপ্লাই-সংখ্যাসহ)
+          refreshDrawer(drawer, drawer.getAttribute('data-comments-for'));
+        }
+        if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
+      })
+      .catch(function (err) {
+        item.style.opacity = '';
+        if (err && err.message === 'login') return;
+        if (window.showToast) showToast('মন্তব্য মুছে ফেলা যায়নি', 'error');
+      });
+  }
 
   // রিপ্লাই-বাটন (ডেলিগেটেড — ড্রয়ারের ভেতরে)
   document.addEventListener('click', function (e) {
@@ -371,7 +731,7 @@
     }
   });
 
-  /* ── ৫. কম্পোজার-সাবমিট (ডেলিগেটেড — ফিড-ড্রয়ার + আর্টিকেল-পেজ) ─────── */
+  /* ── ৬. কম্পোজার-সাবমিট (ডেলিগেটেড — ফিড-ড্রয়ার + আর্টিকেল-পেজ) ─────── */
   document.addEventListener('submit', function (e) {
     var form = e.target;
     if (!(form instanceof HTMLFormElement) || !form.classList.contains('cc-form')) return;

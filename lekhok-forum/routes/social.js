@@ -1550,25 +1550,54 @@ router.post('/api/comment', async (req, res) => {
 // প্যারেন্ট-কমেন্ট মুছে গেলে রিপ্লাইগুলো অপরিচিত-অবস্থায় টপ-লেভেলে ফুটে যায় না —
 // শুধু বৈধ প্যারেন্টের ভেতরেই বসে (ASC-অর্ডারে প্যারেন্ট সবসময় আগে আসে)। গেস্ট-ও
 // পড়তে পারে (মন্তব্য পাবলিক)।
+// ── সেশন ১০৪ (FB-প্যারিটি): প্রতি-কমেন্টে reactions (টাইপ-ভাগ-করা গণনা),
+// my_reaction (ভিউয়ারের বর্তমান প্রতিক্রিয়া), edited_at (সম্পাদিত-মার্কার),
+// author_id (নিজের-মন্তব্য-চেনা) — প্যালেট/ব্যাজ/৩-ডট-মেনুর ডেটা-সোর্স।
 router.get('/api/comments', async (req, res) => {
   const postId = parseInt(req.query.post_id, 10);
   if (!Number.isInteger(postId) || postId <= 0) return res.status(400).json({ error: 'bad_post_id' });
   try {
     const rows = await db.prepare(`
-      SELECT c.id, c.post_id, c.author_id, c.body, c.parent_id, c.created_at,
+      SELECT c.id, c.post_id, c.author_id, c.body, c.parent_id, c.created_at, c.edited_at,
              u.username, u.full_name, u.pen_name, u.avatar_url
       FROM comments c JOIN users u ON u.id = c.author_id
       WHERE c.post_id = ?
       ORDER BY c.created_at ASC, c.id ASC
     `).all(postId);
+    // রিঅ্যাকশন-ব্যাচ (পোস্ট-বাউন্ড — ২ কুয়েরিতেই সম্পূর্ণ চিত্র)
+    const reactByComment = {};   // cid → {like:N,...}
+    const mineByComment = {};    // cid → 'like'|...
+    const me = req.session.user || null;
+    try {
+      const counts = await db.prepare(`
+        SELECT l.comment_id AS cid, COALESCE(l.reaction_type, 'like') AS rt, COUNT(*) AS c
+        FROM likes l JOIN comments c2 ON c2.id = l.comment_id
+        WHERE c2.post_id = ?
+        GROUP BY l.comment_id, rt
+      `).all(postId);
+      counts.forEach(r => {
+        (reactByComment[r.cid] = reactByComment[r.cid] || {})[r.rt] = r.c;
+      });
+      if (me) {
+        const mineRows = await db.prepare(`
+          SELECT l.comment_id AS cid, COALESCE(l.reaction_type, 'like') AS rt
+          FROM likes l JOIN comments c2 ON c2.id = l.comment_id
+          WHERE c2.post_id = ? AND l.user_id = ?
+        `).all(postId, me.id);
+        mineRows.forEach(r => { mineByComment[r.cid] = r.rt; });
+      }
+    } catch (_) { /* likes টেবিল স্কিমা-ভিন্ন হলে নীরব-ফলব্যাক */ }
+
     const { renderComment: rc92 } = require('../helpers/markdown-lite');
     const byId = {};
     const tops = [];
     for (const r of rows) {
       const item = {
         id: r.id, post_id: r.post_id, author_id: r.author_id, body: r.body,
-        bodyHtml: rc92(r.body || ''), created_at: r.created_at, edited: false,
+        bodyHtml: rc92(r.body || ''), created_at: r.created_at, edited_at: r.edited_at || null,
         username: r.username, author_name: displayName92(r), avatar_url: r.avatar_url,
+        reactions: reactByComment[r.id] || {},
+        my_reaction: mineByComment[r.id] || null,
         replies: []
       };
       byId[r.id] = item;
@@ -1579,6 +1608,60 @@ router.get('/api/comments', async (req, res) => {
     res.json({ ok: true, comments: tops, total });
   } catch (e) {
     res.status(500).json({ error: 'server' });
+  }
+});
+
+// ── সেশন ১০৪: নিজের মন্তব্য সম্পাদনা (FB-প্যারিটি ৩-ডট-মেনু) ─────────────────
+// POST /api/comments/:id {body} — শুধু লেখক নিজে; body ১..২০০০; edited_at স্ট্যাম্প;
+// সার্ভার-সাইড markdown-lite পুনঃরেন্ডার (XSS-নিরাপদ bodyHtml ফেরত)।
+router.post('/api/comments/:id', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const cid = parseInt(req.params.id, 10);
+  if (!Number.isInteger(cid) || cid <= 0) return res.status(404).json({ ok: false, error: 'not_found' });
+  const body = String((req.body && req.body.body) || '').trim();
+  if (!body) return res.status(400).json({ ok: false, error: 'empty' });
+  if (body.length > 2000) return res.status(400).json({ ok: false, error: 'too_long' });
+  try {
+    const row = await db.prepare('SELECT id, author_id FROM comments WHERE id = ?').get(cid);
+    if (!row) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (row.author_id !== me.id) return res.status(403).json({ ok: false, error: 'forbidden' });
+    await db.prepare('UPDATE comments SET body = ?, edited_at = CURRENT_TIMESTAMP WHERE id = ?').run(body, cid);
+    const { renderComment: rc104 } = require('../helpers/markdown-lite');
+    res.json({ ok: true, id: cid, bodyHtml: rc104(body), edited_at: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'server' });
+  }
+});
+
+// ── সেশন ১০৪: মন্তব্য মুছে-ফেলা (লেখক নিজে অথবা মডারেটর/অ্যাডমিন) ────────────
+// DELETE /api/comments/:id — টপ-লেভেল মুছলে সরাসরি রিপ্লাইগুলোও যায় (BFS-সংগ্রহ);
+// likes-রো-পরিষ্কার + posts.comment_count সিঙ্ক (MAX(0, −n))।
+router.delete('/api/comments/:id', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const cid = parseInt(req.params.id, 10);
+  if (!Number.isInteger(cid) || cid <= 0) return res.status(404).json({ ok: false, error: 'not_found' });
+  try {
+    const row = await db.prepare('SELECT id, post_id, author_id FROM comments WHERE id = ?').get(cid);
+    if (!row) return res.status(404).json({ ok: false, error: 'not_found' });
+    const isStaff = /moderator|admin/.test(String(me.role || ''));
+    if (row.author_id !== me.id && !isStaff) return res.status(403).json({ ok: false, error: 'forbidden' });
+    // পোস্টের সব মন্তব্য এনে BFS-এ টার্গেট-সাবট্রি সংগ্রহ (রিপ্লাই-অব-রিপ্লাইসহ)
+    const all = await db.prepare('SELECT id, parent_id FROM comments WHERE post_id = ?').all(row.post_id);
+    const children = {};
+    all.forEach(r => { (children[r.parent_id] = children[r.parent_id] || []).push(r.id); });
+    const doomed = [cid];
+    for (let i = 0; i < doomed.length; i++) {
+      (children[doomed[i]] || []).forEach(k => doomed.push(k));
+    }
+    const ph = doomed.map(() => '?').join(',');
+    try { await db.prepare(`DELETE FROM likes WHERE comment_id IN (${ph})`).run(...doomed); } catch (_) {}
+    const del = await db.prepare(`DELETE FROM comments WHERE id IN (${ph})`).run(...doomed);
+    const deleted = (del && (del.changes ?? del.rows_affected)) || doomed.length;
+    await db.prepare('UPDATE posts SET comment_count = MAX(0, comment_count - ?) WHERE id = ?').run(deleted, row.post_id);
+    const post = await db.prepare('SELECT comment_count FROM posts WHERE id = ?').get(row.post_id);
+    res.json({ ok: true, deleted, total: post ? post.comment_count : 0 });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'server' });
   }
 });
 

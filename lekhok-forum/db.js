@@ -183,6 +183,7 @@ const MIGRATION_SQL = `
     parent_id INTEGER,
     like_count INTEGER DEFAULT 0,
     reactions TEXT DEFAULT '{}',
+    edited_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS likes (
@@ -535,6 +536,9 @@ const LATER_COLUMNS = [
   // ফ্রেশ-DB-সেফটি: নিচের CREATE TABLE-এও যোগ করা (সেশন-৫৭-লেশন)।
   ['gallery', 'photographer', 'TEXT'],
   ['gallery', 'event_date',   'TEXT'],
+  // সেশন ১০৪: FB-প্যারিটি কমেন্ট-সিস্টেম — edited_at (সম্পাদনা-স্ট্যাম্প,
+  // GET /api/comments + কমেন্ট-বাবলের 'সম্পাদিত' মার্কার)।
+  ['comments', 'edited_at', 'DATETIME'],
   // সেশন ১০১: রিসোর্স-মাল্টিমিডিয়া আপগ্রেড — res_type (pdf/audio/video/image/doc/link)
   // legacy file_type (document/video/link) থেকে আলাদা; পড়ার সময় res_type ফাঁক থাকলে
   // file_type থেকে derive হয়। file_size হিউম্যান-রিডেবল ("15.4 MB"), duration
