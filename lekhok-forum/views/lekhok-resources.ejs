@@ -67,6 +67,13 @@
             <span class="rsx-sericount"><%= bn(s.n) %></span>
           </a>
         <% }) %>
+        <%# সেশন ১১৮: সিরিজ play-all — সক্রিয়-সিরিজেই রেন্ডার; ক্লিকে প্রথম-অডিও-পর্বে
+            ?play=1 নিয়ে যায় (ডিটেইল-পেজে অটো-স্টার্ট; অটোপ্লে-নীতি-ব্লক হলে পালস-ফলব্যাক) %>
+        <% if (initialSeries) { %>
+          <button type="button" class="rsx-seriplay" id="rsxSeriPlay" title="সিরিজের অডিও পর্ব ইন-পেজে শুনুন">
+            <i class="fas fa-play" aria-hidden="true"></i> সিরিজ শুনুন
+          </button>
+        <% } %>
       </div>
     <% } %>
 
@@ -201,6 +208,12 @@
 .rsx-seriesrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 16px 0 2px; padding: 10px 14px; background: linear-gradient(120deg, #f0fdf4 0%, var(--bg-card, #fff) 55%); border: 1px solid rgba(5,150,105,.22); border-radius: 14px; }
 .rsx-serieslabel { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 900; color: var(--accent, #059669); text-transform: uppercase; letter-spacing: .06em; }
 .rsx-serieslabel i { font-size: .78rem; }
+/* সেশন ১১৮: সিরিজ play-all বাটন */
+.rsx-seriplay { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; font-size: .74rem; font-weight: 800; cursor: pointer; box-shadow: 0 3px 10px -4px rgba(5,150,105,.55); transition: all .15s ease; }
+.rsx-seriplay:hover { transform: translateY(-1px); box-shadow: 0 7px 16px -6px rgba(5,150,105,.6); filter: brightness(1.04); }
+.rsx-seriplay:focus-visible { outline: 2px solid #065f46; outline-offset: 2px; }
+.rsx-seriplay i { font-size: .68rem; }
+.rsx-seriplay:active { transform: translateY(0); }
 .rsx-serichip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border-radius: 999px; border: 1.5px solid var(--border, #e2e8f0); background: var(--bg-card, #fff); color: var(--text, #1e293b); font-size: .76rem; font-weight: 700; text-decoration: none; transition: all .15s ease; max-width: 260px; }
 .rsx-serichip i { font-size: .7rem; color: #94a3b8; transition: color .15s ease; }
 .rsx-serichip:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); background: #ecfdf5; transform: translateY(-1px); }
@@ -566,6 +579,28 @@
       try { document.execCommand('copy'); } catch (err) {}
       ta.remove();
     }
+  });
+
+  /* ═══ সেশন ১১৮: সিরিজ play-all → ডিটেইল-অটোস্টার্ট ═══
+     প্রথম-অডিও-কার্ড (.rsx-audio audio[src]) খুঁজে তার ডিটেইল-লিংকে sessionStorage-ইনটেন্ট
+     + ?play=1-সহ নেভিগেট; স্যান্ডবক্সে XTransformPort বহন; অডিও-শূন্য সিরিজে টোস্ট। */
+  var seriPlay = document.getElementById('rsxSeriPlay');
+  if (seriPlay) seriPlay.addEventListener('click', function () {
+    var first = null;
+    document.querySelectorAll('.rsx-card').forEach(function (card) {
+      if (first) return;
+      var a = card.querySelector('.rsx-audio audio[src]');
+      var link = card.querySelector('a[data-rsx-detail]');
+      if (a && link) first = link.getAttribute('href');
+    });
+    if (!first) { rsxToast('এই সিরিজে অডিও পর্ব নেই'); return; }
+    var mh = /\/resources\/(\d+)/.exec(first);
+    if (!mh) return;
+    try { sessionStorage.setItem('lekhok.rplIntent', '1'); } catch (e) {}
+    /* সার্ভার স্যান্ডবক্সে লিংকে ইতিমধ্যেই পোর্ট-প্যারাম রেন্ডার করে (XTPQ) — id থেকে
+       URL-পুনর্গতি করা হয়, নইলে ডাবল-প্যারামে গেটওয়ে ব্যর্থ → অফলাইন-পাতা (E2E-তে ধরা) */
+    var mp = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+    location.href = '/resources/' + mh[1] + '?play=1' + (mp ? '&XTransformPort=' + mp[1] : '');
   });
 
   /* ═══ সেশন ১০৪: ডিপ-লিংক — ?r=<id> হলে কার্ডে স্ক্রল + পালস-হাইলাইট ═══ */

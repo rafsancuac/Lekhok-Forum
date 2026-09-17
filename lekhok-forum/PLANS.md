@@ -1158,6 +1158,15 @@ push-রেস-এ abhi-asol: উপরের session113-নোট লেখা�
 
 **ভবিষ্যৎ-এজেন্টের জন্য:** qa-উত্তর-থ্রেডের কনট্র্যাক্ট = session114-এর (social.js answerReplies113 + qa-answer-slot + comments-total); chip/noReply-প্যারাম ব্যবহারের প্রয়োজন হলে CommentItem.ejs-হেডার-ডকুমেন্টেশন দেখুন। **লেবেল-রেস-প্রতিকার:** এ-রাউন্ডের পরে নতুন-এজেন্ট session117 থেকে (সর্বোচ্চ+১)।
 
+## ক্রস-এজেন্ট-নোট (session118 — resources-agent): প্লেলিস্ট রিজুম + সিরিজ play-all (১৮ সেপ্টেম্বর ২০২৬)
+
+- **রিজুম-স্টেট-চুক্তি:** localStorage `lekhok.rpl.<encodeURIComponent(series).replace(/%/g,'').slice(0,48)>` = `{cur:{epi,t,title,ts}, done:{<resId>:ts}}` — epi = `.rsxd-seriep-li`-ইনডেক্স (data-epi); done রিসোর্স-id-ভিত্তিক (লি-তে নতুন data-id); ৩০-দিন-TTL; t≤৩সে বা done-পর্বে রিজুম-চিপ নেই। সেভ-পয়েন্ট: pause (reset-এর-আগেই, একই-হ্যান্ডলারে) + timeupdate-৩সে-থ্রটল + pagehide + ended (advance-এর-আগেই — playIdx curIdx বদলায়)।
+- **🚨 XTPQ-ডাবল-প্যারাম-গোটচা (নতুন):** সার্ভার স্যান্ডবক্সে অভ্যন্তরীণ লিংকে `?XTransformPort=` রেন্ডার-টাইমে বসায় (session116 XTPQ) — JS-এ ওই href-এ আবার প্যারাম জুড়লে **ডাবল** → গেটওয়ে ব্যর্থ → SW অফলাইন-পাতা। JS-location-নেভিগেশনে href র-পার্স করে path/id নিয়ে URL নতুন-বানান, পোর্ট-প্যারাম একবারই (play-all-এ id-রেজেক্স-প্যাটার্ন)।
+- **play=1-ইনটেন্ট-চুক্তি:** /resources?series=X-এর "সিরিজ শুনুন" → sessionStorage `lekhok.rplIntent='1'` + `/resources/<firstAudioId>?play=1` → ডিটেইল autoStart: ইনটেন্ট-কনজিউম → রিজুম-অবস্থা-প্রাধান্য (t>৩সে) → নইলে প্রথম-অডিও-পর্ব; অটোপ্লে-ব্লকে playAll-পালস+টোস্ট ফলব্যাক; play=1 URL-থেকে মুছে ফেলা হয়।
+- **প্রগ্রেস-বার-চুক্তি:** `.rsxd-epiprog` JS-ইনজেক্টেড (audLis-রোতে); `setProg(lisIdx)` লিস-ইনডেক্স নেয় — audLis-রূপান্তর ভিতরেই (স্পেস-মিসম্যাচ = বার-সর্বদা-০%-বাগ)।
+
+---
+
 ## Cross-Agent Note — Session 117 (অনাথ-কমেন্ট-বাগ-ফিক্স + pagination-টেস্ট; qa-ক্যানোনিকাল প্রত্যাহার) (১৮ সেপ্টেম্বর ২০২৬)
 
 **⚠️ অনাথ-কমেন্ট-বাগ (session105-যুগের, এখন ফিক্সড — ভবিষ্যৎ-এজেন্ট রক্ষা করুন):**

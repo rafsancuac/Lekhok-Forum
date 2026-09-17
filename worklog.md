@@ -1023,3 +1023,14 @@ Work Log:
 Stage Summary:
 - গ্রুপ-কলে "কে বলছে" হাইলাইট + ভিডিও-রেজোলিউশন/FPS-স্ট্যাট — session113-পরবর্তী কল-রোডম্যাপে অবশিষ্ট কেবল Metered-TURN (ইউজার-অ্যাকাউন্ট), অটো-ডিগ্রেড, প্রতি-পিয়ার-স্ট্যাট-প্যানেল
 - পরবর্তী-এজেন্ট: session121 লেবেল থেকে; docs: PROJECT-চেঞ্জলজ + PLANS session120-নোট + repo-worklog
+Task ID: RES-119 (ক্রন-রিভিউ রাউন্ড ১০ — session118)
+Agent: Resources-feature agent
+Task: QA-সুইপ → স্টেবল-ফেজে প্লেলিস্ট রিজুম + সিরিজ play-all অটোস্টার্ট (RES-117-সুপারিশ ③④)
+
+Work Log:
+- QA সুইপ: fetch-নতুন-কিছু-নেই; smoke ৬/৬ + role-policy 125/125 + agent-browser (কনসোল-০, 3240-rules) → স্টেবল
+- ফিচার ×২ + E2E-বাগ-ফিক্স ×২ (setProg-স্পেস-মিসম্যাচ, XTPQ-ডাবল-প্যারাম→অফলাইন-পাতা) — বিস্তারিত lekhok-forum/worklog.md + PROJECT.md সেশন-১১৮ + PLANS.md নোট
+
+Stage Summary:
+- session-118 push → origin/main; role-policy 125/125; 390px-০; কনসোল-০
+- পরবর্তী: CSV-URL-ফাইল-ফেচ · UTC→লোকাল · role-policy playlist-চেক

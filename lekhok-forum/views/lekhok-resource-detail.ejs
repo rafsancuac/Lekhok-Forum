@@ -164,10 +164,17 @@
       </button>
       <span class="rsxd-plmeta"><i class="fas fa-headphones"></i> অডিও পর্ব <%= bn(seriesAudioCount) %><% if (seriesItems.length > seriesAudioCount) { %> · বাকি পর্ব লিংকে<% } %></span>
     </div>
+    <%# সেশন ১১৮: রিজুম-চিপ — localStorage-এ শেষ-শোনা-অবস্থান (৩০-দিন-মধ্যে, শোনা-হয়ে-যাওয়া
+        পর্ব বাদে) থাকলে JS দেখায়; ক্লিকে সেই-পর্বে সেই-সেকেন্ড থেকে প্লেব্যাক %>
+    <button type="button" class="rsxd-plresume" id="rsxdResume" hidden>
+      <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+      <span class="rsxd-plresume-txt">আগে শোনা হয়েছে: <strong class="rsxd-plresume-t"></strong> · <span class="rsxd-plresume-pos"></span></span>
+      <span class="rsxd-plresume-go"><i class="fas fa-play"></i> সেখান থেকে</span>
+    </button>
     <% } %>
     <ol class="rsxd-serilist" id="rsxdSeriList">
       <% seriesItems.forEach((x, i) => { %>
-        <li class="rsxd-seriep-li<%= x.id === r.id ? ' here' : '' %>" data-epi="<%= i %>"<% if (x.audioSrc) { %> data-audio="<%= x.audioSrc %>" data-title="<%= x.title %>"<% if (x.thumbnail_url) { %> data-art="<%= x.thumbnail_url %>"<% } %><% } %>>
+        <li class="rsxd-seriep-li<%= x.id === r.id ? ' here' : '' %>" data-epi="<%= i %>" data-id="<%= x.id %>"<% if (x.audioSrc) { %> data-audio="<%= x.audioSrc %>" data-title="<%= x.title %>"<% if (x.thumbnail_url) { %> data-art="<%= x.thumbnail_url %>"<% } %><% } %>>
           <% if (x.audioSrc) { %>
             <button type="button" class="rsxd-seriep-play" aria-label="ইন-পেজে শুনুন: <%= x.title %>" title="ইন-পেজে শুনুন">
               <i class="fas fa-play"></i>
@@ -438,11 +445,30 @@
   .rsxd-mini-info { max-width: calc(100% - 46px); }
 }
 
+/* ═══ সেশন ১১৮: রিজুম-চিপ + শোনা-হয়েছে-মার্ক + পর্ব-প্রগ্রেস-বার + পালস ═══ */
+.rsxd-plresume { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin-top: 8px; padding: 7px 12px; border: 1px dashed rgba(5,150,105,.45); background: linear-gradient(120deg, #ecfdf5, #f0fdf4); border-radius: 999px; color: #065f46; font-size: .74rem; font-weight: 700; cursor: pointer; transition: all .15s ease; }
+.rsxd-plresume:hover { border-style: solid; background: linear-gradient(120deg, #d1fae5, #ecfdf5); transform: translateY(-1px); box-shadow: 0 6px 14px -6px rgba(5,150,105,.35); }
+.rsxd-plresume:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+.rsxd-plresume-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsxd-plresume-txt strong { font-weight: 800; color: #064e3b; }
+.rsxd-plresume-go { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: linear-gradient(135deg, #059669, #10b981); color: #fff; font-size: .68rem; font-weight: 800; box-shadow: 0 2px 6px -2px rgba(5,150,105,.5); }
+.rsxd-seriep-li { position: relative; }
+.rsxd-seriep-li.done .rsxd-seriep-title { color: #64748b; }
+.rsxd-seriep-li.done .rsxd-seriep-title::after { content: "\f058"; font-family: "Font Awesome 6 Free"; font-weight: 900; color: #059669; font-size: .78em; margin-left: 6px; }
+.rsxd-seriep-li.done .rsxd-seriep-eq { display: none; }
+.rsxd-seriep-li.done .rsxd-seriep-play i { color: #059669; }
+.rsxd-epiprog { position: absolute; left: 44px; right: 10px; bottom: 2px; height: 3px; border-radius: 2px; background: rgba(5,150,105,.14); overflow: hidden; opacity: 0; transition: opacity .2s ease; pointer-events: none; }
+.rsxd-epiprog i { display: block; height: 100%; width: 0%; border-radius: 2px; background: linear-gradient(90deg, #059669, #34d399); transition: width .25s linear; }
+.rsxd-seriep-li.playing .rsxd-epiprog { opacity: 1; }
+@keyframes rsxdPlPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(5,150,105,.45); } 50% { box-shadow: 0 0 0 9px rgba(5,150,105,0); } }
+.rsxd-plall.pulse { animation: rsxdPlPulse 1.1s ease-out 5; }
 @media (prefers-reduced-motion: reduce) {
   .rsxd-audiohero-wv span { animation: none; }
   .rsxd-seriep-eq i { animation: none !important; }
   .rsxd-mini { animation: none; }
-  .rsxd-act, .rsxd-relcard, .rsxd-crumbs a, .rsxd-cover-cta, .rsxd-relarrow, .rsxd-sact, .rsxd-seristep, .rsxd-seriep, .rsxd-seribadge, .rsxd-seriep-play, .rsxd-plall, .rsxd-serimore { transition: none; transform: none; }
+  .rsxd-plall.pulse { animation: none; }
+  .rsxd-epiprog i, .rsxd-plresume { transition: none; }
+  .rsxd-act, .rsxd-relcard, .rsxd-crumbs a, .rsxd-cover-cta, .rsxd-relarrow, .rsxd-sact, .rsxd-seristep, .rsxd-seriep, .rsxd-seribadge, .rsxd-seriep-play, .rsxd-plall, .rsxd-serimore, .rsxd-plresume { transition: none; transform: none; }
 }
 @media print {
   .rsxd-series, .rsxd-staffacts, .rsxd-manage, .rsxd-mini { display: none !important; }
@@ -609,6 +635,69 @@
 
   function bn(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
 
+  /* ═══ সেশন ১১৮: রিজুম + শোনা-হয়েছে-মার্ক + প্রগ্রেস-বার (localStorage, প্রতি-সিরিজ) ═══
+     কী: lekhok.rpl.<series> — {cur:{epi,t,title,ts}, done:{<resId>:ts}}; epi = lis-ইনডেক্স,
+     done রিসোর্স-id-ভিত্তিক (ক্রম-বদলেও টিকে); ৩০-দিন-পুরনো অবস্থান বাদ। */
+  var LSK = 'lekhok.rpl.' + encodeURIComponent(SERIES || 'x').replace(/%/g, '').slice(0, 48);
+  var ST = null;
+  try { ST = JSON.parse(localStorage.getItem(LSK) || 'null'); } catch (e) { ST = null; }
+  if (!ST || typeof ST !== 'object') ST = {};
+  if (!ST.done || typeof ST.done !== 'object') ST.done = {};
+  function saveSt() { try { localStorage.setItem(LSK, JSON.stringify(ST)); } catch (e) {} }
+  function idOf(li) { return li.getAttribute('data-id') || ('e' + lis.indexOf(li)); }
+  function setProg(idx, pct) {
+    /* idx = lis-ইনডেক্স — audLis-স্পেসে রূপান্তর বাধ্যতামূলক (অডিও-পর্ব প্রথম-এলিমেন্ট
+       না-হলে k===idx কখনোই ম্যাচ করত না — E2E-তে ধরা: বার-সর্বদা ০%) */
+    var li = lis[idx];
+    var ai = li ? audLis.indexOf(li) : -1;
+    for (var k = 0; k < audLis.length; k++) {
+      var bar = audLis[k].querySelector('.rsxd-epiprog i');
+      if (bar) bar.style.width = (k === ai) ? Math.max(0, Math.min(100, pct)) + '%' : '0%';
+    }
+  }
+  audLis.forEach(function (li) {
+    var p = document.createElement('span');
+    p.className = 'rsxd-epiprog';
+    p.setAttribute('aria-hidden', 'true');
+    p.innerHTML = '<i></i>';
+    li.appendChild(p);
+  });
+  (function applyDone() {
+    lis.forEach(function (li) { if (ST.done[idOf(li)]) li.classList.add('done'); });
+  })();
+  function fmtT(s) {
+    s = Math.max(0, Math.floor(s || 0));
+    var m = Math.floor(s / 60), r = s % 60;
+    return bn(m) + ':' + bn(r < 10 ? '0' + r : '' + r);
+  }
+  function plToast(msg) {
+    try { if (typeof window.showToast === 'function') { window.showToast(msg, 'success'); return; } } catch (e) {}
+    var t = document.createElement('div');
+    t.className = 'toast success';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add('show'); }, 10);
+    setTimeout(function () { t.remove(); }, 2600);
+  }
+  var resumeBtn = document.getElementById('rsxdResume');
+  (function showResume() {
+    var c = ST.cur;
+    if (!resumeBtn || !c || !lis[c.epi] || !lis[c.epi].hasAttribute('data-audio')) return;
+    if (!(c.t > 3)) return;                              /* প্রায়-শুরু হলে অর্থহীন */
+    if ((Date.now() - (c.ts || 0)) > 30 * 864e5) return;  /* ৩০-দিন-পুরনো */
+    if (ST.done[idOf(lis[c.epi])]) return;                /* শেষ-হওয়া পর্বে রিজুম নয় */
+    var rt = resumeBtn.querySelector('.rsxd-plresume-t');
+    var rp = resumeBtn.querySelector('.rsxd-plresume-pos');
+    if (rt) rt.textContent = c.title || 'পর্ব';
+    if (rp) rp.textContent = fmtT(c.t);
+    resumeBtn.hidden = false;
+  })();
+  if (resumeBtn) resumeBtn.addEventListener('click', function () {
+    var c = ST.cur;
+    if (!c) return;
+    playIdx(c.epi, c.t);
+  });
+
   function ensureAudio() {
     if (audio) return audio;
     mini = document.createElement('div');
@@ -661,23 +750,36 @@
     } catch (e) {}
   }
 
-  function playIdx(i) {
+  function playIdx(i, seekTo) {
     var li = lis[i];
-    if (!li || !li.hasAttribute('data-audio')) return;
+    if (!li || !li.hasAttribute('data-audio')) return null;
     var a = ensureAudio();
-    if (!a) return;
+    if (!a) return null;
     manualStop = false;
     revealLi(li);
     var src = li.getAttribute('data-audio') || '';
     if (SBX && !/^(https?:)?\/\//i.test(src)) src += (src.indexOf('?') > -1 ? '&' : '?') + SBX;
-    if (!a.currentSrc || a.currentSrc.indexOf(src.split('?')[0]) === -1) { a.src = src; }
-    if (mini) mini.querySelector('.rsxd-mini-t').textContent = li.getAttribute('data-title') || '';
+    if (!a.currentSrc || a.currentSrc.indexOf(src.split('?')[0]) === -1) {
+      a.src = src;
+      /* সেশন ১১৮: রিজুম-সিক — metadata-লোডের পরে currentTime (readyState-গার্ড) */
+      if (seekTo > 0) {
+        var seek = function () { try { a.currentTime = seekTo; } catch (e) {} };
+        if (a.readyState >= 1) seek();
+        else a.addEventListener('loadedmetadata', seek, { once: true });
+      }
+    } else if (seekTo > 0) { try { a.currentTime = seekTo; } catch (e) {} }
+    if (mini) {
+      mini.querySelector('.rsxd-mini-t').textContent = li.getAttribute('data-title') || '';
+      var ms = mini.querySelector('.rsxd-mini-s');
+      if (ms) ms.textContent = SERIES + ' · পর্ব ' + bn(audLis.indexOf(li) + 1) + '/' + bn(audLis.length);
+    }
     curIdx = i;
     setPlaying(i);
     mediaMeta(li);
     var p = a.play();
     if (p && p.catch) p.catch(function () {});
     try { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+    return p;
   }
 
   audLis.forEach(function (li) {
@@ -714,14 +816,82 @@
          সে-ক্ষেত্রে curIdx-রিসেট করলে ended-হ্যান্ডলার ভুল-পর্বে (প্রথম অডিও-পর্বে)
          রিপ্লে/অ্যাডভান্স করত — a.ended গার্ড বাধ্যতামূলক (session117-E2E-তে ধরা) */
       if (manualStop || a.ended || !a.duration) { return; }
+      /* সেশন ১১৮: reset-এর আগেই অবস্থান-সংরক্ষণ (নিচে curIdx = -1 হয়ে যায় —
+         আলাদা-লিসেনারে দিলে অর্ডারে মিস হত) */
+      var li = (curIdx > -1) ? lis[curIdx] : null;
+      if (li) {
+        ST.cur = { epi: curIdx, t: a.currentTime || 0, title: li.getAttribute('data-title') || '', ts: Date.now() };
+        saveSt();
+      }
       setPlaying(-1); curIdx = -1;
     });
     a.addEventListener('ended', function () {
+      /* সেশন ১১৮: শোনা-হয়েছে-মার্ক + অবস্থা-ক্লিয়ার — advance-এর আগেই (playIdx বদলায়
+         curIdx — পরে-মার্ক করলে পরের-পর্ব ভুল-ভাবে done হত) */
+      if (curIdx > -1 && lis[curIdx]) {
+        lis[curIdx].classList.add('done');
+        ST.done[idOf(lis[curIdx])] = Date.now();
+        ST.cur = { epi: curIdx, t: 0, title: lis[curIdx].getAttribute('data-title') || '', ts: Date.now() };
+        saveSt();
+      }
       var nxt = -1;
       for (var j = curIdx + 1; j < lis.length; j++) { if (lis[j].hasAttribute('data-audio')) { nxt = j; break; } }
       if (nxt > -1) { playIdx(nxt); } else { setPlaying(-1); curIdx = -1; }
     });
+    /* সেশন ১১৮: প্রগ্রেস-বার (প্রতি-timeupdate) + অবস্থান-সংরক্ষণ (৩-সেকেন্ড-থ্রটল) */
+    var lastSave = 0;
+    a.addEventListener('timeupdate', function () {
+      if (curIdx < 0) return;
+      setProg(curIdx, a.duration ? (a.currentTime / a.duration) * 100 : 0);
+      var now = Date.now();
+      if (now - lastSave < 3000) return;
+      lastSave = now;
+      var li = lis[curIdx];
+      if (!li) return;
+      ST.cur = { epi: curIdx, t: a.currentTime || 0, title: li.getAttribute('data-title') || '', ts: now };
+      saveSt();
+    });
+    /* ট্যাব-বিদায়েও সর্বশেষ-অবস্থান (মোবাইল-ব্যাকগ্রাউন্ড-সুইপ) */
+    window.addEventListener('pagehide', function () {
+      if (curIdx < 0 || a.ended || !(a.currentTime > 0)) return;
+      var li = lis[curIdx];
+      if (!li) return;
+      ST.cur = { epi: curIdx, t: a.currentTime || 0, title: li.getAttribute('data-title') || '', ts: Date.now() };
+      saveSt();
+    });
   }
+
+  /* ═══ সেশন ১১৮: ?play=1 / সিরিজ-পেজ-ইনটেন্ট → অটো-স্টার্ট ═══
+     সিরিজ-পেজের "সিরিজ শুনুন" sessionStorage-ইনটেন্ট রেখে আসে (?play=1-সহ); এখানে
+     রিজুম-অবস্থা থাকলে সেখান থেকে, নইলে প্রথম-অডিও-পর্ব থেকে। অটোপ্লে-নীতি-ব্লক হলে
+     প্লে-অল-বাটনে পালস + টোস্ট (এক-ক্লিক-ফলব্যাক)। URL-থেকে play=1 মুছে ফেলা হয়। */
+  (function autoStart() {
+    var intent = false;
+    try { if (sessionStorage.getItem('lekhok.rplIntent')) { intent = true; sessionStorage.removeItem('lekhok.rplIntent'); } } catch (e) {}
+    var q = null;
+    try { q = new URLSearchParams(location.search); } catch (e) {}
+    if (q && q.get('play') === '1') {
+      intent = true;
+      try {
+        q.delete('play');
+        var qs = q.toString();
+        history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+      } catch (e) {}
+    }
+    if (!intent) return;
+    var target = -1, seekTo = 0;
+    var c = ST.cur;
+    if (c && lis[c.epi] && lis[c.epi].hasAttribute('data-audio') && (c.t > 3) && !ST.done[idOf(lis[c.epi])]) {
+      target = c.epi; seekTo = c.t;
+    } else if (audLis.length) { target = lis.indexOf(audLis[0]); }
+    if (target < 0) return;
+    var pr = playIdx(target, seekTo);
+    if (pr && pr.catch) pr.catch(function () {
+      var all = document.getElementById('rsxdPlayAll');
+      if (all) all.classList.add('pulse');
+      plToast('ব্রাউজার অটোপ্লে আটকেছে — "সব শুনুন" চাপুন');
+    });
+  })();
   bindMedia(audio);
 })();
 </script>
