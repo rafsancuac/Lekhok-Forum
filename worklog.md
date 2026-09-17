@@ -942,3 +942,19 @@ Stage Summary:
 - session105-ডিজাইন-সিস্টেম-সুপারিশ-তালিকা এখন সম্পূর্ণ-শূন্য-অবশিষ্ট; qa উত্তরে FB-প্যারিটি (প্যালেট/ব্যাজ/৩-ডট)
 - পরিবেশ-গোটচা পুনঃপ্রমাণিত: ব্যাকগ্রাউন্ড-সার্ভার প্রতি-ইনভোকেশনে মরে → মাল্টি-স্টেপ-ফ্লো ফ্রেশ-বুট+টাইট-চেইন (lf-boot.sh হেল্পার /home/z/my-project/download/)
 - পরবর্তী: role-policy-তে comment-API-চেক · tokens-হেক্স-স্ক্যান-গার্ড · qa-কম্পোজার অটো-গ্রো · notifications ফিল্টার-ট্যাব
+
+---
+Task ID: session-113-ফাইনাল (push-সমাপ্তি)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: push-রেস ×২ + প্যারালাল-ডুপ্লিকেট-সমন্বয় + পুশ-সমাপ্তি
+
+Work Log:
+- push-রেস ×২: ① rebase-১ (৮-কমিট: session110/112/114/115/116) — আবিষ্কার: প্যারালাল-এজেন্ট qa-single-কে **থ্রেডেড-উত্তরসহ** ক্যানোনিকালাইজ করেছে (replies113 + CommentComposer + no-JS) → session105-প্রেসিডেন্সিতে তাদের সংস্করণ গৃহীত, আমার flat-list-সংস্করণ প্রত্যাহৃত ② rebase-২ (session114-মিনি-বাবল) — shared.css EOF-ইউনিয়ন ×২ (brace-depth ০ উভয়বার)
+- অনন্য-রক্ষিত: CommentItem chip/noReply-প্যারাম · comment-tools data-raw-ফিক্স · cursor-টেস্ট ২৬→৩৫ · session113-খ-CSS (chip+focus) · দুই-সিড-চুক্তি
+- union-পরে তিন-স্তর-যাচাই: brace-০ ✓ guard:design ✓ লাইভ-রেন্ডার (fc-item+qa-answers-list+cc-form+noscript+comments-total সহ-অস্তিত্ব) ✓
+- **pushed: 3a234b6..5dff97f** ✓ post-push ৭-পেজ-স্মোক ২০০ ✓
+- PLANS/PROJECT/repo-worklog-এ প্রত্যাহার-সংশোধন-নোট (পরবর্তী-এজেন্ট: session117 থেকে)
+
+Stage Summary:
+- মূল-শিক্ষা: একই-সুপারিশে দুই-এজেন্ট সমান্তরালে কাজ করতে পারে — PLANS-নোট সবসময় push-এর আগে re-read করুন; union-মার্জে "সমৃদ্ধ-সংস্করণ-জয়" + অনন্য-অংশ-সংরক্ষণ নীতি আবার সফল
+- env-gotcha চূড়ান্ত-রূপ: মৃত-প্রসেসের flush DB-কে পুরনো-স্ন্যাপশটে ফেরত পাঠায় (ডিলিট/তৈরি উভয়ই উল্টে যেতে পারে) — এক-ইনভোকেশনে তৈরি+যাচাই+ক্লিনআপই নিরাপদ
