@@ -1430,6 +1430,49 @@ router.post('/api/comment', async (req, res) => {
   res.json({ ok: true, id: Number(ins.lastInsertRowid) });
 });
 
+// ── সেশন ৯৩: GET /api/comments — ফিড-ইনলাইন-ড্রয়ারের JSON-সোর্স ──────────────
+// ?post_id=N — ঐ পোস্টের মন্তব্য-থ্রেড (১-লেভেল রিপ্লাই) bodyHtml-সহ (markdown-lite
+// renderComment — সার্ভার-রেন্ডার্ড, ক্লায়েন্টে innerHTML-নিরাপদ)। পুরনো-থ্রেডের
+// প্যারেন্ট-কমেন্ট মুছে গেলে রিপ্লাইগুলো অপরিচিত-অবস্থায় টপ-লেভেলে ফুটে যায় না —
+// শুধু বৈধ প্যারেন্টের ভেতরেই বসে (ASC-অর্ডারে প্যারেন্ট সবসময় আগে আসে)। গেস্ট-ও
+// পড়তে পারে (মন্তব্য পাবলিক)।
+router.get('/api/comments', async (req, res) => {
+  const postId = parseInt(req.query.post_id, 10);
+  if (!Number.isInteger(postId) || postId <= 0) return res.status(400).json({ error: 'bad_post_id' });
+  try {
+    const rows = await db.prepare(`
+      SELECT c.id, c.post_id, c.author_id, c.body, c.parent_id, c.created_at,
+             u.username, u.full_name, u.pen_name, u.avatar_url
+      FROM comments c JOIN users u ON u.id = c.author_id
+      WHERE c.post_id = ?
+      ORDER BY c.created_at ASC, c.id ASC
+    `).all(postId);
+    const { renderComment: rc92 } = require('../helpers/markdown-lite');
+    const byId = {};
+    const tops = [];
+    for (const r of rows) {
+      const item = {
+        id: r.id, post_id: r.post_id, author_id: r.author_id, body: r.body,
+        bodyHtml: rc92(r.body || ''), created_at: r.created_at, edited: false,
+        username: r.username, author_name: displayName92(r), avatar_url: r.avatar_url,
+        replies: []
+      };
+      byId[r.id] = item;
+      if (r.parent_id && byId[r.parent_id]) byId[r.parent_id].replies.push(item);
+      else tops.push(item);
+    }
+    const total = rows.length;
+    res.json({ ok: true, comments: tops, total });
+  } catch (e) {
+    res.status(500).json({ error: 'server' });
+  }
+});
+
+// সেশন ৯৩: কমেন্ট-লেখকের প্রদর্শন-নাম — pen_name-প্রধান (D1-নীতির মিরর)
+function displayName92(u) {
+  return (u && u.pen_name) ? u.pen_name : (u && u.full_name) || '';
+}
+
 router.post('/follow/:userId', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   const targetId = parseInt(req.params.userId, 10);

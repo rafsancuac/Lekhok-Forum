@@ -1103,6 +1103,13 @@ async function runMigrations() {
     "ALTER TABLE resources ADD COLUMN link_url TEXT",
     "ALTER TABLE resources ADD COLUMN file_type TEXT DEFAULT 'link'",
     "ALTER TABLE resources ADD COLUMN description TEXT",
+    // সেশন ৯৩: সেশন-৮০-র ইউজার-কলামগুলো বুট-মাইগ্রেশনে — আগে শুধু /settings-
+    // রুটের লেজি-ALTER-এ যোত (পুরনো DB-তে /settings ভিজিট না-হলে ফিড-কোয়েরির
+    // 'u.pen_name' সরাসরি ৫০০ খেতো; এখন সব-কোল্ড-বুটে নিরাপদ-ইডেম্পটেন্ট)।
+    "ALTER TABLE users ADD COLUMN pen_name TEXT",
+    "ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'",
+    "ALTER TABLE users ADD COLUMN allow_messages_from TEXT DEFAULT 'everyone'",
+    "ALTER TABLE users ADD COLUMN bookmarks_public INTEGER DEFAULT 0",
     // সেশন ৭৭: সুপার-এডমিন প্যানেল — অ্যাডমিন অ্যাকাউন্টে কাজের-পরিধি (scopes),
     // লক-স্টেট ও শেষ-লগইন ট্র্যাকিং
     "ALTER TABLE admin_users ADD COLUMN scopes TEXT",

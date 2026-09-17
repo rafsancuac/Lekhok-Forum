@@ -13,6 +13,10 @@
   if (typeof commentCount === 'undefined') commentCount = 0;
   if (typeof shareCount === 'undefined') shareCount = 0;
   if (typeof reactorFaces === 'undefined') reactorFaces = [];
+  // সেশন ৯৩: inlineComments — ফিড-মোডে 'মন্তব্য' বাটন আর আলাদা-পেজে যায় না;
+  // একই কার্ডে .fc-drawer টগল করে (comment-tools.js)। ডিফল্ট-false —
+  // article-single/qa-single-এ আগের anchor-আচরণ অপরিবর্তিত।
+  if (typeof inlineComments === 'undefined') inlineComments = false;
   var _meta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
   var _labels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
   var _mine = mine || 'like';
@@ -31,7 +35,11 @@
         <span class="reaction-summary"><%# সেশন ৮৯: FB-২০২৪ ফেসপাইল — রিঅ্যাক্টরদের মিনি-অ্যাভাটার (main.js lf:reactupdate-এ লাইভ-আপডেট) %><span class="rs-faces"<% if (!reactorFaces.length) { %> hidden<% } %>><% reactorFaces.forEach(function (f) { %><img loading="lazy" decoding="async" class="rsf-av" src="<%= f.avatar_url || '/avatar/' + f.id %>" alt="" data-uid="<%= f.id %>" title="<%= (f.pen_name || f.full_name || '') %>" onerror="this.style.display='none'"><% }); %></span><span class="as-emojis rs-emojis"><% if (_total > 0) { _topEmojis.forEach(function (em) { %><span><%= em %></span><% }); } %></span><span class="as-count rs-count"><% if (_total > 0) { %><%= _total %><% } %></span></span>
       </span>
       <span class="as-right">
+        <% if (inlineComments) { %>
+        <button type="button" class="as-stat as-stat-btn" title="মন্তব্য" data-toggle-comments="<%= targetId %>"><span><%= commentCount || 0 %></span><i class="far fa-comment"></i></button>
+        <% } else { %>
         <a href="<%= link %>#comments" class="as-stat" title="মন্তব্য"><span><%= commentCount || 0 %></span><i class="far fa-comment"></i></a>
+        <% } %>
         <% if (shareCount > 0) { %><span class="as-stat" title="শেয়ার"><span><%= shareCount %></span><i class="fas fa-share"></i></span><% } %>
         <% if (typeof viewCount !== 'undefined' && viewCount !== null) { %><span class="as-stat" title="পঠিত"><span><%= viewCount %></span><i class="far fa-eye"></i></span><% } %>
       </span>
@@ -49,7 +57,12 @@
       </button>
     </div>
 
+    <%# সেশন ৯৩: ফিডে ইনলাইন-টগল (কোনো রিডাইরেক্ট নেই) · পেজে আগের anchor %>
+    <% if (inlineComments) { %>
+    <button type="button" class="reaction-btn" data-toggle-comments="<%= targetId %>"><i class="far fa-comment"></i> মন্তব্য</button>
+    <% } else { %>
     <a class="reaction-btn" href="<%= link %>#comments"><i class="far fa-comment"></i> মন্তব্য</a>
+    <% } %>
 
     <% if (showShare) { %>
     <div class="share-wrap">

@@ -152,7 +152,8 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
     } catch (_) {}
   }
 
-  // (৮৯) কমেন্ট-প্রিভিউ-ব্যাচ — প্রতি-পোস্টের সর্বশেষ ১ মন্তব্য
+  // (৮৯+৯২) কমেন্ট-প্রিভিউ-ব্যাচ — প্রতি-পোস্টের সর্বশেষ ২ মন্তব্য (FB-স্টাইল
+  // হাইলাইটেড-প্রিভিউ বাবল; আগে ছিল ১টি লাইন)
   const cmtByPost = {};
   if (postIds.length) {
     try {
@@ -163,7 +164,8 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
         ORDER BY c.created_at DESC, c.id DESC
         LIMIT 400
       `).all(...postIds)).forEach(r => {
-        if (!cmtByPost[r.post_id]) cmtByPost[r.post_id] = r;
+        const arr = (cmtByPost[r.post_id] = cmtByPost[r.post_id] || []);
+        if (arr.length < 2) arr.push(r);
       });
     } catch (_) {}
   }
@@ -180,14 +182,16 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
       if (!item.images.length && item.cover_image) item.images = [item.cover_image];
     }
     item.reactorFaces = facesByPost[item.id] || [];
-    const cp = cmtByPost[item.id];
-    if (cp) {
-      item.commentPreview = {
+    // (৯২) FB-স্টাইল প্রিভিউ-বাবল ×২ — কম্প্যাক্ট রেন্ডারের জন্য মার্কার-স্ট্রিপড
+    const cpList = cmtByPost[item.id] || [];
+    if (cpList.length) {
+      item.commentPreviews = cpList.map(cp => ({
         authorName: displayName(cp, cp.full_name),
         username: cp.username,
         avatar: cp.avatar_url || '/avatar/' + cp.author_uid,
         body: String(cp.body || '').replace(/^#{1,6}[ \t]+/gm, '').replace(/\s+/g, ' ').trim().substring(0, 110)
-      };
+      }));
+      item.commentPreview = item.commentPreviews[0]; // ৮৯-ব্যাকওয়ার্ড-কম্প্যাট
     }
   }
 

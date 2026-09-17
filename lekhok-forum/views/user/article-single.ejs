@@ -60,12 +60,23 @@
           <% }); %>
         </div>
         <h1 class="article-title"><%= post.title %></h1>
-        <div class="article-author-bar">
-          <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="author-avatar">
-          <div>
-            <a href="/profile/<%= author.username %>" class="author-name"><%= author.full_name %></a>
-            <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত &middot; <i class="far fa-clock"></i> <span title="<%= wordCountBn %> শব্দ">≈ <%= readingMinutesBn %> মিনিট পড়া</span></div>
+        <div class="article-author-row92">
+          <div class="article-author-bar">
+            <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="author-avatar" alt="">
+            <div>
+              <a href="/profile/<%= author.username %>" class="author-name"><%= author.full_name %></a>
+              <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত &middot; <i class="far fa-clock"></i> <span title="<%= wordCountBn %> শব্দ">≈ <%= readingMinutesBn %> মিনিট পড়া</span></div>
+            </div>
           </div>
+          <%# ── সেশন ৯৩: গ্লোবাল ৩-ডট মেনু — সম্পাদনা/লুকান/মুছুন/রিপোর্ট সব এখানে ── %>
+          <%- include('../partials/post-menu', {
+            postId: post.id,
+            isOwner: !!(user && isOwner81),
+            canMod: !!canMod81,
+            isHidden: !!postHidden81,
+            myReport: !!myOpenReport81,
+            reportLabel: 'লেখা: ' + String(post.title || '').slice(0, 60)
+          }) %>
         </div>
       </div>
       <%# ── সেশন ৬৫: অটো-সূচিপত্র — ৩+ হেডিং (##/###) থাকলে; স্ক্রলস্পাই-সহ (article-reading.js) ── %>
@@ -105,71 +116,21 @@
           shareCount: post.share_count || 0,
           bookmarked: userBookmarked
         }) %>
-        <% if (user && user.id === post.author_id) { %>
-          <div class="owner-actions">
-            <a href="/articles/<%= post.id %>/edit" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
-            <%# সেশন ৮১: মালিকের লুকানো/প্রকাশ — মুছে ফেলার আগে নরম বিকল্প %>
-            <% if (postHidden81) { %>
-              <form method="POST" action="/posts/<%= post.id %>/unhide" style="display:inline">
-                <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> পুনঃপ্রকাশ</button>
-              </form>
-            <% } else { %>
-              <form method="POST" action="/posts/<%= post.id %>/hide" style="display:inline" data-confirm81="এই লেখাটি লুকিয়ে রাখতে চান? আপনি যখন-ইচ্ছে আবার প্রকাশ করতে পারবেন।">
-                <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-low-vision"></i> লুকান</button>
-              </form>
-            <% } %>
-            <%# সেশন ৬৫-বাগফিক্স: আগে action-এ '?_method=DELETE' ছিল — DELETE /articles/:id
-                রুট নেই, তাই মালিকের 'মুছুন' বাটন ৪০৪ খেতো (কিছুই হতো না)। সঠিক POST-রুটে পাঠানো হলো। %>
-            <form method="POST" action="/articles/<%= post.id %>/delete" style="display:inline">
-              <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
-            </form>
-          </div>
-        <% } %>
-        <%# ── সেশন ৮১: মডারেটর-কন্ট্রোল (অন্যের পোস্টে) + রিপোর্ট-বাটন ── %>
-        <% if (user && user.id !== post.author_id) { %>
-          <div class="owner-actions modrow81">
-            <% if (canMod81) { %>
-              <% if (postHidden81) { %>
-                <form method="POST" action="/posts/<%= post.id %>/unhide" style="display:inline">
-                  <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> পুনঃপ্রকাশ</button>
-                </form>
-              <% } else { %>
-                <form method="POST" action="/posts/<%= post.id %>/hide" style="display:inline" data-confirm81="মডারেটর হিসেবে এই লেখাটি লুকাবেন? লেখক নোটিফিকেশন পাবেন।">
-                  <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-low-vision"></i> লুকান</button>
-                </form>
-              <% } %>
-              <a href="/moderator/reports" class="btn btn-ghost btn-sm"><i class="fas fa-inbox"></i> রিপোর্ট-কিউ</a>
-            <% } %>
-            <% if (myOpenReport81) { %>
-              <span class="rp81-reported-chip" title="আপনার রিপোর্ট মডারেটরদের কাছে খোলা আছে"><i class="fas fa-flag"></i> রিপোর্ট করা হয়েছে</span>
-            <% } else { %>
-              <button type="button" class="btn btn-ghost btn-sm rp81-trigger" data-report-type="post" data-report-id="<%= post.id %>" data-report-label="লেখা: <%= (post.title || '').slice(0, 60) %>"><i class="far fa-flag"></i> রিপোর্ট</button>
-            <% } %>
-          </div>
-        <% } %>
+        <%# সেশন ৯৩: ছড়ানো owner-actions/modrow81-বাটন অপসারিত — সব অপশন
+            উপরের ৩-ডট মেনুতে (post-menu.ejs); ডাবল-ফুটার-স্পেস মুছে কম্প্যাক্ট %>
       </div>
 
       <div class="comments-section">
-        <h3><i class="far fa-comment"></i> মন্তব্য (<%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %>)</h3>
+        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %>)</h3>
+        <%# সেশন ৯৩: কম্প্যাক্ট FB-স্টাইল কম্পোজার — কার্যকর টুলবার + @ম্যানশন
+            (পুরনো cf-hint ড্যাশড-চিপ + 'প্রথম মন্তব্যকারী হোন' বিশাল-কার্ড অপসারিত) %>
         <% if (user) { %>
-          <form method="POST" class="comment-form" id="commentForm">
-            <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar">
-            <div class="comment-input-wrap">
-              <textarea name="body" placeholder="আপনার মন্তব্য লিখুন... (@ব্যবহারকারী নাম লিখে ম্যানশন করুন)" rows="3" required></textarea>
-              <div class="cf-hint" aria-hidden="true">
-                <span><b>**বোল্ড**</b></span><span><i>_ইটালিক_</i></span><span><s>~~কাটা~~</s></span><span>[লিংক](https://…)</span><span>- তালিকা</span><span>&gt; উদ্ধৃতি</span>
-              </div>
-              <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> পাঠান</button>
-            </div>
-          </form>
+          <%- include('../partials/comment-composer', { user, postId: post.id }) %>
         <% } else { %>
           <p class="login-to-comment"><a href="/login?next=/articles/<%= post.id %>">লগইন</a> করে সবার আগে মন্তব্য করুন</p>
         <% } %>
 
         <div class="comments-list">
-          <% if (comments.length === 0 && user) { %>
-            <div class="empty-state comments-empty"><i class="far fa-comment-dots"></i><p>প্রথম মন্তব্যকারী হোন</p></div>
-          <% } %>
           <% comments.forEach(c => { %>
             <div class="comment-item" id="c<%= c.id %>">
               <img loading="lazy" decoding="async" src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
@@ -203,13 +164,10 @@
                   </div>
                 <% }); %>
                 <% if (user) { %>
-                  <form class="reply-form" data-parent="<%= c.id %>" hidden>
-                    <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar small">
-                    <div class="comment-input-wrap">
-                      <textarea name="body" rows="2" placeholder="<%= c.full_name %>-কে উত্তর দিন..." required></textarea>
-                      <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                  </form>
+                  <%# সেশন ৯৩: রিপ্লাই-কম্পোজার (কম্প্যাক্ট) — টুলবার+ম্যানশনসহ %>
+                  <div class="reply-form cc-slot" hidden>
+                    <%- include('../partials/comment-composer', { user, postId: post.id, parentId: c.id, compact: true, placeholder: c.full_name + '-কে উত্তর দিন…' }) %>
+                  </div>
                 <% } %>
               </div>
             </div>
@@ -260,37 +218,22 @@
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
   <script src="/assets/js/article-reading.js?v=<%= AV %>"></script>
+  <%# সেশন ৯৩: কম্পোজার-টুলবার + ম্যানশন + ৩-ডট-মেনু ইঞ্জিন (সাবমিট-সহ) %>
+  <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
   <script>
-    // Reply toggle
+    // Reply toggle (সেশন ৯৩: কম্পোজার-স্লট-টগল; সাবমিট comment-tools.js সামলায়)
     document.querySelectorAll('.reply-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const item = btn.closest('.comment-item');
         const form = item.querySelector('.reply-form');
-        if (form) { form.hidden = !form.hidden; if (!form.hidden) form.querySelector('textarea').focus(); }
+        if (form) {
+          form.hidden = !form.hidden;
+          if (!form.hidden) {
+            const ta = form.querySelector('.cc-input');
+            if (ta) setTimeout(() => ta.focus(), 60);
+          }
+        }
       });
-    });
-    // Reply submit (API)
-    document.querySelectorAll('.reply-form').forEach(form => {
-      form.addEventListener('submit', async e => {
-        e.preventDefault();
-        const body = form.querySelector('textarea').value.trim();
-        if (!body) return;
-        const res = await fetch('/api/comment', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ post_id: '<%= post.id %>', body, parent_id: form.dataset.parent })
-        });
-        if (res.ok) location.reload();
-      });
-    });
-    // Top-level comment (API + optimistic reload)
-    document.getElementById('commentForm')?.addEventListener('submit', async e => {
-      e.preventDefault();
-      const body = e.target.body.value;
-      const res = await fetch('/api/comment', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: '<%= post.id %>', body })
-      });
-      if (res.ok) location.reload();
     });
   </script>
   <%# ── সেশন ৮১: রিপোর্ট-মোডাল + কনফার্ম/অটো-টোস্ট স্ক্রিপ্ট ── %>

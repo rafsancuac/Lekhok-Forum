@@ -140,3 +140,47 @@
 .cf-hint b,.cf-hint i,.cf-hint s{color:#3f5346}
 @media (max-width:560px){.cf-hint{font-size:.66rem;gap:4px 6px;padding:5px 8px}.cf-hint span{padding:1px 6px}}
 @media (prefers-reduced-motion:reduce){.comment-body a.mention,.comment-body a.tag{transition:none}}
+
+/* ═══ সেশন ৯৩: কমপ্যাক্ট কমেন্ট-সেকশন + থ্রি-ডট-হেডার ─────────────────══
+   অপসারিত-সমস্যা: ① cf-hint ড্যাশড-বর্ডার-বক্স (কার্যকর টুলবারে প্রতিস্থাপিত)
+   ② 'প্রথম মন্তব্যকারী হোন' ২০px-প্যাডিং-কার্ড ③ অ্যাকশন-বার↔কমেন্ট মাঝের
+   অতিরিক্ত গ্যাপ ④ ছড়ানো owner-actions-রো (৩-ডটে গেছে)। */
+.article-author-row92{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.article-author-row92 .article-author-bar{border-bottom:0;padding-bottom:0}
+.article-author-row92 .pm-wrap{margin-left:0;padding-top:2px}
+
+/* কমেন্ট-হেডিং — কম্প্যাক্ট */
+.comments-h{color:var(--brand-text);font-size:1.02rem;margin:10px 0 7px;display:flex;align-items:center;gap:7px}
+.comments-h i{color:var(--accent,#059669);font-size:.9rem}
+
+/* কম্পোজার-স্পেসিং — ফর্মের নিচে ন্যূনতম গ্যাপ */
+.comments-section .cc-form{margin-bottom:10px}
+.comments-section .cc-avatar{margin-top:1px}
+
+/* কমেন্ট-লিস্ট — আরও ঘন */
+.comments-list{gap:9px;margin-top:2px}
+.comment-item{scroll-margin-top:88px}
+.comment-bubble{padding:6px 11px}
+.comment-bubble .comment-body{font-size:.88rem}
+
+/* রিপ্লাই-কম্পোজার স্লট (আগের .reply-form ফর্ম-এলিমেন্ট → div.cc-slot) */
+.reply-form.cc-slot{margin:6px 0 2px 26px}
+.reply-form.cc-slot .cc-avatar{width:26px;height:26px}
+
+/* পুরনো-এলিমেন্ট সেফগার্ড — নতুন-কোডে আর রেন্ডার হয় না, রেখে-দেওয়া
+   নিরাপত্তা-নেট (ক্যাশড-পেজ/অন্য-ভিউ থেকে এলে) */
+.comments-empty{display:none}
+.cf-hint{display:none}
+
+/* অ্যাকশন-ফুটার — owner-actions-রো চলে গেছে, এখন শুধু বার */
+.article-footer{padding:6px 32px 14px;gap:4px}
+
+/* qa-পেজে ৩-ডট (question-meta flex-রোতে) */
+.question-meta .pm-wrap{margin-left:auto}
+.question-meta .pm-btn{width:30px;height:30px}
+
+@media (max-width:640px){
+  .article-author-row92{gap:6px}
+  .comments-section .cc-form{margin-bottom:8px}
+  .article-footer{padding:6px 18px 12px}
+}
