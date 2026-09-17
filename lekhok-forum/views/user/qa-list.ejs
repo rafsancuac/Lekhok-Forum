@@ -1,5 +1,7 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: 'সাধারণ জিজ্ঞাসা | লেখক ফোরাম' }) %>
+<%# সেশন ১১৮: বাংলা-অঙ্ক হেল্পার + ফিল্টার-স্টেট (qaFilter: 'all'|'unanswered', qaCounts) — social.js-রুট থেকে %>
+<% const bn118 = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]); %>
 
   <div class="page-wrap">
     <div class="page-header">
@@ -9,28 +11,51 @@
       <% } %>
     </div>
 
+    <%# সেশন ১১৮: FB-প্যারিটি ফিল্টার-চিপ — সব/অনুত্তরিত, কাউন্ট-ব্যাজসহ;
+        ?filter=unanswered ডিপ-লিংকযোগ্য (সার্ভার-রেন্ডার্ড active-স্টেট) %>
+    <div class="qa-filter-bar" role="navigation" aria-label="প্রশ্ন-ফিল্টার">
+      <a href="/qa" class="qa-filter-chip <%= qaFilter !== 'unanswered' ? 'active' : '' %>" <%= qaFilter !== 'unanswered' ? 'aria-current="page"' : '' %>>
+        <i class="fas fa-list-ul" aria-hidden="true"></i> সব প্রশ্ন <span class="qf-count"><%= bn118(qaCounts.all) %></span>
+      </a>
+      <a href="/qa?filter=unanswered" class="qa-filter-chip <%= qaFilter === 'unanswered' ? 'active' : '' %>" <%= qaFilter === 'unanswered' ? 'aria-current="page"' : '' %>>
+        <i class="far fa-circle-question" aria-hidden="true"></i> অনুত্তরিত <span class="qf-count <%= qaCounts.unanswered > 0 ? 'has' : '' %>"><%= bn118(qaCounts.unanswered) %></span>
+      </a>
+    </div>
+
     <div class="qa-list">
       <% if (questions.length === 0) { %>
         <div class="empty-state-full">
-          <i class="fas fa-question-circle"></i>
-          <p>কোনো প্রশ্ন করা হয়নি।</p>
-          <% if (user) { %><a href="/questions/new" class="btn-primary-sm">প্রথম প্রশ্ন করুন</a><% } %>
+          <i class="fas fa-<%= qaFilter === 'unanswered' ? 'circle-check' : 'question-circle' %>"></i>
+          <% if (qaFilter === 'unanswered') { %>
+            <p>দারুণ! কোনো অনুত্তরিত প্রশ্ন নেই — সব প্রশ্নের উত্তর মিলেছে।</p>
+            <a href="/qa" class="btn-primary-sm">সব প্রশ্ন দেখুন</a>
+          <% } else { %>
+            <p>কোনো প্রশ্ন করা হয়নি।</p>
+            <% if (user) { %><a href="/questions/new" class="btn-primary-sm">প্রথম প্রশ্ন করুন</a><% } %>
+          <% } %>
         </div>
       <% } else { %>
         <% questions.forEach(q => { %>
+          <% const _ans118 = q.ans_count || 0; %>
           <div class="qa-item">
             <div class="qa-votes">
-              <span class="vote-count"><%= q.like_count || 0 %></span>
+              <span class="vote-count"><%= bn118(q.like_count || 0) %></span>
               <small><i class="far fa-thumbs-up"></i>প্রাসঙ্গিক</small>
             </div>
             <div class="qa-content">
               <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
               <% if (q.body) { %><p class="qa-excerpt"><%= mdPlain(q.body, 150) %></p><% } %>
               <div class="qa-meta">
-                <img loading="lazy" decoding="async" src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar">
+                <%# সেশন ১১৮: উত্তর-স্টেট ব্যাজ — উত্তরিত=সবুজ, অনুত্তরিত=অ্যাম্বার;
+                    কাউন্ট stale-comment_count নয় → live ans_count %>
+                <span class="qa-ans-badge <%= _ans118 > 0 ? 'is-answered' : 'is-unanswered' %>">
+                  <i class="fas fa-<%= _ans118 > 0 ? 'check' : 'hourglass-half' %>" aria-hidden="true"></i>
+                  <%= _ans118 > 0 ? bn118(_ans118) + ' উত্তরিত' : 'অনুত্তরিত' %>
+                </span>
+                <img loading="lazy" decoding="async" src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar" alt="">
                 <a href="/profile/<%= q.username %>" class="qa-author"><%= q.full_name %></a>
                 <span>&middot;</span>
-                <span><i class="far fa-comment"></i> <%= q.comment_count || 0 %> উত্তর</span>
+                <span><i class="far fa-comment"></i> <%= bn118(_ans118) %> উত্তর</span>
                 <span>&middot;</span>
                 <span data-ts="<%= new Date(q.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
               </div>

@@ -787,14 +787,23 @@ router.post('/articles/:id/comment', ensureLoggedIn, async (req, res) => {
 // ── Q&A list ─────────────────────────────────────────────────────────────────
 // সেশন ৮৯: '/questions' বেয়ার-লিস্ট অ্যালিয়াস — আগে শুধু '/qa' ছিল, '/questions/new'
 // ও '/questions/:id' থাকলেও '/questions' 404 খেত (QA-রাউন্ডে ধরা)।
+// সেশন ১১৮: ফিল্টার-চিপ (সব/অনুত্তরিত) + উত্তর-ব্যাজ — ?filter=unanswered ডিপ-লিংকযোগ্য;
+// কাউন্ট-ডিসপ্লে-বাগ-ফিক্স: ভিউ q.comment_count (stale-কলাম) দেখাত → এখন live
+// ans_count সাব-কুয়েরি (posts.comment_count হারানো-কমেন্টে বাসি হয়ে যেত — প্রমাণ:
+// id=1 কলামে ২, বাস্তবে ০)।
 router.get(['/qa', '/questions'], async (req, res) => {
-  const questions = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender,
+  const f118 = req.query.filter === 'unanswered' ? 'unanswered' : 'all';
+  const rows118 = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender,
     (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as ans_count
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.type = 'question' AND p.status = 'published'
     ORDER BY p.published_at DESC`).all();
+  const totalAll118 = rows118.length;
+  const questions = f118 === 'unanswered' ? rows118.filter(q => (q.ans_count || 0) === 0) : rows118;
   res.render('user/qa-list', {
     questions, currentPath: '/qa',
+    qaFilter: f118,
+    qaCounts: { all: totalAll118, unanswered: rows118.filter(q => (q.ans_count || 0) === 0).length },
     metaDesc: 'লেখক ফোরামের প্রশ্নোত্তর কর্নার — সদস্যদের লেখালেখি, সাহিত্য, শিক্ষা ও সংগঠন সংক্রান্ত প্রশ্ন করুন এবং অভিজ্ঞদের কাছ থেকে উত্তর পান।',
   });
 });
@@ -1923,6 +1932,15 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
            published_at, created_at, status, featured
     FROM posts WHERE author_id = ? ORDER BY created_at DESC LIMIT 50
   `).all(me.id);
+
+  // সেশন ১১৮: /me-র FeedPostCard-এও পড়ার-সময়-চিপ (rt-chip) — decorateFeed-সমীকরণ
+  // (মার্কডাউন/HTML-স্ট্রিপ → ~৯৫০ অক্ষর/মিনিট, floor ১)। ১১০-র দাবি ছিল কিন্তু
+  // প্যারালাল-মার্জে প্লাম্বিংটা কখনোই এই রুটে এসেছিল না — এখন সম্পূর্ণ।
+  for (const p of myPosts) {
+    if (p.status === 'draft') continue; // ড্রাফটে পড়ার-সময় অর্থহীন
+    const plain118 = String(p.body || '').replace(/<[^>]*>/g, ' ').replace(/[#*_>`~[\]()!-]/g, ' ').replace(/\s+/g, ' ').trim();
+    p.read_mins = Math.max(1, Math.round(plain118.length / 950) || 1);
+  }
 
   // My drafts
   const myDrafts = await db.prepare(`

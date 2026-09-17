@@ -2041,3 +2041,28 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 @media (max-width:640px){.notif-filter-bar{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}.nft-chip{flex-shrink:0;white-space:nowrap}}
 @media (prefers-reduced-motion:reduce){.nft-chip,.nft-chip i{transition:none}}
 /* ═══ EOF-MARKER session117 (nft) ═══ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১১৮ — Q&A তালিকা: ফিল্টার-চিপ (সব/অনুত্তরিত) + উত্তর-স্টেট-ব্যাজ
+   ?filter=unanswered ডিপ-লিংকযোগ্য; কাউন্ট এখন live ans_count (stale
+   posts.comment_count ডিসপ্লে-বাগ শেষ)। FB-প্যারিটি পিল-চিপ, ব্র্যান্ড-সবুজ।
+   ═══════════════════════════════════════════════════════════════════════════ */
+.qa-filter-bar{display:flex;align-items:center;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.qa-filter-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;border:1px solid var(--border,#e2e8f0);background:#fff;color:#475569;font-size:.84rem;font-weight:600;text-decoration:none;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
+.qa-filter-chip i{font-size:.74rem;opacity:.85}
+.qa-filter-chip:hover{background:#F0F4F2;color:#1e293b;border-color:rgba(5,150,105,.35)}
+.qa-filter-chip.active{background:var(--accent,#059669);border-color:var(--accent,#059669);color:#fff;box-shadow:0 1px 3px rgba(5,150,105,.28)}
+.qa-filter-chip .qf-count{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:17px;padding:0 5px;border-radius:999px;font-size:.68rem;font-weight:700;line-height:1;background:#E8EDEA;color:#5b6b64}
+.qa-filter-chip .qf-count.has{background:rgba(217,119,6,.14);color:#b45309}
+.qa-filter-chip.active .qf-count{background:rgba(255,255,255,.24);color:#fff}
+.qa-ans-badge{display:inline-flex;align-items:center;gap:5px;padding:2.5px 9px;border-radius:999px;font-size:.72rem;font-weight:700;line-height:1.5;white-space:nowrap}
+.qa-ans-badge i{font-size:.66rem}
+.qa-ans-badge.is-answered{background:rgba(5,150,105,.1);color:#047857;border:1px solid rgba(5,150,105,.28)}
+.qa-ans-badge.is-unanswered{background:rgba(217,119,6,.09);color:#b45309;border:1px solid rgba(217,119,6,.3)}
+@media (max-width:640px){
+  .qa-filter-bar{gap:6px}
+  .qa-filter-chip{padding:6px 11px;font-size:.78rem}
+  .qa-item{flex-wrap:wrap}
+  .qa-votes{flex-direction:row;min-width:0;gap:6px;padding:5px 10px}
+  .qa-votes small i{display:inline;margin:0 4px 0 0}
+}
