@@ -919,3 +919,26 @@ Stage Summary:
 - /qa-উত্তর-থ্রেড এখন /articles-কমেন্টের সাথে পূর্ণ-সমতা + অনাথ-কমেন্ট-করাপশন-পথ বন্ধ
 - পরবর্তী: accepted-answer-মার্কিং, /qa unanswered-ফিল্টার, notifications QA-আইকন
 
+Task ID: 12 (Session 113 — cron review round: status assess + QA → গ্রুপ-কল mesh ইমপ্ল)
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ 75154bb থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-শূন্যতায় স্বাধীন-ফোকাস নির্বাচন → গ্রুপ-কল (mesh WebRTC) ফুল-ইমপ্ল + push
+
+Work Log:
+- প্রি-যাচাই: git fetch (HEAD=75154bb, clean) → root-worklog/PROJECT/PLANS রিভিউ — মাস্টার-টেবিল ২০/২০-পরবর্তী কল-রোডম্যাপে অবশিষ্ট: গ্রুপ-কল (ভারী), Metered-TURN (ইউজার-অ্যাকাউন্ট), ভিডিও-স্ট্যাট, অটো-ডিগ্রেড
+- QA-ফেজ: pkill → port-free → seed-qa-users (সার্ভার-বন্ধ) → সার্ভার (PORT=8080 SANDBOX_PORT=8080 CALL_RING_TIMEOUT_S=4) → role-policy ১০৭/১০৭ ✓ + calls-E2E ৫৪/৫৪ ✓ + cursor-E2E ২২/২২ ✓
+- ব্রাউজার-QA: হোম/লগইন(ismail)/ড্যাশ/মেসেঞ্জার-লিস্ট/গ্রুপ-চ্যাট(ctx isGroup:true)/রিসোর্স — কনসোল-০ ✓ 390px ×৩-পেজ ওভারফ্লো-০ ✓ → বাগ-শূন্য → ফিচার-রাউন্ড
+- ফোকাস-নির্বাচন: রোডম্যাপ-অবশিষ্টের মধ্যে ①গ্লোবাল-রিংগার ②কল-ইতিহাস ⑤ICE-restart-রিট্রাই আগেই-সম্পন্ন (সেশন ৯৪/৯৭) প্রমাণ করে নিলাম (কোড-অডিট) → **গ্রুপ-কল (mesh)** = শেষ-বড়-ফাঁক — "নিজস্ব-বড়-রাউন্ড" এই-রাউন্ডেই
+- **সার্ভার ইমপ্ল:** db.js — call_participants টেবিল (MIGRATION_SQL + fresh-DB + ইনডেক্স) + call_sessions.is_group LATER_COLUMN; routes/calls.js — গ্রুপ-শাখা ×৭-এন্ডপয়েন্ট (start অফার-বিহীন+৮-ক্যাপ / answer joined-তালিকা+idempotent / decline / cancel / end caller-vs-leave+all-left-finalize / signal অংশগ্রহণকারী-গেট / poll group+from+self-heal) + history গ্রুপ-সমর্থন; 1:1-পথ is_group=0-গেটে অক্ষুণ্ণ
+- **ক্লায়েন্ট ইমপ্ল:** webrtc-call.js — সেশন-১১৩-মার্কড mesh-ব্লক (peerPC/peerEnsure/peerDrop/peerDrain প্রতি-পিয়ার, groupOfferPeer, joinedLaterThan টোটাল-অর্ডার-টাই-ব্রেক, groupSignal from-রাউটিং, groupReconcile টাইল-সিঙ্ক, startGroup/acceptGroup, activePC, _qaEnsureGroupGrid/_qaTeardownGroupGrid) + ৮-ব্রাঞ্চ-পয়েন্ট (start/showIncoming/acceptCall/poll-সিগন্যাল/ended-টোস্ট/ঙ-reconcile/onConnected/statsTick/cleanup/endCall); messages-chat.ejs — গ্রুপ-কল-বাটন + convTitle; calls.css — .lc-grid/.lc-tile পরিবার (EOF-মার্কার + brace-depth-০ ✓)
+- **নতুন E2E:** verify-session113-groupcalls.js (তিন-ইউজার, ৫০-চেক) — গ্রুপ-স্টার্ট→incoming→জয়েন-ক্রম→mesh-রিলে (from-ভিত্তিক offer/answer/candidate + ডুপ্লিকেট-শূন্য)→অংশগ্রহণকারী-লাইভ→লিভ/শেষ→decline→মিসড-self-heal→busy-guard→403→auth — **৫০/৫০ প্রথম-পূর্ণ-রানেই ALL GREEN**
+- চুক্তি-আপডেট: verify-session93-calls.js-এর ২-পুরনো group-block-চেক (400-আশা) নতুন-আচরণে (200+group:true+cleanup) — calls **৫৫/৫৫**
+- ট্রায়াল-অ্যান্ড-এরর ইতিবৃত্ত: ①start-অফার-ভ্যালিডেশন গ্রুপে 400 দিল → 1:1-শাখায় সরানো ✓ ②E2E-তে members-as-string → অ্যারে ফিক্স ✓ ③await-in-arrow সিনট্যাক্স → uid-প্রি-ক্যাপচার ✓ ④decline-পুরনো-টেক্সট-মিসম্যাচ → আলাদা-এডিট ✓
+- যাচাই: node --check (db.js/routes/calls.js/webrtc-call.js/E2E) ✓ চার-স্যুট ১০৭+৫৫+৫০+২২=২৩৪-চেক ALL GREEN ✓ ব্রাউজার: গ্রুপ-কল-বাটন ✓ QA-গ্রিড ৩-টাইল (self/live-dot/fail) ✓ ডেস্কটপ+390px ✓ কনসোল-০ ✓ রিয়েল-start-ব্রাঞ্চ graceful-cleanup ✓ guard:design ✓
+- docs: PROJECT.md-চেঞ্জলজ (সেশন ১১৩) + PLANS.md cross-agent নোট (৮-ইন্টিগ্রেশন-পয়েন্ট + গোটচা) + repo-worklog + root-worklog
+- git: এক-ফিচার-কমিট + docs-কমিট, push-এর আগে পুনঃfetch/rebase (প্যারালল-এজেন্ট-প্রোটোকল)
+
+Stage Summary:
+- **গ্রুপ-কল এখন লাইভ:** গ্রুপ-চ্যাট-হেডারে অডিও/ভিডিও কল-বাটন → সব-সদস্য রিং → যে-কেউ গ্রহণ → mesh (প্রতি-জোড়ায় PC) → গ্রিড-UI (ভিডিও/অ্যাভাটার-টাইল) → লিভ/শেষ-সেমেন্টিক্স সার্ভার-self-heal-সহ
+- চুক্তি: সিগন্যালে from/to; poll.group.participants-ই গ্রিডের সত্য-উৎস; নতুন-জয়েনকারী-অফার-নিয়ম (কলার কখনো অফার-নয়) — বিস্তারিত PLANS session113-নোট
+- ঝুঁকি: openrelay-TURN অস্থির — গ্রুপ-কলে ক্রস-নেটওয়ার্ক রিলে-সাকসেস-রেট ব্যবহারে-যাচাই-করা-দরকার (ডায়াগনস্টিকস-প্যানেল টুল প্রস্তুত); হেডলেস-ব্রাউজারে রিয়েল-মিডিয়া-ফ্লো যাচাই-অসম্ভব (signaling-plane-৫০-চেক + UI-হুক-প্রমাণই কভারেজ)
+- পরবর্তী: Metered.ca-TURN → প্রতি-পিয়ার-স্ট্যাট → স্পিকার-হাইলাইট → অটো-ভিডিও-ডিগ্রেড → PLANS-রোডম্যাপ-টেবিল আইটেম

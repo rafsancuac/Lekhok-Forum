@@ -82,7 +82,11 @@
     poorStreak: 0,          // টানা দুর্বল-নমুনা
     poorNotified: false,    // দুর্বল-নেটওয়ার্ক টোস্ট (একবারী)
     lastBytes: 0,           // bitrate-ডেল্টা-বেস
-    lastBytesAt: 0
+    lastBytesAt: 0,
+    /* সেশন ১১৩: গ্রুপ-কল (mesh) — প্রতি-পিয়ার PC + গ্রিড-UI */
+    group: false,           // এই-কল গ্রুপ-কল কি-না (1:1 পুরনো-পথ অক্ষুণ্ণ)
+    peers: {},              // uid → {pc, info, queue, madeOffer, stream}
+    meJoinedAt: null        // আমার জয়েন-টাইমস্ট্যাম্প (গ্লেয়ার-টাই-ব্রেকে ব্যবহৃত)
   };
 
   /* ── DOM হেল্পার ───────────────────────────────────────────────────────── */
@@ -376,7 +380,7 @@
   }
   async function statsTick() {
     clearTimeout(S.qPollT);
-    var pc = S.pc;
+    var pc = activePC(); /* সেশন ১১৩: গ্রুপে প্রথম connected পিয়ার-PC */
     if (!pc || (S.state !== 'connected' && S.state !== 'connecting')) return;
     try {
       var st = await pc.getStats();
@@ -530,10 +534,396 @@
     }
   }
 
+  /* ═══ সেশন ১১৩: গ্রুপ-কল (mesh WebRTC) ═════════════════════════════════
+     টপোলজি: মেশ — প্রতি-অংশগ্রহণকারী-জোড়ায় আলাদা RTCPeerConnection।
+     সিগন্যালিং: একই /api/calls/* HTTP-পোলিং; প্রতি-সিগন্যালে from (সার্ভার যোগ
+     করে) + ঐচ্ছিক to — ক্লায়েন্ট from-ভিত্তিক রাউট করে সঠিক পিয়ার-PC-তে।
+     গ্লেয়ার-প্রতিরোধ (deterministic): নতুন-জয়েনকারী আগে-জয়েনডদের প্রতি অফার
+     পাঠায় — গ্রহণ-রেসপনসের joined-তালিকাই কর্তৃত্বপূর্ণ; রেস-কেসে (একই-সেকেন্ডে
+     দুই-জয়েন) (joined_at, uid) টোটাল-অর্ডারে টাই-ব্রেক — বড় uid অফার পাঠায়।
+     কলার সবচেয়ে-পুরনো অংশগ্রহণকারী → কলার কখনো অফার পাঠায় না, শুধু উত্তর দেয়।
+     UI: .lc-grid — ভিডিও-মোডে ভিডিও-টাইল, অডিও-মোডে অ্যাভাটার-টাইল (+ hidden
+     audio-বহনকারী video-element); সেলফি-টাইল muted। 1:1-পথ (.lc-videos/
+     .lc-audioface) অক্ষুণ্ণ — গ্রুপে root-এ lc-root--group ক্লাসে লুকানো। ═══ */
+
+  function isGroup() { return !!S.group; }
+
+  /* স্ট্যাটস/কোয়ালিটির জন্য সক্রিয় PC — গ্রুপে প্রথম connected পিয়ার */
+  function activePC() {
+    if (!isGroup()) return S.pc;
+    var keys = Object.keys(S.peers);
+    for (var i = 0; i < keys.length; i++) {
+      var p = S.peers[keys[i]];
+      if (p.pc && p.pc.connectionState === 'connected') return p.pc;
+    }
+    for (var j = 0; j < keys.length; j++) { if (S.peers[keys[j]].pc) return S.peers[keys[j]].pc; }
+    return null;
+  }
+
+  function peerEnsure(uid, pinfo) {
+    if (S.peers[uid]) {
+      if (pinfo) S.peers[uid].info = pinfo;
+      return S.peers[uid];
+    }
+    var p = { pc: null, info: pinfo || null, queue: [], madeOffer: false, stream: null };
+    S.peers[uid] = p;
+    return p;
+  }
+
+  function peerPC(uid) {
+    var p = peerEnsure(uid);
+    if (p.pc) return p.pc;
+    var pc = new RTCPeerConnection(rtcConfig());
+    p.pc = pc;
+    if (S.local) S.local.getTracks().forEach(function (t) { try { pc.addTrack(t, S.local); } catch (_) {} });
+    pc.onicecandidate = function (e) {
+      if (e.candidate) {
+        S.outBuf.push({ type: 'candidate', to: uid, candidate: e.candidate.toJSON ? e.candidate.toJSON() : { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex } });
+        scheduleFlush();
+      }
+    };
+    pc.ontrack = function (e) {
+      var stream = e.streams && e.streams[0];
+      if (!stream) return;
+      p.stream = stream;
+      gridAttachStream(uid, stream);
+      tryPlayGrid();
+      status('সংযুক্ত', 'is-live');
+    };
+    pc.onconnectionstatechange = function () {
+      var st = pc.connectionState;
+      if (st === 'connected') { gridTileState(uid, 'live'); maybeGroupConnected(); }
+      else if (st === 'connecting') { gridTileState(uid, 'conn'); }
+      else if (st === 'failed') { gridTileState(uid, 'fail'); }
+      else if (st === 'disconnected') { gridTileState(uid, 'warn'); }
+    };
+    return pc;
+  }
+
+  function peerDrain(uid) {
+    var p = S.peers[uid];
+    if (!p || !p.pc || !p.pc.remoteDescription || !p.pc.remoteDescription.type) return Promise.resolve();
+    var chain = Promise.resolve();
+    while (p.queue.length) {
+      (function (c) {
+        chain = chain.then(function () { return p.pc.addIceCandidate(new RTCIceCandidate(c)).catch(function () {}); });
+      })(p.queue.shift());
+    }
+    return chain;
+  }
+
+  function peerDrop(uid) {
+    var p = S.peers[uid];
+    if (!p) return;
+    if (p.pc) { try { p.pc.close(); } catch (_) {} }
+    if (root) {
+      var t = root.querySelector('.lc-grid [data-uid="' + uid + '"]');
+      if (t) t.remove();
+    }
+    delete S.peers[uid];
+  }
+
+  async function groupOfferPeer(uid, pinfo) {
+    var p = peerEnsure(uid, pinfo);
+    if (p.madeOffer) return;
+    try {
+      var pc = peerPC(uid);
+      var offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      p.madeOffer = true;
+      S.outBuf.push({ type: 'offer', to: uid, sdp: { type: offer.type, sdp: offer.sdp } });
+      scheduleFlush();
+    } catch (_) { /* পরের reconcile-এ আবার */ }
+  }
+
+  /* (joined_at, uid) টোটাল-অর্ডারে আমি কি পরে-জয়েনকারী? (তাহলে আমি-ই অফার পাঠাব) */
+  function joinedLaterThan(mine, myUid, theirs, theirUid) {
+    if (!mine || !theirs) return false;
+    if (mine > theirs) return true;
+    if (mine === theirs) return Number(myUid) > Number(theirUid);
+    return false;
+  }
+
+  /* ── গ্রিড-UI ── */
+  function ensureGrid() {
+    if (!root) return null;
+    var g = root.querySelector('.lc-grid');
+    if (!g) {
+      g = el('div', 'lc-grid');
+      g.setAttribute('aria-label', 'কল-অংশগ্রহণকারী');
+      root.querySelector('.lc-panel').insertBefore(g, root.querySelector('.lc-controls'));
+    }
+    return g;
+  }
+  function gridTile(uid, pinfo) {
+    var g = ensureGrid();
+    if (!g) return null;
+    var t = g.querySelector('[data-uid="' + uid + '"]');
+    if (t) return t;
+    var isSelf = (uid === 'self');
+    t = el('div', 'lc-tile' + (isGroup() && S.kind === 'video' ? ' lc-tile--video' : ''));
+    t.setAttribute('data-uid', uid);
+    var inner = '';
+    if (isGroup() && S.kind === 'video') {
+      inner += '<video class="lc-tile-video" autoplay playsinline' + (isSelf ? ' muted' : '') + '></video>';
+    } else {
+      inner += '<div class="lc-tile-face"><img alt="" /></div>';
+      /* অডিও-মোডে দৃশ্যমান টাইলের ভেতরে hidden video-element — remote-অডিও-বাহক */
+      if (!isSelf) inner += '<video class="lc-tile-audio" autoplay playsinline></video>';
+    }
+    inner += '<div class="lc-tile-meta"><span class="lc-tile-name"></span><span class="lc-tile-state"></span></div>';
+    t.innerHTML = inner;
+    var nm = t.querySelector('.lc-tile-name');
+    if (nm) nm.textContent = isSelf ? 'আপনি' : ((pinfo && (pinfo.name || pinfo.username)) || 'সদস্য');
+    var img = t.querySelector('.lc-tile-face img');
+    if (img) {
+      var av = isSelf ? (C().meAvatar || '') : ((pinfo && pinfo.avatar) || '');
+      if (av) { img.src = av; img.onerror = function () { img.hidden = true; }; } else { img.hidden = true; }
+    }
+    if (isSelf) t.classList.add('lc-tile--self');
+    g.appendChild(t);
+    return t;
+  }
+  function gridAttachStream(uid, stream) {
+    if (!root) return;
+    var t = root.querySelector('.lc-grid [data-uid="' + uid + '"]');
+    if (!t) t = gridTile(uid, (S.peers[uid] && S.peers[uid].info) || null);
+    if (!t) return;
+    var v = t.querySelector('.lc-tile-video');
+    var a = t.querySelector('.lc-tile-audio');
+    var target = v || a;
+    if (target) { target.srcObject = stream; tryPlayGrid(); }
+  }
+  function gridSelfAttach() {
+    if (!S.local) return;
+    var t = gridTile('self', null);
+    if (!t) return;
+    var v = t.querySelector('.lc-tile-video');
+    if (v) v.srcObject = S.local;
+  }
+  function gridTileState(uid, st) {
+    if (!root) return;
+    var t = root.querySelector('.lc-grid [data-uid="' + uid + '"]');
+    if (!t) return;
+    var s = t.querySelector('.lc-tile-state');
+    if (!s) return;
+    t.classList.remove('is-live', 'is-warn', 'is-fail');
+    if (st === 'live') { t.classList.add('is-live'); s.textContent = ''; }
+    else if (st === 'conn') { s.textContent = 'সংযোগ হচ্ছে…'; }
+    else if (st === 'warn') { t.classList.add('is-warn'); s.textContent = 'বিচ্ছিন্ন হচ্ছে…'; }
+    else if (st === 'fail') { t.classList.add('is-fail'); s.textContent = 'সংযোগ ব্যর্থ'; }
+  }
+  function tryPlayGrid() {
+    if (!root) return;
+    root.querySelectorAll('.lc-grid video').forEach(function (v) {
+      var pr = v.play();
+      if (pr && pr.catch) pr.catch(function () { /* জেসচার-প্রয়োজন — নীরব */ });
+    });
+  }
+  function groupUI(on) {
+    if (!root) return;
+    root.classList.toggle('lc-root--group', !!on);
+  }
+  function setGroupHeader(title) {
+    if (!root) return;
+    var n = root.querySelector('.lc-name');
+    if (n) n.textContent = title || (C().convTitle || 'গ্রুপ কল');
+    var i2 = root.querySelector('.lc-avatar2');
+    if (i2 && i2.src !== C().meAvatar) { /* মোডাল-অ্যাভাটার কলার-নামেই থাকে */ }
+  }
+  function maybeGroupConnected() {
+    if (!isGroup()) return;
+    if (S.state === 'connected') return;
+    var anyLive = Object.keys(S.peers).some(function (k) { return S.peers[k].pc && S.peers[k].pc.connectionState === 'connected'; });
+    if (!anyLive) return;
+    S.state = 'connected';
+    stopRing();
+    S.t0 = Date.now();
+    clearInterval(S.tickT);
+    S.tickT = setInterval(function () {
+      var s = Math.floor((Date.now() - S.t0) / 1000);
+      var m = Math.floor(s / 60); s = s % 60;
+      status(bn(m) + ':' + (s < 10 ? '০' + bn(s) : bn(s)), 'is-live');
+    }, 1000);
+    status('সংযুক্ত', 'is-live');
+    startStatsTicker();
+    tryPlayGrid();
+  }
+
+  /* poll-এর ভেতর থেকে ডাকা হয় — অংশগ্রহণকারী-রিকনসাইল + গ্লেয়ার-ফলব্যাক-অফার */
+  function groupReconcile(g) {
+    if (!isGroup() || !g || !root) return;
+    if (typeof g.me_joined_at === 'string' && g.me_joined_at) S.meJoinedAt = g.me_joined_at;
+    var seen = {};
+    (g.participants || []).forEach(function (pj) {
+      var meId = C().me;
+      if (pj.id === meId) return;
+      if (pj.status === 'joined') {
+        seen[pj.id] = true;
+        var p = peerEnsure(pj.id, pj);
+        if (!p.tile || !root.querySelector('.lc-grid [data-uid="' + pj.id + '"]')) {
+          gridTile(pj.id, pj);
+          p.tile = true;
+        }
+        if (!p.pc && !p.madeOffer && joinedLaterThan(S.meJoinedAt, meId, pj.joined_at, pj.id)) {
+          groupOfferPeer(pj.id, pj);
+        }
+      } else if (pj.status === 'left' || pj.status === 'declined' || pj.status === 'missed') {
+        peerDrop(pj.id);
+      }
+    });
+    /* টাইল-অরফান-সিঙ্ক: participants-এ আর নেই এমন পিয়ার সরাও */
+    Object.keys(S.peers).forEach(function (uid) {
+      if (!seen[uid]) peerDrop(uid);
+    });
+    /* কলার outgoing → কেউ জয়েন করলেই স্টেট-নামাও */
+    if (S.state === 'outgoing' && Object.keys(S.peers).length) {
+      stopRing();
+      status('সংযোগ করা হচ্ছে…');
+    }
+    var liveCount = Object.keys(S.peers).filter(function (k) { return S.peers[k].pc && S.peers[k].pc.connectionState === 'connected'; }).length;
+    if (S.state === 'connected') {
+      if (!liveCount) status('প্রত্যাশা করা হচ্ছে…', 'is-warn');
+    }
+  }
+
+  /* গ্রুপ-সিগন্যাল রাউটিং (poll থেকে) — from-ভিত্তিক পিয়ার-PC নির্বাচন */
+  async function groupSignal(fromUid, p) {
+    if (!isGroup()) return;
+    if (p.type === 'offer' && p.sdp) {
+      try {
+        var pc = peerPC(fromUid);
+        var pinfo = (S.peers[fromUid] && S.peers[fromUid].info) || null;
+        if (!root.querySelector('.lc-grid [data-uid="' + fromUid + '"]')) gridTile(fromUid, pinfo);
+        await pc.setRemoteDescription(new RTCSessionDescription(p.sdp));
+        await peerDrain(fromUid);
+        var ans = await pc.createAnswer();
+        await pc.setLocalDescription(ans);
+        S.outBuf.push({ type: 'answer', to: fromUid, sdp: { type: ans.type, sdp: ans.sdp } });
+        scheduleFlush();
+      } catch (_) { /* পরের অফারে/রিকনসাইলে আবার */ }
+    } else if (p.type === 'answer' && p.sdp) {
+      var pp = S.peers[fromUid];
+      if (pp && pp.pc) {
+        try { await pp.pc.setRemoteDescription(new RTCSessionDescription(p.sdp)); await peerDrain(fromUid); } catch (_) {}
+      }
+    } else if (p.type === 'candidate' && p.candidate) {
+      var pq = S.peers[fromUid];
+      if (pq && pq.pc && pq.pc.remoteDescription && pq.pc.remoteDescription.type) {
+        try { await pq.pc.addIceCandidate(new RTCIceCandidate(p.candidate)); } catch (_) { /* stale */ }
+      } else if (pq) {
+        pq.queue.push(p.candidate); /* প্রতি-পিয়ার ICE-কিউ (1:1-এর S.queue-চুক্তির মতোই) */
+      }
+    } else if (p.type === 'left') {
+      peerDrop(fromUid);
+    } else if (p.type === 'ended' || p.type === 'cancelled') {
+      if (S.state !== 'idle') {
+        toast(p.type === 'cancelled' ? 'গ্রুপ-কল বাতিল হয়েছে' : 'কল শেষ হয়েছে');
+        cleanup(true);
+      }
+    } else if (p.type === 'declined') {
+      /* নীরব — ইতিহাস/অংশগ্রহণ-তালিকাতেই দৃশ্যমান (টোস্ট-স্প্যাম এড়ানো) */
+    } else if (p.type === 'joined') {
+      /* রিকনসাইল পোলেই টাইল আঁকবে */
+    }
+  }
+
+  /* ── গ্রুপ-কল শুরু (caller) ── */
+  async function startGroup(kind) {
+    var ctx = C();
+    if (S.state !== 'idle') { toast('একটি কল ইতিমধ্যে চলছে', true); return; }
+    if (!ctx.convId) { toast('কল দিতে গ্রুপ-কথোপকথন খুলুন', true); return; }
+
+    S.state = 'outgoing';
+    S.role = 'caller';
+    S.kind = kind;
+    S.group = true;
+    S.peer = null;
+    S.queue = []; S.outBuf = []; S.after = 0;
+    S.peers = {}; S.meJoinedAt = null;
+
+    ensureRoot();
+    root.querySelector('.lc-ctl--cam').style.display = kind === 'video' ? '' : 'none';
+    root.querySelector('.lc-incoming').hidden = true;
+    root.classList.remove('lc-root--min'); minimize(false);
+    setGroupHeader();
+    groupUI(true);
+    ensureGrid();
+    gridTile('self', null);
+    showVideos(false);
+    status(kind === 'video' ? icon('fa-video') + ' গ্রুপ ভিডিও কল দেওয়া হচ্ছে…' : icon('fa-phone') + ' গ্রুপ অডিও কল দেওয়া হচ্ছে…');
+    startRing('outgoing');
+    schedulePoll(900);
+
+    try {
+      var stream = await getMedia(kind);
+      attachLocal(stream);
+      gridSelfAttach();
+      var r = await api('POST', '/api/calls/start', { conv_id: ctx.convId, kind: S.kind });
+      if (!r.ok) {
+        var gmsg = { busy: 'আপনার আরেকটি কল চলছে', no_members: 'গ্রুপে অন্য কোনো সদস্য নেই', too_many_members: 'গ্রুপটি কল-সীমার (৮ জন) বেশি বড়' };
+        toast(gmsg[r.error] || 'গ্রুপ-কল শুরু করা যায়নি', true);
+        cleanup(true);
+        return;
+      }
+      S.callId = r.call_id;
+      status('রিং হচ্ছে…');
+    } catch (err) {
+      var gm = (err && err.message) || '';
+      var _gfid = S.callId;
+      if (gm.indexOf('permission:') === 0 || gm.indexOf('device:') === 0 || gm.indexOf('insecure:') === 0) toast(gm.split(':').slice(1).join(':').trim(), true);
+      else toast('মাইক/ক্যামেরা চালু করা যায়নি', true);
+      cleanup(true);
+      if (_gfid) { try { await api('POST', '/api/calls/' + _gfid + '/end', { reason: 'failed' }); } catch (_) {} }
+    }
+  }
+
+  /* ── গ্রুপ-কল গ্রহণ (callee) — অফার নেই; সার্ভারে জয়েন + আগে-জয়েনডদের প্রতি অফার ── */
+  async function acceptGroup() {
+    if (S.state !== 'incoming') return;
+    click();
+    hideIncoming();
+    if (S.incT) { clearTimeout(S.incT); S.incT = null; }
+    S.state = 'connecting';
+    status('সংযোগ করা হচ্ছে…');
+    try {
+      var stream = await getMedia(S.kind);
+      attachLocal(stream);
+      var r = await api('POST', '/api/calls/' + S.callId + '/answer', {});
+      if (!r.ok || !r.group) { toast('কল গ্রহণ করা যায়নি (' + (r.error || '?') + ')', true); cleanup(true); return; }
+      S.meJoinedAt = r.me_joined_at || null;
+      groupUI(true);
+      ensureGrid();
+      gridTile('self', null);
+      gridSelfAttach();
+      var offered = false;
+      (r.joined || []).forEach(function (pj) {
+        if (pj.id === C().me) return;
+        peerEnsure(pj.id, pj);
+        gridTile(pj.id, pj);
+        groupOfferPeer(pj.id, pj);
+        offered = true;
+      });
+      if (!offered) status('অন্যদের অপেক্ষা হচ্ছে…');
+      else status('সংযোগ করা হচ্ছে…');
+    } catch (err) {
+      var m = (err && err.message) || '';
+      var _gaid = S.callId;
+      if (m.indexOf('permission:') === 0 || m.indexOf('device:') === 0 || m.indexOf('insecure:') === 0) toast(m.split(':').slice(1).join(':').trim(), true);
+      else toast('কল গ্রহণে সমস্যা', true);
+      cleanup(true);
+      if (_gaid) { api('POST', '/api/calls/' + _gaid + '/end', { reason: 'failed' }).catch(function () {}); }
+    }
+  }
+
+  /* ═══ সেশন ১১৩ শেষ ═══════════════════════════════════════════════════ */
+
   /* ── কল শুরু (caller) ─────────────────────────────────────────────────── */
   async function start(kind) {
     var ctx = C(); /* লেজি-পাঠ — মেসেঞ্জার-ভিউ পরে সমৃদ্ধ করলেও ধরা পড়বে */
     if (S.state !== 'idle') { toast('একটি কল ইতিমধ্যে চলছে', true); return; }
+    /* সেশন ১১৩: গ্রুপ-কথোপকথনে (isGroup+convId, peer নেই) গ্রুপ-স্টার্ট-শাখা */
+    if (ctx.isGroup && ctx.convId && !ctx.peer) return startGroup(kind);
     if (!ctx.convId || !ctx.peer) { toast('কল দিতে কথোপকথন খুলুন', true); return; }
 
     S.state = 'outgoing';
@@ -594,18 +984,22 @@
     S.role = 'callee';
     S.callId = inc.id;
     S.kind = inc.kind;
+    S.group = !!inc.group; /* সেশন ১১৩: গ্রুপ-আসন্ন-কল ফ্ল্যাগ */
     S.peer = inc.caller;
     S.pendingOffer = inc.offer;
     S.queue = [];
     S.outBuf = [];
     S.after = 0;
+    S.peers = {}; S.meJoinedAt = null;
 
     ensureRoot();
     root.querySelector('.lc-ctl--cam').style.display = inc.kind === 'video' ? '' : 'none';
     setPeerUI();
     var box = root.querySelector('.lc-incoming');
     box.hidden = false;
-    box.querySelector('.lc-incoming-kind').innerHTML = inc.kind === 'video' ? icon('fa-video') + ' ভিডিও কল আসছে' : icon('fa-phone') + ' অডিও কল আসছে';
+    box.querySelector('.lc-incoming-kind').innerHTML = inc.group
+      ? (inc.kind === 'video' ? icon('fa-users') + ' গ্রুপ ভিডিও কল আসছে' : icon('fa-users') + ' গ্রুপ অডিও কল আসছে')
+      : (inc.kind === 'video' ? icon('fa-video') + ' ভিডিও কল আসছে' : icon('fa-phone') + ' অডিও কল আসছে');
     status('');
     startRing('incoming');
     schedulePoll(900);
@@ -626,7 +1020,9 @@
   }
 
   async function acceptCall() {
-    if (S.state !== 'incoming' || !S.pendingOffer) return;
+    if (S.state !== 'incoming') return;
+    if (isGroup()) return acceptGroup(); /* সেশন ১১৩: গ্রুপ-গ্রহণ-শাখা (pendingOffer নেই) */
+    if (!S.pendingOffer) return;
     click();
     hideIncoming();
     if (S.incT) { clearTimeout(S.incT); S.incT = null; }
@@ -669,6 +1065,7 @@
   /* ── সংযুক্ত ──────────────────────────────────────────────────────────── */
   function onConnected() {
     if (S.state === 'connected') return;
+    if (isGroup()) { maybeGroupConnected(); return; } /* সেশন ১১৩: গ্রুপে নিজস্ব-পথ */
     S.state = 'connected';
     stopRing();
     hideIncoming();
@@ -696,6 +1093,12 @@
     S.statsOpen = false; S.lastStats = null; S.poorStreak = 0; S.poorNotified = false;
     S.lastBytes = 0; S.lastBytesAt = 0;
     S.iceRestarts = 0; S.restartAnswer = false;
+    /* সেশন ১১৩: গ্রুপ-পিয়ার-PC সমূহ বন্ধ */
+    Object.keys(S.peers).forEach(function (uid) {
+      var p = S.peers[uid];
+      if (p && p.pc) { try { p.pc.close(); } catch (_) {} }
+    });
+    S.peers = {}; S.group = false; S.meJoinedAt = null;
     if (S.pc) { try { S.pc.close(); } catch (_) {} S.pc = null; }
     if (S.local) { S.local.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} }); S.local = null; }
     S.remote = null;
@@ -714,11 +1117,13 @@
   async function endCall(reason) {
     var id = S.callId;
     var wasConnected = S.state === 'connected';
+    var wasGroupCallee = isGroup() && S.role !== 'caller';
     cleanup(true);
     if (id) {
       try { await api('POST', '/api/calls/' + id + '/end', { reason: reason || 'hangup' }); } catch (_) {}
     }
     if (reason === 'failed') { /* টোস্ট আগেই দেখানো */ }
+    else if (wasGroupCallee) toast(wasConnected ? 'গ্রুপ-কল থেকে বেরিয়ে গেছেন' : 'গ্রুপ-কল বাতিল হয়েছে');
     else if (wasConnected && reason === 'hangup') toast('কল শেষ হয়েছে');
   }
 
@@ -800,13 +1205,14 @@
           }
         }
 
-        /* (গ) সিগন্যাল-ডেলিভারি (ICE + লাইফসাইকেল) */
+        /* (গ) সিগন্যাল-ডেলিভারি (ICE + লাইফসাইকেল) — গ্রুপে from-ভিত্তিক মেশ-রাউটিং (সেশন ১১৩) */
         if (r.signals && r.signals.length) {
           for (var i = 0; i < r.signals.length; i++) {
             var sg = r.signals[i];
             if (S.callId && sg.call_id !== S.callId) continue;
             var p = sg.signal;
             if (!p) continue;
+            if (isGroup()) { await groupSignal(sg.from, p); continue; }
             if (p.type === 'candidate') {
               var cand = p.candidate;
               if (!cand) continue;
@@ -824,7 +1230,7 @@
               if (S.state === 'incoming') { toast('কলটি বাতিল হয়েছে'); cleanup(true); }
             } else if (p.type === 'ended') {
               if (S.state === 'outgoing' || S.state === 'connecting' || S.state === 'connected' || S.state === 'incoming') {
-                if (S.state === 'connected') toast('অপর পক্ষ কল কেটে দিয়েছে');
+                if (S.state === 'connected') toast(isGroup() ? 'গ্রুপ-কল শেষ হয়েছে' : 'অপর পক্ষ কল কেটে দিয়েছে');
                 cleanup(true);
               }
             } else if (p.type === 'offer' && p.sdp) {
@@ -865,6 +1271,9 @@
             break;
         }
         }
+
+        /* (ঙ) সেশন ১১৩: গ্রুপ-অংশগ্রহণকারী-রিকনসাইল (টাইল/পিয়ার-সেট/অবস্থা) */
+        if (isGroup() && r.group && r.group.id === S.callId) groupReconcile(r.group);
       }
     } catch (_) { /* নেটওয়ার্ক-ঝাঁকুনি — পরের টিকে আবার */ }
     schedulePoll();
@@ -883,7 +1292,28 @@
     _debug: S,
     /* সেশন ১১১ QA-হুক — রুট/কোয়ালিটি-UI যাচাই (কল ছাড়াই) */
     _qaEnsureRoot: function () { ensureRoot(); return !!root; },
-    _qaSetQuality: function (lvl, rtt) { setQuality(lvl, rtt, 'QA-নমুনা'); }
+    _qaSetQuality: function (lvl, rtt) { setQuality(lvl, rtt, 'QA-নমুনা'); },
+    /* সেশন ১১৩ QA-হুক: কল ছাড়াই গ্রুপ-গ্রিড DOM নির্মাণ (হেডলেস-যাচাই) —
+       ফেক-অংশগ্রহণকারী টাইল + অবস্থা-ক্লাস; রিয়েল-কল-স্টেট অপরিবর্তিত থাকে */
+    _qaEnsureGroupGrid: function () {
+      S.group = true; S.kind = 'audio';
+      ensureRoot();
+      groupUI(true);
+      ensureGrid();
+      gridTile('self', { name: 'আপনি', avatar: C().meAvatar || '' });
+      gridTile(9001, { name: 'কালাম-টেস্ট-১', avatar: '/avatar/0' });
+      gridTile(9002, { name: 'কালাম-টেস্ট-২', avatar: '/avatar/0' });
+      gridAttachStream(9001, new MediaStream());
+      gridTileState(9002, 'fail');
+      gridTileState(9001, 'live');
+      return Object.keys(S.peers).length + 1;
+    },
+    _qaTeardownGroupGrid: function () {
+      Object.keys(S.peers).forEach(peerDrop);
+      S.group = false;
+      if (root) { groupUI(false); var g = root.querySelector('.lc-grid'); if (g) g.remove(); }
+      return true;
+    }
   };
 
   /* আইডল-অবস্থাতেও পোল-লুপ চালু — ক্যালি হিসেবে আসন্ন-কল দেখতে হলে

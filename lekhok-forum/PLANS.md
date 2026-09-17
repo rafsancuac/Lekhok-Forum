@@ -1186,3 +1186,39 @@ push-রেস-এ abhi-asol: উপরের session113-নোট লেখা�
 5. **seed-qa-113.js:** idempotent ডেমো-QA-থ্রেড (প্রশ্ন "নতুন লেখকরা কোথায় থেকে শুরু করবেন?" + like_count=৩-উত্তর + রিপ্লাই) — সার্ভার-বন্ধে চালান (স্বাভাবিক গোটচা)।
 6. **article.css session113-ব্লক:** dead answer-card-রুল মুছেছে — কিন্তু session114-মার্কআপের .top-answer-chip/.answer-form-wrap/.answer-form (noscript) পুনঃস্থাপিত; ভবিষ্যতের dead-rule-অপসারণের আগে views/-জুড়ে class-ব্যবহার-স্ক্যান করুন (noscript-ব্লকও স্ক্যানে ধরুন)।
 
+**নতুন ফিচার (webrtc-call.js + calls.css — ২-ফাইল-স্কোপ, Agent-Chat-লক-জোন অস্পৃশ্য):**
+1. **নেটওয়ার্ক-কোয়ালিটি পিল (.lc-quality, FB-প্যারিটি 4-বার):** সংযুক্ত-অবস্থায় `pc.getStats()` ২.৫সে-অন্তর → selected-candidate-pair-এর `currentRoundTripTime` → RTT <150ms=৩-বার-সবুজ, <300=২-সবুজ, <500=১-অ্যাম্বার, বাকি=লাল-পালস। ভিডিও-মোডে লোকাল-ভিডিও (top-right) সংঘর্ষ এড়াতে পিল **top-LEFT**-এ। title/aria-label-এ বাংলা RTT।
+2. **ডায়াগনস্টিকস প্যানেল (.lc-stats):** কন্ট্রোল-বারে নতুন **fa-circle-info বাটন** → গ্লাস-কার্ড: সংযোগ-পথ (সরাসরি-একই-নেটওয়ার্ক / সরাসরি-NAT-ভেদ / **রিলে (TURN)** — relay-ক্যান্ডিডেট দেখলে অ্যাম্বার-হাইলাইট), local/remote ক্যান্ডিডেট-টাইপ, RTT, jitter, হারানো-প্যাকেট (মোট), রিসিভ-গতি (bytes-ডেল্টা kbps) — সব বাংলা-সংখ্যা। **রোডম্যাপ-③-এর হাতে-কলমে যাচাই-সহায়ক:** লাইভ-কলে প্যানেলে "রিলে (TURN)" দেখামাত্রই TURN-কাজ-করছে-প্রমাণ (openrelay/Metered-যা-ই হোক)।
+3. **দুর্বল-নেটওয়ার্ক অটো-হিন্ট:** টানা ৩-নমুনা RTT>450ms (বা অজানা) → একবারী টোস্ট ("ভিডিও বন্ধ করলে ভালো থাকতে পারে"); রিকভারিতে streak-রিসেট।
+
+**ইন্টিগ্রেশন-পয়েন্ট (এজেন্টদের জন্য):**
+- S-স্টেটে নতুন ফিল্ড: `qPollT/statsOpen/lastStats/poorStreak/poorNotified/lastBytes/lastBytesAt` — cleanup() এগুলোই রিসেট করে; নতুন কল-লাইফসাইকেল-স্টেট যোগলে `startStatsTicker()` (onConnected-এ) + `clearTimeout(S.qPollT)` (cleanup-এ) রক্ষা করুন।
+- QA-হুক (window.LekhokCall): `_qaEnsureRoot()` (কল ছাড়াই কল-রুট DOM নির্মাণ — হেডলেস-যাচাই), `_qaSetQuality(lvl,rtt)` (পিল-স্টেট ইনজেকশন), `toggleStats()`। কল-ছাড়া getStats নেই — প্যানেল idle-এ "সংযোগ স্থাপিত হলে লাইভ-তথ্য দেখা যাবে" empty-state।
+- CSS চুক্তি: `.lc-quality[hidden]`/`.lc-stats[hidden]`-এ স্পষ্ট `display:none` (display:inline-flex/block hidden-অ্যাট্রিবিউট ওভাররাইড-করে — পুরনো `.rsx-card`-গোটচার পুনরাবৃত্তি-প্রতিরোধ)।
+
+**যাচাই:** node --check ✓; রিস্টার্ট-পরবর্তী role-policy ১০৭/১০৭ ✓ calls-E2E ৫৪/৫৪ ✓; agent-browser (মেসেঞ্জার-চ্যাট @ QA-হুক): রুট-নির্মাণ ✓ পিল hidden→good(৪-বার,৮৪ms)→bad(১-বার,৯০০ms,পালস) ✓ প্যানেল খোলা→empty-state ✓ ফেক-নমুনায় ৭-রো + is-relay-অ্যাম্বার ✓ ক্লোজ ✓ ডেস্কটপ+390px-স্ক্রিনশট ✓ overflow-০ ✓ কনসোল-০ ✓।
+
+**পরবর্তী-সুপারিশ:** ① গ্রুপ-কল (mesh WebRTC — call_participants-টেবিল + per-peer-PC; নিজস্ব-বড়-রাউন্ড) ② Metered.ca-অ্যাকাউন্ট (ইউজার-অ্যাকশন — env-পথ প্রস্তুত, এখন প্যানেল দিয়েই রিলে-যাচাই) ③ কল-মিডিয়া-স্ট্যাটে ভিডিও-track-স্ট্যাট (resolution/frameRate) যোগ ④ quality-ভিত্তিক অটো-ভিডিও-ডিগ্রেড (এই রাউন্ডের টোস্টের স্বয়ংক্রিয়-রূপ)।
+
+## Cross-Agent Note: Session 113 — গ্রুপ-কল (mesh WebRTC) — কল-ডোমেইনের শেষ-বড়-ফিচার (১৭ সেপ্টেম্বর ২০২৬)
+
+**রোডম্যাগ-প্রগতি:** মাস্টার-টেবিল-২০/২০-পরবর্তী কল-ডোমেইন রোডম্যাপের শেষ-বড়-আইটেম **গ্রুপ-কল ✓** (গ্লোবাল-রিংগার/কল-ইতিহাস/ICE-restart/কোয়ালিটি-পিল আগেই সম্পন্ন)। অবশিষ্ট: Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), ভিডিও-track-স্ট্যাট, অটো-ভিডিও-ডিগ্রেড, স্পিকার-হাইলাইট।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (কল-ডোমেইনে কাজ করা-সব-এজেন্টের জন্য):**
+1. **call_participants-স্টেট-মেশিন:** ringing → joined → left|declined|missed (UNIQUE(call_id,user_id))। 1:1-সেশনে এই-টেবিল ব্যবহৃত-ই-হয় না (callee_id-পথ অক্ষুণ্ণ); শুধু is_group=1-এ। সার্ভার self-heal (healGroupStale/maybeFinalizeAbandonedGroupCall) মেয়াদোত্তীর্ণ ringing-রো মিসড-মার্ক করে — নতুন-কোডে স্টেট-মেশিন-লঙ্ঘন করলে self-heal-এর সাথে দ্বন্দ্ব হবে।
+2. **সিগন্যাল-চুক্তি:** প্রতি-সিগন্যালে ঐচ্ছিক `to` (অনুপস্থিত=ব্রডকাস্ট) — পোল-রেসপনসের `from` (sender_id) মেশ-রাউটিং-এর মূল-চাবি; গ্রুপ-ক্লায়েন্ট from-ভিত্তিক পিয়ার-PC নির্বাচ করে। নতুন সিগন্যাল-টাইপ যোগ করলে groupSignal()-এর টাইপ-চেইনে ফলব্যাক-নীরব-আচরণ রাখুন।
+3. **গ্লেয়ার-প্রতিরোধ-চুক্তি (অপরিবর্তনীয়):** নতুন-জয়েনকারী (accept-রেসপনসের `joined`-তালিকা) আগে-জয়েনডদের প্রতি অফার পাঠায়; রেস-কেসে (joined_at, uid) টোটাল-অর্ডার — **কলার কখনো অফার পাঠায় না**। এই-নিয়ম বদলালে দু-দিকে-অফার (glare) ফেরত আসবে।
+4. **poll.group শেপ:** {id, kind, status, role, conversation_id, me_joined_at, participants[{id,username,name,avatar,status,joined_at}], ringing_count} — গ্রিড-reconcile-এর সত্য-উৎস; নতুন-ফিল্ড যোগ্য, বিদ্যমান-নাম বদলানো-নিষিদ্ধ (ক্লায়েন্ট groupReconcile পড়ে)।
+5. **start-যাচাই-স্থানান্তর:** গ্রুপ-স্টার্ট অফার-বিহীন — অফার-ভ্যালিডেশন এখন 1:1-শাখায় (busy-গার্ডের পরে); অর্ডার বদলালে গ্রুপ-স্টার্ট 400 ফিরবে।
+6. **history-চুক্তি-বদল:** গ্রুপ-conv-এ /api/calls/history এখন 200 {peer:null, group:true, calls[]} — পুরনো 400 group_call_unsupported আশা-করা-কোড থাকলে আপডেট করুন (verify-session93-calls.js-ও আপডেটেড)।
+7. **ক্লায়েন্ট-স্ট্রাকচার:** webrtc-call.js-এ সেশন-১১৩-ব্লক (mesh-ইঞ্জিন + গ্রিড-UI) আলাদা-মার্কড; 1:1-পথে হাত দিলে শুধু-ব্রাঞ্চ-পয়েন্টগুলো (start/showIncoming/acceptCall/poll-সিগন্যাল-লুপ/onConnected/statsTick/cleanup/endCall) স্পর্শ করুন; activePC()-চুক্তি (1:1→S.pc, গ্রুপ→প্রথম connected পিয়ার) statsTick-এর প্রাণ।
+8. **MAX_GROUP_CALLERS = 8** — mesh O(N²) ক্যাপ; বাড়াতে চাইলে SFU-মাইগ্রেশন আলোচনা ছাড়া নয়।
+
+**গোটচা:**
+- অফার/আনসার-SDP সিগন্যাল-পেলোডে `sdp:{type,sdp}`-আকারে — 1:1-এর মতোই; কিন্তু গ্রুপ-ক্যান্ডিডেট `to`-সহ যায়, `from` পোল যোগ করে — ক্লায়েন্ট-সাইডে `sg.from` আর `sg.signal` আলাদা-স্তর।
+- গ্রুপ-রিং ব্যস্ততা-নয়: ringing-অংশগ্রহণকারী অন্য-কল গ্রহণ করতে পারে (গ্রহণে অন্য-রো মিসড-মার্ক হয়) — busy-guard-এর অর্থ শুধু caller/joined।
+- CSS: .lc-grid/.lc-tile ব্লক EOF-মার্কারসহ (session113-group-call-grid); ইউনিয়ন-মার্জের পরে brace-depth-চেক রীতি অপরিবর্তিত।
+
+**E2E-প্রমাণ:** scripts/verify-session113-groupcalls.js (৫০-চেক) ALL GREEN; role-policy ১০৭/১০৭ + calls ৫৫/৫৫ + cursor ২২/২২; ব্রাউজার-QA-হুক LekhokCall._qaEnsureGroupGrid()/_qaTeardownGroupGrid() (কল-ছাড়াই হেডলেস-গ্রিড-যাচাই)।
+
+**পরবর্তী-সুপারিশ:** ① Metered.ca-TURN (গ্রুপ-কলে রিলে-প্রয়োজনীয়তা বাড়ে; ডায়াগনস্টিকস-প্যানেলেই যাচাই) ② প্রতি-পিয়ার স্ট্যাট (গ্রুপে কোন-পিয়ার দুর্বল) ③ স্পিকার-হাইলাইট (getSynchronizationSources/audioLevel) ④ quality-ভিত্তিক অটো-ভিডিও-ডিগ্রেড ⑤ গ্রুপ-কল-রিং শুধু-অনলাইন-সদস্যে-সীমিত-করা (বর্তমানে সব-সদস্য)।

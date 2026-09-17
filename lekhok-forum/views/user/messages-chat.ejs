@@ -132,6 +132,10 @@
             <% if (!isGroup) { %>
             <button type="button" class="fb-icon-btn" title="অডিও কল" onclick="LekhokCall.start('audio')" aria-label="<%= other.full_name %>-কে অডিও কল দিন"><i class="fas fa-phone"></i></button>
             <button type="button" class="fb-icon-btn" title="ভিডিও কল" onclick="LekhokCall.start('video')" aria-label="<%= other.full_name %>-কে ভিডিও কল দিন"><i class="fas fa-video"></i></button>
+            <% } else { %>
+            <%# সেশন ১১৩: গ্রুপ-কল (mesh) — গ্রুপ-কথোপকথনে অডিও/ভিডিও কল সমর্থিত %>
+            <button type="button" class="fb-icon-btn" title="গ্রুপ অডিও কল" onclick="LekhokCall.start('audio')" aria-label="গ্রুপে অডিও কল দিন"><i class="fas fa-phone"></i></button>
+            <button type="button" class="fb-icon-btn" title="গ্রুপ ভিডিও কল" onclick="LekhokCall.start('video')" aria-label="গ্রুপে ভিডিও কল দিন"><i class="fas fa-video"></i></button>
             <% } %>
             <button type="button" class="fb-icon-btn" id="fbInfoBtn" title="তথ্য প্যানেল"><i class="fas fa-circle-info"></i></button>
           </div>
@@ -1942,6 +1946,7 @@
       meAvatar: <%- jesc(user.avatar_url || ('/avatar/' + user.id)) %>,
       convId: <%= conv ? conv.id : 0 %>,
       convUsername: <%- jesc(other.username) %>,
+      convTitle: <%- jesc(isGroup ? (other.full_name || 'গ্রুপ কল') : '') %>,
       isGroup: <%= isGroup ? 'true' : 'false' %>,
       peer: <% if (isGroup) { %>null<% } else { %>{ id: <%- parseInt(other.id, 10) %>, name: <%- jesc(other.full_name) %>, username: <%- jesc(other.username) %>, avatar: <%- jesc(other.avatar_url || ('/avatar/' + other.id)) %> }<% } %>
     };

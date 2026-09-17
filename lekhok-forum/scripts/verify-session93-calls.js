@@ -87,14 +87,19 @@ async function login(username, password) {
   const badConv = await req(A, 'POST', '/api/calls/start', { conv_id: 999999, kind: 'audio', offer: FAKE_OFFER });
   check('অজানা-conv start → 403', badConv.status === 403, { status: badConv.status });
 
-  /* ── ৩. গ্রুপ-কল ব্লক ── */
-  console.log('\n— গ্রুপ-কল ব্লক —');
+  /* ── ৩. গ্রুপ-কল ব্লক (সেশন ১১৩: গ্রুপ-কল এখন সমর্থিত — স্টার্ট-সাকসেস + অবশ্যই
+     পরিষ্কার-করণ, নাহলে পরবর্তী ১:১-টেস্টে busy-guard আটকাবে) ── */
+  console.log('\n— গ্রুপ-কল ব্লক (সেশন ১১৩-চুক্তি) —');
   const gcreate = await req(A, 'POST', '/messages/group/create', { title: 'কল-টেস্ট-গ্রুপ', members: [U_B] });
   const gm = (gcreate.location || '').match(/\/messages\/g\/(\d+)/);
   const groupConvId = gm ? parseInt(gm[1], 10) : null;
   if (groupConvId) {
     const gcall = await req(A, 'POST', '/api/calls/start', { conv_id: groupConvId, kind: 'audio', offer: FAKE_OFFER });
-    check('গ্রুপ-কল → 400 group_call_unsupported', gcall.status === 400 && gcall.json && gcall.json.error === 'group_call_unsupported', gcall.json);
+    check('গ্রুপ-কল start → 200 + group:true', gcall.status === 200 && gcall.json && gcall.json.ok && gcall.json.group === true, gcall.json);
+    if (gcall.json && gcall.json.call_id) {
+      const gend = await req(A, 'POST', '/api/calls/' + gcall.json.call_id + '/end', { reason: 'hangup' });
+      check('গ্রুপ-কল ক্লিনআপ end → ok', gend.status === 200 && gend.json.ok, gend.json);
+    }
   } else {
     check('গ্রুপ-কল ব্লক (গ্রুপ-তৈরি ব্যর্থ — স্কিপ)', true);
   }
@@ -250,7 +255,7 @@ async function login(username, password) {
   check('history: B-দৃষ্টিতে incoming আছে', ((histB.json && histB.json.calls) || []).some(c => c.direction === 'incoming'));
   if (groupConvId) {
     const histG = await req(A, 'GET', '/api/calls/history?conv_id=' + groupConvId);
-    check('history: গ্রুপ-conv → 400', histG.status === 400 && histG.json && histG.json.error === 'group_call_unsupported', histG.json);
+    check('history: গ্রুপ-conv → 200 + group:true (সেশন ১১৩)', histG.status === 200 && histG.json && histG.json.ok && histG.json.group === true, histG.json);
   }
   const histF = await req(A, 'GET', '/api/calls/history?conv_id=999999');
   check('history: অজানা-conv → 403', histF.status === 403, { status: histF.status });

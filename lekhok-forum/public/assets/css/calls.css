@@ -430,3 +430,96 @@
   .lc-stats { animation: none; }
   .lc-quality-bars i { transition: none; }
 }
+
+/* ═══════════════ সেশন ১১৩: গ্রুপ-কল (mesh) — গ্রিড-গ্রিড UI ═══════════════
+   .lc-root--group মোডে 1:1-সারফেস (.lc-videos/.lc-audioface) লুকানো হয়; এর
+   বদলে .lc-grid — টাইল (ভিডিও/অ্যাভাটার) গ্রিড। ব্যাকড্রপ-প্যানেল-কন্ট্রোল
+   1:1-এর সাথেই শেয়ার্ড। ═══════════════════════════════════════════════════ */
+.lc-root--group .lc-videos,
+.lc-root--group .lc-audioface { display: none !important; }
+.lc-root--group .lc-meta { z-index: 5; }
+
+.lc-grid {
+  position: absolute; inset: 0;
+  display: grid; grid-auto-flow: dense;
+  gap: 8px; padding: 56px 12px 88px;
+  overflow-y: auto; overflow-x: hidden;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-content: center;
+}
+.lc-grid::-webkit-scrollbar { width: 6px; }
+.lc-grid::-webkit-scrollbar-thumb { background: rgba(233,237,239,.14); border-radius: 3px; }
+
+.lc-tile {
+  position: relative;
+  min-height: 132px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(23,32,42,.92), rgba(15,22,30,.88));
+  border: 1px solid rgba(233, 237, 239, .09);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 22px rgba(0,0,0,.32);
+  animation: lc-tile-in .28s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes lc-tile-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+
+.lc-tile--video { min-height: 168px; }
+.lc-tile-video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; background: #0b1117;
+}
+.lc-tile--self .lc-tile-video { transform: scaleX(-1); }
+
+.lc-tile-audio { display: none; } /* অডিও-বাহক hidden — অডিও-ই যথেষ্ট */
+
+.lc-tile-face {
+  width: 74px; height: 74px; border-radius: 50%;
+  background: rgba(233,237,239,.07);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  border: 2px solid rgba(233,237,239,.12);
+}
+.lc-tile-face img { width: 100%; height: 100%; object-fit: cover; }
+
+.lc-tile-meta {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 20px 10px 7px;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,.62));
+  pointer-events: none;
+}
+.lc-tile-name {
+  color: #fff; font-size: 12.5px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.lc-tile-name::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(233,237,239,.34); flex: 0 0 auto;
+}
+.lc-tile.is-live .lc-tile-name::before { background: var(--lc-green, #10B981); box-shadow: 0 0 6px rgba(16,185,129,.7); }
+.lc-tile-state { color: #FBBF24; font-size: 11px; white-space: nowrap; }
+.lc-tile.is-fail { border-color: rgba(248,113,113,.5); }
+.lc-tile.is-fail .lc-tile-state { color: #F87171; }
+.lc-tile.is-warn { border-color: rgba(251,191,36,.4); }
+.lc-tile--self { border-color: rgba(16,185,129,.35); }
+
+/* মিকি-বন্ধ অবস্থায় গ্রুপ-সেলফি-টাইল নির্দেশক */
+.lc-root--camoff .lc-tile--self::after {
+  content: '\f470'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+  position: absolute; top: 8px; right: 8px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(0,0,0,.55); color: #F87171;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .lc-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; padding: 52px 8px 86px; }
+  .lc-tile { min-height: 118px; border-radius: 14px; }
+  .lc-tile--video { min-height: 148px; }
+  .lc-tile-face { width: 58px; height: 58px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lc-tile { animation: none; }
+}
+/* EOF-MARKER: session113-group-call-grid */

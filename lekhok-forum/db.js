@@ -467,6 +467,20 @@ const MIGRATION_SQL = `
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS idx_2fa_tokens_user ON two_factor_tokens(user_id, method);
+  /* সেশন ১১৩: গ্রুপ-কল (mesh) — প্রতি-কল-অংশগ্রহণকারী ট্র্যাকিং। 1:1-এও ব্যবহৃত
+     হয় না (1:1 পুরনো caller_id/callee_id-পথেই চলে — অক্ষুণ্ণ); শুধু is_group=1
+     সেশনে অংশগ্রহণ/রিং/জয়েন/লিভ-স্টেট এখানেই থাকে। */
+  CREATE TABLE IF NOT EXISTS call_participants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    call_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    status TEXT DEFAULT 'ringing',
+    joined_at DATETIME,
+    left_at DATETIME,
+    UNIQUE(call_id, user_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_callpart_call ON call_participants(call_id, status);
+  CREATE INDEX IF NOT EXISTS idx_callpart_user ON call_participants(user_id, status);
 `;
 
 // Columns added in later migrations — applied to existing installs during initDb().
@@ -486,6 +500,8 @@ const LATER_COLUMNS = [
   ['past_leaders', 'social_linkedin', 'TEXT'],
   ['past_leaders', 'message', 'TEXT'],
   ['conversations', 'is_group', 'INTEGER DEFAULT 0'],
+  // সেশন ১১৩: গ্রুপ-কল — 1:1-সেশনে 0; গ্রুপ-কলে 1 (callee_id=0 রাখা হয়)
+  ['call_sessions', 'is_group', 'INTEGER DEFAULT 0'],
   ['conversations', 'title', 'TEXT'],
   // টাস্ক ১৪: মেম্বার অ্যাকাউন্ট ক্লেইম/অ্যাক্টিভেশন
   ['members', 'member_id',     'TEXT'],
@@ -644,6 +660,21 @@ async function applyLaterMigrations() {
     await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON quiz_attempts(user_id, answered_at)');
     await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id)');
   } catch (e) { /* already exists — fine */ }
+  // সেশন ১১৩: গ্রুপ-কল — অংশগ্রহণকারী-টেবিল (MIGRATION_SQL-এও যোগ; এখানে
+  // পুনঃCREATE → ফাংশন-সোর্স-হ্যাশ বদলায় → লাইভ Turso-তে ফুল-ইনিট চলবে)।
+  try {
+    await backend.exec(`CREATE TABLE IF NOT EXISTS call_participants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      call_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      status TEXT DEFAULT 'ringing',
+      joined_at DATETIME,
+      left_at DATETIME,
+      UNIQUE(call_id, user_id)
+    )`);
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_callpart_call ON call_participants(call_id, status)');
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_callpart_user ON call_participants(user_id, status)');
+  } catch (e) { console.error('[db] call_participants (session 113):', e.message); }
   // সেশন ৯৩: WebRTC কল — সিগন্যালিং-স্টোর (Vercel-serverless-নিরাপদ: WebSocket
   // নেই, কথোপকথনের বিদ্যমান HTTP-পোলিং-প্যাটার্নেই SDP/ICE রিলে)। MIGRATION_SQL-এও
   // যোগ; এখানে পুনঃCREATE → ফাংশন-সোর্স-হ্যাশ বদলায় → লাইভ Turso-তে ফুল-ইনিট চলবে।
