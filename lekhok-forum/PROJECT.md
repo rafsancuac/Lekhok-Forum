@@ -298,6 +298,21 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ১১৪ (১৮ সেপ্টেম্বর ২০২৬) — QA-উত্তর-থ্রেড FB-প্যারিটি + angry-ম্যাপ-গ্যাপ-পূরণ + রিপ্লাই-নোটিফিকেশন (cron-রাউন্ড)
+
+**স্কোপ:** PLANS.md session104-নোটের অবশিষ্ট-সুপারিশ — qa-single-উত্তরে FB-কমেন্ট-UX (session107-articles-এর ক্যানোনিকাল-মার্কআপের QA-বহমান), 'angry' ৭-রিঅ্যাকশনের বাকি ডিফল্ট-ম্যাপ-গ্যাপ ×৭, রিপ্লাই-নোটিফিকেশন। প্যারালাল-ডিটেকশন: rebase-এ session107-articles (5d93176) + session108 (b622eda) আগেই আর্টিকেল-প্যারিটি/angry-বেস দিয়েছে → সেগুলো ক্যানোনিকাল গৃহীত, কেবল গ্যাপ-ডেল্টা নেওয়া হয়েছে।
+
+**① qa-single-উত্তর FB-প্যারিটি:** পুরনো .answer-item/answer-sidebar/actions-bar-কার্ড → session107-articles-চুক্তির হুবহু .comment-item মার্কআপ (data-cid/author-id, data-raw, fcr-প্যালেট, fc-react-badge, fb-meta107, হোভার ৩-ডট, fc-edit-slot, .reply-btn/.reply-form-টগল) + স্টাফ-ডিলিট (canMod81) + থ্রেডেড .reply-item (রুটে reply-কোয়েরি + reaction-ব্যাচ + bodyHtml রেন্ডার + replies112-অ্যাট্যাচ) + /qa/:id/answer-রিডাইরেক্ট অ্যাঙ্কর '#c'+id। একই comment-tools.js ইঞ্জিন বিনা-পরিবর্তনে চলে।
+
+**② angry-ম্যাপ-গ্যাপ ×৭ (ক্যানোনিকাল 😡/'রাগ'):** REACTION_META-তে angry ছিলই না, getReactionSummary/parseReactionsJson counts (care-সহ), comment-tools.js R_META/R_LABEL (ফিড-ড্রয়ারের প্যালেট ৬-ইমোজিতে আটকে ছিল), dashboard.js decorateFeed, me.ejs ×২, analytics.ejs।
+
+**③ রিপ্লাই-নোটিফিকেশন:** POST /api/comment + POST /articles/:id/comment — parent_id থাকলে প্যারেন্ট-মন্তব্যের লেখককে notify_comments/'reply'-টাইপ (নিজের-কমেন্টে-নিজে-উত্তর ও পোস্ট-লেখক-ডুপ্লিকেট-গার্ড) + .notif-ico.ico-reply রঙ (session105-রেজিস্ট্রি)।
+
+**④ পলিশ:** [data-cmt-total] লেবেল-নিরপেক্ষ কাউন্টার-স্প্যান (article+QA হেডিং) — comment-tools.js ডিলিট-সিঙ্ক স্প্যান-প্রথম (উত্তরসমূহ-হেডিং .comments-h-র হার্ডকোডেড-রিরাইট থেকে নিরাপদ); style.css session112-ব্লক (কাউন্টার-পিল, qa-উত্তর-রিদম+হোভার-টিন্ট, শীর্ষ-উত্তর-চিপ-ইনলাইন, 640px, reduced-motion)।
+
+**E2E (agent-browser, আইসোলেটেড :3120):** QA-উত্তর প্যালেট→care→🤗১ ✓ রিপ্লাই→রিলোড→reply-item ✓ রিপ্লাইে টাচ-প্যালেট→care ✓ উত্তর-এডিট data-raw-প্রি-ফিল→<strong>+সম্পাদিত ✓ রিপ্লাই-ডিলিট→ইন-প্লেস+কাউন্টার ২→১ ✓ আর্টিকেল-রিগ্রেশন ✓ ফিড-ড্রয়ার+angry-অপ্ট ✓ গেস্ট-ভিউ ✓ 390px×২-০ ✓ কনসোল-০ ✓ ১৫-পেজ-স্মোক ✓ inspect-audit 48/49 (১-ফেল প্রি-এক্সিস্টিং: session109-এর stat-tile-বিলুপ্তির স্টেল-রুল, clean-origin-এও উপস্থিত)। গোটচা-নোট: role-policy স্ক্রিপ্ট :8080-টার্গেটেড — ওই ইনস্ট্যান্সের স্টেল-কোডে /resources 500 নয়েজ; টুলিং-ট্রান্সপোর্ট '[<letter>'-স্ট্রিপ → _meta[mine] '_metaine]' দেখায় (char-code-চেক করুন)।
+
+
 ### সেশন ১০৭-ব (১৮ সেপ্টেম্বর ২০২৬) — FB-প্যারিটি কমেন্ট UX আর্টিকেল-পেজে বহমান + AV-হ্যাশ-কোলিশন-ফিক্স (cron-রাউন্ড)
 
 **স্কোপ:** session104-এর ফিড-কমেন্ট FB-ইঞ্জিন (প্যালেট/ব্যাজ/৩-ডট/ইনলাইন-এডিট) আর্টিকেল-পেজে বহমান — "একই ফিচারে একই ডিজাইনে সব জায়গায়" (ইউজার-অনুরোধ-চুক্তি)। + QA-তে ধরা গভীর ক্যাশিং-বাগ ফিক্স।

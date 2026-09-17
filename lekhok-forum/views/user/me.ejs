@@ -145,7 +145,7 @@
           <div class="feed-card-body">
             <div class="feed-card-meta">
               <span class="badge">
-                <% const emo = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' }; %>
+                <% const emo = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' }; %>
                 <%= emo[r.reaction_type] || '👍' %> <%= r.reaction_type %>
               </span>
               <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
@@ -197,7 +197,7 @@
       <% if (activity.length === 0) { %>
         <div class="empty"><div class="icon"><i class="fas fa-stream"></i></div><h3>কোনো অ্যাক্টিভিটি নেই</h3><p>লিখুন, মন্তব্য করুন, প্রতিক্রিয়া দিন, সব এখানে জমা হবে।</p></div>
       <% } %>
-      <% const _emo = { like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢' }; %>
+      <% const _emo = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' }; %>
       <% activity.forEach(a => { %>
         <article class="feed-card activity-card">
           <span class="activity-icon <%= a.kind %>">

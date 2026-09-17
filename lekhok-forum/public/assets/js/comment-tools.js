@@ -21,8 +21,8 @@
   var ME_ID = AUTHED && document.body ? (document.body.getAttribute('data-uid') || '') : '';
 
   /* ── সেশন ১০৪: রিঅ্যাকশন-কনস্ট্যান্ট (server REACTIONS-চুক্তি: ৬ টাইপ) ────── */
-  var R_META = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
-  var R_LABEL = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
+  var R_META = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
+  var R_LABEL = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ', angry: 'রাগ' };
 
   /* ── ১. মার্কডাউন-টুলবার ─────────────────────────────────────────────── */
   var FMT_SYNTAX = {
@@ -735,8 +735,14 @@
           try {
             var total = (typeof j.total === 'number') ? j.total : null;
             if (total !== null) {
-              var hCount = document.querySelector('.comments-h');
-              if (hCount) hCount.innerHTML = '<i class="far fa-comment"></i> মন্তব্য (' + bnNum(total) + ')';
+              // সেশন ১১৪: লেবেল-নিরপেক্ষ কাউন্টার-স্প্যান ([data-cmt-total]) প্রথমে —
+              // 'উত্তরসমূহ (N)' হেডিং .comments-h-র হার্ডকোডেড innerHTML-রিরাইট থেকে নিরাপদ
+              var cSpan = document.querySelector('[data-cmt-total]') || document.querySelector('.comments-total');
+              if (cSpan) cSpan.textContent = bnNum(total);
+              else {
+                var hCount = document.querySelector('.comments-h');
+                if (hCount) hCount.innerHTML = '<i class="far fa-comment"></i> মন্তব্য (' + bnNum(total) + ')';
+              }
               var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
               if (stat) stat.textContent = total;
             }

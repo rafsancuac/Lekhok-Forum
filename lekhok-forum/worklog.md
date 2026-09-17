@@ -904,3 +904,27 @@ Stage Summary:
 - **মাস্টার-টেবিল ২০/২০ সম্পূর্ণ** — রোডম্যাপ-১৭ নতুন-কোড-মুক্ত যাচাই-সমাপ্ত; ভবিষ্যৎ-এজেন্ট 'সম্পূর্ণ' ধরবেন
 - moderator/moderator123 পাসওয়ার্ড এ-স্যান্ডবক্স DB-তে রিসেট-করা হয়েছে (সার্ভার-বন্ধ-অবস্থায়, নিরাপদ-পদ্ধতিতে)
 - পরবর্তী-সুপারিশ: ইনবক্স PDF-এক্সপোর্ট · pagination-লাইভ-টেস্ট (১৬+ বার্তা) · hCaptcha/Turnstile · প্রভোস্ট-নোট-কলাম
+- কল-UI এখন FB-প্যারিটি নেটওয়ার্ক-মিটার + ডায়াগনস্টিকসসহ — TURN-যাচাই (রোডম্যাপ-③) লাইভ-কলের প্যানেল থেকেই সম্ভব
+- নতুন-এজেন্ট-নোট: webrtc-call.js-এ কল-লাইফসাইকেল বদলালে startStatsTicker()/S.qPollT-ক্লিনআপ রক্ষা করুন; [hidden]-সিলেক্টর-গার্ড রীতি মানুন
+- পরবর্তী: গ্রুপ-কল (mesh, নিজস্ব-বড়-রাউন্ড) → Metered.ca-অ্যাকাউন্ট → ভিডিও-স্ট্যাট → অটো-ডিগ্রেড
+
+---
+Task ID: 11 (Session 114 — QA রাউন্ড: qa-single FB-প্যারিটি + angry-ম্যাপ-পূরণ + রিপ্লাই-নোটিফিকেশন)
+Agent: Main agent (webDevReview — origin/main @ 036677b, clean-tree)
+Task: QA-first অ্যাসেসমেন্ট → PLANS-সুপারিশ বাস্তবায়ন (qa-উত্তর-থ্রেড parity + session104-নোটের ②③-অবশিষ্ট)
+
+Work Log:
+- আইসোলেটেড QA ইনস্ট্যান্স: /home/z/qa-s108 (ফুল-কপি + নিজস্ব lekhok.db, :3120) — শেয়ার্ড-db ক্লব-রেস এড়াতে; reset-qa-logins.js প্রি-বুট (ismail/riya/tanvir=secret123 ✓), seed-gallery-107 (৩২-রো)
+- QA-অ্যাসেসমেন্ট: ১৪-পেজ-200 + agent-browser (লগইন→ড্যাশ→গ্যালেরি ২৪→৩২-লোডমোর→অ্যাপেন্ডেড-লাইটবক্স + /admin/messages ইনবক্স) — বাগ-শূন্য → ফিচার-রাউন্ড
+- 🚨 গোটচা-পুনঃপ্রমাণ: pkill -f "qa-s108" প্যাটার্ন node server.js-কে ধরে না → পুরনো-ইনস্ট্যান্সের flush ৩২-রো seed ২২-তে ফেরত লিখেছিল — kill-বাই-পোর্ট (ss -tlnp) রীতি
+- 🚨 টুলিং-গোটচা-নতুন-ব্যাখ্যা: ট্রান্সপোর্ট ANSI-CSI-স্ট্রিপে '[m'/'[h'-সদৃশ '[<letter>' রান খেয়ে যায় — _meta[mine] → '_metaine]' দেখায় (node console.log-এও!)। সত্যের-উৎস: char-code প্রিন্ট বা s.includes('_meta[mine]') চেক
+- প্যারালাল-ডিটেকশন: pull --rebase-এ ২০-নতুন-কমিট — session107-articles (5d93176) আর্টিকেল-পেজ parity ইতোমধ্যে + session108 (b622eda) angry 😡 ইতোমধ্যে → ক্যানোনিকাল গ্রহণ, আমার সমান্তরাল-ইমপ্ল (thread-comment.ejs মিরর-মার্কআপ + 😠) প্রত্যাহৃত; my-session-diff.patch আর্কাইভ
+- ইউনিয়ন-পরে অবশিষ্ট-গ্যাপ ×৩ বাস্তবায়ন: ① qa-single-উত্তরে session107-articles-এর হুবহু মার্কআপ-চুক্তি (.comment-item + data-cid/author-id + data-raw + fcr-প্যালেট + fc-react-badge + fb-meta107 + ৩-ডট + fc-edit-slot + reply-btn/.reply-form + reply-item-থ্রেড) + রুটে reply-কোয়েরি/অ্যাট্যাচ/bodyHtml + স্টাফ-ডিলিট-মেনু (canMod81) ② angry-ম্যাপ-গ্যাপ-পূরণ ×৭: REACTION_META+angry, getReactionSummary/parseReactionsJson counts (care-সহ), comment-tools R_META/R_LABEL, dashboard.js, me.ejs×২, analytics.ejs (emoji 😡 + লেবেল 'রাগ' — b622eda-ক্যানোনিকাল) ③ রিপ্লাই-নোটিফিকেশন: POST /api/comment + POST /articles/:id/comment-এ parent-author notify (notify_comments 'reply'-টাইপ, নিজে/পোস্ট-লেখক-ডুপ্লিকেট-গার্ড) + .ico-reply রঙ
+- পলিশ: [data-cmt-total] কাউন্টার-স্প্যান (article+QA) — comment-tools.js ডিলিট-সিঙ্ক লেবেল-নিরপেক্ষ (স্প্যান-প্রথম, .comments-h-innerHTML-ফলব্যাক) — 'উত্তরসমূহ (N)' হেডিং ভাঙার ঝুঁকি শূন্য; /qa/:id/answer-redirect অ্যাঙ্কর '#answer-'→'#c'+id; style.css session112-ব্লক (কাউন্টার-পিল, qa-উত্তর-রিদম, শীর্ষ-উত্তর-চিপ-ইনলাইন, ico-reply, 640px, reduced-motion)
+- E2E (agent-browser, :3120): QA-উত্তর প্যালেট→care→🤗১ ✓ রিপ্লাই→রিলোড→reply-item+data-raw ✓ রিপ্লাইে টাচ-প্যালেট→care ✓ উত্তর-এডিট প্রি-ফিল→<strong>+সম্পাদিত ✓ রিপ্লাই-ডিলিট→ইন-প্লেস+কাউন্টার ২→১ ✓ আর্টিকেল রিগ্রেশন (২-আইটেম+angry-অপ্ট+কাউন্টার) ✓ ফিড-ড্রয়ার+angry-অপ্ট ✓ গেস্ট (প্যালেট-শূন্য+😡-ব্যাজ) ✓ 390px×২-overflow-০ ✓ কনসোল-০ ✓ ১৫-পেজ-স্মোক ✓
+- সুইট: inspect-audit 48/1-fail (ফেলটি প্রি-এক্সিস্টিং — session109-এর stat-tile-বিলুপ্তির বিপরীতে স্টেল-অডিট-রুল; clean-origin-এও একই) · role-policy স্ক্রিপ্ট :8080-টার্গেটেড — ওই ইনস্ট্যান্স স্টেল-কোড (series-কমিট-পূর্ব) → /resources 500-নয়েজ; আমার :3120-তে /resources+/dashboard 200
+
+Stage Summary:
+- qa-single এখন আর্টিকেল-পেজের সাথে ১:1 FB-কমেন্ট-UX; angry ৭-টাইপ সব ডিফল্ট-ম্যাপে ধারাবাহিক; রিপ্লাই-নোটিফিকেশন লাইভ
+- ক্যানোনিকাল-চুক্তি-নোট: qa-উত্তর-মার্কআপ article-single-এর কপি — ভবিষ্যতে মার্কআপ-বদল দুই-ফাইল-সিঙ্কে (বা পার্শিয়াল-রিফ্যাক্টর)
+- পরবর্তী: inspect-audit-এর stat-tile-রুল session109-ডিজাইনে আপডেট · কমেন্ট-reaction-নোটিফিকেশন · optimistic-ইনসার্ট (ফিড-ড্রয়ারে আছে, থ্রেডে নেই) · :8080-ইনস্ট্যান্স-মালিককে pull-রিমাইন্ডার

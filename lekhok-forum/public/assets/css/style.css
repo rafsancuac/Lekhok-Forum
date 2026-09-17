@@ -1907,3 +1907,40 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
   .cx102 .cx-chip108,.cx102 .cx-prov-tool108{transition:none}
   .cx102 .cx-chip108:hover,.cx102 .cx-prov-tool108:hover{transform:none}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১১৪ — QA-উত্তর FB-প্যারিটি (session107-articles-এর QA-বহমান) + angry-ম্যাপ-পূরণ
+   + রিপ্লাই-নোটিফিকেশন + লেবেল-নিরপেক্ষ কাউন্টার-স্প্যান
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* 'উত্তরসমূহ (N)' কাউন্টার-স্প্যান — article ও QA দুই হেডিং-এ একই পিল-ভাষা */
+.comments-h [data-cmt-total], .answers-section h2 [data-cmt-total]{
+  display:inline-block; min-width:1.5em; text-align:center;
+  background:rgba(5,150,105,.10); color:var(--accent,#059669);
+  border-radius:999px; padding:0 .5em; font-size:.85em; font-weight:800;
+}
+/* QA-উত্তর: .comment-item মার্কআপ উত্তর-সেকশনের রিদমে (কার্ড-বিভাজক + হোভার-টিন্ট) */
+.answers-section .comment-item{
+  padding:12px 10px; border-radius:12px; transition:background .16s ease;
+}
+.answers-section .comment-item + .comment-item{border-top:1px solid rgba(15,23,42,.06)}
+.answers-section .comment-item:hover{background:rgba(15,23,42,.025)}
+.answers-section .comment-body{font-size:.93rem; line-height:1.62}
+/* শীর্ষ-উত্তর চিপ — লেখক-নামের পাশে ইনলাইন (পুরনো sidebar-অবস্থান থেকে) */
+.top-answer-chip{
+  display:inline-flex; align-items:center; gap:4px; margin-left:8px;
+  font-size:.66rem; font-weight:800; color:#b45309; background:rgba(245,158,11,.13);
+  border:1px solid rgba(245,158,11,.3); border-radius:999px; padding:2px 9px; vertical-align:middle;
+}
+/* রিপ্লাই-নোটিফিকেশন টাইপ 'reply' — session105-রঙ-রেজিস্ট্রি */
+.notif-ico.ico-reply{background:rgba(234,88,12,.13); color:#ea580c}
+/* উত্তর-সেকশনে ইনলাইন-এডিটর পূর্ণ-প্রস্থ */
+.answers-section .fc-edit-slot{width:100%}
+@media (hover: none){
+  .answers-section .fc-menu-btn{opacity:1; width:26px; height:26px}
+}
+@media (max-width:640px){
+  .answers-section .comment-item{padding:10px 6px}
+}
+@media (prefers-reduced-motion: reduce){
+  .answers-section .comment-item{transition:none}
+}

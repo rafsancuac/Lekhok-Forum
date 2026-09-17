@@ -89,13 +89,13 @@
       </div>
 
       <div class="answers-section">
-        <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<span class="comments-total"><%= answers.length %></span>)</h2>
+        <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<span class="comments-total"><%= answers.reduce((a, a2) => a + 1 + (a2.replies113 || []).length, 0) %></span>)</h2>
 
         <% if (answers.length === 0) { %>
           <div class="empty-state answers-empty"><i class="fas fa-reply-all"></i><p>এখনো কোনো উত্তর নেই। প্রথম উত্তরদাতা হোন!</p></div>
         <% } %>
 
-        <%# ── সেশন ১১৩: ক্যানোনিকাল CommentItem — উত্তর-থ্রেড এখন ফিড/আর্টিকেলের
+        <%# ── সেশন ১১৪: ক্যানোনিকাল CommentItem — উত্তর-থ্রেড এখন ফিড/আর্টিকেলের
             কমেন্টের সাথে হুবহু একই বাবল (হোভার ৩-ডট: সম্পাদনা/মুছুন-নিজের/রিপোর্ট-অন্যের,
             হোভার ৬-ইমোজি প্যালেট, বাবল-কোণায় রিঅ্যাকশন-ব্যাজ)। ইঞ্জিন comment-tools.js। ── %>
         <div class="qa-answers-list">
@@ -103,12 +103,17 @@
           <div class="qa-answer-slot" id="answer-<%= a.id %>">
             <% if (idx === 0 && a.like_count > 0) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>
             <%- include('../shared/comment/CommentItem', { c: { id: a.id, author_id: a.author_id, username: a.username, pen_name: a.pen_name, full_name: a.full_name, avatar_url: a.avatar_url, body: a.body, bodyHtml: a.html, created_at: a.created_at, edited_at: a.edited_at, reaction: a.reaction }, link: '/qa/' + post.id, user: user }) %>
+            <%# সেশন ১১৪: থ্রেডেড-উত্তর — রুটের reply-কোয়েরি (answerReplies113) থেকে,
+                 ক্যানোনিকাল CommentItem-এর compact-মোডে (fc-reply ইনডেন্ট) একই বাবল %>
+            <% (a.replies113 || []).forEach(r => { %>
+              <%- include('../shared/comment/CommentItem', { c: { id: r.id, author_id: r.author_id, username: r.username, pen_name: r.pen_name, full_name: r.full_name, avatar_url: r.avatar_url, body: r.body, bodyHtml: r.html, created_at: r.created_at, edited_at: r.edited_at, reaction: r.reaction }, link: '/qa/' + post.id, user: user, compact: true }) %>
+            <% }); %>
           </div>
         <% }); %>
         </div>
 
         <% if (user) { %>
-          <%# ── সেশন ১১৩: ক্যানোনিকাল CommentComposer — B/I/S/লিংক/তালিকা/উদ্ধৃতি +
+          <%# ── সেশন ১১৪: ক্যানোনিকাল CommentComposer — B/I/S/লিংক/তালিকা/উদ্ধৃতি +
               @ম্যানশন; AJAX-সাবমিট /api/comment (comment-tools.js §5) — উত্তরও
               comments-টেবিলেই, ফলে এডিট/ডিলিট/রিঅ্যাকশন সব-স্তরে একই চুক্তি।
               no-JS ফলব্যাক: নিচের নেটিভ-ফর্ম (লুকানো, JS-ব্যর্থতায় দৃশ্যমান)। ── %>
@@ -158,7 +163,7 @@
   <%- include('../partials/share-modal') %>
   <%# ── সেশন ৮১: রিপোর্ট-মোডাল + কনফার্ম/অটো-টোস্ট ── %>
   <%- include('../partials/report-modal') %>
-  <%# সেশন ১১৩: রিঅ্যাক্টরস-মডাল — উত্তর-ব্যাজ/কাউন্টারের data-rx-open ক্লিক-টার্গেট %>
+  <%# সেশন ১১৪: রিঅ্যাক্টরস-মডাল — উত্তর-ব্যাজ/কাউন্টারের data-rx-open ক্লিক-টার্গেট %>
   <%- include('../shared/post/ReactorsModal') %>
   <script>
     (function () {

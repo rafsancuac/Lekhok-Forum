@@ -23,8 +23,8 @@
   var _link = (typeof link !== 'undefined' && link) ? link : '';
   var _compact = (typeof compact !== 'undefined') && !!compact;
   var _rx = c.reaction || { counts: {}, mine: null, total: 0 };
-  var _rxMeta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
-  var _rxLabels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
+  var _rxMeta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
+  var _rxLabels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ', angry: 'রাগ' };
   var _cName = c.pen_name || c.author_name || c.full_name || 'সদস্য';
   var _mineLabel = _rx.mine ? (_rxLabels[_rx.mine] || 'রিঅ্যাক্টেড') : 'লাইক';
 %>

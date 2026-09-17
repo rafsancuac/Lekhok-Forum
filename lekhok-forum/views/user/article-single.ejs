@@ -121,7 +121,8 @@
       </div>
 
       <div class="comments-section">
-        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<span class="comments-total"><%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %></span>)</h3>
+        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<span class="comments-total" data-cmt-total><%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %></span>)</h3>
+        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<span data-cmt-total><%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %></span>)</h3>
         <%# সেশন ৯৩: কম্প্যাক্ট FB-স্টাইল কম্পোজার — কার্যকর টুলবার + @ম্যানশন
             (পুরনো cf-hint ড্যাশড-চিপ + 'প্রথম মন্তব্যকারী হোন' বিশাল-কার্ড অপসারিত) %>
         <% if (user) { %>

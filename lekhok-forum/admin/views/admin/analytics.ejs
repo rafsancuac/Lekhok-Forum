@@ -55,7 +55,7 @@
   <div class="card" style="margin-top:16px;">
     <h3 style="margin:0 0 8px;"><i class="fas fa-chart-pie" style="color:#dc2626;"></i> রিয়েকশন-ধরন (৩০ দিন)</h3>
     <div class="an-chips">
-      <% const RC = { like: 'লাইক 👍', love: 'ভালোবাসা ❤️', care: 'যত্ন 🤗', haha: 'হাসি 😆', wow: 'বিস্ময় 😮', sad: 'দুঃখ 😢' }; %>
+      <% const RC = { like: 'লাইক 👍', love: 'ভালোবাসা ❤️', care: 'যত্ন 🤗', haha: 'হাসি 😆', wow: 'বিস্ময় 😮', sad: 'দুঃখ 😢', angry: 'রাগ 😡' }; %>
       <% reactionBreakdown.forEach(r => { %>
         <span class="an-chip"><%= (RC[r.rt] || r.rt) %> <b><%= r.c %></b></span>
       <% }); %>

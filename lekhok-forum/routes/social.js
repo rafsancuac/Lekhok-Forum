@@ -101,12 +101,13 @@ const REACTION_META = {
   care: { emoji: '🤗', label: 'কেয়ার' },
   haha: { emoji: '😂', label: 'হাহা' },
   wow:  { emoji: '😮', label: 'বিস্ময়' },
-  sad:  { emoji: '😢', label: 'দুঃখ' }
+  sad:  { emoji: '😢', label: 'দুঃখ' },
+  angry: { emoji: '😡', label: 'রাগ' }
 };
 
 async function getReactionSummary(col, id, myUserId) {
   const rows = await db.prepare(`SELECT user_id, reaction_type FROM likes WHERE ${col} = ?`).all(id);
-  const counts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+  const counts = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
   let mine = null;
   rows.forEach(r => {
     const t = r.reaction_type || 'like';
@@ -119,8 +120,8 @@ async function getReactionSummary(col, id, myUserId) {
 function parseReactionsJson(json) {
   try {
     const p = JSON.parse(json || '{}');
-    return { like: p.like || 0, love: p.love || 0, haha: p.haha || 0, wow: p.wow || 0, sad: p.sad || 0 };
-  } catch (_) { return { like: 0, love: 0, haha: 0, wow: 0, sad: 0 }; }
+    return Object.assign({ like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 }, p);
+  } catch (_) { return { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 }; }
 }
 
 async function isBlockedBetween(a, b) {
@@ -772,6 +773,13 @@ router.post('/articles/:id/comment', ensureLoggedIn, async (req, res) => {
   if (post && post.author_id !== req.session.user.id) {
     await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + req.params.id, req.session.user.id);
   }
+  // সেশন ১১৪: রিপ্লাই-নোটিফিকেশন — প্যারেন্ট-মন্তব্যের লেখককেও (নিজে/পোস্ট-লেখক-ডুপ্লিকেট বাদ)
+  if (parent_id) {
+    const parent = await db.prepare('SELECT id, author_id FROM comments WHERE id = ?').get(parent_id);
+    if (parent && parent.author_id !== req.session.user.id && parent.author_id !== (post && post.author_id)) {
+      await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, '/articles/' + req.params.id, req.session.user.id);
+    }
+  }
   res.redirect('/articles/' + req.params.id + '#comments');
 });
 
@@ -865,7 +873,7 @@ router.post('/qa/:id/delete', ensureLoggedIn, async (req, res) => {
 router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   // সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স): post + answers + related একসাথে (আগে সিরিয়াল —
   // Turso-তে প্রতিটি await একটি নেটওয়ার্ক রাউন্ড-ট্রিপ ছিল)।
-  const [post, answers, relatedQ72] = await Promise.all([
+  const [post, answers, answerReplies113, relatedQ72] = await Promise.all([
     db.prepare(`SELECT p.*, u.full_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.type = 'question'`).get(req.params.id),
@@ -873,6 +881,13 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
                               FROM comments c JOIN users u ON c.author_id = u.id
                               WHERE c.post_id = ? AND c.parent_id IS NULL
                               ORDER BY c.like_count DESC, c.created_at ASC`).all(req.params.id),
+    // সেশন ১১৪: উত্তর-রিপ্লাই — .reply-btn-চুক্তির সাথে থ্রেডেড-উত্তর প্রদর্শন
+    // (আগে reply-btn ছিলই না; এখন article-single-এর একই থ্রেড-মডেল)
+    db.prepare(`SELECT c.id, c.parent_id, c.author_id, c.body, c.edited_at, c.created_at,
+                       u.username, u.full_name, u.pen_name, u.avatar_url
+                              FROM comments c JOIN users u ON c.author_id = u.id
+                              WHERE c.post_id = ? AND c.parent_id IS NOT NULL
+                              ORDER BY c.created_at ASC, c.id ASC`).all(req.params.id),
     // ইন্টারনাল লিংকিং: একই পেজ থেকে অন্য প্রশ্নের লিংক (ক্রল-পাথ তৈরি করে)
     db.prepare(`SELECT p.id, p.title, u.full_name AS author_name FROM posts p
                 JOIN users u ON p.author_id = u.id
@@ -899,11 +914,17 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   }
   const myId = req.session.user ? req.session.user.id : null;
   // সেশন ৭২: per-answer রিঅ্যাকশন-সামারি N+1 সিরিয়াল → প্যারালাল
+  // সেশন ১১৪: রিপ্লাই-রো-ও একই ব্যাচে (রিঅ্যাকশন + bodyHtml পরে ভিউতে)
   await Promise.all([
     ...answers.map(a => getReactionSummary('comment_id', a.id, myId).then(r => { a.reaction = r; })),
+    ...(answerReplies113 || []).map(r => getReactionSummary('comment_id', r.id, myId).then(x => { r.reaction = x; })),
     getReactionSummary('post_id', req.params.id, myId).then(r => { res.locals._qReaction72 = r; }),
   ]);
   const reaction = res.locals._qReaction72;
+  // সেশন ১১৪: রিপ্লাই-থ্রেড অ্যাট্যাচ (article-single-মডেল) + bodyHtml রেন্ডার
+  const _repliesByAnswer113 = {};
+  (answerReplies113 || []).forEach(r => { (_repliesByAnswer113[r.parent_id] = _repliesByAnswer113[r.parent_id] || []).push(r); });
+  answers.forEach(a => { a.replies113 = _repliesByAnswer113[a.id] || []; });
   // সেশন ৭২ (GSC 'Alternate page with proper canonical tag' ফিক্স):
   // আগে canonicalPath ছিল না → header.ejs-এর fallback currentPath('/qa') ব্যবহার হত,
   // অর্থাৎ প্রতিটি qa-ডিটেইল পেজ নিজেকে /qa লিস্ট-পেজের ডুপ্লিকেট ঘোষণা করত!
@@ -915,6 +936,8 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   const { renderBody: _renderQa80 } = require('../helpers/markdown-lite');
   post.questionHtml = _renderQa80(post.body, { toc: false }).html;
   answers.forEach(a => { a.html = _renderQa80(a.body, { toc: false }).html; });
+  // সেশন ১১৪: রিপ্লাই-বডিও সার্ভার-রেন্ডার (এস্কেপ-ফার্স্ট একই চুক্তি)
+  (answerReplies113 || []).forEach(r => { r.html = _renderQa80(r.body, { toc: false }).html; });
   res.render('user/qa-single', {
     post, answers, reaction, REACTION_META, currentPath: '/qa',
     canonicalPath: '/qa/' + post.id,
@@ -1552,6 +1575,13 @@ router.post('/api/comment', async (req, res) => {
   const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(post_id);
   if (post && post.author_id !== req.session.user.id) {
     await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + post_id, req.session.user.id);
+  }
+  // সেশন ১১৪: রিপ্লাই-নোটিফিকেশন — প্যারেন্ট-মন্তব্যের লেখককেও (নিজে/পোস্ট-লেখক-ডুপ্লিকেট বাদ)
+  if (parent_id) {
+    const parent = await db.prepare('SELECT id, author_id FROM comments WHERE id = ?').get(parent_id);
+    if (parent && parent.author_id !== req.session.user.id && parent.author_id !== (post && post.author_id)) {
+      await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, '/articles/' + post_id, req.session.user.id);
+    }
   }
   // Return the new comment id so callers (inline reply UI, tests) can chain
   // follow-ups like /api/comment with parent_id.
@@ -2661,7 +2691,7 @@ router.post('/qa/:id/answer', ensureLoggedIn, async (req, res) => {
   if (q && q.author_id !== me.id) {
     await notifyIfAllowed(q.author_id, 'notify_comments', 'comment', 'নতুন উত্তর', displayName(me) + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid, me.id);
   }
-  res.redirect('/qa/' + qid + '#answer-' + r.lastInsertRowid);
+  res.redirect('/qa/' + qid + '#c' + r.lastInsertRowid);
 });
 
 // ────────────────────────────────────────────────────────────────────────────

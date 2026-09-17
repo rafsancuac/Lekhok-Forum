@@ -278,7 +278,7 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
 
   for (const item of feed) {
     try { item.reactionCounts = JSON.parse(item.reactions || '{}'); } catch (_) { item.reactionCounts = {}; }
-    ['like','love','care','haha','wow','sad'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
+    ['like','love','care','haha','wow','sad','angry'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
     item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
     item.myReaction = (me && item.item_type !== 'activity') ? (myReactions[item.id] || null) : null;
     // (D1) কলমী-নাম-প্রধান প্রদর্শন-নাম (ফিড-কার্ডের লেখক-লাইনে)
