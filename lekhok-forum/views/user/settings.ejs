@@ -673,6 +673,32 @@
     }
   })();
   </script>
+<script>
+  /* ── সেশন ৯৪: আনসেভড-ডেটা গার্ড (beforeunload + dirty-ট্র্যাকিং) ──
+     সেটিংস-ফর্মে অসংরক্ষিত পরিবর্তন থাকলে ট্যাব-বন্ধ/রিলোড/লিঙ্ক-নেভিগেশনে
+     ব্রাউজার-নিশ্চিতকরণ দেখায় — সাইলেন্ট ডেটা-লস্ট বন্ধ। */
+  (function () {
+    var dirty = false;
+    function markDirty(e) {
+      var t = e.target;
+      if (t && t.closest && t.closest('.settings-section') && !t.closest('.dz-del-form')) dirty = true;
+    }
+    document.addEventListener('input', markDirty, true);
+    document.addEventListener('change', markDirty, true);
+    /* সেভ-সাবমিটে ক্লিন-মার্ক (capture-ফেজ — AJAX-সাবমিটও ধরা পড়ে) */
+    document.addEventListener('submit', function () { dirty = false; }, true);
+    /* অ্যাকাউন্ট-ডিলিটের প্রোগ্রাম্যাটিক pd.submit() গেট-বাইপাস করে — সেখানে ক্লিন */
+    document.addEventListener('click', function (e) {
+      if (e.target && e.target.closest && e.target.closest('.dz-del-form')) dirty = false;
+    }, true);
+    window.addEventListener('beforeunload', function (e) {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    });
+  })();
+</script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>

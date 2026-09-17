@@ -1576,6 +1576,8 @@
   .page-wrap--messenger .md-tabpane:not([hidden]),
   .page-wrap--messenger .md-section.is-loading .md-media-refresh i,
   .page-wrap--messenger .md-media.md-skeleton span { animation: none; }
+}
+
 /* ── সেশন ৯৩ (রোডম্যাপ-১১): আগের-বার্তা লোডার + জাম্প-হাইলাইট + সার্ভার-সার্চ + জাম্প-পিল ── */
 .page-wrap--messenger .chat-header { position: relative; }
 
