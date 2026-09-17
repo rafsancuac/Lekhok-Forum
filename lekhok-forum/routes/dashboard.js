@@ -40,7 +40,10 @@ function isOnline(userId) {
 
 // Touch own online state on ANY router hit (registered before all routes)
 router.use(async (req, res, next) => {
-  if (req.session && req.session.user) touchOnline(req.session.user.id);
+  if (req.session && req.session.user) {
+    touchOnline(req.session.user.id);
+    if (process.env.DBG75) console.log('[dbg75] touch uid=' + req.session.user.id, req.method, req.path);
+  }
   next();
 });
 
@@ -586,7 +589,38 @@ router.get('/api/messages/poll', ensureAuth, async (req, res) => {
   // Online
   const online = otherId ? isOnline(otherId) : false;
 
-  res.json({ messages, typing, online, me: { id: me } });
+  // সেশন ৭৫ (FB-মেসেঞ্জার-রিভাম্প): সিন-রসিট — আমার পাঠানো শেষ-পঠিত মেসেজের id
+  // (পল-এ এলে ক্লায়েন্ট সেই বাবলের নিচে অপর পক্ষের মাইক্রো-অ্যাভাটার বসায়)
+  let seen_upto = 0;
+  try {
+    const r = await db.prepare('SELECT MAX(id) AS mx FROM messages WHERE conversation_id = ? AND sender_id = ? AND is_read = 1').get(convId, me);
+    seen_upto = (r && r.mx) || 0;
+  } catch (_) {}
+
+  res.json({ messages, typing, online, seen_upto, me: { id: me } });
+});
+
+// ── সেশন ৭৫ (FB-মেসেঞ্জার-রিভাম্প): Active-now ট্রে-র জন্য সব অনলাইন ইউজার ──
+router.get('/api/messages/online-users', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const now = Date.now();
+  const ids = [];
+  onlineState.forEach((ts, uid) => {
+    if ((now - ts) < 5 * 60 * 1000 && uid !== me) ids.push(uid);
+  });
+  if (!ids.length) return res.json({ users: [] });
+  try {
+    const ph = ids.map(() => '?').join(',');
+    const rows = await db.prepare(
+      `SELECT id, username, full_name, avatar_url, gender FROM users WHERE id IN (${ph}) AND status = 'active' LIMIT 12`
+    ).all(...ids);
+    res.json({ users: rows.map(u => ({
+      id: u.id,
+      username: u.username,
+      name: u.full_name || u.username,
+      avatar: u.avatar_url || ('/avatar/' + u.id)
+    })) });
+  } catch (_) { res.json({ users: [] }); }
 });
 
 // ── v2.2: Messenger polling — fetch new messages since timestamp ───────

@@ -1,18 +1,42 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: (other.full_name) + ' | মেসেজ | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
+<%# সেশন ৭৫ — ফেসবুক মেসেঞ্জার-স্টাইল চ্যাট-ভিউ (৩-কলাম: লিস্ট + চ্যাট + ডিটেইলস) %>
+<%- include('../partials/header', { title: (other.full_name) + ' | মেসেজ | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/messenger.css'] }) %>
+
+<%
+  // ── ক্লাস্টার-হেল্পার: পরপর একই প্রেরকের বাবল গুচ্ছ বাঁধে (FB-আচরণ) ──
+  function clusterInfo(list, idx) {
+    var m = list[idx], p = list[idx - 1] || null, n = list[idx + 1] || null;
+    var t = function (x) { return new Date(x.created_at).getTime(); };
+    var samePrev = p && p.sender_id === m.sender_id && (t(m) - t(p) < 3 * 60 * 1000);
+    var sameNext = n && n.sender_id === m.sender_id && (t(n) - t(m) < 3 * 60 * 1000);
+    return { samePrev: !!samePrev, sameNext: !!sameNext };
+  }
+  function dateLabel(ds) {
+    var d = new Date(ds); d.setHours(0, 0, 0, 0);
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var diff = Math.round((today - d) / 86400000);
+    if (diff === 0) return 'আজ';
+    if (diff === 1) return 'গতকাল';
+    return d.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  var _isImg = function (u) { return u && /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(u); };
+  var _sharedImgs = messages.filter(function (m) { return _isImg(m.file_url); }).slice(-9).reverse();
+  var _lastOwnRead = null;
+  messages.forEach(function (m) { if (m.sender_id === user.id && m.is_read) _lastOwnRead = m; });
+%>
 
   <div class="page-wrap page-wrap--messenger">
-    <div class="messenger-shell" id="messengerShell">
-      <%# ── Left: conversation list ──────────────────────────────────── %>
+    <div class="messenger-shell has-details" id="messengerShell">
+
+      <%# ── বাম: কথোপকথন-তালিকা ──────────────────────────────────────── %>
       <aside class="messenger-list" id="messengerList">
         <div class="messenger-list-head">
           <div class="msg-head-row">
-            <h2><i class="fas fa-comment-dots"></i> কথোপকথন</h2>
-            <a href="/messages" class="btn-ghost btn-sm" style="margin-left:auto;padding:4px 10px"><i class="fas fa-arrow-left"></i> সব</a>
+            <h2><i class="fas fa-comment-dots"></i> চ্যাট</h2>
+            <a href="/messages" class="fb-icon-btn" style="margin-left:auto" title="সব কথোপকথন"><i class="fas fa-arrow-left"></i></a>
           </div>
           <div class="msg-search-wrap" id="msgSearchWrap">
             <i class="fas fa-search msg-search-icon"></i>
-            <input type="search" class="messenger-search msg-search-input" id="convSearch" placeholder="নাম, ইউজারনেম বা নতুন সদস্য খুঁজুন..." autocomplete="off" />
+            <input type="search" class="messenger-search msg-search-input" id="convSearch" placeholder="মেসেঞ্জারে খুঁজুন" autocomplete="off" />
             <button type="button" class="msg-search-clear" id="convSearchClear" hidden><i class="fas fa-times"></i></button>
           </div>
           <div class="msg-search-results" id="convSearchResults" hidden>
@@ -31,7 +55,7 @@
           <div class="empty-state-full">
             <i class="fas fa-comment-slash"></i>
             <p>এখনো কোনো কথোপকথন নেই।</p>
-            <a href="/members" class="btn btn-primary btn-sm">সদস্য খুঁজুন</a>
+            <a href="/members" class="fb-icon-btn fb-icon-btn--accent" style="width:auto;padding:0 16px;height:34px;border-radius:99px;font-weight:700;font-size:13px">সদস্য খুঁজুন</a>
           </div>
         <% } %>
         <% conversations.forEach(c => { %>
@@ -46,7 +70,7 @@
             </div>
             <div class="conv-meta">
               <div class="conv-name"><%= c.other_name %></div>
-              <div class="conv-snippet"><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 50) : 'নতুন কথোপকথন' %></div>
+              <div class="conv-snippet"><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 42) : 'নতুন কথোপকথন' %></div>
             </div>
             <div class="conv-meta-right">
               <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
@@ -55,129 +79,154 @@
         <% }); %>
       </aside>
 
-      <%# ── Right: chat panel ────────────────────────────────────────── %>
+      <%# ── মাঝ: মূল চ্যাট ─────────────────────────────────────────────── %>
       <section class="messenger-chat" id="messengerChat">
         <% if (typeof err !== 'undefined' && err) { %>
           <div class="chat-error"><i class="fas fa-exclamation-triangle"></i> <%= err %></div>
         <% } %>
         <header class="chat-header">
-          <button class="back-btn btn-icon" onclick="document.getElementById('messengerList').classList.remove('hidden'); document.getElementById('messengerChat').classList.add('hidden');" title="ফিরে যান">
-            <i class="fas fa-arrow-left"></i>
+          <button class="back-btn" id="fbBackBtn" title="ফিরে যান">
+            <i class="fas fa-chevron-left"></i>
           </button>
           <div class="avatar avatar-md" style="position:relative">
             <img loading="lazy" decoding="async" src="<%= other.avatar_url || ('/avatar/' + other.id) %>" alt="<%= other.full_name %>" onerror="this.onerror=null;this.src='/avatar/<%= other.id %>'" />
             <span class="online-dot" id="otherOnlineDot" data-user-id="<%= other.id %>" style="display:none"></span>
           </div>
           <div class="info">
-            <h3><% if (isGroup) { %><i class="fas fa-users" style="color:var(--accent);font-size:14px"></i> <%= other.full_name %><% } else { %><a href="/profile/<%= other.username %>" style="text-decoration:none;color:inherit"><%= other.full_name %></a><% } %></h3>
+            <h3><% if (isGroup) { %><i class="fas fa-users" style="color:var(--fb-blue);font-size:13px"></i> <%= other.full_name %><% } else { %><a href="/profile/<%= other.username %>"><%= other.full_name %></a><% } %></h3>
             <div class="status" id="otherStatus">
-              <% if (isGroup) { %><i class="fas fa-users" style="font-size:9px;vertical-align:middle"></i> <%= members.length %> সদস্য<% } else { %><i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> <%= other.online_text || '@' + other.username %><% } %>
+              <% if (isGroup) { %><i class="fas fa-users" style="font-size:9px"></i> <%= members.length %> সদস্য<% } else { %><i class="fas fa-circle" style="font-size:6px"></i> <span id="otherStatusText"><%= other.online_text || '@' + other.username %></span><% } %>
             </div>
           </div>
           <div class="conv-insearch">
             <i class="fas fa-search"></i>
             <input type="search" id="convInSearch" placeholder="মেসেজ খুঁজুন..." autocomplete="off" />
           </div>
-          <div style="margin-left:auto;display:flex;gap:6px">
+          <div class="fb-chat-actions">
             <% if (!isGroup) { %>
-            <a href="/profile/<%= other.username %>" class="btn-icon" title="প্রোফাইল"><i class="fas fa-user"></i></a>
-            <button type="button" class="btn-icon" title="কথোপকথন মুছুন" style="color:#ef4444" onclick="deleteConversation('<%= other.username %>')"><i class="fas fa-trash"></i></button>
-            <% } else { %>
-            <button type="button" class="btn-icon" title="সদস্য ব্যবস্থাপনা" onclick="var p=document.getElementById('grpPanel');p.style.display=(p.style.display==='none'||!p.style.display)?'block':'none'"><i class="fas fa-users-cog"></i></button>
+            <button type="button" class="fb-icon-btn" title="অডিও কল (শীঘ্রই)" onclick="fbToast('অডিও-কল ফিচারটি শীঘ্রই আসছে!')"><i class="fas fa-phone"></i></button>
+            <button type="button" class="fb-icon-btn" title="ভিডিও কল (শীঘ্রই)" onclick="fbToast('ভিডিও-কল ফিচারটি শীঘ্রই আসছে!')"><i class="fas fa-video"></i></button>
             <% } %>
+            <button type="button" class="fb-icon-btn" id="fbInfoBtn" title="তথ্য প্যানেল"><i class="fas fa-circle-info"></i></button>
           </div>
         </header>
 
         <% if (isGroup) { %>
         <% var _gAdmin = conv.user_a === user.id; %>
-        <div id="grpPanel" style="display:none;border-bottom:1px solid #e4e6eb;background:#fff;padding:10px 14px;">
-          <% if (note === 'added') { %><div style="color:#059669;font-size:13px;margin-bottom:6px;"><i class="fas fa-check-circle"></i> সদস্য যোগ করা হয়েছে।</div><% } %>
-          <% if (note === 'removed') { %><div style="color:#059669;font-size:13px;margin-bottom:6px;"><i class="fas fa-check-circle"></i> সদস্য বাদ দেওয়া হয়েছে।</div><% } %>
-          <% if (err === 'perm') { %><div style="color:#dc2626;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> শুধু গ্রুপ অ্যাডমিন সদস্য যোগ/বাদ করতে পারেন।</div><% } %>
-          <% if (err === 'self') { %><div style="color:#dc2626;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> নিজেকে বা অ্যাডমিনকে বাদ দেওয়া যাবে না।</div><% } %>
-          <% if (err === 'owner') { %><div style="color:#dc2626;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> গ্রুপ ক্রিয়েটর গ্রুপ ছাড়তে পারবেন না।</div><% } %>
-          <div style="font-size:12px;font-weight:700;color:#65676b;margin-bottom:6px;">সদস্য তালিকা (<%= members.length %>)</div>
+        <div id="grpPanel" style="display:none;border-bottom:1px solid var(--fb-border);background:#fff;padding:10px 14px;">
+          <% if (note === 'added') { %><div style="color:#31A24C;font-size:13px;margin-bottom:6px;"><i class="fas fa-check-circle"></i> সদস্য যোগ করা হয়েছে।</div><% } %>
+          <% if (note === 'removed') { %><div style="color:#31A24C;font-size:13px;margin-bottom:6px;"><i class="fas fa-check-circle"></i> সদস্য বাদ দেওয়া হয়েছে।</div><% } %>
+          <% if (err === 'perm') { %><div style="color:#e41e3f;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> শুধু গ্রুপ অ্যাডমিন সদস্য যোগ/বাদ করতে পারেন।</div><% } %>
+          <% if (err === 'self') { %><div style="color:#e41e3f;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> নিজেকে বা অ্যাডমিনকে বাদ দেওয়া যাবে না।</div><% } %>
+          <% if (err === 'owner') { %><div style="color:#e41e3f;font-size:13px;margin-bottom:6px;"><i class="fas fa-exclamation-circle"></i> গ্রুপ ক্রিয়েটর গ্রুপ ছাড়তে পারবেন না।</div><% } %>
+          <div style="font-size:12px;font-weight:700;color:#65676B;margin-bottom:6px;">সদস্য তালিকা (<%= members.length %>)</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
             <% members.forEach(mm => { %>
-              <span style="display:inline-flex;align-items:center;gap:6px;background:#f0f2f5;border-radius:5px;padding:4px 10px;font-size:13px;">
-                <%= mm.full_name %><% if (mm.id === conv.user_a) { %><i class="fas fa-crown" style="color:#d4a017;font-size:10px" title="গ্রুপ অ্যাডমিন"></i><% } %>
+              <span class="md-member"><img src="<%= mm.avatar_url || ('/avatar/' + mm.id) %>" style="width:20px;height:20px;border-radius:50%;object-fit:cover" alt="" /><%= mm.full_name %><% if (mm.id === conv.user_a) { %><i class="fas fa-crown" style="color:#d4a017;font-size:10px" title="গ্রুপ অ্যাডমিন"></i><% } %>
                 <% if (_gAdmin && mm.id !== user.id && mm.id !== conv.user_a) { %>
-                <form method="POST" action="/messages/g/<%= conv.id %>/members/<%= mm.id %>/remove" style="display:inline"><button type="submit" style="border:0;background:none;color:#dc2626;cursor:pointer;padding:0;font-size:12px" title="বাদ দিন"><i class="fas fa-times"></i></button></form>
+                <form method="POST" action="/messages/g/<%= conv.id %>/members/<%= mm.id %>/remove" style="display:inline"><button type="submit" style="border:0;background:none;color:#e41e3f;cursor:pointer;padding:0;font-size:12px" title="বাদ দিন"><i class="fas fa-times"></i></button></form>
                 <% } %>
               </span>
             <% }) %>
           </div>
           <% if (_gAdmin) { %>
           <form method="POST" action="/messages/g/<%= conv.id %>/members/add" style="display:flex;gap:6px;">
-            <input type="text" name="members" placeholder="ইউজারনেম লিখুন (কমা দিয়ে একাধিক)" required style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:5px;font-family:inherit;font-size:13px;" />
-            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-user-plus"></i> যোগ করুন</button>
+            <input type="text" name="members" placeholder="ইউজারনেম (কমা দিয়ে একাধিক)" required style="flex:1;padding:8px 14px;border:none;border-radius:99px;font-family:inherit;font-size:13px;background:#F0F2F5;" />
+            <button type="submit" class="fb-icon-btn fb-icon-btn--accent" style="width:auto;padding:0 16px;font-weight:700;font-size:13px"><i class="fas fa-user-plus"></i> যোগ</button>
           </form>
           <% } else { %>
           <form method="POST" action="/messages/g/<%= conv.id %>/leave" style="display:inline">
-            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-sign-out-alt"></i> গ্রুপ ছাড়ুন</button>
+            <button type="submit" class="md-link md-link--danger" style="margin:0;width:auto"><i class="fas fa-sign-out-alt"></i> গ্রুপ ছাড়ুন</button>
           </form>
           <% } %>
         </div>
         <% } %>
 
         <div class="chat-body" id="chatBody">
-          <% messages.forEach(m => { %>
-            <% var _sm = isGroup ? (members || []).find(x => x.id === m.sender_id) : null; %>
-            <div class="bubble <%= m.sender_id === user.id ? 'me' : 'them' %>" data-id="<%= m.id %>">
-              <% if (isGroup && m.sender_id !== user.id) { %>
-              <div class="bubble-sender"><img src="<%= (_sm && _sm.avatar_url) || '/avatar/' + m.sender_id %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt=""><%= _sm ? _sm.full_name : 'সদস্য' %></div>
+          <%
+            var _prevDate = null;
+          %>
+          <% messages.forEach(function(m, idx) { %>
+            <%
+              var _cl = clusterInfo(messages, idx);
+              var _mdate = new Date(m.created_at); _mdate.setHours(0,0,0,0);
+              var _showDate = !_prevDate || _mdate.getTime() !== _prevDate.getTime();
+              _prevDate = _mdate;
+              var _sm = isGroup ? (members || []).find(x => x.id === m.sender_id) : null;
+              var _cls = 'bubble ' + (m.sender_id === user.id ? 'me' : 'them');
+              if (!_cl.samePrev) _cls += ' first-of-cluster';
+              if (!_cl.sameNext) _cls += ' last-of-cluster';
+              else if (_cl.samePrev) _cls += ' mid-cluster';
+              var _rx = (typeof reactionMap !== 'undefined' && reactionMap[m.id]) || [];
+            %>
+            <% if (_showDate) { %><div class="date-sep"><span><%= dateLabel(m.created_at) %></span></div><% } %>
+            <div class="<%= _cls %>" data-id="<%= m.id %>">
+              <% if (m.sender_id !== user.id && !_cl.sameNext) { %>
+                <img class="b-av" loading="lazy" src="<%= isGroup ? ((_sm && _sm.avatar_url) || ('/avatar/' + m.sender_id)) : (other.avatar_url || ('/avatar/' + other.id)) %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt="" />
               <% } %>
-              <% if (m.sender_id === user.id) { %>
+              <div class="b-content">
+                <% if (m.sender_id === user.id) { %>
                 <button type="button" class="bubble-delete" data-msg-delete="<%= m.id %>" title="মুছে ফেলুন"><i class="fas fa-times"></i></button>
-              <% } %>
-              <% if (m.body) { %><div class="bubble-text"><%= m.body %></div><% } %>
-              <% if (m.file_url) { %>
-                <% var isImg = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(m.file_url); %>
-                <% if (isImg) { %>
-                  <a href="<%= m.file_url %>" target="_blank"><img loading="lazy" decoding="async" src="<%= m.file_url %>" alt="<%= m.file_name || 'ছবি' %>" class="bubble-image" /></a>
-                <% } else { %>
-                  <a href="<%= m.file_url %>" class="bubble-file" download="<%= m.file_name || 'file' %>">
-                    <i class="fas fa-paperclip"></i> <%= m.file_name || 'ফাইল' %>
-                  </a>
                 <% } %>
-              <% } %>
-              <% var _rx = (typeof reactionMap !== 'undefined' && reactionMap[m.id]) || []; %>
-              <% if (_rx.length) { %><div class="bubble-reacts"><% _rx.forEach(r => { %><span title="<%= r.c %>"><%= r.emoji %><% if (r.c > 1) { %> <%= r.c %><% } %></span><% }); %></div><% } %>
-              <button type="button" class="bubble-react-btn" data-msg-react="<%= m.id %>" title="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>
-              <div class="bubble-react-menu" hidden><% ['❤️','😂','😮','😢','👍'].forEach(e => { %><button type="button" data-emoji="<%= e %>"><%= e %></button><% }); %></div>
+                <% if (isGroup && m.sender_id !== user.id && !_cl.samePrev) { %>
+                <div class="bubble-sender"><img src="<%= (_sm && _sm.avatar_url) || ('/avatar/' + m.sender_id) %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt=""><%= _sm ? _sm.full_name : 'সদস্য' %></div>
+                <% } %>
+                <% if (m.body) { %><div class="bubble-text"><%= m.body %></div><% } %>
+                <% if (m.file_url) { %>
+                  <% if (_isImg(m.file_url)) { %>
+                    <a href="<%= m.file_url %>" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="<%= m.file_url %>" alt="<%= m.file_name || 'ছবি' %>" class="bubble-image" /></a>
+                  <% } else { %>
+                    <a href="<%= m.file_url %>" class="bubble-file" download="<%= m.file_name || 'file' %>">
+                      <i class="fas fa-paperclip"></i> <%= m.file_name || 'ফাইল' %>
+                    </a>
+                  <% } %>
+                <% } %>
+                <% if (_rx.length) { %><div class="bubble-reacts"><% _rx.forEach(r => { %><span title="<%= r.c %>"><%= r.emoji %><% if (r.c > 1) { %> <%= r.c %><% } %></span><% }); %></div><% } %>
+                <button type="button" class="bubble-react-btn" data-msg-react="<%= m.id %>" title="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>
+                <div class="bubble-react-menu" hidden><% ['👍','❤️','🤗','😂','😮','😢','😡'].forEach(e => { %><button type="button" data-emoji="<%= e %>"><%= e %></button><% }); %></div>
+              </div>
               <div class="bubble-meta">
                 <span class="bubble-time"><%= new Date(m.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' }) %></span>
                 <% if (m.sender_id === user.id) { %>
                   <span class="bubble-seen" data-msg-id="<%= m.id %>">
-                    <% if (m.is_read) { %><i class="fas fa-check-double" title="পড়া হয়েছে"></i><% } else { %><i class="fas fa-check" title="পৌঁছেছে"></i><% } %>
+                    <% if (_lastOwnRead && _lastOwnRead.id === m.id) { %>
+                      <img src="<%= other.avatar_url || ('/avatar/' + other.id) %>" alt="পড়া হয়েছে" title="পড়া হয়েছে" />
+                    <% } else if (m.is_read) { %>
+                      <i class="fas fa-check-double" title="পড়া হয়েছে"></i>
+                    <% } else { %>
+                      <i class="fas fa-check" title="পৌঁছেছে"></i>
+                    <% } %>
                   </span>
                 <% } %>
               </div>
             </div>
           <% }); %>
 
-          <%# Typing indicator (hidden by default) %>
+          <%# ── টাইপিং-ইন্ডিকেটর (FB ৩-ডট) ── %>
           <div class="typing-indicator" id="typingIndicator">
-            <span class="typing-dot"></span>
-            <span class="typing-dot"></span>
-            <span class="typing-dot"></span>
-            <span style="margin-left:6px">লিখছেন...</span>
+            <img class="ti-av" src="<%= isGroup ? '/avatar/0' : (other.avatar_url || ('/avatar/' + other.id)) %>" alt="" />
+            <div class="ti-bubble">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="ti-label">লিখছেন…</span>
+            </div>
           </div>
         </div>
 
         <form method="POST" class="chat-input-bar" enctype="multipart/form-data" id="chatForm">
-          <button type="button" class="emoji-trigger" id="emojiBtn" title="ইমোজি"><i class="far fa-smile"></i></button>
+          <label for="fileInput" class="ci-icon" title="ছবি বা ফাইল যুক্ত করুন"><i class="fas fa-plus"></i></label>
+          <input type="file" id="fileInput" name="attachment" style="display:none" />
           <div class="chat-input-wrap">
-            <input type="text" name="body" id="msgInput" placeholder="একটি মেসেজ লিখুন..." autocomplete="off" />
+            <input type="text" name="body" id="msgInput" placeholder="Aa" autocomplete="off" />
+            <button type="button" class="emoji-trigger" id="emojiBtn" title="ইমোজি"><i class="far fa-smile"></i></button>
             <div class="emoji-picker" id="emojiPicker">
               <% ['😀','😃','😄','😁','😆','😂','🤣','😊','😇','🙂','😉','😍','🥰','😘','😋','😜','🤔','😎','👍','👎','👏','🙏','💪','❤️','🔥','✨','🎉','📝','📚','✍️'].forEach(em => { %>
                 <button type="button" class="emoji-pick" onclick="insertEmoji('<%= em %>')"><%= em %></button>
               <% }); %>
             </div>
           </div>
-          <label for="fileInput" class="emoji-trigger" title="ফাইল যুক্ত করুন"><i class="fas fa-paperclip"></i></label>
-          <input type="file" id="fileInput" name="attachment" style="display:none" />
-          <button type="submit" class="btn btn-primary" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+          <button type="submit" class="btn btn-primary is-like" id="sendBtn" title="পাঠান"><span style="font-size:20px;line-height:1">👍</span></button>
         </form>
         <div class="file-preview" id="filePreview" hidden>
           <i class="fas fa-paperclip"></i>
@@ -185,50 +234,78 @@
           <button type="button" id="filePreviewRemove" aria-label="সরান">&times;</button>
         </div>
       </section>
+
+      <%# ── ডান: ডিটেইলস-প্যানেল (≥১০২৪px) ─────────────────────────────── %>
+      <aside class="messenger-details" id="fbDetails">
+        <div class="md-close"><button type="button" id="fbDetailsClose" title="বন্ধ করুন"><i class="fas fa-times"></i></button></div>
+        <div class="md-profile">
+          <div class="mdp-avwrap">
+            <% if (isGroup) { %>
+              <div class="mdp-av" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1877F2,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px"><i class="fas fa-users"></i></div>
+            <% } else { %>
+              <img class="mdp-av" src="<%= other.avatar_url || ('/avatar/' + other.id) %>" onerror="this.src='/avatar/<%= other.id %>'" alt="<%= other.full_name %>" />
+              <span class="mdp-dot" id="mdpDot" style="display:none"></span>
+            <% } %>
+          </div>
+          <div class="mdp-name"><%= other.full_name %></div>
+          <div class="mdp-sub"><% if (isGroup) { %><%= members.length %> সদস্য · গ্রুপ কথোপকথন<% } else { %>@<%= other.username %><% } %></div>
+          <% if (!isGroup) { %>
+            <a href="/profile/<%= other.username %>" class="mdp-btn mdp-btn--blue"><i class="fas fa-user"></i> প্রোফাইল দেখুন</a>
+          <% } else { %>
+            <button type="button" class="mdp-btn" onclick="var p=document.getElementById('grpPanel');p.style.display=(p.style.display==='none'||!p.style.display)?'block':'none';p.scrollIntoView({behavior:'smooth',block:'center'})"><i class="fas fa-users-cog"></i> সদস্য ব্যবস্থাপনা</button>
+          <% } %>
+        </div>
+        <div class="md-section">
+          <h4><i class="fas fa-images"></i> শেয়ার করা ছবি</h4>
+          <% if (_sharedImgs.length) { %>
+            <div class="md-media">
+              <% _sharedImgs.forEach(im => { %>
+                <a href="<%= im.file_url %>" target="_blank" rel="noopener"><img loading="lazy" src="<%= im.file_url %>" alt="<%= im.file_name || 'ছবি' %>" /></a>
+              <% }); %>
+            </div>
+          <% } else { %>
+            <div class="md-media-empty">এই কথোপকথনে এখনো কোনো ছবি শেয়ার করা হয়নি।</div>
+          <% } %>
+        </div>
+        <% if (isGroup) { %>
+        <div class="md-section">
+          <h4><i class="fas fa-user-group"></i> সদস্যবৃন্দ</h4>
+          <div class="md-members">
+            <% members.slice(0, 14).forEach(mm => { %>
+              <span class="md-member"><img src="<%= mm.avatar_url || ('/avatar/' + mm.id) %>" style="width:20px;height:20px;border-radius:50%;object-fit:cover" alt="" /><%= mm.full_name %></span>
+            <% }); %>
+            <% if (members.length > 14) { %><span class="md-member">+<%= members.length - 14 %></span><% } %>
+          </div>
+        </div>
+        <% } %>
+        <div class="md-section">
+          <h4><i class="fas fa-shield-halved"></i> গোপনীয়তা ও সহায়তা</h4>
+          <% if (!isGroup) { %>
+            <button type="button" class="md-link md-link--danger" onclick="deleteConversation('<%= other.username %>')"><i class="fas fa-trash"></i> কথোপকথন মুছে ফেলুন</button>
+          <% } else { %>
+            <form method="POST" action="/messages/g/<%= conv.id %>/leave" style="margin:0">
+              <button type="submit" class="md-link md-link--danger"><i class="fas fa-sign-out-alt"></i> গ্রুপ ছাড়ুন</button>
+            </form>
+          <% } %>
+          <a href="/contact" class="md-link"><i class="fas fa-circle-question"></i> সহায়তা কেন্দ্র</a>
+        </div>
+      </aside>
     </div>
   </div>
 
-  <style>
-    .msg-head-row { display: flex; align-items: center; gap: 8px; }
-    .msg-head-row h2 { margin: 0; }
-    .msg-search-wrap { position: relative; margin-top: 8px; }
-    .msg-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; pointer-events: none; }
-    .msg-search-input { width: 100%; padding: 10px 36px 10px 34px !important; font-size: 14px; border-radius: 5px !important; border: 1.5px solid var(--border) !important; transition: border-color 0.15s, box-shadow 0.15s; }
-    .msg-search-input:focus { outline: none; border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
-    .msg-search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: var(--text-muted); font-size: 13px; padding: 4px 7px; border-radius: 5px; }
-    .msg-search-clear:hover { background: var(--surface-alt); color: var(--text); }
-    .msg-search-results { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 5px; box-shadow: 0 12px 32px rgba(0,0,0,0.16); max-height: 400px; overflow-y: auto; z-index: 50; }
-    .msr-section { border-bottom: 1px solid var(--border); }
-    .msr-section:last-child { border-bottom: 0; }
-    .msr-section-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 6px; font-size: 11px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-alt); }
-    .msr-section-head i { margin-right: 4px; }
-    .msr-count { background: var(--accent-soft); color: var(--accent); padding: 1px 7px; border-radius: 5px; font-size: 10.5px; }
-    .msr-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; text-decoration: none; color: inherit; border-bottom: 1px solid var(--border); transition: background 0.12s; }
-    .msr-row:last-child { border-bottom: 0; }
-    .msr-row:hover, .msr-row.kb-active { background: var(--accent-soft); }
-    .msr-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex: 0 0 38px; background: var(--surface-alt); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--accent); font-size: 14px; }
-    .msr-meta { flex: 1; min-width: 0; }
-    .msr-name { font-weight: 600; font-size: 14px; color: var(--text); }
-    .msr-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .msr-name mark, .msr-sub mark { background: #fef08a; color: #713f12; padding: 0 2px; border-radius: 5px; }
-    .msr-right { flex-shrink: 0; color: var(--text-muted); font-size: 12px; }
-    .msr-right .conv-unread { background: var(--accent); color: white; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 5px; }
-    .msr-empty { padding: 28px 14px; text-align: center; color: var(--text-muted); }
-    .msr-empty i { font-size: 28px; margin-bottom: 8px; display: block; opacity: 0.5; }
-    .msr-empty p { font-size: 13px; margin: 0; }
-  </style>
   <script>
-    // ── helpers ────────────────────────────────────────────────────────
+    // ── হেল্পার ─────────────────────────────────────────────────────────
     const body = document.getElementById('chatBody');
     const convId = <%= conv ? conv.id : 0 %>;
     const myId = <%= user.id %>;
     const otherId = <%= other.id %>;
     const otherUsername = <%- JSON.stringify(other.username) %>;
+    const otherAvatar = <%- JSON.stringify(other.avatar_url || ('/avatar/' + other.id)) %>;
     const sendUrl = <%- JSON.stringify(isGroup ? '/messages/g/' + conv.id : '/messages/' + other.username) %>;
+    const isGroupChat = <%= isGroup ? 'true' : 'false' %>;
     let lastMsgId = <%= messages.length ? messages[messages.length - 1].id : 0 %>;
+    let seenUpto = <%= _lastOwnRead ? _lastOwnRead.id : 0 %>;
     let typingTimeout = null;
-
-    if (body) body.scrollTop = body.scrollHeight;
 
     function escapeHtml(s) {
       return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -241,7 +318,42 @@
       return escapeHtml(text.substring(0, idx)) + '<mark>' + escapeHtml(text.substring(idx, idx + q.length)) + '</mark>' + escapeHtml(text.substring(idx + q.length));
     }
 
-    // Unified search (conversations + new users)
+    // স্ক্রল নিচে + FB-টোস্ট
+    if (body) body.scrollTop = body.scrollHeight;
+    function fbToast(msg) {
+      let t = document.querySelector('.fb-toast');
+      if (!t) { t = document.createElement('div'); t.className = 'fb-toast'; document.body.appendChild(t); }
+      t.textContent = msg;
+      requestAnimationFrame(() => t.classList.add('show'));
+      clearTimeout(t._hide);
+      t._hide = setTimeout(() => t.classList.remove('show'), 2400);
+    }
+
+    // ── ডিটেইলস-প্যানেল টগল ────────────────────────────────────────────
+    const fbShell = document.getElementById('messengerShell');
+    const fbDetails = document.getElementById('fbDetails');
+    const fbInfoBtn = document.getElementById('fbInfoBtn');
+    if (fbInfoBtn && fbDetails && fbShell) {
+      fbInfoBtn.addEventListener('click', () => {
+        fbDetails.hidden = !fbDetails.hidden;
+        fbShell.classList.toggle('has-details', !fbDetails.hidden);
+      });
+      const fbClose = document.getElementById('fbDetailsClose');
+      if (fbClose) fbClose.addEventListener('click', () => {
+        fbDetails.hidden = true;
+        fbShell.classList.remove('has-details');
+      });
+      // <1024px-এ প্যানেল দেখানো বন্ধ — CSS-ও জোর করে লুকায়
+      if (window.innerWidth < 1024) { fbDetails.hidden = true; fbShell.classList.remove('has-details'); }
+    }
+
+    // মোবাইল: ব্যাক-বাটন → লিস্ট দেখাও
+    document.getElementById('fbBackBtn')?.addEventListener('click', () => {
+      document.getElementById('messengerList').classList.remove('hidden');
+      document.getElementById('messengerChat').classList.add('hidden');
+    });
+
+    // ── সাইডবার-সার্চ (কথোপকথন + নতুন ইউজার) ───────────────────────────
     const convSearch = document.getElementById('convSearch');
     const convSearchClear = document.getElementById('convSearchClear');
     const convSearchResults = document.getElementById('convSearchResults');
@@ -256,7 +368,6 @@
 
     function filterConvs(q) {
       q = (q || '').toLowerCase().trim();
-      // Hide/show sidebar items
       document.querySelectorAll('.messenger-list .conv-item').forEach(el => {
         el.style.display = !q || el.dataset.name.indexOf(q) !== -1 ? 'flex' : 'none';
       });
@@ -266,7 +377,7 @@
       const qLower = (q || '').toLowerCase().trim();
       const items = [...document.querySelectorAll('.messenger-list .conv-item')];
       const matched = qLower ? items.filter(el => el.dataset.name.indexOf(qLower) !== -1) : items;
-      
+
       if (!matched.length) { csrConversations.hidden = true; return; }
       csrConvCount.textContent = matched.length;
       csrConvList.innerHTML = matched.map(el => {
@@ -319,7 +430,6 @@
         return;
       }
       convSearchClear.hidden = false;
-      // Also filter sidebar items live
       filterConvs(q);
       renderConvSearchResults(q);
       await renderUserSearchResults(q);
@@ -356,10 +466,12 @@
       if (kbIndexC >= 0 && kbRowsC[kbIndexC]) kbRowsC[kbIndexC].scrollIntoView({ block: 'nearest' });
     }
 
+    // ── ইমোজি-পিকার ────────────────────────────────────────────────────
     function insertEmoji(em) {
       const input = document.getElementById('msgInput');
       input.value += em;
       input.focus();
+      updateSendBtn();
       document.getElementById('emojiPicker').classList.remove('open');
     }
 
@@ -372,61 +484,97 @@
       }
     });
 
+    // ── FB ডাইনামিক অ্যাকশন-বাটন: খালি ইনপুটে 👍, টাইপ শুরুতে সেন্ড-প্লেন ──
+    const chatForm = document.getElementById('chatForm');
+    const sendBtn = document.getElementById('sendBtn');
+    const msgInput = document.getElementById('msgInput');
+    const fileInputEl = document.getElementById('fileInput');
+    const filePreviewEl = document.getElementById('filePreview');
+
+    function updateSendBtn() {
+      const has = (msgInput.value || '').trim().length > 0;
+      sendBtn.classList.toggle('is-like', !has);
+      sendBtn.title = has ? 'পাঠান' : 'লাইক পাঠান';
+      sendBtn.innerHTML = has ? '<i class="fas fa-location-arrow"></i>' : '<span style="font-size:20px;line-height:1">👍</span>';
+    }
+    msgInput.addEventListener('input', updateSendBtn);
+    updateSendBtn();
+
+    // ── মেসেজ-রেন্ডারিং ─────────────────────────────────────────────────
     function appendMessage(msg) {
-      // Avoid duplicate
       if (document.querySelector('.bubble[data-id="' + msg.id + '"]')) return;
-      // নিজের মেসেজ: optimistic tmp-বাবল থাকলে সেটাকেই আসল id দিই (ডুপ বাবল নয়)
+      // নিজের মেসেজ: optimistic tmp-বাবল থাকলে সেটাকেই আসল id দিই
       if (msg.is_me) {
         const tmps = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]'));
         const match = tmps.reverse().find(b => ((b.querySelector('.bubble-text') || {}).textContent || '') === (msg.body || ''));
         if (match) { match.dataset.id = String(msg.id); return; }
       }
       const div = document.createElement('div');
-      div.className = 'bubble ' + (msg.is_me ? 'me' : 'them');
+      div.className = 'bubble ' + (msg.is_me ? 'me' : 'them') + ' first-of-cluster last-of-cluster';
       div.dataset.id = msg.id;
       let html = '';
+      if (!msg.is_me) {
+        const av = isGroupChat ? (msg.sender_avatar || ('/avatar/' + msg.sender_id)) : otherAvatar;
+        html += '<img class="b-av" loading="lazy" src="' + escapeHtml(av) + '" onerror="this.src=\'/avatar/' + (msg.sender_id || 0) + '\'" alt="" />';
+      }
+      html += '<div class="b-content">';
+      if (!msg.is_me && isGroupChat) {
+        html += '<div class="bubble-sender">' + escapeHtml(msg.sender_name || 'সদস্য') + '</div>';
+      }
       if (msg.body) html += '<div class="bubble-text"></div>';
       if (msg.file_url) {
-        const isImg = /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(msg.file_url);
-        if (isImg) html += '<a href="' + msg.file_url + '" target="_blank"><img loading="lazy" decoding="async" src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
-        else html += '<a href="' + msg.file_url + '" class="bubble-file" download><i class="fas fa-paperclip"></i> ' + (msg.file_name || 'ফাইল') + '</a>';
+        if (/\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(msg.file_url)) html += '<a href="' + msg.file_url + '" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
+        else html += '<a href="' + msg.file_url + '" class="bubble-file" download><i class="fas fa-paperclip"></i> ' + escapeHtml(msg.file_name || 'ফাইল') + '</a>';
       }
       html += '<button type="button" class="bubble-react-btn" data-msg-react="' + msg.id + '" title="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>';
-      html += '<div class="bubble-react-menu" hidden>' + ['❤️','😂','😮','😢','👍'].map(e => '<button type="button" data-emoji="' + e + '">' + e + '</button>').join('') + '</div>';
+      html += '<div class="bubble-react-menu" hidden>' + ['👍','❤️','🤗','😂','😮','😢','😡'].map(e => '<button type="button" data-emoji="' + e + '">' + e + '</button>').join('') + '</div>';
+      html += '</div>';
       html += '<div class="bubble-meta"><span class="bubble-time"></span>';
-      if (msg.is_me) {
-        html += '<span class="bubble-seen"><i class="fas fa-check" title="পৌঁছেছে"></i></span>';
-      }
+      if (msg.is_me) html += '<span class="bubble-seen"><i class="fas fa-check" title="পৌঁছেছে"></i></span>';
       html += '</div>';
       div.innerHTML = html;
       if (msg.body) div.querySelector('.bubble-text').textContent = msg.body;
       div.querySelector('.bubble-time').textContent = new Date(msg.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
-      // Insert before typing indicator
       const ti = document.getElementById('typingIndicator');
       body.insertBefore(div, ti);
-      body.scrollTop = body.scrollHeight;
+      body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
     }
 
+    // সিন-রসিট: শেষ-পঠিত নিজের বাবলে অপর পক্ষের মাইক্রো-অ্যাভাটার (FB-স্টাইল)
+    function updateSeenAvatar() {
+      document.querySelectorAll('.bubble.me .bubble-seen').forEach(s => {
+        if (!s.querySelector('img')) return;
+        s.innerHTML = '<i class="fas fa-check-double" title="পড়া হয়েছে"></i>';
+      });
+      let last = null;
+      document.querySelectorAll('.bubble.me').forEach(b => {
+        const id = parseInt(b.dataset.id);
+        if (!isNaN(id) && id > 0 && id <= seenUpto) last = b;
+      });
+      if (last) {
+        const s = last.querySelector('.bubble-seen');
+        if (s) s.innerHTML = '<img src="' + escapeHtml(otherAvatar) + '" alt="পড়া হয়েছে" title="পড়া হয়েছে">';
+      }
+    }
     function markSeen(id) {
       const b = document.querySelector('.bubble[data-id="' + id + '"] .bubble-seen');
       if (b) b.innerHTML = '<i class="fas fa-check-double" title="পড়া হয়েছে"></i>';
     }
 
-    // Typing indicator — send signal + show theirs
-    document.getElementById('msgInput').addEventListener('input', () => {
-      if (!convId || <%= isGroup ? 'true' : 'false' %>) return;
+    // ── টাইপিং-সিগন্যাল ────────────────────────────────────────────────
+    msgInput.addEventListener('input', () => {
+      if (!convId || isGroupChat) return;
       if (typingTimeout) clearTimeout(typingTimeout);
       fetch('/api/messages/typing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conv_id: convId }) });
       typingTimeout = setTimeout(() => {}, 6000);
     });
 
-    // Auto-mark incoming as seen when polled
     function markConvSeen() {
       if (!convId) return;
       fetch('/api/messages/seen-all', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conv_id: convId }) });
     }
 
-    // Combined polling (5s): messages + typing + online
+    // ── পোলিং (৫সে): নতুন মেসেজ + টাইপিং + অনলাইন + সিন ────────────────
     async function poll() {
       if (!convId) return;
       try {
@@ -438,28 +586,43 @@
           markConvSeen();
         }
 
-        // Typing
+        if (typeof data.seen_upto === 'number' && data.seen_upto > seenUpto) {
+          seenUpto = data.seen_upto;
+          updateSeenAvatar();
+        }
+
         const ti = document.getElementById('typingIndicator');
         if (ti) ti.classList.toggle('show', !!data.typing);
 
-        // Other user online status
-        const dot = document.getElementById('otherOnlineDot');
-        const status = document.getElementById('otherOther') || document.getElementById('otherStatus');
-        if (!<%= isGroup ? 'true' : 'false' %>) {
+        if (!isGroupChat) {
+          const dot = document.getElementById('otherOnlineDot');
+          const mdpDot = document.getElementById('mdpDot');
+          const statusText = document.getElementById('otherStatusText');
           if (dot) dot.style.display = data.online ? 'block' : 'none';
-          if (status) {
-            status.innerHTML = data.online
-              ? '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle;color:var(--accent)"></i> এখনই অনলাইন'
-              : '<i class="fas fa-circle" style="font-size:6px;vertical-align:middle"></i> @' + '<%= other.username %>';
+          if (mdpDot) mdpDot.style.display = data.online ? 'block' : 'none';
+          if (statusText) {
+            statusText.textContent = data.online ? 'এখনই অনলাইন' : '@' + otherUsername;
+            statusText.className = data.online ? 'st-online' : '';
           }
         }
+
+        // সাইডবার অনলাইন-ডট
+        const userIds = [...document.querySelectorAll('.messenger-list .online-dot')].map(d => d.dataset.userId).filter(Boolean);
+        await Promise.all([...new Set(userIds)].map(async uid => {
+          try {
+            const r = await fetch('/api/messages/online?user_id=' + uid);
+            const d = await r.json();
+            document.querySelectorAll('.messenger-list .online-dot[data-user-id="' + uid + '"]').forEach(dot => {
+              dot.style.display = d.online ? 'block' : 'none';
+            });
+          } catch {}
+        }));
       } catch (e) { /* silent */ }
     }
     setInterval(poll, 5000);
-    // First poll after 1s
     setTimeout(poll, 1000);
 
-    // ── সেশন ৩৮: কথোপকথনের ভেতরে মেসেজ-সার্চ (ক্লায়েন্ট-সাইড ফিল্টার) ──
+    // ── কথোপকথনের ভেতরে মেসেজ-সার্চ ────────────────────────────────────
     const cis = document.getElementById('convInSearch');
     if (cis) cis.addEventListener('input', function () {
       const q = cis.value.trim().toLowerCase();
@@ -469,7 +632,7 @@
       });
     });
 
-    // ── সেশন ৩৮: মেসেজে রিয়েকশন (হোভার-মেনু) ──
+    // ── রিয়েকশন (হোভার-ক্যাপসুল) ───────────────────────────────────────
     function renderReacts(bubble, counts) {
       let box = bubble.querySelector('.bubble-reacts');
       if (!counts || !counts.length) { if (box) box.remove(); return; }
@@ -496,19 +659,15 @@
       }
     });
 
-    // Form: AJAX send with re-entry guard (fixes multi-send bug)
+    // ── ফর্ম: AJAX সেন্ড + optimistic ───────────────────────────────────
     let sending = false;
-    const chatForm = document.getElementById('chatForm');
-    const sendBtn = document.getElementById('sendBtn');
-    const msgInput = document.getElementById('msgInput');
-    const fileInputEl = document.getElementById('fileInput');
-    const filePreviewEl = document.getElementById('filePreview');
-
     chatForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       if (sending) return;
-      const body_text = (msgInput.value || '').trim();
+      let body_text = (msgInput.value || '').trim();
       const file = fileInputEl.files[0];
+      // FB-আচরণ: খালি ইনপুটে বাটন = 👍 পাঠাও
+      if (!body_text && !file) body_text = '👍';
       if (!body_text && !file) return;
       sending = true;
       sendBtn.disabled = true;
@@ -518,7 +677,6 @@
       fd.append('body', body_text);
       if (file) fd.append('attachment', file);
 
-      // Optimistic append — show my message immediately
       if (body_text) {
         const optimistic = {
           id: 'tmp-' + Date.now(),
@@ -535,14 +693,12 @@
         const csrfM42 = document.querySelector('meta[name="csrf-token"]');
         const res = await fetch(sendUrl, {
           method: 'POST', body: fd,
-          headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrfM42 ? csrfM42.content : '' },   // JSON-এ id ফেরত → optimistic বাবল swap, ডুপ্লিকেট নয়
+          headers: { 'Accept': 'application/json', 'X-CSRF-Token': csrfM42 ? csrfM42.content : '' },
           redirect: 'manual'
         });
-        // redirect: 'manual' returns opaqueredirect (type) or 0 status — both mean success
         let data = null;
         try { data = await res.json(); } catch (_) {}
         if (res.type === 'opaqueredirect' || res.status === 0 || res.ok) {
-          // optimistic (tmp-) বাবলটাকে আসল id দিয়ে ট্যাগ করি — poll তখন ডুপ বানায় না
           if (data && data.id) {
             const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
             if (tmp) tmp.dataset.id = String(data.id);
@@ -550,26 +706,24 @@
           msgInput.value = '';
           fileInputEl.value = '';
           if (filePreviewEl) filePreviewEl.hidden = true;
-          // Force immediate poll to refresh seen-status/list
           setTimeout(poll, 500);
         } else {
-          // ব্যর্থ হলে optimistic বাবল সরিয়ে নিই
           const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
           if (tmp) tmp.remove();
-          alert((data && data.error) || 'মেসেজ পাঠানো যায়নি (status ' + res.status + ')। আবার চেষ্টা করুন।');
+          fbToast((data && data.error) || 'মেসেজ পাঠানো যায়নি — আবার চেষ্টা করুন');
         }
       } catch (err) {
         const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
         if (tmp) tmp.remove();
-        alert('নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।');
+        fbToast('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন');
       } finally {
         sending = false;
         sendBtn.disabled = false;
-        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        updateSendBtn();
       }
     });
 
-    // Enter to send (without shift)
+    // Enter = সেন্ড, Shift+Enter = নতুন লাইন
     msgInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -577,12 +731,12 @@
       }
     });
 
-    // Mobile: hide list on load (show only chat) when convId is set
+    // মোবাইল: চ্যাট খোলা থাকলে লিস্ট লুকাও
     if (window.innerWidth <= 768 && convId) {
       document.getElementById('messengerList').classList.add('hidden');
     }
 
-    // File/image preview before send
+    // ── ফাইল-প্রিভিউ ───────────────────────────────────────────────────
     const fileInput = document.getElementById('fileInput');
     const filePreview = document.getElementById('filePreview');
     fileInput?.addEventListener('change', () => {
@@ -596,10 +750,7 @@
       filePreview.hidden = true;
     });
 
-    // Delete a single message (own messages only — the route also enforces
-    // this server-side). The button was newly added to the bubble markup;
-    // the DELETE route already existed (POST /messages/:username/:msgId/delete)
-    // but had no UI trigger anywhere, so it was effectively unreachable.
+    // ── নিজের একক মেসেজ মুছুন ──────────────────────────────────────────
     body?.addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-msg-delete]');
       if (!btn) return;
@@ -620,8 +771,9 @@
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <script>
-    // Delete entire conversation (AJAX)
+    // পুরো কথোপকথন মুছুন (AJAX)
     async function deleteConversation(username) {
+      if (!confirm('নিশ্চিত? পুরো কথোপকথনটি মুছে যাবে।')) return;
       try {
         const res = await fetch('/messages/' + encodeURIComponent(username) + '/delete', {
           method: 'POST',
@@ -636,8 +788,7 @@
         alert('নেটওয়ার্ক সমস্যা।');
       }
     }
-
-</script>
+  </script>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>

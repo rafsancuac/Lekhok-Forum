@@ -1,0 +1,817 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   সেশন ৭৫ — ফেসবুক মেসেঞ্জার ডিজাইন-সিস্টেম (শুধু /messages পেজে স্কোপড)
+   ডিজাইন-টোকেন (FB-স্পেসিফিকেশন অনুযায়ী):
+   primary #1877F2 · sent-bubble #0084FF · received #E4E6EB · canvas #F0F2F5
+   surface #FFF · text #050505 / #65676B · border #E4E6EB · online #31A24C
+   নোট: সাইটের বাকি অংশ লাইট-মিন্ট থিমেই থাকে — এই নীল-প্যালেট ইচ্ছাকৃতভাবে
+   শুধু মেসেঞ্জার-শেলের ভেতরে (auth-split-panel-এর নেভির মতো পেজ-স্কোপড)।
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.page-wrap--messenger {
+  --fb-blue: #1877F2;
+  --fb-msg: #0084FF;
+  --fb-canvas: #F0F2F5;
+  --fb-surface: #FFFFFF;
+  --fb-bubble-in: #E4E6EB;
+  --fb-text: #050505;
+  --fb-text2: #65676B;
+  --fb-border: #E4E6EB;
+  --fb-green: #31A24C;
+  --fb-hover: #F2F2F2;
+  --fb-active: #EAF3FF;
+  max-width: 100% !important;
+  width: 100%;
+  padding: 0 !important;
+  background: var(--fb-canvas);
+  min-height: calc(100vh - 76px);
+}
+
+/* ── ৩-কলাম শেল: লিস্ট (৩৬০px) + চ্যাট (flex) + ডিটেইলস (৩২০px, ≥১০২৪px) ── */
+.page-wrap--messenger .messenger-shell {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  height: calc(100vh - 76px);
+  min-height: 480px;
+  background: var(--fb-canvas);
+  border-radius: 0;
+  box-shadow: none;
+}
+.page-wrap--messenger .messenger-shell.has-details {
+  grid-template-columns: 340px minmax(0, 1fr) 320px;
+}
+@media (min-width: 1024px) and (max-width: 1250px) {
+  .page-wrap--messenger .messenger-shell.has-details { grid-template-columns: 300px minmax(0, 1fr) 280px; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .page-wrap--messenger .messenger-shell,
+  .page-wrap--messenger .messenger-shell.has-details { grid-template-columns: 300px minmax(0, 1fr); }
+  .page-wrap--messenger .messenger-details { display: none !important; }
+}
+
+/* মোবাইল: একবারে এক ভিউ — .hidden ক্লাস দিয়ে টগল */
+@media (max-width: 767px) {
+  .page-wrap--messenger .messenger-shell,
+  .page-wrap--messenger .messenger-shell.has-details { grid-template-columns: 1fr; height: calc(100vh - 76px); }
+  .page-wrap--messenger .messenger-list.hidden { display: none; }
+  .page-wrap--messenger .messenger-chat.hidden { display: none; }
+  .page-wrap--messenger .messenger-details { display: none !important; }
+}
+@media (max-width: 767px) {
+  .page-wrap--messenger .messenger-list:not(.hidden) ~ .messenger-chat:not(.hidden) { display: none; }
+}
+
+/* ═══════════════════ বাম সাইডবার (Chats) ═══════════════════ */
+.page-wrap--messenger .messenger-list {
+  background: var(--fb-surface);
+  border-right: 1px solid var(--fb-border);
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.page-wrap--messenger .messenger-list-head {
+  padding: 16px 16px 10px;
+  border-bottom: 1px solid var(--fb-border);
+  background: var(--fb-surface);
+  position: relative;
+  z-index: 30;
+}
+.page-wrap--messenger .msg-head-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.page-wrap--messenger .msg-head-row h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fb-text);
+  letter-spacing: -.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-wrap--messenger .msg-head-row h2 i { color: var(--fb-blue); font-size: 1.2rem; }
+.page-wrap--messenger .msg-count-badge {
+  background: var(--fb-active);
+  color: var(--fb-blue);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(24, 119, 242, .18);
+}
+.page-wrap--messenger .fb-head-actions { margin-left: auto; display: flex; gap: 6px; }
+.page-wrap--messenger .fb-icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--fb-canvas);
+  color: var(--fb-text);
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .15s;
+  text-decoration: none;
+}
+.page-wrap--messenger .fb-icon-btn:hover { background: var(--fb-bubble-in); }
+.page-wrap--messenger .fb-icon-btn:active { transform: scale(.92); }
+.page-wrap--messenger .fb-icon-btn--accent { background: var(--fb-blue); color: #fff; }
+.page-wrap--messenger .fb-icon-btn--accent:hover { background: #166fe0; }
+
+/* পিল-সার্চ */
+.page-wrap--messenger .msg-search-wrap { position: relative; margin: 0 0 10px; }
+.page-wrap--messenger .msg-search-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--fb-text2); font-size: 13px; pointer-events: none;
+}
+.page-wrap--messenger .msg-search-input {
+  width: 100%;
+  padding: 9px 36px 9px 36px !important;
+  font-size: 14px;
+  border-radius: 99px !important;
+  border: none !important;
+  background: var(--fb-canvas) !important;
+  color: var(--fb-text);
+  transition: box-shadow .15s;
+  font-family: inherit;
+}
+.page-wrap--messenger .msg-search-input::placeholder { color: var(--fb-text2); }
+.page-wrap--messenger .msg-search-input:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--fb-blue);
+  border-color: transparent !important;
+}
+.page-wrap--messenger .msg-search-clear {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: transparent; border: none; cursor: pointer;
+  color: var(--fb-text2); font-size: 13px; padding: 4px 7px; border-radius: 50%;
+}
+.page-wrap--messenger .msg-search-clear:hover { background: var(--fb-bubble-in); color: var(--fb-text); }
+.page-wrap--messenger .msg-search-kbd {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: var(--fb-surface); border: 1px solid var(--fb-border);
+  border-radius: 6px; padding: 1px 7px; font-size: 11px;
+  font-family: inherit; color: var(--fb-text2);
+}
+.page-wrap--messenger .msg-search-input:focus ~ .msg-search-kbd { display: none; }
+.page-wrap--messenger .msg-search-input:not(:placeholder-shown) ~ .msg-search-kbd { display: none; }
+
+/* সার্চ-ড্রপডাউন */
+.page-wrap--messenger .msg-search-results {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+  background: var(--fb-surface);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
+  max-height: 420px; overflow-y: auto; z-index: 50;
+}
+.page-wrap--messenger .msr-section { border-bottom: 1px solid #f0f2f5; }
+.page-wrap--messenger .msr-section:last-child { border-bottom: 0; }
+.page-wrap--messenger .msr-section-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px 6px; font-size: 11px; font-weight: 700;
+  color: var(--fb-text2); text-transform: uppercase; letter-spacing: .04em;
+  background: transparent;
+}
+.page-wrap--messenger .msr-count { background: var(--fb-active); color: var(--fb-blue); padding: 1px 8px; border-radius: 99px; font-size: 10.5px; }
+.page-wrap--messenger .msr-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; cursor: pointer; text-decoration: none; color: inherit;
+  border-bottom: 1px solid #f7f8fa;
+  transition: background .12s;
+}
+.page-wrap--messenger .msr-row:last-child { border-bottom: 0; }
+.page-wrap--messenger .msr-row:hover, .page-wrap--messenger .msr-row.kb-active { background: var(--fb-hover); }
+.page-wrap--messenger .msr-avatar {
+  width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: 0 0 40px;
+  background: var(--fb-canvas); display: flex; align-items: center; justify-content: center;
+  font-weight: 600; color: var(--fb-blue); font-size: 15px;
+}
+.page-wrap--messenger .msr-meta { flex: 1; min-width: 0; }
+.page-wrap--messenger .msr-name { font-weight: 600; font-size: 14px; color: var(--fb-text); }
+.page-wrap--messenger .msr-sub { font-size: 12px; color: var(--fb-text2); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-wrap--messenger .msr-name mark, .page-wrap--messenger .msr-sub mark { background: #fff3cd; color: #664d03; padding: 0 2px; border-radius: 4px; }
+.page-wrap--messenger .msr-right { flex-shrink: 0; color: var(--fb-text2); font-size: 12px; }
+.page-wrap--messenger .msr-right .conv-unread { background: var(--fb-blue); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.page-wrap--messenger .msr-empty { padding: 28px 14px; text-align: center; color: var(--fb-text2); }
+.page-wrap--messenger .msr-empty i { font-size: 28px; margin-bottom: 8px; display: block; opacity: .5; }
+.page-wrap--messenger .msr-empty p { font-size: 13px; margin: 0; }
+
+/* সাম্প্রতিক সার্চ */
+.page-wrap--messenger .msg-recent { padding: 8px 16px 10px; border-bottom: 1px solid var(--fb-border); }
+.page-wrap--messenger .msg-recent-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; font-weight: 600; color: var(--fb-text2);
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
+}
+.page-wrap--messenger .msg-recent-clear { background: transparent; border: none; cursor: pointer; color: var(--fb-text2); font-size: 11px; text-decoration: underline; }
+.page-wrap--messenger .msg-recent-clear:hover { color: #e41e3f; }
+.page-wrap--messenger .msg-recent-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+  border-radius: 8px; cursor: pointer; text-decoration: none; color: inherit;
+  font-size: 13px; transition: background .12s;
+}
+.page-wrap--messenger .msg-recent-item:hover { background: var(--fb-hover); }
+.page-wrap--messenger .msg-recent-item i { color: var(--fb-text2); font-size: 11px; }
+.page-wrap--messenger .msg-recent-item .mr-remove { margin-left: auto; opacity: 0; transition: opacity .12s; background: transparent; border: none; cursor: pointer; color: #e41e3f; padding: 2px 4px; }
+.page-wrap--messenger .msg-recent-item:hover .mr-remove { opacity: 1; }
+
+/* ── Active-now ট্রে (FB Stories-স্টাইল) ── */
+.page-wrap--messenger .fb-active-tray {
+  display: flex; gap: 14px;
+  padding: 10px 16px 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--fb-border);
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.page-wrap--messenger .fb-active-tray::-webkit-scrollbar { display: none; }
+.page-wrap--messenger .fb-active-tray[hidden] { display: none; }
+.page-wrap--messenger .fb-active-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 0 0 auto; cursor: pointer; text-decoration: none; color: inherit;
+  width: 56px;
+}
+.page-wrap--messenger .fb-active-avwrap { position: relative; width: 48px; height: 48px; }
+.page-wrap--messenger .fb-active-avwrap img {
+  width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+  border: 2.5px solid var(--fb-active);
+  transition: transform .15s;
+}
+.page-wrap--messenger .fb-active-chip:hover .fb-active-avwrap img { transform: scale(1.06); }
+.page-wrap--messenger .fb-active-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 13px; height: 13px;
+  background: var(--fb-green);
+  border: 2.5px solid var(--fb-surface);
+  border-radius: 50%;
+}
+.page-wrap--messenger .fb-active-name {
+  font-size: 11px; color: var(--fb-text2);
+  max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+}
+.fb-tray-title {
+  font-size: 12px; font-weight: 700; color: var(--fb-text2);
+  padding: 10px 16px 0; flex-shrink: 0; align-self: center;
+}
+
+/* ── ফিল্টার-চিপ (সব/আনরিড/গ্রুপ) — FB পিল-ট্যাব লুক ── */
+.page-wrap--messenger .msg-filter-row { display: flex; gap: 6px; margin: 8px 0 10px; }
+.page-wrap--messenger .msg-filter-row .filter-chip {
+  font-size: 12.5px; font-weight: 600;
+  padding: 5px 14px; border-radius: 99px;
+  background: var(--fb-canvas); color: var(--fb-text2);
+  border: none; cursor: pointer; font-family: inherit;
+  transition: background .15s, color .15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.page-wrap--messenger .msg-filter-row .filter-chip:hover { background: var(--fb-bubble-in); }
+.page-wrap--messenger .msg-filter-row .filter-chip.active { background: var(--fb-active); color: var(--fb-blue); }
+
+/* গ্রুপ-তৈরির ফর্ম */
+.page-wrap--messenger .grp-form { background: var(--fb-canvas); border: none; border-radius: 12px; padding: 12px; margin: 8px 0; }
+.page-wrap--messenger .grp-form-head { font-weight: 700; font-size: 13px; margin-bottom: 8px; color: var(--fb-blue); }
+.page-wrap--messenger .grp-form input[name=title] {
+  width: 100%; padding: 9px 14px; border: none; border-radius: 99px; margin-bottom: 8px; font-family: inherit; font-size: 13px; background: var(--fb-surface);
+}
+.page-wrap--messenger .grp-form input[name=title]:focus { outline: 2px solid var(--fb-blue); }
+.page-wrap--messenger .grp-members { max-height: 160px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 8px; }
+.page-wrap--messenger .grp-member {
+  display: flex; align-items: center; gap: 6px; font-size: 12.5px;
+  background: var(--fb-surface); border: none; border-radius: 99px; padding: 4px 10px; cursor: pointer;
+}
+.page-wrap--messenger .grp-member img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+
+/* ── কথোপকথন-তালিকা (FB ConversationItem) ── */
+.page-wrap--messenger #convListDefault,
+.page-wrap--messenger .messenger-list > .conv-scroll {
+  flex: 1; min-height: 0; overflow-y: auto; padding: 6px 8px 12px;
+}
+.page-wrap--messenger .conv-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border-bottom: none;
+  text-decoration: none; color: inherit;
+  transition: background .14s;
+  position: relative;
+}
+.page-wrap--messenger .conv-item:hover { background: var(--fb-hover); }
+.page-wrap--messenger .conv-item.active { background: var(--fb-active); }
+.page-wrap--messenger .conv-item .avatar,
+.page-wrap--messenger .conv-item .avatar-md { width: 48px; height: 48px; flex: 0 0 48px; position: relative; }
+.page-wrap--messenger .conv-item .avatar img,
+.page-wrap--messenger .conv-item .avatar-md img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; display: block; }
+.page-wrap--messenger .conv-item .group-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, #1877F2, #7c3aed);
+  color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
+}
+.page-wrap--messenger .online-dot {
+  position: absolute; bottom: 1px; right: 1px;
+  width: 13px; height: 13px;
+  background: var(--fb-green);
+  border: 2.5px solid var(--fb-surface);
+  border-radius: 50%;
+  z-index: 2;
+}
+.page-wrap--messenger .conv-meta { flex: 1; min-width: 0; }
+.page-wrap--messenger .conv-name {
+  color: var(--fb-text); font-weight: 600; font-size: 15px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.page-wrap--messenger .conv-item[data-unread="1"] .conv-name { font-weight: 800; }
+.page-wrap--messenger .conv-snippet {
+  color: var(--fb-text2); font-size: 13px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px;
+}
+.page-wrap--messenger .conv-item[data-unread="1"] .conv-snippet { color: var(--fb-blue); font-weight: 600; }
+.page-wrap--messenger .conv-meta-right {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+  color: var(--fb-text2); font-size: 12px;
+}
+.page-wrap--messenger .conv-unread {
+  background: var(--fb-blue); color: #fff;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: 99px; font-size: 11.5px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.page-wrap--messenger .conv-reltime { font-size: 11.5px; color: var(--fb-text2); white-space: nowrap; }
+.page-wrap--messenger #convListDefault.hidden { display: none; }
+.page-wrap--messenger .empty-state-full { text-align: center; padding: 40px 20px; color: var(--fb-text2); }
+.page-wrap--messenger .empty-state-full i { font-size: 2.4rem; color: var(--fb-border); margin-bottom: 12px; display: block; }
+
+/* ═══════════════════ ডেস্কটপ এম্পটি-স্টেট প্যানেল ═══════════════════ */
+.page-wrap--messenger .messenger-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 24px;
+  background: var(--fb-canvas);
+}
+@media (max-width: 767px) { .page-wrap--messenger .messenger-empty { display: none; } }
+.page-wrap--messenger .messenger-empty .me-icon {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: var(--fb-surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.4rem; color: var(--fb-text2);
+  margin-bottom: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .06);
+}
+.page-wrap--messenger .messenger-empty h2 { font-size: 1.3rem; font-weight: 700; color: var(--fb-text); margin: 0 0 6px; }
+.page-wrap--messenger .messenger-empty p { font-size: .92rem; color: var(--fb-text2); margin: 0; max-width: 320px; line-height: 1.6; }
+
+/* ═══════════════════ মূল চ্যাট-প্যানেল ═══════════════════ */
+.page-wrap--messenger .messenger-chat {
+  display: flex; flex-direction: column;
+  background: var(--fb-surface);
+  border-radius: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* চ্যাট-হেডার */
+.page-wrap--messenger .chat-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--fb-border);
+  background: var(--fb-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  flex-shrink: 0;
+  min-height: 64px;
+}
+.page-wrap--messenger .chat-header .back-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: transparent; color: var(--fb-blue); font-size: 17px; cursor: pointer;
+}
+.page-wrap--messenger .chat-header .back-btn:hover { background: var(--fb-canvas); }
+@media (min-width: 768px) { .page-wrap--messenger .chat-header .back-btn { display: none; } }
+.page-wrap--messenger .chat-header .avatar-md { width: 40px; height: 40px; flex: 0 0 40px; position: relative; }
+.page-wrap--messenger .chat-header .avatar-md img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block; }
+.page-wrap--messenger .chat-header .info { min-width: 0; }
+.page-wrap--messenger .chat-header .info h3 {
+  margin: 0; font-size: 15px; font-weight: 700; color: var(--fb-text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.page-wrap--messenger .chat-header .info h3 a { color: inherit; text-decoration: none; }
+.page-wrap--messenger .chat-header .info h3 a:hover { color: var(--fb-blue); }
+.page-wrap--messenger .chat-header .status {
+  font-size: 12px; color: var(--fb-text2); margin-top: 1px;
+  display: flex; align-items: center; gap: 5px;
+}
+.page-wrap--messenger .chat-header .status .st-online { color: var(--fb-blue); font-weight: 600; }
+.page-wrap--messenger .chat-header .status i { font-size: 7px; }
+.page-wrap--messenger .chat-header .fb-chat-actions { margin-left: auto; display: flex; gap: 4px; }
+.page-wrap--messenger .chat-header .fb-chat-actions .btn-icon,
+.page-wrap--messenger .chat-header .fb-chat-actions .fb-icon-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: transparent; color: var(--fb-blue); font-size: 16px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s;
+  text-decoration: none;
+}
+.page-wrap--messenger .chat-header .fb-chat-actions .btn-icon:hover,
+.page-wrap--messenger .chat-header .fb-chat-actions .fb-icon-btn:hover { background: var(--fb-canvas); }
+
+/* চ্যাট-বডি */
+.page-wrap--messenger .chat-body {
+  flex: 1; overflow-y: auto;
+  padding: 18px 16px 10px;
+  background: var(--fb-surface);
+  scrollbar-width: thin;
+  scrollbar-color: #ced0d4 transparent;
+}
+.page-wrap--messenger .chat-body::-webkit-scrollbar { width: 8px; }
+.page-wrap--messenger .chat-body::-webkit-scrollbar-thumb { background: #ced0d4; border-radius: 8px; }
+.page-wrap--messenger .chat-error {
+  margin: 10px 16px 0; padding: 10px 14px; border-radius: 10px;
+  background: #fee2e2; color: #b91c1c; font-size: 13px;
+}
+
+/* ── ডেট-সেপারেটর ── */
+.page-wrap--messenger .date-sep {
+  display: flex; align-items: center; justify-content: center;
+  margin: 14px 0 10px;
+}
+.page-wrap--messenger .date-sep span {
+  font-size: 11px; font-weight: 700; color: var(--fb-text2);
+  background: var(--fb-canvas);
+  padding: 4px 14px; border-radius: 99px;
+  letter-spacing: .02em;
+}
+
+/* ── বাবল (FB MessageBubble) ── */
+.page-wrap--messenger .bubble {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 2px 0;
+}
+.page-wrap--messenger .bubble + .bubble { margin-top: 2px; }
+.page-wrap--messenger .bubble.first-of-cluster { margin-top: 10px; }
+.page-wrap--messenger .bubble.them { justify-content: flex-start; }
+.page-wrap--messenger .bubble.me { justify-content: flex-end; }
+.page-wrap--messenger .bubble .b-av {
+  width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+  flex: 0 0 28px; align-self: flex-end; margin-bottom: 2px;
+}
+.page-wrap--messenger .bubble .b-content {
+  position: relative;
+  max-width: min(70%, 420px);
+  background: var(--fb-bubble-in);
+  color: var(--fb-text);
+  padding: 9px 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  border-radius: 18px;
+  border-bottom-left-radius: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .08);
+}
+.page-wrap--messenger .bubble.me .b-content {
+  background: var(--fb-msg);
+  color: #fff;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 4px;
+  margin-left: auto;
+}
+/* ক্লাস্টার-মাঝে পূর্ণ-গোল কোণ */
+.page-wrap--messenger .bubble.mid-cluster .b-content { border-radius: 18px; }
+.page-wrap--messenger .bubble .bubble-text { white-space: pre-wrap; }
+.page-wrap--messenger .bubble-image {
+  display: block; max-width: 100%; border-radius: 14px; margin-top: 4px;
+  max-height: 320px; object-fit: cover;
+}
+.page-wrap--messenger .bubble-file {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 5px; padding: 7px 12px; border-radius: 10px;
+  background: rgba(0, 0, 0, .05); color: inherit; text-decoration: none; font-size: 13.5px; font-weight: 600;
+}
+.page-wrap--messenger .bubble.me .bubble-file { background: rgba(255, 255, 255, .22); color: #fff; }
+
+/* বাবল-মেটা (সময়+সিন) */
+.page-wrap--messenger .bubble .bubble-meta {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--fb-text2);
+  align-self: flex-end; margin-bottom: 3px;
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity .15s;
+  min-width: 44px;
+}
+.page-wrap--messenger .bubble:hover .bubble-meta,
+.page-wrap--messenger .bubble.last-of-cluster .bubble-meta { opacity: 1; }
+.page-wrap--messenger .bubble.me .bubble-meta { flex-direction: row-reverse; }
+.page-wrap--messenger .bubble .bubble-seen i { font-size: 12px; color: var(--fb-text2); }
+.page-wrap--messenger .bubble .bubble-seen img {
+  width: 16px; height: 16px; border-radius: 50%; object-fit: cover; display: block;
+}
+.page-wrap--messenger .bubble .bubble-delete {
+  position: absolute; top: -8px; left: -8px; z-index: 6;
+  width: 22px; height: 22px; border-radius: 50%; border: none;
+  background: var(--fb-surface); color: var(--fb-text2); font-size: 10px; cursor: pointer;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .22);
+  opacity: 0; transition: opacity .12s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.page-wrap--messenger .bubble.me .bubble-delete { left: auto; right: -8px; }
+.page-wrap--messenger .bubble:hover .bubble-delete { opacity: 1; }
+.page-wrap--messenger .bubble .bubble-delete:hover { color: #e41e3f; background: #fee2e2; }
+
+/* গ্রুপ-সেন্ডার নাম */
+.page-wrap--messenger .bubble-sender {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 700; color: var(--fb-blue);
+  margin-bottom: 3px;
+}
+.page-wrap--messenger .bubble-sender img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+
+/* ── রিয়েকশন: হোভার-স্মাইলি + ভাসমান ক্যাপসুল ── */
+.page-wrap--messenger .bubble-react-btn {
+  position: absolute; top: -12px; z-index: 5;
+  width: 26px; height: 26px; border-radius: 50%; border: none;
+  background: var(--fb-surface); color: var(--fb-text2);
+  font-size: 12px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+  opacity: 0; transition: opacity .12s, transform .12s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.page-wrap--messenger .bubble.them .bubble-react-btn { right: -10px; }
+.page-wrap--messenger .bubble.me .bubble-react-btn { left: -10px; right: auto; }
+.page-wrap--messenger .bubble:hover .bubble-react-btn { opacity: 1; }
+.page-wrap--messenger .bubble-react-btn:hover { color: var(--fb-blue); transform: scale(1.1); }
+.page-wrap--messenger .bubble-react-menu {
+  position: absolute; bottom: calc(100% + 8px); z-index: 8;
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border);
+  border-radius: 99px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .18);
+  display: flex; gap: 2px; padding: 4px 8px;
+}
+.page-wrap--messenger .bubble.them .bubble-react-menu { left: 0; }
+.page-wrap--messenger .bubble.me .bubble-react-menu { right: 0; left: auto; }
+.page-wrap--messenger .bubble-react-menu[hidden] { display: none; }
+.page-wrap--messenger .bubble-react-menu button {
+  border: none; background: 0 0; font-size: 21px; cursor: pointer; padding: 2px 3px;
+  transition: transform .13s cubic-bezier(.16, 1, .3, 1);
+  line-height: 1.3;
+}
+.page-wrap--messenger .bubble-react-menu button:hover { transform: scale(1.35) translateY(-2px); }
+
+/* রিয়েকশন-চিপ (বাবলের নিচে ওভারল্যাপ) */
+.page-wrap--messenger .bubble-reacts {
+  position: absolute; bottom: -10px; z-index: 4;
+  display: flex; gap: 2px;
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border);
+  border-radius: 99px;
+  padding: 1px 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.page-wrap--messenger .bubble.them .bubble-reacts { left: 10px; }
+.page-wrap--messenger .bubble.me .bubble-reacts { right: 10px; }
+.page-wrap--messenger .bubble-reacts span { cursor: default; }
+
+/* ── টাইপিং-ইন্ডিকেটর (FB ৩-ডট) ── */
+.page-wrap--messenger .typing-indicator {
+  display: none;
+  align-items: flex-end; gap: 8px;
+  margin-top: 10px;
+}
+.page-wrap--messenger .typing-indicator.show { display: flex; }
+.page-wrap--messenger .typing-indicator .ti-av { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: 0 0 28px; }
+.page-wrap--messenger .typing-indicator .ti-bubble {
+  background: var(--fb-bubble-in);
+  border-radius: 18px;
+  padding: 11px 14px;
+  display: flex; align-items: center; gap: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .08);
+}
+.page-wrap--messenger .typing-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--fb-text2);
+  animation: fbTyping 1.2s infinite ease-in-out;
+}
+.page-wrap--messenger .typing-dot:nth-child(2) { animation-delay: .15s; }
+.page-wrap--messenger .typing-dot:nth-child(3) { animation-delay: .3s; }
+@keyframes fbTyping {
+  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+.page-wrap--messenger .typing-indicator .ti-label { margin-left: 6px; font-size: 12px; color: var(--fb-text2); }
+
+/* ── ইনপুট-বার (FB ChatInputBar) ── */
+.page-wrap--messenger .chat-input-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--fb-border);
+  background: var(--fb-surface);
+  flex-shrink: 0;
+}
+.page-wrap--messenger .chat-input-bar .ci-icon {
+  width: 36px; height: 36px; flex: 0 0 36px;
+  border-radius: 50%; border: none; background: transparent;
+  color: var(--fb-msg); font-size: 18px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .13s;
+}
+.page-wrap--messenger .chat-input-bar .ci-icon:hover { background: var(--fb-canvas); }
+.page-wrap--messenger .chat-input-bar .ci-icon:active { transform: scale(.9); }
+.page-wrap--messenger .chat-input-wrap {
+  flex: 1; position: relative;
+  background: var(--fb-canvas);
+  border-radius: 99px;
+  display: flex; align-items: center;
+  padding: 4px 6px 4px 16px;
+}
+.page-wrap--messenger .chat-input-wrap input[type=text] {
+  flex: 1; min-width: 0;
+  border: none; background: transparent;
+  font-size: 15px; color: var(--fb-text);
+  padding: 7px 4px;
+  font-family: inherit;
+}
+.page-wrap--messenger .chat-input-wrap input[type=text]::placeholder { color: var(--fb-text2); }
+.page-wrap--messenger .chat-input-wrap input[type=text]:focus { outline: none; }
+.page-wrap--messenger .chat-input-wrap .emoji-trigger {
+  width: 32px; height: 32px; flex: 0 0 32px;
+  border-radius: 50%; border: none; background: transparent;
+  color: var(--fb-text2); font-size: 17px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color .15s, background .15s;
+}
+.page-wrap--messenger .chat-input-wrap .emoji-trigger:hover { color: var(--fb-text); background: var(--fb-bubble-in); }
+
+/* ইমোজি-পিকার (পিল-ইনপুটের উপরে ভাসমান) */
+.page-wrap--messenger .emoji-picker {
+  position: absolute; bottom: calc(100% + 10px); right: 0;
+  width: 264px;
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+  padding: 8px;
+  display: none;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  z-index: 40;
+}
+.page-wrap--messenger .emoji-picker.open { display: grid; animation: fbPop .18s cubic-bezier(.16, 1, .3, 1); }
+.page-wrap--messenger .emoji-pick {
+  border: none; background: transparent; font-size: 20px; cursor: pointer;
+  padding: 5px 0; border-radius: 8px; transition: background .12s, transform .12s;
+  line-height: 1.4;
+}
+.page-wrap--messenger .emoji-pick:hover { background: var(--fb-canvas); transform: scale(1.18); }
+@keyframes fbPop { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* ডাইনামিক অ্যাকশন-বাটন: থাম্বস-আপ ↔ সেন্ড */
+.page-wrap--messenger .chat-input-bar .btn-primary#sendBtn {
+  width: 38px; height: 38px; padding: 0;
+  flex: 0 0 38px;
+  border-radius: 50% !important;
+  border: none;
+  background: transparent !important;
+  color: var(--fb-msg);
+  font-size: 20px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: transform .15s cubic-bezier(.16, 1, .3, 1), background .15s;
+}
+.page-wrap--messenger .chat-input-bar .btn-primary#sendBtn:hover { background: var(--fb-canvas) !important; transform: scale(1.08); }
+.page-wrap--messenger .chat-input-bar .btn-primary#sendBtn:active { transform: scale(.88); }
+.page-wrap--messenger .chat-input-bar .btn-primary#sendBtn:disabled { opacity: .55; cursor: wait; }
+.page-wrap--messenger .chat-input-bar .btn-primary#sendBtn.is-like { font-size: 22px; }
+
+/* ফাইল-প্রিভিউ */
+.page-wrap--messenger .file-preview {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 12px 8px; padding: 8px 14px;
+  background: var(--fb-active); border: 1px solid rgba(24, 119, 242, .22);
+  border-radius: 99px; font-size: 13px; color: var(--fb-blue);
+}
+.page-wrap--messenger .file-preview i { color: var(--fb-blue); }
+.page-wrap--messenger .file-preview span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-wrap--messenger .file-preview button { background: 0 0; border: none; font-size: 1.1rem; cursor: pointer; color: inherit; line-height: 1; }
+
+/* ═══════════════════ ডান ডিটেইলস-প্যানেল ═══════════════════ */
+.page-wrap--messenger .messenger-details {
+  background: var(--fb-surface);
+  border-left: 1px solid var(--fb-border);
+  overflow-y: auto;
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.page-wrap--messenger .messenger-details[hidden] { display: none; }
+.page-wrap--messenger .md-close {
+  display: flex; justify-content: flex-end; padding: 10px 12px 0;
+  flex-shrink: 0;
+}
+.page-wrap--messenger .md-close button {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--fb-canvas); color: var(--fb-text2); cursor: pointer; font-size: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.page-wrap--messenger .md-close button:hover { background: var(--fb-bubble-in); color: var(--fb-text); }
+.page-wrap--messenger .md-profile {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 20px 18px;
+  border-bottom: 1px solid var(--fb-border);
+  text-align: center;
+}
+.page-wrap--messenger .md-profile .mdp-avwrap { position: relative; margin-bottom: 8px; }
+.page-wrap--messenger .md-profile img.mdp-av { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+.page-wrap--messenger .md-profile .mdp-dot {
+  position: absolute; bottom: 4px; right: 4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--fb-green); border: 3px solid var(--fb-surface);
+}
+.page-wrap--messenger .md-profile .mdp-name { font-size: 16px; font-weight: 800; color: var(--fb-text); }
+.page-wrap--messenger .md-profile .mdp-sub { font-size: 12.5px; color: var(--fb-text2); margin-top: 2px; }
+.page-wrap--messenger .md-profile .mdp-btn {
+  margin-top: 12px;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--fb-canvas); color: var(--fb-text);
+  border: none; border-radius: 8px;
+  padding: 9px 18px; font-size: 13.5px; font-weight: 700;
+  cursor: pointer; text-decoration: none; font-family: inherit;
+  transition: background .15s;
+}
+.page-wrap--messenger .md-profile .mdp-btn:hover { background: var(--fb-bubble-in); }
+.page-wrap--messenger .md-profile .mdp-btn--blue { background: var(--fb-blue); color: #fff; }
+.page-wrap--messenger .md-profile .mdp-btn--blue:hover { background: #166fe0; }
+.page-wrap--messenger .md-section { padding: 14px 18px; border-bottom: 1px solid var(--fb-border); }
+.page-wrap--messenger .md-section h4 {
+  margin: 0 0 10px; font-size: 13px; font-weight: 800;
+  color: var(--fb-text); display: flex; align-items: center; gap: 7px;
+}
+.page-wrap--messenger .md-section h4 i { color: var(--fb-blue); font-size: 12px; }
+.page-wrap--messenger .md-media {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+}
+.page-wrap--messenger .md-media a { display: block; aspect-ratio: 1; border-radius: 8px; overflow: hidden; }
+.page-wrap--messenger .md-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .15s; }
+.page-wrap--messenger .md-media img:hover { transform: scale(1.06); }
+.page-wrap--messenger .md-media-empty { font-size: 12.5px; color: var(--fb-text2); }
+.page-wrap--messenger .md-link {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 10px 12px; margin: 0 -12px;
+  border: none; background: transparent; border-radius: 8px;
+  font-size: 13.5px; font-weight: 600; color: var(--fb-text);
+  cursor: pointer; text-decoration: none; font-family: inherit;
+  transition: background .14s;
+  text-align: left;
+}
+.page-wrap--messenger .md-link:hover { background: var(--fb-hover); }
+.page-wrap--messenger .md-link i { color: var(--fb-text2); width: 18px; text-align: center; font-size: 14px; }
+.page-wrap--messenger .md-link--danger { color: #e41e3f; }
+.page-wrap--messenger .md-link--danger i { color: #e41e3f; }
+.page-wrap--messenger .md-members { display: flex; flex-wrap: wrap; gap: 6px; }
+.page-wrap--messenger .md-member {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--fb-canvas); border-radius: 99px;
+  padding: 4px 12px; font-size: 12.5px; color: var(--fb-text);
+}
+
+/* গ্রুপ-প্যানেল (চ্যাটের ভেতরে টগল-হওয়া) */
+#grpPanel { background: var(--fb-surface); }
+#grpPanel .md-member { background: var(--fb-canvas); }
+
+/* কনভ-ইন-সার্চ (হেডারে) */
+.page-wrap--messenger .conv-insearch { position: relative; margin-left: 8px; flex: 0 1 190px; }
+.page-wrap--messenger .conv-insearch i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--fb-text2); }
+.page-wrap--messenger .conv-insearch input {
+  width: 100%; padding: 7px 12px 7px 28px; border: none; border-radius: 99px;
+  font-size: 12.5px; background: var(--fb-canvas); color: var(--fb-text); font-family: inherit;
+}
+.page-wrap--messenger .conv-insearch input:focus { outline: 2px solid var(--fb-blue); }
+@media (max-width: 900px) { .page-wrap--messenger .conv-insearch { display: none; } }
+
+/* ছোট-টোস্ট (কল/ভিডিও 'শীঘ্রই') */
+.fb-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px);
+  background: #050505; color: #fff;
+  font-size: 13.5px; font-weight: 600;
+  padding: 11px 22px; border-radius: 99px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .3);
+  z-index: 9999; opacity: 0; pointer-events: none;
+  transition: opacity .22s, transform .22s;
+}
+.fb-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* মোবাইল ফাইন-টিউনিং */
+@media (max-width: 767px) {
+  .page-wrap--messenger .messenger-list-head { padding: 12px 12px 8px; }
+  .page-wrap--messenger .msg-head-row h2 { font-size: 1.25rem; }
+  .page-wrap--messenger .conv-item { padding: 8px; gap: 10px; }
+  .page-wrap--messenger .conv-item .avatar, .page-wrap--messenger .conv-item .avatar-md,
+  .page-wrap--messenger .conv-item .avatar img, .page-wrap--messenger .conv-item .avatar-md img { width: 44px; height: 44px; flex-basis: 44px; }
+  .page-wrap--messenger .conv-name { font-size: 14px; }
+  .page-wrap--messenger .bubble .b-content { max-width: 78%; }
+  .page-wrap--messenger .chat-input-bar { padding: 8px 8px; }
+  .page-wrap--messenger .fb-active-tray { padding: 8px 12px 10px; }
+}
