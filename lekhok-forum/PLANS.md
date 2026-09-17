@@ -1431,3 +1431,12 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **E2E-প্রমাণ:** data-cover ✓ c-পার্সিস্ট ✓ উইজেট-থাম্ব (loaded+পোর্টেড-src) ✓ টাইল-স্ট্রিপ ✓ legacy-ফলব্যাক ✓ onerror ✓ 390px-০ ✓ কনসোল-০ ✓ ১৪-রুট ✓ brace-০ ✓ node --check ×২ ✓ টেস্ট-এন্ট্রি-ক্লিনআপ ✓ স্ক্রিনশট ×৩ (reading-mobile/desktop + dashboard-widget) ✓
 
 **পরবর্তী-প্রথম-পছন্দ:** থ্রেড-সাবমিটে optimistic-ইনসার্ট (session116-অবশিষ্ট) → mini-bubble unread-ডট (session117-⑤) → tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤) → crx-এ 'শেষ-পড়া'-অগ্রাধিকার-পিন।
+
+### session121 ক্রস-এজেন্ট নোট (cron-r6 — রিসোর্স)
+
+- **সিরিজ-প্রগ্রেস-চুক্তি:** detail-পেজের localStorage স্কিমা (`lekhok.rpl.<encodeURIComponent(series).replace(/%/g,'').slice(0,48)` = `{cur:{epi,t,title,ts}, done:{resId:ts}}`) এখন /resources লিস্টিংও পড়ে — **নতুন প্লেলিস্ট-স্টেট ফিল্ড যোগ করলে দুই-সারফেসই (lekhok-resource-detail.ejs + lekhok-resources.ejs) একসাথে আপডেট করতে হবে**; কী-জেনারেশন দুই-জায়গায় হুবহু একই (`slice(0,48)`-সহ — slice-বিহীন কী মিলবে না, E2E-তে ধরা)।
+- **seriesMap-ডেটা-এমবেড:** routes/pages.js থেকে ভিউতে `SMAP` — `<%- JSON.stringify(x).replace(/</g,'\\u003c') %>` রীতি; inline JSON embed-এ `<script>`-ইনজেকশন-নিরাপদ প্যাটার্ন, নতুন এমবেডেও এটিই।
+- **FAB-occupancy-গোটচা (নতুন):** গ্লোবাল `#backToTop` (layout.ejs, fixed bottom-right, z-80) সব-পেজে আছে — নতুন ফ্লোটিং-বাটন bottom-right-এ যোগ করা নিষেধ; দরকার হলে গ্লোবাল-টার position/অফসেট-কনভেনশন অনুসরণ করুন।
+- **[hidden]-গার্ড-রীতি-পুনরাবৃত্তি:** display:flex/inline-flex-যুক্ত এলিমেন্টে `[hidden]{display:none!important}`-গার্ড ছাড়া hidden-অ্যাট্রিবিউট নীরবে ব্যর্থ হয় (rsx-seriprog/rsx-seridone/rsx-serisum-এ করা হয়েছে)।
+- **স্টিকি-কন্ট্রোল:** `.rsx-controls` ডেস্কটপে sticky (top:10px, z-40) — রিসোর্স-পেজে নতুন fixed/overlay-UI (z<90) যোগ করলে স্টিকি-বারের সাথে ওভারল্যাপ-যাচাই করুন।
+- **stat-এন্ডপয়েন্ট-চুক্তি (§১৭):** POST /api/resources/:id/stat = পাবলিক কিন্তু ডিডুপ-উইন্ডো-যুক্ত (৩০সে, in-memory) — নতুন কাউন্টার-এন্ডপয়েন্টেও একই-অ্যাবিউজ-প্যাটার্ন (dedup + invalid-id 400 + unknown-id নিরাপদ-ok) প্রত্যাশিত।

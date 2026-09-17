@@ -481,6 +481,18 @@ router.get('/resources', async (req, res) => {
               WHERE series IS NOT NULL AND TRIM(series) != '' GROUP BY TRIM(series)) s
       ORDER BY s.series COLLATE NOCASE`
   ).all()).map(x => ({ series: String(x.series).trim(), n: x.n, cover: x.cover || null }));
+  // সেশন ১২১: সিরিজ প্রগ্রেস-ম্যাপ — {সিরিজ: [resId,…]} পর্ব-ক্রমে (detail-পেজের
+  // localStorage done-সেটের সাথে মিলিয়ে লিস্টিংয়ে চিপে n/m ব্যাজ + কার্ডে শোনা-হয়েছে-টিক;
+  // অবস্থা ক্লায়েন্টেই থাকে — সার্ভার শুধু id-ম্যাপ দেয়, প্রাইভেসি-নিরপেক্ষ)
+  const seriesMap = {};
+  (await db.prepare(
+    `SELECT TRIM(series) AS series, id FROM resources
+      WHERE series IS NOT NULL AND TRIM(series) != ''
+      ORDER BY COALESCE(series_order, 1000000), id`
+  ).all()).forEach(x => {
+    const k = String(x.series).trim();
+    (seriesMap[k] = seriesMap[k] || []).push(x.id);
+  });
   const u = req.session && req.session.user;
   const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
   res.render('lekhok-resources', {
@@ -494,7 +506,7 @@ router.get('/resources', async (req, res) => {
     RES_TYPE_META: RT,
     videoEmbedUrl: RT.videoEmbedUrl,
     initialType, initialSort, initialQ,
-    initialSeries, seriesList
+    initialSeries, seriesList, seriesMap
   });
 });
 

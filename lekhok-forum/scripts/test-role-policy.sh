@@ -260,6 +260,19 @@ ck "mod update own → 303" "303" "$(curl -s -b $JARM -o /dev/null -w "%{http_co
 [ -n "$RP117" ] && curl -s -b $JARM -o /dev/null -X POST "$BASE/moderator/resources/$RP117/delete?_csrf=$TOKM2"
 
 echo ""
+
+# ═══ সেশন ১২১: রিসোর্স stat-এন্ডপয়েন্ট অ্যাবিউজ-গার্ড (RES-119-সুপারিশ ③ — playlist-ভিউ-চেক) ═══
+# ভিউ-কাউন্টার = পাবলিক (প্লেলিস্ট/কার্ড-ক্লিক থেকে ফায়ার) — কিন্তু ডিডুপ-উইন্ডো (৩০সে),
+# পদ্ধতি-সীমা (শুধু POST), অজানা/অসংখ্যা-id-নিরাপত্তা সঠিক থাকতে হবে (500-বিস্ফোরণ-নিষেধ)
+echo "══ ১৭. রিসোর্স stat অ্যাবিউজ-গার্ড ══"
+ck "stat anon view → 200 (ডিডুপ-হলেও 200)" "200" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/resources/1/stat" -H "Content-Type: application/json" -d '{"kind":"view"}')"
+ckc "stat dedup ৩০সে-উইন্ডো → deduped:true" '"deduped":true' "$(curl -s -X POST "$BASE/api/resources/1/stat" -H "Content-Type: application/json" -d '{"kind":"view"}')"
+ck "stat download-kind → 200" "200" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/resources/1/stat" -H "Content-Type: application/json" -d '{"kind":"download"}')"
+ckc "stat অজানা-id → নিরাপদ ok:true (নো-এক্সপশন)" '"ok":true' "$(curl -s -X POST "$BASE/api/resources/999999/stat" -H "Content-Type: application/json" -d '{"kind":"view"}')"
+ck "stat non-numeric-id → 400" "400" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/resources/abc/stat" -H "Content-Type: application/json" -d '{}')"
+ck "GET stat → 404 (catch-all, 500-নয়)" "404" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/resources/1/stat")"
+
+echo ""
 echo "════════════════════════════════"
 echo "PASS=$PASS FAIL=$FAIL"
 [ $FAIL -eq 0 ] && echo "ALL GREEN ✓" || echo "FAILURES ✗"

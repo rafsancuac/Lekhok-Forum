@@ -61,15 +61,25 @@
         <% seriesList.forEach(s => { %>
           <a href="?category=<%= encodeURIComponent(activeCategory || 'all') %>&series=<%= encodeURIComponent(s.series) %><%= rsxExtra.replace(/&series=[^&]*/, '') %>"
              class="rsx-serichip <%= initialSeries === s.series ? 'active' : '' %>"
+             data-series="<%= s.series %>"
              title="<%= s.series %> — <%= bn(s.n) %>টি পর্ব">
             <% if (s.cover) { %><img class="rsx-sericover" src="<%= s.cover %>" alt="" loading="lazy" width="28" height="28"><% } else { %><span class="rsx-seriico"><i class="fas fa-book-open"></i></span><% } %>
             <span class="rsx-seriname"><%= s.series %></span>
             <span class="rsx-sericount"><%= bn(s.n) %></span>
+            <%# সেশন ১২১: শোনা-হয়েছে-প্রগ্রেস — JS localStorage done-সেট থেকে বসায় (n/m + মিনি-বার) %>
+            <span class="rsx-seriprog" hidden aria-hidden="true"><i></i></span>
+            <span class="rsx-seridone" hidden></span>
           </a>
         <% }) %>
         <%# সেশন ১১৮: সিরিজ play-all — সক্রিয়-সিরিজেই রেন্ডার; ক্লিকে প্রথম-অডিও-পর্বে
             ?play=1 নিয়ে যায় (ডিটেইল-পেজে অটো-স্টার্ট; অটোপ্লে-নীতি-ব্লক হলে পালস-ফলব্যাক) %>
         <% if (initialSeries) { %>
+          <%# সেশন ১২১: সক্রিয়-সিরিজের শোনা-হয়েছে-সামারি — n/m পর্ব + মিনি-বার + রিজুম-লিংক %>
+          <span class="rsx-serisum" id="rsxSeriSum" hidden>
+            <span class="rsx-serisum-txt"></span>
+            <span class="rsx-serisum-bar" aria-hidden="true"><i></i></span>
+            <a class="rsx-serisum-resume" id="rsxSeriResume" hidden href="#"><i class="fas fa-play" aria-hidden="true"></i> শেষ অবস্থান থেকে</a>
+          </span>
           <button type="button" class="rsx-seriplay" id="rsxSeriPlay" title="সিরিজের অডিও পর্ব ইন-পেজে শুনুন">
             <i class="fas fa-play" aria-hidden="true"></i> সিরিজ শুনুন
           </button>
@@ -197,6 +207,9 @@
     <img id="rsxLbImg" src="" alt="রিসোর্স ছবি">
   </div>
 </div>
+
+<%# ── সেশন ১২১-নোট: উপরে-যান-বাটন এখানে নেই — layout.ejs-এর গ্লোবাল #backToTop সব-পেজে আছে
+     (ডুপ্লিকেট-ফ্লোটিং-বাটন-ওভারল্যাপ E2E-তে ধরা পড়েছিল; আমার rsx-totop সরানো হয়েছে) ── %>
 
 <style>
 /* ═══ সেশন ১০১: ক্লিকেবল রিসোর্স-কার্ড (rsx-* স্কোপ) ═══ */
@@ -332,6 +345,60 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .rsx-card, .rsx-card:hover, .rsx-cta, .rsx-cover img, .rsx-vmodal-box { transition: none; animation: none; transform: none; }
+}
+
+/* ═══ সেশন ১২১: সিরিজ শোনা-হয়েছে-নির্দেশ (localStorage done-সেট → চিপ n/m + বার + কার্ড-টিক) ═══ */
+/* চিপের ভেতরে মিনি-প্রগ্রেস-বার (শুধু কিছু-শোনা হলেই JS দেখায়) */
+.rsx-seriprog[hidden], .rsx-seridone[hidden] { display: none !important; } /* display-ওভাররাইড-গার্ড (সেশন-১০৪-রীতি) */
+.rsx-seriprog { display: inline-block; width: 26px; height: 4px; border-radius: 999px; background: rgba(5,150,105,.18); overflow: hidden; flex-shrink: 0; }
+.rsx-seriprog i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #059669, #10b981); transition: width .4s ease; }
+.rsx-serichip.active .rsx-seriprog { background: rgba(255,255,255,.28); }
+.rsx-seriprog i { background: #fff; } /* active-চিপে সাদা-বার (JS width বসায়) */
+.rsx-serichip:not(.active) .rsx-seriprog i { background: linear-gradient(90deg, #059669, #10b981); }
+/* চিপে n/m টিক-কাউন্ট */
+.rsx-seridone { display: inline-flex; align-items: center; gap: 3px; font-size: .62rem; font-weight: 900; color: #059669; flex-shrink: 0; }
+.rsx-seridone::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: .66rem; }
+.rsx-serichip.active .rsx-seridone { color: #d1fae5; }
+/* সক্রিয়-সিরিজের সামারি-পিল (n/m + বার + রিজুম-লিংক) */
+.rsx-serisum { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; background: #fff; border: 1.5px dashed rgba(5,150,105,.45); font-size: .72rem; font-weight: 800; color: #065f46; }
+.rsx-serisum[hidden] { display: none; }
+.rsx-serisum-bar { display: inline-block; width: 54px; height: 5px; border-radius: 999px; background: rgba(5,150,105,.16); overflow: hidden; }
+.rsx-serisum-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #059669, #10b981); transition: width .4s ease; }
+.rsx-serisum-resume { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; background: linear-gradient(135deg, #059669, #047857); color: #fff !important; font-size: .68rem; font-weight: 800; text-decoration: none; box-shadow: 0 2px 8px -2px rgba(5,150,105,.5); transition: transform .15s ease, filter .15s ease; }
+.rsx-serisum-resume:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.rsx-serisum-resume i { font-size: .58rem; }
+/* সম্পূর্ণ-শোনা পর্বের কার্ডে কোণে টিক (data-id → done মিললে JS is-done) */
+.rsx-card.is-done::after {
+  content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 26px; height: 26px; display: grid; place-items: center;
+  border-radius: 50%; font-size: .8rem; color: #fff;
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 3px 10px -2px rgba(5,150,105,.55), 0 0 0 2px rgba(255,255,255,.9);
+  animation: rsxDonePop .25s ease;
+}
+@keyframes rsxDonePop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ═══ সেশন ১২১: পলিশ — স্টিকি-কন্ট্রোল বার + কভার-শিমার + উপরে-যান + ফোকাস-রিং ═══ */
+/* ডেস্কটপে টাইপ-পিল+সার্চ বার স্ক্রলে উপরে আটকে থাকে (গ্রিড-ব্রাউজে ফিল্টার-সর্বদা-হাতের-নাগালে) */
+@media (min-width: 1024px) {
+  .rsx-controls { position: sticky; top: 10px; z-index: 40; transition: box-shadow .2s ease, background .2s ease; }
+  .rsx-controls.is-stuck { background: rgba(255,255,255,.88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 14px; box-shadow: 0 8px 24px -8px rgba(2,6,23,.16), 0 0 0 1px rgba(5,150,105,.12); padding: 12px 14px; }
+}
+/* কভার-ছবি লোড-হওয়া পর্যন্ত শিমার (is-loaded ক্লাস JS দেয়) */
+.rsx-cover { position: relative; }
+.rsx-cover::before { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, #f1f5f9 40%, #e2e8f0 50%, #f1f5f9 60%); background-size: 200% 100%; animation: rsxShimmer 1.4s linear infinite; }
+.rsx-cover.is-loaded::before { display: none; }
+@keyframes rsxShimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+/* ভাসমান উপরে-যান-বাটন — বাদ (layout.ejs-এর গ্লোবাল #backToTop-এর সাথে ওভারল্যাপ হত —
+   দুটো ফ্লোটিং-বাটন একই-কোণে = UX-বাগ; গ্লোবাল-টাই যথেষ্ট) */
+/* a11y: পিল/চিপ/ট্যাবে কীবোর্ড-ফোকাস রিং */
+.rsx-pill:focus-visible, .rsx-serichip:focus-visible, .rsx-sclear:focus-visible, .rsx-copy:focus-visible { outline: 2.5px solid #059669; outline-offset: 2px; }
+.notice-tabs a:focus-visible { outline: 2.5px solid #059669; outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .rsx-cover::before { animation: none; }
+  .rsx-serisum-bar i, .rsx-seriprog i { transition: none; }
+  .rsx-card.is-done::after { animation: none; }
 }
 </style>
 
@@ -615,5 +682,87 @@
       setTimeout(function () { target.classList.remove('rsx-flash'); }, 2600);
     }, 350);
   })();
+})();
+
+/* ═══ সেশন ১২১: সিরিজ শোনা-হয়েছে-নির্দেশ — detail-পেজের localStorage (lekhok.rpl.<series>
+   = {cur:{epi,t,title,ts}, done:{resId:ts}}) লিস্টিংয়েই প্রতিফলিত: প্রতিটি সিরিজ-চিপে
+   n/m ব্যাজ + মিনি-বার, সক্রিয়-সিরিজে সামারি-পিল + শেষ-অবস্থান-রিজুম-লিংক, সম্পূর্ণ-শোনা
+   পর্বের কার্ডে কোণে টিক। ডেটা-উৎস: সার্ভার রেন্ডার-টাইমে পর্ব-ক্রমে id-ম্যাপ (SMAP),
+   অবস্থা সম্পূর্ণ ক্লায়েন্টে — প্রোফাইল/সার্ভারে কিছু যায় না। ═══ */
+(function () {
+  var BNA = '০১২৩৪৫৬৭৮৯';
+  function bn(n) { return String(n).replace(/\d/g, function (d) { return BNA[+d]; }); }
+  var SMAP = <%- JSON.stringify(seriesMap || {}).replace(/</g, '\\u003c') %>;
+  var ACTIVE = <%- JSON.stringify(initialSeries || '') %>;
+  function lsKey(s) { return 'lekhok.rpl.' + encodeURIComponent(s || 'x').replace(/%/g, '').slice(0, 48); }
+  function readSt(s) {
+    try { return JSON.parse(localStorage.getItem(lsKey(s)) || 'null') || {}; } catch (e) { return {}; }
+  }
+  function doneCount(s, done) {
+    var ids = SMAP[s] || [], n = 0;
+    for (var i = 0; i < ids.length; i++) if (done[ids[i]]) n++;
+    return n;
+  }
+  /* চিপ-ব্যাজ — কিছু-শোনা সিরিজেই n/m + বার (শূন্য-শোনা চিপ অস্পৃশ্য) */
+  document.querySelectorAll('.rsx-serichip[data-series]').forEach(function (chip) {
+    var s = chip.getAttribute('data-series');
+    if (!SMAP[s] || !SMAP[s].length) return;
+    var done = readSt(s).done || {};
+    var n = doneCount(s, done), tot = SMAP[s].length;
+    if (!n) return;
+    var bar = chip.querySelector('.rsx-seriprog'), cnt = chip.querySelector('.rsx-seridone');
+    if (bar) { bar.hidden = false; var f = bar.querySelector('i'); if (f) f.style.width = Math.round(n / tot * 100) + '%'; }
+    if (cnt) { cnt.hidden = false; cnt.textContent = bn(n) + '/' + bn(tot); }
+  });
+  if (!ACTIVE || !SMAP[ACTIVE] || !SMAP[ACTIVE].length) return;
+  var ids = SMAP[ACTIVE];
+  var st = readSt(ACTIVE);
+  var done = st.done || {};
+  var n = doneCount(ACTIVE, done);
+  /* সক্রিয়-সিরিজ সামারি — n/m পর্ব + শতকরা-বার */
+  var sum = document.getElementById('rsxSeriSum');
+  if (sum && n) {
+    var txt = sum.querySelector('.rsx-serisum-txt');
+    var bar = sum.querySelector('.rsx-serisum-bar i');
+    if (txt) txt.textContent = bn(n) + '/' + bn(ids.length) + ' পর্ব শোনা হয়েছে';
+    if (bar) bar.style.width = Math.round(n / ids.length * 100) + '%';
+    sum.hidden = false;
+  }
+  /* রিজুম-লিংক — cur.t>৩সে, ৩০-দিনের মধ্যে, সেই-পর্ব এখনো শেষ-না-হলে;
+     href সাধারণ /resources/<id> — ডিটেইল-পেজ নিজেই resume-চিপ দেখায় (গেটওয়ে-ক্লিক-ক্যাপচার পোর্ট-সংরক্ষণ করে) */
+  var cur = st.cur;
+  var resume = document.getElementById('rsxSeriResume');
+  if (resume && cur && typeof cur.epi === 'number' && ids[cur.epi] && cur.t > 3
+      && !done[ids[cur.epi]] && (Date.now() - (cur.ts || 0)) < 30 * 864e5) {
+    resume.setAttribute('href', '/resources/' + ids[cur.epi]);
+    resume.hidden = false;
+  }
+  /* সম্পূর্ণ-শোনা পর্বের কার্ডে কোণে টিক */
+  document.querySelectorAll('.rsx-card[data-id]').forEach(function (card) {
+    if (done[card.getAttribute('data-id')]) card.classList.add('is-done');
+  });
+})();
+
+/* ═══ সেশন ১২১: পলিশ — কভার-শিমার-নিরসন + স্টিকি-কন্ট্রোল-ছায়া ═══ */
+(function () {
+  /* কভার-ছবি লোড-সমাপ্ত → শিমার-সরান (ক্যাশেড-complete ও error-দুই-পথেই) */
+  document.querySelectorAll('.rsx-cover img').forEach(function (img) {
+    var off = function () { var c = img.closest('.rsx-cover'); if (c) c.classList.add('is-loaded'); };
+    if (img.complete) off();
+    else { img.addEventListener('load', off); img.addEventListener('error', off); }
+  });
+  /* স্টিকি-কন্ট্রোল আটকে-পড়লে ছায়া+ব্লার (শুধু ডেস্কটপ-CSS-এ sticky; JS অবস্থা-চিহ্ন) */
+  var ctl = document.getElementById('rsxControls');
+  if (ctl) {
+    var st2 = false;
+    window.addEventListener('scroll', function () {
+      if (st2) return;
+      st2 = true;
+      requestAnimationFrame(function () {
+        ctl.classList.toggle('is-stuck', ctl.getBoundingClientRect().top <= 10 && window.scrollY > 40);
+        st2 = false;
+      });
+    }, { passive: true });
+  }
 })();
 </script>

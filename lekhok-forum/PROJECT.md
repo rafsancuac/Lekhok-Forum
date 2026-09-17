@@ -2466,3 +2466,22 @@ git push origin main
 **স্টাইল — dashboard.css EOF session122-ব্লক:** thumb/tilecover (gradient+feather ফলব্যাক, hover/focus-within zoom, rowtop flex-min-width) + has-cover ✕-কনট্রাস্ট + bar-glow + crx-all-arr শেভরন-মাইক্রোইন্টার‍্যাকশন + 640px-টাইল-উচ্চতা + reduced-motion-গার্ড — crx-স্কোপড, গ্লোবাল-অস্পৃশ্য।
 
 **যাচাই (agent-browser):** data-cover ✓ c-পার্সিস্ট (r .281/c /img/cover/...) ✓ উইজেট-থাম্ব img-loaded + src গেটওয়ে-পোর্টেড ✓ টাইল has-cover+strip-loaded ✓ legacy-এন্ট্রি (c-বিহীন) আইকন-ফলব্যাক+has-cover-বিহীন ✓ onerror self-remove (আসল-404-src) ✓ 390px-overflow-০ ✓ কনসোল-০ ✓ ১৪-রুট-স্মোক ✓ CSS-brace-০ ✓ node --check ×২ ✓ টেস্ট-এন্ট্রি-ক্লিনআপ ✓। **গোটচা (নতুন):** /img/cover/ জেনারেটর যে-কোনো-slug-এ 200-SVG দেয় — 'ভাঙা-কভার' টেস্টে সেটি 404 নয়; onerror-প্রমাণে সত্যিকারের অনুপস্থিত-পাথ লাগে।
+
+---
+
+## session121 — রিসোর্স সিরিজ শোনা-হয়েছে-নির্দেশ + লিস্টিং-পলিশ (cron-r6, RES-119-সুপারিশ ③④)
+
+**নতুন ফিচার — সিরিজ প্রগ্রেস লিস্টিংয়ে (/resources):**
+- routes/pages.js: `seriesMap` = {সিরিজ: [resId,…]} পর্ব-ক্রমে (COALESCE(series_order,1000000), id) — ভিউতে `SMAP` হিসেবে embed (`<`→`\u003c` এস্কেপ; JSON.parse-নিরাপদ)।
+- প্রতিটি সিরিজ-চিপে `data-series` + শোনা-হয়েছে হলে মিনি-প্রগ্রেস-বার (২৬px) + `n/m` টিক-ব্যাজ (JS, localStorage `lekhok.rpl.<series>` done-সেট থেকে — detail-পেজের একই স্কিমা/কী-রীতি)। শূন্য-শোনা চিপ অস্পৃশ্য।
+- সক্রিয়-সিরিজে সামারি-পিল: `n/m পর্ব শোনা হয়েছে` + শতকরা-বার + `শেষ অবস্থান থেকে` রিজুম-লিংক (cur.t>৩সে ∧ <৩০দিন ∧ সেই-পর্ব-অশেষ; href=/resources/<ids[cur.epi]> — ডিটেইল-পেজ নিজস্ব resume-চিপ দেখায়)।
+- সম্পূর্ণ-শোনা পর্বের কার্ডে কোণে গ্রেডিয়েন্ট-টিক (`.rsx-card.is-done::after`, rsxDonePop অ্যানিমেশন, reduced-motion-সম্মানিত)।
+
+**পলিশ:**
+- ডেস্কটপে (≥1024px) `.rsx-controls` স্টিকি (top 10px) — স্ক্রলে is-stuck-ছায়া+ব্লার (JS rAF-চিহ্নিত) — গ্রিড-ব্রাউজে ফিল্টার-সর্বদা-হাতের-নাগালে।
+- কভার-ছবি লোড-পর্যন্ত শিমার (`.rsx-cover::before`, is-loaded-নিরসন; complete/error-দুই-পথ)।
+- a11y: পিল/চিপ/ট্যাব/কপি-বাটনে focus-visible রিং।
+
+**E2E-ধরা বাগ-নিজের-তৈরি (প্রি-পুশ ফিক্স):** নতুন rsx-totop ভাসমান-বাটন — layout.ejs-এর গ্লোবাল `#backToTop`-এর সাথে একই-কোণে ওভারল্যাপ (click-blocked প্রমাণিত) → সম্পূর্ণ সরানো; গ্লোবাল-টাই সব-পেজে যথেষ্ট। গোটচা: নতুন ফ্লোটিং-FAB যোগের আগে গ্লোবাল-কোনার-occupancy যাচাই বাধ্যতামূলক।
+
+**যাচাই:** role-policy **131/131** ALL GREEN (নতুন §১৭: stat অ্যাবিউজ-গার্ড ×৬ — dedup ৩০সে / download-kind / অজানা-id নিরাপদ / non-numeric 400 / GET 404) ✓; E2E agent-browser: LS-সিড → চিপ ১/৩+৬৭%-বার ✓ সামারি-পিল ✓ রিজুম-লিংক→/resources/3 ✓ ডিটেইল resume-চিপ `দ্বিতীয় পর্ব · ১:৩৩` ✓ কার্ড-টিক ✓ নন-অডিও-পর্বে resume-সাপ্রেশন (সঠিক-আচরণ) ✓ স্টিকি is-stuck ✓ গ্লোবাল-টটপ-ক্লিক→0 ✓ শিমার 1/1 ✓ 390px ×৩-overflow-০ ✓ কনসোল-০ ✓ LS-টেস্ট-রেজিডু ক্লিন-আপ ✓। স্ক্রিনশট: s121-series-desktop.png, s121-series-mobile.png, s121-series-scrolled.png
