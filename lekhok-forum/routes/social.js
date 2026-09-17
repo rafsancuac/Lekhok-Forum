@@ -140,9 +140,13 @@ router.get('/articles', async (req, res) => {
   const [articles, popularTags, bookmarkedIds72] = await Promise.all([
     db.prepare(q).all(...params),
     db.prepare("SELECT tags FROM posts WHERE type='article' AND tags IS NOT NULL").all(),
-    req.session.user
-      ? db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(req.session.user.id).then(r => r.map(x => x.post_id))
-      : Promise.resolve([]),
+    // নোট: db.prepare(...).all(...) sql.js-এ sync, Turso-তে promise — তাই শুধু
+    // await-প্যাটার্ন (async-IIFE), .then() নয়।
+    (async () => {
+      if (!req.session.user) return [];
+      const rows72 = await db.prepare('SELECT post_id FROM bookmarks WHERE user_id = ?').all(req.session.user.id);
+      return (rows72 || []).map(x => x.post_id);
+    })(),
   ]);
   // ইমেজ-অ্যাটাচ N+1 → প্যারালাল (প্রতি পোস্টে একটি কুয়েরি, কিন্তু একসাথে ছোড়া)
   await Promise.all(articles.map(async a => {

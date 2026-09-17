@@ -93,6 +93,8 @@
   <% }) } %>
 </head>
 <body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>">
+  <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
+  <script src="/assets/js/auth-sync.js?v=<%= AV %>"></script>
 <%# সেশন ৬৭: data-auth — main.js লগইন-গার্ডের নির্ভরযোগ্য সোর্স (যেকোনো লেআউটে) -%>
   <!-- Back to top (session 59) -->
   <button type="button" class="back-to-top" id="backToTop" aria-label="উপরে ফিরে যান" title="উপরে ফিরে যান"><i class="fas fa-chevron-up"></i></button>

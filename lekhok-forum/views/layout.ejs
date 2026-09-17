@@ -88,6 +88,8 @@
   <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
 </head>
 <body class="<%= currentPath === '/' ? 'home-page' : '' %>" data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>">
+  <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
+  <script src="/assets/js/auth-sync.js?v=<%= AV %>"></script>
   <%# সেশন ৬৭: data-auth — পাবলিক-লেআউটেও main.js-এর লগইন-গার্ড নির্ভরযোগ্য (আগে .topbar-tabs a[href="/settings"] শুধু মেম্বার-হেডারে ছিল → /articles-এর সেভ-বাটনে লগইন-ইউজারও /login→/dashboard-এ বাউন্স করত) -%>
   <!-- Scroll progress bar -->
   <div class="scroll-progress" id="scrollProgress"></div>
