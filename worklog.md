@@ -1034,3 +1034,11 @@ Work Log:
 Stage Summary:
 - session-118 push → origin/main; role-policy 125/125; 390px-০; কনসোল-০
 - পরবর্তী: CSV-URL-ফাইল-ফেচ · UTC→লোকাল · role-policy playlist-চেক
+
+---
+
+## session120 (cron-r5) — সার্চ-হাইলাইট + পড়ার-সময় + boot-reconcile
+
+- QA-সুইপ: ১৫-route ম্যাট্রিক্স + /me-রিডিজাইন-মার্কার + notifications/qa-ফিল্টার + continue-reading + 390px ×৩ + কনসোল — বাগ-শূন্য (মিথ্যা-অ্যালার্ম ×২ নিষ্পত্তি: সার্চ-রিভিল-অ্যানিমেশন-ধরা-স্ক্রিনশট, curl raw-UTF8 400)
+- ফিচার: সার্চ-ফলাফল `<mark>` হাইলাইট (escape-first, XSS-E2E ×৩) + ≈N মিনিট চিপ + boot-reconcile self-heal (করাপ্ট→heal→idempotent-প্রমাণ)
+- ইউনিয়ন: style.css-EOF session12-ব্লকের সাথে (depth ০/০); push f982b82 (docs-আগে)

@@ -2403,3 +2403,23 @@ git push origin main
 - বিলম্ব: ~২.৬সে-শূন্য-অপেক্ষা → ৬৮ms-প্রথম-দৃশ্যমান (E2E-প্রমাণিত)।
 
 **যাচাই:** agent-browser hook-based-লেটেন্সি-সিমুলেশন (রিফেচ +১.২সে): ৬৮ms opt+strong+কাউন্টার"৬"+৭-প্যালেট+৩-ডট ✓ reconcile ✓ নেস্টেড ✓ রিঅ্যাকশন 👍১ ✓ ডিলিট-ক্যাসকেড ৬→৩+সিঙ্ক ✓ ড্রয়ার as-stat ✓ 390px-০ ✓ কনসোল-০ ✓ role-policy 103✓/13✗-প্রি-এক্সিস্টিং ✓ নোটিফিকেশন-ব্যাজ E2E (riya→ismail "৪") ✓
+
+---
+
+## session120 — সার্চ-ফলাফল হাইলাইট + পড়ার-সময় + boot-reconcile (cron-r5)
+
+**নতুন ফিচার — সার্চ-ফলাফল হাইলাইট (lekhok-search.ejs):**
+- কোয়েরি ≥২ অক্ষর হলে ফলাফলে সার্চ-টার্ম `<mark>`-হাইলাইট — escape-first (XSS-সেফ): টেক্সট ও টার্ম দুটোই আগে HTML-এস্কেপ, তারপর regex-replace। `<script>alert(1)</script>`/`<img onerror>`/`(নতুন|লেখা)+`-জাতীয় কোয়েরি E2E-প্রমাণিত নিরাপদ (inert ld+json-এ প্রবেশও `</script>`-বন্ধ-শূন্য)।
+- পূর্ণ-বাক্যাংশ + প্রতিটি শব্দ (≥২ অক্ষর, ডুপ্লিকেট-শূন্য, দীর্ঘ-আগে) — JS alternation বাঁ-ম্যাচ-প্রথম নেওয়ায় ফ্রেজ-প্রাধান্য কাজ করে; নেস্টেড-মার্ক শূন্য।
+- ৫-গ্রুপ কভারেজ: articles/questions/users/notices/dailies — title + excerpt + author_name + username + designation।
+
+**নতুন ফিচার — সার্চ-ফলাফলে পড়ার-সময়:**
+- routes/pages.js সার্চ-SELECT-এ p.body → decorateFeed-এর ৯৫০-অক্ষর/মিনিট কনভেনশনের হুবহু প্রতিরূপ → `≈ N মিনিট` চিপ (বাংলা-অঙ্ক); গণনার-পরে body ড্রপ।
+
+**infra — boot-reconcile self-heal (server.js):**
+- session119-র db/reconcile-comment-counts.js-এর বুট-হুক: initDb-পরবর্তী async ১-কোয়েরি অসঙ্গতি-চেক → অসঙ্গত-রো-তেই UPDATE + তাৎক্ষণিক flushDb। মেমরি-লোডেড DB-তেই চলে (ফাইল-রেস-শূন্য), Turso-ব্যাকএন্ড-সেফ await-রীতি, require.main-গেটেড (serverless-অপ্রভাবিত)।
+- প্রমাণ: comment_count 0→42-করাপ্ট → বুট → `[boot-reconcile] 1 রো সংশোধিত` + ফাইল-অবস্থা healed; ২য়-বুট নীরব (idempotent)।
+
+**স্টাইল — style.css session120-ব্লক:** amber mark (#fef08a — হেডার-ড্রপডাউন mark-এর টোনাল-সামঞ্জস্য) + box-decoration-break:clone + `.search-result-card:has(...mark)`-রিম + focus-visible-রিং + reduced-motion-গার্ড।
+
+**যাচাই:** সার্চ 7-mark/≈২-মিনিট-চিপ স্ক্রিনশট ✓ XSS ×২ + regex-মেটা-কোয়েরি ✓ multi-word 8-mark/নেস্টেড-০ ✓ boot-reconcile করাপ্ট→heal→idempotent ✓ 9-route ম্যাট্রিক্স ২০০ ✓ 390px-overflow-০ ✓ কনসোল-০ ✓ guard:design গ্রিন ✓ ইউনিয়ন-মার্জ: session12-অপটিমিস্টিক-ব্লকের সাথে EOF-ইউনিয়ন (brace-depth ০/০) + দুই-ফিচার-সহাবস্থান লাইভ-যাচাই ✓।

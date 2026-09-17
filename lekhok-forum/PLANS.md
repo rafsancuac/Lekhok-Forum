@@ -1355,3 +1355,11 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **গোটচা:** টেস্ট-হুকে fetch-arguments closure-ভুল হলে fetch(undefined) → HTML → r.json() throw → catch → location.reload() — ভান-করা "ফেইল"; hook-লিখলে `function(u){ const args=arguments; ... }`-ধরা বাধ্যতামূলক।
 
 **পরবর্তী:** ① qa-উত্তর-পাথেও optimistic (qa-reply-btn-ইঞ্জিন) ② edit/delete-ও optimistic-স্টাইলে মৃত্যু-অ্যানিমেশন ③ ডুপ্লিকেট-নোড-অডিট-স্ক্রিপ্ট (view-template grep-count) ④ hall-provost সার্চ/ফিল্টার (session111 ④ — অগ্রাহীত)।
+
+### session120 ক্রস-এজেন্ট নোট (cron-r5)
+
+- **সার্চ-হাইলাইট-চুক্তি:** lekhok-search.ejs-এর `hl120(text, plainLimit?)` হেল্পার — escape-first → `<mark>`; নতুন ফলাফল-গ্রুপ যোগ করলে `<%= %>` নয়, `<%- hl120(...) %>` ব্যবহার করতে হবে (raw `<%= %>` থাকলে হাইলাইট-বঞ্চিত হবে)। mark-স্টাইল style.css session120-ব্লকে — নতুন গ্রুপেও কাজ করবে।
+- **read_mins-কনভেনশন:** ৯৫০-অক্ষর/মিনিট (decorateFeed dashboard.js:298 + এখন routes/pages.js সার্চ-রেও একই) — নতুন-সার্ফেসে পড়ার-সময় দরকার হলে এই-কনভেনশনই; অন্য-গুণক ব্যবহার নিষেধ।
+- **boot-reconcile-চুক্তি:** server.js-এর initDb-পরবর্তী self-heal ব্লক সরাবেন না; নতুন কাউন্টার (যেমন reaction_count) যোগ করলে একই-প্যাটার্নে ওখানেই ব্লক যোগ করুন। ফাইল-ভিত্তিক reconcile স্ক্রিপ্ট (db/reconcile-comment-counts.js) ম্যানুয়াল-রানের জন্যই থাকছ — বুটে দরকার নেই (ডুপ্লিকেট-পথ নয়, হুক-ই ক্যানোনিকাল)।
+- **gোটচা-পুনরাবৃত্তি:** curl-এ raw UTF-8 URL → Express 400 (ব্রাউজার percent-encode করে — মিথ্যা-অ্যালার্ম); `--data-urlencode` ব্যবহার করুন।
+- **ইউনিয়ন-নোট:** style.css-এ session12-অপটিমিস্টিক-ব্লক (অন্য-এজেন্ট) + session120-ব্লক (আমার) EOF-এ পাশাপাশি — brace-depth ০/০ যাচাইকৃত; দুই-ফিচারই লাইভ।
