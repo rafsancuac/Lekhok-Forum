@@ -667,3 +667,22 @@ Stage Summary:
 - রোডম্যাপ ২০/২০ সম্পূর্ণ — মাস্টার-টেবিলে নতুন কোনো আইটেম অবশিষ্ট নেই
 - /dashboard/more: cursor+offset দ্বৈত-মোড; /gallery/more: নতুন এন্ডপয়েন্ট
 - পরবর্তী-প্রার্থী: গ্যালারি অ্যালবাম-কভার কাস্টম-নির্বাচন (স্টাফ), যোগাযোগ হল-প্রভোস্ট সার্চ/ফিল্টার, contact_hours 'এখন খোলা?' লাইভ-ইন্ডিকেটর
+
+---
+Task ID: 21 (Session 108)
+Agent: Z.ai (cron webDevReview — same sandbox)
+Task: ইউজার-স্পেসিফিকেশন বাস্তবায়ন — FB-২০২৪ পোস্ট-ফুটার (রিঅ্যাক্টরস-মডাল + ৩-অপশন-শেয়ার + angry + সেভ) + অ্যালবাম-প্রচ্ছদ কাস্টম-নির্বাচন + গ্যালারি লেজি-লোড/পেজিনেশন (SSE-হাব যাচাই)
+
+Work Log:
+- প্রবেশ-অবস্থা: origin/main @ 9c836ac → QA-বেসলাইন (৯-পেজ ম্যাট্রিক্স + /api/health sse.connections:1 — সেশন-৯৯-এর SSE-হাব লাইভ কনফার্মড, নতুন-কাজের প্রয়োজন নেই)
+- **FB-ফুটার:** actions-bar.ejs রি-রাইট (ইমোজি-সার্কেল-সামারি ক্লিকেবল + সর্বদা কমেন্ট/শেয়ার-কাউন্ট + ১-শেয়ার-বাটন→৩-অপশন-মেনু + angry) · GET /api/reactions/:type/:id/reactors · reactors-modal.ejs/js (layout+header গ্লোবাল-শেল) · main.js বাইট-প্যাচ (angry-ম্যাপ + .rs-emojis span-রেন্ডার) · style.css rxm/smx/as-emojis ব্লক
+- **ফিক্স-রাউন্ড (E2E-তে ধরা):** খালি-পিল আর্টিফ্যাক্ট (button-reset+:has-হাইড) · শেয়ার-মেনু ১৮px-স্লিভার (feed-card overflow:hidden — মেনু এখন উপরে খোলে) · revealed-কাউন্টার-বাগ (নিজের ইঞ্জিনে — পরে প্রত্যাহার) · FormData→JSON (multipart body-parser-অনুপস্থিতি)
+- **অ্যালবাম-প্রচ্ছদ:** gal-coverpick চিপ (staff) + POST /admin/gallery/cover (scope+audit) + settings galcover:<cat> + অ্যালবাম-ভিউ কভার-ওভাররাইড+পিন+লাইভ-আপডেট
+- **মার্জ-থিয়েটার:** rebase চলাকালেই সমান্তরাল session105/107 push — session107 গ্যালারি-পেজিনেশনও বানিয়েছিল → **ডুপ্লিকেশন-শূন্য-নীতি: তাঁদের সার্ভার-সাইড load-more গৃহীত, আমার ক্লায়েন্ট-ইঞ্জিন §৯ প্রত্যাহার**; ৪-ফাইল কনফ্লিক্ট সমাধান (style/gallery.css ইউনিয়ন, pages.js দুই-ফিচার, gallery.ejs partial-স্ট্রাকচার+আমার অ্যালবাম-কভার); সেশন-নাম্বার ১০৫→১০৮ (highest+1)
+- **নতুন-গোটচা (PLANS.md-ডকুমেন্টেড):** EJS-পার্শিয়াল প্যারেন্ট-স্ক্রিপ্টলেট-ভেরিয়েবল দেখে না → `include('partials/gallery-cards', { items, isStaff })`-স্পষ্ট-পাস না-দিলে staff-chips রেন্ডারই হয় না; rebase-এ ours=origin/theirs=my-commit দিক-বিভ্রান্তি — checkout-এর পরে কনটেন্ট-যাচাই বাধ্যতামূলক
+- E2E (curl+agent-browser): মডাল-ট্যাব-ফিল্টার/প্রোফাইল-লিংক/Escape ✓ শেয়ার-৩-অপশন+কপি-টোস্ট+মেসেজ-মোডাল+টাইমলাইন-রিডাইরেক্ট ✓ angry-লাইভ+span-সার্কেল ✓ সেভ ✓ কভার-সেট page-1+appended→টোস্ট+পিন+পার্সিস্ট ✓ load-more ২৪→৪০+appended-পিকার ✓ role-policy ১০৭/১০৭ ✓ কনসোল-০ ✓ 390px-০ ✓
+
+Stage Summary:
+- কমিট: f85c98c (session108, session107-এর ওপর rebase-মার্জড) → push-পেন্ডিং
+- নতুন-সারফেস: /api/reactions/:type/:id/reactors, POST /admin/gallery/cover, reactors-modal.ejs/js
+- পরবর্তী-প্রথম-পছন্দ: ① রিঅ্যাক্টরস-মডালে facepile-মোড (FB-২০২৪-অ্যাভাটার+ব্যাজ-টগল) ② শেয়ার-মেনুতে রিসেন্ট-চ্যাট-শর্টকাট ③ অ্যালবাম-প্রচ্ছদ অ্যাডমিন-প্যানেল থেকেও (gallery/list-এ ড্রপডাউন) ④ ১৭-হোম-কিউরেশন-সোশ্যাল-ফিল্টার (মাস্টার-টেবিলের শেষ-আইটেম)
