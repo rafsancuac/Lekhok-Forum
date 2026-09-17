@@ -76,6 +76,54 @@ router.get('/', async (req, res) => {
   }));
   const hasToday = Object.values(todayByType).some(v => v);
 
+  // ── সেশন ৭৯: হোমপেজ কুইজ-চ্যালেঞ্জ (ইন্টারঅ্যাক্টিভ প্রমো-ব্যান্ড) ──
+  // ডেটা: আজকের কুইজের অপশন (answer ভিউতে কখনো যাবে না — যাচাই শুধু
+  // POST /quiz/check-এ), লগইন-ইউজারের আজকের চূড়ান্ত উত্তর + সামগ্রিক
+  // স্ট্যাট/স্ট্রিক, টপ-৩ লিডার, আজকের অংশগ্রহণকারী-সংখ্যা।
+  let quizChallenge = null;
+  const quizToday = todayByType.quiz;
+  if (quizToday) {
+    try {
+      let qcOptions = null;
+      try {
+        const arr = JSON.parse(quizToday.options || '[]');
+        if (Array.isArray(arr) && arr.length >= 2 && arr.length <= 6) qcOptions = arr.map(String);
+      } catch (e) { /* খারাপ JSON — ইন্টারঅ্যাক্টিভ কার্ড বাদ, স্ট্যাটিক থাকবে */ }
+      const hasAnswer = quizToday.answer !== null && quizToday.answer !== undefined;
+      if (qcOptions && hasAnswer) {
+        const uid = req.session.user ? req.session.user.id : null;
+        const [myRow, myRowsAsc, qcLeaders, qcParts] = await Promise.all([
+          uid
+            ? db.prepare('SELECT choice, correct FROM quiz_attempts WHERE user_id = ? AND quiz_id = ?').get(uid, quizToday.id)
+            : Promise.resolve(null),
+          uid
+            ? db.prepare('SELECT correct FROM quiz_attempts WHERE user_id = ? ORDER BY answered_at ASC').all(uid)
+            : Promise.resolve([]),
+          db.prepare(`SELECT u.id, u.username, u.full_name, u.avatar_url,
+                SUM(a.correct) AS correct_n, COUNT(*) AS answered
+              FROM quiz_attempts a JOIN users u ON u.id = a.user_id
+              WHERE u.status = 'active'
+              GROUP BY u.id ORDER BY correct_n DESC, answered ASC LIMIT 3`).all(),
+          db.prepare('SELECT COUNT(*) AS n FROM quiz_attempts WHERE quiz_id = ?').get(quizToday.id)
+        ]);
+        let qcStreak = 0;
+        for (let i = myRowsAsc.length - 1; i >= 0; i--) {
+          if (myRowsAsc[i].correct) qcStreak++; else break;
+        }
+        quizChallenge = {
+          id: quizToday.id,
+          title: quizToday.title,
+          body: quizToday.body || '',
+          options: qcOptions,
+          myAttempt: myRow ? { choice: myRow.choice, correct: !!myRow.correct } : null,
+          myStats: uid ? { answered: myRowsAsc.length, correct: myRowsAsc.filter(r => r.correct).length, streak: qcStreak } : null,
+          leaders: qcLeaders || [],
+          participants: (qcParts && qcParts.n) || 0
+        };
+      }
+    } catch (e) { /* কুইজ-চ্যালেঞ্জ ডেটা-ব্যর্থ → সেকশন লুকানো থাকবে */ }
+  }
+
   res.render('lekhok-home', { faqItems42,
     layout: 'layout',
     pageTitle: 'হোম',
@@ -89,7 +137,8 @@ router.get('/', async (req, res) => {
     advisors,
     recentArticles,
     todayByType,
-    hasToday
+    hasToday,
+    quizChallenge
   });
 });
 
