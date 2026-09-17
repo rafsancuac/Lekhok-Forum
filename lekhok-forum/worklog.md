@@ -565,3 +565,24 @@ TURSO_DATABASE_URL='libsql://lekhok-forum-rafsancuac.aws-ap-south-1.turso.io' \
 TURSO_AUTH_TOKEN='<লাইভ-টোকেন>' node scripts/reset-qa-logins.js
 ```
 রিডিপ্লয়ের দরকার নেই। এরপর লাইভে ismail/riya/tanvir + secret123 সরাসরি কাজ করবে (force-change-গেটসহ সব-ক্লিয়ার)।
+Task ID: 8 (Session 100 — cron round: QA + composer-modal 07🔴 + ranked-feed 08 + atomic-react 04)
+Agent: Main agent (webDevReview round — Lekhok-Forum, origin/main @ 7ba5064 → session100)
+Task: বর্তমান-স্টেট যাচাই + agent-browser QA → স্থিতিশীল-রায় → মাস্টার-টেবিলের অবশিষ্ট আইটেম ০৭🔴+০৮+০৪ বাস্তবায়ন + স্টাইল-ডিটেইল + ডক-হ্যান্ডওভার + push
+
+Work Log:
+- ক্রস-এজেন্ট-সিঙ্ক: sandbox + repo worklog/PROJECT.md/PLANS.md পড়ে session99-অবস্থা বুঝলাম; git fetch — up-to-date (পরে eb38e16 docs-পুশও এসেছে — rebase-মার্জ হবে)
+- QA: ৭-পেজ + লগইন-গার্ড HTTP-স্মোক + agent-browser (ফিড ২২-কার্ড/মেসেঞ্জার-৬০-বাবল+২-ভয়েস/প্রোফাইল-পূর্ণ-pf-হিরো) — সব গ্রিন, কনসোল-০ → ফিচার-রাউন্ড রায়
+- করাপশন-স্ক্যান-ডিসিপ্লিন: buildFeedSql-এর `params = e.id, me.id];`-দৃশ্য → od-বাইট-যাচাইয়ে `[me.id, me.id]` অক্ষত (ডিসপ্লে-গোটচা ভুয়া-পজিটিভ — নিয়ম আবার প্রমাণিত)
+- ০৭-কম্পোজার-মোডাল: dashboard.ejs (button-কম্পোজার + #composerModal) + composer-modal.js (নতুন) + dashboard.css .cpm-ব্লক — ড্র্যাগ-ড্রপ/খসড়া-অটোসেভ/গার্ড/রিস্টোর-নোটিশ/ফোকাস-ট্র্যাপ/বাংলা-কাউন্টার
+- 🚨 E2E-তে ধরা বাস্তব-ইস্যু: headless-ব্রাউজারে POST→303-follow "Failed to fetch" (request সার্ভারে যায়, ফলো-ফেজে মরে; curl/GET/JSON ঠিক) → সমাধান: নতুন JSON-এন্ডপয়েন্ট POST /api/articles/quick (redirect-free) + client-নেভিগেশন; no-JS ফলব্যাক /articles/new অক্ষত
+- ০৮-র‍্যাংকড-ফিড: buildFeedSql ৫ম-প্যারাম + view_count ৩-শাখা + applyRankedSort/rankedFeedSlice + /dashboard & /dashboard/more sort-প্যারাম + সেগমেন্টেড-টগল UI + main.js data-sort passthrough
+- ০৪-অ্যাটমিক-রিঅ্যাক্ট: /api/react posts+comments আপডেট এক-স্টেটমেন্টে (json_group_object; ফলব্যাক সংরক্ষিত) — ১৫/১৫-স্ট্রেস + মিসম্যাচ-০ + অ্যাটমিক-পাথ-ফরম্যাট-প্রমাণ
+- E2E: মোডাল-ফুল-ফ্লো (ওপেন→ফিল→ক্লোস-গার্ড→রিস্টোর-নোটিশ→ডিসকার্ড→পোস্ট→/articles/12→খসড়া-ক্লিয়ার) ✓ র‍্যাংকড-অর্ডার ✓ more-ranked ✓ রিঅ্যাক্ট-লাইভ-রিগ্রেশন ✓ ১৯-পেজ-স্মোক ✓ 390px-০ ✓ কনসোল-০ ✓ ডেস্কটপ+মোবাইল-স্ক্রিনশট ✓
+- probe-পোস্ট ৪টি অ্যাপ-রুট দিয়ে ডিলিট (DB-মেমোরি-সামঞ্জস্য); /articles/12 ডেমো-হিসেবে রাখা
+- ডকস: PROJECT.md-চেঞ্জলগ + PLANS.md-ক্রস-এজেন্ট-নোট + repo worklog + sandbox worklog
+
+Stage Summary:
+- কমিট+পুশ: feat(session100) — origin/main (eb38e16-এর উপর rebase)
+- রোডম্যাপ: ০৭ ✓, ০৮ ✓, ০৪ ✓ — অবশিষ্ট মাত্র ০৫-কার্সর-পলিশ + ১৭-হোম-কিউরেশন
+- টেস্ট-ডেটা: /articles/12 (মোডাল-ডেমো); post#5-এ fbtest3-haha অবশিষ্ট
+- ঝুঁকি: composer-modal.js/dashboard.ejs-এ পরবর্তী-এজেন্টের এডিটে DOM-আইডি-কনট্র্যাক্ট রক্ষা করতে হবে (PLANS.md দেখুন); sandbox-ব্রাউজারের POST→redirect-follow-লেসন E2E-হারনেস-নোটে রিকর্ডেড

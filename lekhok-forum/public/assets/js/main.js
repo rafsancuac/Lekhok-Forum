@@ -116,6 +116,7 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
   var btn = document.getElementById('feedMoreBtn');
   var offset = parseInt(more.getAttribute('data-offset') || '0', 10) || 0;
   var filter = more.getAttribute('data-filter') || 'all';
+  var sort = more.getAttribute('data-sort') || 'recent'; // সেশন ১০০ (০৮): র‍্যাংকড-মোড ধারাবাহিকতা
   var busy = false, done = false;
   // সেশন ৯৩ (০৫-পলিশ): ধারাবাহিক-লোড চেইন — স্ক্রল-রিস্টোর একাধিক পেজ পরপর চাইলে
   // busy-গার্ডের ইনস্ট্যান্ট-রিটার্নে আটকে না-যায়; প্রতিটি কল চেইনে সারিবদ্ধ হয়।
@@ -148,7 +149,7 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
     if (spinner) spinner.hidden = false;
     if (btn) btn.hidden = true;
     try {
-      var res = await fetch('/dashboard/more?filter=' + encodeURIComponent(filter) + '&offset=' + offset, { credentials: 'same-origin' });
+      var res = await fetch('/dashboard/more?filter=' + encodeURIComponent(filter) + '&sort=' + encodeURIComponent(sort) + '&offset=' + offset, { credentials: 'same-origin' });
       var data = await res.json();
       if (!data || !data.ok || !data.html) { finish(); return; }
       var tpl = document.createElement('template');

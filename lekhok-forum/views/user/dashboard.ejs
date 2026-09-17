@@ -7,9 +7,11 @@
       <% if (user) { %>
       <div class="dash-composer card">
         <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
-        <a href="/articles/new" class="composer-input">আপনার লেখা শুরু করুন...</a>
+        <%# সেশন ১০০ (রোডম্যাপ-০৭): FB-স্টাইল কম্পোজার-মোডাল — ক্লিকে মোডাল খোলে
+            (নিচে #composerModal); 'লেখা' লিঙ্ক পূর্ণ-এডিটরেই যায় %>
+        <button type="button" id="composerOpen" class="composer-input" aria-haspopup="dialog" aria-controls="composerModal">আপনার লেখা শুরু করুন...</button>
         <div class="composer-actions">
-          <a href="/articles/new" class="composer-action"><i class="fas fa-pen-nib"></i> লেখা</a>
+          <button type="button" class="composer-action js-composer-open"><i class="fas fa-pen-nib"></i> লেখা</button>
           <a href="/qa/new" class="composer-action q"><i class="fas fa-question"></i> প্রশ্ন</a>
         </div>
       </div>
@@ -26,11 +28,19 @@
 
       <!-- Filter chips -->
       <div class="filter-chips">
-        <a href="/dashboard" class="filter-chip <%= filter === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সব</a>
-        <a href="/dashboard?filter=article" class="filter-chip <%= filter === 'article' ? 'active' : '' %>"><i class="fas fa-pen-nib"></i> লেখা</a>
-        <a href="/dashboard?filter=question" class="filter-chip <%= filter === 'question' ? 'active' : '' %>"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
+        <a href="/dashboard<%= sort === 'ranked' ? '?sort=ranked' : '' %>" class="filter-chip <%= filter === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সব</a>
+        <a href="/dashboard?filter=article<%= sort === 'ranked' ? '&sort=ranked' : '' %>" class="filter-chip <%= filter === 'article' ? 'active' : '' %>"><i class="fas fa-pen-nib"></i> লেখা</a>
+        <a href="/dashboard?filter=question<%= sort === 'ranked' ? '&sort=ranked' : '' %>" class="filter-chip <%= filter === 'question' ? 'active' : '' %>"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
         <a href="/dashboard?filter=activity" class="filter-chip <%= filter === 'activity' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> কার্যক্রম</a>
-        <% if (user) { %><a href="/dashboard?filter=following" class="filter-chip <%= filter === 'following' ? 'active' : '' %>"><i class="fas fa-user-friends"></i> অনুসরণ only</a><% } %>
+        <% if (user) { %><a href="/dashboard?filter=following<%= sort === 'ranked' ? '&sort=ranked' : '' %>" class="filter-chip <%= filter === 'following' ? 'active' : '' %>"><i class="fas fa-user-friends"></i> অনুসরণ only</a><% } %>
+      </div>
+
+      <%# সেশন ১০০ (রোডম্যাপ-০৮): সর্ট-টগল — সর্বশেষ|জনপ্রিয় (time-decay র‍্যাংকড-ফিড) %>
+      <div class="feed-sort-bar" role="tablist" aria-label="ফিড সাজানোর ধরন">
+        <a href="/dashboard<%= filter !== 'all' ? '?filter=' + filter : '' %>" class="feed-sort-btn <%= sort !== 'ranked' ? 'active' : '' %>" role="tab" aria-selected="<%= sort !== 'ranked' ? 'true' : 'false' %>"><i class="fas fa-clock"></i> সর্বশেষ</a>
+        <span class="feed-sort-sep" aria-hidden="true"></span>
+        <a href="/dashboard?<%= filter !== 'all' ? 'filter=' + filter + '&amp;' : '' %>sort=ranked" class="feed-sort-btn <%= sort === 'ranked' ? 'active' : '' %>" role="tab" aria-selected="<%= sort === 'ranked' ? 'true' : 'false' %>"><i class="fas fa-fire"></i> জনপ্রিয়</a>
+        <% if (sort === 'ranked') { %><span class="feed-sort-hint"><i class="fas fa-bolt"></i> এনগেজমেন্ট × সময়-ক্ষয় র‍্যাংকিং</span><% } %>
       </div>
 
       <% if (feed.length === 0) { %>
@@ -46,7 +56,7 @@
       <% } %>
       <%# সেশন ৮৯ (B1): ইনফিনিট-স্ক্রল সেন্টিনেল — main.js-এর feed-more ইঞ্জিন এটি দেখে
           /dashboard/more কল করে; JS-বিহীন ব্রাউজারে ফলব্যাক 'আরও দেখুন' বাটন %>
-      <div class="feed-more" id="feedMore" data-filter="<%= filter %>" data-offset="<%= feed.length %>" data-has-more="1" hidden>
+      <div class="feed-more" id="feedMore" data-filter="<%= filter %>" data-sort="<%= sort || 'recent' %>" data-offset="<%= feed.length %>" data-has-more="1" hidden>
         <div class="feed-more-spinner" id="feedMoreSpinner" hidden><i class="fas fa-circle-notch fa-spin"></i> <span>আরও লেখা লোড হচ্ছে…</span></div>
         <button type="button" class="feed-more-btn" id="feedMoreBtn">আরও দেখুন <i class="fas fa-chevron-down"></i></button>
       </div>
@@ -169,10 +179,57 @@
   <%- include('../partials/share-modal') %>
   <%# ── সেশন ৯৩: ফিড-৩-ডট-মেনুর 'রিপোর্ট'-অপশনের জন্য মোডাল + কমেন্ট-ইঞ্জিন ── %>
   <%- include('../partials/report-modal') %>
+
+  <%# ── সেশন ১০০ (রোডম্যাপ-০৭ 🔴): FB-স্টাইল কম্পোজার-মোডাল — ড্র্যাগ-ড্রপ ছবি,
+      খসড়া-অটোসেভ (localStorage), খসড়া-গার্ড, অটো-গ্রো টেক্সটএরিয়া, ক্যারেক্টার-কাউন্টার।
+      সাবমিট: POST /articles/new (fetch-ফরওয়ার্ড → আর্টিকেল-পেজে নেভিগেশন) ── %>
+  <% if (user) { %>
+  <div class="cpm-backdrop" id="composerModal" hidden>
+    <div class="cpm-dialog" role="dialog" aria-modal="true" aria-labelledby="cpmTitle">
+      <form id="composerForm" action="/articles/new" method="post" enctype="multipart/form-data" novalidate>
+        <div class="cpm-head">
+          <h2 id="cpmTitle">নতুন লেখা তৈরি করুন</h2>
+          <button type="button" class="cpm-close" id="composerClose" aria-label="বন্ধ করুন" title="বন্ধ করুন"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cpm-author">
+          <img src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" class="cpm-avatar">
+          <div class="cpm-author-meta">
+            <strong><%= typeof displayName === 'function' ? displayName(user) : (user.pen_name || user.full_name) %></strong>
+            <span class="cpm-audience"><i class="fas fa-globe"></i> পাবলিক</span>
+          </div>
+        </div>
+        <input type="text" class="cpm-title" id="cpmTitleInput" name="title" maxlength="160" placeholder="শিরোনাম *" autocomplete="off">
+        <%# সেশন ১০০: খসড়া-রিস্টোর-নোটিশ — আগের অসংরক্ষিত খসড়া ফিরে পেলে জানাই + বাতিল-অপশন %>
+        <div class="cpm-restore" id="cpmRestoreNote" hidden>
+          <i class="fas fa-history"></i>
+          <span>আগের অসংরক্ষিত খসড়া ফিরিয়ে আনা হয়েছে</span>
+          <button type="button" id="cpmDraftDiscard">বাতিল করুন</button>
+        </div>
+        <textarea class="cpm-body" id="cpmBody" name="body" rows="4" placeholder="আপনার লেখা শুরু করুন… @ম্যানশন #হ্যাশট্যাগ ব্যবহার করতে পারেন"></textarea>
+        <input type="hidden" name="images" id="cpmImagesInput" value="[]">
+        <div class="cpm-strip" id="cpmStrip" hidden></div>
+        <div class="cpm-droptip" id="cpmDropTip" hidden><i class="fas fa-cloud-arrow-up"></i> ছবি ছেড়ে দিন — আপলোড শুরু হবে</div>
+        <input type="file" id="cpmFile" accept="image/*" multiple hidden>
+        <input class="cpm-tags" id="cpmTags" name="tags" placeholder="ট্যাগ (কমা দিয়ে আলাদা করুন — ঐচ্ছিক)">
+        <div class="cpm-error" id="cpmError" hidden></div>
+        <div class="cpm-foot">
+          <div class="cpm-foot-left">
+            <button type="button" class="cpm-tool" id="cpmAddImg" title="ছবি যোগ করুন" aria-label="ছবি যোগ করুন"><i class="fas fa-image"></i></button>
+            <span class="cpm-charcount" id="cpmCharCount">০</span>
+            <span class="cpm-draftnote" id="cpmDraftNote" hidden><i class="fas fa-cloud-arrow-down"></i> খসড়া সংরক্ষিত</span>
+          </div>
+          <button type="submit" class="cpm-post" id="cpmPostBtn" disabled>পোস্ট করুন <i class="fas fa-paper-plane"></i></button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
   <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
+  <% if (user) { %><script src="/assets/js/composer-modal.js?v=<%= AV %>"></script><% } %>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>

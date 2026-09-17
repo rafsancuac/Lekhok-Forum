@@ -315,6 +315,50 @@ async function attachPostImages(post) {
   return post;
 }
 
+// সেশন ১০০ (রোডম্যাপ-০৭): FB-কম্পোজার-মোডালের JSON-এন্ডপয়েন্ট — redirect-free সাবমিট।
+// headless-ব্রাউজারে POST→303-follow "Failed to fetch" দেয় (E2E-প্রমাণিত; curl/GET
+// ঠিক), তাই মোডাল JSON-রেসপন্স নিয়ে location.href-নেভিগেট করে। ছবি আগেই
+// /upload-images-এ গেছে — এখানে URL-অ্যারেই আসে (মাল্টিপার্ট দরকার নেই)।
+// নোট: নিউজলেটার-ব্লাস্ট শুধু /articles/new (পূর্ণ-এডিটর)-এই — মোডাল হালকা-কম্পোজার।
+router.post('/api/articles/quick', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const title = String(req.body.title || '').trim();
+  const body = String(req.body.body || '').trim();
+  const tags = String(req.body.tags || '').trim();
+  if (!title || !body) return res.status(400).json({ ok: false, error: 'শিরোনাম ও বিষয়বস্তু আবশ্যক' });
+  try {
+    let images = req.body.images;
+    if (typeof images === 'string') { try { images = JSON.parse(images); } catch (_) { images = []; } }
+    if (!Array.isArray(images)) images = [];
+    // সেশন-৬৭-স্যানিটাইজ-প্যাটার্ন: http(s)-URL বা সাইট-পাথ ছাড়া মান বাদ
+    images = images.filter(u => typeof u === 'string' && (u.startsWith('/') || /^https?:\/.+$/i.test(u))).slice(0, 6);
+    // সেশন-৩৯-প্যাটার্ন: ২-মিনিট ডুপ-গার্ড (দুই পাথের সমান আচরণ)
+    const dup100 = await db.prepare(`
+      SELECT id FROM posts WHERE author_id = ? AND type = 'article' AND title = ?
+        AND created_at > datetime('now', '-2 minutes') ORDER BY id DESC LIMIT 1
+    `).get(me.id, title);
+    if (dup100) return res.json({ ok: true, id: dup100.id, url: '/articles/' + dup100.id, duplicate: true });
+    const mentions = await extractMentions(body);
+    const result = await db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category) VALUES (?, 'article', ?, ?, ?, ?, ?, ?, ?)`).run(
+      me.id, title, body, mdPlain85(body, 200), images[0] || null, tags || null, mentions, 'general'
+    );
+    const postId = result.lastInsertRowid;
+    if (images.length) await db.setPostImages('post', postId, images);
+    try {
+      const mentioned = JSON.parse(mentions);
+      for (const m of mentioned) {
+        if (m.id !== me.id) {
+          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId);
+        }
+      }
+    } catch (_) {}
+    res.json({ ok: true, id: postId, url: '/articles/' + postId });
+  } catch (e) {
+    console.error('[social] quick-post failed:', e.message);
+    res.status(500).json({ ok: false, error: 'পোস্ট সংরক্ষণ ব্যর্থ — আবার চেষ্টা করুন' });
+  }
+});
+
 // ── Submit article (with optional cover image upload) ────────────────────────
 router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req, res) => {
   const { title, body, excerpt, cover_image, tags, category } = req.body;
@@ -2245,8 +2289,25 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
     counts.forEach(r => { reactions[r.reaction_type || 'like'] = r.c; });
     const total = Object.values(reactions).reduce((a, b) => a + b, 0);
-    try { await db.exec("ALTER TABLE posts ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
-    await db.prepare('UPDATE posts SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
+    // সেশন ১০০+১০১-মার্জ (রোডম্যাপ-০৪): session101-এর টগল-ডিটেকশন (DELETE-changes +
+    // OR-IGNORE + ইউনিক-ইনডেক্স) + সেশন-১০০-এর অ্যাটমিক-কাউন্ট-লেখা এক-স্টেটমেন্টে
+    // (স্কেলার-সাবকোয়েরি + json_group_object) — দুই-স্তরেই রেস-সেফ। json_group_object
+    // ব্যর্থ হলে (পুরনো-libsql) JS-recompute ফলব্যাক — আগের-আচরণ।
+    let atomic = false;
+    try {
+      await db.prepare(`UPDATE posts SET
+        like_count = (SELECT COUNT(*) FROM likes WHERE post_id = posts.id),
+        reactions = (SELECT COALESCE(json_group_object(rk, rc), '{}') FROM (
+          SELECT COALESCE(reaction_type,'like') AS rk, COUNT(*) AS rc
+          FROM likes WHERE post_id = ? GROUP BY rk
+        ))
+        WHERE id = ?`).run(target_id, target_id);
+      atomic = true;
+    } catch (_) {}
+    if (!atomic) {
+      try { await db.exec("ALTER TABLE posts ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
+      await db.prepare('UPDATE posts SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
+    }
     res.json({ ok: true, reactions, total, mine: mine101 });
   } else {
     // comment — একই রেস-সেফ প্যাটার্ন (সেশন ১০১)
@@ -2263,8 +2324,22 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
     counts.forEach(r => { reactions[r.reaction_type || 'like'] = r.c; });
     const total = Object.values(reactions).reduce((a, b) => a + b, 0);
-    try { await db.exec("ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
-    await db.prepare('UPDATE comments SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
+    // সেশন ১০০+১০১-মার্জ: কমেন্টেও টগল-ডিটেকশন(session101) + অ্যাটমিক-কাউন্ট(১০০)
+    let atomicC = false;
+    try {
+      await db.prepare(`UPDATE comments SET
+        like_count = (SELECT COUNT(*) FROM likes WHERE comment_id = comments.id),
+        reactions = (SELECT COALESCE(json_group_object(rk, rc), '{}') FROM (
+          SELECT COALESCE(reaction_type,'like') AS rk, COUNT(*) AS rc
+          FROM likes WHERE comment_id = ? GROUP BY rk
+        ))
+        WHERE id = ?`).run(target_id, target_id);
+      atomicC = true;
+    } catch (_) {}
+    if (!atomicC) {
+      try { await db.exec("ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
+      await db.prepare('UPDATE comments SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
+    }
     res.json({ ok: true, reactions, total, mine: mine101 });
   }
 });

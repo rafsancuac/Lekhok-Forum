@@ -62,22 +62,30 @@ router.use(async (req, res, next) => {
 // সেশন ৮৯: ফিড-কুয়েরি বিল্ডার — /dashboard ও /dashboard/more (ইনফিনিট-স্ক্রল)
 // দুই রুটই একই SQL শেয়ার করে (ডুপ্লিকেট-লজিক এড়াতে)। ইউজার না-থাকলে
 // 'following' ফিল্টার স্বয়ংক্রিয়ভাবে 'all'-এ নামে।
-function buildFeedSql(filter, me, limit, offset) {
+// সেশন ১০০ (রোডম্যাপ-০৮): ranked-পুল — স্কোরিং-পুল কুয়েরি (LIMIT/OFFSET ছাড়া,
+// activity বাদ — এনগেজমেন্ট-০ মডারেটর-পোস্ট র‍্যাংকে অর্থহীন); স্কোর-সাজানো JS-সাইডে
+// applyRankedSort()-এ (২-পাস স্কোরিং — পাস-১ SQL পুল, পাস-২ time-decay স্কোর)।
+// UNION-গোটচা-সচেতন: view_count তিন শাখাতেই সমান-অর্ডারে যোগ করা হয়েছে।
+const FEED_POOL_CAP = 150; // ranked পুল — সর্বশেষ ১৫০ পোস্টের মধ্যেই র‍্যাংকিং (স্কেল-সুরক্ষা)
+
+function buildFeedSql(filter, me, limit, offset, ranked) {
   const lim = Math.max(1, Math.min(30, limit | 0 || 30));
   const off = Math.max(0, offset | 0);
-  const limOff = ` ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`;
+  const limOff = ranked
+    ? ` ORDER BY created_at DESC LIMIT ${Math.max(FEED_POOL_CAP, off + lim)}`
+    : ` ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`;
   const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
-           p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions,
+           p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
   const QUESTION_SQL = `\n    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
-           p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions,
+           p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
   const ACTIVITY_SQL = `\n    SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
-           NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions,
+           NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, NULL as pen_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
     WHERE dc.content_type = 'activity' AND dc.published = 1`;
@@ -88,15 +96,55 @@ function buildFeedSql(filter, me, limit, offset) {
   } else if (filter === 'question') {
     sql = QUESTION_SQL + limOff;
   } else if (filter === 'activity') {
+    // ranked-এ activity বাদ — 'activity'-ফিল্টার + ranked = recent-অর্ডারেই (স্কোর-০)
     sql = ACTIVITY_SQL + limOff;
   } else if (filter === 'following' && me) {
     sql = ARTICLE_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
       UNION ALL ` + QUESTION_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)` + limOff;
     params = [me.id, me.id];
+  } else if (ranked) {
+    // র‍্যাংকড-পুল: article+question (activity বাদ) — পুল-ক্যাপ LIMIT limOff-এই বসে
+    sql = ARTICLE_SQL + ' UNION ALL ' + QUESTION_SQL + limOff;
   } else {
     sql = ARTICLE_SQL + ' UNION ALL ' + QUESTION_SQL + ' UNION ALL ' + ACTIVITY_SQL + limOff;
   }
   return { sql, params };
+}
+
+// সেশন ১০০ (রোডম্যাপ-০৮): এনগেজমেন্ট-র‍্যাংকড স্কোরিং — time-decay (FB "জনপ্রিয়")।
+// score = (like×2 + comment×3 + share×2.5) / (ageHours + 2)^1.15
+//   • like_count আসলে মোট-রিঅ্যাকশন (react-এন্ডপয়েন্ট recompute করে রাখে) — দ্বিগুণ-গণনা নেই
+//   • কমেন্ট-ওজন সর্বোচ্চ (FB-প্যাটার্ন: কথোপকথন > রিঅ্যাকশন > শেয়ার)
+//   • ageHours+2 ফ্লোর নতুন-পোস্টকে সুস্পষ্ট-সুবিধা দেয়; ^1.15 = ধীর-ক্ষয় (৭২ঘ→÷৫.৪)
+//   • view_count ×০.২ — পড়া গণনায় সামান্য-ওজন (র‍্যাংক-ইঞ্জিনের প্রত্যাশা-মতো)
+function rankScoreOf(item, nowMs) {
+  const raw = String(item.created_at || '');
+  const t = Date.parse(raw.includes('T') || raw.includes('Z') ? raw : raw.replace(' ', 'T'));
+  const ageH = Number.isFinite(t) ? Math.max(0, (nowMs - t) / 3.6e6) : 0;
+  const engagement =
+    (item.like_count | 0) * 2 +
+    (item.comment_count | 0) * 3 +
+    (item.share_count | 0) * 2.5 +
+    (item.view_count | 0) * 0.2;
+  return engagement / Math.pow(ageH + 2, 1.15);
+}
+function applyRankedSort(pool, nowMs) {
+  const now = nowMs || Date.now();
+  return pool
+    .map(i => ({ i, s: rankScoreOf(i, now) }))
+    .sort((a, b) => (b.s - a.s) || String(b.i.created_at).localeCompare(String(a.i.created_at)))
+    .map(x => x.i);
+}
+// ranked ফিড-পেজ: পুল এনে স্কোর-সাজিয়ে offset..offset+limit স্লাইস
+async function rankedFeedSlice(filter, me, limit, offset) {
+  const lim = Math.max(1, Math.min(30, limit | 0 || 30));
+  const off = Math.max(0, offset | 0);
+  if (off > 300) return { items: [], hasMore: false }; // রানওয়ে-গার্ড (recent-মোডের সমান)
+  const { sql, params } = buildFeedSql(filter, me, lim, off, true);
+  const pool = await db.prepare(sql).all(...params);
+  const ranked = applyRankedSort(pool);
+  const items = ranked.slice(off, off + lim);
+  return { items, hasMore: off + lim < ranked.length && off + lim <= 300 };
 }
 
 // সেশন ৮৯: ফিড-ডেকোরেশন — /dashboard ও /dashboard/more-এর শেয়ার্ড পাইপলাইন।
@@ -209,9 +257,15 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
 router.get('/dashboard', async (req, res) => {
   const me = req.session.user || null;
   const filter = me && req.query.filter === 'following' ? 'following' : (req.query.filter || 'all');   // all | article | question | activity | following
+  const sort = req.query.sort === 'ranked' ? 'ranked' : 'recent'; // সেশন ১০০ (০৮): জনপ্রিয়|সর্বশেষ
 
-  const { sql, params } = buildFeedSql(filter, me, 30, 0);
-  const feed = await db.prepare(sql).all(...params);
+  let feed;
+  if (sort === 'ranked') {
+    feed = (await rankedFeedSlice(filter, me, 30, 0)).items;
+  } else {
+    const { sql, params } = buildFeedSql(filter, me, 30, 0);
+    feed = await db.prepare(sql).all(...params);
+  }
   await decorateFeed(feed, me);
   const myBookmarkedIds = (await decorateFeed([], me, { withBookmarks: true })) || [];
 
@@ -276,7 +330,7 @@ router.get('/dashboard', async (req, res) => {
   // সেশন ৬৬+৮৯: bookmarked-প্রিফিল এখন decorateFeed()-এর সাথেই (উপরে myBookmarkedIds)
 
   res.render('user/dashboard', {
-    feed, filter, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
+    feed, filter, sort, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
     myBookmarkedIds,
     user: req.session.user || null,
     currentPath: '/dashboard'
@@ -291,10 +345,16 @@ router.get('/dashboard/more', async (req, res) => {
   const me = req.session.user || null;
   const filter = me && req.query.filter === 'following' ? 'following' : (['article', 'question', 'activity'].includes(req.query.filter) ? req.query.filter : 'all');
   const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+  const sort = req.query.sort === 'ranked' ? 'ranked' : 'recent'; // সেশন ১০০ (০৮)
   if (offset > 300) return res.json({ ok: true, html: '', hasMore: false, nextOffset: offset }); // রানওয়ে-গার্ড
   try {
-    const { sql, params } = buildFeedSql(filter, me, 10, offset);
-    const feed = await db.prepare(sql).all(...params);
+    let feed;
+    if (sort === 'ranked') {
+      feed = (await rankedFeedSlice(filter, me, 10, offset)).items;
+    } else {
+      const { sql, params } = buildFeedSql(filter, me, 10, offset);
+      feed = await db.prepare(sql).all(...params);
+    }
     await decorateFeed(feed, me);
     const myBookmarkedIds = me ? ((await decorateFeed([], me, { withBookmarks: true })) || []) : [];
     res.render('partials/feed-cards', { feed, user: req.session.user || null, myBookmarkedIds }, function (err, html) {

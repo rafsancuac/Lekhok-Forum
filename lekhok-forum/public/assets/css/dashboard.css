@@ -11,3 +11,105 @@
 .feed-card .actions-bar .react-wrap{flex:1;min-width:0}
 .feed-card .feed-card-body{padding:4px 16px 8px}
 .feed-card .feed-card-head{padding:11px 12px 5px 16px}
+
+/* ── সেশন ১০০ (রোডম্যাপ-০৭ 🔴): FB-স্টাইল কম্পোজার-মোডাল + সর্ট-টগল (রোডম্যাপ-০৮) ── */
+/* composer-input এখন <button> (মোডাল-ওপেনার) — আগে <a> স্টাইলের বাটন-রিসেট */
+button.composer-input{border:0;cursor:pointer;font-family:inherit;font-size:.92rem;text-align:left}
+button.composer-input:focus-visible{outline:2px solid #1877F2;outline-offset:2px}
+button.composer-action{border:0;cursor:pointer;font-family:inherit}
+button.composer-action:focus-visible{outline:2px solid #1877F2;outline-offset:2px}
+.composer-action:hover i{transform:translateY(-1px)}
+.composer-action i{transition:transform .15s ease}
+
+/* সর্ট-টগল — সর্বশেষ|জনপ্রিয় (FB সেগমেন্টেড-কন্ট্রোল প্যাটার্ন) */
+.feed-sort-bar{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:5px;background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow-soft);width:fit-content;max-width:100%;overflow:hidden}
+.feed-sort-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 18px;border-radius:20px;font-size:.86rem;font-weight:600;color:var(--text-muted);text-decoration:none;transition:background .18s,color .18s,box-shadow .18s}
+.feed-sort-btn i{font-size:.8rem}
+.feed-sort-btn:hover{background:var(--bg,#F0F2F5);color:var(--brand-text);text-decoration:none}
+.feed-sort-btn.active{background:#1877F2;color:#fff;box-shadow:0 4px 12px -4px rgba(24,119,242,.55)}
+.feed-sort-btn.active:hover{background:#166FE5;color:#fff}
+.feed-sort-btn:focus-visible{outline:2px solid #1877F2;outline-offset:2px}
+.feed-sort-sep{width:1px;height:18px;background:var(--border)}
+.feed-sort-hint{font-size:.74rem;color:var(--text-muted,#64748b);padding:0 10px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed-sort-hint i{color:#F7B928;margin-right:4px}
+@media (max-width:600px){.feed-sort-bar{width:100%}.feed-sort-btn{flex:1;justify-content:center;padding:8px 10px}.feed-sort-hint{display:none}}
+
+/* কম্পোজার-মোডাল — FB ডায়ালগ (৫০০px কার্ড, সফট-ব্যাকড্রপ, ২০px-রেডিয়াস-সামঞ্জস্য) */
+.cpm-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(9,30,66,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:6vh 16px 24px;animation:cpmFade .18s ease}
+.cpm-dialog{background:var(--card,#fff);width:100%;max-width:500px;border-radius:12px;box-shadow:0 24px 64px -16px rgba(9,30,66,.5),0 0 0 1px rgba(0,0,0,.05);overflow:hidden;animation:cpmPop .22s cubic-bezier(.2,.9,.3,1.2);position:relative}
+html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
+.cpm-head{display:flex;align-items:center;justify-content:center;position:relative;padding:14px 48px;border-bottom:1px solid var(--border,#E4E6EB)}
+.cpm-head h2{margin:0;font-size:1.02rem;color:var(--brand-text);font-weight:700}
+.cpm-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:none;background:var(--bg,#F0F2F5);color:var(--text-muted,#65676B);font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+.cpm-close:hover{background:#D8DADF;color:var(--text,#050505);transform:translateY(-50%) scale(1.05)}
+.cpm-close:focus-visible{outline:2px solid #1877F2;outline-offset:2px}
+.cpm-author{display:flex;align-items:center;gap:10px;padding:14px 16px 0}
+.cpm-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(24,119,242,.35)}
+.cpm-author-meta{display:flex;flex-direction:column;gap:3px}
+.cpm-author-meta strong{font-size:.92rem;color:var(--brand-text);line-height:1.2}
+.cpm-audience{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;color:var(--text-muted,#65676B);background:var(--bg,#F0F2F5);border:1px solid var(--border,#E4E6EB);border-radius:14px;padding:2px 9px;width:fit-content}
+.cpm-audience i{font-size:.68rem;color:#1877F2}
+.cpm-title{margin:12px 16px 0;padding:10px 14px;border:1px solid var(--border,#E4E6EB);border-radius:10px;background:var(--bg,#F7F8FA);font-family:inherit;font-size:1rem;font-weight:700;color:var(--text);transition:border-color .18s,box-shadow .18s,background .18s}
+.cpm-title:focus{outline:0;border-color:#1877F2;background:var(--card,#fff);box-shadow:0 0 0 3px rgba(24,119,242,.14)}
+.cpm-title::placeholder{font-weight:600;color:var(--text-muted,#8a8d91)}
+.cpm-body{display:block;margin:10px 16px 0;padding:10px 14px;border:1px solid var(--border,#E4E6EB);border-radius:10px;background:var(--bg,#F7F8FA);font-family:inherit;font-size:.95rem;line-height:1.65;color:var(--text);resize:none;min-height:96px;max-height:320px;overflow-y:auto;transition:border-color .18s,box-shadow .18s,background .18s}
+.cpm-body:focus{outline:0;border-color:#1877F2;background:var(--card,#fff);box-shadow:0 0 0 3px rgba(24,119,242,.14)}
+.cpm-body::placeholder{color:var(--text-muted,#8a8d91)}
+.cpm-tags{margin:10px 16px 0;padding:9px 14px;border:1px solid var(--border,#E4E6EB);border-radius:10px;background:var(--bg,#F7F8FA);font-family:inherit;font-size:.86rem;color:var(--text);width:calc(100% - 32px)}
+.cpm-tags:focus{outline:0;border-color:#1877F2;background:var(--card,#fff);box-shadow:0 0 0 3px rgba(24,119,242,.14)}
+.cpm-tags::placeholder{color:var(--text-muted,#8a8d91)}
+/* ছবি-স্ট্রিপ — ৩-কলাম মিনি-গ্রিড (FB কম্পোজার-থাম্বনেইল) */
+.cpm-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 16px 0}
+.cpm-cell{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:var(--bg,#F0F2F5);animation:cpmPop .18s ease}
+.cpm-cell img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}
+.cpm-cell:hover img{transform:scale(1.04)}
+.cpm-cell-x{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,.62);color:#fff;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.cpm-cell-x:hover{background:rgba(0,0,0,.8);transform:scale(1.1)}
+.cpm-cell-x:focus-visible{outline:2px solid #fff;outline-offset:1px}
+/* ড্র্যাগ-ওভার টিপ + ডায়ালগ-ড্র্যাগ-স্টেট */
+.cpm-droptip{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(24,119,242,.12);border:2px dashed #1877F2;border-radius:12px;color:#1877F2;font-weight:700;font-size:.95rem;pointer-events:none;animation:cpmFade .15s ease}
+.cpm-droptip i{font-size:1.3rem}
+.cpm-drag{box-shadow:0 0 0 3px rgba(24,119,242,.4),0 24px 64px -16px rgba(9,30,66,.5)}
+/* এরর-বার */
+.cpm-error{margin:10px 16px 0;padding:9px 13px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;font-size:.84rem;border-radius:10px;display:flex;align-items:center;gap:8px;animation:cpmShake .3s ease}
+/* ফুটার — টুল-রো + পোস্ট-বাটন */
+.cpm-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 16px;margin-top:12px}
+.cpm-foot-left{display:flex;align-items:center;gap:10px;min-width:0}
+.cpm-tool{width:38px;height:38px;border-radius:50%;border:none;background:rgba(24,119,242,.1);color:#1877F2;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+.cpm-tool:hover{background:rgba(24,119,242,.18);transform:translateY(-1px)}
+.cpm-tool:focus-visible{outline:2px solid #1877F2;outline-offset:2px}
+.cpm-tool:active{transform:scale(.94)}
+.cpm-charcount{font-size:.76rem;color:var(--text-muted,#65676B);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cpm-charcount.warn{color:#DC2626;font-weight:700}
+.cpm-draftnote{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;color:var(--accent,#059669);background:rgba(5,150,105,.08);border-radius:12px;padding:2px 9px;white-space:nowrap}
+.cpm-draftnote i{font-size:.68rem}
+.cpm-draftnote.flash{animation:cpmDraftPulse .5s ease}
+.cpm-post{display:inline-flex;align-items:center;gap:8px;background:#1877F2;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-family:inherit;font-size:.92rem;font-weight:700;cursor:pointer;box-shadow:0 8px 20px -8px rgba(24,119,242,.7);transition:background .18s,transform .18s,box-shadow .18s,opacity .18s}
+.cpm-post:hover:not(:disabled){background:#166FE5;transform:translateY(-1px);box-shadow:0 12px 26px -8px rgba(24,119,242,.75)}
+.cpm-post:active:not(:disabled){transform:translateY(0) scale(.98)}
+.cpm-post:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.cpm-post:focus-visible{outline:2px solid #050505;outline-offset:2px}
+/* অ্যানিমেশন — reduced-motion-সচেতন */
+@keyframes cpmFade{from{opacity:0}to{opacity:1}}
+@keyframes cpmPop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes cpmShake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes cpmDraftPulse{0%{box-shadow:0 0 0 0 rgba(5,150,105,.4)}100%{box-shadow:0 0 0 8px rgba(5,150,105,0)}}
+@media (prefers-reduced-motion:reduce){.cpm-backdrop,.cpm-dialog,.cpm-cell,.cpm-droptip,.cpm-error,.cpm-draftnote.flash{animation:none}}
+/* মোবাইল — FB মোবাইল-শিট সেন্স */
+@media (max-width:600px){
+  .cpm-backdrop{padding:3vh 10px 16px}
+  .cpm-dialog{max-width:100%;border-radius:14px}
+  .cpm-strip{grid-template-columns:repeat(3,1fr)}
+  .cpm-post{flex:1;justify-content:center}
+  .cpm-foot{flex-direction:column-reverse;align-items:stretch}
+  .cpm-foot-left{justify-content:flex-start}
+}
+
+/* সেশন ১০০: খসড়া-রিস্টোর-নোটিশ বার */
+.cpm-restore{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:8px 12px;background:#FFF7E0;border:1px solid #FDE68A;border-radius:10px;font-size:.8rem;color:#92400E;animation:cpmFade .2s ease}
+.cpm-restore i{color:#F59E0B}
+.cpm-restore span{flex:1;min-width:0}
+.cpm-restore button{background:0 0;border:1px solid #FDE68A;border-radius:6px;padding:3px 10px;font-family:inherit;font-size:.74rem;font-weight:700;color:#92400E;cursor:pointer;transition:background .15s,color .15s}
+.cpm-restore button:hover{background:#92400E;color:#fff;border-color:#92400E}
+.cpm-restore button:focus-visible{outline:2px solid #F59E0B;outline-offset:1px}
+@media (prefers-reduced-motion:reduce){.cpm-restore{animation:none}}
