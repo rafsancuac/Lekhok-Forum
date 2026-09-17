@@ -1,3 +1,23 @@
+<%
+  // ── সেশন ৯৯ (cron-r2): জনপ্রিয়-ট্যাগ ক্লাউড — রুট থেকে আসা raw tag-rows পার্স+কাউন্ট+সর্ট (রুট-ফাইল স্পর্শ নয়)
+  const tagRows99 = Array.isArray(popularTags) ? popularTags : [];
+  const tagCount99 = {};
+  tagRows99.forEach(r => {
+    String(r.tags || '').split(',').forEach(t => {
+      const name = t.trim();
+      if (!name) return;
+      tagCount99[name] = (tagCount99[name] || 0) + 1;
+    });
+  });
+  const topTags99 = Object.entries(tagCount99)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'bn'))
+    .slice(0, 14)
+    .map(([name, count]) => ({ name, count }));
+  const bn99 = (n) => String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+  // ট্যাগ-টগলে type-ফিল্টার (filter=) টিক থাকে; type-ট্যাবে ক্লিকে ট্যাগ রিসেট
+  const keepFilter99 = filterType ? '&filter=' + encodeURIComponent(filterType) : '';
+  const allUrl99 = '/articles' + (filterType ? '?filter=' + encodeURIComponent(filterType) : '');
+%>
 <header class="page-header">
   <div class="container">
     <span class="eyebrow"><%= C('articles_header_eyebrow') %></span>
@@ -15,6 +35,28 @@
       <a href="/articles?filter=letter" class="<%= filterType === 'letter' ? 'active' : '' %>"><i class="fas fa-envelope"></i> প্রকাশিত চিঠি</a>
     </div>
 
+    <% if (topTags99.length) { %>
+      <div class="tag-bar" role="navigation" aria-label="জনপ্রিয় বিষয় অনুযায়ী ফিল্টার">
+        <span class="tag-bar-label"><i class="fas fa-hashtag" aria-hidden="true"></i> জনপ্রিয় বিষয়</span>
+        <div class="tag-bar-chips">
+          <a href="<%= allUrl99 %>" class="tag-pill<%= !tag ? ' active' : '' %>">সব</a>
+          <% topTags99.forEach(t => { %>
+            <a href="/articles?tag=<%= encodeURIComponent(t.name) %><%= keepFilter99 %>" class="tag-pill<%= tag === t.name ? ' active' : '' %>" aria-label="<%= t.name %> বিষয়ে <%= bn99(t.count) %>টি লেখা">
+              <%= t.name %><span class="tag-count"><%= bn99(t.count) %></span>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (tag) { %>
+      <div class="tag-filter-note" role="status">
+        <i class="fas fa-filter" aria-hidden="true"></i>
+        <span><strong><%= tag %></strong> বিষয়ে <span class="tfn-count"><%= bn99(articles ? articles.length : 0) %></span>টি লেখা পাওয়া গেছে</span>
+        <a href="<%= allUrl99 %>" class="tag-clear">ফিল্টার সরান <i class="fas fa-times" aria-hidden="true"></i></a>
+      </div>
+    <% } %>
+
     <% if (articles && articles.length) { %>
       <div class="articles-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px;">
         <% articles.forEach(post => { %>
@@ -24,9 +66,10 @@
             <% } %>
             <div style="padding:16px 18px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:11px; color:var(--text-muted); background:var(--surface-alt); padding:2px 8px; border-radius:5px;">
+                <%# সেশন ৯৯: প্রথম-ট্যাগ এখন ক্লিকেবল ফিল্টার-লিঙ্ক (আগে নিষ্ক্রিয় span) %>
+                <a class="card-tag" href="/articles?tag=<%= encodeURIComponent(post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ') %><%= keepFilter99 %>">
                   <%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %>
-                </span>
+                </a>
                 <span style="font-size:11px; color:var(--text-muted);">
                   <i class="far fa-clock"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD') %>
                 </span>

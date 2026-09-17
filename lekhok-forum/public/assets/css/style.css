@@ -1140,3 +1140,19 @@ html.lf-restoring .feed-more-sentinel{margin:0}
   .notif-bell-wrap.notif-ping .notif-bell-btn,
   .notif-badge.badge-pop { animation: none; }
 }
+/* ── সেশন ৯৯ (cron-r2): জনপ্রিয়-ট্যাগ বার + কার্ড-ট্যাগ (/articles) ── */
+.tag-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.tag-bar-label{font-size:.8rem;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.tag-bar-chips{display:flex;flex-wrap:wrap;gap:8px}
+.tag-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-size:.82rem;font-weight:600;color:var(--text-soft,#475569);background:var(--surface-alt);border:1px solid var(--border);line-height:1.5;transition:all .18s ease}
+.tag-pill:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);box-shadow:0 3px 10px rgba(5,150,105,.12)}
+.tag-pill .tag-count{font-size:.72rem;font-weight:700;color:var(--text-muted);background:rgba(100,116,139,.14);padding:1px 7px;border-radius:999px}
+.tag-pill.active{color:#fff;background:var(--accent);border-color:var(--accent)}
+.tag-pill.active .tag-count{color:#fff;background:rgba(255,255,255,.22)}
+.tag-filter-note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;padding:10px 14px;border-radius:var(--radius);background:var(--accent-soft);border:1px solid rgba(5,150,105,.25);color:var(--accent-dark,#047857);font-size:.9rem}
+.tag-filter-note .tfn-count{font-weight:800}
+.tag-filter-note a.tag-clear{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--accent)}
+.tag-filter-note a.tag-clear:hover{text-decoration:underline}
+a.card-tag{display:inline-flex;align-items:center;font-size:11px;color:var(--text-muted);background:var(--surface-alt);padding:2px 8px;border-radius:5px;border:1px solid transparent;transition:all .18s ease;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background:var(--accent-soft)}
+@media (max-width:640px){.tag-bar{gap:8px;padding:10px 12px}.tag-filter-note a.tag-clear{margin-left:0}}
