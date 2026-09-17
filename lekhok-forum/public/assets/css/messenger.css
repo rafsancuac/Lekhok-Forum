@@ -492,7 +492,10 @@
   color: #fff;
   border-bottom-left-radius: 18px;
   border-bottom-right-radius: 4px;
-  margin-left: auto;
+  /* সেশন ১০৯: margin-left:auto বাদ — এটি সারির সব ফাঁকা-জায়গা গিলে
+     order:-1 অ্যাকশন-রেলকে বাবল থেকে বিচ্ছিন্ন করে সারির বাঁ-প্রান্তে
+     ফেলে রাখত (ইউজার-স্ক্রিনশটের দূরন্ত-বাঁয়ে-আইকন বাগ);
+     justify-content:flex-end নিজেই বাবলকে ডানে প্যাক করে। */
 }
 /* ক্লাস্টার-মাঝে পূর্ণ-গোল কোণ */
 .page-wrap--messenger .bubble.mid-cluster .b-content { border-radius: 18px; }
@@ -530,12 +533,25 @@
    (FB-ওয়েব মেসেঞ্জারের মতো) — লেখার ওপর আর কিছু চেপে বসে না।
    them-বাবল → রেল বাবলের ডানে (DOM-ক্রম); me-বাবল → রেল বামে (order:-1)।
    আনসেন্ড ✕-বাটন সম্পূর্ণ বাদ — ⋮-ড্রপডাউনে ইন্টিগ্রেটেড।
-   রেল সবসময় লেআউট-জায়গা নেয় (হোভারে শিফট-নেই), opacity+pointer-events দিয়ে লুকানো। */
+   রেল সবসময় লেআউট-জায়গা নেয় (হোভারে শিফট-নেই), opacity+pointer-events দিয়ে লুকানো।
+
+   ═══ সেশন ১০৯-ফিক্স (ইউজার-রিপোর্ট: আইকন বাবলের চেয়ে কিছুটা ওপরে) ═══
+   মূল-কারণ ×২:
+   ① গ্লোবাল style.css-এর লেগেসি `.bubble-actions{position:absolute;top:-22px;right:4px}` —
+     messenger.css শুধু `position` ফেরত relative করেছিল, কিন্তু `top/right` অফসেট-দুটো
+     ওভাররাইড হয়নি → relative-পজিশনে রেল নিজের ফ্লেক্স-সেন্টার-স্পট থেকে ২২px ওপরে
+     (আর ৪px বাঁয়ে) সরে বসত। ফিক্স: `inset:auto` — চার-অফসেটই নিরপেক্ষ।
+   ② `.bubble.me .b-content{margin-left:auto}` সারির সব ফাঁকা-জায়গা গিলে ফেলত →
+     order:-1-রেল বাবলের গলাঘরে না লেগে সারির একদম বাঁ-প্রান্তে পড়ে যেত।
+     ফিক্স: auto-মার্জিন বাদ (justify-content:flex-end নিজেই ডানে-প্যাক করে)।
+   ফলাফল: ১-লাইনের ছোট বা ১০-লাইনের বড় বাবল — যাই হোক, রেল বাবলের গা-ঘেঁষে
+   বাঁয়ে এবং বাবলের উল্লম্ব মধ্যবিন্দুতে (align-self:center) পিন করা। */
 .page-wrap--messenger .bubble .bubble-actions {
   position: relative;
+  inset: auto; /* সেশন ১০৯: লেগেসি top:-22px/right:4px লিক-নিউট্রালাইজার */
   display: flex; align-items: center; gap: 2px;
   flex: 0 0 auto;
-  align-self: center; /* বাবল-উচ্চতার মাঝ-সারি (রেফারেন্স-শটের মতো) */
+  align-self: center; /* বাবল-উচ্চতার মাঝ-সারি — বড়/ছোট সব বাবলে */
   opacity: 0; pointer-events: none;
   transition: opacity .15s ease;
 }
