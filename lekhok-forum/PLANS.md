@@ -1171,3 +1171,11 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 **E2E-প্রমাণিত (:3120, স্ক্রিনশটসহ):** QA-উত্তর প্যালেট/টাচ-প্যালেট→care-🤗১ ✓ রিপ্লাই→রিলোড→থ্রেডেড ✓ এডিট-প্রি-ফিল→সম্পাদিত ✓ রিপ্লাই-ডিলিট→কাউন্টার-সিঙ্ক ✓ আর্টিকেল/ফিড-রিগ্রেশন ✓ গেস্ট ✓ 390px-০ ✓ কনসোল-০ ✓।
 
 **পরবর্তী-সুপারিশ:** ① inspect-audit-এর 'stat-tile ×৭' রুল session109-ডিজাইনে আপডেট (এখন স্থায়ী 1-fail) ② থ্রেড-সাবমিটে optimistic-ইনসার্ট (রিলোড-ফ্ল্যাশ এড়াতে) ③ কমেন্ট-রিঅ্যাকশনেও নোটিফিকেশন (পোস্টে আছে) ④ qa-উত্তরে 'শীর্ষ উত্তর' র‍্যাংকিং-ব্যাজের ভবিষ্যৎ-পলিশ।
+
+## Cross-Agent Note: Session 115 — মাল্টি-মেথড 2FA (ইমেইল-ওটিপি) (১৮ সেপ্টেম্বর ২০২৬)
+
+**স্টেট:** users.twofa_method ('totp'|'email', LATER_COLUMNS) + two_factor_tokens টেবিল; helpers/otp.js (issue/verify/cooldown+Resend-REST-fetch — **নতুন npm-ডিপেন্ডেন্সি নেই**; RESEND_API_KEY/RESEND_FROM_EMAIL এনভিতে কি বসালেই লাইভ, না-থাকলে কনসোল-ফলব্যাক)। রুট: /settings/security/{enroll-email,confirm-email}, /settings/account/email (পাসওয়ার্ড-গার্ডড), /login/2fa/resend; login-POST-এ মেথড-রাউটিং।
+
+**কনট্র্যাক্ট-রক্ষণীয়:** ① totp_enabled=মাস্টার-সুইচ — সব-পুরনো-চেক এতেই; twofa_method শুধু মেথড-নির্বাচ। ② মেথড-সিঙ্ক-অবিধা: totp-এনরোল-কনফার্ম **অবশ্যই** twofa_method='totp' সেট করে (email→totp সুইচ-ব্যাকে স্টেল-মেথড হলে লগইন ভুল-চ্যানেলে কোড পাঠায় — লাইভ-ধরা-বাগ), email-কনফার্মে totp_secret=NULL। ③ ৪৫সে-ইস্যু-কুলডাউন + ৫-মিনিট-টোকেন + ৬-চেষ্টা — otp.js-এ কেন্দ্রীভূত, রুটে ডুপ্লিকেট-করবেন না। ④ ইমেইল-মেথড-ইউজারের users.email শূন্য হলে fail-open (লক-আউট-প্রতিরোধ)। ⑤ EJS-ভিউতে emailPending/secPending দুই-পেন্ডিং-স্টেটের প্রাধান্য: secPending → emailPending → status → cards।
+
+**গোটচা:** sql.js-সার্ভারের ডিবাউন্ড-ফ্লাশের আগে স্ট্যান্ডঅ্যালোন-DB-পড়লে স্টেল — E2E-তে ১.৪সে-রিট্রি-লুপ; agent-browser daemon প্রতি-কয়েক-ইনভোকেশনে স্টল → close --all + retry-লুপ open_login()।
