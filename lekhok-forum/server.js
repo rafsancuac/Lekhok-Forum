@@ -175,10 +175,14 @@ app.use((req, res, next) => {
 // সেশন ৫০ (পারফরম্যান্স): স্ট্যাটিক অ্যাসেটে দীর্ঘ Cache-Control।
 // /assets/* (CSS/JS/ফন্ট) `?v=<AV>` দিয়ে bust হয়; /uploads/* timestamp-ফাইলনামে
 // কনটেন্ট-অ্যাড্রেসড — তাই immutable (৩০ দিন) নিরাপদ। অন্য স্ট্যাটিক ১ দিন।
+// সেশন ৯০ (রোডম্যাপ-আইটেম ০৩/২০): sw.js-এ no-cache — SW-আপডেট ২৪-ঘণ্টা-নয়,
+// পরবর্তী-নেভিগেশনেই রোলআউট; ফন্ট-ওয়ারিয়েন্টে ১-বছর-ইমিউটেবল (কখনো বদলায় না)।
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
     let rel = filePath.replace(path.join(__dirname, 'public'), '').replace(/\\/g, '/');
-    if (rel.startsWith('/assets/') || rel.startsWith('/uploads/')) {
+    if (rel === '/sw.js') {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (rel.startsWith('/assets/fonts/') || rel.startsWith('/assets/') || rel.startsWith('/uploads/')) {
       res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
     } else {
       res.setHeader('Cache-Control', 'public, max-age=86400');

@@ -156,4 +156,30 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// ── সেশন ৯০ (রোডম্যাপ-আইটেম ১৮): সিস্টেম-হেলথ-চেক ────────────────────────────
+// অথ-মুক্ত, লাইটওয়েট — সুপারভাইজার-হ্যাং-চেক, আপটাইম-মনিটর ও ক্রন-এজেন্টের
+// পারফরম্যান্স-অডিট (মিনিট ৮-১১) এই এন্ডপয়েন্ট ব্যবহার করবে।
+router.get('/health', async (req, res) => {
+  const start = Date.now();
+  let dbOk = false, dbError = null;
+  try { await db.prepare('SELECT 1').get(); dbOk = true; }
+  catch (e) { dbError = e.message; }
+  const latency = Date.now() - start;
+  const mem = process.memoryUsage();
+  res.status(dbOk ? 200 : 503).set('Cache-Control', 'no-store').json({
+    status: dbOk ? 'healthy' : 'unhealthy',
+    database: dbOk ? 'connected' : ('failed' + (dbError ? ': ' + dbError : '')),
+    latency: latency + 'ms',
+    uptimeSeconds: Math.round(process.uptime()),
+    memory: {
+      rssMb: Math.round(mem.rss / 1048576),
+      heapUsedMb: Math.round(mem.heapUsed / 1048576),
+      heapTotalMb: Math.round(mem.heapTotal / 1048576)
+    },
+    node: process.version,
+    app: 'lekhok-forum',
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router;

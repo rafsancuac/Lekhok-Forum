@@ -91,6 +91,23 @@
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<%= AV %>" />
   <%# সেশন ৫৮: প্রিমিয়াম-রেস্পন্সিভ-অ্যানিমেটেড পলিশ-লেয়ার (additive) -%>
   <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
+  <%# সেশন ৯০ (রোডম্যাপ-আইটেম ২০): PWA সার্ভিস-ওয়ার্কার — অফলাইন-শেল রেজিস্ট্রেশন।
+      স্যান্ডবক্স-গেটওয়ে-সচেতন: পেজ-URL-এ XTransformPort থাকলে sw.js-ও সেই-কুয়েরি নিয়ে
+      রেজিস্টার হয় যাতে গেটওয়ে সঠিক-পোর্টে ফরওয়ার্ড করে। ব্যর্থতা নীরব (SW-নন-সাপোর্ট/iframe)। %>
+  <script>
+  (function () {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      var m = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+      var swUrl = '/sw.js' + (m ? '?XTransformPort=' + m[1] : '');
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(function () { navigator.serviceWorker.register(swUrl).catch(function () {}); }, { timeout: 4000 });
+      } else {
+        setTimeout(function () { navigator.serviceWorker.register(swUrl).catch(function () {}); }, 2500);
+      }
+    } catch (e) { /* নীরব */ }
+  })();
+  </script>
 </head>
 <body class="<%= currentPath === '/' ? 'home-page' : '' %>" data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>">
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
