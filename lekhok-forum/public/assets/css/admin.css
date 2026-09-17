@@ -605,3 +605,97 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
   .us-alert.is-anim{animation:none}
   .us-table tbody tr{transition:none}
 }
+
+/* ── সেশন ১০৫: যোগাযোগ-বার্তা ইনবক্স (msg105/cmodal105 স্কোপড) — EOF-অ্যাপেন্ড-রীতি ── */
+.msg-badge105{background:#dc2626;color:#fff;border-radius:8px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:2px;box-shadow:0 1px 4px rgba(220,38,38,.4);animation:msgPop105 .35s ease}
+@keyframes msgPop105{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.stat-box-accent105{border-left:3px solid var(--ad-accent)}
+.stat-box-accent105 strong{color:var(--ad-accent-ink)}
+.inbox-toolbar105{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0 10px}
+.pill-row105{display:flex;gap:6px;flex-wrap:wrap}
+.pill105{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:99px;border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-ink-2);font-size:.83rem;font-weight:600;text-decoration:none;transition:all .15s}
+.pill105 i{font-size:.75rem;opacity:.75}
+.pill105:hover{border-color:var(--ad-accent);color:var(--ad-accent-ink);background:var(--ad-accent-soft)}
+.pill105.active{background:var(--ad-accent);border-color:var(--ad-accent);color:#fff;box-shadow:0 2px 8px var(--ad-accent-ring)}
+.pill-count105{background:var(--ad-icon-bg);color:var(--ad-icon-ink);border-radius:8px;padding:0 7px;font-size:.72rem;font-weight:700;line-height:18px}
+.pill105.active .pill-count105{background:rgba(255,255,255,.25);color:#fff}
+.pill-count105.hot{background:#dc2626;color:#fff}
+.inbox-search105{display:flex;align-items:center;gap:8px;background:var(--ad-card);border:1px solid var(--ad-line);border-radius:99px;padding:4px 6px 4px 14px;min-width:280px;transition:border-color .15s, box-shadow .15s}
+.inbox-search105:focus-within{border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-accent-ring)}
+.inbox-search105>i{color:var(--ad-muted);font-size:.85rem}
+.inbox-search105 input[type="search"]{border:0;outline:0;background:transparent;font-family:inherit;font-size:.88rem;color:var(--ad-ink);flex:1;min-width:0}
+.inbox-search105 .clr105{color:var(--ad-muted);font-size:.9rem;padding:4px;border-radius:50%;text-decoration:none}
+.inbox-search105 .clr105:hover{background:var(--ad-icon-bg);color:var(--ad-ink)}
+.inbox-meta105{font-size:.83rem;color:var(--ad-muted);margin:0 0 12px}
+.msg-list105{display:grid;gap:10px}
+.msg105-card{display:flex;gap:12px;align-items:flex-start;background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:14px 16px;box-shadow:var(--ad-shadow);transition:border-color .15s, box-shadow .15s, transform .15s;position:relative}
+.msg105-card:hover{border-color:#c9ede0;box-shadow:0 4px 14px rgba(5,150,105,.1)}
+.msg105-card.unread{border-left:4px solid var(--ad-accent);background:linear-gradient(90deg, rgba(5,150,105,.05), var(--ad-card) 22%)}
+.msg105-card.archived{opacity:.72}
+.msg105-card.archived:hover{opacity:1}
+.msg-select105{padding-top:10px}
+.msg-select105 input{width:16px;height:16px;cursor:pointer;accent-color:var(--ad-accent)}
+.msg-mono105{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;flex-shrink:0;margin-top:2px}
+.msg-body105{flex:1;min-width:0}
+.msg-top105{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.msg-dot105{width:8px;height:8px;border-radius:50%;background:transparent;flex-shrink:0}
+.msg105-card.unread .msg-dot105{background:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-accent-ring)}
+.msg-name105{font-size:.95rem;color:var(--ad-ink);line-height:1.4}
+.msg105-card.unread .msg-name105{font-weight:800}
+.msg-mail105{font-size:.82rem;color:var(--ad-muted);text-decoration:none;display:inline-flex;align-items:center;gap:4px;word-break:break-all}
+.msg-mail105:hover{color:var(--ad-accent-ink);text-decoration:underline}
+.msg-time105{margin-left:auto;font-size:.78rem;color:var(--ad-muted);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.msg-subj105{display:inline-flex;align-items:center;gap:6px;margin-top:7px;font-size:.8rem;font-weight:700;color:var(--ad-accent-ink);background:var(--ad-accent-soft);border-radius:99px;padding:3px 11px}
+.msg-subj105 i{font-size:.7rem;opacity:.7}
+.msg-text105{margin:8px 0 0;color:var(--ad-ink-2);font-size:.9rem;line-height:1.75;white-space:pre-line;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.msg105-card.open .msg-text105{display:block;-webkit-line-clamp:unset}
+.msg-more105{margin-top:6px;background:none;border:0;color:var(--ad-accent-ink);font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:2px 0}
+.msg-more105 i{transition:transform .2s}
+.msg105-card.open .msg-more105 i{transform:rotate(180deg)}
+.msg-more105 .less-l{display:none}
+.msg105-card.open .msg-more105 .less-l{display:inline}
+.msg105-card.open .msg-more105 .more-l{display:none}
+.msg-actions105{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px dashed var(--ad-line)}
+.act-btn105{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-ink-2);border-radius:99px;padding:6px 13px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s}
+.act-btn105 i{font-size:.78rem;opacity:.8}
+.act-btn105:hover{border-color:var(--ad-accent);color:var(--ad-accent-ink);background:var(--ad-accent-soft)}
+.act-btn105.accent{background:var(--ad-accent);border-color:var(--ad-accent);color:#fff}
+.act-btn105.accent:hover{background:var(--ad-accent-dark);color:#fff}
+.act-btn105.danger:hover{border-color:var(--ad-red);color:var(--ad-red);background:rgba(220,38,38,.07)}
+.inbox-empty105{text-align:center;padding:52px 18px}
+.inbox-empty105>i{font-size:34px;opacity:.28;display:block;margin-bottom:12px}
+.inbox-empty105 strong{display:block;font-size:1.02rem;color:var(--ad-ink);margin-bottom:6px}
+.inbox-empty105 span{color:var(--ad-muted);font-size:.88rem}
+.pg105{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px 0 4px}
+.pg-btn105{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-ink-2);border-radius:99px;padding:8px 16px;font-size:.84rem;font-weight:700;text-decoration:none;transition:all .15s}
+.pg-btn105:hover{border-color:var(--ad-accent);color:var(--ad-accent-ink);background:var(--ad-accent-soft)}
+.pg-info105{font-size:.83rem;color:var(--ad-muted);font-weight:600}
+/* কনফার্ম-মোডাল */
+.cmodal105{position:fixed;inset:0;z-index:1600;display:none;align-items:center;justify-content:center;padding:20px}
+.cmodal105.open{display:flex}
+.cmodal-back105{position:absolute;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px)}
+.cmodal-card105{position:relative;background:var(--ad-card);border-radius:14px;box-shadow:var(--ad-shadow-lg);max-width:420px;width:100%;padding:26px 24px 22px;text-align:center;animation:cmIn105 .22s ease}
+@keyframes cmIn105{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.cmodal-ico105{width:52px;height:52px;border-radius:50%;background:rgba(220,38,38,.1);color:var(--ad-red);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 12px}
+.cmodal-card105 h3{margin:0 0 8px;font-size:1.08rem;color:var(--ad-ink)}
+.cmodal-card105 p{margin:0 0 18px;color:var(--ad-muted);font-size:.9rem;line-height:1.7}
+.cmodal-btns105{display:flex;gap:10px;justify-content:center}
+/* focus-visible + মোবাইল + reduced-motion */
+.pill105:focus-visible,.act-btn105:focus-visible,.pg-btn105:focus-visible,.msg-more105:focus-visible,.clr105:focus-visible,.cmodal-btns105 .btn:focus-visible{outline:3px solid var(--ad-accent-ring);outline-offset:2px;border-radius:99px}
+@media (max-width:640px){
+  .inbox-toolbar105{flex-direction:column;align-items:stretch}
+  .inbox-search105{min-width:0}
+  .msg105-card{flex-wrap:wrap;padding:12px}
+  .msg-select105{order:-1;width:100%;display:flex;justify-content:flex-end;padding-top:0}
+  .msg-mono105{width:36px;height:36px;font-size:.95rem}
+  .msg-time105{margin-left:0;width:100%;order:5}
+  .act-btn105{padding:7px 12px;font-size:.76rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .msg-badge105{animation:none}
+  .cmodal-card105{animation:none}
+  .msg105-card,.pill105,.act-btn105,.pg-btn105{transition:none}
+}
+
+/* সেশন ১০৫-ব: ড্যাশবোর্ড বার্তা-কার্ডে অপঠিত-ব্যাজ */
+.dash-unread105{position:absolute;top:10px;right:12px;background:#dc2626;color:#fff;border-radius:8px;padding:2px 8px;font-size:.72rem;font-weight:800;box-shadow:0 1px 5px rgba(220,38,38,.4)}

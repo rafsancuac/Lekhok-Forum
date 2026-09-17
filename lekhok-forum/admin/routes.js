@@ -331,6 +331,7 @@ router.get('/', requireStaff, async (req, res) => {
     gallery:   (await db.prepare('SELECT COUNT(*) as c FROM gallery').get()).c,
     resources: (await db.prepare('SELECT COUNT(*) as c FROM resources').get()).c,
     messages:  (await db.prepare('SELECT COUNT(*) as c FROM contact_submissions').get()).c,
+    unreadMessages: (await db.prepare('SELECT COUNT(*) as c FROM contact_submissions WHERE is_read = 0 AND is_archived = 0').get()).c, // সেশন ১০৫: ড্যাশবোর্ড বার্তা-কার্ডে অপঠিত-ব্যাজ
     users:     (await db.prepare("SELECT COUNT(*) as c FROM users WHERE status='active'").get()).c,
     posts:     (await db.prepare("SELECT COUNT(*) as c FROM posts WHERE status='published'").get()).c,
     daily:     (await db.prepare('SELECT COUNT(*) as c FROM daily_content').get()).c,
@@ -1248,6 +1249,7 @@ const BULK_TABLES = {
   'complaints':   ['complaints',    requireScope('complaints')], // সেশন ৩৯: মার্ক-অ্যান্ড-ডিলিট পারিটি
   'subscribers':  ['newsletter_subscribers', requireAdmin], // সেশন ৪১
   'tasks':        ['moderator_tasks',        requireAdmin], // সেশন ৪১
+  'messages':     ['contact_submissions',    requireAdmin], // সেশন ১০৫: ইনবক্স bulk-delete
 };
 for (const slug of Object.keys(BULK_TABLES)) {
   const [table, guard] = BULK_TABLES[slug];
@@ -1350,10 +1352,109 @@ router.post('/navigation', requireStaff, async (req, res) => {
 });
 
 // ── Messages ─────────────────────────────────────────────────────────────────
+// ── সেশন ১০৫: যোগাযোগ-বার্তা ইনবক্স (পূর্ণাঙ্গ) ──────────────────────────────
+// আগের অবস্থা: খালি-লিস্ট (read/unread নেই, অ্যাকশন নেই, সার্চ/ফিল্টার/পেজিনেশন
+// নেই) — PLANS.md সুপারিশ: "সাবমিশন কেউ দেখে না"। এখন: স্ট্যাট-স্ট্রিপ + ফিল্টার
+// পিল + লাইভ-সার্চ + পেজিনেশন + read/unread/archive/delete + bulk-delete
+// (BULK_TABLES-এ 'messages' এন্ট্রি)।
+const MSG_PER105 = 15;
 router.get('/messages', requireAdmin, async (req, res) => {
-  const messages = await db.prepare('SELECT * FROM contact_submissions ORDER BY id DESC').all();
-  res.render('admin/messages', { messages, currentPath: '/admin/messages' });
+  const q105 = String(req.query.q || '').trim().slice(0, 80);
+  const filter105 = ['all', 'unread', 'read', 'archived'].includes(req.query.f) ? req.query.f : 'all';
+  const page105 = Math.max(1, parseInt(req.query.page, 10) || 1);
+
+  // কাউন্টার — ফিল্টার-পিল ব্যাজ + স্ট্যাট-স্ট্রিপ (এক-জায়গায়)
+  const counts105 = {
+    all:      (await db.prepare('SELECT COUNT(*) AS c FROM contact_submissions WHERE is_archived = 0').get()).c,
+    unread:   (await db.prepare('SELECT COUNT(*) AS c FROM contact_submissions WHERE is_read = 0 AND is_archived = 0').get()).c,
+    read:     (await db.prepare('SELECT COUNT(*) AS c FROM contact_submissions WHERE is_read = 1 AND is_archived = 0').get()).c,
+    archived: (await db.prepare('SELECT COUNT(*) AS c FROM contact_submissions WHERE is_archived = 1').get()).c,
+    today:    (await db.prepare("SELECT COUNT(*) AS c FROM contact_submissions WHERE is_archived = 0 AND created_at >= datetime('now', 'localtime', 'start of day')").get()).c
+  };
+
+  const where105 = [];
+  const args105 = [];
+  if (filter105 === 'unread')   { where105.push('is_archived = 0 AND is_read = 0'); }
+  if (filter105 === 'read')     { where105.push('is_archived = 0 AND is_read = 1'); }
+  if (filter105 === 'archived') { where105.push('is_archived = 1'); }
+  if (filter105 === 'all')      { where105.push('is_archived = 0'); }
+  if (q105) {
+    where105.push('(name LIKE ? OR email LIKE ? OR subject LIKE ? OR message LIKE ?)');
+    const like = '%' + q105 + '%';
+    args105.push(like, like, like, like);
+  }
+  const whereSql105 = where105.length ? 'WHERE ' + where105.join(' AND ') : '';
+  const total105 = (await db.prepare(`SELECT COUNT(*) AS c FROM contact_submissions ${whereSql105}`).get(...args105)).c;
+  const messages = await db.prepare(
+    `SELECT * FROM contact_submissions ${whereSql105} ORDER BY is_read ASC, id DESC LIMIT ? OFFSET ?`
+  ).all(...args105, MSG_PER105, (page105 - 1) * MSG_PER105);
+
+  res.render('admin/messages', { messages, currentPath: '/admin/messages',
+    q105, filter105, page105, total105, per105: MSG_PER105,
+    pages105: Math.max(1, Math.ceil(total105 / MSG_PER105)), counts105 });
 });
+
+// সেশন ১০৫: এক-বার্তা অ্যাকশন — read/unread/archive/unarchive/delete
+// সব POST (sidebar-এর injectCsrf42 অটো-_csrf বসায়) + 303-ফেরত (ফিল্টার/সার্চ/পেজ ধরে রেখে) + অডিট
+function msgBack105(req, extraParam) {
+  const parts = ['f', 'q', 'page'].map(k => req.query[k] ? `${k}=${encodeURIComponent(req.query[k])}` : '').filter(Boolean);
+  if (extraParam) parts.push(String(extraParam).replace(/^[&?]/, ''));
+  return '/admin/messages' + (parts.length ? '?' + parts.join('&') : '');
+}
+router.post('/messages/:id/read', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isInteger(id)) {
+    await db.prepare('UPDATE contact_submissions SET is_read = 1 WHERE id = ?').run(id);
+    await TA42.audit(db, req, 'mark-read', 'contact_submissions', id, '');
+  }
+  res.redirect(303, msgBack105(req));
+});
+router.post('/messages/:id/unread', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isInteger(id)) {
+    await db.prepare('UPDATE contact_submissions SET is_read = 0 WHERE id = ?').run(id);
+    await TA42.audit(db, req, 'mark-unread', 'contact_submissions', id, '');
+  }
+  res.redirect(303, msgBack105(req));
+});
+router.post('/messages/:id/archive', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isInteger(id)) {
+    await db.prepare('UPDATE contact_submissions SET is_archived = 1 WHERE id = ?').run(id);
+    await TA42.audit(db, req, 'archive', 'contact_submissions', id, '');
+  }
+  res.redirect(303, msgBack105(req));
+});
+router.post('/messages/:id/unarchive', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isInteger(id)) {
+    await db.prepare('UPDATE contact_submissions SET is_archived = 0 WHERE id = ?').run(id);
+    await TA42.audit(db, req, 'unarchive', 'contact_submissions', id, '');
+  }
+  res.redirect(303, msgBack105(req));
+});
+router.post('/messages/:id/delete', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isInteger(id)) {
+    const tid105 = await TA42.trashDelete(db, 'contact_submissions', id, req);
+    await TA42.audit(db, req, 'delete', 'contact_submissions', id, '');
+    return res.redirect(303, msgBack105(req, tid105 ? 'trashed=' + tid105 : null));
+  }
+  res.redirect(303, msgBack105(req));
+});
+
+// সেশন ১০৫: বাল্ক read/archive/unarchive (bulk-delete জেনেরিক BULK_TABLES থেকে আসে)
+async function msgBulk105(req, res, setter105, label105) {
+  const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+  for (const id of ids) {
+    await setter105(id);
+    await TA42.audit(db, req, label105, 'contact_submissions', id, '');
+  }
+  res.redirect(303, msgBack105(req, 'saved=1'));
+}
+router.post('/messages/bulk-read',      requireAdmin, (req, res) => msgBulk105(req, res, id => db.prepare('UPDATE contact_submissions SET is_read = 1 WHERE id = ?').run(id), 'bulk-mark-read'));
+router.post('/messages/bulk-archive',   requireAdmin, (req, res) => msgBulk105(req, res, id => db.prepare('UPDATE contact_submissions SET is_archived = 1 WHERE id = ?').run(id), 'bulk-archive'));
+router.post('/messages/bulk-unarchive', requireAdmin, (req, res) => msgBulk105(req, res, id => db.prepare('UPDATE contact_submissions SET is_archived = 0 WHERE id = ?').run(id), 'bulk-unarchive'));
 
 // ── Newsletter subscribers (visible to admin AND moderators) ─────────────────
 // সেশন ৪২: সাবস্ক্রাইবার CSV এক্সপোর্ট

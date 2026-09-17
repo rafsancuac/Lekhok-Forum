@@ -107,7 +107,7 @@
     <a href="/admin/users"          class="<%= _active('/admin/users') %>"><i class="fas fa-users-cog"></i> ইউজার</a>
     <a href="/admin/moderators"     class="<%= _active('/admin/moderators') %>"><i class="fas fa-user-shield"></i> মডারেটর</a>
     <% } %>
-    <a href="/admin/messages"       class="<%= _active('/admin/messages') %>"><i class="fas fa-envelope"></i> বার্তা</a>
+    <a href="/admin/messages"       class="<%= _active('/admin/messages') %>"><i class="fas fa-envelope"></i> বার্তা<% if (typeof unreadMsg105 !== 'undefined' && unreadMsg105 > 0) { %> <span class="msg-badge105" aria-label="অপঠিত বার্তা"><%= unreadMsg105 %></span><% } %></a>
     <a href="/admin/subscribers"    class="<%= _active('/admin/subscribers') %>"><i class="fas fa-paper-plane"></i> নিউজলেটার</a>
     <a href="/admin/complaints"     class="<%= _active('/admin/complaints') %>"><i class="fas fa-flag"></i> অভিযোগ</a>
 

@@ -3,35 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>লেখক ফোরাম — অ্যাডমিন প্যানেল</title>
+  <title>যোগাযোগ বার্তা — অ্যাডমিন প্যানেল</title>
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
 </head>
 <body>
 <%- include('partials/sidebar') %>
 <div class="admin-main">
   <div class="admin-header">
-    <h1>যোগাযোগ বার্তা</h1>
-    <p><%= messages.length %> টি বার্তা</p>
+    <h1><i class="fas fa-inbox"></i> যোগাযোগ বার্তা</h1>
+    <p>/contact ফর্ম থেকে আসা দর্শক-পাঠানো বার্তা — পড়ুন, উত্তর দিন, আর্কাইভ করুন</p>
   </div>
+
+  <% /* ── স্ট্যাট-স্ট্রিপ ─────────────────────────────────────────── */ %>
+  <div class="stat-grid">
+    <div class="stat-box"><i class="fas fa-inbox"></i><div><strong><%= counts105.all %></strong><span>ইনবক্সে মোট</span></div></div>
+    <div class="stat-box<%= counts105.unread > 0 ? ' stat-box-accent105' : '' %>"><i class="fas fa-envelope"></i><div><strong><%= counts105.unread %></strong><span>অপঠিত</span></div></div>
+    <div class="stat-box"><i class="fas fa-calendar-day"></i><div><strong><%= counts105.today %></strong><span>আজকের</span></div></div>
+    <div class="stat-box"><i class="fas fa-box-archive"></i><div><strong><%= counts105.archived %></strong><span>আর্কাইভড</span></div></div>
+  </div>
+
+  <% /* ── ফিল্টার-পিল + সার্চ ────────────────────────────────────── */ %>
+  <div class="inbox-toolbar105">
+    <div class="pill-row105" role="tablist" aria-label="বার্তা ফিল্টার">
+      <a class="pill105<%= filter105 === 'all' ? ' active' : '' %>" href="/admin/messages<%= q105 ? '?q=' + encodeURIComponent(q105) : '' %>">সব <span class="pill-count105"><%= counts105.all %></span></a>
+      <a class="pill105<%= filter105 === 'unread' ? ' active' : '' %>" href="/admin/messages?f=unread<%= q105 ? '&q=' + encodeURIComponent(q105) : '' %>"><i class="fas fa-envelope"></i> অপঠিত <span class="pill-count105<%= counts105.unread > 0 ? ' hot' : '' %>"><%= counts105.unread %></span></a>
+      <a class="pill105<%= filter105 === 'read' ? ' active' : '' %>" href="/admin/messages?f=read<%= q105 ? '&q=' + encodeURIComponent(q105) : '' %>"><i class="fas fa-envelope-open"></i> পঠিত <span class="pill-count105"><%= counts105.read %></span></a>
+      <a class="pill105<%= filter105 === 'archived' ? ' active' : '' %>" href="/admin/messages?f=archived<%= q105 ? '&q=' + encodeURIComponent(q105) : '' %>"><i class="fas fa-box-archive"></i> আর্কাইভ <span class="pill-count105"><%= counts105.archived %></span></a>
+    </div>
+    <form method="GET" class="inbox-search105" role="search">
+      <% if (filter105 !== 'all') { %><input type="hidden" name="f" value="<%= filter105 %>"><% } %>
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input type="search" name="q" value="<%= q105 %>" placeholder="নাম, ইমেইল, বিষয় বা বার্তা খুঁজুন…" aria-label="বার্তা খুঁজুন">
+      <% if (q105) { %><a class="clr105" href="/admin/messages<%= filter105 !== 'all' ? '?f=' + filter105 : '' %>" aria-label="সার্চ মুছুন"><i class="fas fa-xmark"></i></a><% } %>
+      <button class="btn btn-primary btn-sm" type="submit">খুঁজুন</button>
+    </form>
+  </div>
+
+  <p class="inbox-meta105"><%= total105 %> টি বার্তা<% if (q105) { %> — “<%= q105 %>” এর জন্য<% } %><% if (pages105 > 1) { %> · পেজ <%= page105 %>/<%= pages105 %><% } %></p>
+
+  <% /* ── বাল্ক-বার (sidebar-এর initBulkBar চুক্তি: bulkBar + bulk_ids) ── */ %>
+  <form method="POST" action="/admin/messages/bulk-delete" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড বার্তাগুলো মুছে ট্র্যাশে পাঠানো হবে?"><i class="fas fa-trash"></i> মুছুন</button>
+    <% if (filter105 === 'archived') { %>
+    <button type="submit" formmethod="post" formaction="/admin/messages/bulk-unarchive" class="btn btn-sm" data-bulk-msg="সিলেক্টেড বার্তাগুলো ইনবক্সে ফেরত আনা হবে?"><i class="fas fa-inbox-out"></i> ইনবক্সে ফেরত</button>
+    <% } else { %>
+    <button type="submit" formmethod="post" formaction="/admin/messages/bulk-archive" class="btn btn-sm" data-bulk-msg="সিলেক্টেড বার্তাগুলো আর্কাইভে সরানো হবে?"><i class="fas fa-box-archive"></i> আর্কাইভ</button>
+    <button type="submit" formmethod="post" formaction="/admin/messages/bulk-read" class="btn btn-sm" data-bulk-msg="সিলেক্টেড বার্তাগুলো পঠিত হিসেবে চিহ্নিত হবে?"><i class="fas fa-envelope-open-text"></i> পঠিত করুন</button>
+    <% } %>
+  </form>
+
   <% if (messages.length === 0) { %>
-    <div class="card empty">কোনো বার্তা নেই</div>
+    <div class="card empty inbox-empty105">
+      <i class="fas <%= q105 ? 'fa-magnifying-glass' : (filter105 === 'archived' ? 'fa-box-archive' : (filter105 === 'unread' ? 'fa-envelope-open' : 'fa-inbox')) %>"></i>
+      <strong><%= q105 ? 'কোনো মিল পাওয়া যায়নি' : (filter105 === 'archived' ? 'আর্কাইভ খালি' : (filter105 === 'unread' ? 'সব বার্তা পঠিত ✓' : 'ইনবক্স খালি')) %></strong>
+      <span><%= q105 ? 'অন্য শব্দ দিয়ে খুঁজে দেখুন বা সার্চ মুছুন।' : (filter105 === 'archived' ? 'আর্কাইভ করা বার্তা এখানে জমা হবে।' : 'ওয়েবসাইটের যোগাযোগ-ফর্মে নতুন বার্তা এলে এখানে দেখা যাবে।') %></span>
+    </div>
   <% } else { %>
-  <div style="display:grid; gap:12px;">
-    <% messages.forEach(m => { %>
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <strong><%= m.name %></strong>
-          <span style="color:#999; font-size:0.85rem;"><%= new Date(m.created_at).toLocaleString('bn-BD') %></span>
-        </div>
-        <% if (m.email) { %><p style="color:#666; font-size:0.9rem;"><i class="fas fa-envelope"></i> <%= m.email %></p><% } %>
-        <% if (m.subject) { %><p style="margin-top:6px;"><strong>বিষয়:</strong> <%= m.subject %></p><% } %>
-        <p style="margin-top:8px; line-height:1.6;"><%= m.message %></p>
+
+  <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin:2px 0 10px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>
+
+  <div class="msg-list105">
+    <% const TINTS105 = ['#059669','#7c3aed','#d97706','#dc2626','#0891b2']; %>
+    <% messages.forEach((m, idx) => { %>
+    <% const isUnread105 = !m.is_read; %>
+    <% const mono105 = (String(m.name || '?').trim()[0] || '?').toUpperCase(); %>
+    <% const tint105 = TINTS105[m.id % TINTS105.length]; %>
+    <% const replySub105 = m.subject ? ( /^রে:/i.test(m.subject) || /^re:/i.test(m.subject) ? m.subject : 'Re: ' + m.subject ) : 'Re: আপনার বার্তা'; %>
+    <div class="msg105-card<%= isUnread105 ? ' unread' : '' %><%= m.is_archived ? ' archived' : '' %>" id="msg<%= m.id %>">
+      <div class="msg-select105">
+        <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট <%= m.id %>">
       </div>
+      <div class="msg-mono105" style="background:<%= tint105 %>1a;color:<%= tint105 %>;border:1px solid <%= tint105 %>33;"><%= mono105 %></div>
+      <div class="msg-body105">
+        <div class="msg-top105">
+          <span class="msg-dot105" aria-hidden="true"></span>
+          <strong class="msg-name105"><%= m.name %></strong>
+          <% if (m.email) { %><a class="msg-mail105" href="mailto:<%= m.email %>"><i class="fas fa-at"></i> <%= m.email %></a><% } %>
+          <time class="msg-time105" datetime="<%= String(m.created_at).replace(' ', 'T') %>" title="<%= m.created_at ? new Date(String(m.created_at).replace(' ', 'T')).toLocaleString('bn-BD') : '' %>"><i class="far fa-clock"></i> <%= m.created_at ? new Date(String(m.created_at).replace(' ', 'T')).toLocaleString('bn-BD', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—' %></time>
+        </div>
+        <% if (m.subject) { %><div class="msg-subj105"><i class="fas fa-tag"></i> <%= m.subject %></div><% } %>
+        <p class="msg-text105"><%= m.message %></p>
+        <button type="button" class="msg-more105" data-toggle-msg aria-expanded="false"><span class="more-l">পুরো বার্তা দেখুন</span><span class="less-l">সংক্ষেপে দেখুন</span> <i class="fas fa-chevron-down"></i></button>
+        <div class="msg-actions105">
+          <% if (isUnread105) { %>
+          <form method="POST" action="/admin/messages/<%= m.id %>/read<%= (filter105 !== 'all' || q105 || page105 > 1) ? '?' + [filter105 !== 'all' ? 'f=' + filter105 : '', q105 ? 'q=' + encodeURIComponent(q105) : '', page105 > 1 ? 'page=' + page105 : ''].filter(Boolean).join('&') : '' %>">
+            <button class="act-btn105" title="পঠিত হিসেবে চিহ্নিত করুন"><i class="fas fa-envelope-open"></i> পঠিত করুন</button>
+          </form>
+          <% } else { %>
+          <form method="POST" action="/admin/messages/<%= m.id %>/unread<%= (filter105 !== 'all' || q105 || page105 > 1) ? '?' + [filter105 !== 'all' ? 'f=' + filter105 : '', q105 ? 'q=' + encodeURIComponent(q105) : '', page105 > 1 ? 'page=' + page105 : ''].filter(Boolean).join('&') : '' %>">
+            <button class="act-btn105" title="অপঠিত হিসেবে চিহ্নিত করুন"><i class="fas fa-envelope"></i> অপঠিত করুন</button>
+          </form>
+          <% } %>
+          <% if (m.is_archived) { %>
+          <form method="POST" action="/admin/messages/<%= m.id %>/unarchive<%= filter105 === 'archived' ? '?f=archived' : '' %>">
+            <button class="act-btn105" title="ইনবক্সে ফেরত আনুন"><i class="fas fa-inbox-out"></i> ইনবক্সে ফেরত</button>
+          </form>
+          <% } else { %>
+          <form method="POST" action="/admin/messages/<%= m.id %>/archive<%= filter105 !== 'all' ? '?f=' + filter105 : '' %>">
+            <button class="act-btn105" title="আর্কাইভে সরান"><i class="fas fa-box-archive"></i> আর্কাইভ</button>
+          </form>
+          <% } %>
+          <% if (m.email) { %>
+          <a class="act-btn105 accent" href="mailto:<%= m.email %>?subject=<%= encodeURIComponent(replySub105) %>&body=<%= encodeURIComponent('প্রিয় ' + m.name + ',\n\nআপনার বার্তার জন্য ধন্যবাদ।\n\n') %>"><i class="fas fa-reply"></i> উত্তর দিন</a>
+          <% } %>
+          <button type="button" class="act-btn105 danger" data-confirm="“<%= m.name %>”-এর বার্তা মুছে ট্র্যাশে পাঠানো হবে — নিশ্চিত?" data-form="/admin/messages/<%= m.id %>/delete<%= (filter105 !== 'all' || q105 || page105 > 1) ? '?' + [filter105 !== 'all' ? 'f=' + filter105 : '', q105 ? 'q=' + encodeURIComponent(q105) : '', page105 > 1 ? 'page=' + page105 : ''].filter(Boolean).join('&') : '' %>"><i class="fas fa-trash"></i> মুছুন</button>
+        </div>
+      </div>
+    </div>
     <% }) %>
   </div>
+
+  <% if (pages105 > 1) { %>
+  <div class="pg105">
+    <% const qB = (f, p) => { const a = []; if (f !== 'all') a.push('f=' + f); if (q105) a.push('q=' + encodeURIComponent(q105)); a.push('page=' + p); return '/admin/messages?' + a.join('&'); }; %>
+    <% if (page105 > 1) { %><a class="pg-btn105" href="<%= qB(filter105, page105 - 1) %>">← আগের</a><% } %>
+    <span class="pg-info105">পেজ <%= page105 %> / <%= pages105 %></span>
+    <% if (page105 < pages105) { %><a class="pg-btn105" href="<%= qB(filter105, page105 + 1) %>">পরের →</a><% } %>
+  </div>
+  <% } %>
   <% } %>
 </div>
+
+<% /* ── কাস্টম কনফার্ম-মোডাল (নেটিভ confirm() নিষিদ্ধ — সেশন-৪৫ নীতি) ── */ %>
+<div class="cmodal105" id="confirmModal105" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="cmText105">
+  <div class="cmodal-back105" data-cm-close></div>
+  <div class="cmodal-card105" role="document">
+    <div class="cmodal-ico105"><i class="fas fa-triangle-exclamation"></i></div>
+    <h3 id="cmTitle105">নিশ্চিত করুন</h3>
+    <p id="cmText105">আপনি কি নিশ্চিত?</p>
+    <div class="cmodal-btns105">
+      <button type="button" class="btn" data-cm-close>বাতিল</button>
+      <button type="button" class="btn btn-danger" id="cmOk105"><i class="fas fa-check"></i> নিশ্চিত</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  /* ── ১০৫-ক: বার্তা-কার্ড এক্সপ্যান্ড/কল্যাপ্স (clamp → full) ── */
+  document.querySelectorAll('[data-toggle-msg]').forEach(function (btn) {
+    var card = btn.closest('.msg105-card');
+    if (!card) return;
+    var p = card.querySelector('.msg-text105');
+    if (!p) return;
+    if (p.scrollHeight <= p.clientHeight + 2) { btn.hidden = true; return; }
+    btn.addEventListener('click', function () {
+      var open = card.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+
+  /* ── ১০৫-খ: কাস্টম কনফার্ম-মোডাল — card-delete (data-confirm + data-form)
+        এবং bulkBar submit (data-bulk-msg) দুটোতেই ── */
+  var modal = document.getElementById('confirmModal105');
+  var cmText = document.getElementById('cmText105');
+  var cmOk = document.getElementById('cmOk105');
+  var pending = null; /* fn() | form */
+  function openModal(text, onOk) {
+    if (!modal) return onOk();
+    cmText.textContent = text;
+    pending = onOk;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(function () { cmOk.focus(); }, 40);
+  }
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    pending = null;
+  }
+  if (modal) {
+    modal.addEventListener('click', function (e) { if (e.target.closest('[data-cm-close]')) closeModal(); });
+    cmOk.addEventListener('click', function () { var fn = pending; closeModal(); if (fn) fn(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+  }
+  document.querySelectorAll('[data-confirm][data-form]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      openModal(btn.getAttribute('data-confirm'), function () {
+        var f = document.createElement('form');
+        f.method = 'POST';
+        f.action = btn.getAttribute('data-form');
+        var m = document.querySelector('meta[name="csrf-token"]');
+        if (m && m.content) {
+          var i = document.createElement('input'); i.type = 'hidden'; i.name = '_csrf'; i.value = m.content;
+          f.appendChild(i);
+        }
+        document.body.appendChild(f);
+        f.submit();
+      });
+    });
+  });
+  var bulkBar = document.getElementById('bulkBar');
+  if (bulkBar) {
+    bulkBar.addEventListener('submit', function (e) {
+      /* sidebar-এর initBulkBar খালি-হলে preventDefault করে; আমরা ০-আইডিতে মোডাল খুলব না */
+      if (!bulkBar.querySelectorAll('input[type="hidden"][name="ids"]').length) return;
+      if (bulkBar.dataset.skipConfirm105 === '1') { delete bulkBar.dataset.skipConfirm105; return; }
+      var submitter = (e.submitter && e.submitter.getAttribute) ? e.submitter : bulkBar.querySelector('[data-bulk-msg]');
+      var msg = submitter ? submitter.getAttribute('data-bulk-msg') : null;
+      if (!msg) return;
+      e.preventDefault();
+      /* ⚠️ গোটচা: form.submit() সাবমিটার-বাটনের formaction অগ্রাহ্য করে —
+         ফর্মের ডিফল্ট action (bulk-delete)-এ যায়! তাই কনফার্মের পরে বাটনে
+         আবার .click() করি, skip-flag দিয়ে মোডাল-লুপ এড়িয়ে (সেশন-১০৫ QA-তে
+         বাল্ক-read ভুলে bulk-delete চালানোর আসল-ঘটনা থেকে শেখা)। */
+      openModal(msg, function () {
+        if (submitter && typeof submitter.click === 'function') {
+          bulkBar.dataset.skipConfirm105 = '1';
+          submitter.click();
+        } else {
+          bulkBar.submit();
+        }
+      });
+    });
+  }
+
+  /* ── ১০৫-গ: ?saved=1 টোস্ট (bulk-action ফেরত) ── */
+  try {
+    var qs = new URLSearchParams(location.search);
+    if (qs.get('saved') === '1') {
+      qs.delete('saved');
+      var clean = location.pathname + (qs.toString() ? '?' + qs.toString() : '') + location.hash;
+      if (history.replaceState) history.replaceState(null, '', clean);
+      var t = document.createElement('div');
+      t.setAttribute('role', 'status');
+      t.style.cssText = 'position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:1300;background:#065f46;color:#fff;border-radius:5px;padding:12px 20px;font-size:.92rem;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.3);transition:opacity .5s;';
+      t.textContent = '✓ অ্যাকশন সম্পন্ন হয়েছে';
+      document.body.appendChild(t);
+      setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 500); }, 3200);
+    }
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>

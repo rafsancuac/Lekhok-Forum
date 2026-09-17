@@ -117,6 +117,8 @@ const MIGRATION_SQL = `
     email TEXT,
     subject TEXT,
     message TEXT,
+    is_read INTEGER DEFAULT 0,
+    is_archived INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS users (
@@ -554,6 +556,14 @@ const LATER_COLUMNS = [
   // সেশন ১০২: নোটিফিকেশন-ড্রপডাউন actor-avatar — কে ট্রিগার করেছে তার রেফারেন্স
   // (nullable — সিস্টেম/মডারেশন-নোটিফিকেশনে actor নেই, আইকন-ফলব্যাক থাকবে)।
   ['notifications', 'actor_id', 'INTEGER'],
+  // সেশন ১০৭: যোগাযোগ-বার্তা ইনবক্স — is_read (অপঠিত-ব্যাজ/ফিল্টার),
+  // is_archived (ইনবক্স পরিষ্কার রাখতে আর্কাইভ-ফোল্ডার)। LATER_COLUMNS-এ
+  // আছে বলে পুরনো DB (লোকাল sql.js + লাইভ Turso)-তে মাইগ্রেশন-ছাড়াই
+  // প্রথম বুটেই কলাম পৌঁছে যায় (duplicate-column → নিরীহ catch)।
+  // [নাম্বার-রেস-নোট: কমিট-লেবেলে ১০৫ দুইবার + ১০৬ অন্য-এজেন্টে ব্যবহৃত —
+  //  সর্বোচ্চ+১ রীতিতে এই-কাজ ১০৭; PLANS-নোট ১০৫-লেবেলে-লেখা ছিল, ১০৭-তে সংশোধিত]
+  ['contact_submissions', 'is_read',     'INTEGER DEFAULT 0'],
+  ['contact_submissions', 'is_archived', 'INTEGER DEFAULT 0'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

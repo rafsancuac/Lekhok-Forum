@@ -373,6 +373,12 @@ app.use(async (req, res, next) => {
     const staff43 = req.session && (req.session.adminUser || (req.session.user && /moderator|admin/.test(req.session.user.role)));
     if (staff43 && (req.path.startsWith('/admin') || req.path.startsWith('/moderator'))) {
       try { const rc = await db.prepare('SELECT COUNT(*) AS c FROM trash').get(); res.locals.trashCount42 = rc ? rc.c : 0; } catch (e) {}
+      // সেশন ১০৫: সাইডবার "বার্তা" অপঠিত-ব্যাজ (যোগাযোগ-ফর্মের নতুন সাবমিশন
+      // কেউ না-দেখার সমস্যার দৃশ্যমান সমাধান — অ্যাডমিন প্যানেলে ঢুকলেই চোখে পড়ে)
+      const isAdmin105 = req.session && !!req.session.adminUser;
+      if (isAdmin105) {
+        try { const rm = await db.prepare('SELECT COUNT(*) AS c FROM contact_submissions WHERE is_read = 0 AND is_archived = 0').get(); res.locals.unreadMsg105 = rm ? rm.c : 0; } catch (e) {}
+      }
     }
     res.locals.restoredFlag = req.query.restored || null;
   } catch (e) { /* কুকি-পার্স ব্যর্থ হলেও রুট চালু থাকে */ }

@@ -27,7 +27,7 @@
       <a href="/admin/gallery"     class="stat-box v-violet"><span class="stat-ico"><i class="fas fa-images"></i></span><div><strong><%= counts.gallery %></strong><span>গ্যালারি</span></div></a>
       <a href="/admin/daily"       class="stat-box v-cyan"><span class="stat-ico"><i class="fas fa-sun"></i></span><div><strong><%= counts.daily %></strong><span>ডেইলি কনটেন্ট</span></div></a>
       <a href="/admin/resources"   class="stat-box v-amber"><span class="stat-ico"><i class="fas fa-book"></i></span><div><strong><%= counts.resources %></strong><span>রিসোর্স</span></div></a>
-      <a href="/admin/messages"    class="stat-box v-green"><span class="stat-ico"><i class="fas fa-envelope"></i></span><div><strong><%= counts.messages %></strong><span>বার্তা</span></div></a>
+      <a href="/admin/messages"    class="stat-box v-green"><span class="stat-ico"><i class="fas fa-envelope"></i></span><div><strong><%= counts.messages %></strong><span>বার্তা</span></div><% if (counts.unreadMessages > 0) { %><span class="dash-unread105" title="অপঠিত বার্তা"><%= counts.unreadMessages %></span><% } %></a>
       <a href="/admin/complaints"  class="stat-box v-rose"><span class="stat-ico"><i class="fas fa-flag"></i></span><div><strong><%= counts.complaints %></strong><span>নতুন অভিযোগ</span></div></a>
     </div>
 
