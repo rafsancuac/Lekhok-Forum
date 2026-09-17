@@ -418,6 +418,32 @@ const MIGRATION_SQL = `
   CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at);
   CREATE INDEX IF NOT EXISTS idx_reports_post ON reports(post_id);
   CREATE INDEX IF NOT EXISTS idx_reports_comment ON reports(comment_id);
+  CREATE TABLE IF NOT EXISTS call_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER NOT NULL,
+    caller_id INTEGER NOT NULL,
+    callee_id INTEGER NOT NULL,
+    kind TEXT DEFAULT 'audio',
+    status TEXT DEFAULT 'ringing',
+    offer_sdp TEXT,
+    answer_sdp TEXT,
+    ended_by INTEGER,
+    ended_reason TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    answered_at DATETIME,
+    ended_at DATETIME
+  );
+  CREATE INDEX IF NOT EXISTS idx_calls_callee ON call_sessions(callee_id, status);
+  CREATE INDEX IF NOT EXISTS idx_calls_caller ON call_sessions(caller_id, status);
+  CREATE INDEX IF NOT EXISTS idx_calls_conv ON call_sessions(conversation_id);
+  CREATE TABLE IF NOT EXISTS call_signals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    call_id INTEGER NOT NULL,
+    sender_id INTEGER NOT NULL,
+    payload TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_callsig_call ON call_signals(call_id, id);
 `;
 
 // Columns added in later migrations — applied to existing installs during initDb().
@@ -479,13 +505,14 @@ const LATER_COLUMNS = [
   // সেশন ৮৫: পিনড-পোস্ট — লেখক তার সেরা লেখা প্রোফাইল-টাইমলাইনের শীর্ষে
   // পিন করতে পারেন (pen_name/genres কলাম সেশন-৮০-র social.js ALTER-লুপে আছে)।
   ['posts', 'is_pinned', 'INTEGER DEFAULT 0'],
-  // সেশন ৯১ (লাইভ-বাগফিক্স): সেশন-৮০-র social.js ALTER-লুপ প্রোডাকশন Turso-তে
-  // চলেনি → users.pen_name নেই বলে লাইভ /dashboard সব-ফিল্টারে 500 (SQL_INPUT_ERROR:
-  // no such column: u.pen_name) — ড্যাশবোর্ড-ইউনিয়ন-কোয়েরি এই কলাম সিলেক্ট করে।
-  // LATER_COLUMNS-এ সরানো হলো যাতে উভয়-ব্যাকএন্ডে প্রতি-বুটে ইডেম্পোটেন্টভাবে
-  // নিশ্চিত হয় (duplicate-column → নিরীহ catch)।
+  // সেশন ৯১/৯৩ (লাইভ-বাগফিক্স + fresh-deploy-বাগফিক্স, দুই-এজেন্টের সমান্তরাল আবিষ্কার):
+  // users-এর pen_name/genres আগে শুধু /settings-ভিজিটে লেজি-ALTER হতো → লাইভ Turso-তে
+  // ও fresh DB/ডিপ্লয়ে /dashboard-এর feed-কোয়েরি (u.pen_name) 500 দিত ("no such column")।
+  // এখন বুট-টাইমেই ensure (idempotent — duplicate-column → নিরীহ catch)।
   ['users', 'pen_name', 'TEXT'],
   ['users', 'genres', 'TEXT'],
+  ['users', 'allow_messages_from', "TEXT DEFAULT 'everyone'"],
+  ['users', 'bookmarks_public', 'INTEGER DEFAULT 0'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
@@ -541,6 +568,37 @@ async function applyLaterMigrations() {
     await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user ON quiz_attempts(user_id, answered_at)');
     await backend.exec('CREATE INDEX IF NOT EXISTS idx_quiz_attempts_quiz ON quiz_attempts(quiz_id)');
   } catch (e) { /* already exists — fine */ }
+  // সেশন ৯৩: WebRTC কল — সিগন্যালিং-স্টোর (Vercel-serverless-নিরাপদ: WebSocket
+  // নেই, কথোপকথনের বিদ্যমান HTTP-পোলিং-প্যাটার্নেই SDP/ICE রিলে)। MIGRATION_SQL-এও
+  // যোগ; এখানে পুনঃCREATE → ফাংশন-সোর্স-হ্যাশ বদলায় → লাইভ Turso-তে ফুল-ইনিট চলবে।
+  try {
+    await backend.exec(`CREATE TABLE IF NOT EXISTS call_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id INTEGER NOT NULL,
+      caller_id INTEGER NOT NULL,
+      callee_id INTEGER NOT NULL,
+      kind TEXT DEFAULT 'audio',
+      status TEXT DEFAULT 'ringing',
+      offer_sdp TEXT,
+      answer_sdp TEXT,
+      ended_by INTEGER,
+      ended_reason TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      answered_at DATETIME,
+      ended_at DATETIME
+    )`);
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_calls_callee ON call_sessions(callee_id, status)');
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_calls_caller ON call_sessions(caller_id, status)');
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_calls_conv ON call_sessions(conversation_id)');
+    await backend.exec(`CREATE TABLE IF NOT EXISTS call_signals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      call_id INTEGER NOT NULL,
+      sender_id INTEGER NOT NULL,
+      payload TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_callsig_call ON call_signals(call_id, id)');
+  } catch (e) { console.error('[db] call tables (session 93):', e.message); }
   // সেশন ৬৭: bookmarks-স্কিমা-হার্ডেনিং — (১) ঐতিহাসিক ডুপ্লিকেট-রো ডিডুপ
   // (earliest MIN(id) থাকিয়ে) + UNIQUE INDEX uq_bookmarks_user_post — টগল-
   // রেস/ডাবল-ক্লিকে ডুপ্লিকেট রো আর জমবে না (টেবিলে আগে কোনো UNIQUE-ই ছিল না);

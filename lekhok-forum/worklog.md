@@ -371,3 +371,26 @@ Stage Summary:
 **টেস্ট-ডেটা:** conv-1-এ ৯৭-বার্তা (seed ১-৮০ + reply id=97→36 + pen_name 'নীলকণ্ঠ-৯৩' fbtest1) — উইন্ডোিং/সার্চ-জাম্প ডেমো সরাসরি।
 
 **পরবর্তী:** ০৫-ইনফিনিট-স্ক্রল-কার্সার-পলিশ → ০১-SSE-রিয়েল-টাইম-হাব (🔴) → ১৩-WebRTC → নোটিফিকেশন-ভিউতে displayName।
+
+## সেশন ৯৩ (WebRTC-কল-এজেন্ট) — মেসেঞ্জার অডিও/ভিডিও কল ফিচার: ডায়াগনোসিস → আর্কিটেকচার → ট্রায়াল-অ্যান্ড-এরর ফিক্স ✅
+
+**ইউজার-রিপোর্ট:** মেসেঞ্জারের অডিও ও ভিডিও কল কাজ করছে না।
+**রুট-কজ:** ফিচারটি কখনো ইমপ্লিমেন্ট-ই হয়নি — বাটন ছিল, "শীঘ্রই আসছে"-টোস্ট ছিল, WebRTC কোড ছিল ০। সেশন-৭৬ এই এরিয়া ইচ্ছাকৃতভাবে খোলা রেখেছিল।
+
+**Work Log:**
+- git fetch (parallel agent-এর session92 voice-note কমিট rebase-free pull) + worklog/PLANS/PROJECT পড়ে কনটেক্সট-সিঙ্ক
+- ডায়াগনোসিস: RTCPeerConnection/socket.io রিপো-স্ক্যান ০; Vercel-serverless-এ WebSocket অসম্ভব; messenger ইতিমধ্যে HTTP-পোলিং-নির্ভর → DB-মাধ্যম-সিগন্যালিং-সিদ্ধান্ত (শূন্য-নতুন-ইনফ্রা)
+- db.js: call_sessions + call_signals (MIGRATION_SQL + applyLaterMigrations — fingerprint-bust-safe)
+- routes/calls.js (নতুন): ৭ এন্ডপয়েন্ট — সব গেটেড, busy-guard, সাইজ-ক্যাপ, self-heal, missed-নোটিফিকেশন, চ্যাটে 📞-রেকর্ড
+- webrtc-call.js (নতুন, ~৬৫০ লাইন): ICE-কিউ (race-ফিক্স), TURN/STUN, autoplay-ফলব্যাক, WebAudio-রিং, স্টেট-মেশিন, keepalive-ক্লিনআপ
+- calls.css (নতুন): ডার্ক-গ্রিন থিম-সামঞ্জস্য কল-UI (মোবাইল + reduced-motion)
+- views: বাটন-ওয়্যারিং + bootstrap-ctx (chat + list দুটোতেই)
+- **ট্রায়াল-অ্যান্ড-এররে ধরা ৩ বাস্তব বাগ (E2E-তে):** ① আইডল-পোল-লুপ কখনো শুরু-ই হতো না (ক্যালি রিং পেত না) ② cleanup-এ পোল-লুপ মরে যেত (দ্বিতীয় কল আর আসত না) ③ error-path-এ callId capture হারাত (স্টাল-রিং) — তিনটিই ফিক্স+পুনঃযাচাই
+- **বোনাস fresh-deploy-500 ফিক্স:** /dashboard-এর u.pen_name — /settings-লেজি-ALTER নির্ভরতা → LATER_COLUMNS-বুট-ensure (fresh DB 500→200 যাচাই)
+- scripts/verify-session93-calls.js (৪৫-চেক E2E) + scripts/seed-qa-users.js (পুনরুদ্ধার+ডেমো-ইউজার-সংযোজন)
+- যাচাই: API E2E ৪৫/৪৫ ×২; agent-browser প্রকৃত-রিং ৩-রাউন্ড (গ্রহণ-গ্রেসফুল/প্রত্যাখ্যান/পুনঃ-রিং) + স্ক্রিনশট; কনসোল-০; ১০-পেজ-স্মোক 200; role-policy-স্যুট-বেসলাইন-নোট (environment-ফলস-ফেইল ডকুমেন্টেড)
+
+**Stage Summary:**
+- কল-ফিচার এখন সম্পূর্ণ: রিং→গ্রহণ/প্রত্যাখ্যান/মিসড→সংযুক্ত (টাইমার/মিউট/ক্যাম-টগল/মিনিমাইজ)→শেষ→চ্যাটে রেকর্ড+মিসড-নোটিফিকেশন
+- push-পরবর্তী Vercel-কোল্ড-বুটে নতুন টেবিল ফুল-ইনিটে তৈরি হবে (fingerprint-bust)
+- বাকি/পরবর্তী: গ্লোবাল-রিংগার (layout), কল-হিস্ট্রি-ট্যাব, Metered.ca TURN-ক্রেডেনশিয়াল, গ্রুপ-কল

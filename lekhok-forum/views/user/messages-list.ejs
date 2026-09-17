@@ -1,5 +1,5 @@
 <%# সেশন ৭৫ — ফেসবুক মেসেঞ্জার-স্টাইল লিস্ট-ভিউ (Chats) %>
-<%- include('../partials/header', { title: 'মেসেজ | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/messenger.css'] }) %>
+<%- include('../partials/header', { title: 'মেসেজ | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/messenger.css', '/assets/css/calls.css'] }) %>
 
   <div class="page-wrap page-wrap--messenger">
     <div class="messenger-shell" id="messengerShell">
@@ -621,3 +621,19 @@
     if (typeof applyFilterChip === 'function') applyFilterChip();
   })();
 </script>
+<%# সেশন ৯৩: WebRTC কল — লিস্ট-ভিউতে আসন্ন-কল-রিং (শুরু চ্যাট-ভিউ থেকেই হয়) %>
+<script>
+  window.LekhokCallCtx = {
+    me: <%- parseInt(user.id, 10) %>,
+    meName: <%- jesc(user.full_name || user.username) %>,
+    meAvatar: <%- jesc(user.avatar_url || ('/avatar/' + user.id)) %>,
+    convId: 0,
+    convUsername: null,
+    isGroup: false,
+    peer: null
+  };
+</script>
+<script src="/assets/js/webrtc-call.js?v=<%= AV %>"></script>
+<%- include('../partials/sandbox-preview') %>
+</body>
+</html>

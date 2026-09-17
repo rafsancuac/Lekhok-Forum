@@ -388,6 +388,28 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 **E2E (scripts/test-role-policy.sh — এখন git-tracked): সেকশন-১২ যোগে ১৯ নতুন চেক → ৯৯/৯৯ ALL GREEN** — কারণসহ-নিষেধ 303 ✓ বিজ্ঞপ্তি-শিরোনাম+কারণ ✓ নোটসহ-ফেরত+প্রত্যাহার-বিজ্ঞপ্তি ✓ ৩০০+অক্ষর প্রত্যাখ্যান+নিষেধ/বিজ্ঞপ্তি-নেই ✓ mu-stats/mu-reason/ফিড ✓ সুপার-রিভোক-বাটন+ফ্ল্যাশ ✓ revoke→moderator-403→পুনঃপ্রদান-200 ✓ প্রোফাইল-ব্যাজ ✓। agent-browser: তদারকি-পেজ (ডেস্কটপ+390px, কনসোল-০), সুপার-নজরদারি-কার্ড (রিভোক-বাটন+ফ্ল্যাশ+scope-revoke-অডিট-রো), প্রোফাইল-এডমিন-ব্যাজ — ভিজ্যুয়াল-ভেরিফায়েড।
 
+### সেশন ৯৩ (১৮ সেপ্টেম্বর ২০২৬) — মেসেঞ্জার WebRTC অডিও/ভিডিও কল: HTTP-পোলিং সিগন্যালিং + সম্পূর্ণ কল-UI + fresh-deploy /dashboard-500 ফিক্স
+
+> ইউজার-রিপোর্ট: "মেসেঞ্জারের অডিও ও ভিডিও কল ফিচারটি কাজ করছে না"। ডায়াগনোসিস: কল-বাটন দুটি ছিল কিন্তু শুধু "শীঘ্রই আসছে"-টোস্ট দেখাত — **WebRTC কোড রিপোতে কখনোই ছিল না** (RTCPeerConnection/socket.io = ০ ম্যাচ; সেশন-৭৬ এই এরিয়া "অন্য-এজেন্টের জন্য খোলা" রেখেছিল)। সেই সাথে সেশন-৭৬/৮৩-এর "পরবর্তী সুপারিশ"-তালিকার শেষ-খোলা বড়-আইটেমটি এই সেশনেই পূর্ণ।
+
+**আর্কিটেকচার-সিদ্ধান্ত (Vercel-serverless-বান্ধব):** অ্যাপ Vercel-serverless-এ চলে বলে স্থায়ী WebSocket/Socket.io অসম্ভব — তাই সিগন্যালিং (SDP offer/answer + ICE candidates) মেসেঞ্জারের বিদ্যমান HTTP-পোলিং-প্যাটার্নেই DB-মাধ্যমে রিলে হয়। নতুন কোনো ইনফ্রা/সার্ভিস/API-কী লাগে না।
+
+**নতুন ফাইল:**
+- `routes/calls.js` (মাউন্ট: server.js) — `/api/calls/start|:id/answer|:id/decline|:id/cancel|:id/end|:id/signal|poll` — সব ensureAuth + convAccess-গেটেড, শুধু 1:1 (গ্রুপ→400 group_call_unsupported), busy-guard (এক-ইউজার-এক-কল, 409), SDP 32KB/ICE 4KB-ক্যাপ, stale-ring self-heal (45s ডিফল্ট, `CALL_RING_TIMEOUT_S` env-ওভাররাইডযোগ্য), missed-এ নোটিফিকেশন + চ্যাটে 📞-রেকর্ড-মেসেজ (কল/প্রত্যাখ্যাত/মিসড, বাংলা-সময়সহ)।
+- `public/assets/js/webrtc-call.js` — ক্লায়েন্ট মডিউল: STUN×২+TURN(openrelay 80/443 tcp/udp)+iceCandidatePoolSize; **ICE-candidate queue** (remoteDescription-পূর্ব এলে কিউ→drain — race-condition-নিরাপদ); ব্যাচড-সিগন্যাল-ফ্লাশ (২৫০ms); অ্যাডাপটিভ পোল (idle 3s/রিং 1s/connecting 0.8s/connected 1.5s); ক্যামেরা-ব্যর্থতায় অডিও-ফলব্যাক; autoplay-block-এ "ট্যাপ করে চালু করুন"; WebAudio রিংব্যাক/রিংটোন (কোনো অডিও-ফাইল/CSP-ঝুঁকি নেই); mic/cam-টগল, মিনিমাইজ-বার, বাংলা কল-টাইমার; beforeunload/pagehide-এ keepalive end; কল-শেষে পোল-হার্টবিট পুনরায়-চালু (আসন্ন-কল ধরতে)।
+- `public/assets/css/calls.css` — `.lc-*` কল-UI: ডার্ক-গ্রিন-গ্র্যাডিয়েন্ট স্টেজ (সাইট-থিম-সামঞ্জস্য), aura-ripple, FB-স্টাইল আসন্ন-কল মোডাল (সবুজ-গ্রহণ/লাল-প্রত্যাখ্যান), PIP লোকাল-ভিডিও, কন্ট্রোল-পিল, ≤640px মোবাইল, prefers-reduced-motion।
+- `scripts/verify-session93-calls.js` — দুই-ইউজার সিগন্যালিং E2E (৪৫ চেক): মূল-ফ্লো (start→incoming+offer→answer→active+answer→ICE-বিনিময়→end→চ্যাট-রেকর্ড), decline/cancel/missed+নোটিফিকেশন, busy-guard ×২, গ্রুপ-ব্লক, auth 401, outsider 403, কার্সার-অ্যাডভান্স, সাইজ-ক্যাপ। `scripts/seed-qa-users.js` পুনরুদ্ধার+সংযোজন (ডেমো-ইউজার ismail/monem/... রোস্টার-সিড-ডিবিতে অনুপস্থিত ছিল)।
+
+**সংশোধিত:** `db.js` (call_sessions+call_signals টেবিল — MIGRATION_SQL + applyLaterMigrations দুই-জায়গায় → fingerprint-bust → লাইভ-Turso-তে ফুল-ইনিটে তৈরি); `server.js` (mount); `messages-chat.ejs` (টোস্ট-বাটন→`LekhokCall.start()` + calls.css + bootstrap-ctx + স্ক্রিপ্ট); `messages-list.ejs` (আসন্ন-কল-রিং ctx)।
+
+**বোনাস-বাগফিক্স (fresh-deploy 500):** `/dashboard` ফিড-কোয়েরি `u.pen_name` — কলামটি আগে শুধু **/settings-ভিজিটে লেজি-ALTER** হতো → fresh DB/ডিপ্লয়ে 500 ("no such column")। pen_name/genres/allow_messages_from/bookmarks_public এখন db.js LATER_COLUMNS-এ বুট-টাইম ensure (idempotent) — লেজি-ALTER অক্ষত (ডুপ্লিকেট-নিরাপদ)। যাচাই: fresh-DBতে /dashboard 500→200।
+
+**E2E:** API ৪৫/৪৫ ALL GREEN (দুইবার)। agent-browser (প্রকৃত-রিং): monem-ব্রাউজারে ismail-এর কল → ~2-4s-এ আসন্ন-মোডাল (স্ক্রিনশট: download/incoming-call-final.png) → গ্রহণ→headless-মাইক-অনুপস্থিতিতে গ্রেসফুল-টোস্ট "কোনো মাইক্রোফোন পাওয়া যায়নি"+ক্লিনআপ ✓ → পুনঃ-রিং ✓ → প্রত্যাখ্যান ✓ → টানা ৩-রাউন্ড পোল-সাইকেল-টিকে ✓ কনসোল-এরর ০ ✓ ১০-পেজ-স্মোক 200 ✓।
+
+**পরিচিত-সীমা:** রিং/ICE-লেটেন্সি পোল-ইন্টারভালে আবদ্ধ (Vercel-এ ~1-3s); TURN হিসেবে openrelay-ফ্রি-রিলে (অস্থিতিশীল হলে Metered.ca-ফ্রি-টিয়ার-ক্রেডেনশিয়াল যোগ করতে হবে); গ্রুপ-কল v1-এ বাদ (UI-ও লুকায়); মাল্টি-ট্যাবে একই-ইউজার দুই-মোডাল দেখতে পারে (সার্ভার-স্টেট-গার্ডে ক্ষতিকর নয়)।
+
+**কমিট:** session93 → pushed। **পরবর্তী সুপারিশ:** ① গ্লোবাল-রিংগার (layout.ejs-এ লগড-ইন-ইউজারের 4-5s আইডল-পোল — মেসেঞ্জার-বাইরেও রিং) ② কল-হিস্ট্রি-ট্যাব (call_sessions থেকে ডিটেইলস-প্যানেলে) ③ TURN-অ্যাকাউন্ট (Metered.ca ফ্রি-টিয়ার) ④ video-কলে স্ক্রিনশেয়ার (getDisplayMedia) ⑤ ICE-restart-রিট্রাই-UI (network-switch টলারেন্স)।
+
 ### সেশন ৯২ (১৮ সেপ্টেম্বর ২০২৬) — রোডম্যাপ C1+C12: মেসেঞ্জার ভয়েস-নোট (MediaRecorder+ওয়েভফর্ম) + শেয়ার্ড-কনটেন্ট ট্যাব + ক্রিটিক্যাল [hidden]-সিলেক্টর-করাপশন রিপেয়ার (১৬ সাইট)
 
 > QA-রাউন্ড: ২৩-পেজ-স্মোক গ্রিন → স্থিতিশীল রায় → রোডম্যাপ থেকে স্বাধীন-নির্বাচন (C1+C12)। চলাকালীন পুরো-রিপো-স্ক্যানে **সেশন-৮৯-ধাঁচের সিলেক্টর-করাপশন পুনঃ-আবিষ্কৃত** — এবার গভীরে।

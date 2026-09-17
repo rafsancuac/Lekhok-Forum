@@ -1,0 +1,659 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ৯৩ — LekhokCall: WebRTC অডিও/ভিডিও কল (HTTP-পোলিং সিগন্যালিং)
+   ─────────────────────────────────────────────────────────────────────────
+   Vercel-serverless-নিরাপদ: কোনো WebSocket নেই — সিগন্যাল (SDP/ICE) যায়
+   /api/calls/* এন্ডপয়েন্ট দিয়ে, ক্লায়েন্ট অ্যাডাপটিভ ইন্টারভালে পোল করে।
+
+   বিল্ট-ইন হার্ডেনিং (ক্লাসিক WebRTC-ফেইল-ফিক্স সেট):
+   ① ICE-candidate QUEUE — remoteDescription সেট হওয়ার আগে এলে কিউতে থাকে,
+      সেট-হওয়ার সাথে সাথেই drain (InvalidStateError/race-condition-নিরাপদ)
+   ② STUN×২ + TURN-রিলে — ভিন্ন নেটওয়ার্ক/মোবাইল-ডাটাতেও NAT-traversal
+   ③ autoPlay+playsInline+muted(local) — autoplay-policy ও echo-নিরাপদ;
+      play() প্রত্যাখ্যাত হলে "ট্যাপ করে চালু করুন" ফলব্যাক
+   ④ সম্পূর্ণ স্টেট-মেশিন + ক্লিনআপ — ট্র্যাক-স্টপ, pc.close, টাইমার-ক্লিয়ার,
+      beforeunload/pagehide-এ keepalive end-কল
+
+   ব্যবহার: window.LekhokCallCtx = { me, meName, meAvatar, convId, convUsername, peer }
+   তারপর LekhokCall.start('audio'|'video')
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  var ctx = window.LekhokCallCtx || {};
+  if (!ctx.me) return; /* লগড-আউট পেজে মডিউল নিষ্ক্রিয় */
+
+  var RTC_CFG = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'turn:openrelay.metered.ca:80', username: 'openrelay', credential: 'openrelay' },
+      { urls: 'turn:openrelay.metered.ca:80?transport=tcp', username: 'openrelay', credential: 'openrelay' },
+      { urls: 'turn:openrelay.metered.ca:443', username: 'openrelay', credential: 'openrelay' },
+      { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelay', credential: 'openrelay' }
+    ],
+    iceCandidatePoolSize: 10
+  };
+
+  var BN = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  function bn(n) { return String(n).replace(/[0-9]/g, function (d) { return BN[+d]; }); }
+
+  /* ── স্টেট ─────────────────────────────────────────────────────────────── */
+  var S = {
+    state: 'idle',          // idle|outgoing|incoming|connecting|connected
+    callId: null,
+    kind: 'audio',
+    role: null,             // caller|callee
+    peer: null,             // {id,name,avatar,username}
+    pendingOffer: null,
+    pc: null,
+    local: null,            // MediaStream
+    remote: null,
+    after: 0,               // signal-cursor
+    queue: [],              // আসা ICE যেগুলোর remoteDescription এখনো সেট হয়নি
+    outBuf: [],             // পাঠানো-হবে ICE ব্যাচ
+    flushT: null,
+    pollT: null,
+    tickT: null,            // কানেক্টেড-টাইমার
+    t0: 0,                  // connected-timestamp
+    muted: false,
+    camOff: false,
+    minimized: false,
+    ringing: null           // WebAudio হ্যান্ডেল
+  };
+
+  /* ── DOM হেল্পার ───────────────────────────────────────────────────────── */
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function icon(name) { return '<i class="fas ' + name + '"></i>'; }
+  function toast(msg, isErr) {
+    if (typeof window.fbToast === 'function') return window.fbToast(msg, isErr);
+    var t = el('div', 'lc-toast' + (isErr ? ' lc-toast--err' : ''), msg);
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add('show'); }, 10);
+    setTimeout(function () { t.classList.remove('show'); setTimeout(function () { t.remove(); }, 350); }, 3200);
+  }
+
+  /* ── সাউন্ড (WebAudio — কোনো এক্সটার্নাল ফাইল/CSP-ঝুঁকি নেই) ──────────── */
+  var AC = null;
+  function audioCtx() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return null; } }
+    if (AC && AC.state === 'suspended') { try { AC.resume(); } catch (_) {} }
+    return AC;
+  }
+  function beep(ac, freq, t0, dur, vol) {
+    var o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.03);
+    g.gain.setValueAtTime(vol, t0 + dur - 0.05);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function startRing(mode) { /* 'outgoing' রিংব্যাক | 'incoming' রিংটোন */
+    stopRing();
+    var ac = audioCtx(); if (!ac) return;
+    var seq = [];
+    if (mode === 'incoming') {          /* US-স্টাইল ডুয়াল-টোন: ২সে অন / ১সে অফ */
+      for (var i = 0; i < 6; i++) { seq.push([440, 480, i * 3, 1.8, 0.06]); }
+    } else {                            /* রিংব্যাক: ৪২৫Hz, ১সে অন / ৩সে অফ */
+      for (var j = 0; j < 10; j++) { seq.push([425, 0, j * 4, 1.2, 0.05]); }
+    }
+    var now = ac.currentTime + 0.05;
+    seq.forEach(function (s) {
+      if (s[2] === 0 && s[3] === 0) return;
+      beep(ac, s[0], now + s[2], s[3], s[4]);
+      if (s[1]) beep(ac, s[1], now + s[2], s[3], s[4]);
+    });
+    S.ringing = { ac: ac, stopAt: now + 40, timer: setTimeout(function () { stopRing(); }, 40000) };
+  }
+  function stopRing() {
+    if (!S.ringing) return;
+    clearTimeout(S.ringing.timer);
+    S.ringing = null;
+  }
+  function click() {
+    var ac = audioCtx(); if (!ac) return;
+    beep(ac, 880, ac.currentTime, 0.08, 0.05);
+  }
+
+  /* ── API হেল্পার ───────────────────────────────────────────────────────── */
+  function api(method, url, body) {
+    var opt = { method: method, headers: { 'Content-Type': 'application/json' } };
+    if (body !== undefined) opt.body = JSON.stringify(body);
+    return fetch(url, opt).then(function (r) {
+      return r.json().catch(function () { return { ok: false, error: 'badjson' }; }).then(function (j) { j.__status = r.status; return j; });
+    });
+  }
+
+  /* ── UI: ওভারলে-নির্মাণ ────────────────────────────────────────────────── */
+  var root = null;
+  function ensureRoot() {
+    if (root) return root;
+    root = el('div', 'lc-root');
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.innerHTML =
+      '<div class="lc-backdrop"></div>' +
+      '<div class="lc-stage">' +
+      '  <div class="lc-minbar" hidden><button type="button" class="lc-minbar-btn" data-lc="restore" title="কল আবার খুলুন">' + icon('fa-phone-volume') + '<span class="lc-minbar-t"></span></button></div>' +
+      '  <div class="lc-panel">' +
+      '    <div class="lc-videos" hidden>' +
+      '      <video class="lc-remote-video" autoplay playsinline></video>' +
+      '      <video class="lc-local-video" autoplay playsinline muted></video>' +
+      '      <div class="lc-tapplay" hidden><button type="button" class="lc-tapplay-btn">' + icon('fa-play') + ' ট্যাপ করে চালু করুন</button></div>' +
+      '    </div>' +
+      '    <div class="lc-audioface">' +
+      '      <div class="lc-aura"><span></span><span></span><span></span></div>' +
+      '      <img class="lc-avatar" alt="" />' +
+      '      <video class="lc-remote-video--audio" autoplay playsinline hidden></video>' +
+      '    </div>' +
+      '    <div class="lc-meta">' +
+      '      <div class="lc-name"></div>' +
+      '      <div class="lc-status"></div>' +
+      '    </div>' +
+      '    <div class="lc-controls">' +
+      '      <button type="button" class="lc-ctl lc-ctl--mic" data-lc="mic" title="মাইক বন্ধ/চালু">' + icon('fa-microphone') + '</button>' +
+      '      <button type="button" class="lc-ctl lc-ctl--cam" data-lc="cam" title="ক্যামেরা বন্ধ/চালু">' + icon('fa-video') + '</button>' +
+      '      <button type="button" class="lc-ctl lc-ctl--min" data-lc="min" title="মিনিমাইজ">' + icon('fa-chevron-down') + '</button>' +
+      '      <button type="button" class="lc-ctl lc-ctl--end" data-lc="end" title="কল কেটে দিন">' + icon('fa-phone-slash') + '</button>' +
+      '    </div>' +
+      '  </div>' +
+      '</div>' +
+      '<div class="lc-incoming" hidden>' +
+      '  <div class="lc-incoming-card">' +
+      '    <div class="lc-incoming-kind"></div>' +
+      '    <div class="lc-incoming-avatarwrap"><span></span><span></span><span></span><img class="lc-avatar2" alt="" /></div>' +
+      '    <div class="lc-incoming-name"></div>' +
+      '    <div class="lc-incoming-sub">উত্তর দিতে সবুজ, প্রত্যাখ্যান করতে লাল বাটনে চাপ দিন</div>' +
+      '    <div class="lc-incoming-actions">' +
+      '      <button type="button" class="lc-act lc-act--decline" data-lc="decline" title="প্রত্যাখ্যান">' + icon('fa-phone-slash') + '</button>' +
+      '      <button type="button" class="lc-act lc-act--accept" data-lc="accept" title="গ্রহণ">' + icon('fa-phone') + '</button>' +
+      '    </div>' +
+      '  </div>' +
+      '</div>';
+    document.body.appendChild(root);
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-lc]');
+      if (!b) return;
+      var a = b.getAttribute('data-lc');
+      if (a === 'mic') toggleMic();
+      else if (a === 'cam') toggleCam();
+      else if (a === 'min') minimize(true);
+      else if (a === 'restore') minimize(false);
+      else if (a === 'end') { click(); endCall('hangup'); }
+      else if (a === 'accept') acceptCall();
+      else if (a === 'decline') { click(); declineCall(); }
+      else if (a === 'tapplay') { /* handled below */ }
+    });
+    var tp = root.querySelector('.lc-tapplay');
+    tp.addEventListener('click', function () {
+      var v = root.querySelector('.lc-remote-video');
+      var va = root.querySelector('.lc-remote-video--audio');
+      var p = (v && v.play()) || (va && va.play()) || Promise.resolve();
+      Promise.resolve(p).then(function () { tp.hidden = true; }).catch(function () {});
+    });
+    return root;
+  }
+
+  function setPeerUI() {
+    if (!root) return;
+    var img = root.querySelector('.lc-avatar'), img2 = root.querySelector('.lc-avatar2');
+    var url = (S.peer && S.peer.avatar) || '';
+    if (img) { img.src = url; img.onerror = function () { img.hidden = true; }; }
+    if (img2) { img2.src = url; img2.onerror = function () { img2.hidden = true; }; }
+    var n = root.querySelector('.lc-name'), n2 = root.querySelector('.lc-incoming-name');
+    if (n) n.textContent = S.peer ? S.peer.name : '';
+    if (n2) n2.textContent = S.peer ? S.peer.name : '';
+  }
+  function status(text, cls) {
+    if (!root) return;
+    var s = root.querySelector('.lc-status');
+    if (s) { s.textContent = text; s.className = 'lc-status' + (cls ? ' ' + cls : ''); }
+  }
+  function showVideos(on) {
+    if (!root) return;
+    root.querySelector('.lc-videos').hidden = !on;
+    root.querySelector('.lc-audioface').hidden = on;
+  }
+  function minimize(on) {
+    if (!root) return;
+    S.minimized = on;
+    root.classList.toggle('lc-root--min', on);
+    var mb = root.querySelector('.lc-minbar');
+    if (mb) mb.hidden = !on;
+  }
+
+  /* ── PeerConnection ───────────────────────────────────────────────────── */
+  function createPC() {
+    var pc = new RTCPeerConnection(RTC_CFG);
+
+    pc.onicecandidate = function (e) {
+      if (e.candidate) {
+        S.outBuf.push({ type: 'candidate', candidate: e.candidate.toJSON ? e.candidate.toJSON() : { candidate: e.candidate.candidate, sdpMid: e.candidate.sdpMid, sdpMLineIndex: e.candidate.sdpMLineIndex } });
+        scheduleFlush();
+      }
+    };
+    pc.ontrack = function (e) {
+      var stream = e.streams && e.streams[0];
+      if (!stream) return;
+      S.remote = stream;
+      if (root) {
+        var rv = root.querySelector('.lc-remote-video');
+        var ra = root.querySelector('.lc-remote-video--audio');
+        if (rv) rv.srcObject = stream;
+        if (ra) ra.srcObject = stream;
+        tryPlayRemote();
+      }
+      status('সংযুক্ত', 'is-live');
+    };
+    pc.onconnectionstatechange = function () {
+      if (!pc) return;
+      var st = pc.connectionState;
+      if (st === 'connected') { onConnected(); }
+      else if (st === 'failed') { toast('সংযোগ ব্যর্থ — নেটওয়ার্ক/ফায়ারওয়াল সমস্যা (TURN রিলে ব্যর্থ)', true); endCall('failed'); }
+      else if (st === 'disconnected') { status('সংযোগ বিচ্ছিন্ন হচ্ছে…', 'is-warn'); }
+      else if (st === 'closed') { /* cleanup already */ }
+    };
+    pc.oniceconnectionstatechange = function () {
+      if (pc && (pc.iceConnectionState === 'failed')) {
+        try { pc.restartIce && pc.restartIce(); } catch (_) {}
+      }
+    };
+    return pc;
+  }
+
+  function tryPlayRemote() {
+    if (!root) return;
+    var v = root.querySelector('.lc-remote-video');
+    var a = root.querySelector('.lc-remote-video--audio');
+    var tp = root.querySelector('.lc-tapplay');
+    var p = null;
+    if (S.kind === 'video' && v) p = v.play();
+    else if (a) p = a.play();
+    if (!p) return;
+    Promise.resolve(p).then(function () { if (tp) tp.hidden = true; }).catch(function () {
+      /* autoplay-policy ব্লক — ইউজার-জেসচার দরকার */
+      if (tp) tp.hidden = false;
+    });
+  }
+  document.addEventListener('click', function once() {
+    document.removeEventListener('click', once);
+    if (S.state === 'connected') tryPlayRemote();
+    audioCtx();
+  }, { once: false });
+
+  async function getMedia(kind) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('insecure: মাইক/ক্যামেরার জন্য HTTPS (বা localhost) প্রয়োজন');
+    }
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: kind === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' } : false
+      });
+    } catch (err) {
+      if (kind === 'video') {
+        /* ক্যামেরা নেই/ব্লকড → অডিও-অনলি-ফলব্যাক */
+        var st = (err && err.name) || '';
+        if (st === 'NotFoundError' || st === 'OverconstrainedError' || st === 'NotReadableError' || st === 'NotAllowedError') {
+          var s2 = await navigator.mediaDevices.getUserMedia({ audio: true });
+          toast('ক্যামেরা পাওয়া যায়নি — অডিও-কল হিসেবে চলছে', true);
+          S.kind = 'audio';
+          return s2;
+        }
+      }
+      if (err && err.name === 'NotAllowedError') throw new Error('permission: মাইক্রোফোন/ক্যামেরা-অনুমতি দেওয়া হয়নি');
+      if (err && err.name === 'NotFoundError') throw new Error('device: কোনো মাইক্রোফোন পাওয়া যায়নি');
+      throw err;
+    }
+  }
+
+  function attachLocal(stream) {
+    S.local = stream;
+    if (root) {
+      var lv = root.querySelector('.lc-local-video');
+      if (lv) lv.srcObject = stream;
+    }
+  }
+
+  /* ── ICE flush (ব্যাচ-পোস্ট) ───────────────────────────────────────────── */
+  function scheduleFlush() {
+    if (S.flushT) return;
+    S.flushT = setTimeout(function () { S.flushT = null; flushSignals(); }, 250);
+  }
+  async function flushSignals() {
+    if (!S.callId || !S.outBuf.length) return;
+    var batch = S.outBuf.splice(0, 24);
+    try { await api('POST', '/api/calls/' + S.callId + '/signal', { signals: batch }); } catch (_) {}
+    if (S.outBuf.length) scheduleFlush();
+  }
+
+  /* ── কিউ-drain (রেস-কন্ডিশন ফিক্স) ────────────────────────────────────── */
+  async function drainQueue() {
+    var pc = S.pc;
+    if (!pc || !pc.remoteDescription || !pc.remoteDescription.type) return;
+    while (S.queue.length) {
+      var c = S.queue.shift();
+      try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) { /* stale candidate — চুপচাপ */ }
+    }
+  }
+
+  /* ── কল শুরু (caller) ─────────────────────────────────────────────────── */
+  async function start(kind) {
+    if (S.state !== 'idle') { toast('একটি কল ইতিমধ্যে চলছে', true); return; }
+    if (!ctx.convId || !ctx.peer) { toast('এই ভিউ থেকে কল করা যায় না', true); return; }
+
+    S.state = 'outgoing';
+    S.role = 'caller';
+    S.kind = kind;
+    S.peer = ctx.peer;
+    S.queue = [];
+    S.outBuf = [];
+    S.after = 0;
+
+    ensureRoot();
+    root.querySelector('.lc-ctl--cam').style.display = kind === 'video' ? '' : 'none';
+    root.querySelector('.lc-incoming').hidden = true;
+    root.classList.remove('lc-root--min'); minimize(false);
+    setPeerUI();
+    showVideos(false);
+    status(kind === 'video' ? icon('fa-video') + ' ভিডিও কল দেওয়া হচ্ছে…' : icon('fa-phone') + ' অডিও কল দেওয়া হচ্ছে…');
+    startRing('outgoing');
+    schedulePoll(900);
+
+    try {
+      var stream = await getMedia(kind);
+      attachLocal(stream);
+      var pc = createPC();
+      S.pc = pc;
+      stream.getTracks().forEach(function (t) { pc.addTrack(t, stream); });
+
+      var offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      var r = await api('POST', '/api/calls/start', {
+        conv_id: ctx.convId,
+        kind: S.kind,
+        offer: { type: offer.type, sdp: offer.sdp }
+      });
+      if (!r.ok) {
+        var msgMap = { busy: 'আপনার আরেকটি কল চলছে', peer_busy: 'প্রাপক এখন অন্য কলে ব্যস্ত', group_call_unsupported: 'গ্রুপ-কল এখনো সমর্থিত নয়' };
+        toast(msgMap[r.error] || 'কল শুরু করা যায়নি', true);
+        cleanup(true);
+        return;
+      }
+      S.callId = r.call_id;
+      status('রিং হচ্ছে…');
+    } catch (err) {
+      var m = (err && err.message) || '';
+      var _fid = S.callId; /* cleanup-এর আগে — নাহলে end-কল হারায় */
+      if (m.indexOf('permission:') === 0 || m.indexOf('device:') === 0 || m.indexOf('insecure:') === 0) toast(m.split(':').slice(1).join(':').trim(), true);
+      else toast('মাইক/ক্যামেরা চালু করা যায়নি', true);
+      cleanup(true);
+      if (_fid) { try { await api('POST', '/api/calls/' + _fid + '/end', { reason: 'failed' }); } catch (_) {} }
+    }
+  }
+
+  /* ── আসন্ন-কল মোডাল (callee) ──────────────────────────────────────────── */
+  function showIncoming(inc) {
+    if (S.state !== 'idle') return; /* ব্যস্ত — সার্ভার নিজেই missed-মার্ক করবে */
+    S.state = 'incoming';
+    S.role = 'callee';
+    S.callId = inc.id;
+    S.kind = inc.kind;
+    S.peer = inc.caller;
+    S.pendingOffer = inc.offer;
+    S.queue = [];
+    S.outBuf = [];
+    S.after = 0;
+
+    ensureRoot();
+    root.querySelector('.lc-ctl--cam').style.display = inc.kind === 'video' ? '' : 'none';
+    setPeerUI();
+    var box = root.querySelector('.lc-incoming');
+    box.hidden = false;
+    box.querySelector('.lc-incoming-kind').innerHTML = inc.kind === 'video' ? icon('fa-video') + ' ভিডিও কল আসছে' : icon('fa-phone') + ' অডিও কল আসছে';
+    status('');
+    startRing('incoming');
+    schedulePoll(900);
+  }
+  function hideIncoming() {
+    if (root) root.querySelector('.lc-incoming').hidden = true;
+    stopRing();
+  }
+
+  async function acceptCall() {
+    if (S.state !== 'incoming' || !S.pendingOffer) return;
+    click();
+    hideIncoming();
+    S.state = 'connecting';
+    status('সংযোগ করা হচ্ছে…');
+    try {
+      var stream = await getMedia(S.kind);
+      attachLocal(stream);
+      var pc = createPC();
+      S.pc = pc;
+      stream.getTracks().forEach(function (t) { pc.addTrack(t, stream); });
+
+      await pc.setRemoteDescription(new RTCSessionDescription(S.pendingOffer));
+      S.pendingOffer = null;
+      await drainQueue();
+
+      var answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      var r = await api('POST', '/api/calls/' + S.callId + '/answer', { answer: { type: answer.type, sdp: answer.sdp } });
+      if (!r.ok) { toast('কল গ্রহণ করা যায়নি (' + (r.error || '?') + ')', true); cleanup(true); return; }
+      showVideos(S.kind === 'video');
+    } catch (err) {
+      var m = (err && err.message) || '';
+      var _aid = S.callId; /* cleanup-এর আগে */
+      if (m.indexOf('permission:') === 0 || m.indexOf('device:') === 0 || m.indexOf('insecure:') === 0) toast(m.split(':').slice(1).join(':').trim(), true);
+      else toast('কল গ্রহণে সমস্যা', true);
+      cleanup(true);
+      if (_aid) { api('POST', '/api/calls/' + _aid + '/end', { reason: 'failed' }).catch(function () {}); }
+    }
+  }
+
+  async function declineCall() {
+    hideIncoming();
+    var id = S.callId;
+    cleanup(true);
+    if (id) { try { await api('POST', '/api/calls/' + id + '/decline'); } catch (_) {} }
+  }
+
+  /* ── সংযুক্ত ──────────────────────────────────────────────────────────── */
+  function onConnected() {
+    if (S.state === 'connected') return;
+    S.state = 'connected';
+    stopRing();
+    hideIncoming();
+    showVideos(S.kind === 'video');
+    tryPlayRemote();
+    S.t0 = Date.now();
+    status('সংযুক্ত', 'is-live');
+    clearInterval(S.tickT);
+    S.tickT = setInterval(function () {
+      var s = Math.floor((Date.now() - S.t0) / 1000);
+      var m = Math.floor(s / 60); s = s % 60;
+      status(bn(m) + ':' + (s < 10 ? '০' + bn(s) : bn(s)), 'is-live');
+    }, 1000);
+  }
+
+  /* ── শেষ/ক্লিনআপ ──────────────────────────────────────────────────────── */
+  function cleanup(silent) {
+    stopRing();
+    clearInterval(S.tickT); S.tickT = null;
+    clearTimeout(S.flushT); S.flushT = null;
+    clearTimeout(S.pollT); S.pollT = null;
+    if (S.pc) { try { S.pc.close(); } catch (_) {} S.pc = null; }
+    if (S.local) { S.local.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} }); S.local = null; }
+    S.remote = null;
+    S.queue = []; S.outBuf = [];
+    S.callId = null; S.pendingOffer = null; S.role = null;
+    S.muted = false; S.camOff = false;
+    S.state = 'idle';
+    if (root) {
+      root.remove();
+      root = null;
+    }
+    if (!silent && typeof S._onended === 'function') { try { S._onended(); } catch (_) {} }
+    /* পোল-হার্টবিট পুনরায় চালু — নাহলে কল-শেষে ক্যালি আর কখনো নতুন আসন্ন-কল দেখবে না */
+    schedulePoll();
+  }
+  async function endCall(reason) {
+    var id = S.callId;
+    var wasConnected = S.state === 'connected';
+    cleanup(true);
+    if (id) {
+      try { await api('POST', '/api/calls/' + id + '/end', { reason: reason || 'hangup' }); } catch (_) {}
+    }
+    if (reason === 'failed') { /* টোস্ট আগেই দেখানো */ }
+    else if (wasConnected && reason === 'hangup') toast('কল শেষ হয়েছে');
+  }
+
+  window.addEventListener('pagehide', function () {
+    if (S.callId) {
+      try {
+        fetch('/api/calls/' + S.callId + '/end', {
+          method: 'POST', keepalive: true,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: 'left_page' })
+        });
+      } catch (_) {}
+    }
+    if (S.local) S.local.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} });
+    if (S.pc) { try { S.pc.close(); } catch (_) {} }
+  });
+
+  /* ── কন্ট্রোল ─────────────────────────────────────────────────────────── */
+  function toggleMic() {
+    if (!S.local) return;
+    S.muted = !S.muted;
+    S.local.getAudioTracks().forEach(function (t) { t.enabled = !S.muted; });
+    if (root) {
+      var b = root.querySelector('.lc-ctl--mic');
+      b.classList.toggle('is-off', S.muted);
+      b.innerHTML = icon(S.muted ? 'fa-microphone-slash' : 'fa-microphone');
+      b.title = S.muted ? 'মাইক চালু করুন' : 'মাইক বন্ধ করুন';
+    }
+    toast(S.muted ? 'মাইক বন্ধ' : 'মাইক চালু');
+  }
+  function toggleCam() {
+    if (!S.local || S.kind !== 'video') return;
+    S.camOff = !S.camOff;
+    S.local.getVideoTracks().forEach(function (t) { t.enabled = !S.camOff; });
+    if (root) {
+      var b = root.querySelector('.lc-ctl--cam');
+      b.classList.toggle('is-off', S.camOff);
+      b.innerHTML = icon(S.camOff ? 'fa-video-slash' : 'fa-video');
+      root.classList.toggle('lc-root--camoff', S.camOff);
+    }
+    toast(S.camOff ? 'ক্যামেরা বন্ধ' : 'ক্যামেরা চালু');
+  }
+
+  /* ── পোল-লুপ (সিগন্যালিং-হার্টবিট) ────────────────────────────────────── */
+  function schedulePoll(ms) {
+    clearTimeout(S.pollT);
+    var interval;
+    if (ms) interval = ms;
+    else if (S.state === 'connecting') interval = 800;
+    else if (S.state === 'outgoing' || S.state === 'incoming') interval = 1000;
+    else if (S.state === 'connected') interval = 1500;
+    else interval = 3000;
+    S.pollT = setTimeout(poll, interval);
+  }
+
+  async function poll() {
+    var nextState = S.state;
+    try {
+      var r = await api('GET', '/api/calls/poll?after=' + S.after);
+      if (r && r.ok) {
+        S.after = r.after || S.after;
+
+        /* (ক) আসন্ন কল */
+        if (r.incoming && S.state === 'idle') showIncoming(r.incoming);
+
+        /* (খ) চলমান কল-স্টেট (caller: accepted+answer) */
+        if (r.active && r.active.id === S.callId && S.role === 'caller' && (S.state === 'outgoing' || S.state === 'connecting') && r.active.answer) {
+          nextState = 'connecting';
+          stopRing();
+          status('সংযোগ করা হচ্ছে…');
+          var pc = S.pc;
+          if (pc && (!pc.remoteDescription || !pc.remoteDescription.type)) {
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription(r.active.answer));
+              await drainQueue();
+              showVideos(S.kind === 'video');
+            } catch (e) { /* পুনঃপোলে আবার */ }
+          }
+        }
+
+        /* (গ) সিগন্যাল-ডেলিভারি (ICE + লাইফসাইকেল) */
+        if (r.signals && r.signals.length) {
+          for (var i = 0; i < r.signals.length; i++) {
+            var sg = r.signals[i];
+            if (S.callId && sg.call_id !== S.callId) continue;
+            var p = sg.signal;
+            if (!p) continue;
+            if (p.type === 'candidate') {
+              var cand = p.candidate;
+              if (!cand) continue;
+              if (S.pc && S.pc.remoteDescription && S.pc.remoteDescription.type) {
+                try { await S.pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) { /* stale — ঠিক আছে */ }
+              } else {
+                S.queue.push(cand); /* ① ICE-কিউ — remoteDescription-এর অপেক্ষায় */
+              }
+            } else if (p.type === 'accepted') {
+              /* caller-এর answer আসবে active.answer দিয়ে — এখানে শুধু দ্রুত-নজ (রিং থামাও) */
+              if (S.state === 'outgoing') { stopRing(); status('সংযোগ করা হচ্ছে…'); nextState = 'connecting'; }
+            } else if (p.type === 'declined') {
+              if (S.state === 'outgoing' || S.state === 'connecting') { toast('কল প্রত্যাখ্যাত হয়েছে'); cleanup(true); }
+            } else if (p.type === 'cancelled') {
+              if (S.state === 'incoming') { toast('কলটি বাতিল হয়েছে'); cleanup(true); }
+            } else if (p.type === 'ended') {
+              if (S.state === 'outgoing' || S.state === 'connecting' || S.state === 'connected' || S.state === 'incoming') {
+                if (S.state === 'connected') toast('অপর পক্ষ কল কেটে দিয়েছে');
+                cleanup(true);
+              }
+            }
+          }
+        }
+
+        /* (ঘ) সদ্য-শেষ কল (রিং-টাইমআউট/মিসড ইত্যাদি) */
+        if (r.ended && r.ended.length && S.state !== 'idle') {
+          for (var j = 0; j < r.ended.length; j++) {
+            var en = r.ended[j];
+            if (en.id !== S.callId) continue;
+            if (S.state === 'outgoing' && (en.status === 'missed' || en.reason === 'timeout')) toast('উত্তর পাওয়া যায়নি', true);
+            else if (S.state === 'outgoing' && en.status === 'declined') toast('কল প্রত্যাখ্যাত হয়েছে');
+            else if (S.state === 'connected' && en.status === 'ended') toast('কল শেষ হয়েছে');
+            cleanup(true);
+            break;
+        }
+        }
+      }
+    } catch (_) { /* নেটওয়ার্ক-ঝাঁকুনি — পরের টিকে আবার */ }
+    schedulePoll();
+  }
+
+  /* ── এক্সপোজ ──────────────────────────────────────────────────────────── */
+  window.LekhokCall = {
+    start: start,
+    end: function () { endCall('hangup'); },
+    toggleMic: toggleMic,
+    toggleCam: toggleCam,
+    minimize: function () { minimize(!S.minimized); },
+    state: function () { return S.state; },
+    /* QA-হুক: হেডলেস-ব্রাউজার টেস্টে UI-স্টেট যাচাই */
+    _debug: S
+  };
+
+  /* আইডল-অবস্থাতেও পোল-লুপ চালু — ক্যালি হিসেবে আসন্ন-কল দেখতে হলে
+     পেজ-লোডের পর থেকেই হার্টবিট লাগবে (কলার তো start()-এ শুরু করেই) */
+  schedulePoll();
+})();

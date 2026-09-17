@@ -1,0 +1,244 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   সেশন ৯৩ — WebRTC কল-UI (.lc-* ফ্যামিলি — শুধু body.lc-active স্কোপ)
+   FB/WhatsApp-স্টাইল ফুল-স্ক্রিন কল-স্টেজ + আসন্ন-কল মোডাল।
+   থিম: কল-স্টেজ ডার্ক (ভিডিও-প্যানেলের জন্য স্বাভাবিক), অ্যাকসেন্ট =
+   সাইটের ডার্ক-সবুজ (#059669 পরিবার) — গ্রহণ-বাটনে, aura-রিং-এ।
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.lc-root {
+  --lc-green: #10B981;
+  --lc-green-deep: #059669;
+  --lc-danger: #E4405F;
+  --lc-surface: #111B21;
+  --lc-surface2: #1F2C34;
+  --lc-text: #E9EDEF;
+  --lc-text2: #8696A0;
+  --lc-ring: rgba(16, 185, 129, .45);
+  position: fixed; inset: 0; z-index: 99998;
+  font-family: inherit;
+}
+.lc-backdrop {
+  position: absolute; inset: 0;
+  background: radial-gradient(1200px 700px at 50% 30%, rgba(5, 150, 105, .16), transparent 60%),
+              rgba(6, 12, 15, .92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.lc-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+/* ── মূল প্যানেল ─────────────────────────────────────────────────────── */
+.lc-panel {
+  position: relative;
+  width: min(860px, 100%);
+  height: min(620px, 100%);
+  background: linear-gradient(180deg, var(--lc-surface2), var(--lc-surface));
+  border: 1px solid rgba(233, 237, 239, .08);
+  border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  animation: lc-pop .28s cubic-bezier(.2, .9, .3, 1.2);
+}
+@keyframes lc-pop { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* ── ভিডিও-স্টেজ ─────────────────────────────────────────────────────── */
+.lc-videos { position: absolute; inset: 0; background: #0b141a; }
+.lc-remote-video, .lc-remote-video--audio {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #0b141a;
+}
+.lc-local-video {
+  position: absolute; right: 14px; top: 14px;
+  width: min(220px, 30vw); aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  background: #10181d;
+  z-index: 3;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.lc-root--camoff .lc-local-video { opacity: .25; transform: scale(.96); }
+.lc-tapplay {
+  position: absolute; inset: 0; z-index: 4;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(6, 12, 15, .45);
+}
+.lc-tapplay-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--lc-green-deep); color: #fff;
+  border: 0; border-radius: 999px;
+  padding: 13px 22px; font-size: 15px; font-weight: 600;
+  cursor: pointer; box-shadow: 0 12px 34px rgba(5, 150, 105, .45);
+}
+.lc-tapplay-btn:hover { background: var(--lc-green); }
+
+/* ── অডিও-মুখ ────────────────────────────────────────────────────────── */
+.lc-audioface {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+  background: radial-gradient(900px 560px at 50% 34%, rgba(5, 150, 105, .14), transparent 62%);
+}
+.lc-avatar {
+  width: 132px; height: 132px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, .14);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, .5);
+  z-index: 2;
+  background: #0f1c14;
+}
+.lc-aura { position: absolute; top: calc(50% - 118px); left: 50%; width: 0; height: 0; z-index: 1; }
+.lc-aura span {
+  position: absolute; left: 0; top: 0;
+  width: 132px; height: 132px; margin: -66px;
+  border-radius: 50%;
+  border: 2px solid var(--lc-ring);
+  opacity: 0;
+  animation: lc-ripple 2.4s ease-out infinite;
+}
+.lc-aura span:nth-child(2) { animation-delay: .8s; }
+.lc-aura span:nth-child(3) { animation-delay: 1.6s; }
+@keyframes lc-ripple {
+  0% { transform: scale(1); opacity: .55; }
+  70% { transform: scale(1.7); opacity: 0; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+/* ── মেটা (নাম + স্ট্যাটাস/টাইমার) ───────────────────────────────────── */
+.lc-meta {
+  position: absolute; left: 0; right: 0; bottom: 92px;
+  text-align: center; z-index: 5;
+  pointer-events: none;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .65);
+  padding: 0 16px;
+}
+.lc-name { color: var(--lc-text); font-size: 24px; font-weight: 700; letter-spacing: .2px; }
+.lc-status { color: var(--lc-text2); font-size: 14.5px; margin-top: 6px; }
+.lc-status.is-live { color: var(--lc-green); font-variant-numeric: tabular-nums; }
+.lc-status.is-warn { color: #F59E0B; }
+.lc-status .fas { margin-right: 6px; }
+
+/* ── কন্ট্রোল-বার ─────────────────────────────────────────────────────── */
+.lc-controls {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: flex; gap: 14px; z-index: 6;
+  background: rgba(15, 25, 31, .78);
+  border: 1px solid rgba(233, 237, 239, .1);
+  padding: 12px 16px;
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.lc-ctl {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 19px;
+  background: var(--lc-surface2); color: var(--lc-text);
+  transition: background .15s ease, transform .15s ease, color .15s ease;
+}
+.lc-ctl:hover { background: #2a3942; transform: translateY(-2px); }
+.lc-ctl.is-off { background: rgba(228, 64, 95, .18); color: #FF8FA6; }
+.lc-ctl--end { background: var(--lc-danger); color: #fff; }
+.lc-ctl--end:hover { background: #ff5b78; }
+.lc-ctl:focus-visible, .lc-act:focus-visible, .lc-tapplay-btn:focus-visible, .lc-minbar-btn:focus-visible {
+  outline: 3px solid var(--lc-ring); outline-offset: 2px;
+}
+
+/* ── আসন্ন-কল মোডাল ───────────────────────────────────────────────────── */
+.lc-incoming {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(900px 560px at 50% 30%, rgba(5, 150, 105, .2), rgba(6, 12, 15, .96) 70%);
+}
+/* আসন্ন-মোডাল দৃশ্যমান হলে পিছনের স্টেজ/কন্ট্রোল লুকাও (দ্বৈত-নাম/বাটন-ছায়া এড়াতে) */
+.lc-root:has(.lc-incoming:not([hidden])) .lc-stage { visibility: hidden; }
+.lc-incoming-card { text-align: center; padding: 28px 40px; animation: lc-pop .3s cubic-bezier(.2, .9, .3, 1.2); }
+.lc-incoming-kind {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--lc-green); font-weight: 600; font-size: 14px;
+  background: rgba(16, 185, 129, .12);
+  border: 1px solid rgba(16, 185, 129, .3);
+  padding: 7px 14px; border-radius: 999px;
+  margin-bottom: 22px;
+}
+.lc-incoming-avatarwrap { position: relative; width: 132px; height: 132px; margin: 0 auto 18px; }
+.lc-avatar2 {
+  width: 132px; height: 132px; border-radius: 50%; object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, .16);
+  z-index: 2; position: relative; background: #0f1c14;
+}
+.lc-incoming-avatarwrap span {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid var(--lc-ring);
+  animation: lc-ripple 2s ease-out infinite;
+}
+.lc-incoming-avatarwrap span:nth-child(2) { animation-delay: .66s; }
+.lc-incoming-avatarwrap span:nth-child(3) { animation-delay: 1.33s; }
+.lc-incoming-name { color: var(--lc-text); font-size: 26px; font-weight: 700; }
+.lc-incoming-sub { color: var(--lc-text2); margin-top: 6px; font-size: 14px; }
+.lc-incoming-actions { display: flex; gap: 26px; justify-content: center; margin-top: 30px; }
+.lc-act {
+  width: 66px; height: 66px; border-radius: 50%;
+  border: 0; cursor: pointer; font-size: 23px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; transition: transform .15s ease, filter .15s ease;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .45);
+}
+.lc-act:hover { transform: translateY(-3px) scale(1.04); filter: brightness(1.1); }
+.lc-act--accept { background: linear-gradient(160deg, var(--lc-green), var(--lc-green-deep)); }
+.lc-act--decline { background: linear-gradient(160deg, #FF5B78, var(--lc-danger)); }
+
+/* ── মিনিমাইজড-বার ────────────────────────────────────────────────────── */
+.lc-root--min .lc-panel { display: none; }
+.lc-minbar { position: absolute; top: 14px; right: 14px; z-index: 12; }
+.lc-minbar-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: rgba(15, 25, 31, .9); color: var(--lc-text);
+  border: 1px solid rgba(16, 185, 129, .4);
+  border-radius: 999px; padding: 10px 18px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
+}
+.lc-minbar-btn .lc-minbar-t { color: var(--lc-green); font-variant-numeric: tabular-nums; }
+.lc-minbar-btn:hover { background: #1f2c34; }
+
+/* ── টোস্ট (fbToast-অনুপস্থিতির ফলব্যাক) ──────────────────────────────── */
+.lc-toast {
+  position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(14px);
+  z-index: 99999;
+  background: #111B21; color: #E9EDEF;
+  border: 1px solid rgba(233, 237, 239, .14);
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 14.5px; box-shadow: 0 14px 40px rgba(0, 0, 0, .45);
+  opacity: 0; transition: opacity .3s ease, transform .3s ease;
+  max-width: min(92vw, 480px); text-align: center;
+}
+.lc-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.lc-toast--err { border-color: rgba(228, 64, 95, .5); color: #FFD9DF; }
+
+/* ── মোবাইল (≤640px) ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .lc-stage { padding: 0; }
+  .lc-panel { border-radius: 0; border: 0; height: 100%; width: 100%; }
+  .lc-local-video { width: min(120px, 30vw); border-radius: 10px; right: 10px; top: 10px; }
+  .lc-avatar, .lc-avatar2 { width: 104px; height: 104px; }
+  .lc-aura span { width: 104px; height: 104px; margin: -52px; }
+  .lc-name { font-size: 20px; }
+  .lc-incoming-name { font-size: 22px; }
+  .lc-ctl { width: 50px; height: 50px; font-size: 17px; }
+  .lc-act { width: 60px; height: 60px; }
+  .lc-controls { gap: 10px; padding: 10px 12px; bottom: 14px; }
+  .lc-meta { bottom: 84px; }
+}
+/* ── মোশন-সংবেদনশীল ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .lc-panel, .lc-incoming-card { animation: none; }
+  .lc-aura span, .lc-incoming-avatarwrap span { animation: none; opacity: .35; }
+  .lc-ctl, .lc-act { transition: none; }
+}

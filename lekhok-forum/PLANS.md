@@ -709,3 +709,23 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 **গোটচা-পুনঃপ্রমাণ:** ডিসপ্লে-গোটচা এই রাউন্ডেও ২ ভুয়া-পজিটিভ (`:not(idden])`, `messagesessages` — দুটোই বাইট-লেভেলে অক্ষত ছিল)। **নিয়ম অপরিবর্তিত:** স্ক্যানে 'corruption' দেখলে char-code/od-যাচাই আগে, ফিক্স পরে।
 
 **পরবর্তী-ক্রন-রাউন্ডে (৯৩-পরবর্তী):** ০৫-ইনফিনিট-স্ক্রল-কার্সার-পলিশ → ০১-SSE-রিয়েল-টাইম-হাব (🔴 — নোটিফ+মেসেজ-পুশ, পোলিং-ফলব্যাক) → ১৩-WebRTC-কল-সিগন্যালিং (🔴) → নোটিফিকেশন-ভিউতে displayName → প্রোফাইল-টাইমলাইনেও স্ক্রল-রিস্টোর।
+
+## Cross-Agent Note: Session 93 — WebRTC অডিও/ভিডিও কল (HTTP-পোলিং সিগন্যালিং) + /dashboard fresh-500 ফিক্স (১৮ সেপ্টেম্বর ২০২৬)
+
+**রোডম্যাপ/সুপারিশ-প্রগতি:** সেশন-৭৬-এর "WebRTC এজেন্টের সিগন্যালিং-সার্ভিস" + "⋯-মেনুতে 'কলে উত্তর'"-এর ভিত্তি এখন আছে — কল-সিগন্যালিং সম্পূর্ণ কার্যকর (৪৫/৪৫ API E2E + agent-browser প্রকৃত-রিং E2E)। Agent-Chat-লক সম্মান করা হয়েছে — **messages-chat.ejs-এ আমার স্পর্শ মাত্র ৩টি ছোট ব্লক**: ① header-include-এ `calls.css` ② fb-chat-actions-এর দুই বাটনের onclick ③ ফুটারে bootstrap-ctx+`webrtc-call.js`। ভয়েস-নোট (session92)-ব্লক অক্ষত।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (এজেন্টদের জন্য):**
+- **কল-এন্ডপয়েন্ট:** `routes/calls.js` — সব `/api/calls/*`। পোল-রেসপন্স `{incoming, outgoing, active, ended, signals, after}`। নতুন সিগন্যাল-টাইপ (যেমন স্ক্রিনশেয়ার/রিনেগোশিয়েশন) যোগ করতে হলে payload-JSON-এ `type` বাড়ান — ক্লায়েন্ট webrtc-call.js-এর signal-সুইচে হ্যান্ডলার যোগ করুন (অজানা-টাইপ নীরবে ইগনোর হয় — ব্যাক-কম্প্যাট নিরাপদ)।
+- **কল-টেবিল:** `call_sessions` (status: ringing/accepted/ended/declined/cancelled/missed) + `call_signals` (payload-JSON, sender-ফিল্টার্ড ডেলিভারি, cursor `after`=signal-id)। MIGRATION_SQL + applyLaterMigrations দুই-জায়গাতেই CREATE — নতুন কলাম লাগলে LATER_COLUMNS-প্যাটার্ন মানুন (fingerprint-bust)।
+- **🚨 /settings-লেজি-ALTER থেকে সরানো হলো:** users-এর pen_name/genres/allow_messages_from/bookmarks_public এখন db.js LATER_COLUMNS-এ বুট-টাইম ensure — fresh-deploy-তে /dashboard-এর `u.pen_name` 500 ছিল ("no such column"), এখন 200। social.js-এর লেজি-ALTER-লুপ রাখা হয়েছে (ডুপ্লিকেট-নিরাপদ) — অপসারণ করবেন না, কিন্তু নতুন কলাম এখন থেকে **LATER_COLUMNS-এই** যোগ করুন।
+- **QA-ইউজার:** `node scripts/seed-qa-users.js` (**সার্ভার বন্ধ করে**!) — testuser/testadmin (demo123), testagent1/2 (Test@1234), ismail/monem/karishma/mahfuz/nusrat (demo123)। রোস্টার-সিড-ডিবিতে ডেমো-ইউজাররা সিড হয় না (users-table non-empty) — কল/চ্যাট E2E-র জন্য এই সিড দরকার।
+- **কল-টেস্ট:** `node scripts/verify-session93-calls.js http://localhost:PORT` (সার্ভারে `CALL_RING_TIMEOUT_S=4` দিলে missed-টেস্ট দ্রুত)। টেস্টের আগে ismail-সেশনে একবার `/api/calls/poll` কল + ৫-সে অপেক্ষা → stale-রিং self-heal (নাহলে অন্য-সোর্সের টাটকা রিং busy-দেয়)।
+- **কল-UI DOM:** webrtc-call.js `document.body`-তে `.lc-root` ইনজেক্ট করে — messenger.css-এর কোনো স্টাইল সেখানে প্রযোজ্য নয়; কল-ভিজ্যুয়াল বদলাতে calls.css-ই এডিট করুন। `:has()` সিলেক্টর ব্যবহৃত (আসন্ন-মোডালে স্টেজ-লুকানো) — ২০২৩+ ব্রাউজার; পুরনো-ব্রাউজারে কেবল দ্বৈত-ছায়া দেখায় (কার্যতঃ ক্ষতিকর নয়)।
+
+**গোটচা (এই সেশনে বাস্তবে খাওয়া):**
+1. **E2E-ব্রাউজার + API-টেস্ট একসাথে চললে রেস** — ব্রাউজারে খোলা আসন্ন-কল টাটকা (≤ring-timeout) থাকায় API-start busy-দেয়। টেস্ট-আইসোলেশনে প্রি-পোল+৫সে-অপেক্ষা রাখুন।
+2. **cleanup-পরে S.callId পড়া** — ক্লায়েন্টের error-path-এ callId cleanup-এর **আগে** capture করুন (নাহলে end-কল `/api/calls/0/end`-এ যায় — কল রিংিং-ই থেকে যায়)।
+3. **পোল-লুপ পুনরায়-চালু** — কল-ক্লিনআপে (cleanup) `schedulePoll()` আবার কল করতে হয়; নাহলে কল-শেষে ক্যালি আর কখনো নতুন কল দেখে না (এই বাগ দুই-রাউন্ড agent-browser টেস্টে ধরা পড়েছিল)।
+4. **role-policy-স্যুট baseline** — `test-role-policy.sh` session-91-এর stateful-baseline (testadmin role=admin ইত্যাদি) ছাড়া ২৯+ ফলস-ফেইল দেয়; fresh-clone-এ চালালে সেটি environment-সমস্যা, কোড-রিগ্রেশন নয় (ডকুমেন্টেড)।
+
+**টেস্ট-ডেটা (এই clone-এর lekhok.db):** testuser↔testagent1 + ismail↔monem কথোপকথন + কয়েকটি টেস্ট-কল-রেকর্ড (📞 মেসেজ) সিডড — মেসেঞ্জারে কল-রেকর্ড-বাবল সরাসরি দেখা যায়।

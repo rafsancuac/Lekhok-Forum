@@ -1,5 +1,5 @@
 <%# সেশন ৭৫ — ফেসবুক মেসেঞ্জার-স্টাইল চ্যাট-ভিউ (৩-কলাম: লিস্ট + চ্যাট + ডিটেইলস) %>
-<%- include('../partials/header', { title: (other.full_name) + ' | মেসেজ | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/messenger.css'] }) %>
+<%- include('../partials/header', { title: (other.full_name) + ' | মেসেজ | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/messenger.css', '/assets/css/calls.css'] }) %>
 
 <%
   // ── ক্লাস্টার-হেল্পার: পরপর একই প্রেরকের বাবল গুচ্ছ বাঁধে (FB-আচরণ) ──
@@ -130,8 +130,8 @@
           </div>
           <div class="fb-chat-actions">
             <% if (!isGroup) { %>
-            <button type="button" class="fb-icon-btn" title="অডিও কল (শীঘ্রই)" onclick="fbToast('অডিও-কল ফিচারটি শীঘ্রই আসছে!')"><i class="fas fa-phone"></i></button>
-            <button type="button" class="fb-icon-btn" title="ভিডিও কল (শীঘ্রই)" onclick="fbToast('ভিডিও-কল ফিচারটি শীঘ্রই আসছে!')"><i class="fas fa-video"></i></button>
+            <button type="button" class="fb-icon-btn" title="অডিও কল" onclick="LekhokCall.start('audio')" aria-label="<%= other.full_name %>-কে অডিও কল দিন"><i class="fas fa-phone"></i></button>
+            <button type="button" class="fb-icon-btn" title="ভিডিও কল" onclick="LekhokCall.start('video')" aria-label="<%= other.full_name %>-কে ভিডিও কল দিন"><i class="fas fa-video"></i></button>
             <% } %>
             <button type="button" class="fb-icon-btn" id="fbInfoBtn" title="তথ্য প্যানেল"><i class="fas fa-circle-info"></i></button>
           </div>
@@ -1804,6 +1804,19 @@
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/messenger-actions.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+  <%# সেশন ৯৩: WebRTC কল — bootstrap-কনটেক্সট (me/peer/conv) + মডিউল %>
+  <script>
+    window.LekhokCallCtx = {
+      me: <%- parseInt(user.id, 10) %>,
+      meName: <%- jesc(user.full_name || user.username) %>,
+      meAvatar: <%- jesc(user.avatar_url || ('/avatar/' + user.id)) %>,
+      convId: <%= conv ? conv.id : 0 %>,
+      convUsername: <%- jesc(other.username) %>,
+      isGroup: <%= isGroup ? 'true' : 'false' %>,
+      peer: <% if (isGroup) { %>null<% } else { %>{ id: <%- parseInt(other.id, 10) %>, name: <%- jesc(other.full_name) %>, username: <%- jesc(other.username) %>, avatar: <%- jesc(other.avatar_url || ('/avatar/' + other.id)) %> }<% } %>
+    };
+  </script>
+  <script src="/assets/js/webrtc-call.js?v=<%= AV %>"></script>
   <script>
     // পুরো কথোপকথন মুছুন (AJAX)
     async function deleteConversation(username) {

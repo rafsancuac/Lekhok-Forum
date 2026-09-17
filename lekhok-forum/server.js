@@ -789,6 +789,7 @@ app.use('/',          require('./routes/social'));   // articles, qa, members, p
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
 app.use('/',          require('./routes/pages'));     // public pages: home, about, gallery, committee, contact, events, resources, notices
 app.use('/',          require('./routes/dashboard'));// dashboard feed, messages, complaints
+app.use('/',          require('./routes/calls'));    // সেশন ৯৩: WebRTC কল-সিগন্যালিং (HTTP-পোলিং — Vercel-serverless-নিরাপদ)
 app.use('/avatar',    require('./routes/avatar'));   // default avatar serving
 app.use('/img/cover', require('./routes/cover'));    // সেশন ৭৩: লোকাল ডিটারমিনিস্টিক SVG কভার-আর্ট (picsum প্রতিস্থাপন — Googlebot-ব্লক ফিক্স)
 app.use('/moderator', require('./routes/moderator'));// scoped moderator posting panel
