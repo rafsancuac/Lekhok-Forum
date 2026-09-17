@@ -950,6 +950,8 @@ function resourceFormPayload101(req, existing) {
     link_url:  b.link_url || null,
     file_size: b.file_size || null,
     duration:  (b.duration || '').trim() || null,
+    // সেশন ১০৪: কভার-ছবি (thumbnail_url) — pdf/doc/link/অডিও/ভিডিও কার্ডেও কভার দেখায়
+    thumbnail_url: (b.thumbnail_url || '').trim() || null,
   };
   if (f) {
     out.file_url = f.url || f.path;
@@ -973,8 +975,8 @@ router.post('/resources', requireAdmin, withUpload(resourceUpload), async (req, 
   const p = resourceFormPayload101(req, null);
   if (!p.title) return res.render('admin/resources/form', { resource: Object.assign({}, req.body, req.file ? { res_type: detectResType101(req.file) } : {}), error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources', RES_TYPE_META });
   if (req.uploadError) return res.render('admin/resources/form', { resource: req.body, error: req.uploadError, currentPath: '/admin/resources', RES_TYPE_META });
-  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
-    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, (req.session.user && req.session.user.username) || null
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, thumbnail_url, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, p.thumbnail_url, (req.session.user && req.session.user.username) || null
   );
   res.redirect('/admin/resources?saved=1');
 });
@@ -988,8 +990,8 @@ router.get('/resources/:id/edit', requireAdmin, async (req, res) => {
 router.put('/resources/:id', requireAdmin, withUpload(resourceUpload), async (req, res) => {
   const existing = await db.prepare('SELECT * FROM resources WHERE id = ?').get(req.params.id);
   const p = resourceFormPayload101(req, existing);
-  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=?, res_type=?, file_size=?, duration=? WHERE id=?').run(
-    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, req.params.id
+  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=?, res_type=?, file_size=?, duration=?, thumbnail_url=? WHERE id=?').run(
+    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, p.thumbnail_url, req.params.id
   );
   res.redirect('/admin/resources?saved=1');
 });
