@@ -651,12 +651,23 @@ if (process.env.SANDBOX_PORT) {
     function patchHtml(html) {
       if (typeof html !== 'string') return html;
       try {
-        // অ্যাট্রিবিউট: src/href/action/poster/formaction — মান পথ-অ্যাবসোলিউট হলে
-        html = html.replace(/(\s(?:src|href|action|poster|formaction)\s*=\s*["'])([^"']*)(["'])/g,
-          function (m, pre, val, post) { return pre + patchAssetPath(val) + post; });
-        // ইনলাইন style/CSS url(/...)
-        html = html.replace(/url\((['"]?)(\/[^'")\s]+)\1\)/g,
-          function (m, q, u) { return 'url(' + q + patchAssetPath(u) + q + ')'; });
+        // ── সেশন ৭৮: script-body সুরক্ষা (JS-স্ট্রিং মিথ্যা-প্যাচ বাগ) ──
+        // আগে attribute-রেগেক্স পুরো HTML-এ চলত — ইনলাইন <script>-এর কোডের
+        // ভেতরের স্ট্রিং-লিটারেলও ধরা পড়ত (যেমন messages-list ট্রে-কোডের
+        // '<a href="/messages/' + username…) → href="/messages/?XTransformPort=3030' + username
+        // → রানটাইম-লিংক ভাঙা। এখন <script>-ব্লক স্কিপ-করা: শুধু মার্কআপ-অংশ + স্ক্রিপ্টের
+        // ওপেনিং-ট্যাগের অ্যাট্রিবিউট (src=…) প্যাচ হয়, কোড-বডি অক্ষত থাকে।
+        var out = '', lastIdx = 0, sm;
+        var scriptRe = /(<script\b[^>]*>)([\s\S]*?)(<\/script\s*>)/gi;
+        while ((sm = scriptRe.exec(html)) !== null) {
+          out += patchMarkupPart(html.slice(lastIdx, sm.index));
+          out += patchMarkupPart(sm[1]);      // ওপেনিং-ট্যাগ (src/href অ্যাট্রিবিউট)
+          out += sm[2];                        // JS-কোড — অপরিবর্তিত
+          out += sm[3];
+          lastIdx = sm.index + sm[0].length;
+        }
+        out += patchMarkupPart(html.slice(lastIdx));
+        html = out;
         // fetch-guard: <head>-এ একবার ইনজেক্ট — ক্লায়েন্ট-সাইড fetch('/x')
         // (quiz.js / admin-url-upload.js / auth-sync.js / ভবিষ্যৎ) কোয়েরি-ছাড়া
         // গেটওয়ে-ডিফল্টে (Next.js:3000) পড়ে 404 হওয়া রোধ। XMLHttpRequest-ও কভার।
@@ -669,12 +680,26 @@ if (process.env.SANDBOX_PORT) {
           + 'if(window.XMLHttpRequest&&!window.__lfSbXhr){window.__lfSbXhr=1;'
           + 'var oo=XMLHttpRequest.prototype.open;'
           + 'XMLHttpRequest.prototype.open=function(m,u){arguments[1]=qp(u);return oo.apply(this,arguments);};}'
+          + 'window.__lfSbUrl=qp;'
           + '})();</scr' + 'ipt>';
         if (html.indexOf('__lfSbFetch') === -1 && /<\/head>/i.test(html)) {
           html = html.replace(/<\/head>/i, FETCH_GUARD + '</head>');
         }
       } catch (e) { /* HTML-প্যাচ ফেইল হলে অরিজিনাল অক্ষত থাকবে */ }
       return html;
+    }
+
+    function patchMarkupPart(part) {
+      if (typeof part !== 'string' || !part) return part;
+      try {
+        // অ্যাট্রিবিউট: src/href/action/poster/formaction — মান পথ-অ্যাবসোলিউট হলে
+        part = part.replace(/(\s(?:src|href|action|poster|formaction)\s*=\s*["'])([^"']*)(["'])/g,
+          function (m, pre, val, post) { return pre + patchAssetPath(val) + post; });
+        // ইনলাইন style/CSS url(/...)
+        part = part.replace(/url\((['"]?)(\/[^'")\s]+)\1\)/g,
+          function (m, q, u) { return 'url(' + q + patchAssetPath(u) + q + ')'; });
+      } catch (e) { /* পার্ট-প্যাচ ফেইল → অক্ষত */ }
+      return part;
     }
 
     const origRender = res.render.bind(res);

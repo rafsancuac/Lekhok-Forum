@@ -227,6 +227,13 @@
           </div>
         </div>
 
+        <%# ── সেশন ৭৮: কুইক-রিপ্লাই চিপস (বাংলা দ্রুত-উত্তর) ── %>
+        <div class="qr-chips" id="qrChips" role="toolbar" aria-label="দ্রুত উত্তর">
+          <% ['স্যালাম', 'জি বলুন', 'কেমন আছেন?', 'ঠিক আছে 👍', 'ধন্যবাদ 🙏', 'শীঘ্রই জানাচ্ছি', 'আপনার লেখা পড়েছি ✍️', 'শুভকামনা 🎉'].forEach(t => { %>
+            <button type="button" class="qr-chip" data-qr="<%= t %>"><%= t %></button>
+          <% }); %>
+        </div>
+
         <form method="POST" class="chat-input-bar" enctype="multipart/form-data" id="chatForm">
           <%# সেশন ৭৬: রিপ্লাই/এডিট বার (ইনপুট-বারের উপরে FB-স্টাইল) %>
           <div class="reply-bar" id="replyBar" hidden>
@@ -646,6 +653,23 @@
       updateSendBtn();
       document.getElementById('emojiPicker').classList.remove('open');
     }
+
+    // ── সেশন ৭৮: কুইক-রিপ্লাই চিপ ──────────────────────────────────────
+    // চিপ-ক্লিক → ইনপুটে টেক্সট বসে + ফোকাস (সেন্ড ইউজারের হাতে — accidental
+    // সেন্ড-রোধ); ইনপুট খালি হলে রিপ্লেস, লেখা থাকলে জোড়া+স্পেস।
+    function quickReply(btn) {
+      const t = btn.getAttribute('data-qr') || '';
+      const cur = msgInput.value || '';
+      msgInput.value = cur.trim() ? (cur.replace(/\s+$/, '') + ' ' + t) : t;
+      updateSendBtn();
+      msgInput.focus();
+      btn.classList.add('qr-pop');
+      setTimeout(() => btn.classList.remove('qr-pop'), 350);
+    }
+    document.getElementById('qrChips').addEventListener('click', e => {
+      const chip = e.target.closest('.qr-chip');
+      if (chip) quickReply(chip);
+    });
 
     document.getElementById('emojiBtn').addEventListener('click', () => {
       document.getElementById('emojiPicker').classList.toggle('open');

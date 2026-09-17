@@ -606,6 +606,53 @@
 }
 .page-wrap--messenger .typing-indicator .ti-label { margin-left: 6px; font-size: 12px; color: var(--fb-text2); }
 
+/* ── সেশন ৭৮: কুইক-রিপ্লাই চিপস (বাংলা দ্রুত-উত্তর, ইনপুট-বারের উপরে) ── */
+.page-wrap--messenger .qr-chips {
+  display: flex; gap: 8px;
+  padding: 8px 14px 4px;
+  background: var(--fb-surface);
+  border-top: 1px solid var(--fb-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  flex-shrink: 0;
+}
+.page-wrap--messenger .qr-chips::-webkit-scrollbar { display: none; }
+.page-wrap--messenger .qr-chip {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  border: 1px solid var(--fb-border);
+  background: var(--fb-canvas);
+  color: var(--fb-text);
+  border-radius: 99px;
+  padding: 5px 14px;
+  font-size: 13px; font-family: inherit; font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, border-color .15s, transform .12s, box-shadow .15s;
+}
+.page-wrap--messenger .qr-chip:hover {
+  background: var(--fb-active);
+  border-color: var(--fb-blue);
+  box-shadow: 0 1px 4px rgba(24, 119, 242, .18);
+}
+.page-wrap--messenger .qr-chip:active { transform: scale(.94); }
+.page-wrap--messenger .qr-chip:focus-visible {
+  outline: 2px solid var(--fb-blue);
+  outline-offset: 2px;
+}
+.page-wrap--messenger .qr-chip.qr-pop { animation: qrPop .35s ease; }
+@keyframes qrPop {
+  0% { transform: scale(.94); }
+  55% { transform: scale(1.06); background: var(--fb-active); border-color: var(--fb-blue); }
+  100% { transform: scale(1); }
+}
+@media (max-width: 640px) {
+  .page-wrap--messenger .qr-chips { padding: 6px 10px 2px; gap: 6px; }
+  .page-wrap--messenger .qr-chip { font-size: 12px; padding: 4px 12px; }
+}
+
 /* ── ইনপুট-বার (FB ChatInputBar) ── */
 .page-wrap--messenger .chat-input-bar {
   display: flex; align-items: center; flex-wrap: wrap; gap: 6px;

@@ -256,6 +256,9 @@
 
     // ── Active-now ট্রে (সেশন ৭৬: অ্যাডাপটিভ পোল) ──────
     const fbActiveTray = document.getElementById('fbActiveTray');
+    // স্যান্ডবক্স-প্রিভিউ: JS-জেনারেটেড img-src/href-ও গেটওয়ে-কোয়েরি বহন করবে —
+    // __lfSbUrl fetch-guard-স্ক্রিপ্ট থেকে আসে (স্যান্ডবক্সে), প্রোডাকশনে undefined → identity।
+    const sbU = window.__lfSbUrl || function (u) { return u; };
     async function pollActiveTray() {
       try {
         const r = await fetch('/api/messages/online-users');
@@ -265,9 +268,9 @@
         fbActiveTray.innerHTML =
           '<span class="fb-tray-title"><i class="fas fa-circle" style="font-size:6px;color:var(--fb-green)"></i> এখন অনলাইন</span>' +
           users.map(u =>
-            '<a class="fb-active-chip" href="/messages/' + encodeURIComponent(u.username) + '" title="' + escapeHtml(u.name) + '">' +
+            '<a class="fb-active-chip" href="' + sbU('/messages/' + encodeURIComponent(u.username)) + '" title="' + escapeHtml(u.name) + '">' +
               '<span class="fb-active-avwrap">' +
-                '<img loading="lazy" src="' + escapeHtml(u.avatar) + '" onerror="this.onerror=null;this.src=\'/avatar/' + u.id + '\'" alt="' + escapeHtml(u.name) + '">' +
+                '<img loading="lazy" src="' + escapeHtml(sbU(u.avatar)) + '" onerror="this.onerror=null;this.src=(window.__lfSbUrl||function(x){return x})(\'/avatar/' + u.id + '\')" alt="' + escapeHtml(u.name) + '">' +
                 '<span class="fb-active-dot"></span>' +
               '</span>' +
               '<span class="fb-active-name">' + escapeHtml(u.name.split(' ')[0]) + '</span>' +
