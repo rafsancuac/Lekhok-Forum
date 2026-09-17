@@ -1668,3 +1668,81 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .notif-page-icon.has-avatar .notif-avatar{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
 .notif-page-icon.has-avatar i{display:none}
 .notif-page-item.unread .notif-page-icon.has-avatar{box-shadow:0 0 0 2px var(--bg-card,#fff),0 0 0 3.5px rgba(5,150,105,.45)}
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১০৯ — ব্যক্তিগত-ফিড (/me) প্রফেশনাল রিডিজাইন (FB-প্যারিটি কমপ্যাক্ট লেআউট)
+   ইউজার-রিপোর্ট: ① ৭টি ডুপ্লিকেট স্ট্যাট-বক্স (১৫০px) ট্যাবের সাথে পুনরাবৃত্ত
+   ② হিরোতে 'প্রোফাইল' বাটনের লেখা অস্বচ্ছ/অপঠনযোগ্য ③ সেরা-লেখা টেক্সট কার্ড
+   ভেঙে বের হয় ④ ৫ ফাঁকা-মাসের জন্য বিশাল খালি SVG-চার্ট (viewBox-স্ট্রেচ)।
+   সমাধান: গ্রিড-বিলুপ্ত → ট্যাব-ব্যাজ, সাদা হাই-কনট্রাস্ট বাটন, min-width:0
+   truncate-গার্ড, SVG → ফিক্সড-৮৪px HTML flex-বার + টগল।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ১. হিরো: কমপ্যাক্ট ব্যান্ড + রোল-চিপ + স্ট্যাটস-লাইন ── */
+.me-header{border-radius:14px;overflow:hidden}
+.me-wrap .me-header-inner{position:relative;display:flex;align-items:center;gap:14px;padding:16px 20px;min-height:0}
+.me-wrap .avatar-xl{width:68px;height:68px;margin-top:0;border:3px solid rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.22);font-size:24px}
+.me-id h1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:1.28rem}
+.me-role-chip{display:inline-flex;align-items:center;font-size:11px;font-weight:600;line-height:1;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.28);padding:3px 9px;border-radius:999px;backdrop-filter:blur(2px);white-space:nowrap}
+.me-stats-line{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.92)!important;font-size:.78rem;margin:3px 0 0}
+.me-stats-line i{font-size:.68rem;opacity:.85}
+.me-header .me-bio{font-size:.8rem;margin-top:4px}
+
+/* ── ২. হিরো-বাটন: ১০০% কনট্রাস্ট — সাদা-বেস + গাঢ় টেক্সট (ডার্ক-গ্রিনে অদৃশ্য হওয়া বন্ধ) ── */
+.me-actions{gap:8px}
+.me-actions .btn{font-weight:700;letter-spacing:.1px;box-shadow:0 1px 3px rgba(0,0,0,.18);min-height:38px}
+/* গোটচা: পুরনো .btn-primary{color:…!important} আছে — তাই এখানেও !important অপরিহার্য।
+   ইউজার-রেফারেন্স: 'নতুন লেখা' = emerald-সলিড + সাদা বোল্ড; 'প্রোফাইল' = সাদা-সলিড + গাঢ় লেখা। */
+.me-actions .btn-primary{background:linear-gradient(135deg,#10B981,#047857)!important;color:#ffffff!important;border:1px solid rgba(255,255,255,.35)!important}
+.me-actions .btn-primary:hover{background:linear-gradient(135deg,#059669,#065F46)!important;border-color:rgba(255,255,255,.55)!important;color:#ffffff!important;transform:translateY(-1px)}
+.me-actions .btn-ghost{background:#ffffff!important;color:#0a3d34!important;border:1px solid #ffffff!important}
+.me-actions .btn-ghost:hover{background:#e8f5f0!important;color:#0a3d34!important;border-color:#e8f5f0!important;transform:translateY(-1px)}
+
+/* ── ৩. ws91 কার্ড: স্লিম-রেক্ট্যাঙ্গুলার KPI-চিপ (বড় প্যাডিং নেই) ── */
+.ws91-card{border-radius:14px;padding:14px 16px 12px;margin:0 0 16px}
+.ws91-head{gap:10px;margin-bottom:10px}
+.ws91-head h2{font-size:.95rem}
+.ws91-sub{font-size:.74rem}
+.ws91-toggle{margin-left:auto;border:0;background:#F1F5F4;color:#0f4c46;font-family:inherit;font-size:.72rem;font-weight:700;padding:5px 11px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .15s,color .15s;white-space:nowrap}
+.ws91-toggle:hover{background:#DCEBE4;color:#065F46}
+.ws91-toggle i{font-size:.6rem}
+.ws91-kpis{grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.ws91-kpi{background:#F8FAF9;border-radius:10px;padding:8px 11px;gap:9px;min-width:0}
+.ws91-kpi:hover{transform:none;box-shadow:none;border-color:#cfe5db}
+.ws91-kpi-ico{width:30px;height:30px;border-radius:8px;font-size:.8rem}
+.ws91-kpi b{font-size:.95rem}
+.ws91-kpi div{min-width:0;flex:1}
+.ws91-kpi div span{max-width:100%}
+.ws91-kpi-ico.b{color:#92600a}
+
+/* ── ৪. স্লিম HTML-বার চার্ট (৮৪px — viewBox-স্ট্রেচ-গোটচা শেষ) ── */
+.ws91-chart-wrap{padding:10px 12px 8px;margin-top:0}
+.ws91-chart-wrap[hidden]{display:none}
+.ws91-bars{display:flex;align-items:stretch;gap:12px;height:84px}
+.ws91-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+.ws91-val{font-size:.68rem;font-weight:700;color:#065F46;line-height:1;min-height:11px;display:flex;align-items:center}
+.ws91-track{width:100%;max-width:42px;flex:1;display:flex;align-items:flex-end;background:#F1F5F4;border-radius:7px 7px 3px 3px;overflow:hidden}
+.ws91-fill{width:100%;background:#DCE7E1;border-radius:7px 7px 2px 2px;min-height:4px;transition:height .45s cubic-bezier(.22,1,.36,1)}
+.ws91-fill.has{background:linear-gradient(180deg,#10B981,#047857);transform-origin:bottom;animation:ws107grow .45s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes ws107grow{from{transform:scaleY(0);opacity:.35}to{transform:scaleY(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.ws91-fill.has{animation:none}}
+.ws91-mo{font-size:.66rem;color:#6b7280;font-weight:600;white-space:nowrap}
+
+/* ── ৫. ট্যাব-বার: পিল-স্টাইল + কাউন্ট-ব্যাজ (ডুপ্লিকেট-গ্রিডের উত্তরসূরি) ── */
+.me-wrap .personal-tabs{background:#fff;border:1px solid var(--border);border-radius:12px;padding:4px;gap:2px;overflow-x:auto;margin-bottom:16px;scrollbar-width:thin}
+.me-wrap .personal-tab{display:inline-flex;align-items:center;gap:6px;border:0;border-bottom:0;margin-bottom:0;background:transparent;padding:7px 11px;border-radius:9px;font-size:.8rem;font-weight:600;color:var(--text-soft,#65676b);white-space:nowrap;transition:background .15s,color .15s}
+.me-wrap .personal-tab i{font-size:.72rem;opacity:.85}
+.me-wrap .personal-tab:hover{background:#F0F4F2;color:#1e293b}
+.me-wrap .personal-tab.active{background:var(--accent-soft);color:var(--accent-dark);border-bottom:0}
+.me-wrap .personal-tab .tb-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:17px;padding:0 5px;border-radius:999px;font-size:.66rem;font-weight:700;line-height:1;background:#E8EDEA;color:#5b6b64}
+.me-wrap .personal-tab.active .tb-badge{background:var(--accent-dark);color:#fff}
+
+/* ── ৬. মোবাইল (≤640px): হিরো-কলাম + KPI ২-কলাম + চার্ট-ঘন ── */
+@media (max-width:640px){
+  .me-wrap .me-header-inner{flex-direction:column;align-items:flex-start;gap:12px;padding:14px}
+  .me-actions{margin-left:0;width:100%;justify-content:stretch}
+  .me-actions .btn{flex:1;justify-content:center;display:inline-flex;align-items:center}
+  .ws91-kpis{grid-template-columns:repeat(2,1fr)}
+  .ws91-bars{gap:8px;height:72px}
+  .ws91-mo{font-size:.58rem}
+  .me-wrap .personal-tab{padding:6px 9px;font-size:.74rem}
+}
