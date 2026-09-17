@@ -622,3 +622,22 @@ Stage Summary:
 **গোটচা-লগ:** ① রোস্টার-ইউজার (akij ইত্যাদি) র‍্যান্ডম-পাস — actor-টেস্টে testadmin-নিজে-লেখক পথ নেওয়া হয়েছিল ② /api/react 'like' ডিবাউন্সড-নন-নোটিফাই (love/haha/wow-ই নোটিফাই) — টেস্টে love ব্যবহার ③ **agent-browser ডম-অনির্ভরস্যতা সাবধানতা:** open/reload-এ ডেমন state-replay + query-loss (→ :3000 Next.js scaffold "Z.ai Code Scaffold" টাইটেল!) পুরনো-রেন্ডার দেখাতে পারে — সার্ভার-সত্য যাচাইতে curl + in-browser fetch + সার্ভার-সাইড debug-log তিনটাই দরকার হয়েছিল; SW-unregister/cache-clear যথেষ্ট নয় ④ gateway-এর সাইট-JS/CSS-ব্লক থাকায় স্টাইলড-শট চাইলে fetch+`<style>`-ইনজেক্ট (প্রতিষ্ঠিত-রীতি)।
 
 **পরবর্তী:** ০৭-কম্পোজার-মোডাল (🔴 — একক-রাউন্ড-ফোকাস: dashboard.ejs+style.css, ড্র্যাগ-ড্রপ+ড্রাফট-গার্ড, ওপেন/ক্লোজ+মেমোরি-ফ্রি-টেস্ট) → নোটিফ actor-avatar-বৃদ্ধি: /notifications ফুল-পেজ-তালিকায়ও অবতার → ১৯-অডিট-CSV-ভেরিফিকেশন।
+
+---
+Task ID: 9 (Session 104 — ইউজার-রিপোর্ট রাউন্ড: FB-প্যারিটি কমেন্ট-সিস্টেম)
+Agent: Main agent (webDevReview — Lekhok-Forum, origin/main @ 59bebe5 → rebase ba8797b/session106 → push a3263a9)
+Task: কমিউনিটি-ফিডে ডুপ্লিকেট-কমেন্ট (দুই-স্টাইলে দুইবার) ফিক্স + কমেন্টে FB-রিঅ্যাকশন প্যালেট + ৩-ডট ইনলাইন এডিট/ডিলিট — ফেসবুক 1:1
+
+Work Log:
+- স্যান্ডবক্স-স্টেট: রিপো ফ্রেশ-ক্লোন (পুরনো ক্লোন/সার্ভার ছিল না); mini-services/lekhok-forum র‍্যাপারে node --watch :8080 (SANDBOX_PORT=8080) — প্রসেস টুল-কল-পার-সার্ভাইভ প্রমাণিত
+- Root-cause: feed-cards.ejs-এর .fc-preview (২-বাবল) ও .fc-drawer উভয়ই রেন্ডার → ড্রয়ার-খোলা অবস্থায় প্রিভিউ লুকাত না
+- ফিক্স-প্যাক (কমিট a3263a9): ① CSS-গেট .fc-open .fc-preview{display:none} ② GET /api/comments-এ reactions/my_reaction/edited_at/author_id (২-কুয়েরি ব্যাচ) ③ POST+DELETE /api/comments/:id (মালিকানা/স্টাফ-গার্ড, BFS-ক্যাসকেড, likes-ক্লিন, comment_count-সিঙ্ক) ④ comment-tools.js FB-আইটেম (৬-ইমোজি প্যালেট hover+টাচ, ব্যাজ, হোভার ৩-ডট, ইনলাইন-এডিটর RAW_CACHE-প্রি-ফিল, syncPreview) ⑤ style.css-EOF + touch(hover:none)-টিউনিং ⑥ db: comments.edited_at (৩-জায়গায়)
+- E2E (agent-browser): ডুপ্লিকেট-শূন্য ✓ প্যালেট→love/haha-ব্যাজ+লেবেল-অ্যাকটিভ ✓ পুনঃ-ক্লিক-টগল-অফ ✓ এডিট-প্রি-ফিল **মার্কারসহ→সেভ→<strong>+সম্পাদিত ✓ ডিলিট→ক্যাসকেড deleted:2+কাউন্টার ✓ 403/401-গার্ড ✓ 390px-০ ✓ কনসোল-০ ✓ role-policy ৭২/৯৯-অভিন্ন ✓
+- 🚨 গোটচা (নতুন): Express-স্ট্যাটিক immutable-ক্যাশে AV-হ্যাশ server-boot-এই হিসাব হয় — স্ট্যাটিক-অ্যাসেট এডিটের পর সার্ভার রিস্টার্ট না-করলে ব্রাউজার পুরনো ?v= URL-এ ক্যাশড ফাইল চালায় (এডিট কার্যকর হয় না; ডিবাগে এক-ঘণ্টা খেয়েছে)
+- মার্জ: session105 (feed-ranking) + session106 (resource-detail) টেনে rebase — style.css-EOF কনফ্লিক্ট union-মার্জ (দুই-ব্লকই রক্ষিত), বাকি ডিসজয়েন্ট
+- QA-ডেটা: lekhok.db ফ্রেশ-সিডে QA-ট্রায়ো নেই → seed-qa-users.js চালানো (সার্ভার-স্টপ→সিড→বুট-ক্রম মেনে); পোস্ট#1-এ ডেমো-কমেন্ট (ইসমাইল, love-রিঅ্যাকশনসহ)
+
+Stage Summary:
+- পুশ: a3263a9 → origin/main (ba8797b-এর উপর rebase)
+- ইউজার-রিপোর্টের তিনটি বিষয়ই সমাধাত: ডুপ্লিকেশন-শূন্য + কমেন্ট-রিঅ্যাকশন (FB-প্যালেট/ব্যাজ) + ৩-ডট-এডিট/ডিলিট (FB-1:1 আচরণ)
+- Next-agent: article-single/qa-single-থ্রেডে একই UX বহমান-করা + 'angry'-রিঅ্যাকশন-যোগ (breaking: REACTIONS-ডিফল্ট-ম্যাপ) — বিস্তারিত PLANS.md session104-নোট
