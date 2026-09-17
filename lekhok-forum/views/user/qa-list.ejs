@@ -1,6 +1,6 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: 'সাধারণ জিজ্ঞাসা | লেখক ফোরাম' }) %>
-<%# সেশন ১১৮: বাংলা-অঙ্ক হেল্পার + ফিল্টার-স্টেট (qaFilter: 'all'|'unanswered', qaCounts) — social.js-রুট থেকে %>
+<%# সেশন ১১৯: বাংলা-অঙ্ক হেল্পার + ফিল্টার-স্টেট (qaFilter: 'all'|'unanswered', qaCounts) — social.js-রুট থেকে %>
 <% const bn118 = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]); %>
 
   <div class="page-wrap">
@@ -11,7 +11,7 @@
       <% } %>
     </div>
 
-    <%# সেশন ১১৮: FB-প্যারিটি ফিল্টার-চিপ — সব/অনুত্তরিত, কাউন্ট-ব্যাজসহ;
+    <%# সেশন ১১৯: FB-প্যারিটি ফিল্টার-চিপ — সব/অনুত্তরিত, কাউন্ট-ব্যাজসহ;
         ?filter=unanswered ডিপ-লিংকযোগ্য (সার্ভার-রেন্ডার্ড active-স্টেট) %>
     <div class="qa-filter-bar" role="navigation" aria-label="প্রশ্ন-ফিল্টার">
       <a href="/qa" class="qa-filter-chip <%= qaFilter !== 'unanswered' ? 'active' : '' %>" <%= qaFilter !== 'unanswered' ? 'aria-current="page"' : '' %>>
@@ -46,7 +46,7 @@
               <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
               <% if (q.body) { %><p class="qa-excerpt"><%= mdPlain(q.body, 150) %></p><% } %>
               <div class="qa-meta">
-                <%# সেশন ১১৮: উত্তর-স্টেট ব্যাজ — উত্তরিত=সবুজ, অনুত্তরিত=অ্যাম্বার;
+                <%# সেশন ১১৯: উত্তর-স্টেট ব্যাজ — উত্তরিত=সবুজ, অনুত্তরিত=অ্যাম্বার;
                     কাউন্ট stale-comment_count নয় → live ans_count %>
                 <span class="qa-ans-badge <%= _ans118 > 0 ? 'is-answered' : 'is-unanswered' %>">
                   <i class="fas fa-<%= _ans118 > 0 ? 'check' : 'hourglass-half' %>" aria-hidden="true"></i>

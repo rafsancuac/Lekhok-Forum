@@ -787,7 +787,7 @@ router.post('/articles/:id/comment', ensureLoggedIn, async (req, res) => {
 // ── Q&A list ─────────────────────────────────────────────────────────────────
 // সেশন ৮৯: '/questions' বেয়ার-লিস্ট অ্যালিয়াস — আগে শুধু '/qa' ছিল, '/questions/new'
 // ও '/questions/:id' থাকলেও '/questions' 404 খেত (QA-রাউন্ডে ধরা)।
-// সেশন ১১৮: ফিল্টার-চিপ (সব/অনুত্তরিত) + উত্তর-ব্যাজ — ?filter=unanswered ডিপ-লিংকযোগ্য;
+// সেশন ১১৯: ফিল্টার-চিপ (সব/অনুত্তরিত) + উত্তর-ব্যাজ — ?filter=unanswered ডিপ-লিংকযোগ্য;
 // কাউন্ট-ডিসপ্লে-বাগ-ফিক্স: ভিউ q.comment_count (stale-কলাম) দেখাত → এখন live
 // ans_count সাব-কুয়েরি (posts.comment_count হারানো-কমেন্টে বাসি হয়ে যেত — প্রমাণ:
 // id=1 কলামে ২, বাস্তবে ০)।
@@ -1933,7 +1933,7 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
     FROM posts WHERE author_id = ? ORDER BY created_at DESC LIMIT 50
   `).all(me.id);
 
-  // সেশন ১১৮: /me-র FeedPostCard-এও পড়ার-সময়-চিপ (rt-chip) — decorateFeed-সমীকরণ
+  // সেশন ১১৯ (পুর্বে ১১৮-ড্রাফট; প্যারালাল-এজেন্ট ১১৮ নিয়ে গেছে — max+1 রীতি): /me-র FeedPostCard-এও পড়ার-সময়-চিপ (rt-chip) — decorateFeed-সমীকরণ
   // (মার্কডাউন/HTML-স্ট্রিপ → ~৯৫০ অক্ষর/মিনিট, floor ১)। ১১০-র দাবি ছিল কিন্তু
   // প্যারালাল-মার্জে প্লাম্বিংটা কখনোই এই রুটে এসেছিল না — এখন সম্পূর্ণ।
   for (const p of myPosts) {
