@@ -1,43 +1,97 @@
-<!-- Gallery — Image Gallery with category filter -->
-<header class="page-header">
-  <div class="container">
-    <span class="eyebrow"><i class="fas fa-images"></i> <%= C('gallery_header_eyebrow') %></span>
-    <h1><%= C('gallery_header_t1') %> <span style="color:var(--accent);"><%= C('gallery_header_accent') %></span></h1>
-    <p class="header-sub"><%= C('gallery_header_sub') %></p>
+<%# ═══════════════════════════════════════════════════════════════════════
+    লেখক ফোরাম — চিত্রশালা (সেশন ৯৭ পূর্ণ-রিরাইট)
+    ─────────────────────────────────────────────────────────────────────
+    • প্রিমিয়াম হিরো: ব্যাজ + শিরোনাম + স্ট্যাট-চিপ + ডুয়াল-ভিউ টগল
+    • ডুয়াল ভিউ: মেসনারি "ছবিসমূহ" ↔ ফেসবুক-ধাঁচে "অ্যালবাম"
+    • ক্যাটাগরি পিল-ফিল্টার (আইকন + কাউন্ট) + লাইভ সার্চ
+    • মেসনারি কার্ড: হোভারে জুম + গ্রেডিয়েন্ট-ওভারলে (ক্যাটাগরি/শিরোনাম/
+      তারিখ/ফটোগ্রাফার-ক্রেডিট) — event_date না থাকলে created_at বাংলা-ফরম্যাট
+    • লাইটবক্স: কীবোর্ড (Esc/←/→) + টাচ-সোয়াইপ + জুম-টগল + ডাউনলোড +
+      শেয়ার + মেটাডেটা-বার — বিস্তারিত public/assets/js/gallery.js
+    • সেশন-৯৪-অডিট অনুসারী: পুরনো album-photo hidden-সিলেক্টর করাপশন এখানে
+      রিরাইটের মাধ্যমে নির্মূল (album-extra-গুলো এখন hidden অ্যাট্রিবিউটে চলে)
+    ═══════════════════════════════════════════════════════════════════ %>
+<%
+  const albumKeys = Object.keys(albums);
+  const catIcons = {
+    general: 'fas fa-layer-group',
+    event: 'fas fa-calendar-alt', events: 'fas fa-calendar-alt',
+    seminar: 'fas fa-microphone-alt', seminars: 'fas fa-microphone-alt',
+    workshop: 'fas fa-chalkboard-teacher', workshops: 'fas fa-chalkboard-teacher',
+    meeting: 'fas fa-users', meetings: 'fas fa-users',
+    award: 'fas fa-trophy', awards: 'fas fa-trophy',
+    press: 'far fa-newspaper', media: 'far fa-newspaper',
+    cultural: 'fas fa-music', sports: 'fas fa-running',
+    achievement: 'fas fa-medal', achievements: 'fas fa-medal',
+    others: 'fas fa-folder'
+  };
+  // স্টাফ-সনাক্ত (সেশন-৯৭): সোশ্যাল-ইউজার (user.role) + অ্যাডমিন-প্যানেল সেশন (adminUser) দুটোই;
+  // সেশন-৮৩ পোর্টাল-বিভাজনে স্টাফরা adminUser-সেশনে লগইন করেন (layout-মেইনটেন্যান্স-ব্যানার-প্যাটার্ন)
+  const isStaff = (typeof adminUser !== 'undefined' && adminUser && /admin|moderator/i.test(adminUser.role || ''))
+              || (typeof user !== 'undefined' && user && /admin|moderator/i.test(user.role || ''));
+  const bn = (n) => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]);
+%>
+
+<!-- ══ ১. প্রিমিয়াম গ্যালারি হিরো ══ -->
+<header class="gal-hero" id="galHero">
+  <div class="gal-hero__glow gal-hero__glow--1" aria-hidden="true"></div>
+  <div class="gal-hero__glow gal-hero__glow--2" aria-hidden="true"></div>
+  <div class="container gal-hero__inner">
+    <span class="gal-hero__badge"><i class="fas fa-images" aria-hidden="true"></i> ছবির মহাফেজখানা</span>
+    <h1 class="gal-hero__title">
+      <%= C('gallery_header_t1') %> <span class="gal-hero__accent"><%= C('gallery_header_accent') %></span>
+    </h1>
+    <p class="gal-hero__sub"><%= C('gallery_header_sub') %></p>
+
+    <div class="gal-hero__stats" role="list">
+      <span class="gal-stat" role="listitem"><i class="fas fa-image" aria-hidden="true"></i> <strong><%= bn(items.length) %></strong> ছবি</span>
+      <span class="gal-stat" role="listitem"><i class="fas fa-folder-open" aria-hidden="true"></i> <strong><%= bn(albumKeys.length) %></strong> অ্যালবাম</span>
+      <% if (recent.length) { %>
+        <span class="gal-stat" role="listitem"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> সর্বশেষ: <%= recent[0].displayDate || '' %></span>
+      <% } %>
+    </div>
+
+    <div class="gal-hero__controls">
+      <%# ডুয়াল-ভিউ টগল — সেশন ৯৭ (ছবিসমূহ ↔ অ্যালবাম) %>
+      <div class="gal-viewtoggle" role="tablist" aria-label="গ্যালারি ভিউ মোড">
+        <button type="button" class="gal-viewtoggle__btn is-active" id="viewPhotosBtn" role="tab" aria-selected="true" aria-controls="galPhotosView" data-view="photos">
+          <i class="fas fa-table-cells-large" aria-hidden="true"></i> ছবিসমূহ
+        </button>
+        <button type="button" class="gal-viewtoggle__btn" id="viewAlbumsBtn" role="tab" aria-selected="false" aria-controls="galAlbumsView" data-view="albums">
+          <i class="fas fa-folder-closed" aria-hidden="true"></i> অ্যালবাম
+        </button>
+      </div>
+      <% if (isStaff) { %>
+        <a href="/admin/gallery/new" class="gal-uploadbtn" title="এডমিন প্যানেলে নতুন ছবি যোগ করুন">
+          <i class="fas fa-plus" aria-hidden="true"></i> নতুন ছবি আপলোড
+        </a>
+      <% } %>
+    </div>
   </div>
 </header>
 
-<section class="section">
+<section class="section gal-section">
   <div class="container">
-    <% const albumKeys = Object.keys(albums);
-       const catIcons = {
-         general: 'fas fa-layer-group',
-         event: 'fas fa-calendar-alt', events: 'fas fa-calendar-alt',
-         seminar: 'fas fa-microphone-alt', seminars: 'fas fa-microphone-alt',
-         workshop: 'fas fa-chalkboard-teacher', workshops: 'fas fa-chalkboard-teacher',
-         meeting: 'fas fa-users', meetings: 'fas fa-users',
-         award: 'fas fa-trophy', awards: 'fas fa-trophy',
-         press: 'far fa-newspaper', media: 'far fa-newspaper',
-         cultural: 'fas fa-music', sports: 'fas fa-running',
-         achievement: 'fas fa-medal', achievements: 'fas fa-medal',
-         others: 'fas fa-folder'
-       }; %>
 
-    <%# ── সেশন ৭৬: সাম্প্রতিক সংযোজন-স্ট্রিপ (আনুভূমিক স্ক্রল, লাইটবক্স-সংযুক্ত) ── %>
+    <%# ── সাম্প্রতিক সংযোজন-স্ট্রিপ (সেশন ৭৬ থেকে সংরক্ষিত, নতুন স্টাইলিং) ── %>
     <% if (typeof recent !== 'undefined' && recent.length > 3) { %>
-      <div class="gallery-recent reveal">
-        <div class="gr-head">
-          <h3><i class="fas fa-wand-magic-sparkles"></i> সাম্প্রতিক সংযোজন</h3>
-          <span class="gr-hint">সর্বশেষ যোগ হওয়া <%= recent.length %>টি ছবি</span>
+      <div class="gal-recent reveal">
+        <div class="gal-recent__head">
+          <h3><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> সাম্প্রতিক সংযোজন</h3>
+          <span class="gal-recent__hint">সর্বশেষ যোগ হওয়া <%= bn(recent.length) %>টি ছবি</span>
         </div>
-        <div class="gr-strip" role="list">
+        <div class="gal-recent__strip" role="list">
           <% recent.forEach(g => { %>
-            <a href="<%= g.image_url %>" class="gr-photo" role="listitem"
-               data-caption="<%= g.caption || '' %>" data-category="<%= g.category || '' %>"
-               data-lightbox="recent">
+            <a href="<%= g.image_url %>" class="gal-recent__photo" role="listitem"
+               data-lightbox
+               data-title="<%= g.caption || g.catLabel %>"
+               data-caption="<%= g.caption || '' %>"
+               data-catlabel="<%= g.catLabel %>"
+               data-date="<%= g.displayDate || '' %>"
+               data-photographer="<%= g.photographer || '' %>">
               <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || 'গ্যালারির ছবি' %>" />
               <% if (g.caption) { %>
-                <span class="gr-cap"><%= g.caption.length > 28 ? g.caption.slice(0, 28) + '…' : g.caption %></span>
+                <span class="gal-recent__cap"><%= g.caption.length > 28 ? g.caption.slice(0, 28) + '…' : g.caption %></span>
               <% } %>
             </a>
           <% }); %>
@@ -47,504 +101,130 @@
 
     <% if (albumKeys.length) { %>
 
-      <!-- Category filter — white bar, link-style items -->
-      <nav class="gallery-tabs" id="galleryTabs" aria-label="গ্যালারি ক্যাটাগরি">
-        <a href="#" class="gtab active" data-cat="all">
-          <i class="fas fa-images"></i> সব ছবি
-          <span class="gtab-count"><%= items.length %></span>
-        </a>
-        <% albumKeys.forEach(cat => { %>
-          <a href="#" class="gtab" data-cat="<%= cat %>">
-            <i class="<%= catIcons[cat] || 'fas fa-folder' %>"></i> <%= categoryLabels[cat] || cat %>
-            <span class="gtab-count"><%= albums[cat].length %></span>
-          </a>
-        <% }) %>
+      <%# ── ২. ক্যাটাগরি পিল-ফিল্টার + লাইভ সার্চ ── %>
+      <nav class="gal-filterbar reveal" aria-label="গ্যালারি ক্যাটাগরি ফিল্টার">
+        <div class="gal-pills" id="galPills">
+          <button type="button" class="gal-pill is-active" data-cat="all">
+            <i class="fas fa-border-all" aria-hidden="true"></i> সব ছবি
+            <span class="gal-pill__count"><%= bn(items.length) %></span>
+          </button>
+          <% albumKeys.forEach(cat => { %>
+            <button type="button" class="gal-pill" data-cat="<%= cat %>">
+              <i class="<%= catIcons[cat] || 'fas fa-folder' %>" aria-hidden="true"></i>
+              <%= categoryLabels[cat] || cat %>
+              <span class="gal-pill__count"><%= bn(albums[cat].length) %></span>
+            </button>
+          <% }) %>
+        </div>
+        <div class="gal-search">
+          <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" id="galSearch" placeholder="ছবি, ক্যাপশন বা ফটোগ্রাফার খুঁজুন…" aria-label="গ্যালারিতে খুঁজুন" />
+          <button type="button" class="gal-search__clear" id="galSearchClear" aria-label="সার্চ মুছুন" hidden><i class="fas fa-xmark"></i></button>
+        </div>
       </nav>
 
-      <% albumKeys.forEach(cat => { %>
-        <% const items = albums[cat]; const count = items.length; %>
-        <div class="gallery-album reveal" data-cat="<%= cat %>">
-          <div class="album-header">
-            <h2 class="album-title">
-              <i class="<%= catIcons[cat] || 'fas fa-folder-open' %>"></i>
-              <%= categoryLabels[cat] || cat %>
-            </h2>
-            <span class="album-count"><%= count %> <%= count === 1 ? 'ছবি' : 'ছবি' %></span>
-          </div>
-
-          <% if (count === 1) { %>
-            <!-- Single photo: centered large view -->
-            <div class="album-single">
-              <a href="<%= items[0].image_url %>"
-                 class="album-photo album-photo--single"
-                 data-caption="<%= items[0].caption || '' %>" data-category="<%= items[0].category || '' %>" data-id="<%= items[0].id %>"
-                 data-lightbox="album-<%= cat %>">
-                <img loading="lazy" decoding="async" src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
-                <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
+      <%# ── ৩. মেসনারি ছবি-ভিউ (ডিফল্ট) ── %>
+      <div id="galPhotosView" class="gal-photosview" role="tabpanel" aria-label="সব ছবি">
+        <div class="gal-masonry" id="galMasonry">
+          <% items.forEach(g => { %>
+            <figure class="gal-card" data-cat="<%= g.category || 'general' %>"
+                    data-search="<%= ((g.title || '') + ' ' + (g.caption || '') + ' ' + (g.catLabel || '') + ' ' + (g.photographer || '')).toLowerCase().replace(/"/g, '&quot;') %>">
+              <a href="<%= g.image_url %>" class="gal-card__link"
+                 data-lightbox
+                 data-title="<%= g.caption || g.catLabel %>"
+                 data-caption="<%= g.caption || '' %>"
+                 data-catlabel="<%= g.catLabel %>"
+                 data-date="<%= g.displayDate || '' %>"
+                 data-photographer="<%= g.photographer || '' %>"
+                 aria-label="<%= g.caption || g.catLabel %> — বড় করে দেখুন">
+                <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || g.catLabel || 'গ্যালারির ছবি' %>" />
+                <span class="gal-card__quickview" aria-hidden="true"><i class="fas fa-magnifying-glass-plus"></i></span>
+                <figcaption class="gal-card__overlay">
+                  <span class="gal-card__cat"><%= g.catLabel %></span>
+                  <% if (g.caption) { %><span class="gal-card__title"><%= g.caption.length > 64 ? g.caption.slice(0, 64) + '…' : g.caption %></span><% } %>
+                  <span class="gal-card__meta">
+                    <% if (g.displayDate) { %><span><i class="far fa-calendar" aria-hidden="true"></i> <%= g.displayDate %></span><% } %>
+                    <% if (g.photographer) { %><span><i class="fas fa-camera-retro" aria-hidden="true"></i> <%= g.photographer %></span><% } %>
+                  </span>
+                </figcaption>
               </a>
-              <% if (items[0].caption) { %>
-                <p class="album-caption-text"><%= items[0].caption %></p>
-              <% } %>
-            </div>
-
-          <% } else if (count <= 8) { %>
-            <!-- Small album: uniform auto-fit grid (no empty cells) -->
-            <div class="album-grid album-grid--small">
-              <% items.forEach(g => { %>
-                <a href="<%= g.image_url %>"
-                   class="album-photo"
-                   data-caption="<%= g.caption || '' %>"
-                   data-lightbox="album-<%= cat %>">
-                  <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
-                  <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
-                </a>
-              <% }) %>
-            </div>
-
-          <% } else { %>
-            <!-- Featured album: first photo spans 2x2, dense packing -->
-            <div class="album-grid album-grid--featured">
-              <a href="<%= items[0].image_url %>"
-                 class="album-photo album-photo--wide"
-                 data-caption="<%= items[0].caption || '' %>" data-category="<%= items[0].category || '' %>" data-id="<%= items[0].id %>"
-                 data-lightbox="album-<%= cat %>">
-                <img loading="lazy" decoding="async" src="<%= items[0].image_url %>" alt="<%= items[0].caption || cat %>" loading="lazy" />
-                <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
-              </a>
-              <% items.slice(1).forEach((g, i) => { %>
-                <a href="<%= g.image_url %>"
-                   class="album-photo<%= i >= 15 ? ' album-photo--extra' : '' %>"
-                   <% if (i >= 15) { %>hidden<% } %>
-                   data-caption="<%= g.caption || '' %>"
-                   data-lightbox="album-<%= cat %>">
-                  <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || cat %>" loading="lazy" />
-                  <div class="album-photo-overlay"><i class="fas fa-search-plus"></i></div>
-                </a>
-              <% }) %>
-              <% if (count > 16) { %>
-                <button type="button" class="album-more" title="সব ছবি দেখুন">
-                  <span>+<%= count - 16 %></span>
-                  <small>আরো দেখুন</small>
-                </button>
-              <% } %>
-            </div>
-          <% } %>
-
+            </figure>
+          <% }); %>
         </div>
-      <% }) %>
+        <%# ফিল্টার/সার্চের ফাঁকা অবস্থা %>
+        <div class="gal-empty" id="galEmpty" hidden>
+          <i class="fas fa-camera-retro" aria-hidden="true"></i>
+          <p class="gal-empty__title">এই বিভাগে কোনো ছবি পাওয়া যায়নি।</p>
+          <p class="gal-empty__sub">অন্য ক্যাটাগরি বেছে নিন বা সার্চ-শব্দ বদলান।</p>
+          <button type="button" class="gal-empty__reset" id="galReset"><i class="fas fa-rotate-left"></i> সব ছবি দেখুন</button>
+        </div>
+      </div>
+
+      <%# ── ৪. অ্যালবাম ভিউ (ফেসবুক-ধাঁচে কালেকশন) ── %>
+      <div id="galAlbumsView" class="gal-albumsview" role="tabpanel" aria-label="অ্যালবাম সমূহ" hidden>
+        <div class="gal-albumgrid">
+          <% albumKeys.forEach(cat => { const list = albums[cat]; const cover = list[0]; const previews = list.slice(1, 5); %>
+            <article class="gal-album" data-cat="<%= cat %>">
+              <button type="button" class="gal-album__open" data-goto-cat="<%= cat %>"
+                      aria-label="<%= categoryLabels[cat] || cat %> অ্যালবামের ছবিগুলো দেখুন">
+                <span class="gal-album__coverwrap">
+                  <img loading="lazy" decoding="async" class="gal-album__cover" src="<%= cover.image_url %>" alt="<%= categoryLabels[cat] || cat %> অ্যালবামের প্রচ্ছদ" />
+                  <span class="gal-album__stack" aria-hidden="true">
+                    <% previews.forEach(p => { %><img loading="lazy" decoding="async" src="<%= p.image_url %>" alt="" /><% }) %>
+                  </span>
+                  <span class="gal-album__count"><%= bn(list.length) %> ছবি</span>
+                  <span class="gal-album__peek" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
+                </span>
+                <span class="gal-album__body">
+                  <span class="gal-album__name"><i class="<%= catIcons[cat] || 'fas fa-folder' %>" aria-hidden="true"></i> <%= categoryLabels[cat] || cat %></span>
+                  <span class="gal-album__meta">
+                    <% if (cover.displayDate) { %><i class="far fa-calendar" aria-hidden="true"></i> <%= cover.displayDate %><% } %>
+                    <span class="gal-album__dot">•</span> সর্বশেষ সংযোজন
+                  </span>
+                </span>
+              </button>
+            </article>
+          <% }) %>
+        </div>
+      </div>
 
     <% } else { %>
-      <div class="empty-state">
-        <i class="far fa-images"></i>
-        <h3>এখনও কোনো ছবি যোগ হয়নি</h3>
-        <p>অ্যাডমিন প্যানেল থেকে গ্যালারিতে ছবি আপলোড করুন</p>
-        <a href="/admin/gallery" class="btn btn-primary"><i class="fas fa-plus"></i> ছবি যোগ করুন</a>
+      <%# কোনো ছবিই না থাকলে %>
+      <div class="gal-empty gal-empty--page">
+        <i class="fas fa-images" aria-hidden="true"></i>
+        <p class="gal-empty__title">এখনো কোনো ছবি জমা হয়নি।</p>
+        <p class="gal-empty__sub">আয়োজনের মুহূর্তগুলো শিগগিরই এখানে সাজানো হবে।</p>
       </div>
     <% } %>
   </div>
 </section>
 
-<!-- Lightbox -->
-<div class="lightbox gallery-popup" id="lightbox" role="dialog" aria-modal="true" aria-label="ছবি দেখুন">
-  <button class="lightbox-close popup-close" id="lightboxClose" aria-label="বন্ধ করুন" title="বন্ধ করুন (Esc)"><i class="fas fa-times"></i></button>
-  <button class="popup-back" id="popupBack" aria-label="ফিরে যান" title="ফিরে যান" style="display:none"><i class="fas fa-arrow-left"></i></button>
-  <div class="popup-content">
-    <div class="popup-image-wrap">
-      <img loading="lazy" decoding="async" id="lightboxImg" src="" alt="" />
-    </div>
-    <div class="popup-details" id="popupDetails">
-      <div class="popup-caption" id="lightboxCaption"></div>
-      <div class="popup-meta" id="popupMeta"></div>
+<!-- ══ ৫. ফুলস্ক্রিন লাইটবক্স (gallery.js নিয়ন্ত্রিত) ══ -->
+<div class="gal-lb" id="lightbox" role="dialog" aria-modal="true" aria-label="ছবি ভিউয়ার" aria-hidden="true">
+  <div class="gal-lb__top">
+    <span class="gal-lb__counter" id="lbCounter">১ / ১</span>
+    <div class="gal-lb__actions">
+      <button type="button" class="gal-lb__act" id="lbZoom" title="জুম করুন (Z)" aria-label="জুম টগল"><i class="fas fa-magnifying-glass-plus"></i></button>
+      <a class="gal-lb__act" id="lbDownload" href="#" download title="ছবি ডাউনলোড করুন" aria-label="ডাউনলোড"><i class="fas fa-download"></i></a>
+      <button type="button" class="gal-lb__act" id="lbShare" title="শেয়ার করুন" aria-label="শেয়ার"><i class="fas fa-share-nodes"></i></button>
+      <button type="button" class="gal-lb__act gal-lb__act--close" id="lightboxClose" title="বন্ধ করুন (Esc)" aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
     </div>
   </div>
-  <% if (albumKeys.length) { %>
-  <div class="lightbox-nav">
-    <button id="lbPrev" aria-label="আগের ছবি"><i class="fas fa-chevron-left"></i></button>
-    <span id="lbCounter"></span>
-    <button id="lbNext" aria-label="পরের ছবি"><i class="fas fa-chevron-right"></i></button>
+
+  <div class="gal-lb__stage">
+    <button type="button" class="gal-lb__nav gal-lb__nav--prev" id="lbPrev" aria-label="আগের ছবি"><i class="fas fa-chevron-left"></i></button>
+    <div class="gal-lb__framewrap">
+      <div class="gal-lb__spinner" id="lbSpinner" aria-hidden="true"></div>
+      <img id="lightboxImg" class="gal-lb__img" src="" alt="" draggable="false" />
+    </div>
+    <button type="button" class="gal-lb__nav gal-lb__nav--next" id="lbNext" aria-label="পরের ছবি"><i class="fas fa-chevron-right"></i></button>
   </div>
-  <% } %>
+
+  <div class="gal-lb__infobar" id="popupMeta">
+    <div class="gal-lb__info">
+      <span class="gal-lb__cat" id="lbCat"></span>
+      <span class="gal-lb__caption" id="lightboxCaption"></span>
+      <span class="gal-lb__meta" id="lbMeta"></span>
+    </div>
+  </div>
 </div>
-
-<style>
-/* ── সেশন ৬০-ফিক্স: গ্যালারি হিরো ডার্ক-গ্রিন থিমে (আগে জোর-করে লাইট ওভাররাইড ছিল —
-   সাইট-ওয়াইড গ্রেডিয়েন্টের সাথে অমিল, PLANS.md-র প্যালেট-নিয়ম ভাঙছিল) ── */
-.page-header {
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf7 60%, #e8f8f0 100%) !important;
-  color: #1e293b !important;
-  border-bottom: 1px solid rgba(5, 150, 105, 0.18);
-}
-.page-header h1, .page-header .eyebrow { color: #1e293b !important; }
-.page-header p, .page-header .header-sub { color: #475569 !important; }
-.page-header .eyebrow {
-  background: rgba(5, 150, 105, 0.12) !important;
-  color: #047857 !important;
-  border: 1px solid rgba(5, 150, 105, 0.3) !important;
-}
-
-/* ── সেশন ৭৬: সাম্প্রতিক সংযোজন-স্ট্রিপ ── */
-.gallery-recent {
-  margin-bottom: 34px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 16px 18px 12px;
-  box-shadow: 0 10px 26px -18px rgba(15, 23, 42, 0.15);
-}
-.gr-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
-}
-.gr-head h3 {
-  margin: 0; font-size: .98rem; color: #1e293b;
-  display: flex; align-items: center; gap: 8px;
-}
-.gr-head h3 i { color: #059669; }
-.gr-hint { font-size: .76rem; color: #64748b; }
-.gr-strip {
-  display: flex; gap: 10px;
-  overflow-x: auto;
-  padding: 2px 2px 8px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-.gr-strip::-webkit-scrollbar { height: 6px; }
-.gr-strip::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
-.gr-strip::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 99px; }
-.gr-photo {
-  position: relative;
-  flex: 0 0 132px; height: 98px;
-  border-radius: 9px; overflow: hidden;
-  border: 1px solid #e2e8f0;
-  scroll-snap-align: start;
-  background: #f1f5f9;
-  display: block;
-}
-.gr-photo img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform .25s;
-  display: block;
-}
-.gr-photo:hover img { transform: scale(1.07); }
-.gr-photo::after {
-  content: ''; position: absolute; inset: 0;
-  box-shadow: inset 0 0 0 2px rgba(5, 150, 105, 0);
-  transition: box-shadow .18s;
-}
-.gr-photo:hover::after { box-shadow: inset 0 0 0 2px rgba(5, 150, 105, .55); }
-.gr-cap {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(transparent, rgba(15, 23, 42, .78));
-  color: #fff; font-size: .64rem; font-weight: 600;
-  padding: 14px 7px 5px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-@media (max-width: 640px) {
-  .gr-photo { flex-basis: 108px; height: 82px; }
-  .gallery-recent { padding: 12px 12px 8px; }
-}
-
-/* ── ক্যাটাগরি-ফিল্টার বার (ডার্ক-প্যানেল) ── */
-.gallery-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0 26px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 0 20px;
-  margin-bottom: 30px;
-  box-shadow: 0 10px 26px -18px rgba(15, 23, 42, 0.15);
-}
-.gallery-tabs .gtab {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 14px 2px 12px;
-  color: #475569;
-  text-decoration: none;
-  font-size: 0.93rem;
-  font-weight: 600;
-  border-bottom: 2px solid transparent;
-  transition: color 0.18s, border-color 0.18s;
-}
-.gallery-tabs .gtab i { font-size: 0.95em; opacity: 0.75; transition: opacity 0.18s; }
-.gallery-tabs .gtab:hover { color: #1e293b; }
-.gallery-tabs .gtab:hover i { opacity: 1; }
-.gallery-tabs .gtab.active {
-  color: #047857;
-  border-bottom-color: #047857;
-}
-.gallery-tabs .gtab.active i { opacity: 1; }
-.gallery-tabs .gtab-count {
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: #047857;
-  background: rgba(5,150,105,.1);
-  padding: 1px 8px;
-  border-radius: 99px;
-  transition: color 0.18s, background 0.18s;
-}
-.gallery-tabs .gtab:hover .gtab-count { color: #047857; background: rgba(5,150,105,.14); }
-.gallery-tabs .gtab.active .gtab-count { color: #047857; background: rgba(5,150,105,.16); }
-
-@media (max-width: 640px) {
-  .gallery-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 14px;
-    gap: 0 20px;
-    scrollbar-width: none;
-  }
-  .gallery-tabs::-webkit-scrollbar { display: none; }
-  .gallery-tabs .gtab { white-space: nowrap; padding: 12px 2px 10px; }
-}
-
-/* ── অ্যালবাম লেআউট (সেশন ৬০-ফিক্স: শিরোনাম নেভি→লাইট, সীমানা/গণনা ডার্ক-সেফ) ── */
-.gallery-album { margin-bottom: 40px; }
-.gallery-album:last-child { margin-bottom: 0; }
-
-.album-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 10px;
-}
-.album-title {
-  font-size: 1.1rem;
-  color: var(--brand-text, #F0FBF6);
-  margin: 0;
-  font-weight: 700;
-}
-.album-title i { color: #059669; margin-right: 8px; }
-.album-count {
-  background: rgba(5, 150, 105, 0.1);
-  color: #047857;
-  padding: 3px 12px;
-  border-radius: 99px;
-  border: 1px solid rgba(5, 150, 105, 0.3);
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-/* Uniform grid — auto-fit collapses empty tracks, so few photos never leave holes */
-.album-grid {
-  display: grid;
-  gap: 10px;
-}
-.album-grid--small {
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-}
-
-/* Featured album: hero 2x2 + dense packing */
-.album-grid--featured {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  grid-auto-flow: dense;
-}
-
-/* Single photo: centered with capped max-width */
-.album-single {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-.album-photo--single {
-  width: 100%;
-  max-width: 360px;
-  aspect-ratio: 4/3;
-}
-
-/* Shared photo styles (সেশন ৬০-ফিক্স: ডার্ক-ব্যাকগ্রাউন্ড) */
-.album-photo {
-  position: relative;
-  aspect-ratio: 1;
-  overflow: hidden;
-  border-radius: var(--radius-sm, 5px);
-  display: block;
-  background: #f1f5f9;
-  max-height: 240px;
-  border: 1px solid #e2e8f0;
-}
-.album-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
-}
-.album-photo:hover img { transform: scale(1.05); }
-.album-photo[hidden] { display: none; }
-
-/* Featured wide: first photo spans 2x2 */
-.album-photo--wide {
-  grid-column: span 2;
-  grid-row: span 2;
-  aspect-ratio: auto;
-  max-height: none;
-}
-
-.album-photo-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.28);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-  color: #fff;
-  font-size: 1.3rem;
-}
-.album-photo:hover .album-photo-overlay { opacity: 1; }
-
-.album-more {
-  aspect-ratio: 1;
-  max-height: 240px;
-  background: #f8fafc;
-  border: 2px dashed #cbd5e1;
-  border-radius: var(--radius-sm, 5px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #475569;
-  font-family: inherit;
-  text-decoration: none;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-.album-more:hover { border-color: #059669; color: #059669; }
-.album-more span { font-size: 1.6rem; font-weight: 700; }
-.album-more small { font-size: 0.78rem; }
-
-.album-caption-text {
-  color: var(--text-muted, #A9C4B5);
-  font-size: 0.85rem;
-  text-align: center;
-  max-width: 640px;
-  margin: 0;
-}
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .album-grid--featured { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
-  .album-photo--wide { grid-column: span 1; grid-row: span 1; aspect-ratio: 1; max-height: 180px; }
-  .album-grid--small { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-  .album-photo { max-height: 180px; }
-}
-@media (max-width: 480px) {
-  .album-grid--featured { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 5px; }
-  .album-grid--small { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-  .album-photo--single { max-width: 100%; max-height: 220px; }
-  .album-photo { max-height: 150px; }
-}
-</style>
-
-<script>
-(function() {
-  const lb = document.getElementById('lightbox');
-  if (!lb) return;
-  const lbImg = document.getElementById('lightboxImg');
-  const lbCap = document.getElementById('lightboxCaption');
-  const lbCounter = document.getElementById('lbCounter');
-  const lbPrev = document.getElementById('lbPrev');
-  const lbNext = document.getElementById('lbNext');
-
-  let allPhotos = [];
-  let currentIdx = 0;
-
-  /* Category filter — link-style tabs, instant client-side switch */
-  const tabs = document.querySelectorAll('#galleryTabs .gtab');
-  tabs.forEach(function(tab) {
-    tab.addEventListener('click', function(e) {
-      e.preventDefault();
-      tabs.forEach(function(t) { t.classList.remove('active'); });
-      tab.classList.add('active');
-      const cat = tab.dataset.cat;
-      document.querySelectorAll('.gallery-album').forEach(function(sec) {
-        sec.style.display = (cat === 'all' || sec.dataset.cat === cat) ? '' : 'none';
-      });
-    });
-  });
-
-  /* "আরো দেখুন" — reveal hidden extras in this album */
-  document.querySelectorAll('.album-more').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      const album = btn.closest('.gallery-album');
-      if (album) album.querySelectorAll('.album-photo--extra').forEach(function(x) { x.hidden = false; });
-      btn.remove();
-    });
-  });
-
-  /* Lightbox — rebuilds photo list from currently visible photos only */
-  function collectPhotos() {
-    allPhotos = [];
-    document.querySelectorAll('[data-lightbox]').forEach(function(a) {
-      if (a.offsetParent === null) return;
-      allPhotos.push({
-        src: a.href,
-        caption: a.dataset.caption || '',
-        category: a.dataset.category || '',
-        id: a.dataset.id || ''
-      });
-    });
-  }
-
-  document.querySelectorAll('[data-lightbox]').forEach(function(a) {
-    a.addEventListener('click', function(e) {
-      e.preventDefault();
-      collectPhotos();
-      const idx = allPhotos.findIndex(function(p) { return p.src === a.href; });
-      currentIdx = idx >= 0 ? idx : 0;
-      showPhoto(currentIdx);
-      lb.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    });
-  });
-
-  function showPhoto(idx) {
-    const photo = allPhotos[idx];
-    if (!photo) return;
-    lbImg.src = photo.src;
-    lbImg.alt = photo.caption;
-    lbCap.textContent = photo.caption || 'ক্যাপশন নেই';
-    if (lbCounter) lbCounter.textContent = (idx + 1) + ' / ' + allPhotos.length;
-    // Populate popup meta
-    const meta = document.getElementById('popupMeta');
-    if (meta) {
-      const catLabel = photo.category ? photo.category.charAt(0).toUpperCase() + photo.category.slice(1) : '';
-      meta.innerHTML = (catLabel ? '<div class="popup-meta-item"><i class="fas fa-folder"></i><span class="popup-meta-badge">' + catLabel + '</span></div>' : '')
-        + '<div class="popup-meta-item"><i class="fas fa-image"></i> ছবি #' + (idx + 1) + '</div>'
-        + '<div class="popup-meta-item"><i class="fas fa-info-circle"></i> বিস্তারিত দেখুন</div>';
-    }
-  }
-
-  if (lbPrev) lbPrev.addEventListener('click', function() {
-    currentIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length;
-    showPhoto(currentIdx);
-  });
-  if (lbNext) lbNext.addEventListener('click', function() {
-    currentIdx = (currentIdx + 1) % allPhotos.length;
-    showPhoto(currentIdx);
-  });
-
-  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
-  lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
-  document.addEventListener('keydown', function(e) {
-    if (!lb.classList.contains('open')) return;
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') { currentIdx = (currentIdx - 1 + allPhotos.length) % allPhotos.length; showPhoto(currentIdx); }
-    if (e.key === 'ArrowRight') { currentIdx = (currentIdx + 1) % allPhotos.length; showPhoto(currentIdx); }
-  });
-
-  function closeLightbox() {
-    lb.classList.remove('open');
-    document.body.style.overflow = '';
-    lbImg.src = '';
-  }
-})();
-</script>

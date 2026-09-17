@@ -63,9 +63,9 @@ check "GET /moderator/notices (moderator)" "200" "$code"
 code=$(curl -s -o /dev/null -w "%{http_code}" -b /tmp/cj3.txt $B/moderator/daily/quiz)
 check "GET /moderator/daily/quiz (moderator)" "200" "$code"
 
-# 10. Regular user (ismail/demo123) still works via /login → 302 /dashboard
-code=$(curl -s -o /dev/null -w "%{http_code}|%{redirect_url}" -c /tmp/cj4.txt -X POST $B/login -d "username=ismail&password=demo123")
-check "ismail/demo123 on /login → 302 /dashboard" "302|${B}/dashboard" "$code"
+# 10. Regular user (ismail/secret123) still works via /login → 302 /dashboard
+code=$(curl -s -o /dev/null -w "%{http_code}|%{redirect_url}" -c /tmp/cj4.txt -X POST $B/login -d "username=ismail&password=secret123")
+check "ismail/secret123 on /login → 302 /dashboard (session97 QA-trio password)" "302|${B}/dashboard" "$code"
 
 # 11. Regular user denied on /moderator → 403
 code=$(curl -s -o /dev/null -w "%{http_code}" -b /tmp/cj4.txt $B/moderator)

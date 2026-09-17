@@ -10,7 +10,7 @@
          group-ব্লক, auth-guard, ভিডিও-কাইন্ড, সাইজ-ক্যাপ।
    ═══════════════════════════════════════════════════════════════════════ */
 const BASE = process.argv[2] || 'http://localhost:3030';
-const U_A = 'ismail', U_B = 'monem', U_C = 'karishma', DEMO_PASS = 'demo123';
+const U_A = 'ismail', U_B = 'monem', U_C = 'karishma', DEMO_PASS = 'demo123', TRIO_PASS = 'secret123'; // সেশন-৯৭: ismail=QA-ট্রায়ো-পাসওয়ার্ড
 
 let pass = 0, fail = 0;
 const fails = [];
@@ -67,7 +67,7 @@ async function login(username, password) {
 
   /* ── ১. দুই ইউজার লগইন ── */
   console.log('\n— লগইন —');
-  const A = await login(U_A, DEMO_PASS);
+  const A = await login(U_A, TRIO_PASS);
   const B = await login(U_B, DEMO_PASS);
 
   // A↔B কথোপকথন নিশ্চিত: GET /messages/<B> পাওয়া-তৈরি করে; চ্যাট-পেজ-HTML থেকে

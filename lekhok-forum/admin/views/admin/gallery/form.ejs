@@ -28,6 +28,8 @@
       </div>
       <div class="form-group"><label>শিরোনাম</label><input type="text" name="title" value="<%= item ? (item.title || '') : '' %>"></div>
       <div class="form-group"><label>ক্যাপশন</label><textarea name="caption" rows="3"><%= item ? (item.caption || '') : '' %></textarea></div>
+      <div class="form-group"><label>ফটোগ্রাফার (ঐচ্ছিক — /gallery কার্ডে ক্রেডিট দেখাবে)</label><input type="text" name="photographer" value="<%= item ? (item.photographer || '') : '' %>" placeholder="যেমন: রাফসান নীল"></div>
+      <div class="form-group"><label>ইভেন্টের তারিখ (ঐচ্ছিক — ফাঁকা রাখলে আপলোডের তারিখ)</label><input type="text" name="event_date" value="<%= item ? (item.event_date || '') : '' %>" placeholder="যেমন: ২১ ফেব্রুয়ারি, ২০২৬"></div>
       <div class="form-group">
         <label>ক্যাটাগরি</label>
         <select name="category">

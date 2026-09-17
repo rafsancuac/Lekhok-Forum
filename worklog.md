@@ -576,3 +576,22 @@ Stage Summary:
 - কমিট 569bef1 → pushed ✓ — রোডম্যাপে এখন খালি: ০৭ (কম্পোজার-মোডাল 🔴), ০৮ (এনগেজমেন্ট-ফিড), + এক্সটেনশন (নোটিফ-actor-avatar, শেয়ার্ড-ট্যাব pagination, profile-timeline স্ক্রল-রিস্টোর)
 - seed-ডেটা: testuser/testadmin + testagent1/2 + ismail/monem/karishma/mahfuz/nusrat (demo123/Test@1234) — এই clone-এ
 - পরবর্তী-প্রথম-পছন্দ: ০৮-এনগেজমেন্ট-র‍্যাংকড-ফিড (২-পাস স্কোরিং, social.js) → ০৭-কম্পোজার-মোডাল (বড় — একক-রাউন্ড-ফোকাস)
+Task ID: session-97
+Agent: Z.ai (Z.ai Code — sandbox web-9d4762c4)
+Task: ① লাইভ টেস্ট-লগইন রিসেট (ismail/riya/tanvir/secret123) ② /gallery আন্তর্জাতিক-মান আধুনিকায়ন (ইউজারের ফুল-ডিজাইন ডক অনুযায়ী, Express/EJS-অ্যাডাপ্টেড)
+
+Work Log:
+- বর্তমান অবস্থা যাচাই: রিপো ক্লোন → HEAD 9189302 (সেশন-৯৬), স্ট্যাক নিশ্চিত Express+EJS+sql.js/Turso; sandbox worklog.md ছিল না (প্রথম এজেন্ট)
+- লগইন-ভাঙার রুট-কজ নির্ণয়: riya/tanvir কোনো সিডেই নেই + seed-এর skip-if-exists লজিকে পাসওয়ার্ড-রিসেট অসম্ভব + সেশন-৯৫ must_change_password গেটে আটকানো-লগইনের সম্ভাবনা
+- scripts/reset-qa-logins.js (নতুন): ফোর্স-রিসেটার, লাইভ-Turso-সক্ষম (env টোকেনে @libsql/client ডাইরেক্ট)
+- seed-qa-users.js: riya/tanvir + ট্রায়ো secret123 + must_change_password=0; test-login-fixes.sh + verify-session93-calls.js প্রত্যাশা-সিঙ্ক
+- ডাটা-লেয়ার: gallery.photographer/event_date (LATER_COLUMNS + CREATE TABLE + schema.sql + admin form/INSERT/UPDATE)
+- /gallery পূর্ণ-রিরাইট: প্রিমিয়াম হিরো + ডুয়াল-ভিউ টগল + পিল-ফিল্টার + লাইভ সার্চ + মেসনারি + অ্যালবাম-কার্ড + ফুল-লাইটবক্স (gallery.css/gallery.js নতুন, কন্ডিশনাল include) + স্টাফ-আপলোড-বাটন
+- সেশন-৯৪-র বাকি .album-photoidden] করাপশন-রেমন্যান্ট নির্মূল; নিজের ডক-কমেন্টেও স্ট্রিং-পুনরাবৃত্তি এড়ানো (অডিট-সেফ)
+- বাগফিক্স প্রক্রিয়ায়: EJS নেস্টেড-স্ক্রিপ্টলেট-কমেন্ট 500 (নিজের), রিস্টার্টে স্টাফ-আপলোড-বাটন-অদৃশ্য (adminUser-সেশন-শাখা যোগ করা)
+
+Stage Summary:
+- যাচাই: inspect-audit ৪৯/৪৯ PASS; ট্রায়ো-লগইন 303→/dashboard (curl + agent-browser E2E); role-policy git-stash A/B → বেসলাইন=পরিবর্তন-সহ (৭২/২৭ অভিন্ন, রিগ্রেশন-শূন্য); agent-browser ফুল-ফ্লো + ৩৯০px + কনসোল-০ ✓
+- ⚠️ লাইভ-Turso রিসেট রেহাই: টোকেন এই-সেশনে ছিল না — `TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... node scripts/reset-qa-logins.js` এক-রানেই লাইভ ঠিক হবে (বিস্তারিত lekhok-forum/worklog.md সেশন-৯৭)
+- সেশন-নাম্বার: ৯৭ ব্যবহার করেছি (৯৬-এর পরবর্তী) — প্যারালাল এজেন্টের সাথে নাম্বার-রেস হলে rebase-এ দুই-এন্ট্রি-ই রাখা হয়েছে কনভেনশন অনুযায়ী
+- সিক্রেট-রোটেশন (Turso/SESSION_SECRET/Blob/Resend) এই-টাস্কের স্কোপ-বাইরে — আলাদা এজেন্ট/সেশনে বাকি

@@ -537,3 +537,31 @@ session93: ইউজার-প্রদত্ত অডিট-স্ক্রি
 - কল-ফিচার এখন সেলফ-হিলিং: হ্যাং-গ্যাপ বন্ধ, ICE-ব্যর্থতায় অটো-রিকভারি+ম্যানুয়াল-রিট্রাই, প্রোডাকশন-TURN এখন env-config (কোড-টাচ ছাড়াই Metered.ca)
 - sandbox-গোটচা (পুনঃপ্রমাণিত): dying-instance সেশন-রেস — pkill-পর ss -tln পোর্ট-ফ্রি-কনফার্ম; কলার-পোলিং-শূন্য কল-টেস্টেই ক্লায়েন্ট-টাইমআউট যাচাই-সম্ভব (ডিটারমিনিস্টিক)
 - পরবর্তী: গ্রুপ-কল, নোটিফ-বেলে মিসড-কাউন্ট-ব্যাজ, ICE-টেলিমেট্রি, রোডম্যাপ-০১ SSE-হাব
+## সেশন ৯৭ (১৮ সেপ্টেম্বর ২০২৬) — চিত্রশালা পূর্ণ-রিরাইট + QA-লগইন-রিসেট টুলিং
+
+**এজেন্ট:** Z.ai (sandbox session web-9d4762c4) · **টাস্ক:** ① লাইভ QA-লগইন রিসেট (ismail/riya/tanvir/secret123) ② /gallery আন্তর্জাতিক-মান রিরাইট
+
+### কাজের বিবরণ
+- **reset-qa-logins.js (নতুন):** ট্রায়ো ফোর্স-রিসেট (secret123 + must_change_password=0 + active) — লাইভ-Turso-সক্ষম (TURSO_DATABASE_URL/TURSO_AUTH_TOKEN env-এ @libsql/client ডাইরেক্ট); রোস্টার create-if-missing।
+- **seed-qa-users.js:** riya/tanvir যোগ; ট্রায়ো secret123; must_change_password=0-সহ INSERT।
+- **E2E-সিঙ্ক:** test-login-fixes.sh + verify-session93-calls.js → ismail=secret123 (TRIO_PASS)।
+- **gallery ডাটা-লেয়ার:** gallery.photographer + gallery.event_date (LATER_COLUMNS + CREATE TABLE); pages.js-এ catLabel/displayDate (created_at বাংলা-ফরম্যাট fallback)।
+- **gallery ফ্রন্টএন্ড পূর্ণ-রিরাইট:** ডার্ক-হিরো + ডুয়াল-ভিউ টগল (ছবিↅঅ্যালবাম, localStorage) + পিল-ফিল্টার + লাইভ সার্চ + মেসনারি (হোভার-গ্রেডিয়েন্ট: ক্যাটাগরি/ক্যাপশন/তারিখ/ফটোগ্রাফার) + অ্যালবাম-কার্ড (স্ট্যাক-প্রিভিউ, ক্লিকে ফিল্টার-জাম্প) + লাইটবক্স (কীবোর্ড/সোয়াইপ/জুম/ডাউনলোড/শেয়ার/স্পিনার/মেটাডেটা-বার) + স্টাফ-আপলোড-বাটন (user+adminUser দুই-সেশন-সচেতন) + admin ফর্মে নতুন ফিল্ড। নতুন: public/assets/css/gallery.css + public/assets/js/gallery.js (কন্ডিশনাল include)। সেশন-৯৪-র বাকি `.album-photoidden]` করাপশন-রেমন্যান্ট নির্মূল।
+
+### যাচাই
+- inspect-audit.mjs **৪৯/৪৯ PASS**।
+- ট্রায়ো+testuser লগইন 303→/dashboard (curl-CSRF + browser E2E, ফ্রেশ-জার); ভুল-পাস 200-কন্ট্রোল; স্টাফ-পোর্টাল অক্ষত।
+- agent-browser: হিরো/টগল/ফিল্টার/সার্চ/এম্পটি-রিসেট/লাইটবক্স-কীবোর্ড-জুম/অ্যালবাম-জাম্প/৩৯০px-ওভারফ্লো-শূন্য/কনসোল-০ ✓।
+- test-role-policy.sh: **git-stash A/B → বেসলাইন=৭২/২৭, পরিবর্তন-সহ=৭২/২৭ (অভিন্ন)** — ২৭ ফেইল প্রি-এক্সিস্টিং পরিবেশ-নির্ভর, রিগ্রেশন-শূন্য।
+
+### শিক্ষা / সতর্কতা
+- EJS স্ক্রিপ্টলেটের ভেতরে নেস্টেড `<%# %>` কমেন্ট "Could not find matching close tag" 500 দেয় — স্ক্রিপ্টলেটে শুধু JS-কমেন্ট।
+- sql.js সার্ভার চালু অবস্থায় ফাইল-সিড সার্ভারের চোখে নেই (ইন-মেমরি) — বুট→স্টপ→সিড→বুট ক্রমে কাজ করতে হয়।
+- nohup+& ব্যাকগ্রাউন্ড নোড সেশন-শেষে মরে — setsid-ডিট্যাচ বাধ্যতামূলক।
+
+### লাইভে প্রয়োগ (টোকেন-ধারী পরবর্তী এজেন্ট/ইউজারের জন্য)
+```
+TURSO_DATABASE_URL='libsql://lekhok-forum-rafsancuac.aws-ap-south-1.turso.io' \
+TURSO_AUTH_TOKEN='<লাইভ-টোকেন>' node scripts/reset-qa-logins.js
+```
+রিডিপ্লয়ের দরকার নেই। এরপর লাইভে ismail/riya/tanvir + secret123 সরাসরি কাজ করবে (force-change-গেটসহ সব-ক্লিয়ার)।

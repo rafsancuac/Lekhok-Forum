@@ -267,6 +267,8 @@ const MIGRATION_SQL = `
     caption TEXT,
     image_url TEXT NOT NULL,
     category TEXT DEFAULT 'general',
+    photographer TEXT,
+    event_date TEXT,
     uploaded_by INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -520,6 +522,12 @@ const LATER_COLUMNS = [
   // plaintext-এ সংরক্ষিত হয় না — শুধু bcrypt-hash থাকে, রিভার্স-অসম্ভব।
   ['users', 'password_changed_at', 'DATETIME'],
   ['users', 'must_change_password', 'INTEGER DEFAULT 0'],
+  // সেশন ৯৭: গ্যালারি মেটাডেটা — ফটোগ্রাফার-ক্রেডিট + ইভেন্টের তারিখ।
+  // (/gallery আধুনিকায়ন: কার্ড-হোভার ও লাইটবক্সে ক্রেডিট/তারিখ দেখায়;
+  //  event_date ফাঁকা হলে created_at fallback — routes/pages.js)।
+  // ফ্রেশ-DB-সেফটি: নিচের CREATE TABLE-এও যোগ করা (সেশন-৫৭-লেশন)।
+  ['gallery', 'photographer', 'TEXT'],
+  ['gallery', 'event_date',   'TEXT'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

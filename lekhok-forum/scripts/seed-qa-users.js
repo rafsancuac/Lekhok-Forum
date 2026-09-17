@@ -10,8 +10,14 @@
      testadmin  / demo123   (role=user)  ← নামে admin হলেও ইউজার-রোল
      testagent1 / Test@1234 (role=user)
      testagent2 / Test@1234 (role=user)
-     ismail/monem/karishma/mahfuz/nusrat / demo123 (রোস্টার-সিড-ডিবিতে
+     ismail/riya/tanvir / secret123 (সেশন-৯৭: অফিসিয়াল QA-ট্রায়ো —
+                  প্যারালাল এজেন্টদের E2E-তে এই-পাসওয়ার্ডই প্রত্যাশিত)
+     monem/karishma/mahfuz/nusrat / demo123 (রোস্টার-সিড-ডিবিতে
                   ডেমো-ইউজার সিড-হয় না বলে — E2E-র জন্য)
+
+   ⚠️ ইতিমধ্যে-বিদ্যমান ইউজারের পাসওয়ার্ড এই স্ক্রিপ্ট বদলায় না —
+      ফোর্স-রিসেট দরকার হলে: scripts/reset-qa-logins.js (সেশন-৯৭,
+      লাইভ-Turso-ও সমর্থন করে)।
 
    ব্যবহার: node scripts/seed-qa-users.js [lekhok.db-পাথ]
    ═══════════════════════════════════════════════════════════════════════ */
@@ -26,7 +32,11 @@ const USERS = [
   ['testadmin', 'demo123', 'টেস্ট অ্যাডমিন (ইউজার-রোল)'],
   ['testagent1', 'Test@1234', 'টেস্ট এজেন্ট এক'],
   ['testagent2', 'Test@1234', 'টেস্ট এজেন্ট দুই'],
-  ['ismail', 'demo123', 'ইসমাইল হোসেন'],
+  // সেশন-৯৭: QA-ট্রায়ো secret123 — test-login-fixes.sh + verify-session93-calls.js-ও
+  // এখন এই-পাসওয়ার্ড প্রত্যাশা করে (ডিফল্ট demo123 থেকে স্থানান্তরিত)
+  ['ismail', 'secret123', 'ইসমাইল হোসেন'],
+  ['riya', 'secret123', 'রিয়া আক্তার'],
+  ['tanvir', 'secret123', 'তানভীর আহমেদ'],
   ['monem', 'demo123', 'মোনেম শাহরিয়ার শাওন'],
   ['karishma', 'demo123', 'কারিশমা ইরিন এ্যামি'],
   ['mahfuz', 'demo123', 'মাহফুজ রহমান'],
@@ -47,7 +57,7 @@ const USERS = [
     if (exists) { skipped++; continue; }
     const hash = bcrypt.hashSync(password, 10);
     db.run(
-      "INSERT INTO users (username, password_hash, full_name, gender, designation, bio, status, role) VALUES (?, ?, ?, 'other', 'সাহিত্যিক', 'QA সিড-অ্যাকাউন্ট (session91/93)', 'active', 'user')",
+      "INSERT INTO users (username, password_hash, full_name, gender, designation, bio, status, role, must_change_password) VALUES (?, ?, ?, 'other', 'সাহিত্যিক', 'QA সিড-অ্যাকাউন্ট (session91/93/97)', 'active', 'user', 0)",
       [username, hash, fullName]
     );
     added++;

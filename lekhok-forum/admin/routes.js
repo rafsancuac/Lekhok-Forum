@@ -838,10 +838,11 @@ router.get('/gallery/new', requireScope('gallery'), async (req, res) => {
 });
 
 router.post('/gallery', requireScope('gallery'), withUpload(galleryUpload), async (req, res) => {
-  const { title, image_url, caption, category } = req.body;
+  // সেশন ৯৭: photographer + event_date — /gallery-র নতুন কার্ড-হোভার/লাইটবক্সে ক্রেডিট-মেটাডেটা
+  const { title, image_url, caption, category, photographer, event_date } = req.body;
   const img = req.file ? '/uploads/gallery/' + req.file.filename : image_url;
   if (!img) return res.render('admin/gallery/form', { item: req.body, error: 'ছবি আপলোড করুন বা URL দিন', currentPath: '/admin/gallery' });
-  await db.prepare('INSERT INTO gallery (title, image_url, caption, category) VALUES (?, ?, ?, ?)').run(title || '', img, caption || '', category || 'general');
+  await db.prepare('INSERT INTO gallery (title, image_url, caption, category, photographer, event_date) VALUES (?, ?, ?, ?, ?, ?)').run(title || '', img, caption || '', category || 'general', photographer || '', event_date || '');
   res.redirect('/admin/gallery?saved=1');
 });
 
@@ -852,10 +853,11 @@ router.get('/gallery/:id/edit', requireScope('gallery'), async (req, res) => {
 });
 
 router.put('/gallery/:id', requireScope('gallery'), withUpload(galleryUpload), async (req, res) => {
-  const { title, image_url, caption, category } = req.body;
+  // সেশন ৯৭: photographer + event_date সমর্থন
+  const { title, image_url, caption, category, photographer, event_date } = req.body;
   const item = await db.prepare('SELECT * FROM gallery WHERE id = ?').get(req.params.id);
   const img = req.file ? '/uploads/gallery/' + req.file.filename : (image_url || item.image_url);
-  await db.prepare('UPDATE gallery SET title=?, image_url=?, caption=?, category=? WHERE id=?').run(title || '', img, caption || '', category || 'general', req.params.id);
+  await db.prepare('UPDATE gallery SET title=?, image_url=?, caption=?, category=?, photographer=?, event_date=? WHERE id=?').run(title || '', img, caption || '', category || 'general', photographer || '', event_date || '', req.params.id);
   res.redirect('/admin/gallery?saved=1');
 });
 

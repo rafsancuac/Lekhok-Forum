@@ -352,6 +352,20 @@ router.get('/gallery', async (req, res) => {
     media: 'প্রেস ও মিডিয়া',
     others: 'অন্যান্য'
   };
+  // সেশন ৯৭: প্রদর্শন-তারিখ — event_date না থাকলে created_at-কে বাংলা-ফরম্যাটে ফলব্যাক
+  const BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  const BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  const bnDate = (d) => {
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt)) return '';
+      return `${String(dt.getDate()).replace(/\d/g, c => BN_DIGITS[+c])} ${BN_MONTHS[dt.getMonth()]}, ${String(dt.getFullYear()).replace(/\d/g, c => BN_DIGITS[+c])}`;
+    } catch (e) { return ''; }
+  };
+  for (const g of all) {
+    g.catLabel = categoryLabels[g.category || 'general'] || g.category || 'সাধারণ';
+    g.displayDate = (g.event_date && String(g.event_date).trim()) || bnDate(g.created_at);
+  }
   for (const g of all) {
     const cat = g.category || 'general';
     if (!albums[cat]) albums[cat] = [];

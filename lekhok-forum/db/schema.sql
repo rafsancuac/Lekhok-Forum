@@ -227,6 +227,8 @@ CREATE TABLE IF NOT EXISTS gallery (
   image_url   TEXT    NOT NULL,
   caption     TEXT,
   category    TEXT    DEFAULT 'general',
+  photographer TEXT,
+  event_date  TEXT,
   author_id   INTEGER,
   created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
