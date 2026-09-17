@@ -1,0 +1,38 @@
+{
+  "name": "লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়",
+  "short_name": "লেখক ফোরাম",
+  "description": "শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সাহিত্য-সংগঠনের কমিউনিটি প্ল্যাটফর্ম — লেখা, আলোচনা ও সম্প্রদায়।",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#04231B",
+  "theme_color": "#065F46",
+  "lang": "bn",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "social",
+    "books"
+  ],
+  "icons": [
+    {
+      "src": "/assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
