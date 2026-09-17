@@ -1178,3 +1178,21 @@ Stage Summary:
 - সব কমেন্ট-সারফেস reload-মুক্ত + তাৎক্ষণিক-বাবল (তিন-স্তর-ফলব্যাক-চেইন: j.html→optimistic→swapQaThread) — তিন-এজেন্টের-কাজ union-এ বিনা-দ্বন্দ্বে
 - গোটচা: বহু-রেসে প্রতি-rebase-এ নিজের-ডেল্টার অনন্যতা পুনঃমূল্যায়ন বাধ্যতামূলক; `>>>>>>> sha (msg)`-ট্রেইলার-লিক স্ক্যান (rg)
 - পরবর্তী: tokens.css-হেক্স-গার্ড (session113-⑤) · গ্যালারি-অ্যালবাম-কভার-নির্বাচন · লাইভ-Turso-রিসেট + সিক্রেট-রোটেশন ×৪
+
+Task ID: cron-r6 (session126 — লেবেল-রেস: সমান্তরাল-এজেন্টও 125-নিয়েছিল, max+1=126) (session125 — রাউন্ড-৬: QA-সুইপ → paintList-mirror + audit:views → ত্রি-এজেন্ট-কলিশন-ইউনিয়ন)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগ-শূন্যে ফিচার-রাউন্ড → সমান্তরাল-কলিশনে অনন্য-ডেল্টা রক্ষা → push + ডকস
+
+Work Log:
+- sync+QA: 4ec1a2d-বেসে ১৫-route ম্যাট্রিক্স + ৭-পেজ কনসোল-০ + /me-ইন্টিগ্রিটি (৯-ট্যাব/টগল/ws91) + /qa-ফিল্টার + সার্চ-২১-মার্ক + 390px ×৪-০ — বাগ-শূন্য → ফিচার-রাউন্ড
+- রাউন্ড-শুরুতে নির্বাচিত ৪-ফিচার: qa-optimistic (comment-tools .qa-answers-list এক্সটেনশন — E2E-প্রমাণিত: reload-শূন্য-বাবল + nested-replies + empty-state-অপসারণ), header-ড্রপডাউন-dismiss-✕ (div-শেল-রিস্ট্রাকচার + main.js-IIFE + badge-বাংলা-সিঙ্ক + nx-out-অ্যানিমেশন), audit-view-dupes.mjs (পজিটিভ+নেগেটিভ-টেস্টেড), notifications-?type= (client-side restore+persist — G121-whitelist-গার্ড)
+- E2E-পথে ধরা-বাগ ×২: ① live.js paintList এক-এঞ্চর-পুরনো-শেল পেইন্ট করে প্রতি-বেল-ওপেনে ✕-মুছে-ফেলত ("stale-repaint" মিথ্যা-অনুমান ভেঙে) ② SW-ক্যাশ মিশ্র-পাঠ (fetch-নেটওয়ার্ক-সত্য + DOM-বাসি) — SW-unregister+caches-purge-প্রতিকার
+- push-পূর্ব fetch: সমান্তরাল session121-নোটিফ / 122-QA-সোয়াপ / 123-মাইক্রো / 124-canonical-insert pushকৃত — আমার ৪-ডেল্টা আচ্ছাদিত → stash→pull→pop-ত্রিয়ান (৪-UU + ২-অটো-মার্জ-ডুপ্লিকেট-ঝুঁকি) → header/notifications/style=origin-canonical, comment-tools/main=HEAD-প্রত্যাহার, live.js=আমার-মিরর (canonical-শেলে রি-অ্যালাইন: data-dismiss + in-anchor ✕), package.json=audit:views-ইউনিয়ন
+- চূড়ান্ত-যাচাই: বেল→repaint→✕ ৪/৪ ✓ painted-row-dismiss ✓ role-policy ১৩১/১৩১ ✓ cursor ২৫/২৫ ✓ guard ✓ audit ✓ brace ০/০ ✓ 390px-০ ✓ কনসোল-০ ✓ ক্লিনআপ (comment-79 + notif-136) ✓
+- pushed: f897590 (feat) + docs-কমিট (PROJECT §১২৫ + PLANS session125-নোট + worklog ×২)
+
+Stage Summary:
+- ড্রপডাউন-রিপেইন্ট এখন ✕-সংরক্ষণকারী; audit:views union-মার্জ-দুর্ঘটনা-শ্রেণির স্থায়ী-গার্ড
+- শিক্ষা: সমান্তরাল-কলিশনে নিজের-প্রতিটি-ডেল্টা origin-canonical-এর সাথে re-compare বাধ্যতামূলক (অটো-মার্জ-হওয়া ফাইলসহ); SW-বাসি-পেজ E2E-বিভ্রান্তি-উৎস
+- পরবর্তী-প্রার্থী: parent-chain-সচেতন chip-render (POST-html-এ), drawer-প্রিভিউ-ইনস্ট্যান্ট-প্রতিফলন, notifications-শূন্য-অবস্থায় ফিল্টার-বার-বিহীন empty-স্টেট পর্যালোচনা, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট)
+

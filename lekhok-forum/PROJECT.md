@@ -2545,3 +2545,14 @@ git push origin main
 3. **union-ডকুমেন্টেশন** (PLANS session125-নোট): তিন-স্তর-ফলব্যাক-চেইন চুক্তি (j.html-প্রাইমারি → session12-optimistic → swapQaThread-reload) + গোটচা (rebase-এ নিজের-ডেল্টার অনন্যতা পুনঃমূল্যায়ন; ডেল্টা-শূন্য-হওয়াও বৈধ)।
 
 **যাচাই:** node --check ✓ CSS-brace-০ ✓ inspect-audit 47/0 ✓; আগের-রাউন্ডের E2E-প্রমাণ (তাৎক্ষণিক-বাবল/নো-রিলোড/চিপ-রক্ষা/নো-ডুপ) ইঞ্জিন-স্তরে প্রযোজ্য।
+
+## session126 — live.js paintList-mirror + audit:views ডুপ্লিকেট-নোড-গার্ড (ক্রন-রিভিউ রাউন্ড)
+
+**প্রেক্ষাপট:** QA-সুইপ বাগ-শূন্য → ফিচার-রাউন্ড শুরুর মাঝেই সমান্তরাল session121-নোটিফ (dismiss-✕+?type=) / 122-QA-সোয়াপ / 123-মাইক্রোইন্টারঅ্যাকশন / 124-canonical-insert push — আমার ৪-ডেল্টা তাদের canonical-দ্বারা আচ্ছাদিত হওয়ায় stash→pull→pop-ত্রিয়ানে স্বেচ্ছায়-প্রত্যাহার (duplication-শূন্য-নীতি); অনন্য-ডেল্টা ২টি রক্ষিত।
+
+**① paintList-মার্কআপ-ড্রিফট ফিক্স (live.js — E2E-ধরা P2-বাগ):** নোটিফ-ড্রপডাউনের লাইভ-রিফ্রেশ (প্রতি-বেল-ওপেন + SSE-নোটিফ) `paintList()` দিয়ে এক-এঞ্চর-পুরনো-শেল পেইন্ট করত — session121-এর dismiss-✕ প্রতি-রিফ্রেশে মুছে যেত (session121-এজেন্ট "synthetic-দ্রুতক্রমে stale-repaint-observed — রিয়েল-ফ্লো-নিরাপদ" লিখলেও রিয়েল-ফ্লোই আক্রান্ত ছিল)। এখন paintList = header.ejs-canonical-শেলের হুবহু মিরর (a.notif-item + in-anchor button.notif-x[data-dismiss]) — header.ejs-এর ডেলিগেটেড list121-লিসেনার বলে পেইন্টেড-রোতেও ✕-সম্পূর্ণ-কার্যকর। **চুক্তি: header.ejs-ড্রপডাউন-মার্কআপ বদলালে live.js paintList একসাথে মিরর-আপডেট বাধ্যতামূলক** (ক্যানোনিকাল-মার্কআপ ×২-জায়গায় — grep `notif-x` উভয়-ফাইলে)।
+
+**② audit:views টুলিং (scripts/audit-view-dupes.mjs + npm run):** union-মার্জ-দুর্ঘটনা-শ্রেণির (session12-এর comments-h ×২-জাতীয়) স্থায়ী-গার্ড — এক-ফাইলে স্ট্যাটিক-id-ডুপ (EJS-ইন্টারপোলেশন + JS-টেমপ্লেট-স্ট্রিং-ফিল্টার), comments-h-ডুপ-সিগনেচার, data-post-link-কনটেইনার-ডুপ (.comments-list/.qa-answers-list), শেয়ার্ড-শেল-আইডি-ডুপ (notifDropdown/notifBadge/notifList — header ×২-ইনক্লুড-প্রক্সি)। মিউচুয়ালি-এক্সক্লুসিভ-ব্রাঞ্চের যাচাইকৃত-বেনাইন-ডুপের জন্য বেসলাইন-হোয়াইটলিস্ট (রিসোর্স-ডিটেইল rsxdAct ×৪, profile pf-menu ×৩/×২); exit-1 = CI-বান্ধব; পজিটিভ (ইনজেক্টেড comments-h-ডুপ → ধরে) + নেগেটিভ (ক্লিন-ট্রি → গ্রিন) উভয়-প্রমাণিত।
+
+**যাচাই:** role-policy **১৩১/১৩১** ✓ cursor ২৫/২৫ ✓ guard:design ✓ audit:views ✓ brace-depth ০/০ ✓; E2E: বেল→repaint→✕ ৪/৪ ✓ painted-row-dismiss (row-remove + empty121 + badge121-server-truth) ✓ canonical-insert-API-চুক্তি-লাইভ (html/total) ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ ✓। **গোটচা-নতুন:** SW-ক্যাশে পুরনো-HTML — fetch-নেটওয়ার্ক-সত্য ও DOM-পুরনো-মার্কআপ মিশ্র-পাঠ হতে পারে → সন্দেহে আগে SW-unregister + caches-purge, নইলে "বাগ" আসলে বাসি-পেজ।
+
