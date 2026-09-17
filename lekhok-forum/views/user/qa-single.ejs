@@ -99,10 +99,12 @@
         <%# ── সেশন ১১৪: ক্যানোনিকাল CommentItem — উত্তর-থ্রেড এখন ফিড/আর্টিকেলের
             কমেন্টের সাথে হুবহু একই বাবল (হোভার ৩-ডট: সম্পাদনা/মুছুন-নিজের/রিপোর্ট-অন্যের,
             হোভার ৬-ইমোজি প্যালেট, বাবল-কোণায় রিঅ্যাকশন-ব্যাজ)। ইঞ্জিন comment-tools.js। ── %>
-        <%# সেশন ১১৩: data-post-link → সাবমিটের পরে রিলোড-নেই থ্রেড-রিফ্রেশ
-            (refreshArticleThread — format=html ক্যানোনিকাল-HTML সোয়াপ + কাউন্টার-সিঙ্ক);
-            রিফ্রেশের পরে স্লট-র‍্যাপার/চিপ না-থাকলেও কমেন্ট-বাবলগুলো অক্ষত থাকে। ── %>
-        <div class="qa-answers-list" data-post-link="/qa/<%= post.id %>">
+        <%# সেশন ১১৩: data-post-link → সাবমিটের পরে রিলোড-নেই থ্রেড-রিফ্রেশ;
+            সেশন ১১৭: data-post-id + ?format=qa-html — থ্রেড-সোয়াপ এখন
+            qa-single-এর সার্ভার-সত্যই (like_count DESC-অর্ডার + স্লট-র‍্যাপার +
+            top-answer-chip + compact-রিপ্লাই) — চিপ AJAX-রিফ্রেশ-পরেও টেকনামী
+            (session113-বকেয়া ③ পূর্ণ); ইঞ্জিন comment-tools.js swapQaThread। ── %>
+        <div class="qa-answers-list" data-post-link="/qa/<%= post.id %>" data-post-id="<%= post.id %>">
         <% answers.forEach((a, idx) => { %>
           <div class="qa-answer-slot" id="answer-<%= a.id %>">
             <% if (idx === 0 && a.like_count > 0) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>

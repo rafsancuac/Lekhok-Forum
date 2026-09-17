@@ -290,7 +290,8 @@
                     <% } %>
                     <span class="notif-text">
                       <span class="notif-body"><%= n.body %></span>
-                      <span class="notif-time"><%= n.created_at %></span>
+                      <%# সেশন ১২২: রিলেটিভ-টাইম (LekhokRelTime [data-ts]-চুক্তি) — কাঁচা ডেটটাইম আর নয় %>
+                      <span class="notif-time" data-ts="<%= n.created_at %>"><%= n.created_at %></span>
                       <% if (n.type === 'call') { %><span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %>
                     </span>
                     <% if (!n.is_read) { %><span class="notif-dot" title="অপঠিত"></span><% } %>

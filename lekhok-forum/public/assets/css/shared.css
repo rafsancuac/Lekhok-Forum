@@ -124,6 +124,12 @@
 .mnp-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mnp-bubble--me .mnp-text{color:var(--lf-ui-surface);font-weight:600}
 .conv-item.is-muted .mnp-bubble{opacity:.55;box-shadow:none}
+/* ── সেশন ১১৭: অপঠিত-ইনকামিং (FB-প্যারিটি) — মিনি-বাবলের আগে মেসেঞ্জার-নীল ডট,
+      বাবল-টেক্সট বোল্ড; মিউট-রোতে ডটও নিভে যায় (রো-অপাসিটির সাথে সামঞ্জস্য)। ── */
+.mnp-dot{flex:0 0 auto;width:8px;height:8px;border-radius:var(--lf-radius-chip);background:var(--lf-social-messenger);box-shadow:0 0 0 3px var(--lf-social-blue-light)}
+.mnp-bubble--unread .mnp-text{font-weight:800}
+.mnp-bubble--unread.mnp-bubble--them{background:var(--lf-ui-input-bg);border:1px solid var(--lf-ui-border-strong);padding:2px 9px}
+.conv-item.is-muted .mnp-dot{visibility:hidden}
 @media (prefers-reduced-motion: reduce){.mnp-bubble{transition:none}}
 /* ── session113-খ: CommentItem chip-প্যারাম-স্টাইল + অ্যাক্সেসিবিলিটি ─────────
    [union-মার্জ: session114-থ্রেডেড-এজেন্টের qa-ব্লক ক্যানোনিকাল গৃহীত; আমার

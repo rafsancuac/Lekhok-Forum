@@ -722,6 +722,36 @@
   }
 
   // ── সেশন ১০৪+১০৭: মুছে-ফেলা (ফিড-ড্রয়ারে রিফ্রেশ, আর্টিকেল-পেজে ইন-প্লেস) ─
+  // ── সেশন ১২১: মুছে-ফেলার-পরের DOM-সিঙ্ক — দুই-হ্যান্ডলারই (legacy .fc-menu +
+  // ক্যানোনিকাল [data-cmt-delete]) একই ফাংশনে: ড্রয়ার → পূর্ণ-রিফ্রেশ;
+  // QA-থ্রেড → সার্ভার-সত্য সোয়াপ (empty-slot-অবশেষ/চিপ/কাউন্টার অটো-সিঙ্ক);
+  // অন্যথায় ইন-প্লেস + কাউন্টার-সিঙ্ক।
+  function afterDeleteSuccess(j, it) {
+    var drawer = it && it.closest('.fc-drawer');
+    if (drawer) {
+      // ফিড-ড্রয়ার: পূর্ণ-রিফ্রেশ — লিস্ট + কাউন্টার + প্রিভিউ-সিঙ্ক
+      refreshDrawer(drawer, drawer.getAttribute('data-comments-for'));
+      return;
+    }
+    if (swapQaThread('', null)) return;
+    if (it) it.remove();
+    try {
+      var total = (typeof j.total === 'number') ? j.total : null;
+      if (total !== null) {
+        // সেশন ১১৪: লেবেল-নিরপেক্ষ কাউন্টার-স্প্যান ([data-cmt-total]) প্রথমে —
+        // 'উত্তরসমূহ (N)' হেডিং .comments-h-র হার্ডকোডেড innerHTML-রিরাইট থেকে নিরাপদ
+        var cSpan = document.querySelector('[data-cmt-total]') || document.querySelector('.comments-total');
+        if (cSpan) cSpan.textContent = bnNum(total);
+        else {
+          var hCount = document.querySelector('.comments-h');
+          if (hCount) hCount.innerHTML = '<i class="far fa-comment"></i> মন্তব্য (' + bnNum(total) + ')';
+        }
+        var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
+        if (stat) stat.textContent = bnNum(total); // সেশন ১২: বাংলা-সংখ্যা (ASCII-লিক-ফিক্স)
+      }
+    } catch (_) {}
+  }
+
   function deleteComment(item, cid) {
     if (!window.confirm('নিশ্চিত? এই মন্তব্যটি মুছে ফেলতে চান?')) return;
     item.style.opacity = '0.45';
@@ -732,29 +762,7 @@
       })
       .then(function (j) {
         if (!j || !j.ok) throw new Error('failed');
-        var drawer = item.closest('.fc-drawer');
-        if (drawer) {
-          // ফিড-ড্রয়ার: পূর্ণ-রিফ্রেশ — লিস্ট + কাউন্টার + প্রিভিউ-সিঙ্ক
-          refreshDrawer(drawer, drawer.getAttribute('data-comments-for'));
-        } else {
-          // আর্টিকেল/প্রশ্ন-পেজ: ইন-প্লেস — এলিমেন্ট (রিপ্লাইসহ) সরাও + কাউন্টার-সিঙ্ক
-          item.remove();
-          try {
-            var total = (typeof j.total === 'number') ? j.total : null;
-            if (total !== null) {
-              // সেশন ১১৪: লেবেল-নিরপেক্ষ কাউন্টার-স্প্যান ([data-cmt-total]) প্রথমে —
-              // 'উত্তরসমূহ (N)' হেডিং .comments-h-র হার্ডকোডেড innerHTML-রিরাইট থেকে নিরাপদ
-              var cSpan = document.querySelector('[data-cmt-total]') || document.querySelector('.comments-total');
-              if (cSpan) cSpan.textContent = bnNum(total);
-              else {
-                var hCount = document.querySelector('.comments-h');
-                if (hCount) hCount.innerHTML = '<i class="far fa-comment"></i> মন্তব্য (' + bnNum(total) + ')';
-              }
-              var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
-              if (stat) stat.textContent = bnNum(total); // সেশন ১২: বাংলা-সংখ্যা (ASCII-লিক-ফিক্স)
-            }
-          } catch (_) {}
-        }
+        afterDeleteSuccess(j, item);
         if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
       })
       .catch(function (err) {
@@ -993,6 +1001,8 @@
           if (slot) { slot.hidden = true; slot.innerHTML = ''; }
         } else if (refreshArticleThread(form)) {
           // আর্টিকেল-পেজ (সেশন ১০৫): রিলোড-নেই — ক্যানোনিকাল-HTML থ্রেড-সোয়াপ
+        } else if (swapQaThread(form.getAttribute('data-post-id'), null)) {
+          // QA-উত্তর-পেজ (সেশন ১২১): রিলোড-নেই — চিপ/স্লট-সহ সার্ভার-সত্য সোয়াপ
         } else if (!shown) {
           // লিগ্যাসি থ্রেড-পেজ ফলব্যাক: সার্ভার-রেন্ডার্ড রিলোড
           setTimeout(function () { location.reload(); }, 450);
@@ -1005,6 +1015,29 @@
   });
 
   /* ── ৬. সেশন ১০৫: ক্যানোনিকাল CommentItem-আচরণ (রুল-২) + রিঅ্যাক্টরস-মডাল ── */
+
+  // ৬.a-ক (সেশন ১২১): QA-উত্তর-থ্রেড-সোয়াপ — .qa-answers-list[data-post-link] থাকলে
+  // ?format=qa-html (qa-single-এর সার্ভার-সত্য: like_count DESC-অর্ডার + top-answer-chip
+  // + compact-রিপ্লাই, ক্যানোনিকাল CommentItem-ই রেন্ডারার) — রিলোড-নেই; চিপ
+  // AJAX-রিফ্রেশ-পরেও টেকনামী (session113-বকেয়া ③)। qaHtml-না-এলে রিলোড-ফলব্যাক।
+  function swapQaThread(postId, toastMsg) {
+    var list = document.querySelector('.qa-answers-list[data-post-link]');
+    if (!list) return false;
+    if (!postId) postId = list.getAttribute('data-post-id') || '';
+    if (!postId) return false;
+    fetch('/api/comments?post_id=' + postId + '&format=qa-html')
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.qaHtml) {
+          list.innerHTML = j.qaHtml;
+          var tot = document.querySelector('.comments-total');
+          if (tot && typeof (j && j.total) === 'number') tot.textContent = bnNum(j.total);
+          if (toastMsg && window.showToast) showToast(toastMsg, 'success');
+        } else { location.reload(); }
+      })
+      .catch(function () { location.reload(); });
+    return true;
+  }
 
   // ৬.a আর্টিকেল-থ্রেড-রিফ্রেশ (রিলোড-নেই) — .comments-list[data-post-link] থাকলে
   // (টোস্ট নেই — সেশন ১২: সাবমিট-হ্যান্ডলারে অপটিমিস্টিক-ইনসার্টের সাথেই একবার দেখানো হয়)
@@ -1131,6 +1164,10 @@
           if (j && j.ok) {
             var it = document.getElementById('fc-c' + cidD);
             var cardD = it ? it.closest('.feed-card, article') : null;
+            if (swapQaThread('', null)) {
+              // সেশন ১২১: QA-উত্তর-পেজ — সার্ভার-সত্য সোয়াপ; হাতে-সিঙ্ক অপ্রয়োজনীয়
+              // (empty-slot-অবশেষ নেই, চিপ/অর্ডার like_count-DESC-এ পুনর্বিন্যস্ত)
+            } else {
             if (it) it.remove();
             try {
               // সেশন ১১১: কাউন্টার-সিঙ্ক — পুরনো-ইঞ্জিন deleteComment-এর মতোই
@@ -1158,6 +1195,7 @@
                 if (dwD && dwD.dataset.loaded) refreshDrawer(dwD, dwD.getAttribute('data-comments-for'));
               }
             } catch (_) {}
+            }
             if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
           } else if (window.showToast) showToast('মোছা যায়নি', 'error');
         })

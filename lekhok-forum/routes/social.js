@@ -1690,6 +1690,60 @@ router.get('/api/comments', async (req, res) => {
     }
     const total = rows.length;
 
+    // ── সেশন ১১৭: QA-উত্তর-থ্রেড AJAX-রিফ্রেশ (?format=qa-html) ──────────────
+    // qa-single-এর সার্ভার-সত্য হুবহু বজায়: like_count DESC-অর্ডার, idx-0 top-answer-chip,
+    // রিপ্লাই compact-মোডে — রেন্ডারার একই ক্যানোনিকাল CommentItem (single-source)।
+    // ক্লায়েন্ট (comment-tools.js swapQaThread) qaHtml পেলে থ্রেড-সোয়াপ করে —
+    // রিলোড-নেই; qaHtml না-পেলে লিগ্যাসি-রিলোড ফলব্যাক।
+    if (String(req.query.format || '') === 'qa-html') {
+      try {
+        const _post117 = await db.prepare('SELECT type FROM posts WHERE id = ?').get(postId);
+        if (_post117 && _post117.type === 'question') {
+          const _me117 = req.session.user || null;
+          const _myId117 = _me117 ? _me117.id : null;
+          const _isMod117 = !!(_me117 && /moderator|admin/.test(String(_me117.role || '')));
+          const _answers117 = await db.prepare(`SELECT c.id, c.post_id, c.author_id, c.body, c.like_count, c.created_at, c.edited_at,
+                       u.username, u.full_name, u.pen_name, u.avatar_url
+                              FROM comments c JOIN users u ON c.author_id = u.id
+                              WHERE c.post_id = ? AND c.parent_id IS NULL
+                              ORDER BY c.like_count DESC, c.created_at ASC`).all(postId);
+          const _replies117 = await db.prepare(`SELECT c.id, c.parent_id, c.author_id, c.body, c.created_at, c.edited_at,
+                       u.username, u.full_name, u.pen_name, u.avatar_url
+                              FROM comments c JOIN users u ON c.author_id = u.id
+                              WHERE c.post_id = ? AND c.parent_id IS NOT NULL
+                              ORDER BY c.created_at ASC, c.id ASC`).all(postId);
+          const _rxBy117 = new Map();
+          await Promise.all([..._answers117, ..._replies117].map(r =>
+            getReactionSummary('comment_id', r.id, _myId117).then(x => _rxBy117.set(r.id, x))));
+          const { renderBody: _rb117 } = require('../helpers/markdown-lite');
+          const _repliesBy117 = {};
+          (_replies117 || []).forEach(r => { (_repliesBy117[r.parent_id] = _repliesBy117[r.parent_id] || []).push(r); });
+          const _can117 = (authorId) => !!(_me117 && (authorId === _me117.id || _isMod117));
+          const _renderOne117 = (row, compact) => new Promise((res2, rej2) => {
+            req.app.render('shared/comment/CommentItem', {
+              c: {
+                id: row.id, author_id: row.author_id, username: row.username,
+                pen_name: row.pen_name, full_name: row.full_name, avatar_url: row.avatar_url,
+                body: row.body, bodyHtml: _rb117(row.body || '', { toc: false }).html,
+                created_at: row.created_at, edited_at: row.edited_at || null,
+                reaction: _rxBy117.get(row.id) || { counts: {}, mine: null, total: 0 },
+                canEdit: _can117(row.author_id), canDelete: _can117(row.author_id),
+              },
+              link: '/qa/' + postId, user: _me117, compact: !!compact,
+            }, (e, h) => e ? rej2(e) : res2(h));
+          });
+          const _slots117 = await Promise.all(_answers117.map(async (a, idx) => {
+            const _repHtml = await Promise.all((_repliesBy117[a.id] || []).map(r => _renderOne117(r, true)));
+            const _chip117 = (idx === 0 && a.like_count > 0)
+              ? '<span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span>' : '';
+            return '<div class="qa-answer-slot" id="answer-' + a.id + '">' + _chip117
+              + await _renderOne117(a, false) + _repHtml.join('') + '</div>';
+          }));
+          return res.json({ ok: true, total: rows.length, qaHtml: _slots117.join('') });
+        }
+      } catch (e) { /* ফলব্যাক: নিচের সাধারণ JSON — ক্লায়েন্ট রিলোড করবে */ }
+    }
+
     // ── সেশন ১০৫: কমেন্ট-রিঅ্যাকশন-ডেকোরেশন + canEdit/canDelete + HTML-রেন্ডার
     // (single-source: views/shared/comment/CommentItem.ejs — ?format=html দিলে
     //  সার্ভারই পার্শিয়াল রেন্ডার করে; ক্লায়েন্ট আর DOM-বানায় না)
@@ -1893,6 +1947,9 @@ router.get('/notifications/mark-all-read', async (req, res) => {
 // ── সেশন ৬৬: সংরক্ষিত লেখা — ডেডিকেটেড পেজ ──
 // আগে generic user/articles-ভিউ রেন্ডার হতো: ভুল শিরোনাম "প্রকাশিত লেখা",
 // সেভ-করা কার্ডেও আনসেভড-আইকন, অপ্রাসঙ্গিক "নতুন লেখা" বাটন। এখন নিজস্ব ভিউ।
+// নোট: 'পড়া চালিয়ে যান' ফুল-পেজ = /me/reading (session117-প্যারালাল-ক্যানোনিকাল,
+// নিচে); ডুপ্লিকেট-/reading-list-প্রস্তাব ইউনিয়ন-রিবেজে সরানো হয়েছে।
+
 router.get('/bookmarks', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   const items = await db.prepare(`
