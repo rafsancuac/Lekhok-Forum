@@ -899,3 +899,23 @@ Stage Summary:
 - **session108-খ ③ pagination-টেস্ট সম্পন্ন** — ১৬-বার্তায় ২-পেজ নির্ভুল + CSV-সম্মতি
 - qa-উত্তর-ক্যানোনিকাল = session113/114-ক্যানোনিকাল (আমার ডেল্টা প্রত্যাহৃত — session113-র PLANS-নোটের session117-লেবেল-রিজার্ভ অনুসৃত)
 - পরবর্তী-সুপারিশ: role-policy-স্যুটে POST /api/comment bad_post_id-৪০০-চেক + comment PUT/DELETE 403/404 (session105 ④ — session114-এর §১৫-সেলফ-সিডের সাথে মিলিয়ে) · tokens.css-হার্ডকোড-হেক্স-স্ক্যান-গার্ড (session105 ⑤) · কল-প্যানেল ভিডিও-track-স্ট্যাট (session111 ③)
+
+---
+Task ID: cron-r3 (session113 — রাউন্ড-৪: QA-সুইপ → Q&A উত্তর-থ্রেড কমেন্ট-সমতা + নীরব-অনাথ-কমেন্ট-বাগ)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: অবস্থা-যাচাই + agent-browser QA → স্টেবল → session105-সুপারিশ ①④ বাস্তবায়ন → push + ডকস
+
+Work Log:
+- sync+QA: fetch/rebase ক্লিন → ১৪-পেজ-ম্যাট্রিক্স ২০০ + কনসোল-০ → ফিচার-রাউন্ড
+- আবিষ্কার: session105-সুপারিশ ① (/qa-উত্তরের কমেন্ট-সমতা) এখনও খোলা; সাথে ৩-বাগ: (ক) রিপ্লাই-স্লট postId=null → অনাথ-কমেন্ট-TEXT-রো (ক) /api/comment প্রশ্ন-বিজ্ঞপ্তিতে /articles/N-লিংক (ঘ) DELETE-এ total নেই → কাউন্টার-স্টেল
+- E2E (agent-browser): /qa/6-সিডে উত্তর-সাবমিট (৩→৪-অটো-বাংলা-কাউন্ট) ✓ রিপ্লাই-নেস্ট+walk-up ✓ এডিট+সম্পাদিত-চিপ ✓ ডিলিট→সিঙ্ক ✓ প্যালেট-৬+ব্যাজ-👍১ ✓ গেস্ট-ভিউ (বাবল-দৃশ্যমান, কম্পোজার-শূন্য) ✓ আর্টিকেল-রিগ্রেশন ✓ 390px-০ ✓ কনসোল-০ ✓
+- curl-হার্ডেনিং-প্রুফ: null-post_id→400, ghost→404, cross-parent→400, guest→401, DELETE→total:4 ✓ লোকাল-DB-র ২-অনাথ-রো পরিষ্কার
+- প্যারালাল-সংঘর্ষ: push-রেসে session114 (qa-থ্রেড! একই-সমস্যা-ভিন্ন-পথ) + session116-কমিট → stash→rebase→3-ফাইল-কনফ্লিক্ট → origin-ভার্সন-গ্রহণ → আমার-ডেল্টা পুনঃপ্রয়োগ (ইন্টারপ-কমিট c19df87) — তাদের [data-cmt-total]-সিলেক্টর/নোস্ক্রিপ্ট-ফর্ম সংরক্ষিত, আমার ফিক্স+UX যোগ
+- স্যুট: §১৪ (১৫-অ্যাসারশন) + §১৫ self-sufficient-রূপান্তর → role-policy ১২৫/১২৫ ✓ guard:design ✓
+- গোটচা-আবিষ্কার: git stash -u ensure-server.sh-ও নিয়েছিল (pop-করা হয়েছে); immutable-ক্যাশে-পুরনো-JS-ফ্লেক; seed-র testadmin role-divergence → ban-ক্যাসকেড
+
+Stage Summary:
+- পুশড: dbdfd3f (session113-ফিচার, rebase-পরে সংকুচিত) + c19df87 (114-ইন্টারপ-ফলোআপ) + ডকস-কমিট
+- /qa-উত্তর-থ্রেড এখন /articles-কমেন্টের সাথে পূর্ণ-সমতা + অনাথ-কমেন্ট-করাপশন-পথ বন্ধ
+- পরবর্তী: accepted-answer-মার্কিং, /qa unanswered-ফিল্টার, notifications QA-আইকন
+

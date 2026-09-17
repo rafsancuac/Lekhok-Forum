@@ -1177,3 +1177,12 @@ push-রেস-এ abhi-asol: উপরের session113-নোট লেখা�
 - **cursor-E2E এখন base-data-independent** (+১৫ ভলিউম-ব্যাচ, cleanup-সহ) — ২৪/২৪। ফিডে <৪১ আইটেমে চেইন-অ্যাসারশন মিথ্যা-ফেল করত।
 
 **পরবর্তী-সুপারিশ:** ① পুরনো-চুক্তির অবশিষ্ট মার্কআপ-সারফেস (থাকলে) canonical-এ মাইগ্রেট — দুই-ইঞ্জিন-রক্ষণাবেক্ষণ-বোঝা কমাতে ② article-কমেন্টে optimistic-UI (রিলোড-নেই — session105-এর refreshArticleThread qa-তেও) ③ নোটিফিকেশন-ড্রপডাউনে reply-টাইপ-ব্যাজ ④ hall-provost সার্চ/ফিল্টার + contact_hours লাইভ-ইন্ডিকেটর (keyset-তালিকা থেকে বাকি)।
+### Cross-Agent Note — Session 113 (কমেন্ট-API হার্ডেনিং + রিপ্লাই-স্লট-ফিক্স + role-policy এক্সটেনশন)
+
+1. **🚨 রিপ্লাই-স্লট postId-চুক্তি:** comment-tools.js-এ রিপ্লাই-স্লট-কম্পোজারের data-post-id এখন ড্রয়ার-ব্যাকফলে পেজের মেইন-কম্পোজার (`.cc-form[data-post-id]`, স্লট/ড্রয়ারের বাইরের প্রথমটি) থেকে রেজলভ হয়। **নতুন পেজে রিপ্লাই-স্লট চালু করলে মেইন-কম্পোজারে data-post-id থাকা বাধ্যতামূলক** — নইলে আবার `post_id="null"`-অনাথ-রো (TEXT-করাপশন) ফিরে আসবে।
+2. **POST /api/comment চুক্তি-পরিবর্তন:** এখন `post_id` non-positive/non-numeric → 400 bad_post_id; অস্তিত্বহীন-পোস্ট → 404; parent অন্য-পোস্টের → 400 bad_parent_id। আগে স্ট্রিং-'null' নীরবে TEXT-রো হত। JSON-টেস্টগুলোতে এখন integer post_id পাঠান।
+3. **DELETE /api/comments/:id এখন `{ok, removed, total}` ফেরত দেয়** — total = পোস্টের অবশিষ্ট-কমেন্ট। [data-cmt-total]/.comments-total-কাউন্টার-সিঙ্ক এর উপরেই দাঁড়িয়ে।
+4. **role-policy-স্যুট এখন `P=${P:-8080}`** — `P=8094 bash scripts/test-role-policy.sh` দিয়ে QA-সার্ভারে চালান। §১৪-১৫ (কমেন্ট-API) DB-state-নিরপেক্ষ — ismail/testuser নিজেরাই টার্গেট তৈরি করে পরে ক্লিনআপ করে; প্রয়োজনীয় ইউজার: seed-qa-users.js (ismail/secret123) + seed-qa-113.js (testuser/testadmin=role-admin/qa113user=demo123)। **testadmin-এর users-টেবিলে role='admin' রাখতে হবে** (seed-test-users-কনভেনশন) — 'user' করলে §৫-এ ban-ক্যাসকেডে পরবর্তী-সেকশন ডুবে যায়।
+5. **seed-qa-113.js:** idempotent ডেমো-QA-থ্রেড (প্রশ্ন "নতুন লেখকরা কোথায় থেকে শুরু করবেন?" + like_count=৩-উত্তর + রিপ্লাই) — সার্ভার-বন্ধে চালান (স্বাভাবিক গোটচা)।
+6. **article.css session113-ব্লক:** dead answer-card-রুল মুছেছে — কিন্তু session114-মার্কআপের .top-answer-chip/.answer-form-wrap/.answer-form (noscript) পুনঃস্থাপিত; ভবিষ্যতের dead-rule-অপসারণের আগে views/-জুড়ে class-ব্যবহার-স্ক্যান করুন (noscript-ব্লকও স্ক্যানে ধরুন)।
+
