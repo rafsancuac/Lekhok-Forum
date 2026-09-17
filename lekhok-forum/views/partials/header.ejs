@@ -159,6 +159,8 @@
   </script>
   <script src="/assets/js/webrtc-call.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>"></script>
   <% } %>
+  <%# সেশন ১২৩: ডিসমিস-আন্ডু টোস্ট — window.lfUndoShow; ড্রপডাউন dismiss121-IIFE-এর আগে লোড হওয়া জরুরি (non-defer) %>
+  <script src="/assets/js/undo-toast.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>"></script>
 <%# সেশন ৬৭: data-auth — main.js লগইন-গার্ডের নির্ভরযোগ্য সোর্স (যেকোনো লেআউটে) -%>
   <!-- Back to top (session 59) -->
   <button type="button" class="back-to-top" id="backToTop" aria-label="উপরে ফিরে যান" title="উপরে ফিরে যান"><i class="fas fa-chevron-up"></i></button>
@@ -281,7 +283,8 @@
               <% if (typeof recentNotifs !== 'undefined' && recentNotifs && recentNotifs.length) { %>
                 <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', reaction: 'fa-heart', reply: 'fa-reply', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', call: 'fa-phone-slash' }; %>
                 <% recentNotifs.forEach(n => { %>
-                  <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>">
+                  <%# সেশন ১২৩: data-n restore-পেলোড — ফুল-পেজ (notifications.ejs) ও paintList-চুক্তি অভিন্ন %>
+                  <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>" data-n="<%= JSON.stringify({ i: n.id, t: n.type, ti: n.title || '', b: n.body || '', l: n.link || '', r: n.is_read ? 1 : 0, ts: n.created_at || '' }) %>">
                     <%# সেশন ১০২-ইউনিয়ন: actor-avatar (actor_id JOIN + legacy link-fallback) — ছবি নাহলে টাইপ-রঙা আইকন (live.js-এর সাথে সমান) %>
                     <% if (n.actor_id) { %>
                       <span class="notif-ico has-avatar"><img class="notif-avatar" src="<%= n.actor_avatar || ('/avatar/' + n.actor_id) %>" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-avatar');this.remove()"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
@@ -337,6 +340,9 @@
               var row = btn.closest('.notif-item');
               if (!row || row.dataset.xBusy121) return;
               row.dataset.xBusy121 = '1';
+              /* সেশন ১২৩: restore-পেলোড ক্যাপচার — টোস্টের 'বাতিল করুন' এতে ফিরিয়ে দেয় */
+              var payload = null;
+              try { payload = JSON.parse(row.getAttribute('data-n') || 'null'); } catch (_) {}
               fetch('/api/notifications/' + encodeURIComponent(btn.getAttribute('data-dismiss')) + '/dismiss', { method: 'POST', credentials: 'same-origin' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
@@ -344,6 +350,38 @@
                     row.classList.add('dx-out');
                     setTimeout(function () { row.remove(); empty121(); }, 200);
                     badge121();
+                    /* সেশন ১২৩: আন্ডু-টোস্ট (lfUndoShow — undo-toast.js; ফুল-পেজের সাথে প্যারিটি) */
+                    if (payload && window.lfUndoShow) {
+                      window.lfUndoShow({
+                        message: 'বিজ্ঞপ্তি সরানো হয়েছে',
+                        ms: 7000,
+                        onUndo: function (after) {
+                          fetch('/api/notifications/restore', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(payload)
+                          }).then(function (r) { return r.json(); }).then(function (j) {
+                            if (j && j.ok) {
+                              row.classList.remove('dx-out');
+                              delete row.dataset.xBusy121;
+                              /* এম্পটি-স্টেট এঁকে-থাকলে সরাও; রো ফিরিয়ে আনো */
+                              var emp = list121.querySelector('.notif-empty');
+                              if (emp) emp.remove();
+                              var first = list121.querySelector('.notif-item');
+                              if (row.parentNode) row.parentNode.removeChild(row);
+                              if (first) list121.insertBefore(row, first);
+                              else list121.appendChild(row);
+                              badge121();
+                            } else if (window.showToast) showToast('বাতিল করা যায়নি', 'error');
+                            after();
+                          }).catch(function () {
+                            if (window.showToast) showToast('বাতিল করা যায়নি', 'error');
+                            after();
+                          });
+                        }
+                      });
+                    }
                   } else { delete row.dataset.xBusy121; }
                 })
                 .catch(function () { delete row.dataset.xBusy121; });

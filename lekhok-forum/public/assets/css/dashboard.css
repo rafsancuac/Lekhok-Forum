@@ -235,8 +235,8 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .crx-tilecover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
 .crx-tile:hover .crx-tilecover img,.crx-tile:focus-within .crx-tilecover img{transform:scale(1.04)}
 /* কভারের ওপরে ভাসা ✕-বাটনে কনট্রাস্ট-ব্যাকড্রপ (JS দেয় .has-cover — :has()-নিষিদ্ধ-রীতি) */
-.crx-tile.has-cover .crx-x{background:rgba(15,23,42,.45);color:#fff;border-color:transparent}
-.crx-tile.has-cover .crx-x:hover{background:rgba(220,38,38,.92);color:#fff;border-color:transparent}
+.crx-tile.has-cover .crx-x{background:rgba(15,23,42,.45);color:var(--lf-ui-surface);border-color:transparent}
+.crx-tile.has-cover .crx-x:hover{background:rgba(220,38,38,.92);color:var(--lf-ui-surface);border-color:transparent}
 /* পলিশ: প্রগ্রেস-বার-গ্লো + 'সব দেখুন' শেভরন-মাইক্রোইন্টার‍্যাকশন */
 .crx-bar-fill{box-shadow:0 0 6px rgba(16,185,129,.3)}
 .crx-all-arr{font-size:.72rem;transition:var(--transition)}

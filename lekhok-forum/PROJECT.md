@@ -2575,3 +2575,10 @@ git push origin main
 **যাচাই:** ইন-পেজ-টাইমলাইন-প্রোব: উত্তর firstFresh=80ms + total-তাৎক্ষণিক-বাম্প, gone=২৫৬১ms (সোয়াপ-ডিলে-ইনজেকশনে); রিপ্লায় (Ctrl+Enter) firstFresh=161ms, রিকনসাইল-পরে সার্ভার-সত্য flat-compact ✓ অটো-গ্রো ✓ ক্লিনআপ ✓ 390px-০ ✓ কনসোল-০ ✓ role-policy 131/131 ✓ cursor 25/25 ✓ guard ✓। **গোটচা ×২ (PLANS-এ বিস্তারিত):** fetch-patch-গ্লোবাল-ওভাররাইট-রিকার্শন (ভান-করা-ব্যর্থতা) + স্ট্যাটিক-এডিটের-পরে AV-রিস্টার্ট-চুক্তি (immutable-ক্যাশ পুরনো-কোড চালায়; transferSize-০-চেক রীতি)।
 
 ---
+## session129 — ডিসমিস-আন্ডু-টোস্ট + 🚨 BFS-নেস্টেড-ডিলিট-বাগফিক্স + hex-র্যাচেট-গার্ড (cron-r12)
+- **ডিসমিস-আন্ডু (FB-প্যারিটি):** notifications ফুল-পেজ ও হেডার-ড্রপডাউন — সরানোর পরে ৭-সেকেন্ড "বিজ্ঞপ্তি সরানো হয়েছে · বাতিল করুন" টোস্ট (undo-toast.js lfUndoShow সিঙ্গেলটন + shared.css session129-ব্লক, টোকেন-শুধু)। ব্যাকএন্ড POST /api/notifications/restore (data-n কম্প্যাক্ট-কী {i,t,ti,b,l,r,ts} + idempotent + type-হোয়াইটলিস্ট + নিজের-user_id-সীমা)। শেষ-আইটেম-রিলোড ৭সে-স্থগিত (undo-সুযোগ)।
+- **🚨 বাগফিক্স BFS-ডিলিট:** DELETE /api/comments/:id এক-লেভেল kids মুছত — রিপ্লাই-অব-রিপ্লাই অনাথ হত (parent_id মৃত-রোতে, comment_count-তে গোনা); session104-এর ডুপ্লিকেট-হ্যান্ডলার (অগম্য-জীবাশ্ম) অপসারণ + BFS-সাবট্রি-লজিক লাইভ-হ্যান্ডলারে মার্জ; রেসপন্স-চুক্তি অক্ষুণ্ণ।
+- **hex-র্যাচেট-গার্ড (session113-⑤):** guard-design-system.js — per-ফাইল হেক্স-গণনা tokens-hex-baseline.json-সীমায় ফ্রিজ, বৃদ্ধিতে ফেইল; প্রথম-প্রয়োগেই parallel-ব্লকের ২×#fff ধরা → var(--lf-ui-surface)।
+- **paintList-প্যারিটি:** live.js AJAX-রেন্ডার আইটেমে data-n (restore) + data-ts (LekhokRelTime চুক্তি)।
+- **crx-ডেল্টা-পোর্ট:** session123-ক্যানোনিকলের ওপর c-বিহীন-এন্ট্রিতে ডিটারমিনিস্টিক /img/cover/crx<id> ফলব্যাক।
+- **পরীক্ষা:** role-policy §২৫ সহ ১৪৭/১৪৭ + cursor ২৬/২৬ + guard ✓ + agent-browser E2E (undo ×৩-সারফেস, crx-থাম্ব, 390px-০, কনসোল-০) + টেস্ট-ডেটা-ক্লিনআপ। বিস্তারিত PLANS.md session129-নোট।

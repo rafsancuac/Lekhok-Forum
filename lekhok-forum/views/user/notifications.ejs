@@ -72,7 +72,11 @@
               reply/mention = comment-পরিবার — feed.css-এর .icon-* প্যালেট পুনঃব্যবহার) %>
           <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' || n.type === 'reaction' ? 'icon-like' : (n.type === 'comment' || n.type === 'reply' || n.type === 'mention' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : 'icon-system')))); %>
           <% const _ico = n.type === 'birthday' ? 'fa-birthday-cake' : (n.type === 'like' || n.type === 'reaction' ? 'fa-heart' : (n.type === 'comment' ? 'fa-comment' : (n.type === 'reply' ? 'fa-reply' : (n.type === 'mention' ? 'fa-at' : (n.type === 'follow' ? 'fa-user-plus' : (n.type === 'call' ? 'fa-phone-slash' : 'fa-bell')))))); %>
-          <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" data-type="<%= n.type %>" data-g117="<%= gKeyOf117(n.type) %>" onclick="markRead('<%= n.id %>')">
+          <%# সেশন ১২৩: data-n = restore-পেলোড JSON (id/type/title/body/link/read/ts) —
+              ডিসমিস-টোস্টের 'বাতিল করুন' এই ফিল্ড দিয়েই POST /api/notifications/restore
+              করে (EJS-escape JSON.stringify — quote-নিরাপদ); হেডার-ড্রপডাউন ও
+              live.js paintList-এর সাথে অভিন্ন চুক্তি %>
+          <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" data-type="<%= n.type %>" data-g117="<%= gKeyOf117(n.type) %>" onclick="markRead('<%= n.id %>')" data-n="<%= JSON.stringify({ i: n.id, t: n.type, ti: n.title || '', b: n.body || '', l: n.link || '', r: n.is_read ? 1 : 0, ts: n.created_at || '' }) %>">
             <%# সেশন ১০৮: actor-avatar — হেডার-ড্রপডাউন (সেশন ১০২) ও একই শেপ; actor না থাকলে টাইপ-আইকন %>
             <% if (n.actor_id) { %>
               <div class="notif-page-icon <%= iconClass %> has-avatar"><img class="notif-avatar" src="<%= n.actor_avatar || ('/avatar/' + n.actor_id) %>" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-avatar');this.remove()"><i class="fas <%= _ico %>"></i></div>
@@ -98,10 +102,34 @@
       await fetch('/api/notifications/read/' + id, { method: 'POST' });
     }
     /* ── সেশন ১১৪: বিজ্ঞপ্তি-সরান (FB-প্যারিটি) — অ্যানিমেটেড-রিমুভ + কাউন্ট-সিঙ্ক;
-         শেষ-আইটেম সরলে সার্ভার-সত্যে (empty-state) রিলোড ── */
+         শেষ-আইটেম সরলে সার্ভার-সত্যে (empty-state) রিলোড
+       ── সেশন ১২৩: ডিসমিস-আন্ডু — data-n ক্যাপচার → lfUndoShow টোস্টে 'বাতিল করুন';
+         undo = POST /api/notifications/restore + একই-রো DOM-এ ফিরিয়ে-অ্যানিমেট +
+         unread-হলে চিপ/ব্যাজ +১; শেষ-আইটেম-রিলোড টোস্ট-সময় পর্যন্ত স্থগিত (undo-লে বাতিল) ── */
     (function () {
       var list = document.querySelector('.notif-page-list');
       if (!list) return;
+      function bnDigitsOf(n) {
+        var d = '০১২৩৪৫৬৭৮৯';
+        return String(n).replace(/[0-9]/g, function (x) { return d[+x]; });
+      }
+      function bumpChip(delta) {
+        var chip = document.querySelector('.notif-count-chip');
+        if (chip) {
+          var cur = parseInt(chip.textContent.trim().replace(/[০-৯]/g, function (d) { return '০১২৩৪৫৬৭৮৯'.indexOf(d); }), 10) || 0;
+          var left = Math.max(0, cur + delta);
+          if (left > 0) chip.textContent = bnDigitsOf(left) + ' টি নতুন';
+          else chip.remove();
+        }
+        /* হেডার-ব্যাজ সার্ভার-সত্য (session121-চুক্তি) */
+        fetch('/api/notifications/count', { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            var b = document.getElementById('notifBadge');
+            if (b && d && typeof d.unread === 'number') b.textContent = d.unread > 0 ? bnDigitsOf(d.unread) : '';
+          })
+          .catch(function () {});
+      }
       list.addEventListener('click', function (e) {
         var btn = e.target.closest('.notif-dismiss');
         if (!btn) return;
@@ -109,6 +137,10 @@
         var row = btn.closest('.notif-page-item');
         if (!row || row.dataset.dismissBusy) return;
         row.dataset.dismissBusy = '1';
+        /* সেশন ১২৩: restore-পেলোড ক্যাপচার (fetch-এর আগেই — রো-ডেটা এখানেই সত্য) */
+        var payload = null;
+        try { payload = JSON.parse(row.getAttribute('data-n') || 'null'); } catch (_) {}
+        var wasUnread = row.classList.contains('unread');
         fetch('/api/notifications/' + btn.dataset.dismiss + '/dismiss', { method: 'POST' })
           .then(function (r) { return r.json(); })
           .then(function (j) {
@@ -118,22 +150,57 @@
               row.classList.add('removing');
               row.style.height = '0px';
             });
+            var undoDone = false;
+            var pendingReload = null; /* সেশন ১২৩: শেষ-আইটেম-রিলোড টোস্ট-আয়ু পর্যন্ত স্থগিত */
             setTimeout(function () {
-              var wasUnread = row.classList.contains('unread');
-              row.remove();
-              var rest = list.querySelectorAll('.notif-page-item').length;
-              var chip = document.querySelector('.notif-count-chip');
-              if (chip && wasUnread) {
-                /* চিপ-টেক্সট বাংলা-সংখ্যায় ("২ টি নতুন") — parseInt-নিরাপদ রূপান্তর */
-                var bnDigits = '০১২৩৪৫৬৭৮৯';
-                var cur = parseInt(chip.textContent.trim().replace(/[০-৯]/g, function (d) { return bnDigits.indexOf(d); }), 10) || 0;
-                var left = Math.max(0, cur - 1);
-                if (left > 0) chip.textContent = String(left).replace(/[0-9]/g, function (d) { return bnDigits[+d]; }) + ' টি নতুন';
-                else chip.remove();
+              var rest = 0;
+              if (!undoDone) {
+                /* undo-হলে রো-অপসারণ করা হয় না — undo-ফাংশন নিজেই রো ফেরায় */
+                row.remove();
+                rest = list.querySelectorAll('.notif-page-item').length;
+                if (wasUnread) bumpChip(-1);
+                if (window.nftRecount117) window.nftRecount117();
+                if (!rest) {
+                  /* তালিকা-খালি → সার্ভার-সত্যে রিলোড, তবে undo-সুযোগ (৭সে) পর্যন্ত অপেক্ষা —
+                     undo হলে pendingReload-নিষ্ক্রিয় (undoDone-গার্ড) */
+                  pendingReload = setTimeout(function () { if (!undoDone) location.reload(); }, 7000);
+                }
               }
-              if (window.nftRecount117) window.nftRecount117();
-              if (!rest) location.reload();
             }, 260);
+            if (payload && window.lfUndoShow) {
+              var nextRef = row.nextSibling;
+              window.lfUndoShow({
+                message: 'বিজ্ঞপ্তি সরানো হয়েছে',
+                ms: 7000,
+                onUndo: function (after) {
+                  undoDone = true;
+                  fetch('/api/notifications/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payload)
+                  }).then(function (r) { return r.json(); }).then(function (j2) {
+                    if (j2 && j2.ok) {
+                      row.classList.remove('removing');
+                      row.style.height = '';
+                      row.removeAttribute('data-dismiss-busy');
+                      if (row.parentNode) row.parentNode.removeChild(row);
+                      if (nextRef && nextRef.parentNode === list) list.insertBefore(row, nextRef);
+                      else list.insertBefore(row, list.firstChild);
+                      requestAnimationFrame(function () { row.classList.add('restoring'); setTimeout(function () { row.classList.remove('restoring'); }, 350); });
+                      if (payload.r) { /* ছিল-অপঠিত → চিপ/ব্যাজ +১ */ bumpChip(1); }
+                      if (window.nftRecount117) window.nftRecount117();
+                    } else {
+                      if (window.showToast) showToast('বাতিল করা যায়নি', 'error');
+                    }
+                    after();
+                  }).catch(function () {
+                    if (window.showToast) showToast('বাতিল করা যায়নি', 'error');
+                    after();
+                  });
+                }
+              });
+            }
           })
           .catch(function () { row.removeAttribute('data-dismiss-busy'); });
       });

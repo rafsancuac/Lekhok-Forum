@@ -155,7 +155,7 @@
 .qa-answer-slot .cmt-replies{margin-top:10px;padding-left:32px;border-left:2px solid var(--lf-ui-border);display:flex;flex-direction:column;gap:8px}
 .qa-answer-slot .cmt-replies .cmt-item.fc-reply{margin-left:0}
 .qa-answer-slot .cmt-replies .cmt-item .fc-av{width:26px;height:26px}
-.qa-answer-slot .cmt-replies .cmt-item .fc-bubble{padding:7px 11px;background:var(--lf-brand-light,#eef7f3)}
+.qa-answer-slot .cmt-replies .cmt-item .fc-bubble{padding:7px 11px;background:var(--lf-brand-light)}
 .qa-answer-slot .cmt-replies .cmt-item .fc-body{font-size:.84rem}
 /* রিপ্লাই-কম্পোজার স্লট (qa-উত্তরের ভেতরে খোলা অবস্থায়) ব্রিদ-স্পেসিং */
 .qa-answer-slot .fc-reply-slot{margin-top:8px}
@@ -181,3 +181,23 @@
   .qa-answer-slot.opt-fresh,.qa-answer-slot.opt-fresh .fc-bubble{animation:none}
   .answer-form-wrap{transition:none}
 }
+
+/* ── session125: ডিসমিস-আন্ডু টোস্ট (lfUndoShow — undo-toast.js) ─────────────
+   FB-প্যারিটি: "বিজ্ঞপ্তি সরানো হয়েছে · বাতিল করুন" — হেডার-ড্রপডাউন ও
+   /notifications ফুল-পেজ উভয় সারফেসে একই কম্পোনেন্ট। টোকেন-শুধু (var(--lf-*)). */
+.lf-utoast{position:fixed;left:50%;bottom:22px;z-index:12000;display:flex;align-items:center;gap:10px;min-width:280px;max-width:min(92vw,480px);padding:12px 14px 14px;background:var(--lf-ui-surface);color:var(--lf-text-primary);border:1px solid var(--lf-ui-border);border-radius:var(--lf-radius-chip);box-shadow:0 8px 28px rgba(15,23,42,.18),0 2px 6px rgba(15,23,42,.08);opacity:0;transform:translateX(-50%) translateY(12px);transition:opacity .2s ease,transform .2s ease}
+.lf-utoast.lf-utoast-in{opacity:1;transform:translateX(-50%) translateY(0)}
+.lf-utoast.lf-utoast-out{opacity:0;transform:translateX(-50%) translateY(10px)}
+.lf-utoast-msg{font-size:.86rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lf-utoast-undo{border:0;background:transparent;color:var(--lf-social-blue);font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer;padding:5px 10px;border-radius:var(--lf-radius-chip);transition:background .14s ease,opacity .14s ease;flex-shrink:0}
+.lf-utoast-undo:hover{background:var(--lf-social-blue-light)}
+.lf-utoast-undo:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px}
+.lf-utoast-undo.is-busy{opacity:.55;cursor:wait}
+.lf-utoast-x{border:0;background:transparent;color:var(--lf-text-secondary);width:26px;height:26px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .14s ease,color .14s ease}
+.lf-utoast-x:hover{background:rgba(15,23,42,.06);color:var(--lf-text-primary)}
+.lf-utoast-x:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+/* অবশিষ্ট-সময় প্রগ্রেস-বার — JS দূরত্বে ms-অনুযায়ী transition-duration সেট করে */
+.lf-utoast-bar{position:absolute;left:14px;right:14px;bottom:5px;height:2px;border-radius:999px;background:var(--lf-social-blue);opacity:.35;transform-origin:left center;transform:scaleX(1)}
+@media (max-width:640px){.lf-utoast{left:12px;right:12px;transform:translateY(12px);min-width:0}.lf-utoast.lf-utoast-in{transform:translateY(0)}.lf-utoast.lf-utoast-out{transform:translateY(10px)}}
+@media (prefers-reduced-motion:reduce){.lf-utoast,.lf-utoast-bar{transition:none;transform:none}.lf-utoast.lf-utoast-in{opacity:1}}
+/* EOF-MARKER: session125-utoast */

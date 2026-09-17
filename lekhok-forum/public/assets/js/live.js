@@ -101,11 +101,15 @@
          আগের পেইন্ট এক-এঞ্চর-মার্কআপে ফেরত যেত — প্রতি-বেল-ওপেন রিফ্রেশে ডিসমিস-✕
          মুছে যেত (E2E-ধরা-বাগ: "stale-repaint" ছিল আসলে এই মার্কআপ-ড্রিফট)।
          ✕-আচরণ header.ejs-এর ডেলিগেটেড list121-লিসেনারে — পেইন্টেড-রোতেও স্বয়ংক্রিয়। */
-      return '<a href="' + esc(n.link || '/notifications') + '" class="notif-item ' + (n.is_read ? '' : 'unread') + '">' +
+      return '<a href="' + esc(n.link || '/notifications') + '" class="notif-item ' + (n.is_read ? '' : 'unread') + '"'
+        /* সেশন ১২৫: data-n restore-পেলোড — header.ejs-ক্যানোনিকাল-শেলের data-n-চুক্তির মিরর
+           (ড্রপডাউন-ডিসমিস-টোস্টের 'বাতিল করুন' AJAX-রেন্ডার-আইটেমেও কাজ করে) */
+        + ' data-n="' + esc(JSON.stringify({ i: n.id, t: n.type, ti: n.title || '', b: n.body || '', l: n.link || '', r: n.is_read ? 1 : 0, ts: n.created_at || '' })) + '">' +
         icoHtml +
         '<span class="notif-text">' +
         '<span class="notif-body">' + esc(n.body) + '</span>' +
-        '<span class="notif-time">' + esc(relTime(n.created_at)) + '</span>' +
+        /* সেশন ১২৫: data-ts-চুক্তি — LekhokRelTime AJAX-রিরেন্ডার-আইটেমেও প্রযোজ্য (header.ejs-প্যারিটি) */
+        '<span class="notif-time" data-ts="' + esc(n.created_at || '') + '">' + esc(relTime(n.created_at)) + '</span>' +
         (n.type === 'call' ? '<span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span>' : '') + /* সেশন ৯৭-মার্জ: মিসড-কল-চিপ (সার্ভার-রেন্ডারড ড্রপডাউনের সাথে অভিন্ন) */
         '</span>' +
         (n.is_read ? '' : '<span class="notif-dot" title="অপঠিত"></span>') +

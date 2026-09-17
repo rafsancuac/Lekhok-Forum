@@ -1846,8 +1846,16 @@ router.delete('/api/comments/:id', ensureLoggedIn, async (req, res) => {
     if (!c) return res.status(404).json({ error: 'not_found' });
     const isMod = /moderator|admin/.test(String(req.session.user.role || ''));
     if (c.author_id !== req.session.user.id && !isMod) return res.status(403).json({ error: 'forbidden' });
-    const kids = (await db.prepare('SELECT id FROM comments WHERE parent_id = ?').all(id)).map(k => k.id);
-    const del = [id].concat(kids);
+    /* সেশন ১২৩-বাগফিক্স: এক-লেভেল kids-কোয়েরি প্রতিস্থাপনে BFS-সাবট্রি-সংগ্রহ —
+       রিপ্লাই-অব-রিপ্লাই (session114-থ্রেড) থাকলে আগের সংস্করণ নাতি-রো অনাথ রেখে যেত
+       (parent_id মৃত-রোতে পয়েন্ট করা, comment_count-তেও গোনা)। সেশন ১০৪-র ডুপ্লিকেট
+       DELETE-হ্যান্ডলারের (নীচে, rebase-ইউনিয়ন-অক্সিডেন্টে জীবাশ্ম) BFS-লজিক এখানে মার্জড —
+       রেসপন্স-শেপ {ok, removed, total} অক্ষুণ্ণ (comment-tools.js-চুক্তি)। */
+    const _all123 = await db.prepare('SELECT id, parent_id FROM comments WHERE post_id = ?').all(c.post_id);
+    const _kids123 = {};
+    _all123.forEach(r => { (_kids123[r.parent_id] = _kids123[r.parent_id] || []).push(r.id); });
+    const del = [id];
+    for (let i = 0; i < del.length; i++) (_kids123[del[i]] || []).forEach(k => del.push(k));
     const ph = del.map(() => '?').join(',');
     await db.prepare(`DELETE FROM likes WHERE comment_id IN (${ph})`).run(...del);
     await db.prepare(`DELETE FROM comments WHERE id IN (${ph})`).run(...del);
@@ -1883,37 +1891,9 @@ router.post('/api/comments/:id', ensureLoggedIn, async (req, res) => {
   }
 });
 
-// ── সেশন ১০৪: মন্তব্য মুছে-ফেলা (লেখক নিজে অথবা মডারেটর/অ্যাডমিন) ────────────
-// DELETE /api/comments/:id — টপ-লেভেল মুছলে সরাসরি রিপ্লাইগুলোও যায় (BFS-সংগ্রহ);
-// likes-রো-পরিষ্কার + posts.comment_count সিঙ্ক (MAX(0, −n))।
-router.delete('/api/comments/:id', ensureLoggedIn, async (req, res) => {
-  const me = req.session.user;
-  const cid = parseInt(req.params.id, 10);
-  if (!Number.isInteger(cid) || cid <= 0) return res.status(404).json({ ok: false, error: 'not_found' });
-  try {
-    const row = await db.prepare('SELECT id, post_id, author_id FROM comments WHERE id = ?').get(cid);
-    if (!row) return res.status(404).json({ ok: false, error: 'not_found' });
-    const isStaff = /moderator|admin/.test(String(me.role || ''));
-    if (row.author_id !== me.id && !isStaff) return res.status(403).json({ ok: false, error: 'forbidden' });
-    // পোস্টের সব মন্তব্য এনে BFS-এ টার্গেট-সাবট্রি সংগ্রহ (রিপ্লাই-অব-রিপ্লাইসহ)
-    const all = await db.prepare('SELECT id, parent_id FROM comments WHERE post_id = ?').all(row.post_id);
-    const children = {};
-    all.forEach(r => { (children[r.parent_id] = children[r.parent_id] || []).push(r.id); });
-    const doomed = [cid];
-    for (let i = 0; i < doomed.length; i++) {
-      (children[doomed[i]] || []).forEach(k => doomed.push(k));
-    }
-    const ph = doomed.map(() => '?').join(',');
-    try { await db.prepare(`DELETE FROM likes WHERE comment_id IN (${ph})`).run(...doomed); } catch (_) {}
-    const del = await db.prepare(`DELETE FROM comments WHERE id IN (${ph})`).run(...doomed);
-    const deleted = (del && (del.changes ?? del.rows_affected)) || doomed.length;
-    await db.prepare('UPDATE posts SET comment_count = MAX(0, comment_count - ?) WHERE id = ?').run(deleted, row.post_id);
-    const post = await db.prepare('SELECT comment_count FROM posts WHERE id = ?').get(row.post_id);
-    res.json({ ok: true, deleted, total: post ? post.comment_count : 0 });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: 'server' });
-  }
-});
+/* সেশন ১২৩-অপসারণ: সেশন ১০৪-র ডুপ্লিকেট DELETE /api/comments/:id হ্যান্ডলার
+   (Express-রেজিস্ট্রেশন-অর্ডারে অগম্য dead-code — উপরের session105-হ্যান্ডলারে
+   BFS-লজিক মার্জ করা হয়েছে)। rebase-ইউনিয়ন-অ্যাক্সিডেন্টে জীবাশ্ম ছিল। */
 
 // সেশন ৯৩: কমেন্ট-লেখকের প্রদর্শন-নাম — pen_name-প্রধান (D1-নীতির মিরর)
 function displayName92(u) {
@@ -1972,6 +1952,44 @@ router.post('/api/notifications/:id/dismiss', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   const del = await db.prepare('DELETE FROM notifications WHERE id = ? AND user_id = ?').run(req.params.id, req.session.user.id);
   res.json({ ok: true, removed: del.changes > 0 });
+});
+
+// ── সেশন ১২৩: ডিসমিস-আন্ডু (restore) — FB-প্যারিটি "বাতিল করুন" টোস্ট-ব্যাকএন্ড ──
+// ক্লায়েন্ট dismiss-এর আগে রো-ফিল্ড (data-n JSON) ক্যাপচার করে; টোস্টের 'বাতিল'
+// চাপলে এই রুটে ফিরিয়ে দেয়। নিরাপত্তা: id ধনাত্মক-পূর্ণসংখ্যা + type হোয়াইটলিস্ট-প্যাটার্ন
+// + স্ট্রিং-ক্যাপ + শুধু নিজের user_id-তে ইনসার্ট (অন্যের নোটিফিকেশন তৈরি অসম্ভব) —
+// নিজের-অ্যাকাউন্টে ভুয়া-নোটিশ তৈরির ঝুঁকি self-harm মাত্র (localStorage-সমতুল্য)।
+// idempotent: id ইতিমধ্যে থাকলে existed:true (ডাবল-ক্লিক-নিরাপদ)।
+router.post('/api/notifications/restore', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'login' });
+  const b = (req.body && typeof req.body === 'object') ? req.body : {};
+  /* সেশন ১২৩-ফিক্স: data-n JSON-চুক্তির কম্প্যাক্ট-কী (i/t/ti/b/l/r/ts) প্রাথমিক —
+     লং-নাম (id/type/...) fallback (curl/টুল-কল-সামঞ্জস্য) */
+  const id = parseInt(b.id !== undefined ? b.id : b.i, 10);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ ok: false, error: 'bad_id' });
+  const type = String((b.type !== undefined ? b.type : b.t) || '').trim();
+  if (!/^[a-z][a-z_-]{0,23}$/.test(type)) return res.status(400).json({ ok: false, error: 'bad_type' });
+  const title = String((b.title !== undefined ? b.title : b.ti) || '').slice(0, 200);
+  const body = String((b.body !== undefined ? b.body : b.b) || '').slice(0, 300);
+  let link = String((b.link !== undefined ? b.link : b.l) || '').slice(0, 300);
+  if (link && !/^\/[^\s"']*$/.test(link) && !/^https?:\/\/[^\s"']*$/.test(link)) link = '';
+  const isRead = (b.is_read !== undefined ? b.is_read : b.r) ? 1 : 0;
+  const ts = String((b.created_at !== undefined ? b.created_at : b.ts) || '');
+  const hasTs = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?/.test(ts);
+  try {
+    const exists = await db.prepare('SELECT id FROM notifications WHERE id = ?').get(id);
+    if (exists) return res.json({ ok: true, existed: true });
+    if (hasTs) {
+      await db.prepare('INSERT INTO notifications (id, user_id, type, title, body, link, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(id, req.session.user.id, type, title, body, link, isRead, ts);
+    } else {
+      await db.prepare('INSERT INTO notifications (id, user_id, type, title, body, link, is_read) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(id, req.session.user.id, type, title, body, link, isRead);
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'server' });
+  }
 });
 
 router.get('/notifications/mark-all-read', async (req, res) => {

@@ -184,6 +184,39 @@ function scanHex(file, label) {
   });
 })();
 
+/* ── সেশন ১২৫: tokens-হেক্স-র্যাচেট (session113-⑤-এর CSS-লেয়ার; session124-এর tokensHexGuard-এর পরিপূরক) ───────────────────────
+   পুরো CSS-লেয়ারে হার্ডকোড-হেক্স বয়স্ক (legacy ~২.৮ হাজার) — এক-দিনে নিষিদ্ধ করা
+   অবাস্তব। র্যাচেট-নীতি: per-ফাইল হেক্স-গণনা tokens-hex-baseline.json-এ ফ্রিজ —
+   নতুন কোডে হেক্স **বাড়লে গার্ড ফেইল**; কমলে/সমান থাকলে গ্রিন। ধীরে-ধীরে রিফ্যাক্টরে
+   baseline নেমে আসবে। tokens.css নিজে (সত্য-উৎস) স্ক্যান-বহির্ভূত।
+   CLI: node scripts/guard-design-system.js --update-hex-baseline  → নতুন baseline লেখে */
+const CSS_DIR = path.join(ROOT, 'public', 'assets', 'css');
+const HEX_BASELINE = path.join(__dirname, 'tokens-hex-baseline.json');
+const HEX_RE = /#[0-9a-fA-F]{3,8}\b/g;
+function hexCounts() {
+  const counts = {};
+  for (const f of fs.readdirSync(CSS_DIR).filter(f => f.endsWith('.css'))) {
+    if (f === 'tokens.css') continue; /* সত্য-উৎস — এখানেই হেক্সের বৈধ-ঘর */
+    const src = fs.readFileSync(path.join(CSS_DIR, f), 'utf8');
+    counts[f] = (src.match(HEX_RE) || []).length;
+  }
+  return counts;
+}
+if (process.argv.includes('--update-hex-baseline')) {
+  fs.writeFileSync(HEX_BASELINE, JSON.stringify(hexCounts(), null, 2) + '\n');
+  console.log('[guard] tokens-hex-baseline.json আপডেট ✓ (র্যাচেট-নতুন-ভিত্তি)');
+} else if (fs.existsSync(HEX_BASELINE)) {
+  const _base123 = JSON.parse(fs.readFileSync(HEX_BASELINE, 'utf8'));
+  const _cur123 = hexCounts();
+  for (const f of Object.keys(_cur123)) {
+    const b = Object.prototype.hasOwnProperty.call(_base123, f) ? _base123[f] : 0;
+    if (_cur123[f] > b) {
+      console.error(`✗ tokens-hex-র্যাচেট: ${f} হেক্স-সংখ্যা ${b} → ${_cur123[f]} বেড়েছে — var(--lf-*) ব্যবহার করুন (হ্রাস করুন, বা সচেতন-হলে --update-hex-baseline)`);
+      fail++;
+    }
+  }
+}
+
 if (fail) {
   console.error(`\n[guard] ${fail}টি লঙ্ঘন — ডিজাইন-সিস্টেম ভাঙা (বিস্তারিত: lekhok-forum/PLANS.md "ডিজাইন-সিস্টেম" নোট)`);
   process.exit(1);

@@ -272,6 +272,36 @@ ckc "stat অজানা-id → নিরাপদ ok:true (নো-এক্স
 ck "stat non-numeric-id → 400" "400" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/resources/abc/stat" -H "Content-Type: application/json" -d '{}')"
 ck "GET stat → 404 (catch-all, 500-নয়)" "404" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/resources/1/stat")"
 
+
+echo "══ ২৫. সেশন ১২৫: কমেন্ট PUT/DELETE মালিকানা + BFS-নেস্টেড-ডিলিট + নোটিফ-restore ══"
+JAR25A=/tmp/jar_25a; JAR25B=/tmp/jar_25b; rm -f $JAR25A $JAR25B
+R=$(login $JAR25A /login testuser demo123); ck "s125 testuser লগইন" "/dashboard" "${R##* }"
+R=$(login $JAR25B /login ismail secret123); ck "s125 ismail লগইন" "/dashboard" "${R##* }"
+CT=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":3,"body":"rp125-top"}')
+TID=$(echo "$CT" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+CR=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":3,"body":"rp125-reply","parent_id":'"$TID"'}')
+RID=$(echo "$CR" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+CG=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":3,"body":"rp125-grand","parent_id":'"$RID"'}')
+GID=$(echo "$CG" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+if [ -n "$TID" ] && [ -n "$RID" ] && [ -n "$GID" ]; then PASS=$((PASS+1)); echo "  ✓ s125 থ্রেড-ত্রয়ী তৈরি"; else FAIL=$((FAIL+1)); echo "  ✗ s125 থ্রেড-ত্রয়ী ব্যর্থ"; fi
+ck "s125 PUT anon → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$TID" -H "Content-Type: application/json" --data '{"body":"x"}')"
+ck "s125 PUT অন্যের-কমেন্ট → 403" "403" "$(curl -s -b $JAR25B -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$TID" -H "Content-Type: application/json" --data '{"body":"x"}')"
+ck "s125 PUT নিজের-কমেন্ট → 200" "200" "$(curl -s -b $JAR25A -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$TID" -H "Content-Type: application/json" --data '{"body":"rp125-top-edited"}')"
+ck "s125 DELETE anon → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/comments/$TID")"
+ck "s125 DELETE অন্যের-কমেন্ট → 403" "403" "$(curl -s -b $JAR25B -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/comments/$TID")"
+DELJSON=$(curl -s -b $JAR25A -X DELETE "$BASE/api/comments/$TID")
+DELN=$(echo "$DELJSON" | grep -o '"removed":[0-9]*' | cut -d: -f2)
+ck "s125 DELETE নিজের-টপ → ok" "1" "$(echo "$DELJSON" | grep -c '"ok":true')"
+ck "s125 BFS removed=৩ (টপ+রিপ্লাই+নাতি)" "3" "$DELN"
+ORPH=$(curl -s "$BASE/api/comments?post_id=3" | grep -c "rp125-")
+ck "s125 BFS অনাথ-শূন্য (নাতিও গেছে)" "0" "$ORPH"
+ck "s125 restore anon → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/notifications/restore" -H "Content-Type: application/json" --data '{"id":992501,"type":"system"}')"
+ck "s125 restore bad-type → 400" "400" "$(curl -s -b $JAR25A -o /dev/null -w "%{http_code}" -X POST "$BASE/api/notifications/restore" -H "Content-Type: application/json" --data '{"id":992501,"type":"BAD TYPE"}')"
+R1=$(curl -s -b $JAR25A -X POST "$BASE/api/notifications/restore" -H "Content-Type: application/json" --data '{"id":992501,"type":"system","title":"rp125","body":"rp125-undo-test","link":"/notifications","is_read":0,"created_at":"2026-09-21 10:00:00"}')
+ck "s125 restore বৈধ → ok:true" "1" "$(echo "$R1" | grep -c '"ok":true')"
+R2=$(curl -s -b $JAR25A -X POST "$BASE/api/notifications/restore" -H "Content-Type: application/json" --data '{"id":992501,"type":"system","body":"rp125-undo-test"}')
+ck "s125 restore idempotent (existed)" "1" "$(echo "$R2" | grep -c '"existed":true')"
+ck "s125 ক্লিনআপ: dismiss removed:true" "1" "$(curl -s -b $JAR25A -X POST "$BASE/api/notifications/992501/dismiss" | grep -c '"removed":true')"
 echo ""
 echo "════════════════════════════════"
 echo "PASS=$PASS FAIL=$FAIL"

@@ -1253,3 +1253,15 @@ Work Log:
 Stage Summary:
 - QA-পেজের উত্তর/রিপ্লাই এখন ফিড/আর্টিকেলের মতোই তাৎক্ষণিক (৩-সারফেস-অপটিমিস্টিক-চুক্তি সম্পূর্ণ); tokens.css এখন গার্ড-লকড
 - **পরের-এজেন্ট: session125/126-সমান্তরাল-ল্যান্ডের পরে — **session129 থেকে**** — পরবর্তী-প্রথম-পছন্দ: reconcile-flash-মসৃণকরণ → crx-'শেষ-পড়া'-পিন → লাইভ-Turso-রিসেট (টোকেন-ধারী)
+Task ID: session129 (cron-r12 — sandbox web-68dcf7c4, "Project Status & Dev Focus")
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ 9390875→7ad5fb3-মাঝপথে-বিবর্তিত)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-অভিযান (BFS-ডিলিট-আবিষ্কার) → অনন্য-ফিচার (undo-toast + restore-API + hex-র্যাচেট + §25) → প্যারালাল-ইউনিয়ন (crx-ডুপ্লিকেট-প্রত্যাহার + ফলব্যাক-পোর্ট) + push
+- QA-ফেজ: ১৮-রুট-স্মোক + কনসোল-সুইপ + /dashboard-crx-ইন্সপেকশন — বাগ-শূন্য, তাই রোডম্যাপ-ফিচার-রাউন্ড
+- 🚨 বাগ-আবিষ্কার (কোড-অডিট): DELETE /api/comments/:id দ্বৈত-নিবন্ধন — session105 (লাইভ, এক-লেভেল) + session104 (BFS-জানা, অগম্য-জীবাশ্ম) → রিপ্লাই-অব-রিপ্লাই-ডিলিটে অনাথ-রো প্রমাণিত; BFS-মার্জ + জীবাশ্ম-অপসারণ
+- ফিচার ×৩: ① ডিসমিস-আন্ডু-টোস্ট (lfUndoShow + restore-API + data-n চুক্তি ×৩-সারফেস + শেষ-আইটেম-রিলোড-স্থগিত) ② hex-র্যাচেট-গার্ড (--update-hex-baseline CLI) ③ paintList data-n+data-ts-প্যারিটি
+- মাঝ-রাউন্ডে নিজের-ইমপ্লে বাগ ধরা: restore-রুট b.id বনাম data-n {i:} কী-মিসম্যাচ → কম্প্যাক্ট-কী-প্রাথমিক ফিক্স; আরও পরে pendingReload-রেস (শেষ-আইটেম-রিলোড ২৬০ms-এ undo-খুন) → ৭সে-স্থগিত-গার্ড
+- union-rebase: origin-এ cron-r11-এর crx-থাম্বনেইল (তাদের session123) pushকৃত → ক্যানোনিকল-গ্রহণ + আমার deterministic-ফলব্যাক-পোর্ট + তাদের ২×#fff র্যাচেট-ধরা → var(--lf-ui-surface); root-worklog UU-ইউনিয়ন; stage-2/3-দিক-গোটচা (grep মার্কার-ক্লাস দিয়ে নিশ্চিত)
+- টেস্ট-ব্লক-ট্রান্সপোর্ট-করাপশন ×১ (truncated duplicate-line) → bash -n বিসেক্টে ধরা → লিস্ট-নির্মাণ-পুনঃইনসার্ট
+- যাচাই (মার্জড-কোডে): role-policy ১৪৭/১৪৭ ✓ cursor ২৬/২৬ ✓ guard ✓ E2E undo ×৩-সারফেস+DB-সত্য ✓ crx-থাম্ব ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ ✓
+- পুশ-কৃত: feat(session129) — undo-toast.js (নতুন), tokens-hex-baseline.json (নতুন), social.js (BFS+restore), guard-design-system.js (র্যাচেট), test-role-policy.sh (§25), notifications.ejs/header.ejs/live.js (data-n), shared.css (utoast-ব্লক), continue-reading.js (ফলব্যাক-পোর্ট), dashboard.css (#fff→টোকেন)
+- পরবর্তী: og-default-বিরোধী data-cover-গার্ড · dropdown reltime-রি-পেইন্ট · র্যাচেট-বেসলাইন-হ্রাস (admin.css-৪২৬)

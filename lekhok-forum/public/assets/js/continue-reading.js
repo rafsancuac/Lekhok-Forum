@@ -40,7 +40,10 @@
       var it = m[id];
       /* ti/u-বিহীন পুরনো-এন্ট্রি (সেশন-১১২-এর আগের) বাদ — টাইটেল ছাড়া সারি আঁকা যায় না */
       if (it && it.ti && it.u && it.r > 0.05 && it.r < 0.95) {
-        arr.push({ id: id, r: +it.r || 0, t: +it.t || 0, ti: String(it.ti), u: String(it.u), c: String(it.c || '') });
+        /* session125-ডেল্টা: c-বিহীন এন্ট্রিতে ডিটারমিনিস্টিক /img/cover/crx<id> ফলব্যাক —
+           routes/cover.js যেকোনো seed-এ সাইট-লোকাল SVG-আর্ট (প্রতি-লেখায় স্থায়ী-রঙ,
+           broken/আইকন-শূন্য)। data-cover-থাকলে সেটাই প্রাধান্য (session123-চুক্তি)। */
+        arr.push({ id: id, r: +it.r || 0, t: +it.t || 0, ti: String(it.ti), u: String(it.u), c: String(it.c || ('/img/cover/crx' + id + '/160/160')) });
       }
     });
     arr.sort(function (a, b) { return b.t - a.t; });
