@@ -937,6 +937,7 @@
         }).then(function (r) { return r.json(); }).then(function (j) {
           if (j && j.ok) {
             bodyEl.innerHTML = j.bodyHtml;
+            bodyEl.setAttribute('data-raw', val); /* session113-ফিক্স: স্টেল-প্রিফিল — দ্বিতীয়-সম্পাদনায় নতুন-রক টেক্সটই দেখুক */
             var ed = item.querySelector('.fc-edited');
             if (!ed) { ed = document.createElement('span'); ed.className = 'fc-edited'; ed.textContent = 'সম্পাদিত'; bodyEl.parentNode.appendChild(ed); }
             box.remove(); bodyEl.hidden = false;

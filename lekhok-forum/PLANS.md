@@ -1115,3 +1115,37 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 **E2E:** role-policy ১০৭/১০৭ (ফ্রেশ-সার্ভার) ✓ calls ৫৪/৫৪ ✓ cursor ২২/২২ ✓ guard:design ✓ ১১-পেজ কনসোল-০ + 390px-০ ✓ মিনি-বাবল ৪-ভ্যারিয়েন্ট (me/them/গ্রুপ/ভয়েস) স্ক্রিনশট ✓ ডিসমিস ownership (অন্যের-সারি removed:false) ✓
 
 **পরবর্তী-সুপারিশ:** হেডার-ড্রপডাউন বিজ্ঞপ্তিতেও dismiss (main.js-রেন্ডারেড — আলাদা-রাউন্ড) · মিনি-বাবলে unread-অবস্থায় ডট-প্রিফিক্স · continue-reading 'সব দেখুন' পূর্ণ-তালিকা-পেজ (session112-প্রস্তাব) · qa-top-answer-chip AJAX-স্থায়িত্ব
+## Cross-Agent Note: Session 113 — qa-উত্তরে ক্যানোনিকাল CommentItem + chip/noReply-প্যারাম + cursor-টেস্ট-রোবাস্টনেস (১৮ সেপ্টেম্বর ২০২৬)
+
+**প্রেক্ষাপট:** QA-স্যুইপ বাগ-শূন্য (role-policy 107/107 + calls 54/54; cursor ১-ফেইল = env-artifact) → session105-এর শেষ-অবশিষ্ট সুপারিশ ① (qa-single-উত্তরে CommentItem) বাস্তবায়ন + টেস্ট-রোবাস্টনেস।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (সব এজেন্টের জন্য):**
+- **CommentItem.ejs-এ ২-নতুন backward-compatible-প্যারাম:** ① `chip` {label, icon?, title?} — বাবলের ভেতরে লেখক-নামের পরে ছোট-ব্যাজ (qa 'শীর্ষ উত্তর'-র মতো) ② `noReply: true` — 'উত্তর'-বাটন hidden। **flat-list পেজে (রিপ্লাই-রেন্ডার-পথ নেই এমন) noReply অবশ্যই দিন** — নইলে রিপ্লাই POST হয়ে অদৃশ্য হয়ে যায় (গোপন-ডেটা-এন্ট্রি-ফাঁদ)।
+- **qa-single এখন ক্যানোনিকাল:** উত্তর = CommentItem (`.fc-item.cmt-item`); লিগ্যাসি `.answer-item/.answer-sidebar` মার্কআপ আর রেন্ডার হয় না (CSS রয়ে গেছে, ক্ষতিকর নয়)। উত্তর-ফিল্ড-চুক্তি: bodyHtml=a.html (markdown-lite), reaction=a.reaction (getReactionSummary — {counts,total,mine} সরাসরি-ম্যাপ)।
+- **উত্তর-কাউন্টার-চুক্তি:** h2-তে `.qa-answer-count`-স্প্যান + `.answers-all-deleted`-নোট (hidden) — ডিলিট-সিঙ্ক qa-single-এর inline MutationObserver করে (fc-item-রিমুভ → বাংলা-সংখ্যা-হ্রাস); নতুন-উত্তর-অ্যাড-পাথ যোগলে এই-হুক আপডেট করুন।
+- **shared.css session113-ব্লক:** .cmt-item-chip + .answers-section .fc-item-প্যারিটি (44px/34px-অ্যাভাটার) + focus-visible + 640px + reduced-motion — নতুন-চিপ-স্টাইল এখানেই, অন্যত্র ডুপ্লিকেট নয়।
+
+**🐛 shared-ইঞ্জিন-ফিক্স (comment-tools.js):** ইনলাইন-এডিট-সেভে `data-raw` আপডেট-হীনতা → দ্বিতীয়-সম্পাদনায় পুরনো-টেক্সট-প্রিফিল। ফিক্স: সেভ-সাকসেসে `bodyEl.setAttribute('data-raw', val)` — ফিড/আর্টিকেল/qa সব-সারফেসে প্রযোজ্য।
+
+**cursor-টেস্ট-রোবাস্টনেস:** verify-session107-cursor.js টাই-ব্যাচ ২৬→৩৫ (পেজ-সাইজ ৩০-এর ভেতরে ঢুকে pages:1 ফল্স-ফেইল এড়াতে; ৩৫>৩০ ⇒ ≥২-পেজ-প্রমাণ DB-স্টেট-নিরপেক্ষ)। ভবিষ্যৎ-টেস্ট-লেখকের জন্য নীতি: **বহু-পেজ-অ্যাসার্শনে ব্যাচ-সাইজ > পেজ-সাইজ-এর সর্বোচ্চ-সম্ভাব্য-মান ধরুন**।
+
+**QA-সিড-চুক্তি-স্পষ্টীকরণ:** role-policy-র সম্পূর্ণ 107/107-র জন্য **দুই-সিড-ই-লাগে** — `seed-qa-users.js` (ইউজার+পাসওয়ার্ড) **এবং** `seed-test-users.js` (testadmin→role=admin + moderator→user_mgmt-scope)। শুধু-প্রথমটা দিলে 80/107 (ডকুমেন্টেড-বেসলাইন) — ফেইল-নয়, সিড-অসম্পূর্ণ।
+
+**E2E-প্রমাণ:** রেন্ডার-গঠন ✓ লাইক/প্যালেট→ব্যাজ-লাইভ ✓ ইনলাইন-এডিট(মার্কডাউন-পুনঃরেন্ডার+সম্পাদিত) ✓ data-raw-প্রিফিল ✓ ডিলিট→কাউন্টার-০+নোট ✓ গেস্ট-ভিউ (চিপ+ব্যাজ-দৃশ্যমান, প্যালেট/৩-ডট-অনুপস্থিত) ✓ ডেস্কটপ+390px-০ ✓ কনসোল-০ ✓ role-policy 107/107 + calls 54/54 + cursor 22/22 ✓ guard:design ✓ brace-depth-০ ✓
+
+**পরবর্তী-সুপারিশ:** ① role-policy-তে comment-API-চেক (PUT/DELETE 403/404-পাথ — session105-সুপারিশ-বহুল) ② tokens.css-হার্ডকোড-হেক্স-স্ক্যান guard-এ ③ qa-তে 'উত্তর লিখুন'-কম্পোজারে FB-স্টাইল অটো-গ্রো + ctrl+enter ④ crx-উইজেট 'সব দেখুন'-পেজ ⑤ notifications ফিল্টার-ট্যাব (type-ভিত্তিক)
+
+### ⚠️ Session 113-পোস্ট-মার্জ-সংশোধন: qa-ক্যানোনিকালাইজেশনে সমান্তরাল-ডুপ্লিকেট — session114-সংস্করণ ক্যানোনিকাল (১৮ সেপ্টেম্বর ২০২৬)
+
+push-রেস-এ abhi-asol: উপরের session113-নোট লেখার সময় অজানা ছিল — একজন প্যারালাল-এজেন্ট (লেবেল "সেশন ১১৪", তাদের CSS-কমেন্টেও "session113" — লেবেল-রেস আবার) **একই কাজ qa-single-এ করেছে, থ্রেডেড-উত্তরসহ আরও সমৃদ্ধভাবে**: replies113-কোয়েরি + compact CommentItem + ক্যানোনিকাল CommentComposer (রিচ-এডিটর + AJAX + no-JS noscript-ফলব্যাক) + comments-total-হুক + qa-answers-list/slot-র‍্যাপার। session105-প্রেসিডেন্সি ও পূর্ববর্তী-প্রত্যাহার-রীতি অনুযায়ী **তাদের qa-single.ejs-ই ক্যানোনিকাল** — union-মার্জে সেটাই গৃহীত।
+
+**প্রত্যাহৃত (আমার session113 থেকে):** qa-single.ejs-এডিট (flat-list + noReply-পাথ — থ্রেডেড-সংস্করণে অপ্রাসঙ্গিক, রিপ্লাই-বাটন এখন কাজ করে), .answers-section/.answers-all-deleted CSS-রুল, MutationObserver-কাউন্টার-সিঙ্ক-স্ক্রিপ্ট।
+
+**অনন্য-রক্ষিত (union-এ টিকেছে, সবার-লাভ):**
+1. **CommentItem.ejs-প্যারাম ×২ (backward-compatible):** `chip` {label,icon?,title?} (বাবলে ছোট-ব্যাজ — ভবিষ্যৎ-পেজের জন্য ক্যানোনিকাল) + `noReply` (flat-list পেজে নেস্টেড-উত্তর-ফাঁদ-বন্ধ — রিপ্লাই-রেন্ডার-পথ-নেই এমন যেকোনো পেজে বাধ্যতামূলক-চিন্তা)
+2. **🐛 comment-tools.js data-raw-ফিক্স:** এডিট-সেভ-সাকসেসে `bodyEl.setAttribute('data-raw', val)` — দ্বিতীয়-সম্পাদনায় স্টেল-প্রিফিল-বাগ (ফিড/আর্টিকেল/qa সব-সারফেস)
+3. **cursor-টেস্ট-রোবাস্টনেস:** টাই-ব্যাচ ২৬→৩৫ (পেজ-সাইজ-৩০-ওভারফ্লো-গ্যারান্টি) → 22/22
+4. **shared.css session113-খ-ব্লক:** .cmt-item-chip + cmt-item focus-visible-রিং + 640px-চিপ + reduced-motion (তাদের qa-থ্রেড-ব্লকের সাথে সহ-অস্তিত্ব; brace-depth-০)
+5. **QA-সিড-চুক্তি-স্পষ্টীকরণ:** role-policy 107/107 = seed-qa-users + seed-test-users **উভয়ে**
+
+**ভবিষ্যৎ-এজেন্টের জন্য:** qa-উত্তর-থ্রেডের কনট্র্যাক্ট = session114-এর (social.js answerReplies113 + qa-answer-slot + comments-total); chip/noReply-প্যারাম ব্যবহারের প্রয়োজন হলে CommentItem.ejs-হেডার-ডকুমেন্টেশন দেখুন। **লেবেল-রেস-প্রতিকার:** এ-রাউন্ডের পরে নতুন-এজেন্ট session117 থেকে (সর্বোচ্চ+১)।

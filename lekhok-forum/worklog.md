@@ -855,3 +855,24 @@ Task: অবস্থা-মূল্যায়ন + agent-browser QA → প�
 - টেস্ট: §১৫ সেলফ-সিড + login()-csrf-রিট্রাই; role-policy ১০৭/১০৭ · calls ৫৪/৫৪ · cursor ২২/২২ · guard গ্রিন
 - QA-স্টেট-রিপেয়ার: testadmin/testuser seed-অবস্থায় ফেরানো; ফিড-গভীরতা ৮-ডেমো-পোস্টে পুনঃস্থাপিত (cursor-চেইন ≥২-পেজ)
 - বিস্তারিত: PLANS.md Session-114 Cross-Agent Note + PROJECT.md Changelog
+---
+Task ID: session-113 (সেশন ১১৩ — cron webDevReview রাউন্ড)
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ 9e47c98 থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ/স্টেবল-বিচার → স্বাধীন-ফোকাস: session105-এর শেষ-অবশিষ্ট সুপারিশ ① qa-single উত্তর-কার্ড CommentItem-ক্যানোনিকালাইজেশন + cursor-টেস্ট-রোবাস্টনেস + স্টাইলিং-পলিশ
+
+Work Log:
+- **QA-ফেজ:** ১৪-পেজ স্মোক ২০০ (302=অথ-গেট সঠিক; /lekhok-home→404 সঠিক — হোম=/) + guard:design গ্রিন + role-policy **107/107** (গোটচা: সম্পূর্ণ-গ্রিনে `seed-test-users.js`-ও লাগে — testadmin-কে role=admin + moderator-কে user_mgmt-scope দেয়; seed-qa-users একা দিলে 80/107) + calls-E2E **54/54** (স্ক্রিপ্ট-নাম verify-session93-calls.js, আর্গ http://localhost:8080) + cursor-E2E 20/21 → ১-ফেইল তদন্ত
+- **cursor-ফেইল-রুট-কজ (env-artifact, কোড-বাগ নয়):** টেস্ট ২৬-পোস্ট বানায় কিন্তু পেজ-সাইজ ৩০ — পরিষ্কার-DB-তে (আগের-রানের ক্লিনআপ-পরবর্তী) সব এক-পেজে → pages:1 ফল্স-ফেইল। **ফিক্স: টেস্ট-রোবাস্টনেস ২৬→৩৫ পোস্ট** (৩৫>৩০ ⇒ ≥২-পেজ সব-সময়) → re-run **22/22 ALL GREEN**
+- **ব্রাউজার-QA:** হোম/লগইন(ismail)/ড্যাশ/QA-ফ্লো (প্রশ্ন-তৈরি→উত্তর)/notifications — কনসোল-০ এরর-০; **সুন্দর-আবিষ্কার:** সার্ভার-ডাউনে সার্ভিস-ওয়ার্কার মার্জিত অফলাইন-পেজ দেখায় (গ্রেসফুল-ডিগ্রেডেশন কাজ করছে)
+- **① CommentItem-এক্সটেনশন (backward-compatible ×২):** `chip` {label,icon?,title?} — বাবলে ছোট-ব্যাজ; `noReply` — 'উত্তর'-বাটন hidden (qa flat-list প্যারাডাইমে নেস্টেড-উত্তর-ফাঁদ-বন্ধ: উত্তর POST হলেও রেন্ডার-পথ নেই)
+- **② qa-single.ejs:** লিগ্যাসি .answer-item.card-লুপ → ক্যানোনিকাল `include CommentItem` (bodyHtml=a.html, reaction=a.reaction — getReactionSummary-শেপ সরাসরি-ম্যাপ); শীর্ষ-উত্তর chip=idx-0 && like_count>0; গেস্ট-প্যারিটি আপগ্রেড (আগে স্ট্যাটিক-হার্ট → এখন cmt-badge-কাউন্ট); h2-কাউন্টে .qa-answer-count-হুক + MutationObserver-ডিলিট-সিঙ্ক (fc-item-remove → কাউন্ট-হ্রাস বাংলা-সংখ্যায় + শূন্যে 'সব উত্তর মুছে ফেলা হয়েছে' নোট)
+- **③ shared.css session113-ব্লক (EOF + EOF-MARKER):** .cmt-item-chip (brand-light/brand-primary) + answers-section .fc-item-স্পেসিং/44px-অ্যাভাটার/overflow-wrap + .answers-all-deleted + focus-visible-রিং + 640px + reduced-motion; comment-stripped brace-depth ০ ✓
+- **④ 🐛 shared-ইঞ্জিন-বাগ-ফিক্স (comment-tools.js):** এডিট-সেভ-সাকসেসে data-raw আপডেট হতো না → দ্বিতীয়-সম্পাদনায় স্টেল-প্রিফিল। ফিক্স: bodyEl.setAttribute('data-raw', val) — সব ক্যানোনিকাল-সারফেস (ফিড/আর্টিকেল/qa) লাভবান
+- **E2E (agent-browser, qa/5-টেস্ট-পোস্টে):** রেন্ডার-গঠন (fc-item/chip-কন্ডিশনাল/badge-hidden/replyHidden) ✓ লাইক→badge 👍১+is-mine ✓ প্যালেট-love→❤️১ ✓ ইনলাইন-এডিট→session113-টেক্সট+<strong>-মার্কডাউন+সম্পাদিত ✓ data-raw-প্রিফিল-ফিক্স ✓ ৩-ডট-ডিলিট→element-remove+কাউন্ট-০+নোট ✓ tanvir-react→guest-curl-এ চিপ+ব্যাজ-১ ✓ ডেস্কটপ+390px-স্ক্রিনশট+overflow-০ ✓ কনসোল-০ ✓
+- **রিগ্রেশন-পোস্ট-ইমপ্ল:** role-policy 107/107 + calls 54/54 + cursor 22/22 (৩৫-পোস্ট) — সব-গ্রিন; টেস্ট-পোস্ট ক্লিনআপ (owner-HTTP-delete)
+- **🚨 পরিবেশ-গোটচা (পুনঃপ্রমাণিত ×৩):** স্যান্ডবক্সে ব্যাকগ্রাউন্ড-সার্ভার ইনভোকেশন-শেষে/মাঝে নীরবে মরে — মাল্টি-স্টেপ-ব্রাউজার-ফ্লো প্রতি-ইনভোকেশনে ফ্রেশ-বুট+টাইট-চেইনে চালান; মৃত্যু-লক্ষণ = agent-browser-এ 'This site can't be reached'/অফলাইন-পেজ + curl-000। বুট-হেল্পার প্যাটার্ন: /home/z/my-project/download/lf-boot.sh (health-retry)
+
+Stage Summary:
+- **session105-ডিজাইন-সিস্টেমের শেষ-অবশিষ্ট সুপারিশও সম্পন্ন** — qa উত্তর এখন ফিড/আর্টিকেলের সাথে এক-মার্কআপ-এক-ইঞ্জিন: হোভার-প্যালেট, কোণা-ব্যাজ, ৩-ডট (সম্পাদনা/মুছুন/রিপোর্ট) qa-তেও; CommentItem-এ chip/noReply-প্যারাম নতুন-ইন্টিগ্রেশন-পয়েন্ট
+- পরবর্তী-প্রার্থী: ① role-policy-তে comment-API (PUT/DELETE 403/404) চেক ② tokens.css-হার্ডকোড-হেক্স-স্ক্যান guard-এ ③ crx-উইজেট 'সব দেখুন' ④ qa-উত্তরে ভোট-স্টাইল সর্টিং (like_count DESC আছেই — UI-ইন্ডিকেটর) ⑤ notifications ফিল্টার-ট্যাব
+- **[push-রেস-সংশোধন]:** প্যারালাল session114-এজেন্ট qa-single-কে থ্রেডেড-উত্তর+CommentComposer-সহ ক্যানোনিকালাইজ করেছে → তাদের সংস্করণ গৃহীত (union-মার্জ), আমার qa-single-এডিট+observer+answers-section-CSS প্রত্যাহৃত; অনন্য-রক্ষিত: CommentItem chip/noReply + data-raw-ফিক্স + cursor ২৬→৩৫ + chip/focus-CSS। PLANS-সংশোধন-নোট দেখুন।

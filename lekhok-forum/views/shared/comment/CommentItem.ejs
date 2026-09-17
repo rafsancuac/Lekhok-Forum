@@ -17,11 +17,17 @@
     link  (ঐ) পোস্ট-লিংক (কনটেক্সট)
     user  (ঐ) লগইন-ইউজার (প্যারেন্ট-স্কোপে থাকলে সেটাই)
     compact (ঐ) রিপ্লাই-মোড (ছোট অ্যাভাটার)
+    chip  (ঐ) {label, icon?, title?} — বাবলে ছোট-ব্যাজ (যেমন qa-র 'শীর্ষ উত্তর',
+          session113; অপরিবর্তিত-থাকলে কিছু আঁকে না — backward-compatible)
+    noReply (ঐ) 'উত্তর' বাটন-বিহীন মোড (qa-উত্তরের মতো flat-list প্যারাডাইমে —
+          নেস্টেড-উত্তর কোথাও রেন্ডার হয় না এমন পেজে ফাঁদ-বন্ধ, session113)
   ═══════════════════════════════════════════════════════════════════════════ %>
 <%
   var _me = (typeof user !== 'undefined') ? user : null;
   var _link = (typeof link !== 'undefined' && link) ? link : '';
   var _compact = (typeof compact !== 'undefined') && !!compact;
+  var _chip = (typeof chip !== 'undefined' && chip && chip.label) ? chip : null;
+  var _noReply = (typeof noReply !== 'undefined') && !!noReply;
   var _rx = c.reaction || { counts: {}, mine: null, total: 0 };
   var _rxMeta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
   var _rxLabels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ', angry: 'রাগ' };
@@ -32,7 +38,7 @@
   <img class="fc-av<%= _compact ? ' small' : '' %>" src="<%= c.avatar_url || ('/avatar/' + c.author_id) %>" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
   <div class="fc-main">
     <div class="fc-bubble">
-      <a class="fc-author" href="/profile/<%= c.username %>"><%= _cName %></a><% if (c.pen_name && c.full_name) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %>
+      <a class="fc-author" href="/profile/<%= c.username %>"><%= _cName %></a><% if (c.pen_name && c.full_name) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %><% if (_chip) { %><span class="cmt-item-chip" title="<%= _chip.title || _chip.label %>"><% if (_chip.icon) { %><i class="fas <%= _chip.icon %>"></i> <% } %><%= _chip.label %></span><% } %>
       <div class="fc-body" data-raw="<%= c.body %>"><%- c.bodyHtml || '' %></div>
       <% if (c.edited || c.edited_at) { %><span class="fc-edited">সম্পাদিত</span><% } %>
       <%# রুল-২②: বাবলের নিচের ডান কোণায় গোল রিঅ্যাকশন-কাউন্ট-ব্যাজ %>
@@ -50,7 +56,7 @@
             <% }); %>
           </span>
         </span>
-        <button type="button" class="fc-act cmt-reply-btn" data-reply-to="<%= c.id %>" data-reply-name="<%= _cName %>">উত্তর</button>
+        <button type="button" class="fc-act cmt-reply-btn" data-reply-to="<%= c.id %>" data-reply-name="<%= _cName %>"<% if (_noReply) { %> hidden<% } %>>উত্তর</button>
       <% } %>
     </div>
     <%# রুল-২①: হোভারে ডানে ৩-ডট — pm-ইঞ্জিন রিইউজ (কমেন্ট-এডিট/ডিলিট/রিপোর্ট) %>

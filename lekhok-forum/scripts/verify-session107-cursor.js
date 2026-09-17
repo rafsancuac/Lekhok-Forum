@@ -87,17 +87,19 @@ function lastArticleId(html) {
     const lr = await req(s, 'POST', '/login', { username: 'ismail', password: 'secret123' });
     check('লগইন ismail', [200, 302, 303].includes(lr.status) && !(lr.json && lr.json.error === 'login'), { status: lr.status });
 
-    /* ── ১. টাই-ব্যাচ: ২৬-টেস্ট-পোস্ট (একই-সেকেন্ড — টাই-হ্যান্ডলিং পরীক্ষা) ── */
-    console.log('\n— ২৬-পোস্ট টাই-ব্যাচ (API quick) —');
+    /* ── ১. টাই-ব্যাচ: ৩৫-টেস্ট-পোস্ট (একই-সেকেন্ড — টাই-হ্যান্ডলিং পরীক্ষা)।
+          session113-রোবাস্টনেস: আগে ২৬ ছিল — খালি/পরিষ্কার-DB-তে পেজ-সাইজ-৩০-এর
+          ভেতরে ঢুকে যায় (pages:1 ফল্স-ফেইল); ৩৫ > ৩০ ⇒ ≥২-পেজ সব-সময় গ্যারান্টি ── */
+    console.log('\n— ৩৫-পোস্ট টাই-ব্যাচ (API quick) —');
     let apiOk = 0;
-    for (let i = 1; i <= 26; i++) {
+    for (let i = 1; i <= 35; i++) {
       const r = await req(s, 'POST', '/api/articles/quick', {
         title: MARK + ' ' + String(i).padStart(2, '0'),
         body: 'কার্সার-পলিশ E2E পোস্ট #' + i + ' — টেস্ট-শেষে মুছে ফেলা হবে।'
       });
       if (r.json && r.json.ok && r.json.id) { created.push(r.json.id); apiOk++; }
     }
-    check('২৬/২৬ quick-পোস্ট সৃষ্টি', apiOk === 26, { apiOk });
+    check('৩৫/৩৫ quick-পোস্ট সৃষ্টি', apiOk === 35, { apiOk });
 
     /* ── ২. প্রথম-পেজ + data-cursor ── */
     console.log('\n— প্রথম-পেজ + কার্সার-মার্কআপ —');
@@ -140,10 +142,10 @@ function lastArticleId(html) {
       return true; // নিচের টাই-চেকে প্রমাণিত হয় (টাইটেল-ভিত্তিক)
     })(), {});
 
-    /* ── ৪. টাই-হ্যান্ডলিং: ২৬-মার্ক-টাইটেল পেজ-১-HTML-এ সব আছে? ── */
+    /* ── ৪. টাই-হ্যান্ডলিং: মার্ক-টাইটেল পেজ-১-HTML-এ পর্যাপ্ত আছে? (≥২৬ = সেফ-মার্জিন) ── */
     console.log('\n— টাই-হ্যান্ডলিং —');
     const page1Titles = (d1.body.match(new RegExp(MARK + ' [০-৯0-9]{2}', 'g')) || []).length;
-    check('২৬-টাই-পোস্টই পেজ-১-এ (সর্বশেষ ২৬)', page1Titles >= 26, { page1Titles });
+    check('টাই-পোস্ট পেজ-১-এ ≥২৬ (৩৫-ব্যাচ-পরবর্তী পূর্ণ-পেজ)', page1Titles >= 26, { page1Titles });
 
     /* ── ৫. অ্যান্টি-ড্রিফট: মাঝ-পথে নতুন-পোস্ট ঢোকালেও পুরনো-কার্সারে পরের পেজ অপরিবর্তিত ── */
     console.log('\n— অ্যান্টি-ড্রিফট (কার্সার বনাম OFFSET প্যারিটি) —');

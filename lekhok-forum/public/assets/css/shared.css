@@ -125,3 +125,18 @@
 .mnp-bubble--me .mnp-text{color:var(--lf-ui-surface);font-weight:600}
 .conv-item.is-muted .mnp-bubble{opacity:.55;box-shadow:none}
 @media (prefers-reduced-motion: reduce){.mnp-bubble{transition:none}}
+/* ── session113-খ: CommentItem chip-প্যারাম-স্টাইল + অ্যাক্সেসিবিলিটি ─────────
+   [union-মার্জ: session114-থ্রেডেড-এজেন্টের qa-ব্লক ক্যানোনিকাল গৃহীত; আমার
+   answers-section/answers-all-deleted-রুল প্রত্যাহৃত (তাদের সংস্করণে অপ্রাসঙ্গিক)।
+   chip-প্যারাম ভবিষ্যৎ-পেজের জন্য ক্যানোনিকাল — CommentItem.ejs-ডকুমেন্টেশন দেখুন] */
+.cmt-item-chip{display:inline-flex;align-items:center;gap:3px;background:var(--lf-brand-light);color:var(--lf-brand-primary);border-radius:var(--lf-radius-chip);padding:1px 8px;font-size:.66rem;font-weight:800;line-height:1.5;white-space:nowrap;vertical-align:1px}
+.cmt-item-chip .fas{font-size:.6rem}
+.cmt-item .fc-act:focus-visible,.cmt-item .pm-btn:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px;border-radius:var(--lf-radius-chip)}
+@media (max-width: 640px){
+  .cmt-item-chip{font-size:.62rem;padding:1px 6px}
+}
+@media (prefers-reduced-motion: reduce){
+  .cmt-item-chip{transition:none;animation:none}
+}
+
+/* EOF-MARKER: session113+113-খ */
