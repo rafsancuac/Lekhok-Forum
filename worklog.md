@@ -611,3 +611,41 @@ Stage Summary:
 - কমিট: (নিচে git-log দেখুন) — PROJECT.md-তে সেশন ১০০-খ entry, PLANS.md-তে ক্রস-এজেন্ট নোট
 - যাচাই: কার্ড-টাইপ pdf6/audio3/doc4/image2/video2/link2 ✓, অডিও-টগল ✓, ভিডিও-এমবেড-মোডাল ✓, লাইটবক্স open/close/backdrop ✓, stat লাইভ-কাউন্টার (১→২ DOM-আপডেট) ✓, dedup ✓, PDF-ট্যাব XTransformPort-সহ ✓, কনসোল-০ ✓
 - শেখা: multipart CSRF-এ body দেখা যায় না (query _csrf প্যাটার্ন); sandbox-এ সার্ভার+টেস্ট এক-ইনভোকেশনে; ব্যাকগ্রাউন্ড প্রসেস মরে যায়
+Task ID: user-fix-102 (সেশন ১০২ — যোগাযোগ-পেজ ম্যাপ-ফিক্স ও রিডিজাইন)
+Agent: Z.ai Contact-Page Agent
+Task: যোগাযোগ পেজের ① গুগল-ম্যাপ না-দেখানো ② 'ক্যাম্পাস তথ্য' কার্ড-ডিজাইন ③ 'বিশ্ববিদ্যালয় সম্পর্কিত তথ্য'/'যাতায়াত'/'জরুরি যোগাযোগ' সাবসেকশনের প্যাডিং ও ডিজাইন — পূর্ণাঙ্গ সমাধান + ফ্লায়ার-ডেটা ইন্টিগ্রেশন
+
+Work Log:
+- বর্তমান অবস্থা যাচাই: git fetch (parallel এজেন্টদের session94–101 কমিট সিঙ্ক) → worklog/PLANS/PROJECT পড়ে লক-ম্যাট্রিক্স বুঝলাম; fresh clone-এ bun install → :3030 বুট (SANDBOX_PORT) → agent-browser-এ /contact বেসলাইন স্ক্রিনশট
+- **ম্যাপ-মূল-কারণ আবিষ্কার:** শুধু ভাঙা pb=-URL নয় — server.js CSP-তে frame-src-ই ছিল না (default-src 'self' ফলব্যাকে গুগল-আইফ্রেম ব্লকড; সঠিক URL-ও লোড হতো না, লাইভেও)। CSP + frame-src (গুগল-ম্যাপস অরিজিন) + output=embed URL — দুই-স্তর ফিক্স
+- views/lekhok-contact.ejs পূর্ণ-রিডিজাইন: কোথায়-আমরা status-রো+লাইভ-ম্যাপ+খুলুন-বাটন; ক্যাম্পাস-চ্যানেল ব্র্যান্ড-টিন্ট অ্যাকশন-কার্ড; ইউনিভার্সিটি অ্যারো-কার্ড; জরুরি-গ্রিড ক্লিক-টু-কল (bn↔en ডিজিট, phoneOf102); হল-প্রভোস্ট গ্রিড+টগল; ফ্রি-শাটল চিপ-প্যানেল — সব C()-কী CMS-চালিত রেখে
+- helpers/sections-registry.js: contact_transport ডিফল্ট ৬-জরুরি-নম্বর (tel: extra) + নতুন contact_halls সেকশন (১৫ প্রভোস্ট, অ্যাডমিন-প্যানেলে অটো-আসে); helpers/transport-schedule.js + db.js: freeShuttle ডিফল্ট + মিসিং-কী মার্জ (লাইভ-DB-তেও মাইগ্রেশন-ছাড়া পৌঁছায়)
+- routes/pages.js: contact-রুটে halls42 প্যারালাল-ফেচ; style.css EOF: .cx102-স্কোপড ব্লক (+২ প্যাচ — প্রভোস্ট-র‍্যাপ-ফিক্স, egr-num আইকন)
+- Sandbox DB: tr42 → ৬-রো (saveDb-সহ; প্রথমবার process.exit-এ হারিয়েছিল — গোটচা প্রমাণিত)
+- E2E (agent-browser): ম্যাপ লাইভ-রেন্ডার ✓ চ্যানেল/ইউনি/ইমার্জেন্সি/প্রভোস্ট/ফ্রি-শাটল ভিজ্যুয়াল ✓ টগল ৬↔১৫+লেবেল-সিঙ্ক ✓ tel:-href ✓ 14-পেজ 200 ✓ /api/health ✓ অ্যাডমিন sections-পেজে halls ✓ 390px overflow-0 ✓ কনসোল-0 ✓; role-policy ৭২-পাস (২৭-ফেল = ফ্রেশ-ক্লোন QA-সিড-স্টেট, ডিফে-অসম্পর্কিত)
+- PROJECT.md চেঞ্জলগ + PLANS.md cross-agent নোট লিখে কমিট+পুশ
+
+Stage Summary:
+- কমিট: session102 — ৭ ফাইল (contact.ejs +362, style.css +167, registry/transport/db/pages/server)
+- ফিক্স-প্রমাণ: after-*.png /tmp-তে (before/after তুলনাযোগ্য)
+- লাইভ-নোট: ম্যাপ-CSP ফিক্স ডিপ্লয়ে সাথে সাথে কাজ করবে; জরুরি-নম্বর/হল-তালিকা লাইভ-Turso-তে contact_halls-ফলব্যাক থেকে আসবে (admin-চাইলে site_items-এ ওভাররাইড করতে পারবেন)
+- পরবর্তী: ফর্ম-রেট-লিমিট, প্রভোস্ট-সার্চ, মাল্টি-পিন ম্যাপ, 'এখন খোলা?' লাইভ-ইন্ডিকেটর
+- Cron webDevReview টাস্ক সেট: job_id 393823 (fixed_rate 900s, webDevReview payload — প্রজেক্ট-কনটেক্সটসহ)
+
+---
+Task ID: session-103
+Agent: Z.ai (cron webDevReview — same sandbox)
+Task: গ্যালারি আপলোডার-ফিচার (মূল-ডিজাইনের UploadPhotoModal) + UX-স্টাইলিং উন্নতি + QA/মার্জ
+
+Work Log:
+- State-check: origin-এ session-100/101-a/102 এসেছে — stash→pull-rebase→pop (কনফ্লিক্ট-শূন্য), মার্জড-ট্রি স্মোক+audit-গ্রিন
+- POST /admin/gallery/bulk (requireScope + multer + storeBufferImage + TA42-audit) — টাস্ক-১৩ /upload-images প্যাটার্নে
+- /gallery আপলোডার-মডাল: ড্র্যাগ-ড্রপ/পিকার/প্রিভিউ/মেটাডেটা/XHR-প্রগ্রেস/CSRF-হেডার/সাফল্য-রিলোড
+- whoami.staff + gallery.js self-heal (stale-SWR-কপিতে বাটন-গায়েব ফিক্স)
+- লাইটবক্স থাম্বনেইল-স্ট্রিপ (ক্লিক-জাম্প+অ্যাক্টিভ-হাইলাইট) + ইমেজ-লোড স্কেলেটন (শিমার→is-loaded)
+- E2E: স্টাফ-আপলোড ২০→২২ কার্ড ✓; থাম্বনেইল-জাম্প ✓; নিরাপত্তা-ব্লক ✓; ৩৯০px ✓; কনসোল-০ ✓
+
+Stage Summary:
+- স্টাইলিং+ফিচার ম্যান্ডেট পূর্ণ: আপলোডার-মডাল (নতুন-ফিচার), থাম্বনেইল-স্ট্রিপ+স্কেলেটন (স্টাইলিং-বিস্তারিত)
+- সব ফাইল audit-গ্রিন; push পূর্বে pull-rebase কনভেনশন মানা হয়েছে
+- রিস্ক: লাইভ-Turso-রিসেট এখনো টোকেন-অপেক্ষায়; সিক্রেট-রোটেশন ×৪ বাকি

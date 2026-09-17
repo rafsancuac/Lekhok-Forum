@@ -313,6 +313,10 @@ app.get('/api/whoami', (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.json({
     authed: !!(req.session && req.session.user),
+    // সেশন ৯৮: অ্যাডমিন-প্যানেল সেশনও সনাক্ত — /gallery-র স্টাফ-আপলোড-বাটন
+    // stale-ক্যাশড (SWR) অ্যানোনিমাস কপিতে গায়েব হওয়ার সমস্যার self-heal-এ
+    // gallery.js এই ফ্ল্যাগ ব্যবহার করে (?_u= রিফ্রেশ — session-72 প্যাটার্ন)।
+    staff: !!(req.session && req.session.adminUser),
     ts: Date.now()
   });
 });

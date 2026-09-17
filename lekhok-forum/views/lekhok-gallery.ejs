@@ -62,9 +62,9 @@
         </button>
       </div>
       <% if (isStaff) { %>
-        <a href="/admin/gallery/new" class="gal-uploadbtn" title="এডমিন প্যানেলে নতুন ছবি যোগ করুন">
+        <button type="button" class="gal-uploadbtn" id="galUploadBtn" title="এই পেজ থেকেই ড্র্যাগ-ড্রপে একসাথে ১২টি পর্যন্ত ছবি আপলোড">
           <i class="fas fa-plus" aria-hidden="true"></i> নতুন ছবি আপলোড
-        </a>
+        </button>
       <% } %>
     </div>
   </div>
@@ -220,6 +220,8 @@
     <button type="button" class="gal-lb__nav gal-lb__nav--next" id="lbNext" aria-label="পরের ছবি"><i class="fas fa-chevron-right"></i></button>
   </div>
 
+  <div class="gal-lb__thumbs" id="lbThumbs" aria-label="ছবির তালিকা" hidden></div>
+
   <div class="gal-lb__infobar" id="popupMeta">
     <div class="gal-lb__info">
       <span class="gal-lb__cat" id="lbCat"></span>
@@ -228,3 +230,66 @@
     </div>
   </div>
 </div>
+
+<% if (isStaff) { %>
+<!-- ══ ৬. ইন-পেজ ড্র্যাগ-ড্রপ মাল্টি-ফটো আপলোডার (সেশন ৯৮ — স্টাফ-অনলি) ══ -->
+<div class="gal-upl" id="galUploader" role="dialog" aria-modal="true" aria-label="ছবি আপলোড" aria-hidden="true">
+  <div class="gal-upl__card" role="document">
+    <div class="gal-upl__head">
+      <h2><i class="fas fa-cloud-arrow-up" aria-hidden="true"></i> নতুন ছবি আপলোড</h2>
+      <button type="button" class="gal-upl__close" id="galUplClose" aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
+    </div>
+
+    <div class="gal-upl__drop" id="galUplDrop" tabindex="0" role="button"
+         aria-label="ছবি টেনে আনুন বা ক্লিক করে বাছুন (সর্বোচ্চ ১২টি, ৮MB)">
+      <i class="fas fa-images" aria-hidden="true"></i>
+      <p><strong>ছবি টেনে আনুন</strong> অথবা ক্লিক করে বাছুন</p>
+      <span class="gal-upl__hint">একসাথে ১২টি · প্রতিটি ৮MB পর্যন্ত · JPG/PNG/WebP/GIF</span>
+      <input type="file" id="galUplInput" accept="image/*" multiple hidden />
+    </div>
+    <div class="gal-upl__previews" id="galUplPreviews"></div>
+
+    <div class="gal-upl__fields">
+      <div class="gal-upl__row">
+        <label>শিরোনাম <small>(ঐচ্ছিক — দিলে "শিরোনাম ১/২…" হবে)</small></label>
+        <input type="text" id="galUplTitle" maxlength="120" placeholder="যেমন: বইমেলা ২০২৬" />
+      </div>
+      <div class="gal-upl__row gal-upl__row--2">
+        <div>
+          <label>ক্যাটাগরি</label>
+          <select id="galUplCat">
+            <% [['events','ইভেন্ট'],['workshops','কর্মশালা'],['meetings','সভা'],['awards','পুরস্কার'],['press','প্রেস ও মিডিয়া'],['cultural','সাংস্কৃতিক'],['seminar','সেমিনার'],['general','সাধারণ']].forEach(([v, l]) => { %>
+              <option value="<%= v %>"><%= l %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label>ফটোগ্রাফার <small>(ঐচ্ছিক)</small></label>
+          <input type="text" id="galUplPhotog" maxlength="120" placeholder="যেমন: রাফসান নীল" />
+        </div>
+      </div>
+      <div class="gal-upl__row gal-upl__row--2">
+        <div>
+          <label>ইভেন্টের তারিখ <small>(ঐচ্ছিক)</small></label>
+          <input type="text" id="galUplDate" maxlength="60" placeholder="যেমন: ২১ ফেব্রুয়ারি, ২০২৬" />
+        </div>
+        <div>
+          <label>ক্যাপশন <small>(ঐচ্ছিক — সব ছবিতে)</small></label>
+          <input type="text" id="galUplCaption" maxlength="300" placeholder="এক-লাইনের বর্ণনা" />
+        </div>
+      </div>
+    </div>
+
+    <div class="gal-upl__foot">
+      <span class="gal-upl__result" id="galUplResult" aria-live="polite"></span>
+      <div class="gal-upl__footbtns">
+        <a href="/admin/gallery" class="gal-upl__manage" title="এডমিন প্যানেলে সম্পাদনা/মুছুন">প্যানেলে ব্যবস্থাপনা <i class="fas fa-arrow-up-right-from-square"></i></a>
+        <button type="button" class="gal-upl__submit" id="galUplSubmit" disabled>
+          <i class="fas fa-upload"></i> আপলোড করুন
+        </button>
+      </div>
+    </div>
+    <div class="gal-upl__progress" id="galUplProgress" hidden><div class="gal-upl__bar" id="galUplBar"></div></div>
+  </div>
+</div>
+<% } %>

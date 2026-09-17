@@ -867,6 +867,54 @@ router.delete('/gallery/:id', requireScope('gallery'), async (req, res) => {
   res.redirect('/admin/gallery?saved=1&trashed=' + tid42);
 });
 
+// ── সেশন ৯৮: /gallery ইন-পেজ ড্র্যাগ-ড্রপ মাল্টি-ফটো আপলোডার (JSON) ─────────
+// ফিল্ড "images" (সর্বোচ্চ ১২, ৮MB/ফাইল, ছবি-অনলি) + শেয়ার্ড-মেটাডেটা
+// (title/caption/category/photographer/event_date) → প্রতি-ফাইলে একটি করে
+// gallery-রো; রেসপন্স { ok, added, urls }। শিরোনাম দিলে "টাইটেল ১/২…" বাংলা-সংখ্যায়।
+// স্টোরেজ: storeBufferImage দ্বৈত-মোড (লোকাল ডিস্ক / Vercel Blob — /gallery
+// আপলোডার-মডাল ও এডমিন প্যানেল — উভয় পথেই একই ফল)।
+router.post('/gallery/bulk', requireScope('gallery'), (req, res) => {
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 8 * 1024 * 1024, files: 12 },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) cb(null, true);
+      else cb(new Error('শুধু ছবি ফাইল আপলোড করা যাবে'));
+    }
+  }).array('images', 12)(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: err.message });
+    if (!req.files || !req.files.length) return res.status(400).json({ ok: false, error: 'কোনো ফাইল নেই' });
+    const { title, caption, category, photographer, event_date } = req.body || {};
+    const BN = '০১২৩৪৫৬৭৮৯';
+    const bn = (n) => String(n).replace(/\d/g, (d) => BN[+d]);
+    const clean = (v) => String(v || '').trim().slice(0, 300);
+    const baseTitle = clean(title);
+    const cap = clean(caption);
+    const cat = clean(category) || 'general';
+    const photog = clean(photographer).slice(0, 120);
+    const evDate = clean(event_date).slice(0, 60);
+    try {
+      const { storeBufferImage } = require('../middleware/upload');
+      const urls = [];
+      let added = 0;
+      for (let i = 0; i < req.files.length; i++) {
+        const f = req.files[i];
+        const stored = await storeBufferImage(f, 'gallery');
+        const rowTitle = baseTitle ? `${baseTitle} ${bn(i + 1)}` : (cap || '');
+        await db.prepare('INSERT INTO gallery (title, image_url, caption, category, photographer, event_date) VALUES (?, ?, ?, ?, ?, ?)')
+          .run(rowTitle, stored.url, cap, cat, photog, evDate);
+        urls.push(stored.url);
+        added++;
+      }
+      await TA42.audit(db, req, 'bulk-create', 'gallery', '', `${added} ছবি (${cat})`);
+      res.json({ ok: true, added, urls });
+    } catch (e) {
+      console.error('[admin:gallery-bulk] failed:', e.message);
+      res.status(500).json({ ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+    }
+  });
+});
+
 // ── Resources CRUD ───────────────────────────────────────────────────────────
 // সেশন ১০১: মাল্টিমিডিয়া আপলোড — ফাইল (PDF/অডিও/ভিডিও/ছবি/ডক) আপলোড করলে
 // res_type অটো-ডিটেক্ট (mime/ext থেকে) + file_size হিউম্যান-রিডেবল সেট হয়।
