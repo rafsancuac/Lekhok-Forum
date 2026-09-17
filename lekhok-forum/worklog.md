@@ -33,3 +33,19 @@
 **টুল:** /home/z/my-project/scripts/{theme-revert-session60.js, theme-revert2-session60.js, theme-revert3-session60.js, theme-revert-session67.js (রিবেস-পরবর্তী পুনঃপ্রয়োগ), pixel-sample60.py}।
 
 **রিবেস-নোট:** প্যারালাল সেশন ৬০-৬৬ এসেছিল (ইন্টারঅ্যাক্টিভ কুইজ, 2FA-QR, কুইজ-স্কোর-পারসিস্টেন্স, রিডিং-টুলবার, TOC, বুকমার্ক-পেজ) — ৯টি ফাইলে দুই-পক্ষীয় মার্জ; CSS-গুলো সর্বশেষ-সংস্করণ নিয়ে থিম-ম্যাপিং পুনঃপ্রয়োগ; avatar-রুটে সেশন-৬১-এর ইনলাইন-সার্ভিং রাখা; সেশন-৬৬-এর bookmarks.css লাইট-রি-থিম। ভেরিফিকেশন-স্ক্রিপ্ট আপডেট: ৫৬ (ব্র্যান্ড-নাম-টেস্ট লেখক ফোরাম), ৫৮-ব্রাউজার (সেশন-৬১-এর ব্যাকআপ-মোড টগল-ব্যাক)।
+
+---
+Task ID: 4
+Agent: Main agent (Session 72 — GSC indexing fixes)
+Task: ইউজার-আপলোড GSC Coverage Drilldown (৪ zip) অনুযায়ী ইনডেক্সিং-সমস্যা সমাধান
+
+Work Log:
+- ৪টি zip আনজিপ+বিশ্লেষণ: Discovered-not-indexed ৩২ পেজ, Crawled-not-indexed /constitution, noindex-excluded /quiz, alternate-canonical /qa/14।
+- লাইভ-audit: TTFB ১.১-৭.২s (warm ৩-৫s), প্রতি-রেসপন্সে _csrfTok+connect.sid Set-Cookie, qa-ডিটেইল canonical=/qa (নিজে নয়!), noindex-regex-এ quiz, সাইটম্যাপ fake lastmod।
+- Fix-১ (31265db): qa canonicalPath, quiz-noindex রিমুভ+regex word-boundary, সিরিয়াল-কুয়ারি প্যারালালাইজ (home/articles/qa/notices/events/...), N+1 প্যারালাল, অ্যানোনিমাস-এজ-ক্যাশ (s-maxage=300+SWR) + CSRF/সেশন-সেভ স্কিপ, settings-TTL, সাইটম্যাপ-সৎকরণ+৫ পেজ, ফুটার-কলাম+qa-related+হোম-সাম্প্রতিক-লেখা, JSON-LD (Org/WebSite/QAPage), মেটা-ফলব্যাক ৯ পেজ, preconnect-ফিক্স, og-default.png (AI), /rss.xml।
+- Fix-২ (4459837): লাইভে কুকিসহ-রিকোয়েস্টও HIT পায় ধরা পড়ে → /api/whoami + auth-sync.js (?_u= ক্যাশ-বাইপাস রিফ্রেশ, লুপ-রোধ); sql.js sync-all().then() ৫০০-বাগ → async-IIFE।
+
+Stage Summary:
+- লাইভ ভেরিফায়েড: qa/14 canonical ✓, /quiz indexable ✓, x-vercel-cache HIT (TTFB ৩.৯s→৪০ms) ✓, sitemap 29 URL ✓, RSS ✓, মোবাইল ✓, কনসোল-ক্লিন ✓, লগইন-CSRF-ফ্লো ✓।
+- ইউজারের GSC-করণীয়: সাইটম্যাপ রি-সাবমিট + মূল পেজগুলোতে Request Indexing।
+- সতর্কতা: এজ-ক্যাশ ৫-মিনিট স্টেলনেস গ্রহণযোগ্য ট্রেড-অফ; লগড-ইন রেসপন্স কখনো ক্যাশ হয় না।

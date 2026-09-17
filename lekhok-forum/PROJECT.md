@@ -296,6 +296,30 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ৭২ (১৭ সেপ্টেম্বর ২০২৬) — GSC কভারেজ-ড্রিলডাউন ইস্যু চারটির মূল ফিক্স + এজ-ক্যাশ (TTFB ৩-৭s → ~৪০ms)
+
+**ইনপুট:** ইউজার-আপলোড GSC Coverage Drilldown (৪টি zip): ① 'Discovered – currently not indexed' ৩২ পেজ (সব আর্টিকেল/নোটিশ/qa-ডিটেইল + committee/events/gallery/members/press/resources...) ② 'Crawled – not indexed' /constitution ③ 'Excluded by noindex' /quiz ④ 'Alternate page with proper canonical tag' /qa/14।
+
+**রুট-কজন অডিট (লাইভ curl):** ① qa-ডিটেইলের canonical নিজে নয় বরং **/qa লিস্ট-পেজ** নির্দেশ করত (currentPath-fallback) ② noindex-regex-এ `/quiz` অন্তর্ভুক্ত (পাবলিক ডেইলি-কনটেন্ট সত্ত্বেও) ③ **ওয়ার্ম TTFB-ই ৩-৭ সেকেন্ড** — প্রতি পেজে ১২+ সিরিয়াল Turso-রাউন্ড-ট্রিপ + প্রতি রেসপন্সে `_csrfTok`+`connect.sid` Set-Cookie (Vercel Edge-ক্যাশ চির-অক্ষম) → Googlebot-এর ক্রল-রেট-হ্রাসই ৩২-পেজ 'Discovered'-এর মূল কারণ ④ সাইটম্যাপে প্রতিদিনের fake `lastmod=আজ` + ৫টি পাবলিক পেজ অনুপস্থিত।
+
+**ফিক্স (commit `31265db` + `4459837`):**
+- **Canonical:** qa-ডিটেইলে `canonicalPath=/qa/<id>` + বডি-থেকে metaDesc; `/questions/:id` উপনামেও একই।
+- **noindex:** regex থেকে quiz বাদ + `^…(\/|$|\?)` ওয়ার্ড-বাউন্ডারি (`/me`-র সাবস্ট্রিং-ম্যাচ বাগ — `/members`-জাতীয় পথ আটকাত)।
+- **পারফরম্যান্স:** home/articles/qa-সিঙ্গেল/article-সিঙ্গেল/notices/events/about/press/contact/quiz — সিরিয়াল-await প্যারালাল `Promise.all` + N+1 (রিঅ্যাকশন/ইমেজ) প্যারালাল; settings-এ ১০s ইন-প্রসেস TTL।
+- **এজ-ক্যাশ:** অ্যানোনিমাস কুকি-নন-GET পাবলিক পথে (regex-অনুমোদিত, কুয়েরি-স্ট্রিং ছাড়া) `Cache-Control: public, s-maxage=300, stale-while-revalidate=86400` + ঐ রিকোয়েস্টে CSRF-কুকি/সেশন-রাইট/`req.session.save()` স্কিপ (Set-Cookie শূন্য → Vercel ক্যাশ করে)। লগইন-ইউজার/অথ-পেজ কখনো ক্যাশ-হেডার পায় না।
+- **ক্যাশড-পেজে লগড-ইন UX:** Vercel কুকিসহ রিকোয়েস্টকেও HIT দেয় ধরা পড়ে → `/api/whoami` (no-store, social-user-only) + `auth-sync.js` (অ্যানোনিমাস-রেন্ডারে প্রোব → `?_u=<ts>` ক্যাশ-বাইপাস রিফ্রেশ → replaceState-ক্লিনআপ; sessionStorage-পথ-ফ্ল্যাগে লুপ-রোধ)।
+- **sql.js-সামঞ্জস্য:** `db.prepare().all()` লোকালে sync — `.then()` নয় await-async-IIFE (লোকাল /articles ৫০০ ফিক্স)।
+- **সাইটম্যাপ:** স্ট্যাটিক-পেজে fake lastmod বাদ (ডাইনামিকে বাস্তব updated_at/created_at); /quiz,/achievements,/team,/birthdays,/on-this-day যোগ।
+- **ইন্টারনাল লিংকিং:** ফুটারে 'আরও দেখুন' কলাম (৮ লিংক — প্রতি পেজ থেকে গভীর পাবলিক পেজ), qa-single-এ 'আরও প্রশ্ন' কার্ড (৫টি), হোমে 'সাম্প্রতিক লেখা' সেকশন (আগের ডেড recentQA-কুয়েরি প্রতিস্থাপন)।
+- **স্ট্রাকচার্ড ডেটা:** সাইট-ওয়াইড Organization+WebSite/SearchAction JSON-LD (উভয় লেআউট), qa-single-এ QAPage JSON-LD।
+- **মেটা:** ৯ পাবলিক পেজে ইউনিক টাইটেল/ডেসক্রিপশন ফলব্যাক (`PATH_SEO_FALLBACK72`); preconnect ডোমেইন-ফিক্স (jsdelivr→cdnjs); ডিফল্ট OG-ইমেজ (AI-জেনারেটেড og-default.png, সব শেয়ার-কার্ডে); **নতুন `/rss.xml`** (২০ আইটেম)।
+
+**যাচাই:** লোকাল ৩৩ রুট ২০০ + লগইন-CSRF 303 + moderator-সেশনে data-auth=1 + ক্যাশেবল পেজে Set-Cookie শূন্য + লগে ০ এরর; **লাইভ:** /qa/14 canonical ✓ /quiz indexable ✓ x-vercel-cache **HIT (TTFB ৩.৯s→৪০ms)** ✓ sitemap 29 URL ✓ RSS 20 আইটেম ✓ হোম-সেকশন+ফুটার-কলাম ✓ মোবাইল-390px ওভারফ্লো-মুক্ত ✓ VLM/agent-browser কনসোল-ক্লিন ✓।
+
+**GSC-তে ইউজারের করণীয়:** সাইটম্যাপ রি-সাবমিট + 'URL Inspection'-এ মূল ৩২ পেজের কয়েকটি 'Request Indexing' — ক্রল-স্পিড এখন শতগুণ দ্রুত, বাকিটা Google-এর রিক্রল-সাইকেল।
+
+---
+
 ### সেশন ৬৬ (৯ সেপ্টেম্বর ২০২৬, ক্রন-review রাউন্ড ৮) — সংরক্ষিত-লেখা (bookmarks) সম্পূর্ণ UX-ওভারহল + সেভ-স্টেট প্রিফিল + এক্সারপ্ট `##`-স্ট্রিপ প্যারিটি
 
 **QA-ফাইন্ডিং (এই রাউন্ডের আসল-আবিষ্কার):** `/bookmarks`-পেজটি generic articles-ভিউ রেন্ডার করত — ভুল শিরোনাম "প্রকাশিত লেখা", সেভ-করা কার্ডেও আনসেভড-আইকন, অপ্রাসঙ্গিক "নতুন লেখা" বাটন; ড্যাশবোর্ড-ফিডে `bookmarked:false` হার্ডকোড; /me-সংরক্ষিত-ট্যাব+লিস্ট-এক্সারপ্টে কাঁচা `##`-মার্কার।
