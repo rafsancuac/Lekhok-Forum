@@ -522,12 +522,18 @@ router.get('/resources/:id(\\d+)', async (req, res) => {
   related = related.map(x => Object.assign({}, x, { res_type: RT.normalizeResType(x) }));
   // সেশন ১০৭: সিরিজ-নেভিগেটর — এই রিসোর্সের সিরিজ-থাকলে পর্ব-তালিকা (order→id ক্রমে),
   // আগের/পরের পর্ব + অবস্থান (পর্ব N/মোট M)। সিরিজ-শূন্য হলে পুরো ব্লক রেন্ডার-ই হয় না।
-  let seriesItems = null, seriesPrev = null, seriesNext = null, seriesPos = 0;
+  let seriesItems = null, seriesPrev = null, seriesNext = null, seriesPos = 0, seriesAudioCount = 0;
   const seriesName = String(r.series || '').trim();
   if (seriesName) {
     seriesItems = (await db.prepare(
       "SELECT id, title, res_type, series_order, thumbnail_url, link_url, file_url FROM resources WHERE TRIM(COALESCE(series,'')) = ? ORDER BY COALESCE(series_order, 1000000), id"
-    ).all(seriesName)).map(x => Object.assign({}, x, { res_type: RT.normalizeResType(x) }));
+    ).all(seriesName)).map(x => {
+      const t = RT.normalizeResType(x);
+      // সেশন ১১৭: প্লেলিস্ট — অডিও-পর্বের ইন-পেজ-প্লেব্যাক-সোর্স (hero-audio/মিনি-প্লেয়ার শেয়ার্ড)
+      const audioSrc = (t === 'audio' && (x.file_url || x.link_url)) ? (x.file_url || x.link_url) : null;
+      return Object.assign({}, x, { res_type: t, audioSrc });
+    });
+    seriesAudioCount = seriesItems.filter(x => x.audioSrc).length;
     const pos = seriesItems.findIndex(x => x.id === r.id);
     seriesPos = pos + 1;
     if (pos > 0) seriesPrev = seriesItems[pos - 1];
@@ -543,7 +549,7 @@ router.get('/resources/:id(\\d+)', async (req, res) => {
     r, related, descHtml, isStaff,
     staffRole: isStaff ? u.role : null,
     staffName: isStaff ? (u.username || '') : '',
-    seriesName, seriesItems, seriesPrev, seriesNext, seriesPos,
+    seriesName, seriesItems, seriesPrev, seriesNext, seriesPos, seriesAudioCount,
     RES_TYPE_META: RT,
     videoEmbedUrl: RT.videoEmbedUrl
   });

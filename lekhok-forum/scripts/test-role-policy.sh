@@ -216,9 +216,6 @@ R=$(curl -s -X POST -H "Content-Type: application/json" -d '{}' "$BASE/api/resou
 ck "stat invalid-id 400" "400" "$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -d '{}' "$BASE/api/resources/0/stat")"
 
 echo ""
-echo "════════════════════════════════"
-echo "PASS=$PASS FAIL=$FAIL"
-[ $FAIL -eq 0 ] && echo "ALL GREEN ✓" || echo "FAILURES ✗"
 
 # ═══ সেশন ১১৩: কমেন্ট-এডিট/ডিলিট API — অথরাইজেশন-চেক (session105-চুক্তি) ═══
 # JSON-API (CSRF-মুক্ত) — target comment id সিড-নির্ভর; চলানোর আগে SEED_CMT সেট করুন
@@ -243,3 +240,28 @@ ck "নিজের-কমেন্ট PUT → 200" "200" "$(put $JARV $SEED_CMT
 ck "নিজের-কমেন্ট DELETE → 200 (ক্লিনআপ)" "200" "$(del $JARV $SEED_CMT)"
 R=$(curl -s -b $JARV -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$SEED_CMT" -H "Content-Type: application/json" -d '{"body":"ghost"}')
 ck "মুছে-ফেলা-কমেন্ট PUT → 404 (ghost)" "404" "$R"
+
+# ═══ সেশন ১১৭: রিসোর্স bulk/update অথরাইজেশন (RES-108-সুপারিশ ④) ═══
+# bulk = JSON + X-CSRF-Token (নিজস্ব-যাচাই); update = multipart (গ্লোবাল-গার্ড + মালিকানা-গার্ড)
+echo "══ ১৬. রিসোর্স bulk/update অথরাইজেশন ══"
+ck "anon bulk → 303" "303" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources/bulk" -H "Content-Type: application/json" -d '{"csv":"title\nx"}')"
+ck "user bulk → 403" "403" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources/bulk" -H "Content-Type: application/json" -d '{"csv":"title\nx"}')"
+ck "mod bulk no-CSRF → 403" "403" "$(curl -s -b $JARM -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources/bulk" -H "Content-Type: application/json" -d '{"csv":"title\nx"}')"
+ck "anon update → 303" "303" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources/1/update")"
+ck "user update → 403" "403" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources/1/update")"
+# মালিকানা-গার্ড: মডারেটর (testuser) অ্যাডমিন-সৃষ্ট রিসোর্স-১-এর মালিক নয় → 403 (সঠিক-CSRF-সহ)
+TOKM=$(getcsrf $JARM /moderator/resources)
+ck "mod update other's → 403" "403" "$(curl -s -b $JARM -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources/1/update?_csrf=$TOKM" -F "title=হাইজ্যাক-১১৭")"
+# নিজের-আপলোড তৈরি → আপডেট → 302 (posted=2) → ট্র্যাশ-ডিলিট ক্লিন-আপ
+ck "mod নিজের-আপলোড তৈরি → 303" "303" "$(curl -s -b $JARM -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources?_csrf=$TOKM" -F "title=rp117-own-check" -F "res_type=link" -F "link_url=https://example.com/rp117" -F "category=guide")"
+RP117=$(curl -s -b $JARM "$BASE/moderator/resources" | grep -o 'edit=[0-9]*' | head -40 | grep -o '[0-9]*' | while read i; do curl -s -b $JARM "$BASE/resources/$i" | grep -q 'rp117-own-check' && echo $i && break; done)
+TOKM2=$(getcsrf $JARM /moderator/resources)
+ck "mod update own → 303" "303" "$(curl -s -b $JARM -o /dev/null -w "%{http_code}" -X POST "$BASE/moderator/resources/$RP117/update?_csrf=$TOKM2" -F "title=rp117-own-check-2" -F "res_type=link" -F "link_url=https://example.com/rp117" -F "category=guide")"
+[ -n "$RP117" ] && curl -s -b $JARM -o /dev/null -X POST "$BASE/moderator/resources/$RP117/delete?_csrf=$TOKM2"
+
+echo ""
+echo "════════════════════════════════"
+echo "PASS=$PASS FAIL=$FAIL"
+[ $FAIL -eq 0 ] && echo "ALL GREEN ✓" || echo "FAILURES ✗"
+[ $FAIL -gt 0 ] && exit 1
+exit 0

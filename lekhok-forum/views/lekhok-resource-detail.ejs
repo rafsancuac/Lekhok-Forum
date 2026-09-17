@@ -154,17 +154,42 @@
       <% } else { %><span class="rsxd-seristep rsxd-seristep-off rsxd-seristep-next"><i class="fas fa-flag-checkered"></i><span class="rsxd-seristep-txt"><em>সর্বশেষ পর্ব</em></span></span><% } %>
     </div>
     <% } %>
-    <ol class="rsxd-serilist">
+    <%# সেশন ১১৭: প্লেলিস্ট-হেড — সিরিজে অডিও-পর্ব থাকলে "সব শুনুন" + অডিও-গণনা
+        (ইন-পেজ প্লেব্যাক: পর্ব-রো-র ▶-বাটন হিরো-অডিও/মিনি-প্লেয়ারে src-সোয়াপ করে —
+        অটো-অ্যাডভান্স 'ended'-ইভেন্টে পরবর্তী অডিও-পর্ব; নেভিগেশন-ছাড়াই ধারাবাহিক শ্রবণ) %>
+    <% if (seriesAudioCount > 0) { %>
+    <div class="rsxd-plhead">
+      <button type="button" class="rsxd-plall" id="rsxdPlayAll">
+        <i class="fas fa-play"></i><span>সব শুনুন</span>
+      </button>
+      <span class="rsxd-plmeta"><i class="fas fa-headphones"></i> অডিও পর্ব <%= bn(seriesAudioCount) %><% if (seriesItems.length > seriesAudioCount) { %> · বাকি পর্ব লিংকে<% } %></span>
+    </div>
+    <% } %>
+    <ol class="rsxd-serilist" id="rsxdSeriList">
       <% seriesItems.forEach((x, i) => { %>
-        <li>
+        <li class="rsxd-seriep-li<%= x.id === r.id ? ' here' : '' %>" data-epi="<%= i %>"<% if (x.audioSrc) { %> data-audio="<%= x.audioSrc %>" data-title="<%= x.title %>"<% if (x.thumbnail_url) { %> data-art="<%= x.thumbnail_url %>"<% } %><% } %>>
+          <% if (x.audioSrc) { %>
+            <button type="button" class="rsxd-seriep-play" aria-label="ইন-পেজে শুনুন: <%= x.title %>" title="ইন-পেজে শুনুন">
+              <i class="fas fa-play"></i>
+            </button>
+          <% } %>
           <a class="rsxd-seriep <%= x.id === r.id ? 'here' : '' %>" href="/resources/<%= x.id %>" <%= x.id === r.id ? 'aria-current="step"' : '' %>>
             <span class="rsxd-seriep-num"><%= bn(i + 1) %></span>
             <span class="rsxd-seriep-title"><%= x.title %></span>
-            <% if (x.id === r.id) { %><span class="rsxd-seriep-now"><i class="fas fa-circle-play"></i> চলছে</span><% } else { %><i class="fas fa-chevron-right rsxd-seriep-go"></i><% } %>
+            <% if (x.audioSrc) { %><span class="rsxd-seriep-eq" aria-hidden="true"><i></i><i></i><i></i></span><% } %>
+            <% if (x.id === r.id) { %><span class="rsxd-seriep-now"><i class="fas fa-circle-play"></i> এই পর্ব</span><% } else { %><i class="fas fa-chevron-right rsxd-seriep-go"></i><% } %>
           </a>
         </li>
       <% }) %>
     </ol>
+    <%# সেশন ১১৭: >১২-পর্ব তালিকা-কলাপ্স — বাটনটি JS-ই প্রথম দেখায় (hidden-সার্ভার-রেন্ডার);
+        noscript-এ পূর্ণ-তালিকা-ই থাকে (গ্রেসফুল-ডিগ্রেডেশন)। li[hidden]-গার্ড CSS-এ বাধ্যতামূলক
+        (display:flex hidden-ওভাররাইড-গোটচা — session104-রীতি)। %>
+    <% if (seriesItems.length > 12) { %>
+      <button type="button" class="rsxd-serimore" id="rsxdSeriMore" hidden>
+        <i class="fas fa-chevron-down"></i> সব পর্ব দেখুন (<span class="rsxd-serimore-n"></span>)
+      </button>
+    <% } %>
   </section>
   <% } %>
 
@@ -367,12 +392,60 @@
   .rsxd-crumb-here { max-width: 130px; }
   .rsxd-manage { margin-left: 0; }
 }
+/* ═══ সেশন ১১৭: সিরিজ প্লেলিস্ট-প্যানেল — ইন-পেজ অডিও-পর্ব প্লেব্যাক + অটো-অ্যাডভান্স ═══ */
+.rsxd-seriep-li { display: flex; align-items: center; gap: 7px; }
+.rsxd-seriep-li[hidden] { display: none !important; }
+.rsxd-seriep-li .rsxd-seriep { flex: 1; min-width: 0; }
+.rsxd-seriep-li:hover .rsxd-seriep { background: var(--bg-card, #fff); border-color: var(--border, #e2e8f0); }
+.rsxd-seriep-play { flex: none; width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--border, #e2e8f0); background: var(--bg-card, #fff); color: var(--accent, #059669); font-size: .66rem; cursor: pointer; display: grid; place-items: center; transition: all .14s ease; }
+.rsxd-seriep-play:hover { background: var(--accent, #059669); border-color: var(--accent, #059669); color: #fff; transform: scale(1.07); }
+.rsxd-seriep-play:focus-visible { outline: 2px solid var(--accent, #059669); outline-offset: 2px; }
+.rsxd-seriep-eq { flex: none; display: none; align-items: flex-end; gap: 2px; height: 12px; margin-left: auto; }
+.rsxd-seriep-eq i { width: 2.5px; height: 100%; border-radius: 1px; background: var(--accent, #059669); transform-origin: bottom; }
+.rsxd-seriep-li.playing .rsxd-seriep { background: #ecfdf5; border-color: var(--accent, #059669); }
+.rsxd-seriep-li.playing .rsxd-seriep-eq { display: inline-flex; }
+.rsxd-seriep-li.playing .rsxd-seriep-eq i { animation: rsxdEq 1.1s ease-in-out infinite; }
+.rsxd-seriep-li.playing .rsxd-seriep-eq i:nth-child(2) { animation-delay: .22s; }
+.rsxd-seriep-li.playing .rsxd-seriep-eq i:nth-child(3) { animation-delay: .44s; }
+.rsxd-seriep-li.playing .rsxd-seriep-go { display: none; }
+.rsxd-seriep-li.playing .rsxd-seriep-play { background: var(--accent, #059669); border-color: var(--accent, #059669); color: #fff; }
+@keyframes rsxdEq { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+
+.rsxd-plhead { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 12px; margin: 0 0 10px; border-radius: 12px; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid rgba(5,150,105,.18); }
+.rsxd-plall { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 0; border-radius: 999px; background: linear-gradient(135deg, var(--accent, #059669), var(--accent-dark, #047857)); color: #fff; font-weight: 800; font-size: .78rem; cursor: pointer; box-shadow: 0 6px 16px -8px rgba(5,150,105,.55); transition: all .15s ease; }
+.rsxd-plall:hover { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(5,150,105,.6); }
+.rsxd-plall:focus-visible { outline: 2px solid var(--accent, #059669); outline-offset: 2px; }
+.rsxd-plmeta { font-size: .72rem; font-weight: 700; color: var(--accent, #059669); display: inline-flex; align-items: center; gap: 6px; }
+
+.rsxd-serimore { margin-top: 10px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 12px; border-radius: 10px; border: 1px dashed var(--border, #e2e8f0); background: transparent; color: var(--accent, #059669); font-weight: 800; font-size: .78rem; font-family: inherit; cursor: pointer; transition: all .14s ease; }
+.rsxd-serimore:hover { background: #ecfdf5; border-color: var(--accent, #059669); }
+.rsxd-serimore:focus-visible { outline: 2px solid var(--accent, #059669); outline-offset: 2px; }
+.rsxd-serimore[hidden] { display: none !important; }
+
+/* মিনি-প্লেয়ার — নন-অডিও পর্বের পেজে প্লেলিস্ট চালু হলে (ডকড বটম-বার) */
+.rsxd-mini { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 9990; width: min(560px, calc(100vw - 24px)); display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: rgba(255,255,255,.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--border, #e2e8f0); box-shadow: 0 18px 44px -14px rgba(2,6,23,.4); animation: rsxdMiniIn .28s ease; }
+@keyframes rsxdMiniIn { from { opacity: 0; transform: translate(-50%, 14px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.rsxd-mini audio { flex: 1; min-width: 0; height: 36px; border-radius: 8px; }
+.rsxd-mini-info { display: flex; flex-direction: column; min-width: 0; max-width: 42%; gap: 1px; }
+.rsxd-mini-t { font-size: .76rem; font-weight: 800; color: var(--text, #1e293b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rsxd-mini-s { font-size: .66rem; font-weight: 700; color: var(--accent, #059669); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rsxd-mini-close { flex: none; width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--border, #e2e8f0); background: #fff; color: #64748b; cursor: pointer; display: grid; place-items: center; transition: all .14s ease; }
+.rsxd-mini-close:hover { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+.rsxd-mini-close:focus-visible { outline: 2px solid #dc2626; outline-offset: 2px; }
+@media (max-width: 560px) {
+  .rsxd-mini { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+  .rsxd-mini audio { flex-basis: 100%; order: 3; }
+  .rsxd-mini-info { max-width: calc(100% - 46px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rsxd-audiohero-wv span { animation: none; }
-  .rsxd-act, .rsxd-relcard, .rsxd-crumbs a, .rsxd-cover-cta, .rsxd-relarrow, .rsxd-sact, .rsxd-seristep, .rsxd-seriep, .rsxd-seribadge { transition: none; transform: none; }
+  .rsxd-seriep-eq i { animation: none !important; }
+  .rsxd-mini { animation: none; }
+  .rsxd-act, .rsxd-relcard, .rsxd-crumbs a, .rsxd-cover-cta, .rsxd-relarrow, .rsxd-sact, .rsxd-seristep, .rsxd-seriep, .rsxd-seribadge, .rsxd-seriep-play, .rsxd-plall, .rsxd-serimore { transition: none; transform: none; }
 }
 @media print {
-  .rsxd-series, .rsxd-staffacts, .rsxd-manage { display: none !important; }
+  .rsxd-series, .rsxd-staffacts, .rsxd-manage, .rsxd-mini { display: none !important; }
 }
 </style>
 
@@ -486,5 +559,169 @@
       }
     });
   }
+})();
+</script>
+<script>
+/* ═══ সেশন ১১৭: সিরিজ প্লেলিস্ট-প্যানেল ═══════════════════════════════════════
+   অডিও-পর্বে ইন-পেজ প্লেব্যাক: পর্ব-রো-র ▶-বাটন হিরো-অডিও (অডিও-পর্বের পেজে) বা
+   ডকড মিনি-প্লেয়ারে (নন-অডিও পর্বের পেজে) src-সোয়াপ করে — নেভিগেশন-ছাড়াই চলে।
+   'ended'-এ পরবর্তী অডিও-পর্বে অটো-অ্যাডভান্স (user-gesture-পূর্ব একই-এলিমেন্ট, তাই
+   অটোপ্লে-নীতি-সুরক্ষিত) + MediaSession মেটাডেটা (OS-লেভেল টাইটেল/আর্টওয়ার্ক)।
+   >১২-পর্ব তালিকা-কলাপ্স: প্রথম ১২ + বর্তমান পর্ব দৃশ্যমান, বাকিটা "সব পর্ব দেখুন"-এ।
+   noscript-এ সব-কিছু প্রগ্রেসিভ-ডিগ্রেড: পূর্ণ-তালিকা + সাধারণ পর্ব-লিংক। ═══ */
+(function () {
+  'use strict';
+  /* >১২-পর্ব তালিকা-কলাপ্স — অডিও-স্বাধীন (link/pdf-সিরিজেও চলে); প্রথম ১২ + বর্তমান
+     (.here) দৃশ্যমান রাখা। noscript-এ কোনো-কিছু-লুকানো-হয়-না (পূর্ণ-তালিকা)। */
+  var list0 = document.getElementById('rsxdSeriList');
+  if (!list0) return;
+  var lis0 = Array.prototype.slice.call(list0.querySelectorAll('.rsxd-seriep-li'));
+  var more0 = document.getElementById('rsxdSeriMore');
+  function bn(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
+  if (more0) {
+    var LIMIT = 12, hiddenN = 0;
+    lis0.forEach(function (li, i) {
+      if (i >= LIMIT && !li.classList.contains('here')) { li.hidden = true; hiddenN++; }
+    });
+    if (hiddenN > 0) {
+      var n = more0.querySelector('.rsxd-serimore-n');
+      if (n) n.textContent = bn(hiddenN);
+      more0.hidden = false;
+      more0.addEventListener('click', function () {
+        lis0.forEach(function (li) { li.hidden = false; });
+        more0.hidden = true;
+      });
+    }
+  }
+})();
+(function () {
+  'use strict';
+  var list = document.getElementById('rsxdSeriList');
+  if (!list) return;
+  var lis = Array.prototype.slice.call(list.querySelectorAll('.rsxd-seriep-li'));
+  var audLis = lis.filter(function (li) { return li.hasAttribute('data-audio'); });
+  if (!audLis.length) return;
+  var audio = document.querySelector('.rsxd-audiobar audio');
+  var mini = null, curIdx = -1, manualStop = false;
+  var SERIES = '<%= seriesName %>';
+  /* sandbox-গেটওয়ে: পেজ-URL-এ XTransformPort থাকলে মিডিয়া-src-এও বহন (লাইভে নো-অপ) */
+  var SBX = (/XTransformPort=/.test(location.search)) ? location.search.replace(/^\?/, '') : '';
+
+  function bn(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
+
+  function ensureAudio() {
+    if (audio) return audio;
+    mini = document.createElement('div');
+    mini.className = 'rsxd-mini';
+    mini.setAttribute('role', 'region');
+    mini.setAttribute('aria-label', 'সিরিজ প্লেয়ার');
+    mini.innerHTML = '<div class="rsxd-mini-info"><span class="rsxd-mini-t"></span><span class="rsxd-mini-s">' + SERIES + '</span></div>' +
+      '<audio controls preload="metadata"></audio>' +
+      '<button type="button" class="rsxd-mini-close" aria-label="প্লেয়ার বন্ধ করুন"><i class="fas fa-xmark"></i></button>';
+    document.body.appendChild(mini);
+    audio = mini.querySelector('audio');
+    bindMedia(audio);
+    mini.querySelector('.rsxd-mini-close').addEventListener('click', function () {
+      manualStop = true;
+      try { audio.pause(); } catch (e) {}
+      setPlaying(-1); curIdx = -1;
+      mini.remove(); mini = null; audio = null;
+    });
+    return audio;
+  }
+
+  function setPlaying(idx) {
+    lis.forEach(function (li, i) {
+      var on = (i === idx);
+      li.classList.toggle('playing', on);
+      var ic = li.querySelector('.rsxd-seriep-play i');
+      if (ic) ic.className = on ? 'fas fa-pause' : 'fas fa-play';
+      var btn = li.querySelector('.rsxd-seriep-play');
+      if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function revealLi(li) {
+    if (!li || !li.hidden) return;
+    li.hidden = false;
+    var more = document.getElementById('rsxdSeriMore');
+    if (more) more.hidden = true;
+  }
+
+  function mediaMeta(li) {
+    try {
+      if (!('mediaSession' in navigator) || !window.MediaMetadata) return;
+      var art = li.getAttribute('data-art');
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: li.getAttribute('data-title') || '',
+        artist: 'লেখক ফোরাম',
+        album: SERIES || 'রিসোর্স প্লেলিস্ট',
+        artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
+      });
+    } catch (e) {}
+  }
+
+  function playIdx(i) {
+    var li = lis[i];
+    if (!li || !li.hasAttribute('data-audio')) return;
+    var a = ensureAudio();
+    if (!a) return;
+    manualStop = false;
+    revealLi(li);
+    var src = li.getAttribute('data-audio') || '';
+    if (SBX && !/^(https?:)?\/\//i.test(src)) src += (src.indexOf('?') > -1 ? '&' : '?') + SBX;
+    if (!a.currentSrc || a.currentSrc.indexOf(src.split('?')[0]) === -1) { a.src = src; }
+    if (mini) mini.querySelector('.rsxd-mini-t').textContent = li.getAttribute('data-title') || '';
+    curIdx = i;
+    setPlaying(i);
+    mediaMeta(li);
+    var p = a.play();
+    if (p && p.catch) p.catch(function () {});
+    try { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+  }
+
+  audLis.forEach(function (li) {
+    var btn = li.querySelector('.rsxd-seriep-play');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var i = lis.indexOf(li);
+      if (i === curIdx && audio && !audio.paused) { manualStop = false; audio.pause(); return; }
+      playIdx(i);
+    });
+  });
+
+  var all = document.getElementById('rsxdPlayAll');
+  if (all) all.addEventListener('click', function () {
+    var here = list.querySelector('.rsxd-seriep-li.here');
+    var start = (here && here.hasAttribute('data-audio')) ? lis.indexOf(here) : lis.indexOf(audLis[0]);
+    if (curIdx === start && audio && !audio.paused) { audio.pause(); return; }
+    if (start > -1) playIdx(start);
+  });
+
+  /* native-controls-সিঙ্ক — hero/মিনি যে-টাই হোক, play/pause/ended এক-জায়গায় */
+  function bindMedia(a) {
+    if (!a || a.dataset.plBound) return;
+    a.dataset.plBound = '1';
+    a.addEventListener('play', function () {
+      if (curIdx < 0) {
+        var here = list.querySelector('.rsxd-seriep-li.here');
+        curIdx = (here && here.hasAttribute('data-audio')) ? lis.indexOf(here) : -1;
+      }
+      if (curIdx > -1) setPlaying(curIdx);
+    });
+    a.addEventListener('pause', function () {
+      /* মিডিয়া-স্পেক: শেষ-প্রান্তে pause ইভেন্ট ended-এর আগেই আসে (a.ended=true) —
+         সে-ক্ষেত্রে curIdx-রিসেট করলে ended-হ্যান্ডলার ভুল-পর্বে (প্রথম অডিও-পর্বে)
+         রিপ্লে/অ্যাডভান্স করত — a.ended গার্ড বাধ্যতামূলক (session117-E2E-তে ধরা) */
+      if (manualStop || a.ended || !a.duration) { return; }
+      setPlaying(-1); curIdx = -1;
+    });
+    a.addEventListener('ended', function () {
+      var nxt = -1;
+      for (var j = curIdx + 1; j < lis.length; j++) { if (lis[j].hasAttribute('data-audio')) { nxt = j; break; } }
+      if (nxt > -1) { playIdx(nxt); } else { setPlaying(-1); curIdx = -1; }
+    });
+  }
+  bindMedia(audio);
 })();
 </script>
