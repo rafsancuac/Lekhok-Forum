@@ -597,23 +597,17 @@ Stage Summary:
 - সিক্রেট-রোটেশন (Turso/SESSION_SECRET/Blob/Resend) এই-টাস্কের স্কোপ-বাইরে — আলাদা এজেন্ট/সেশনে বাকি
 
 ---
-Task ID: user-fix-102 (সেশন ১০২ — যোগাযোগ-পেজ ম্যাপ-ফিক্স ও রিডিজাইন)
-Agent: Z.ai Contact-Page Agent
-Task: যোগাযোগ পেজের ① গুগল-ম্যাপ না-দেখানো ② 'ক্যাম্পাস তথ্য' কার্ড-ডিজাইন ③ 'বিশ্ববিদ্যালয় সম্পর্কিত তথ্য'/'যাতায়াত'/'জরুরি যোগাযোগ' সাবসেকশনের প্যাডিং ও ডিজাইন — পূর্ণাঙ্গ সমাধান + ফ্লায়ার-ডেটা ইন্টিগ্রেশন
+Task ID: RES-100-b (সেশন ১০০-খ — রিসোর্স QA/পলিশ রাউন্ড)
+Agent: Resources-feature agent (Z.ai)
+Task: "রিসোর্স পেইজ ক্লিকেবল + অডিও/ভিডিও/ফটো/পিডিএফ সংযুক্ত + এডমিন/মডারেটর আপলোড-অপশন" — স্বাধীন ইমপ্লিমেন্টেশন শুরু করে session101-a (a0b1bb7) পাওয়ায় তাঁর ইমপ্লিমেন্টেশন গ্রহণ + QA + ফিক্স/পলিশ
 
 Work Log:
-- বর্তমান অবস্থা যাচাই: git fetch (parallel এজেন্টদের session94–101 কমিট সিঙ্ক) → worklog/PLANS/PROJECT পড়ে লক-ম্যাট্রিক্স বুঝলাম; fresh clone-এ bun install → :3030 বুট (SANDBOX_PORT) → agent-browser-এ /contact বেসলাইন স্ক্রিনশট
-- **ম্যাপ-মূল-কারণ আবিষ্কার:** শুধু ভাঙা pb=-URL নয় — server.js CSP-তে frame-src-ই ছিল না (default-src 'self' ফলব্যাকে গুগল-আইফ্রেম ব্লকড; সঠিক URL-ও লোড হতো না, লাইভেও)। CSP + frame-src (গুগল-ম্যাপস অরিজিন) + output=embed URL — দুই-স্তর ফিক্স
-- views/lekhok-contact.ejs পূর্ণ-রিডিজাইন: কোথায়-আমরা status-রো+লাইভ-ম্যাপ+খুলুন-বাটন; ক্যাম্পাস-চ্যানেল ব্র্যান্ড-টিন্ট অ্যাকশন-কার্ড; ইউনিভার্সিটি অ্যারো-কার্ড; জরুরি-গ্রিড ক্লিক-টু-কল (bn↔en ডিজিট, phoneOf102); হল-প্রভোস্ট গ্রিড+টগল; ফ্রি-শাটল চিপ-প্যানেল — সব C()-কী CMS-চালিত রেখে
-- helpers/sections-registry.js: contact_transport ডিফল্ট ৬-জরুরি-নম্বর (tel: extra) + নতুন contact_halls সেকশন (১৫ প্রভোস্ট, অ্যাডমিন-প্যানেলে অটো-আসে); helpers/transport-schedule.js + db.js: freeShuttle ডিফল্ট + মিসিং-কী মার্জ (লাইভ-DB-তেও মাইগ্রেশন-ছাড়া পৌঁছায়)
-- routes/pages.js: contact-রুটে halls42 প্যারালাল-ফেচ; style.css EOF: .cx102-স্কোপড ব্লক (+২ প্যাচ — প্রভোস্ট-র‍্যাপ-ফিক্স, egr-num আইকন)
-- Sandbox DB: tr42 → ৬-রো (saveDb-সহ; প্রথমবার process.exit-এ হারিয়েছিল — গোটচা প্রমাণিত)
-- E2E (agent-browser): ম্যাপ লাইভ-রেন্ডার ✓ চ্যানেল/ইউনি/ইমার্জেন্সি/প্রভোস্ট/ফ্রি-শাটল ভিজ্যুয়াল ✓ টগল ৬↔১৫+লেবেল-সিঙ্ক ✓ tel:-href ✓ 14-পেজ 200 ✓ /api/health ✓ অ্যাডমিন sections-পেজে halls ✓ 390px overflow-0 ✓ কনসোল-0 ✓; role-policy ৭২-পাস (২৭-ফেল = ফ্রেশ-ক্লোন QA-সিড-স্টেট, ডিফে-অসম্পর্কিত)
-- PROJECT.md চেঞ্জলগ + PLANS.md cross-agent নোট লিখে কমিট+পুশ
+- Fresh clone → ইউজারের Next.js-ডিজাইনকে Express/EJS-এ অ্যাডাপ্ট করে সম্পূর্ণ ইমপ্লিমেন্টেশন বানিয়েছিলাম (db-কলাম, resourceUpload, ফর্ম-রিডিজাইন, ক্লিকেবল কার্ড, /api view+download, CSS, ডেমো-PDF/WAV/PNG)
+- push-এর আগে git fetch → session101-a একই ফিচার main-এ push করেছে (বিস্তর overlap) → আমার প্যাচ /tmp/session100-res-backup.patch-এ সংরক্ষণ করে ডিস্কার্ড → তাঁর কোড গ্রহণ
+- তাঁর কোডে QA (curl + agent-browser) করে ৩টি গ্যাপ ফিক্স: ① stat-fetch/window.open/video-src-এ XTransformPort-কুয়েরি অনুপস্থিত (sandbox-এ 404) → sbx() হেল্পার ② image-টাইপে লাইটবক্স নেই → rsxLightbox যোগ ③ লেগেসি res_type='link'-আটকে-রো ১৫/১৯ কার্ড ভুল ব্যাজ → বুট-ব্যাকফিল + normalizeResType স্মার্ট-ফলব্যাক
+- বোনাস: ডেমো-মডারেটরকে 'resources' scope (moderator/moderator123 → /moderator/resources 200 যাচাই), CAT_BN বাংলা-লেবেল
 
 Stage Summary:
-- কমিট: session102 — ৭ ফাইল (contact.ejs +362, style.css +167, registry/transport/db/pages/server)
-- ফিক্স-প্রমাণ: after-*.png /tmp-তে (before/after তুলনাযোগ্য)
-- লাইভ-নোট: ম্যাপ-CSP ফিক্স ডিপ্লয়ে সাথে সাথে কাজ করবে; জরুরি-নম্বর/হল-তালিকা লাইভ-Turso-তে contact_halls-ফলব্যাক থেকে আসবে (admin-চাইলে site_items-এ ওভাররাইড করতে পারবেন)
-- পরবর্তী: ফর্ম-রেট-লিমিট, প্রভোস্ট-সার্চ, মাল্টি-পিন ম্যাপ, 'এখন খোলা?' লাইভ-ইন্ডিকেটর
-- Cron webDevReview টাস্ক সেট: job_id 393823 (fixed_rate 900s, webDevReview payload — প্রজেক্ট-কনটেক্সটসহ)
+- কমিট: (নিচে git-log দেখুন) — PROJECT.md-তে সেশন ১০০-খ entry, PLANS.md-তে ক্রস-এজেন্ট নোট
+- যাচাই: কার্ড-টাইপ pdf6/audio3/doc4/image2/video2/link2 ✓, অডিও-টগল ✓, ভিডিও-এমবেড-মোডাল ✓, লাইটবক্স open/close/backdrop ✓, stat লাইভ-কাউন্টার (১→২ DOM-আপডেট) ✓, dedup ✓, PDF-ট্যাব XTransformPort-সহ ✓, কনসোল-০ ✓
+- শেখা: multipart CSRF-এ body দেখা যায় না (query _csrf প্যাটার্ন); sandbox-এ সার্ভার+টেস্ট এক-ইনভোকেশনে; ব্যাকগ্রাউন্ড প্রসেস মরে যায়

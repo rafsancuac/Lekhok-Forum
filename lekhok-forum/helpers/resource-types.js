@@ -18,9 +18,15 @@ const RES_TYPES = {
 
 /** legacy file_type (document|video|link|pdf|…) + res_type থেকে ক্যানোনিক্যাল টাইপ */
 function normalizeResType(row) {
-  const t = String((row && (row.res_type || row.file_type)) || '').toLowerCase();
-  if (RES_TYPES[t]) return t;
-  if (t === 'document') return 'pdf';
+  // সেশন ১০০-খ: res_type='link' ডিফল্টে আটকে-থাকা লেগেসি রো হিল করি — file_type-এ
+  // অর্থবহ টাইপ (pdf/audio/…) থাকলে সেটাই প্রাধান্য পায় (বুট-ব্যাকফিল db.js-এও আছে)।
+  const ft = String((row && row.file_type) || '').toLowerCase();
+  const legacyMap = { document: 'doc' };
+  const ftCanon = RES_TYPES[ft] ? ft : (legacyMap[ft] || null);
+  const rt = String((row && row.res_type) || '').toLowerCase();
+  if (rt && RES_TYPES[rt] && rt !== 'link') return rt;        // res_type-এ অর্থবহ টাইপ
+  if (ftCanon) return ftCanon;                                 // লেগেসি file_type হিল
+  if (rt && RES_TYPES[rt]) return rt;                          // দুটোই link হলে link
   return 'link';
 }
 

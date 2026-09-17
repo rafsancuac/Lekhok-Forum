@@ -8,7 +8,7 @@
 
 <section class="section reveal">
   <div class="container">
-    <% const CAT_BN = { guide: 'গাইড', document: 'ডকুমেন্ট', report: 'প্রতিবেদন', form: 'ফর্ম', anthology: 'সংকলন', reference: 'রেফারেন্স', scholarship: 'ফেলোশিপ', 'writing-tips': 'লেখালেখির টিপস', general: 'সাধারণ' }; const catBn = (c) => CAT_BN[c] || c; %>
+    <% const CAT_BN = { guide: 'গাইড', document: 'ডকুমেন্ট', report: 'প্রতিবেদন', form: 'ফর্ম', anthology: 'সংকলন', reference: 'রেফারেন্স', scholarship: 'ফেলোশিপ', 'writing-tips': 'লেখালেখির টিপস', general: 'সাধারণ', 'audio-lecture': 'অডিও লেকচার', 'video-class': 'ভিডিও ক্লাস', ebook: 'ই-বুক' }; const catBn = (c) => CAT_BN[c] || c; %>
     <% const BN = '০১২৩৪৫৬৭৮৯'; const bn = n => String(n).replace(/\d/g, d => BN[+d]); %>
     <%
       /* সেশন ১০১: টাইপ-মেটা — কার্ডে ব্যাজ/আইকন/অ্যাকশন-লেবেল (helpers/resource-types.js-এর সাথে সিঙ্কড) */
@@ -97,12 +97,19 @@
   </div>
 </section>
 
-<%# ── ভিডিও মোডাল (সেশন ১০১) ── %>
+<%# ── ভিডিও মোডাল (সেশন ১০১) + ছবি লাইটবক্স (সেশন ১০০-খ) ── %>
 <div class="rsx-vmodal" id="rsxVModal" hidden role="dialog" aria-modal="true" aria-label="ভিডিও প্রিভিউ">
   <div class="rsx-vmodal-back" data-rsx-close></div>
   <div class="rsx-vmodal-box">
     <button type="button" class="rsx-vmodal-x" data-rsx-close aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
     <div class="rsx-vmodal-frame" id="rsxVModalFrame"></div>
+  </div>
+</div>
+<div class="rsx-vmodal rsx-lb" id="rsxLightbox" hidden role="dialog" aria-modal="true" aria-label="ছবি প্রিভিউ">
+  <div class="rsx-vmodal-back" data-rsx-close></div>
+  <div class="rsx-lb-box">
+    <button type="button" class="rsx-vmodal-x" data-rsx-close aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
+    <img id="rsxLbImg" src="" alt="রিসোর্স ছবি">
   </div>
 </div>
 
@@ -147,6 +154,10 @@
 .rsx-vmodal-frame { aspect-ratio: 16/9; width: 100%; }
 .rsx-vmodal-frame iframe, .rsx-vmodal-frame video { width: 100%; height: 100%; border: 0; display: block; }
 
+/* সেশন ১০০-খ: ছবি-লাইটবক্স (ভিডিও-মোডাল পরিবারেই) */
+.rsx-lb-box { position: relative; max-width: 940px; width: 100%; background: #0B1121; border-radius: 16px; padding: 12px; text-align: center; }
+.rsx-lb-box img { max-width: 100%; max-height: 76vh; object-fit: contain; border-radius: 10px; display: block; margin: 0 auto; }
+
 @media (max-width: 640px) {
   .rsx-grid { grid-template-columns: 1fr; gap: 14px; }
   .rsx-foot { flex-wrap: wrap; gap: 8px; }
@@ -163,9 +174,17 @@
   /* ═══ সেশন ১০১: কার্ড-ক্লিক ইঞ্জিন — অডিও ইনলাইন-প্লে, ভিডিও মোডাল, ডাউনলোড-কাউন্ট ═══ */
   var BN = '০১২৩৪৫৬৭৮৯';
   function bn(n) { return String(n).replace(/\d/g, function (d) { return BN[+d]; }); }
+  /* সেশন ১০০-খ: স্যান্ডবক্স-গেটওয়ে সাপোর্ট — পেজ-ইউআরএলে XTransformPort থাকলে fetch/
+     window.open/মিডিয়া-src-তেও সেই কুয়েরি বহন করতে হয় (নইলে গেটওয়ে অন্য পোর্টে পাঠায়)।
+     লাইভ/প্রোডাকশনে এটি খালি → সম্পূর্ণ নো-অপ। */
+  var SBX = (/XTransformPort=/.test(location.search)) ? location.search.replace(/^\?/, '') : '';
+  function sbx(u) {
+    if (!SBX || !u || /^(https?:)?\/\//i.test(u)) return u; // বাহ্যিক-লিংকে হাত নেই
+    return u + (u.indexOf('?') > -1 ? '&' : '?') + SBX;
+  }
   function stat(id, kind) {
     try {
-      fetch('/api/resources/' + id + '/stat', {
+      fetch(sbx('/api/resources/' + id + '/stat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kind: kind })
@@ -184,16 +203,29 @@
   var frame = document.getElementById('rsxVModalFrame');
   function closeModal() {
     if (!modal.hidden) { frame.innerHTML = ''; modal.hidden = true; document.body.style.overflow = ''; }
+    if (lb && !lb.hidden) { lb.hidden = true; document.body.style.overflow = ''; }
   }
   modal.addEventListener('click', function (e) { if (e.target.closest('[data-rsx-close]')) closeModal(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+  /* সেশন ১০০-খ: ছবি-লাইটবক্স — ইনফোগ্রাফিক/ছবি-রিসোর্স ক্লিকে ইন-পেজ বড়-প্রিভিউ */
+  var lb = document.getElementById('rsxLightbox');
+  var lbImg = document.getElementById('rsxLbImg');
+  /* লাইটবক্সেও একই close-হ্যান্ডলার (বন্ধ-বাটন + ব্যাকড্রপ) */
+  if (lb) lb.addEventListener('click', function (e) { if (e.target.closest('[data-rsx-close]')) closeModal(); });
+  function openLightbox(url) {
+    if (!lb) { window.open(url, '_blank', 'noopener'); return; }
+    lbImg.src = url;
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
 
   function openVideo(url, id) {
     var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
     var vm = url.match(/vimeo\.com\/(\d+)/);
     if (m) frame.innerHTML = '<iframe src="https://www.youtube.com/embed/' + m[1] + '?autoplay=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
     else if (vm) frame.innerHTML = '<iframe src="https://player.vimeo.com/video/' + vm[1] + '?autoplay=1" allow="autoplay; fullscreen" allowfullscreen></iframe>';
-    else frame.innerHTML = '<video src="' + url + '" controls autoplay playsinline></video>';
+    else frame.innerHTML = '<video src="' + sbx(url) + '" controls autoplay playsinline></video>';
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
     stat(id, 'view');
@@ -213,9 +245,11 @@
         return;
       }
       if (type === 'video' && url) { openVideo(url, id); return; }
+      /* সেশন ১০০-খ: ছবি → লাইটবক্স (নতুন-ট্যাবের বদলে ইন-পেজ প্রিভিউ) */
+      if (type === 'image' && url) { openLightbox(sbx(url)); stat(id, 'view'); return; }
       if (url) {
         stat(id, 'download');
-        window.open(url, '_blank', 'noopener');
+        window.open(sbx(url), '_blank', 'noopener');
       }
     }
     card.addEventListener('click', activate);

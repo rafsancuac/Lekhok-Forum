@@ -1231,6 +1231,28 @@ async function runMigrations() {
     try { await backend.exec(s); } catch (_) {}
   }
 
+  // ── সেশন ১০০-খ: রিসোর্স res_type লেগেসি-ব্যাকফিল (idempotent) ────────────────
+  // session101-a-র res_type কলাম ALTER DEFAULT 'link' দিয়ে যোগ হয়েছে — পুরনো রোতে
+  // file_type যা-ই থাকুক, res_type='link'-এ আটকে থাকে; ফলে পাবলিক কার্ড/অ্যাডমিন লিস্টে
+  // পিডিএফ/অডিও/ভিডিও/ছবি সব 'লিংক' ব্যাজ দেখায়। বুটে একবার file_type থেকে ক্যানোনিক্যাল
+  // মান বসিয়ে দিই (document→doc ম্যাপিং সহ); normalizeResType read-time ফলব্যাকও রইল।
+  try {
+    await backend.exec(`
+      UPDATE resources
+         SET res_type = CASE LOWER(COALESCE(file_type, ''))
+                         WHEN 'document' THEN 'doc'
+                         WHEN 'pdf'    THEN 'pdf'
+                         WHEN 'audio'  THEN 'audio'
+                         WHEN 'video'  THEN 'video'
+                         WHEN 'image'  THEN 'image'
+                         WHEN 'doc'    THEN 'doc'
+                         ELSE 'link' END
+       WHERE (res_type IS NULL OR res_type = 'link')
+         AND file_type IS NOT NULL
+         AND LOWER(file_type) IN ('pdf','audio','video','image','doc','document')
+    `);
+  } catch (_) {}
+
   // ── সেশন ৭৭: সুপার-এডমিন বুটস্ট্র্যাপ ──────────────────────────────────────
   // সাইটে যদি কোনো সুপার-এডমিন না থাকে, প্রথম (প্রাচীনতম) অ্যাডমিন অ্যাকাউন্টকে
   // একবার superadmin-এ উন্নীত করা হয় — idempotent, প্রতি বুটে নিরাপদ।

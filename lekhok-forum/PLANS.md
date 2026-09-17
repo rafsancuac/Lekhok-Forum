@@ -813,3 +813,17 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 3. agent-browser-এ reveal-গোটচা আগের মতোই — `.reveal/.reveal-stagger`-এ ম্যানুয়াল `.in`।
 
 **পরবর্তী-সুপারিশ (রোডম্যাপ-বহির্ভূত UX-বৃদ্ধি):** যোগাযোগ-ফর্মে hCaptcha/রেট-লিমিট · হল-প্রভোস্টে সার্চ/ফিল্টার (১৫+ আইটেম) · ম্যাপে মাল্টি-পিন (হল/ডিপার্টমেন্ট) · contact_hours-এ "এখন খোলা?" লাইভ-ইন্ডিকেটর (সার্ভার-টাইম)।
+
+## Cross-Agent Note: Session 100-খ — রিসোর্স-ফিচার QA + sandbox-গেটওয়ে-ফিক্স + লেগেসি-হিল (১৮ সেপ্টেম্বর ২০২৬)
+
+**প্রেক্ষাপট:** session101-a-র রিসোর্স-মাল্টিমিডিয়া ইমপ্লিমেন্টেশন (a0b1bb7)-এর ওপর QA-রাউন্ড। আমার সমান্তরাল ইমপ্লিমেন্টেশন (/tmp/session100-res-backup.patch) ডিস্কার্ড করে তাঁরটি গ্রহণ — ডুপ্লিকেশন-রিস্ক-শূন্য।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (এজেন্টদের জন্য):**
+- **sandbox-গেটওয়ে স্কিমা:** পেজ-কুয়েরিতে `XTransformPort` থাকলে সেই পেজের **সব fetch/window.open/মিডিয়া-src-তে** কুয়েরিটা বহন করতে হয় — নইলে Caddy গেটওয়ে Next.js(:3000)-এ পাঠায় → 404। lekhok-resources.ejs-এর `sbx()` হেল্পার-প্যাটার্ন কপি করুন (লাইভে নো-অপ)। সার্ভার-সাইড SANDBOX_PORT-রিরাইট শুধু HTML-অ্যাট্রিবিউট (src/href) ধরে — JS-ট্রিগার্ড fetch/open ধরে না।
+- **multipart CSRF:** গ্লোবাল CSRF-মিডলওয়্যার (server.js:371) router-মাউন্টের **আগে** চলে — multipart-এ `req.body` তখনো খালি। আসল অ্যাপ-প্যাটার্ন: main.js multipart-ফর্মের action-এ meta-token থেকে `?_csrf=` জোড়া দেয়। curl-E2E-তে `-F "_csrf=..."` নয়, query-তে দিন।
+- **res_type-লেগেসি-হিল:** db.js boot-এ idempotent UPDATE (file_type→res_type) + helpers/resource-types.js `normalizeResType`-এ file_type-প্রাধান্য-ফলব্যাক — পুরনো DB (Vercel Turso সহ) প্রথম বুটেই ঠিক হবে।
+- **রিসোর্স-ফিচার-ম্যাপ:** পাবলিক /resources (ক্লিকেবল কার্ড: অডিও=ইনলাইন-প্লেয়ার, ভিডিও=YouTube/HTML5-মোডাল, ছবি=লাইটবক্স, pdf/doc/link=stat-কাউন্টেড-ডাউনলোড) + অ্যাডমিন /admin/resources (requireAdmin) + মডারেটর /moderator/resources (requireScope 'resources') + POST /api/resources/:id/stat (view|download, ৩০সে-ডিডুপ)।
+
+**গোটচা-পুনঃপ্রমাণ:** detached node সার্ভার টুল-কলের মাঝে মরে (setsid-ও নয়) — সার্ভার+টেস্ট এক-ইনভোকেশনে; bash-এ `cd X && long-chain &` লিখলে পুরো চেইন ব্যাকগ্রাউন্ডে যায় (CWD-বিভ্রম → ফাইল " disappears"-ভুল-তথ্য) — `cd` আলাদা স্টেটমেন্টে।
+
+**পরবর্তী-ক্রন-রাউন্ড-সুপারিশ:** ① /moderator/resources-ও sbx-প্যাটার্নে যাচাই (moderator-ফ্লো E2E) ② রিসোর্সে বাল্ক-আপলোড/সংকলন-সিরিজ ③ ই-বুক-ক্যাটাগরির জন্য কভার-ইমেজ (thumbnail_url ফিল্ড ফাঁকা — ফর্মে অপশন) ④ role-policy স্যুটে resources-রুটের চেক-যোগ।
