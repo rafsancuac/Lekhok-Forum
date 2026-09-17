@@ -1745,4 +1745,30 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
   .ws91-bars{gap:8px;height:72px}
   .ws91-mo{font-size:.58rem}
   .me-wrap .personal-tab{padding:6px 9px;font-size:.74rem}
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১০৭: FB-প্যারিটি কমেন্ট UX আর্টিকেল/প্রশ্ন-পেজে বহমান (session104-ইঞ্জিন)
+   .comment-item/.reply-item-ও এখন প্যালেট+ব্যাজ+৩-ডট+ইনলাইন-এডিট চালায় —
+   comment-tools.js-এর ডুয়াল-সারফেস অ্যাডাপ্টারের ভিত্তি। ব্যাজ/প্যালেট/মেনুর
+   মূল-স্টাইল session104-ব্লকে আছে; এখানে শুধু আর্টিকেল-কনটেক্সট সংযোজন।
+   ═══════════════════════════════════════════════════════════════════════════ */
+.comment-bubble{position:relative} /* রিঅ্যাকশন-ব্যাজ (fc-react-badge) বাবল-কোণে অ্যাঙ্কর */
+.comment-bubble .fc-edited{margin:2px 0 0 1px}
+.fb-meta107{margin-top:4px;padding-left:2px}
+.fb-meta107 .cm-time107{color:var(--text-muted,#94a3b8);font-weight:400}
+.fb-meta107 .fc-menu-wrap{margin-left:auto}
+.fb-meta107 .reply-btn{background:0 0;border:0;color:var(--text-soft,#65676b);font-family:inherit;font-size:.7rem;font-weight:600;cursor:pointer;padding:0}
+.fb-meta107 .reply-btn:hover{text-decoration:underline;color:var(--accent,#059669)}
+/* বাবলের ভেতরে রিপ্লাই-থ্রেড থাকলে ব্যাজ/এডিটেড মার্কারের জ-ওভারল্যাপ গার্ড */
+.comment-bubble .fc-react-badge{z-index:4}
+.comment-bubble .reply-item{margin-top:8px}
+/* ইনলাইন-এডিটর আর্টিকেল-বাবলের ভেতরে পূর্ণ-প্রস্থ */
+.comment-item .fc-edit-slot,.reply-item .fc-edit-slot{width:100%}
+.reply-item .fc-edit-box .fc-edit-input{font-size:.82rem}
+/* টাচ-ডিভাইস: ৩-ডট সর্বদা দৃশ্যমান (session104-নিয়ম আর্টিকেল-পেজেও) */
+@media (hover: none){
+  .comment-meta .fc-menu-btn,.reply-item .fc-menu-btn{opacity:1;width:26px;height:26px}
+}
+@media (max-width:640px){
+  .fb-meta107{gap:10px}
+  .fb-meta107 .fc-menu{min-width:158px;right:-4px}
 }

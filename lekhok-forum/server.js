@@ -65,6 +65,12 @@ function computeAssetVersion() {
     };
     walk(path.join(__dirname, 'public', 'assets'));
   } catch (e) { h = Date.now() & 0x7fffffff; }
+  /* সেশন ১০৭-ফিক্স: হ্যাশ-কোলিশন-গার্ড — size+mtime-হ্যাশ বুট-থেকে-বুটে এক থেকে
+     গেলে (একই স্টেটে দুই বুট, বা শেয়ার্ড-ক্লোনের গিট-রেস) ব্রাউজার ৩০-দিন
+     immutable-ক্যাশ থেকে পুরনো CSS/JS চালাতেই থাকে (লাইভ-বাগ: session104-এর
+     fc-open-ডুপ্লিকেট-ফিক্স "কাজ করছে না" দেখাচ্ছিল — কোড ঠিক থাকাও)। boot-epoch
+     XOR-এ প্রতি-বুটেই ইউনিক → রিস্টার্টে ব্রাউজার সবসময় ফ্রেশ অ্যাসেট ফেচ করে। */
+  h = (h ^ (Math.floor(Date.now() / 1000) & 0x7fffffff)) | 0;
   return (h >>> 0).toString(36);
 }
 app.locals.AV = computeAssetVersion();

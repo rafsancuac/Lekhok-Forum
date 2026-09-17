@@ -131,35 +131,97 @@
         <% } %>
 
         <div class="comments-list">
+          <%
+            // ── সেশন ১০৭: FB-প্যারিটি কমেন্ট-আইটেম — হোভার রিঅ্যাকশন-প্যালেট (fcr) +
+            // বাবল-কোণে রিঅ্যাকশন-ব্যাজ + হোভার ৩-ডট-মেনু (সম্পাদনা/মুছে-ফেলা/রিপোর্ট) +
+            // ইনলাইন-এডিটর (data-raw প্রি-ফিল)। ইঞ্জিন comment-tools.js (session104/107) —
+            // ডেলিগেটেড, data-cid/author-id/data-raw-চুক্তিতে চলে। session100-এর hold-ইঞ্জিন
+            // (actions-bar) কমেন্ট-স্তর থেকে সরানো হলো — ফিডের সাথে একই UX।
+            var _rm107 = REACTION_META;
+            var _bn107 = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); };
+            var _topEmoji107 = function (counts) {
+              var best = null, bc = -1;
+              Object.keys(counts || {}).forEach(function (k) {
+                if ((counts[k] || 0) > bc && _rm107[k]) { best = k; bc = counts[k] || 0; }
+              });
+              return best ? _rm107[best].emoji : '👍';
+            };
+          %>
           <% comments.forEach(c => { %>
-            <div class="comment-item" id="c<%= c.id %>">
+            <div class="comment-item" id="c<%= c.id %>" data-cid="<%= c.id %>" data-author-id="<%= c.author_id %>">
               <img loading="lazy" decoding="async" src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
               <div class="comment-bubble">
                 <a href="/profile/<%= c.username %>" class="comment-author"><%= displayName(c, c.full_name) %></a><% if (hasPenName(c)) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %>
-                <div class="comment-body"><%- c.bodyHtml %></div>
-                <div class="comment-meta">
-                  <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
-                  <span class="comment-react-mini"><%= (c.reaction && c.reaction.total) ? c.reaction.total + ' প্রতিক্রিয়া' : '' %></span>
-                  <% if (user) { %><button class="reply-btn" data-id="<%= c.id %>" data-name="<%= c.username %>"><i class="far fa-comment"></i> উত্তর</button><% } %>
-                </div>
-                <div class="comment-reactions">
+                <div class="comment-body" data-raw="<%= c.body %>"><%- c.bodyHtml %></div>
+                <% if (c.edited_at) { %><span class="fc-edited">সম্পাদিত</span><% } %>
+                <% if (c.reaction && c.reaction.total > 0) { %>
+                  <div class="fc-react-badge" title="প্রতিক্রিয়া"><span class="fcrb-emoji"><%= _topEmoji107(c.reaction.counts) %></span><span class="fcrb-count"><%= _bn107(c.reaction.total) %></span></div>
+                <% } %>
+                <div class="comment-meta fb-meta107">
                   <% if (user) { %>
-                    <%- include('../partials/actions-bar', {
-                      targetId: c.id, targetType: 'comment',
-                      counts: c.reaction.counts, mine: c.reaction.mine,
-                      link: '/articles/' + post.id, showBookmark: false, showShare: false
-                    }) %>
+                    <span class="fc-react-wrap">
+                      <button type="button" class="fc-react-btn<%= c.reaction && c.reaction.mine ? ' active' : '' %>" data-mine="<%= (c.reaction && c.reaction.mine) || '' %>"><%= (c.reaction && c.reaction.mine && _rm107[c.reaction.mine]) ? _rm107[c.reaction.mine].label : 'লাইক' %></button>
+                      <div class="fcr-palette" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন" hidden>
+                        <% Object.keys(_rm107).forEach(function (k) { %>
+                          <button type="button" class="fcr-opt<%= (c.reaction && c.reaction.mine === k) ? ' selected' : '' %>" data-reaction="<%= k %>" title="<%= _rm107[k].label %>" aria-label="<%= _rm107[k].label %>"><%= _rm107[k].emoji %></button>
+                        <% }); %>
+                      </div>
+                    </span>
+                    <button type="button" class="reply-btn" data-id="<%= c.id %>" data-name="<%= c.username %>">উত্তর দিন</button>
+                  <% } %>
+                  <span class="cm-time107"><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
+                  <% if (user) { %>
+                    <span class="fc-menu-wrap">
+                      <button type="button" class="fc-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="মন্তব্য অপশন" title="মন্তব্য অপশন"><i class="fas fa-ellipsis-h"></i></button>
+                      <div class="fc-menu" role="menu" hidden>
+                        <% if (user && c.author_id === user.id) { %>
+                          <button type="button" class="fc-menu-item" data-cact="edit" role="menuitem"><i class="fas fa-pen"></i> সম্পাদনা করুন</button>
+                          <button type="button" class="fc-menu-item fc-menu-danger" data-cact="delete" role="menuitem"><i class="fas fa-trash"></i> মুছে ফেলুন</button>
+                        <% } else { %>
+                          <button type="button" class="fc-menu-item fc-menu-danger" data-cact="report" role="menuitem"><i class="far fa-flag"></i> রিপোর্ট করুন</button>
+                        <% } %>
+                      </div>
+                    </span>
                   <% } %>
                 </div>
+                <% if (user) { %><div class="fc-edit-slot" hidden></div><% } %>
                 <% c.replies && c.replies.forEach(r => { %>
-                  <div class="reply-item" id="c<%= r.id %>">
+                  <div class="reply-item" id="c<%= r.id %>" data-cid="<%= r.id %>" data-author-id="<%= r.author_id %>">
                     <img loading="lazy" decoding="async" src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
                     <div class="comment-bubble small">
                       <a href="/profile/<%= r.username %>" class="comment-author"><%= displayName(r, r.full_name) %></a><% if (hasPenName(r)) { %><span class="pen-chip" title="আসল নাম: <%= r.full_name %>">কলমে</span><% } %>
-                      <div class="comment-body"><%- r.bodyHtml %></div>
-                      <div class="comment-meta">
-                        <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
+                      <div class="comment-body" data-raw="<%= r.body %>"><%- r.bodyHtml %></div>
+                      <% if (r.edited_at) { %><span class="fc-edited">সম্পাদিত</span><% } %>
+                      <% if (r.reaction && r.reaction.total > 0) { %>
+                        <div class="fc-react-badge" title="প্রতিক্রিয়া"><span class="fcrb-emoji"><%= _topEmoji107(r.reaction.counts) %></span><span class="fcrb-count"><%= _bn107(r.reaction.total) %></span></div>
+                      <% } %>
+                      <div class="comment-meta fb-meta107">
+                        <% if (user) { %>
+                          <span class="fc-react-wrap">
+                            <button type="button" class="fc-react-btn<%= r.reaction && r.reaction.mine ? ' active' : '' %>" data-mine="<%= (r.reaction && r.reaction.mine) || '' %>"><%= (r.reaction && r.reaction.mine && _rm107[r.reaction.mine]) ? _rm107[r.reaction.mine].label : 'লাইক' %></button>
+                            <div class="fcr-palette" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন" hidden>
+                              <% Object.keys(_rm107).forEach(function (k) { %>
+                                <button type="button" class="fcr-opt<%= (r.reaction && r.reaction.mine === k) ? ' selected' : '' %>" data-reaction="<%= k %>" title="<%= _rm107[k].label %>" aria-label="<%= _rm107[k].label %>"><%= _rm107[k].emoji %></button>
+                              <% }); %>
+                            </div>
+                          </span>
+                        <% } %>
+                        <span class="cm-time107"><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
+                        <% if (user) { %>
+                          <span class="fc-menu-wrap">
+                            <button type="button" class="fc-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="মন্তব্য অপশন" title="মন্তব্য অপশন"><i class="fas fa-ellipsis-h"></i></button>
+                            <div class="fc-menu" role="menu" hidden>
+                              <% if (user && r.author_id === user.id) { %>
+                                <button type="button" class="fc-menu-item" data-cact="edit" role="menuitem"><i class="fas fa-pen"></i> সম্পাদনা করুন</button>
+                                <button type="button" class="fc-menu-item fc-menu-danger" data-cact="delete" role="menuitem"><i class="fas fa-trash"></i> মুছে ফেলুন</button>
+                              <% } else { %>
+                                <button type="button" class="fc-menu-item fc-menu-danger" data-cact="report" role="menuitem"><i class="far fa-flag"></i> রিপোর্ট করুন</button>
+                              <% } %>
+                            </div>
+                          </span>
+                        <% } %>
                       </div>
+                      <% if (user) { %><div class="fc-edit-slot" hidden></div><% } %>
                     </div>
                   </div>
                 <% }); %>

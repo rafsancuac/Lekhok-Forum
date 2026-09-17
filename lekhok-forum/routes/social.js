@@ -98,6 +98,7 @@ const REACTIONS = ['like', 'love', 'care', 'haha', 'wow', 'sad', 'angry'];
 const REACTION_META = {
   like: { emoji: '👍', label: 'লাইক' },
   love: { emoji: '❤️', label: 'ভালোবাসা' },
+  care: { emoji: '🤗', label: 'কেয়ার' },
   haha: { emoji: '😂', label: 'হাহা' },
   wow:  { emoji: '😮', label: 'বিস্ময়' },
   sad:  { emoji: '😢', label: 'দুঃখ' }
