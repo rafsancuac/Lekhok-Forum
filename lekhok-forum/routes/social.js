@@ -2657,8 +2657,14 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const prev101 = await db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND comment_id = ?').get(me.id, target_id);
     const del101 = await db.prepare('DELETE FROM likes WHERE user_id = ? AND comment_id = ?').run(me.id, target_id);
     const toggledOff101 = del101.changes > 0 && ((prev101 && prev101.reaction_type) || 'like') === reaction_type;
+    // সেশন ১১১(ব)+১১৬-ইউনিয়ন: কমেন্ট-রিঅ্যাকশনে লেখক-নোটিফিকেশন — পোস্ট-ব্রাঞ্চ-সিমেট্রিক
+    // নীতি (কেবল নতুন-INSERT-এ + love/haha/wow-ডিবাউন্স; same-reaction টগল-অফে INSERT-ই
+    // হয় না)। নোটিফাই-কল নিচে atomicC-কাউন্টের পরে (অ্যাঙ্কর-লিঙ্ক + try/catch-সহ
+    // session-116-ব্লকে) — এখানে ডুপ্লিকেট-নোটিফাই নেই।
+    let addedC116 = false;
     if (!toggledOff101) {
-      await db.prepare('INSERT OR IGNORE INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+      const insC116 = await db.prepare('INSERT OR IGNORE INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+      addedC116 = insC116.changes > 0;
     }
     const mine101 = toggledOff101 ? null : reaction_type;
     const counts = await db.prepare(`
@@ -2682,6 +2688,29 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     if (!atomicC) {
       try { await db.exec("ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
       await db.prepare('UPDATE comments SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
+    }
+    // ── সেশন ১১৬: কমেন্ট-রিঅ্যাকশন নোটিফিকেশন — পোস্ট-রিঅ্যাকশনের সাথে প্যারিটি ──
+    // (সেশন-১১৪-নোটের সুপারিশ ③: 'কমেন্ট-রিঅ্যাকশনেও নোটিফিকেশন (পোস্টে আছে)')।
+    // পোস্ট-ব্রাঞ্চের ডিবাউন্স-নীতি হুবহু: কেবল love/haha/wow, কেবল নতুন-INSERT-এ
+    // (same-reaction টগল-অফে INSERT-ই হয় না → addedC116=false; রিঅ্যাকশন-সুইচ
+    //  নতুন-INSERT-ই — পোস্ট-ব্রাঞ্চের added101-চুক্তির সাথে অভিন্ন), প্রেফ-গেট
+    // (notify_reactions), নিজের-মন্তব্যে নয়। লিঙ্কে অ্যাঙ্কর: QA-উত্তর → #answer-<id>
+    // (qa-single স্লট), আর্টিকেল-কমেন্ট → #fc-c<id> (ক্যানোনিকাল CommentItem id)।
+    if (addedC116 && ['love', 'haha', 'wow'].includes(reaction_type)) {
+      try {
+        const cRow116 = await db.prepare(`
+          SELECT c.author_id, c.post_id, p.type AS post_type
+          FROM comments c JOIN posts p ON c.post_id = p.id
+          WHERE c.id = ?`).get(target_id);
+        if (cRow116 && cRow116.author_id !== me.id) {
+          const labels116 = { love: '❤️ ভালোবাসা', haha: '😂 হাসি', wow: '😮 বিস্ময়' };
+          const link116 = (cRow116.post_type === 'question'
+            ? '/qa/' + cRow116.post_id + '#answer-'
+            : '/articles/' + cRow116.post_id + '#fc-c') + target_id;
+          await notifyIfAllowed(cRow116.author_id, 'notify_reactions', 'reaction', labels116[reaction_type] || 'প্রতিক্রিয়া',
+            displayName(me) + ' আপনার মন্তব্যে প্রতিক্রিয়া জানিয়েছেন', link116, me.id);
+        }
+      } catch (_e) { /* নোটিফিকেশন-ব্যর্থতা রিঅ্যাকশন-ফ্লো ভাঙবে না */ }
     }
     res.json({ ok: true, reactions, total, mine: mine101 });
   }
@@ -2789,7 +2818,11 @@ router.post('/qa/:id/answer', ensureLoggedIn, async (req, res) => {
   if (q && q.author_id !== me.id) {
     await notifyIfAllowed(q.author_id, 'notify_comments', 'comment', 'নতুন উত্তর', displayName(me) + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid, me.id);
   }
-  res.redirect('/qa/' + qid + '#c' + r.lastInsertRowid);
+  // সেশন ১১৬-ফিক্স: '#c'+id অ্যাঙ্করের কোনো টার্গেট qa-single-এ ছিল না (উত্তর-স্লটের
+  // id হলো 'answer-<id>', ক্যানোনিকাল CommentItem-এর 'fc-c<id>') → ব্রাউজার স্ক্রল-ব্যর্থ,
+  // নীরবে পেজ-টপে থেকে যেত। এখন আসল স্লট-id ('answer-<id>' — চিপসহ পূর্ণ-স্লট) +
+  // সেশন-১১৬-এর .qa-answer-slot{scroll-margin-top:90px} — স্টিকি-টপবারের নিচেও দৃশ্যমান।
+  res.redirect('/qa/' + qid + '#answer-' + r.lastInsertRowid);
 });
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -254,7 +254,7 @@
             </div>
             <div id="notifList">
               <% if (typeof recentNotifs !== 'undefined' && recentNotifs && recentNotifs.length) { %>
-                <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', reply: 'fa-reply', call: 'fa-phone-slash' }; %>
+                <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', reaction: 'fa-heart', reply: 'fa-reply', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', call: 'fa-phone-slash' }; %>
                 <% recentNotifs.forEach(n => { %>
                   <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>">
                     <%# সেশন ১০২-ইউনিয়ন: actor-avatar (actor_id JOIN + legacy link-fallback) — ছবি নাহলে টাইপ-রঙা আইকন (live.js-এর সাথে সমান) %>

@@ -1935,3 +1935,30 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
    ═══════════════════════════════════════════════════════════════════════════ */
 .fc-item:hover .fc-menu-btn,.comment-item:hover .fc-menu-btn,.reply-item:hover .fc-menu-btn,
 .fc-menu-btn:focus-visible,.fc-menu-wrap.open .fc-menu-btn{opacity:1}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১১৬ — নোটিফিকেশন আইকন-রেজিস্ট্রি প্যারিটি + QA-উত্তর-অ্যাঙ্কর পলিশ
+   (হেডার-ড্রপডাউন _ico-ম্যাপ + notifications.ejs পেজ-আইকন + স্টাইল-বিস্তারিত)
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* কমেন্ট-রিঅ্যাকশন নোটিফিকেশন টাইপ 'reaction' — like/react-পরিবারের রোজ-প্যালেট
+   (ড্রপডাউনের .ico-react-এর সাথে সুরেলা; সেশন-১১৬ পর্যন্ত fa-bell-ফলব্যাকে পড়ত) */
+.notif-ico.ico-reaction{background:rgba(228,64,95,.12); color:#e0245e}
+/* নোটিফিকেশন-পেজে 'reply' টাইপের নিজস্ব প্যালেট (icon-comment ভাগ করে নেয়,
+   ফন্ট হিসেবে fa-reply — কমেন্ট-পরিবারের অ্যাম্বার রেজিস্ট্রির সাথে মিল রেখে) */
+.notif-page-icon.icon-reply{background:rgba(234,88,12,.13); color:#ea580c; border-color:#fed7aa}
+/* QA-উত্তর-অ্যাঙ্কর স্ক্রল-অফসেট (article.css-এর .answer-item-চুক্তির মিরর) —
+   /qa/:id#answer-<id> লিঙ্কে স্টিকি-টপবারের নিচে লুকায় না */
+.qa-answer-slot{scroll-margin-top:90px}
+/* শীর্ষ-উত্তর চিপ পলিশ: ট্রফি-গ্রেড মাইক্রো-ডিটেইল (গ্রেডিয়েন্ট + হেয়ারলাইন
+   + হোভার-লিফট) — ক্যানোনিকাল shared.css টোকেন-লকের ওপরে পেজ-লেয়ার এনহ্যান্সমেন্ট */
+.top-answer-chip{
+  background:linear-gradient(135deg, rgba(5,150,105,.10), rgba(16,185,129,.16));
+  border:1px solid rgba(5,150,105,.38);
+  box-shadow:0 1px 3px rgba(0,106,78,.14), inset 0 1px 0 rgba(255,255,255,.55);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.top-answer-chip:hover{transform:translateY(-1px); box-shadow:0 3px 8px rgba(0,106,78,.2), inset 0 1px 0 rgba(255,255,255,.55)}
+.top-answer-chip .fa-arrow-up{font-size:.6em; transform:translateY(-.5px)}
+@media (prefers-reduced-motion: reduce){
+  .top-answer-chip, .top-answer-chip:hover{transition:none; transform:none}
+}

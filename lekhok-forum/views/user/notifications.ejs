@@ -19,8 +19,11 @@
     <% } else { %>
       <div class="notif-page-list">
         <% items.forEach(n => { %>
-          <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' || n.type === 'reaction' ? 'icon-like' : (n.type === 'comment' ? 'icon-comment' : (n.type === 'reply' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : 'icon-system'))))); %>
-          <% const _ico = n.type === 'birthday' ? 'fa-birthday-cake' : (n.type === 'like' || n.type === 'reaction' ? 'fa-heart' : (n.type === 'comment' ? 'fa-comment' : (n.type === 'reply' ? 'fa-reply' : (n.type === 'follow' ? 'fa-user-plus' : (n.type === 'call' ? 'fa-phone-slash' : 'fa-bell'))))); %>
+          <%# সেশন ১১৬: reaction/reply/mention টাইপ-আইকন — হেডার-ড্রপডাউনের _ico-ম্যাপের
+              সাথে প্যারিটি (আগে শুধু icon-system + fa-bell-এ পড়ত; reaction = like-পরিবার,
+              reply/mention = comment-পরিবার — feed.css-এর .icon-* প্যালেট পুনঃব্যবহার) %>
+          <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' || n.type === 'reaction' ? 'icon-like' : (n.type === 'comment' || n.type === 'reply' || n.type === 'mention' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : 'icon-system')))); %>
+          <% const _ico = n.type === 'birthday' ? 'fa-birthday-cake' : (n.type === 'like' || n.type === 'reaction' ? 'fa-heart' : (n.type === 'comment' ? 'fa-comment' : (n.type === 'reply' ? 'fa-reply' : (n.type === 'mention' ? 'fa-at' : (n.type === 'follow' ? 'fa-user-plus' : (n.type === 'call' ? 'fa-phone-slash' : 'fa-bell')))))); %>
           <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" onclick="markRead('<%= n.id %>')">
             <%# সেশন ১০৮: actor-avatar — হেডার-ড্রপডাউন (সেশন ১০২) ও একই শেপ; actor না থাকলে টাইপ-আইকন %>
             <% if (n.actor_id) { %>

@@ -254,12 +254,19 @@ section('৩', 'সোশ্যাল ফিড, কমেন্ট-প্রি
   }
   const fc = read(FC) || '';
 
+  // সেশন ১১৬-অডিট-আপডেট: ক্যানোনিকাল ডিজাইন-সিস্টেম (সেশন ১০৫) — ফিড-কার্ডের
+  // আসল মার্কআপ এখন views/shared/post/FeedPostCard.ejs-এ; পুরনো partials ফাইলটি
+  // delegate-শিম। রুল এখন ক্যানোনিকাল-প্রথম, legacy-ফলব্যাক (দুই-যুগের ডিজাইনেই সত্য)।
+  const FPC = 'views/shared/post/FeedPostCard.ejs';
+  const fpc = read(FPC) || '';
+  const _fcUnion = fpc + fc;
+
   // হাইলাইটেড কমেন্ট-প্রিভিউ (সেশন ৮৯ এক-লাইন → সেশন ৯৩ FB-দুই-বাবল-আপগ্রেড)
-  const prevOk = (fc.includes('feed-cpreview') || fc.includes('fcp-row')) && fc.includes('commentPreview');
+  const prevOk = (_fcUnion.includes('feed-cpreview') || _fcUnion.includes('fcp-row')) && _fcUnion.includes('commentPreview');
   if (prevOk) {
-    logPass('হাইলাইটেড কমেন্ট প্রিভিউ', 'ফিডে সর্বশেষ ২টি পর্যন্ত মন্তব্য-বাবল প্রিভিউ + "সব Nটি মন্তব্য" টগল-লিংক (ড্রয়ার-বন্ধ অবস্থায়ই)');
+    logPass('হাইলাইটেড কমেন্ট প্রিভিউ', `ফিডে সর্বশেষ ২টি পর্যন্ত মন্তব্য-বাবল প্রিভিউ + "সব Nটি মন্তব্য" টগল-লিংক (ক্যানোনিকাল ${exists(FPC) ? FPC : FC})`);
   } else {
-    logFail('কমেন্ট-প্রিভিউ অনুপস্থিত', 'feed-cards.ejs-এ প্রিভিউ-মার্কার (feed-cpreview/fcp-row + commentPreview) নেই', 'সর্বশেষ-কমেন্ট প্রিভিউ-বাবল (batch-কুয়েরিসহ) পুনঃস্থাপন করুন');
+    logFail('কমেন্ট-প্রিভিউ অনুপস্থিত', 'FeedPostCard.ejs/feed-cards.ejs-এ প্রিভিউ-মার্কার (feed-cpreview/fcp-row + commentPreview) নেই', 'সর্বশেষ-কমেন্ট প্রিভিউ-বাবল (batch-কুয়েরিসহ) পুনঃস্থাপন করুন');
   }
 
   // ইনফিনিট-স্ক্রল (রোডম্যাপ B1, সেশন ৮৯)
@@ -271,28 +278,34 @@ section('৩', 'সোশ্যাল ফিড, কমেন্ট-প্রি
     logFail('ইনফিনিট-স্ক্রল ভাঙা', `main.js-IO=${mj.includes('IntersectionObserver')}, endpoint=${dashR.includes('/dashboard/more')}`, 'main.js-সেন্টিনেল ও dashboard.js /more-রুট পুনঃসংযোগ করুন');
   }
 
-  // রিঅ্যাকশন ফেসপাইল (সেশন ৮৯)
+  // রিঅ্যাকশন ফেসপাইল (সেশন ৮৯) — সেশন ১১৬: ক্যানোনিকাল PostFooterActions ইউনিয়নে
   const ab = read(AB) || '';
-  if (ab.includes('rs-faces') || fc.includes('rs-faces')) {
-    logPass('রিঅ্যাক্টর-ফেসপাইল', '.rs-faces ওভারল্যাপিং মিনি-অ্যাভাটার actions-bar-এ');
+  const PFA = 'views/shared/post/PostFooterActions.ejs';
+  const pfa = read(PFA) || '';
+  if ((pfa + ab + fc).includes('rs-faces')) {
+    logPass('রিঅ্যাক্টর-ফেসপাইল', '.rs-faces ওভারল্যাপিং মিনি-অ্যাভাটার — ক্যানোনিকাল ' + PFA + ' (legacy actions-bar ইউনিয়ন)');
   } else {
-    logWarn('ফেসপাইল মার্কার নেই', 'actions-bar.ejs-এ rs-faces ক্লাস পাওয়া যায়নি — রিঅ্যাকশন-সামারি যাচাই করুন');
+    logWarn('ফেসপাইল মার্কার নেই', 'PostFooterActions.ejs/actions-bar.ejs-এ rs-faces ক্লাস পাওয়া যায়নি — রিঅ্যাকশন-সামারি যাচাই করুন');
   }
 
-  // গ্লোবাল ৩-ডট পোস্ট-মেনু (প্রদত্ত-স্ক্রিপ্টের "সম্পাদনা/লুকান/মুছুন ৩-ডটে সংকলন" চেক)
+  // গ্লোবাল ৩-ডট পোস্ট-মেনু — সেশন ১১৬: ক্যানোনিকাল PostActionMenu-প্রথম, legacy-ফলব্যাক
+  // (সেশন-১০৫-যুগে মেনু-মার্কআপ shared/post/PostActionMenu.ejs-এ স্থানান্তরিত —
+  //  পুরনো রুল legacy partials/post-menu.ejs-শিমে ফলস-নেগেটিভ দিচ্ছিল)
   const PM = 'views/partials/post-menu.ejs';
-  const pmc = read(PM) || '';
-  if (exists(PM) && pmc.includes('সম্পাদনা') && (pmc.includes('মুছুন') || pmc.includes('রিপোর্ট'))) {
-    logPass('শীর্ষে গ্লোবাল থ্রি-ডট অ্যাকশন মেনু', 'post-menu.ejs: মালিক=সম্পাদনা/লুকান/মুছুন · অন্য=রিপোর্ট · মড=মডারেশন (ছড়ানো বাটন সংকলিত)');
+  const PMC = 'views/shared/post/PostActionMenu.ejs';
+  const pmc = (read(PMC) || '') + (read(PM) || '');
+  if ((exists(PMC) || exists(PM)) && pmc.includes('সম্পাদনা') && (pmc.includes('মুছুন') || pmc.includes('রিপোর্ট'))) {
+    logPass('শীর্ষে গ্লোবাল থ্রি-ডট অ্যাকশন মেনু', 'ক্যানোনিকাল ' + PMC + ': মালিক=সম্পাদনা/লুকান/মুছুন/পিন · অন্য=রিপোর্ট · মড=মডারেশন (legacy post-menu.ejs-শিম ফলব্যাকসহ)');
   } else {
-    logFail('গ্লোবাল থ্রি-ডট মেনু অনুপস্থিত', PM + ' নেই বা মেনু-আইটেম হারানো', 'post-menu.ejs পার্শিয়াল পুনঃস্থাপন করুন (৩-ডটে সম্পাদনা/লুকান/মুছুন/রিপোর্ট সংকলন)');
+    logFail('গ্লোবাল থ্রি-ডট মেনু অনুপস্থিত', PMC + '/' + PM + ' নেই বা মেনু-আইটেম হারানো', 'PostActionMenu.ejs-এ ৩-ডট মেনু-আইটেম (সম্পাদনা/লুকান/মুছুন/রিপোর্ট) পুনঃস্থাপন করুন');
   }
 
-  // ইন-লাইন কমেন্ট-ড্রয়ার (প্রদত্ত-স্ক্রিপ্টের "মন্তব্যে রিডাইরেক্ট নয়" চেক)
-  if (ab.includes('inlineComments')) {
-    logPass('ইন-লাইন কমেন্ট টগল', "actions-bar 'মন্তব্য'-বাটনে রিডাইরেক্ট নয় — একই-পেজে লেজি ইনলাইন-ড্রয়ার (GET /api/comments)");
+  // ইন-লাইন কমেন্ট-ড্রয়ার (প্রদত্ত-স্ক্রিপ্টের "মন্তব্যে রিডাইরেক্ট নয়" চেক) —
+  // সেশন ১১৬: ক্যানোনিকাল PostFooterActions (inlineComments ×৫) ইউনিয়নে
+  if ((pfa + ab).includes('inlineComments')) {
+    logPass('ইন-লাইন কমেন্ট টগল', "'মন্তব্য'-বাটনে রিডাইরেক্ট নয় — একই-পেজে লেজি ইনলাইন-ড্রয়ার (GET /api/comments); ক্যানোনিকাল " + PFA);
   } else {
-    logFail('ইন-লাইন কমেন্ট টগল নেই', 'actions-bar.ejs-এ inlineComments প্যারাম নেই', 'মন্তব্য-বাটনকে ইনলাইন-ড্রয়ার-টগলে রূপান্তর করুন (পেজ-রিডাইরেক্ট বাদ)');
+    logFail('ইন-লাইন কমেন্ট টগল নেই', 'PostFooterActions.ejs/actions-bar.ejs-এ inlineComments প্যারাম নেই', 'মন্তব্য-বাটনকে ইনলাইন-ড্রয়ার-টগলে রূপান্তর করুন (পেজ-রিডাইরেক্ট বাদ)');
   }
 
   // কমেন্ট-কম্পোজার: ফরম্যাটিং-টুলবার + @ম্যানশন (প্রদত্ত-স্ক্রিপ্টের CommentComposer চেক)
