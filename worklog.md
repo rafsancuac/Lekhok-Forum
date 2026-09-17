@@ -495,3 +495,7 @@ Stage Summary:
 - Trusted-click quirk makes browser E2E awkward — documented JS-click pattern for future rounds.
 - Next best items: messenger shared-media tab (11+12), scroll-position restore (06), pen_name in comment bubbles/notifications (14), voice notes (C1 — coordinate with WebRTC agent), then SSE hub (01, 🔴 core).
 - Local test data left in lekhok.db only (testagent1 has 1 post + 1 bookmark + bookmarks_public=1) — sandbox-only, not on live Turso.
+
+### Addendum (post-push cross-agent catch)
+- Parallel agent's `3b9a246` (deep-audit security batch: secrets scrub + jesc XSS-guard + leader-card escaping) landed while this round was wrapping. Its `app.locals.jesc` (server.js) requires a **process restart** — a stale dev server 500s on any view calling `jesc()` (`jesc is not defined` on / and /articles/1 was observed live). Restart fixed it; final tree verified: role-policy 99/99 ALL GREEN, 19-page matrix 200, console 0. Vercel redeploys are fresh processes (unaffected).
+- Local servers left running: :3030 (SANDBOX_PORT, my QA instance) + :8080 (suite target). If another agent needs a clean DB state, stop instances before seeding (in-memory DB overwrites file seeds).
