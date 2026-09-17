@@ -2451,3 +2451,18 @@ git push origin main
 **E2E-প্রমাণ:** API-রিগ্রেশন 54/54 ALL GREEN ✓ নতুন ব্রাউজার-লেভেল টুয়ো-ব্রাউজার fake-media E2E (scripts/verify-session122-calls-browser.js) **21/21** — getUserMedia-অনুমতি ✓ কলার-পপআপ+রিং+call_id ✓ ইনবক্স-পেজে আসন্ন-পপআপ ✓ উভয়-পিয়ার connected+remote-স্ট্রিম+টাইমার ✓ মিউট ✓ দুই-পক্ষ-ক্লিনআপ ✓ পারমিশন-প্যানেল-পথ (মোডাল-থাকা+গাইড+রিট্রাই+বাতিল) ✓ গেটওয়ে-জার্নি: ইনবক্স-মেনু→কল→প্যানেল→বাতিল ✓ API-কলার→ইনবক্স-পপআপ+title-flash ✓ guard:design ✓। স্ক্রিনশট-প্রমাণ: scripts/qa121-perm-panel.png।
 
 **সহযোগিতা-নোট:** session120-র SPK-স্পিকার-ইঞ্জিনের সাথে union-মার্জ — উভয়-ফিচার অক্ষত; বিস্তারিত-চুক্তি PLANS.md Session 122-নোটে।
+
+---
+
+## session123 — crx কভার-থাম্বনেইল (session117-সুপারিশ ③) + crx-পলিশ (cron-r11)
+
+**নতুন ফিচার — 'পড়া চালিয়ে যান'-সারফেসে কভার-থাম্বনেইল:**
+- **lf_read_pos-চুক্তি-বর্ধন:** নতুন-ঐচ্ছিক-ফিল্ড **`c`** (cover-URL) — চুক্তি এখন r/t/ti/u/**c**; c-বিহীন পুরনো-এন্ট্রি অক্ষত (আইকন-ফলব্যাক)।
+- **article-single.ejs:** `#articleCard[data-cover]` (post.cover_image — /img/cover/ SVG-জেনারেটর-রুটসহ, অন-পেজ `<img>` রেন্ডার-উপযোগী; data-* অ্যাট্রিবিউট স্যান্ডবক্স-প্যাচ-অপরিবর্তিত → স্টোরে ক্লিন-URL)।
+- **article-reading.js savePos:** c-ফিল্ড সংরক্ষণ (card.getAttribute('data-cover'))।
+- **continue-reading.js দুই-সারফেস:** উইজেট-রো `.crx-rowtop` (৪২px `.crx-thumb` + টাইটেল) + ফুল-পেজ-টাইল-টপে `.crx-tilecover` ফুল-ব্লিড ১৬:৯-স্ট্রিপ; c-থাকলে `.crx-tile.has-cover` (✕-বাটনে ডার্ক-ব্যাকড্রপ — :has()-বিহীন রীতি)। আইকন সবসময় img-এর নিচে — লোড-ব্যর্থতায় `onerror="this.remove()"` → আইকন-ফলব্যাক।
+- **স্যান্ডবক্স-গেটওয়ে-সচেতনতা:** JS-ইনজেক্টেড img-src-এ `window.__lfSbUrl` (server.js fetch-guard-হেল্পার) দিয়ে XTransformPort — প্রোডাকশনে undefined → নো-অপ (session118 XTPQ-গোটচার প্রয়োগ)।
+
+**স্টাইল — dashboard.css EOF session122-ব্লক:** thumb/tilecover (gradient+feather ফলব্যাক, hover/focus-within zoom, rowtop flex-min-width) + has-cover ✕-কনট্রাস্ট + bar-glow + crx-all-arr শেভরন-মাইক্রোইন্টার‍্যাকশন + 640px-টাইল-উচ্চতা + reduced-motion-গার্ড — crx-স্কোপড, গ্লোবাল-অস্পৃশ্য।
+
+**যাচাই (agent-browser):** data-cover ✓ c-পার্সিস্ট (r .281/c /img/cover/...) ✓ উইজেট-থাম্ব img-loaded + src গেটওয়ে-পোর্টেড ✓ টাইল has-cover+strip-loaded ✓ legacy-এন্ট্রি (c-বিহীন) আইকন-ফলব্যাক+has-cover-বিহীন ✓ onerror self-remove (আসল-404-src) ✓ 390px-overflow-০ ✓ কনসোল-০ ✓ ১৪-রুট-স্মোক ✓ CSS-brace-০ ✓ node --check ×২ ✓ টেস্ট-এন্ট্রি-ক্লিনআপ ✓। **গোটচা (নতুন):** /img/cover/ জেনারেটর যে-কোনো-slug-এ 200-SVG দেয় — 'ভাঙা-কভার' টেস্টে সেটি 404 নয়; onerror-প্রমাণে সত্যিকারের অনুপস্থিত-পাথ লাগে।

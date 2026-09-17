@@ -104,9 +104,11 @@
         if (ratio < 0.95 && ratio > 0.05) {
           if (!prev || Math.abs((prev.r || 0) - ratio) > 0.02) {
             /* সেশন ১১২: টাইটেল + পাথ-ও রাখি — ড্যাশবোর্ডের 'পড়া চালিয়ে যান'
-               উইজেট (continue-reading.js) এখান থেকেই শূন্য-API-তে তালিকা বানায় */
+               উইজেট (continue-reading.js) এখান থেকেই শূন্য-API-তে তালিকা বানায়
+               সেশন ১২৩: কভার-থাম্বনেইল — data-cover-অ্যাট্রিবিউটে থাকা cover-URL
+               'c'-ফিল্ডে (ঐচ্ছিক — না-থাকলে উইজেট আইকন-ফলব্যাক দেখায়) */
             var cleanTitle = String(document.title || '').replace(/\s*\|\s*লেখক ফোরাম\s*$/, '').trim();
-            map[postId] = { r: +ratio.toFixed(3), t: Date.now(), ti: cleanTitle, u: location.pathname };
+            map[postId] = { r: +ratio.toFixed(3), t: Date.now(), ti: cleanTitle, u: location.pathname, c: String(card.getAttribute('data-cover') || '') };
             /* শুধু সর্বশেষ ৩০টি লেখা মনে রাখি */
             var keys = Object.keys(map);
             if (keys.length > 30) keys.sort(function (a, b) { return (map[a].t || 0) - (map[b].t || 0); }).slice(0, keys.length - 30).forEach(function (k) { delete map[k]; });

@@ -27,7 +27,7 @@
   <div class="article-wrap">
     <%# ── সেশন ৬৩: পড়ার-অভিজ্ঞতা — আগের অবস্থান থেকে শুরুর ব্যানার (JS localStorage থেকে বানায়) ── %>
     <div class="read-resume" id="readResume" hidden></div>
-    <article class="article-main card <%= postHidden81 ? 'is-hidden-81' : '' %>" data-post-id="<%= post.id %>" data-read-min="<%= readingMinutes %>" id="articleCard">
+    <article class="article-main card <%= postHidden81 ? 'is-hidden-81' : '' %>" data-post-id="<%= post.id %>" data-read-min="<%= readingMinutes %>"<% if (post.cover_image) { %> data-cover="<%= post.cover_image %>"<% } %> id="articleCard">
       <%# ── সেশন ৮১: লুকানো-পোস্ট ব্যানার (শুধু মালিক+মডারেটর এই পেজ দেখে) ── %>
       <% if (postHidden81) { %>
         <div class="hid81-banner">

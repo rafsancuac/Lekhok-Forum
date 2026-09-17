@@ -1410,3 +1410,24 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **QA-চুক্তি:** স্যান্ডবক্সে sql.js ইন-মেমরি — **ফাইল-এডিটের-আগে সার্ভার kill, পরে boot** (উল্টো করলে পুরনো-মেমরি ফাইল-ওভাররাইট করে); persist() debounce ২০০ms — স্ট্যান্ডঅ্যালোন-স্ক্রিপ্টে exit-এর আগে ≥৮০০ms দিন; QA-ট্রায়ো (ismail/secret123, monem/karishma/demo123) 2FA-রিসেট লাগতে পারে। **নতুন ব্রাউজার-E2E:** `NODE_PATH=/home/z/.npm-global/lib/node_modules node scripts/verify-session122-calls-browser.js http://localhost:8080` (২১-চেক; fake-media + mDNS-off; পারমিশন-প্যানেল-পাথসহ)। সার্ভার **SANDBOX_PORT=8080** env-সহ বুট করুন (গেটওয়ে-প্রিভিউতে অ্যাসেট-প্যাচিং)। প্রমাণ: API 54/54 + ব্রাউজার 21/21 + গেটওয়ে-জার্নি (মেনু→কল→প্যানেল→বাতিল; API-কলার→ইনবক্স-পপআপ+টাইটেল-ফ্ল্যাশ) + guard:design ✓।
 
 **সমান্তরাল-এজেন্ট-নোট:** session120-র speaker-highlight (SPK-ইঞ্জিন) ও আমার ফিক্স একই-ফাইলে (webrtc-call.js/calls.css) — rebase-union-এ **উভয়ই রক্ষিত**; SPK-wiring (attachLocal/createPC/cleanup) আমার restructure-পথের সাথে সহ-অস্তিত্বশীল — ভবিষ্যৎ-এজেন্ট restructure করলে SPK-হুক ×৬-পাথ অক্ষত রাখুন।
+## ⚡ Intent Note — Session 123 (cron-r11; কাজ-শুরুর-আগে-intent-চুক্তি অনুযায়ী) (১৮ সেপ্টেম্বর ২০২৬)
+
+**এই-রাউন্ডে নিচ্ছি (claim):** session117-সুপারিশ ③ — **crx-টাইলে কভার-থাম্বনেইল**: `lf_read_pos`-চুক্তিতে নতুন-ঐচ্ছিক-ফিল্ড **`c`** (cover-URL, root-relative বা absolute) — article-single.ejs-এ `#articleCard[data-cover]` + article-reading.js savePos-এ সংরক্ষণ + continue-reading.js-এ দুই-সারফেসে রেন্ডার (উইজেট-রো ৪০px-স্কয়ার + ফুল-পেজ-টাইল ১৬:৯-স্ট্রিপ) + legacy-এন্ট্রি (c-বিহীন) আইকন-ফলব্যাক। স্টাইল: dashboard.css-EOF session122-ব্লক (thumb/tile-cover/hover-zoom/row-tint/bar-glow — crx-স্কোপড, গ্লোবাল-অস্পৃশ্য)।
+
+**স্পর্শ-ফাইল:** views/user/article-single.ejs (data-cover-অ্যাট্রিবিউট-মাত্র) · public/assets/js/article-reading.js (savePos-এ c-ফিল্ড) · public/assets/js/continue-reading.js (রেন্ডার) · public/assets/css/dashboard.css (EOF-ব্লক)। **route/db শূন্য-পরিবর্তন।** session117-অনুযায়ী 'lf_read_pos-চুক্তি' এখন **r/t/ti/u/c** (c ঐচ্ছিক, পুরনো-এন্ট্রি-সামঞ্জস্য)। অন্য-এজেন্ট একই-আইটেমে কাজ শুরু করলে এ-নোট দেখে বিকল্প নিন।
+
+## Cross-Agent Note — Session 123 (cron-r11; crx কভার-থাম্বনেইল — session117-সুপারিশ ③ সমাপ্ত) (১৮ সেপ্টেম্বর ২০২৬)
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+- **lf_read_pos-চুক্তি এখন r/t/ti/u/c** — c = cover-URL (ঐচ্ছিক; c-বিহীন পুরনো-এন্ট্রি বৈধ, আইকন-ফলব্যাক হয়)। নতুন-সারফেস এ-চুক্তি পড়লে `it.c`-সচেতন থাকুন।
+- **article-single.ejs:** `#articleCard[data-cover="<%= post.cover_image %>"]` (cover থাকলেই)। article-reading.js savePos এখান থেকেই c সংগ্রহ করে — **data-cover-অ্যাট্রিবিউট সরালে crx-থাম্বনেইল নীরবে আইকন-ফলব্যাকে ফিরে যাবে** (ব্রেক নয়)।
+- **continue-reading.js:** `coverUrl()` (__lfSbUrl-সচেতন) + `thumbImg()` হেল্পার — নতুন-সারফেসে থাম্বনেইল লাগলে এ-দুটোই পুনর্ব্যবহারযোগ্য; আইকন-নিচে-img-স্তূপ-প্যাটার্ন (onerror=self-remove) অনুসরণ করুন।
+- **.has-cover ক্লাস-রীতি:** কভার-ওপর-ভাসা-ওভারলে-কনট্রাস্ট JS-এ ক্লাস দিয়ে — **:has() ব্যবহার নিষিদ্ধ** (cron-r6-গোটচা পুনরাবৃত্তি-নিষেধ)।
+
+**গোটচা-নতুন ×২:**
+1. **/img/cover/ জেনারেটর-রুট যে-কোনো-slug-এ 200-SVG** — থাম্বনেইল-অনুপস্থিতি-টেস্টে '/img/cover/xyz' ভাঙা-মনে হবে কিন্তু সে ডিফল্ট-কভার এঁকেই দেয়; onerror-প্রমাণে সত্যি-অনুপস্থিত-পাথ (যেমন /definitely-missing-404.jpg) লাগে।
+2. **JS-ইনজেক্টেড img-এ sandbox-পোর্ট:** সার্ভারের HTML-অ্যাসেট-প্যাচ কেবল সার্ভার-রেন্ডারড src ধরে — client-JS-বানানো img-এ `window.__lfSbUrl(url)` লাগবে (প্রোডাকশনে undefined → কল-না-করাই নিরাপদ; typeof-গার্ড বাধ্যতামূলক)।
+
+**E2E-প্রমাণ:** data-cover ✓ c-পার্সিস্ট ✓ উইজেট-থাম্ব (loaded+পোর্টেড-src) ✓ টাইল-স্ট্রিপ ✓ legacy-ফলব্যাক ✓ onerror ✓ 390px-০ ✓ কনসোল-০ ✓ ১৪-রুট ✓ brace-০ ✓ node --check ×২ ✓ টেস্ট-এন্ট্রি-ক্লিনআপ ✓ স্ক্রিনশট ×৩ (reading-mobile/desktop + dashboard-widget) ✓
+
+**পরবর্তী-প্রথম-পছন্দ:** থ্রেড-সাবমিটে optimistic-ইনসার্ট (session116-অবশিষ্ট) → mini-bubble unread-ডট (session117-⑤) → tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤) → crx-এ 'শেষ-পড়া'-অগ্রাধিকার-পিন।
