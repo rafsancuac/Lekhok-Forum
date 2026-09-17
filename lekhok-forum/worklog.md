@@ -1162,3 +1162,19 @@ Stage Summary:
 - POST /api/comment → `{ok,id,html,total}` (backward-compatible); ক্লায়েন্টে insertCanonical124/syncTotals124 + `.is-new124`-অ্যানিমেশন; session12-ফলব্যাক অক্ষত
 - লেবেল-রেস-নোট: একই-রাউন্ডে ৩+ এজেন্টের সমান্তরাল-কাজ — push-পূর্ব re-read আবশ্যক; পরবর্তী-এজেন্ট session125 থেকে
 - ডকস: PROJECT-চেঞ্জলজ §১২৪ + PLANS session124-নোট (৪-ইন্টিগ্রেশন-পয়েন্ট + ৫-গোটচা) + worklog ×২
+
+---
+Task ID: session-125 (cron-QA-রাউন্ড — তৃতীয়-রেস-union-সমাপ্তি)
+Agent: Main agent (Lekhok-Forum Express/EJS repo)
+Task: qa-উত্তর-optimistic টার্গেট → তিন-এজেন্ট-রেসে চূড়ান্ত-ইউনিয়ন → অনন্য-ডেল্টা → push
+
+Work Log:
+- বেস-৫cc41df-এ qa-উত্তর-গ্যাপ-আবিষ্কার (রিলোড-ফলব্যাক) → ফুল-ইমপ্ল (insertOptimistic-qa-target + reconcileQa123 + pen_name + CSS) + E2E-গ্রিন
+- rebase-রেস ①: cb83da1 (session123, swapQaThread+qa-html) → ইউনিয়ন: তাদের swap ক্যানোনিকাল, আমার টার্গেট রক্ষিত, reconcileQa123 প্রত্যাহৃত; union-E2E-পুনঃযাচাই (sessionStorage-stamp নো-রিলোড ✓ চিপ-রক্ষা ✓)
+- push-রেস ②: 7ad5fb3 (session124, POST j.html + insertCanonical124) → তাদের ইঞ্জিনে আমার টার্গেট-ও অন্তর্ভুক্ত → টার্গেট-ও প্রত্যাহৃত; চূড়ান্ত-ডেল্টা = shared.css session125-পলিশ + pen_name/full_name additive + union-ডকুমেন্টেশন
+- লেবেল: 123→তাদের, 124→তাদের, আমি 125 (max+1)
+
+Stage Summary:
+- সব কমেন্ট-সারফেস reload-মুক্ত + তাৎক্ষণিক-বাবল (তিন-স্তর-ফলব্যাক-চেইন: j.html→optimistic→swapQaThread) — তিন-এজেন্টের-কাজ union-এ বিনা-দ্বন্দ্বে
+- গোটচা: বহু-রেসে প্রতি-rebase-এ নিজের-ডেল্টার অনন্যতা পুনঃমূল্যায়ন বাধ্যতামূলক; `>>>>>>> sha (msg)`-ট্রেইলার-লিক স্ক্যান (rg)
+- পরবর্তী: tokens.css-হেক্স-গার্ড (session113-⑤) · গ্যালারি-অ্যালবাম-কভার-নির্বাচন · লাইভ-Turso-রিসেট + সিক্রেট-রোটেশন ×৪

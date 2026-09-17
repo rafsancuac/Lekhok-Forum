@@ -147,3 +147,25 @@
 
 /* EOF-MARKER: session113+113-খ */
 /* EOF-MARKER: session113+113-খ */
+
+/* ═══ Session 125: qa-উত্তর optimistic (insertCanonical124-qa-নেস্ট) পলিশ ═══
+   [optimistic-রিপ্লাই-পাথ উত্তর-স্লটে .cmt-replies নেস্ট তৈরি করে (insertOptimistic/
+   insertCanonical124/swapQaThread-র রিপ্লাই-নেস্ট) — ক্যানোনিকাল flat-compact-রিপ্লাই-দৃশ্যের সাথে টোনাল-সামঞ্জস্য;
+   এন্ট্রি-অ্যানিমেশন optIn12 (style.css) রিইউজ — opt-fresh ক্লাসেই হয়] */
+.qa-answer-slot .cmt-replies{margin-top:10px;padding-left:32px;border-left:2px solid var(--lf-ui-border);display:flex;flex-direction:column;gap:8px}
+.qa-answer-slot .cmt-replies .cmt-item.fc-reply{margin-left:0}
+.qa-answer-slot .cmt-replies .cmt-item .fc-av{width:26px;height:26px}
+.qa-answer-slot .cmt-replies .cmt-item .fc-bubble{padding:7px 11px;background:var(--lf-brand-light,#eef7f3)}
+.qa-answer-slot .cmt-replies .cmt-item .fc-body{font-size:.84rem}
+/* নতুন-উত্তর-স্লটে মৃদু-হাইলাইট (opt-fresh-এর সাথে সহাবস্থান — বাবলেই অ্যানিমেট হয়) */
+.qa-answer-slot:has(.opt-fresh){animation:optIn12 .34s cubic-bezier(.2,.9,.3,1.2) both}
+/* রিপ্লাই-কম্পোজার স্লট (qa-উত্তরের ভেতরে খোলা অবস্থায়) ব্রিদ-স্পেসিং */
+.qa-answer-slot .fc-reply-slot{margin-top:8px}
+@media (max-width: 640px){
+  .qa-answer-slot .cmt-replies{padding-left:18px}
+}
+@media (prefers-reduced-motion: reduce){
+  .qa-answer-slot:has(.opt-fresh){animation:none}
+}
+
+/* EOF-MARKER: session125 */

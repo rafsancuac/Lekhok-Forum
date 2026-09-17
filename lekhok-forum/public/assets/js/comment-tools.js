@@ -964,6 +964,10 @@
       var drawer = document.querySelector('.fc-drawer[data-comments-for="' + String(postId).replace(/"/g, '') + '"]');
       if (drawer) list = drawer.querySelector('.fc-list');
     }
+    /* session125-union-নোট: আমার সমান্তরাল .qa-answers-list-টার্গেট-ব্লক প্রত্যাহৃত —
+       session124-ক্যানোনিকালের insertCanonical124 (j.html প্রাইমারি-পাথ) qa-লিস্ট
+       সনাক্তকরণ + স্লট-র‍্যাপ + answers-empty-সরানো সবই করে; এই session12-ফলব্যাক
+       পাথ অপরিবর্তিত (j.html-অনুপস্থিতিতেই চলে — swapQaThread ব্যাকস্টপ)। */
     if (!list) return false;
     var html = buildOptimisticItem(id, raw, parentId);
     if (!html) return false;
@@ -1158,7 +1162,9 @@
         } else if (refreshArticleThread(form)) {
           // আর্টিকেল-পেজ (সেশন ১০৫): রিলোড-নেই — ক্যানোনিকাল-HTML থ্রেড-সোয়াপ
         } else if (swapQaThread(form.getAttribute('data-post-id'), null)) {
-          // QA-উত্তর-পেজ (সেশন ১২১): রিলোড-নেই — চিপ/স্লট-সহ সার্ভার-সত্য সোয়াপ
+          // QA-উত্তর-পেজ (সেশন ১২৩-ক্যানোনিকাল): রিলোড-নেই — চিপ/স্লট-সহ সার্ভার-সত্য সোয়াপ
+          // (union-নোট session124: আমার insertOptimistic qa-টার্গেট তাৎক্ষণিক-বাবল দেয়,
+          //  এই সোয়াপ সেটিকে ক্যানোনিকাল-করে — আমার reconcileQa123 ডেড-ব্রাঞ্চ প্রত্যাহৃত)
         } else if (!shown) {
           // লিগ্যাসি থ্রেড-পেজ ফলব্যাক: সার্ভার-রেন্ডার্ড রিলোড
           setTimeout(function () { location.reload(); }, 450);
@@ -1219,6 +1225,13 @@
       .catch(function () { location.reload(); });
     return true;
   }
+
+  /* ── সেশন ১২৪ union-নোট: আমার সমান্তরাল reconcileQa123 (append-only id-diff)
+     প্রত্যাহৃত — session123-ক্যানোনিকালের swapQaThread (format=qa-html সার্ভার-সত্য
+     সোয়াপ) একই-গ্রাউন্ড কভার করে এবং সাবমিট-চেইনে আগেই মিলে যায় (ডেড-ব্রাঞ্চ-শূন্য)।
+     অনন্য-রক্ষিত (এ-ফাইলে): insertOptimistic-এর .qa-answers-list ৩-তম-টার্গেট +
+     .qa-answer-slot#answer-<id> র‍্যাপার + .answers-empty সরানো — সোয়াপ-পূর্ব
+     তাৎক্ষণিক-বাবল (আর্টিকেল-প্যাটার্ন প্যারিটি)। ── */
 
   // ৬.b কমেন্ট-রিঅ্যাকশন (রুল-২②) — টেক্সট-লাইক টগল + হোভার-প্যালেট → /api/react
   function reactComment105(cid, type) {

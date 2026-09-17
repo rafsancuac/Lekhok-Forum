@@ -1478,3 +1478,21 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **E2E-প্রমাণ:** role-policy ১৩১/১৩১ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard ✓; ব্রাউজার: আর্টিকেল/QA/রিপ্লাই/ড্রয়ার — চার-সারফেস-ই window-মার্কার-প্রমাণিত reload-শূন্য + বাংলা-অঙ্কে total-সিঙ্ক + `#answer-N`-অ্যাঙ্কর-রক্ষা; 390px-০; কনসোল-০।
 
 **পরবর্তী-এজেন্ট: session125 লেবেল থেকে।** পরবর্তী-সুপারিশ: parent-chain-সচেতন chip-render (POST-html-এ), drawer-প্রিভিউ-ইনস্ট্যান্ট-প্রতিফলন, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমিতকরণ।
+
+## Cross-Agent Note — Session 125 (cron-QA-রাউন্ড; এক-রাউন্ডে-তৃতীয়-রেস) (২২ সেপ্টেম্বর ২০২৬)
+
+**রেস-ইতিহাস (এ-রাউন্ডেই তিনবার!):** আমার রাউন্ডের টার্গেট ছিল qa-উত্তর-নো-রিলোড (session116-অবশিষ্ট নোট)। কমিটের-পরে ① rebase-এ **cb83da1 (session123)** — swapQaThread + format=qa-html → ইউনিয়ন (আমার insertOptimistic-টার্গেট রক্ষিত, reconcileQa123 প্রত্যাহৃত), ② push-এর-সময় **7ad5fb3 (session124)** — POST /api/comment এখন {ok,id,html,total} + insertCanonical124 → **আমার insertOptimistic-qa-টার্গেট-ও প্রত্যাহৃত** (তাদের j.html-প্রাইমারি-পাথে qa-লিস্ট-সনাক্তকরণ + .qa-answer-slot#answer-<id> র‍্যাপ + .answers-empty-সরানো সব-ই আছে)। লেবেল: 123→(তাদের)→124→(তাদের)→**আমি 125**।
+
+**চূড়ান্ত-ডেল্টা (এ-কমিটে):**
+1. **shared.css session125-ব্লক** (অনন্য): `.qa-answer-slot .cmt-replies` নেস্ট-পলিশ — insertCanonical124-এর qa-রিপ্লাই-পাথ (parent.closest('.qa-answer-slot') → qaSlot-অ্যাপেন্ড / .cmt-replies-নেস্ট) যে-DOM তৈরি করে তার টোনাল-সামঞ্জস্য (left-rule ইনডেন্ট 32px/640px-এ 18px, কমপ্যাক্ট অ্যাভাটার ২৬px/বাবল, fc-reply margin-নিরাপেক্ষ, :has(.opt-fresh)-এন্ট্রি-অ্যানিমেশন, reduced-motion)। session12-ফলব্যাক-পাথের নেস্টেও প্রযোজ্য।
+2. **/api/comments pen_name/full_name additive ×২-ফিল্ড** (অনন্য): GET-JSON-কনসিউমারের (live.js paintList ইত্যাদি) pen-chip-প্যারিটি; বর্তমান-কনসিউমার অস্পৃশ্য; POST-রেন্ডারার (CommentItem.ejs) ইতিমধ্যেই pen_name জানে।
+3. **union-ডকুমেন্টেশন** — নিচের চুক্তি-নোট।
+
+**union-চুক্তি (তিন-স্তরের ইতিহাস — ভবিষ্যৎ-এজেন্ট জানুন):**
+- **প্রাইমারি:** submit → POST /api/comment j.html → insertCanonical124 (সব-সারফেস: ফিড-ড্রয়ার/আর্টিকেল/qa-উত্তর+রিপ্লাই — qa-তে স্লট-র‍্যাপসহ) + syncTotals124 + is-new124-অ্যানিমেশন।
+- **ফলব্যাক-১ (j.html নেই):** session12 insertOptimistic (qa-টার্গেট-বিহীন — qa হলে shown=false) → refreshArticleThread → swapQaThread → reload।
+- **ফলব্যাক-২ (qa-রেফেচ ব্যর্থ):** swapQaThread-এর নিজস্ব location.reload() ক্যাচ।
+
+**E2E-প্রমাণ (union-of-union @ :3150):** আগের-রাউন্ডের সব-প্রমাণ প্রযোজ্য (sessionStorage-stamp নো-রিলোড ✓ চিপ/অ্যাঙ্কর/নো-ডুপ ✓); এ-কমিটের ডেল্টা CSS+JSON-additive — node --check ✓ brace-০ ✓ inspect-audit ✓।
+
+**গোটচা-পুনরাবৃত্তি-সতর্কতা:** এক-রাউন্ডে তিন-এজেন্ট একই-ফিচার-গ্রাউন্ডে নামলে (১১৬-নোট চার-সেশন-খোলা থাকলে দুর্বল-সংকেত!) — প্রতি-rebase-এ **নিজের-ডেল্টার অনন্যতা পুনঃমূল্যায়ন বাধ্যতামূলক**; শেষ-কমিটে ডেল্টা-শূন্য-হয়ে-যাওয়াও বৈধ-ফলাফল (docs+polish থাকলে)।

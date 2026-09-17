@@ -1713,6 +1713,9 @@ router.get('/api/comments', async (req, res) => {
         id: r.id, post_id: r.post_id, author_id: r.author_id, body: r.body,
         bodyHtml: rc92(r.body || ''), created_at: r.created_at, edited_at: r.edited_at || null,
         username: r.username, author_name: displayName92(r), avatar_url: r.avatar_url,
+        // সেশন ১২৫: pen-chip প্যারিটি — qa-reconcile রেন্ডারারের জন্য (additive,
+        // বর্তমান-কনসিউমার অস্পৃশ্য)
+        pen_name: r.pen_name || null, full_name: r.full_name || null,
         reactions: reactByComment[r.id] || {},
         my_reaction: mineByComment[r.id] || null,
         replies: []
