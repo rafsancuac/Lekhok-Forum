@@ -671,7 +671,7 @@ Work Log:
 - ডক: PLANS.md ক্রস-এজেন্ট-নোট + PROJECT.md changelog
 
 Stage Summary:
-- origin/main @ <HEAD-after-push> — session101 (a0b1bb7 + session101-g)
+- origin/main @ 9c836ac — session101 (a0b1bb7 + 101-g; মার্জ: session102/103/104 union)
 - নতুন-সারফেস: /moderator/resources, POST /api/resources/:id/stat, helpers/resource-types.js
 - টেস্ট-ডেটা: resources-টেবিলে ১৬-রো (৫ ডেমো-মাল্টিমিডিয়া + ১ মডারেটর-আপলোড); ডেমো-ফাইল public/uploads/resources/ (gitignored)
 - ⚠️ নতুন-গোটচা: sql.js সিড-স্ক্রিপ্টে prepare().run() → ২০০ms-ডিবাউন্ড — saveDb() ম্যানুয়াল-কল+৫০০ms-অপেক্ষা নইলে ডেটা-হারানি (দুইবার-প্রমাণিত)
