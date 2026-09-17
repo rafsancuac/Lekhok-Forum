@@ -1872,6 +1872,18 @@ router.post('/api/notifications/read/:id', async (req, res) => {
   res.json({ ok: true });
 });
 
+/* ── সেশন ১১৯-রিস্টোর: session114-এর ক্যানোনিকাল বিজ্ঞপ্তি-সরান রুট — da91a80
+   (session113-followup) rebase-ইউনিয়নে নিখোঁজ হয়েছিল (af372de-এ ছিল, 5a59c1f-এ
+   নেই) — ফলে নোটিফিকেশন-পেজ/ড্রপডাউনের ✕-বাটন অরিজিনে POST-404→?saveerr=1-এ
+   পড়ত (UI-জীবন্ত, API-মৃত)। আফিম-অক্ষত ক্যানোনিকাল-ব্লক পুনঃস্থাপন ── */
+// পুরনো-লিঙ্ক-মৃত (মুছে-ফেলা লেখা/পোস্ট) বিজ্ঞপ্তি ইউজার নিজের হাতে পরিষ্কার
+// করতে পারেন — এই-রাউন্ডের QA-সিড-নোটিশগুলোও এই-পথেই পরিষ্কার হবে (product-first)।
+router.post('/api/notifications/:id/dismiss', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'login' });
+  const del = await db.prepare('DELETE FROM notifications WHERE id = ? AND user_id = ?').run(req.params.id, req.session.user.id);
+  res.json({ ok: true, removed: del.changes > 0 });
+});
+
 router.get('/notifications/mark-all-read', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   await db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.session.user.id);
