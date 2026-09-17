@@ -19,6 +19,7 @@
     <% if (error) { %><div class="error"><%= error %></div><% } %>
     <form method="POST" enctype="multipart/form-data">
       <div class="form-group"><label>পূর্ণ নাম *</label><input type="text" name="full_name" value="<%= user.full_name %>" required></div>
+      <div class="form-group"><label>কলমী নাম (ছদ্মনাম — প্রোফাইলে আসল নামের পাশে দেখা যাবে)</label><input type="text" name="pen_name" value="<%= user.pen_name || '' %>" placeholder="যেমন: রাফসান নীল" maxlength="60"></div>
       <div class="form-row">
         <div class="form-group"><label>ইমেইল</label><input type="email" name="email" value="<%= user.email || '' %>"></div>
         <div class="form-group"><label>মোবাইল</label><input type="tel" name="phone" value="<%= user.phone || '' %>"></div>

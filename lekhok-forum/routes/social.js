@@ -1018,6 +1018,13 @@ router.get('/members', async (req, res) => {
 });
 
 // ── Public profile ───────────────────────────────────────────────────────────
+// সেশন ৮৩: /profile (ইউজারনেম-হীন) → নিজের প্রোফাইলে নিয়ে যায় (লগইন থাকলে),
+// নইলে লগইনে — ফেসবুকের "র প্রোফাইল"-বাটনের অভিজ্ঞতা।
+router.get('/profile', (req, res) => {
+  if (req.session.user && req.session.user.username) return res.redirect('/profile/' + req.session.user.username);
+  return res.redirect('/login?next=%2Fprofile');
+});
+
 router.get('/profile/:username', async (req, res) => {
   const profile = await db.prepare('SELECT * FROM users WHERE username = ? AND status != ?').get(req.params.username, 'banned');
   if (!profile) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
@@ -1098,6 +1105,83 @@ router.get('/profile/:username', async (req, res) => {
     }
   } catch (e) { /* টেবিল নেই — কার্ড বাদ */ }
 
+  // ═══ সেশন ৮৩: ফেসবুক-স্ট্যান্ডার্ড পার্সোনাল প্রোফাইল ডেটা ═══════════════════
+  // বাংলা-সংখ্যা + সাপেক্ষ-সময় হেল্পার (ভিউতে পাস করা হয়)
+  const BN83 = '০১২৩৪৫৬৭৮৯';
+  const bn83 = (n) => String(n).replace(/\d/g, d => BN83[+d]);
+  const BN_MONTHS83 = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+  const bnDate83 = (dt) => {
+    if (!dt) return '';
+    const d = new Date(String(dt).replace(' ', 'T') + (String(dt).includes('Z') ? '' : 'Z'));
+    if (isNaN(d.getTime())) return '';
+    return `${bn83(d.getUTCDate())} ${BN_MONTHS83[d.getUTCMonth()]} ${bn83(d.getUTCFullYear())}`;
+  };
+  const bnRelTime83 = (dt) => {
+    if (!dt) return '';
+    const d = new Date(String(dt).replace(' ', 'T') + (String(dt).includes('Z') ? '' : 'Z'));
+    if (isNaN(d.getTime())) return '';
+    const diff = Math.max(0, Date.now() - d.getTime());
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'এইমাত্র';
+    if (m < 60) return bn83(m) + ' মিনিট আগে';
+    const h = Math.floor(m / 60);
+    if (h < 24) return bn83(h) + ' ঘণ্টা আগে';
+    const dd = Math.floor(h / 24);
+    if (dd < 7) return bn83(dd) + ' দিন আগে';
+    return bnDate83(dt);
+  };
+
+  // (১) পিনড-পোস্ট — লেখকের সেরা লেখা টাইমলাইনের শীর্ষে
+  let pinnedPost = null;
+  try {
+    pinnedPost = await db.prepare("SELECT * FROM posts WHERE author_id = ? AND is_pinned = 1 AND status = 'published' LIMIT 1").get(profile.id) || null;
+  } catch (_) { /* is_pinned কলাম এখনো নেই এমন অতি-পুরনো ডিপ্লয় */ }
+
+  // (২) অনলাইন-স্ট্যাটাস — শেষ লগইন ৫ মিনিটের মধ্যে হলে সবুজ-ডট
+  const lastLoginMs = profile.last_login ? new Date(String(profile.last_login).replace(' ', 'T') + (String(profile.last_login).includes('Z') ? '' : 'Z')).getTime() : 0;
+  const isOnline = !!lastLoginMs && (Date.now() - lastLoginMs) < 5 * 60 * 1000;
+  const lastSeenBn = lastLoginMs && !isOnline ? bnRelTime83(profile.last_login) : '';
+
+  // (৩) ছবি-গ্রিড — পোস্টের কভার + পোস্ট-ইমেজ, কম হলে ডিটারমিনিস্টিক লোকাল কভার-আর্ট
+  const photos = [];
+  (await db.prepare("SELECT id, cover_image, title FROM posts WHERE author_id = ? AND status = 'published' AND cover_image IS NOT NULL AND TRIM(cover_image) != '' ORDER BY published_at DESC LIMIT 9").all(profile.id))
+    .forEach(p => { if (photos.length < 9 && /^https?:\/\/|^\//.test(p.cover_image)) photos.push({ url: p.cover_image, postId: p.id, title: p.title }); });
+  if (photos.length < 9) {
+    try {
+      const imgs = await db.prepare(`SELECT pi.image_url, pi.post_id FROM post_images pi JOIN posts p ON p.id = pi.post_id WHERE p.author_id = ? AND p.status = 'published' ORDER BY p.published_at DESC LIMIT 18`).all(profile.id);
+      imgs.forEach(im => {
+        if (photos.length < 9 && im.image_url && /^(https?:\/\/|\/)/.test(im.image_url) && !photos.some(x => x.url === im.image_url))
+          photos.push({ url: im.image_url, postId: im.post_id, title: '' });
+      });
+    } catch (_) { /* post_images টেবিল নেই */ }
+  }
+  while (photos.length < 9) {
+    const i = photos.length + 1;
+    photos.push({ url: `/img/cover/${encodeURIComponent(profile.username)}-pf${i}/600/400`, postId: null, title: '' });
+  }
+
+  // (৪) মিউচুয়াল সংযোগ — প্রোফাইলের অনুসারী যাদের ভিজিটরও অনুসরণ করেন
+  let mutuals = [];
+  if (myId && !isOwner) {
+    try {
+      mutuals = await db.prepare(`
+        SELECT u.id, u.username, u.full_name, u.avatar_url
+        FROM follows f1
+        JOIN follows f2 ON f1.follower_id = f2.following_id
+        JOIN users u ON u.id = f1.follower_id
+        WHERE f1.following_id = ? AND f2.follower_id = ?
+        ORDER BY f1.created_at DESC LIMIT 6
+      `).all(profile.id, myId);
+    } catch (_) {}
+  }
+
+  // (৫) মোট-স্ট্যাট (হেডার-লাইন: "X লেখা • Y প্রতিক্রিয়া পেয়েছেন")
+  const totalPosts = (await db.prepare("SELECT COUNT(*) c FROM posts WHERE author_id = ? AND status = 'published'").get(profile.id)).c;
+  const totalLikes = (await db.prepare("SELECT COALESCE(SUM(like_count),0) c FROM posts WHERE author_id = ? AND status = 'published'").get(profile.id)).c;
+
+  // (৬) ভেরিফায়েড-টিক — সংগঠনের অ্যাডমিন/মডারেটর পদবি থেকে
+  const isVerified = profile.role === 'admin' || profile.role === 'moderator';
+
   res.render('user/profile', {
     profile,
     author: profile,
@@ -1109,9 +1193,35 @@ router.get('/profile/:username', async (req, res) => {
     followerCount, followingCount,
     isOwner, isFollowing, iBlockedHim,
     REACTION_META,
+    // সেশন ৮৩: ফেসবুক-প্যারিটি এক্সট্রা
+    pinnedPost, photos, mutuals, isOnline, lastSeenBn,
+    totalPosts, totalLikes, isVerified,
+    joinedBn: bnDate83(profile.created_at),
+    bn: bn83, bnRelTime: bnRelTime83,
     req,
     currentPath: '/profile/' + profile.username
   });
+});
+
+// ── সেশন ৮৩: পিনড-পোস্ট টগল (মালিক-অনলি) — একসাথে একটি লেখা পিন থাকে ──────────
+router.post('/profile/:username/pin', ensureLoggedIn, async (req, res) => {
+  const target = await db.prepare('SELECT id FROM users WHERE username = ?').get(req.params.username);
+  if (!target || target.id !== req.session.user.id) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const postId = Number(req.body && req.body.postId);
+  if (!postId) return res.status(400).json({ ok: false, error: 'bad_post' });
+  const post = await db.prepare("SELECT id, is_pinned FROM posts WHERE id = ? AND author_id = ? AND status = 'published'").get(postId, req.session.user.id);
+  if (!post) return res.status(404).json({ ok: false, error: 'not_found' });
+  const makePinned = post.is_pinned ? 0 : 1;
+  try {
+    if (makePinned) {
+      // আগের পিন সরিয়ে নতুনটি পিন — প্রতি লেখকে একটিই পিনড-পোস্ট (ফেসবুক-ফিচার্ড প্যাটার্ন)
+      await db.prepare('UPDATE posts SET is_pinned = 0 WHERE author_id = ? AND is_pinned = 1').run(req.session.user.id);
+    }
+    await db.prepare('UPDATE posts SET is_pinned = ? WHERE id = ?').run(makePinned, postId);
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'db', message: e.message });
+  }
+  res.json({ ok: true, pinned: !!makePinned });
 });
 
 // ── Follow / Unfollow ────────────────────────────────────────────────────────

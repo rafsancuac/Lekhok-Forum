@@ -1,4 +1,11 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
+<%# ═══════════════════════════════════════════════════════════════════════════
+    সেশন ৮৩ — ফেসবুক-স্ট্যান্ডার্ড পার্সোনাল প্রোফাইল ও টাইমলাইন
+    ① হিরো-হেডার: ৩:১ কভার (মোবাইলে ১৬:৯) + ওভারল্যাপিং ১৬৮px অ্যাভাটার + অনলাইন-ডট
+      + কলমী নাম + ভেরিফায়েড-টিক + মিউচুয়াল-স্ন্যাপশট + ডুয়াল CTA (অনুসরণ/মেসেজ/•••)
+    ② স্টিকি সাব-ন্যাভ (পোস্টসমূহ | পরিচিতি | অনুসরণকারী | অনুসরণ | ছবি)
+    ③ ২-কলাম গ্রিড: বামে Intro/ছবি/অনুসারী সাইডবার-কার্ড, ডানে টাইমলাইন-ফিড
+    ④ পিনড-পোস্ট (মালিক ৩-ডট মেনু থেকে পিন/আনপিন) + FB-স্টাইল পোস্ট-কার্ড
+    ═══════════════════════════════════════════════════════════════════════ %>
 <%- include('../partials/header', { title: (profile.full_name) + ' | লেখক ফোরাম', extra_css: ['/assets/css/profile.css'] }) %>
 
   <% if (typeof req !== 'undefined' && req.query.ok === 'avatar') { %>
@@ -7,410 +14,638 @@
   <% if (typeof req !== 'undefined' && req.query.ok === 'cover') { %>
     <div class="profile-toast success" onclick="this.remove()"><i class="fas fa-check-circle"></i> কভার ফটো সফলভাবে পরিবর্তন হয়েছে</div>
   <% } %>
+  <% if (typeof req !== 'undefined' && req.query.ok === 'pinned') { %>
+    <div class="profile-toast success" onclick="this.remove()"><i class="fas fa-thumbtack"></i> পিন আপডেট হয়েছে</div>
+  <% } %>
   <% if (typeof req !== 'undefined' && req.query.err) { %>
     <div class="profile-toast error" onclick="this.remove()"><i class="fas fa-exclamation-circle"></i> ত্রুটি: <%= req.query.err === 'upload' ? 'ফাইল আপলোড ব্যর্থ' : req.query.err === 'no_file' ? 'কোনো ফাইল নির্বাচিত হয়নি' : 'সংরক্ষণ ব্যর্থ' %></div>
   <% } %>
-  <div class="profile-wrap">
-    <div class="profile-cover card">
-      <div class="profile-banner"<% if (profile.cover_url) { %> style="background-image:url('<%= profile.cover_url %>'); background-size:cover; background-position:center;"<% } %>>
+
+  <div class="pf-shell">
+  <div class="pf-wrap">
+
+    <%# ═══════════ হিরো-হেডার (কভার + অ্যাভাটার + CTA + সাব-ন্যাভ) ═══════════ %>
+    <header class="pf-hero" role="banner">
+      <div class="pf-cover"<% if (profile.cover_url) { %> style="background-image:url('<%= profile.cover_url %>');"<% } %>>
         <% if (isOwner) { %>
-        <button type="button" class="cover-cam-btn" id="coverCamBtn"><i class="fas fa-camera"></i> কভার সম্পাদনা</button>
-        <div class="pic-menu" id="coverMenu" hidden>
-          <% if (profile.cover_url) { %><button type="button" data-view="<%= profile.cover_url %>"><i class="fas fa-eye"></i> কভার ফটো দেখুন</button><% } %>
-          <button type="button" onclick="document.getElementById('coverUpload').click()"><i class="fas fa-image"></i> কভার ফটো পরিবর্তন করুন</button>
-        </div>
+          <button type="button" class="pf-cover-btn" id="coverCamBtn" title="কভার ফটো"><i class="fas fa-camera"></i><span>কভার পরিবর্তন</span></button>
+          <div class="pic-menu" id="coverMenu" hidden>
+            <% if (profile.cover_url) { %><button type="button" data-view="<%= profile.cover_url %>"><i class="fas fa-eye"></i> কভার ফটো দেখুন</button><% } %>
+            <button type="button" onclick="document.getElementById('coverUpload').click()"><i class="fas fa-image"></i> কভার ফটো পরিবর্তন করুন</button>
+          </div>
         <% } %>
       </div>
-      <div class="profile-avatar-row">
-        <div class="profile-avatar-wrap">
-          <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="profile-avatar profile-avatar-lg">
-          <% if (isOwner) { %>
-            <button type="button" class="avatar-cam-btn" id="avatarCamBtn" title="প্রোফাইল ছবি"><i class="fas fa-camera"></i></button>
-            <div class="pic-menu" id="avatarMenu" hidden>
-              <button type="button" data-view="<%= profile.avatar_url || '/avatar/' + profile.id %>"><i class="fas fa-eye"></i> প্রোফাইল পিকচার দেখুন</button>
-              <button type="button" onclick="document.getElementById('avatarUpload').click()"><i class="fas fa-user-circle"></i> প্রোফাইল পিকচার পরিবর্তন করুন</button>
-            </div>
-            <form method="POST" action="/settings/avatar" enctype="multipart/form-data" id="avatarForm" style="display:none">
-              <input type="file" name="avatar" id="avatarUpload" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
-            </form>
-          <% } %>
+
+      <div class="pf-hero-row">
+        <%# অ্যাভাটার — কভারের উপর অর্ধেক ওভারল্যাপ + অনলাইন-ডট %>
+        <div class="pf-avatar-area">
+          <div class="pf-avatar-wrap">
+            <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="<%= profile.full_name %>" class="pf-avatar">
+            <% if (isOnline) { %><span class="pf-online-dot" title="এখন অনলাইনে" aria-label="অনলাইন"></span><% } %>
+            <% if (isOwner) { %>
+              <button type="button" class="pf-avatar-cam" id="avatarCamBtn" title="প্রোফাইল ছবি"><i class="fas fa-camera"></i></button>
+              <div class="pic-menu" id="avatarMenu" hidden>
+                <button type="button" data-view="<%= profile.avatar_url || '/avatar/' + profile.id %>"><i class="fas fa-eye"></i> প্রোফাইল পিকচার দেখুন</button>
+                <button type="button" onclick="document.getElementById('avatarUpload').click()"><i class="fas fa-user-circle"></i> প্রোফাইল পিকচার পরিবর্তন করুন</button>
+              </div>
+              <form method="POST" action="/settings/avatar" enctype="multipart/form-data" id="avatarForm" style="display:none">
+                <input type="file" name="avatar" id="avatarUpload" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
+              </form>
+            <% } %>
+          </div>
         </div>
-        <% if (isOwner) { %>
-          <div class="profile-owner-actions">
-            <a href="/profile/edit" class="btn btn-ghost btn-sm"><i class="fas fa-pen"></i> সম্পাদনা</a>
-            <a href="/settings" class="btn btn-ghost btn-sm"><i class="fas fa-sliders-h"></i> সেটিংস</a>
-            <a href="/articles/new" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> নতুন লেখা</a>
-            <div class="profile-3dot-wrap">
-              <button class="profile-3dot-btn" onclick="toggleProfile3Dot(event)" title="আরও"><i class="fas fa-ellipsis-v"></i></button>
-              <div class="profile-3dot-menu" id="profile3DotMenu">
+
+        <%# নাম + কলমী নাম + ভেরিফায়েড + স্ট্যাট-লাইন %>
+        <div class="pf-id-block">
+          <h1 class="pf-name">
+            <%= profile.full_name %>
+            <% if (profile.pen_name) { %><span class="pf-pen-name">(<%= profile.pen_name %>)</span><% } %>
+            <% if (isVerified) { %><span class="pf-verified" title="যাচাইকৃত সংগঠন-পদাধিকারী" aria-label="ভেরিফায়েড"><i class="fas fa-check"></i></span><% } %>
+          </h1>
+          <p class="pf-sub-line">
+            <button type="button" class="pf-meta-link" data-tab="followers"><strong><%= bn(followerCount) %></strong> জন অনুসারী</button>
+            <span class="pf-dot-sep">•</span>
+            <span><strong><%= bn(totalPosts) %></strong> লেখা</span>
+            <% if (totalLikes > 0) { %><span class="pf-dot-sep">•</span><span><strong><%= bn(totalLikes) %></strong> প্রতিক্রিয়া</span><% } %>
+          </p>
+          <% if (mutuals && mutuals.length) { %>
+            <p class="pf-mutual-line">
+              <span class="pf-mutual-avatars">
+                <% mutuals.slice(0, 5).forEach(m => { %>
+                  <img loading="lazy" decoding="async" src="<%= m.avatar_url || '/avatar/' + m.id %>" alt="<%= m.full_name %>" title="<%= m.full_name %>">
+                <% }) %>
+              </span>
+              <button type="button" class="pf-meta-link" data-tab="followers"><%= bn(mutuals.length) %> জন মিউচুয়াল সংযোগ</button>
+            </p>
+          <% } %>
+          <p class="pf-presence <%= isOnline ? 'on' : 'off' %>">
+            <% if (isOnline) { %>এখন অনলাইনে<% } else if (lastSeenBn) { %>সক্রিয় ছিলেন <%= lastSeenBn %><% } %>
+          </p>
+        </div>
+
+        <%# অ্যাকশন-বার: মালিক → সম্পাদনা/নতুন-লেখা/••• ; ভিজিটর → অনুসরণ/মেসেজ/••• %>
+        <div class="pf-actions">
+          <% if (isOwner) { %>
+            <a href="/articles/new" class="pf-btn primary"><i class="fas fa-plus"></i> নতুন লেখা</a>
+            <a href="/profile/edit" class="pf-btn gray"><i class="fas fa-pen"></i> প্রোফাইল সম্পাদনা</a>
+            <div class="pf-menu-wrap">
+              <button type="button" class="pf-btn gray icon-only" id="profile3DotBtn" onclick="toggleProfile3Dot(event)" title="আরও অপশন" aria-label="আরও অপশন"><i class="fas fa-ellipsis-h"></i></button>
+              <div class="pf-menu" id="profile3DotMenu">
                 <button type="button" onclick="document.getElementById('coverUpload').click()"><i class="fas fa-image"></i> কভার ফটো পরিবর্তন</button>
                 <button type="button" onclick="document.getElementById('avatarUpload').click()"><i class="fas fa-user-circle"></i> প্রোফাইল ছবি পরিবর্তন</button>
-                <a href="/settings"><i class="fas fa-cog"></i> সেটিংস</a>
+                <a href="/settings"><i class="fas fa-cog"></i> সেটিংস ও গোপনীয়তা</a>
+                <a href="/dashboard"><i class="fas fa-chart-line"></i> ড্যাশবোর্ড</a>
               </div>
               <form method="POST" action="/settings/cover" enctype="multipart/form-data" id="coverForm" style="display:none">
                 <input type="file" name="cover" id="coverUpload" accept="image/*" onchange="document.getElementById('coverForm').submit()">
               </form>
             </div>
-          </div>
-        <% } else if (user) { %>
-          <div class="profile-owner-actions">
-            <button class="btn <%= isFollowing ? 'btn-ghost' : 'btn-primary' %> btn-sm btn-follow" data-user="<%= profile.id %>">
-              <i class="fas fa-<%= isFollowing ? 'check' : 'plus' %>"></i> <%= isFollowing ? 'অনুসরণ করছেন' : 'অনুসরণ করুন' %>
-            </button>
-            <a href="/messages/<%= profile.username %>" class="btn btn-ghost btn-sm"><i class="far fa-envelope"></i> মেসেজ</a>
-          </div>
-        <% } %>
+          <% } else { %>
+            <% if (user) { %>
+              <button type="button" class="pf-btn <%= isFollowing ? 'gray' : 'primary' %> pf-follow-btn" data-user="<%= profile.id %>">
+                <i class="fas fa-<%= isFollowing ? 'check' : 'plus' %>"></i> <%= isFollowing ? 'অনুসরণ করছেন' : 'অনুসরণ করুন' %>
+              </button>
+              <a href="/messages/<%= profile.username %>" class="pf-btn gray"><i class="fab fa-facebook-messenger"></i> মেসেজ</a>
+              <div class="pf-menu-wrap">
+                <button type="button" class="pf-btn gray icon-only" onclick="toggleProfile3Dot(event)" title="আরও অপশন" aria-label="আরও অপশন"><i class="fas fa-ellipsis-h"></i></button>
+                <div class="pf-menu" id="profile3DotMenu">
+                  <button type="button" id="pfCopyLink"><i class="fas fa-link"></i> প্রোফাইল লিংক কপি</button>
+                  <a href="/complaints"><i class="fas fa-flag"></i> প্রোফাইল রিপোর্ট করুন</a>
+                  <% if (!iBlockedHim) { %><button type="button" class="pf-danger-item" id="pfBlockUser" data-user="<%= profile.id %>"><i class="fas fa-ban"></i> ব্লক করুন</button><% } %>
+                </div>
+              </div>
+            <% } else { %>
+              <a href="/login?next=<%= encodeURIComponent('/profile/' + profile.username) %>" class="pf-btn primary"><i class="fas fa-plus"></i> অনুসরণ করুন</a>
+              <a href="/login?next=<%= encodeURIComponent('/profile/' + profile.username) %>" class="pf-btn gray"><i class="fab fa-facebook-messenger"></i> মেসেজ</a>
+              <div class="pf-menu-wrap">
+                <button type="button" class="pf-btn gray icon-only" onclick="toggleProfile3Dot(event)" title="আরও অপশন" aria-label="আরও অপশন"><i class="fas fa-ellipsis-h"></i></button>
+                <div class="pf-menu" id="profile3DotMenu">
+                  <button type="button" id="pfCopyLink"><i class="fas fa-link"></i> প্রোফাইল লিংক কপি</button>
+                </div>
+              </div>
+            <% } %>
+          <% } %>
+        </div>
       </div>
-    </div>
 
-    <div class="profile-body">
-      <div class="profile-left">
-        <div class="card profile-info-card">
-          <h2><%= profile.pen_name || profile.full_name %></h2>
-          <% if (profile.pen_name) { %><p class="pen-name-chip"><i class="fas fa-feather-pointed"></i> কলমে: <%= profile.pen_name %></p><% } %>
-          <p class="profile-username"><%= profile.designation || 'সদস্য' %></p>
-          <% if (typeof profile.genres === 'string' && profile.genres) { try { var _g80 = JSON.parse(profile.genres); if (Array.isArray(_g80) && _g80.length) { %>
-          <div class="genre-badges"><% _g80.forEach(function (g) { %><span class="genre-badge"><i class="fas fa-feather"></i> <%= g %></span><% }) %></div>
-          <% } } catch (e) {} } %>
-          <% if (profile.designation) { %><p class="profile-designation"><i class="fas fa-briefcase"></i> <%= profile.designation %></p><% } %>
-          <% if (profile.bio) { %><p class="profile-bio"><%= profile.bio %></p><% } %>
+      <%# স্টিকি সাব-ন্যাভ — হেডারের নিচেই আটকে থাকে %>
+      <nav class="pf-subnav" role="tablist" aria-label="প্রোফাইল সেকশন">
+        <button type="button" class="pf-tab active" data-tab="posts" role="tab" aria-selected="true"><i class="far fa-newspaper"></i> পোস্টসমূহ</button>
+        <button type="button" class="pf-tab" data-tab="about" role="tab" aria-selected="false"><i class="far fa-id-badge"></i> পরিচিতি</button>
+        <button type="button" class="pf-tab" data-tab="followers" role="tab" aria-selected="false"><i class="fas fa-users"></i> অনুসরণকারী</button>
+        <button type="button" class="pf-tab" data-tab="following" role="tab" aria-selected="false"><i class="fas fa-user-friends"></i> অনুসরণ</button>
+        <button type="button" class="pf-tab" data-tab="photos" role="tab" aria-selected="false"><i class="far fa-images"></i> ছবি</button>
+        <% if (isOwner) { %>
+          <button type="button" class="pf-tab" data-tab="bookmarks" role="tab" aria-selected="false"><i class="fas fa-bookmark"></i> সংরক্ষিত</button>
+          <button type="button" class="pf-tab" data-tab="drafts" role="tab" aria-selected="false"><i class="fas fa-file"></i> ড্রাফট</button>
+          <button type="button" class="pf-tab" data-tab="categories" role="tab" aria-selected="false"><i class="fas fa-tags"></i> ক্যাটাগরি</button>
+        <% } %>
+      </nav>
+    </header>
 
-          <% if (orgRoles && orgRoles.length) { %>
-            <div class="org-roles">
-              <h4><i class="fas fa-award"></i> সংগঠনে দায়িত্ব</h4>
-              <div class="org-role-chips">
-                <% orgRoles.forEach(r => { %>
-                  <span class="org-role-chip">
-                    <strong><%= r.role %></strong>
-                    <% if (r.term_year) { %><small><%= r.term_year %> কার্যবর্ষ</small><% } %>
-                  </span>
-                <% }) %>
-              </div>
-            </div>
-          <% } %>
+    <%# ═══════════ ২-কলাম বডি গ্রিড (৩৬০px সাইডবার + ফ্লেক্স টাইমলাইন) ═══════════ %>
+    <div class="pf-body">
 
-          <%# সেশন ৬২: কুইজ-স্কোর কার্ড — সার্ভার-পার্সিস্টেন্ট স্কোর (সবার দেখা যায়) %>
-          <% if (quizStats) { %>
-            <div class="quiz-profile-card">
-              <h4><i class="fas fa-bullseye"></i> কুইজ পারফরম্যান্স</h4>
-              <div class="qpc-row">
-                <span class="qpc-item"><i class="fas fa-circle-check"></i> সঠিক <strong><%= quizStats.correct %>/<%= quizStats.answered %></strong></span>
-                <span class="qpc-item"><i class="fas fa-bullseye"></i> নির্ভুলতা <strong><%= quizStats.accuracy %>%</strong></span>
-                <span class="qpc-item<%= quizStats.streak > 0 ? ' has-fire' : '' %>"><i class="fas fa-fire"></i> ধারাবাহিক <strong><%= quizStats.streak %></strong></span>
-              </div>
-              <a href="/quiz" class="qpc-link"><i class="fas fa-arrow-left"></i> আজকের কুইজ খেলুন</a>
-            </div>
-          <% } %>
+      <%# ── কলাম ১: বাম সাইডবার (পরিচিতি / ছবি / অনুসারী) ── %>
+      <aside class="pf-side" aria-label="প্রোফাইল সাইডবার">
 
-          <div class="profile-stats">
-            <button class="stat tab-jump" data-tab="posts"><span><%= postCount %></span><small>লেখা</small></button>
-            <button class="stat tab-jump" data-tab="followers"><span><%= followerCount %></span><small>অনুসরণকারী</small></button>
-            <button class="stat tab-jump" data-tab="following"><span><%= followingCount %></span><small>অনুসরণ</small></button>
-          </div>
-
-          <div class="profile-contact">
-            <% if (isOwner || (profile.show_email && profile.email)) { %>
-              <div><i class="fas fa-envelope"></i> <a href="mailto:<%= profile.email %>"><%= profile.email %></a></div>
-            <% } %>
-            <% if (isOwner || (profile.show_phone && profile.phone)) { %>
-              <div><i class="fas fa-phone"></i> <%= profile.phone %></div>
-            <% } %>
-            <% if (profile.address) { %>
-              <div><i class="fas fa-map-marker-alt"></i> <%= profile.address %></div>
-            <% } %>
+        <%# ১. পরিচিতি কার্ড %>
+        <div class="pf-card">
+          <h3 class="pf-card-title">পরিচিতি</h3>
+          <% if (profile.bio) { %><p class="pf-bio"><%= profile.bio %></p><% } else if (isOwner) { %><p class="pf-bio muted">আপনার পরিচিতি লিখুন — <a href="/profile/edit">সম্পাদনা করুন</a></p><% } %>
+          <ul class="pf-detail-list">
+            <% if (profile.designation) { %><li><i class="fas fa-briefcase"></i><span><%= profile.designation %></span></li><% } %>
+            <% if (joinedBn) { %><li><i class="far fa-calendar-plus"></i><span><%= joinedBn %> এ যুক্ত হয়েছেন</span></li><% } %>
+            <% if (profile.address) { %><li><i class="fas fa-map-marker-alt"></i><span><%= profile.address %></span></li><% } %>
             <% if (isOwner || (profile.show_birth && profile.birth_date)) { %>
-              <div><i class="fas fa-birthday-cake"></i> <%= profile.birth_date %></div>
+              <% if (profile.birth_date) { %><li><i class="fas fa-birthday-cake"></i><span><%= profile.birth_date %></span></li><% } %>
             <% } %>
-          </div>
-
-          <%# সেশন ৬০: সংযুক্ত সোশ্যাল লিংক — শুধু http/https রেন্ডার (নিরাপত্তা-গার্ড) %>
+            <% if ((isOwner || (profile.show_email && profile.email)) && profile.email) { %>
+              <li><i class="fas fa-envelope"></i><a href="mailto:<%= profile.email %>" class="pf-link"><%= profile.email %></a></li>
+            <% } %>
+            <% if ((isOwner || (profile.show_phone && profile.phone)) && profile.phone) { %><li><i class="fas fa-phone"></i><span><%= profile.phone %></span></li><% } %>
+          </ul>
           <%
-            const safeUrl60 = u => (typeof u === 'string' && /^https?:\/\//i.test(u.trim())) ? u.trim() : null;
-            const socials60 = [
-              { u: safeUrl60(profile.social_fb),       ico: 'fab fa-facebook-f',     lbl: 'Facebook' },
-              { u: safeUrl60(profile.social_twitter),  ico: 'fab fa-x-twitter',      lbl: 'Twitter / X' },
-              { u: safeUrl60(profile.social_linkedin), ico: 'fab fa-linkedin-in',    lbl: 'LinkedIn' },
-              { u: safeUrl60(profile.social_telegram), ico: 'fab fa-telegram-plane', lbl: 'Telegram' },
-              { u: safeUrl60(profile.social_website),  ico: 'fas fa-globe',          lbl: 'ওয়েবসাইট' },
+            const safeUrl83 = u => (typeof u === 'string' && /^https?:\/\//i.test(u.trim())) ? u.trim() : null;
+            const socials83 = [
+              { u: safeUrl83(profile.social_fb),       ico: 'fab fa-facebook-f',     lbl: 'Facebook' },
+              { u: safeUrl83(profile.social_twitter),  ico: 'fab fa-x-twitter',      lbl: 'Twitter / X' },
+              { u: safeUrl83(profile.social_linkedin), ico: 'fab fa-linkedin-in',    lbl: 'LinkedIn' },
+              { u: safeUrl83(profile.social_telegram), ico: 'fab fa-telegram-plane', lbl: 'Telegram' },
+              { u: safeUrl83(profile.social_website),  ico: 'fas fa-globe',          lbl: 'ওয়েবসাইট' },
             ].filter(s => s.u);
+            // সেশন ৮০ (মার্জ-সংরক্ষণ): settings-এ নির্বাচিত সাহিত্য-ধারা (genres JSON)
+            let genres83 = [];
+            try { genres83 = JSON.parse(profile.genres || '[]'); if (!Array.isArray(genres83)) genres83 = []; } catch (_) {}
           %>
-          <% if (socials60.length) { %>
-          <div class="profile-social">
-            <% socials60.forEach(function (s) { %>
-              <a href="<%= s.u %>" target="_blank" rel="noopener" class="social-link" aria-label="<%= s.lbl %>" title="<%= s.lbl %>"><i class="<%= s.ico %>"></i></a>
+          <% if (genres83.length) { %>
+            <div class="pf-genres"><% genres83.forEach(function (g) { %><span class="pf-genre-badge"><i class="fas fa-feather"></i> <%= g %></span><% }) %></div>
+          <% } %>
+          <% if (socials83.length) { %>
+            <div class="pf-social-row">
+              <% socials83.forEach(function (s) { %>
+                <a href="<%= s.u %>" target="_blank" rel="noopener" class="pf-social-chip" aria-label="<%= s.lbl %>" title="<%= s.lbl %>"><i class="<%= s.ico %>"></i></a>
+              <% }) %>
+            </div>
+          <% } %>
+          <% if (interests.length) { %>
+            <div class="pf-interests">
+              <% interests.forEach(t => { %><a href="/articles?tag=<%= encodeURIComponent(t) %>" class="tag-chip">#<%= t %></a><% }); %>
+            </div>
+          <% } %>
+          <a href="/profile/edit" class="pf-btn gray full-w"><i class="fas fa-pen"></i> পরিচিতি সম্পাদনা</a>
+        </div>
+
+        <%# ২. ছবি কার্ড (৩×৩ স্ন্যাপশট) %>
+        <div class="pf-card">
+          <div class="pf-card-head">
+            <h3 class="pf-card-title">ছবি</h3>
+            <button type="button" class="pf-card-more" data-tab="photos">সব ছবি দেখুন</button>
+          </div>
+          <div class="pf-photo-grid">
+            <% photos.slice(0, 9).forEach(p => { %>
+              <% if (p.postId) { %>
+                <a href="/articles/<%= p.postId %>" class="pf-photo-tile" title="<%= p.title || 'ছবি' %>"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="<%= p.title || 'ছবি' %>"></a>
+              <% } else { %>
+                <a href="<%= p.url %>" target="_blank" rel="noopener" class="pf-photo-tile"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="ছবি"></a>
+              <% } %>
             <% }) %>
           </div>
-          <% } %>
+        </div>
 
-          <% if (interests.length) { %>
-            <div class="interests-row">
-              <h4><i class="fas fa-tags"></i> আগ্রহের বিষয়</h4>
-              <div class="tag-cloud">
-                <% interests.forEach(t => { %><a href="/articles?tag=<%= encodeURIComponent(t) %>" class="tag-chip">#<%= t %></a><% }); %>
-              </div>
+        <%# ৩. অনুসারী কার্ড (৩×৩ অ্যাভাটার-স্ন্যাপশট) %>
+        <div class="pf-card">
+          <div class="pf-card-head">
+            <h3 class="pf-card-title">অনুসরণকারী</h3>
+            <button type="button" class="pf-card-more" data-tab="followers">সবাইকে দেখুন</button>
+          </div>
+          <% if (followers.length === 0) { %>
+            <p class="pf-side-empty">এখনো কোনো অনুসরণকারী নেই।</p>
+          <% } else { %>
+            <div class="pf-follower-grid">
+              <% followers.slice(0, 9).forEach(f => { %>
+                <a href="/profile/<%= f.username %>" class="pf-follower-tile">
+                  <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" alt="<%= f.full_name %>">
+                  <span><%= f.full_name %></span>
+                </a>
+              <% }) %>
             </div>
           <% } %>
         </div>
-      </div>
 
-      <div class="profile-right">
-        <div class="profile-tabs">
-          <button class="tab-btn active" data-tab="posts"><i class="fas fa-pen-nib"></i> লেখা</button>
-          <button class="tab-btn" data-tab="questions"><i class="fas fa-question-circle"></i> প্রশ্ন</button>
-          <button class="tab-btn" data-tab="comments"><i class="far fa-comment"></i> মন্তব্য</button>
-          <button class="tab-btn" data-tab="reactions"><i class="far fa-heart"></i> প্রতিক্রিয়া</button>
-          <button class="tab-btn" data-tab="followers"><i class="fas fa-users"></i> অনুসরণকারী</button>
-          <button class="tab-btn" data-tab="following"><i class="fas fa-user-friends"></i> অনুসরণ</button>
-          <% if (isOwner) { %>
-            <button class="tab-btn" data-tab="bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত</button>
-            <button class="tab-btn" data-tab="drafts"><i class="fas fa-file"></i> ড্রাফট</button>
-            <button class="tab-btn" data-tab="categories"><i class="fas fa-tags"></i> ক্যাটাগরি</button>
+        <%# ৪. সংগঠনে দায়িত্ব %>
+        <% if (orgRoles && orgRoles.length) { %>
+          <div class="pf-card">
+            <h3 class="pf-card-title"><i class="fas fa-award pf-title-ico"></i> সংগঠনে দায়িত্ব</h3>
+            <div class="pf-role-chips">
+              <% orgRoles.forEach(r => { %>
+                <span class="pf-role-chip"><strong><%= r.role %></strong><% if (r.term_year) { %><small><%= r.term_year %></small><% } %></span>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
+        <%# ৫. কুইজ-পারফরম্যান্স (সেশন ৬২ — পাবলিক) %>
+        <% if (quizStats) { %>
+          <div class="quiz-profile-card">
+            <h4><i class="fas fa-bullseye"></i> কুইজ পারফরম্যান্স</h4>
+            <div class="qpc-row">
+              <span class="qpc-item"><i class="fas fa-circle-check"></i> সঠিক <strong><%= bn(quizStats.correct) %>/<%= bn(quizStats.answered) %></strong></span>
+              <span class="qpc-item"><i class="fas fa-bullseye"></i> নির্ভুলতা <strong><%= bn(quizStats.accuracy) %>%</strong></span>
+              <span class="qpc-item<%= quizStats.streak > 0 ? ' has-fire' : '' %>"><i class="fas fa-fire"></i> ধারাবাহিক <strong><%= bn(quizStats.streak) %></strong></span>
+            </div>
+            <a href="/quiz" class="qpc-link"><i class="fas fa-arrow-left"></i> আজকের কুইজ খেলুন</a>
+          </div>
+        <% } %>
+      </aside>
+
+      <%# ── কলাম ২: টাইমলাইন / ট্যাব-প্যানেলসমূহ ── %>
+      <main class="pf-main">
+
+        <%# ═══ ট্যাব: পোস্টসমূহ (পিনড + ফিল্টার-পিল + FB-ফিড) ═══ %>
+        <section class="tab-content active" id="tab-posts" role="tabpanel">
+          <%# পিনড-পোস্ট — টাইমলাইনের শীর্ষে %>
+          <% if (pinnedPost) { %>
+            <article class="pf-post pinned" data-post="<%= pinnedPost.id %>">
+              <div class="pf-pinned-label"><i class="fas fa-thumbtack"></i> পিন করা লেখা</div>
+              <header class="pf-post-head">
+                <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="" class="pf-post-avatar">
+                <div class="pf-post-id">
+                  <a href="/articles/<%= pinnedPost.id %>" class="pf-post-author"><%= profile.full_name %></a>
+                  <span class="pf-post-time"><%= bnRelTime(pinnedPost.published_at) %> • <i class="fas fa-globe-americas" title="পাবলিক"></i></span>
+                </div>
+                <% if (isOwner) { %>
+                  <div class="post-3dot-wrap">
+                    <button class="post-3dot-btn" onclick="togglePost3Dot(event, <%= pinnedPost.id %>)" title="আরও"><i class="fas fa-ellipsis-h"></i></button>
+                    <div class="post-3dot-menu" id="post3dot-<%= pinnedPost.id %>">
+                      <button type="button" class="pf-pin-toggle" data-post="<%= pinnedPost.id %>" data-pinned="1"><i class="fas fa-thumbtack"></i> পিন সরান</button>
+                      <a href="/articles/<%= pinnedPost.id %>/edit"><i class="fas fa-pen"></i> সম্পাদনা</a>
+                      <a href="/articles/<%= pinnedPost.id %>"><i class="fas fa-eye"></i> দেখুন</a>
+                      <a href="#" onclick="sharePost(<%= pinnedPost.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
+                      <form method="POST" action="/articles/<%= pinnedPost.id %>/delete" style="margin:0">
+                        <button type="submit" class="post-delete-btn"><i class="fas fa-trash"></i> মুছুন</button>
+                      </form>
+                    </div>
+                  </div>
+                <% } %>
+              </header>
+              <h3 class="pf-post-title"><a href="/articles/<%= pinnedPost.id %>"><%= pinnedPost.title %></a></h3>
+              <% if (pinnedPost.excerpt || pinnedPost.body) { %><p class="pf-post-excerpt"><%= (pinnedPost.excerpt || pinnedPost.body || '').substring(0, 180) %><%= (pinnedPost.excerpt || pinnedPost.body || '').length > 180 ? '…' : '' %></p><% } %>
+              <% if (pinnedPost.cover_image) { %><a href="/articles/<%= pinnedPost.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= pinnedPost.cover_image %>" alt="<%= pinnedPost.title %>" class="pf-post-cover"></a><% } %>
+              <div class="pf-post-counts">
+                <span class="pf-count-emoji">👍❤️</span><span><%= bn(pinnedPost.like_count || 0) %></span>
+                <span class="pf-spacer"></span>
+                <span><%= bn(pinnedPost.comment_count || 0) %> মন্তব্য</span>
+                <span class="pf-dot-sep">•</span>
+                <span><%= bn(pinnedPost.view_count || 0) %> পঠিত</span>
+              </div>
+              <div class="pf-post-actions">
+                <a href="/articles/<%= pinnedPost.id %>"><i class="far fa-thumbs-up"></i> লাইক</a>
+                <a href="/articles/<%= pinnedPost.id %>#comments"><i class="far fa-comment"></i> মন্তব্য</a>
+                <a href="#" onclick="sharePost(<%= pinnedPost.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
+              </div>
+            </article>
           <% } %>
-        </div>
 
-        <!-- Tab: Posts -->
-        <div class="tab-content active" id="tab-posts">
+          <%# ফিল্টার-পিল: লেখা/প্রশ্ন/মন্তব্য/প্রতিক্রিয়া (ট্যাব-প্যানেল সুইচ) %>
+          <div class="pf-filter-bar pf-card">
+            <button type="button" class="pf-pill active" data-tab="posts"><i class="fas fa-pen-nib"></i> লেখা</button>
+            <button type="button" class="pf-pill" data-tab="questions"><i class="fas fa-question-circle"></i> প্রশ্ন</button>
+            <button type="button" class="pf-pill" data-tab="comments"><i class="far fa-comment"></i> মন্তব্য</button>
+            <button type="button" class="pf-pill" data-tab="reactions"><i class="far fa-heart"></i> প্রতিক্রিয়া</button>
+          </div>
+
           <% if (posts.length === 0) { %>
-            <div class="empty-state card">
+            <div class="pf-card pf-empty">
               <i class="fas fa-pen-nib"></i>
               <p>এখনো কোনো লেখা প্রকাশ করা হয়নি।</p>
-              <% if (isOwner) { %><a href="/articles/new" class="btn btn-primary btn-sm">প্রথম লেখা লিখুন</a><% } %>
+              <% if (isOwner) { %><a href="/articles/new" class="pf-btn primary">প্রথম লেখা লিখুন</a><% } %>
             </div>
           <% } else { %>
-            <% posts.forEach(post => { %>
-              <div class="post-card card">
-                <% if (post.cover_image) { %><img loading="lazy" decoding="async" src="<%= post.cover_image %>" alt="cover" class="post-cover"><% } %>
-                <div class="post-card-body">
-                  <div class="post-meta-top">
-                    <span class="post-tag"><%= post.tags ? post.tags.split(',')[0].trim() : 'সাধারণ' %></span>
-                    <span class="post-date"><i class="far fa-clock"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD') %></span>
-                    <% if (isOwner) { %>
-                    <div class="post-3dot-wrap">
-                      <button class="post-3dot-btn" onclick="togglePost3Dot(event, <%= post.id %>)" title="আরও"><i class="fas fa-ellipsis-v"></i></button>
-                      <div class="post-3dot-menu" id="post3dot-<%= post.id %>">
-                        <a href="/articles/<%= post.id %>/edit"><i class="fas fa-pen"></i> সম্পাদনা</a>
-                        <a href="/articles/<%= post.id %>"><i class="fas fa-eye"></i> দেখুন</a>
-                        <a href="#" onclick="sharePost(<%= post.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
-                        <form method="POST" action="/articles/<%= post.id %>/delete" style="margin:0">
-                          <button type="submit" class="post-delete-btn"><i class="fas fa-trash"></i> মুছুন</button>
-                        </form>
-                      </div>
+            <div class="pf-feed">
+              <% posts.forEach(post => { %>
+                <article class="pf-post" data-post="<%= post.id %>">
+                  <header class="pf-post-head">
+                    <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="" class="pf-post-avatar">
+                    <div class="pf-post-id">
+                      <a href="/articles/<%= post.id %>" class="pf-post-author"><%= profile.full_name %></a>
+                      <span class="pf-post-time"><%= bnRelTime(post.published_at) %> • <i class="fas fa-globe-americas" title="পাবলিক"></i></span>
                     </div>
+                    <% if (isOwner) { %>
+                      <div class="post-3dot-wrap">
+                        <button class="post-3dot-btn" onclick="togglePost3Dot(event, <%= post.id %>)" title="আরও"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="post-3dot-menu" id="post3dot-<%= post.id %>">
+                          <button type="button" class="pf-pin-toggle" data-post="<%= post.id %>" data-pinned="<%= post.is_pinned ? 1 : 0 %>"><i class="fas fa-thumbtack"></i> <%= post.is_pinned ? 'পিন সরান' : 'পিন করুন' %></button>
+                          <a href="/articles/<%= post.id %>/edit"><i class="fas fa-pen"></i> সম্পাদনা</a>
+                          <a href="/articles/<%= post.id %>"><i class="fas fa-eye"></i> দেখুন</a>
+                          <a href="#" onclick="sharePost(<%= post.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
+                          <form method="POST" action="/articles/<%= post.id %>/delete" style="margin:0">
+                            <button type="submit" class="post-delete-btn"><i class="fas fa-trash"></i> মুছুন</button>
+                          </form>
+                        </div>
+                      </div>
                     <% } %>
+                  </header>
+                  <h3 class="pf-post-title"><a href="/articles/<%= post.id %>"><%= post.title %></a></h3>
+                  <% if (post.excerpt || post.body) { %><p class="pf-post-excerpt"><%= (post.excerpt || post.body || '').substring(0, 180) %><%= (post.excerpt || post.body || '').length > 180 ? '…' : '' %></p><% } %>
+                  <% if (post.cover_image) { %><a href="/articles/<%= post.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= post.cover_image %>" alt="<%= post.title %>" class="pf-post-cover"></a><% } %>
+                  <div class="pf-post-counts">
+                    <span class="pf-count-emoji">👍❤️</span><span><%= bn(post.like_count || 0) %></span>
+                    <span class="pf-spacer"></span>
+                    <span><%= bn(post.comment_count || 0) %> মন্তব্য</span>
+                    <span class="pf-dot-sep">•</span>
+                    <span><%= bn(post.view_count || 0) %> পঠিত</span>
                   </div>
-                  <a href="/articles/<%= post.id %>" class="post-title"><%= post.title %></a>
-                  <p class="post-excerpt"><%= (post.excerpt || post.body || '').substring(0, 150) %>…</p>
-                  <div class="post-actions">
-                    <span><i class="far fa-heart"></i> <%= post.like_count || 0 %></span>
-                    <span><i class="far fa-comment"></i> <%= post.comment_count || 0 %></span>
-                    <span><i class="far fa-eye"></i> <%= post.view_count || 0 %></span>
-                    <span><i class="fas fa-share"></i> <%= post.share_count || 0 %></span>
+                  <div class="pf-post-actions">
+                    <a href="/articles/<%= post.id %>"><i class="far fa-thumbs-up"></i> লাইক</a>
+                    <a href="/articles/<%= post.id %>#comments"><i class="far fa-comment"></i> মন্তব্য</a>
+                    <a href="#" onclick="sharePost(<%= post.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
                   </div>
-                </div>
-              </div>
-            <% }); %>
-          <% } %>
-        </div>
-
-        <!-- Tab: Questions -->
-        <div class="tab-content" id="tab-questions">
-          <% if (questions.length === 0) { %>
-            <div class="empty-state card">
-              <i class="fas fa-question-circle"></i>
-              <p>এখনো কোনো প্রশ্ন করা হয়নি।</p>
-              <% if (isOwner) { %><a href="/qa/new" class="btn btn-primary btn-sm">প্রশ্ন করুন</a><% } %>
+                </article>
+              <% }); %>
             </div>
-          <% } else { %>
-            <% questions.forEach(q => { %>
-              <div class="qa-card card">
-                <div class="qa-q"><i class="fas fa-question-circle"></i> <a href="/qa/<%= q.id %>"><%= q.title %></a></div>
-                <div class="qa-meta"><%= q.comment_count || 0 %> উত্তর &middot; <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></div>
-              </div>
-            <% }); %>
           <% } %>
-        </div>
+        </section>
 
-        <!-- Tab: Comments -->
-        <div class="tab-content" id="tab-comments">
-          <% if (comments.length === 0) { %>
-            <div class="empty-state card"><i class="far fa-comment"></i><p>কোনো মন্তব্য নেই।</p></div>
-          <% } else { %>
-            <% comments.forEach(c => { %>
-              <div class="qa-card card">
-                <p class="comment-excerpt"><%= c.body.substring(0, 180) %><%= c.body.length > 180 ? '…' : '' %></p>
-                <div class="qa-meta">
-                  <span class="badge badge-muted"><%= c.post_type === 'question' ? 'প্রশ্নে' : 'লেখায়' %></span>
-                  <a href="<%= c.post_type === 'question' ? '/qa/' + c.post_id : '/articles/' + c.post_id %>"><%= c.post_title %></a>
-                  &middot; <%= new Date(c.created_at).toLocaleDateString('bn-BD') %>
+        <%# ═══ ট্যাব: পরিচিতি (বিস্তারিত) ═══ %>
+        <section class="tab-content" id="tab-about" role="tabpanel">
+          <div class="pf-card">
+            <h3 class="pf-card-title">পরিচিতি</h3>
+            <% if (profile.bio) { %><p class="pf-bio"><%= profile.bio %></p><% } else { %><p class="pf-bio muted">কোনো বায়ো যোগ করা হয়নি।</p><% } %>
+            <ul class="pf-detail-list">
+              <% if (profile.designation) { %><li><i class="fas fa-briefcase"></i><span>পদবি: <strong><%= profile.designation %></strong></span></li><% } %>
+              <% if (joinedBn) { %><li><i class="far fa-calendar-plus"></i><span><%= joinedBn %> এ যুক্ত হয়েছেন</span></li><% } %>
+              <% if (profile.address) { %><li><i class="fas fa-map-marker-alt"></i><span>ঠিকানা: <%= profile.address %></span></li><% } %>
+              <% if (isOwner || (profile.show_birth && profile.birth_date)) { %>
+                <% if (profile.birth_date) { %><li><i class="fas fa-birthday-cake"></i><span>জন্ম: <%= profile.birth_date %></span></li><% } %>
+              <% } %>
+              <% if ((isOwner || (profile.show_email && profile.email)) && profile.email) { %><li><i class="fas fa-envelope"></i><span>ইমেইল: <a href="mailto:<%= profile.email %>" class="pf-link"><%= profile.email %></a></span></li><% } %>
+              <% if ((isOwner || (profile.show_phone && profile.phone)) && profile.phone) { %><li><i class="fas fa-phone"></i><span>ফোন: <%= profile.phone %></span></li><% } %>
+            </ul>
+            <% if (orgRoles && orgRoles.length) { %>
+              <div class="pf-about-block">
+                <h4><i class="fas fa-award"></i> সংগঠনে দায়িত্ব</h4>
+                <div class="pf-role-chips">
+                  <% orgRoles.forEach(r => { %><span class="pf-role-chip"><strong><%= r.role %></strong><% if (r.term_year) { %><small><%= r.term_year %></small><% } %></span><% }) %>
                 </div>
               </div>
-            <% }); %>
-          <% } %>
-        </div>
-
-        <!-- Tab: Reactions -->
-        <div class="tab-content" id="tab-reactions">
-          <% const emo = REACTION_META; %>
-          <% if (reactions.length === 0) { %>
-            <div class="empty-state card"><i class="far fa-heart"></i><p>কোনো প্রতিক্রিয়া দেওয়া হয়নি।</p></div>
-          <% } else { %>
-            <% reactions.forEach(r => { %>
-              <div class="qa-card card">
-                <div class="qa-meta">
-                  <span class="badge"><%= emo[r.reaction_type || 'like'].emoji %> <%= emo[r.reaction_type || 'like'].label %></span>
-                  <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
+            <% } %>
+            <% if (socials83 && socials83.length) { %>
+              <div class="pf-about-block">
+                <h4><i class="fas fa-link"></i> সোশ্যাল লিংক</h4>
+                <div class="pf-social-row">
+                  <% socials83.forEach(function (s) { %><a href="<%= s.u %>" target="_blank" rel="noopener" class="pf-social-chip" aria-label="<%= s.lbl %>"><i class="<%= s.ico %>"></i></a><% }) %>
                 </div>
-                <div class="qa-q"><a href="<%= r.post_type === 'question' ? '/qa/' + r.post_id : '/articles/' + r.post_id %>"><%= r.title %></a></div>
               </div>
-            <% }); %>
-          <% } %>
-        </div>
+            <% } %>
+            <% if (genres83 && genres83.length) { %>
+              <div class="pf-about-block">
+                <h4><i class="fas fa-feather"></i> সাহিত্য-ধারা</h4>
+                <div class="pf-genres"><% genres83.forEach(function (g) { %><span class="pf-genre-badge"><i class="fas fa-feather"></i> <%= g %></span><% }) %></div>
+              </div>
+            <% } %>
+            <% if (interests.length) { %>
+              <div class="pf-about-block">
+                <h4><i class="fas fa-tags"></i> আগ্রহের বিষয়</h4>
+                <div class="pf-interests">
+                  <% interests.forEach(t => { %><a href="/articles?tag=<%= encodeURIComponent(t) %>" class="tag-chip">#<%= t %></a><% }); %>
+                </div>
+              </div>
+            <% } %>
+            <% if (isOwner) { %><a href="/profile/edit" class="pf-btn gray full-w"><i class="fas fa-pen"></i> সম্পাদনা করুন</a><% } %>
+          </div>
+        </section>
 
-        <!-- Tab: Followers (manageable by owner) -->
-        <div class="tab-content" id="tab-followers">
+        <%# ═══ ট্যাব: অনুসরণকারী ═══ %>
+        <section class="tab-content" id="tab-followers" role="tabpanel">
+          <div class="pf-list-head"><h3>অনুসরণকারী <span class="pf-count-badge"><%= bn(followerCount) %></span></h3></div>
           <% if (followers.length === 0) { %>
-            <div class="empty-state card"><i class="fas fa-users"></i><p>কোনো অনুসরণকারী নেই।</p></div>
+            <div class="pf-card pf-empty"><i class="fas fa-users"></i><p>কোনো অনুসরণকারী নেই।</p></div>
           <% } else { %>
             <% if (isOwner) { %><p class="manage-hint"><i class="fas fa-sliders-h"></i> আপনার অনুসরণকারী ব্যবস্থাপনা, সরান বা ব্লক করুন</p><% } %>
-            <% followers.forEach(f => { %>
-              <div class="user-row card">
-                <a href="/profile/<%= f.username %>" class="side-user-main">
-                  <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
-                  <span><strong><%= f.full_name %></strong><small><%= f.designation || 'সদস্য' %></small></span>
-                </a>
-                <% if (isOwner) { %>
-                  <span class="user-row-actions">
-                    <button type="button" class="btn btn-ghost btn-sm remove-follower" data-user="<%= f.id %>" title="অনুসরণকারী সরান"><i class="fas fa-user-minus"></i> সরান</button>
-                    <button type="button" class="btn btn-danger btn-sm block-user" data-user="<%= f.id %>" title="ব্লক করুন"><i class="fas fa-ban"></i></button>
-                  </span>
-                <% } %>
-              </div>
-            <% }); %>
+            <div class="pf-list">
+              <% followers.forEach(f => { %>
+                <div class="pf-user-row pf-card">
+                  <a href="/profile/<%= f.username %>" class="pf-user-main">
+                    <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="pf-user-avatar" alt="">
+                    <span><strong><%= f.full_name %></strong><small><%= f.designation || 'সদস্য' %></small></span>
+                  </a>
+                  <% if (isOwner) { %>
+                    <span class="pf-user-actions">
+                      <button type="button" class="pf-btn gray sm remove-follower" data-user="<%= f.id %>" title="অনুসরণকারী সরান"><i class="fas fa-user-minus"></i> সরান</button>
+                      <button type="button" class="pf-btn danger sm block-user" data-user="<%= f.id %>" title="ব্লক করুন"><i class="fas fa-ban"></i></button>
+                    </span>
+                  <% } %>
+                </div>
+              <% }) %>
+            </div>
           <% } %>
-        </div>
+        </section>
 
-        <!-- Tab: Following -->
-        <div class="tab-content" id="tab-following">
+        <%# ═══ ট্যাব: অনুসরণ ═══ %>
+        <section class="tab-content" id="tab-following" role="tabpanel">
+          <div class="pf-list-head"><h3>অনুসরণ করছেন <span class="pf-count-badge"><%= bn(followingCount) %></span></h3></div>
           <% if (following.length === 0) { %>
-            <div class="empty-state card"><i class="fas fa-user-friends"></i><p>কাউকে অনুসরণ করছেন না।</p></div>
+            <div class="pf-card pf-empty"><i class="fas fa-user-friends"></i><p>কাউকে অনুসরণ করছেন না।</p></div>
           <% } else { %>
-            <% following.forEach(f => { %>
-              <div class="user-row card">
-                <a href="/profile/<%= f.username %>" class="side-user-main">
-                  <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="side-avatar" alt="">
-                  <span><strong><%= f.full_name %></strong><small><%= f.designation || 'সদস্য' %></small></span>
-                </a>
-              </div>
-            <% }); %>
+            <div class="pf-list">
+              <% following.forEach(f => { %>
+                <div class="pf-user-row pf-card">
+                  <a href="/profile/<%= f.username %>" class="pf-user-main">
+                    <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="pf-user-avatar" alt="">
+                    <span><strong><%= f.full_name %></strong><small><%= f.designation || 'সদস্য' %></small></span>
+                  </a>
+                </div>
+              <% }) %>
+            </div>
           <% } %>
-        </div>
+        </section>
+
+        <%# ═══ ট্যাব: ছবি (গ্যালারি) ═══ %>
+        <section class="tab-content" id="tab-photos" role="tabpanel">
+          <div class="pf-list-head"><h3>ছবিসমূহ</h3></div>
+          <div class="pf-card pf-photo-gallery">
+            <% if (photos.length === 0) { %>
+              <p class="pf-side-empty">কোনো ছবি নেই।</p>
+            <% } else { %>
+              <div class="pf-photo-grid big">
+                <% photos.forEach(p => { %>
+                  <% if (p.postId) { %>
+                    <a href="/articles/<%= p.postId %>" class="pf-photo-tile"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="<%= p.title || 'ছবি' %>"></a>
+                  <% } else { %>
+                    <a href="<%= p.url %>" target="_blank" rel="noopener" class="pf-photo-tile"><img loading="lazy" decoding="async" src="<%= p.url %>" alt="ছবি"></a>
+                  <% } %>
+                <% }) %>
+              </div>
+            <% } %>
+          </div>
+        </section>
 
         <% if (isOwner) { %>
-        <!-- Tab: Bookmarks (owner only) -->
-        <div class="tab-content" id="tab-bookmarks">
+        <%# ═══ ট্যাব: সংরক্ষিত (মালিক) ═══ %>
+        <section class="tab-content" id="tab-bookmarks" role="tabpanel">
+          <div class="pf-list-head"><h3>সংরক্ষিত পোস্ট</h3></div>
           <% if (bookmarks.length === 0) { %>
-            <div class="empty-state card"><i class="fas fa-bookmark"></i><p>কোনো সংরক্ষিত পোস্ট নেই।</p></div>
+            <div class="pf-card pf-empty"><i class="fas fa-bookmark"></i><p>কোনো সংরক্ষিত পোস্ট নেই।</p></div>
           <% } else { %>
-            <% bookmarks.forEach(b => { %>
-              <div class="qa-card card">
-                <div class="qa-q"><a href="<%= b.type === 'question' ? '/qa/' + b.id : '/articles/' + b.id %>"><%= b.title %></a></div>
-                <div class="qa-meta"><span class="badge"><%= b.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span> সংরক্ষিত <%= new Date(b.bookmarked_at).toLocaleDateString('bn-BD') %></div>
+            <div class="pf-list">
+              <% bookmarks.forEach(b => { %>
+                <div class="pf-card pf-mini-row">
+                  <div class="pf-mini-title"><a href="<%= b.type === 'question' ? '/qa/' + b.id : '/articles/' + b.id %>"><%= b.title %></a></div>
+                  <div class="pf-mini-meta"><span class="pf-badge"><%= b.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span> সংরক্ষিত <%= bnRelTime(b.bookmarked_at) %></div>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </section>
+
+        <%# ═══ ট্যাব: ড্রাফট (মালিক) ═══ %>
+        <section class="tab-content" id="tab-drafts" role="tabpanel">
+          <div class="pf-list-head"><h3>আমার কন্টেন্ট ব্যবস্থাপনা</h3></div>
+          <% if (drafts.length === 0 && myDaily.length === 0) { %>
+            <div class="pf-card pf-empty"><i class="fas fa-file"></i><p>কোনো ড্রাফট বা শিডিউল করা কন্টেন্ট নেই।</p></div>
+          <% } %>
+          <div class="pf-list">
+            <% drafts.forEach(d => { %>
+              <div class="pf-card pf-mini-row">
+                <div class="pf-mini-title"><%= d.title || 'শিরোনামহীন ড্রাফট' %></div>
+                <div class="pf-mini-meta"><span class="pf-badge muted"><%= d.type === 'question' ? 'প্রশ্ন ড্রাফট' : 'লেখা ড্রাফট' %></span> <%= bnRelTime(d.created_at) %></div>
               </div>
             <% }); %>
-          <% } %>
-        </div>
-
-        <!-- Tab: Drafts + content management (owner only) -->
-        <div class="tab-content" id="tab-drafts">
-          <p class="manage-hint"><i class="fas fa-layer-group"></i> আমার কন্টেন্ট ব্যবস্থাপনা</p>
-          <% if (drafts.length === 0 && myDaily.length === 0) { %>
-            <div class="empty-state card"><i class="fas fa-file"></i><p>কোনো ড্রাফট বা শিডিউল করা কন্টেন্ট নেই।</p></div>
-          <% } %>
-          <% drafts.forEach(d => { %>
-            <div class="qa-card card">
-              <div class="qa-q"><%= d.title || 'শিরোনামহীন ড্রাফট' %></div>
-              <div class="qa-meta">
-                <span class="badge badge-muted"><%= d.type === 'question' ? 'প্রশ্ন ড্রাফট' : 'লেখা ড্রাফট' %></span>
-                <%= new Date(d.created_at).toLocaleDateString('bn-BD') %>
+            <% myDaily.forEach(d => { %>
+              <div class="pf-card pf-mini-row">
+                <div class="pf-mini-title"><%= d.title || '(শিরোনাম নেই)' %></div>
+                <div class="pf-mini-meta"><span class="pf-badge <%= d.published ? '' : 'muted' %>"><%= d.published ? 'প্রকাশিত' : 'শিডিউল' %></span> <%= d.content_type %><% if (d.scheduled_date) { %> • <%= d.scheduled_date %><% } %></div>
               </div>
-            </div>
-          <% }); %>
-          <% myDaily.forEach(d => { %>
-            <div class="qa-card card">
-              <div class="qa-q"><%= d.title || '(শিরোনাম নেই)' %></div>
-              <div class="qa-meta">
-                <span class="badge <%= d.published ? '' : 'badge-muted' %>"><%= d.published ? 'প্রকাশিত' : 'শিডিউল' %></span>
-                <%= d.content_type %><% if (d.scheduled_date) { %> &middot; <%= d.scheduled_date %><% } %>
-              </div>
-            </div>
-          <% }); %>
-        </div>
+            <% }); %>
+          </div>
+        </section>
 
-        <!-- Tab: Categories (owner only) -->
-        <div class="tab-content" id="tab-categories">
-          <p class="manage-hint"><i class="fas fa-tags"></i> আগ্রহের বিষয় নির্বাচন করুন, এগুলো আপনার ফিড ব্যক্তিগত করবে</p>
-          <div class="card interest-picker">
+        <%# ═══ ট্যাব: ক্যাটাগরি (মালিক) ═══ %>
+        <section class="tab-content" id="tab-categories" role="tabpanel">
+          <div class="pf-list-head"><h3>আগ্রহের বিষয়</h3></div>
+          <div class="pf-card">
+            <p class="manage-hint"><i class="fas fa-tags"></i> আগ্রহের বিষয় নির্বাচন করুন, এগুলো আপনার ফিড ব্যক্তিগত করবে</p>
             <div class="tag-cloud" id="interestPool">
               <% tagPool.forEach(t => { %>
                 <button type="button" class="tag-chip interest-opt <%= interests.includes(t.tag) ? 'selected' : '' %>" data-tag="<%= t.tag %>">#<%= t.tag %></button>
               <% }); %>
               <% if (tagPool.length === 0) { %><span class="side-text">এখনো কোনো ট্যাগ পুল নেই।</span><% } %>
             </div>
-            <button type="button" class="btn btn-primary" id="saveInterests"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+            <button type="button" class="pf-btn primary" id="saveInterests"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
           </div>
-        </div>
+        </section>
         <% } %>
-      </div>
+      </main>
     </div>
   </div>
+  </div><%# /.pf-shell %>
 
   <%- include('../partials/share-modal') %>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <script>
-    // Tabs
-    document.querySelectorAll('.tab-btn, .tab-jump').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    // ── ট্যাব-সুইচ (সাব-ন্যাভ + ফিল্টার-পিল + স্ট্যাট-বাটন একই মেকানিজম) ──
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        const target = this.dataset.tab;
+        if (!target || !document.getElementById('tab-' + target)) return;
+        document.querySelectorAll('.pf-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+        document.querySelectorAll('.pf-pill').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        const target = btn.dataset.tab;
-        const tb = document.querySelector('.tab-btn[data-tab="' + target + '"]');
-        if (tb) tb.classList.add('active');
-        document.getElementById('tab-' + target)?.classList.add('active');
+        this.classList.add('active');
+        this.setAttribute('aria-selected', 'true');
+        document.getElementById('tab-' + target).classList.add('active');
+        // ট্যাব-বদলে মৃদু-স্ক্রল (শুধু মেইন-কনটেন্ট দেখা যায় এমন পজিশনে)
+        if (window.innerWidth < 900) {
+          document.querySelector('.pf-body')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       });
     });
 
-    // Follow / unfollow
-    document.querySelector('.btn-follow')?.addEventListener('click', async function () {
-      const res = await fetch('/follow/' + this.dataset.user, { method: 'POST' });
-      const data = await res.json();
-      if (data.following) {
-        this.classList.remove('btn-primary'); this.classList.add('btn-ghost');
-        this.innerHTML = '<i class="fas fa-check"></i> অনুসরণ করছেন';
-      } else {
-        this.classList.add('btn-primary'); this.classList.remove('btn-ghost');
-        this.innerHTML = '<i class="fas fa-plus"></i> অনুসরণ করুন';
+    // ── অনুসরণ/আনফলো (অপ্টিমিস্টিক টগল) ──
+    document.querySelector('.pf-follow-btn')?.addEventListener('click', async function () {
+      this.disabled = true;
+      try {
+        const res = await fetch('/follow/' + this.dataset.user, { method: 'POST' });
+        const data = await res.json();
+        if (data.following) {
+          this.classList.remove('primary'); this.classList.add('gray');
+          this.innerHTML = '<i class="fas fa-check"></i> অনুসরণ করছেন';
+          showToast('অনুসরণ করছেন ✓', 'success');
+        } else {
+          this.classList.add('primary'); this.classList.remove('gray');
+          this.innerHTML = '<i class="fas fa-plus"></i> অনুসরণ করুন';
+          showToast('অনুসরণ বাতিল হয়েছে', '');
+        }
+      } catch (e) {
+        showToast('সম্ভব হয়নি — আবার চেষ্টা করুন', 'error');
+      } finally {
+        this.disabled = false;
       }
     });
 
+    // ── প্রোফাইল লিংক কপি (••• মেনু) ──
+    document.getElementById('pfCopyLink')?.addEventListener('click', async function () {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        showToast('প্রোফাইল লিংক কপি হয়েছে ✓', 'success');
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = location.href; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+        showToast('প্রোফাইল লিংক কপি হয়েছে ✓', 'success');
+      }
+      document.getElementById('profile3DotMenu')?.classList.remove('open');
+    });
+
+    // ── ব্লক (ভিজিটর ••• মেনু) ──
+    document.getElementById('pfBlockUser')?.addEventListener('click', async function () {
+      if (!confirm('এই ব্যবহারকারীকে ব্লক করবেন?')) return;
+      const res = await fetch('/api/block/' + this.dataset.user, { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) {
+        showToast('ব্যবহারকারী ব্লক করা হয়েছে', 'success');
+        setTimeout(() => location.href = '/', 900);
+      } else showToast('ব্লক করা যায়নি', 'error');
+    });
+
     <% if (isOwner) { %>
-    // Remove follower
+    // ── পিনড-পোস্ট টগল (মালিক) — সফল হলে পুনরায় লোড (শীর্ষে স্থানান্তর) ──
+    document.querySelectorAll('.pf-pin-toggle').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/profile/<%= profile.username %>/pin', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId: Number(btn.dataset.post) })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(data.pinned ? 'লেখাটি প্রোফাইলের শীর্ষে পিন হয়েছে 📌' : 'পিন সরানো হয়েছে', 'success');
+          setTimeout(() => location.reload(), 700);
+        } else {
+          showToast('পিন করা যায়নি', 'error');
+        }
+      });
+    });
+
+    // অনুসরণকারী সরান
     document.querySelectorAll('.remove-follower').forEach(btn => {
       btn.addEventListener('click', async () => {
         const res = await fetch('/api/followers/' + btn.dataset.user + '/remove', { method: 'POST' });
-        if (res.ok) btn.closest('.user-row').remove();
+        if (res.ok) btn.closest('.pf-user-row').remove();
       });
     });
-    // Block user
+    // ব্লক করুন (অনুসারী-তালিকা)
     document.querySelectorAll('.block-user').forEach(btn => {
       btn.addEventListener('click', async () => {
         const res = await fetch('/api/block/' + btn.dataset.user, { method: 'POST' });
         const data = await res.json();
         if (data.ok && data.blocked) showToast('ব্যবহারকারী ব্লক করা হয়েছে', 'success');
-        btn.closest('.user-row')?.remove();
+        btn.closest('.pf-user-row')?.remove();
       });
     });
-    // Interest picker
+    // আগ্রহ-পিকার
     document.querySelectorAll('.interest-opt').forEach(chip => {
       chip.addEventListener('click', () => chip.classList.toggle('selected'));
     });
@@ -423,66 +658,96 @@
       if (res.ok) { showToast('আগ্রহের বিষয় সংরক্ষিত হয়েছে', 'success'); setTimeout(() => location.reload(), 800); }
     });
     <% } %>
+
+    // ── ৩-ডট মেনু (হিরো) ──
+    function toggleProfile3Dot(e) {
+      e.stopPropagation();
+      const m = document.getElementById('profile3DotMenu');
+      m.classList.toggle('open');
+    }
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.pf-menu-wrap')) {
+        document.getElementById('profile3DotMenu')?.classList.remove('open');
+      }
+    });
+
+    // ── পোস্ট ৩-ডট মেনু + শেয়ার ──
+    function togglePost3Dot(e, id) {
+      e.stopPropagation();
+      e.preventDefault();
+      const m = document.getElementById('post3dot-' + id);
+      document.querySelectorAll('.post-3dot-menu.open').forEach(x => { if (x.id !== 'post3dot-' + id) x.classList.remove('open'); });
+      m.classList.toggle('open');
+    }
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.post-3dot-wrap')) {
+        document.querySelectorAll('.post-3dot-menu.open').forEach(x => x.classList.remove('open'));
+      }
+    });
+    function sharePost(id) {
+      const url = window.location.origin + '/articles/' + id;
+      if (navigator.share) {
+        navigator.share({ title: 'লেখক ফোরাম', url: url });
+      } else {
+        navigator.clipboard.writeText(url);
+        showToast('লিংক কপি হয়েছে', 'success');
+      }
+    }
+
+    // ── স্টিকি সাব-ন্যাভ — সাইট-ওয়াইড body{overflow-x:hidden}-এ position:sticky
+    //     অকার্যকর, তাই FB-ম্যাট-প্যাটার্ন: টপে পৌঁছালে fixed-ক্লাস + প্লেসহোল্ডার-জাম্পগার্ড ──
+    (function () {
+      var nav = document.querySelector('.pf-subnav');
+      if (!nav) return;
+      var ph = document.createElement('div');
+      ph.style.height = '0px';
+      nav.parentNode.insertBefore(ph, nav);
+      var docTop = 0, ticking = false;
+      function measure() {
+        docTop = nav.getBoundingClientRect().top + (window.scrollY || 0) - ph.offsetHeight;
+        apply();
+      }
+      function apply() {
+        var y = window.scrollY || 0;
+        var stuck = y + 1 >= docTop;
+        if (stuck) {
+          if (ph.style.height === '0px') ph.style.height = nav.offsetHeight + 'px';
+          nav.classList.add('fixed');
+        } else {
+          ph.style.height = '0px';
+          nav.classList.remove('fixed');
+        }
+      }
+      window.addEventListener('scroll', function () {
+        if (!ticking) { requestAnimationFrame(function () { apply(); ticking = false; }); ticking = true; }
+      }, { passive: true });
+      window.addEventListener('resize', measure);
+      window.addEventListener('load', measure);
+      setTimeout(measure, 300);
+      measure();
+    })();
+
+    // ── ক্যামেরা-মেনু ওয়্যারিং (কভার/অ্যাভাটার) ──
+    (function () {
+      function wire(btnId, menuId) {
+        var b = document.getElementById(btnId), m = document.getElementById(menuId);
+        if (!b || !m) return;
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => { if (x !== m) x.hidden = true; });
+          m.hidden = !m.hidden;
+        });
+        m.addEventListener('click', function (e) {
+          var v = e.target.closest('[data-view]');
+          if (v) { window.open(v.dataset.view, '_blank'); m.hidden = true; }
+        });
+      }
+      wire('avatarCamBtn', 'avatarMenu');
+      wire('coverCamBtn', 'coverMenu');
+      document.addEventListener('click', function () { document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => x.hidden = true); });
+    })();
   </script>
 
-<script>
-function toggleProfile3Dot(e) {
-  e.stopPropagation();
-  const m = document.getElementById('profile3DotMenu');
-  m.classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.profile-3dot-wrap')) {
-    document.getElementById('profile3DotMenu')?.classList.remove('open');
-  }
-});
-</script>
-
-<script>
-function togglePost3Dot(e, id) {
-  e.stopPropagation();
-  e.preventDefault();
-  const m = document.getElementById('post3dot-' + id);
-  // Close others
-  document.querySelectorAll('.post-3dot-menu.open').forEach(x => { if (x.id !== 'post3dot-' + id) x.classList.remove('open'); });
-  m.classList.toggle('open');
-}
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.post-3dot-wrap')) {
-    document.querySelectorAll('.post-3dot-menu.open').forEach(x => x.classList.remove('open'));
-  }
-});
-function sharePost(id) {
-  const url = window.location.origin + '/articles/' + id;
-  if (navigator.share) {
-    navigator.share({ title: 'লেখক ফোরাম', url: url });
-  } else {
-    navigator.clipboard.writeText(url);
-    alert('লিংক কপি হয়েছে');
-  }
-}
-</script>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>
-
-<script>
-(function () {
-  function wire(btnId, menuId) {
-    var b = document.getElementById(btnId), m = document.getElementById(menuId);
-    if (!b || !m) return;
-    b.addEventListener('click', function (e) {
-      e.stopPropagation();
-      document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => { if (x !== m) x.hidden = true; });
-      m.hidden = !m.hidden;
-    });
-    m.addEventListener('click', function (e) {
-      var v = e.target.closest('[data-view]');
-      if (v) { window.open(v.dataset.view, '_blank'); m.hidden = true; }
-    });
-  }
-  wire('avatarCamBtn', 'avatarMenu');
-  wire('coverCamBtn', 'coverMenu');
-  document.addEventListener('click', function () { document.querySelectorAll('.pic-menu:not([hidden])').forEach(x => x.hidden = true); });
-})();
-</script>

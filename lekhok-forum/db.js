@@ -476,6 +476,9 @@ const LATER_COLUMNS = [
   ['messages', 'edited_at',   'TEXT'],
   ['conversation_members', 'muted',  'INTEGER DEFAULT 0'],
   ['conversation_members', 'pinned', 'INTEGER DEFAULT 0'],
+  // সেশন ৮৫: পিনড-পোস্ট — লেখক তার সেরা লেখা প্রোফাইল-টাইমলাইনের শীর্ষে
+  // পিন করতে পারেন (pen_name/genres কলাম সেশন-৮০-র social.js ALTER-লুপে আছে)।
+  ['posts', 'is_pinned', 'INTEGER DEFAULT 0'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

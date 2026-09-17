@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   email         TEXT,
   password_hash TEXT    NOT NULL,
   full_name     TEXT    NOT NULL,
+  pen_name      TEXT,                          -- কলমী নাম (সেশন ৮৩ হিরো + ৮০ সেটিংস)
   phone         TEXT,
   bio           TEXT,
   designation   TEXT,
@@ -22,7 +23,6 @@ CREATE TABLE IF NOT EXISTS users (
   social_linkedin TEXT,
   social_website TEXT,
   -- সেশন ৮০: লেখক-পরিচয় + গোপনীয়তা-নিয়ন্ত্রণ
-  pen_name      TEXT,                         -- ছদ্মনাম / কলমী নাম
   genres        TEXT    DEFAULT '[]',         -- পছন্দের সাহিত্য-ধারা (JSON, সর্বোচ্চ ৫)
   allow_messages_from TEXT DEFAULT 'everyone', -- everyone | followers | none
   bookmarks_public INTEGER DEFAULT 0,         -- বুকমার্ক-তালিকা পাবলিক কিনা
@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS posts (
   reactions     TEXT    DEFAULT '{}',        -- JSON: {"like":0,"love":0,"haha":0,"wow":0,"sad":0}
   repost_of     INTEGER,                     -- id of original post if this is a repost
   repost_note   TEXT,                        -- optional quote/comment added by the reposter
+  is_pinned     INTEGER DEFAULT 0,           -- সেশন ৮৩: প্রোফাইল-টাইমলাইনে পিনড (প্রতি লেখকে ১টি)
   published_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
