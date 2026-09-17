@@ -1047,6 +1047,17 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 - **পরিধি**: রুট 86→98; নেভ-আইটেম অ্যাডমিন 20→21, মডারেটর 10→11 (নতুন: অ্যাক্টিভিটি লগ); অ্যাডমিন ভিউ 32→33 (activity.ejs); CSS/সাইডবার/৯ লিস্ট/moderators/db-তে সংযোজন — **কোনো বিদ্যমান রুট/ফিল্ড/মেনু-আইটেম বাদ যায়নি**
 
 
+### সেশন ৯১ (১৭ সেপ্টেম্বর ২০২৬) — নিরাপত্তা-ও-পারফরম্যান্স ডিপ-অডিট (নিরাপত্তা-স্ট্রিম; QA-এজেন্টের session91-QA/92-এর সমান্তরাল)
+
+**স্কোপ**: ইউজারের "পুরো সাইট ডিপ-স্ক্যান" — প্রতিটি রুট/পেজ/সেকশন/ফাইল।
+
+- **🔴 সিক্রেট-লিক (CRITICAL)**: deploy-to-vercel.ps1-এ প্রোডাকশন Turso rw-JWT + SESSION_SECRET + Blob rw-টোকেন কমিটেড ছিল → স্ক্রাব (env-রেফারেন্স) + রোটেশন-নির্দেশ; হিস্ট্রি-লিকের জন্য ইউজারকে ৪টি রোটেশন করতে বলা হয়েছে
+- **🔴 Stored-XSS ×৩ শ্রেণি**: JSON-in-`<script>` ব্রেকআউট (১১ ভিউ → `app.locals.jesc`), leaderCard-টেমপ্লেট-লিটারালে কাঁচা ইউজার-স্ট্রিং (esc()+safeLeaderUrl), leaderSocialRow (committee/past-leaders) স্কিম-গার্ড
+- **🔴 লাইভ /dashboard 500**: প্রোডাকশন Turso-তে users.pen_name ছিল না → LATER_COLUMNS-এ pen_name/genres + post-kind backfill-এর ৩-স্টেটমেন্ট-এক-exec ভাঙা (Turso নীরবে বাদ দিত — SQL_MANY_STATEMENTS)
+- **⚡ পারফ**: vercel.json regions:["bom1"] (DB মুম্বাই-অথচ-ফাংশন-US-মিসম্যাচ; db-latency 204ms→4ms, প্রোফাইল ৪.৩s→০.৩s) + /profile/:username-এর ১২ সিরিয়াল-কোয়েরি → Promise.all (all91/get91 দুই-ব্যাকএন্ড-থাঙ্ক)
+- **টেস্ট-ইনফ্রা**: শেয়ার্ড test-lekhok.sh CSRF/303/স্টাফ-পোর্টাল-সিঙ্ক + পিয়ার-ismail + রোল-পলিসি পজিটিভ ৩ → ৮১/৮১ PASS; audit-live-crawl.js (৩৩ লাইভ-রুট) + audit-browser-session91.js (১৩ পেজ × দুই-ভিউপোর্ট, ওভারফ্লো-০/কনসোল-০); Turso-মোড লোকাল-রেপ্লিকায় dashboard/profile/home 200-প্রুফ
+- **দাবি-যাচাই**: "বাংলা-স্লাগ ক্র্যাশ" দাবি এই স্ট্যাকে অপ্রাসঙ্গিক — /profile/মোঃ রাফছান লাইভে সঠিকই রেন্ডার (মালিকের আসল প্রোফাইল); আসল সমস্যা ছিল পারফ
+
 ### সেশন ৩৬ (৭ সেপ্টেম্বর ২০২৬) — হটফিক্স: লাইভ সাইট-ওয়াইড 500 — মডিউল-লোড multer ক্র্যাশ (মূল কারণ) + কোল্ড-বুট ফাস্ট-পাথ (গুপ্ত ঝুঁকি)
 
 **ইউজার রিকোয়েস্ট**: "সব রিভেরিফাই কর!" — পুনঃযাচাইয়ে দেখা গেল লাইভ https://lekhok-forum.vercel.app **সব রুটে HTTP 500 (FUNCTION_INVOCATION_FAILED)**।
