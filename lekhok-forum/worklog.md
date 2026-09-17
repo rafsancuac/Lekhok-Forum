@@ -802,3 +802,23 @@ Stage Summary:
 - সাইটের পোস্ট/কমেন্ট/মেসেঞ্জার-মার্কআপের একমাত্র সোর্স এখন views/shared/**; নতুন রঙের একমাত্র সোর্স tokens.css — guard-design-system.js লঙ্ঘনে ফেইল করায়
 - ইউজারের ৫ নিয়ম E2E-প্রমাণিত; FB-প্যারিটি (রিঅ্যাক্টরস-মডাল, কমেন্ট ৩-ডট-এডিট/ডিলিট, কর্নার-ব্যাজ, ড্রয়ার-প্রিভিউ-সোয়াপ) নতুন-যোগ
 - পরবর্তী: qa-single-উত্তর→CommentItem, ইনবক্স-মিনি-বাবল, comment-API-র role-policy-চেক, tokens-হেক্স-স্ক্যান
+
+---
+Task ID: 11 (Session 111 — cron review round: status assess + call-UX polish package)
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ 9bb2a98 থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-শূন্যতায় স্বাধীন-ফোকাস নির্বাচন → কল-UX পলিশ প্যাকেজ (কোয়ালিটি-পিল + ডায়াগনস্টিকস + অটো-হিন্ট)
+
+Work Log:
+- প্রি-যাচাই: git fetch (2a8d411→9bb2a98 — session107-series-রিসোর্স-কমিট এসেছে) → pull --ff-only → worklog/PROJECT/PLANS রিভিউ
+- QA-ফেজ: pkill → port-free-ভেরিফাই → seed-qa-users (সার্ভার-বন্ধ — ১১-ইউজার আগেই-ছিল) → সার্ভার (PORT=8080 SANDBOX_PORT=8080 CALL_RING_TIMEOUT_S=4) → role-policy ১০৭/১০৭ ✓ + calls-E2E ৫৪/৫৪ ✓ + cursor-E2E ২২/২২ ✓
+- ব্রাউজার-QA: হোম/লগইন(ismail/secret123)/ড্যাশ(১৫-কার্ড)/মেসেঞ্জার-চ্যাট (LekhokCall-ctx সম্পূর্ণ, calls-ট্যাব ২০-রো ✓) /resources/articles/lekhok-home/gallery/resources/1/quiz/notifications — কনসোল-০ ✓; 390px ×৪-পেজ ওভারফ্লো-০ ✓ — বাগ-শূন্য
+- ফোকাস-নির্বাচন: মাস্টার-টেবিল ২০/২০-পরবর্তী রোডম্যাপে গ্রুপ-কল ছাড়া বাকি ছিল কল-পলিশ; ③-Metered-TURN ইউজার-অ্যাকাউন্ট-নির্ভর — তাই **কল-UX পলিশ প্যাকেজ** (webrtc-call.js + calls.css-২-ফাইল, Agent-Chat-লক-জোন-অস্পৃশ্য)
+- ইমপ্ল: ① .lc-quality 4-বার পিল (getStats RTT-গ্রেডেড, top-LEFT-পিন — লোকাল-ভিডিও-সংঘর্ষ-এড়াতে) ② .lc-stats ডায়াগনস্টিকস প্যানেল (fa-circle-info বাটন; সংযোগ-পথ/ক্যান্ডিডেট/RTT/jitter/loss/kbps — বাংলা-সংখ্যা; relay=অ্যাম্বার) ③ টানা-৩-দুর্বল-নমুনায় একবারী টোস্ট ④ QA-হুক _qaEnsureRoot/_qaSetQuality/toggleStats ⑤ S-স্টেট ৭-নতুন-ফিল্ড + onConnected/cleanup-ওয়্যারিং
+- CSS: পিল ৩-গ্রেড (সবুজ/অ্যাম্বার/লাল-পালস) + গ্লাস-প্যানেল + 640px-মোবাইল + reduced-motion; hidden-অ্যাট্রিবিউট-ওভাররাইড-গার্ড ([hidden]{display:none} — display:flex-গোটচা)
+- যাচাই: node --check ✓ রিস্টার্ট-পরবর্তী role-policy ১০৭/১০৭ ✓ calls ৫৪/৫৪ ✓ agent-browser: পিল good/bad ✓ প্যানেল empty→৭-রো+is-relay ✓ ডেস্কটপ+390px-স্ক্রিনশট ✓ overflow-০ ✓ কনসোল-০ ✓
+- docs: PLANS session111-নোট (ইন্টিগ্রেশন-পয়েন্ট+পরবর্তী-সুপারিশ) + PROJECT চেঞ্জলজ
+
+Stage Summary:
+- কল-UI এখন FB-প্যারিটি নেটওয়ার্ক-মিটার + ডায়াগনস্টিকসসহ — TURN-যাচাই (রোডম্যাপ-③) লাইভ-কলের প্যানেল থেকেই সম্ভব
+- নতুন-এজেন্ট-নোট: webrtc-call.js-এ কল-লাইফসাইকেল বদলালে startStatsTicker()/S.qPollT-ক্লিনআপ রক্ষা করুন; [hidden]-সিলেক্টর-গার্ড রীতি মানুন
+- পরবর্তী: গ্রুপ-কল (mesh, নিজস্ব-বড়-রাউন্ড) → Metered.ca-অ্যাকাউন্ট → ভিডিও-স্ট্যাট → অটো-ডিগ্রেড

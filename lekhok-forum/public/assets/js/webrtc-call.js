@@ -74,7 +74,15 @@
     muted: false,
     camOff: false,
     minimized: false,
-    ringing: null           // WebAudio হ্যান্ডেল
+    ringing: null,          // WebAudio হ্যান্ডেল
+    /* সেশন ১১১: নেটওয়ার্ক-কোয়ালিটি + ডায়াগনস্টিকস */
+    qPollT: null,           // getStats-টিকার টাইমার
+    statsOpen: false,       // ডায়াগনস্টিকস-প্যানেল খোলা কি-না
+    lastStats: null,        // সর্বশেষ নমুনা {rtt,path,local,remote,jitter,lost,kbps}
+    poorStreak: 0,          // টানা দুর্বল-নমুনা
+    poorNotified: false,    // দুর্বল-নেটওয়ার্ক টোস্ট (একবারী)
+    lastBytes: 0,           // bitrate-ডেল্টা-বেস
+    lastBytesAt: 0
   };
 
   /* ── DOM হেল্পার ───────────────────────────────────────────────────────── */
@@ -163,6 +171,7 @@
       '      <video class="lc-local-video" autoplay playsinline muted></video>' +
       '      <div class="lc-tapplay" hidden><button type="button" class="lc-tapplay-btn">' + icon('fa-play') + ' ট্যাপ করে চালু করুন</button></div>' +
       '    </div>' +
+      '    <div class="lc-quality" hidden><span class="lc-quality-bars"><i></i><i></i><i></i><i></i></span><span class="lc-quality-t">—</span></div>' +
       '    <div class="lc-audioface">' +
       '      <div class="lc-aura"><span></span><span></span><span></span></div>' +
       '      <img class="lc-avatar" alt="" />' +
@@ -172,12 +181,17 @@
       '      <div class="lc-name"></div>' +
       '      <div class="lc-status"></div>' +
       '    </div>' +
+      '    <div class="lc-stats" hidden role="region" aria-label="সংযোগ-তথ্য">' +
+      '      <div class="lc-stats-head"><span>' + icon('fa-signal') + ' সংযোগ-তথ্য</span><button type="button" class="lc-stats-x" data-lc="stats-close" title="বন্ধ করুন" aria-label="সংযোগ-তথ্য বন্ধ করুন">' + icon('fa-xmark') + '</button></div>' +
+      '      <div class="lc-stats-rows"></div>' +
+      '    </div>' +
       '    <div class="lc-retrybar" hidden>' +
       '      <span class="lc-retrybar-t">' + icon('fa-triangle-exclamation') + ' সংযোগ বিচ্ছিন্ন</span>' +
       '      <button type="button" class="lc-retrybar-btn lc-retrybar-btn--retry" data-lc="retry">' + icon('fa-rotate-right') + ' আবার চেষ্টা করুন</button>' +
       '      <button type="button" class="lc-retrybar-btn lc-retrybar-btn--end" data-lc="end">' + icon('fa-phone-slash') + ' কল শেষ করুন</button>' +
       '    </div>' +
       '    <div class="lc-controls">' +
+      '      <button type="button" class="lc-ctl lc-ctl--info" data-lc="stats" title="সংযোগ-তথ্য (নেটওয়ার্ক)">' + icon('fa-circle-info') + '</button>' +
       '      <button type="button" class="lc-ctl lc-ctl--mic" data-lc="mic" title="মাইক বন্ধ/চালু">' + icon('fa-microphone') + '</button>' +
       '      <button type="button" class="lc-ctl lc-ctl--cam" data-lc="cam" title="ক্যামেরা বন্ধ/চালু">' + icon('fa-video') + '</button>' +
       '      <button type="button" class="lc-ctl lc-ctl--min" data-lc="min" title="মিনিমাইজ">' + icon('fa-chevron-down') + '</button>' +
@@ -209,6 +223,8 @@
       else if (a === 'end') { click(); endCall('hangup'); }
       else if (a === 'accept') acceptCall();
       else if (a === 'decline') { click(); declineCall(); }
+      else if (a === 'stats') toggleStats();
+      else if (a === 'stats-close') toggleStats(false);
       else if (a === 'retry') {
         click();
         var rb = root && root.querySelector('.lc-retrybar');
@@ -323,6 +339,119 @@
     if (rb) rb.hidden = false;
     status('সংযোগ ব্যর্থ', 'is-warn');
     toast('সংযোগ স্থাপন করা যায়নি — নেটওয়ার্ক/ফায়ারওয়াল (TURN রিলে) সমস্যা', true);
+  }
+
+  /* ── সেশন ১১১: নেটওয়ার্ক-কোয়ালিটি ইন্ডিকেটর + ডায়াগনস্টিকস (getStats) ────
+     ① কোয়ালিটি-পিল (4-বার, FB-প্যারিটি) — RTT ভিত্তিক: <150ms ভালো, <300 মাঝারি,
+        <500 দুর্বল, তার-বেশি/অজানা সংকট; সংযুক্ত-অবস্থায় ২.৫সে-অন্তর নমুনা।
+     ② ডায়াগনস্টিকস-প্যানেল — সংযোগ-পথ (সরাসরি/রিলে=TURN-প্রমাণ), ক্যান্ডিডেট-টাইপ,
+        RTT/jitter/হারানো-প্যাকেট/রিসিভ-গতি — রোডম্যাপ-③ (TURN-যাচাই)-এর হাতে-কলমে সহায়ক।
+     ③ দুর্বল-নেটওয়ার্ক অটো-হিন্ট — টানা ৩-দুর্বল-নমুনায় একবারী টোস্ট; রিকভারিতে রিসেট। */
+  function setQuality(lvl, rttMs, note) {
+    if (!root) return;
+    var q = root.querySelector('.lc-quality');
+    if (!q) return;
+    q.hidden = false;
+    q.classList.remove('is-good', 'is-warn', 'is-bad');
+    q.classList.add(lvl >= 2 ? 'is-good' : (lvl === 1 ? 'is-warn' : 'is-bad'));
+    var bars = q.querySelectorAll('.lc-quality-bars i');
+    for (var i = 0; i < bars.length; i++) {
+      if (bars[i]) bars[i].classList.toggle('is-on', i < (lvl + 1));
+    }
+    var t = q.querySelector('.lc-quality-t');
+    if (t) t.textContent = (rttMs != null ? bn(rttMs) + ' ms' : '—');
+    q.title = 'নেটওয়ার্ক: ' + (lvl >= 2 ? 'ভালো' : (lvl === 1 ? 'মাঝারি' : 'দুর্বল')) + (rttMs != null ? ' · RTT ' + bn(rttMs) + ' ms' : '') + (note ? ' · ' + note : '');
+    q.setAttribute('aria-label', q.title);
+  }
+  function hideQuality() {
+    if (!root) return;
+    var q = root.querySelector('.lc-quality');
+    if (q) q.hidden = true;
+  }
+  function startStatsTicker() {
+    clearTimeout(S.qPollT);
+    S.poorStreak = 0; S.poorNotified = false;
+    S.lastBytes = 0; S.lastBytesAt = 0;
+    statsTick();
+  }
+  async function statsTick() {
+    clearTimeout(S.qPollT);
+    var pc = S.pc;
+    if (!pc || (S.state !== 'connected' && S.state !== 'connecting')) return;
+    try {
+      var st = await pc.getStats();
+      var pair = null, lcMap = {}, rcMap = {}, inbound = null;
+      st.forEach(function (r) {
+        if (r.type === 'candidate-pair' && (r.selected || r.state === 'succeeded')) {
+          if (!pair || (r.selected && !pair.selected)) pair = r;
+        } else if (r.type === 'local-candidate') { lcMap[r.id] = r; }
+        else if (r.type === 'remote-candidate') { rcMap[r.id] = r; }
+        else if (r.type === 'inbound-rtp' && !r.isRemote && r.kind === 'audio') { inbound = r; }
+      });
+      var d = { at: Date.now(), rtt: null, path: null, local: null, remote: null, jitter: null, lost: null, kbps: null };
+      if (pair) {
+        if (typeof pair.currentRoundTripTime === 'number') d.rtt = Math.round(pair.currentRoundTripTime * 1000);
+        var l = lcMap[pair.localCandidateId], r2 = rcMap[pair.remoteCandidateId];
+        if (l) d.local = l.candidateType || null;
+        if (r2) d.remote = r2.candidateType || null;
+        if (l && r2) {
+          d.path = (l.candidateType === 'relay' || r2.candidateType === 'relay') ? 'রিলে (TURN)'
+            : ((l.candidateType === 'host' && r2.candidateType === 'host') ? 'সরাসরি (একই-নেটওয়ার্ক)' : 'সরাসরি (NAT-ভেদ)');
+        }
+      }
+      if (inbound) {
+        if (typeof inbound.jitter === 'number') d.jitter = Math.round(inbound.jitter * 1000);
+        if (typeof inbound.packetsLost === 'number') d.lost = Math.max(0, inbound.packetsLost);
+        if (typeof inbound.bytesReceived === 'number') {
+          if (S.lastBytesAt && d.at > S.lastBytesAt && inbound.bytesReceived >= S.lastBytes) {
+            d.kbps = Math.max(0, Math.round(((inbound.bytesReceived - S.lastBytes) * 8) / (d.at - S.lastBytesAt) / 1000));
+          }
+          S.lastBytes = inbound.bytesReceived; S.lastBytesAt = d.at;
+        }
+      }
+      S.lastStats = d;
+      var lvl = (d.rtt == null) ? 0 : (d.rtt < 150 ? 3 : (d.rtt < 300 ? 2 : (d.rtt < 500 ? 1 : 0)));
+      setQuality(lvl, d.rtt, d.path);
+      if (S.statsOpen) renderStats();
+      if ((d.rtt == null || d.rtt > 450)) S.poorStreak++;
+      else { S.poorStreak = 0; S.poorNotified = false; }
+      if (S.poorStreak >= 3 && !S.poorNotified && S.state === 'connected') {
+        S.poorNotified = true;
+        toast('নেটওয়ার্ক দুর্বল হচ্ছে — ভিডিও বন্ধ করলে সংযোগ ভালো থাকতে পারে', true);
+      }
+    } catch (_) { /* pc বন্ধ — নেক্সট-টিকে থামবে */ }
+    S.qPollT = setTimeout(statsTick, 2500);
+  }
+  function statsRow(k, v, cls) {
+    return '<div class="lc-stats-row' + (cls ? ' ' + cls : '') + '"><span>' + k + '</span><b>' + ((v == null || v === '') ? '—' : v) + '</b></div>';
+  }
+  function renderStats() {
+    if (!root) return;
+    var rows = root.querySelector('.lc-stats-rows');
+    if (!rows) return;
+    if (S.state !== 'connected' || !S.lastStats) {
+      rows.innerHTML = '<div class="lc-stats-empty">সংযোগ স্থাপিত হলে লাইভ-তথ্য দেখা যাবে।</div>';
+      return;
+    }
+    var d = S.lastStats;
+    rows.innerHTML =
+      statsRow('সংযোগ-পথ', d.path, (d.path && d.path.indexOf('রিলে') === 0) ? 'is-relay' : '') +
+      statsRow('আমার ক্যান্ডিডেট', d.local) +
+      statsRow('পিয়ার ক্যান্ডিডেট', d.remote) +
+      statsRow('RTT (রাউন্ড-ট্রিপ)', d.rtt != null ? bn(d.rtt) + ' ms' : null) +
+      statsRow('জিটার', d.jitter != null ? bn(d.jitter) + ' ms' : null) +
+      statsRow('হারানো প্যাকেট (মোট)', d.lost != null ? bn(d.lost) : null) +
+      statsRow('গতি (রিসিভ)', d.kbps != null ? bn(d.kbps) + ' kbps' : null);
+  }
+  function toggleStats(force) {
+    if (!root) return;
+    var p = root.querySelector('.lc-stats');
+    if (!p) return;
+    S.statsOpen = (force !== undefined) ? !!force : !S.statsOpen;
+    p.hidden = !S.statsOpen;
+    var b = root.querySelector('.lc-ctl--info');
+    if (b) b.classList.toggle('is-active', S.statsOpen);
+    if (S.statsOpen) renderStats();
   }
 
   function tryPlayRemote() {
@@ -553,6 +682,7 @@
       var m = Math.floor(s / 60); s = s % 60;
       status(bn(m) + ':' + (s < 10 ? '০' + bn(s) : bn(s)), 'is-live');
     }, 1000);
+    startStatsTicker(); /* সেশন ১১১: কোয়ালিটি-পিল + ডায়াগনস্টিকস লাইভ */
   }
 
   /* ── শেষ/ক্লিনআপ ──────────────────────────────────────────────────────── */
@@ -561,7 +691,10 @@
     clearInterval(S.tickT); S.tickT = null;
     clearTimeout(S.flushT); S.flushT = null;
     clearTimeout(S.pollT); S.pollT = null;
+    clearTimeout(S.qPollT); S.qPollT = null; /* সেশন ১১১ */
     if (S.incT) { clearTimeout(S.incT); S.incT = null; }
+    S.statsOpen = false; S.lastStats = null; S.poorStreak = 0; S.poorNotified = false;
+    S.lastBytes = 0; S.lastBytesAt = 0;
     S.iceRestarts = 0; S.restartAnswer = false;
     if (S.pc) { try { S.pc.close(); } catch (_) {} S.pc = null; }
     if (S.local) { S.local.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} }); S.local = null; }
@@ -745,8 +878,12 @@
     toggleCam: toggleCam,
     minimize: function () { minimize(!S.minimized); },
     state: function () { return S.state; },
+    toggleStats: function () { toggleStats(); },
     /* QA-হুক: হেডলেস-ব্রাউজার টেস্টে UI-স্টেট যাচাই */
-    _debug: S
+    _debug: S,
+    /* সেশন ১১১ QA-হুক — রুট/কোয়ালিটি-UI যাচাই (কল ছাড়াই) */
+    _qaEnsureRoot: function () { ensureRoot(); return !!root; },
+    _qaSetQuality: function (lvl, rtt) { setQuality(lvl, rtt, 'QA-নমুনা'); }
   };
 
   /* আইডল-অবস্থাতেও পোল-লুপ চালু — ক্যালি হিসেবে আসন্ন-কল দেখতে হলে
