@@ -734,3 +734,53 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
 /* [hidden]-রক্ষা: ক্লাস-ডিসপ্লে (inline-flex) UA-র [hidden]{display:none}-কে ছাপিয়ে যায় */
 .mn-add109[hidden],.mn-form109[hidden]{display:none !important}
 @media (prefers-reduced-motion: reduce){.mn-add109,.mn-mini109,.mn-form109 textarea{transition:none}}
+/* ═══════════════ সেশন ১০৮: ইনবক্স উত্তর-নোট + ক্লিন-প্রিন্ট-শিট ═══════════════
+   স্কোপড-ক্লাস (108-প্রত্যয়) — EOF-অ্যাপেন্ড-রীতি (minified-ফাইলে exact-anchor
+   প্যাচ নয়)। focus-visible গ্লোবাল রুল আগেই আছে; এখানে শুধু নতুন-ইন্টারঅ্যাক্টর। */
+
+/* ── তালিকা-প্রিন্ট বাটন (meta-লাইনে) ── */
+.inbox-print108{display:inline-flex;align-items:center;gap:7px;margin-left:12px;vertical-align:middle;border:1px solid var(--ad-line);background:#fff;color:#4b5563;font-weight:600;border-radius:8px;padding:6px 14px;font-size:.82rem;cursor:pointer;transition:border-color .18s,color .18s,box-shadow .18s}
+.inbox-print108:hover{border-color:var(--ad-accent);color:var(--ad-accent-ink);box-shadow:0 2px 10px rgba(5,150,105,.14)}
+.inbox-print108 i{font-size:.8rem}
+
+/* ── প্রতি-কার্ড প্রিন্ট-বাটন (অ্যাকশন-রো) ── */
+.act-btn108-print{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ad-line);background:#fff;color:#6b7280;border-radius:7px;padding:7px 12px;font-size:.78rem;font-weight:600;cursor:pointer;transition:border-color .18s,color .18s,transform .18s}
+.act-btn108-print:hover{border-color:var(--ad-accent);color:var(--ad-accent-ink);transform:translateY(-1px)}
+
+/* ── ক্লিন-প্রিন্ট-শিট (স্ক্রিনে অদৃশ্য, প্রিন্টে একমাত্র দৃশ্যমান) ── */
+#printSheet108{display:none}
+@media print{
+  body.ps-mode108{background:#fff}
+  body.ps-mode108 .admin-sidebar,
+  body.ps-mode108 .admin-main{display:none !important}
+  body.ps-mode108 #printSheet108{display:block !important;padding:0;color:#111}
+  #printSheet108 .ps-head108{border-bottom:2.5px solid #059669;padding-bottom:12px;margin-bottom:18px}
+  #printSheet108 .ps-brand108{font-size:1.28rem;font-weight:800;color:#065f46}
+  #printSheet108 .ps-title108{font-size:1rem;font-weight:700;color:#374151;margin-top:3px}
+  #printSheet108 .ps-meta108{font-size:.76rem;color:#6b7280;margin-top:2px}
+  #printSheet108 .ps-msg108{border:1px solid #d1d5db;border-radius:8px;padding:12px 14px;margin-bottom:12px;page-break-inside:avoid}
+  #printSheet108 .ps-msg108.unread{border-left:3px solid #dc2626}
+  #printSheet108 .ps-msg108.archived{border-left:3px solid #9ca3af}
+  #printSheet108 .ps-top108{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-bottom:6px}
+  #printSheet108 .ps-no108{font-size:.74rem;font-weight:700;color:#9ca3af}
+  #printSheet108 .ps-name108{font-size:.98rem;color:#111}
+  #printSheet108 .ps-mail108,#printSheet108 .ps-time108{font-size:.78rem;color:#6b7280}
+  #printSheet108 .ps-flag108{font-size:.68rem;font-weight:700;color:#dc2626;border:1px solid #fecaca;border-radius:999px;padding:1px 8px}
+  #printSheet108 .ps-flag108.dim{color:#6b7280;border-color:#d1d5db}
+  #printSheet108 .ps-subj108{font-size:.84rem;font-weight:700;color:#374151;margin-bottom:4px}
+  #printSheet108 .ps-body108{font-size:.9rem;line-height:1.7;white-space:pre-wrap;word-break:break-word;margin:0 0 6px}
+  #printSheet108 .ps-note108{margin-top:8px;border-top:1px dashed #f59e0b;padding-top:8px}
+  #printSheet108 .ps-note-h108{font-size:.72rem;font-weight:800;color:#92400e;margin-bottom:3px}
+  #printSheet108 .ps-note-b108{font-size:.86rem;line-height:1.65;color:#78350f;white-space:pre-wrap;word-break:break-word;margin:0}
+  #printSheet108 .ps-foot108{margin-top:16px;border-top:1px solid #e5e7eb;padding-top:8px;font-size:.72rem;color:#9ca3af;text-align:center}
+}
+
+/* ── মোবাইল (640px) + reduced-motion — সেশন-রীতি ── */
+@media (max-width:640px){
+  .inbox-print108{margin-left:0;margin-top:8px}
+  .act-btn108-print{padding:6px 10px}
+}
+@media (prefers-reduced-motion:reduce){
+  .inbox-print108,.act-btn108-print{transition:none}
+  .act-btn108-print:hover{transform:none}
+}

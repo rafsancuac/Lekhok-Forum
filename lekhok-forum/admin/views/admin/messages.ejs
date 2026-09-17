@@ -43,7 +43,10 @@
     <a class="btn btn-sm csv108" href="/admin/messages/export?f=<%= encodeURIComponent(filter105) %><%= q105 ? '&q=' + encodeURIComponent(q105) : '' %>" title="বর্তমান ফিল্টার ধরে রেখে CSV ডাউনলোড"><i class="fas fa-file-csv"></i> CSV</a>
   </div>
 
-  <p class="inbox-meta105"><%= total105 %> টি বার্তা<% if (q105) { %> — “<%= q105 %>” এর জন্য<% } %><% if (pages105 > 1) { %> · পেজ <%= page105 %>/<%= pages105 %><% } %></p>
+  <p class="inbox-meta105"><%= total105 %> টি বার্তা<% if (q105) { %> — “<%= q105 %>” এর জন্য<% } %><% if (pages105 > 1) { %> · পেজ <%= page105 %>/<%= pages105 %><% } %>
+    <% /* সেশন ১০৮: তালিকা-প্রিন্ট — ফিল্টার-সংবেদী ক্লিন-প্রিন্ট-শিট */ %>
+    <button type="button" class="btn btn-sm inbox-print108" id="msgPrintAll108" title="ফিল্টার করা তালিকা প্রিন্ট করুন"><i class="fas fa-print"></i> তালিকা প্রিন্ট</button>
+  </p>
 
   <% /* ── বাল্ক-বার (sidebar-এর initBulkBar চুক্তি: bulkBar + bulk_ids) ── */ %>
   <form method="POST" action="/admin/messages/bulk-delete" class="bulk-bar" id="bulkBar">
@@ -112,6 +115,8 @@
           <% if (m.email) { %>
           <a class="act-btn105 accent" href="mailto:<%= m.email %>?subject=<%= encodeURIComponent(replySub105) %>&body=<%= encodeURIComponent('প্রিয় ' + m.name + ',\n\nআপনার বার্তার জন্য ধন্যবাদ।\n\n') %>"><i class="fas fa-reply"></i> উত্তর দিন</a>
           <% } %>
+          <% /* সেশন ১০৮-খ: বার্তা-প্রিন্ট (নোট-UI session109-ক্যানোনিকাল) */ %>
+          <button type="button" class="act-btn108-print" data-msg-print="<%= m.id %>" title="এই বার্তাটি প্রিন্ট করুন"><i class="fas fa-print"></i> প্রিন্ট</button>
           <button type="button" class="act-btn105 danger" data-confirm="“<%= m.name %>”-এর বার্তা মুছে ট্র্যাশে পাঠানো হবে — নিশ্চিত?" data-form="/admin/messages/<%= m.id %>/delete<%= (filter105 !== 'all' || q105 || page105 > 1) ? '?' + [filter105 !== 'all' ? 'f=' + filter105 : '', q105 ? 'q=' + encodeURIComponent(q105) : '', page105 > 1 ? 'page=' + page105 : ''].filter(Boolean).join('&') : '' %>"><i class="fas fa-trash"></i> মুছুন</button>
         </div>
         <% /* ── সেশন ১০৯: রিপ্লাই-নোট — ইমেইল-উত্তরের অফলাইন-রেকর্ড (CSV-তেও যায়) ── */ %>
@@ -145,6 +150,7 @@
           </form>
           <button type="button" class="mn-add109" data-note-open="<%= m.id %>" <%= m.admin_reply ? 'hidden' : '' %>><i class="fas fa-plus"></i> নোট লিখুন</button>
         </div>
+=======
       </div>
     </div>
     <% }) %>
@@ -178,151 +184,98 @@
 <script>
 (function () {
   'use strict';
-  /* ── ১০৫-ক: বার্তা-কার্ড এক্সপ্যান্ড/কল্যাপ্স (clamp → full) ── */
-  document.querySelectorAll('[data-toggle-msg]').forEach(function (btn) {
-    var card = btn.closest('.msg105-card');
-    if (!card) return;
-    var p = card.querySelector('.msg-text105');
-    if (!p) return;
-    if (p.scrollHeight <= p.clientHeight + 2) { btn.hidden = true; return; }
-    btn.addEventListener('click', function () {
-      var open = card.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-  });
 
-  /* ── ১০৫-খ: কাস্টম কনফার্ম-মোডাল — card-delete (data-confirm + data-form)
-        এবং bulkBar submit (data-bulk-msg) দুটোতেই ── */
-  var modal = document.getElementById('confirmModal105');
-  var cmText = document.getElementById('cmText105');
-  var cmOk = document.getElementById('cmOk105');
-  var pending = null; /* fn() | form */
-  function openModal(text, onOk) {
-    if (!modal) return onOk();
-    cmText.textContent = text;
-    pending = onOk;
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-    setTimeout(function () { cmOk.focus(); }, 40);
+  /* ── ক্লিন-প্রিন্ট-শিট (session108-খ — নোট-UI session109-ক্যানোনিকাল) ── */
+  /* ── ক্লিন-প্রিন্ট-শিট ── */
+  function dataFromCard108(card) {
+    var pick = function (sel, attr) {
+      var el = card.querySelector(sel);
+      if (!el) return '';
+      return attr ? (el.getAttribute(attr) || el.textContent || '').trim() : (el.textContent || '').trim();
+    };
+    var subj = pick('.msg-subj105');
+    return {
+      name: pick('.msg-name105'),
+      email: pick('.msg-mail105'),
+      time: pick('.msg-time105', 'title'),
+      subject: subj ? subj.replace(/^#[^#]*#\s*/, '') : '',
+      message: pick('.msg-text105'),
+      note: pick('.mn-text109'),
+      unread: card.classList.contains('unread'),
+      archived: card.classList.contains('archived')
+    };
   }
-  function closeModal() {
-    if (!modal) return;
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
-    pending = null;
+  function mk108(tag, cls, text) {
+    var el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text !== undefined && text !== null && text !== '') el.textContent = text;
+    return el;
   }
-  if (modal) {
-    modal.addEventListener('click', function (e) { if (e.target.closest('[data-cm-close]')) closeModal(); });
-    cmOk.addEventListener('click', function () { var fn = pending; closeModal(); if (fn) fn(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
-  }
-  document.querySelectorAll('[data-confirm][data-form]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      openModal(btn.getAttribute('data-confirm'), function () {
-        var f = document.createElement('form');
-        f.method = 'POST';
-        f.action = btn.getAttribute('data-form');
-        var m = document.querySelector('meta[name="csrf-token"]');
-        if (m && m.content) {
-          var i = document.createElement('input'); i.type = 'hidden'; i.name = '_csrf'; i.value = m.content;
-          f.appendChild(i);
-        }
-        document.body.appendChild(f);
-        f.submit();
-      });
-    });
-  });
-  var bulkBar = document.getElementById('bulkBar');
-  if (bulkBar) {
-    bulkBar.addEventListener('submit', function (e) {
-      /* sidebar-এর initBulkBar খালি-হলে preventDefault করে; আমরা ০-আইডিতে মোডাল খুলব না */
-      if (!bulkBar.querySelectorAll('input[type="hidden"][name="ids"]').length) return;
-      if (bulkBar.dataset.skipConfirm105 === '1') { delete bulkBar.dataset.skipConfirm105; return; }
-      var submitter = (e.submitter && e.submitter.getAttribute) ? e.submitter : bulkBar.querySelector('[data-bulk-msg]');
-      var msg = submitter ? submitter.getAttribute('data-bulk-msg') : null;
-      if (!msg) return;
-      e.preventDefault();
-      /* ⚠️ গোটচা: form.submit() সাবমিটার-বাটনের formaction অগ্রাহ্য করে —
-         ফর্মের ডিফল্ট action (bulk-delete)-এ যায়! তাই কনফার্মের পরে বাটনে
-         আবার .click() করি, skip-flag দিয়ে মোডাল-লুপ এড়িয়ে (সেশন-১০৫ QA-তে
-         বাল্ক-read ভুলে bulk-delete চালানোর আসল-ঘটনা থেকে শেখা)। */
-      openModal(msg, function () {
-        if (submitter && typeof submitter.click === 'function') {
-          bulkBar.dataset.skipConfirm105 = '1';
-          submitter.click();
-        } else {
-          bulkBar.submit();
-        }
-      });
-    });
-  }
-
-  /* ── ১০৯: রিপ্লাই-নোট — ওপেন/এডিট/ক্যানসেল/কাউন্টার (বাংলা-ডিজিট) ── */
-  var bn109 = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
-  function noteFormOf109(id) { return document.querySelector('[data-note-form="' + id + '"]'); }
-  function noteAddBtnOf109(id) { return document.querySelector('[data-note-open="' + id + '"]'); }
-  document.querySelectorAll('[data-note-open]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var f = noteFormOf109(b.getAttribute('data-note-open'));
-      if (f) { f.hidden = false; b.hidden = true; var t = f.querySelector('textarea'); if (t) t.focus(); }
-    });
-  });
-  document.querySelectorAll('[data-note-edit]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var card = b.closest('.msg-note109');
-      var f = noteFormOf109(b.getAttribute('data-note-edit'));
-      if (f) {
-        f.hidden = false;
-        if (card) card.classList.add('editing');
-        var t = f.querySelector('textarea'); if (t) t.focus();
-      }
-    });
-  });
-  document.querySelectorAll('[data-note-cancel]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var f = b.closest('[data-note-form]');
-      if (!f) return;
-      var id = f.getAttribute('data-note-form');
-      var card = f.closest('.msg-note109');
-      f.hidden = true;
-      if (card) {
-        card.classList.remove('editing');
-        var has = card.classList.contains('has');
-        if (has) {
-          var view = card.querySelector('.mn-view109');
-          if (view) view.hidden = false;
-          /* এডিট-ড্রাফট বাতিল → মূল-নোট টেক্সটেরিয়ায় ফেরত (পরের এডিটে প্রি-ফিল সঠিক) */
-          var vt = card.querySelector('.mn-text109');
-          var ta = f.querySelector('textarea');
-          if (vt && ta) { ta.value = vt.textContent; ta.dispatchEvent(new Event('input')); }
-        } else {
-          var add = noteAddBtnOf109(id);
-          if (add) add.hidden = false;
-        }
-      }
-    });
-  });
-  document.querySelectorAll('[data-note-form] textarea').forEach(function (t) {
-    var c = t.closest('[data-note-form]').querySelector('[data-note-count]');
-    var upd = function () { if (c) c.textContent = bn109(t.value.length) + ' / ২০০০'; };
-    t.addEventListener('input', upd); upd();
-  });
-
-  /* ── ১০৫-গ: ?saved=1 টোস্ট (bulk-action ফেরত) ── */
-  try {
-    var qs = new URLSearchParams(location.search);
-    if (qs.get('saved') === '1') {
-      qs.delete('saved');
-      var clean = location.pathname + (qs.toString() ? '?' + qs.toString() : '') + location.hash;
-      if (history.replaceState) history.replaceState(null, '', clean);
-      var t = document.createElement('div');
-      t.setAttribute('role', 'status');
-      t.style.cssText = 'position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:1300;background:#065f46;color:#fff;border-radius:5px;padding:12px 20px;font-size:.92rem;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,.3);transition:opacity .5s;';
-      t.textContent = '✓ অ্যাকশন সম্পন্ন হয়েছে';
-      document.body.appendChild(t);
-      setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 500); }, 3200);
+  function msgNode108(d, idx) {
+    var w = mk108('div', 'ps-msg108' + (d.unread ? ' unread' : '') + (d.archived ? ' archived' : ''));
+    var top = mk108('div', 'ps-top108');
+    top.appendChild(mk108('span', 'ps-no108', idx ? ('#' + String(idx).replace(/[0-9]/g, function (c) { return '০১২৩৪৫৬৭৮৯'[+c]; })) : ''));
+    top.appendChild(mk108('strong', 'ps-name108', d.name || '—'));
+    if (d.email) top.appendChild(mk108('span', 'ps-mail108', d.email));
+    if (d.time) top.appendChild(mk108('span', 'ps-time108', d.time));
+    if (d.unread) top.appendChild(mk108('span', 'ps-flag108', 'অপঠিত'));
+    if (d.archived) top.appendChild(mk108('span', 'ps-flag108 dim', 'আর্কাইভড'));
+    w.appendChild(top);
+    if (d.subject) w.appendChild(mk108('div', 'ps-subj108', 'বিষয়: ' + d.subject));
+    w.appendChild(mk108('p', 'ps-body108', d.message));
+    if (d.note) {
+      var nb = mk108('div', 'ps-note108');
+      nb.appendChild(mk108('div', 'ps-note-h108', 'উত্তর-নোট (অ্যাডমিন রেকর্ড)'));
+      nb.appendChild(mk108('p', 'ps-note-b108', d.note));
+      w.appendChild(nb);
     }
-  } catch (e) {}
+    return w;
+  }
+  function printSheet108(titleText, nodes) {
+    var old = document.getElementById('printSheet108');
+    if (old) old.remove();
+    var sheet = mk108('div');
+    sheet.id = 'printSheet108';
+    var head = mk108('div', 'ps-head108');
+    head.appendChild(mk108('div', 'ps-brand108', 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়'));
+    head.appendChild(mk108('div', 'ps-title108', titleText));
+    head.appendChild(mk108('div', 'ps-meta108', 'প্রিন্ট: ' + new Date().toLocaleString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })));
+    sheet.appendChild(head);
+    nodes.forEach(function (n) { sheet.appendChild(n); });
+    var foot = mk108('div', 'ps-foot108', 'লেখক ফোরাম · /contact ফর্ম থেকে সংগৃহীত বার্তা · গোপনীয়তা: শুধুমাত্র অভ্যন্তরীণ ব্যবহারে');
+    sheet.appendChild(foot);
+    document.body.appendChild(sheet);
+    document.body.classList.add('ps-mode108');
+    var cleaned = false;
+    var cleanup = function () {
+      if (cleaned) return; cleaned = true;
+      document.body.classList.remove('ps-mode108');
+      sheet.remove();
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+    setTimeout(cleanup, 3000);
+  }
+  /* বার্তা-প্রিন্ট (প্রতি-কার্ড) */
+  document.querySelectorAll('[data-msg-print]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var card = document.getElementById('msg' + b.getAttribute('data-msg-print'));
+      if (!card) return;
+      var d = dataFromCard108(card);
+      printSheet108('যোগাযোগ-বার্তা', [msgNode108(d, 0)]);
+    });
+  });
+  /* তালিকা-প্রিন্ট (বর্তমান ফিল্টার-পেজের সব কার্ড) */
+  var all = document.getElementById('msgPrintAll108');
+  if (all) {
+    all.addEventListener('click', function () {
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.msg-list105 .msg105-card'));
+      if (!cards.length) return;
+      var nodes = cards.map(function (c, i) { return msgNode108(dataFromCard108(c), i + 1); });
+      printSheet108('যোগাযোগ-বার্তা তালিকা (' + cards.length + 'টি)', nodes);
+    });
+  }
 })();
 </script>
 </body>

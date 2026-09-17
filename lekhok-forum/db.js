@@ -119,6 +119,7 @@ const MIGRATION_SQL = `
     message TEXT,
     is_read INTEGER DEFAULT 0,
     is_archived INTEGER DEFAULT 0,
+    reply_note TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS users (

@@ -121,12 +121,21 @@
 
       <div class="cx-map-wrap">
         <%# সেশন ১০২ ফিক্স: ভাঙা pb-এমবেডের বদলে API-কী-বিহীন নির্ভরযোগ্য output=embed আইফ্রেম %>
+        <%# সেশন ১০৮: মাল্টি-পিন — জায়গা-চিপ চাপলে আইফ্রেম q=/z= প্যারাম বদলায় (কোনো API-কী লাগে না) %>
+        <div class="cx-map-chips108" role="tablist" aria-label="ম্যাপে দেখার জায়গা নির্বাচন">
+          <button type="button" class="cx-chip108 active" data-q="University of Chittagong, Hathazari, Chittagong, Bangladesh" data-z="14" aria-pressed="true"><i class="fas fa-university" aria-hidden="true"></i> মূল ক্যাম্পাস</button>
+          <button type="button" class="cx-chip108" data-q="Chittagong University Railway Station" data-z="15" aria-pressed="false"><i class="fas fa-train" aria-hidden="true"></i> বিশ্ববিদ্যালয় রেলস্টেশন</button>
+          <button type="button" class="cx-chip108" data-q="Nazarhat Bus Stand, Hathazari, Chittagong" data-z="15" aria-pressed="false"><i class="fas fa-bus" aria-hidden="true"></i> নাজিরহাট</button>
+          <button type="button" class="cx-chip108" data-q="Chittagong University Gate, Hathazari Road" data-z="15" aria-pressed="false"><i class="fas fa-door-open" aria-hidden="true"></i> গেট নং-১</button>
+        </div>
+        <p class="cx-pin-caption108" id="cxPinCaption108" aria-live="polite"><i class="fas fa-map-pin" aria-hidden="true"></i> দেখানো হচ্ছে: <strong>মূল ক্যাম্পাস</strong></p>
         <iframe
+          id="cxMapIframe108"
           src="https://maps.google.com/maps?q=University%20of%20Chittagong%2C%20Hathazari%2C%20Chittagong%2C%20Bangladesh&t=&z=14&ie=UTF8&iwloc=&output=embed"
           width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
           title="চট্টগ্রাম বিশ্ববিদ্যালয় অবস্থান — গুগল ম্যাপ"></iframe>
-        <a class="cx-map-open" href="https://maps.google.com/?q=University+of+Chittagong" target="_blank" rel="noopener">
+        <a class="cx-map-open" id="cxMapOpen108" href="https://maps.google.com/?q=University+of+Chittagong" target="_blank" rel="noopener">
           <i class="fas fa-external-link-alt"></i> ম্যাপে খুলুন
         </a>
       </div>
@@ -388,9 +397,13 @@
           <input type="search" id="cxProvSearch" placeholder="হল, প্রভোস্ট বা বিভাগ লিখে খুঁজুন…" aria-label="হল প্রভোস্ট খুঁজুন" autocomplete="off">
           <button type="button" class="cx-prov-clear" id="cxProvClear" aria-label="সার্চ মুছুন" hidden><i class="fas fa-times"></i></button>
         </div>
-        <span class="cx-prov-count" id="cxProvCount"><%= en2bn102(String(halls42.length)) %>টি হল</span>
-        <% /* সেশন ১০৯: প্রিন্ট-বাটন (সেশন-১০৭-সুপারিশ) — ক্লিকে সব-হল-প্রসারিত করে window.print() */ %>
-        <button type="button" class="cx-prov-print" id="cxProvPrint" title="প্রভোস্ট তালিকা প্রিন্ট করুন"><i class="fas fa-print" aria-hidden="true"></i> প্রিন্ট করুন</button>
+        <span class="cx-prov-actions-108">
+          <span class="cx-prov-count" id="cxProvCount"><%= en2bn102(String(halls42.length)) %>টি হল</span>
+          <% /* সেশন ১০৯: প্রিন্ট-বাটন (ক্যানোনিকাল — beforeprint-প্রসারণ + cx-print-keep; JS-ব্যর্থতায়ও সব-হল) */ %>
+          <button type="button" class="cx-prov-print" id="cxProvPrint" title="প্রভোস্ট তালিকা প্রিন্ট করুন"><i class="fas fa-print" aria-hidden="true"></i> প্রিন্ট করুন</button>
+          <% /* সেশন ১০৮-খ: শেয়ার (নেটিভ-শেয়ার → ক্লিপবোর্ড-ফলব্যাক) — অনন্য */ %>
+          <button type="button" class="cx-prov-tool108" id="cxProvShare108" title="তালিকা শেয়ার করুন" aria-label="প্রভোস্ট তালিকা শেয়ার করুন"><i class="fas fa-share-nodes" aria-hidden="true"></i> শেয়ার</button>
+        </span>
       </div>
 
       <div class="cx-prov-grid" id="cxProvGrid" data-collapsed="1">
@@ -714,5 +727,78 @@
       show(false, 'নেটওয়ার্ক সমস্যা — ইন্টারনেট যাচাই করে আবার চেষ্টা করুন।');
     }).then(function () { setBusy(false); });
   });
+})();
+
+/* ── সেশন ১০৮: মাল্টি-পিন ম্যাপ — জায়গা-চিপে iframe q=/z= সোয়াপ (API-কী-বিহীন) ── */
+(function () {
+  var chips = document.querySelectorAll('.cx-chip108');
+  var frame = document.getElementById('cxMapIframe108');
+  var cap = document.getElementById('cxPinCaption108');
+  var open = document.getElementById('cxMapOpen108');
+  if (!chips.length || !frame) return;
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      if (c.classList.contains('active')) return;
+      chips.forEach(function (o) { o.classList.remove('active'); o.setAttribute('aria-pressed', 'false'); });
+      c.classList.add('active');
+      c.setAttribute('aria-pressed', 'true');
+      var q = c.getAttribute('data-q') || '';
+      var z = c.getAttribute('data-z') || '14';
+      var label = c.textContent.trim().replace(/\s+/g, ' ');
+      frame.src = 'https://maps.google.com/maps?q=' + encodeURIComponent(q) + '&t=&z=' + z + '&ie=UTF8&iwloc=&output=embed';
+      frame.title = label + ' — গুগল ম্যাপ';
+      if (cap) cap.innerHTML = '<i class="fas fa-map-pin" aria-hidden="true"></i> দেখানো হচ্ছে: <strong></strong>';
+      if (cap) cap.querySelector('strong').textContent = label;
+      if (open) open.href = 'https://maps.google.com/?q=' + encodeURIComponent(q);
+    });
+  });
+})();
+
+/* ── সেশন ১০৮: প্রভোস্ট-তালিকা প্রিন্ট-শিট + শেয়ার (নেটিভ → ক্লিপবোর্ড-ফলব্যাক) ── */
+(function () {
+  var grid = document.getElementById('cxProvGrid');
+  if (!grid) return;
+  var bnN = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+
+  /* DOM থেকে সারি-ডেটা (textContent-only → XSS-নিরাপদ) — শেয়ার-টেক্সটের উৎস */
+  function rows108() {
+    return Array.prototype.map.call(grid.children, function (it) {
+      var t = it.querySelector('.cx-prov-info strong');
+      var nm = it.querySelector('.cx-prov-name');
+      var call = it.querySelector('.cx-prov-call');
+      return {
+        hall: t ? t.textContent.trim() : '',
+        provost: nm ? nm.textContent.trim() : '',
+        phone: call ? call.textContent.trim() : ''
+      };
+    });
+  }
+
+  var sb = document.getElementById('cxProvShare108');
+  if (sb) {
+    sb.addEventListener('click', function () {
+      var rows = rows108();
+      var text = 'চট্টগ্রাম বিশ্ববিদ্যালয় — আবাসিক হল প্রভোস্ট তালিকা\n\n' + rows.map(function (r) {
+        return '• ' + r.hall + (r.provost ? ' — ' + r.provost : '') + (r.phone ? ' · ' + r.phone : '');
+      }).join('\n') + '\n\nবিস্তারিত: ' + location.href;
+      var done = function () {
+        sb.classList.add('done');
+        var ic = sb.querySelector('i');
+        var old = ic ? ic.className : '';
+        if (ic) ic.className = 'fas fa-check';
+        setTimeout(function () { sb.classList.remove('done'); if (ic && old) ic.className = old; }, 1600);
+      };
+      if (navigator.share) {
+        navigator.share({ title: 'চট্টগ্রাম বিশ্ববিদ্যালয় — হল প্রভোস্ট তালিকা', text: text }).then(function () { done(); }).catch(function () {});
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta); done();
+      }
+    });
+  }
 })();
 </script>

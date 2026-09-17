@@ -1868,3 +1868,42 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .msx-chip.wide{grid-column:1/-1}
 /* ═══ Session 112 সমাপ্ত ═══ */
 
+@media (max-width:640px){.msx-grid{gap:6px}.msx-chip{padding:6px 9px}}
+
+/* ═══════════════ সেশন ১০৮: যোগাযোগ — মাল্টি-পিন ম্যাপ-চিপ + প্রভোস্ট প্রিন্ট/শেয়ার ═══════════════
+   স্কোপ: .cx102 (session102-কনটেইনার) + 108-প্রত্যয়-ক্লাস — EOF-অ্যাপেন্ড-রীতি */
+
+/* ── ম্যাপ-জায়গা-চিপ (মাল্টি-পিন নির্বাচক) ── */
+.cx102 .cx-map-chips108{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.cx102 .cx-chip108{display:inline-flex;align-items:center;gap:7px;border:1px solid #e4e6eb;background:#fff;color:#4b5563;border-radius:999px;padding:8px 14px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:border-color .18s,color .18s,background .18s,box-shadow .18s,transform .18s}
+.cx102 .cx-chip108 i{font-size:.74rem;color:#9ca3af;transition:color .18s}
+.cx102 .cx-chip108:hover{border-color:rgba(5,150,105,.45);color:#065f46;transform:translateY(-1px);box-shadow:0 3px 10px rgba(5,150,105,.1)}
+.cx102 .cx-chip108:hover i{color:#059669}
+.cx102 .cx-chip108:focus-visible{outline:2px solid #059669;outline-offset:2px}
+.cx102 .cx-chip108.active{background:linear-gradient(135deg,#059669,#047857);border-color:#047857;color:#fff;box-shadow:0 3px 12px rgba(5,150,105,.3)}
+.cx102 .cx-chip108.active i{color:rgba(255,255,255,.85)}
+
+/* ── বর্তমান-পিন ক্যাপশন ── */
+.cx102 .cx-pin-caption108{display:flex;align-items:center;gap:7px;margin:-2px 0 10px;font-size:.76rem;font-weight:600;color:#6b7280}
+.cx102 .cx-pin-caption108 i{color:#059669;font-size:.72rem}
+.cx102 .cx-pin-caption108 strong{color:#065f46;font-weight:800}
+
+/* ── প্রভোস্ট-টুল বাটন (প্রিন্ট/শেয়ার) ── */
+.cx102 .cx-prov-actions-108{display:inline-flex;align-items:center;gap:8px;margin-left:auto}
+.cx102 .cx-prov-tool108{display:inline-flex;align-items:center;gap:6px;border:1px solid #e4e6eb;background:#fff;color:#4b5563;border-radius:8px;padding:8px 13px;font:inherit;font-size:.76rem;font-weight:700;cursor:pointer;transition:border-color .18s,color .18s,transform .18s,box-shadow .18s}
+.cx102 .cx-prov-tool108 i{font-size:.72rem}
+.cx102 .cx-prov-tool108:hover{border-color:rgba(5,150,105,.5);color:#065f46;transform:translateY(-1px);box-shadow:0 3px 10px rgba(5,150,105,.12)}
+.cx102 .cx-prov-tool108:focus-visible{outline:2px solid #059669;outline-offset:2px}
+.cx102 .cx-prov-tool108.done{background:linear-gradient(135deg,#059669,#047857);border-color:#047857;color:#fff}
+
+/* ── প্রভোস্ট-প্রিন্ট-শিট (স্ক্রিনে অদৃশ্য, প্রিন্টে একমাত্র দৃশ্যমান) ── */
+
+/* ── মোবাইল + reduced-motion — সেশন-রীতি ── */
+@media (max-width:640px){
+  .cx102 .cx-chip108{padding:7px 12px;font-size:.74rem}
+  .cx102 .cx-prov-actions-108{margin-left:0;width:100%;justify-content:space-between}
+}
+@media (prefers-reduced-motion:reduce){
+  .cx102 .cx-chip108,.cx102 .cx-prov-tool108{transition:none}
+  .cx102 .cx-chip108:hover,.cx102 .cx-prov-tool108:hover{transform:none}
+}
