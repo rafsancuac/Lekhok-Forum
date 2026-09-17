@@ -2938,7 +2938,14 @@ async function getTransportSchedule() {
     const raw = await getSetting('transport_schedule');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.shuttle && parsed.bus && parsed.train) return parsed;
+      if (parsed && parsed.shuttle && parsed.bus && parsed.train) {
+        // সেশন ১০২: পুরনো DB-JSON-এ freeShuttle কী না থাকলে হেল্পার-ডিফল্ট ইনজেক্ট —
+        // লাইভ/পুরনো ডেটাতেও নতুন চাকসু-ফ্রি-বাস প্যানেল দেখা যায়; admin-মান থাকলে সেটিই প্রাধান্য।
+        if (!parsed.freeShuttle) {
+          try { parsed.freeShuttle = require('./helpers/transport-schedule').freeShuttle; } catch (e) {}
+        }
+        return parsed;
+      }
     }
   } catch (e) { /* নীরবে হেল্পার ফলব্যাকে যাই */ }
   return require('./helpers/transport-schedule');

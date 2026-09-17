@@ -1162,3 +1162,167 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .notif-missed .fas{font-size:9px}
 .notif-missed--page{font-size:11px;padding:3px 10px;vertical-align:middle;margin-left:6px}
 .notif-page-icon.icon-call{background:rgba(228,64,95,.14);color:#E4405F}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১০২ — যোগাযোগ-পেজ রিডিজাইন (স্কোপড: .cx102 — অন্য পেজে প্রভাব শূন্য)
+   ফিক্স: ① ভাঙা গুগল-ম্যাপ → লাইভ আইফ্রেম  ② ক্যাম্পাস-চ্যানেল প্রফেশনাল কার্ড
+   ③ বিশ্ববিদ্যালয়/যাতায়াত/জরুরি সাবসেকশনের প্রান্তিক প্যাডিং + আধুনিক ডিজাইন
+   ④ হল-প্রভোস্ট গ্রিড + ফ্রি-শাটল-বাস প্যানেল
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ১. কোথায় আমরা: সময়সূচি + ম্যাপ স্প্লিট ── */
+.cx102 .cx-loc-grid{display:grid;grid-template-columns:5fr 7fr;gap:0;background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:18px;overflow:hidden;box-shadow:0 10px 34px rgba(10,31,68,.07)}
+.cx102 .cx-loc-info{padding:28px 30px;display:flex;flex-direction:column;gap:0}
+.cx102 .cx-loc-text{font-size:.92rem;color:var(--text-muted,#64748b);line-height:1.8;margin:6px 0 18px}
+.cx102 .cx-hours{display:flex;flex-direction:column;gap:10px}
+.cx102 .cx-hour-row{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;padding:11px 14px;background:#F7F8FA;border:1px solid var(--border,#e2e8f0);border-radius:12px;transition:border-color .2s,background .2s}
+.cx102 .cx-hour-row:hover{border-color:rgba(5,150,105,.45);background:#F2FBF7}
+.cx102 .cx-hour-dot{width:9px;height:9px;border-radius:50%;background:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.cx102 .cx-hour-row.is-closed .cx-hour-dot{background:#F87171;box-shadow:0 0 0 3px rgba(248,113,113,.16)}
+.cx102 .cx-hour-day{font-weight:700;font-size:.88rem;color:var(--brand,#0a1f44)}
+.cx102 .cx-hour-time{font-size:.82rem;color:var(--text-muted,#64748b);justify-self:end;font-variant-numeric:tabular-nums}
+.cx102 .cx-hour-state{font-size:.68rem;font-weight:800;letter-spacing:.3px;padding:3px 10px;border-radius:999px;background:rgba(16,185,129,.12);color:#047857;border:1px solid rgba(16,185,129,.3)}
+.cx102 .cx-hour-state.off{background:rgba(248,113,113,.1);color:#DC2626;border-color:rgba(248,113,113,.3)}
+.cx102 .cx-loc-addr{display:flex;align-items:flex-start;gap:10px;margin-top:18px;padding-top:16px;border-top:1px dashed var(--border,#e2e8f0);font-size:.82rem;color:var(--text-muted,#64748b);line-height:1.7}
+.cx102 .cx-loc-addr .fas{color:var(--accent,#059669);margin-top:2px}
+.cx102 .cx-map-wrap{position:relative;min-height:380px;background:#E8EDF3}
+.cx102 .cx-map-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cx102 .cx-map-open{position:absolute;right:14px;bottom:14px;z-index:2;display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.96);color:var(--accent,#059669);font-size:.78rem;font-weight:800;padding:8px 14px;border-radius:999px;border:1px solid var(--border,#e2e8f0);box-shadow:0 6px 18px rgba(10,31,68,.16);backdrop-filter:blur(4px);transition:transform .2s,box-shadow .2s,color .2s}
+.cx102 .cx-map-open:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(10,31,68,.22);color:#047857}
+
+/* ── ২. ক্যাম্পাস চ্যানেল: অ্যাকশন-কার্ড গ্রিড ── */
+.cx102 .cx-ch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:28px 0 8px}
+.cx102 .cx-ch-card{display:flex;flex-direction:column;justify-content:space-between;gap:14px;background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:16px;padding:18px 18px 16px;box-shadow:0 2px 12px rgba(10,31,68,.05);transition:transform .22s,box-shadow .22s,border-color .22s;color:inherit;text-decoration:none}
+.cx102 .cx-ch-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(10,31,68,.11)}
+.cx102 .cx-ch-card.is-static{opacity:.92}
+.cx102 .cx-ch-card.is-static .cx-ch-btn{background:#F1F5F9;color:#94A3B8;border-color:transparent;cursor:default}
+.cx102 .cx-ch-top{display:flex;align-items:flex-start;gap:13px}
+.cx102 .cx-ch-ico{flex:0 0 48px;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:19px;background:linear-gradient(135deg,rgba(5,150,105,.13),rgba(10,31,68,.08));color:var(--accent,#059669);border:1px solid rgba(5,150,105,.22);transition:transform .25s}
+.cx102 .cx-ch-card:hover .cx-ch-ico{transform:scale(1.06) rotate(-3deg)}
+.cx102 .cx-ch-head{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cx102 .cx-ch-title{font-weight:800;font-size:.95rem;color:var(--brand,#0a1f44);line-height:1.4}
+.cx102 .cx-ch-desc{font-size:.8rem;color:var(--text-muted,#64748b);line-height:1.6;word-break:break-word}
+.cx102 .cx-ch-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:9px 12px;border-radius:12px;font-size:.8rem;font-weight:800;border:1px solid transparent;background:#F0FDF6;color:#047857;transition:background .2s,color .2s,transform .2s}
+.cx102 .cx-ch-btn .fas{font-size:.7rem;transition:transform .2s}
+.cx102 .cx-ch-card:hover .cx-ch-btn .fas{transform:translateX(3px)}
+/* ব্র্যান্ড-টিন্ট */
+.cx102 .cx-ch-card.tint-fb .cx-ch-ico{background:rgba(24,119,242,.1);color:#1877F2;border-color:rgba(24,119,242,.25)}
+.cx102 .cx-ch-card.tint-fb .cx-ch-btn{background:#EFF6FF;color:#1D4ED8}
+.cx102 .cx-ch-card.tint-yt .cx-ch-ico{background:rgba(255,0,0,.08);color:#E02F2F;border-color:rgba(255,0,0,.22)}
+.cx102 .cx-ch-card.tint-yt .cx-ch-btn{background:#FEF2F2;color:#DC2626}
+.cx102 .cx-ch-card.tint-tg .cx-ch-ico{background:rgba(41,171,226,.1);color:#229ED9;border-color:rgba(41,171,226,.25)}
+.cx102 .cx-ch-card.tint-tg .cx-ch-btn{background:#F0F9FF;color:#0369A1}
+.cx102 .cx-ch-card.tint-mail .cx-ch-ico{background:rgba(5,150,105,.1);color:#059669;border-color:rgba(5,150,105,.25)}
+.cx102 .cx-ch-card.tint-tel .cx-ch-ico{background:rgba(217,119,6,.1);color:#D97706;border-color:rgba(217,119,6,.25)}
+.cx102 .cx-ch-card.tint-tel .cx-ch-btn{background:#FFFBEB;color:#B45309}
+.cx102 .cx-ch-card.tint-grp .cx-ch-ico{background:rgba(124,58,237,.09);color:#7C3AED;border-color:rgba(124,58,237,.22)}
+.cx102 .cx-ch-card.tint-grp .cx-ch-btn{background:#F5F3FF;color:#6D28D9}
+
+/* ── ৩. সাবসেকশন হেডার (ইউনিভার্সিটি/যাতায়াত/জরুরি) ── */
+.cx102 .cx-sub-block{margin-top:44px}
+.cx102 .cx-sec-head{display:flex;align-items:center;gap:14px;margin:0 0 18px;padding:14px 18px;background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);border-left:4px solid var(--accent,#059669);border-radius:14px;box-shadow:0 2px 10px rgba(10,31,68,.04)}
+.cx102 .cx-sec-head.is-emergency{border-left-color:#DC2626}
+.cx102 .cx-sec-ico{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;background:linear-gradient(135deg,rgba(5,150,105,.12),rgba(10,31,68,.07));color:var(--accent,#059669)}
+.cx102 .cx-sec-head.is-emergency .cx-sec-ico{background:linear-gradient(135deg,rgba(220,38,38,.1),rgba(220,38,38,.05));color:#DC2626}
+.cx102 .cx-sec-title{margin:0;font-size:1.05rem;font-weight:800;color:var(--brand,#0a1f44);line-height:1.4}
+.cx102 .cx-sec-sub{margin:2px 0 0;font-size:.78rem;color:var(--text-muted,#64748b);line-height:1.6}
+
+/* ── ৪. বিশ্ববিদ্যালয় সম্পর্কিত তথ্য: আধুনিক কার্ড ── */
+.cx102 .cx-uni-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.cx102 .cx-uni-card{display:flex;align-items:center;gap:14px;background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(10,31,68,.05);transition:transform .22s,box-shadow .22s,border-color .22s;color:inherit;text-decoration:none;min-width:0}
+.cx102 .cx-uni-card:hover{transform:translateY(-3px);border-color:rgba(5,150,105,.45);box-shadow:0 12px 26px rgba(10,31,68,.1)}
+.cx102 .cx-uni-card.is-static{cursor:default}
+.cx102 .cx-uni-ico{flex:0 0 44px;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;background:linear-gradient(135deg,rgba(5,150,105,.12),rgba(10,31,68,.07));color:var(--accent,#059669);border:1px solid rgba(5,150,105,.2)}
+.cx102 .cx-uni-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.cx102 .cx-uni-meta strong{font-size:.9rem;font-weight:800;color:var(--brand,#0a1f44);line-height:1.45}
+.cx102 .cx-uni-meta span{font-size:.78rem;color:var(--text-muted,#64748b);word-break:break-word}
+.cx102 .cx-uni-go{flex:0 0 30px;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;background:#F1F5F9;color:#64748B;transition:background .2s,color .2s,transform .2s}
+.cx102 .cx-uni-card:hover .cx-uni-go{background:var(--accent,#059669);color:#fff;transform:translateX(2px)}
+
+/* ── ৫. জরুরি যোগাযোগ: ক্লিক-টু-কল গ্রিড ── */
+.cx102 .cx-egr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.cx102 .cx-egr-card{display:flex;align-items:center;gap:14px;background:var(--card,#fff);border:1px solid var(--border,#e2e8f0);border-radius:14px;padding:16px 16px 16px 18px;box-shadow:0 2px 10px rgba(10,31,68,.05);transition:transform .22s,box-shadow .22s,border-color .22s;min-width:0}
+.cx102 .cx-egr-card:hover{transform:translateY(-3px);box-shadow:0 12px 26px rgba(10,31,68,.1)}
+.cx102 .cx-egr-ico{flex:0 0 46px;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.cx102 .cx-egr-meta{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.cx102 .cx-egr-meta strong{font-size:.88rem;font-weight:800;color:var(--brand,#0a1f44);line-height:1.45}
+.cx102 .cx-egr-sub{font-size:.8rem;font-weight:700;color:var(--accent,#059669);font-variant-numeric:tabular-nums}
+.cx102 .cx-egr-desc{font-size:.75rem;color:var(--text-muted,#64748b);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cx102 .cx-egr-num{font-size:.8rem;font-weight:800;color:var(--accent,#059669);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.cx102 .cx-egr-call{flex:0 0 38px;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(5,150,105,.1);color:#047857;border:1px solid rgba(5,150,105,.3);transition:background .2s,color .2s,transform .2s,box-shadow .2s}
+.cx102 .cx-egr-call:hover{background:var(--accent,#059669);color:#fff;transform:scale(1.08);box-shadow:0 8px 18px rgba(5,150,105,.35)}
+/* টিন্ট-প্যালেট (data-tint) */
+.cx102 .cx-egr-card[data-tint="red"] .cx-egr-ico{background:rgba(220,38,38,.09);color:#DC2626}
+.cx102 .cx-egr-card[data-tint="red"]{border-top:3px solid rgba(220,38,38,.5)}
+.cx102 .cx-egr-card[data-tint="amber"] .cx-egr-ico{background:rgba(217,119,6,.1);color:#D97706}
+.cx102 .cx-egr-card[data-tint="amber"]{border-top:3px solid rgba(217,119,6,.5)}
+.cx102 .cx-egr-card[data-tint="blue"] .cx-egr-ico{background:rgba(24,119,242,.09);color:#1877F2}
+.cx102 .cx-egr-card[data-tint="blue"]{border-top:3px solid rgba(24,119,242,.45)}
+.cx102 .cx-egr-card[data-tint="purple"] .cx-egr-ico{background:rgba(124,58,237,.09);color:#7C3AED}
+.cx102 .cx-egr-card[data-tint="purple"]{border-top:3px solid rgba(124,58,237,.45)}
+.cx102 .cx-egr-card[data-tint="green"] .cx-egr-ico{background:rgba(5,150,105,.1);color:#059669}
+.cx102 .cx-egr-card[data-tint="green"]{border-top:3px solid rgba(5,150,105,.5)}
+.cx102 .cx-egr-card[data-tint="slate"] .cx-egr-ico{background:rgba(71,85,105,.09);color:#475569}
+.cx102 .cx-egr-card[data-tint="slate"]{border-top:3px solid rgba(71,85,105,.4)}
+
+/* ── ৬. হল-প্রভোস্ট গ্রিড + টগল ── */
+.cx102 .cx-prov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.cx102 .cx-prov-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F8FAFC;border:1px solid var(--border,#e2e8f0);border-radius:13px;padding:13px 14px;transition:border-color .2s,background .2s}
+.cx102 .cx-prov-item:hover{border-color:rgba(5,150,105,.45);background:#F2FBF7}
+.cx102 .cx-prov-info{display:flex;flex-direction:column;gap:1px;min-width:0}
+.cx102 .cx-prov-info strong{font-size:.85rem;font-weight:800;color:var(--accent,#059669);line-height:1.45}
+.cx102 .cx-prov-name{font-size:.8rem;font-weight:600;color:var(--brand,#0a1f44)}
+.cx102 .cx-prov-dept{font-size:.72rem;color:var(--text-muted,#64748b)}
+.cx102 .cx-prov-call{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:800;font-variant-numeric:tabular-nums;color:#047857;background:#fff;border:1px solid var(--border,#dbe3ec);border-radius:999px;padding:6px 12px;transition:background .2s,color .2s,border-color .2s,transform .2s}
+.cx102 .cx-prov-call .fas{font-size:.66rem}
+.cx102 .cx-prov-call:hover{background:var(--accent,#059669);color:#fff;border-color:var(--accent,#059669);transform:translateY(-1px)}
+.cx102 .cx-prov-toggle{display:none;align-items:center;gap:8px;margin:16px auto 0;padding:10px 22px;border-radius:999px;border:1px solid rgba(5,150,105,.35);background:#fff;color:#047857;font-size:.82rem;font-weight:800;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.cx102 .cx-prov-toggle:hover{background:var(--accent,#059669);color:#fff;box-shadow:0 8px 20px rgba(5,150,105,.3)}
+/* কলাপ্সড-অবস্থায় প্রথম ৬টি প্রদর্শন (JS-বিহীন ফলব্যাকও কাজ করে) */
+.cx102 .cx-prov-grid[data-collapsed="1"] .cx-prov-item{display:none}
+.cx102 .cx-prov-grid[data-collapsed="1"] .cx-prov-item:nth-child(-n+6){display:flex}
+
+/* ── ৭. ফ্রি শাটল বাস প্যানেল ── */
+.cx102 .cx-fs-free{background:rgba(16,185,129,.18);border-color:rgba(16,185,129,.45);color:#D1FAE5}
+.cx102 .cx-fs-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cx102 .cx-fs-col{border:1px solid var(--border,#e2e8f0);border-radius:13px;padding:13px 14px;min-width:0}
+.cx102 .cx-fs-col-gate{background:linear-gradient(160deg,#F0FDF6,#fff)}
+.cx102 .cx-fs-col-zero{background:linear-gradient(160deg,#EFF6FF,#fff)}
+.cx102 .cx-fs-colhead{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:800;margin-bottom:10px}
+.cx102 .cx-fs-col-gate .cx-fs-colhead{color:#047857}
+.cx102 .cx-fs-col-zero .cx-fs-colhead{color:#1D4ED8}
+.cx102 .cx-fs-colhead .fas{font-size:.72rem}
+.cx102 .cx-fs-chips{display:flex;flex-wrap:wrap;gap:7px}
+.cx102 .cx-fs-chip{font-size:.74rem;font-weight:700;font-variant-numeric:tabular-nums;padding:5px 11px;border-radius:999px;background:#fff;border:1px solid var(--border,#e2e8f0);color:var(--text,#1e293b);transition:transform .15s,border-color .15s}
+.cx102 .cx-fs-chip:hover{transform:translateY(-1px);border-color:rgba(5,150,105,.45)}
+.cx102 .cx-fs-contact{display:flex;align-items:center;gap:9px;margin:14px 2px 0;padding-top:12px;border-top:1px dashed var(--border,#e2e8f0);font-size:.78rem;color:var(--text-muted,#64748b)}
+.cx102 .cx-fs-contact .fas{color:var(--accent,#059669)}
+.cx102 .cx-fs-contact a{color:#047857;font-weight:800}
+.cx102 .cx-fs-contact a:hover{text-decoration:underline}
+
+/* ── ৮. স্টাফ-বাস গ্রুপ গ্রিড (প্যানেল-বডির ভেতরে ২-কলাম) ── */
+.cx102 .cx-bus-groups{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.cx102 .cx-bus-groups .ts-dir-wrap{margin-top:0}
+
+/* ── ৯. রেসপনসিভ ── */
+@media (max-width:1024px){
+  .cx102 .cx-loc-grid{grid-template-columns:1fr}
+  .cx102 .cx-map-wrap{min-height:340px}
+}
+@media (max-width:640px){
+  .cx102 .cx-loc-info{padding:22px 18px}
+  .cx102 .cx-hour-row{grid-template-columns:auto 1fr auto;padding:10px 12px}
+  .cx102 .cx-hour-state{display:none}
+  .cx102 .cx-ch-grid{grid-template-columns:1fr}
+  .cx102 .cx-fs-cols{grid-template-columns:1fr}
+  .cx102 .cx-bus-groups{grid-template-columns:1fr}
+  .cx102 .cx-sub-block{margin-top:34px}
+  .cx102 .cx-sec-head{padding:12px 14px}
+  .cx102 .cx-map-wrap{min-height:300px}
+}
+
+/* সেশন ১০২-প্যাচ: হল-প্রভোস্ট আইটেম র‍্যাপ-ফিক্স — লম্বা নম্বর-পিল ইনফো-কলাম চাপা দিলে পরের লাইনে যায় */
+.cx102 .cx-prov-item{flex-wrap:wrap;row-gap:8px}
+.cx102 .cx-prov-call{margin-left:auto}
+.cx102 .cx-prov-info{flex:1 1 140px}
+.cx102 .cx-egr-num .fas{font-size:.68rem;margin-right:2px;opacity:.75}

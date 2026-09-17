@@ -150,6 +150,9 @@ app.set('layout', false);
 // সিকিউরিটি টাস্ক: + Content-Security-Policy (frame-ancestors/object-src/base-uri/
 // form-action) + ক্যাশ-কন্ট্রোল। CSP-তে script-src 'unsafe-inline' আছে কারণ অ্যাপে
 // বহু inline <script> ব্যবহৃত (nonce-মাইগ্রেশন ভবিষ্যৎ উন্নতি হিসেবে ডকুমেন্ট করা)।
+// সেশন ১০২ ফিক্স: frame-src যোগ — যোগাযোগ-পেজের গুগল-ম্যাপ আইফ্রেম CSP-র
+// default-src 'self'-ফলব্যাকে ব্লক হচ্ছিল (আইফ্রেমে ভাঙা-আইকন দেখার মূল-কারণ)।
+// শুধুমাত্র গুগল-ম্যাপস অরিজিনগুলো অনুমোদিত — অন্য সব এমবেড এখনো ব্লকড।
 try { app.use(require('compression')()); } catch (e) {}
 const CSP_POLICY = [
   "default-src 'self'",
@@ -158,6 +161,7 @@ const CSP_POLICY = [
   "font-src 'self' https://cdnjs.cloudflare.com data:",
   "img-src 'self' data: blob: https:",
   "connect-src 'self'",
+  "frame-src https://maps.google.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

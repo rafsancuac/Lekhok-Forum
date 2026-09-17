@@ -290,13 +290,15 @@ router.get('/notices', async (req, res) => {
 // ── Contact ──────────────────────────────────────────────────────────────────
 router.get('/contact', async (req, res) => {
   // সেশন ৭২: যোগাযোগ-পেজের ৪টি স্বাধীন কুয়েরি প্যারালাল
-  const [ch42, uni42, tr42, ts] = await Promise.all([
+  // সেশন ১০২: halls42 (আবাসিক হল প্রভোস্ট) — DB খালি হলে sections-registry ডিফল্ট
+  const [ch42, uni42, tr42, ts, halls42] = await Promise.all([
     db.getSectionItems('contact_channels'),
     db.getSectionItems('contact_university'),
     db.getSectionItems('contact_transport'),
     db.getTransportSchedule(),
+    db.getSectionItems('contact_halls'),
   ]);
-  res.render('lekhok-contact', { ch42, uni42, tr42, ts,
+  res.render('lekhok-contact', { ch42, uni42, tr42, ts, halls42,
     layout: 'layout',
     pageTitle: 'যোগাযোগ',
     currentPath: '/contact',

@@ -1,3 +1,42 @@
+<%
+  // ── সেশন ১০২: যোগাযোগ-পেজ রিডিজাইন হেল্পার (ভিউ-লোকাল, অন্য পেজে প্রভাব শূন্য) ──
+  var _BN102 = '০১২৩৪৫৬৭৮৯';
+  function bn2en102(s) { return String(s || '').replace(/[০-৯]/g, function (d) { return String(_BN102.indexOf(d)); }); }
+  function en2bn102(s) { return String(s || '').replace(/[0-9]/g, function (d) { return _BN102[+d]; }); }
+  // আইটেম থেকে কলযোগ্য নম্বর → { tel: '880...', pretty: '০১৭১৪-৪৬৫৭৯৩' } বা null
+  function phoneOf102(c) {
+    var raw = String((c && c.extra) || '').trim();
+    if (raw.toLowerCase().indexOf('tel:') === 0) raw = raw.slice(4);
+    var ok = /^[0-9+()\-\s]+$/.test(raw) && raw.replace(/[^0-9]/g, '').length >= 6;
+    if (!ok) {
+      var m = String((c && (c.subtitle || c.body)) || '').match(/\+?88[ ()-]*[০-৯0-9][০-৯0-9 ()-]{7,}/);
+      if (!m) return null;
+      raw = m[0];
+    }
+    var digits = bn2en102(raw).replace(/[^0-9+]/g, '');
+    if (digits.replace(/[^0-9]/g, '').length < 6) return null;
+    // প্রদর্শন-নম্বর: subtitle কেবল তখনই যখন এটি আসলে নম্বর (≥৬ ডিজিট); নাহলে raw → বাংলা ডিজিট (সেশন ১০২-প্যাচ)
+    var sub = String((c && c.subtitle) || '').trim();
+    var pretty = (sub.replace(/[^0-9০-৯]/g, '').length >= 6) ? sub : en2bn102(raw.trim());
+    return { tel: digits.charAt(0) === '+' ? digits : digits, pretty: pretty };
+  }
+  // subtitle-স্ট্রিং কি প্রদর্শনযোগ্য ফোন-নম্বর (ইমার্জেন্সি-কার্ডে ডুপ্লিকেট এড়াতে)
+  function isNum102(s) { return String(s || '').replace(/[^0-9০-৯]/g, '').length >= 6; }
+  // চ্যানেল-কার্ডের অ্যাকশন-লেবেল/টিন্ট আইকন-ক্লাস থেকে অনুমিত
+  function chAction102(c) {
+    var ic = String((c && c.icon) || '');
+    if (ic.indexOf('youtube') > -1) return { t: 'সাবস্ক্রাইব করুন', tint: 'yt' };
+    if (ic.indexOf('facebook') > -1) return { t: 'ফলো করুন', tint: 'fb' };
+    if (ic.indexOf('telegram') > -1) return { t: 'জয়েন করুন', tint: 'tg' };
+    if (ic.indexOf('users') > -1) return { t: 'গ্রুপে যোগ দিন', tint: 'grp' };
+    if (ic.indexOf('envelope') > -1) return { t: 'ইমেইল পাঠান', tint: 'mail' };
+    if (ic.indexOf('phone') > -1) return { t: 'কল করুন', tint: 'tel' };
+    return { t: 'বিস্তারিত দেখুন', tint: 'gen' };
+  }
+  // ইমার্জেন্সি-গ্রিডের টিন্ট-প্যালেট (ইনডেক্স-ভিত্তিক, ডেটা-নিরপেক্ষ)
+  var _EGTINT102 = ['red', 'amber', 'blue', 'purple', 'green', 'slate', 'red', 'amber', 'blue', 'purple', 'green', 'slate'];
+%>
+
 <header class="page-header">
   <div class="container">
     <span class="eyebrow"><%= C('contact_header_eyebrow') %></span>
@@ -6,7 +45,9 @@
   </div>
 </header>
 
-<!-- Two-column: contact info + form -->
+<div class="cx102">
+
+<!-- ── সেকশন ১: যোগাযোগের তথ্য + ফর্ম ─────────────────────────────── -->
 <section class="section reveal">
   <div class="container">
     <div class="section-split">
@@ -43,38 +84,55 @@
   </div>
 </section>
 
-<!-- Map placeholder + Office hours -->
+<!-- ── সেকশন ২: কোথায় আমরা — সময়সূচি + লাইভ গুগল ম্যাপ (সেশন ১০২ ফিক্স) ── -->
 <section class="section section-alt reveal">
   <div class="container">
-    <div class="section-split">
-      <div>
+    <div class="cx-loc-grid">
+      <div class="cx-loc-info">
         <span class="eyebrow"><%= C('contact_loc_eyebrow') %></span>
         <h2 class="section-title"><%= C('contact_loc_t1') %> <span class="accent"><%= C('contact_loc_accent') %></span></h2>
         <span class="accent-divider"></span>
-        <p><%= C('contact_loc_text') %></p>
-        <ul class="bullet-list">
-          <li><%= C('contact_hours1') %></li>
-          <li><%= C('contact_hours2') %></li>
-          <li><%= C('contact_hours3') %></li>
-          <li><%= C('contact_hours4') %></li>
-        </ul>
+        <p class="cx-loc-text"><%= C('contact_loc_text') %></p>
+
+        <div class="cx-hours">
+          <% ['contact_hours1', 'contact_hours2', 'contact_hours3', 'contact_hours4'].forEach(function (hk, hi) {
+               var ht = C(hk); if (!ht) return;
+               var closed = /বন্ধ/.test(ht);
+               var ci = ht.indexOf(':');
+               var dayPart = ci > -1 ? ht.slice(0, ci) : ht;
+               var timePart = ci > -1 ? ht.slice(ci + 1).trim() : '';
+          %>
+          <div class="cx-hour-row<%= closed ? ' is-closed' : '' %>">
+            <span class="cx-hour-dot" aria-hidden="true"></span>
+            <span class="cx-hour-day"><%= dayPart %></span>
+            <span class="cx-hour-time"><%= timePart %></span>
+            <span class="cx-hour-state <%= closed ? 'off' : 'on' %>"><%= closed ? 'বন্ধ' : 'খোলা' %></span>
+          </div>
+          <% }); %>
+        </div>
+
+        <div class="cx-loc-addr">
+          <i class="fas fa-map-marker-alt"></i>
+          <span><%= (typeof getSetting === 'function' && getSetting('contact_address')) || 'চট্টগ্রাম বিশ্ববিদ্যালয়, হাটহাজারী, চট্টগ্রাম-৪৩৩১' %></span>
+        </div>
       </div>
-      <div class="map-embed">
+
+      <div class="cx-map-wrap">
+        <%# সেশন ১০২ ফিক্স: ভাঙা pb-এমবেডের বদলে API-কী-বিহীন নির্ভরযোগ্য output=embed আইফ্রেম %>
         <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3683.4477074837404!2d91.786556315342!3d22.46095798524007!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30ad7e8b5f5e5b5b%3A0x5f5e5b5b5f5e5b5b!2z4Ka34KeN4Kaf4KeB4Kas4Ka_4Kao4KeN4Kaf!5e0!3m2!1sbn!2sbd!4v1620000000000!5m2!1sbn!2sbd"
-          width="100%" height="350" style="border:0; border-radius:5px; box-shadow:0 4px 16px rgba(15,23,42,0.1);"
-          allowfullscreen="" loading="lazy"
+          src="https://maps.google.com/maps?q=University%20of%20Chittagong%2C%20Hathazari%2C%20Chittagong%2C%20Bangladesh&t=&z=14&ie=UTF8&iwloc=&output=embed"
+          width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          title="চট্টগ্রাম বিশ্ববিদ্যালয় অবস্থান"></iframe>
-        <p style="text-align:center; margin-top:8px; font-size:13px; color:var(--text-muted);">
-          <i class="fas fa-map-marker-alt"></i> চট্টগ্রাম বিশ্ববিদ্যালয়, হাটহাজারী, চট্টগ্রাম
-        </p>
+          title="চট্টগ্রাম বিশ্ববিদ্যালয় অবস্থান — গুগল ম্যাপ"></iframe>
+        <a class="cx-map-open" href="https://maps.google.com/?q=University+of+Chittagong" target="_blank" rel="noopener">
+          <i class="fas fa-external-link-alt"></i> ম্যাপে খুলুন
+        </a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Emergency hotline -->
+<!-- ── সেকশন ৩: ক্যাম্পাস তথ্য ─────────────────────────────────────── -->
 <section class="section reveal">
   <div class="container">
     <div class="section-head center">
@@ -84,44 +142,56 @@
       <p class="lead"><%= C('contact_campus_lead') %></p>
     </div>
 
-    <!-- Campus social / digital channels -->
-    <div class="campus-channel-grid reveal-stagger">
-      <% (typeof ch42 !== 'undefined' ? ch42 : []).forEach(c => { %>
-      <% if (c.extra) { %><a class="campus-channel-card" href="<%= c.extra %>" <%= c.extra.startsWith('http') ? 'target="_blank" rel="noopener"' : '' %>>
-      <% } else { %><div class="campus-channel-card"><% } %>
-        <span class="ch-icon"><% if (c.image) { %><img loading="lazy" decoding="async" src="<%= c.image %>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:5px;"><% } else { %><i class="<%= c.icon || 'fas fa-phone' %>"></i><% } %></span>
-        <span class="ch-title"><%= c.title %></span>
-        <span class="ch-desc"><%= c.body %></span>
-      <% if (c.extra) { %></a><% } else { %></div><% } %>
+    <!-- ৩ক. ক্যাম্পাস চ্যানেল — প্রফেশনাল অ্যাকশন-কার্ড (সেশন ১০২) -->
+    <div class="cx-ch-grid reveal-stagger">
+      <% (typeof ch42 !== 'undefined' ? ch42 : []).forEach(function (c) {
+           var act = chAction102(c);
+           var hasLink = !!c.extra;
+      %>
+      <% if (hasLink) { %><a class="cx-ch-card tint-<%= act.tint %>" href="<%= c.extra %>" <%= String(c.extra).indexOf('http') === 0 ? 'target="_blank" rel="noopener"' : '' %>><% } else { %><div class="cx-ch-card tint-<%= act.tint %> is-static"><% } %>
+        <span class="cx-ch-top">
+          <span class="cx-ch-ico"><% if (c.image) { %><img loading="lazy" decoding="async" src="<%= c.image %>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:14px;"><% } else { %><i class="<%= c.icon || 'fas fa-phone' %>"></i><% } %></span>
+          <span class="cx-ch-head">
+            <span class="cx-ch-title"><%= c.title %></span>
+            <span class="cx-ch-desc"><%= c.body %></span>
+          </span>
+        </span>
+        <span class="cx-ch-btn"><%= hasLink ? act.t : 'শীঘ্রই আসছে' %> <i class="fas fa-arrow-right"></i></span>
+      <% if (hasLink) { %></a><% } else { %></div><% } %>
       <% }); %>
     </div>
-    </div>
 
-    <!-- University resources -->
-    <div class="campus-resource-section">
-      <div class="section-head center" style="margin:40px 0 0;">
-        <h2 class="section-title" style="font-size:1.45rem;"><i class="fas fa-university" style="color:var(--accent);"></i> <%= C('contact_crs_uni') %></h2>
-        <span class="accent-divider center"></span>
+    <!-- ৩খ. বিশ্ববিদ্যালয় সম্পর্কিত তথ্য -->
+    <div class="cx-sub-block">
+      <div class="cx-sec-head">
+        <span class="cx-sec-ico"><i class="fas fa-university"></i></span>
+        <div>
+          <h3 class="cx-sec-title"><%= C('contact_crs_uni') %></h3>
+          <p class="cx-sec-sub">অফিসিয়াল ওয়েবসাইট, পেইজ ও কমিউনিটি গ্রুপসমূহ</p>
+        </div>
       </div>
-      <div class="campus-grid reveal-stagger">
-        <% (typeof uni42 !== 'undefined' ? uni42 : []).forEach(c => { %>
-        <% if (c.extra) { %><a class="campus-card" href="<%= c.extra %>" target="_blank" rel="noopener">
-        <% } else { %><div class="campus-card static"><% } %>
-          <span class="cc-icon"><% if (c.image) { %><img loading="lazy" decoding="async" src="<%= c.image %>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:5px;"><% } else { %><i class="<%= c.icon || 'fas fa-globe' %>"></i><% } %></span>
-          <div>
+      <div class="cx-uni-grid reveal-stagger">
+        <% (typeof uni42 !== 'undefined' ? uni42 : []).forEach(function (c) { %>
+        <% if (c.extra) { %><a class="cx-uni-card" href="<%= c.extra %>" target="_blank" rel="noopener"><% } else { %><div class="cx-uni-card is-static"><% } %>
+          <span class="cx-uni-ico"><% if (c.image) { %><img loading="lazy" decoding="async" src="<%= c.image %>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"><% } else { %><i class="<%= c.icon || 'fas fa-globe' %>"></i><% } %></span>
+          <span class="cx-uni-meta">
             <strong><%= c.title %></strong>
             <span><%= c.body %></span>
-          </div>
+          </span>
+          <span class="cx-uni-go"><i class="fas fa-arrow-right"></i></span>
         <% if (c.extra) { %></a><% } else { %></div><% } %>
         <% }); %>
       </div>
     </div>
 
-    <!-- Transport & important numbers -->
-    <div class="campus-resource-section">
-      <div class="section-head center" style="margin:40px 0 0;">
-        <h2 class="section-title" style="font-size:1.45rem;"><i class="fas fa-bus-alt" style="color:var(--accent);"></i> <%= C('contact_crs_transport') %></h2>
-        <span class="accent-divider center"></span>
+    <!-- ৩গ. যাতায়াত ও সময়সূচি -->
+    <div class="cx-sub-block">
+      <div class="cx-sec-head">
+        <span class="cx-sec-ico"><i class="fas fa-bus-alt"></i></span>
+        <div>
+          <h3 class="cx-sec-title"><%= C('contact_crs_transport') %></h3>
+          <p class="cx-sec-sub">শাটল ট্রেন, ফ্রি শাটল বাস ও শহর–ক্যাম্পাস যাতায়াতের হালনাগাদ সময়সূচি</p>
+        </div>
       </div>
 
       <% if (typeof ts !== 'undefined' && ts) { %>
@@ -139,27 +209,27 @@
           </div>
           <div class="ts-panel-body">
             <div class="ts-tabs">
-              <% ts.shuttle.tabs.forEach((tab, ti) => { %>
+              <% ts.shuttle.tabs.forEach(function (tab, ti) { %>
               <input type="radio" name="ts-shuttle" id="ts-shuttle-<%= ti %>" <%= ti === 0 ? 'checked' : '' %>>
               <% }); %>
               <div class="ts-tabbar" role="tablist">
-                <% ts.shuttle.tabs.forEach((tab, ti) => { %>
+                <% ts.shuttle.tabs.forEach(function (tab, ti) { %>
                 <label for="ts-shuttle-<%= ti %>" role="tab"><%= tab.label %></label>
                 <% }); %>
               </div>
-              <% ts.shuttle.tabs.forEach((tab, ti) => { %>
+              <% ts.shuttle.tabs.forEach(function (tab, ti) { %>
               <div class="ts-pane ts-pane-<%= ti %>">
-                <% tab.directions.forEach(dir => { %>
+                <% tab.directions.forEach(function (dir) { %>
                 <div class="ts-dir-wrap">
                   <div class="ts-dir">
                     <span class="ts-dir-badge"><i class="fas <%= dir.icon %>"></i></span>
                     <span><%= dir.title %></span>
                   </div>
                   <table class="ts-table">
-                    <thead><tr><% dir.head.forEach(h => { %><th><%= h %></th><% }); %></tr></thead>
+                    <thead><tr><% dir.head.forEach(function (h) { %><th><%= h %></th><% }); %></tr></thead>
                     <tbody>
-                      <% dir.rows.forEach(row => { %>
-                      <tr><% row.forEach(cell => { %><td><%= cell %></td><% }); %></tr>
+                      <% dir.rows.forEach(function (row) { %>
+                      <tr><% row.forEach(function (cell) { %><td><%= cell %></td><% }); %></tr>
                       <% }); %>
                     </tbody>
                   </table>
@@ -171,36 +241,43 @@
           </div>
         </div>
 
-        <!-- ২ ও ৩: বাস + নাজিরহাট ট্রেন -->
+        <!-- ২ ও ৩: ফ্রি শাটল বাস + নাজিরহাট ট্রেন (সেশন ১০২) -->
         <div class="ts-grid2">
-          <div class="ts-panel">
+
+          <% if (ts.freeShuttle) { %>
+          <div class="ts-panel cx-fs-panel">
             <div class="ts-panel-head">
-              <span class="ts-ico"><i class="fas <%= ts.bus.icon %>"></i></span>
+              <span class="ts-ico"><i class="fas <%= ts.freeShuttle.icon || 'fa-bus-simple' %>"></i></span>
               <div class="ts-head-meta">
-                <h3><%= ts.bus.title %></h3>
-                <p><%= ts.bus.subtitle %></p>
+                <h3><%= ts.freeShuttle.title %></h3>
+                <p><%= ts.freeShuttle.subtitle %></p>
               </div>
-              <span class="ts-source"><i class="fas fa-check-circle"></i> <%= ts.bus.source %></span>
+              <span class="ts-source cx-fs-free"><i class="fas fa-check-circle"></i> <%= ts.freeShuttle.badge || 'ফ্রি' %></span>
             </div>
             <div class="ts-panel-body">
-              <% ts.bus.groups.forEach(g => { %>
-              <div class="ts-dir-wrap">
-                <div class="ts-dir"><span class="ts-dir-badge"><i class="fas fa-bus"></i></span><span><%= g.title %></span></div>
-                <table class="ts-table">
-                  <thead><tr><% g.head.forEach(h => { %><th><%= h %></th><% }); %></tr></thead>
-                  <tbody>
-                    <% g.rows.forEach(row => { %>
-                    <tr>
-                      <td><span class="ts-period <%= row[0] === 'সকাল' ? 'ts-am' : (row[0] === 'সন্ধ্যা' ? 'ts-pm' : 'ts-night') %>"><%= row[0] %></span></td>
-                      <td><%= row[1] %></td>
-                    </tr>
-                    <% }); %>
-                  </tbody>
-                </table>
+              <div class="cx-fs-cols">
+                <div class="cx-fs-col cx-fs-col-gate">
+                  <span class="cx-fs-colhead"><i class="fas fa-location-dot"></i> <%= ts.freeShuttle.head[0] %></span>
+                  <div class="cx-fs-chips">
+                    <% ts.freeShuttle.rows.forEach(function (r) { %><span class="cx-fs-chip"><%= r[0] %></span><% }); %>
+                  </div>
+                </div>
+                <div class="cx-fs-col cx-fs-col-zero">
+                  <span class="cx-fs-colhead"><i class="fas fa-location-crosshairs"></i> <%= ts.freeShuttle.head[1] %></span>
+                  <div class="cx-fs-chips">
+                    <% ts.freeShuttle.rows.forEach(function (r) { %><span class="cx-fs-chip"><%= r[1] %></span><% }); %>
+                  </div>
+                </div>
               </div>
-              <% }); %>
+              <% if (ts.freeShuttle.contact) { %>
+              <p class="cx-fs-contact">
+                <i class="fas fa-headset"></i>
+                <span>যোগাযোগ: <a href="tel:<%= bn2en102(ts.freeShuttle.contact) %>"><strong><%= ts.freeShuttle.contact %></strong></a> (<%= ts.freeShuttle.contactLabel || '' %>)</span>
+              </p>
+              <% } %>
             </div>
           </div>
+          <% } %>
 
           <div class="ts-panel">
             <div class="ts-panel-head">
@@ -213,10 +290,10 @@
             </div>
             <div class="ts-panel-body">
               <table class="ts-table ts-table-route">
-                <thead><tr><% ts.train.head.forEach(h => { %><th><%= h %></th><% }); %></tr></thead>
+                <thead><tr><% ts.train.head.forEach(function (h) { %><th><%= h %></th><% }); %></tr></thead>
                 <tbody>
-                  <% ts.train.rows.forEach(row => { %>
-                  <tr><% row.forEach(cell => { %><td><%= cell %></td><% }); %></tr>
+                  <% ts.train.rows.forEach(function (row) { %>
+                  <tr><% row.forEach(function (cell) { %><td><%= cell %></td><% }); %></tr>
                   <% }); %>
                 </tbody>
               </table>
@@ -224,23 +301,130 @@
             </div>
           </div>
         </div>
+
+        <!-- ৪. স্টাফ ও শিক্ষার্থীদের বাস (সেশন ১০২: গ্রুপ-গ্রিড লেআউট) -->
+        <div class="ts-panel">
+          <div class="ts-panel-head">
+            <span class="ts-ico"><i class="fas <%= ts.bus.icon %>"></i></span>
+            <div class="ts-head-meta">
+              <h3><%= ts.bus.title %></h3>
+              <p><%= ts.bus.subtitle %></p>
+            </div>
+            <span class="ts-source"><i class="fas fa-check-circle"></i> <%= ts.bus.source %></span>
+          </div>
+          <div class="ts-panel-body">
+            <div class="cx-bus-groups">
+              <% ts.bus.groups.forEach(function (g) { %>
+              <div class="ts-dir-wrap">
+                <div class="ts-dir"><span class="ts-dir-badge"><i class="fas fa-bus"></i></span><span><%= g.title %></span></div>
+                <table class="ts-table">
+                  <thead><tr><% g.head.forEach(function (h) { %><th><%= h %></th><% }); %></tr></thead>
+                  <tbody>
+                    <% g.rows.forEach(function (row) { %>
+                    <tr>
+                      <td><span class="ts-period <%= row[0] === 'সকাল' ? 'ts-am' : (row[0] === 'সন্ধ্যা' ? 'ts-pm' : 'ts-night') %>"><%= row[0] %></span></td>
+                      <td><%= row[1] %></td>
+                    </tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
       </div>
       <% } %>
+    </div>
 
-      <!-- গুরুত্বপূর্ণ নম্বর (দ্রুত যোগাযোগ) -->
-      <div class="ts-cards-head"><i class="fas fa-phone-alt"></i><span>জরুরি ও গুরুত্বপূর্ণ যোগাযোগ</span></div>
-      <div class="campus-grid reveal-stagger">
-        <% (typeof tr42 !== 'undefined' ? tr42 : []).forEach(c => { %>
-        <% if (c.extra) { %><a class="campus-card" href="<%= c.extra %>" target="_blank" rel="noopener">
-        <% } else { %><div class="campus-card static"><% } %>
-          <span class="cc-icon"><% if (c.image) { %><img loading="lazy" decoding="async" src="<%= c.image %>" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:5px;"><% } else { %><i class="<%= c.icon || 'fas fa-bus' %>"></i><% } %></span>
-          <div>
+    <!-- ৩ঘ. জরুরি ও গুরুত্বপূর্ণ যোগাযোগ — ক্লিক-টু-কল গ্রিড (সেশন ১০২) -->
+    <div class="cx-sub-block">
+      <div class="cx-sec-head is-emergency">
+        <span class="cx-sec-ico"><i class="fas fa-phone-volume"></i></span>
+        <div>
+          <h3 class="cx-sec-title">জরুরি ও গুরুত্বপূর্ণ যোগাযোগ</h3>
+          <p class="cx-sec-sub">যেকোনো প্রয়োজনে নম্বরে সরাসরি ট্যাপ করে কল করুন</p>
+        </div>
+      </div>
+      <div class="cx-egr-grid reveal-stagger">
+        <% (typeof tr42 !== 'undefined' ? tr42 : []).forEach(function (c, ci) {
+             var ph = phoneOf102(c);
+             var tint = _EGTINT102[ci % _EGTINT102.length];
+        %>
+        <div class="cx-egr-card" data-tint="<%= tint %>">
+          <span class="cx-egr-ico"><i class="<%= c.icon || 'fas fa-phone' %>"></i></span>
+          <span class="cx-egr-meta">
             <strong><%= c.title %></strong>
-            <span><%= c.body %></span>
-          </div>
-        <% if (c.extra) { %></a><% } else { %></div><% } %>
+            <% if (c.subtitle && !isNum102(c.subtitle)) { %><span class="cx-egr-sub"><%= c.subtitle %></span><% } %>
+            <span class="cx-egr-desc"><%= c.body %></span>
+            <% if (ph) { %><span class="cx-egr-num"><i class="fas fa-phone-alt"></i> <%= ph.pretty %></span><% } %>
+          </span>
+          <% if (ph) { %>
+          <a class="cx-egr-call" href="tel:<%= ph.tel %>" title="<%= c.title %> — সরাসরি কল করুন" aria-label="<%= c.title %> কল করুন">
+            <i class="fas fa-phone-alt"></i>
+          </a>
+          <% } %>
+        </div>
         <% }); %>
       </div>
     </div>
+
+    <!-- ৩ঙ. আবাসিক হল প্রভোস্ট তালিকা (সেশন ১০২ — নতুন; DB/contact_halls খালি হলে রেজিস্ট্রি-ডিফল্ট) -->
+    <% if (typeof halls42 !== 'undefined' && halls42 && halls42.length) { %>
+    <div class="cx-sub-block">
+      <div class="cx-sec-head">
+        <span class="cx-sec-ico"><i class="fas fa-hotel"></i></span>
+        <div>
+          <h3 class="cx-sec-title">আবাসিক হলসমূহের প্রভোস্ট তালিকা</h3>
+          <p class="cx-sec-sub">চট্টগ্রাম বিশ্ববিদ্যালয়ের সব হলের প্রশাসনিক যোগাযোগ</p>
+        </div>
+      </div>
+      <div class="cx-prov-grid" id="cxProvGrid" data-collapsed="1">
+        <% halls42.forEach(function (h) {
+             var ph = phoneOf102(h);
+        %>
+        <div class="cx-prov-item">
+          <span class="cx-prov-info">
+            <strong><%= h.title %></strong>
+            <span class="cx-prov-name"><%= h.subtitle || h.body %></span>
+            <% if (h.body && h.subtitle) { %><span class="cx-prov-dept"><%= h.body %> বিভাগ</span><% } %>
+          </span>
+          <% if (ph) { %>
+          <a class="cx-prov-call" href="tel:<%= ph.tel %>"><i class="fas fa-phone-alt"></i> <%= ph.pretty %></a>
+          <% } %>
+        </div>
+        <% }); %>
+      </div>
+      <button type="button" class="cx-prov-toggle" id="cxProvToggle">সবগুলো দেখুন (<%= en2bn102(String(halls42.length)) %>টি)</button>
+    </div>
+    <% } %>
+
   </div>
 </section>
+
+</div>
+
+<%# সেশন ১০২: হল-প্রভোস্ট শো-অল/কম-টগল (প্রগ্রেসিভ-এনহ্যান্সমেন্ট — JS বন্ধ থাকলেও প্রথম ৬টি দেখা যায়) %>
+<script>
+(function () {
+  var grid = document.getElementById('cxProvGrid');
+  var btn = document.getElementById('cxProvToggle');
+  if (!grid || !btn) return;
+  var total = grid.children.length;
+  var label = function (collapsed) {
+    var n = String(total).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; });
+    return collapsed ? 'সবগুলো দেখুন (' + n + 'টি)' : 'সংক্ষিপ্ত করুন';
+  };
+  if (total > 6) {
+    btn.style.display = 'inline-flex';
+    btn.textContent = label(true);
+    btn.addEventListener('click', function () {
+      var collapsed = grid.getAttribute('data-collapsed') === '1';
+      grid.setAttribute('data-collapsed', collapsed ? '0' : '1');
+      btn.textContent = label(!collapsed);
+    });
+  } else {
+    btn.parentNode && btn.parentNode.removeChild(btn);
+  }
+})();
+</script>
