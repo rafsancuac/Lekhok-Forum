@@ -722,3 +722,20 @@ Stage Summary:
 - স্ক্রিনশট-আর্টিফ্যাক্ট: sandbox /home/z/my-project/tests/lf109-{desktop,mobile}.png + হারনেস lf109-e2e.sh
 - **সতর্কতা পরবর্তী-এজেন্টের জন্য:** এই sandbox-clone-এ `stash@{0}` = অসমাপ্ত-রাউন্ডের স্টেল-WIP (style.css/main.js/dashboard.js/pages.js/social.js + helpers/bn63.js-আনট্র্যাকড) — upstream-এ সমতুল্য-ফিচার আগেই মার্জড; পুনঃস্থাপন নয়, প্রয়োজনে চেরি-পিক করুন
 - গোটচা-পুনঃপ্রমাণ: node-সার্ভার টুল-কলের মাঝে মরে → সার্ভার+পূর্ণ-E2E এক-ইনভোকেশনে; `agent-browser open`-এর পরে স্পষ্ট `wait <sel>` আবশ্যক (নইলে fill before-load ব্যর্থ)
+
+---
+Task ID: 10 (Session 107-ব — cron QA রাউন্ড: আর্টিকেল-পেজ FB-কমেন্ট + AV-ক্যাশ-ফিক্স)
+Agent: Main agent (webDevReview — origin/main @ 2e36960 → rebase 3af2733/4615a74-line → push 5d93176)
+Task: QA → আর্টিকেল-পেজে ফিড-প্যারিটি FB-কমেন্ট UX বহমান + স্টেল-অ্যাসেট-বাগ-ফিক্স
+
+Work Log:
+- pull --rebase (session105-actor-avatar) → রিস্টার্ট → QA: ফিড ✓ আর্টিকেল-পেজ কমেন্ট-থ্রেডে গ্যাপ আবিষ্কার (hold-ইঞ্জিন ছিল, প্যালেট/ব্যাজ/৩-ডট/এডিট নেই)
+- ফিক্স-প্যাক: comment-tools.js ডুয়াল-সারফেস অ্যাডাপ্টার (itemOf/bubbleOf/bodyOf, data-raw-প্রি-ফিল, non-drawer-ডিলিট+কাউন্টার-সিঙ্ক) + article-single.ejs FB-মার্কআপ + style.css-ইন্টিগ্রেশন + REACTION_META care-ফিক্স
+- 🚨 গভীর-বাগ আবিষ্কার+E2E-প্রমাণ: AV-হ্যাশ-কোলিশন — একই ?v= হ্যাশে ব্রাউজার ৩০-দিন-immutable-ক্যাশ থেকে পুরনো CSS চালাচ্ছিল (ডিস্কে নতুন রুল ছিল, CSSOM-এ নেই; transferSize-প্রমাণ: 51149 ≠ বর্তমান-ফাইলের gzip 47981) — server.js-এ boot-epoch XOR-ফিক্স
+- মার্জ-রেস: শেয়ার্ড-ক্লোনে প্যারালাল এজেন্টের git-অপারেশনে ট্রানজিয়েন্ট-ফাইল-স্টেট পর্যবেক্ষণ (style.css 236,977↔251,576-বাইট) — commit-আগে-ভাগ করার শিক্ষা; union-মার্জ দু'-দফা
+- E2E: আর্টিকেল-পেজ প্যালেট(৬)→care→🤗১ ✓ এডিট data-raw-প্রি-ফিল→<strong>+সম্পাদিত ✓ ডিলিট→ইন-প্লেস+কাউন্টার ২→১ ✓ রিপ্লাই-টগল ✓ ফিড dupFixed:true+wow→😮১ ✓ 390px ✓ কনসোল-০ ✓ role-policy ৯৪/১০৩ (ফেল=প্রি-এক্সিস্টিং) ✓
+
+Stage Summary:
+- push 5d93176 → origin/main (session108/109-এর উপর rebase, union-মার্জ)
+- আর্টিকেল-পেজ কমেন্ট এখন ফিডের সাথে ১:1 FB-UX; পোস্ট-রিঅ্যাকশন hold-ইঞ্জিন অক্ষুণ্ণ
+- পরবর্তী: qa-single-উত্তরে একই মার্কআপ, কমেন্ট-নোটিফিকেশন, optimistic-ইনসার্ট — PLANS.md session107-ব-নোট
