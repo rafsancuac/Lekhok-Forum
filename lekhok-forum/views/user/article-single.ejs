@@ -156,6 +156,9 @@
             <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="comment-avatar">
             <div class="comment-input-wrap">
               <textarea name="body" placeholder="আপনার মন্তব্য লিখুন... (@ব্যবহারকারী নাম লিখে ম্যানশন করুন)" rows="3" required></textarea>
+              <div class="cf-hint" aria-hidden="true">
+                <span><b>**বোল্ড**</b></span><span><i>_ইটালিক_</i></span><span><s>~~কাটা~~</s></span><span>[লিংক](https://…)</span><span>- তালিকা</span><span>&gt; উদ্ধৃতি</span>
+              </div>
               <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> পাঠান</button>
             </div>
           </form>
@@ -172,7 +175,7 @@
               <img loading="lazy" decoding="async" src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
               <div class="comment-bubble">
                 <a href="/profile/<%= c.username %>" class="comment-author"><%= c.full_name %></a>
-                <p class="comment-body"><%= c.body %></p>
+                <div class="comment-body"><%- c.bodyHtml %></div>
                 <div class="comment-meta">
                   <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
                   <span class="comment-react-mini"><%= (c.reaction && c.reaction.total) ? c.reaction.total + ' প্রতিক্রিয়া' : '' %></span>
@@ -192,7 +195,7 @@
                     <img loading="lazy" decoding="async" src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
                     <div class="comment-bubble small">
                       <a href="/profile/<%= r.username %>" class="comment-author"><%= r.full_name %></a>
-                      <p class="comment-body"><%= r.body %></p>
+                      <div class="comment-body"><%- r.bodyHtml %></div>
                       <div class="comment-meta">
                         <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
                       </div>

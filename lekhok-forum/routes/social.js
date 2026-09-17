@@ -453,6 +453,14 @@ router.get('/articles/:id', async (req, res) => {
     comments.push({ ...c, reaction: _rx72.get(c.id), replies });
   }
 
+  // সেশন ৮৪: কমেন্টে মার্কডাউন-লাইট — কমপ্যাক্ট রেন্ডারার (এস্কেপ-ফার্স্ট,
+  // helpers/markdown-lite.js) — ভিউতে র-বডি নয়, bodyHtml যায়।
+  const { renderComment: _renderCmt84 } = require('../helpers/markdown-lite');
+  comments.forEach(c => {
+    c.bodyHtml = _renderCmt84(c.body);
+    (c.replies || []).forEach(r => { r.bodyHtml = _renderCmt84(r.body); });
+  });
+
   // check if current user liked/bookmarked
   let userBookmarked = false;
   if (req.session.user) {

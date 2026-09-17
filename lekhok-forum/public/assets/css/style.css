@@ -822,3 +822,7 @@ html.lh-relaxed .article-body,html.lh-relaxed .feed-text,html.lh-relaxed .post-b
 .genre-badge{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--accent-soft,rgba(5,150,105,.1));color:var(--accent-dark,#047857);border:1px solid var(--accent-glow,rgba(5,150,105,.3))}
 html.theme-sepia .genre-badge{color:#7c5c2e;background:rgba(124,92,46,.1);border-color:rgba(124,92,46,.3)}
 .pen-name-chip{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:var(--accent);margin-top:2px}
+/* ── সেশন ৮৪: কুইজ-ব্যান্ড অ্যাননিমাস-রিস্টোর — লগইন-CTA লিংক (qc-result-বডিতে) ── */
+.qc-result-txt a.qc-ls-login{color:#047857;font-weight:700;text-decoration:none;border-bottom:2px solid rgba(5,150,105,.4);padding-bottom:1px;white-space:nowrap}
+.qc-result-txt a.qc-ls-login:hover{color:#059669;border-bottom-color:#059669;background:rgba(5,150,105,.06);border-radius:4px}
+.qc-result.is-correct .qc-result-txt p,.qc-result.is-wrong .qc-result-txt p{color:#3f5346}

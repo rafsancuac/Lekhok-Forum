@@ -119,4 +119,50 @@ function renderBody(raw, opts) {
   return { html: out.join('\n'), toc };
 }
 
-module.exports = { renderBody, inlineMd, escH };
+/* ═══ সেশন ৮৪: কমেন্ট-রেন্ডারার (কমপ্যাক্ট) ═════════════════════════════
+   মন্তব্যের বাবল ছোট — হেডিং বা hr-এর মতো ভারী ব্লক বাদ। শুধু:
+   ইনলাইন (বোল্ড, ইটালিক, কাটা, লিংক, ম্যানশন, ট্যাগ),
+   ছোট তালিকা (- বা 1.) আর উদ্ধৃতি (>)। নীতি একই — এস্কেপ-ফার্স্ট। */
+function renderComment(raw) {
+  const lines = String(raw || '').replace(/\r\n/g, '\n').split('\n');
+  const out = [];
+  let para = [], listMode = null, quoteBuf = null;
+  const flushPara = () => {
+    if (para.length) {
+      out.push(para.map((l) => inlineMd(escH(l))).join('<br>'));
+      para = [];
+    }
+  };
+  const closeList = () => { if (listMode) { out.push('</' + listMode + '>'); listMode = null; } };
+  const closeQuote = () => { if (quoteBuf) { out.push(quoteBuf.join('<br>') + '</blockquote>'); quoteBuf = null; } };
+  const closeAll = () => { flushPara(); closeList(); closeQuote(); };
+  for (const line of lines) {
+    let m = line.match(/^>\s?(.*)$/);
+    if (m) {
+      flushPara(); closeList();
+      if (!quoteBuf) { out.push('<blockquote class="a-quote">'); quoteBuf = []; }
+      quoteBuf.push(inlineMd(escH(m[1])));
+      continue;
+    }
+    m = line.match(/^[-*]\s+(.+)$/);
+    if (m) {
+      flushPara(); closeQuote();
+      if (listMode !== 'ul') { closeList(); out.push('<ul class="a-ul">'); listMode = 'ul'; }
+      out.push('<li>' + inlineMd(escH(m[1])) + '</li>');
+      continue;
+    }
+    m = line.match(/^(\d+|[\u09E6-\u09EF])[.)]\s+(.+)$/);
+    if (m) {
+      flushPara(); closeQuote();
+      if (listMode !== 'ol') { closeList(); out.push('<ol class="a-ol">'); listMode = 'ol'; }
+      out.push('<li>' + inlineMd(escH(m[2])) + '</li>');
+      continue;
+    }
+    closeList(); closeQuote();
+    para.push(line);
+  }
+  closeAll();
+  return out.join('\n');
+}
+
+module.exports = { renderBody, renderComment, inlineMd, escH };

@@ -203,22 +203,50 @@
   }
   var qid = parseInt(wrap.getAttribute('data-qid'), 10);
   var myAttempt = <%- JSON.stringify(quizChallenge.myAttempt) %>;
+  /* সার্ভার-সত্য (res.locals.user) — main.js-এর LekhokAuthed-এর লোড-টাইমিং
+     নির্ভরতা এড়াতে ইনলাইন-স্ক্রিপ্ট চলার সময়েই নিশ্চিত মান */
+  var authed = <%- JSON.stringify(!!(typeof user !== 'undefined' && user)) %>;
+
+  /* সেশন ৮৪: অ্যাননিমাস localStorage-পারসিস্ট — /quiz পেজের quiz.js-এর
+     সাথে একই স্টোর (lf_quiz_v1) শেয়ার করে: হোম-ব্যান্ডে উত্তর দিলে সেটি
+     /quiz পেজেও ফিরে আসে (এবং উল্টোটাও)। লগইন-ইউজারের সার্ভার-উত্তর
+     (myAttempt) সবসময় প্রাধান্য পায় — DB-ই সত্য। */
+  var LS_KEY = 'lf_quiz_v1';
+  function loadLs() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveLs(s) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) { /* প্রাইভেট-মোড */ }
+  }
+  if (!myAttempt) {
+    var lsPrev = loadLs()[String(qid)];
+    if (lsPrev && lsPrev.answered) {
+      myAttempt = { choice: lsPrev.choice, correct: !!lsPrev.correct, ls: true, answer: lsPrev.answer, body: lsPrev.body };
+    }
+  }
   var letters = ['ক', 'খ', 'গ', 'ঘ', 'ঙ', 'চ'];
   var opts = [].slice.call(wrap.querySelectorAll('.qc-opt'));
 
   function bn(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
 
-  /* প্রি-অ্যানসার্ড স্টেট (সার্ভারে আজকের চূড়ান্ত উত্তর আছে) */
+  /* প্রি-অ্যানসার্ড স্টেট (সার্ভারে আজকের চূড়ান্ত উত্তর আছে; সেশন ৮৪:
+     অ্যাননিমাস হলে localStorage-থেকেও) */
   if (myAttempt) {
     lockAll();
     var chosen = opts[myAttempt.choice];
     if (chosen) chosen.classList.add(myAttempt.correct ? 'is-correct' : 'is-wrong-picked');
+    if (!myAttempt.correct && myAttempt.answer !== null && myAttempt.answer !== undefined && opts[myAttempt.answer]) {
+      opts[myAttempt.answer].classList.add('is-correct');
+    }
     resultBox.hidden = false;
     resultBox.className = 'qc-result ' + (myAttempt.correct ? 'is-correct' : 'is-wrong');
     resultTitle.innerHTML = myAttempt.correct
       ? '<i class="fas fa-clipboard-check"></i> আপনি আজকের উত্তর দিয়েছেন — সঠিক!'
       : '<i class="fas fa-clipboard-check"></i> আপনি আজকের উত্তর দিয়েছেন';
     resultBody.textContent = 'প্রথম উত্তরই চূড়ান্ত — আগামীকাল নতুন প্রশ্নে আবার চেষ্টা করুন।';
+    if (myAttempt.ls && !authed) {
+      resultBody.innerHTML = 'এই ব্রাউজারে আপনার উত্তর সংরক্ষিত — <a href="/login" class="qc-ls-login">লগইন করুন</a> স্কোর ও স্ট্রিক সার্ভারে জমা রাখতে।';
+    }
     setShareText(myAttempt.correct ? 'আজকের কুইজে সঠিক উত্তর দিয়েছি! 🔥 — লেখক ফোরাম' : 'আজকের কুইজ চ্যালেঞ্জে অংশ নিয়েছি — আপনিও দেখুন!');
   }
 
@@ -259,6 +287,18 @@
             ? 'চমৎকার! আগামীকালের প্রশ্নেও স্ট্রিক ধরে রাখুন।'
             : 'ভুল হয়েছে — আগামীকাল নতুন প্রশ্নে আবার চেষ্টা করুন।';
           setShareText(isCorrect ? 'আজকের কুইজে সঠিক উত্তর দিয়েছি! 🔥 — লেখক ফোরাম' : 'আজকের কুইজ চ্যালেঞ্জে অংশ নিয়েছি — আপনিও দেখুন!');
+          /* সেশন ৮৪: উত্তর lf_quiz_v1-এ সেভ — রিলোডে প্রি-অ্যানসার্ড স্টেট
+             ফিরবে (quiz.js-এর স্টোর-ফরম্যাটের মিরর — answer/body সহ, যাতে
+             /quiz পেজে ব্যাখ্যাসহ রিস্টোর হয়)। সার্ভারে final থাকলে সেটিই সেভ। */
+          try {
+            var lsStore = loadLs();
+            lsStore[String(qid)] = {
+              answered: true, choice: shown, correct: isCorrect,
+              answer: (d.answer !== null && d.answer !== undefined) ? d.answer : null,
+              body: d.body || '', ts: Date.now()
+            };
+            saveLs(lsStore);
+          } catch (e) { /* প্রাইভেট-মোড — নন-ব্লকিং */ }
         })
         .catch(function () {
           wrap.classList.remove('qc-busy');

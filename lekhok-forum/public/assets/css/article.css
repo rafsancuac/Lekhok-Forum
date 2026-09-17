@@ -117,3 +117,26 @@
 .article-body a.a-link,.qa-wrap a.a-link,.question-detail a.a-link,.answer-text a.a-link{color:#047857;font-weight:600;text-decoration:none;border-bottom:1.5px dotted rgba(5,150,105,.5);padding-bottom:1px}
 .article-body a.a-link:hover,.qa-wrap a.a-link:hover,.question-detail a.a-link:hover,.answer-text a.a-link:hover{color:#059669;border-bottom-style:solid}
 .article-body del,.qa-wrap del,.question-detail del,.answer-text del{color:#94a3b8}
+
+/* ── সেশন ৮৪: কমেন্টে মার্কডাউন-লাইট — কমপ্যাক্ট ভ্যারিয়েন্ট (বাবল-স্কেল, আর্টিকেল-বডির চেয়ে ছোট) ── */
+.comment-body{margin:4px 0 6px;line-height:1.62}
+.comment-body strong{color:#1f2937;font-weight:700}
+.comment-body em{font-style:italic}
+.comment-body del{color:#94a3b8}
+.comment-body a.a-link{color:#047857;font-weight:600;text-decoration:none;border-bottom:1.5px dotted rgba(5,150,105,.5);padding-bottom:1px}
+.comment-body a.a-link:hover{color:#059669;border-bottom-style:solid}
+.comment-body a.mention{color:#0d9488;font-weight:600;text-decoration:none;background:rgba(13,148,136,.08);padding:1px 6px;border-radius:99px;font-size:.92em}
+.comment-body a.mention:hover{background:rgba(13,148,136,.16)}
+.comment-body a.tag{color:#b45309;font-weight:600;text-decoration:none;background:rgba(245,158,11,.1);padding:1px 6px;border-radius:99px;font-size:.92em}
+.comment-body a.tag:hover{background:rgba(245,158,11,.18)}
+.comment-body .a-quote{margin:7px 0;padding:5px 10px;border-left:3px solid rgba(5,150,105,.55);background:rgba(5,150,105,.05);border-radius:0 8px 8px 0;color:#3f5346;font-style:italic;font-size:.93em}
+.comment-body .a-ul,.comment-body .a-ol{margin:6px 0;padding-left:20px}
+.comment-body .a-ul li,.comment-body .a-ol li{margin:2px 0}
+.comment-body .a-ul li::marker{color:#059669;font-size:1.02em}
+.comment-body .a-ol li::marker{color:#047857;font-weight:700}
+/* ফরম্যাট-হিন্ট চিপ-রো (কমেন্ট-ফর্মের নিচে সূক্ষ্ম সিনট্যাক্স-গাইড) */
+.cf-hint{display:flex;flex-wrap:wrap;gap:5px 8px;margin:0 0 7px;padding:6px 10px;background:rgba(5,150,105,.04);border:1px dashed rgba(5,150,105,.22);border-radius:9px;font-size:.72rem;color:#6b7f73;user-select:none}
+.cf-hint span{white-space:nowrap;padding:1px 7px;background:#fff;border:1px solid rgba(5,150,105,.14);border-radius:99px;letter-spacing:.02em}
+.cf-hint b,.cf-hint i,.cf-hint s{color:#3f5346}
+@media (max-width:560px){.cf-hint{font-size:.66rem;gap:4px 6px;padding:5px 8px}.cf-hint span{padding:1px 6px}}
+@media (prefers-reduced-motion:reduce){.comment-body a.mention,.comment-body a.tag{transition:none}}
