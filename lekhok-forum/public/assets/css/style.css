@@ -1921,3 +1921,8 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .notif-empty small{color:var(--text-muted)}
 @keyframes notifBell114{0%,100%{transform:rotate(0)}4%{transform:rotate(11deg)}9%{transform:rotate(-9deg)}14%{transform:rotate(7deg)}19%{transform:rotate(-5deg)}24%{transform:rotate(0)}}
 @media (prefers-reduced-motion:reduce){.notif-empty i{animation:none}}
+/* ── সেশন ১১৭ (অ্যাডিটিভ-পলিশ): qa-উত্তর-অ্যাঙ্কর স্টিকি-হেডার-সেফটি + সোয়াপ-স্থিতি —
+   session114-এর .qa-answer-slot ক্যানোনিকাল-ব্লকের ওপর হালকা সংযোজন (ডুপ্লিকেট-শূন্য) ── */
+.qa-answer-slot{scroll-margin-top:84px}
+.qa-answer-slot .cmt-item .cmt-badge{z-index:6}
+@media (prefers-reduced-motion: reduce){.qa-answer-slot .cmt-item,.qa-answer-slot .top-answer-chip{transition:none}}

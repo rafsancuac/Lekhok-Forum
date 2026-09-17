@@ -1571,11 +1571,15 @@ router.post('/api/comment', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   const { post_id, body, parent_id } = req.body;
   if (!body || !body.trim()) return res.status(400).json({ error: 'empty' });
+  // সেশন ১১৭-গার্ড: post_id বাধ্যতামূলক-ধনাত্মক-পূর্ণসংখ্যা — নইলে অনাথ-কমেন্ট
+  // তৈরি হয় (কোনো থ্রেডে অদৃশ্য; E2E-তে post_id="null" ফাঁক ধরা পড়েছে)।
+  const _pid117 = parseInt(post_id, 10);
+  if (!Number.isInteger(_pid117) || _pid117 <= 0) return res.status(400).json({ error: 'bad_post_id' });
   const ins = await db.prepare('INSERT INTO comments (post_id, author_id, body, parent_id) VALUES (?, ?, ?, ?)').run(
-    post_id, req.session.user.id, body.trim(), parent_id || null
+    _pid117, req.session.user.id, body.trim(), parent_id || null
   );
-  await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(post_id);
-  const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(post_id);
+  await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(_pid117);
+  const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(_pid117);
   if (post && post.author_id !== req.session.user.id) {
     await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + post_id, req.session.user.id);
   }

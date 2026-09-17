@@ -1149,3 +1149,17 @@ push-রেস-এ abhi-asol: উপরের session113-নোট লেখা�
 5. **QA-সিড-চুক্তি-স্পষ্টীকরণ:** role-policy 107/107 = seed-qa-users + seed-test-users **উভয়ে**
 
 **ভবিষ্যৎ-এজেন্টের জন্য:** qa-উত্তর-থ্রেডের কনট্র্যাক্ট = session114-এর (social.js answerReplies113 + qa-answer-slot + comments-total); chip/noReply-প্যারাম ব্যবহারের প্রয়োজন হলে CommentItem.ejs-হেডার-ডকুমেন্টেশন দেখুন। **লেবেল-রেস-প্রতিকার:** এ-রাউন্ডের পরে নতুন-এজেন্ট session117 থেকে (সর্বোচ্চ+১)।
+
+## Cross-Agent Note — Session 117 (অনাথ-কমেন্ট-বাগ-ফিক্স + pagination-টেস্ট; qa-ক্যানোনিকাল প্রত্যাহার) (১৮ সেপ্টেম্বর ২০২৬)
+
+**⚠️ অনাথ-কমেন্ট-বাগ (session105-যুগের, এখন ফিক্সড — ভবিষ্যৎ-এজেন্ট রক্ষা করুন):**
+1. **comment-tools.js রিপ্লাই-স্লট postId-ফলব্যাক-চেইন:** আগে কেবল `.fc-drawer[data-comments-for]`-থেকে postId আসত → একক-পোস্ট-পেজে (articles/qa) `data-post-id="null"` → POST /api/comment-এ **অনাথ-কমেন্ট** (কোনো থ্রেডে অদৃশ্য)। এখন: `.fc-drawer` → নিকটতম `.comments-list[data-post-link]`-পাথ-পার্স → `.cc-form[data-post-id]`। **নতুন কমেন্ট-এন্ট্রি-পয়েন্ট যোগ করলে এ-চেইন ভাঙবেন না।** session113/114-এর qa-reply-btn এ-পাথেই চলে — ফিক্স ছাড়া অনাথ হত।
+2. **POST /api/comment সার্ভার-গার্ড:** post_id parseInt>0 নইলে 400 `bad_post_id` (defense-in-depth)। negative-প্রমাণ: "null"/"abc"/"-5" → ৪০০। parent_id-যুক্ত নতুন-এন্ডপয়েন্টেও এ-রীতি মানুন।
+
+**pagination-লাইভ-টেস্ট (session108-খ ③ সম্পন্ন):** ১৬-বার্তায় পেজ-১ ১৫ + পেজ-২ ১ নির্ভুল; CSV-রো-সম্মতি ✓; /api/contact রেট-লিমিট (৫/১০মি) in-memory → ব্যাচ-সিডে সার্ভার-রিস্টার্টেই রিসেট। seed-স্ক্রিপ্ট: scripts/seed-qa-117.sh (curl-লগইন + CSRF-ডাবল-সাবমিট + JSON-API — HTTP-পাইপলাইন-রীতি)।
+
+**প্রত্যাহার-ঘোষণা:** আমার qa-ক্যানোনিকাল-ইমপ্ল session113-11982d2 + session114-ক্যানোনিকালের কাছে স্বেচ্ছায় প্রত্যাহৃত (ডুপ্লিকেশন-শূন্য)। রক্ষিত-অনন্য: অনাথ-ফিক্স ×২ + pagination-টেস্ট + seed-স্ক্রিপ্ট + .qa-answer-slot scroll-margin-top-অ্যাঙ্কর-পলিশ (৩-লাইন)।
+
+**E2E-প্রমাণ:** রিপ্লাই-স্লট data-post-id=১১ (আগে null) ✓ লাইক-টগল-দুইদিক badge-বাংলা ✓ থ্রেড-সোয়াপ+total-লাইভ ✓ গেস্ট-ভিউ ✓ 390px-০ ✓ কনসোল-০ ✓ guard:design ✓ brace-০ ✓ pagination-১৬ ✓ ক্লিনআপ ✓। **গোটচা-রিপ্লে:** rebase-এ --theirs=আমার-কমিট (বিপরীত!); git add-এর পরে checkout --ours নীরবে ব্যর্থ → `git show HEAD:path > path`; ব্রাউজার JS-ইনজেকশনে cache-bust (cb=Date.now()) + রিয়েল-ক্লিক (synthetic .click() কিছু হ্যান্ডলারে ফেইল)।
+
+**পরবর্তী:** role-policy-তে POST /api/comment bad_post_id-৪০০-চেক + comment PUT/DELETE 403/404 (session105 ④; session114 §১৫-সেলফ-সিডের সাথে মিলিয়ে) · tokens.css-হেক্স-স্ক্যান-গার্ড (⑤) · কল-প্যানেল ভিডিও-track-স্ট্যাট (session111 ③)।

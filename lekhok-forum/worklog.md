@@ -876,3 +876,26 @@ Stage Summary:
 - **session105-ডিজাইন-সিস্টেমের শেষ-অবশিষ্ট সুপারিশও সম্পন্ন** — qa উত্তর এখন ফিড/আর্টিকেলের সাথে এক-মার্কআপ-এক-ইঞ্জিন: হোভার-প্যালেট, কোণা-ব্যাজ, ৩-ডট (সম্পাদনা/মুছুন/রিপোর্ট) qa-তেও; CommentItem-এ chip/noReply-প্যারাম নতুন-ইন্টিগ্রেশন-পয়েন্ট
 - পরবর্তী-প্রার্থী: ① role-policy-তে comment-API (PUT/DELETE 403/404) চেক ② tokens.css-হার্ডকোড-হেক্স-স্ক্যান guard-এ ③ crx-উইজেট 'সব দেখুন' ④ qa-উত্তরে ভোট-স্টাইল সর্টিং (like_count DESC আছেই — UI-ইন্ডিকেটর) ⑤ notifications ফিল্টার-ট্যাব
 - **[push-রেস-সংশোধন]:** প্যারালাল session114-এজেন্ট qa-single-কে থ্রেডেড-উত্তর+CommentComposer-সহ ক্যানোনিকালাইজ করেছে → তাদের সংস্করণ গৃহীত (union-মার্জ), আমার qa-single-এডিট+observer+answers-section-CSS প্রত্যাহৃত; অনন্য-রক্ষিত: CommentItem chip/noReply + data-raw-ফিক্স + cursor ২৬→৩৫ + chip/focus-CSS। PLANS-সংশোধন-নোট দেখুন।
+
+---
+Task ID: session-117 (সেশন ১১৭ — cron webDevReview রাউন্ড; upstream-রিজার্ভ-লেবেল অনুযায়ী)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: QA-সুইপ → session105-সুপারিশ ① (qa-উত্তর-ক্যানোনিকাল) নিজস্ব-ইমপ্ল → push-রেসে session113/114-ক্যানোনিকাল আবিষ্কার → **স্বেচ্ছায় প্রত্যাহার** (ডুপ্লিকেশন-শূন্য) — অনন্য-রক্ষিত: 🚨 অনাথ-কমেন্ট-বাগ-ফিক্স (comment-tools.js postId-ফলব্যাক + /api/comment সার্ভার-গার্ড) + pagination-লাইভ-টেস্ট (session108-খ ③) + seed-স্ক্রিপ্ট
+
+Work Log:
+- **সিঙ্ক:** 1c2338f → rebase 9e47c98 → (session108-খ ইনবক্স-প্রিন্ট/111-কল-UX/112-continue-reading/105-ডিজাইন-সিস্টেম) — পরিকল্পিত "ইনবক্স-প্রিন্ট" ডুপ্লিকেট প্রমাণিত → স্কোপ-বদল: session105 ① + session108-খ ③
+- **QA-ফেজ:** ৩০-রুট স্মোক + health + agent-browser (articles/top, admin-inbox, contact-badges, article-detail) — বাগ-শূন্য
+- **নিজস্ব-ইমপ্ল (পরে প্রত্যাহৃত):** qa-route থ্রেড-অ্যাটাচ + qa-single CommentItem/Composer + CSS — E2E-তেই **অনাথ-কমেন্ট-বাগ** ধরা পড়ে: রিপ্লাই-স্লট-নির্মাতা postId কেবল .fc-drawer থেকে নিত → একক-পোস্ট-পেজে (articles/qa) post_id="null" → /api/comment-এ অনাথ-রো (কোনো থ্রেডে অদৃশ্য, comment_count-স্খুন)। session105-যুগের আসল-বাগ
+- **🚨 ফিক্স-১ (comment-tools.js — রক্ষিত):** রিপ্লাই-স্লট postId-ফলব্যাক-চেইন: .fc-drawer[data-comments-for] → নিকটতম .comments-list[data-post-link]-পাথ-পার্স (/articles|qa|questions/N) → পেজের .cc-form[data-post-id]। session113/114-ক্যানোনিকালের qa-reply-btn-ও এ-ইঞ্জিন-পাথ ব্যবহার করে — ফিক্স ছাড়া তাদের উত্তর-থ্রেডও অনাথ-তৈরি করত; **আমার সবচেয়ে-গুরুত্বপূর্ণ অনন্য-অবদান**
+- **🚨 ফিক্স-২ (routes/social.js POST /api/comment — রক্ষিত):** post_id parseInt>0-গার্ড নইলে 400 bad_post_id (defense-in-depth; GET /api/comments-গার্ডের POST-প্রতিরূপ) — negative-টেস্ট "null"/"abc"/"-5" → ৪০১/৪০০ ✓
+- **প্রত্যাহার-সিদ্ধান্ত:** push-রেসে session113-11982d2 (ক্যানোনিকাল CommentItem-রিফ্যাক্টর + chip/noReply) + session114 আবিষ্কার → আমার route/view-ডেল্টা ফেলে দিয়ে কেবল ফিক্স-১/২ + ৩-লাইনের অ্যাডিটিভ-পলিশ (.qa-answer-slot scroll-margin-top অ্যাঙ্কর-সেফটি) রাখলাম; আমার মৃত-CSS-ব্লক মুছে ফেলা
+- **pagination-লাইভ-টেস্ট (session108-খ ③ — সম্পন্ন):** /api/contact-এ ১১-বার্তা (রেট-লিমিট ৫/১০মি → ৩-ব্যাচ, সার্ভার-রিস্টার্টে লিমিটার-রিসেট) → ১৬-বার্তা = পেজ-১ ১৫ + পেজ-২ ১ (id-গণনা-নির্ভুল) + পেজ-নেভ (পেজ 1/2, 2/2) ✓ CSV ১৬-রো+হেডার ✓ → ১১-ডিলিট (303→ট্র্যাশ) → ব্যাক-টু-৫ ✓
+- **E2E (লিক-জোন-ফিক্স-প্রমাণ):** রিপ্লাই-স্লট data-post-id=১১ (আগে null — ফিক্স-১-প্রমাণ, session114-মার্কআপে) ✓ লাইক-টগল-দুইদিক (badge-বাংলা+is-mine) ✓ থ্রেড-সোয়াপ+total-লাইভ ✓ নতুন-উত্তর ✓ গেস্ট-ভিউ ✓ 390px-overflow-০ ✓ কনসোল-০ ✓ guard:design-গ্রিন ✓ brace-০ ✓
+- scripts/seed-qa-117.sh — HTTP-পাইপলাইন qa-সিডার (curl-লগইন+CSRF-ডাবল-সাবমিট; sql.js dual-instance-গোটচা এড়ানো)
+- **rebase ×২:** প্রথমে ৪-ফাইল কনফ্লিক্ট (session114-রুট/ভিউ — --ours-এ ক্যানোনিকাল নিয়েছি), তারপর আবার (session113-final 11982d2+session114 3a234b6) — style.css/PLANS/worklog ইউনিয়ন; **গোটচা-রিপ্লে: rebase-এ --theirs=আমার-কমিট (বিপরীত!); git add-এর পরে checkout --ours নীরবে-ব্যর্থ → git show HEAD:path > path নিরাপদ-রিকভারি**; ব্রাউজার JS-ইনজেকশনে cache-bust (cb=Date.now()) + রিয়েল-ক্লিক (synthetic .click() কিছু হ্যান্ডলারে ফেইল)
+
+Stage Summary:
+- **অনাথ-কমেন্ট-বাগ (session105-যুগের) এখন ফিক্সড** — সব একক-পোস্ট-পেজে রিপ্লাই সঠিক post_id নেয়; সার্ভার-গার্ড অনাথ-ইনসার্ট অসম্ভব। ভবিষ্যৎ-এজেন্ট: **নতুন কমেন্ট-এন্ট্রি-পয়েন্টে postId-ফলব্যাক-চেইন ভাঙবেন না**
+- **session108-খ ③ pagination-টেস্ট সম্পন্ন** — ১৬-বার্তায় ২-পেজ নির্ভুল + CSV-সম্মতি
+- qa-উত্তর-ক্যানোনিকাল = session113/114-ক্যানোনিকাল (আমার ডেল্টা প্রত্যাহৃত — session113-র PLANS-নোটের session117-লেবেল-রিজার্ভ অনুসৃত)
+- পরবর্তী-সুপারিশ: role-policy-স্যুটে POST /api/comment bad_post_id-৪০০-চেক + comment PUT/DELETE 403/404 (session105 ④ — session114-এর §১৫-সেলফ-সিডের সাথে মিলিয়ে) · tokens.css-হার্ডকোড-হেক্স-স্ক্যান-গার্ড (session105 ⑤) · কল-প্যানেল ভিডিও-track-স্ট্যাট (session111 ③)

@@ -772,6 +772,20 @@
     var slot = item && item.querySelector('.fc-reply-slot');
     if (!slot) return;
     var postId = rBtn.closest('.fc-drawer') && rBtn.closest('.fc-drawer').getAttribute('data-comments-for');
+    /* ── সেশন ১১৭-ফিক্স: ফিড-ড্রয়ারের বাইরে (আর্টিকেল/qa একক-পোস্ট) postId=null
+          হত → রিপ্লাই /api/comment-এ post_id="null" যেত → অনাথ-কমেন্ট (কোনো
+          থ্রেডে অদৃশ্য, E2E-তে ধরা)। ফলব্যাক-চেইন: নিকটতম .comments-list[data-
+          post-link]-এর পাথ → পেজের প্রধান .cc-form[data-post-id]। ── */
+    if (!postId) {
+      var _cl117 = rBtn.closest('.comments-list[data-post-link]');
+      var _pl117 = _cl117 ? String(_cl117.getAttribute('data-post-link') || '') : '';
+      var _pm117 = _pl117.match(/\/(?:articles|qa|questions)\/(\d+)/);
+      if (_pm117) postId = _pm117[1];
+    }
+    if (!postId) {
+      var _pc117 = document.querySelector('.cc-form[data-post-id]');
+      if (_pc117 && _pc117.getAttribute('data-post-id')) postId = _pc117.getAttribute('data-post-id');
+    }
     var authorMeta = document.querySelector('meta[name="lf-me-avatar"]');
     if (slot.hidden) {
       slot.innerHTML = buildComposerHtml(postId, authorMeta ? authorMeta.getAttribute('content') : '/avatar/0');
