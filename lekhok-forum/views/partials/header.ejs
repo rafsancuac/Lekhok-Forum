@@ -113,6 +113,19 @@
       isGroup: false,
       peer: null
     };
+    <% /* সেশন ৯৭: env-configurable TURN (Metered.ca-গ্রাউন্ডওয়ার্ক) — openrelay
+          অস্থিতিশীল হওয়ায় Vercel-এ LEKHOK_TURN_URLS/LEKHOK_TURN_USERNAME/
+          LEKHOK_TURN_CREDENTIAL দিলে সেটিই ব্যবহার হয় (ডিফল্ট openrelay অক্ষত)।
+          নোট: TURN ক্রেডেনশিয়াল WebRTC-তে স্বভাবতই ক্লায়েন্ট-দৃশ্যমান — সীমাবদ্ধ
+          কোটা-ক্রেডেনশিয়ালই স্ট্যান্ডার্ড প্র্যাকটিস। */
+      var _turnUrls = String(process.env.LEKHOK_TURN_URLS || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); %>
+    <% if (_turnUrls.length) { %>
+    window.LekhokCallCtx.iceServers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: <%- JSON.stringify(_turnUrls) %>, username: <%- jesc(process.env.LEKHOK_TURN_USERNAME || '') %>, credential: <%- jesc(process.env.LEKHOK_TURN_CREDENTIAL || '') %> }
+    ];
+    <% } %>
   </script>
   <script src="/assets/js/webrtc-call.js?v=<%= AV %>"></script>
   <% } %>
@@ -236,13 +249,14 @@
             </div>
             <div id="notifList">
               <% if (typeof recentNotifs !== 'undefined' && recentNotifs && recentNotifs.length) { %>
-                <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle' }; %>
+                <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', call: 'fa-phone-slash' }; %>
                 <% recentNotifs.forEach(n => { %>
                   <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>">
                     <span class="notif-ico"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
                     <span class="notif-text">
                       <span class="notif-body"><%= n.body %></span>
                       <span class="notif-time"><%= n.created_at %></span>
+                      <% if (n.type === 'call') { %><span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %>
                     </span>
                     <% if (!n.is_read) { %><span class="notif-dot" title="অপঠিত"></span><% } %>
                   </a>

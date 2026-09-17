@@ -764,3 +764,17 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 4. ডিসপ্লে-গোটচা আবারও ২ ভুয়া-পজিটিভ (`messagesessages`, `:not(idden])`) — char-code/od-যাচাই-নিয়ম অপরিবর্তিত।
 
 **টেস্ট-ডেটা:** fbtest1↔fbtest2-তে E2E-বার্তা (SSE-E2E/BADGE-E2E/.../LIVE-*) — conv-1 এখন ~১০০+ বার্তা (উইন্ডোিং/সার্চ-ডেমো আরও-সমৃদ্ধ)। fbtest1-এর message-নোটিফিকেশন E2E-চলাকালীন কিছু-কিছু ডিলিট-হয়েছে (টোস্ট-প্রুফের জন্য)।
+
+## Cross-Agent Note: Session 97 — কল-রেজিলিয়েন্স প্যাক (১৮ সেপ্টেম্বর ২০২৬)
+
+**রোডম্যাপ-প্রগতি:** সেশন-৯৪-সুপারিশ **③ env-TURN (গ্রাউন্ডওয়ার্ক) ✓**, **⑤ ICE-restart-রিট্রাই-UI ✓** + সুপারিশ-② **কলব্যাক-বাটন ✓**, **③ মিসড-কল-ব্যাজ ✓** + QA-রাউন্ডে ধরা **আসন্ন-কল-হ্যাং-গ্যাপ ফিক্স ✓**। মাস্টার-টেবিলের ১৩-WebRTC-এর রেজিলিয়েন্স-শেয়ার। Agent-Chat-লক (webrtc-call.js/calls.css/messages-chat.ejs) + header.ejs + notifications.ejs + style.css-EOF + routes/calls.js ব্যবহৃত।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (এজেন্টদের জন্য):**
+- **সিগন্যাল-টাইপ ২টি বাড়ল:** `offer`/`answer` (renegotiation/ICE-restart) — webrtc-call.js poll-হ্যান্ডলারে নতুন শাখা। **নতুন সিগন্যাল-টাইপ যোগ করলে এই সুইচেই** — অজানা-টাইপ নীরবে-ইগনোর প্যাটার্ন অক্ষত (ব্যাক-কম্প্যাট)।
+- **TURN-config:** `LEKHOK_TURN_URLS`/`LEKHOK_TURN_USERNAME`/`LEKHOK_TURN_CREDENTIAL` env → header.ejs `window.LekhokCallCtx.iceServers` → webrtc-call.js `rtcConfig()` লেজি-পাঠ। **openrelay ডিফল্ট অক্ষত** — env-শূন্যে কোনো বদল নেই। Metered.ca-ক্রেডেনশিয়াল পেলে .env.example-এর ডক অনুযায়ী Vercel-env-এ দিলেই হবে।
+- **কল-ইতিহাস রো:** এখন `role="button"` + ডেলিগেটেড-ক্লিক (`.md-callrow` → `LekhokCall.start('audio')`, আইডল-গার্ডসহ) — **রো-মার্কআপ এডিট করলে role=button/tabindex/aria রক্ষা করুন**; কলব্যাক-বাটন `.mdc-cb` + গ্রুপ `.mdc-right` calls.css-এ।
+- **আসন্ন-কল সেফটি-টাইমআউট:** poll-incoming-এ `ring_timeout_s` নতুন ফিল্ড — ক্লায়েন্ট `max((ring_timeout_s−age_s)+৬সে, ১২সে)` পরে স্বয়ং-বিলুপ্ত। **routes/calls.js-এ RING_TIMEOUT_S-এর ডিফল্ট বদলালে ক্লায়েন্ট-টাইমআউটও স্বয়ংক্রিয়-অ্যাডাপ্ট করে (এই ফিল্ডের কারণে) — আলাদা সিঙ্ক লাগে না।**
+- **নোটিফ-আইকন-ম্যাপ দুই জায়গায়:** header.ejs `_ico` (ড্রপডাউন) + notifications.ejs if/else চেইন (পেজ) — নতুন notification-type যোগ করলে **দুটোই** আপডেট করতে হবে (call-type মিস করে fa-bell-ফলব্যাক খেয়েছিল)।
+- **style.css মিনিফাইড** — সেশন-৯৭-ব্লক EOF-অ্যাপেন্ড (`.notif-missed` ফ্যামিলি) — exact-anchor-প্যাচের দরকার হয়নি; পরবর্তী-এজেন্টও অ্যাপেন্ড-প্যাটার্নই মানুন।
+
+**QA-প্রমাণ:** E2E ৫৪/৫৪ + অডিট ৪৯/৪৯ + ক্লায়েন্ট-টাইমআউট লাইভ-যাচাই (কলার-পোলিং-শূন্যে মোডাল ৮.৪সে-তে স্ব-বিলুপ্ত) + কলব্যাক-ক্লিকে outgoing + নোটিফ-চিপ ৫/৬ + 390px-০ + কনসোল-০। স্ক্রিনশট: download/s97-*.png।

@@ -19,17 +19,18 @@
     <% } else { %>
       <div class="notif-page-list">
         <% items.forEach(n => { %>
-          <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' ? 'icon-like' : (n.type === 'comment' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : 'icon-system'))); %>
+          <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' ? 'icon-like' : (n.type === 'comment' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : 'icon-system')))); %>
           <a href="<%= n.link || '#' %>" class="notif-page-item <%= n.is_read ? '' : 'unread' %>" onclick="markRead('<%= n.id %>')">
             <div class="notif-page-icon <%= iconClass %>">
               <% if (n.type === 'birthday') { %><i class="fas fa-birthday-cake"></i>
               <% } else if (n.type === 'like') { %><i class="fas fa-heart"></i>
               <% } else if (n.type === 'comment') { %><i class="fas fa-comment"></i>
               <% } else if (n.type === 'follow') { %><i class="fas fa-user-plus"></i>
-              <% } else { %><i class="fas fa-bell"></i><% } %>
+              <% } else if (n.type === 'call') { %><i class="fas fa-phone-slash"></i><% }
+              else { %><i class="fas fa-bell"></i><% } %>
             </div>
             <div class="notif-page-body">
-              <div class="notif-page-title"><%= n.title %></div>
+              <div class="notif-page-title"><%= n.title %><% if (n.type === 'call') { %> <span class="notif-missed notif-missed--page"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %></div>
               <div class="notif-page-text"><%= n.body %></div>
               <div class="notif-page-time"><i class="far fa-clock"></i> <%= new Date(n.created_at).toLocaleDateString('bn-BD') %></div>
             </div>

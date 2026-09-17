@@ -38,6 +38,15 @@
     iceCandidatePoolSize: 10
   };
 
+  /* সেশন ৯৭: ঐচ্ছিক env-TURN — header.ejs window.LekhokCallCtx.iceServers-এ দিলে
+     (LEKHOK_TURN_URLS/USERNAME/CREDENTIAL) openrelay-এর বদলে সেটিই ব্যবহার হয়।
+     ctx লেজি-পাঠ — createPC-এর সময় পড়া হয় (পেজ-লাইফসাইকেলে বদলালেও ধরা পড়ে)। */
+  function rtcConfig() {
+    var c = C();
+    var srv = (c.iceServers && c.iceServers.length) ? c.iceServers : RTC_CFG.iceServers;
+    return { iceServers: srv, iceCandidatePoolSize: 10 };
+  }
+
   var BN = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   function bn(n) { return String(n).replace(/[0-9]/g, function (d) { return BN[+d]; }); }
 
@@ -57,6 +66,9 @@
     outBuf: [],             // পাঠানো-হবে ICE ব্যাচ
     flushT: null,
     pollT: null,
+    incT: null,             // সেশন ৯৭: আসন্ন-কল ক্লায়েন্ট-সাইড সেফটি-টাইমআউট
+    iceRestarts: 0,         // সেশন ৯৭: ICE-restart রিট্রাই-কাউন্টার
+    restartAnswer: false,   // সেশন ৯৭: পিয়ারের restart-answer-এর অপেক্ষায়
     tickT: null,            // কানেক্টেড-টাইমার
     t0: 0,                  // connected-timestamp
     muted: false,
@@ -160,6 +172,11 @@
       '      <div class="lc-name"></div>' +
       '      <div class="lc-status"></div>' +
       '    </div>' +
+      '    <div class="lc-retrybar" hidden>' +
+      '      <span class="lc-retrybar-t">' + icon('fa-triangle-exclamation') + ' সংযোগ বিচ্ছিন্ন</span>' +
+      '      <button type="button" class="lc-retrybar-btn lc-retrybar-btn--retry" data-lc="retry">' + icon('fa-rotate-right') + ' আবার চেষ্টা করুন</button>' +
+      '      <button type="button" class="lc-retrybar-btn lc-retrybar-btn--end" data-lc="end">' + icon('fa-phone-slash') + ' কল শেষ করুন</button>' +
+      '    </div>' +
       '    <div class="lc-controls">' +
       '      <button type="button" class="lc-ctl lc-ctl--mic" data-lc="mic" title="মাইক বন্ধ/চালু">' + icon('fa-microphone') + '</button>' +
       '      <button type="button" class="lc-ctl lc-ctl--cam" data-lc="cam" title="ক্যামেরা বন্ধ/চালু">' + icon('fa-video') + '</button>' +
@@ -192,6 +209,13 @@
       else if (a === 'end') { click(); endCall('hangup'); }
       else if (a === 'accept') acceptCall();
       else if (a === 'decline') { click(); declineCall(); }
+      else if (a === 'retry') {
+        click();
+        var rb = root && root.querySelector('.lc-retrybar');
+        if (rb) rb.hidden = true;
+        S.iceRestarts = 0; /* ম্যানুয়াল-রিট্রাইয়ে নতুন ভাতা */
+        attemptIceRestart();
+      }
       else if (a === 'tapplay') { /* handled below */ }
     });
     var tp = root.querySelector('.lc-tapplay');
@@ -234,7 +258,7 @@
 
   /* ── PeerConnection ───────────────────────────────────────────────────── */
   function createPC() {
-    var pc = new RTCPeerConnection(RTC_CFG);
+    var pc = new RTCPeerConnection(rtcConfig());
 
     pc.onicecandidate = function (e) {
       if (e.candidate) {
@@ -259,7 +283,7 @@
       if (!pc) return;
       var st = pc.connectionState;
       if (st === 'connected') { onConnected(); }
-      else if (st === 'failed') { toast('সংযোগ ব্যর্থ — নেটওয়ার্ক/ফায়ারওয়াল সমস্যা (TURN রিলে ব্যর্থ)', true); endCall('failed'); }
+      else if (st === 'failed') { handleConnFailed(); }
       else if (st === 'disconnected') { status('সংযোগ বিচ্ছিন্ন হচ্ছে…', 'is-warn'); }
       else if (st === 'closed') { /* cleanup already */ }
     };
@@ -269,6 +293,36 @@
       }
     };
     return pc;
+  }
+
+  /* ── সেশন ৯৭: সংযোগ-ব্যর্থতা রিকভারি (ICE-restart + রিট্রাই-UI) ─────────
+     'failed' এ সরাসরি কল-কাটার বদলে ২ বার পর্যন্ত ICE-restart (নতুন ICE-পথ
+     খোঁজা — একই pc-তে createOffer({iceRestart:true})), তারপরও ব্যর্থ হলে
+     ইউজারের হাতে "আবার চেষ্টা / কল শেষ" বার দেখাও। */
+  function handleConnFailed() {
+    if (S.state !== 'connecting' && S.state !== 'connected') return;
+    if (S.iceRestarts < 2) { attemptIceRestart(); return; }
+    showRetryBar();
+  }
+  async function attemptIceRestart() {
+    var pc = S.pc;
+    if (!pc || !S.callId) { showRetryBar(); return; }
+    S.iceRestarts++;
+    status('পুনঃসংযোগের চেষ্টা চলছে… (' + bn(S.iceRestarts) + '/২)', 'is-warn');
+    try {
+      var offer = await pc.createOffer({ iceRestart: true });
+      await pc.setLocalDescription(offer);
+      S.restartAnswer = true;
+      S.outBuf.push({ type: 'offer', sdp: { type: offer.type, sdp: offer.sdp }, restart: 1 });
+      scheduleFlush();
+    } catch (_) { showRetryBar(); }
+  }
+  function showRetryBar() {
+    if (!root) return;
+    var rb = root.querySelector('.lc-retrybar');
+    if (rb) rb.hidden = false;
+    status('সংযোগ ব্যর্থ', 'is-warn');
+    toast('সংযোগ স্থাপন করা যায়নি — নেটওয়ার্ক/ফায়ারওয়াল (TURN রিলে) সমস্যা', true);
   }
 
   function tryPlayRemote() {
@@ -426,6 +480,16 @@
     status('');
     startRing('incoming');
     schedulePoll(900);
+    /* সেশন ৯৭: ক্লায়েন্ট-সাইড সেফটি-টাইমআউট — কলারের ক্লায়েন্ট মারা গেলে
+       (end-কল না-পাঠিয়ে) সার্ভার মিসড-মার্ক করতে পারে না এবং ক্যালির মোডাল
+       অনির্দিষ্টকাল ঝুলে থাকত। সার্ভারের ring_timeout_s - age_s (+৬সে মার্জিন)
+       পরে নিজে থেকেই মোডাল সরাও। */
+    if (S.incT) { clearTimeout(S.incT); S.incT = null; }
+    var rtS = (typeof inc.ring_timeout_s === 'number' ? inc.ring_timeout_s : 45) - (inc.age_s || 0);
+    S.incT = setTimeout(function () {
+      S.incT = null;
+      if (S.state === 'incoming') { toast('সাড়া পাওয়া যায়নি — কলটি মিসড ধরা হলো', true); cleanup(true); }
+    }, Math.max(rtS * 1000 + 6000, 12000));
   }
   function hideIncoming() {
     if (root) root.querySelector('.lc-incoming').hidden = true;
@@ -436,6 +500,7 @@
     if (S.state !== 'incoming' || !S.pendingOffer) return;
     click();
     hideIncoming();
+    if (S.incT) { clearTimeout(S.incT); S.incT = null; }
     S.state = 'connecting';
     status('সংযোগ করা হচ্ছে…');
     try {
@@ -466,6 +531,7 @@
 
   async function declineCall() {
     hideIncoming();
+    if (S.incT) { clearTimeout(S.incT); S.incT = null; }
     var id = S.callId;
     cleanup(true);
     if (id) { try { await api('POST', '/api/calls/' + id + '/decline'); } catch (_) {} }
@@ -495,6 +561,8 @@
     clearInterval(S.tickT); S.tickT = null;
     clearTimeout(S.flushT); S.flushT = null;
     clearTimeout(S.pollT); S.pollT = null;
+    if (S.incT) { clearTimeout(S.incT); S.incT = null; }
+    S.iceRestarts = 0; S.restartAnswer = false;
     if (S.pc) { try { S.pc.close(); } catch (_) {} S.pc = null; }
     if (S.local) { S.local.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} }); S.local = null; }
     S.remote = null;
@@ -625,6 +693,28 @@
               if (S.state === 'outgoing' || S.state === 'connecting' || S.state === 'connected' || S.state === 'incoming') {
                 if (S.state === 'connected') toast('অপর পক্ষ কল কেটে দিয়েছে');
                 cleanup(true);
+              }
+            } else if (p.type === 'offer' && p.sdp) {
+              /* সেশন ৯৭: পিয়ারের ICE-restart/renegotiation-অফার (সংযুক্ত-অবস্থায়) */
+              if ((S.state === 'connected' || S.state === 'connecting') && S.pc) {
+                try {
+                  await S.pc.setRemoteDescription(new RTCSessionDescription(p.sdp));
+                  await drainQueue();
+                  var ans = await S.pc.createAnswer();
+                  await S.pc.setLocalDescription(ans);
+                  S.outBuf.push({ type: 'answer', sdp: { type: ans.type, sdp: ans.sdp } });
+                  scheduleFlush();
+                  status('পুনঃসংযোগ হচ্ছে…', 'is-warn');
+                } catch (e) { /* পরের সিগন্যালে আবার */ }
+              }
+            } else if (p.type === 'answer' && p.sdp) {
+              /* সেশন ৯৭: আমার ICE-restart-অফারের উত্তর */
+              if (S.restartAnswer && S.pc) {
+                S.restartAnswer = false;
+                try {
+                  await S.pc.setRemoteDescription(new RTCSessionDescription(p.sdp));
+                  await drainQueue();
+                } catch (e) { /* রিট্রাই-বারে ফিরবে */ }
               }
             }
           }

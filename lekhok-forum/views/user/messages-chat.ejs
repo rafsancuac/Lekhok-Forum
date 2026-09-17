@@ -1745,13 +1745,30 @@
         const dirIc = c.direction === 'outgoing' ? 'fa-arrow-up-right' : 'fa-arrow-down-left';
         const st = ST94[c.status] || esc94(c.status);
         const subTxt = c.status === 'ended' && c.duration_s != null ? dur94(c.duration_s) : st;
-        return '<div class="md-callrow' + (missed ? ' is-missed' : '') + '">' +
+        /* সেশন ৯৭: কলব্যাক-বাটন — রো-ক্লিকে একই পিয়ারকে অডিও-কল (আইডলে থাকলে) */
+        const cbAttr = 'data-cb94="' + esc94(c.direction) + '" data-cbkind="' + esc94(c.kind) + '"';
+        return '<div class="md-callrow' + (missed ? ' is-missed' : '') + '" ' + cbAttr + ' role="button" tabindex="0" title="কলব্যাক দিন">' +
           '<span class="mdc-ic"><i class="fas ' + (c.kind === 'video' ? 'fa-video' : 'fa-phone') + '"></i></span>' +
           '<span class="mdc-body"><span class="mdc-dir"><i class="fas ' + dirIc + '"></i> ' + (c.direction === 'outgoing' ? 'আউটগোয়িং' : 'ইনকামিং') + ' ' + (c.kind === 'video' ? 'ভিডিও' : 'অডিও') + ' কল</span>' +
           '<span class="mdc-sub">' + esc94(subTxt) + ' · ' + esc94(rel94(c.created_at)) + '</span></span>' +
-          '<span class="mdc-st ' + (missed ? 'is-bad' : 'is-ok') + '">' + esc94(ST94[c.status] || c.status) + '</span>' +
+          '<span class="mdc-right"><span class="mdc-st ' + (missed ? 'is-bad' : 'is-ok') + '">' + esc94(ST94[c.status] || c.status) + '</span>' +
+          '<button type="button" class="mdc-cb" title="কলব্যাক দিন" aria-label="কলব্যাক দিন"><i class="fas fa-phone"></i></button></span>' +
           '</div>';
       }
+      /* কলব্যাক: ডেলিগেটেড-ক্লিক (রো-রি-রেন্ডার-নিরাপদ) — কল-মডিউল আইডলে থাকলেই */
+      body.addEventListener('click', function (e) {
+        const row = e.target.closest('.md-callrow');
+        if (!row || !window.LekhokCall || window.LekhokCall.state() !== 'idle') return;
+        e.preventDefault();
+        window.LekhokCall.start('audio');
+      });
+      body.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const row = e.target.closest('.md-callrow');
+        if (!row || !window.LekhokCall || window.LekhokCall.state() !== 'idle') return;
+        e.preventDefault();
+        window.LekhokCall.start('audio');
+      });
       async function loadCalls(force) {
         if ((loaded && !force) || loading || !convId) return;
         loading = true;

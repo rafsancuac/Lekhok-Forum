@@ -284,3 +284,59 @@
   .mdc-dir { font-size: 12.5px; }
   .mdc-sub { font-size: 11.5px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   সেশন ৯৭ — ① সংযোগ-রিট্রাই বার (.lc-retrybar) + ② কল-ইতিহাস কলব্যাক-বাটন
+   ① 'failed' স্টেটে অটো-ICE-restart ×২ ব্যর্থ হলে ইউজারের হাতে বার —
+      হলুদ-অ্যাম্বার সতর্ক-পটভূমি, ডার্ক-থিমে গ্লাস; ② রো-ডানে সবুজ কলব্যাক।
+   ═══════════════════════════════════════════════════════════════════════ */
+.lc-retrybar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin: 12px 18px 2px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, .12);
+  border: 1px solid rgba(245, 158, 11, .45);
+  backdrop-filter: blur(8px);
+}
+.lc-retrybar-t { font-size: 13px; font-weight: 700; color: #FBBF24; display: inline-flex; align-items: center; gap: 7px; }
+.lc-retrybar-t .fas { font-size: 12px; }
+.lc-retrybar-btn {
+  flex: 0 0 auto;
+  border: 0; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 700;
+  padding: 7px 14px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 7px;
+  transition: transform .15s ease, filter .15s ease, background .15s ease;
+}
+.lc-retrybar-btn .fas { font-size: 11px; }
+.lc-retrybar-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.lc-retrybar-btn:focus-visible { outline: 2px solid rgba(251, 191, 36, .8); outline-offset: 2px; }
+.lc-retrybar-btn--retry { background: var(--lc-green, #10B981); color: #04231A; }
+.lc-retrybar-btn--end { background: rgba(228, 64, 95, .16); color: #FF8FA9; border: 1px solid rgba(228, 64, 95, .4); }
+@media (max-width: 640px) {
+  .lc-retrybar { margin: 10px 12px 0; padding: 9px 12px; }
+  .lc-retrybar-btn { padding: 8px 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lc-retrybar-btn { transition: none; }
+}
+
+/* কল-ইতিহাস রো: স্ট্যাটাস + কলব্যাক গ্রুপ */
+.mdc-right { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
+.mdc-cb {
+  flex: 0 0 auto;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(16, 185, 129, .14);
+  color: var(--lc-green-deep, #059669);
+  font-size: 12px;
+  transition: background .15s ease, transform .15s ease, color .15s ease;
+}
+.mdc-cb:hover { background: var(--lc-green, #10B981); color: #fff; transform: scale(1.08); }
+.mdc-cb:focus-visible { outline: 2px solid rgba(16, 185, 129, .6); outline-offset: 2px; }
+.md-callrow[role="button"] { cursor: pointer; }
+@media (max-width: 640px) {
+  .mdc-cb { width: 28px; height: 28px; font-size: 11px; }
+}

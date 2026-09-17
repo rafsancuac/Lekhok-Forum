@@ -325,6 +325,37 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 **করা:** ① EJS-এর দুই রেন্ডার-পথেই (সার্ভার + appendMessage) .bubble-actions রেল — b-content-এর বাইরে ফ্লেক্স-সিবলিং, নতুন ↩-কুইক-রিপ্লাই-বাটন (data-msg-reply → startReply), রিয়েক্ট-পিকার রেলের ভেতরে; bubble-delete ✕ + ডেড data-msg-delete-হ্যান্ডলার অপসারিত। ② messenger.css: রেল relative-flex align-self:center, opacity-0+pointer-events-none → hover/:focus-within-এ দৃশ্যমান; me-তে order:-1; ফ্ল্যাট-গোল ২৮px বাটন; টাচে @media(hover:none) সবসময়-দৃশ্যমান; পুরনো ৩টি overlay-রুল-ব্লক নেস্টেড-রুলে স্থানান্তর (লেখার-ওপর ওভারল্যাপ শূন্য)। ③ রিবেজ-কনফ্লিক্ট সেশন-৯২ ভয়েস-নোটের সাথে শান্তিপূর্ণ-সমাধান। **E2E (agent-browser):** রেল-ডোম ২০×৩-বাটন ✓ ⋮-মেনু-আনসেন্ড-রাউন্ডট্রিপ ✓ রিয়েক্ট ❤️-ব্যাজ ✓ কুইক-রিপ্লাই-বার ✓ হোভার-ডেমো VLM-নিশ্চিত (পাশে-সারি, ওভারল্যাপ-০) ✓ ৩৯০px-ওভারফ্লো-০+কনসোল-০ ✓ ভয়েস-মিক+রেল সহাবস্থান ✓
 
+### সেশন ৯৭ (১৮ সেপ্টেম্বর ২০২৬) — কল-রেজিলিয়েন্স প্যাক: ক্লায়েন্ট-সাইড আসন্ন-কল-টাইমআউট + ICE-restart-রিট্রাই-UI + env-TURN + কলব্যাক-বাটন + মিসড-কল-ব্যাজ (cron-QA রাউন্ড)
+
+> প্রবেশ-অবস্থা: origin/main @ c67b646 (session94) — fetch-ক্লিন। QA-সুইপ: E2E ৫৪/৫৪ + অডিট ৪৯/৪৯ + ২০-পেজ-স্মোক + agent-browser প্রকৃত-রিং (ড্যাশবোর্ডে ২.৮সে-তে মোডাল, টিয়ারডাউন-পরিষ্কার) — **সব-গ্রিন → স্থিতিশীল রায়** → সেশন-৯৪-সুপারিশ ①③⑤ + নতুন-ধরা রোবাস্টনেস-গ্যাপ নির্বাচিত।
+
+**QA-রাউন্ডে ধরা নতুন রোবাস্টনেস-গ্যাপ:** কলারের ক্লায়েন্ট মরে গেলে (end-কল না-পাঠিয়ে) সার্ভার stale-ring self-heal কেবল **কলারের নিজের পোলে** চলে — কেউ পোল না-করলে ক্যালির আসন্ন-মোডাল অনির্দিষ্টকাল ঝুলে থাকে (ক্লায়েন্টে কোনো টাইমআউট ছিল না; ৪০সে-পরে শুধু রিংটোন থামে)।
+
+**① ক্লায়েন্ট-সাইড আসন্ন-কল-সেফটি-টাইমআউট (webrtc-call.js + routes/calls.js):**
+- poll-রেসপন্সের incoming-এ `ring_timeout_s` যোগ (RING_TIMEOUT_S expose)।
+- showIncoming-এ `S.incT` টাইমআউট: `max((ring_timeout_s − age_s) + ৬সে, ১২সে)` পরে স্টেট যদি এখনো 'incoming' হয় → টোস্ট "সাড়া পাওয়া যায়নি" → cleanup(true)। accept/decline/cleanup-পথে টাইমার-ক্লিয়ার।
+- **E2E-প্রমাণিত:** কলার-পোলিং-শূন্য কলে মোডাল ২.৮সে-তে → ৮.৪সে-তে স্বয়ংক্রিয়-বিলুপ্ত (idle|false) — হ্যাং-গ্যাপ বন্ধ।
+
+**② ICE-restart-রিট্রাই-UI (roadmap-⑤; webrtc-call.js + calls.css):**
+- `onconnectionstatechange:'failed'` আর সরাসরি কল-কাটে না — `handleConnFailed()`: ২ বার পর্যন্ত **অটো-ICE-restart** (`createOffer({iceRestart:true})` → নতুন `offer`/`answer` সিগন্যাল-টাইপ পিয়ারে — poll-হ্যান্ডলারে রিনেগোশিয়েশন-সেট (setRemote→createAnswer→answer-ব্যাক; অজানা-টাইপ পুরনো-ক্লায়েন্ট নীরবে ইগনোর — ব্যাক-কম্প্যাট)।
+- তারপরও ব্যর্থ → `.lc-retrybar` (অ্যাম্বার-গ্লাস বার): "সংযোগ বিচ্ছিন্ন — [আবার চেষ্টা করুন] [কল শেষ করুন]" — ম্যানুয়াল-রিট্রাইতে কাউন্টার-রিসেট+পুনঃ-restart; স্টাইল calls.css সেশন-৯৭-ব্লক (hover-lift/focus-ring/মোবাইল/reduced-motion)।
+
+**③ env-configurable TURN (roadmap-③ Metered.ca-গ্রাউন্ডওয়ার্ক):**
+- header.ejs: `LEKHOK_TURN_URLS` (কমা-সেপারেটেড) + `LEKHOK_TURN_USERNAME` + `LEKHOK_TURN_CREDENTIAL` env থাকলে `window.LekhokCallCtx.iceServers`-এ STUN×২+TURN-অ্যারে ইনজেক্ট; webrtc-call.js `rtcConfig()`-লেজি-পাঠ — ctx-iceServers থাকলে সেটিই, না-থাকলে openrelay-ডিফল্ট (অক্ষত)।
+- .env.example-এ Metered.ca সেটআপ-ডকুমেন্টেশন (কোটা-ক্রেডেনশিয়াল-নোটসহ)। Vercel-এ env-দিলেই প্রোডাকশন-TURN — কোড-পরিবর্তন-শূন্য।
+
+**④ কল-ইতিহাস কলব্যাক-বাটন (session94-সুপারিশ-②):**
+- messages-chat.ejs কল-ইতিহাস রো-এ সবুজ ফোন-বাটন (`.mdc-cb`) + রো-নিজেই role=button/tabindex/Enter-Space-কি-সাপোর্ট; ডেলিগেটেড-ক্লিক (রো-রি-রেন্ডার-নিরাপদ) — কল-মডিউল আইডলে থাকলে `LekhokCall.start('audio')`।
+- স্টাইল: `.mdc-right` গ্রুপ + `.mdc-cb` (hover-scale/focus-visible/≤640px)।
+
+**⑤ নোটিফিকেশনে মিসড-কল-ভিজ্যুয়াল (session94-সুপারিশ-③):**
+- header.ejs ড্রপডাউন `_ico`-ম্যাপে `call: 'fa-phone-slash'` + টাইপ-'call'-আইটেমে লাল **"মিসড কল"**-চিপ (`.notif-missed`)।
+- notifications.ejs ফুল-পেজেও: icon-call-ব্রাঞ্চ + টাইটেলের পাশে চিপ (`.notif-missed--page`); স্টাইল style.css-EOF-অ্যাপেন্ড (মিনিফাইড-ফাইলে exact-anchor-প্যাচ এড়াতে)।
+
+**যাচাই:** E2E **৫৪/৫৪ ALL GREEN** (রিস্টার্ট-পরবর্তী); inspect-audit **৪৯/৪৯ PASS ০ FAIL**; ২০-পেজ-স্মোক ✓ (non-200 = কেবল anon-গেট); agent-browser: ড্যাশবোর্ডে প্রকৃত-রিং ✓ ক্লায়েন্ট-টাইমআউট স্ব-বিলুপ্তি ✓ রিট্রাই-বার DOM-hidden ✓ কলব্যাক-বাটন ৬/৬+ক্লিকে outgoing-স্টেট (headless-মাইক-গ্রেসফুল-টোস্ট) ✓ নোটিফ-চিপ ড্রপডাউন-৫/পেজ-৬ ✓ মোবাইল-390px-ওভারফ্লো-০ ✓ কনসোল-০ ✓। স্ক্রিনশট: download/s97-callback-tab.png, download/s97-notif-missed-chip.png, download/s97-notif-page.png।
+
+**কমিট:** session97 → pushed। **পরবর্তী সুপারিশ:** ① গ্রুপ-কল (multi-party mesh — call_sessions-এ participant-টেবিল) ② মিসড-কল-কাউন্ট-ব্যাজ নোটিফ-বেলে ③ ICE-restart-টেলিমেট্রি (কত-টা অটো-রিকভারি হয় — ভবিষ্যৎ-অ্যানালিটিক্স) ④ রোডম্যাপ-০১ SSE-হাব (🔴)।
+
 ### সেশন ৯৪ (১৮ সেপ্টেম্বর ২০২৬) — গ্লোবাল কল-রিংগার (মেসেঞ্জার-বাইরে আসন্ন-কল) + চ্যাট-ডিটেইলসে কল-ইতিহাস ট্যাব
 
 > সেশন-৯৩-এর WebRTC কল-ফিচারের স্বাভাবিক পরবর্তী-ধাপ (roadmap সুপারিশ ① + ②)। মূল-সমস্যা ছিল: আসন্ন কল শুধু মেসেঞ্জার-পেজে খোলা থাকলেই রিং হতো — ইউজার ড্যাশবোর্ড/প্রোফাইল/লেখা পড়ার সময়ে কল মিস হতো।

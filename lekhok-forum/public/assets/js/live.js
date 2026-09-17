@@ -62,7 +62,7 @@
   }
 
   /* ── ড্রপডাউন লাইভ-রিফ্রেশ (সার্ভার-মার্কআপের হুবহু শেপ) ──────────────────── */
-  var ICONS = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle' };
+  var ICONS = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', call: 'fa-phone-slash' }; /* সেশন ৯৭-মার্জ: call-টাইপ → মিসড-কল-আইকন (header.ejs _ico-এর সাথে সিঙ্কড) */
   function relTime(raw) {
     if (!raw) return '';
     var t = new Date(String(raw).replace(' ', 'T')).getTime();
@@ -96,6 +96,7 @@
         '<span class="notif-text">' +
         '<span class="notif-body">' + esc(n.body) + '</span>' +
         '<span class="notif-time">' + esc(relTime(n.created_at)) + '</span>' +
+        (n.type === 'call' ? '<span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span>' : '') + /* সেশন ৯৭-মার্জ: মিসড-কল-চিপ (সার্ভার-রেন্ডারড ড্রপডাউনের সাথে অভিন্ন) */
         '</span>' +
         (n.is_read ? '' : '<span class="notif-dot" title="অপঠিত"></span>') +
         '</a>';

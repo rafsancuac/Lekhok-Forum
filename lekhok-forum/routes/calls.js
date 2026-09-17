@@ -324,7 +324,10 @@ router.get('/api/calls/poll', ensureAuth, async (req, res) => {
       caller: await publicUser(inc.caller_id),
       offer: parseSdp(inc.offer_sdp),
       conversation_id: inc.conversation_id,
-      age_s: Math.round((Date.now() - new Date(inc.created_at.replace(' ', 'T') + 'Z').getTime()) / 1000)
+      age_s: Math.round((Date.now() - new Date(inc.created_at.replace(' ', 'T') + 'Z').getTime()) / 1000),
+      /* সেশন ৯৭: ক্লায়েন্ট-সাইড সেফটি-টাইমআউটের জন্য — কলারের ক্লায়েন্ট মরে
+         গেলে সার্ভার মিসড-মার্ক করতে পারে না; ক্যালি নিজেই মোডাল সরাবে */
+      ring_timeout_s: RING_TIMEOUT_S
     };
   }
 

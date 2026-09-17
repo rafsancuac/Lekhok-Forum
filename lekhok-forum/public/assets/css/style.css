@@ -1156,3 +1156,9 @@ html.lf-restoring .feed-more-sentinel{margin:0}
 a.card-tag{display:inline-flex;align-items:center;font-size:11px;color:var(--text-muted);background:var(--surface-alt);padding:2px 8px;border-radius:5px;border:1px solid transparent;transition:all .18s ease;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background:var(--accent-soft)}
 @media (max-width:640px){.tag-bar{gap:8px;padding:10px 12px}.tag-filter-note a.tag-clear{margin-left:0}}
+
+/* সেশন ৯৭ — মিসড-কল ব্যাজ (নোটিফ-ড্রপডাউন + বিজ্ঞপ্তি-পেজ) */
+.notif-missed{display:inline-flex;align-items:center;gap:5px;margin-top:3px;font-size:10.5px;font-weight:700;letter-spacing:.2px;color:#E4405F;background:rgba(228,64,95,.12);border:1px solid rgba(228,64,95,.35);padding:2px 8px;border-radius:999px;width:fit-content}
+.notif-missed .fas{font-size:9px}
+.notif-missed--page{font-size:11px;padding:3px 10px;vertical-align:middle;margin-left:6px}
+.notif-page-icon.icon-call{background:rgba(228,64,95,.14);color:#E4405F}
