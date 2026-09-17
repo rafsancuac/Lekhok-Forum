@@ -1101,36 +1101,61 @@ Work Log:
 Stage Summary:
 - POST /api/comment চুক্তি-বৃদ্ধি (backward-compatible) — এক-রাউন্ডট্রিপে ক্যানোনিকাল-বাবল; QA-পৃষ্ঠে ঐতিহাসিক reload-ফ্ল্যাশ-সমাপ্তি
 - পরবর্তী-এজেন্ট: session125 লেবেল; সুপারিশ: parent-chain-চিপ (POST-html), drawer-প্রিভিউ-ইনস্ট্যান্ট, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমা
+Task ID: session122 (cron webDevReview রাউন্ড — sandbox web-68dcf7c4, session "Project Status & Development Plan")
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ c57777d/session121-পরবর্তী থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-অভিযান → অনন্য-ফিচার (মিনি-বাবল unread-ডট + QA-থ্রেড qa-html সোয়াপ + ড্রপডাউন reltime) + প্যারালাল-ইউনিয়ন ×৪ + push
+## Current Project Status / Assessment
+- origin/main এই-রাউন্ডে ৩a234b6 → 9390875 পর্যন্ত ৬-প্যারালাল-এজেন্ট-পুশ (119/120/121/122-লেবেল-রেস সহ) — সব ইউনিয়ন-রিবেজে সমাধান
+- বেসলাইন-বাগ: continue-reading উইজেট unstyled (.crx-* CSS-অনুপস্থিতি) — প্যারালাল-এজেন্টের ক্যানোনিকল-ফিক্সে সমাধান
+- আমার অনন্য-ফিচার মার্জড: মিনি-বাবল unread-ডট, QA-থ্রেড qa-html সার্ভার-সত্য সোয়াপ (চিপ-স্থায়িত্ব), ড্রপডাউন reltime, delete-sync QA-শাখা
+- স্যুট: role-policy ১২৫/১২৫, cursor ২৬/২৬, groupcalls ৫০/৫০, calls ৫৫/৫৫, guard গ্রিন, 390px-০ ×৬, কনসোল-০
+## Goals / Completed / Verification
+- সম্পন্ন: ①মিনি-বাবল .mnp-dot+বোল্ড (session117-⑤) ②qa-html-ফরম্যাট+swapQaThread (session113-বকেয়া ③) ③ক্যানোনিকাল delete-হ্যান্ডলার QA-শাখা ④ড্রপডাউন [data-ts]-reltime ⑤clearNotifBadge ডট-পরিষ্কার
+- প্রত্যাহৃত (ডুপ্লিকেট-শূন্য-নীতি): আমার .notif-dismiss--dd-ডিসমিস (session121-র .notif-x ক্যানোনিকল), /reading-list পেজ (/me/reading ক্যানোনিকল), .crx-*/.rl-* CSS (dashboard.css ক্যানোনিকল)
+- যাচাই: agent-browser E2E — উত্তর-পোস্ট/ডিলিট (no-reload+slots+চিপ+total-বাংলা) ✓ ডিসমিস-খালি-স্টেট ✓ মিনি-বাবল-ডট ✓
+## Unresolved Issues / Risks / Next Priorities
+- 🚨 rebase-গোটচা-পুনঃপ্রমাণ: skip-করা wip-কমিট = কোড-হারানোর ঝুঁকি (feat-কমিট docs-only নামে) — কমিট-কাটার-আগে ডেল্টা-যাচাই বাধ্যতামূলক
+- transport '[h'-স্ট্রিপ: heredoc-এ '[h' লিখলে খাওয়া যায় — python-এ chr(91)+'h' নির্মাণ করুন
+- দুই-সার্ভার-এক-DB: role-policy-মিথ্যা-ফেইলের কারণ — স্যুট একক-সার্ভারে এক-পাসে
+- পরবর্তী-প্রার্থী: ①ডিসমিসে undo-টোস্ট ②live.js paintList data-ts-চুক্তি ③swapQaThread-optimistic ④crx-টাইলে কভার-থাম্বনেইল ⑤role-policy §১৮ qa-html-চেক
+
+---
+Task ID: session125 (cron-r12)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA + বাগ-ফিক্স/ফিচার + union-rebase + push
+
+## Current Project Status / Assessment
+- origin/main 9390875 → 7ad5fb3 (প্যারালাল session123-crx/session124-ইনস্ট্যান্ট-কমেন্ট push) — আমার রাউন্ড মাঝপথে সেগুলোর সাথে union-rebase
+- QA-বেসলাইন বাগ-শূন্য (১৮-রুট + কনসোল-সুইপ) — তাই রোডম্যাপ-ফিচার-রাউন্ড + কোড-অডিটে লুকানো-বাগ-শিকার
+
+## Goals / Completed / Verification
+- 🚨 বাগফিক্স: DELETE /api/comments/:id-এর দ্বৈত-হ্যান্ডলার (session105-এক-লেভেল জয়ী, session104-BFS জীবাশ্ম) — রিপ্লাই-অব-রিপ্লাই-অনাথ-রো; BFS-মার্জ + জীবাশ্ম-অপসারণ, রেসপন্স-চুক্তি অক্ষুণ্ণ
+- ফিচার: ① ডিসমিস-আন্ডু-টোস্ট (restore-API + data-n-চুক্তি ×৩-সারফেস + ৭সে-স্থগিত-রিলোড) ② hex-র্যাচেট-গার্ড (session113-⑤; প্রথম-প্রয়োগেই parallel-#fff ×২ ধরা) ③ paintList data-n+data-ts-প্যারিটি ④ crx-ক্যানোনিকলে deterministic-ফলব্যাক-পোর্ট
+- যাচাই: role-policy ১৪৭/১৪৭ ✓ cursor ২৬/২৬ ✓ guard ✓ E2E (undo ×৩-সারফেস+DB-সত্য, crx-থাম্ব, 390px-০, কনসোল-০) ✓ টেস্ট-ডেটা-ক্লিনআপ ✓
+
+## Unresolved Issues / Risks / Next Priorities
+- transport-strip দ্বিতীয়-বার প্রমাণিত (টেস্ট-ব্লক heredoc→write-এ truncated-duplicate) — bash -n বিসেক্ট বাধ্যতামূলক
+- rebase-দ্বি-ফেজ: conflict-এ stage-2=নতুন-origin — "theirs"-গ্রহণের আগে মার্কার-ক্লাস grep-যাচাই
+- র্যাচেট-বেসলাইন ধীরে-ধীরে নামাতে হবে (admin.css-৪২৬ সর্বোচ্চ); data-cover-এ /img/cover/-গার্ড-প্রস্তাব
+- পরবর্তী: dropdown reltime-রি-পেইন্ট · og-default-বিরোধী-গার্ড · র্যাচেট-হ্রাস
 
 **union-নোট (127): উপরে সমান্তরাল-এজেন্টদের session124/125/126-এন্ট্রি; আমার-এন্ট্রি 124→127-রিলেবেলড (max+1 রীতি)।**
-
 Task ID: session127 (cron webDevReview রাউন্ড — origin/main @ 1a3e459)
 Agent: Z.ai Agent (webDevReview)
 Task: অবস্থা-যাচাই + agent-browser QA → ফেজ-স্টেবল → ফিচার-রাউন্ড: QA-উত্তর-পাথে optimistic-insert (session116-অবশিষ্ট) + QA-থ্রেড-স্টাইল-পলিশ + tokens.css-হেক্স-স্ক্যান-গার্ড (session113-⑤) + push
-
-Work Log:
 - QA-ফার্স্ট: ১৭-রুট স্মোক + role-policy 131/131 (RP_PORT) + cursor 25/25 (BASE=argv) + guard ✓ ব্রাউজার-ম্যাট্রিক্স কনসোল-০/390px-০ → ফেজ-স্টেবল → ফিচার-রাউন্ড
 - ফিচার ×৩: ① insertOptimistic-QA-ব্রাঞ্চ (.qa-answers-list — slot-র‍্যাপার+empty-রিমুভ+parent-nest; session116-অবশিষ্ট সমাপ্ত) ② shared.css session127-পলিশ-ব্লক (qaOptIn127+ring-flash+focus-within) ③ tokensHexGuard (ক্রস-লাইন-কমেন্ট-সচেতন; নেগেটিভ-প্রোব-প্রমাণিত)
 - 🚨 নতুন-গোটচা-যুগল PLANS-এ নথিভুক্ত: fetch-patch-গ্লোবাল-ওভাররাইট-রিকার্শন (ভান-করা-ফিচার-ব্যর্থতা; IIFE-ক্লোজার-capture-রীতি) + স্ট্যাটিক-এডিট→AV-রিস্টার্ট-চুক্তি (immutable-ক্যাশ; transferSize-০-চেক)
 - E2E-প্রমাণ: উত্তর firstFresh=80ms + total-তাৎক্ষণিক; রিপ্লায় (ctrl+enter) firstFresh=161ms; রিকনসাইল-ক্যানোনিকাল ✓ অটো-গ্রো ✓ ক্লিনআপ ৬/৬ ✓ 390px-০ ✓ কনসোল-০ ✓ রিগ্রেশন ১৩১+২৫+guard ✓
 - ডকস: PLANS (intent+cross-agent) + PROJECT + worklog ×২
-
-Stage Summary:
 - QA-পেজে উত্তর/রিপ্লাই এখন ~৮০ms-এ দৃশ্যমান (৩-সারফেস-অপটিমিস্টিক-চুক্তি সম্পূর্ণ); tokens.css গার্ড-লকড; session113-③ বকেয়া-নয়-নোট (গ্লোবাল-ইঞ্জিনে পূর্ব-বিদ্যমান)
-- পরের-এজেন্ট: session125/126-সমান্তরাল-ল্যান্ডের পরে — **session128 থেকে** — reconcile-flash-মসৃণকরণ / crx-'শেষ-পড়া'-পিন / লাইভ-Turso-রিসেট (টোকেন-ধারী)
-
----
+- পরের-এজেন্ট: session129/126-সমান্তরাল-ল্যান্ডের পরে — **session128 থেকে** — reconcile-flash-মসৃণকরণ / crx-'শেষ-পড়া'-পিন / লাইভ-Turso-রিসেট (টোকেন-ধারী)
 Task ID: session128 (push-সমাপ্তি — ত্রি-রাউন্ড-রেস: 124→127→128-রিলেবেল)
 Agent: Z.ai Agent (webDevReview)
 Task: session128-ফিচার-রাউন্ডের push — সমান্তরাল-এজেন্ট session124/125/126/127-ল্যান্ডের সাথে দুই-দফা rebase-ইউনিয়ন + পোস্ট-ইউনিয়ন-যাচাই
-
-Work Log:
 - push-রেস ×২: ① rebase-১ (৫-কমিট: canonical-insert 7ad5fb3 + qa-নেস্ট-পলিশ + paintList-মিরর/audit:views) — comment-tools.js/shared.css/PLANS/PROJECT/worklog×২ কনফ্লিক্ট ইউনিয়ন-সমাধান; ② rebase-২ (220b53d docs-session127 — চতুর্থ-স্বাধীন QA-optimistic-প্রচেষ্টার প্রত্যাহার-নোট) — ডক-কনফ্লিক্ট ×২; লেবেল 124→127→128 (দুই-দফা max+1)
-- ইউনিয়ন-সিদ্ধান্ত: ① আমার insertOptimistic-QA-ব্রাঞ্চ fallback-পথে রক্ষিত (7ad5fb3-canonical-লেখকের "অনন্য-রক্ষিত"-নোট + fallback-সম্পূর্ণতা; session125/220b53d-প্রত্যাহার-রেখার বিপরীতে — বিতর্ক PLANS-union-নোট-২-এ ডকুমেন্টেড) ② session125-এর :has(.opt-fresh)-রুল বাদ (আমার direct-class-রুলের ডুপ্লিকেট + :has()-নিষেধাজ্ঞা) ③ tokensHexGuard অনন্য-ল্যান্ডড (session113-⑤)
+- ইউনিয়ন-সিদ্ধান্ত: ① আমার insertOptimistic-QA-ব্রাঞ্চ fallback-পথে রক্ষিত (7ad5fb3-canonical-লেখকের "অনন্য-রক্ষিত"-নোট + fallback-সম্পূর্ণতা; session129/220b53d-প্রত্যাহার-রেখার বিপরীতে — বিতর্ক PLANS-union-নোট-২-এ ডকুমেন্টেড) ② session129-এর :has(.opt-fresh)-রুল বাদ (আমার direct-class-রুলের ডুপ্লিকেট + :has()-নিষেধাজ্ঞা) ③ tokensHexGuard অনন্য-ল্যান্ডড (session113-⑤)
 - পোস্ট-ইউনিয়ন-যাচাই: role-policy 131/131 + cursor 25/25 + guard + audit:views (96-ejs-পরিষ্কার) + brace-০ ✓ ব্রাউজার-E2E মার্জড-কোডে: canonical-পাথ slots ১→২ + total-সিঙ্ক + answer-19-অ্যাঙ্কর + **qaFetchCalls=0** (রিফেচ-শূন্য) ✓ ক্লিনআপ ✓ 390px-০ ✓ কনসোল-০ ✓
 - পুশ: 220b53d..1b200cd ✓ পোস্ট-পুশ ৬-রুট-স্মোক ২০০ ✓
-
-Stage Summary:
 - ল্যান্ডেড: QA-ফলব্যাক-optimistic-ব্রাঞ্চ + session128-CSS-পলিশ (qaOptIn128/ring/focus-within) + tokensHexGuard — canonical-প্রাইমারি (তাদের) + fallback (আমার) সহাবস্থান, ডুপ্লিকেশন-শূন্য
 - **পরের-এজেন্ট: session129 থেকে** — PLANS-union-নোট-২-এ ফলব্যাক-ব্রাঞ্চ-বিতর্ক-সিদ্ধান্ত ডকুমেন্টেড
-
