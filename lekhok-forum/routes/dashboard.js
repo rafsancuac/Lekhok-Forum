@@ -954,6 +954,68 @@ router.post('/api/messages/conv/:id/mute', ensureAuth, async (req, res) => {
   res.json({ ok: true, muted: !!next });
 });
 
+// (ছ) সেশন ৯২ (রোডম্যাপ C4/১২): শেয়ার্ড-মিডিয়া ফিড — ডিটেইলস-প্যানেলের
+// ছবি/ফাইল/লিংক-ট্যাব লাইভ-লোড করে (পেজ-লোডে স্টেল হয় না)।
+// শ্রেণিবিভাগ: file_url-ইমেজ → images; বাকি সংযুক্তি → files; বডিতে http(s)-লিংক → links।
+router.get('/api/messages/conv/:id/media', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.params.id, 10);
+  if (!convId) return res.status(400).json({ ok: false, error: 'invalid' });
+  const conv = await convAccess(convId, me);
+  if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+
+  const rows = await db.prepare(
+    `SELECT m.id, m.body, m.file_url, m.file_name, m.created_at, u.full_name AS sender_name
+     FROM messages m JOIN users u ON u.id = m.sender_id
+     WHERE m.conversation_id = ? AND (m.file_url IS NOT NULL AND m.file_url != '') 
+     ORDER BY m.id DESC LIMIT 90`
+  ).all(convId);
+
+  const isImg = (u) => /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(String(u || ''));
+  const isAud = (u) => /\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i.test(String(u || ''));
+  const URL_RE = /https?:\/\/[^\s<>"')\]]+/gi;
+
+  const images = [];
+  const voice = [];
+  const files = [];
+  const seen = new Set();
+  for (const m of rows) {
+    const item = { id: m.id, url: m.file_url, name: m.file_name || m.file_url.split('/').pop() || 'ফাইল', by: m.sender_name, at: m.created_at };
+    if (isImg(m.file_url)) images.push(item);
+    else if (isAud(m.file_url)) voice.push(item);
+    else { if (!seen.has(m.file_url)) { seen.add(m.file_url); files.push(item); } }
+  }
+
+  // লিংক: ফাইল-বিহীন বার্তার বডি থেকে URL (শেষ ১২০ বার্তা স্ক্যান)
+  const linkRows = await db.prepare(
+    `SELECT m.id, m.body, m.created_at, u.full_name AS sender_name
+     FROM messages m JOIN users u ON u.id = m.sender_id
+     WHERE m.conversation_id = ? AND (m.file_url IS NULL OR m.file_url = '') AND m.body LIKE '%http%'
+     ORDER BY m.id DESC LIMIT 120`
+  ).all(convId);
+  const links = [];
+  const seenLink = new Set();
+  for (const m of linkRows) {
+    const matches = String(m.body || '').match(URL_RE);
+    if (!matches) continue;
+    for (const raw of matches) {
+      const url = raw.replace(/[.,;!?]+$/, '');
+      let host = url;
+      try { host = new URL(url).host; } catch (e) { continue; }
+      const key = host + new URL(url).pathname;
+      if (seenLink.has(key)) continue;
+      seenLink.add(key);
+      // প্রিভিউ-টেক্সট: URL-ছাড়া বডির প্রথম লাইন, না থাকলে host
+      const text = String(m.body || '').replace(URL_RE, '').trim().replace(/\s+/g, ' ').slice(0, 80);
+      links.push({ id: m.id, url, host, text, by: m.sender_name, at: m.created_at });
+      break; // প্রতি-বার্তায় প্রথম লিংক
+    }
+    if (links.length >= 40) break;
+  }
+
+  res.json({ ok: true, images: images.slice(0, 60), voice: voice.slice(0, 24), files: files.slice(0, 40), links });
+});
+
 // (চ) আনসেন্ড — নিজের মেসেজ সবার জন্য মুছুন (1:1 + গ্রুপ এক এন্ডপয়েন্টে)
 router.post('/api/messages/:id/delete', ensureAuth, async (req, res) => {
   const me = req.session.user.id;

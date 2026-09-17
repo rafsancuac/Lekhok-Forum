@@ -2,14 +2,21 @@
  * ক্যাশ-স্ট্র্যাটেজি:
  *   /assets/*        → CacheFirst (immutable, AV-হ্যাশ-বাস্টেড)
  *   /uploads/*       → StaleWhileRevalidate (কনটেন্ট-অ্যাড্রেসড)
- *   HTML-নেভিগেশন    → NetworkFirst → অফলাইন-ফলব্যাক (offline.html)
+ *   HTML-নেভিগেশন    → নেটওয়ার্ক-অনলি → অফলাইন-ফলব্যাক (offline.html)
  *   /api/*           → নেটওয়ার্ক-অনলি (কখনো ক্যাশ নয় — লাইভ-ডেটা)
+ *
+ * সেশন ৯২ প্রাইভেসি-ফিক্স: HTML কখনো ক্যাশ হয় না। আগের ব্ল্যাকলিস্ট-রেজেক্স
+ * (admin|dashboard|messages…) /me ও /profile/:username ধরতে পারেনি → ব্যক্তিগত
+ * HTML (হেডারে ইউজার-নাম, মালিক-কন্ট্রোল, বুকমার্ক-স্টেট) SW-ক্যাশে জমত → একই
+ * ব্রাউজারে ভিন্ন-অ্যাকাউন্ট/লগআউট-অবস্থায় স্টেল-পার্সোনালাইজড পেজ দেখাত।
+ * সব HTML-পেজ এখন নেটওয়ার্ক-অনলি; অফলাইনে styled offline.html ফলব্যাক।
+ *
  * স্যান্ডবক্স-নোট: গেটওয়ে-কুয়েরি (?XTransformPort=…) URL-এর অংশ — কী হিসেবে
  * সংরক্ষিত হয়, তাই ভিন্ন-পোর্ট-কী আলাদা ক্যাশ-এন্ট্রি (এলাকার-বাইরে কোনো নষ্ট নেই)।
  */
 'use strict';
 
-var CACHE_VERSION = 'lekhok-shell-v1';
+var CACHE_VERSION = 'lekhok-shell-v2';
 
 /* স্যান্ডবক্স-সচেতনতা: SW-স্ক্রিপ্ট URL-এ XTransformPort থাকলে (গেটওয়ে-প্রিভিউ)
  * প্রি-ক্যাশ-ও অফলাইন-ফলব্যাক-URL-এ সেই-কী যোগ করতে হয় — নাহলে গেটওয়ে
@@ -111,25 +118,16 @@ self.addEventListener('fetch', function (e) {
       fetch(req).then(function (resp) {
         // ব্যাকএন্ড-মৃত/অস্বাভাবিক-গেটওয়ে-অবস্থা (৫০২-৫০৪) → অফলাইন-শেল দেখাও
         if (resp && (resp.status === 502 || resp.status === 503 || resp.status === 504)) {
-          return caches.match(req).then(function (hit) {
-            if (hit) return hit;
-            return caches.match(OFFLINE_URL).then(function (off) {
-              return off || resp;
-            });
+          return caches.match(OFFLINE_URL).then(function (off) {
+            return off || resp;
           });
         }
-        // লগইন/ড্যাশবোর্ড-জাতীয় ব্যক্তিগত-পেজ ক্যাশ নয়; পাবলিক-পেজ শেল ক্যাশ
-        if (resp && resp.ok && !/\/(admin|moderator|dashboard|settings|messages|login|register|claim|notifications|bookmarks|complaints)\b/.test(path)) {
-          var clone = resp.clone();
-          caches.open(CACHE_VERSION).then(function (c) { c.put(req, clone); });
-        }
+        // HTML কখনো ক্যাশ হয় না (সেশন ৯২ প্রাইভেসি-ফিক্স — ব্যক্তিগত-পেজ-লিক বন্ধ)
         return resp;
       }).catch(function () {
-        return caches.match(req).then(function (hit) {
-          return hit || caches.match(OFFLINE_URL).then(function (off) {
-            return off || new Response('<h1>অফলাইন</h1><p>ইন্টারনেট-সংযোগ নেই।</p>',
-              { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
-          });
+        return caches.match(OFFLINE_URL).then(function (off) {
+          return off || new Response('<h1>অফলাইন</h1><p>ইন্টারনেট-সংযোগ নেই।</p>',
+            { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         });
       })
     );

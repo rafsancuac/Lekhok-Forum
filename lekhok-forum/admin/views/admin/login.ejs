@@ -103,6 +103,8 @@
     </div>
     <% if (error) { %><div class="error"><i class="fas fa-exclamation-circle"></i> <%- error %></div><% } %>
     <form method="POST">
+      <%# সেশন ৯২: সার্ভার-রেন্ডার্ড CSRF (নো-জেএস ক্লায়েন্ট/পাসওয়ার্ড-ম্যানেজার) — JS-ইনজেক্টর ফলব্যাক থাকছেই %>
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="form-group">
         <label for="username">ব্যবহারকারী নাম</label>
         <div class="input-wrap">

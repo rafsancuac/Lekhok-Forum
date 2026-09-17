@@ -385,11 +385,11 @@
         </div>
         <%# ── সেশন ৯২: শেয়ার্ড কনটেন্ট ট্যাব (মিডিয়া / ফাইল / লিংক — রোডম্যাপ আইটেম ১২) ── %>
         <div class="md-section md-shared">
-          <h4><i class="fas fa-photo-film"></i> শেয়ার করা কনটেন্ট</h4>
-          <div class="md-tabs" role="tablist" id="mdTabs">
-            <button type="button" class="md-tab is-active" role="tab" aria-selected="true" data-mtab="media">মিডিয়া</button>
-            <button type="button" class="md-tab" role="tab" aria-selected="false" data-mtab="files">ফাইল</button>
-            <button type="button" class="md-tab" role="tab" aria-selected="false" data-mtab="links">লিংক</button>
+          <h4><i class="fas fa-photo-film"></i> শেয়ার করা কনটেন্ট <button type="button" class="md-media-refresh" id="mdMediaRefresh" title="রিফ্রেশ করুন" aria-label="কনটেন্ট রিফ্রেশ করুন"><i class="fas fa-rotate-right"></i></button></h4>
+          <div class="md-tabs" role="tablist" id="mdTabs" aria-label="শেয়ার করা কনটেন্ট">
+            <button type="button" class="md-tab is-active" role="tab" aria-selected="true" data-mtab="media">মিডিয়া <span class="md-tab-count"><%= (_sharedImgs.length + _sharedVn.length) || '' %></span></button>
+            <button type="button" class="md-tab" role="tab" aria-selected="false" data-mtab="files">ফাইল <span class="md-tab-count"><%= _sharedDocs.length || '' %></span></button>
+            <button type="button" class="md-tab" role="tab" aria-selected="false" data-mtab="links">লিংক <span class="md-tab-count"><%= _sharedLinks.length || '' %></span></button>
           </div>
           <div class="md-tabpane" data-pane="media">
             <% if (_sharedImgs.length || _sharedVn.length) { %>
@@ -561,6 +561,106 @@
       // <1024px-এ প্যানেল দেখানো বন্ধ — CSS-ও জোর করে লুকায়
       if (window.innerWidth < 1024) { fbDetails.hidden = true; fbShell.classList.remove('has-details'); }
     }
+
+    // ── সেশন ৯২(b): শেয়ার্ড-কনটেন্ট লাইভ-রিফ্রেশ — ডিটেইলস খুললে/রিফ্রেশ-বাটনে
+    // /api/messages/conv/:id/media থেকে ছবি/ভয়েস/ফাইল/লিংক পুনঃরেন্ডার
+    // (সার্ভার-রেন্ডারড প্রাথমিক অবস্থার উপরে লাইভ-সিঙ্ক; ট্যাব-সুইচিং নিচের mdTabs-ব্লক) ──
+    (function initSharedRefresh() {
+      const CONV_ID = <%= conv.id %>;
+      const section = document.querySelector('.md-shared');
+      if (!section || !CONV_ID) return;
+
+      const panes = {
+        media: section.querySelector('.md-tabpane[data-pane="media"]'),
+        files: section.querySelector('.md-tabpane[data-pane="files"]'),
+        links: section.querySelector('.md-tabpane[data-pane="links"]')
+      };
+      const counts = {
+        media: section.querySelector('.md-tab[data-mtab="media"] .md-tab-count'),
+        files: section.querySelector('.md-tab[data-mtab="files"] .md-tab-count'),
+        links: section.querySelector('.md-tab[data-mtab="links"] .md-tab-count')
+      };
+      const refreshBtn = document.getElementById('mdMediaRefresh');
+      let inFlight = null;
+
+      function esc(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function skeleton() {
+        return '<div class="md-media md-skeleton"><span></span><span></span><span></span></div>';
+      }
+      /* ভয়েস-রো — সার্ভার-রেন্ডারড মার্কআপের হুবহু রেপ্লিকা (seeded-waveform সহ);
+         প্লে-ব্যবস্থাপনা .bubble-voice ডেলিগেশনেই ঘটে (ডাইনামিক-নোড সাপোর্টেড) */
+      function voiceRow(vn) {
+        let x = 11, spans = '';
+        for (let i = 0; i < 16; i++) { x = (x * 29 + 13) % 89; spans += '<span style="--h:' + (24 + (x % 72)) + '%"></span>'; }
+        return '<div class="bubble-voice md-vn" data-src="' + esc(vn.url) + '">' +
+          '<button type="button" class="bv-play" aria-label="প্লে করুন"><i class="fas fa-play"></i></button>' +
+          '<div class="bv-wave" aria-hidden="true">' + spans + '</div>' +
+          '<span class="bv-time">\u09E6:\u09E6\u09E6</span></div>';
+      }
+      function renderMedia(images, voice) {
+        let h = '';
+        if (images.length) {
+          h += '<div class="md-media">' + images.map(function (im) {
+            return '<a href="' + esc(im.url) + '" target="_blank" rel="noopener" title="' + esc(im.name) + '">' +
+              '<img loading="lazy" src="' + esc(im.url) + '" alt="' + esc(im.name) + '" /></a>';
+          }).join('') + '</div>';
+        }
+        if (voice.length) {
+          h += '<div class="md-vn-list">' + voice.map(voiceRow).join('') + '</div>';
+        }
+        return h || '<div class="md-media-empty">এই কথোপকথনে এখনো কোনো ছবি বা ভয়েস শেয়ার করা হয়নি।</div>';
+      }
+      function renderFiles(files) {
+        if (!files.length) return '<div class="md-media-empty">কোনো ফাইল শেয়ার করা হয়নি।</div>';
+        return '<div class="md-files">' + files.map(function (dcm) {
+          return '<a class="md-file" href="' + esc(dcm.url) + '" download="' + esc(dcm.name || 'file') + '" target="_blank" rel="noopener">' +
+            '<span class="mdf-ic"><i class="fas fa-file"></i></span>' +
+            '<span class="mdf-body"><span class="mdf-name">' + esc(dcm.name || 'ফাইল') + '</span><span class="mdf-host">সংযুক্তি</span></span>' +
+            '<i class="fas fa-download mdf-dl"></i></a>';
+        }).join('') + '</div>';
+      }
+      function renderLinks(links) {
+        if (!links.length) return '<div class="md-media-empty">কোনো লিংক শেয়ার করা হয়নি।</div>';
+        return '<div class="md-links">' + links.map(function (l) {
+          return '<a class="md-linkrow" href="' + esc(l.url) + '" target="_blank" rel="noopener nofollow">' +
+            '<span class="mdl-ic"><i class="fas fa-link"></i></span>' +
+            '<span class="mdl-body"><span class="mdl-host">' + esc(l.host) + '</span><span class="mdl-url">' + esc(l.url) + '</span></span></a>';
+        }).join('') + '</div>';
+      }
+      function paint(d) {
+        const images = d.images || [], voice = d.voice || [], files = d.files || [], links = d.links || [];
+        panes.media.innerHTML = renderMedia(images, voice);
+        panes.files.innerHTML = renderFiles(files);
+        panes.links.innerHTML = renderLinks(links);
+        if (counts.media) counts.media.textContent = (images.length + voice.length) || '';
+        if (counts.files) counts.files.textContent = files.length || '';
+        if (counts.links) counts.links.textContent = links.length || '';
+      }
+      function fetchShared() {
+        if (inFlight) inFlight.abort();
+        const ctrl = ('AbortController' in window) ? new AbortController() : null;
+        inFlight = ctrl;
+        panes.media.innerHTML = skeleton();
+        section.classList.add('is-loading');
+        fetch('/api/messages/conv/' + CONV_ID + '/media', {
+          headers: { 'Accept': 'application/json' },
+          signal: ctrl ? ctrl.signal : undefined
+        })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)); })
+          .then(function (d) { if (d && d.ok) paint(d); })
+          .catch(function () { /* ব্যর্থ হলে সার্ভার-রেন্ডারড অবস্থায়ই থাক */ })
+          .finally(function () { section.classList.remove('is-loading'); inFlight = null; });
+      }
+      if (refreshBtn) refreshBtn.addEventListener('click', fetchShared);
+      if (fbInfoBtn) fbInfoBtn.addEventListener('click', function () {
+        if (!fbDetails.hidden) fetchShared();
+      });
+      if (!fbDetails.hidden) fetchShared();
+    })();
 
     // মোবাইল: ব্যাক-বাটন → লিস্ট দেখাও
     document.getElementById('fbBackBtn')?.addEventListener('click', () => {

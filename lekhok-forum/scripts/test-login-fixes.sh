@@ -1,5 +1,20 @@
 #!/bin/bash
 # E2E test: admin/moderator login flows + scope fixes (v2.6)
+#
+# ⚠️ সেশন ৯২: DEPRECATED — এই সুইটের প্রত্যাশাগুলো পুরনো-নীতির (session ≤ ৮২):
+#   ① স্টাফ (admin/moderator) /login দিয়ে লগইন করতে পারত — এখন স্টাফ-পোর্টাল
+#      (/admin/login) বাধ্যতামূলক (session ৮৩ role-policy — নিরাপত্তা-নির্দেশ)।
+#   ② CSRF-টোকেন meta-tag থেকে নেয় — login পেজ এখন সার্ভার-রেন্ডার্ড hidden
+#      input ব্যবহার করে (session ৫৭/৭৬ hardening)।
+# ফলে সুইটটি সবসময় false-fail দেয়। বর্তমান অথরাইটেটিভ সুইট:
+#   scripts/test-role-policy.sh  (৯৯ চেক — পোর্টাল-বিভাজন + স্কোপ + role-gate সহ)
+# এই ফাইল রাখা হয়েছে ইতিহাস-রেফারেন্স হিসেবে; চালানোর দরকার নেই।
+echo "✗ DEPRECATED — পুরনো-নীতির প্রত্যাশা (staff-on-/login, meta-csrf)।"
+echo "  বর্তমান সুইট: bash scripts/test-role-policy.sh"
+exit 0
+
+# ── নিচের পুরনো-বডি আর চালানো হয় না ──
+exit 0
 # Run from the lekhok-forum repo root (needs node_modules for sql.js lookup):
 #   node server.js &   # or use scripts/run-all-tests.sh
 #   bash scripts/test-login-fixes.sh
