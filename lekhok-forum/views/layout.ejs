@@ -285,6 +285,9 @@
   <button type="button" class="back-to-top" id="backToTop" aria-label="উপরে ফিরে যান" title="উপরে ফিরে যান"><i class="fas fa-chevron-up"></i></button>
 
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <%# সেশন ১০৫: FB-স্টাইল রিঅ্যাক্টরস-মডাল ("কে কোন প্রতিক্রিয়া দিয়েছে") — গ্লোবাল শেল + JS %>
+  <%- include('partials/reactors-modal') %>
+  <script src="/assets/js/reactors-modal.js?v=<%= AV %>" defer></script>
   <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <%# সেশন ৯৭: চিত্রশালা-ইন্টারঅ্যাকশন (ভিউ-টগল/ফিল্টার/লাইটবক্স) — শুধু /gallery-তে %>

@@ -1,12 +1,25 @@
 <%
   // Shared reactions + share + bookmark actions bar.
-  // Params: targetId, targetType ('post'|'comment'), counts {like..sad}, mine, link,
+  // Params: targetId, targetType ('post'|'comment'), counts {like..angry}, mine, link,
   //         bookmarked (optional bool), showBookmark (optional, default true),
   //         commentCount / shareCount / viewCount (optional numbers — summary strip-এ দেখায়)
-  // সেশন ৮৭ (মার্জ-সেফ সংযোজন): summary-তে .reaction-summary/.rs-emojis/.rs-count
-  // ডুয়াল-ক্লাস যোগ — main.js-এর hold+slide রিঅ্যাকশন-আপডেটার এখন summary লাইভ-আপডেট
-  // করতে পারে (আগে ক্লাস-মিসম্যাচে কোনো পেজেই summary আপডেট হত না); display:contents
-  // রাখায় বিদ্যমান পেজের ভিজ্যুয়াল অপরিবর্তিত। viewCount দিলে 'পঠিত' স্ট্যাট দেখায়।
+  //
+  // ── সেশন ১০৫ (FB-২০২৪ পোস্ট-ফুটার সম্পূর্ণ-আপগ্রেড — ইউজার-স্পেসিফিকেশন) ──
+  // ① মেট্রিক-রো: বামে ওভারল্যাপিং ইমোজি-সার্কেল (FB-হুবহু) + বোল্ড মোট-কাউন্ট —
+  //    ক্লিকে রিঅ্যাক্টরস-মডাল (কে কোন রিঅ্যাক্ট দিয়েছে → ট্যাব-ফিল্টার → প্রোফাইল-লিংক;
+  //    reactors-modal.js + GET /api/reactions/:type/:id/reactors)
+  // ② ডানে কমেন্ট-কাউন্ট + শেয়ার-কাউন্ট পাশাপাশি — এখন সর্বদা দৃশ্যমান (০ হলেও,
+  //    FB-রেফারেন্স লেআউট: "2 💬 20 ↪️")
+  // ③ অ্যাকশন-রো: লাইক (হোভার-প্যালেট) · মন্তব্য · শেয়ার · সেভ — আগের মতোই
+  // ④ শেয়ার-বাটন এখন একটিই (share-trigger) — ক্লিকে ঠিক ৩টি অপশনের মেনু:
+  //    টাইমলাইনে শেয়ার করুন / মেসেজে পাঠান / পোস্টের লিংক কপি করুন
+  //    (main.js-এর timeline/user/copy হ্যান্ডলার অপরিবর্তিত; সাবটাইটেলসহ FB-ধাঁচ)
+  // ⑤ ৭ম রিঅ্যাকশন 'রাগ' (angry 😡) — সব-স্তরে (API REACTIONS + প্যালেট + ম্যাপ)
+  // ⑥ আগের share-now এক-ক্লিক-বাটন সরানো হয়েছে — FB-স্পেক: একটিই শেয়ার-বাটন → মেনু
+  //
+  // সেশন ৮৭ (মার্জ-সেফ): summary-তে .reaction-summary/.rs-emojis/.rs-count ডুয়াল-ক্লাস —
+  // main.js-এর hold+slide রিঅ্যাকশন-আপডেটার summary লাইভ-আপডেট করে (অক্ষত রাখুন)।
+  // সেশন ৮৯: .rs-faces ফেসপাইল + lf:reactupdate লাইভ-অ্যাভাটার — অক্ষত।
   if (typeof showBookmark === 'undefined') showBookmark = true;
   if (typeof showShare === 'undefined') showShare = true;
   if (typeof bookmarked === 'undefined') bookmarked = false;
@@ -17,8 +30,8 @@
   // একই কার্ডে .fc-drawer টগল করে (comment-tools.js)। ডিফল্ট-false —
   // article-single/qa-single-এ আগের anchor-আচরণ অপরিবর্তিত।
   if (typeof inlineComments === 'undefined') inlineComments = false;
-  var _meta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
-  var _labels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
+  var _meta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
+  var _labels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ', angry: 'রাগ' };
   var _mine = mine || 'like';
   var _topEmojis = Object.entries(counts || {}).filter(e => e[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => _meta[e[0]]);
   var _total = Object.values(counts || {}).reduce((a, b) => a + (b || 0), 0);
@@ -28,11 +41,11 @@
     <% if (targetType === 'post') { %>
     <%# সেশন ৮৭: summary এখন actions-bar-এর ভেতরে (flex-basis:100% → নিজস্ব-রো) —
         main.js-এর আপডেটার t.parentElement(=.actions-bar)-এর ভেতরে .reaction-summary
-        খোঁজে; বাইরে থাকায় আগে কোনো পেজেই summary লাইভ-আপডেট হত না (ক্লাস-মিসম্যাচ
-        + ডম-পজিশন দুটোই ঠিক)। সবসময় রেন্ডার (০-তে খালি-অদৃশ্য) — ০→১-এও কাজ করে। %>
+        খোঁজে; সেশন ১০৫: .reaction-summary এখন <button> — ক্লিকে রিঅ্যাক্টরস-মডাল
+        (data-reactors-for/type দেখে reactors-modal.js); লাইভ-আপডেট-শৃঙ্খল অক্ষত। %>
     <div class="actions-summary">
       <span class="as-left">
-        <span class="reaction-summary"><%# সেশন ৮৯: FB-২০২৪ ফেসপাইল — রিঅ্যাক্টরদের মিনি-অ্যাভাটার (main.js lf:reactupdate-এ লাইভ-আপডেট) %><span class="rs-faces"<% if (!reactorFaces.length) { %> hidden<% } %>><% reactorFaces.forEach(function (f) { %><img loading="lazy" decoding="async" class="rsf-av" src="<%= f.avatar_url || '/avatar/' + f.id %>" alt="" data-uid="<%= f.id %>" title="<%= (f.pen_name || f.full_name || '') %>" onerror="this.style.display='none'"><% }); %></span><span class="as-emojis rs-emojis"><% if (_total > 0) { _topEmojis.forEach(function (em) { %><span><%= em %></span><% }); } %></span><span class="as-count rs-count"><% if (_total > 0) { %><%= _total %><% } %></span></span>
+        <button type="button" class="reaction-summary as-click" data-reactors-for="<%= targetId %>" data-reactors-type="<%= targetType %>" title="কে কোন প্রতিক্রিয়া দিয়েছে দেখুন" aria-haspopup="dialog"><span class="rs-faces"<% if (!reactorFaces.length) { %> hidden<% } %>><% reactorFaces.forEach(function (f) { %><img loading="lazy" decoding="async" class="rsf-av" src="<%= f.avatar_url || '/avatar/' + f.id %>" alt="" data-uid="<%= f.id %>" title="<%= (f.pen_name || f.full_name || '') %>" onerror="this.style.display='none'"><% }); %></span><span class="as-emojis rs-emojis"><% if (_total > 0) { _topEmojis.forEach(function (em) { %><span><%= em %></span><% }); } %></span><span class="as-count rs-count"><% if (_total > 0) { %><%= _total %><% } %></span></button>
       </span>
       <span class="as-right">
         <% if (inlineComments) { %>
@@ -40,7 +53,8 @@
         <% } else { %>
         <a href="<%= link %>#comments" class="as-stat" title="মন্তব্য"><span><%= commentCount || 0 %></span><i class="far fa-comment"></i></a>
         <% } %>
-        <% if (shareCount > 0) { %><span class="as-stat" title="শেয়ার"><span><%= shareCount %></span><i class="fas fa-share"></i></span><% } %>
+        <%# সেশন ১০৫: শেয়ার-কাউন্ট সর্বদা (FB-রেফারেন্স: 20 ↪️) %>
+        <span class="as-stat" title="শেয়ার"><span><%= shareCount || 0 %></span><i class="fas fa-share"></i></span>
         <% if (typeof viewCount !== 'undefined' && viewCount !== null) { %><span class="as-stat" title="পঠিত"><span><%= viewCount %></span><i class="far fa-eye"></i></span><% } %>
       </span>
     </div>
@@ -65,25 +79,32 @@
     <% } %>
 
     <% if (showShare) { %>
+    <%# সেশন ১০৫: FB-স্পেক — একটিই শেয়ার-বাটন, ক্লিকে ঠিক ৩টি অপশনসমৃদ্ধ মেনু
+        (টাইমলাইন / মেসেজে পাঠান / লিংক কপি)। সাব-টেক্সটসহ স্মুথ ড্রপডাউন। %>
     <div class="share-wrap">
-      <% if (typeof user !== 'undefined' && user && targetType === 'post') { %>
-      <button type="button" class="reaction-btn share-now" data-share-post="<%= targetId %>" title="এক ক্লিকে নিজের টাইমলাইনে শেয়ার"><i class="fas fa-share"></i> শেয়ার</button>
-      <button type="button" class="reaction-btn share-trigger share-caret" aria-label="আরও শেয়ার অপশন"><i class="fas fa-caret-down"></i></button>
-      <% } else { %>
-      <button type="button" class="reaction-btn share-trigger"><i class="far fa-share-square"></i> শেয়ার</button>
-      <% } %>
-      <div class="share-menu" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>" data-share-post="<%= targetType === 'post' ? targetId : '' %>">
+      <button type="button" class="reaction-btn share-trigger" aria-haspopup="menu" title="শেয়ার অপশন">
+        <i class="fas fa-share"></i> <span>শেয়ার</span>
+      </button>
+      <div class="share-menu share-menu--fb" role="menu" data-share-url="<%= typeof link !== 'undefined' ? link : '' %>" data-share-post="<%= targetType === 'post' ? targetId : '' %>">
         <% if (typeof user !== 'undefined' && user && targetType === 'post') { %>
-        <button type="button" data-share="timeline"><i class="fas fa-retweet"></i> নিজের টাইমলাইনে শেয়ার</button>
+        <button type="button" class="smx-item" data-share="timeline" role="menuitem">
+          <span class="smx-ico"><i class="fas fa-retweet"></i></span>
+          <span class="smx-txt"><strong>টাইমলাইনে শেয়ার করুন</strong><small>এখনই আপনার ফিডে প্রকাশ করুন</small></span>
+        </button>
+        <button type="button" class="smx-item" data-share="user" role="menuitem">
+          <span class="smx-ico"><i class="far fa-paper-plane"></i></span>
+          <span class="smx-txt"><strong>মেসেজে পাঠান</strong><small>বন্ধুদের ইনবক্সে ফরোয়ার্ড করুন</small></span>
+        </button>
+        <% } else if (targetType === 'post') { %>
+        <a class="smx-item" href="/login" role="menuitem">
+          <span class="smx-ico"><i class="fas fa-retweet"></i></span>
+          <span class="smx-txt"><strong>টাইমলাইনে শেয়ার করুন</strong><small>শেয়ার করতে লগইন করুন</small></span>
+        </a>
         <% } %>
-        <button type="button" data-share="copy"><i class="fas fa-link"></i> লিংক কপি করুন</button>
-        <a data-share="whatsapp" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-        <a data-share="facebook" target="_blank" rel="noopener"><i class="fab fa-facebook"></i> Facebook</a>
-        <a data-share="telegram" target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i> Telegram</a>
-        <a data-share="x" target="_blank" rel="noopener"><i class="fab fa-x-twitter"></i> X (Twitter)</a>
-        <% if (user) { %>
-        <button type="button" data-share="user"><i class="fas fa-user-friends"></i> ইউজারকে পাঠান</button>
-        <% } %>
+        <button type="button" class="smx-item" data-share="copy" role="menuitem">
+          <span class="smx-ico"><i class="fas fa-link"></i></span>
+          <span class="smx-txt"><strong class="smx-copylabel">পোস্টের লিংক কপি করুন</strong><small>সরাসরি শেয়ার করার জন্য</small></span>
+        </button>
       </div>
     </div>
     <% } %>

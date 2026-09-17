@@ -126,7 +126,9 @@
       <%# ── ৩. মেসনারি ছবি-ভিউ (ডিফল্ট) — ১০৪: পেজ-১ = সর্বশেষ ২৪, বাকি /gallery/more থেকে ── %>
       <div id="galPhotosView" class="gal-photosview" role="tabpanel" aria-label="সব ছবি">
         <div class="gal-masonry" id="galMasonry">
-          <%- include('partials/gallery-cards', { items }) %>
+          <%# সেশন ১০৮: isStaff স্পষ্ট-পাস — EJS-পার্শিয়াল প্যারেন্ট-স্ক্রিপ্টলেট-ভেরিয়েবল
+              দেখে না (শুধু render-locals + পাস-করা-ডেটা); না-হলে প্রচ্ছদ-পিকার রেন্ডারই হত না %>
+          <%- include('partials/gallery-cards', { items, isStaff }) %>
         </div>
         <%# সেশন ১০৪: load-more সেন্টিনেল — gallery.js-এর ইঞ্জিন IntersectionObserver-এ
             /gallery/more ডেকে কার্ডগুলো galMasonry-তে append করে; JS-বিহীনে ফলব্যাক বাটন %>
@@ -152,7 +154,7 @@
       <%# ── ৪. অ্যালবাম ভিউ (ফেসবুক-ধাঁচে কালেকশন) ── %>
       <div id="galAlbumsView" class="gal-albumsview" role="tabpanel" aria-label="অ্যালবাম সমূহ" hidden>
         <div class="gal-albumgrid">
-          <% albumKeys.forEach(cat => { const list = albums[cat]; const cover = list[0]; const previews = list.slice(1, 5); %>
+          <% albumKeys.forEach(cat => { const list = albums[cat]; const customCover = (typeof coverByCat !== 'undefined') && coverByCat && coverByCat[cat]; const cover = (customCover && list.find(g => g.id === customCover)) || list[0]; const previews = list.filter(g => g.id !== cover.id).slice(0, 4); %>
             <article class="gal-album" data-cat="<%= cat %>">
               <button type="button" class="gal-album__open" data-goto-cat="<%= cat %>"
                       aria-label="<%= categoryLabels[cat] || cat %> অ্যালবামের ছবিগুলো দেখুন">
@@ -162,13 +164,14 @@
                     <% previews.forEach(p => { %><img loading="lazy" decoding="async" src="<%= p.image_url %>" alt="" /><% }) %>
                   </span>
                   <span class="gal-album__count"><%= bn(list.length) %> ছবি</span>
+                  <% if (customCover) { %><span class="gal-album__custom" title="অ্যাডমিন-নির্ধারিত প্রচ্ছদ"><i class="fas fa-thumbtack" aria-hidden="true"></i> প্রচ্ছদ</span><% } %>
                   <span class="gal-album__peek" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
                 </span>
                 <span class="gal-album__body">
                   <span class="gal-album__name"><i class="<%= catIcons[cat] || 'fas fa-folder' %>" aria-hidden="true"></i> <%= categoryLabels[cat] || cat %></span>
                   <span class="gal-album__meta">
                     <% if (cover.displayDate) { %><i class="far fa-calendar" aria-hidden="true"></i> <%= cover.displayDate %><% } %>
-                    <span class="gal-album__dot">•</span> সর্বশেষ সংযোজন
+                    <span class="gal-album__dot">•</span> <%= customCover ? 'নির্ধারিত প্রচ্ছদ' : 'সর্বশেষ সংযোজন' %>
                   </span>
                 </span>
               </button>

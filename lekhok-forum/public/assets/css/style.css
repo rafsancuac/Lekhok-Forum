@@ -1578,3 +1578,81 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .notif-item:hover .notif-ico.has-avatar img{transform:scale(1.06)}
 @media (prefers-reduced-motion: reduce){.notif-ico.has-avatar img{transition:none}.notif-item:hover .notif-ico.has-avatar img{transform:none}}
 
+
+/* ════════ সেশন ১০৮ (রিবেজ-ইউনিয়ন): FB-২০২৪ পোস্ট-ফুটার ব্লকগুলো (সেশন-১০৫-ড্রাফ্ট থেকে) ════════ */
+
+/* (১) মেট্রিক-সামারি — ক্লিকেবল ("কে কোন রিঅ্যাক্ট দিয়েছে" মডাল খোলে) */
+.reaction-summary.as-click{cursor:pointer;border-radius:var(--radius-pill);transition:background .18s ease}
+.reaction-summary.as-click:hover{background:rgba(15,23,42,.05)}
+.reaction-summary.as-click:hover .rs-count{text-decoration:underline}
+.reaction-summary.as-click:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.as-emojis span{width:21px;height:21px;font-size:12.5px;background:#fff;border:1px solid rgba(15,23,42,.14);box-shadow:0 1px 2px rgba(0,0,0,.08);margin-right:-5px}
+.as-emojis span:last-child{margin-right:0}
+.actions-summary .rs-count{font-weight:700;color:var(--text,#0f172a)}
+
+/* (২) ৩-অপশন FB-শেয়ার-মেনু (টাইমলাইন / মেসেজে পাঠান / লিংক কপি) */
+.actions-bar .share-menu--fb{min-width:250px;padding:8px;border-radius:12px}
+.share-menu--fb .smx-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:0 0;border:0;padding:10px 12px;border-radius:9px;cursor:pointer;font-family:inherit;transition:background .15s ease;color:var(--text);text-decoration:none}
+.share-menu--fb .smx-item:hover{background:rgba(15,23,42,.06)}
+.share-menu--fb .smx-ico{width:36px;height:36px;border-radius:50%;background:var(--accent-soft,rgba(5,150,105,.1));color:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.share-menu--fb .smx-txt{display:flex;flex-direction:column;min-width:0}
+.share-menu--fb .smx-txt strong{font-size:13.5px;font-weight:700;line-height:1.25}
+.share-menu--fb .smx-txt small{font-size:11.5px;color:var(--text-soft,#65676b);line-height:1.3;margin-top:1px}
+
+/* (৩) রিঅ্যাক্টরস-মডাল — FB-ধাঁচ (ট্যাব-ফিল্টার + প্রোফাইল-লিংক) */
+.rxm-backdrop{position:fixed;inset:0;z-index:210;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;animation:rxmFade .18s ease}
+.rxm-backdrop.is-open{display:flex}
+@keyframes rxmFade{from{opacity:0}to{opacity:1}}
+.rxm-box{background:var(--card,#fff);width:100%;max-width:440px;max-height:min(75vh,560px);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;display:flex;flex-direction:column;animation:rxmPop .22s cubic-bezier(.16,1,.3,1)}
+@keyframes rxmPop{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:none}}
+.rxm-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.rxm-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+.rxm-tabs::-webkit-scrollbar{display:none}
+.rxm-tab{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:var(--radius-pill);border:0;background:0 0;color:var(--text-soft,#65676b);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background .15s ease,color .15s ease}
+.rxm-tab:hover{background:rgba(15,23,42,.06)}
+.rxm-tab.is-active{background:var(--accent-soft,rgba(5,150,105,.12));color:var(--accent)}
+.rxm-tabemoji{font-size:14px}
+.rxm-tabcount{font-weight:700}
+.rxm-close{width:34px;height:34px;border-radius:50%;border:0;background:0 0;color:var(--text-soft,#65676b);font-size:15px;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;transition:background .15s ease}
+.rxm-close:hover{background:rgba(15,23,42,.07)}
+.rxm-body{overflow-y:auto;overscroll-behavior:contain;flex:1;min-height:120px}
+.rxm-list{list-style:none;margin:0;padding:6px 8px}
+.rxm-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 6px;border-radius:10px;transition:background .15s ease}
+.rxm-row:hover{background:rgba(15,23,42,.04)}
+.rxm-user{display:flex;align-items:center;gap:11px;min-width:0;flex:1;color:inherit}
+.rxm-avwrap{position:relative;flex-shrink:0;width:44px;height:44px}
+.rxm-av{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid var(--border);background:var(--surface-alt,rgba(15,23,42,.06))}
+.rxm-badge{position:absolute;bottom:-3px;right:-3px;background:#fff;border:1px solid var(--border);border-radius:50%;width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.rxm-meta{display:flex;flex-direction:column;min-width:0}
+.rxm-name{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rxm-user:hover .rxm-name{text-decoration:underline}
+.rxm-sub{font-size:12px;color:var(--text-soft,#65676b);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rxm-hint{font-size:10.5px;color:var(--text-soft,#65676b);opacity:.75}
+.rxm-profilebtn{flex-shrink:0;padding:7px 14px;border-radius:8px;background:rgba(15,23,42,.06);color:var(--text);font-size:12.5px;font-weight:700;transition:background .15s ease}
+.rxm-profilebtn:hover{background:rgba(15,23,42,.11)}
+.rxm-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:38px 16px;color:var(--text-soft,#65676b);font-size:13.5px;text-align:center}
+.rxm-empty i{font-size:30px;opacity:.5}
+.rxm-loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:34px 16px;color:var(--text-soft,#65676b);font-size:13px}
+.rxm-spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(15,23,42,.15);border-top-color:var(--accent);animation:rxmSpin .7s linear infinite}
+@keyframes rxmSpin{to{transform:rotate(360deg)}}
+.rxm-none{padding:22px 10px;text-align:center;color:var(--text-soft,#65676b);font-size:13px}
+
+@media (max-width:600px){
+  .rxm-box{max-height:80vh;border-radius:14px}
+  .rxm-profilebtn{padding:6px 11px;font-size:12px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .rxm-backdrop,.rxm-box{animation:none}
+  .rxm-spin{animation-duration:1.6s}
+}
+
+/* সেশন-১০৮-ফিক্স: .reaction-summary এখন <button> — ব্রাউজার-ডিফল্ট রিসেট +
+   ০-রিঅ্যাকশনে অদৃশ্য (FB-আচরণ: কেউ রিঅ্যাক্ট না-করলে খালি-পিল নয়) */
+.reaction-summary.as-click{background:transparent;border:0;font-family:inherit}
+.reaction-summary.as-click:has(> .rs-emojis:empty):has(> .rs-count:empty):not(:has(> .rs-faces:not([hidden]))){visibility:hidden;pointer-events:none}
+
+/* সেশন-১০৮-ফিক্স-২: শেয়ার-মেনু উপরের-দিকে খোলে (FB-আচরণ) — না-হলে feed-card-এর
+   overflow:hidden-এ নিচের-দিকে-খোলা মেনু কাটা পড়ে (শুধু ১৮px-স্লিভার দেখা যেত) */
+.actions-bar .share-menu.share-menu--fb{top:auto;bottom:calc(100% + 6px)}
+.actions-bar .share-menu.share-menu--fb.open{display:flex;flex-direction:column}

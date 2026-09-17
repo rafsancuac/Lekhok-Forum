@@ -1,0 +1,27 @@
+<%#
+  সেশন ১০৫: FB-স্টাইল রিঅ্যাক্টরস-মডাল ("কে কোন প্রতিক্রিয়া দিয়েছে")
+  ─ গ্লোবাল শেল — layout.ejs-এ একবারই অন্তর্ভুক্ত; reactors-modal.js চালায়:
+    · .reaction-summary[data-reactors-for]-ক্লিকে খোলে
+    · GET /api/reactions/:type/:id/reactors থেকে তালিকা নেয়
+    · ট্যাব-ফিল্টার [সব · 👍 · ❤️ · …] (শুধু যেগুলোতে কাউন্ট>০)
+    · নামে/প্রোফাইল-বাটনে ক্লিকে /profile/:username
+  ─ EJS-ভেরিয়েবল-নিরপেক্ষ (ভ্যানিলা মার্কআপ) — যে-কোনো পেজে নিরাপদ।
+%>
+<div class="rxm-backdrop" id="rxModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="প্রতিক্রিয়াকারীরা">
+  <div class="rxm-box">
+    <header class="rxm-head">
+      <div class="rxm-tabs" id="rxTabs" role="tablist" aria-label="প্রতিক্রিয়া-ফিল্টার">
+        <button type="button" class="rxm-tab is-active" data-rx-tab="ALL" role="tab" aria-selected="true">সব <span class="rxm-tabcount" id="rxTabAllCount">০</span></button>
+      </div>
+      <button type="button" class="rxm-close" id="rxClose" aria-label="বন্ধ করুন" title="বন্ধ করুন"><i class="fas fa-times"></i></button>
+    </header>
+    <div class="rxm-body" id="rxBody" aria-live="polite">
+      <div class="rxm-empty" id="rxEmpty" hidden>
+        <i class="far fa-smile" aria-hidden="true"></i>
+        <p>এখনো কোনো প্রতিক্রিয়া নেই।</p>
+      </div>
+      <div class="rxm-loading" id="rxLoading" hidden><span class="rxm-spin" aria-hidden="true"></span> লোড হচ্ছে…</div>
+      <ul class="rxm-list" id="rxList"></ul>
+    </div>
+  </div>
+</div>

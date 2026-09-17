@@ -434,3 +434,8 @@
 
 <!-- ============= Page content starts ============= -->
 <main class="page-main">
+  <%# সেশন ১০৫: FB-স্টাইল রিঅ্যাক্টরস-মডাল ("কে কোন প্রতিক্রিয়া দিয়েছে") —
+      মেম্বার-পেজে গ্লোবাল শেল (fixed-overlay — মার্কআপ-পজিশন নিরপেক্ষ) + JS;
+      পাবলিক layout.ejs-পেজেও একই শেল আছে (ডাবল-ইনক্লুড অসম্ভব — দুই-ওপেনার)। %>
+  <%- include('reactors-modal') %>
+  <script src="/assets/js/reactors-modal.js?v=<%= AV %>" defer></script>

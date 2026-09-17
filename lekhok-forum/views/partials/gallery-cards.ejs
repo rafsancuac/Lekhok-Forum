@@ -24,5 +24,13 @@
         </span>
       </figcaption>
     </a>
+    <%# সেশন ১০৮: অ্যালবাম-প্রচ্ছদ কাস্টম-নির্বাচন (শুধু স্টাফ) — POST /admin/gallery/cover;
+        /gallery ও /gallery/more-দুই-পথেই isStaff লোকাল পাস হয় (pages.js) — typeof-গার্ড
+        অন্য-রেন্ডার-কলারের জন্য। %>
+    <% if (typeof isStaff !== 'undefined' && isStaff) { %>
+    <button type="button" class="gal-coverpick" data-cover-id="<%= g.id %>" data-cover-cat="<%= g.category || 'general' %>" title="এই ছবিটি '<%= g.catLabel %>' অ্যালবামের প্রচ্ছদ নির্ধারণ করুন">
+      <i class="far fa-flag" aria-hidden="true"></i><span>প্রচ্ছদ</span>
+    </button>
+    <% } %>
   </figure>
 <% }); %>

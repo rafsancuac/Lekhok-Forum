@@ -589,3 +589,51 @@
       .catch(function () { /* নীরব */ });
   } catch (e) { /* নীরব */ }
 })();
+
+/* ═══ ১০. অ্যালবাম-প্রচ্ছদ কাস্টম-নির্বাচন (সেশন ১০৫ — স্টাফ-অনলি) ═══
+   মেসনরি-কার্ডের 'প্রচ্ছদ' চিপ → POST /admin/gallery/cover {id} — সার্ভার ছবির
+   category-অ্যালবামের প্রচ্ছদ settings-এ সংরক্ষণ করে; সাফল্যে অ্যালবাম-ভিউর কভার
+   লাইভ-আপডেট + টোস্ট। CSRF: X-CSRF-Token (session-57 চুক্তি)। */
+(function () {
+  'use strict';
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.gal-coverpick');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (btn.getAttribute('data-busy') === '1') return;
+    btn.setAttribute('data-busy', '1');
+    var tokMeta = document.querySelector('meta[name="csrf-token"]');
+    var headers = { 'Content-Type': 'application/json' };
+    if (tokMeta && tokMeta.content) headers['X-CSRF-Token'] = tokMeta.content;
+    var payload = JSON.stringify({ id: parseInt(btn.getAttribute('data-cover-id'), 10) || 0 });
+    var label = btn.querySelector('span');
+    var old = label ? label.textContent : '';
+    if (label) label.textContent = '…';
+    fetch('/admin/gallery/cover', { method: 'POST', body: payload, credentials: 'same-origin', headers: headers })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+      .then(function (j) {
+        btn.removeAttribute('data-busy');
+        if (j && j.ok) {
+          btn.classList.add('is-set');
+          if (label) label.textContent = 'প্রচ্ছদ ✓';
+          if (window.showToast) window.showToast('অ্যালবাম-প্রচ্ছদ নির্ধারিত হয়েছে ✓', 'success');
+          try {
+            var cat = (btn.getAttribute('data-cover-cat') || '').replace(/"/g, '');
+            var albImg = document.querySelector('.gal-album[data-cat="' + cat + '"] .gal-album__cover');
+            var cardImg = btn.closest('.gal-card');
+            var src = cardImg ? cardImg.querySelector('.gal-card__link img') : null;
+            if (albImg && src) albImg.src = src.src;
+          } catch (err) { /* নীরব */ }
+        } else {
+          if (label) label.textContent = old;
+          if (window.showToast) window.showToast((j && j.error) || 'প্রচ্ছদ নির্ধারণ ব্যর্থ', 'error');
+        }
+      })
+      .catch(function () {
+        btn.removeAttribute('data-busy');
+        if (label) label.textContent = old;
+        if (window.showToast) window.showToast('প্রচ্ছদ নির্ধারণ ব্যর্থ — নেটওয়ার্ক', 'error');
+      });
+  });
+})();

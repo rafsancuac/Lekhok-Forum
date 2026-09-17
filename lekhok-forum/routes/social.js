@@ -93,7 +93,8 @@ async function extractMentions(text) {
 }
 
 // ── Reaction helpers (5-emoji system) ────────────────────────────────────────
-const REACTIONS = ['like', 'love', 'care', 'haha', 'wow', 'sad'];
+// সেশন ১০৫: ৭ম রিঅ্যাকশন 'angry' (😡 রাগ) — FB-৭-সেট সম্পূর্ণ (API + UI + ম্যাপ)
+const REACTIONS = ['like', 'love', 'care', 'haha', 'wow', 'sad', 'angry'];
 const REACTION_META = {
   like: { emoji: '👍', label: 'লাইক' },
   love: { emoji: '❤️', label: 'ভালোবাসা' },
@@ -2414,7 +2415,7 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const counts = await db.prepare(`
       SELECT reaction_type, COUNT(*) AS c FROM likes WHERE post_id = ? GROUP BY reaction_type
     `).all(target_id);
-    const reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+    const reactions = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
     counts.forEach(r => { reactions[r.reaction_type || 'like'] = r.c; });
     const total = Object.values(reactions).reduce((a, b) => a + b, 0);
     // সেশন ১০০+১০১-মার্জ (রোডম্যাপ-০৪): session101-এর টগল-ডিটেকশন (DELETE-changes +
@@ -2449,7 +2450,7 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const counts = await db.prepare(`
       SELECT reaction_type, COUNT(*) AS c FROM likes WHERE comment_id = ? GROUP BY reaction_type
     `).all(target_id);
-    const reactions = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+    const reactions = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
     counts.forEach(r => { reactions[r.reaction_type || 'like'] = r.c; });
     const total = Object.values(reactions).reduce((a, b) => a + b, 0);
     // সেশন ১০০+১০১-মার্জ: কমেন্টেও টগল-ডিটেকশন(session101) + অ্যাটমিক-কাউন্ট(১০০)
@@ -2478,10 +2479,36 @@ router.get('/api/reactions/:type/:id', async (req, res) => {
   if (!['post', 'comment'].includes(type)) return res.status(400).json({ error: 'invalid' });
   const col = type === 'post' ? 'post_id' : 'comment_id';
   const rows = await db.prepare(`SELECT user_id, reaction_type FROM likes WHERE ${col} = ?`).all(id);
-  const counts = { like: 0, love: 0, haha: 0, wow: 0, sad: 0 };
+  const counts = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
   rows.forEach(r => { counts[r.reaction_type || 'like'] = (counts[r.reaction_type || 'like'] || 0) + 1; });
   const mine = req.session.user ? (rows.find(r => r.user_id === req.session.user.id) || null) : null;
   res.json({ counts, total: rows.length, mine: mine ? (mine.reaction_type || 'like') : null });
+});
+
+// ── সেশন ১০৫: রিঅ্যাক্টরস-লিস্ট — FB-স্টাইল "কে কোন রিঅ্যাক্ট দিয়েছে" মডালের জন্য ──
+// পাবলিক (পোস্ট-প্রতিক্রিয়া পাবলিক-তথ্য — /api/reactions/:type/:id-এর মতোই)।
+// রো: {id, reaction, name, pen_name, username, avatar_url} — মডালে ট্যাব-ফিল্টার +
+// নামে-ক্লিকে /profile/:username যায় (reactors-modal.js)। সর্বশেষ-রিঅ্যাক্ট আগে (id DESC)।
+router.get('/api/reactions/:type/:id/reactors', async (req, res) => {
+  const { type, id } = req.params;
+  if (!['post', 'comment'].includes(type)) return res.status(400).json({ error: 'invalid' });
+  if (!/^\d+$/.test(String(id))) return res.status(400).json({ error: 'invalid' });
+  const col = type === 'post' ? 'post_id' : 'comment_id';
+  try {
+    const rows = await db.prepare(`
+      SELECT l.user_id AS id, COALESCE(l.reaction_type, 'like') AS reaction,
+             u.full_name AS name, u.pen_name, u.username, u.avatar_url
+      FROM likes l JOIN users u ON u.id = l.user_id
+      WHERE l.${col} = ?
+      ORDER BY l.id DESC
+      LIMIT 200
+    `).all(id);
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, reactors: rows, total: rows.length });
+  } catch (e) {
+    console.error('[reactions:reactors] failed:', e.message);
+    res.status(500).json({ error: 'failed' });
+  }
 });
 
 // ────────────────────────────────────────────────────────────────────────────

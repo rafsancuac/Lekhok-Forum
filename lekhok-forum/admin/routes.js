@@ -918,6 +918,29 @@ router.post('/gallery/bulk', requireScope('gallery'), (req, res) => {
   });
 });
 
+// ── সেশন ১০৫: অ্যালবাম-প্রচ্ছদ কাস্টম-নির্বাচন ──────────────────────────────
+// POST /admin/gallery/cover  body: { id } — gallery-রো-এর category থেকে অ্যালবাম
+// বেঝে settings-এ 'galcover:<cat>' = id সংরক্ষণ করে (/gallery রুট সেখান থেকে
+// কভার-ওভাররাইড পড়ে; রো-মুছে-গেলে নীরবে নতুনতম-ছবি-ফলব্যাক)। স্কোপ: gallery।
+router.post('/gallery/cover', requireScope('gallery'), async (req, res) => {
+  const id = parseInt((req.body || {}).id, 10);
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ ok: false, error: 'invalid id' });
+  try {
+    const row = await db.prepare('SELECT id, category FROM gallery WHERE id = ?').get(id);
+    if (!row) return res.status(404).json({ ok: false, error: 'not found' });
+    const cat = row.category || 'general';
+    const key = 'galcover:' + cat;
+    const exists = await db.prepare('SELECT key FROM settings WHERE key = ?').get(key);
+    if (exists) await db.prepare('UPDATE settings SET value = ? WHERE key = ?').run(String(id), key);
+    else await db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(key, String(id));
+    try { await TA42.audit(db, req, 'update', 'gallery', '', `অ্যালবাম-প্রচ্ছদ নির্ধারণ (${cat}): photo#${id}`); } catch (_) {}
+    res.json({ ok: true, category: cat, coverId: id });
+  } catch (e) {
+    console.error('[admin:gallery-cover] failed:', e.message);
+    res.status(500).json({ ok: false, error: 'প্রচ্ছদ নির্ধারণ ব্যর্থ: ' + e.message });
+  }
+});
+
 // ── Resources CRUD ───────────────────────────────────────────────────────────
 // সেশন ১০১: মাল্টিমিডিয়া আপলোড — ফাইল (PDF/অডিও/ভিডিও/ছবি/ডক) আপলোড করলে
 // res_type অটো-ডিটেক্ট (mime/ext থেকে) + file_size হিউম্যান-রিডেবল সেট হয়।

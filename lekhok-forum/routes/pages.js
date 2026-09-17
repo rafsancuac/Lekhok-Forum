@@ -379,6 +379,20 @@ router.get('/gallery', async (req, res) => {
   const showAll = req.query.all === '1';
   const items = showAll ? all : all.slice(0, GALLERY_PER_PAGE);
   const hasMoreItems = !showAll && all.length > GALLERY_PER_PAGE;
+  // ── সেশন ১০৮: অ্যালবাম-প্রচ্ছদ কাস্টম-নির্বাচন ──
+  // settings key 'galcover:<cat>' = gallery-রো-এর id (স্টাফ POST /admin/gallery/cover
+  // থেকে সেট হয়)। ভ্যালিড-না-হলে (রো-মুছে-গেলে) নীরবে list[0]-ফলব্যাক।
+  const coverByCat = {};
+  const getCoverStmt = db.prepare('SELECT value FROM settings WHERE key = ?');
+  for (const cat of Object.keys(albums)) {
+    try {
+      const row = getCoverStmt.get('galcover:' + cat);
+      if (row && row.value) {
+        const cid = parseInt(row.value, 10);
+        if (albums[cat].some(g => g.id === cid)) coverByCat[cat] = cid;
+      }
+    } catch (e) { /* settings-টেবিল না-থাকলে ফলব্যাক-কভার */ }
+  }
   res.render('lekhok-gallery', {
     layout: 'layout',
     pageTitle: 'গ্যালারি',
@@ -391,6 +405,7 @@ router.get('/gallery', async (req, res) => {
     albums,
     recent,
     categoryLabels: GALLERY_LABELS,
+    coverByCat,
     getSetting
   });
 });
@@ -404,7 +419,10 @@ router.get('/gallery/more', async (req, res) => {
     const all = await db.prepare('SELECT * FROM gallery ORDER BY id DESC').all();
     const start = (page - 1) * GALLERY_PER_PAGE;
     const slice = enrichGalleryRows(all.slice(start, start + GALLERY_PER_PAGE));
-    res.render('partials/gallery-cards', { items: slice }, function (err, html) {
+    // সেশন ১০৮: অ্যাপেন্ড-হওয়া কার্ডেও স্টাফ-প্রচ্ছদ-পিকার — adminUser-সেশন (session-83 পোর্টাল-বিভাজন)
+    const au = req.session && req.session.adminUser;
+    const isStaff = !!(au && /admin|moderator/i.test(au.role || ''));
+    res.render('partials/gallery-cards', { items: slice, isStaff }, function (err, html) {
       if (err) return res.status(500).json({ ok: false, error: 'render' });
       const hasMore = start + GALLERY_PER_PAGE < all.length;
       res.json({ ok: true, html, hasMore, page, shown: start + slice.length, total: all.length });
