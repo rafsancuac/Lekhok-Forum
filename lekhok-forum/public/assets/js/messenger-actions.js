@@ -195,7 +195,7 @@
       } else {
         name = ((document.querySelector('.mdp-name') || {}).textContent || document.querySelector('.fb-chat-name')?.textContent || 'প্রাপক').trim();
       }
-      var text = bubbleTextOf(bubble).trim() || '📎 ফাইল';
+      var text = bubbleTextOf(bubble).trim() || (bubble.querySelector('.bubble-voice') ? '🎙️ ভয়েস মেসেজ' : '📎 ফাইল');
       replyState = { id: id, name: name, text: text.slice(0, 120) };
       replyToInput.value = id;
       replyBarName.textContent = name;

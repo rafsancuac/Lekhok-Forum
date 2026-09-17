@@ -52,7 +52,8 @@ function makeFilenameSync(file) {
 // শুধু রাস্টার ফরম্যাট (jpeg/png/gif/webp) অনুমোদিত, যেগুলো WebP-রিঅ্যানকোডে স্যানিটাইজ হয়।
 const IMAGE_TYPES = /^image\/(jpe?g|png|gif|webp)$/;
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp)$/i;
-const DOC_EXT   = /\.(pdf|docx?|xlsx?|zip|txt|jpe?g|png|gif|webp)$/i;
+// সেশন ৯২: অডিও-এক্সটেনশন (মেসেঞ্জার ভয়েস-নোট — MediaRecorder আউটপুট webm/mp4/ogg)
+const DOC_EXT   = /\.(pdf|docx?|xlsx?|zip|txt|jpe?g|png|gif|webp|webm|ogg|oga|mp3|m4a|wav|aac|opus)$/i;
 const EPAPER_EXT = /\.(pdf|jpe?g|png|gif|webp)$/i;
 
 // ── ম্যাজিক-বাইট যাচাই (MIME-spoofing গার্ড) ────────────────────────────────
@@ -148,9 +149,11 @@ function makeUpload({ subdir, maxBytes, allowedTypes, allowedExts }) {
       limits:  { fileSize: maxBytes },
       fileFilter: (req, file, cb) => {
         // সিকিউরিটি টাস্ক: mimetype + এক্সটেনশন দুটোই স্ট্রিক্ট ভ্যালিডেট
+        // সেশন ৯২: mimetype প্যারাম-স্ট্রিপ (audio/webm;codecs=opus → audio/webm)
+        const mime = String(file.mimetype || '').split(';')[0].trim();
         const ext = (path.extname(file.originalname) || '').toLowerCase();
         const extOk = allowedExts ? allowedExts.test(ext) : true;
-        const mimeOk = allowedTypes ? allowedTypes.test(file.mimetype) : true;
+        const mimeOk = allowedTypes ? allowedTypes.test(mime) : true;
         if (!extOk || !mimeOk) {
           return cb(new Error('এই ধরনের ফাইল অনুমোদিত নয়'));
         }
@@ -228,7 +231,9 @@ const coverUpload = makeUpload({
 });
 
 // Attachments (messages/complaints): docs + images, max 10MB
-const DOC_TYPES = /^((image|application|text)\/(jpe?g|png|gif|webp|pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|plain|x-zip-compressed|zip))$/;
+// সেশন ৯২: audio গ্রুপ যোগ (voice-note) — busboy mimetype-এ `;codecs=` প্যারাম থাকলে
+// fileFilter-এ আগে স্ট্রিপ হয়, তাই base-type-ই যথেষ্ট
+const DOC_TYPES = /^((image|application|text|audio)\/(jpe?g|png|gif|webp|pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|plain|x-zip-compressed|zip|webm|ogg|mpeg|mp4|m4a|x-m4a|wav|x-wav|aac|opus))$/;
 const attachmentUpload = makeUpload({
   subdir:      'attachments',
   maxBytes:    10 * 1024 * 1024,
