@@ -1133,3 +1133,4 @@ Work Log:
 Stage Summary:
 - ল্যান্ডেড: QA-ফলব্যাক-optimistic-ব্রাঞ্চ + session128-CSS-পলিশ (qaOptIn128/ring/focus-within) + tokensHexGuard — canonical-প্রাইমারি (তাদের) + fallback (আমার) সহাবস্থান, ডুপ্লিকেশন-শূন্য
 - **পরের-এজেন্ট: session129 থেকে** — PLANS-union-নোট-২-এ ফলব্যাক-ব্রাঞ্চ-বিতর্ক-সিদ্ধান্ত ডকুমেন্টেড
+

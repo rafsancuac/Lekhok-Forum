@@ -1163,54 +1163,71 @@ Stage Summary:
 - লেবেল-রেস-নোট: একই-রাউন্ডে ৩+ এজেন্টের সমান্তরাল-কাজ — push-পূর্ব re-read আবশ্যক; পরবর্তী-এজেন্ট session125 থেকে
 - ডকস: PROJECT-চেঞ্জলজ §১২৪ + PLANS session124-নোট (৪-ইন্টিগ্রেশন-পয়েন্ট + ৫-গোটচা) + worklog ×২
 
----
+## সেশন ১২২ (২১ সেপ্টেম্বর ২০২৬) — WebRTC কল: মৃত্যু-বাগ-সেটের মূল-কারণ-ফিক্স + UI-ফার্স্ট পারমিশন-প্যানেল + ব্যাকগ্রাউন্ড-রিং (ক্রন-রিভিউ রাউন্ড)
+**ইনপুট (লাইভ-ইউজার):** "অডিও ও ভিডিও কল কাজ করছে না — ফেসবুক/টেলিগ্রাম/হোয়াটসঅ্যাপের মতো করো; ইন্টারফেস পপ-আপ হয় না; মাইক্রোফোন-অনুমতি দেওয়া হয়নি বলে" — UI-ফার্স্ট-কল-স্থাপত্যের রেফারেন্স-ব্লুপ্রিন্টসহ (React-CallContext-ঘরানা; EJS-স্থাপত্যে অনুবাদিত)।
+**রোগনির্ণয় (চার-স্তর):**
+1. 🚨 server.js `Permissions-Policy: microphone=(), camera=()` — সাইট নিজেই ব্রাউজারে মাইক/ক্যামেরা নিষিদ্ধ ঘোষণা করছিল → getUserMedia ডায়ালগের-আগেই NotAllowedError (রিপোর্টের মূল-কারণ)।
+2. `S.after=0`-কার্সর-রিসেট → প্রথম-পোলেই পুরনো অন্য-কলের 'ended' সিগন্যাল-রিপ্লে → callId-null-গার্ড-বাইপাস → cleanup() → কল-UI মুহূর্তেই সেলফ-ডেস্ট্রাক্ট (গায়েব-বাগ)।
+3. flushSignals early-return → অফার-পূর্ব ICE-ব্যাচ স্ট্র্যান্ডেড → ICE 'connecting'-এ আটকে (সংযোগ-স্থাপন-ব্যর্থতা)।
+4. হিডেন-ট্যাবে DOM-টাইমার-থ্রটল (৬০সে) > রিং-টাইমআউট (৪৫সে) → ব্যাকগ্রাউন্ড-ট্যাবে আসন্ন-কল-পপআপ অসম্ভব।
+**কাজ:**
+- server.js: `(self)`-পারমিশন + কমেন্ট-ডকুমেন্টেশন।
+- webrtc-call.js (বড়-রিফ্যাক্টর): UI-ফার্স্ট start() → openUI→acquireAndOffer(); acceptCall() → acceptResume(); .lc-perm-প্যানেল (মানব-বার্তা humanMediaError err.name-ম্যাপ + 🔒-৩-ধাপ + permRetry-রিজিউম + perm-cancel-ভূমিকা-সচেতন [callee=decline]) + নতুন-ট্যাব-বোতাম (iframe/HTTP-ডিটেকশন) + poll-busy-গার্ড + 401-ব্যাকঅফ (১৫সে) + visibilitychange/focus/pageshow-পোল + Worker-হার্টবিট (call-heartbeat.js — CSP-ক্লিন same-origin, XTransformPort-সচেতন, onerror-নীরব) + title-flash + Notification + কার্সর-গ্লোবাল (রিসেট-বাদ) + সিগন্যাল-প্রসেসে callId-বাধ্যতামূলক + flushSignals রি-শিডিউল/কিক + QA-হুক ×৩ (_qaShowPerm/_qaPermState/_qaPollNow)।
+- calls.css: .lc-perm-ফ্যামিলি + .lc-btn ×৩ + 640px + reduced-motion (EOF, brace-০)।
+- messages-list.ejs: সারি-data-peer-id + মেনু call-audio/video (1:1-গার্ড; row116-প্রি-ক্যাপচার — closeConvMenu menuTarget-null করে এমন-বাগ-ধরা)।
+- routes/calls.js: accepted-স্টেল self-heal (২ঘণ্টা, stale_cleanup — ক্র্যাশ-পরে চিরকাল-busy-বাগ)।
+- নতুন: call-heartbeat.js + verify-session122-calls-browser.js (২১-চেক, টুয়ো-ব্রাউজার fake-media+mdns-off) + diag-session122-ice.js।
+**যাচাই (সব-সব-সবুজ):** API 54/54 ✓ ব্রাউজার-E2E 21/21 (getUserMedia ✓ পপআপ ✓ রিং ✓ ইনবক্স-পেজে-আসন্ন ✓ connected+remote-স্ট্রিম-উভয়-পিয়ার ✓ টাইমার ✓ মিউট ✓ ক্লিনআপ-উভয় ✓ পারমিশন-প্যানেল-পথ ×৪ ✓) ✓ গেটওয়ে-জার্নি (SANDBOX_PORT=8080-বুটে): মেনু→কল→ctx-সেট→মোডাল-স্থায়ী→প্যানেল→বাতিল ✓ API-কলার→ইনবক্স-পপআপ+title-flash ✓ guard:design ✓ JS-syntax ✓ CSS-brace ✓। স্ক্রিনশট: scripts/qa121-perm-panel.png।
+**স্যান্ডবক্স-গোটচা (ভবিষ্যৎ-এজেন্টের জন্য — PLANS-এও ডকুমেন্টেড):**
+- sql.js ইন-মেমরি: ফাইল-এডিটের **আগে** সার্ভার-kill, পরে boot — উল্টোলে পুরনো-মেমরি ফাইল-ওভাররাইট করে (ধরা-খেয়েছিলাম)।
+- persist() debounce ২০০ms — স্ট্যান্ডঅ্যালোন DB-স্ক্রিপ্টে exit-এর আগে ≥৮০০ms।
+- QA-ট্রায়ো 2FA/পাসওয়ার্ড: ismail/secret123, monem/karishma/demo123 — ব্লক হলে totp_enabled=0+twofa_method=NULL+two_factor_tokens-ক্লিয়ার।
+- সার্ভার **SANDBOX_PORT=8080**-env-সহ বুট (গেটওয়ে-প্রিভিউতে অ্যাসেট-প্যাচিং লাইভ থাকে; এ-রাউন্ডে এ-জিনিস-হারিয়ে ডিবাগ-ঘুরপাক খেয়েছি)।
+- call_signals-কার্সর **গ্লোবাল** — নতুন-কলে রিসেট করা নিষিদ্ধ (এ-সেশনের সবচেয়ে-গোপন-বাগ)।
+- ২-ঘণ্টার-বেশি পুরনো accepted-কল সার্ভার-নিজে-ই 'ended' করে (stale_cleanup) — টেস্টে ঝুলে-থাকা সেশন দেখলে আতঙ্কিত হবেন না।
+**লেবেল-রেস:** আমার কাজ-শুরুর সময় সর্বোচ্চ ছিল 115 → আমি 116-লেবেলে কাজ করছিলাম — push-পূর্ব fetch-এ দেখি 116(রিসোর্স-CSV)/118/119/120 সব-নেওয়া → সর্বোচ্চ+১ রীতিতে **121-এ রিলেবেল** (ফাইল-নামসহ)। পরবর্তী-এজেন্ট 122 থেকে।
+**পরবর্তী-প্রথম-পছন্দ:** ① কল-মিনিমাইজ-অবস্থায় মেসেজ-টাইপিং-সহাবস্থান-পলিশ ② group-call 1:1-উত্তরাধিকারে Notification-অ্যাকশন-বাটন (গ্রহণ/প্রত্যাখ্যান সরাসরি OS-নোটিফিকেশন থেকে) ③ role-policy-র মতো কল-রিগ্রেশন-সুইটকে cron-QA-রুটিনে ধরা ④ verify-session122-browser-কে CALL_RING_TIMEOUT_S-নিরপেক্ষ করা (এনভি-নিজেই বুটে সেট)।
+**পুশ-সমাপ্তি (session-121):** প্যারালাল-রেস ×৪ (১১৯-চিপস/ডিসমিস → ১২০-সার্চ → ১২-অপটিমিস্টিক → ১২১-দ্বিতীয়-এজেন্ট db726c0) — চূড়ান্ত push **c57777d** (মূল-ফিচার) + **51502e4** (inspect-audit stat-tile-রুল → ক্যানোনিকাল-প্রথম, 48/48)। union-চূড়ান্ত: server-side ?type= (আমার) + client-side setUrl121 (তাদের) + dismiss-সিঙ্ক — ৩-স্তরে সম্পূর্ণ। QA-ইনস্ট্যান্স :3140 পরবর্তী-এজেন্টের জন্য রেখে-দেওয়া (পিড রিসেট-লগইন প্রয়োজনে scripts/reset-qa-logins.js)।
+(docs(session121): repo-worklog পুশ-সমাপ্তি-এন্ট্রি (c57777d + 51502e4, রেস×৪-ইতিহাস))
+Task ID: session122 (cron webDevReview রাউন্ড — sandbox web-68dcf7c4, "Project Status & Development Plan")
+Agent: Z.ai Cron Agent (webDevReview — origin/main @ c57777d/session121-পরবর্তী থেকে শুরু)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-অভিযান → অনন্য-ফিচার (মিনি-বাবল unread-ডট + QA-থ্রেড qa-html সোয়াপ + ড্রপডাউন reltime) + প্যারালাল-ইউনিয়ন ×৪ + push
+- **অবস্থা-যাচাই:** git fetch (3a234b6) → PLANS/PROJECT/ওয়ার্কলগ-রিভিউ → guard গ্রিন → :3030 লাইভ → বেসলাইন নির্ধারণ
+- **QA-ফেজ (agent-browser):** ড্যাশবোর্ড/নোটিফিকেশন-ড্রপডাউন/মেসেজ/QA-পেজ ভিজ্যুয়াল + localStorage-seed — **বাগ-১ ধরা পড়ে:** session112-র continue-reading উইজেটের .crx-* CSS ছিলই না (unstyled rows) → ফিক্স-প্রস্তুতির-মাঝে প্যারালাল-এজেন্টের dashboard.css .crx-* ক্যানোনিকল পাওয়া গেল → ইউনিয়নে আমার ডুপ্লিকেট প্রত্যাহার
+- **ফিচার ① মিনি-বাবল অপঠিত-ডট:** MiniBubblePreview.ejs — না-পড়া-ইনকামিং-এ .mnp-dot (messenger-নীল + blue-light হ্যালো) + .mnp-bubble--unread বোল্ড; মিউট-রোতে ডট-লুকানো; convListFor-unread_count-সোর্স (শূন্য-নতুন-API) — session117-সুপারিশ ⑤ সম্পন্ন
+- **ফিচার ② QA-উত্তর-থ্রেড সার্ভার-সত্য সোয়াপ (session113-বকেয়া ③):** GET /api/comments?format=qa-html → qa-single-সত্য (like_count DESC + slot-র‍্যাপার + idx-0 top-answer-chip + compact-রিপ্লাই, একই CommentItem) → comment-tools.js swapQaThread (রিলোড-নেই; চিপ AJAX-পরেও টেকনামী); ক্যানোনিকাল delete-হ্যান্ডলারে QA-শাখা (empty-slot-শূন্য + চিপ-পুনর্বিন্যাস)
+- **ফিচার ③ ড্রপডাউন আপেক্ষিক-সময়:** header.ejs notif-time [data-ts] → LekhokRelTime (বাংলা-রিলেটিভ + টুলটিপে পূর্ণ-তারিখ) + clearNotifBadge-বাসি-ডট-পরিষ্কার
+- **ফিচার ④ ড্রপডাউন-ডিসমিস (পরিণতি):** আমার .notif-dismiss--dd+main.js-ইমপ্ল E2E-প্রমাণিত হলেও প্যারালাল session121-র .notif-x (header-IIFE + /api/count-ব্যাজ + Enter-কি) আরও-বিবর্তিত → তাদেরটা ক্যানোনিকল গৃহীত, আমার প্রত্যাহার (ডুপ্লিকেট-শূন্য)
+- **🚨 rebase-গোটচা (আবার-প্রমাণিত):** skip-করা wip-কমিটের কোড-পরিবর্তন ফেরত-আনতে হয়েছে (feat-কমিট docs-only নেমে গিয়েছিল); transport '[h'-স্ট্রিপ বাইপাসে python-এ chr(91)+'h'-নির্মাণ; দুই-সার্ভার-এক-DB-রেসে role-policy মিথ্যা-ফেইল (১০৬/১) — একক-সার্ভারে ১২৫/১২৫ ✓
+- **রিগ্রেশন (ফ্রেশ-সার্ভার এক-পাস):** role-policy ১২৫/১২৫ ✓ cursor ২৬/২৬ ✓ groupcalls ৫০/৫০ (CALL_RING_TIMEOUT_S=4-পূর্বশর্ত) ✓ calls ৫৫/৫৫ ✓ guard ✓ 390px-ওভারফ্লো-০ ×৬ ✓ কনসোল-০ ✓
 Task ID: session-125 (cron-QA-রাউন্ড — তৃতীয়-রেস-union-সমাপ্তি)
 Agent: Main agent (Lekhok-Forum Express/EJS repo)
 Task: qa-উত্তর-optimistic টার্গেট → তিন-এজেন্ট-রেসে চূড়ান্ত-ইউনিয়ন → অনন্য-ডেল্টা → push
-
-Work Log:
 - বেস-৫cc41df-এ qa-উত্তর-গ্যাপ-আবিষ্কার (রিলোড-ফলব্যাক) → ফুল-ইমপ্ল (insertOptimistic-qa-target + reconcileQa123 + pen_name + CSS) + E2E-গ্রিন
 - rebase-রেস ①: cb83da1 (session123, swapQaThread+qa-html) → ইউনিয়ন: তাদের swap ক্যানোনিকাল, আমার টার্গেট রক্ষিত, reconcileQa123 প্রত্যাহৃত; union-E2E-পুনঃযাচাই (sessionStorage-stamp নো-রিলোড ✓ চিপ-রক্ষা ✓)
 - push-রেস ②: 7ad5fb3 (session124, POST j.html + insertCanonical124) → তাদের ইঞ্জিনে আমার টার্গেট-ও অন্তর্ভুক্ত → টার্গেট-ও প্রত্যাহৃত; চূড়ান্ত-ডেল্টা = shared.css session125-পলিশ + pen_name/full_name additive + union-ডকুমেন্টেশন
 - লেবেল: 123→তাদের, 124→তাদের, আমি 125 (max+1)
-
-Stage Summary:
 - সব কমেন্ট-সারফেস reload-মুক্ত + তাৎক্ষণিক-বাবল (তিন-স্তর-ফলব্যাক-চেইন: j.html→optimistic→swapQaThread) — তিন-এজেন্টের-কাজ union-এ বিনা-দ্বন্দ্বে
 - গোটচা: বহু-রেসে প্রতি-rebase-এ নিজের-ডেল্টার অনন্যতা পুনঃমূল্যায়ন বাধ্যতামূলক; `>>>>>>> sha (msg)`-ট্রেইলার-লিক স্ক্যান (rg)
 - পরবর্তী: tokens.css-হেক্স-গার্ড (session113-⑤) · গ্যালারি-অ্যালবাম-কভার-নির্বাচন · লাইভ-Turso-রিসেট + সিক্রেট-রোটেশন ×৪
-
 Task ID: cron-r6 (session126 — লেবেল-রেস: সমান্তরাল-এজেন্টও 125-নিয়েছিল, max+1=126) (session125 — রাউন্ড-৬: QA-সুইপ → paintList-mirror + audit:views → ত্রি-এজেন্ট-কলিশন-ইউনিয়ন)
-Agent: Z.ai Cron Agent (webDevReview)
 Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগ-শূন্যে ফিচার-রাউন্ড → সমান্তরাল-কলিশনে অনন্য-ডেল্টা রক্ষা → push + ডকস
-
-Work Log:
 - sync+QA: 4ec1a2d-বেসে ১৫-route ম্যাট্রিক্স + ৭-পেজ কনসোল-০ + /me-ইন্টিগ্রিটি (৯-ট্যাব/টগল/ws91) + /qa-ফিল্টার + সার্চ-২১-মার্ক + 390px ×৪-০ — বাগ-শূন্য → ফিচার-রাউন্ড
 - রাউন্ড-শুরুতে নির্বাচিত ৪-ফিচার: qa-optimistic (comment-tools .qa-answers-list এক্সটেনশন — E2E-প্রমাণিত: reload-শূন্য-বাবল + nested-replies + empty-state-অপসারণ), header-ড্রপডাউন-dismiss-✕ (div-শেল-রিস্ট্রাকচার + main.js-IIFE + badge-বাংলা-সিঙ্ক + nx-out-অ্যানিমেশন), audit-view-dupes.mjs (পজিটিভ+নেগেটিভ-টেস্টেড), notifications-?type= (client-side restore+persist — G121-whitelist-গার্ড)
 - E2E-পথে ধরা-বাগ ×২: ① live.js paintList এক-এঞ্চর-পুরনো-শেল পেইন্ট করে প্রতি-বেল-ওপেনে ✕-মুছে-ফেলত ("stale-repaint" মিথ্যা-অনুমান ভেঙে) ② SW-ক্যাশ মিশ্র-পাঠ (fetch-নেটওয়ার্ক-সত্য + DOM-বাসি) — SW-unregister+caches-purge-প্রতিকার
 - push-পূর্ব fetch: সমান্তরাল session121-নোটিফ / 122-QA-সোয়াপ / 123-মাইক্রো / 124-canonical-insert pushকৃত — আমার ৪-ডেল্টা আচ্ছাদিত → stash→pull→pop-ত্রিয়ান (৪-UU + ২-অটো-মার্জ-ডুপ্লিকেট-ঝুঁকি) → header/notifications/style=origin-canonical, comment-tools/main=HEAD-প্রত্যাহার, live.js=আমার-মিরর (canonical-শেলে রি-অ্যালাইন: data-dismiss + in-anchor ✕), package.json=audit:views-ইউনিয়ন
 - চূড়ান্ত-যাচাই: বেল→repaint→✕ ৪/৪ ✓ painted-row-dismiss ✓ role-policy ১৩১/১৩১ ✓ cursor ২৫/২৫ ✓ guard ✓ audit ✓ brace ০/০ ✓ 390px-০ ✓ কনসোল-০ ✓ ক্লিনআপ (comment-79 + notif-136) ✓
 - pushed: f897590 (feat) + docs-কমিট (PROJECT §১২৫ + PLANS session125-নোট + worklog ×২)
-
-Stage Summary:
 - ড্রপডাউন-রিপেইন্ট এখন ✕-সংরক্ষণকারী; audit:views union-মার্জ-দুর্ঘটনা-শ্রেণির স্থায়ী-গার্ড
 - শিক্ষা: সমান্তরাল-কলিশনে নিজের-প্রতিটি-ডেল্টা origin-canonical-এর সাথে re-compare বাধ্যতামূলক (অটো-মার্জ-হওয়া ফাইলসহ); SW-বাসি-পেজ E2E-বিভ্রান্তি-উৎস
 - পরবর্তী-প্রার্থী: parent-chain-সচেতন chip-render (POST-html-এ), drawer-প্রিভিউ-ইনস্ট্যান্ট-প্রতিফলন, notifications-শূন্য-অবস্থায় ফিল্টার-বার-বিহীন empty-স্টেট পর্যালোচনা, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট)
-
-
----
-
 ## Session 127 (cron-r12-দ্বিতীয়) — QA-সুইপ + ক্যানোনিকাল-প্রত্যাহার + stale-সুপারিশ-পরিষ্কার (২৩ সেপ্টেম্বর ২০২৬)
-
 **Agent:** Z.ai Cron Agent (webDevReview)
 **Task:** QA-সুইপ → session116-অবশিষ্ট ইমপ্ল → push-পূর্ব rebase-এ ক্যানোনিকাল-আবিষ্কার → সম্পূর্ণ-প্রত্যাহার + docs-only
-
-**Work Log:**
 - সিঙ্ক fbaf3d0-পূর্ব 9e3f8b9; QA-বেসলাইন: ১৮-রুট + home/articles/qa ভিজ্যুয়াল + 390px-০ ×২ + কনসোল-০ → বাগ-শূন্য
 - QA-optimistic + মৃত্যু-অ্যানিমেশন + answers-empty-ফিক্স সম্পূর্ণ ইমপ্ল, E2E-প্রুফসহ (swap-delay-hook কৌশলে ৭০০ms-প্রুফ)
 - push-পূর্ব rebase-এ ৪-নতুন-কমিট (session123ব/124/125/126) — insertCanonical124 + killItem আমার সব-ডেল্টা আচ্ছাদন করে → HEAD-রিসেট-প্রত্যাহার (ডুপ্লিকেশন-শূন্য-নীতি; session125-এর পরেই দ্বিতীয়-একই-রেস)
 - অনন্য-রক্ষিত (docs-only): hall-provost stale-ঘোষণা · swap-delay-hook E2E-কৌশল · `[h`-খাওয়ার দ্বৈত-যাচাই · `.reveal` IO-আর্টিফ্যাক্ট-নোট
-
-**Stage Summary:**
 - QA-পেজে উত্তর-সাবমিট ক্যানোনিকাল-ইঞ্জিনে ০-রিফেচে পিক্সেল-নির্ভুল; ডিলিটে মৃত্যু-অ্যানিমেশন ক্যানোনিকাল killItem-এ — দুটোই ৪-এজেন্টের স্বাধীন-প্রমাণে সুদৃঢ়
 - পরবর্তী-প্রথম-পছন্দ: QA-ডিলিটে স্লট-স্তরের অ্যানিমেশন-উপযোগ-যাচাই → tokens.css-হেক্স-স্ক্যান-গার্ড → contact_hours লাইভ-ইন্ডিকেটর
 
