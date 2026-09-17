@@ -101,6 +101,22 @@ function lastArticleId(html) {
     }
     check('৩৫/৩৫ quick-পোস্ট সৃষ্টি', apiOk === 35, { apiOk });
 
+    // সেশন ১১১: ভলিউম-ব্যাচ — "চেইন ≥২-পেজ" অ্যাসারশনটি ফিডে ≥৪১ আইটেম ছাড়া
+    // মিথ্যা-ফেল (পেজ-১=৩০ → প্রথম more-ফ্র্যাগমেন্টে >১০ আইটেম থাকা চাই)।
+    // বেস-ডেটা-নিরপেক্ষ করতে +১৫ ভলিউম-পোস্ট (পৃথক-সেকেন্ড — টাই-ব্যাচের পরে,
+    // স্লিপ দিয়ে) — ক্লিনআপ তালিকায় অন্তর্ভুক্ত।
+    console.log('\n— +১৫ ভলিউম-পোস্ট (বহু-পেজ-নিশ্চয়তা) —');
+    let volOk = 0;
+    for (let i = 1; i <= 15; i++) {
+      const r = await req(s, 'POST', '/api/articles/quick', {
+        title: 'VOL ' + MARK + ' ' + String(i).padStart(2, '0'),
+        body: 'ভলিউম-পোস্ট #' + i + ' — বহু-পেজ-নিশ্চয়তা।'
+      });
+      if (r.json && r.json.ok && r.json.id) { created.push(r.json.id); volOk++; }
+      await new Promise(res => setTimeout(res, 35)); // পৃথক-সেকেন্ড নিশ্চিত
+    }
+    check('১৫/১৫ ভলিউম-পোস্ট', volOk === 15, { volOk });
+
     /* ── ২. প্রথম-পেজ + data-cursor ── */
     console.log('\n— প্রথম-পেজ + কার্সার-মার্কআপ —');
     const d1 = await text(s, '/dashboard');

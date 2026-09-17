@@ -647,6 +647,30 @@
   });
 
   // ── সেশন ১০৪+১০৭: ইনলাইন-সম্পাদনা (ফিড + আর্টিকেল-পেজ দুই-সারফেস) ──────
+  // সেশন ১১১-ফিক্স: আর্টিকেল/প্রশ্ন-বাবলে .fc-edit-slot বাবলের ভেতরেই থাকে —
+  // পুরো-বাবল display:none করলে এডিটর-স্লটও ০×০ হয়ে অদৃশ্য হত (লাইভ-জিওমেট্রি
+  // টেস্টে ধরা — DOM-attr চেকে ঢাকা পড়ত)। বাবল-লুকানোর বদলে slot বাদে বাবলের
+  // সন্তান-সারিগুলো লুকাও (fc-editing); ফিডে slot বাবলের বাইরে — পুরোনো-পথ অক্ষুণ্ণ।
+  function hideBubbleForEdit(bubble, slot) {
+    if (slot.parentElement === bubble) {
+      bubble.classList.add('fc-editing');
+      Array.prototype.forEach.call(bubble.children, function (ch) {
+        if (ch !== slot) ch.style.display = 'none';
+      });
+    } else {
+      bubble.style.display = 'none';
+    }
+  }
+  function restoreBubbleAfterEdit(bubble, slot) {
+    if (bubble.classList.contains('fc-editing')) {
+      Array.prototype.forEach.call(bubble.children, function (ch) {
+        if (ch !== slot) ch.style.display = '';
+      });
+      bubble.classList.remove('fc-editing');
+    } else {
+      bubble.style.display = '';
+    }
+  }
   function startEdit(item, cid) {
     var slot = item.querySelector('.fc-edit-slot');
     var bubble = bubbleOf(item);
@@ -664,14 +688,14 @@
     var ta = slot.querySelector('.fc-edit-input');
     ta.value = raw;
     slot.hidden = false;
-    bubble.style.display = 'none';
+    hideBubbleForEdit(bubble, slot);
     ta.addEventListener('input', function () {
       ta.style.height = 'auto';
       ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
     });
     setTimeout(function () { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 50);
     slot.querySelector('.fc-edit-cancel').addEventListener('click', function () {
-      slot.hidden = true; slot.innerHTML = ''; bubble.style.display = '';
+      slot.hidden = true; slot.innerHTML = ''; restoreBubbleAfterEdit(bubble, slot);
     });
     slot.querySelector('.fc-edit-save').addEventListener('click', function () {
       var body = ta.value.trim();
@@ -699,7 +723,7 @@
         }
         RAW_CACHE[cid] = body;
         slot.hidden = true; slot.innerHTML = '';
-        bubble.style.display = '';
+        restoreBubbleAfterEdit(bubble, slot);
         if (window.showToast) showToast('মন্তব্য সম্পাদিত হয়েছে ✓', 'success');
       }).catch(function (err) {
         if (err && err.message === 'login') return;
@@ -746,6 +770,14 @@
               var stat = document.querySelector('.as-stat[title="মন্তব্য"] span');
               if (stat) stat.textContent = total;
             }
+            // সেশন ১১১: জেনেরিক DOM-রিকাউন্ট-হুক — data-cm-count="<selector>"।
+            // qa-উত্তরসমূহ: j.total = comment_count (রিপ্লাইসহ) — টপ-লেভেল উত্তর-গণনা
+            // নয়; তাই অপসারণ-পরবর্তী দৃশ্যমান-আইটেম গুনে সিঙ্ক (রিপ্লাই-ডিলিটেও নিরাপদ —
+            // রিকাউন্ট অপরিবর্তিত থাকে)।
+            document.querySelectorAll('[data-cm-count]').forEach(function (cEl) {
+              var sel = cEl.getAttribute('data-cm-count');
+              if (sel) cEl.textContent = bnNum(document.querySelectorAll(sel).length);
+            });
           } catch (_) {}
         }
         if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
@@ -973,6 +1005,20 @@
           if (j && j.ok) {
             var it = document.getElementById('fc-c' + cidD);
             if (it) it.remove();
+            try {
+              // সেশন ১১১: কাউন্টার-সিঙ্ক — পুরনো-ইঞ্জিন deleteComment-এর মতোই
+              // ([data-cmt-total]/.comments-total + data-cm-count-রিকাউন্ট) —
+              // আগে ক্যানোনিকাল-পথে ডিলিটে হেডার-কাউন্টার স্টেল থাকত।
+              var totD = (typeof j.total === 'number') ? j.total : null;
+              if (totD !== null) {
+                var cSpanD = document.querySelector('[data-cmt-total]') || document.querySelector('.comments-total');
+                if (cSpanD) cSpanD.textContent = bnNum(totD);
+              }
+              document.querySelectorAll('[data-cm-count]').forEach(function (cEl) {
+                var sel = cEl.getAttribute('data-cm-count');
+                if (sel) cEl.textContent = bnNum(document.querySelectorAll(sel).length);
+              });
+            } catch (_) {}
             if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
           } else if (window.showToast) showToast('মোছা যায়নি', 'error');
         })

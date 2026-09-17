@@ -1926,3 +1926,12 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .qa-answer-slot{scroll-margin-top:84px}
 .qa-answer-slot .cmt-item .cmt-badge{z-index:6}
 @media (prefers-reduced-motion: reduce){.qa-answer-slot .cmt-item,.qa-answer-slot .top-answer-chip{transition:none}}
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১১১: হোভার-৩-ডট তিন-সারফেস-রুল (ডেস্কটপ)
+   ─────────────────────────────────────────────────────────────────────────
+   reveal-রুল ছিল কেবল .fc-item:hover — আর্টিকেল/প্রশ্ন-পেজের .comment-item/
+   .reply-item-এ ডেস্কটপ-হোভারে ৩-ডট অদৃশ্য থাকত (agent-browser টাচ-মোডে
+   (hover:none)-রুল ঢেকে দেয় বলে E2E-তে ধরা পড়েনি)। এখন তিন-সারফেস।
+   ═══════════════════════════════════════════════════════════════════════════ */
+.fc-item:hover .fc-menu-btn,.comment-item:hover .fc-menu-btn,.reply-item:hover .fc-menu-btn,
+.fc-menu-btn:focus-visible,.fc-menu-wrap.open .fc-menu-btn{opacity:1}

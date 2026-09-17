@@ -1163,3 +1163,17 @@ push-রেস-এ abhi-asol: উপরের session113-নোট লেখা�
 **E2E-প্রমাণ:** রিপ্লাই-স্লট data-post-id=১১ (আগে null) ✓ লাইক-টগল-দুইদিক badge-বাংলা ✓ থ্রেড-সোয়াপ+total-লাইভ ✓ গেস্ট-ভিউ ✓ 390px-০ ✓ কনসোল-০ ✓ guard:design ✓ brace-০ ✓ pagination-১৬ ✓ ক্লিনআপ ✓। **গোটচা-রিপ্লে:** rebase-এ --theirs=আমার-কমিট (বিপরীত!); git add-এর পরে checkout --ours নীরবে ব্যর্থ → `git show HEAD:path > path`; ব্রাউজার JS-ইনজেকশনে cache-bust (cb=Date.now()) + রিয়েল-ক্লিক (synthetic .click() কিছু হ্যান্ডলারে ফেইল)।
 
 **পরবর্তী:** role-policy-তে POST /api/comment bad_post_id-৪০০-চেক + comment PUT/DELETE 403/404 (session105 ④; session114 §১৫-সেলফ-সিডের সাথে মিলিয়ে) · tokens.css-হেক্স-স্ক্যান-গার্ড (⑤) · কল-প্যানেল ভিডিও-track-স্ট্যাট (session111 ③)।
+## Cross-Agent Note: Session 111-ব — কমেন্ট-সিস্টেম QA + ৩-লেটেন্ট-বাগ + সেশন-লেবেল-রেস-পুনঃপ্রমাণ (১৮ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** comment-tools.js (এডিট-জিওমেট্রি-ফিক্স + canonical-delete-সিঙ্ক + data-cm-count) + style.css (হোভার-তিন-সারফেস) + social.js (react-comment-নোটিফিকেশন + comment-লিংক-ফিক্স + DELETE-total) + notifications/header-আইকন + cursor-E2E-ভলিউম-ব্যাচ। ফিড-র‍্যাংকিং/মেসেঞ্জার/গ্যালারি/admin লক-জোন অস্পৃশ্য।
+
+**সেশন-লেবেল-রেস-পুনঃপ্রমাণ:** এই-রাউন্ডে qa-উত্তর FB-প্যারিটি + reply-নোটিফিকেশন টার্গেট করেছিলাম — pull-এ দেখা গেল session113/114 একই কাজ ক্যানোনিকাল-লেয়ারে (shared/CommentItem) করেছে + f736fc1-এ style.css-ব্রেস-বাগ-ফিক্সও। 'আমার সেশন১১১' আর 'অন্যের সেশন১১১' উভয়ই আছে — লেবেল-race তৃতীয়বার। **আগে-থেকে pull → কাজ-শুরুর আগে PLANS-এ intent-নোট → কমিট-রেডি হলেই সঙ্গে-সঙ্গে push** — এর বিকল্প কিছুই না।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+- **দুই-ইঞ্জিন-বাস্তবতা:** পুরনো fb-parity (data-cid/fc-react-wrap/fc-menu-wrap/fc-edit-slot) ও নতুন canonical (.cmt-item[data-cmt-id]/cmt-palette/cmt-badge/pm-wrap+data-cmt-edit/delete) — comment-tools.js-এ উভয়েই চলে (attr-ভিন্ন, ডাবল-ফায়ার-নেই)। নতুন-সারফেস canonical-ই ব্যবহার করুন।
+- **DELETE /api/comments/:id এখন total ফেরত দেয়** (session105-এর বিজয়ী-রুটে যোগ) — ক্লায়েন্ট-কাউন্টার-সিঙ্ক দুই-ইঞ্জিনেই কাজ করে। রেসপন্স: {ok, removed, total}।
+- **data-cm-count="<selector>"-হুক:** যেকোনো কাউন্টারে DOM-রিকাউন্ট (বাংলা-অঙ্ক) — ডিলিটে দুই-ইঞ্জিনেই চলে। [data-cmt-total]/.comments-total (j.total=comment_count) ও সহ-বিদ্যমান।
+- **E2E-জিওমেট্রি-মান (পুনরাবৃত্তি-মূল্য):** DOM-attr-চেক অপর্যাপ্ত — getBoundingClientRect().width>0; agent-browser=touch-mode — হোভার-রুল CSSOM-স্ক্যানে।
+- **cursor-E2E এখন base-data-independent** (+১৫ ভলিউম-ব্যাচ, cleanup-সহ) — ২৪/২৪। ফিডে <৪১ আইটেমে চেইন-অ্যাসারশন মিথ্যা-ফেল করত।
+
+**পরবর্তী-সুপারিশ:** ① পুরনো-চুক্তির অবশিষ্ট মার্কআপ-সারফেস (থাকলে) canonical-এ মাইগ্রেট — দুই-ইঞ্জিন-রক্ষণাবেক্ষণ-বোঝা কমাতে ② article-কমেন্টে optimistic-UI (রিলোড-নেই — session105-এর refreshArticleThread qa-তেও) ③ নোটিফিকেশন-ড্রপডাউনে reply-টাইপ-ব্যাজ ④ hall-provost সার্চ/ফিল্টার + contact_hours লাইভ-ইন্ডিকেটর (keyset-তালিকা থেকে বাকি)।

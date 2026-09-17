@@ -1579,15 +1579,19 @@ router.post('/api/comment', async (req, res) => {
     _pid117, req.session.user.id, body.trim(), parent_id || null
   );
   await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(_pid117);
-  const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(_pid117);
+  const post = await db.prepare('SELECT author_id, title, type FROM posts WHERE id = ?').get(_pid117);
+  // সেশন ১১১: নোটিফিকেশন-লিংক ছিল শক্ত-কোডড '/articles/' — প্রশ্নের উত্তর/মন্তব্যে
+  // ক্লিক করলে ভুল-পেজে যেত; post.type-সচেতন লিংক + প্রসঙ্গ-সচেতন বার্তা।
+  const isQ111 = post && post.type === 'question';
+  const link111 = isQ111 ? '/qa/' + _pid117 : '/articles/' + _pid117;
   if (post && post.author_id !== req.session.user.id) {
-    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + post_id, req.session.user.id);
+    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার ${isQ111 ? 'প্রশ্নে' : 'লেখায়'} মন্তব্য করেছেন`, link111, req.session.user.id);
   }
   // সেশন ১১৪: রিপ্লাই-নোটিফিকেশন — প্যারেন্ট-মন্তব্যের লেখককেও (নিজে/পোস্ট-লেখক-ডুপ্লিকেট বাদ)
   if (parent_id) {
     const parent = await db.prepare('SELECT id, author_id FROM comments WHERE id = ?').get(parent_id);
     if (parent && parent.author_id !== req.session.user.id && parent.author_id !== (post && post.author_id)) {
-      await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, '/articles/' + post_id, req.session.user.id);
+      await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, link111, req.session.user.id);
     }
   }
   // Return the new comment id so callers (inline reply UI, tests) can chain
@@ -1729,7 +1733,10 @@ router.delete('/api/comments/:id', ensureLoggedIn, async (req, res) => {
     await db.prepare(`DELETE FROM likes WHERE comment_id IN (${ph})`).run(...del);
     await db.prepare(`DELETE FROM comments WHERE id IN (${ph})`).run(...del);
     await db.prepare(`UPDATE posts SET comment_count = MAX(0, comment_count - ${del.length}) WHERE id = ?`).run(c.post_id);
-    res.json({ ok: true, removed: del.length });
+    // সেশন ১১১: এই রুট session104-এর DELETE-কে শ্যাডো করে (first-match) — আগে total
+    // ফেরত হত না বলে ক্লায়েন্ট-কাউন্টার-সিঙ্ক (.comments-total/[data-cmt-total]) অসম্ভব ছিল।
+    const postAfter = await db.prepare('SELECT comment_count AS total FROM posts WHERE id = ?').get(c.post_id);
+    res.json({ ok: true, removed: del.length, total: postAfter ? postAfter.total : 0 });
   } catch (e) {
     res.status(500).json({ error: 'server' });
   }
@@ -2640,8 +2647,22 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const prev101 = await db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND comment_id = ?').get(me.id, target_id);
     const del101 = await db.prepare('DELETE FROM likes WHERE user_id = ? AND comment_id = ?').run(me.id, target_id);
     const toggledOff101 = del101.changes > 0 && ((prev101 && prev101.reaction_type) || 'like') === reaction_type;
+    // সেশন ১১১: কমেন্ট-রিঅ্যাকশনে লেখক-নোটিফিকেশন — পোস্ট-ব্রাঞ্চ-সিমেট্রিক নীতি
+    // (কেবল নতুন-যোগে + love/haha/wow-ডিবাউন্স; টগল-অফ/সুইচ/like-স্প্যামে নয়)।
+    // লিংক post.type-সচেতন — প্রশ্ন-উত্তরের রিঅ্যাকশনে /qa/-তেই নিয়ে যায়।
+    let addedC111 = false;
     if (!toggledOff101) {
-      await db.prepare('INSERT OR IGNORE INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+      const insC111 = await db.prepare('INSERT OR IGNORE INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+      addedC111 = insC111.changes > 0;
+    }
+    if (addedC111 && ['love', 'haha', 'wow'].includes(reaction_type)) {
+      const cOwn111 = await db.prepare('SELECT c.author_id AS ca, c.post_id AS pid, p.type AS ptype FROM comments c JOIN posts p ON p.id = c.post_id WHERE c.id = ?').get(target_id);
+      if (cOwn111 && cOwn111.ca !== me.id) {
+        const cLink111 = cOwn111.ptype === 'question' ? '/qa/' + cOwn111.pid : '/articles/' + cOwn111.pid;
+        const labels111 = { love: '❤️ ভালোবাসা', haha: '😂 হাসি', wow: '😮 বিস্ময়' };
+        await notifyIfAllowed(cOwn111.ca, 'notify_reactions', 'reaction', labels111[reaction_type] || 'প্রতিক্রিয়া',
+          displayName(me) + ' আপনার মন্তব্যে প্রতিক্রিয়া জানিয়েছেন', cLink111, me.id);
+      }
     }
     const mine101 = toggledOff101 ? null : reaction_type;
     const counts = await db.prepare(`
