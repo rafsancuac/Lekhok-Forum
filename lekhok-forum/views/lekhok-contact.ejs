@@ -104,7 +104,7 @@
                var dayPart = ci > -1 ? ht.slice(0, ci) : ht;
                var timePart = ci > -1 ? ht.slice(ci + 1).trim() : '';
           %>
-          <div class="cx-hour-row<%= closed ? ' is-closed' : '' %>" data-days="<%= dayPart %>" data-closed="<%= closed ? '1' : '0' %>">
+          <div class="cx-hour-row<%= closed ? ' is-closed' : '' %>" data-days="<%= dayPart %>" data-time="<%= timePart %>" data-closed="<%= closed ? '1' : '0' %>">
             <span class="cx-hour-dot" aria-hidden="true"></span>
             <span class="cx-hour-day"><%= dayPart %></span>
             <span class="cx-hour-time"><%= timePart %></span>
@@ -134,8 +134,8 @@
   </div>
 </section>
 
-<!-- ── সেকশন ৩: ক্যাম্পাস তথ্য ─────────────────────────────────────── -->
-<section class="section reveal">
+<!-- ── সেকশন ৩: ক্যাম্পাস তথ্য (cx-print-keep = প্রিন্টে কেবল এই সেকশন — ১০৯) ── -->
+<section class="section reveal cx-print-keep">
   <div class="container">
     <div class="section-head center">
       <span class="eyebrow"><%= C('contact_campus_eyebrow') %></span>
@@ -371,9 +371,9 @@
       </div>
     </div>
 
-    <!-- ৩ঙ. আবাসিক হল প্রভোস্ট তালিকা (সেশন ১০২ — DB/contact_halls খালি হলে রেজিস্ট্রি-ডিফল্ট; ১০৩: সার্চ+কপি+মোনোগ্রাম) -->
+    <!-- ৩ঙ. আবাসিক হল প্রভোস্ট তালিকা (সেশন ১০২ — DB/contact_halls খালি হলে রেজিস্ট্রি-ডিফল্ট; ১০৩: সার্চ+কপি+মোনোগ্রাম; ১০৯: id=প্রিন্ট-টার্গেট) -->
     <% if (typeof halls42 !== 'undefined' && halls42 && halls42.length) { %>
-    <div class="cx-sub-block">
+    <div class="cx-sub-block" id="cxProvBlock">
       <div class="cx-sec-head">
         <span class="cx-sec-ico"><i class="fas fa-hotel"></i></span>
         <div>
@@ -389,6 +389,8 @@
           <button type="button" class="cx-prov-clear" id="cxProvClear" aria-label="সার্চ মুছুন" hidden><i class="fas fa-times"></i></button>
         </div>
         <span class="cx-prov-count" id="cxProvCount"><%= en2bn102(String(halls42.length)) %>টি হল</span>
+        <% /* সেশন ১০৯: প্রিন্ট-বাটন (সেশন-১০৭-সুপারিশ) — ক্লিকে সব-হল-প্রসারিত করে window.print() */ %>
+        <button type="button" class="cx-prov-print" id="cxProvPrint" title="প্রভোস্ট তালিকা প্রিন্ট করুন"><i class="fas fa-print" aria-hidden="true"></i> প্রিন্ট করুন</button>
       </div>
 
       <div class="cx-prov-grid" id="cxProvGrid" data-collapsed="1">
@@ -531,9 +533,25 @@
   } else {
     btn.parentNode && btn.parentNode.removeChild(btn);
   }
+
+  /* ── সেশন ১০৯: প্রিন্ট-ফ্লো — ক্লিকে সব-হল-প্রসারিত → window.print();
+     Ctrl+P-তেও beforeprint-ইভেন্টে একই প্রসারণ (afterprint-এ ফেরত) ── */
+  var expandForPrint = function () {
+    grid.setAttribute('data-collapsed', '0');
+    items.forEach(function (it) { it.style.display = ''; });
+    if (emptyEl) emptyEl.hidden = true;
+    if (btn) btn.textContent = label(false);
+  };
+  var printBtn = document.getElementById('cxProvPrint');
+  if (printBtn) printBtn.addEventListener('click', function () { expandForPrint(); window.print(); });
+  window.addEventListener('beforeprint', expandForPrint);
 })();
 
-/* ── 'আজ খোলা' লাইভ-ব্যাজ (দিন-স্তর; contact_hours-রো-এর data-days/data-closed থেকে) ── */
+/* ── 'আজ খোলা' লাইভ-ব্যাজ — সেশন-১০৯: টাইম-লেভেল আপগ্রেড ──
+   আগে ছিল দিন-স্তর (আজ খোলা/আজ বন্ধ); এখন বাংলা সময়-পরিসর (যেমন
+   'সকাল ১০টা – সন্ধ্যা ৬টা') পার্স করে স্টেট-চার: এখন খোলা (pulse) /
+   এখন বন্ধ / আজ খোলা (অপার্সেবল সময়) / আজ বন্ধ। আজকের-রোতেও লাইভ-চিপ।
+   ডিভাইস-সময় ব্যবহার হয় (ভিজিটরের টাইমজোন — প্রোডাকশনে বাংলাদেশ)। */
 (function () {
   var badge = document.getElementById('cxTodayBadge');
   var txt = document.getElementById('cxTodayText');
@@ -556,12 +574,74 @@
     }
     if (found && !hit) hit = r;
   });
+  /* বাংলা সময়-স্ট্রিং → মিনিট (উদা: 'সকাল ১০টা'→600, 'সন্ধ্যা ৬টা'→1080,
+     'বিকাল ৪টা'→960, 'রাত ৮টা'→1200, 'দুপুর ১২টা'→720, 'ভোর ৫টা'→300) */
+  var bnToEn = function (s) { return String(s).replace(/[০-৯]/g, function (d) { return '০১২৩৪৫৬৭৮৯'.indexOf(d); }); };
+  var periodToHour = function (p, h) {
+    h = parseInt(h, 10);
+    if (isNaN(h)) return -1;
+    if (p === 'ভোর') return h;
+    if (p === 'সকাল') return h <= 11 ? h : -1;
+    if (p === 'দুপুর') return h === 12 ? 12 : (h < 12 ? 12 + h : h);
+    if (p === 'বিকাল') return h < 12 ? 12 + h : h;
+    if (p === 'সন্ধ্যা') return h < 12 ? 12 + h : h;
+    if (p === 'রাত') return h === 12 ? 0 : (h < 6 ? h : 12 + h);
+    return -1;
+  };
+  var parseRange = function (s) {
+    if (!s) return null;
+    var parts = String(s).split(/–|-|—/);
+    if (parts.length < 2) return null;
+    var val = function (t) {
+      var mm = bnToEn(t).match(/(ভোর|সকাল|দুপুর|বিকাল|সন্ধ্যা|রাত)\s*(\d{1,2})/);
+      if (!mm) {
+        var pm = bnToEn(t).match(/(\d{1,2})\s*[:.]\s*(\d{2})/); /* ১০:৩০-ধাঁচ */
+        if (pm) return parseInt(pm[1], 10) * 60 + parseInt(pm[2], 10);
+        var ph = bnToEn(t).match(/\d{1,2}/);
+        return ph ? parseInt(ph[0], 10) % 24 * 60 : -1;
+      }
+      var h = periodToHour(mm[1], mm[2]);
+      return h > -1 ? h * 60 : -1;
+    };
+    var o = val(parts[0]), c = val(parts[1]);
+    if (o < 0 || c < 0) return null;
+    if (c <= o) c += 12 * 60; /* 'রাত ৮টা – রাত ১টা' → মধ্যরাত অতিক্রম */
+    return { o: o, c: c };
+  };
+  var now = new Date();
+  var nowMin = now.getHours() * 60 + now.getMinutes();
   if (hit) {
     var closed = hit.getAttribute('data-closed') === '1';
+    var range = parseRange(hit.getAttribute('data-time'));
     badge.hidden = false;
-    badge.classList.add(closed ? 'is-off' : 'is-on');
-    txt.textContent = closed ? 'আজ বন্ধ' : 'আজ খোলা';
+    if (closed) {
+      badge.classList.add('is-off');
+      txt.textContent = 'আজ বন্ধ';
+    } else if (range) {
+      var openNow = nowMin >= range.o && nowMin < range.c;
+      if (openNow) {
+        badge.classList.add('is-live');
+        txt.textContent = 'এখন খোলা';
+      } else {
+        badge.classList.add('is-idle');
+        txt.textContent = 'এখন বন্ধ';
+        badge.title = 'আজকের অফিস-সময়: ' + (hit.getAttribute('data-time') || '');
+      }
+    } else {
+      badge.classList.add('is-on');
+      txt.textContent = 'আজ খোলা';
+    }
     hit.classList.add('is-today');
+    /* আজকের-রোর স্টেট-চিপও লাইভ করা (অপার্সেবল হলে স্ট্যাটিক-ই থাকে) */
+    if (!closed && range) {
+      var st = hit.querySelector('.cx-hour-state');
+      if (st) {
+        var openNow2 = nowMin >= range.o && nowMin < range.c;
+        st.textContent = openNow2 ? 'এখন খোলা' : 'এখন বন্ধ';
+        st.classList.toggle('live', openNow2);
+        st.classList.toggle('idle', !openNow2); /* সবুজ 'খোলা'-স্টাইলে 'বন্ধ' পাঠ বিভ্রান্তিকর — ধূসর-আইডল */
+      }
+    }
   }
 })();
 

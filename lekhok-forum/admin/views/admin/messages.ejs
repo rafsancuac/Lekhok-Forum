@@ -74,6 +74,7 @@
     <% const mono105 = (String(m.name || '?').trim()[0] || '?').toUpperCase(); %>
     <% const tint105 = TINTS105[m.id % TINTS105.length]; %>
     <% const replySub105 = m.subject ? ( /^রে:/i.test(m.subject) || /^re:/i.test(m.subject) ? m.subject : 'Re: ' + m.subject ) : 'Re: আপনার বার্তা'; %>
+    <% const qs109 = (filter105 !== 'all' || q105 || page105 > 1) ? '?' + [filter105 !== 'all' ? 'f=' + filter105 : '', q105 ? 'q=' + encodeURIComponent(q105) : '', page105 > 1 ? 'page=' + page105 : ''].filter(Boolean).join('&') : ''; %>
     <div class="msg105-card<%= isUnread105 ? ' unread' : '' %><%= m.is_archived ? ' archived' : '' %>" id="msg<%= m.id %>">
       <div class="msg-select105">
         <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট <%= m.id %>">
@@ -112,6 +113,37 @@
           <a class="act-btn105 accent" href="mailto:<%= m.email %>?subject=<%= encodeURIComponent(replySub105) %>&body=<%= encodeURIComponent('প্রিয় ' + m.name + ',\n\nআপনার বার্তার জন্য ধন্যবাদ।\n\n') %>"><i class="fas fa-reply"></i> উত্তর দিন</a>
           <% } %>
           <button type="button" class="act-btn105 danger" data-confirm="“<%= m.name %>”-এর বার্তা মুছে ট্র্যাশে পাঠানো হবে — নিশ্চিত?" data-form="/admin/messages/<%= m.id %>/delete<%= (filter105 !== 'all' || q105 || page105 > 1) ? '?' + [filter105 !== 'all' ? 'f=' + filter105 : '', q105 ? 'q=' + encodeURIComponent(q105) : '', page105 > 1 ? 'page=' + page105 : ''].filter(Boolean).join('&') : '' %>"><i class="fas fa-trash"></i> মুছুন</button>
+        </div>
+        <% /* ── সেশন ১০৯: রিপ্লাই-নোট — ইমেইল-উত্তরের অফলাইন-রেকর্ড (CSV-তেও যায়) ── */ %>
+        <div class="msg-note109<%= m.admin_reply ? ' has' : '' %>" id="note<%= m.id %>">
+          <% if (m.admin_reply) { %>
+          <div class="mn-view109">
+            <span class="mn-ico109" aria-hidden="true"><i class="fas fa-reply"></i></span>
+            <div class="mn-body109">
+              <div class="mn-head109">
+                <strong>উত্তর-নোট</strong>
+                <time title="নোট সংরক্ষিত হয়েছে"><i class="far fa-clock"></i> <%= m.replied_at ? new Date(String(m.replied_at).replace(' ', 'T')).toLocaleString('bn-BD', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—' %></time>
+              </div>
+              <p class="mn-text109"><%= m.admin_reply %></p>
+              <div class="mn-foot109">
+                <button type="button" class="mn-mini109" data-note-edit="<%= m.id %>"><i class="fas fa-pen"></i> সম্পাদনা</button>
+                <button type="button" class="mn-mini109 danger" data-confirm="এই বার্তার উত্তর-নোট মুছে ফেলা হবে — নিশ্চিত?" data-form="/admin/messages/<%= m.id %>/note/delete<%= qs109 %>"><i class="fas fa-trash"></i> মুছুন</button>
+              </div>
+            </div>
+          </div>
+          <% } %>
+          <form method="POST" class="mn-form109" action="/admin/messages/<%= m.id %>/note<%= qs109 %>" data-note-form="<%= m.id %>" hidden>
+            <label class="mn-lbl109" for="nt<%= m.id %>"><%= m.admin_reply ? 'নোট সম্পাদনা করুন' : 'উত্তর-নোট লিখুন' %> <span>— ইমেইল-উত্তরের রেকর্ড</span></label>
+            <textarea id="nt<%= m.id %>" name="admin_reply" rows="3" maxlength="2000" placeholder="যেমন: ইমেইলে জবাব দেওয়া হয়েছে — পরবর্তী-পদক্ষেপ জানানো হয়েছে…"><%= m.admin_reply || '' %></textarea>
+            <div class="mn-frm-foot109">
+              <span class="mn-count109" data-note-count>০ / ২০০০</span>
+              <div class="mn-frm-btns109">
+                <button type="button" class="mn-mini109" data-note-cancel>বাতিল</button>
+                <button type="submit" class="mn-mini109 save"><i class="fas fa-check"></i> সংরক্ষণ</button>
+              </div>
+            </div>
+          </form>
+          <button type="button" class="mn-add109" data-note-open="<%= m.id %>" <%= m.admin_reply ? 'hidden' : '' %>><i class="fas fa-plus"></i> নোট লিখুন</button>
         </div>
       </div>
     </div>
@@ -224,6 +256,57 @@
       });
     });
   }
+
+  /* ── ১০৯: রিপ্লাই-নোট — ওপেন/এডিট/ক্যানসেল/কাউন্টার (বাংলা-ডিজিট) ── */
+  var bn109 = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+  function noteFormOf109(id) { return document.querySelector('[data-note-form="' + id + '"]'); }
+  function noteAddBtnOf109(id) { return document.querySelector('[data-note-open="' + id + '"]'); }
+  document.querySelectorAll('[data-note-open]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = noteFormOf109(b.getAttribute('data-note-open'));
+      if (f) { f.hidden = false; b.hidden = true; var t = f.querySelector('textarea'); if (t) t.focus(); }
+    });
+  });
+  document.querySelectorAll('[data-note-edit]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var card = b.closest('.msg-note109');
+      var f = noteFormOf109(b.getAttribute('data-note-edit'));
+      if (f) {
+        f.hidden = false;
+        if (card) card.classList.add('editing');
+        var t = f.querySelector('textarea'); if (t) t.focus();
+      }
+    });
+  });
+  document.querySelectorAll('[data-note-cancel]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = b.closest('[data-note-form]');
+      if (!f) return;
+      var id = f.getAttribute('data-note-form');
+      var card = f.closest('.msg-note109');
+      f.hidden = true;
+      if (card) {
+        card.classList.remove('editing');
+        var has = card.classList.contains('has');
+        if (has) {
+          var view = card.querySelector('.mn-view109');
+          if (view) view.hidden = false;
+          /* এডিট-ড্রাফট বাতিল → মূল-নোট টেক্সটেরিয়ায় ফেরত (পরের এডিটে প্রি-ফিল সঠিক) */
+          var vt = card.querySelector('.mn-text109');
+          var ta = f.querySelector('textarea');
+          if (vt && ta) { ta.value = vt.textContent; ta.dispatchEvent(new Event('input')); }
+        } else {
+          var add = noteAddBtnOf109(id);
+          if (add) add.hidden = false;
+        }
+      }
+    });
+  });
+  document.querySelectorAll('[data-note-form] textarea').forEach(function (t) {
+    var c = t.closest('[data-note-form]').querySelector('[data-note-count]');
+    var upd = function () { if (c) c.textContent = bn109(t.value.length) + ' / ২০০০'; };
+    t.addEventListener('input', upd); upd();
+  });
 
   /* ── ১০৫-গ: ?saved=1 টোস্ট (bulk-action ফেরত) ── */
   try {

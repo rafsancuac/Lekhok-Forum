@@ -1802,3 +1802,49 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .msx-chip b{font-size:.98rem;color:var(--accent-dark,#047857);line-height:1;flex:0 0 auto;min-width:20px;text-align:center}
 .msx-chip span{font-size:.66rem;color:var(--text-muted,#64748b);line-height:1.25;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:640px){.msx-grid{gap:6px}.msx-chip{padding:6px 9px}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SESSION 109 — যোগাযোগ-পেজ: টাইম-লেভেল 'এখন খোলা' ব্যাজ + প্রভোস্ট প্রিন্ট
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ১. টাইম-লেভেল ব্যাজ স্টেট (is-live = এখন খোলা, is-idle = এখন বন্ধ) ── */
+.cx102 .cx-today-badge.is-live{background:linear-gradient(160deg,rgba(16,185,129,.18),rgba(5,150,105,.12));color:#065F46;border-color:rgba(5,150,105,.55);box-shadow:0 2px 10px rgba(5,150,105,.22)}
+.cx102 .cx-today-badge.is-live .cx-tb-dot{background:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.2);animation:cxPulse103 1.8s ease-out infinite}
+.cx102 .cx-today-badge.is-idle{background:rgba(100,116,139,.1);color:#475569;border-color:rgba(100,116,139,.35)}
+.cx102 .cx-today-badge.is-idle .cx-tb-dot{background:#94A3B8;box-shadow:0 0 0 3px rgba(148,163,184,.16);animation:none}
+/* আজকের-রোর লাইভ-চিপ ভেরিয়েন্ট (খোলা → এখন খোলা) */
+.cx102 .cx-hour-state.live{background:rgba(5,150,105,.14);color:#065F46;border-color:rgba(5,150,105,.45);position:relative;padding-left:22px}
+.cx102 .cx-hour-state.idle{background:rgba(100,116,139,.1);color:#475569;border-color:rgba(100,116,139,.32)}
+.cx102 .cx-hour-state.live::before{content:'';position:absolute;left:9px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:#059669;animation:cxPulse103 1.8s ease-out infinite}
+
+/* ── ২. প্রভোস্ট-তালিকা প্রিন্ট-বাটন (cx-prov-tools-এর তৃতীয়-আইটেম) ── */
+.cx102 .cx-prov-print{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:999px;border:1px solid rgba(5,150,105,.35);background:#fff;color:#047857;font-size:.82rem;font-weight:800;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s,transform .2s}
+.cx102 .cx-prov-print:hover{background:var(--accent,#059669);color:#fff;box-shadow:0 8px 20px rgba(5,150,105,.3);transform:translateY(-1px)}
+.cx102 .cx-prov-print:focus-visible{outline:3px solid rgba(5,150,105,.45);outline-offset:2px;border-radius:999px}
+@media (max-width:640px){.cx102 .cx-prov-print{padding:8px 15px;font-size:.78rem}}
+
+/* ── ৩. প্রিন্ট-স্টাইলশিট: কেবল প্রভোস্ট-তালিকা কাগজে আসে ──
+   হেডার/ফুটার/ফর্ম/ম্যাপ/অন্য-ব্লক বাদ; সব হল প্রসারিত (JS-ব্যর্থতায়ও);
+   reveal-অদৃশ্যতা ও শ্যাডো নির্মূল — কালি-বান্ধব দুই-কলাম গ্রিড */
+@media print{
+  @page{margin:14mm}
+  body{background:#fff !important}
+  .scroll-progress,.btclf-topbar,.btclf-footer,.back-to-top,iframe,.cx102 .cx-prov-tools,.cx102 .cx-prov-toggle{display:none !important}
+  .cx102 .reveal,.reveal{opacity:1 !important;transform:none !important}
+  .cx102 section{display:none !important}
+  .cx102 section.cx-print-keep{display:block !important}
+  .cx102 .cx-sub-block{display:none !important}
+  .cx102 #cxProvBlock{display:block !important}
+  .cx102 .section-head.center{display:none !important}
+  .cx102 #cxProvBlock .cx-sec-head{margin-bottom:14px}
+  .cx102 #cxProvBlock .cx-sec-title{font-size:16pt;color:#0a1f44}
+  .cx102 #cxProvBlock .cx-sec-sub{font-size:10pt;color:#333}
+  .cx102 #cxProvBlock .cx-sec-ico{border:1px solid #ccc}
+  .cx102 #cxProvBlock .cx-prov-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .cx102 #cxProvBlock .cx-prov-grid[data-collapsed="1"] .cx-prov-item{display:flex !important}
+  .cx102 #cxProvBlock .cx-prov-item{border:1px solid #d0d5dd !important;box-shadow:none !important;background:#fff !important;break-inside:avoid}
+  .cx102 #cxProvBlock .cx-prov-call{color:#0a1f44 !important;font-weight:700;text-decoration:none}
+  .cx102 #cxProvBlock .cx-prov-copy{display:none !important}
+  .cx102 #cxProvBlock .cx-prov-empty{display:none !important}
+  #cxTodayBadge{display:none !important}
+}

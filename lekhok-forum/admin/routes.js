@@ -1449,12 +1449,34 @@ router.get('/messages/export', requireAdmin, async (req, res) => {
   const rowsX = await db.prepare(
     `SELECT * FROM contact_submissions ${whereX.length ? 'WHERE ' + whereX.join(' AND ') : ''} ORDER BY id ASC`
   ).all(...argsX);
-  const outX = [['id', 'name', 'email', 'subject', 'message', 'read', 'archived', 'created_at']];
-  for (const m of rowsX) outX.push([m.id, m.name || '', m.email || '', m.subject || '', m.message || '', m.is_read ? 'yes' : 'no', m.is_archived ? 'yes' : 'no', m.created_at || '']);
+  // সেশন ১০৯: + replied_at/admin_reply — অফলাইন-রেকর্ডে উত্তর-ইতিহাসও
+  const outX = [['id', 'name', 'email', 'subject', 'message', 'read', 'archived', 'created_at', 'replied_at', 'admin_reply']];
+  for (const m of rowsX) outX.push([m.id, m.name || '', m.email || '', m.subject || '', m.message || '', m.is_read ? 'yes' : 'no', m.is_archived ? 'yes' : 'no', m.created_at || '', m.replied_at || '', m.admin_reply || '']);
   const csvX = outX.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="contact-messages.csv"');
   res.send('\ufeff' + csvX);
+});
+
+// ── সেশন ১০৯: রিপ্লাই-নোট — অ্যাডমিন প্রতিটি বার্তায় নিজের উত্তর-রেকর্ড লেখেন
+// (কে জবাব দিল কী কী — mailto-পাথওয়ে-র অফলাইন-অডিট; CSV-তেও যায়)।
+// POST /messages/:id/note {admin_reply} | POST /messages/:id/note/delete
+router.post('/messages/:id/note', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const note = String(req.body.admin_reply || '').trim().slice(0, 2000);
+  if (Number.isInteger(id) && id > 0 && note) {
+    await db.prepare("UPDATE contact_submissions SET admin_reply = ?, replied_at = datetime('now', 'localtime') WHERE id = ?").run(note, id);
+    await TA42.audit(db, req, 'reply-note', 'contact_submissions', id, note.slice(0, 120));
+  }
+  res.redirect(303, msgBack105(req, 'saved=1'));
+});
+router.post('/messages/:id/note/delete', requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isInteger(id) && id > 0) {
+    await db.prepare('UPDATE contact_submissions SET admin_reply = NULL, replied_at = NULL WHERE id = ?').run(id);
+    await TA42.audit(db, req, 'reply-note-delete', 'contact_submissions', id, '');
+  }
+  res.redirect(303, msgBack105(req, 'saved=1'));
 });
 
 // সেশন ১০৫: এক-বার্তা অ্যাকশন — read/unread/archive/unarchive/delete

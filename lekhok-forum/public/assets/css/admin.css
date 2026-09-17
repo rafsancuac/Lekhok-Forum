@@ -699,3 +699,38 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
 
 /* সেশন ১০৫-ব: ড্যাশবোর্ড বার্তা-কার্ডে অপঠিত-ব্যাজ */
 .dash-unread105{position:absolute;top:10px;right:12px;background:#dc2626;color:#fff;border-radius:8px;padding:2px 8px;font-size:.72rem;font-weight:800;box-shadow:0 1px 5px rgba(220,38,38,.4)}
+
+/* ═══ Session 109 — ইনবক্স রিপ্লাই-নোট (.msg-note109 / .mn-*) ═══
+   ইমেইল-উত্তরের অফলাইন-রেকর্ড: কার্ডের একশন-রোর নিচে এমারল্ড-অ্যাকসেন্ট ব্লক।
+   চুক্তি: [data-note-open/edit/cancel/count] + [data-confirm][data-form] (মোছার পথ — ১০৫-মোডাল) */
+.msg-note109{margin-top:10px;border-top:1px dashed #e5e7eb;padding-top:10px}
+.mn-add109{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px dashed rgba(5,150,105,.4);background:transparent;color:#059669;font-size:.78rem;font-weight:700;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+.mn-add109:hover{background:rgba(5,150,105,.08);border-color:#059669}
+.mn-add109:focus-visible{outline:3px solid rgba(5,150,105,.4);outline-offset:2px}
+.mn-view109{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(160deg,#F0FDF6,#fff);border:1px solid rgba(5,150,105,.3);border-left:3px solid #059669;border-radius:10px;padding:10px 12px}
+.mn-ico109{flex:none;width:26px;height:26px;border-radius:50%;background:#059669;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.68rem;box-shadow:0 2px 6px rgba(5,150,105,.35)}
+.mn-body109{flex:1;min-width:0}
+.mn-head109{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.mn-head109 strong{font-size:.8rem;color:#065f46;letter-spacing:.2px}
+.mn-head109 time{font-size:.72rem;color:#059669;background:rgba(5,150,105,.1);border-radius:999px;padding:2px 9px;font-weight:700}
+.mn-text109{margin:0;font-size:.88rem;color:#374151;white-space:pre-wrap;word-break:break-word}
+.mn-foot109{display:flex;gap:6px;margin-top:8px}
+.mn-mini109{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;border:1px solid #d1d5db;background:#fff;color:#4b5563;font-size:.74rem;font-weight:700;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+.mn-mini109:hover{border-color:#059669;color:#059669;background:rgba(5,150,105,.06)}
+.mn-mini109.danger:hover{border-color:#dc2626;color:#dc2626;background:rgba(220,38,38,.05)}
+.mn-mini109.save{background:#059669;border-color:#059669;color:#fff}
+.mn-mini109.save:hover{background:#047857;border-color:#047857;color:#fff}
+.mn-mini109:focus-visible{outline:3px solid rgba(5,150,105,.4);outline-offset:2px}
+.mn-form109{background:#F7F8FA;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px}
+.mn-lbl109{display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:6px}
+.mn-lbl109 span{font-weight:600;color:#9ca3af}
+.mn-form109 textarea{width:100%;resize:vertical;min-height:64px;border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;font-size:.86rem;font-family:inherit;line-height:1.5;color:#111;transition:border-color .18s,box-shadow .18s;background:#fff}
+.mn-form109 textarea:focus{outline:none;border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,.15)}
+.mn-frm-foot109{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;flex-wrap:wrap}
+.mn-count109{font-size:.72rem;color:#9ca3af;font-variant-numeric:tabular-nums}
+.mn-frm-btns109{display:flex;gap:6px}
+/* এডিট-মোডে পুরনো নোট-ভিউ লুকাও (ফর্মই প্রি-ফিল্ড) */
+.msg-note109.editing .mn-view109{display:none}
+/* [hidden]-রক্ষা: ক্লাস-ডিসপ্লে (inline-flex) UA-র [hidden]{display:none}-কে ছাপিয়ে যায় */
+.mn-add109[hidden],.mn-form109[hidden]{display:none !important}
+@media (prefers-reduced-motion: reduce){.mn-add109,.mn-mini109,.mn-form109 textarea{transition:none}}
