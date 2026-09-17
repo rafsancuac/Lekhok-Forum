@@ -87,7 +87,7 @@
             </div>
           <% } else { %>
             <% conversations.forEach(c => { %>
-              <a href="<%= c.conv_link || ('/messages/' + c.other_username) %>" class="conv-item <%= c.is_group_flag ? 'is-group' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username || '' %>" data-id="<%= c.id %>" data-group="<%= c.is_group_flag ? 1 : 0 %>" data-unread="<%= c.unread_count > 0 ? 1 : 0 %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>" data-lm="<%= c.last_message_at || '' %>">
+              <a href="<%= c.conv_link || ('/messages/' + c.other_username) %>" class="conv-item <%= c.is_group_flag ? 'is-group' : '' %><%= c.pinned ? ' is-pinned' : '' %><%= c.muted ? ' is-muted' : '' %>" data-name="<%= c.other_name.toLowerCase() %>" data-username="<%= c.other_username || '' %>" data-id="<%= c.id %>" data-group="<%= c.is_group_flag ? 1 : 0 %>" data-unread="<%= c.unread_count > 0 ? 1 : 0 %>" data-last="<%= (c.last_body || '').replace(/<[^>]+>/g, '').toLowerCase() %>" data-lm="<%= c.last_message_at || '' %>">
                 <div class="avatar avatar-md" style="position:relative">
                   <% if (c.is_group_flag) { %>
                   <span class="group-avatar"><i class="fas fa-users"></i></span>
@@ -101,6 +101,9 @@
                   <div class="conv-snippet"><% if (c.is_group_flag) { %><i class="fas fa-users" style="font-size:10px"></i> <%= c.member_count %> সদস্য · <% } %><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 42) : 'নতুন কথোপকথন' %></div>
                 </div>
                 <div class="conv-meta-right">
+                  <%# সেশন ৭৬: পিন/মিউট ফ্ল্যাগ + রো-মেনু %>
+                  <% if (c.pinned) { %><i class="fas fa-thumbtack conv-flag" title="পিন করা" style="color:var(--fb-blue)"></i><% } %>
+                  <% if (c.muted) { %><i class="fas fa-bell-slash conv-flag" title="মিউট করা"></i><% } %>
                   <span class="conv-reltime" data-reltime="<%= c.last_message_at || '' %>"></span>
                   <span class="conv-mute-tag" hidden title="মিউট করা"><i class="fas fa-bell-slash"></i></span>
                   <% if (c.unread_count > 0) { %><span class="conv-unread"><%= c.unread_count %></span><% } %>
@@ -123,6 +126,9 @@
 
   <%# ── সেশন ৭৬: সারি-প্রতি ৩-ডট কনটেক্সট-মেনু (মিউট/আর্কাইভ, localStorage-পেসিস্টেন্ট) ── %>
   <div class="conv-menu" id="convMenu" hidden role="menu" aria-label="কথোপকথন অপশন">
+    <%# সেশন ৭৬-মার্জ: পিন = DB-ব্যাকড (ক্রস-ডিভাইস, তালিকা-রি-সর্ট); মিউট = DB + লোকাল-প্রেফ সিঙ্কড %>
+    <button type="button" role="menuitem" data-act="pin" hidden><i class="fas fa-thumbtack"></i> <span>পিন করুন</span></button>
+    <button type="button" role="menuitem" data-act="unpin" hidden><i class="fas fa-thumbtack"></i> <span>আনপিন করুন</span></button>
     <button type="button" role="menuitem" data-act="mute"><i class="fas fa-bell-slash"></i> <span>মিউট করুন</span></button>
     <button type="button" role="menuitem" data-act="unmute"><i class="fas fa-bell"></i> <span>আনমিউট করুন</span></button>
     <button type="button" role="menuitem" data-act="archive"><i class="fas fa-box-archive"></i> <span>আর্কাইভ করুন</span></button>
@@ -186,6 +192,10 @@
       convMenu.querySelector('[data-act="unmute"]').style.display = p.muted ? 'flex' : 'none';
       convMenu.querySelector('[data-act="archive"]').style.display = p.archived ? 'none' : 'flex';
       convMenu.querySelector('[data-act="unarchive"]').style.display = p.archived ? 'flex' : 'none';
+      // সেশন ৭৬-মার্জ: পিন-স্টেট DB-থেকে (সার্ভার-রেন্ডারড is-pinned ক্লাস)
+      const isPinned76 = menuTarget.classList.contains('is-pinned');
+      convMenu.querySelector('[data-act="pin"]').style.display = isPinned76 ? 'none' : 'flex';
+      convMenu.querySelector('[data-act="unpin"]').style.display = isPinned76 ? 'flex' : 'none';
       const r = btn.getBoundingClientRect();
       convMenu.hidden = false;
       const mw = convMenu.offsetWidth || 200;
@@ -213,8 +223,28 @@
       const act = e.target.closest('[data-act]');
       if (!act || !menuTarget) return;
       const p = prefOf(menuTarget.dataset.id);
+      const rowConvId76 = parseInt(menuTarget.dataset.id, 10);
+      const csrf76 = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+      // সেশন ৭৬-মার্জ: পিন = DB-ব্যাকড (তালিকা রি-সর্টের জন্য রিলোড)
+      if (act.dataset.act === 'pin' || act.dataset.act === 'unpin') {
+        const want = act.dataset.act === 'pin';
+        fetch('/api/messages/conv/' + rowConvId76 + '/pin', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf76 },
+          body: JSON.stringify({ pinned: want })
+        }).then(r => r.json()).then(d => {
+          if (d.ok) { closeConvMenu(); window.location.reload(); }
+        }).catch(() => {});
+        return;
+      }
       if (act.dataset.act === 'mute') p.muted = true;
       if (act.dataset.act === 'unmute') p.muted = false;
+      // সেশন ৭৬-মার্জ: মিউট = DB-সিঙ্ক (নোটিফিকেশন-সাপ্রেশন, ক্রস-ডিভাইস) + লোকাল-ভিজ্যুয়াল
+      if (act.dataset.act === 'mute' || act.dataset.act === 'unmute') {
+        fetch('/api/messages/conv/' + rowConvId76 + '/mute', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf76 },
+          body: JSON.stringify({ muted: act.dataset.act === 'mute' ? 1 : 0 })
+        }).catch(() => {});
+      }
       if (act.dataset.act === 'archive') p.archived = true;
       if (act.dataset.act === 'unarchive') p.archived = false;
       savePrefs();
@@ -535,6 +565,7 @@
     renderRecent();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/messenger-actions.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
 </body>

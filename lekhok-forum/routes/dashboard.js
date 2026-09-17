@@ -200,6 +200,31 @@ async function reactionMapFor(messages) {
   return map;
 }
 
+// সেশন ৭৬: মিউট-স্টেট হেল্পার — মিউট করা সদস্যকে নোটিফিকেশন যাবে না
+async function isConvMuted(convId, userId) {
+  try {
+    return !!(await db.prepare('SELECT 1 AS x FROM conversation_members WHERE conversation_id = ? AND user_id = ? AND muted = 1').get(convId, userId));
+  } catch (e) { return false; }
+}
+
+// সেশন ৭৬: চ্যাট-মেসেজ লোড — রিপ্লাই-টার্গেট প্রিভিউ + এডিট-ট্রেসসহ
+async function chatMessagesFor(convId) {
+  try {
+    return await db.prepare(`
+      SELECT m.*,
+        rb.body AS reply_body, rb.file_url AS reply_file_url, rb.file_name AS reply_file_name,
+        ru.full_name AS reply_sender_name, ru.username AS reply_sender_username
+      FROM messages m
+      LEFT JOIN messages rb ON rb.id = m.reply_to_id
+      LEFT JOIN users ru ON ru.id = rb.sender_id
+      WHERE m.conversation_id = ?
+      ORDER BY m.created_at ASC
+    `).all(convId);
+  } catch (e) {
+    return await db.prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(convId);
+  }
+}
+
 // সেশন ৩৮: 1-on-1 + গ্রুপ — একত্রে কথোপথন তালিকা (সাইডবার/লিস্ট দুই জায়গাতেই)
 async function convListFor(me) {
   const one = await db.prepare(`
@@ -210,12 +235,14 @@ async function convListFor(me) {
       CASE WHEN c.user_a = ? THEN ub.gender ELSE ua.gender END as other_gender,
       '/messages/' || (CASE WHEN c.user_a = ? THEN ub.username ELSE ua.username END) as conv_link,
       (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_body,
-      (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count
+      (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count,
+      IFNULL((SELECT pinned FROM conversation_members WHERE conversation_id = c.id AND user_id = ?), 0) as pinned,
+      IFNULL((SELECT muted FROM conversation_members WHERE conversation_id = c.id AND user_id = ?), 0) as muted
     FROM conversations c
     JOIN users ua ON c.user_a = ua.id
     JOIN users ub ON c.user_b = ub.id
     WHERE (c.user_a = ? OR c.user_b = ?) AND IFNULL(c.is_group, 0) = 0
-  `).all(me, me, me, me, me, me, me, me);
+  `).all(me, me, me, me, me, me, me, me, me, me);
   let groups = [];
   try {
     groups = await db.prepare(`
@@ -223,12 +250,14 @@ async function convListFor(me) {
         '/messages/g/' || c.id as conv_link,
         (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_body,
         (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count,
-        (SELECT COUNT(*) FROM conversation_members WHERE conversation_id = c.id) as member_count
-      FROM conversations c JOIN conversation_members cm ON cm.conversation_id = c.id
-      WHERE IFNULL(c.is_group, 0) = 1 AND cm.user_id = ?
+        (SELECT COUNT(*) FROM conversation_members WHERE conversation_id = c.id) as member_count,
+        IFNULL(cm.pinned, 0) as pinned, IFNULL(cm.muted, 0) as muted
+      FROM conversations c JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = ?
+      WHERE IFNULL(c.is_group, 0) = 1
     `).all(me, me);
   } catch (e) {}
-  return one.concat(groups).sort((a, b) => String(b.last_message_at || '').localeCompare(String(a.last_message_at || '')));
+  // সেশন ৭৬: পিন-করা কথোপকথন সবার আগে (FB চ্যাট-হেড আচরণ)
+  return one.concat(groups).sort((a, b) => ((b.pinned || 0) - (a.pinned || 0)) || String(b.last_message_at || '').localeCompare(String(a.last_message_at || '')));
 }
 
 router.get('/messages', ensureAuth, async (req, res) => {
@@ -256,13 +285,17 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
   // Mark as read
   await db.prepare('UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?').run(conv.id, me);
 
-  const messages = await db.prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(conv.id);
+  const messages = await chatMessagesFor(conv.id);
   const reactionMap = await reactionMapFor(messages);
 
   // Refresh list of conversations for sidebar (1-on-1 + groups)
   const conversations = await convListFor(me);
 
-  res.render('user/messages-chat', { other, messages, conversations, conv, isGroup: false, members: [], reactionMap, currentPath: '/messages', err: req.query.err || null });
+  // সেশন ৭৬: আমার প্রতি-কথোপকথন সেটিংস (মিউট/পিন)
+  let myFlags = { muted: 0, pinned: 0 };
+  try { myFlags = await db.prepare('SELECT muted, pinned FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(conv.id, me) || myFlags; } catch (e) {}
+
+  res.render('user/messages-chat', { other, messages, conversations, conv, isGroup: false, members: [], reactionMap, myFlags, currentPath: '/messages', err: req.query.err || null });
 });
 
 router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), async (req, res) => {
@@ -282,7 +315,13 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
   const conv = await db.prepare('SELECT * FROM conversations WHERE (user_a = ? AND user_b = ?) OR (user_a = ? AND user_b = ?)')
     .get(me, other.id, other.id, me);
   if (!conv) return res.redirect('/messages');
-  const { body } = req.body;
+  const { body, reply_to } = req.body;
+  // সেশন ৭৬: রিপ্লাই-থ্রেডিং — টার্গেট মেসেজ এই কথোপকথনেই থাকতে হবে
+  let replyToId = parseInt(reply_to, 10) || null;
+  if (replyToId) {
+    const rt = await db.prepare('SELECT id FROM messages WHERE id = ? AND conversation_id = ?').get(replyToId, conv.id);
+    if (!rt) replyToId = null;
+  }
   // req.file.url is correct in BOTH modes (local disk path or Vercel blob URL)
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   const fileName = req.file ? req.file.originalname : null;
@@ -290,11 +329,11 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
     if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.status(400).json({ ok: false, error: 'empty' });
     return res.redirect('/messages/' + req.params.username);
   }
-  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
-    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName);
+  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, reply_to_id) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, replyToId);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
-  // Notify recipient (dedup: ১০ মিনিটে একই বডির দ্বিতীয় নোটিফিকেশন নয়)
-  if (other.id !== me) {
+  // Notify recipient (dedup: ১০ মিনিটে একই বডির দ্বিতীয় নোটিফিকেশন নয়; মিউট-হলে নয়)
+  if (other.id !== me && !(await isConvMuted(conv.id, other.id))) {
     await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username);
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
@@ -345,15 +384,17 @@ router.get('/messages/g/:id', ensureAuth, async (req, res) => {
   const conv = await convAccess(parseInt(req.params.id), me);
   if (!conv || !conv.is_group) return res.redirect('/messages');
   await db.prepare('UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?').run(conv.id, me);
-  const messages = await db.prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(conv.id);
+  const messages = await chatMessagesFor(conv.id);
   const reactionMap = await reactionMapFor(messages);
   const members = await db.prepare(`
     SELECT u.id, u.username, u.full_name, u.avatar_url FROM conversation_members cm JOIN users u ON u.id = cm.user_id WHERE cm.conversation_id = ?
   `).all(conv.id);
   const other = { id: 0, username: null, full_name: conv.title, avatar_url: null, is_group: true };
   const conversations = await convListFor(me);
+  let myFlags = { muted: 0, pinned: 0 };
+  try { myFlags = await db.prepare('SELECT muted, pinned FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(conv.id, me) || myFlags; } catch (e) {}
   res.render('user/messages-chat', {
-    other, messages, conversations, conv, isGroup: true, members, reactionMap,
+    other, messages, conversations, conv, isGroup: true, members, reactionMap, myFlags,
     currentPath: '/messages', err: req.query.err || null,
     note: req.query.added ? 'added' : (req.query.removed ? 'removed' : null)
   });
@@ -367,19 +408,25 @@ router.post('/messages/g/:id', ensureAuth, withUpload(attachmentUpload), async (
     if ((req.headers.accept || '').includes('application/json')) return res.status(403).json({ ok: false, error: 'forbidden' });
     return res.redirect('/messages');
   }
-  const { body } = req.body;
+  const { body, reply_to } = req.body;
   const fileUrl = req.file ? (req.file.url || req.file.path) : null;
   const fileName = req.file ? req.file.originalname : null;
   if ((!body || !body.trim()) && !fileUrl) {
     if ((req.headers.accept || '').includes('application/json')) return res.status(400).json({ ok: false, error: 'empty' });
     return res.redirect('/messages/g/' + conv.id);
   }
-  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
-    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName);
+  // সেশন ৭৬: গ্রুপেও রিপ্লাই-থ্রেডিং
+  let replyToId = parseInt(reply_to, 10) || null;
+  if (replyToId) {
+    const rt = await db.prepare('SELECT id FROM messages WHERE id = ? AND conversation_id = ?').get(replyToId, conv.id);
+    if (!rt) replyToId = null;
+  }
+  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, reply_to_id) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, replyToId);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   const members = await db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(conv.id);
   for (const m of members) {
-    if (m.user_id !== me) await notifyOnce(m.user_id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} (${conv.title}): ${(body || '📎').slice(0, 60)}`, '/messages/g/' + conv.id);
+    if (m.user_id !== me && !(await isConvMuted(conv.id, m.user_id))) await notifyOnce(m.user_id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} (${conv.title}): ${(body || '📎').slice(0, 60)}`, '/messages/g/' + conv.id);
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
   res.redirect('/messages/g/' + conv.id);
@@ -560,7 +607,13 @@ router.get('/api/messages/poll', ensureAuth, async (req, res) => {
 
   // New messages
   const rows = await db.prepare(
-    'SELECT m.*, u.username AS sender_username, u.full_name AS sender_name, u.avatar_url AS sender_avatar FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.conversation_id = ? AND m.id > ? ORDER BY m.id ASC'
+    `SELECT m.*, u.username AS sender_username, u.full_name AS sender_name, u.avatar_url AS sender_avatar,
+      rb.body AS reply_body, ru.full_name AS reply_sender_name
+    FROM messages m
+    JOIN users u ON u.id = m.sender_id
+    LEFT JOIN messages rb ON rb.id = m.reply_to_id
+    LEFT JOIN users ru ON ru.id = rb.sender_id
+    WHERE m.conversation_id = ? AND m.id > ? ORDER BY m.id ASC`
   ).all(convId, since);
   const messages = rows.map(r => ({
     id: r.id,
@@ -573,8 +626,18 @@ router.get('/api/messages/poll', ensureAuth, async (req, res) => {
     sender_avatar: r.sender_avatar || '/avatar/' + r.sender_id,
     is_me: r.sender_id === me,
     created_at: r.created_at,
-    is_read: !!r.is_read
+    is_read: !!r.is_read,
+    reply_to_id: r.reply_to_id || null,
+    reply_body: r.reply_body || null,
+    reply_sender_name: r.reply_sender_name || null,
+    edited: !!r.edited_at
   }));
+
+  // সেশন ৭৬: লাইভ-এডিট প্রোপাগেশন — পুরনো (id <= since) মেসেজের নতুন এডিটও ক্লায়েন্টে পৌঁছাক
+  let edits = [];
+  try {
+    edits = await db.prepare('SELECT id, body, edited_at FROM messages WHERE conversation_id = ? AND id <= ? AND edited_at IS NOT NULL').all(convId, since);
+  } catch (_) {}
 
   // Typing (1-on-1 only)
   let typing = false;
@@ -597,7 +660,7 @@ router.get('/api/messages/poll', ensureAuth, async (req, res) => {
     seen_upto = (r && r.mx) || 0;
   } catch (_) {}
 
-  res.json({ messages, typing, online, seen_upto, me: { id: me } });
+  res.json({ messages, typing, online, seen_upto, edits, me: { id: me } });
 });
 
 // ── সেশন ৭৫ (FB-মেসেঞ্জার-রিভাম্প): Active-now ট্রে-র জন্য সব অনলাইন ইউজার ──
@@ -659,6 +722,108 @@ router.get('/api/messages/unread', ensureAuth, async (req, res) => {
   `).all(me, me, me);
   const totalUnread = rows.reduce((a, r) => a + r.unread, 0);
   res.json({ totalUnread, conversations: rows });
+});
+
+// ── সেশন ৭৬: মেসেজিং প্রো-ফিচার ──────────────────────────────────────────────
+// (ক) মেসেজ এডিট — শুধু নিজের টেক্সট-মেসেজ, ১৫-মিনিট উইন্ডো, edited_at-ট্রেসসহ
+router.post('/api/messages/:id/edit', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const msgId = parseInt(req.params.id, 10);
+  const text = String((req.body || {}).body || '').trim().slice(0, 4000);
+  if (!msgId || !text) return res.status(400).json({ ok: false, error: 'invalid' });
+  const msg = await db.prepare('SELECT * FROM messages WHERE id = ?').get(msgId);
+  if (!msg || msg.sender_id !== me || !(await convAccess(msg.conversation_id, me))) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const sentTs = new Date(String(msg.created_at).includes('T') ? msg.created_at : String(msg.created_at).replace(' ', 'T') + 'Z').getTime();
+  if (Date.now() - sentTs > 15 * 60 * 1000) return res.json({ ok: false, error: 'window' });
+  await db.prepare("UPDATE messages SET body = ?, edited_at = datetime('now') WHERE id = ?").run(text, msgId);
+  res.json({ ok: true, id: msgId, body: text, edited: true });
+});
+
+// (খ) ফরওয়ার্ড-টার্গেট তালিকা (মোডালের জন্য — নিজের সব কথোপকথন)
+router.get('/api/messages/forward-targets', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convs = await convListFor(me);
+  res.json({ conversations: convs.map(c => ({
+    id: c.id,
+    name: c.other_name,
+    avatar: c.other_avatar,
+    is_group: !!c.is_group_flag,
+    member_count: c.member_count || 0,
+    muted: !!c.muted
+  })) });
+});
+
+// (গ) ফরওয়ার্ড — কপি নতুন কথোপকথনে পাঠায় (মূল মেসেজ অক্ষত)
+router.post('/api/messages/:id/forward', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const msgId = parseInt(req.params.id, 10);
+  const targetId = parseInt((req.body || {}).conv_id, 10);
+  if (!msgId || !targetId) return res.status(400).json({ ok: false, error: 'invalid' });
+  const msg = await db.prepare('SELECT * FROM messages WHERE id = ?').get(msgId);
+  if (!msg || !(await convAccess(msg.conversation_id, me))) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const target = await convAccess(targetId, me);
+  if (!target) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
+    .run(targetId, me, msg.body, msg.file_url, msg.file_name);
+  await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(targetId);
+  const preview = (msg.body || '📎 ' + (msg.file_name || 'ফাইল')).slice(0, 60);
+  if (target.is_group) {
+    const members = await db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(targetId);
+    for (const mm of members) {
+      if (mm.user_id !== me && !(await isConvMuted(targetId, mm.user_id))) {
+        await notifyOnce(mm.user_id, 'message', 'ফরওয়ার্ড করা মেসেজ', `${req.session.user.full_name} (${target.title || 'চ্যাট'}): ${preview}`, '/messages/g/' + targetId);
+      }
+    }
+  } else {
+    const oid = target.user_a === me ? target.user_b : target.user_a;
+    if (oid !== me && !(await isConvMuted(targetId, oid))) {
+      await notifyOnce(oid, 'message', 'ফরওয়ার্ড করা মেসেজ', `${req.session.user.full_name} আপনাকে একটি মেসেজ ফরওয়ার্ড করেছেন`, '/messages/' + req.session.user.username);
+    }
+  }
+  res.json({ ok: true, id: ins.lastInsertRowid });
+});
+
+// (ঘ) মিউট টগল — 1:1-এ অন-ডিমান্ড conversation_members রো (গ্রুপে আগেই থাকে);
+// মিউট = এই কথোপকথনের নোটিফিকেশন বন্ধ (চ্যাট-বার্তা আগের মতোই আসবে)
+router.post('/api/messages/conv/:id/mute', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.params.id, 10);
+  const conv = await convAccess(convId, me);
+  if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+  try {
+    await db.prepare('INSERT OR IGNORE INTO conversation_members (conversation_id, user_id, added_by) VALUES (?, ?, ?)').run(convId, me, me);
+  } catch (e) {}
+  const want = (req.body || {}).muted;
+  const row = await db.prepare('SELECT muted FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(convId, me);
+  const next = (typeof want !== 'undefined' && want !== null) ? (want ? 1 : 0) : ((row && row.muted) ? 0 : 1);
+  await db.prepare('UPDATE conversation_members SET muted = ? WHERE conversation_id = ? AND user_id = ?').run(next, convId, me);
+  res.json({ ok: true, muted: !!next });
+});
+
+// (চ) আনসেন্ড — নিজের মেসেজ সবার জন্য মুছুন (1:1 + গ্রুপ এক এন্ডপয়েন্টে)
+router.post('/api/messages/:id/delete', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const msgId = parseInt(req.params.id, 10);
+  const msg = await db.prepare('SELECT * FROM messages WHERE id = ?').get(msgId);
+  if (!msg || msg.sender_id !== me || !(await convAccess(msg.conversation_id, me))) return res.status(403).json({ ok: false });
+  await db.prepare('DELETE FROM messages WHERE id = ?').run(msgId);
+  res.json({ ok: true });
+});
+
+// (ছ) পিন টগল — পিন-করা কথোপকথন তালিকায় সবার আগে থাকে
+router.post('/api/messages/conv/:id/pin', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.params.id, 10);
+  const conv = await convAccess(convId, me);
+  if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+  try {
+    await db.prepare('INSERT OR IGNORE INTO conversation_members (conversation_id, user_id, added_by) VALUES (?, ?, ?)').run(convId, me, me);
+  } catch (e) {}
+  const want = (req.body || {}).pinned;
+  const row = await db.prepare('SELECT pinned FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(convId, me);
+  const next = (typeof want !== 'undefined' && want !== null) ? (want ? 1 : 0) : ((row && row.pinned) ? 0 : 1);
+  await db.prepare('UPDATE conversation_members SET pinned = ? WHERE conversation_id = ? AND user_id = ?').run(next, convId, me);
+  res.json({ ok: true, pinned: !!next });
 });
 
 // NOTE: /api/users/search lives in routes/social.js (canonical — social is

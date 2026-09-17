@@ -454,6 +454,12 @@ const LATER_COLUMNS = [
   // সেশন ৬০ (theme-session): "সংযুক্ত অ্যাকাউন্ট" সেকশনকে সত্যিকারের কার্যকর করতে —
   // users.social_telegram (fb/twitter/linkedin/website আগেই আছে)।
   ['users', 'social_telegram', 'TEXT'],
+  // সেশন ৭৬: মেসেজিং প্রো-ফিচার — রিপ্লাই-থ্রেডিং, এডিট-ট্রেস, প্রতি-সদস্য
+  // মিউট/পিন (1:1-এ সেশন-মিউটে অন-ডিমান্ড conversation_members রো তৈরি হয়)।
+  ['messages', 'reply_to_id', 'INTEGER'],
+  ['messages', 'edited_at',   'TEXT'],
+  ['conversation_members', 'muted',  'INTEGER DEFAULT 0'],
+  ['conversation_members', 'pinned', 'INTEGER DEFAULT 0'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

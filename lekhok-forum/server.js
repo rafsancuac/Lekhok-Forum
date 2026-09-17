@@ -158,8 +158,11 @@ app.use((req, res, next) => {
 // সিকিউরিটি টাস্ক (§63): অথেনটিকেটেড/প্রাইভেট পেজ কখনো পাবলিক ক্যাশ হবে না।
 // সেশন ৫৭: login/register-ও যোগ — স্টেল-ক্যাশড অথ-পেজ পুরনো CSRF-টোকেন বহন
 // করে, সাবমিটে 403 আসত (লাইভ-রিপোর্ট)।
+// সেশন ৭৬: messages/complaints/notifications/bookmarks যোগ — এগুলো লগড-ইন
+// ডাইনামিক পেজ; Cache-Control ছাড়া ব্রাউজার হিউরিস্টিক-ক্যাশে ডিপ্লয়-পরবর্তী
+// পুরনো HTML দেখাতে পারে (লোকাল-যাচাইতে প্রমাণিত)।
 app.use((req, res, next) => {
-  if (/^\/(admin|moderator|dashboard|profile|settings|claim|login|logout|register|reset-password|forgot-password)\b/.test(req.path)) {
+  if (/^\/(admin|moderator|dashboard|profile|settings|claim|login|logout|register|reset-password|forgot-password|messages|complaints|notifications|bookmarks)\b/.test(req.path)) {
     res.setHeader('Cache-Control', 'no-store');
   }
   next();
