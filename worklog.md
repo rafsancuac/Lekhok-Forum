@@ -462,3 +462,36 @@ Stage Summary:
 
 **কমিট:** 91a787e (rebase on 6beebe6) → pushed।
 **পরবর্তী সুপারিশ:** ① ইনলাইন-চ্যাট-স্ক্রিপ্টের reply/edit অংশ messenger-actions.js-এ সরানো (ফাইল ভার কমানো) ② চ্যাট-সাইডবারের convMenu-মিউটেও DB-সিঙ্ক (তালিকায় করা হয়েছে) ③ WebRTC এজেন্টের সিগন্যালিং-সার্ভিস আসার পর ⋯-মেনুতে 'কলে উত্তর' অপশন ④ মেসেজ-ডিলিটের soft-delete/ tombstone (অন্য পক্ষের ক্লায়েন্টে লাইভ-রিমুভাল)।
+
+---
+
+## Session 91-QA (cron-review round 2) — QA first, then bugfixes + roadmap features ✅ (commits ef58f03, 22e5a6a — pushed)
+
+### Current project status / assessment
+- Repo synced at session90 (633bda3) at start; parallel agent pushed 4 commits mid-round (session91-Phase-E: /api/health+PWA-sw; session89: facepile/infinite-scroll/messenger-search) → rebased cleanly on ffe1b5c.
+- QA sweep: 19-page curl matrix all 200; 0 console errors (home/login/dashboard/messages); server on :3030 via setsid double-fork.
+- **Environment quirks found:** (1) local lekhok.db had no QA users → seeded via new `scripts/seed-qa-users.js` (testuser/testadmin demo123; testagent1/testagent2 Test@1234). Note: a RUNNING server overwrites file-seeds via its in-memory DB — stop server before seeding. (2) agent-browser **trusted clicks dispatch no events at all** in this headless env (pure-JS buttons too) → use `eval b.click()` + curl for browser E2E; not an app bug. (3) bash tool output eats `[h` sequences — verify file bytes via node/Buffer hex, never trust grep prints (this is what corrupted the repo in the first place).
+
+### Bugs found & fixed this round
+1. **POST /login 500** on missing/non-string fields (sql.js "bind unknown type undefined" in admin_users fallback lookup) → string-coerce + trim → graceful Bengali error (verified: 200, no log error).
+2. **No-JS CSRF gap**: 5 primary settings forms + article form lacked server-side `_csrf` hidden input (JS-injection only) → added; settings/privacy POST now succeeds headlessly (303 → ?ok=privacy).
+3. **/me hero white-on-white** (pre-existing): `.me-header-inner` white card bg covered the gradient band → white name invisible → transparent + gradient #0f4c46→#059669 (verified by screenshot).
+4. **`[h[h[hidden]` selector corruption — 17 occurrences repo-wide** (previous agent's fix commit was incomplete): style.css ×5, messenger.css ×9, messages-chat.ejs ×1, profile.ejs ×2 — all restored byte-true (node-verified), repo scan now 0. These were silently-dead selectors (facepile hide, me-tabs, rp81 overlays).
+
+### New features (roadmap master-table items)
+- **09 B4 notification-pref enforcement**: helpers/notify.js `prefAllows/notifyIfAllowed` (unset=true back-compat); 10 social.js sites (reaction/like/comment/mention/follow/answer) + dashboard.js notifyOnce `prefsKind` for 3 message sites (mute-check intact). E2E: pref-off→0 notifications, pref-on→delivered.
+- **15 D2 public bookmarks**: `GET /profile/:username/bookmarks` + new `user/profile-bookmarks.ejs` (pbk-* scoped design: mini-hero+stats, card grid with cover/excerpt/read-time/relative-saved-time, owner inline-unsave, empty state, styled privacy lock-screen, 390px-safe); profile subnav "সংরক্ষণ" link-tab (owner or bookmarks_public=1); settings toggle now has "পাবলিক ভিউ দেখুন" link. Privacy matrix E2E ✓.
+- **16 D3 writer stats (/me)**: ws91 card — total views/reactions/comments KPIs + best-post trophy link + 6-month publish bar chart (hand-rolled SVG, gradient grow animation, reduced-motion aware, Bengali digits/months).
+- **18 merged**: two agents' /api/health unified (session90 key-names + session91 ok/env fields); duplicate route removed.
+- **A3 verified already complete** since session 50 (assets/uploads immutable 30d, /img/cover 1y, avatar 60s) — no change needed.
+
+### Verification results
+- `scripts/test-role-policy.sh` **99/99 ALL GREEN** (single instance; 6 false-fails when two server instances race the shared lekhok.db file — environmental).
+- Health JSON merged schema ✓; login-missing-field 200 ✓; pref-gate chain ✓; privacy matrix ✓; chart render ✓; 19 pages 200 ✓; console 0 on /messages+/me+/profile-bookmarks ✓; 390px overflow 0 ✓.
+- Rebase on ffe1b5c (only style.css EOF conflict — kept both blocks) + merge-cleanup commit → pushed ffe1b5c..22e5a6a.
+
+### Unresolved risks / next-step recommendations
+- ⚠️ Shared lekhok.db + multiple node instances = last-writer-wins (seed loss, test false-fails) — keep ONE instance when running suites.
+- Trusted-click quirk makes browser E2E awkward — documented JS-click pattern for future rounds.
+- Next best items: messenger shared-media tab (11+12), scroll-position restore (06), pen_name in comment bubbles/notifications (14), voice notes (C1 — coordinate with WebRTC agent), then SSE hub (01, 🔴 core).
+- Local test data left in lekhok.db only (testagent1 has 1 post + 1 bookmark + bookmarks_public=1) — sandbox-only, not on live Turso.
