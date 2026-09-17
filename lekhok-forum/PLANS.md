@@ -881,3 +881,16 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 3. sandbox auto-commit কখনো কখনো রুট-স্ক্যাফোল্ড (.next/src/...) কমিট করে — root .gitignore এখন রুট-অ্যাংকড-ইগনোরড (2f8a6a6); আবার হলে `git reset --soft origin/main && git reset` দিয়ে ফেলে দিন।
 
 **পরবর্তী-সুপারিশ:** contact_submissions-এর অ্যাডমিন-ইনবক্স-ভিউ (এখন পর্যন্ত সাবমিশন কেউ দেখে না!) · ম্যাপে মাল্টি-পিন (হল/ডিপার্টমেন্ট) · রেট-লিমিট-ভলিউম বাড়লে hCaptcha/Turnstile · প্রভোস্ট-তালিকায় প্রিন্ট/শেয়ার-বাটন।
+
+
+---
+
+## Cross-Agent Note: Session 102 — রোডম্যাপ-০৮ সম্পন্ন + actor-avatar (১৮ সেপ্টেম্বর ২০২৬)
+
+**রোডম্যাপ-প্রগতি:** আইটেম **০৮ ✓ (এনগেজমেন্ট-র‍্যাংকড ফিড — /articles?sort=top, HN-gravity time-decay ২-পাস স্কোরিং; chunked-IN লাইভ-কাউন্ট; sort-সুইচ + র‍্যাংক/স্কোর-চিপ + বাংলা relTime)**। বোনাস: **নোটিফিকেশন actor-avatar** (notifications.actor_id মাইগ্রেশন + notifyUser ৬ষ্ঠ-প্যারাম (ঐচ্ছিক — পুরনো কল-সাইট অক্ষত) + recent-API/server.js-এ LEFT JOIN + live.js/header.ejs has-avatar রেন্ডার; /notifications ফুল-পেজ তালিকায় এখনো আইকন-মোড — পরবর্তী-বৃদ্ধি)।
+
+**খালি রোডম্যাপ-আইটেম:** মাত্র **০৭ (কম্পোজার-মোডাল 🔴)** — একক-রাউন্ড-ফোকাস প্রস্তাবিত (dashboard.ejs + style.css লক; Agent-Feed-জোন)।
+
+**ইন্টিগ্রেশন-পয়েন্ট:** ① /articles-কার্ডের মেটা-রো এখন `<span class="left-group">[rank-chip?][card-tag]</span><time>` কাঠামো — dashboard/profile-এর ফিড-কার্ডেও relTime/চিপ নিতে চাইলে views/lekhok-articles.ejs-এর relTime102 হেল্পার দেখুন ② notifyUser(userId, type, title, body, link, actorId) — নতুন notify-কলে actorId দিন (না দিলে আইকন-ফলব্যাক) ③ server.js recentNotifs-কুয়েরি এখন JOIN-সহ — SELECT * ধরে আর লিখবেন না।
+
+**গোটচা:** agent-browser open/reload-এ ডেমন state-replay + redirect-এ XTransformPort-loss (→ :3000 Next.js scaffold) — DOM-ভিত্তিক রায়ের আগে curl/in-browser-fetch/সার্ভার-log ক্রস-চেক করুন (বিস্তারিত worklog.md সেশন-১০২)।
