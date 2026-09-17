@@ -1966,6 +1966,13 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
     WHERE f.follower_id = ? ORDER BY u.full_name LIMIT 50
   `).all(me.id);
 
+  // সেশন ১১৮: অনুসারী-তালিকা — FB-ট্যাব-বারের 'অনুসারী' পেনের জন্য (আগে কেবল কাউন্ট ছিল)
+  const myFollowers = await db.prepare(`
+    SELECT u.id, u.username, u.full_name, u.designation, u.avatar_url, u.bio
+    FROM follows f JOIN users u ON u.id = f.follower_id
+    WHERE f.following_id = ? ORDER BY u.full_name LIMIT 50
+  `).all(me.id);
+
   // Stats
   const stats = {
     posts:       myPosts.filter(p => p.status === 'published').length,
@@ -2006,7 +2013,8 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
         AND COALESCE(published_at, created_at) >= datetime('now', '-5 months', 'start of month')
       GROUP BY ym`).all(me.id);
     const byYm91 = {}; rows91.forEach(r => { byYm91[r.ym] = r.c; });
-    const BN_MONTHS91 = ['জানু', 'ফেব', 'মার্চ', 'এপ্রি', 'মে', 'জুন', 'জুলা', 'আগ', 'সেপ্ট', 'অক্টো', 'নভে', 'ডিসে'];
+    // সেশন ১১৮ (ইউজার-রিপোর্ট): সংক্ষিপ্ত-মাস ('এপ্রি','আগ','সেপ্ট') নয় — পূর্ণাঙ্গ বাংলা মাসের নাম
+    const BN_MONTHS91 = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
     const now91 = new Date();
     for (let i = 5; i >= 0; i--) {
       const d91 = new Date(now91.getFullYear(), now91.getMonth() - i, 1);
@@ -2019,7 +2027,7 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
     bestPost91 = await db.prepare("SELECT id, title, type, view_count FROM posts WHERE author_id = ? AND status = 'published' ORDER BY view_count DESC LIMIT 1").get(me.id) || null;
   } catch (_) {}
 
-  res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, stats, activity, myInterests, tagPool, REACTION_META, totals91, monthly91, bestPost91, bn91: (n) => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]), currentPath: '/me' });
+  res.render('user/me', { myPosts, myDrafts, myComments, myReactions, myBookmarks, following, myFollowers, stats, activity, myInterests, tagPool, REACTION_META, totals91, monthly91, bestPost91, bn91: (n) => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]), currentPath: '/me' });
 });
 
 // ────────────────────────────────────────────────────────────────────────────

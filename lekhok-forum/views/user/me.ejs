@@ -8,6 +8,13 @@
         <div class="me-id">
           <h1><%= user.full_name %></h1>
           <p class="me-handle"><%= user.designation || 'লেখক ফোরাম সদস্য' %></p>
+          <%# সেশন ১১৮ (ইউজার-স্পেক): বক্স-বিহীন ইন-লাইন মেটা-স্ট্রিপ — তথ্যের পুনরাবৃত্তি রোধে
+              ৭-সাদা-বক্স (stats-grid) বিলোপের বদলে হেডারেই FB-ঘরানার কাউন্টার-লাইন %>
+          <p class="me-meta118">
+            <b><%= bn91(stats.posts) %></b>টি লেখা
+            <span aria-hidden="true"> • </span><b><%= bn91(stats.followers) %></b> জন অনুসারী
+            <span aria-hidden="true"> • </span><b><%= bn91(stats.reactions) %></b>টি প্রতিক্রিয়া
+          </p>
           <% if (user.bio) { %><p class="me-bio"><%= user.bio %></p><% } %>
         </div>
         <div class="me-actions">
@@ -17,86 +24,83 @@
       </div>
     </header>
 
-    <div class="stats-grid">
-      <div class="stat-tile"><div class="num"><%= stats.posts %></div><div class="lbl">প্রকাশিত লেখা</div></div>
-      <div class="stat-tile"><div class="num"><%= stats.drafts %></div><div class="lbl">ড্রাফট</div></div>
-      <div class="stat-tile"><div class="num"><%= stats.comments %></div><div class="lbl">মন্তব্য</div></div>
-      <div class="stat-tile"><div class="num"><%= stats.reactions %></div><div class="lbl">প্রতিক্রিয়া</div></div>
-      <div class="stat-tile"><div class="num"><%= stats.bookmarks %></div><div class="lbl">সংরক্ষিত</div></div>
-      <div class="stat-tile"><div class="num"><%= stats.following %></div><div class="lbl">অনুসরণ</div></div>
-      <div class="stat-tile"><div class="num"><%= stats.followers %></div><div class="lbl">অনুসরণকারী</div></div>
-    </div>
+    <%# ═══ সেশন ১১৮ (ইউজার-স্পেক): ৭টি আলাদা সাদা stat-tile বক্স সম্পূর্ণ বিলোপ —
+        কাউন্টগুলো এখন নিচের FB-স্টাইল ট্যাব-বারের ব্যাজে ও হেডারের মেটা-স্ট্রিপে ═══ %>
 
-    <%# ═══ D3 (সেশন ৯১): লেখা-স্ট্যাটিসটিক্স — KPI + ৬-মাসিক SVG-গ্রাফ + সেরা-লেখা ═══ %>
-    <div class="ws91-card" aria-label="লেখা-স্ট্যাটিসটিক্স">
+    <%# ═══ সেশন ১১৮ (ইউজার-স্পেক): লেখা-স্ট্যাটিসটিক্স রিডিজাইন —
+        ৪টি KPI-বক্স ও বিশাল ফাঁকা চার্ট-কন্টেইনার বিলোপ → একক স্লিম ইনসাইটস-স্ট্রিপ
+        (হেডার-রো + ইন-লাইন ৪-সেল ডিভাইডার-স্ট্রিপ + কলাপ্সেবল স্লিম-বার-চার্ট) ═══ %>
+    <div class="ws91-card" aria-label="পারফরম্যান্স ও প্রকাশনা ইনসাইটস">
       <div class="ws91-head">
-        <h2><i class="fas fa-chart-column"></i> লেখা-স্ট্যাটিসটিক্স</h2>
-        <span class="ws91-sub">প্রকাশিত লেখার সামগ্রিক পারফরম্যান্স · শেষ ৬ মাস</span>
+        <h2><i class="fas fa-chart-column"></i> পারফরম্যান্স ও প্রকাশনা ইনসাইটস</h2>
+        <span class="ws91-sub">বিগত ৬ মাসের সারাংশ</span>
+        <button type="button" class="ws91-toggle" id="ws91Toggle" aria-expanded="true" aria-controls="ws91ChartBody">
+          <span id="ws91ToggleTxt">চার্ট লুকান</span> <i class="fas fa-chevron-up" id="ws91ToggleIco"></i>
+        </button>
       </div>
-      <div class="ws91-kpis">
-        <div class="ws91-kpi">
-          <span class="ws91-kpi-ico v"><i class="far fa-eye"></i></span>
-          <div><b><%= bn91(totals91.views) %></b><span>মোট পাঠ</span></div>
+
+      <%# ইন-লাইন স্ট্যাটাস-স্ট্রিপ — আলাদা ৪টি বক্সের বদলে একক ডিভাইডার-রো %>
+      <div class="ws118-strip">
+        <div class="ws118-cell">
+          <span>মোট পাঠ</span>
+          <b><%= bn91(totals91.views) %> বার</b>
         </div>
-        <div class="ws91-kpi">
-          <span class="ws91-kpi-ico l"><i class="fas fa-heart"></i></span>
-          <div><b><%= bn91(totals91.likes) %></b><span>প্রতিক্রিয়া পেয়েছেন</span></div>
+        <div class="ws118-cell">
+          <span>মোট প্রতিক্রিয়া</span>
+          <b><%= bn91(totals91.likes) %>টি</b>
         </div>
-        <div class="ws91-kpi">
-          <span class="ws91-kpi-ico c"><i class="far fa-comments"></i></span>
-          <div><b><%= bn91(totals91.comments) %></b><span>মন্তব্য পেয়েছেন</span></div>
+        <div class="ws118-cell">
+          <span>মন্তব্য প্রাপ্তি</span>
+          <b><%= bn91(totals91.comments) %>টি</b>
         </div>
         <% if (bestPost91) { %>
-          <a class="ws91-kpi ws91-best" href="/<%= bestPost91.type === 'question' ? 'qa' : 'articles' %>/<%= bestPost91.id %>" title="<%= bestPost91.title %>">
-            <span class="ws91-kpi-ico b"><i class="fas fa-trophy"></i></span>
-            <div><b><%= bn91(bestPost91.view_count || 0) %></b><span class="ws91-best-label">সেরা লেখা: <%= bestPost91.title.length > 34 ? bestPost91.title.slice(0, 34) + '…' : bestPost91.title %></span></div>
+          <a class="ws118-cell" href="/<%= bestPost91.type === 'question' ? 'qa' : 'articles' %>/<%= bestPost91.id %>" title="<%= bestPost91.title %>">
+            <span>সেরা লেখা</span>
+            <b><%= bestPost91.title.length > 30 ? bestPost91.title.slice(0, 30) + '…' : bestPost91.title %></b>
           </a>
+        <% } else { %>
+          <div class="ws118-cell">
+            <span>সেরা লেখা</span>
+            <b>—</b>
+          </div>
         <% } %>
       </div>
-      <% if (monthly91.length) {
-           const maxC91 = Math.max.apply(null, monthly91.map(m => m.count).concat([1]));
-           const W91 = 560, H91 = 120, PAD91 = 6, GAP91 = 18;
-           const bw91 = (W91 - PAD91 * 2 - GAP91 * (monthly91.length - 1)) / monthly91.length;
-      %>
-      <div class="ws91-chart-wrap">
-        <svg class="ws91-chart" viewBox="0 0 <%= W91 %> <%= H91 + 22 %>" preserveAspectRatio="none" role="img" aria-label="মাসিক প্রকাশনা-গ্রাফ">
-          <defs>
-            <linearGradient id="ws91bar" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#10B981"/>
-              <stop offset="100%" stop-color="#047857"/>
-            </linearGradient>
-          </defs>
-          <% monthly91.forEach(function (m91, i91) {
-               const h91 = Math.max(m91.count > 0 ? 10 : 3, Math.round((m91.count / maxC91) * (H91 - 14)));
-               const x91 = PAD91 + i91 * (bw91 + GAP91);
-               const y91 = H91 - h91;
-               const cx91 = x91 + bw91 / 2;
+
+      <%# স্লিম বার-চার্ট — পূর্ণাঙ্গ মাসের নাম, সর্বোচ্চ ৬৬px বার, শূন্য-মাসে ধূসর-স্টাব (SVG-বক্স নয়) %>
+      <div class="ws91-chart-wrap" id="ws91ChartBody">
+        <% if (monthly91.length) {
+             const maxC118 = Math.max.apply(null, monthly91.map(m => m.count).concat([1]));
+        %>
+        <div class="ws118-chart" role="img" aria-label="মাসিক প্রকাশনা-গ্রাফ — বিগত ৬ মাস">
+          <% monthly91.forEach(function (m118, i118) {
+               const pct118 = m118.count > 0 ? Math.max(10, Math.round((m118.count / maxC118) * 100)) : 0;
           %>
-            <g class="ws91-bar-g">
-              <rect class="ws91-bar" x="<%= x91 %>" y="<%= y91 %>" width="<%= bw91 %>" height="<%= h91 %>" rx="6"
-                    fill="url(#ws91bar)" style="animation-delay:<%= i91 * 70 %>ms">
-                <title><%= m91.label %>: <%= bn91(m91.count) %>টি লেখা</title>
-              </rect>
-              <% if (m91.count > 0) { %>
-                <text class="ws91-bar-num" x="<%= cx91 %>" y="<%= y91 - 5 %>" text-anchor="middle"><%= bn91(m91.count) %></text>
-              <% } %>
-              <text class="ws91-bar-lbl" x="<%= cx91 %>" y="<%= H91 + 15 %>" text-anchor="middle"><%= m91.label %></text>
-            </g>
+            <div class="ws118-col" title="<%= m118.label %>: <%= bn91(m118.count) %>টি লেখা">
+              <span class="ws118-num"><%= m118.count > 0 ? bn91(m118.count) : '' %></span>
+              <div class="ws118-track">
+                <div class="ws118-bar<%= m118.count > 0 ? '' : ' zero' %>"
+                     style="height:<%= m118.count > 0 ? pct118 : 0 %>%;animation-delay:<%= i118 * 60 %>ms"></div>
+              </div>
+              <span class="ws118-month"><%= m118.label %></span>
+            </div>
           <% }); %>
-        </svg>
+        </div>
+        <% } %>
       </div>
-      <% } %>
     </div>
 
-    <div class="personal-tabs" role="tablist">
-      <button class="personal-tab active" data-tab="posts"><i class="fas fa-pen-nib"></i> আমার পোস্ট (<%= stats.posts %>)</button>
-      <button class="personal-tab" data-tab="comments"><i class="fas fa-comment"></i> মন্তব্য (<%= stats.comments %>)</button>
-      <button class="personal-tab" data-tab="reactions"><i class="fas fa-heart"></i> প্রতিক্রিয়া (<%= stats.reactions %>)</button>
-      <button class="personal-tab" data-tab="bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত (<%= stats.bookmarks %>)</button>
-      <button class="personal-tab" data-tab="following"><i class="fas fa-user-friends"></i> অনুসরণ (<%= stats.following %>)</button>
-      <button class="personal-tab" data-tab="activity"><i class="fas fa-stream"></i> অ্যাক্টিভিটি</button>
-      <button class="personal-tab" data-tab="categories"><i class="fas fa-tags"></i> ক্যাটাগরি</button>
-      <% if (stats.drafts > 0) { %><button class="personal-tab" data-tab="drafts"><i class="fas fa-file"></i> ড্রাফট (<%= stats.drafts %>)</button><% } %>
+    <%# সেশন ১১৮ (ইউজার-স্পেক): FB-প্রোফাইল-ঘরানার সিঙ্গেল-লাইন ট্যাব-বার —
+        সাদা stat-বক্সের কাউন্টগুলো এখন ট্যাবের ভেতরে পিল-ব্যাজে; অ্যাক্টিভ = সবুজ-আন্ডারলাইন %>
+    <div class="personal-tabs" role="tablist" aria-label="আমার কনটেন্ট-ট্যাব">
+      <button class="personal-tab active" data-tab="posts"><span>লেখা</span><span class="pt-count"><%= bn91(stats.posts) %></span></button>
+      <button class="personal-tab" data-tab="drafts"><span>ড্রাফট</span><span class="pt-count"><%= bn91(stats.drafts) %></span></button>
+      <button class="personal-tab" data-tab="comments"><span>মন্তব্য</span><span class="pt-count"><%= bn91(stats.comments) %></span></button>
+      <button class="personal-tab" data-tab="reactions"><span>প্রতিক্রিয়া</span><span class="pt-count"><%= bn91(stats.reactions) %></span></button>
+      <button class="personal-tab" data-tab="bookmarks"><span>সংরক্ষিত</span><span class="pt-count"><%= bn91(stats.bookmarks) %></span></button>
+      <button class="personal-tab" data-tab="following"><span>অনুসরণ</span><span class="pt-count"><%= bn91(stats.following) %></span></button>
+      <button class="personal-tab" data-tab="followers"><span>অনুসারী</span><span class="pt-count"><%= bn91(stats.followers) %></span></button>
+      <button class="personal-tab" data-tab="activity"><span>অ্যাক্টিভিটি</span></button>
+      <button class="personal-tab" data-tab="categories"><span>ক্যাটাগরি</span></button>
     </div>
 
     <!-- Tab: Posts -->
@@ -192,6 +196,22 @@
       </div>
     </section>
 
+    <!-- Tab: Followers (সেশন ১১৮ — FB-ট্যাব-বারের 'অনুসারী' ব্যাজের পেন) -->
+    <section class="me-tab" data-pane="followers" hidden>
+      <% if (myFollowers.length === 0) { %>
+        <div class="empty"><div class="icon"><i class="fas fa-users"></i></div><h3>এখনো কোনো অনুসারী নেই</h3><p>নিয়মিত লিখলে পাঠক আপনাকে অনুসরণ করবে।</p></div>
+      <% } %>
+      <div class="follow-grid">
+        <% myFollowers.forEach(f => { %>
+          <a href="/profile/<%= f.username %>" class="follow-card">
+            <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" class="avatar-md" style="border-radius:50%" onerror="this.onerror=null;this.src='/avatar/<%= f.id %>'">
+            <strong><%= f.full_name %></strong>
+            <small><%= f.designation || 'সদস্য' %></small>
+          </a>
+        <% }) %>
+      </div>
+    </section>
+
     <!-- Tab: Activity (chronological) -->
     <section class="me-tab" data-pane="activity" hidden>
       <% if (activity.length === 0) { %>
@@ -238,9 +258,11 @@
       </div>
     </section>
 
-    <!-- Tab: Drafts -->
-    <% if (stats.drafts > 0) { %>
+    <!-- Tab: Drafts (সেশন ১১৮: ট্যাব-ব্যাজ সবসময় দেখায় — তাই পেনও সবসময় রেন্ডার) -->
     <section class="me-tab" data-pane="drafts" hidden>
+      <% if (myDrafts.length === 0) { %>
+        <div class="empty"><div class="icon"><i class="fas fa-file"></i></div><h3>কোনো খসড়া নেই</h3><p>অসমাপ্ত লেখা এখানে জমা থাকবে।</p></div>
+      <% } %>
       <% myDrafts.forEach(d => { %>
         <article class="feed-card">
           <div class="feed-card-body">
@@ -253,7 +275,6 @@
         </article>
       <% }) %>
     </section>
-    <% } %>
   </div>
 
   <%- include('../partials/footer') %>
@@ -267,6 +288,21 @@
         document.querySelectorAll('.me-tab').forEach(p => p.hidden = p.dataset.pane !== target);
       });
     });
+    // সেশন ১১৮: ইনসাইটস-চার্ট টগল — চার্ট লুকান/দেখুন (aria-expanded সিঙ্ক)
+    (function () {
+      const tgl = document.getElementById('ws91Toggle');
+      if (!tgl) return;
+      const body = document.getElementById('ws91ChartBody');
+      const txt = document.getElementById('ws91ToggleTxt');
+      const ico = document.getElementById('ws91ToggleIco');
+      tgl.addEventListener('click', () => {
+        const show = body.hidden;
+        body.hidden = !show;
+        tgl.setAttribute('aria-expanded', String(show));
+        txt.textContent = show ? 'চার্ট লুকান' : 'চার্ট দেখুন';
+        ico.className = show ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+      });
+    })();
     // Deep-link ?tab=x
     const urlTab = new URLSearchParams(location.search).get('tab');
     if (urlTab) document.querySelector('.personal-tab[data-tab="' + urlTab + '"]')?.click();
