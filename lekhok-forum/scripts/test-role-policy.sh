@@ -1,6 +1,6 @@
 #!/bin/bash
 # ═══ সেশন ৮১: রোল-হায়ারার্কি ও লগইন-বিভাজন E2E v2 ═══
-P=8080; BASE="http://localhost:$P"
+P=${P:-8080}; BASE="http://localhost:$P"
 PASS=0; FAIL=0
 ck() { if [ "$2" == "$3" ]; then PASS=$((PASS+1)); echo "  ✓ $1"; else FAIL=$((FAIL+1)); echo "  ✗ $1 (expected [$2] got [$3])"; fi }
 ckc() { if echo "$3" | grep -q "$2"; then PASS=$((PASS+1)); echo "  ✓ $1"; else FAIL=$((FAIL+1)); echo "  ✗ $1 (missing: $2)"; fi }
@@ -34,8 +34,8 @@ postf() {
   echo "${R%% *} $(strip "${R#* }")"
 }
 
-JARU=/tmp/jar_user; JARM=/tmp/jar_mod; JARA=/tmp/jar_admin; JARTA=/tmp/jar_testadmin
-rm -f $JARU $JARM $JARA $JARTA
+JARU=/tmp/jar_user; JARM=/tmp/jar_mod; JARA=/tmp/jar_admin; JARTA=/tmp/jar_testadmin; JARQ=/tmp/jar_qa113
+rm -f $JARU $JARM $JARA $JARTA $JARQ
 
 echo "══ ১. লগইন-পোর্টাল বিভাজন ══"
 R=$(login $JARU /login admin admin123); ck "admin via /login প্রত্যাখ্যাত (200)" "200" "${R%% *}"
@@ -65,6 +65,7 @@ login $JARU /login testuser demo123 > /dev/null
 login $JARM /admin/login moderator moderator123 > /dev/null
 login $JARA /admin/login admin admin123 > /dev/null
 login $JARTA /admin/login testadmin demo123 > /dev/null
+login $JARQ /login qa113user demo123 > /dev/null
 ck "user /dashboard 200" "200" "$(get $JARU /dashboard)"
 ck "moderator /moderator 200" "200" "$(get $JARM /moderator)"
 ck "admin(সুপার) /admin 200" "200" "$(get $JARA /admin)"
@@ -214,6 +215,55 @@ R=$(curl -s -X POST -H "Content-Type: application/json" -d '{"kind":"bogus"}' "$
 ckc "stat bogus-kind → view-তে ফলব্যাক ok" '"ok":true' "$R"
 R=$(curl -s -X POST -H "Content-Type: application/json" -d '{}' "$BASE/api/resources/0/stat")
 ck "stat invalid-id 400" "400" "$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -d '{}' "$BASE/api/resources/0/stat")"
+
+# ═══ সেশন ১১৩: কমেন্ট-API রোল-পলিসি (PUT/DELETE 403/404-পাথ + প্রশ্ন-লিংক) ═══
+# স্বয়ংসম্পূর্ণ: testuser নিজেই একটি প্রশ্ন বানায় → সেই post_id-তে সব চেক।
+QID=$(postf $JARU /qa/new /qa/new "title=রোল-পলিসি-১১৩-টেস্ট" "body=কমেন্ট-API-টেস্ট-প্রশ্ন" | awk '{print $2}')
+QID=$(strip "$QID"); QID=${QID#/qa/}; QID=${QID%%\?*}
+if [ -n "$QID" ] && [ "$QID" != "-" ]; then
+  ck "testuser /qa/new → /qa/$QID" "$QID" "$QID"
+  R=$(curl -s -X POST -H "Content-Type: application/json" -d '{"post_id":"null","body":"x"}' "$BASE/api/comment")
+  ckc "guest POST /api/comment → login" '"error":"login"' "$R"
+  R=$(curl -s -b $JARU -X POST -H "Content-Type: application/json" -d '{"post_id":"null","body":"x"}' "$BASE/api/comment")
+  ckc "string post_id → bad_post_id 400" '"error":"bad_post_id"' "$R"
+  R=$(curl -s -b $JARU -X POST -H "Content-Type: application/json" -d '{"post_id":999999,"body":"x"}' "$BASE/api/comment")
+  ckc "ghost post → post_not_found 404" '"error":"post_not_found"' "$R"
+  R=$(curl -s -b $JARU -X POST -H "Content-Type: application/json" -d "{\"post_id\":$QID,\"body\":\"মালিক-কমেন্ট\"}" "$BASE/api/comment")
+  ckc "মালিক-কমেন্ট ok" '"ok":true' "$R"
+  CID=$(echo "$R" | grep -o '"id":[0-9]*' | cut -d: -f2)
+  R=$(curl -s -b $JARQ -X PUT -H "Content-Type: application/json" -d '{"body":"অন্যের-এডিট"}' "$BASE/api/comments/$CID")
+  ckc "non-owner(plain) PUT → 403 forbidden" '"error":"forbidden"' "$R"
+  R=$(curl -s -b $JARQ -X POST -H "Content-Type: application/json" -d '{"body":"x"}' "$BASE/api/comments/$CID")
+  ckc "non-owner(plain) legacy-POST → 403" '"error":"forbidden"' "$R"
+  R=$(curl -s -b $JARQ -X DELETE "$BASE/api/comments/$CID")
+  ckc "non-owner(plain) DELETE → 403" '"error":"forbidden"' "$R"
+  R=$(curl -s -b $JARTA -X PUT -H "Content-Type: application/json" -d '{"body":"অ্যাডমিন-রোল-এডিট"}' "$BASE/api/comments/$CID")
+  ckc "admin-role PUT ok (মড-পাওয়ার)" '"ok":true' "$R"
+  R=$(curl -s -b $JARM -X PUT -H "Content-Type: application/json" -d '{"body":"মড-এডিট"}' "$BASE/api/comments/$CID")
+  ckc "moderator PUT ok (mod-পাওয়ার)" '"ok":true' "$R"
+  R=$(curl -s -b $JARU -X PUT -H "Content-Type: application/json" -d '{"body":"মালিক-এডিট"}' "$BASE/api/comments/$CID")
+  ckc "owner PUT ok + bodyHtml" '"bodyHtml"' "$R"
+  R=$(curl -s -b $JARU -X DELETE "$BASE/api/comments/999999")
+  ckc "ghost DELETE → 404 not_found" '"error":"not_found"' "$R"
+  R=$(curl -s -b $JARU -X DELETE "$BASE/api/comments/$CID")
+  ckc "owner DELETE ok + total" '"total":0' "$R"
+  R=$(curl -s -b $JARU -X DELETE "$BASE/api/comments/$CID")
+  ckc "re-DELETE → not_found" '"error":"not_found"' "$R"
+  R=$(curl -s -b $JARU -X POST -H "Content-Type: application/json" -d "{\"post_id\":$QID,\"body\":\"লিংক-চেক\"}" "$BASE/api/comment")
+  CID2=$(echo "$R" | grep -o '"id":[0-9]*' | cut -d: -f2)
+  HTML=$(curl -s "$BASE/api/comments?post_id=$QID&format=html")
+  ckc "format=html → /qa/ লিংক (প্রশ্ন-সমতা)" "/qa/$QID" "$HTML"
+  ckc "format=html → ক্যানোনিকাল fc-item" "fc-item" "$HTML"
+  curl -s -b $JARU -X DELETE "$BASE/api/comments/$CID2" > /dev/null
+  # সেশন ১১৩: টেস্ট-প্রশ্ন সেলফ-ক্লিনআপ — /qa তালিকা প্রতি-রানে টেস্ট-প্রশ্নে
+  # ভরে যাওয়া-লিক বন্ধ (মালিক-ইউজারই ডিলিট — রোল-পলিসি অক্ষুণ্ণ)।
+  R=$(postf $JARU /qa/$QID /qa/$QID/delete)
+  ck "টেস্ট-প্রশ্ন সেলফ-ক্লিনআপ 303" "303" "${R%% *}"
+  ck "ক্লিনআপ-পরে প্রশ্ন 404" "404" "$(get $JARU /qa/$QID)"
+else
+  echo "  ✗ Q&A-টেস্ট-প্রশ্ন তৈরি ব্যর্থ — সেশন-১১৩-ব্লক স্কিপ"
+  FAIL=$((FAIL+1))
+fi
 
 echo ""
 echo "════════════════════════════════"
