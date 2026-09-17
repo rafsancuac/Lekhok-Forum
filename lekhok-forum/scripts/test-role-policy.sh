@@ -208,3 +208,18 @@ echo ""
 echo "════════════════════════════════"
 echo "PASS=$PASS FAIL=$FAIL"
 [ $FAIL -eq 0 ] && echo "ALL GREEN ✓" || echo "FAILURES ✗"
+
+# ═══ সেশন ১১৩: কমেন্ট-এডিট/ডিলিট API — অথরাইজেশন-চেক (session105-চুক্তি) ═══
+# JSON-API (CSRF-মুক্ত) — target comment id সিড-নির্ভর; চলানোর আগে SEED_CMT সেট করুন
+echo "══ ১৫. কমেন্ট PUT/DELETE অথরাইজেশন ══"
+SEED_CMT=${SEED_CMT:-1}
+put() { curl -s -b "$1" -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$2" -H "Content-Type: application/json" -d "{\"body\":\"$3\"}"; }
+del() { curl -s -b "$1" -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/comments/$2"; }
+JARV=/tmp/jar_viewer; rm -f $JARV
+R=$(login $JARV /login ismail secret123); ck "viewer-লগইন (ismail)" "/dashboard" "${R##* }"
+ck "anon PUT → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$SEED_CMT" -H "Content-Type: application/json" -d '{"body":"x"}')"
+ck "anon DELETE → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/comments/$SEED_CMT")"
+ck "bogus-id PUT → 400" "400" "$(put $JARV 0 'x')"
+ck "অন্যের-কমেন্ট PUT → 403" "403" "$(put $JARU $SEED_CMT 'হাইজ্যাক')"
+ck "অন্যের-কমেন্ট DELETE → 403" "403" "$(del $JARU $SEED_CMT)"
+ck "নিজের-কমেন্ট PUT → 200" "200" "$(put $JARV $SEED_CMT 'সম্পাদিত-চেক-১১৩')"

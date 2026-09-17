@@ -89,45 +89,41 @@
       </div>
 
       <div class="answers-section">
-        <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<%= answers.length %>)</h2>
+        <h2><i class="fas fa-reply-all"></i> উত্তরসমূহ (<span class="comments-total"><%= answers.length %></span>)</h2>
 
         <% if (answers.length === 0) { %>
           <div class="empty-state answers-empty"><i class="fas fa-reply-all"></i><p>এখনো কোনো উত্তর নেই। প্রথম উত্তরদাতা হোন!</p></div>
         <% } %>
 
+        <%# ── সেশন ১১৩: ক্যানোনিকাল CommentItem — উত্তর-থ্রেড এখন ফিড/আর্টিকেলের
+            কমেন্টের সাথে হুবহু একই বাবল (হোভার ৩-ডট: সম্পাদনা/মুছুন-নিজের/রিপোর্ট-অন্যের,
+            হোভার ৬-ইমোজি প্যালেট, বাবল-কোণায় রিঅ্যাকশন-ব্যাজ)। ইঞ্জিন comment-tools.js। ── %>
+        <div class="qa-answers-list">
         <% answers.forEach((a, idx) => { %>
-          <div class="answer-item card" id="answer-<%= a.id %>">
-            <div class="answer-sidebar">
-              <img loading="lazy" decoding="async" src="<%= a.avatar_url || '/avatar/' + a.author_id %>" class="answer-avatar">
-              <% if (idx === 0 && a.like_count > 0) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>
-            </div>
-            <div class="answer-body">
-              <div class="answer-header">
-                <a href="/profile/<%= a.username %>" class="answer-author"><%= displayName(a, a.full_name) %></a><% if (hasPenName(a)) { %><span class="pen-chip" title="আসল নাম: <%= a.full_name %>">কলমে</span><% } %>
-                <span class="answer-date"><i class="far fa-clock"></i> <%= new Date(a.created_at).toLocaleDateString('bn-BD') %></span>
-              </div>
-              <div class="answer-text"><%- a.html %></div>
-              <% if (user) { %>
-                <%- include('../partials/actions-bar', {
-                  targetId: a.id, targetType: 'comment',
-                  counts: a.reaction.counts, mine: a.reaction.mine,
-                  link: '/qa/' + post.id, showBookmark: false, showShare: false
-                }) %>
-              <% } else { %>
-                <div class="answer-actions"><span><i class="far fa-heart"></i> <%= a.like_count || 0 %></span></div>
-              <% } %>
-            </div>
+          <div class="qa-answer-slot" id="answer-<%= a.id %>">
+            <% if (idx === 0 && a.like_count > 0) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>
+            <%- include('../shared/comment/CommentItem', { c: { id: a.id, author_id: a.author_id, username: a.username, pen_name: a.pen_name, full_name: a.full_name, avatar_url: a.avatar_url, body: a.body, bodyHtml: a.html, created_at: a.created_at, edited_at: a.edited_at, reaction: a.reaction }, link: '/qa/' + post.id, user: user }) %>
           </div>
         <% }); %>
+        </div>
 
         <% if (user) { %>
-          <div class="answer-form-wrap card" id="answerForm">
-            <h3><i class="fas fa-pen-nib"></i> আপনার উত্তর দিন</h3>
-            <form method="POST" action="/qa/<%= post.id %>/answer" class="answer-form">
-              <textarea name="body" rows="5" placeholder="আপনার উত্তর লিখুন..." required></textarea>
-              <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> উত্তর দিন</button>
-            </form>
+          <%# ── সেশন ১১৩: ক্যানোনিকাল CommentComposer — B/I/S/লিংক/তালিকা/উদ্ধৃতি +
+              @ম্যানশন; AJAX-সাবমিট /api/comment (comment-tools.js §5) — উত্তরও
+              comments-টেবিলেই, ফলে এডিট/ডিলিট/রিঅ্যাকশন সব-স্তরে একই চুক্তি।
+              no-JS ফলব্যাক: নিচের নেটিভ-ফর্ম (লুকানো, JS-ব্যর্থতায় দৃশ্যমান)। ── %>
+          <div class="answer-form-wrap" id="answerForm">
+            <%- include('../shared/comment/CommentComposer', { user: user, postId: post.id, placeholder: 'আপনার উত্তর লিখুন… (@ লিখে মেনশন করুন)' }) %>
           </div>
+          <noscript>
+            <div class="answer-form-wrap card qa-noscript-form">
+              <h3><i class="fas fa-pen-nib"></i> আপনার উত্তর দিন</h3>
+              <form method="POST" action="/qa/<%= post.id %>/answer" class="answer-form">
+                <textarea name="body" rows="5" placeholder="আপনার উত্তর লিখুন..." required></textarea>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> উত্তর দিন</button>
+              </form>
+            </div>
+          </noscript>
         <% } else { %>
           <p class="login-to-comment"><a href="/login?next=/qa/<%= post.id %>">লগইন</a> করে উত্তর দিন</p>
         <% } %>
@@ -162,6 +158,8 @@
   <%- include('../partials/share-modal') %>
   <%# ── সেশন ৮১: রিপোর্ট-মোডাল + কনফার্ম/অটো-টোস্ট ── %>
   <%- include('../partials/report-modal') %>
+  <%# সেশন ১১৩: রিঅ্যাক্টরস-মডাল — উত্তর-ব্যাজ/কাউন্টারের data-rx-open ক্লিক-টার্গেট %>
+  <%- include('../shared/post/ReactorsModal') %>
   <script>
     (function () {
       document.querySelectorAll('form[data-confirm81]').forEach(function (f) {

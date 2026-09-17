@@ -98,6 +98,52 @@ function checkHeadOrder(file) {
 checkHeadOrder(path.join(VIEWS, 'partials', 'header.ejs'));
 checkHeadOrder(path.join(VIEWS, 'layout.ejs'));
 
+/* ── সেশন ১১৩: ক্যানোনিকাল-লেয়ার হেক্স-স্ক্যান ─────────────────────────────────
+   views/shared/** ও shared.css-এ হার্ডকোড-হেক্স-রঙ নিষিদ্ধ — শুধু var(--lf-*)।
+   অনুমোদিত ব্যতিক্রম: rgba(শ্যাডো/ওভারলে) ও ডকুমেন্টেশন-কমেন্ট। */
+const TOKEN_HEX = /#(?:006A4E|00523C|E8F5E9|1877F2|166FE5|EAF3FF|0084FF|F0F2F5|FFFFFF|E4E6EB|CED0D4|050505|65676B|8A8D91|FA3E3E|F7B125|E9710F)\b/gi;
+const SHARED_CSS = path.join(ROOT, 'public', 'assets', 'css', 'shared.css');
+function scanHex(file, label) {
+  const src = fs.readFileSync(file, 'utf8');
+  const rawLines = src.split('\n');
+  // মাল্টি-লাইন EJS-কমেন্ট (<%# … %>) ব্ল্যাঙ্ক-করা — লাইন-নম্বর অক্ষত রেখে
+  let inEjsComment = false;
+  const lines = rawLines.map(line => {
+    let out = '';
+    let rest = line;
+    while (rest.length) {
+      if (!inEjsComment) {
+        const open = rest.indexOf('<%#');
+        if (open === -1) { out += rest; rest = ''; }
+        else { out += rest.slice(0, open); rest = rest.slice(open + 3); inEjsComment = true; }
+      } else {
+        const close = rest.indexOf('%>');
+        if (close === -1) { rest = ''; }
+        else { rest = rest.slice(close + 2); inEjsComment = false; }
+      }
+    }
+    return out.replace(/\/\*[\s\S]*?\*\//g, '');
+  });
+  lines.forEach((line, idx) => {
+    TOKEN_HEX.lastIndex = 0;
+    if (!TOKEN_HEX.test(line)) return;
+    console.error(`✗ ${label}:${idx + 1}: হার্ডকোড-হেক্স "${rawLines[idx].trim().slice(0, 90)}" — var(--lf-*) ব্যবহার করুন`);
+    fail++;
+  });
+}
+(function hexScan() {
+  function walkShared(dir, out) {
+    for (const f of fs.readdirSync(dir)) {
+      const p = path.join(dir, f);
+      if (fs.statSync(p).isDirectory()) walkShared(p, out);
+      else if (p.endsWith('.ejs')) out.push(p);
+    }
+    return out;
+  }
+  walkShared(path.join(VIEWS, 'shared'), []).forEach(file => scanHex(file, path.relative(VIEWS, file)));
+  scanHex(SHARED_CSS, 'public/assets/css/shared.css');
+})();
+
 if (fail) {
   console.error(`\n[guard] ${fail}টি লঙ্ঘন — ডিজাইন-সিস্টেম ভাঙা (বিস্তারিত: lekhok-forum/PLANS.md "ডিজাইন-সিস্টেম" নোট)`);
   process.exit(1);
