@@ -91,11 +91,12 @@
     }
     box.innerHTML = items.map(function (n) {
       var ico = ICONS[n.type] || 'fa-bell';
-      /* সেশন ১০২: actor-avatar — actor থাকলে ৪০px-বৃত্তে ছবি (আইকন ফলব্যাক:
-         img onerror → has-avatar ক্লাস সরে → আইকন আবার দৃশ্যমান) */
+      /* সেশন ১০২-ইউনিয়ন: actor-avatar — actor_id (JOIN + legacy link-fallback) থাকলে
+         ৪০px-বৃত্তে ছবি (img onerror → has-avatar ক্লাস সরে → আইকন আবার দৃশ্যমান);
+         নইলে টাইপ-রঙা .ico-<type> আইকন-সার্কল — header.ejs-সার্ভার-মার্কআপের সাথে অভিন্ন */
       var icoHtml = n.actor_id
         ? '<span class="notif-ico has-avatar"><img class="notif-avatar" src="' + esc(n.actor_avatar || ('/avatar/' + n.actor_id)) + '" alt="" loading="lazy" onerror="this.parentNode.classList.remove(\'has-avatar\');this.remove()"><i class="fas ' + ico + '"></i></span>'
-        : '<span class="notif-ico"><i class="fas ' + ico + '"></i></span>';
+        : '<span class="notif-ico ico-' + esc(n.type) + '"><i class="fas ' + ico + '"></i></span>';
       return '<a href="' + esc(n.link || '/notifications') + '" class="notif-item ' + (n.is_read ? '' : 'unread') + '">' +
         icoHtml +
         '<span class="notif-text">' +

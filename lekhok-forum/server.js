@@ -563,6 +563,29 @@ app.use(async (req, res, next) => {
       res.locals.unread = row.c;
       const recent = await db.prepare("SELECT n.*, a.avatar_url AS actor_avatar, a.full_name AS actor_name FROM notifications n LEFT JOIN users a ON a.id = n.actor_id WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT 5").all(req.session.user.id);
       res.locals.recentNotifs = recent;
+      // ── সেশন ১০২ (ইউনিয়ন-মার্জ): legacy-row actor-fallback — actor_id-হীন পুরনো নোটিফিকেশনের
+      // link (/messages/<u>|/profile/<u>) থেকে অ্যাক্টর-শনাক্ত → এক IN-কুয়েরিতে actor_id/actor_avatar
+      // ফিল্ড বসানো (session102-এর JOIN-মার্কআপের হুবহু শেপ)। নতুন রোতে actor_id আছেই — স্কিপ।
+      // ব্যর্থতা নীরব — ফলব্যাক-ব্যর্থতায় আইকন-সার্কল দেখাবে।
+      try {
+        const legacy = (recent || []).filter(n => !n.actor_id && n.link);
+        const unames = [...new Set(legacy.map(n => {
+          const m = /^(?:\/messages|\/profile)\/([^\/?#]+)/.exec(n.link || '');
+          return m ? decodeURIComponent(m[1]) : null;
+        }).filter(Boolean))];
+        if (unames.length) {
+          const ph = unames.map(() => '?').join(',');
+          const urows = await db.prepare("SELECT username, avatar_url, id FROM users WHERE username IN (" + ph + ")").all(...unames);
+          const umap = {}; urows.forEach(u => { umap[u.username] = u; });
+          legacy.forEach(n => {
+            const m = /^(?:\/messages|\/profile)\/([^\/?#]+)/.exec(n.link || '');
+            if (m) {
+              const u = umap[decodeURIComponent(m[1])];
+              if (u) { n.actor_id = u.id; n.actor_avatar = u.avatar_url || ('/avatar/' + u.id); }
+            }
+          });
+        }
+      } catch (_) {}
       // Unread message conversations count
       try {
         const msgRow = await db.prepare("SELECT COUNT(*) as c FROM messages m JOIN conversations c ON m.conversation_id = c.id WHERE m.sender_id != ? AND m.is_read = 0 AND (c.user_a = ? OR c.user_b = ?)").get(req.session.user.id, req.session.user.id, req.session.user.id);
@@ -756,6 +779,9 @@ if (process.env.SANDBOX_PORT) {
           + 'if(window.XMLHttpRequest&&!window.__lfSbXhr){window.__lfSbXhr=1;'
           + 'var oo=XMLHttpRequest.prototype.open;'
           + 'XMLHttpRequest.prototype.open=function(m,u){arguments[1]=qp(u);return oo.apply(this,arguments);};}'
+          + 'if(window.EventSource&&!window.__lfSbEs){window.__lfSbEs=1;'
+          + 'var OE=window.EventSource;window.EventSource=function(u,c){return new OE(qp(String(u)),c);};'
+          + 'window.EventSource.prototype=OE.prototype;}'
           + 'window.__lfSbUrl=qp;'
           + '})();</scr' + 'ipt>';
         if (html.indexOf('__lfSbFetch') === -1 && /<\/head>/i.test(html)) {

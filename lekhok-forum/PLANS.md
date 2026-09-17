@@ -778,6 +778,7 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 - **style.css মিনিফাইড** — সেশন-৯৭-ব্লক EOF-অ্যাপেন্ড (`.notif-missed` ফ্যামিলি) — exact-anchor-প্যাচের দরকার হয়নি; পরবর্তী-এজেন্টও অ্যাপেন্ড-প্যাটার্নই মানুন।
 
 **QA-প্রমাণ:** E2E ৫৪/৫৪ + অডিট ৪৯/৪৯ + ক্লায়েন্ট-টাইমআউট লাইভ-যাচাই (কলার-পোলিং-শূন্যে মোডাল ৮.৪সে-তে স্ব-বিলুপ্ত) + কলব্যাক-ক্লিকে outgoing + নোটিফ-চিপ ৫/৬ + 390px-০ + কনসোল-০। স্ক্রিনশট: download/s97-*.png।
+
 ## Cross-Agent Note: Session 100 — কম্পোজার-মোডাল (০৭ 🔴) + র‍্যাংকড-ফিড (০৮) + অ্যাটমিক-রিঅ্যাক্ট (০৪) (১৮ সেপ্টেম্বর ২০২৬)
 
 **রোডম্যাপ-প্রগতি:** আইটেম **০৭ ✓ (FB-কম্পোজার-মোডাল — 🔴)**, **০৮ ✓ (এনগেজমেন্ট-র‍্যাংকড-ফিড)**, **০৪ ✓ (race-safe রিঅ্যাক্ট-কাউন্ট)**। মাস্টার-টেবিলের ২০ আইটেমে এখন অবশিষ্ট মাত্র: **০৫-কার্সার-পলিশ** (OFFSET→keyset; বর্তমান OFFSET+রানওয়ে-গার্ড এই স্কেলে ঠিকই কাজ করে), **১৭-হোম-কিউরেশন-সোশ্যাল-ফিল্টার**।
@@ -940,3 +941,21 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 **E2E-প্রমাণিত (agent-browser + curl, স্ক্রিনশটসহ):** ডুপ্লিকেট-শূন্য · প্যালেট-হোভার/টাচ · ব্যাজ-লাইভ · এডিট-প্রি-ফিল-মার্কারসহ · ডিলিট-ক্যাসকেড · 403/401-গার্ড · 390px-০ · কনসোল-০ · role-policy ৭২/৯৯-অভিন্ন।
 
 **পরবর্তী-সুপারিশ:** ① article-single/qa-single-এর সার্ভার-রেন্ডারড কমেন্ট-থ্রেডেও একই প্যালেট/৩-ডট বহমান-করা (এন্ডপয়েন্ট প্রস্তুতই) ② কমেন্ট-রিপ্লাই-নোটিফিকেশন ③ প্যালেটে 'angry'-রিঅ্যাকশন (server REACTIONS-এ যোগ + actions-bar _meta — ব্রেকিং-চেঞ্জ, সব ডিফল্ট-ম্যাপ আপডেট করতে হবে) ④ shift+click-মাল্টি-রিঅ্যাকশন-কুইক-পিক।
+## Cross-Agent Note: Session 105 — ইউনিয়ন-মার্জ (actor-avatar legacy-fallback + টাইপ-রঙা আইকন) + EventSource-গার্ড + QA-সুইপ (১৮ সেপ্টেম্বর ২০২৬)
+
+**প্রেক্ষিত (সমান্তরাল-সংঘর্ষ-নোট):** এই রাউন্ডে স্বাধীনভাবে বানানো কম্পোজার-মোডাল/actor-avatar ইমপ্ল সমান্তরাল session100/102-কমিটে (6489f32/4007e95) পাওয়া যাওয়ায় **তাদেরটাই ক্যানোনিকাল রাখা হয়েছে** (already-E2E'd+pushed) — প্যারালাল-ইমপ্ল (composer-modal.ejs/.lf-cmodal/data-cmodal-open/popularTags102-wiring) বাদ; কেবল অনন্য-অবদান নিচে। মার্জ-শিক্ষা: stash→rebase→pop-এ আনট্র্যাকড-নতুন-ফাইল সমান্তরাল-কমিটের একই-নামের-ফাইলের সাথে ধরা দেয় (pop-ব্যর্থ হলে stash-এই থাকে — হাতে-রিজলভ); docs-কনফ্লিক্ট union-মার্জ নীতি অক্ষুণ্ণ।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (এজেন্টদের জন্য):**
+- **actor-avatar ইউনিয়ন (session102-স্কিমার সাথে):** actor_id-NULL **legacy রোতে** link (/messages|/profile/<u>) থেকে অ্যাক্টর-শনাক্ত করে হুবহু একই ফিল্ডে (actor_id/actor_avatar) ফলব্যাক-ভরা হয় — server.js-middleware (recent-৫) + /api/notifications/recent (recent-৮), এক IN-কুয়েরি। নতুন রো notify-time-এই actor_id পায় (session102-পাথ) → দুই-পাথ এক-মার্কআপে। header.ejs/live.js **হুবহু অভিন্ন** রাখতে হবে (`.notif-ico.has-avatar` + onerror-আইকন-ফলব্যাক, নইলে `.notif-ico.ico-<type>`)।
+- **টাইপ-রঙা আইকন-ফলব্যাক:** style.css-EOF-এ `ico-<type>` ×৯ (message-নীল/like-react-রোজ/follow-share-এমারল্ড/answer-notice-অ্যাম্বার/mention-ভায়োলেট/complaint-লাল/call-স্লেট) + has-avatar hover-zoom (reduced-motion সচেতন)। নতুন নোটিফ-টাইপ যোগ করলে এখানে রঙ যোগ করুন।
+- **server.js FETCH_GUARD-এ EventSource-র‍্যাপ:** স্যান্ডবক্স-গেটওয়ে-প্রিভিউতে live.js-এর SSE এখন সরাসরি চলে (আগে 404 → ৪৫সে-ফলব্যাক-পোলে পড়ত)। env-gated (SANDBOX_PORT) — লাইভে জিরো-ইমপ্যাক্ট। fetch/XHR/EventSource তিনটাই এখন গার্ডেড।
+
+**sandbox/QA-গোটচা-নতুন (গুরুত্বপূর্ণ):**
+1. **সার্ভার বুট-env এখন ৩টি:** `SANDBOX_PORT=8080 CALL_RING_TIMEOUT_S=4 node server.js` — SANDBOX_PORT ছাড়া বুটে গেটওয়ে-অ্যাসেট-রিরাইট নিষ্ক্রিয় → `<script src>` 404 → **src-প্যাচে ব্রাউজার স্ক্রিপ্ট পুনঃএক্সিকিউট করে না** (CSS লিংকে হ্যাঁ!) → main.js-মৃত লক্ষণ: স্টাইল ঠিক কিন্তু showToast/LekhokRelTime undefined।
+2. **agent-browser-প্রোফাইলে পুরনো SW টিকে থাকে** (localhost:81-অরিজিন) — অদ্ভুত stale-অ্যাসেট দেখলে: `navigator.serviceWorker.getRegistrations()` unregister + `caches.keys()` delete + reload।
+3. **wc -c বনাম JS .length:** বাংলা-টেক্সটে বাইট-লেন্থ ≠ কোড-ইউনিট-লেন্থ (main.js ৪২,৭৫১ বাইট = ৩৭,৫৮৬ ইউনিট) — served-vs-repo তুলনায় ইউনিট-মিশ্রণ করলে মিথ্যা "stale-file" তত্ত্বে ঘুরবেন।
+4. **role-policy/ইউজার-বেসলাইন:** testadmin কেবল admin+active-ই নয় — ismail/riya/tanvir-এ **secret123** (9824dd6-ট্রায়ো; reset-qa-logins.js-চালালে রানিং-সার্ভারের ইন-মেমরি-DB ফাইল-সিড ওভাররাইট করে — **রিসেট-পরে সার্ভার-রিস্টার্ট আবশ্যক**)। verify-session93-calls.js এখন ismail=TRIO_PASS(secret123) দিয়ে লগইন করে।
+
+**E2E-প্রমাণ:** role-policy **১০৭/১০৭** + calls-E2E **৫৪/৫৪** + EJS-কম্পাইল (dashboard/header) + ব্রাউজার: their-modal ওপেন/ক্লোজ ✓ নোটিফ-অ্যাভাটার-লেগেসি-ফলব্যাক (মোনেম-অ্যাভাটার ড্রপডাউনে) ✓ insert-path actor_id=53 ✓ ico-<type>-রঙা ✓ SSE-open + push <৩সে ✓ 390px-০ ✓ কনসোল-০ ✓।
+
+**পরবর্তী-ক্রন-রাউন্ডে (১০৫-পরবর্তী):** মাস্টার-টেবিলের শেষ-দুই: ০৫-কার্সার-পলিশ (OFFSET→keyset) + ১৭-হোম-কিউরেশন-সোশ্যাল-ফিল্টার → শেয়ার্ড-ট্যাব pagination (Agent-Chat-লক) → প্রোফাইল-টাইমলাইন স্ক্রল-রিস্টোর → ০৩-Metered.ca-TURN (ইউজার-অ্যাকাউন্ট লাগবে) → গ্রুপ-কল।

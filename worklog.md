@@ -696,3 +696,24 @@ Stage Summary:
 - কমিট: session103 push ✓ — ফাইল: api.js (contact-হ্যান্ডলার), lekhok-contact.ejs (ফর্ম+টুলস+JSON-LD+স্ক্রিপ্ট), style.css (session103-ব্লক), routes/pages.js (error-লোকাল)
 - ফর্ম এখন দুই-পথেই কাজ করে (JS: inline+auto-CSRF-রিকভারি; no-JS: ২-স্টেপ প্ল্যাটফর্ম-রিকভারি → success-strip) — আগে ০%-ও সেভ হতো না
 - পরবর্তী: contact_submissions অ্যাডমিন-ভিউ (ইনবক্স), ম্যাপে মাল্টি-পিন, hCaptcha-টার্ন (রেট-লিমিট ভলিউম বাড়লে)
+
+---
+Task ID: cron-r4 (সেশন ১০৫ — webDevReview রাউন্ড ৫)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: প্রজেক্ট-স্টেটাস অ্যাসেসমেন্ট + agent-browser QA → বাগ-ফিক্স/ফিচার-নির্বাচন → ইউনিয়ন-মার্জ (actor-avatar legacy-fallback + EventSource-গার্ড) + ডক-সিঙ্ক
+
+Work Log:
+- worklog/PROJECT/PLANS রিভিউ + git fetch → QA-ফেজ: pkill → port-ভেরিফাই → seed-qa-users (সার্ভার-বন্ধ) → সার্ভার+টেস্ট এক-ইনভোকেশনে
+- calls-E2E ২-ফেইল পরিবেশ-ত্রুটি (CALL_RING_TIMEOUT_S ছাড়া বুট) → env-সহ ৫৪/৫৪; role-policy ১৩-ফেইল বেসলাইন-করাপশন (testadmin banned) → pkill -9 + DB-রিপেয়ার → গ্রিন
+- ব্রাউজার-QA-তে ৩টি নতুন স্যান্ডবক্স-গোটচা আবিষ্কৃত: ① SANDBOX_PORT-হীন বুটে `<script src>`-404-পরে src-প্যাচে পুনঃএক্সিকিউশন-অসম্ভব (CSS-এ সম্ভব) → main.js-নীরব-মৃত্যু ② agent-browser-প্রোফাইলে পুরনো SW টিকে থাকে (unregister+cache-clear রেসিপি) ③ wc -c বনাম JS .length (বাংলা ৩-বাইট) মিথ্যা stale-তত্ত্ব
+- ফোকাস: মাস্টার-টেবিল ০৭+০৮ নিয়ে কাজ শুরু করেছিলাম — মাঝ-রাউন্ডে git fetch-এ সমান্তরাল session100/102-কমিট (6489f32/4007e95) পাওয়া গেল যাতে ০৭ (কম্পোজার-মোডাল), ০৮ (র‍্যাংকড-ফিড), actor-avatar **ইতোমধ্যেই ইমপ্লিমেন্টেড**
+- **ইউনিয়ন-সিদ্ধান্ত:** তাদের ইমপ্ল ক্যানোনিকাল (already-E2E'd+pushed); আমার প্যারালাল-ইমপ্ল (composer-modal.ejs + composer-modal.js + .lf-cmodal + data-cmodal-open + popularTags102) বাদ; stash→rebase→pop-কনফ্লিক্ট ৮-ফাইল হাতে-রিজলভ (docs-union, কোড-তাদের+আমার-অনন্য)
+- **অনন্য-অবদান রক্ষা:** ① server.js FETCH_GUARD-এ EventSource-র‍্যাপ (SSE গেটওয়ে-টপলেভেলে 404→ফলব্যাক-পোল হতো) ② actor-avatar legacy-row-ফলব্যাক — actor_id-NULL রোতে link-prefix থেকে হুবহু actor_id/actor_avatar-শেপে ভরা (server.js + dashboard.js, এক IN-কুয়েরি) ③ টাইপ-রঙা ico-<type> আইকন ×৯ + has-avatar hover-zoom (style.css)
+- reset-qa-logins.js চালানো (ismail=secret123 বেসলাইন — 9824dd6-চুক্তি); রানিং-সার্ভারের ইন-মেমরি-DB ফাইল-সিড ওভাররাইট করে — রিসেট-পরে রিস্টার্ট আবশ্যক (পুনঃপ্রমাণিত)
+- যাচাই: role-policy ১০৭/১০৭ + calls ৫৪/৫৪ + EJS-কম্পাইল ×২ + node --check ×৪ + ব্রাউজার (their-modal ওপেন/ক্লোজ ✓ অ্যাভাটার-ফলব্যাক ✓ insert-path actor_id=53 ✓ ico-রঙা ✓ SSE-open ✓ কনসোল-০)
+- PROJECT.md §১০-তে সেশন-১০৫-এন্ট্রি + PLANS.md-এ Cross-Agent-Note (session102-নোট প্রতিস্থাপন করে)
+
+Stage Summary:
+- মূল-কমিটের সাথে pushed ✓ — মাস্টার-টেবিলে খালি: ০৫-কার্সার-পলিশ + ১৭-হোম-কিউরেশন
+- ফাইল: server.js (EventSource-গার্ড + legacy-fallback), routes/dashboard.js (recent-enrichment), header.ejs/live.js/style.css (মার্কআপ+রঙ-ইউনিয়ন), PROJECT.md/PLANS.md
+- পরবর্তী: ০৫-কার্সার-পলিশ → ১৭-হোম-কিউরেশন → শেয়ার্ড-ট্যাব pagination → Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) → গ্রুপ-কল

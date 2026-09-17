@@ -1155,12 +1155,32 @@ router.get('/api/health', async (req, res) => {
 router.get('/api/notifications/recent', ensureAuth, async (req, res) => {
   const me = req.session.user.id;
   try {
-    // সেশন ১০২: actor-avatar — LEFT JOIN users (actor_id) থেকে অবতার/নাম;
-    // actor_id NULL (সিস্টেম-নোটিশ/পুরনো রো) হলে avatar ফিল্ডগুলো null — ক্লায়েন্ট আইকন-ফলব্যাক দেখাবে।
+    // সেশন ১০২-ইউনিয়ন: actor-avatar — LEFT JOIN users (actor_id) + legacy link-fallback;
+    // actor_id NULL পুরনো রোতে link (/messages|/profile/<u>) থেকে অ্যাক্টর-শনাক্ত করে
+    // হুবহু একই ফিল্ডে (actor_id/actor_avatar) ফলব্যাক-ভরা হয় — ক্লায়েন্ট-মার্কআপ এক।
     const items = await db.prepare(`SELECT n.id, n.type, n.body, n.link, n.is_read, n.created_at, n.actor_id,
                                     a.avatar_url AS actor_avatar, a.full_name AS actor_name
                                     FROM notifications n LEFT JOIN users a ON a.id = n.actor_id
                                     WHERE n.user_id = ? ORDER BY n.created_at DESC, n.id DESC LIMIT 8`).all(me);
+    try {
+      const legacy = items.filter(n => !n.actor_id && n.link);
+      const unames = [...new Set(legacy.map(n => {
+        const m = /^(?:\/messages|\/profile)\/([^\/?#]+)/.exec(n.link || '');
+        return m ? decodeURIComponent(m[1]) : null;
+      }).filter(Boolean))];
+      if (unames.length) {
+        const ph = unames.map(() => '?').join(',');
+        const urows = await db.prepare("SELECT username, avatar_url, id FROM users WHERE username IN (" + ph + ")").all(...unames);
+        const umap = {}; urows.forEach(u => { umap[u.username] = u; });
+        legacy.forEach(n => {
+          const m = /^(?:\/messages|\/profile)\/([^\/?#]+)/.exec(n.link || '');
+          if (m) {
+            const u = umap[decodeURIComponent(m[1])];
+            if (u) { n.actor_id = u.id; n.actor_avatar = u.avatar_url || ('/avatar/' + u.id); }
+          }
+        });
+      }
+    } catch (_) {}
     const c = await db.prepare('SELECT COUNT(*) AS c FROM notifications WHERE user_id = ? AND is_read = 0').get(me);
     res.json({ ok: true, unread: c.c, items });
   } catch (e) { res.status(500).json({ ok: false, error: 'db' }); }

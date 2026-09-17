@@ -1163,6 +1163,7 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .notif-missed--page{font-size:11px;padding:3px 10px;vertical-align:middle;margin-left:6px}
 .notif-page-icon.icon-call{background:rgba(228,64,95,.14);color:#E4405F}
 
+
 /* ═══════════════════════════════════════════════════════════════════════════
    সেশন ১০২ — যোগাযোগ-পেজ রিডিজাইন (স্কোপড: .cx102 — অন্য পেজে প্রভাব শূন্য)
    ফিক্স: ① ভাঙা গুগল-ম্যাপ → লাইভ আইফ্রেম  ② ক্যাম্পাস-চ্যানেল প্রফেশনাল কার্ড
@@ -1562,3 +1563,18 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
   .fc-menu{min-width:158px;right:-4px}
   .fc-meta{gap:10px}
 }
+
+/* ── সেশন ১০২-ইউনিয়ন: টাইপ-রঙা আইকন-সার্কল ফলব্যাক (actor_id-হীন রো; FB-ধাঁচ) ── */
+.notif-ico.ico-message,.notif-ico.ico-comment{background:rgba(26,140,216,.13);color:#1a8cd8}
+.notif-ico.ico-like{background:rgba(228,64,95,.12);color:#E4405F}
+.notif-ico.ico-react{background:rgba(228,64,95,.12);color:#e0245e}
+.notif-ico.ico-follow{background:rgba(5,150,105,.13);color:#059669}
+.notif-ico.ico-share{background:rgba(16,185,129,.13);color:#10b981}
+.notif-ico.ico-answer,.notif-ico.ico-notice{background:rgba(180,83,9,.12);color:#b45309}
+.notif-ico.ico-mention{background:rgba(124,58,237,.12);color:#7c3aed}
+.notif-ico.ico-complaint{background:rgba(220,38,38,.12);color:#dc2626}
+.notif-ico.ico-call{background:rgba(100,116,139,.14);color:#64748b}
+.notif-ico.has-avatar img{transition:transform .18s ease}
+.notif-item:hover .notif-ico.has-avatar img{transform:scale(1.06)}
+@media (prefers-reduced-motion: reduce){.notif-ico.has-avatar img{transition:none}.notif-item:hover .notif-ico.has-avatar img{transform:none}}
+

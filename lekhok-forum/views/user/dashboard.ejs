@@ -1,5 +1,6 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'কমিউনিটি ফিড | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css'] }) %>
+<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix)
+    সেশন ১০২ (রোডম্যাপ-০৭): +rich-editor.css +multi-image.css — কম্পোজার-মোডালের এডিটর/মাল্টি-ছবি-উইজেট %>
+<%- include('../partials/header', { title: 'কমিউনিটি ফিড | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/rich-editor.css', '/assets/css/multi-image.css'] }) %>
 
   <div class="dashboard-wrap two-col">
     <!-- Main Feed -->
@@ -180,6 +181,7 @@
   <%# ── সেশন ৯৩: ফিড-৩-ডট-মেনুর 'রিপোর্ট'-অপশনের জন্য মোডাল + কমেন্ট-ইঞ্জিন ── %>
   <%- include('../partials/report-modal') %>
 
+
   <%# ── সেশন ১০০ (রোডম্যাপ-০৭ 🔴): FB-স্টাইল কম্পোজার-মোডাল — ড্র্যাগ-ড্রপ ছবি,
       খসড়া-অটোসেভ (localStorage), খসড়া-গার্ড, অটো-গ্রো টেক্সটএরিয়া, ক্যারেক্টার-কাউন্টার।
       সাবমিট: POST /articles/new (fetch-ফরওয়ার্ড → আর্টিকেল-পেজে নেভিগেশন) ── %>
@@ -224,6 +226,7 @@
     </div>
   </div>
   <% } %>
+
 
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
