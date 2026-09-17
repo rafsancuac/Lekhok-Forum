@@ -187,9 +187,22 @@ ck "revoke-পরে moderator /moderator/users 403" "403" "$(get $JARM /moderat
 HTML=$(curl -s -b $JARA "$BASE/admin/super?saved=scope_revoke")
 ckc "revoke-পরে ফ্ল্যাশ বার্তা" "প্রত্যাহার হয়েছে" "$HTML"
 # re-grant to keep demo state sane (scopes POST replaces list)
-R90=$(postf $JARA /admin/users /admin/users/$MODID/scopes "scopes=user_mgmt")
+R90=$(postf $JARA /admin/users /admin/users/$MODID/scopes "scopes=user_mgmt" "scopes=resources")
 ck "user_mgmt পুনঃপ্রদান 303" "303" "${R90%% *}"
 ck "পুনঃপ্রদান-পরে moderator /moderator/users 200" "200" "$(get $JARM /moderator/users)"
+
+# ═══ সেশন ১০১: রিসোর্স-স্কোপ + এন্ডপয়েন্ট-গার্ড ═══
+ck "anon /moderator/resources → লগইন-রিডাইরেক্ট" "302" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/moderator/resources")"
+ck "plain-user /moderator/resources 403" "403" "$(get $JARU /moderator/resources)"
+ck "moderator /moderator/resources 200" "200" "$(get $JARM /moderator/resources)"
+ck "admin /admin/resources 200" "200" "$(get $JARA /admin/resources)"
+ck "admin /admin/resources/new 200" "200" "$(get $JARA /admin/resources/new)"
+R=$(curl -s -b $JARU -X POST -H "Content-Type: application/json" -d '{"kind":"view"}' "$BASE/api/resources/1/stat")
+ckc "plain-user stat-কাউন্টার পাবলিক ok" '"ok":true' "$R"
+R=$(curl -s -X POST -H "Content-Type: application/json" -d '{"kind":"bogus"}' "$BASE/api/resources/1/stat")
+ckc "stat bogus-kind → view-তে ফলব্যাক ok" '"ok":true' "$R"
+R=$(curl -s -X POST -H "Content-Type: application/json" -d '{}' "$BASE/api/resources/0/stat")
+ck "stat invalid-id 400" "400" "$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -d '{}' "$BASE/api/resources/0/stat")"
 
 echo ""
 echo "════════════════════════════════"

@@ -56,7 +56,7 @@ function humanFileSize(bytes) {
   if (bytes === undefined || bytes === null || bytes === '') return null;
   const units = ['B', 'KB', 'MB', 'GB']; let i = 0; let n = Number(bytes) || 0;
   while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-  return (i === 0 ? String(n) : n.toFixed(1) + ' ' + units[i]);
+  return (i === 0 ? n + ' B' : n.toFixed(1) + ' ' + units[i]);
 }
 
 module.exports = { RES_TYPES, normalizeResType, videoEmbedUrl, detectResType, humanFileSize };

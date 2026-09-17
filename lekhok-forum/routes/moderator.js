@@ -657,7 +657,7 @@ function humanFileSizeMod101(bytes) {
   if (bytes === undefined || bytes === null || bytes === '') return null;
   const units = ['B', 'KB', 'MB', 'GB']; let i = 0; let n = Number(bytes) || 0;
   while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-  return (i === 0 ? String(n) : n.toFixed(1) + ' ' + units[i]);
+  return (i === 0 ? n + ' B' : n.toFixed(1) + ' ' + units[i]);
 }
 router.get('/resources', ensureModerator, requireScope('resources'), async (req, res) => {
   const resources = await db.prepare('SELECT * FROM resources ORDER BY id DESC').all();
@@ -668,7 +668,7 @@ router.get('/resources', ensureModerator, requireScope('resources'), async (req,
 });
 
 router.post('/resources', ensureModerator, requireScope('resources'), withUpload(resourceUpload), async (req, res) => {
-  const { title, content, category, author, tags, file_url, link_url, res_type, file_size, duration, thumbnail_url } = req.body;
+  const { title, content, category, author, tags, file_url, link_url, res_type, file_size, duration } = req.body;
   if (!title || !String(title).trim()) return res.redirect('/moderator/resources');
   if (req.uploadError) return res.redirect('/moderator/resources?posted=err');
   const f = req.file;
@@ -679,11 +679,14 @@ router.post('/resources', ensureModerator, requireScope('resources'), withUpload
     type = RT.detectResType(f);
     fSize = humanFileSizeMod101(f.size);
   }
-  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, thumbnail_url, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+  // সেশন ১০১-গ: থাম্বনেইল স্যানিটাইজ (http(s)/সাইট-পাথ)
+  let thumb = String(req.body.thumbnail_url || '').trim() || null;
+  if (thumb && !/^(https?:\/\/.+|\/)/i.test(thumb)) thumb = null;
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by, thumbnail_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
     String(title).trim(), content || '', category || 'general',
     author || (req.session.user.username || req.session.user.full_name || ''),
     tags || '', fUrl, link_url || null, type, type, fSize, (duration || '').trim() || null,
-    (thumbnail_url || '').trim() || null, req.session.user.username || null
+    req.session.user.username || null, thumb
   );
   res.redirect('/moderator/resources?posted=1');
 });

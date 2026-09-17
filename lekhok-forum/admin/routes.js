@@ -33,7 +33,9 @@ const CANONICAL_SCOPES = [
   { key: 'epaper',      label: 'আজকের ই-পেপার',   icon: 'fas fa-newspaper' },
   // সেশন ৮৩: ইউজার তদারকি — মডারেটর ইউজার-তালিকা দেখে নিষেধ/ফেরত দিতে পারবেন
   // (রোল বদল নয় — সেটি কেবল এডমিন/সুপার-এডমিন)।
-  { key: 'user_mgmt',   label: 'ইউজার তদারকি',     icon: 'fas fa-users-cog' }
+  { key: 'user_mgmt',   label: 'ইউজার তদারকি',     icon: 'fas fa-users-cog' },
+  // সেশন ১০১: রিসোর্স — মডারেটর অডিও/ভিডিও/পিডিএফ/ছবি-রিসোর্স প্রকাশ করবে
+  { key: 'resources',   label: 'রিসোর্স',           icon: 'fas fa-book' }
 ];
 const VALID_SCOPE_KEYS = CANONICAL_SCOPES.map(s => s.key).concat(ADMIN_SCOPES); // canonical + legacy plural
 
@@ -924,7 +926,7 @@ function humanFileSize101(bytes) {
   if (bytes === undefined || bytes === null || bytes === '') return null;
   const units = ['B', 'KB', 'MB', 'GB']; let i = 0; let n = Number(bytes) || 0;
   while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-  return (i === 0 ? String(n) : n.toFixed(1) + ' ' + units[i]);
+  return (i === 0 ? n + ' B' : n.toFixed(1) + ' ' + units[i]);
 }
 function detectResType101(file) {
   const mime = String(file.mimetype || '').split(';')[0].trim();
@@ -950,9 +952,10 @@ function resourceFormPayload101(req, existing) {
     link_url:  b.link_url || null,
     file_size: b.file_size || null,
     duration:  (b.duration || '').trim() || null,
-    // সেশন ১০৪: কভার-ছবি (thumbnail_url) — pdf/doc/link/অডিও/ভিডিও কার্ডেও কভার দেখায়
     thumbnail_url: (b.thumbnail_url || '').trim() || null,
   };
+  // সেশন ১০১-গ: thumbnail_url স্যানিটাইজ (http(s)/সাইট-পাথ ছাড়া → null)
+  if (out.thumbnail_url && !(/^(https?:\/\/.+|\/)/i.test(out.thumbnail_url))) out.thumbnail_url = null;
   if (f) {
     out.file_url = f.url || f.path;
     out.res_type = detectResType101(f);
@@ -975,8 +978,8 @@ router.post('/resources', requireAdmin, withUpload(resourceUpload), async (req, 
   const p = resourceFormPayload101(req, null);
   if (!p.title) return res.render('admin/resources/form', { resource: Object.assign({}, req.body, req.file ? { res_type: detectResType101(req.file) } : {}), error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources', RES_TYPE_META });
   if (req.uploadError) return res.render('admin/resources/form', { resource: req.body, error: req.uploadError, currentPath: '/admin/resources', RES_TYPE_META });
-  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, thumbnail_url, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
-    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, p.thumbnail_url, (req.session.user && req.session.user.username) || null
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by, thumbnail_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, (req.session.user && req.session.user.username) || null, p.thumbnail_url
   );
   res.redirect('/admin/resources?saved=1');
 });

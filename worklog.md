@@ -649,3 +649,30 @@ Stage Summary:
 - স্টাইলিং+ফিচার ম্যান্ডেট পূর্ণ: আপলোডার-মডাল (নতুন-ফিচার), থাম্বনেইল-স্ট্রিপ+স্কেলেটন (স্টাইলিং-বিস্তারিত)
 - সব ফাইল audit-গ্রিন; push পূর্বে pull-rebase কনভেনশন মানা হয়েছে
 - রিস্ক: লাইভ-Turso-রিসেট এখনো টোকেন-অপেক্ষায়; সিক্রেট-রোটেশন ×৪ বাকি
+
+---
+Task ID: 20 (Session 101)
+Agent: Cron webDevReview round — ইউজার-আপলোড ২ রিকোয়েস্ট + বাকি-রোডম্যাপ
+Task: ① ইউজারের আপলোড-ফাইলের ২ রিকোয়েস্ট বাস্তবায়ন (resources ক্লিকেবল-মাল্টিমিডিয়া + পত্রিকার-ইমেইল ডিরেক্টরি প্রফেশনাল-রিডিজাইন) ② "যে কাজ বাকি আছে" — রোডম্যাপ-অবশিষ্ট (০৭/০৮) ③ E2E + ডক
+
+Work Log:
+- cross-agent সিঙ্ক: git fetch → session98/99/100 push ছিল (SSE-হাব ০১ ✓, ট্যাগ-ক্লাউড); session=101 নেওয়া (highest+1)
+- **Phase-A (ইউজার-রিকোয়েস্ট-১, কমিট a0b1bb7):** resources মাল্টিমিডিয়া-আপলোড সিস্টেম —
+  - db.js: resources-এ res_type/file_size/thumbnail_url/duration/downloads/views/created_by (LATER_COLUMNS+CREATE+schema.sql); MODERATOR_SCOPES-এ 'resources'
+  - middleware/upload.js: resourceUpload (subdir=resources, ৬০MB, resource_file-ফিল্ড)
+  - admin/resources: ৬-টাইপ-পিকার ফর্ম + auto-detect + list-এ টাইপ-ব্যাজ/স্ট্যাট
+  - মডারেটর-প্যানেল: /moderator/resources GET/POST/delete + moderator-resources.ejs + sidebar
+  - /resources পাবলিক রিরাইট: ক্লিকেবল কার্ড (অডিও=ইনলাইন, ভিডিও=YT-মোডাল, pdf/doc/image/link=ডাউনলোড-কাউন্টেড) + POST /api/resources/:id/stat (৩০সে-ডিডুপ)
+  - /resources/emails পূর্ণ-রিডিজাইন: পরিসংখ্যান-স্ট্রিপ + নির্দেশিকা-বার + স্টিকি সার্চ + ৯-ডেস্ক-পিল (নোট-টেক্সট অটো-শ্রেণিবিন্যাস) + ওয়ান-ক্লিক-কপি + সাবজেক্টসহ mailto-ড্রাফট
+  - scripts/seed-resources-101.js: আসল PDF/WAV(PCM)/PNG জেনারেটর + ৫ ডেমো-রো
+- **Phase-B (রোডম্যাপ-০৭+০৮):** আমার ইমপ্লিমেন্টেশন (api/posts/quick + buildPopularFeed + qm-মোডাল) বানিয়েছিলাম, কিন্তু rebase-এ দেখি সমান্তরাল session100 আরও পূর্ণাঙ্গ ভার্সন (cpm-মোডাল + composer-modal.js + sort=ranked rankedFeedSlice) পুশ করেছে — **আমার ডুপ্লিকেট ড্রপ করে তাঁদেরটি গ্রহণ** (দুই-পক্ষই সচেতন-সিদ্ধান্ত, ডুপ্লিকেশন-শূন্য)
+- **Phase-C (session100-খ-সুপারিশ বাস্তবায়ন):** ③ thumbnail_url এন্ড-টু-এন্ড (ফর্ম×২ + পেলোড + স্যানিটাইজ + পাবলিক-কার্ড-কভার) ④ role-policy স্যুটে ৮-নতুন চেক (resources-স্কোপ/গার্ড/stat-API) → **107/107 ALL GREEN** ⑤ CANONICAL_SCOPES-এ 'resources' বাদ-ছিল (অ্যাডমিন-স্কোপ-UI-তে দেখাত না) — ফিক্স ⑥ humanFileSize-এ 'B'-ইউনিট ⑦ মডারেটর-ফাইল-আপলোড E2E (curl multipart + ?_csrf=কুয়েরি → DB-রো: pdf-অটোডিটেক্ট+thumbnail+created_by) ✓
+- ব্রাউজার-E2E (agent-browser): /resources অডিও-টগল/ভিডিও-YT-মোডাল/PDF-open+DB-কাউন্টার ✓ /resources/emails ফিল্টার(৮-চিঠি)/সার্চ(৩-প্রথমআলো)/খালি-অবস্থা/কপি-ফিডব্যাখ ✓ কম্পোজার-মোডাল(তাঁদের)-ওপেন ✓ 390px-ওভারফ্লো-০ (৪-পেজ) ✓ কনসোল-এরর-০ ✓
+- ডক: PLANS.md ক্রস-এজেন্ট-নোট + PROJECT.md changelog
+
+Stage Summary:
+- origin/main @ <HEAD-after-push> — session101 (a0b1bb7 + session101-g)
+- নতুন-সারফেস: /moderator/resources, POST /api/resources/:id/stat, helpers/resource-types.js
+- টেস্ট-ডেটা: resources-টেবিলে ১৬-রো (৫ ডেমো-মাল্টিমিডিয়া + ১ মডারেটর-আপলোড); ডেমো-ফাইল public/uploads/resources/ (gitignored)
+- ⚠️ নতুন-গোটচা: sql.js সিড-স্ক্রিপ্টে prepare().run() → ২০০ms-ডিবাউন্ড — saveDb() ম্যানুয়াল-কল+৫০০ms-অপেক্ষা নইলে ডেটা-হারানি (দুইবার-প্রমাণিত)
+- পরবর্তী-প্রথম-পছন্দ: ① রিসোর্স-বাল্ক-আপলোড/সংকলন-সিরিজ ② মাস্টার-টেবিলের শেষ-২: ০৫-কার্সর-পলিশ, ১৭-হোম-কিউরেশন-সোশ্যাল-ফিল্টার ③ ইমেইল-ডিরেক্টরিতে অ্যাডমিন-সম্পাদনাযোগ্য ডেটা (এখন helpers-হার্ডকোড)

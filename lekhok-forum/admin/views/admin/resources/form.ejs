@@ -95,11 +95,11 @@
         <input type="text" name="file_size" value="<%= resource ? (resource.file_size || '') : '' %>" placeholder="যেমন: 5.2 MB">
       </div>
 
-      <%# সেশন ১০৪: কভার-ছবি — pdf/doc/link/অডিও/ভিডিও কার্ডেও কভার দেখায় %>
+      <%# সেশন ১০১-গ: থাম্বনেইল (ই-বুক/ক্যাটাগরি-কভার) — সব টাইপে প্রযোজ্য %>
       <div class="form-group">
-        <label>কভার-ছবি URL (ঐচ্ছিক)</label>
-        <input type="url" name="thumbnail_url" value="<%= resource ? (resource.thumbnail_url || '') : '' %>" placeholder="https://... অথবা /uploads/resources/...">
-        <p class="rt-hint"><i class="fas fa-circle-info"></i> কার্ডের উপরে কভার-ছবি হিসেবে দেখাবে (ছবি-টাইপে ফাইল-ইউআরএল-ই কভার হয়)। উদাহরণ: ই-বুকের প্রচ্ছদ, লেকচারের পোস্টার।</p>
+        <label>থাম্বনেইল / কভার-ছবির URL (ঐচ্ছিক — কার্ডের উপরে দেখাবে)</label>
+        <input type="url" name="thumbnail_url" value="<%= resource ? (resource.thumbnail_url || '') : '' %>" placeholder="https://... অথবা /uploads/content/...">
+        <p class="rt-hint"><i class="fas fa-circle-info"></i> ই-বুক/গাইডবুকের প্রচ্ছদ, অডিও-লেকচারের পোস্টার — দিলে রিসোর্স-কার্ডে কভার হিসেবে দেখানো হবে (ছবি-টাইপে না-দিলেও অটো)।</p>
       </div>
 
       <button type="submit" class="btn btn-primary"><%= resource ? 'আপডেট' : 'তৈরি করুন' %></button>
