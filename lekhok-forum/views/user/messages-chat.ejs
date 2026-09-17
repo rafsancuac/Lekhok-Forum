@@ -234,6 +234,17 @@
           <% }); %>
         </div>
 
+        <%# ── সেশন ৭৮: ফাইল-প্রিভিউ — ইনপুটের উপরে, শুধু ফাইল থাকলেই দৃশ্যমান (থাম্বনেইল+সাইজ+টাইপ-আইকন) ── %>
+        <div class="file-preview" id="filePreview" hidden>
+          <i class="fas fa-paperclip" id="filePreviewIcon"></i>
+          <img id="filePreviewThumb" class="fp-thumb" alt="" hidden />
+          <div class="fp-meta">
+            <div class="fp-name" id="filePreviewName"></div>
+            <div class="fp-size" id="filePreviewSize"></div>
+          </div>
+          <button type="button" id="filePreviewRemove" aria-label="সরান" title="সরান">&times;</button>
+        </div>
+
         <form method="POST" class="chat-input-bar" enctype="multipart/form-data" id="chatForm">
           <%# সেশন ৭৬: রিপ্লাই/এডিট বার (ইনপুট-বারের উপরে FB-স্টাইল) %>
           <div class="reply-bar" id="replyBar" hidden>
@@ -260,11 +271,12 @@
           </div>
           <button type="submit" class="btn btn-primary is-like" id="sendBtn" title="পাঠান"><span style="font-size:20px;line-height:1">👍</span></button>
         </form>
-        <div class="file-preview" id="filePreview" hidden>
-          <i class="fas fa-paperclip"></i>
-          <span id="filePreviewName"></span>
-          <button type="button" id="filePreviewRemove" aria-label="সরান">&times;</button>
-        </div>
+
+        <%# ── সেশন ৭৮: স্ক্রল-টু-বটম FAB (নতুন-মেসেজ ব্যাজসহ) ── %>
+        <button type="button" class="jump-btn" id="jumpBtn" aria-label="সবচেয়ে নিচে যান" title="সবচেয়ে নিচে যান">
+          <i class="fas fa-chevron-down"></i>
+          <span class="jump-badge"></span>
+        </button>
       </section>
 
       <%# ── ডান: ডিটেইলস-প্যানেল (≥১০২৪px) ─────────────────────────────── %>
@@ -693,11 +705,72 @@
       sendBtn.title = has ? 'পাঠান' : 'লাইক পাঠান';
       sendBtn.innerHTML = has ? '<i class="fas fa-location-arrow"></i>' : '<span style="font-size:20px;line-height:1">👍</span>';
     }
-    msgInput.addEventListener('input', updateSendBtn);
+
+    // ── সেশন ৭৮: প্রতি-কথোপকথন ড্রাফট-সেভ (FB-আচরণ — অন্য চ্যাটে গিয়ে ফিরলেও লেখা বাঁচে) ──
+    const draftKey = 'lfDraft:' + (isGroupChat ? 'g' + convId : 'u:' + otherUsername);
+    function saveDraft() { try { localStorage.setItem(draftKey, msgInput.value); } catch (e) {} }
+    function clearDraft() { try { localStorage.removeItem(draftKey); } catch (e) {} }
+    try { const _draft = localStorage.getItem(draftKey); if (_draft) msgInput.value = _draft; } catch (e) {}
+
+    msgInput.addEventListener('input', () => {
+      updateSendBtn();
+      if (msgInput.value.trim()) saveDraft(); else clearDraft();
+    });
     updateSendBtn();
 
+    // ── সেশন ৭৮: স্ক্রল-টু-বটম FAB + নতুন-মেসেজ ব্যাজ + স্মার্ট-অটোস্ক্রল ──
+    const jumpBtn = document.getElementById('jumpBtn');
+    const jumpBadge = jumpBtn ? jumpBtn.querySelector('.jump-badge') : null;
+    let newMsgCount = 0;
+    function isNearBottom() { return body.scrollHeight - body.scrollTop - body.clientHeight < 160; }
+    function updateJumpBtn() {
+      if (!jumpBtn) return;
+      jumpBtn.classList.toggle('show', body.scrollHeight - body.scrollTop - body.clientHeight > 320);
+    }
+    function clearJumpBadge() {
+      newMsgCount = 0;
+      if (jumpBadge) { jumpBadge.textContent = ''; jumpBadge.classList.remove('show'); }
+    }
+    body.addEventListener('scroll', () => { updateJumpBtn(); if (isNearBottom()) clearJumpBadge(); }, { passive: true });
+    if (jumpBtn) jumpBtn.addEventListener('click', () => {
+      body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+      clearJumpBadge();
+    });
+    updateJumpBtn();
+
+    // ── সেশন ৭৮: ছবি-লাইটবক্স (চ্যাট-ছবি + শেয়ার্ড-মিডিয়া গ্রিড — নতুন ট্যাবের বদলে) ──
+    let lbEl = null;
+    function openLightbox(src, caption) {
+      if (!lbEl) {
+        lbEl = document.createElement('div');
+        lbEl.className = 'lf-lightbox';
+        lbEl.setAttribute('role', 'dialog');
+        lbEl.setAttribute('aria-modal', 'true');
+        lbEl.innerHTML = '<button type="button" class="lb-close" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button><img alt="" /><div class="lb-caption"></div>';
+        lbEl.addEventListener('click', e => { if (e.target === lbEl || e.target.closest('.lb-close')) closeLightbox(); });
+        document.body.appendChild(lbEl);
+      }
+      const img = lbEl.querySelector('img');
+      img.src = src; img.alt = caption || 'ছবি';
+      const cap = lbEl.querySelector('.lb-caption');
+      cap.textContent = caption || '';
+      cap.style.display = caption ? '' : 'none';
+      lbEl.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() { if (lbEl) lbEl.classList.remove('open'); document.body.style.overflow = ''; }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    body.addEventListener('click', e => {
+      const img = e.target.closest('.bubble-image');
+      if (img) { e.preventDefault(); openLightbox(img.currentSrc || img.src, img.alt); }
+    });
+    document.getElementById('fbDetails')?.addEventListener('click', e => {
+      const img = e.target.closest('.md-media img');
+      if (img) { e.preventDefault(); openLightbox(img.currentSrc || img.src, img.alt); }
+    });
+
     // ── মেসেজ-রেন্ডারিং ─────────────────────────────────────────────────
-    function appendMessage(msg) {
+    function appendMessage(msg, forceScrollFlag) {
       if (document.querySelector('.bubble[data-id="' + msg.id + '"]')) return;
       // নিজের মেসেজ: optimistic tmp-বাবল থাকলে সেটাকেই আসল id দিই
       if (msg.is_me) {
@@ -705,6 +778,7 @@
         const match = tmps.reverse().find(b => ((b.querySelector('.bubble-text') || {}).textContent || '') === (msg.body || ''));
         if (match) { match.dataset.id = String(msg.id); return; }
       }
+      const nearBottom = isNearBottom();
       const div = document.createElement('div');
       div.className = 'bubble ' + (msg.is_me ? 'me' : 'them') + ' first-of-cluster last-of-cluster';
       div.dataset.id = msg.id;
@@ -741,7 +815,15 @@
       div.querySelector('.bubble-time').textContent = new Date(msg.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
       const ti = document.getElementById('typingIndicator');
       body.insertBefore(div, ti);
-      body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+      // স্মার্ট-স্ক্রল (সেশন ৭৮): পুরোনো মেসেজ পড়তে উপরে থাকলে অবস্থান ঠিক থাকে,
+      // FAB-ব্যাজে নতুন-গণনা দেখায়; নিজের মেসেজ বা নিচের-কাছে হলে অটো-স্ক্রল
+      if (forceScrollFlag === true || nearBottom || msg.is_me) {
+        body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+        clearJumpBadge();
+      } else {
+        newMsgCount++;
+        if (jumpBadge) { jumpBadge.textContent = newMsgCount > 9 ? '৯+' : String(newMsgCount); jumpBadge.classList.add('show'); }
+      }
     }
 
     // সিন-রসিট: শেষ-পঠিত নিজের বাবলে অপর পক্ষের মাইক্রো-অ্যাভাটার (FB-স্টাইল)
@@ -786,7 +868,10 @@
         const data = await res.json();
 
         if (data.messages && data.messages.length) {
-          data.messages.forEach(m => { lastMsgId = Math.max(lastMsgId, m.id); appendMessage(m); });
+          /* সেশন ৭৮: ব্যাচ-অ্যারাইভালে প্রথম মেসেজের আগের অবস্থান মানি — নইলে
+             smooth-scroll-রেসে মাঝের মেসেজগুলো ভুলভাবে 'স্ক্রল-আপ' ধরে FAB-ব্যাজ বাড়ায় */
+          const wasNearBottom78 = isNearBottom();
+          data.messages.forEach(m => { lastMsgId = Math.max(lastMsgId, m.id); appendMessage(m, wasNearBottom78); });
           markConvSeen();
         }
 
@@ -867,7 +952,7 @@
     function renderReacts(bubble, counts) {
       let box = bubble.querySelector('.bubble-reacts');
       if (!counts || !counts.length) { if (box) box.remove(); return; }
-      if (!box) { box = document.createElement('div'); box.className = 'bubble-reacts'; bubble.insertBefore(box, bubble.querySelector('.bubble-meta')); }
+      if (!box) { box = document.createElement('div'); box.className = 'bubble-reacts'; (bubble.querySelector('.b-content') || bubble).appendChild(box); }
       box.innerHTML = counts.map(c => '<span title="' + c.c + '">' + c.emoji + (c.c > 1 ? ' ' + c.c : '') + '</span>').join('');
     }
     body.addEventListener('click', async function (e) {
@@ -875,7 +960,16 @@
       if (rb) {
         const menu = rb.parentElement.querySelector('.bubble-react-menu');
         document.querySelectorAll('.bubble-react-menu:not([hidden])').forEach(m => { if (m !== menu) m.hidden = true; });
-        if (menu) menu.hidden = !menu.hidden;
+        if (menu) {
+          menu.hidden = !menu.hidden;
+          /* সেশন ৭৮: চ্যাটের একদম উপরের মেসেজে ক্যাপসুল ক্লিপ হলে নিচে-ফ্লিপ */
+          if (!menu.hidden) {
+            menu.classList.remove('flip-below');
+            const mr = menu.getBoundingClientRect();
+            const br = body.getBoundingClientRect();
+            if (mr.top < br.top + 10) menu.classList.add('flip-below');
+          }
+        }
         return;
       }
       const em = e.target.closest('.bubble-react-menu [data-emoji]');
@@ -923,6 +1017,16 @@
         appendMessage(optimistic);
       }
 
+      /* সেশন ৭৮-ফিক্স (ইউজার-অভিযোগ): সেন্ড চাপলেই ইনপুট সাথে সাথে খালি — আগে
+         সার্ভার-উত্তরের অপেক্ষায় আগের টেক্স্ট চ্যাটবক্সে ঝুলে থাকত; ব্যর্থ হলে
+         টেক্সট ইনপুটে ফিরে আসে যাতে হারিয়ে না যায়। */
+      msgInput.value = '';
+      fileInputEl.value = '';
+      if (filePreviewEl) filePreviewEl.hidden = true;
+      resetFilePreviewUI();
+      clearDraft();
+      updateSendBtn();
+
       try {
         const csrfM42 = document.querySelector('meta[name="csrf-token"]');
         const res = await fetch(sendUrl, {
@@ -937,24 +1041,26 @@
             const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
             if (tmp) tmp.dataset.id = String(data.id);
           }
-          msgInput.value = '';
-          fileInputEl.value = '';
-          if (filePreviewEl) filePreviewEl.hidden = true;
           if (window.MSA) window.MSA.afterSent();
           setTimeout(poll, 500);
         } else {
           const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
           if (tmp) tmp.remove();
+          msgInput.value = body_text; /* ব্যর্থ মেসেজ ফিরিয়ে দিই */
+          saveDraft();
           fbToast((data && data.error) || 'মেসেজ পাঠানো যায়নি — আবার চেষ্টা করুন');
         }
       } catch (err) {
         const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
         if (tmp) tmp.remove();
+        msgInput.value = body_text;
+        saveDraft();
         fbToast('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন');
       } finally {
         sending = false;
         sendBtn.disabled = false;
         updateSendBtn();
+        msgInput.focus();
       }
     });
 
@@ -971,18 +1077,59 @@
       document.getElementById('messengerList').classList.add('hidden');
     }
 
-    // ── ফাইল-প্রিভিউ ───────────────────────────────────────────────────
+    // ── ফাইল-প্রিভিউ (সেশন ৭৮: থাম্বনেইল + সাইজ + টাইপ-আইকন) ──
     const fileInput = document.getElementById('fileInput');
     const filePreview = document.getElementById('filePreview');
+    const fpThumb = document.getElementById('filePreviewThumb');
+    const fpIcon = document.getElementById('filePreviewIcon');
+    let fpThumbUrl = null;
+
+    function humanSize(n) {
+      if (!n && n !== 0) return '';
+      if (n < 1024) return n + ' বাইট';
+      if (n < 1048576) return (n / 1024).toFixed(1) + ' কিলোবাইট';
+      if (n < 1073741824) return (n / 1048576).toFixed(1) + ' মেগাবাইট';
+      return (n / 1073741824).toFixed(1) + ' গিগাবাইট';
+    }
+    function resetFilePreviewUI() {
+      if (fpThumbUrl) { URL.revokeObjectURL(fpThumbUrl); fpThumbUrl = null; }
+      if (fpThumb) { fpThumb.removeAttribute('src'); fpThumb.hidden = true; }
+      if (fpIcon) { fpIcon.className = 'fas fa-paperclip'; fpIcon.hidden = false; }
+    }
     fileInput?.addEventListener('change', () => {
-      if (fileInput.files && fileInput.files[0]) {
-        document.getElementById('filePreviewName').textContent = fileInput.files[0].name;
-        filePreview.hidden = false;
+      const f = fileInput.files && fileInput.files[0];
+      if (!f) { filePreview.hidden = true; resetFilePreviewUI(); return; }
+      document.getElementById('filePreviewName').textContent = f.name;
+      document.getElementById('filePreviewSize').textContent = humanSize(f.size);
+      const ext = (f.name.split('.').pop() || '').toLowerCase();
+      if (fpIcon) {
+        if (/^(jpe?g|png|gif|webp|bmp|svg|avif)$/.test(ext) || /^image\//.test(f.type)) fpIcon.className = 'fas fa-file-image';
+        else if (ext === 'pdf') fpIcon.className = 'fas fa-file-pdf';
+        else if (/^(zip|rar|7z|gz|tar)$/.test(ext)) fpIcon.className = 'fas fa-file-zipper';
+        else if (/^(mp3|wav|ogg|m4a|aac)$/.test(ext) || /^audio\//.test(f.type)) fpIcon.className = 'fas fa-file-audio';
+        else if (/^(mp4|mkv|mov|avi|webm)$/.test(ext) || /^video\//.test(f.type)) fpIcon.className = 'fas fa-file-video';
+        else if (/^(docx?|txt|rtf|odt|md)$/.test(ext)) fpIcon.className = 'fas fa-file-lines';
+        else if (/^(xlsx?|csv)$/.test(ext)) fpIcon.className = 'fas fa-file-excel';
+        else fpIcon.className = 'fas fa-paperclip';
       }
+      if (fpThumb) {
+        if (/^image\//.test(f.type)) {
+          if (fpThumbUrl) URL.revokeObjectURL(fpThumbUrl);
+          fpThumbUrl = URL.createObjectURL(f);
+          fpThumb.src = fpThumbUrl;
+          fpThumb.hidden = false;
+          if (fpIcon) fpIcon.hidden = true; /* থাম্বনেইল থাকলে আইকন লুকাই */
+        } else {
+          fpThumb.hidden = true;
+          if (fpIcon) fpIcon.hidden = false;
+        }
+      }
+      filePreview.hidden = false;
     });
     document.getElementById('filePreviewRemove')?.addEventListener('click', () => {
       fileInput.value = '';
       filePreview.hidden = true;
+      resetFilePreviewUI();
     });
 
     // ── নিজের একক মেসেজ মুছুন (সেশন ৭৬: ইউনিভার্সাল এন্ডপয়েন্ট — গ্রুপেও কাজ করে) ──

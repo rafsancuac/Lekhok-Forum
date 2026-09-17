@@ -361,6 +361,7 @@
 /* ═══════════════════ মূল চ্যাট-প্যানেল ═══════════════════ */
 .page-wrap--messenger .messenger-chat {
   display: flex; flex-direction: column;
+  position: relative; /* সেশন ৭৮: স্ক্রল-টু-বটম FAB-এর অ্যাঙ্কর */
   background: var(--fb-surface);
   border-radius: 0;
   min-height: 0;
@@ -411,10 +412,10 @@
 .page-wrap--messenger .chat-header .fb-chat-actions .btn-icon:hover,
 .page-wrap--messenger .chat-header .fb-chat-actions .fb-icon-btn:hover { background: var(--fb-canvas); }
 
-/* চ্যাট-বডি */
+/* চ্যাট-বডি (সেশন ৭৮: কম্প্যাক্ট — মেসেঞ্জারদের মতো টাইট উল্লম্ব-ছন্দ) */
 .page-wrap--messenger .chat-body {
   flex: 1; overflow-y: auto;
-  padding: 18px 16px 10px;
+  padding: 12px 16px 8px;
   background: var(--fb-surface);
   scrollbar-width: thin;
   scrollbar-color: #ced0d4 transparent;
@@ -426,10 +427,10 @@
   background: #fee2e2; color: #b91c1c; font-size: 13px;
 }
 
-/* ── ডেট-সেপারেটর ── */
+/* ── ডেট-সেপারেটর (সেশন ৭৮: কম্প্যাক্ট মার্জিন) ── */
 .page-wrap--messenger .date-sep {
   display: flex; align-items: center; justify-content: center;
-  margin: 14px 0 10px;
+  margin: 10px 0 8px;
 }
 .page-wrap--messenger .date-sep span {
   font-size: 11px; font-weight: 700; color: var(--fb-text2);
@@ -444,10 +445,10 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  margin: 2px 0;
+  margin: 1px 0;
 }
 .page-wrap--messenger .bubble + .bubble { margin-top: 2px; }
-.page-wrap--messenger .bubble.first-of-cluster { margin-top: 10px; }
+.page-wrap--messenger .bubble.first-of-cluster { margin-top: 7px; }
 .page-wrap--messenger .bubble.them { justify-content: flex-start; }
 .page-wrap--messenger .bubble.me { justify-content: flex-end; }
 .page-wrap--messenger .bubble .b-av {
@@ -459,16 +460,17 @@
   max-width: min(70%, 420px);
   background: var(--fb-bubble-in);
   color: var(--fb-text);
-  padding: 9px 14px;
+  padding: 6px 12px;
   font-size: 15px;
-  line-height: 1.45;
+  line-height: 1.38;
   border-radius: 18px;
   border-bottom-left-radius: 4px;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  /* সেশন ৭৬-ফিক্স: কনটেইনারে pre-wrap থাকলে EJS টেমপ্লেটের নিউলাইনগুলো
-     অ্যানোনিমাস লাইন-বক্স হয়ে বাবল অযৌক্তিকভাবে লম্বা হত (মোবাইলে বিশেষভাবে) —
-     normal রাখা হলো; মেসেজ-টেক্সটের pre-wrap নিচের .bubble-text রুলেই আছে। */
+  /* সেশন ৭৬+৭৮-ফিক্স (দুই এজেন্ট স্বাধীনভাবে একই রুট-কারণ ধরেছিল): কনটেইনারে
+     pre-wrap থাকলে EJS টেমপ্লেটের ইন্টার-এলিমেন্ট নিউলাইন/ইন্ডেন্ট অ্যানোনিমাস
+     লাইন-বক্স হয়ে ২৮০-৪৫১px লম্বা ফাঁপা বাবল বানাত (মোবাইলেও) — normal রাখা হলো;
+     ইউজারের নিজের মাল্টি-লাইন মেসেজের pre-wrap .bubble-text রুলেই আছে। */
   white-space: normal;
   box-shadow: 0 1px 1px rgba(0, 0, 0, .08);
 }
@@ -530,9 +532,10 @@
 }
 .page-wrap--messenger .bubble-sender img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
 
-/* ── রিয়েকশন: হোভার-স্মাইলি + ভাসমান ক্যাপসুল ── */
+/* ═══ সেশন ৭৮: রিয়েকশন — হোভার-স্মাইলি এখন বাবলের নিচ-ডান কোণে (ইউজার-অনুরোধ,
+   মূলধারার মেসেঞ্জারের মতো); রিয়েক্ট-চিপ নিচ-বামে যাতে কোণে সংঘর্ষ না হয় ═══ */
 .page-wrap--messenger .bubble-react-btn {
-  position: absolute; top: -12px; z-index: 5;
+  position: absolute; bottom: -13px; top: auto; z-index: 5; /* top:auto — dashboard.css-এর পুরনো top:-10px লেগেসি-রুল প্রত্যাখ্যান */
   width: 26px; height: 26px; border-radius: 50%; border: none;
   background: var(--fb-surface); color: var(--fb-text2);
   font-size: 12px; cursor: pointer;
@@ -540,20 +543,22 @@
   opacity: 0; transition: opacity .12s, transform .12s;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.page-wrap--messenger .bubble.them .bubble-react-btn { right: -10px; }
-.page-wrap--messenger .bubble.me .bubble-react-btn { left: -10px; right: auto; }
+.page-wrap--messenger .bubble.them .bubble-react-btn,
+.page-wrap--messenger .bubble.me .bubble-react-btn { right: -4px; left: auto; }
 .page-wrap--messenger .bubble:hover .bubble-react-btn { opacity: 1; }
-.page-wrap--messenger .bubble-react-btn:hover { color: var(--fb-blue); transform: scale(1.1); }
+.page-wrap--messenger .bubble-react-btn:hover { color: var(--fb-blue); transform: scale(1.12); }
+.page-wrap--messenger .bubble-react-btn:focus-visible { opacity: 1; outline: 2px solid var(--fb-blue); }
 .page-wrap--messenger .bubble-react-menu {
-  position: absolute; bottom: calc(100% + 8px); z-index: 8;
+  position: absolute; bottom: calc(100% + 10px); top: auto; z-index: 8; /* top:auto — লেগেসি top:-34px প্রত্যাখ্যান */
   background: var(--fb-surface);
   border: 1px solid var(--fb-border);
   border-radius: 99px;
   box-shadow: 0 6px 22px rgba(0, 0, 0, .18);
   display: flex; gap: 2px; padding: 4px 8px;
 }
-.page-wrap--messenger .bubble.them .bubble-react-menu { left: 0; }
-.page-wrap--messenger .bubble.me .bubble-react-menu { right: 0; left: auto; }
+.page-wrap--messenger .bubble.them .bubble-react-menu,
+.page-wrap--messenger .bubble.me .bubble-react-menu { right: -4px; left: auto; }
+.page-wrap--messenger .bubble-react-menu.flip-below { bottom: auto; top: calc(100% + 12px); }
 .page-wrap--messenger .bubble-react-menu[hidden] { display: none; }
 .page-wrap--messenger .bubble-react-menu button {
   border: none; background: 0 0; font-size: 21px; cursor: pointer; padding: 2px 3px;
@@ -562,7 +567,8 @@
 }
 .page-wrap--messenger .bubble-react-menu button:hover { transform: scale(1.35) translateY(-2px); }
 
-/* রিয়েকশন-চিপ (বাবলের নিচে ওভারল্যাপ) */
+/* রিয়েকশন-চিপ (বাবলের নিচ-বামে ওভারল্যাপ — সেশন ৭৮: me-তেও বামে, ডান কোণ
+   এখন রিয়েক্ট-বাটনের) */
 .page-wrap--messenger .bubble-reacts {
   position: absolute; bottom: -10px; z-index: 4;
   display: flex; gap: 2px;
@@ -574,8 +580,8 @@
   font-size: 12.5px;
   line-height: 1.5;
 }
-.page-wrap--messenger .bubble.them .bubble-reacts { left: 10px; }
-.page-wrap--messenger .bubble.me .bubble-reacts { right: 10px; }
+.page-wrap--messenger .bubble.them .bubble-reacts,
+.page-wrap--messenger .bubble.me .bubble-reacts { left: 10px; }
 .page-wrap--messenger .bubble-reacts span { cursor: default; }
 
 /* ── টাইপিং-ইন্ডিকেটর (FB ৩-ডট) ── */
@@ -589,7 +595,7 @@
 .page-wrap--messenger .typing-indicator .ti-bubble {
   background: var(--fb-bubble-in);
   border-radius: 18px;
-  padding: 11px 14px;
+  padding: 8px 12px;
   display: flex; align-items: center; gap: 4px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, .08);
 }
@@ -736,16 +742,33 @@
 .page-wrap--messenger .chat-input-bar .btn-primary#sendBtn:disabled { opacity: .55; cursor: wait; }
 .page-wrap--messenger .chat-input-bar .btn-primary#sendBtn.is-like { font-size: 22px; }
 
-/* ফাইল-প্রিভিউ */
+/* ═══ সেশন ৭৮: ফাইল-প্রিভিউ — শুধু ফাইল নির্বাচন থাকলেই দৃশ্যমান (আগে display:flex
+     hidden-অ্যাট্রিবিউটকে হার মানাত → খালি বারটা সবসময় দেখা যেত) ═══ */
 .page-wrap--messenger .file-preview {
-  display: flex; align-items: center; gap: 8px;
-  margin: 0 12px 8px; padding: 8px 14px;
+  display: flex; align-items: center; gap: 9px;
+  margin: 0 12px 6px; padding: 6px 12px;
   background: var(--fb-active); border: 1px solid rgba(24, 119, 242, .22);
-  border-radius: 99px; font-size: 13px; color: var(--fb-blue);
+  border-radius: 12px; font-size: 13px; color: var(--fb-blue);
+  animation: fbPop .16s cubic-bezier(.16, 1, .3, 1);
 }
-.page-wrap--messenger .file-preview i { color: var(--fb-blue); }
-.page-wrap--messenger .file-preview span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.page-wrap--messenger .file-preview button { background: 0 0; border: none; font-size: 1.1rem; cursor: pointer; color: inherit; line-height: 1; }
+.page-wrap--messenger .file-preview[hidden] { display: none; }
+.page-wrap--messenger .file-preview i { color: var(--fb-blue); font-size: 15px; flex: 0 0 auto; }
+.page-wrap--messenger .file-preview .fp-thumb {
+  width: 38px; height: 38px; flex: 0 0 38px; border-radius: 8px; object-fit: cover;
+  border: 1px solid rgba(24, 119, 242, .25); display: block;
+}
+.page-wrap--messenger .file-preview .fp-meta { flex: 1; min-width: 0; }
+.page-wrap--messenger .file-preview .fp-name {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 600; color: var(--fb-text);
+}
+.page-wrap--messenger .file-preview .fp-size { font-size: 11.5px; color: var(--fb-text2); margin-top: 1px; }
+.page-wrap--messenger .file-preview button {
+  background: 0 0; border: none; font-size: 1.1rem; cursor: pointer; color: var(--fb-text2);
+  line-height: 1; width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
+  display: inline-flex; align-items: center; justify-content: center; transition: background .12s, color .12s;
+}
+.page-wrap--messenger .file-preview button:hover { background: rgba(24, 119, 242, .12); color: #e41e3f; }
 
 /* ═══════════════════ ডান ডিটেইলস-প্যানেল ═══════════════════ */
 .page-wrap--messenger .messenger-details {
@@ -1177,4 +1200,64 @@
   .page-wrap--messenger .reply-bar { margin-bottom: 4px; padding: 6px 6px 6px 10px; }
   .msg-menu { min-width: 164px; }
   .page-wrap--messenger .bubble-quote { padding: 3px 7px 3px 9px; }
+}
+
+/* ═══════════ সেশন ৭৮: স্ক্রল-টু-বটম FAB + নতুন-মেসেজ ব্যাজ ═══════════ */
+.jump-btn {
+  position: absolute; right: 18px; bottom: 86px; z-index: 30;
+  width: 40px; height: 40px; border-radius: 50%; border: none;
+  background: var(--fb-surface); color: var(--fb-blue);
+  font-size: 16px; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .18);
+  display: inline-flex; align-items: center; justify-content: center;
+  opacity: 0; transform: translateY(10px) scale(.85); pointer-events: none;
+  transition: opacity .18s, transform .18s cubic-bezier(.16, 1, .3, 1);
+}
+.jump-btn.show { opacity: 1; transform: none; pointer-events: auto; }
+.jump-btn:hover { background: var(--fb-active); transform: scale(1.06); }
+.jump-btn:focus-visible { outline: 2px solid var(--fb-blue); }
+.jump-btn .jump-badge {
+  position: absolute; top: -5px; left: -5px;
+  min-width: 19px; height: 19px; border-radius: 99px;
+  background: var(--fb-blue); color: #fff;
+  font-size: 11px; font-weight: 700; line-height: 19px;
+  padding: 0 5px; box-sizing: border-box;
+  border: 2px solid var(--fb-surface);
+  display: none;
+}
+.jump-btn .jump-badge.show { display: block; }
+
+/* ═══════════ সেশন ৭৮: ছবি-লাইটবক্স ═══════════ */
+.lf-lightbox {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(4, 4, 4, .9);
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; gap: 14px;
+  cursor: zoom-out;
+}
+.lf-lightbox.open { display: flex; animation: lfFade .16s ease; }
+@keyframes lfFade { from { opacity: 0; } to { opacity: 1; } }
+.lf-lightbox img {
+  max-width: min(92vw, 1000px); max-height: 82vh;
+  border-radius: 8px; box-shadow: 0 18px 60px rgba(0, 0, 0, .5);
+  background: #fff;
+}
+.lf-lightbox .lb-caption {
+  color: #e4e6eb; font-size: 13px; max-width: 80vw;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lf-lightbox .lb-close {
+  position: absolute; top: 18px; right: 18px;
+  width: 40px; height: 40px; border-radius: 50%; border: none;
+  background: rgba(255, 255, 255, .12); color: #fff; font-size: 17px;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  transition: background .14s;
+}
+.lf-lightbox .lb-close:hover { background: rgba(255, 255, 255, .24); }
+
+/* টাচ-ডিভাইসে হোভার-নির্ভর কন্ট্রোল সবসময়-দৃশ্যমান (হোভার নেই তো!) */
+@media (hover: none) {
+  .page-wrap--messenger .bubble .bubble-react-btn { opacity: .85; }
+  .page-wrap--messenger .bubble .bubble-delete { opacity: .85; }
+  .page-wrap--messenger .bubble .bubble-meta { opacity: 1; }
 }
