@@ -1049,79 +1049,84 @@ router.get('/profile/:username', async (req, res) => {
   const isOwner = req.session.user && req.session.user.id === profile.id;
   const myId = req.session.user ? req.session.user.id : null;
 
-  const articles = await db.prepare("SELECT * FROM posts WHERE author_id = ? AND type = 'article' AND status = 'published' ORDER BY published_at DESC LIMIT 20").all(profile.id);
-  const questions = await db.prepare("SELECT * FROM posts WHERE author_id = ? AND type = 'question' AND status = 'published' ORDER BY published_at DESC LIMIT 20").all(profile.id);
-  const drafts = isOwner
-    ? await db.prepare("SELECT id, title, type, created_at, status FROM posts WHERE author_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 20").all(profile.id)
-    : [];
-  const myDaily = isOwner
-    ? await db.prepare('SELECT id, content_type, title, scheduled_date, published FROM daily_content WHERE author_id = ? ORDER BY created_at DESC LIMIT 10').all(profile.id)
-    : [];
-
-  // Comments by this user (public context)
-  const comments = await db.prepare(`
+  // ── সেশন ৯১: সমান্তরাল-কোয়েরি রিফ্যাক্ট (লাইভ-পারফ বাগফিক্স) ──────────────
+  // আগে ~১২টি কোয়েরি সিরিয়াল চলত — Turso-তে ~২০০ms RTT × ১২ ≈ ২.৫-৪.৫s
+  // প্রোফাইল-লোড (লাইভ-মাপা: /profile/ismail ৪.৩s, হোম ০.২৭s); কোল্ড-বুটে
+  // জমে ৬০s→504 পর্যন্ত যেত। সব কোয়েরি profile.id/myId-নির্ভর — পরস্পর-
+  // নির্ভর নয়, তাই Promise.all-এ এক-রাউন্ড-ট্রিপে (~০.৩-০.৮s)।
+  // sql.js-মোডে prepare().all() সিঙ্ক (rows রিটার্ন), Turso-মোডে Promise —
+  // then()-এ মুড়ে দুই-মোডই Promise-এ ঐক্যবদ্ধ; সিঙ্ক-থ্রো/রিজেকশন → ফলব্যাক।
+  const all91 = (sql, ...a) => Promise.resolve().then(() => db.prepare(sql).all(...a)).catch(() => []);
+  const get91 = (sql, ...a) => Promise.resolve().then(() => db.prepare(sql).get(...a)).catch(() => null);
+  const [
+    articles, questions, drafts, myDaily, comments, reactions, bookmarks,
+    followers, followingList, isFollowingRow, iBlockedHimRow, orgRolesRows, qaRows, tagPool
+  ] = await Promise.all([
+    all91("SELECT * FROM posts WHERE author_id = ? AND type = 'article' AND status = 'published' ORDER BY published_at DESC LIMIT 20", profile.id),
+    all91("SELECT * FROM posts WHERE author_id = ? AND type = 'question' AND status = 'published' ORDER BY published_at DESC LIMIT 20", profile.id),
+    isOwner ? all91("SELECT id, title, type, created_at, status FROM posts WHERE author_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 20", profile.id) : Promise.resolve([]),
+    isOwner ? all91('SELECT id, content_type, title, scheduled_date, published FROM daily_content WHERE author_id = ? ORDER BY created_at DESC LIMIT 10', profile.id) : Promise.resolve([]),
+    // Comments by this user (public context)
+    all91(`
     SELECT c.id, c.body, c.created_at, p.id AS post_id, p.title AS post_title, p.type AS post_type
     FROM comments c JOIN posts p ON p.id = c.post_id
     WHERE c.author_id = ? ORDER BY c.created_at DESC LIMIT 30
-  `).all(profile.id);
-
-  // Reactions this user gave
-  const reactions = await db.prepare(`
+  `, profile.id),
+    // Reactions this user gave
+    all91(`
     SELECT l.reaction_type, l.created_at, p.id AS post_id, p.title, p.type AS post_type
     FROM likes l JOIN posts p ON p.id = l.post_id
     WHERE l.user_id = ? AND l.post_id IS NOT NULL ORDER BY l.created_at DESC LIMIT 30
-  `).all(profile.id);
-
-  // Bookmarks — owner only (private)
-  const bookmarks = isOwner
-    ? await db.prepare(`SELECT p.id, p.title, p.type, p.cover_image, b.created_at AS bookmarked_at
+  `, profile.id),
+    // Bookmarks — owner only (private)
+    isOwner ? all91(`SELECT p.id, p.title, p.type, p.cover_image, b.created_at AS bookmarked_at
                   FROM bookmarks b JOIN posts p ON p.id = b.post_id
-                  WHERE b.user_id = ? ORDER BY b.created_at DESC LIMIT 30`).all(profile.id)
-    : [];
-
-  // Followers / Following lists (with follow-date)
-  const followers = await db.prepare(`
+                  WHERE b.user_id = ? ORDER BY b.created_at DESC LIMIT 30`, profile.id) : Promise.resolve([]),
+    // Followers / Following lists (with follow-date)
+    all91(`
     SELECT u.id, u.username, u.full_name, u.designation, u.avatar_url, f.created_at AS since
     FROM follows f JOIN users u ON u.id = f.follower_id
     WHERE f.following_id = ? ORDER BY f.created_at DESC LIMIT 50
-  `).all(profile.id);
-  const followingList = await db.prepare(`
+  `, profile.id),
+    all91(`
     SELECT u.id, u.username, u.full_name, u.designation, u.avatar_url, f.created_at AS since
     FROM follows f JOIN users u ON u.id = f.following_id
     WHERE f.follower_id = ? ORDER BY f.created_at DESC LIMIT 50
-  `).all(profile.id);
+  `, profile.id),
+    (myId ? get91('SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?', myId, profile.id) : Promise.resolve(null)),
+    (myId ? get91('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?', myId, profile.id) : Promise.resolve(null)),
+    all91(
+      "SELECT role, term_year FROM members WHERE user_id = ? AND role IS NOT NULL AND role != ''",
+      profile.id
+    ),
+    // সেশন ৬২: কুইজ-স্কোর কার্ড (পাবলিক) — quiz_attempts টেবিল না-থাকা
+    // পুরনো ডিপ্লয়ে চুপচাপ null (নিচে স্কিপ)।
+    Promise.resolve().then(() => db.prepare('SELECT quiz_id, correct FROM quiz_attempts WHERE user_id = ? ORDER BY answered_at ASC').all(profile.id)).catch(() => null),
+    isOwner ? Promise.resolve().then(() => getTagPool(24)).catch(() => []) : Promise.resolve([])
+  ]);
 
   const followerCount = followers.length || (await db.prepare('SELECT COUNT(*) as c FROM follows WHERE following_id = ?').get(profile.id)).c;
   const followingCount = followingList.length || (await db.prepare('SELECT COUNT(*) as c FROM follows WHERE follower_id = ?').get(profile.id)).c;
-  const isFollowing = myId && !!await db.prepare('SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?').get(myId, profile.id);
-  const iBlockedHim = myId && !!await db.prepare('SELECT 1 FROM blocks WHERE blocker_id = ? AND blocked_id = ?').get(myId, profile.id);
+  const isFollowing = !!isFollowingRow;
+  const iBlockedHim = !!iBlockedHimRow;
 
   // Interests + tag pool (owner manages categories; visitors see them)
   let interests = [];
   try { interests = JSON.parse(profile.interests || '[]'); } catch (_) {}
-  const tagPool = isOwner ? await getTagPool(24) : [];
 
-  // সংগঠনে দায়িত্ব — committee posts held by this user (any term), newest term first
+  // সংগঠনে দায়িত্ব — newest term first
   const bnLead = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
-  const orgRoles = (await db.prepare(
-    "SELECT role, term_year FROM members WHERE user_id = ? AND role IS NOT NULL AND role != ''"
-  ).all(profile.id)).sort((a, b) => bnLead(b.term_year) - bnLead(a.term_year));
+  const orgRoles = orgRolesRows.sort((a, b) => bnLead(b.term_year) - bnLead(a.term_year));
 
-  // সেশন ৬২: কুইজ-স্কোর কার্ড (পাবলিক — লিডারবোর্ডের সাথে সামঞ্জস্য)।
-  // quiz_attempts টেবিল না-থাকা পুরনো ডিপ্লয়ে চুপচাপ স্কিপ।
+  // সেশন ৬২: কুইজ-স্কোর কার্ড গণনা (রুট-বডি থেকে সরানো — শুধু গণনা)
   let quizStats = null;
-  try {
-    const qa = await db.prepare(
-      'SELECT quiz_id, correct FROM quiz_attempts WHERE user_id = ? ORDER BY answered_at ASC'
-    ).all(profile.id);
-    if (qa.length) {
-      const answered = qa.length;
-      const correct = qa.filter(r => r.correct).length;
-      let streak = 0;
-      for (let i = qa.length - 1; i >= 0; i--) { if (qa[i].correct) streak++; else break; }
-      quizStats = { answered, correct, streak, accuracy: Math.round((correct / answered) * 100) };
-    }
-  } catch (e) { /* টেবিল নেই — কার্ড বাদ */ }
+  if (qaRows && qaRows.length) {
+    const answered = qaRows.length;
+    const correct = qaRows.filter(r => r.correct).length;
+    let streak = 0;
+    for (let i = qaRows.length - 1; i >= 0; i--) { if (qaRows[i].correct) streak++; else break; }
+    quizStats = { answered, correct, streak, accuracy: Math.round((correct / answered) * 100) };
+  }
 
   // ═══ সেশন ৮৩: ফেসবুক-স্ট্যান্ডার্ড পার্সোনাল প্রোফাইল ডেটা ═══════════════════
   // বাংলা-সংখ্যা + সাপেক্ষ-সময় হেল্পার (ভিউতে পাস করা হয়)
