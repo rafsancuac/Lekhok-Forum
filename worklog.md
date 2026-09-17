@@ -558,3 +558,21 @@ Stage Summary:
 **গোটচা-পুনঃপ্রমাণ (cron-r3):** ① দ্বৈত-ইনস্ট্যান্স রেস → lekhok.db ফাঁকা (posts=0) — একক-ইনস্ট্যান্স রিবুটেই স্বাভাবিক; সিডের আগে সার্ভার বন্ধ রাখুন ② agent-browser-এ পেজ-নেভিগেশনে XTransformPort কুয়েরি হারায় — ফিল্টার্ড-URL সরাসরি ওপেন করুন ③ seed-INSERT-এ কলাম/placeholder-অর্ডার দ্বিবার মিলিয়ে নিন (এই রাউন্ডে excerpt↔tags উল্টে গিয়েছিল)।
 
 **পরবর্তী-ক্রন-রাউন্ডে (১০০-পরবর্তী):** ০৭-কম্পোজার-মোডাল (🔴) → ০৮-এনগেজমেন্ট-র‍্যাংকড-ফিড → নোটিফ-ড্রপডাউন actor-avatar → শেয়ার্ড-ট্যাব pagination → ০৮-এর পর D4-বৃদ্ধি: ট্যাগ-অটোকমপ্লিট (article-form)।
+
+---
+Task ID: cron-r3 (সেশন ১০১ — webDevReview রাউন্ড ৪)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: QA-সুইপ → রোডম্যাপ-০৪ (রিঅ্যাক্ট-কাউন্ট রেস-সেফ) + D4-বৃদ্ধি (ট্যাগ-অটোকমপ্লিট) — দুই আইটেম এক রাউন্ডে
+
+Work Log:
+- সিঙ্ক: 2ab905c (parallel নতুন কমিট নেই); QA ৭-পেজ ২০০ + health ✓ — বাগ-শূন্য
+- **রোডম্যাপ-০৪ রুট-কজ:** likes টেবিলে কোনো UNIQUE ইনডেক্স নেই + তিন টগল-পাথেই (toggleLike, /api/react post+comment-ব্রাঞ্চ) read→decide→write — Turso-র async-ইন্টারলিভে ডুপ্লিকেট-লাইক + like_count-ড্রিফট সম্ভব
+- **ফিক্স-প্যাটার্ন:** db.js IDX101 (ডুপ্লিকেট-পার্জ MIN(id) + পার্শিয়াল-ইউনিক-ইনডেক্স ×২) + social.js টগলগুলোতে changes()-সিদ্ধান্ত + INSERT OR IGNORE + প্রতিবার সত্য-গণনা; নোটিফ কেবল নতুন-যোগে
+- **D4-বৃদ্ধি:** popularTagNames101 হেল্পার → new/edit ফর্মে datalist + '#জনপ্রিয়' চিপ-রো (টগল-অ্যাড/বাদ, .picked, অটোসেভ-সচেতন)
+- **E2E-প্রমাণ:** ১৫x-প্যারালাল same-type react → ০-এরর total=১ ✓ ১২x-মিক্সড → এক-রো ✓ ১০x-প্যারালাল toggleLike → ৩০৩ ✓ গ্লোবাল-ডুপ-অডিট ০ ✓ like_count==COUNT(*) ✓ ব্রাউজার চিপ-টগল/পিকড + ডেটালিস্ট-১১ ✓ 390px-০ ✓ কনসোল-০ ✓
+- গোটচা: ① /login = সাধারণ-ইউজার পোর্টাল (staff প্রত্যাখাত) — API-টেস্টে roster/demo ইউজার লাগে ② রোস্টার-ইউজার র‍্যান্ডম-পাসওয়ার্ডে সিড — QA-লগইনে scripts/seed-qa-users.js (সার্ভার-বন্ধ-করে) ③ CSRF শুধু urlencoded/multipart POST-এ — JSON /api/* মুক্ত (টেস্ট-সহজ)
+
+Stage Summary:
+- কমিট 569bef1 → pushed ✓ — রোডম্যাপে এখন খালি: ০৭ (কম্পোজার-মোডাল 🔴), ০৮ (এনগেজমেন্ট-ফিড), + এক্সটেনশন (নোটিফ-actor-avatar, শেয়ার্ড-ট্যাব pagination, profile-timeline স্ক্রল-রিস্টোর)
+- seed-ডেটা: testuser/testadmin + testagent1/2 + ismail/monem/karishma/mahfuz/nusrat (demo123/Test@1234) — এই clone-এ
+- পরবর্তী-প্রথম-পছন্দ: ০৮-এনগেজমেন্ট-র‍্যাংকড-ফিড (২-পাস স্কোরিং, social.js) → ০৭-কম্পোজার-মোডাল (বড় — একক-রাউন্ড-ফোকাস)
