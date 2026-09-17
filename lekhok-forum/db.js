@@ -513,6 +513,13 @@ const LATER_COLUMNS = [
   ['users', 'genres', 'TEXT'],
   ['users', 'allow_messages_from', "TEXT DEFAULT 'everyone'"],
   ['users', 'bookmarks_public', 'INTEGER DEFAULT 0'],
+  // সেশন ৯৫: অ্যাকাউন্ট-রিকভারি ট্র্যাকিং (সুপার-এডমিন প্যানেল) —
+  // password_changed_at: সর্বশেষ পাসওয়ার্ড সেট/পরিবর্তনের সময়;
+  // must_change_password: সুপার-এডমিন-প্রদত্ত অস্থায়ী পাসওয়ার্ডে লগইন করেছে
+  // কিনা (1 = লগইন-পরবর্তী ফোর্স-চেঞ্জ গেট সক্রিয়)। মূল পাসওয়ার্ড কখনোই
+  // plaintext-এ সংরক্ষিত হয় না — শুধু bcrypt-hash থাকে, রিভার্স-অসম্ভব।
+  ['users', 'password_changed_at', 'DATETIME'],
+  ['users', 'must_change_password', 'INTEGER DEFAULT 0'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
@@ -1168,6 +1175,10 @@ async function runMigrations() {
     "ALTER TABLE users ADD COLUMN genres TEXT DEFAULT '[]'",
     "ALTER TABLE users ADD COLUMN allow_messages_from TEXT DEFAULT 'everyone'",
     "ALTER TABLE users ADD COLUMN bookmarks_public INTEGER DEFAULT 0",
+    // সেশন ৯৫: অ্যাকাউন্ট-রিকভারি — পাসওয়ার্ড-ট্র্যাকিং কলাম (LATER_COLUMNS-এর
+    // প্রতিচ্ছবি; উভয় তালিকায় থাকা নিরাপদ — duplicate-column নিরীহ catch)।
+    "ALTER TABLE users ADD COLUMN password_changed_at DATETIME",
+    "ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0",
     // সেশন ৭৭: সুপার-এডমিন প্যানেল — অ্যাডমিন অ্যাকাউন্টে কাজের-পরিধি (scopes),
     // লক-স্টেট ও শেষ-লগইন ট্র্যাকিং
     "ALTER TABLE admin_users ADD COLUMN scopes TEXT",

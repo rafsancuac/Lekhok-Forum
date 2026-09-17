@@ -321,6 +321,96 @@ router.post('/admins/:id/2fa-clear', async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
+// সেশন ৯৫: ইউজার তথ্য ও পাসওয়ার্ড সাপোর্ট (অ্যাকাউন্ট-রিকভারি)
+// ══════════════════════════════════════════════════════════════════════════════
+// নিরাপত্তা-নীতি: ডাটাবেজে পাসওয়ার্ড কখনো plaintext-এ থাকে না — শুধু bcrypt-
+// hash (একমুখী, রিভার্স-অসম্ভব)। সুপার-এডমিন "বিপদে পড়া" ব্যবহারকারীকে সাহায্য
+// করেন ইন্ডাস্ট্রি-স্ট্যান্ডার্ড পথে: ইউজারের পরিচয়-তথ্য (আইডি/নাম/ইমেইল/সর্বশেষ
+// পাসওয়ার্ড-পরিবর্তনের তারিখ) দেখে যাচাই করে এক-বার-ব্যবহারযোগ্য "অস্থায়ী
+// পাসওয়ার্ড" (Lekhok#NNNN) তৈরি করে ইউজারকে দেন। ইউজার এই পাসওয়ার্ডে লগইন
+// করলেই ফোর্স-চেঞ্জ গেট (/force-change-password) তাকে নিজস্ব নতুন পাসওয়ার্ড
+// সেট করতে বাধ্য করে। প্রতিটি মিউটেশন audit_log-এ TA42.audit দিয়ে রেকর্ড হয়।
+// ── GET /admin/super/users-support — তথ্য-তালিকা (সার্ভার-সাইড সার্চ + ক্লায়েন্ট-ফিল্টার) ──
+router.get('/users-support', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    let sql = `SELECT u.id, u.username, u.full_name, u.pen_name, u.email, u.phone, u.role, u.status,
+                      u.gender, u.avatar_url, u.password_changed_at, u.must_change_password,
+                      u.totp_enabled, u.last_login, u.created_at,
+                      (SELECT m.member_id FROM members m WHERE m.user_id = u.id LIMIT 1) AS member_id
+               FROM users u`;
+    const params = [];
+    if (q) {
+      sql += ` WHERE (u.username LIKE ? OR u.full_name LIKE ? OR u.pen_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ? OR CAST(u.id AS TEXT) LIKE ?)`;
+      params.push('%' + q + '%', '%' + q + '%', '%' + q + '%', '%' + q + '%', '%' + q + '%', '%' + q + '%');
+    }
+    sql += ` ORDER BY (u.must_change_password = 1) DESC, u.id DESC LIMIT 300`;
+    const users = await db.prepare(sql).all(...params);
+
+    // পরিসংখ্যান-চিপ (সার্চ-নিরপেক্ষ, পূর্ণ-টেবিল থেকে)
+    const one = async (label, s) => {
+      try { return (await db.prepare(s).get()).c; }
+      catch (e) { console.error(`[super:users-support] ${label}:`, e.message); return 0; }
+    };
+    const stats = {
+      total:       await one('total',  'SELECT COUNT(*) as c FROM users'),
+      active:      await one('active', "SELECT COUNT(*) as c FROM users WHERE status='active'"),
+      pending:     await one('pend',   "SELECT COUNT(*) as c FROM users WHERE status='pending'"),
+      banned:      await one('banned', "SELECT COUNT(*) as c FROM users WHERE status='banned'"),
+      tempActive:  await one('temp',   'SELECT COUNT(*) as c FROM users WHERE must_change_password = 1'),
+      with2fa:     await one('2fa',    'SELECT COUNT(*) as c FROM users WHERE totp_enabled = 1')
+    };
+
+    res.render('admin/super/users', {
+      users, q, stats,
+      flash: req.query.saved ? (FLASH[req.query.saved] || 'পরিবর্তন সফল') : null,
+      flashErr: req.query.err === '1' ? 'অনুরোধ সম্পূর্ন হয়নি — আবার চেষ্টা করুন' : null,
+      currentPath: '/admin/super/users-support'
+    });
+  } catch (e) {
+    console.error('[super] users-support:', e);
+    res.status(500).send('ইউজার-তালিকা লোড ব্যর্থ');
+  }
+});
+
+// ── POST /admin/super/users/:id/reset-temp — অস্থায়ী পাসওয়ার্ড জেনারেশন (JSON) ──
+// fetch()-ভিত্তিক (Content-Type: application/json → CSRF-গার্ডের urlencoded/multipart
+// স্কোপের বাইরে; ক্রস-অরিজিন সিম্পল-ফর্ম JSON পাঠাতে পারে না)। রেসপন্সে কাঁচা
+// টেম্পোরারি পাসওয়ার্ড একবারই দেখানো হয় — সার্ভার আর কোথাও সংরক্ষণ করে না।
+router.post('/users/:id/reset-temp', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id || id < 1) return res.status(400).json({ ok: false, error: 'অবৈধ আইডি' });
+    const target = await db.prepare('SELECT id, username, full_name, role, status, must_change_password FROM users WHERE id = ?').get(id);
+    if (!target) return res.status(404).json({ ok: false, error: 'ব্যবহারকারী পাওয়া যায়নি' });
+
+    // ৮-অক্ষরের ওয়ান-টাইম পাসওয়ার্ড (crypto.randomInt — predictible Math.random নয়)
+    const crypto = require('crypto');
+    const rawTemp = 'Lekhok#' + crypto.randomInt(1000, 9999);
+    const hash = await bcrypt.hash(rawTemp, 10);
+    await db.prepare(
+      "UPDATE users SET password_hash = ?, must_change_password = 1, password_changed_at = CURRENT_TIMESTAMP WHERE id = ?"
+    ).run(hash, id);
+
+    await TA42.audit(db, req, 'super-user-temp-pwd', 'users', id,
+      `${target.username} (${target.full_name || target.username})${target.must_change_password ? ' — পুনঃজেনারেট' : ''}`);
+
+    res.json({
+      ok: true,
+      message: 'অস্থায়ী পাসওয়ার্ড সফলভাবে তৈরি হয়েছে।',
+      temporaryPassword: rawTemp,
+      username: target.username,
+      fullName: target.full_name || target.username,
+      loginHint: target.username
+    });
+  } catch (e) {
+    console.error('[super] users/reset-temp:', e);
+    res.status(500).json({ ok: false, error: 'সার্ভার সমস্যা — আবার চেষ্টা করুন' });
+  }
+});
+
+
+// ══════════════════════════════════════════════════════════════════════════════
 // সংবেদনশীল সাইট-তথ্য ও সাইট-ওয়াইড টগল
 // ══════════════════════════════════════════════════════════════════════════════
 router.get('/settings', async (req, res) => {

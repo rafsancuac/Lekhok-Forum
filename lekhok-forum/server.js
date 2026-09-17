@@ -176,7 +176,7 @@ app.use((req, res, next) => {
 // ডাইনামিক পেজ; Cache-Control ছাড়া ব্রাউজার হিউরিস্টিক-ক্যাশে ডিপ্লয়-পরবর্তী
 // পুরনো HTML দেখাতে পারে (লোকাল-যাচাইতে প্রমাণিত)।
 app.use((req, res, next) => {
-  if (/^\/(admin|moderator|dashboard|profile|settings|claim|login|logout|register|reset-password|forgot-password|messages|complaints|notifications|bookmarks)\b/.test(req.path)) {
+  if (/^\/(admin|moderator|dashboard|profile|settings|claim|login|logout|register|reset-password|force-change-password|forgot-password|messages|complaints|notifications|bookmarks)\b/.test(req.path)) {
     res.setHeader('Cache-Control', 'no-store');
   }
   next();
@@ -241,6 +241,31 @@ app.use((req, res, next) => {
         loginAt: Date.now()
       };
     } catch (e) { /* ডিভাইস-স্ট্যাম্প ব্যর্থ হলে সেশন কাজ করা বন্ধ হবে না */ }
+  }
+  next();
+});
+
+// ── সেশন ৯৫: ফোর্স-চেঞ্জ গেট — অস্থায়ী পাসওয়ার্ডে লগইন-কৃত ইউজার ──────────
+// সুপার-এডমিনের দেওয়া অস্থায়ী পাসওয়ার্ডে লগইন করলে auth.js সেশনে
+// mustChangePassword=true সেট করে। এই গার্ড তখন ইউজারকে শুধু
+// /force-change-password (+ লগআউট + whoami-প্রোব) পথ খোলা রাখে —
+// নিজস্ব পাসওয়ার্ড সেট না করা পর্যন্ত ফিড/প্রোফাইল/মেসেঞ্জার/এপিআই সব
+// ব্লকড (Facebook-প্যারিটি account-recovery আচরণ)। স্টাফ-সেশন (adminUser)
+// প্রভাবিত হয় না। স্ট্যাটিক-অ্যাসেট express.static-এ আগেই শেষ হয় → এখানে আসে না।
+const FCP_ALLOW_RE94 = /^\/(force-change-password|logout|api\/whoami)(\/|$)/;
+app.use((req, res, next) => {
+  if (req.session && req.session.user && req.session.mustChangePassword && !FCP_ALLOW_RE94.test(req.path)) {
+    if (req.method === 'GET' || req.method === 'HEAD') {
+      return res.redirect('/force-change-password');
+    }
+    if (req.is('json') || String(req.headers.accept || '').includes('application/json')) {
+      return res.status(403).json({
+        ok: false,
+        error: 'আপনি অস্থায়ী পাসওয়ার্ড ব্যবহার করছেন — আগে নতুন পাসওয়ার্ড সেট করুন',
+        redirect: '/force-change-password'
+      });
+    }
+    return res.redirect('/force-change-password');
   }
   next();
 });

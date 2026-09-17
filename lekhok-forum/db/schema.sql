@@ -35,6 +35,10 @@ CREATE TABLE IF NOT EXISTS users (
   role          TEXT    DEFAULT 'user',      -- user | moderator | admin
   status        TEXT    DEFAULT 'active',    -- active | pending | banned | inactive
   last_login    DATETIME,
+  -- সেশন ৯৫: অ্যাকাউন্ট-রিকভারি ট্র্যাকিং (সুপার-এডমিন প্যানেল)
+  -- password_hash-এ শুধু bcrypt-hash থাকে (plaintext কখনোই নয়)।
+  password_changed_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  must_change_password INTEGER DEFAULT 0,    -- সুপার-এডমিনের অস্থায়ী পাসওয়ার্ডে লগইন → 1
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

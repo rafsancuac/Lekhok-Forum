@@ -1567,7 +1567,9 @@ router.post('/users/:id/password', requireAdmin, async (req, res) => {
     return res.redirect('/admin/users/' + req.params.id + '/edit?pwd=short');
   }
   const hash = await bcrypt.hash(String(new_password), 10);
-  await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, req.params.id);
+  // সেশন ৯৫: অ্যাডমিন-প্রদত্ত পাসওয়ার্ড = অস্থায়ী — ইউজারের পরের লগইনেই
+  // নিজস্ব পাসওয়ার্ড সেট করতে বাধ্য (ফোর্স-চেঞ্জ গেট) + ট্র্যাকিং-তারিখ।
+  await db.prepare("UPDATE users SET password_hash = ?, must_change_password = 1, password_changed_at = CURRENT_TIMESTAMP WHERE id = ?").run(hash, req.params.id);
   res.redirect('/admin/users/' + req.params.id + '/edit?pwd=ok');
 });
 

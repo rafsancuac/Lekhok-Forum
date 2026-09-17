@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ইউজার তথ্য ও পাসওয়ার্ড সাপোর্ট — সুপার এডমিন</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-id-card super-ico"></i> ইউজার তথ্য ও পাসওয়ার্ড সাপোর্ট</h1>
+      <p>ব্যবহারকারীর পরিচয়-তথ্য (আইডি, নাম, ইমেইল, সর্বশেষ পাসওয়ার্ড-পরিবর্তন) যাচাই ও নিরাপদ অ্যাকাউন্ট-রিকভারি</p>
+    </div>
+    <div class="header-actions">
+      <span class="chip chip-super"><i class="fas fa-users"></i> <%= stats.total %> ব্যবহারকারী</span>
+      <span class="chip chip-warn"><i class="fas fa-key"></i> <%= stats.tempActive %> টেম্পোরারি সক্রিয়</span>
+    </div>
+  </div>
+
+  <% if (flash) { %><div class="success"><%= flash %></div><% } %>
+  <% if (flashErr) { %><div class="error"><%= flashErr %></div><% } %>
+
+  <%# ── নিরাপত্তা-নীতি নোট — কেন মূল পাসওয়ার্ড দেখা যায় না ── %>
+  <div class="us-note">
+    <i class="fas fa-shield-halved"></i>
+    <div>
+      <strong>নিরাপত্তা-নীতি:</strong> পাসওয়ার্ড একমুখী bcrypt-হ্যাশে সংরক্ষিত — কেউই (এমনকি সুপার এডমিনও) মূল পাসওয়ার্ড দেখতে পারবেন না। বিপদে পড়া ব্যবহারকারীকে সহায়তার ইন্ডাস্ট্রি-স্ট্যান্ডার্ড পথ: নিচের তালিকা থেকে সঠিক ব্যক্তিকে যাচাই করে একটি <em>অস্থায়ী পাসওয়ার্ড</em> তৈরি করে দিন — লগইন করা মাত্রই সিস্টেম তাকে নিজের নতুন পাসওয়ার্ড সেট করতে বাধ্য করবে। প্রতিটি অ্যাকশন অডিট-লগে রেকর্ড হয়।
+    </div>
+  </div>
+
+  <%# ── অ্যাম্বার অ্যালার্ট — সদ্য তৈরি হওয়া অস্থায়ী পাসওয়ার্ড (একবারই দৃশ্যমান) ── %>
+  <div class="us-alert" id="usAlert" hidden role="status" aria-live="polite">
+    <div class="us-alert-body">
+      <div class="us-alert-title"><i class="fas fa-key"></i> অস্থায়ী পাসওয়ার্ড তৈরি সম্পন্ন হয়েছে!</div>
+      <div class="us-alert-user">ব্যবহারকারী: <strong id="usAlertName"></strong></div>
+      <div class="us-alert-pwd-row">
+        <code class="us-pwd" id="usAlertPwd" title="ক্লিক করে সিলেক্ট করুন"></code>
+        <button type="button" class="btn btn-outline btn-sm" id="usCopyBtn"><i class="far fa-copy"></i> কপি</button>
+      </div>
+      <div class="us-alert-hint">
+        <i class="fas fa-circle-info"></i>
+        ব্যবহারকারীকে এই পাসওয়ার্ডটি দিন — লগইন আইডি: <strong id="usAlertLogin"></strong>।
+        এই পাসওয়ার্ডে লগইন করা মাত্রই তাকে নতুন নিজস্ব পাসওয়ার্ড সেট করতে হবে। এই পাসওয়ার্ড আর দ্বিতীয়বার দেখানো যাবে না।
+      </div>
+    </div>
+    <button type="button" class="us-alert-close" id="usAlertClose" aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
+  </div>
+
+  <%# ── সার্চ + পরিসংখ্যান ── %>
+  <form class="us-searchbar" method="GET" action="/admin/super/users-support">
+    <div class="us-search-wrap">
+      <i class="fas fa-magnifying-glass"></i>
+      <input type="text" id="usSearch" name="q" value="<%= q %>"
+             placeholder="নাম, ইউজারনেম, ইমেইল, ফোন বা আইডি দিয়ে খুঁজুন..." autocomplete="off" />
+      <button type="button" class="us-clear" id="usClear" aria-label="সার্চ মুছুন" hidden><i class="fas fa-xmark"></i></button>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> খুঁজুন</button>
+    <% if (q) { %><a href="/admin/super/users-support" class="btn btn-secondary"><i class="fas fa-rotate-left"></i> রিসেট</a><% } %>
+    <span class="us-count" id="usCount"><%= users.length %> জন</span>
+  </form>
+
+  <div class="us-chips">
+    <span class="chip chip-info"><i class="fas fa-circle-check"></i> সক্রিয়: <%= stats.active %></span>
+    <span class="chip"><i class="fas fa-hourglass-half"></i> অপেক্ষমাণ: <%= stats.pending %></span>
+    <span class="chip chip-danger"><i class="fas fa-ban"></i> নিষিদ্ধ: <%= stats.banned %></span>
+    <span class="chip chip-warn"><i class="fas fa-key"></i> টেম্পোরারি: <%= stats.tempActive %></span>
+    <span class="chip"><i class="fas fa-mobile-screen"></i> 2FA: <%= stats.with2fa %></span>
+  </div>
+
+  <%# ── ব্যবহারকারী তালিকা ── %>
+  <div class="us-table-wrap">
+    <table class="us-table">
+      <thead>
+        <tr>
+          <th>ব্যবহারকারী</th>
+          <th>ইউজার আইডি</th>
+          <th>যোগাযোগ</th>
+          <th>রোল ও স্ট্যাটাস</th>
+          <th>সর্বশেষ পাসওয়ার্ড পরিবর্তন</th>
+          <th>শেষ লগইন</th>
+          <th>পাসওয়ার্ড স্ট্যাটাস</th>
+          <th class="th-action">অ্যাকশন</th>
+        </tr>
+      </thead>
+      <tbody id="usTbody">
+        <% if (users.length === 0) { %>
+          <tr><td colspan="8" class="us-empty"><i class="fas fa-user-slash"></i> কোনো ব্যবহারকারী পাওয়া যায়নি</td></tr>
+        <% } %>
+        <%
+          const bnDT = (s) => {
+            if (!s) return '';
+            const d = new Date(String(s).replace(' ', 'T'));
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' })
+              + ', ' + d.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+          };
+          const ROLE_LABEL = { user: 'ইউজার', moderator: 'মডারেটর', admin: 'এডমিন', superadmin: 'সুপার এডমিন' };
+          const ROLE_CLASS = { user: 'role-user', moderator: 'role-moderator', admin: 'role-admin', superadmin: 'role-superadmin' };
+          const STATUS_LABEL = { active: 'সক্রিয়', pending: 'অপেক্ষমাণ', banned: 'নিষিদ্ধ', inactive: 'নিষ্ক্রিয়' };
+          const STATUS_CLASS = { active: 'status-active', pending: 'status-pending', banned: 'status-banned', inactive: 'status-closed' };
+        %>
+        <% users.forEach(u => { %>
+          <%
+            const searchable = [u.id, u.username, u.full_name, u.pen_name, u.email, u.phone, u.member_id]
+              .filter(Boolean).join(' ').toLowerCase();
+          %>
+          <tr class="us-row <%= u.must_change_password ? 'us-row-temp' : '' %>" data-search="<%= searchable %>" data-uid="<%= u.id %>">
+            <td>
+              <div class="us-user">
+                <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="us-avatar" alt="<%= u.full_name || u.username %>"
+                     onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+                <div class="us-user-meta">
+                  <a href="/profile/<%= encodeURIComponent(u.username) %>" target="_blank" class="us-name"><%= u.full_name || u.username %></a>
+                  <div class="us-username">@<%= u.username %><% if (u.pen_name) { %> <span class="us-pen" title="কলমী নাম">✒ <%= u.pen_name %></span><% } %></div>
+                </div>
+              </div>
+            </td>
+            <td class="us-ids">
+              <span class="us-idchip" title="ডাটাবেজ আইডি"><i class="fas fa-hashtag"></i> <%= u.id %></span>
+              <% if (u.member_id) { %><span class="us-idchip us-idmem" title="মেম্বার আইডি (লগইন-যোগ্য)"><i class="fas fa-id-badge"></i> <%= u.member_id %></span><% } %>
+            </td>
+            <td class="us-contact">
+              <% if (u.email) { %><div class="us-c-line"><i class="fas fa-envelope"></i> <%= u.email %></div><% } %>
+              <% if (u.phone) { %><div class="us-c-line"><i class="fas fa-phone"></i> <%= u.phone %></div><% } %>
+              <% if (!u.email && !u.phone) { %><span class="us-none">—</span><% } %>
+            </td>
+            <td class="us-rolecell">
+              <span class="badge-soft <%= ROLE_CLASS[u.role] || 'role-user' %>"><%= ROLE_LABEL[u.role] || u.role %></span>
+              <span class="badge-soft <%= STATUS_CLASS[u.status] || 'status-closed' %>"><%= STATUS_LABEL[u.status] || u.status %></span>
+              <% if (u.totp_enabled) { %><span class="badge-soft" title="দুই-স্তর যাচাই সক্রিয় — টেম্পোরারি পাসওয়ার্ডেও 2FA কোড লাগবে"><i class="fas fa-mobile-screen"></i> 2FA</span><% } %>
+            </td>
+            <td class="us-pwdate"><%= u.password_changed_at ? bnDT(u.password_changed_at) : 'তথ্য নেই' %></td>
+            <td class="us-lastlogin"><%= u.last_login ? bnDT(u.last_login) : 'কখনো নয়' %></td>
+            <td class="us-pwstatus">
+              <% if (u.must_change_password) { %>
+                <span class="badge-soft status-pending"><i class="fas fa-key"></i> টেম্পোরারি সক্রিয়</span>
+              <% } else { %>
+                <span class="badge-soft status-active">স্বাভাবিক</span>
+              <% } %>
+            </td>
+            <td class="us-action">
+              <button type="button" class="btn btn-primary btn-sm us-gen"
+                      data-uid="<%= u.id %>" data-uname="<%= u.username %>" data-name="<%= u.full_name || u.username %>">
+                <i class="fas fa-key"></i> অস্থায়ী পাসওয়ার্ড দিন
+              </button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (users.length >= 300) { %>
+    <p class="us-more-hint"><i class="fas fa-circle-info"></i> সর্বশেষ ৩০০ জন দেখানো হচ্ছে — আরও সুনির্দিষ্ট ফলাফলের জন্য সার্চ ব্যবহার করুন।</p>
+  <% } %>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+  var searchInput = document.getElementById('usSearch');
+  var clearBtn = document.getElementById('usClear');
+  var countEl = document.getElementById('usCount');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#usTbody tr[data-search]'));
+  var alertBox = document.getElementById('usAlert');
+  var alertPwd = document.getElementById('usAlertPwd');
+  var alertName = document.getElementById('usAlertName');
+  var alertLogin = document.getElementById('usAlertLogin');
+  var copyBtn = document.getElementById('usCopyBtn');
+
+  // ── তাৎক্ষণিক ক্লায়েন্ট-ফিল্টার (প্রতিটি কী-স্ট্রোকে) ──
+  function applyFilter() {
+    var q = (searchInput.value || '').trim().toLowerCase();
+    if (clearBtn) clearBtn.hidden = !searchInput.value;
+    var shown = 0;
+    rows.forEach(function (r) {
+      var hit = !q || r.getAttribute('data-search').indexOf(q) !== -1;
+      r.style.display = hit ? '' : 'none';
+      if (hit) shown++;
+    });
+    if (countEl) countEl.textContent = shown + ' জন' + (shown < rows.length ? ' (মোট ' + rows.length + ')' : '');
+    var emptyRow = document.querySelector('#usTbody .us-empty');
+    if (emptyRow) emptyRow.parentNode.style.display = rows.length === 0 ? '' : 'none';
+  }
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilter);
+    if (searchInput.value) applyFilter();
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      searchInput.value = '';
+      applyFilter();
+      searchInput.focus();
+    });
+  }
+
+  // ── অ্যাম্বার অ্যালার্ট-বক্স ──
+  function showAlert(data) {
+    alertName.textContent = data.fullName || data.username || '';
+    alertLogin.textContent = data.loginHint || data.username || '';
+    alertPwd.textContent = data.temporaryPassword || '';
+    alertBox.hidden = false;
+    alertBox.classList.remove('is-anim');
+    void alertBox.offsetWidth; // reflow → অ্যানিমেশন রিস্টার্ট
+    alertBox.classList.add('is-anim');
+    try { alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+  var closeBtn = document.getElementById('usAlertClose');
+  if (closeBtn) closeBtn.addEventListener('click', function () { alertBox.hidden = true; });
+
+  // কপি (clipboard-API + লিগ্যাসি ফলব্যাক)
+  function copyText(txt) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(txt);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy') ? resolve() : reject(); }
+      catch (e) { reject(e); }
+      finally { ta.remove(); }
+    });
+  }
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      var btn = this;
+      copyText(alertPwd.textContent).then(function () {
+        btn.innerHTML = '<i class="fas fa-check"></i> কপি হয়েছে ✓';
+        setTimeout(function () { btn.innerHTML = '<i class="far fa-copy"></i> কপি'; }, 1800);
+      }).catch(function () { alertPwd.focus(); });
+    });
+  }
+  if (alertPwd) {
+    alertPwd.addEventListener('click', function () {
+      var range = document.createRange();
+      range.selectNodeContents(alertPwd);
+      var sel = window.getSelection();
+      sel.removeAllRanges(); sel.addRange(range);
+    });
+  }
+
+  // ── অস্থায়ী পাসওয়ার্ড জেনারেশন (fetch + কনফার্ম) ──
+  function bnNow() {
+    var d = new Date();
+    return d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' })
+      + ', ' + d.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+  }
+  document.querySelectorAll('.us-gen').forEach(function (btn) {
+    btn.addEventListener('click', async function () {
+      var uid = btn.getAttribute('data-uid');
+      var uname = btn.getAttribute('data-uname');
+      var name = btn.getAttribute('data-name');
+      if (!window.confirm('আপনি কি নিশ্চিত যে "' + name + '" (@' + uname + ') এর জন্য একটি নতুন অস্থায়ী পাসওয়ার্ড তৈরি করবেন?\n\nযেহেতু পাসওয়ার্ড একমুখী-এনক্রিপ্টেড, মূল পাসওয়ার্ড উদ্ধার সম্ভব নয় — পুরনো পাসওয়ার্ড বাতিল হয়ে নতুন অস্থায়ী পাসওয়ার্ড সেট হবে।')) return;
+      var origHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> জেনারেট হচ্ছে...';
+      try {
+        var res = await fetch('/admin/super/users/' + uid + '/reset-temp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+          body: JSON.stringify({})
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (res.ok && data.ok) {
+          showAlert(data);
+          // সারি-আপডেট: স্ট্যাটাস → টেম্পোরারি সক্রিয়, তারিখ → এইমাত্র
+          var row = document.querySelector('tr[data-uid="' + uid + '"]');
+          if (row) {
+            row.classList.add('us-row-temp');
+            var pwst = row.querySelector('.us-pwstatus');
+            if (pwst) pwst.innerHTML = '<span class="badge-soft status-pending"><i class="fas fa-key"></i> টেম্পোরারি সক্রিয়</span>';
+            var pwdt = row.querySelector('.us-pwdate');
+            if (pwdt) pwdt.textContent = bnNow();
+          }
+        } else {
+          window.alert(data.error || 'পাসওয়ার্ড তৈরি ব্যর্থ হয়েছে — আবার চেষ্টা করুন।');
+        }
+      } catch (e) {
+        window.alert('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন।');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

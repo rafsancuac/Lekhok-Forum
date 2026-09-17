@@ -102,6 +102,14 @@ router.post('/login', async (req, res) => {
       }
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+      // ── সেশন ৯৫: ফোর্স-চেঞ্জ গেট ────────────────────────────────────────────
+      // সুপার-এডমিনের দেওয়া অস্থায়ী পাসওয়ার্ডে লগইন — গন্তব্য যাই হোক না কেন,
+      // /force-change-password-এই পাঠানো হবে; সেখানে নিজস্ব নতুন পাসওয়ার্ড
+      // সেট না করা পর্যন্ত server.js-র গার্ড-মিডলওয়্যার অন্য সব পেজ ব্লক করবে।
+      if (user.must_change_password) {
+        req.session.mustChangePassword = true;
+        return new Promise((resolve) => req.session.save(() => { res.redirect('/force-change-password'); resolve(); }));
+      }
       // রোল-বেজড গন্তব্য + (সেফ) `next` — প্রোটেক্টেড পেজ থেকে এলে সেখানেই ফিরে যাই
       return new Promise((resolve) => req.session.save((err) => {
         if (err) console.error('[auth] /login session save error:', err);
@@ -182,7 +190,7 @@ router.post('/login/2fa', async (req, res) => {
 
   try {
     if (m.kind === 'user') {
-      const user = await db.prepare('SELECT id, username, full_name, avatar_url, gender, role, status, totp_secret, totp_enabled, backup_codes FROM users WHERE id = ?').get(m.uid);
+      const user = await db.prepare('SELECT id, username, full_name, avatar_url, gender, role, status, totp_secret, totp_enabled, backup_codes, must_change_password FROM users WHERE id = ?').get(m.uid);
       if (!user || !user.totp_enabled || !user.totp_secret || user.status === 'banned') {
         req.session.mfaPending = null;
         return res.redirect('/login');
@@ -202,6 +210,11 @@ router.post('/login/2fa', async (req, res) => {
       req.session.mfaPending = null;
       req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+      // সেশন ৯৫: 2FA-পার হওয়া টেম্পোরারি-পাসওয়ার্ড লগইনেও ফোর্স-চেঞ্জ গেট
+      if (user.must_change_password) {
+        req.session.mustChangePassword = true;
+        return new Promise((resolve) => req.session.save(() => { res.redirect('/force-change-password'); resolve(); }));
+      }
       return new Promise((resolve) => req.session.save((err) => {
         if (err) console.error('[auth] /login/2fa session save error:', err);
         res.redirect(m.dest || dashboardFor(user));
@@ -362,7 +375,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
   const clean = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();
   if (passwordHash) {
     await db.prepare(
-      `UPDATE users SET full_name=?, pen_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url), password_hash=? WHERE id=?`
+      `UPDATE users SET full_name=?, pen_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url), password_hash=?, password_changed_at=CURRENT_TIMESTAMP, must_change_password=0 WHERE id=?`
     ).run(
       full_name.trim(),
       clean(pen_name),
@@ -514,11 +527,66 @@ router.post('/reset-password', async (req, res) => {
   const rec = await db.prepare("SELECT * FROM password_resets WHERE token_hash = ? AND used = 0 AND expires_at > datetime('now')").get(tokenHash);
   if (!rec) return back('এই লিংকটি মেয়াদোত্তীর্ণ বা ইতিমধ্যে ব্যবহৃত');
   const hash = await bcrypt.hash(password, 10);
-  await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, rec.user_id);
+  await db.prepare("UPDATE users SET password_hash = ?, must_change_password = 0, password_changed_at = CURRENT_TIMESTAMP WHERE id = ?").run(hash, rec.user_id);
   await db.prepare('UPDATE password_resets SET used = 1 WHERE id = ?').run(rec.id);
   // অ্যাডমিন-অ্যাকশন হিসেবে অডিট (পাসওয়ার্ড কখনো লগ হয় না)
   try { await db.logActivity({ user_id: rec.user_id, username: null, role: 'user', action: 'password-reset', target: 'users', detail: 'self-service' }); } catch (e) {}
   res.redirect('/login?reset=1');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// সেশন ৯৫: ফোর্স-চেঞ্জ পাসওয়ার্ড — অস্থায়ী পাসওয়ার্ডে লগইন-পরবর্তী গেট
+// ══════════════════════════════════════════════════════════════════════════════
+// সুপার-এডমিন /admin/super/users-support থেকে অস্থায়ী পাসওয়ার্ড (Lekhok#NNNN)
+// তৈরি করে দিলে must_change_password=1 সেট হয়। ইউজার লগইন করলেই এই পেজে
+// আসে; নিজস্ব নতুন পাসওয়ার্ড সেট করা ছাড়া অন্য কোথাও যেতে পারে না
+// (server.js-র গার্ড-মিডলওয়্যার)। সফল পরিবর্তনে ফ্ল্যাগ নামে ও তারিখ রেকর্ড হয়।
+router.get('/force-change-password', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  const u = await db.prepare('SELECT id, username, full_name, must_change_password FROM users WHERE id = ?').get(req.session.user.id);
+  if (!u) return res.redirect('/login');
+  if (!u.must_change_password) {
+    req.session.mustChangePassword = false;
+    return res.redirect(dashboardFor(req.session.user));
+  }
+  res.render('user/force-change-password', {
+    error: null, userName: u.full_name || u.username, currentPath: '/force-change-password'
+  });
+});
+
+router.post('/force-change-password', async (req, res) => {
+  if (!req.session.user) return res.redirect('/login');
+  const u = await db.prepare('SELECT id, username, must_change_password FROM users WHERE id = ?').get(req.session.user.id);
+  if (!u) return res.redirect('/login');
+  const back = (err) => res.render('user/force-change-password', {
+    error: err, userName: (req.session.user && (req.session.user.full_name || req.session.user.username)) || '', currentPath: '/force-change-password'
+  });
+  if (!u.must_change_password) {
+    req.session.mustChangePassword = false;
+    return res.redirect(dashboardFor(req.session.user));
+  }
+  const password = String(req.body.password || '');
+  const confirm = String(req.body.confirmPassword || '');
+  if (password.length < 6) return back('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে');
+  if (password !== confirm) return back('পাসওয়ার্ড ও নিশ্চিতকরণ মিলছে না');
+  if (password.indexOf(' ') !== -1) return back('পাসওয়ার্ডে স্পেস থাকতে পারবে না');
+
+  const hash = await bcrypt.hash(password, 10);
+  await db.prepare(
+    "UPDATE users SET password_hash = ?, must_change_password = 0, password_changed_at = CURRENT_TIMESTAMP WHERE id = ?"
+  ).run(hash, u.id);
+  req.session.mustChangePassword = false; // গেট-উত্তরণ — পরের রিকোয়েস্ট থেকে মুক্ত
+  try {
+    await db.logActivity({
+      user_id: u.id, username: u.username, role: (req.session.user && req.session.user.role) || 'user',
+      action: 'password-change', target: 'users', detail: 'forced-after-temp'
+    });
+  } catch (e) { /* অ্যাক্টিভিটি-লগ ব্যর্থ হলেও পরিবর্তন বাতিল হবে না */ }
+  return new Promise((resolve) => req.session.save((err) => {
+    if (err) console.error('[auth] force-change-password session save error:', err);
+    res.redirect(dashboardFor(req.session.user));
+    resolve();
+  }));
 });
 
 module.exports = router;

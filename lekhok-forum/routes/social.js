@@ -2028,7 +2028,8 @@ router.post('/settings/account/password', ensureLoggedIn, async (req, res) => {
     return res.redirect('/settings?err=password_wrong');
   }
   const newHash = await bcrypt.hash(new_password, 10);
-  await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(newHash, me.id);
+  // সেশন ৯৫: নিজের পাসওয়ার্ড বদলালে ট্র্যাকিং-তারিখ আপডেট + টেম্পোরারি-ফ্ল্যাগ ক্লিয়ার
+  await db.prepare("UPDATE users SET password_hash = ?, must_change_password = 0, password_changed_at = CURRENT_TIMESTAMP WHERE id = ?").run(newHash, me.id);
   res.redirect('/settings?ok=password');
 });
 
