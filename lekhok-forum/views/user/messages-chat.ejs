@@ -204,10 +204,6 @@
                 <img class="b-av" loading="lazy" src="<%= isGroup ? ((_sm && _sm.avatar_url) || ('/avatar/' + m.sender_id)) : (other.avatar_url || ('/avatar/' + other.id)) %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt="" />
               <% } %>
               <div class="b-content">
-                <% if (m.sender_id === user.id) { %>
-                <button type="button" class="bubble-delete" data-msg-delete="<%= m.id %>" title="আনসেন্ড (মুছে ফেলুন)"><i class="fas fa-times"></i></button>
-                <% } %>
-                <button type="button" class="bubble-more" data-msg-more="<%= m.id %>" title="আরও অপশন" aria-haspopup="true"><i class="fas fa-ellipsis"></i></button>
                 <% if (isGroup && m.sender_id !== user.id && !_cl.samePrev) { %>
                 <div class="bubble-sender"><img src="<%= (_sm && _sm.avatar_url) || ('/avatar/' + m.sender_id) %>" onerror="this.src='/avatar/<%= m.sender_id %>'" alt=""><%= _sm ? _sm.full_name : 'সদস্য' %></div>
                 <% } %>
@@ -236,7 +232,13 @@
                   <% } %>
                 <% } %>
                 <% if (_rx.length) { %><div class="bubble-reacts"><% _rx.forEach(r => { %><span title="<%= r.c %>"><%= r.emoji %><% if (r.c > 1) { %> <%= r.c %><% } %></span><% }); %></div><% } %>
-                <button type="button" class="bubble-react-btn" data-msg-react="<%= m.id %>" title="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>
+              </div>
+              <%# ── সেশন ৯৩: FB-স্টাইল সাইড-অ্যাকশন-রেল — বাবলের বাইরে পাশে (লেখার ওপর কখনোই নয়);
+                   ⋮-মেনুতেই আনসেন্ড (আলাদা ✕-বাটন বাদ); হোভার/ফোকাসেই দৃশ্যমান; me-বাবলে বামে, them-এ ডানে ── %>
+              <div class="bubble-actions">
+                <button type="button" class="bubble-react-btn" data-msg-react="<%= m.id %>" title="রিয়েক্ট করুন" aria-label="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>
+                <button type="button" class="bubble-reply-btn" data-msg-reply="<%= m.id %>" title="উত্তর দিন" aria-label="উত্তর দিন"><i class="fas fa-reply"></i></button>
+                <button type="button" class="bubble-more" data-msg-more="<%= m.id %>" title="আরও অপশন" aria-haspopup="true" aria-label="আরও অপশন"><i class="fas fa-ellipsis-vertical"></i></button>
                 <div class="bubble-react-menu" hidden><% ['👍','❤️','🤗','😂','😮','😢','😡'].forEach(e => { %><button type="button" data-emoji="<%= e %>"><%= e %></button><% }); %></div>
               </div>
               <div class="bubble-meta">
@@ -1122,8 +1124,6 @@
         html += '<img class="b-av" loading="lazy" src="' + escapeHtml(av) + '" onerror="this.src=\'/avatar/' + (msg.sender_id || 0) + '\'" alt="" />';
       }
       html += '<div class="b-content">';
-      if (msg.is_me) html += '<button type="button" class="bubble-delete" data-msg-delete="' + msg.id + '" title="আনসেন্ড (মুছে ফেলুন)"><i class="fas fa-times"></i></button>';
-      html += '<button type="button" class="bubble-more" data-msg-more="' + msg.id + '" title="আরও অপশন"><i class="fas fa-ellipsis"></i></button>';
       if (!msg.is_me && isGroupChat) {
         html += '<div class="bubble-sender">' + escapeHtml(msg.sender_name || 'সদস্য') + '</div>';
       }
@@ -1142,7 +1142,12 @@
         }
         else html += '<a href="' + msg.file_url + '" class="bubble-file" download><i class="fas fa-paperclip"></i> ' + escapeHtml(msg.file_name || 'ফাইল') + '</a>';
       }
-      html += '<button type="button" class="bubble-react-btn" data-msg-react="' + msg.id + '" title="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>';
+      html += '</div>';
+      // সেশন ৯৩: FB-স্টাইল সাইড-অ্যাকশন-রেল (বাবলের পাশে; ✕-আনসেন্ড বাদ — ⋮-মেনুতে ইন্টিগ্রেটেড)
+      html += '<div class="bubble-actions">';
+      html += '<button type="button" class="bubble-react-btn" data-msg-react="' + msg.id + '" title="রিয়েক্ট করুন" aria-label="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>';
+      html += '<button type="button" class="bubble-reply-btn" data-msg-reply="' + msg.id + '" title="উত্তর দিন" aria-label="উত্তর দিন"><i class="fas fa-reply"></i></button>';
+      html += '<button type="button" class="bubble-more" data-msg-more="' + msg.id + '" title="আরও অপশন" aria-haspopup="true" aria-label="আরও অপশন"><i class="fas fa-ellipsis-vertical"></i></button>';
       html += '<div class="bubble-react-menu" hidden>' + ['👍','❤️','🤗','😂','😮','😢','😡'].map(e => '<button type="button" data-emoji="' + e + '">' + e + '</button>').join('') + '</div>';
       html += '</div>';
       html += '<div class="bubble-meta"><span class="bubble-time"></span>';
@@ -1576,6 +1581,7 @@
       resetFilePreviewUI();
     });
 
+
     /* ══════════ সেশন ৯২: ভয়েস-নোট ইঞ্জিন (রোডম্যাপ আইটেম ১০) ══════════
        MediaRecorder রেকর্ড → রেকর্ডিং-স্টেট UI → বাতিল/পাঠান → অ্যাটাচমেন্ট-এন্ডপয়েন্টে
        আপলোড (একই POST sendUrl — attachment ফিল্ড) → optimistic ওয়েভফর্ম-বাবল।
@@ -1756,23 +1762,8 @@
     vrCancel?.addEventListener('click', function () { stopRec(false); });
     window.addEventListener('beforeunload', cleanupRec);
 
-    // ── নিজের একক মেসেজ মুছুন (সেশন ৭৬: ইউনিভার্সাল এন্ডপয়েন্ট — গ্রুপেও কাজ করে) ──
-    body?.addEventListener('click', async (e) => {
-      const btn = e.target.closest('[data-msg-delete]');
-      if (!btn) return;
-      const msgId = btn.dataset.msgDelete;
-      try {
-        const res = await fetch('/api/messages/' + msgId + '/delete', {
-          method: 'POST',
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        const data = await res.json();
-        if (data.ok) {
-          const bubble = body.querySelector('.bubble[data-id="' + msgId + '"]');
-          bubble?.remove();
-        }
-      } catch (_) {}
-    });
+    // ── সেশন ৯৩: একক ✕-আনসেন্ড-বাটন বাদ — আনসেন্ড এখন ⋮-মেনুতে (messenger-actions.js) ──
+
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/messenger-actions.js?v=<%= AV %>"></script>

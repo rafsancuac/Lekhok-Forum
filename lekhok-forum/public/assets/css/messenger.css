@@ -525,17 +525,66 @@
 .page-wrap--messenger .bubble .bubble-seen img {
   width: 16px; height: 16px; border-radius: 50%; object-fit: cover; display: block;
 }
-.page-wrap--messenger .bubble .bubble-delete {
-  position: absolute; top: -8px; left: -8px; z-index: 6;
-  width: 22px; height: 22px; border-radius: 50%; border: none;
-  background: var(--fb-surface); color: var(--fb-text2); font-size: 10px; cursor: pointer;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, .22);
-  opacity: 0; transition: opacity .12s;
-  display: inline-flex; align-items: center; justify-content: center;
+/* ═══ সেশন ৯৩: FB-স্টাইল সাইড-অ্যাকশন-রেল ═══
+   😊-রিয়েক্ট, ↩-রিপ্লাই, ⋮-মোর — তিনটিই বাবলের *বাইরে* পাশে অনুভূমিক সারিতে
+   (FB-ওয়েব মেসেঞ্জারের মতো) — লেখার ওপর আর কিছু চেপে বসে না।
+   them-বাবল → রেল বাবলের ডানে (DOM-ক্রম); me-বাবল → রেল বামে (order:-1)।
+   আনসেন্ড ✕-বাটন সম্পূর্ণ বাদ — ⋮-ড্রপডাউনে ইন্টিগ্রেটেড।
+   রেল সবসময় লেআউট-জায়গা নেয় (হোভারে শিফট-নেই), opacity+pointer-events দিয়ে লুকানো। */
+.page-wrap--messenger .bubble .bubble-actions {
+  position: relative;
+  display: flex; align-items: center; gap: 2px;
+  flex: 0 0 auto;
+  align-self: center; /* বাবল-উচ্চতার মাঝ-সারি (রেফারেন্স-শটের মতো) */
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s ease;
 }
-.page-wrap--messenger .bubble.me .bubble-delete { left: auto; right: -8px; }
-.page-wrap--messenger .bubble:hover .bubble-delete { opacity: 1; }
-.page-wrap--messenger .bubble .bubble-delete:hover { color: #e41e3f; background: #fee2e2; }
+.page-wrap--messenger .bubble.me .bubble-actions { order: -1; } /* me: বাবলের বামে */
+.page-wrap--messenger .bubble:hover .bubble-actions,
+.page-wrap--messenger .bubble:focus-within .bubble-actions {
+  opacity: 1; pointer-events: auto;
+}
+/* ফ্ল্যাট-গোল আইকন-বাটন — কোনো shadow-ক্যাপসুল নয় (লেগেসি absolute-রুল নিরপেক্ষ) */
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-btn,
+.page-wrap--messenger .bubble .bubble-actions .bubble-reply-btn,
+.page-wrap--messenger .bubble .bubble-actions .bubble-more {
+  position: static; top: auto; bottom: auto; left: auto; right: auto; z-index: auto;
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: transparent; color: var(--fb-text2);
+  font-size: 13px; cursor: pointer; box-shadow: none; opacity: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s, transform .12s;
+}
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-btn i,
+.page-wrap--messenger .bubble .bubble-actions .bubble-reply-btn i,
+.page-wrap--messenger .bubble .bubble-actions .bubble-more i { pointer-events: none; }
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-btn:hover,
+.page-wrap--messenger .bubble .bubble-actions .bubble-reply-btn:hover,
+.page-wrap--messenger .bubble .bubble-actions .bubble-more:hover {
+  background: var(--fb-active); color: var(--fb-blue); transform: scale(1.08);
+}
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-btn:focus-visible,
+.page-wrap--messenger .bubble .bubble-actions .bubble-reply-btn:focus-visible,
+.page-wrap--messenger .bubble .bubble-actions .bubble-more:focus-visible {
+  outline: 2px solid var(--fb-blue); outline-offset: 1px;
+}
+/* রিয়েক্ট-পিকার — রেলের 😊-বাটনের ওপরে খোলে (রেলের ভেতরেই — হোভার-চেইন অটুট) */
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-menu {
+  position: absolute; bottom: calc(100% + 8px); top: auto; left: 0; right: auto; z-index: 30;
+  background: var(--fb-surface);
+  border: 1px solid var(--fb-border);
+  border-radius: 99px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .18);
+  display: flex; gap: 2px; padding: 4px 8px;
+}
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-menu.flip-below { bottom: auto; top: calc(100% + 8px); }
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-menu[hidden] { display: none; }
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-menu button {
+  border: none; background: 0 0; font-size: 21px; cursor: pointer; padding: 2px 3px;
+  transition: transform .13s cubic-bezier(.16, 1, .3, 1);
+  line-height: 1.3;
+}
+.page-wrap--messenger .bubble .bubble-actions .bubble-react-menu button:hover { transform: scale(1.35) translateY(-2px); }
 
 /* গ্রুপ-সেন্ডার নাম */
 .page-wrap--messenger .bubble-sender {
@@ -545,40 +594,9 @@
 }
 .page-wrap--messenger .bubble-sender img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
 
-/* ═══ সেশন ৭৮: রিয়েকশন — হোভার-স্মাইলি এখন বাবলের নিচ-ডান কোণে (ইউজার-অনুরোধ,
-   মূলধারার মেসেঞ্জারের মতো); রিয়েক্ট-চিপ নিচ-বামে যাতে কোণে সংঘর্ষ না হয় ═══ */
-.page-wrap--messenger .bubble-react-btn {
-  position: absolute; bottom: -13px; top: auto; z-index: 5; /* top:auto — dashboard.css-এর পুরনো top:-10px লেগেসি-রুল প্রত্যাখ্যান */
-  width: 26px; height: 26px; border-radius: 50%; border: none;
-  background: var(--fb-surface); color: var(--fb-text2);
-  font-size: 12px; cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
-  opacity: 0; transition: opacity .12s, transform .12s;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.page-wrap--messenger .bubble.them .bubble-react-btn,
-.page-wrap--messenger .bubble.me .bubble-react-btn { right: -4px; left: auto; }
-.page-wrap--messenger .bubble:hover .bubble-react-btn { opacity: 1; }
-.page-wrap--messenger .bubble-react-btn:hover { color: var(--fb-blue); transform: scale(1.12); }
-.page-wrap--messenger .bubble-react-btn:focus-visible { opacity: 1; outline: 2px solid var(--fb-blue); }
-.page-wrap--messenger .bubble-react-menu {
-  position: absolute; bottom: calc(100% + 10px); top: auto; z-index: 8; /* top:auto — লেগেসি top:-34px প্রত্যাখ্যান */
-  background: var(--fb-surface);
-  border: 1px solid var(--fb-border);
-  border-radius: 99px;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, .18);
-  display: flex; gap: 2px; padding: 4px 8px;
-}
-.page-wrap--messenger .bubble.them .bubble-react-menu,
-.page-wrap--messenger .bubble.me .bubble-react-menu { right: -4px; left: auto; }
-.page-wrap--messenger .bubble-react-menu.flip-below { bottom: auto; top: calc(100% + 12px); }
-.page-wrap--messenger .bubble-react-menu[hidden] { display: none; }
-.page-wrap--messenger .bubble-react-menu button {
-  border: none; background: 0 0; font-size: 21px; cursor: pointer; padding: 2px 3px;
-  transition: transform .13s cubic-bezier(.16, 1, .3, 1);
-  line-height: 1.3;
-}
-.page-wrap--messenger .bubble-react-menu button:hover { transform: scale(1.35) translateY(-2px); }
+/* ═══ সেশন ৯৩-নোট: react-btn ও react-menu এখন .bubble-actions রেলের ভেতরে —
+   সম্পূর্ণ রুল-সেট উপরের সাইড-অ্যাকশন-রেল ব্লকে; এখানে পুরনো
+   bubble-overlay-স্টাইল রুল সরে গেছে। নিচের .bubble-reacts ব্যাজ অপরিবর্তিত ═══ */
 
 /* রিয়েকশন-চিপ (বাবলের নিচ-বামে ওভারল্যাপ — সেশন ৭৮: me-তেও বামে, ডান কোণ
    এখন রিয়েক্ট-বাটনের) */
@@ -1064,24 +1082,8 @@
 .page-wrap--messenger .bubble.me .bubble-edited { color: rgba(255, 255, 255, .85); }
 .page-wrap--messenger .bubble.them .bubble-edited { color: var(--fb-text2); }
 
-/* ── ⋯-মোর-বাটন (হোভারে, delete-এর পাশে) ───────────────────────────── */
-.page-wrap--messenger .bubble .bubble-more {
-  position: absolute; top: -8px; z-index: 6;
-  width: 22px; height: 22px; border-radius: 50%; border: none;
-  background: var(--fb-surface); color: var(--fb-text2); font-size: 10px; cursor: pointer;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, .22);
-  opacity: 0; transition: opacity .12s;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.page-wrap--messenger .bubble.them .bubble-more { left: -8px; }
-.page-wrap--messenger .bubble.me .bubble-more { left: -8px; right: auto; }
-.page-wrap--messenger .bubble.me .bubble-delete { right: -8px; left: auto; }
-.page-wrap--messenger .bubble:hover .bubble-more { opacity: 1; }
-.page-wrap--messenger .bubble .bubble-more:hover { color: var(--fb-blue); background: var(--fb-active); }
-@media (hover: none) {
-  .page-wrap--messenger .bubble .bubble-more { opacity: .55; }
-  .page-wrap--messenger .bubble .bubble-delete { opacity: .55; }
-}
+/* ── ⋮-মোর-বাটন — সেশন ৯৩: .bubble-actions রেলের ভেতরে স্থানান্তরিত
+   (উপরের সাইড-অ্যাকশন-রেল ব্লক দেখুন; এখানে পুরনো বাবল-কোণা overlay-রুল সরে গেছে) ── */
 
 /* ── ভাসমান মেসেজ-অ্যাকশন মেনু (⋯) ──────────────────────────────────── */
 .msg-menu {
@@ -1284,10 +1286,13 @@
 }
 .lf-lightbox .lb-close:hover { background: rgba(255, 255, 255, .24); }
 
-/* টাচ-ডিভাইসে হোভার-নির্ভর কন্ট্রোল সবসময়-দৃশ্যমান (হোভার নেই তো!) */
+/* টাচ-ডিভাইসে হোভার-নির্ভর কন্ট্রোল সবসময়-দৃশ্যমান (হোভার নেই তো!) — সেশন ৯৩:
+   পুরো অ্যাকশন-রেল হালকা-দৃশ্যমান + ক্লিকযোগ্য; বাটনগুলো একটু ছোট যাতে চ্যাট-স্ক্রিন না ভিড় করে */
 @media (hover: none) {
-  .page-wrap--messenger .bubble .bubble-react-btn { opacity: .85; }
-  .page-wrap--messenger .bubble .bubble-delete { opacity: .85; }
+  .page-wrap--messenger .bubble .bubble-actions { opacity: .9; pointer-events: auto; }
+  .page-wrap--messenger .bubble .bubble-actions .bubble-react-btn,
+  .page-wrap--messenger .bubble .bubble-actions .bubble-reply-btn,
+  .page-wrap--messenger .bubble .bubble-actions .bubble-more { width: 26px; height: 26px; font-size: 12px; }
   .page-wrap--messenger .bubble .bubble-meta { opacity: 1; }
 }
 

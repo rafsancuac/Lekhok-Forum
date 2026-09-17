@@ -291,6 +291,13 @@
         else hideMenu();
         return;
       }
+      // সেশন ৯৩: FB-স্টাইল সাইড-রেলের দ্রুত-রিপ্লাই বাটন (↩)
+      var replyBtn = e.target.closest('[data-msg-reply]');
+      if (replyBtn) {
+        var rbubble = replyBtn.closest('.bubble');
+        if (rbubble && String(rbubble.dataset.id).indexOf('tmp-') !== 0) startReply(rbubble);
+        return;
+      }
       // কোট-ক্লিক → মূল মেসেজে স্ক্রল + ফ্ল্যাশ
       var quote = e.target.closest('.bubble-quote');
       if (quote) {
