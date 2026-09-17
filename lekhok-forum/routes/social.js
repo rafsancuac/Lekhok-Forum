@@ -379,27 +379,14 @@ router.get('/articles/:id', async (req, res) => {
   const BN_D63 = '০১২৩৪৫৬৭৮৯';
   const bn63 = (n) => String(n).replace(/\d/g, (d) => BN_D63[+d]);
 
-  // ── সেশন ৬৫: হেডিং-সাপোর্টেড বডি — '## '/'### ' দিয়ে শুরু হওয়া লাইন h2/h3 হয়;
-  // ৩+ হেডিং থাকলে অটো-সূচিপত্র (TOC)। আগের ইনলাইন-ট্রান্সফর্ম হুবহু রক্ষিত —
-  // শুধু লাইন-স্তরে ভাগ করে হেডিং-ডিটেকশন আগে বসানো হয়েছে। ──
-  const escHtml65 = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const inline65 = (s) => s
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/_(.*?)_/g, '<em>$1</em>')
-    .replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>')
-    .replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>');
-  const toc = [];
-  const bodyHtml = String(post.body || '').replace(/\r\n/g, '\n').split('\n').map((line) => {
-    const m = line.match(/^(#{2,3})\s+(.+?)\s*$/);
-    if (m) {
-      const lv = m[1].length;
-      const txt = m[2].trim();
-      const hid = 'asec-' + (toc.length + 1);
-      toc.push({ level: lv, text: txt, id: hid });
-      return '<h' + lv + ' id="' + hid + '" class="a-heading a-h' + lv + '" data-toc-id="' + hid + '">' + escHtml65(txt) + '</h' + lv + '>';
-    }
-    return inline65(line);
-  }).join('<br>');
+  // ── সেশন ৮০: মার্কডাউন-লাইট v2 (শেয়ার্ড রেন্ডারার) — সেশন ৬৫-এর হেডিং/TOC
+  // + নতুন: তালিকা (ul/ol), উদ্ধৃতি, hr, ~~কাটা~~, [লিংক](url)। এস্কেপ-ফার্স্ট —
+  // বডিতে লেখা র-HTML (<img onerror=…>) আর রেন্ডার হয় না (stored-XSS-ফিক্স)।
+  // ক্লায়েন্ট-প্রিভিউ (rich-editor.js) একই ফরম্যাটের মিরর। ──
+  const { renderBody: renderBody80 } = require('../helpers/markdown-lite');
+  const _rendered80 = renderBody80(post.body);
+  const toc = _rendered80.toc;
+  const bodyHtml = _rendered80.html;
 
   // ── সেশন ৬৭: "আরও পড়ুন" — ট্যাগ/ক্যাটাগরি/লেখক-ভিত্তিক সম্পর্কিত লেখা ──
   // স্কোরিং: শেয়ার্ড-ট্যাগ ×৩ + একই ক্যাটাগরি ×২ + একই লেখক ×১; টাই-এ নত লেখা
@@ -643,6 +630,13 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   // আগে canonicalPath ছিল না → header.ejs-এর fallback currentPath('/qa') ব্যবহার হত,
   // অর্থাৎ প্রতিটি qa-ডিটেইল পেজ নিজেকে /qa লিস্ট-পেজের ডুপ্লিকেট ঘোষণা করত!
   const _md72 = String(post.body || post.excerpt || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  // ── সেশন ৮০: প্রশ্ন/উত্তরের বডি মার্কডাউন-লাইট v2 দিয়ে সার্ভারেই রেন্ডার —
+  // ভিউতে <%- _escH80(...) %> প্যাটার্নের বদলে এক জায়গায় নিরাপদ রেন্ডার
+  // (এস্কেপ-ফার্স্ট + href-শ্বেততালিকা)। qa-single.ejs কেবল questionHtml /
+  // a.html বসায়। ──
+  const { renderBody: _renderQa80 } = require('../helpers/markdown-lite');
+  post.questionHtml = _renderQa80(post.body, { toc: false }).html;
+  answers.forEach(a => { a.html = _renderQa80(a.body, { toc: false }).html; });
   res.render('user/qa-single', {
     post, answers, reaction, REACTION_META, currentPath: '/qa',
     canonicalPath: '/qa/' + post.id,

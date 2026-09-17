@@ -9,28 +9,20 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/auth.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/multi-image.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/rich-editor.css?v=<%= AV %>" />
   <style>
     /* ── সেশন ৬৮: লাইট-থিম এডিটর-পলিশ (PLANS.md Session 67 revert-নিয়ম মেনে) ── */
     body { background: linear-gradient(180deg, #f8fafc 0%, #eef6f1 60%, #f8fafc 100%); min-height: 100vh; }
-    .editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-    .editor-toolbar button {
-      padding: 5px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px;
-      cursor: pointer; font-family: inherit; color: #334155; line-height: 1.4;
-      transition: background .16s, border-color .16s, box-shadow .16s, transform .06s;
-    }
-    .editor-toolbar button:hover { background: #ecfdf5; border-color: rgba(5,150,105,.45); }
-    .editor-toolbar button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(5,150,105,.25); }
-    .editor-toolbar button:active { transform: translateY(1px); }
-    .editor-toolbar button[title] { font-weight: 700; }
+    /* (সেশন ৮০: টুলবার-স্টাইল এখন rich-editor.css-এ) */
     .heading-hint {
-      margin: 0 0 10px; padding: 9px 13px; border-radius: 8px;
+      margin: 10px 0 10px; padding: 9px 13px; border-radius: 8px;
       background: rgba(5,150,105,.06); border: 1px solid rgba(5,150,105,.22);
       color: #3f6212; color: #065f46; font-size: .8rem; line-height: 1.65;
     }
     .heading-hint i { color: #059669; margin-right: 3px; }
     .heading-hint code { background: rgba(5,150,105,.1); border: 1px solid rgba(5,150,105,.26); border-radius: 4px; padding: 1px 6px; font-size: .76rem; color: #047857; }
     .heading-hint strong { color: #047857; }
-    textarea#body { min-height: 300px; font-size: 1.1rem; }
+    textarea#body { font-size: 1.05rem; }
     .tag-hint { font-size: 0.85rem; color: #94a3b8; }
     .form-group.full { grid-column: 1 / -1; }
 
@@ -93,7 +85,7 @@
       .draft-banner, .autosave-note .dot { animation: none; }
     }
     @media (max-width: 600px) {
-      .editor-toolbar { display: none; } .heading-hint { display: none; }
+      .heading-hint { display: none; }
       .draft-banner .db-text { flex-basis: 100%; }
       .draft-banner .db-actions { flex: 1 1 100%; justify-content: flex-end; }
     }
@@ -128,16 +120,13 @@
       <div class="form-group"><label>সংক্ষিপ্ত সারাংশ</label><textarea name="excerpt" rows="2"><%= post?.excerpt || '' %></textarea></div>
       <div class="form-group">
         <label>বিষয়বস্তু *</label>
-        <div class="editor-toolbar">
-          <button type="button" onclick="wrap('**','**')"><b>B</b></button>
-          <button type="button" onclick="wrap('_','_')"><i>I</i></button>
-          <button type="button" onclick="headingWrap('## ')" title="বড় শিরোনাম">H2</button>
-          <button type="button" onclick="headingWrap('### ')" title="উপশিরোনাম">H3</button>
-          <button type="button" onclick="wrap('\n- ','\n')">&#8226; List</button>
-          <button type="button" onclick="insertLink()">🔗 Link</button>
-        </div>
-        <p class="heading-hint"><i class="fas fa-list-ul"></i> লাইনের শুরুতে <code>## </code> দিলে বড় শিরোনাম, <code>### </code> দিলে উপশিরোনাম — ৩টির বেশি হলে পাঠক স্বয়ংক্রিয় <strong>সূচিপত্র</strong> পাবেন।</p>
-        <textarea id="body" name="body" required><%= post?.body || '' %></textarea>
+        <%# ── সেশন ৮০: রিচ-এডিটর — টুলবার + লাইভ-প্রিভিউ + জেন-মোড
+             (public/assets/js/rich-editor.js)। প্রগ্রেসিভ: JS ছাড়াও ফর্ম কাজ করে;
+             প্রিভিউ-রেন্ডারার সার্ভারের helpers/markdown-lite.js-এর মিরর।
+             আগের সেশন-৬৮ টুলবার (৬ বাটন, মোবাইলে hidden, wrap-এ কার্সর-লস,
+             লিংক-সিনট্যাক্স রেন্ডারার-অসমর্থিত ছিল) প্রতিস্থাপিত। ── %>
+        <textarea id="body" name="body" data-rich-editor required><%= post?.body || '' %></textarea>
+        <p class="heading-hint"><i class="fas fa-wand-magic-sparkles"></i> টুলবার থেকে ফরম্যাট করুন বা সরাসরি লিখুন — <code>## </code> শিরোনাম, <code>- </code> তালিকা, <code>&gt; </code> উদ্ধৃতি, <code>**বোল্ড**</code>, <code>~~কাটা~~</code>, <code>[টেক্সট](url)</code> লিংক; ৩+ শিরোনামে স্বয়ংক্রিয় <strong>সূচিপত্র</strong>, ডেস্কটপে পাশে-পাশি <strong>লাইভ-প্রিভিউ</strong>।</p>
         <div class="editor-stats" id="editorStats" aria-live="polite"></div>
       </div>
       <button type="submit" class="btn-primary"><%= !!post && post.id ? 'সংরক্ষণ করুন' : 'প্রকাশ করুন' %></button>
@@ -145,42 +134,10 @@
     </form>
   </div>
   <script>
-    function wrap(before, after) {
-      const ta = document.getElementById('body');
-      const s = ta.selectionStart, e = ta.selectionEnd;
-      ta.value = ta.value.substring(0, s) + before + ta.value.substring(s, e) + after + ta.value.substring(e);
-      ta.focus();
-    }
-    /* সেশন ৬৫: হেডিং-ইনসার্ট — সিলেকশন থাকলে সেটি হেডিং-টেক্সট হয়, নয়তো
-       কার্সর-লাইনের শুরুতে প্রিফিক্স বসে (আগে থেকে ## থাকলে টগল-করে সরায়)। */
-    function headingWrap(prefix) {
-      const ta = document.getElementById('body');
-      const s = ta.selectionStart, e = ta.selectionEnd;
-      if (s !== e) { wrap('\n' + prefix, '\n'); return; }
-      const v = ta.value;
-      let ls = v.lastIndexOf('\n', s - 1) + 1;
-      const le = (v.indexOf('\n', s) === -1) ? v.length : v.indexOf('\n', s);
-      const line = v.substring(ls, le);
-      const m = line.match(/^(#{2,3})\s+/);
-      if (m && m[1] === prefix.trim()) {
-        ta.value = v.substring(0, ls) + line.replace(/^#{2,3}\s+/, '') + v.substring(le);
-        ta.selectionStart = ta.selectionEnd = ls;
-      } else if (m) {
-        ta.value = v.substring(0, ls) + line.replace(/^#{2,3}\s+/, prefix) + v.substring(le);
-        ta.selectionStart = ta.selectionEnd = ls + prefix.length;
-      } else {
-        ta.value = v.substring(0, ls) + prefix + line + v.substring(le);
-        ta.selectionStart = ta.selectionEnd = ls + prefix.length + line.length;
-      }
-      ta.focus();
-      ta.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    function insertLink() {
-      const url = prompt('URL:');
-      if (url) wrap('[', '](' + url + ')');
-    }
-
-    /* ═══════ সেশন ৬৮: এডিটর লাইভ-স্ট্যাটস + খসড়া-অটোসেভ ═══════ */
+    /* ═══════ সেশন ৬৮: এডিটর লাইভ-স্ট্যাটস + খসড়া-অটোসেভ ═══════
+       (সেশন ৮০-এ টুলবার-ফাংশনগুলো rich-editor.js-এ চলে গেছে — wrap/
+        headingWrap/insertLink মুছে গেছে; রিচ-এডিটরের প্রতিটি ইনসার্শন
+        'input' ইভেন্ট ছাড়ে, তাই নিচের update()/scheduleSave() নিজে থেকেই চলে) */
     (function () {
       const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
       const toBn = n => String(n).replace(/[0-9]/g, d => bnDigits[d]);
@@ -300,6 +257,7 @@
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+  <script src="/assets/js/rich-editor.js?v=<%= AV %>"></script>
   <script src="/assets/js/multi-image.js?v=<%= AV %>"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {

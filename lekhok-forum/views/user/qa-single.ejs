@@ -1,6 +1,11 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%- include('../partials/header', { title: (post.title) + ' | প্রশ্নোত্তর | লেখক ফোরাম', extra_css: ['/assets/css/article.css'] }) %>
 
+<%# ── সেশন ৮০ (XSS-ফিক্স): প্রশ্ন/উত্তরের বডি এখন সার্ভারেই মার্কডাউন-লাইট
+    v2 (helpers/markdown-lite.js) দিয়ে রেন্ডার হয় — এস্কেপ-ফার্স্ট, তাই
+    <img onerror=…> কখনো র-HTML হয় না। ভিউ কেবল রেডিমেড questionHtml /
+    a.html বসায়। প্রশ্নের কন্টেইনার <p> → <div>: তালিকা/উদ্ধৃতি-ব্লক <p>-র
+    ভেতরে অবৈধ নেস্টিং হতো (HTML nesting fix-নীতি, সেশন ৭)। ── %>
 <%# ── সেশন ৭২ (GSC-ফিক্স): QAPage JSON-LD — Google-এ সমৃদ্ধ ফলাফল + কনটেন্ট-সিগন্যাল ── %>
 <%
   var _qText72 = (s) => String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -28,7 +33,7 @@
       <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
       <div class="question-body">
         <h1 class="question-title"><%= post.title %></h1>
-        <p class="question-detail"><%- post.body.replace(/\n/g, '<br>').replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>') %></p>
+        <div class="question-detail"><%- post.questionHtml %></div>
         <% try { const qMentions = JSON.parse(post.mentions || '[]'); if (qMentions.length) { %>
           <div class="mentions-row">
             <span class="mentions-label"><i class="fas fa-at"></i> ম্যানশন:</span>
@@ -82,7 +87,7 @@
                 <a href="/profile/<%= a.username %>" class="answer-author"><%= a.full_name %></a>
                 <span class="answer-date"><i class="far fa-clock"></i> <%= new Date(a.created_at).toLocaleDateString('bn-BD') %></span>
               </div>
-              <div class="answer-text"><%- a.body.replace(/\n/g, '<br>') %></div>
+              <div class="answer-text"><%- a.html %></div>
               <% if (user) { %>
                 <%- include('../partials/actions-bar', {
                   targetId: a.id, targetType: 'comment',

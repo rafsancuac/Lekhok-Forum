@@ -107,3 +107,13 @@
   .ra-card{transition:none}
   .ra-card:hover{transform:none}
 }
+/* ── সেশন ৮০: মার্কডাউন-লাইট v2 এলিমেন্ট — উদ্ধৃতি/তালিকা/বিভাজক/লিংক (পাঠ-ভিউ; প্রিভিউ-কপি rich-editor.css-এ) ── */
+.article-body .a-quote,.qa-wrap .a-quote,.question-detail .a-quote,.answer-text .a-quote{margin:14px 0;padding:10px 16px;border-left:4px solid rgba(5,150,105,.6);background:rgba(5,150,105,.05);border-radius:0 10px 10px 0;color:#3f5346;font-style:italic}
+.article-body .a-ul,.article-body .a-ol,.qa-wrap .a-ul,.qa-wrap .a-ol,.question-detail .a-ul,.question-detail .a-ol,.answer-text .a-ul,.answer-text .a-ol{margin:12px 0;padding-left:26px}
+.article-body .a-ul li,.article-body .a-ol li,.qa-wrap .a-ul li,.qa-wrap .a-ol li,.question-detail .a-ul li,.question-detail .a-ol li,.answer-text .a-ul li,.answer-text .a-ol li{margin:4px 0}
+.article-body .a-ul li::marker,.qa-wrap .a-ul li::marker,.question-detail .a-ul li::marker,.answer-text .a-ul li::marker{color:#059669;font-size:1.05em}
+.article-body .a-ol li::marker,.qa-wrap .a-ol li::marker,.question-detail .a-ol li::marker,.answer-text .a-ol li::marker{color:#047857;font-weight:700}
+.article-body .a-hr,.qa-wrap .a-hr,.question-detail .a-hr,.answer-text .a-hr{border:none;height:2px;margin:22px auto;width:62%;border-radius:99px;background:linear-gradient(90deg,transparent,rgba(5,150,105,.45),transparent)}
+.article-body a.a-link,.qa-wrap a.a-link,.question-detail a.a-link,.answer-text a.a-link{color:#047857;font-weight:600;text-decoration:none;border-bottom:1.5px dotted rgba(5,150,105,.5);padding-bottom:1px}
+.article-body a.a-link:hover,.qa-wrap a.a-link:hover,.question-detail a.a-link:hover,.answer-text a.a-link:hover{color:#059669;border-bottom-style:solid}
+.article-body del,.qa-wrap del,.question-detail del,.answer-text del{color:#94a3b8}

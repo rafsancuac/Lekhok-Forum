@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/auth.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/rich-editor.css?v=<%= AV %>" />
   <style>body{background:linear-gradient(180deg,#f8fafc 0%,#eef6f1 60%,#f8fafc 100%);min-height:100vh}</style>
 
 </head>
@@ -18,7 +19,7 @@
     <% if (error) { %><div class="error"><%= error %></div><% } %>
     <form method="POST">
       <div class="form-group"><label>প্রশ্নের বিষয় *</label><input type="text" name="title" value="<%= post?.title || '' %>" placeholder="আপনার প্রশ্ন সংক্ষেপে লিখুন..." required></div>
-      <div class="form-group"><label>বিস্তারিত (ঐচ্ছিক)</label><textarea id="body" name="body" rows="6" placeholder="প্রসঙ্গ বা বিস্তারিত বিবরণ..."><%= post?.body || '' %></textarea><div class="char-counter" id="charCounter" aria-live="polite"></div></div>
+      <div class="form-group"><label>বিস্তারিত (ঐচ্ছিক)</label><textarea id="body" name="body" rows="6" data-rich-editor placeholder="প্রসঙ্গ বা বিস্তারিত বিবরণ..."><%= post?.body || '' %></textarea><div class="char-counter" id="charCounter" aria-live="polite"></div></div>
       <button type="submit" class="btn-primary"><i class="fas fa-<%= post?.id ? 'save' : 'question-circle' %>"></i> <%= post?.id ? 'সংরক্ষণ করুন' : 'প্রশ্ন করুন' %></button>
     </form>
   </div>
@@ -39,6 +40,7 @@
     })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/rich-editor.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </body>
