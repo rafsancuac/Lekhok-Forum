@@ -264,6 +264,7 @@ echo "PASS=$PASS FAIL=$FAIL"
 echo "══ ১৫. কমেন্ট PUT/DELETE অথরাইজেশন ══"
 put() { curl -s -b "$1" -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$2" -H "Content-Type: application/json" -d "{\"body\":\"$3\"}"; }
 del() { curl -s -b "$1" -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/comments/$2"; }
+api() { curl -s -b "$1" -H "Content-Type: application/json" -d "$2" "$3"; }
 JARV=/tmp/jar_viewer; rm -f $JARV
 R=$(login $JARV /login ismail secret123); ck "viewer-লগইন (ismail)" "/dashboard" "${R##* }"
 # সেশন ১১৩-রূপান্তর: টার্গেট-কমেন্ট সেলফ-সাফিসিয়েন্ট — ismail নিজেই একটি প্রশ্ন +
