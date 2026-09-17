@@ -362,13 +362,19 @@ section('৪', 'ব্যক্তিগত প্রোফাইল ও ড্�
     logFail('/me পেজ ফাইল মিসিং', ME + ' নেই', 'ইউজার-ফিড পেজ পুনরুদ্ধার করুন');
   } else {
     const me = read(ME) || '';
-    const tiles = (me.match(/stat-tile/g) || []).length;
-    const labels = ['প্রকাশিত লেখা', 'ড্রাফট', 'মন্তব্য', 'প্রতিক্রিয়া', 'সংরক্ষিত', 'অনুসরণ', 'অনুসরণকারী'];
-    const all7 = labels.every(l => me.includes(l));
-    if (tiles >= 7 && all7) {
-      logPass('৭-টাইল স্ট্যাটাস স্ট্রিপ', 'প্রকাশিত/ড্রাফট/মন্তব্য/প্রতিক্রিয়া/সংরক্ষিত/অনুসরণ/অনুসরণকারী — ৭টি কাউন্টার stats-grid-এ');
+    // সেশন ১২১-অডিট-আপডেট: /me-রিডিজাইন (session118a, ইউজার-স্পেক) — ৭-সাদা-stat-tile
+    // বক্স সম্পূর্ণ বিলোপ হয়ে এখন FB-ঘরানার হেডার-কাউন্টার-লাইন + personal-tab পিল-ব্যাজ
+    // (.pt-count)। রুল ক্যানোনিকাল-প্রথম (নতুন-মার্কআপ), legacy stat-tile ফলব্যাক।
+    const tabPills = (me.match(/class="personal-tab/g) || []).length;
+    const ptCounts = (me.match(/pt-count/g) || []).length;
+    const headerCounter = me.includes('bn91(stats.posts)');
+    const legacyTiles = (me.match(/stat-tile/g) || []).length;
+    if (tabPills >= 7 && ptCounts >= 7 && headerCounter) {
+      logPass('৭-ট্যাব কাউন্টার-স্ট্রিপ (canonical)', `personal-tab পিল ×${tabPills} + pt-count ব্যাজ ×${ptCounts} + হেডার FB-কাউন্টার-লাইন — session118a-রিডিজাইন`);
+    } else if (legacyTiles >= 7) {
+      logPass('৭-টাইল স্ট্যাটাস স্ট্রিপ (legacy)', `stat-tile ×${legacyTiles} — পুরনো stats-grid ডিজাইন (রিডিজাইন-পূর্ব)`);
     } else {
-      logFail('স্ট্যাট-টাইল অসম্পূর্ণ', `stat-tile=${tiles}, সব-লেবেল=${all7}`, 'me.ejs-এ ৭টি stat-tile ও লেবেল পুনঃস্থাপন করুন');
+      logFail('স্ট্যাট-কাউন্টার অসম্পূর্ণ', `personal-tab=${tabPills}, pt-count=${ptCounts}, হেডার-কাউন্টার=${headerCounter}, stat-tile(legacy)=${legacyTiles}`, 'me.ejs-এ ৭টি personal-tab+pt-count (নতুন) বা ৭টি stat-tile (পুরনো) রাখুন');
     }
     const style = read('public/assets/css/style.css') || '';
     const nm = style.match(/\.me-id h1\s*\{([^}]*)\}/);
