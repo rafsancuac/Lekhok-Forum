@@ -327,34 +327,21 @@ router.get('/events', async (req, res) => {
   });
 });
 
-// ── Gallery ──────────────────────────────────────────────────────────────────
-router.get('/gallery', async (req, res) => {
-  const all = await db.prepare('SELECT * FROM gallery ORDER BY id DESC').all();
-  const getSetting = (k) => {
-    try { return (db.prepare('SELECT value FROM settings WHERE key = ?').get(k) || {}).value; } catch(e) { return null; }
-  };
-  // Group by category to render as albums
-  const albums = {};
-  const categoryLabels = {
-    general: 'সাধারণ',
-    event: 'ইভেন্ট',
-    events: 'ইভেন্ট',
-    seminar: 'সেমিনার',
-    seminars: 'সেমিনার',
-    workshop: 'কর্মশালা',
-    workshops: 'কর্মশালা',
-    cultural: 'সাংস্কৃতিক',
-    sports: 'ক্রীড়া',
-    achievement: 'অর্জন',
-    achievements: 'অর্জন',
-    awards: 'পুরস্কার',
-    award: 'পুরস্কার',
-    meeting: 'সভা',
-    meetings: 'সভা',
-    press: 'প্রেস ও মিডিয়া',
-    media: 'প্রেস ও মিডিয়া',
-    others: 'অন্যান্য'
-  };
+// ── Gallery ──────────────────────────────────────────────────────────────────────
+// সেশন ১০৪: চিত্রশালা পেজিনেশন — >১০০ ছবির প্রস্তুতি (session-103 সুপারিশ)।
+// পেজ-১ = সর্বশেষ ২৪টি সার্ভার-রেন্ডার; বাকিগুলো /gallery/more (নিচে) থেকে
+// ইনফিনিট-স্ক্রল/বাটনে append। অ্যালবাম/রিসেন্ট-স্ট্রিপ সম্পূর্ণ-ডেটা (ছোট-সেট)।
+const GALLERY_PER_PAGE = 24;
+
+// সেশন-৯৭-এর এনরিচমেন্ট (ক্যাটাগরি-লেবেল + বাংলা-প্রদর্শন-তারিখ) — /gallery ও
+// /gallery/more উভয়ের শেয়ার্ড হেল্পার (১০৪ — ডুপ্লিকেট-লজিক এড়াতে টেনে আনা)
+const GALLERY_LABELS = {
+  general: 'সাধারণ', event: 'ইভেন্ট', events: 'ইভেন্ট', seminar: 'সেমিনার', seminars: 'সেমিনার',
+  workshop: 'কর্মশালা', workshops: 'কর্মশালা', cultural: 'সাংস্কৃতিক', sports: 'ক্রীড়া',
+  achievement: 'অর্জন', achievements: 'অর্জন', awards: 'পুরস্কার', award: 'পুরস্কার',
+  meeting: 'সভা', meetings: 'সভা', press: 'প্রেস ও মিডিয়া', media: 'প্রেস ও মিডিয়া', others: 'অন্যান্য'
+};
+function enrichGalleryRows(rows) {
   // সেশন ৯৭: প্রদর্শন-তারিখ — event_date না থাকলে created_at-কে বাংলা-ফরম্যাটে ফলব্যাক
   const BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
   const BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
@@ -365,10 +352,21 @@ router.get('/gallery', async (req, res) => {
       return `${String(dt.getDate()).replace(/\d/g, c => BN_DIGITS[+c])} ${BN_MONTHS[dt.getMonth()]}, ${String(dt.getFullYear()).replace(/\d/g, c => BN_DIGITS[+c])}`;
     } catch (e) { return ''; }
   };
-  for (const g of all) {
-    g.catLabel = categoryLabels[g.category || 'general'] || g.category || 'সাধারণ';
+  for (const g of rows) {
+    g.catLabel = GALLERY_LABELS[g.category || 'general'] || g.category || 'সাধারণ';
     g.displayDate = (g.event_date && String(g.event_date).trim()) || bnDate(g.created_at);
   }
+  return rows;
+}
+
+router.get('/gallery', async (req, res) => {
+  const all = await db.prepare('SELECT * FROM gallery ORDER BY id DESC').all();
+  const getSetting = (k) => {
+    try { return (db.prepare('SELECT value FROM settings WHERE key = ?').get(k) || {}).value; } catch(e) { return null; }
+  };
+  // Group by category to render as albums
+  const albums = {};
+  enrichGalleryRows(all);
   for (const g of all) {
     const cat = g.category || 'general';
     if (!albums[cat]) albums[cat] = [];
@@ -376,16 +374,44 @@ router.get('/gallery', async (req, res) => {
   }
   // সেশন ৭৬: সাম্প্রতিক সংযোজন-স্ট্রিপ (সর্বশেষ ১০টি ছবি, id DESC এমনই নতুন-প্রথম)
   const recent = all.slice(0, 10);
+  // সেশন ১০৪: পেজিনেশন — পেজ-১ স্লাইস + মেটা (মেসনারি-ভিউয়ের কার্ড; অ্যালবাম সম্পূর্ণ)
+  // ?all=1 → সম্পূর্ণ-রেন্ডার (JS-বিহীন ফলব্যাক + প্রিন্ট/SEO-বান্ধব)
+  const showAll = req.query.all === '1';
+  const items = showAll ? all : all.slice(0, GALLERY_PER_PAGE);
+  const hasMoreItems = !showAll && all.length > GALLERY_PER_PAGE;
   res.render('lekhok-gallery', {
     layout: 'layout',
     pageTitle: 'গ্যালারি',
     currentPath: '/gallery',
-    items: all,
+    items,
+    itemsTotal: all.length,
+    itemsShown: items.length,
+    hasMoreItems,
+    perPage: GALLERY_PER_PAGE,
     albums,
     recent,
-    categoryLabels,
+    categoryLabels: GALLERY_LABELS,
     getSetting
   });
+});
+
+// সেশন ১০৪: চিত্রশালা load-more — ?page=N (N≥২) → পরবর্তী ২৪-কার্ডের HTML ফ্র্যাগমেন্ট।
+// পাবলিক (গ্যালারি পাবলিক); পেজ-সীমা গার্ড (≤৫০ পেজ = ১২০০ ছবি — রানওয়ে-সুরক্ষা)।
+router.get('/gallery/more', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page, 10) || 0;
+    if (page < 2 || page > 50) return res.json({ ok: true, html: '', hasMore: false, page, total: 0 });
+    const all = await db.prepare('SELECT * FROM gallery ORDER BY id DESC').all();
+    const start = (page - 1) * GALLERY_PER_PAGE;
+    const slice = enrichGalleryRows(all.slice(start, start + GALLERY_PER_PAGE));
+    res.render('partials/gallery-cards', { items: slice }, function (err, html) {
+      if (err) return res.status(500).json({ ok: false, error: 'render' });
+      const hasMore = start + GALLERY_PER_PAGE < all.length;
+      res.json({ ok: true, html, hasMore, page, shown: start + slice.length, total: all.length });
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'server' });
+  }
 });
 
 // ── Resources ─────────────────────────────────────────────────────────────

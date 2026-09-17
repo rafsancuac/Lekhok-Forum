@@ -883,3 +883,89 @@
   .gal-lb__thumb, .gal-upl, .gal-upl__card, .gal-upl__submit { transition: none !important; }
   .gal-card__link img, .gal-album__cover, .gal-recent__photo img { animation: none !important; background-image: none !important; }
 }
+
+/* ── ৭. load-more সেন্টিনেল (সেশন ১০৪ — চিত্রশালা পেজিনেশন) ───────────── */
+.gal-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 16px 8px;
+}
+.gal-more__sentinel { height: 1px; }
+.gal-more__spinner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--accent, #059669);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.gal-more__spinner i { font-size: 1.05rem; }
+.gal-more__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 26px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  border-radius: 999px;
+  background: var(--bg-card, #fff);
+  color: var(--text, #1e293b);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.22s, border-color 0.22s, transform 0.2s, box-shadow 0.2s;
+}
+.gal-more__btn:hover:not(:disabled) {
+  background: var(--accent-soft, rgba(5, 150, 105, 0.1));
+  border-color: var(--accent, #059669);
+  color: var(--accent-dark, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.14);
+}
+.gal-more__btn:disabled { opacity: 0.6; cursor: default; }
+.gal-more__btn:not(:disabled) .fa-check-circle { display: none; }
+.gal-more--done .gal-more__btn {
+  background: var(--accent-soft, rgba(5, 150, 105, 0.08));
+  border-color: transparent;
+  color: var(--accent-dark, #047857);
+}
+.gal-more--done .gal-more__btn .fa-check-circle { display: inline-block; }
+.gal-more__hint { font-size: 11.5px; color: var(--text-muted, #64748b); font-weight: 600; }
+
+/* শূন্য-ফলাফলে 'আরও ছবি লোড' CTA (অটো-লোড-চেইনের ফলব্যাক) */
+.gal-empty__loadmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border: 1.5px solid var(--accent, #059669);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--accent-dark, #047857);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.22s, color 0.22s, transform 0.2s;
+}
+.gal-empty__loadmore:hover { background: var(--accent-soft, rgba(5, 150, 105, 0.1)); transform: translateY(-1px); }
+.gal-empty__reset + .gal-empty__loadmore { margin-inline-start: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gal-more__btn, .gal-empty__loadmore { transition: none !important; }
+}
+
+.gal-more__noscript {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  background: var(--accent, #059669);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+}

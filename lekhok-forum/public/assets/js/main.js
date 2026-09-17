@@ -117,6 +117,11 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
   var offset = parseInt(more.getAttribute('data-offset') || '0', 10) || 0;
   var filter = more.getAttribute('data-filter') || 'all';
   var sort = more.getAttribute('data-sort') || 'recent'; // সেশন ১০০ (০৮): র‍্যাংকড-মোড ধারাবাহিকতা
+  // সেশন ১০৪ (রোডম্যাপ-০৫): keyset-কার্সার — সার্ভার পেজ-১-এর শেষ-আইটেম-টুপল দেয়;
+  // recent-মোডে কার্সার-প্যারাম যায় (OFFSET-বিহীন), ranked-মোডে OFFSET-ই থাকে (পুল-স্লাইস)।
+  var curTs = more.getAttribute('data-cursor-ts') || '';
+  var curType = more.getAttribute('data-cursor-type') || '';
+  var curId = parseInt(more.getAttribute('data-cursor-id') || '0', 10) || 0;
   var busy = false, done = false;
   // সেশন ৯৩ (০৫-পলিশ): ধারাবাহিক-লোড চেইন — স্ক্রল-রিস্টোর একাধিক পেজ পরপর চাইলে
   // busy-গার্ডের ইনস্ট্যান্ট-রিটার্নে আটকে না-যায়; প্রতিটি কল চেইনে সারিবদ্ধ হয়।
@@ -149,12 +154,21 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
     if (spinner) spinner.hidden = false;
     if (btn) btn.hidden = true;
     try {
-      var res = await fetch('/dashboard/more?filter=' + encodeURIComponent(filter) + '&sort=' + encodeURIComponent(sort) + '&offset=' + offset, { credentials: 'same-origin' });
+      // ১০৪: recent + বৈধ-কার্সার → keyset-কুয়েরি; নইলে legacy OFFSET
+      var useCursor = sort !== 'ranked' && curTs && curType && curId;
+      var q = '/dashboard/more?filter=' + encodeURIComponent(filter) + '&sort=' + encodeURIComponent(sort);
+      q += useCursor
+        ? '&cursor=' + encodeURIComponent(curTs) + '&cursorType=' + encodeURIComponent(curType) + '&cursorId=' + curId
+        : '&offset=' + offset;
+      var res = await fetch(q, { credentials: 'same-origin' });
       var data = await res.json();
       if (!data || !data.ok || !data.html) { finish(); return; }
       var tpl = document.createElement('template');
       tpl.innerHTML = data.html;
       more.parentNode.insertBefore(tpl.content, more);
+      if (data.nextCursor && data.nextCursor.ts && data.nextCursor.type && data.nextCursor.id) {
+        curTs = data.nextCursor.ts; curType = data.nextCursor.type; curId = data.nextCursor.id;
+      }
       offset = data.nextOffset || offset;
       // নতুন ডমে ইন্টারঅ্যাকশন-ইঞ্জিনগুলো পুনঃচালু (আইডি-ইমপোটেন্ট)
       try { window.LekhokReactions && window.LekhokReactions.init(); } catch (_) {}

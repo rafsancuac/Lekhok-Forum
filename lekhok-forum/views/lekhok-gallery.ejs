@@ -123,40 +123,29 @@
         </div>
       </nav>
 
-      <%# ── ৩. মেসনারি ছবি-ভিউ (ডিফল্ট) ── %>
+      <%# ── ৩. মেসনারি ছবি-ভিউ (ডিফল্ট) — ১০৪: পেজ-১ = সর্বশেষ ২৪, বাকি /gallery/more থেকে ── %>
       <div id="galPhotosView" class="gal-photosview" role="tabpanel" aria-label="সব ছবি">
         <div class="gal-masonry" id="galMasonry">
-          <% items.forEach(g => { %>
-            <figure class="gal-card" data-cat="<%= g.category || 'general' %>"
-                    data-search="<%= ((g.title || '') + ' ' + (g.caption || '') + ' ' + (g.catLabel || '') + ' ' + (g.photographer || '')).toLowerCase().replace(/"/g, '&quot;') %>">
-              <a href="<%= g.image_url %>" class="gal-card__link"
-                 data-lightbox
-                 data-title="<%= g.caption || g.catLabel %>"
-                 data-caption="<%= g.caption || '' %>"
-                 data-catlabel="<%= g.catLabel %>"
-                 data-date="<%= g.displayDate || '' %>"
-                 data-photographer="<%= g.photographer || '' %>"
-                 aria-label="<%= g.caption || g.catLabel %> — বড় করে দেখুন">
-                <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || g.catLabel || 'গ্যালারির ছবি' %>" />
-                <span class="gal-card__quickview" aria-hidden="true"><i class="fas fa-magnifying-glass-plus"></i></span>
-                <figcaption class="gal-card__overlay">
-                  <span class="gal-card__cat"><%= g.catLabel %></span>
-                  <% if (g.caption) { %><span class="gal-card__title"><%= g.caption.length > 64 ? g.caption.slice(0, 64) + '…' : g.caption %></span><% } %>
-                  <span class="gal-card__meta">
-                    <% if (g.displayDate) { %><span><i class="far fa-calendar" aria-hidden="true"></i> <%= g.displayDate %></span><% } %>
-                    <% if (g.photographer) { %><span><i class="fas fa-camera-retro" aria-hidden="true"></i> <%= g.photographer %></span><% } %>
-                  </span>
-                </figcaption>
-              </a>
-            </figure>
-          <% }); %>
+          <%- include('partials/gallery-cards', { items }) %>
         </div>
+        <%# সেশন ১০৪: load-more সেন্টিনেল — gallery.js-এর ইঞ্জিন IntersectionObserver-এ
+            /gallery/more ডেকে কার্ডগুলো galMasonry-তে append করে; JS-বিহীনে ফলব্যাক বাটন %>
+        <% if (hasMoreItems) { %>
+          <div class="gal-more" id="galMore" data-page="1" data-total="<%= itemsTotal %>" data-per-page="<%= perPage %>" data-shown="<%= itemsShown %>">
+            <div class="gal-more__spinner" id="galMoreSpinner" hidden><i class="fas fa-circle-notch fa-spin"></i> <span>আরও ছবি লোড হচ্ছে…</span></div>
+            <button type="button" class="gal-more__btn" id="galMoreBtn">আরও ছবি দেখুন <i class="fas fa-chevron-down"></i></button>
+            <span class="gal-more__hint" id="galMoreHint">প্রদর্শিত <%= itemsShown %> / মোট <%= itemsTotal %> ছবি</span>
+            <%# JS-বিহীন ফলব্যাক — সম্পূর্ণ-রেন্ডারে (?all=1) সব ছবি এক-পেজে %>
+            <noscript><a class="gal-more__noscript" href="/gallery?all=1">সব ছবি এক-পেজে দেখুন</a></noscript>
+          </div>
+        <% } %>
         <%# ফিল্টার/সার্চের ফাঁকা অবস্থা %>
         <div class="gal-empty" id="galEmpty" hidden>
           <i class="fas fa-camera-retro" aria-hidden="true"></i>
           <p class="gal-empty__title">এই বিভাগে কোনো ছবি পাওয়া যায়নি।</p>
           <p class="gal-empty__sub">অন্য ক্যাটাগরি বেছে নিন বা সার্চ-শব্দ বদলান।</p>
           <button type="button" class="gal-empty__reset" id="galReset"><i class="fas fa-rotate-left"></i> সব ছবি দেখুন</button>
+          <button type="button" class="gal-empty__loadmore" id="galEmptyLoadMore" hidden><i class="fas fa-images"></i> আরও ছবি লোড করুন</button>
         </div>
       </div>
 

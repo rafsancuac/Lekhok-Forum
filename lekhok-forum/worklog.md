@@ -641,3 +641,29 @@ Stage Summary:
 - পুশ: a3263a9 → origin/main (ba8797b-এর উপর rebase)
 - ইউজার-রিপোর্টের তিনটি বিষয়ই সমাধাত: ডুপ্লিকেশন-শূন্য + কমেন্ট-রিঅ্যাকশন (FB-প্যালেট/ব্যাজ) + ৩-ডট-এডিট/ডিলিট (FB-1:1 আচরণ)
 - Next-agent: article-single/qa-single-থ্রেডে একই UX বহমান-করা + 'angry'-রিঅ্যাকশন-যোগ (breaking: REACTIONS-ডিফল্ট-ম্যাপ) — বিস্তারিত PLANS.md session104-নোট
+
+---
+## সেশন ১০৭ (১৮ সেপ্টেম্বর ২০২৬) — রোডম্যাপ-০৫ সম্পূর্ণ (keyset) + চিত্রশালা load-more + লাইটবক্স ডেলিগেশন-ফিক্স
+
+**এজেন্ট:** Z.ai (cron webDevReview) · **ইনপুট:** ক্রন-রাউন্ড — QA-সুইপ → স্থিতিশীল মিলে রোডম্যাপ-০৫ (শেষ-অবশিষ্ট আইটেম) + session-103-সুপারিশের /gallery পেজিনেশন
+
+### কাজের বিবরণ
+- **QA-সুইপ (প্রথমে):** প্যারালাল-এজেন্টের :3030 ইনস্ট্যান্স (session-103-কোড) ব্যবহার — ৯-পেজ 200, /gallery ফিল্টার/সার্চ/লাইটবক্স/থাম্বনেইল/অ্যালবাম ✓, ismail/secret123 লগইন ✓, ৩৯০px-০, কনসোল-০ — **বাগ-শূন্য**। (নোট: /dashboard-এ প্রথমে `params = e.id` সন্দেহ করেছিলাম — od-ডাম্পে `[me.id, me.id]` সঠিক; Read-টুলের ডিসপ্লে-আর্টিফ্যাক্ট ছিল।)
+- **রোডম্যাপ-০৫ (OFFSET→keyset):** /dashboard/more `?cursor=<ts>&cursorType=<type>&cursorId=<id>` — টুপল (created_at, item_type, id); ORDER BY-তে item_type+id টাই-ব্রেকার; শাখা-প্রতি কার্সার-কন্ডিশন (৩-কেস) + `p.id as id` অ্যালিয়াস; LIMIT lim+১; nextCursor উত্তরে; OFFSET-legacy অক্ষত; ranked পুল-স্লাইসেই। ক্লায়েন্ট main.js cursor-চেইন।
+- **চিত্রশালা load-more:** /gallery/more?page=N (≤৫০-গার্ড), পেজ-১=২৪, gallery-cards.ejs partial, §২.ক ইঞ্জিন (sentinel+button+hint+অটো-লোড-চেইন), __galMarkSkeletons(masonry) হুক, ?all=1 + noscript, seed-gallery-107.js (১০ ডেমো-ছবি → ৩২ রো)।
+- **লাইটবক্স ডেলিগেশন-ফিক্স:** append-কার্ডে বাইন্ডিং-অনুপস্থিতি → কাঁচা-ছবি-নেভিগেশন বাগ; document-লেভেল closest('[data-lightbox]') ডেলিগেশন।
+
+### যাচাই
+- keyset SQL-ইনভ্যারিয়েন্ট (sql.js): full-ORDER বনাম keyset-ওয়াক **EXACT MATCH, dup-০, miss-০**; ১১-কেস buildFeedSql ?-কাউন্ট/প্যারাম-অর্ডার ইউনিট-পাস
+- QA-ধরা **ranked-মোড 500** (অ্যামবিগুয়াস-`id` ORDER BY-তে) → অ্যালিয়াস-ফিক্সে রিগ্রেশন-গ্রিন (ranked/article/question/activity/runaway-guard)
+- ব্রাউজার E2E: dashboard cursor-ফেচ→done ✓; gallery ২৪→৩২ সেন্টিনেল ✓; 'নবীন বরণ' (পেজ-২-অনলি) সার্চ-অটো-চেইন→১-মিল ✓; অ্যাপেন্ডেড-কার্ডে লাইটবক্স ✓; ?all=1=৩২ ✓; ৩৯০px-০ ✓; কনসোল-০ ✓; audit 0-fail ✓; ১৩-পেজ স্মোক ✓
+- গোটচা-লেসন: ① compound-SELECT-এ ORDER BY `id` JOIN-এ অ্যামবিগুয়াস → এক্সপ্লিসিট-অ্যালিয়াস ② SW `/assets/` CacheFirst — JS-এডিটের পরে সার্ভার-রিস্টার্ট (AV-রিহ্যাশ) জরুরি ③ অ্যাসিঙ্ক-চেইনে applyFilter busy=false-এর পরে
+
+### নোট
+- লোকাল lekhok.db-তে ১০টি 'ডেমো-চিত্র' রো যোগ হয়েছে (seed-gallery-107 — /img/cover SVG; লাইভে চাইলে চালানো যাবে, আইডি-ইমপোটেন্ট)
+- লাইভ-Turso QA-রিসেট + সিক্রেট-রোটেশন ×৪ এখনো পেন্ডিং (টোকেন লাগবে)
+
+Stage Summary:
+- রোডম্যাপ ২০/২০ সম্পূর্ণ — মাস্টার-টেবিলে নতুন কোনো আইটেম অবশিষ্ট নেই
+- /dashboard/more: cursor+offset দ্বৈত-মোড; /gallery/more: নতুন এন্ডপয়েন্ট
+- পরবর্তী-প্রার্থী: গ্যালারি অ্যালবাম-কভার কাস্টম-নির্বাচন (স্টাফ), যোগাযোগ হল-প্রভোস্ট সার্চ/ফিল্টার, contact_hours 'এখন খোলা?' লাইভ-ইন্ডিকেটর

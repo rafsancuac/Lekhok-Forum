@@ -67,50 +67,94 @@ router.use(async (req, res, next) => {
 // activity বাদ — এনগেজমেন্ট-০ মডারেটর-পোস্ট র‍্যাংকে অর্থহীন); স্কোর-সাজানো JS-সাইডে
 // applyRankedSort()-এ (২-পাস স্কোরিং — পাস-১ SQL পুল, পাস-২ time-decay স্কোর)।
 // UNION-গোটচা-সচেতন: view_count তিন শাখাতেই সমান-অর্ডারে যোগ করা হয়েছে।
+// সেশন ১০৪ (রোডম্যাপ-০৫): OFFSET→keyset (কার্সার) পেজিনেশন।
+//   • কার্সার-টুপল = (created_at, item_type, id) — পরবর্তী-পেজ = টুপলের চেয়ে কঠোর-ছোট
+//     (DESC-অর্ডারে) → সার্ভার-সাইডে O(1)-জাম্প, OFFSET-এর O(n)-স্ক্যান ও বড়-অফসেটের
+//     পারফরম্যান্স-ক্ষয় নেই; পেজ-মাঝে-নতুন-পোস্ট-ঢুকলেও ডুপ্লিকেট/স্কিপ-শূন্য (OFFSET-এর মূল-ব্যধি)।
+//   • ORDER BY-তে item_type+id টাই-ব্রেকার যোগ → এক-সেকেন্ডে-একাধিক-পোস্টেও পেজ-সীমানা
+//     নির্ধারণী (পুরনো OFFSET-যুগের টাই-শাফল-বাগও সহ-নির্মূল)।
+//   • ranked-মোড keyset-প্রযোজ্য নয় (র‍্যাংক-অর্ডার created_at-মোনোটোনিক নয়) — পুল
+//     FEED_POOL_CAP=১৫০-বাউন্ডেড বলে JS-স্লাইসই সঠিক (রানওয়ে-গার্ড off>300)।
 const FEED_POOL_CAP = 150; // ranked পুল — সর্বশেষ ১৫০ পোস্টের মধ্যেই র‍্যাংকিং (স্কেল-সুরক্ষা)
 
-function buildFeedSql(filter, me, limit, offset, ranked) {
+// কার্সার-শাখা-কন্ডিশন: শাখার কনস্ট্যান্ট-টাইপ T ও কার্সার-টাইপ ct তুলনা করে
+// সরলীকৃত কন্ডিশন জেনারেট (item_type শাখা-প্রতি ধ্রুবক — ৩-কেসেই সংকুচিত):
+//   T > ct → টাই-সেকেন্ডের এই-শাখার সব-আইটেম কার্সারের আগে → শুধু ts < cur
+//   T = ct → টাই-সেকেন্ডে id-টাই-ব্রেকার: (ts < cur OR (ts = cur AND id < curId))
+//   T < ct → টাই-সেকেন্ডের এই-শাখার সব-আইটেম কার্সারের পরে → ts <= cur
+function feedCursorCond(branchType, tsCol, idCol, cursor) {
+  if (!cursor || !cursor.ts || !cursor.type) return '';
+  const ct = String(cursor.type);
+  if (branchType > ct) return ` AND ${tsCol} < ?`;
+  if (branchType === ct) return ` AND (${tsCol} < ? OR (${tsCol} = ? AND ${idCol} < ?))`;
+  return ` AND ${tsCol} <= ?`;
+}
+function feedCursorParams(branchType, cursor) {
+  if (!cursor || !cursor.ts || !cursor.type) return [];
+  const ct = String(cursor.type);
+  if (branchType > ct) return [cursor.ts];
+  if (branchType === ct) return [cursor.ts, cursor.ts, cursor.id];
+  return [cursor.ts];
+}
+
+function buildFeedSql(filter, me, limit, offset, ranked, cursor) {
   const lim = Math.max(1, Math.min(30, limit | 0 || 30));
   const off = Math.max(0, offset | 0);
+  const ORDER = ' ORDER BY created_at DESC, item_type DESC, id DESC'; // ১০৪: নির্ধারণী-টাই-ব্রেকার
+  const useCursor = !ranked && cursor && cursor.ts && cursor.type;
   const limOff = ranked
-    ? ` ORDER BY created_at DESC LIMIT ${Math.max(FEED_POOL_CAP, off + lim)}`
-    : ` ORDER BY created_at DESC LIMIT ${lim} OFFSET ${off}`;
-  const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+    ? ORDER + ` LIMIT ${Math.max(FEED_POOL_CAP, off + lim)}`
+    : useCursor
+      ? ORDER + ` LIMIT ${lim + 1}` // কার্সার-মোড: hasMore-সঠিকতার জন্য +১
+      : ORDER + ` LIMIT ${lim} OFFSET ${off}`;
+  const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
-  const QUESTION_SQL = `\n    SELECT 'question' as item_type, p.id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+  const QUESTION_SQL = `\n    SELECT 'question' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
-  const ACTIVITY_SQL = `\n    SELECT 'activity' as item_type, dc.id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
+  const ACTIVITY_SQL = `\n    SELECT 'activity' as item_type, dc.id as id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
            NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
            NULL as author_id,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, NULL as pen_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
     WHERE dc.content_type = 'activity' AND dc.published = 1`;
 
+  // ১০৪: শাখা-প্রতি কার্সার-কন্ডিশন + প্যারাম (শাখা-যোগদান-ক্রমেই প্যারাম-ক্রম)
+  const cArt = feedCursorCond('article', 'p.published_at', 'p.id', cursor);
+  const cQues = feedCursorCond('question', 'p.published_at', 'p.id', cursor);
+  const cAct = feedCursorCond('activity', 'dc.created_at', 'dc.id', cursor);
+  const pArt = feedCursorParams('article', cursor);
+  const pQues = feedCursorParams('question', cursor);
+  const pAct = feedCursorParams('activity', cursor);
+
   let sql, params = [];
   if (filter === 'article') {
-    sql = ARTICLE_SQL + limOff;
+    sql = ARTICLE_SQL + cArt + limOff;
+    params = pArt;
   } else if (filter === 'question') {
-    sql = QUESTION_SQL + limOff;
+    sql = QUESTION_SQL + cQues + limOff;
+    params = pQues;
   } else if (filter === 'activity') {
     // ranked-এ activity বাদ — 'activity'-ফিল্টার + ranked = recent-অর্ডারেই (স্কোর-০)
-    sql = ACTIVITY_SQL + limOff;
+    sql = ACTIVITY_SQL + cAct + limOff;
+    params = pAct;
   } else if (filter === 'following' && me) {
-    sql = ARTICLE_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)
-      UNION ALL ` + QUESTION_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)` + limOff;
-    params = [me.id, me.id];
+    sql = ARTICLE_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)` + cArt + `
+      UNION ALL ` + QUESTION_SQL + ` AND p.author_id IN (SELECT following_id FROM follows WHERE follower_id = ?)` + cQues + limOff;
+    params = [me.id].concat(pArt, [me.id], pQues);
   } else if (ranked) {
     // র‍্যাংকড-পুল: article+question (activity বাদ) — পুল-ক্যাপ LIMIT limOff-এই বসে
     sql = ARTICLE_SQL + ' UNION ALL ' + QUESTION_SQL + limOff;
   } else {
-    sql = ARTICLE_SQL + ' UNION ALL ' + QUESTION_SQL + ' UNION ALL ' + ACTIVITY_SQL + limOff;
+    sql = ARTICLE_SQL + cArt + ' UNION ALL ' + QUESTION_SQL + cQues + ' UNION ALL ' + ACTIVITY_SQL + cAct + limOff;
+    params = [].concat(pArt, pQues, pAct);
   }
   return { sql, params };
 }
@@ -342,9 +386,15 @@ router.get('/dashboard', async (req, res) => {
 
   // সেশন ৬৬+৮৯: bookmarked-প্রিফিল এখন decorateFeed()-এর সাথেই (উপরে myBookmarkedIds)
 
+  // সেশন ১০৪ (রোডম্যাপ-০৫): পেজ-১-এর শেষ-আইটেম থেকে প্রাথমিক keyset-কার্সার —
+  // ranked-মোডে কার্সার অর্থহীন (পুল-স্লাইস), খালি-ফিডেও নয়।
+  const lastFeed = sort === 'recent' && feed.length ? feed[feed.length - 1] : null;
+  const cursor = (lastFeed && lastFeed.created_at && lastFeed.item_type && lastFeed.id)
+    ? { ts: String(lastFeed.created_at), type: String(lastFeed.item_type), id: lastFeed.id } : null;
+
   res.render('user/dashboard', {
     feed, filter, sort, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
-    myBookmarkedIds,
+    myBookmarkedIds, cursor,
     user: req.session.user || null,
     currentPath: '/dashboard'
   });
@@ -352,30 +402,55 @@ router.get('/dashboard', async (req, res) => {
 
 // ── সেশন ৮৯ (B1): ইনফিনিট-স্ক্রল — পরবর্তী ফিড-পেজ সার্ভার-রেন্ডার করে HTML ফেরত।
 // ক্লায়েন্ট (main.js-এর feed-more ইঞ্জিন) IntersectionObserver-সেন্টিনেলে এই এন্ডপয়েন্ট
-// ডেকে ফলাফল ফিডের শেষে append করে। OFFSET-ভিত্তিক (এই স্কেলে পর্যাপ্ত ও প্রেডিক্টেবল);
-// per-page ১০, প্রথম পেজ ৩০ (/dashboard রুট)। গেস্ট-ও ব্যবহার করতে পারে (ফিড পাবলিক)।
+// ডেকে ফলাফল ফিডের শেষে append করে। per-page ১০, প্রথম পেজ ৩০ (/dashboard রুট)।
+// গেস্ট-ও ব্যবহার করতে পারে (ফিড পাবলিক)।
+// সেশন ১০৪ (রোডম্যাপ-০৫): OFFSET→keyset — recent-মোডে ?cursor=<ts>&cursorType=<type>&cursorId=<id>
+// গ্রহণ করে (last.created_at/item_type/id টুপল); উত্তরে nextCursor ফেরত। OFFSET-প্যারাম
+// অক্ষত (পুরনো-ক্যাশড ক্লায়েন্ট + ranked-মোডের ফলব্যাক)। ranked পুল-স্লাইসেই থাকে।
 router.get('/dashboard/more', async (req, res) => {
   const me = req.session.user || null;
   const filter = me && req.query.filter === 'following' ? 'following' : (['article', 'question', 'activity'].includes(req.query.filter) ? req.query.filter : 'all');
   const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
-  const sort = (req.query.sort === 'ranked' || req.query.sort === 'relevant') ? 'ranked' : 'recent'; // সেশন-১০০ (০৮) + ১০২ ('relevant' অ্যালায়াস)
-  if (offset > 300) return res.json({ ok: true, html: '', hasMore: false, nextOffset: offset }); // রানওয়ে-গার্ড
+  const sort = (req.query.sort === 'ranked' || req.query.sort === 'relevant') ? 'ranked' : 'recent'; // সেশন-১০০ (০৮) + ১০২ ('relevant' অ্যালায়াস) + ১০৪ keyset
+  // ১০৪: কার্সার-পার্স — ts নরমালাইজ (T/ফ্র্যাকশন/Z-কেটা), type হোয়াইট-লিস্ট, id পূর্ণসংখ্যা;
+  // অসম্পূর্ণ কার্সার → null (OFFSET-ফলব্যাক) — কখনোই ৫০০ নয়।
+  let cursor = null;
+  const rawTs = String(req.query.cursor || '').trim();
+  if (rawTs) {
+    const ts = rawTs.replace('T', ' ').replace(/[Zz].*$/, '').replace(/\.\d+$/, '').slice(0, 19);
+    const type = ['article', 'question', 'activity'].includes(String(req.query.cursorType)) ? String(req.query.cursorType) : '';
+    const id = parseInt(req.query.cursorId, 10) || 0;
+    if (ts.length === 19 && type && id > 0) cursor = { ts, type, id };
+  }
+  if (!cursor && offset > 300) return res.json({ ok: true, html: '', hasMore: false, nextOffset: offset }); // রানওয়ে-গার্ড (কার্সার-মোডে অপ্রাসঙ্গিক — টুপল-বাউন্ড)
   try {
-    let feed, rankedHasMore = false;
+    let feed, hasMore;
     if (sort === 'ranked') {
       const aff = me ? await FR.buildAffinity(me) : FR.blankAffinity(); // সেশন-১০২: অ্যাফিনিটি
       const r = await rankedFeedSlice(filter, me, 10, offset, aff);
-      feed = r.items; rankedHasMore = r.hasMore;
+      feed = r.items; hasMore = r.hasMore; // ১০২: পুল-শেষ-সীমা-সচেতন hasMore
+    } else if (cursor) {
+      // ১০৪: keyset — lim+১ এনে সঠিক hasMore; decorate-এর আগেই স্লাইস
+      const { sql, params } = buildFeedSql(filter, me, 10, 0, false, cursor);
+      const rows = await db.prepare(sql).all(...params);
+      hasMore = rows.length > 10;
+      feed = rows.slice(0, 10);
     } else {
       const { sql, params } = buildFeedSql(filter, me, 10, offset);
       feed = await db.prepare(sql).all(...params);
+      hasMore = feed.length >= 10;
     }
     await decorateFeed(feed, me);
     const myBookmarkedIds = me ? ((await decorateFeed([], me, { withBookmarks: true })) || []) : [];
     res.render('partials/feed-cards', { feed, user: req.session.user || null, myBookmarkedIds, sort }, function (err, html) {
       if (err) return res.status(500).json({ ok: false, error: 'render' });
-      // সেশন-১০২: ranked-মোডে rankedFeedSlice-এর সঠিক hasMore (পুল-শেষ-সীমা) ব্যবহার
-      res.json({ ok: true, html, hasMore: sort === 'ranked' ? rankedHasMore : feed.length >= 10, nextOffset: offset + feed.length });
+      const last = feed[feed.length - 1];
+      res.json({
+        ok: true, html, hasMore,
+        nextCursor: (sort !== 'ranked' && hasMore && last && last.created_at && last.item_type && last.id)
+          ? { ts: String(last.created_at), type: String(last.item_type), id: last.id } : null,
+        nextOffset: offset + feed.length // legacy-কম্প্যাট
+      });
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'server' });

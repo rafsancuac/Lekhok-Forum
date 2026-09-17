@@ -57,7 +57,7 @@
       <% } %>
       <%# সেশন ৮৯ (B1): ইনফিনিট-স্ক্রল সেন্টিনেল — main.js-এর feed-more ইঞ্জিন এটি দেখে
           /dashboard/more কল করে; JS-বিহীন ব্রাউজারে ফলব্যাক 'আরও দেখুন' বাটন %>
-      <div class="feed-more" id="feedMore" data-filter="<%= filter %>" data-sort="<%= sort || 'recent' %>" data-offset="<%= feed.length %>" data-has-more="1" hidden>
+      <div class="feed-more" id="feedMore" data-filter="<%= filter %>" data-sort="<%= sort || 'recent' %>" data-offset="<%= feed.length %>" data-has-more="1" hidden<%- cursor ? ' data-cursor-ts="' + cursor.ts + '" data-cursor-type="' + cursor.type + '" data-cursor-id="' + cursor.id + '"' : '' %>>
         <div class="feed-more-spinner" id="feedMoreSpinner" hidden><i class="fas fa-circle-notch fa-spin"></i> <span>আরও লেখা লোড হচ্ছে…</span></div>
         <button type="button" class="feed-more-btn" id="feedMoreBtn">আরও দেখুন <i class="fas fa-chevron-down"></i></button>
       </div>

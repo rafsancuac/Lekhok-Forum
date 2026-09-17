@@ -51,6 +51,9 @@
   /* ═══ ২. ক্যাটাগরি ফিল্টার + লাইভ সার্চ ═══ */
   var activeCat = 'all';
   var pills = document.querySelectorAll('.gal-pill');
+  /* ১০৪: load-more ইঞ্জিন-হুক — সেকশন ২.ক-তে অ্যাসাইন হয়; applyFilter-এর
+     প্রতি-রানের শেষে ভিজিবল-কাউন্ট জানিয়ে দেয় (শূন্য-ফলাফলে অটো-লোড-চেইন) */
+  var galAutoLoad = null;
 
   function applyFilter() {
     var q = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -68,6 +71,7 @@
     }
     if (emptyBox) emptyBox.hidden = visibleCount !== 0;
     pills.forEach(function (p) { p.classList.toggle('is-active', p.dataset.cat === activeCat); });
+    if (galAutoLoad) galAutoLoad(visibleCount, q);
   }
 
   pills.forEach(function (pill) {
@@ -91,6 +95,84 @@
       applyFilter();
       setView('photos');
     });
+  }
+
+  /* ═══ ২.ক load-more ইঞ্জিন (সেশন ১০৪ — >১০০ ছবির প্রস্তুতি) ═══
+     • সেন্টিনেল-ভিউ (IntersectionObserver, ৬০০px-আগে) + ফলব্যাক-বাটন → /gallery/more?page=N
+     • append-এর পরে: __galMarkSkeletons + applyFilter (সক্রিয়-ফিল্টার/সার্চ নতুন-কার্ডেও)
+     • শূন্য-ফলাফলে অটো-লোড: ফিল্টার/সার্চ সক্রিয় অবস্থায় মিল-শূন্য হলে পরের-পেজ
+       স্বয়ংক্রিয় (চেইনে — মিল পাওয়া বা শেষ-পেজ পর্যন্ত); সার্ভার-গার্ড ≤৫০ পেজ */
+  var galMore = document.getElementById('galMore');
+  if (galMore && masonry) {
+    var galSpinner = document.getElementById('galMoreSpinner');
+    var galBtn = document.getElementById('galMoreBtn');
+    var galHint = document.getElementById('galMoreHint');
+    var galEmptyLoadMore = document.getElementById('galEmptyLoadMore');
+    var galPage = parseInt(galMore.getAttribute('data-page') || '1', 10) || 1;
+    var galTotal = parseInt(galMore.getAttribute('data-total') || '0', 10) || 0;
+    var galBusy = false, galDone = false;
+
+    function galFinish() {
+      galDone = true;
+      galMore.classList.add('gal-more--done');
+      if (galSpinner) galSpinner.hidden = true;
+      if (galBtn) {
+        galBtn.disabled = true;
+        galBtn.innerHTML = 'সব ছবি দেখানো হয়েছে <i class="fas fa-check-circle"></i>';
+      }
+      if (galHint) galHint.textContent = 'প্রদর্শিত ' + bn(galTotal) + ' / মোট ' + bn(galTotal) + ' ছবি';
+    }
+
+    function galLoadNext() {
+      if (galBusy || galDone) return Promise.resolve(false);
+      galBusy = true;
+      if (galSpinner) galSpinner.hidden = false;
+      if (galBtn) galBtn.hidden = true;
+      var next = galPage + 1;
+      return fetch('/gallery/more?page=' + next, { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data || !data.ok || !data.html) { galFinish(); return false; }
+          masonry.insertAdjacentHTML('beforeend', data.html);
+          galPage = data.page || next;
+          galTotal = data.total || galTotal;
+          if (window.__galMarkSkeletons) window.__galMarkSkeletons(masonry);
+          if (galHint && !galDone) galHint.textContent = 'প্রদর্শিত ' + bn(data.shown) + ' / মোট ' + bn(galTotal) + ' ছবি';
+          if (!data.hasMore) { galFinish(); return false; }
+          return true;
+        })
+        .catch(function () { galFinish(); return false; })
+        .then(function (progressed) {
+          galBusy = false;
+          if (galSpinner) galSpinner.hidden = true;
+          if (!galDone && galBtn) galBtn.hidden = false;
+          /* applyFilter এখানেই — galBusy=false-এর পরে, নইলে অটো-লোড-হুক
+             busy-গার্ডে আটকে চেইন ভেঙে যায় (মিল-শূন্য হলে পরের-পেজ) */
+          applyFilter();
+          return progressed;
+        });
+    }
+
+    /* অটো-লোড-চেইন: ফিল্টার/সার্চ-সক্রিয় + মিল-শূন্য + আরও-ছবি-বাকি → পরের-পেজ */
+    galAutoLoad = function (visibleCount, q) {
+      if (galEmptyLoadMore) galEmptyLoadMore.hidden = !(galDone === false && visibleCount === 0);
+      if (galDone || galBusy) return;
+      var filtered = activeCat !== 'all' || q;
+      if (filtered && visibleCount === 0) galLoadNext(); /* applyFilter-পুনঃরানে চেইন এগিয়ে যায় */
+    };
+
+    if (galBtn) galBtn.addEventListener('click', galLoadNext);
+    if (galEmptyLoadMore) galEmptyLoadMore.addEventListener('click', galLoadNext);
+    if ('IntersectionObserver' in window) {
+      var galSentinel = document.createElement('div');
+      galSentinel.className = 'gal-more__sentinel';
+      galSentinel.setAttribute('aria-hidden', 'true');
+      galMore.parentNode.insertBefore(galSentinel, galMore);
+      var galIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting && !galDone) galLoadNext(); });
+      }, { rootMargin: '600px 0px' });
+      galIO.observe(galSentinel);
+    }
   }
 
   /* ═══ ৩. অ্যালবাম-কার্ড → ছবি-ভিউ জাম্প ═══ */
@@ -207,11 +289,14 @@
     render();
   };
 
-  document.querySelectorAll('[data-lightbox]').forEach(function (a) {
-    a.addEventListener('click', function (e) {
-      e.preventDefault();
-      open(a);
-    });
+  /* ১০৪: ইভেন্ট-ডেলিগেশন — /gallery/more থেকে append-হওয়া কার্ডের অ্যাংকরেও
+     লাইটবক্স কাজ করে (আগের লোড-টাইম-বাইন্ডিংয়ে নতুন-কার্ড ক্লিকে কাঁচা-ছবিতে
+     নেভিগেট করত — পেজিনেশন-ব্রেকিং বাগ); ডকুমেন্ট-লেভেলে একবারই বাঁধাই। */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('[data-lightbox]') : null;
+    if (!a) return;
+    e.preventDefault();
+    open(a);
   });
 
   if (lbClose) lbClose.addEventListener('click', close);
@@ -275,13 +360,21 @@
 
 /* ═══ ৫. ইমেজ-লোড স্কেলেটন (সেশন ৯৮) — লোড-শেষে শিমার-বন্ধ ═══ */
 (function () {
-  var imgs = document.querySelectorAll('.gal-card__link img, .gal-album__cover, .gal-recent__photo img');
-  imgs.forEach(function (img) {
-    var mark = function () { img.classList.add('is-loaded'); };
-    if (img.complete && img.naturalWidth > 0) mark();
-    else img.addEventListener('load', mark);
-    img.addEventListener('error', mark); /* ভাঙা-ছবিতেও শিমার আটকে থাকবে না */
-  });
+  /* ১০৪: root-প্যারাম — /gallery/more থেকে append-হওয়া কার্ডেও পুনঃবাঁধাই;
+     window.__galMarkSkeletons(document.getElementById('galMasonry')) দিয়ে হুক */
+  window.__galMarkSkeletons = function (root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var imgs = scope.querySelectorAll('.gal-card__link img, .gal-album__cover, .gal-recent__photo img');
+    imgs.forEach(function (img) {
+      if (img.dataset.galSkeleton === '1') return; /* আইডি-ইমপোটেন্ট */
+      img.dataset.galSkeleton = '1';
+      var mark = function () { img.classList.add('is-loaded'); };
+      if (img.complete && img.naturalWidth > 0) mark();
+      else img.addEventListener('load', mark);
+      img.addEventListener('error', mark); /* ভাঙা-ছবিতেও শিমার আটকে থাকবে না */
+    });
+  };
+  window.__galMarkSkeletons(document);
 })();
 
 /* ═══ ৬. লাইটবক্স থাম্বনেইল-স্ট্রিপ (সেশন ৯৮) ═══ */

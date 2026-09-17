@@ -1,0 +1,28 @@
+<%# ── সেশন ১০৪: চিত্রশালা-কার্ড ফ্র্যাগমেন্ট — /gallery (পেজ-১) ও /gallery/more
+    (ইনফিনিট-স্ক্রল append) উভয়ের শেয়ার্ড পার্শিয়াল। মার্কআপ lekhok-gallery.ejs-এর
+    gal-card-এর হুবহু প্রতিলিপি — DOM-কনট্র্যাক্ট (data-cat/data-search/data-lightbox)
+    অপরিবর্তিত রাখতে হবে (gallery.js এগুলোর ওপর দাঁড়িয়ে আছে)। ── %>
+<% items.forEach(g => { %>
+  <figure class="gal-card" data-cat="<%= g.category || 'general' %>"
+          data-search="<%= ((g.title || '') + ' ' + (g.caption || '') + ' ' + (g.catLabel || '') + ' ' + (g.photographer || '')).toLowerCase().replace(/"/g, '&quot;') %>">
+    <a href="<%= g.image_url %>" class="gal-card__link"
+       data-lightbox
+       data-title="<%= g.caption || g.catLabel %>"
+       data-caption="<%= g.caption || '' %>"
+       data-catlabel="<%= g.catLabel %>"
+       data-date="<%= g.displayDate || '' %>"
+       data-photographer="<%= g.photographer || '' %>"
+       aria-label="<%= g.caption || g.catLabel %> — বড় করে দেখুন">
+      <img loading="lazy" decoding="async" src="<%= g.image_url %>" alt="<%= g.caption || g.catLabel || 'গ্যালারির ছবি' %>" />
+      <span class="gal-card__quickview" aria-hidden="true"><i class="fas fa-magnifying-glass-plus"></i></span>
+      <figcaption class="gal-card__overlay">
+        <span class="gal-card__cat"><%= g.catLabel %></span>
+        <% if (g.caption) { %><span class="gal-card__title"><%= g.caption.length > 64 ? g.caption.slice(0, 64) + '…' : g.caption %></span><% } %>
+        <span class="gal-card__meta">
+          <% if (g.displayDate) { %><span><i class="far fa-calendar" aria-hidden="true"></i> <%= g.displayDate %></span><% } %>
+          <% if (g.photographer) { %><span><i class="fas fa-camera-retro" aria-hidden="true"></i> <%= g.photographer %></span><% } %>
+        </span>
+      </figcaption>
+    </a>
+  </figure>
+<% }); %>
