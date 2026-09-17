@@ -806,3 +806,21 @@ Stage Summary:
 - origin/main @ 335bac5+docs — মাল্টি-মেথড 2FA সম্পূর্ণ: TOTP (আগেই ছিল) + ইমেইল-ওটিপি (নতুন) — দুটোই $0
 - প্রোডাকশন-সক্রিয়করণ: .env-এ RESEND_API_KEY + RESEND_FROM_EMAIL বসালেই লাইভ ইমেইল (না-থাকলে কনসোল-ফলব্যাক — .env.example-ডকুমেন্টেড)
 - পরবর্তী-প্রার্থী: ইমেইল-ভেরিফাই-ব্যাজ (ডেলিভারি-টেস্ট), OTP-রিসেন্ড-কাউন্টডাউন-টাইমার (ক্লায়েন্ট), স্পেকের SMS-মেথড (বাজেট-স্পন্সর মিললে BulkSMSBD-ইন্টিগ্রেশন), /login/2fa-রেট-লিমিটার (IP-ভিত্তিক, loginLimiter-স্টাইল)
+
+---
+Task ID: 22-খ (Session 112 — Lekhok-Forum; merge-followup)
+Agent: Z.ai (same round — session108-খ/113/114/115-প্যারালাল-পুশের সাথে ইউনিয়ন)
+Task: দুই-রাউন্ড rebase-ইউনিয়ন + নতুন-ক্যানোনিকাল কনট্র্যাক্টে Facepile-ইন্টারপ
+
+Work Log:
+- push-রেস ×৩: 9e47c98 (session108-খ) → 335bac5 (113/114/115) → 1642c7f (docs) — প্রতি-রাউন্ডে fetch+rebase+union-রিজলভ
+- session108-খ আবিষ্কার: actions-bar.ejs এখন DELEGATE SHIM → ক্যানোনিকাল views/shared/post/PostFooterActions.ejs + ReactorsModal.ejs (article/dashboard/profile/me-সহ ৪ পেজে include) + ট্রিগার-কনট্র্যাক্ট data-reactors-for → data-rx-open/data-rx-id; শেয়ার-স্ট্রিপ ক্যানোনিকালে পোর্ট (_me-গার্ড)
+- Facepile-ইন্টারপ: shared ReactorsModal.ejs-এ মোড-সেগ + .rxm-fgrid (session110-CSS-রিইউজ); comment-tools.js-এ additive lfPaintMode/lfRenderFacepile (localStorage 'rxm110view' শেয়ার্ড); reactors-modal.js-এ data-rx-open-বাইন্ডিং + presence-guard (lf-rxm থাকলে তাদের মডাল প্রাধান্য, নইলে গ্লোবাল rxm) — ডুপ্লিকেট-মোডাল-শূন্য
+- ইউনিয়ন-গোটচা-নোট: style.css-EOF-কনফ্লিক্টে naive union-regex তাদের-ব্লক খেয়ে ফেলেছিল ×১ — git show থেকে পুনঃস্থাপন; brace-চেকে comment-ভেতরের `}` ফলস-অ্যালার্ম (comment-stripped-কাউন্টই সত্য)
+- session-লেবেল-রেস: ১১০/১১১ অন্য-এজেন্টদের হাতে গেছে → সর্বোচ্চ+১ রীতিতে ১১২
+- যাচাই: article-page ফেসপাইল (seg+cells+tooltip+টগল+পার্সিসটেন্স) ✓ dashboard-ইল্ড ✓ ৩৯০px-ফিট ✓ role-policy ১০৭/১০৭ ✓ পেজ-ম্যাট্রিক্স ✓ push e8ab401 ✓
+
+Stage Summary:
+- origin/main @ e8ab401 — session-110 ফিচার-কমিট + session-112 ইন্টারপ-কমিট উভয়ই ল্যান্ডেড
+- স্থাপত্য-সত্য (ভবিষ্যৎ-এজেন্টদের জন্য): পোস্ট-ফুটার = shared/post/PostFooterActions.ejs (actions-bar.ejs শুধু শিম); রিঅ্যাক্টরস-মডাল = shared/post/ReactorsModal.ejs + comment-tools.js (lf-rxm, data-rx-open-কনট্র্যাক্ট); গ্লোবাল partials/reactors-modal + reactors-modal.js = লেগেসি-কনট্র্যাক্ট-ফলব্যাক; Facepile-মোড উভয় মডালে কার্যকর (localStorage-শেয়ার্ড)
+- পরবর্তী-প্রথম-পছন্দ: ০৫-কার্সার-পলিশ (মাস্টার-টেবিল শেষ-আইটেম) · ফেসপাইল ১০০+-রিঅ্যাক্টর-ভার্চুয়ালাইজেশন · প্রচ্ছদ-মোডালে ইমেজ-আপলোড
