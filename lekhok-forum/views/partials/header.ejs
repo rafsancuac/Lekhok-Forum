@@ -95,6 +95,11 @@
   <% if (typeof user !== 'undefined' && user) { %>
   <link rel="stylesheet" href="/assets/css/calls.css?v=<%= AV %>" />
   <% } %>
+  <%# ── সেশন ১০৫: গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) ──
+      tokens.css সর্বশেষ লোড হয় (ক্যাসকেড-গ্যারান্টি: লিগ্যাসি :root-ওভাররাইড জয়ী)।
+      কেউ এই দুই লিংকের অর্ডার বদলাবেন না — guard-design-system.js ধরে ফেলবে। %>
+  <link rel="stylesheet" href="/assets/css/shared.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
 </head>
 <body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= ((user.pen_name || user.full_name) || '').replace(/"/g, '&quot;') %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>

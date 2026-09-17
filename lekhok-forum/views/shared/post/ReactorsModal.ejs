@@ -1,0 +1,23 @@
+<%#
+  ═══════════════════════════════════════════════════════════════════════════
+  ReactorsModal.ejs — রিঅ্যাক্টরস-মডাল (সেশন ১০৫ — ডিজাইন-সিস্টেম কম্পোনেন্ট)
+  ───────────────────────────────────────────────────────────────────────────
+  রুল-১: PostFooterActions-এর কাউন্টার-বারে ক্লিক করলে কারা কী রিঅ্যাকশন
+  দিয়েছেন তার তালিকা। প্রতি পেজে একবার include করতে হয় (ডেটা লেজি-ফেচ:
+  GET /api/reactions/:type/:id → {users:[...]} — comment-tools.js পপুলেট করে)।
+  ═══════════════════════════════════════════════════════════════════════════ %>
+<div class="lf-rxm" id="reactorsModal" hidden role="dialog" aria-modal="true" aria-label="রিঅ্যাক্টরগণ">
+  <div class="lf-rxm-backdrop" data-rxm-close></div>
+  <div class="lf-rxm-card">
+    <header class="lf-rxm-head">
+      <h3 class="lf-rxm-title">প্রতিক্রিয়া</h3>
+      <button type="button" class="lf-rxm-close" data-rxm-close aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
+    </header>
+    <div class="lf-rxm-tabs" role="tablist">
+      <button type="button" class="lf-rxm-tab active" data-rx-filter="all" role="tab" aria-selected="true">সব</button>
+    </div>
+    <div class="lf-rxm-list" aria-live="polite">
+      <div class="lf-rxm-empty"><i class="fas fa-spinner fa-spin"></i></div>
+    </div>
+  </div>
+</div>

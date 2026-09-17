@@ -1,0 +1,83 @@
+<%#
+  ═══════════════════════════════════════════════════════════════════════════
+  CommentItem.ejs — সর্বজনীন কমেন্ট-বাবল (সেশন ১০৫ — ডিজাইন-সিস্টেম কম্পোনেন্ট)
+  ───────────────────────────────────────────────────────────────────────────
+  রুল-২ (কমেন্টের সার্বজনীন আচরণ):
+    ① মাউস নিলে ডানে ৩-ডট (নিজের কমেন্ট: সম্পাদনা/মুছুন; অন্যের: রিপোর্ট)
+    ② লাইক-বাটনে হোভার → FB-৬-ইমোজি প্যালেট (👍❤️🤗😂😮😢);
+       বাবলের নিচের ডান কোণায় গোল ব্যাজে রিঅ্যাকশন-কাউন্ট
+    ③ কমেন্ট-বাটন কখনো রিডাইরেক্ট করে না — ইন-লাইন ড্রয়ার (ফিডে)
+  বাধ্যতামূলক ব্যবহার: ফিড-ড্রয়ার (GET /api/comments?format=html এই পার্শিয়ালই
+  রেন্ডার করে — সিঙ্গেল-সোর্স), ব্লগ/আর্টিকেল-কমেন্ট, একক-পোস্ট আলোচনা-থ্রেড।
+
+  প্যারামিটার:
+    c     (必) কমেন্ট-অবজেক্ট: {id, author_id, username, author_name|full_name,
+          pen_name?, avatar_url, bodyHtml, created_at, edited?,
+          reaction? {counts, mine, total}, canEdit?, canDelete?, replies?[]}
+    link  (ঐ) পোস্ট-লিংক (কনটেক্সট)
+    user  (ঐ) লগইন-ইউজার (প্যারেন্ট-স্কোপে থাকলে সেটাই)
+    compact (ঐ) রিপ্লাই-মোড (ছোট অ্যাভাটার)
+  ═══════════════════════════════════════════════════════════════════════════ %>
+<%
+  var _me = (typeof user !== 'undefined') ? user : null;
+  var _link = (typeof link !== 'undefined' && link) ? link : '';
+  var _compact = (typeof compact !== 'undefined') && !!compact;
+  var _rx = c.reaction || { counts: {}, mine: null, total: 0 };
+  var _rxMeta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
+  var _rxLabels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ' };
+  var _cName = c.pen_name || c.author_name || c.full_name || 'সদস্য';
+  var _mineLabel = _rx.mine ? (_rxLabels[_rx.mine] || 'রিঅ্যাক্টেড') : 'লাইক';
+%>
+<div class="fc-item cmt-item<%= _compact ? ' fc-reply cmt-reply' : '' %>" id="fc-c<%= c.id %>" data-cmt-id="<%= c.id %>" data-post-link="<%= _link %>">
+  <img class="fc-av<%= _compact ? ' small' : '' %>" src="<%= c.avatar_url || ('/avatar/' + c.author_id) %>" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+  <div class="fc-main">
+    <div class="fc-bubble">
+      <a class="fc-author" href="/profile/<%= c.username %>"><%= _cName %></a><% if (c.pen_name && c.full_name) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %>
+      <div class="fc-body" data-raw="<%= c.body %>"><%- c.bodyHtml || '' %></div>
+      <% if (c.edited || c.edited_at) { %><span class="fc-edited">সম্পাদিত</span><% } %>
+      <%# রুল-২②: বাবলের নিচের ডান কোণায় গোল রিঅ্যাকশন-কাউন্ট-ব্যাজ %>
+      <span class="cmt-badge"<% if (!_rx.total) { %> hidden<% } %> title="প্রতিক্রিয়া"><% if (_rx.total) { %><span class="cmt-badge-emoji">👍</span><span class="cmt-badge-count"><%= _rx.total %></span><% } %></span>
+    </div>
+    <div class="fc-meta">
+      <span class="fc-time" data-ts="<%= new Date(c.created_at).toISOString() %>"><%= new Date(c.created_at).toLocaleString('bn-BD') %></span>
+      <% if (_me) { %>
+        <%# রুল-২②: লাইক-টেক্সট + হোভারে FB-৬-ইমোজি প্যালেট %>
+        <span class="cmt-like-wrap">
+          <button type="button" class="fc-act cmt-like<%= _rx.mine ? ' is-mine' : '' %>" data-cmt-react-toggle="<%= c.id %>" data-mine="<%= _rx.mine || '' %>" aria-label="প্রতিক্রিয়া দিন"><%= _mineLabel %></button>
+          <span class="cmt-palette" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন">
+            <% Object.keys(_rxMeta).forEach(function (k) { %>
+              <button type="button" class="cmt-palette-opt<%= _rx.mine === k ? ' selected' : '' %>" data-cmt-react="<%= k %>" data-cmt-id="<%= c.id %>" title="<%= _rxLabels[k] %>" aria-label="<%= _rxLabels[k] %>"><%= _rxMeta[k] %></button>
+            <% }); %>
+          </span>
+        </span>
+        <button type="button" class="fc-act cmt-reply-btn" data-reply-to="<%= c.id %>" data-reply-name="<%= _cName %>">উত্তর</button>
+      <% } %>
+    </div>
+    <%# রুল-২①: হোভারে ডানে ৩-ডট — pm-ইঞ্জিন রিইউজ (কমেন্ট-এডিট/ডিলিট/রিপোর্ট) %>
+    <% if (_me) { %>
+      <div class="pm-wrap cmt-more" data-pm-comment="<%= c.id %>">
+        <button type="button" class="pm-btn" aria-haspopup="menu" aria-expanded="false" aria-label="মন্তব্য অপশন" title="মন্তব্য অপশন">
+          <i class="fas fa-ellipsis-h"></i>
+        </button>
+        <div class="pm-menu" role="menu" hidden>
+          <% if (_me && (c.author_id === _me.id || /moderator|admin/.test(String(_me.role || '')))) { %>
+            <button type="button" class="pm-item" role="menuitem" data-cmt-edit="<%= c.id %>"><i class="fas fa-pen"></i> সম্পাদনা করুন</button>
+            <button type="button" class="pm-item pm-danger" role="menuitem" data-cmt-delete="<%= c.id %>"><i class="fas fa-trash"></i> মুছে ফেলুন</button>
+          <% } else { %>
+            <button type="button" class="pm-item pm-danger" role="menuitem" data-report-type="comment" data-report-id="<%= c.id %>" data-report-label="মন্তব্য #<%= c.id %>"><i class="far fa-flag"></i> রিপোর্ট করুন</button>
+          <% } %>
+        </div>
+      </div>
+    <% } %>
+    <% if (_me) { %>
+      <div class="fc-reply-slot" data-slot-for="<%= c.id %>" hidden></div>
+    <% } %>
+    <% if (c.replies && c.replies.length) { %>
+      <div class="cmt-replies">
+        <% c.replies.forEach(function (r) { %>
+          <%- include('./CommentItem', { c: r, link: _link, user: _me, compact: true }) %>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</div>

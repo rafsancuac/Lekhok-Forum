@@ -1,0 +1,52 @@
+<%#
+  ═══════════════════════════════════════════════════════════════════════════
+  AuthorLabel.ejs — সর্বজনীন লেখক-লেবেল (সেশন ১০৫ — ডিজাইন-সিস্টেম কম্পোনেন্ট)
+  ───────────────────────────────────────────────────────────────────────────
+  বাধ্যতামূলক ব্যবহার: পোস্ট-হেডার, কমেন্টার-নাম, আর্টিকেল কিউরেশন-তালিকা।
+  ছদ্মনাম-প্রায়োরিটি রেন্ডার (D1-নীতি): pen_name থাকলে সেটাই প্রদর্শন-নাম,
+  আসল নাম 'কলমে:' চিপে। নাম সর্বদা --lf-text-primary (#050505)।
+
+  প্যারামিটার (সবই optional-গার্ডেড, না-দিলে প্যারেন্ট-স্কোপের u/author ব্যবহার):
+    u          — লেখক-অবজেক্ট {id?, username, full_name, pen_name?, avatar_url?,
+                 author_role?, role?}  (item-অবজেক্টও চলে — author_name সহ)
+    avatarSize — 'sm' | 'md' (ডিফল্ট) | 'lg'
+    timeIso    — ISO-টাইমস্ট্যাম্প (data-ts — LekhokRelTime লাইভ-রিলেটাইভ করে)
+    timeText   — সরাসরি টেক্সট (timeIso না-দিলে)
+    subtitle   — নামের নিচে ছোট-লাইন (ঐ)
+    verified   — true হলে নীল ভেরিফায়েড-ব্যাজ
+    nameClass  — অতিরিক্ত ক্লাস
+    showAvatar — ডিফল্ট true
+  ═══════════════════════════════════════════════════════════════════════════ %>
+<%
+  var _u = (typeof u !== 'undefined' && u) ? u : ((typeof author !== 'undefined' && author) ? author : {});
+  var _name = _u.pen_name || _u.author_name || _u.display_name || _u.full_name || _u.name || 'সদস্য';
+  var _uname = _u.username || '';
+  var _role = _u.author_role || _u.role || '';
+  var _av = _u.avatar_url || (_u.id ? ('/avatar/' + _u.id) : '/avatar/0');
+  var _size = (typeof avatarSize !== 'undefined' && avatarSize) ? avatarSize : 'md';
+  var _showAvatar = (typeof showAvatar === 'undefined') ? true : !!showAvatar;
+  var _verified = (typeof verified !== 'undefined') && !!verified;
+%>
+<span class="lf-author-label<%= (typeof nameClass !== 'undefined' && nameClass) ? ' ' + nameClass : '' %>">
+  <% if (_showAvatar) { %>
+    <img loading="lazy" decoding="async" src="<%= _av %>" class="lf-author-avatar lf-av-<%= _size %>" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+  <% } %>
+  <span class="lf-author-main">
+    <span class="lf-author-name-row">
+      <% if (_uname) { %>
+        <a href="/profile/<%= _uname %>" class="lf-author-name"><%= _name %></a>
+      <% } else { %>
+        <span class="lf-author-name"><%= _name %></span>
+      <% } %>
+      <% if (_verified) { %><span class="verified-badge" title="ভেরিফায়েড"><i class="fas fa-check-circle"></i></span><% } %>
+      <% if (_role === 'admin' || _role === 'moderator') { %><span class="role-chip"><%= _role === 'admin' ? 'অ্যাডমিন' : 'মডারেটর' %></span><% } %>
+      <% if (hasPenName(_u)) { %><span class="pen-chip" title="আসল নাম: <%= _u.full_name %>">কলমে: <%= _u.full_name %></span><% } %>
+    </span>
+    <% if (typeof subtitle !== 'undefined' && subtitle) { %><span class="lf-author-sub"><%= subtitle %></span><% } %>
+    <% if (typeof timeIso !== 'undefined' && timeIso) { %>
+      <span class="lf-author-time" data-ts="<%= new Date(timeIso).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(timeIso).toLocaleString('bn-BD') %></span>
+    <% } else if (typeof timeText !== 'undefined' && timeText) { %>
+      <span class="lf-author-time"><i class="far fa-clock"></i> <%= timeText %></span>
+    <% } %>
+  </span>
+</span>

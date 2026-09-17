@@ -780,3 +780,25 @@ Stage Summary:
 3. **print-CSS-এ :has() এড়ান** — স্পষ্ট ক্লাস (cx-print-keep) দিন; প্রিন্ট-ইঞ্জিন :has() সমর্থন-না-করলে 'সব-লুকানো' ফলব্যাক হয়ে যায়।
 
 **পরবর্তী-সুপারিশ:** ইনবক্সে প্রিন্ট/PDF-ভিউ (এক-বার্তা + তালিকা) → নোট-সহ-মেইলমার্জ CSV ব্যবহার-নথি (DEPLOYMENT.md) → pagination-লাইভ-টেস্ট (১৬+ বার্তা) → প্রোফাইল-টাইমলাইন স্ক্রল-রিস্টোর → ০৩-Metered.ca-TURN (ইউজার-অ্যাকাউন্ট লাগবে)।
+
+
+Task ID: session-105
+Agent: Z.ai (Design-System Agent — sandbox web-68dcf7c4)
+Task: সেন্ট্রালাইজড গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) — টোকেন + ৬ ক্যানোনিকাল কম্পোনেন্ট + ৫ অপরিবর্তনীয় নিয়ম + মাল্টি-এজেন্ট গার্ড + E2E
+
+Work Log:
+- বর্তমান অবস্থা যাচাই: fresh clone @ 1704998 (session104-docs); sandbox-রুটে রিপো-ইনস্টল (root-.gitignore-অনুযায়ী scaffold-ইগনোর) + bun install + :3030 বুট (SANDBOX_PORT) — ৯-পেজ স্মোক ২০০
+- রেন্ডারিং-ম্যাপ: পোস্ট-কার্ড ×৪-আইডিওম (feed-cards/pf-post/me-rows/article-comments), কমেন্ট ×২ (server comment-item vs JS fc-item), মেসেঞ্জার (chat-bubbles + JS-বিল্ডার-ডুপ) — অসামঞ্জস্য-নথিভুক্ত
+- **tokens.css** (ক্যানোনিকাল --lf-* + লিগ্যাসি-রিম্যাপ + :root:root + html-ক্যানভাস-লক) + **shared.css** (.lf-*/.cmt-*/.lf-rxm-* + প্রিভিউ-সোয়াপ + টাইপোগ্রাফি-লক) — header.ejs ও layout.ejs উভয়-হেডে শেষ-লোড
+- **views/shared/** ৭ পার্শিয়াল: FeedPostCard/PostFooterActions/PostActionMenu/ReactorsModal/CommentItem/CommentComposer/MessengerBubble; পুরনো ৫ partials → delegate-শিম (কল-সাইট-অক্ষত)
+- **রিফ্যাক্টর:** dashboard/profile(+pin-menu, bookmark-ডেকোরেশন)/me/article-single(কমেন্ট+রিলোড-নেই-থ্রেড)/lekhok-articles(AuthorLabel+/api/like-বাদ)/messages-chat(JS-বিল্ডার→/api/messages/render + optimistic-প্রতিস্থাপন-চুক্তি)
+- **API:** /api/comments?format=html (CommentItem-সার্ভার-রেন্ডার+রিঅ্যাকশন-ডেকোর) · PUT/DELETE /api/comments/:id · /api/reactions +users[] · /api/messages/render (after_id=0-গোটচা-ফিক্সসহ)
+- **গার্ড:** scripts/guard-design-system.js + guard:design — ৪-লঙ্ঘন-ধরে ফিক্স-পরে গ্রিন (মেসেঞ্জার-JS-ডুপ/প্রোফাইল-togglePost3Dot-রেসিডিউ/header-ক্রম-false-positive)
+- **E2E (agent-browser):** ফিড-কার্ড কাউন্টার-বার ✓ ড্রয়ার↔প্রিভিউ-সোয়াপ ✓ প্যালেট love→❤️৪+লেবেল ✓ টগল-অফ ✓ এডিট(ইনলাইন+সম্পাদিত-চিপ-ফিক্স) ✓ ডিলিট(সার্ভার ৩→২+DOM) ✓ রিঅ্যাক্টরস-মডাল(ফিড+আর্টিকেল) ✓ শেয়ার-৩-ফিক্সড ✓ চ্যাট tmp→ক্যানোনিকাল(4/4 rail) ✓ ৩৯০px-০ ✓ কনসোল-০ ✓ টোকেন-কম্পিউটেড(দুই-লেআউট) ✓
+- ডেমো-ডেটা: scripts/seed-demo-feed-105.js + seed-qa-users (ismail/secret123) — এই-ক্লোনে
+- ডকস: PROJECT.md (Changelog সেশন ১০৫ + §৮ টোকেন-নোট) + PLANS.md Cross-Agent Note
+
+Stage Summary:
+- সাইটের পোস্ট/কমেন্ট/মেসেঞ্জার-মার্কআপের একমাত্র সোর্স এখন views/shared/**; নতুন রঙের একমাত্র সোর্স tokens.css — guard-design-system.js লঙ্ঘনে ফেইল করায়
+- ইউজারের ৫ নিয়ম E2E-প্রমাণিত; FB-প্যারিটি (রিঅ্যাক্টরস-মডাল, কমেন্ট ৩-ডট-এডিট/ডিলিট, কর্নার-ব্যাজ, ড্রয়ার-প্রিভিউ-সোয়াপ) নতুন-যোগ
+- পরবর্তী: qa-single-উত্তর→CommentItem, ইনবক্স-মিনি-বাবল, comment-API-র role-policy-চেক, tokens-হেক্স-স্ক্যান

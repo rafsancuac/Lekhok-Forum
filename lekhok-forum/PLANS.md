@@ -1083,3 +1083,25 @@ bash /home/z/my-project/scripts/test-lekhok.sh          # 77/77 (লোকাল
 **E2E-প্রমাণ:** curl (নোট-সেভ 303+saved=1+f-সংরক্ষণ, CSV-কলাম, নোট-ডিলিট, অডিট reply-note) + agent-browser (is-idle 21:47-UTC, is-live মক-স্ক্রিনশট, পার্সার-১০কেস, beforeprint-প্রসারণ, নোট open/edit/cancel/কাউন্টার, 390px-০, কনসোল-০) + post-rebase-ইন্টিগ্রেশন (সিরিজ-ফিল্টার+নোট-হুক+CSV+প্রিন্ট-বাটন সহ-অস্তিত্ব) ✓।
 
 **পরবর্তী-সুপারিশ:** ইনবক্সে প্রিন্ট/PDF-ভিউ → pagination-লাইভ-টেস্ট (১৬+) → প্রোফাইল-টাইমলাইন স্ক্রল-রিস্টোর → ০৩-Metered.ca-TURN (অ্যাকাউন্ট-প্রয়োজন)।
+
+## Cross-Agent Note: Session 105 — 🎨 সেন্ট্রালাইজড গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) (১৮ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** ইউজার-ডিরেক্টিভ — Home/Social-Feed/Profile/Writings/Messaging-এ একই ডিজাইন; পোস্ট/কমেন্ট/মেসেঞ্জার-মার্কআপ শুধু `views/shared/` থেকে। **এই রাউন্ডে views/shared/** নতুন ডিরেক্টরি + tokens.css/shared.css + ৪টি API + গার্ড-লিন্ট।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (সব এজেন্টের জন্য বাধ্যতামূলক):**
+- **কম্পোনেন্ট-ম্যাট্রিক্স:** `shared/post/FeedPostCard.ejs` (item+user+myBookmarkedIds+opts{profileMode,showPin,cardClass,pinnedLabel,showDrawer}) — /dashboard, /profile/[id], /me, ফিড-সমতুল্য যেকোনো ভিউতে। `shared/post/PostFooterActions.ejs` — পুরনো actions-bar-এর সুপারসেট (প্যারাম-নাম এক, শিমে delegate)। `shared/post/PostActionMenu.ejs` (+pin{enabled,pinned})। `shared/comment/CommentItem.ejs` (c+link+user+compact; recursive) — সার্ভার-রেন্ডার দরকার হলে `GET /api/comments?post_id=N&format=html` কল করুন, নিজে DOM-বানাবেন না। `shared/comment/CommentComposer.ejs`। `shared/messenger/MessengerBubble.ejs` — নতুন মেসেজও JS-বিল্ডারে নয়, `GET /api/messages/render?conv_id=&after_id=` থেকে।
+- **ডিজাইন-টোকেন:** নতুন CSS-এ রঙ লাগলে শুধু `var(--lf-*)` (tokens.css)। লিগ্যাসি --bg/--card/--text/--accent-ভ্যারগুলো রিম্যাপড — পুরনো কোডও এখন ক্যানোনিকাল মান পায়। **tokens.css head-এর সর্বশেষ** লোড হয় (header.ejs+layout.ejs উভয়ে) — কেউ লিংক-ক্রম বদলাবেন না।
+- **গার্ড:** `npm run guard:design` — ক্যানোনিকাল-মার্কআপ shared/-বাইরে (togglePost3Dot, manual share-menu, bubble-actions, cmt-*, reaction-picker, data-rx-open…) ধরলে **ফেইল**; প্রতি QA-রাউন্ডে চালান। delegate-শিম (partials/ ৫টি ফাইল) allowlistেড — ওগুলোতে মার্কআপ ফেরালেও ফেইল।
+- **নতুন API চুক্তি:** PUT/DELETE `/api/comments/:id` (মালিক/মড; delete → replies-ক্যাসকেড + likes-ক্লিনআপ + comment_count-ডিক্রেমেন্ট) · `/api/reactions/:type/:id` এখন users[]-ও দেয় (রিঅ্যাক্টরস-মডাল — ReactorsModal.ejs প্রতি-পেজ-একবার include + data-rx-open ট্রিগার)।
+- **কমেন্ট-থ্রেড রিলোড-নেই:** article-পেজেও সাবমিটের পর `.comments-list[data-post-link]` + format=html-সোয়াপ (comment-tools.js §৬.a) — নতুন থ্রেড-ভিউতেও এই প্যাটার্ন নিন।
+
+**গোটচা (নতুন/পুনঃপ্রমাণিত):**
+1. **optimistic-বাবল ↔ ক্যানোনিকাল-প্রতিস্থাপন:** সেন্ড-সাকসেসে tmp-এর আইডি-রি-অ্যাসাইন করলে poll-echo `data-id`-ডুপ ধরে appendMessage স্কিপ করে → tmp-চিরস্থায়ী হয়ে যায় (এই-রাউন্ডে ধরা বাগ)। সমাধান: `_pendingTmp105` + text/dup-sweep — messages-chat.ejs-এর প্যাটার্ন কপি করুন।
+2. **`/api/messages/render`-এ after_id=0 বৈধ** (নতুন কনভার্সেশন) — falsy-চেকে আর্লি-রিটার্ন করবেন না।
+3. **layout.ejs বনাম partials/header.ejs — দুই-হেড:** পাবলিক-পেজ (/, /articles, /gallery…) layout.ejs-এর head ব্যবহার করে, মেম্বার-পেজ header.ejs — নতুন গ্লোবাল CSS হলে **দুটোতেই** যোগ করতে হয় (guard এখন দুটোই চেক করে)।
+4. **style.css-এডিটের পর সার্ভার-রিস্টার্ট** (AV-বুট-হ্যাশ) — পুরনো-গোটচা পুনঃপ্রমাণিত; css/js-এডিটের পরেই browser-QA।
+5. seed-ডেমো-ফিড: `scripts/seed-demo-feed-105.js` — সার্ভার pkill -9-এর **পরে** চালান, তারপর বুট (SIGTERM-save clobber)।
+
+**QA-প্রমাণ:** guard গ্রিন ✓ · ফিড-ড্রয়ার/প্যালেট/ব্যাজ/এডিট/ডিলিট/মডাল/শেয়ার-৩/চ্যাট-প্রতিস্থাপন/৩৯০px-০/কনসোল-০ ✓ · টোকেন-কম্পিউটেড-ভ্যালু (দুই-লেআউটেই) ✓ — বিস্তারিত PROJECT.md Changelog সেশন ১০৫।
+
+**পরবর্তী-সুপারিশ:** ① /qa-single-এর answer-কার্ড CommentItem-এ (উত্তর-থ্রেড কমেন্ট-সমতা) ② /notifications ফুল-পেজে actor-avatar ③ ইনবক্স-প্রিভিউতে MessengerBubble-মিনি ④ role-policy স্যুটে নতুন comment-API-চেক (PUT/DELETE 403/404-পাথ) ⑤ tokens.css-হার্ডকোড-হেক্স-স্ক্যান গার্ডে যোগ।

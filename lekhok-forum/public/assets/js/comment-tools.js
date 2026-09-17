@@ -433,12 +433,18 @@
   }
 
   function refreshDrawer(drawer, postId) {
-    return fetch('/api/comments?post_id=' + postId)
+    // সেশন ১০৫: ?format=html — সার্ভারই ক্যানোনিকাল CommentItem.ejs রেন্ডার করে
+    // (single-source); html না-আসলে পুরনো JS-রেন্ডারার ফলব্যাক।
+    return fetch('/api/comments?post_id=' + postId + '&format=html')
       .then(function (r) { return r.json(); })
       .then(function (j) {
         var comments = (j && j.comments) || [];
         var total = typeof (j && j.total) === 'number' ? j.total : comments.length;
-        renderCommentList(comments, postId, drawer);
+        /* সেশন ১০৫: ?format=html — সার্ভারই ক্যানোনিকাল CommentItem.ejs রেন্ডার করে
+           (single-source); html না-আসলে adapter-রেন্ডারার ফলব্যাক। */
+        var _list105 = drawer.querySelector('.fc-list');
+        if (j && j.html && _list105) { _list105.innerHTML = j.html; }
+        else { renderCommentList(comments, postId, drawer); }
         syncPreview(drawer, comments, total);
         // কাউন্টার-আপডেট (actions-summary-র as-stat)
         var card = drawer.closest('.feed-card, article');
@@ -746,8 +752,14 @@
   }
 
   // রিপ্লাই-বাটন (ডেলিগেটেড — ফিড-ড্রয়ার + আর্টিকেল-পেজের .reply-btn-চুক্তি পৃথক)
+
+  /* ── সেশন ১০৫ (ডিজাইন-সিস্টেম): ক্যানোনিকাল CommentItem (.cmt-*)-হুক —
+     views/shared/comment/CommentItem.ejs-এর সাথে চুক্তিবদ্ধ; উপরের fc-react-*
+     ইঞ্জিন (session104/107-adapter) .comment-item/.fc-item-উভয়-মার্কআপে চলে —
+     attr-ভিন্ন বলে ডাবল-ফায়ার নেই। */
+  // রিপ্লাই-বাটন (ডেলিগেটেড — ড্রয়ার + ক্যানোনিকাল CommentItem-এর .cmt-reply-btn)
   document.addEventListener('click', function (e) {
-    var rBtn = e.target.closest('.fc-reply-btn');
+    var rBtn = e.target.closest('.fc-reply-btn, .cmt-reply-btn');
     if (!rBtn) return;
     e.preventDefault();
     var item = itemOf(rBtn);
@@ -802,13 +814,14 @@
 
         var drawer = form.closest('.fc-drawer');
         if (drawer) {
-          // ফিড-ড্রয়ার: লিস্ট-রিফ্রেশ (সার্ভার-রেন্ডার্ড bodyHtml-সহ) — রিলোড নেই
+          // ফিড-ড্রয়ার: লিস্ট-রিফ্রেশ (ক্যানোনিকাল CommentItem-HTML) — রিলোড নেই
           refreshDrawer(drawer, drawer.getAttribute('data-comments-for'));
           var slot = form.closest('.fc-reply-slot');
           if (slot) { slot.hidden = true; slot.innerHTML = ''; }
+        } else if (refreshArticleThread(form)) {
+          // আর্টিকেল-পেজ (সেশন ১০৫): রিলোড-নেই — ক্যানোনিকাল-HTML থ্রেড-সোয়াপ
         } else {
-          // আর্টিকেল-পেজ: সার্ভার-রেন্ডার্ড থ্রেড-সাঙ্কেতি রিলোড
-          // (রিপ্লাই-ফর্ম পুনঃলোডে নিজেই লুকানো থাকে)
+          // লিগ্যাসি থ্রেড-পেজ ফলব্যাক: সার্ভার-রেন্ডার্ড রিলোড
           if (window.showToast) showToast('মন্তব্য প্রকাশিত হয়েছে ✓', 'success');
           setTimeout(function () { location.reload(); }, 450);
         }
@@ -817,5 +830,200 @@
         if (send) { send.disabled = false; send.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
         if (window.showToast) showToast('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন', 'error');
       });
+  });
+
+  /* ── ৬. সেশন ১০৫: ক্যানোনিকাল CommentItem-আচরণ (রুল-২) + রিঅ্যাক্টরস-মডাল ── */
+
+  // ৬.a আর্টিকেল-থ্রেড-রিফ্রেশ (রিলোড-নেই) — .comments-list[data-post-link] থাকলে
+  function refreshArticleThread(form) {
+    var list = document.querySelector('.comments-list[data-post-link]');
+    if (!list) return false;
+    var postId = form.getAttribute('data-post-id');
+    var slot = form.closest('.fc-reply-slot');
+    fetch('/api/comments?post_id=' + postId + '&format=html')
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.html) list.innerHTML = j.html;
+        var tot = document.querySelector('.comments-total');
+        if (tot && typeof (j && j.total) === 'number') tot.textContent = bnNum(j.total);
+        if (window.showToast) showToast('মন্তব্য প্রকাশিত হয়েছে ✓', 'success');
+      })
+      .catch(function () { location.reload(); });
+    return true;
+  }
+
+  // ৬.b কমেন্ট-রিঅ্যাকশন (রুল-২②) — টেক্সট-লাইক টগল + হোভার-প্যালেট → /api/react
+  function reactComment105(cid, type) {
+    return fetch('/api/react', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_type: 'comment', target_id: Number(cid), reaction_type: type })
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || j.ok === false) { if (window.showToast) showToast('রিঅ্যাকশন সম্ভব হয়নি', 'error'); return; }
+      var meta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
+      var labels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ', angry: 'রাগ' };
+      var mine = j.mine;
+      var item = document.getElementById('fc-c' + cid);
+      if (item) {
+        var badge = item.querySelector('.cmt-badge');
+        if (badge) {
+          if ((j.total || 0) > 0) {
+            badge.hidden = false;
+            badge.innerHTML = '<span class="cmt-badge-emoji">' + (mine ? (meta[mine] || '👍') : '👍') + '</span><span class="cmt-badge-count">' + bnNum(j.total) + '</span>';
+          } else { badge.hidden = true; badge.innerHTML = ''; }
+        }
+        var lb = item.querySelector('.cmt-like');
+        if (lb) {
+          lb.classList.toggle('is-mine', !!mine);
+          lb.setAttribute('data-mine', mine || '');
+          lb.textContent = mine ? (labels[mine] || 'রিঅ্যাক্টেড') : 'লাইক';
+        }
+        item.querySelectorAll('.cmt-palette-opt').forEach(function (o) {
+          o.classList.toggle('selected', o.getAttribute('data-cmt-react') === mine);
+        });
+      }
+    }).catch(function () { if (window.showToast) showToast('নেটওয়ার্ক সমস্যা', 'error'); });
+  }
+
+  document.addEventListener('click', function (e) {
+    var likeBtn = e.target.closest('.cmt-like');
+    if (likeBtn) {
+      e.preventDefault();
+      var _cid = likeBtn.getAttribute('data-cmt-react-toggle');
+      var _mine = likeBtn.getAttribute('data-mine');
+      // টগল: mine থাকলে সেই-টাইপ-আবার-পাঠানো = API-র টগল-অফ-পাথ (session101 চুক্তি)
+      reactComment105(_cid, _mine || 'like');
+      return;
+    }
+    var opt = e.target.closest('.cmt-palette-opt');
+    if (opt) {
+      e.preventDefault();
+      reactComment105(opt.getAttribute('data-cmt-id'), opt.getAttribute('data-cmt-react'));
+    }
+  });
+
+  // ৬.c কমেন্ট ৩-ডট: সম্পাদনা (ইনলাইন-এডিটবক্স) ও মুছে ফেলা (রুল-২①)
+  document.addEventListener('click', function (e) {
+    var edBtn = e.target.closest('[data-cmt-edit]');
+    if (edBtn) {
+      e.preventDefault();
+      closeAllMenus(null);
+      var item = document.getElementById('fc-c' + edBtn.getAttribute('data-cmt-edit'));
+      var bodyEl = item && item.querySelector('.fc-body');
+      if (!bodyEl || item.querySelector('.cmt-editbox')) return;
+      var rawText = bodyEl.getAttribute('data-raw') || bodyEl.textContent.trim(); /* data-raw-প্রি-ফিল (session107-চুক্তি) */
+      var box = document.createElement('div');
+      box.className = 'cmt-editbox';
+      box.innerHTML = '<textarea maxlength="2000"></textarea>' +
+        '<span class="cmt-edit-actions"><button type="button" class="cmt-edit-save">সংরক্ষণ</button>' +
+        '<button type="button" class="cmt-edit-cancel">বাতিল</button></span>';
+      box.querySelector('textarea').value = rawText;
+      bodyEl.hidden = true;
+      bodyEl.parentNode.insertBefore(box, bodyEl.nextSibling);
+      var ta = box.querySelector('textarea');
+      ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+      box.querySelector('.cmt-edit-cancel').addEventListener('click', function () { box.remove(); bodyEl.hidden = false; });
+      box.querySelector('.cmt-edit-save').addEventListener('click', function () {
+        var val = ta.value.trim();
+        if (!val) return;
+        fetch('/api/comments/' + edBtn.getAttribute('data-cmt-edit'), {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: val })
+        }).then(function (r) { return r.json(); }).then(function (j) {
+          if (j && j.ok) {
+            bodyEl.innerHTML = j.bodyHtml;
+            var ed = item.querySelector('.fc-edited');
+            if (!ed) { ed = document.createElement('span'); ed.className = 'fc-edited'; ed.textContent = 'সম্পাদিত'; bodyEl.parentNode.appendChild(ed); }
+            box.remove(); bodyEl.hidden = false;
+            if (window.showToast) showToast('মন্তব্য সম্পাদিত ✓', 'success');
+          } else if (window.showToast) showToast('সম্পাদনা সম্ভব হয়নি', 'error');
+        }).catch(function () { if (window.showToast) showToast('নেটওয়ার্ক সমস্যা', 'error'); });
+      });
+      return;
+    }
+    var delBtn = e.target.closest('[data-cmt-delete]');
+    if (delBtn) {
+      e.preventDefault();
+      closeAllMenus(null);
+      var cidD = delBtn.getAttribute('data-cmt-delete');
+      if (!window.confirm('নিশ্চিত? এই মন্তব্যটি মুছে যাবে।')) return;
+      fetch('/api/comments/' + cidD, { method: 'DELETE' })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (j && j.ok) {
+            var it = document.getElementById('fc-c' + cidD);
+            if (it) it.remove();
+            if (window.showToast) showToast('মন্তব্য মুছে ফেলা হয়েছে', 'success');
+          } else if (window.showToast) showToast('মোছা যায়নি', 'error');
+        })
+        .catch(function () { if (window.showToast) showToast('নেটওয়ার্ক সমস্যা', 'error'); });
+    }
+  });
+
+  // ৬.d রিঅ্যাক্টরস-মডাল (রুল-১) — কাউন্টার-বারের [data-rx-open] ক্লিকে লেজি-ফেচ
+  var RX_META = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢' };
+  function renderRxList(list, users, filter) {
+    var rows = users.filter(function (u) { return filter === 'all' || u.reaction === filter; });
+    if (!rows.length) { list.innerHTML = '<div class="lf-rxm-empty">এই প্রতিক্রিয়া এখনো নেই</div>'; return; }
+    list.innerHTML = rows.map(function (u) {
+      return '<a class="lf-rxm-row" href="/profile/' + esc(u.username) + '">' +
+        '<img class="lf-rxm-av" src="' + esc(u.avatar_url) + '" alt="" onerror="this.src=\'/assets/img/avatar-placeholder.svg?v=2\'">' +
+        '<span class="lf-rxm-info"><span class="lf-rxm-name">' + esc(u.name) + '</span>' +
+        '<span class="lf-rxm-sub">@' + esc(u.username) + '</span></span>' +
+        '<span class="lf-rxm-emoji">' + (RX_META[u.reaction] || '👍') + '</span></a>';
+    }).join('');
+  }
+
+  function openReactorsModal(type, id) {
+    var modal = document.getElementById('reactorsModal');
+    if (!modal) return;
+    modal.hidden = false;
+    var list = modal.querySelector('.lf-rxm-list');
+    var tabs = modal.querySelector('.lf-rxm-tabs');
+    list.innerHTML = '<div class="lf-rxm-empty"><i class="fas fa-spinner fa-spin"></i></div>';
+    tabs.innerHTML = '';
+    fetch('/api/reactions/' + type + '/' + id)
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var users = j.users || [];
+        var counts = j.counts || {};
+        var tabsHtml = '<button type="button" class="lf-rxm-tab active" data-rx-filter="all">সব <span>' + bnNum(j.total || users.length) + '</span></button>';
+        Object.keys(counts).forEach(function (k) {
+          if (counts[k] > 0) tabsHtml += '<button type="button" class="lf-rxm-tab" data-rx-filter="' + k + '">' + (RX_META[k] || '👍') + ' <span>' + bnNum(counts[k]) + '</span></button>';
+        });
+        tabs.innerHTML = tabsHtml;
+        renderRxList(list, users, 'all');
+        tabs.onclick = function (ev) {
+          var b = ev.target.closest('.lf-rxm-tab');
+          if (!b) return;
+          tabs.querySelectorAll('.lf-rxm-tab').forEach(function (x) { x.classList.toggle('active', x === b); });
+          renderRxList(list, users, b.getAttribute('data-rx-filter'));
+        };
+      })
+      .catch(function () { list.innerHTML = '<div class="lf-rxm-empty">লোড করা যায়নি — আবার চেষ্টা করুন</div>'; });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-rxm-close]')) {
+      var m = document.getElementById('reactorsModal');
+      if (m) m.hidden = true;
+      return;
+    }
+    var t = e.target.closest('[data-rx-open]');
+    if (!t) return;
+    e.preventDefault();
+    openReactorsModal(t.getAttribute('data-rx-open'), t.getAttribute('data-rx-id'));
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var m = document.getElementById('reactorsModal');
+    if (m && !m.hidden) m.hidden = true;
+  });
+  // কাউন্টার-বার কীবোর্ড-অ্যাক্সেস (role=button span)
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var t = e.target.closest && e.target.closest('.as-rx-trigger');
+    if (!t) return;
+    e.preventDefault();
+    openReactorsModal(t.getAttribute('data-rx-open'), t.getAttribute('data-rx-id'));
   });
 })();

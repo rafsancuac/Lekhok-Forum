@@ -142,9 +142,9 @@
                 <%= mdPlain(post.excerpt || post.body || '', 120) %>
               </p>
               <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border);">
-                <a href="/profile/<%= post.author_username %>" style="display:flex; align-items:center; gap:6px; text-decoration:none; color:inherit;">
-                  <img src="<%= post.author_avatar || '/avatar/' + post.author_id %>" alt="" style="width:24px; height:24px; border-radius:50%;" loading="lazy">
-                  <span style="font-size:12px; font-weight:500;"><%= post.author_name %></span>
+                <%# সেশন ১০৫: ক্যানোনিকাল AuthorLabel — কিউরেশন-তালিকায় কলমী-নাম-প্রাধান্য %>
+                <a href="/profile/<%= post.author_username %>" style="text-decoration:none; color:inherit; min-width:0;">
+                  <%- include('./shared/user/AuthorLabel', { u: { username: post.author_username, author_name: post.author_name, avatar_url: post.author_avatar, id: post.author_id }, avatarSize: 'sm' }) %>
                 </a>
                 <div style="display:flex; gap:10px; font-size:12px; color:var(--text-muted); align-items:center;">
                   <%# সেশন ১০২: জনপ্রিয়-ফিডে স্কোর-চিপ (এক-দশমিক, বাংলা-ডিজিট) %>

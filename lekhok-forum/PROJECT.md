@@ -246,7 +246,9 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ৮. ডিজাইন সিস্টেম
 
-> **সেশন ৬৭-আপডেট (৫৮-৬৬-থিম-নোট বাতিল):** ইউজার-রিপোর্টে ডার্ক-গ্রিন পছন্দ হয়নি, সাইট আবার **আগের লাইট থিমে** (পটভূমি #f8fafc, কার্ড #fff, টেক্সট #1e293b, অ্যাকসেন্ট #059669, টপবার/ফুটার নেভি #0B1121)। নতুন কম্পোনেন্টে ডার্ক-গ্রিন লিটারেল নিষিদ্ধ; বিস্তারিত PLANS.md Cross-Agent Note Session 60।
+> **সেশন ১০৫-আপডেট (সেন্ট্রালাইজড ডিজাইন-টোকেন):** পুরো প্ল্যাটফর্মের রঙ/রেডিয়াস এখন `public/assets/css/tokens.css`-এর ক্যানোনিকাল `--lf-*` টোকেনে **লকড** — brand #006A4E · social-blue #1877F2 · canvas #F0F2F5 · surface #FFFFFF · border #E4E6EB · text #050505/#65676B · radius card 16px/bubble 18px/chip 9999px। নতুন CSS-এ হার্ডকোড-হেক্স নিষিদ্ধ — শুধু `var(--lf-*)`। লিগ্যাসি ভেরিয়েবল (--bg/--card/--text/--accent…) টোকেনে রিম্যাপড; tokens.css **head-এর সর্বশেষ** লোড হয় (header.ejs + layout.ejs — guard যাচাই করে)। পোস্ট/কমেন্ট/মেসেঞ্জার-মার্কআপ শুধু `views/shared/` থেকে — লঙ্ঘনে `npm run guard:design` ফেইল। বিস্তারিত: PLANS.md Cross-Agent Note Session 105।
+
+> **সেশন ৬৭-আপডেট (৫৮-৬৬-থিম-নোট বাতিল):** ইউজার-রিপোর্টে ডার্ক-গ্রিন পছন্দ হয়নি, সাইট আবার **আগের লাইট থিমে** (পটভূমি #f8fafc, কার্ড #fff, টেক্সট #1e293b, অ্যাকসেন্ট #059669, টপবার/ফুটার নেভি #0B1121)। নতুন কম্পোনেন্টে ডার্ক-গ্রিন লিটারেল নিষিদ্ধ; বিস্তারিত PLANS.md Cross-Agent Note Session 60। *(সেশন ১০৫-নোট: থিম-মানগুলো এখন tokens.css-রিম্যাপে ক্যানোনিকাল — উপরের নতুন-নোট দেখুন।)*
 
 ### কঠোর দুই-ফন্ট নিয়ম (`public/assets/css/fonts.css`) — সেশন ১৪ থেকে কার্যকর
 **সাইট-ওয়াইড শুধু দুটি ফন্ট, কঠোরভাবে অনুসরণীয়:**
@@ -354,6 +356,27 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 **যাচাই:** ইউনিট **১৭/১৭** (ওয়েট/অ্যাফিনিটি-বোনাস/ব্যাজ-প্রাধান্য/decay/ইউনিয়ন-সূত্র-রেপ্লিকা) ✓ **A/B-রিগ্রেশন-প্রমাণ**: একই-স্টেটে বেসলাইন vs ইউনিয়ন — role-policy **৭০/২৯ অভিন্ন** (স্টেটফুল-বেসলাইন-ফেইল-সেট ডকুমেন্টেড) ✓ E2E: লগড-ইনে "অনুসৃত লেখক"×3-চিপ + ফলোয়ে-লেখকের পোস্ট র‍্যাংক-লিফট ✓ অফসেট-স্লাইস কন্টিগুয়াস (cur[10]=more[0]) ✓ গেস্ট-নিরপেক্ষ ✓ অ্যালায়াস ✓ recent-মোড শূন্য-রিগ্রেশন ✓ 390px-০ ✓ কনসোল-০ ✓ VLM-ডিজাইন-রিভিউ ("professional, high-fidelity") ✓। QA-ডেটা: testmsg1→testmsg2 ফলো-রো (অ্যাফিনিটি-ডেমোর জন্য)।
 (১৮ সেপ্টেম্বর ২০২৬) — রিসোর্স-মাল্টিমিডিয়া-আপলোড + ক্লিকেবল /resources + পত্রিকার-ইমেইল ডিরেক্টরি পূর্ণ-রিডিজাইন (ইউজার-রিকোয়েস্ট দুটি)
+
+### সেশন ১০৫ (১৮ সেপ্টেম্বর ২০২৬) — 🎨 সেন্ট্রালাইজড গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) + রিঅ্যাক্টরস-মডাল + কমেন্ট-এডিট/ডিলিট + মেসেঞ্জার single-source
+
+**স্কোপ:** ইউজারের ডিজাইন-সিস্টেম-ডিরেক্টিভ — পুরো প্ল্যাটফর্মে (Home, Social Feed, Profile, Writings, Messaging) একই ডিজাইন/আচরণ; পোস্ট/কমেন্ট/মেসেঞ্জার-মার্কআপ শুধুই `views/shared/` থেকে; ৫টি অপরিবর্তনীয় নিয়ম + মাল্টি-এজেন্ট গার্ড-লিন্ট।
+
+**① ডিজাইন-টোকেন (`public/assets/css/tokens.css` — নতুন):**
+- ক্যানোনিকাল `--lf-*` টোকেন: brand (#006A4E সবুজ), social (#1877F2 ব্লু), ui (#F0F2F5 canvas/#FFFFFF surface/#E4E6EB border), text (#050505/#65676B/#8A8D91), reaction (#1877F2/#FA3E3E/#F7B125/#E9710F), radius (card 16px/bubble 18px/chip 9999px)।
+- **লিগ্যাসি-রিম্যাপ:** `--bg/--card/--border/--text/--text-muted/--accent*/--brand*/--radius-lg/--radius-pill` → ক্যানোনিকাল টোকেনে — style.css/auth.css না-ছুঁয়েই সাইট-ব্যাপী কনফর্ম; `:root:root` ডাবল-স্পেসিফিসিটি + **head-শেষ-লোড** (header.ejs + layout.ejs উভয়ে — guard-যাচাইকৃত ক্রম) + `html{background:var(--lf-ui-canvas)}` ক্যানভাস-লক।
+- **shared.css (নতুন):** AuthorLabel (.lf-author-*), কমেন্ট-হোভার ৩-ডট/প্যালেট/কর্নার-ব্যাজ (.cmt-*), রিঅ্যাক্টরস-মডাল (.lf-rxm-*), প্রিভিউ-সোয়াপ (`.fc-open .fc-preview{display:none}`), রুল-৫ টাইপোগ্রাফি-লক।
+
+**② ক্যানোনিকাল কম্পোনেন্ট-ম্যাট্রিক্স (`views/shared/` — নতুন):** `post/FeedPostCard.ejs` (সার্বজনীন পোস্ট-কার্ড: AuthorLabel+PostActionMenu+PostFooterActions+১-প্রিভিউ+ড্রয়ার; repost/profileMode/pin ভ্যারিয়েন্ট) · `post/PostFooterActions.ejs` (কাউন্টার-বার বামে ফেসপাইল+ইমোজি+মোট → **রিঅ্যাক্টরস-মডাল**, ডানে N💬N↪N👁; ৩-ফিক্সড শেয়ার-মেনু: টাইমলাইনে/মেসেজে/লিংক-কপি; hold+slide লাইক+সেভ) · `post/PostActionMenu.ejs` (+pin আইটেম) · `post/ReactorsModal.ejs` (প্রতি-পেজ-একবার) · `comment/CommentItem.ejs` (হোভার ৩-ডট=এডিট/ডিলিট-নিজের/রিপোর্ট-অন্যের; লাইক-হোভারে ৬-ইমোজি প্যালেট; বাবল-কোণায় গোল কাউন্ট-ব্যাজ; recursive replies) · `comment/CommentComposer.ejs` · `messenger/MessengerBubble.ejs` (৩-অনুভূমিক-আইকন রেল, ✕-শূন্য, ⋮-তে আনসেন্ড)। **পুরনো partials → delegate-শিম** (actions-bar/post-menu/comment-composer/feed-cards/chat-bubbles — সব পুরনো কল-সাইট অক্ষত)।
+
+**③ পেজ-রিফ্যাক্টর:** dashboard (শিম→FeedPostCard) · **profile** (pf-post ম্যানুয়াল-কার্ড+togglePost3Dot বাদ → FeedPostCard+pin; bookmark-ডেকোরেশন রুটে) · **me** (লেখা-ট্যাব → FeedPostCard) · **article-single** (ইনলাইন-কমেন্ট-মার্কআপ বাদ → CommentItem+CommentComposer; সাবমিটে রিলোড-নেই থ্রেড-রিফ্রেশ) · **lekhok-articles** (কিউরেশন-তালিকায় AuthorLabel; লিগ্যাসি /api/like like-btn → PostFooterActions) · **messages-chat** (JS-বাবল-বিল্ডার বাদ → `/api/messages/render` ক্যানোনিকাল-HTML; optimistic tmp → প্রতিস্থাপন-চুক্তি)।
+
+**④ নতুন/বর্ধিত API:** `GET /api/comments?format=html` (CommentItem.ejs সার্ভার-রেন্ডার + রিঅ্যাকশন/canEdit ডেকোরেশন) · `PUT/DELETE /api/comments/:id` (মালিক/মড; replies-ক্যাসকেড + comment_count-ক্যালিব্রেশন + edited_at) · `GET /api/reactions/:type/:id` +users[] (মডালের ডেটা) · `GET /api/messages/render` (MessengerBubble single-source; after_id=0 বৈধ)।
+
+**⑤ গার্ড-লিন্ট (`scripts/guard-design-system.js` + `npm run guard:design`):** ক্যানোনিকাল-মার্কআপ shared/-বহির্ভূত হলে ফেইল · togglePost3Dot/post-3dot/onclick-sharePost যেকোনো ভিউতে ফেইল · শিমে আসল-মার্কআপ ফিরলে ফেইল · header.ejs+layout.ejs CSS-ক্রম যাচাই — **গ্রিন ✓**।
+
+**যাচাই (agent-browser E2E):** ফিড-কার্ডে কাউন্টার-বার (👍❤️+মোট | ২💬) ✓ ড্রয়ার-খোলা→প্রিভিউ-গায়েব→ক্যানোনিকাল-থ্রেড ✓ প্যালেটে love→ব্যাজ ❤️৪+লেবেল-সিঙ্ক ✓ টগল-অফ→👍৩ ✓ ৩-ডট এডিট (ইনলাইন-এডিটবক্স+সম্পাদিত-চিপ) ✓ ডিলিট (confirm→সার্ভার ৩→২, DOM-সিঙ্ক, রিলোড-শূন্য) ✓ রিঅ্যাক্টরস-মডাল (সব ৮ + ৫-ইমোজি-ট্যাব + কলমী-নাম-রো) — ফিড ও আর্টিকেল উভয়ে ✓ শেয়ার-মেনু = ঠিক ৩-অ্যাকশন ✓ চ্যাট: সেন্ড→optimistic→ক্যানোনিকাল-প্রতিস্থাপন (rail 4/4, tmp 0) ✓ ৩৯০px-ওভারফ্লো-০ (dashboard+article) ✓ কনসোল-০ ✓ টোকেন-প্রমাণ: html-bg #F0F2F5, card-border #E4E6EB, author #050505 (সদস্য+পাবলিক উভয়-লেআউটে) ✓। ডেমো-সিড: scripts/seed-demo-feed-105.js (pkill -9-পরে চালাতে হয়)।
+
+### সেশন ১০১ (১৮ সেপ্টেম্বর ২০২৬) — রিসোর্স-মাল্টিমিডিয়া-আপলোড + ক্লিকেবল /resources + পত্রিকার-ইমেইল ডিরেক্টরি পূর্ণ-রিডিজাইন (ইউজার-রিকোয়েস্ট দুটি)
 
 **স্কোপ:** ইউজারের আপলোড-ফাইলের ২ রিকোয়েস্ট — ① রিসোর্স-কার্ড ক্লিকেবল + অ্যাডমিন/মডারেটর অডিও/ভিডিও/পিডিএফ/ছবি-আপলোড-অপশন ② /resources/emails প্রফেশনাল-ডিরেক্টরি। সাথে রোডম্যাপ-০৭/০৮-এর সমান্তরাল-ইমপ্লিমেন্টেশন session100-এর পূর্ণাঙ্গ ভার্সনে স্বেচ্ছা-প্রত্যাহার (ডুপ্লিকেশন-শূন্য)।
 

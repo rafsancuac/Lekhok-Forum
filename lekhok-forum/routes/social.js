@@ -1373,6 +1373,16 @@ router.get('/profile/:username', async (req, res) => {
   if (pinnedPost) pinnedPost.reactorFaces = facesByPost89[pinnedPost.id] || [];
   articles.forEach(p => { p.reactorFaces = facesByPost89[p.id] || []; });
 
+  // (সেশন ১০৫) ভিউয়ারের বুকমার্ক-স্টেট — ক্যানোনিকাল PostFooterActions-এর
+  // 'সেভ' বাটনে সঠিক প্রাথমিক-অবস্থা (ফিড-কার্ড-চুক্তি: myBookmarkedIds)
+  let myBookmarkedIds105 = [];
+  if (myId && feedIds87.length) {
+    try {
+      (await db.prepare(`SELECT post_id FROM bookmarks WHERE user_id = ? AND post_id IN (${feedIds87.map(() => '?').join(',')})`).all(myId, ...feedIds87))
+        .forEach(r => { myBookmarkedIds105.push(r.post_id); });
+    } catch (_) {}
+  }
+
   res.render('user/profile', {
     profile,
     author: profile,
@@ -1386,6 +1396,8 @@ router.get('/profile/:username', async (req, res) => {
     REACTION_META,
     // সেশন ৮৩: ফেসবুক-প্যারিটি এক্সট্রা
     pinnedPost, photos, mutuals, isOnline, lastSeenBn,
+    // সেশন ১০৫: ক্যানোনিকাল FeedPostCard-এর সেভ-স্টেট
+    myBookmarkedIds: myBookmarkedIds105,
     totalPosts, totalLikes, isVerified, roleBadge,
     joinedBn: bnDate83(profile.created_at),
     bn: bn83, bnRelTime: bnRelTime83,
@@ -1607,7 +1619,80 @@ router.get('/api/comments', async (req, res) => {
       else tops.push(item);
     }
     const total = rows.length;
-    res.json({ ok: true, comments: tops, total });
+
+    // ── সেশন ১০৫: কমেন্ট-রিঅ্যাকশন-ডেকোরেশন + canEdit/canDelete + HTML-রেন্ডার
+    // (single-source: views/shared/comment/CommentItem.ejs — ?format=html দিলে
+    //  সার্ভারই পার্শিয়াল রেন্ডার করে; ক্লায়েন্ট আর DOM-বানায় না)
+    const myId105 = req.session.user ? req.session.user.id : null;
+    const _me105 = req.session.user || null;
+    const _rx105 = new Map();
+    await Promise.all(rows.map(r => getReactionSummary('comment_id', r.id, myId105).then(x => _rx105.set(r.id, x))));
+    const _isMod105 = !!(_me105 && /moderator|admin/.test(String(_me105.role || '')));
+    function dec105(item) {
+      item.reaction = _rx105.get(item.id) || { counts: {}, mine: null, total: 0 };
+      item.canEdit = !!(_me105 && (item.author_id === _me105.id || _isMod105));
+      item.canDelete = item.canEdit;
+      (item.replies || []).forEach(dec105);
+    }
+    tops.forEach(dec105);
+
+    let html105 = null;
+    if (String(req.query.format || '') === 'html') {
+      try {
+        const _post105 = await db.prepare('SELECT type FROM posts WHERE id = ?').get(postId);
+        const _link105 = (_post105 && _post105.type === 'question') ? '/qa/' + postId : '/articles/' + postId;
+        const rendered = await Promise.all(tops.map(c => new Promise((res2, rej2) => {
+          req.app.render('shared/comment/CommentItem', { c: c, link: _link105, user: _me105, compact: false }, (e, h) => e ? rej2(e) : res2(h));
+        })));
+        html105 = rendered.join('');
+      } catch (e) { html105 = null; }
+    }
+
+    res.json({ ok: true, comments: tops, total, html: html105 });
+  } catch (e) {
+    res.status(500).json({ error: 'server' });
+  }
+});
+
+// ── সেশন ১০৫: কমেন্ট সম্পাদনা (রুল-২① — নিজের কমেন্টের হোভার ৩-ডট থেকে) ────
+// PUT /api/comments/:id — মালিক (বা মড) বডি-এডিট; markdown-lite পুনঃরেন্ডার।
+router.put('/api/comments/:id', ensureLoggedIn, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'bad_id' });
+  const body = String((req.body && req.body.body) || '').trim();
+  if (!body) return res.status(400).json({ error: 'empty' });
+  if (body.length > 2000) return res.status(400).json({ error: 'too_long' });
+  try {
+    const c = await db.prepare('SELECT id, author_id, post_id FROM comments WHERE id = ?').get(id);
+    if (!c) return res.status(404).json({ error: 'not_found' });
+    const isMod = /moderator|admin/.test(String(req.session.user.role || ''));
+    if (c.author_id !== req.session.user.id && !isMod) return res.status(403).json({ error: 'forbidden' });
+    try { await db.exec("ALTER TABLE comments ADD COLUMN edited_at TEXT"); } catch (_) {}
+    await db.prepare('UPDATE comments SET body = ?, edited_at = CURRENT_TIMESTAMP WHERE id = ?').run(body, id);
+    const { renderComment: rc105 } = require('../helpers/markdown-lite');
+    res.json({ ok: true, bodyHtml: rc105(body), edited: true });
+  } catch (e) {
+    res.status(500).json({ error: 'server' });
+  }
+});
+
+// ── সেশন ১০৫: কমেন্ট মুছে ফেলা (রুল-২①) — মালিক/মড; রিপ্লাই-পুতুল-ডিলিট +
+// comment_count-ক্যালিব্রেশন + likes-ক্লিনআপ।
+router.delete('/api/comments/:id', ensureLoggedIn, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'bad_id' });
+  try {
+    const c = await db.prepare('SELECT id, author_id, post_id FROM comments WHERE id = ?').get(id);
+    if (!c) return res.status(404).json({ error: 'not_found' });
+    const isMod = /moderator|admin/.test(String(req.session.user.role || ''));
+    if (c.author_id !== req.session.user.id && !isMod) return res.status(403).json({ error: 'forbidden' });
+    const kids = (await db.prepare('SELECT id FROM comments WHERE parent_id = ?').all(id)).map(k => k.id);
+    const del = [id].concat(kids);
+    const ph = del.map(() => '?').join(',');
+    await db.prepare(`DELETE FROM likes WHERE comment_id IN (${ph})`).run(...del);
+    await db.prepare(`DELETE FROM comments WHERE id IN (${ph})`).run(...del);
+    await db.prepare(`UPDATE posts SET comment_count = MAX(0, comment_count - ${del.length}) WHERE id = ?`).run(c.post_id);
+    res.json({ ok: true, removed: del.length });
   } catch (e) {
     res.status(500).json({ error: 'server' });
   }
@@ -2483,7 +2568,23 @@ router.get('/api/reactions/:type/:id', async (req, res) => {
   const counts = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
   rows.forEach(r => { counts[r.reaction_type || 'like'] = (counts[r.reaction_type || 'like'] || 0) + 1; });
   const mine = req.session.user ? (rows.find(r => r.user_id === req.session.user.id) || null) : null;
-  res.json({ counts, total: rows.length, mine: mine ? (mine.reaction_type || 'like') : null });
+  // ── সেশন ১০৫: রিঅ্যাক্টরস-মডাল (ReactorsModal.ejs) — কারা কী দিয়েছেন তালিকা
+  // (কলমী-নাম-প্রাধান্য; ১০০-সীমা; নতুন-আগে) — কাউন্টার-বারের data-rx-open ক্লিকে লেজি-ফেচ।
+  let users105 = [];
+  try {
+    users105 = (await db.prepare(`
+      SELECT u.id, u.username, u.full_name, u.pen_name, u.avatar_url, l.reaction_type
+      FROM likes l JOIN users u ON u.id = l.user_id
+      WHERE l.${col} = ?
+      ORDER BY l.created_at DESC, l.id DESC LIMIT 100
+    `).all(id)).map(r => ({
+      id: r.id, username: r.username,
+      name: r.pen_name || r.full_name || 'সদস্য',
+      avatar_url: r.avatar_url || ('/avatar/' + r.id),
+      reaction: r.reaction_type || 'like'
+    }));
+  } catch (_) {}
+  res.json({ counts, total: rows.length, mine: mine ? (mine.reaction_type || 'like') : null, users: users105 });
 });
 
 // ── সেশন ১০৫: রিঅ্যাক্টরস-লিস্ট — FB-স্টাইল "কে কোন রিঅ্যাক্ট দিয়েছে" মডালের জন্য ──

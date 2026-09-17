@@ -33,19 +33,14 @@
               </div>
               <a href="/articles/<%= post.id %>" class="post-title"><%= post.title %></a>
               <p class="post-excerpt"><%= mdPlain(post.excerpt || post.body || '', 200) %></p>
+              <%# সেশন ১০৫: ক্যানোনিকাল AuthorLabel — কিউরেশন-তালিকায়ও কলমী-নাম-প্রাধান্য %>
               <div class="post-author-row">
-                <img loading="lazy" decoding="async" src="<%= post.avatar_url || '/avatar/' + post.author_id %>" class="post-author-avatar">
-                <span class="post-author-name"><%= post.author_name %></span>
+                <%- include('../shared/user/AuthorLabel', { u: post, showAvatar: true, avatarSize: 'sm' }) %>
               </div>
+              <%# সেশন ১০৫: ক্যানোনিকাল PostFooterActions — ম্যানুয়াল like-btn/bookmark-btn
+                  (লিগ্যাসি /api/like) প্রতিস্থাপিত; সব পেজে এখন একই রিঅ্যাকশন-ইঞ্জিন %>
               <div class="post-actions">
-                <button class="action-btn like-btn" data-id="<%= post.id %>" data-type="post">
-                  <i class="far fa-heart"></i> <%= post.like_count || 0 %>
-                </button>
-                <span><i class="far fa-comment"></i> <%= post.comment_count || 0 %></span>
-                <span><i class="far fa-eye"></i> <%= post.view_count || 0 %></span>
-                <button class="action-btn bookmark-btn" data-id="<%= post.id %>">
-                  <i class="far fa-bookmark"></i>
-                </button>
+                <%- include('../shared/post/PostFooterActions', { targetId: post.id, targetType: 'post', counts: { like: post.like_count || 0 }, mine: '', link: '/articles/' + post.id, commentCount: post.comment_count || 0, shareCount: 0, viewCount: post.view_count || 0, showShare: false }) %>
               </div>
             </div>
           </div>
@@ -54,24 +49,7 @@
     </div>
   </div>
 
-  <script>
-    document.querySelectorAll('.like-btn').forEach(btn => {
-      btn.addEventListener('click', async function() {
-        const id = this.dataset.id;
-        const res = await fetch('/api/like', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, type: 'post' }) });
-        const data = await res.json();
-        this.innerHTML = '<i class="fas fa-heart" style="color:#e74c3c"></i> ' + data.count;
-      });
-    });
-    document.querySelectorAll('.bookmark-btn').forEach(btn => {
-      btn.addEventListener('click', async function() {
-        const id = this.dataset.id;
-        const res = await fetch('/api/bookmark', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ post_id: id }) });
-        const data = await res.json();
-        this.querySelector('i').className = data.saved ? 'fas fa-bookmark' : 'far fa-bookmark';
-      });
-    });
-  </script>
+  <%# সেশন ১০৫: লিগ্যাসি like/bookmark-স্ক্রিপ্ট অপসারিত — main.js রিঅ্যাকশন/সেভ-ইঞ্জিনই একমাত্র %>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>

@@ -781,3 +781,24 @@ Stage Summary:
 - ফিড এখন ধনী: পড়ার-সময়-চিপ + লোডিং-শিমার + ড্যাশবোর্ডে ব্যক্তিগত-স্ট্যাট-শর্টকাট (৪৮৬৮b07→rebase→0442f44 + f736fc1)
 - 🚨 প্যারালাল-এজেন্ট-শিক্ষা: (ক) EOF-ব্লক append করলে আগের-ব্লকের ক্লোজিং-ব্রেস নষ্ট হতে পারে — মার্জ-পরে comment-stripped brace-depth-চেক বাধ্যতামূলক (খ) সেশন-লেবেল-রেস আবার (১১০×২) — টাইমস্ট্যাম্প-স্টাইল-আইডি প্রয়োজনীয় (গ) CSS-এডিট-পরে সার্ভার-রিস্টার্ট + স্টেল-প্রসেস-সন্দেহে রুট-কজ-বিচারের-আগে রিস্টার্ট
 - পরবর্তী: /article-single-এও rt-chip + পড়া-অগ্রগতি-বার, msx-উইজেটে drafts-চিপ, ws91-পুরনো-SVG-রুল-পরিষ্কার
+
+Task ID: session-105
+Agent: Z.ai (Design-System Agent — sandbox web-68dcf7c4, channel zai-web)
+Task: Lekhok-Forum — সেন্ট্রালাইজড গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) প্রতিষ্ঠা: ডিজাইন-টোকেন + ক্যানোনিকাল কম্পোনেন্ট-ম্যাট্রিক্স + ৫ অপরিবর্তনীয় নিয়ম + মাল্টি-এজেন্ট গার্ড-লিন্ট + E2E QA + ক্রন-হ্যান্ডওভার
+
+Work Log:
+- **অবস্থা-যাচাই:** GitHub (ghp_…KSHO) থেকে fresh clone @ 1704998 (session-104-docs) → sandbox-রুটে রিপো-ইনস্টল (Next.js-scaffold root-.gitignore-ইগনোরড, আগের এজেন্ট-কনভেনশন অনুযায়ী) → bun install → Express :3030 বুট (SANDBOX_PORT=3030, gateway XTransformPort-প্রিভিউ) — স্মোক ২০০
+- **ম্যাপিং:** পোস্ট-কার্ড ৪-আইডিওম, কমেন্ট ২-রেন্ডারার, মেসেঞ্জার JS-ডুপ — অসামঞ্জস্য-তালিকা → ক্যানোনিকালাইজেশন-প্ল্যান
+- **Design Tokens:** lekhok-forum/public/assets/css/tokens.css (ইউজারের tailwind-config-স্পেকের CSS-ভেরিয়েবল-অ্যাডাপ্টেশন: brand #006A4E, social #1877F2, ui #F0F2F5/#FFFFFF/#E4E6EB, text #050505/#65676B, reaction ×৪, radius 16/18/9999) + লিগ্যাসি-ভেরিয়েবল-রিম্যাপ (style.css/auth.css অক্ষত) + :root:root + head-শেষ-লোড (header.ejs + layout.ejs দুই-হেডেই) + html-ক্যানভাস-লক
+- **Shared কম্পোনেন্ট:** lekhok-forum/views/shared/{post,comment,user,messenger}/ — FeedPostCard, PostFooterActions (৩-ফিক্সড শেয়ার + রিঅ্যাক্টরস-মডাল-ট্রিগার), PostActionMenu, ReactorsModal, CommentItem (হোভার ৩-ডট/৬-ইমোজি প্যালেট/কর্নার-ব্যাজ), CommentComposer, MessengerBubble; পুরনো partials → delegate-শিম
+- **রিফ্যাক্টর:** /dashboard, /profile/[id] (pin-মেনু + bookmark-ডেকোরেশন), /me, /articles/[id] (রিলোড-নেই থ্রেড), /articles তালিকা (AuthorLabel + লিগ্যাসি-/api/like-বাদ), /messages/[username] (JS-বাবল-বিল্ডার → /api/messages/render)
+- **API:** /api/comments?format=html · PUT/DELETE /api/comments/:id · /api/reactions/:type/:id +users · /api/messages/render
+- **গার্ড:** lekhok-forum/scripts/guard-design-system.js + npm run guard:design — shared/-বহির্ভূত ক্যানোনিকাল-মার্কআপ/লিগ্যাসি-ইঞ্জিন/শিম-দূষণ/CSS-ক্রম-লঙ্ঘনে ফেইল
+- **E2E (agent-browser):** ফিড-কার্ড কাউন্টার-বার ✓ ড্রয়ার-প্রিভিউ-সোয়াপ ✓ প্যালেট-রিঅ্যাক্ট (❤️৪) ✓ টগল-অফ ✓ কমেন্ট-এডিট/ডিলিট (সার্ভার-প্রমাণসহ) ✓ রিঅ্যাক্টরস-মডাল ✓ শেয়ার-মেনু = ৩-অ্যাকশন ✓ চ্যাট optimistic→ক্যানোনিকাল-প্রতিস্থাপন ✓ ৩৯০px-ওভারফ্লো-০ ✓ কনসোল-০ ✓
+- ডকস: PROJECT.md Changelog সেশন ১০৫ + §৮-টোকেন-নোট; PLANS.md Cross-Agent Note; lekhok-forum/worklog.md সেশন-১০৫
+- **ক্রন:** webDevReview ১৫-মিনিট টাস্ক সেট (এই-সেশনে)
+
+Stage Summary:
+- প্ল্যাটফর্মের পোস্ট/কমেন্ট/মেসেঞ্জার-মার্কআপ ও রঙ — এক-সোর্স-লকড; এক-প্রান্তের আপডেট এখন সর্বত্র সমানভাবে প্রতিফলিত (ইউজারের মূল-লক্ষ্য)
+- পরবর্তী-এজেন্টের প্রথম-কাজ: `git fetch` → lekhok-forum/PLANS.md-এর Cross-Agent Note Session 105 পড়ুন → `npm run guard:design` গ্রিন-রাখুন
+- রিস্ক/অবশিষ্ট: qa-single-উত্তর এখনো নিজস্ব-আইডিওম; role-policy-স্যুটে নতুন comment-API-চেক যোগ হয়নি; লাইভ-Turso-ডিপ্লয়ে seed-স্ক্রিপ্ট প্রযোজ্য নয় (ডেমো-ডেটা sandbox-ক্লোন-লোকাল)

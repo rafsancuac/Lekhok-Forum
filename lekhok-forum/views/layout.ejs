@@ -95,6 +95,10 @@
   <% if (currentPath === '/gallery') { %>
   <link rel="stylesheet" href="/assets/css/gallery.css?v=<%= AV %>" />
   <% } %>
+  <%# ── সেশন ১০৫: গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) — পাবলিক-লেআউট টুইন।
+      tokens.css সর্বশেষ লোড (ক্যাসকেদ-গ্যারান্টি); ক্রম বদলানো নিষিদ্ধ (guard)। %>
+  <link rel="stylesheet" href="/assets/css/shared.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
   <%# সেশন ৯০ (রোডম্যাপ-আইটেম ২০): PWA সার্ভিস-ওয়ার্কার — অফলাইন-শেল রেজিস্ট্রেশন।
       স্যান্ডবক্স-গেটওয়ে-সচেতন: পেজ-URL-এ XTransformPort থাকলে sw.js-ও সেই-কুয়েরি নিয়ে
       রেজিস্টার হয় যাতে গেটওয়ে সঠিক-পোর্টে ফরওয়ার্ড করে। ব্যর্থতা নীরব (SW-নন-সাপোর্ট/iframe)। %>

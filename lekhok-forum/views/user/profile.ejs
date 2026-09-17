@@ -270,39 +270,9 @@
 
         <%# ═══ ট্যাব: পোস্টসমূহ (পিনড + ফিল্টার-পিল + FB-ফিড) ═══ %>
         <section class="tab-content active" id="tab-posts" role="tabpanel">
-          <%# পিনড-পোস্ট — টাইমলাইনের শীর্ষে %>
+          <%# পিনড-পোস্ট — টাইমলাইনের শীর্ষে — সেশন ১০৫: ক্যানোনিকাল FeedPostCard %>
           <% if (pinnedPost) { %>
-            <article class="pf-post pinned" data-post="<%= pinnedPost.id %>">
-              <div class="pf-pinned-label"><i class="fas fa-thumbtack"></i> পিন করা লেখা</div>
-              <header class="pf-post-head">
-                <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="" class="pf-post-avatar">
-                <div class="pf-post-id">
-                  <a href="/articles/<%= pinnedPost.id %>" class="pf-post-author"><%= profile.full_name %></a>
-                  <span class="pf-post-time"><%= bnRelTime(pinnedPost.published_at) %> • <i class="fas fa-globe-americas" title="পাবলিক"></i></span>
-                </div>
-                <% if (isOwner) { %>
-                  <div class="post-3dot-wrap">
-                    <button class="post-3dot-btn" onclick="togglePost3Dot(event, <%= pinnedPost.id %>)" title="আরও"><i class="fas fa-ellipsis-h"></i></button>
-                    <div class="post-3dot-menu" id="post3dot-<%= pinnedPost.id %>">
-                      <button type="button" class="pf-pin-toggle" data-post="<%= pinnedPost.id %>" data-pinned="1"><i class="fas fa-thumbtack"></i> পিন সরান</button>
-                      <a href="/articles/<%= pinnedPost.id %>/edit"><i class="fas fa-pen"></i> সম্পাদনা</a>
-                      <a href="/articles/<%= pinnedPost.id %>"><i class="fas fa-eye"></i> দেখুন</a>
-                      <a href="#" onclick="sharePost(<%= pinnedPost.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
-                      <form method="POST" action="/articles/<%= pinnedPost.id %>/delete" style="margin:0">
-                        <button type="submit" class="post-delete-btn"><i class="fas fa-trash"></i> মুছুন</button>
-                      </form>
-                    </div>
-                  </div>
-                <% } %>
-              </header>
-              <h3 class="pf-post-title"><a href="/articles/<%= pinnedPost.id %>"><%= pinnedPost.title %></a></h3>
-              <% if (pinnedPost.excerpt || pinnedPost.body) { %><p class="pf-post-excerpt"><%= mdPlain(pinnedPost.excerpt || pinnedPost.body || '', 180) %></p><% } %>
-              <% if (pinnedPost.cover_image) { %><a href="/articles/<%= pinnedPost.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= pinnedPost.cover_image %>" alt="<%= pinnedPost.title %>" class="pf-post-cover"></a><% } %>
-              <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
-              <div class="pf-actions-host">
-                <%- include('../partials/actions-bar', { targetId: pinnedPost.id, targetType: 'post', counts: pinnedPost.reactCounts, mine: pinnedPost.myReaction, link: '/articles/' + pinnedPost.id, showBookmark: false, showShare: true, commentCount: bn(pinnedPost.comment_count || 0), shareCount: pinnedPost.share_count || 0, viewCount: bn(pinnedPost.view_count || 0), reactorFaces: pinnedPost.reactorFaces || [] }) %>
-              </div>
-            </article>
+            <%- include('../shared/post/FeedPostCard', { item: pinnedPost, user: user, myBookmarkedIds: (typeof myBookmarkedIds !== 'undefined' ? myBookmarkedIds : []), opts: { profileMode: true, showPin: isOwner, cardClass: 'pf-post pinned', pinnedLabel: 'পিন করা লেখা' } }) %>
           <% } %>
 
           <%# ফিল্টার-পিল: লেখা/প্রশ্ন/মন্তব্য/প্রতিক্রিয়া (ট্যাব-প্যানেল সুইচ) + সব-লেখা লিংক %>
@@ -323,36 +293,8 @@
           <% } else { %>
             <div class="pf-feed">
               <% posts.forEach(post => { %>
-                <article class="pf-post" data-post="<%= post.id %>">
-                  <header class="pf-post-head">
-                    <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="" class="pf-post-avatar">
-                    <div class="pf-post-id">
-                      <a href="/articles/<%= post.id %>" class="pf-post-author"><%= profile.full_name %></a>
-                      <span class="pf-post-time"><%= bnRelTime(post.published_at) %> • <i class="fas fa-globe-americas" title="পাবলিক"></i></span>
-                    </div>
-                    <% if (isOwner) { %>
-                      <div class="post-3dot-wrap">
-                        <button class="post-3dot-btn" onclick="togglePost3Dot(event, <%= post.id %>)" title="আরও"><i class="fas fa-ellipsis-h"></i></button>
-                        <div class="post-3dot-menu" id="post3dot-<%= post.id %>">
-                          <button type="button" class="pf-pin-toggle" data-post="<%= post.id %>" data-pinned="<%= post.is_pinned ? 1 : 0 %>"><i class="fas fa-thumbtack"></i> <%= post.is_pinned ? 'পিন সরান' : 'পিন করুন' %></button>
-                          <a href="/articles/<%= post.id %>/edit"><i class="fas fa-pen"></i> সম্পাদনা</a>
-                          <a href="/articles/<%= post.id %>"><i class="fas fa-eye"></i> দেখুন</a>
-                          <a href="#" onclick="sharePost(<%= post.id %>);return false"><i class="fas fa-share"></i> শেয়ার</a>
-                          <form method="POST" action="/articles/<%= post.id %>/delete" style="margin:0">
-                            <button type="submit" class="post-delete-btn"><i class="fas fa-trash"></i> মুছুন</button>
-                          </form>
-                        </div>
-                      </div>
-                    <% } %>
-                  </header>
-                  <h3 class="pf-post-title"><a href="/articles/<%= post.id %>"><%= post.title %></a></h3>
-                  <% if (post.excerpt || post.body) { %><p class="pf-post-excerpt"><%= mdPlain(post.excerpt || post.body || '', 180) %></p><% } %>
-                  <% if (post.cover_image) { %><a href="/articles/<%= post.id %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= post.cover_image %>" alt="<%= post.title %>" class="pf-post-cover"></a><% } %>
-                  <%# সেশন ৮৭: FB-রিঅ্যাকশন-ইঞ্জিন — summary-স্ট্রিপ (ইমোজি-ফেসপাইল + মন্তব্য/পঠিত) + hold+slide পিকার %>
-                  <div class="pf-actions-host">
-                    <%- include('../partials/actions-bar', { targetId: post.id, targetType: 'post', counts: post.reactCounts, mine: post.myReaction, link: '/articles/' + post.id, showBookmark: false, showShare: true, commentCount: bn(post.comment_count || 0), shareCount: post.share_count || 0, viewCount: bn(post.view_count || 0), reactorFaces: post.reactorFaces || [] }) %>
-                  </div>
-                </article>
+                <%# সেশন ১০৫: ক্যানোনিকাল FeedPostCard — প্রোফাইল-টাইমলাইনেও একই পোস্ট-কার্ড %>
+                <%- include('../shared/post/FeedPostCard', { item: post, user: user, myBookmarkedIds: (typeof myBookmarkedIds !== 'undefined' ? myBookmarkedIds : []), opts: { profileMode: true, showPin: isOwner, cardClass: 'pf-post' } }) %>
               <% }); %>
             </div>
           <% } %>
@@ -550,6 +492,10 @@
   <%- include('../partials/share-modal') %>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+  <%# সেশন ১০৫: কমেন্ট-ড্রয়ার/প্যালেট/৩-ডট/রিঅ্যাক্টরস-মডাল ইঞ্জিন — ক্যানোনিকাল কম্পোনেন্ট-চুক্তি %>
+  <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
+  <%# সেশন ১০৫: রিঅ্যাক্টরস-মডাল (PostFooterActions কাউন্টার-বারের ক্লিক-টার্গেট) %>
+  <%- include('../shared/post/ReactorsModal') %>
   <script>
     // ── ট্যাব-সুইচ (সাব-ন্যাভ + ফিল্টার-পিল + স্ট্যাট-বাটন একই মেকানিজম) ──
     document.querySelectorAll('[data-tab]').forEach(btn => {
@@ -677,28 +623,8 @@
       }
     });
 
-    // ── পোস্ট ৩-ডট মেনু + শেয়ার ──
-    function togglePost3Dot(e, id) {
-      e.stopPropagation();
-      e.preventDefault();
-      const m = document.getElementById('post3dot-' + id);
-      document.querySelectorAll('.post-3dot-menu.open').forEach(x => { if (x.id !== 'post3dot-' + id) x.classList.remove('open'); });
-      m.classList.toggle('open');
-    }
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('.post-3dot-wrap')) {
-        document.querySelectorAll('.post-3dot-menu.open').forEach(x => x.classList.remove('open'));
-      }
-    });
-    function sharePost(id) {
-      const url = window.location.origin + '/articles/' + id;
-      if (navigator.share) {
-        navigator.share({ title: 'লেখক ফোরাম', url: url });
-      } else {
-        navigator.clipboard.writeText(url);
-        showToast('লিংক কপি হয়েছে', 'success');
-      }
-    }
+    <%# সেশন ১০৫: পোস্ট ৩-ডট মেনু এখন ক্যানোনিকাল PostActionMenu (.pm-wrap —
+        comment-tools.js গ্লোবাল ইঞ্জিন) — পুরনো inline ৩-ডট/শেয়ার হ্যান্ডলার অবচিত-অপসারিত %>
 
     // ── স্টিকি সাব-ন্যাভ — সাইট-ওয়াইড body{overflow-x:hidden}-এ position:sticky
     //     অকার্যকর, তাই FB-ম্যাট-প্যাটার্ন: টপে পৌঁছালে fixed-ক্লাস + প্লেসহোল্ডার-জাম্পগার্ড ──

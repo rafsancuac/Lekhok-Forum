@@ -1,0 +1,196 @@
+<%#
+  ═══════════════════════════════════════════════════════════════════════════
+  FeedPostCard.ejs — সর্বজনীন পোস্ট-কার্ড (সেশন ১০৫ — ডিজাইন-সিস্টেম কম্পোনেন্ট)
+  ───────────────────────────────────────────────────────────────────────────
+  রুল-১ (সার্বজনীন গঠন): উপরে বামে অ্যাভাটার+AuthorLabel, ডানে PostActionMenu;
+  মাঝে কনটেন্ট+মিডিয়া-গ্রিড; নিচে PostFooterActions; ড্রয়ার বন্ধ থাকলে কেবল
+  ১টি প্রিভিউ-কমেন্ট, খুললে প্রিভিউ-গায়েব → সম্পূর্ণ-থ্রেড।
+
+  বাধ্যতামূলক ব্যবহার: /dashboard (ফিড), /profile/[id] (পিনড+টাইমলাইন),
+  /me (আমার-লেখা ট্যাব), একক-পোস্টের ফিড-সমতুল্য ভিউ।
+
+  প্যারামিটার:
+    item            (必) পোস্ট-অবজেক্ট। সমর্থিত ক্ষেত্র:
+                      id, item_type|type ('article'|'question'|'activity'|'repost'),
+                      title, body, excerpt, cover_image, images[], link,
+                      username, author_name|display_name|full_name, pen_name,
+                      avatar_url, author_role, created_at|published_at,
+                      comment_count, share_count, view_count,
+                      reactionCounts, myReaction, reactorFaces,
+                      commentPreviews (১টিই রেন্ডার হবে — রুল-১),
+                      repost-*: repost_note, original{...}
+    user            (ঐ) লগইন-ইউজার
+    myBookmarkedIds (ঐ) বুকমার্ক-করা পোস্ট-আইডি-অ্যারে
+    opts            (ঐ) { cardClass, pinnedLabel, showPin, showDrawer,
+                          showPreview, repostUndo }
+  ═══════════════════════════════════════════════════════════════════════════ %>
+<%
+  var _o = (typeof opts !== 'undefined' && opts) ? opts : {};
+  var _user = (typeof user !== 'undefined') ? user : null;
+  var _bmk = (typeof myBookmarkedIds !== 'undefined' && myBookmarkedIds) ? myBookmarkedIds : [];
+  var _type = item.item_type || item.type || 'article';
+  var _isRepost = _type === 'repost' && item.original;
+  var _link = item.link || (_type === 'question' ? '/qa/' + item.id : '/articles/' + item.id);
+  var _ts = item.published_at || item.created_at;
+  var _cardClass = 'feed-card card' + (_o.cardClass ? ' ' + _o.cardClass : '') + (_isRepost ? ' repost-card' : '');
+  var _canMod = !!(_user && /moderator|admin/.test(String(_user.role || '')));
+  var _isOwner = !!(_user && item.username === _user.username);
+  var _showDrawer = (typeof _o.showDrawer === 'undefined') ? true : !!_o.showDrawer;
+  var _showPreview = (typeof _o.showPreview === 'undefined') ? true : !!_o.showPreview;
+  var _bmkOn = _bmk.indexOf ? _bmk.indexOf(item.id) !== -1 : false;
+%>
+<% if (_isRepost) { %>
+  <%# ── রিপোস্ট-কার্ড: শেয়ারকারীর হেডার + মূল-পোস্ট ভেতরে ── %>
+  <article class="<%= _cardClass %>" data-repost-id="<%= item.id %>">
+    <div class="feed-card-head">
+      <%- include('../user/AuthorLabel', { u: item, timeIso: item.created_at }) %>
+      <span class="feed-type-badge repost"><i class="fas fa-share"></i> শেয়ার</span>
+      <% if (_user && item.username === _user.username && _o.repostUndo !== false) { %>
+        <button type="button" class="btn-icon repost-undo" data-repost-id="<%= item.id %>" title="শেয়ার প্রত্যাহার"><i class="fas fa-times"></i></button>
+      <% } %>
+    </div>
+    <% if (item.repost_note) { %><div class="repost-note"><%= item.repost_note %></div><% } %>
+    <div class="repost-original card-inner">
+      <% var _orig = item.original; %>
+      <div class="feed-card-head">
+        <%- include('../user/AuthorLabel', { u: _orig, timeIso: _orig.published_at || _orig.created_at }) %>
+        <% if (_orig.type === 'question') { %>
+          <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
+        <% } else { %>
+          <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+        <% } %>
+        <%- include('./PostActionMenu', {
+          postId: _orig.id,
+          editUrl: (_orig.type === 'question' ? '/qa/' : '/articles/') + _orig.id + '/edit',
+          deleteUrl: (_orig.type === 'question' ? '/qa/' : '/articles/') + _orig.id + '/delete',
+          isOwner: !!(_user && _orig.username === _user.username),
+          canMod: _canMod,
+          reportLabel: 'লেখা: ' + String(_orig.title || '').slice(0, 60)
+        }) %>
+      </div>
+      <% if (_orig.cover_image) { %>
+        <a href="<%= _orig.link || (_orig.type === 'question' ? '/qa/' + _orig.id : '/articles/' + _orig.id) %>"><img loading="lazy" decoding="async" onload="this.classList.add('ld')" src="<%= _orig.cover_image %>" class="feed-image img-skel" alt=""></a>
+      <% } %>
+      <div class="feed-card-body">
+        <h3 class="feed-title"><a href="<%= _orig.link || (_orig.type === 'question' ? '/qa/' + _orig.id : '/articles/' + _orig.id) %>"><%= _orig.title %></a></h3>
+        <p class="feed-text"><%= mdPlain(_orig.body || '', 280) %><% if ((_orig.body || '').length > 280) { %> <a href="<%= _orig.link %>">আরও পড়ুন</a><% } %></p>
+      </div>
+      <%- include('./PostFooterActions', {
+        targetId: _orig.id, targetType: 'post',
+        counts: _orig.reactionCounts, mine: _orig.myReaction,
+        link: _orig.link || (_orig.type === 'question' ? '/qa/' + _orig.id : '/articles/' + _orig.id),
+        commentCount: _orig.comment_count || 0, shareCount: _orig.share_count || 0,
+        bookmarked: _bmk.indexOf(_orig.id) !== -1,
+        reactorFaces: _orig.reactorFaces || [], inlineComments: true
+      }) %>
+      <% if (_showDrawer) { %>
+      <div class="fc-drawer" data-comments-for="<%= _orig.id %>" hidden>
+        <div class="fc-list"></div>
+        <% if (_user) { %><%- include('../comment/CommentComposer', { user: _user, postId: _orig.id }) %><% } %>
+      </div>
+      <% } %>
+    </div>
+  </article>
+<% } else { %>
+  <%# ── সাধারণ পোস্ট-কার্ড ── %>
+  <article class="<%= _cardClass %>"<%= item.is_pinned ? ' data-pinned-post="' + item.id + '"' : '' %>>
+    <% if (_o.pinnedLabel) { %><div class="pf-pinned-label"><i class="fas fa-thumbtack"></i> <%= _o.pinnedLabel %></div><% } %>
+    <div class="feed-card-head">
+      <% if (item.username === 'moderator' && !item.avatar_url) { %>
+        <span class="lf-author-label">
+          <img loading="lazy" decoding="async" src="/assets/img/avatar-placeholder.svg" class="lf-author-avatar lf-av-md" alt="">
+          <span class="lf-author-main"><span class="lf-author-name-row"><span class="lf-author-name">মডারেটর</span><span class="verified-badge"><i class="fas fa-check-circle"></i></span></span>
+          <span class="lf-author-time" data-ts="<%= new Date(_ts).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(_ts).toLocaleString('bn-BD') %></span></span>
+        </span>
+      <% } else { %>
+        <%- include('../user/AuthorLabel', { u: item, timeIso: _ts, timeText: (typeof bnRelTime !== 'undefined' && item.published_at && _o.profileMode) ? bnRelTime(item.published_at) : undefined }) %>
+      <% } %>
+      <% if (_type === 'activity') { %>
+        <span class="feed-type-badge activity"><i class="fas fa-calendar-check"></i> কার্যক্রম</span>
+      <% } else if (_type === 'question') { %>
+        <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
+      <% } else { %>
+        <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+      <% } %>
+      <%# সেশন ১১০-মার্জ: আনুমানিক পড়ার-সময় (decorateFeed-গণিত) — স্লিম চিপ %>
+      <% if (item.read_mins) { %>
+        <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= String(item.read_mins).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> মিনিট</span>
+      <% } %>
+      <%# সেশন ১১০-মার্জ (র‍্যাংকড-ফিড): "কেন-দেখছেন" চিপ — ranked-মোডে শুধু %>
+      <% if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge) { %>
+        <% if (item.rank_badge === 'followed') { %>
+          <span class="fd-rank-chip is-followed" title="আপনি এই লেখককে অনুসরণ করেন — সামঞ্জস্য-বোনাস"><i class="fas fa-user-check"></i> অনুসৃত লেখক</span>
+        <% } else if (item.rank_badge === 'hot') { %>
+          <span class="fd-rank-chip is-hot" title="উচ্চ-এনগেজমেন্ট: রিঅ্যাকশন+মন্তব্য+শেয়ার ≥ ১০"><i class="fas fa-fire"></i> আলোচিত</span>
+        <% } else if (item.rank_badge === 'fresh') { %>
+          <span class="fd-rank-chip is-fresh" title="গত ২৪ ঘণ্টায় প্রকাশিত"><i class="fas fa-bolt"></i> নতুন</span>
+        <% } %>
+      <% } %>
+      <% if (item.shared_from) { %>
+        <span class="shared-chip"><i class="fas fa-retweet"></i> শেয়ারকৃত পোস্ট · <a href="/articles/<%= item.shared_from %>">মূল পোস্ট</a></span>
+      <% } %>
+      <%- include('./PostActionMenu', {
+        postId: item.id,
+        editUrl: (_type === 'question' ? '/qa/' : '/articles/') + item.id + '/edit',
+        deleteUrl: (_type === 'question' ? '/qa/' : '/articles/') + item.id + '/delete',
+        isOwner: !!(_isOwner && (_type === 'article' || _type === 'question')),
+        canMod: _canMod,
+        pin: (_o.showPin && _isOwner && (_type === 'article')) ? { enabled: true, pinned: !!item.is_pinned } : null,
+        reportLabel: 'লেখা: ' + String(item.title || '').slice(0, 60)
+      }) %>
+    </div>
+    <%# মিডিয়া: গ্যালারি-গ্রিড অগ্রাধিকার, নইলে প্রচ্ছদ (প্রোফাইল-মোড) %>
+    <% if (item.images && item.images.length) { %>
+      <%- include('../../partials/post-gallery', { images: item.images, alt: item.title, height: '260px', group: 'feed-' + _type + '-' + item.id }) %>
+    <% } else if (item.cover_image && _o.profileMode) { %>
+      <a href="<%= _link %>" class="pf-post-cover-link"><img loading="lazy" decoding="async" src="<%= item.cover_image %>" alt="<%= item.title %>" class="pf-post-cover"></a>
+    <% } %>
+    <div class="feed-card-body">
+      <h3 class="feed-title"><a href="<%= _link %>"><%= item.title %></a></h3>
+      <p class="feed-text"><%= mdPlain(item.excerpt || item.body || '', 280) %><% if (((item.body || '').length) > 280) { %> <a href="<%= _link %>">আরও পড়ুন</a><% } %></p>
+    </div>
+    <%- include('./PostFooterActions', {
+      targetId: item.id, targetType: 'post',
+      counts: item.reactionCounts, mine: item.myReaction,
+      link: _link,
+      commentCount: item.comment_count || 0,
+      shareCount: item.share_count || 0,
+      viewCount: (typeof item.view_count !== 'undefined' && item.view_count !== null) ? item.view_count : undefined,
+      bookmarked: _bmkOn,
+      reactorFaces: item.reactorFaces || [],
+      inlineComments: _showDrawer && _type !== 'activity'
+    }) %>
+    <%# ── রুল-১: ড্রয়ার বন্ধ থাকলে কেবল ১টি প্রিভিউ-কমেন্ট; খুললে প্রিভিউ-গায়েব ── %>
+    <% if (_showPreview && _type !== 'activity' && item.commentPreviews && item.commentPreviews.length) { %>
+      <div class="fc-preview">
+        <% var _cp = item.commentPreviews[0]; %>
+        <div class="fcp-row">
+          <a href="/profile/<%= _cp.username %>" class="fcp-av-link" aria-hidden="true" tabindex="-1">
+            <img loading="lazy" decoding="async" src="<%= _cp.avatar %>" class="fcp-avatar" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+          </a>
+          <div class="fcp-main">
+            <div class="fcp-bubble">
+              <a href="/profile/<%= _cp.username %>" class="fcp-author"><%= _cp.authorName %></a>
+              <span class="fcp-body"><%= _cp.body %></span>
+            </div>
+            <div class="fcp-actions">
+              <button type="button" class="fcp-act" data-toggle-comments="<%= item.id %>">মন্তব্য করুন</button>
+              <span class="fcp-act muted">সর্বশেষ</span>
+            </div>
+          </div>
+        </div>
+        <% if ((item.comment_count || 0) > 1) { %>
+          <button type="button" class="fc-more" data-toggle-comments="<%= item.id %>">
+            সব <%= String(item.comment_count).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> টি মন্তব্য দেখুন
+          </button>
+        <% } %>
+      </div>
+    <% } %>
+    <% if (_showDrawer && _type !== 'activity') { %>
+      <div class="fc-drawer" data-comments-for="<%= item.id %>" hidden>
+        <div class="fc-list"></div>
+        <% if (_user) { %><%- include('../comment/CommentComposer', { user: _user, postId: item.id }) %><% } %>
+      </div>
+    <% } %>
+  </article>
+<% } %>

@@ -1049,6 +1049,47 @@ router.get('/api/messages/older', ensureAuth, async (req, res) => {
   res.json({ ok: true, html, hasOlder, oldestId, count: rows.length });
 });
 
+// ── সেশন ১০৫: নতুন-আসা মেসেজের ক্যানোনিকাল HTML-রেন্ডার ──────────────────────
+// GET /api/messages/render?conv_id=N&after_id=M — after_id-পরবর্তী বার্তাগুলো
+// chat-fragment (→ shared/messenger/MessengerBubble) দিয়েই রেন্ডার হয়।
+// messages-chat.ejs-এর পুরনো JS-বাবল-বিল্ডার প্রতিস্থাপন — মেসেঞ্জার-মার্কআপের
+// একমাত্র সোর্স এখন views/shared/messenger/MessengerBubble.ejs (গার্ড-রুল)।
+router.get('/api/messages/render', ensureAuth, async (req, res) => {
+  const me = req.session.user.id;
+  const convId = parseInt(req.query.conv_id, 10);
+  const afterId = parseInt(req.query.after_id, 10) || 0;
+  const conv = await convAccess(convId, me);
+  if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+  // সতর্কতা: after_id=0 বৈধ (নতুন কনভার্সেশনের প্রথম-বার্তা) — LIMIT 50-ই বাউন্ড
+  const rows = await db.prepare(`
+    SELECT m.*,
+      rb.body AS reply_body, rb.file_url AS reply_file_url, rb.file_name AS reply_file_name,
+      ru.full_name AS reply_sender_name, ru.username AS reply_sender_username
+    FROM messages m
+    LEFT JOIN messages rb ON rb.id = m.reply_to_id
+    LEFT JOIN users ru ON ru.id = rb.sender_id
+    WHERE m.conversation_id = ? AND m.id > ?
+    ORDER BY m.id ASC LIMIT 50
+  `).all(convId, afterId);
+  if (!rows.length) return res.json({ ok: true, html: '', lastId: afterId });
+  const lastId = rows[rows.length - 1].id;
+  const reactionMap = await reactionMapFor(rows);
+  const prevMsg = await db.prepare('SELECT id, sender_id, created_at FROM messages WHERE conversation_id = ? AND id < ? ORDER BY id DESC LIMIT 1').get(convId, rows[0].id) || null;
+  let partner = null;
+  if (!conv.is_group) {
+    const pid = conv.user_a === me ? conv.user_b : conv.user_a;
+    partner = await db.prepare('SELECT id, full_name, avatar_url FROM users WHERE id = ?').get(pid) || partner;
+  }
+  const members = await db.prepare('SELECT u.id, u.username, u.full_name, u.avatar_url FROM conversation_members cm JOIN users u ON u.id = cm.user_id WHERE cm.conversation_id = ?').all(convId);
+  const html = await new Promise((resolve, reject) => {
+    req.app.render('user/chat-fragment', {
+      user: req.session.user, conv, isGroup: !!conv.is_group, other: partner, members,
+      batch: rows, prevMsg, nextMsg: null, reactionMap
+    }, (err, out) => err ? reject(err) : resolve(out));
+  });
+  res.json({ ok: true, html, lastId, count: rows.length });
+});
+
 // ── সেশন ৯৩ (রোডম্যাপ-১১): সার্ভার-সাইড ইন-চ্যাট সার্চ (LIKE) — উইন্ডোর-বাইরের পুরনো বার্তাসহ ──
 router.get('/api/messages/search', ensureAuth, async (req, res) => {
   const me = req.session.user.id;

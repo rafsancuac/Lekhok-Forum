@@ -121,118 +121,21 @@
       </div>
 
       <div class="comments-section">
-        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %>)</h3>
+        <h3 class="comments-h"><i class="far fa-comment"></i> মন্তব্য (<span class="comments-total"><%= comments.reduce((a, c) => a + 1 + (c.replies || []).length, 0) %></span>)</h3>
         <%# সেশন ৯৩: কম্প্যাক্ট FB-স্টাইল কম্পোজার — কার্যকর টুলবার + @ম্যানশন
             (পুরনো cf-hint ড্যাশড-চিপ + 'প্রথম মন্তব্যকারী হোন' বিশাল-কার্ড অপসারিত) %>
         <% if (user) { %>
-          <%- include('../partials/comment-composer', { user, postId: post.id }) %>
+          <%- include('../shared/comment/CommentComposer', { user: user, postId: post.id }) %>
         <% } else { %>
           <p class="login-to-comment"><a href="/login?next=/articles/<%= post.id %>">লগইন</a> করে সবার আগে মন্তব্য করুন</p>
         <% } %>
 
-        <div class="comments-list">
-          <%
-            // ── সেশন ১০৭: FB-প্যারিটি কমেন্ট-আইটেম — হোভার রিঅ্যাকশন-প্যালেট (fcr) +
-            // বাবল-কোণে রিঅ্যাকশন-ব্যাজ + হোভার ৩-ডট-মেনু (সম্পাদনা/মুছে-ফেলা/রিপোর্ট) +
-            // ইনলাইন-এডিটর (data-raw প্রি-ফিল)। ইঞ্জিন comment-tools.js (session104/107) —
-            // ডেলিগেটেড, data-cid/author-id/data-raw-চুক্তিতে চলে। session100-এর hold-ইঞ্জিন
-            // (actions-bar) কমেন্ট-স্তর থেকে সরানো হলো — ফিডের সাথে একই UX।
-            var _rm107 = REACTION_META;
-            var _bn107 = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); };
-            var _topEmoji107 = function (counts) {
-              var best = null, bc = -1;
-              Object.keys(counts || {}).forEach(function (k) {
-                if ((counts[k] || 0) > bc && _rm107[k]) { best = k; bc = counts[k] || 0; }
-              });
-              return best ? _rm107[best].emoji : '👍';
-            };
-          %>
+        <%# সেশন ১০৫: ক্যানোনিকাল CommentItem — ফিড-ড্রয়ার ও একক-পোস্ট এখন একই
+            কমেন্ট-বাবল (হোভার ৩-ডট, হোভার ৬-ইমোজি প্যালেট, কর্নার-ব্যাজ)।
+            data-post-link → সাবমিটের পর রিলোড-নেই থ্রেড-রিফ্রেশ (comment-tools.js)। %>
+        <div class="comments-list" data-post-link="/articles/<%= post.id %>">
           <% comments.forEach(c => { %>
-            <div class="comment-item" id="c<%= c.id %>" data-cid="<%= c.id %>" data-author-id="<%= c.author_id %>">
-              <img loading="lazy" decoding="async" src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
-              <div class="comment-bubble">
-                <a href="/profile/<%= c.username %>" class="comment-author"><%= displayName(c, c.full_name) %></a><% if (hasPenName(c)) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %>
-                <div class="comment-body" data-raw="<%= c.body %>"><%- c.bodyHtml %></div>
-                <% if (c.edited_at) { %><span class="fc-edited">সম্পাদিত</span><% } %>
-                <% if (c.reaction && c.reaction.total > 0) { %>
-                  <div class="fc-react-badge" title="প্রতিক্রিয়া"><span class="fcrb-emoji"><%= _topEmoji107(c.reaction.counts) %></span><span class="fcrb-count"><%= _bn107(c.reaction.total) %></span></div>
-                <% } %>
-                <div class="comment-meta fb-meta107">
-                  <% if (user) { %>
-                    <span class="fc-react-wrap">
-                      <button type="button" class="fc-react-btn<%= c.reaction && c.reaction.mine ? ' active' : '' %>" data-mine="<%= (c.reaction && c.reaction.mine) || '' %>"><%= (c.reaction && c.reaction.mine && _rm107[c.reaction.mine]) ? _rm107[c.reaction.mine].label : 'লাইক' %></button>
-                      <div class="fcr-palette" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন" hidden>
-                        <% Object.keys(_rm107).forEach(function (k) { %>
-                          <button type="button" class="fcr-opt<%= (c.reaction && c.reaction.mine === k) ? ' selected' : '' %>" data-reaction="<%= k %>" title="<%= _rm107[k].label %>" aria-label="<%= _rm107[k].label %>"><%= _rm107[k].emoji %></button>
-                        <% }); %>
-                      </div>
-                    </span>
-                    <button type="button" class="reply-btn" data-id="<%= c.id %>" data-name="<%= c.username %>">উত্তর দিন</button>
-                  <% } %>
-                  <span class="cm-time107"><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
-                  <% if (user) { %>
-                    <span class="fc-menu-wrap">
-                      <button type="button" class="fc-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="মন্তব্য অপশন" title="মন্তব্য অপশন"><i class="fas fa-ellipsis-h"></i></button>
-                      <div class="fc-menu" role="menu" hidden>
-                        <% if (user && c.author_id === user.id) { %>
-                          <button type="button" class="fc-menu-item" data-cact="edit" role="menuitem"><i class="fas fa-pen"></i> সম্পাদনা করুন</button>
-                          <button type="button" class="fc-menu-item fc-menu-danger" data-cact="delete" role="menuitem"><i class="fas fa-trash"></i> মুছে ফেলুন</button>
-                        <% } else { %>
-                          <button type="button" class="fc-menu-item fc-menu-danger" data-cact="report" role="menuitem"><i class="far fa-flag"></i> রিপোর্ট করুন</button>
-                        <% } %>
-                      </div>
-                    </span>
-                  <% } %>
-                </div>
-                <% if (user) { %><div class="fc-edit-slot" hidden></div><% } %>
-                <% c.replies && c.replies.forEach(r => { %>
-                  <div class="reply-item" id="c<%= r.id %>" data-cid="<%= r.id %>" data-author-id="<%= r.author_id %>">
-                    <img loading="lazy" decoding="async" src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
-                    <div class="comment-bubble small">
-                      <a href="/profile/<%= r.username %>" class="comment-author"><%= displayName(r, r.full_name) %></a><% if (hasPenName(r)) { %><span class="pen-chip" title="আসল নাম: <%= r.full_name %>">কলমে</span><% } %>
-                      <div class="comment-body" data-raw="<%= r.body %>"><%- r.bodyHtml %></div>
-                      <% if (r.edited_at) { %><span class="fc-edited">সম্পাদিত</span><% } %>
-                      <% if (r.reaction && r.reaction.total > 0) { %>
-                        <div class="fc-react-badge" title="প্রতিক্রিয়া"><span class="fcrb-emoji"><%= _topEmoji107(r.reaction.counts) %></span><span class="fcrb-count"><%= _bn107(r.reaction.total) %></span></div>
-                      <% } %>
-                      <div class="comment-meta fb-meta107">
-                        <% if (user) { %>
-                          <span class="fc-react-wrap">
-                            <button type="button" class="fc-react-btn<%= r.reaction && r.reaction.mine ? ' active' : '' %>" data-mine="<%= (r.reaction && r.reaction.mine) || '' %>"><%= (r.reaction && r.reaction.mine && _rm107[r.reaction.mine]) ? _rm107[r.reaction.mine].label : 'লাইক' %></button>
-                            <div class="fcr-palette" role="menu" aria-label="প্রতিক্রিয়া নির্বাচন" hidden>
-                              <% Object.keys(_rm107).forEach(function (k) { %>
-                                <button type="button" class="fcr-opt<%= (r.reaction && r.reaction.mine === k) ? ' selected' : '' %>" data-reaction="<%= k %>" title="<%= _rm107[k].label %>" aria-label="<%= _rm107[k].label %>"><%= _rm107[k].emoji %></button>
-                              <% }); %>
-                            </div>
-                          </span>
-                        <% } %>
-                        <span class="cm-time107"><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
-                        <% if (user) { %>
-                          <span class="fc-menu-wrap">
-                            <button type="button" class="fc-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="মন্তব্য অপশন" title="মন্তব্য অপশন"><i class="fas fa-ellipsis-h"></i></button>
-                            <div class="fc-menu" role="menu" hidden>
-                              <% if (user && r.author_id === user.id) { %>
-                                <button type="button" class="fc-menu-item" data-cact="edit" role="menuitem"><i class="fas fa-pen"></i> সম্পাদনা করুন</button>
-                                <button type="button" class="fc-menu-item fc-menu-danger" data-cact="delete" role="menuitem"><i class="fas fa-trash"></i> মুছে ফেলুন</button>
-                              <% } else { %>
-                                <button type="button" class="fc-menu-item fc-menu-danger" data-cact="report" role="menuitem"><i class="far fa-flag"></i> রিপোর্ট করুন</button>
-                              <% } %>
-                            </div>
-                          </span>
-                        <% } %>
-                      </div>
-                      <% if (user) { %><div class="fc-edit-slot" hidden></div><% } %>
-                    </div>
-                  </div>
-                <% }); %>
-                <% if (user) { %>
-                  <%# সেশন ৯৩/৯৪: রিপ্লাই-কম্পোজার (কম্প্যাক্ট) — টুলবার+ম্যানশনসহ; placeholder-এ কলমী-নাম প্রাধান্য (৯৪) %>
-                  <div class="reply-form cc-slot" hidden>
-                    <%- include('../partials/comment-composer', { user, postId: post.id, parentId: c.id, compact: true, placeholder: displayName(c, c.full_name) + '-কে উত্তর দিন…' }) %>
-                  </div>
-                <% } %>
-              </div>
-            </div>
+            <%- include('../shared/comment/CommentItem', { c: c, link: '/articles/' + post.id, user: user }) %>
           <% }); %>
         </div>
       </div>
@@ -282,22 +185,10 @@
   <script src="/assets/js/article-reading.js?v=<%= AV %>"></script>
   <%# সেশন ৯৩: কম্পোজার-টুলবার + ম্যানশন + ৩-ডট-মেনু ইঞ্জিন (সাবমিট-সহ) %>
   <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
-  <script>
-    // Reply toggle (সেশন ৯৩: কম্পোজার-স্লট-টগল; সাবমিট comment-tools.js সামলায়)
-    document.querySelectorAll('.reply-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = btn.closest('.comment-item');
-        const form = item.querySelector('.reply-form');
-        if (form) {
-          form.hidden = !form.hidden;
-          if (!form.hidden) {
-            const ta = form.querySelector('.cc-input');
-            if (ta) setTimeout(() => ta.focus(), 60);
-          }
-        }
-      });
-    });
-  </script>
+  <%# সেশন ১০৫: রিঅ্যাক্টরস-মডাল (কাউন্টার-বারের data-rx-open ক্লিক-টার্গেট) %>
+  <%- include('../shared/post/ReactorsModal') %>
+  <%# সেশন ১০৫: রিপ্লাই-টগল এখন comment-tools.js-এ ডেলিগেটেড (.cmt-reply-btn) —
+      পুরনো .reply-btn-বাইন্ডিং-স্ক্রিপ্ট অবচিত-অপসারিত %>
   <%# ── সেশন ৮১: রিপোর্ট-মোডাল + কনফার্ম/অটো-টোস্ট স্ক্রিপ্ট ── %>
   <%- include('../partials/report-modal') %>
   <script>

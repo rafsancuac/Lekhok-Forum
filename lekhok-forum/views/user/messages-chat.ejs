@@ -1043,68 +1043,97 @@
 
     // ── মেসেজ-রেন্ডারিং ─────────────────────────────────────────────────
     function appendMessage(msg, forceScrollFlag) {
-      if (document.querySelector('.bubble[data-id="' + msg.id + '"]')) return;
-      // নিজের মেসেজ: optimistic tmp-বাবল থাকলে সেটাকেই আসল id দিই
-      if (msg.is_me) {
-        const tmps = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]'));
-        const match = tmps.reverse().find(b => ((b.querySelector('.bubble-text') || {}).textContent || '') === (msg.body || ''));
-        if (match) { match.dataset.id = String(msg.id); return; }
-      }
-      const nearBottom = isNearBottom();
-      const div = document.createElement('div');
-      div.className = 'bubble ' + (msg.is_me ? 'me' : 'them') + ' first-of-cluster last-of-cluster';
-      div.dataset.id = msg.id;
-      div.dataset.own = msg.is_me ? '1' : '0';
-      let html = '';
-      if (!msg.is_me) {
-        const av = isGroupChat ? (msg.sender_avatar || ('/avatar/' + msg.sender_id)) : otherAvatar;
-        html += '<img class="b-av" loading="lazy" src="' + escapeHtml(av) + '" onerror="this.src=\'/avatar/' + (msg.sender_id || 0) + '\'" alt="" />';
-      }
-      html += '<div class="b-content">';
-      if (!msg.is_me && isGroupChat) {
-        html += '<div class="bubble-sender">' + escapeHtml(msg.sender_name || 'সদস্য') + '</div>';
-      }
-      // সেশন ৭৬: রিপ্লাই-কোট + এডিটেড-লেবেল (নতুন-আসা মেসেজেও)
-      if (msg.reply_to_id && (msg.reply_body || msg.reply_file_name)) {
-        html += '<div class="bubble-quote" data-quote-id="' + msg.reply_to_id + '"><span class="bq-name">' + escapeHtml(msg.reply_sender_name || 'মেসেজ') + '</span><span class="bq-text">' + escapeHtml(String(msg.reply_body || (/\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i.test(msg.reply_file_name || '') ? '🎙️ ভয়েস মেসেজ' : ('📎 ' + (msg.reply_file_name || 'ফাইল')))).slice(0, 120)) + '</span></div>';
-      }
-      if (msg.body) html += '<div class="bubble-text"></div>';
-      if (msg.file_url) {
-        if (/\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(msg.file_url)) html += '<a href="' + msg.file_url + '" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
-        /* সেশন ৯২: ভয়েস/অডিও → ওয়েভফর্ম প্লেয়ার বাবল */
-        else if (/\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i.test(msg.file_url)) {
-          html += '<div class="bubble-voice" data-src="' + msg.file_url + '"><button type="button" class="bv-play" aria-label="প্লে করুন"><i class="fas fa-play"></i></button><div class="bv-wave" aria-hidden="true">' +
-            (function () { var s = '', x = 7 + (msg.id % 13); for (var i = 0; i < 22; i++) { x = (x * 31 + 17) % 97; s += '<span style="--h:' + (22 + (x % 78)) + '%"></span>'; } return s; })() +
-            '</div><span class="bv-time">০:০০</span></div>';
+      // ── সেশন ১০৫: ক্যানোনিকাল single-source রেন্ডারিং ──────────────────────
+      // নতুন/আসা মেসেজ JS-স্ট্রিং-দিয়ে আর বানানো হয় না — সার্ভারের
+      // MessengerBubble-পাইপলাইন (/api/messages/render → chat-fragment →
+      // shared/messenger/MessengerBubble.ejs) থেকেই HTML এসে বসে। চ্যাট-উইন্ডো,
+      // older-ব্যাচ ও ভবিষ্যৎ ইনবক্স-প্রিভিউ — সব এখন একই মার্কআপ (গার্ড-রুল)।
+      const idStr = String(msg.id);
+      const isTmp = idStr.indexOf('tmp-') === 0;
+      if (!isTmp && document.querySelector('.bubble[data-id="' + idStr + '"]')) return;
+      if (isTmp) {
+        // জিরো-ল্যাগ optimistic — ন্যূনতম বাবল; আসল-আইডি এলেই ক্যানোনিকাল
+        // রেন্ডার এটিকে পূর্ণ অ্যাকশন-রেলসহ বাবলে প্রতিস্থাপন করে।
+        const nearBottom = isNearBottom();
+        const div = document.createElement('div');
+        div.className = 'bubble me optimistic-tmp first-of-cluster last-of-cluster';
+        div.dataset.id = idStr;
+        div.dataset.own = '1';
+        let html = '<div class="b-content">';
+        if (msg.reply_to_id) html += '<div class="bubble-quote"><span class="bq-name">' + escapeHtml(msg.reply_sender_name || 'মেসেজ') + '</span><span class="bq-text">' + escapeHtml(String(msg.reply_body || '').slice(0, 120)) + '</span></div>';
+        html += '<div class="bubble-text"></div>';
+        if (msg.file_url) {
+          if (/\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(msg.file_url)) html += '<a href="' + msg.file_url + '" target="_blank" rel="noopener"><img src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
+          else html += '<a href="' + msg.file_url + '" class="bubble-file"><i class="fas fa-paperclip"></i> ' + escapeHtml(msg.file_name || 'ফাইল') + '</a>';
         }
-        else html += '<a href="' + msg.file_url + '" class="bubble-file" download><i class="fas fa-paperclip"></i> ' + escapeHtml(msg.file_name || 'ফাইল') + '</a>';
+        html += '</div><div class="bubble-meta"><span class="bubble-time"></span><span class="bubble-seen"><i class="fas fa-check" title="পৌঁছেছে"></i></span></div>';
+        div.innerHTML = html;
+        div.querySelector('.bubble-text').textContent = msg.body || '';
+        div.querySelector('.bubble-time').textContent = new Date(msg.created_at || Date.now()).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+        const ti = document.getElementById('typingIndicator');
+        body.insertBefore(div, ti);
+        if (forceScrollFlag === true || nearBottom) {
+          body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+          clearJumpBadge();
+        }
+        return;
       }
-      html += '</div>';
-      // সেশন ৯৩: FB-স্টাইল সাইড-অ্যাকশন-রেল (বাবলের পাশে; ✕-আনসেন্ড বাদ — ⋮-মেনুতে ইন্টিগ্রেটেড)
-      html += '<div class="bubble-actions">';
-      html += '<button type="button" class="bubble-react-btn" data-msg-react="' + msg.id + '" title="রিয়েক্ট করুন" aria-label="রিয়েক্ট করুন"><i class="far fa-smile"></i></button>';
-      html += '<button type="button" class="bubble-reply-btn" data-msg-reply="' + msg.id + '" title="উত্তর দিন" aria-label="উত্তর দিন"><i class="fas fa-reply"></i></button>';
-      html += '<button type="button" class="bubble-more" data-msg-more="' + msg.id + '" title="আরও অপশন" aria-haspopup="true" aria-label="আরও অপশন"><i class="fas fa-ellipsis-vertical"></i></button>';
-      html += '<div class="bubble-react-menu" hidden>' + ['👍','❤️','🤗','😂','😮','😢','😡'].map(e => '<button type="button" data-emoji="' + e + '">' + e + '</button>').join('') + '</div>';
-      html += '</div>';
-      html += '<div class="bubble-meta"><span class="bubble-time"></span>';
-      if (msg.is_me) html += '<span class="bubble-seen"><i class="fas fa-check" title="পৌঁছেছে"></i></span>';
-      html += '</div>';
-      div.innerHTML = html;
-      if (msg.body) div.querySelector('.bubble-text').textContent = msg.body;
-      if (msg.edited) { const bt = div.querySelector('.bubble-text'); if (bt) bt.insertAdjacentHTML('afterend', '<span class="bubble-edited">সম্পাদিত</span>'); }
-      div.querySelector('.bubble-time').textContent = new Date(msg.created_at).toLocaleString('bn-BD', { hour: '2-digit', minute: '2-digit' });
-      const ti = document.getElementById('typingIndicator');
-      body.insertBefore(div, ti);
-      // স্মার্ট-স্ক্রল (সেশন ৭৮): পুরোনো মেসেজ পড়তে উপরে থাকলে অবস্থান ঠিক থাকে,
-      // FAB-ব্যাজে নতুন-গণনা দেখায়; নিজের মেসেজ বা নিচের-কাছে হলে অটো-স্ক্রল
-      if (forceScrollFlag === true || nearBottom || msg.is_me) {
-        body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
-        clearJumpBadge();
-      } else {
-        newMsgCount++;
-        if (jumpBadge) { jumpBadge.textContent = newMsgCount > 9 ? '৯+' : String(newMsgCount); jumpBadge.classList.add('show'); }
+      // আসল-আইডি (echo বা অন্যের বার্তা) — মিলে-যাওয়া tmp সরিয়ে ক্যানোনিকাল রেন্ডার
+      if (msg.is_me) {
+        const tmps = Array.prototype.slice.call(document.querySelectorAll('.bubble.optimistic-tmp'));
+        const match = tmps.reverse().find(b => ((b.querySelector('.bubble-text') || {}).textContent || '') === (msg.body || ''));
+        if (match) match.remove();
       }
+      _lastMsg105 = Math.max(_lastMsg105, Number(msg.id) || 0);
+      queueCanonicalRender(forceScrollFlag);
+    }
+
+    var _lastMsg105 = 0;
+    (function () {
+      document.querySelectorAll('.bubble[data-id]').forEach(function (b) {
+        var n = parseInt(b.getAttribute('data-id'), 10);
+        if (!isNaN(n) && n > _lastMsg105) _lastMsg105 = n;
+      });
+    })();
+    var _renderTimer105 = null;
+    var _forceScroll105 = false;
+    var _pendingTmp105 = null;
+    function queueCanonicalRender(forceScrollFlag) {
+      if (forceScrollFlag === true) _forceScroll105 = true;
+      clearTimeout(_renderTimer105);
+      _renderTimer105 = setTimeout(function () {
+        fetch('/api/messages/render?conv_id=' + convId + '&after_id=' + _lastMsg105)
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.ok || !d.html) { _forceScroll105 = false; return; }
+            const nearBottom = isNearBottom();
+            const ti = document.getElementById('typingIndicator');
+            if (ti) ti.insertAdjacentHTML('beforebegin', d.html);
+            else body.insertAdjacentHTML('beforeend', d.html);
+            _lastMsg105 = Math.max(_lastMsg105, Number(d.lastId) || 0);
+            // প্রতিস্থাপন-নিশ্চয়তা: টেক্সট-মিল টmp বাবল সরাও
+            const fresh = Array.prototype.slice.call(body.querySelectorAll('.bubble:not(.optimistic-tmp) .bubble-text'));
+            document.querySelectorAll('.bubble.optimistic-tmp').forEach(function (t) {
+              const tt = (t.querySelector('.bubble-text') || {}).textContent || '';
+              if (tt && fresh.some(function (f) { return f.textContent === tt; })) t.remove();
+            });
+            if (_pendingTmp105 && document.body.contains(_pendingTmp105)) {
+              const tt2 = (_pendingTmp105.querySelector('.bubble-text') || {}).textContent || '';
+              if (!tt2 || fresh.some(function (f) { return f.textContent === tt2; })) _pendingTmp105.remove();
+              _pendingTmp105 = null;
+            }
+            if (_forceScroll105 || nearBottom) {
+              body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+              clearJumpBadge();
+              newMsgCount = 0;
+            } else if (fresh.length) {
+              newMsgCount++;
+              if (jumpBadge) { jumpBadge.textContent = newMsgCount > 9 ? '৯+' : String(newMsgCount); jumpBadge.classList.add('show'); }
+            }
+            _forceScroll105 = false;
+          })
+          .catch(function () { _forceScroll105 = false; /* পরবর্তী poll-এ আবার */ });
+      }, 220);
     }
 
     // সিন-রসিট: শেষ-পঠিত নিজের বাবলে অপর পক্ষের মাইক্রো-অ্যাভাটার (FB-স্টাইল)
@@ -1536,7 +1565,10 @@
         if (res.type === 'opaqueredirect' || res.status === 0 || res.ok) {
           if (data && data.id) {
             const tmp = Array.prototype.slice.call(document.querySelectorAll('.bubble[data-id^="tmp-"]')).pop();
-            if (tmp) tmp.dataset.id = String(data.id);
+            /* সেশন ১০৫: optimistic-বাবলটি ক্যানোনিকাল MessengerBubble-HTML-এ
+               আপগ্রেড হয় (অ্যাকশন-রেলসহ) — আইডি-রি-অ্যাসাইন নয়, প্রতিস্থাপন-চুক্তি */
+            _pendingTmp105 = tmp || null;
+            queueCanonicalRender(true);
           }
           if (window.MSA) window.MSA.afterSent();
           setTimeout(poll, 500);

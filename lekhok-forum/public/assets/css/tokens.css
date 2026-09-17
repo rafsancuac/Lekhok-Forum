@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   tokens.css — গ্লোবাল ডিজাইন টোকেন (Single Source of Truth) — সেশন ১০৫
+   ─────────────────────────────────────────────────────────────────────────
+   পুরো প্ল্যাটফর্মের (Home, Social Feed, Profile, Writings, Messaging) সমস্ত
+   বর্ডার, টেক্সট, ব্যাকগ্রাউন্ড ও রিঅ্যাকশন রঙ এই টোকেনে লকড।
+
+   নিয়ম (মাল্টি-এজেন্ট গার্ড):
+   ① এই ফাইলের বাইরে নতুন রঙ হার্ডকোড নিষিদ্ধ — শুধু var(--lf-*) ব্যবহার করুন।
+   ② পুরনো জেনেরিক ভেরিয়েবল (--bg/--card/--border/--text/--accent…) এখানেই
+      ক্যানোনিকাল টোকেনে রিম্যাপড — তাই style.css/auth.css আর কিছু না-করেই
+      সাইট-ব্যাপী কনফর্ম করে (তাদের :root-ওভাররাইড এই ফাইল শেষ-লোডে জয়ী)।
+   ③ ক্যাসকেড-গ্যারান্টি: `:root:root` (ডাবল-স্পেসিফিসিটি) + header.ejs-এ
+      সর্বশেষ <link>। কেউ tokens.css-কে head-এর আগে সরাবেন না।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root:root {
+  /* ── ১. ব্র্যান্ড (চট্টগ্রাম বিশ্ববিদ্যালয় ও লেখক ফোরাম সবুজ) ── */
+  --lf-brand-primary: #006A4E;
+  --lf-brand-primary-hover: #00523C;
+  --lf-brand-light: #E8F5E9;
+
+  /* ── ২. সোশ্যাল (FB-প্রাইমারি ব্লু পরিবার) ── */
+  --lf-social-blue: #1877F2;
+  --lf-social-blue-hover: #166FE5;
+  --lf-social-blue-light: #EAF3FF;
+  --lf-social-messenger: #0084FF;
+
+  /* ── ৩. UI সারফেস ── */
+  --lf-ui-canvas: #F0F2F5;        /* পুরো সাইটের ব্যাকগ্রাউন্ড গ্রে */
+  --lf-ui-surface: #FFFFFF;       /* কার্ড ও প্যানেল */
+  --lf-ui-border: #E4E6EB;        /* স্ট্যান্ডার্ড ডিভাইডার ও বর্ডার */
+  --lf-ui-border-strong: #CED0D4;
+  --lf-ui-input-bg: #F0F2F5;
+
+  /* ── ৪. টেক্সট ── */
+  --lf-text-primary: #050505;     /* ১০০% ডিপ — নাম/টাইটেল/বডি */
+  --lf-text-secondary: #65676B;   /* টাইমস্ট্যাম্প, সাব-টাইটেল, আইকন */
+  --lf-text-tertiary: #8A8D91;
+
+  /* ── ৫. রিঅ্যাকশন ── */
+  --lf-reaction-like: #1877F2;
+  --lf-reaction-love: #FA3E3E;
+  --lf-reaction-yellow: #F7B125;  /* Care, Haha, Wow, Sad */
+  --lf-reaction-angry: #E9710F;
+
+  /* ── ৬. রেডিয়াস ── */
+  --lf-radius-card: 16px;         /* পোস্ট কার্ড, মডাল ও বড় প্যানেল */
+  --lf-radius-bubble: 18px;       /* চ্যাট ও কমেন্ট বাবল */
+  --lf-radius-chip: 9999px;       /* পিল ফিল্টার ও ব্যাজ */
+
+  /* ═══════════════════════════════════════════════════════════════════
+     লিগ্যাসি-ভেরিয়েবল রিম্যাপ — style.css/auth.css-এর বিদ্যমান সব ব্যবহার
+     এখন থেকে ক্যানোনিকাল টোকেন থেকেই মান নেয় (সাইট-ব্যাপী কনসিস্টেন্সি)।
+     ═══════════════════════════════════════════════════════════════════ */
+  --bg: var(--lf-ui-canvas);
+  --bg-card: var(--lf-ui-surface);
+  --card: var(--lf-ui-surface);
+  --border: var(--lf-ui-border);
+  --text: var(--lf-text-primary);
+  --text-muted: var(--lf-text-secondary);
+
+  /* ব্র্যান্ড-গ্রিন ফ্যামিলি (accent = ব্র্যান্ড-প্রাইমারি) */
+  --accent: var(--lf-brand-primary);
+  --accent-dark: var(--lf-brand-primary-hover);
+  /* সতর্কতা: --accent-light কোডবেসে টেক্সট-রঙ হিসেবে ব্যবহৃত (ব্যাজ/আইকন) —
+     ব্র্যান্ড-লাইট (#E8F5E9) দিলে অপাঠ্য হতো; পাঠযোগ্য ব্র্যান্ড-গ্রিন দেওয়া হলো */
+  --accent-light: var(--lf-brand-primary);
+  --accent-soft: rgba(0, 106, 78, 0.10);
+  --accent-glow: rgba(0, 106, 78, 0.25);
+
+  /* ব্র্যান্ড-নেভি ফ্যামিলি (টপবার) — ব্র্যান্ড-গ্রিনে সংযত */
+  --brand: var(--lf-brand-primary);
+  --brand-light: var(--lf-brand-primary-hover);
+
+  /* রেডিয়াস-লিগ্যাসি */
+  --radius-lg: var(--lf-radius-card);   /* কার্ড/মডাল/প্যানেল */
+  --radius-pill: var(--lf-radius-chip); /* পিল/ব্যাজ */
+
+  /* রিঅ্যাকশন-ইঞ্জিন (main.js hold+slide পিকার সিলেক্টেড-স্টেট) */
+  --lf-react-liked: var(--lf-social-blue);
+}
+
+/* ── সার্বজনীন টাইপোগ্রাফি-স্যান্ড (রুল-৫: নাম ডিপ-ব্ল্যাক, সেকেন্ডারি গ্রে) ──
+   ক্যানোনিকাল কম্পোনেন্ট-ক্লাসগুলো (views/shared/ থেকে রেন্ডারড) এই ভেরিয়েবল
+   ছাড়া রঙ দেখবে না — shared.css-এ সব এর মাধ্যমেই। */
+:root:root {
+  --lf-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
+  --lf-transition: 140ms cubic-bezier(0.2, 0.6, 0.3, 1);
+}
+
+/* ── ক্যানভাস-লক (রুল-৫): style.css:103-এর হার্ডকোড html{background:#f8fafc}-এর
+   ক্যানোনিকাল ওভাররাইড — পুরো সাইটের ব্যাকগ্রাউন্ড মেটালিক গ্রে #F0F2F5 */
+html { background: var(--lf-ui-canvas); }

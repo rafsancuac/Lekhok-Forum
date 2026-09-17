@@ -6,8 +6,8 @@
       <div class="me-header-inner">
         <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="avatar-xl" onerror="this.onerror=null;this.src='/avatar/<%= user.id %>'" style="border-radius:50%">
         <div class="me-id">
-          <h1><%= user.full_name %><span class="me-role-chip"><%= user.designation || 'লেখক সদস্য' %></span></h1>
-          <p class="me-handle me-stats-line"><i class="fas fa-user-friends" aria-hidden="true"></i> <%= bn91(stats.followers) %> জন অনুসারী · <%= bn91(stats.following) %> জনকে অনুসরণ করছেন</p>
+          <h1><%= user.full_name %></h1>
+          <p class="me-handle"><%= user.designation || 'লেখক ফোরাম সদস্য' %></p>
           <% if (user.bio) { %><p class="me-bio"><%= user.bio %></p><% } %>
         </div>
         <div class="me-actions">
@@ -17,13 +17,21 @@
       </div>
     </header>
 
-    <%# ═══ সেশন ১০৯: স্ট্যাট-টাইল-গ্রিড বিলুপ্ত — সংখ্যাগুলো নিচের ট্যাব-ব্যাজেই।
-         লেখা-স্ট্যাটিসটিক্স — কমপ্যাক্ট KPI-চিপ + ৮০px স্লিম-বার-চার্ট (টগলযোগ্য) ═══ %>
+    <div class="stats-grid">
+      <div class="stat-tile"><div class="num"><%= stats.posts %></div><div class="lbl">প্রকাশিত লেখা</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.drafts %></div><div class="lbl">ড্রাফট</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.comments %></div><div class="lbl">মন্তব্য</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.reactions %></div><div class="lbl">প্রতিক্রিয়া</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.bookmarks %></div><div class="lbl">সংরক্ষিত</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.following %></div><div class="lbl">অনুসরণ</div></div>
+      <div class="stat-tile"><div class="num"><%= stats.followers %></div><div class="lbl">অনুসরণকারী</div></div>
+    </div>
+
+    <%# ═══ D3 (সেশন ৯১): লেখা-স্ট্যাটিসটিক্স — KPI + ৬-মাসিক SVG-গ্রাফ + সেরা-লেখা ═══ %>
     <div class="ws91-card" aria-label="লেখা-স্ট্যাটিসটিক্স">
       <div class="ws91-head">
-        <h2><i class="fas fa-chart-column"></i> পারফরম্যান্স সারাংশ</h2>
-        <span class="ws91-sub">প্রকাশিত লেখার পারফরম্যান্স · শেষ ৬ মাস</span>
-        <button type="button" class="ws91-toggle" id="ws91Toggle" aria-expanded="true" aria-controls="ws91Chart">লুকান <i class="fas fa-chevron-up" aria-hidden="true"></i></button>
+        <h2><i class="fas fa-chart-column"></i> লেখা-স্ট্যাটিসটিক্স</h2>
+        <span class="ws91-sub">প্রকাশিত লেখার সামগ্রিক পারফরম্যান্স · শেষ ৬ মাস</span>
       </div>
       <div class="ws91-kpis">
         <div class="ws91-kpi">
@@ -45,36 +53,50 @@
           </a>
         <% } %>
       </div>
-      <% if (monthly91.length) { const maxC91 = Math.max.apply(null, monthly91.map(m => m.count).concat([1])); %>
-      <%# সেশন ১০৯: SVG → HTML flex-বার — viewBox-স্ট্রেচে বিশাল-ফাঁকা-চার্ট গোটচা শেষ;
-          ফিক্সড ৮৪px উচ্চতা, শূন্য-মাসে ৫px মিউটেড-স্টাব, ভ্যালু-লেবেল শুধু >০ হলে %>
-      <div class="ws91-chart-wrap" id="ws91Chart">
-        <div class="ws91-bars" role="img" aria-label="মাসিক প্রকাশনা-গ্রাফ">
+      <% if (monthly91.length) {
+           const maxC91 = Math.max.apply(null, monthly91.map(m => m.count).concat([1]));
+           const W91 = 560, H91 = 120, PAD91 = 6, GAP91 = 18;
+           const bw91 = (W91 - PAD91 * 2 - GAP91 * (monthly91.length - 1)) / monthly91.length;
+      %>
+      <div class="ws91-chart-wrap">
+        <svg class="ws91-chart" viewBox="0 0 <%= W91 %> <%= H91 + 22 %>" preserveAspectRatio="none" role="img" aria-label="মাসিক প্রকাশনা-গ্রাফ">
+          <defs>
+            <linearGradient id="ws91bar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#10B981"/>
+              <stop offset="100%" stop-color="#047857"/>
+            </linearGradient>
+          </defs>
           <% monthly91.forEach(function (m91, i91) {
-               const pct91 = maxC91 > 0 ? Math.round((m91.count / maxC91) * 100) : 0;
+               const h91 = Math.max(m91.count > 0 ? 10 : 3, Math.round((m91.count / maxC91) * (H91 - 14)));
+               const x91 = PAD91 + i91 * (bw91 + GAP91);
+               const y91 = H91 - h91;
+               const cx91 = x91 + bw91 / 2;
           %>
-            <div class="ws91-col" title="<%= m91.label %>: <%= bn91(m91.count) %>টি লেখা">
-              <span class="ws91-val"><%= m91.count > 0 ? bn91(m91.count) : '' %></span>
-              <div class="ws91-track"><div class="ws91-fill<%= m91.count > 0 ? ' has' : '' %>" style="height:<%= m91.count > 0 ? Math.max(pct91, 14) : 6 %>%"></div></div>
-              <span class="ws91-mo"><%= m91.label %></span>
-            </div>
+            <g class="ws91-bar-g">
+              <rect class="ws91-bar" x="<%= x91 %>" y="<%= y91 %>" width="<%= bw91 %>" height="<%= h91 %>" rx="6"
+                    fill="url(#ws91bar)" style="animation-delay:<%= i91 * 70 %>ms">
+                <title><%= m91.label %>: <%= bn91(m91.count) %>টি লেখা</title>
+              </rect>
+              <% if (m91.count > 0) { %>
+                <text class="ws91-bar-num" x="<%= cx91 %>" y="<%= y91 - 5 %>" text-anchor="middle"><%= bn91(m91.count) %></text>
+              <% } %>
+              <text class="ws91-bar-lbl" x="<%= cx91 %>" y="<%= H91 + 15 %>" text-anchor="middle"><%= m91.label %></text>
+            </g>
           <% }); %>
-        </div>
+        </svg>
       </div>
       <% } %>
     </div>
 
-    <%# সেশন ১০৯: একক সমন্বিত ট্যাব-বার — কাউন্ট ব্যাজে (ডুপ্লিকেট-গ্রিড নেই),
-        ড্রাফট-ট্যাব সর্বদা দৃশ্যমান (০ হলেও), FB-প্যারিটি অর্ডার %>
-    <div class="personal-tabs" role="tablist" aria-label="ব্যক্তিগত ফিড ট্যাব">
-      <button class="personal-tab active" data-tab="posts" role="tab" aria-selected="true"><i class="fas fa-pen-nib"></i> আমার পোস্ট <span class="tb-badge"><%= bn91(stats.posts) %></span></button>
-      <button class="personal-tab" data-tab="drafts" role="tab" aria-selected="false"><i class="fas fa-file"></i> ড্রাফট <span class="tb-badge"><%= bn91(stats.drafts) %></span></button>
-      <button class="personal-tab" data-tab="bookmarks" role="tab" aria-selected="false"><i class="fas fa-bookmark"></i> সংরক্ষিত <span class="tb-badge"><%= bn91(stats.bookmarks) %></span></button>
-      <button class="personal-tab" data-tab="comments" role="tab" aria-selected="false"><i class="fas fa-comment"></i> মন্তব্য <span class="tb-badge"><%= bn91(stats.comments) %></span></button>
-      <button class="personal-tab" data-tab="reactions" role="tab" aria-selected="false"><i class="fas fa-heart"></i> প্রতিক্রিয়া <span class="tb-badge"><%= bn91(stats.reactions) %></span></button>
-      <button class="personal-tab" data-tab="following" role="tab" aria-selected="false"><i class="fas fa-user-friends"></i> অনুসরণ <span class="tb-badge"><%= bn91(stats.following) %></span></button>
-      <button class="personal-tab" data-tab="activity" role="tab" aria-selected="false"><i class="fas fa-stream"></i> অ্যাক্টিভিটি</button>
-      <button class="personal-tab" data-tab="categories" role="tab" aria-selected="false"><i class="fas fa-tags"></i> ক্যাটাগরি</button>
+    <div class="personal-tabs" role="tablist">
+      <button class="personal-tab active" data-tab="posts"><i class="fas fa-pen-nib"></i> আমার পোস্ট (<%= stats.posts %>)</button>
+      <button class="personal-tab" data-tab="comments"><i class="fas fa-comment"></i> মন্তব্য (<%= stats.comments %>)</button>
+      <button class="personal-tab" data-tab="reactions"><i class="fas fa-heart"></i> প্রতিক্রিয়া (<%= stats.reactions %>)</button>
+      <button class="personal-tab" data-tab="bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত (<%= stats.bookmarks %>)</button>
+      <button class="personal-tab" data-tab="following"><i class="fas fa-user-friends"></i> অনুসরণ (<%= stats.following %>)</button>
+      <button class="personal-tab" data-tab="activity"><i class="fas fa-stream"></i> অ্যাক্টিভিটি</button>
+      <button class="personal-tab" data-tab="categories"><i class="fas fa-tags"></i> ক্যাটাগরি</button>
+      <% if (stats.drafts > 0) { %><button class="personal-tab" data-tab="drafts"><i class="fas fa-file"></i> ড্রাফট (<%= stats.drafts %>)</button><% } %>
     </div>
 
     <!-- Tab: Posts -->
@@ -88,27 +110,8 @@
         </div>
       <% } %>
       <% myPosts.forEach(p => { %>
-        <article class="feed-card">
-          <% if (p.cover_image) { %><img loading="lazy" decoding="async" src="<%= p.cover_image %>" class="feed-card-cover" alt=""> <% } %>
-          <div class="feed-card-body">
-            <div class="feed-card-meta">
-              <span class="badge <%= p.type === 'question' ? 'badge-muted' : '' %>"><%= p.type === 'question' ? 'প্রশ্ন' : 'লেখা' %></span>
-              <span><i class="far fa-clock"></i> <%= new Date(p.created_at).toLocaleDateString('bn-BD') %></span>
-              <span><i class="far fa-eye"></i> <%= p.view_count || 0 %></span>
-              <%# সেশন ১১০: আনুমানিক পড়ার-সময় %>
-              <% const rm110 = Math.max(1, Math.round(String(p.body || '').replace(/<[^>]*>/g, ' ').replace(/[#*_>`~\[\]()!]/g, '').replace(/\s+/g, ' ').trim().length / 950) || 1); %>
-              <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= String(rm110).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> মিনিট</span>
-            </div>
-            <h3 class="feed-card-title"><a href="<%= p.type === 'question' ? '/qa/' + p.id : '/articles/' + p.id %>"><%= p.title %></a></h3>
-            <% if (p.excerpt) { %><p class="feed-card-excerpt"><%= mdPlain(p.excerpt, 200) %></p><% } %>
-          </div>
-          <div class="feed-card-actions">
-            <span class="feed-action"><i class="far fa-heart"></i> <%= p.like_count || 0 %></span>
-            <span class="feed-action"><i class="far fa-comment"></i> <%= p.comment_count || 0 %></span>
-            <span class="feed-action-spacer"></span>
-            <a class="feed-action" href="/articles/<%= p.id %>/edit"><i class="fas fa-edit"></i> সম্পাদনা</a>
-          </div>
-        </article>
+        <%# সেশন ১০৫: ক্যানোনিকাল FeedPostCard — /me-তেও ফিড/প্রোফাইলের সমান পোস্ট-কার্ড %>
+        <%- include('../shared/post/FeedPostCard', { item: p, user: user, myBookmarkedIds: [], opts: { profileMode: true, showDrawer: true } }) %>
       <% }) %>
     </section>
 
@@ -235,11 +238,9 @@
       </div>
     </section>
 
-    <!-- Tab: Drafts (সর্বদা রেন্ডার — ০ হলে empty-state) -->
+    <!-- Tab: Drafts -->
+    <% if (stats.drafts > 0) { %>
     <section class="me-tab" data-pane="drafts" hidden>
-      <% if (myDrafts.length === 0) { %>
-        <div class="empty"><div class="icon"><i class="fas fa-file"></i></div><h3>কোনো ড্রাফট নেই</h3><p>অসম্পূর্ণ লেখা ড্রাফট হিসেবে সংরক্ষণ করুন, পরে সম্পাদনা করে প্রকাশ করুন।</p></div>
-      <% } %>
       <% myDrafts.forEach(d => { %>
         <article class="feed-card">
           <div class="feed-card-body">
@@ -252,6 +253,7 @@
         </article>
       <% }) %>
     </section>
+    <% } %>
   </div>
 
   <%- include('../partials/footer') %>
@@ -268,16 +270,6 @@
     // Deep-link ?tab=x
     const urlTab = new URLSearchParams(location.search).get('tab');
     if (urlTab) document.querySelector('.personal-tab[data-tab="' + urlTab + '"]')?.click();
-    // সেশন ১০৯: পারফরম্যান্স-চার্ট টগল
-    const wsT = document.getElementById('ws91Toggle'), wsC = document.getElementById('ws91Chart');
-    if (wsT && wsC) {
-      wsT.addEventListener('click', () => {
-        const willShow = wsC.hidden;
-        wsC.hidden = !willShow;
-        wsT.setAttribute('aria-expanded', String(willShow));
-        wsT.innerHTML = willShow ? 'লুকান <i class="fas fa-chevron-up"></i>' : 'চার্ট <i class="fas fa-chevron-down"></i>';
-      });
-    }
     // Interest picker
     document.querySelectorAll('.interest-opt').forEach(chip => {
       chip.addEventListener('click', () => chip.classList.toggle('selected'));
@@ -294,5 +286,8 @@
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+  <%# সেশন ১০৫: ক্যানোনিকাল কম্পোনেন্ট-ইঞ্জিন + রিঅ্যাক্টরস-মডাল %>
+  <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
+  <%- include('../shared/post/ReactorsModal') %>
 </body>
 </html>

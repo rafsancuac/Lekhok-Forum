@@ -1,38 +1,4 @@
-<%
-  // ── সেশন ৯৩: কম্প্যাক্ট ফেসবুক-স্টাইল কমেন্ট-কম্পোজার ──────────────────────
-  // কার্যকর মার্কডাউন-টুলবার (B/I/S/লিংক/তালিকা/উদ্ধৃতি) + @ম্যানশন-অটোকমপ্লিট।
-  // পুরনো cf-hint (স্ট্যাটিক ড্যাশড-চিপ) প্রতিস্থাপন — বাটনগুলো এখন সত্যিই কাজ করে।
-  //
-  // প্যারামিটার:
-  //   user        (必) লগইন-ইউজার (avatar_url, id, full_name)
-  //   postId      (必) টার্গেট পোস্ট-আইডি
-  //   parentId    (ঐ) রিপ্লাই হলে প্যারেন্ট-কমেন্ট-আইডি
-  //   placeholder (ঐ) ডিফল্ট 'আপনার মন্তব্য লিখুন…'
-  //   compact     (ঐ) রিপ্লাই-মোড (ছোট অ্যাভাটার + rows)
-  //   autoFocus   (ঐ) ওপেন হলেই ফোকাস
-  //   extraClass  (ঐ) অতিরিক্ত ক্লাস
-  var _ph = (typeof placeholder !== 'undefined' && placeholder) ? placeholder
-    : 'আপনার মন্তব্য লিখুন… (@ লিখে মেনশন করুন)';
-  var _compact = (typeof compact !== 'undefined') && !!compact;
-  var _parentId = (typeof parentId !== 'undefined' && parentId) ? parentId : null;
-  var _focus = (typeof autoFocus !== 'undefined') && !!autoFocus;
-%>
-<form class="cc-form<%= _compact ? ' cc-compact' : '' %><%= (typeof extraClass !== 'undefined' && extraClass) ? ' ' + extraClass : '' %>" data-post-id="<%= postId %>" data-parent-id="<%= _parentId || '' %>">
-  <img loading="lazy" decoding="async" src="<%= user.avatar_url || ('/avatar/' + user.id) %>" class="cc-avatar<%= _compact ? ' small' : '' %>" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
-  <div class="cc-bubble">
-    <textarea class="cc-input" name="body" rows="1" maxlength="2000" placeholder="<%= _ph %>"<%= _focus ? ' autofocus' : '' %> required></textarea>
-    <%# @ম্যানশন সাজেশন-ড্রপডাউন (comment-tools.js পপুলেট করে) %>
-    <div class="cc-mention" role="listbox" aria-label="মেনশন-সাজেশন" hidden></div>
-    <div class="cc-tools">
-      <div class="cc-tools-left" role="toolbar" aria-label="ফরম্যাটিং">
-        <button type="button" class="cc-fmt" data-fmt="bold" title="বোল্ড (**টেক্সট**)" aria-label="বোল্ড"><i class="fas fa-bold"></i></button>
-        <button type="button" class="cc-fmt" data-fmt="italic" title="ইটালিক (_টেক্সট_)" aria-label="ইটালিক"><i class="fas fa-italic"></i></button>
-        <button type="button" class="cc-fmt" data-fmt="strike" title="কাটা (~~টেক্সট~~)" aria-label="কাটা"><i class="fas fa-strikethrough"></i></button>
-        <button type="button" class="cc-fmt" data-fmt="link" title="লিংক ([টেক্সট](https://…))" aria-label="লিংক"><i class="fas fa-link"></i></button>
-        <button type="button" class="cc-fmt" data-fmt="list" title="তালিকা (- আইটেম)" aria-label="তালিকা"><i class="fas fa-list-ul"></i></button>
-        <button type="button" class="cc-fmt" data-fmt="quote" title="উদ্ধৃতি (> লাইন)" aria-label="উদ্ধৃতি"><i class="fas fa-quote-right"></i></button>
-      </div>
-      <button type="submit" class="cc-send" disabled aria-label="মন্তব্য পাঠান"><i class="fas fa-paper-plane"></i></button>
-    </div>
-  </div>
-</form>
+<%#
+  session105: DELEGATE SHIM — ক্যানোনিকাল সোর্স এখন views/shared/comment/CommentComposer.ejs
+  (ডিজাইন-সিস্টেম গার্ড: এই ফাইলে নতুন মার্কআপ লেখা নিষিদ্ধ — সব এডিট ক্যানোনিকালে) %>
+<%- include('../shared/comment/CommentComposer') %>
