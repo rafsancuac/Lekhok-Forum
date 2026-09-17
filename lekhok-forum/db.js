@@ -479,6 +479,13 @@ const LATER_COLUMNS = [
   // সেশন ৮৫: পিনড-পোস্ট — লেখক তার সেরা লেখা প্রোফাইল-টাইমলাইনের শীর্ষে
   // পিন করতে পারেন (pen_name/genres কলাম সেশন-৮০-র social.js ALTER-লুপে আছে)।
   ['posts', 'is_pinned', 'INTEGER DEFAULT 0'],
+  // সেশন ৯১ (লাইভ-বাগফিক্স): সেশন-৮০-র social.js ALTER-লুপ প্রোডাকশন Turso-তে
+  // চলেনি → users.pen_name নেই বলে লাইভ /dashboard সব-ফিল্টারে 500 (SQL_INPUT_ERROR:
+  // no such column: u.pen_name) — ড্যাশবোর্ড-ইউনিয়ন-কোয়েরি এই কলাম সিলেক্ট করে।
+  // LATER_COLUMNS-এ সরানো হলো যাতে উভয়-ব্যাকএন্ডে প্রতি-বুটে ইডেম্পোটেন্টভাবে
+  // নিশ্চিত হয় (duplicate-column → নিরীহ catch)।
+  ['users', 'pen_name', 'TEXT'],
+  ['users', 'genres', 'TEXT'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
@@ -1145,11 +1152,17 @@ async function runMigrations() {
          AND (title LIKE '%প্রোফাইল পিকচার আপডেট%'
            OR title LIKE '%প্রোফাইল ছবি%'
            OR body LIKE '%নতুন প্রোফাইল পিকচার%');
+    `);
+    // সেশন ৯১: এক exec-এ ৩ স্টেটমেন্ট ছিল — sql.js সহ্য করে কিন্তু Turso বলে
+    // SQL_MANY_STATEMENTS এবং পুরো ব্যাকফিল নীরবে বাদ পড়ত; আলাদা exec-এ ভাঙা হলো।
+    await backend.exec(`
       UPDATE posts SET post_kind = 'cover_update', archive_visible = 0, home_featured = 0
        WHERE post_kind = 'writing'
          AND (title LIKE '%কভার ফটো আপডেট%'
            OR title LIKE '%কভার ছবি%'
            OR body LIKE '%নতুন কভার ফটো%');
+    `);
+    await backend.exec(`
       UPDATE posts SET post_kind = 'question'
        WHERE post_kind = 'writing' AND type = 'question';
     `);
