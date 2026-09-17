@@ -2169,3 +2169,21 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 @keyframes cmtSavedPulse121{0%{box-shadow:0 0 0 0 rgba(5,150,105,.38);background-color:rgba(5,150,105,.07)}60%{box-shadow:0 0 0 6px rgba(5,150,105,.12)}100%{box-shadow:0 0 0 0 rgba(5,150,105,0);background-color:transparent}}
 .cmt-saved-pulse{animation:cmtSavedPulse121 1.15s cubic-bezier(.3,.8,.4,1) both;border-radius:18px}
 @media (prefers-reduced-motion:reduce){.cmt-saved-pulse{animation:none}.cmt-dying{transition:none}}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১২৪ — ক্যানোনিকাল তাৎক্ষণিক-কমেন্ট-ইনসার্ট এন্ট্রি-অ্যানিমেশন
+   ───────────────────────────────────────────────────────────────────────────
+   POST /api/comment-এর সার্ভার-রেন্ডার্ড ক্যানোনিকাল-বাবল (session12-অপটিমিস্টিকের
+   সার্ভার-সত্য-রূপ — রিফেচ-রিকনসাইল-শূন্য) DOM-এ বসার সময় .is-new124:
+   স্লাইড-ইন + ব্র্যান্ড-গ্লো-পালস (বাবল + qa-স্লট-উভয়-ফর্মে)।
+   session12-এর optIn12-এর সাথে সহাবস্থান — ফলব্যাক-পথে তাদেরটাই চলে।
+   reduced-motion: অ্যানিমেশন-শূন্য (অ্যাক্সেসিবিলিটি-নীতি)।
+   EOF-মার্কার: session124-canonical-instant-insert
+   ═══════════════════════════════════════════════════════════════════════════ */
+.fc-item.is-new124,.qa-answer-slot.is-new124{animation:lfNew124 .5s cubic-bezier(.2,.8,.3,1) both}
+.fc-item.is-new124>div>.fc-bubble,.qa-answer-slot.is-new124>div>.fc-bubble,.qa-answer-slot.is-new124>.fc-bubble{animation:lfNewGlow124 1.3s ease}
+@keyframes lfNew124{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes lfNewGlow124{0%{background-color:rgba(10,125,79,.1);box-shadow:0 0 0 3px rgba(10,125,79,.08)}100%{background-color:transparent;box-shadow:none}}
+@media (prefers-reduced-motion: reduce){
+  .fc-item.is-new124,.qa-answer-slot.is-new124,.fc-item.is-new124>div>.fc-bubble,.qa-answer-slot.is-new124>div>.fc-bubble,.qa-answer-slot.is-new124>.fc-bubble{animation:none}
+}

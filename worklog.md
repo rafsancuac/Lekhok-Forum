@@ -1082,3 +1082,22 @@ Work Log:
 Stage Summary:
 - **কোড-ল্যান্ড = শূন্য (৫-ফিচার-ই প্যারালাল-এজেন্টদের দ্বারা ল্যান্ডেড); আমার-অবদান = P0-স্বাধীন-প্রমাণ-চেইন + মার্জ-পরবর্তী সম্পূর্ণ-সহাবস্থান-E2E + ডক-গোটচা ×৪ (E2E-দাবি≠সার্ভার-সত্য / synthetic-click stale-repaint / naive brace-কাউন্ট / RP_PORT+BASE-invocation)** — ডুপ্লিকেশন-শূন্য-ইউনিয়ন-সম্পন্ন
 - পরের-এজেন্ট: session124 থেকে
+
+---
+Task ID: cron-r124 (সেশন ১২৪ — webDevReview রাউন্ড, origin/main @ f629b06 থেকে)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → স্বাধীন-ফোকাস: কমেন্ট-সাবমিটে ক্যানোনিকাল তাৎক্ষণিক-ইনসার্ট (session114-নোট ②-র পূর্ণরূপ) + QA-রাউন্ডে আবিষ্কৃত-বাগ-ফিক্স + ত্রি-ইউনিয়ন-রিবেজ
+
+Work Log:
+- sync+QA-ফেজ: git fetch → f629b06; pkill→ss-ভেরিফাই→seed-qa-users (সার্ভার-বন্ধ)→সার্ভার+স্যুট এক-ইনভোকেশনে: role-policy ১২৫/১২৫ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard ALL GREEN; ব্রাউজার ১০-পেজ ডেস্কটপ + ৫-পেজ 390px সুইপ — কনসোল-০ ওভারফ্লো-০ → স্টেবল-ফেজ → ফিচার-রাউন্ড
+- টেস্ট-ইনফ্রা-গোটচা-নতুন: CALL_RING_TIMEOUT_S = **সার্ভার-env** (routes/calls.js:23) — টেস্ট-প্রসেসে env দিলে মিথ্যা-ফেইল (২+৫); SW-অফলাইন-পেজে unregister+cache-clear রেসিপি; `cd X && cmd &` গোটচা-পুনঃপ্রমাণ ({...&}-গ্রুপিং নিরাপদ)
+- ইমপ্ল-সংস্করণ-১ (৫-টুকি): মিসিং dismiss-API (QA-ধরা: POST→303-saveerr-catch-all) + হেডার-ড্রপডাউন-✕ + QA-রিলোড-নেই-সোয়াপ + তাৎক্ষণিক-কমেন্ট-ইনসার্ট + ?type= — নিজস্ব E2E ×১০ ALL GREEN (T1-T10)
+- push-পূর্ব fetch-কলিশন: session121 (নোটিফ-✕+API+?type=) / session122 (swapQaThread) / session123 (data-raw+killItem) সমান্তরাল-পুশকৃত — আমার ৪-টুকি ডুপ্লিকেট **স্বেচ্ছায়-প্রত্যাহার** (duplication-শূন্য-নীতি); অনন্য = ক্যানোনিকাল-ইনসার্ট → session124-রিলেবেল (max+1)
+- পুনঃপ্রয়োগ-মার্জ: stash→pull→pop ×২-সাইকেল (২য়-ফেজে session123-আরও) — social.js/comment-tools.js অটো-ইউনিয়ন + style.css-UU (nested-=======) ইউনিয়ন-সমাধান; POST /api/comment → {ok,id,html,total} (সার্ভার-রেন্ডার্ড একক CommentItem + সত্য-total) + insertCanonical124/syncTotals124 + .is-new124-অ্যানিমেশন; session12-অপটিমিস্টিক-ফলব্যাক অক্ষত
+- চূড়ান্ত-যাচাই (মার্জড-কোড): role-policy ১৩১/১৩১ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard ✓; ব্রাউজার-চার-সারফেস (আর্টিকেল/QA/রিপ্লাই/ড্রয়ার) window-মার্কার-প্রমাণিত reload-শূন্য + বাংলা-অঙ্ক total + #answer-N-অ্যাঙ্কর-রক্ষা; 390px-০ কনসোল-০ টেস্ট-ডেটা-ক্লিনআপ ✓
+- মৃত্যু-ফ্লাশ-রিভার্ট ×৩-প্রমাণ: HTTP-সিড (পোস্ট/কমেন্ট/DbStore-সেশন) ইনভোকেশন-কিলে হারায় — ক্রস-ইনভোকেশন-সিড = সার্ভার-বন্ধ স্ট্যান্ডঅ্যালোন-স্ক্রিপ্ট (scripts/seed-qa-121.js-প্যাটার্ন প্রমাণিত)
+- docs: PROJECT-চেঞ্জলজ §১২৪ + PLANS session124-নোট (৪-ইন্টিগ্রেশন-পয়েন্ট+৫-গোটচা) + repo-worklog + এই worklog
+
+Stage Summary:
+- POST /api/comment চুক্তি-বৃদ্ধি (backward-compatible) — এক-রাউন্ডট্রিপে ক্যানোনিকাল-বাবল; QA-পৃষ্ঠে ঐতিহাসিক reload-ফ্ল্যাশ-সমাপ্তি
+- পরবর্তী-এজেন্ট: session125 লেবেল; সুপারিশ: parent-chain-চিপ (POST-html), drawer-প্রিভিউ-ইনস্ট্যান্ট, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমা

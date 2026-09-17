@@ -1623,9 +1623,42 @@ router.post('/api/comment', async (req, res) => {
       await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, _pLink113, req.session.user.id);
     }
   }
-  // Return the new comment id so callers (inline reply UI, tests) can chain
-  // follow-ups like /api/comment with parent_id.
-  res.json({ ok: true, id: Number(ins.lastInsertRowid) });
+  // ── সেশন ১২৪: ক্যানোনিকাল তাৎক্ষণিক-ইনসার্ট (session12-অপটিমিস্টিকের সার্ভার-সত্য-রূপ) —
+  // নতুন মন্তব্যের একক CommentItem-HTML (সার্ভার-রেন্ডার্ড — XSS-নিরাপদ, single-source:
+  // views/shared/comment/CommentItem.ejs — format=html/qa-html-পাথেরই মিরর) +
+  // সার্ভার-সত্য মোট-সংখ্যা ফেরত। ক্লায়েন্ট এক-রাউন্ডট্রিপেই ক্যানোনিকাল-বাবল বসায় —
+  // রিফেচ-রিকনসাইল ছাড়াই নির্ভুল (প্যালেট/৩-ডট/রিঅ্যাকশন-ব্যাজ পূর্ণ)।
+  // রেন্ডার-ব্যর্থতায় পুরনো চুক্তি {ok,id}-ই যায় → ক্লায়েন্টের session12-অপটিমিস্টিক
+  // + refresh*-রিকনসাইল পথ অক্ষত থাকে (ফলব্যাক-চুক্তি)।
+  let _resp124 = { ok: true, id: Number(ins.lastInsertRowid) };
+  try {
+    const _row124 = await db.prepare(`
+      SELECT c.id, c.post_id, c.author_id, c.body, c.parent_id, c.created_at, c.edited_at,
+             u.username, u.full_name, u.pen_name, u.avatar_url
+      FROM comments c JOIN users u ON u.id = c.author_id WHERE c.id = ?
+    `).get(Number(ins.lastInsertRowid));
+    if (_row124) {
+      const { renderComment: rc124 } = require('../helpers/markdown-lite');
+      const _tot124 = await db.prepare('SELECT COUNT(*) AS c FROM comments WHERE post_id = ?').get(pid);
+      let _rx124 = null;
+      try { _rx124 = await getReactionSummary('comment_id', _row124.id, req.session.user.id); } catch (_) {}
+      const item124 = {
+        id: _row124.id, post_id: _row124.post_id, author_id: _row124.author_id,
+        body: _row124.body, bodyHtml: rc124(_row124.body || ''), created_at: _row124.created_at,
+        edited_at: _row124.edited_at || null, username: _row124.username,
+        author_name: displayName(req.session.user), pen_name: req.session.user.pen_name || null,
+        avatar_url: _row124.avatar_url,
+        reaction: _rx124 || { counts: {}, mine: null, total: 0 },
+        canEdit: true, canDelete: true, replies: []
+      };
+      const _link124 = post.type === 'question' ? '/qa/' + pid : '/articles/' + pid;
+      const _html124 = await new Promise((res2, rej2) => {
+        req.app.render('shared/comment/CommentItem', { c: item124, link: _link124, user: req.session.user, compact: !!_parentId113 }, (e, h) => e ? rej2(e) : res2(h));
+      });
+      _resp124 = { ok: true, id: Number(ins.lastInsertRowid), html: _html124, total: Number(_tot124.c) };
+    }
+  } catch (e124) { /* ফলব্যাক: {ok,id} — ক্লায়েন্ট session12-পথে রিকনসাইল করবে */ }
+  res.json(_resp124);
 });
 
 // ── সেশন ৯৩: GET /api/comments — ফিড-ইনলাইন-ড্রয়ারের JSON-সোর্স ──────────────

@@ -1002,6 +1002,91 @@
     return true;
   }
 
+  /* ── সেশন ১২৪: ক্যানোনিকাল তাৎক্ষণিক-ইনসার্ট ইঞ্জিন — POST /api/comment-এর
+     সার্ভার-রেন্ডার্ড CommentItem-HTML সরাসরি DOM-এ বসানো। লিস্ট-সনাক্ত
+     insertOptimistic-এর নিয়মেই (data-post-link postId-মিল → ড্রয়ার data-comments-for);
+     qa-তালিকায় .qa-answer-slot#answer-N-র‍্যাপ (নোটিফ-অ্যাঙ্কর-চুক্তি session116);
+     রিপ্লাই = প্যারেন্টের .cmt-replies (qa-তে স্লটের ভাই-নোড — qa-single-প্যারাডাইম)।
+     ফেরত: বসানো-নোড (qa-তে স্লট) — ব্যর্থতায় null (session12-ফলব্যাক-পথে)। */
+  function insertCanonical124(form, html, parentId) {
+    var tmp = document.createElement('div');
+    tmp.innerHTML = String(html || '').trim();
+    var node = tmp.firstElementChild;
+    if (!node) return null;
+    var cId = node.getAttribute('data-cmt-id') || '';
+    var postId = form.getAttribute('data-post-id');
+
+    // লিস্ট-সনাক্ত (session12-নিয়ম: পোস্ট-id-মিল জরুরি — ফিডে বহু-কার্ড)
+    var list = null;
+    document.querySelectorAll('.comments-list[data-post-link], .qa-answers-list[data-post-link]').forEach(function (el) {
+      var p = String(el.getAttribute('data-post-link') || '').replace(/^.*\//, '');
+      if (!list && p === String(postId)) list = el;
+    });
+    if (!list && postId) {
+      var drawer0 = document.querySelector('.fc-drawer[data-comments-for="' + String(postId).replace(/"/g, '') + '"]');
+      if (drawer0) list = drawer0.querySelector('.fc-list');
+    }
+    if (!list) {
+      var drawerF = form.closest('.fc-drawer');
+      if (drawerF) list = drawerF.querySelector('.fc-list');
+    }
+    if (!list) return null;
+
+    // রিপ্লাই — প্যারেন্ট-বাবলের ভেতরে
+    if (parentId) {
+      var parent = list.querySelector('.cmt-item[data-cmt-id="' + String(parentId).replace(/"/g, '') + '"]') ||
+                   document.getElementById('fc-c' + parentId);
+      if (parent) {
+        var qaSlot = parent.closest('.qa-answer-slot');
+        if (qaSlot) { qaSlot.appendChild(node); return node; }
+        var nest = parent.querySelector('.cmt-replies');
+        if (!nest) {
+          nest = document.createElement('div');
+          nest.className = 'cmt-replies';
+          var main = parent.querySelector('.fc-main');
+          (main || parent).appendChild(nest);
+        }
+        nest.hidden = false;
+        nest.appendChild(node);
+        return node;
+      }
+      /* প্যারেন্ট-না-মেললে টপ-লেভেল-এই পড়ুক (session12-চুক্তি — reconcile ঠিক করবে) */
+    }
+
+    // qa-তালিকা — স্লট-র‍্যাপ বাধ্যতামূলক
+    if (list.classList && list.classList.contains('qa-answers-list')) {
+      var slot = document.createElement('div');
+      slot.className = 'qa-answer-slot';
+      if (cId) slot.id = 'answer-' + cId;
+      slot.appendChild(node);
+      node = slot;
+      var emp = document.querySelector('.answers-empty');
+      if (emp) emp.remove();
+    } else {
+      var none = list.querySelector('.fc-none');
+      if (none) none.remove();
+    }
+    list.appendChild(node);
+    return node;
+  }
+
+  /* ── সেশন ১২৪: কাউন্টার-সিঙ্ক — সার্ভার-সত্য total → সব-সারফেস (SET — বাম্প-নয়;
+     optBumpCounters-এর মতোই ডুপ্লিকেট-স্প্যান-গার্ড) ── */
+  function syncTotals124(form, total) {
+    if (typeof total !== 'number') return;
+    var seen124 = [];
+    document.querySelectorAll('[data-cmt-total], .comments-total').forEach(function (el) {
+      if (seen124.indexOf(el) !== -1) return;
+      seen124.push(el);
+      el.textContent = bnNum(total);
+    });
+    var card124 = form.closest('.feed-card, article');
+    if (card124) {
+      var stat124 = card124.querySelector('.as-stat[title="মন্তব্য"] span:first-child');
+      if (stat124) stat124.textContent = bnNum(total);
+    }
+  }
+
   /* ── ৬. কম্পোজার-সাবমিট (ডেলিগেটেড — ফিড-ড্রয়ার + আর্টিকেল-পেজ) ─────── */
   document.addEventListener('submit', function (e) {
     var form = e.target;
@@ -1034,6 +1119,28 @@
         var bubble = form.querySelector('.cc-bubble');
         if (bubble) closeMention(bubble);
         if (send) { send.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
+
+        /* ── সেশন ১২৪: ক্যানোনিকাল তাৎক্ষণিক-ইনসার্ট-পথ (প্রধান) — POST /api/comment
+            এখন সার্ভার-রেন্ডার্ড একক CommentItem-HTML + সত্য-total ফেরত দেয়; এক
+            রাউন্ডট্রিপেই পিক্সেল-নির্ভুল ক্যানোনিকাল-বাবল (প্যালেট/৩-ডট/ব্যাজ/ক্যানএডিট)
+            DOM-এ বসে — রিফেচ-রিকনসাইল-শূন্য। j.html-না-এলে session12-অপটিমিস্টিক
+            ফলব্যাক (নিচে — অপরিবর্তিত চুক্তি)। ── */
+        if (j.html) {
+          var node124 = insertCanonical124(form, j.html, parentId);
+          if (node124) {
+            node124.classList.add('is-new124');
+            setTimeout(function () { node124.classList.remove('is-new124'); }, 1300);
+            syncTotals124(form, j.total);
+            if (window.showToast) showToast('মন্তব্য প্রকাশিত হয়েছে ✓', 'success');
+            var slot124 = form.closest('.fc-reply-slot');
+            if (slot124) { slot124.hidden = true; slot124.innerHTML = ''; }
+            /* ফিড-ড্রয়ারে প্রিভিউ/স্ট্যাট-রিকনসাইল (নীরব — কনটেন্ট-অভিন্ন, ফ্ল্যাশ-শূন্য);
+               আর্টিকেল/কিউঅ্যান্ডএ-তালিকায় রিফেচ-ই-লাগে না (insert-ই সার্ভার-সত্য) */
+            var drawer124 = form.closest('.fc-drawer');
+            if (drawer124) refreshDrawer(drawer124, drawer124.getAttribute('data-comments-for'));
+            return;
+          }
+        }
 
         /* সেশন ১২ (অপটিমিস্টিক-UI): সার্ভার-রিফেচের আগেই বাবল তাৎক্ষণিক বসে —
            j.id বাস্তব তাই প্যালেট/৩-ডট/রিপ্লাই সঙ্গে সঙ্গেই সক্রিয়;
