@@ -53,12 +53,42 @@ router.get('/resources', async (req, res) => {
 });
 
 // ── Contact form submission ────────────────────────────────────────────────
+// সেশন ১০৩: ① ইন-মেমরি রেট-লিমিট (প্রতি IP ৫/১০মি — স্প্যাম-গার্ড) ② প্লেইন-ফর্ম-POST
+// (Accept: text/html) এখন JSON-পেজে আটকাবে না — /contact?success=|error=-এ 303-রিডাইরেক্ট
+// (ভিউতে স্ট্রিপ রেন্ডার হয়); fetch/AJAX সাবমিটে আগের মতো JSON।
+const _cxHits103 = new Map(); // ip → [Date.now(), ...]
+const _CX_RL103 = { max: 5, windowMs: 10 * 60 * 1000 };
+function _cxRateLimited103(ip) {
+  const now = Date.now();
+  const arr = (_cxHits103.get(ip) || []).filter(t => now - t < _CX_RL103.windowMs);
+  const limited = arr.length >= _CX_RL103.max;
+  if (!limited) { arr.push(now); _cxHits103.set(ip, arr); }
+  if (_cxHits103.size > 500) { // মেমরি-গার্ড: পুরনো-কী প্রুন
+    for (const [k, v] of _cxHits103) {
+      if (!v.some(t => now - t < _CX_RL103.windowMs)) _cxHits103.delete(k);
+    }
+  }
+  return limited;
+}
 router.post('/contact', async (req, res) => {
-  const { name, email, subject, message } = req.body;
-  if (!name || !message) return res.status(400).json({ error: 'নাম এবং বার্তা আবশ্যক' });
-  await db.prepare('INSERT INTO contact_submissions (name, email, subject, message) VALUES (?, ?, ?, ?)')
-    .run(name, email || null, subject || null, message);
-  res.json({ success: true, message: 'আপনার বার্তা পাঠানো হয়েছে।' });
+  const wantsHtml = String(req.get('accept') || '').includes('text/html');
+  const reply = (ok, msg, code) => {
+    if (wantsHtml) return res.redirect(303, '/contact?' + (ok ? 'success=' : 'error=') + encodeURIComponent(msg));
+    if (ok) return res.json({ ok: true, success: true, message: msg });
+    return res.status(code || 400).json({ ok: false, error: msg });
+  };
+  const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
+  if (_cxRateLimited103(ip)) return reply(false, 'অনেকবার বার্তা পাঠানো হয়েছে — ১০ মিনিট পরে আবার চেষ্টা করুন।', 429);
+  const { name, email, subject, message } = req.body || {};
+  if (!name || !message) return reply(false, 'নাম এবং বার্তা আবশ্যক', 400);
+  const clamp = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+  try {
+    await db.prepare('INSERT INTO contact_submissions (name, email, subject, message) VALUES (?, ?, ?, ?)')
+      .run(clamp(name, 120), clamp(email, 200) || null, clamp(subject, 200) || null, clamp(message, 4000));
+  } catch (e) {
+    return reply(false, 'সার্ভার সমস্যা — কিছুক্ষণ পরে আবার চেষ্টা করুন।', 500);
+  }
+  reply(true, 'আপনার বার্তা পাঠানো হয়েছে। ধন্যবাদ!');
 });
 
 // ── সেশন ৪৩: ডাবল-অপ্ট-ইন কনফার্মেশন লিংক ──

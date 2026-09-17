@@ -1326,3 +1326,83 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 .cx102 .cx-prov-call{margin-left:auto}
 .cx102 .cx-prov-info{flex:1 1 140px}
 .cx102 .cx-egr-num .fas{font-size:.68rem;margin-right:2px;opacity:.75}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১০৩ — যোগাযোগ-পেজ বৃদ্ধি (স্কোপড: .cx102)
+   ① প্রভোস্ট-সার্চ + কপি-টু-ক্লিপবোর্ড + মোনোগ্রাম-টাইল  ② 'আজ খোলা' লাইভ-ব্যাজ
+   ③ ফর্ম-নোট (fetch-ইনলাইন + রিডাইরেক্ট-স্ট্রিপ)  ④ স্টাইল-পলিশ: শাইন-সুইপ/জেব্রা-
+   টেবিল/গ্রেডিয়েন্ট-ট্রিম/পালস-ডট/focus-visible
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ১. 'আজ খোলা' লাইভ-ব্যাজ + আজকের-রো হাইলাইট ── */
+.cx102 .cx-today-badge{display:inline-flex;align-items:center;gap:7px;vertical-align:middle;margin-left:10px;padding:5px 13px;border-radius:999px;font-size:.7rem;font-weight:800;letter-spacing:.3px;background:rgba(16,185,129,.12);color:#047857;border:1px solid rgba(16,185,129,.35);position:relative;top:-3px}
+.cx102 .cx-today-badge.is-off{background:rgba(248,113,113,.1);color:#DC2626;border-color:rgba(248,113,113,.35)}
+.cx102 .cx-tb-dot{width:8px;height:8px;border-radius:50%;background:#10B981;box-shadow:0 0 0 3px rgba(16,185,129,.18);animation:cxPulse103 2.2s ease-out infinite}
+.cx102 .cx-today-badge.is-off .cx-tb-dot{background:#F87171;box-shadow:0 0 0 3px rgba(248,113,113,.16);animation:none}
+@keyframes cxPulse103{0%{box-shadow:0 0 0 0 rgba(16,185,129,.35)}70%{box-shadow:0 0 0 7px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+.cx102 .cx-hour-row.is-today{border-color:rgba(5,150,105,.55);background:linear-gradient(160deg,#F0FDF6,#fff);box-shadow:0 3px 12px rgba(5,150,105,.12);position:relative}
+.cx102 .cx-hour-row.is-today::after{content:'আজ';position:absolute;top:-9px;right:14px;font-size:.62rem;font-weight:800;letter-spacing:.4px;color:#047857;background:#D1FAE5;border:1px solid rgba(5,150,105,.35);border-radius:999px;padding:2px 9px;line-height:1.4}
+
+/* ── ২. প্রভোস্ট-টুলবার: সার্চ + কাউন্ট ── */
+.cx102 .cx-prov-tools{display:flex;align-items:center;gap:12px;margin:0 0 14px}
+.cx102 .cx-prov-search{position:relative;flex:1;min-width:0}
+.cx102 .cx-prov-search .fa-search{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:.82rem;color:#94A3B8;pointer-events:none;transition:color .2s}
+.cx102 .cx-prov-search input{width:100%;padding:12px 44px;border:1px solid var(--border,#e2e8f0);border-radius:999px;font-size:.85rem;font-family:inherit;background:var(--card,#fff);color:var(--text,#1e293b);box-shadow:0 2px 8px rgba(10,31,68,.04);transition:border-color .2s,box-shadow .2s}
+.cx102 .cx-prov-search input:focus{outline:none;border-color:var(--accent,#059669);box-shadow:0 0 0 4px rgba(5,150,105,.12)}
+.cx102 .cx-prov-search input:focus + .fa-search,.cx102 .cx-prov-search:focus-within .fa-search{color:var(--accent,#059669)}
+.cx102 .cx-prov-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:none;background:#F1F5F9;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:background .2s,color .2s}
+.cx102 .cx-prov-clear:hover{background:#E2E8F0;color:#334155}
+.cx102 .cx-prov-count{flex-shrink:0;font-size:.76rem;font-weight:800;color:var(--accent,#059669);background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.22);border-radius:999px;padding:8px 14px;white-space:nowrap}
+.cx102 .cx-prov-empty{display:flex;align-items:center;justify-content:center;gap:10px;padding:26px 18px;border:1px dashed var(--border,#dbe3ec);border-radius:14px;color:var(--text-muted,#64748b);font-size:.85rem;background:#FAFBFC}
+
+/* ── ৩. মোনোগ্রাম-টাইল + কপি-বাটন + অ্যাকশন-গ্রুপ ── */
+.cx102 .cx-prov-item{gap:12px}
+.cx102 .cx-prov-mono{flex:0 0 40px;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;font-weight:800;background:linear-gradient(135deg,rgba(5,150,105,.14),rgba(10,31,68,.08));color:var(--accent,#059669);border:1px solid rgba(5,150,105,.2);transition:transform .2s}
+.cx102 .cx-prov-item:hover .cx-prov-mono{transform:scale(1.07)}
+.cx102 .cx-prov-mono.tint-red{background:rgba(220,38,38,.09);color:#DC2626;border-color:rgba(220,38,38,.22)}
+.cx102 .cx-prov-mono.tint-amber{background:rgba(217,119,6,.1);color:#D97706;border-color:rgba(217,119,6,.24)}
+.cx102 .cx-prov-mono.tint-blue{background:rgba(24,119,242,.09);color:#1877F2;border-color:rgba(24,119,242,.24)}
+.cx102 .cx-prov-mono.tint-purple{background:rgba(124,58,237,.09);color:#7C3AED;border-color:rgba(124,58,237,.24)}
+.cx102 .cx-prov-mono.tint-green{background:rgba(5,150,105,.1);color:#059669;border-color:rgba(5,150,105,.24)}
+.cx102 .cx-prov-mono.tint-slate{background:rgba(71,85,105,.09);color:#475569;border-color:rgba(71,85,105,.22)}
+.cx102 .cx-prov-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.cx102 .cx-prov-copy{width:30px;height:30px;border-radius:9px;border:1px solid var(--border,#dbe3ec);background:#fff;color:#64748B;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,border-color .2s,transform .15s}
+.cx102 .cx-prov-copy:hover{background:#F0FDF6;color:#047857;border-color:rgba(5,150,105,.4);transform:translateY(-1px)}
+.cx102 .cx-prov-copy.copied{background:#059669;color:#fff;border-color:#059669}
+.cx102 .cx-prov-info{flex:1 1 130px}
+
+/* ── ৪. ফর্ম-নোট (ইনলাইন + রিডাইরেক্ট-স্ট্রিপ) ── */
+.cx102 .cx-form-note{display:none;align-items:flex-start;gap:9px;margin-top:14px;padding:12px 15px;border-radius:12px;font-size:.83rem;line-height:1.65}
+.cx102 .cx-form-note.show{display:flex}
+.cx102 .cx-form-note.ok{color:#065F46;background:rgba(16,185,129,.1);border:1px solid rgba(52,211,153,.4)}
+.cx102 .cx-form-note.bad{color:#991B1B;background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.4)}
+.cx102 .cx-form-note .fas{margin-top:2px}
+
+/* ── ৫. স্টাইল-পলিশ: শাইন-সুইপ / গ্রেডিয়েন্ট-ট্রিম / জেব্রা / পালস / ফোকাস-রিং ── */
+/* চ্যানেল-কার্ডে শাইন-সুইপ (hover-এ ডায়াগোনাল-গ্লো অতিক্রম) */
+.cx102 .cx-ch-card{position:relative;overflow:hidden}
+.cx102 .cx-ch-card::after{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.5) 45%,rgba(5,150,105,.08) 55%,transparent);transform:skewX(-18deg);transition:left .65s cubic-bezier(.22,1,.36,1);pointer-events:none}
+.cx102 .cx-ch-card:hover::after{left:135%}
+/* সাবসেকশন-হেডারে গ্রেডিয়েন্ট-ট্রিম */
+.cx102 .cx-sec-head{position:relative;overflow:hidden}
+.cx102 .cx-sec-head::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,rgba(5,150,105,.55),rgba(16,185,129,.18) 45%,transparent 80%);opacity:.85}
+.cx102 .cx-sec-head.is-emergency::after{background:linear-gradient(90deg,rgba(220,38,38,.55),rgba(248,113,113,.18) 45%,transparent 80%)}
+/* টেবিল-জেব্রা + রো-হোভার-অ্যাকসেন্ট */
+.cx102 .ts-table tbody tr:nth-child(even){background:rgba(5,150,105,.028)}
+.cx102 .ts-table tbody tr{transition:background .15s,box-shadow .15s}
+.cx102 .ts-table tbody tr:hover{background:rgba(5,150,105,.07);box-shadow:inset 3px 0 0 var(--accent,#059669)}
+/* ফ্রি-শাটল 'ফ্রি'-ব্যাজে পালস-ডট */
+.cx102 .cx-fs-free::before{content:'';width:7px;height:7px;border-radius:50%;background:#6EE7B7;animation:cxPulse103 2.2s ease-out infinite;flex-shrink:0}
+/* ইন্টারেক্টিভ cx-এলিমেন্টে focus-visible (কীবোর্ড-অ্যাক্সেসিবিলিটি) */
+.cx102 .cx-ch-card:focus-visible,.cx102 .cx-uni-card:focus-visible,.cx102 .cx-prov-call:focus-visible,.cx102 .cx-prov-copy:focus-visible,.cx102 .cx-prov-toggle:focus-visible,.cx102 .cx-egr-call:focus-visible,.cx102 .cx-map-open:focus-visible,.cx102 .cx-prov-clear:focus-visible{outline:3px solid rgba(5,150,105,.45);outline-offset:2px;border-radius:14px}
+/* রেসপনসিভ */
+@media (max-width:640px){
+  .cx102 .cx-today-badge{margin-left:0;margin-top:8px;position:static;display:inline-flex}
+  .cx102 .cx-prov-tools{flex-direction:column;align-items:stretch}
+  .cx102 .cx-prov-count{align-self:flex-start}
+  .cx102 .cx-prov-mono{flex-basis:34px;width:34px;height:34px;font-size:.9rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .cx102 .cx-tb-dot,.cx102 .cx-fs-free::before{animation:none}
+  .cx102 .cx-ch-card::after{display:none}
+}

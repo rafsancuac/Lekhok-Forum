@@ -302,7 +302,8 @@ router.get('/contact', async (req, res) => {
     layout: 'layout',
     pageTitle: 'যোগাযোগ',
     currentPath: '/contact',
-    success: req.query.success || null
+    success: req.query.success || null,
+    error: req.query.error || null
   });
 });
 

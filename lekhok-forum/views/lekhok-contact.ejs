@@ -64,7 +64,9 @@
           <li><i class="fab fa-telegram-plane"></i><div><strong><%= C('contact_tg_label') %></strong><span><%= C('contact_tg_text') %></span></div></li>
         </ul>
       </div>
-      <form class="contact-form card" method="POST" action="/api/contact">
+      <form class="contact-form card" id="cxForm103" method="POST" action="/api/contact">
+        <%# সেশন ১০৩-ফিক্স: মূল-ফর্মে _csrf-ফিল্ডই ছিল না → সাবমিট সবসময় 303/?csrf=1-বাউন্স (কখনো সেভ হতো না) — টোকেন এখন ফর্মেই রেন্ডার %>
+        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
         <h3 style="margin-top:0;"><i class="fas fa-paper-plane" style="color:var(--accent);"></i> <%= C('contact_form_title') %></h3>
         <p style="color:var(--text-muted); margin-bottom:18px;"><%= C('contact_form_text') %></p>
         <div class="form-row">
@@ -74,11 +76,11 @@
         <input type="text" name="subject" placeholder="বিষয়">
         <textarea name="message" placeholder="আপনার বার্তা লিখুন... *" rows="6" required></textarea>
         <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-paper-plane"></i> <%= C('contact_form_btn') %></button>
-        <% if (success) { %>
-          <p style="margin-top:14px;color:#A7F3D0;background:rgba(16,185,129,.14);border:1px solid rgba(52,211,153,.35);padding:10px 14px;border-radius:5px;">
-            <i class="fas fa-check-circle"></i> <%= success %>
-          </p>
-        <% } %>
+        <%# সেশন ১০৩: success/error স্ট্রিপ (no-JS ফলব্যাক: ?success=|error= রিডাইরেক্ট) + fetch-ইনলাইন-নোট %>
+        <p id="cxFormNote" class="cx-form-note<%= success ? ' ok show' : (error ? ' bad show' : '') %>" role="status" aria-live="polite" <%= (success || error) ? '' : 'hidden' %>>
+          <i class="fas <%= success ? 'fa-check-circle' : 'fa-exclamation-circle' %>"></i>
+          <%= success || error || '' %>
+        </p>
       </form>
     </div>
   </div>
@@ -90,7 +92,7 @@
     <div class="cx-loc-grid">
       <div class="cx-loc-info">
         <span class="eyebrow"><%= C('contact_loc_eyebrow') %></span>
-        <h2 class="section-title"><%= C('contact_loc_t1') %> <span class="accent"><%= C('contact_loc_accent') %></span></h2>
+        <h2 class="section-title"><%= C('contact_loc_t1') %> <span class="accent"><%= C('contact_loc_accent') %></span> <span id="cxTodayBadge" class="cx-today-badge" hidden><span class="cx-tb-dot" aria-hidden="true"></span><span id="cxTodayText">আজ খোলা</span></span></h2>
         <span class="accent-divider"></span>
         <p class="cx-loc-text"><%= C('contact_loc_text') %></p>
 
@@ -102,7 +104,7 @@
                var dayPart = ci > -1 ? ht.slice(0, ci) : ht;
                var timePart = ci > -1 ? ht.slice(ci + 1).trim() : '';
           %>
-          <div class="cx-hour-row<%= closed ? ' is-closed' : '' %>">
+          <div class="cx-hour-row<%= closed ? ' is-closed' : '' %>" data-days="<%= dayPart %>" data-closed="<%= closed ? '1' : '0' %>">
             <span class="cx-hour-dot" aria-hidden="true"></span>
             <span class="cx-hour-day"><%= dayPart %></span>
             <span class="cx-hour-time"><%= timePart %></span>
@@ -369,7 +371,7 @@
       </div>
     </div>
 
-    <!-- ৩ঙ. আবাসিক হল প্রভোস্ট তালিকা (সেশন ১০২ — নতুন; DB/contact_halls খালি হলে রেজিস্ট্রি-ডিফল্ট) -->
+    <!-- ৩ঙ. আবাসিক হল প্রভোস্ট তালিকা (সেশন ১০২ — DB/contact_halls খালি হলে রেজিস্ট্রি-ডিফল্ট; ১০৩: সার্চ+কপি+মোনোগ্রাম) -->
     <% if (typeof halls42 !== 'undefined' && halls42 && halls42.length) { %>
     <div class="cx-sub-block">
       <div class="cx-sec-head">
@@ -379,21 +381,40 @@
           <p class="cx-sec-sub">চট্টগ্রাম বিশ্ববিদ্যালয়ের সব হলের প্রশাসনিক যোগাযোগ</p>
         </div>
       </div>
+
+      <div class="cx-prov-tools">
+        <div class="cx-prov-search">
+          <i class="fas fa-search" aria-hidden="true"></i>
+          <input type="search" id="cxProvSearch" placeholder="হল, প্রভোস্ট বা বিভাগ লিখে খুঁজুন…" aria-label="হল প্রভোস্ট খুঁজুন" autocomplete="off">
+          <button type="button" class="cx-prov-clear" id="cxProvClear" aria-label="সার্চ মুছুন" hidden><i class="fas fa-times"></i></button>
+        </div>
+        <span class="cx-prov-count" id="cxProvCount"><%= en2bn102(String(halls42.length)) %>টি হল</span>
+      </div>
+
       <div class="cx-prov-grid" id="cxProvGrid" data-collapsed="1">
-        <% halls42.forEach(function (h) {
+        <% halls42.forEach(function (h, hi) {
              var ph = phoneOf102(h);
+             var firstChar = String(h.title || '').trim().charAt(0) || 'হ';
+             var mtint = _EGTINT102[hi % _EGTINT102.length];
         %>
-        <div class="cx-prov-item">
+        <div class="cx-prov-item" data-search="<%= String((h.title || '') + ' ' + (h.subtitle || '') + ' ' + (h.body || '')).replace(/"/g, '&quot;') %>">
+          <span class="cx-prov-mono tint-<%= mtint %>" aria-hidden="true"><%= firstChar %></span>
           <span class="cx-prov-info">
             <strong><%= h.title %></strong>
             <span class="cx-prov-name"><%= h.subtitle || h.body %></span>
             <% if (h.body && h.subtitle) { %><span class="cx-prov-dept"><%= h.body %> বিভাগ</span><% } %>
           </span>
           <% if (ph) { %>
-          <a class="cx-prov-call" href="tel:<%= ph.tel %>"><i class="fas fa-phone-alt"></i> <%= ph.pretty %></a>
+          <span class="cx-prov-actions">
+            <button type="button" class="cx-prov-copy" data-num="<%= ph.pretty %>" title="নম্বর কপি করুন" aria-label="<%= h.title %> নম্বর কপি করুন"><i class="far fa-copy"></i></button>
+            <a class="cx-prov-call" href="tel:<%= ph.tel %>"><i class="fas fa-phone-alt"></i> <%= ph.pretty %></a>
+          </span>
           <% } %>
         </div>
         <% }); %>
+      </div>
+      <div class="cx-prov-empty" id="cxProvEmpty" hidden>
+        <i class="fas fa-magnifying-glass"></i> কোনো হল মেলেনি — বানান বদলে আবার খুঁজুন।
       </div>
       <button type="button" class="cx-prov-toggle" id="cxProvToggle">সবগুলো দেখুন (<%= en2bn102(String(halls42.length)) %>টি)</button>
     </div>
@@ -404,17 +425,101 @@
 
 </div>
 
+<%# সেশন ১০৩: SEO — জরুরি-যোগাযোগ ContactPoint JSON-LD (নম্বরগুলো +880-নরমালাইজড) %>
+<% if (typeof tr42 !== 'undefined' && tr42 && tr42.length) {
+     var ld102 = tr42.map(function (c) {
+       var ph = phoneOf102(c);
+       if (!ph) return null;
+       var intl = ph.tel.replace(/[^0-9]/g, '');
+       if (intl.charAt(0) === '0') intl = '+88' + intl;
+       return { '@type': 'ContactPoint', 'telephone': intl, 'contactType': String(c.title || ''), 'name': String(c.title || ''), 'areaServed': 'BD', 'availableLanguage': ['bn', 'en'] };
+     }).filter(Boolean); %>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়","url":<%= JSON.stringify((typeof siteUrl !== 'undefined' ? siteUrl : '') + '/contact') %>,"contactPoint":<%= JSON.stringify(ld102) %>}
+</script>
+<% } %>
+
 <%# সেশন ১০২: হল-প্রভোস্ট শো-অল/কম-টগল (প্রগ্রেসিভ-এনহ্যান্সমেন্ট — JS বন্ধ থাকলেও প্রথম ৬টি দেখা যায়) %>
+<%# সেশন ১০৩: + সার্চ-ফিল্টার + কপি-টু-ক্লিপবোর্ড + 'আজ খোলা' ব্যাজ + ফর্ম-fetch-ইন্টারসেপ্ট — সব IIFE-গার্ডেড, একে-অপর-নির্ভরশীল নয় %>
 <script>
 (function () {
   var grid = document.getElementById('cxProvGrid');
   var btn = document.getElementById('cxProvToggle');
   if (!grid || !btn) return;
-  var total = grid.children.length;
-  var label = function (collapsed) {
-    var n = String(total).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; });
+  var items = Array.prototype.slice.call(grid.children);
+  var total = items.length;
+  var bnN = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+  var label = function (collapsed, visible) {
+    var n = bnN(visible == null ? total : visible);
     return collapsed ? 'সবগুলো দেখুন (' + n + 'টি)' : 'সংক্ষিপ্ত করুন';
   };
+
+  /* ── সার্চ-ফিল্টার (হল/প্রভোস্ট/বিভাগ; কেস-অসংবেদী, জাবার-নিরপেক্ষ) ── */
+  var search = document.getElementById('cxProvSearch');
+  var clearB = document.getElementById('cxProvClear');
+  var countEl = document.getElementById('cxProvCount');
+  var emptyEl = document.getElementById('cxProvEmpty');
+  var query = '';
+  function applyFilter() {
+    var visible = 0;
+    items.forEach(function (it) {
+      var hay = (it.getAttribute('data-search') || '').toLowerCase();
+      var hit = !query || hay.indexOf(query) > -1;
+      it.style.display = hit ? '' : 'none';
+      if (hit) visible++;
+    });
+    if (countEl) countEl.textContent = bnN(visible) + 'টি হল';
+    if (emptyEl) emptyEl.hidden = visible !== 0;
+    if (clearB) clearB.hidden = !query;
+    // সার্চ-চলাকালীন কলাপ্স-অর্থহীন — সব দেখাও
+    if (query && grid.getAttribute('data-collapsed') === '1') {
+      grid.setAttribute('data-collapsed', '0');
+      btn.textContent = label(false, visible);
+    } else if (!query) {
+      var collapsed = grid.getAttribute('data-collapsed') === '1';
+      btn.textContent = label(collapsed, visible);
+    }
+  }
+  if (search) {
+    search.addEventListener('input', function () {
+      query = search.value.trim().toLowerCase();
+      applyFilter();
+    });
+  }
+  if (clearB) {
+    clearB.addEventListener('click', function () {
+      if (search) { search.value = ''; search.focus(); }
+      query = '';
+      applyFilter();
+    });
+  }
+
+  /* ── কপি-টু-ক্লিপবোর্ড (কপি-হয়েছে-ফিডব্যাক) ── */
+  grid.addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('.cx-prov-copy') : null;
+    if (!b) return;
+    ev.preventDefault();
+    var num = b.getAttribute('data-num') || '';
+    var done = function () {
+      b.classList.add('copied');
+      var ic = b.querySelector('i');
+      if (ic) { ic.className = 'fas fa-check'; }
+      setTimeout(function () {
+        b.classList.remove('copied');
+        if (ic) ic.className = 'far fa-copy';
+      }, 1400);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(num).then(done, done);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = num; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); done();
+    }
+  });
+
+  /* ── শো-অল/কম-টগল ── */
   if (total > 6) {
     btn.style.display = 'inline-flex';
     btn.textContent = label(true);
@@ -426,5 +531,108 @@
   } else {
     btn.parentNode && btn.parentNode.removeChild(btn);
   }
+})();
+
+/* ── 'আজ খোলা' লাইভ-ব্যাজ (দিন-স্তর; contact_hours-রো-এর data-days/data-closed থেকে) ── */
+(function () {
+  var badge = document.getElementById('cxTodayBadge');
+  var txt = document.getElementById('cxTodayText');
+  var rows = document.querySelectorAll('.cx-hour-row[data-days]');
+  if (!badge || !txt || !rows.length) return;
+  var names = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
+  var today = names[new Date().getDay()];
+  var hit = null;
+  Array.prototype.forEach.call(rows, function (r) {
+    var d = r.getAttribute('data-days') || '';
+    var found = d.indexOf(today) > -1;
+    if (!found && d.indexOf('–') > -1) {
+      var m = d.match(/(রবি|সোম|মঙ্গল|বুধ|বৃহস্পতি|শুক্র|শনি)বার/g) || [];
+      if (m.length >= 2) {
+        var a = names.indexOf(m[0].replace('বার', ''));
+        var b = names.indexOf(m[1].replace('বার', ''));
+        var t = names.indexOf(today);
+        if (a > -1 && b > -1 && t > -1 && a <= t && t <= b) found = true;
+      }
+    }
+    if (found && !hit) hit = r;
+  });
+  if (hit) {
+    var closed = hit.getAttribute('data-closed') === '1';
+    badge.hidden = false;
+    badge.classList.add(closed ? 'is-off' : 'is-on');
+    txt.textContent = closed ? 'আজ বন্ধ' : 'আজ খোলা';
+    hit.classList.add('is-today');
+  }
+})();
+
+/* ── ফর্ম fetch-ইন্টারসেপ্ট (no-JS-এ প্লেইন POST → রুটে 303-রিডাইরেক্ট — উভয়-পথ কাজ করে) ── */
+(function () {
+  var f = document.getElementById('cxForm103');
+  var note = document.getElementById('cxFormNote');
+  if (!f || !note) return;
+  f.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var name = f.elements.name ? f.elements.name.value.trim() : '';
+    var msg = f.elements.message ? f.elements.message.value.trim() : '';
+    var show = function (ok, m) {
+      note.hidden = false;
+      note.className = 'cx-form-note show ' + (ok ? 'ok' : 'bad');
+      note.innerHTML = '<i class="fas ' + (ok ? 'fa-check-circle' : 'fa-exclamation-circle') + '"></i> ' + m;
+    };
+    if (!name || !msg) { show(false, 'নাম এবং বার্তা আবশ্যক'); return; }
+    var btn = f.querySelector('button[type="submit"]');
+    var setBusy = function (busy) {
+      if (!btn) return;
+      if (busy) { btn.disabled = true; btn.setAttribute('data-orig', btn.innerHTML); btn.innerHTML = 'পাঠানো হচ্ছে…'; }
+      else { btn.disabled = false; btn.innerHTML = btn.getAttribute('data-orig') || btn.innerHTML; }
+    };
+    var buildBody = function (tok) {
+      var b = new URLSearchParams(new FormData(f));
+      if (tok) b.set('_csrf', tok); else if (!b.get('_csrf')) {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        b.set('_csrf', meta ? meta.content : '');
+      }
+      return b.toString();
+    };
+    /* সেশন ১০৩-গোটচা-হিল: /contact ক্যাশেবল-পাবলিক → রেন্ডার-টোকেন এফেমেরাল
+       (সেশন/কুকি-তে নেই) → প্রথম POST 403-csrf দিতে পারে। রিকভারি: fresh
+       ?_u= GET (ক্যাশ-বাইপাস → Set-Cookie + বৈধ-টোকেন) → রিট্রায়। */
+    var post = function (tok) {
+      return fetch(f.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+        body: buildBody(tok),
+        credentials: 'same-origin'
+      }).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, j: j }; }, function () { return { ok: r.ok, j: {} }; });
+      });
+    };
+    var refreshTok = function () {
+      var u = document.createElement('a');
+      u.href = location.href;
+      var qs = u.search ? u.search.replace(/^\?/, '') : '';
+      var params = new URLSearchParams(qs);
+      params.set('_u', String(Date.now())); // ক্যাশ-বাইপাস + গেটওয়ে-কুয়েরি (XTransformPort) প্রিজার্ভ
+      return fetch(u.pathname + '?' + params.toString(), { credentials: 'same-origin' })
+        .then(function (r) { return r.text(); })
+        .then(function (html) {
+          var m = html.match(/name="_csrf" value="([^"]+)"/);
+          return m ? m[1] : '';
+        });
+    };
+    setBusy(true);
+    post(null).then(function (res) {
+      var csrfFail = (res.j && res.j.error && String(res.j.error).indexOf('নিরাপত্তা') > -1) || res.status === 403;
+      if (csrfFail) return refreshTok().then(function (tok) { return post(tok); });
+      return res;
+    }).then(function (res) {
+      var ok = !!(res.ok && res.j && res.j.success);
+      var m = (res.j && (res.j.message || res.j.error)) || (ok ? 'পাঠানো হয়েছে' : 'সমস্যা হয়েছে — আবার চেষ্টা করুন।');
+      show(ok, m);
+      if (ok) f.reset();
+    }).catch(function () {
+      show(false, 'নেটওয়ার্ক সমস্যা — ইন্টারনেট যাচাই করে আবার চেষ্টা করুন।');
+    }).then(function () { setBusy(false); });
+  });
 })();
 </script>
