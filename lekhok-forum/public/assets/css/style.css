@@ -969,19 +969,11 @@ html.theme-sepia .genre-badge{color:#7c5c2e;background:rgba(124,92,46,.1);border
 .ws91-kpi div span{font-size:.72rem;color:#6b7280;display:block;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 a.ws91-best:hover .ws91-best-label{color:#065F46}
 .ws91-chart-wrap{background:linear-gradient(180deg,#FAFCFB,#F4F8F6);border:1px solid #EEF1F4;border-radius:12px;padding:12px 14px 6px}
-.ws91-chart{width:100%;height:auto;display:block}
-.ws91-bar{
-  transform-origin:bottom;animation:ws91grow .5s cubic-bezier(.22,1,.36,1) backwards;
-}
-@keyframes ws91grow{from{transform:scaleY(0);opacity:.3}to{transform:scaleY(1);opacity:1}}
-@media (prefers-reduced-motion:reduce){.ws91-bar{animation:none}}
-.ws91-bar:hover{filter:brightness(1.08)}
-.ws91-bar-num{font-size:11px;font-weight:700;fill:#065F46}
-.ws91-bar-lbl{font-size:11px;fill:#6b7280}
+/* সেশন ১১২ পরিষ্কার: SVG-যুগের মৃত-রুল সরানো হয়েছে (.ws91-chart, .ws91-bar,
+   @keyframes ws91grow, .ws91-bar-num/-lbl) — চার্ট এখন HTML flex-বার
+   (ws91-bars/col/track/fill, সেশন-১০৯ ব্লকে)। কোনো এলিমেন্ট এগুলো ব্যবহার করে না। */
 @media (max-width:520px){
   .ws91-card{padding:14px 12px 12px}
-  .ws91-bar-num{font-size:9px}
-  .ws91-bar-lbl{font-size:9px}
 }
 
 /* ═══ সেশন ৯১ ফিক্স: /me হিরো — .me-header-এর gradient-ব্যান্ডের উপর inner
@@ -1848,3 +1840,31 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
   .cx102 #cxProvBlock .cx-prov-empty{display:none !important}
   #cxTodayBadge{display:none !important}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Session 112 — 'পড়া চালিয়ে যান' উইজেট (crx) + msx খসড়া-চিপ
+   • crx: ড্যাশবোর্ড সাইডবারে অসমাপ্ত-পঠন তালিকা (localStorage lf_read_pos;
+     continue-reading.js রেন্ডার করে) — কমপ্যাক্ট-সারি, ৪px প্রগ্রেস-বার,
+     খালি-তালিকায় কার্ড-আঁকা-ই-হয়-না (ইউজারের কমপ্যাক্ট-এসথেটিক)
+   • msx-chip.wide: ৫ম (ফুল-উইডথ) খসড়া-চিপ — grid-column:1/-1                ═══ */
+.crx-mount[hidden]{display:none}
+.crx-card h4{display:flex;align-items:center;gap:7px}
+.crx-list{display:flex;flex-direction:column;gap:8px;margin:10px 0 4px}
+.crx-row{display:flex;align-items:stretch;gap:6px;min-width:0}
+.crx-link{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;background:#F8FAF9;border:1px solid var(--border,#e2e8f0);border-radius:10px;padding:8px 10px;text-decoration:none;transition:border-color .15s,background .15s}
+.crx-link:hover{border-color:#B7DCCE;background:#F2F8F5}
+.crx-link:focus-visible{outline:2px solid #059669;outline-offset:1px}
+.crx-title{font-size:.74rem;font-weight:600;color:var(--text,#0f172a);line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;display:block}
+.crx-bar{display:block;height:4px;border-radius:999px;background:#E2E8F0;overflow:hidden}
+.crx-bar-fill{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#10B981,#047857);transition:width .4s cubic-bezier(.22,1,.36,1)}
+@media (prefers-reduced-motion:reduce){.crx-bar-fill{transition:none}}
+.crx-meta{font-size:.64rem;color:var(--text-muted,#64748b);display:flex;align-items:center;gap:4px}
+.crx-x{border:0;background:transparent;color:#94A3B8;font-size:1rem;line-height:1;cursor:pointer;padding:2px 6px;border-radius:6px;align-self:center;transition:color .15s,background .15s}
+.crx-x:hover{color:#DC2626;background:#FEF2F2}
+@media (max-width:640px){
+  .crx-list{gap:6px}
+  .crx-title{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3}
+}
+.msx-chip.wide{grid-column:1/-1}
+/* ═══ Session 112 সমাপ্ত ═══ */
+

@@ -400,8 +400,10 @@ router.get('/dashboard', async (req, res) => {
       const aggP = await db.prepare("SELECT COUNT(*) c, COALESCE(SUM(view_count),0) v FROM posts WHERE author_id = ? AND status = 'published'").get(me.id);
       const aggC = await db.prepare('SELECT COUNT(*) c FROM comments WHERE author_id = ?').get(me.id);
       const aggR = await db.prepare("SELECT COALESCE(SUM(like_count),0) l FROM posts WHERE author_id = ? AND status = 'published'").get(me.id);
-      myStats = { posts: aggP.c || 0, views: aggP.v || 0, reactions: aggR.l || 0, comments: aggC.c || 0 };
-    } catch (_) { myStats = { posts: 0, views: 0, reactions: 0, comments: 0 }; }
+      /* সেশন ১১২: খসড়া-সংখ্যা — msx-উইজেটের নতুন 'খসড়া (ড্রাফট)' চিপে */
+      const aggD = await db.prepare("SELECT COUNT(*) c FROM posts WHERE author_id = ? AND status = 'draft'").get(me.id);
+      myStats = { posts: aggP.c || 0, views: aggP.v || 0, reactions: aggR.l || 0, comments: aggC.c || 0, drafts: aggD.c || 0 };
+    } catch (_) { myStats = { posts: 0, views: 0, reactions: 0, comments: 0, drafts: 0 }; }
   }
 
   // সেশন ৬৬+৮৯: bookmarked-প্রিফিল এখন decorateFeed()-এর সাথেই (উপরে myBookmarkedIds)
