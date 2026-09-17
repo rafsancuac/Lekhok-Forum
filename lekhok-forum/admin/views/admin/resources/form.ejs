@@ -7,6 +7,21 @@
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* সেশন ১০১: রিসোর্স টাইপ-পিকার + আপলোড-ফিল্ড */
+    .rt-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    @media (max-width: 760px) { .rt-grid { grid-template-columns: repeat(3, 1fr); } }
+    .rt-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 6px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--bg-soft, #f8fafc); color: var(--text-soft, #475569); font-size: .78rem; font-weight: 600; cursor: pointer; transition: all .15s ease; text-align: center; }
+    .rt-btn i { font-size: 1.15rem; }
+    .rt-btn:hover { background: #f1f5f9; transform: translateY(-1px); }
+    .rt-btn.active { border-color: var(--accent, #059669); background: #ecfdf5; color: var(--accent, #059669); box-shadow: 0 2px 8px rgba(5,150,105,.15); }
+    .rt-pane { display: none; }
+    .rt-pane.on { display: block; animation: rtFade .18s ease; }
+    @keyframes rtFade { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+    .rt-hint { font-size: .78rem; color: #64748b; margin: 4px 0 0; }
+    .rt-cur { display: inline-flex; align-items: center; gap: 6px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; border-radius: 8px; padding: 3px 10px; font-size: .75rem; font-weight: 600; margin-bottom: 6px; }
+    @media (prefers-reduced-motion: reduce) { .rt-pane.on { animation: none; } .rt-btn:hover { transform: none; } }
+  </style>
 </head>
 <body>
 <%- include('../partials/sidebar') %>
@@ -17,32 +32,96 @@
   </div>
   <div class="card">
     <% if (error) { %><div class="error"><%= error %></div><% } %>
-    <form method="POST" action="<%= resource ? '/admin/resources/' + resource.id + '?_method=PUT' : '/admin/resources' %>">
+    <%
+      // সেশন ১০১: ক্যানোনিক্যাল টাইপ (legacy row হলে normalize)
+      var curType = RES_TYPE_META.normalizeResType(resource || {});
+      var types = RES_TYPE_META.RES_TYPES;
+    %>
+    <form method="POST" action="<%= resource ? '/admin/resources/' + resource.id + '?_method=PUT' : '/admin/resources' %>" enctype="multipart/form-data" id="resForm">
       <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= resource ? resource.title : '' %>" required></div>
-      <div class="form-group"><label>বিষয়বস্তু</label><textarea name="content" rows="8"><%= resource ? (resource.content || '') : '' %></textarea></div>
+      <div class="form-group">
+        <label>ফাইলের ধরন নির্বাচন করুন *</label>
+        <input type="hidden" name="res_type" id="resTypeInput" value="<%= curType %>">
+        <div class="rt-grid" role="radiogroup" aria-label="ফাইলের ধরন">
+          <% Object.keys(types).forEach(function(k){ %>
+            <button type="button" class="rt-btn <%= k === curType ? 'active' : '' %>" data-rt="<%= k %>" role="radio" aria-checked="<%= k === curType ? 'true' : 'false' %>">
+              <i class="fas <%= types[k].icon %>"></i> <span><%= types[k].label %></span>
+            </button>
+          <% }) %>
+        </div>
+      </div>
+      <div class="form-group"><label>বিষয়বস্তু / সংক্ষিপ্ত বিবরণ</label><textarea name="content" rows="6" placeholder="এই ফাইলে কী কী বিষয় অন্তর্ভুক্ত আছে তা সংক্ষেপে লিখুন…"><%= resource ? (resource.content || '') : '' %></textarea></div>
       <div class="form-group">
         <label>ক্যাটাগরি</label>
         <select name="category">
-          <option value="scholarship"  <%= resource && resource.category === 'scholarship'  ? 'selected' : '' %>>ফেলোশিপ</option>
+          <option value="guide"       <%= resource && resource.category === 'guide'       ? 'selected' : '' %>>গাইড</option>
+          <option value="document"    <%= resource && resource.category === 'document'    ? 'selected' : '' %>>ডকুমেন্ট</option>
+          <option value="report"      <%= resource && resource.category === 'report'      ? 'selected' : '' %>>প্রতিবেদন</option>
+          <option value="form"        <%= resource && resource.category === 'form'        ? 'selected' : '' %>>ফর্ম</option>
+          <option value="anthology"   <%= resource && resource.category === 'anthology'   ? 'selected' : '' %>>সংকলন</option>
+          <option value="reference"   <%= resource && resource.category === 'reference'   ? 'selected' : '' %>>রেফারেন্স</option>
+          <option value="scholarship" <%= resource && resource.category === 'scholarship' ? 'selected' : '' %>>ফেলোশিপ</option>
           <option value="writing-tips" <%= resource && resource.category === 'writing-tips' ? 'selected' : '' %>>লেখালেখির টিপস</option>
-          <option value="general"      <%= resource && resource.category === 'general'      ? 'selected' : '' %>>সাধারণ</option>
+          <option value="general"     <%= resource && (!resource.category || resource.category === 'general') ? 'selected' : '' %>>সাধারণ</option>
         </select>
       </div>
-      <div class="form-group"><label>লেখক</label><input type="text" name="author" value="<%= resource ? (resource.author || '') : '' %>"></div>
+      <div class="form-group"><label>লেখক / প্রকাশক</label><input type="text" name="author" value="<%= resource ? (resource.author || '') : '' %>"></div>
       <div class="form-group"><label>ট্যাগ (কমা দিয়ে আলাদা করুন)</label><input type="text" name="tags" value="<%= resource ? (resource.tags || '') : '' %>" placeholder="কবিতা, লেখালেখি, পরামর্শ"></div>
-      <div class="form-group">
-        <label>ধরন</label>
-        <select name="file_type">
-          <option value="link"     <%= resource && resource.file_type === 'link'     ? 'selected' : '' %>>লিংক</option>
-          <option value="document" <%= resource && resource.file_type === 'document' ? 'selected' : '' %>>ডকুমেন্ট (PDF/DOC)</option>
-          <option value="video"    <%= resource && resource.file_type === 'video'    ? 'selected' : '' %>>ভিডিও</option>
-        </select>
+
+      <%# ── টাইপ-ভিত্তিক ফাইল প্যানেল ── %>
+      <div class="form-group rt-pane <%= ['pdf','audio','video','image','doc'].indexOf(curType) !== -1 ? 'on' : '' %>" data-pane="file">
+        <% if (resource && resource.file_url) { %>
+          <span class="rt-cur"><i class="fas fa-paperclip"></i> বর্তমান ফাইল: <a href="<%= resource.file_url %>" target="_blank" rel="noopener" style="color:inherit;"><%= resource.file_url %></a></span>
+        <% } %>
+        <label>ফাইল আপলোড (PDF / অডিও / ভিডিও / ছবি / ডকুমেন্ট — সর্বোচ্চ ৬০MB)</label>
+        <input type="file" name="resource_file" id="resFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,image/*,audio/*,video/*,.txt,.zip">
+        <p class="rt-hint"><i class="fas fa-circle-info"></i> আপলোড করলে ধরন ও ফাইল-সাইজ স্বয়ংক্রিয়ভাবে নির্ধারিত হবে। আপলোড না করে নিচের ফাইল-URL দিলেও চলবে।</p>
+        <input type="url" name="file_url" value="<%= resource ? (resource.file_url || '') : '' %>" placeholder="https://... অথবা /uploads/resources/..." style="margin-top:8px;">
       </div>
-      <div class="form-group"><label>লিংক URL (যদি লিংক হয়)</label><input type="url" name="link_url" value="<%= resource ? (resource.link_url || '') : '' %>" placeholder="https://..."></div>
-      <div class="form-group"><label>ফাইল URL (যদি ডকুমেন্ট হয়)</label><input type="url" name="file_url" value="<%= resource ? (resource.file_url || '') : '' %>" placeholder="https://... অথবা /uploads/..."></div>
+
+      <div class="form-group rt-pane <%= curType === 'link' ? 'on' : '' %>" data-pane="link">
+        <label>গুগল ড্রাইভ / ইউটিউব / ডাউনলোড লিংক</label>
+        <input type="url" name="link_url" value="<%= resource ? (resource.link_url || '') : '' %>" placeholder="https://...">
+        <p class="rt-hint"><i class="fas fa-circle-info"></i> গুগল-ড্রাইভ ফোল্ডার/ফাইল শেয়ার-লিংক, ইউটিউব ভিডিও বা যেকোনো পাবলিক ডাউনলোড লিংক দেওয়া যাবে।</p>
+      </div>
+
+      <div class="form-group rt-pane <%= (curType === 'audio' || curType === 'video') ? 'on' : '' %>" data-pane="duration">
+        <label>সময়সীমা (ঐচ্ছিক — যেমন "22:45 মিনিট")</label>
+        <input type="text" name="duration" value="<%= resource ? (resource.duration || '') : '' %>" placeholder="যেমন: 22:45">
+      </div>
+
+      <div class="form-group rt-pane <%= ['pdf','audio','video','image','doc'].indexOf(curType) !== -1 ? 'on' : '' %>" data-pane="size">
+        <label>ফাইলের আকার (ঐচ্ছিক — আপলোড করলে অটো)</label>
+        <input type="text" name="file_size" value="<%= resource ? (resource.file_size || '') : '' %>" placeholder="যেমন: 5.2 MB">
+      </div>
+
       <button type="submit" class="btn btn-primary"><%= resource ? 'আপডেট' : 'তৈরি করুন' %></button>
     </form>
   </div>
 </div>
+<script>
+(function () {
+  // সেশন ১০১: টাইপ-পিকার — প্যানেল-টগল + hidden input সেট + duration/size প্রাসঙ্গিকতা
+  var TYPE_PANES = {
+    pdf:   ['file', 'size'],
+    audio: ['file', 'size', 'duration'],
+    video: ['file', 'size', 'duration'],
+    image: ['file', 'size'],
+    doc:   ['file', 'size'],
+    link:  ['link']
+  };
+  var input = document.getElementById('resTypeInput');
+  var btns = document.querySelectorAll('.rt-btn');
+  var panes = document.querySelectorAll('.rt-pane');
+  function apply(t) {
+    input.value = t;
+    btns.forEach(function (b) { b.classList.toggle('active', b.dataset.rt === t); b.setAttribute('aria-checked', b.dataset.rt === t ? 'true' : 'false'); });
+    var show = TYPE_PANES[t] || ['link'];
+    panes.forEach(function (p) { p.classList.toggle('on', show.indexOf(p.dataset.pane) !== -1); });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { apply(b.dataset.rt); }); });
+  apply(input.value || 'link');
+})();
+</script>
 </body>
 </html>

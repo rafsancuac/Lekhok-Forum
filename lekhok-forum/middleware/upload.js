@@ -138,7 +138,7 @@ async function uploadToBlob(file, subdir) {
 // "image". req.file was therefore ALWAYS undefined and every upload silently
 // did nothing. .fields() accepts all of them; the first present file is
 // normalized to req.file so routes keep working unchanged.
-const UPLOAD_FIELDS = ['file', 'avatar', 'attachment', 'cover', 'image', 'epaper', 'photo'];
+const UPLOAD_FIELDS = ['file', 'avatar', 'attachment', 'cover', 'image', 'epaper', 'photo', 'resource_file'];
 
 function makeUpload({ subdir, maxBytes, allowedTypes, allowedExts }) {
   const dest = path.join(UPLOAD_ROOT, subdir);
@@ -271,6 +271,19 @@ const epaperUpload = makeUpload({
   allowedExts:  EPAPER_EXT
 });
 
+// সেশন ১০১: রিসোর্স আপলোড — গাইডবুক/ই-বুক (PDF/DOC/XLSX), অডিও লেকচার, ভিডিও ক্লাস,
+// ইনফোগ্রাফিক/সার্টিফিকেট। ভিডিও বড় হতে পারে → 60MB। HTML/SVG স্পষ্টভাবে বাদ
+// (stored-XSS-প্রতিরোধ — epaper-র মতোই নীতি)।
+const RES_TYPES = /^((image|application|text|audio|video)\/(jpe?g|png|gif|webp|pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|plain|octet-stream|webm|ogg|mpeg|mp4|x-m4a|wav|aac|opus|quicktime|x-msvideo))$/;
+const RES_EXT = /\.(jpe?g|png|gif|webp|pdf|docx?|xlsx?|pptx?|mp3|m4a|wav|aac|opus|ogg|webm|mp4|mov|avi|txt|zip)$/i;
+const resourceUpload = makeUpload({
+  subdir:       'resources',
+  maxBytes:     60 * 1024 * 1024,
+  allowedTypes: RES_TYPES,
+  allowedExts:  RES_EXT,
+  fieldName:    'resource_file'
+});
+
 /**
  * সেশন ৩৫: কনটেন্ট এডিটরের ছবি/ব্যানার আপলোড — একাধিক নামাঙ্কিত ফিল্ড একসাথে।
  * makeUpload() একটি মাত্র req.file নরমালাইজ করে; কনটেন্ট ফর্মে একাধিক ইমেজ-ফিল্ড
@@ -363,6 +376,7 @@ async function storeBufferImage(file, subdir) {
 module.exports = {
   avatarUpload, coverUpload, attachmentUpload, galleryUpload, pressUpload,
   messageUpload, complaintUpload, epaperUpload,
+  resourceUpload,
   makeContentImageUpload,
   withUpload,
   optimizeToWebp,

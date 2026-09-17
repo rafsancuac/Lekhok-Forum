@@ -24,20 +24,21 @@
     <div class="card empty">কোনো রিসোর্স নেই</div>
   <% } else { %>
   <table>
-    <thead><tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>ক্যাটাগরি</th><th>লেখক</th><th>কার্যক্রম</th></tr></thead>
+    <thead><tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>ধরন</th><th>ক্যাটাগরি</th><th>কার্যক্রম</th><th>স্ট্যাট</th></tr></thead>
     <tbody>
-      <% resources.forEach(r => { %>
+      <% resources.forEach(r => { var _rt = RES_TYPE_META.RES_TYPES[RES_TYPE_META.normalizeResType(r)]; %>
         <tr>
           <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= r.id %>" aria-label="সিলেক্ট"></td>
-          <td><strong><%= r.title %></strong></td>
+          <td><strong><%= r.title %></strong><% if (r.file_url) { %><br><a href="<%= r.file_url %>" target="_blank" rel="noopener" style="font-size:.72rem;color:#64748b;"><%= r.file_url %></a><% } %></td>
+          <td><span style="display:inline-flex;align-items:center;gap:5px;background:<%= _rt.bg %>;color:<%= _rt.color %>;border:1px solid <%= _rt.border %>;border-radius:8px;padding:2px 9px;font-size:.72rem;font-weight:700;"><i class="fas <%= _rt.icon %>"></i> <%= _rt.short %></span></td>
           <td><%= r.category %></td>
-          <td><%= r.author || '—' %></td>
           <td>
             <a href="/admin/resources/<%= r.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
             <form method="POST" action="/admin/resources/<%= r.id %>?_method=DELETE" style="display:inline;">
               <button class="btn btn-danger btn-sm">মুছুন</button>
             </form>
           </td>
+          <td style="font-size:.72rem;color:#64748b;white-space:nowrap;"><i class="far fa-eye"></i> <%= r.views || 0 %> · <i class="fas fa-download"></i> <%= r.downloads || 0 %></td>
         </tr>
       <% }) %>
     </tbody>

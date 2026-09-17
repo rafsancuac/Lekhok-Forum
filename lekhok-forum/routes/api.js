@@ -188,4 +188,31 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// ── সেশন ১০১: রিসোর্স ভিউ/ডাউনলোড-কাউন্টার (public — পেজ-কার্ড ক্লিকে ফায়ার) ──
+// kind=view (অডিও-প্লে/ভিডিও-মোডাল খুললে) | download (ফাইল-লিংক খোলা/ডাউনলোড)।
+// রেট-গার্ড: একই সেশনে প্রতি-রিসোর্স-প্রতি-কাইন্ড ৩০ সেকেন্ডে ১ বারই গোনা হয়।
+const resStatHits = new Map(); // "kind:id:uid|ip" → ts
+router.post('/resources/:id/stat', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const kind = req.body && req.body.kind === 'download' ? 'download' : 'view';
+    if (!id || id < 1) return res.status(400).json({ ok: false, error: 'invalid id' });
+    const u = req.session && req.session.user;
+    const key = kind + ':' + id + ':' + (u ? 'u' + u.id : req.ip || 'anon');
+    const now = Date.now();
+    const last = resStatHits.get(key) || 0;
+    if (now - last < 30 * 1000) return res.json({ ok: true, deduped: true });
+    resStatHits.set(key, now);
+    if (resStatHits.size > 2000) { // মেমোরি-গার্ড
+      for (const [k, ts] of resStatHits) { if (now - ts > 10 * 60 * 1000) resStatHits.delete(k); }
+    }
+    const col = kind === 'download' ? 'downloads' : 'views';
+    await db.prepare('UPDATE resources SET ' + col + ' = COALESCE(' + col + ', 0) + 1 WHERE id = ?').run(id);
+    const row = await db.prepare('SELECT views, downloads FROM resources WHERE id = ?').get(id);
+    res.json({ ok: true, views: row ? row.views : 0, downloads: row ? row.downloads : 0 });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: 'stat failed' });
+  }
+});
+
 module.exports = router;

@@ -8,8 +8,29 @@
 
 <section class="section reveal">
   <div class="container">
-    <% const CAT_BN = { guide: 'গাইড', document: 'ডকুমেন্ট', report: 'প্রতিবেদন', form: 'ফর্ম', anthology: 'সংকলন', reference: 'রেফারেন্স', scholarship: 'ফেলোশিপ', 'writing-tips': 'লেখালেখির টিপস' }; const catBn = (c) => CAT_BN[c] || c; %>
-    <% const FT_BN = { pdf: 'পিডিএফ', doc: 'ওয়ার্ড', docx: 'ওয়ার্ড', image: 'ছবি', jpg: 'ছবি', png: 'ছবি' }; %>
+    <% const CAT_BN = { guide: 'গাইড', document: 'ডকুমেন্ট', report: 'প্রতিবেদন', form: 'ফর্ম', anthology: 'সংকলন', reference: 'রেফারেন্স', scholarship: 'ফেলোশিপ', 'writing-tips': 'লেখালেখির টিপস', general: 'সাধারণ' }; const catBn = (c) => CAT_BN[c] || c; %>
+    <% const BN = '০১২৩৪৫৬৭৮৯'; const bn = n => String(n).replace(/\d/g, d => BN[+d]); %>
+    <%
+      /* সেশন ১০১: টাইপ-মেটা — কার্ডে ব্যাজ/আইকন/অ্যাকশন-লেবেল (helpers/resource-types.js-এর সাথে সিঙ্কড) */
+      var RT_META = {
+        pdf:   { icon: 'fa-file-pdf',    label: 'PDF ডকুমেন্ট', action: 'খুলুন / ডাউনলোড' },
+        audio: { icon: 'fa-headphones',  label: 'অডিও লেকচার',  action: 'শুনুন' },
+        video: { icon: 'fa-circle-play', label: 'ভিডিও ক্লাস',   action: 'ভিডিও দেখুন' },
+        image: { icon: 'fa-file-image',  label: 'ইনফোগ্রাফিক',  action: 'দেখুন' },
+        doc:   { icon: 'fa-file-word',   label: 'ডকুমেন্ট',     action: 'খুলুন / ডাউনলোড' },
+        link:  { icon: 'fa-link',        label: 'রিসোর্স লিংক', action: 'লিংক খুলুন' }
+      };
+      var resUrl = function (r) { return r.link_url || r.file_url || ''; };
+    %>
+
+    <%# ── স্টাফ-গেট: অ্যাডমিন/মডারেটরের আপলোড-শর্টকাট (সেশন ১০১) ── %>
+    <% if (isStaff) { %>
+      <div class="rsx-staffbar">
+        <span><i class="fas fa-user-shield"></i> আপনি <strong>অ্যাডমিন/মডারেটর</strong> — নতুন অডিও, ভিডিও, পিডিএফ বা ছবির রিসোর্স প্রকাশ করতে পারেন।</span>
+        <a href="/moderator/resources" class="rsx-staffbtn"><i class="fas fa-cloud-arrow-up"></i> রিসোর্স আপলোড করুন</a>
+      </div>
+    <% } %>
+
     <div class="notice-tabs">
       <a href="?category=all"          class="<%= activeCategory === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সকল</a>
       <% if (categories && categories.length) { %>
@@ -24,32 +45,43 @@
     </div>
 
     <% if (resources && resources.length) { %>
-      <div class="resource-grid reveal-stagger">
+      <div class="rsx-grid">
         <% resources.forEach(r => {
-             var iconClass = 'fas fa-file-alt';
-             var fileType = (r.file_type || '').toLowerCase();
-             if (fileType === 'pdf') iconClass = 'fas fa-file-pdf';
-             else if (fileType === 'doc' || fileType === 'docx') iconClass = 'fas fa-file-word';
-             else if (fileType === 'image' || fileType === 'jpg' || fileType === 'png') iconClass = 'fas fa-file-image';
-             else if (r.category === 'scholarship') iconClass = 'fas fa-graduation-cap';
-             else if (r.category === 'writing-tips') iconClass = 'fas fa-pen-fancy';
+             var t = RT_META[r.res_type] || RT_META.link;
+             var url = resUrl(r);
+             var embed = (r.res_type === 'video') ? videoEmbedUrl(url) : null;
         %>
-          <div class="resource-card has-image">
-            <div class="res-icon-wrap" style="position:relative;">
-              <span class="res-badge"><%= FT_BN[(r.file_type || '').toLowerCase()] || catBn(r.category) %></span>
-              <i class="<%= iconClass %>"></i>
-            </div>
-            <div class="res-body">
-              <h3><%= r.title %></h3>
-              <% if (r.content) { %><p><%= mdPlain(r.content, 110) %></p><% } %>
-              <% if (r.author) { %><p class="res-meta"><i class="far fa-user"></i> <%= r.author %></p><% } %>
-              <% if (r.tags) { %><p class="res-meta"><i class="fas fa-tags"></i> <%= r.tags %></p><% } %>
-              <% const resLink = r.link_url || r.file_url; %>
-              <% if (resLink) { %>
-              <a href="<%= resLink %>" class="btn btn-primary" target="_blank" rel="noopener">
-                <i class="fas fa-external-link-alt"></i> দেখুন
-              </a>
+          <div class="rsx-card" role="button" tabindex="0" aria-label="<%= r.title %> — <%= t.label %>"
+               data-id="<%= r.id %>" data-type="<%= r.res_type %>" data-url="<%= url %>">
+            <% if (r.res_type === 'image' && url) { %>
+              <div class="rsx-cover"><img src="<%= url %>" alt="<%= r.title %>" loading="lazy" decoding="async" onerror="this.parentElement.style.display='none'"></div>
+            <% } %>
+            <div class="rsx-body">
+              <div class="rsx-top">
+                <span class="rsx-badge" style="background:<%= t.bg %>;color:<%= t.color %>;border-color:<%= t.border %>;">
+                  <i class="fas <%= t.icon %>"></i> <%= t.label %>
+                </span>
+                <span class="rsx-meta">
+                  <% if (r.duration) { %><span title="সময়সীমা"><i class="far fa-clock"></i> <%= r.duration %></span><% } %>
+                  <% if (r.file_size) { %><span title="ফাইল-আকার"><i class="far fa-save"></i> <%= r.file_size %></span><% } %>
+                </span>
+              </div>
+              <h3 class="rsx-title"><%= r.title %></h3>
+              <% if (r.content) { %><p class="rsx-desc"><%= mdPlain(r.content, 130) %></p><% } %>
+              <%# ── ইনলাইন অডিও-প্লেয়ার (অডিও-কার্ডে শুনুন-ক্লিকে টগল) ── %>
+              <% if (r.res_type === 'audio' && url) { %>
+                <div class="rsx-audio" hidden>
+                  <audio controls preload="none" src="<%= url %>"></audio>
+                </div>
               <% } %>
+              <div class="rsx-foot">
+                <span class="rsx-cat"><i class="fas fa-folder-open"></i> <%= catBn(r.category) %></span>
+                <span class="rsx-stats">
+                  <span title="পাঠ"><i class="far fa-eye"></i> <%= bn(r.views || 0) %></span>
+                  <span title="ডাউনলোড/খোলা"><i class="fas fa-download"></i> <%= bn(r.downloads || 0) %></span>
+                </span>
+                <span class="rsx-cta"><%= t.action %> <i class="fas fa-arrow-right"></i></span>
+              </div>
             </div>
           </div>
         <% }) %>
@@ -59,8 +91,137 @@
         <i class="fas fa-book-open"></i>
         <h3>এই ক্যাটাগরিতে কোনো রিসোর্স নেই</h3>
         <p>নতুন রিসোর্স এখানে যোগ করা হবে</p>
-        <a href="/admin/resources/new" class="btn btn-primary"><i class="fas fa-plus"></i> রিসোর্স যোগ করুন</a>
+        <% if (isStaff) { %><a href="/moderator/resources" class="btn btn-primary"><i class="fas fa-plus"></i> রিসোর্স যোগ করুন</a><% } %>
       </div>
     <% } %>
   </div>
 </section>
+
+<%# ── ভিডিও মোডাল (সেশন ১০১) ── %>
+<div class="rsx-vmodal" id="rsxVModal" hidden role="dialog" aria-modal="true" aria-label="ভিডিও প্রিভিউ">
+  <div class="rsx-vmodal-back" data-rsx-close></div>
+  <div class="rsx-vmodal-box">
+    <button type="button" class="rsx-vmodal-x" data-rsx-close aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
+    <div class="rsx-vmodal-frame" id="rsxVModalFrame"></div>
+  </div>
+</div>
+
+<style>
+/* ═══ সেশন ১০১: ক্লিকেবল রিসোর্স-কার্ড (rsx-* স্কোপ) ═══ */
+.rsx-staffbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px 18px; margin-bottom: 18px; font-size: .85rem; color: #065f46; }
+.rsx-staffbtn { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, #059669, #047857); color: #fff !important; border-radius: 9px; padding: 8px 16px; font-size: .82rem; font-weight: 700; box-shadow: 0 3px 10px rgba(5,150,105,.25); transition: transform .15s ease, box-shadow .15s ease; }
+.rsx-staffbtn:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(5,150,105,.35); }
+
+.rsx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-top: 22px; }
+.rsx-card { position: relative; display: flex; flex-direction: column; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; outline: none; }
+.rsx-card:hover, .rsx-card:focus-visible { transform: translateY(-4px); box-shadow: 0 14px 30px -8px rgba(2,6,23,.14), 0 4px 10px -4px rgba(2,6,23,.08); border-color: var(--accent, #059669); }
+.rsx-card:focus-visible { box-shadow: 0 0 0 3px rgba(5,150,105,.25), 0 14px 30px -8px rgba(2,6,23,.14); }
+.rsx-cover { aspect-ratio: 16/9; overflow: hidden; background: #f1f5f9; }
+.rsx-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
+.rsx-card:hover .rsx-cover img { transform: scale(1.05); }
+.rsx-body { padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.rsx-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rsx-badge { display: inline-flex; align-items: center; gap: 6px; border: 1px solid; border-radius: 8px; padding: 3px 10px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.rsx-meta { display: flex; gap: 10px; font-size: .72rem; color: var(--text-muted, #64748b); font-weight: 600; }
+.rsx-meta span { display: inline-flex; align-items: center; gap: 4px; }
+.rsx-title { margin: 0; font-size: 1rem; font-weight: 800; color: var(--text, #1e293b); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color .15s ease; }
+.rsx-card:hover .rsx-title { color: var(--accent, #059669); }
+.rsx-desc { margin: 0; font-size: .8rem; color: var(--text-muted, #64748b); line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.rsx-audio { margin-top: 2px; }
+.rsx-audio audio { width: 100%; height: 36px; border-radius: 8px; }
+.rsx-foot { margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--border, #e2e8f0); display: flex; align-items: center; gap: 10px; }
+.rsx-cat { font-size: .7rem; font-weight: 700; color: var(--text-muted, #64748b); background: var(--bg, #f8fafc); border: 1px solid var(--border, #e2e8f0); padding: 3px 9px; border-radius: 7px; white-space: nowrap; }
+.rsx-stats { display: flex; gap: 9px; font-size: .7rem; color: var(--text-muted, #64748b); font-weight: 600; }
+.rsx-stats span { display: inline-flex; align-items: center; gap: 4px; }
+.rsx-cta { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .76rem; font-weight: 800; color: var(--accent, #059669); transition: transform .15s ease; white-space: nowrap; }
+.rsx-card:hover .rsx-cta { transform: translateX(3px); }
+
+/* ভিডিও মোডাল */
+.rsx-vmodal { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; padding: 18px; }
+.rsx-vmodal[hidden] { display: none; }
+.rsx-vmodal-back { position: absolute; inset: 0; background: rgba(2,6,23,.82); backdrop-filter: blur(3px); }
+.rsx-vmodal-box { position: relative; width: 100%; max-width: 860px; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 80px -10px rgba(0,0,0,.6); animation: rsxPop .2s ease; }
+@keyframes rsxPop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+.rsx-vmodal-x { position: absolute; top: 10px; right: 10px; z-index: 2; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; font-size: 1rem; cursor: pointer; transition: background .15s ease; }
+.rsx-vmodal-x:hover { background: rgba(255,255,255,.28); }
+.rsx-vmodal-frame { aspect-ratio: 16/9; width: 100%; }
+.rsx-vmodal-frame iframe, .rsx-vmodal-frame video { width: 100%; height: 100%; border: 0; display: block; }
+
+@media (max-width: 640px) {
+  .rsx-grid { grid-template-columns: 1fr; gap: 14px; }
+  .rsx-foot { flex-wrap: wrap; gap: 8px; }
+  .rsx-cta { margin-left: 0; width: 100%; justify-content: flex-end; }
+  .rsx-stats { margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rsx-card, .rsx-card:hover, .rsx-cta, .rsx-cover img, .rsx-vmodal-box { transition: none; animation: none; transform: none; }
+}
+</style>
+
+<script>
+(function () {
+  /* ═══ সেশন ১০১: কার্ড-ক্লিক ইঞ্জিন — অডিও ইনলাইন-প্লে, ভিডিও মোডাল, ডাউনলোড-কাউন্ট ═══ */
+  var BN = '০১২৩৪৫৬৭৮৯';
+  function bn(n) { return String(n).replace(/\d/g, function (d) { return BN[+d]; }); }
+  function stat(id, kind) {
+    try {
+      fetch('/api/resources/' + id + '/stat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: kind })
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+        if (!j || !j.ok) return;
+        document.querySelectorAll('.rsx-card[data-id="' + id + '"]').forEach(function (card) {
+          var v = card.querySelector('.rsx-stats span:first-child'), d = card.querySelector('.rsx-stats span:last-child');
+          if (v) v.innerHTML = '<i class="far fa-eye"></i> ' + bn(j.views || 0);
+          if (d) d.innerHTML = '<i class="fas fa-download"></i> ' + bn(j.downloads || 0);
+        });
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
+  var modal = document.getElementById('rsxVModal');
+  var frame = document.getElementById('rsxVModalFrame');
+  function closeModal() {
+    if (!modal.hidden) { frame.innerHTML = ''; modal.hidden = true; document.body.style.overflow = ''; }
+  }
+  modal.addEventListener('click', function (e) { if (e.target.closest('[data-rsx-close]')) closeModal(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+  function openVideo(url, id) {
+    var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/);
+    var vm = url.match(/vimeo\.com\/(\d+)/);
+    if (m) frame.innerHTML = '<iframe src="https://www.youtube.com/embed/' + m[1] + '?autoplay=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+    else if (vm) frame.innerHTML = '<iframe src="https://player.vimeo.com/video/' + vm[1] + '?autoplay=1" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+    else frame.innerHTML = '<video src="' + url + '" controls autoplay playsinline></video>';
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    stat(id, 'view');
+  }
+
+  document.querySelectorAll('.rsx-card').forEach(function (card) {
+    var id = card.getAttribute('data-id');
+    var type = card.getAttribute('data-type');
+    var url = card.getAttribute('data-url');
+    var audio = card.querySelector('.rsx-audio');
+
+    function activate() {
+      if (type === 'audio' && audio) {
+        var a = audio.querySelector('audio');
+        if (audio.hidden) { audio.hidden = false; if (a && a.paused) { a.play().catch(function () {}); stat(id, 'view'); } }
+        else { audio.hidden = true; if (a) a.pause(); }
+        return;
+      }
+      if (type === 'video' && url) { openVideo(url, id); return; }
+      if (url) {
+        stat(id, 'download');
+        window.open(url, '_blank', 'noopener');
+      }
+    }
+    card.addEventListener('click', activate);
+    card.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+    });
+  });
+})();
+</script>

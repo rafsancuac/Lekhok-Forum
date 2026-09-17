@@ -58,6 +58,7 @@
     <%# সেশন ৯০: হোম-কিউরেশন — 'লেখকদের কালি' + 'সব লেখা' নিয়ন্ত্রণ %>
     <a href="/moderator/curation" class="<%= _active('/moderator/curation') %>"><i class="fas fa-pen-nib"></i> লেখা কিউরেশন</a>
     <% if (_hasScope('epaper')) { %><a href="/moderator/press"      class="<%= _active('/moderator/press') %>"><i class="fas fa-newspaper"></i> পত্রিকা কাটিং</a><% } %>
+    <% if (_hasScope('resources')) { %><a href="/moderator/resources" class="<%= _active('/moderator/resources') %>"><i class="fas fa-book"></i> রিসোর্স</a><% } %>
     <a href="/moderator/navigation" class="<%= _active('/moderator/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
     <div class="nav-group-label">সুইচ</div>
     <% if (_isAdmin) { %><a href="/admin"><i class="fas fa-user-shield"></i> অ্যাডমিন প্যানেল</a><% } %>

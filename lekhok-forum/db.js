@@ -96,6 +96,13 @@ const MIGRATION_SQL = `
     category TEXT DEFAULT 'general',
     author TEXT,
     tags TEXT,
+    res_type TEXT DEFAULT 'link',
+    file_size TEXT,
+    thumbnail_url TEXT,
+    duration TEXT,
+    downloads INTEGER DEFAULT 0,
+    views INTEGER DEFAULT 0,
+    created_by TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS settings (
@@ -528,6 +535,18 @@ const LATER_COLUMNS = [
   // ফ্রেশ-DB-সেফটি: নিচের CREATE TABLE-এও যোগ করা (সেশন-৫৭-লেশন)।
   ['gallery', 'photographer', 'TEXT'],
   ['gallery', 'event_date',   'TEXT'],
+  // সেশন ১০১: রিসোর্স-মাল্টিমিডিয়া আপগ্রেড — res_type (pdf/audio/video/image/doc/link)
+  // legacy file_type (document/video/link) থেকে আলাদা; পড়ার সময় res_type ফাঁক থাকলে
+  // file_type থেকে derive হয়। file_size হিউম্যান-রিডেবল ("15.4 MB"), duration
+  // অডিও/ভিডিওর ("22:45"), downloads/views কাউন্টার, thumbnail_url ইমেজ-কার্ড-কভার,
+  // created_by = আপলোডকারীর username (অ্যাডমিন/মডারেটর)।
+  ['resources', 'res_type',      "TEXT DEFAULT 'link'"],
+  ['resources', 'file_size',     'TEXT'],
+  ['resources', 'thumbnail_url', 'TEXT'],
+  ['resources', 'duration',      'TEXT'],
+  ['resources', 'downloads',     'INTEGER DEFAULT 0'],
+  ['resources', 'views',         'INTEGER DEFAULT 0'],
+  ['resources', 'created_by',    'TEXT'],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
@@ -956,7 +975,9 @@ const MODERATOR_SCOPES = [
   { key: 'complaints',  label: 'অভিযোগ দেখা' },
   { key: 'content',     label: 'সেকশন কন্টেন্ট (সেশন ৪২)' },
   // সেশন ৮৩: ইউজার তদারকি — মডারেটর ইউজার-নিষেধ/ফেরত (রোল নয়) পরিচালনা করবে
-  { key: 'user_mgmt',   label: 'ইউজার তদারকি' }
+  { key: 'user_mgmt',   label: 'ইউজার তদারকি' },
+  // সেশন ১০১: রিসোর্স আপলোড — মডারেটরও অডিও/ভিডিও/পিডিএফ/ছবি-রিসোর্স প্রকাশ করবে
+  { key: 'resources',   label: 'রিসোর্স' }
 ];
 
 // ────────────────────────────────────────────────────────────────────────────

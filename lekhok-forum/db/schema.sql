@@ -274,16 +274,23 @@ CREATE TABLE IF NOT EXISTS moderator_scopes (
 
 -- ── Resources ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS resources (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  title       TEXT    NOT NULL,
-  file_url    TEXT,
-  link_url    TEXT,
-  file_type   TEXT    DEFAULT 'document',  -- document | video | link
-  description TEXT,
-  category    TEXT    DEFAULT 'general',
-  tags        TEXT,
-  author      TEXT,
-  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  title         TEXT    NOT NULL,
+  file_url      TEXT,
+  link_url      TEXT,
+  file_type     TEXT    DEFAULT 'document',  -- legacy: document | video | link
+  res_type      TEXT    DEFAULT 'link',      -- সেশন ১০১: pdf | audio | video | image | doc | link
+  file_size     TEXT,                        -- হিউম্যান-রিডেবল (যেমন "15.4 MB")
+  thumbnail_url TEXT,
+  duration      TEXT,                        -- অডিও/ভিডিও (যেমন "14:20")
+  downloads     INTEGER DEFAULT 0,
+  views         INTEGER DEFAULT 0,
+  created_by    TEXT,
+  description   TEXT,
+  category      TEXT    DEFAULT 'general',
+  tags          TEXT,
+  author        TEXT,
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ── Settings ───────────────────────────────────────────────

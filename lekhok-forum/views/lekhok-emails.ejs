@@ -1,52 +1,121 @@
 <header class="page-header">
   <div class="container">
     <span class="eyebrow">যোগাযোগ ডিরেক্টরি</span>
-    <h1>পত্রিকার <span style="color:var(--accent);">ইমেইল</span></h1>
+    <h1>পত্রিকার <span style="color:var(--accent);">ইমেইল ঠিকানা</span></h1>
     <p>দেশের সকল দৈনিক পত্রিকায় কলাম, চিঠিপত্র, ফিচার, গল্প-কবিতা প্রেরণের জন্য প্রদানকৃত ইমেইল আইডিগুলো</p>
   </div>
 </header>
 
+<%
+  /* ═══ সেশন ১০১: ডেস্ক-শ্রেণিবিন্যাস + প্রফেশনাল ডিরেক্টরি ═══
+     note-টেক্সট থেকে ডেস্ক-ব্যাজ নির্ণয় (সাহিত্য/চিঠিপত্র/সম্পাদকীয়/ইসলামি/ক্যাম্পাস/ভ্রমণ/রম্য/শিশু)। */
+  const PE_DESKS = [
+    { key: 'lit',     label: 'সাহিত্য',            icon: 'fa-feather-pointed', color: '#047857', bg: '#ecfdf5', border: '#a7f3d0' },
+    { key: 'letter',  label: 'চিঠিপত্র',           icon: 'fa-envelope-open-text', color: '#b45309', bg: '#fffbeb', border: '#fde68a' },
+    { key: 'oped',    label: 'সম্পাদকীয় ও কলাম',   icon: 'fa-pen-nib',         color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+    { key: 'feature', label: 'ফিচার ও রম্য',       icon: 'fa-face-smile',      color: '#0e7490', bg: '#ecfeff', border: '#a5f3fc' },
+    { key: 'islam',   label: 'ইসলামি',             icon: 'fa-mosque',          color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0' },
+    { key: 'campus',  label: 'ক্যাম্পাস',           icon: 'fa-graduation-cap',  color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
+    { key: 'travel',  label: 'ভ্রমণ',              icon: 'fa-route',           color: '#be185d', bg: '#fdf2f8', border: '#fbcfe8' },
+    { key: 'child',   label: 'শিশু পাতা',          icon: 'fa-child-reaching',  color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' },
+    { key: 'general', label: 'সাধারণ',             icon: 'fa-inbox',           color: '#475569', bg: '#f8fafc', border: '#e2e8f0' }
+  ];
+  function peDesk(note, groupLabel) {
+    const n = String(note || '') + ' ' + String(groupLabel || '');
+    const has = (re) => re.test(n);
+    if (has(/শিশু|খেলখুশি|সপ্তডিঙ্গা|সোনামনি|কিশোর/)) return 'child';
+    if (has(/ইসলাম|ধর্ম|দ্বীন|মসজিদ/)) return 'islam';
+    if (has(/ক্যাম্পাস|শিক্ষা/)) return 'campus';
+    if (has(/ভ্রমণ|বিলাস|কর্নার(?!.*ক্যাম্পাস)|ছুটিদিনে|ঝিলিমিলি/)) return 'travel';
+    if (has(/রম্য|ঠাট্টা|রঙ্গ|বিচ্ছু|থেরাপি|বাঙ্গালিয়াশ|হৈচৈ|রকমারি|খেলা|মজার|গল্প-ছড়া|নগরপরিক্রমা/)) return 'feature';
+    if (has(/চিঠি|মুক্তমঞ্চ|পাঠকমত|পাঠক ফোরাম|মতামত|অভিমত|নিবন্ধ/)) return 'letter';
+    if (has(/সাহিত্য|সাময়িকী|কবিতা|গল্প|ছড়া|শিলালিপি|ঘাসফুল|ঘাসফড়িং|জলপড়ে|কলম/)) return 'lit';
+    if (has(/সম্পাদক|কলাম|উপসম্পাদকীয়|নিউজ|সংবাদ|নাগরিক/)) return 'oped';
+    return 'general';
+  }
+  /* প্রতিটি আইটেমে ডেস্ক-কী প্রি-কম্পিউট */
+  const pePrepared = paperEmails.groups.map(g => ({
+    id: g.id, label: g.label, icon: g.icon,
+    items: g.items.map(it => Object.assign({}, it, { desk: peDesk(it.note, g.label) }))
+  }));
+  const peTotalItems = pePrepared.reduce((a, g) => a + g.items.length, 0);
+  const peTotalEmails = pePrepared.reduce((a, g) => a + g.items.reduce((x, it) => x + it.emails.length, 0), 0);
+  const BN = '০১২৩৪৫৬৭৮৯'; const bn = n => String(n).replace(/\d/g, d => BN[+d]);
+%>
+
 <section class="section reveal">
   <div class="container">
-    <div class="pe-intro card">
-      <i class="fas fa-envelope-open-text" style="color:var(--accent); font-size:1.6rem;"></i>
-      <p><%= paperEmails.intro %></p>
+    <%# ── ১. পরিসংখ্যান-স্ট্রিপ ── %>
+    <div class="pe-stats">
+      <div class="pe-stat"><i class="fas fa-newspaper"></i><div><strong><%= bn(peTotalItems) %></strong><span>পত্রিকা</span></div></div>
+      <div class="pe-stat"><i class="fas fa-at"></i><div><strong><%= bn(peTotalEmails) %></strong><span>ইমেইল ঠিকানা</span></div></div>
+      <div class="pe-stat"><i class="fas fa-calendar-day"></i><div><strong><%= bn(pePrepared.length) %></strong><span>বিভাগ / বার</span></div></div>
+      <div class="pe-stat pe-stat-ok"><i class="fas fa-circle-check"></i><div><strong>সক্রিয়</strong><span>যাচাইকৃত তালিকা</span></div></div>
     </div>
 
-    <div class="pe-toolbar">
+    <%# ── ২. লেখা পাঠানোর নির্দেশিকা-বার ── %>
+    <div class="pe-guide">
+      <div class="pe-guide-head"><i class="fas fa-lightbulb"></i> লেখা পাঠানোর সময় খেয়াল রাখুন</div>
+      <ul class="pe-guide-list">
+        <li><i class="fas fa-check"></i> সাবজেক্ট লাইনে <strong>লেখার নাম ও বিভাগ</strong> উল্লেখ করুন — যেমন: <em>[কবিতা] মেঘেদের ভিটা</em></li>
+        <li><i class="fas fa-check"></i> <strong>ইউনিকোড / অভ্র</strong> ফন্টে লিখুন — বিজয়/সুতোন্ন্য-এনকোডেড ফাইল পড়া যায় না</li>
+        <li><i class="fas fa-check"></i> লেখার নিচে <strong>সংক্ষিপ্ত পরিচয় ও মোবাইল নম্বর</strong> দিন</li>
+        <li><i class="fas fa-check"></i> এক ইমেইলে <strong>একটি লেখা</strong> — একাধিক লেখা পাঠালে আলাদা মেইল করুন</li>
+      </ul>
+    </div>
+
+    <%# ── ৩. সার্চ + ডেস্ক-ফিল্টার টুলবার (স্টিকি) ── %>
+    <div class="pe-toolbar" id="peToolbar">
       <div class="pe-search">
         <i class="fas fa-search"></i>
-        <input type="search" id="peSearch" placeholder="পত্রিকা বা ইমেইল খুঁজুন…" autocomplete="off" aria-label="ইমেইল খুঁজুন" />
+        <input type="search" id="peSearch" placeholder="পত্রিকার নাম, বিভাগ বা ইমেইল খুঁজুন…" autocomplete="off" aria-label="ইমেইল খুঁজুন" />
+        <button type="button" id="peClear" class="pe-clear" hidden aria-label="সার্চ মুছুন"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="pe-deskpills" role="group" aria-label="ডেস্ক ফিল্টার">
+        <button type="button" class="pe-deskpill active" data-desk="all">সব ডেস্ক</button>
+        <% PE_DESKS.forEach(d => { %>
+          <button type="button" class="pe-deskpill" data-desk="<%= d.key %>"><i class="fas <%= d.icon %>" style="color:<%= d.color %>;"></i> <%= d.label %></button>
+        <% }) %>
       </div>
       <span class="pe-count" id="peCount"></span>
     </div>
 
+    <%# ── ৪. বার/বিভাগ-ট্যাব (অ্যাংকর-নেভিগেশন) ── %>
     <nav class="pe-tabs" aria-label="ইমেইল বিভাগ">
-      <% paperEmails.groups.forEach((g, i) => { %>
+      <% pePrepared.forEach((g, i) => { %>
         <a href="#pe-<%= g.id %>" class="pe-tab <%= i === 0 ? 'active' : '' %>"><i class="fas <%= g.icon %>"></i> <%= g.label %></a>
       <% }) %>
     </nav>
 
-    <% const BN = '০১২৩৪৫৬৭৮৯'; const bn = n => String(n).replace(/\d/g, d => BN[+d]); %>
-    <% paperEmails.groups.forEach(g => { %>
+    <%# ── ৫. গ্রুপ-গ্রিড (ডেস্ক-ব্যাজ + কপি + ড্রাফট) ── %>
+    <% pePrepared.forEach(g => { %>
       <div class="pe-group" id="pe-<%= g.id %>" data-pe-group>
         <div class="pe-group-head">
           <span class="pe-group-ico"><i class="fas <%= g.icon %>"></i></span>
           <h2><%= g.label %></h2>
-          <span class="pe-group-count"><%= bn(g.items.length) %>টি</span>
+          <span class="pe-group-count"><%= bn(g.items.length) %>টি পত্রিকা</span>
         </div>
         <div class="pe-grid">
           <% g.items.forEach(it => { %>
-            <div class="pe-card" data-pe-search="<%= (it.paper + ' ' + (it.note || '') + ' ' + it.emails.join(' ')).toLowerCase() %>">
+            <div class="pe-card" data-pe-search="<%= (it.paper + ' ' + (it.note || '') + ' ' + it.emails.join(' ')).toLowerCase() %>" data-pe-desk="<%= it.desk %>">
               <div class="pe-card-head">
                 <h3><%= it.paper %></h3>
                 <% if (it.note) { %><span class="pe-note"><%= it.note %></span><% } %>
               </div>
+              <% var deskMeta = PE_DESKS.find(d => d.key === it.desk); %>
               <ul class="pe-mails">
                 <% it.emails.forEach(em => { %>
                   <li>
-                    <a href="mailto:<%= em %>" class="pe-mail"><i class="far fa-envelope"></i> <%= em %></a>
-                    <button type="button" class="pe-copy" data-copy="<%= em %>" title="কপি করুন" aria-label="<%= em %> কপি করুন"><i class="far fa-copy"></i></button>
+                    <span class="pe-deskbadge" style="color:<%= deskMeta.color %>;background:<%= deskMeta.bg %>;border-color:<%= deskMeta.border %>;">
+                      <i class="fas <%= deskMeta.icon %>"></i> <%= deskMeta.label %>
+                    </span>
+                    <div class="pe-mailrow">
+                      <a href="mailto:<%= em %>?subject=<%= encodeURIComponent('[' + (it.note || deskMeta.label) + '] লেখা প্রেরণ প্রসঙ্গে') %>" class="pe-mail" title="সরাসরি ড্রাফট খুলুন"><i class="far fa-envelope"></i> <span class="pe-mail-text"><%= em %></span></a>
+                      <span class="pe-actions">
+                        <a href="mailto:<%= em %>?subject=<%= encodeURIComponent('[' + (it.note || deskMeta.label) + '] লেখা প্রেরণ প্রসঙ্গে') %>" class="pe-iconbtn pe-draft" title="সরাসরি ড্রাফট (সাবজেক্টসহ)" aria-label="<%= em %> ড্রাফট"><i class="fas fa-pen-to-square"></i></a>
+                        <button type="button" class="pe-iconbtn pe-copy" data-copy="<%= em %>" title="কপি করুন" aria-label="<%= em %> কপি করুন"><i class="far fa-copy"></i></button>
+                      </span>
+                    </div>
                   </li>
                 <% }) %>
               </ul>
@@ -56,93 +125,185 @@
       </div>
     <% }) %>
 
-    <div class="card pe-footnote">
-      <i class="fas fa-lightbulb" style="color:var(--accent);"></i>
+    <%# ── ৬. খালি-অবস্থা (ফিল্টার-মিসে) ── %>
+    <div class="pe-empty" id="peEmpty" hidden>
+      <i class="fas fa-inbox"></i>
+      <h3>কোনো ম্যাচ পাওয়া যায়নি</h3>
+      <p>ভিন্ন শব্দ দিয়ে সার্চ করুন অথবা ডেস্ক-ফিল্টার বদলান।</p>
+      <button type="button" id="peReset" class="pe-resetbtn"><i class="fas fa-rotate-left"></i> সব দেখান</button>
+    </div>
+
+    <div class="pe-footnote">
+      <i class="fas fa-circle-info"></i>
       <p><%= paperEmails.note %></p>
     </div>
   </div>
 </section>
 
 <style>
-.pe-intro { display: flex; gap: 16px; align-items: flex-start; padding: 22px 26px; margin-bottom: 20px; }
-.pe-intro p { margin: 0; color: var(--text-soft, #475569); line-height: 1.85; text-align: justify; }
-.pe-toolbar { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
-.pe-search { position: relative; flex: 1; min-width: 240px; max-width: 460px; }
+/* ═══ সেশন ১০১: প্রফেশনাল পত্রিকার-ইমেইল ডিরেক্টরি (pe2-* বাদে পুরনো pe-ক্লাস রিফাইন) ═══ */
+/* পরিসংখ্যান-স্ট্রিপ */
+.pe-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+.pe-stat { display: flex; align-items: center; gap: 12px; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 14px 18px; }
+.pe-stat i { font-size: 1.25rem; color: var(--accent, #059669); }
+.pe-stat strong { display: block; font-size: 1.15rem; line-height: 1.2; color: var(--text, #1e293b); }
+.pe-stat span { font-size: .72rem; color: var(--text-muted, #64748b); font-weight: 600; }
+.pe-stat-ok i { color: #16a34a; }
+/* নির্দেশিকা-বার */
+.pe-guide { background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%); border: 1px solid #a7f3d0; border-radius: 14px; padding: 18px 22px; margin-bottom: 18px; }
+.pe-guide-head { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: .95rem; color: #065f46; margin-bottom: 10px; }
+.pe-guide-head i { color: #d97706; }
+.pe-guide-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 22px; margin: 0; padding: 0; list-style: none; }
+.pe-guide-list li { display: flex; gap: 8px; font-size: .8rem; color: #334155; line-height: 1.7; align-items: baseline; }
+.pe-guide-list i { color: var(--accent, #059669); font-size: .7rem; }
+.pe-guide-list em { font-style: normal; background: #fff; border: 1px solid #d1fae5; border-radius: 5px; padding: 0 6px; font-size: .74rem; }
+/* টুলবার */
+.pe-toolbar { position: sticky; top: 58px; z-index: 25; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 2px 12px; background: linear-gradient(180deg, var(--bg, #f4f6f8) 88%, transparent); }
+.pe-search { position: relative; flex: 1 1 260px; min-width: 220px; max-width: 460px; }
 .pe-search i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted, #64748b); font-size: 14px; }
-.pe-search input { width: 100%; padding: 11px 16px 11px 38px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 5px; font-family: inherit; font-size: .95rem; background: #fff; }
+.pe-search input { width: 100%; padding: 11px 38px 11px 38px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 10px; font-family: inherit; font-size: .9rem; background: #fff; box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.04)); transition: border-color .15s ease, box-shadow .15s ease; }
 .pe-search input:focus { outline: none; border-color: var(--accent, #059669); box-shadow: 0 0 0 3px rgba(5,150,105,.12); }
-.pe-count { color: var(--text-muted, #64748b); font-size: .88rem; font-weight: 600; }
-.pe-tabs { position: sticky; top: 62px; z-index: 20; display: flex; gap: 8px; overflow-x: auto; padding: 10px 4px; background: linear-gradient(180deg, var(--bg, #f4f6f8) 82%, transparent); scrollbar-width: thin; }
-.pe-tab { flex: 0 0 auto; padding: 8px 15px; border-radius: 5px; border: 1px solid var(--border, #e2e8f0); background: #fff; color: var(--text-soft, #475569); font-size: .88rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 7px; transition: all .18s ease; }
-.pe-tab:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); }
-.pe-tab.active { background: linear-gradient(135deg, #059669, #047857); border-color: transparent; color: #fff; box-shadow: 0 4px 12px rgba(5,150,105,.3); }
-.pe-group { margin-top: 34px; scroll-margin-top: 120px; }
-.pe-group-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.pe-group-ico { width: 42px; height: 42px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; background: linear-gradient(135deg, #059669, #0a1f44); box-shadow: 0 5px 14px rgba(5,150,105,.3); }
-.pe-group-head h2 { margin: 0; font-size: 1.3rem; color: var(--brand, #0a1f44); }
-.pe-group-count { background: #ecfdf5; color: #065f46; border: 1px solid rgba(5,150,105,.25); font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 5px; }
-.pe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
-.pe-card { background: #fff; border: 1px solid var(--border, #e2e8f0); border-left: 4px solid var(--accent, #059669); border-radius: 5px; padding: 16px 18px; box-shadow: 0 2px 10px rgba(10,31,68,.05); transition: transform .2s ease, box-shadow .2s ease, border-color .2s; }
-.pe-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(10,31,68,.12); border-color: rgba(5,150,105,.5); }
-.pe-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-.pe-card-head h3 { margin: 0; font-size: 1rem; color: var(--brand, #0a1f44); line-height: 1.5; }
-.pe-note { background: linear-gradient(135deg, #ecfdf5, #f0fdf4); color: #065f46; border: 1px solid rgba(5,150,105,.22); font-size: .74rem; font-weight: 700; padding: 3px 9px; border-radius: 5px; white-space: nowrap; }
-.pe-mails { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
-.pe-mails li { display: flex; align-items: center; gap: 8px; }
-.pe-mail { flex: 1; display: inline-flex; align-items: center; gap: 8px; color: var(--accent, #059669); font-weight: 600; font-size: .88rem; text-decoration: none; background: var(--surface-alt, #f8fafc); border: 1px solid var(--border, #e2e8f0); border-radius: 5px; padding: 7px 11px; word-break: break-all; transition: background .15s, border-color .15s; }
-.pe-mail:hover { background: #ecfdf5; border-color: rgba(5,150,105,.4); }
-.pe-copy { flex: 0 0 auto; width: 32px; height: 32px; border-radius: 5px; border: 1px solid var(--border, #e2e8f0); background: #fff; color: var(--text-muted, #64748b); cursor: pointer; transition: all .15s; }
-.pe-copy:hover { color: var(--accent, #059669); border-color: var(--accent, #059669); }
-.pe-copy.done { color: #fff; background: var(--accent, #059669); border-color: var(--accent, #059669); }
-.pe-group.pe-hidden, .pe-card.pe-hidden { display: none; }
-.pe-footnote { display: flex; gap: 12px; align-items: flex-start; margin-top: 34px; padding: 18px 22px; background: #fffbeb; border: 1px solid #fde68a; }
-.pe-footnote p { margin: 0; color: #78350f; line-height: 1.7; }
+.pe-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: 0; background: #f1f5f9; color: #64748b; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: .7rem; }
+.pe-clear:hover { background: #e2e8f0; color: #334155; }
+.pe-deskpills { display: flex; gap: 6px; overflow-x: auto; padding: 2px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.pe-deskpill { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border, #e2e8f0); background: #fff; color: var(--text-soft, #475569); font-size: .76rem; font-weight: 700; cursor: pointer; transition: all .15s ease; font-family: inherit; }
+.pe-deskpill:hover { border-color: var(--accent, #059669); color: var(--accent, #059669); }
+.pe-deskpill.active { background: linear-gradient(135deg, #059669, #047857); border-color: transparent; color: #fff; box-shadow: 0 3px 10px rgba(5,150,105,.28); }
+.pe-deskpill.active i { color: #fff !important; }
+.pe-count { margin-left: auto; font-size: .8rem; font-weight: 700; color: var(--text-muted, #64748b); white-space: nowrap; }
+/* কার্ড */
+.pe-card { background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 14px 16px; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+.pe-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(2,6,23,.16); border-color: var(--accent, #059669); }
+.pe-card.pe-hidden { display: none; }
+.pe-card-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.pe-card-head h3 { margin: 0; font-size: .95rem; font-weight: 800; color: var(--text, #1e293b); }
+.pe-note { font-size: .68rem; font-weight: 700; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; padding: 1px 8px; border-radius: 999px; }
+.pe-mails { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pe-mails li { display: flex; flex-direction: column; gap: 5px; }
+.pe-deskbadge { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; font-size: .66rem; font-weight: 800; padding: 2px 9px; border-radius: 999px; border: 1px solid; }
+.pe-mailrow { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.pe-mail { flex: 1; min-width: 0; font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: .8rem; color: var(--text, #1e293b); display: inline-flex; align-items: center; gap: 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px; padding: 2px 4px; transition: color .15s ease; }
+.pe-mail:hover { color: var(--accent, #059669); }
+.pe-mail-text { overflow: hidden; text-overflow: ellipsis; }
+.pe-actions { display: inline-flex; gap: 5px; flex-shrink: 0; }
+.pe-iconbtn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; background: #f8fafc; color: #64748b; cursor: pointer; transition: all .15s ease; font-size: .8rem; }
+.pe-iconbtn:hover { background: var(--accent, #059669); border-color: var(--accent, #059669); color: #fff; transform: translateY(-1px); }
+.pe-copy.copied { background: #16a34a !important; border-color: #16a34a !important; color: #fff !important; }
+.pe-draft:hover { background: #b45309 !important; border-color: #b45309 !important; }
+/* গ্রুপ */
+.pe-group { margin-top: 30px; scroll-margin-top: 130px; }
+.pe-group-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.pe-group-ico { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft, rgba(5,150,105,.1)); color: var(--accent, #059669); border-radius: 10px; font-size: .9rem; }
+.pe-group-head h2 { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text, #1e293b); }
+.pe-group-count { font-size: .72rem; font-weight: 700; color: var(--text-muted, #64748b); background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); padding: 3px 10px; border-radius: 999px; }
+.pe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
+/* খালি-অবস্থা + ফুটনোট */
+.pe-empty { text-align: center; padding: 48px 20px; background: var(--bg-card, #fff); border: 1px dashed var(--border, #e2e8f0); border-radius: 14px; margin-top: 26px; }
+.pe-empty i { font-size: 2rem; color: #94a3b8; margin-bottom: 8px; }
+.pe-empty h3 { margin: 0 0 4px; font-size: 1rem; color: var(--text, #1e293b); }
+.pe-empty p { margin: 0 0 14px; font-size: .82rem; color: var(--text-muted, #64748b); }
+.pe-resetbtn { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, #059669, #047857); color: #fff; border: 0; border-radius: 9px; padding: 9px 18px; font-size: .82rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+.pe-resetbtn:hover { filter: brightness(1.06); }
+.pe-footnote { display: flex; gap: 12px; align-items: flex-start; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 12px; padding: 16px 20px; margin-top: 28px; }
+.pe-footnote i { color: var(--accent, #059669); margin-top: 3px; }
+.pe-footnote p { margin: 0; font-size: .82rem; color: var(--text-muted, #64748b); line-height: 1.8; }
+/* রেসপনসিভ */
+@media (max-width: 760px) {
+  .pe-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .pe-stat { padding: 10px 12px; }
+  .pe-stat i { font-size: 1rem; }
+  .pe-stat strong { font-size: .95rem; }
+  .pe-guide { padding: 14px 16px; }
+  .pe-guide-list { grid-template-columns: 1fr; }
+  .pe-toolbar { top: 54px; }
+  .pe-count { width: 100%; margin-left: 0; }
+  .pe-grid { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pe-card, .pe-card:hover, .pe-iconbtn, .pe-iconbtn:hover, .pe-deskpill { transition: none; transform: none; }
+}
+/* ফোকাস-ভিজিবল (কীবোর্ড) */
+.pe-iconbtn:focus-visible, .pe-deskpill:focus-visible, .pe-mail:focus-visible, #peSearch:focus-visible { outline: 2px solid var(--accent, #059669); outline-offset: 2px; }
 </style>
 
 <script>
 (function () {
-  var search = document.getElementById('peSearch');
-  var count = document.getElementById('peCount');
+  /* ═══ সেশন ১০১: সার্চ + ডেস্ক-ফিল্টার + কপি-ফিডব্যাক ═══ */
   var BN = '০১২৩৪৫৬৭৮৯';
   function bn(n) { return String(n).replace(/\d/g, function (d) { return BN[+d]; }); }
-  function total() { return document.querySelectorAll('.pe-card').length; }
-  function syncCount(shown) { count.textContent = bn(shown) + '/' + bn(total()) + ' এন্ট্রি'; }
-  syncCount(total());
-  if (search) search.addEventListener('input', function () {
-    var q = search.value.trim().toLowerCase();
+  var search = document.getElementById('peSearch');
+  var clearBtn = document.getElementById('peClear');
+  var countEl = document.getElementById('peCount');
+  var emptyEl = document.getElementById('peEmpty');
+  var pills = document.querySelectorAll('.pe-deskpill');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.pe-card[data-pe-search]'));
+  var groups = document.querySelectorAll('[data-pe-group]');
+  var desk = 'all', q = '';
+
+  function apply() {
     var shown = 0;
-    document.querySelectorAll('[data-pe-group]').forEach(function (g) {
-      var gShown = 0;
-      g.querySelectorAll('.pe-card').forEach(function (c) {
-        var hit = !q || (c.getAttribute('data-pe-search') || '').indexOf(q) !== -1;
-        c.classList.toggle('pe-hidden', !hit);
-        if (hit) gShown++;
-      });
-      g.classList.toggle('pe-hidden', gShown === 0);
-      shown += gShown;
+    cards.forEach(function (c) {
+      var matchQ = !q || c.getAttribute('data-pe-search').indexOf(q) !== -1;
+      var matchD = desk === 'all' || c.getAttribute('data-pe-desk') === desk;
+      var on = matchQ && matchD;
+      c.classList.toggle('pe-hidden', !on);
+      if (on) shown++;
     });
-    syncCount(shown);
-  });
-  document.querySelectorAll('.pe-tab').forEach(function (t) {
-    t.addEventListener('click', function () {
-      document.querySelectorAll('.pe-tab').forEach(function (x) { x.classList.remove('active'); });
-      t.classList.add('active');
+    groups.forEach(function (g) {
+      var vis = g.querySelectorAll('.pe-card:not(.pe-hidden)').length;
+      g.hidden = vis === 0;
     });
-  });
-  document.querySelectorAll('.pe-copy').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var em = b.getAttribute('data-copy');
-      function done() {
-        b.classList.add('done');
-        b.innerHTML = '<i class="fas fa-check"></i>';
-        setTimeout(function () { b.classList.remove('done'); b.innerHTML = '<i class="far fa-copy"></i>'; }, 1400);
-      }
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(em).then(done, done);
-      else {
-        var ta = document.createElement('textarea'); ta.value = em; document.body.appendChild(ta);
-        ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); done();
-      }
+    countEl.textContent = bn(shown) + 'টি পত্রিকা দেখানো হচ্ছে';
+    emptyEl.hidden = shown !== 0;
+    clearBtn.hidden = !q;
+    // ফিল্টার সক্রিয় হলে ট্যাব-নেভ লুকান (অ্যাংকর অর্থহীন)
+    var tabs = document.querySelector('.pe-tabs');
+    if (tabs) tabs.hidden = !(desk === 'all' && !q);
+  }
+
+  search.addEventListener('input', function () { q = this.value.trim().toLowerCase(); apply(); });
+  clearBtn.addEventListener('click', function () { search.value = ''; q = ''; search.focus(); apply(); });
+  pills.forEach(function (p) {
+    p.addEventListener('click', function () {
+      desk = p.getAttribute('data-desk');
+      pills.forEach(function (x) { x.classList.toggle('active', x === p); });
+      apply();
     });
   });
+  document.getElementById('peReset').addEventListener('click', function () {
+    search.value = ''; q = ''; desk = 'all';
+    pills.forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-desk') === 'all'); });
+    apply();
+  });
+
+  /* ওয়ান-ক্লিক কপি + "কপি হয়েছে!" ফিডব্যাক */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.pe-copy');
+    if (!btn) return;
+    var em = btn.getAttribute('data-copy');
+    var done = function () {
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="fas fa-check"></i>';
+      var t = btn.getAttribute('title');
+      btn.setAttribute('title', 'কপি হয়েছে!');
+      setTimeout(function () {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="far fa-copy"></i>';
+        btn.setAttribute('title', t || 'কপি করুন');
+      }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(em).then(done).catch(function () { fallbackCopy(em); done(); });
+    } else { fallbackCopy(em); done(); }
+  });
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (err) {}
+    document.body.removeChild(ta);
+  }
+
+  apply(); // প্রাথমিক কাউন্ট
 })();
 </script>

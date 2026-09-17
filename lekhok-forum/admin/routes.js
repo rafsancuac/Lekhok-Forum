@@ -868,31 +868,81 @@ router.delete('/gallery/:id', requireScope('gallery'), async (req, res) => {
 });
 
 // ── Resources CRUD ───────────────────────────────────────────────────────────
+// সেশন ১০১: মাল্টিমিডিয়া আপলোড — ফাইল (PDF/অডিও/ভিডিও/ছবি/ডক) আপলোড করলে
+// res_type অটো-ডিটেক্ট (mime/ext থেকে) + file_size হিউম্যান-রিডেবল সেট হয়।
+const { resourceUpload } = require('../middleware/upload'); // withUpload লাইন-৬-এ আছে
+const RES_TYPE_META = require('../helpers/resource-types');
+function humanFileSize101(bytes) {
+  if (bytes === undefined || bytes === null || bytes === '') return null;
+  const units = ['B', 'KB', 'MB', 'GB']; let i = 0; let n = Number(bytes) || 0;
+  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  return (i === 0 ? String(n) : n.toFixed(1) + ' ' + units[i]);
+}
+function detectResType101(file) {
+  const mime = String(file.mimetype || '').split(';')[0].trim();
+  const ext  = (require('path').extname(file.originalname || '') || '').toLowerCase().replace('.', '');
+  if (/^image\//.test(mime)) return 'image';
+  if (/^audio\//.test(mime)) return 'audio';
+  if (/^video\//.test(mime)) return 'video';
+  if (mime === 'application/pdf' || ext === 'pdf') return 'pdf';
+  if (/^(docx?|xlsx?|pptx?|txt|zip)$/.test(ext) || /word|excel|presentation|plain/.test(mime)) return 'doc';
+  return 'link';
+}
+function resourceFormPayload101(req, existing) {
+  const b = req.body || {};
+  const f = req.file;
+  const out = {
+    title:     (b.title || '').trim(),
+    content:   b.content || '',
+    category:  b.category || 'general',
+    author:    b.author || (req.session && req.session.user ? (req.session.user.username || req.session.user.full_name || '') : ''),
+    tags:      b.tags || '',
+    res_type:  null,
+    file_url:  b.file_url || null,
+    link_url:  b.link_url || null,
+    file_size: b.file_size || null,
+    duration:  (b.duration || '').trim() || null,
+  };
+  if (f) {
+    out.file_url = f.url || f.path;
+    out.res_type = detectResType101(f);
+    if (f.size) out.file_size = humanFileSize101(f.size);
+  }
+  if (!out.res_type) out.res_type = existing ? RES_TYPE_META.normalizeResType(existing) : (b.res_type || 'link');
+  return out;
+}
+
 router.get('/resources', requireAdmin, async (req, res) => {
   const resources = await db.prepare('SELECT * FROM resources ORDER BY id DESC').all();
-  res.render('admin/resources/list', { resources, currentPath: '/admin/resources' });
+  res.render('admin/resources/list', { resources, currentPath: '/admin/resources', RES_TYPE_META });
 });
 
 router.get('/resources/new', requireAdmin, async (req, res) => {
-  res.render('admin/resources/form', { resource: null, error: null, currentPath: '/admin/resources' });
+  res.render('admin/resources/form', { resource: null, error: null, currentPath: '/admin/resources', RES_TYPE_META });
 });
 
-router.post('/resources', requireAdmin, async (req, res) => {
-  const { title, content, category, author, tags, file_url, link_url, file_type } = req.body;
-  if (!title) return res.render('admin/resources/form', { resource: req.body, error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources' });
-  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(title, content || '', category || 'general', author || '', tags || '', file_url || null, link_url || null, file_type || 'link');
+router.post('/resources', requireAdmin, withUpload(resourceUpload), async (req, res) => {
+  const p = resourceFormPayload101(req, null);
+  if (!p.title) return res.render('admin/resources/form', { resource: Object.assign({}, req.body, req.file ? { res_type: detectResType101(req.file) } : {}), error: 'শিরোনাম আবশ্যক', currentPath: '/admin/resources', RES_TYPE_META });
+  if (req.uploadError) return res.render('admin/resources/form', { resource: req.body, error: req.uploadError, currentPath: '/admin/resources', RES_TYPE_META });
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, (req.session.user && req.session.user.username) || null
+  );
   res.redirect('/admin/resources?saved=1');
 });
 
 router.get('/resources/:id/edit', requireAdmin, async (req, res) => {
   const resource = await db.prepare('SELECT * FROM resources WHERE id = ?').get(req.params.id);
   if (!resource) return res.redirect('/admin/resources?saved=1');
-  res.render('admin/resources/form', { resource, error: null, currentPath: '/admin/resources' });
+  res.render('admin/resources/form', { resource, error: null, currentPath: '/admin/resources', RES_TYPE_META });
 });
 
-router.put('/resources/:id', requireAdmin, async (req, res) => {
-  const { title, content, category, author, tags, file_url, link_url, file_type } = req.body;
-  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=? WHERE id=?').run(title, content || '', category || 'general', author || '', tags || '', file_url || null, link_url || null, file_type || 'link', req.params.id);
+router.put('/resources/:id', requireAdmin, withUpload(resourceUpload), async (req, res) => {
+  const existing = await db.prepare('SELECT * FROM resources WHERE id = ?').get(req.params.id);
+  const p = resourceFormPayload101(req, existing);
+  await db.prepare('UPDATE resources SET title=?, content=?, category=?, author=?, tags=?, file_url=?, link_url=?, file_type=?, res_type=?, file_size=?, duration=? WHERE id=?').run(
+    p.title, p.content, p.category, p.author, p.tags, p.file_url, p.link_url, p.res_type, p.res_type, p.file_size, p.duration, req.params.id
+  );
   res.redirect('/admin/resources?saved=1');
 });
 

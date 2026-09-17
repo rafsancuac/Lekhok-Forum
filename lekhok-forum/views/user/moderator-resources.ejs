@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>রিসোর্স ব্যবস্থাপনা | মডারেটর প্যানেল</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    /* সেশন ১০১: মডারেটর রিসোর্স-প্যানেল (mr-* স্কোপ — অন্য-পেজের সাথে সংঘর্ষমুক্ত) */
+    .mr-type-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 4px; }
+    @media (max-width: 760px) { .mr-type-grid { grid-template-columns: repeat(3, 1fr); } }
+    .mr-type { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 6px; border: 1.5px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--bg-soft, #f8fafc); color: var(--text-soft, #475569); font-size: .74rem; font-weight: 600; cursor: pointer; transition: all .15s ease; text-align: center; font-family: inherit; }
+    .mr-type i { font-size: 1.1rem; }
+    .mr-type:hover { background: #f1f5f9; }
+    .mr-type.active { border-color: #059669; background: #ecfdf5; color: #059669; box-shadow: 0 2px 8px rgba(5,150,105,.15); }
+    .mr-pane { display: none; }
+    .mr-pane.on { display: block; animation: mrFade .18s ease; }
+    @keyframes mrFade { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .mr-pane.on { animation: none; } }
+    .mr-res-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px dashed var(--border, #e2e8f0); }
+    .mr-res-row:last-child { border-bottom: 0; }
+    .mr-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 8px; padding: 3px 10px; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
+    .mr-title { font-weight: 700; color: var(--text-strong, #0f172a); font-size: .92rem; }
+    .mr-sub { font-size: .75rem; color: #64748b; margin-top: 2px; }
+    .mr-stat { margin-left: auto; display: flex; gap: 10px; font-size: .72rem; color: #64748b; white-space: nowrap; }
+    @media (max-width: 640px) { .mr-stat { display: none; } }
+    .mr-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mr-form-grid .full { grid-column: 1 / -1; }
+    @media (max-width: 640px) { .mr-form-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<%- include('../../admin/views/admin/partials/sidebar') %>
+<div class="admin-main">
+<div class="mod-page">
+  <div class="mod-hero">
+    <div>
+      <h1><i class="fas fa-book"></i> রিসোর্স ব্যবস্থাপনা</h1>
+      <p>গাইডবুক, অডিও লেকচার, ভিডিও ক্লাস, ইনফোগ্রাফিক ও ফরম — পিডিএফ/অডিও/ভিডিও/ছবি/লিংক আকারে প্রকাশ করুন</p>
+    </div>
+    <a href="/moderator" class="mod-back-btn"><i class="fas fa-arrow-left"></i> প্যানেলে ফিরুন</a>
+  </div>
+
+  <% if (posted === '1') { %><div class="mod-flash ok"><i class="fas fa-check-circle"></i> রিসোর্সটি সফলভাবে প্রকাশিত হয়েছে — <a href="/resources" target="_blank" style="color:#059669;font-weight:700;">/resources পেজে</a> দেখা যাবে।</div><% } %>
+  <% if (posted === 'err') { %><div class="mod-flash err"><i class="fas fa-exclamation-circle"></i> আপলোড ব্যর্থ — ফাইল-ধরন সমর্থিত নয় বা সাইজ-সীমা (৬০MB) ছাড়িয়ে গেছে।</div><% } %>
+  <% if (removed) { %><div class="mod-flash ok"><i class="fas fa-trash-alt"></i> রিসোর্সটি মুছে ট্র্যাশে সরানো হয়েছে।</div><% } %>
+
+  <div class="mod-card">
+    <h2><i class="fas fa-cloud-arrow-up"></i> নতুন রিসোর্স প্রকাশ করুন</h2>
+    <p class="mod-hint">ফাইল আপলোড করলে ধরন ও আকার স্বয়ংক্রিয়ভাবে নির্ধারিত হবে। চাইলে সরাসরি <strong>ড্রাইভ/ইউটিউব লিংক</strong>-ও দিতে পারেন। প্রকাশিত রিসোর্স <a href="/resources" target="_blank" style="color:#059669;font-weight:700;"><strong>/resources</strong></a> পেজে ক্লিকেবল কার্ড হিসেবে দেখা যাবে।</p>
+    <form method="POST" action="/moderator/resources" enctype="multipart/form-data" id="mrForm">
+      <input type="hidden" name="res_type" id="mrTypeInput" value="pdf">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label style="display:block;font-weight:700;margin-bottom:8px;font-size:.85rem;">ফাইলের ধরন নির্বাচন করুন *</label>
+        <div class="mr-type-grid" role="radiogroup" aria-label="ফাইলের ধরন">
+          <% Object.keys(RES_TYPE_META.RES_TYPES).forEach(function(k){ var t = RES_TYPE_META.RES_TYPES[k]; %>
+            <button type="button" class="mr-type <%= k === 'pdf' ? 'active' : '' %>" data-rt="<%= k %>" role="radio" aria-checked="<%= k === 'pdf' ? 'true' : 'false' %>">
+              <i class="fas <%= t.icon %>"></i> <span><%= t.label %></span>
+            </button>
+          <% }) %>
+        </div>
+      </div>
+      <div class="mr-form-grid">
+        <div class="form-group full" style="margin-bottom:8px;"><label>শিরোনাম *</label><input type="text" name="title" maxlength="200" placeholder="যেমন: নতুন লেখকদের জন্য বাংলা বানান রীতি নির্দেশিকা" required /></div>
+        <div class="form-group full" style="margin-bottom:8px;"><label>সংক্ষিপ্ত বিবরণ / নোট</label><textarea name="content" rows="3" placeholder="এই ফাইলে কী কী বিষয় অন্তর্ভুক্ত আছে…"></textarea></div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label>ক্যাটাগরি</label>
+          <select name="category">
+            <option value="guide">গাইড</option>
+            <option value="document">ডকুমেন্ট</option>
+            <option value="report">প্রতিবেদন</option>
+            <option value="form">ফর্ম</option>
+            <option value="anthology">সংকলন</option>
+            <option value="reference">রেফারেন্স</option>
+            <option value="scholarship">ফেলোশিপ</option>
+            <option value="writing-tips">লেখালেখির টিপস</option>
+            <option value="general">সাধারণ</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;"><label>ট্যাগ (কমা দিয়ে)</label><input type="text" name="tags" placeholder="কবিতা, নির্দেশিকা" /></div>
+        <div class="form-group mr-pane on full" data-pane="file" style="margin-bottom:8px;">
+          <label>ফাইল আপলোড (সর্বোচ্চ ৬০MB)</label>
+          <input type="file" name="resource_file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,image/*,audio/*,video/*,.txt,.zip">
+        </div>
+        <div class="form-group mr-pane full" data-pane="link" style="margin-bottom:8px;">
+          <label>গুগল ড্রাইভ / ইউটিউব / ডাউনলোড লিংক</label>
+          <input type="url" name="link_url" placeholder="https://..." />
+        </div>
+        <div class="form-group mr-pane" data-pane="duration" style="margin-bottom:8px;"><label>সময়সীমা (ঐচ্ছিক)</label><input type="text" name="duration" placeholder="যেমন: 22:45" /></div>
+        <div class="form-group mr-pane" data-pane="size" style="margin-bottom:8px;"><label>ফাইলের আকার (ঐচ্ছিক — আপলোডে অটো)</label><input type="text" name="file_size" placeholder="যেমন: 5.2 MB" /></div>
+        <div class="form-group" style="margin-bottom:8px;"><label>লেখক / প্রকাশক (খালি রাখলে আপনার নাম)</label><input type="text" name="author" /></div>
+      </div>
+      <div class="clip-actions">
+        <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-cloud-arrow-up"></i> রিসোর্স প্রকাশ করুন</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="mod-card">
+    <h2><i class="fas fa-list"></i> সব রিসোর্স <span class="clip-count"><%= resources.length %> টি</span></h2>
+    <p class="mod-hint">প্রতিটি রিসোর্সের ধরন, পাঠ/ডাউনলোড-সংখ্যা ও আপলোডকারী দেখানো হচ্ছে। মুছলে ট্র্যাশে যাবে (পুনরুদ্ধারযোগ্য)।</p>
+    <% if (!resources.length) { %><p class="mod-hint"><i class="fas fa-info-circle"></i> এখনো কোনো রিসোর্স নেই — উপরের ফর্ম থেকে প্রথমটি প্রকাশ করুন।</p><% } %>
+    <% resources.forEach(function(r) { var t = RES_TYPE_META.RES_TYPES[RES_TYPE_META.normalizeResType(r)]; %>
+      <div class="mr-res-row">
+        <span class="mr-badge" style="background:<%= t.bg %>;color:<%= t.color %>;border:1px solid <%= t.border %>;"><i class="fas <%= t.icon %>"></i> <%= t.short %></span>
+        <div style="min-width:0;">
+          <div class="mr-title"><%= r.title %></div>
+          <div class="mr-sub"><%= [r.author, r.file_size, r.duration].filter(Boolean).join(' · ') || '—' %><% if (r.created_by) { %> · আপলোড: <%= r.created_by %><% } %></div>
+        </div>
+        <div class="mr-stat">
+          <span title="পাঠ"><i class="far fa-eye"></i> <%= r.views || 0 %></span>
+          <span title="ডাউনলোড"><i class="fas fa-download"></i> <%= r.downloads || 0 %></span>
+        </div>
+        <form method="POST" action="/moderator/resources/<%= r.id %>/delete" style="flex-shrink:0;margin-left:8px;" onsubmit="return confirm('রিসোর্সটি মুছে ফেলতে চান? (ট্র্যাশে যাবে)');">
+          <button type="submit" class="mod-back-btn" style="color:#dc2626;border-color:#fecaca;padding:6px 12px;" title="মুছুন"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+    <% }) %>
+  </div>
+</div>
+</div>
+<script>
+(function () {
+  // সেশন ১০১: টাইপ-পিকার (ফাইল/লিংক/ডিউরেশন/সাইজ-প্যানেল টগল)
+  var PANES = { pdf: ['file','size'], audio: ['file','size','duration'], video: ['file','size','duration'], image: ['file','size'], doc: ['file','size'], link: ['link'] };
+  var input = document.getElementById('mrTypeInput');
+  var btns = document.querySelectorAll('.mr-type');
+  var panes = document.querySelectorAll('.mr-pane');
+  function apply(t) {
+    if (!PANES[t]) t = 'link';
+    input.value = t;
+    btns.forEach(function (b) { b.classList.toggle('active', b.dataset.rt === t); b.setAttribute('aria-checked', b.dataset.rt === t ? 'true' : 'false'); });
+    panes.forEach(function (p) { p.classList.toggle('on', PANES[t].indexOf(p.dataset.pane) !== -1); });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { apply(b.dataset.rt); }); });
+})();
+</script>
+</body>
+</html>

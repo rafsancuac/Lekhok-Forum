@@ -4,7 +4,7 @@ const db = require('../db');
 const { broadcastToAll } = require('./dashboard');
 const { notifyUser } = require('../helpers/notify'); // সেশন ৯০: তদারকি-বিজ্ঞপ্তি
 const { validateNavJson, parseNav } = require('../helpers/nav');
-const { pressUpload, withUpload } = require('../middleware/upload');
+const { pressUpload, withUpload, resourceUpload } = require('../middleware/upload');
 const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
 
 // সেশন ৪৪: পারমিশন-ত্রুটিতে আগে `404` টেমপ্লেট রেন্ডার হতো — সেভ/এডিটের পর
@@ -650,6 +650,48 @@ router.delete('/daily/:type/:id', ensureModerator, async (req, res, next) => {
     await TA42.audit(db, req, 'delete', 'daily_content', req.params.id, '');
     res.redirect('/moderator/daily/' + req.params.type + '?trashed=' + tid42);
   });
+});
+
+// ── Resources (সেশন ১০১: মডারেটর রিসোর্স-আপলোড — অ্যাডমিনের সাথে shared-লজিক) ─
+function humanFileSizeMod101(bytes) {
+  if (bytes === undefined || bytes === null || bytes === '') return null;
+  const units = ['B', 'KB', 'MB', 'GB']; let i = 0; let n = Number(bytes) || 0;
+  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  return (i === 0 ? String(n) : n.toFixed(1) + ' ' + units[i]);
+}
+router.get('/resources', ensureModerator, requireScope('resources'), async (req, res) => {
+  const resources = await db.prepare('SELECT * FROM resources ORDER BY id DESC').all();
+  res.render('user/moderator-resources', {
+    resources, RES_TYPE_META: require('../helpers/resource-types'),
+    posted: req.query.posted || null, removed: req.query.removed || null, currentPath: '/moderator'
+  });
+});
+
+router.post('/resources', ensureModerator, requireScope('resources'), withUpload(resourceUpload), async (req, res) => {
+  const { title, content, category, author, tags, file_url, link_url, res_type, file_size, duration } = req.body;
+  if (!title || !String(title).trim()) return res.redirect('/moderator/resources');
+  if (req.uploadError) return res.redirect('/moderator/resources?posted=err');
+  const f = req.file;
+  const RT = require('../helpers/resource-types');
+  let type = res_type || 'link', fUrl = file_url || null, fSize = file_size || null;
+  if (f) {
+    fUrl = f.url || f.path;
+    type = RT.detectResType(f);
+    fSize = humanFileSizeMod101(f.size);
+  }
+  await db.prepare('INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+    String(title).trim(), content || '', category || 'general',
+    author || (req.session.user.username || req.session.user.full_name || ''),
+    tags || '', fUrl, link_url || null, type, type, fSize, (duration || '').trim() || null,
+    req.session.user.username || null
+  );
+  res.redirect('/moderator/resources?posted=1');
+});
+
+router.post('/resources/:id/delete', ensureModerator, requireScope('resources'), async (req, res) => {
+  const tid42 = await TA42.trashDelete(db, 'resources', req.params.id, req);
+  await TA42.audit(db, req, 'delete', 'resources', req.params.id, '');
+  res.redirect('/moderator/resources?trashed=' + tid42);
 });
 
 // ── Notices ──────────────────────────────────────────────────────────────────

@@ -385,8 +385,11 @@ router.get('/gallery', async (req, res) => {
   });
 });
 
-// ── Resources ────────────────────────────────────────────────────────────────
+// ── Resources ─────────────────────────────────────────────────────────────
+// সেশন ১০১: ক্লিকেবল মাল্টিমিডিয়া-কার্ড — res_type নরমালাইজ + স্টাফ-গেট (অ্যাডমিন/
+// মডারেটর এই পেজ থেকেই আপলোড-প্যানেলে যাবে) + হিউম্যান-বাংলা-কাউন্টার।
 router.get('/resources', async (req, res) => {
+  const RT = require('../helpers/resource-types');
   const category = req.query.category || 'all';
   let resources;
   if (category === 'all') {
@@ -394,14 +397,21 @@ router.get('/resources', async (req, res) => {
   } else {
     resources = await db.prepare('SELECT * FROM resources WHERE category = ? ORDER BY id DESC').all(category);
   }
+  // ভিউ-রেন্ডারে ধরণ-নরমালাইজড রো দরকার (res_type ফাঁক হলে legacy file_type থেকে)
+  resources = resources.map(r => Object.assign({}, r, { res_type: RT.normalizeResType(r) }));
   const categories = await db.prepare('SELECT DISTINCT category FROM resources').all();
+  const u = req.session && req.session.user;
+  const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
   res.render('lekhok-resources', {
     layout: 'layout',
     pageTitle: 'রিসোর্স',
     currentPath: '/resources',
     resources,
     categories,
-    activeCategory: category
+    activeCategory: category,
+    isStaff,
+    RES_TYPE_META: RT,
+    videoEmbedUrl: RT.videoEmbedUrl
   });
 });
 
