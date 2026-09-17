@@ -293,9 +293,17 @@ router.get('/articles', async (req, res) => {
 });
 
 // ── New article form ─────────────────────────────────────────────────────────
+// ── সেশন ১০১ (D4-বৃদ্ধি): ফর্মের ট্যাগ-অটোকমপ্লিট/চিপের জনপ্রিয়-ট্যাগ নাম-পুল ──
+async function popularTagNames101(limit = 16) {
+  const rows101 = await db.prepare("SELECT tags FROM posts WHERE type='article' AND post_kind='writing' AND archive_visible=1 AND shared_from IS NULL AND tags IS NOT NULL").all();
+  const c101 = {};
+  (rows101 || []).forEach(r => String(r.tags || '').split(',').forEach(t => { const n = t.trim(); if (n) c101[n] = (c101[n] || 0) + 1; }));
+  return Object.entries(c101).sort((a, b) => b[1] - a[1]).slice(0, limit).map(x => x[0]);
+}
 router.get('/articles/new', ensureLoggedIn, async (req, res) => {
   // Session 68: me — editor draft-autosave key (per-user, shared-browser safe)
-  res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new', me: req.session.user });
+  const tags101 = await popularTagNames101();
+  res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new', me: req.session.user, popularTags101: tags101 });
 });
 
 // টাস্ক ১৩ (পর্ব ৪, অংশ ক): ইউজার লেখা/প্রশ্ন ফর্মে বিদ্যমান একাধিক ছবি লোড
@@ -584,7 +592,8 @@ router.get('/articles/:id/edit', ensureLoggedIn, async (req, res) => {
   const post = await db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
   if (!post || post.author_id !== req.session.user.id) return res.redirect('/articles/' + req.params.id);
   await attachPostImages(post);
-  res.render('user/article-form', { post, error: null, currentPath: '/articles', me: req.session.user });
+  const tags101 = await popularTagNames101();
+  res.render('user/article-form', { post, error: null, currentPath: '/articles', me: req.session.user, popularTags101: tags101 });
 });
 
 // ── Update article ───────────────────────────────────────────────────────────
@@ -623,17 +632,21 @@ async function toggleLike(req, res) {
   const back = req.get('Referrer') || '/';
   const postId = req.params.id;
   const userId = req.session.user.id;
-  const existing = await db.prepare('SELECT id FROM likes WHERE post_id = ? AND user_id = ? AND comment_id IS NULL').get(postId, userId);
-  if (existing) {
-    await db.prepare('DELETE FROM likes WHERE id = ?').run(existing.id);
-    await db.prepare('UPDATE posts SET like_count = like_count - 1 WHERE id = ?').run(postId);
+  // ── সেশন ১০১ (রোডম্যাপ-০৪): রেস-সেফ টগল — পড়া-তারপর-সিদ্ধান্ত উইন্ডো বাদ;
+  // সিদ্ধান্ত স্টেটমেন্টের changes() থেকে (db.js-এর ইউনিক-ইনডেক্স + OR IGNORE ব্যাকস্টপ),
+  // কাউন্ট প্রতিবার সত্য-গণনা — ড্রিফট-সেলফ-হিল (Turso-র async-ইন্টারলিভেও নিরাপদ)।
+  const del101 = await db.prepare('DELETE FROM likes WHERE post_id = ? AND user_id = ? AND comment_id IS NULL').run(postId, userId);
+  if (del101.changes > 0) {
+    await db.prepare('UPDATE posts SET like_count = (SELECT COUNT(*) FROM likes WHERE post_id = ?) WHERE id = ?').run(postId, postId);
   } else {
-    await db.prepare('INSERT INTO likes (user_id, post_id) VALUES (?, ?)').run(userId, postId);
-    await db.prepare('UPDATE posts SET like_count = like_count + 1 WHERE id = ?').run(postId);
-    // notify post author — B4: notify_reactions প্রেফ-গেট (type 'like' = রিঅ্যাকশন-পরিবার)
-    const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(postId);
-    if (post && post.author_id !== userId) {
-      await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${displayName(req.session.user)} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + postId);
+    const ins101 = await db.prepare('INSERT OR IGNORE INTO likes (user_id, post_id) VALUES (?, ?)').run(userId, postId);
+    if (ins101.changes > 0) {
+      await db.prepare('UPDATE posts SET like_count = (SELECT COUNT(*) FROM likes WHERE post_id = ?) WHERE id = ?').run(postId, postId);
+      // notify post author — B4: notify_reactions প্রেফ-গেট (type 'like' = রিঅ্যাকশন-পরিবার)
+      const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(postId);
+      if (post && post.author_id !== userId) {
+        await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${displayName(req.session.user)} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + postId);
+      }
     }
   }
   res.redirect(back);
@@ -2198,21 +2211,24 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
   const ALLOWED = REACTIONS;
   if (!ALLOWED.includes(reaction_type)) return res.status(400).json({ error: 'invalid reaction' });
   if (!['post', 'comment'].includes(target_type)) return res.status(400).json({ error: 'invalid target_type' });
+  // ── সেশন ১০১ (রোডম্যান-০৪): legacy-DB কলাম-ensure একবারই (আগে প্রতি-ব্রাঞ্চে ছিল)
+  try { await db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
 
   // Schema: likes has columns (id, user_id, post_id, comment_id, created_at)
   // For backward compat: post_id=target_id when type=post, comment_id=target_id when type=comment
   if (target_type === 'post') {
-    const existing = await db.prepare('SELECT id, reaction_type FROM likes WHERE user_id = ? AND post_id = ?').get(me.id, target_id);
-    if (existing && existing.reaction_type === reaction_type) {
-      await db.prepare('DELETE FROM likes WHERE id = ?').run(existing.id);
-    } else if (existing) {
-      try { await db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
-      await db.prepare('UPDATE likes SET reaction_type = ? WHERE id = ?').run(reaction_type, existing.id);
-    } else {
-      try { await db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
-      await db.prepare('INSERT INTO likes (user_id, post_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
-      // Notify post author (debounced — only for love/haha/wow)
-      if (['love', 'haha', 'wow'].includes(reaction_type)) {
+    // ── সেশন ১০১: রেস-সেফ টগল/সুইচ — prev শুধু mine-রিপোর্টিংয়ে (নন-ক্রিটিক্যাল);
+    // সিদ্ধান্ত DELETE-এর changes() থেকে; ইউনিক-ইনডেক্স (db.js IDX101) + OR IGNORE-এ
+  // কনকারেন্ট ডাবল-ইনসার্ট অসম্ভব; কাউন্ট প্রতিবার গ্রুপ-গণনা থেকে (সত্য-স্টেট)।
+    const prev101 = await db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND post_id = ?').get(me.id, target_id);
+    const del101 = await db.prepare('DELETE FROM likes WHERE user_id = ? AND post_id = ?').run(me.id, target_id);
+    const toggledOff101 = del101.changes > 0 && ((prev101 && prev101.reaction_type) || 'like') === reaction_type;
+    let added101 = false;
+    if (!toggledOff101) {
+      const ins101 = await db.prepare('INSERT OR IGNORE INTO likes (user_id, post_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+      added101 = ins101.changes > 0;
+      // Notify post author (debounced — only for love/haha/wow) — কেবল নতুন-যোগে (টগল-অফ/সুইচে নয়)
+      if (added101 && ['love', 'haha', 'wow'].includes(reaction_type)) {
         const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(target_id);
         if (post && post.author_id !== me.id) {
           const labels = { love: '❤️ ভালোবাসা', haha: '😂 হাসি', wow: '😮 বিস্ময়' };
@@ -2221,6 +2237,7 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
         }
       }
     }
+    const mine101 = toggledOff101 ? null : reaction_type;
     // Recompute like_count and store reactions JSON
     const counts = await db.prepare(`
       SELECT reaction_type, COUNT(*) AS c FROM likes WHERE post_id = ? GROUP BY reaction_type
@@ -2230,19 +2247,16 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const total = Object.values(reactions).reduce((a, b) => a + b, 0);
     try { await db.exec("ALTER TABLE posts ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
     await db.prepare('UPDATE posts SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
-    res.json({ ok: true, reactions, total, mine: existing ? (existing.reaction_type === reaction_type ? null : reaction_type) : reaction_type });
+    res.json({ ok: true, reactions, total, mine: mine101 });
   } else {
-    // comment
-    const existing = await db.prepare('SELECT id, reaction_type FROM likes WHERE user_id = ? AND comment_id = ?').get(me.id, target_id);
-    if (existing && existing.reaction_type === reaction_type) {
-      await db.prepare('DELETE FROM likes WHERE id = ?').run(existing.id);
-    } else if (existing) {
-      try { await db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
-      await db.prepare('UPDATE likes SET reaction_type = ? WHERE id = ?').run(reaction_type, existing.id);
-    } else {
-      try { await db.exec("ALTER TABLE likes ADD COLUMN reaction_type TEXT DEFAULT 'like'"); } catch (_) {}
-      await db.prepare('INSERT INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
+    // comment — একই রেস-সেফ প্যাটার্ন (সেশন ১০১)
+    const prev101 = await db.prepare('SELECT reaction_type FROM likes WHERE user_id = ? AND comment_id = ?').get(me.id, target_id);
+    const del101 = await db.prepare('DELETE FROM likes WHERE user_id = ? AND comment_id = ?').run(me.id, target_id);
+    const toggledOff101 = del101.changes > 0 && ((prev101 && prev101.reaction_type) || 'like') === reaction_type;
+    if (!toggledOff101) {
+      await db.prepare('INSERT OR IGNORE INTO likes (user_id, comment_id, reaction_type) VALUES (?, ?, ?)').run(me.id, target_id, reaction_type);
     }
+    const mine101 = toggledOff101 ? null : reaction_type;
     const counts = await db.prepare(`
       SELECT reaction_type, COUNT(*) AS c FROM likes WHERE comment_id = ? GROUP BY reaction_type
     `).all(target_id);
@@ -2251,7 +2265,7 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
     const total = Object.values(reactions).reduce((a, b) => a + b, 0);
     try { await db.exec("ALTER TABLE comments ADD COLUMN reactions TEXT DEFAULT '{}'"); } catch (_) {}
     await db.prepare('UPDATE comments SET like_count = ?, reactions = ? WHERE id = ?').run(total, JSON.stringify(reactions), target_id);
-    res.json({ ok: true, reactions, total, mine: existing ? (existing.reaction_type === reaction_type ? null : reaction_type) : reaction_type });
+    res.json({ ok: true, reactions, total, mine: mine101 });
   }
 });
 

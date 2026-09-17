@@ -89,6 +89,14 @@
       .draft-banner .db-text { flex-basis: 100%; }
       .draft-banner .db-actions { flex: 1 1 100%; justify-content: flex-end; }
     }
+
+    /* ── সেশন ১০১ (D4-বৃদ্ধি): জনপ্রিয়-ট্যাগ সাজেস্ট-চিপ ── */
+    .tag-suggest-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 9px; }
+    .tag-suggest-row .tsr-label { font-size: .74rem; font-weight: 700; color: #059669; display: inline-flex; align-items: center; gap: 4px; }
+    .tag-suggest-chip { padding: 3px 11px; border-radius: 999px; font-size: .76rem; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0; cursor: pointer; transition: all .16s ease; line-height: 1.6; }
+    .tag-suggest-chip:hover { color: #047857; border-color: rgba(5,150,105,.4); background: rgba(5,150,105,.08); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(5,150,105,.12); }
+    .tag-suggest-chip.picked { color: #fff; background: #059669; border-color: #059669; }
+    .tag-suggest-chip:focus-visible { outline: 2px solid #059669; outline-offset: 1px; }
   </style>
 </head>
 <body>
@@ -104,7 +112,18 @@
       <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF (multer req.body-তে দেয়) %>
       <div class="form-group"><label>শিরোনাম *</label><input type="text" name="title" value="<%= post?.title || '' %>" required></div>
       <div class="form-row">
-        <div class="form-group"><label>ট্যাগ</label><input type="text" name="tags" value="<%= post?.tags || '' %>" placeholder="কবিতা, উপন্যাস,প্রবন্ধ"><small class="tag-hint">কমা দিয়ে আলাদা করুন</small></div>
+        <div class="form-group"><label>ট্যাগ</label><input type="text" name="tags" id="tagsInput101" value="<%= post?.tags || '' %>" list="tagOptions99" placeholder="কবিতা, উপন্যাস,প্রবন্ধ"><small class="tag-hint">কমা দিয়ে আলাদা করুন</small>
+          <%# ── সেশন ১০১ (D4-বৃদ্ধি): ট্যাগ-অটোকমপ্লিট (datalist) + জনপ্রিয়-ট্যাগ চিপ ── %>
+          <% if (typeof popularTags101 !== 'undefined' && popularTags101.length) { %>
+          <datalist id="tagOptions99"><% popularTags101.forEach(t => { %><option value="<%= t %>"></option><% }) %></datalist>
+          <div class="tag-suggest-row" aria-label="জনপ্রিয় ট্যাগ (ক্লিক করে যোগ/বাদ করুন)">
+            <span class="tsr-label"><i class="fas fa-hashtag" aria-hidden="true"></i> জনপ্রিয়:</span>
+            <% popularTags101.slice(0, 10).forEach(t => { %>
+              <button type="button" class="tag-suggest-chip" data-tag="<%= t %>"><%= t %></button>
+            <% }) %>
+          </div>
+          <% } %>
+        </div>
         <div class="form-group"><label>কভার ছবি আপলোড</label><input type="file" name="cover" accept="image/*"></div>
         <div class="form-group"><label>অথবা কভার ছবি URL</label><input type="text" inputmode="url" placeholder="https://… অথবা /img/cover/…" name="cover_image" value="<%= post?.cover_image || '' %>"></div>
       </div>
@@ -254,6 +273,35 @@
           if (window.showToast) showToast('খসড়াটি মুছে ফেলা হয়েছে', 'success');
         });
       }
+    })();
+  </script>
+  <script>
+    // ── সেশন ১০১ (D4-বৃদ্ধি): জনপ্রিয়-ট্যাগ চিপ → ইনপুটে যোগ/বাদ (ডুপ্লিকেট-সচেতন) ──
+    (function () {
+      var input101 = document.getElementById('tagsInput101');
+      if (!input101) return;
+      var chips101 = document.querySelectorAll('.tag-suggest-chip');
+      var sync101 = function () {
+        var cur = input101.value.split(',').map(function (s) { return s.trim(); });
+        chips101.forEach(function (ch) { ch.classList.toggle('picked', cur.indexOf(ch.getAttribute('data-tag')) !== -1); });
+      };
+      chips101.forEach(function (ch) {
+        ch.addEventListener('click', function () {
+          var tag = ch.getAttribute('data-tag');
+          var cur = input101.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+          if (cur.indexOf(tag) !== -1) {
+            input101.value = cur.filter(function (t) { return t !== tag; }).join(', ');
+          } else {
+            cur.push(tag);
+            input101.value = cur.join(', ');
+          }
+          input101.dispatchEvent(new Event('input', { bubbles: true })); // খসড়া-অটোসেভ সচেতন
+          input101.focus();
+          sync101();
+        });
+      });
+      input101.addEventListener('input', sync101);
+      sync101();
     })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>

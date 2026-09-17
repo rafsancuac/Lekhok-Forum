@@ -2271,6 +2271,17 @@ async function applySession42Migrations() {
   ];
   for (const q of IDX50) { try { await backend.prepare(q).run(); } catch (e) {} }
 
+  // ── সেশন ১০১ (রোডম্যাপ-০৪): রিঅ্যাক্ট/লাইক রেস-সেফ ইনভ্যারিয়েন্ট ──
+  // পুরোনো রেস থেকে জমা ডুপ্লিকেট-লাইক পুড়িয়ে (প্রতি গ্রুপে MIN(id) রক্ষা) ইউজার-প্রতি-
+  // টার্গেট এক-রো ইউনিক-ইনডেক্স — routes/social.js-এর INSERT OR IGNORE-এর ভিত্তি।
+  // Partial-ইনডেক্স: post-লাইক ও comment-লাইক একই ইউজারে সহাবস্থান করে (NULL-পার্থক্য)।
+  const IDX101 = [
+    "DELETE FROM likes WHERE id NOT IN (SELECT MIN(id) FROM likes GROUP BY user_id, COALESCE(post_id, 0), COALESCE(comment_id, 0))",
+    'CREATE UNIQUE INDEX IF NOT EXISTS uq_likes_user_post ON likes(user_id, post_id) WHERE post_id IS NOT NULL',
+    'CREATE UNIQUE INDEX IF NOT EXISTS uq_likes_user_comment ON likes(user_id, comment_id) WHERE comment_id IS NOT NULL'
+  ];
+  for (const q of IDX101) { try { await backend.prepare(q).run(); } catch (e) {} }
+
   // (42c) ৩০ দিনের পুরনো ট্র্যাশ পার্জ
   try {
     await backend.prepare(`DELETE FROM trash WHERE deleted_at < datetime('now', '-30 days', 'localtime')`).run();
