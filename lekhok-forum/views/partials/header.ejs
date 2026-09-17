@@ -81,29 +81,54 @@
   <%# সেশন ৭২: preconnect — আসল CSS-উৎস cdnjs %>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link rel="stylesheet" href="/assets/css/style.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="/assets/css/feed.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/style.css?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" />
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" />
+  <link rel="stylesheet" href="/assets/css/feed.css?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" />
   <%# সেশন ৫৮: প্রিমিয়াম-রেস্পন্সিভ-অ্যানিমেটেড পলিশ-লেয়ার (additive) -%>
-  <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" />
   <%# পেজ-নির্দিষ্ট স্টাইলশিট (HTML nesting fix-এর পর পেজের নিজস্ব head আর নেই,
       সেখান থেকে এখানে এসেছে) -%>
   <% if (typeof extra_css !== 'undefined' && extra_css) { extra_css.forEach(function (href) { %>
-  <link rel="stylesheet" href="<%= href %><%= href.indexOf('/') === 0 ? '?v=' + AV : '' %>" />
+  <link rel="stylesheet" href="<%= href %><%= href.indexOf('/') === 0 ? '?v=' + AV + (typeof XTPQ !== 'undefined' ? XTPQ : '') : '' %>" />
   <% }) } %>
   <%# সেশন ৯৪: গ্লোবাল কল-রিংগার-স্টাইল — লগড-ইন ইউজারের যেকোনো পেজে আসন্ন-কল-মোডাল রেন্ডার হতে পারে %>
   <% if (typeof user !== 'undefined' && user) { %>
-  <link rel="stylesheet" href="/assets/css/calls.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/calls.css?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" />
   <% } %>
   <%# ── সেশন ১০৫: গ্লোবাল ডিজাইন-সিস্টেম (Single Source of Truth) ──
       tokens.css সর্বশেষ লোড হয় (ক্যাসকেড-গ্যারান্টি: লিগ্যাসি :root-ওভাররাইড জয়ী)।
       কেউ এই দুই লিংকের অর্ডার বদলাবেন না — guard-design-system.js ধরে ফেলবে। %>
-  <link rel="stylesheet" href="/assets/css/shared.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/shared.css?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" />
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" />
+  <%# ── সেশন ১১৯: স্যান্ডবক্স-গেটওয়ে fetch-পোর্ট-সংরক্ষণ (header-পার্শিয়াল-পেজগুলোতে) —
+      session116-এর প্যাচ কেবল layout.ejs/admin-sidebar-এ ছিল; header-পার্শিয়াল দিয়ে খোলা
+      পেজে (qa-single/profile/settings/notifications…) JS-fetch('/api/…') প্যারাম-হীন যেত →
+      গেটওয়ে Next.js-অ্যাপে 404-HTML (ডিসমিস/রিড/রিঅ্যাক্ট সব নীরবে ফেইল)। এখানে একই
+      আইডেম্পোটেন্ট প্যাচ (guard ভাগ) — layout-সহ পেজে ডাবল-প্যাচ অসম্ভব। প্রোডাকশনে
+      location.search-এ প্যারাম নেই → নো-অপ (বাইট-অভিন্ন আচরণ)। ── %>
+  <script>
+  (function () {
+    var m = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+    if (!m || window.__xtpFetchPatched) return;
+    window.__xtpFetchPatched = true;
+    var qp = 'XTransformPort=' + m[1];
+    var _fetch = window.fetch ? window.fetch.bind(window) : null;
+    if (!_fetch) return;
+    window.fetch = function (input, init) {
+      try {
+        var url = (input && typeof input === 'object' && input.url) ? input.url : String(input || '');
+        if (url.charAt(0) === '/' && url.indexOf('XTransformPort=') === -1) {
+          input = url + (url.indexOf('?') > -1 ? '&' : '?') + qp;
+        }
+      } catch (e) {}
+      return _fetch(input, init);
+    };
+  })();
+  </script>
 </head>
 <body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= ((user.pen_name || user.full_name) || '').replace(/"/g, '&quot;') %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>
-  <script src="/assets/js/auth-sync.js?v=<%= AV %>"></script>
+  <script src="/assets/js/auth-sync.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>"></script>
   <%# সেশন ৯৪: গ্লোবাল কল-রিংগার — লগড-ইন ইউজার মেসেঞ্জারের বাইরেও (ড্যাশবোর্ড/প্রোফাইল/
       লেখা ইত্যাদি সব মেম্বার-পেজে) আসন্ন কলের রিং শোনেন ও গ্রহণ/প্রত্যাখ্যান করতে পারেন।
       মেসেঞ্জার-ভিউগুলো পরে window.LekhokCallCtx সমৃদ্ধ করে (convId/peer) — মডিউল লেজি-পাঠ করে। %>
@@ -132,7 +157,7 @@
     ];
     <% } %>
   </script>
-  <script src="/assets/js/webrtc-call.js?v=<%= AV %>"></script>
+  <script src="/assets/js/webrtc-call.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>"></script>
   <% } %>
 <%# সেশন ৬৭: data-auth — main.js লগইন-গার্ডের নির্ভরযোগ্য সোর্স (যেকোনো লেআউটে) -%>
   <!-- Back to top (session 59) -->
@@ -443,4 +468,4 @@
       মেম্বার-পেজে গ্লোবাল শেল (fixed-overlay — মার্কআপ-পজিশন নিরপেক্ষ) + JS;
       পাবলিক layout.ejs-পেজেও একই শেল আছে (ডাবল-ইনক্লুড অসম্ভব — দুই-ওপেনার)। %>
   <%- include('reactors-modal') %>
-  <script src="/assets/js/reactors-modal.js?v=<%= AV %>" defer></script>
+  <script src="/assets/js/reactors-modal.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" defer></script>

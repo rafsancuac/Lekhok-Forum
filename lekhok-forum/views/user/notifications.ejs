@@ -29,6 +29,24 @@
       <% } %>
     </div>
 
+    <%# ── সেশন ১১৯: টাইপ-ভিত্তিক ফিল্টার-ট্যাব (session113-সুপারিশ ⑤) —
+        গ্রুপ-ম্যাপিং সার্ভার-সাইডে (route-অস্পৃশ্য); কাউন্ট-ব্যাজ বাংলা-ডিজিট;
+        client-side ফিল্টার (৫০-আইটেম-পেজে তাত্ক্ষণিক) + dismiss-সিঙ্ক MutationObserver ── %>
+    <% const bn119 = v => String(v).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[+d]); %>
+    <% const G119 = { comment: ['comment', 'reply'], reaction: ['like', 'reaction'], mention: ['mention'], follow: ['follow'] }; %>
+    <% const groupOf119 = t => G119.comment.indexOf(t) > -1 ? 'comment' : (G119.reaction.indexOf(t) > -1 ? 'reaction' : (G119.mention.indexOf(t) > -1 ? 'mention' : (G119.follow.indexOf(t) > -1 ? 'follow' : 'system'))); %>
+    <% const g119 = { all: items.length, comment: 0, reaction: 0, mention: 0, follow: 0, system: 0 }; %>
+    <% items.forEach(n => { g119[groupOf119(n.type)]++; }); %>
+    <%# ── সেশন ১১৯: বাংলা আপেক্ষিক-সময় (cron-r4-আর্টিকেল-ফিড-প্যারিটি) —
+        এইমাত্র → মিনিট → ঘণ্টা → দিন; ৭-দিন-পরে পূর্ণ-তারিখ-ফলব্যাক; title-এ পূর্ণ-তারিখ ── %>
+    <% const rel119 = d => { const s = (Date.now() - new Date(d).getTime()) / 1000;
+      if (!(s >= 0)) return new Date(d).toLocaleDateString('bn-BD');
+      if (s < 60) return 'এইমাত্র';
+      if (s < 3600) return bn119(Math.floor(s / 60)) + ' মিনিট আগে';
+      if (s < 86400) return bn119(Math.floor(s / 3600)) + ' ঘণ্টা আগে';
+      if (s < 7 * 86400) return bn119(Math.floor(s / 86400)) + ' দিন আগে';
+      return new Date(d).toLocaleDateString('bn-BD'); }; %>
+
     <% if (items.length === 0) { %>
       <div class="notif-empty"><i class="fas fa-bell-slash"></i><p>এখনও কোনো বিজ্ঞপ্তি আসেনি।</p><small style="color:var(--text-muted);">নতুন কার্যকলাপ এখানে দেখা যাবে।</small></div>
     <% } else { %>
@@ -62,7 +80,7 @@
             <div class="notif-page-body">
               <div class="notif-page-title"><%= n.title %><% if (n.type === 'call') { %> <span class="notif-missed notif-missed--page"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %></div>
               <div class="notif-page-text"><%= n.body %></div>
-              <div class="notif-page-time"><i class="far fa-clock"></i> <%= new Date(n.created_at).toLocaleDateString('bn-BD') %></div>
+              <div class="notif-page-time"><i class="far fa-clock"></i> <span title="<%= new Date(n.created_at).toLocaleString('bn-BD') %>"><%= rel119(n.created_at) %></span></div>
             </div>
             <%# সেশন ১১৪: FB-প্যারিটি সরান-বাটন (হোভারে দৃশ্যমান; নিজের-সারি-ইনভ্যারিয়েন্ট API) %>
             <button type="button" class="notif-dismiss" data-dismiss="<%= n.id %>" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>

@@ -2066,3 +2066,9 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .qa-votes{flex-direction:row;min-width:0;gap:6px;padding:5px 10px}
   .qa-votes small i{display:inline;margin:0 4px 0 0}
 }
+
+/* [সেশন ১১৯-রক্ষণ] session117-চিপ-ফিল্টারের JS it.hidden=!show-এর জন্য [hidden]-গার্ড —
+   ক্লাস-ডিসপ্লে (block/flex) UA-র [hidden] ছাপিয়ে যায় (cron-r6-প্রমাণিত গোটচা) —
+   গার্ড-ছাড়া ফিল্টার-রো লুকাত না; আমার notif-tabs-ব্লক প্রত্যাহৃত (ডুপ্লিকেট-শূন্য-নীতি) */
+.notif-page-item[hidden]{display:none!important}
+.notif-filter-empty[hidden]{display:none!important}
