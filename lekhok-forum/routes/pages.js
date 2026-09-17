@@ -654,6 +654,7 @@ router.get('/search', async (req, res) => {
     try {
       results.articles = await db.prepare(`
         SELECT p.id, p.title, p.excerpt, p.category, p.like_count, p.comment_count,
+               p.body, /* session120: পড়ার-সময় গণনার জন্য */
                u.full_name AS author_name
         FROM posts p JOIN users u ON p.author_id = u.id
         WHERE p.type = 'article' AND p.status = 'published'
@@ -662,6 +663,16 @@ router.get('/search', async (req, res) => {
           AND (p.title LIKE ? OR p.body LIKE ?)
         ORDER BY p.published_at DESC LIMIT 20
       `).all(like, like);
+      /* session120: ফলাফল-কার্ডে ≈N মিনিট চিপ — decorateFeed-এর ৯৫০-অক্ষর/মিনিট
+         কনভেনশনের হুবহু প্রতিরূপ (dashboard.js:298); গণনার পরে body ফেলে দেওয়া হয় */
+      results.articles.forEach(a => {
+        const plain = String(a.body || '')
+          .replace(/<[^>]*>/g, ' ')
+          .replace(/[#*_>`~\[\]()!]/g, '')
+          .replace(/\s+/g, ' ').trim();
+        a.read_mins = Math.max(1, Math.round(plain.length / 950) || 1);
+        delete a.body;
+      });
       results.questions = await db.prepare(`
         SELECT p.id, p.title, p.body AS excerpt, u.full_name AS author_name
         FROM posts p JOIN users u ON p.author_id = u.id

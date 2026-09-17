@@ -2,6 +2,29 @@
 <%
   const DAILY_LABELS = { quiz: 'কুইজ', this_day: 'এই দিনে', epaper: 'ই-পেপার', best_writer: 'সেরা লেখক', activity: 'কার্যক্রম' };
   const hasAny = total > 0;
+
+  /* ── session120: সার্চ-টার্ম হাইলাইট — escape-first → <mark> (XSS-সেফ) ──
+     কোয়েরি ≥২ অক্ষর হলে পূর্ণ-বাক্যাংশ + প্রতিটি শব্দ (≥২ অক্ষর, ডুপ্লিকেট-শূন্য,
+     দীর্ঘ-আগে — JS alternation বাঁ-দিকের-প্রথম-ম্যাচ নেওয়ায় ফ্রেজ-প্রাধান্য কাজ করে)।
+     টার্ম-ও escape হয় — কোয়েরিতে &/</" থাকলেও এস্কেপড-টেক্সটের সাথে ম্যাচ করে। */
+  const _esc120 = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  let _re120 = null;
+  if (q && q.length >= 2) {
+    const _terms120 = [...new Set([q, ...q.split(/\s+/)].map(t => t.trim()))]
+      .filter(t => t.length >= 2)
+      .sort((a, b) => b.length - a.length)
+      .slice(0, 8)
+      .map(t => _esc120(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    if (_terms120.length) _re120 = new RegExp('(' + _terms120.join('|') + ')', 'gi');
+  }
+  /* hl120(text) = escape+highlight · hl120(text, n) = mdPlain(n)-truncate + escape+highlight */
+  const hl120 = (text, plainLimit) => {
+    const raw = (typeof plainLimit === 'number') ? mdPlain(text, plainLimit) : String(text == null ? '' : text);
+    const esc = _esc120(raw);
+    return _re120 ? esc.replace(_re120, '<mark>$1</mark>') : esc;
+  };
+  /* বাংলা-অঙ্ক (session120: পড়ার-সময় চিপে) */
+  const _bn120 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]);
 %>
 
 <header class="page-header">
@@ -44,12 +67,13 @@
         <% results.articles.forEach(a => { %>
           <a class="search-result-card" href="/articles/<%= a.id %>">
             <div class="search-result-head">
-              <strong><%= a.title %></strong>
+              <strong><%- hl120(a.title) %></strong>
               <% if (a.category) { %><span class="chip"><%= a.category %></span><% } %>
             </div>
-            <% if (a.excerpt) { %><p class="search-result-excerpt"><%= mdPlain(a.excerpt, 150) %></p><% } %>
+            <% if (a.excerpt) { %><p class="search-result-excerpt"><%- hl120(a.excerpt, 150) %></p><% } %>
             <span class="search-result-meta">
               <i class="fas fa-user"></i> <%= a.author_name %>
+              &middot; <i class="far fa-clock" title="আনুমানিক পড়ার সময়"></i> ≈ <%= _bn120(a.read_mins || 1) %> মিনিট
               &middot; <i class="fas fa-heart"></i> <%= a.like_count || 0 %>
               &middot; <i class="fas fa-comment"></i> <%= a.comment_count || 0 %>
             </span>
@@ -63,9 +87,9 @@
       <div class="search-result-list">
         <% results.questions.forEach(qu => { %>
           <a class="search-result-card" href="/qa/<%= qu.id %>">
-            <div class="search-result-head"><strong><%= qu.title %></strong></div>
-            <% if (qu.excerpt) { %><p class="search-result-excerpt"><%= mdPlain(qu.excerpt, 150) %></p><% } %>
-            <span class="search-result-meta"><i class="fas fa-user"></i> <%= qu.author_name %></span>
+            <div class="search-result-head"><strong><%- hl120(qu.title) %></strong></div>
+            <% if (qu.excerpt) { %><p class="search-result-excerpt"><%- hl120(qu.excerpt, 150) %></p><% } %>
+            <span class="search-result-meta"><i class="fas fa-user"></i> <%- hl120(qu.author_name) %></span>
           </a>
         <% }) %>
       </div>
@@ -78,8 +102,8 @@
           <a class="search-user-card" href="/profile/<%= encodeURIComponent(u.username) %>">
             <img src="<%= u.avatar_url || ('/avatar/' + u.id) %>" alt="<%= u.full_name %>" loading="lazy" decoding="async" onerror="this.src='/assets/avatars/neutral.svg?v=3'" />
             <div>
-              <strong><%= u.full_name %></strong>
-              <small>@<%= u.username %><% if (u.designation) { %> &middot; <%= u.designation %><% } %></small>
+              <strong><%- hl120(u.full_name) %></strong>
+              <small>@<%- hl120(u.username) %><% if (u.designation) { %> &middot; <%- hl120(u.designation) %><% } %></small>
             </div>
           </a>
         <% }) %>
@@ -91,7 +115,7 @@
       <div class="search-result-list">
         <% results.notices.forEach(n => { %>
           <a class="search-result-card" href="/notices/<%= n.id %>">
-            <div class="search-result-head"><strong><%= n.title %></strong></div>
+            <div class="search-result-head"><strong><%- hl120(n.title) %></strong></div>
             <span class="search-result-meta"><i class="fas fa-calendar"></i> <%= n.date %></span>
           </a>
         <% }) %>
@@ -110,10 +134,10 @@
         %>
           <a class="search-result-card" href="<%= link %>">
             <div class="search-result-head">
-              <strong><%= d.title || DAILY_LABELS[d.content_type] || 'দৈনিক কনটেন্ট' %></strong>
+              <strong><%- hl120(d.title || DAILY_LABELS[d.content_type] || 'দৈনিক কনটেন্ট') %></strong>
               <span class="chip"><%= DAILY_LABELS[d.content_type] || d.content_type %></span>
             </div>
-            <% if (d.body) { %><p class="search-result-excerpt"><%= mdPlain(d.body, 150) %></p><% } %>
+            <% if (d.body) { %><p class="search-result-excerpt"><%- hl120(d.body, 150) %></p><% } %>
           </a>
         <% }) %>
       </div>

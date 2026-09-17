@@ -922,6 +922,26 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   // Direct run: init DB once, then listen.
   db.initDb().then(() => {
+    // ── session120: boot-reconcile — posts.comment_count self-heal ──────────
+    // session119-র মেইনটেন্যান্স-স্ক্রিপ্টের (db/reconcile-comment-counts.js)
+    // বুট-হুক: প্রতি বুটে অতি-সস্তা ১-কোয়েরি অসঙ্গতি-চেক; অসঙ্গত রো থাকলেই কেবল
+    // আপডেট + তাৎক্ষণিক ফ্লাশ (snapshot-guard-এর ৫-সেকেন্ড-অপেক্ষা না করে)।
+    // মেমরি-লোডেড-DB-তেই চলে — ফাইল-রেস-শূন্য; idempotent (দ্বিতীয়-বুটে ০-রো)।
+    // (prepare() Turso-ব্যাকএন্ডে async — await-সহ লেখা; sql.js-তেও await নিরাপদ)
+    (async () => {
+      try {
+        const _stale120 = await db.prepare(
+          'SELECT p.id, p.comment_count AS stored, (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS actual FROM posts p WHERE p.comment_count != (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id)'
+        ).all();
+        if (_stale120.length) {
+          for (const r of _stale120) {
+            await db.prepare('UPDATE posts SET comment_count = ? WHERE id = ?').run([r.actual, r.id]);
+          }
+          if (typeof db.flushDb === 'function') await db.flushDb();
+          console.log(`[boot-reconcile] posts.comment_count self-heal: ${_stale120.length} রো সংশোধিত`);
+        }
+      } catch (e) { console.error('[boot-reconcile] failed:', e.message); }
+    })();
     // সেশন ৩৮: স্ন্যাপশট সেফটি-নেট — ফ্লাশ-বেকি রাইট থাকলে ৫ সেকেন্ড পরপর আপলোড
     const _snapGuard = setInterval(() => {
       try { if (db.snapshotActive && db.snapshotDirty) db.flushDb(); } catch (e) {}

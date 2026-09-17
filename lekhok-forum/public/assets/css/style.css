@@ -2081,3 +2081,50 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 @media (prefers-reduced-motion:reduce){.opt-fresh{animation:none}}
 /* অপটিমিস্টিক-বাবলের রিঅ্যাকশন-ব্যাজ শূন্য-অবস্থায় লুকানো থাকে (canonical-এর মতোই) */
 .cmt-item[data-opt="1"] .cmt-badge[hidden]{display:none}
+/* ═══ session120: সার্চ-ফলাফল হাইলাইট + পলিশ ═══════════════════════════════
+   lekhok-search.ejs-এর escape-first <mark> হাইলাইটের স্টাইল — হেডার-ড্রপডাউনের
+   (.gs-sub mark/.gs-title mark) সাথে টোনাল-সামঞ্জস্য (amber #fef08a পরিবার)।
+   box-decoration-break: দীর্ঘ-শব্দ ২-লাইনে ভাঙলে প্রতিটি অংশে হাইলাইট থাকে। */
+.search-result-card mark,
+.search-user-card mark,
+.search-result-excerpt mark {
+  background: #fef08a;
+  color: #713f12;
+  padding: 0 2px;
+  border-radius: 5px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.search-result-card .search-result-head strong mark {
+  font-weight: 800;
+  color: #5c3a06;
+}
+/* হাইলাইট-থাকা কার্ডে সূক্ষ্ম অ্যাম্বার-রিম নজর-টানতে (কেবল টাইটেল-মার্ক থাকলে) */
+.search-result-card:has(.search-result-head mark) {
+  border-color: rgba(202, 138, 4, .35);
+}
+/* session120: কীবোর্ড-ফোকাস রিং — কার্ড-গ্রিডে Tab-নেভিগেশন a11y */
+.search-result-card:focus-visible,
+.search-user-card:focus-visible {
+  outline: 2px solid var(--accent, #059669);
+  outline-offset: 2px;
+  transform: translateY(-2px);
+}
+/* সার্চ-ফলাফলের পড়ার-সময় চিপ (search-result-meta-র ঘড়ি-অংশ) */
+.search-result-meta .fa-clock {
+  color: var(--text-muted, #64748b);
+}
+.search-result-meta {
+  color: var(--text-muted, #64748b);
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-result-card,
+  .search-user-card {
+    transition: none;
+  }
+  .search-result-card:hover,
+  .search-result-card:focus-visible,
+  .search-user-card:focus-visible {
+    transform: none;
+  }
+}
