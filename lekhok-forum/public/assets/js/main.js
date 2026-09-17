@@ -117,6 +117,17 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
   var offset = parseInt(more.getAttribute('data-offset') || '0', 10) || 0;
   var filter = more.getAttribute('data-filter') || 'all';
   var busy = false, done = false;
+  // সেশন ৯৩ (০৫-পলিশ): ধারাবাহিক-লোড চেইন — স্ক্রল-রিস্টোর একাধিক পেজ পরপর চাইলে
+  // busy-গার্ডের ইনস্ট্যান্ট-রিটার্নে আটকে না-যায়; প্রতিটি কল চেইনে সারিবদ্ধ হয়।
+  var chain = Promise.resolve();
+  function loadNext() {
+    if (done) return Promise.resolve(false);
+    chain = chain.then(function () {
+      if (done) return false;
+      return loadMore().then(function () { return !done; });
+    }).catch(function () { return false; });
+    return chain;
+  }
 
   function finish() {
     done = true;
@@ -159,7 +170,13 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
     }
   }
 
-  if (btn) btn.addEventListener('click', loadMore);
+  // সেশন ৯৩: বাটন/সেন্টিনেল/রিস্টোর সবগুলো ট্রিগার একই চেইনে — busy-দ্বন্দ্ব শেষ
+  if (btn) btn.addEventListener('click', loadNext);
+  // সেশন ৯৩: স্ক্রল-রিস্টোর-ইঞ্জিনের জন্য পাবলিক API (০৫-পলিশ — load-on-restore)
+  window.LekhokFeedMore = {
+    loadNext: loadNext,
+    isDone: function () { return done; }
+  };
   more.hidden = false; // JS আছে — সেন্টিনেল সক্রিয় (নইলে ফলব্যাক-বাটনও লুকানো থাকবে ঠিকই)
   if ('IntersectionObserver' in window) {
     var sentinel = document.createElement('div');
@@ -167,7 +184,7 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
     sentinel.setAttribute('aria-hidden', 'true');
     more.parentNode.insertBefore(sentinel, more);
     var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) { if (en.isIntersecting) loadMore(); });
+      entries.forEach(function (en) { if (en.isIntersecting) loadNext(); });
     }, { rootMargin: '600px 0px' });
     io.observe(sentinel);
   }
@@ -186,16 +203,40 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
 
     var KEY = 'lf_feed_y:' + p + location.search;
     var saved = parseInt(sessionStorage.getItem(KEY) || '0', 10);
+    var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
     function clampGo() {
       var max = document.documentElement.scrollHeight - window.innerHeight;
       window.scrollTo(0, Math.min(saved, Math.max(max, 0)));
     }
+    /* সেশন ৯৩ (রোডম্যাপ-০৫ পলিশ): load-on-restore — সেভ-অবস্থান বর্তমান-কনটেন্টের
+     * নিচে হলে (গভীর স্ক্রল করে পোস্টে গিয়ে ফেরা), আগে ফিডের পরের পেজগুলো
+     * ধারাবাহিকভাবে লোড করে যথেষ্ট উচ্চতা আনি (সর্বোচ্চ ১২ পেজ), তারপর নিখুঁত
+     * রিস্টোর — আগে clamp-এ উপরে আটকে যেত। */
+    function loadUntilReachable(tries) {
+      var max = document.documentElement.scrollHeight - window.innerHeight;
+      if (saved <= max + 40) { clampGo(); doneRestoring(); return; }
+      var fm = window.LekhokFeedMore;
+      if (!fm || !fm.loadNext || tries <= 0) { clampGo(); doneRestoring(); return; }
+      Promise.resolve(fm.loadNext()).then(function (progressed) {
+        if (!progressed) { clampGo(); doneRestoring(); return; }
+        raf(function () { loadUntilReachable(tries - 1); });
+      });
+    }
+    function doneRestoring() {
+      try {
+        var n = 0;
+        var iv = setInterval(function () { // ইমেজ-রিফলোর পরেও পুনঃনিশ্চিত
+          clampGo();
+          if (++n >= 6) { clearInterval(iv); document.documentElement.classList.remove('lf-restoring'); }
+        }, 250);
+      } catch (e) { document.documentElement.classList.remove('lf-restoring'); }
+    }
     if (saved > 120) {
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', clampGo);
-      else clampGo();
-      var raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
-      raf(function () { raf(clampGo); });
-      window.addEventListener('load', clampGo, { once: true });
+      document.documentElement.classList.add('lf-restoring');
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { clampGo(); loadUntilReachable(12); });
+      else { clampGo(); loadUntilReachable(12); }
+      raf(function () { raf(function () { clampGo(); loadUntilReachable(12); }); });
+      window.addEventListener('load', function () { clampGo(); loadUntilReachable(12); }, { once: true });
     }
     var t = null;
     window.addEventListener('scroll', function () {

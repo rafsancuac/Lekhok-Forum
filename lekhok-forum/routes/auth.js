@@ -100,7 +100,8 @@ router.post('/login', async (req, res) => {
         req.session.mfaPending = { kind: 'user', uid: user.id, dest, hint: user.full_name || user.username, ts: Date.now() };
         return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
       }
-      req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
+      // সেশন ৯৩ (D1): pen_name সেশনে — নোটিফিকেশন/সারফেসে displayName() যেন কলমী-নাম দেখায়
+      req.session.user = { id: user.id, username: user.username, full_name: user.full_name, pen_name: user.pen_name || null, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
       // ── সেশন ৯৫: ফোর্স-চেঞ্জ গেট ────────────────────────────────────────────
       // সুপার-এডমিনের দেওয়া অস্থায়ী পাসওয়ার্ডে লগইন — গন্তব্য যাই হোক না কেন,
@@ -208,7 +209,7 @@ router.post('/login/2fa', async (req, res) => {
       }
       if (!ok) return failAndRender('কোড মিলছে না। অ্যাপে নতুন কোড দেখে আবার চেষ্টা করুন (কোড ৩০ সেকেন্ডে বদলায়)।');
       req.session.mfaPending = null;
-      req.session.user = { id: user.id, username: user.username, full_name: user.full_name, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
+      req.session.user = { id: user.id, username: user.username, full_name: user.full_name, pen_name: user.pen_name || null, avatar_url: user.avatar_url, gender: user.gender, role: user.role || 'user' };
       await db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
       // সেশন ৯৫: 2FA-পার হওয়া টেম্পোরারি-পাসওয়ার্ড লগইনেও ফোর্স-চেঞ্জ গেট
       if (user.must_change_password) {
@@ -320,7 +321,7 @@ router.post('/register', withUpload(avatarUpload), async (req, res) => {
   if (requireApproval) {
     return res.render('user/register-pending', { email, currentPath: '/register' });
   }
-  req.session.user = { id: uid, username: uname, full_name, avatar_url: avatarPath, gender: gender || 'other', role: 'user' };
+  req.session.user = { id: uid, username: uname, full_name, pen_name: null, avatar_url: avatarPath, gender: gender || 'other', role: 'user' };
   req.session.save(() => res.redirect('/profile/' + uname + '?welcome=1'));
 });
 
@@ -430,6 +431,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     id: updated.id,
     username: updated.username,
     full_name: updated.full_name,
+    pen_name: updated.pen_name || null,
     avatar_url: updated.avatar_url,
     gender: updated.gender,
     role: updated.role || 'user'

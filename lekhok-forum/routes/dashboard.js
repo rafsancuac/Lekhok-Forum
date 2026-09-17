@@ -557,7 +557,7 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   // Notify recipient (dedup: ১০ মিনিটে একই বডির দ্বিতীয় নোটিফিকেশন নয়; মিউট-হলে নয়)
   if (other.id !== me && !(await isConvMuted(conv.id, other.id))) {
-    await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username, 10, 'notify_messages');
+    await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${displayName(req.session.user)} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username, 10, 'notify_messages');
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
   res.redirect('/messages/' + req.params.username);
@@ -605,7 +605,7 @@ router.post('/messages/group/create', ensureAuth, async (req, res) => {
     try { await db.prepare('INSERT INTO conversation_members (conversation_id, user_id, added_by) VALUES (?, ?, ?)').run(convId, uid, me); } catch (e) {}
   }
   for (const uid of all) {
-    if (uid !== me) await notifyOnce(uid, 'message', 'নতুন গ্রুপ', `${req.session.user.full_name} আপনাকে "${title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + convId, 10, 'notify_messages');
+    if (uid !== me) await notifyOnce(uid, 'message', 'নতুন গ্রুপ', `${displayName(req.session.user)} আপনাকে "${title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + convId, 10, 'notify_messages');
   }
   res.redirect('/messages/g/' + convId + (blockedCount ? ('?blocked=' + blockedCount) : ''));
 });
@@ -669,7 +669,7 @@ router.post('/messages/g/:id', ensureAuth, withUpload(attachmentUpload), async (
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   const members = await db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(conv.id);
   for (const m of members) {
-    if (m.user_id !== me && !(await isConvMuted(conv.id, m.user_id))) await notifyOnce(m.user_id, 'message', 'নতুন বার্তা', `${req.session.user.full_name} (${conv.title}): ${(body || '📎').slice(0, 60)}`, '/messages/g/' + conv.id, 10, 'notify_messages');
+    if (m.user_id !== me && !(await isConvMuted(conv.id, m.user_id))) await notifyOnce(m.user_id, 'message', 'নতুন বার্তা', `${displayName(req.session.user)} (${conv.title}): ${(body || '📎').slice(0, 60)}`, '/messages/g/' + conv.id, 10, 'notify_messages');
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true, id: ins.lastInsertRowid });
   res.redirect('/messages/g/' + conv.id);
@@ -699,7 +699,7 @@ router.post('/messages/g/:id/members/add', ensureAuth, async (req, res) => {
     try {
       await db.prepare('INSERT INTO conversation_members (conversation_id, user_id, added_by) VALUES (?, ?, ?)').run(conv.id, u.id, me);
       added++;
-      await notifyOnce(u.id, 'message', 'গ্রুপে যোগ', `${req.session.user.full_name} আপনাকে "${conv.title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + conv.id);
+      await notifyOnce(u.id, 'message', 'গ্রুপে যোগ', `${displayName(req.session.user)} আপনাকে "${conv.title}" গ্রুপে যুক্ত করেছেন`, '/messages/g/' + conv.id);
     } catch (e) {}
   }
   res.redirect('/messages/g/' + conv.id + '?added=' + added + (blocked81 ? ('&blocked=' + blocked81) : ''));
@@ -1079,13 +1079,13 @@ router.post('/api/messages/:id/forward', ensureAuth, async (req, res) => {
     const members = await db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(targetId);
     for (const mm of members) {
       if (mm.user_id !== me && !(await isConvMuted(targetId, mm.user_id))) {
-        await notifyOnce(mm.user_id, 'message', 'ফরওয়ার্ড করা মেসেজ', `${req.session.user.full_name} (${target.title || 'চ্যাট'}): ${preview}`, '/messages/g/' + targetId);
+        await notifyOnce(mm.user_id, 'message', 'ফরওয়ার্ড করা মেসেজ', `${displayName(req.session.user)} (${target.title || 'চ্যাট'}): ${preview}`, '/messages/g/' + targetId);
       }
     }
   } else {
     const oid = target.user_a === me ? target.user_b : target.user_a;
     if (oid !== me && !(await isConvMuted(targetId, oid))) {
-      await notifyOnce(oid, 'message', 'ফরওয়ার্ড করা মেসেজ', `${req.session.user.full_name} আপনাকে একটি মেসেজ ফরওয়ার্ড করেছেন`, '/messages/' + req.session.user.username);
+      await notifyOnce(oid, 'message', 'ফরওয়ার্ড করা মেসেজ', `${displayName(req.session.user)} আপনাকে একটি মেসেজ ফরওয়ার্ড করেছেন`, '/messages/' + req.session.user.username);
     }
   }
   res.json({ ok: true, id: ins.lastInsertRowid });
@@ -1231,7 +1231,7 @@ router.post('/complaints', ensureAuth, withUpload(attachmentUpload), async (req,
   (await db.prepare("SELECT id FROM users WHERE role IN ('admin','moderator')").all()).forEach(a => staff.add(a.id));
   staff.delete(req.session.user.id);
   for (const uid of staff) {
-    await notifyOnce(uid, 'complaint', 'নতুন অভিযোগ', `${req.session.user.full_name} একটি অভিযোগ দিয়েছেন: ${subject}`, '/admin/complaints');
+    await notifyOnce(uid, 'complaint', 'নতুন অভিযোগ', `${displayName(req.session.user)} একটি অভিযোগ দিয়েছেন: ${subject}`, '/admin/complaints');
   }
   res.redirect('/complaints?sent=1');
 });

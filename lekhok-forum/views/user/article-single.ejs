@@ -17,7 +17,7 @@
   headline: String(post.title || '').slice(0, 110),
   description: (typeof metaDesc !== 'undefined' && metaDesc) ? metaDesc : undefined,
   image: (typeof ogImage !== 'undefined' && ogImage) ? [ogImage] : undefined,
-  author: { '@type': 'Person', name: author.full_name, url: (typeof siteUrl !== 'undefined' && author.username) ? siteUrl + '/profile/' + author.username : undefined },
+  author: { '@type': 'Person', name: displayName(author), url: (typeof siteUrl !== 'undefined' && author.username) ? siteUrl + '/profile/' + author.username : undefined },
   datePublished: (typeof publishedTime !== 'undefined') ? publishedTime : undefined,
   publisher: { '@type': 'Organization', name: 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়' },
   mainEntityOfPage: (typeof siteUrl !== 'undefined') ? siteUrl + '/articles/' + post.id : undefined
@@ -46,7 +46,7 @@
       <% if (post.shared_from && post.shared_original) { %>
         <div class="shared-banner">
           <i class="fas fa-retweet"></i>
-          <span><a href="/profile/<%= author.username %>"><%= author.full_name %></a> শেয়ার করেছেন,
+          <span><a href="/profile/<%= author.username %>"><%= displayName(author) %></a> শেয়ার করেছেন,
             <a href="/articles/<%= post.shared_original.id %>"><%= post.shared_original.orig_author %>-এর মূল পোস্ট</a></span>
         </div>
       <% } %>
@@ -64,7 +64,7 @@
           <div class="article-author-bar">
             <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="author-avatar" alt="">
             <div>
-              <a href="/profile/<%= author.username %>" class="author-name"><%= author.full_name %></a>
+              <a href="/profile/<%= author.username %>" class="author-name"><%= displayName(author) %></a><% if (hasPenName(author)) { %><span class="pen-chip" title="আসল নাম: <%= author.full_name %>">কলমে: <%= author.full_name %></span><% } %>
               <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত &middot; <i class="far fa-clock"></i> <span title="<%= wordCountBn %> শব্দ">≈ <%= readingMinutesBn %> মিনিট পড়া</span></div>
             </div>
           </div>
@@ -135,7 +135,7 @@
             <div class="comment-item" id="c<%= c.id %>">
               <img loading="lazy" decoding="async" src="<%= c.avatar_url || '/avatar/' + c.author_id %>" class="comment-avatar">
               <div class="comment-bubble">
-                <a href="/profile/<%= c.username %>" class="comment-author"><%= displayName(c, c.full_name) %></a>
+                <a href="/profile/<%= c.username %>" class="comment-author"><%= displayName(c, c.full_name) %></a><% if (hasPenName(c)) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %>
                 <div class="comment-body"><%- c.bodyHtml %></div>
                 <div class="comment-meta">
                   <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
@@ -155,7 +155,7 @@
                   <div class="reply-item" id="c<%= r.id %>">
                     <img loading="lazy" decoding="async" src="<%= r.avatar_url || '/avatar/' + r.author_id %>" class="comment-avatar small">
                     <div class="comment-bubble small">
-                      <a href="/profile/<%= r.username %>" class="comment-author"><%= displayName(r, r.full_name) %></a>
+                      <a href="/profile/<%= r.username %>" class="comment-author"><%= displayName(r, r.full_name) %></a><% if (hasPenName(r)) { %><span class="pen-chip" title="আসল নাম: <%= r.full_name %>">কলমে</span><% } %>
                       <div class="comment-body"><%- r.bodyHtml %></div>
                       <div class="comment-meta">
                         <span><i class="far fa-clock"></i> <%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
@@ -164,7 +164,7 @@
                   </div>
                 <% }); %>
                 <% if (user) { %>
-                  <%# সেশন ৯৩: রিপ্লাই-কম্পোজার (কম্প্যাক্ট) — টুলবার+ম্যানশনসহ %>
+                  <%# সেশন ৯৩/৯৪: রিপ্লাই-কম্পোজার (কম্প্যাক্ট) — টুলবার+ম্যানশনসহ; placeholder-এ কলমী-নাম প্রাধান্য (৯৪) %>
                   <div class="reply-form cc-slot" hidden>
                     <%- include('../partials/comment-composer', { user, postId: post.id, parentId: c.id, compact: true, placeholder: displayName(c, c.full_name) + '-কে উত্তর দিন…' }) %>
                   </div>

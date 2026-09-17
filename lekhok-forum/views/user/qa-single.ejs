@@ -17,11 +17,11 @@
       "name": post.title,
       "text": _qText72(post.body),
       "answerCount": (answers || []).length,
-      "author": { "@type": "Person", "name": post.full_name },
+      "author": { "@type": "Person", "name": displayName(post) },
       "datePublished": post.published_at || post.created_at || undefined,
       "acceptedAnswer": undefined,
       "suggestedAnswer": (answers || []).map(function (a) {
-        return { "@type": "Answer", "text": _qText72(a.body), "datePublished": a.created_at || undefined, "author": { "@type": "Person", "name": a.full_name } };
+        return { "@type": "Answer", "text": _qText72(a.body), "datePublished": a.created_at || undefined, "author": { "@type": "Person", "name": displayName(a) } };
       })
     }
   };
@@ -59,7 +59,7 @@
         <% } } catch(e) {} %>
         <div class="question-meta">
           <img loading="lazy" decoding="async" src="<%= post.avatar_url || '/avatar/' + post.author_id %>" class="mini-avatar">
-          <a href="/profile/<%= post.username %>" class="qa-author"><%= post.full_name %></a>
+          <a href="/profile/<%= post.username %>" class="qa-author"><%= displayName(post) %></a><% if (hasPenName(post)) { %><span class="pen-chip" title="আসল নাম: <%= post.full_name %>">কলমে</span><% } %>
           <span>&middot;</span>
           <span><i class="far fa-clock"></i> <%= new Date(post.created_at).toLocaleDateString('bn-BD') %></span>
           <%# ── সেশন ৯৩: গ্লোবাল ৩-ডট — ছড়ানো qa-owner-controls/modrow81 প্রতিস্থাপন ── %>
@@ -103,7 +103,7 @@
             </div>
             <div class="answer-body">
               <div class="answer-header">
-                <a href="/profile/<%= a.username %>" class="answer-author"><%= displayName(a, a.full_name) %></a>
+                <a href="/profile/<%= a.username %>" class="answer-author"><%= displayName(a, a.full_name) %></a><% if (hasPenName(a)) { %><span class="pen-chip" title="আসল নাম: <%= a.full_name %>">কলমে</span><% } %>
                 <span class="answer-date"><i class="far fa-clock"></i> <%= new Date(a.created_at).toLocaleDateString('bn-BD') %></span>
               </div>
               <div class="answer-text"><%- a.html %></div>

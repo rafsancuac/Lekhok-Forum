@@ -457,3 +457,43 @@ session93: ইউজার-প্রদত্ত অডিট-স্ক্রি
 - কল এখন সাইটজুড়ে রিং করে (মেসেঞ্জার-বাইরেও), চ্যাট-ডিটেইলসে কল-ইতিহাস দৃশ্যমান
 - sandbox-গোটচা (পুনঃপ্রমাণিত): বুট-পরবর্তী ৪-সে settle-এর আগে লগইন-টেস্ট করলে dying/init-race-এ মিথ্যা-401 — settle-delay + status-প্রিন্ট বাধ্যতামূলক
 - পরবর্তী: Metered.ca TURN, হিস্ট্রি-রোতে কলব্যাক-বাটন, মিসড-কল-ব্যাজ, গ্রুপ-কল
+
+## সেশন ৯৭ (১৮ সেপ্টেম্বর ২০২৬) — QA-রাউন্ড → রোডম্যাপ-১৪ সম্পূর্ণ (pen_name এভরিহিয়ার) + রোডম্যাপ-০৫ পলিশ (load-on-restore) + pen-chip স্টাইলিং
+
+**প্রবেশ-অবস্থা:** origin/main @ b2a0615 (session92-b docs) — worklog/PROJECT.md/PLANS.md পড়ে শুরু; সার্ভার-স্টার্টে gotcha: সাধারণ `&`/nohup-ব্যাকগ্রাউন্ড node টুল-রানের মাঝে মারা যায় → **`(setsid node server.js > log 2>&1 < /dev/null &)` সাবশেল-ডাবল-ফর্ক** প্যাটার্নেই বেঁচে থাকে (পরের এজেন্টদের জন্য নোট)। লোকাল lekhok.db-তে `admin`-ইউজার ছিল না → superadmin হিসেবে সিড (admin/admin123) — test-role-policy.sh-এর পূর্বশর্ত।
+
+**QA-অ্যাসেসমেন্ট:** ৯৯/৯৯ role-policy ALL GREEN ✓ ১১-পেজ ম্যাট্রিক্স (200/302) ✓ agent-browser: কনসোল-এরর ০, 390px-ওভারফ্লো-০ (dashboard/chat/me), মেসেঞ্জার-ফিচার অক্ষত (সার্চ/মাইক/ডিটেইলস-ট্যাব-ব্যাজ [3,1,1]) → **স্থিতিশীল রায়** → বাগ-ফিক্স প্রয়োজন নেই; রোডম্যাপ-ফিচার নির্বাচন। **Agent-Chat-লক ফাইল (messages-chat.ejs/messenger.css/messenger-actions.js) ইচ্ছাকৃত-অস্পৃশ্য** — সমান্তরাল WebRTC (রোডম্যাপ-১৩) সংঘর্ষ-ঝুঁকি।
+
+### ফিচার ① — রোডম্যাপ-১৪ সম্পূর্ণ (D1: pen_name প্রধান-নাম এভরিহিয়ার)
+- **সেশনে pen_name:** auth.js ×৪ (login/2fa/register/profile-update-refresh) + social.js অ্যাভাটার-রিফ্রেশ + admin/routes.js স্টাফ-পোর্টাল — পুরনো-সেশনে full_name-fallback (graceful)।
+- **নোটিফিকেশন ×১৬ সাইট displayName()-এ:** social.js (ম্যানশন×২/লাইক×২/মন্তব্য×২/শেয়ার/ফলো/প্রতিক্রিয়া/উত্তর/নিউজলেটার-authorName) + dashboard.js (বার্তা/গ্রুপ×৩/ফরওয়ার্ড×২/অভিযোগ)।
+- **ভিউ (article-single.ejs + qa-single.ejs):** কমেন্ট/উত্তর-বাবল + বাইলাইন + শেয়ার-ব্যানার + reply-placeholder + JSON-LD (Article/Question/Answer) — displayName() + `.pen-chip` (বাইলাইনে 'কলমে: আসল-নাম', বাবলে কমপ্যাক্ট 'কলমে', টুলটিপে আসল-নাম)। SQL-এ `u.pen_name` যোগ ×৪ কুয়েরি।
+- **server.js:** `app.locals.displayName/hasPenName` — ভবিষ্যৎ-ভিউ-অ্যাডপশন এক-লাইনে।
+- **E2E-প্রমাণ:** কমেন্ট-বাবল 'নীলকণ্ঠ'+চিপ ✓ বাইলাইন 'মেঘতীর্থ'+'কলমে: টেস্ট testagent1' ✓ JSON-LD-author ✓ নোটিফিকেশন 'মেঘতীর্থ আপনাকে ফলো করেছেন' + 'মেঘতীর্থ আপনাকে মেসেজ করেছেন' ✓ QA-উত্তর-দুটি ✓।
+
+### ফিচার ② — রোডম্যাপ-০৫ পলিশ (load-on-restore)
+- main.js feed-more ইঞ্জিনে **serialized-চেইন** (`loadNext()`) — বাটন/IO-সেন্টিনেল/রিস্টোর সব-ট্রিগার একই চেইনে (busy-দ্বন্দ্ব-মুক্ত); `window.LekhokFeedMore` পাবলিক API।
+- স্ক্রল-রিস্টোর ইঞ্জিন: সেভ-অবস্থান কনটেন্টের নিচে হলে পেজগুলো ধারাবাহিক-লোড (≤১২) → নিখুঁত রিস্টোর (আগে clamp-আটকে) + `html.lf-restoring` + রিফলো-পুনঃনিশ্চিত।
+- **E2E:** exact-restore y=6461 ✓ অগভীর/অসম্ভব-সেভ → graceful-clamp + ক্লাস-ক্লিনআপ + কনসোল-০ ✓।
+
+### স্টাইলিং
+- `.pen-chip` অ্যাম্বার-গ্রেডিয়েন্ট পিল (hover-lift, কমপ্যাক্ট-ভ্যারিয়েন্ট, ≤600px, reduced-motion-সচেতন) — style.css EOF-ব্লক (safe-merge প্যাটার্ন)।
+
+**রিগ্রেশন:** test-role-policy.sh **৯৯/৯৯ ALL GREEN** ✓ ১১-পেজ ম্যাট্রিক্স ✓ node --check সব-এডিটেড-JS ✓।
+**স্কোপ-নোট:** রোডম্যাপ-১৭ যাচাইকৃত-পূর্ব-নির্মিত (সেশন-৯০ `post_kind='writing'`-ফিল্টার)।
+**টেস্ট-ডেটা (লোকাল lekhok.db):** admin(superadmin), testagent1='মেঘতীর্থ', testagent2='নীলকণ্ঠ', প্রশ্ন id=2 (+উত্তর), ৪০-অ্যাক্টিভিটি পোস্ট (ফিড-উচ্চতা-টেস্ট)।
+**পরবর্তী সুপারিশ:** ① ০১-SSE-হাব (🔴-কোর, একক-রাউন্ড-ফোকাস) ② ০৭-কম্পোজার-মোডাল ③ ০৮-এনগেজমেন্ট-র‍্যাংকড-ফিড ④ WebRTC-মার্জ-পরে শেয়ার্ড-ট্যাব pagination ⑤ নোটিফিকেশন-ড্রপডাউন actor-avatar।
+
+---
+
+## সেশন ৯৭-সম্পূরক — rebase-মার্জ (সমান্তরাল session93-এর সাথে) + পূর্ণ-রিগ্রেশন
+
+- কাজের মাঝেই সমান্তরাল-এজেন্ট session93-a/b/c push করেছে (WebRTC-কল ৭a71b26, চ্যাট-উইন্ডোিং+সার্চ-জাম্প 244f5ad, FB-ফিড-কমেন্ট c9f4ccf/26d52b1, সাইড-অ্যাকশন-রেল) — আমার কাজ WIP-কমিট করে `git pull --rebase` → **৬-ফাইল কনফ্লিক্ট** সমাধান:
+  - **social.js ×৩ হাঙ্ক:** import-কমেন্ট ঐক্য; comments-কুয়েরি (উভয়ের pen_name এক); render-line — তাঁদের `displayName`-লোকাল-পাস + আমার `authorName: displayName(author)` উভয়ই।
+  - **article-single.ejs ×৪:** তাঁদের `.article-author-row92`+post-menu কাঠামোর ভেতরে আমার displayName+pen-chip; কমেন্ট/উত্তরে `displayName(c, c.full_name)` (তাঁদের explicit-fallback স্টাইল) + আমার চিপ; **রিপ্লাই-ফর্মে তাঁদের নতুন cc-কম্পোজার-পার্টিয়ালই রাখা** (আমার প্লেইন-ফর্ম বাদ — তাঁদের টুলবার+ম্যানশন-ইউপি উন্নত)।
+  - **qa-single.ejs ×১, style.css EOF ×১ (দুই-ব্লকই), PROJECT.md (তাঁদের ৯৩/৯৩-b + আমার ৯৪, ভাঙা ৮৯-হেডিং পুনর্গঠিত), worklog.md (দুই-এন্ট্রিই)।**
+- **রিনাম্বার:** আমার সেশন ৯৩→**৯৪** (নাম-সংঘর্ষ এড়াতে; প্রজেক্ট-রীতি অনুযায়ী origin/main-এর সর্বোচ্চ+১)।
+- **post-merge যাচাই:** node --check সব-JS ✓ আর্টিকেল-পেজ: বাইলাইন 'মেঘতীর্থ'+চিপ + কমেন্ট 'নীলকণ্ঠ' + তাঁদের pm-মেনু + cc-কম্পোজার সহাবস্থান ✓ ড্যাশবোর্ড: LekhokFeedMore-API + তাঁদের inline-comments-toggle ×৮ + pm-btn ×১২ ✓ চ্যাট: LekhokCall-object + older-pill + সার্চ + মাইক ✓ 390px-ওভারফ্লো-০ ×৩ ✓ কনসোল-০ ✓
+- **ডুয়াল-স্যুট:** `verify-session93-calls.js` **৪৫/৪৫ ALL GREEN** (নোট: ismail/monem/karishma demo123 সিড দরকার; CALL_RING_TIMEOUT_S=4 **সার্ভার-প্রসেসে** দিতে হয় — ক্লায়েন্টে নয়) + `test-role-policy.sh` **৯৯/৯৯ ALL GREEN** ✓
+- **টেস্ট-ডেটা সংযোজন:** ismail/monem/karishma (demo123) সিড — পরের এজেন্টদের জন্য প্রস্তুত।
+- push: 87dd9a4 → origin/main (session94)

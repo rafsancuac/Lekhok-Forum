@@ -7,7 +7,7 @@ const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload'
 const rolePolicy = require('../helpers/role-policy');
 const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
 const { notifyIfAllowed } = require('../helpers/notify'); // সেশন ৯১ (B4): প্রেফ-গেটেড নোটিফিকেশন
-const { displayName } = require('../helpers/display-name'); // সেশন ৯৩ (D1/রোডম্যাপ-১৪): কলমী-নাম প্রাধান্য — কমেন্ট/উত্তর-সারফেস
+const { displayName } = require('../helpers/display-name'); // সেশন ৯৩/৯৪ (D1/রোডম্যাপ-১৪): কলমী-নাম প্রাধান্য — কমেন্ট/উত্তর/নোটিফিকেশন-সারফেস
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCurrentUser(req) {
@@ -344,7 +344,7 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
     for (const m of mentioned) {
       if (m.id !== req.session.user.id) {
         // B4: প্রাপকের notify_comments প্রেফ সম্মান করি (ম্যানশন = কমেন্ট-পরিবার)
-        await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', req.session.user.full_name + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId);
+        await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(req.session.user) + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId);
       }
     }
   } catch (e) {}
@@ -361,7 +361,7 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
       const postRow = await db.prepare('SELECT * FROM posts WHERE id = ?').get(result.lastInsertRowid);
       const r = await mailer.notifySubscribers({
         kind: 'article', refId: result.lastInsertRowid,
-        title, body: excerpt || body, authorName: author.full_name || ''
+        title, body: excerpt || body, authorName: displayName(author) || ''
       });
       console.log(`[newsletter] article #${result.lastInsertRowid}: queued=${r.queued} sent=${r.sent} failed=${r.failed}${r.configured ? '' : ' (RESEND_API_KEY নেই — কিউতে অপেক্ষমাণ)'}`);
     }
@@ -418,7 +418,7 @@ router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
     try {
       await db.prepare(`INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, 'share', ?, ?, ?)`).run(
         origAuthorId, 'শেয়ার',
-        req.session.user.full_name + ' আপনার পোস্ট শেয়ার করেছেন',
+        displayName(req.session.user) + ' আপনার পোস্ট শেয়ার করেছেন',
         '/articles/' + (newIdInt || sourceId)
       );
     } catch (e) {}
@@ -428,7 +428,7 @@ router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
 
 // ── Single article view ──────────────────────────────────────────────────────
 router.get('/articles/:id', async (req, res) => {
-  const post = await db.prepare(`SELECT p.*, u.full_name as author_name, u.username as author_username, u.avatar_url as author_avatar, u.gender as author_gender, u.designation as author_designation, u.bio as author_bio
+  const post = await db.prepare(`SELECT p.*, u.full_name as author_name, u.pen_name as author_pen_name, u.username as author_username, u.avatar_url as author_avatar, u.gender as author_gender, u.designation as author_designation, u.bio as author_bio
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.type = 'article'`).get(req.params.id);
   if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
@@ -467,7 +467,7 @@ router.get('/articles/:id', async (req, res) => {
   // increment view
   await db.prepare('UPDATE posts SET view_count = view_count + 1 WHERE id = ?').run(req.params.id);
 
-  // comments — threaded (top-level + replies), with reaction info (সেশন ৯৩: pen_name-ও নেওয়া হলো — কলমী-নাম প্রাধান্য)
+  // comments — threaded (top-level + replies), with reaction info (সেশন ৯৩/৯৪: pen_name-ও নেওয়া হলো — কলমী-নাম প্রাধান্য)
   const flatComments = await db.prepare(`SELECT c.*, u.full_name, u.pen_name, u.username, u.avatar_url, u.gender
                                FROM comments c JOIN users u ON c.author_id = u.id
                                WHERE c.post_id = ? ORDER BY c.created_at ASC`).all(req.params.id);
@@ -502,6 +502,7 @@ router.get('/articles/:id', async (req, res) => {
   const author = {
     id: post.author_id,
     full_name: post.author_name,
+    pen_name: post.author_pen_name,
     username: post.author_username,
     avatar_url: post.author_avatar,
     gender: post.author_gender,
@@ -575,7 +576,7 @@ router.get('/articles/:id', async (req, res) => {
       first_tag: (String(r.tags || '').split(',')[0] || '').trim()
     }));
 
-  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc, related, postHidden81, isOwner81, canMod81, myOpenReport81, hiddenToast81: req.query.hidden === '1', unhiddenToast81: req.query.unhidden === '1', displayName });
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: displayName(author), readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc, related, postHidden81, isOwner81, canMod81, myOpenReport81, hiddenToast81: req.query.hidden === '1', unhiddenToast81: req.query.unhidden === '1', displayName });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────
@@ -632,7 +633,7 @@ async function toggleLike(req, res) {
     // notify post author — B4: notify_reactions প্রেফ-গেট (type 'like' = রিঅ্যাকশন-পরিবার)
     const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(postId);
     if (post && post.author_id !== userId) {
-      await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${req.session.user.full_name} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + postId);
+      await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${displayName(req.session.user)} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + postId);
     }
   }
   res.redirect(back);
@@ -665,7 +666,7 @@ router.post('/articles/:id/comment', ensureLoggedIn, async (req, res) => {
   // notify — B4: প্রাপকের notify_comments প্রেফ-গেট
   const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(req.params.id);
   if (post && post.author_id !== req.session.user.id) {
-    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${req.session.user.full_name} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + req.params.id);
+    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + req.params.id);
   }
   res.redirect('/articles/' + req.params.id + '#comments');
 });
@@ -715,7 +716,7 @@ router.post(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
     for (const m of mentioned) {
       if (m.id !== req.session.user.id) {
         // B4: প্রাপকের notify_comments প্রেফ সম্মান করি (প্রশ্ন-ম্যানশন)
-        await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', req.session.user.full_name + ' আপনাকে একটি প্রশ্নে ম্যানশন করেছেন', '/qa/' + postId);
+        await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(req.session.user) + ' আপনাকে একটি প্রশ্নে ম্যানশন করেছেন', '/qa/' + postId);
       }
     }
   } catch (e) {}
@@ -761,7 +762,7 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   // সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স): post + answers + related একসাথে (আগে সিরিয়াল —
   // Turso-তে প্রতিটি await একটি নেটওয়ার্ক রাউন্ড-ট্রিপ ছিল)।
   const [post, answers, relatedQ72] = await Promise.all([
-    db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender, u.designation
+    db.prepare(`SELECT p.*, u.full_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation
                            FROM posts p JOIN users u ON p.author_id = u.id
                            WHERE p.id = ? AND p.type = 'question'`).get(req.params.id),
     db.prepare(`SELECT c.*, u.full_name, u.pen_name, u.username, u.avatar_url, u.gender
@@ -1401,7 +1402,7 @@ router.post('/api/like', async (req, res) => {
       await db.prepare('UPDATE posts SET like_count = like_count + 1 WHERE id = ?').run(id);
       const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(id);
       if (post && post.author_id !== userId) {
-        await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${req.session.user.full_name} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + id);
+        await notifyIfAllowed(post.author_id, 'notify_reactions', 'like', 'নতুন লাইক', `${displayName(req.session.user)} আপনার লেখা "${post.title}" লাইক করেছেন`, '/articles/' + id);
       }
     }
     const p = await db.prepare('SELECT like_count FROM posts WHERE id = ?').get(id);
@@ -1434,7 +1435,7 @@ router.post('/api/comment', async (req, res) => {
   await db.prepare('UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?').run(post_id);
   const post = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(post_id);
   if (post && post.author_id !== req.session.user.id) {
-    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${req.session.user.full_name} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + post_id);
+    await notifyIfAllowed(post.author_id, 'notify_comments', 'comment', 'নতুন মন্তব্য', `${displayName(req.session.user)} আপনার লেখায় মন্তব্য করেছেন`, '/articles/' + post_id);
   }
   // Return the new comment id so callers (inline reply UI, tests) can chain
   // follow-ups like /api/comment with parent_id.
@@ -1509,7 +1510,7 @@ router.post('/follow/:userId', async (req, res) => {
   } else {
     await db.prepare('INSERT INTO follows (follower_id, following_id) VALUES (?, ?)').run(req.session.user.id, targetId);
     const target = await db.prepare('SELECT username FROM users WHERE id = ?').get(targetId);
-    await notifyIfAllowed(targetId, 'notify_follows', 'follow', 'নতুন ফলোয়ার', `${req.session.user.full_name} আপনাকে ফলো করেছেন`, '/profile/' + (target?.username || ''));
+    await notifyIfAllowed(targetId, 'notify_follows', 'follow', 'নতুন ফলোয়ার', `${displayName(req.session.user)} আপনাকে ফলো করেছেন`, '/profile/' + (target?.username || ''));
     return res.json({ following: true });
   }
 });
@@ -1932,7 +1933,7 @@ router.post('/settings/avatar', ensureLoggedIn, withUpload(avatarUpload), async 
     } catch (e) { console.error('[avatar] autopost:', e.message); }
     // Refresh session user from DB
     const fresh = await db.prepare('SELECT * FROM users WHERE id = ?').get(me.id);
-    if (fresh) req.session.user = { id: fresh.id, username: fresh.username, full_name: fresh.full_name, avatar_url: fresh.avatar_url, gender: fresh.gender, role: fresh.role || 'user' };
+    if (fresh) req.session.user = { id: fresh.id, username: fresh.username, full_name: fresh.full_name, pen_name: fresh.pen_name || null, avatar_url: fresh.avatar_url, gender: fresh.gender, role: fresh.role || 'user' };
     res.redirect('/profile/' + encodeURIComponent(me.username) + '?ok=avatar');
   } catch(e) {
     console.error('[avatar] save error:', e);
@@ -2216,7 +2217,7 @@ router.post('/api/react', ensureLoggedIn, async (req, res) => {
         if (post && post.author_id !== me.id) {
           const labels = { love: '❤️ ভালোবাসা', haha: '😂 হাসি', wow: '😮 বিস্ময়' };
           await notifyIfAllowed(post.author_id, 'notify_reactions', 'reaction', labels[reaction_type] || 'প্রতিক্রিয়া',
-            me.full_name + ' আপনার পোস্টে প্রতিক্রিয়া জানিয়েছেন', '/articles/' + target_id);
+            displayName(me) + ' আপনার পোস্টে প্রতিক্রিয়া জানিয়েছেন', '/articles/' + target_id);
         }
       }
     }
@@ -2312,7 +2313,7 @@ router.post('/qa/:id/answer', ensureLoggedIn, async (req, res) => {
   // Notify question author — B4: প্রাপকের notify_comments প্রেফ-গেট
   const q = await db.prepare('SELECT author_id, title FROM posts WHERE id = ?').get(qid);
   if (q && q.author_id !== me.id) {
-    await notifyIfAllowed(q.author_id, 'notify_comments', 'comment', 'নতুন উত্তর', me.full_name + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid);
+    await notifyIfAllowed(q.author_id, 'notify_comments', 'comment', 'নতুন উত্তর', displayName(me) + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid);
   }
   res.redirect('/qa/' + qid + '#answer-' + r.lastInsertRowid);
 });

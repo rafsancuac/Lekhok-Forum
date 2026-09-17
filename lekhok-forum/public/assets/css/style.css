@@ -1101,3 +1101,19 @@ a.ws91-best:hover .ws91-best-label{color:#065F46}
   .fc-list{max-height:300px}
   .fcp-bubble,.fc-bubble{max-width:calc(100% - 4px)}
 }
+=======
+/* ── সেশন ৯৩ (রোডম্যাপ-১৪ D1): কলমী-নাম চিপ — pen_name প্রধান-নামের পাশে 'কলমে' ট্যাগ ──
+ * বাইলাইনে 'কলমে: আসল-নাম' (টুলটিপসহ), কমেন্ট/উত্তর-বাবলে কমপ্যাক্ট 'কলমে' (টুলটিপে আসল-নাম)। */
+.pen-chip{display:inline-flex;align-items:center;margin-left:8px;padding:2px 9px;border-radius:999px;font-size:.72rem;font-weight:600;line-height:1.5;letter-spacing:.01em;color:#92400e;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fcd34d;vertical-align:middle;white-space:nowrap;transition:box-shadow .18s,transform .18s}
+.pen-chip:hover{box-shadow:0 2px 8px rgba(180,83,9,.22);transform:translateY(-1px)}
+.author-name + .pen-chip{margin-left:10px;padding:3px 11px;font-size:.75rem}
+.comment-author + .pen-chip,.answer-author + .pen-chip{margin-left:6px;padding:1px 8px;font-size:.68rem}
+.qa-author + .pen-chip{margin-left:8px}
+@media (max-width:600px){.pen-chip{margin-left:6px;padding:1px 7px;font-size:.64rem}.author-name + .pen-chip{padding:2px 9px;font-size:.7rem}}
+@media (prefers-reduced-motion:reduce){.pen-chip{transition:none}.pen-chip:hover{transform:none;box-shadow:none}}
+
+/* ── সেশন ৯৩ (রোডম্যাপ-০৫ পলিশ): লোড-অন-রিস্টোর — গভীর-স্ক্রল রিস্টোরে ফিড-লোড অবস্থা ──
+ * রিস্টোর-ইঞ্জিন পেজ-লোড করার সময় সেন্টিনেল-স্পিনারেই ব্যবহারকারী দেখেন; এখানে
+ * restore চলাকালীন পেজটি নরম-লক (স্ক্রল-জাম্প এড়াতে) ক্লাস টগল হয়। */
+html.lf-restoring{scroll-behavior:auto}
+html.lf-restoring .feed-more-sentinel{margin:0}

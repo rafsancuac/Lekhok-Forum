@@ -74,6 +74,11 @@ app.locals.AV = computeAssetVersion();
 // সীমা দিলে শব্দ-সীমায় কেটে '…' দেয়। মিরর: helpers/markdown-lite.js plainText()।
 app.locals.mdPlain = require('./helpers/markdown-lite').plainText;
 
+// ── সেশন ৯৩ (D1): প্রদর্শন-নাম হেল্পার — সব EJS-ভিউতে displayName(row) / hasPenName(row) ──
+// pen_name (কলমী নাম) প্রধান, fallback full_name। কমেন্ট-বাবল/উত্তর/বাইলাইন-সহ সব সারফেসে।
+app.locals.displayName = require('./helpers/display-name').displayName;
+app.locals.hasPenName = require('./helpers/display-name').hasPenName;
+
 // ── সেশন ৯১: JSON-in-<script> XSS-গার্ড — সব EJS-ভিউতে jesc(ভ্যালু) ডাকা যায় ──
 // `<%- JSON.stringify(x) %>` ব্যবহারে ইউজার-কনটেন্টে `</script>` থাকলে স্ক্রিপ্ট-
 // কনটেক্সট ভেঙে stored-XSS হয় (উদা: প্রশ্নের টাইটেল/আর্টিকেল হেডলাইন/কুইজ-উত্তর)।

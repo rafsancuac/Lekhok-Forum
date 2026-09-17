@@ -244,7 +244,7 @@ router.post('/login', async (req, res) => {
           return new Promise((resolve) => {
             req.session.regenerate((err) => {
               if (err) console.error('[admin] /admin/login user-staff regenerate error:', err);
-              req.session.user = { id: _cu81.id, username: _cu81.username, full_name: _cu81.full_name, avatar_url: _cu81.avatar_url, gender: _cu81.gender, role: _cu81.role || 'user' };
+              req.session.user = { id: _cu81.id, username: _cu81.username, full_name: _cu81.full_name, pen_name: _cu81.pen_name || null, avatar_url: _cu81.avatar_url, gender: _cu81.gender, role: _cu81.role || 'user' };
               req.session.modMode = true;
               req.session.save((err2) => {
                 if (err2) console.error('[admin] /admin/login user-staff save error:', err2);
