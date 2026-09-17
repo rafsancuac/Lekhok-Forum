@@ -173,18 +173,24 @@ router.get('/robots.txt', (req, res) => {
   const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
   res.set('Content-Type', 'text/plain; charset=utf-8');
   res.set('Cache-Control', 'public, max-age=3600');
+  // সেশন ৭৩ (GSC live-test "Googlebot blocked by robots.txt" ফিক্স):
+  //  • /avatar/ আনব্লক — লেখক/মন্তব্য/মেম্বার-তালিকায় অ্যাভাটার পাবলিক পেজেরই
+  //    অংশ; ব্লক করলে Google-এর রেন্ডারড স্ক্রিনশটে সব অ্যাভাটার হারিয়ে যায়।
+  //  • Allow: /api/whoami — auth-sync.js প্রতিটি পাবলিক-পেজ রেন্ডারে এই XHR
+  //    ছোড়ে; Googlebot-এর জন্য এটা নিরীহ (logged-out JSON)। longest-match রুলে
+  //    এই Allow, Disallow: /api/-কে ছাড়িয়ে যায় — বাকি API আগের মতোই ব্লকড।
   res.send(
     'User-agent: *\n' +
     'Allow: /\n' +
     'Disallow: /admin\n' +
     'Disallow: /api/\n' +
+    'Allow: /api/whoami\n' +
     'Disallow: /dashboard\n' +
     'Disallow: /messages\n' +
     'Disallow: /bookmarks\n' +
     'Disallow: /settings\n' +
     'Disallow: /articles/new\n' +
     'Disallow: /qa/new\n' +
-    'Disallow: /avatar/\n' +
     '\n' +
     `Sitemap: ${siteUrl}/sitemap.xml\n`
   );

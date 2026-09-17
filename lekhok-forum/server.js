@@ -277,7 +277,10 @@ app.use(async (req, res, next) => {
     // (দুটোর যেকোনো একটিই Set-Cookie বহন করে → Vercel Edge-ক্যাশ বাতিল হত)।
     // এপিমেরাল টোকেন যথেষ্ট: ঐ পেজের ইন্টারঅ্যাকটিভ এন্ডপয়েন্ট JSON/fetch —
     // CSRF-গার্ড urlencoded/multipart-এ সীমাবদ্ধ।
-    if (res.locals._cacheablePublic72) {
+    // সেশন ৭৩: ইমেজ/অ্যাসেট-পাথ (img/cover, avatar, uploads) একই কুকি-স্কিপে —
+    // নাহলে প্রতি ইমেজ-রেসপন্সে _csrfTok+connect.sid যেত → এজ-ক্যাশ বাতিল।
+    const ASSET_RE73 = /^\/(img\/cover|avatar|assets|uploads)\//;
+    if (res.locals._cacheablePublic72 || ASSET_RE73.test(req.path)) {
       res.locals.csrfToken = tok57;
     } else {
       req.session.csrfToken = tok57;   // সেশন-কপি best-effort; নির্ভরযোগ্য উৎস কুকি
@@ -671,6 +674,7 @@ app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epape
 app.use('/',          require('./routes/pages'));     // public pages: home, about, gallery, committee, contact, events, resources, notices
 app.use('/',          require('./routes/dashboard'));// dashboard feed, messages, complaints
 app.use('/avatar',    require('./routes/avatar'));   // default avatar serving
+app.use('/img/cover', require('./routes/cover'));    // সেশন ৭৩: লোকাল ডিটারমিনিস্টিক SVG কভার-আর্ট (picsum প্রতিস্থাপন — Googlebot-ব্লক ফিক্স)
 app.use('/moderator', require('./routes/moderator'));// scoped moderator posting panel
 app.use('/api',      require('./routes/api'));
 app.use('/admin',    require('./admin/routes'));

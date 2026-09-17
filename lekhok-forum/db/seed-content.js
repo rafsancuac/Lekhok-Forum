@@ -83,9 +83,9 @@ const path = require('path');
     articleTopics.forEach((t, i) => {
       const slug = t.title.toLowerCase().replace(/[^\w\s-]/g, '').slice(0, 30);
       const excerpt = t.body.slice(0, 120) + '...';
-      // Use picsum.photos seeded images for variety
+      // Local deterministic cover art (সেশন ৭৩: picsum Googlebot-ব্লক ফিক্স)
       const seed = (u.id * 100 + i);
-      const cover = `https://picsum.photos/seed/${seed}/800/400`;
+      const cover = `/img/cover/${seed}/800/400`;
       const reactions = JSON.stringify({ like: Math.floor(Math.random()*15)+1, love: Math.floor(Math.random()*8), haha: Math.floor(Math.random()*3), wow: Math.floor(Math.random()*2), sad: 0 });
       try {
         const stmt = db.prepare(`INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, category, status, featured, view_count, like_count, comment_count, published_at, created_at, reactions)

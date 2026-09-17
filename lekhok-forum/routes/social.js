@@ -361,7 +361,11 @@ router.get('/articles/:id', async (req, res) => {
   const metaDesc = _d ? (_d.length > 197 ? _d.slice(0, 197) + '…' : _d) : null;
   const _base = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
   const ogImage = post.cover_image
-    ? (post.cover_image.startsWith('http') ? post.cover_image : _base + post.cover_image)
+    ? (post.cover_image.startsWith('http') ? post.cover_image
+      // সেশন ৭৩: /img/cover/ জেনারেটেড SVG — সোশ্যাল ক্রলার (FB/WA/Twitter)
+      // SVG og:image সাপোর্ট করে না, তাই ব্র্যান্ডেড ডিফল্ট PNG-এ ফলব্যাক।
+      : post.cover_image.startsWith('/img/cover/') ? (_base + '/assets/img/og-default.png')
+      : _base + post.cover_image)
     : null;
   let publishedTime = null;
   try {
