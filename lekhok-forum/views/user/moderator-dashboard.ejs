@@ -112,6 +112,14 @@
 
   <%# ── সাইট মেনু ব্যবস্থাপনা (অ্যাডমিন + মডারেটর সবাই) ── %>
   <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:860px;">
+    <%# ── সেশন ৮১: রিপোর্ট-কিউ টাইল (খোলা-রিপোর্ট ব্যাজসহ) ── %>
+    <a href="/moderator/reports" class="mod-tile" style="display:flex;align-items:center;gap:14px;position:relative;">
+      <div class="mod-tile-icon"><i class="fas fa-shield-alt"></i></div>
+      <div>
+        <div class="mod-tile-label">রিপোর্ট-কিউ <% if (stats.openReports > 0) { %><span class="mrq81-dash-badge"><%= stats.openReports %></span><% } %></div>
+        <div class="mod-tile-desc">সদস্যদের রিপোর্ট দেখে কনটেন্ট লুকান/খারিজ করুন</div>
+      </div>
+    </a>
     <a href="/moderator/navigation" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
       <div class="mod-tile-icon"><i class="fas fa-bars"></i></div>
       <div>

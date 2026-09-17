@@ -20,6 +20,20 @@ function ensureLoggedIn(req, res, next) {
   next();
 }
 
+// ── সেশন ৮১: পোস্ট-মডারেশন হেল্পার ─────────────────────────────────────────
+// header.ejs-এর মতোই সব মডারেটর-রোল (senior/junior/content_moderator) + অ্যাডমিন।
+function canModerate81(u) {
+  return !!(u && /moderator|admin/.test(String(u.role || '')));
+}
+const REPORT_REASONS_81 = {
+  spam:        { label: 'স্প্যাম / বিজ্ঞাপন', icon: 'fas fa-bullhorn' },
+  abuse:       { label: 'হয়রানি / আপত্তিকর ভাষা', icon: 'fas fa-comment-slash' },
+  adult:       { label: 'অশ্লীল কনটেন্ট', icon: 'fas fa-ban' },
+  copyright:   { label: 'কপিরাইট লঙ্ঘন', icon: 'fas fa-copy' },
+  misleading:  { label: 'ভুয়া / বিভ্রান্তিকর তথ্য', icon: 'fas fa-exclamation-triangle' },
+  other:       { label: 'অন্যান্য', icon: 'fas fa-ellipsis-h' }
+};
+
 // টাস্ক ১৩ (পর্ব ৪, অংশ ক): ইউজার-ফেসিং মাল্টি-ইমেজ আপলোড (লেখা/প্রশ্ন ফর্ম) —
 // অ্যাডমিন-এন্ডপয়েন্টের মতোই, কিন্তু এখানে লগইন করা যেকোনো ইউজার ব্যবহার করতে পারে।
 router.post('/upload-images', ensureLoggedIn, (req, res) => {
@@ -118,6 +132,91 @@ async function getTagPool(limit) {
   });
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, limit || 24).map(([tag, count]) => ({ tag, count }));
 }
+
+// ── সেশন ৮১: পোস্ট-মডারেশন — রিপোর্ট তৈরি (লেখা/প্রশ্ন/মন্তব্য যেকোনো টার্গেট) ──
+router.post('/report', ensureLoggedIn, async (req, res) => {
+  const body = req.body || {};
+  const targetType = body.target_type === 'comment' ? 'comment' : 'post';
+  const targetId = parseInt(body.target_id, 10);
+  const reason = String(body.reason || '').trim();
+  const details = String(body.details || '').trim().slice(0, 800);
+  if (!targetId || !Number.isFinite(targetId)) return res.status(400).json({ ok: false, error: 'টার্গেট নির্দিষ্ট নয়।' });
+  if (!REPORT_REASONS_81[reason]) return res.status(400).json({ ok: false, error: 'কারণ নির্বাচন করুন।' });
+  const me = req.session.user;
+  try {
+    // টার্গেট-যাচাই + নিজের কনটেন্ট রিপোর্ট-নিষেধ
+    let post;
+    if (targetType === 'comment') {
+      post = await db.prepare('SELECT p.id, p.author_id, p.status, p.type FROM comments c JOIN posts p ON c.post_id = p.id WHERE c.id = ?').get(targetId);
+      if (!post) return res.status(404).json({ ok: false, error: 'মন্তব্যটি খুঁজে পাওয়া যায়নি।' });
+      const c = await db.prepare('SELECT author_id FROM comments WHERE id = ?').get(targetId);
+      if (c.author_id === me.id) return res.status(400).json({ ok: false, error: 'নিজের মন্তব্য রিপোর্ট করা যায় না।' });
+    } else {
+      post = await db.prepare('SELECT id, author_id, status, type FROM posts WHERE id = ?').get(targetId);
+      if (!post) return res.status(404).json({ ok: false, error: 'পোস্টটি খুঁজে পাওয়া যায়নি।' });
+      if (post.author_id === me.id) return res.status(400).json({ ok: false, error: 'নিজের লেখা রিপোর্ট করা যায় না।' });
+    }
+    // ডুপ্লিকেট-গার্ড: একই ইউজারের একই টার্গেটে খোলা রিপোর্ট থাকলে নতুন নয়
+    const dup = await db.prepare(
+      "SELECT id FROM reports WHERE reporter_id = ? AND status = 'open' AND " +
+      (targetType === 'comment' ? 'comment_id = ?' : 'post_id = ? AND comment_id IS NULL')
+    ).get(me.id, targetId);
+    if (dup) return res.status(409).json({ ok: false, error: 'আপনি ইতিমধ্যে এটি রিপোর্ট করেছেন — মডারেটররা দেখছেন।' });
+    await db.prepare(
+      targetType === 'comment'
+        ? 'INSERT INTO reports (reporter_id, comment_id, post_id, reason, details) VALUES (?, ?, ?, ?, ?)'
+        : 'INSERT INTO reports (reporter_id, post_id, reason, details) VALUES (?, ?, ?, ?)'
+    ).run(...(targetType === 'comment'
+      ? [me.id, targetId, post.id, reason, details || null]
+      : [me.id, targetId, reason, details || null]));
+    res.json({ ok: true, message: 'রিপোর্ট পাঠানো হয়েছে ✓ মডারেটররা দ্রুত দেখবেন।' });
+  } catch (e) {
+    console.error('[report:81]', e.message);
+    res.status(500).json({ ok: false, error: 'রিপোর্ট পাঠানো যায়নি — আবার চেষ্টা করুন।' });
+  }
+});
+
+// ── সেশন ৮১: পোস্ট লুকানো / পুনঃপ্রকাশ (মালিক বা মডারেটর) ──────────────────
+async function setPostHidden81(req, res, hidden) {
+  const post = await db.prepare('SELECT id, author_id, title, status, type FROM posts WHERE id = ?').get(req.params.id);
+  if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  const me = req.session.user;
+  const isOwner = post.author_id === me.id;
+  if (!isOwner && !canModerate81(me)) {
+    return res.status(403).send('অনুমতি নেই — শুধু লেখক বা মডারেটর লুকাতে পারেন।');
+  }
+  if (hidden && post.status === 'hidden') {
+    return res.redirect((post.type === 'question' ? '/qa/' : '/articles/') + post.id + '?already=hidden');
+  }
+  if (!hidden && post.status !== 'hidden') {
+    return res.redirect((post.type === 'question' ? '/qa/' : '/articles/') + post.id);
+  }
+  await db.prepare('UPDATE posts SET status = ? WHERE id = ?').run(hidden ? 'hidden' : 'published', post.id);
+  // মডারেটর অন্যের পোস্ট লুকালে/ফিরালে লেখককে নোটিফিকেশন
+  if (!isOwner) {
+    const back = (post.type === 'question' ? '/qa/' : '/articles/') + post.id;
+    await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
+      post.author_id, 'system',
+      hidden ? 'আপনার লেখা লুকানো হয়েছে' : 'আপনার লেখা পুনরায় প্রকাশিত হয়েছে',
+      hidden ? 'মডারেটর-নির্বাচনে "' + String(post.title || '').slice(0, 80) + '" সাময়িকভাবে লুকানো হয়েছে। প্রয়োজনে সম্পাদনা করে আবার প্রকাশ করতে পারেন।'
+             : '"' + String(post.title || '').slice(0, 80) + '" আবার সবার জন্য দৃশ্যমান করা হয়েছে।',
+      back
+    );
+  }
+  res.redirect((post.type === 'question' ? '/qa/' : '/articles/') + post.id + (hidden ? '?hidden=1' : '?unhidden=1'));
+}
+router.post('/posts/:id/hide', ensureLoggedIn, async (req, res) => {
+  try { await setPostHidden81(req, res, true); } catch (e) {
+    console.error('[hide:81]', e.message);
+    res.status(500).send('সমস্যা হয়েছে — আবার চেষ্টা করুন।');
+  }
+});
+router.post('/posts/:id/unhide', ensureLoggedIn, async (req, res) => {
+  try { await setPostHidden81(req, res, false); } catch (e) {
+    console.error('[unhide:81]', e.message);
+    res.status(500).send('সমস্যা হয়েছে — আবার চেষ্টা করুন।');
+  }
+});
 
 // ── Article list ─────────────────────────────────────────────────────────────
 router.get('/articles', async (req, res) => {
@@ -299,8 +398,28 @@ router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
 router.get('/articles/:id', async (req, res) => {
   const post = await db.prepare(`SELECT p.*, u.full_name as author_name, u.username as author_username, u.avatar_url as author_avatar, u.gender as author_gender, u.designation as author_designation, u.bio as author_bio
                            FROM posts p JOIN users u ON p.author_id = u.id
-                           WHERE p.id = ? AND p.status = 'published'`).get(req.params.id);
+                           WHERE p.id = ? AND p.type = 'article'`).get(req.params.id);
   if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  // ── সেশন ৮১: হিডেন-পোস্ট অ্যাক্সেস-নিয়ন্ত্রণ ──
+  // draft/archived আগের মতোই সবার জন্য 404; 'hidden' শুধু মালিক+মডারেটর দেখে
+  // (লুকানো-ব্যানার সহ), বাকিরা 404 পায়।
+  const viewer81 = req.session.user || null;
+  const isOwner81 = !!(viewer81 && viewer81.id === post.author_id);
+  const canMod81 = canModerate81(viewer81);
+  if (post.status === 'hidden' && !isOwner81 && !canMod81) {
+    return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  }
+  if (post.status !== 'published' && post.status !== 'hidden') {
+    return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  }
+  const postHidden81 = post.status === 'hidden';
+  // সেশন ৮১: এই ভিউয়ারের এই পোস্টে খোলা রিপোর্ট আছে কি (বাটন-স্টেটের জন্য)
+  let myOpenReport81 = false;
+  if (viewer81 && !isOwner81) {
+    myOpenReport81 = !!await db.prepare(
+      "SELECT id FROM reports WHERE reporter_id = ? AND post_id = ? AND comment_id IS NULL AND status = 'open'"
+    ).get(viewer81.id, post.id);
+  }
   // টাস্ক ১৩ (পর্ব ৪, অংশ ক): পোস্টের একাধিক ছবি (post_images) — না থাকলে কভার দিয়ে
   post.images = (await db.getPostImages('post', post.id)).map(i => i.image_url);
   if (!post.images.length && post.cover_image) post.images = [post.cover_image];
@@ -418,7 +537,7 @@ router.get('/articles/:id', async (req, res) => {
       first_tag: (String(r.tags || '').split(',')[0] || '').trim()
     }));
 
-  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc, related });
+  res.render('user/article-single', { post, author, comments, user, userBookmarked, reaction, REACTION_META, userLiked: !!reaction.mine, currentPath: '/articles', canonicalPath: `/articles/${post.id}`, metaDesc, ogImage, ogType: 'article', publishedTime, authorName: author.full_name, readingMinutes, readingMinutesBn: bn63(readingMinutes), wordCountBn: bn63(_wordCount), bodyHtml, toc, related, postHidden81, isOwner81, canMod81, myOpenReport81, hiddenToast81: req.query.hidden === '1', unhiddenToast81: req.query.unhidden === '1' });
 });
 
 // ── Edit article form ────────────────────────────────────────────────────────
@@ -607,7 +726,7 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   const [post, answers, relatedQ72] = await Promise.all([
     db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender, u.designation
                            FROM posts p JOIN users u ON p.author_id = u.id
-                           WHERE p.id = ? AND p.type = 'question' AND p.status = 'published'`).get(req.params.id),
+                           WHERE p.id = ? AND p.type = 'question'`).get(req.params.id),
     db.prepare(`SELECT c.*, u.full_name, u.username, u.avatar_url, u.gender
                               FROM comments c JOIN users u ON c.author_id = u.id
                               WHERE c.post_id = ? AND c.parent_id IS NULL
@@ -619,6 +738,23 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
                 ORDER BY p.published_at DESC LIMIT 5`).all(req.params.id),
   ]);
   if (!post) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  // ── সেশন ৮১: হিডেন-প্রশ্ন অ্যাক্সেস-নিয়ন্ত্রণ (আর্টিকেলের মতোই) ──
+  const viewer81 = req.session.user || null;
+  const isOwner81 = !!(viewer81 && viewer81.id === post.author_id);
+  const canMod81 = canModerate81(viewer81);
+  if (post.status === 'hidden' && !isOwner81 && !canMod81) {
+    return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  }
+  if (post.status !== 'published' && post.status !== 'hidden') {
+    return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  }
+  const postHidden81 = post.status === 'hidden';
+  let myOpenReport81 = false;
+  if (viewer81 && !isOwner81) {
+    myOpenReport81 = !!await db.prepare(
+      "SELECT id FROM reports WHERE reporter_id = ? AND post_id = ? AND comment_id IS NULL AND status = 'open'"
+    ).get(viewer81.id, post.id);
+  }
   const myId = req.session.user ? req.session.user.id : null;
   // সেশন ৭২: per-answer রিঅ্যাকশন-সামারি N+1 সিরিয়াল → প্যারালাল
   await Promise.all([
@@ -642,6 +778,8 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
     canonicalPath: '/qa/' + post.id,
     metaDesc: _md72 ? (_md72.length > 197 ? _md72.slice(0, 197) + '…' : _md72) : null,
     relatedQ: relatedQ72,
+    postHidden81, isOwner81, canMod81, myOpenReport81,
+    hiddenToast81: req.query.hidden === '1', unhiddenToast81: req.query.unhidden === '1',
   });
 });
 
@@ -1683,3 +1821,6 @@ router.post('/api/block/:userId', ensureLoggedIn, async (req, res) => {
 });
 
 module.exports = router;
+// সেশন ৮১: মডারেশন-হেল্পার শেয়ার (moderator.js-এর রিপোর্ট-কিউ ব্যবহার করে)
+module.exports.canModerate81 = canModerate81;
+module.exports.REPORT_REASONS_81 = REPORT_REASONS_81;

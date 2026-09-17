@@ -345,10 +345,12 @@ router.get('/', ensureModerator, async (req, res) => {
     ? db.MODERATOR_SCOPES.map(s => s.key)
     : await db.getModeratorScopes(req.session.user.id);
   // Stats for dashboard
-  let stats = { notices: 0, events: 0, daily: 0 };
+  let stats = { notices: 0, events: 0, daily: 0, openReports: 0 };
   try { stats.notices = (await db.prepare('SELECT COUNT(*) as c FROM notices').get()).c; } catch(e) {}
   try { stats.events = (await db.prepare('SELECT COUNT(*) as c FROM events').get()).c; } catch(e) {}
   try { stats.daily = (await db.prepare('SELECT COUNT(*) as c FROM daily_content WHERE published = 1').get()).c; } catch(e) {}
+  // সেশন ৮১: খোলা রিপোর্ট-ব্যাজ
+  try { stats.openReports = (await db.prepare("SELECT COUNT(*) as c FROM reports WHERE status = 'open'").get()).c; } catch(e) {}
   res.render('user/moderator-dashboard', {
     scopes: db.MODERATOR_SCOPES,
     myScopes,
@@ -357,6 +359,131 @@ router.get('/', ensureModerator, async (req, res) => {
     stats,
     currentPath: '/moderator'
   });
+});
+
+// ── সেশন ৮১: পোস্ট-মডারেশন — রিপোর্ট-কিউ (approve/report-queue) ─────────────
+// সব মডারেটর-রোল + অ্যাডমিন প্রবেশ করতে পারে (কনটেন্ট-মডারেশন মূল দায়িত্ব,
+// ডেইলি-কনটেন্ট স্কোপের সাথে বাঁধা নয় — navigation-প্যানেলের মতোই)।
+router.get('/reports', ensureModerator, async (req, res) => {
+  const tab81 = ['open', 'resolved', 'dismissed'].includes(req.query.tab) ? req.query.tab : 'open';
+  const { REPORT_REASONS_81 } = require('./social');
+  const esc81 = (s) => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  try {
+    const [rows81, counts81, hidden81] = await Promise.all([
+      db.prepare(`
+        SELECT r.*, ru.full_name AS reporter_name, ru.username AS reporter_username, ru.avatar_url AS reporter_avatar,
+               vu.full_name AS resolver_name,
+               p.title AS post_title, p.status AS post_status, p.type AS post_type, p.author_id AS post_author_id,
+               pu.full_name AS post_author_name, pu.username AS post_author_username,
+               c.body AS comment_body, cu.full_name AS comment_author_name, cu.username AS comment_author_username
+        FROM reports r
+        JOIN users ru ON r.reporter_id = ru.id
+        LEFT JOIN users vu ON r.resolved_by = vu.id
+        LEFT JOIN posts p ON r.post_id = p.id
+        LEFT JOIN users pu ON p.author_id = pu.id
+        LEFT JOIN comments c ON r.comment_id = c.id
+        LEFT JOIN users cu ON c.author_id = cu.id
+        WHERE r.status = ?
+        ORDER BY r.created_at DESC LIMIT 100`).all(tab81),
+      db.prepare(`SELECT
+        (SELECT COUNT(*) FROM reports WHERE status = 'open') AS open,
+        (SELECT COUNT(*) FROM reports WHERE status = 'resolved') AS resolved,
+        (SELECT COUNT(*) FROM reports WHERE status = 'dismissed') AS dismissed,
+        (SELECT COUNT(*) FROM reports WHERE status = 'resolved' AND date(resolved_at) = date('now')) AS resolvedToday`).get(),
+      db.prepare("SELECT COUNT(*) AS c FROM posts WHERE status = 'hidden'").get()
+    ]);
+    // টার্গেট-প্রিভিউ: পোস্ট-রিপোর্টে এক্সার্পট, কমেন্ট-রিপোর্টে মন্তব্যের অংশ
+    const excerpts = new Map();
+    const postIds = [...new Set(rows81.filter(r => r.post_id && !r.comment_id).map(r => r.post_id))];
+    if (postIds.length) {
+      const ph = postIds.map(() => '?').join(',');
+      const pr = await db.prepare(`SELECT id, body, excerpt FROM posts WHERE id IN (${ph})`).all(...postIds);
+      pr.forEach(p => {
+        const txt = String(p.excerpt || p.body || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        excerpts.set(p.id, txt.slice(0, 220));
+      });
+    }
+    const reports = rows81.map(r => ({
+      ...r,
+      reasonMeta: REPORT_REASONS_81[r.reason] || REPORT_REASONS_81.other,
+      targetExcerpt: r.comment_id ? String(r.comment_body || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 220) : (excerpts.get(r.post_id) || ''),
+      targetPath: r.post_id ? ((r.post_type === 'question' ? '/qa/' : '/articles/') + r.post_id) : null,
+      targetLabel: r.comment_id ? 'মন্তব্য' : (r.post_type === 'question' ? 'প্রশ্ন' : 'লেখা'),
+    }));
+    res.render('user/moderator-reports', {
+      reports, tab81, counts: counts81, hiddenCount: hidden81.c,
+      reasons: REPORT_REASONS_81, esc: esc81,
+      done81: req.query.done || null,
+      currentPath: '/moderator/reports'
+    });
+  } catch (e) {
+    console.error('[reports:81]', e.message);
+    res.status(500).send('রিপোর্ট-কিউ লোড করা যায়নি — সার্ভার-লগ দেখুন।');
+  }
+});
+
+// সেশন ৮১: রিপোর্টে মডারেটর-অ্যাকশন — hide (পোস্ট লুকানো+সমাধান) / dismiss / resolve
+router.post('/reports/:id/action', ensureModerator, async (req, res) => {
+  const action = String(req.body.action || '');
+  if (!['hide', 'dismiss', 'resolve', 'unhide'].includes(action)) {
+    return res.status(400).redirect('/moderator/reports');
+  }
+  try {
+    const report = await db.prepare('SELECT * FROM reports WHERE id = ?').get(req.params.id);
+    if (!report) return res.redirect('/moderator/reports?done=missing');
+    if (report.status !== 'open' && action !== 'unhide') {
+      return res.redirect('/moderator/reports?done=already');
+    }
+    const me = req.session.user;
+    let postTitle81 = '';
+    if (report.post_id) {
+      const p = await db.prepare('SELECT id, title, author_id, type, status FROM posts WHERE id = ?').get(report.post_id);
+      if (p) {
+        postTitle81 = String(p.title || '').slice(0, 80);
+        if (action === 'hide' && p.status !== 'hidden') {
+          await db.prepare("UPDATE posts SET status = 'hidden' WHERE id = ?").run(p.id);
+          // লেখককে জানানো (রিপোর্টার নয় — কনফিডেনশিয়ালিটি)
+          if (p.author_id !== me.id) {
+            await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
+              p.author_id, 'system', 'আপনার লেখা লুকানো হয়েছে',
+              'মডারেটর-নির্বাচনে "' + postTitle81 + '" সাময়িকভাবে লুকানো হয়েছে। প্রয়োজনে সম্পাদনা করে আবার প্রকাশ করতে পারেন।',
+              (p.type === 'question' ? '/qa/' : '/articles/') + p.id
+            );
+          }
+        }
+        if (action === 'unhide' && p.status === 'hidden') {
+          await db.prepare("UPDATE posts SET status = 'published' WHERE id = ?").run(p.id);
+          if (p.author_id !== me.id) {
+            await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
+              p.author_id, 'system', 'আপনার লেখা পুনরায় প্রকাশিত হয়েছে',
+              '"' + postTitle81 + '" আবার সবার জন্য দৃশ্যমান করা হয়েছে।',
+              (p.type === 'question' ? '/qa/' : '/articles/') + p.id
+            );
+          }
+        }
+      }
+    }
+    if (action !== 'unhide') {
+      const newStatus = action === 'hide' || action === 'resolve' ? 'resolved' : 'dismissed';
+      await db.prepare('UPDATE reports SET status = ?, action = ?, resolved_by = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(newStatus, action, me.id, report.id);
+      // রিপোর্টকারীকে ফলাফল-জানানো
+      const msg81 = action === 'hide'
+        ? { title: 'আপনার রিপোর্টে ব্যবস্থা নেওয়া হয়েছে ✓', body: 'রিপোর্ট করা কনটেন্টটি লুকানো হয়েছে। সহযোগিতার জন্য ধন্যবাদ।' }
+        : action === 'resolve'
+        ? { title: 'আপনার রিপোর্ট সমাধান করা হয়েছে ✓', body: 'মডারেটররা বিষয়টি দেখে প্রয়োজনীয় ব্যবস্থা নিয়েছেন।' }
+        : { title: 'আপনার রিপোর্ট পর্যালোচনা করা হয়েছে', body: 'এবারের রিপোর্টে কোনো নিয়মভঙ্গ পাওয়া যায়নি। তবুও জানানোর জন্য ধন্যবাদ।' };
+      if (report.reporter_id !== me.id) {
+        await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)').run(
+          report.reporter_id, 'system', msg81.title, msg81.body, '/moderator/reports'
+        );
+      }
+    }
+    res.redirect('/moderator/reports?done=' + action);
+  } catch (e) {
+    console.error('[reports-action:81]', e.message);
+    res.redirect('/moderator/reports?done=error');
+  }
 });
 
 // ── Generic daily_content poster (quiz / this_day / activity / epaper) ──────

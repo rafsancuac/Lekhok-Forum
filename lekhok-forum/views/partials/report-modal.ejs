@@ -1,0 +1,126 @@
+<%
+  // সেশন ৮১: শেয়ার্ড রিপোর্ট-মোডাল — লেখা/প্রশ্ন/মন্তব্য যেকোনো টার্গেটে।
+  // ওপেন-API: window.openReport81(targetType, targetId, label)
+  // ব্যবহার: actions-বাটনে data-report-type / data-report-id দিয়ে ট্রিগার।
+%>
+<div class="rp81-overlay" id="reportModal81" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="rp81Title">
+  <div class="rp81-card">
+    <div class="rp81-head">
+      <div class="rp81-head-icon"><i class="fas fa-flag"></i></div>
+      <div>
+        <h3 id="rp81Title">রিপোর্ট করুন</h3>
+        <p id="rp81Sub">কী সমস্যা দেখছেন? একটি কারণ বেছে নিন।</p>
+      </div>
+      <button type="button" class="rp81-close" id="rp81Close" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="rp81-target" id="rp81TargetBox" hidden>
+      <i class="far fa-file-alt"></i><span id="rp81TargetLabel"></span>
+    </div>
+    <div class="rp81-reasons" id="rp81Reasons" role="radiogroup" aria-label="রিপোর্টের কারণ">
+      <% const RP81 = { spam:{l:'স্প্যাম / বিজ্ঞাপন',i:'fas fa-bullhorn',d:'অযাচাইত বিজ্ঞাপন বা বারবার একই কথা'}, abuse:{l:'হয়রানি / আপত্তিকর ভাষা',i:'fas fa-comment-slash',d:'গালাগালি, ব্যক্তিগত আক্রমণ বা হুমকি'}, adult:{l:'অশ্লীল কনটেন্ট',i:'fas fa-ban',d:'প্রকাশ্য বা আপত্তিকর উপাদান'}, copyright:{l:'কপিরাইট লঙ্ঘন',i:'fas fa-copy',d:'অন্যের লেখা অনুমতি ছাড়া ব্যবহার'}, misleading:{l:'ভুয়া / বিভ্রান্তিকর তথ্য',i:'fas fa-exclamation-triangle',d:'যাচাই-না-হওয়া বা মিথ্যা তথ্য'}, other:{l:'অন্যান্য',i:'fas fa-ellipsis-h',d:'উপরের কোনোটি না-হলে'} }; %>
+      <% Object.entries(RP81).forEach(([k, m], idx) => { %>
+      <label class="rp81-reason" data-key="<%= k %>">
+        <input type="radio" name="rp81Reason" value="<%= k %>" <%= idx === 0 ? 'checked' : '' %>>
+        <span class="rp81-r-icon"><i class="<%= m.i %>"></i></span>
+        <span class="rp81-r-txt"><strong><%= m.l %></strong><small><%= m.d %></small></span>
+        <span class="rp81-r-dot" aria-hidden="true"></span>
+      </label>
+      <% }); %>
+    </div>
+    <div class="rp81-details-wrap">
+      <label for="rp81Details">বিস্তারিত (ঐচ্ছিক)</label>
+      <textarea id="rp81Details" rows="2" maxlength="800" placeholder="চাইলে সমস্যাটি এক-দুই লাইনে বর্ণনা করুন…"></textarea>
+    </div>
+    <div class="rp81-foot">
+      <span class="rp81-note"><i class="fas fa-shield-alt"></i> রিপোর্ট গোপন থাকে — লেখক দেখতে পাবেন না কে রিপোর্ট করেছেন।</span>
+      <div class="rp81-btns">
+        <button type="button" class="rp81-btn ghost" id="rp81Cancel">বাতিল</button>
+        <button type="button" class="rp81-btn primary" id="rp81Submit"><i class="fas fa-paper-plane"></i> পাঠান</button>
+      </div>
+    </div>
+    <div class="rp81-done" id="rp81Done" hidden>
+      <div class="rp81-done-icon"><i class="fas fa-check"></i></div>
+      <h4>রিপোর্ট পাঠানো হয়েছে</h4>
+      <p>মডারেটররা দ্রুত পর্যালোচনা করবেন। ধন্যবাদ! 🙏</p>
+      <button type="button" class="rp81-btn primary" id="rp81DoneOk">ঠিক আছে</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById('reportModal81');
+  if (!overlay) return;
+  var card = overlay.querySelector('.rp81-card');
+  var targetBox = document.getElementById('rp81TargetBox');
+  var targetLabel = document.getElementById('rp81TargetLabel');
+  var done = document.getElementById('rp81Done');
+  var main = overlay.querySelector('.rp81-head').parentElement;
+  var cur = { type: null, id: null };
+
+  function open(type, id, label) {
+    cur = { type: type, id: id };
+    if (label) { targetLabel.textContent = label; targetBox.hidden = false; }
+    else targetBox.hidden = true;
+    done.hidden = true;
+    card.classList.remove('rp81-show-done');
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { overlay.querySelector('input:checked') && overlay.querySelector('input:checked').focus(); }, 80);
+  }
+  function close() {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  window.openReport81 = open;
+  window.closeReport81 = close;
+
+  document.getElementById('rp81Close').addEventListener('click', close);
+  document.getElementById('rp81Cancel').addEventListener('click', close);
+  document.getElementById('rp81DoneOk').addEventListener('click', close);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
+
+  document.getElementById('rp81Submit').addEventListener('click', async function () {
+    var btn = this;
+    var reason = (overlay.querySelector('input[name="rp81Reason"]:checked') || {}).value;
+    var details = (document.getElementById('rp81Details').value || '').trim();
+    if (!reason || !cur.id) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> পাঠানো হচ্ছে…';
+    try {
+      var tok = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+      var r = await fetch('/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': tok },
+        body: JSON.stringify({ target_type: cur.type, target_id: cur.id, reason: reason, details: details })
+      });
+      var j = await r.json().catch(function () { return {}; });
+      if (r.ok && j.ok) {
+        done.hidden = false;
+        card.classList.add('rp81-show-done');
+        document.getElementById('rp81Details').value = '';
+        var repBtn = document.querySelector('[data-report-id="' + cur.id + '"]');
+        if (repBtn) { repBtn.classList.add('reported'); repBtn.innerHTML = '<i class="fas fa-flag"></i> রিপোর্ট করা হয়েছে'; repBtn.disabled = true; }
+      } else {
+        if (window.showToast) showToast(j.error || 'রিপোর্ট পাঠানো যায়নি', 'error');
+        else alert(j.error || 'রিপোর্ট পাঠানো যায়নি');
+      }
+    } catch (err) {
+      if (window.showToast) showToast('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> পাঠান';
+    }
+  });
+
+  // ডেলিগেটেড ট্রিগার: [data-report-type][data-report-id]
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-report-type]');
+    if (!t || t.disabled) return;
+    e.preventDefault();
+    open(t.getAttribute('data-report-type'), t.getAttribute('data-report-id'), t.getAttribute('data-report-label') || '');
+  });
+})();
+</script>

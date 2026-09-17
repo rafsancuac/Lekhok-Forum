@@ -1,0 +1,183 @@
+<%# সেশন ৮১: রিপোর্ট-কিউ — পোস্ট-মডারেশন প্যানেল (hide/report approve-queue) %>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>রিপোর্ট-কিউ | মডারেটর প্যানেল</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/css/style.css?v=<%= AV %>">
+</head>
+<body class="mrq81-body">
+<%- include('../../admin/views/admin/partials/sidebar') %>
+<div class="admin-main">
+<div class="mrq81-wrap">
+
+  <div class="mrq81-topbar">
+    <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
+    <h2><i class="fas fa-shield-alt"></i> রিপোর্ট-কিউ</h2>
+    <p class="mrq81-sub">সদস্যদের পাঠানো কনটেন্ট-রিপোর্ট এখানে আসে — পর্যালোচনা করে <strong>লুকান</strong> বা <strong>খারিজ</strong> করুন। রিপোর্টকারীর পরিচয় লেখকের কাছে যায় না।</p>
+  </div>
+
+  <% if (done81) { %>
+  <div class="mrq81-flash <%= ['hide','resolve','unhide'].includes(done81) ? 'ok' : (done81 === 'dismiss' ? 'info' : 'warn') %>">
+    <% if (done81 === 'hide') { %><i class="fas fa-check-circle"></i> রিপোর্টটি সমাধান হয়েছে — কনটেন্ট লুকানো হলো, লেখক ও রিপোর্টকারী দুজনেই নোটিফিকেশন পেয়েছেন।
+    <% } else if (done81 === 'dismiss') { %><i class="fas fa-info-circle"></i> রিপোর্টটি খারিজ হয়েছে — রিপোর্টকারীকে জানানো হয়েছে।
+    <% } else if (done81 === 'resolve') { %><i class="fas fa-check-circle"></i> রিপোর্টটি সমাধান-চিহ্নিত হয়েছে।
+    <% } else if (done81 === 'unhide') { %><i class="fas fa-eye"></i> কনটেন্টটি পুনঃপ্রকাশিত হয়েছে।
+    <% } else if (done81 === 'already') { %><i class="fas fa-exclamation-circle"></i> রিপোর্টটি আগেই প্রক্রিয়াকরণ হয়েছে।
+    <% } else if (done81 === 'missing') { %><i class="fas fa-exclamation-triangle"></i> রিপোর্টটি খুঁজে পাওয়া যায়নি।
+    <% } else { %><i class="fas fa-exclamation-triangle"></i> কিছু একটা সমস্যা হয়েছে — আবার চেষ্টা করুন। <% } %>
+  </div>
+  <% } %>
+
+  <%# ── পরিসংখ্যান-স্ট্রিপ ── %>
+  <div class="mrq81-stats">
+    <div class="mrq81-stat <%= counts.open > 0 ? 'hot' : '' %>">
+      <div class="mrq81-stat-n"><%= (counts.open + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></div>
+      <div class="mrq81-stat-l"><i class="fas fa-inbox"></i> খোলা রিপোর্ট</div>
+    </div>
+    <div class="mrq81-stat">
+      <div class="mrq81-stat-n"><%= (counts.resolvedToday + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></div>
+      <div class="mrq81-stat-l"><i class="fas fa-check-double"></i> আজ সমাধান</div>
+    </div>
+    <div class="mrq81-stat">
+      <div class="mrq81-stat-n"><%= (counts.resolved + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></div>
+      <div class="mrq81-stat-l"><i class="fas fa-flag-checkered"></i> মোট সমাধান</div>
+    </div>
+    <div class="mrq81-stat">
+      <div class="mrq81-stat-n"><%= (hiddenCount + '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></div>
+      <div class="mrq81-stat-l"><i class="fas fa-low-vision"></i> লুকানো কনটেন্ট</div>
+    </div>
+  </div>
+
+  <%# ── ট্যাব ── %>
+  <div class="mrq81-tabs" role="tablist">
+    <a href="/moderator/reports?tab=open" class="mrq81-tab <%= tab81 === 'open' ? 'active' : '' %>" role="tab" aria-selected="<%= tab81 === 'open' %>">
+      <i class="fas fa-inbox"></i> খোলা
+      <% if (counts.open > 0) { %><span class="mrq81-tab-badge"><%= counts.open %></span><% } %>
+    </a>
+    <a href="/moderator/reports?tab=resolved" class="mrq81-tab <%= tab81 === 'resolved' ? 'active' : '' %>" role="tab" aria-selected="<%= tab81 === 'resolved' %>">
+      <i class="fas fa-check-double"></i> সমাধান <span class="mrq81-tab-count"><%= counts.resolved %></span>
+    </a>
+    <a href="/moderator/reports?tab=dismissed" class="mrq81-tab <%= tab81 === 'dismissed' ? 'active' : '' %>" role="tab" aria-selected="<%= tab81 === 'dismissed' %>">
+      <i class="fas fa-archive"></i> খারিজ <span class="mrq81-tab-count"><%= counts.dismissed %></span>
+    </a>
+  </div>
+
+  <%# ── তালিকা ── %>
+  <% if (reports.length === 0) { %>
+  <div class="mrq81-empty">
+    <% if (tab81 === 'open') { %>
+      <i class="fas fa-mug-hot"></i>
+      <h3>সব পরিষ্কার! 🎉</h3>
+      <p>এই মুহূর্তে কোনো খোলা রিপোর্ট নেই।</p>
+    <% } else if (tab81 === 'resolved') { %>
+      <i class="fas fa-flag-checkered"></i>
+      <h3>এখনো কোনো সমাধান-ইতিহাস নেই</h3>
+      <p>খোলা ট্যাব থেকে রিপোর্ট প্রক্রিয়াকরণ করলে এখানে জমা হবে।</p>
+    <% } else { %>
+      <i class="fas fa-archive"></i>
+      <h3>কোনো খারিজ-রিপোর্ট নেই</h3>
+      <p>নিয়মভঙ্গ না-পাওয়া রিপোর্ট খারিজ করলে এখানে থাকবে।</p>
+    <% } %>
+  </div>
+  <% } %>
+
+  <% reports.forEach(r => { %>
+    <div class="mrq81-card st-<%= r.status %>">
+      <div class="mrq81-card-head">
+        <span class="mrq81-reason" title="<%= r.reasonMeta.label %>">
+          <i class="<%= r.reasonMeta.icon %>"></i> <%= r.reasonMeta.label %>
+        </span>
+        <span class="mrq81-status s-<%= r.status %>">
+          <% if (r.status === 'open') { %><i class="fas fa-circle dot"></i> খোলা
+          <% } else if (r.status === 'resolved') { %><i class="fas fa-check"></i> সমাধান
+          <% } else { %><i class="fas fa-archive"></i> খারিজ <% } %>
+        </span>
+        <span class="mrq81-time" title="<%= new Date(r.created_at).toLocaleString('bn-BD') %>"><i class="far fa-clock"></i> <span data-ts="<%= new Date(r.created_at).toISOString() %>"><%= new Date(r.created_at).toLocaleDateString('bn-BD') %></span></span>
+      </div>
+
+      <div class="mrq81-target">
+        <div class="mrq81-target-head">
+          <span class="mrq81-target-kind"><i class="<%= r.comment_id ? 'far fa-comment' : (r.post_type === 'question' ? 'fas fa-question-circle' : 'fas fa-file-alt') %>"></i> <%= r.targetLabel %></span>
+          <% if (r.post_id) { %>
+            <a class="mrq81-target-title" href="<%= r.targetPath %>" target="_blank" rel="noopener"><%= r.comment_id ? (r.post_title || 'মূল পোস্ট') : (r.post_title || '(শিরোনামহীন)') %> <i class="fas fa-external-link-alt"></i></a>
+          <% } else { %>
+            <span class="mrq81-target-title">(মুছে ফেলা কনটেন্ট)</span>
+          <% } %>
+          <% if (r.post_status === 'hidden') { %><span class="mrq81-hidden-chip"><i class="fas fa-low-vision"></i> লুকানো</span><% } %>
+        </div>
+        <% if (r.targetExcerpt) { %><p class="mrq81-target-ex">“<%= r.targetExcerpt %>”</p><% } %>
+        <div class="mrq81-target-meta">
+          <% if (r.comment_id) { %>
+            <span>মন্তব্যকারী: <strong><%= r.comment_author_name || '—' %></strong></span>
+          <% } else { %>
+            <span>লেখক: <%= r.post_author_name ? ('<a href="/profile/' + r.post_author_username + '">' + r.post_author_name + '</a>') : '—' %></span>
+          <% } %>
+          <span>রিপোর্টকারী: <strong><%= r.reporter_name %></strong> (@<%= r.reporter_username %>)</span>
+        </div>
+      </div>
+
+      <% if (r.details) { %>
+      <div class="mrq81-details"><i class="fas fa-quote-left"></i> <%= r.details %></div>
+      <% } %>
+
+      <div class="mrq81-foot">
+        <% if (r.status === 'open') { %>
+          <% if (r.post_id && r.post_status !== 'hidden') { %>
+          <form method="POST" action="/moderator/reports/<%= r.id %>/action" data-confirm81="কনটেন্টটি লুকিয়ে দিতে চান? লেখক ও রিপোর্টকারী নোটিফিকেশন পাবেন।">
+            <input type="hidden" name="action" value="hide">
+            <button type="submit" class="mrq81-act primary"><i class="fas fa-low-vision"></i> লুকানো করুন</button>
+          </form>
+          <% } %>
+          <% if (r.post_id && r.post_status === 'hidden') { %>
+          <form method="POST" action="/moderator/reports/<%= r.id %>/action" data-confirm81="কনটেন্টটি আবার প্রকাশ করবেন?">
+            <input type="hidden" name="action" value="unhide">
+            <button type="submit" class="mrq81-act warn"><i class="fas fa-eye"></i> পুনঃপ্রকাশ</button>
+          </form>
+          <% } %>
+          <form method="POST" action="/moderator/reports/<%= r.id %>/action">
+            <input type="hidden" name="action" value="resolve">
+            <button type="submit" class="mrq81-act ok"><i class="fas fa-check"></i> সমাধান (লুকানো ছাড়া)</button>
+          </form>
+          <form method="POST" action="/moderator/reports/<%= r.id %>/action" data-confirm81="রিপোর্টটি খারিজ করবেন? রিপোর্টকারী জানতে পারবেন।">
+            <input type="hidden" name="action" value="dismiss">
+            <button type="submit" class="mrq81-act ghost"><i class="fas fa-times"></i> খারিজ</button>
+          </form>
+        <% } else { %>
+          <div class="mrq81-resolved-meta">
+            <i class="fas fa-user-check"></i>
+            <%= r.action === 'hide' ? 'লুকিয়ে সমাধান' : r.action === 'dismiss' ? 'খারিজ করা হয়েছে' : 'সমাধান-চিহ্নিত' %> —
+            <strong><%= r.resolver_name || 'মডারেটর' %></strong>,
+            <span data-ts="<%= r.resolved_at ? new Date(String(r.resolved_at).replace(' ', 'T') + 'Z').toISOString() : '' %>"><%= r.resolved_at ? new Date(String(r.resolved_at).replace(' ', 'T') + 'Z').toLocaleDateString('bn-BD') : '' %></span>
+          </div>
+        <% } %>
+        <% if (r.post_id) { %>
+        <a class="mrq81-view" href="<%= r.targetPath %>" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> দেখুন</a>
+        <% } %>
+      </div>
+    </div>
+  <% }) %>
+
+  <% if (reports.length > 0) { %>
+  <p class="mrq81-footnote"><i class="fas fa-lightbulb"></i> টিপ: লেখক-নিজেও পারেন নিজের লেখা লুকাতে/ফেরাতে — সেক্ষেত্রে নোটিফিকেশন যায় না। মডারেটর-লুকালে লেখক জানতে পারেন (কিন্তু কে রিপোর্ট করেছে জানতে পারেন না)।</p>
+  <% } %>
+</div>
+
+<script>
+  (function () {
+    document.querySelectorAll('form[data-confirm81]').forEach(function (f) {
+      f.addEventListener('submit', function (e) {
+        if (!window.confirm(f.getAttribute('data-confirm81'))) { e.preventDefault(); }
+      });
+    });
+  })();
+</script>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+<%- include('../partials/sandbox-preview') %>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+</body>
+</html>

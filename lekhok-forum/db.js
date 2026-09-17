@@ -402,6 +402,22 @@ const MIGRATION_SQL = `
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS idx_pwd_resets_token ON password_resets(token_hash);
+  CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reporter_id INTEGER NOT NULL,
+    post_id INTEGER,
+    comment_id INTEGER,
+    reason TEXT NOT NULL,
+    details TEXT,
+    status TEXT DEFAULT 'open',
+    action TEXT,
+    resolved_by INTEGER,
+    resolved_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at);
+  CREATE INDEX IF NOT EXISTS idx_reports_post ON reports(post_id);
+  CREATE INDEX IF NOT EXISTS idx_reports_comment ON reports(comment_id);
 `;
 
 // Columns added in later migrations — applied to existing installs during initDb().
@@ -550,6 +566,27 @@ async function applyLaterMigrations() {
         AND TRIM(cover_image) NOT LIKE 'https://%'
         AND TRIM(cover_image) NOT LIKE '/%'`);
   } catch (e) { console.error('[db] post_images heal (session 68):', e.message); }
+  // সেশন ৮১: পোস্ট-মডারেশন — reports টেবিল (report/hide + moderator queue)।
+  // MIGRATION_SQL-এও যোগ করা হয়েছে, কিন্তু বুট-ফিঙ্গারপ্রিন্ট ফাংশন-সোর্স হ্যাশ
+  // করে — এখানে আবার CREATE করা ফুল-ইনিট নিশ্চিত করে (কুইজ-attempts-এর প্যাটার্ন)।
+  try {
+    await backend.exec(`CREATE TABLE IF NOT EXISTS reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      reporter_id INTEGER NOT NULL,
+      post_id INTEGER,
+      comment_id INTEGER,
+      reason TEXT NOT NULL,
+      details TEXT,
+      status TEXT DEFAULT 'open',
+      action TEXT,
+      resolved_by INTEGER,
+      resolved_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at)');
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_reports_post ON reports(post_id)');
+    await backend.exec('CREATE INDEX IF NOT EXISTS idx_reports_comment ON reports(comment_id)');
+  } catch (e) { console.error('[db] reports table (session 81):', e.message); }
   try { await brandRenameMigration(); } catch (e) {
     console.error('[db] brandRenameMigration failed:', e.message);
   }

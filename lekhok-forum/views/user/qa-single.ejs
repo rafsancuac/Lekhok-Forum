@@ -29,7 +29,22 @@
 <script type="application/ld+json"><%- JSON.stringify(_qaLd72) %></script>
 
   <div class="article-wrap qa-wrap">
-    <article class="article-main card">
+    <article class="article-main card <%= postHidden81 ? 'is-hidden-81' : '' %>">
+      <%# ── সেশন ৮১: লুকানো-প্রশ্ন ব্যানার ── %>
+      <% if (postHidden81) { %>
+        <div class="hid81-banner">
+          <div class="hid81-icon"><i class="fas fa-low-vision"></i></div>
+          <div class="hid81-txt">
+            <strong>এই প্রশ্নটি সাময়িকভাবে লুকানো আছে</strong>
+            <span>এখন শুধু আপনি<%= canMod81 && !isOwner81 ? ' (মডারেটর)' : '' %> এবং মডারেটররা দেখতে পারছেন — সাধারণ পাঠক ও ফিডে দেখা যাবে না।</span>
+          </div>
+          <form method="POST" action="/posts/<%= post.id %>/unhide">
+            <button type="submit" class="hid81-unhide"><i class="fas fa-eye"></i> পুনঃপ্রকাশ</button>
+          </form>
+        </div>
+      <% } %>
+      <% if (hiddenToast81) { %><div class="hid81-toast" data-autoshow>🔒 প্রশ্নটি লুকানো হয়েছে — এখন থেকে শুধু আপনি দেখতে পাবেন।</div><% } %>
+      <% if (unhiddenToast81) { %><div class="hid81-toast ok" data-autoshow>✅ প্রশ্নটি আবার সবার জন্য প্রকাশিত হয়েছে।</div><% } %>
       <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
       <div class="question-body">
         <h1 class="question-title"><%= post.title %></h1>
@@ -49,11 +64,43 @@
           <span><i class="far fa-clock"></i> <%= new Date(post.created_at).toLocaleDateString('bn-BD') %></span>
         </div>
         <% if (user && user.id === post.author_id) { %>
-        <div class="qa-owner-controls" style="margin-top:8px; display:flex; gap:8px;">
+        <div class="qa-owner-controls" style="margin-top:8px; display:flex; gap:8px;flex-wrap:wrap;">
           <a href="/qa/<%= post.id %>/edit" class="btn btn-ghost btn-sm"><i class="fas fa-edit"></i> সম্পাদনা</a>
+          <%# সেশন ৮১: মালিকের লুকানো/প্রকাশ %>
+          <% if (postHidden81) { %>
+            <form method="POST" action="/posts/<%= post.id %>/unhide" style="display:inline">
+              <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> পুনঃপ্রকাশ</button>
+            </form>
+          <% } else { %>
+            <form method="POST" action="/posts/<%= post.id %>/hide" style="display:inline" data-confirm81="এই প্রশ্নটি লুকিয়ে রাখতে চান? আপনি যখন-ইচ্ছে আবার প্রকাশ করতে পারবেন।">
+              <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-low-vision"></i> লুকান</button>
+            </form>
+          <% } %>
           <form method="POST" action="/qa/<%= post.id %>/delete"  style="display:inline;">
             <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> মুছুন</button>
           </form>
+        </div>
+        <% } %>
+        <%# ── সেশন ৮১: মডারেটর-কন্ট্রোল + রিপোর্ট (অন্যের প্রশ্নে) ── %>
+        <% if (user && user.id !== post.author_id) { %>
+        <div class="qa-owner-controls modrow81" style="margin-top:8px; display:flex; gap:8px;flex-wrap:wrap;">
+          <% if (canMod81) { %>
+            <% if (postHidden81) { %>
+              <form method="POST" action="/posts/<%= post.id %>/unhide" style="display:inline">
+                <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-eye"></i> পুনঃপ্রকাশ</button>
+              </form>
+            <% } else { %>
+              <form method="POST" action="/posts/<%= post.id %>/hide" style="display:inline" data-confirm81="মডারেটর হিসেবে এই প্রশ্নটি লুকাবেন? লেখক নোটিফিকেশন পাবেন।">
+                <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-low-vision"></i> লুকান</button>
+              </form>
+            <% } %>
+            <a href="/moderator/reports" class="btn btn-ghost btn-sm"><i class="fas fa-inbox"></i> রিপোর্ট-কিউ</a>
+          <% } %>
+          <% if (myOpenReport81) { %>
+            <span class="rp81-reported-chip" title="আপনার রিপোর্ট মডারেটরদের কাছে খোলা আছে"><i class="fas fa-flag"></i> রিপোর্ট করা হয়েছে</span>
+          <% } else { %>
+            <button type="button" class="btn btn-ghost btn-sm rp81-trigger" data-report-type="post" data-report-id="<%= post.id %>" data-report-label="প্রশ্ন: <%= (post.title || '').slice(0, 60) %>"><i class="far fa-flag"></i> রিপোর্ট</button>
+          <% } %>
         </div>
         <% } %>
       </div>
@@ -141,6 +188,22 @@
   </div>
 
   <%- include('../partials/share-modal') %>
+  <%# ── সেশন ৮১: রিপোর্ট-মোডাল + কনফার্ম/অটো-টোস্ট ── %>
+  <%- include('../partials/report-modal') %>
+  <script>
+    (function () {
+      document.querySelectorAll('form[data-confirm81]').forEach(function (f) {
+        f.addEventListener('submit', function (e) {
+          if (!window.confirm(f.getAttribute('data-confirm81'))) { e.preventDefault(); }
+        });
+      });
+      var t = document.querySelector('.hid81-toast[data-autoshow]');
+      if (t) {
+        requestAnimationFrame(function () { t.classList.add('show'); });
+        setTimeout(function () { t.classList.remove('show'); }, 4200);
+      }
+    })();
+  </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>

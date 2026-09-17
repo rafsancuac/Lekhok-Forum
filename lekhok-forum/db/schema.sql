@@ -315,3 +315,23 @@ CREATE TABLE IF NOT EXISTS past_leaders (
   sort_order     INTEGER DEFAULT 0,
   created_at     DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ── Reports (সেশন ৮১: পোস্ট-মডারেশন — hide/report + moderator queue) ──
+CREATE TABLE IF NOT EXISTS reports (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  reporter_id INTEGER NOT NULL,
+  post_id     INTEGER,
+  comment_id  INTEGER,
+  reason      TEXT    NOT NULL,   -- spam | abuse | adult | copyright | misleading | other
+  details     TEXT,
+  status      TEXT    DEFAULT 'open',   -- open | resolved | dismissed
+  action      TEXT,               -- hide | resolve | dismiss (moderator's action)
+  resolved_by INTEGER,
+  resolved_at DATETIME,
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (post_id)    REFERENCES posts(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_reports_post ON reports(post_id);
+CREATE INDEX IF NOT EXISTS idx_reports_comment ON reports(comment_id);
