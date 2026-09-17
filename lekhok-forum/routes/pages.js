@@ -29,11 +29,31 @@ router.get('/', async (req, res) => {
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year DESC, m.sort_order DESC LIMIT 2").all(),
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all(),
     db.prepare("SELECT * FROM daily_content WHERE scheduled_date = ? AND published = 1 ORDER BY id").all(new Date().toISOString().slice(0, 10)),
-    // সেশন ৭২: আগের recentQA কুয়েরি ভিউতে অব্যবহৃত ছিল (ডেড কুয়েরি) — এখন
-    // "সাম্প্রতিক লেখা" সেকশনে রূপান্তর (হোম থেকে আর্টিকেল-ক্রল-পাথ তৈরি হয়)।
-    db.prepare("SELECT p.id, p.title, p.excerpt, u.full_name AS author_name, u.username AS author_username FROM posts p JOIN users u ON p.author_id = u.id WHERE p.type = 'article' AND p.status = 'published' ORDER BY p.published_at DESC LIMIT 4").all(),
+    // সেশন ৯০ (হোম-কিউরেশন): 'লেখকদের কালি / সাম্প্রতিক লেখা' এখন পুরোপুরি
+    // মডারেটর/এডমিন-নির্বাচিত (home_featured, সর্বোচ্চ ৬)। কঠোর-ফিল্টার:
+    // • post_kind='writing' — অ্যাভাটার/কভার-আপডেট + প্রশ্নের মতো সোশ্যাল-
+    //   অ্যাক্টিভিটি কখনোই ঢুকতে পারবে না
+    // • archive-নির্বাচনের ক্রম featured_at DESC (সদ্য-নির্বাচিত আগে)
+    // নির্বাচন না থাকলে ফলব্যাক-কুয়েরি নিচে (homeCurated=false সহ)।
+    db.prepare(`SELECT p.id, p.title, p.excerpt, u.full_name AS author_name, u.username AS author_username
+                  FROM posts p JOIN users u ON p.author_id = u.id
+                 WHERE p.type = 'article' AND p.status = 'published'
+                   AND p.post_kind = 'writing' AND p.home_featured = 1
+                 ORDER BY p.home_featured_at DESC, p.published_at DESC LIMIT 6`).all(),
     db.getSectionItems('home_faq'),
   ]);
+  // সেশন ৯০: ফলব্যাক — এডমিন/মডারেটর এখনো কিছু বাছাই না করলে সেকশন ফাঁকা
+  // না রেখে সর্বশেষ ৬টি খাঁটি writing (avatar/cover/প্রশ্ন কঠোরভাবে বাদ)
+  // দেখানো হয়; homeCurated-ব্যাজ ভিউতে 'সম্পাদক-নির্বাচিত' বনাম 'সর্বশেষ'
+  // পার্থক্য দেখায়।
+  let homeCurated = recentArticles.length > 0;
+  if (!recentArticles.length) {
+    recentArticles.push(...await db.prepare(`SELECT p.id, p.title, p.excerpt, u.full_name AS author_name, u.username AS author_username
+                  FROM posts p JOIN users u ON p.author_id = u.id
+                 WHERE p.type = 'article' AND p.status = 'published'
+                   AND p.post_kind = 'writing' AND p.archive_visible = 1
+                 ORDER BY p.published_at DESC LIMIT 6`).all());
+  }
 
   // Leadership: 2 current (president + GS) + 2 founders + 4 advisors
   // সর্বশেষ কার্যবর্ষের (সর্বোচ্চ term_year) সভাপতি ও সাধারণ সম্পাদক দেখাই
@@ -136,6 +156,7 @@ router.get('/', async (req, res) => {
     currentAdvisors,
     advisors,
     recentArticles,
+    homeCurated,
     todayByType,
     hasToday,
     quizChallenge
@@ -468,6 +489,7 @@ router.get('/search', async (req, res) => {
                u.full_name AS author_name
         FROM posts p JOIN users u ON p.author_id = u.id
         WHERE p.type = 'article' AND p.status = 'published'
+          AND p.post_kind = 'writing'  /* সেশন ৯০: অটো-পোস্ট বাদ */
           AND (p.title LIKE ? OR p.body LIKE ?)
         ORDER BY p.published_at DESC LIMIT 20
       `).all(like, like);

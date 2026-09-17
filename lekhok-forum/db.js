@@ -1100,7 +1100,19 @@ async function runMigrations() {
     // লক-স্টেট ও শেষ-লগইন ট্র্যাকিং
     "ALTER TABLE admin_users ADD COLUMN scopes TEXT",
     "ALTER TABLE admin_users ADD COLUMN locked INTEGER DEFAULT 0",
-    "ALTER TABLE admin_users ADD COLUMN last_login DATETIME"
+    "ALTER TABLE admin_users ADD COLUMN last_login DATETIME",
+    // সেশন ৯০: হোম-কিউরেশন — পোস্টের প্রকৃত শ্রেণি + এডমিন/মডারেটর নিয়ন্ত্রণ-ফ্ল্যাগ।
+    // post_kind: 'writing' (আসল সাহিত্য) | 'question' | 'avatar_update' | 'cover_update'
+    // — type='article' এখনো সোশ্যাল-ফিডে অটো-পোস্ট দেখাতে ব্যবহৃত, তাই শ্রেণি-বিভাজন
+    //   আলাদা কলামে; হোমপেজ/লেখা-তালিকা/সার্চ কেবল post_kind='writing' নেবে।
+    "ALTER TABLE posts ADD COLUMN post_kind TEXT DEFAULT 'writing'",
+    // home_featured: হোমপেজের 'লেখকদের কালি / সাম্প্রতিক লেখা'-তে দেখানোর নির্বাচন
+    // (featured কলাম 'মাসিক সেরা লেখক'-র জন্য আগে থেকেই ব্যস্ত — তাই আলাদা ফ্ল্যাগ)
+    "ALTER TABLE posts ADD COLUMN home_featured INTEGER DEFAULT 0",
+    "ALTER TABLE posts ADD COLUMN home_featured_at TEXT",
+    // archive_visible: 'সব লেখা দেখুন' (/articles) তালিকায় দৃশ্যমান কিনা —
+    // মডারেটর/এডমিন যেকোনো লেখা তালিকা থেকে সরিয়ে রাখতে পারবেন (ডিফল্ট: দৃশ্যমান)
+    "ALTER TABLE posts ADD COLUMN archive_visible INTEGER DEFAULT 1"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}
@@ -1117,6 +1129,33 @@ async function runMigrations() {
          AND NOT EXISTS (SELECT 1 FROM admin_users WHERE role = 'superadmin')
     `);
   } catch (_) {}
+
+  // ── সেশন ৯০: হোম-কিউরেশন — অটো-পোস্ট শ্রেণি-ব্যাকফিল ───────────────────────
+  // প্রোফাইল/কভার-ছবি বদলালে সৃষ্ট সোশ্যাল-অ্যাক্টিভিটি পোস্টগুলো আগে
+  // type='article' হিসেবে ঢুকত (কোডের পুরনো বাচনা: "… প্রোফাইল পিকচার আপডেট
+  // করেছেন"; লাইভে পুরনো বাচনাও আছে: "… প্রোফাইল ছবির আপডেট করেছেন") — ফলে
+  // হোমপেজের 'লেখকদের কালি' ও /articles-তালিকায় সাহিত্যের ছদ্মবেশে ঢুকে পড়ত।
+  // এখন সেগুলো post_kind দিয়ে চিহ্নিত হয় এবং লেখা-সারফেস থেকে বাদ পড়ে
+  // (সোশ্যাল ফিড/প্রোফাইল-টাইমলাইনে আগের মতোই থাকে)। Idempotent —
+  // একবার 'avatar_update' হলে post_kind='writing'-গার্ড আর মেলে না।
+  try {
+    await backend.exec(`
+      UPDATE posts SET post_kind = 'avatar_update', archive_visible = 0, home_featured = 0
+       WHERE post_kind = 'writing'
+         AND (title LIKE '%প্রোফাইল পিকচার আপডেট%'
+           OR title LIKE '%প্রোফাইল ছবি%'
+           OR body LIKE '%নতুন প্রোফাইল পিকচার%');
+      UPDATE posts SET post_kind = 'cover_update', archive_visible = 0, home_featured = 0
+       WHERE post_kind = 'writing'
+         AND (title LIKE '%কভার ফটো আপডেট%'
+           OR title LIKE '%কভার ছবি%'
+           OR body LIKE '%নতুন কভার ফটো%');
+      UPDATE posts SET post_kind = 'question'
+       WHERE post_kind = 'writing' AND type = 'question';
+    `);
+  } catch (e) {
+    console.warn('[migrate] post-kind backfill:', (e.message || '').slice(0, 120));
+  }
 
   // ── Data migration — global rebrand to the real branch identity ───────────
   // (1) settings: replace rows that still carry the old demo defaults. Only

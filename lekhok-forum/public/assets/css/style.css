@@ -989,3 +989,9 @@ a.ws91-best:hover .ws91-best-label{color:#065F46}
    ডিজাইন-ইনটেন্ট gradient-হিরো — inner transparent হলেই সঠিক লুক ফেরে। ═══ */
 .me-header-inner{background:transparent;border:0;box-shadow:none}
 .me-header{background:linear-gradient(120deg,#0f4c46 0,#059669 100%)}
+/* ── সেশন ৯০ (হোম-কিউরেশন): 'লেখকদের কালি' সম্পাদক-নির্বাচিত-ব্যাজ + এক্সসার্পট ── */
+.ink-curate-badge{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;margin-left:10px;margin-top:2px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;line-height:1;background:var(--accent-soft);color:var(--accent-dark);border:1px solid rgba(5,150,105,.28);letter-spacing:.2px;transform:translateY(-4px);position:relative;top:-6px}
+.ink-curate-badge i{font-size:11px}
+@media (max-width:600px){.ink-curate-badge{margin-left:6px;padding:3px 10px;font-size:11px;top:-4px}}
+.ink-excerpt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;color:var(--text-muted);line-height:1.55;max-width:640px}
+.notice-row--compact .notice-row-sub.ink-excerpt{margin-top:1px}

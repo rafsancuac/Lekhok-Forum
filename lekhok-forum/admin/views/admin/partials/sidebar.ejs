@@ -55,6 +55,8 @@
     <% if (_hasScope('complaints')) { %><a href="/moderator/complaints" class="<%= _active('/moderator/complaints') %>"><i class="fas fa-flag"></i> অভিযোগ</a><% } %>
     <% if (_hasScope('user_mgmt')) { %><a href="/moderator/users" class="<%= _active('/moderator/users') %>"><i class="fas fa-users-cog"></i> ইউজার তদারকি</a><% } %>
     <% if (_hasScope('best_writer')) { %><a href="/moderator/best-writer" class="<%= _active('/moderator/best-writer') %>"><i class="fas fa-trophy"></i> সেরা লেখক</a><% } %>
+    <%# সেশন ৯০: হোম-কিউরেশন — 'লেখকদের কালি' + 'সব লেখা' নিয়ন্ত্রণ %>
+    <a href="/moderator/curation" class="<%= _active('/moderator/curation') %>"><i class="fas fa-pen-nib"></i> লেখা কিউরেশন</a>
     <% if (_hasScope('epaper')) { %><a href="/moderator/press"      class="<%= _active('/moderator/press') %>"><i class="fas fa-newspaper"></i> পত্রিকা কাটিং</a><% } %>
     <a href="/moderator/navigation" class="<%= _active('/moderator/navigation') %>"><i class="fas fa-bars"></i> মেনু ব্যবস্থাপনা</a>
     <div class="nav-group-label">সুইচ</div>
@@ -92,6 +94,8 @@
     <a href="/admin/events"         class="<%= _active('/admin/events') %>"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
     <a href="/admin/daily"          class="<%= _active('/admin/daily') %>"><i class="fas fa-sun"></i> ডেইলি কনটেন্ট</a>
     <a href="/admin/gallery"        class="<%= _active('/admin/gallery') %>"><i class="fas fa-images"></i> গ্যালারি</a>
+    <%# সেশন ৯০: হোম-কিউরেশন — অ্যাডমিন-প্যানেল থেকেও একই নিয়ন্ত্রণ-কেন্দ্র %>
+    <a href="/moderator/curation"   class="<%= _active('/moderator/curation') %>"><i class="fas fa-pen-nib"></i> লেখা কিউরেশন</a>
     <% if (_isAdmin) { %>
     <a href="/admin/resources"      class="<%= _active('/admin/resources') %>"><i class="fas fa-book"></i> রিসোর্স</a>
     <% } %>

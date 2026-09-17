@@ -578,14 +578,21 @@
 </section>
 
 <%# ── সেশন ৭২ (GSC-ফিক্স): সাম্প্রতিক লেখা — হোম থেকে আর্টিকেল-ক্রল-পাথ
-    (আগে হোমে কোনো আর্টিকেল-লিংক ছিল না; /articles/22-30 GSC-তে 'Discovered' ছিল) ── %>
+    (আগে হোমে কোনো আর্টিকেল-লিংক ছিল না; /articles/22-30 GSC-তে 'Discovered' ছিল)
+    সেশন ৯০ (হোম-কিউরেশন): তালিকা এখন মডারেটর/এডমিন-নির্বাচিত
+    (home_featured) — অ্যাভাটার/কভার-আপডেট বা প্রশ্নের মতো সোশ্যাল-
+    অ্যাক্টিভিটি কখনোই এখানে আসতে পারে না (post_kind='writing' ফিল্টার)। ── %>
 <% if (typeof recentArticles !== 'undefined' && recentArticles && recentArticles.length) { %>
 <section class="section reveal">
   <div class="container">
     <div class="section-head">
       <div>
         <span class="eyebrow"><i class="fas fa-pen-nib"></i> লেখকদের কালি</span>
-        <h2 class="section-title">সাম্প্রতিক <span class="accent">লেখা</span></h2>
+        <h2 class="section-title">সাম্প্রতিক <span class="accent">লেখা</span>
+          <% if (typeof homeCurated !== 'undefined' && homeCurated) { %>
+            <span class="ink-curate-badge" title="মডারেটর/এডমিন নির্বাচিত লেখা"><i class="fas fa-check-double"></i> সম্পাদক-নির্বাচিত</span>
+          <% } %>
+        </h2>
         <span class="accent-divider"></span>
       </div>
       <a href="/articles" class="link-more">সব লেখা দেখুন <i class="fas fa-arrow-right"></i></a>
@@ -600,6 +607,9 @@
             <span class="notice-row-top">
               <span class="notice-row-title"><%= a.title %></span>
             </span>
+            <% if (a.excerpt) { %>
+              <span class="notice-row-sub ink-excerpt"><%= mdPlain(a.excerpt, 110) %></span>
+            <% } %>
           </span>
           <span class="notice-row-meta">
             <span class="notice-row-date"><i class="far fa-user"></i><%= a.author_name %></span>

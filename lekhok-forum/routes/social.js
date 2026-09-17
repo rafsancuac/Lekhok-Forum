@@ -245,7 +245,11 @@ router.get('/articles', async (req, res) => {
   const filterType = req.query.filter || ''; // column | letter
   let q = `SELECT p.*, u.full_name as author_name, u.username as author_username, u.avatar_url as author_avatar, u.gender as author_gender
            FROM posts p JOIN users u ON p.author_id = u.id
-           WHERE p.type = 'article' AND p.status = 'published'`;
+           WHERE p.type = 'article' AND p.status = 'published'`
+    // সেশন ৯০ (হোম-কিউরেশন): 'সব লেখা দেখুন' তালিকা এখন মডারেটর/এডমিন-
+    // নিয়ন্ত্রিত — শুধু খাঁটি সাহিত্য-লেখা (post_kind='writing') আর যেগুলো
+    // archive_visible=1; অ্যাভাটার/কভার-আপডেট অটো-পোস্ট কঠোরভাবে বাদ।
+    + " AND p.post_kind = 'writing' AND p.archive_visible = 1";
   const params = [];
   if (tag) { q += ' AND p.tags LIKE ?'; params.push('%' + tag + '%'); }
   if (author) { q += ' AND u.username = ?'; params.push(author); }
@@ -257,7 +261,8 @@ router.get('/articles', async (req, res) => {
   // (আগে সিরিয়াল ৩টি + প্রতি-আর্টিকেল ইমেজ N+1 — Turso-তে সামগ্রিক TTFB ৩-৫ সেকেন্ড)।
   const [articles, popularTags, bookmarkedIds72] = await Promise.all([
     db.prepare(q).all(...params),
-    db.prepare("SELECT tags FROM posts WHERE type='article' AND tags IS NOT NULL").all(),
+    // সেশন ৯০: ট্যাগ-পুলেও খাঁটি writing-ফিল্টার (বাদ-দেওয়া/অটো-পোস্টের ট্যাগ নয়)।
+    db.prepare("SELECT tags FROM posts WHERE type='article' AND post_kind='writing' AND archive_visible=1 AND tags IS NOT NULL").all(),
     // নোট: db.prepare(...).all(...) sql.js-এ sync, Turso-তে promise — তাই শুধু
     // await-প্যাটার্ন (async-IIFE), .then() নয়।
     (async () => {
@@ -689,7 +694,9 @@ router.post(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
     return res.redirect('/qa/' + dupQ.id);
   }
   const mentions = await extractMentions(body);
-  const r = await db.prepare(`INSERT INTO posts (author_id, type, title, body, category, tags, mentions) VALUES (?, 'question', ?, ?, ?, ?, ?)`).run(req.session.user.id, title, body, category || 'general', tags || null, mentions);
+  // সেশন ৯০: প্রশ্নের post_kind='question' — হোমপেজ/লেখা-তালিকার writing-ফিল্টার
+  // এগুলোকে স্বয়ংক্রিয়ভাবে বাদ দেবে (type-ই আগে থেকে 'question', কলাম-মিরর)।
+  const r = await db.prepare(`INSERT INTO posts (author_id, type, title, body, category, tags, mentions, post_kind) VALUES (?, 'question', ?, ?, ?, ?, ?, 'question')`).run(req.session.user.id, title, body, category || 'general', tags || null, mentions);
 
   // Send notifications to mentioned users
   try {
@@ -1858,8 +1865,10 @@ router.post('/settings/avatar', ensureLoggedIn, withUpload(avatarUpload), async 
   try {
     await db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatarUrl, me.id);
     // সেশন ৩৮: প্রোফাইল পিকচার পরিবর্তন = নিজের টাইমলাইন + মূল ফিডে অটো-পোস্ট
+    // সেশন ৯০: post_kind='avatar_update' + archive_visible=0 — সোশ্যাল-ফিডে
+    // থাকবে, কিন্তু হোমপেজের 'লেখকদের কালি' বা /articles-তালিকায় আর ঢুকবে না।
     try {
-      await db.prepare("INSERT INTO posts (author_id, type, title, body, cover_image, status, published_at) VALUES (?, 'article', ?, ?, ?, 'published', CURRENT_TIMESTAMP)")
+      await db.prepare("INSERT INTO posts (author_id, type, title, body, cover_image, status, published_at, post_kind, archive_visible, home_featured) VALUES (?, 'article', ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'avatar_update', 0, 0)")
         .run(me.id, me.full_name + ' প্রোফাইল পিকচার আপডেট করেছেন', '📷 নতুন প্রোফাইল পিকচার', avatarUrl);
     } catch (e) { console.error('[avatar] autopost:', e.message); }
     // Refresh session user from DB
@@ -1888,8 +1897,10 @@ router.post('/settings/cover', ensureLoggedIn, withUpload(coverUpload), async (r
   try {
     await db.prepare('UPDATE users SET cover_url = ? WHERE id = ?').run(coverUrl, me.id);
     // সেশন ৩৮: কভার ফটো পরিবর্তন = অটো-পোস্ট (টাইমলাইন + মূল ফিড)
+    // সেশন ৯০: post_kind='cover_update' + archive_visible=0 — সোশ্যাল-ফিডে
+    // থাকবে, কিন্তু হোমপেজের 'লেখকদের কালি' বা /articles-তালিকায় আর ঢুকবে না।
     try {
-      await db.prepare("INSERT INTO posts (author_id, type, title, body, cover_image, status, published_at) VALUES (?, 'article', ?, ?, ?, 'published', CURRENT_TIMESTAMP)")
+      await db.prepare("INSERT INTO posts (author_id, type, title, body, cover_image, status, published_at, post_kind, archive_visible, home_featured) VALUES (?, 'article', ?, ?, ?, 'published', CURRENT_TIMESTAMP, 'cover_update', 0, 0)")
         .run(me.id, me.full_name + ' কভার ফটো আপডেট করেছেন', '🖼️ নতুন কভার ফটো', coverUrl);
     } catch (e) { console.error('[cover] autopost:', e.message); }
     res.redirect('/profile/' + encodeURIComponent(me.username) + '?ok=cover');

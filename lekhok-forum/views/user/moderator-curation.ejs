@@ -1,0 +1,248 @@
+<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix)
+    সেশন ৯০: হোম-কিউরেশন প্যানেল — 'লেখকদের কালি' (home_featured ≤ ৬) + 'সব লেখা'
+    তালিকার (archive_visible) সম্পূর্ণ মডারেটর/এডমিন নিয়ন্ত্রণ-কেন্দ্র। %>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>লেখা কিউরেশন | মডারেটর প্যানেল</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+<%- include('../../admin/views/admin/partials/sidebar') %>
+<div class="admin-main">
+<div class="mod-wrap mod-wrap--cur">
+  <p class="cur-back"><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
+
+  <div class="cur-hero">
+    <div class="cur-hero-txt">
+      <h2><i class="fas fa-pen-nib cur-hero-ico"></i> লেখা কিউরেশন</h2>
+      <p>হোমপেজের <strong>“লেখকদের কালি / সাম্প্রতিক লেখা”</strong> সেকশনে কোন কোন লেখা দেখানো হবে — চেকবকসে বাছাই করুন (সর্বোচ্চ <strong><%= maxFeatured %></strong>টি)। “সব লেখা দেখুন” তালিকায় কোনো লেখা রাখা বা বাদ দেওয়াও এখানেই। প্রোফাইল/কভার-ছবি আপডেটের মতো সোশ্যাল-অ্যাক্টিভিটি স্বয়ংক্রিয়ভাবে বাদ — ওগুলো কখনোই সাহিত্য-তালিকায় নির্বাচনযোগ্য নয়।</p>
+    </div>
+    <div class="cur-hero-stats">
+      <div class="cur-stat">
+        <span class="cur-stat-n" id="curFeaturedCount"><%= featuredCount %></span>
+        <span class="cur-stat-l">হোমে নির্বাচিত / <%= maxFeatured %></span>
+      </div>
+      <div class="cur-stat">
+        <span class="cur-stat-n"><%= totalWritings %></span>
+        <span class="cur-stat-l">প্রকাশিত লেখা</span>
+      </div>
+      <div class="cur-stat">
+        <span class="cur-stat-n"><%= hiddenCount %></span>
+        <span class="cur-stat-l">তালিকায় বাদ</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cur-toolbar">
+    <form method="GET" action="/moderator/curation" class="cur-search" role="search">
+      <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+      <input type="search" name="q" value="<%= searchQ %>" placeholder="শিরোনাম বা লেখকের নাম খুঁজুন…" aria-label="লেখা খুঁজুন" autocomplete="off" />
+      <% if (kindFilter) { %><input type="hidden" name="kind" value="<%= kindFilter %>" /><% } %>
+    </form>
+    <div class="cur-kindchips" role="group" aria-label="ধরন-ফিল্টার">
+      <a href="/moderator/curation<%= searchQ ? '?q=' + encodeURIComponent(searchQ) : '' %>" class="cur-kindchip <%= !kindFilter ? 'is-on' : '' %>">সব ধরন</a>
+      <a href="/moderator/curation?kind=writing<%= searchQ ? '&q=' + encodeURIComponent(searchQ) : '' %>" class="cur-kindchip <%= kindFilter === 'writing' ? 'is-on' : '' %>"><i class="fas fa-feather-alt"></i> সাহিত্য-লেখা</a>
+      <a href="/moderator/curation?kind=avatar_update<%= searchQ ? '&q=' + encodeURIComponent(searchQ) : '' %>" class="cur-kindchip <%= kindFilter === 'avatar_update' ? 'is-on' : '' %>"><i class="fas fa-user-circle"></i> প্রোফাইল-আপডেট</a>
+      <a href="/moderator/curation?kind=cover_update<%= searchQ ? '&q=' + encodeURIComponent(searchQ) : '' %>" class="cur-kindchip <%= kindFilter === 'cover_update' ? 'is-on' : '' %>"><i class="fas fa-image"></i> কভার-আপডেট</a>
+    </div>
+    <div class="cur-quick">
+      <button type="button" class="cur-qbtn" id="curQuickLatest" title="সর্বশেষ ৬টি খাঁটি সাহিত্য-লেখা হোমপেজে তুলে দিন">
+        <i class="fas fa-bolt"></i> সর্বশেষ ৬টি নির্বাচন
+      </button>
+      <button type="button" class="cur-qbtn cur-qbtn-dim" id="curQuickClear" title="হোমপেজ-নির্বাচন সম্পূর্ণ খালি">
+        <i class="fas fa-eraser"></i> খালি করুন
+      </button>
+    </div>
+  </div>
+
+  <% if (!writings.length) { %>
+    <div class="cur-empty">
+      <i class="fas fa-feather-alt"></i>
+      <h3>কোনো লেখা পাওয়া যায়নি</h3>
+      <p>সার্চ-শব্দ/ফিল্টার বদলে আবার চেষ্টা করুন</p>
+    </div>
+  <% } else { %>
+  <div class="cur-list" id="curList">
+    <% const _fmt90 = (s) => { try { return new Date(s).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } }; %>
+    <% writings.forEach(a => {
+         const isWriting90 = (a.post_kind || 'writing') === 'writing';
+         const kindLabel90 = a.post_kind === 'avatar_update' ? 'প্রোফাইল-আপডেট' : a.post_kind === 'cover_update' ? 'কভার-আপডেট' : 'সাহিত্য-লেখা';
+         const kindIco90 = a.post_kind === 'avatar_update' ? 'fa-user-circle' : a.post_kind === 'cover_update' ? 'fa-image' : 'fa-feather-alt';
+    %>
+      <div class="cur-item <%= a.home_featured ? 'is-featured' : '' %> <%= !isWriting90 ? 'is-social' : '' %>" data-id="<%= a.id %>" data-kind="<%= a.post_kind || 'writing' %>">
+        <label class="cur-check <%= !isWriting90 ? 'is-disabled' : '' %>" title="<%= isWriting90 ? 'হোমপেজে দেখান' : 'সোশ্যাল-অ্যাক্টিভিটি — নির্বাচনযোগ্য নয়' %>">
+          <input type="checkbox" class="cur-check-input" data-field="home_featured" <%= a.home_featured ? 'checked' : '' %> <%= !isWriting90 ? 'disabled' : '' %> aria-label="হোমপেজে দেখান: <%= a.title %>" />
+          <span class="cur-check-box"><i class="fas fa-check"></i></span>
+        </label>
+        <div class="cur-item-main">
+          <div class="cur-item-top">
+            <a class="cur-item-title" href="/articles/<%= a.id %>" target="_blank" rel="noopener"><%= a.title %></a>
+            <% if (a.home_featured) { %><span class="cur-chip cur-chip-home"><i class="fas fa-home"></i> হোম</span><% } %>
+            <% if (a.featured) { %><span class="cur-chip cur-chip-bw"><i class="fas fa-trophy"></i> সেরা লেখক</span><% } %>
+            <% if (a.status === 'hidden') { %><span class="cur-chip cur-chip-hidden"><i class="fas fa-eye-slash"></i> লুকানো</span><% } %>
+            <% if (!a.archive_visible) { %><span class="cur-chip cur-chip-hidden"><i class="fas fa-list-slash"></i> তালিকায় বাদ</span><% } %>
+          </div>
+          <% if (a.excerpt) { %><p class="cur-item-ex"><%= a.excerpt %></p><% } %>
+          <div class="cur-item-meta">
+            <span class="cur-kindtag"><i class="fas <%= kindIco90 %>"></i> <%= kindLabel90 %></span>
+            <span><i class="far fa-user"></i> <a href="/profile/<%= encodeURIComponent(a.author_username) %>" target="_blank" rel="noopener"><%= a.author_name %></a></span>
+            <span><i class="far fa-calendar"></i> <%= _fmt90(a.published_at) %></span>
+            <span><i class="far fa-heart"></i> <%= a.like_count || 0 %></span>
+            <span><i class="far fa-comment"></i> <%= a.comment_count || 0 %></span>
+          </div>
+        </div>
+        <label class="cur-arch <%= !a.archive_visible ? 'is-off' : '' %>" title="<%= a.archive_visible ? 'সব লেখা তালিকায় দৃশ্যমান' : 'সব লেখা তালিকা থেকে বাদ' %>">
+          <input type="checkbox" class="cur-arch-input" data-field="archive_visible" <%= a.archive_visible ? 'checked' : '' %> aria-label="'সব লেখা' তালিকায় দেখান: <%= a.title %>" />
+          <span class="cur-arch-track"><i class="fas fa-eye cur-arch-eye"></i><i class="fas fa-eye-slash cur-arch-eyeoff"></i></span>
+        </label>
+      </div>
+    <% }) %>
+  </div>
+  <% } %>
+</div>
+</div>
+
+<div class="cur-toast" id="curToast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+  var TOAST = document.getElementById('curToast');
+  var CNT = document.getElementById('curFeaturedCount');
+  var MAXF = <%= maxFeatured %>;
+  var listEl = document.getElementById('curList');
+  var toastTimer = null;
+
+  function toast(msg, isErr) {
+    if (!TOAST) return;
+    TOAST.textContent = msg;
+    TOAST.classList.toggle('is-err', !!isErr);
+    TOAST.hidden = false;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { TOAST.hidden = true; }, 3400);
+  }
+  function csrf() {
+    var m = document.querySelector('meta[name="csrf-token"]');
+    return m ? m.content : '';
+  }
+  function post(body) {
+    var p = new URLSearchParams(body);
+    return fetch('/moderator/curation/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': csrf() },
+      body: p.toString(),
+      credentials: 'same-origin'
+    }).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'সার্ভার-উত্তর বোঝা যায়নি' }; }); });
+  }
+  function setCount(n) { if (CNT) CNT.textContent = String(n); }
+  function countChecked() {
+    return listEl ? listEl.querySelectorAll('.cur-check-input:checked:not(:disabled)').length : 0;
+  }
+
+  // ── চেকবক্স: হোমপেজ-নির্বাচন (অপটিমিস্টিক + সার্ভার-রিভার্ট) ──
+  document.addEventListener('change', function (ev) {
+    var inp = ev.target;
+    if (!inp.classList || !inp.classList.contains('cur-check-input')) return;
+    var row = inp.closest('.cur-item');
+    var id = row.getAttribute('data-id');
+    var want = inp.checked ? 1 : 0;
+
+    // ক্লায়েন্ট-গার্ড: ৬-সীমা (সার্ভারেও যমল আছে)
+    if (want && countChecked() > MAXF) {
+      inp.checked = false;
+      toast('হোমপেজে সর্বোচ্চ ' + MAXF + 'টি লেখা রাখা যায়। অন্য একটি আনচেক করুন।', true);
+      return;
+    }
+    post({ id: id, field: 'home_featured', value: want })
+      .then(function (r) {
+        if (!r.ok) {
+          inp.checked = !want; // রিভার্ট
+          toast(r.error || 'সংরক্ষণ করা যায়নি', true);
+          if (typeof r.featuredCount === 'number') setCount(r.featuredCount);
+          return;
+        }
+        setCount(r.featuredCount);
+        row.classList.toggle('is-featured', !!want);
+        var chip = row.querySelector('.cur-chip-home');
+        if (want && !chip) {
+          var top = row.querySelector('.cur-item-top');
+          if (top) {
+            var s = document.createElement('span');
+            s.className = 'cur-chip cur-chip-home';
+            s.innerHTML = '<i class="fas fa-home"></i> হোম';
+            top.appendChild(s);
+          }
+        } else if (!want && chip) { chip.remove(); }
+        toast(want ? 'হোমপেজে নির্বাচিত — লেখককে জানানো হয়েছে' : 'হোমপেজ থেকে সরানো হয়েছে');
+      })
+      .catch(function () {
+        inp.checked = !want;
+        toast('নেটওয়ার্ক-সমস্যা — আবার চেষ্টা করুন', true);
+      });
+  });
+
+  // ── আর্কাইভ-টগল: 'সব লেখা' তালিকায় দৃশ্যমানতা ──
+  document.addEventListener('change', function (ev) {
+    var inp = ev.target;
+    if (!inp.classList || !inp.classList.contains('cur-arch-input')) return;
+    var row = inp.closest('.cur-item');
+    var id = row.getAttribute('data-id');
+    var want = inp.checked ? 1 : 0;
+    post({ id: id, field: 'archive_visible', value: want })
+      .then(function (r) {
+        if (!r.ok) {
+          inp.checked = !want;
+          toast(r.error || 'সংরক্ষণ করা যায়নি', true);
+          return;
+        }
+        var wrap = inp.closest('.cur-arch');
+        if (wrap) wrap.classList.toggle('is-off', !want);
+        row.classList.toggle('is-social', row.getAttribute('data-kind') !== 'writing' || false);
+        toast(want ? '“সব লেখা” তালিকায় দৃশ্যমান' : '“সব লেখা” তালিকা থেকে বাদ');
+      })
+      .catch(function () {
+        inp.checked = !want;
+        toast('নেটওয়ার্ক-সমস্যা — আবার চেষ্টা করুন', true);
+      });
+  });
+
+  // ── কুইক-অ্যাকশন ──
+  function quick(action, confirmMsg) {
+    if (!window.confirm(confirmMsg)) return;
+    var p = new URLSearchParams({ action: action });
+    fetch('/moderator/curation/quick', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-Token': csrf() },
+      body: p.toString(),
+      credentials: 'same-origin'
+    }).then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) { toast(r.error || 'ব্যর্থ', true); return; }
+        window.location.href = '/moderator/curation?saved=' + action;
+      })
+      .catch(function () { toast('নেটওয়ার্ক-সমস্যা', true); });
+  }
+  var qLatest = document.getElementById('curQuickLatest');
+  if (qLatest) qLatest.addEventListener('click', function () {
+    quick('latest6', 'সর্বশেষ ৬টি খাঁটি সাহিত্য-লেখা হোমপেজে নির্বাচিত হবে (বর্তমান নির্বাচন বদলে যাবে)। এগিয়ে যাবেন?');
+  });
+  var qClear = document.getElementById('curQuickClear');
+  if (qClear) qClear.addEventListener('click', function () {
+    quick('clear', 'হোমপেজ-নির্বাচন সম্পূর্ণ খালি হবে — হোমপেজ তখন সর্বশেষ লেখা দেখাবে। এগিয়ে যাবেন?');
+  });
+
+  // ফ্ল্যাশ-টোস্ট (quick-অ্যাকশন রিডাইরেক্টের পরে)
+  <% if (savedFlash === 'latest6') { %>toast('সর্বশেষ ৬টি লেখা হোমপেজে নির্বাচিত হয়েছে');<% } %>
+  <% if (savedFlash === 'clear') { %>toast('হোমপেজ-নির্বাচন খালি করা হয়েছে');<% } %>
+})();
+</script>
+<script src="/assets/js/main.js?v=<%= AV %>"></script>
+<%- include('../partials/sandbox-preview') %>
+<script src="/assets/js/premium.js?v=<%= AV %>"></script>
+</body>
+</html>

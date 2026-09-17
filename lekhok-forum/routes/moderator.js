@@ -729,6 +729,125 @@ router.post('/best-writer/:id/toggle', ensureModerator, requireScope('best_write
   res.redirect('/moderator/best-writer');
 });
 
+// ── সেশন ৯০: হোম-কিউরেশন — 'লেখকদের কালি' + 'সব লেখা' নিয়ন্ত্রণ-কেন্দ্র ──────
+// হোমপেজের 'লেখকদের কালি / সাম্প্রতিক লেখা' (home_featured, সর্বোচ্চ ৬) ও
+// 'সব লেখা দেখুন' /articles-তালিকার (archive_visible) দৃশ্যমানতা — দুটোই
+// মডারেটর/এডমিন এখান থেকে চেকবক্স/টগলে নিয়ন্ত্রণ করেন। অ্যাভাটার/কভার-
+// আপডেট অটো-পোস্ট (post_kind≠writing) প্যানেলে দেখা যায় (চিপসহ) কিন্তু
+// হোম-নির্বাচনযোগ্য নয় — সোশ্যাল-অ্যাক্টিভিটি কখনোই সাহিত্য-তালিকায় ঢুকবে না।
+const MAX_HOME_FEATURED_90 = 6;
+const TA42_90 = require('../helpers/trash-audit');
+
+router.get('/curation', ensureModerator, async (req, res) => {
+  const q90 = String(req.query.q || '').trim();
+  const kind90 = String(req.query.kind || '').trim(); // writing|avatar_update|cover_update
+  let sql90 = `
+    SELECT p.id, p.title, p.excerpt, p.status, p.post_kind, p.home_featured,
+           p.home_featured_at, p.archive_visible, p.featured, p.published_at,
+           p.like_count, p.comment_count, p.view_count,
+           u.full_name AS author_name, u.username AS author_username, u.id AS author_id
+      FROM posts p JOIN users u ON p.author_id = u.id
+     WHERE p.type = 'article'`;
+  const params90 = [];
+  if (kind90 && ['writing', 'avatar_update', 'cover_update'].includes(kind90)) {
+    sql90 += ' AND p.post_kind = ?'; params90.push(kind90);
+  }
+  if (q90) {
+    sql90 += ' AND (p.title LIKE ? OR u.full_name LIKE ? OR u.username LIKE ?)';
+    params90.push('%' + q90 + '%', '%' + q90 + '%', '%' + q90 + '%');
+  }
+  sql90 += ` ORDER BY p.home_featured DESC, p.home_featured_at DESC, p.published_at DESC LIMIT 300`;
+  const [writings, featuredCount90, totalWritings90, hiddenCount90] = await Promise.all([
+    db.prepare(sql90).all(...params90),
+    db.prepare('SELECT COUNT(*) AS c FROM posts WHERE home_featured = 1').get(),
+    db.prepare("SELECT COUNT(*) AS c FROM posts WHERE type='article' AND post_kind='writing' AND status='published'").get(),
+    db.prepare("SELECT COUNT(*) AS c FROM posts WHERE type='article' AND archive_visible = 0").get(),
+  ]);
+  res.render('user/moderator-curation', {
+    writings,
+    featuredCount: featuredCount90 ? featuredCount90.c : 0,
+    totalWritings: totalWritings90 ? totalWritings90.c : 0,
+    hiddenCount: hiddenCount90 ? hiddenCount90.c : 0,
+    maxFeatured: MAX_HOME_FEATURED_90,
+    searchQ: q90, kindFilter: kind90,
+    savedFlash: req.query.saved ? String(req.query.saved) : '',
+    currentPath: '/moderator/curation'
+  });
+});
+
+// টগল-অ্যাকশন — urlencoded-fetch (গ্লোবাল CSRF-গার্ড X-CSRF-Token হেডারে পড়ে)
+// → JSON উত্তর; ভিউ অপটিমিস্টিক-আপডেটে রিলোড ছাড়াই লাইভ কাউন্টার বদলায়।
+router.post('/curation/toggle', ensureModerator, async (req, res) => {
+  const id90 = parseInt(req.body.id, 10);
+  const field90 = String(req.body.field || '');
+  const value90 = req.body.value === '1' ? 1 : 0;
+  if (!id90 || !['home_featured', 'archive_visible'].includes(field90)) {
+    return res.status(400).json({ ok: false, error: 'অবৈধ অনুরোধ' });
+  }
+  const post90 = await db.prepare("SELECT id, title, post_kind, author_id, home_featured, archive_visible FROM posts WHERE id = ? AND type = 'article'").get(id90);
+  if (!post90) return res.status(404).json({ ok: false, error: 'লেখাটি পাওয়া যায়নি' });
+
+  if (field90 === 'home_featured') {
+    if (value90) {
+      // কঠোর-নিয়ম ১: অটো-পোস্ট (avatar/cover ইত্যাদি) কখনোই হোমে নির্বাচনযোগ্য নয়
+      if ((post90.post_kind || 'writing') !== 'writing') {
+        return res.status(422).json({ ok: false, error: 'এটি সোশ্যাল-অ্যাক্টিভিটি পোস্ট — হোমপেজের লেখা-তালিকায় নির্বাচনযোগ্য নয়।' });
+      }
+      // কঠোর-নিয়ম ২: সর্বোচ্চ ৬টি (ক্লায়েন্ট-গার্ডের সার্ভার-যমল)
+      const cnt90 = await db.prepare('SELECT COUNT(*) AS c FROM posts WHERE home_featured = 1').get();
+      if (!post90.home_featured && (cnt90.c || 0) >= MAX_HOME_FEATURED_90) {
+        return res.status(422).json({ ok: false, error: 'হোমপেজে সর্বোচ্চ ' + MAX_HOME_FEATURED_90 + 'টি লেখা রাখা যায়। অন্য একটি আনচেক করে আবার চেষ্টা করুন।', featuredCount: cnt90.c });
+      }
+      await db.prepare('UPDATE posts SET home_featured = 1, home_featured_at = CURRENT_TIMESTAMP WHERE id = ?').run(id90);
+      // লেখককে সুখবর (best-writer-নোটিফিকেশন-প্যাটার্নের মিরর)
+      try {
+        await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
+          .run(post90.author_id, 'home_featured', 'আপনার লেখা নির্বাচিত হয়েছে!', 'আপনার «' + String(post90.title).slice(0, 60) + '» লেখাটি হোমপেজের "লেখকদের কালি" সেকশনে প্রদর্শিত হবে।', '/articles/' + id90);
+      } catch (e) { /* নন-ফেটাল */ }
+      await TA42_90.audit(db, req, 'home-feature', 'posts', id90, 'হোমপেজ কিউরেশন: ' + String(post90.title).slice(0, 50));
+    } else {
+      await db.prepare('UPDATE posts SET home_featured = 0 WHERE id = ?').run(id90);
+      await TA42_90.audit(db, req, 'home-unfeature', 'posts', id90, 'হোমপেজ কিউরেশন-বাদ: ' + String(post90.title).slice(0, 50));
+    }
+  } else if (field90 === 'archive_visible') {
+    await db.prepare('UPDATE posts SET archive_visible = ? WHERE id = ?').run(value90, id90);
+    await TA42_90.audit(db, req, value90 ? 'archive-show' : 'archive-hide', 'posts', id90, 'সব-লেখা তালিকা: ' + String(post90.title).slice(0, 50));
+  }
+  const cntAfter90 = await db.prepare('SELECT COUNT(*) AS c FROM posts WHERE home_featured = 1').get();
+  res.json({ ok: true, featuredCount: cntAfter90.c || 0 });
+});
+
+// কুইক-অ্যাকশন — 'latest6' (সর্বশেষ ৬টি খাঁটি লেখা এক ক্লিকে হোমে তোলা) |
+// 'clear' (সব হোম-নির্বাচন খালি)। বড় ডিপ্লয়ের পর এডমিনের শূন্য-থেকে-শুরু
+// ঝামেলা দূর করতে।
+router.post('/curation/quick', ensureModerator, async (req, res) => {
+  const act90 = String(req.body.action || '');
+  if (!['latest6', 'clear'].includes(act90)) {
+    return res.status(400).json({ ok: false, error: 'অজানা অ্যাকশন' });
+  }
+  if (act90 === 'clear') {
+    await db.prepare('UPDATE posts SET home_featured = 0').run();
+    await TA42_90.audit(db, req, 'home-clear-all', 'posts', null, 'হোমপেজ কিউরেশন সম্পূর্ণ খালি');
+    return res.json({ ok: true, featuredCount: 0 });
+  }
+  // latest6: আগে সব খালি → সর্বশেষ ৬ খাঁটি writing বাছাই (নোটিফিকেশনসহ)
+  await db.prepare('UPDATE posts SET home_featured = 0').run();
+  const rows90 = await db.prepare(`
+    SELECT id, author_id, title FROM posts
+     WHERE type='article' AND status='published' AND post_kind='writing' AND archive_visible=1
+     ORDER BY published_at DESC LIMIT ${MAX_HOME_FEATURED_90}
+  `).all();
+  for (const r90 of rows90) {
+    await db.prepare('UPDATE posts SET home_featured = 1, home_featured_at = CURRENT_TIMESTAMP WHERE id = ?').run(r90.id);
+    try {
+      await db.prepare('INSERT INTO notifications (user_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)')
+        .run(r90.author_id, 'home_featured', 'আপনার লেখা নির্বাচিত হয়েছে!', 'আপনার «' + String(r90.title).slice(0, 60) + '» লেখাটি হোমপেজের "লেখকদের কালি" সেকশনে প্রদর্শিত হবে।', '/articles/' + r90.id);
+    } catch (e) { /* নন-ফেটাল */ }
+  }
+  await TA42_90.audit(db, req, 'home-quick-latest6', 'posts', null, 'সর্বশেষ ৬ লেখা স্বয়ংক্রিয়-নির্বাচন');
+  res.json({ ok: true, featuredCount: rows90.length });
+});
+
 // ── Complaints (read + status update; visible only to scoped moderators) ────
 router.get('/complaints', ensureModerator, requireScope('complaints'), async (req, res) => {
   const items = await db.prepare(`
