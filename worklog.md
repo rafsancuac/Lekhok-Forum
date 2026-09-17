@@ -717,3 +717,20 @@ Stage Summary:
 - মূল-কমিটের সাথে pushed ✓ — মাস্টার-টেবিলে খালি: ০৫-কার্সার-পলিশ + ১৭-হোম-কিউরেশন
 - ফাইল: server.js (EventSource-গার্ড + legacy-fallback), routes/dashboard.js (recent-enrichment), header.ejs/live.js/style.css (মার্কআপ+রঙ-ইউনিয়ন), PROJECT.md/PLANS.md
 - পরবর্তী: ০৫-কার্সার-পলিশ → ১৭-হোম-কিউরেশন → শেয়ার্ড-ট্যাব pagination → Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) → গ্রুপ-কল
+
+---
+Task ID: cron-r5 (সেশন ১০৭ — webDevReview রাউন্ড ৬)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: QA-সুইপ → কন্টাক্ট-ইনবক্স-আপগ্রেড (/admin/messages) + /notifications ফুল-পেজ actor-avatar → rebase (session104-১০৫ ইউনিয়ন) → push
+
+Work Log:
+- worklog/PLANS রিভিউ + QA: ১৪-পেজ ২০০ + health 0ms + ট্যাগ-বার/rank-chip/sort-bar লাইভ → বাগ-শূন্য
+- ইনবক্স: contact_submissions.status মাইগ্রেশন + সার্চ/ফিল্টার/পেজিনেশন/CSV/স্ট্যাটাস-ট্রানজিশন/ট্র্যাশ-ডিলিট + ibx-* ফুল-স্টাইলিং; E2E curl+agent-browser সম্পূর্ণ ওয়ার্কফ্লো
+- ফুল-পেজ avatar: daily.js JOIN + session105-legacy-fallback-মিরর + has-avatar ভিউ-ব্রাঞ্চ + পেজ-ভ্যারিয়েন্ট CSS
+- rebase-কালে আবিষ্কার: origin-এর style.css-এ session104-কমেন্ট-ব্লকের /*-ওপেনার হারানো ছিল → পুনঃস্থাপনসহ union-মার্জ
+- সেশন-নাম্বার-সংঘর্ষ এড়াতে push-এর আগে origin-worklog-চেক → ১০৭ লেবেল
+
+Stage Summary:
+- /contact-সাবমিশন এখন অ্যাডমিনে দৃশ্যমান (ওয়ার্কফ্লো-সহ) — session103-এর "কেউ দেখে না" অনুরোধ পূরণ
+- খালি মাস্টার-আইটেম: ০৫-কার্সার-পলিশ + ১৭-হোম-কিউরেশন
+- পরবর্তী: ০৫ → ১৭ → ইনবক্স-বাল্ক/রিপ্লাই
