@@ -594,6 +594,8 @@ async function convListFor(me) {
       CASE WHEN c.user_a = ? THEN ub.gender ELSE ua.gender END as other_gender,
       '/messages/' || (CASE WHEN c.user_a = ? THEN ub.username ELSE ua.username END) as conv_link,
       (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_body,
+      (SELECT sender_id FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_sender_id,
+      (SELECT file_url FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_file_url,
       (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count,
       IFNULL((SELECT pinned FROM conversation_members WHERE conversation_id = c.id AND user_id = ?), 0) as pinned,
       IFNULL((SELECT muted FROM conversation_members WHERE conversation_id = c.id AND user_id = ?), 0) as muted
@@ -608,6 +610,9 @@ async function convListFor(me) {
       SELECT c.*, 1 as is_group_flag, c.title as other_name, NULL as other_username, NULL as other_avatar, NULL as other_gender,
         '/messages/g/' || c.id as conv_link,
         (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_body,
+        (SELECT sender_id FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_sender_id,
+        (SELECT u.full_name FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) as last_sender_name,
+        (SELECT m.file_url FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) as last_file_url,
         (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count,
         (SELECT COUNT(*) FROM conversation_members WHERE conversation_id = c.id) as member_count,
         IFNULL(cm.pinned, 0) as pinned, IFNULL(cm.muted, 0) as muted

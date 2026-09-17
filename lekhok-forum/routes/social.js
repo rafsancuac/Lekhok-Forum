@@ -397,7 +397,9 @@ router.post('/api/articles/quick', ensureLoggedIn, async (req, res) => {
       const mentioned = JSON.parse(mentions);
       for (const m of mentioned) {
         if (m.id !== me.id) {
-          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId);
+          // সেশন ১১৪-ফিক্স: actorId অনুপস্থিত ছিল — quick-কম্পোজারের ম্যানশন-নোটিফিকেশনে
+          // actor-avatar আসত না (আইকন-ফলব্যাক পড়ত); /articles/new-পথের সাথে সামঞ্জস্য
+          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে ম্যানশন করেছেন', '/articles/' + postId, me.id);
         }
       }
     } catch (_) {}
@@ -1828,6 +1830,16 @@ router.post('/api/notifications/read/:id', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'login' });
   await db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?').run(req.params.id, req.session.user.id);
   res.json({ ok: true });
+});
+
+// ── সেশন ১১৪: বিজ্ঞপ্তি-সরানো (FB-প্যারিটি "remove this notification") ──
+// নিজের-সারি-ইনভ্যারিয়েন্ট (user_id = আমি) — অন্যের বিজ্ঞপ্তি স্পর্শ অসম্ভব।
+// পুরনো-লিঙ্ক-মৃত (মুছে-ফেলা লেখা/পোস্ট) বিজ্ঞপ্তি ইউজার নিজের হাতে পরিষ্কার
+// করতে পারেন — এই-রাউন্ডের QA-সিড-নোটিশগুলোও এই-পথেই পরিষ্কার হবে (product-first)।
+router.post('/api/notifications/:id/dismiss', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'login' });
+  const del = await db.prepare('DELETE FROM notifications WHERE id = ? AND user_id = ?').run(req.params.id, req.session.user.id);
+  res.json({ ok: true, removed: del.changes > 0 });
 });
 
 router.get('/notifications/mark-all-read', async (req, res) => {

@@ -847,3 +847,11 @@ Task: অবস্থা-মূল্যায়ন + agent-browser QA → প�
 - **fetch-প্যাচ স্কোপ:** fetch/XHR ঢাকা হয়েছে; EventSource/WebSocket-ভিত্তিক ভবিষ্যৎ-ফিচারে ম্যানুয়াল প্যারাম লাগবে
 - **পরবর্তী-প্রস্তাব:** ① বাল্ক-ইমপোর্টে ফাইল-ডাউনলোড-সাইড (CSV-তে URL-থেকে ফাইল-ফেচ-করে আপলোড — এখন শুধু-লিংক) ② created_at UTC→লোকাল সাইট-ওয়াইড ③ সিরিজ-পেজিনেশন (>২০-পর্ব) ④ role-policy-তে resources/bulk + moderator-update চেক-যোগ
 - **গোটচা-রিমাইন্ডার:** push-এর আগে fetch+rebase; doc-ফাইল union-মানে **শেষে append**; '[h'-খাওয়া টুল-আউটপুটে বাইট-চেক-আগে; role-policy প্রথম-রান-নয়েজ
+
+## সেশন ১১৪ (১৮ সেপ্টেম্বর ২০২৬) — ইনবক্স মিনি-মেসেঞ্জার-বাবল + বিজ্ঞপ্তি-সরান + §১৫-সেলফ-সিড
+
+- QA: ১২-পেজ সুইপ কনসোল-০/390px-০ → ২-লুকানো-বাগ আবিষ্কৃত ও ফিক্সড (conv-meta text-align লিক; quick-ম্যানশন actorId)
+- নতুন: MiniBubblePreview.ejs (views/shared/messenger/) + .mnp-* (shared.css) + convListFor-SQL এনরিচমেন্ট + POST /api/notifications/:id/dismiss + /notifications ✕-বাটন/অ্যানিমেশন/চিপ-সিঙ্ক/empty-state-পলিশ
+- টেস্ট: §১৫ সেলফ-সিড + login()-csrf-রিট্রাই; role-policy ১০৭/১০৭ · calls ৫৪/৫৪ · cursor ২২/২২ · guard গ্রিন
+- QA-স্টেট-রিপেয়ার: testadmin/testuser seed-অবস্থায় ফেরানো; ফিড-গভীরতা ৮-ডেমো-পোস্টে পুনঃস্থাপিত (cursor-চেইন ≥২-পেজ)
+- বিস্তারিত: PLANS.md Session-114 Cross-Agent Note + PROJECT.md Changelog

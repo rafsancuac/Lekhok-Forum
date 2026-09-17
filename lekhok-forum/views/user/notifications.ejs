@@ -35,6 +35,8 @@
               <div class="notif-page-text"><%= n.body %></div>
               <div class="notif-page-time"><i class="far fa-clock"></i> <%= new Date(n.created_at).toLocaleDateString('bn-BD') %></div>
             </div>
+            <%# সেশন ১১৪: FB-প্যারিটি সরান-বাটন (হোভারে দৃশ্যমান; নিজের-সারি-ইনভ্যারিয়েন্ট API) %>
+            <button type="button" class="notif-dismiss" data-dismiss="<%= n.id %>" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>
           </a>
         <% }); %>
       </div>
@@ -44,6 +46,46 @@
     async function markRead(id) {
       await fetch('/api/notifications/read/' + id, { method: 'POST' });
     }
+    /* ── সেশন ১১৪: বিজ্ঞপ্তি-সরান (FB-প্যারিটি) — অ্যানিমেটেড-রিমুভ + কাউন্ট-সিঙ্ক;
+         শেষ-আইটেম সরলে সার্ভার-সত্যে (empty-state) রিলোড ── */
+    (function () {
+      var list = document.querySelector('.notif-page-list');
+      if (!list) return;
+      list.addEventListener('click', function (e) {
+        var btn = e.target.closest('.notif-dismiss');
+        if (!btn) return;
+        e.preventDefault(); e.stopPropagation();
+        var row = btn.closest('.notif-page-item');
+        if (!row || row.dataset.dismissBusy) return;
+        row.dataset.dismissBusy = '1';
+        fetch('/api/notifications/' + btn.dataset.dismiss + '/dismiss', { method: 'POST' })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (!j || !j.ok) { row.removeAttribute('data-dismiss-busy'); return; }
+            row.style.height = row.offsetHeight + 'px';
+            requestAnimationFrame(function () {
+              row.classList.add('removing');
+              row.style.height = '0px';
+            });
+            setTimeout(function () {
+              var wasUnread = row.classList.contains('unread');
+              row.remove();
+              var rest = list.querySelectorAll('.notif-page-item').length;
+              var chip = document.querySelector('.notif-count-chip');
+              if (chip && wasUnread) {
+                /* চিপ-টেক্সট বাংলা-সংখ্যায় ("২ টি নতুন") — parseInt-নিরাপদ রূপান্তর */
+                var bnDigits = '০১২৩৪৫৬৭৮৯';
+                var cur = parseInt(chip.textContent.trim().replace(/[০-৯]/g, function (d) { return bnDigits.indexOf(d); }), 10) || 0;
+                var left = Math.max(0, cur - 1);
+                if (left > 0) chip.textContent = String(left).replace(/[0-9]/g, function (d) { return bnDigits[+d]; }) + ' টি নতুন';
+                else chip.remove();
+              }
+              if (!rest) location.reload();
+            }, 260);
+          })
+          .catch(function () { row.removeAttribute('data-dismiss-busy'); });
+      });
+    })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>

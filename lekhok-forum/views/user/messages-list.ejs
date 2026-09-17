@@ -109,7 +109,8 @@
                 </div>
                 <div class="conv-meta">
                   <div class="conv-name"><%= c.other_name %></div>
-                  <div class="conv-snippet"><% if (c.is_group_flag) { %><i class="fas fa-users" style="font-size:10px"></i> <%= c.member_count %> সদস্য · <% } %><%= c.last_body ? c.last_body.replace(/<[^>]+>/g, '').slice(0, 42) : 'নতুন কথোপকথন' %></div>
+                  <%# সেশন ১১৪: ইনবক্স-প্রিভিউ = ক্যানোনিকাল মিনি-বাবল (MessengerBubble-এর প্রতিশ্রুত; মার্কআপ views/shared/ থেকে) %>
+                  <%- include('../shared/messenger/MiniBubblePreview', { c: c, meId: user.id }) %>
                 </div>
                 <div class="conv-meta-right">
                   <%# সেশন ৭৬: পিন/মিউট ফ্ল্যাগ + রো-মেনু %>

@@ -313,7 +313,9 @@
   border-radius: 50%;
   z-index: 2;
 }
-.page-wrap--messenger .conv-meta { flex: 1; min-width: 0; }
+/* সেশন ১১৪-ফিক্স: dashboard.css-এর লিগ্যাসি .conv-meta{text-align:right} ইনবক্সে
+   লিক করত (নাম/প্রিভিউ ডানে-সারিন্ড) — FB-প্যারিটি বাঁ-সারিন্ধে স্কোপড-রিসেট */
+.page-wrap--messenger .conv-meta { flex: 1; min-width: 0; text-align: left; }
 .page-wrap--messenger .conv-name {
   color: var(--fb-text); font-weight: 600; font-size: 15px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

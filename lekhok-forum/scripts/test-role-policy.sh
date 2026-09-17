@@ -8,10 +8,16 @@ strip() { echo "$1" | sed 's|https\?://[^/]*||'; }
 # getcsrf <jar> <page> — fetch page with jar, extract csrf token
 getcsrf() { curl -s -b "$1" -c "$1" "$BASE$2" | grep -o 'csrf-token" content="[^"]*"' | head -1 | sed 's/.*content="//;s/"//'; }
 # login <jar> <page> <user> <pass> — full login flow, echoes "code redirectpath"
+# সেশন ১১৪-হার্ডেনিং: সেশন-রাইট-রেসে csrf-block (200-রেন্ডার) হলে ব্রাউজারের
+# graceful "?csrf=1" রিকভারির মিরর — একবার টোকেন-ফেচ+POST রিট্রাই, নইলে ফেল-ভ্যালু।
 login() {
   local J=$1 PG=$2 U=$3 PW=$4
   local TOK=$(getcsrf "$J" "$PG")
   local R=$(curl -s -b "$J" -c "$J" -o /dev/null -w "%{http_code} %{redirect_url}" -X POST "$BASE$PG" --data-urlencode "username=$U" --data-urlencode "password=$PW" --data-urlencode "_csrf=$TOK")
+  if [ "${R%% *}" = "200" ]; then
+    TOK=$(getcsrf "$J" "$PG")
+    R=$(curl -s -b "$J" -c "$J" -o /dev/null -w "%{http_code} %{redirect_url}" -X POST "$BASE$PG" --data-urlencode "username=$U" --data-urlencode "password=$PW" --data-urlencode "_csrf=$TOK")
+  fi
   echo "${R%% *} $(strip "${R#* }")"
 }
 # get <jar> <path> -> code
@@ -46,6 +52,11 @@ R=$(login /tmp/jar_tu2 /admin/login testuser demo123); ck "user via /admin/login
 LASTJAR3=/tmp/jar_msg2; rm -f $LASTJAR3
 TOK=$(getcsrf $LASTJAR3 /admin/login)
 MSGHTML=$(curl -s -b $LASTJAR3 -X POST $BASE/admin/login --data-urlencode "username=testuser" --data-urlencode "password=demo123" --data-urlencode "_csrf=$TOK")
+# সেশন ১১৪: csrf-রেস-ব্লক (টোকেন-মিরর-রিট্রাই) — ব্লকড-রেসপন্সে বার্তা থাকে না
+if ! echo "$MSGHTML" | grep -q "স্টাফ লগইন পোর্টাল"; then
+  TOK=$(getcsrf $LASTJAR3 /admin/login)
+  MSGHTML=$(curl -s -b $LASTJAR3 -X POST $BASE/admin/login --data-urlencode "username=testuser" --data-urlencode "password=demo123" --data-urlencode "_csrf=$TOK")
+fi
 ckc "স্টাফ-পোর্টালে ইউজার-প্রত্যাখ্যান বার্তা" "স্টাফ লগইন পোর্টাল" "$MSGHTML"
 ckc "ইউজার-লগইন লিংক" "/login" "$MSGHTML"
 
@@ -212,14 +223,22 @@ echo "PASS=$PASS FAIL=$FAIL"
 # ═══ সেশন ১১৩: কমেন্ট-এডিট/ডিলিট API — অথরাইজেশন-চেক (session105-চুক্তি) ═══
 # JSON-API (CSRF-মুক্ত) — target comment id সিড-নির্ভর; চলানোর আগে SEED_CMT সেট করুন
 echo "══ ১৫. কমেন্ট PUT/DELETE অথরাইজেশন ══"
-SEED_CMT=${SEED_CMT:-1}
+# সেশন ১১৪: সেশন-১১৩-র "SEED_CMT-ডকুমেন্টেশন/ফ্রেশ-ক্লোন" বকেয়া এখন শেষ —
+# টার্গেট-মন্তব্য এখন আর সিড-নির্ভর নয়: ismail হয়ে POST /api/comment দিয়ে
+# নিজের-মন্তব্য HTTP-API-তেই সিড করা হয় (চলমান-সার্ভার-মধ্যস্থ — স্যান্ডবক্স-গোটচা-সেফ),
+# শেষ-ধাপের নিজের-DELETE-ই ক্লিনআপ (নতুন-কভারেজ: নিজের-কমেন্ট DELETE → 200)।
 put() { curl -s -b "$1" -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$2" -H "Content-Type: application/json" -d "{\"body\":\"$3\"}"; }
 del() { curl -s -b "$1" -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/comments/$2"; }
 JARV=/tmp/jar_viewer; rm -f $JARV
 R=$(login $JARV /login ismail secret123); ck "viewer-লগইন (ismail)" "/dashboard" "${R##* }"
+SEED_CMT=$(curl -s -b $JARV -X POST "$BASE/api/comment" -H "Content-Type: application/json" -d '{"post_id":1,"body":"role-policy §১৫ সেলফ-সিড মন্তব্য (session114)"}' | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+if [ -z "$SEED_CMT" ]; then echo "  ✗ §15-সেলফ-সিড ব্যর্থ (POST /api/comment)"; FAIL=$((FAIL+1)); SEED_CMT=0; else echo "  ✓ §15-সেলফ-সিড মন্তব্য id=$SEED_CMT"; PASS=$((PASS+1)); fi
 ck "anon PUT → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$SEED_CMT" -H "Content-Type: application/json" -d '{"body":"x"}')"
 ck "anon DELETE → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/comments/$SEED_CMT")"
 ck "bogus-id PUT → 400" "400" "$(put $JARV 0 'x')"
 ck "অন্যের-কমেন্ট PUT → 403" "403" "$(put $JARU $SEED_CMT 'হাইজ্যাক')"
 ck "অন্যের-কমেন্ট DELETE → 403" "403" "$(del $JARU $SEED_CMT)"
-ck "নিজের-কমেন্ট PUT → 200" "200" "$(put $JARV $SEED_CMT 'সম্পাদিত-চেক-১১৩')"
+ck "নিজের-কমেন্ট PUT → 200" "200" "$(put $JARV $SEED_CMT 'সম্পাদিত-চেক-১১৪')"
+ck "নিজের-কমেন্ট DELETE → 200 (ক্লিনআপ)" "200" "$(del $JARV $SEED_CMT)"
+R=$(curl -s -b $JARV -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$SEED_CMT" -H "Content-Type: application/json" -d '{"body":"ghost"}')
+ck "মুছে-ফেলা-কমেন্ট PUT → 404 (ghost)" "404" "$R"

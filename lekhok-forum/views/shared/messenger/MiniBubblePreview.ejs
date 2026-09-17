@@ -1,0 +1,28 @@
+<%# ═══════════════════════════════════════════════════════════════════════════
+  MiniBubblePreview.ejs — ইনবক্স-লিস্টের মিনি-মেসেঞ্জার-বাবল (সেশন ১১৪ — ডিজাইন-সিস্টেম)
+  ───────────────────────────────────────────────────────────────────────────
+  MessengerBubble (রুল-৪)-এর প্রতিশ্রুত "ইনবক্স-প্রিভিউ" — কম্প্যাক্ট-তালিকা-রোর
+  জন্য ক্যানোনিকাল বাবলেরই মিনি-রূপ: নিজের-শেষ-বার্তা = --lf-social-messenger
+  নীল-সারফেস + সাদা-টেক্সট; প্রতিপক্ষের = --lf-ui-border সারফেস + ডিপ-টেক্সট
+  (রুল-৫ টোকেন); কোণ = বাবলের মতো এক-কোণ চার-পিক্সেল (me→ডান-নিচ, them→বাঁ-নিচ)।
+  অ্যাটাচমেন্ট-বার্তায় টেক্সটের বদলে আইকন-লেবেল (🖼️/🎙️/📎 — MessengerBubble-এর
+  _isImg/_isAud চুক্তিরই সার্ভার-সাইড প্রতিরূপ)।
+  বাধ্যতামূলক ব্যবহার: /messages ইনবক্স-তালিকা (messages-list)।
+  স্টাইলিং: shared.css-এর .mnp-* ব্লক (শুধু var(--lf-*) টোকেন)।
+  প্যারাম (include-স্কোপ):
+    c     — convListFor-এর রো (last_body, last_sender_id, last_sender_name?, last_file_url, is_group_flag)
+    meId  — বর্তমান-ইউজার id (user.id)
+  JS-চুক্তি: .conv-snippet ক্লাস রক্ষা — messages-list-এর সার্চ-হাইলাইটার
+  (renderConversationResults) এই ক্লাসের textContent পড়ে।
+%>
+<%
+  var _mnpOwn = Number(c.last_sender_id) === Number(meId);
+  var _mnpTxt = (c.last_body || '').replace(/<[^>]+>/g, '').trim();
+  var _mnpFu = c.last_file_url || '';
+  if (!_mnpTxt && _mnpFu) {
+    if (/\.(png|jpe?g|gif|webp|bmp|svg)(\?|$)/i.test(_mnpFu)) _mnpTxt = '🖼️ ছবি';
+    else if (/\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)(\?|$)/i.test(_mnpFu)) _mnpTxt = '🎙️ ভয়েস মেসেজ';
+    else _mnpTxt = '📎 ' + ((_mnpFu.split('/').pop() || 'ফাইল').slice(0, 24));
+  }
+  if (!_mnpTxt) _mnpTxt = 'নতুন কথোপকথন';
+%><span class="conv-snippet mnp-snippet"><% if (c.is_group_flag) { %><span class="mnp-members"><i class="fas fa-users" aria-hidden="true"></i> <%= c.member_count %> সদস্য</span><% } %><span class="mnp-bubble <%= _mnpOwn ? 'mnp-bubble--me' : 'mnp-bubble--them' %>" title="<%= _mnpTxt %>"><% if (c.is_group_flag && !_mnpOwn && c.last_sender_name) { %><b class="mnp-sender"><%= c.last_sender_name %>:</b> <% } %><span class="mnp-text"><%= _mnpTxt.length > 60 ? (_mnpTxt.slice(0, 60) + '…') : _mnpTxt %></span></span></span>

@@ -1896,3 +1896,28 @@ a.card-tag:hover{color:var(--accent);border-color:rgba(5,150,105,.35);background
 @media (max-width:640px){
   .lf-rxm-head .lf-rxm-modeseg .rxm-modebtn span{display:none}
 }
+
+/* ═══ সেশন ১১৪ — বিজ্ঞপ্তি-সরান (FB-প্যারিটি dismiss) + পেজ-পলিশ ═══
+   /notifications ফুল-পেজ: প্রতি-আইটেমে হোভারে ✕ (সরান) — নিজের-সারি-ইনভ্যারিয়েন্ট
+   /api/notifications/:id/dismiss; অ্যানিমেটেড-কল্যাপস; কাউন্ট-চিপ-সিঙ্ক (বাংলা-সংখ্যা)। */
+.notif-page-item{position:relative}
+.notif-dismiss{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:none;background:transparent;color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transform:scale(.8);transition:opacity .14s ease,transform .14s ease,background .14s ease,color .14s ease;font-size:.85rem;z-index:3}
+.notif-page-item:hover .notif-dismiss,.notif-dismiss:focus-visible{opacity:1;transform:scale(1)}
+.notif-dismiss:hover{background:var(--accent-soft);color:var(--accent-dark)}
+.notif-dismiss:focus-visible{outline:2px solid var(--accent);outline-offset:2px;opacity:1}
+.notif-page-item.removing{overflow:hidden;opacity:0;transform:translateX(24px);transition:height .24s ease,opacity .22s ease,transform .22s ease}
+@media (max-width:640px){
+  /* টাচ-ডিভাইসে হোভার-নেই — বাটন সর্বদা দৃশ্যমান (44px টাচ-টার্গেট) */
+  .notif-dismiss{opacity:1;transform:none;width:36px;height:36px}
+}
+@media (prefers-reduced-motion:reduce){
+  .notif-dismiss,.notif-page-item.removing{transition:none}
+}
+
+/* সেশন ১১৪: বিজ্ঞপ্তি-ফাঁকা-অবস্থা পলিশ — আইকন-মেডেলিয়ন + নরম-পালস (টোকেন-মাত্র) */
+.notif-empty{background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius-lg);padding:44px 18px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.notif-empty i{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;opacity:1;background:var(--accent-soft);color:var(--accent);margin-bottom:4px;animation:notifBell114 3.2s ease-in-out infinite}
+.notif-empty p{margin:0;font-weight:600;color:var(--text)}
+.notif-empty small{color:var(--text-muted)}
+@keyframes notifBell114{0%,100%{transform:rotate(0)}4%{transform:rotate(11deg)}9%{transform:rotate(-9deg)}14%{transform:rotate(7deg)}19%{transform:rotate(-5deg)}24%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.notif-empty i{animation:none}}

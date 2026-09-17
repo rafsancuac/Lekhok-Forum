@@ -108,3 +108,20 @@
    ক্যানোনিকাল কম্পোজারের সাথে সংঘর্ষ করত — টোকেন-লক সারফেসে ওভাররাইড */
 .answer-form-wrap{background:var(--lf-ui-surface);border:1px solid var(--lf-ui-border);border-radius:var(--lf-radius-card);padding:14px}
 .qa-noscript-form{display:none}
+
+/* ═══ সেশন ১১৪ — ইনবক্স মিনি-মেসেঞ্জার-বাবল (views/shared/messenger/MiniBubblePreview.ejs) ═══
+   MessengerBubble-এর "ইনবক্স-প্রিভিউ" প্রতিশ্রুতি: কম্প্যাক্ট-রোতে শেষ-বার্তাটি
+   প্লেইন-টেক্সট নয়, ক্যানোনিকাল বাবলেরই মিনি-রূপ — me→messenger-নীল সারফেস,
+   them→ui-border সারফেস, এক-কোণ 4px (ক্লাস্টার-কোণ ভাষা), টোকেন-মাত্র। */
+.mnp-snippet{display:flex;align-items:center;gap:6px;min-width:0}
+.mnp-members{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;color:var(--lf-text-secondary);font-size:.68rem;font-weight:700}
+.mnp-members i{font-size:.6rem}
+.mnp-bubble{display:inline-flex;align-items:baseline;gap:4px;max-width:100%;min-width:0;padding:3px 10px;border-radius:var(--lf-radius-chip);font-size:.78rem;line-height:1.45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:var(--lf-shadow-card)}
+.mnp-bubble--me{background:var(--lf-social-messenger);color:var(--lf-ui-surface)}
+.mnp-bubble--them{background:var(--lf-ui-border);color:var(--lf-text-primary)}
+.mnp-bubble--me .mnp-sender{color:var(--lf-ui-surface)}
+.mnp-sender{font-weight:800;color:var(--lf-text-primary);flex:0 0 auto}
+.mnp-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mnp-bubble--me .mnp-text{color:var(--lf-ui-surface);font-weight:600}
+.conv-item.is-muted .mnp-bubble{opacity:.55;box-shadow:none}
+@media (prefers-reduced-motion: reduce){.mnp-bubble{transition:none}}
