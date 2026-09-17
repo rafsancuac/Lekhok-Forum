@@ -457,6 +457,16 @@ const MIGRATION_SQL = `
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   CREATE INDEX IF NOT EXISTS idx_callsig_call ON call_signals(call_id, id);
+  CREATE TABLE IF NOT EXISTS two_factor_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    code TEXT NOT NULL,
+    method TEXT NOT NULL DEFAULT 'email',
+    expires_at INTEGER NOT NULL,
+    attempts INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_2fa_tokens_user ON two_factor_tokens(user_id, method);
 `;
 
 // Columns added in later migrations — applied to existing installs during initDb().
@@ -574,6 +584,11 @@ const LATER_COLUMNS = [
   // [লেবেল-রেস-নোট: '১০৯' লেবেলও দুই-এজেন্টে গেছে — আমার ব্লক contact_submissions-নোট, অন্যটি style.css]
   ['contact_submissions', 'admin_reply', 'TEXT'],
   ['contact_submissions', 'replied_at',  'TEXT'],
+  // সেশন ১১৫: মাল্টি-মেথড 2FA — twofa_method ('totp'|'email') নির্ধারণ করে লগইনের
+  // দ্বিতীয় ধাপে কোন ধরনের কোড চাওয়া হবে। totp_enabled আগের মতোই মাস্টার-সুইচ
+  // (পুরনো সব চেক — লগইন-ইন্টারসেপ্ট/ব্যাকআপ/ডিসেবল — অক্ষত থাকে)।
+  // [নাম্বার-রেস-নোট: ১১০-অ্যাকশন-রেল-ফিক্সের পর সমান্তরাল-এজেন্টে ১১১-১১৪ নেওয়া — সর্বোচ্চ+১ রীতিতে ১১৫]
+  ['users', 'twofa_method', "TEXT DEFAULT 'totp'"],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং

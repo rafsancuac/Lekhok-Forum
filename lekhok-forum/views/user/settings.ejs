@@ -226,6 +226,21 @@
               <div class="field"><label>পুনরায় নতুন পাসওয়ার্ড</label><input class="input" type="password" name="confirm_password" required minlength="6"></div>
               <button type="submit" class="btn btn-primary">পাসওয়ার্ড পরিবর্তন</button>
             </form>
+
+            <%# সেশন ১১৫: অ্যাকাউন্ট ইমেইল — ইমেইল-ওটিপি 2FA-র পূর্বশর্ত (পাসওয়ার্ড-গার্ডড) %>
+            <hr style="margin:30px 0;border:none;border-top:1px solid var(--border)">
+            <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-at"></i> অ্যাকাউন্ট ইমেইল</h3>
+            <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">নিরাপত্তা-কোড (ইমেইল-ওটিপি) এই ঠিকানায় যাবে — সঠিক ও নিজের-নিয়ন্ত্রণে থাকা ইমেইল দিন।</p>
+            <% if (ok === 'email_saved') { %><div class="badge save-ok"><i class="fas fa-check"></i> ইমেইল সংরক্ষিত হয়েছে।</div><% } %>
+            <% if (err === 'email_password_wrong') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> বর্তমান পাসওয়ার্ড ভুল।</div><% } %>
+            <% if (err === 'email_invalid') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> সঠিক ইমেইল ঠিকানা লিখুন।</div><% } %>
+            <% if (err === 'email_taken') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> এই ইমেইল অন্য কোনো অ্যাকাউন্টে ব্যবহৃত।</div><% } %>
+            <form method="POST" action="/settings/account/email">
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
+              <div class="field"><label>ইমেইল ঠিকানা</label><input class="input" type="email" name="email" value="<%= profileUser.email || '' %>" placeholder="you@example.com" required></div>
+              <div class="field"><label>বর্তমান পাসওয়ার্ড (নিশ্চিতকরণ)</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
+              <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> ইমেইল সংরক্ষণ করুন</button>
+            </form>
             <%# সেশন ৮০: ডেটা-এক্সপোর্ট — লেখকের স্বত্ব-ব্যাকআপ %>
             <hr style="margin:30px 0;border:none;border-top:1px solid var(--border)">
             <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-cloud-arrow-down"></i> ডেটা ব্যাকআপ</h3>
@@ -274,6 +289,12 @@
             <% if (secErr === 'no_pending') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> কোনো অপেক্ষমাণ সেটআপ নেই। "2FA চালু করুন" দিয়ে নতুন করে শুরু করুন।</div><% } %>
             <% if (secErr === 'password_wrong') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> বর্তমান পাসওয়ার্ড ভুল।</div><% } %>
             <% if (secErr === 'no_2fa') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> 2FA সক্রিয় নেই।</div><% } %>
+            <%# সেশন ১১৫: ইমেইল-ওটিপি ফ্ল্যাশসমূহ %>
+            <% if (secMsg === 'email_sent') { %><div class="badge save-ok"><i class="fas fa-envelope"></i> কোড <%= emailMask || 'আপনার ইমেইল' %>-এ পাঠানো হয়েছে (মেয়াদ ৫ মিনিট)। ইনবক্স/স্প্যাম ফোল্ডার দেখুন।</div><% } %>
+            <% if (secErr === 'otp_rate') { %><div class="badge save-err"><i class="fas fa-hourglass-half"></i> খুব দ্রুত আবার-পাঠানোর চেষ্টা — আরও <%= typeof r !== 'undefined' && r ? r : 'কয়েক' %> সেকেন্ড অপেক্ষা করুন।</div><% } %>
+            <% if (secErr === 'otp_bad') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> কোড ভুল বা মেয়াদোত্তীর্ণ।<%= typeof left !== 'undefined' && left ? ' আর ' + left + ' বার চেষ্টা করতে পারবেন।' : '' %></div><% } %>
+            <% if (secErr === 'no_email') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> ইমেইল-ওটিপির জন্য অ্যাকাউন্টে নিবন্ধিত ইমেইল দরকার — <a href="/settings#account" style="text-decoration:underline;">অ্যাকাউন্ট-সেটিংসে ইমেইল যোগ করুন</a>।</div><% } %>
+            <% if (secErr === 'email_fail') { %><div class="badge save-err"><i class="fas fa-cloud-arrow-down"></i> ইমেইল পাঠানো যায়নি — কিছুক্ষণ পরে আবার চেষ্টা করুন।</div><% } %>
 
             <% if (backupFlash && backupFlash.length) { %>
               <div class="sec-backup-box">
@@ -284,13 +305,36 @@
               </div>
             <% } %>
 
-            <% if (totpEnabled && !secPending) { %>
+            <% if (totpEnabled && !secPending && !emailPending) { %>
               <div class="sec-status on">
                 <span class="sec-status-ico"><i class="fas fa-shield-halved"></i></span>
                 <span class="sec-status-meta">
                   <strong>2FA সক্রিয় আছে</strong>
-                  <small>লগইনে পাসওয়ার্ডের পরে অ্যাপের ৬-অঙ্কের কোড চাওয়া হয়, অ্যাকাউন্ট দ্বি-স্তরে সুরক্ষিত।</small>
+                  <small>লগইনে পাসওয়ার্ডের পরে <%= twofaMethod === 'email' ? 'নিবন্ধিত ইমেইলে পাঠানো' : 'অ্যাপে দেখানো' %> ৬-অঙ্কের কোড চাওয়া হয় — বর্তমান মাধ্যম: <b><%= twofaMethod === 'email' ? 'ইমেইল ওটিপি' : 'অথেনটিকেটর অ্যাপ' %></b>, অ্যাকাউন্ট দ্বি-স্তরে সুরক্ষিত।</small>
                 </span>
+              </div>
+              <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
+              <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-right-left"></i> মাধ্যম বদলান</h3>
+              <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">অন্য ফ্রি মাধ্যমে সুইচ করতে এনরোল করুন — কনফার্ম করলেই বর্তমান মাধ্যমের সেটআপ বদলে যাবে (যাচাই শেষ না হওয়া পর্যন্ত বর্তমান মাধ্যমই চলবে)।</p>
+              <div class="sec-method-grid">
+                <% if (twofaMethod !== 'totp') { %>
+                <form method="POST" action="/settings/security/enroll" class="sec-method-card">
+                  <span class="sec-mico">🔐</span>
+                  <span class="sec-mname">অথেনটিকেটর অ্যাপ</span>
+                  <span class="sec-mnote">QR স্ক্যান — প্রতি ৩০ সেকেন্ডে বদলানো কোড</span>
+                  <span class="sec-mfree">১০০% ফ্রি ও অফলাইন</span>
+                  <button type="submit" class="btn btn-ghost btn-sm sec-mbtn">এই মাধ্যমে সুইচ করুন</button>
+                </form>
+                <% } %>
+                <% if (twofaMethod !== 'email') { %>
+                <form method="POST" action="/settings/security/enroll-email" class="sec-method-card">
+                  <span class="sec-mico">✉️</span>
+                  <span class="sec-mname">ইমেইল ওটিপি</span>
+                  <span class="sec-mnote"><%= userEmail || 'নিবন্ধিত ইমেইল' %>-এ ৬-অঙ্কের কোড</span>
+                  <span class="sec-mfree blue">বিনামূল্যে (Resend)</span>
+                  <button type="submit" class="btn btn-ghost btn-sm sec-mbtn">এই মাধ্যমে সুইচ করুন</button>
+                </form>
+                <% } %>
               </div>
               <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
               <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড</h3>
@@ -306,6 +350,24 @@
                 <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
                 <button type="submit" class="btn btn-danger"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</button>
               </form>
+            <% } else if (emailPending) { %>
+              <%# সেশন ১১৫: ইমেইল-ওটিপি পেন্ডিং — কোড ইমেইলে গেছে, এখন যাচাই %>
+              <div class="sec-enroll">
+                <div class="sec-status on" style="margin-bottom:16px;">
+                  <span class="sec-status-ico"><i class="fas fa-envelope-circle-check"></i></span>
+                  <span class="sec-status-meta">
+                    <strong>ইমেইলে কোড পাঠানো হয়েছে</strong>
+                    <small><%= emailMask || 'আপনার ইমেইল' %> — ইনবক্স বা স্প্যাম ফোল্ডার দেখুন। কোডের মেয়াদ ৫ মিনিট।</small>
+                  </span>
+                </div>
+                <form method="POST" action="/settings/security/confirm-email" class="sec-inline-form">
+                  <div class="field"><label>ইমেইলে প্রাপ্ত ৬-অঙ্কের কোড</label><input class="input" type="text" name="email_otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus placeholder="যেমন: ৪৫৮২১৩"></div>
+                  <button type="submit" class="btn btn-primary"><i class="fas fa-shield-halved"></i> সক্রিয় করুন</button>
+                </form>
+                <form method="POST" action="/settings/security/enroll-email" style="margin-top:12px;">
+                  <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-rotate"></i> কোড আসেনি? আবার পাঠান (৪৫ সেকেন্ড কুলডাউন)</button>
+                </form>
+              </div>
             <% } else if (secPending) { %>
               <div class="sec-enroll">
                 <div class="sec-qr-row">
@@ -329,12 +391,27 @@
                 <span class="sec-status-ico"><i class="fas fa-shield"></i></span>
                 <span class="sec-status-meta">
                   <strong>2FA সক্রিয় নয়</strong>
-                  <small>দ্বি-স্তর যাচাইকরণ (TOTP) চালু করে আপনার আইডি আরও সুরক্ষিত করুন, Google Authenticator-সহ যেকোনো অথেনটিকেটর অ্যাপে বিনামূল্যে কাজ করে।</small>
+                  <small>দ্বি-স্তর যাচাই চালু করে আপনার আইডি আরও সুরক্ষিত করুন — নিচের যেকোনো একটি <b>সম্পূর্ণ বিনামূল্যের</b> মাধ্যম বেছে নিন।</small>
                 </span>
               </div>
-              <form method="POST" action="/settings/security/enroll" style="margin-top:14px;">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-shield-halved"></i> 2FA চালু করুন</button>
-              </form>
+              <%# সেশন ১১৫: ফেসবুক-ঘরানার মেথড-সিলেক্টর কার্ড (দুটোই $0) %>
+              <div class="sec-method-grid">
+                <form method="POST" action="/settings/security/enroll" class="sec-method-card">
+                  <span class="sec-mico">🔐</span>
+                  <span class="sec-mname">অথেনটিকেটর অ্যাপ (TOTP)</span>
+                  <span class="sec-mnote">Google Authenticator / Authy / 1Password-এ QR স্ক্যান করে প্রতি ৩০ সেকেন্ডে বদলানো কোড দিন।</span>
+                  <span class="sec-mfree">১০০% ফ্রি ও অফলাইন</span>
+                  <button type="submit" class="btn btn-primary btn-sm sec-mbtn"><i class="fas fa-qrcode"></i> সেটআপ শুরু করুন</button>
+                </form>
+                <form method="POST" action="/settings/security/enroll-email" class="sec-method-card">
+                  <span class="sec-mico">✉️</span>
+                  <span class="sec-mname">ইমেইল ওটিপি</span>
+                  <span class="sec-mnote">নিবন্ধিত ইমেইলে (<%= userEmail || '—' %>) লগইনের সময় ৬-অঙ্কের তাৎক্ষণিক কোড পাঠানো হবে।</span>
+                  <span class="sec-mfree blue">বিনামূল্যে (Resend)</span>
+                  <button type="submit" class="btn btn-primary btn-sm sec-mbtn"><i class="fas fa-paper-plane"></i> কোড পাঠান</button>
+                </form>
+              </div>
+              <p class="hint" style="margin-top:12px;"><i class="fas fa-circle-info"></i> দুটো মাধ্যমই $0 খরচে চলে — SMS-গেটওয়ে ফি লাগে না। লগইনে পাসওয়ার্ডের পরে নির্বাচিত মাধ্যমের কোড চাওয়া হবে; ব্যাকআপ-কোড দুই মাধ্যমেই কাজ করে।</p>
             <% } %>
           </div>
         

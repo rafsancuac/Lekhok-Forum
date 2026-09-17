@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcryptjs');
 const totp = require('../helpers/totp');
+const otp = require('../helpers/otp'); // সেশন ১১৫: ইমেইল-ওটিপি (মাল্টি-মেথড 2FA)
 const { coverUpload, avatarUpload, withUpload } = require('../middleware/upload');
 const rolePolicy = require('../helpers/role-policy');
 const { plainText: mdPlain85 } = require('../helpers/markdown-lite'); // সেশন ৮৫: এক্সসার্পট-স্ট্রিপ
@@ -2067,7 +2068,14 @@ router.get('/settings', ensureLoggedIn, async (req, res) => {
     blockedUsers,
     activeSessions,
     ok: req.query.ok || null, err: req.query.err || null,
-    totpEnabled: !!(me.totp_enabled && me.totp_secret),
+    // সেশন ১১৫: মাল্টি-মেথড 2FA — totp_enabled মাস্টার-সুইচ; মেথড-অনুযায়ী সাব-গার্ড
+    // (email-মেথডে সিক্রেট NULL হয়, তাই শুধু totp_secret-চেক করলে ইমেইল-ইউজার
+    // 'সক্রিয় নয়' দেখাত — মেথড-সচেতন গার্ড বাধ্যতামূলক)
+    totpEnabled: !!me.totp_enabled && (me.twofa_method === 'email' ? !!me.email : !!me.totp_secret),
+    twofaMethod: me.twofa_method === 'email' ? 'email' : 'totp',
+    userEmail: me.email || '',
+    emailPending: !!req.session.pendingUserEmailOtp,
+    emailMask: (req.session.pendingUserEmailOtp && req.session.pendingUserEmailOtp.emailMask) || '',
     secPending,
     secOtpauth: secPending ? totp.otpauthUri(secPending, me.username, 'লেখক ফোরাম') : null,
     backupFlash,
@@ -2111,10 +2119,50 @@ router.post('/settings/security/confirm', ensureLoggedIn, async (req, res) => {
   const code = String(req.body.totp_code || '').trim();
   if (!totp.verifyTotp(secret, code)) return res.redirect('/settings?secerr=bad_code#security');
   const plain = totp.generateBackupCodes(10);
-  await db.prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1, backup_codes = ? WHERE id = ?')
+  // সেশন ১১৫: মেথড-কলামও সিঙ্ক করা বাধ্যতামূলক — নইলে email→TOTP সুইচ-ব্যাকের
+  // পরেও twofa_method='email' থেকে যায় আর লগইন ঠিক ইমেইলে কোড পাঠাতে থাকে।
+  await db.prepare("UPDATE users SET totp_secret = ?, totp_enabled = 1, backup_codes = ?, twofa_method = 'totp' WHERE id = ?")
     .run(secret, JSON.stringify(totp.hashBackupCodes(plain)), req.session.user.id);
   req.session.pendingUserTotpSecret = null;
   req.session.backupCodesShown = plain;  // ফ্ল্যাশ — রেন্ডারের পর মুছে যায়
+  req.session.save(() => res.redirect('/settings?sec=enrolled#security'));
+});
+
+// ── সেশন ১১৫: ইমেইল-ওটিপি এনরোল শুরু (ধাপ ১) — ফ্রি সেকেন্ড-মেথড ──
+// নিবন্ধিত ইমেইলে ৬-অঙ্কের কোড যায় (Resend REST; কি না থাকলে কনসোল-ফলব্যাক)।
+// কুলডাউন ৪৫সে (helpers/otp.js) — ইনবক্স-স্প্যাম আটকায়।
+router.post('/settings/security/enroll-email', ensureLoggedIn, async (req, res) => {
+  const me = await db.prepare('SELECT id, email FROM users WHERE id = ?').get(req.session.user.id);
+  if (!me || !me.email) return res.redirect('/settings?secerr=no_email#security');
+  const issue = otp.issueOtp(me.id, 'email');
+  if (!issue.ok) {
+    return res.redirect('/settings?secerr=otp_rate&r=' + Math.max(issue.retryAfter, 1) + '#security');
+  }
+  const sent = await otp.sendMail({
+    to: me.email,
+    subject: 'লেখক ফোরাম: ২-ফ্যাক্টর অ্যাক্টিভেশন কোড',
+    html: otp.otpEmailHtml(issue.code, 'enroll'),
+  });
+  if (!sent.ok) return res.redirect('/settings?secerr=email_fail#security');
+  req.session.pendingUserEmailOtp = { ts: Date.now(), emailMask: otp.maskEmail(me.email) };
+  req.session.save(() => res.redirect('/settings?sec=email_sent#security'));
+});
+
+// ── সেশন ১১৫: ইমেইল-ওটিপি কনফার্ম (ধাপ ২) → 2FA সক্রিয় (মেথড='email') ──
+router.post('/settings/security/confirm-email', ensureLoggedIn, async (req, res) => {
+  if (!req.session.pendingUserEmailOtp) return res.redirect('/settings?secerr=no_pending#security');
+  const code = String(req.body.email_otp || '').trim();
+  const v = otp.verifyOtp(req.session.user.id, code, 'email');
+  if (!v.ok) {
+    return res.redirect('/settings?secerr=otp_bad' + (v.retryAfter != null ? '&left=' + v.retryAfter : '') + '#security');
+  }
+  // মেথড-সুইচ: পুরনো অ্যাপ-সিক্রেট বাতিল (সুইচ-ব্যাক = পুনঃএনরোল করতেই হবে),
+  // ব্যাকআপ-কোড টাটকা — দুই মেথডেই রিকভারি-পথ এক থাকে।
+  const plain = totp.generateBackupCodes(10);
+  await db.prepare("UPDATE users SET totp_enabled = 1, twofa_method = 'email', totp_secret = NULL, backup_codes = ? WHERE id = ?")
+    .run(JSON.stringify(totp.hashBackupCodes(plain)), req.session.user.id);
+  req.session.pendingUserEmailOtp = null;
+  req.session.backupCodesShown = plain;
   req.session.save(() => res.redirect('/settings?sec=enrolled#security'));
 });
 
@@ -2124,8 +2172,9 @@ router.post('/settings/security/disable', ensureLoggedIn, async (req, res) => {
   if (!me || !await bcrypt.compare(String(req.body.current_password || ''), me.password_hash)) {
     return res.redirect('/settings?secerr=password_wrong#security');
   }
-  await db.prepare('UPDATE users SET totp_enabled = 0, totp_secret = NULL, backup_codes = NULL WHERE id = ?').run(me.id);
+  await db.prepare("UPDATE users SET totp_enabled = 0, totp_secret = NULL, backup_codes = NULL, twofa_method = 'totp' WHERE id = ?").run(me.id);
   req.session.pendingUserTotpSecret = null;
+  req.session.pendingUserEmailOtp = null;
   req.session.save(() => res.redirect('/settings?sec=disabled#security'));
 });
 
@@ -2328,6 +2377,22 @@ router.post('/settings/notifications', ensureLoggedIn, async (req, res) => {
   };
   await db.prepare('UPDATE users SET notify_prefs = ? WHERE id = ?').run(JSON.stringify(prefs), me.id);
   res.redirect('/settings?ok=notifications#notifications');
+});
+
+// ── সেশন ১১৫: অ্যাকাউন্ট ইমেইল সেট/পরিবর্তন (পাসওয়ার্ড-গার্ডড) — ইমেইল-ওটিপির পূর্বশর্ত ──
+// ইমেইল-ওটিপি 2FA এই ঠিকানায় কোড পাঠায়; হাইজ্যাক-রোধে পরিবর্তনে সর্বদা বর্তমান
+// পাসওয়ার্ড লাগে। ফরম্যাট-যাচাই + ইউনিকনেস (অন্য-অ্যাকাউন্ট-সংঘর্ষ ব্লক)।
+router.post('/settings/account/email', ensureLoggedIn, async (req, res) => {
+  const me = await db.prepare('SELECT id, email, password_hash FROM users WHERE id = ?').get(req.session.user.id);
+  if (!me || !await bcrypt.compare(String(req.body.current_password || ''), me.password_hash)) {
+    return res.redirect('/settings?err=email_password_wrong#account');
+  }
+  const email = String(req.body.email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return res.redirect('/settings?err=email_invalid#account');
+  const dup = await db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, me.id);
+  if (dup) return res.redirect('/settings?err=email_taken#account');
+  await db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, me.id);
+  req.session.save(() => res.redirect('/settings?ok=email_saved#account'));
 });
 
 router.post('/settings/account/password', ensureLoggedIn, async (req, res) => {

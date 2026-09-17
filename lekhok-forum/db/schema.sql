@@ -355,3 +355,17 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_reports_post ON reports(post_id);
 CREATE INDEX IF NOT EXISTS idx_reports_comment ON reports(comment_id);
+
+-- ── Two-factor tokens (সেশন ১১৫: মাল্টি-মেথড 2FA — ইমেইল-ওটিপি) ──
+-- ক্ষণস্থায়ী ৬-অঙ্কের কোড (মেয়াদ ৫ মিনিট); attempts = ব্রুট-ফোর্স গার্ড কাউন্টার।
+-- twofa_method ('totp'|'email') users-টেবিলে LATER_COLUMNS দিয়ে যোগ হয়।
+CREATE TABLE IF NOT EXISTS two_factor_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  code TEXT NOT NULL,
+  method TEXT NOT NULL DEFAULT 'email',
+  expires_at INTEGER NOT NULL,
+  attempts INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_2fa_tokens_user ON two_factor_tokens(user_id, method);

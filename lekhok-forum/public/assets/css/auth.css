@@ -636,3 +636,11 @@ body.auth-split .mfa-code-wrap label{
 }
 @keyframes asCardIn{ from{ opacity:0; transform:translateY(16px) scale(.985); } to{ opacity:1; transform:none; } }
 @keyframes asBrandIn{ from{ opacity:0; } to{ opacity:1; } }
+
+/* ═══ সেশন ১১৫: ইমেইল-ওটিপি লগইন-চ্যালেঞ্জ — রিসেন্ড-নোট + কুলডাউন ═══ */
+.mfa-resend-note{display:flex;align-items:flex-start;gap:8px;background:#F0FDF4;border:1px solid #A7F3D0;color:#047857;border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.5;margin:0 0 12px}
+.mfa-resend-note.warn{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
+.mfa-resend-note i{margin-top:2px}
+.mfa-alt form{display:block}
+#mfaResendBtn{width:100%;text-align:center}
+@media (prefers-reduced-motion: reduce){.mfa-resend-note{transition:none}}

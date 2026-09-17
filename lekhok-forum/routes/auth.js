@@ -6,6 +6,7 @@ const { avatarUpload, withUpload } = require('../middleware/upload');
 const security = require('../helpers/security-config');
 const { loginLimiter, forgotLimiter, registerLimiter, clientIp } = require('../helpers/rate-limit');
 const totp = require('../helpers/totp');
+const otp = require('../helpers/otp'); // সেশন ১১৫: ইমেইল-ওটিপি (মাল্টি-মেথড 2FA)
 const rolePolicy = require('../helpers/role-policy');
 
 // ── সেশন ৪৬: রোল-বেজড রিডাইরেক্ট হেল্পার ─────────────────────────────────────
@@ -96,6 +97,36 @@ router.post('/login', async (req, res) => {
       // এখন অ্যাপের ৬-অঙ্কের কোড চাই (লগইন-ফর্মে কোনো 2FA-ফিল্ড নেই; সেটআপ
       // ইউজারের সেটিংস-পেজে)। পাসওয়ার্ড সেশনে রাখি না — শুধু মেয়াদী পেন্ডিং-স্টেট।
       const dest = safeNextPath(req.body.next || req.query.next) || dashboardFor(user);
+      // ── সেশন ১১৫: মাল্টি-মেথড 2FA — মেথড-রাউটিং ──
+      // twofa_method='email' হলে অ্যাপের বদলে নিবন্ধিত ইমেইলে ৬-অঙ্কের কোড যায়
+      // (Resend ফ্রি-টিয়ার; কি না থাকলে কনসোল-ফলব্যাক — কোড DB-তে থাকেই, যাচাই চলে)।
+      // মেথড='totp' বা লেগেসি (কলাম-NULL) হলে আগের অ্যাপ-চ্যালেঞ্জই চলে।
+      // গার্ড: ইমেইল-মেথড কিন্তু ইমেইলই নেই → লক-আউট-প্রতিরোধে অ্যাপ-সিক্রেট থাকলে
+      // সেটিই ফিরে যাই, নইলে 2FA-স্কিপ (fail-open, কনসোলে সতর্কতা)।
+      const mfaMethod = (user.totp_enabled && user.twofa_method === 'email') ? 'email' : 'totp';
+      if (mfaMethod === 'email' && user.email) {
+        const issue = otp.issueOtp(user.id, 'email');
+        let otpSent = false;
+        if (issue.ok) {
+          const sent = await otp.sendMail({
+            to: user.email,
+            subject: 'লেখক ফোরাম: লগইন ভেরিফিকেশন কোড',
+            html: otp.otpEmailHtml(issue.code, 'login'),
+          });
+          otpSent = !!sent.ok;
+          if (!sent.ok) console.warn('[auth] 2FA-ইমেইল পাঠানো ব্যর্থ — চ্যালেঞ্জ চলছে (ব্যাকআপ-কোড পথ খোলা)');
+        } else {
+          console.log(`[auth] 2FA-ইমেইল কুলডাউন (${issue.retryAfter}s) — আগের টোকেন (৫-মিনিট-মেয়াদ) বৈধ থাকতে পারে`);
+        }
+        req.session.mfaPending = {
+          kind: 'user', mode: 'email', uid: user.id, dest,
+          hint: user.full_name || user.username,
+          emailMask: otp.maskEmail(user.email),
+          otpSent, retryAfter: issue.ok ? 0 : issue.retryAfter,
+          ts: Date.now(),
+        };
+        return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
+      }
       if (user.totp_enabled && user.totp_secret) {
         req.session.mfaPending = { kind: 'user', uid: user.id, dest, hint: user.full_name || user.username, ts: Date.now() };
         return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa'); resolve(); }));
@@ -164,14 +195,16 @@ function mfaOf(req) {
 router.get('/login/2fa', async (req, res) => {
   const m = mfaOf(req);
   if (!m) return res.redirect('/login');
-  res.render('user/login-2fa', { error: null, hint: m.hint || '', currentPath: '/login/2fa' });
+  // সেশন ১১৫: মেথড-সচেতন রেন্ডার — mode='email' হলে ইমেইল-ওটিপি UI (রিসেন্ড-বাটনসহ)
+  res.render('user/login-2fa', { error: null, hint: m.hint || '', mode: m.mode || 'totp', emailMask: m.emailMask || '', otpSent: m.otpSent !== false, retryAfter: m.retryAfter || 0, resendMsg: req.query.sent ? 'নতুন কোড ইমেইলে পাঠানো হয়েছে।' : (req.query.rate ? `অনুগ্রহ করে ${req.query.rate} সেকেন্ড অপেক্ষা করে আবার চেষ্টা করুন।` : null), currentPath: '/login/2fa' });
 });
 
 router.post('/login/2fa', async (req, res) => {
   const m = mfaOf(req);
   if (!m) return res.redirect('/login');
   const code = String(req.body.totp_code || '').trim();
-  const render2fa = (error) => res.status(200).render('user/login-2fa', { error, hint: m.hint || '', currentPath: '/login/2fa' });
+  // সেশন ১১৫: মেথড-সচেতন রেন্ডার (ত্রুটি-ফেরতেও মোড/ইমেইল-মাস্ক অক্ষত)
+  const render2fa = (error) => res.status(200).render('user/login-2fa', { error, hint: m.hint || '', mode: m.mode || 'totp', emailMask: m.emailMask || '', otpSent: m.otpSent !== false, retryAfter: m.retryAfter || 0, resendMsg: null, currentPath: '/login/2fa' });
   if (!code) return render2fa('অ্যাপে দেখানো ৬-অঙ্কের কোড দিন।');
 
   // সেশন ৬২: ব্যর্থ-উত্তর গণনা + লক — ৫ম ব্যর্থতায় ধাপ বাতিল, লগইনে ফেরত।
@@ -191,12 +224,20 @@ router.post('/login/2fa', async (req, res) => {
 
   try {
     if (m.kind === 'user') {
-      const user = await db.prepare('SELECT id, username, full_name, avatar_url, gender, role, status, totp_secret, totp_enabled, backup_codes, must_change_password FROM users WHERE id = ?').get(m.uid);
-      if (!user || !user.totp_enabled || !user.totp_secret || user.status === 'banned') {
+      const user = await db.prepare('SELECT id, username, full_name, avatar_url, gender, role, status, email, totp_secret, totp_enabled, twofa_method, backup_codes, must_change_password FROM users WHERE id = ?').get(m.uid);
+      // সেশন ১১৫: মেথড-নির্ণয় — twofa_method='email' হলে ওটিপি-টোকেন দিয়ে যাচাই,
+      // নইলে অ্যাপ-টিওটিপি। লেগেসি-ইউজারের (কলাম NULL) মেথড 'totp'-ই ধরা হয়।
+      const method = (user && user.totp_enabled && user.twofa_method === 'email') ? 'email' : 'totp';
+      if (!user || !user.totp_enabled
+          || (method === 'totp' && !user.totp_secret)
+          || (method === 'email' && !user.email)
+          || user.status === 'banned') {
         req.session.mfaPending = null;
         return res.redirect('/login');
       }
-      let ok = totp.verifyTotp(user.totp_secret, code);
+      let ok = (method === 'email')
+        ? otp.verifyOtp(user.id, code, 'email').ok
+        : totp.verifyTotp(user.totp_secret, code);
       if (!ok && user.backup_codes) {
         try {
           const codes = JSON.parse(user.backup_codes);
@@ -255,6 +296,28 @@ router.post('/login/2fa', async (req, res) => {
     console.error('[auth] /login/2fa error:', e);
     return render2fa('যাচাই করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
   }
+});
+
+// ── সেশন ১১৫: ইমেইল-ওটিপি রিসেন্ড (লগইন-চ্যালেঞ্জ পেজ থেকে) ──
+// কুলডাউন-গার্ড helpers/otp.js-এ (৪৫সে); ব্যর্থতায় ?rate=<sec> ফ্ল্যাশ।
+router.post('/login/2fa/resend', async (req, res) => {
+  const m = mfaOf(req);
+  if (!m || m.kind !== 'user' || m.mode !== 'email') return res.redirect('/login');
+  const user = await db.prepare('SELECT id, email FROM users WHERE id = ?').get(m.uid);
+  if (!user || !user.email) { req.session.mfaPending = null; return res.redirect('/login'); }
+  const issue = otp.issueOtp(user.id, 'email');
+  if (!issue.ok) {
+    const rate = Math.max(issue.retryAfter, 1);
+    return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa?rate=' + rate); resolve(); }));
+  }
+  const sent = await otp.sendMail({
+    to: user.email,
+    subject: 'লেখক ফোরাম: লগইন ভেরিফিকেশন কোড',
+    html: otp.otpEmailHtml(issue.code, 'login'),
+  });
+  m.otpSent = !!sent.ok; m.retryAfter = 0;
+  req.session.mfaPending = m;
+  return new Promise((resolve) => req.session.save(() => { res.redirect('/login/2fa?sent=1'); resolve(); }));
 });
 
 // ── Register (GET) ───────────────────────────────────────────────────────────
