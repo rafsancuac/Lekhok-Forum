@@ -341,15 +341,66 @@ router.get('/birthdays', async (req, res) => {
 });
 
 // ── Notifications page ──────────────────────────────────────────────────────
+// ── সেশন ১১৮: নোটিফিকেশন ফিল্টার-ট্যাবের server-side ?type= ডিপ-লিংক (noscript-নিরাপদ) ──
+// session-১১৯ ক্লায়েন্ট-সাইড nft-chip-এর সাথে ইউনিয়ন: চিপ-UX তাদেরটাই (ক্যানোনিকাল,
+// dismiss-সিঙ্কসহ); আমার-ডেল্টা = ?type= কুয়েরি-প্যারামে সার্ভার-সাইড প্রি-ফিল্টার —
+// শেয়ারেবল/bookmark-যোগ্য URL + noscript-এও ফিল্টার কাজ করে। ফ্যামিলি-কী = তাদের
+// data-nft-চিপ-কী-এর সাথে ১:১ (ভিউ-লেয়ারে মিলিয়ে চিপ-অ্যাকটিভেট হয়)।
+//   • reply   = comment, reply, mention... না — তাদের G117-ম্যাপ: mention আলাদা চিপ
+//   • reaction= reaction, like
+//   • message = message, call (সেশন-১১৮-ইউনিয়ন: কল-নোটিফিকেশন 'অন্যান্য'-তে নয় —
+//               বার্তা-চিপে, missed-call-ব্যাজ-মার্কআপ কমেন্ট-পরিবারের পাশেই থাকে)
+//   • follow  = follow (সেশন-১১৮: নিজস্ব-চিপ — আগে 'অন্যান্য'-এ হারাত)
+//   • other   = moderation, system, birthday + সব-অজানা-টাইপ (fallback বাকেট —
+//               ভবিষ্যৎ-টাইপ যোগ হলেও ফিল্টার কখনো রো-হারায় না)
+const NF_FAMILIES = [
+  { key: 'mention',  types: ['mention'] },
+  { key: 'reply',    types: ['comment', 'reply'] },
+  { key: 'reaction', types: ['reaction', 'like'] },
+  { key: 'message',  types: ['message', 'call'] },
+  { key: 'follow',   types: ['follow'] },
+  { key: 'other',    types: ['moderation', 'system', 'birthday'] },
+];
+const NF_KNOWN = NF_FAMILIES.flatMap(f => f.types);
+const NF_FAMILY_BY_KEY = Object.fromEntries(NF_FAMILIES.map(f => [f.key, f]));
+
 router.get('/notifications', async (req, res) => {
   if (!req.session.user) return res.redirect('/login');
   // সেশন ১০৭: ফুল-পেজ তালিকাতেও actor-avatar — ড্রপডাউন (recent-API, সেশন-১০২/১০৫)
   // একই শেপ: LEFT JOIN + legacy link-fallback (actor_id-NULL পুরনো রোতে
   // /profile/<u> লিংক থেকে অ্যাক্টর-শনাক্ত); দুই জায়গাতেই আউটপুট-ফিল্ড এক।
   const meId = req.session.user.id;
+
+  // সেশন ১১৮: চিপ-গণনা — সম্পূর্ণ-তালিকার GROUP BY (LIMIT-৫০-এর স্লাইসে নয়) —
+  // এক-কুয়েরি, সস্তা; অজানা-টাইপ other-বাকেটে যোগ হয়।
+  const famCounts = Object.fromEntries(NF_FAMILIES.map(f => [f.key, 0]));
+  try {
+    const trows = await db.prepare('SELECT type, COUNT(*) AS c FROM notifications WHERE user_id = ? GROUP BY type').all(meId);
+    trows.forEach(r => {
+      const fam = NF_FAMILIES.find(f => f.types.includes(r.type));
+      famCounts[fam ? fam.key : 'other'] += r.c;
+    });
+  } catch (_) {}
+
+  // ?type= ফিল্টার — চেনা-কী ছাড়া সব 'all' (injection-নিরাপদ: কেবল-হোয়াইটলিস্ট)
+  const activeType = NF_FAMILY_BY_KEY[req.query.type] ? req.query.type : 'all';
+  let where = 'n.user_id = ?';
+  const params = [meId];
+  if (activeType !== 'all') {
+    const fam = NF_FAMILY_BY_KEY[activeType];
+    if (fam.key === 'other') {
+      // other = স্পষ্ট-টাইপ + সব-অজানা (fallback বাকেট)
+      where += ` AND (n.type IN (${fam.types.map(() => '?').join(',')}) OR n.type NOT IN (${NF_KNOWN.map(() => '?').join(',')}))`;
+      params.push(...fam.types, ...NF_KNOWN);
+    } else {
+      where += ` AND n.type IN (${fam.types.map(() => '?').join(',')})`;
+      params.push(...fam.types);
+    }
+  }
+
   const items = await db.prepare(`SELECT n.*, a.avatar_url AS actor_avatar, a.full_name AS actor_name
                                   FROM notifications n LEFT JOIN users a ON a.id = n.actor_id
-                                  WHERE n.user_id = ? ORDER BY n.created_at DESC, n.id DESC LIMIT 50`).all(meId);
+                                  WHERE ${where} ORDER BY n.created_at DESC, n.id DESC LIMIT 50`).all(...params);
   try {
     const legacy = items.filter(n => !n.actor_id && n.link);
     const unames = [...new Set(legacy.map(n => {
@@ -370,7 +421,12 @@ router.get('/notifications', async (req, res) => {
     }
   } catch (_) {}
   await db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(meId);
-  res.render('user/notifications', { items, currentPath: '/notifications' });
+  // সেশন ১১৮: চিপ-ডেটা (ভিউ-লেয়ারের G117-চিপের কী-নামেই; ভিউ ?type= দিয়ে চিপ-অ্যাকটিভেট করে)
+  const families = [
+    { key: 'all', count: NF_FAMILIES.reduce((s, f) => s + famCounts[f.key], 0) },
+    ...NF_FAMILIES.map(f => ({ key: f.key, count: famCounts[f.key] })),
+  ];
+  res.render('user/notifications', { items, currentPath: '/notifications', families, activeType });
 });
 
 module.exports = router;

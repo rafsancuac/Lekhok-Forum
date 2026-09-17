@@ -1,13 +1,17 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
 <%# সেশন ১১৭: টাইপ→গ্রুপ-ম্যাপ + বাংলা-সংখ্যা — ফিল্টার-চিপ এখান থেকেই গণনা হয় %>
+<%# সেশন ১১৮-ইউনিয়ন: ① message-গ্রুপে 'call' (missed-call 'অন্যান্য'-তে নয় — বার্তা-ও-কল
+    চিপে; missed-call-ব্যাজ-মার্কআপ ইতিমধ্যে-ই comment-পরিবারের পাশে) ② follow নিজস্ব-চিপ
+    (আগে 'অন্যান্য'-এ হারাত) ③ রুট-লেয়ারের ?type= ডিপ-লিংকে চিপ-প্রি-অ্যাকটিভেট (নিচে স্ক্রিপ্ট) %>
 <%
   const bn117 = (n) => String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[+d]);
   const G117 = [
     { key: 'mention',  label: 'ম্যানশন',         icon: 'fa-at',       types: ['mention'] },
     { key: 'reply',    label: 'উত্তর ও মন্তব্য', icon: 'fa-comments', types: ['reply', 'comment'] },
     { key: 'reaction', label: 'প্রতিক্রিয়া',      icon: 'fa-heart',    types: ['like', 'reaction'] },
-    { key: 'message',  label: 'বার্তা',           icon: 'fa-envelope', types: ['message'] },
-    /* 'other' = বাকি-সব (follow/complaint/birthday/call/system/...) */
+    { key: 'message',  label: 'বার্তা ও কল',    icon: 'fa-envelope', types: ['message', 'call'] },
+    { key: 'follow',   label: 'অনুসরণ',         icon: 'fa-user-plus', types: ['follow'] },
+    /* 'other' = বাকি-সব (moderation/complaint/birthday/system/...) */
     { key: 'other',    label: 'অন্যান্য',         icon: 'fa-bell',     types: [] }
   ];
   const gKeyOf117 = (t) => (G117.find(g => g.types.indexOf(t) !== -1) || G117[G117.length - 1]).key;
@@ -213,6 +217,10 @@
         }
       };
     })();
+    <%# সেশন ১২১-ইউনিয়ন-নোট: ?type=-init অ্যাকটিভেট-স্ক্রিপ্ট এখন উপরের session121-ব্লকেই
+        (setUrl121 + synthetic-click — ক্যানোনিকল, bar-ডেলিগেশনে ফুল-পাইপলাইন চলে);
+        আমার সমান্তরাল-কপি প্রত্যাহৃত (ডুপ্লিকেট-শূন্য)। সার্ভার-সাইড প্রি-ফিল্টার
+        (daily.js NF_FAMILIES) অক্ষত — noscript-এ ?type= তখনও সার্ভারেই ফিল্টার হয়। %>
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
