@@ -126,3 +126,43 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 @keyframes fdrankFlicker{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.75}}
 @media (prefers-reduced-motion:reduce){.fd-rank-chip,.fd-rank-chip.is-hot i{animation:none}}
 @media print{.fd-rank-chip{display:none}}
+
+/* ══ সেশন ১০৭ (রোডম্যাপ-০৫ কার্সার-পলিশ): ইনফিনিট-স্ক্রল লোডিং-পলিশ — ══
+   স্কেলেটন-শিমার কার্ড (লোড-চলাকালীন ফিডে প্রাণ) + স্টেট-পিল গ্লাস-ট্রিটমেন্ট +
+   done-অবস্থা এমারল্ড-টিন্ট। style.css-এর বেস .feed-more-নিয়মের ওপর পাজ-লেয়ার। */
+.feed-more { flex-direction: column; gap: 12px; }
+.feed-more-sentinel { height: 1px; margin: 0; }
+.feed-more-spinner {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 999px;
+  background: linear-gradient(135deg, rgba(5,150,105,.09), rgba(13,148,136,.12));
+  border: 1px solid rgba(5,150,105,.20);
+  color: #047857; font-size: .85rem; font-weight: 600; letter-spacing: .01em;
+  box-shadow: 0 2px 10px -4px rgba(5,150,105,.35);
+}
+@supports (backdrop-filter: blur(6px)) {
+  .feed-more-spinner { backdrop-filter: blur(6px); }
+}
+/* লোড-চলাকালীন দুই-স্তর স্কেলেটন-কার্ড (শিমার সুইপ) — ::before বড়-কার্ড, ::after ছোট */
+.feed-more.is-loading::before,
+.feed-more.is-loading::after {
+  content: ''; display: block; width: 100%; max-width: 560px;
+  border-radius: 14px; border: 1px solid rgba(5,150,105,.10);
+  background: linear-gradient(100deg, rgba(5,150,105,.05) 30%, rgba(5,150,105,.13) 50%, rgba(5,150,105,.05) 70%);
+  background-size: 220% 100%;
+  animation: fmShimmer107 1.15s linear infinite;
+}
+.feed-more.is-loading::before { height: 92px; }
+.feed-more.is-loading::after { height: 54px; animation-delay: .14s; }
+@keyframes fmShimmer107 { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+/* শেষ-পেজ নামলে বাটন 'সব লেখা দেখানো হয়েছে' — এমারল্ড-টিন্ট + ডিমড চেক */
+.feed-more--done .feed-more-btn {
+  color: #047857; border-color: rgba(5,150,105,.25);
+  background: linear-gradient(135deg, rgba(5,150,105,.08), rgba(13,148,136,.05));
+}
+.feed-more--done .feed-more-btn i { opacity: .75; }
+@media (prefers-reduced-motion: reduce) {
+  .feed-more.is-loading::before,
+  .feed-more.is-loading::after { animation: none; }
+}
+@media print { .feed-more, .feed-more-sentinel { display: none !important; } }
