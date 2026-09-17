@@ -1066,3 +1066,19 @@ Stage Summary:
 - ধরা-বাগ (নিজের-তৈরি): rsx-totop FAB গ্লোবাল #backToTop-এর সাথে ওভারল্যাপ (ক্লিক-ব্লকড) → সরানো; FAB-occupancy-গোটচা PLANS-এ
 - role-policy §১৭ (stat অ্যাবিউজ-গার্ড ×৬) → **131/131 ALL GREEN**; E2E: চিপ ১/৩+৬৭% ✓ রিজুম-চেইন (লিস্টিং→/resources/3→'দ্বিতীয় পর্ব · ১:৩৩') ✓ নন-অডিও-পর্বে resume-সাপ্রেশন-সঠিক ✓ 390px×৩-০ ✓ কনসোল-০ ✓ LS-রেজিডু-ক্লিন ✓
 - গোটচা: lsKey-এ `slice(0,48)` হুবহু দরকার (slice-বিহীন সিড-কী মিলেনি — E2E-মিথ্যা-ফেইল); rebase-ইউনিয়ন PLANS+PROJECT (session122/123-এর সাথে); push 74b31d3
+
+---
+Task ID: session119-গ (cron webDevReview রাউন্ড — চূড়ান্ত-ইউনিয়ন: session119/120/121/122/123-রেস ×৫)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: অবস্থা-মূল্যায়ন + agent-browser QA → P0-ডিসমিস-স্বাধীন-প্রমাণ + session117-সুপারিশ ①③④⑤-চেষ্টা → সম্পূর্ণ-ইউনিয়ন-যাচাই-রাউন্ড
+
+Work Log:
+- QA-ফেজ: ১১-পেজ স্মোক + role-policy 125/125 + cursor 25/25 + guard ✓
+- 🚨 P0-স্বাধীন-আবিষ্কার: /notifications 'সরান' নীরব-মৃত (session114-রুট da91a80-র rebase-reapply-এ pure-deletion; curl-প্রোব POST→303-জেনেরিক-ফলব্যাক) — ক্যানোনিকাল-ফিক্স = session119-এজেন্টের ee0d9df; আমার-প্রোব-চেইন (anon 401/own removed:true/re removed:false/non-numeric নিরাপদ) স্বাধীন-যাচাই
+- ফিচার-চেষ্টা ①③④⑤ সব-বাস্তবায়ন-করেও push-রেস ×৫-এ প্রত্যাহার: ①④→session121 ⑤→session122 (.mnp-dot) ③→session123 (data-cover+__lfSbUrl সমৃদ্ধ-সংস্করণ) — union-নীতিতে সব-তাদের-ক্যানোনিকাল গৃহীত
+- মার্জ-পরবর্তী সম্পূর্ণ-সহাবস্থান-যাচাই (ismail+testuser): c=লাইভ ✓ উডট (প্রেরণ→ডট ✓ পঠন→GONE ✓) তাদের-① (server-truth ৮→৫ ✓) তাদের-④ (?type= URL-সিঙ্ক+রিলোড ✓) 390px-০ ✓ কনসোল-০ ✓ রিগ্রেশন ১২৫+২৫+guard ✓
+- push-রেস ×৩-হ্যান্ডলিং (pull --rebase ×৩, কনফ্লিক্ট ×১১ ইউনিয়ন); রীতি-পুনঃপ্রমাণ: rebase-এ --theirs=আমার-কমিট; synthetic .click()-এ stale-repaint-মিথ্যা-নেগেটিভ → সার্ভার-সত্য রিলোডে-যাচাই
+
+Stage Summary:
+- **কোড-ল্যান্ড = শূন্য (৫-ফিচার-ই প্যারালাল-এজেন্টদের দ্বারা ল্যান্ডেড); আমার-অবদান = P0-স্বাধীন-প্রমাণ-চেইন + মার্জ-পরবর্তী সম্পূর্ণ-সহাবস্থান-E2E + ডক-গোটচা ×৪ (E2E-দাবি≠সার্ভার-সত্য / synthetic-click stale-repaint / naive brace-কাউন্ট / RP_PORT+BASE-invocation)** — ডুপ্লিকেশন-শূন্য-ইউনিয়ন-সম্পন্ন
+- পরের-এজেন্ট: session124 থেকে

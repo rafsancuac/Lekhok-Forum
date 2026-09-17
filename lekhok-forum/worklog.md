@@ -1084,3 +1084,38 @@ Stage Summary:
 **Stage Summary:**
 - মাস্টার-রোডম্যাপ ২০/২০ অক্ষুণ্ণ; নোটিফ-ফিল্টার এখন URL-state-সহ (শেয়ারেবল + noscript-নিরাপদ)
 - পরবর্তী: নোটিফ-ড্রপডাউনেও ?type=-সিঙ্কড-লিংক (ঐচ্ছিক), optimistic-থ্রেড-ইনসার্ট (session-114-নোট এখনো-খোলা), লাইভ-Turso-রিসেট + সিক্রেট-রোটেশন ×৪ (টোকেন-ধারী-এজেন্ট)
+
+---
+Task ID: session119-খ (cron webDevReview রাউন্ড — session119/120/121-রেস-পরবর্তী ইউনিয়ন)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: অবস্থা-মূল্যায়ন + agent-browser QA → P0-ডিসমিস-স্বাধীন-প্রমাণ + PLANS session117-সুপারিশ ③⑤ (crx-কভার-থাম্বনেইল + মিনি-বাবল unread-ডট) + রিগ্রেশন + push
+
+Work Log:
+- QA-ফেজ: ১১-পেজ স্মোক ২০০ + role-policy 125/125 + cursor 25/25 + guard ✓ (গোটচা: role-policy RP_PORT-env, cursor BASE=argv[2])
+- 🚨 P0-স্বাধীন-আবিষ্কার: /notifications 'সরান' নীরব-মৃত — curl-প্রোব: POST dismiss → 303-জেনেরিক-ফলব্যাক; git-ট্রেসে da91a80-র rebase-reapply session114-রুট pure-deletion (session119-এজেন্টের ee0d9df = ক্যানোনিকাল-ফিক্স; আমার-পুনঃস্থাপন স্বাধীন-প্রমাণ-হিসেবে যাচাই-অবদান: anon 401 / own removed:true / re removed:false / non-numeric নিরাপদ)
+- ফিচার-③ crx-কভার-থাম্বনেইল: **c=চুক্তি নতুন** — article-reading.js savePosে og:image (প্রিফিক্স-গার্ড: https?:// বা /uploads|/assets/img/) → continue-reading.js উইজেট-রো (thumb + .crx-rowmain) + ফুল-পেজ .crx-tiletop-কভার-স্ট্রিপ (টাইল-কিনারায় ব্লিড) + .crx-tilepct %-ব্যাজ (নিচে-বাঁয়ে — ×-বাটন-সংঘর্ষ-এড়ানো) + c-বিহীন-ফলব্যাক পালক-আইকন (img-onerror-ও); dashboard.css session119-ব্লক
+- ফিচার-⑤ মিনি-বাবল unread-ডট: MiniBubblePreview .mnp-udot (aria-label রোল — **sr-only-নিষিদ্ধ: .conv-snippet-textContent-সার্চ-চুক্তি**) + .mnp-bubble.has-unread + data-mnp-unread-হুক + title-এ "— অপঠিত বার্তা"; shared.css session119-ব্লক
+- union-রেস: push-পূর্ব fetch-এ session119/120/121 আগে-ল্যান্ডড (P0 + ①ড্রপডাউন-dismiss + ④?type= + optimistic-কমেন্ট + সার্চ-হাইলাইট) → আমার ① (main.js-EOF-IIFE + header-✕) ও ④ (client-side setUrl) **প্রত্যাহৃত** — তাদের-ক্যানোনিকাল গৃহীত (header-partial-IIFE badge121+keyboard; setUrl121+server-side-প্রি-ফিল্টার); আমার main.js-ট্রিম node --check-প্রমাণিত; rebase-কনফ্লিক্ট ×৯ ইউনিয়ন-সমাধান
+- E2E (মার্জ-পরবর্তী, ismail+testuser দুই-সেশন): ③ c=লাইভ (/articles/1 ৪৫%→ls c=og-default ✓ উইজেট-থাম্ব ✓ ফুল-পেজ কভার-স্ট্রিপ+৫৩%-ব্যাজ ✓ ফলব্যাক-টাইল ✓ টেস্ট-এন্ট্রি-ক্লিনআপ ✓) ⑤ উডট (ismail→testuser বার্তা → .mnp-udot+has-unread+title ✓ পঠন-পরে GONE ✓) তাদের-① (ডিসমিস → server-truth ৮→৫ ✓ synthetic-দ্রুতক্রমে stale-repaint-observed — রিয়েল-ফ্লো-নিরাপদ) তাদের-④ (?type=message URL-সিঙ্ক+রিলোড-অটো-চিপ+G117-ইউনিয়ন-লেবেল ✓ শূন্য-পরিবার-এম্পটি ✓) 390px ×৪-০ ✓ কনসোল-০ ✓ রিগ্রেশন ১২৫+২৫+guard ✓
+- ডকস: PLANS session119-খ-নোট + PROJECT চেঞ্জলজ + worklog ×২
+
+Stage Summary:
+- অনন্য-ল্যান্ডেড: ③ crx-থাম্বনেইল (c=চুক্তি — ভবিষ্যৎ-এজেন্ট এই-শেপ-রক্ষা করুন); ①④⑤ প্রত্যাহার-নোট (session121/122-ক্যানোনিকাল — ⑤ .mnp-dot)
+- মূল-শিক্ষা: E2E-দাবি ≠ সার্ভার-সত্য — এন্ডপয়েন্ট HTTP-প্রোব-রীতি; synthetic .click()-এ stale-repaint-মিথ্যা-নেগেটিভ — সার্ভার-সত্য রিলোডে যাচাই
+- **পরের-এজেন্ট: session122 থেকে**
+
+---
+Task ID: session119-গ (cron webDevReview রাউন্ড — চূড়ান্ত-ইউনিয়ন: session119/120/121/122/123-রেস)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: অবস্থা-মূল্যায়ন + agent-browser QA → P0-ডিসমিস-স্বাধীন-প্রমাণ + session117-সুপারিশ ①③④⑤-চেষ্টা → সম্পূর্ণ-ইউনিয়ন-যাচাই-রাউন্ড (রেস ×৫)
+
+Work Log:
+- QA-ফেজ: ১১-পেজ স্মোক + role-policy 125/125 + cursor 25/25 + guard ✓ (গোটচা: role-policy RP_PORT-env, cursor BASE=argv[2])
+- 🚨 P0-স্বাধীন-আবিষ্কার: /notifications 'সরান' নীরব-মৃত (session114-রুট da91a80-র rebase-reapply-এ pure-deletion; curl-প্রোব: POST→303-জেনেরিক-ফলব্যাক) — ক্যানোনিকাল-ফিক্স session119-এজেন্টের ee0d9df; আমার-প্রোব-চেইন (anon 401/own removed:true/re removed:false/non-numeric নিরাপদ) স্বাধীন-যাচাই
+- ফিচার-চেষ্টা ①③④⑤ সব-বাস্তবায়ন-করেও push-রেস ×৫-এ প্রত্যাহার: ①④→session121 (header-IIFE badge121+keyboard; setUrl121+server-side-প্রি-ফিল্টার) ⑤→session122 (.mnp-dot+mnp-bubble--unread CSS-সম্পূর্ণ) ③→session123 (data-cover+/img/cover/-SVG+__lfSbUrl+১৬:৯-স্ট্রিপ — সমৃদ্ধ-সংস্করণ) — union-নীতিতে সব-তাদের-ক্যানোনিকাল গৃহীত; আমার-কোড-ট্রিম (main.js-EOF-IIFE) node --check-প্রমাণিত
+- মার্জ-পরবর্তী সম্পূর্ণ-সহাবস্থান-যাচাই (ismail+testuser দুই-সেশন): c=লাইভ (/articles/1→ls c=og-default ✓ উইজেট+ফুল-পেজ থাম্ব ✓ ফলব্যাক-টাইল ✓) উডট (প্রেরণ→ডট ✓ পঠন→GONE ✓) তাদের-① (server-truth ৮→৫ ✓ synthetic-দ্রুতক্রমে stale-repaint — রিয়েল-ফ্লো-নিরাপদ) তাদের-④ (?type=message URL-সিঙ্ক+রিলোড-অটো-চিপ ✓ শূন্য-পরিবার-এম্পটি ✓) 390px ×৪-০ ✓ কনসোল-০ ✓ রিগ্রেশন ১২৫+২৫+guard ✓
+- push-রেস ×৩-হ্যান্ডলিং: pull --rebase ×২ + কনফ্লিক্ট ×১১ (docs-ইউনিয়ন, অটো-ওয়ার্কলগ-কমিট সহ); রীতি-পুনঃপ্রমাণ: rebase-এ --theirs=আমার-কমিট (বিপরীত); synthetic .click()-এ stale-repaint-মিথ্যা-নেগেটিভ → সার্ভার-সত্য রিলোডে-যাচাই
+
+Stage Summary:
+- **কোড-ল্যান্ড = শূন্য (৫-ফিচার-ই প্যারালাল-এজেন্টদের দ্বারা ল্যান্ডেড); আমার-অবদান = P0-স্বাধীন-প্রমাণ-চেইন + মার্জ-পরবর্তী সম্পূর্ণ-সহাবস্থান-E2E + ডক-গোটচা ×৪** — ডুপ্লিকেশন-শূন্য-ইউনিয়ন-সম্পন্ন
+- পরের-এজেন্ট: session124 থেকে
