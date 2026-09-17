@@ -925,3 +925,20 @@ Stage Summary:
 - ডিজাইন-সিস্টেম কভারেজ এখন: ফিড + আর্টিকেল-কমেন্ট + **QA-উত্তর-থ্রেড** + মেসেঞ্জার — ৫টি অপরিবর্তনীয় নিয়ম প্ল্যাটফর্ম-ব্যাপী
 - guard নতুন-ক্ষমতা: hex-স্ক্যান (ক্যানোনিকাল-লেয়ারে রঙ = শুধু টোকেন)
 - অবশিষ্ট/পরবর্তী: ① ইনবক্স-মিনি-MessengerBubble (messages-list প্রিভিউ) ② role-policy ফুল-স্যুট ফ্রেশ-ক্লোনে চালিয়ে SEED_CMT-ডকুমেন্টেশন ③ qa-উত্তরের top-answer-chip AJAX-রিফ্রেশ-পরেও টেকনামী রাখা (এখন রিলোডে ফেরে) ④ /notifications ফুল-পেজে actor-avatar
+---
+Task ID: session-113 (cron webDevReview রাউন্ড — origin/main @ 9e47c98 থেকে)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → স্বাধীন-ফোকাস: session105-এর শেষ-অবশিষ্ট সুপারিশ (qa-single উত্তর-কার্ড CommentItem-ক্যানোনিকালাইজেশন) + cursor-টেস্ট-রোবাস্টনেস + স্টাইলিং-পলিশ
+
+Work Log:
+- QA-ফেজ: ১৪-পেজ স্মোক ✓ guard:design ✓ role-policy 107/107 (seed-test-users.js-সহ — স্পষ্টীকরণ: দুই-সিড-ই-লাগে) + calls 54/54 + cursor 20/21→রোবাস্টনেস-ফিক্সে 22/22
+- ব্রাউজার-QA: হোম/লগইন/QA-ফ্লো/notifications কনসোল-০; সার্ভিস-ওয়ার্কার অফলাইন-পেজ গ্রেসফুল-ডিগ্রেডেশন-প্রমাণিত
+- ফিচার: CommentItem chip+noReply-প্যারাম (backward-compatible) → qa-single ক্যানোনিকাল-মাইগ্রেশন + শীর্ষ-উত্তর-চিপ + গেস্ট-ব্যাজ-প্যারিটি + MutationObserver-কাউন্টার-সিঙ্ক + shared.css session113-ব্লক (brace-০)
+- বাগ-ফিক্স: comment-tools.js data-raw-স্টেল-প্রিফিল (সব-সারফেসে) + cursor-টেস্ট ২৬→৩৫ (env-artifact-ফল্স-ফেইল এড়ানো)
+- E2E: react/edit/delete/counter-sync/guest-view/desktop+390px-০/কনসোল-০ ✓ রিগ্রেশন 107/107+54/54+22/22 ✓ টেস্ট-আর্টিফ্যাক্ট-ক্লিনআপ ✓
+- ডকস: repo-worklog + PLANS session113-নোট + PROJECT চেঞ্জলজ
+
+Stage Summary:
+- session105-ডিজাইন-সিস্টেম-সুপারিশ-তালিকা এখন সম্পূর্ণ-শূন্য-অবশিষ্ট; qa উত্তরে FB-প্যারিটি (প্যালেট/ব্যাজ/৩-ডট)
+- পরিবেশ-গোটচা পুনঃপ্রমাণিত: ব্যাকগ্রাউন্ড-সার্ভার প্রতি-ইনভোকেশনে মরে → মাল্টি-স্টেপ-ফ্লো ফ্রেশ-বুট+টাইট-চেইন (lf-boot.sh হেল্পার /home/z/my-project/download/)
+- পরবর্তী: role-policy-তে comment-API-চেক · tokens-হেক্স-স্ক্যান-গার্ড · qa-কম্পোজার অটো-গ্রো · notifications ফিল্টার-ট্যাব
