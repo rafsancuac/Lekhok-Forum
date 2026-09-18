@@ -1543,7 +1543,7 @@ Work Log:
 
 Stage Summary:
 - @মেনশন-চক্র পূর্ণ: কমেন্ট/উত্তরে বিজ্ঞপ্তি-ডেলিভারি + /qa-তে অটোকমপ্লিট
-- পরের-এজেন্ট: session148 থেকে (PLANS session145-নোটে ৪-প্রস্তাব)
+- পরের-এজেন্ট: session150 থেকে (PLANS session145-নোটে ৪-প্রস্তাব)
 - **push-সমাপ্তি (cron-r15):** 093f97a → origin/main (d46a55a-উপরে রিবেজড; পঞ্চম-push-রেস — সমান্তরাল session144(feed-pill)-এজেন্টের সাথে লেবেল-দখল → আমার চূড়ান্ত-লেবেল session145; ডকস-ইউনিয়ন: PROJECT/PLANS/worklog দ্বি-§144-সংঘর্ষে union + আমার-অংশ 145-রিলেবেল) — পরের-এজেন্ট session148 থেকে
 
 ---
@@ -1560,7 +1560,7 @@ Work Log:
 
 Stage Summary:
 - ইউজার-রিপোর্টকৃত ৩-বাগ + ১-লুকানো-রেস সম্পূর্ণ-ফিক্সড, চার-সুইট-রিগ্রেশন-সবুজ
-- পরের-এজেন্ট: session148 থেকে (PLANS-বকেয়া ×৪)
+- পরের-এজেন্ট: session150 থেকে (PLANS-বকেয়া ×৪)
 - পরের-এজেন্ট: session146 থেকে (PLANS session145-নোটে ৪-প্রস্তাব)
 - **push-সমাপ্তি (cron-r15):** 093f97a → origin/main (d46a55a-উপরে রিবেজড; পঞ্চম-push-রেস — সমান্তরাল session144(feed-pill)-এজেন্টের সাথে লেবেল-দখল → আমার চূড়ান্ত-লেবেল session145; ডকস-ইউনিয়ন: PROJECT/PLANS/worklog দ্বি-§144-সংঘর্ষে union + আমার-অংশ 145-রিলেবেল) — পরের-এজেন্ট session146 থেকে
 Task ID: session143 (cron — স্টেটাস-অ্যাসেসমেন্ট → QA → ফিচার-রাউন্ড → push)
@@ -1585,3 +1585,24 @@ Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্�
 - tokens.css-এ pre-existing ভাঙা-আর্টিফ্যাক্ট `(wip(session136)...)` :root-এর ভেতরে inert — HEAD-থেকে আছে, স্পর্শ-করা-হয়নি (ভবিষ্যৎ-পরিষ্কারণ-প্রার্থী)
 - প্রস্তাব-কিউ: style.css-র্যাচেট (১৩৯৫ — ২-৩-রাউন্ডে ভাগ) · auth/gallery/messenger.css (১২৩/১২৩/১৪৪) · /qa-মেনশন-অটোকমপ্লিট (session140-②) · og-কার্ড-পোস্ট-বডিতে (session142-①) · কল-ইতিহাসে degrade-রেকর্ড (db-স্কিমা) · লাইভ-Turso-রিসেট (টোকেন-ধারী)
 - **পরের-এজেন্ট: session144 থেকে**; push-পূর্বে git pull --rebase (union-মার্জ PLANS/PROJECT/worklog)
+
+---
+Task ID: session147 (cron — স্টেটাস-অ্যাসেসমেন্ট → QA → ফিচার-রাউন্ড → push) [relabel: আমার-144→149 — push-রেসে সমান্তরাল session144/145/146 আগে-ল্যান্ডেড (max+1); কোড-আইডি s144 অক্ষত]
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্যায়ন + agent-browser QA + ফিচার/স্টাইল রাউন্ড + হ্যান্ডওভার
+
+## Current Project Status / Assessment
+- প্রবেশ: origin/main @ ad8af3c (session143) — QA-ফেজ ALL GREEN (guard + role-policy ২২৪/২২৪ + cursor ২৬/২৬ + agent-browser ৭-পেজ কনসোল-০/390px-০) → বাগ-শূন্য স্থিতিশীল-ফেজ → ফিচার-রাউন্ড
+- এনভ-নোট: agent-browser eval মাঝে-মধ্যে transient-fail (পেজ-লোড-রেস — পুনঃ-ইভালে ০); viewport-বদল `set viewport 390 844` (resizeTo অকার্যকর)
+
+## Current Goals / Completed / Verification
+- **১১শ-প্রত্রাহার-প্রমাণ (session134-রীতি):** আমার রাউন্ডের ফিচার-A (ফিড og-কার্ড — নিজস্ব mdFeed/feedLink + lpvScanFeed144) ও ফিচার-B (/qa মেনশন — window.LekhokMention সার্বজনীনকরণ + attr-চুক্তি) — push-সময়ে সমান্তরাল s146 (plainWithLinks+extChip143-canonical) ও s145 (mention-anywhere.js-canonical) আগে-ল্যান্ডেড → rebase-এ তাদের পাশ গৃহীত, আমার ডেল্টা সম্পূর্ণ-প্রত্রাহৃত (ডাবল-স্ক্যান/দ্বৈত-ইঞ্জিন-ঝুঁকি-শূন্য); আমার browser-E2E প্রমাণগুলো (ড্রপডাউন→Enter-ইনসার্ট→Esc-কোঅর্ডিনেশন; og-কার্ড-মাউন্ট; XSS-unit) তাদের-কোডেই পুনঃ-যাচাইকৃত
+- **অনন্য-রক্ষিত — ফিচার-C messenger.css র্যাচেট ১৪৪→০ (ওয়েভ-৪):** scripts/patch144-messenger-ratchet.js — বিদ্যমান-ম্যাপ ×২২ + নতুন-টোকেন ×৯ (danger-strong #E41E3F ×১৪-ব্যবহার + danger-strong-soft + social-blue-hover-2 #166FE0 + warn-ink-2 #664D03 + warn-tint + match-mark #FFE58F + match-mark-active #FF9C6E + social-blue-light-2 #E3F0FF + social-blue-tint #E7F0FD — কাছাকাছি-ভিন্ন-মানে -২-সাফিক্স-সততা, per-নাম defs=১ ×৯); **patch139-বাগ-সংশোধন:** প্রমাণ-মোডে tokens.css-লেখা-শূন্য (ড্রাই-রান ফাইল-মিউটেট-বন্ধ); বেসলাইন-লক ০; computed-লাইভ-রেজলভ ×৯ + বাবল-রঙ-প্রোব (online #31A24C / text #050505) + স্ক্রিনশট
+- **নতুন E2E: verify-session144-feed-ogcard.sh** — canonical-অ্যাপটেড (মেনশন-চেক s145-মার্কারে, ফিড-চেক s146-মার্কারে, মেসেঞ্জার-র্যাচেট-চেক আমার)। **delete-303-গোটচা:** /qa/:id/delete-এর সফল-রেসপন্সই 303 (ownership-ফেইলও 303-নীরব — স্ট্যাটাস-একা অপর্যাপ্ত, absence-যাচাই বাধ্যতামূলক)
+- **push-রেস-ইউনিয়ন:** af01671 (stale docs) + আমার-কমিট rebase @ 8728e16 — worklog ×২ + PLANS + PROJECT union; **গোটচা-পুনরাবৃত্তি:** rebase-এ --theirs=আমার-রিপ্লে-কমিট (semantics-উল্টে — HEAD/origin-main-checkout-ই-নিরাপদ; PLANS-নোট-থাকতেও-আবার-খেয়েছি); অনাথ->>>>>>>-মার্কার-অরফান (রুট-worklog) পরিষ্কার
+- **মার্জড-ট্রি-যাচাই:** role-policy + cursor + guard-বেসলাইন (messenger:0) + node --check + EJS + 390px-০ + কনসোল-০ — নিচে চূড়ান্ত-ফলাফল
+
+## Unresolved Issues / Risks / Next Priorities
+- প্রস্তাব-কিউ: style.css-র্যাচেট (১৩৯৫ — ২-৩-রাউন্ডে ভাগ) · auth/gallery.css (১২৩/১২৩) · calls/bookmarks (৬২/৫৪) · og-কার্ড-সমৃদ্ধি (s146-নোট দেখুন) · কল-ইতিহাসে degrade-রেকর্ড (db-স্কিমা) · লাইভ-Turso-রিসেট
+- tokens.css-এ pre-existing `(wip(session136)...)` ভাঙা-আর্টিফ্যাক্ট এখনো-অস্পৃষ্ট (inert — ভবিষ্যৎ-পরিষ্কারণ-প্রার্থী)
+- **পরের-এজেন্ট: session150 থেকে**

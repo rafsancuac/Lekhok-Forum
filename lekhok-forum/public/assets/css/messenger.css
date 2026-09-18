@@ -1,24 +1,24 @@
 /* ═══════════════════════════════════════════════════════════════════════
    সেশন ৭৫ — ফেসবুক মেসেঞ্জার ডিজাইন-সিস্টেম (শুধু /messages পেজে স্কোপড)
    ডিজাইন-টোকেন (FB-স্পেসিফিকেশন অনুযায়ী):
-   primary #1877F2 · sent-bubble #0084FF · received #E4E6EB · canvas #F0F2F5
-   surface #FFF · text #050505 / #65676B · border #E4E6EB · online #31A24C
+   primary var(--lf-social-blue) · sent-bubble var(--lf-social-messenger) · received var(--lf-ui-border) · canvas var(--lf-ui-canvas)
+   surface var(--lf-ui-surface) · text var(--lf-text-primary) / var(--lf-text-secondary) · border var(--lf-ui-border) · online var(--lf-fb-green)
    নোট: সাইটের বাকি অংশ লাইট-মিন্ট থিমেই থাকে — এই নীল-প্যালেট ইচ্ছাকৃতভাবে
    শুধু মেসেঞ্জার-শেলের ভেতরে (auth-split-panel-এর নেভির মতো পেজ-স্কোপড)।
    ═══════════════════════════════════════════════════════════════════════ */
 
 .page-wrap--messenger {
-  --fb-blue: #1877F2;
-  --fb-msg: #0084FF;
-  --fb-canvas: #F0F2F5;
-  --fb-surface: #FFFFFF;
-  --fb-bubble-in: #E4E6EB;
-  --fb-text: #050505;
-  --fb-text2: #65676B;
-  --fb-border: #E4E6EB;
-  --fb-green: #31A24C;
-  --fb-hover: #F2F2F2;
-  --fb-active: #EAF3FF;
+  --fb-blue: var(--lf-social-blue);
+  --fb-msg: var(--lf-social-messenger);
+  --fb-canvas: var(--lf-ui-canvas);
+  --fb-surface: var(--lf-ui-surface);
+  --fb-bubble-in: var(--lf-ui-border);
+  --fb-text: var(--lf-text-primary);
+  --fb-text2: var(--lf-text-secondary);
+  --fb-border: var(--lf-ui-border);
+  --fb-green: var(--lf-fb-green);
+  --fb-hover: var(--lf-fb-hover-2);
+  --fb-active: var(--lf-social-blue-light);
   max-width: 100% !important;
   width: 100%;
   padding: 0 !important;
@@ -113,8 +113,8 @@
 }
 .page-wrap--messenger .fb-icon-btn:hover { background: var(--fb-bubble-in); }
 .page-wrap--messenger .fb-icon-btn:active { transform: scale(.92); }
-.page-wrap--messenger .fb-icon-btn--accent { background: var(--fb-blue); color: #fff; }
-.page-wrap--messenger .fb-icon-btn--accent:hover { background: #166fe0; }
+.page-wrap--messenger .fb-icon-btn--accent { background: var(--fb-blue); color: var(--lf-ui-surface); }
+.page-wrap--messenger .fb-icon-btn--accent:hover { background: var(--lf-social-blue-hover-2); }
 
 /* পিল-সার্চ */
 .page-wrap--messenger .msg-search-wrap { position: relative; margin: 0 0 10px; }
@@ -163,7 +163,7 @@
   box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
   max-height: 420px; overflow-y: auto; z-index: 50;
 }
-.page-wrap--messenger .msr-section { border-bottom: 1px solid #f0f2f5; }
+.page-wrap--messenger .msr-section { border-bottom: 1px solid var(--lf-ui-canvas); }
 .page-wrap--messenger .msr-section:last-child { border-bottom: 0; }
 .page-wrap--messenger .msr-section-head {
   display: flex; justify-content: space-between; align-items: center;
@@ -175,7 +175,7 @@
 .page-wrap--messenger .msr-row {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 14px; cursor: pointer; text-decoration: none; color: inherit;
-  border-bottom: 1px solid #f7f8fa;
+  border-bottom: 1px solid var(--lf-fb-field);
   transition: background .12s;
 }
 .page-wrap--messenger .msr-row:last-child { border-bottom: 0; }
@@ -188,9 +188,9 @@
 .page-wrap--messenger .msr-meta { flex: 1; min-width: 0; }
 .page-wrap--messenger .msr-name { font-weight: 600; font-size: 14px; color: var(--fb-text); }
 .page-wrap--messenger .msr-sub { font-size: 12px; color: var(--fb-text2); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.page-wrap--messenger .msr-name mark, .page-wrap--messenger .msr-sub mark { background: #fff3cd; color: #664d03; padding: 0 2px; border-radius: 4px; }
+.page-wrap--messenger .msr-name mark, .page-wrap--messenger .msr-sub mark { background: var(--lf-warn-soft); color: var(--lf-warn-ink-2); padding: 0 2px; border-radius: 4px; }
 .page-wrap--messenger .msr-right { flex-shrink: 0; color: var(--fb-text2); font-size: 12px; }
-.page-wrap--messenger .msr-right .conv-unread { background: var(--fb-blue); color: #fff; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
+.page-wrap--messenger .msr-right .conv-unread { background: var(--fb-blue); color: var(--lf-ui-surface); font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 99px; }
 .page-wrap--messenger .msr-empty { padding: 28px 14px; text-align: center; color: var(--fb-text2); }
 .page-wrap--messenger .msr-empty i { font-size: 28px; margin-bottom: 8px; display: block; opacity: .5; }
 .page-wrap--messenger .msr-empty p { font-size: 13px; margin: 0; }
@@ -203,7 +203,7 @@
   text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
 }
 .page-wrap--messenger .msg-recent-clear { background: transparent; border: none; cursor: pointer; color: var(--fb-text2); font-size: 11px; text-decoration: underline; }
-.page-wrap--messenger .msg-recent-clear:hover { color: #e41e3f; }
+.page-wrap--messenger .msg-recent-clear:hover { color: var(--lf-danger-strong); }
 .page-wrap--messenger .msg-recent-item {
   display: flex; align-items: center; gap: 8px; padding: 6px 8px;
   border-radius: 8px; cursor: pointer; text-decoration: none; color: inherit;
@@ -211,7 +211,7 @@
 }
 .page-wrap--messenger .msg-recent-item:hover { background: var(--fb-hover); }
 .page-wrap--messenger .msg-recent-item i { color: var(--fb-text2); font-size: 11px; }
-.page-wrap--messenger .msg-recent-item .mr-remove { margin-left: auto; opacity: 0; transition: opacity .12s; background: transparent; border: none; cursor: pointer; color: #e41e3f; padding: 2px 4px; }
+.page-wrap--messenger .msg-recent-item .mr-remove { margin-left: auto; opacity: 0; transition: opacity .12s; background: transparent; border: none; cursor: pointer; color: var(--lf-danger-strong); padding: 2px 4px; }
 .page-wrap--messenger .msg-recent-item:hover .mr-remove { opacity: 1; }
 
 /* ── Active-now ট্রে (FB Stories-স্টাইল) ── */
@@ -302,8 +302,8 @@
 .page-wrap--messenger .conv-item .avatar-md img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; display: block; }
 .page-wrap--messenger .conv-item .group-avatar {
   width: 48px; height: 48px; border-radius: 50%;
-  background: linear-gradient(135deg, #1877F2, #7c3aed);
-  color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
+  background: linear-gradient(135deg, var(--lf-social-blue), var(--lf-violet));
+  color: var(--lf-ui-surface); display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
 }
 .page-wrap--messenger .online-dot {
   position: absolute; bottom: 1px; right: 1px;
@@ -331,7 +331,7 @@
   color: var(--fb-text2); font-size: 12px;
 }
 .page-wrap--messenger .conv-unread {
-  background: var(--fb-blue); color: #fff;
+  background: var(--fb-blue); color: var(--lf-ui-surface);
   min-width: 20px; height: 20px; padding: 0 6px;
   border-radius: 99px; font-size: 11.5px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center;
@@ -420,13 +420,13 @@
   padding: 12px 16px 8px;
   background: var(--fb-surface);
   scrollbar-width: thin;
-  scrollbar-color: #ced0d4 transparent;
+  scrollbar-color: var(--lf-ui-border-strong) transparent;
 }
 .page-wrap--messenger .chat-body::-webkit-scrollbar { width: 8px; }
-.page-wrap--messenger .chat-body::-webkit-scrollbar-thumb { background: #ced0d4; border-radius: 8px; }
+.page-wrap--messenger .chat-body::-webkit-scrollbar-thumb { background: var(--lf-ui-border-strong); border-radius: 8px; }
 .page-wrap--messenger .chat-error {
   margin: 10px 16px 0; padding: 10px 14px; border-radius: 10px;
-  background: #fee2e2; color: #b91c1c; font-size: 13px;
+  background: var(--lf-danger-soft-2); color: var(--lf-danger-deep); font-size: 13px;
 }
 
 /* ── ডেট-সেপারেটর (সেশন ৭৮: কম্প্যাক্ট মার্জিন) ── */
@@ -491,7 +491,7 @@
 }
 .page-wrap--messenger .bubble.me .b-content {
   background: var(--fb-msg);
-  color: #fff;
+  color: var(--lf-ui-surface);
   border-bottom-left-radius: 18px;
   border-bottom-right-radius: 4px;
   /* সেশন ১০৯: margin-left:auto বাদ — এটি সারির সব ফাঁকা-জায়গা গিলে
@@ -511,7 +511,7 @@
   margin-top: 5px; padding: 7px 12px; border-radius: 10px;
   background: rgba(0, 0, 0, .05); color: inherit; text-decoration: none; font-size: 13.5px; font-weight: 600;
 }
-.page-wrap--messenger .bubble.me .bubble-file { background: rgba(255, 255, 255, .22); color: #fff; }
+.page-wrap--messenger .bubble.me .bubble-file { background: rgba(255, 255, 255, .22); color: var(--lf-ui-surface); }
 
 /* বাবল-মেটা (সময়+সিন) */
 .page-wrap--messenger .bubble .bubble-meta {
@@ -792,7 +792,7 @@
   border-radius: 50% !important;
   border: none;
   background: transparent !important;
-  color: var(--fb-msg) !important; /* সেশন ৭৬: গ্লোবাল .btn-primary-এর color:#fff!important-কে হার মানাত সাদা-অদৃশ্য প্লেন হত */
+  color: var(--fb-msg) !important; /* সেশন ৭৬: গ্লোবাল .btn-primary-এর color:var(--lf-ui-surface)!important-কে হার মানাত সাদা-অদৃশ্য প্লেন হত */
   font-size: 20px;
   display: inline-flex; align-items: center; justify-content: center;
   cursor: pointer;
@@ -829,7 +829,7 @@
   line-height: 1; width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px;
   display: inline-flex; align-items: center; justify-content: center; transition: background .12s, color .12s;
 }
-.page-wrap--messenger .file-preview button:hover { background: rgba(24, 119, 242, .12); color: #e41e3f; }
+.page-wrap--messenger .file-preview button:hover { background: rgba(24, 119, 242, .12); color: var(--lf-danger-strong); }
 
 /* ═══════════════════ ডান ডিটেইলস-প্যানেল ═══════════════════ */
 .page-wrap--messenger .messenger-details {
@@ -875,8 +875,8 @@
   transition: background .15s;
 }
 .page-wrap--messenger .md-profile .mdp-btn:hover { background: var(--fb-bubble-in); }
-.page-wrap--messenger .md-profile .mdp-btn--blue { background: var(--fb-blue); color: #fff; }
-.page-wrap--messenger .md-profile .mdp-btn--blue:hover { background: #166fe0; }
+.page-wrap--messenger .md-profile .mdp-btn--blue { background: var(--fb-blue); color: var(--lf-ui-surface); }
+.page-wrap--messenger .md-profile .mdp-btn--blue:hover { background: var(--lf-social-blue-hover-2); }
 .page-wrap--messenger .md-section { padding: 14px 18px; border-bottom: 1px solid var(--fb-border); }
 .page-wrap--messenger .md-section h4 {
   margin: 0 0 10px; font-size: 13px; font-weight: 800;
@@ -902,8 +902,8 @@
 }
 .page-wrap--messenger .md-link:hover { background: var(--fb-hover); }
 .page-wrap--messenger .md-link i { color: var(--fb-text2); width: 18px; text-align: center; font-size: 14px; }
-.page-wrap--messenger .md-link--danger { color: #e41e3f; }
-.page-wrap--messenger .md-link--danger i { color: #e41e3f; }
+.page-wrap--messenger .md-link--danger { color: var(--lf-danger-strong); }
+.page-wrap--messenger .md-link--danger i { color: var(--lf-danger-strong); }
 .page-wrap--messenger .md-members { display: flex; flex-wrap: wrap; gap: 6px; }
 .page-wrap--messenger .md-member {
   display: inline-flex; align-items: center; gap: 6px;
@@ -928,7 +928,7 @@
 /* ছোট-টোস্ট (কল/ভিডিও 'শীঘ্রই') */
 .fb-toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px);
-  background: #050505; color: #fff;
+  background: var(--lf-text-primary); color: var(--lf-ui-surface);
   font-size: 13.5px; font-weight: 600;
   padding: 11px 22px; border-radius: 99px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, .3);
@@ -1030,10 +1030,10 @@
   font-size: 11.5px; font-weight: 600; color: var(--fb-text2);
   transition: border-color .14s, box-shadow .14s, transform .14s;
 }
-.md-theme:hover { border-color: #94a3b8; transform: translateY(-1px); }
+.md-theme:hover { border-color: var(--lf-slate-soft-5); transform: translateY(-1px); }
 .md-theme .mdt-dot {
   width: 27px; height: 27px; border-radius: 50%;
-  border: 2px solid #fff;
+  border: 2px solid var(--lf-ui-surface);
   box-shadow: 0 0 0 1px var(--fb-border), 0 2px 6px rgba(0, 0, 0, .14);
 }
 .md-theme.active {
@@ -1087,8 +1087,8 @@
   word-break: break-word;
 }
 .page-wrap--messenger .bubble.me .bubble-quote { background: rgba(255, 255, 255, .22); }
-.page-wrap--messenger .bubble.me .bubble-quote::before { background: #fff; }
-.page-wrap--messenger .bubble.me .bq-name { color: #e3f0ff; }
+.page-wrap--messenger .bubble.me .bubble-quote::before { background: var(--lf-ui-surface); }
+.page-wrap--messenger .bubble.me .bq-name { color: var(--lf-social-blue-light-2); }
 .page-wrap--messenger .bubble.me .bq-text { color: rgba(255, 255, 255, .82); }
 .page-wrap--messenger .bubble.them .bubble-quote { background: rgba(0, 0, 0, .05); }
 
@@ -1106,7 +1106,7 @@
 /* ── ভাসমান মেসেজ-অ্যাকশন মেনু (⋯) ──────────────────────────────────── */
 .msg-menu {
   position: fixed; z-index: 90; min-width: 176px;
-  background: #fff; border-radius: 10px; padding: 5px;
+  background: var(--lf-ui-surface); border-radius: 10px; padding: 5px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, .18), 0 0 0 1px rgba(0, 0, 0, .05);
   animation: msgMenuIn .12s ease-out;
 }
@@ -1114,13 +1114,13 @@
 .msg-menu button {
   display: flex; align-items: center; gap: 10px; width: 100%;
   padding: 9px 12px; border: 0; background: none; cursor: pointer;
-  font-family: inherit; font-size: 13.5px; color: #050505; border-radius: 8px; text-align: left;
+  font-family: inherit; font-size: 13.5px; color: var(--lf-text-primary); border-radius: 8px; text-align: left;
 }
-.msg-menu button i { width: 18px; text-align: center; font-size: 13px; color: #65676B; }
-.msg-menu button:hover { background: #F2F2F2; }
-.msg-menu button:hover i { color: #1877F2; }
-.msg-menu button.is-danger, .msg-menu button.is-danger:hover { color: #e41e3f; }
-.msg-menu button.is-danger i, .msg-menu button.is-danger:hover i { color: #e41e3f; }
+.msg-menu button i { width: 18px; text-align: center; font-size: 13px; color: var(--lf-text-secondary); }
+.msg-menu button:hover { background: var(--lf-fb-hover-2); }
+.msg-menu button:hover i { color: var(--lf-social-blue); }
+.msg-menu button.is-danger, .msg-menu button.is-danger:hover { color: var(--lf-danger-strong); }
+.msg-menu button.is-danger i, .msg-menu button.is-danger:hover i { color: var(--lf-danger-strong); }
 
 /* ── রিপ্লাই/এডিট-বার (ইনপুট-বারের উপরে, ফুল-প্রস্থ রো) ─────────────── */
 .page-wrap--messenger .chat-input-bar .reply-bar { flex: 1 1 100%; order: -1; }
@@ -1139,12 +1139,12 @@
   background: var(--fb-active); color: var(--fb-blue);
   display: inline-flex; align-items: center; justify-content: center; font-size: 12px;
 }
-.page-wrap--messenger .reply-bar.edit-bar .rb-ic { background: #FFF7E6; color: #B45309; }
+.page-wrap--messenger .reply-bar.edit-bar .rb-ic { background: var(--lf-warn-tint); color: var(--lf-soon-amber); }
 .page-wrap--messenger .reply-bar .rb-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .page-wrap--messenger .reply-bar .rb-name {
   font-size: 12px; font-weight: 700; color: var(--fb-blue); line-height: 1.3;
 }
-.page-wrap--messenger .reply-bar.edit-bar .rb-name { color: #B45309; }
+.page-wrap--messenger .reply-bar.edit-bar .rb-name { color: var(--lf-soon-amber); }
 .page-wrap--messenger .reply-bar .rb-text {
   font-size: 12.5px; color: var(--fb-text2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1153,7 +1153,7 @@
   width: 30px; height: 30px; border-radius: 50%; border: none; flex: none;
   background: none; color: var(--fb-text2); cursor: pointer; font-size: 13px;
 }
-.page-wrap--messenger .reply-bar .rb-x:hover { background: var(--fb-hover); color: #e41e3f; }
+.page-wrap--messenger .reply-bar .rb-x:hover { background: var(--fb-hover); color: var(--lf-danger-strong); }
 
 /* ── কোট-ক্লিক ফ্ল্যাশ ──────────────────────────────────────────────── */
 .page-wrap--messenger .bubble.is-flash .b-content { animation: bubbleFlash 1.2s ease-out; }
@@ -1170,7 +1170,7 @@
 }
 .fwd-modal {
   width: 100%; max-width: 400px; max-height: min(560px, 90vh);
-  background: #fff; border-radius: 14px; overflow: hidden;
+  background: var(--lf-ui-surface); border-radius: 14px; overflow: hidden;
   display: flex; flex-direction: column;
   box-shadow: 0 16px 48px rgba(0, 0, 0, .3);
   animation: fwdIn .16s ease-out;
@@ -1178,21 +1178,21 @@
 @keyframes fwdIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
 .fwd-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 16px; border-bottom: 1px solid #E4E6EB;
+  padding: 14px 16px; border-bottom: 1px solid var(--lf-ui-border);
 }
-.fwd-head h3 { margin: 0; font-size: 16px; color: #050505; display: flex; align-items: center; gap: 8px; }
-.fwd-head h3 i { color: #1877F2; font-size: 14px; }
+.fwd-head h3 { margin: 0; font-size: 16px; color: var(--lf-text-primary); display: flex; align-items: center; gap: 8px; }
+.fwd-head h3 i { color: var(--lf-social-blue); font-size: 14px; }
 .fwd-x {
-  width: 32px; height: 32px; border-radius: 50%; border: none; background: #F0F2F5;
-  color: #65676B; cursor: pointer; font-size: 14px;
+  width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--lf-ui-canvas);
+  color: var(--lf-text-secondary); cursor: pointer; font-size: 14px;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.fwd-x:hover { background: #E4E6EB; color: #050505; }
-.fwd-search { position: relative; padding: 10px 14px; border-bottom: 1px solid #F0F2F5; }
-.fwd-search i { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #65676B; pointer-events: none; }
+.fwd-x:hover { background: var(--lf-ui-border); color: var(--lf-text-primary); }
+.fwd-search { position: relative; padding: 10px 14px; border-bottom: 1px solid var(--lf-ui-canvas); }
+.fwd-search i { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--lf-text-secondary); pointer-events: none; }
 .fwd-search input {
   width: 100%; padding: 9px 14px 9px 34px; border: none; border-radius: 99px;
-  background: #F0F2F5; font-family: inherit; font-size: 13.5px; color: #050505; outline: none;
+  background: var(--lf-ui-canvas); font-family: inherit; font-size: 13.5px; color: var(--lf-text-primary); outline: none;
 }
 .fwd-search input:focus { box-shadow: 0 0 0 2px rgba(24, 119, 242, .35); }
 .fwd-list { flex: 1; overflow-y: auto; padding: 6px; }
@@ -1201,27 +1201,27 @@
   padding: 8px 10px; border: none; background: none; cursor: pointer;
   border-radius: 10px; text-align: left; font-family: inherit;
 }
-.fwd-row:hover { background: #F2F2F2; }
+.fwd-row:hover { background: var(--lf-fb-hover-2); }
 .fwd-row:disabled { opacity: .55; cursor: wait; }
 .fwd-avwrap { flex: none; }
 .fwd-av { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; display: block; }
 .fwd-av--txt {
   display: inline-flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #1877F2, #31A24C); color: #fff;
+  background: linear-gradient(135deg, var(--lf-social-blue), var(--lf-fb-green)); color: var(--lf-ui-surface);
   font-weight: 700; font-size: 15px;
 }
 .fwd-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.fwd-name { font-size: 14px; font-weight: 600; color: #050505; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fwd-sub { font-size: 12px; color: #65676B; }
-.fwd-go { color: #1877F2; font-size: 13px; opacity: 0; transition: opacity .12s; }
+.fwd-name { font-size: 14px; font-weight: 600; color: var(--lf-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fwd-sub { font-size: 12px; color: var(--lf-text-secondary); }
+.fwd-go { color: var(--lf-social-blue); font-size: 13px; opacity: 0; transition: opacity .12s; }
 .fwd-row:hover .fwd-go { opacity: 1; }
-.fwd-empty { padding: 28px 16px; text-align: center; color: #65676B; font-size: 13px; }
-.fwd-foot { padding: 10px 14px; border-top: 1px solid #F0F2F5; display: flex; justify-content: flex-end; }
+.fwd-empty { padding: 28px 16px; text-align: center; color: var(--lf-text-secondary); font-size: 13px; }
+.fwd-foot { padding: 10px 14px; border-top: 1px solid var(--lf-ui-canvas); display: flex; justify-content: flex-end; }
 .fwd-cancel {
-  padding: 8px 18px; border: none; border-radius: 8px; background: #F0F2F5;
-  color: #050505; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  padding: 8px 18px; border: none; border-radius: 8px; background: var(--lf-ui-canvas);
+  color: var(--lf-text-primary); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
 }
-.fwd-cancel:hover { background: #E4E6EB; }
+.fwd-cancel:hover { background: var(--lf-ui-border); }
 
 /* ── লিস্ট-পেজ: পিন/মিউট ফ্ল্যাগ + রো-মোর-বাটন ──────────────────────── */
 .page-wrap--messenger .conv-more {
@@ -1268,7 +1268,7 @@
 .jump-btn .jump-badge {
   position: absolute; top: -5px; left: -5px;
   min-width: 19px; height: 19px; border-radius: 99px;
-  background: var(--fb-blue); color: #fff;
+  background: var(--fb-blue); color: var(--lf-ui-surface);
   font-size: 11px; font-weight: 700; line-height: 19px;
   padding: 0 5px; box-sizing: border-box;
   border: 2px solid var(--fb-surface);
@@ -1289,16 +1289,16 @@
 .lf-lightbox img {
   max-width: min(92vw, 1000px); max-height: 82vh;
   border-radius: 8px; box-shadow: 0 18px 60px rgba(0, 0, 0, .5);
-  background: #fff;
+  background: var(--lf-ui-surface);
 }
 .lf-lightbox .lb-caption {
-  color: #e4e6eb; font-size: 13px; max-width: 80vw;
+  color: var(--lf-ui-border); font-size: 13px; max-width: 80vw;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .lf-lightbox .lb-close {
   position: absolute; top: 18px; right: 18px;
   width: 40px; height: 40px; border-radius: 50%; border: none;
-  background: rgba(255, 255, 255, .12); color: #fff; font-size: 17px;
+  background: rgba(255, 255, 255, .12); color: var(--lf-ui-surface); font-size: 17px;
   cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
   transition: background .14s;
 }
@@ -1362,12 +1362,12 @@
 }
 .page-wrap--messenger .md-switch-slider {
   position: absolute; inset: 0; border-radius: 99px;
-  background: #bcc0c4; transition: background .18s;
+  background: var(--lf-fb-placeholder); transition: background .18s;
 }
 .page-wrap--messenger .md-switch-slider::before {
   content: ""; position: absolute; top: 2px; left: 2px;
   width: 18px; height: 18px; border-radius: 50%;
-  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+  background: var(--lf-ui-surface); box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
   transition: transform .18s cubic-bezier(.16, 1, .3, 1);
 }
 .page-wrap--messenger .md-switch input:checked + .md-switch-slider { background: var(--fb-blue); }
@@ -1382,7 +1382,7 @@
 .page-wrap--messenger .conv-insearch .cis-clear {
   position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
   width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
-  background: rgba(15, 23, 42, .12); color: var(--fb-text2, #65676b);
+  background: rgba(15, 23, 42, .12); color: var(--fb-text2, var(--lf-text-secondary));
   font-size: 9px; display: inline-flex; align-items: center; justify-content: center;
   transition: background .15s ease;
 }
@@ -1392,26 +1392,26 @@
 .cis-tools { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; flex-shrink: 0; }
 .cis-tools[hidden] { display: none; }
 .cis-counter {
-  font-size: 11px; font-weight: 700; color: var(--fb-blue, #0084FF);
+  font-size: 11px; font-weight: 700; color: var(--fb-blue, var(--lf-social-messenger));
   background: rgba(0, 132, 255, .1); padding: 3px 8px; border-radius: 99px;
   min-width: 34px; text-align: center; letter-spacing: .3px;
 }
 .cis-nav {
   width: 24px; height: 24px; border-radius: 50%; border: none; cursor: pointer;
-  background: var(--fb-canvas, #F0F2F5); color: var(--fb-text2, #65676b);
+  background: var(--fb-canvas, var(--lf-ui-canvas)); color: var(--fb-text2, var(--lf-text-secondary));
   font-size: 10px; display: inline-flex; align-items: center; justify-content: center;
   transition: background .15s ease, color .15s ease;
 }
-.cis-nav:hover { background: #d8dadf; color: var(--fb-text, #050505); }
+.cis-nav:hover { background: var(--lf-ad-line-2); color: var(--fb-text, var(--lf-text-primary)); }
 @media (max-width: 900px) { .cis-tools { display: none !important; } }
 
 /* ম্যাচ-হাইলাইট (বাবল-টেক্সটের ভেতরে <mark class=msg-hl>) */
 .page-wrap--messenger mark.msg-hl {
-  background: #FFE58F; color: inherit; border-radius: 3px;
+  background: var(--lf-match-mark); color: inherit; border-radius: 3px;
   padding: 0 1px; box-shadow: 0 0 0 1px rgba(212, 167, 0, .25);
 }
 .page-wrap--messenger mark.msg-hl.msg-hl-active {
-  background: #FF9C6E; color: #fff;
+  background: var(--lf-match-mark-active); color: var(--lf-ui-surface);
   box-shadow: 0 0 0 2px rgba(255, 118, 55, .45);
   animation: msg-hl-pop .3s ease;
 }
@@ -1433,7 +1433,7 @@
   width: 100%; min-height: 40px; padding: 4px 10px;
 }
 .page-wrap--messenger .vr-dot {
-  width: 12px; height: 12px; border-radius: 50%; background: #E41E3F;
+  width: 12px; height: 12px; border-radius: 50%; background: var(--lf-danger-strong);
   box-shadow: 0 0 0 0 rgba(228, 30, 63, .45); animation: vr-pulse 1.1s ease-out infinite; flex: 0 0 auto;
 }
 @keyframes vr-pulse {
@@ -1441,7 +1441,7 @@
   70% { box-shadow: 0 0 0 9px rgba(228, 30, 63, 0); }
   100% { box-shadow: 0 0 0 0 rgba(228, 30, 63, 0); }
 }
-.page-wrap--messenger .vr-time { font-size: .9rem; font-weight: 700; color: #E41E3F; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+.page-wrap--messenger .vr-time { font-size: .9rem; font-weight: 700; color: var(--lf-danger-strong); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .page-wrap--messenger .vr-wave { display: flex; align-items: center; gap: 2.5px; flex: 1 1 auto; height: 22px; overflow: hidden; }
 .page-wrap--messenger .vr-wave i {
   width: 3px; border-radius: 3px; background: var(--fb-blue); opacity: .75;
@@ -1456,10 +1456,10 @@
   display: inline-flex; align-items: center; justify-content: center; font-size: .9rem;
   transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
-.page-wrap--messenger .vr-cancel { background: var(--fb-canvas); color: #E41E3F; }
-.page-wrap--messenger .vr-cancel:hover { background: #fbe1e5; transform: scale(1.06); }
-.page-wrap--messenger .vr-send { background: var(--fb-blue); color: #fff; box-shadow: 0 2px 8px rgba(24, 119, 242, .35); }
-.page-wrap--messenger .vr-send:hover { transform: scale(1.06); background: #166FE5; }
+.page-wrap--messenger .vr-cancel { background: var(--fb-canvas); color: var(--lf-danger-strong); }
+.page-wrap--messenger .vr-cancel:hover { background: var(--lf-danger-strong-soft); transform: scale(1.06); }
+.page-wrap--messenger .vr-send { background: var(--fb-blue); color: var(--lf-ui-surface); box-shadow: 0 2px 8px rgba(24, 119, 242, .35); }
+.page-wrap--messenger .vr-send:hover { transform: scale(1.06); background: var(--lf-social-blue-hover); }
 
 /* ── ভয়েস-বাবল প্লেয়ার (ওয়েভফর্ম) ── */
 .page-wrap--messenger .bubble-voice {
@@ -1470,22 +1470,22 @@
 .page-wrap--messenger .bubble.me .bubble-voice { background: rgba(255, 255, 255, .22); }
 .page-wrap--messenger .bubble-voice .bv-play {
   flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
-  background: var(--fb-blue); color: #fff; font-size: .74rem;
+  background: var(--fb-blue); color: var(--lf-ui-surface); font-size: .74rem;
   display: inline-flex; align-items: center; justify-content: center;
   transition: transform .12s ease, box-shadow .12s ease;
   box-shadow: 0 2px 6px rgba(24, 119, 242, .35);
 }
 .page-wrap--messenger .bubble-voice .bv-play:hover { transform: scale(1.08); }
 .page-wrap--messenger .bubble-voice .bv-play:active { transform: scale(.94); }
-.page-wrap--messenger .bubble.me .bubble-voice .bv-play { background: #fff; color: var(--fb-blue); }
+.page-wrap--messenger .bubble.me .bubble-voice .bv-play { background: var(--lf-ui-surface); color: var(--fb-blue); }
 .page-wrap--messenger .bv-wave { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; height: 26px; min-width: 0; }
 .page-wrap--messenger .bv-wave span {
   flex: 1 1 0; min-width: 2px; max-width: 4px; height: var(--h, 50%);
   border-radius: 3px; background: var(--fb-text-secondary); opacity: .42; transition: opacity .15s, background .15s;
 }
-.page-wrap--messenger .bubble.me .bv-wave span { background: #fff; opacity: .5; }
+.page-wrap--messenger .bubble.me .bv-wave span { background: var(--lf-ui-surface); opacity: .5; }
 .page-wrap--messenger .bv-wave span.played { opacity: 1; background: var(--fb-blue); }
-.page-wrap--messenger .bubble.me .bv-wave span.played { background: #fff; }
+.page-wrap--messenger .bubble.me .bv-wave span.played { background: var(--lf-ui-surface); }
 .page-wrap--messenger .bv-time { flex: 0 0 auto; font-size: .72rem; font-weight: 600; color: var(--fb-text-secondary); font-variant-numeric: tabular-nums; }
 .page-wrap--messenger .bubble.me .bv-time { color: rgba(255, 255, 255, .9); }
 .page-wrap--messenger .bubble-voice.is-playing .bv-wave { animation: bv-breathe 1.6s ease-in-out infinite; }
@@ -1505,7 +1505,7 @@
   color: var(--fb-text-secondary); transition: background .15s, color .15s, box-shadow .15s;
 }
 .page-wrap--messenger .md-tab:hover { background: rgba(0, 0, 0, .05); }
-.page-wrap--messenger .md-tab.is-active { background: #fff; color: var(--fb-blue); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.page-wrap--messenger .md-tab.is-active { background: var(--lf-ui-surface); color: var(--fb-blue); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
 .page-wrap--messenger .md-tabpane[hidden] { display: none; }
 
 .page-wrap--messenger .md-vn-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
@@ -1518,13 +1518,13 @@
   display: flex; align-items: center; gap: 10px; padding: 8px 10px;
   border-radius: 10px; background: var(--fb-canvas); transition: background .15s, transform .12s;
 }
-.page-wrap--messenger .md-file:hover, .page-wrap--messenger .md-linkrow:hover { background: #e4e6eb; transform: translateY(-1px); }
+.page-wrap--messenger .md-file:hover, .page-wrap--messenger .md-linkrow:hover { background: var(--lf-ui-border); transform: translateY(-1px); }
 .page-wrap--messenger .mdf-ic, .page-wrap--messenger .mdl-ic {
   flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9px;
-  background: #fff; color: var(--fb-blue); display: inline-flex; align-items: center; justify-content: center;
+  background: var(--lf-ui-surface); color: var(--fb-blue); display: inline-flex; align-items: center; justify-content: center;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06);
 }
-.page-wrap--messenger .mdl-ic { color: #E41E3F; }
+.page-wrap--messenger .mdl-ic { color: var(--lf-danger-strong); }
 .page-wrap--messenger .mdf-body, .page-wrap--messenger .mdl-body { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .page-wrap--messenger .mdf-name { font-size: .8rem; font-weight: 600; color: var(--fb-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .page-wrap--messenger .mdf-host, .page-wrap--messenger .mdl-host { font-size: .72rem; font-weight: 700; color: var(--fb-blue); }
@@ -1546,12 +1546,12 @@
 .page-wrap--messenger .ci-mic:focus-visible {
   outline: 2px solid var(--fb-blue); outline-offset: 2px;
 }
-.page-wrap--messenger .vr-cancel:focus-visible { outline-color: #E41E3F; }
+.page-wrap--messenger .vr-cancel:focus-visible { outline-color: var(--lf-danger-strong); }
 
 /* ── সেশন ৯২(b): ট্যাব-কাউন্ট ব্যাজ + লাইভ-রিফ্রেশ + স্কেলেটন + স্টাইলিং-ডিটেইল ── */
 .page-wrap--messenger .md-tab-count {
   min-width: 16px; height: 16px; padding: 0 4px; margin-left: 2px; border-radius: 8px;
-  background: var(--fb-blue); color: #fff; font-size: 10px; font-weight: 700;
+  background: var(--fb-blue); color: var(--lf-ui-surface); font-size: 10px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center; vertical-align: 1px;
 }
 .page-wrap--messenger .md-tab:not(.is-active) .md-tab-count:empty { display: none; }
@@ -1602,25 +1602,25 @@
 .older-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 2px 0 10px; }
 .older-btn {
   display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-  background: #fff; color: #1877F2; border: 1px solid var(--fb-border, #E4E6EB);
+  background: var(--lf-ui-surface); color: var(--lf-social-blue); border: 1px solid var(--fb-border, var(--lf-ui-border));
   padding: 6px 14px; border-radius: 99px; font-weight: 600; font-size: 12.5px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
   transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.older-btn:hover { background: #F0F2F5; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0, 0, 0, .08); }
-.older-btn:focus-visible { outline: 2px solid #1877F2; outline-offset: 2px; }
-.older-btn.is-done { color: #65676B; pointer-events: none; }
-.older-spinner, .older-end { font-size: 12px; color: #65676B; display: inline-flex; gap: 6px; align-items: center; }
+.older-btn:hover { background: var(--lf-ui-canvas); transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0, 0, 0, .08); }
+.older-btn:focus-visible { outline: 2px solid var(--lf-social-blue); outline-offset: 2px; }
+.older-btn.is-done { color: var(--lf-text-secondary); pointer-events: none; }
+.older-spinner, .older-end { font-size: 12px; color: var(--lf-text-secondary); display: inline-flex; gap: 6px; align-items: center; }
 
 /* জাম্প-হাইলাইট পালস (FB-নীল গ্লো) — সার্চ-জাম্প / রিপ্লাই-জাম্প */
 .msg-jump-hl { animation: msgJumpPulse93 1.1s ease-in-out 3; }
 @keyframes msgJumpPulse93 {
   0%, 100% { box-shadow: 0 0 0 0 rgba(24, 119, 242, 0); }
   40% { box-shadow: 0 0 0 4px rgba(24, 119, 242, .30); }
-  60% { background: #E7F0FD; }
+  60% { background: var(--lf-social-blue-tint); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .msg-jump-hl { animation: none; outline: 2px solid #1877F2; outline-offset: 2px; }
+  .msg-jump-hl { animation: none; outline: 2px solid var(--lf-social-blue); outline-offset: 2px; }
 }
 
 /* রিপ্লাই-কোট এখন ক্লিকযোগ্য (মূল-বার্তায় জাম্প) */
@@ -1630,42 +1630,42 @@
 /* সার্ভার-সাইড সার্চ-ড্রপডাউন (চ্যাট-হেডারের নিচে) */
 .cis-server {
   position: absolute; top: calc(100% + 6px); left: 8px; right: 8px; z-index: 60;
-  background: #fff; border: 1px solid var(--fb-border, #E4E6EB); border-radius: 12px;
+  background: var(--lf-ui-surface); border: 1px solid var(--fb-border, var(--lf-ui-border)); border-radius: 12px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, .14); overflow: hidden;
 }
 .css-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 12px; font-size: 12.5px; font-weight: 700; color: #050505;
-  border-bottom: 1px solid var(--fb-border, #E4E6EB); background: #F7F8FA;
+  padding: 8px 12px; font-size: 12.5px; font-weight: 700; color: var(--lf-text-primary);
+  border-bottom: 1px solid var(--fb-border, var(--lf-ui-border)); background: var(--lf-fb-field);
 }
-.css-head button { border: 0; background: none; cursor: pointer; color: #65676B; padding: 2px 4px; border-radius: 6px; }
-.css-head button:hover { background: #E4E6EB; }
+.css-head button { border: 0; background: none; cursor: pointer; color: var(--lf-text-secondary); padding: 2px 4px; border-radius: 6px; }
+.css-head button:hover { background: var(--lf-ui-border); }
 .css-list { max-height: 300px; overflow-y: auto; }
 .css-row {
   display: flex; gap: 8px; align-items: center; width: 100%;
   padding: 8px 12px; border: 0; background: none; cursor: pointer; text-align: left;
   transition: background .12s ease;
 }
-.css-row:hover, .css-row:focus-visible { background: #F0F2F5; outline: none; }
+.css-row:hover, .css-row:focus-visible { background: var(--lf-ui-canvas); outline: none; }
 .css-av {
   width: 28px; height: 28px; border-radius: 50%; flex: none;
-  background: #E7F0FD; color: #1877F2; display: flex; align-items: center; justify-content: center; font-size: 11px;
+  background: var(--lf-social-blue-tint); color: var(--lf-social-blue); display: flex; align-items: center; justify-content: center; font-size: 11px;
 }
 .css-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
-.css-name { font-size: 12.5px; font-weight: 700; color: #050505; }
-.css-snip { font-size: 12px; color: #444950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.css-time { font-size: 11px; color: #65676B; flex: none; }
-.css-empty { padding: 14px; text-align: center; color: #65676B; font-size: 12.5px; }
+.css-name { font-size: 12.5px; font-weight: 700; color: var(--lf-text-primary); }
+.css-snip { font-size: 12px; color: var(--lf-fb-text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.css-time { font-size: 11px; color: var(--lf-text-secondary); flex: none; }
+.css-empty { padding: 14px; text-align: center; color: var(--lf-text-secondary); font-size: 12.5px; }
 
 /* around-মোড: সর্বশেষ-বার্তায়-ফেরার পিল */
 .jump-now-wrap { display: flex; justify-content: center; padding: 4px 0 8px; }
 .jump-now-btn {
   display: inline-flex; gap: 6px; align-items: center; text-decoration: none;
-  background: #1877F2; color: #fff; font-size: 12.5px; font-weight: 700;
+  background: var(--lf-social-blue); color: var(--lf-ui-surface); font-size: 12.5px; font-weight: 700;
   padding: 8px 14px; border-radius: 99px; box-shadow: 0 4px 14px rgba(24, 119, 242, .40);
   transition: background .15s ease, transform .15s ease;
 }
-.jump-now-btn:hover { background: #166FE5; color: #fff; transform: translateY(-1px); }
+.jump-now-btn:hover { background: var(--lf-social-blue-hover); color: var(--lf-ui-surface); transform: translateY(-1px); }
 
 @media (max-width: 600px) {
   .cis-server { left: 4px; right: 4px; }

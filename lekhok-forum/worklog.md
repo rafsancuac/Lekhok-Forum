@@ -1668,7 +1668,7 @@ Stage Summary:
 - **লিঙ্ক-ইকোসিস্টেম FB-1:1 এখন তিন-সারফেস-সম্পূর্ণ:** কমেন্ট-বাবল + ফিড-পোস্ট-বডি + আর্টিকেল-বডি — সবখানে og-কার্ড (reactor-faces-সহ) + amber ext-chip (লেটার-ফেভিকন-সহ); session146-ব্যাকলগ ①②③ সমাধাত
 - **নতুন-চুক্তি:** rx_faces-পেলোড (≤৩, ফলব্যাক-সুরক্ষিত), atEl147-অ্যাডজাসেন্ট-মাউন্ট, .article-body-তৃতীয়-সারফেস, lf-ext-fav hsl-ডিস্ক
 - **ঝুঁকি:** og-ইঞ্জিন-সিলেক্টর/বাবল/at-রেজলুশন এখন তিন-জায়গায়-সমলয়-রাখতে-হবে (নতুন-সারফেস-নোট PLANS-এ); markdown-<p>-না-থাকলে at-fallback=anchor (ইনলাইন-মাউন্ট — গৃহীত)
-- **পরবর্তী-প্রায়োরিটি:** ① ক্লিকযোগ্য rx-ব্যাজ→reactors-modal (nesting-সতর্কতা) ② tokens-র্যাচেট (style.css ১৩৯৫) ③ dropdown-paintList reltime ④ **পরের-এজেন্ট session148 থেকে**
+- **পরবর্তী-প্রায়োরিটি:** ① ক্লিকযোগ্য rx-ব্যাজ→reactors-modal (nesting-সতর্কতা) ② tokens-র্যাচেট (style.css ১৩৯৫) ③ dropdown-paintList reltime ④ **পরের-এজেন্ট session150 থেকে**
 
 ---
 Task ID: 24 (Session 148 — Lekhok-Forum কল-পলিশ রাউন্ড)
@@ -1689,3 +1689,20 @@ Stage Summary:
 - নতুন-চুক্তি: S.ringing.nodes[]-হার্ডস্টপ · S.seq-টোকেন (নতুন async-start-পথে বাধ্যতামূলক) · .lc-local-video ক্লাস-চালিত-দৃশ্যমানতা · _qaRingState/_qaSelfPip হুক
 - পরবর্তী-প্রার্থী: কল-মিড-মিনিমাইজ-পলিশ · OS-নোটিফিকেশন অ্যাকশন-বাটন · Metered.ca-TURN · উত্তর-থ্রেড-মেনশন-চিপ (session145-বকেয়া-সহ)
 
+---
+Task ID: session147 (cron — স্টেটাস-অ্যাসেসমেন্ট → QA → ফিচার-রাউন্ড → push) [relabel: আমার-144→149 — push-রেসে সমান্তরাল session144/145/146 আগে-ল্যান্ডেড (max+1); কোড-আইডি s144 অক্ষত]
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগ/ফিচার-সিদ্ধান্ত → ফিচার-রাউন্ড + হ্যান্ডওভার
+
+Work Log:
+- QA-ফেজ ALL GREEN @ ad8af3c (guard + role-policy ২২৪/২২৪ + cursor ২৬/২৬ + agent-browser ৭-পেজ কনসোল-০/390px-০) → ফিচার-রাউন্ড
+- ১১শ-প্রত্রাহার-প্রমাণ: আমার ফিড-og-কার্ড (নিজস্ব mdFeed/feedLink + lpvScanFeed144) ও /qa-মেনশন (window.LekhokMention সার্বজনীনকরণ) — push-সময়ে s146 (plainWithLinks+extChip143) ও s145 (mention-anywhere.js) canonical-আগে-ল্যান্ডেড → rebase-এ তাদের পাশ, আমার ডেল্টা পূর্ণ-প্রত্রাহৃত (ডাবল-স্ক্যান/দ্বৈত-ইঞ্জিন-শূন্য); আমার browser-E2E (ড্রপডাউন→Enter-ইনসার্ট→Esc-কোঅর্ডিনেশন; og-কার্ড-মাউন্ট) তাদের-কোডেই পুনঃ-যাচাইকৃত
+- **অনন্য-রক্ষিত — messenger.css র্যাচেট ১৪৪→০ (ওয়েভ-৪):** patch144-messenger-ratchet.js — বিদ্যমান-ম্যাপ ×২২ + নতুন-টোকেন ×৯ (danger-strong #E41E3F ×১৪ + match-mark জোড়া + কাছাকাছি-ভিন্ন-মানে -২-সাফিক্স: social-blue-hover-2/warn-ink-2/social-blue-light-2 — per-নাম defs=১ ×৯); patch139-বাগ-সংশোধন (প্রমাণ-মোডে tokens.css-লেখা-শূন্য); বেসলাইন-লক ০; computed-লাইভ-রেজলভ ×৯ + বাবল-রঙ-প্রোব
+- verify-session144-feed-ogcard.sh canonical-অ্যাপটেড (মেনশন-চেক s145-মার্কারে, ফিড-চেক s146-মার্কারে); delete-303-গোটচা: /qa/:id/delete-এর সফল-রেসপন্সই 303 (absence-যাচাই বাধ্যতামূলক)
+- গোটচা: rebase-এ --theirs/--ours উল্টে-যায় (আমি আবারও-খেয়েছি — HEAD-checkout-ই-নিরাপদ); agent-browser eval transient-fail (পেজ-লোড-রেস); viewport = set viewport 390 844
+- মার্জড-ট্রি-রিগ্রেশন: E2E-অ্যাপটেড + role-policy + cursor + guard-বেসলাইন + 390px/কনসোল-শূন্য — ALL GREEN
+
+Stage Summary:
+- messenger.css হেক্স-শূন্য + ৯-টোকেন যুক্ত (র্যাচেট-ওয়েভ-৪ সম্পন্ন); patch144 + E2E-স্ক্রিপ্ট রিপোতে
+- পরের-প্রস্তাব: style.css-র্যাচেট (১৩৯৫) · auth/gallery.css (১২৩/১২৩) · og-কার্ড rx-ব্যাজ (s146-সম্পন্ন-যাচাই) · কল-ইতিহাস degrade-রেকর্ড
+- পরের-এজেন্ট: session150 থেকে

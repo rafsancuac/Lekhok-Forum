@@ -385,3 +385,19 @@ html { background: var(--lf-ui-canvas); }
   --lf-yellow-tint: #FEFCE8;
 }
 /* EOF-MARKER: session141-profile-tokens */
+
+/* ═════════ session144-messenger-ratchet — messenger.css র্যাচেট (patch139-রীতি) ═════════════
+   উৎপত্তি: messenger.css-অবশিষ্ট হেক্সের exact-value টোকেনাইজেশন — ভিজ্যুয়াল-পরিবর্তন-শূন্য।
+   নামকরণ-সততা (session143-গোটচা-রীতি): ভিন্ন-মানের কাছাকাছি-শেডে -২-সাফিক্স
+   (social-blue-hover-2, warn-ink-2, social-blue-light-2); per-নাম defs=১ যাচাইকৃত। ═════════════ */
+:root:root {
+  --lf-danger-strong: #E41E3F;
+  --lf-danger-strong-soft: #FBE1E5;
+  --lf-social-blue-hover-2: #166FE0;
+  --lf-warn-ink-2: #664D03;
+  --lf-warn-tint: #FFF7E6;
+  --lf-match-mark: #FFE58F;
+  --lf-match-mark-active: #FF9C6E;
+  --lf-social-blue-light-2: #E3F0FF;
+  --lf-social-blue-tint: #E7F0FD;
+}
