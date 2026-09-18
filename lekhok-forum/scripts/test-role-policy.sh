@@ -277,11 +277,15 @@ echo "══ ২৫. সেশন ১২৫: কমেন্ট PUT/DELETE ম�
 JAR25A=/tmp/jar_25a; JAR25B=/tmp/jar_25b; rm -f $JAR25A $JAR25B
 R=$(login $JAR25A /login testuser demo123); ck "s125 testuser লগইন" "/dashboard" "${R##* }"
 R=$(login $JAR25B /login ismail secret123); ck "s125 ismail লগইন" "/dashboard" "${R##* }"
-CT=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":3,"body":"rp125-top"}')
+# session129-fix: post_id dynamic-discovery — hardcoded 3 was sandbox-DB-dependent
+# (post_not_found -> thread-trio fail -> PUT/DELETE 404 cascade); pick first live article id
+PID=$(curl -s "$BASE/articles" | grep -oE "/articles/[0-9]+" | head -1 | grep -oE "[0-9]+$")
+[ -n "$PID" ] || PID=1
+CT=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":'"$PID"',"body":"rp125-top"}')
 TID=$(echo "$CT" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
-CR=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":3,"body":"rp125-reply","parent_id":'"$TID"'}')
+CR=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":'"$PID"',"body":"rp125-reply","parent_id":'"$TID"'}')
 RID=$(echo "$CR" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
-CG=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":3,"body":"rp125-grand","parent_id":'"$RID"'}')
+CG=$(curl -s -b $JAR25A -X POST "$BASE/api/comment" -H "Content-Type: application/json" --data '{"post_id":'"$PID"',"body":"rp125-grand","parent_id":'"$RID"'}')
 GID=$(echo "$CG" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
 if [ -n "$TID" ] && [ -n "$RID" ] && [ -n "$GID" ]; then PASS=$((PASS+1)); echo "  ✓ s125 থ্রেড-ত্রয়ী তৈরি"; else FAIL=$((FAIL+1)); echo "  ✗ s125 থ্রেড-ত্রয়ী ব্যর্থ"; fi
 ck "s125 PUT anon → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$BASE/api/comments/$TID" -H "Content-Type: application/json" --data '{"body":"x"}')"
