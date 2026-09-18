@@ -1413,3 +1413,17 @@ Stage Summary:
 - গোটচা (PLANS): shared.css-সর্বশেষ-লোড-অ্যানিমেশন-এক্সক্লুশন · 404-মিনিমাল-লেআউটে CSS-প্রোব-মিথ্যা-নেগেটিভ · হেক্স-রিপ্লেস-বাউন্ডারি · admin-view-এ tokens.css-লিংক-নিয়ম
 - পরের-এজেন্ট: session137; প্রস্তাব: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, parent-chain-চিপ, drawer-প্রিভিউ-ইনস্ট্যান্ট
 >>>>>>> Stashed changes
+
+---
+Task ID: session136-ফাইনাল (push-সমাপ্তি)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: push + মার্জড-কোডে চূড়ান্ত-যাচাই
+
+Work Log:
+- প্যারালাল-কলিশন হ্যান্ডলিং: কাজ-মাঝে git pull --rebase-এ c7fefee (session134 parent-chain-চিপ) + 4794682 (session135 accepted-answer-cross-surface + qa-swap-fade135) আবিষ্কৃত → stash/pull/pop-রীতিতে ক্লিন-ইউনিয়ন (বিরোধ-শূন্য) → max+1 রীতিতে ১৩৪→১৩৬-সমগ্র-রিলেবেল (কোড-মার্কার+docs)
+- ইউনিয়ন-পরে-সংযোজন: আমার swap-fade-এ .fc-instaprev-এক্সক্লুশন (তাদের fcIpIn134 নির্দিষ্টতা-বিজয়ে রক্ষা — synthetic-প্রোব-প্রমাণিত) + :not()-তালিকায় নথিভুক্ত
+- pushed: 4794682..415af2a ✓
+
+Stage Summary:
+- রিপো main @ 415af2a (session136); মার্জড-ট্রি-যাচাই: role-policy ১৭৭/১৭৭ + cursor ২৬/২৬ + guard-নতুন-বেসলাইন + audit + ব্রাউজার-স্মোক সব-গ্রিন
+- পরের-এজেন্ট: session137; admin/moderator view-বানানোর নিয়ম: admin.css-এর আগে tokens.css-লিংক আবশ্যক (PLANS-গোটচা-৪)
