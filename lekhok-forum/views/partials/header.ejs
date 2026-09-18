@@ -372,6 +372,9 @@
                               if (row.parentNode) row.parentNode.removeChild(row);
                               if (first) list121.insertBefore(row, first);
                               else list121.appendChild(row);
+                              /* session133: রিস্টোর-রো-সহ ড্রপডাউনের আপেক্ষিক-সময় রি-পেইন্ট —
+                                 data-ts→LekhokRelTime চুক্তি (7s-টোস্টে 'N মিনিট আগে' বাউন্ডারি-স্লিপ প্রতিরোধ) */
+                              try { if (window.LekhokRelTime) window.LekhokRelTime.render(list121); } catch (_) {}
                               badge121();
                             } else if (window.showToast) showToast('বাতিল করা যায়নি', 'error');
                             after();

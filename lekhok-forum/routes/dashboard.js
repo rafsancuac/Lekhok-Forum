@@ -318,6 +318,14 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
   return null; // myBookmarkedIds প্রত্যাশা করলে রিটার্ন-ভ্যালু হিসেবে পাঠায়
 }
 
+/* ── session133: /feed অ্যালায়াস — ডিজাইন-সিস্টেম-ডকসে "Social Feed" পেজটিকে /feed বলা হয়,
+ *    বাস্তব-রুট /dashboard (session105 থেকে)। পুরনো-লিংক/বুকমার্ক/ডক-প্রত্যাশা 404-এ না-পড়ায়
+ *    query-সংরক্ষণসহ 302 (filter/sort অক্ষুণ্ণ)। GET-শুধু — POST কখনো /feed-এ আসে না। ── */
+router.get('/feed', (req, res) => {
+  const qs = Object.keys(req.query || {}).length ? '?' + new URLSearchParams(req.query).toString() : '';
+  res.redirect(302, '/dashboard' + qs);
+});
+
 router.get('/dashboard', async (req, res) => {
   const me = req.session.user || null;
   const filter = me && req.query.filter === 'following' ? 'following' : (req.query.filter || 'all');   // all | article | question | activity | following

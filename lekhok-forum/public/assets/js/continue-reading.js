@@ -42,8 +42,13 @@
       if (it && it.ti && it.u && it.r > 0.05 && it.r < 0.95) {
         /* session125-ডেল্টা: c-বিহীন এন্ট্রিতে ডিটারমিনিস্টিক /img/cover/crx<id> ফলব্যাক —
            routes/cover.js যেকোনো seed-এ সাইট-লোকাল SVG-আর্ট (প্রতি-লেখায় স্থায়ী-রঙ,
-           broken/আইকন-শূন্য)। data-cover-থাকলে সেটাই প্রাধান্য (session123-চুক্তি)। */
-        arr.push({ id: id, r: +it.r || 0, t: +it.t || 0, ti: String(it.ti), u: String(it.u), c: String(it.c || ('/img/cover/crx' + id + '/160/160')), p: +it.p || 0 });
+           broken/আইকন-শূন্য)। data-cover-থাকলে সেটাই প্রাধান্য (session123-চুক্তি)।
+           session133 (PLANS-প্রস্তাব-①, আগের-লেবেল session130): og-default-বিরোধী গার্ড —
+           c যদি সাইট-ওয়াইড জেনেরিক /assets/img/og-default হয়, সেটা কভার-নয় (সব-লেখায়
+           এক-ছবি) — c-বিহীন হিসেবেই গণ্য → প্রতি-লেখায় ডিটারমিনিস্টিক crx<id>-আর্ট প্রাধান্য। */
+        var cRaw = String(it.c || '');
+        var cOk = cRaw && cRaw.indexOf('og-default') === -1;
+        arr.push({ id: id, r: +it.r || 0, t: +it.t || 0, ti: String(it.ti), u: String(it.u), c: cOk ? cRaw : ('/img/cover/crx' + id + '/160/160'), p: +it.p || 0 });
       }
     });
     /* সেশন ১২৯: পিন-ফার্স্ট-সর্ট — পিন করা (p desc) আগে, তারপর শেষ-পড়া (t desc) */

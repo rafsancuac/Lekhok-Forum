@@ -1335,3 +1335,24 @@ Task ID: 14 — Session 124 (cron-QA রাউন্ড)
 **গোটচা ×৩ (PLANS-এ বিস্তারিত):** getSenders() প্ল্যাটফর্ম-অবজেক্ট (ক্লাস-ওভাররাইড sender-কল ধরে না — এন্ড-স্টেট-পাঠই প্রমাণ); /dashboard গেস্টেও 200 (data-auth-ই বিশ্বস্ত-সোর্স); #F7B125=rgb(247,177,37) ডেসিমাল-গোটচা।
 
 **পরের-এজেন্ট: session133 লেবেল থেকে।** — সুপারিশ: গ্রুপ-রিং-অনলাইন-সীমা, parent-chain-চিপ, drawer-প্রিভিউ-ইনস্ট্যান্ট।
+
+---
+Task ID: session133 (cron-r13 — QA→ফিচার-রাউন্ড)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browser QA → স্থিতিশীল-ফেজে session129-প্রস্তাব বাস্তবায়ন
+
+## Current Project Status / Assessment
+- QA-ফেজ: role-policy ১৪৭/১৪৭ ✓ cursor ২৬/২৬ ✓ guard ✓ audit:views ✓ — ব্রাউজার-সুইপ (ismail): ফিড-canonical-মার্কআপ (fc-drawer ×১২) ✓ ড্রয়ার no-reload-নিয়ম (window-marker) ✓ pm-btn/share-menu/rx-মডাল-ট্রিগার ✓ কনসোল-০ ✓ 390px-০ ✓ — **বাগ-শূন্য, স্থিতিশীল** → ফিচার-রাউন্ড
+- QA-আবিষ্কার: `/feed` 404 (ডিজাইন-ডকস "Social Feed" = বাস্তবে /dashboard)
+
+## Goals / Completed / Verification
+- ① `/feed`→302 `/dashboard` query-সংরক্ষণে (routes/dashboard.js) + role-policy §২৬ (৩-চেক; ১৫০ মোট)
+- ② undo-toast Enter=undo/Escape=নিষ্ক্রিয়ণ — interactive-focus-অগ্রাধিকার-গার্ডসহ + aria-keyshortcuts + kbd-হিন্ট (session129-প্রস্তাব-④)
+- ③ header.ejs undo-restore-পরে LekhokRelTime.render(list121) (session129-প্রস্তাব-②)
+- ④ continue-reading.js og-default-বিরোধী গার্ড (session129-প্রস্তাব-①)
+- ⑤ shared.css session133-ব্লক: kbd-চিপ + :focus-within-এলিভেশন + #notifList স্ক্রোল-ক্ল্যাম্প 60vh+কাস্টম-স্ক্রলবার + .notif-x hover-reveal + টোস্ট safe-area (টোকেন-শুধু, হেক্স-শূন্য)
+- যাচাই: role-policy ১৫০/১৫০ ✓ cursor ২৬/২৬ ✓ guard ✓ audit ✓ brace-০ ✓; E2E ৮-প্রোব (alias/kbd/enter/escape/typing-guard/scroll/কনসোল/390px) ✓
+
+## Unresolved Issues / Risks / Next Priorities
+- বকেয়া-নয়: স্টাইলিং-বাকি-সুপারিশ PLANS session133-নোটে (reconcile-flash-fade, crx-পিন, র্যাচেট-নামানো, full-page-reltime, Turso-রিসেট)
+- পরের-এজেন্ট: **session131 থেকে**; push-পূর্বে git pull --rebase + union-নোট পড়ুন

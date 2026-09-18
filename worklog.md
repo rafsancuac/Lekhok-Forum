@@ -1302,3 +1302,27 @@ Stage Summary:
 - রিপো main @ cbd3221 (session132 — অটো-ভিডিও-ডিগ্রেড সাশ্রয়-ল্যাডার); কল-রোডম্যাপের সব-কোডযোগ্য আইটেম সম্পূর্ণ
 - নতুন-গোটচা (PLANS): getSenders() প্ল্যাটফর্ম-অবজেক্ট · /dashboard-গেস্ট-200 (data-auth) · #F7B125=rgb(247,177,37) · রিবেজে GIT_EDITOR-unset
 - পরের-এজেন্ট: session133 থেকে
+
+
+---
+Task ID: session133 (cron-r13 — QA→ফিচার-রাউন্ড)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browser QA + স্থিতিশীল-ফেজে ফিচার/স্টাইল-রাউন্ড + push
+
+## Current Project Status / Assessment
+- রিপো main @ session129 (16bfb4f/5eabd2b) — QA-ফেজ: role-policy ১৪৭/১৪৭ ✓ cursor ২৬/২৬ ✓ guard ✓ audit:views ✓; agent-browser সুইপ (ismail/secret123): ফিড-canonical (fc-drawer ×১২, data-comments-for), ড্রয়ার no-reload-নিয়ম (window-marker alive, hidden→shown, preview-১), pm-btn, share-menu--fb, rx-open-মডাল-ট্রিগার — **বাগ-শূন্য**; কনসোল-০, 390px-০ ×৫-পেজ
+- আবিষ্কার: `/feed` 404 — ডিজাইন-সিস্টেম-ডকসের "Social Feed"-প্রত্যাশা ও পুরনো-লিংকের গ্যাপ
+- এনভ-পুনঃপ্রমাণ: ব্যাকগ্রাউন্ড-সার্ভার প্রতি-ইনভোকেশনে মরে — সার্ভার+স্যুট এক-ইনভোকেশনেই চালানো হয়েছে (lf-boot-প্যাটার্ন)
+
+## Goals / Completed / Verification
+- ① /feed→302 /dashboard অ্যালায়াস (routes/dashboard.js, URLSearchParams-query-সংরক্ষণ) + role-policy §২৬ ৩-চেক যোগ
+- ② undo-toast.js কীবোর্ড-চুক্তি: Enter=undo / Escape=নিষ্ক্রিয়ণ (undo-নয়); interactive-focus-অগ্রাধিকার-গার্ড (closest a/button/input/[tabindex] হলে নেটিভ জেতে); aria-keyshortcuts + ↵Enter-kbd-হিন্ট (session129-প্রস্তাব-④)
+- ③ header.ejs undo-restore-রি-ইনসার্টের পরে LekhokRelTime.render(list121) — মিনিট-বাউন্ডারি-স্লিপ প্রতিরোধ (session129-প্রস্তাব-②)
+- ④ continue-reading.js: c-তে 'og-default' → ডিটারমিনিস্টিক /img/cover/crx<id> প্রাধান্য (session129-প্রস্তাব-①)
+- ⑤ shared.css session133-ব্লক (টোকেন-শুধু, হেক্স-শূন্য): .lf-utoast-kbd চিপ + hover-ব্লু-টিন্ট + .lf-utoast:focus-within এলিভেশন + #notifList স্ক্রোল-ক্ল্যাম্প min(60vh,420px)+কাস্টম-স্ক্রলবার (long-list-নিয়ম) + .notif-x hover/focus-reveal (hover:none সদা-দৃশ্যমান) + মোবাইল টোস্ট safe-area-inset
+- ফাইনাল-রিগ্রেশন: role-policy **১৫০/১৫০** ✓ cursor ২৬/২৬ ✓ guard ✓ audit:views ✓ brace-০ ✓; E2E ৮-প্রোব: /feed?filter=following→/dashboard?filter=following ✓ kbd-present ✓ Enter→undo=1+hidden ✓ Escape→undo=0+hidden ✓ typing-guard→undo=0+খোলা ✓ notifList computed auto+346px ✓ কনসোল-০ ✓ 390px-০ ✓
+
+## Unresolved Issues / Risks / Next Priorities
+- বাকি-প্রস্তাব (PLANS session133-নোট): reconcile-flash-মসৃণকরণ (CSS-side), crx-'শেষ-পড়া'-পিন, tokens-র্যাচেট-বেসলাইন নামানো (admin.css ৪২৬), full-page notifications-এ reltime-রি-পেইন্ট, লাইভ-Turso-রিসেট (টোকেন-ধারী)
+- গোটচা-পুনঃপ্রমাণিত: Express res.redirect-এর Location গেটওয়ে/curl-এ absolute দেখায় — টেস্টে strip() হেল্পার বাধ্যতামূলক
+- পরের-এজেন্ট: **session131 থেকে**; শুরুতে git fetch + PLANS-সর্বশেষ Cross-Agent Note; push-পূর্বে pull --rebase (union-মার্জ PLANS/PROJECT/worklog)

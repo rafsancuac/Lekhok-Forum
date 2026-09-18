@@ -233,3 +233,25 @@
 @media (prefers-reduced-motion: reduce){.flash-acc127{animation:none}}
 
 /* EOF-MARKER: session131 */
+
+/* ── session133: টোস্ট-কীবোর্ড-হিন্ট + ফোকাস-পলিশ + ড্রপডাউন-স্ক্রোল-ক্ল্যাম্প ─────────
+   (১) kbd-হিন্ট: undo-বাটনে Enter-শর্টকাটের ভিজ্যুয়াল (undo-toast.js session133-চুক্তি)
+   (২) :focus-within-এ টোস্ট-এলিভেশন (কীবোর্ড-ব্যবহারকারীর দৃষ্টি-অ্যাঙ্কর)
+   (৩) #notifList-স্ক্রোল-ক্ল্যাম্প: দীর্ঘ-তালিকায় ড্রপডাউন-ভিউপোর্ট-উল্লঙ্ঘন-বন্ধ
+       + কাস্টম-স্ক্রলবার (long-list UI-নিয়ম) — টোকেন-শুধু (var(--lf-*)). */
+.lf-utoast-undo .lf-utoast-kbd{font-family:inherit;font-size:.66rem;font-weight:700;line-height:1;color:var(--lf-text-secondary);background:var(--lf-ui-input-bg);border:1px solid var(--lf-ui-border-strong);border-radius:5px;padding:2px 5px;margin-left:2px;display:inline-block;vertical-align:1px;letter-spacing:.2px}
+.lf-utoast-undo:hover .lf-utoast-kbd{color:var(--lf-social-blue);border-color:var(--lf-social-blue);background:var(--lf-social-blue-light)}
+.lf-utoast:focus-within{box-shadow:0 10px 34px rgba(15,23,42,.22),0 3px 8px rgba(15,23,42,.1);border-color:var(--lf-ui-border-strong)}
+.lf-utoast-bar{transition-timing-function:linear}
+@media (max-width:640px){.lf-utoast{bottom:calc(14px + env(safe-area-inset-bottom,0px))}}
+#notifDropdown #notifList{max-height:min(60vh,420px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--lf-ui-border-strong) transparent}
+#notifDropdown #notifList::-webkit-scrollbar{width:6px}
+#notifDropdown #notifList::-webkit-scrollbar-track{background:transparent}
+#notifDropdown #notifList::-webkit-scrollbar-thumb{background:var(--lf-ui-border-strong);border-radius:999px}
+#notifDropdown #notifList::-webkit-scrollbar-thumb:hover{background:var(--lf-text-tertiary)}
+#notifDropdown .notif-item{transition:background .12s ease}
+#notifDropdown .notif-x{opacity:0;transition:opacity .12s ease,background .12s ease,color .12s ease}
+#notifDropdown .notif-item:hover .notif-x,#notifDropdown .notif-item:focus-visible .notif-x,#notifDropdown .notif-x:focus-visible{opacity:1}
+@media (hover:none){#notifDropdown .notif-x{opacity:1}}
+@media (prefers-reduced-motion:reduce){#notifDropdown .notif-item,#notifDropdown .notif-x{transition:none}}
+/* EOF-MARKER: session133-toast-kbd-scroll */

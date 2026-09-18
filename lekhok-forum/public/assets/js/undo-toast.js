@@ -6,6 +6,9 @@
  *    • auto-hide ms (ডিফল্ট ৭০০০); প্রগ্রেস-বার অবশিষ্ট-সময় দেখায়।
  *    • a11y: role="status" aria-live="polite" + focus-টোকেন-বাটন + Escape=বাতিল-নয়
  *      (টোস্ট-নিষ্ক্রিয়ণ মানেই undo-নয় — FB-আচরণ)।
+ *    • session133: কীবোর্ড-শর্টকাট — Enter=undo (টোস্টের undo-বাটনে সরাসরি),
+ *      Escape=টোস্ট-নিষ্ক্রিয়ণ (undo-নয় — উপরের নিয়মই)। ইনপুট/টেক্সটএরিয়া/contenteditable-এ
+ *      টাইপ করার সময় শর্টকাট নীরব (typing-guard); aria-keyshortcuts চুক্তি।
  *  মার্কআপ/স্টাইল: .lf-utoast-* (style.css session123-ব্লক) — টোকেন-শুধু (var(--lf-*))।
  *  হোস্ট: header.ejs (প্রতি user-পেজ) — ড্রপডাউন-ডিসমিস ও /notifications ফুল-পেজ দুটোই এটাই ব্যবহার করে।
  */
@@ -53,7 +56,9 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'lf-utoast-undo';
-      btn.textContent = 'বাতিল করুন';
+      /* session133: কীবোর্ড-শর্টকাট চুক্তি + ভিজ্যুয়াল kbd-হিন্ট (স্টাইল session133-ব্লক) */
+      btn.setAttribute('aria-keyshortcuts', 'Enter');
+      btn.innerHTML = 'বাতিল করুন <kbd class="lf-utoast-kbd" aria-hidden="true">↵ Enter</kbd>';
       btn.addEventListener('click', function (e) {
         e.preventDefault(); e.stopPropagation();
         if (busy) return;
@@ -71,6 +76,7 @@
     x.type = 'button';
     x.className = 'lf-utoast-x';
     x.setAttribute('aria-label', 'বন্ধ করুন');
+    x.setAttribute('aria-keyshortcuts', 'Escape');
     x.innerHTML = '<i class="fas fa-xmark" aria-hidden="true"></i>';
     x.addEventListener('click', function (e) { e.preventDefault(); hide(); });
     el.appendChild(x);
@@ -86,4 +92,28 @@
     /* প্রগ্রেস-বার অ্যানিমেশন (CSS transition — reduced-motion-এ স্থির) */
     requestAnimationFrame(function () { if (bar) bar.style.transform = 'scaleX(0)'; });
   };
+
+  /* ── session133: গ্লোবাল কীবোর্ড-শর্টকাট (একবার বাউন্ড) ──────────────────────────
+   * Enter = undo-বাটন ক্লিক (টোস্ট-খোলা থাকলে); Escape = টোস্ট নিষ্ক্রিয় (undo-নয়)।
+   * টাইপিং-গার্ড: ইনপুট/textarea/contenteditable-এ ফোকাস থাকলে পাত্তা দেয় না —
+   * মেসেজ-কম্পোজারে Enter-চাপলে টোস্ট-undo ফায়ার করবে না। টোস্টের নিজের বাটনে
+   * ফোকাস থাকলে নেটিভ-ক্লিকই যথেষ্ট (busy-গার্ড ডাবল-ফায়ার আটকায়)। */
+  document.addEventListener('keydown', function (e) {
+    if (!el || busy) return;
+    var ae = document.activeElement;
+    var inToast = ae && el.contains(ae);
+    if (e.key === 'Enter') {
+      if (inToast) return; /* নেটিভ বাটন-ক্লিক নিজেই চলে */
+      /* টাইপিং-গার্ড + ফোকাস-অগ্রাধিকার: যেকোনো interactive-এলিমেন্টে (লিংক/বাটন/ইনপুট)
+         ফোকাস থাকলে নেটিভ-অ্যাক্টিভেশনই জেতে — টোস্ট-শর্টকাট শুধু "ফ্রি" ফোকাসে চলে */
+      if (ae && ae !== document.body && ae.closest && ae.closest('a, button, input, select, textarea, [contenteditable="true"], [role="button"], [tabindex]:not([tabindex="-1"])')) return;
+      if (!undoFn) return;
+      var btn = el.querySelector('.lf-utoast-undo');
+      if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
+    } else if (e.key === 'Escape') {
+      if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) return;
+      e.preventDefault();
+      hide();
+    }
+  }, true);
 })();

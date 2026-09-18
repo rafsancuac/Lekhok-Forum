@@ -337,6 +337,18 @@ if [ -z "$Q127" ]; then echo "  ✗ §26-সেলফ-সিড ব্যর্�
 fi
 
 echo ""
+echo "══ ২৭. সেশন ১৩৩: /feed→/dashboard অ্যালায়াস (query-সংরক্ষণ) ══"
+ckR27() { if [ "$2" == "$3" ]; then PASS=$((PASS+1)); echo "  ✓ $1"; else FAIL=$((FAIL+1)); echo "  ✗ $1 (expected [$2] got [$3])"; fi }
+# গেস্ট: /feed → 302 /dashboard (লগইন-গার্ডের আগে অ্যালায়াস — dashboard.js নিজেই গেস্ট-ফ্রেন্ডলি)
+RA=$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" "$BASE/feed")
+ckR27 "/feed গেস্ট 302" "302 /dashboard" "$(strip "$RA")"
+RB=$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" "$BASE/feed?filter=following&sort=ranked")
+ckR27 "/feed query-সংরক্ষণ" "302 /dashboard?filter=following&sort=ranked" "$(strip "$RB")"
+# লগইন: অ্যালায়াস-পথেও ফিড রেন্ডার (follow redirect → 200)
+RC=$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -L "$BASE/feed")
+ckR27 "/feed লগইন → 200 (ফিড)" "200" "$RC"
+echo ""
+echo ""
 echo "════════════════════════════════"
 echo "PASS=$PASS FAIL=$FAIL"
 [ $FAIL -eq 0 ] && echo "ALL GREEN ✓" || echo "FAILURES ✗"

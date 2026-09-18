@@ -2658,3 +2658,13 @@ git push origin main
 **যাচাই:** নতুন E2E verify-session132-autodegrade.js **৩০/৩০** (হুক-পাথ ৯ + লাইভ-কল-ল্যাডার ১৬ — ফেক-RTT-তে প্রকৃত sender.getParameters() এন্ড-স্টেট-প্রমাণ — + অডিও-গার্ড ২ + idle ৩); রিগ্রেশন session122 ২১/২১ + session130 ২৫/২৫ + role-policy ১৪৭/১৪৭ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard + audit:views + 390px-০ + কনসোল-০।
 
 **স্পর্শ:** webrtc-call.js (৮-সংযোজন) · calls.css (EOF-ব্লক) · scripts/verify-session132-autodegrade.js (নতুন)। route/db শূন্য। বিস্তারিত: PLANS.md session132-নোট।
+
+---
+## session133 — /feed-অ্যালায়াস + আন্ডু-টোস্ট-কীবোর্ড-শর্টকাট + ড্রপডাউন-স্ক্রোল-ক্ল্যাম্প (cron-r13 QA→ফিচার-রাউন্ড)
+- **QA-ফেজ (প্রথমে-যাচাই):** রিগ্রেশন role-policy ১৪৭/১৪৭ + cursor ২৬/২৬ + guard + audit:views ✓; agent-browser সুইপ — লগইন-প্রবাহ, ফিড-কার্ড-canonical-মার্কআপ (fc-drawer/data-comments-for ১২-কার্ড), কমেন্ট-ড্রয়ার no-reload-নিয়ম (window-marker alive, hidden→shown, preview-১), pm-btn/three-dot, share-menu--fb, রিঅ্যাক্টরস-মডাল-ট্রিগার — বাগ-শূন্য, কনসোল-০, 390px-০। **আবিষ্কার:** `/feed` 404 (ডিজাইন-ডকস "Social Feed" = বাস্তবে /dashboard)।
+- **① /feed-অ্যালায়াস (QA-ফাউন্ড-গ্যাপ):** routes/dashboard.js `GET /feed` → 302 `/dashboard` query-সংরক্ষণে (filter/sort অক্ষুণ্ণ; URLSearchParams)। role-policy §২৬ ৩-চেক (গেস্ট-302 + query + লগইন-200) — মোট ১৫০/১৫০।
+- **② আন্ডু-টোস্ট-কীবোর্ড (session129-প্রস্তাব-④):** undo-toast.js — Enter=undo / Escape=নিষ্ক্রিয়ণ (undo-নয়, FB-নিয়ম)। গার্ড: interactive-element-ফোকাসে নেটিভ-অ্যাক্টিভেশন জেতে (লিংক/বাটন/ইনপুট/textarea/contenteditable) — শর্টকাট "ফ্রি-ফোকাসেই" চলে; `aria-keyshortcuts` চুক্তি + বাটনে `↵ Enter` kbd-হিন্ট। E2E: enter-fired=1+toast-hidden / escape→undo=0 / typing-guard→undo=0+toast-খোলা।
+- **③ ড্রপডাউন-রিলেটাইম-রি-পেইন্ট (session129-প্রস্তাব-②):** header.ejs undo-restore-রো-রি-ইনসার্টের পরে `LekhokRelTime.render(list121)` — ৭সে-টোস্টের মিনিট-বাউন্ডারি-স্লিপ প্রতিরোধ।
+- **④ crx og-default-গার্ড (session129-প্রস্তাব-①):** continue-reading.js allEntries — `c`-এ 'og-default' হলে জেনেরিক-এক-ছবি নয়, প্রতি-লেখায় ডিটারমিনিস্টিক `/img/cover/crx<id>` প্রাধান্য।
+- **⑤ স্টাইল-পলিশ (shared.css session133-ব্লক, টোকেন-শুধু):** `.lf-utoast-kbd` চিপ (hover-এ ব্লু-টিন্ট) + `.lf-utoast:focus-within` এলিভেশন + `#notifList` স্ক্রোল-ক্ল্যাম্প `min(60vh,420px)` + কাস্টম-স্ক্রলবার (long-list-নিয়ম) + `.notif-x` hover/focus-reveal (hover:none-এ সদা-দৃশ্যমান — FB-প্যারিটি) + মোবাইল টোস্ট safe-area-inset।
+- **পরীক্ষা:** role-policy ১৫০/১৫০ ✓ cursor ২৬/২৬ ✓ guard ✓ audit:views ✓ brace-০ ✓; agent-browser E2E ৮-প্রোব (alias/kbd/enter/escape/typing-guard/scroll-clamp/কনসোল-০/390px-০) ✓। বিস্তারিত PLANS.md session133-নোট।
