@@ -62,7 +62,7 @@
   }
 
   /* ── ড্রপডাউন লাইভ-রিফ্রেশ (সার্ভার-মার্কআপের হুবহু শেপ) ──────────────────── */
-  var ICONS = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', call: 'fa-phone-slash' }; /* সেশন ৯৭-মার্জ: call-টাইপ → মিসড-কল-আইকন (header.ejs _ico-এর সাথে সিঙ্কড) */
+  var ICONS = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', answer_accepted: 'fa-circle-check', call: 'fa-phone-slash' }; /* সেশন ৯৭-মার্জ: call-টাইপ → মিসড-কল-আইকন (header.ejs _ico-এর সাথে সিঙ্কড) */
   /* সেশন ১৩১: UTC-সচেতন DB-টাইমস্ট্যাম্প পার্স (main.js _pTs131-এর মিরর — PLANS-চুক্তি: স্কিমা-বদলে দুই-জায়গাই) */
   function _pTs131L(s) {
     s = String(s == null ? '' : s).trim();
@@ -71,6 +71,7 @@
     if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(s)) return new Date(s.replace(' ', 'T') + 'Z').getTime();
     var d = new Date(s); return d.getTime();
   }
+
   function relTime(raw) {
     if (!raw) return '';
     var t = _pTs131L(raw); /* সেশন ১৩১: DB-নেম-লেস = UTC ('Z'-জোড়া) — ক্লায়েন্ট-লোকাল-মিসপার্স-ফিক্স */

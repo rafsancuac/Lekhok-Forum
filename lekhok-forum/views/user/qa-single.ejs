@@ -105,7 +105,11 @@
             qa-single-এর সার্ভার-সত্যই (like_count DESC-অর্ডার + স্লট-র‍্যাপার +
             top-answer-chip + compact-রিপ্লাই) — চিপ AJAX-রিফ্রেশ-পরেও টেকনামী
             (session113-বকেয়া ③ পূর্ণ); ইঞ্জিন comment-tools.js swapQaThread। ── %>
-        <div class="qa-answers-list" data-post-link="/qa/<%= post.id %>" data-post-id="<%= post.id %>">
+        <%# সেশন ১৩৫: data-can-acc135-মার্কার — দর্শক প্রশ্নকর্তা/অ্যাডমিন কিনা; comment-tools.js-এর
+            mkAccActions135 fresh-উত্তরে (optimistic/canonical) টগল-বাটন বসাতে এটি পড়ে
+            (session131-নোট ③: swap-অবধি টগল-অনুপস্থিতি বন্ধ)। ডেলিগেটেড-লিসনার বলে রিবাইন্ড-শূন্য। %>
+        <% const _canAcc135 = !!(user && (user.id === post.author_id || user.role === 'admin')); %>
+        <div class="qa-answers-list" data-post-link="/qa/<%= post.id %>" data-post-id="<%= post.id %>" data-can-acc135="<%= _canAcc135 ? '1' : '0' %>">
         <% answers.forEach((a, idx) => { %>
           <%# সেশন ১৩১: গ্রহণকৃত-উত্তর — স্লটে is-accepted127 + সবুজ accepted-chip127;
               প্রশ্নকর্তা/অ্যাডমিনের জন্য টগল-বাটন (acc-btn127) — AJAX no-reload। %>

@@ -2213,3 +2213,26 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .cx102 .cx-today-badge.is-soon .cx-tb-dot,.cx102 .cx-hour-row.is-today .cx-hour-state.live{animation:none}
   .cx102 .cx-today-badge,.cx102 .cx-hour-state{transition:none}
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session135 — accepted-answer cross-surface completion
+   ① ফিড-কার্ডে গৃহীত-উত্তর ব্যাজ (FeedPostCard — ড্যাশবোর্ড/প্রোফাইল ফিড)
+   ② answer_accepted টোনাল আইকন (নোটিফ-পেজ .icon-accepted135 + ড্রপডাউন
+      .ico-answer_accepted — আগে জেনেরিক icon-system/fa-bell-এ হারাত)
+   ③ swapQaThread reconcile-ফ্ল্যাশ-মসৃণকরণ (ডিম→সোয়াপ→ফেড-ব্যাক)
+   রঙ = var(--lf-*) কেবল (hex-র্যাচেট-চুক্তি) · rgba-শ্যাডো লিগ্যাসি-রীতি
+   ═══════════════════════════════════════════════════════════════════════════ */
+.feed-acc-badge135{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:var(--lf-brand-light);color:var(--lf-brand-primary);border:1px solid rgba(0,106,78,.22);font-size:.72rem;font-weight:700;line-height:1.5;vertical-align:middle;white-space:nowrap;transition:transform .18s ease,box-shadow .18s ease}
+.feed-acc-badge135:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,106,78,.18)}
+.feed-acc-badge135 i{font-size:.7rem}
+.feed-card-head .feed-acc-badge135,.repost-original .feed-acc-badge135{margin-left:6px}
+.notif-page-icon.icon-accepted135{background:var(--lf-brand-light);color:var(--lf-brand-primary);border-color:rgba(0,106,78,.28)}
+.notif-ico.ico-answer_accepted{background:rgba(0,106,78,.13);color:var(--lf-brand-primary)}
+.qa-answers-list{transition:opacity .22s ease}
+.qa-answers-list.qa-swap-fade135{opacity:.45}
+@media (max-width:390px){.feed-acc-badge135{padding:2px 7px;font-size:.68rem}}
+@media (prefers-reduced-motion: reduce){
+  .feed-acc-badge135,.qa-answers-list{transition:none}
+  .qa-answers-list.qa-swap-fade135{opacity:1}
+}

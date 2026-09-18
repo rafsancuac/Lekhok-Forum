@@ -355,7 +355,7 @@ router.get('/birthdays', async (req, res) => {
 //               ভবিষ্যৎ-টাইপ যোগ হলেও ফিল্টার কখনো রো-হারায় না)
 const NF_FAMILIES = [
   { key: 'mention',  types: ['mention'] },
-  { key: 'reply',    types: ['comment', 'reply'] },
+  { key: 'reply',    types: ['comment', 'reply', 'answer_accepted'] },
   { key: 'reaction', types: ['reaction', 'like'] },
   { key: 'message',  types: ['message', 'call'] },
   { key: 'follow',   types: ['follow'] },

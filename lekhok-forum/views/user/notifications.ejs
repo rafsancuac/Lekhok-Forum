@@ -7,7 +7,7 @@
   const bn117 = (n) => String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[+d]);
   const G117 = [
     { key: 'mention',  label: 'ম্যানশন',         icon: 'fa-at',       types: ['mention'] },
-    { key: 'reply',    label: 'উত্তর ও মন্তব্য', icon: 'fa-comments', types: ['reply', 'comment'] },
+    { key: 'reply',    label: 'উত্তর ও মন্তব্য', icon: 'fa-comments', types: ['reply', 'comment', 'answer_accepted'] },
     { key: 'reaction', label: 'প্রতিক্রিয়া',      icon: 'fa-heart',    types: ['like', 'reaction'] },
     { key: 'message',  label: 'বার্তা ও কল',    icon: 'fa-envelope', types: ['message', 'call'] },
     { key: 'follow',   label: 'অনুসরণ',         icon: 'fa-user-plus', types: ['follow'] },
@@ -37,7 +37,7 @@
         গ্রুপ-ম্যাপিং সার্ভার-সাইডে (route-অস্পৃশ্য); কাউন্ট-ব্যাজ বাংলা-ডিজিট;
         client-side ফিল্টার (৫০-আইটেম-পেজে তাত্ক্ষণিক) + dismiss-সিঙ্ক MutationObserver ── %>
     <% const bn119 = v => String(v).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[+d]); %>
-    <% const G119 = { comment: ['comment', 'reply'], reaction: ['like', 'reaction'], mention: ['mention'], follow: ['follow'] }; %>
+    <% const G119 = { comment: ['comment', 'reply', 'answer_accepted'], reaction: ['like', 'reaction'], mention: ['mention'], follow: ['follow'] }; %>
     <% const groupOf119 = t => G119.comment.indexOf(t) > -1 ? 'comment' : (G119.reaction.indexOf(t) > -1 ? 'reaction' : (G119.mention.indexOf(t) > -1 ? 'mention' : (G119.follow.indexOf(t) > -1 ? 'follow' : 'system'))); %>
     <% const g119 = { all: items.length, comment: 0, reaction: 0, mention: 0, follow: 0, system: 0 }; %>
     <% items.forEach(n => { g119[groupOf119(n.type)]++; }); %>
@@ -70,8 +70,10 @@
           <%# সেশন ১১৬: reaction/reply/mention টাইপ-আইকন — হেডার-ড্রপডাউনের _ico-ম্যাপের
               সাথে প্যারিটি (আগে শুধু icon-system + fa-bell-এ পড়ত; reaction = like-পরিবার,
               reply/mention = comment-পরিবার — feed.css-এর .icon-* প্যালেট পুনঃব্যবহার) %>
-          <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' || n.type === 'reaction' ? 'icon-like' : (n.type === 'comment' || n.type === 'reply' || n.type === 'mention' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : 'icon-system')))); %>
-          <% const _ico = n.type === 'birthday' ? 'fa-birthday-cake' : (n.type === 'like' || n.type === 'reaction' ? 'fa-heart' : (n.type === 'comment' ? 'fa-comment' : (n.type === 'reply' ? 'fa-reply' : (n.type === 'mention' ? 'fa-at' : (n.type === 'follow' ? 'fa-user-plus' : (n.type === 'call' ? 'fa-phone-slash' : 'fa-bell')))))); %>
+          <%# সেশন ১৩৫: answer_accepted — নিজস্ব টোনাল আইকন (icon-accepted135 + fa-circle-check;
+              আগে icon-system/fa-bell-এ হারাত) + G117-র reply-পরিবারে যুক্ত (উত্তর-ও-মন্তব্য চিপে গণনা) %>
+          <% const iconClass = n.type === 'birthday' ? 'icon-birthday' : (n.type === 'like' || n.type === 'reaction' ? 'icon-like' : (n.type === 'comment' || n.type === 'reply' || n.type === 'mention' ? 'icon-comment' : (n.type === 'follow' ? 'icon-follow' : (n.type === 'call' ? 'icon-call' : (n.type === 'answer_accepted' ? 'icon-accepted135' : 'icon-system'))))); %>
+          <% const _ico = n.type === 'birthday' ? 'fa-birthday-cake' : (n.type === 'like' || n.type === 'reaction' ? 'fa-heart' : (n.type === 'comment' ? 'fa-comment' : (n.type === 'reply' ? 'fa-reply' : (n.type === 'mention' ? 'fa-at' : (n.type === 'follow' ? 'fa-user-plus' : (n.type === 'call' ? 'fa-phone-slash' : (n.type === 'answer_accepted' ? 'fa-circle-check' : 'fa-bell'))))))); %>
           <%# সেশন ১২৩: data-n = restore-পেলোড JSON (id/type/title/body/link/read/ts) —
               ডিসমিস-টোস্টের 'বাতিল করুন' এই ফিল্ড দিয়েই POST /api/notifications/restore
               করে (EJS-escape JSON.stringify — quote-নিরাপদ); হেডার-ড্রপডাউন ও

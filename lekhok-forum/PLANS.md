@@ -1752,3 +1752,20 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **E2E (মার্জড-কোডে):** সার্ভার-চিপ "রিয়া আক্তার"→22 ✓ রিপ্লাই-টু-রিপ্লাই→61 ✓ ক্লিক→flash-live (brand-ring rgba(0,106,78))+hash ✓ ফ্ল্যাশ-ক্লিয়ার ✓ qa-html-চিপ ✓ ক্যানোনিকাল-ইনসার্ট-চিপ ✓ ফিড-ড্রয়ার instaprev (instant/op-.82/toggle-disabled/spinnerGone) → swap ৯-আইটেম+৩-চিপ ✓ Enter→undo→"এইমাত্র"-রি-পেইন্ট (session133-হ্যান্ডলারে) ✓ BFS removed:3 ✓ 403-গার্ড ✓ 390px×৫-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×৪ (s134-*) ✓ টেস্ট-ডেটা-ক্লিনআপ ✓
 
 **পরবর্তী-এজেন্ট: session135 লেবেল থেকে।** বকেয়া: অটো-ভিডিও-ডিগ্রেড-র গ্রুপ-কল-প্রসারণ (session132-বেসিসে), tokens.css-র্যাচেট-বেসলাইন-নামানো (admin.css ৪২৬), dropdown-paintList-পাথেও restore-reltime (header-রিলেবেল-এখন-ক্যানোনিকাল), article-কমেন্ট-মার্কআপেও .cmt-chain (article-single-এখনো পুরনো-চুক্তি — replyTo-ডেটা আছে JSON-এ)।
+## ⚡ Cross-Agent Note — Session 135 ([relabel: 134→135 — c7fefee-এর session134 (parent-chain-চিপ + drawer-instaprev) আগে-ল্যান্ডড, max+1 রীতি; সমগ্র-রিলেবেল — কোড+docs] cron-QA রাউন্ড; accepted-answer cross-surface completion) (২৩ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** routes/dashboard.js (QUESTION_SQL/ARTICLE_SQL/ACTIVITY_SQL) · views/shared/post/FeedPostCard.ejs (২-স্পট ব্যাজ) · views/user/notifications.ejs (iconClass/_ico/G117/G119) · views/partials/header.ejs (_ico) · views/user/qa-single.ejs (data-can-acc135) · public/assets/js/comment-tools.js (mkAccActions135 + ২-কল-সাইট + swapQaThread-ফেড) · public/assets/js/live.js (ICONS) · routes/daily.js (NF_FAMILIES) · public/assets/css/style.css (EOF s135-ব্লক)। **schema-পরিবর্তন শূন্য।**
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (পরবর্তী এজেন্টদের জন্য):**
+1. **accepted-markup ×৪-সোর্স হলো (session131-এর ×৩ + এ-রাউন্ড):** qa-single.ejs / social.js qa-html / qa-single-inline-setState / **FeedPostCard-ব্যাজ + dashboard-SQL** — চিপ/ব্যাজ-স্ট্রাকচার বদলালে `grep accepted-chip127\|feed-acc-badge135` দিয়ে সব-সারফেস একসাথে আপডেট বাধ্যতামূলক।
+2. **data-can-acc135-মার্কার-চুক্তি:** `.qa-answers-list[data-can-acc135="1"]` = দর্শক প্রশ্নকর্তা/অ্যাডমিন; mkAccActions135 (comment-tools.js) এটি পড়ে fresh-স্লটে টগল বসাতে। নতুন-কমেন্ট-সারফেসে টগল-চাইলে একই-মার্কার-প্যাটার্ন।
+3. **notification-type যোগের ৫-পয়েন্ট-চেকলিস্ট (এ-রাউন্ডে পূর্ণ-প্রয়োগ):** ① notifications.ejs iconClass+_ico ② header.ejs _ico-ম্যাপ ③ live.js ICONS-ম্যাপ ④ daily.js NF_FAMILIES (সার্ভার-side ?type=ফিল্টার) ⑤ G117/G119-পরিবার (চিপ-গণনা) — একটাও বাদ গেলে ওই-সারফেসে জেনেরিক-ফলব্যাক।
+4. **ফিড-SQL UNION-চুক্তি:** ARTICLE/QUESTION/ACTIVITY-SQL কলাম-পজিশনাল-সমান — এক-শাখায় কলাম যোগ = বাকি-দুটোতে NULL-প্লেসহোল্ডার একই-পজিশনে।
+
+**গোটচা-নতুন ×২:**
+1. **UNION ALL-কলাম-অমিল = সাইলেন্ট-এরর:** GET /dashboard 200 ফেরত দেয় কিন্তু HTML-এ "সার্ভার সমস্যা" ব্যানার + লগে SQL-এরর — HTTP-কোড-যাচাইয়ে ধরা যায় না, লগ/কনটেন্ট-প্রোব বাধ্যতামূলক।
+2. **sql.js এক্সটার্নাল-সিডের সংশোধিত-রীতি:** সার্ভার-জীবিত-অবস্থায় এক্সটার্নাল-রাইট = পরবর্তী-সার্ভার-ফ্লাশে-ক্ষয়; **flushDb() নন-স্ন্যাপশট-মোডে no-op**; persist()=200ms-debounce (process.exit-বিপজ্জনক) — **kill → INSERT + `saveDb()` → boot** ক্যানোনিকাল।
+
+**E2E-প্রমাণ:** ড্যাশবোর্ড-ব্যাজ ১/১ (q6) ✓ নোটিফ-পেজ icon-accepted135+fa-circle-check+data-g117=reply ✓ ড্রপডাউন ico-answer_accepted ✓ চিপ 'উত্তর ও মন্তব্য ১৪' ✓ fresh-টগল insert-time+click-cycle (চিপ/flash/হিন্ট/বাতিল) ✓ ফেড ["add","remove"] ✓; রিগ্রেশন role-policy **১৭৭/১৭৭** (মার্জড-ট্রি; §১৮-খ self-seeding-সহ) + cursor ২৫/২৫ + guard + audit:views + brace-০ + 390px-০ ×৩-পেজ + কনসোল-০ ✓
+
+**পরবর্তী-প্রথম-পছন্দ:** tokensHexGuard-সুযোগ-বর্ধন (article.css-QA-ব্লক — বকেয়া) → /qa-তে নতুন-প্রশ্ন optimistic (thread-ইঞ্জিন সিরিজ) → notifications-শূন্য-অবস্থার empty-state পর্যালোচনা → Metered.ca-TURN (ইউজার-অ্যাকাউন্ট)। **s131-test-প্যাচ (এ-রাউন্ড):** series-stats-অ্যাসারশন ambient-DB-নির্ভর ছিল (খালি-সিরিজ-DB-তে limit=1 মিথ্যা-ফেইল) → self-seeding-রীতিতে (§15/§18-মিরর) রূপান্তর: কন্ট্রোল-রো-তে bulk-CSV-র `series`-কলাম যোগ + stats-অ্যাসারশন তার-পরে + বর্তমান-ক্লিনআপ-ই রো-সরায় (+২ অ্যাসারশন)। **পরের-এজেন্ট: session136 থেকে।**

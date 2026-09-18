@@ -1058,6 +1058,10 @@
       slotNode.className = 'qa-answer-slot';
       slotNode.id = 'answer-' + String(id).replace(/"/g, '');
       slotNode.appendChild(node);
+      /* সেশন ১৩৫: প্রশ্নকর্তার টগল-বাটন তাৎক্ষণিক (session131-নোট ③ — swap-অবধি
+         ট্রানজিয়েন্ট-অনুপস্থিতি বন্ধ)। j.id বাস্তব — এই-উইন্ডোতে ক্লিকও সার্ভার-সত্য। */
+      var _acc135 = mkAccActions135(list, id);
+      if (_acc135) slotNode.appendChild(_acc135);
     }
     if (parentId) {
       var parent = list.querySelector('.cmt-item[data-cmt-id="' + String(parentId).replace(/"/g, '') + '"]');
@@ -1092,6 +1096,33 @@
       }
     }
     return true;
+  }
+
+  /* ── সেশন ১৩৫: গৃহীত-উত্তর টগল-বাটন (acc-actions127) fresh-উত্তরে —
+     session131-নোট ③ পূর্ণ: প্রশ্নকর্তা/অ্যাডমিনের নতুন-উত্তরেই টগল দৃশ্যমান
+     (আগে swapQaThread-reconcile-অবধি অনুপস্থিত)। চুক্তি: qa-single.ejs-এর
+     .qa-answers-list[data-can-acc135="1"]-মার্কার = দর্শক প্রশ্নকর্তা/অ্যাডমিন।
+     বাটন qa-single-এর list-ডেলিগেটেড-লিসনারেই চলে — রিবাইন্ড-শূন্য;
+     setState চিপ/হিন্ট নিজেই তৈরি করে বলে খালি-স্লট-টগলও নিরাপদ। */
+  function mkAccActions135(list, cId) {
+    try {
+      if (!list || list.getAttribute('data-can-acc135') !== '1') return null;
+      if (!cId || !/^\d+$/.test(String(cId))) return null;
+      var qid = list.getAttribute('data-post-id') || String(list.getAttribute('data-post-link') || '').split('/').pop();
+      if (!qid) return null;
+      var acts = document.createElement('div');
+      acts.className = 'acc-actions127';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'acc-btn127';
+      btn.setAttribute('data-acc127', '');
+      btn.setAttribute('data-qid', String(qid));
+      btn.setAttribute('data-cid', String(cId));
+      btn.setAttribute('aria-pressed', 'false');
+      btn.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i><span>গ্রহণ করুন</span>';
+      acts.appendChild(btn);
+      return acts;
+    } catch (_) { return null; }
   }
 
   /* ── সেশন ১২৪: ক্যানোনিকাল তাৎক্ষণিক-ইনসার্ট ইঞ্জিন — POST /api/comment-এর
@@ -1151,6 +1182,9 @@
       slot.className = 'qa-answer-slot';
       if (cId) slot.id = 'answer-' + cId;
       slot.appendChild(node);
+      /* সেশন ১৩৫: প্রশ্নকর্তার টগল-বাটন ক্যানোনিকাল-স্লটেও (data-cmt-id = সার্ভার-সত্য) */
+      var _accC135 = mkAccActions135(list, cId);
+      if (_accC135) slot.appendChild(_accC135);
       node = slot;
       var emp = document.querySelector('.answers-empty');
       if (emp) emp.remove();
@@ -1275,6 +1309,9 @@
     if (!list) return false;
     if (!postId) postId = list.getAttribute('data-post-id') || '';
     if (!postId) return false;
+    /* সেশন ১৩৫: সোয়াপ-ফ্ল্যাশ-মসৃণকরণ — ফেচ-চলাকালে মৃদু-ডিম, সোয়াপ-শেষে ফেড-ব্যাক
+       (reconcile-ফ্ল্যাশ-মসৃণকরণ — session125/129-রৈখিক-সুপারিশ) */
+    list.classList.add('qa-swap-fade135');
     fetch('/api/comments?post_id=' + postId + '&format=qa-html')
       .then(function (r) { return r.json(); })
       .then(function (j) {
@@ -1283,6 +1320,8 @@
            reload-ফলব্যাকে পড়ত; খালি-স্ট্রিংও বৈধ সার্ভার-সত্য। */
         if (j && typeof j.qaHtml === 'string') {
           list.innerHTML = j.qaHtml;
+          /* সেশন ১৩৫: সোয়াপ-শেষে ফেড-ব্যাক (qa-swap-fade135 অপসারণ — CSS-ট্রানজিশন) */
+          requestAnimationFrame(function () { list.classList.remove('qa-swap-fade135'); });
           // session124 বাগ-ফিক্স: .answers-empty লিস্টের বাইরের-সিবলিং — শূন্য-প্রশ্নে
           // প্রথম AJAX-উত্তরের পরেও "এখনো কোনো উত্তর নেই" লেগে থাকত; swap-সফলে অপসারণ।
           // (submit-পাথে insertCanonical124 নিজেই সরায় — এখানে ডিলিট/চিপ-পাথ।)

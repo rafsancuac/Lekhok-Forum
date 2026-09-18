@@ -1371,3 +1371,23 @@ Task: অবস্থা-মূল্যায়ন + agent-browser QA → স�
 - **গোটচা-রিমাইন্ডার:** push-এর আগে fetch+rebase; doc-union; RP_PORT; node --check-আগে; স্যান্ডবক্সে detached-node প্রতি-টুল-কলে মরে (boot-srv.sh)
 
 Task ID: RES-133 (ক্রন-রিভিউ রাউন্ড ১৩ — session133)
+---
+Task ID: cron-r8 (session135 — রাউন্ড-৮: QA-সুইপ → accepted-answer cross-surface completion + নোটিফ-টোনাল-আইকন + reconcile-ফেড)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগ-শূন্যে ফিচার-রাউন্ড (session131-নোট ①②③ + session125/129-র reconcile-ফেড) → push + ডকস
+
+Work Log:
+- sync+QA @00b5af3: fetch/rebase (session129-গ contact-hours + docs-union ল্যান্ডেড) → ১৮-route HTTP-ম্যাট্রিক্স + ১২-পেজ agent-browser কনসোল-০ + 390px ×৫-০ + /me-ইন্টিগ্রিটি (১১-ট্যাব/চার্ট) + session131 accepted-badge + session129-গ cx-state-মেশিন (is-off/is-soon/is-idle-হুক-প্রমাণ) — বাগ-শূন্য → ফিচার-রাউন্ড
+- ① ফিড-কার্ড গৃহীত-উত্তর ব্যাজ: QUESTION_SQL + p.accepted_comment_id (ARTICLE/ACTIVITY-তে NULL-প্লেসহোল্ডার — UNION-কলাম-সাম্য; প্রথম-বুটে অমিল-এরর E2E-বুট-যাচাইয়েই ক্যাচ → ফিক্স) + FeedPostCard ২-স্পট .feed-acc-badge135
+- ② answer_accepted টোনাল-আইকন ৩-সারফেস: notifications.ejs (icon-accepted135 + fa-circle-check + G117/G119-পরিবার) + header.ejs _ico + live.js ICONS + daily.js NF_FAMILIES (?type=ফিল্টার-প্যারিটি) + CSS s132-ব্লক
+- ③ fresh-উত্তরে owner-টগল: qa-single data-can-acc135-মার্কার + comment-tools mkAccActions135 (optimistic+canonical উভয়-স্লটে; j.id-বাস্তব; ডেলিগেটেড-লিসনার-রিবাইন্ড-শূন্য)
+- ④ swapQaThread ফেড: ফেচে qa-swap-fade135 (opacity .45) → সোয়াপ → rAF-ফেড-ব্যাক; reduced-motion-গার্ড
+- E2E (testuser, agent-browser): ড্যাশবোর্ড-ব্যাজ ১/১ ✓ নোটিফ-পেজ icon+data-g117=reply ✓ ড্রপডাউন ico-answer_accepted ✓ চিপ-গণনা ১৪ ✓ MutationObserver-প্রমাণিত fresh-টগল (insert-time cid=106-সত্য + গ্রহণ→চিপ+flash+হিন্ট + বাতিল) ✓ ফেড ["add","remove"] ✓
+- রিগ্রেশন (মার্জড-ট্রি): role-policy ১৭৭/১৭৭ (s131-test self-seeding-প্যাচসহ +২) ✓ cursor ২৫/২৫ ✓ guard ✓ audit:views ✓ brace-০ ✓ 390px ×৩-পেজ-০ ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ (প্রোব-উত্তর + সিডেড-নোটিফ) ✓
+- s131-test self-seeding-প্যাচ: series-stats limit=1-অ্যাসারশন ambient-নির্ভর → কন্ট্রোল-রো (bulk-CSV series-কলাম) আগে-সিড + ক্লিনআপ-ই-সরায় (+২ অ্যাসারশন)
+- গোটচা ×২ (PLANS): UNION-অমিল = HTTP-200-সাইলেন্ট-এরর (কনটেন্ট-প্রোব বাধ্যতামূলক) + sql.js এক্সটার্নাল-সিড সংশোধিত-রীতি (kill → INSERT+saveDb → boot; flushDb=নন-স্ন্যাপশট-no-op; process.exit debounced-persist-মেরে দেয়)
+
+Stage Summary:
+- accepted-answer এখন ৪-সারফেসে দৃশ্যমান (qa-single/qa-list/dashboard-ফিড/নোটিফিকেশন) + fresh-উত্তরেও প্রশ্নকর্তার টগল তাৎক্ষণিক + reconcile-ফ্ল্যাশ মসৃণ
+- নোটিফ-টাইপ-যোগের ৫-পয়েন্ট-চেকলিস্ট ডকুমেন্টেড (PLANS) — ভবিষ্যৎ-টাইপে জেনেরিক-ফলব্যাক-রিস্ক বন্ধ
+- পরবর্তী-প্রার্থী: tokensHexGuard-বর্ধন (article.css) → /qa optimistic-নতুন-প্রশ্ন → notifications-empty-state → Metered.ca-TURN (পরের-এজেন্ট session133 থেকে)

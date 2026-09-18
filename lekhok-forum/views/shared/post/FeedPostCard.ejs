@@ -56,6 +56,8 @@
         <%- include('../user/AuthorLabel', { u: _orig, timeIso: _orig.published_at || _orig.created_at }) %>
         <% if (_orig.type === 'question') { %>
           <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
+          <%# সেশন ১৩৫: গৃহীত-উত্তর-ব্যাজ — accepted_comment_id থাকলে ফিড-কার্ডেই সবুজ-চিহ্ন (qa-single-এর accepted-chip127-এর ফিড-মিরর) %>
+          <% if (_orig.accepted_comment_id != null) { %><span class="feed-acc-badge135" title="এই প্রশ্নের একটি উত্তর গৃহীত হয়েছে"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span><% } %>
         <% } else { %>
           <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
         <% } %>
@@ -109,6 +111,8 @@
         <span class="feed-type-badge activity"><i class="fas fa-calendar-check"></i> কার্যক্রম</span>
       <% } else if (_type === 'question') { %>
         <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
+        <%# সেশন ১৩৫: গৃহীত-উত্তর-ব্যাজ (মূল-কার্ড — ড্যাশবোর্ড/প্রোফাইল ফিড) %>
+        <% if (item.accepted_comment_id != null) { %><span class="feed-acc-badge135" title="এই প্রশ্নের একটি উত্তর গৃহীত হয়েছে"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span><% } %>
       <% } else { %>
         <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
       <% } %>
