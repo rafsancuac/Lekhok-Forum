@@ -77,13 +77,24 @@
       </div>
       <% } %>
 
-      <!-- Filter chips -->
+      <%# সেশন ১৬৩ (ইউজার-স্পেক FeedFilterBar.tsx-পোর্ট): একক-লাইন কম্প্যাক্ট ফিল্টার-বার —
+          আলাদা ক্যাপসুল/পিল সর্ট-বার চিরতরে বাদ; 'সর্বশেষ' ও 'জনপ্রিয়' এখন ক্যাটাগরি-চিপগুলোর
+          একই সারিতে, হুবহু একই ৮px-চারকোনা সাদা-বর্ডার ডিজাইনে (সক্রিয় = সবুজ accent)।
+          ৭০০px-ফিডে ৭টি বাটন এক লাইনে আঁটতে প্যাডিং কম্প্যাক্ট (৬px×১০px) + সূক্ষ্ম ডিভাইডার;
+          সরু-স্ক্রিনে no-scrollbar মসৃণ হরাইজন্টাল-স্ক্রোল। র‍্যাংকড-হিন্ট এখন জনপ্রিয়-বাটনের
+          title-টুলটিপে + ফিড-কার্ডের session102 fd-rank-chip ব্যাখ্যা বহাল। %>
+      <!-- Filter chips + sort toggle (একই লাইন) -->
       <div class="filter-chips">
         <a href="/dashboard<%= sort === 'ranked' ? '?sort=ranked' : '' %>" class="filter-chip <%= filter === 'all' ? 'active' : '' %>"><i class="fas fa-layer-group"></i> সব</a>
         <a href="/dashboard?filter=article<%= sort === 'ranked' ? '&sort=ranked' : '' %>" class="filter-chip <%= filter === 'article' ? 'active' : '' %>"><i class="fas fa-pen-nib"></i> লেখা</a>
         <a href="/dashboard?filter=question<%= sort === 'ranked' ? '&sort=ranked' : '' %>" class="filter-chip <%= filter === 'question' ? 'active' : '' %>"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
         <a href="/dashboard?filter=activity" class="filter-chip <%= filter === 'activity' ? 'active' : '' %>"><i class="fas fa-calendar-check"></i> কার্যক্রম</a>
         <% if (user) { %><a href="/dashboard?filter=following<%= sort === 'ranked' ? '&sort=ranked' : '' %>" class="filter-chip <%= filter === 'following' ? 'active' : '' %>"><i class="fas fa-user-friends"></i> অনুসরণ only</a><% } %>
+        <span class="fsort-sep163" aria-hidden="true"></span>
+        <span class="fsort-grp163" role="tablist" aria-label="ফিড সাজানোর ধরন">
+          <a href="/dashboard<%= filter !== 'all' ? '?filter=' + filter : '' %>" class="feed-sort-btn <%= sort !== 'ranked' ? 'active' : '' %>" role="tab" aria-selected="<%= sort !== 'ranked' ? 'true' : 'false' %>" title="সর্বশেষ প্রকাশের ক্রমে"><i class="fas fa-clock"></i> সর্বশেষ</a>
+          <a href="/dashboard?<%= filter !== 'all' ? 'filter=' + filter + '&amp;' : '' %>sort=ranked" class="feed-sort-btn <%= sort === 'ranked' ? 'active' : '' %>" role="tab" aria-selected="<%= sort === 'ranked' ? 'true' : 'false' %>" title="এনগেজমেন্ট × সময়-ক্ষয় র‍্যাংকিং"><i class="fas fa-fire"></i> জনপ্রিয়</a>
+        </span>
       </div>
 
       <%# সেশন ১৪৪: 'নতুন পোস্ট' লাইভ-পিল (FB-প্যারিটি) — র‍্যাংকড-মোডে রেন্ডারই হয় না
@@ -102,14 +113,6 @@
           <button type="button" class="feed-fresh-x" id="feedFreshX" hidden aria-label="নতুন পোস্টের সংকেত ১০ মিনিটের জন্য সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>
         </div>
       <% } %>
-
-      <%# সেশন ১০০ (রোডম্যাপ-০৮): সর্ট-টগল — সর্বশেষ|জনপ্রিয় (time-decay র‍্যাংকড-ফিড) %>
-      <div class="feed-sort-bar" role="tablist" aria-label="ফিড সাজানোর ধরন">
-        <a href="/dashboard<%= filter !== 'all' ? '?filter=' + filter : '' %>" class="feed-sort-btn <%= sort !== 'ranked' ? 'active' : '' %>" role="tab" aria-selected="<%= sort !== 'ranked' ? 'true' : 'false' %>"><i class="fas fa-clock"></i> সর্বশেষ</a>
-        <span class="feed-sort-sep" aria-hidden="true"></span>
-        <a href="/dashboard?<%= filter !== 'all' ? 'filter=' + filter + '&amp;' : '' %>sort=ranked" class="feed-sort-btn <%= sort === 'ranked' ? 'active' : '' %>" role="tab" aria-selected="<%= sort === 'ranked' ? 'true' : 'false' %>"><i class="fas fa-fire"></i> জনপ্রিয়</a>
-        <% if (sort === 'ranked') { %><span class="feed-sort-hint"><i class="fas fa-bolt"></i> এনগেজমেন্ট × সময়-ক্ষয় র‍্যাংকিং</span><% } %>
-      </div>
 
       <% if (feed.length === 0) { %>
         <div class="empty-state-full card">

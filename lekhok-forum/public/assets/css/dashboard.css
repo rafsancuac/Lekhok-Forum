@@ -24,16 +24,11 @@ button.composer-action:focus-visible{outline:2px solid var(--lf-social-blue);out
 
 /* সর্ট-টগল — সর্বশেষ|জনপ্রিয় (FB সেগমেন্টেড-কন্ট্রোল প্যাটার্ন) */
 .feed-sort-bar{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:5px;background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow-soft);width:fit-content;max-width:100%;overflow:hidden}
-.feed-sort-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 18px;border-radius:20px;font-size:.86rem;font-weight:600;color:var(--text-muted);text-decoration:none;transition:background .18s,color .18s,box-shadow .18s}
-.feed-sort-btn i{font-size:.8rem}
-.feed-sort-btn:hover{background:var(--bg,var(--lf-ui-canvas));color:var(--brand-text);text-decoration:none}
-.feed-sort-btn.active{background:var(--lf-social-blue);color:var(--lf-white);box-shadow:0 4px 12px -4px rgba(24,119,242,.55)}
-.feed-sort-btn.active:hover{background:var(--lf-social-blue-hover);color:var(--lf-white)}
-.feed-sort-btn:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px}
-.feed-sort-sep{width:1px;height:18px;background:var(--border)}
-.feed-sort-hint{font-size:.74rem;color:var(--text-muted,var(--lf-slate));padding:0 10px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.feed-sort-hint i{color:var(--lf-yellow-bright);margin-right:4px}
-@media (max-width:600px){.feed-sort-bar{width:100%}.feed-sort-btn{flex:1;justify-content:center;padding:8px 10px}.feed-sort-hint{display:none}}
+/* সেশন ১৬৩: .feed-sort-btn/.feed-sort-sep/.feed-sort-hint নিয়মগুলো সরানো হয়েছে —
+   /dashboard-এ আলাদা সর্ট-ক্যাপসুল-বার বাদ (একই সারিতে চিপ-স্টাইলে মার্জ, নিচে
+   session163-ব্লক)। .feed-sort-bar কন্টেইনার-রুল শুধু lekhok-articles.ejs-এর
+   সর্ট-বার (sort-switch/sort-opt) সার্বিক থাকায় অক্ষত। */
+@media (max-width:600px){.feed-sort-bar{width:100%}}
 
 /* কম্পোজার-মোডাল — FB ডায়ালগ (৫০০px কার্ড, সফট-ব্যাকড্রপ, ২০px-রেডিয়াস-সামঞ্জস্য) */
 .cpm-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(9,30,66,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:6vh 16px 24px;animation:cpmFade .18s ease}
@@ -543,3 +538,23 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .fr-empty159 i{font-size:15px;opacity:.7}
 .feed-rail.fr-searching159 .fr-sep{display:none}
 /* ════════ EOF session159-rail-search-core ════════ */
+
+/* ════════ session163 — একক-লাইন কম্প্যাক্ট ফিল্টার-বার (ইউজার-স্পেক FeedFilterBar.tsx-পোর্ট) ════════
+   আলাদা সর্ট-ক্যাপসুল-বার বাদ — 'সর্বশেষ|জনপ্রিয়' ক্যাটাগরি-চিপের একই সারিতে, হুবহু একই
+   ৮px-চারকোনা সাদা-বর্ডার ডিজাইনে; সক্রিয় অবস্থা = সবুজ accent (আগের নীল pill-গ্লো বাদ)।
+   প্যাডিং ৬×১০px (py-1.5×px-2.5) + gap 4px → ৭০০px-ফিডে ৭টি বাটন এক-লাইনে আঁটে;
+   সরু-স্ক্রিনে no-scrollbar মসৃণ হরাইজন্টাল-স্ক্রোল (overflow-x:auto + scrollbar-width:none)।
+   স্কোপিং: .filter-chips-অভ্যন্তরীণ — messenger.css-এর .filter-chip + lekhok-articles-এর
+   .feed-sort-bar (কন্টেইনার + sort-opt) অক্ষত। specificity (0,3,0) — style.css-বেস
+   (0,2,0)-ও dashboard.css-মিনিফাইড-মিডিয়া (0,1,0)-ও নির্ভরযোগ্যভাবে ওভাররাইড করে। */
+.filter-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;gap:4px;padding-bottom:8px;margin-bottom:12px}
+.filter-chips::-webkit-scrollbar{display:none}
+.filter-chips .filter-chip,.filter-chips .feed-sort-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text-muted);font-size:12px;font-weight:700;line-height:1.4;white-space:nowrap;text-decoration:none;flex:0 0 auto;box-shadow:0 1px 2px rgba(15,23,42,.05);transition:background .16s,color .16s,border-color .16s,box-shadow .16s}
+.filter-chips .filter-chip i,.filter-chips .feed-sort-btn i{font-size:11px}
+.filter-chips .filter-chip:hover,.filter-chips .feed-sort-btn:hover{background:var(--bg,var(--lf-ui-canvas));color:var(--brand-text);text-decoration:none;border-color:#cbd5e1}
+.filter-chips .filter-chip.active,.filter-chips .feed-sort-btn.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff)}
+.filter-chips .feed-sort-btn.active{box-shadow:0 2px 10px -3px rgba(5,150,105,.5)}
+.filter-chips .filter-chip:focus-visible,.filter-chips .feed-sort-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fsort-sep163{flex:0 0 auto;width:1px;height:20px;background:var(--border);margin:0 3px}
+.fsort-grp163{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto}
+/* ════════ EOF session163-single-line-filter-bar ════════ */

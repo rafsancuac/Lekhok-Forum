@@ -1868,3 +1868,19 @@ Work Log:
 Stage Summary:
 - ভয়েস-মেসেজিং এখন ক্লাউড-প্রিভিউ/আইফ্রেম/রিড-ওনলি-প্রতিরোধী: ডিস্ক-ব্যর্থ হলেও ভয়েস সরবরাহ অটো-Base64-ফলব্যাকে স্থায়ী-বাজানো; ৪০১/EROFS-ক্র্যাশ-পথ শূন্য; alert() পপ-আপ চিরতরে বন্ধ — ইউজারের ৪-পয়েন্ট-চেকলিস্ট (প্লেব্যাক/বাংলা-ডিউরেশন/রিফ্রেশ-ধারণ/ঢাকা-টাইম+টিক) সব-সবুজ
 - পরের-এজেন্ট-প্রস্তাব: মাইক-এরর-পিলের ব্রাউজার-অনুমতি-ফ্লো-পলিশ · ভয়েস-বাবলে ডাউনলোড-বাটন · Base64-মেসেজের DB-সাইজ-মনিটর · real-webm-seed (voice-demo.wav ছাড়া) · /api/upload-এ rate-limit
+
+---
+Task ID: 27 (Session 163 — একক-লাইন কম্প্যাক্ট ফিল্টার-বার: সর্ট-ক্যাপসুল বাদ)
+Agent: Z.ai (ইউজার-স্পেক: 'সর্বশেষ/জনপ্রিয়' বাটন ক্যাটাগরি-চিপের একই লাইনে — FeedFilterBar.tsx-রেফারেন্সসহ)
+Task: /dashboard-এর আলাদা ক্যাপসুল/পিল সর্ট-বার সম্পূর্ণ বাদ করে 'সর্বশেষ' ও 'জনপ্রিয়'-কে ক্যাটাগরি-চিপগুলোর (সব/লেখা/প্রশ্নোত্তর/কার্যক্রম/অনুসরণ only) একই সারিতে, হুবহু একই ৮px-চারকোনা ডিজাইনে মার্জ — ৭০০px-ফিডে সব এক লাইনে
+
+Work Log:
+- views/user/dashboard.ejs: সর্ট-টগল মার্কআপ .filter-chips-সারিতে স্থানান্তর — ৫-চিপের পরে fsort-sep163 (1px ডিভাইডার) + fsort-grp163 (role=tablist, সর্বশেষ|জনপ্রিয় feed-sort-btn ×২) ; পুরনো .feed-sort-bar-ব্লক + feed-sort-hint মুছে (র‍্যাংকড-হিন্ট এখন জনপ্রিয়-বাটনের title-টুলটিপে; session102 fd-rank-chip ব্যাখ্যা অক্ষত); সব href/কোয়েরি-চেইনিং (sort=ranked ↔ filter=*) হুবহু সংরক্ষিত
+- public/assets/css/dashboard.css: পুরনো .feed-sort-btn (নীল pill, radius 20px)/.feed-sort-sep/.feed-sort-hint নিয়ম মুছে; .feed-sort-bar কন্টেইনার-রুল রক্ষিত (lekhok-articles.ejs এখনো sort-switch/sort-opt-সহ ব্যবহার করে); নতুন session163-ব্লক — .filter-chips{nowrap+overflow-x:auto+scrollbar-width:none+gap:4px} ; .filter-chips .filter-chip,.feed-sort-btn ইউনিফায়েড (8px radius, padding 6px×10px = py-1.5×px-2.5, font 12px/700, সাদা bg + var(--border), সক্রিয় = var(--accent) #006A4E-সবুজ + সাদা টেক্সট, সবুজ সফট-গ্লো শুধু সর্ট-active-এ) ; specificity (0,3,0) — style.css-বেস ও মিনিফাইড-মিডিয়া নির্ভরযোগ্য ওভাররাইড; messenger.css-এর .filter-chip স্কোপ-বাইরে অক্ষত
+- QA (agent-browser @ :8080): computed — singleLine:true (rowHeight 40px @1366/390px), radius 8px/8px, pad 6px 10px, activeBg rgb(0,106,78)=#006A4E (স্পেকের হুবহু সবুজ), 5 চিপ+2 সর্ট+sep, oldCapsuleGone:true ; ইন্টারঅ্যাকশন — জনপ্রিয়-ক্লিক → /dashboard?sort=ranked সবুজ-active ✓, তারপর লেখা-ক্লিক → ?filter=article&sort=ranked (sort-সংরক্ষণ) ✓, সর্বশেষ-ক্লিক → ক্লিন /dashboard ✓ ; মোবাইল 390px — এক-লাইন + হরাইজন্টাল-স্ক্রোল + স্ক্রলবার-লুকানো ✓ ; /articles রিগ্রেশন — ক্যাপসুল 24px + sort-opt ×২ অক্ষত ✓ ; কনসোল-এরর শূন্য
+- গোটচা-রিমাইন্ডার: server.js-এর AV ক্যাশ-হ্যাশ বুট-টাইমে হিসাব হয় — CSS-এডিটের পরে ব্রাউজারে পুরনো ?v= URL ক্যাশ হিট করে পুরনো-ডিজাইন দেখাতে পারে → সার্ভার-রিস্টার্ট (নতুন হ্যাশ) বাধ্যতামূলক; setsid-সাবশেল বুট প্রথম-চেষ্টায় মরেছিল — (setsid nohup env ... &)-বন্ধনী-রীতিতে টিকেছে
+- স্ক্রিনশট: download/s163-{merged-1366,ranked,mobile-390,articles-regression,final-1440}.png
+
+Stage Summary:
+- ইউজার-স্পেক-পূর্ণ: ৭টি বাটন (৫ ক্যাটাগরি + সর্বশেষ|জনপ্রিয়) এক লাইনে, হুবহু একই ৮px সাদা-বর্ডার ডিজাইন, কম্প্যাক্ট প্যাডিং, সক্রিয় = #006A4E-সবুজ — আলাদা ক্যাপসুল-বার চিরতরে শেষ
+- পরের-এজেন্ট: AV-ক্যাশ-গোটচা মনে রাখবেন; প্রস্তাব — ফিল্টার-স্টেট URL-সিঙ্ক পলিশ (history.replaceState), চিপে কাউন্ট-ব্যাজ, /articles-এর sort-opt-ও একই ৮px পরিবারে আনা
