@@ -2224,3 +2224,16 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 
 
 **session153-push-নোট (rebase-union):** সমান্তরাল session153(sidebar-premium)/154(notif-dropdown)/155(next-app) আগে-ল্যান্ডেড → rebase ×৪-UU (PLANS/PROJECT/dashboard.css/style.css EOF-ইউনিয়ন — তাদের ব্লক-আগে) + header.ejs-এ তাদের `nfNewPill148` if/else-দ্বি-শাখায় একই-id (audit:views-ফেইল) এক-এলিমেন্টে সংকুচিত (runtime-সেমান্টিক্স হুবহু)। মার্জড-ট্রি: role-policy **254/254** + cursor 25/25 + lf153 49/49 + guard + audit ✓। double-session153-লেবেল ডকুমেন্টেড (double-147/152-রীতি); আইডেন্টিফায়ার fbm-*153/fb-col153/setPostMedia153/filterByAudience153 তাদের sb148/msx148/nf148-পরিবারের সাথে collision-শূন্য। পরের-এজেন্ট: **session156**।
+
+## Cross-Agent Note — Session 156 (FB ইনডিপেন্ডেন্ট ৩-কলাম স্ক্রল — /dashboard) (১৮ সেপ্টেম্বর ২০২৬)
+
+**চুক্তি ×৫:**
+1. **bodyClass-প্যারাম** — header.ejs-এ ঐচ্ছিক `bodyClass` (typeof-guard); কেবল /dashboard `lf-feed-lock156` পাঠায়; অন্য পেজ শূন্য-প্রভাব।
+2. **লক-আর্কিটেকচার** — `body.lf-feed-lock156` কেবল ≥1200px-এ সক্রিয় (body flex-col + page-main flex:1 + তিন কলাম নিজস্ব overflow-y-auto); টপবার-উচ্চতা হার্ডকোড নয় — flex অ্যাডাপ্টিভ।
+3. **স্পেসিফিসিটি-চুক্তি** — কলাম-ওভাররাইড অবশ্যই `body.lf-feed-lock156 .dashboard-wrap X` (0,3,1) — নইলে `.two-col.has-rail` (0,3,0) জয়ী।
+4. **.fb-scroll টোকেন-ভিত্তিক** — নতুন hex নিষিদ্ধ (guard র‍্যাচেট); thumb `var(--border)`, hover `var(--text-muted)` — ডার্ক-মোড টোকেন-ফ্লিপ স্বয়ংক্রিয়।
+5. **IO-ইনফিনিট-স্ক্রল container-নিরপেক্ষ** — ancestor-clipping-এ কন্টেইনার-স্ক্রলেও সঠিক; cursor-মোডে `data-offset` স্থির (by-design) — প্রমাণে card-count/`data-cursor-*` ডেল্টা ব্যবহার করুন, offset নয়।
+
+**হারনেস-লেসন ×২:** `agent-browser set viewport` ব্রাউজার-লঞ্চের আগে দিলে নিঃশব্দে বাতিল (ক্রম: open → wait → set viewport) · node-সার্ভার টুল-কলের মাঝে মরে — প্রতিটি পরীক্ষা-চক্র এক-ইনভোকেশনে (পুনঃপ্রমাণিত)।
+
+**প্রস্তাব ×৪ (session157+):** ① মোবাইলে টপবার hide-on-scroll-down/show-on-up FB-প্যারিটি (সাইট-ব্যাপী প্রি-একজিস্টিং স্ক্রল-অ্যাওয়ে — /articles-প্রমাণিত; sticky top:0 থাকাও কার্যকর নয় — html/body overflow-x সন্দেহ) ② ফিড-কলাম কীবোর্ড-স্ক্রল (tabindex=0 + focus-ring + a11y) ③ সাইডবার-স্ক্রল-অবস্থান sessionStorage-স্মরণ ④ .fb-scroll অন্যান্য লম্বা-তালিকায় (bookmarks/members/notifications) প্রসারণ।

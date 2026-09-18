@@ -476,3 +476,29 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 @media (prefers-reduced-motion:reduce){.dash-right{scroll-behavior:auto}}
 @media (max-width:980px){.dash-right{max-height:none;overflow:visible}}
 /* ════════ EOF session148-sidebar-premium ════════ */
+
+/* ════════ session156 — FB ইনডিপেন্ডেন্ট ৩-কলাম স্ক্রল (শুধু /dashboard, ≥1200px) ════════
+   ইউজার-স্পেক: মেনুবার স্থায়ী + বাম-রেল/মাঝ-ফিড/ডান-সাইডবার — তিনটির সম্পূর্ণ আলাদা স্ক্রল।
+   কৌশল: ব্রাউজার-উইন্ডোর স্ক্রল সম্পূর্ণ লক (body height:100vh + overflow:hidden — FB-র
+   h-screen overflow-hidden সমতুল্য) → body flex-কলাম → টপবার flex:0 0 auto + page-main
+   flex:1 → প্রতিটি কলাম নিজস্ব overflow-y-auto স্ক্রলার (.fb-scroll)। মাউস যে কলামে থাকবে
+   স্ক্রল করলে কেবল সেটিই স্ক্রল হবে — অন্য দুই কলাম + মেনুবার পিক্সেল-স্থির।
+   <1200px/মোবাইলে লেগেসি ডকুমেন্ট-স্ক্রল অক্ষত (বডি-ক্লাস-গেটেড)।
+   নোট: IO-ইনফিনিট-স্ক্রল ancestor-clipping-এ কন্টেইনার-স্ক্রলেও সঠিক; স্পেসিফিসিটি
+   (0,3,1) — .two-col.has-rail (0,3,0)-কে ছাড়িয়ে যায়। কলাম-প্রস্থ FB-স্পেক-সন্নিহিত:
+   280/320px (@1440px+: 320/348) + ফিড ৬২০px-ক্যাপ-সেন্টার। */
+@media (min-width:1200px){
+  body.lf-feed-lock156{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+  body.lf-feed-lock156 .btclf-topbar{flex:0 0 auto}
+  body.lf-feed-lock156 .page-main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  body.lf-feed-lock156 .dashboard-wrap.two-col{flex:1 1 auto;min-height:0;height:auto;display:flex;align-items:stretch;gap:16px;max-width:1600px;padding:12px 16px 0}
+  body.lf-feed-lock156 .dashboard-wrap .feed-rail{flex:0 0 280px;position:static;top:auto;max-height:none;align-self:stretch;min-height:0;overscroll-behavior:contain;padding:4px 8px 24px 0}
+  body.lf-feed-lock156 .dashboard-wrap .dash-main{flex:1 1 auto;min-width:0;overscroll-behavior:contain;padding:0 8px 48px}
+  body.lf-feed-lock156 .dashboard-wrap .dash-main>*{max-width:620px;margin-left:auto;margin-right:auto;width:100%}
+  body.lf-feed-lock156 .dashboard-wrap .dash-right{flex:0 0 320px;position:static;top:auto;max-height:none;align-self:stretch;min-height:0;overscroll-behavior:contain;padding-bottom:48px}
+}
+@media (min-width:1440px){
+  body.lf-feed-lock156 .dashboard-wrap .feed-rail{flex-basis:320px}
+  body.lf-feed-lock156 .dashboard-wrap .dash-right{flex-basis:348px}
+}
+/* ════════ EOF session156-fb-independent-scroll ════════ */

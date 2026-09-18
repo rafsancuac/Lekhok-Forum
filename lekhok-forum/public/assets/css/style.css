@@ -2362,3 +2362,17 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 @media (max-width:640px){.msx148-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.msx148-chip.wide{grid-column:span 2}}
 @media (prefers-reduced-motion:reduce){.msx148-chip{transition:none;transform:none}}
 /* ════════ EOF session148-msx-me ════════ */
+
+/* ════════ session156 — FB-স্টাইল হোভার-স্ক্রলবার ইউটিলিটি (.fb-scroll) ════════
+   ফেসবুক-কনভেনশন: স্ক্রলবার সাধারণ অবস্থায় অদৃশ্য; কন্টেইনার-হোভারে হালকা হয়ে দৃশ্যমান।
+   চুক্তি: (১) কোনো নতুন hex নয় — টোকেন (--border/--text-muted) → guard র‍্যাচেট-নিরাপদ
+   ও ডার্ক-মোড স্বয়ংক্রিয়; (২) উচ্চতা-অটো কন্টেইনারে overflow-y:auto নিষ্ক্রিয়-সমতুল্য
+   (<1200px/মোবাইলে শূন্য-প্রভাব); (৩) /dashboard-এর তিন কলামে প্রয়োগ (dashboard.ejs)। */
+.fb-scroll{overflow-y:auto;scrollbar-width:thin;scrollbar-color:transparent transparent;transition:scrollbar-color .2s ease}
+.fb-scroll:hover{scrollbar-color:var(--border) transparent}
+.fb-scroll::-webkit-scrollbar{width:8px}
+.fb-scroll::-webkit-scrollbar-track{background:transparent}
+.fb-scroll::-webkit-scrollbar-thumb{background-color:transparent;border-radius:8px}
+.fb-scroll:hover::-webkit-scrollbar-thumb{background-color:var(--border)}
+.fb-scroll::-webkit-scrollbar-thumb:hover{background-color:var(--text-muted)}
+/* ════════ EOF session156-fb-scroll ════════ */

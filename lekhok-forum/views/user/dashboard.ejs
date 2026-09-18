@@ -1,13 +1,16 @@
 <%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix)
-    সেশন ১০২ (রোডম্যাপ-০৭): +rich-editor.css +multi-image.css — কম্পোজার-মোডালের এডিটর/মাল্টি-ছবি-উইজেট %>
-<%- include('../partials/header', { title: 'কমিউনিটি ফিড | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/rich-editor.css', '/assets/css/multi-image.css'] }) %>
+    সেশন ১০২ (রোডম্যাপ-০৭): +rich-editor.css +multi-image.css — কম্পোজার-মোডালের এডিটর/মাল্টি-ছবি-উইজেট
+    সেশন ১৫৬: bodyClass lf-feed-lock156 — FB-ইনডিপেন্ডেন্ট ৩-কলাম স্ক্রল লক (≥1200px;
+    dashboard.css session156-ব্লক) — মেনুবার স্থায়ী, বাম/মাঝ/ডান কলামের সম্পূর্ণ আলাদা স্ক্রল %>
+<%- include('../partials/header', { title: 'কমিউনিটি ফিড | লেখক ফোরাম', bodyClass: 'lf-feed-lock156', extra_css: ['/assets/css/dashboard.css', '/assets/css/rich-editor.css', '/assets/css/multi-image.css'] }) %>
 
   <div class="dashboard-wrap two-col has-rail">
     <%# ── সেশন ১৪৭: ফিড লেফট-রেল (FB-প্যারিটি) — ফিডের স্থায়ী শর্টকাট-কলাম (≥1200px;
         নিচে লুকানো — হেডারের ৯-ডট ডিরেক্টরি-লঞ্চার + মোবাইল-সাইডবার কভার করে)।
         helpers/dir-launcher.js এক-রেজিস্ট্রি (app.locals.dirRail) — হেডার-প্যানেলের সাথে
         ড্রিফট-অসম্ভব; রেল-ক্রম/হাইলাইট ওই রেজিস্ট্রিতেই নিয়ন্ত্রিত। ── %>
-    <aside class="feed-rail" aria-label="ফিড শর্টকাট">
+    <%# সেশন ১৫৬: fb-scroll — হোভারে দৃশ্যমান স্ক্রলবার (style.css session156-ইউটিলিটি) %>
+    <aside class="feed-rail fb-scroll" aria-label="ফিড শর্টকাট">
       <% if (user) { %>
         <a href="/me" class="fr-me">
           <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" class="fr-me-avatar" onerror="this.onerror=null;this.src='/assets/avatars/neutral.svg?v=3'">
@@ -24,7 +27,7 @@
       <div class="fr-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
     </aside>
     <!-- Main Feed -->
-    <main class="dash-main">
+    <main class="dash-main fb-scroll">
       <% if (user) { %>
       <div class="dash-composer card">
         <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
@@ -106,7 +109,7 @@
          ③ ট্রেন্ডিং = কেবল মৌলিক সাহিত্যকর্ম (avatar_update-বাদ + শিরোনাম-ডিডুপ — routes/dashboard.js)
          ④ লিডারবোর্ডে ডাবল-ব্যাজ বিলোপ → স্লিম বাংলা র‍্যাঙ্ক + অ্যাভাটার-কোণে গোল্ড/সিলভার/ব্রোঞ্জ ডট + এমারেল্ড পয়েন্ট-ব্যাজ
          ⑤ সর্বোচ্চ ৮px রেডিয়াস (--radius-sm) + সর্বত্র বাংলা অঙ্ক (toBn — session150 single-source চুক্তি) -->
-    <aside class="dash-right" aria-label="ফিড সাইডবার">
+    <aside class="dash-right fb-scroll" aria-label="ফিড সাইডবার">
       <%# সেশন ১১২: 'পড়া চালিয়ে যান' মাউন্ট — continue-reading.js localStorage থেকে
           রেন্ডার করে; খালি তালিকায় কার্ড আঁকা হয় না (ফাঁকা-কার্ড নয়) %>
       <div id="crxMount" class="crx-mount" hidden></div>
