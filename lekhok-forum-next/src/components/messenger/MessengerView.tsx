@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  CircleAlert,
   Loader2,
   MessageCircleDashed,
   MessagesSquare,
@@ -22,6 +23,7 @@ import {
   Search,
   Phone,
   Video,
+  X,
 } from 'lucide-react';
 import type { FrontendUser } from '@/lib/types';
 import { bn } from '@/lib/format';
@@ -74,10 +76,31 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
   const [uploadingVoice, setUploadingVoice] = useState(false);
   const [search, setSearch] = useState('');
   const [mobileThread, setMobileThread] = useState(false);
+  // ইনলাইন এরর-টোস্ট (ব্রাউজারের alert() পপ-আপ-মুক্ত — FB-প্যারিটি)
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<string | null>(null);
   activeIdRef.current = activeId;
+  const errTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // এরর লগিং কনসোলে + ব্যবহারকারীর কাছে ইনলাইন টোস্টে (৫ সেকেন্ডে নিজেই মুছে যায়)
+  const reportError = useCallback((err: unknown, fallback: string) => {
+    console.error('[মেসেঞ্জার]', err);
+    setActionError(err instanceof Error && err.message ? err.message : fallback);
+    if (errTimerRef.current) clearTimeout(errTimerRef.current);
+    errTimerRef.current = setTimeout(() => setActionError(null), 5000);
+  }, []);
+  const dismissError = useCallback(() => {
+    if (errTimerRef.current) clearTimeout(errTimerRef.current);
+    setActionError(null);
+  }, []);
+  useEffect(
+    () => () => {
+      if (errTimerRef.current) clearTimeout(errTimerRef.current);
+    },
+    []
+  );
 
   const activeConv = useMemo(
     () => conversations.find((c) => c.id === activeId) ?? null,
@@ -189,11 +212,11 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
       loadConversations();
     } catch (err) {
       setDraft(content); // ড্রাফট ফেরত
-      alert(err instanceof Error ? err.message : 'মেসেজ পাঠানো ব্যর্থ');
+      reportError(err, 'মেসেজ পাঠানো ব্যর্থ'); // ইনলাইন টোস্ট — কোনো alert() নেই
     } finally {
       setSending(false);
     }
-  }, [draft, sending, loadConversations, scrollToBottom]);
+  }, [draft, sending, loadConversations, scrollToBottom, reportError]);
 
   /* ─── ভয়েস পাঠানো: আপলোড → duration-সহ মেসেজ (০:০০-বাগ-স্থায়ী-সমাধান) ─── */
   const sendVoice = useCallback(
@@ -224,12 +247,13 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
         window.dispatchEvent(new CustomEvent('lf:messages-changed'));
         loadConversations();
       } catch (err) {
-        alert(err instanceof Error ? err.message : 'ভয়েস পাঠানো ব্যর্থ');
+        // ইনলাইন টোস্ট — কুৎসিত alert() পপ-আপ চিরতরে বন্ধ
+        reportError(err, 'ভয়েস পাঠানো ব্যর্থ — আবার চেষ্টা করুন');
       } finally {
         setUploadingVoice(false);
       }
     },
-    [loadConversations, scrollToBottom]
+    [loadConversations, scrollToBottom, reportError]
   );
 
   /* ─── নতুন কথোপকথন (লেখকবৃন্দ থেকে) ─── */
@@ -245,11 +269,11 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
         const data = await res.json();
         await loadConversations();
         openConversation(data.conversationId);
-      } catch {
-        alert('কথোপকথন শুরু করা যায়নি');
+      } catch (err) {
+        reportError(err, 'কথোপকথন শুরু করা যায়নি — আবার চেষ্টা করুন');
       }
     },
-    [loadConversations, openConversation]
+    [loadConversations, openConversation, reportError]
   );
 
   const filteredUsers = useMemo(() => {
@@ -407,6 +431,24 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
 
           {/* কম্পোজার */}
           <div className="border-t border-[#3e4042] bg-[#242526] px-3 py-2.5 shrink-0">
+            {/* ইনলাইন এরর-টোস্ট (alert-বিহীন) */}
+            {actionError && (
+              <div
+                role="alert"
+                className="mb-2 flex items-center gap-2 rounded-lg bg-red-950/50 border border-red-500/30 px-3 py-2 text-[12.5px] text-red-300 lf-anim-fade"
+              >
+                <CircleAlert className="w-4 h-4 shrink-0" />
+                <span className="flex-1 min-w-0">{actionError}</span>
+                <button
+                  onClick={dismissError}
+                  className="w-6 h-6 rounded-full hover:bg-red-500/20 flex items-center justify-center shrink-0"
+                  aria-label="সতর্ববার্তা বন্ধ করুন"
+                  type="button"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-1.5">
               <input
                 value={draft}

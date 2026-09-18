@@ -23,6 +23,8 @@ export default function VoiceRecorder({
   const [recording, setRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [starting, setStarting] = useState(false);
+  // মাইক-এরর ইনলাইনে (alert() পপ-আপ-মুক্ত) — ৫ সেকেন্ডে নিজেই মুছে যায়
+  const [micError, setMicError] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -37,6 +39,21 @@ export default function VoiceRecorder({
       mediaRecorderRef.current?.stream.getTracks().forEach((t) => t.stop());
     };
   }, []);
+
+  // ইনলাইন মাইক-এরর টোস্ট (৫ সেকেন্ড অটো-ডিসমিস)
+  const micTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showMicError = (msg: string) => {
+    console.error('[ভয়েস রেকর্ডার]', msg);
+    setMicError(msg);
+    if (micTimerRef.current) clearTimeout(micTimerRef.current);
+    micTimerRef.current = setTimeout(() => setMicError(null), 5000);
+  };
+  useEffect(
+    () => () => {
+      if (micTimerRef.current) clearTimeout(micTimerRef.current);
+    },
+    []
+  );
 
   // সবচেয়ে সাপোর্টেড মাইম-টাইপ বাছাই (Safari-তে audio/webm নেই — audio/mp4)
   const pickMime = (): string | undefined => {
@@ -70,7 +87,8 @@ export default function VoiceRecorder({
         setRecordSeconds(secondsRef.current);
       }, 1000);
     } catch {
-      alert('মাইক্রোফোন চালু করা যায়নি — ব্রাউজারের মাইক-অনুমতি দিন');
+      // ইনলাইন পিল — কোনো alert() পপ-আপ নেই
+      showMicError('মাইক্রোফোন চালু করা যায়নি — ব্রাউজারের মাইক-অনুমতি দিন');
     } finally {
       setStarting(false);
     }
@@ -121,6 +139,27 @@ export default function VoiceRecorder({
     setRecordSeconds(0);
     secondsRef.current = 0;
   };
+
+  if (micError && !recording) {
+    return (
+      <div
+        role="alert"
+        className="flex items-center gap-1.5 bg-red-950/40 text-red-400 pl-3 pr-1.5 py-1.5 rounded-full border border-red-500/30 shrink-0 max-w-[220px] lf-anim-fade"
+      >
+        <Mic className="w-3.5 h-3.5 shrink-0" />
+        <span className="text-[11px] font-semibold leading-tight flex-1 min-w-0">{micError}</span>
+        <button
+          onClick={() => setMicError(null)}
+          className="w-6 h-6 rounded-full hover:bg-red-500/20 flex items-center justify-center shrink-0"
+          title="বন্ধ করুন"
+          aria-label="সতর্ববার্তা বন্ধ করুন"
+          type="button"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
 
   if (recording) {
     return (

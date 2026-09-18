@@ -46,6 +46,8 @@ skills/
 
 # user-uploaded files (session screenshots etc.)
 upload/
+# ব্যতিক্রম: Next.js-অ্যাপের API-রুট-ডিরেক্টরি (session162 — bare-upload-রুল একে ভুলভাবে ধরে)
+!lekhok-forum-next/src/app/api/upload/
 
 # ── Sandbox Next.js scaffold / env (lekhok-forum প্রজেক্টের অংশ নয় — root-অ্যাংকড) ──
 /.next/

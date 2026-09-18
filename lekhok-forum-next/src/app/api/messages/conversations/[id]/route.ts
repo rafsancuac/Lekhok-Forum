@@ -11,6 +11,8 @@ import { getCurrentUser } from '@/lib/session'
 
 const MAX_TEXT = 2000
 const MAX_DURATION = 600 // ১০ মিনিট ক্যাপ
+// Base64 ফলব্যাক (রিড-ওনলি কনটেইনার) হলে audioUrl data:URI হয় — ~৮MB বাইনারি-ক্যাপ
+const MAX_INLINE_URL = 11_000_000
 
 async function getConversation(id: string, meId: string) {
   return db.conversation.findFirst({
@@ -87,7 +89,10 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     if (type === 'VOICE') {
       const audioUrl = (body?.audioUrl as string | undefined)?.trim()
       const duration = Number(body?.duration)
-      if (!audioUrl || !audioUrl.startsWith('/uploads/'))
+      // দুই-স্টোরেজ গ্রহণ: '/uploads/...' (ডিস্ক) অথবা 'data:audio/...' (Base64 ফলব্যাক)
+      const isDisk = !!audioUrl && audioUrl.startsWith('/uploads/')
+      const isInline = !!audioUrl && audioUrl.startsWith('data:audio/') && audioUrl.length <= MAX_INLINE_URL
+      if (!isDisk && !isInline)
         return NextResponse.json({ error: 'ভয়েস ফাইল পাওয়া যায়নি' }, { status: 400 })
       if (!Number.isFinite(duration) || duration < 0 || duration > MAX_DURATION)
         return NextResponse.json({ error: 'ভয়েসের দৈর্ঘ্য অবৈধ' }, { status: 400 })
