@@ -576,3 +576,28 @@
   .lf-og-in147{animation:none}
 }
 /* EOF-MARKER: session147-og-faces-article-mount-ext-fav */
+
+/* ═══ session147-ব্লক: FB-নেস্টেড শেয়ার-কার্ড + মন্তব্য-সহ-শেয়ার শিট ═══════════
+   শেয়ার-বাবল: শেয়ারকারী-হেডার + ক্যাপশন + ভেতরে বর্ডারড মূল-পোস্ট + গ্লোবাল ফুটার।
+   টোকেন-শুধু (var(--lf-*)) — hex-শূন্য; reduced-motion-সম্মানিত। */
+.share-nested147{display:flex;flex-direction:column;gap:10px}
+.share-note147{margin:0;padding:0 2px;font-size:.9rem;line-height:1.6;color:var(--lf-text-primary);white-space:pre-line}
+.share-orig147{border:1px solid var(--lf-fb-border-2);border-radius:var(--lf-radius-card);background:var(--lf-fb-field);display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.share-orig147 .feed-card-head{padding:10px 12px 0}
+.share-orig147 .feed-card-body{padding:0 12px}
+.share-orig147 .feed-title{font-size:.95rem}
+.share-orig147 .feed-text{font-size:.82rem;color:var(--lf-text-secondary)}
+.share-orig147 .feed-image{margin:0;border-radius:0}
+.share-orig-link147{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;margin:0 12px 10px;font-size:.74rem;font-weight:700;color:var(--lf-brand-primary);text-decoration:none;padding:4px 8px;border-radius:var(--lf-radius-chip);transition:background .2s ease}
+.share-orig-link147:hover,.share-orig-link147:focus-visible{background:var(--lf-brand-light);text-decoration:underline}
+
+/* মন্তব্য-সহ-শেয়ার শিট (#shareNoteSheet) — বিদ্যমান modal-backdrop/modal-box চুক্তিতে */
+#shareNoteSheet textarea{width:100%;resize:vertical;min-height:72px;font:inherit;font-size:.88rem;line-height:1.55;color:var(--lf-text-primary);background:var(--lf-ui-input-bg);border:1px solid var(--lf-fb-border-2);border-radius:var(--lf-radius-card);padding:10px 12px}
+#shareNoteSheet textarea:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:1px}
+#shareNoteSheet .modal-close.primary{background:var(--lf-brand-primary);color:var(--lf-fb-ink);border-color:var(--lf-brand-primary)}
+#shareNoteSheet .modal-close.primary:hover{background:var(--lf-brand-primary-hover)}
+
+@media (max-width:480px){
+  .share-orig147 .feed-card-head,.share-orig147 .feed-card-body{padding-left:10px;padding-right:10px}
+  .share-orig-link147{margin-left:10px}
+}

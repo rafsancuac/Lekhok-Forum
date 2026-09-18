@@ -6,6 +6,7 @@ const rolePolicy = require('../helpers/role-policy');
 const { displayName } = require('../helpers/display-name');
 const sseHub = require('../helpers/sse'); // সেশন ৯৯ (রোডম্যাপ-০১): SSE রিয়েল-টাইম হাব
 const FR = require('../helpers/feed-ranking'); // সেশন ১০২ (০৮-ইউনিয়ন): অ্যাফিনিটি + র‍্যাংক-ব্যাজ
+const sharedPosts147 = require('../helpers/shared-posts')(db); // সেশন ১৪৭: নেস্টেড শেয়ার-ডেকোরেটর
 
 // ── ডুপ্লিকেট-নোটিফিকেশন গার্ড: একই ইউজার+টাইপ+বডি ১ মিনিটের মধ্যে দ্বিতীয়বার ঢোকে না ──
 // সেশন ৯১ (B4): ঐচ্ছিক prefsKind — প্রাপকের notify_prefs[kind]===false হলে নোটিফিকেশনই হয় না
@@ -115,7 +116,7 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
     : useCursor
       ? ORDER + ` LIMIT ${lim + 1}` // কার্সার-মোড: hasMore-সঠিকতার জন্য +১
       : ORDER + ` LIMIT ${lim} OFFSET ${off}`;
-  const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+  const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from, p.repost_note,
            NULL as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            NULL as accepted_comment_id,
@@ -123,7 +124,7 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
-  const QUESTION_SQL = ` /* session132: accepted_flag — ফিড-প্রশ্ন-কার্ডে গ্রহণকৃত-উত্তর-ব্যাজ */\n    SELECT 'question' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+  const QUESTION_SQL = ` /* session132: accepted_flag — ফিড-প্রশ্ন-কার্ডে গ্রহণকৃত-উত্তর-ব্যাজ */\n    SELECT 'question' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from, p.repost_note,
            (CASE WHEN p.accepted_comment_id IS NOT NULL THEN 1 ELSE 0 END) as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            p.accepted_comment_id,
@@ -132,8 +133,9 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
   const ACTIVITY_SQL = `\n    SELECT 'activity' as item_type, dc.id as id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
+           NULL as shared_from, NULL as repost_note,
            NULL as accepted_flag,
-           NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
+           dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
            NULL as accepted_comment_id,
            NULL as author_id,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, NULL as pen_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
@@ -223,6 +225,9 @@ async function rankedFeedSlice(filter, me, limit, offset, aff) {
 //   • reactorFaces: FB-২০২৪ ফেসপাইল — প্রতি-পোস্টে সর্বশেষ ৩ রিঅ্যাক্টরের মিনি-অ্যাভাটার (১ batch)
 //   • commentPreview: ফিড-কার্ডের নিচে সর্বশেষ মন্তব্যের প্রিভিউ-লাইন (১ batch)
 async function decorateFeed(feed, me, { withBookmarks } = {}) {
+  // সেশন ১৪৭: শেয়ার-কপিগুলোতে shared_orig অ্যাটাচ (FB-নেস্টেড রেন্ডার —
+  // FeedPostCard-এর shared-শাখা)। withBookmarks-মোডে ফিড খালি — স্কিপ-সস্তা।
+  if (!withBookmarks) await sharedPosts147.decorateShared(feed);
   const postItems = feed.filter(i => i.item_type !== 'activity');
   const postIds = postItems.map(i => i.id);
   const dailyIds = feed.filter(i => i.item_type === 'activity').map(i => i.id);

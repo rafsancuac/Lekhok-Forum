@@ -408,7 +408,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
   try {
   if (!req.session.user) return res.redirect('/login');
   const u = req.session.user;
-  const { full_name, pen_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, show_email, show_phone, show_birth, new_password, confirm_password } = req.body;
+  const { full_name, pen_name, email, phone, bio, designation, address, birth_date, gender, social_fb, social_twitter, social_linkedin, social_website, show_email, show_phone, show_birth, new_password, confirm_password, blood_group, hometown, institution, academic_year } = req.body;
 
   if (req.uploadError) {
     return res.redirect('/profile/edit?err=' + encodeURIComponent(req.uploadError));
@@ -439,7 +439,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
   const clean = (v) => (v == null || String(v).trim() === '') ? null : String(v).trim();
   if (passwordHash) {
     await db.prepare(
-      `UPDATE users SET full_name=?, pen_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url), password_hash=?, password_changed_at=CURRENT_TIMESTAMP, must_change_password=0 WHERE id=?`
+      `UPDATE users SET full_name=?, pen_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, blood_group=?, hometown=?, institution=?, academic_year=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url), password_hash=?, password_changed_at=CURRENT_TIMESTAMP, must_change_password=0 WHERE id=?`
     ).run(
       full_name.trim(),
       clean(pen_name),
@@ -454,6 +454,10 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
       clean(social_twitter),
       clean(social_linkedin),
       clean(social_website),
+      clean(blood_group),
+      clean(hometown),
+      clean(institution),
+      clean(academic_year),
       show_email ? 1 : 0,
       show_phone ? 1 : 0,
       show_birth ? 1 : 0,
@@ -463,7 +467,7 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
     );
   } else {
     await db.prepare(
-      `UPDATE users SET full_name=?, pen_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url) WHERE id=?`
+      `UPDATE users SET full_name=?, pen_name=?, email=?, phone=?, bio=?, designation=?, address=?, birth_date=?, gender=?, social_fb=?, social_twitter=?, social_linkedin=?, social_website=?, blood_group=?, hometown=?, institution=?, academic_year=?, show_email=?, show_phone=?, show_birth=?, avatar_url=COALESCE(?, avatar_url) WHERE id=?`
     ).run(
       full_name.trim(),
       clean(pen_name),
@@ -478,6 +482,10 @@ router.post('/profile/edit', withUpload(avatarUpload), async (req, res) => {
       clean(social_twitter),
       clean(social_linkedin),
       clean(social_website),
+      clean(blood_group),
+      clean(hometown),
+      clean(institution),
+      clean(academic_year),
       show_email ? 1 : 0,
       show_phone ? 1 : 0,
       show_birth ? 1 : 0,

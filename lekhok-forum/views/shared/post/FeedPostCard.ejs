@@ -94,6 +94,60 @@
       <% } %>
     </div>
   </article>
+<% } else if (item.shared_from && item.shared_orig) { %>
+  <%# ── সেশন ১৪৭: FB-নেস্টেড শেয়ার-কার্ড (ছবি-৬ আর্কিটেকচার) ──
+      শেয়ারকারীর হেডার + (repost_note ক্যাপশন) + ভেতরে মূল-পোস্টের বর্ডারড
+      মিনি-কার্ড + নিচে গ্লোবাল ফুটার (লাইক/কমেন্ট/শেয়ার টার্গেট = শেয়ার-কপি)।
+      পুরনো ফুল-কপি রেন্ডার শুধু shared_orig-অনুপস্থিতির ফলব্যাকে (লিগেসি-ডিপ্লয়)। %>
+  <% var _so147 = item.shared_orig; %>
+  <article class="<%= _cardClass %> share-nested147" data-post-id="<%= item.id %>" data-shared-from="<%= item.shared_from %>">
+    <div class="feed-card-head">
+      <%- include('../user/AuthorLabel', { u: item, timeIso: item.created_at }) %>
+      <span class="feed-type-badge repost"><i class="fas fa-share"></i> শেয়ার</span>
+      <%- include('./PostActionMenu', {
+        postId: item.id,
+        editUrl: '/articles/' + item.id + '/edit',
+        deleteUrl: '/articles/' + item.id + '/delete',
+        isOwner: _isOwner,
+        canMod: _canMod,
+        reportLabel: 'শেয়ার: ' + String(_so147.title || '').slice(0, 60)
+      }) %>
+    </div>
+    <%# শেয়ারকারীর নিজস্ব ক্যাপশন (মন্তব্য-সহ-শেয়ার — repost_note) %>
+    <% if (item.repost_note) { %><p class="repost-note share-note147"><%= item.repost_note %></p><% } %>
+
+    <%# ভেতরের আসল পোস্ট — FB-বর্ডারড নেস্টেড মিনি-কার্ড %>
+    <div class="repost-original share-orig147">
+      <div class="feed-card-head">
+        <%- include('../user/AuthorLabel', { u: _so147, timeIso: _so147.published_at || _so147.created_at }) %>
+        <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+      </div>
+      <% if (_so147.cover_image) { %>
+        <a href="/articles/<%= _so147.id %>"><img loading="lazy" decoding="async" onload="this.classList.add('ld')" src="<%= _so147.cover_image %>" class="feed-image img-skel" alt=""></a>
+      <% } %>
+      <div class="feed-card-body">
+        <h3 class="feed-title"><a href="/articles/<%= _so147.id %>"><%= _so147.title %></a></h3>
+        <p class="feed-text"><%- mdFeed(_so147.excerpt || _so147.body || '', 200) %></p>
+      </div>
+      <a class="share-orig-link147" href="/articles/<%= _so147.id %>">মূল পোস্ট দেখুন <i class="fas fa-angle-right" aria-hidden="true"></i></a>
+    </div>
+
+    <%# গ্লোবাল সেন্ট্রাল ফুটার — টার্গেট = শেয়ার-কপি (FB-স্ট্যান্ডার্ড) %>
+    <%- include('./PostFooterActions', {
+      targetId: item.id, targetType: 'post',
+      counts: item.reactionCounts, mine: item.myReaction,
+      link: '/articles/' + item.id,
+      commentCount: item.comment_count || 0, shareCount: item.share_count || 0,
+      bookmarked: _bmkOn,
+      reactorFaces: item.reactorFaces || [], inlineComments: _showDrawer
+    }) %>
+    <% if (_showDrawer) { %>
+    <div class="fc-drawer" data-comments-for="<%= item.id %>" hidden>
+      <div class="fc-list"></div>
+      <% if (_user) { %><%- include('../comment/CommentComposer', { user: _user, postId: item.id }) %><% } %>
+    </div>
+    <% } %>
+  </article>
 <% } else { %>
   <%# ── সাধারণ পোস্ট-কার্ড ── %>
   <article class="<%= _cardClass %>"<%= item.is_pinned ? ' data-pinned-post="' + item.id + '"' : '' %>>

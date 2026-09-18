@@ -82,9 +82,11 @@
 
     <% if (showShare) { %>
     <div class="share-wrap">
-      <%# রুল-৪ + session105-parallel-মার্জ: FB-স্পেক — একটিই শেয়ার-বাটন, ক্লিকে ঠিক ৩টি
-          ফিক্সড-অপশনসহ সাবটাইটেল-মেনু (smx-* স্টাইল style.css session105-ব্লক)।
-          অন্য কিছু যোগ/বিয়োগ নিষিদ্ধ। main.js LekhokShare-হ্যান্ডলার অপরিবর্তিত। %>
+      <%# রুল-৪ + session105-parallel-মার্জ: FB-স্পেক — একটিই শেয়ার-বাটন, ক্লিকে ফিক্সড-অপশনসহ
+          সাবটাইটেল-মেনু (smx-* স্টাইল style.css session105-ব্লক)। session147: FB-শেয়ার-শীট
+          প্যারিটিতে ৪র্থ-অপশন 'মন্তব্য সহ শেয়ার' (data-share-note → comment-tools.js
+          → #shareNoteSheet → POST /articles/:id/share {note}) — মেনু = ঠিক ৪টি
+          ফিক্সড-অপশন। main.js LekhokShare-হ্যান্ডলার অপরিবর্তিত। %>
       <button type="button" class="reaction-btn share-trigger" aria-haspopup="menu" title="শেয়ার অপশন">
         <i class="fas fa-share"></i> <span>শেয়ার</span>
       </button>
@@ -110,6 +112,11 @@
         <button type="button" class="smx-item" data-share="timeline" role="menuitem">
           <span class="smx-ico"><i class="fas fa-retweet"></i></span>
           <span class="smx-txt"><strong>টাইমলাইনে শেয়ার করুন</strong><small>এখনই আপনার ফিডে প্রকাশ করুন</small></span>
+        </button>
+        <%# সেশন ১৪৭: FB 'Share with note' — শেয়ারকারীর ক্যাপশনসহ নেস্টেড শেয়ার %>
+        <button type="button" class="smx-item" data-share-note="<%= targetId %>" role="menuitem">
+          <span class="smx-ico"><i class="far fa-comment-dots"></i></span>
+          <span class="smx-txt"><strong>মন্তব্য সহ শেয়ার করুন</strong><small>আপনার কথা লিখে প্রকাশ করুন</small></span>
         </button>
         <button type="button" class="smx-item" data-share="user" role="menuitem">
           <span class="smx-ico"><i class="far fa-paper-plane"></i></span>

@@ -476,6 +476,13 @@ router.post('/articles/new', ensureLoggedIn, withUpload(coverUpload), async (req
 // via posts.shared_from — the original stays untouched; the shared copy lives
 // on the sharer's timeline/profile like a Facebook share.
 router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
+  // সেশন ১৪৭: মন্তব্য-সহ শেয়ার — JSON বডির {note} ঐচ্ছিক (≤৫০০ অক্ষর);
+  // এক-ট্যাপ শেয়ার-প্রবাহ (main.js) নোট না-পাঠালে NULL — পুরনো ব্যবহার অক্ষুণ্ণ।
+  let note147 = null;
+  try {
+    const n147 = req.body && typeof req.body === 'object' ? String(req.body.note || '').trim() : '';
+    if (n147) note147 = n147.slice(0, 500);
+  } catch (_) {}
   const orig = await db.prepare(`
     SELECT p.*, u.full_name as orig_author, u.username as orig_username
     FROM posts p JOIN users u ON p.author_id = u.id
@@ -502,10 +509,13 @@ router.post('/articles/:id/share', ensureLoggedIn, async (req, res) => {
   // archive_visible=0 (/articles 'সব লেখা' তালিকায় শেয়ার-কপি বাদ)।
   // সোশাল-ফিড/টাইমলাইন দৃশ্যমানতা অক্ষুণ্ণ (type='article')।
   const result = await db.prepare(`
-    INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category, shared_from, post_kind, home_featured, archive_visible)
-    VALUES (?, 'article', ?, ?, ?, ?, NULL, NULL, 'general', ?, 'share', 0, 0)
-  `).run(req.session.user.id, title, body, excerpt, source.cover_image || null, sourceId);
+    INSERT INTO posts (author_id, type, title, body, excerpt, cover_image, tags, mentions, category, shared_from, post_kind, home_featured, archive_visible, repost_of, repost_note)
+    VALUES (?, 'article', ?, ?, ?, ?, NULL, NULL, 'general', ?, 'share', 0, 0, ?, ?)
+  `).run(req.session.user.id, title, body, excerpt, source.cover_image || null, sourceId, sourceId, note147);
   const newIdInt = result && result.lastInsertRowid;
+  // সেশন ১৪৭: মন্তব্য-সহ শেয়ার — শেয়ারকারীর ক্যাপশন repost_note-এ (FB-ক্যাপশন;
+  // FeedPostCard-এর নেস্টেড-শেয়ার শাখায় শেয়ারকারী-হেডারের নিচে রেন্ডার হয়)।
+  // note147 উপরে ডিক্লেয়ার্ড — ≤৫০০ অক্ষর, খালি → NULL।
   // টাস্ক ১৩ (পর্ব ৪, অংশ ক): শেয়ার করা কপিতেও মূল পোস্টের সব ছবি কপি করি
   if (newIdInt) {
     const srcImgs = (await db.getPostImages('post', sourceId)).map(i => i.image_url);
@@ -1392,6 +1402,46 @@ router.get('/profile/:username', async (req, res) => {
     link: _ptab139(r.post_type) + r.post_id
   }));
 
+  /* সেশন ১৪৭: ফেসবুক-প্যারিটি প্রোফাইল-সম্প্রসারণ ═══════════════════════════
+     (ক) নেস্টেড শেয়ার-পোস্ট: টাইমলাইনের শেয়ার-কপিগুলোতে shared_orig অ্যাটাচ —
+         FeedPostCard এখন FB-আর্কিটেকচারে রেন্ডার করবে (শেয়ারকারী-হেডার +
+         repost_note ক্যাপশন + ভেতরে মূল-পোস্ট + গ্লোবাল ফুটার)।
+     (খ) হাইলাইটস: সর্বাধিক-এনগেজড ৩ লেখার ক্যারোসেল-কার্ড (সত্য-ডেটা —
+         like_count×2 + comment_count×3 + view_count×0.2 — র‍্যাংকড-ফিডের
+         ওজন-চুক্তির লাইট-মিরর)।
+     (গ) অনুসারী-টাইল-মিউচুয়াল: প্রতি-অনুসারী-টাইলে "N জন মিউচুয়াল" — ভিজিটর ও
+         টাইল-ব্যক্তি উভয়েই যাঁদের অনুসরণ করেন (২ কোয়েরি — N+1 শূন্য)। */
+  const sharedPosts147 = require('../helpers/shared-posts')(db);
+  await sharedPosts147.decorateShared(articles).catch(() => {});
+  // প্রোফাইল-রুটের পোস্ট-রো = SELECT * FROM posts (author-জয়েন্ট নয়) → AuthorLabel
+  // নাম/অ্যাভাটার অন্ধ হয়। প্রোফাইল-টাইমলাইনে প্রতিটি লেখার লেখকই মালিক —
+  // profile-অবজেক্ট থেকে author-ফিল্ড অ্যাটাচ (ড্যাশবোর্ড-ফিডে SQL জয়েনই আছে;
+  // ||-গার্ড — ভবিষ্যৎ-জয়েনে দ্বৈত-নয়)।
+  articles.forEach(p => {
+    p.username = p.username || profile.username;
+    p.full_name = p.full_name || profile.full_name;
+    p.pen_name = p.pen_name || profile.pen_name;
+    p.avatar_url = p.avatar_url || profile.avatar_url;
+    p.gender = p.gender || profile.gender;
+  });
+  const highlights147 = articles
+    .map(p => ({ id: p.id, title: p.title, cover_image: p.cover_image, view_count: p.view_count || 0,
+                 score: (p.like_count || 0) * 2 + (p.comment_count || 0) * 3 + (p.view_count || 0) * 0.2 }))
+    .sort((a, b) => b.score - a.score).slice(0, 3);
+  let tileMutuals147 = null;
+  if (myId && !isOwner && followers.length) {
+    try {
+      const viewerFollow = new Set((await db.prepare('SELECT following_id FROM follows WHERE follower_id = ?').all(myId)).map(r => r.following_id));
+      const tileIds = followers.slice(0, 9).map(f => f.id);
+      if (tileIds.length && viewerFollow.size) {
+        const ph147 = tileIds.map(() => '?').join(',');
+        tileMutuals147 = {};
+        (await db.prepare(`SELECT follower_id, following_id FROM follows WHERE follower_id IN (${ph147})`).all(...tileIds))
+          .forEach(r => { if (viewerFollow.has(r.following_id)) tileMutuals147[r.follower_id] = (tileMutuals147[r.follower_id] || 0) + 1; });
+      }
+    } catch (_) { tileMutuals147 = null; }
+  }
+
   // Interests + tag pool (owner manages categories; visitors see them)
   let interests = [];
   try { interests = JSON.parse(profile.interests || '[]'); } catch (_) {}
@@ -1568,6 +1618,8 @@ router.get('/profile/:username', async (req, res) => {
     // সেশন ১০৫: ক্যানোনিকাল FeedPostCard-এর সেভ-স্টেট
     myBookmarkedIds: myBookmarkedIds105,
     totalPosts, totalLikes, isVerified, roleBadge,
+    // সেশন ১৪৭: নেস্টেড-শেয়ার + হাইলাইটস + টাইল-মিউচুয়াল
+    highlights: highlights147, tileMutuals: tileMutuals147,
     joinedBn: bnDate83(profile.created_at),
     bn: bn83, bnRelTime: bnRelTime83,
     req,

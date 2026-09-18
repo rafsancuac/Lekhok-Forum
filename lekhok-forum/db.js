@@ -553,6 +553,13 @@ const LATER_COLUMNS = [
   ['users', 'genres', 'TEXT'],
   ['users', 'allow_messages_from', "TEXT DEFAULT 'everyone'"],
   ['users', 'bookmarks_public', 'INTEGER DEFAULT 0'],
+  // সেশন ১৪৭: ফেসবুক-প্যারিটি বিস্তারিত পরিচিতি — রক্তের গ্রুপ / নিজ জেলা /
+  // শিক্ষা-প্রতিষ্ঠান / শিক্ষাবর্ষ (প্রোফাইল-হেডার মেটা-চিপ + সাইডবার পরিচিতি +
+  // tab-about; /profile/edit ফর্ম থেকে সেভ)। schema.sql-এও যোগ করা (fresh-DB)।
+  ['users', 'blood_group',    'TEXT'],
+  ['users', 'hometown',       'TEXT'],
+  ['users', 'institution',    'TEXT'],
+  ['users', 'academic_year',  'TEXT'],
   // সেশন ৯৫: অ্যাকাউন্ট-রিকভারি ট্র্যাকিং (সুপার-এডমিন প্যানেল) —
   // password_changed_at: সর্বশেষ পাসওয়ার্ড সেট/পরিবর্তনের সময়;
   // must_change_password: সুপার-এডমিন-প্রদত্ত অস্থায়ী পাসওয়ার্ডে লগইন করেছে

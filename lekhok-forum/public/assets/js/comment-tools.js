@@ -1884,3 +1884,71 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', lpvScanAll139);
   else lpvScanAll139();
 })();
+
+/* ═══ session147: FB 'Share with note' শিট-ইঞ্জিন ═══════════════════════════
+   পোস্ট-শেয়ার-মেনুর [data-share-note] → #shareNoteSheet খোলে → POST
+   /articles/:id/share {note} → টোস্ট + পুনঃলোড (প্রোফাইল/ফিডে নেস্টেড শেয়ার-বাবল)।
+   main.js-এর LekhokShare-এর সাথে সহাবস্থান: এই-হ্যান্ডলার data-share-note-কেই
+   ধরে (data-share বাদ) — কোনো-মেনু-ক্লোজ দ্বৈত-নয় (main.js document-ক্লিকে
+   .share-wrap-বহির্ভূত-ক্লোজ আগেই-চলে)। */
+(function () {
+  'use strict';
+  function sheet() { return document.getElementById('shareNoteSheet'); }
+  function closeSheet() {
+    var s = sheet(); if (!s) return;
+    s.classList.remove('open'); s.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-share-note]');
+    if (btn) {
+      e.preventDefault(); e.stopPropagation();
+      if (!window.LekhokAuthed || !window.LekhokAuthed()) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return; }
+      var s = sheet(); if (!s) return;
+      document.getElementById('shareNotePostId').value = btn.getAttribute('data-share-note') || '';
+      document.getElementById('shareNoteText').value = '';
+      s.classList.add('open'); s.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      document.querySelectorAll('.share-menu.open').forEach(function (m) { m.classList.remove('open'); });
+      setTimeout(function () { var t = document.getElementById('shareNoteText'); if (t) t.focus(); }, 80);
+      return;
+    }
+    if (e.target.closest('[data-close-share-note]') || e.target.id === 'shareNoteSheet') { closeSheet(); return; }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var s = sheet();
+      if (s && s.classList.contains('open')) { closeSheet(); }
+    }
+  });
+  document.addEventListener('click', function (e) {
+    var sub = e.target.closest('#shareNoteSubmit');
+    if (!sub) return;
+    var pid = document.getElementById('shareNotePostId').value;
+    var note = (document.getElementById('shareNoteText').value || '').trim().slice(0, 500);
+    if (!pid) { if (window.showToast) showToast('শেয়ার করা যাবে না', 'error'); return; }
+    sub.disabled = true;
+    fetch('/articles/' + pid + '/share', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: note })
+    }).then(function (r) {
+      if (r.status === 401) { location.href = '/login?next=' + encodeURIComponent(location.pathname); return null; }
+      if (!r.ok) throw new Error('share ' + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (!j) return;
+      if (j.ok) {
+        closeSheet();
+        if (window.showToast) showToast(note ? 'মন্তব্য সহ শেয়ার হয়েছে ✓' : 'নিজের টাইমলাইনে শেয়ার হয়েছে ✓', 'success');
+        setTimeout(function () { location.reload(); }, 700);
+      } else {
+        if (window.showToast) showToast(j.error || 'শেয়ার ব্যর্থ হয়েছে', 'error');
+        sub.disabled = false;
+      }
+    }).catch(function () {
+      if (window.showToast) showToast('শেয়ার ব্যর্থ হয়েছে', 'error');
+      sub.disabled = false;
+    });
+  });
+})();

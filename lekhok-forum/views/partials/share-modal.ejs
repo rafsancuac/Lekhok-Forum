@@ -17,4 +17,22 @@
     <textarea id="shareMsg" rows="2" placeholder="একটি বার্তা যোগ করুন (ঐচ্ছিক)…"></textarea>
   </div>
 </div>
+
+<%# সেশন ১৪৭: FB 'Share with note' শিট — মন্তব্য-সহ টাইমলাইন-শেয়ার;
+    ইঞ্জিন comment-tools.js (shareNote147) — পোস্ট-মেনুর data-share-note থেকে খোলে %>
+<div class="modal-backdrop" id="shareNoteSheet" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-label="মন্তব্য সহ শেয়ার করুন">
+    <header class="modal-head">
+      <h3><i class="fas fa-share"></i> মন্তব্য সহ শেয়ার করুন</h3>
+      <button type="button" class="modal-close" data-close-share-note aria-label="বন্ধ করুন">&times;</button>
+    </header>
+    <input type="hidden" id="shareNotePostId" value="" />
+    <p class="modal-empty" style="margin:0 0 8px">আপনার কথাটি শেয়ার-বাবলের উপরে ক্যাপশন হিসেবে দেখা যাবে।</p>
+    <textarea id="shareNoteText" rows="3" maxlength="500" placeholder="আপনার মন্তব্য লিখুন… (ঐচ্ছিক)"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button type="button" class="modal-close" data-close-share-note>বাতিল</button>
+      <button type="button" class="modal-close primary" id="shareNoteSubmit"><i class="fas fa-share"></i> শেয়ার করুন</button>
+    </div>
+  </div>
+</div>
 <% } %>

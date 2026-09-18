@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS users (
   social_twitter TEXT,
   social_linkedin TEXT,
   social_website TEXT,
+  -- সেশন ১৪৭: ফেসবুক-প্যারিটি বিস্তারিত পরিচিতি (রক্ত/নিজ-জেলা/প্রতিষ্ঠান/শিক্ষাবর্ষ)
+  blood_group   TEXT,                          -- যেমন: 'A+'
+  hometown      TEXT,                          -- নিজ জেলা / শহর
+  institution   TEXT,                          -- শিক্ষা-প্রতিষ্ঠান (যেমন: University of Chittagong)
+  academic_year TEXT,                          -- শিক্ষাবর্ষ / পাস-সময় (যেমন: 'March 2025')
   -- সেশন ৮০: লেখক-পরিচয় + গোপনীয়তা-নিয়ন্ত্রণ
   genres        TEXT    DEFAULT '[]',         -- পছন্দের সাহিত্য-ধারা (JSON, সর্বোচ্চ ৫)
   allow_messages_from TEXT DEFAULT 'everyone', -- everyone | followers | none

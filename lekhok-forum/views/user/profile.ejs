@@ -70,6 +70,22 @@
             <span><strong><%= bn(totalPosts) %></strong> লেখা</span>
             <% if (totalLikes > 0) { %><span class="pf-dot-sep">•</span><span><strong><%= bn(totalLikes) %></strong> প্রতিক্রিয়া</span><% } %>
           </p>
+          <%# সেশন ১৪৭: FB-হেডার বায়ো + ইনলাইন-মেটা চিপ (ঠিকানা/প্রতিষ্ঠান/রক্ত/ওয়েবসাইট) %>
+          <% if (profile.bio) { %><p class="pf-bio147"><%= profile.bio %></p><% } %>
+          <%
+            const metaChips147 = [];
+            if (profile.address) metaChips147.push({ ico: 'fas fa-map-marker-alt', txt: profile.address + '-এ বসবাস' });
+            if (profile.institution) metaChips147.push({ ico: 'fas fa-graduation-cap', txt: profile.academic_year ? (profile.institution + ' · ' + profile.academic_year) : profile.institution });
+            if (profile.hometown) metaChips147.push({ ico: 'fas fa-home', txt: 'নিজ জেলা: ' + profile.hometown });
+            if (profile.blood_group) metaChips147.push({ ico: 'fas fa-tint', txt: 'রক্তের গ্রুপ: ' + profile.blood_group });
+          %>
+          <% if (metaChips147.length) { %>
+            <p class="pf-meta-chips147">
+              <% metaChips147.forEach(function (m) { %>
+                <span class="pf-meta-chip147"><i class="<%= m.ico %>" aria-hidden="true"></i> <%= m.txt %></span>
+              <% }) %>
+            </p>
+          <% } %>
           <% if (mutuals && mutuals.length) { %>
             <p class="pf-mutual-line">
               <span class="pf-mutual-avatars">
@@ -162,7 +178,10 @@
           <ul class="pf-detail-list">
             <% if (profile.designation) { %><li><i class="fas fa-briefcase"></i><span><%= profile.designation %></span></li><% } %>
             <% if (joinedBn) { %><li><i class="far fa-calendar-plus"></i><span><%= joinedBn %> এ যুক্ত হয়েছেন</span></li><% } %>
-            <% if (profile.address) { %><li><i class="fas fa-map-marker-alt"></i><span><%= profile.address %></span></li><% } %>
+            <% if (profile.address) { %><li><i class="fas fa-map-marker-alt"></i><span><%= profile.address %>-এ বসবাস<% if (profile.hometown) { %> · নিজ জেলা <%= profile.hometown %><% } %></span></li><% } %>
+            <%# সেশন ১৪৭: FB-বিস্তারিত পরিচিতি — প্রতিষ্ঠান/শিক্ষাবর্ষ/রক্তের-গ্রুপ %>
+            <% if (profile.institution) { %><li><i class="fas fa-graduation-cap"></i><span>অধ্যয়ন করেছেন: <strong><%= profile.institution %></strong><% if (profile.academic_year) { %><small class="pf-detail-sub147"><%= profile.academic_year %></small><% } %></span></li><% } %>
+            <% if (profile.blood_group) { %><li><i class="fas fa-tint"></i><span>রক্তের গ্রুপ: <strong><%= profile.blood_group %></strong></span></li><% } %>
             <% if (isOwner || (profile.show_birth && profile.birth_date)) { %>
               <% if (profile.birth_date) { %><li><i class="fas fa-birthday-cake"></i><span><%= profile.birth_date %></span></li><% } %>
             <% } %>
@@ -202,6 +221,32 @@
           <a href="/profile/edit" class="pf-btn gray full-w"><i class="fas fa-pen"></i> পরিচিতি সম্পাদনা</a>
         </div>
 
+        <%# ১(খ). সেশন ১৪৭: হাইলাইটস ক্যারোসেল — সর্বাধিক-এনগেজড ৩ লেখার উল্লম্ব
+            কার্ড-স্ট্রিপ (সত্য-ডেটা: রিঅ্যাকশন×২ + কমেন্ট×৩ + ভিউ×০.২) — FB-হাইলাইটস-প্যারিটি %>
+        <% if (highlights && highlights.length) { %>
+          <div class="pf-card">
+            <div class="pf-card-head">
+              <h3 class="pf-card-title"><i class="fas fa-star pf-title-ico"></i> হাইলাইটস</h3>
+              <span class="pf-card-more as-text147">সর্বাধিক আলোচিত</span>
+            </div>
+            <div class="pf-highlights147">
+              <% highlights.forEach(function (h) { %>
+                <a href="/articles/<%= h.id %>" class="pf-hl-card147">
+                  <span class="pf-hl-media147">
+                    <% if (h.cover_image) { %>
+                      <img loading="lazy" decoding="async" src="<%= h.cover_image %>" alt="">
+                    <% } else { %>
+                      <span class="pf-hl-fallback147"><i class="fas fa-feather-alt"></i></span>
+                    <% } %>
+                    <span class="pf-hl-views147"><i class="fas fa-eye" aria-hidden="true"></i> <%= bn(h.view_count || 0) %></span>
+                  </span>
+                  <span class="pf-hl-title147"><%= h.title %></span>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        <% } %>
+
         <%# ২. ছবি কার্ড (৩×৩ স্ন্যাপশট) %>
         <div class="pf-card">
           <div class="pf-card-head">
@@ -233,6 +278,8 @@
                 <a href="/profile/<%= f.username %>" class="pf-follower-tile">
                   <img loading="lazy" decoding="async" src="<%= f.avatar_url || '/avatar/' + f.id %>" alt="<%= f.full_name %>">
                   <span><%= f.full_name %></span>
+                  <%# সেশন ১৪৭: FB-মিউচুয়াল-কাউন্ট — ভিজিটর ও টাইল-ব্যক্তি উভয়েই যাঁদের অনুসরণ করেন %>
+                  <% if (tileMutuals && tileMutuals[f.id]) { %><small class="pf-tile-mutual147"><%= bn(tileMutuals[f.id]) %> জন মিউচুয়াল</small><% } %>
                 </a>
               <% }) %>
             </div>
@@ -267,6 +314,22 @@
 
       <%# ── কলাম ২: টাইমলাইন / ট্যাব-প্যানেলসমূহ ── %>
       <main class="pf-main">
+
+        <%# ═══ সেশন ১৪৭: FB-কম্পোজার-স্ট্রিপ (মালিক) — প্রোফাইল-টাইমলাইনের শীর্ষে
+            'আপনার মনের কথা লিখুন…' + দ্রুত-অ্যাকশন (লেখা/প্রশ্ন/ছবি) ═══ %>
+        <% if (isOwner) { %>
+          <div class="pf-card pf-composer147">
+            <div class="pf-composer-row147">
+              <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="" class="pf-composer-av147">
+              <a href="/articles/new" class="pf-composer-cta147"><%= profile.full_name.split(' ')[0] %>, আপনার মনের কথা লিখুন…</a>
+            </div>
+            <div class="pf-composer-acts147">
+              <a href="/articles/new" class="pf-composer-act147 is-green"><i class="fas fa-pen-nib" aria-hidden="true"></i> লেখা লিখুন</a>
+              <a href="/articles/new" class="pf-composer-act147 is-red"><i class="far fa-images" aria-hidden="true"></i> ছবি/ভিডিও</a>
+              <a href="/qa/new" class="pf-composer-act147 is-blue"><i class="fas fa-question-circle" aria-hidden="true"></i> প্রশ্ন করুন</a>
+            </div>
+          </div>
+        <% } %>
 
         <%# ═══ ট্যাব: পোস্টসমূহ (পিনড + ফিল্টার-পিল + FB-ফিড) ═══ %>
         <%# session139: ফিল্টার-বার tab-posts-এর বাইরে তোলা হলো — চার-প্যানেল-সুইচেও
@@ -387,7 +450,10 @@
             <ul class="pf-detail-list">
               <% if (profile.designation) { %><li><i class="fas fa-briefcase"></i><span>পদবি: <strong><%= profile.designation %></strong></span></li><% } %>
               <% if (joinedBn) { %><li><i class="far fa-calendar-plus"></i><span><%= joinedBn %> এ যুক্ত হয়েছেন</span></li><% } %>
-              <% if (profile.address) { %><li><i class="fas fa-map-marker-alt"></i><span>ঠিকানা: <%= profile.address %></span></li><% } %>
+              <% if (profile.address) { %><li><i class="fas fa-map-marker-alt"></i><span>ঠিকানা: <%= profile.address %><% if (profile.hometown) { %> · নিজ জেলা <%= profile.hometown %><% } %></span></li><% } %>
+              <%# সেশন ১৪৭: FB-বিস্তারিত পরিচিতি (tab-about মিরর) %>
+              <% if (profile.institution) { %><li><i class="fas fa-graduation-cap"></i><span>অধ্যয়ন করেছেন: <strong><%= profile.institution %></strong><% if (profile.academic_year) { %><small class="pf-detail-sub147"><%= profile.academic_year %></small><% } %></span></li><% } %>
+              <% if (profile.blood_group) { %><li><i class="fas fa-tint"></i><span>রক্তের গ্রুপ: <strong><%= profile.blood_group %></strong></span></li><% } %>
               <% if (isOwner || (profile.show_birth && profile.birth_date)) { %>
                 <% if (profile.birth_date) { %><li><i class="fas fa-birthday-cake"></i><span>জন্ম: <%= profile.birth_date %></span></li><% } %>
               <% } %>
