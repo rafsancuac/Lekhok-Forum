@@ -850,6 +850,7 @@
         if (!j || !j.ok) throw new Error('failed');
         if (bodyEl) bodyEl.innerHTML = j.bodyHtml || esc(body);
         bodyEl && bodyEl.setAttribute('data-raw', body);
+        bodyEl && bodyEl.removeAttribute('data-lpv'); /* সেশন ১৩৯: সম্পাদনায় নতুন-লিংক হলে og-কার্ড পুনঃ-স্ক্যান (observer-চুক্তি) */
         var ed = bubble.querySelector('.fc-edited');
         if (!ed) {
           ed = document.createElement('span');
@@ -982,14 +983,28 @@
   function optMd(raw) {
     // markdown-lite-এর ক্লায়েন্ট-মিরর (ইনলাইন-সাবসেট) — esc-ফার্স্ট (XSS-নিরাপদ);
     // সম্পূর্ণ-নির্ভুলতা দরকার নেই: reconcile-সোয়াপ সঙ্গে সঙ্গেই ক্যানোনিকাল-HTML বসায়।
+    // সেশন ১৩৯: দুই-পাস-স্প্লিট (সার্ভার inlineMd-এর হুবহু মিরর) — খালি-URL আগে
+    // (নইলে #tag URL-এর ভেতরের #fc-c22 ভাঙে), তারপর @ম্যানশন/#ট্যাগ সব-অ্যাঙ্করের বাইরে।
     var s = esc(raw);
     s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
          .replace(/_(.+?)_/g, '<em>$1</em>')
          .replace(/~~(.+?)~~/g, '<del>$1</del>')
          .replace(/\[([^\]]+)\]\(\s*((?:https?:\/\/|\/)[^\s)"]+)\s*\)/g,
-           '<a href="$2" class="a-link" target="_blank" rel="noopener nofollow">$1</a>')
-         .replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>')
-         .replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>');
+           '<a href="$2" class="a-link" target="_blank" rel="noopener nofollow">$1</a>');
+    s = s.split(/(<a\s[^>]*>[^<]*<\/a>)/g).map(function (seg139) {
+      if (seg139.slice(0, 3) === '<a ') return seg139;
+      return seg139.replace(/(^|[\s(])(https?:\/\/[^\s<>()\[\]]+)/g, function (_m, pre, url) {
+        var trail = url.match(/[.,;:!?…।]+$/);
+        var core = trail ? url.slice(0, url.length - trail[0].length) : url;
+        return pre + '<a href="' + core + '" class="a-link" target="_blank" rel="noopener nofollow">' + core + '</a>' + (trail ? trail[0] : '');
+      });
+    }).join('');
+    s = s.split(/(<a\s[^>]*>[^<]*<\/a>)/g).map(function (seg139) {
+      if (seg139.slice(0, 3) === '<a ') return seg139;
+      return seg139
+        .replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>')
+        .replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>');
+    }).join('');
     return s.split(/\r?\n/).map(function (l) { return l; }).join('<br>');
   }
 
@@ -1505,6 +1520,7 @@
             // পুনঃ-এডিটে প্রথম-সংস্করণ প্রি-ফিল হয়ে প্রথম-সম্পাদনা নীরবে হারাত।
             // পুরনো-ইঞ্জিন startEdit (লাইন ~৬৯৯/৭০৭) এটা করত — ক্যানোনিকাল-পথেও সমতা।
             bodyEl.setAttribute('data-raw', val);
+            bodyEl.removeAttribute('data-lpv'); /* সেশন ১৩৯: সম্পাদনায় নতুন-লিংক হলে og-কার্ড পুনঃ-স্ক্যান (observer-চুক্তি) */
             try { RAW_CACHE[edBtn.getAttribute('data-cmt-edit')] = val; } catch (_) {}
             pulseSaved(item); // সেশন ১২১: সেভ-স্বীকৃতি-পালস (ক্যানোনিকাল-পথেও)
             var ed = item.querySelector('.fc-edited');
@@ -1698,4 +1714,105 @@
     e.preventDefault();
     openReactorsModal(t.getAttribute('data-rx-open'), t.getAttribute('data-rx-id'));
   });
+
+  /* ═════════════════════════════════════════════════════════════════════════
+     সেশন ১৩৯: og-স্টাইল লিংক-প্রিভিউ কার্ড (session135-ব্যাকলগ — পারমালিঙ্কের
+     প্রাকৃতিক-উত্তরণ)। কমেন্ট-বডির অভ্যন্তরীণ-লিংক (articles/qa/resources/
+     কমেন্ট-অ্যাঙ্কর #fc-cN) → GET /api/link-preview?u=… → বাবলের ভেতরে কার্ড।
+     ইন্টিগ্রেশন-চুক্তি:
+       • প্রতি .fc-body একবারই স্ক্যান (data-lpv="1" গার্ড) — সম্পাদনা-সেভ-পাথ
+         bodyEl.removeAttribute('data-lpv') ডাকে, MutationObserver পুনঃ-স্ক্যান করে।
+       • প্রতি-ইউনিক-হ্রেফ প্রতি-বডিতে ১টি কার্ড (FB-প্যারিটি); LPV_CACHE গ্লোবাল।
+       • 🚨 ডুপ্লিকেট-গার্ডে :not(.lf-og-loading) বাধ্যতামূলক — লোডিং-প্লেসহোল্ডারেও
+         data-lpv-u আছে; ছাড়া মাউন্ট নিজের-শিমার-দেখে সাইলেন্ট-রিটার্ন করে
+         (E2E-আবিষ্কৃত — শিমার-স্থায়ী-আটকে-যাওয়া-বাগ)।
+       • এক্সটার্নাল-লিংকে কার্ড নেই (স্যান্ডবক্স-নেটওয়ার্ক-নির্ভরতা — extension point)।
+     ═════════════════════════════════════════════════════════════════════════ */
+  var LPV_CACHE139 = {};
+  var LPV_INTERNAL_RE139 = /^\/(?:articles|qa|questions|resources)\/\d+(?:[?#][^\s]*)?$/;
+  var LPV_TIMER139 = null;
+
+  function lpvMarkOf(href) {
+    return (typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(href) : href.replace(/"/g, '');
+  }
+
+  function lpvCardHtml139(href, c) {
+    var thumb = c.thumb
+      ? '<span class="lf-og-thumb"><img src="' + esc(c.thumb) + '" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'lf-og-noimg\');this.remove()"></span>'
+      : '<span class="lf-og-thumb lf-og-noimg"><i class="fas ' + esc(c.icon || 'fa-link') + '" aria-hidden="true"></i></span>';
+    return '<a class="lf-ogcard" href="' + esc(href) + '" target="_blank" rel="noopener nofollow">' + thumb +
+      '<span class="lf-og-main">' +
+        '<span class="lf-og-domain"><i class="fas fa-globe" aria-hidden="true"></i> লেখক ফোরাম · ' + esc(c.label || 'লিংক') + '</span>' +
+        '<span class="lf-og-title">' + esc(c.title || '') + '</span>' +
+        (c.desc ? '<span class="lf-og-desc">' + esc(c.desc) + '</span>' : '') +
+        (c.meta ? '<span class="lf-og-meta">' + esc(c.meta) + '</span>' : '') +
+      '</span></a>';
+  }
+
+  function lpvMount139(bubble, href, j) {
+    if (!bubble || !bubble.isConnected) return;
+    /* বাস্তব-কার্ড-গার্ড — লোডিং-প্লেসহোল্ডার বাদ (নইলে নিজের-শিমার-দেখে ফেরত!) */
+    if (bubble.querySelector('.lf-ogcard:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
+    var loading = bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]') ||
+                  bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u]');
+    if (loading) loading.remove();
+    if (!j || !j.ok || !j.card) return;
+    var tmp = document.createElement('div');
+    tmp.innerHTML = lpvCardHtml139(href, j.card);
+    var card = tmp.firstElementChild;
+    if (card) { card.setAttribute('data-lpv-u', href); bubble.appendChild(card); }
+  }
+
+  function lpvFetch139(bubble, href) {
+    /* বাস্তব-কার্ড-গার্ড (লোডিং বাদ) — পুনঃ-স্ক্যানে দ্বৈত-কার্ড-নিষিদ্ধ */
+    if (bubble.querySelector('.lf-ogcard:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
+    if (LPV_CACHE139[href]) { lpvMount139(bubble, href, { ok: true, card: LPV_CACHE139[href] }); return; }
+    if (bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]')) return; /* ইন-ফ্লাইট */
+    bubble.insertAdjacentHTML('beforeend',
+      '<span class="lf-ogcard lf-og-loading" data-lpv-u="' + esc(href) + '" aria-hidden="true">' +
+        '<span class="lf-og-thumb"></span><span class="lf-og-main">' +
+          '<span class="lf-og-domain">&nbsp;</span><span class="lf-og-title">&nbsp;</span><span class="lf-og-desc">&nbsp;</span>' +
+        '</span></span>');
+    fetch('/api/link-preview?u=' + encodeURIComponent(href))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (j && j.ok && j.card) LPV_CACHE139[href] = j.card;
+        lpvMount139(bubble, href, j);
+      })
+      .catch(function () {
+        var l = bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]');
+        if (l) l.remove();
+      });
+  }
+
+  function lpvScanBody139(body) {
+    if (!body || body.getAttribute('data-lpv') === '1') return;
+    var anchors = [].slice.call(body.querySelectorAll('a.a-link'));
+    if (!anchors.length) return;
+    var bubble = body.closest('.fc-bubble') || body.parentElement;
+    if (!bubble) return;
+    var seen = {};
+    var hit = false;
+    anchors.forEach(function (a) {
+      var href = (a.getAttribute('href') || '').replace(/^https?:\/\/[^\/]+/i, '');
+      if (!LPV_INTERNAL_RE139.test(href) || seen[href]) return;
+      seen[href] = 1; hit = true;
+      lpvFetch139(bubble, href);
+    });
+    if (hit) body.setAttribute('data-lpv', '1');
+  }
+
+  function lpvScanAll139() {
+    document.querySelectorAll('.fc-body').forEach(lpvScanBody139);
+  }
+
+  // MutationObserver — ড্রয়ার-লোড/reconcile/optimistic/canonical-ইনসার্ট সব-পাথ
+  // এক-জায়গাতেই ধরে (প্রতিটি পেইন্ট-পাথে হাত না-দিয়ে); ১৫০ms-ডিবাউন্স।
+  new MutationObserver(function () {
+    clearTimeout(LPV_TIMER139);
+    LPV_TIMER139 = setTimeout(lpvScanAll139, 150);
+  }).observe(document.body, { childList: true, subtree: true });
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', lpvScanAll139);
+  else lpvScanAll139();
 })();

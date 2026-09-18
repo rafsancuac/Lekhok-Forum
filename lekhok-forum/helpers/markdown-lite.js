@@ -33,16 +33,40 @@ const escH = (s) => String(s || '')
 
 /* ইনলাইন-ট্রান্সফর্ম — ইনপুট অবশ্যই আগে-এস্কেপড স্ট্রিং হবে।
    লিংক-রেজেক্স URL-কে (https?://… | /…)-এ সীমাবদ্ধ রাখে + [^\s)"] ক্লাস —
-   এস্কেপড টেক্সটে র-কোট/অ্যাঙ্গেল থাকতেই পারে না, তবু ডাবল-গার্ড। */
+   এস্কেপড টেক্সটে র-কোট/অ্যাঙ্গেল থাকতেই পারে না, তবু ডাবল-গার্ড।
+   সেশন ১৩৯-পুনর্গঠন: দুই-পাস-স্প্লিট —
+     পাস-১: মার্কডাউন-লিংক-অ্যাঙ্কর-গার্ড সহ খালি-URL অটো-লিংক (URL আগে —
+            নইলে #tag-রেজেক্স URL-এর ভেতরের #fc-c22-কে ভেঙে দেয় — E2E-ধরা);
+     পাস-২: সব-অ্যাঙ্কর-গার্ড সহ @ম্যানশন/#ট্যাগ (URL/লিংক-টেক্সটে হাত-না-দেওয়া)। */
+const _anchorSplit139 = /(<a\s[^>]*>[^<]*<\/a>)/g;
+function _bareUrlPass(seg) {
+  return seg.replace(/(^|[\s(])(https?:\/\/[^\s<>()\[\]]+)/g, function (_m, pre, url) {
+    const trail = url.match(/[.,;:!?…।]+$/);
+    const core = trail ? url.slice(0, url.length - trail[0].length) : url;
+    return pre + '<a href="' + core + '" class="a-link" target="_blank" rel="noopener nofollow">' + core + '</a>' + (trail ? trail[0] : '');
+  });
+}
 function inlineMd(s) {
-  return s
+  /* পাস-১: বোল্ড/ইটালিক/কাটা/মার্কডাউন-লিংক, তারপর খালি-URL (মার্কডাউন-অ্যাঙ্কর-গার্ড) */
+  s = s
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/_(.+?)_/g, '<em>$1</em>')
     .replace(/~~(.+?)~~/g, '<del>$1</del>')
     .replace(/\[([^\]]+)\]\(\s*((?:https?:\/\/|\/)[^\s)"]+)\s*\)/g,
-      '<a href="$2" class="a-link" target="_blank" rel="noopener nofollow">$1</a>')
-    .replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>')
-    .replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>');
+      '<a href="$2" class="a-link" target="_blank" rel="noopener nofollow">$1</a>');
+  s = s.split(_anchorSplit139)
+    .map(function (seg139) { return seg139.slice(0, 3) === '<a ' ? seg139 : _bareUrlPass(seg139); })
+    .join('');
+  /* পাস-২: @ম্যানশন/#ট্যাগ — সব-অ্যাঙ্করের (মার্কডাউন+URL) বাইরে শুধু */
+  s = s.split(_anchorSplit139)
+    .map(function (seg139) {
+      if (seg139.slice(0, 3) === '<a ') return seg139;
+      return seg139
+        .replace(/@([a-zA-Z0-9_]+)/g, '<a class="mention" href="/profile/$1">@$1</a>')
+        .replace(/#([\u0980-\u09FFa-zA-Z0-9_]+)/g, '<a class="tag" href="/articles?tag=$1">#$1</a>');
+    })
+    .join('');
+  return s;
 }
 
 /* মূল রেন্ডারার — { html, toc } দেয়।

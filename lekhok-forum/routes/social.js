@@ -1377,6 +1377,21 @@ router.get('/profile/:username', async (req, res) => {
   const isFollowing = !!isFollowingRow;
   const iBlockedHim = !!iBlockedHimRow;
 
+  /* সেশন ১৩৯: প্রোফাইল-ট্যাব-ত্রয়ী ডেটা-সমৃদ্ধি — পিল 'প্রশ্ন/মন্তব্য/প্রতিক্রিয়া'
+     আগে ডেড ছিল (প্যানেল-শূন্য, ক্লিকে নীরব-রিটার্ন); এখন প্যানেল-ত্রয়ী রেন্ডার করে।
+     comments/reactions-এ স্নিপেট (markdown-মার্কার-মুক্ত plainText) + পোস্ট-লিংক
+     প্রি-গণনা — ভিউ পরিষ্কার থাকে, লিংক-চুক্তি এক-সোর্স। */
+  const _ptab139 = (t) => (t === 'question' ? '/qa/' : '/articles/');
+  const comments139 = (comments || []).map(c => ({
+    ...c,
+    snippet: mdPlain85(c.body, 150),
+    link: _ptab139(c.post_type) + c.post_id
+  }));
+  const reactions139 = (reactions || []).map(r => ({
+    ...r,
+    link: _ptab139(r.post_type) + r.post_id
+  }));
+
   // Interests + tag pool (owner manages categories; visitors see them)
   let interests = [];
   try { interests = JSON.parse(profile.interests || '[]'); } catch (_) {}
@@ -1537,7 +1552,7 @@ router.get('/profile/:username', async (req, res) => {
     profile,
     author: profile,
     posts: articles,
-    questions, comments, reactions, bookmarks, drafts, myDaily,
+    questions, comments: comments139, reactions: reactions139, bookmarks, drafts, myDaily,
     followers, following: followingList,
     interests, tagPool, orgRoles, quizStats,
     postCount: articles.length,
@@ -1777,6 +1792,114 @@ router.post('/api/comment', async (req, res) => {
     }
   } catch (e124) { /* ফলব্যাক: {ok,id} — ক্লায়েন্ট session12-পথে রিকনসাইল করবে */ }
   res.json(_resp124);
+});
+
+// ── সেশন ১৩৯: GET /api/link-preview — অভ্যন্তরীণ-লিংক আনফার্ল (og-কার্ড-ইঞ্জিন) ──
+// কমেন্ট-বডিতে পেস্ট করা লিংকের og-স্টাইল প্রিভিউ-কার্ডের সার্ভার-সত্য (session135-
+// ব্যাকলগ "reply-anchor-লিঙ্ক-প্রিভিউ-কার্ড (og-style)" — পারমালিঙ্কের প্রাকৃতিক-উত্তরণ)।
+// ফর্ম: ?u=/qa/2#fc-c22 → কমেন্ট-কার্ড (লেখক+স্নিপেট+প্রসঙ্গ); ?u=/articles/5 |
+// /qa/7 | /questions/7 | /resources/3 → কনটেন্ট-কার্ড। নিরাপত্তা: শুধু-অভ্যন্তরীণ
+// পাথ (scheme/অথরিটি-স্ট্রিপড), পাথ-হোয়াইটলিস্ট, ইন-মেমরি-ক্যাশ (TTL ৫মি, ক্যাপ ৩০০);
+// গেস্ট-ও পারে (কমেন্ট/পোস্ট-পাবলিক চুক্তির মিরর)। এক্সটার্নাল og-ফেচ ইচ্ছাকৃতভাবে
+// স্কোপ-বাইরে (স্যান্ডবক্স-নেটওয়ার্ক-অনির্ভরতা + SSRF-পৃষ্ঠ) — extension point।
+const _lpvCache139 = new Map();   // u → { t, card }
+const _LPV_TTL139 = 5 * 60 * 1000;
+const _LPV_CAP139 = 300;
+const _LPV_RE139 = { hash: /#(?:fc-)?c(\d+)\s*$/, article: /^\/articles\/(\d+)/, qa: /^\/(?:qa|questions)\/(\d+)/, res: /^\/resources\/(\d+)/ };
+// রিসোর্স-টাইপ মেটা + বাংলা-অঙ্ক (কার্ড-মেটা সাইট-কনভেনশন — ASCII-লিক-শূন্য)
+const _RT139 = require('../helpers/resource-types');
+const _bnNum139 = (n) => String(Number(n) || 0).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
+router.get('/api/link-preview', async (req, res) => {
+  const u = String(req.query.u || '');
+  if (u.length > 300 || u[0] !== '/' || u.includes('//') || u.includes('\\') || u.includes('\0')) {
+    return res.status(400).json({ ok: false, error: 'bad_url' });
+  }
+  const hit = _lpvCache139.get(u);
+  if (hit && (Date.now() - hit.t) < _LPV_TTL139) return res.json({ ok: true, card: hit.card });
+  try {
+    const _card139 = await (async () => {
+      /* ── কেস-১: কমেন্ট-অ্যাঙ্কর (#fc-cN / #cN) — পাথ যা-ই হোক কমেন্টের সত্য-প্রসঙ্গ দেখাই ── */
+      const hm = _LPV_RE139.hash.exec(u);
+      if (hm) {
+        const cid = Number(hm[1]);
+        const row = await db.prepare(`
+          SELECT c.id, c.body, c.edited_at, c.author_id, u.full_name, u.pen_name, u.username, u.avatar_url,
+                 p.id AS post_id, p.title AS post_title, p.type AS post_type
+          FROM comments c JOIN users u ON u.id = c.author_id JOIN posts p ON p.id = c.post_id
+          WHERE c.id = ?
+        `).get(cid);
+        if (!row) return null;
+        return {
+          kind: 'comment', label: 'মন্তব্য',
+          title: displayName92(row) || 'সদস্য',
+          desc: mdPlain85(row.body, 140),
+          meta: (row.post_type === 'question' ? 'প্রশ্ন' : 'লেখা') + ': ' + (row.post_title || '').slice(0, 80) + (row.edited_at ? ' · সম্পাদিত' : ''),
+          thumb: row.avatar_url || ('/avatar/' + row.author_id),
+          link: (row.post_type === 'question' ? '/qa/' : '/articles/') + row.post_id + '#fc-c' + row.id
+        };
+      }
+      /* ── কেস-২: আর্টিকেল ── */
+      let m = _LPV_RE139.article.exec(u);
+      if (m) {
+        const row = await db.prepare(`
+          SELECT p.id, p.title, p.body, p.cover_image, p.view_count, p.comment_count, u.full_name, u.username, u.avatar_url
+          FROM posts p JOIN users u ON u.id = p.author_id
+          WHERE p.id = ? AND p.type = 'article' AND p.status = 'published'
+        `).get(Number(m[1]));
+        if (!row) return null;
+        return {
+          kind: 'content', label: 'লেখা',
+          title: (row.title || '').slice(0, 110),
+          desc: mdPlain85(row.body, 120),
+          meta: (row.full_name || 'সদস্য') + ' · 👁 ' + _bnNum139(row.view_count) + ' · 💬 ' + _bnNum139(row.comment_count),
+          thumb: row.cover_image || null, icon: 'fa-feather-pointed',
+          link: '/articles/' + row.id
+        };
+      }
+      /* ── কেস-৩: প্রশ্ন (লাইভ-উত্তর-গণনা + গৃহীত-স্টেট — qa-list-চুক্তির মিরর) ── */
+      m = _LPV_RE139.qa.exec(u);
+      if (m) {
+        const row = await db.prepare(`
+          SELECT p.id, p.title, p.body, p.accepted_comment_id, u.full_name, u.username, u.avatar_url,
+            (SELECT COUNT(*) FROM comments WHERE post_id = p.id) AS ans_count
+          FROM posts p JOIN users u ON u.id = p.author_id
+          WHERE p.id = ? AND p.type = 'question' AND p.status = 'published'
+        `).get(Number(m[1]));
+        if (!row) return null;
+        return {
+          kind: 'content', label: 'প্রশ্ন',
+          title: (row.title || '').slice(0, 110),
+          desc: mdPlain85(row.body, 120),
+          meta: (row.full_name || 'সদস্য') + ' · 💬 ' + _bnNum139(row.ans_count) + ' উত্তর' + (row.accepted_comment_id != null ? ' · ✅ গৃহীত' : ''),
+          thumb: row.avatar_url || null, icon: 'fa-circle-question',
+          link: '/qa/' + row.id
+        };
+      }
+      /* ── কেস-৪: রিসোর্স (res_type-আইকন — resource-types এক-সোর্স) ── */
+      m = _LPV_RE139.res.exec(u);
+      if (m) {
+        const row = await db.prepare('SELECT id, title, description, thumbnail_url, res_type, file_type, views, downloads, author FROM resources WHERE id = ?').get(Number(m[1]));
+        if (!row) return null;
+        const _rt = _RT139.normalizeResType(row);
+        return {
+          kind: 'content', label: 'রিসোর্স',
+          title: (row.title || '').slice(0, 110),
+          desc: mdPlain85(row.description, 120),
+          meta: (row.author || '') + (row.views != null ? ' · 👁 ' + _bnNum139(row.views) + ' · ⬇ ' + _bnNum139(row.downloads) : ''),
+          thumb: row.thumbnail_url || null, icon: (_rt && _RT139.RES_TYPES[_rt] && _RT139.RES_TYPES[_rt].icon) || 'fa-link',
+          link: '/resources/' + row.id
+        };
+      }
+      return null;
+    })();
+    if (!_card139) return res.status(404).json({ ok: false, error: 'not_found' });
+    if (_lpvCache139.size >= _LPV_CAP139) { const k0 = _lpvCache139.keys().next().value; _lpvCache139.delete(k0); }
+    _lpvCache139.set(u, { t: Date.now(), card: _card139 });
+    res.json({ ok: true, card: _card139 });
+  } catch (e139) {
+    console.log('[social] link-preview error:', e139 && e139.message);
+    res.status(500).json({ ok: false, error: 'preview_failed' });
+  }
 });
 
 // ── সেশন ৯৩: GET /api/comments — ফিড-ইনলাইন-ড্রয়ারের JSON-সোর্স ──────────────

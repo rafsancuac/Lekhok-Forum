@@ -380,3 +380,44 @@
   .qa-optimistic140,.qa-canonical-in140,.qac-guest140:hover{animation:none;transform:none}
 }
 /* EOF-MARKER: session140-qa-composer */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১৩৯ — og-স্টাইল লিংক-প্রিভিউ কার্ড (কমেন্ট-বাবলের ভেতরে, বডির পরে)
+   নিয়ম: টোকেন-শুধু (var(--lf-*)/var(--accent-*)) — নতুন-হেক্স-শূন্য (hex-র্যাচেট)।
+   ইঞ্জিন: comment-tools.js (MutationObserver + data-lpv গার্ড + LPV_CACHE)।
+   ═══════════════════════════════════════════════════════════════════════════ */
+.lf-ogcard{
+  display:flex;align-items:stretch;gap:10px;width:100%;max-width:420px;
+  margin-top:6px;padding:8px;border-radius:12px;text-decoration:none;
+  background:var(--lf-ui-input-bg);border:1px solid var(--lf-ui-border);
+  transition:border-color var(--lf-transition,.18s ease),box-shadow var(--lf-transition,.18s ease),transform var(--lf-transition,.18s ease),background var(--lf-transition,.18s ease);
+}
+.lf-ogcard:hover{border-color:var(--lf-brand-primary);box-shadow:var(--lf-shadow-card);transform:translateY(-1px);background:var(--lf-ui-surface)}
+.lf-ogcard:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:2px}
+.lf-og-thumb{flex:0 0 52px;width:52px;height:52px;border-radius:9px;overflow:hidden;background:var(--lf-ui-border);display:flex;align-items:center;justify-content:center;align-self:flex-start}
+.lf-og-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.lf-og-thumb.lf-og-noimg{background:linear-gradient(135deg,var(--accent-soft),var(--lf-social-blue-light))}
+.lf-og-thumb.lf-og-noimg i,.lf-og-noimg i{font-size:20px;color:var(--lf-brand-primary)}
+.lf-og-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.lf-og-domain{display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--lf-text-tertiary)}
+.lf-og-domain i{font-size:9px;color:var(--lf-brand-primary)}
+.lf-og-title{font-size:13px;font-weight:600;line-height:1.35;color:var(--lf-text-primary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.lf-og-desc{font-size:12px;line-height:1.4;color:var(--lf-text-secondary);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.lf-og-meta{font-size:11px;color:var(--lf-text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* লোডিং-শিমার — ফেচ-বিলম্বেও লেআউট-জাম্প-শূন্য */
+.lf-ogcard.lf-og-loading{pointer-events:none;border-style:dashed}
+.lf-og-loading .lf-og-thumb,.lf-og-loading .lf-og-domain,.lf-og-loading .lf-og-title,.lf-og-loading .lf-og-desc{background:linear-gradient(90deg,var(--lf-ui-border) 25%,var(--lf-ui-input-bg) 50%,var(--lf-ui-border) 75%);background-size:200% 100%;animation:lfOgShimmer139 1.1s linear infinite;border-radius:6px;color:transparent}
+.lf-og-loading .lf-og-thumb{border-radius:9px}
+@keyframes lfOgShimmer139{from{background-position:200% 0}to{background-position:-200% 0}}
+/* কমেন্ট-কার্ড সামান্য কমপ্যাক্ট (বাবলের ভেতরে ভিজ্যুয়াল-ওজন FB-মেটা-বাউন্ড) */
+.fc-bubble .lf-ogcard{max-width:100%}
+/* 390px — থাম্ব-ক্রম্প + ক্ল্যাম্প-অক্ষুণ্ণ (mobile-first-নিয়ম) */
+@media (max-width:480px){
+  .lf-ogcard{gap:8px;padding:7px;border-radius:10px}
+  .lf-og-thumb{flex-basis:44px;width:44px;height:44px}
+}
+@media (prefers-reduced-motion:reduce){
+  .lf-ogcard,.lf-ogcard:hover{transition:none;transform:none}
+  .lf-og-loading .lf-og-thumb,.lf-og-loading .lf-og-domain,.lf-og-loading .lf-og-title,.lf-og-loading .lf-og-desc{animation:none}
+}
+/* EOF-MARKER: session139-og-link-preview */
