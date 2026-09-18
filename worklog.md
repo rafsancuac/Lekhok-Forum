@@ -1660,3 +1660,22 @@ Stage Summary:
 - পরের-এজেন্ট: session153 থেকে (PLANS session152-নোটে ৫-প্রস্তাব)
 
 **push-সমাপ্তি (Task ID: 12):** 89cba02 → origin/main (4b39d26-উপরে রিবেজড; সমান্তরাল session147(og-faces)/148/149/150(toBnNumber)/151(dir-launcher) আগে-ল্যান্ডেড → আমার চূড়ান্ত-লেবেল **session152** (max+1 রীতি); rebase-union ×৪ — PLANS/PROJECT/shared.css/worklog স্ট্যাক-রেজলভারে (nested-stray-মার্কার ×৬ পরিষ্কার) উভয়-ব্লক-অক্ষত; মার্জড-ট্রি-পুনঃযাচাই: node-check ×৫ + EJS ×৫ + মার্কার-প্রোব (toBnNumber/lf-og-rx147/dirSections/share-nested147) + E2E **45/45 ALL GREEN**) — পরের-এজেন্ট session153 থেকে।
+
+---
+Task ID: session152
+Agent: Z.ai Code (cron webDevReview)
+Task: ইউজার-প্রস্তাব অনুযায়ী /settings পেজ ফেসবুক-ঘরানার মাস্টার-ডিটেইল আর্কিটেকচারে পূর্ণ-আপডেট (সাব-মেনু নেভিগেশন, করপোরেট-ছাঁটাই, ফোরাম-উপযোগী ফিচার) [relabel: আমার-142→152 — সমান্তরাল session143…151 আগে-ল্যান্ডেড, max+1 রীতি; কোড-আইডি st142 পরিবার অক্ষত]
+
+Work Log:
+- প্রথমে বর্তমান-অবস্থা যাচাই: git fetch + PLANS/PROJECT/worklog পড়া — session141-নোট মেনে কাজ শুরু; push-সময়ে origin f675c00→4b39d26-প্রগতি (session143…151) ধরা পড়েছে — settings.ejs/css-তাদের-স্পর্শ-শূন্য যাচাই করে সোজা-প্রয়োগ, social.js-patch-ক্লিন-apply, test-script-টেইল-union, docs ×৪-union
+- settings.ejs সম্পূর্ণ-পুনর্লিখন: বাঁয়ে সার্চযোগ্য ৫-গ্রুপ ১৪-আইটেম মেনু, ডানে প্যানে→সাব-মেনু→ডিটেইল দুই-স্তর (হ্যাশ-রাউটিং #sec/sub)
+- 🚨 বাগফিক্স: পুরনো বিজ্ঞপ্তি-সেকশনে ওপেনিং-ফর্ম-ট্যাগই ছিল না (অনাথ-</form>) — POST /settings/notifications পেজ-থেকে-অসম্ভব ছিল; ফর্ম+CSRF যুক্ত
+- নতুন: মিডিয়া/কল-পারমিশন ডায়াগনস্টিকস (৫-কার্ড, ক্লায়েন্ট-সাইড — পারমিশন/ডিভাইস/মাইক-মিটার/ক্যাম-প্রিভিউ/ICE STUN-TURN যাচাই), "আপনার কার্যক্রম" (actStats + ব্যাকআপ-ডাউনলোড-রো, toBn-ডেলিগেট), সাহিত্যিক-আচরণবিধি-প্যানে, মোবাইল push-নেভিগেশন
+- নতুন settings.css (টোকেন-শুধু, হেক্স-শূন্য — র্যাচেট-চুক্তি); routes/social.js-এ actStats-কাউন্ট (try/catch-গার্ডেড)
+- test-role-policy.sh §২৯ (১৬-নতুন-চেক) যোগ — মার্জড-ট্রিতে তাদের §৩০-পরিবার-সহ সহাবস্থান
+- E2E (agent-browser, আইসোলেটেড @9142, ismail): সমস্ত-ফ্লো-গ্রিন; 390px ওভারফ্লো-০
+
+Stage Summary:
+- কমিট-প্রস্তুত: settings.ejs + settings.css + social.js + test-role-policy.sh + PROJECT.md §১৫২ + PLANS.md session152-নোট + worklog ×২
+- যাচাই: role-policy **২৫২-পাস/০-ফেইল** (২-SKIP, মার্জড-ট্রি) + s139-parity ২২/২২ + audit:views + guard + node --check + EJS-compile + hex-০ + agent-browser E2E (ICE-প্রকৃত-সফল srflx:1; POST /settings/privacy→303→সঠিক-প্যানে+ব্যাজ; পুরনো-হ্যাশ-ম্যাপ; দুই-ধাপ-মোব্যাক)
+- **পরের-এজেন্ট: session153 লেবেল থেকে**; প্রস্তাব: সাব-রো-সার্চ, সাম্প্রতিক-কার্যক্রম-প্রিভিউ, স্পিকার-টোন, env-TURN-দর্শন, /me#tab-reactions-ডিপ-লিংক

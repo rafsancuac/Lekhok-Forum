@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   settings.css — সেটিংস মাস্টার-ডিটেইল স্কিন (সেশন ১৪২)
+   ──────────────────────────────────────────────────────────────────────────
+   ফেসবুক-ঘরানার দুই-কলাম (Master-Detail) সেটিংস:
+   • বাঁয়ে: সার্চযোগ্য গ্রুপড-মেনু (৫ গ্রুপ) — সক্রিয়-আইটেমে নরম-নীল পিল + বার
+   • ডানে: সেকশন-প্যানে → সাব-মেনু রো → ডিটেইল-ভিউ (ব্যাক-বাটনসহ) দুই-স্তর
+   • মিডিয়া/কল ডায়াগনস্টিকস গ্রিড + অ্যাক্টিভিটি-সামারি স্ট্যাট
+   রুল: শুধুমাত্র var(--lf-*)/গ্লোবাল টোকেন — হেক্স-শূন্য (র্যাচেট-চুক্তি)।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── পেজ-ক্যানভাস ও শেল ─────────────────────────────────────── */
+.st142-wrap{max-width:1200px;margin:0 auto;padding:22px 16px 72px}
+.st142-topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.st142-backlink{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--lf-fb-ink-2);background:var(--card);border:1px solid var(--lf-fb-border-3);border-radius:999px;padding:7px 14px;transition:all .18s ease}
+.st142-backlink:hover{background:var(--lf-fb-hover);color:var(--lf-fb-ink)}
+.st142-topbar h1{margin:0;font-size:21px;font-weight:800;color:var(--lf-fb-ink);letter-spacing:-.2px}
+.st142-shell{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;align-items:start}
+
+/* ── বাঁয়ের কলাম: ন্যাভিগেশন সাইডবার ─────────────────────────── */
+.st142-side{position:sticky;top:74px;background:var(--card);border:1px solid var(--lf-fb-border-3);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 96px)}
+.st142-side-head{padding:14px 14px 10px;border-bottom:1px solid var(--lf-fb-line-soft)}
+.st142-side-head h2{margin:0 0 10px;font-size:15.5px;font-weight:800;color:var(--lf-fb-ink)}
+.st142-search{position:relative}
+.st142-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11.5px;color:var(--lf-fb-meta-2);pointer-events:none}
+.st142-search input{width:100%;background:var(--lf-fbg-100);border:1px solid transparent;border-radius:999px;padding:8px 14px 8px 32px;font-size:12.5px;color:var(--lf-fb-ink);outline:none;transition:border .15s ease,background .15s ease}
+.st142-search input::placeholder{color:var(--lf-fb-meta-2)}
+.st142-search input:focus{border-color:var(--lf-info-mid-2);background:var(--lf-fbg-50)}
+.st142-nav{flex:1;overflow-y:auto;padding:8px 8px 12px;scrollbar-width:thin;scrollbar-color:var(--lf-fbg-300) transparent}
+.st142-nav::-webkit-scrollbar{width:8px}
+.st142-nav::-webkit-scrollbar-thumb{background:var(--lf-fbg-300);border-radius:8px}
+.st142-grp{margin-top:12px}
+.st142-grp:first-child{margin-top:2px}
+.st142-grp-label{display:block;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--lf-fb-meta);padding:0 10px 5px}
+.st142-item{position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border-radius:10px;text-align:left;cursor:pointer;transition:background .15s ease}
+.st142-item:hover{background:var(--lf-fb-hover)}
+.st142-item.on{background:var(--lf-info-soft)}
+.st142-ico{width:36px;height:36px;border-radius:50%;background:var(--lf-fbg-100);color:var(--lf-fb-icon-ink);display:flex;align-items:center;justify-content:center;font-size:13.5px;flex-shrink:0;transition:all .15s ease}
+.st142-item.on .st142-ico{background:var(--lf-info);color:var(--lf-white)}
+.st142-item.is-danger .st142-ico{background:var(--lf-danger-soft);color:var(--lf-danger)}
+.st142-item.is-danger.on{background:var(--lf-danger-soft)}
+.st142-item.is-danger.on .st142-ico{background:var(--lf-danger);color:var(--lf-white)}
+.st142-imeta{min-width:0;flex:1}
+.st142-imeta b{display:block;font-size:13px;font-weight:700;color:var(--lf-fb-ink);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st142-imeta small{display:block;font-size:10.8px;color:var(--lf-fb-meta);line-height:1.35;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st142-item.on .st142-imeta b{color:var(--lf-info)}
+.st142-bar{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:3.5px;height:22px;border-radius:99px;background:var(--lf-info);opacity:0;transition:opacity .15s ease}
+.st142-item.on .st142-bar{opacity:1}
+.st142-item.is-danger.on .st142-bar{background:var(--lf-danger)}
+.st142-item[hidden]{display:none}
+.st142-grp[hidden]{display:none}
+.st142-noresult{display:none;padding:18px 12px;text-align:center;font-size:12px;color:var(--lf-fb-meta)}
+.st142-nav.searching .st142-noresult.show{display:block}
+
+/* ── ডানের কলাম: প্যানে ──────────────────────────────────────── */
+.st142-main{min-width:0}
+.st142-pane{display:none}
+.st142-pane.on{display:block;animation:st142In .22s ease}
+@keyframes st142In{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.st142-phead{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.st142-phead h2{margin:0;font-size:17px;font-weight:800;color:var(--lf-fb-ink);letter-spacing:-.1px}
+.st142-phead p{margin:3px 0 0;font-size:12.3px;color:var(--lf-fb-meta);line-height:1.5}
+.st142-moback{display:none;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--lf-fb-border-3);background:var(--card);color:var(--lf-fb-ink-2);font-size:12.5px;cursor:pointer;flex-shrink:0;margin-top:2px}
+.st142-moback:hover{background:var(--lf-fb-hover)}
+
+.st142-card{background:var(--card);border:1px solid var(--lf-fb-border-3);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow-sm)}
+.st142-card + .st142-card{margin-top:14px}
+.st142-card > h3{margin:0 0 4px;font-size:14.5px;font-weight:800;color:var(--lf-fb-ink);display:flex;align-items:center;gap:8px}
+.st142-card > h3 i{color:var(--lf-fb-icon-ink);font-size:12.5px}
+.st142-card > .st142-sub{margin:0 0 14px;font-size:12px;color:var(--lf-fb-meta);line-height:1.5}
+
+/* ── সাব-মেনু রো-তালিকা (ফেসবুক সেটিংস-লিস্ট প্যাটার্ন) ────────── */
+.st142-rows{padding:6px}
+.st142-row{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:10px;background:none;border:none;text-align:left;cursor:pointer;font-family:inherit;transition:background .15s ease;color:inherit}
+.st142-row:hover{background:var(--lf-fb-hover)}
+.st142-row .st142-ico{background:var(--lf-fbg-100)}
+.st142-row:hover .st142-ico{background:var(--lf-fbg-200)}
+.st142-rmeta{min-width:0;flex:1}
+.st142-rmeta b{display:block;font-size:13.5px;font-weight:700;color:var(--lf-fb-ink)}
+.st142-rmeta small{display:block;font-size:11.3px;color:var(--lf-fb-meta);margin-top:2px;line-height:1.45}
+.st142-rcount{font-size:11px;font-weight:800;color:var(--lf-brandgreen-deep);background:var(--lf-brandgreen-soft);border-radius:999px;padding:3px 9px;flex-shrink:0;white-space:nowrap}
+.st142-rchev{color:var(--lf-fb-meta-2);font-size:12px;flex-shrink:0}
+.st142-row.is-ext .st142-rchev{color:var(--lf-info)}
+.st142-row.is-danger .st142-rmeta b{color:var(--lf-danger)}
+.st142-rows + .st142-note{margin:10px 6px 2px;font-size:11.5px;color:var(--lf-fb-meta);line-height:1.5}
+
+/* ── ডিটেইল-ভিউ (সাব-মেনুর ভেতরের ধাপ) ──────────────────────── */
+.st142-detail{display:none}
+.st142-detail.on{display:block;animation:st142In .2s ease}
+.st142-backbtn{display:inline-flex;align-items:center;gap:8px;background:none;border:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--lf-info);cursor:pointer;padding:4px 2px;margin-bottom:10px;border-radius:8px}
+.st142-backbtn:hover{text-decoration:underline}
+.st142-backbtn i{font-size:11px}
+
+/* ── অ্যাক্টিভিটি-স্ট্যাট স্ট্রিপ ─────────────────────────────── */
+.st142-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.st142-stat{background:var(--card);border:1px solid var(--lf-fb-border-3);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.st142-stat b{display:block;font-size:20px;font-weight:800;color:var(--lf-brandgreen-deep);letter-spacing:-.4px}
+.st142-stat small{display:block;font-size:11px;color:var(--lf-fb-meta);margin-top:2px}
+
+/* ── মিডিয়া ও কল ডায়াগনস্টিকস ───────────────────────────────── */
+.st142-diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.st142-dcard{border:1px solid var(--lf-fb-border-3);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--card)}
+.st142-dhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.st142-dhead b{font-size:13px;font-weight:800;color:var(--lf-fb-ink);display:flex;align-items:center;gap:7px}
+.st142-dhead b i{color:var(--lf-fb-icon-ink)}
+.st142-dstat{font-size:10.3px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--lf-fbg-100);color:var(--lf-fb-meta);white-space:nowrap;transition:all .2s ease}
+.st142-dstat.run{background:var(--lf-info-soft);color:var(--lf-info)}
+.st142-dstat.ok{background:var(--lf-ok-soft-5);color:var(--lf-ok-ink)}
+.st142-dstat.warn{background:var(--lf-amber-soft-2);color:var(--lf-amber-ink)}
+.st142-dstat.bad{background:var(--lf-danger-soft);color:var(--lf-danger)}
+.st142-dbody{font-size:11.8px;color:var(--lf-fb-ink-2);line-height:1.55}
+.st142-dbody ul{list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px}
+.st142-dbody li{display:flex;align-items:center;gap:6px;font-size:11.3px;color:var(--lf-fb-ink-2)}
+.st142-dbody li i{font-size:9.5px;color:var(--lf-fb-meta-2);width:14px;text-align:center;flex-shrink:0}
+.st142-meter{height:9px;background:var(--lf-fbg-100);border-radius:99px;overflow:hidden}
+.st142-meter i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--lf-brandgreen),var(--lf-ok-bright));border-radius:99px;transition:width .12s linear}
+.st142-cam{width:100%;aspect-ratio:4/3;background:var(--lf-fb-ink);border-radius:10px;object-fit:cover;display:none}
+.st142-cam.live{display:block}
+.st142-dactions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+
+/* ── নীতিমালা (কমিউনিটি স্ট্যান্ডার্ড) ───────────────────────── */
+.st142-policy{display:flex;flex-direction:column;gap:10px}
+.st142-policy-item{display:flex;gap:11px;padding:12px 14px;border:1px solid var(--lf-fb-line-soft);border-radius:11px;background:var(--lf-fbg-50)}
+.st142-policy-item i{color:var(--lf-brandgreen);font-size:13px;margin-top:3px;flex-shrink:0}
+.st142-policy-item b{display:block;font-size:12.8px;font-weight:800;color:var(--lf-fb-ink);margin-bottom:3px}
+.st142-policy-item p{margin:0;font-size:11.8px;color:var(--lf-fb-ink-2);line-height:1.6}
+.st142-policy-item.is-red i{color:var(--lf-danger)}
+
+/* ── 2FA স্ট্যাটাস-ব্যাজ প্যানে-হেডে ─────────────────────────── */
+.st142-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;border-radius:999px;padding:4px 11px;flex-shrink:0;margin-top:3px}
+.st142-pill.on{background:var(--lf-ok-soft-5);color:var(--lf-ok-ink)}
+.st142-pill.off{background:var(--lf-amber-soft-2);color:var(--lf-amber-ink)}
+
+/* ── মোবাইল: ফেসবুক-ঘরানার push-navigation ───────────────────── */
+@media (max-width:960px){
+  .st142-shell{grid-template-columns:minmax(0,1fr)}
+  .st142-side{position:static;max-height:none}
+  .st142-nav{max-height:56vh}
+  .st142-shell.show-pane .st142-side{display:none}
+  .st142-shell.show-pane .st142-pane .st142-moback{display:inline-flex}
+  .st142-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:520px){
+  .st142-wrap{padding:16px 10px 60px}
+  .st142-card{padding:15px 14px}
+  .st142-topbar h1{font-size:18.5px}
+  .st142-diag{grid-template-columns:1fr}
+}
+
+/* ── রিডিউসড-মোশন ──────────────────────────────────────────── */
+@media (prefers-reduced-motion:reduce){
+  .st142-pane.on,.st142-detail.on{animation:none}
+  .st142-meter i{transition:none}
+  .st142-item,.st142-row,.st142-backlink{transition:none}
+}

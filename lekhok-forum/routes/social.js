@@ -2627,6 +2627,21 @@ router.get('/settings', ensureLoggedIn, async (req, res) => {
   const secPending = req.session.pendingUserTotpSecret || null;
   const backupFlash = req.session.backupCodesShown || null;
   if (backupFlash) req.session.backupCodesShown = null;
+
+  // ── সেশন ১৪২: অ্যাক্টিভিটি-সামারি কাউন্ট (সেটিংস "আপনার কার্যক্রম" সাব-মেনুর মেটা-সংখ্যা) ──
+  // প্রতিটি কাউন্ট আলাদা try/catch — যেকোনো একটি ব্যর্থ হলে ০-ই থাকে, পেজ কখনো ভাঙে না।
+  const actStats = { posts: 0, comments: 0, reactions: 0, bookmarks: 0 };
+  try {
+    const uid142 = req.session.user.id;
+    const cnt142 = async function (sql, id) {
+      try { const r = await db.prepare(sql).get(id); return (r && r.c) || 0; } catch (_) { return 0; }
+    };
+    actStats.posts = await cnt142("SELECT COUNT(*) c FROM posts WHERE author_id = ? AND status = 'published'", uid142);
+    actStats.comments = await cnt142('SELECT COUNT(*) c FROM comments WHERE author_id = ?', uid142);
+    actStats.reactions = await cnt142('SELECT COUNT(*) c FROM likes WHERE user_id = ?', uid142);
+    actStats.bookmarks = await cnt142('SELECT COUNT(*) c FROM bookmarks WHERE user_id = ?', uid142);
+  } catch (_) {}
+
   res.render('user/settings', {
     currentPath: '/settings',
     profileUser: me,
@@ -2634,6 +2649,7 @@ router.get('/settings', ensureLoggedIn, async (req, res) => {
     notifyPrefs, displayPrefs,
     blockedUsers,
     activeSessions,
+    actStats,
     ok: req.query.ok || null, err: req.query.err || null,
     // সেশন ১১৫: মাল্টি-মেথড 2FA — totp_enabled মাস্টার-সুইচ; মেথড-অনুযায়ী সাব-গার্ড
     // (email-মেথডে সিক্রেট NULL হয়, তাই শুধু totp_secret-চেক করলে ইমেইল-ইউজার

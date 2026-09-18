@@ -541,6 +541,25 @@ fi
 echo ""
 
 
+# ── §২৯ (session152, কোড-আইডি st142): সেটিংস মাস্টার-ডিটেইল — st142 প্যাটার্ন, সাব-নেভিগেশন, ডায়াগনস্টিকস, অনাথ-ফর্ম-বাগফিক্স ──
+login $JARU /login testuser demo123 > /dev/null
+RP142S=$(curl -s -b $JARU "$BASE/settings")
+ckc "s142 settings.css লিংকড (extra_css)" 'assets/css/settings.css' "$RP142S"
+ckc "s142 st142-শেল রেন্ডার" 'st142-shell' "$RP142S"
+ck "s142 সাইডবার ৫-গ্রুপ" "5" "$(echo "$RP142S" | grep -o 'st142-grp-label' | wc -l)"
+ck "s142 সাইডবার ১৪-আইটেম" "14" "$(echo "$RP142S" | grep -o 'data-sec="' | wc -l)"
+ckc "s142 সার্চ-বক্স (stSearch)" 'id="stSearch"' "$RP142S"
+ck "s142 security সাব-মেনু ৩-রো" "3" "$(echo "$RP142S" | grep -o 'data-goto="' | wc -l)"
+ck "s142 security ডিটেইল ৩-ভিউ" "3" "$(echo "$RP142S" | grep -o 'st142-detail" data-detail' | wc -l)"
+ckc "s142 পুরনো-হ্যাশ-লক্ষ্য password-প্যানে" 'data-pane="password"' "$RP142S"
+ckc "s142 পুরনো-হ্যাশ-লক্ষ্য audience-প্যানে" 'data-pane="audience"' "$RP142S"
+ck "s142 ডায়াগনস্টিকস ৫-কার্ড" "5" "$(echo "$RP142S" | grep -o 'st142-dcard' | wc -l)"
+ckc "s142 ICE/TURN-টেস্ট বাটন" 'btnNet142' "$RP142S"
+ck "s142 অ্যাক্টিভিটি ৪-স্ট্যাট" "4" "$(echo "$RP142S" | grep -o 'st142-stat"' | wc -l)"
+ck "s142 বিজ্ঞপ্তি-ফর্ম-অনাথ-বাগফিক্স (নতুন-ফর্ম+csrf)" "1" "$(echo "$RP142S" | awk 'BEGIN{RS="\0"} {n=gsub(/form method="POST" action="\/settings\/notifications"/,""); if(n>0){print n; exit}}')"
+ckc "s142 মোব্যাক-বাটন (মোবাইল push-নেভ)" 'st142-moback' "$RP142S"
+ckc "s142 2FA-স্ট্যাটাস-পিল" 'st142-pill' "$RP142S"
+
 echo ""
 echo "════════════════════════════════"
 echo "PASS=$PASS FAIL=$FAIL SKIP=$SKIP"

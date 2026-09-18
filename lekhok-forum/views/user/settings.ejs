@@ -1,310 +1,298 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'সেটিংস | লেখক ফোরাম' }) %>
+<%# সেশন ১৪২ — সেটিংস ও গোপনীয়তা: ফেসবুক-ঘরানার মাস্টার-ডিটেইল পুনর্নির্মাণ
+    বাঁয়ে সার্চযোগ্য ৫-গ্রুপ মেনু, ডানে প্যানে → সাব-মেনু → ডিটেইল দুই-স্তর নেভিগেশন।
+    সব পুরনো ফর্ম-এন্ডপয়েন্ট/ফিল্ড-নাম/CSRF অক্ষুণ্ণ; পুরনো হ্যাশ (#account, #privacy)
+    কম্প্যাট-ম্যাপে নতুন সেকশনে ম্যাপ করা। স্কিন: settings.css (শুধু --lf-* টোকেন) %>
+<%- include('../partials/header', { title: 'সেটিংস ও গোপনীয়তা | লেখক ফোরাম', extra_css: ['/assets/css/settings.css'] }) %>
 
-  <div class="container" style="padding: 30px 20px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-      <a href="/me" class="btn btn-ghost btn-sm"><i class="fas fa-arrow-left"></i> ফিডে ফিরুন</a>
-      <h1 style="margin:0;font-size:24px;">সেটিংস</h1>
-      <% if (ok) { %>
-        <span class="badge save-ok"><i class="fas fa-check"></i>
-          <%= ok === 'unblocked' ? 'ব্লক সরানো হয়েছে' : ok === 'session_revoked' ? 'ডিভাইস লগআউট হয়েছে' : ok === 'sessions_revoked' ? 'অন্য সব ডিভাইস লগআউট হয়েছে' : 'সংরক্ষিত' %>
-        </span>
-      <% } else if (err) { %>
-        <span class="badge save-err"><i class="fas fa-exclamation-triangle"></i>
-          <%= err === 'delete_password' ? 'পাসওয়ার্ড ভুল — অ্যাকাউন্ট মুছা হয়নি' : err === 'delete_confirm' ? 'নিশ্চিত করতে ঠিক DELETE শব্দটি লিখুন' : err === 'export' ? 'ডেটা এক্সপোর্টে সমস্যা হয়েছে' : 'সমস্যা হয়েছে' %>
-        </span>
-      <% } %>
-    </div>
+<%# বাংলা-অঙ্ক: ক্যানোনিকাল toBn (session150, helpers/bn-number.js) ব্যবহার; ফলব্যাকসহ %>
+<% var bn142 = (typeof toBn === 'function') ? toBn : function (n) { return String(n == null ? 0 : n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); }; %>
 
-    <div class="settings-shell">
-      <aside class="settings-nav">
-        <a href="#" data-section="profile" class="active"><i class="fas fa-user"></i> প্রোফাইল</a>
-        <a href="#" data-section="privacy"><i class="fas fa-shield-alt"></i> গোপনীয়তা</a>
-        <a href="#" data-section="notifications"><i class="fas fa-bell"></i> বিজ্ঞপ্তি</a>
-        <a href="#" data-section="account"><i class="fas fa-key"></i> অ্যাকাউন্ট</a>
-        <a href="#" data-section="security"><i class="fas fa-shield-halved"></i> নিরাপত্তা (2FA)</a>
-        <a href="#" data-section="display"><i class="fas fa-palette"></i> প্রদর্শন</a>
-        <a href="#" data-section="connected"><i class="fas fa-link"></i> সংযুক্ত অ্যাকাউন্ট</a>
-      </aside>
+<div class="st142-wrap">
+  <div class="st142-topbar">
+    <a href="/me" class="st142-backlink"><i class="fas fa-arrow-left"></i> ফিডে ফিরুন</a>
+    <h1>সেটিংস ও গোপনীয়তা</h1>
+    <% if (ok) { %>
+      <span class="badge save-ok"><i class="fas fa-check"></i>
+        <%= ok === 'unblocked' ? 'ব্লক সরানো হয়েছে' : ok === 'session_revoked' ? 'ডিভাইস লগআউট হয়েছে' : ok === 'sessions_revoked' ? 'অন্য সব ডিভাইস লগআউট হয়েছে' : ok === 'profile' ? 'প্রোফাইল সংরক্ষিত হয়েছে' : ok === 'privacy' ? 'গোপনীয়তা সংরক্ষিত হয়েছে' : ok === 'notifications' ? 'বিজ্ঞপ্তি-পছন্দ সংরক্ষিত হয়েছে' : ok === 'email_saved' ? 'ইমেইল সংরক্ষিত হয়েছে' : ok === 'password' ? 'পাসওয়ার্ড পরিবর্তন হয়েছে' : ok === 'display' ? 'প্রদর্শন-পছন্দ সংরক্ষিত হয়েছে' : 'সংরক্ষিত' %>
+      </span>
+    <% } else if (err) { %>
+      <span class="badge save-err"><i class="fas fa-exclamation-triangle"></i>
+        <%= err === 'delete_password' ? 'পাসওয়ার্ড ভুল — অ্যাকাউন্ট মুছা হয়নি' : err === 'delete_confirm' ? 'নিশ্চিত করতে ঠিক DELETE শব্দটি লিখুন' : err === 'export' ? 'ডেটা এক্সপোর্টে সমস্যা হয়েছে' : err === 'email_password_wrong' ? 'বর্তমান পাসওয়ার্ড ভুল' : err === 'email_invalid' ? 'সঠিক ইমেইল লিখুন' : err === 'email_taken' ? 'ইমেইল অন্য অ্যাকাউন্টে ব্যবহৃত' : err === 'password_mismatch' ? 'নতুন পাসওয়ার্ড দুটি মিলছে না' : err === 'password_short' ? 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে' : err === 'password_wrong' ? 'বর্তমান পাসওয়ার্ড ভুল' : err === 'social_bad' ? 'সংযোগ বিচ্ছিন্ন করা যায়নি' : err === 'social_url' ? 'সঠিক http/https লিংক দিন' : 'সমস্যা হয়েছে' %>
+      </span>
+    <% } %>
+  </div>
 
-      <main>
-        <!-- Profile -->
-        <section class="settings-section active" data-pane="profile">
-          <div class="card">
-            <h2><i class="fas fa-user"></i> প্রোফাইল</h2>
-            <form method="POST" action="/settings/profile" enctype="multipart/form-data">
-              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
-              
-              <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div>
-                  <label>পুরো নাম</label>
-                  <input class="input" name="full_name" value="<%= profileUser.full_name %>" required>
-                                  <div class="hint" style="margin-top:6px;">নথি-সদস্যের আসল নাম (গোপন থাকবে)</div>
-                </div>
-                <div>
-                  <label>ছদ্মনাম / কলমী নাম (ঐচ্ছিক)</label>
-                  <input class="input" name="pen_name" value="<%= profileUser.pen_name || '' %>" maxlength="60" placeholder="যেমন: বনফুল, সুনন্দ…">
-                  <div class="hint">আসল নাম না বাহর করে এই নামেই লেখক-পরিচয় দেখাবে</div>
-                </div>
-              </div>
-              <%# সেশন ৮০: সাহিত্য-ধারা চিপ-পিকার (সর্বোচ্চ ৫) — জেএস হিডেন-ইনপুটে JSON রাখে %>
-              <div class="field">
-                <label>পছন্দের সাহিত্য-ধারা <span class="genre-count" id="genreCount"><%= genres.length %>/৫</span></label>
-                <div class="genre-chip-wrap" id="genreChips">
-                  <%
-                    const GENRE_LIST_80 = ['কবিতা','ছোটগল্প','উপন্যাস','কল্পবিজ্ঞান','গোয়েন্দা ও থ্রিলার','প্রবন্ধ ও গবেষণা','অনুবাদ সাহিত্য','ভ্রমণকাহিনী','ইতিহাস','নাটক ও নাটিকা','শিশুসাহিত্য'];
-                    GENRE_LIST_80.forEach(function (g) { %>
-                    <button type="button" class="genre-chip<%= genres.includes(g) ? ' selected' : '' %>" data-genre="<%= g %>"><%= genres.includes(g) ? '✓ ' : '+ ' %><%= g %></button>
-                  <% }) %>
-                </div>
-                <input type="hidden" name="genres" id="genreInput" value="<%= JSON.stringify(genres) %>">
-                <div class="hint">আপনি কোন ধারার লেখক — প্রোফাইল-পেজে ব্যাজ হিসেবে দেখাবে</div>
-              </div>
-              <div class="field">
-                <label>পরিচিতি (Bio)</label>
-                <textarea class="textarea" name="bio" rows="3" placeholder="নিজের সম্পর্কে কিছু লিখুন…"><%= profileUser.bio || '' %></textarea>
-                <div class="hint">সর্বোচ্চ ৩০০ অক্ষর</div>
-              </div>
-              <div class="field">
-                <label>পদবি / Designation</label>
-                <input class="input" name="designation" value="<%= profileUser.designation || '' %>" placeholder="যেমন: সাহিত্যিক, শিক্ষক…">
-              </div>
-              <div class="field">
-                <label>ঠিকানা</label>
-                <input class="input" name="address" value="<%= profileUser.address || '' %>">
-              </div>
-              <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div>
-                  <label>লিঙ্গ</label>
-                  <select class="select" name="gender">
-                    <option value="male"   <%= profileUser.gender === 'male'   ? 'selected' : '' %>>পুরুষ</option>
-                    <option value="female" <%= profileUser.gender === 'female' ? 'selected' : '' %>>নারী</option>
-                    <option value="other"  <%= profileUser.gender === 'other'  ? 'selected' : '' %>>অন্যান্য</option>
-                  </select>
-                </div>
-                <div>
-                  <label>জন্ম তারিখ</label>
-                  <input class="input" type="date" name="birth_date" value="<%= profileUser.birth_date || '' %>">
-                </div>
-              </div>
-              <%# সোশ্যাল লিংক এখন নিচের "সংযুক্ত অ্যাকাউন্ট" সেকশনে পরিচালিত (সেশন ৬০) %>
-              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
-            </form>
-          </div>
-        </section>
+  <div class="st142-shell" id="stShell">
 
-        <!-- Privacy -->
-        <section class="settings-section" data-pane="privacy">
-          <div class="card">
-            <h2><i class="fas fa-shield-alt"></i> গোপনীয়তা</h2>
-            <form method="POST" action="/settings/privacy">
-              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
-              <div class="field-row">
-                <div class="label-block"><strong>ইমেইল দেখান</strong><span>অন্যরা আপনার ইমেইল দেখতে পারবে</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="show_email" value="1" <%= profileUser.show_email ? 'checked' : '' %>><span class="toggle-slider"></span></label>
-              </div>
-              <div class="field-row">
-                <div class="label-block"><strong>ফোন নম্বর দেখান</strong><span>অন্যরা আপনার ফোন নম্বর দেখতে পারবে</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="show_phone" value="1" <%= profileUser.show_phone ? 'checked' : '' %>><span class="toggle-slider"></span></label>
-              </div>
-              <div class="field-row">
-                <div class="label-block"><strong>জন্ম তারিখ দেখান</strong><span>অন্যরা আপনার জন্ম তারিখ দেখতে পারবে</span></div>
-                <label class="toggle-switch"><input type="checkbox" name="show_birth" value="1" <%= profileUser.show_birth ? 'checked' : '' %>><span class="toggle-slider"></span></label>
-              </div>
-              
-              <%# সেশন ৮০: ইনবক্সে মেসেজ পাঠানোর অনুমতি — নতুন কথোপকথনে কার্যকর %>
-              <div class="perm-box">
-                <div class="perm-title"><i class="fas fa-comment-dots"></i> ইনবক্সে বার্তা পাঠানোর অনুমতি</div>
-                <p class="perm-desc">কে আপনাকে নতুন প্রাইভেট-বার্তা পাঠাতে পারবে — অবাঞ্ছিত স্প্যাম থেকে বাঁচতে নিয়ন্ত্রণ করুন।</p>
-                <div class="perm-options">
-                  <label class="perm-opt">
-                    <input type="radio" name="allow_messages_from" value="everyone" <%= (profileUser.allow_messages_from || 'everyone') === 'everyone' ? 'checked' : '' %>>
-                    <span><strong>সবাই</strong><small>ফোরামের যে কেউ সরাসরি বার্তা দিতে পারবে</small></span>
-                  </label>
-                  <label class="perm-opt">
-                    <input type="radio" name="allow_messages_from" value="followers" <%= profileUser.allow_messages_from === 'followers' ? 'checked' : '' %>>
-                    <span><strong>শুধুমাত্র অনুসরণকারী</strong><small>যাঁরা আপনাকে ফলো করছেন কেবল তাঁরাই</small></span>
-                  </label>
-                  <label class="perm-opt">
-                    <input type="radio" name="allow_messages_from" value="none" <%= profileUser.allow_messages_from === 'none' ? 'checked' : '' %>>
-                    <span><strong>সম্পূর্ণ বন্ধ</strong><small>কেউ নতুন প্রাইভেট-বার্তা পাঠাতে পারবে না</small></span>
-                  </label>
-                </div>
-              </div>
-              <div class="field-row">
-                <div class="label-block"><strong>বুকমার্ক-তালিকা পাবলিক</strong><span>আপনার সংরক্ষিত লেখার তালিকা অন্যরা দেখতে পাবে
-                  <%# D2 (সেশন ৯১): পাবলিক ভিউ-লিঙ্ক %>
-                  — <a href="/profile/<%= profileUser.username %>/bookmarks" target="_blank" rel="noopener">পাবলিক ভিউ দেখুন <i class="fas fa-external-link-alt" style="font-size:.7em"></i></a></span></div>
-                <label class="toggle-switch"><input type="checkbox" name="bookmarks_public" value="1" <%= profileUser.bookmarks_public ? 'checked' : '' %>><span class="toggle-slider"></span></label>
-              </div>
-<button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
-            </form>
-          </div>
-        
-        <%# সেশন ৮০: ব্লক-তালিকা ব্যবস্থাপনা %>
-        <div class="card" style="margin-top:20px;">
-          <h2><i class="fas fa-ban"></i> ব্লক করা সদস্য</h2>
-          <p style="color:var(--text-muted);font-size:14px;">ব্লক করা সদস্যরা আপনাকে বার্তা দিতে বা আপনার কনটেন্ট শেয়ার করতে পারবে না।</p>
-          <% if (!blockedUsers.length) { %>
-            <p class="hint" style="margin-top:10px;"><i class="fas fa-circle-info"></i> কাউকে ব্লক করা নেই — যেকোনো প্রোফাইল-পেজের বাটন থেকে কাউকে ব্লক করা যায়।</p>
-          <% } else { %>
-            <div class="blk-list" style="margin-top:14px;">
-              <% blockedUsers.forEach(function (b) { %>
-                <div class="blk-row">
-                  <img class="blk-avatar" src="<%= b.avatar_url || '/avatar/' + b.id %>" onerror="this.onerror=null;this.src='/avatar/0'" alt="">
-                  <span class="blk-meta">
-                    <strong><%= b.full_name %></strong>
-                    <small>@<%= b.username %><% if (b.designation) { %> · <%= b.designation %><% } %></small>
-                  </span>
-                  <a href="/profile/<%= encodeURIComponent(b.username) %>" class="btn btn-ghost btn-sm"><i class="fas fa-user"></i> প্রোফাইল</a>
-                  <form method="POST" action="/settings/unblock" class="blk-form">
-                    <input type="hidden" name="user_id" value="<%= b.id %>">
-                    <button type="submit" class="btn btn-ghost btn-sm blk-unblock"><i class="fas fa-unlock"></i> ব্লক সরান</button>
-                  </form>
-                </div>
-              <% }) %>
-            </div>
-          <% } %>
+    <!-- ═══════════ বাঁয়ের কলাম: সার্চযোগ্য গ্রুপড-মেনু ═══════════ -->
+    <aside class="st142-side">
+      <div class="st142-side-head">
+        <h2>সেটিংস</h2>
+        <div class="st142-search">
+          <i class="fas fa-magnifying-glass"></i>
+          <input type="text" id="stSearch" placeholder="সেটিংস খুঁজুন..." aria-label="সেটিংস খুঁজুন" autocomplete="off">
         </div>
-</section>
+      </div>
+      <nav class="st142-nav" id="stNav" aria-label="সেটিংস মেনু">
 
-        <!-- Notifications -->
-        <section class="settings-section" data-pane="notifications">
-          <div class="card">
-            <h2><i class="fas fa-bell"></i> বিজ্ঞপ্তি</h2>
-            <%
-  /* সেশন ৮০: ব্যাক-কম্প্যাট ডিফল্ট — পুরনো কী থাকলে তা, না থাকলে ইন-অ্যাপ=চালু/ইমেইল=বন্ধ */
-  const np80 = notifyPrefs || {};
-  const inAppDef = function (k, legacy) { return np80[k] !== undefined ? !!np80[k] : (legacy !== undefined ? !!legacy : true); };
-  const emailDef = function (k, legacy) { return np80[k] !== undefined ? !!np80[k] : (legacy !== undefined ? !!legacy : false); };
-%>
-              <div class="notif-matrix">
-                <div class="nm-head">
-                  <div>ঘটনা</div><div><i class="fas fa-desktop"></i> ইন-অ্যাপ</div><div><i class="fas fa-envelope"></i> ইমেইল</div>
-                </div>
-                <label class="nm-row">
-                  <span class="nm-event"><strong>লেখায় প্রতিক্রিয়া</strong><small>কেউ আপনার লেখায় লাইক/ভালোবাসা দিলে</small></span>
-                  <input type="checkbox" name="notify_reactions" value="1" <%= inAppDef('notify_reactions', np80.push_like) ? 'checked' : '' %>>
-                  <input type="checkbox" name="email_reactions" value="1" <%= emailDef('email_reactions') ? 'checked' : '' %>>
-                </label>
-                <label class="nm-row">
-                  <span class="nm-event"><strong>নতুন মন্তব্য ও মেনশন</strong><small>পোস্টে মন্তব্য বা @উল্লেখ হলে</small></span>
-                  <input type="checkbox" name="notify_comments" value="1" <%= inAppDef('notify_comments') ? 'checked' : '' %>>
-                  <input type="checkbox" name="email_comment" value="1" <%= emailDef('email_comment', np80.email_comment) ? 'checked' : '' %>>
-                </label>
-                <label class="nm-row">
-                  <span class="nm-event"><strong>নতুন অনুসরণকারী</strong><small>কেউ আপনাকে ফলো করা শুরু করলে</small></span>
-                  <input type="checkbox" name="notify_follows" value="1" <%= inAppDef('notify_follows') ? 'checked' : '' %>>
-                  <input type="checkbox" name="email_follows" value="1" <%= emailDef('email_follows') ? 'checked' : '' %>>
-                </label>
-                <label class="nm-row">
-                  <span class="nm-event"><strong>প্রাইভেট বার্তা</strong><small>ইনবক্সে নতুন বার্তা এলে</small></span>
-                  <input type="checkbox" name="notify_messages" value="1" <%= inAppDef('notify_messages') ? 'checked' : '' %>>
-                  <input type="checkbox" name="email_messages" value="1" <%= emailDef('email_messages') ? 'checked' : '' %>>
-                </label>
-                <label class="nm-row">
-                  <span class="nm-event"><strong>সাপ্তাহিক সাহিত্য-ডাইজেস্ট</strong><small>ফোরামের সেরা নির্বাচিত লেখার ইমেইল-সংকলন</small></span>
-                  <span class="nm-dash">—</span>
-                  <input type="checkbox" name="weekly_digest" value="1" <%= np80.weekly_digest !== undefined ? (np80.weekly_digest ? 'checked' : '') : (np80.daily_digest ? 'checked' : '') %>>
-                </label>
+        <div class="st142-grp" data-grp>
+          <span class="st142-grp-label">আপনার অ্যাকাউন্ট</span>
+          <a href="#profile" class="st142-item on" data-sec="profile" data-kw="ব্যক্তিগত তথ্য ছদ্মনাম প্রোফাইল নাম বায়ো ধারা কলমী pen name">
+            <span class="st142-ico"><i class="fas fa-user"></i></span>
+            <span class="st142-imeta"><b>ব্যক্তিগত তথ্য ও ছদ্মনাম</b><small>নাম, বায়ো, ধারা ও কলমী নাম</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#email" class="st142-item" data-sec="email" data-kw="ইমেইল email ঠিকানা ওটিপি নিরাপত্তা কোড">
+            <span class="st142-ico"><i class="fas fa-at"></i></span>
+            <span class="st142-imeta"><b>অ্যাকাউন্ট ইমেইল</b><small>নিরাপত্তা-কোডের ঠিকানা</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#password" class="st142-item" data-sec="password" data-kw="পাসওয়ার্ড password লগইন বদল">
+            <span class="st142-ico"><i class="fas fa-key"></i></span>
+            <span class="st142-imeta"><b>পাসওয়ার্ড</b><small>লগইন-পাসওয়ার্ড পরিবর্তন</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#security" class="st142-item" data-sec="security" data-kw="নিরাপত্তা 2FA দুই স্তর ওটিপি ব্যাকআপ কোড অথেনটিকেটর totp">
+            <span class="st142-ico"><i class="fas fa-shield-halved"></i></span>
+            <span class="st142-imeta"><b>নিরাপত্তা ও ২-ফ্যাক্টর</b><small>2FA মাধ্যম ও ব্যাকআপ কোড</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#sessions" class="st142-item" data-sec="sessions" data-kw="ডিভাইস সেশন লগইন লগআউট আইপি ব্রাউজার">
+            <span class="st142-ico"><i class="fas fa-laptop"></i></span>
+            <span class="st142-imeta"><b>ডিভাইস ও সেশন</b><small>কোথায় কোথায় লগইন আছে</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#danger" class="st142-item is-danger" data-sec="danger" data-kw="বিপজ্জনক মুছে ফেলা নিষ্ক্রিয় ডিলিট delete">
+            <span class="st142-ico"><i class="fas fa-triangle-exclamation"></i></span>
+            <span class="st142-imeta"><b>বিপজ্জনক অঞ্চল</b><small>নিষ্ক্রিয়করণ ও স্থায়ী মুছেফেলা</small></span>
+            <span class="st142-bar"></span>
+          </a>
+        </div>
+
+        <div class="st142-grp" data-grp>
+          <span class="st142-grp-label">পছন্দসমূহ</span>
+          <a href="#notifications" class="st142-item" data-sec="notifications" data-kw="বিজ্ঞপ্তি notification নোটিফিকেশন ইমেইল ডাইজেস্ট">
+            <span class="st142-ico"><i class="fas fa-bell"></i></span>
+            <span class="st142-imeta"><b>বিজ্ঞপ্তি</b><small>ইন-অ্যাপ ও ইমেইল নোটিফিকেশন</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#display" class="st142-item" data-sec="display" data-kw="প্রদর্শন ডার্ক মোড থিম ফন্ট সাইজ লাইন স্পেসিং display dark">
+            <span class="st142-ico"><i class="fas fa-palette"></i></span>
+            <span class="st142-imeta"><b>প্রদর্শন ও ডার্ক মোড</b><small>থিম, ফন্ট ও পড়ার আরাম</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#media" class="st142-item" data-sec="media" data-kw="মিডিয়া কল পারমিশন মাইক্রোফোন ক্যামেরা ওয়েবক্যাম নেটওয়ার্ক টার্ন turn ডায়াগনস্টিকস webrtc">
+            <span class="st142-ico"><i class="fas fa-video"></i></span>
+            <span class="st142-imeta"><b>মিডিয়া ও কল পারমিশন</b><small>মাইক-ক্যামেরা-নেটওয়ার্ক পরীক্ষা</small></span>
+            <span class="st142-bar"></span>
+          </a>
+        </div>
+
+        <div class="st142-grp" data-grp>
+          <span class="st142-grp-label">দর্শক ও গোপনীয়তা</span>
+          <a href="#audience" class="st142-item" data-sec="audience" data-kw="দর্শক গোপনীয়তা privacy ইমেইল ফোন জন্ম দেখান মেসেজ অনুমতি বুকমার্ক পাবলিক">
+            <span class="st142-ico"><i class="fas fa-earth-asia"></i></span>
+            <span class="st142-imeta"><b>লেখার দর্শক ও যোগাযোগ</b><small>তথ্য-দৃশ্যমানতা ও মেসেজ-অনুমতি</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#blocking" class="st142-item" data-sec="blocking" data-kw="ব্লক তালিকা অবরুদ্ধ সদস্য block unblock">
+            <span class="st142-ico"><i class="fas fa-ban"></i></span>
+            <span class="st142-imeta"><b>ব্লক তালিকা</b><small>ব্লক করা সদস্যবৃন্দ</small></span>
+            <span class="st142-bar"></span>
+          </a>
+          <a href="#connected" class="st142-item" data-sec="connected" data-kw="সংযুক্ত অ্যাকাউন্ট সোশ্যাল ফেসবুক টুইটার লিংকডইন টেলিগ্রাম ওয়েবসাইট">
+            <span class="st142-ico"><i class="fas fa-link"></i></span>
+            <span class="st142-imeta"><b>সংযুক্ত অ্যাকাউন্ট</b><small>সোশ্যাল প্রোফাইল লিংক</small></span>
+            <span class="st142-bar"></span>
+          </a>
+        </div>
+
+        <div class="st142-grp" data-grp>
+          <span class="st142-grp-label">আপনার কার্যক্রম</span>
+          <a href="#activity" class="st142-item" data-sec="activity" data-kw="কার্যক্রম অ্যাক্টিভিটি লগ লেখা মন্তব্য প্রতিক্রিয়া সংরক্ষিত বুকমার্ক ব্যাকআপ এক্সপোর্ট activity log">
+            <span class="st142-ico"><i class="fas fa-clock-rotate-left"></i></span>
+            <span class="st142-imeta"><b>আপনার কার্যক্রম</b><small>লেখা, মন্তব্য, প্রতিক্রিয়া ও সংরক্ষণ</small></span>
+            <span class="st142-bar"></span>
+          </a>
+        </div>
+
+        <div class="st142-grp" data-grp>
+          <span class="st142-grp-label">নীতিমালা ও সহায়তা</span>
+          <a href="#standards" class="st142-item" data-sec="standards" data-kw="নীতিমালা আচরণবিধি কমিউনিটি স্ট্যান্ডার্ড কপিরাইট স্বত্ব সংবিধান মৌলিকতা policy">
+            <span class="st142-ico"><i class="fas fa-scale-balanced"></i></span>
+            <span class="st142-imeta"><b>সাহিত্যিক আচরণবিধি</b><small>কমিউনিটি স্ট্যান্ডার্ড ও কপিরাইট</small></span>
+            <span class="st142-bar"></span>
+          </a>
+        </div>
+
+        <div class="st142-noresult" id="stNoResult">কোনো সেটিংস মেলেনি — অন্য শব্দে চেষ্টা করুন</div>
+      </nav>
+    </aside>
+
+    <!-- ═══════════ ডানের কলাম: প্যানে-সমূহ ═══════════ -->
+    <main class="st142-main" id="stMain">
+
+      <!-- ১. ব্যক্তিগত তথ্য ও ছদ্মনাম -->
+      <section class="st142-pane on" data-pane="profile" aria-label="ব্যক্তিগত তথ্য ও ছদ্মনাম">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>ব্যক্তিগত তথ্য ও ছদ্মনাম</h2><p>লেখক ফোরামে আপনার পরিচয় ও পরিচিতি — আসল নাম গোপন থাকে, চাইলে কলমী নামে লেখেন।</p></div>
+        </div>
+        <div class="st142-card">
+          <form method="POST" action="/settings/profile" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label>পুরো নাম</label>
+                <input class="input" name="full_name" value="<%= profileUser.full_name %>" required>
+                <div class="hint" style="margin-top:6px;">নথি-সদস্যের আসল নাম (গোপন থাকবে)</div>
               </div>
-              <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
-            </form>
-          </div>
-        </section>
-
-        <!-- Account -->
-        <section class="settings-section" data-pane="account">
-          <div class="card">
-            <h2><i class="fas fa-key"></i> অ্যাকাউন্ট</h2>
-
-            <h3 style="margin:0 0 12px;font-size:15px;">পাসওয়ার্ড পরিবর্তন</h3>
-            <form method="POST" action="/settings/account/password">
-              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
-              <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required></div>
-              <div class="field"><label>নতুন পাসওয়ার্ড</label><input class="input" type="password" name="new_password" required minlength="6"></div>
-              <div class="field"><label>পুনরায় নতুন পাসওয়ার্ড</label><input class="input" type="password" name="confirm_password" required minlength="6"></div>
-              <button type="submit" class="btn btn-primary">পাসওয়ার্ড পরিবর্তন</button>
-            </form>
-
-            <%# সেশন ১১৫: অ্যাকাউন্ট ইমেইল — ইমেইল-ওটিপি 2FA-র পূর্বশর্ত (পাসওয়ার্ড-গার্ডড) %>
-            <hr style="margin:30px 0;border:none;border-top:1px solid var(--border)">
-            <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-at"></i> অ্যাকাউন্ট ইমেইল</h3>
-            <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">নিরাপত্তা-কোড (ইমেইল-ওটিপি) এই ঠিকানায় যাবে — সঠিক ও নিজের-নিয়ন্ত্রণে থাকা ইমেইল দিন।</p>
-            <% if (ok === 'email_saved') { %><div class="badge save-ok"><i class="fas fa-check"></i> ইমেইল সংরক্ষিত হয়েছে।</div><% } %>
-            <% if (err === 'email_password_wrong') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> বর্তমান পাসওয়ার্ড ভুল।</div><% } %>
-            <% if (err === 'email_invalid') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> সঠিক ইমেইল ঠিকানা লিখুন।</div><% } %>
-            <% if (err === 'email_taken') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> এই ইমেইল অন্য কোনো অ্যাকাউন্টে ব্যবহৃত।</div><% } %>
-            <form method="POST" action="/settings/account/email">
-              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
-              <div class="field"><label>ইমেইল ঠিকানা</label><input class="input" type="email" name="email" value="<%= profileUser.email || '' %>" placeholder="you@example.com" required></div>
-              <div class="field"><label>বর্তমান পাসওয়ার্ড (নিশ্চিতকরণ)</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
-              <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> ইমেইল সংরক্ষণ করুন</button>
-            </form>
-            <%# সেশন ৮০: ডেটা-এক্সপোর্ট — লেখকের স্বত্ব-ব্যাকআপ %>
-            <hr style="margin:30px 0;border:none;border-top:1px solid var(--border)">
-            <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-cloud-arrow-down"></i> ডেটা ব্যাকআপ</h3>
-            <div class="dz-card">
-              <div class="dz-meta">
-                <strong>সব লেখার ব্যাকআপ ডাউনলোড (JSON)</strong>
-                <span>আপনার প্রকাশিত লেখা, মন্তব্য, বুকমার্ক ও বার্তা — এক ক্লিকে নিরাপদ ব্যাকআপ।</span>
+              <div>
+                <label>ছদ্মনাম / কলমী নাম (ঐচ্ছিক)</label>
+                <input class="input" name="pen_name" value="<%= profileUser.pen_name || '' %>" maxlength="60" placeholder="যেমন: বনফুল, সুনন্দ…">
+                <div class="hint">আসল নাম না বাহর করে এই নামেই লেখক-পরিচয় দেখাবে</div>
               </div>
-              <a href="/settings/export" class="btn btn-primary" download><i class="fas fa-download"></i> ডাউনলোড করুন</a>
             </div>
-
-            <hr style="margin:30px 0;border:none;border-top:1px solid rgba(220,38,38,.35)">
-            <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;"><i class="fas fa-triangle-exclamation"></i> বিপজ্জনক অঞ্চল</h3>
-            <p style="color:var(--text-muted);font-size:14px;">এই কার্যগুলো ফিরিয়ে আনা যাবে না — আগে ব্যাকআপ নিন।</p>
-            <form method="POST" action="/settings/account/deactivate" style="display:inline">
-              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %>
-              <button type="submit" class="btn btn-danger"><i class="fas fa-pause"></i> অ্যাকাউন্ট নিষ্ক্রিয় করুন</button>
-            </form>
-
-            <%# সেশন ৮০: স্থায়ী ডিলিট — পাসওয়ার্ড + DELETE-টাইপ কনফার্ম %>
-            <div class="dz-card danger" style="margin-top:16px;">
-              <div class="dz-meta">
-                <strong>অ্যাকাউন্ট স্থায়ীভাবে মুছে ফেলুন</strong>
-                <span>প্রোফাইল, সব লেখা, মন্তব্য, বার্তা চিরতরে মুছে যাবে। নিচে পাসওয়ার্ড দিয়ে <b>DELETE</b> লিখে নিশ্চিত করুন।</span>
+            <div class="field">
+              <label>পছন্দের সাহিত্য-ধারা <span class="genre-count" id="genreCount"><%= genres.length %>/৫</span></label>
+              <div class="genre-chip-wrap" id="genreChips">
+                <%
+                  const GENRE_LIST_80 = ['কবিতা','ছোটগল্প','উপন্যাস','কল্পবিজ্ঞান','গোয়েন্দা ও থ্রিলার','প্রবন্ধ ও গবেষণা','অনুবাদ সাহিত্য','ভ্রমণকাহিনী','ইতিহাস','নাটক ও নাটিকা','শিশুসাহিত্য'];
+                  GENRE_LIST_80.forEach(function (g) { %>
+                  <button type="button" class="genre-chip<%= genres.includes(g) ? ' selected' : '' %>" data-genre="<%= g %>"><%= genres.includes(g) ? '✓ ' : '+ ' %><%= g %></button>
+                <% }) %>
               </div>
-              <div class="dz-del-form">
-                <input class="input" type="password" name="current_password" placeholder="বর্তমান পাসওয়ার্ড" required autocomplete="current-password">
-                <input class="input dz-del-confirm" type="text" placeholder="নিশ্চিত করতে DELETE লিখুন" required autocomplete="off" style="text-transform:uppercase;">
-                <button type="button" class="btn btn-danger"><i class="fas fa-trash-can"></i> চিরতরে মুছুন</button>
+              <input type="hidden" name="genres" id="genreInput" value="<%= JSON.stringify(genres) %>">
+              <div class="hint">আপনি কোন ধারার লেখক — প্রোফাইল-পেজে ব্যাজ হিসেবে দেখাবে</div>
+            </div>
+            <div class="field">
+              <label>পরিচিতি (Bio)</label>
+              <textarea class="textarea" name="bio" rows="3" placeholder="নিজের সম্পর্কে কিছু লিখুন…"><%= profileUser.bio || '' %></textarea>
+              <div class="hint">সর্বোচ্চ ৩০০ অক্ষর</div>
+            </div>
+            <div class="field">
+              <label>পদবি / Designation</label>
+              <input class="input" name="designation" value="<%= profileUser.designation || '' %>" placeholder="যেমন: সাহিত্যিক, শিক্ষক…">
+            </div>
+            <div class="field">
+              <label>ঠিকানা</label>
+              <input class="input" name="address" value="<%= profileUser.address || '' %>">
+            </div>
+            <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label>লিঙ্গ</label>
+                <select class="select" name="gender">
+                  <option value="male"   <%= profileUser.gender === 'male'   ? 'selected' : '' %>>পুরুষ</option>
+                  <option value="female" <%= profileUser.gender === 'female' ? 'selected' : '' %>>নারী</option>
+                  <option value="other"  <%= profileUser.gender === 'other'  ? 'selected' : '' %>>অন্যান্য</option>
+                </select>
               </div>
-              <form method="POST" action="/settings/account/delete" id="permDeleteForm80" hidden>
-                <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"><%# সেশন ৯১: no-JS-safe CSRF %></form>
+              <div>
+                <label>জন্ম তারিখ</label>
+                <input class="input" type="date" name="birth_date" value="<%= profileUser.birth_date || '' %>">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ২. অ্যাকাউন্ট ইমেইল -->
+      <section class="st142-pane" data-pane="email" aria-label="অ্যাকাউন্ট ইমেইল">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>অ্যাকাউন্ট ইমেইল</h2><p>ইমেইল-ওটিপি 2FA-র কোড এই ঠিকানায় যায় — সঠিক ও নিজের-নিয়ন্ত্রণে থাকা ইমেইল রাখুন।</p></div>
+        </div>
+        <div class="st142-card">
+          <% if (ok === 'email_saved') { %><div class="badge save-ok"><i class="fas fa-check"></i> ইমেইল সংরক্ষিত হয়েছে।</div><% } %>
+          <% if (err === 'email_password_wrong') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> বর্তমান পাসওয়ার্ড ভুল।</div><% } %>
+          <% if (err === 'email_invalid') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> সঠিক ইমেইল ঠিকানা লিখুন।</div><% } %>
+          <% if (err === 'email_taken') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> এই ইমেইল অন্য কোনো অ্যাকাউন্টে ব্যবহৃত।</div><% } %>
+          <form method="POST" action="/settings/account/email">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <div class="field"><label>ইমেইল ঠিকানা</label><input class="input" type="email" name="email" value="<%= profileUser.email || '' %>" placeholder="you@example.com" required></div>
+            <div class="field"><label>বর্তমান পাসওয়ার্ড (নিশ্চিতকরণ)</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> ইমেইল সংরক্ষণ করুন</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ৩. পাসওয়ার্ড -->
+      <section class="st142-pane" data-pane="password" aria-label="পাসওয়ার্ড">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>পাসওয়ার্ড</h2><p>নিয়মিত পাসওয়ার্ড বদলান এবং অন্য কোথাও ব্যবহৃত পাসওয়ার্ড পুনরায় ব্যবহার করবেন না।</p></div>
+        </div>
+        <div class="st142-card">
+          <form method="POST" action="/settings/account/password">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required></div>
+            <div class="field"><label>নতুন পাসওয়ার্ড</label><input class="input" type="password" name="new_password" required minlength="6"></div>
+            <div class="field"><label>পুনরায় নতুন পাসওয়ার্ড</label><input class="input" type="password" name="confirm_password" required minlength="6"></div>
+            <button type="submit" class="btn btn-primary">পাসওয়ার্ড পরিবর্তন</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ৪. নিরাপত্তা ও ২-ফ্যাক্টর (সাব-মেনু সহ) -->
+      <section class="st142-pane" data-pane="security" aria-label="নিরাপত্তা ও ২-ফ্যাক্টর">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div>
+            <h2>নিরাপত্তা ও ২-ফ্যাক্টর</h2>
+            <p>পাসওয়ার্ডের পরে দ্বিতীয় স্তরের যাচাই — লগইনে ৬-অঙ্কের কোড চাওয়া হবে।</p>
+          </div>
+          <span class="st142-pill <%= totpEnabled ? 'on' : 'off' %>"><i class="fas <%= totpEnabled ? 'fa-shield-halved' : 'fa-shield' %>"></i> <%= totpEnabled ? '2FA সক্রিয়' : '2FA বন্ধ' %></span>
+        </div>
+
+        <% if (backupFlash && backupFlash.length) { %>
+          <div class="st142-card" style="margin-bottom:14px;">
+            <div class="sec-backup-box">
+              <h3><i class="fas fa-key"></i> ব্যাকআপ কোড (একবারই দেখানো হয়)</h3>
+              <p>ফোন হারিয়ে গেলে বা অ্যাপে ঢুকতে না পারলে লগইনের দ্বিতীয় ধাপে এই কোডগুলোর একটি ব্যবহার করুন। প্রতিটি কোড একবারই কাজ করে, নিরাপদ জায়গায় সংরক্ষণ করুন (লিখে রাখুন বা কপি করে রাখুন)।</p>
+              <div class="sec-codes-grid"><% backupFlash.forEach(function (c) { %><div class="sec-code-chip"><%= c %></div><% }) %></div>
+              <button type="button" class="btn btn-sm sec-copy-btn" id="secCopyCodes"><i class="fas fa-copy"></i> সব কোড কপি করুন</button>
             </div>
           </div>
-        </section>
+        <% } %>
 
-        <!-- Security (2FA) — সেশন ৫৮ -->
-        <section class="settings-section" data-pane="security">
-          <div class="card">
-            <h2><i class="fas fa-shield-halved"></i> নিরাপত্তা (2FA)</h2>
+        <% if (secMsg === 'enrolled') { %><div class="badge save-ok"><i class="fas fa-check"></i> 2FA সক্রিয় হয়েছে। উপরের ব্যাকআপ কোডগুলো এখনই সংরক্ষণ করুন।</div><% } %>
+        <% if (secMsg === 'disabled') { %><div class="badge save-ok"><i class="fas fa-check"></i> 2FA বন্ধ করা হয়েছে।</div><% } %>
+        <% if (secMsg === 'backup') { %><div class="badge save-ok"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড তৈরি হয়েছে। পুরনো কোডগুলো বাতিল।</div><% } %>
+        <% if (secMsg === 'email_sent') { %><div class="badge save-ok"><i class="fas fa-envelope"></i> কোড <%= emailMask || 'আপনার ইমেইল' %>-এ পাঠানো হয়েছে (মেয়াদ ৫ মিনিট)। ইনবক্স/স্প্যাম ফোল্ডার দেখুন।</div><% } %>
+        <% if (secErr === 'bad_code') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> কোড মিলছে না। অ্যাপে দেখানো বর্তমান ৬-অঙ্কের কোড দিন (৩০ সেকেন্ডে বদলায়)।</div><% } %>
+        <% if (secErr === 'no_pending') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> কোনো অপেক্ষমাণ সেটআপ নেই। "2FA চালু করুন" দিয়ে নতুন করে শুরু করুন।</div><% } %>
+        <% if (secErr === 'password_wrong') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> বর্তমান পাসওয়ার্ড ভুল।</div><% } %>
+        <% if (secErr === 'no_2fa') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> 2FA সক্রিয় নেই।</div><% } %>
+        <% if (secErr === 'otp_rate') { %><div class="badge save-err"><i class="fas fa-hourglass-half"></i> খুব দ্রুত আবার-পাঠানোর চেষ্টা — আরও <%= typeof r !== 'undefined' && r ? r : 'কয়েক' %> সেকেন্ড অপেক্ষা করুন।</div><% } %>
+        <% if (secErr === 'otp_bad') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> কোড ভুল বা মেয়াদোত্তীর্ণ।<%= typeof left !== 'undefined' && left ? ' আর ' + left + ' বার চেষ্টা করতে পারবেন।' : '' %></div><% } %>
+        <% if (secErr === 'no_email') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> ইমেইল-ওটিপির জন্য অ্যাকাউন্টে নিবন্ধিত ইমেইল দরকার — <a href="/settings#email" style="text-decoration:underline;">অ্যাকাউন্ট ইমেইল সেটিংসে যোগ করুন</a>।</div><% } %>
+        <% if (secErr === 'email_fail') { %><div class="badge save-err"><i class="fas fa-cloud-arrow-down"></i> ইমেইল পাঠানো যায়নি — কিছুক্ষণ পরে আবার চেষ্টা করুন।</div><% } %>
 
-            <% if (secMsg === 'enrolled') { %><div class="badge save-ok"><i class="fas fa-check"></i> 2FA সক্রিয় হয়েছে। নিচের ব্যাকআপ কোডগুলো এখনই সংরক্ষণ করুন।</div><% } %>
-            <% if (secMsg === 'disabled') { %><div class="badge save-ok"><i class="fas fa-check"></i> 2FA বন্ধ করা হয়েছে।</div><% } %>
-            <% if (secMsg === 'backup') { %><div class="badge save-ok"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড তৈরি হয়েছে। পুরনো কোডগুলো বাতিল।</div><% } %>
-            <% if (secErr === 'bad_code') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> কোড মিলছে না। অ্যাপে দেখানো বর্তমান ৬-অঙ্কের কোড দিন (৩০ সেকেন্ডে বদলায়)।</div><% } %>
-            <% if (secErr === 'no_pending') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> কোনো অপেক্ষমাণ সেটআপ নেই। "2FA চালু করুন" দিয়ে নতুন করে শুরু করুন।</div><% } %>
-            <% if (secErr === 'password_wrong') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> বর্তমান পাসওয়ার্ড ভুল।</div><% } %>
-            <% if (secErr === 'no_2fa') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> 2FA সক্রিয় নেই।</div><% } %>
-            <%# সেশন ১১৫: ইমেইল-ওটিপি ফ্ল্যাশসমূহ %>
-            <% if (secMsg === 'email_sent') { %><div class="badge save-ok"><i class="fas fa-envelope"></i> কোড <%= emailMask || 'আপনার ইমেইল' %>-এ পাঠানো হয়েছে (মেয়াদ ৫ মিনিট)। ইনবক্স/স্প্যাম ফোল্ডার দেখুন।</div><% } %>
-            <% if (secErr === 'otp_rate') { %><div class="badge save-err"><i class="fas fa-hourglass-half"></i> খুব দ্রুত আবার-পাঠানোর চেষ্টা — আরও <%= typeof r !== 'undefined' && r ? r : 'কয়েক' %> সেকেন্ড অপেক্ষা করুন।</div><% } %>
-            <% if (secErr === 'otp_bad') { %><div class="badge save-err"><i class="fas fa-exclamation-triangle"></i> কোড ভুল বা মেয়াদোত্তীর্ণ।<%= typeof left !== 'undefined' && left ? ' আর ' + left + ' বার চেষ্টা করতে পারবেন।' : '' %></div><% } %>
-            <% if (secErr === 'no_email') { %><div class="badge save-err"><i class="fas fa-circle-info"></i> ইমেইল-ওটিপির জন্য অ্যাকাউন্টে নিবন্ধিত ইমেইল দরকার — <a href="/settings#account" style="text-decoration:underline;">অ্যাকাউন্ট-সেটিংসে ইমেইল যোগ করুন</a>।</div><% } %>
-            <% if (secErr === 'email_fail') { %><div class="badge save-err"><i class="fas fa-cloud-arrow-down"></i> ইমেইল পাঠানো যায়নি — কিছুক্ষণ পরে আবার চেষ্টা করুন।</div><% } %>
+        <div class="st142-card st142-submenu" style="margin-top:14px;">
+          <div class="st142-rows">
+            <button type="button" class="st142-row" data-goto="sec-status">
+              <span class="st142-ico"><i class="fas fa-shield-halved"></i></span>
+              <span class="st142-rmeta"><b>2FA অবস্থা ও মাধ্যম</b><small>সক্রিয়তা দেখুন, অ্যাপ/ইমেইল-ওটিপি মাধ্যম বদলান বা নতুন সেটআপ শুরু করুন</small></span>
+              <i class="fas fa-chevron-right st142-rchev"></i>
+            </button>
+            <button type="button" class="st142-row" data-goto="sec-backup">
+              <span class="st142-ico"><i class="fas fa-key"></i></span>
+              <span class="st142-rmeta"><b>ব্যাকআপ কোড</b><small>ফোন হারালে কাজের বিমা — নতুন সেট তৈরি করুন (পুরনো বাতিল হবে)</small></span>
+              <i class="fas fa-chevron-right st142-rchev"></i>
+            </button>
+            <button type="button" class="st142-row is-danger" data-goto="sec-off">
+              <span class="st142-ico"><i class="fas fa-unlock"></i></span>
+              <span class="st142-rmeta"><b>2FA বন্ধ করুন</b><small>পাসওয়ার্ড নিশ্চিত করে দ্বি-স্তর যাচাই বন্ধ করুন</small></span>
+              <i class="fas fa-chevron-right st142-rchev"></i>
+            </button>
+          </div>
+          <p class="st142-note"><i class="fas fa-circle-info"></i> দুটো মাধ্যমই সম্পূর্ণ বিনামূল্যের — SMS-গেটওয়ে ফি লাগে না; ব্যাকআপ-কোড দুই মাধ্যমেই কাজ করে।</p>
+        </div>
 
-            <% if (backupFlash && backupFlash.length) { %>
-              <div class="sec-backup-box">
-                <h3><i class="fas fa-key"></i> ব্যাকআপ কোড (একবারই দেখানো হয়)</h3>
-                <p>ফোন হারিয়ে গেলে বা অ্যাপে ঢুকতে না পারলে লগইনের দ্বিতীয় ধাপে এই কোডগুলোর একটি ব্যবহার করুন। প্রতিটি কোড একবারই কাজ করে, নিরাপদ জায়গায় সংরক্ষণ করুন (লিখে রাখুন বা কপি করে রাখুন)।</p>
-                <div class="sec-codes-grid"><% backupFlash.forEach(function (c) { %><div class="sec-code-chip"><%= c %></div><% }) %></div>
-                <button type="button" class="btn btn-sm sec-copy-btn" id="secCopyCodes"><i class="fas fa-copy"></i> সব কোড কপি করুন</button>
-              </div>
-            <% } %>
-
+        <div class="st142-detail" data-detail="sec-status">
+          <button type="button" class="st142-backbtn"><i class="fas fa-arrow-left"></i> নিরাপত্তা মেনুতে ফিরুন</button>
+          <div class="st142-card">
             <% if (totpEnabled && !secPending && !emailPending) { %>
               <div class="sec-status on">
                 <span class="sec-status-ico"><i class="fas fa-shield-halved"></i></span>
@@ -313,8 +301,7 @@
                   <small>লগইনে পাসওয়ার্ডের পরে <%= twofaMethod === 'email' ? 'নিবন্ধিত ইমেইলে পাঠানো' : 'অ্যাপে দেখানো' %> ৬-অঙ্কের কোড চাওয়া হয় — বর্তমান মাধ্যম: <b><%= twofaMethod === 'email' ? 'ইমেইল ওটিপি' : 'অথেনটিকেটর অ্যাপ' %></b>, অ্যাকাউন্ট দ্বি-স্তরে সুরক্ষিত।</small>
                 </span>
               </div>
-              <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
-              <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-right-left"></i> মাধ্যম বদলান</h3>
+              <h3 style="margin:18px 0 4px;font-size:15px;"><i class="fas fa-right-left"></i> মাধ্যম বদলান</h3>
               <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">অন্য ফ্রি মাধ্যমে সুইচ করতে এনরোল করুন — কনফার্ম করলেই বর্তমান মাধ্যমের সেটআপ বদলে যাবে (যাচাই শেষ না হওয়া পর্যন্ত বর্তমান মাধ্যমই চলবে)।</p>
               <div class="sec-method-grid">
                 <% if (twofaMethod !== 'totp') { %>
@@ -336,22 +323,7 @@
                 </form>
                 <% } %>
               </div>
-              <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
-              <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড</h3>
-              <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">পুরনো ব্যাকআপ কোড হারিয়ে গেলে বা শেষ হয়ে গেলে নতুন সেট তৈরি করুন (পুরনোগুলো বাতিল হয়ে যায়)।</p>
-              <form method="POST" action="/settings/security/backup-regen" class="sec-inline-form">
-                <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-rotate"></i> নতুন কোড তৈরি করুন</button>
-              </form>
-              <hr style="margin:22px 0;border:none;border-top:1px solid var(--border);">
-              <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</h3>
-              <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">এতে অ্যাকাউন্ট কম সুরক্ষিত হবে, লগইনে শুধু পাসওয়ার্ড লাগবে। নিশ্চিত হতে বর্তমান পাসওয়ার্ড দিতে হবে।</p>
-              <form method="POST" action="/settings/security/disable" class="sec-inline-form" onsubmit="return confirm('2FA বন্ধ করবেন? অ্যাকাউন্ট কম সুরক্ষিত হবে।');">
-                <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
-                <button type="submit" class="btn btn-danger"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</button>
-              </form>
             <% } else if (emailPending) { %>
-              <%# সেশন ১১৫: ইমেইল-ওটিপি পেন্ডিং — কোড ইমেইলে গেছে, এখন যাচাই %>
               <div class="sec-enroll">
                 <div class="sec-status on" style="margin-bottom:16px;">
                   <span class="sec-status-ico"><i class="fas fa-envelope-circle-check"></i></span>
@@ -394,8 +366,7 @@
                   <small>দ্বি-স্তর যাচাই চালু করে আপনার আইডি আরও সুরক্ষিত করুন — নিচের যেকোনো একটি <b>সম্পূর্ণ বিনামূল্যের</b> মাধ্যম বেছে নিন।</small>
                 </span>
               </div>
-              <%# সেশন ১১৫: ফেসবুক-ঘরানার মেথড-সিলেক্টর কার্ড (দুটোই $0) %>
-              <div class="sec-method-grid">
+              <div class="sec-method-grid" style="margin-top:14px;">
                 <form method="POST" action="/settings/security/enroll" class="sec-method-card">
                   <span class="sec-mico">🔐</span>
                   <span class="sec-mname">অথেনটিকেটর অ্যাপ (TOTP)</span>
@@ -411,15 +382,43 @@
                   <button type="submit" class="btn btn-primary btn-sm sec-mbtn"><i class="fas fa-paper-plane"></i> কোড পাঠান</button>
                 </form>
               </div>
-              <p class="hint" style="margin-top:12px;"><i class="fas fa-circle-info"></i> দুটো মাধ্যমই $0 খরচে চলে — SMS-গেটওয়ে ফি লাগে না। লগইনে পাসওয়ার্ডের পরে নির্বাচিত মাধ্যমের কোড চাওয়া হবে; ব্যাকআপ-কোড দুই মাধ্যমেই কাজ করে।</p>
             <% } %>
           </div>
-        
-        <%# সেশন ৮০: অ্যাক্টিভ-সেশন ট্র্যাকার %>
-        <div class="card" style="margin-top:20px;">
-          <h2><i class="fas fa-laptop"></i> অ্যাক্টিভ সেশন</h2>
-          <p style="color:var(--text-muted);font-size:14px;">আপনার অ্যাকাউন্ট কোন কোন ডিভাইসে লগইন করা আছে — চেনা-যায় না এমন ডিভাইস দেখলে সঙ্গে সঙ্গে লগআউট করুন।</p>
-          <div class="sess-list" style="margin-top:14px;">
+        </div>
+
+        <div class="st142-detail" data-detail="sec-backup">
+          <button type="button" class="st142-backbtn"><i class="fas fa-arrow-left"></i> নিরাপত্তা মেনুতে ফিরুন</button>
+          <div class="st142-card">
+            <h3 style="margin:0 0 8px;font-size:15px;"><i class="fas fa-rotate"></i> নতুন ব্যাকআপ কোড</h3>
+            <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">পুরনো ব্যাকআপ কোড হারিয়ে গেলে বা শেষ হয়ে গেলে নতুন সেট তৈরি করুন (পুরনোগুলো বাতিল হয়ে যায়)।</p>
+            <form method="POST" action="/settings/security/backup-regen" class="sec-inline-form">
+              <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
+              <button type="submit" class="btn btn-primary"><i class="fas fa-rotate"></i> নতুন কোড তৈরি করুন</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="st142-detail" data-detail="sec-off">
+          <button type="button" class="st142-backbtn"><i class="fas fa-arrow-left"></i> নিরাপত্তা মেনুতে ফিরুন</button>
+          <div class="st142-card">
+            <h3 style="margin:0 0 8px;font-size:15px;color:#dc2626;"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</h3>
+            <p style="color:var(--text-muted);font-size:13.5px;margin:0 0 10px;">এতে অ্যাকাউন্ট কম সুরক্ষিত হবে, লগইনে শুধু পাসওয়ার্ড লাগবে। নিশ্চিত হতে বর্তমান পাসওয়ার্ড দিতে হবে।</p>
+            <form method="POST" action="/settings/security/disable" class="sec-inline-form" onsubmit="return confirm('2FA বন্ধ করবেন? অ্যাকাউন্ট কম সুরক্ষিত হবে।');">
+              <div class="field"><label>বর্তমান পাসওয়ার্ড</label><input class="input" type="password" name="current_password" required autocomplete="current-password"></div>
+              <button type="submit" class="btn btn-danger"><i class="fas fa-unlock"></i> 2FA বন্ধ করুন</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ৫. ডিভাইস ও সেশন -->
+      <section class="st142-pane" data-pane="sessions" aria-label="ডিভাইস ও সেশন">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>ডিভাইস ও সেশন</h2><p>আপনার অ্যাকাউন্ট কোন কোন ডিভাইসে লগইন করা আছে — চেনা-যায় না এমন ডিভাইস দেখলে সঙ্গে সঙ্গে লগআউট করুন।</p></div>
+        </div>
+        <div class="st142-card">
+          <div class="sess-list">
             <% activeSessions.forEach(function (s) { %>
               <div class="sess-row<%= s.current ? ' current' : '' %>">
                 <span class="sess-ico"><i class="fas <%= s.icon %>"></i></span>
@@ -446,218 +445,605 @@
             </form>
           <% } %>
         </div>
-</section>
+      </section>
 
-        <!-- Display -->
-        <section class="settings-section" data-pane="display">
-          <div class="card">
-            <h2><i class="fas fa-palette"></i> প্রদর্শন</h2>
-            <form method="POST" action="/settings/display">
-              <div class="field">
-                <label>থিম</label>
-                <select class="select" name="theme">
-                  <option value="auto" <%= (displayPrefs.theme || 'auto') === 'auto' ? 'selected' : '' %>>অটো (সিস্টেম অনুসারে)</option>
-                  <option value="light" <%= displayPrefs.theme === 'light' ? 'selected' : '' %>>হালকা</option>
-                  <option value="dark" <%= displayPrefs.theme === 'dark' ? 'selected' : '' %>>গাঢ়</option>
-                  <option value="sepia" <%= displayPrefs.theme === 'sepia' ? 'selected' : '' %>>সেপিয়া (বইয়ের পাতার আভা)</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>ফন্ট স্টাইল</label>
-                <select class="select" name="font_family">
-                  <option value="bn"       <%= (displayPrefs.font_family || 'bn') === 'bn'       ? 'selected' : '' %>>হিন্দ সিলিগুড়ি (সহজ, পড়ার জন্য আদর্শ)</option>
-                  <option value="serif"    <%= displayPrefs.font_family === 'serif'             ? 'selected' : '' %>>লিপি মল্লিকা (ক্লাসিক বাংলা সিরিফ)</option>
-                  <option value="sans"     <%= displayPrefs.font_family === 'sans'             ? 'selected' : '' %>>সিস্টেম স্ট্যান্ডার্ড (আধুনিক)</option>
-                  <option value="mixed"    <%= displayPrefs.font_family === 'mixed'             ? 'selected' : '' %>>মিশ্র (হিন্দ বডি + আখন্দ শীর্ষক)</option>
-                  <option value="hand"     <%= displayPrefs.font_family === 'hand'             ? 'selected' : '' %>>বেনসেন (হাতে লেখা স্টাইল)</option>
-                  <option value="display"  <%= displayPrefs.font_family === 'display'           ? 'selected' : '' %>>আখন্দ বাংলা (বোল্ড ডিসপ্লে)</option>
-                  <option value="durnibar"<%= displayPrefs.font_family === 'durnibar'           ? 'selected' : '' %>>দুর্নিবার (সুন্দর বাংলা সিরিফ)</option>
-                  <option value="lipi"    <%= displayPrefs.font_family === 'lipi'             ? 'selected' : '' %>>লিপি মল্লিকা (প্রিমিয়াম সিরিফ)</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>ফন্ট সাইজ</label>
-                <select class="select" name="font_size">
-                  <option value="small"  <%= displayPrefs.font_size === 'small'  ? 'selected' : '' %>>ছোট</option>
-                  <option value="medium" <%= (displayPrefs.font_size || 'medium') === 'medium' ? 'selected' : '' %>>মাঝারি</option>
-                  <option value="large"  <%= displayPrefs.font_size === 'large'  ? 'selected' : '' %>>বড়</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>লাইন-স্পেসিং</label>
-                <select class="select" name="line_height" id="lhSelect">
-                  <option value="compact" <%= (displayPrefs.line_height || 'normal') === 'compact' ? 'selected' : '' %>>ঘন (১.৫)</option>
-                  <option value="normal"  <%= (displayPrefs.line_height || 'normal') === 'normal'  ? 'selected' : '' %>>স্বাভাবিক (১.৭)</option>
-                  <option value="relaxed" <%= (displayPrefs.line_height || 'normal') === 'relaxed' ? 'selected' : '' %>>আরামদায়ক (১.৯)</option>
-                </select>
-                <div class="hint">দীর্ঘ পড়ার সময় চোখের আরাম বাড়াতে লাইনের ব্যবধান</div>
-              </div>
-              <div class="field">
-                <label>ভাষা</label>
-                <select class="select" name="language">
-                  <option value="bn" <%= (displayPrefs.language || 'bn') === 'bn' ? 'selected' : '' %>>বাংলা</option>
-                  <option value="en" <%= displayPrefs.language === 'en' ? 'selected' : '' %>>English</option>
-                </select>
-              </div>
-              
-              <%# সেশন ৮০: রিয়েল-টাইম টাইপোগ্রাফি প্রিভিউ %>
-              <div class="dp-preview-wrap">
-                <div class="dp-preview-label"><i class="fas fa-eye"></i> লাইভ প্রিভিউ</div>
-                <div class="dp-preview" id="dpPreview">সাহিত্য আসলে আয়নার মতো — যা আমাদের না বলা ব্যথা ও আনন্দকে নতুন করে ভাষা দেয়। বইয়ের পাতা উল্টানোর মতো আনন্দ আর কিছুতেই নেই।</div>
-              </div>
-<button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
-            </form>
+      <!-- ৬. বিপজ্জনক অঞ্চল -->
+      <section class="st142-pane" data-pane="danger" aria-label="বিপজ্জনক অঞ্চল">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>বিপজ্জনক অঞ্চল</h2><p>এই কার্যগুলো ফিরিয়ে আনা যাবে না — আগে "আপনার কার্যক্রম" থেকে লেখার ব্যাকআপ নিয়ে নিন।</p></div>
+        </div>
+        <div class="st142-card">
+          <form method="POST" action="/settings/account/deactivate" style="display:inline">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <button type="submit" class="btn btn-danger"><i class="fas fa-pause"></i> অ্যাকাউন্ট নিষ্ক্রিয় করুন</button>
+          </form>
+
+          <div class="dz-card danger" style="margin-top:16px;">
+            <div class="dz-meta">
+              <strong>অ্যাকাউন্ট স্থায়ীভাবে মুছে ফেলুন</strong>
+              <span>প্রোফাইল, সব লেখা, মন্তব্য, বার্তা চিরতরে মুছে যাবে। নিচে পাসওয়ার্ড দিয়ে <b>DELETE</b> লিখে নিশ্চিত করুন।</span>
+            </div>
+            <div class="dz-del-form">
+              <input class="input" type="password" name="current_password" placeholder="বর্তমান পাসওয়ার্ড" required autocomplete="current-password">
+              <input class="input dz-del-confirm" type="text" placeholder="নিশ্চিত করতে DELETE লিখুন" required autocomplete="off" style="text-transform:uppercase;">
+              <button type="button" class="btn btn-danger"><i class="fas fa-trash-can"></i> চিরতরে মুছুন</button>
+            </div>
+            <form method="POST" action="/settings/account/delete" id="permDeleteForm80" hidden>
+              <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>"></form>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- Connected (সেশন ৬০: সত্যিকারের কার্যকর — users.social_* কলামে সংরক্ষিত, প্রোফাইল-পেজে আইকন) -->
-        <section class="settings-section" data-pane="connected">
-          <div class="card">
-            <h2><i class="fas fa-link"></i> সংযুক্ত অ্যাকাউন্ট</h2>
-            <p style="color:var(--text-muted);">আপনার সোশ্যাল প্রোফাইল যুক্ত করুন, সংযুক্ত লিংকগুলো আপনার প্রোফাইল পেজে আইকন হিসেবে দেখা যাবে।</p>
-            <div class="connected-list" style="margin-top:16px;">
-              <%
-                const providers60 = [
-                  { key: 'fb',       ico: 'fab fa-facebook-f',    brand: '#1877f2', name: 'Facebook',    desc: 'প্রোফাইল বা পেজের লিংক',        val: profileUser.social_fb },
-                  { key: 'twitter',  ico: 'fab fa-x-twitter',     brand: '#111',     name: 'Twitter / X', desc: 'এক্স-প্রোফাইলের লিংক',           val: profileUser.social_twitter },
-                  { key: 'linkedin', ico: 'fab fa-linkedin-in',   brand: '#0a66c2',  name: 'LinkedIn',    desc: 'প্রফেশনাল প্রোফাইলের লিংক',     val: profileUser.social_linkedin },
-                  { key: 'telegram', ico: 'fab fa-telegram-plane', brand: '#229ed9',  name: 'Telegram',    desc: 'চ্যানেল বা ইউজারনেমের লিংক',    val: profileUser.social_telegram },
-                  { key: 'website',  ico: 'fas fa-globe',         brand: '#059669',  name: 'ওয়েবসাইট',    desc: 'নিজের ব্লগ বা পোর্টফোলিও',       val: profileUser.social_website },
-                ];
-              %>
-              <% providers60.forEach(function (p) { const on = p.val && /^https?:\/\//i.test(p.val); %>
-              <div class="ca-row <%= on ? 'is-on' : '' %>" data-provider="<%= p.key %>">
-                <span class="ca-ico" style="--ca:<%= p.brand %>"><i class="<%= p.ico %>"></i></span>
-                <span class="ca-meta">
-                  <strong><%= p.name %></strong>
-                  <small><%= p.desc %></small>
-                </span>
-                <% if (on) { %>
-                  <a class="ca-link" href="<%= p.val %>" target="_blank" rel="noopener" title="<%= p.val %>"><i class="fas fa-external-link-alt"></i> খুলুন</a>
-                <% } %>
-                <span class="ca-state <%= on ? 'on' : 'off' %>"><i class="fas <%= on ? 'fa-check-circle' : 'fa-circle' %>"></i> <%= on ? 'সংযুক্ত' : 'সংযুক্ত নয়' %></span>
-                <% if (on) { %>
-                  <form method="POST" action="/settings/social" class="ca-inline-form" data-confirm="সংযোগ বিচ্ছিন্ন করবেন?">
-                    <input type="hidden" name="provider" value="<%= p.key %>">
-                    <input type="hidden" name="value" value="">
-                    <button type="submit" class="btn btn-ghost btn-sm ca-btn ca-unlink"><i class="fas fa-unlink"></i> বিচ্ছিন্ন</button>
-                  </form>
-                <% } %>
-                <button type="button" class="btn btn-primary btn-sm ca-btn ca-edit"><i class="fas <%= on ? 'fa-pen' : 'fa-plus' %>"></i> <%= on ? 'পরিবর্তন' : 'সংযুক্ত করুন' %></button>
-                <form method="POST" action="/settings/social" class="ca-editor" hidden>
-                  <input type="hidden" name="provider" value="<%= p.key %>">
-                  <div class="ca-editor-field">
-                    <i class="<%= p.ico %>" style="color:<%= p.brand %>"></i>
-                    <input class="input" type="text" inputmode="url" name="value" value="<%= on ? p.val : '' %>" placeholder="https://… বা t.me/ইউজারনেম" autocomplete="off" spellcheck="false" required>
-                  </div>
-                  <div class="ca-editor-actions">
-                    <button type="button" class="btn btn-ghost btn-sm ca-cancel"><i class="fas fa-times"></i> বাতিল</button>
-                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-check"></i> সংরক্ষণ</button>
-                  </div>
-                </form>
+      <!-- ৭. বিজ্ঞপ্তি -->
+      <section class="st142-pane" data-pane="notifications" aria-label="বিজ্ঞপ্তি">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>বিজ্ঞপ্তি</h2><p>কোন ঘটনায় ইন-অ্যাপ বা ইমেইল-নোটিফিকেশন পাবেন — অপ্রয়োজনীয়গুলো বন্ধ রাখুন।</p></div>
+        </div>
+        <div class="st142-card">
+          <%
+            const np80 = notifyPrefs || {};
+            const inAppDef = function (k, legacy) { return np80[k] !== undefined ? !!np80[k] : (legacy !== undefined ? !!legacy : true); };
+            const emailDef = function (k, legacy) { return np80[k] !== undefined ? !!np80[k] : (legacy !== undefined ? !!legacy : false); };
+          %>
+          <form method="POST" action="/settings/notifications">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <div class="notif-matrix">
+              <div class="nm-head">
+                <div>ঘটনা</div><div><i class="fas fa-desktop"></i> ইন-অ্যাপ</div><div><i class="fas fa-envelope"></i> ইমেইল</div>
               </div>
+              <label class="nm-row">
+                <span class="nm-event"><strong>লেখায় প্রতিক্রিয়া</strong><small>কেউ আপনার লেখায় লাইক/ভালোবাসা দিলে</small></span>
+                <input type="checkbox" name="notify_reactions" value="1" <%= inAppDef('notify_reactions', np80.push_like) ? 'checked' : '' %>>
+                <input type="checkbox" name="email_reactions" value="1" <%= emailDef('email_reactions') ? 'checked' : '' %>>
+              </label>
+              <label class="nm-row">
+                <span class="nm-event"><strong>নতুন মন্তব্য ও মেনশন</strong><small>পোস্টে মন্তব্য বা @উল্লেখ হলে</small></span>
+                <input type="checkbox" name="notify_comments" value="1" <%= inAppDef('notify_comments') ? 'checked' : '' %>>
+                <input type="checkbox" name="email_comment" value="1" <%= emailDef('email_comment', np80.email_comment) ? 'checked' : '' %>>
+              </label>
+              <label class="nm-row">
+                <span class="nm-event"><strong>নতুন অনুসরণকারী</strong><small>কেউ আপনাকে ফলো করা শুরু করলে</small></span>
+                <input type="checkbox" name="notify_follows" value="1" <%= inAppDef('notify_follows') ? 'checked' : '' %>>
+                <input type="checkbox" name="email_follows" value="1" <%= emailDef('email_follows') ? 'checked' : '' %>>
+              </label>
+              <label class="nm-row">
+                <span class="nm-event"><strong>প্রাইভেট বার্তা</strong><small>ইনবক্সে নতুন বার্তা এলে</small></span>
+                <input type="checkbox" name="notify_messages" value="1" <%= inAppDef('notify_messages') ? 'checked' : '' %>>
+                <input type="checkbox" name="email_messages" value="1" <%= emailDef('email_messages') ? 'checked' : '' %>>
+              </label>
+              <label class="nm-row">
+                <span class="nm-event"><strong>সাপ্তাহিক সাহিত্য-ডাইজেস্ট</strong><small>ফোরামের সেরা নির্বাচিত লেখার ইমেইল-সংকলন</small></span>
+                <span class="nm-dash">—</span>
+                <input type="checkbox" name="weekly_digest" value="1" <%= np80.weekly_digest !== undefined ? (np80.weekly_digest ? 'checked' : '') : (np80.daily_digest ? 'checked' : '') %>>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ৮. প্রদর্শন ও ডার্ক মোড -->
+      <section class="st142-pane" data-pane="display" aria-label="প্রদর্শন ও ডার্ক মোড">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>প্রদর্শন ও ডার্ক মোড</h2><p>থিম, ফন্ট ও লাইন-স্পেসিং — পড়ার আরাম নিজের চোখের মতো সাজান।</p></div>
+        </div>
+        <div class="st142-card">
+          <form method="POST" action="/settings/display">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <div class="field">
+              <label>থিম</label>
+              <select class="select" name="theme">
+                <option value="auto" <%= (displayPrefs.theme || 'auto') === 'auto' ? 'selected' : '' %>>অটো (সিস্টেম অনুসারে)</option>
+                <option value="light" <%= displayPrefs.theme === 'light' ? 'selected' : '' %>>হালকা</option>
+                <option value="dark" <%= displayPrefs.theme === 'dark' ? 'selected' : '' %>>গাঢ়</option>
+                <option value="sepia" <%= displayPrefs.theme === 'sepia' ? 'selected' : '' %>>সেপিয়া (বইয়ের পাতার আভা)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>ফন্ট স্টাইল</label>
+              <select class="select" name="font_family">
+                <option value="bn"       <%= (displayPrefs.font_family || 'bn') === 'bn'       ? 'selected' : '' %>>হিন্দ সিলিগুড়ি (সহজ, পড়ার জন্য আদর্শ)</option>
+                <option value="serif"    <%= displayPrefs.font_family === 'serif'             ? 'selected' : '' %>>লিপি মল্লিকা (ক্লাসিক বাংলা সিরিফ)</option>
+                <option value="sans"     <%= displayPrefs.font_family === 'sans'             ? 'selected' : '' %>>সিস্টেম স্ট্যান্ডার্ড (আধুনিক)</option>
+                <option value="mixed"    <%= displayPrefs.font_family === 'mixed'            ? 'selected' : '' %>>মিশ্র (হিন্দ বডি + আখন্দ শীর্ষক)</option>
+                <option value="hand"     <%= displayPrefs.font_family === 'hand'             ? 'selected' : '' %>>বেনসেন (হাতে লেখা স্টাইল)</option>
+                <option value="display"  <%= displayPrefs.font_family === 'display'          ? 'selected' : '' %>>আখন্দ বাংলা (বোল্ড ডিসপ্লে)</option>
+                <option value="durnibar" <%= displayPrefs.font_family === 'durnibar'         ? 'selected' : '' %>>দুর্নিবার (সুন্দর বাংলা সিরিফ)</option>
+                <option value="lipi"     <%= displayPrefs.font_family === 'lipi'             ? 'selected' : '' %>>লিপি মল্লিকা (প্রিমিয়াম সিরিফ)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>ফন্ট সাইজ</label>
+              <select class="select" name="font_size">
+                <option value="small"  <%= displayPrefs.font_size === 'small'  ? 'selected' : '' %>>ছোট</option>
+                <option value="medium" <%= (displayPrefs.font_size || 'medium') === 'medium' ? 'selected' : '' %>>মাঝারি</option>
+                <option value="large"  <%= displayPrefs.font_size === 'large'  ? 'selected' : '' %>>বড়</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>লাইন-স্পেসিং</label>
+              <select class="select" name="line_height" id="lhSelect">
+                <option value="compact" <%= (displayPrefs.line_height || 'normal') === 'compact' ? 'selected' : '' %>>ঘন (১.৫)</option>
+                <option value="normal"  <%= (displayPrefs.line_height || 'normal') === 'normal'  ? 'selected' : '' %>>স্বাভাবিক (১.৭)</option>
+                <option value="relaxed" <%= (displayPrefs.line_height || 'normal') === 'relaxed' ? 'selected' : '' %>>আরামদায়ক (১.৯)</option>
+              </select>
+              <div class="hint">দীর্ঘ পড়ার সময় চোখের আরাম বাড়াতে লাইনের ব্যবধান</div>
+            </div>
+            <div class="field">
+              <label>ভাষা</label>
+              <select class="select" name="language">
+                <option value="bn" <%= (displayPrefs.language || 'bn') === 'bn' ? 'selected' : '' %>>বাংলা</option>
+                <option value="en" <%= displayPrefs.language === 'en' ? 'selected' : '' %>>English</option>
+              </select>
+            </div>
+            <div class="dp-preview-wrap">
+              <div class="dp-preview-label"><i class="fas fa-eye"></i> লাইভ প্রিভিউ</div>
+              <div class="dp-preview" id="dpPreview">সাহিত্য আসলে আয়নার মতো — যা আমাদের না বলা ব্যথা ও আনন্দকে নতুন করে ভাষা দেয়। বইয়ের পাতা উল্টানোর মতো আনন্দ আর কিছুতেই নেই।</div>
+            </div>
+            <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ৯. মিডিয়া ও কল পারমিশন ডায়াগনস্টিকস (নতুন, সেশন ১৪২) -->
+      <section class="st142-pane" data-pane="media" aria-label="মিডিয়া ও কল পারমিশন">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>মিডিয়া ও কল পারমিশন</h2><p>মেসেঞ্জারে অডিও/ভিডিও কলের আগে মাইক, ক্যামেরা ও নেটওয়ার্ক ঠিক আছে কিনা যাচাই করুন — সব পরীক্ষা আপনার ব্রাউজারেই চলে, কোনো রেকর্ড রাখা হয় না।</p></div>
+        </div>
+        <div class="st142-card">
+          <div class="st142-diag">
+
+            <div class="st142-dcard">
+              <div class="st142-dhead">
+                <b><i class="fas fa-lock"></i> ব্রাউজার-পারমিশন</b>
+                <span class="st142-dstat" id="permStat142">অপেক্ষমাণ</span>
+              </div>
+              <div class="st142-dbody">
+                মাইক ও ক্যামেরার অনুমতি-অবস্থা:
+                <ul id="diagPerms142"><li><i class="fas fa-circle-minus"></i> নিচের পরীক্ষা চালালে ব্রাউজার নিজেই জিজ্ঞেস করবে</li></ul>
+              </div>
+              <div class="st142-dactions"><button type="button" class="btn btn-ghost btn-sm" id="btnPerms142"><i class="fas fa-rotate"></i> আবার দেখুন</button></div>
+            </div>
+
+            <div class="st142-dcard">
+              <div class="st142-dhead">
+                <b><i class="fas fa-headset"></i> ডিভাইস-তালিকা</b>
+                <span class="st142-dstat" id="devStat142">অপেক্ষমাণ</span>
+              </div>
+              <div class="st142-dbody">
+                সংযুক্ত অডিও/ভিডিও ডিভাইস:
+                <ul id="diagDevs142"><li><i class="fas fa-circle-minus"></i> পরীক্ষা চালালে ডিভাইসের নাম দেখা যাবে</li></ul>
+              </div>
+              <div class="st142-dactions"><button type="button" class="btn btn-ghost btn-sm" id="btnDevs142"><i class="fas fa-rotate"></i> ডিভাইস স্ক্যান</button></div>
+            </div>
+
+            <div class="st142-dcard">
+              <div class="st142-dhead">
+                <b><i class="fas fa-microphone"></i> মাইক-টেস্ট</b>
+                <span class="st142-dstat" id="micStat142">অপেক্ষমাণ</span>
+              </div>
+              <div class="st142-dbody">
+                কথা বলুন — নিচের মিটার কাঁপবে:
+                <div class="st142-meter" style="margin-top:8px;"><i id="micMeter142"></i></div>
+              </div>
+              <div class="st142-dactions">
+                <button type="button" class="btn btn-primary btn-sm" id="btnMicStart142"><i class="fas fa-play"></i> শুরু</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnMicStop142" hidden><i class="fas fa-stop"></i> বন্ধ</button>
+              </div>
+            </div>
+
+            <div class="st142-dcard">
+              <div class="st142-dhead">
+                <b><i class="fas fa-video"></i> ক্যামেরা-টেস্ট</b>
+                <span class="st142-dstat" id="camStat142">অপেক্ষমাণ</span>
+              </div>
+              <video class="st142-cam" id="camVideo142" autoplay playsinline muted></video>
+              <div class="st142-dactions">
+                <button type="button" class="btn btn-primary btn-sm" id="btnCamStart142"><i class="fas fa-play"></i> শুরু</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnCamStop142" hidden><i class="fas fa-stop"></i> বন্ধ</button>
+              </div>
+            </div>
+
+            <div class="st142-dcard">
+              <div class="st142-dhead">
+                <b><i class="fas fa-tower-broadcast"></i> নেটওয়ার্ক (STUN/TURN)</b>
+                <span class="st142-dstat" id="netStat142">অপেক্ষমাণ</span>
+              </div>
+              <div class="st142-dbody">
+                কল-সার্ভারে পৌঁছানো যায় কিনা (ICE-যাচাই):
+                <ul id="netBox142"><li><i class="fas fa-circle-minus"></i> পরীক্ষা চালালে NAT/TURN-অবস্থা জানা যাবে</li></ul>
+              </div>
+              <div class="st142-dactions"><button type="button" class="btn btn-ghost btn-sm" id="btnNet142"><i class="fas fa-rotate"></i> নেটওয়ার্ক-যাচাই</button></div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- ১০. লেখার দর্শক ও যোগাযোগ -->
+      <section class="st142-pane" data-pane="audience" aria-label="লেখার দর্শক ও যোগাযোগ">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>লেখার দর্শক ও যোগাযোগ</h2><p>কারা আপনার ব্যক্তিগত তথ্য দেখতে পারবে এবং কে আপনাকে সরাসরি বার্তা দিতে পারবে — নিয়ন্ত্রণ করুন।</p></div>
+        </div>
+        <div class="st142-card">
+          <form method="POST" action="/settings/privacy">
+            <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <div class="field-row">
+              <div class="label-block"><strong>ইমেইল দেখান</strong><span>অন্যরা আপনার ইমেইল দেখতে পারবে</span></div>
+              <label class="toggle-switch"><input type="checkbox" name="show_email" value="1" <%= profileUser.show_email ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+            </div>
+            <div class="field-row">
+              <div class="label-block"><strong>ফোন নম্বর দেখান</strong><span>অন্যরা আপনার ফোন নম্বর দেখতে পারবে</span></div>
+              <label class="toggle-switch"><input type="checkbox" name="show_phone" value="1" <%= profileUser.show_phone ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+            </div>
+            <div class="field-row">
+              <div class="label-block"><strong>জন্ম তারিখ দেখান</strong><span>অন্যরা আপনার জন্ম তারিখ দেখতে পারবে</span></div>
+              <label class="toggle-switch"><input type="checkbox" name="show_birth" value="1" <%= profileUser.show_birth ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+            </div>
+            <div class="perm-box">
+              <div class="perm-title"><i class="fas fa-comment-dots"></i> ইনবক্সে বার্তা পাঠানোর অনুমতি</div>
+              <p class="perm-desc">কে আপনাকে নতুন প্রাইভেট-বার্তা পাঠাতে পারবে — অবাঞ্ছিত স্প্যাম থেকে বাঁচতে নিয়ন্ত্রণ করুন।</p>
+              <div class="perm-options">
+                <label class="perm-opt">
+                  <input type="radio" name="allow_messages_from" value="everyone" <%= (profileUser.allow_messages_from || 'everyone') === 'everyone' ? 'checked' : '' %>>
+                  <span><strong>সবাই</strong><small>ফোরামের যে কেউ সরাসরি বার্তা দিতে পারবে</small></span>
+                </label>
+                <label class="perm-opt">
+                  <input type="radio" name="allow_messages_from" value="followers" <%= profileUser.allow_messages_from === 'followers' ? 'checked' : '' %>>
+                  <span><strong>শুধুমাত্র অনুসরণকারী</strong><small>যাঁরা আপনাকে ফলো করছেন কেবল তাঁরাই</small></span>
+                </label>
+                <label class="perm-opt">
+                  <input type="radio" name="allow_messages_from" value="none" <%= profileUser.allow_messages_from === 'none' ? 'checked' : '' %>>
+                  <span><strong>সম্পূর্ণ বন্ধ</strong><small>কেউ নতুন প্রাইভেট-বার্তা পাঠাতে পারবে না</small></span>
+                </label>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="label-block"><strong>বুকমার্ক-তালিকা পাবলিক</strong><span>আপনার সংরক্ষিত লেখার তালিকা অন্যরা দেখতে পাবে
+                — <a href="/profile/<%= profileUser.username %>/bookmarks" target="_blank" rel="noopener">পাবলিক ভিউ দেখুন <i class="fas fa-external-link-alt" style="font-size:.7em"></i></a></span></div>
+              <label class="toggle-switch"><input type="checkbox" name="bookmarks_public" value="1" <%= profileUser.bookmarks_public ? 'checked' : '' %>><span class="toggle-slider"></span></label>
+            </div>
+            <button type="submit" class="btn btn-primary">সংরক্ষণ করুন</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ১১. ব্লক তালিকা -->
+      <section class="st142-pane" data-pane="blocking" aria-label="ব্লক তালিকা">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>ব্লক তালিকা</h2><p>ব্লক করা সদস্যরা আপনাকে বার্তা দিতে বা আপনার কনটেন্ট শেয়ার করতে পারবে না।</p></div>
+        </div>
+        <div class="st142-card">
+          <% if (!blockedUsers.length) { %>
+            <p class="hint" style="margin:0;"><i class="fas fa-circle-info"></i> কাউকে ব্লক করা নেই — যেকোনো প্রোফাইল-পেজের বাটন থেকে কাউকে ব্লক করা যায়।</p>
+          <% } else { %>
+            <div class="blk-list">
+              <% blockedUsers.forEach(function (b) { %>
+                <div class="blk-row">
+                  <img class="blk-avatar" src="<%= b.avatar_url || '/avatar/' + b.id %>" onerror="this.onerror=null;this.src='/avatar/0'" alt="">
+                  <span class="blk-meta">
+                    <strong><%= b.full_name %></strong>
+                    <small>@<%= b.username %><% if (b.designation) { %> · <%= b.designation %><% } %></small>
+                  </span>
+                  <a href="/profile/<%= encodeURIComponent(b.username) %>" class="btn btn-ghost btn-sm"><i class="fas fa-user"></i> প্রোফাইল</a>
+                  <form method="POST" action="/settings/unblock" class="blk-form">
+                    <input type="hidden" name="user_id" value="<%= b.id %>">
+                    <button type="submit" class="btn btn-ghost btn-sm blk-unblock"><i class="fas fa-unlock"></i> ব্লক সরান</button>
+                  </form>
+                </div>
               <% }) %>
             </div>
-            <div class="hint" style="margin-top:12px"><i class="fas fa-shield-alt"></i> শুধু http/https লিংক গ্রহণযোগ্য, সংযোগ যেকোনো সময় বিচ্ছিন্ন করা যায়।</div>
+          <% } %>
+        </div>
+      </section>
+
+      <!-- ১২. সংযুক্ত অ্যাকাউন্ট -->
+      <section class="st142-pane" data-pane="connected" aria-label="সংযুক্ত অ্যাকাউন্ট">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>সংযুক্ত অ্যাকাউন্ট</h2><p>সোশ্যাল প্রোফাইল যুক্ত করুন — সংযুক্ত লিংকগুলো আপনার প্রোফাইল-পেজে আইকন হিসেবে দেখা যাবে।</p></div>
+        </div>
+        <div class="st142-card">
+          <div class="connected-list">
+            <%
+              const providers60 = [
+                { key: 'fb',       ico: 'fab fa-facebook-f',    brand: '#1877f2', name: 'Facebook',    desc: 'প্রোফাইল বা পেজের লিংক',        val: profileUser.social_fb },
+                { key: 'twitter',  ico: 'fab fa-x-twitter',     brand: '#111',     name: 'Twitter / X', desc: 'এক্স-প্রোফাইলের লিংক',           val: profileUser.social_twitter },
+                { key: 'linkedin', ico: 'fab fa-linkedin-in',   brand: '#0a66c2',  name: 'LinkedIn',    desc: 'প্রফেশনাল প্রোফাইলের লিংক',     val: profileUser.social_linkedin },
+                { key: 'telegram', ico: 'fab fa-telegram-plane', brand: '#229ed9',  name: 'Telegram',    desc: 'চ্যানেল বা ইউজারনেমের লিংক',    val: profileUser.social_telegram },
+                { key: 'website',  ico: 'fas fa-globe',         brand: '#059669',  name: 'ওয়েবসাইট',    desc: 'নিজের ব্লগ বা পোর্টফোলিও',       val: profileUser.social_website },
+              ];
+            %>
+            <% providers60.forEach(function (p) { const on = p.val && /^https?:\/\//i.test(p.val); %>
+            <div class="ca-row <%= on ? 'is-on' : '' %>" data-provider="<%= p.key %>">
+              <span class="ca-ico" style="--ca:<%= p.brand %>"><i class="<%= p.ico %>"></i></span>
+              <span class="ca-meta">
+                <strong><%= p.name %></strong>
+                <small><%= p.desc %></small>
+              </span>
+              <% if (on) { %>
+                <a class="ca-link" href="<%= p.val %>" target="_blank" rel="noopener" title="<%= p.val %>"><i class="fas fa-external-link-alt"></i> খুলুন</a>
+              <% } %>
+              <span class="ca-state <%= on ? 'on' : 'off' %>"><i class="fas <%= on ? 'fa-check-circle' : 'fa-circle' %>"></i> <%= on ? 'সংযুক্ত' : 'সংযুক্ত নয়' %></span>
+              <% if (on) { %>
+                <form method="POST" action="/settings/social" class="ca-inline-form" data-confirm="সংযোগ বিচ্ছিন্ন করবেন?">
+                  <input type="hidden" name="provider" value="<%= p.key %>">
+                  <input type="hidden" name="value" value="">
+                  <button type="submit" class="btn btn-ghost btn-sm ca-btn ca-unlink"><i class="fas fa-unlink"></i> বিচ্ছিন্ন</button>
+                </form>
+              <% } %>
+              <button type="button" class="btn btn-primary btn-sm ca-btn ca-edit"><i class="fas <%= on ? 'fa-pen' : 'fa-plus' %>"></i> <%= on ? 'পরিবর্তন' : 'সংযুক্ত করুন' %></button>
+              <form method="POST" action="/settings/social" class="ca-editor" hidden>
+                <input type="hidden" name="provider" value="<%= p.key %>">
+                <div class="ca-editor-field">
+                  <i class="<%= p.ico %>" style="color:<%= p.brand %>"></i>
+                  <input class="input" type="text" inputmode="url" name="value" value="<%= on ? p.val : '' %>" placeholder="https://… বা t.me/ইউজারনেম" autocomplete="off" spellcheck="false" required>
+                </div>
+                <div class="ca-editor-actions">
+                  <button type="button" class="btn btn-ghost btn-sm ca-cancel"><i class="fas fa-times"></i> বাতিল</button>
+                  <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-check"></i> সংরক্ষণ</button>
+                </div>
+              </form>
+            </div>
+            <% }) %>
           </div>
-        </section>
-      </main>
-    </div>
+          <div class="hint" style="margin-top:12px"><i class="fas fa-shield-alt"></i> শুধু http/https লিংক গ্রহণযোগ্য, সংযোগ যেকোনো সময় বিচ্ছিন্ন করা যায়।</div>
+        </div>
+      </section>
+
+      <!-- ১৩. আপনার কার্যক্রম -->
+      <section class="st142-pane" data-pane="activity" aria-label="আপনার কার্যক্রম">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>আপনার কার্যক্রম</h2><p>আপনার লেখা, মন্তব্য, প্রতিক্রিয়া ও সংরক্ষণের একনজরে হিসেব — বিস্তারিত পেজে পূর্ণ তালিকা।</p></div>
+        </div>
+        <div class="st142-stats">
+          <div class="st142-stat"><b><%= bn142(actStats.posts) %></b><small>প্রকাশিত লেখা</small></div>
+          <div class="st142-stat"><b><%= bn142(actStats.comments) %></b><small>মন্তব্য</small></div>
+          <div class="st142-stat"><b><%= bn142(actStats.reactions) %></b><small>প্রতিক্রিয়া</small></div>
+          <div class="st142-stat"><b><%= bn142(actStats.bookmarks) %></b><small>সংরক্ষিত লেখা</small></div>
+        </div>
+        <div class="st142-card">
+          <div class="st142-rows">
+            <a class="st142-row is-ext" href="/activities">
+              <span class="st142-ico"><i class="fas fa-list-check"></i></span>
+              <span class="st142-rmeta"><b>অ্যাক্টিভিটি লগ</b><small>সাংগঠনিক ও ব্যক্তিগত কার্যক্রমের পূর্ণ তালিকা</small></span>
+              <i class="fas fa-arrow-up-right-from-square st142-rchev"></i>
+            </a>
+            <a class="st142-row is-ext" href="/me">
+              <span class="st142-ico"><i class="fas fa-feather"></i></span>
+              <span class="st142-rmeta"><b>আমার লেখা ও প্রতিক্রিয়া</b><small>নিজের পোস্ট, মন্তব্য ও প্রতিক্রিয়ার টাইমলাইন (ট্যাব-বদল করুন)</small></span>
+              <i class="fas fa-arrow-up-right-from-square st142-rchev"></i>
+            </a>
+            <a class="st142-row is-ext" href="/bookmarks">
+              <span class="st142-ico"><i class="fas fa-bookmark"></i></span>
+              <span class="st142-rmeta"><b>সংরক্ষিত লেখা</b><small>পরে পড়ার জন্য জমানো লেখার তালিকা</small></span>
+              <span class="st142-rcount"><%= bn142(actStats.bookmarks) %>টি</span>
+              <i class="fas fa-arrow-up-right-from-square st142-rchev"></i>
+            </a>
+            <a class="st142-row is-ext" href="/settings/export" download>
+              <span class="st142-ico"><i class="fas fa-cloud-arrow-down"></i></span>
+              <span class="st142-rmeta"><b>ডেটা ব্যাকআপ (JSON)</b><small>আপনার প্রকাশিত লেখা, মন্তব্য, বুকমার্ক ও বার্তা — এক ক্লিকে নিরাপদ ব্যাকআপ</small></span>
+              <i class="fas fa-download st142-rchev"></i>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ১৪. সাহিত্যিক আচরণবিধি -->
+      <section class="st142-pane" data-pane="standards" aria-label="সাহিত্যিক আচরণবিধি">
+        <div class="st142-phead">
+          <button type="button" class="st142-moback" aria-label="সব সেটিংসে ফিরুন"><i class="fas fa-arrow-left"></i></button>
+          <div><h2>সাহিত্যিক আচরণবিধি</h2><p>সুস্থ জ্ঞানচর্চা ও সৃজনশীলতা বজায় রাখার মূল নীতি — প্রত্যেক সদস্যের পালনীয়।</p></div>
+        </div>
+        <div class="st142-card">
+          <div class="st142-policy">
+            <div class="st142-policy-item">
+              <i class="fas fa-feather-pointed"></i>
+              <div><b>১. মৌলিকতার নিশ্চয়তা</b><p>ফোরামে প্রকাশিত যেকোনো সাহিত্যকর্ম, প্রবন্ধ বা কবিতা লেখকের নিজস্ব সৃষ্টি হতে হবে। অন্যের লেখা হুবহু কপি করা সম্পূর্ণ নিষিদ্ধ — উদ্ধৃতি হলে সুস্পষ্ট উৎস উল্লেখ বাধ্যতামূলক।</p></div>
+            </div>
+            <div class="st142-policy-item">
+              <i class="fas fa-hand-holding-heart"></i>
+              <div><b>২. শ্রদ্ধা ও শালীনতা</b><p>গঠনমূলক সমালোচনা স্বাগত, তবে যেকোনো লেখক বা সদস্যের প্রতি ব্যক্তিগত আক্রমণ, কটূক্তি বা গোঁড়ামি-প্রচার করা হলে অ্যাকাউন্ট তাৎক্ষণিক স্থগিত করা হবে।</p></div>
+            </div>
+            <div class="st142-policy-item">
+              <i class="fas fa-building-columns"></i>
+              <div><b>৩. বিশ্ববিদ্যালয় ও সামাজিক সম্প্রীতি</b><p>চট্টগ্রাম বিশ্ববিদ্যালয়ের মর্যাদা ক্ষুণ্ণ করে বা সামাজিক সম্প্রীতি বিনষ্ট করে এমন কোনো কনটেন্ট প্রচার করা যাবে না।</p></div>
+            </div>
+            <div class="st142-policy-item is-red">
+              <i class="fas fa-copyright"></i>
+              <div><b>৪. কপিরাইট ও স্বত্ব</b><p>প্রকাশিত লেখার সম্পূর্ণ স্বত্ব মূল লেখকের — ফোরাম-বাইরে কোনো লেখা পুনঃপ্রকাশের আগে লেখকের অনুমতি নিতে হবে। স্বত্ব-লঙ্ঘনের অভিযোগ <a href="/complaints">অভিযোগ-পেজে</a> জানান।</p></div>
+            </div>
+          </div>
+          <div class="st142-rows" style="margin-top:12px;">
+            <a class="st142-row is-ext" href="/constitution">
+              <span class="st142-ico"><i class="fas fa-scroll"></i></span>
+              <span class="st142-rmeta"><b>ফোরাম-সংবিধান</b><small>গঠনতন্ত্র, পদাধিকার ও সিদ্ধান্ত-প্রক্রিয়ার পূর্ণ দলিল</small></span>
+              <i class="fas fa-arrow-up-right-from-square st142-rchev"></i>
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
+</div>
 
-  <%- include('../partials/footer') %>
+<%- include('../partials/footer') %>
 
-  <script>
-    (function () {
-      function activate(target) {
-        document.querySelectorAll('.settings-nav a').forEach(l => l.classList.remove('active'));
-        const link = document.querySelector('.settings-nav a[data-section="' + target + '"]');
-        if (link) link.classList.add('active');
-        document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
-        const pane = document.querySelector('[data-pane="' + target + '"]');
-        if (pane) pane.classList.add('active');
+<script>
+  /* ── সেশন ১৪২: মাস্টার-ডিটেইল নেভিগেশন ইঞ্জিন (দুই-স্তর হ্যাশ-রাউটিং) ── */
+  (function () {
+    var shell = document.getElementById('stShell');
+    var navEl = document.getElementById('stNav');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.st142-item'));
+    var panes = Array.prototype.slice.call(document.querySelectorAll('.st142-pane'));
+    var curSec = 'profile', curSub = null;
+    /* পুরনো হ্যাশ → নতুন সেকশন (রিডাইরেক্ট-সামঞ্জস্য) */
+    var MAP142 = { account: 'password', privacy: 'audience' };
+
+    function normSec(h) { return MAP142[h] || h; }
+
+    function activate(sec, sub, push) {
+      var pane = null;
+      for (var i = 0; i < panes.length; i++) { if (panes[i].getAttribute('data-pane') === sec) { pane = panes[i]; break; } }
+      if (!pane) return false;
+      curSec = sec; curSub = sub || null;
+      items.forEach(function (l) { l.classList.toggle('on', l.getAttribute('data-sec') === sec); });
+      panes.forEach(function (p) { p.classList.toggle('on', p === pane); });
+      var details = pane.querySelectorAll('.st142-detail');
+      Array.prototype.forEach.call(details, function (d) { d.classList.toggle('on', d.getAttribute('data-detail') === curSub); });
+      var rowsView = pane.querySelector('.st142-submenu');
+      if (rowsView) rowsView.style.display = curSub ? 'none' : '';
+      if (window.innerWidth <= 960) shell.classList.add('show-pane');
+      if (push !== false && history.replaceState) history.replaceState(null, '', curSub ? '#' + sec + '/' + curSub : '#' + sec);
+      return true;
+    }
+
+    function closePane() {
+      shell.classList.remove('show-pane');
+      if (history.replaceState) history.replaceState(null, '', '#' + curSec);
+    }
+
+    /* বাঁয়ের মেনু-ক্লিক */
+    items.forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        activate(link.getAttribute('data-sec'), null);
+      });
+    });
+
+    /* সাব-মেনু রো → ডিটেইল */
+    document.addEventListener('click', function (e) {
+      var row = e.target.closest('.st142-row[data-goto]');
+      if (row) {
+        var pane = row.closest('.st142-pane');
+        if (pane) activate(pane.getAttribute('data-pane'), row.getAttribute('data-goto'));
+        return;
       }
-      document.querySelectorAll('.settings-nav a').forEach(link => {
-        link.addEventListener('click', e => {
-          e.preventDefault();
-          activate(link.dataset.section);
-          if (history.replaceState) history.replaceState(null, '', '#' + link.dataset.section);
-        });
-      });
-      // সেশন ৫৮: #security হ্যাশ বা ?sec=/secerr= কোয়েরিতে নিরাপত্তা-ট্যাব স্বয়ংক্রিয়ভাবে খোলে
-      var q = new URLSearchParams(location.search);
-      var autoSec = (location.hash === '#security') || q.has('sec') || q.has('secerr');
-      if (autoSec) activate('security');
-      else if (location.hash && document.querySelector('[data-pane="' + location.hash.slice(1) + '"]')) activate(location.hash.slice(1));
-      // সেশন ৮০: একই-ডকুমেন্ট hash-বদলেও ট্যাব-অ্যাক্টিভেশন (ব্যাক/ফরওয়ার্ড-নেভিগেশনসহ)
-      window.addEventListener('hashchange', function () {
-        var t = location.hash.slice(1);
-        if (t && document.querySelector('[data-pane="' + t + '"]')) activate(t);
-      });
-      // ব্যাকআপ-কোড কপি বাটন
-      var cp = document.getElementById('secCopyCodes');
-      if (cp) cp.addEventListener('click', function () {
-        var codes = Array.from(document.querySelectorAll('.sec-code-chip')).map(function (c) { return c.textContent.trim(); }).join('\n');
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(codes).then(function () {
-            cp.innerHTML = '<i class="fas fa-check"></i> কপি হয়েছে';
-            setTimeout(function () { cp.innerHTML = '<i class="fas fa-copy"></i> সব কোড কপি করুন'; }, 1800);
-          }).catch(function () {});
-        }
-      });
-    })();
-
-    // ── সেশন ৬০: সংযুক্ত অ্যাকাউন্ট — সম্প্রসারণযোগ্য এডিটর + বিচ্ছিন্ন-নিশ্চিতকরণ ──
-    (function () {
-      function closeEditors(exceptRow) {
-        document.querySelectorAll('.ca-row').forEach(function (row) {
-          if (row === exceptRow) return;
-          var ed = row.querySelector('.ca-editor');
-          if (ed && !ed.hidden) { ed.hidden = true; row.classList.remove('editing'); }
-        });
+      var back = e.target.closest('.st142-backbtn');
+      if (back) { activate(curSec, null); return; }
+      var moback = e.target.closest('.st142-moback');
+      if (moback) {
+        var p = moback.closest('.st142-pane');
+        if (p && curSub) activate(curSec, null);
+        else closePane();
       }
-      document.addEventListener('click', function (e) {
-        var editBtn = e.target.closest('.ca-edit');
-        if (editBtn) {
-          var row = editBtn.closest('.ca-row');
-          var ed = row && row.querySelector('.ca-editor');
-          if (ed) {
-            var opening = ed.hidden;
-            closeEditors(row);
-            ed.hidden = !opening;
-            row.classList.toggle('editing', opening);
-            if (opening) {
-              var inp = ed.querySelector('input[name="value"]');
-              if (inp) setTimeout(function () { inp.focus(); inp.select && inp.select(); }, 60);
-            }
+    });
+
+    /* হ্যাশ-পার্স: #sec বা #sec/sub */
+    function fromHash() {
+      var h = location.hash.slice(1);
+      if (!h) return;
+      var parts = h.split('/');
+      var sec = normSec(parts[0]);
+      if (!activate(sec, parts[1] || null, false)) return;
+    }
+    window.addEventListener('hashchange', fromHash);
+
+    /* প্রাথমিক-অবস্থা: ?sec/secerr → নিরাপত্তা-প্যানে (সেশন ৫৮-চুক্তি); নইলে হ্যাশ */
+    var q = new URLSearchParams(location.search);
+    if (q.has('sec') || q.has('secerr')) {
+      var sub = q.get('sec') === 'backup' ? null : 'sec-status';
+      if (!activate('security', sub, false)) activate('profile', null, false);
+    } else if (location.hash) {
+      fromHash();
+    }
+    if (window.innerWidth > 960) shell.classList.remove('show-pane');
+    window.addEventListener('resize', function () { if (window.innerWidth > 960) shell.classList.remove('show-pane'); });
+
+    /* সার্চ — লেবেল+বর্ণনা মিলিয়ে আইটেম/গ্রুপ লুকানো */
+    var search = document.getElementById('stSearch');
+    var noResult = document.getElementById('stNoResult');
+    if (search) {
+      search.addEventListener('input', function () {
+        var v = search.value.trim().toLowerCase();
+        var any = false;
+        items.forEach(function (it) {
+          var kw = (it.getAttribute('data-kw') || '').toLowerCase() + ' ' + it.textContent.toLowerCase();
+          var hit = !v || kw.indexOf(v) >= 0;
+          it.hidden = !hit;
+          if (hit) any = true;
+          var grp = it.closest('[data-grp]');
+          if (grp) grp.hidden = !grp.querySelector('.st142-item:not([hidden])');
+        });
+        navEl.classList.toggle('searching', !!v);
+        if (noResult) noResult.classList.toggle('show', v && !any);
+      });
+      search.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        var first = navEl.querySelector('.st142-item:not([hidden])');
+        if (first) { activate(first.getAttribute('data-sec'), null); search.value = ''; search.dispatchEvent(new Event('input')); }
+      });
+    }
+  })();
+
+  /* ── ব্যাকআপ-কোড কপি (সেশন ৫৮-চুক্তি) ── */
+  (function () {
+    var cp = document.getElementById('secCopyCodes');
+    if (!cp) return;
+    cp.addEventListener('click', function () {
+      var codes = Array.from(document.querySelectorAll('.sec-code-chip')).map(function (c) { return c.textContent.trim(); }).join('\n');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(codes).then(function () {
+          cp.innerHTML = '<i class="fas fa-check"></i> কপি হয়েছে';
+          setTimeout(function () { cp.innerHTML = '<i class="fas fa-copy"></i> সব কোড কপি করুন'; }, 1800);
+        }).catch(function () {});
+      }
+    });
+  })();
+
+  /* ── সেশন ৬০: সংযুক্ত অ্যাকাউন্ট — সম্প্রসারণযোগ্য এডিটর + বিচ্ছিন্ন-নিশ্চিতকরণ ── */
+  (function () {
+    function closeEditors(exceptRow) {
+      document.querySelectorAll('.ca-row').forEach(function (row) {
+        if (row === exceptRow) return;
+        var ed = row.querySelector('.ca-editor');
+        if (ed && !ed.hidden) { ed.hidden = true; row.classList.remove('editing'); }
+      });
+    }
+    document.addEventListener('click', function (e) {
+      var editBtn = e.target.closest('.ca-edit');
+      if (editBtn) {
+        var row = editBtn.closest('.ca-row');
+        var ed = row && row.querySelector('.ca-editor');
+        if (ed) {
+          var opening = ed.hidden;
+          closeEditors(row);
+          ed.hidden = !opening;
+          row.classList.toggle('editing', opening);
+          if (opening) {
+            var inp = ed.querySelector('input[name="value"]');
+            if (inp) setTimeout(function () { inp.focus(); inp.select && inp.select(); }, 60);
           }
-          return;
         }
-        var cancelBtn = e.target.closest('.ca-cancel');
-        if (cancelBtn) {
-          var row = cancelBtn.closest('.ca-row');
-          var ed = row && row.querySelector('.ca-editor');
-          if (ed) { ed.hidden = true; row.classList.remove('editing'); }
-          return;
-        }
-      });
-      // বিচ্ছিন্ন-ফর্মে নিশ্চিতকরণ
-      document.addEventListener('submit', function (e) {
-        var f = e.target;
-        if (f.classList && f.classList.contains('ca-inline-form')) {
-          var msg = f.getAttribute('data-confirm');
-          if (msg && !window.confirm(msg)) { e.preventDefault(); return; }
-          var btn = f.querySelector('button[type="submit"]');
-          if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> বিচ্ছিন্ন হচ্ছে…'; }
-        }
-      }, true);
-      // #connected হ্যাশে ট্যাব খোলা থাকে (রিডাইরেক্টের পর সঠিক জায়গায় ফেরা)
-      if (location.hash === '#connected') activate('connected');
-    })();
-  </script>
-  
-  <script>
-  /* ── সেশন ৮০: সেটিংস-পেজ নতুন ইন্টারঅ্যাকশন ── */
+        return;
+      }
+      var cancelBtn = e.target.closest('.ca-cancel');
+      if (cancelBtn) {
+        var row2 = cancelBtn.closest('.ca-row');
+        var ed2 = row2 && row2.querySelector('.ca-editor');
+        if (ed2) { ed2.hidden = true; row2.classList.remove('editing'); }
+      }
+    });
+    document.addEventListener('submit', function (e) {
+      var f = e.target;
+      if (f.classList && f.classList.contains('ca-inline-form')) {
+        var msg = f.getAttribute('data-confirm');
+        if (msg && !window.confirm(msg)) { e.preventDefault(); return; }
+        var btn = f.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> বিচ্ছিন্ন হচ্ছে…'; }
+      }
+    }, true);
+  })();
+
+  /* ── সেশন ৮০: সেটিংস-ইন্টারঅ্যাকশন (ধারা-চিপ, প্রিভিউ, রিলটাইম, কনফার্ম, ডিলিট) ── */
   (function () {
     /* ১) সাহিত্য-ধারা চিপ-পিকার — সর্বোচ্চ ৫টি, হিডেন-ইনপুটে JSON */
     var wrap = document.getElementById('genreChips');
@@ -680,7 +1066,7 @@
       });
     }
 
-    /* ২) ডিসপ্লে-ট্যাব লাইভ প্রিভিউ — ফন্ট/সাইজ/লাইন-হাইট/সেপিয়া */
+    /* ২) ডিসপ্লে-লাইভ প্রিভিউ */
     var dp = document.getElementById('dpPreview');
     if (dp) {
       var form = dp.closest('form');
@@ -719,7 +1105,7 @@
     /* ৪) সেশন-রিভোক/আনব্লক/রিভোক-অল কনফার্ম + বাটন-স্পিনার */
     document.addEventListener('submit', function (e) {
       var f = e.target;
-      if (f && (f.classList.contains('sess-form') || f.classList.contains('blk-form') || f.getAttribute('data-confirm'))) {
+      if (f && (f.classList.contains('sess-form') || f.classList.contains('blk-form') || (f.getAttribute && f.getAttribute('data-confirm') && !f.classList.contains('ca-inline-form')))) {
         var msg = f.getAttribute('data-confirm');
         if (msg && !window.confirm(msg)) { e.preventDefault(); return; }
         var btn = f.querySelector('button[type="submit"]');
@@ -749,22 +1135,17 @@
       });
     }
   })();
-  </script>
-<script>
-  /* ── সেশন ৯৪: আনসেভড-ডেটা গার্ড (beforeunload + dirty-ট্র্যাকিং) ──
-     সেটিংস-ফর্মে অসংরক্ষিত পরিবর্তন থাকলে ট্যাব-বন্ধ/রিলোড/লিঙ্ক-নেভিগেশনে
-     ব্রাউজার-নিশ্চিতকরণ দেখায় — সাইলেন্ট ডেটা-লস্ট বন্ধ। */
+
+  /* ── সেশন ৯৪: আনসেভড-ডেটা গার্ড (beforeunload + dirty-ট্র্যাকিং) ── */
   (function () {
     var dirty = false;
     function markDirty(e) {
       var t = e.target;
-      if (t && t.closest && t.closest('.settings-section') && !t.closest('.dz-del-form')) dirty = true;
+      if (t && t.closest && t.closest('.st142-pane') && !t.closest('.dz-del-form')) dirty = true;
     }
     document.addEventListener('input', markDirty, true);
     document.addEventListener('change', markDirty, true);
-    /* সেভ-সাবমিটে ক্লিন-মার্ক (capture-ফেজ — AJAX-সাবমিটও ধরা পড়ে) */
     document.addEventListener('submit', function () { dirty = false; }, true);
-    /* অ্যাকাউন্ট-ডিলিটের প্রোগ্রাম্যাটিক pd.submit() গেট-বাইপাস করে — সেখানে ক্লিন */
     document.addEventListener('click', function (e) {
       if (e.target && e.target.closest && e.target.closest('.dz-del-form')) dirty = false;
     }, true);
@@ -774,6 +1155,209 @@
       e.returnValue = '';
       return '';
     });
+  })();
+
+  /* ── সেশন ১৪২: মিডিয়া ও কল ডায়াগনস্টিকস ইঞ্জিন (সম্পূর্ণ ক্লায়েন্ট-সাইড) ──
+     পারমিশন-অবস্থা, ডিভাইস-তালিকা, মাইক-মিটার, ক্যামেরা-প্রিভিউ ও ICE (STUN/TURN)
+     যাচাই — webrtc-call.js-এর একই ICE-কনফিগ ব্যবহার করে, কোনো রেকর্ড রাখা হয় না। */
+  (function () {
+    function stat(id, cls, txt) { var el = document.getElementById(id); if (el) { el.className = 'st142-dstat ' + cls; el.textContent = txt; } }
+    function boxHtml(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
+    function esc(s) { return String(s || '').replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+    /* ১) ব্রাউজার-পারমিশন */
+    function checkPerms() {
+      stat('permStat142', 'run', 'চলছে…');
+      var names = ['microphone', 'camera'];
+      var hasPermApi = !!(navigator.permissions && navigator.permissions.query);
+      Promise.all(names.map(function (n) {
+        if (!hasPermApi) return Promise.resolve({ name: n, state: 'unsupported' });
+        return navigator.permissions.query({ name: n }).then(function (r) { return { name: n, state: r.state }; }).catch(function () { return { name: n, state: 'unsupported' }; });
+      })).then(function (res) {
+        var BN = { granted: 'অনুমোদিত', denied: 'অবরুদ্ধ', prompt: 'প্রশ্ন-বাকি', unsupported: 'সমর্থিত নয়' };
+        var ICO = { granted: 'fa-check', denied: 'fa-ban', prompt: 'fa-circle-question', unsupported: 'fa-circle-minus' };
+        boxHtml('diagPerms142', res.map(function (r) {
+          return '<li><i class="fas ' + (ICO[r.state] || 'fa-circle') + '"></i> ' + (r.name === 'microphone' ? 'মাইক্রোফোন' : 'ক্যামেরা') + ' — <b>' + (BN[r.state] || esc(r.state)) + '</b></li>';
+        }).join(''));
+        var denied = res.filter(function (r) { return r.state === 'denied'; }).length;
+        var unsup = res.filter(function (r) { return r.state === 'unsupported'; }).length;
+        if (denied === 2) stat('permStat142', 'bad', 'অবরুদ্ধ');
+        else if (denied) stat('permStat142', 'warn', 'আংশিক');
+        else if (unsup) stat('permStat142', 'warn', 'অজানা');
+        else stat('permStat142', 'ok', 'ঠিক আছে');
+      }).catch(function () { stat('permStat142', 'warn', 'অজানা'); });
+    }
+    var bp = document.getElementById('btnPerms142');
+    if (bp) bp.addEventListener('click', checkPerms);
+
+    /* ২) ডিভাইস-তালিকা */
+    function listDevices() {
+      stat('devStat142', 'run', 'স্ক্যান চলছে…');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        stat('devStat142', 'bad', 'অসমর্থিত');
+        boxHtml('diagDevs142', '<li><i class="fas fa-triangle-exclamation"></i> এই ব্রাউজারে ডিভাইস-তালিকা পাওয়া যায় না</li>');
+        return;
+      }
+      navigator.mediaDevices.enumerateDevices().then(function (ds) {
+        var mics = ds.filter(function (d) { return d.kind === 'audioinput'; });
+        var cams = ds.filter(function (d) { return d.kind === 'videoinput'; });
+        var spks = ds.filter(function (d) { return d.kind === 'audiooutput'; });
+        var rows = [];
+        function pushRow(label, arr, icon) {
+          rows.push('<li><i class="fas ' + icon + '"></i> ' + label + ': <b>' + arr.length + '</b>টি' + (arr.length ? ' — ' + esc(arr[0].label || 'নাম-গোপন (পরীক্ষা চালালে দেখা যাবে)') : '') + '</li>');
+        }
+        pushRow('মাইক্রোফোন', mics, 'fa-microphone');
+        pushRow('ক্যামেরা', cams, 'fa-video');
+        pushRow('স্পিকার', spks, 'fa-volume-high');
+        boxHtml('diagDevs142', rows.join(''));
+        stat('devStat142', cams.length ? 'ok' : (mics.length ? 'warn' : 'bad'), cams.length ? 'ঠিক আছে' : (mics.length ? 'ক্যামেরা নেই' : 'ডিভাইস নেই'));
+      }).catch(function () {
+        stat('devStat142', 'bad', 'ব্যর্থ');
+        boxHtml('diagDevs142', '<li><i class="fas fa-triangle-exclamation"></i> ডিভাইস-তালিকা পড়া গেল না</li>');
+      });
+    }
+    var bd = document.getElementById('btnDevs142');
+    if (bd) bd.addEventListener('click', listDevices);
+
+    /* ৩) মাইক-টেস্ট (লাইভ লেভেল-মিটার) */
+    var micStream = null, micRaf = null, audioCtx = null;
+    function stopMic() {
+      if (micRaf) { cancelAnimationFrame(micRaf); micRaf = null; }
+      if (micStream) { micStream.getTracks().forEach(function (t) { t.stop(); }); micStream = null; }
+      if (audioCtx) { try { audioCtx.close(); } catch (_) {} audioCtx = null; }
+      var m = document.getElementById('micMeter142'); if (m) m.style.width = '0%';
+      var s = document.getElementById('btnMicStart142'); if (s) s.hidden = false;
+      var t = document.getElementById('btnMicStop142'); if (t) t.hidden = true;
+      stat('micStat142', '', 'অপেক্ষমাণ');
+    }
+    function startMic() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return stat('micStat142', 'bad', 'অসমর্থিত');
+      stat('micStat142', 'run', 'অনুমতির অপেক্ষায়…');
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        micStream = stream;
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { audioCtx = null; }
+        var meter = document.getElementById('micMeter142');
+        if (audioCtx) {
+          var src = audioCtx.createMediaStreamSource(stream);
+          var analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 512;
+          src.connect(analyser);
+          var buf = new Uint8Array(analyser.fftSize);
+          (function loop() {
+            if (!micStream) return;
+            analyser.getByteTimeDomainData(buf);
+            var sum = 0;
+            for (var i = 0; i < buf.length; i++) { var v = (buf[i] - 128) / 128; sum += v * v; }
+            var rms = Math.sqrt(sum / buf.length);
+            if (meter) meter.style.width = Math.min(100, Math.round(rms * 260)) + '%';
+            micRaf = requestAnimationFrame(loop);
+          })();
+        }
+        stat('micStat142', 'ok', 'কণ্ঠ পাওয়া যাচ্ছে');
+        var s = document.getElementById('btnMicStart142'); if (s) s.hidden = true;
+        var t = document.getElementById('btnMicStop142'); if (t) t.hidden = false;
+      }).catch(function (e) {
+        stat('micStat142', e && e.name === 'NotAllowedError' ? 'bad' : 'warn', e && e.name === 'NotAllowedError' ? 'অনুমতি নেই' : 'ব্যর্থ');
+      });
+    }
+    var ms = document.getElementById('btnMicStart142');
+    var mx = document.getElementById('btnMicStop142');
+    if (ms) ms.addEventListener('click', startMic);
+    if (mx) mx.addEventListener('click', stopMic);
+
+    /* ৪) ক্যামেরা-টেস্ট (লাইভ প্রিভিউ) */
+    var camStream = null;
+    function stopCam() {
+      if (camStream) { camStream.getTracks().forEach(function (t) { t.stop(); }); camStream = null; }
+      var v = document.getElementById('camVideo142'); if (v) { v.srcObject = null; v.classList.remove('live'); }
+      var s = document.getElementById('btnCamStart142'); if (s) s.hidden = false;
+      var t = document.getElementById('btnCamStop142'); if (t) t.hidden = true;
+      stat('camStat142', '', 'অপেক্ষমাণ');
+    }
+    function startCam() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return stat('camStat142', 'bad', 'অসমর্থিত');
+      stat('camStat142', 'run', 'অনুমতির অপেক্ষায়…');
+      navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 } } }).then(function (stream) {
+        camStream = stream;
+        var v = document.getElementById('camVideo142');
+        if (v) { v.srcObject = stream; v.classList.add('live'); }
+        stat('camStat142', 'ok', 'সক্রিয়');
+        var s = document.getElementById('btnCamStart142'); if (s) s.hidden = true;
+        var t = document.getElementById('btnCamStop142'); if (t) t.hidden = false;
+      }).catch(function (e) {
+        stat('camStat142', e && e.name === 'NotAllowedError' ? 'bad' : 'warn', e && e.name === 'NotAllowedError' ? 'অনুমতি নেই' : 'ক্যামেরা পাওয়া যায়নি');
+      });
+    }
+    var cs = document.getElementById('btnCamStart142');
+    var cx = document.getElementById('btnCamStop142');
+    if (cs) cs.addEventListener('click', startCam);
+    if (cx) cx.addEventListener('click', stopCam);
+
+    /* ৫) নেটওয়ার্ক (STUN/TURN) — webrtc-call.js-চুক্তি: window.LekhokCallCtx-ওভাররাইড সম্মানিত */
+    var ICE_DEFAULT = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'turn:openrelay.metered.ca:80', username: 'openrelay', credential: 'openrelay' },
+      { urls: 'turn:openrelay.metered.ca:80?transport=tcp', username: 'openrelay', credential: 'openrelay' },
+      { urls: 'turn:openrelay.metered.ca:443', username: 'openrelay', credential: 'openrelay' },
+      { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelay', credential: 'openrelay' }
+    ];
+    var netBusy = false;
+    function netTest() {
+      if (netBusy) return;
+      if (typeof RTCPeerConnection === 'undefined') {
+        stat('netStat142', 'bad', 'অসমর্থিত');
+        boxHtml('netBox142', '<li><i class="fas fa-triangle-exclamation"></i> এই ব্রাউজারে WebRTC নেই</li>');
+        return;
+      }
+      netBusy = true;
+      stat('netStat142', 'run', 'সংযোগ নিচ্ছি…');
+      boxHtml('netBox142', '<li><i class="fas fa-spinner fa-spin"></i> ICE-প্রার্থী সংগ্রহ চলছে (৯ সেকেন্ড পর্যন্ত)…</li>');
+      var ice = ICE_DEFAULT;
+      if (window.LekhokCallCtx && window.LekhokCallCtx.iceServers && window.LekhokCallCtx.iceServers.length) ice = window.LekhokCallCtx.iceServers;
+      var pc = null, done = false, host = 0, srflx = 0, relay = 0, timer = null;
+      function paint() {
+        boxHtml('netBox142',
+          '<li><i class="fas fa-house"></i> লোকাল (host): <b>' + host + '</b></li>' +
+          '<li><i class="fas fa-globe"></i> পাবলিক (srflx): <b>' + srflx + '</b></li>' +
+          '<li><i class="fas fa-tower-broadcast"></i> রিলে (TURN): <b>' + relay + '</b></li>');
+      }
+      function finish() {
+        if (done) return;
+        done = true; netBusy = false;
+        if (timer) clearTimeout(timer);
+        try { pc && pc.close(); } catch (_) {}
+        paint();
+        if (relay > 0) { stat('netStat142', 'ok', 'TURN সক্রিয়'); boxHtml('netBox142', '<li><i class="fas fa-circle-check"></i> রিলে-প্রার্থী পাওয়া গেছে — কঠিন NAT-এও কল হবে</li>' + document.getElementById('netBox142').innerHTML); }
+        else if (srflx > 0) { stat('netStat142', 'ok', 'STUN ঠিক'); boxHtml('netBox142', '<li><i class="fas fa-circle-check"></i> পাবলিক-পথ আছে — সাধারণ নেটওয়ার্কে কল হবে</li>' + document.getElementById('netBox142').innerHTML); }
+        else if (host > 0) { stat('netStat142', 'warn', 'NAT-সীমিত'); boxHtml('netBox142', '<li><i class="fas fa-triangle-exclamation"></i> শুধু লোকাল-পথ মিলেছে — ফায়ারওয়ালে কল ব্যর্থ হতে পারে</li>' + document.getElementById('netBox142').innerHTML); }
+        else { stat('netStat142', 'bad', 'অবরুদ্ধ'); boxHtml('netBox142', '<li><i class="fas fa-ban"></i> কোনো ICE-প্রার্থী মেলেনি — অফলাইন বা WebRTC-অবরুদ্ধ</li>'); }
+      }
+      try { pc = new RTCPeerConnection({ iceServers: ice }); } catch (_) { finish(); return; }
+      try { pc.createDataChannel('diag142'); } catch (_) {}
+      pc.onicecandidate = function (e) {
+        if (!e.candidate) { finish(); return; }
+        var typ = (e.candidate.candidate.match(/typ ([a-z]+)/) || [])[1];
+        if (typ === 'host') host++;
+        else if (typ === 'srflx') srflx++;
+        else if (typ === 'relay') relay++;
+        paint();
+      };
+      pc.onicegatheringstatechange = function () { if (pc.iceGatheringState === 'complete') finish(); };
+      pc.createOffer().then(function (o) { return pc.setLocalDescription(o); }).catch(function () { finish(); });
+      timer = setTimeout(finish, 9000);
+    }
+    var bn = document.getElementById('btnNet142');
+    if (bn) bn.addEventListener('click', netTest);
+
+    /* প্যানে খুললেই পারমিশন+ডিভাইস স্বয়ংক্রিয় যাচাই */
+    var pane = document.querySelector('.st142-pane[data-pane="media"]');
+    if (pane) {
+      var mo = new MutationObserver(function () {
+        if (pane.classList.contains('on')) { checkPerms(); listDevices(); }
+      });
+      mo.observe(pane, { attributes: true, attributeFilter: ['class'] });
+    }
   })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>
