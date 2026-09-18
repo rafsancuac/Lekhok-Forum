@@ -256,6 +256,21 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
     }
   }
 
+  // সেশন ১৪৭: কার্যক্রম-কার্ডের রিঅ্যাকশন-সত্য (কাউন্টার-ড্রিফট-ফিক্স) — daily_content-এ
+  // reactions/like_count কলাম নেই, কিন্তু /api/react likes-টেবিলে লেখে → ক্লিকে '১'
+  // দেখিয়ে রিলোডে '০' হতো। সার্ভার-ট্রুথ এখন likes-টেবিল থেকেই (API-র রিকম্পিউট-উৎস
+  // হুবহু — এক-সোর্স; posts-আইটেমের মতোই এক ব্যাচ-কুয়েরি)।
+  const actRxTruth = {};
+  if (dailyIds.length) {
+    try {
+      (await db.prepare(`SELECT post_id, reaction_type, COUNT(*) AS c FROM likes WHERE post_id IN ${ph(dailyIds)} GROUP BY post_id, reaction_type`).all(...dailyIds))
+        .forEach(r => {
+          const row = (actRxTruth[r.post_id] = actRxTruth[r.post_id] || { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 });
+          row[r.reaction_type || 'like'] = r.c;
+        });
+    } catch (_) {}
+  }
+
   // (৮৯) ফেসপাইল-ব্যাচ — প্রতি-পোস্টে সর্বশেষ ৩ রিঅ্যাক্টর (ডিস্টিঙ্ক্ট ইউজার)
   const facesByPost = {};
   if (postIds.length) {
@@ -291,7 +306,12 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
   }
 
   for (const item of feed) {
-    try { item.reactionCounts = JSON.parse(item.reactions || '{}'); } catch (_) { item.reactionCounts = {}; }
+    // সেশন ১৪৭: কার্যক্রম-কার্ডে likes-টেবিল-সত্য (উপরে actRxTruth); বাকিতে reactions-JSON
+    if (item.item_type === 'activity') {
+      item.reactionCounts = actRxTruth[item.id] || { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
+    } else {
+      try { item.reactionCounts = JSON.parse(item.reactions || '{}'); } catch (_) { item.reactionCounts = {}; }
+    }
     ['like','love','care','haha','wow','sad','angry'].forEach(k => { item.reactionCounts[k] = item.reactionCounts[k] || 0; });
     item.link = item.item_type === 'question' ? '/qa/' + item.id : (item.item_type === 'activity' ? '/activities' : '/articles/' + item.id);
     item.myReaction = (me && item.item_type !== 'activity') ? (myReactions[item.id] || null) : null;

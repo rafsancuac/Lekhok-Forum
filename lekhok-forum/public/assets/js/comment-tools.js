@@ -244,7 +244,9 @@
   }, true);
 
   /* ── ৪. ফিড-ইনলাইন-কমেন্ট-ড্রয়ার ─────────────────────────────────────── */
-  var bnNum = function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); };
+  /* সেশন ১৪৭: বাংলা-সংখ্যা-চুক্তি — ক্যানোনিকাল window.toBnNumber-এ ডেলিগেট (layout.ejs-মিরর);
+     ফলব্যাক-কপি রাখা (নিরাপত্তা) — আগের লোকাল-ল্যাম্বডা অপসারিত। optParseBn বাংলা-পার্স-সক্ষম — চুক্তি-নিরাপদ। */
+  var bnNum = window.toBnNumber || function (n) { return String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); };
   function relTime(iso) {
     var diff = (Date.now() - new Date(iso).getTime()) / 1000;
     if (isNaN(diff)) return '';

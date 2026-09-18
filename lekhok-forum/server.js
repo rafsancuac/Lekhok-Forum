@@ -104,6 +104,12 @@ app.locals.jesc = (v) => String(JSON.stringify(v === undefined ? null : v))
 // ও হেডার-ড্রপডাউন (header.ejs ?type= কুইক-চিপ) দুই-জায়গাতেই একই কী/লেবেল।
 app.locals.notifGroups = require('./helpers/notif-groups');
 
+// ── সেশন ১৪৭: বাংলা-সংখ্যা চুক্তি (single-source) — সব EJS-ভিউতে toBn(n) ডাকা যায়;
+// কাউন্টার-ভাষা-বৈষম্য-স্থায়ী-সংস্কার (পোস্ট-ফুটারের একপাশে-বাংলা-অন্যপাশে-ইংরেজি বগ)।
+// ক্লায়েন্ট-মিরর: layout.ejs-এ window.toBnNumber (main.js/comment-tools.js ডেলিগেট)।
+// মিরর: helpers/bn-number.js toBnNumber()।
+app.locals.toBn = require('./helpers/bn-number').toBnNumber;
+
 // ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
 // লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।
 // প্রোডাকশনে SANDBOX_PORT সেট না থাকায় স্ক্রিপ্ট রেন্ডারই হয় না।

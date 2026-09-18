@@ -117,9 +117,9 @@
       <% } else { %>
         <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
       <% } %>
-      <%# সেশন ১১০-মার্জ: আনুমানিক পড়ার-সময় (decorateFeed-গণিত) — স্লিম চিপ %>
+      <%# সেশন ১১০-মার্জ: আনুমানিক পড়ার-সময় (decorateFeed-গণিত) — স্লিম চিপ (সেশন ১৪৭: toBn-চুক্তি) %>
       <% if (item.read_mins) { %>
-        <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= String(item.read_mins).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> মিনিট</span>
+        <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= toBn(item.read_mins) %> মিনিট</span>
       <% } %>
       <%# সেশন ১১০-মার্জ (র‍্যাংকড-ফিড): "কেন-দেখছেন" চিপ — ranked-মোডে শুধু %>
       <% if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge) { %>
@@ -187,7 +187,7 @@
         </div>
         <% if ((item.comment_count || 0) > 1) { %>
           <button type="button" class="fc-more" data-toggle-comments="<%= item.id %>">
-            সব <%= String(item.comment_count).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }) %> টি মন্তব্য দেখুন
+            সব <%= toBn(item.comment_count) %> টি মন্তব্য দেখুন
           </button>
         <% } %>
       </div>

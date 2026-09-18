@@ -65,7 +65,7 @@
             <img src="<%= author.avatar_url || '/avatar/' + author.id %>" class="author-avatar" alt="">
             <div>
               <a href="/profile/<%= author.username %>" class="author-name"><%= displayName(author) %></a><% if (hasPenName(author)) { %><span class="pen-chip" title="আসল নাম: <%= author.full_name %>">কলমে: <%= author.full_name %></span><% } %>
-              <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= post.view_count || 0 %> পঠিত &middot; <i class="far fa-clock"></i> <span title="<%= wordCountBn %> শব্দ">≈ <%= readingMinutesBn %> মিনিট পড়া</span></div>
+              <div class="article-date"><i class="far fa-calendar"></i> <%= new Date(post.published_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) %> &middot; <i class="far fa-eye"></i> <%= toBn(post.view_count || 0) %> পঠিত &middot; <i class="far fa-clock"></i> <span title="<%= wordCountBn %> শব্দ">≈ <%= readingMinutesBn %> মিনিট পড়া</span></div>
             </div>
           </div>
           <%# ── সেশন ৯৩: গ্লোবাল ৩-ডট মেনু — সম্পাদনা/লুকান/মুছুন/রিপোর্ট সব এখানে ── %>
@@ -114,6 +114,8 @@
           link: '/articles/' + post.id,
           commentCount: post.comment_count || 0,
           shareCount: post.share_count || 0,
+          // সেশন ১৪৭: ফিড-কার্ডের সাথে ইন্টারফেস-সমতা — একক-পোস্ট ভিউতেও পঠিত-স্ট্যাট ফুটারে (toBn-বাংলা)
+          viewCount: post.view_count,
           bookmarked: userBookmarked
         }) %>
         <%# সেশন ৯৩: ছড়ানো owner-actions/modrow81-বাটন অপসারিত — সব অপশন

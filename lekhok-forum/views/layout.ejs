@@ -105,6 +105,18 @@
       tokens.css সর্বশেষ লোড (ক্যাসকেদ-গ্যারান্টি); ক্রম বদলানো নিষিদ্ধ (guard)। %>
   <link rel="stylesheet" href="/assets/css/shared.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
+  <%# সেশন ১৪৭: বাংলা-সংখ্যা চুক্তি — ক্লায়েন্ট-মিরর (single-source helpers/bn-number.js)।
+      সব স্ক্রিপ্টের আগে ডেফাইন — main.js-রিঅ্যাকশন-ইঞ্জিন (.rs-count) ও comment-tools.js
+      (bnNum) এর উপর ডেলিগেট করে; ফিড/প্রোফাইল/একক-পোস্ট সব সারফেসে কাউন্টার বাংলায় লক।
+      নেটওয়ার্ক-কস্ট-শূন্য ইনলাইন-কপি (bn-date-র ৩-কপি-চুক্তির রীতি)। %>
+  <script>
+  window.toBnNumber = function (num) {
+    if (num === undefined || num === null || num === '') return '০';
+    var s = String(num);
+    if (s.trim() === '' || s.trim() === 'NaN') return '০';
+    return s.replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; });
+  };
+  </script>
   <%# সেশন ৯০ (রোডম্যাপ-আইটেম ২০): PWA সার্ভিস-ওয়ার্কার — অফলাইন-শেল রেজিস্ট্রেশন।
       স্যান্ডবক্স-গেটওয়ে-সচেতন: পেজ-URL-এ XTransformPort থাকলে sw.js-ও সেই-কুয়েরি নিয়ে
       রেজিস্টার হয় যাতে গেটওয়ে সঠিক-পোর্টে ফরওয়ার্ড করে। ব্যর্থতা নীরব (SW-নন-সাপোর্ট/iframe)। %>

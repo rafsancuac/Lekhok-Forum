@@ -125,6 +125,17 @@
     };
   })();
   </script>
+  <%# সেশন ১৪৭: বাংলা-সংখ্যা চুক্তি — ক্লায়েন্ট-মিরর (single-source helpers/bn-number.js;
+      layout.ejs-টুইনেও আছে)। main.js-রিঅ্যাকশন-ইঞ্জিন (.rs-count) ও comment-tools.js
+      (bnNum) এর উপর ডেলিগেট করে — ফিড/প্রোফাইল/একক-পোস্ট সব সারফেসে কাউন্টার বাংলায় লক। %>
+  <script>
+  window.toBnNumber = window.toBnNumber || function (num) {
+    if (num === undefined || num === null || num === '') return '০';
+    var s = String(num);
+    if (s.trim() === '' || s.trim() === 'NaN') return '০';
+    return s.replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; });
+  };
+  </script>
 </head>
 <body data-auth="<%= (typeof user !== 'undefined' && user) ? '1' : '0' %>"<% if (typeof user !== 'undefined' && user) { %> data-uid="<%= user.id %>" data-avatar="<%= user.avatar_url || ('/avatar/' + user.id) %>" data-name="<%= ((user.pen_name || user.full_name) || '').replace(/"/g, '&quot;') %>" data-uname="<%= user.username %>"<% } %>>
   <%# সেশন ৭২: ক্যাশড-অ্যানোনিমাস পেজে লগড-ইন ইউজার ধরলে ?_u= রিফ্রেশ (ক্যাশ-বাইপাস) — বিস্তারিত auth-sync.js-এ %>

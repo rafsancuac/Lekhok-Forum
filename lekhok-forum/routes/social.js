@@ -1495,9 +1495,13 @@ router.get('/profile/:username', async (req, res) => {
 
   // (৭) সেশন ৮৭: প্রোফাইল-ফিডে FB-রিঅ্যাকশন-ইঞ্জিন — প্রতিটি ফিড-কার্ডে
   // actions-bar পার্টিয়ালের জন্য per-post ডেটা ডেকোরেশন:
-  //   post.reactCounts = {like:0,love:0,care:0,haha:0,wow:0,sad:0} (posts.reactions JSON থেকে)
+  //   post.reactionCounts = {like:0,love:0,care:0,haha:0,wow:0,sad:0,angry:0} (posts.reactions JSON থেকে)
   //   post.myReaction  = ভিউয়ারের বর্তমান রিঅ্যাকশন (likes টেবিল — এক IN-কোয়েরিতে)
-  const RN87 = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0 };
+  // সেশন ১৪৭ (কাউন্টার-ইন্টারফেস-সমতা): ক্যানোনিকাল FeedPostCard-এর চুক্তি-ক্ষেত্র নাম
+  // **reactionCounts** (dashboard-decorate-র মতোই) — আগে এখানে reactCounts নামে সেট হতো
+  // → প্রোফাইল-কার্ডে রিঅ্যাকশন-কাউন্ট কখনোই রেন্ডার হতো না (ফিডে দেখাত, প্রোফাইলে না —
+  // পেজভেদে অমিল)। সাথে angry-কী RN87-এ অনুপস্থিত ছিল (৭-রিঅ্যাকশন-ম্যাপ অসম্পূর্ণ)।
+  const RN87 = { like: 0, love: 0, care: 0, haha: 0, wow: 0, sad: 0, angry: 0 };
   const parseReacts87 = (raw) => {
     const out = { ...RN87 };
     try {
@@ -1516,8 +1520,8 @@ router.get('/profile/:username', async (req, res) => {
         .forEach(r => { if (r.reaction_type) myReacts87[r.post_id] = r.reaction_type; });
     } catch (_) {}
   }
-  if (pinnedPost) { pinnedPost.reactCounts = parseReacts87(pinnedPost.reactions); pinnedPost.myReaction = myReacts87[pinnedPost.id] || ''; }
-  articles.forEach(p => { p.reactCounts = parseReacts87(p.reactions); p.myReaction = myReacts87[p.id] || ''; });
+  if (pinnedPost) { pinnedPost.reactionCounts = parseReacts87(pinnedPost.reactions); pinnedPost.myReaction = myReacts87[pinnedPost.id] || ''; }
+  articles.forEach(p => { p.reactionCounts = parseReacts87(p.reactions); p.myReaction = myReacts87[p.id] || ''; });
 
   // (৮৯) ফেসপাইল — প্রতি-পোস্টে সর্বশেষ ৩ রিঅ্যাক্টরের মিনি-অ্যাভাটার (FB-২০২৪ সামারি;
   // এক IN-কুয়েরি — actions-bar-এর নতুন reactorFaces প্যারামে যায়)
