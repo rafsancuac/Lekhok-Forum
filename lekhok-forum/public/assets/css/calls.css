@@ -720,3 +720,47 @@
   .lc-act--accept { animation: none; }
 }
 /* ════════ EOF-MARKER session130 ════════ */
+
+/* ════════ সেশন ১৩১ — অটো-ভিডিও-ডিগ্রেড: সাশ্রয়-ব্যাজ (.lc-eco) + পিল is-eco মোড ════════
+   দুর্বল-নেটওয়ার্কে sender-মান স্বয়ংক্রিয় কমানো হলে কোয়ালিটি-পিলে লিফ-চিপ (সাশ্রয়-১/২/৩) —
+   অ্যাম্বার-টোন (var(--lf-reaction-yellow)) + সূক্ষ্ম পালস; রিকভারিতে ব্যাজ-গায়েব।
+   রঙ-চুক্তি: নতুন কোনো হেক্স-লিটারাল নেই — rgba/টোকেন-শুধু (হেক্স-র্যাচেট-গার্ড-সামঞ্জস্য)। */
+
+/* সাশ্রয়-চিপ — পিলের ভেতরে লিফ-আইকন + স্তর-লেবেল */
+.lc-eco {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 9px; margin-left: 9px;
+  border-radius: var(--lf-radius-chip);
+  background: rgba(247, 177, 125, .16);
+  border: 1px solid rgba(247, 177, 125, .40);
+  color: var(--lf-reaction-yellow);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .2px; line-height: 1.5;
+  vertical-align: middle; white-space: nowrap;
+  animation: lc-eco-in .35s var(--lf-transition, ease);
+}
+.lc-eco i { font-size: 10.5px; }
+@keyframes lc-eco-in {
+  from { opacity: 0; transform: translateY(3px) scale(.92); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* পিল is-eco — অ্যাম্বার-টিন্ট বর্ডার-পালস (ব্যস্ত-চোখেও মোড-সক্রিয়তা ধরা পড়ে) */
+.lc-quality.is-eco {
+  border-color: rgba(247, 177, 125, .45);
+  box-shadow: 0 0 0 1px rgba(247, 177, 125, .12), 0 4px 14px rgba(247, 177, 125, .10);
+  animation: lc-eco-pulse 2.4s ease-in-out infinite;
+}
+@keyframes lc-eco-pulse {
+  0%, 100% { border-color: rgba(247, 177, 125, .30); }
+  50%      { border-color: rgba(247, 177, 125, .62); }
+}
+
+/* ডায়াগনস্টিকস-প্যানেলের অটো-সাশ্রয় সারি — স্তর-বাহী হলে অ্যাম্বার-হাইলাইট */
+.lc-stats-row.is-eco b { color: var(--lf-reaction-yellow); font-weight: 800; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-eco { animation: none; }
+  .lc-quality.is-eco { animation: none; }
+}
+/* ════════ EOF-MARKER session131 ════════ */
+

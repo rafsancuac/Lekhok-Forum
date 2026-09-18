@@ -81,6 +81,11 @@
     lastStats: null,        // সর্বশেষ নমুনা {rtt,path,local,remote,jitter,lost,kbps}
     poorStreak: 0,          // টানা দুর্বল-নমুনা
     poorNotified: false,    // দুর্বল-নেটওয়ার্ক টোস্ট (একবারী)
+    /* সেশন ১৩১: অটো-ভিডিও-ডিগ্রেড (সাশ্রয়-ল্যাডার) */
+    degrade: 0,             // বর্তমান সাশ্রয়-স্তর (0-৩)
+    goodStreak: 0,          // টানা ভালো-নমুনা (রিকভারি-হিস্টেরেসিস)
+    degradeNotBefore: 0,    // কানেক্টের ৮সে-পরেই ইঞ্জিন-সক্রিয় (শুরুর মিথ্যা-ধনাত্মক গার্ড)
+    degradeToasted: {},     // স্তর-প্রতি একবারী টোস্ট
     lastBytes: 0,           // bitrate-ডেল্টা-বেস
     lastBytesAt: 0,
     /* সেশন ১১৩: গ্রুপ-কল (mesh) — প্রতি-পিয়ার PC + গ্রিড-UI */
@@ -256,7 +261,7 @@
       '      <video class="lc-local-video" autoplay playsinline muted></video>' +
       '      <div class="lc-tapplay" hidden><button type="button" class="lc-tapplay-btn">' + icon('fa-play') + ' ট্যাপ করে চালু করুন</button></div>' +
       '    </div>' +
-      '    <div class="lc-quality" hidden><span class="lc-quality-bars"><i></i><i></i><i></i><i></i></span><span class="lc-quality-t">—</span></div>' +
+      '    <div class="lc-quality" hidden><span class="lc-quality-bars"><i></i><i></i><i></i><i></i></span><span class="lc-quality-t">—</span><span class="lc-eco" hidden></span></div>' +
       '    <div class="lc-audioface">' +
       '      <div class="lc-aura"><span></span><span></span><span></span></div>' +
       '      <img class="lc-avatar" alt="" />' +
@@ -554,10 +559,80 @@
     var q = root.querySelector('.lc-quality');
     if (q) q.hidden = true;
   }
+  /* ── সেশন ১৩১: অটো-ভিডিও-ডিগ্রেড — দুর্বল-নেটওয়ার্ক স্বয়ংক্রিয় সাশ্রয়-ল্যাডার ──
+     getStats-টিকারের poorStreak-এর ওপর video-sender-প্যারামিটার (scaleResolutionDownBy/
+     maxBitrate/maxFramerate) ধাপে ধাপে কমানো হয় — রিকভারিতে goodStreak-হিস্টেরেসিসে
+     ধীরে ধাপ-নামা। স্তর: ০=অস্পৃশ্ত · ১=÷২+২৫০kbps · ২=÷৪+১২০kbps+১০fps ·
+     ৩=÷৪+৬০kbps+৮fps (মিনিমাল)। ক্যাম-অফ/অডিও-কলে ইঞ্জিন-স্থগিত। ট্র্যাক-স্তরে ধস নয়
+     (ক্যাম-টগল-বিরোধ-শূন্য) — কেবল sender.setParameters; ব্রাউজার-অসমর্থনে নীরব-ক্যাচ। */
+  function videoSenders() {
+    var pcs = [], out = [];
+    if (!isGroup()) { if (S.pc) pcs.push(S.pc); }
+    else { Object.keys(S.peers).forEach(function (uid) { if (S.peers[uid].pc) pcs.push(S.peers[uid].pc); }); }
+    for (var i = 0; i < pcs.length; i++) {
+      try {
+        var ss = pcs[i].getSenders ? pcs[i].getSenders() : [];
+        for (var j = 0; j < ss.length; j++) {
+          if (ss[j] && ss[j].track && ss[j].track.kind === 'video') out.push(ss[j]);
+        }
+      } catch (_) {}
+    }
+    return out;
+  }
+  function setEcoBadge(level) {
+    if (!root) return;
+    var q = root.querySelector('.lc-quality');
+    if (!q) return;
+    var eco = q.querySelector('.lc-eco');
+    if (!eco) return;
+    if (level > 0) {
+      q.hidden = false; /* সাশ্রয়-সক্রিয় হলে পিল-নিজেও দৃশ্যমান (setQuality-অগ্রাধিকার) */
+      eco.hidden = false;
+      eco.innerHTML = icon('fa-leaf') + '<b>' + (level === 3 ? 'সাশ্রয়-৩' : (level === 2 ? 'সাশ্রয়-২' : 'সাশ্রয়-১')) + '</b>';
+      q.classList.add('is-eco');
+      q.title = 'দুর্বল-নেটওয়ার্ক সাশ্রয়-মোড স্তর ' + bn(level) + ' — ভিডিও-মান স্বয়ংক্রিয়ভাবে কমানো হচ্ছে';
+    } else {
+      eco.hidden = true; eco.innerHTML = '';
+      q.classList.remove('is-eco');
+      q.title = 'নেটওয়ার্ক মান';
+    }
+    q.setAttribute('aria-label', q.title);
+  }
+  function applyVideoDegradation(level) {
+    if ((S.degrade || 0) === level) return;
+    S.degrade = level;
+    var ss = videoSenders();
+    for (var i = 0; i < ss.length; i++) {
+      try {
+        var snd = ss[i];
+        if (!snd.getParameters || !snd.setParameters) continue;
+        var p = snd.getParameters();
+        if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+        var e = p.encodings[0];
+        if (level === 1) { e.scaleResolutionDownBy = 2; e.maxBitrate = 250000; if ('maxFramerate' in e) delete e.maxFramerate; }
+        else if (level === 2) { e.scaleResolutionDownBy = 4; e.maxBitrate = 120000; e.maxFramerate = 10; }
+        else if (level === 3) { e.scaleResolutionDownBy = 4; e.maxBitrate = 60000; e.maxFramerate = 8; }
+        else { e.scaleResolutionDownBy = 1; if ('maxBitrate' in e) delete e.maxBitrate; if ('maxFramerate' in e) delete e.maxFramerate; }
+        snd.setParameters(p).catch(function () {});
+      } catch (_) {}
+    }
+    setEcoBadge(level);
+    if (S.statsOpen) renderStats();
+    S.degradeToasted = S.degradeToasted || {};
+    if (level > 0 && !S.degradeToasted[level] && S.state === 'connected') {
+      S.degradeToasted[level] = true;
+      toast(level === 1 ? 'দুর্বল নেটওয়ার্ক — ভিডিও স্বয়ংক্রিয় সাশ্রয়-স্তর ১'
+        : (level === 2 ? 'নেটওয়ার্ক আরও দুর্বল — সাশ্রয়-স্তর ২ (রেজোলিউশন+এফপিএস কমানো)'
+        : 'সাশ্রয়-স্তর ৩ — মিনিমাল ভিডিও; নেটওয়ার্ক ভালো হলে মান ফিরবে'), true);
+    }
+    if (level === 0) S.degradeToasted = {};
+  }
   function startStatsTicker() {
     clearTimeout(S.qPollT);
     S.poorStreak = 0; S.poorNotified = false;
     S.lastBytes = 0; S.lastBytesAt = 0;
+    S.degrade = 0; S.goodStreak = 0; S.degradeToasted = {};
+    S.degradeNotBefore = Date.now() + 8000; /* শুরুর ৮সে ইঞ্জিন-স্থগিত — RTT-নমুনা উত্তপ্ত হোক */
     statsTick();
     spkStart(); /* সেশন ১১৮: স্পিকার-হাইলাইট টিকারও সংযুক্ত-অবস্থায় চালু */
   }
@@ -622,6 +697,16 @@
         S.poorNotified = true;
         toast('নেটওয়ার্ক দুর্বল হচ্ছে — ভিডিও বন্ধ করলে সংযোগ ভালো থাকতে পারে', true);
       }
+      /* সেশন ১৩১: অটো-সাশ্রয়-ল্যাডার — poorStreak-এ ধাপ-ওঠা, goodStreak(≥৩, rtt<৩০০ms)-এ
+         এক-ধাপ-নামা (হিস্টেরেসিস — দ্রুত-ওঠানামা-বিরোধী); অ-ভিডিও/ক্যাম-অফে স্তর-রিসেট */
+      if (d.rtt != null && d.rtt < 300) S.goodStreak++;
+      else S.goodStreak = 0;
+      var ecoLive = (S.state === 'connected' && S.kind === 'video' && !S.camOff && Date.now() >= (S.degradeNotBefore || 0));
+      if (ecoLive) {
+        var want = (S.poorStreak >= 8) ? 3 : (S.poorStreak >= 6) ? 2 : (S.poorStreak >= 4) ? 1 : 0;
+        if (want > (S.degrade || 0)) applyVideoDegradation(want);
+        else if (want < (S.degrade || 0) && (S.goodStreak || 0) >= 3) { applyVideoDegradation((S.degrade || 0) - 1); S.goodStreak = 0; }
+      } else if (S.degrade) applyVideoDegradation(0);
     } catch (_) { /* pc বন্ধ — নেক্সট-টিকে থামবে */ }
     S.qPollT = setTimeout(statsTick, 2500);
   }
@@ -649,7 +734,8 @@
       (S.kind === 'video' ?
         '<div class="lc-stats-section">' + icon('fa-video') + ' ভিডিও</div>' +
         statsRow('আমার ভিডিও', d.lw != null ? bn(d.lw) + '×' + bn(d.lh) : null, 'is-video') +
-        statsRow('রিসিভ ভিডিও', d.vw != null ? bn(d.vw) + '×' + bn(d.vh) + (d.vfps ? ' @ ' + bn(d.vfps) + ' fps' : '') : null, 'is-video')
+        statsRow('রিসিভ ভিডিও', d.vw != null ? bn(d.vw) + '×' + bn(d.vh) + (d.vfps ? ' @ ' + bn(d.vfps) + ' fps' : '') : null, 'is-video') +
+        statsRow('অটো-সাশ্রয়', (S.degrade || 0) ? 'স্তর ' + bn(S.degrade) : null, (S.degrade || 0) ? 'is-video is-eco' : 'is-video')
         : '');
   }
   function toggleStats(force) {
@@ -1359,6 +1445,7 @@
     spkTeardown(); /* সেশন ১১৮: লেভেল-মিটার-নোড + টিকার পরিষ্কার */
     if (S.incT) { clearTimeout(S.incT); S.incT = null; }
     S.statsOpen = false; S.lastStats = null; S.poorStreak = 0; S.poorNotified = false;
+    S.degrade = 0; S.goodStreak = 0; S.degradeToasted = {}; S.degradeNotBefore = 0;
     S.lastBytes = 0; S.lastBytesAt = 0;
     S.iceRestarts = 0; S.restartAnswer = false;
     /* সেশন ১১৩: গ্রুপ-পিয়ার-PC সমূহ বন্ধ */
@@ -1605,6 +1692,9 @@
     /* সেশন ১১১ QA-হুক — রুট/কোয়ালিটি-UI যাচাই (কল ছাড়াই) */
     _qaEnsureRoot: function () { ensureRoot(); return !!root; },
     _qaSetQuality: function (lvl, rtt) { setQuality(lvl, rtt, 'QA-নমুনা'); },
+    /* সেশন ১৩১ QA-হুক — সাশ্রয়-ল্যাডার যাচাই (কল-ছাড়া ব্যাজ/স্তর-পেইন্ট; লাইভ-কলে প্রকৃত-পথ) */
+    _qaDegradeState: function () { return { level: S.degrade || 0, streak: S.poorStreak, good: S.goodStreak || 0, gated: Date.now() < (S.degradeNotBefore || 0), senders: videoSenders().length }; },
+    _qaApplyDegrade: function (level) { applyVideoDegradation(Math.max(0, Math.min(3, level | 0))); return S.degrade; },
     /* সেশন ১১৮ QA-হুক: স্পিকার-হাইলাইট + ভিডিও-স্ট্যাট (হেডলেস-যাচাই — কল/মাইক ছাড়াই) */
     _qaSetSpeaking: function (uid) { spkPaint(uid == null ? null : String(uid)); return true; },
     _qaSpeaking: function () { return SPK.active; },

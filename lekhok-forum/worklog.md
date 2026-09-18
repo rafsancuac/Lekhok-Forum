@@ -1322,3 +1322,16 @@ Task ID: 14 — Session 124 (cron-QA রাউন্ড)
 - E2E: স্টেট-ম্যাট্রিক্স ৮/৮ + মাইগ্রেশন ✓ CSSOM ✓ পিন ৫/৫ ✓ LS-ক্লিনআপ ✓ 390px-প্রকৃত-০ (docSW+scrollTo-প্রোব) ✓ কনসোল-০ ✓ রিগ্রেশন ALL GREEN ✓
 - গোটচা ×৩ (PLANS): JSON-LD-সিনট্যাক্স-চেক-মিথ্যা-ফেইল · body.scrollWidth≠প্রকৃত-স্ক্রল · আধা-রিফ্যাক্টর-অবশিষ্টাংশ
 - docs: PROJECT §১২৯ + PLANS intent+cross-agent + worklog ×২
+
+
+## session132 (webDevReview রাউন্ড — origin/main @ 8cda026)
+
+**স্টেটাস-মূল্যায়ন:** QA-বেসলাইন বাগ-শূন্য (role-policy ১৪৭ + calls ৫৫ + groupcalls ৫০ + cursor ২৫ + guard + audit + ব্রাউজার-কনসোল-০) → ফেজ-স্টেবল → ফিচার-রাউন্ড: কল-রোডম্যাপের অবশিষ্ট একমাত্র কোডযোগ্য আইটেম **অটো-ভিডিও-ডিগ্রেড**।
+
+**সম্পন্ন:** webrtc-call.js-এ ৩-স্তর সাশ্রয়-ল্যাডার (poorStreak ≥৪/৬/৮ → sender scale÷২+২৫০k / ÷৪+১২০k+১০fps / ÷৪+৬০k+৮fps; goodStreak≥৩-হিস্টেরেসিস-রিকভারি; ৮সে-কানেক্ট-গেট; video+cam-on-গার্ড; ট্র্যাক-অস্পৃশ্ত) + calls.css eco-ব্যাজ-ব্লক (var(--lf-reaction-yellow), হেক্স-শূন্য) + QA-হুক _qaDegradeState/_qaApplyDegrade + নতুন E2E verify-session132-autodegrade.js **৩০/৩০ ALL GREEN** (হুক-পাথ ৯ + লাইভ-কল-ল্যাডার ১৬ — ফেক-RTT ইনজেকশনে প্রকৃত sender.getParameters() এন্ড-স্টেট-প্রমাণ — + অডিও-গার্ড ২)।
+
+**রিগ্রেশন:** session122 ২১/২১ + session130 ২৫/২৫ + API-চতুষ্টয় + guard + audit + 390px-০ + কনসোল-০।
+
+**গোটচা ×৩ (PLANS-এ বিস্তারিত):** getSenders() প্ল্যাটফর্ম-অবজেক্ট (ক্লাস-ওভাররাইড sender-কল ধরে না — এন্ড-স্টেট-পাঠই প্রমাণ); /dashboard গেস্টেও 200 (data-auth-ই বিশ্বস্ত-সোর্স); #F7B125=rgb(247,177,37) ডেসিমাল-গোটচা।
+
+**পরের-এজেন্ট: session133 লেবেল থেকে।** — সুপারিশ: গ্রুপ-রিং-অনলাইন-সীমা, parent-chain-চিপ, drawer-প্রিভিউ-ইনস্ট্যান্ট।

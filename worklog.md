@@ -1256,3 +1256,34 @@ Work Log:
 Stage Summary:
 - session111-⑤-এর শেষ-অবশিষ্ট (contact_hours লাইভ) সম্পূর্ণ — ব্যাজ এখন পেজ-খোলা-অবস্থায়ও সত্য; crx-এ ইউজার-অগ্রাধিকার (পিন) — session128-সুপারিশ-তালিকার ২-আইটেম ল্যান্ডেড
 - **পরের-এজেন্ট: session130 থেকে** — সুপারিশ: tokensHexGuard-সুযোগ-বর্ধন (article.css — বেসলাইন-হোয়াইটলিস্ট-প্রয়োজন) → reconcile-flash-মসৃণকরণ → QA-ডিলিট স্লট-মৃত্যু-অ্যানিমেশন (উপযোগ-যাচাই) → লাইভ-Turso-রিসেট (টোকেন-ধারী)
+
+Task ID: session130-ফাইনাল (push-সমাপ্তি)
+Agent: Z.ai Main Agent (webDevReview)
+Task: push-রেস-হ্যান্ডলিং + সম্পূর্ণ-মার্জড-কোডে চূড়ান্ত-যাচাই
+
+Work Log:
+- push-রেস ×২ + ত্রি-এজেন্ট-129-লেবেল-রেস (আন্ডু-টোস্ট/CSV-SSRF-এজেন্টরাও 129 নেয়) → max+1 রীতিতে 130-চূড়ান্ত-রিলেবেল ×২-সাইকেল; ৪-docs-ইউনিয়ন ×২
+- pushed: 1068b57..126cb46 (feat) + f4dd6e6 (push-সমাপ্তি-docs)
+- পোস্ট-push চূড়ান্ত-যাচাই: ৮-রুট-স্মোক ✓ guard ✓ home-webrtc:1 ✓ verify-session130 ২৫/২৫ ALL GREEN ✓
+
+Stage Summary:
+- রিপো main @ f4dd6e6; পরের-এজেন্ট: session132; সাইট-ব্যাপী কল-রিংগার (রোডম্যাপ-①) সম্পূর্ণ
+
+---
+Task ID: session132 (webDevReview রাউন্ড — origin/main @ 8cda026 থেকে)
+Agent: Z.ai Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → ফেজ-স্টেবল → কল-রোডম্যাপের শেষ-কোডযোগ্য আইটেম: অটো-ভিডিও-ডিগ্রেড (সাশ্রয়-ল্যাডার) + eco-ব্যাজ + নতুন ব্রাউজার-E2E
+
+Work Log:
+- sync: git fetch → 8cda026 (session129-খ role-policy-ফিক্স) fast-forward; stash/rebase/pop-রীতি (root-worklog-আনকমিটেড-এন্ট্রি রক্ষা)
+- QA-ফেজ ALL GREEN: pkill→ss-ভেরিফাই→seed (সার্ভার-বন্ধ) → এক-ইনভোকেশনে সার্ভার+স্যুট: role-policy ১৪৭/১৪৭ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard + audit:views ✓; agent-browser ৬-পেজ কনসোল-০ → স্টেবল-ফেজ → ফিচার-রাউন্ড
+- রোডম্যাপ-অডিট: session94-কল-ইতিহাস ✓ / session97-ICE-restart ✓ / session111-কোয়ালিটি-পিল ✓ / session130-গ্লোবাল-রিংগার ✓; অবশিষ্ট: Metered-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমা (server-presence-বড়-আইটেম) → অটো-ভিডিও-ডিগ্রেড নেওয়া হলো
+- ইমপ্ল ৮-প্যাচ (webrtc-call.js, সব-সংযোজন-ধর্মী): state ×৪ (degrade/goodStreak/degradeNotBefore/degradeToasted) + ফাংশন-ত্রয়ী (videoSenders/setEcoBadge/applyVideoDegradation) + startStatsTicker-গেট (৮সে) + statsTick-ল্যাডার + renderStats-সারি + start()-রিসেট + QA-হুক ×২ + ensureRoot-ব্যাজ-মার্কআপ; ল্যাডার: স্তর১=÷২+২৫০kbps, স্তর২=÷৪+১২০k+১০fps, স্তর৩=÷৪+৬০k+৮fps; রিকভারি=goodStreak≥৩-এ এক-ধাপ-নামা; kind='video'+!camOff-গার্ড; ট্র্যাক-অস্পৃশ্ত (শুধু sender.setParameters — ক্যাম-টগল-বিরোধ-শূন্য)
+- calls.css session132-EOF-ব্লক: .lc-eco লিফ-চিপ (var(--lf-reaction-yellow) — নতুন-হেক্স-শূন্য) + .is-eco পিল-পালস + স্ট্যাটস-হাইলাইট + reduced-motion
+- নতুন E2E verify-session132-autodegrade.js — চূড়ান্ত **৩০/৩০ ALL GREEN**; উন্নয়ন-কালে ধরা ×৩-গোটচা (সব PLANS-এ নথিভুক্ত): ① getSenders() প্ল্যাটফর্ম-অবজেক্ট — ক্লাস-সাবক্লাসের setParameters-ওভাররাইড sender-কল ধরে না → প্রমাণ = লাইভ sender.getParameters() এন্ড-স্টেট-পাঠ ② /dashboard গেস্টেও 200 (URL-রিডাইরেক্ট-চেক অপর্যাপ্ত) → body[data-auth]-বিশ্বস্ত-সোর্স + cookie-aware ensureAuthed + SW-purge ③ #F7B125=rgb(247,177,37) (0xB1=177, 0x25=37 — ডেসিমাল-ভুলে মিথ্যা-ফেইল)
+- চূড়ান্ত-রিগ্রেশন: session122-ব্রাউজার ২১/২১ + session130-ব্রাউজার ২৫/২৫ + API-চতুষ্টয় (১৪৭+৫৫+৫০+২৫) + guard + audit ✓ 390px ×৪-পেজ-০ + কনসোল-০ + স্ক্রিনশট (s131-eco-badge.png)
+- docs: PLANS session132 (intent + cross-agent ×৪-ইন্টিগ্রেশন-পয়েন্ট+৩-গোটচা) + PROJECT §১৩২ + worklog ×২
+
+Stage Summary:
+- কল-রোডম্যাপের সব-কোডযোগ্য আইটেম সম্পূর্ণ (Metered-TURN ইউজার-অ্যাকাউন্ট-নির্ভর বাদে); দুর্বল-নেটওয়ার্কে কল এখন নিজেই সাশ্রয়-মোডে টিকে থাকে (আগে শুধু-হিন্ট)
+- পরের-এজেন্ট: session133; সুপারিশ: গ্রুপ-রিং-অনলাইন-সীমা (server-presence), parent-chain-চিপ, drawer-প্রিভিউ-ইনস্ট্যান্ট, কল-ইতিহাসে degrade-স্তর-রেকর্ড
