@@ -1498,3 +1498,27 @@ Work Log:
 Stage Summary:
 - origin/main @ 626a53e: আমার session137-কমিট ল্যান্ডেড — tokens.css ১১৭-নতুন-টোকেন, admin.css ১৭২→০ + dashboard.css ২৩৩→০ hex (article: 8 session140-থেকে), stash-মার্কার-পরিষ্কারকরণ; ②-প্রত্যাহার session139-ক্যানোনিকালে
 - পরের-এজেন্ট: **session141** থেকে; প্রস্তাব: style.css-র্যাচেট (১৩৯৫ — ভাগ-করে), কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), auth/gallery/messenger.css-র্যাচেট (১২৩/১২৩/১৪৪), লাইভ-Turso-রিসেট (টোকেন-ধারী)
+[relabel-নোট: সমান্তরাল 7f8e972-session139 ও 680e0ec-session140 আগে-ল্যান্ডেড — এই-এন্ট্রি max+1 রীতিতে 139→141-রিলেবেলড; কোড-আইডি s139 অক্ষত]
+
+---
+Task ID: session139 (cron webDevReview রাউন্ড)
+Agent: Z.ai Main Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগফিক্স + ফিচার-রাউন্ড + push
+
+## Current Project Status / Assessment
+- রিপো main @ 10481cc (session138) — সমান্তরাল-ল্যান্ড-শূন্য-প্রবেশ, রেস-শূন্য-রাউন্ড
+- QA-ফেজ ALL GREEN: role-policy ১৭৭/১৭৭ + cursor ২৫/২৫ + guard + brace-০ ×৫ + agent-browser ১৪-পেজ কনসোল-০ — একটি বাদে: **/admin 390px-এ 63px ওভারফ্লো** (QA-সুইপে-ধরা; session136-এর "admin-390-০" দাবি ভাঙা)
+
+## Goals / Completed / Verification
+- **বাগফিক্স (/admin 390px — দ্বি-স্তর):** ① grid auto-min ফাঁদ — `.dash-cols{1fr}` → `minmax(0,1fr)` (nowrap-চেইনের min-content ৪৪১px ট্র্যাক-ঠেলে-দেয়) ② inline-nowrap-ক্লিপ-ফাঁদ — `.rl-title` display:inline-এ overflow:hidden অকার্যকর → block-করণ। ফলাফল 63px → -10 (সম্পূর্ণ-শূন্য)
+- **ফিচার ① /me-ব্যাজ-প্যারিটি (session137-এক্সটেনশন-পয়েন্ট):** /me-র myPosts-SQL-এ accepted_comment_id → ক্যানোনিকাল feed-acc-badge135 /me-তেও রেন্ডার; নতুন E2E **verify-session139-parity.sh ২২/২২ ALL GREEN** (সিড→গ্রহণ→ব্যাজ→ডিলিট-অনুপস্থিতি-পুনঃযাচাই)
+- **ফিচার ③ tokens-র্যাচেট-ওয়েভ-২:** scripts/patch139-admin-ratchet.js — ৬০ নতুন --lf-* টোকেন (TW-স্ট্যান্ডার্ড ৪১ + FB-গ্রে-র‍্যাম্প ১৫ + ব্র্যান্ড-সবুজ ৫) → admin.css exact-value var()-ম্যাপ **১৭২→৩০ হেক্স (৮৩%)** — ভিজ্যুয়াল-পরিবর্তন-শূন্য (computed-style প্রমাণ: --lf-brandgreen #0aa56d লাইভ-রেজলভ, emblem-gradient rgb(10,165,109)); বেসলাইন 172→30
+- **ফিচার ②④ যাচাই-ফল (কোড-শূন্য):** answer_accepted reltime-চিপ ত্রি-সারফেসেই-সম্পূর্ণ (৩০/৩০-রো-চিপ-গণনা-প্যারিটি + icon-accepted135); crx og-default-গার্ড session133-এই-সম্পন্ন। + ismail-এর ৩১-স্টেল-টেস্ট-বিজ্ঞপ্তি-পরিষ্কারণ
+- **চূড়ান্ত-রিগ্রেশন:** role-policy ১৭৭/১৭৭ ✓ cursor ২৫/২৫ ✓ s132-E2E ১৯/১৯ ✓ s139-E2E ২২/২২ ✓ guard ✓ বেসলাইন ✓ node --check ✓ ৮-পেজ কনসোল-০/390px-০ ✓ স্ক্রিনশট ×২ (s139-admin-ratchet + s139-me-badge)
+- docs: PLANS session139-নোট (গোটচা ×৫) + PROJECT §১৩৯ + repo-worklog + এই worklog
+
+## Unresolved Issues / Risks / Next Priorities
+- admin.css-অবশিষ্ট-৩০-একক-শেড (ওয়েভ-৩-ছোট) + dashboard.css (২৩৩)/style.css (১৩৯৫)-র্যাচেট
+- গোটচা ×৫ (PLANS): grep `.{0,N}`-উইন্ডো বিশাল-লাইনে ঝুলে (awk index/substr বাধ্যতামূলক) · awk `BEGIN{RS="\0"}` গোটা-ফাইল-রেকর্ড · CSRF-টোকেন পেজ-স্কোপড (টার্গেট-পেজ থেকেই getcsrf) · grid `1fr`-এ auto-min-ফাঁদ (minmax(0,1fr)-রীতি) · proof-mode-লেখা-গেট (if APPLY)
+- audit-র .env-ফেইল = sandbox-artifact (untracked+gitignored)
+- **পরের-এজেন্ট: session142 লেবেল থেকে** (আমার-এন্ট্রি-রিলেবেল 139→141 দেখুন)

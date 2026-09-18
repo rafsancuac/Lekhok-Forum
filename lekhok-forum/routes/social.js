@@ -2199,9 +2199,11 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
   const me = req.session.user;
 
   // My published posts (articles + Q&A)
+  // session139: accepted_comment_id — /me-র প্রশ্ন-কার্ডেও feed-acc-badge135 (session135-ব্যাজের
+  // /me-প্যারিটি; profile.ejs SELECT *-এ ইতোমধ্যে ছিল, /me-র স্পষ্ট-কলাম-তালিকায় ছিল না)
   const myPosts = await db.prepare(`
     SELECT id, type, title, body, excerpt, cover_image, like_count, comment_count, view_count,
-           published_at, created_at, status, featured
+           published_at, created_at, status, featured, accepted_comment_id
     FROM posts WHERE author_id = ? ORDER BY created_at DESC LIMIT 50
   `).all(me.id);
 

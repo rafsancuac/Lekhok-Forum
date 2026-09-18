@@ -299,3 +299,70 @@ html { background: var(--lf-ui-canvas); }
   --lf-read-quote-ink: #3f5346;         /* a-quote পাঠ্য-কালি */
  (wip(session136): qa-composer + hex-tokenize (pre-rebase))
 }
+
+/* ═════════ session139-admin-ratchet — admin.css র্যাচেট-ওয়েভ-২ (session136-ওয়েভ-১-এর ধারাবাহিকতা) ═════════════
+   উৎপত্তি: admin.css-অবশিষ্ট হেক্সের exact-value টোকেনাইজেশন — ভিজ্যুয়াল-পরিবর্তন-শূন্য।
+   তিন-পরিবার: ① TW-স্ট্যান্ডার্ড শেড (স্কেল-নাম) ② FB-গ্রে-র‍্যাম্প (কাস্টম নিউট্রাল)
+   ③ ব্র্যান্ড-সবুজ (admin-সাকসেস-স্টেট)। hex শুধু এখানেই (guard চুক্তি)। ═════════════ */
+:root:root {
+  --lf-gray-50: #f3f4f6;
+  --lf-gray-200: #e5e7eb;
+  --lf-gray-300: #d1d5db;
+  --lf-gray-400: #9ca3af;
+  --lf-gray-500: #6b7280;
+  --lf-gray-600: #4b5563;
+  --lf-gray-700: #374151;
+  --lf-gray-900: #111827;
+  --lf-blue-200: #bfdbfe;
+  --lf-blue-300: #93c5fd;
+  --lf-blue-600: #2563eb;
+  --lf-blue-700: #1d4ed8;
+  --lf-blue-800: #1e40af;
+  --lf-sky-50: #f0f9ff;
+  --lf-sky-200: #bae6fd;
+  --lf-indigo-50: #eef2ff;
+  --lf-indigo-100: #e0e7ff;
+  --lf-indigo-800: #3730a3;
+  --lf-violet-100: #ede9fe;
+  --lf-violet-600: #7c3aed;
+  --lf-violet-700: #6d28d9;
+  --lf-violet-800: #5b21b6;
+  --lf-cyan-600: #0891b2;
+  --lf-cyan-800: #075985;
+  --lf-emerald-300: #6ee7b7;
+  --lf-emerald-500: #10b981;
+  --lf-green-100: #dcfce7;
+  --lf-green-700: #15803d;
+  --lf-green-800: #166534;
+  --lf-rose-200: #fca5a5;
+  --lf-rose-300: #fda4af;
+  --lf-orange-50: #fff7ed;
+  --lf-orange-200: #fed7aa;
+  --lf-orange-300: #fdba74;
+  --lf-yellow-100: #fef9c3;
+  --lf-yellow-700: #a16207;
+  --lf-yellow-800: #854d0e;
+  --lf-amber-300: #fcd34d;
+  --lf-amber-600: #d97706;
+  --lf-amber-900: #78350f;
+  --lf-fbg-50: #fafbfc;
+  --lf-fbg-75: #f7f8fa;
+  --lf-fbg-100: #f1f2f4;
+  --lf-fbg-150: #eef1f5;
+  --lf-fbg-200: #e9ebef;
+  --lf-fbg-210: #eef2f7;
+  --lf-fbg-300: #dde3ea;
+  --lf-fbg-400: #ccd0d5;
+  --lf-fbg-410: #cdd2d8;
+  --lf-fbg-500: #8a8d93;
+  --lf-fbg-ink: #111111;
+  --lf-fb-link-slate: #34495e;
+  --lf-fb-text: #1c1e21;
+  --lf-fb-text-2: #444950;
+  --lf-fb-text-3: #4b4f56;
+  --lf-brandgreen-soft: #e6f6ef;
+  --lf-brandgreen-soft-2: #eaf7f0;
+  --lf-brandgreen-soft-3: #b5e3d0;
+  --lf-brandgreen: #0aa56d;
+  --lf-brandgreen-deep: #0b6b4b;
+}
