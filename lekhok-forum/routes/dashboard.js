@@ -839,8 +839,11 @@ router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), asy
     if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.status(400).json({ ok: false, error: 'empty' });
     return res.redirect('/messages/' + req.params.username);
   }
-  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, reply_to_id) VALUES (?, ?, ?, ?, ?, ?)')
-    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, replyToId);
+  // সেশন ১৫৮: ভয়েস-মেসেজ স্থায়ী-ফিক্স — রেকর্ডারের মাপা সেকেন্ধ duration DB-তে।
+  // multipart-ফিল্ড multer req.body-তে দেয়; অনুপস্থিত/অবৈধ হলে ০ (নিরাপদ)।
+  const voiceDur158 = Math.max(0, Math.min(7200, parseInt(req.body && req.body.duration, 10) || 0));
+  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, duration, reply_to_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, voiceDur158, replyToId);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   // সেশন ৯৯: SSE পুশ — প্রাপক তাৎক্ষণিক জানবে (পোলিং-ফলব্যাক অক্ষত; এটা শুধু
   // লেটেন্সি ২.৫সে → ~০ করে)। প্রেরকের ট্যাবগুলো ইচ্ছাকৃতভাবে বাদ — optimistic-
@@ -955,8 +958,10 @@ router.post('/messages/g/:id', ensureAuth, withUpload(attachmentUpload), async (
     const rt = await db.prepare('SELECT id FROM messages WHERE id = ? AND conversation_id = ?').get(replyToId, conv.id);
     if (!rt) replyToId = null;
   }
-  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, reply_to_id) VALUES (?, ?, ?, ?, ?, ?)')
-    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, replyToId);
+  // সেশন ১৫৮: গ্রুপেও ভয়েস-duration স্থায়ী (১:১-পথের রূপান্তর সমতুল্য)
+  const voiceDurG158 = Math.max(0, Math.min(7200, parseInt(req.body && req.body.duration, 10) || 0));
+  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, duration, reply_to_id) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .run(conv.id, me, (body || '').trim() || null, fileUrl, fileName, voiceDurG158, replyToId);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(conv.id);
   const members = await db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(conv.id);
   // সেশন ৯৯: SSE পুশ — গ্রুপ-সদস্যরা তাৎক্ষণিক জানবে (প্রেরক বাদ — ওপরের নীতি)
@@ -1474,8 +1479,9 @@ router.post('/api/messages/:id/forward', ensureAuth, async (req, res) => {
   if (!msg || !(await convAccess(msg.conversation_id, me))) return res.status(403).json({ ok: false, error: 'forbidden' });
   const target = await convAccess(targetId, me);
   if (!target) return res.status(403).json({ ok: false, error: 'forbidden' });
-  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name) VALUES (?, ?, ?, ?, ?)')
-    .run(targetId, me, msg.body, msg.file_url, msg.file_name);
+  // সেশন ১৫৮: ফরওয়ার্ডে মূল ভয়েস-duration অক্ষত কপি হয়
+  const ins = await db.prepare('INSERT INTO messages (conversation_id, sender_id, body, file_url, file_name, duration) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(targetId, me, msg.body, msg.file_url, msg.file_name, parseInt(msg.duration, 10) || 0);
   await db.prepare('UPDATE conversations SET last_message_at = CURRENT_TIMESTAMP WHERE id = ?').run(targetId);
   const preview = (msg.body || '📎 ' + (msg.file_name || 'ফাইল')).slice(0, 60);
   if (target.is_group) {
@@ -1522,7 +1528,7 @@ router.get('/api/messages/conv/:id/media', ensureAuth, async (req, res) => {
   if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
 
   const rows = await db.prepare(
-    `SELECT m.id, m.body, m.file_url, m.file_name, m.created_at, u.full_name AS sender_name
+    `SELECT m.id, m.body, m.file_url, m.file_name, m.duration, m.created_at, u.full_name AS sender_name
      FROM messages m JOIN users u ON u.id = m.sender_id
      WHERE m.conversation_id = ? AND (m.file_url IS NOT NULL AND m.file_url != '') 
      ORDER BY m.id DESC LIMIT 90`
@@ -1537,7 +1543,7 @@ router.get('/api/messages/conv/:id/media', ensureAuth, async (req, res) => {
   const files = [];
   const seen = new Set();
   for (const m of rows) {
-    const item = { id: m.id, url: m.file_url, name: m.file_name || m.file_url.split('/').pop() || 'ফাইল', by: m.sender_name, at: m.created_at };
+    const item = { id: m.id, url: m.file_url, name: m.file_name || m.file_url.split('/').pop() || 'ফাইল', by: m.sender_name, at: m.created_at, duration: parseInt(m.duration, 10) || 0 };
     if (isImg(m.file_url)) images.push(item);
     else if (isAud(m.file_url)) voice.push(item);
     else { if (!seen.has(m.file_url)) { seen.add(m.file_url); files.push(item); } }

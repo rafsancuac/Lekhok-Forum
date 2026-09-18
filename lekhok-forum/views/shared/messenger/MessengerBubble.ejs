@@ -59,11 +59,19 @@
         <% if (_isImg(m.file_url)) { %>
           <a href="<%= m.file_url %>" target="_blank" rel="noopener"><img loading="lazy" decoding="async" src="<%= m.file_url %>" alt="<%= m.file_name || 'ছবি' %>" class="bubble-image" /></a>
         <% } else if (_isAud(m.file_url)) { %>
-          <%# সেশন ৯২: ভয়েস-নোট প্লেয়ার (FB-স্টাইল ওয়েভফর্ম) %>
-          <div class="bubble-voice" data-src="<%= m.file_url %>">
+          <%# সেশন ৯২: ভয়েস-নোট প্লেয়ার (FB-স্টাইল ওয়েভফর্ম) — সেশন ১৫৮:
+              DB-সংরক্ষিত duration এখানেই data-duration + বাংলা-টাইম হিসেবে রেন্ডার
+              হয় — রিফ্রেশে আর কখনো ০:০০ আসবে না। duration=০ (লেগেসি-রো) হলে
+              ক্লায়েন্টের voice-probe (messages-chat.ejs) Chromium Infinity-hack
+              দিয়ে আসল সময় বের করে বসায়। %>
+          <% var _vdu158 = parseInt(m.duration, 10) || 0;
+             var _bn158 = '০১২৩৪৫৬৭৮৯';
+             function _bvBn158(n) { return String(n).replace(/\d/g, function (d) { return _bn158[d]; }); }
+             var _bvTime158 = _vdu158 > 0 ? (_bvBn158(Math.floor(_vdu158 / 60)) + ':' + _bvBn158(String(_vdu158 % 60).length < 2 ? '0' + (_vdu158 % 60) : String(_vdu158 % 60))) : '০:০০'; %>
+          <div class="bubble-voice" data-src="<%= m.file_url %>" data-duration="<%= _vdu158 %>">
             <button type="button" class="bv-play" aria-label="প্লে করুন"><i class="fas fa-play"></i></button>
             <div class="bv-wave" aria-hidden="true"><% (function(){ var seed = String(m.id); var x = 7; for (var i = 0; i < 22; i++) { x = (x * 31 + 17) % 97; var h = 22 + (x % 78); %><span style="--h:<%= h %>%"></span><% } })(); %></div>
-            <span class="bv-time">০:০০</span>
+            <span class="bv-time"><%= _bvTime158 %></span>
           </div>
         <% } else { %>
           <a href="<%= m.file_url %>" class="bubble-file" download="<%= m.file_name || 'file' %>">

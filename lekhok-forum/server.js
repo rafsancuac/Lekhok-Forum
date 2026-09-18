@@ -237,6 +237,16 @@ app.use(express.static(path.join(__dirname, 'public'), {
       res.setHeader('Cache-Control', 'no-cache');
     } else if (rel.startsWith('/assets/fonts/') || rel.startsWith('/assets/') || rel.startsWith('/uploads/')) {
       res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+      // সেশন ১৫৮: ভয়েস-নোট Content-Type স্ট্রেটার — mime-db-তে .webm → video/webm;
+      // মেসেঞ্জার-অ্যাটাচমেন্টে webm = শুধুমাত্র-অডিও MediaRecorder-আউটট (রেকর্ডার
+      // audio/webm-ই পাঠায়) → সঠিক audio/webm হেডারই <audio> ডিকোড-নিশ্চিত করে।
+      // স্কোপড-শুধু /uploads/attachments/ — কম্পোজার/রিসোর্সের আসল ভিডিও-webm
+      // video/webm-ই থাকবে। setHeaders হেডার-ফ্লাশের আগে চলে — এখানেই ওভাররাইড কার্যকর।
+      if (/^\/uploads\/attachments\/[^/]+\.webm$/i.test(rel)) {
+        res.setHeader('Content-Type', 'audio/webm');
+      } else if (/^\/uploads\/attachments\/[^/]+\.oga$/i.test(rel)) {
+        res.setHeader('Content-Type', 'audio/ogg');
+      }
     } else {
       res.setHeader('Cache-Control', 'public, max-age=86400');
     }

@@ -340,7 +340,7 @@
               <% if (_sharedVn.length) { %>
                 <div class="md-vn-list">
                   <% _sharedVn.forEach(function (vn) { %>
-                    <div class="bubble-voice md-vn" data-src="<%= vn.file_url %>">
+                    <div class="bubble-voice md-vn" data-src="<%= vn.file_url %>" data-duration="<%= parseInt(vn.duration, 10) || 0 %>">
                       <button type="button" class="bv-play" aria-label="প্লে করুন"><i class="fas fa-play"></i></button>
                       <div class="bv-wave" aria-hidden="true"><% (function(){ var x = 11; for (var i = 0; i < 16; i++) { x = (x * 29 + 13) % 89; var h = 24 + (x % 72); %><span style="--h:<%= h %>%"></span><% } })(); %></div>
                       <span class="bv-time">০:০০</span>
@@ -539,7 +539,7 @@
       function voiceRow(vn) {
         let x = 11, spans = '';
         for (let i = 0; i < 16; i++) { x = (x * 29 + 13) % 89; spans += '<span style="--h:' + (24 + (x % 72)) + '%"></span>'; }
-        return '<div class="bubble-voice md-vn" data-src="' + esc(vn.url) + '">' +
+        return '<div class="bubble-voice md-vn" data-src="' + esc(vn.url) + '" data-duration="' + (parseInt(vn.duration, 10) || 0) + '">' +
           '<button type="button" class="bv-play" aria-label="প্লে করুন"><i class="fas fa-play"></i></button>' +
           '<div class="bv-wave" aria-hidden="true">' + spans + '</div>' +
           '<span class="bv-time">\u09E6:\u09E6\u09E6</span></div>';
@@ -579,6 +579,8 @@
         panes.media.innerHTML = renderMedia(images, voice);
         panes.files.innerHTML = renderFiles(files);
         panes.links.innerHTML = renderLinks(links);
+        /* সেশন ১৫৮: নতুন-যোগ ভয়েস-রো-তে DB-duration বসাতে re-normalize ইভেন্ট */
+        try { document.dispatchEvent(new CustomEvent('lf:voice-nodes-added')); } catch (_) {}
         if (counts.media) counts.media.textContent = (images.length + voice.length) || '';
         if (counts.files) counts.files.textContent = files.length || '';
         if (counts.links) counts.links.textContent = links.length || '';
@@ -1075,7 +1077,23 @@
         if (msg.reply_to_id) html += '<div class="bubble-quote"><span class="bq-name">' + escapeHtml(msg.reply_sender_name || 'মেসেজ') + '</span><span class="bq-text">' + escapeHtml(String(msg.reply_body || '').slice(0, 120)) + '</span></div>';
         html += '<div class="bubble-text"></div>';
         if (msg.file_url) {
+          /* সেশন ১৫৮: ভয়েস-সনাক্তকরণ — নিখুঁত (নিক-হোয়াইটলিস্ট):
+             ① স্পষ্ট isVoice ফ্ল্যাগ (রেকর্ডার পাঠায়) ② file_name-এ অডিও-এক্সটেনশন
+             ③ URL-এ অডিও-এক্সটেনশন। blob: URL-এ এক্সটেনশন নেই — তাই file_name
+             চেক বাধ্যতামূলক। মিললে এখনই আসল ভয়েস-প্লেয়ার বাবল (blob URL থেকেই
+             তাৎক্ষণিক প্লেযোগ্য) — ডকুমেন্ট-বাবল আর কখনো হবে না। */
+          const audRe158 = /\.(webm|ogg|oga|m4a|mp3|wav|aac|opus)$/i;
+          const isVoice158 = !!msg.isVoice || audRe158.test(String(msg.file_name || '')) || audRe158.test(String(msg.file_url));
           if (/\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(msg.file_url)) html += '<a href="' + msg.file_url + '" target="_blank" rel="noopener"><img src="' + msg.file_url + '" alt="" class="bubble-image" /></a>';
+          else if (isVoice158) {
+            const vdur = Math.max(0, parseInt(msg.duration, 10) || 0);
+            let wx = 13, wv = '';
+            for (let wi = 0; wi < 22; wi++) { wx = (wx * 31 + 17) % 97; wv += '<span style="--h:' + (22 + (wx % 78)) + '%"></span>'; }
+            html += '<div class="bubble-voice" data-src="' + escapeHtml(msg.file_url) + '" data-duration="' + vdur + '">' +
+              '<button type="button" class="bv-play" aria-label="প্লে করুন"><i class="fas fa-play"></i></button>' +
+              '<div class="bv-wave" aria-hidden="true">' + wv + '</div>' +
+              '<span class="bv-time">' + bnTime(vdur) + '</span></div>';
+          }
           else html += '<a href="' + msg.file_url + '" class="bubble-file"><i class="fas fa-paperclip"></i> ' + escapeHtml(msg.file_name || 'ফাইল') + '</a>';
         }
         html += '</div><div class="bubble-meta"><span class="bubble-time"></span><span class="bubble-seen"><i class="fas fa-check" title="পৌঁছেছে"></i></span></div>';
@@ -1685,6 +1703,13 @@
     const bnTime = (t) => { t = Math.max(0, Math.floor(t)); return bnDg(Math.floor(t / 60)) + ':' + bnDg(String(t % 60).padStart(2, '0')); };
 
     // ── ভয়েস-প্লেয়ার (ডেলিগেশন — পোলে-আসা বাবলেও স্বয়ংক্রিয়) ──
+    // সেশন ১৫৮ (স্থায়ী-ফিক্স): ① Chromium WebM Infinity-duration হ্যাক —
+    // MediaRecorder-এর webm-হেডারে Duration নেই → audio.duration = Infinity →
+    // ১e101-এ সিক করলে Chromium প্রান্ত-স্ক্যান করে সত্যিকারের duration আবিষ্কার করে
+    // ② DB-সংরক্ষিত data-duration সর্বোচ্চ-অগ্রাধিকার পায় ③ timeupdate-এ
+    // Infinity-truthy-পাইট্র্যাপ — `audio.duration || fallback` লিখলে Infinity-ই জেতে
+    // এবং ওয়েভফর্ম-প্রগ্রেস ০-তে আটকে থাকে; isFinite-গার্ড বাধ্যতামূলক ④ লেগেসি
+    // (duration-শূন্য) ভয়েস-বাবলের জন্য পৃষ্ঠা-লোডে ধাপে-ধাপে metadata-probe।
     (function voicePlayer() {
       let audio = null, cur = null;
       function resetUI(p, backToDur) {
@@ -1697,6 +1722,60 @@
           if (tm) tm.textContent = bnTime(parseInt(p.dataset.duration, 10));
         }
       }
+      function showDur(p, sec) {
+        if (!p || !sec || !isFinite(sec) || sec <= 0) return;
+        p.dataset.duration = String(Math.round(sec));
+        const tm = p.querySelector('.bv-time');
+        if (tm) tm.textContent = bnTime(sec);
+      }
+      // Chromium Infinity-duration হ্যাক — ব্যক্তিগত Audio দিয়ে প্রোব (প্লেয়ার-অবস্থা অস্পৃশ্য)
+      function probeDuration(url, cb) {
+        const a = new Audio();
+        a.preload = 'metadata';
+        let done = false;
+        const finish = function (d) { if (done) return; done = true; a.removeAttribute('src'); try { a.load(); } catch (_) {} cb(d); };
+        a.addEventListener('error', function () { finish(0); });
+        a.addEventListener('loadedmetadata', function () {
+          if (isFinite(a.duration) && a.duration > 0) return finish(Math.round(a.duration));
+          a.ontimeupdate = function () {
+            a.ontimeupdate = null;
+            const d = (isFinite(a.duration) && a.duration > 0) ? Math.round(a.duration) : 0;
+            try { a.currentTime = 0; } catch (_) {}
+            finish(d);
+          };
+          try { a.currentTime = 1e101; } catch (_) { finish(0); }
+        });
+        a.src = url;
+        setTimeout(function () { finish(0); }, 8000);
+      }
+      // পৃষ্ঠা-লোডে: ① নরমালাইজ-পাস — data-duration>0 (DB-মান) কিন্তু bv-time
+      // এখনো প্লেসহোল্ডার ০:০০ (মিডিয়া-প্যান স্ট্যাটিক/AJAX-রো) → সঙ্গে-সঙ্গে
+      // বাংলা-টাইম বসাও ② লেগেসি (duration-শূন্য) বাবল — ক্রমিক-প্রোব কিউ
+      function initVoiceDurations() {
+        const all = Array.prototype.slice.call(document.querySelectorAll('.bubble-voice[data-src]'));
+        all.forEach(function (p) {
+          const d = parseInt(p.dataset.duration, 10) || 0;
+          if (d > 0) {
+            const tm = p.querySelector('.bv-time');
+            if (tm && (tm.textContent === '০:০০' || !tm.textContent.trim())) tm.textContent = bnTime(d);
+          }
+        });
+        const pend = all
+          .filter(function (p) { return !(parseInt(p.dataset.duration, 10) > 0); });
+        (function next() {
+          const p = pend.shift();
+          if (!p) return;
+          if (!document.contains(p)) return next();
+          probeDuration(p.dataset.src, function (d) {
+            if (d > 0 && document.contains(p)) showDur(p, d);
+            setTimeout(next, 120);
+          });
+        })();
+      }
+      /* সেশন ১৫৮: ডাইনামিক-যোগ (AJAX মিডিয়া-প্যান/পোল-বাবল) — re-normalize */
+      document.addEventListener('lf:voice-nodes-added', initVoiceDurations);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initVoiceDurations);
+      else initVoiceDurations();
       document.addEventListener('click', function (e) {
         const btn = e.target.closest('.bv-play');
         if (!btn) return;
@@ -1707,7 +1786,10 @@
           audio.preload = 'metadata';
           audio.addEventListener('timeupdate', function () {
             if (!cur) return;
-            const d = audio.duration || parseFloat(cur.dataset.duration || '0') || 0;
+            /* সেশন ১৫৮: Infinity-truthy-পাইট্র্যাপ — isFinite-গার্ড, নইলে
+               MediaRecorder-webm-এ প্রগ্রেস-বার ০-তেই আটকে থাকে */
+            const ad = audio.duration;
+            const d = (isFinite(ad) && ad > 0) ? ad : (parseFloat(cur.dataset.duration || '0') || 0);
             const pct = d ? Math.min(1, audio.currentTime / d) : 0;
             const bars = cur.querySelectorAll('.bv-wave span');
             const n = Math.floor(pct * bars.length);
@@ -1724,21 +1806,28 @@
           if (cur) resetUI(cur, true);
           cur = player;
           if (!audio.src || audio.src !== player.dataset.src) audio.src = player.dataset.src;
-          audio.currentTime = 0;
+          try { audio.currentTime = 0; } catch (_) {}
         }
         const ic = btn.querySelector('i');
         audio.play().then(function () { if (ic) ic.className = 'fas fa-pause'; player.classList.add('is-playing'); }).catch(function () {});
-        if (!player.dataset.duration) {
-          audio.addEventListener('loadedmetadata', function once() {
-            audio.removeEventListener('loadedmetadata', once);
-            if (!cur || cur !== player) return;
-            if (isFinite(audio.duration) && audio.duration > 0) {
-              player.dataset.duration = String(Math.round(audio.duration));
-              const tm = player.querySelector('.bv-time');
-              if (tm) tm.textContent = bnTime(audio.duration);
-            }
-          });
-        }
+        /* সেশন ১৫৮: duration-আয় — DB-মান আগে (সঙ্গে-সঙ্গে দৃশ্যমান); ফাইল-হেডারে
+           সত্যিকারের মান এলে সেটাই গ্রহণ; Infinity হলে সিক-হ্যাক */
+        if (parseInt(player.dataset.duration, 10) > 0) showDur(player, parseInt(player.dataset.duration, 10));
+        audio.addEventListener('loadedmetadata', function once() {
+          audio.removeEventListener('loadedmetadata', once);
+          if (!cur || cur !== player) return;
+          if (isFinite(audio.duration) && audio.duration > 0) {
+            if (audio.duration > 0.5) showDur(player, Math.round(audio.duration));
+            return;
+          }
+          if (parseInt(player.dataset.duration, 10) > 0) return; /* DB-মানই যথেষ্ট */
+          audio.ontimeupdate = function () {
+            audio.ontimeupdate = null;
+            if (isFinite(audio.duration) && audio.duration > 0) showDur(player, Math.round(audio.duration));
+            try { audio.currentTime = 0; audio.play().catch(function () {}); } catch (_) {}
+          };
+          try { audio.currentTime = 1e101; } catch (_) {}
+        });
       });
     })();
 
@@ -1898,20 +1987,25 @@
         cleanupRec();
         if (send) {
           if (!blob.size || dur < 600) { fbToast('রেকর্ডিং খুব ছোট — আবার চেষ্টা করুন'); return; }
-          sendVoice(blob, st.ext);
+          /* সেশন ১৫৮: setInterval-গণিত সেকেন্ধই সত্যিকারের duration — DB-তে স্থায়ী হয় */
+          sendVoice(blob, st.ext, Math.round(dur / 1000));
         }
       };
       try { st.rec.stop(); } catch (e) { cleanupRec(); }
     }
-    async function sendVoice(blob, ext) {
+    async function sendVoice(blob, ext, durSec) {
       const name = 'voice-' + Date.now() + '.' + ext;
       const optId = 'tmp-v' + Date.now();
       const objUrl = URL.createObjectURL(blob);
-      const opt = { id: optId, body: '', file_url: objUrl, file_name: name, is_me: true, created_at: new Date().toISOString() };
+      const durSec158 = Math.max(1, Math.round(durSec || 0));
+      /* সেশন ১৫৮: isVoice + duration অপটিমিস্টিক-বাবলেই — appendMessage এখন
+         এখান থেকেই তাৎক্ষণিক প্লেযোগ্য ভয়েস-প্লেয়ার রেন্ডার করে (ডকুমেন্ট নয়) */
+      const opt = { id: optId, body: '', file_url: objUrl, file_name: name, is_me: true, created_at: new Date().toISOString(), isVoice: true, duration: durSec158 };
       appendMessage(opt);
       if (typeof SoundFX !== 'undefined') { try { SoundFX.send(); } catch (_) {} }
       const fd = new FormData();
       fd.append('body', '');
+      fd.append('duration', String(durSec158)); /* সেশন ১৫৮: বাধ্যতামূলক duration-পে-লোড */
       try { fd.append('attachment', new File([blob], name, { type: blob.type || 'audio/webm' })); }
       catch (e) { fd.append('attachment', blob, name); }
       try {

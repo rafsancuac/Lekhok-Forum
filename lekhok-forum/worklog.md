@@ -1957,3 +1957,23 @@ Stage Summary:
 - ইউজার-প্রভাব: হোম+সব-পাবলিক-পেজে মেনুবার এখন স্ক্রলেও উপরে স্থির; "ফিডে যান"/"লগইন"/"গ্যালারি"/ফুটার-সবুজ সব উজ্জ্বল এমারেল্ড (#34D399-টোকেন)
 - শিক্ষা: CSS-কমেন্টের হেক্স-উল্লেখও guard-র্যাচেটে গোনা হয়; CSS-এডিটের পর AV-bump-এ সার্ভার-রিস্টার্ট বাধ্যতামূলক
 - পরের-এজেন্ট: session160 থেকে
+
+---
+Task ID: session158
+Agent: Main verification agent (Session 158)
+Task: ভয়েস-মেসেজ ৩-বাগের গভীর-বিশ্লেষণ ও স্থায়ী ফিক্স (EJS অ্যাপ — ইউজারের আসল ব্যবহৃত অ্যাপ)
+
+Work Log:
+- RCA: ইউজারের "আগের ফিক্স" (session155) গিয়েছিল lekhok-forum-next-এ; ইউজার ব্যবহার করছেন Express/EJS অ্যাপ (স্ক্রিনশটের "মিসড অডিও কল" বাবল শুধু EJS-অ্যাপের calls.js-পথ) — ভুল-অ্যাপে-ফিক্স-ই মূল কারণ
+- বাগ-১ (ডকুমেন্ট-বাবল): appendMessage optimistic-পথে শুধু ইমেজ-এক্সটেনশন চেক — blob: URL-এ .webm নেই বলে 📎 ফাইল-বাবল
+- বাগ-২ (রিফ্রেশে ০:০০): messages টেবিলে duration কলাম-ই নেই + MediaRecorder webm-হেডারে Duration নেই (Infinity) + bv-time প্লে-ছাড়া ফিল হয় না
+- বাগ-৩ (শোনা যায় না/প্রগ্রেস-আটকে): timeupdate-এ `audio.duration || fallback` — Infinity-truthy-পাইট্র্যাপ; + mime-db .webm→video/webm
+- ফিক্স: db.js duration-কলাম (CREATE+LATER_COLUMNS) · dashboard.js ৩-INSERT (1:1/গ্রুপ/ফরওয়ার্ড) · MessengerBubble.ejs data-duration+বাংলা-টাইম সার্ভার-রেন্ডার · messages-chat.ejs optimistic-ভয়েস-বাবল (isVoice+file_name-নিক-চেক) + Chromium Infinity-সিক-হ্যাক (১e101) + পৃষ্ঠা-লোডে নরমালাইজ+লেগেসি-প্রোব-কিউ + AJAX-পেইন্টে lf:voice-nodes-added ইভেন্ট · server.js setHeaders-এ attachments-webm→audio/webm (স্কোপড — কম্পোজার-ভিডিও অক্ষত)
+- E2E (curl+agent-browser, 9158): duration=8-পে-লোড → DB-রো [1,'voice-…webm',8] → রেন্ডার data-duration="8"+০:০৮ (মেইন+মিডিয়া-প্যান ×৪) → Content-Type audio/webm → trusted-ক্লিকে playing:true+বার-প্রগ্রেস+timeupdate-বাংলা-টাইম → EBML-Duration=Infinity-ফাইলে সিক-হ্যাক=৮-সেকেন্ড/12ms → optimistic appendMessage → bubble-voice (hasFile:false, ০:১১)
+- রিগ্রেশন: fresh-DB-parity IDENTICAL (210=210, git-stash-বেসলাইন-diff-শূন্য) + node --check ×৩ + audit:views (১০৬-ejs পরিষ্কার) + কনসোল-০
+
+Stage Summary:
+- নতুন-ভয়েসে duration DB-তে স্থায়ী → রিফ্রেশেও সঠিক সময়; পাঠানো-মুহূর্তেই প্লেযোগ্য ভয়েস-বাবল; লেগেসি-রো (duration=০) প্রোব-হ্যাকে আসল সময় পায়
+- চুক্তি: duration-সেভ করতে হলে FormData 'duration' (সেকেন্ড) পাঠাতেই হবে; নতুন-ভয়েস-সারফেসে data-duration+০:০০-প্লেসহোল্ডার রেখে নরমালাইজ-ইভেন্টের ওপর ভরসা
+- পরীক্ষা-গোটচা: agent-browser eval-ক্লিকে user-activation নেই → NotAllowedError (হার্নেস-আর্টিফ্যাক্ট) — প্লে-টেস্টে agent-browser click (trusted) ব্যবহার করুন; headless-এ blob:-অডিও "URL safety check"-ব্লকড — http-URL-ই পরীক্ষা-পথ
+

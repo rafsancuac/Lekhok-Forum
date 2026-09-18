@@ -307,6 +307,7 @@ const MIGRATION_SQL = `
     body TEXT,
     file_url TEXT,
     file_name TEXT,
+    duration INTEGER DEFAULT 0,
     is_read INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -540,6 +541,12 @@ const LATER_COLUMNS = [
   // মিউট/পিন (1:1-এ সেশন-মিউটে অন-ডিমান্ড conversation_members রো তৈরি হয়)।
   ['messages', 'reply_to_id', 'INTEGER'],
   ['messages', 'edited_at',   'TEXT'],
+  // সেশন ১৫৮: ভয়েস-মেসেজ স্থায়ী-ফিক্স — রেকর্ডার-সাইডে মাপা সেকেন্ড DB-তে।
+  // MediaRecorder (Chromium) webm-হেডারে Duration-এলিমেন্ট লেখে না →
+  // audio.duration = Infinity → রিফ্রেশে ০:০০। সমাধান: রেকর্ডিং-সময়ে setInterval-
+  // গণিত সেকেন্ড এখানে সংরক্ষিত — বাবল সর্বদা data-duration পায় (মাইগ্রেশন
+  // idempotent — duplicate-column নিরীহ catch; Turso/sql.js উভয়-ব্যাকএন্ডে চলে)।
+  ['messages', 'duration', 'INTEGER DEFAULT 0'],
   ['conversation_members', 'muted',  'INTEGER DEFAULT 0'],
   ['conversation_members', 'pinned', 'INTEGER DEFAULT 0'],
   // সেশন ৮৫: পিনড-পোস্ট — লেখক তার সেরা লেখা প্রোফাইল-টাইমলাইনের শীর্ষে
