@@ -1118,3 +1118,18 @@ Work Log:
 Stage Summary:
 - QA-পেজে উত্তর/রিপ্লাই এখন ~৮০ms-এ দৃশ্যমান (৩-সারফেস-অপটিমিস্টিক-চুক্তি সম্পূর্ণ); tokens.css গার্ড-লকড; session113-③ বকেয়া-নয়-নোট (গ্লোবাল-ইঞ্জিনে পূর্ব-বিদ্যমান)
 - পরের-এজেন্ট: session125/126-সমান্তরাল-ল্যান্ডের পরে — **session128 থেকে** — reconcile-flash-মসৃণকরণ / crx-'শেষ-পড়া'-পিন / লাইভ-Turso-রিসেট (টোকেন-ধারী)
+
+---
+Task ID: session128 (push-সমাপ্তি — ত্রি-রাউন্ড-রেস: 124→127→128-রিলেবেল)
+Agent: Z.ai Agent (webDevReview)
+Task: session128-ফিচার-রাউন্ডের push — সমান্তরাল-এজেন্ট session124/125/126/127-ল্যান্ডের সাথে দুই-দফা rebase-ইউনিয়ন + পোস্ট-ইউনিয়ন-যাচাই
+
+Work Log:
+- push-রেস ×২: ① rebase-১ (৫-কমিট: canonical-insert 7ad5fb3 + qa-নেস্ট-পলিশ + paintList-মিরর/audit:views) — comment-tools.js/shared.css/PLANS/PROJECT/worklog×২ কনফ্লিক্ট ইউনিয়ন-সমাধান; ② rebase-২ (220b53d docs-session127 — চতুর্থ-স্বাধীন QA-optimistic-প্রচেষ্টার প্রত্যাহার-নোট) — ডক-কনফ্লিক্ট ×২; লেবেল 124→127→128 (দুই-দফা max+1)
+- ইউনিয়ন-সিদ্ধান্ত: ① আমার insertOptimistic-QA-ব্রাঞ্চ fallback-পথে রক্ষিত (7ad5fb3-canonical-লেখকের "অনন্য-রক্ষিত"-নোট + fallback-সম্পূর্ণতা; session125/220b53d-প্রত্যাহার-রেখার বিপরীতে — বিতর্ক PLANS-union-নোট-২-এ ডকুমেন্টেড) ② session125-এর :has(.opt-fresh)-রুল বাদ (আমার direct-class-রুলের ডুপ্লিকেট + :has()-নিষেধাজ্ঞা) ③ tokensHexGuard অনন্য-ল্যান্ডড (session113-⑤)
+- পোস্ট-ইউনিয়ন-যাচাই: role-policy 131/131 + cursor 25/25 + guard + audit:views (96-ejs-পরিষ্কার) + brace-০ ✓ ব্রাউজার-E2E মার্জড-কোডে: canonical-পাথ slots ১→২ + total-সিঙ্ক + answer-19-অ্যাঙ্কর + **qaFetchCalls=0** (রিফেচ-শূন্য) ✓ ক্লিনআপ ✓ 390px-০ ✓ কনসোল-০ ✓
+- পুশ: 220b53d..1b200cd ✓ পোস্ট-পুশ ৬-রুট-স্মোক ২০০ ✓
+
+Stage Summary:
+- ল্যান্ডেড: QA-ফলব্যাক-optimistic-ব্রাঞ্চ + session128-CSS-পলিশ (qaOptIn128/ring/focus-within) + tokensHexGuard — canonical-প্রাইমারি (তাদের) + fallback (আমার) সহাবস্থান, ডুপ্লিকেশন-শূন্য
+- **পরের-এজেন্ট: session129 থেকে** — PLANS-union-নোট-২-এ ফলব্যাক-ব্রাঞ্চ-বিতর্ক-সিদ্ধান্ত ডকুমেন্টেড
