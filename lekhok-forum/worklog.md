@@ -1635,3 +1635,19 @@ Work Log:
 Stage Summary:
 - @মেনশন এখন কমেন্ট/উত্তরে সত্যিই বিজ্ঞপ্তি পাঠায় (UI-প্রতিশ্রুতি=ডেলিভারি) + /qa কম্পোজারে অটোকমপ্লিট — Q&A-মেনশন-চক্র পূর্ণ
 - পরবর্তী-প্রার্থী: rich-editor(session143)-এ @মেনশন-ইন্টিগ্রেশন, নোটিফ-ডিপ-লিংকে #answer-N অ্যাঙ্কর, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট)
+Task ID: 18 (Session 146 — cron-QA রাউন্ড: পোস্ট-বডি og-কার্ড + এক্সটার্নাল domain-chip + og-কার্ড rx-ব্যাজ) [relabel: 143→146 — সমান্তরাল 143/144/145 আগে-ল্যান্ডেড]
+Agent: Main agent
+
+Work Log:
+- worklog-পর্যালোচনা: 78db543-বেসলাইন (0-behind); সার্ভিস-ত্রয়ী সুস্থ (8080/81/3000); বেসলাইন agent-browser QA বাগ-শূন্য (কনসোল-০, dupFixed ৬-০, প্যালেট-৭, পারমালিঙ্ক-attr, 390px-true-overflow-১=বাই-ডিজাইন-চিপ-স্ক্রল) → ফেজ-স্টেবল → session142-ব্যাকলগ ①②③ নির্বাচন (④ paintList-reltime session136-ক্যানোনিকালে প্রমাণিত — বাদ)
+- **ইমপ্ল (৬-ফাইল):** ① markdown-lite `plainWithLinks` — URL-সচেতন-ট্রান্কেশন + \u0000-প্লেসহোল্ডার-রক্ষা-মার্কার-স্ট্রিপ + অ্যাঙ্কর-রিস্টোর (RAW-আউটপুট) ② server.js mdFeed-ইনজেকশন ③ FeedPostCard দুই feed-text mdPlain→mdFeed ④ comment-tools og-ইঞ্জিন: .feed-text-স্ক্যান + .feed-card-body-মাউন্ট + extChip143 (amber domain-chip, ফেচ-শূন্য, data-ext-u-গার্ড) + rx-ব্যাজ ⑤ social.js _rx143 (likes-টেবিল মোট+শীর্ষ-ইমোজি; কেস ১/২/৩) ⑥ shared.css session143-ব্লক (টোকেন-শুধু, hex-শূন্য)
+- E2E: টেস্ট-পোস্টে অ্যাঙ্কর ×২ + og-কার্ড (প্রশ্ন-title+meta) + ext-chip + rx '😮১' ✓ API {১,😮}/absent/400 ✓ প্রোফাইল-সারফেস ✓ ইউনিট ×৪ ✓ স্ক্রিনশট ×২
+- **🚨 নতুন-গোটচা (সার্ভার-প্রসেস):** bare `node server.js` (পুরনো-এজেন্ট-অবশিষ্ট) + `node --watch` দ্বৈত-প্রসেস — bare পোর্ট-ধরে রাখলে --watch EADDRINUSE-wait অথচ curl 200 (পুরনো-কোড!) → রিস্টার্ট-পরে ps-দিয়ে একক-প্রসেস-যাচাই বাধ্যতামূলক
+- রিগ্রেশন: role-policy **212/212** ✓ cursor 25/25 ✓ guard ✓ audit:views ✓ brace-০ ×২ ✓ node --check ×৪ ✓ EJS ×২ ✓ dupFixed ✓ 390px ✓ কনসোল-০ ✓ ক্লিনআপ (টেস্ট-পোস্ট 651+কমেন্ট ডিলিট) ✓
+- push: (commit-hash নিচে) → origin/main
+
+Stage Summary:
+- **লিঙ্ক-ইকোসিস্টেম এখন FB-1:1 পোস্ট-স্তরেও:** পোস্ট-বডির URL ক্লিকযোগ্য + অভ্যন্তরীণ→og-কার্ড + এক্সটার্নাল→amber domain-chip + সব-কার্ডে রিঅ্যাকশন-সত্য; session142-ব্যাকলগ ①②③ সমাধাত (④ আগেই-ক্যানোনিকাল)
+- **নতুন-চুক্তি:** mdFeed (RAW!), .feed-text-স্ক্যান-সারফেস, rx_total/rx_top-পেলোড, data-ext-u-গার্ড — PLANS session143-নোটে ৫-চুক্তি
+- **ঝুঁকি:** স্টোরড-excerpt-পাথে (কাস্টম-সারাংশ) URL কাটা-থাকলে আংশিক-অ্যাঙ্কর-সম্ভব (pre-existing আচরণ-শ্রেণি, ড্যাশবোর্ড-ফিড body-পাথ = নিরাপদ); দ্বৈত-সার্ভার-প্রসেস-গোটচা ভবিষ্যৎ-রাউন্ডেও হাতড়াতে-পারে
+- **পরবর্তী-প্রায়োরিটি:** ① ext-chip favicon ② og-কার্ডে reactor-faces ③ article-single-বডিতে og-কার্ড ④ tokens-র্যাচেট (style.css ১৩৯৫) ⑤ **পরের-এজেন্ট session144 লেবেল থেকে**

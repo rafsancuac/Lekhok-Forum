@@ -1830,6 +1830,17 @@ const _LPV_RE139 = { hash: /#(?:fc-)?c(\d+)\s*$/, article: /^\/articles\/(\d+)/,
 // রিসোর্স-টাইপ মেটা + বাংলা-অঙ্ক (কার্ড-মেটা সাইট-কনভেনশন — ASCII-লিক-শূন্য)
 const _RT139 = require('../helpers/resource-types');
 const _bnNum139 = (n) => String(Number(n) || 0).replace(/[0-9]/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
+/* সেশন ১৪৩: rx-ব্যাজ-সত্য — likes-টেবিল থেকে মোট + শীর্ষ-ইমোজি (getReactionSummary-
+   এক-সোর্স-মিরর; REACTION_META-র ইমোজি-ম্যাপ)। resources-কেসে প্রযোজ্য নয় (likes-
+   টেবিলে রিসোর্স-সারফেস নেই)। */
+const _rxEmoji143 = (t) => (REACTION_META[t] && REACTION_META[t].emoji) || '👍';
+async function _rx143(col, id) {
+  const rows = await db.prepare(`SELECT reaction_type, COUNT(*) AS n FROM likes WHERE ${col} = ? GROUP BY reaction_type`).all(id);
+  const total = rows.reduce((s, r) => s + (Number(r.n) || 0), 0);
+  if (!total) return null;
+  const top = rows.slice().sort((a, b) => (Number(b.n) || 0) - (Number(a.n) || 0))[0];
+  return { total: _bnNum139(total), top: _rxEmoji143(top && top.reaction_type) };
+}
 router.get('/api/link-preview', async (req, res) => {
   const u = String(req.query.u || '');
   if (u.length > 300 || u[0] !== '/' || u.includes('//') || u.includes('\\') || u.includes('\0')) {
@@ -1850,13 +1861,15 @@ router.get('/api/link-preview', async (req, res) => {
           WHERE c.id = ?
         `).get(cid);
         if (!row) return null;
+        const rx143 = await _rx143('comment_id', row.id);
         return {
           kind: 'comment', label: 'মন্তব্য',
           title: displayName92(row) || 'সদস্য',
           desc: mdPlain85(row.body, 140),
           meta: (row.post_type === 'question' ? 'প্রশ্ন' : 'লেখা') + ': ' + (row.post_title || '').slice(0, 80) + (row.edited_at ? ' · সম্পাদিত' : ''),
           thumb: row.avatar_url || ('/avatar/' + row.author_id),
-          link: (row.post_type === 'question' ? '/qa/' : '/articles/') + row.post_id + '#fc-c' + row.id
+          link: (row.post_type === 'question' ? '/qa/' : '/articles/') + row.post_id + '#fc-c' + row.id,
+          ...(rx143 ? { rx_total: rx143.total, rx_top: rx143.top } : {})
         };
       }
       /* ── কেস-২: আর্টিকেল ── */
@@ -1868,13 +1881,15 @@ router.get('/api/link-preview', async (req, res) => {
           WHERE p.id = ? AND p.type = 'article' AND p.status = 'published'
         `).get(Number(m[1]));
         if (!row) return null;
+        const rx143 = await _rx143('post_id', row.id);
         return {
           kind: 'content', label: 'লেখা',
           title: (row.title || '').slice(0, 110),
           desc: mdPlain85(row.body, 120),
           meta: (row.full_name || 'সদস্য') + ' · 👁 ' + _bnNum139(row.view_count) + ' · 💬 ' + _bnNum139(row.comment_count),
           thumb: row.cover_image || null, icon: 'fa-feather-pointed',
-          link: '/articles/' + row.id
+          link: '/articles/' + row.id,
+          ...(rx143 ? { rx_total: rx143.total, rx_top: rx143.top } : {})
         };
       }
       /* ── কেস-৩: প্রশ্ন (লাইভ-উত্তর-গণনা + গৃহীত-স্টেট — qa-list-চুক্তির মিরর) ── */
@@ -1887,13 +1902,15 @@ router.get('/api/link-preview', async (req, res) => {
           WHERE p.id = ? AND p.type = 'question' AND p.status = 'published'
         `).get(Number(m[1]));
         if (!row) return null;
+        const rx143q = await _rx143('post_id', row.id);
         return {
           kind: 'content', label: 'প্রশ্ন',
           title: (row.title || '').slice(0, 110),
           desc: mdPlain85(row.body, 120),
           meta: (row.full_name || 'সদস্য') + ' · 💬 ' + _bnNum139(row.ans_count) + ' উত্তর' + (row.accepted_comment_id != null ? ' · ✅ গৃহীত' : ''),
           thumb: row.avatar_url || null, icon: 'fa-circle-question',
-          link: '/qa/' + row.id
+          link: '/qa/' + row.id,
+          ...(rx143q ? { rx_total: rx143q.total, rx_top: rx143q.top } : {})
         };
       }
       /* ── কেস-৪: রিসোর্স (res_type-আইকন — resource-types এক-সোর্স) ── */

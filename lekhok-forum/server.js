@@ -80,6 +80,12 @@ app.locals.AV = computeAssetVersion();
 // সীমা দিলে শব্দ-সীমায় কেটে '…' দেয়। মিরর: helpers/markdown-lite.js plainText()।
 app.locals.mdPlain = require('./helpers/markdown-lite').plainText;
 
+// ── সেশন ১৪৩: ফিড-এক্সার্পট-হেল্পার — mdFeed(বডি, সীমা) — মার্কার-স্ট্রিপ + খালি-URL
+// অ্যাঙ্কর (a.a-link) — ফিড-পোস্টের লিংক ক্লিকযোগ্য + og-ইঞ্জিন-স্ক্যানেবল। আউটপুট
+// RAW-HTML (এস্কেপ-ফার্স্ট হেল্পারের ভেতরেই) — ভিউতে <%- %> বাধ্যতামূলক।
+// মিরর: helpers/markdown-lite.js plainWithLinks()।
+app.locals.mdFeed = require('./helpers/markdown-lite').plainWithLinks;
+
 // ── সেশন ৯৩ (D1): প্রদর্শন-নাম হেল্পার — সব EJS-ভিউতে displayName(row) / hasPenName(row) ──
 // pen_name (কলমী নাম) প্রধান, fallback full_name। কমেন্ট-বাবল/উত্তর/বাইলাইন-সহ সব সারফেসে।
 app.locals.displayName = require('./helpers/display-name').displayName;

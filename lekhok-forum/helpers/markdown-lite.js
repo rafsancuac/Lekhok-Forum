@@ -224,4 +224,64 @@ function plainText(raw, maxLen) {
   return s;
 }
 
-module.exports = { renderBody, renderComment, inlineMd, escH, plainText };
+/* ═══ সেশন ১৪৩: plainWithLinks() — ফিড-এক্সার্পটের জন্য প্লেইন-টেক্সট +
+   ক্লিকযোগ্য-লিংক ═══════════════════════════════════════════════════════════
+   সমস্যা: mdPlain (plainText) ফিড-পোস্টের URL-কে নিষ্ক্রিয়-টেক্সটে রাখত —
+   ক্লিক-ও অসম্ভব, og-কার্ড-ও অসম্ভব (session142-ব্যাকলগ ① "পোস্ট-বডিতে og-কার্ড"-
+   সার্ভার-শর্ত)। সমাধান: plainText-এর মার্কার-স্ট্রিপ-নীতি রেখে খালি-URL অ্যাঙ্কর
+   (a.a-link — inlineMd-চুক্তি, comment-tools.js og-ইঞ্জিন সে-ই স্ক্যান করে)।
+   ক্রম-গুরুত্ব (URL-অবিন্যস্ত):
+     ১. URL-সচেতন-ট্রান্কেশন — কাট-পয়েন্ট URL-এর ভেতরে পড়লে URL-শুরু থেকেই
+        কাটে (আধা-সেকা URL → ভাঙা domain-chip/og-ফেচ রোধ; plainText-এর
+        শব্দ-সীমা-নীতি হুবহু);
+     ২. মার্কডাউন-লিংক [t](u) → t (plainText-এর প্রথম-নিয়মের মিরর — টার্গেট-URL
+        প্রদর্শন-টেক্সট থেকে বাদ, আজকের আচরণ-অভিন্ন);
+     ৩. খালি-URL \u0000N\u0000-প্লেসহোল্ডারে রক্ষা → তার-পরে _ / ** মার্কার-স্ট্রিপ
+        (URL-এর ভেতরের _ আর কখনো ভাঙবে না — plainText-এর প্রি-এক্সিস্টিং-ত্রুটির
+        স্থায়ী-সংস্কার) → লাইন-প্রিফিক্স/পুরনো-HTML-স্ট্রিপ → escH → প্লেসহোল্ডারের
+        জায়গায় অ্যাঙ্কর (href+টেক্সট escH — escape-first-নীতি অক্ষুণ্ণ;
+        javascript:/data: রেজেক্সেই বাতিল — শুধু https?://)।
+   আউটপুট RAW-HTML — ভিউতে <%- %> দিয়ে (mdPlain-এর মতো <%= নয়!)। */
+function plainWithLinks(raw, maxLen) {
+  let s = String(raw || '');
+  /* ১. URL-সচেতন-ট্রান্কেশন (raw-টেক্সটে — নইলে কাটা-URL রক্ষা-অসম্ভব) */
+  if (maxLen && s.length > maxLen) {
+    let cut = s.slice(0, maxLen);
+    const sp = cut.lastIndexOf(' ');
+    if (sp > maxLen * 0.6) cut = cut.slice(0, sp);
+    const tailUrl = cut.match(/(^|[\s(])(https?:\/\/[^\s]*)$/);
+    if (tailUrl) cut = cut.slice(0, cut.length - tailUrl[2].length);
+    s = cut.trim() + '…';
+  }
+  /* ২. মার্কডাউন-লিংক → টেক্সট (plainText-মিরর) */
+  s = s.replace(/\[([^\]]+)\]\(\s*(?:https?:\/\/|\/)[^\s)"]*\s*\)/g, '$1');
+  /* ৩. খালি-URL রক্ষা → মার্কার-স্ট্রিপ (URL-মুক্ত টেক্সটে — নিরাপদ) */
+  const urls143 = [];
+  s = s.replace(/(^|[\s(])(https?:\/\/[^\s<>()\[\]]+)/g, function (_m, pre, url) {
+    urls143.push(url);
+    return pre + '\u0000' + (urls143.length - 1) + '\u0000';
+  });
+  s = s
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/^[ \t]{0,3}#{1,6}[ \t]+/gm, '')
+    .replace(/^[ \t]{0,3}>[ \t]?/gm, '')
+    .replace(/^[ \t]*[-*+][ \t]+/gm, '')
+    .replace(/^[ \t]*(?:\d+|[\u09E6-\u09EF])[.)][ \t]+/gm, '')
+    .replace(/^[ \t]{0,3}(?:-{3,}|\*{3,}|_{3,})[ \t]*$/gm, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  /* ৪. এস্কেপ-ফার্স্ট, তারপর প্লেসহোল্ডার → অ্যাঙ্কর (ট্রেলিং-পাংচুয়েশন-স্ট্রিপ —
+     inlineMd-_bareUrlPass-মিরর) */
+  s = escH(s).replace(/\u0000(\d+)\u0000/g, function (_m, idx) {
+    const url = String(urls143[Number(idx)] || '');
+    const trail = url.match(/[.,;:!?…।]+$/);
+    const core = trail ? url.slice(0, url.length - trail[0].length) : url;
+    return '<a href="' + escH(core) + '" class="a-link" target="_blank" rel="noopener nofollow">' + escH(core) + '</a>' + (trail ? trail[0] : '');
+  });
+  return s;
+}
+
+module.exports = { renderBody, renderComment, inlineMd, escH, plainText, plainWithLinks };

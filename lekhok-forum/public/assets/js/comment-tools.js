@@ -1746,7 +1746,26 @@
         '<span class="lf-og-title">' + esc(c.title || '') + '</span>' +
         (c.desc ? '<span class="lf-og-desc">' + esc(c.desc) + '</span>' : '') +
         (c.meta ? '<span class="lf-og-meta">' + esc(c.meta) + '</span>' : '') +
+        /* সেশন ১৪৩: rx-ব্যাজ — টার্গেট-কনটেন্টের রিঅ্যাকশন-সত্য (likes-টেবিল — getReactionSummary-এক-সোর্স) */
+        (c.rx_total ? '<span class="lf-og-rx" title="প্রতিক্রিয়া"><span class="lf-og-rx-faces" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' + esc(c.rx_total) + '</span>' : '') +
       '</span></a>';
+  }
+
+  /* সেশন ১৪৩: এক্সটার্নাল domain-chip — এক্সটার্নাল-লিংকের ক্লায়েন্ট-সাইড প্রিভিউ
+     (session142-ব্যাকলগ ②; নেটওয়ার্ক-ফেচ-শূন্য — hostname শুধু URL থেকে বের —
+     SSRF/স্যান্ডবক্স-নেটওয়ার্ক-নির্ভরতা দুটোই প্রযোজ্য নয়)। গার্ড: data-ext-u
+     (og-কার্ডের data-lpv-u থেকে আলাদা — দ্বৈত-সিস্টেম-সংঘর্ষ-শূন্য)। */
+  function extChip143(bubble, href) {
+    if (!bubble || !bubble.isConnected) return;
+    if (bubble.querySelector('.lf-extchip[data-ext-u="' + lpvMarkOf(href) + '"]')) return;
+    var host = '';
+    try { host = new URL(href).hostname.replace(/^www\./, ''); } catch (e143) { return; }
+    if (!host) return;
+    bubble.insertAdjacentHTML('beforeend',
+      '<a class="lf-extchip" href="' + esc(href) + '" target="_blank" rel="noopener nofollow" data-ext-u="' + esc(href) + '">' +
+        '<span class="lf-ext-ico" aria-hidden="true"><i class="fas fa-arrow-up-right-from-square"></i></span>' +
+        '<span class="lf-ext-main"><span class="lf-ext-host">' + esc(host) + '</span>' +
+        '<span class="lf-ext-label">বাহ্যিক লিংক</span></span></a>');
   }
 
   function lpvMount139(bubble, href, j) {
@@ -1789,21 +1808,28 @@
     if (!body || body.getAttribute('data-lpv') === '1') return;
     var anchors = [].slice.call(body.querySelectorAll('a.a-link'));
     if (!anchors.length) return;
-    var bubble = body.closest('.fc-bubble') || body.parentElement;
+    /* সেশন ১৪৩: বাবল-রিজলুশন — কমেন্টে .fc-bubble, ফিড-পোস্টে .feed-card-body
+       (og-কার্ড/চিপ পোস্ট-টেক্সটের নিচে — FB-বসানো) */
+    var bubble = body.closest('.fc-bubble') || body.closest('.feed-card-body') || body.parentElement;
     if (!bubble) return;
     var seen = {};
     var hit = false;
     anchors.forEach(function (a) {
-      var href = (a.getAttribute('href') || '').replace(/^https?:\/\/[^\/]+/i, '');
-      if (!LPV_INTERNAL_RE139.test(href) || seen[href]) return;
-      seen[href] = 1; hit = true;
-      lpvFetch139(bubble, href);
+      var rawHref = a.getAttribute('href') || '';
+      if (seen[rawHref]) return;
+      seen[rawHref] = 1;
+      /* অরিজিন-স্ট্রিপ আগে-ম্যাচ (same-origin absolute URL-ও অভ্যন্তরীণ) */
+      var href = rawHref.replace(/^https?:\/\/[^\/]+/i, '');
+      if (LPV_INTERNAL_RE139.test(href)) { hit = true; lpvFetch139(bubble, href); return; }
+      /* সেশন ১৪৩: এক্সটার্নাল → domain-chip (ক্লায়েন্ট-সাইড, ফেচ-শূন্য) */
+      if (/^https?:\/\//i.test(rawHref)) { hit = true; extChip143(bubble, rawHref); }
     });
     if (hit) body.setAttribute('data-lpv', '1');
   }
 
   function lpvScanAll139() {
-    document.querySelectorAll('.fc-body').forEach(lpvScanBody139);
+    /* সেশন ১৪৩: .feed-text যোগ — পোস্ট-বডিতেও og-কার্ড/domain-chip (session142-ব্যাকলগ ①) */
+    document.querySelectorAll('.fc-body, .feed-text').forEach(lpvScanBody139);
   }
 
   // MutationObserver — ড্রয়ার-লোড/reconcile/optimistic/canonical-ইনসার্ট সব-পাথ

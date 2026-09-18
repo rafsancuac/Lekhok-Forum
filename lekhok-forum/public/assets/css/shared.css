@@ -482,3 +482,54 @@
 /* ② শূন্য-অবস্থা — ব্র্যান্ডেড */
 
 /* EOF-MARKER: session144-mention-anywhere */
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১৪৩ — পোস্ট-বডি og-কার্ড + এক্সটার্নাল domain-chip + og-কার্ড rx-ব্যাজ
+   (session142-ব্যাকলগ ①②③)। নিয়ম: টোকেন-শুধু — নতুন-হেক্স-শূন্য (hex-র্যাচেট)।
+   ইঞ্জিন: comment-tools.js (scan .fc-body, .feed-text; ext-chip fetch-শূন্য)।
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* ① পোস্ট-বডি কার্ড — টেক্সটের নিচে বসে (feed-card-body = মাউন্ট-বাবল) */
+.feed-text a.a-link{
+  color:var(--lf-brand-primary);font-weight:600;text-decoration:none;
+  border-bottom:1.5px dotted var(--lf-brand-primary);
+  word-break:break-all;overflow-wrap:anywhere;
+  transition:color var(--lf-transition,.18s ease),border-color var(--lf-transition,.18s ease);
+}
+.feed-text a.a-link:hover{color:var(--lf-brand-primary-hover);border-bottom-style:solid}
+.feed-text a.a-link:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:2px;border-bottom-style:solid}
+.feed-card-body .lf-ogcard,.feed-card-body .lf-extchip{max-width:100%}
+/* ③ rx-ব্যাজ — কার্ডের প্রতিক্রিয়া-সত্য (শীর্ষ-ইমোজি + বাংলা-মোট) */
+.lf-og-rx{
+  display:inline-flex;align-items:center;gap:4px;align-self:flex-start;
+  padding:2px 8px 2px 5px;border-radius:999px;font-size:11px;font-weight:700;
+  color:var(--lf-text-secondary);background:var(--lf-ui-canvas);
+  border:1px solid var(--lf-ui-border);line-height:1.2;
+}
+.lf-og-rx-faces{font-size:12px;line-height:1;filter:drop-shadow(0 1px 0 rgba(0,0,0,.06))}
+.lf-ogcard:hover .lf-og-rx{border-color:var(--lf-brand-primary)}
+/* ② এক্সটার্নাল domain-chip — amber-পরিচয় (বাইরের-জগতের কনভেনশন), কমপ্যাক্ট-ইনলাইন */
+.lf-extchip{
+  display:inline-flex;align-items:center;gap:7px;max-width:100%;margin-top:6px;
+  padding:5px 10px 5px 6px;border-radius:999px;text-decoration:none;
+  background:var(--lf-amber-soft);border:1px solid var(--lf-amber-soft-3);
+  transition:border-color var(--lf-transition,.18s ease),box-shadow var(--lf-transition,.18s ease),transform var(--lf-transition,.18s ease),background var(--lf-transition,.18s ease);
+}
+.lf-extchip:hover{border-color:var(--lf-amber-mid);background:var(--lf-amber-soft-2);box-shadow:var(--lf-shadow-card);transform:translateY(-1px)}
+.lf-extchip:focus-visible{outline:2px solid var(--lf-amber-deep);outline-offset:2px}
+.lf-ext-ico{
+  flex:0 0 20px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--lf-amber-soft-2);color:var(--lf-amber-deep);font-size:9px;
+}
+.lf-ext-main{display:inline-flex;align-items:baseline;gap:6px;min-width:0}
+.lf-ext-host{font-size:12px;font-weight:700;color:var(--lf-amber-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.lf-ext-label{font-size:10.5px;font-weight:600;letter-spacing:.02em;color:var(--lf-amber-deep);white-space:nowrap}
+/* 390px — হোস্ট-ক্রম্প + লেবেল-সংকোচ (mobile-first-নিয়ম) */
+@media (max-width:480px){
+  .lf-extchip{gap:5px;padding:4px 8px 4px 5px}
+  .lf-ext-host{max-width:130px;font-size:11.5px}
+  .lf-ext-label{display:none}
+  .feed-card-body .lf-ogcard,.feed-card-body .lf-extchip{max-width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .lf-extchip,.lf-extchip:hover{transition:none;transform:none}
+}
+/* EOF-MARKER: session143-post-body-og-extchip-rx */

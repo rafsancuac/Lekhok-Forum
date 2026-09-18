@@ -75,7 +75,8 @@
       <% } %>
       <div class="feed-card-body">
         <h3 class="feed-title"><a href="<%= _orig.link || (_orig.type === 'question' ? '/qa/' + _orig.id : '/articles/' + _orig.id) %>"><%= _orig.title %></a></h3>
-        <p class="feed-text"><%= mdPlain(_orig.body || '', 280) %><% if ((_orig.body || '').length > 280) { %> <a href="<%= _orig.link %>">আরও পড়ুন</a><% } %></p>
+        <%# সেশন ১৪৩: mdFeed — খালি-URL ক্লিকযোগ্য (a.a-link) → og-ইঞ্জিন পোস্ট-বডিতেও কার্ড (RAW-আউটপুট — হেল্পার escape-first) %>
+        <p class="feed-text"><%- mdFeed(_orig.body || '', 280) %><% if ((_orig.body || '').length > 280) { %> <a href="<%= _orig.link %>">আরও পড়ুন</a><% } %></p>
       </div>
       <%- include('./PostFooterActions', {
         targetId: _orig.id, targetType: 'post',
@@ -151,7 +152,8 @@
     <% } %>
     <div class="feed-card-body">
       <h3 class="feed-title"><a href="<%= _link %>"><%= item.title %></a></h3>
-      <p class="feed-text"><%= mdPlain(item.excerpt || item.body || '', 280) %><% if (((item.body || '').length) > 280) { %> <a href="<%= _link %>">আরও পড়ুন</a><% } %></p>
+      <%# সেশন ১৪৩: mdFeed — খালি-URL ক্লিকযোগ্য (a.a-link) → og-ইঞ্জিন পোস্ট-বডিতেও কার্ড (RAW-আউটপুট — হেল্পার escape-first) %>
+      <p class="feed-text"><%- mdFeed(item.excerpt || item.body || '', 280) %><% if (((item.body || '').length) > 280) { %> <a href="<%= _link %>">আরও পড়ুন</a><% } %></p>
     </div>
     <%- include('./PostFooterActions', {
       targetId: item.id, targetType: 'post',
