@@ -1938,3 +1938,22 @@ Stage Summary:
 **E2E (@3200 আইসোলেটেড pristine):** ২-টার্গেটে মাল্টি-ফরওয়ার্ড চক্র '১ জন→২ জনকে পাঠানো হয়েছে' ✓ অ্যাভাটার 38×38/40×40 cover-50% দুই-স্তরে ✓ লাইভ-ফিল্টার ✓ Escape ✓ সার্ভার-সত্য-কপি ✓ 390px-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩; রিগ্রেশন: guard ✓ audit-সব-সবুজ ✓ cursor 32/1 (seed-artifact, baseline-parity delta=০) ✓ node --check ✓ EJS ×২ ✓
 
 **গোটচা ×২:** sql.js-স্ট্যান্ডঅ্যালোন-UPDATE-পরে saveDb() বাধ্যতামূলক; QA-কপি git-স্টেট-স্বাধীন। **পরের-এজেন্ট: session160 থেকে।**
+
+
+---
+Task ID: SESSION-159B (double-159)
+Agent: Public-layout fix agent (cron-free direct user request)
+Task: হোম/পাবলিক পেজের মেনুবার স্ক্রলে স্থির + ডার্ক-নেভিতে ডার্ক-সবুজ টেক্সট উজ্জ্বল এমারেল্ড (সর্বত্র)
+
+Work Log:
+- পূর্ব-যাচাই: git fetch/log — সমান্তরাল session158 (lekhok-forum-next) ট্রি-তে; এ-টাস্ক EJS-অ্যাপে (vercel.json = vercel-প্রিভিউ-প্রমাণ)
+- RCA-১ (sticky): body,html{overflow-x:hidden} → body scroll-container → .btclf-topbar sticky মৃত-scrollport-এ; E2E-প্রমাণ scrollTo-800→top-800
+- RCA-২ (কনট্রাস্ট): tokens.css :root:root --accent/--accent-light→006A4E; computed-প্রমাণ: btn-ghost+gal-hero__accent = rgb(0,106,78)
+- ফিক্স: style.css body-overflow-বিভাজন (html hidden + body clip) + shared.css সেশন-১৫৯ ডার্ক-সারফেস-ব্লক (টপবার/গ্যালারি-হিরো/ফুটার/মোবাইল-CTA; টোকেন-শুধু, লাইট-সারফেস-অস্পৃশ্য)
+- E2E: হোম/গ্যালারি স্ক্রল-লক top=০; সব-টার্গেট rgb(52,211,153); ৩৯০px-স্টিক+hScroll-০; ১০-পেজ-২০০; কনসোল-পরিষ্কার; guard:design (কমেন্ট-হেক্স ×৩ ধরা-পড়া→শুদ্ধি→গ্রিন) + audit:views ✓; স্ক্রিনশট ×৩
+
+Stage Summary:
+- পরিবর্তিত: public/assets/css/style.css (১-লাইন-বিভাজন) + public/assets/css/shared.css (সেশন-১৫৯-ব্লক) + PLANS/PROJECT/worklog
+- ইউজার-প্রভাব: হোম+সব-পাবলিক-পেজে মেনুবার এখন স্ক্রলেও উপরে স্থির; "ফিডে যান"/"লগইন"/"গ্যালারি"/ফুটার-সবুজ সব উজ্জ্বল এমারেল্ড (#34D399-টোকেন)
+- শিক্ষা: CSS-কমেন্টের হেক্স-উল্লেখও guard-র্যাচেটে গোনা হয়; CSS-এডিটের পর AV-bump-এ সার্ভার-রিস্টার্ট বাধ্যতামূলক
+- পরের-এজেন্ট: session160 থেকে

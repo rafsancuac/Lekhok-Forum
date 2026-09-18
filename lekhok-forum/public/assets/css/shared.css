@@ -770,13 +770,13 @@
    হওয়ায় ভিউপোর্ট-প্রস্থ ওঠানাউঠা) + ফ্লেক্স-আইটেমে min-width-অনুপস্থিতি।
    • scrollbar-gutter:stable + overflow-y:scroll → গাটার সর্বদা সংরক্ষিত —
      স্ক্রলবার আসুক বা যাক, ১ পিক্সেলও নড়বে না
-   • body max-width:100vw + overflow-x:hidden → আড়াই-অক্ষে স্ক্রল/ঝাঁকুনি অসম্ভব
+   • body max-width:100vw + overflow-x:clip → আড়াই-অক্ষে স্ক্রল/ঝাঁকুনি অসম্ভব (১৫৯-বি: clip — hidden হলে sticky ভাঙে)
    চুক্তি-নোট: html.cpm-open (কম্পোজার-স্ক্রল-লক) ও body.lf-feed-lock156
    (ফিড-৩-কলাম-লক) — উচ্চতর-স্পেসিফিসিটিতে overflow:hidden রাখে; এ-ব্লক
    তাদের ওভাররাইড করে না (স্পেসিফিসিটি: class-selector > element-selector)।
    admin.css-এর html{scrollbar-gutter:stable} — একই-মান, সংঘর্ষ-শূন্য। */
 html{scrollbar-gutter:stable;overflow-y:scroll}
-body{width:100%;max-width:100vw;overflow-x:hidden;position:relative}
+body{width:100%;max-width:100vw;overflow-x:clip;position:relative} /* session159-বি-শুদ্ধি: hidden→clip — body-scroll-container হলে .btclf-topbar-এর sticky ভাঙে (নিচের ১৫৯-বি-ব্লক দ্রষ্টব্য); clip-এ anti-shift-লক্ষ্য অক্ষত */
 
 /* ── .stable-scroll-panel — অ্যান্টি-শিফট স্বাধীন-স্ক্রল-প্যানেল (ইউজার-স্পেক-নাম;
    session157-এর .independent-scroll-এর সাথে একই-আচরণ — নতুন-মার্কআপে যেকোনো-একটি;
@@ -788,3 +788,85 @@ body{width:100%;max-width:100vw;overflow-x:hidden;position:relative}
 .stable-scroll-panel::-webkit-scrollbar-thumb{background-color:transparent;border-radius:8px}
 .stable-scroll-panel:hover::-webkit-scrollbar-thumb{background-color:var(--lf-ui-border-strong)}
 /* EOF-MARKER: session158-antishift */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১৫৯-বি (double-159-রীতি) — পাবলিক-লেআউট ডার্ক-সারফেস কনট্রাস্ট ফিক্স + টপবার sticky সংহতি
+   ─────────────────────────────────────────────────────────────────────────────
+   ইউজার-স্পেক: (১) হোম/পাবলিক পেজের মেনুবার স্ক্রলে স্থির থাকবে (সোশ্যাল-ফিডের
+   মতো)। (২) ডার্ক/নেভি ব্যাকগ্রাউন্ডের ডার্ক-সবুজ লেখা উজ্জ্বল এমারেল্ড হবে —
+   যেমন টপবারের "ফিডে যান", গ্যালারি হিরোর "গ্যালারি" — এরূপ আরও যেখানে-যেখানে।
+   RCA: (১) style.css-এ body,html{overflow-x:hidden} — html-এ non-visible
+   overflow থাকায় body-র overflow propagate হয় না; body নিজেই scroll-container
+   হয়ে যায় → .btclf-topbar এর sticky নিকটতম scrollport (= body, যা কখনো স্ক্রল
+   করে না) -এ আটকে ভিউপোর্টে লাগে না। ফিক্স: html-এ overflow-x:hidden রাখা +
+   body-তে overflow-x:clip (clip = scroll-container তৈরি করে না → sticky ভিউপোর্টে
+   সঠিক)। (২) tokens.css :root:root --accent/--accent-light → ব্র্যান্ড-গ্রিন (006A4E) রিম্যাপে
+   ডার্ক সারফেসের অ্যাকসেন্ট-টেক্সট অদৃশ্য (~২.৮:১)। ফিক্স: শুধু ডার্ক-সারফেস
+   স্কোপে --lf-emerald-400 টোকেন — লাইট ব্যাকগ্রাউন্ডের ব্র্যান্ড-গ্রিন অপরিবর্তিত
+   (ইউজার-নীতি: লাইটে ব্র্যান্ড-গ্রিন থাকবে, ডার্কে উজ্জ্বল এমারেল্ড)।
+   hex-ratchet: নতুন-ব্লক hex-শূন্য — শুধু টোকেন + rgba()।
+   লোড-অর্ডার নোট: shared.css gallery.css-এর পরে লোড হয় → gal-hero ওভাররাইড
+   নিরাপদ; !important কেবল টপবার বাটনে (আগের !important-চেইন হারানোর জন্য)।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ১. টপবার (নেভি): "ফিডে যান" — উজ্জ্বল এমারেল্ড আউটলাইন-বাটন ── */
+.btclf-topbar .topbar-right a.btn-ghost{
+  color:var(--lf-emerald-400)!important;
+  background:rgba(16,185,129,.10)!important;
+  border:1px solid rgba(52,211,153,.45)!important;
+  font-weight:700;
+}
+.btclf-topbar .topbar-right a.btn-ghost:hover{
+  color:var(--lf-emerald-300)!important;
+  background:rgba(16,185,129,.20)!important;
+  border-color:rgba(52,211,153,.70)!important;
+  transform:translateY(-1px);
+}
+
+/* ── ২. টপবার (নেভি): "লগইন" — একই উজ্জ্বল-এমারেল্ড ভাষা ── */
+.btclf-topbar .topbar-right a.nav-login{
+  color:var(--lf-emerald-400)!important;
+  border-color:rgba(52,211,153,.45)!important;
+  background:rgba(16,185,129,.08)!important;
+}
+.btclf-topbar .topbar-right a.nav-login:hover{
+  color:var(--lf-emerald-300)!important;
+  border-color:rgba(52,211,153,.70)!important;
+  background:rgba(16,185,129,.16)!important;
+}
+
+/* ── ৩. টপবার অ্যাক্টিভ-আন্ডারলাইন — উজ্জ্বল সবুজ + গ্লো ── */
+.btclf-topbar .topbar-tab.active::after{
+  background:var(--lf-emerald-400);
+  box-shadow:0 0 8px rgba(52,211,153,.50);
+}
+
+/* ── ৪. গ্যালারি হিরো (নেভি গ্রেডিয়েন্ট): "ইমেজ গ্যালারি"-র সবুজ অংশ ── */
+.gal-hero .gal-hero__accent{
+  color:var(--lf-emerald-400);
+  text-shadow:0 0 14px rgba(52,211,153,.35);
+}
+
+/* ── ৫. ফুটার (নেভি): লিংক-বুলেট, কন্টাক্ট-আইকন, হোভার, সোশ্যাল, নিউজলেটার ── */
+footer .f-links a i,
+footer .f-contact i{color:var(--lf-emerald-400)}
+footer .f-links a:hover,
+footer .f-contact li:hover span{color:var(--lf-emerald-300)}
+footer .f-socials a:hover{background:var(--lf-emerald-400);color:var(--bg-main)}
+footer .newsletter-form button{background:var(--lf-emerald-400);color:var(--bg-main);font-weight:700}
+footer .newsletter-form button:hover{filter:brightness(1.07)}
+
+/* ── ৬. মোবাইল সাইডবার (নেভি): প্রাইমারি CTA ("ফিডে যান"/"রেজিস্ট্রেশন") ── */
+.mobile-sidebar a.mobile-cta.primary,
+.mobile-sidebar a.btn-ghost{
+  background:var(--lf-emerald-400)!important;
+  color:var(--bg-main)!important;
+  border:0;
+}
+.mobile-sidebar a.mobile-cta.primary:hover,
+.mobile-sidebar a.btn-ghost:hover{
+  background:var(--lf-emerald-300)!important;
+  color:var(--bg-main)!important;
+}
+
+/* EOF-MARKER: session159b-dark-surface-contrast */

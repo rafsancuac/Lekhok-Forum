@@ -2319,3 +2319,24 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **গোটচা ×২:** ① sql.js-স্ট্যান্ডঅ্যালোন-স্ক্রিপ্টে UPDATE-এর পরে **saveDb() বাধ্যতামূলক** (module-এর `db` getter; `getDb` নেই) — না-দিলে in-memory-সুদ্ধ ফাইল-অপরিবর্তিত ② QA-কপি মূল-রিপোর থেকে স্বাধীন — মূল-রিপো-তে git stash করেও QA-ইনস্ট্যান্স-কোড বদলায় না (copy-time-স্ন্যাপশট)।
 
 **পরবর্তী-প্রথম-পছন্দ:** ① কার্সার-স্যুটের last-page hasMore-প্রত্যাশা seed-ভলিউম-ক্যালিব্রেশন ② ফরওয়ার্ড-মোডালে সাম্প্রতিক-সার্চ-মেমরি ③ মেসেঞ্জার-সার্চে গ্রুপ-সদস্য-নাম-ম্যাচিং ④ ফরওয়ার্ড-প্রিভিউ-কার্ড (মেসেজ-স্নিপেট মোডাল-টপে)। **পরের-এজেন্ট: session160 থেকে।**
+
+
+---
+
+## Cross-Agent Note: Session 159-বি (double-159-রীতি) — পাবলিক-লেআউট ফিক্সড টপবার + ডার্ক-সারফেস এমারেল্ড কনট্রাস্ট (১৮ সেপ্টেম্বর ২০২৬)
+
+**ইউজার-স্পেক:** (১) হোম/পাবলিক পেজের মেনুবার স্ক্রলে নেমে যাচ্ছে — সোশ্যাল-ফিডের মতো স্থির থাকুক। (২) ডার্ক/নেভি ব্যাকগ্রাউন্ডে ডার্ক-সবুজ লেখা (টপবারের "ফিডে যান", গ্যালারির "ইমেজ গ্যালারি"-র "গ্যালারি") প্রায় অদৃশ্য — উজ্জ্বল এমারেল্ড করতে হবে; "এরকম আরও থাকতে পারে, সবগুলো ফিক্স কর"। প্রিভিউ = lekhok-forum.vercel.app = **এ-ই-ইজেএস অ্যাপ** (vercel.json-প্রমাণিত) — lekhok-forum-next নয়।
+
+**RCA ×২:**
+1. **sticky-ভাঙা:** style.css-এ `body,html{overflow-x:hidden}` — html-এ non-visible overflow থাকায় body-র overflow ভিউপোর্টে propagate হয় না (CSS-overflow-§3.3) → **body নিজেই scroll-container** (overflow-y:hidden→auto) হয়ে যায় → `.btclf-topbar`-এর `position:sticky` নিকটতম scrollport (= body; body কখনো স্ক্রল করে না, html স্ক্রল করে) -এ আটকে যায় → স্ক্রলে টপবার ভেসে নামে (E2E-প্রমাণ: scrollTo-800 → topbar top=-800)। session156-র "home-topbar-sticky ✓" টেস্ট computed-style-মাত্র দেখেছিল — আচরণ নয়।
+2. **কনট্রাস্ট:** tokens.css `:root:root` (সর্বশেষে-লোড) `--accent` ও `--accent-light`-কে `var(--lf-brand-primary)` (006A4E) -এ রিম্যাপ করেছে → ডার্ক সারফেসে সব অ্যাকসেন্ট-টেক্সট 006A4E (~২.৮:১ নেভিতে)।
+
+**ফিক্স (২-ফাইল, মার্কআপ-লজিক-স্পর্শ-শূন্য):**
+1. `style.css` — `body,html{...overflow-x:hidden}` বিভক্ত: `html{overflow-x:hidden}` + `body{overflow-x:clip}` (clip = scroll-container তৈরি করে না → sticky ভিউপোর্টে সঠিক; ভিজ্যুয়াল-ক্লিপিং আগের মতোই)।
+2. `shared.css` সেশন-১৫৯-ব্লক (EOF) — শুধু ডার্ক-সারফেস স্কোপে টোকেন-ভিত্তিক ওভাররাইড: টপবার `.btn-ghost`/`.nav-login` (emerald-400 টেক্সট+বর্ডার+এমারেল্ড-টিন্টেড-বিজি, !important — আগের !important-চেইন হারাতে) + `.topbar-tab.active::after` (emerald-400+গ্লো) + `.gal-hero .gal-hero__accent` (emerald-400+টেক্সট-শ্যাডো-গ্লো) + ফুটার (f-links/f-contact-আইকন-বুলেট, hover-emerald-300, f-socials-hover, newsletter-বাটন emerald-400-বিজি+নেভি-টেক্সট) + মোবাইল-সাইডবার CTA। **লাইট-ব্যাকগ্রাউন্ড (page-header হিরো, home hero, section) অপরিবর্তিত** — ইউজার-নীতি: লাইটে ব্র্যান্ড-গ্রিন থাকবে।
+
+**E2E-প্রমাণ (agent-browser, gateway :81?XTransformPort=3030):** হোম scrollTo-700/800 → topbar top=**0** ✓; body overflowX=clip ✓; লগইন/ফিডে-যান/অ্যাক্টিভ-আন্ডারলাইন = rgb(52,211,153) ✓; গ্যালারি accent+ফুটার-বুলেট emerald-400 ✓; নিউজলেটার-বাটন emerald-400-বিজি+নেভি-টেক্সট ✓; ৩৯০px topbar-স্টিক+hScroll-০+মোবাইল-CTA-emerald ✓; ১০-পেজ-ম্যাট্রিক্স ২০০; কনসোল-শুধু-লগ; guard:design ✓ (কমেন্টে-হেক্স-লেখাও র্যাচেট-গোনা যায় — গোটচা); audit:views ✓; স্ক্রিনশট ×৩ (download/s159-*)।
+
+**গোটচা ×৩:** ① guard-র্যাচেট CSS-কমেন্টের হেক্স-উল্লেখও গোনে — ডকুমেন্টে "006A4E" (# ছাড়া) লিখুন ② AV ভার্সন-প্যারাম সার্ভার-বুটে-নির্ধারিত — CSS-এডিটের পর ব্রাউজার-যাচাইয়ের আগে সার্ভার-রিস্টার্ট বাধ্যতামূলক ③ sticky-ডিবাগে computed position দেখলে হবে না — scrollTo করে getBoundingClientRect-প্রমাণ নিন। **পরের-এজেন্ট: session160 থেকে।**
+
+**union-শুদ্ধি-নোট (১৫৯-বি):** আগে-ল্যান্ডেড session158-antishift-ব্লকের `body{overflow-x:hidden}` shared.css-এ (style.css-পরবর্তী-লোড) আমার style.css-clip-ফিক্সকে পুনঃভাঙত — rebase-union-এ সে-রুল **overflow-x:clip**-এ সংশোধিত (anti-shift-লক্ষ্য অক্ষত; scroll-container-না-হওয়ায় sticky জীবিত)। ভবিষ্যতে body/html-এ overflow-x:hidden ফেরত-আনা **নিষিদ্ধ** — sticky-টপবার-চুক্তি।
