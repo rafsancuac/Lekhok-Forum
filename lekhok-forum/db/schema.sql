@@ -101,6 +101,12 @@ CREATE TABLE IF NOT EXISTS posts (
   repost_of     INTEGER,                     -- id of original post if this is a repost
   repost_note   TEXT,                        -- optional quote/comment added by the reposter
   is_pinned     INTEGER DEFAULT 0,           -- সেশন ৮৩: প্রোফাইল-টাইমলাইনে পিনড (প্রতি লেখকে ১টি)
+  -- সেশন ১৫৩: FB-রিচ-কম্পোজার (alt/LATER_COLUMNS-প্রতিচ্ছবি — ফ্রেশ-ডিপ্লয় সেফটি)
+  rich_content     TEXT,                      -- contentEditable-HTML (সার্ভার-স্যানিটাইজড); NULL = ক্লাসিক
+  background_color TEXT,                      -- 'Aa' গ্রেডিয়েন্ট-কী (fbg1..fbg8 ক্লাস-হোয়াইটলিস্ট)
+  feeling          TEXT,                      -- অনুভূতি-চিপ
+  location         TEXT,                      -- চেক-ইন
+  audience         TEXT DEFAULT 'PUBLIC',     -- PUBLIC | FRIENDS (মিউচুয়াল-ফলো) | ONLY_ME
   published_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE

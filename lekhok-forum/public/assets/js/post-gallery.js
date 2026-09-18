@@ -58,6 +58,9 @@
     var idx = 0;
 
     function open(e) {
+      // সেশন ১৫৩ (FB-কোলাজ সমাবেশ): ভিডিও/অডিও-প্লেয়ার-ক্লিক ও '+N' ওভারলে-
+      // লিঙ্ক লাইটবক্স-সুইচ নয় — নেটিভ-কন্ট্রোল/নেভিগেশন নির্বিঘ্ন।
+      if (e.target.closest('video, audio, .fb-col-audio153, .fb-col-more153')) return;
       var trigger = e.target.closest('[data-post-lightbox]');
       if (!trigger) return;
       var g = trigger.closest('.pg-gallery') || trigger;

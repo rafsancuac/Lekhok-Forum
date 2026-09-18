@@ -188,6 +188,12 @@
       <% if (item.shared_from) { %>
         <span class="shared-chip"><i class="fas fa-retweet"></i> শেয়ারকৃত পোস্ট · <a href="/articles/<%= item.shared_from %>">মূল পোস্ট</a></span>
       <% } %>
+      <%# সেশন ১৫৩: অডিয়েন্স-চিপ (নন-পাবলিক হলেই — FB-প্যারিটি: লেখক-লাইনে দর্শক) %>
+      <% if (item.audience === 'ONLY_ME') { %>
+        <span class="fb-aud-chip153" title="দৃশ্যমানতা: শুধুমাত্র আমি"><i class="fas fa-lock" aria-hidden="true"></i> শুধু আমি</span>
+      <% } else if (item.audience === 'FRIENDS') { %>
+        <span class="fb-aud-chip153" title="দৃশ্যমানতা: বন্ধুরা (পারস্পরিক-অনুসরণ)"><i class="fas fa-user-friends" aria-hidden="true"></i> বন্ধুরা</span>
+      <% } %>
       <%- include('./PostActionMenu', {
         postId: item.id,
         editUrl: (_type === 'question' ? '/qa/' : '/articles/') + item.id + '/edit',
@@ -198,6 +204,27 @@
         reportLabel: 'লেখা: ' + String(item.title || '').slice(0, 60)
       }) %>
     </div>
+    <%# সেশন ১৫৩: FB-রিচ-কম্পোজার-পোস্ট — rich_content থাকলে FB-বডি (শিরোনাম-বিহীন
+        ইনলাইন-কনটেন্ট + 'Aa' গ্রেডিয়েন্ট + ইন্টেলিজেন্ট-কোলাজ)। HTML লেখার-সময়েই
+        সার্ভার-স্যানিটাইজড (helpers/rich-sanitize.js) — RAW আউটপুট নিরাপদ। %>
+    <% if (item.rich_content) { %>
+      <% if (item.feeling || item.location) { %>
+        <div class="fb-context153">
+          <% if (item.feeling) { %><span class="fb-context-chip153"><i class="far fa-smile" aria-hidden="true"></i> <%= item.feeling %></span><% } %>
+          <% if (item.location) { %><span class="fb-context-chip153"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> <%= item.location %></span><% } %>
+        </div>
+      <% } %>
+      <% if (item.background_color) { %>
+        <%# গ্রেডিয়েন্ট-কী সার্ভার-হোয়াইটলিস্টেড (fbg1..fbg8) — তবু রেন্ডার-গার্ড দ্বিতীয়-স্তর %>
+        <% var _bgKey = ['fbg1','fbg2','fbg3','fbg4','fbg5','fbg6','fbg7','fbg8'].indexOf(String(item.background_color)) !== -1 ? String(item.background_color) : null; %>
+        <div class="<%= _bgKey ? 'fb-bg153 fb-bg153-' + _bgKey : '' %>">
+          <div class="fb-rich153 fb-rich-center153"><%- item.rich_content %></div>
+        </div>
+      <% } else { %>
+        <div class="fb-rich153"><%- item.rich_content %></div>
+      <% } %>
+      <%- include('../../partials/fb-media-collage', { media: item.media153, alt: item.title, link: _link, group: 'fb153-' + _type + '-' + item.id }) %>
+    <% } else { %>
     <%# মিডিয়া: গ্যালারি-গ্রিড অগ্রাধিকার, নইলে প্রচ্ছদ (প্রোফাইল-মোড) %>
     <% if (item.images && item.images.length) { %>
       <%- include('../../partials/post-gallery', { images: item.images, alt: item.title, height: '260px', group: 'feed-' + _type + '-' + item.id }) %>
@@ -209,6 +236,7 @@
       <%# সেশন ১৪৩: mdFeed — খালি-URL ক্লিকযোগ্য (a.a-link) → og-ইঞ্জিন পোস্ট-বডিতেও কার্ড (RAW-আউটপুট — হেল্পার escape-first) %>
       <p class="feed-text"><%- mdFeed(item.excerpt || item.body || '', 280) %><% if (((item.body || '').length) > 280) { %> <a href="<%= _link %>">আরও পড়ুন</a><% } %></p>
     </div>
+    <% } %>
     <%- include('./PostFooterActions', {
       targetId: item.id, targetType: 'post',
       counts: item.reactionCounts, mine: item.myReaction,

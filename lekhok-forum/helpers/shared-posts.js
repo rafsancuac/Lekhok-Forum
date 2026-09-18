@@ -48,6 +48,47 @@ module.exports = function makeSharedPosts(db) {
         row.shared_orig = o;
       });
       return rows;
+    },
+
+    /**
+     * সেশন ১৫৩: অডিয়েন্স-ফিল্টার — FB-কম্পোজারের audience মান সম্মান করে।
+     *   PUBLIC  → সবাই (audience NULL/খালি = পুরনো-রো → পাবলিক ধরা হয়)
+     *   ONLY_ME → শুধু লেখক
+     *   FRIENDS → লেখক + পারস্পরিক-অনুসরণ (মিউচুয়াল-ফলো = এই ফোরামের 'বন্ধু')
+     * ডিজাইন-সিদ্ধান্ত: SQL-হস্তক্ষেপ নয় (buildFeedSql কার্সর/র্যাংকড/fresh তিন-মোডের
+     * হট-পথ — সংঘর্ষ-ঝুঁকি), বদলে রেন্ডার-চোক-পয়েন্টে JS-ফিল্টার: decorateFeed
+     * (ফিড) + profile-route (টাইমলাইন)। পেজ-সাইজ বিরল-ক্ষেত্রে সামান্য কমতে পারে।
+     * friendIds: viewer-এর পারস্পরিক-অনুসরণ-সেট (routes ব্যাচ-কুয়েরিতে দেয়); শূন্য
+     * হলে FRIENDS-পোস্ট শুধু লেখক-নিজে দেখে।
+     */
+    filterByAudience153: function filterByAudience153(rows, me, friendIds) {
+      const uid = me ? Number(me.id) : null;
+      const friends = (friendIds || []).map(Number);
+      return (rows || []).filter(r => {
+        const aud = String(r.audience || 'PUBLIC').toUpperCase();
+        if (aud === 'PUBLIC' || aud === '') return true;
+        if (!uid) return false;                 // অতিথি → নন-পাবলিক শূন্য
+        if (Number(r.author_id) === uid) return true;
+        if (aud === 'ONLY_ME') return false;
+        if (aud === 'FRIENDS') return friends.includes(Number(r.author_id));
+        return false;                            // অজানা-মান → রক্ষণশীল (লুকান)
+      });
+    },
+
+    /** viewer-এর পারস্পরিক-অনুসরণ-আইডি-সেট (filterByAudience153-এর friendIds)। */
+    mutualFollowIds153: async function mutualFollowIds153(me) {
+      if (!me) return [];
+      try {
+        const rows = await db.prepare(`
+          SELECT f1.follower_id AS a, f1.following_id AS b
+          FROM follows f1
+          JOIN follows f2 ON f2.follower_id = f1.following_id AND f2.following_id = f1.follower_id
+          WHERE f1.follower_id = ? OR f1.following_id = ?
+        `).all(me.id, me.id);
+        const ids = new Set();
+        (rows || []).forEach(r => { if (Number(r.a) !== Number(me.id)) ids.add(Number(r.a)); if (Number(r.b) !== Number(me.id)) ids.add(Number(r.b)); });
+        return [...ids];
+      } catch (_) { return []; }
     }
   };
 };

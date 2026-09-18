@@ -116,10 +116,15 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
     : useCursor
       ? ORDER + ` LIMIT ${lim + 1}` // কার্সার-মোড: hasMore-সঠিকতার জন্য +১
       : ORDER + ` LIMIT ${lim} OFFSET ${off}`;
+  // সেশন ১৫৩: নতুন কলাম ×৫ (rich_content/background_color/feeling/location/audience)
+  // UNION-কলাম-সাম্য চুক্তি — তিন-শাখাতেই যোগ (activity শাখায় NULL; কার্যক্রমে ধারণাই নেই)
+  const RICH153 = 'p.rich_content, p.background_color, p.feeling, p.location, p.audience';
+  const RICH153_NULL = 'NULL as rich_content, NULL as background_color, NULL as feeling, NULL as location, NULL as audience';
   const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from, p.repost_note,
            NULL as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            NULL as accepted_comment_id,
+           ${RICH153},
            p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
@@ -128,6 +133,7 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
            (CASE WHEN p.accepted_comment_id IS NOT NULL THEN 1 ELSE 0 END) as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            p.accepted_comment_id,
+           ${RICH153},
            p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
@@ -137,6 +143,7 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
            NULL as accepted_flag,
            dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
            NULL as accepted_comment_id,
+           ${RICH153_NULL},
            NULL as author_id,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, NULL as pen_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc
@@ -228,6 +235,15 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
   // সেশন ১৪৭: শেয়ার-কপিগুলোতে shared_orig অ্যাটাচ (FB-নেস্টেড রেন্ডার —
   // FeedPostCard-এর shared-শাখা)। withBookmarks-মোডে ফিড খালি — স্কিপ-সস্তা।
   if (!withBookmarks) await sharedPosts147.decorateShared(feed);
+  // সেশন ১৫৩: অডিয়েন্স-সম্মান — ONLY_ME/FRIENDS-পোস্ট অনুমোদিত দর্শক ছাড়া
+  // ফিডে আসবেই না (মিউটেটিং-ফিল্টার; ব্যাচ-ডেকোরেশনের আগেই — লুকানো-পোস্টে
+  // কোনো কুয়েরি-খরচ নেই)।
+  const _friends153 = await sharedPosts147.mutualFollowIds153(me);
+  const _visible153 = sharedPosts147.filterByAudience153(feed, me, _friends153);
+  if (_visible153.length !== feed.length) {
+    feed.length = 0;
+    feed.push(..._visible153);
+  }
   const postItems = feed.filter(i => i.item_type !== 'activity');
   const postIds = postItems.map(i => i.id);
   const dailyIds = feed.filter(i => i.item_type === 'activity').map(i => i.id);
@@ -245,21 +261,23 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
   }
 
   // (A2) ছবি-ব্যাচ — post + daily দুই এন্টিটি-টাইপে দুটি কুয়ারি (আগে ছিল N কুয়ারি)
+  // সেশন ১৫৩: media_type-ও ('image'|'video'|'audio') — FB-কোলাজ-রেন্ডারের
+  // item.media=[{url,type}]; item.images পুরনো-চুক্তি (শুধু-ছবি-URL) অক্ষুণ্ণ।
   const imgsByEntity = {};
   try {
     if (postIds.length) {
-      (await db.prepare(`SELECT entity_id, image_url FROM post_images WHERE entity_type = 'post' AND entity_id IN ${ph(postIds)} ORDER BY sort_order, id`).all(...postIds))
-        .forEach(r => { (imgsByEntity['post:' + r.entity_id] = imgsByEntity['post:' + r.entity_id] || []).push(r.image_url); });
+      (await db.prepare(`SELECT entity_id, image_url, media_type FROM post_images WHERE entity_type = 'post' AND entity_id IN ${ph(postIds)} ORDER BY sort_order, id`).all(...postIds))
+        .forEach(r => {
+          (imgsByEntity['post:' + r.entity_id] = imgsByEntity['post:' + r.entity_id] || []).push({ url: r.image_url, type: r.media_type || 'image' });
+        });
     }
     if (dailyIds.length) {
-      (await db.prepare(`SELECT entity_id, image_url FROM post_images WHERE entity_type = 'daily' AND entity_id IN ${ph(dailyIds)} ORDER BY sort_order, id`).all(...dailyIds))
-        .forEach(r => { (imgsByEntity['daily:' + r.entity_id] = imgsByEntity['daily:' + r.entity_id] || []).push(r.image_url); });
+      (await db.prepare(`SELECT entity_id, image_url, media_type FROM post_images WHERE entity_type = 'daily' AND entity_id IN ${ph(dailyIds)} ORDER BY sort_order, id`).all(...dailyIds))
+        .forEach(r => {
+          (imgsByEntity['daily:' + r.entity_id] = imgsByEntity['daily:' + r.entity_id] || []).push({ url: r.image_url, type: r.media_type || 'image' });
+        });
     }
-  } catch (_) { /* post_images টেবিল না থাকলে পুরনো-পথ */
-    for (const item of feed) {
-      item.images = (await db.getPostImages(item.item_type === 'activity' ? 'daily' : 'post', item.id)).map(i => i.image_url);
-    }
-  }
+  } catch (_) { /* post_images টেবিল/কলাম না থাকলে পুরনো-পথ */ }
 
   // সেশন ১৪৭: কার্যক্রম-কার্ডের রিঅ্যাকশন-সত্য (কাউন্টার-ড্রিফট-ফিক্স) — daily_content-এ
   // reactions/like_count কলাম নেই, কিন্তু /api/react likes-টেবিলে লেখে → ক্লিকে '১'
@@ -322,9 +340,13 @@ async function decorateFeed(feed, me, { withBookmarks } = {}) {
     item.myReaction = (me && item.item_type !== 'activity') ? (myReactions[item.id] || null) : null;
     // (D1) কলমী-নাম-প্রধান প্রদর্শন-নাম (ফিড-কার্ডের লেখক-লাইনে)
     item.display_name = item.item_type === 'activity' ? item.author_name : displayName(item, item.author_name);
-    if (!item.images) {
-      item.images = (imgsByEntity[(item.item_type === 'activity' ? 'daily' : 'post') + ':' + item.id] || []);
-      if (!item.images.length && item.cover_image) item.images = [item.cover_image];
+    if (!item.images && !item.media153) {
+      // সেশন ১৫৩: মিডিয়া-রোগুলো [{url,type}] — item.media153 (কোলাজ) + item.images
+      // (পুরনো-চুক্তি: শুধু-ছবি-URL; cover-ফলব্যাক অক্ষুণ্ণ)
+      const rows153 = imgsByEntity[(item.item_type === 'activity' ? 'daily' : 'post') + ':' + item.id] || [];
+      item.media153 = rows153;
+      const imgUrls153 = rows153.filter(m => (m.type || 'image') === 'image').map(m => m.url);
+      item.images = imgUrls153.length ? imgUrls153 : (item.cover_image ? [item.cover_image] : []);
     }
     item.reactorFaces = facesByPost[item.id] || [];
     // সেশন ১১০: আনুমানিক পড়ার-সময় — মার্কডাউন/HTML-মার্কার-স্ট্রিপ → ~৯৫০ অক্ষর/মিনিট

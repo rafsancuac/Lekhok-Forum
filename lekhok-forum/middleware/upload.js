@@ -373,6 +373,30 @@ async function storeBufferImage(file, subdir) {
   return { url: `/uploads/${subdir}/${filename}`, filename };
 }
 
+// ── সেশন ১৫৩: মিডিয়া-সংরক্ষণ (ভিডিও/অডিও — বাইনারি-নিরপেক্ষ) ─────────────────
+// FB-কম্পোজারের /upload-media ভিডিও/অডিও ফাইল রাখে — WebP-অপটিমাইজার (sharp)
+// এদের উপর চলবে না; বাইনারি-নিরপেক্ষ ডিস্ক/ব্লব-লেখা। মাইম/এক্সটেনশন স্যানিটাইজ +
+// হোয়াইটলিস্ট (video/*, audio/* — কলার আগেই যাচাই করে; এখানে দ্বিতীয়-স্তর)।
+async function storeBufferMedia153(file, subdir) {
+  const mimeOk = /^(video|audio)\//.test(String(file.mimetype || ''));
+  const ext = (path.extname(file.originalname) || '').toLowerCase().replace(/[^a-z0-9.]/g, '');
+  const extOk = /\.(mp4|webm|ogg|oga|ogv|mov|m4v|mp3|m4a|wav|aac|opus)$/.test(ext);
+  if (!mimeOk || !extOk) throw new Error('অসমর্থিত মিডিয়া-ফরম্যাট');
+  if (USE_BLOB) {
+    const result = await uploadToBlob(file, subdir);
+    return { url: result.url, filename: result.filename };
+  }
+  const dest = path.join(UPLOAD_ROOT, subdir);
+  try {
+    if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+  } catch (e) {
+    throw new Error('স্টোরেজ লেখাযোগ্য নয় (read-only FS) — Blob টোকেন কনফিগার করুন');
+  }
+  const filename = makeFilenameSync(file);
+  fs.writeFileSync(path.join(dest, filename), file.buffer);
+  return { url: `/uploads/${subdir}/${filename}`, filename };
+}
+
 module.exports = {
   avatarUpload, coverUpload, attachmentUpload, galleryUpload, pressUpload,
   messageUpload, complaintUpload, epaperUpload,
@@ -380,5 +404,6 @@ module.exports = {
   makeContentImageUpload,
   withUpload,
   optimizeToWebp,
-  storeBufferImage
+  storeBufferImage,
+  storeBufferMedia153
 };

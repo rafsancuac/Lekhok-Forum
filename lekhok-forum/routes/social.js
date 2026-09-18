@@ -68,6 +68,123 @@ router.post('/upload-images', ensureLoggedIn, (req, res) => {
   });
 });
 
+// ── সেশন ১৫৩: কম্পোজার মিডিয়া-আপলোড (ছবি + ভিডিও + অডিও) — FB-কম্পোজারের
+// 'Photo/Video/Audio' ডক + 'Voice/Audio note'-এর জন্য /upload-images-এর
+// মাল্টি-টাইপ ভাইবোন। মাইম-হোয়াইটলিস্ট + টাইপ-ভিত্তিক সাইজ-ক্যাপ:
+// image 8MB / video 64MB / audio 16MB; ছবিতে storeBufferImage (WebP-অপটিমাইজ),
+// ভিডিও/অডিওতে বাইনারি-নিরপেক্ষ ডিস্ক/ব্লব-সংরক্ষণ (/uploads/media/<সাবডির>)।
+const MEDIA_MIME_153 = {
+  image: { re: /^image\//, cap: 8 * 1024 * 1024 },
+  video: { re: /^video\//, cap: 64 * 1024 * 1024 },
+  audio: { re: /^audio\//, cap: 16 * 1024 * 1024 }
+};
+router.post('/upload-media', ensureLoggedIn, (req, res) => {
+  const multer = require('multer');
+  multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 64 * 1024 * 1024, files: 12 }
+  }).array('files', 12)(req, res, async (err) => {
+    if (err) return res.status(400).json({ ok: false, error: 'আপলোড ব্যর্থ: ' + (err.message || 'ফাইল বড়') });
+    if (!req.files || !req.files.length) return res.status(400).json({ ok: false, error: 'কোনো ফাইল নেই' });
+    try {
+      const up = require('../middleware/upload');
+      const out = [];
+      for (const f of req.files) {
+        const kind = Object.keys(MEDIA_MIME_153).find(k => MEDIA_MIME_153[k].re.test(f.mimetype));
+        if (!kind) return res.status(400).json({ ok: false, error: 'অসমর্থিত ফাইল-ধরন: ' + f.mimetype });
+        if (f.size > MEDIA_MIME_153[kind].cap) {
+          return res.status(400).json({ ok: false, error: `${kind === 'video' ? 'ভিডিও' : kind === 'audio' ? 'অডিও' : 'ছবি'} সীমা ছাড়িয়েছে (${Math.round(MEDIA_MIME_153[kind].cap / 1048576)}MB)` });
+        }
+        if (kind === 'image') {
+          const stored = await up.storeBufferImage(f, 'content');
+          out.push({ url: stored.url, type: 'image' });
+        } else {
+          const stored = await up.storeBufferMedia153(f, 'media');
+          out.push({ url: stored.url, type: kind });
+        }
+      }
+      res.json({ ok: true, media: out });
+    } catch (e) {
+      console.error('[social upload-media] failed:', e.message);
+      res.status(500).json({ ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+    }
+  });
+});
+
+// ── সেশন ১৫৩: FB-কম্পোজার JSON-এন্ডপয়েন্ট — রিচ-কনটেন্ট + মিডিয়া-কোলাজ +
+// অডিয়েন্স + অনুভূতি + লোকেশন + 'Aa' গ্রেডিয়েন্ট। ইউজার-স্পেকের পূর্ণ-ব্যাকএন্ড।
+//   · rich_content সার্ভার-স্যানিটাইজড (helpers/rich-sanitize.js — একমাত্র-প্রবেশদ্বার)
+//   · title নেই (FB-প্যারিটি) — posts.title NOT NULL-চুক্তির জন্য প্লেইন-টেক্সটের
+//     প্রথম-লাইন থেকে অটো-শিরোনাম (≤৮০ অক্ষর); খালি হলে তারিখ-ভিত্তিক ফলব্যাক
+//   · ডুপ-গার্ড (সেশন-৩৯-প্যাটার্ন): ২ মিনিটে একই অটো-টাইটেল + একই কনটেন্ট = আগেরটা
+//   · মেনশন-নোটিফিকেশন (session145-চুক্তি — extractMentions + notify_comments)
+router.post('/api/posts/compose', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  try {
+    const { sanitizeRichHtml153, richToPlainText153 } = require('../helpers/rich-sanitize');
+    const rawHtml = String(req.body.content || '');
+    const rich = sanitizeRichHtml153(rawHtml);
+    const plain = richToPlainText153(rich);
+    let media = req.body.media;
+    if (typeof media === 'string') { try { media = JSON.parse(media); } catch (_) { media = []; } }
+    if (!Array.isArray(media)) media = [];
+    media = media.slice(0, 12).map(m => ({ url: String((m && m.url) || '').trim(), type: String((m && m.type) || 'image').toLowerCase() }))
+      .filter(m => (m.url.startsWith('/') || /^https?:\/\//i.test(m.url)) && ['image', 'video', 'audio'].includes(m.type));
+    if (!plain && !media.length) return res.status(400).json({ ok: false, error: 'কিছু লিখুন বা মিডিয়া যোগ করুন' });
+    if (plain.length > 50000) return res.status(400).json({ ok: false, error: 'লেখা খুব দীর্ঘ (৫০০০০ অক্ষর সীমা)' });
+
+    const BG_KEYS = ['fbg1','fbg2','fbg3','fbg4','fbg5','fbg6','fbg7','fbg8'];
+    const bg = BG_KEYS.includes(String(req.body.background_color || '')) ? String(req.body.background_color) : null;
+    const feeling = String(req.body.feeling || '').trim().slice(0, 80) || null;
+    const location = String(req.body.location || '').trim().slice(0, 80) || null;
+    // সেশন ১৫৩-ফিক্স: আগে নরমালাইজ → তারপর হোয়াইটলিস্ট (বাগ-প্রমাণ: অনুপস্থিত
+    // audience-এ ভ্যালিডেশন 'PUBLIC' পড়ে কিন্তু টার্নারি String(undefined)='undefined'
+    // সেভ করত — ফিল্টার-সত্য-নীতিতে অতিথি-ফিড থেকে পোস্ট অদৃশ্য হয়ে যেত)
+    const audNorm153 = String(req.body.audience || 'PUBLIC').trim().toUpperCase() || 'PUBLIC';
+    const audience = ['PUBLIC', 'FRIENDS', 'ONLY_ME'].includes(audNorm153) ? audNorm153 : 'PUBLIC';
+
+    const firstLine = (plain.split('\n').find(l => l.trim()) || '').trim();
+    const title = (firstLine || ('পোস্ট · ' + new Date().toISOString().slice(0, 10))).slice(0, 80);
+
+    // সেশন-৩৯-প্যাটার্ন ডুপ-গার্ড
+    const dup153 = await db.prepare(`
+      SELECT id FROM posts WHERE author_id = ? AND type = 'article' AND title = ?
+        AND created_at > datetime('now', '-2 minutes') ORDER BY id DESC LIMIT 1
+    `).get(me.id, title);
+    if (dup153 && richToPlainText153(String(dup153._rich || '')) === plain) {
+      return res.json({ ok: true, id: dup153.id, url: '/articles/' + dup153.id, duplicate: true });
+    }
+
+    const excerpt = mdPlain85(plain, 200);
+    const mentions = await extractMentions(plain);
+    const result = await db.prepare(`
+      INSERT INTO posts (author_id, type, post_kind, title, body, excerpt, cover_image, mentions, category,
+                         rich_content, background_color, feeling, location, audience)
+      VALUES (?, 'article', 'writing', ?, ?, ?, ?, ?, 'general', ?, ?, ?, ?, ?)
+    `).run(
+      me.id, title, plain, excerpt,
+      (media.find(m => m.type === 'image') || {}).url || null,
+      mentions, rich, bg, feeling, location, audience
+    );
+    const postId = result.lastInsertRowid;
+    if (media.length) await db.setPostMedia153('post', postId, media);
+
+    try {
+      const mentioned = JSON.parse(mentions);
+      for (const m of mentioned) {
+        if (m.id !== me.id) {
+          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে মেনশন করেছেন', '/articles/' + postId, me.id);
+        }
+      }
+    } catch (_) {}
+
+    res.json({ ok: true, id: postId, url: '/articles/' + postId });
+  } catch (e) {
+    console.error('[social compose153] failed:', e.message);
+    res.status(500).json({ ok: false, error: 'পোস্ট সংরক্ষণ ব্যর্থ — আবার চেষ্টা করুন' });
+  }
+});
+
 // Auto-linkify @mentions and #hashtags in post bodies
 function linkify(text) {
   if (!text) return '';
@@ -555,6 +672,22 @@ router.get('/articles/:id', async (req, res) => {
   if (post.status !== 'published' && post.status !== 'hidden') {
     return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
   }
+  // সেশন ১৫৩: অডিয়েন্স-সম্মান (সিঙ্গেল-পোস্ট সরাসরি-URL-পথ) — ONLY_ME শুধু
+  // লেখক; FRIENDS শুধু লেখক+পারস্পরিক-অনুসরণ। অনুমোদিত-না-হলে 404 (অস্তিত্ব-লিক শূন্য)।
+  const aud153 = String(post.audience || 'PUBLIC').toUpperCase();
+  if (aud153 === 'ONLY_ME' || aud153 === 'FRIENDS') {
+    let ok153 = !!(viewer81 && viewer81.id === post.author_id);
+    if (!ok153 && viewer81 && aud153 === 'FRIENDS') {
+      try {
+        ok153 = !!(await db.prepare(
+          `SELECT 1 FROM follows f1 JOIN follows f2
+             ON f2.follower_id = f1.following_id AND f2.following_id = f1.follower_id
+            WHERE (f1.follower_id = ? AND f1.following_id = ?) OR (f1.following_id = ? AND f1.follower_id = ?) LIMIT 1`
+        ).get(viewer81.id, post.author_id, viewer81.id, post.author_id));
+      } catch (_) { ok153 = false; }
+    }
+    if (!ok153) return res.status(404).render('404', { layout: false, siteName: 'লেখক ফোরাম' });
+  }
   const postHidden81 = post.status === 'hidden';
   // সেশন ৮১: এই ভিউয়ারের এই পোস্টে খোলা রিপোর্ট আছে কি (বাটন-স্টেটের জন্য)
   let myOpenReport81 = false;
@@ -564,7 +697,9 @@ router.get('/articles/:id', async (req, res) => {
     ).get(viewer81.id, post.id);
   }
   // টাস্ক ১৩ (পর্ব ৪, অংশ ক): পোস্টের একাধিক ছবি (post_images) — না থাকলে কভার দিয়ে
-  post.images = (await db.getPostImages('post', post.id)).map(i => i.image_url);
+  // সেশন ১৫৩: মিডিয়া-রো [{url,type}]-ও (post.media153 — সিঙ্গেল-পেজ কোলাজের জন্য)
+  post.media153 = (await db.getPostImages('post', post.id)).map(i => ({ url: i.image_url, type: i.media_type || 'image' }));
+  post.images = post.media153.filter(m => m.type === 'image').map(m => m.url);
   if (!post.images.length && post.cover_image) post.images = [post.cover_image];
 
   // If this is a shared copy, resolve the ORIGINAL post + author for attribution
@@ -1413,6 +1548,14 @@ router.get('/profile/:username', async (req, res) => {
          টাইল-ব্যক্তি উভয়েই যাঁদের অনুসরণ করেন (২ কোয়েরি — N+1 শূন্য)। */
   const sharedPosts147 = require('../helpers/shared-posts')(db);
   await sharedPosts147.decorateShared(articles).catch(() => {});
+  // সেশন ১৫৩: প্রোফাইল-টাইমলাইনেও অডিয়েন্স-সম্মান — ONLY_ME/FRIENDS-লেখা
+  // অনুমোদিত দর্শক (লেখক/মিউচুয়াল-ফলো) ছাড়া বাদ।
+  try {
+    const _pf153 = req.session.user || null;
+    const _pfFriends153 = await sharedPosts147.mutualFollowIds153(_pf153);
+    const _pfVisible153 = sharedPosts147.filterByAudience153(articles, _pf153, _pfFriends153);
+    articles.length = 0; articles.push(..._pfVisible153);
+  } catch (_) {}
   // প্রোফাইল-রুটের পোস্ট-রো = SELECT * FROM posts (author-জয়েন্ট নয়) → AuthorLabel
   // নাম/অ্যাভাটার অন্ধ হয়। প্রোফাইল-টাইমলাইনে প্রতিটি লেখার লেখকই মালিক —
   // profile-অবজেক্ট থেকে author-ফিল্ড অ্যাটাচ (ড্যাশবোর্ড-ফিডে SQL জয়েনই আছে;

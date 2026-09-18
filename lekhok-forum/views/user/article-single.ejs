@@ -53,6 +53,22 @@
       <% if (post.images && post.images.length) { %>
         <%- include('../partials/post-gallery', { images: post.images, alt: post.title, height: '320px', group: 'artsingle-' + post.id }) %>
       <% } %>
+      <%# সেশন ১৫৩: FB-রিচ-পোস্ট সিঙ্গেল-ভিউ — গ্রেডিয়েন্ট-ব্যানার + রিচ-কনটেন্ট +
+      ফুল-কোলাজ (ভিডিও/অডিও এখানেই প্লেয়ার; ক্লাসিক-শাখা অক্ষুণ্ণ) %>
+      <% if (post.rich_content) { %>
+        <% if (post.background_color && ['fbg1','fbg2','fbg3','fbg4','fbg5','fbg6','fbg7','fbg8'].indexOf(String(post.background_color)) !== -1) { %>
+          <div class="fb-bg153 fb-bg153-<%= post.background_color %> fb-bg-single153">
+            <div class="fb-rich153 fb-rich-center153"><%- post.rich_content %></div>
+          </div>
+        <% } %>
+        <%- include('../partials/fb-media-collage', { media: post.media153, alt: post.title, link: '/articles/' + post.id, group: 'fb153-single-' + post.id }) %>
+        <% if (post.feeling || post.location) { %>
+          <div class="fb-context153">
+            <% if (post.feeling) { %><span class="fb-context-chip153"><i class="far fa-smile" aria-hidden="true"></i> <%= post.feeling %></span><% } %>
+            <% if (post.location) { %><span class="fb-context-chip153"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> <%= post.location %></span><% } %>
+          </div>
+        <% } %>
+      <% } %>
       <div class="article-header">
         <div class="article-tags">
           <% (post.tags || '').split(',').filter(t => t.trim()).forEach(tag => { %>
@@ -94,7 +110,13 @@
       </nav>
       <% } %>
       <div class="article-body">
-        <%- bodyHtml %>
+        <%# সেশন ১৫৩: রিচ-পোস্ট — bg-হীন হলে রিচ-HTML বডিতে (bodyHtml-এর বদলে);
+            bg-যুক্ত হলে কনটেন্ট উপরের গ্রেডিয়েন্ট-ব্যানারেই — ডুপ্লিকেট-শূন্য %>
+        <% if (post.rich_content) { %>
+          <% if (!post.background_color) { %><div class="fb-rich153"><%- post.rich_content %></div><% } %>
+        <% } else { %>
+          <%- bodyHtml %>
+        <% } %>
       </div>
       <% try { const mentions = JSON.parse(post.mentions || '[]'); if (mentions.length) { %>
         <div class="mentions-row">

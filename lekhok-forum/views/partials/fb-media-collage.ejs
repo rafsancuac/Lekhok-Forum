@@ -1,0 +1,75 @@
+<%#
+  ═══════════════════════════════════════════════════════════════════════════
+  fb-media-collage.ejs — সেশন ১৫৩: ফেসবুক ইন্টেলিজেন্ট মিডিয়া-কোলাজ (ইউজার-স্পেক)
+  ───────────────────────────────────────────────────────────────────────────
+  মিডিয়া-সংখ্যা-ভিত্তিক স্বয়ংক্রিয়-লেআউট:
+    ১টি     → ফুল-উইডথ (ছবি | ভিডিও-প্লেয়ার | অডিও-কার্ড)
+    ২টি     → পাশাপাশি ৫০/৫০
+    ৩টি     → বামে ১ বড় (২/৩) + ডানে ২ স্তূপ (স্পেক: "বামে ১ ডানে ২")
+    ৪টি     → বামে ১ বড় (২/৩) + ডানে ৩ স্তূপ ("বামে ১ ডানে ৩")
+    ৫টি+    → বামে ১ + ডানে ২; অবশিষ্ট শেষ-সেলে "+N" ওভারলে ("প্লাস দিয়ে ভেতরে")
+  প্যারামিটার: media [{url, type}], link (পোস্ট-লিংক — +N-ওভারলে-ক্লিক গন্তব্য),
+               alt, group (লাইটবক্স-গ্রুপ)
+  নিরাপত্তা: URL-গার্ড (http(s):// বা /-প্রিফিক্স — post-gallery.ejs-চুক্তি)।
+  ক্লিক: ছবি → data-fb-lightbox (post-gallery.js-ডেলিগেশন, session153);
+        ভিডিও/অডিও → নেটিভ কন্ট্রোল।
+  ═══════════════════════════════════════════════════════════════════════════ %>
+<%
+  var _m153 = (Array.isArray(media) ? media : []).filter(function (m) {
+    var s = String((m && m.url) == null ? '' : m.url).trim();
+    return s && (/^https?:\/\//i.test(s) || s.startsWith('/'));
+  }).map(function (m) { return { url: String(m.url), type: (m.type || 'image').toLowerCase() }; });
+%>
+<% if (_m153.length) { %>
+<% var _cnt153 = _m153.length; var _grp153 = group || ('fb-' + String(alt || '').replace(/[^a-zA-Z0-9\u0980-\u09FF]+/g, '-')); %>
+<%# data-post-lightbox রুটে — post-gallery.js-লাইটবক্স কোলাজ-ছবিতেও চলে (session153-গার্ড: ভিডিও/অডিও/+N বাদ) %>
+<div class="fb-col153 fb-col153-<%= Math.min(_cnt153, 5) %>" data-fb-count="<%= _cnt153 %>" data-post-lightbox="<%= _grp153 %>">
+  <% if (_cnt153 === 1) { %>
+    <% var _a = _m153[0]; %>
+    <% if (_a.type === 'video') { %>
+      <video src="<%= _a.url %>" controls preload="metadata" playsinline class="fb-col-video153" aria-label="<%= alt || 'ভিডিও' %>"></video>
+    <% } else if (_a.type === 'audio') { %>
+      <div class="fb-col-audio153">
+        <span class="fb-col-audio-icon153" aria-hidden="true"><i class="fas fa-music"></i></span>
+        <div class="fb-col-audio-main153">
+          <span class="fb-col-audio-title153"><%= alt || 'অডিও পোস্ট' %></span>
+          <audio src="<%= _a.url %>" controls preload="metadata" class="fb-col-audio-player153" aria-label="<%= alt || 'অডিও' %>"></audio>
+        </div>
+      </div>
+    <% } else { %>
+      <img loading="lazy" decoding="async" onload="this.classList.add('ld')" src="<%= _a.url %>" data-full="<%= _a.url %>" data-fb-lightbox="<%= _grp153 %>" data-fb-index="0" class="fb-col-img153 fb-col-solo153 img-skel" alt="<%= alt || '' %>" />
+    <% } %>
+  <% } else if (_cnt153 === 2) { %>
+    <% _m153.forEach(function (_a, _i) { %>
+      <% if (_a.type === 'video') { %>
+        <div class="fb-col-cell153"><video src="<%= _a.url %>" controls preload="metadata" playsinline class="fb-col-video153" aria-label="ভিডিও <%= _i + 1 %>"></video></div>
+      <% } else if (_a.type === 'audio') { %>
+        <div class="fb-col-cell153"><div class="fb-col-audio153"><span class="fb-col-audio-icon153" aria-hidden="true"><i class="fas fa-music"></i></span><audio src="<%= _a.url %>" controls preload="metadata" class="fb-col-audio-player153" aria-label="অডিও <%= _i + 1 %>"></audio></div></div>
+      <% } else { %>
+        <div class="fb-col-cell153"><img loading="lazy" decoding="async" onload="this.classList.add('ld')" src="<%= _a.url %>" data-full="<%= _a.url %>" data-fb-lightbox="<%= _grp153 %>" data-fb-index="<%= _i %>" class="fb-col-img153 img-skel" alt="<%= (alt || '') + ' ' + (_i + 1) %>" /></div>
+      <% } %>
+    <% }); %>
+  <% } else { %>
+    <%# ৩/৪/৫+ — বামে ১ বড় + ডানে স্তূপ; ৫+-এ শেষ-দৃশ্যমান সেলে +N ওভারলে %>
+    <% var _vis = _cnt153 === 3 ? 3 : 4; %>
+    <% var _hidden153 = _cnt153 - _vis; %>
+    <% _m153.slice(0, _vis).forEach(function (_a, _i) { %>
+      <% var _isLast = _i === _vis - 1; %>
+      <div class="fb-col-cell153<%= (_i === 0 ? ' fb-col-lead153' : '') %>">
+        <% if (_a.type === 'video') { %>
+          <video src="<%= _a.url %>" controls preload="metadata" playsinline class="fb-col-video153" aria-label="ভিডিও <%= _i + 1 %>"></video>
+        <% } else if (_a.type === 'audio') { %>
+          <div class="fb-col-audio153"><span class="fb-col-audio-icon153" aria-hidden="true"><i class="fas fa-music"></i></span><audio src="<%= _a.url %>" controls preload="metadata" class="fb-col-audio-player153" aria-label="অডিও <%= _i + 1 %>"></audio></div>
+        <% } else { %>
+          <img loading="lazy" decoding="async" onload="this.classList.add('ld')" src="<%= _a.url %>" data-full="<%= _a.url %>" data-fb-lightbox="<%= _grp153 %>" data-fb-index="<%= _i %>" class="fb-col-img153 img-skel" alt="<%= (alt || '') + ' ' + (_i + 1) %>" />
+        <% } %>
+        <% if (_isLast && _hidden153 > 0) { %>
+          <a class="fb-col-more153" href="<%= link || '#' %>" aria-label="আরও <%= toBn(_hidden153) %> টি মিডিয়া — পোস্ট দেখুন">
+            <span class="fb-col-more-n153"><i class="fas fa-plus" aria-hidden="true"></i> <%= toBn(_hidden153) %></span>
+          </a>
+        <% } %>
+      </div>
+    <% }); %>
+  <% } %>
+</div>
+<% } %>

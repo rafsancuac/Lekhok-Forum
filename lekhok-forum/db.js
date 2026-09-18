@@ -613,6 +613,14 @@ const LATER_COLUMNS = [
   // (পুরনো সব চেক — লগইন-ইন্টারসেপ্ট/ব্যাকআপ/ডিসেবল — অক্ষত থাকে)।
   // [নাম্বার-রেস-নোট: ১১০-অ্যাকশন-রেল-ফিক্সের পর সমান্তরাল-এজেন্টে ১১১-১১৪ নেওয়া — সর্বোচ্চ+১ রীতিতে ১১৫]
   ['users', 'twofa_method', "TEXT DEFAULT 'totp'"],
+  // সেশন ১৫৩: FB-রিচ-কম্পোজার — কলাম-সেট alt-তালিকার প্রতিচ্ছবি (ফ্রেশ-ডিপ্লয়ে
+  // প্রথম বুটেই পৌঁছায়; duplicate-column → নিরীহ catch)।
+  ['posts', 'rich_content',     'TEXT'],
+  ['posts', 'background_color', 'TEXT'],
+  ['posts', 'feeling',          'TEXT'],
+  ['posts', 'location',         'TEXT'],
+  ['posts', 'audience',         "TEXT DEFAULT 'PUBLIC'"],
+  ['post_images', 'media_type', "TEXT DEFAULT 'image'"],
 ];
 /* সেশন ৩ — ব্র্যান্ড-রিনেম মাইগ্রেশন (ইউজার-সিদ্ধান্ত: দীর্ঘ নাম → "লেখক ফোরাম" সব জায়গায়)
    কোড-ডিফল্ট/সিড বদলালেও পুরনো DB-তে (লোকাল lekhok.db + প্রোডাকশন Turso) পুরনো স্ট্রিং
@@ -1316,7 +1324,21 @@ async function runMigrations() {
     // সেশন ১৩১: গ্রহণকৃত-উত্তর (accepted answer) — প্রশ্নের (type='question') কোন
     // উত্তর (comments.id) প্রশ্নকর্তা কর্তৃক গ্রহীতা হিসেবে চিহ্নিত; NULL = এখনো নয়।
     // টগল-মডেল API: POST /api/qa/:id/accept-answer (routes/social.js)।
-    "ALTER TABLE posts ADD COLUMN accepted_comment_id INTEGER DEFAULT NULL"
+    "ALTER TABLE posts ADD COLUMN accepted_comment_id INTEGER DEFAULT NULL",
+    // সেশন ১৫৩: FB-স্টাইল রিচ-কম্পোজার (ইউজার-স্পেক A-to-Z) —
+    // rich_content: contentEditable-HTML (সার্ভার-স্যানিটাইজড — helpers/rich-sanitize.js);
+    // NULL = ক্লাসিক (article-form) পোস্ট — পুরনো রেন্ডার-পথ অক্ষুণ্ণ।
+    // background_color: 'Aa' গ্রেডিয়েন্ট-কী (fbg1..fbg8 — CSS-ক্লাস হোয়াইটলিস্ট)।
+    // feeling/location: কম্পোজারের অনুভূতি/চেক-ইন চিপ। audience: PUBLIC | FRIENDS
+    // (পারস্পরিক-অনুসরণ = বন্ধু) | ONLY_ME — helpers/shared-posts.js filterByAudience153।
+    "ALTER TABLE posts ADD COLUMN rich_content TEXT",
+    "ALTER TABLE posts ADD COLUMN background_color TEXT",
+    "ALTER TABLE posts ADD COLUMN feeling TEXT",
+    "ALTER TABLE posts ADD COLUMN location TEXT",
+    "ALTER TABLE posts ADD COLUMN audience TEXT DEFAULT 'PUBLIC'",
+    // post_images.media_type: 'image' | 'video' | 'audio' — একই টেবিলে মিডিয়া-কোলাজের
+    // সমস্ত অ্যাটাচমেন্ট (sort_order = কোলাজ-ক্রম); ডিফল্ট 'image' = পুরনো-রো অক্ষত।
+    "ALTER TABLE post_images ADD COLUMN media_type TEXT DEFAULT 'image'"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}
@@ -3004,11 +3026,28 @@ async function getSectionItems(section) {
 // টাস্ক ১৩ (পর্ব ৪, অংশ ক): মাল্টি-ইমেজ হেল্পার
 async function getPostImages(entityType, entityId) {
   try {
+    // সেশন ১৫৩: media_type-ও ('image'|'video'|'audio') — FB-কোলাজ রেন্ডারের জন্য;
+    // পুরনো DB-তে কলাম না-থাকলে নিরীহ-catch ফলব্যাকে image-হিসেবেই ধরা হয়।
     const rows = await prepare(
-      'SELECT id, image_url, sort_order FROM post_images WHERE entity_type = ? AND entity_id = ? ORDER BY sort_order, id'
+      'SELECT id, image_url, sort_order, media_type FROM post_images WHERE entity_type = ? AND entity_id = ? ORDER BY sort_order, id'
     ).all(entityType, entityId);
-    return rows || [];
+    return (rows || []).map(r => ({ ...r, media_type: r.media_type || 'image' }));
   } catch (e) { return []; }
+}
+
+// সেশন ১৫৩: FB-কম্পোজার মিডিয়া-লেখক — items = [{url, type}] (type: image|video|audio,
+// কোলাজ-ক্রম অনুযায়ী)। normalizeImageList68-চুক্তি পুনঃব্যবহার (URL-স্যানিটাইজ + ডিডুপ)।
+async function setPostMedia153(entityType, entityId, items) {
+  const list = (Array.isArray(items) ? items : [])
+    .map(it => ({ url: String((it && it.url) || '').trim(), type: String((it && it.type) || 'image').toLowerCase() }))
+    .filter(it => /^https?:\/\//i.test(it.url) || it.url.startsWith('/'))
+    .filter(it => ['image', 'video', 'audio'].includes(it.type));
+  await prepare('DELETE FROM post_images WHERE entity_type = ? AND entity_id = ?').run(entityType, entityId);
+  for (let i = 0; i < list.length; i++) {
+    await prepare('INSERT INTO post_images (entity_type, entity_id, image_url, sort_order, media_type) VALUES (?, ?, ?, ?, ?)')
+      .run(entityType, entityId, list[i].url, i, list[i].type);
+  }
+  return list.length;
 }
 
 // images = array of URL strings (ক্রম অনুযায়ী) → পুরনো মুছে নতুন ক্রমে লিখে
@@ -3071,6 +3110,7 @@ module.exports = {
   getSectionItems,
   getTransportSchedule,
   getPostImages,
+  setPostMedia153,
   setPostImages,
   exec,
   getSetting,

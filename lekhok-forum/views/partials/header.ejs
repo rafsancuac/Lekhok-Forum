@@ -293,7 +293,7 @@
             <%# সেশন ১৪৮: হেডার-পলিশ — 'N নতুন' পিল + 'সব পঠিত করুন' (unread>০ হলে)।
                 হেডার/চিপ/বাটন = UI-ক্রোম (font-hs); কনটেন্ট/মেনু/টাইম = কালপুরুষ (CSS-ডিকপ্লিং) %>
             <div class="notif-header nf-hdr148">
-              <span class="nf-htitle148">বিজ্ঞপ্তি<% if (unread > 0) { %> <span class="nf-newpill148" id="nfNewPill148"><%= toBn(unread) %> নতুন</span><% } else { %><span class="nf-newpill148" id="nfNewPill148" hidden></span><% } %></span>
+              <span class="nf-htitle148">বিজ্ঞপ্তি <%# session154-union-রিপেয়ার: if/else-দুই-শাখায় একই id স্ট্যাটিক-ডুপ (audit:views-ফেইল) — এক-এলিমেন্টে সংকুচিত, runtime-সেমান্টিক্স হুবহু %><span class="nf-newpill148" id="nfNewPill148"<% if (!(unread > 0)) { %> hidden<% } %>><% if (unread > 0) { %><%= toBn(unread) %> নতুন<% } %></span></span>
               <span class="nf-hact148">
                 <button type="button" class="nf-markall148" id="nfMarkAll148" title="সবগুলো পঠিত হিসেবে চিহ্নিত করুন"<% if (!unread) { %> hidden<% } %>>সব পঠিত করুন</button>
                 <a href="/notifications" class="notif-see-all">সব দেখুন</a>

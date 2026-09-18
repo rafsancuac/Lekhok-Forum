@@ -320,6 +320,123 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .fr-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fr-foot{margin-top:10px;padding:8px;font-size:10.5px;line-height:1.5;color:var(--lf-text-tertiary)}
 @media (prefers-reduced-motion:reduce){.fr-me,.fr-item{transition:none}}
+
+/* ═════════ সেশন ১৫৩ — FB-রিচ-কম্পোজার + ইন্টেলিজেন্ট মিডিয়া-কোলাজ (ইউজার-স্পেক) ═════════
+   টোকেন-শুধু (হেক্স-শূন্য — dashboard.css র্যাচেট-বেসলাইন 0 অক্ষুণ্ণ); 640px + reduced-motion। */
+/* ── মোডাল-শেল ── */
+.fbm-dialog153{max-width:520px}
+.fbm-head153{padding-left:52px;padding-right:52px}
+.fbm-back153{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:none;background:var(--bg,var(--lf-ui-canvas));color:var(--text,var(--lf-text-primary));cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+.fbm-back153:hover{background:var(--lf-ad-line-2);transform:translateY(-50%) scale(1.05)}
+.fbm-back153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px}
+/* ── অডিয়েন্স + কনটেক্সট-চিপ ── */
+.fbm-audrow153{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}
+.fbm-audience153{background:var(--bg,var(--lf-ui-canvas));color:var(--text-secondary,var(--lf-text-secondary));font-size:.74rem;font-weight:600;border:1px solid transparent;border-radius:14px;padding:2px 8px;cursor:pointer;font-family:inherit;transition:border-color .15s}
+.fbm-audience153:hover{border-color:var(--lf-ui-border-strong)}
+.fbm-audience153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+.fbm-ctx-chip153{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;color:var(--lf-brand-primary);background:var(--lf-brand-light);border-radius:14px;padding:2px 8px}
+.fbm-ctx-chip153 i{font-size:.66rem}
+.fbm-ctx-x153{border:none;background:transparent;color:var(--lf-brand-primary);cursor:pointer;font-size:.8rem;line-height:1;padding:0 2px}
+.fbm-ctx-x153:hover{color:var(--lf-brand-primary-hover)}
+/* ── খসড়া-রিস্টোর ── */
+.fbm-restore153{display:flex;align-items:center;gap:8px;margin:12px 16px 0;padding:8px 12px;border-radius:10px;background:var(--lf-brand-light);color:var(--lf-brand-primary);font-size:.78rem;font-weight:600}
+.fbm-restore153 button{margin-left:auto;border:none;background:transparent;color:var(--lf-brand-primary);font-weight:700;font-size:.74rem;cursor:pointer;text-decoration:underline;font-family:inherit}
+/* ── MS-অফিস-বেসিক ফরম্যাটিং-টুলবার ── */
+.fbm-toolbar153{display:flex;align-items:center;gap:2px;margin:12px 16px 0;padding:5px;border-radius:12px;background:var(--bg,var(--lf-ui-canvas));border:1px solid var(--border,var(--lf-ui-border));overflow-x:auto;scrollbar-width:none}
+.fbm-toolbar153::-webkit-scrollbar{display:none}
+.fbm-tool153{min-width:30px;height:30px;padding:0 6px;border:none;border-radius:8px;background:transparent;color:var(--text-secondary,var(--lf-text-secondary));font-size:.8rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-family:inherit;transition:background .15s,color .15s}
+.fbm-tool153 sub{font-size:.6rem}
+.fbm-tool153:hover{background:var(--lf-ad-line-2);color:var(--text,var(--lf-text-primary))}
+.fbm-tool153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+.fbm-tool153.is-active{background:var(--lf-social-blue-light-2,var(--lf-brand-light));color:var(--lf-social-blue)}
+.fbm-tool-sep153{width:1px;height:18px;background:var(--border,var(--lf-ui-border));margin:0 3px;flex:none}
+/* ── বর্ডারহীন ক্যানভাস (ইনপুট-বক্স নেই) ── */
+.fbm-canvas153{margin:10px 16px 0;border-radius:12px;transition:background .2s}
+.fbm-canvas153.has-bg{background:var(--fbm-bg,var(--lf-brand-primary));min-height:170px;display:flex;align-items:center;justify-content:center;padding:24px 20px}
+.fbm-editor153{outline:none;width:100%;min-height:110px;max-height:46vh;overflow-y:auto;font-size:.95rem;line-height:1.7;color:var(--text,var(--lf-text-primary));word-break:break-word;white-space:pre-wrap}
+.fbm-editor153:empty::before{content:attr(data-placeholder);color:var(--lf-text-tertiary);pointer-events:none}
+.fbm-canvas153.has-bg .fbm-editor153{color:var(--lf-white);text-align:center;font-size:1.15rem;font-weight:700;min-height:0}
+.fbm-editor153 h2{font-size:1.3rem;font-weight:800;margin:.5em 0 .25em;color:inherit}
+.fbm-editor153 h3{font-size:1.08rem;font-weight:700;margin:.5em 0 .25em;color:inherit}
+.fbm-editor153 ul,.fbm-editor153 ol{padding-left:1.4em;margin:.35em 0}
+.fbm-editor153 blockquote{border-left:3px solid var(--lf-brand-primary);padding-left:10px;margin:.5em 0;color:var(--text-secondary,var(--lf-text-secondary))}
+.fbm-editor153 a{color:var(--lf-social-blue);text-decoration:underline}
+/* ── 'Aa' গ্রেডিয়েন্ট-প্যালেট ── */
+.fbm-palette153{display:flex;align-items:center;gap:6px;padding:2px 16px 0;min-height:30px}
+.fbm-aa153{width:28px;height:28px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--lf-violet),var(--lf-dlx-pink));color:var(--lf-white);font-weight:800;font-size:.7rem;cursor:pointer;flex:none;transition:transform .15s,box-shadow .15s}
+.fbm-aa153:hover{transform:scale(1.06)}
+.fbm-aa153.is-active{box-shadow:0 0 0 2px var(--lf-white),0 0 0 4px var(--lf-social-blue)}
+.fbm-aa153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px}
+.fbm-dots153{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fbm-dot153{width:24px;height:24px;border:none;border-radius:7px;cursor:pointer;flex:none;transition:transform .15s,box-shadow .15s}
+.fbm-dot153:hover{transform:scale(1.1)}
+.fbm-dot153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px}
+.fbm-dot153.is-active{box-shadow:0 0 0 2px var(--lf-white),0 0 0 4px var(--lf-social-blue);transform:scale(1.1)}
+.fbm-dot-reset153{border:none;background:transparent;color:var(--lf-text-tertiary);font-size:.68rem;font-weight:700;cursor:pointer;margin-left:2px;font-family:inherit}
+.fbm-dot-reset153:hover{color:var(--text,var(--lf-text-primary))}
+/* ── মিডিয়া-কোলাজ প্রিভিউ (কম্পোজারে) ── */
+.fbm-media153{margin:12px 16px 0;border-radius:12px;border:1px solid var(--border,var(--lf-ui-border));background:var(--bg,var(--lf-ui-canvas));padding:4px}
+.fbm-grid153{display:grid;gap:4px;max-height:260px;overflow:hidden;border-radius:9px}
+.fbm-grid-n1{grid-template-columns:1fr}
+.fbm-grid-n2{grid-template-columns:1fr 1fr}
+.fbm-grid-n3,.fbm-grid-n4{grid-template-columns:2fr 1fr}
+.fbm-grid-n5{grid-template-columns:1fr 1fr}
+.fbm-cell153{position:relative;border-radius:8px;overflow:hidden;background:var(--lf-slate);min-height:88px}
+.fbm-cell153 img,.fbm-cell153 video{width:100%;height:100%;object-fit:cover;display:block;min-height:88px;max-height:170px}
+.fbm-cell-audio153{display:flex;align-items:center;gap:8px;height:100%;min-height:88px;padding:10px;color:var(--lf-white);background:linear-gradient(135deg,var(--lf-brand-primary),var(--lf-brand-primary-hover));font-size:.8rem;font-weight:700}
+.fbm-plus153{position:absolute;inset:0;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;color:var(--lf-white);font-weight:800;font-size:1.3rem;backdrop-filter:blur(2px)}
+.fbm-plus153 i{font-size:.9rem;margin-right:3px}
+.fbm-cell-x153{position:absolute;top:6px;right:6px;z-index:2;width:24px;height:24px;border:none;border-radius:50%;background:rgba(0,0,0,.65);color:var(--lf-white);cursor:pointer;font-size:.66rem;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.fbm-cell-x153:hover{background:rgba(0,0,0,.85)}
+.fbm-droptip153{margin:12px 16px 0;padding:16px;border:2px dashed var(--lf-ui-border-strong);border-radius:12px;text-align:center;color:var(--text-secondary,var(--lf-text-secondary));font-size:.82rem;font-weight:600}
+/* ── ডক-বার ── */
+.fbm-dock153{margin:12px 16px 0;border:1px solid var(--border,var(--lf-ui-border));border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--bg,var(--lf-ui-canvas))}
+.fbm-dock-label153{font-size:.78rem;font-weight:700;color:var(--text-secondary,var(--lf-text-secondary))}
+.fbm-dock-actions153{display:flex;align-items:center;gap:2px}
+.fbm-dock-btn153{width:32px;height:32px;border:none;border-radius:50%;background:transparent;color:var(--lf-brand-primary);cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s}
+.fbm-dock-btn153:hover{background:var(--lf-ad-line-2);transform:scale(1.06)}
+.fbm-dock-btn153.is-feel{color:var(--lf-amber-bright)}
+.fbm-dock-btn153.is-loc{color:var(--lf-danger)}
+.fbm-dock-btn153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+/* ── ফুট ── */
+.fbm-foot153{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 16px 16px}
+.fbm-foot-left153{display:flex;align-items:center;gap:10px;min-width:0}
+/* ── ভিউ ২: স্লাইড-ইন সাব-মেনু ── */
+.fbm-view-more153{padding:10px;display:flex;flex-direction:column;gap:6px;animation:fbmSlide153 .2s ease}
+@keyframes fbmSlide153{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.fbm-more-item153{display:flex;align-items:center;gap:12px;padding:10px;border:none;border-radius:12px;background:transparent;cursor:pointer;text-align:left;transition:background .15s;font-family:inherit}
+.fbm-more-item153:hover{background:var(--bg,var(--lf-ui-canvas))}
+.fbm-more-item153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+.fbm-more-icon153{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--lf-white);font-size:1rem;flex:none;background:linear-gradient(135deg,var(--lf-brand-primary),var(--lf-brand-primary-hover))}
+.fbm-more-icon153.is-voice{background:linear-gradient(135deg,var(--lf-violet),var(--lf-dlx-pink))}
+.fbm-more-icon153.is-clear{background:linear-gradient(135deg,var(--lf-slate),var(--lf-slate-steel))}
+.fbm-more-text153{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fbm-more-text153 strong{font-size:.86rem;color:var(--text,var(--lf-text-primary))}
+.fbm-more-text153 small{font-size:.72rem;color:var(--text-muted,var(--lf-text-secondary))}
+.fbm-more-heading153{display:block;padding:8px 10px 2px;font-size:.72rem;font-weight:800;color:var(--text-muted,var(--lf-text-secondary));text-transform:uppercase;letter-spacing:.04em}
+.fbm-feelgrid153{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:4px 10px}
+.fbm-feel-chip153{border:1px solid var(--border,var(--lf-ui-border));border-radius:10px;background:var(--card,var(--lf-white));padding:8px 4px;font-size:.72rem;font-weight:600;color:var(--text,var(--lf-text-primary));cursor:pointer;transition:background .15s,border-color .15s;font-family:inherit}
+.fbm-feel-chip153:hover{background:var(--bg,var(--lf-ui-canvas))}
+.fbm-feel-chip153.is-active{background:var(--lf-brand-light);border-color:var(--lf-brand-primary);color:var(--lf-brand-primary);font-weight:700}
+.fbm-feel-chip153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+.fbm-more-checkin153{padding:2px 10px 8px}
+.fbm-locrow153{display:flex;align-items:center;gap:8px;border:1px solid var(--border,var(--lf-ui-border));border-radius:10px;padding:6px 10px;background:var(--card,var(--lf-white))}
+.fbm-locrow153 i{color:var(--lf-danger);flex:none}
+.fbm-locrow153 input{flex:1;min-width:0;border:none;outline:none;font-size:.8rem;font-family:inherit;color:var(--text,var(--lf-text-primary));background:transparent}
+.fbm-locset153{border:none;border-radius:8px;background:var(--lf-brand-primary);color:var(--lf-white);font-size:.72rem;font-weight:700;padding:6px 10px;cursor:pointer;font-family:inherit;flex:none}
+.fbm-locset153:hover{background:var(--lf-brand-primary-hover)}
+.fbm-locset153:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px}
+/* ── 640px মোবাইল-টিউনিং ── */
+@media (max-width:640px){
+  .fbm-grid-n3,.fbm-grid-n4{grid-template-columns:1fr}
+  .fbm-grid-n5{grid-template-columns:1fr 1fr}
+            .fbm-feelgrid153{grid-template-columns:repeat(2,1fr)}
+  .fbm-editor153{max-height:38vh}
+}
+@media (prefers-reduced-motion:reduce){
+  .fbm-view-more153{animation:none}
+  .fbm-aa153,.fbm-dot153,.fbm-dock-btn153,.fbm-col-img153,.fb-col-img153{transition:none}
+}
 /* ════════ Session 153 — ফিড-সাইডবার প্রিমিয়াম-আপগ্রেড (FB-প্যারিটি, ইউজার-স্পেক) — [relabel: আমার 148→153, max+1-রীতি; কোড-মার্কার sb148/session148-sidebar-premium চুক্তি-নামে অক্ষুণ্ণ] — EOF-MARKER: session148-sidebar-premium ════════
    টোকেন-শুধু — নতুন-হেক্স-শূন্য। সর্বোচ্চ রেডিয়াস ৮px (--radius-sm=5px)। */
 /* স্টিকি-সাইডবার — ভিউপোর্টে লেগে থাকে, নিজস্ব পাতলা-স্ক্রলবার (FB-প্যারিটি) */

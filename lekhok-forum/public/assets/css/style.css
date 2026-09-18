@@ -2284,6 +2284,70 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 .dlx-item-desc{font-size:11px;line-height:1.35;color:var(--lf-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dlx-foot{margin-top:8px;padding:8px 16px 12px;border-top:1px solid var(--lf-ui-border);font-size:10.5px;color:var(--lf-text-tertiary)}
 @media (max-width:992px){.dlx-wrap{display:none!important}}
+
+/* ═════════ ফিড-কোলাজ (fb-col153) — ইন্টেলিজেন্ট লেআউট ═════════ */
+.fb-col153{display:grid;gap:2px;border-radius:10px;overflow:hidden;margin-top:2px}
+.fb-col153-1{grid-template-columns:1fr}
+.fb-col153-2{grid-template-columns:1fr 1fr}
+.fb-col153-3,.fb-col153-4{grid-template-columns:2fr 1fr}
+.fb-col153-5{grid-template-columns:1fr 1fr}
+.fb-col-cell153{position:relative;overflow:hidden;min-height:0}
+.fb-col-img153{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in;transition:opacity .15s}
+.fb-col-img153:hover{opacity:.94}
+.fb-col-solo153{max-height:540px;object-fit:contain;background:var(--lf-slate)}
+.fb-col153-2 .fb-col-cell153{height:280px}
+.fb-col153-3,.fb-col153-4{max-height:420px}
+.fb-col153-3 .fb-col-cell153,.fb-col153-4 .fb-col-cell153{height:420px}
+.fb-col153-5 .fb-col-cell153{height:220px}
+.fb-col-video153{width:100%;height:100%;object-fit:contain;background:var(--lf-ink-max);display:block}
+.fb-col-audio153{display:flex;align-items:center;gap:12px;width:100%;height:100%;min-height:96px;padding:14px;background:linear-gradient(135deg,var(--lf-brand-primary),var(--lf-brand-primary-hover));color:var(--lf-white)}
+.fb-col-audio-icon153{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:1rem;flex:none}
+.fb-col-audio-main153{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
+.fb-col-audio-title153{font-size:.78rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fb-col-audio-player153{width:100%;height:34px}
+.fb-col-more153{position:absolute;inset:0;background:rgba(0,0,0,.58);display:flex;align-items:center;justify-content:center;color:var(--lf-white);text-decoration:none;backdrop-filter:blur(2px);transition:background .15s}
+.fb-col-more153:hover{background:rgba(0,0,0,.72)}
+.fb-col-more-n153{font-weight:800;font-size:1.4rem;display:flex;align-items:center;gap:4px}
+.fb-col-more-n153 i{font-size:.95rem}
+/* ── FB-রিচ-বডি + পটভূমি-গ্রেডিয়েন্ট (ফিড + সিঙ্গেল) ── */
+.fb-rich153{padding:2px 2px 6px;font-size:.92rem;line-height:1.75;color:var(--text,var(--lf-text-primary));word-break:break-word}
+.fb-rich153 h2{font-size:1.22rem;font-weight:800;margin:.55em 0 .3em}
+.fb-rich153 h3{font-size:1.04rem;font-weight:700;margin:.5em 0 .28em}
+.fb-rich153 ul,.fb-rich153 ol{padding-left:1.5em;margin:.4em 0}
+.fb-rich153 blockquote{border-left:3px solid var(--lf-brand-primary);padding-left:12px;margin:.55em 0;color:var(--text-secondary,var(--lf-text-secondary))}
+.fb-rich153 a{color:var(--lf-social-blue);text-decoration:underline}
+.fb-rich153 p{margin:.35em 0}
+.fb-bg153{border-radius:0}
+.fb-bg-single153{border-radius:12px;overflow:hidden}
+.fb-rich-center153{text-align:center;color:var(--lf-white);font-weight:700;padding:34px 22px;font-size:1.06rem}
+.fb-rich-center153 h2,.fb-rich-center153 h3{color:inherit}
+.fb-bg153-fbg1{background:linear-gradient(135deg,var(--lf-violet),var(--lf-dlx-pink))}
+.fb-bg153-fbg2{background:linear-gradient(135deg,var(--lf-blue-600),var(--lf-emerald-500))}
+.fb-bg153-fbg3{background:linear-gradient(135deg,var(--lf-danger),var(--lf-amber-bright))}
+.fb-bg153-fbg4{background:linear-gradient(135deg,var(--lf-navy),var(--lf-slate-steel))}
+.fb-bg153-fbg5{background:linear-gradient(135deg,var(--lf-brand-primary),var(--lf-brand-primary-hover))}
+.fb-bg153-fbg6{background:linear-gradient(135deg,var(--lf-cyan),var(--lf-blue-600))}
+.fb-bg153-fbg7{background:linear-gradient(135deg,var(--lf-orange),var(--lf-rose-300))}
+.fb-bg153-fbg8{background:linear-gradient(135deg,var(--lf-green-deep),var(--lf-emerald-500))}
+/* ── কনটেক্সট-চিপ (অনুভূতি/লোকেশন) + অডিয়েন্স-ব্যাজ ── */
+.fb-context153{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 6px}
+.fb-context-chip153{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;color:var(--lf-text-secondary,var(--lf-text-secondary));background:var(--bg,var(--lf-ui-canvas));border-radius:14px;padding:3px 10px}
+.fb-context-chip153 i{color:var(--lf-brand-primary)}
+.fb-aud-chip153{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;color:var(--lf-text-secondary,var(--lf-text-secondary));background:var(--bg,var(--lf-ui-canvas));border:1px solid var(--border,var(--lf-ui-border));border-radius:12px;padding:1px 8px}
+
+/* সেশন ১৫৩: ফিড-কোলাজ মোবাইল + reduced-motion (গ্লোবাল — FeedPostCard সব-পেজ) */
+@media (max-width:640px){
+  .fb-col153-3,.fb-col153-4{grid-template-columns:1fr;max-height:none}
+  .fb-col153-3 .fb-col-cell153,.fb-col153-4 .fb-col-cell153{height:200px}
+  .fb-col153-5 .fb-col-cell153{height:130px}
+  .fb-col153-2 .fb-col-cell153{height:170px}
+  .fb-rich-center153{font-size:1rem;padding:26px 16px}
+}
+@media (prefers-reduced-motion:reduce){
+  .fb-col-img153{transition:none}
+}
+
+/* EOF-MARKER: session153-fb-rich-composer */
 /* ════════ Session 153 — [relabel: আমার 148→153; কোড-মার্কার msx148 চুক্তি-নামে] — msx 'আমার সারসংক্ষেপ' উইজেট (/me) — EOF-MARKER: session148-msx-me ════════ */
 .msx148-card{background:var(--card);border-radius:var(--radius-sm);padding:14px 16px;margin:0 0 16px;box-shadow:var(--shadow-soft)}
 .msx148-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
