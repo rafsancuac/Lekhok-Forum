@@ -2,7 +2,27 @@
     সেশন ১০২ (রোডম্যাপ-০৭): +rich-editor.css +multi-image.css — কম্পোজার-মোডালের এডিটর/মাল্টি-ছবি-উইজেট %>
 <%- include('../partials/header', { title: 'কমিউনিটি ফিড | লেখক ফোরাম', extra_css: ['/assets/css/dashboard.css', '/assets/css/rich-editor.css', '/assets/css/multi-image.css'] }) %>
 
-  <div class="dashboard-wrap two-col">
+  <div class="dashboard-wrap two-col has-rail">
+    <%# ── সেশন ১৪৭: ফিড লেফট-রেল (FB-প্যারিটি) — ফিডের স্থায়ী শর্টকাট-কলাম (≥1200px;
+        নিচে লুকানো — হেডারের ৯-ডট ডিরেক্টরি-লঞ্চার + মোবাইল-সাইডবার কভার করে)।
+        helpers/dir-launcher.js এক-রেজিস্ট্রি (app.locals.dirRail) — হেডার-প্যানেলের সাথে
+        ড্রিফট-অসম্ভব; রেল-ক্রম/হাইলাইট ওই রেজিস্ট্রিতেই নিয়ন্ত্রিত। ── %>
+    <aside class="feed-rail" aria-label="ফিড শর্টকাট">
+      <% if (user) { %>
+        <a href="/me" class="fr-me">
+          <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" class="fr-me-avatar" onerror="this.onerror=null;this.src='/assets/avatars/neutral.svg?v=3'">
+          <span class="fr-me-name"><%= typeof displayName === 'function' ? displayName(user) : user.full_name %></span>
+        </a>
+        <div class="fr-sep" aria-hidden="true"></div>
+      <% } %>
+      <% (typeof dirRail !== 'undefined' ? dirRail : []).forEach(function (it) { %>
+        <a href="<%= it.href %>" class="fr-item<%= it.railHighlight ? ' hl' : '' %>">
+          <span class="fr-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
+          <span class="fr-label"><%= it.label %></span>
+        </a>
+      <% }) %>
+      <div class="fr-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+    </aside>
     <!-- Main Feed -->
     <main class="dash-main">
       <% if (user) { %>

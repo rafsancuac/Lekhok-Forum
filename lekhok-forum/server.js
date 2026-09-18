@@ -109,6 +109,11 @@ app.locals.notifGroups = require('./helpers/notif-groups');
 // ক্লায়েন্ট-মিরর: layout.ejs-এ window.toBnNumber (main.js/comment-tools.js ডেলিগেট)।
 // মিরর: helpers/bn-number.js toBnNumber()।
 app.locals.toBn = require('./helpers/bn-number').toBnNumber;
+// ── সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার (৯-ডট) + ফিড লেফট-রেল — single-source রেজিস্ট্রি
+// (notifGroups-রীতি): হেডার-প্যানেল (header.ejs #dlxPanel) ও ফিড-রেল (dashboard.ejs
+// .feed-rail) দুই-সারফেস এক-সোর্স — ডুপ্লিকেট/ড্রিফট-অসম্ভব।
+app.locals.dirSections = require('./helpers/dir-launcher').DIR_SECTIONS;
+app.locals.dirRail = require('./helpers/dir-launcher').DIR_RAIL;
 
 // ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
 // লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।

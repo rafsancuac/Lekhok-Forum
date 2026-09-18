@@ -269,6 +269,43 @@
           <a href="/login" class="topbar-nav a nav-login"><i class="fas fa-sign-in-alt"></i> লগইন</a>
           <a href="/register" class="topbar-nav a nav-register"><i class="fas fa-user-plus"></i> রেজিস্ট্রেশন</a>
         <% } %>
+        <%# ── সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার (৯-ডট) — পাবলিক-পেজ টপবারেও
+            (header.ejs-সদৃশ মার্কআপ; একই রেজিস্ট্রি helpers/dir-launcher.js +
+            একই ইঞ্জিন dir-launcher.js + একই style.css session147-ব্লক)।
+            আগে পাবলিক-টপবারে কোনো ডিরেক্টরি-মেনুই ছিল না — নতুন-সক্ষমতা। ── %>
+        <div class="dlx-wrap" id="dlxWrap">
+          <button type="button" class="dlx-trigger" id="dlxTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="dlxPanel" aria-label="ফোরাম ডিরেক্টরি — সব ফিচার ও আয়োজন" title="ফোরাম ডিরেক্টরি" onclick="toggleDlx(event)">
+            <i class="fas fa-th" aria-hidden="true"></i>
+          </button>
+          <div class="dlx-panel" id="dlxPanel" role="dialog" aria-label="ফোরাম ডিরেক্টরি">
+            <div class="dlx-head">
+              <div class="dlx-head-meta">
+                <h2>ফোরাম ডিরেক্টরি</h2>
+                <p>সকল ফিচার, আয়োজন ও সাহিত্য কর্নার</p>
+              </div>
+              <button type="button" class="dlx-close" aria-label="বন্ধ করুন" title="বন্ধ করুন" onclick="closeDlx()"><i class="fas fa-times" aria-hidden="true"></i></button>
+            </div>
+            <div class="dlx-body">
+              <% (typeof dirSections !== 'undefined' ? dirSections : []).forEach(function (sec) { %>
+                <section class="dlx-sec">
+                  <h3 class="dlx-sec-title"><%= sec.title %></h3>
+                  <div class="dlx-grid">
+                    <% sec.items.forEach(function (it) { %>
+                      <a href="<%= it.href %>" class="dlx-item" data-dlx-item>
+                        <span class="dlx-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
+                        <span class="dlx-meta">
+                          <span class="dlx-item-title"><%= it.label %></span>
+                          <span class="dlx-item-desc"><%= it.desc %></span>
+                        </span>
+                      </a>
+                    <% }) %>
+                  </div>
+                </section>
+              <% }) %>
+            </div>
+            <div class="dlx-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+          </div>
+        </div>
         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
       </div>
     </div>
@@ -376,6 +413,8 @@
   <%# সেশন ১০৫: FB-স্টাইল রিঅ্যাক্টরস-মডাল ("কে কোন প্রতিক্রিয়া দিয়েছে") — গ্লোবাল শেল + JS %>
   <%- include('partials/reactors-modal') %>
   <script src="/assets/js/reactors-modal.js?v=<%= AV %><%= XTPQ %>" defer></script>
+  <%# সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার-ইঞ্জিন (toggleDlx/closeDlx) — পাবলিক-পেজ টপবার %>
+  <script src="/assets/js/dir-launcher.js?v=<%= AV %><%= XTPQ %>" defer></script>
   <script src="/assets/js/post-gallery.js?v=<%= AV %><%= XTPQ %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %><%= XTPQ %>"></script>
   <%# সেশন ৯৭: চিত্রশালা-ইন্টারঅ্যাকশন (ভিউ-টগল/ফিল্টার/লাইটবক্স) — শুধু /gallery-তে %>

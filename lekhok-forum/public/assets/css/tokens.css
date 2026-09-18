@@ -401,3 +401,16 @@ html { background: var(--lf-ui-canvas); }
   --lf-social-blue-light-2: #E3F0FF;
   --lf-social-blue-tint: #E7F0FD;
 }
+/* ═════════ সেশন ১৪৭ — ডিরেক্টরি-লঞ্চার টোন প্যালেট ═════════
+   ৯-ডট অ্যাপ-লঞ্চার স্কুইর্কল + ফিড লেফট-রেল আইকনের টোন (helpers/dir-launcher.js TONE_TOKENS
+   একমাত্র ভোক্তা)। হোয়াইট-আইকন কনট্রাস্ট-নিশ্চিত 600-700-শেড; এ-ফাইলের বাইরে কোনো ভিউ/CSS
+   সরাসরি এগুলো ব্যবহার করবে না — শুধু var(--dlx-t) ইনডিরেক্ট। */
+:root:root {
+  --lf-dlx-amber: #B45309;
+  --lf-dlx-gold: #A16207;
+  --lf-dlx-cyan: #0E7490;
+  --lf-dlx-violet: #7C3AED;
+  --lf-dlx-pink: #DB2777;
+  --lf-dlx-slate: #475569;
+}
+/* EOF-MARKER: session147-dir-launcher-tokens */

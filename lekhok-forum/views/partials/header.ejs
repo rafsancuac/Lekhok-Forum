@@ -465,38 +465,44 @@
         <a href="/register" class="topbar-nav a nav-register"><i class="fas fa-user-plus"></i> <%= C('header_btn_register') %></a>
       <% } %>
 
-      <!-- Mega menu trigger (desktop) -->
-      <div class="mega-wrap" id="megaWrap">
-        <button class="mega-trigger" onclick="toggleMega(event)">
-          <i class="fas fa-th"></i> আরও <i class="fas fa-chevron-down" style="font-size:11px"></i>
+      <%# ── সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার (FB ৯-ডট প্যারিটি) — পুরনো ৪-কলাম
+          মেগামেনু প্রতিস্থাপন। সমস্যা-ছিল: মনোক্রোম আইকন, সাব-টাইটেল-শূন্য,
+          ক্যাটাগরি-ডুপ্লিকেট (ঘোষণা/বিজ্ঞপ্তি, আয়োজন/ইভেন্ট)। সমাধান: কমপ্যাক্ট
+          ফ্লোটিং অ্যাপ-প্যানেল — ৩-ডোমেইন × Title+Subtitle + টোন-স্কুইর্কল আইকন।
+          রেজিস্ট্রি: helpers/dir-launcher.js (app.locals.dirSections) — ফিড
+          লেফট-রেল (dashboard.ejs) একই সোর্স। ইঞ্জিন: dir-launcher.js (ARIA +
+          Escape + বাইরে-ক্লিক-বন্ধ)। <992px লুকানো — মোবাইল-সাইডবার কভার করে। ── %>
+      <div class="dlx-wrap" id="dlxWrap">
+        <button type="button" class="dlx-trigger" id="dlxTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="dlxPanel" aria-label="ফোরাম ডিরেক্টরি — সব ফিচার ও আয়োজন" title="ফোরাম ডিরেক্টরি" onclick="toggleDlx(event)">
+          <i class="fas fa-th" aria-hidden="true"></i>
         </button>
-        <div class="mega-menu" id="megaMenu">
-          <div class="mega-col">
-            <h4>কন্টেন্ট</h4>
-            <a href="/articles"><i class="fas fa-pen-nib"></i> সকল লেখা</a>
-            <a href="/qa"><i class="fas fa-question-circle"></i> প্রশ্নোত্তর</a>
-            <a href="/resources"><i class="fas fa-folder-open"></i> রিসোর্স ও ফাইল</a>
+        <div class="dlx-panel" id="dlxPanel" role="dialog" aria-label="ফোরাম ডিরেক্টরি">
+          <div class="dlx-head">
+            <div class="dlx-head-meta">
+              <h2>ফোরাম ডিরেক্টরি</h2>
+              <p>সকল ফিচার, আয়োজন ও সাহিত্য কর্নার</p>
+            </div>
+            <button type="button" class="dlx-close" aria-label="বন্ধ করুন" title="বন্ধ করুন" onclick="closeDlx()"><i class="fas fa-times" aria-hidden="true"></i></button>
           </div>
-          <div class="mega-col">
-            <h4>ঘোষণা ও আয়োজন</h4>
-            <a href="/notices"><i class="fas fa-bullhorn"></i> ঘোষণা</a>
-            <a href="/events"><i class="fas fa-calendar-alt"></i> আয়োজন</a>
-            <a href="/activities"><i class="fas fa-calendar-check"></i> সাংগঠনিক কার্যক্রম</a>
-            <a href="/best-writer"><i class="fas fa-star"></i> মাসিক সেরা লেখক</a>
+          <div class="dlx-body">
+            <% (typeof dirSections !== 'undefined' ? dirSections : []).forEach(function (sec) { %>
+              <section class="dlx-sec">
+                <h3 class="dlx-sec-title"><%= sec.title %></h3>
+                <div class="dlx-grid">
+                  <% sec.items.forEach(function (it) { %>
+                    <a href="<%= it.href %>" class="dlx-item" data-dlx-item>
+                      <span class="dlx-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
+                      <span class="dlx-meta">
+                        <span class="dlx-item-title"><%= it.label %></span>
+                        <span class="dlx-item-desc"><%= it.desc %></span>
+                      </span>
+                    </a>
+                  <% }) %>
+                </div>
+              </section>
+            <% }) %>
           </div>
-          <div class="mega-col">
-            <h4>প্রতিষ্ঠান</h4>
-            <a href="/achievements"><i class="fas fa-trophy"></i> অর্জন ও সম্মাননা</a>
-            <a href="/notices"><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি</a>
-            <a href="/events"><i class="fas fa-calendar-alt"></i> ইভেন্ট</a>
-          </div>
-          <div class="mega-col">
-            <h4>আরও</h4>
-            <a href="/birthdays"><i class="fas fa-birthday-cake"></i> আজকের জন্মদিন</a>
-            <a href="/on-this-day"><i class="fas fa-calendar-day"></i> এই দিনে</a>
-            <a href="/quiz"><i class="fas fa-brain"></i> আজকের কুইজ</a>
-            <a href="/epaper"><i class="fas fa-newspaper"></i> আজকের ই-পেপার</a>
-          </div>
+          <div class="dlx-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
         </div>
       </div>
 
@@ -596,3 +602,5 @@
       পাবলিক layout.ejs-পেজেও একই শেল আছে (ডাবল-ইনক্লুড অসম্ভব — দুই-ওপেনার)। %>
   <%- include('reactors-modal') %>
   <script src="/assets/js/reactors-modal.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" defer></script>
+  <%# সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার-ইঞ্জিন (toggleDlx/closeDlx + Escape + বাইরে-ক্লিক) — সব-পেজ হেডার %>
+  <script src="/assets/js/dir-launcher.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" defer></script>
