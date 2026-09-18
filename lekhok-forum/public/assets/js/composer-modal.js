@@ -145,7 +145,9 @@
   }
   modal.addEventListener('mousedown', function (e) { if (e.target === modal) close(); });
   if (closeBtn) closeBtn.addEventListener('click', function () { close(); });
-  openBtns.forEach(function (b) { if (b) b.addEventListener('click', open); });
+  /* সেশন ১৫৮: ট্রিগারে data-composer-type থাকলে সেই-টাইপেই মোডাল প্রি-সিলেক্টেড খোলে
+     (ইউজার-স্পেক: "ইউজার যে বাটনেই ক্লিক করুক, মোডাল সঠিক ক্যাটাগরি নিয়ে খুলবে") */
+  openBtns.forEach(function (b) { if (b) b.addEventListener('click', onOpenClick158); });
 
   /* ── ② ভিউ-সুইচ (MAIN ↔ MORE স্লাইড) ───────────────────────────────────── */
   function showView(v) {
@@ -153,7 +155,9 @@
     if (viewMore) viewMore.hidden = !more;
     if (viewMain) viewMain.hidden = more;
     if (backBtn) backBtn.hidden = !more;
-    if (titleEl) titleEl.textContent = more ? 'পোস্টে যুক্ত করুন' : 'পোস্ট তৈরি করুন';
+    /* সেশন ১৫৮: শিরোনাম টাইপ-সচেতন — লেখা → 'সাহিত্যকর্ম প্রকাশ করুন', প্রশ্ন → 'নতুন প্রশ্ন জিজ্ঞাসা করুন' */
+    if (titleEl) titleEl.textContent = more ? 'পোস্টে যুক্ত করুন'
+      : (postType158 === 'question' ? 'নতুন প্রশ্ন জিজ্ঞাসা করুন' : 'সাহিত্যকর্ম প্রকাশ করুন');
     if (!more && locInput) locInput.value = '';
   }
   if (backBtn) backBtn.addEventListener('click', function () { showView('MAIN'); });
@@ -398,6 +402,8 @@
     return JSON.stringify({
       html: editor.innerHTML, bg: bgKey, feeling: feeling, location: location,
       audience: audienceSel ? audienceSel.value : 'PUBLIC',
+      /* সেশন ১৫৮: টাইপ+শাখাও খসড়ায় বাঁচে */
+      type: postType158, category: catSel158 ? catSel158.value : null,
       media: media, at: Date.now()
     });
   }
@@ -422,6 +428,12 @@
     bgKey = d.bg || null;
     feeling = d.feeling || null; location = d.location || null;
     if (audienceSel && d.audience) audienceSel.value = d.audience;
+    /* সেশন ১৫৮: খসড়ার টাইপ+শাখা পুনরুদ্ধার */
+    if (d.type) { postType158 = (d.type === 'question') ? 'question' : 'article'; syncType158(); }
+    if (d.category && catSel158) {
+      var hasCat158 = Array.prototype.some.call(catSel158.options, function (o) { return o.value === d.category; });
+      if (hasCat158) catSel158.value = d.category;
+    }
     media = Array.isArray(d.media) ? d.media.slice(0, MAX_MEDIA) : [];
     draftRestored = true;
     renderMedia(); syncAa(); syncCtx();
@@ -463,6 +475,9 @@
         feeling: feeling,
         location: location,
         audience: audienceSel ? audienceSel.value : 'PUBLIC',
+        /* সেশন ১৫৮: সর্বজনীন টাইপ+শাখা (লেখা/প্রশ্ন + জেনার) */
+        type: postType158,
+        category: catSel158 ? catSel158.value : null,
         media: media
       })
     }).then(function (r) {
@@ -484,6 +499,77 @@
     });
   });
 
-  /* সিঙ্ক-ইনিশিয়াল */
+  /* ═════════ সেশন ১৫৮ — সর্বজনীন টাইপ/শাখা (লেখা↔প্রশ্ন + জেনার-ড্রপডাউন) ═════════
+     ইউজার-স্পেক (UniversalCreatePostModal.tsx → EJS-পোর্ট):
+     · মূল ক্যাটাগরি: লেখা (article) নাকি প্রশ্ন (question) — সেগমেন্টেড টগল
+     · লেখার শাখা: প্রবন্ধ/গল্প/অনুগল্প/কলাম/কবিতা/চিঠি/বই-পর্যালোচনা/রম্যরচনা
+     · প্রশ্নের শাখা: ভাষা-ব্যাকরণ/লেখার-কৌশল/সাহিত্য-ইতিহাস/সাধারণ
+     · টাইপ-বদলে: শাখা-অপশন + placeholder + শিরোনাম + সাবমিট-লেবেল স্বয়ংক্রিয় বদলায়
+     চুক্তি: ফাংশন-ডিক্লেয়ারেশন হোস্টিং-নির্ভর — onOpenClick158 উপরের ওয়্যারিংয়ে
+     (লাইন-১৪৮-পরিবার) ব্যবহৃত; var-রা ক্লিক-কালেই পড়া হয় (IIFE-সম্পাদন-পরে)। */
+  var POST_CATS158 = {
+    article: [
+      ['essay', 'প্রবন্ধ'], ['story', 'গল্প'], ['short_story', 'অনুগল্প'], ['column', 'কলাম'],
+      ['poem', 'কবিতা'], ['letter', 'চিঠি'], ['review', 'বই পর্যালোচনা'], ['humor', 'রম্যরচনা']
+    ],
+    question: [
+      ['grammar', 'ভাষা ও ব্যাকরণ'], ['writing_style', 'লেখার কৌশল ও পরামর্শ'],
+      ['literature_history', 'সাহিত্য ও ইতিহাস'], ['general', 'সাধারণ জিজ্ঞাসা']
+    ]
+  };
+  var postType158 = 'article';
+  var catSel158 = document.getElementById('ucs158Genre');
+  var typeBtns158 = document.querySelectorAll('.ucs158-type-btn');
+  var postLbl158 = document.getElementById('cpmPostLbl158');
+
+  function syncType158() {
+    var isQ = postType158 === 'question';
+    Array.prototype.forEach.call(typeBtns158, function (b) {
+      var on = b.getAttribute('data-type') === postType158;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    if (catSel158) {
+      var prev158 = catSel158.value;
+      catSel158.innerHTML = '';
+      POST_CATS158[postType158].forEach(function (c) {
+        var o = document.createElement('option');
+        o.value = c[0]; o.textContent = c[1];
+        catSel158.appendChild(o);
+      });
+      var has158 = POST_CATS158[postType158].some(function (c) { return c[0] === prev158; });
+      catSel158.value = has158 ? prev158 : POST_CATS158[postType158][0][0];
+    }
+    if (editor) {
+      editor.setAttribute('data-placeholder', isQ
+        ? 'আপনার সাহিত্য বা ব্যাকরণ বিষয়ক সুনির্দিষ্ট প্রশ্নটি লিখুন…'
+        : 'আপনার মনের কথা লিখুন… @ম্যানশন #হ্যাশট্যাগ');
+    }
+    if (postLbl158) postLbl158.textContent = isQ ? 'প্রশ্ন জমা দিন' : 'পোস্ট করুন';
+    /* শিরোনামও টাইপ-সচেতন (showView-র ভেতরের লজিকের লাইভ-মিরর) */
+    if (titleEl && viewMore && viewMore.hidden) {
+      titleEl.textContent = isQ ? 'নতুন প্রশ্ন জিজ্ঞাসা করুন' : 'সাহিত্যকর্ম প্রকাশ করুন';
+    }
+  }
+  function openType158(t) {
+    postType158 = (t === 'question') ? 'question' : 'article';
+    syncType158();
+  }
+  function onOpenClick158(e) {
+    var t = e && e.currentTarget ? e.currentTarget.getAttribute('data-composer-type') : null;
+    openType158(t);
+    open();
+  }
+  Array.prototype.forEach.call(typeBtns158, function (b) {
+    b.addEventListener('click', function () {
+      if (postType158 === b.getAttribute('data-type')) return;
+      postType158 = b.getAttribute('data-type') === 'question' ? 'question' : 'article';
+      syncType158(); scheduleDraft();
+    });
+  });
+  if (catSel158) catSel158.addEventListener('change', function () { scheduleDraft(); });
+
+  /* সিঙ্ক-ইনিশিয়াল (সেশন ১৫৮: syncType158-সহ) */
+  syncType158();
   syncAa(); syncCtx(); renderMedia(); refreshState();
 })();

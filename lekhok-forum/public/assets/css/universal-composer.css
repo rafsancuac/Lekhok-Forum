@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   লেখক ফোরাম — সেশন ১৫৮: সর্বজনীন পোস্ট-কম্পোজার স্টাইলশিট (ইউজার-স্পেক)
+   UniversalPostTrigger + UniversalCreatePostModal (React-স্পেক → EJS-পোর্ট, session153-রীতি)
+   ───────────────────────────────────────────────────────────────────────────
+   • upt158-*  : সর্বজনীন ট্রিগার-বক্স (সোশ্যাল ফিড · নিজস্ব প্রোফাইল · প্রশ্নোত্তর —
+                 সব পেজে হুবহু একই ইন্টারফেস: অ্যাভাটার + বাবল + লেখা/প্রশ্ন কুইক-বাটন)
+   • ucs158-*  : ক্যাটাগরি-স্ট্রিপ (মোডালের ভেতরে — লেখা↔প্রশ্ন সেগমেন্টেড টগল +
+                 শাখা-ড্রপডাউন: গল্প/অনুগল্প/কলাম/চিঠি/প্রবন্ধ/কবিতা/… · প্রশ্নে
+                 ব্যাকরণ/লেখার-কৌশল/সাহিত্য-ইতিহাস/সাধারণ)
+   • ucs158-cat-chip : ফিড-কার্ডে শাখা-লেবেল (FeedPostCard)
+   ডিজাইন-স্ট্যান্ডার্ড: ৮px বর্ডার-রেডিয়াস · Kalpurush (body-ইনহেরিট) · টোকেন-শুধু
+   (হেক্স-শূন্য — র্যাচেট-চুক্তি) · reduced-motion গার্ড।
+   সরবরাহ: এই ফাইল shared/post/UniversalComposerModal.ejs পার্শিয়াল থেকে লিঙ্ক-হয়
+   (in-body <link> — qa-list.ejs:rich-editor-রীতি) — কোনো পেজ-লেভেল extra_css দরকার নেই।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ট্রিগার-বক্স (FB "মনে কি আছে?" প্যারিটি) ───────────────────────────── */
+.upt158{display:flex;align-items:center;gap:10px;background:var(--lf-ui-surface);border:1px solid var(--lf-ui-border);border-radius:8px;padding:10px 12px;box-shadow:var(--lf-shadow-card);margin-bottom:12px}
+.upt158-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--lf-ui-border);flex:none;background:var(--lf-ui-input-bg)}
+.upt158-bubble{flex:1;min-width:0;text-align:left;border:none;background:var(--lf-ui-input-bg);color:var(--lf-text-secondary);font-family:inherit;font-size:.9rem;line-height:1.5;padding:9px 14px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upt158-bubble:hover{background:var(--lf-ui-border);color:var(--lf-text-primary)}
+.upt158-bubble:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+.upt158-quick{display:flex;align-items:center;gap:6px;flex:none}
+.upt158-quick-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--lf-ui-border-strong);background:var(--lf-ui-input-bg);color:var(--lf-text-primary);font-family:inherit;font-weight:700;font-size:.8rem;padding:8px 12px;min-height:36px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+.upt158-quick-btn:hover{background:var(--lf-ui-border)}
+.upt158-quick-btn:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+.upt158-quick-btn i{color:var(--lf-brand-primary);font-size:.82rem}
+.upt158-quick-btn.is-q i{color:var(--lf-social-blue)}
+.upt158-quick-btn.is-q:hover{color:var(--lf-social-blue)}
+@media (max-width:560px){
+  .upt158{flex-wrap:wrap}
+  .upt158-bubble{flex:1 1 100%;order:3}
+  .upt158-quick{margin-left:auto}
+  .upt158-qlabel{display:none} /* মোবাইলে শুধু আইকন — স্পেক: hidden sm:inline প্যারিটি */
+}
+
+/* ── ক্যাটাগরি-স্ট্রিপ (মোডালের ভেতরে — স্পেক: "লেখা নাকি প্রশ্ন" + শাখা-ড্রপডাউন) ── */
+.ucs158-strip{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:12px 16px 0;padding:6px;border:1px solid var(--lf-ui-border);border-radius:8px;background:var(--lf-ui-input-bg)}
+.ucs158-types{display:inline-flex;align-items:center;gap:2px;background:var(--lf-ui-surface);border:1px solid var(--lf-ui-border);border-radius:8px;padding:2px;flex:none}
+.ucs158-type-btn{display:inline-flex;align-items:center;gap:5px;border:none;background:transparent;color:var(--lf-text-secondary);font-family:inherit;font-weight:700;font-size:.76rem;padding:5px 12px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+.ucs158-type-btn:hover{color:var(--lf-text-primary)}
+.ucs158-type-btn:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+.ucs158-type-btn.is-active{background:var(--lf-brand-primary);color:var(--lf-white);box-shadow:0 1px 2px rgba(0,0,0,.18)}
+.ucs158-type-btn.is-active:hover{background:var(--lf-brand-primary-hover);color:var(--lf-white)}
+.ucs158-genre-wrap{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 160px}
+.ucs158-genre-label{font-size:.72rem;font-weight:700;color:var(--lf-text-secondary);flex:none}
+.ucs158-genre{flex:1;min-width:0;max-width:230px;background:var(--lf-ui-surface);color:var(--lf-text-primary);font-family:inherit;font-weight:700;font-size:.78rem;border:1px solid var(--lf-ui-border);border-radius:8px;padding:5px 8px;cursor:pointer;outline:none;transition:border-color .15s}
+.ucs158-genre:hover{border-color:var(--lf-ui-border-strong)}
+.ucs158-genre:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:1px}
+@media (max-width:640px){
+  .ucs158-strip{flex-direction:column;align-items:stretch}
+  .ucs158-types{align-self:flex-start}
+  .ucs158-genre{max-width:none}
+}
+
+/* ── ফিড-কার্ডে শাখা-লেবেল (FeedPostCard — টাইপ-ব্যাজের পাশে স্লিম চিপ) ──── */
+.ucs158-cat-chip{display:inline-flex;align-items:center;font-size:.68rem;font-weight:700;color:var(--lf-brand-primary);background:var(--lf-brand-light);border-radius:8px;padding:2px 8px;white-space:nowrap}
+
+@media (prefers-reduced-motion:reduce){
+  .upt158-bubble,.upt158-quick-btn,.ucs158-type-btn,.ucs158-genre{transition:none}
+}
+/* EOF-MARKER: session158-universal-composer */

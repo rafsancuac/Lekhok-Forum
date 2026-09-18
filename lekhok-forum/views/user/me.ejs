@@ -24,6 +24,10 @@
       </div>
     </header>
 
+    <%# সেশন ১৫৮: সর্বজনীন পোস্ট-ট্রিগার + কম্পোজার-মোডাল (স্পেক: UniversalPostTrigger —
+        ফিডের সাথে হুবহু একই ইন্টারফেস; /me সর্বদা লগইন-গেটেড তাই user নিশ্চিত) %>
+    <%- include('../shared/post/UniversalPostTrigger') %>
+
     <%# ═══ সেশন ১১৮ (ইউজার-স্পেক): ৭টি আলাদা সাদা stat-tile বক্স সম্পূর্ণ বিলোপ —
         কাউন্টগুলো এখন নিচের FB-স্টাইল ট্যাব-বারের ব্যাজে ও হেডারের মেটা-স্ট্রিপে ═══ %>
 
@@ -353,5 +357,7 @@
   <%# সেশন ১০৫: ক্যানোনিকাল কম্পোনেন্ট-ইঞ্জিন + রিঅ্যাক্টরস-মডাল %>
   <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
   <%- include('../shared/post/ReactorsModal') %>
+  <%# সেশন ১৫৮: সর্বজনীন কম্পোজার-মোডাল (css+js পার্শিয়াল-ই লোড করে) %>
+  <%- include('../shared/post/UniversalComposerModal') %>
 </body>
 </html>

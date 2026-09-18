@@ -761,3 +761,30 @@
 .pn153-fill{flex:1 1 auto;min-height:0}
 @media (max-width:767px){.pn153-shell{height:auto;min-height:calc(100vh - var(--pn153-top));overflow:visible}}
 /* EOF-MARKER: session153-independent-scroll */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১৫৮ — গ্লোবাল অ্যান্টি-শিফট (ইউজার-স্পেক: স্ক্রলে ডানে-বামে ঝাঁকুনি ও
+   ছোট-বড় হওয়ার স্থায়ী সমাধান — Layout Shift শূন্য)
+   ═══════════════════════════════════════════════════════════════════════════
+   মূল-কারণ: স্ক্রলবার-গাটার-শিফট (Scrollbar Gutter Shift — স্ক্রলবার উপস্থিত/অদৃশ্য
+   হওয়ায় ভিউপোর্ট-প্রস্থ ওঠানাউঠা) + ফ্লেক্স-আইটেমে min-width-অনুপস্থিতি।
+   • scrollbar-gutter:stable + overflow-y:scroll → গাটার সর্বদা সংরক্ষিত —
+     স্ক্রলবার আসুক বা যাক, ১ পিক্সেলও নড়বে না
+   • body max-width:100vw + overflow-x:hidden → আড়াই-অক্ষে স্ক্রল/ঝাঁকুনি অসম্ভব
+   চুক্তি-নোট: html.cpm-open (কম্পোজার-স্ক্রল-লক) ও body.lf-feed-lock156
+   (ফিড-৩-কলাম-লক) — উচ্চতর-স্পেসিফিসিটিতে overflow:hidden রাখে; এ-ব্লক
+   তাদের ওভাররাইড করে না (স্পেসিফিসিটি: class-selector > element-selector)।
+   admin.css-এর html{scrollbar-gutter:stable} — একই-মান, সংঘর্ষ-শূন্য। */
+html{scrollbar-gutter:stable;overflow-y:scroll}
+body{width:100%;max-width:100vw;overflow-x:hidden;position:relative}
+
+/* ── .stable-scroll-panel — অ্যান্টি-শিফট স্বাধীন-স্ক্রল-প্যানেল (ইউজার-স্পেক-নাম;
+   session157-এর .independent-scroll-এর সাথে একই-আচরণ — নতুন-মার্কআপে যেকোনো-একটি;
+   min-width:0 → ফ্লেক্স-কলামে বসালেও প্যানেল ছোট-বড় হবে না) ── */
+.stable-scroll-panel{overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;min-width:0;scrollbar-width:thin;scrollbar-color:transparent transparent;transition:scrollbar-color .2s ease}
+.stable-scroll-panel:hover{scrollbar-color:var(--lf-ui-border-strong) transparent}
+.stable-scroll-panel::-webkit-scrollbar{width:6px}
+.stable-scroll-panel::-webkit-scrollbar-track{background:transparent}
+.stable-scroll-panel::-webkit-scrollbar-thumb{background-color:transparent;border-radius:8px}
+.stable-scroll-panel:hover::-webkit-scrollbar-thumb{background-color:var(--lf-ui-border-strong)}
+/* EOF-MARKER: session158-antishift */

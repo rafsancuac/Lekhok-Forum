@@ -17,31 +17,10 @@
         canonical-HTML-swap; session124-CommentItem-রীতির QA-মিরর)। গেস্টে লগইন-CTA।
         পূর্ণাঙ্গ-ফর্ম (/qa/new) পেজ-হেডারের নতুন-প্রশ্ন-বাটনে অক্ষুণ্ণ। %>
     <% if (user) { %>
-      <div class="qa-composer140" id="qaComposer140">
-        <div class="qac-collapsed140" id="qacTrigger140" role="button" tabindex="0" aria-expanded="false" aria-controls="qacPanel140">
-          <img class="qac-avatar140" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="">
-          <span class="qac-placeholder140">আপনার প্রশ্ন করুন…</span>
-        </div>
-        <form class="qac-panel140" id="qacPanel140" hidden novalidate>
-          <input type="hidden" name="_noop" value="1">
-          <label class="sr-only" for="qacTitle140">প্রশ্নের শিরোনাম</label>
-          <input id="qacTitle140" name="title" class="qac-title140" type="text" maxlength="200" placeholder="প্রশ্নের শিরোনাম লিখুন…" autocomplete="off">
-          <div class="qac-char140" aria-live="polite"><span id="qacTitleCount140">০</span>/২০০</div>
-          <label class="sr-only" for="qacBody140">প্রশ্নের বিস্তারিত</label>
-          <%# সেশন ১৪৪: data-mention — বিস্তারিতে @মেনশন-অটোকমপ্লিট (mention-anywhere.js;
-              কমেন্ট-কম্পোজারের cc-mention-চুক্তির মিরর — একই API/মার্কআপ/কীবোর্ড-রীতি) %>
-          <textarea id="qacBody140" name="body" class="qac-body140" rows="4" maxlength="5000" data-mention="1" placeholder="বিস্তারিত লিখুন — @ লিখে মেনশন করুন…"></textarea>
-          <div class="qac-foot140">
-            <span class="qac-char140 qac-bodycount140" aria-live="polite"><span id="qacBodyCount140">০</span>/৫০০০</span>
-            <span class="qac-hint140" id="qacHint140" role="status"></span>
-            <span class="qac-actions140">
-              <button type="button" class="qac-cancel140" id="qacCancel140">বাতিল</button>
-              <button type="submit" class="qac-submit140" id="qacSubmit140" disabled><i class="fas fa-question-circle" aria-hidden="true"></i> প্রকাশ করুন</button>
-            </span>
-          </div>
-          <p class="qac-tip140"><i class="far fa-keyboard" aria-hidden="true"></i> Ctrl+Enter চেপেও প্রকাশ করা যায়</p>
-        </form>
-      </div>
+      <%# সেশন ১৫৮: সর্বজনীন কম্পোজার-ট্রিগার — session140 ইনলাইন-কম্পোজারের প্রতিস্থাপন
+          (স্পেক: সব পেজে ফেসবুকের মতো একই পোস্ট কম্পোজার ইন্টারফেস) — এ-পেজে প্রশ্ন-প্রি-সিলেক্টেড;
+          পুরনো qa-composer.js অক্ষুণ্ণ (মার্কআপ-অনুপস্থিতিতে স্ব-নিষ্ক্রিয় — null-guard চুক্তি) %>
+      <%- include('../shared/post/UniversalPostTrigger', { composerDefaultType: 'question' }) %>
     <% } else { %>
       <a class="qac-guest140" href="/login">
         <i class="fas fa-circle-question" aria-hidden="true"></i>
@@ -96,6 +75,8 @@
   <script src="/assets/js/qa-composer.js?v=<%= AV %>"></script>
   <%# সেশন ১৪৪: মেনশন-অটোকমপ্লিট — textarea[data-mention] সারফেসে (cc-input-বহির্ভূত) %>
   <script src="/assets/js/mention-anywhere.js?v=<%= AV %>"></script>
+  <%# সেশন ১৫৮: সর্বজনীন কম্পোজার-মোডাল (css+js পার্শিয়াল-ই লোড করে) %>
+  <%- include('../shared/post/UniversalComposerModal') %>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </body>

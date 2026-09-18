@@ -44,16 +44,10 @@
     <!-- Main Feed -->
     <main class="dash-main fb-scroll">
       <% if (user) { %>
-      <div class="dash-composer card">
-        <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" class="composer-avatar">
-        <%# সেশন ১০০ (রোডম্যাপ-০৭): FB-স্টাইল কম্পোজার-মোডাল — ক্লিকে মোডাল খোলে
-            (নিচে #composerModal); 'লেখা' লিঙ্ক পূর্ণ-এডিটরেই যায় %>
-        <button type="button" id="composerOpen" class="composer-input" aria-haspopup="dialog" aria-controls="composerModal">আপনার লেখা শুরু করুন...</button>
-        <div class="composer-actions">
-          <button type="button" class="composer-action js-composer-open"><i class="fas fa-pen-nib"></i> লেখা</button>
-          <a href="/qa/new" class="composer-action q"><i class="fas fa-question"></i> প্রশ্ন</a>
-        </div>
-      </div>
+        <%# সেশন ১৫৮: সর্বজনীন পোস্ট-ট্রিগার (session100/153-ট্রিগারের প্রতিস্থাপন — স্পেক:
+            UniversalPostTrigger — ফিড/প্রোফাইল/QA-তে হুবহু একই কার্ড; ❓-বাটন এখন
+            /qa/new-লিঙ্ক নয়, একই মোডাল প্রশ্ন-প্রি-সিলেক্টেড খোলে) %>
+        <%- include('../shared/post/UniversalPostTrigger') %>
       <% } else { %>
       <div class="dash-composer card visitor-cta">
         <div style="flex:1">
@@ -270,147 +264,21 @@
       তালিকা/অ্যালাইনমেন্ট), 'Aa' গ্রেডিয়েন্ট-ব্যাকগ্রাউন্ড, অডিও/ভিডিও-সহ মিডিয়া-কোলাজ,
       অডিয়েন্স-সিলেক্টর, থ্রি-ডট → ২য় স্লাইড-ইন সাব-মেনু। খসড়া-অটোসেভ (lfCpm153)।
       সাবমিট: JSON POST /api/posts/compose (সেশন-১০০-র redirect-free রীতি) ── %>
+  <%# সেশন ১৫৮: সর্বজনীন কম্পোজার-মোডাল — session153-এর dashboard-ইনলাইন-মোডাল এখন
+      shared/post/UniversalComposerModal.ejs-পার্শিয়ালে single-source (ফিড/প্রোফাইল/QA
+      সব পেজে হুবহু একই মোডাল — স্পেক: UniversalCreatePostModal) + নতুন ক্যাটাগরি-স্ট্রিপ
+      (লেখা↔প্রশ্ন + শাখা-ড্রপডাউন); universal-composer.css + composer-modal.js-ও
+      পার্শিয়াল-ই লোড করে (পেজ-লেভেল ডাবল-ট্যাগ-প্রতিরোধ) %>
   <% if (user) { %>
-  <div class="cpm-backdrop" id="composerModal" hidden>
-    <div class="cpm-dialog fbm-dialog153" role="dialog" aria-modal="true" aria-labelledby="fbmTitle">
-      <form id="composerForm" novalidate>
-        <div class="cpm-head fbm-head153">
-          <button type="button" class="fbm-back153" id="fbmBack" hidden aria-label="পেছনে" title="পেছনে"><i class="fas fa-arrow-left" aria-hidden="true"></i></button>
-          <h2 id="fbmTitle">পোস্ট তৈরি করুন</h2>
-          <button type="button" class="cpm-close" id="composerClose" aria-label="বন্ধ করুন" title="বন্ধ করুন"><i class="fas fa-times"></i></button>
-        </div>
-
-        <%# ══════════ ভিউ ১: মূল কম্পোজার ══════════ %>
-        <div class="fbm-view153" id="fbmViewMain">
-          <div class="cpm-author">
-            <img src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" class="cpm-avatar">
-            <div class="cpm-author-meta">
-              <strong><%= typeof displayName === 'function' ? displayName(user) : (user.pen_name || user.full_name) %></strong>
-              <div class="fbm-audrow153">
-                <select class="fbm-audience153" id="fbmAudience" aria-label="দর্শক নির্বাচন">
-                  <option value="PUBLIC">🌍 পাবলিক</option>
-                  <option value="FRIENDS">👥 বন্ধুরা</option>
-                  <option value="ONLY_ME">🔒 শুধুমাত্র আমি</option>
-                </select>
-                <span class="fbm-ctx-chip153" id="fbmFeelingChip" hidden><i class="far fa-smile" aria-hidden="true"></i> <span></span> <button type="button" class="fbm-ctx-x153" id="fbmFeelingX" aria-label="অনুভূতি সরান">×</button></span>
-                <span class="fbm-ctx-chip153" id="fbmLocChip" hidden><i class="fas fa-map-marker-alt" aria-hidden="true"></i> <span></span> <button type="button" class="fbm-ctx-x153" id="fbmLocX" aria-label="লোকেশন সরান">×</button></span>
-              </div>
-            </div>
-          </div>
-
-          <%# সেশন ১৫৩: খসড়া-রিস্টোর-নোটিশ (সেশন-১০০-রীতি অব্যাহত — নতুন কী lfCpm153) %>
-          <div class="fbm-restore153" id="fbmRestoreNote" hidden>
-            <i class="fas fa-history" aria-hidden="true"></i>
-            <span>আগের অসংরক্ষিত খসড়া ফিরিয়ে আনা হয়েছে</span>
-            <button type="button" id="fbmDraftDiscard">বাতিল করুন</button>
-          </div>
-
-          <%# MS-অফিস-বেসিক ফরম্যাটিং-টুলবার (ইউজার-স্পেক: হেডিং/সাব-হেডিং/বোল্ড/
-              ইটালিক/আন্ডারলাইন/স্ট্রাইক/তালিকা/অ্যালাইনমেন্ট/ফরম্যাট-পরিষ্কার) %>
-          <div class="fbm-toolbar153" role="toolbar" aria-label="লেখা ফরম্যাট করুন">
-            <button type="button" class="fbm-tool153 fbm-block153" data-block="h2" title="বড় হেডিং" aria-label="বড় হেডিং">H<sub>1</sub></button>
-            <button type="button" class="fbm-tool153 fbm-block153" data-block="h3" title="সাব-হেডিং" aria-label="সাব-হেডিং">H<sub>2</sub></button>
-            <span class="fbm-tool-sep153" aria-hidden="true"></span>
-            <button type="button" class="fbm-tool153" data-cmd="bold" title="বোল্ড" aria-label="বোল্ড"><b>ব</b></button>
-            <button type="button" class="fbm-tool153" data-cmd="italic" title="ইটালিক" aria-label="ইটালিক"><i>ক</i></button>
-            <button type="button" class="fbm-tool153" data-cmd="underline" title="আন্ডারলাইন" aria-label="আন্ডারলাইন"><u>অ</u></button>
-            <button type="button" class="fbm-tool153" data-cmd="strikeThrough" title="স্ট্রাইক" aria-label="স্ট্রাইক"><s>ল</s></button>
-            <span class="fbm-tool-sep153" aria-hidden="true"></span>
-            <button type="button" class="fbm-tool153" data-cmd="insertUnorderedList" title="বুলেট তালিকা" aria-label="বুলেট তালিকা"><i class="fas fa-list-ul" aria-hidden="true"></i></button>
-            <button type="button" class="fbm-tool153" data-cmd="insertOrderedList" title="নাম্বারিং তালিকা" aria-label="নাম্বারিং তালিকা"><i class="fas fa-list-ol" aria-hidden="true"></i></button>
-            <span class="fbm-tool-sep153" aria-hidden="true"></span>
-            <button type="button" class="fbm-tool153" data-cmd="justifyLeft" title="বাম প্রান্তিক" aria-label="বাম প্রান্তিক"><i class="fas fa-align-left" aria-hidden="true"></i></button>
-            <button type="button" class="fbm-tool153" data-cmd="justifyCenter" title="মাঝখানে সাজান" aria-label="মাঝখানে সাজান"><i class="fas fa-align-center" aria-hidden="true"></i></button>
-            <button type="button" class="fbm-tool153" data-cmd="justifyRight" title="ডান প্রান্তিক" aria-label="ডান প্রান্তিক"><i class="fas fa-align-right" aria-hidden="true"></i></button>
-            <span class="fbm-tool-sep153" aria-hidden="true"></span>
-            <button type="button" class="fbm-tool153" data-cmd="removeFormat" title="ফরম্যাট পরিষ্কার" aria-label="ফরম্যাট পরিষ্কার"><i class="fas fa-eraser" aria-hidden="true"></i></button>
-          </div>
-
-          <%# বর্ডারহীন ডায়নামিক ক্যানভাস — কোনো ইনপুট-বক্স নেই (ইউজার-স্পেক মূল-অভিযোগ) %>
-          <div class="fbm-canvas153" id="fbmCanvas">
-            <div class="fbm-editor153" id="fbmEditor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="আপনার পোস্ট লিখুন" data-placeholder="আপনার মনের কথা লিখুন… @ম্যানশন #হ্যাশট্যাগ"></div>
-          </div>
-
-          <%# 'Aa' গ্রেডিয়েন্ট-প্যালেট (মিডিয়া-উপস্থিতিতে ইঞ্জিন লুকায় — FB-চুক্তি) %>
-          <div class="fbm-palette153" id="fbmPalette" hidden>
-            <button type="button" class="fbm-aa153" id="fbmAaToggle" title="লেখার পটভূমি" aria-label="লেখার পটভূমি" aria-expanded="false">Aa</button>
-            <div class="fbm-dots153" id="fbmDots" hidden>
-              <% for (var _g153 = 1; _g153 <= 8; _g153++) { %>
-                <button type="button" class="fbm-dot153 fb-dot153-<%= _g153 %>" data-bg="fbg<%= _g153 %>" role="radiogroup" aria-label="পটভূমি <%= _g153 %>" title="পটভূমি <%= _g153 %>"></button>
-              <% } %>
-              <button type="button" class="fbm-dot-reset153" id="fbmBgReset" title="পটভূমি রিসেট">রিসেট</button>
-            </div>
-          </div>
-
-          <%# মিডিয়া-কোলাজ প্রিভিউ (ইঞ্জিন রেন্ডার করে — ফিড-কোলাজের মিনি-মিরর) %>
-          <div class="fbm-media153" id="fbmMedia"></div>
-          <div class="fbm-droptip153" id="fbmDropTip" hidden><i class="fas fa-cloud-arrow-up" aria-hidden="true"></i> ছবি/ভিডিও/অডিও ছেড়ে দিন — আপলোড শুরু হবে</div>
-          <input type="file" id="fbmFile" accept="image/*,video/*,audio/*" multiple hidden>
-          <div class="cpm-error" id="fbmError" hidden></div>
-
-          <%# ডক-বার: "পোস্টে যুক্ত করুন" (রেফারেন্স-ইন্টারফেস-প্যারিটি) + থ্রি-ডট → ভিউ ২ %>
-          <div class="fbm-dock153">
-            <span class="fbm-dock-label153">পোস্টে যুক্ত করুন</span>
-            <div class="fbm-dock-actions153">
-              <button type="button" class="fbm-dock-btn153" id="fbmAddMedia" title="ছবি/ভিডিও/অডিও" aria-label="ছবি, ভিডিও বা অডিও যোগ করুন"><i class="fas fa-photo-video" aria-hidden="true"></i></button>
-              <button type="button" class="fbm-dock-btn153 is-feel" id="fbmFeelingQuick" title="অনুভূতি" aria-label="অনুভূতি যোগ করুন"><i class="far fa-smile" aria-hidden="true"></i></button>
-              <button type="button" class="fbm-dock-btn153 is-loc" id="fbmLocQuick" title="চেক-ইন" aria-label="লোকেশন যোগ করুন"><i class="fas fa-map-marker-alt" aria-hidden="true"></i></button>
-              <button type="button" class="fbm-dock-btn153" id="fbmMore" title="আরও অপশন" aria-label="আরও অপশন" aria-haspopup="true" aria-controls="fbmViewMore"><i class="fas fa-ellipsis-h" aria-hidden="true"></i></button>
-            </div>
-          </div>
-
-          <div class="fbm-foot153">
-            <div class="fbm-foot-left153">
-              <span class="cpm-charcount" id="fbmCharCount">০</span>
-              <span class="cpm-draftnote" id="fbmDraftNote" hidden><i class="fas fa-cloud-arrow-down"></i> খসড়া সংরক্ষিত</span>
-            </div>
-            <button type="submit" class="cpm-post" id="cpmPostBtn" disabled>পোস্ট করুন <i class="fas fa-paper-plane"></i></button>
-          </div>
-        </div>
-
-        <%# ══════════ ভিউ ২: স্লাইড-ইন সাব-মেনু (থ্রি-ডট/ডক-ক্লিক) ══════════ %>
-        <div class="fbm-view153 fbm-view-more153" id="fbmViewMore" hidden>
-          <button type="button" class="fbm-more-item153" id="fbmMoreMedia">
-            <span class="fbm-more-icon153 is-media" aria-hidden="true"><i class="fas fa-photo-video"></i></span>
-            <span class="fbm-more-text153"><strong>ছবি / ভিডিও / অডিও</strong><small>গ্যালারি থেকে মিডিয়া যুক্ত করুন — স্মার্ট কোলাজে সাজানো হবে</small></span>
-          </button>
-          <button type="button" class="fbm-more-item153" id="fbmMoreVoice">
-            <span class="fbm-more-icon153 is-voice" aria-hidden="true"><i class="fas fa-microphone"></i></span>
-            <span class="fbm-more-text153"><strong>ভয়েস / অডিও নোট</strong><small>অডিও-ফাইল যুক্ত করুন — ফিডে প্লেয়ার-সহ দেখাবে</small></span>
-          </button>
-          <div class="fbm-more-feelings153" role="group" aria-label="অনুভূতি বেছে নিন">
-            <span class="fbm-more-heading153">অনুভূতি</span>
-            <div class="fbm-feelgrid153" id="fbmFeelGrid">
-              <% ['খুশি 😊','কৃতজ্ঞ 🙏','অনুপ্রাণিত 🌟','মুগ্ধ 😍','আবেগাপ্লুত 🥹','চিন্তিত 😟','ক্লান্ত 😴','নতুন মাইলফলক 🏆'].forEach(function (_f153) { %>
-                <button type="button" class="fbm-feel-chip153" data-feel="<%= _f153 %>"><%= _f153 %></button>
-              <% }) %>
-            </div>
-          </div>
-          <div class="fbm-more-checkin153">
-            <span class="fbm-more-heading153">চেক-ইন</span>
-            <div class="fbm-locrow153">
-              <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-              <input type="text" id="fbmLocInput" maxlength="80" placeholder="কোথায়? (যেমন: চট্টগ্রাম বিশ্ববিদ্যালয়)" aria-label="লোকেশন">
-              <button type="button" class="fbm-locset153" id="fbmLocSet">যোগ করুন</button>
-            </div>
-          </div>
-          <button type="button" class="fbm-more-item153" id="fbmMoreClear">
-            <span class="fbm-more-icon153 is-clear" aria-hidden="true"><i class="fas fa-eraser"></i></span>
-            <span class="fbm-more-text153"><strong>সব অ্যাটাচমেন্ট সরান</strong><small>অনুভূতি, লোকেশন ও মিডিয়া পরিষ্কার</small></span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+    <%- include('../shared/post/UniversalComposerModal') %>
   <% } %>
 
-
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+<script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <script src="/assets/js/post-gallery.js?v=<%= AV %>"></script>
   <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
   <script src="/assets/js/continue-reading.js?v=<%= AV %>" defer></script>
-  <% if (user) { %><script src="/assets/js/composer-modal.js?v=<%= AV %>"></script><% } %>
+  <%# সেশন ১৫৮: composer-modal.js এখন UniversalComposerModal-পার্শিয়াল-ই লোড করে (ডাবল-ট্যাগ-প্রতিরোধ) %>
   <%# সেশন ১৪৪: 'নতুন পোস্ট' পিল-ইঞ্জিন — গার্ডেড IIFE (পেজ-নির্দিষ্ট; অন্য-কোডের সাথে নির্ভরশীলতা শূন্য)।
       পোল: প্রথম ৮সে, পরে ৬০সে; ট্যাব-লুকানো থাকলে স্কিপ + visibilitychange-এ ভিজিবল-কিক (১৫সে-থ্রটল)।
       ক্লিক = টপে-গিয়ে reload (scrollRestoration=manual — FB-প্যাটার্ন); × = ১০মিনিট-স্নুজ (in-memory)।

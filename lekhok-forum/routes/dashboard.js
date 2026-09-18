@@ -120,11 +120,14 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
   // UNION-কলাম-সাম্য চুক্তি — তিন-শাখাতেই যোগ (activity শাখায় NULL; কার্যক্রমে ধারণাই নেই)
   const RICH153 = 'p.rich_content, p.background_color, p.feeling, p.location, p.audience';
   const RICH153_NULL = 'NULL as rich_content, NULL as background_color, NULL as feeling, NULL as location, NULL as audience';
+  // সেশন ১৫৮: শাখা-লেবেল (category) — ফিড-কার্ডে .ucs158-cat-chip; UNION-কলাম-সাম্য অক্ষুণ্ণ
+  const CAT158 = 'p.category';
+  const CAT158_NULL = 'NULL as category';
   const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from, p.repost_note,
            NULL as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            NULL as accepted_comment_id,
-           ${RICH153},
+           ${RICH153}, ${CAT158},
            p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
@@ -133,7 +136,7 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
            (CASE WHEN p.accepted_comment_id IS NOT NULL THEN 1 ELSE 0 END) as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            p.accepted_comment_id,
-           ${RICH153},
+           ${RICH153}, ${CAT158},
            p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
@@ -143,7 +146,7 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
            NULL as accepted_flag,
            dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
            NULL as accepted_comment_id,
-           ${RICH153_NULL},
+           ${RICH153_NULL}, ${CAT158_NULL},
            NULL as author_id,
            '\u09ae\u09a1\u09be\u09b0\u09c7\u099f\u09b0' as author_name, NULL as pen_name, 'moderator' as username, NULL as avatar_url, 'other' as gender, '' as designation, 'moderator' as author_role
     FROM daily_content dc

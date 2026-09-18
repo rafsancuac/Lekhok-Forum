@@ -1,0 +1,32 @@
+<%# ═══════════════════════════════════════════════════════════════════════════
+  সেশন ১৫৮ — সর্বজনীন পোস্ট-ট্রিগার (ইউজার-স্পেক: UniversalPostTrigger.tsx → EJS-পোর্ট)
+  ──────────────────────────────────────────────────────────────────────────
+  সোশ্যাল ফিড (/dashboard) · নিজস্ব প্রোফাইল (/me) · প্রশ্নোত্তর (/qa) — যেকোনো পেজে
+  বসানো যায়; ইউজার যে বাটনেই ক্লিক করুক, মোডাল তাৎক্ষণিক সঠিক ক্যাটাগরি নিয়ে খোলে।
+  ওয়্যারিং-চুক্তি (composer-modal.js):
+    · বাবল = #composerOpen (session100-লিগ্যাসি-বাইন্ডিং অক্ষুণ্ণ) + .js-composer-open
+    · কুইক-বাটন = .js-composer-open + data-composer-type="article|question"
+  প্যারাম: composerDefaultType ('question' হলে /qa-ঘরানার প্রি-সিলেকশন; ডিফল্ট 'article')
+  পূর্বশর্ত: কলিং-পেজে user স্কোপে থাকতে হবে (সব include-ই user-গার্ডের ভেতরে)।
+  ═══════════════════════════════════════════════════════════════════════════ %><%
+  var upt158Type = (typeof composerDefaultType !== 'undefined' && composerDefaultType === 'question') ? 'question' : 'article';
+  var upt158Name = (typeof displayName === 'function' && user) ? String(displayName(user) || '') : '';
+  var upt158First = upt158Name.split(' ')[0] || '';
+%>
+<div class="upt158" id="upt158">
+  <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" class="upt158-avatar">
+  <button type="button" id="composerOpen" class="upt158-bubble js-composer-open" data-composer-type="<%= upt158Type %>"
+          aria-haspopup="dialog" aria-controls="composerModal">
+    <%= upt158First %><%= upt158First ? ', ' : '' %><%= upt158Type === 'question' ? 'আপনার প্রশ্নটি লিখুন…' : 'আপনার সাহিত্য ভাবনা প্রকাশ করুন…' %>
+  </button>
+  <div class="upt158-quick">
+    <button type="button" class="upt158-quick-btn js-composer-open" data-composer-type="article"
+            title="নতুন লেখা পোস্ট করুন" aria-label="নতুন লেখা পোস্ট করুন">
+      <i class="fas fa-pen-nib" aria-hidden="true"></i> <span class="upt158-qlabel">লেখা</span>
+    </button>
+    <button type="button" class="upt158-quick-btn is-q js-composer-open" data-composer-type="question"
+            title="প্রশ্ন জিজ্ঞাসা করুন" aria-label="প্রশ্ন জিজ্ঞাসা করুন">
+      <i class="fas fa-circle-question" aria-hidden="true"></i> <span class="upt158-qlabel">প্রশ্ন</span>
+    </button>
+  </div>
+</div>

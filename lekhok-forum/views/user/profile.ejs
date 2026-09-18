@@ -344,6 +344,11 @@
         </div>
 
         <section class="tab-content active" id="tab-posts" role="tabpanel" aria-label="লেখাসমূহ">
+          <%# সেশন ১৫৮: সর্বজনীন পোস্ট-ট্রিগার — শুধু মালিকের নিজস্ব-প্রোফাইলে (স্পেক:
+              UniversalPostTrigger — ফিডের সাথে হুবহু একই কম্পোজার-ইন্টারফেস) %>
+          <% if (isOwner && user) { %>
+            <%- include('../shared/post/UniversalPostTrigger') %>
+          <% } %>
           <%# পিনড-পোস্ট — টাইমলাইনের শীর্ষে — সেশন ১০৫: ক্যানোনিকাল FeedPostCard %>
           <% if (pinnedPost) { %>
             <%- include('../shared/post/FeedPostCard', { item: pinnedPost, user: user, myBookmarkedIds: (typeof myBookmarkedIds !== 'undefined' ? myBookmarkedIds : []), opts: { profileMode: true, showPin: isOwner, cardClass: 'pf-post pinned', pinnedLabel: 'পিন করা লেখা' } }) %>
@@ -863,5 +868,7 @@
   </script>
 
 <%- include('../partials/sandbox-preview') %>
+  <%# সেশন ১৫৮: সর্বজনীন কম্পোজার-মোডাল (css+js পার্শিয়াল-ই লোড করে) %>
+  <%- include('../shared/post/UniversalComposerModal') %>
 </body>
 </html>

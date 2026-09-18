@@ -143,16 +143,28 @@ router.post('/api/posts/compose', ensureLoggedIn, async (req, res) => {
     const audNorm153 = String(req.body.audience || 'PUBLIC').trim().toUpperCase() || 'PUBLIC';
     const audience = ['PUBLIC', 'FRIENDS', 'ONLY_ME'].includes(audNorm153) ? audNorm153 : 'PUBLIC';
 
+    // সেশন ১৫৮: সর্বজনীন টাইপ/শাখা — লেখা (article) বা প্রশ্ন (question) + জেনার-হোয়াইটলিস্ট
+    // (ইউজার-স্পেক: UniversalCreatePostModal-এর ক্যাটাগরি-স্ট্রিপ; client POST_CATS158-এর সার্ভার-মিরর)
+    const rawType158 = String(req.body.type || 'article').trim().toLowerCase();
+    const postType158 = rawType158 === 'question' ? 'question' : 'article';
+    const CATS158 = {
+      article: ['essay', 'story', 'short_story', 'column', 'poem', 'letter', 'review', 'humor'],
+      question: ['grammar', 'writing_style', 'literature_history', 'general']
+    };
+    const rawCat158 = String(req.body.category || '').trim().toLowerCase();
+    const category = CATS158[postType158].includes(rawCat158) ? rawCat158 : 'general';
+
     const firstLine = (plain.split('\n').find(l => l.trim()) || '').trim();
     const title = (firstLine || ('পোস্ট · ' + new Date().toISOString().slice(0, 10))).slice(0, 80);
 
-    // সেশন-৩৯-প্যাটার্ন ডুপ-গার্ড
-    const dup153 = await db.prepare(`
-      SELECT id FROM posts WHERE author_id = ? AND type = 'article' AND title = ?
+    // সেশন-৩৯-প্যাটার্ন ডুপ-গার্ড (সেশন ১৫৮: টাইপ-সচেতন + rich_content-ফেচ — আগে _rich
+    // অনুপস্থিত ছিল, তুলনা সর্বদা false-এ পড়ত — এখন ডুপ-গার্ড প্রকৃতপক্ষে সক্রিয়)
+    const dup158 = await db.prepare(`
+      SELECT id, rich_content AS _rich FROM posts WHERE author_id = ? AND type = ? AND title = ?
         AND created_at > datetime('now', '-2 minutes') ORDER BY id DESC LIMIT 1
-    `).get(me.id, title);
-    if (dup153 && richToPlainText153(String(dup153._rich || '')) === plain) {
-      return res.json({ ok: true, id: dup153.id, url: '/articles/' + dup153.id, duplicate: true });
+    `).get(me.id, postType158, title);
+    if (dup158 && richToPlainText153(String(dup158._rich || '')) === plain) {
+      return res.json({ ok: true, id: dup158.id, url: '/' + (postType158 === 'question' ? 'qa' : 'articles') + '/' + dup158.id, duplicate: true });
     }
 
     const excerpt = mdPlain85(plain, 200);
@@ -160,11 +172,11 @@ router.post('/api/posts/compose', ensureLoggedIn, async (req, res) => {
     const result = await db.prepare(`
       INSERT INTO posts (author_id, type, post_kind, title, body, excerpt, cover_image, mentions, category,
                          rich_content, background_color, feeling, location, audience)
-      VALUES (?, 'article', 'writing', ?, ?, ?, ?, ?, 'general', ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
-      me.id, title, plain, excerpt,
+      me.id, postType158, postType158 === 'question' ? 'question' : 'writing', title, plain, excerpt,
       (media.find(m => m.type === 'image') || {}).url || null,
-      mentions, rich, bg, feeling, location, audience
+      mentions, category, rich, bg, feeling, location, audience
     );
     const postId = result.lastInsertRowid;
     if (media.length) await db.setPostMedia153('post', postId, media);
@@ -173,12 +185,12 @@ router.post('/api/posts/compose', ensureLoggedIn, async (req, res) => {
       const mentioned = JSON.parse(mentions);
       for (const m of mentioned) {
         if (m.id !== me.id) {
-          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে মেনশন করেছেন', '/articles/' + postId, me.id);
+          await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' আপনাকে মেনশন করেছেন', '/' + (postType158 === 'question' ? 'qa' : 'articles') + '/' + postId, me.id);
         }
       }
     } catch (_) {}
 
-    res.json({ ok: true, id: postId, url: '/articles/' + postId });
+    res.json({ ok: true, id: postId, url: '/' + (postType158 === 'question' ? 'qa' : 'articles') + '/' + postId });
   } catch (e) {
     console.error('[social compose153] failed:', e.message);
     res.status(500).json({ ok: false, error: 'পোস্ট সংরক্ষণ ব্যর্থ — আবার চেষ্টা করুন' });

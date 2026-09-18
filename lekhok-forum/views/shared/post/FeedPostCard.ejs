@@ -171,6 +171,13 @@
       <% } else { %>
         <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
       <% } %>
+      <%# সেশন ১৫৮: শাখা-লেবেল (ক্যাটাগরি) — পরিচিত-মানেই স্লিম চিপ (general/অজানা = নীরব);
+          client/server একই জেনার-মান (composer-modal.js POST_CATS158 ↔ social.js CATS158) %>
+      <% var _cat158 = String(item.category || '').toLowerCase();
+         var _catLbl158 = ({ essay:'প্রবন্ধ', story:'গল্প', short_story:'অনুগল্প', column:'কলাম', poem:'কবিতা',
+                             letter:'চিঠি', review:'বই পর্যালোচনা', humor:'রম্যরচনা',
+                             grammar:'ভাষা ও ব্যাকরণ', writing_style:'লেখার কৌশল', literature_history:'সাহিত্য ও ইতিহাস' })[_cat158]; %>
+      <% if (_catLbl158 && _type !== 'activity') { %><span class="ucs158-cat-chip" title="শাখা: <%= _catLbl158 %>"><%= _catLbl158 %></span><% } %>
       <%# সেশন ১১০-মার্জ: আনুমানিক পড়ার-সময় (decorateFeed-গণিত) — স্লিম চিপ (সেশন ১৪৭: toBn-চুক্তি) %>
       <% if (item.read_mins) { %>
         <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= toBn(item.read_mins) %> মিনিট</span>
