@@ -575,6 +575,34 @@
 @media (prefers-reduced-motion:reduce){
   .lf-og-in147{animation:none}
 }
+/* ═══════════ session150: og-card rx-badge → reactors-modal (a11y-safe) ═══════════
+   wrap-ভাই কাঠামো — ব্যাজ-বাটন অ্যাঙ্করের বাইরে (a>button-nesting-নিষিদ্ধ — s147-সতর্কতা);
+   ব্যাজ কার্ডের নিচ-বাম কোণে অর্ধ-ভাসমান (FB-প্রিভিউ-প্যারিটি) + ফোকাস-রিং + hover-lift */
+.lf-og-wrap150{display:block;position:relative;min-width:0;max-width:100%}
+.fc-bubble .lf-og-wrap150,.feed-card-body .lf-og-wrap150,.article-body .lf-og-wrap150{max-width:100%}
+/* অর্ধ-ভাসমান ব্যাজের জন্য নিচে সংরক্ষণ (টেক্সট-সংঘর্ষ-শূন্য) — :has() না-থাকলে ক্ষতি-শূন্য */
+.lf-og-wrap150:has(.lf-og-rx-btn150){padding-bottom:11px;margin-bottom:3px}
+.lf-og-rx-btn150{
+  position:absolute;left:10px;bottom:-1px;z-index:1;
+  appearance:none;-webkit-appearance:none;font-family:inherit;line-height:1.2;
+  cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.10);
+  transition:transform .16s ease,background-color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.lf-og-rx-btn150:hover{
+  background:var(--lf-brand-light);border-color:var(--lf-brand-primary);
+  color:var(--lf-brand-primary);transform:translateY(-2px);
+  box-shadow:0 3px 8px rgba(0,0,0,.14);
+}
+.lf-og-rx-btn150:active{transform:scale(.95);box-shadow:0 1px 2px rgba(0,0,0,.10)}
+.lf-og-rx-btn150:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:2px}
+.lf-og-wrap150:hover .lf-og-rx{border-color:var(--lf-brand-primary)}
+@media (max-width:480px){
+  .lf-og-rx-btn150{left:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  .lf-og-rx-btn150,.lf-og-rx-btn150:hover,.lf-og-rx-btn150:active{transition:none;transform:none}
+}
+/* EOF-MARKER: session150-ogcard-rx-open */
 /* EOF-MARKER: session147-og-faces-article-mount-ext-fav */
 
 /* ═══ session147-ব্লক: FB-নেস্টেড শেয়ার-কার্ড + মন্তব্য-সহ-শেয়ার শিট ═══════════

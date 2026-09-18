@@ -1738,37 +1738,62 @@
     return (typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(href) : href.replace(/"/g, '');
   }
 
+  /* সেশন ১৫০: og-কার্ড rx-ব্যাজ → reactors-modal — href-থেকে টার্গেট-রেজলুশন
+     (routes/social.js _LPV_RE139-এর ক্লায়েন্ট-মিরর): কমেন্ট-অ্যাঙ্কর (#fc-cN/#cN)
+     → comment, আর্টিকেল/প্রশ্ন → post; resources-এ rx-পেলোডই নেই (likes-সারফেস-শূন্য)। */
+  function _ogRxTarget150(href) {
+    var h150 = String(href || '');
+    var m150 = /#(?:fc-)?c(\d+)\s*$/.exec(h150);
+    if (m150) return { type: 'comment', id: m150[1] };
+    m150 = /^\/articles\/(\d+)/.exec(h150) || /^\/(?:qa|questions)\/(\d+)/.exec(h150);
+    if (m150) return { type: 'post', id: m150[1] };
+    return null;
+  }
+
   /* সেশন ১৪৭: og-কার্ড reactor-faces — FB-প্রিভিউ-ফেসপাইল-প্যারিটি (session146-ব্যাকলগ ②)।
      অ্যাভস্ট্যাক (সর্বশেষ ৩ রিঅ্যাক্টর + শীর্ষ-ইমোজি-বাবল) + বাংলা-মোট; ফেস-পেলোড
-     অনুপস্থিতে ১৪৩-পিল-ফলব্যাক (পুরনো-ক্যাশ/আগের-সার্ভার-সামঞ্জস্য)। */
-  function lfOgRxHtml147(c) {
+     অনুপস্থিতে ১৪৩-পিল-ফলব্যাক (পুরনো-ক্যাশ/আগের-সার্ভার-সামঞ্জস্য)।
+     সেশন ১৫০: ব্যাজ এখন বাস্তব-বাটন (data-rx-open/data-rx-id চুক্তি — session108
+     ডেলিগেশন + openReactorsModal)। a>button interactive-nesting-নিষিদ্ধ বলে
+     lpvCardHtml139 এটিকে অ্যাঙ্করের বাইরে (wrap-ভাই) রেন্ডার করে — s147-সতর্কতার
+     চূড়ান্ত-সমাধান; টার্গেট-অরিজল্ভেবল হলে পুরনো নিরীহ-স্প্যান (পুরনো-ক্যাশ-সামঞ্জস্য)। */
+  function lfOgRxHtml147(c, href150) {
     if (!c.rx_total) return '';
     var faces147 = (c.rx_faces && c.rx_faces.length) ? c.rx_faces : [];
+    var tgt150 = _ogRxTarget150(href150);
+    var attrs150 = tgt150 ? (' data-rx-open="' + tgt150.type + '" data-rx-id="' + esc(tgt150.id) + '"') : '';
     if (!faces147.length) {
-      return '<span class="lf-og-rx" title="প্রতিক্রিয়া"><span class="lf-og-rx-faces" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' + esc(c.rx_total) + '</span>';
+      var pill150 = '<span class="lf-og-rx-faces" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' + esc(c.rx_total);
+      if (!tgt150) return '<span class="lf-og-rx" title="প্রতিক্রিয়া">' + pill150 + '</span>';
+      return '<button type="button" class="lf-og-rx lf-og-rx-btn150" title="প্রতিক্রিয়া: ' + esc(c.rx_total) + '"' + attrs150 + ' aria-label="প্রতিক্রিয়া দেখুন — ' + esc(c.rx_total) + ' জন">' + pill150 + '</button>';
     }
     var avs147 = faces147.map(function (f) {
       return '<img class="lf-og-rx-av" src="' + esc(f.a) + '" alt="" loading="lazy" onerror="this.remove()">';
     }).join('');
-    return '<span class="lf-og-rx lf-og-rx147" title="প্রতিক্রিয়া: ' + esc(c.rx_total) + '">' +
-      '<span class="lf-og-rx-avstack">' + avs147 +
-        '<span class="lf-og-rx-emb" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' +
-      '</span><span class="lf-og-rx-count">' + esc(c.rx_total) + '</span></span>';
+    var inner150 = '<span class="lf-og-rx-avstack">' + avs147 +
+      '<span class="lf-og-rx-emb" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' +
+      '</span><span class="lf-og-rx-count">' + esc(c.rx_total) + '</span>';
+    if (!tgt150) return '<span class="lf-og-rx lf-og-rx147" title="প্রতিক্রিয়া: ' + esc(c.rx_total) + '">' + inner150 + '</span>';
+    return '<button type="button" class="lf-og-rx lf-og-rx147 lf-og-rx-btn150" title="প্রতিক্রিয়া: ' + esc(c.rx_total) + '"' + attrs150 + ' aria-label="প্রতিক্রিয়া দেখুন — ' + esc(c.rx_total) + ' জন">' + inner150 + '</button>';
   }
 
   function lpvCardHtml139(href, c) {
     var thumb = c.thumb
       ? '<span class="lf-og-thumb"><img src="' + esc(c.thumb) + '" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'lf-og-noimg\');this.remove()"></span>'
       : '<span class="lf-og-thumb lf-og-noimg"><i class="fas ' + esc(c.icon || 'fa-link') + '" aria-hidden="true"></i></span>';
-    return '<a class="lf-ogcard" href="' + esc(href) + '" target="_blank" rel="noopener nofollow">' + thumb +
-      '<span class="lf-og-main">' +
-        '<span class="lf-og-domain"><i class="fas fa-globe" aria-hidden="true"></i> লেখক ফোরাম · ' + esc(c.label || 'লিংক') + '</span>' +
-        '<span class="lf-og-title">' + esc(c.title || '') + '</span>' +
-        (c.desc ? '<span class="lf-og-desc">' + esc(c.desc) + '</span>' : '') +
-        (c.meta ? '<span class="lf-og-meta">' + esc(c.meta) + '</span>' : '') +
-        /* সেশন ১৪৩+১৪৭: rx-ব্যাজ — টার্গেট-কনটেন্টের রিঅ্যাকশন-সত্য (likes-টেবিল); ১৪৭-এ reactor-faces */
-        lfOgRxHtml147(c) +
-      '</span></a>';
+    /* সেশন ১৫০: wrap-ভাই কাঠামো — rx-ব্যাজ-বাটন অ্যাঙ্করের বাইরে (a>button-nesting-নিষিদ্ধ);
+       data-lpv-u/lf-og-loading এখন wrap-এ (guard-সিলেক্টর .lf-og-wrap150);
+       ১৪৩+১৪৭: rx-ব্যাজ = টার্গেট-কনটেন্টের রিঅ্যাকশন-সত্য (likes-টেবিল) + reactor-faces */
+    return '<span class="lf-og-wrap150">' +
+      '<a class="lf-ogcard" href="' + esc(href) + '" target="_blank" rel="noopener nofollow">' + thumb +
+        '<span class="lf-og-main">' +
+          '<span class="lf-og-domain"><i class="fas fa-globe" aria-hidden="true"></i> লেখক ফোরাম · ' + esc(c.label || 'লিংক') + '</span>' +
+          '<span class="lf-og-title">' + esc(c.title || '') + '</span>' +
+          (c.desc ? '<span class="lf-og-desc">' + esc(c.desc) + '</span>' : '') +
+          (c.meta ? '<span class="lf-og-meta">' + esc(c.meta) + '</span>' : '') +
+        '</span></a>' +
+      lfOgRxHtml147(c, href) +
+    '</span>';
   }
 
   /* সেশন ১৪৩: এক্সটার্নাল domain-chip — এক্সটার্নাল-লিংকের ক্লায়েন্ট-সাইড প্রিভিউ
@@ -1800,10 +1825,11 @@
 
   function lpvMount139(bubble, href, j, atEl147) {
     if (!bubble || !bubble.isConnected) return;
-    /* বাস্তব-কার্ড-গার্ড — লোডিং-প্লেসহোল্ডার বাদ (নইলে নিজের-শিমার-দেখে ফেরত!) */
-    if (bubble.querySelector('.lf-ogcard:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
-    var loading = bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]') ||
-                  bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u]');
+    /* বাস্তব-কার্ড-গার্ড — লোডিং-প্লেসহোল্ডার বাদ (নইলে নিজের-শিমার-দেখে ফেরত!)
+       সেশন ১৫০: কার্ড-এখন wrap-রুটেড — guard .lf-og-wrap150-তে */
+    if (bubble.querySelector('.lf-og-wrap150:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
+    var loading = bubble.querySelector('.lf-og-wrap150.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]') ||
+                  bubble.querySelector('.lf-og-wrap150.lf-og-loading[data-lpv-u]');
     if (loading) loading.remove();
     if (!j || !j.ok || !j.card) return;
     var tmp = document.createElement('div');
@@ -1818,15 +1844,16 @@
   }
 
   function lpvFetch139(bubble, href, atEl147) {
-    /* বাস্তব-কার্ড-গার্ড (লোডিং বাদ) — পুনঃ-স্ক্যানে দ্বৈত-কার্ড-নিষিদ্ধ */
-    if (bubble.querySelector('.lf-ogcard:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
+    /* বাস্তব-কার্ড-গার্ড (লোডিং বাদ) — পুনঃ-স্ক্যানে দ্বৈত-কার্ড-নিষিদ্ধ (s150: wrap-রুটেড) */
+    if (bubble.querySelector('.lf-og-wrap150:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
     if (LPV_CACHE139[href]) { lpvMount139(bubble, href, { ok: true, card: LPV_CACHE139[href] }, atEl147); return; }
-    if (bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]')) return; /* ইন-ফ্লাইট */
+    if (bubble.querySelector('.lf-og-wrap150.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]')) return; /* ইন-ফ্লাইট */
     var loadHtml147 =
-      '<span class="lf-ogcard lf-og-loading" data-lpv-u="' + esc(href) + '" aria-hidden="true">' +
-        '<span class="lf-og-thumb"></span><span class="lf-og-main">' +
-          '<span class="lf-og-domain">&nbsp;</span><span class="lf-og-title">&nbsp;</span><span class="lf-og-desc">&nbsp;</span>' +
-        '</span></span>';
+      '<span class="lf-og-wrap150 lf-og-loading" data-lpv-u="' + esc(href) + '" aria-hidden="true">' +
+        '<span class="lf-ogcard lf-og-loading">' +
+          '<span class="lf-og-thumb"></span><span class="lf-og-main">' +
+            '<span class="lf-og-domain">&nbsp;</span><span class="lf-og-title">&nbsp;</span><span class="lf-og-desc">&nbsp;</span>' +
+          '</span></span></span>';
     if (atEl147 && atEl147.isConnected) atEl147.insertAdjacentHTML('afterend', loadHtml147);
     else bubble.insertAdjacentHTML('beforeend', loadHtml147);
     fetch('/api/link-preview?u=' + encodeURIComponent(href))
@@ -1836,7 +1863,7 @@
         lpvMount139(bubble, href, j, atEl147);
       })
       .catch(function () {
-        var l = bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]');
+        var l = bubble.querySelector('.lf-og-wrap150.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]');
         if (l) l.remove();
       });
   }

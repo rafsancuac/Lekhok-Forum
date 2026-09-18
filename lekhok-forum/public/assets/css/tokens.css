@@ -418,3 +418,43 @@ html { background: var(--lf-ui-canvas); }
   --lf-dlx-slate: #475569;
 }
 /* EOF-MARKER: session147-dir-launcher-tokens */
+
+/* ═════════ session150-auth-gallery-calls-bookmarks-ratchet — auth/gallery/calls/bookmarks.css র্যাচেট-ওয়েভ-৫ (patch139/144-রীতি) ═════════════
+   উৎপত্তি: ৪-ফাইল-অবশিষ্ট হেক্সের exact-value টোকেনাইজেশন — ভিজ্যুয়াল-পরিবর্তন-শূন্য।
+   নামকরণ-সততা (session143-রীতি): call-danger-soft ×৪ + wa-পরিবার + navy-deep-3
+   (navy-deep-2 #0B1121 ভিন্ন-মান); per-নাম defs=১ যাচাইকৃত। ═════════════ */
+:root:root {
+  --lf-slate-800: #1E293B;
+  --lf-neutral-50: #FAFAFA;
+  --lf-gray-ice: #ECEFF4;
+  --lf-blue-900: #1E3A8A;
+  --lf-red-500: #EF4444;
+  --lf-emerald-400: #34D399;
+  --lf-emerald-900: #064E3B;
+  --lf-green-950: #04251C;
+  --lf-green-soft: #D1E7DC;
+  --lf-green-muted: #7FA893;
+  --lf-green-muted-2: #5FA98C;
+  --lf-green-placeholder: #7E9C8E;
+  --lf-green-tint: #EAFAF1;
+  --lf-green-50: #F0FDF4;
+  --lf-call-danger: #E4405F;
+  --lf-call-danger-strong: #FF5B78;
+  --lf-call-danger-soft: #FF8FA6;
+  --lf-call-danger-soft-2: #FF8DA1;
+  --lf-call-danger-soft-3: #FF8FA9;
+  --lf-call-danger-soft-4: #FFD9DF;
+  --lf-wa-bg-deep: #0B141A;
+  --lf-wa-panel: #111B21;
+  --lf-wa-panel-2: #1F2C34;
+  --lf-wa-bubble: #2A3942;
+  --lf-wa-text: #E9EDEF;
+  --lf-wa-muted: #8696A0;
+  --lf-wa-video-bg: #10181D;
+  --lf-wa-thumb-bg: #0B1117;
+  --lf-wa-stage: #0F1C14;
+  --lf-call-green-ink: #04231A;
+  --lf-call-navy-top: #0B1528;
+  --lf-call-navy-bottom: #132238;
+  --lf-navy-deep-3: #131B2F;
+}

@@ -40,7 +40,13 @@ const escH = (s) => String(s || '')
      পাস-২: সব-অ্যাঙ্কর-গার্ড সহ @ম্যানশন/#ট্যাগ (URL/লিংক-টেক্সটে হাত-না-দেওয়া)। */
 const _anchorSplit139 = /(<a\s[^>]*>[^<]*<\/a>)/g;
 function _bareUrlPass(seg) {
-  return seg.replace(/(^|[\s(])(https?:\/\/[^\s<>()\[\]]+)/g, function (_m, pre, url) {
+  /* সেশন ১৫০: অভ্যন্তরীণ-বেয়ার-পাথ যোগ (s142-① চুক্তি-সমাপ্তি) — /articles|qa|questions|
+     resources/N — client og-ইঞ্জিনের LPV_INTERNAL_RE139-মিরর; strict-path (অঙ্ক-শেষ)
+     বলে href-esc-ঝুঁকি-শূন্য (কোট/স্পেস ম্যাচই করতে পারে না); same-tab (FB-প্যারিটি) */
+  return seg.replace(/(^|[\s(])(https?:\/\/[^\s<>()\[\]]+|\/(?:articles|qa|questions|resources)\/\d+)(?=$|[\s)|.,;:!?…।])/g, function (_m, pre, url) {
+    if (/^\/(?:articles|qa|questions|resources)\/\d+$/.test(url)) {
+      return pre + '<a href="' + url + '" class="a-link">' + url + '</a>';
+    }
     const trail = url.match(/[.,;:!?…।]+$/);
     const core = trail ? url.slice(0, url.length - trail[0].length) : url;
     return pre + '<a href="' + core + '" class="a-link" target="_blank" rel="noopener nofollow">' + core + '</a>' + (trail ? trail[0] : '');
@@ -255,9 +261,11 @@ function plainWithLinks(raw, maxLen) {
   }
   /* ২. মার্কডাউন-লিংক → টেক্সট (plainText-মিরর) */
   s = s.replace(/\[([^\]]+)\]\(\s*(?:https?:\/\/|\/)[^\s)"]*\s*\)/g, '$1');
-  /* ৩. খালি-URL রক্ষা → মার্কার-স্ট্রিপ (URL-মুক্ত টেক্সটে — নিরাপদ) */
+  /* ৩. খালি-URL রক্ষা → মার্কার-স্ট্রিপ (URL-মুক্ত টেক্সটে — নিরাপদ)
+     সেশন ১৫০: অভ্যন্তরীণ-বেয়ার-পাথ যোগ (_bareUrlPass-১৫০-মিরর — s142-① সমাপ্তি);
+     lookahead-বাউন্ডারি — ট্রেলিং-পাংচুয়েশন href-বাইরে (১৪৩-ট্রেইল-স্ট্রিপ-সমতুল্য-ফল) */
   const urls143 = [];
-  s = s.replace(/(^|[\s(])(https?:\/\/[^\s<>()\[\]]+)/g, function (_m, pre, url) {
+  s = s.replace(/(^|[\s(])(https?:\/\/[^\s<>()\[\]]+|\/(?:articles|qa|questions|resources)\/\d+)(?=$|[\s)|.,;:!?…।])/g, function (_m, pre, url) {
     urls143.push(url);
     return pre + '\u0000' + (urls143.length - 1) + '\u0000';
   });
@@ -274,11 +282,14 @@ function plainWithLinks(raw, maxLen) {
     .replace(/\s+/g, ' ')
     .trim();
   /* ৪. এস্কেপ-ফার্স্ট, তারপর প্লেসহোল্ডার → অ্যাঙ্কর (ট্রেলিং-পাংচুয়েশন-স্ট্রিপ —
-     inlineMd-_bareUrlPass-মিরর) */
+     inlineMd-_bareUrlPass-মিরর); সেশন ১৫০: অভ্যন্তরীণ-পাথে same-tab + target-শূন্য */
   s = escH(s).replace(/\u0000(\d+)\u0000/g, function (_m, idx) {
     const url = String(urls143[Number(idx)] || '');
     const trail = url.match(/[.,;:!?…।]+$/);
     const core = trail ? url.slice(0, url.length - trail[0].length) : url;
+    if (/^\/(?:articles|qa|questions|resources)\/\d+$/.test(core)) {
+      return '<a href="' + core + '" class="a-link">' + core + '</a>' + (trail ? trail[0] : '');
+    }
     return '<a href="' + escH(core) + '" class="a-link" target="_blank" rel="noopener nofollow">' + escH(core) + '</a>' + (trail ? trail[0] : '');
   });
   return s;

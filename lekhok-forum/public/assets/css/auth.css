@@ -4,13 +4,13 @@
    ========================================================================== */
 
 :root{
-  --bg-main:#0B1121; --bg-secondary:#131B2F;
-  --brand:#0a1f44; --brand-light:#1E3A8A; --brand-text:#0B1121;
-  --accent:#059669; --accent-light:#047857; --accent-dark:#047857;
+  --bg-main:var(--lf-navy-deep-2); --bg-secondary:var(--lf-navy-deep-3);
+  --brand:var(--lf-navy); --brand-light:var(--lf-blue-900); --brand-text:var(--lf-navy-deep-2);
+  --accent:var(--lf-ok); --accent-light:var(--lf-ok-deep); --accent-dark:var(--lf-ok-deep);
   --accent-soft:rgba(5,150,105,0.12); --accent-glow:rgba(5,150,105,0.30);
-  --on-accent:#ffffff;
-  --text:#1e293b; --text-muted:#64748b; --border:#e2e8f0;
-  --bg:#f8fafc; --card:#ffffff; --surface-alt:rgba(15,23,42,0.04);
+  --on-accent:var(--lf-white);
+  --text:var(--lf-slate-800); --text-muted:var(--lf-slate); --border:var(--lf-slate-soft-3);
+  --bg:var(--lf-slate-soft); --card:var(--lf-white); --surface-alt:rgba(15,23,42,0.04);
   --radius-sm:5px; --radius:5px;
   --shadow:0 4px 6px -1px rgba(0,0,0,0.3),0 2px 4px -1px rgba(0,0,0,0.25);
   --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.45),0 10px 10px -5px rgba(0,0,0,0.35);
@@ -23,7 +23,7 @@ body{
   background:
     radial-gradient(ellipse at top right, rgba(5,150,105,.12), transparent 55%),
     radial-gradient(ellipse at bottom left, rgba(30,58,138,.07), transparent 55%),
-    linear-gradient(135deg, #f8fafc 0%, #eafaf1 100%);
+    linear-gradient(135deg, var(--lf-slate-soft) 0%, var(--lf-green-tint) 100%);
   min-height:100vh;
   display:flex;
   padding:32px 20px;
@@ -31,13 +31,13 @@ body{
 
 /* ডার্ক-থিমে নেটিভ উইজেট */
 input,select,textarea,button{color-scheme:light}
-input[type=checkbox],input[type=radio]{accent-color:#059669}
+input[type=checkbox],input[type=radio]{accent-color:var(--lf-ok)}
 input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 
 /* স্ট্যাবল সেন্টারিং: ছোট হলে দুই অক্ষে কেন্দ্রে; কার্ড লম্বা হলে (রেজিস্ট্রেশন)
    auto-margin শূন্য হয়ে উপরে লেগে যায় — স্ক্রলে উপরের অংশ আর কাটা পড়ে না। */
 .auth-card{
-  background:#fff;
+  background:var(--lf-white);
   border:1px solid rgba(5,150,105,.22);
   border-radius:var(--radius);
   padding:40px 36px;
@@ -63,7 +63,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 .auth-logo{
   width:42px; height:42px; border-radius:50%;
   display:inline-flex; align-items:center; justify-content:center;
-  color:#fff; font-size:18px;
+  color:var(--lf-white); font-size:18px;
   background:linear-gradient(135deg, var(--accent), var(--brand));
   box-shadow:0 5px 14px var(--accent-glow);
 }
@@ -74,18 +74,18 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 .auth-card h1{ text-align:center; color:var(--brand-text); margin-bottom:6px; }
 
 /* ── এরর / সাকসেস ── */
-/* সেশন ৬৮: লাইট-থিম-কনট্রাস্ট-ফিক্স — #FCA5A5/#6EE7B7 ছিল ডার্ক-ব্যাকগ্রাউন্ডের
+/* সেশন ৬৮: লাইট-থিম-কনট্রাস্ট-ফিক্স — var(--lf-rose-200)/var(--lf-emerald-300) ছিল ডার্ক-ব্যাকগ্রাউন্ডের
    লাইট-টেক্সট; সাদা auth-card-এ ~২:১ অপাঠ্য হয়ে যেত (৮টি ভিউয়ের error-বক্স!)। */
 .error{
-  background:#fef2f2; color:#b91c1c;
+  background:var(--lf-danger-soft); color:var(--lf-danger-deep);
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
   border:1px solid rgba(220,38,38,.35);
   display:flex; align-items:center; gap:8px; line-height:1.5;
 }
-.error i{ flex:0 0 auto; color:#dc2626; }
+.error i{ flex:0 0 auto; color:var(--lf-danger); }
 .success{
-  background:#ecfdf5; color:#047857;
+  background:var(--lf-ok-soft); color:var(--lf-ok-deep);
   padding:11px 14px; border-radius:var(--radius-sm);
   margin-bottom:18px; font-size:.9rem;
   border:1px solid rgba(5,150,105,.38);
@@ -94,22 +94,22 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 
 /* ── ফর্ম ── */
 .form-group{ margin-bottom:16px; }
-.form-group label{ display:block; margin-bottom:7px; color:#334155; font-weight:600; font-size:.86rem; }
+.form-group label{ display:block; margin-bottom:7px; color:var(--lf-slate-deep); font-weight:600; font-size:.86rem; }
 .form-group input, .form-group select, .form-group textarea{
   width:100%; padding:11px 14px;
   border:1.5px solid var(--border); border-radius:var(--radius-sm);
-  font-family:inherit; font-size:1rem; color:#1e293b; background:#fff;
+  font-family:inherit; font-size:1rem; color:var(--lf-slate-800); background:var(--lf-white);
   transition:border-color .15s, box-shadow .15s;
 }
-.form-group input::placeholder{ color:#7E9C8E; }
+.form-group input::placeholder{ color:var(--lf-green-placeholder); }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{
-  outline:none; border-color:#059669; box-shadow:0 0 0 3px rgba(5,150,105,.16);
+  outline:none; border-color:var(--lf-ok); box-shadow:0 0 0 3px rgba(5,150,105,.16);
 }
 /* এরর স্টেট (ভ্যালিডেশন/সার্ভার এরর হলে) */
 .form-group.has-error input,
 .form-group.has-error select,
 .form-group.has-error textarea{
-  border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.12);
+  border-color:var(--lf-red-500); box-shadow:0 0 0 3px rgba(239,68,68,.12);
 }
 
 .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -121,12 +121,12 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 }
 
 /* ── সেকশন-গ্রুপিং (রেজিস্ট্রেশন UX) ── */
-.auth-section-title i{color:#059669}
+.auth-section-title i{color:var(--lf-ok)}
 
 /* ── প্রাইমারি বাটন (সাইটের accent-gradient প্রাইমারির সাথে হুবহু) ── */
 .btn-primary{
   width:100%; padding:12px;
-  background:linear-gradient(135deg, #059669, #047857);
+  background:linear-gradient(135deg, var(--lf-ok), var(--lf-ok-deep));
   color:var(--on-accent); border:none; border-radius:var(--radius-sm);
   font-family:inherit; font-size:1rem; font-weight:800;
   cursor:pointer; margin-top:6px;
@@ -135,7 +135,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
   transition:transform .15s, box-shadow .15s, filter .15s;
 }
 .btn-primary:hover{
-  background:linear-gradient(135deg, #047857, #059669);
+  background:linear-gradient(135deg, var(--lf-ok-deep), var(--lf-ok));
   transform:translateY(-2px); box-shadow:0 8px 26px rgba(16,185,129,.45);
 }
 .btn-primary:active{ transform:translateY(0); box-shadow:0 2px 8px rgba(16,185,129,.3); }
@@ -143,15 +143,15 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:none}
 /* ── নিচের লিংক ── */
 .auth-foot{ text-align:center; margin-top:22px; color:var(--text-muted); font-size:.92rem; }
 .auth-foot a{ color:var(--accent); font-weight:700; }
-.auth-foot a:hover{ color:#047857; text-decoration:underline; }
+.auth-foot a:hover{ color:var(--lf-ok-deep); text-decoration:underline; }
 
 .checkbox-group{ display:flex; align-items:center; gap:8px; margin:8px 0; }
-.checkbox-group input{ width:auto; accent-color:#059669; }
-.checkbox-group label{ margin:0; font-weight:400; color:#475569; }
+.checkbox-group input{ width:auto; accent-color:var(--lf-ok); }
+.checkbox-group label{ margin:0; font-weight:400; color:var(--lf-slate-mid); }
 
-.char-counter{ text-align:right; font-size:12px; color:#64748b; margin-top:4px; padding:0 4px; transition:color .2s; }
-.char-counter.is-warn{ color:#b45309; font-weight:600; }
-.char-counter.is-error{ color:#dc2626; font-weight:700; }
+.char-counter{ text-align:right; font-size:12px; color:var(--lf-slate); margin-top:4px; padding:0 4px; transition:color .2s; }
+.char-counter.is-warn{ color:var(--lf-soon-amber); font-weight:600; }
+.char-counter.is-error{ color:var(--lf-danger); font-weight:700; }
 
 /* ==========================================================================
    সেশন ৫৬ — "Confident Split" (split-screen ৪৫:৫৫) — শুধু body.auth-split-স্কোপড
@@ -164,7 +164,7 @@ body.auth-split{
   display:block;
   min-height:100vh;
   padding:0;
-  background:#FAFAFA;
+  background:var(--lf-neutral-50);
 }
 .as-shell{
   display:grid;
@@ -181,11 +181,11 @@ body.auth-split{
   justify-content:space-between;
   gap:28px;
   padding:52px 44px;
-  color:#1e293b;
+  color:var(--lf-slate-800);
   background:
     radial-gradient(ellipse at 18% -8%, rgba(5,150,105,0.16), transparent 58%),
     repeating-linear-gradient(115deg, rgba(15,23,42,0.03) 0 1px, transparent 1px 26px),
-    linear-gradient(160deg, #ffffff 0%, #f0fdf7 58%, #e6f7ef 100%);
+    linear-gradient(160deg, var(--lf-white) 0%, var(--lf-read-tint) 58%, var(--lf-read-tint-deep) 100%);
   overflow:hidden;
 }
 .as-brand::after{ /* সূক্ষ্ম কোণা-জ্যামিতি */
@@ -198,33 +198,33 @@ body.auth-split{
 .as-logo{
   width:46px; height:46px; border-radius:12px;
   display:inline-flex; align-items:center; justify-content:center;
-  color:#fff; font-size:19px;
+  color:var(--lf-white); font-size:19px;
   background:linear-gradient(135deg, var(--accent), var(--accent-dark));
   box-shadow:0 6px 18px rgba(5,150,105,0.30);
 }
 .as-brand-name{
   font-family:var(--font-heading);
-  font-weight:700; font-size:1.12rem; color:#0B1121; letter-spacing:.3px;
+  font-weight:700; font-size:1.12rem; color:var(--lf-navy-deep-2); letter-spacing:.3px;
 }
 .as-brand-mid{ position:relative; }
 .as-eyebrow{
   font-family:var(--font-body);
   font-size:.82rem; font-weight:700; letter-spacing:1.5px;
-  color:#047857; margin-bottom:10px;
+  color:var(--lf-ok-deep); margin-bottom:10px;
 }
 .as-tagline{
   font-family:var(--font-heading);
   font-size:1.62rem; font-weight:700; line-height:1.32;
-  color:#0B1121; margin:0 0 12px;
+  color:var(--lf-navy-deep-2); margin:0 0 12px;
 }
 .as-intro{
   font-family:var(--font-body);
   font-size:.9rem; line-height:1.7;
-  color:#475569;
+  color:var(--lf-slate-mid);
   max-width:34ch; margin:0;
 }
 .as-brand-bottom{
-  font-size:.78rem; color:#64748b; letter-spacing:.4px;
+  font-size:.78rem; color:var(--lf-slate); letter-spacing:.4px;
 }
 
 /* ── ডান ফর্ম-প্যানেল ── */
@@ -232,7 +232,7 @@ body.auth-split{
   display:flex;
   padding:40px 24px;
   overflow-y:auto;
-  background:#FAFAFA;
+  background:var(--lf-neutral-50);
 }
 .as-form-card{
   margin:auto;               /* স্ট্যাবল সেন্টারিং (সেশন ৫৪-নীতি): ছোট হলে কেন্দ্রে, লম্বা হলে উপরে */
@@ -263,7 +263,7 @@ body.auth-split .back-home{
 /* ── ট্যাব (লগইন | আইডি খুঁজুন) ── */
 .as-tabs{
   display:grid; grid-template-columns:1fr 1fr; gap:4px;
-  background:#eceff4; padding:4px;
+  background:var(--lf-gray-ice); padding:4px;
   border:1px solid rgba(15,23,42,.1);
   border-radius:10px; margin-bottom:24px;
 }
@@ -274,9 +274,9 @@ body.auth-split .back-home{
   color:var(--text-muted);
   transition:background .15s, color .15s, box-shadow .15s;
 }
-.as-tab:hover{ color:#1e293b; }
+.as-tab:hover{ color:var(--lf-slate-800); }
 .as-tab.is-active{
-  background:#ffffff; color:#047857;
+  background:var(--lf-white); color:var(--lf-ok-deep);
   box-shadow:inset 0 0 0 1px rgba(5,150,105,.4);
 }
 .as-tab:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
@@ -289,45 +289,45 @@ body.auth-split .back-home{
 .ff input{
   width:100%; padding:24px 14px 8px;
   border:1.5px solid var(--border); border-radius:8px;
-  font-family:var(--font-body); font-size:1rem; color:#1e293b; background:#fff;
+  font-family:var(--font-body); font-size:1rem; color:var(--lf-slate-800); background:var(--lf-white);
   transition:border-color .15s, box-shadow .15s, background .15s;
 }
-.ff input:hover{ border-color:#94a3b8; }
+.ff input:hover{ border-color:var(--lf-slate-soft-5); }
 .ff input:focus{
-  outline:none; border-color:#059669;
-  background:#fff;
+  outline:none; border-color:var(--lf-ok);
+  background:var(--lf-white);
   box-shadow:0 0 0 3px rgba(5,150,105,.16);
 }
 .ff label{
   position:absolute; left:14px; top:15px;
-  font-family:var(--font-body); font-size:.95rem; color:#64748b;
+  font-family:var(--font-body); font-size:.95rem; color:var(--lf-slate);
   pointer-events:none;
   transition:top .16s ease, font-size .16s ease, color .16s ease;
 }
 .ff input:focus ~ label,
 .ff input:not(:placeholder-shown) ~ label{
-  top:7px; font-size:.72rem; color:#047857; font-weight:700;
+  top:7px; font-size:.72rem; color:var(--lf-ok-deep); font-weight:700;
 }
 .ff.is-error input{
-  border-color:#F87171; box-shadow:0 0 0 3px rgba(248,113,113,.14);
+  border-color:var(--lf-danger-mid-2); box-shadow:0 0 0 3px rgba(248,113,113,.14);
 }
-.ff.is-error label{ color:#b91c1c; }
+.ff.is-error label{ color:var(--lf-danger-deep); }
 
 /* স্ট্যাটিক-লেবেল ভ্যারিয়েন্ট (select / date / file / textarea / readonly) */
 .ff-static label{
   display:block; margin-bottom:6px;
-  font-size:.8rem; font-weight:700; color:#334155;
+  font-size:.8rem; font-weight:700; color:var(--lf-slate-deep);
 }
 .ff-static input, .ff-static select, .ff-static textarea{
   width:100%; padding:11px 14px;
   border:1.5px solid var(--border); border-radius:8px;
-  font-family:var(--font-body); font-size:1rem; color:#1e293b; background:#fff;
+  font-family:var(--font-body); font-size:1rem; color:var(--lf-slate-800); background:var(--lf-white);
   transition:border-color .15s, box-shadow .15s, background .15s;
 }
-.ff-static input:hover, .ff-static select:hover, .ff-static textarea:hover{ border-color:#94a3b8; }
+.ff-static input:hover, .ff-static select:hover, .ff-static textarea:hover{ border-color:var(--lf-slate-soft-5); }
 .ff-static input:focus, .ff-static select:focus, .ff-static textarea:focus{
-  outline:none; border-color:#059669;
-  background:#fff;
+  outline:none; border-color:var(--lf-ok);
+  background:var(--lf-white);
   box-shadow:0 0 0 3px rgba(5,150,105,.16);
 }
 .ff-static select{
@@ -338,7 +338,7 @@ body.auth-split .back-home{
   padding-right:38px;
   cursor:pointer;
 }
-.ff-static select option{ background:#fff; color:#1e293b; }
+.ff-static select option{ background:var(--lf-white); color:var(--lf-slate-800); }
 .ff-static textarea{ resize:vertical; min-height:84px; }
 
 /* ── ফাইল-আপলোড (কাস্টম, ডার্ক) ── */
@@ -352,23 +352,23 @@ body.auth-split .back-home{
   border:1.5px dashed rgba(5,150,105,.45);
   background:rgba(5,150,105,.06);
   border-radius:8px; padding:13px 14px;
-  color:#475569; font-size:.88rem; line-height:1.5;
+  color:var(--lf-slate-mid); font-size:.88rem; line-height:1.5;
   transition:border-color .15s, background .15s;
   cursor:pointer;
 }
-.file-drop:hover{ border-color:#059669; background:rgba(5,150,105,.1); }
-.file-drop i{ color:#059669; font-size:1.15rem; }
-.file-drop .fd-name{ color:#1e293b; font-weight:600; }
+.file-drop:hover{ border-color:var(--lf-ok); background:rgba(5,150,105,.1); }
+.file-drop i{ color:var(--lf-ok); font-size:1.15rem; }
+.file-drop .fd-name{ color:var(--lf-slate-800); font-weight:600; }
 
 /* ── পাসওয়ার্ড শো/হাইড ── */
 .ff.has-toggle input{ padding-right:46px; }
 .pw-toggle{
   position:absolute; right:6px; top:50%; transform:translateY(-50%);
   background:none; border:none; cursor:pointer;
-  color:#94a3b8; padding:8px; border-radius:6px;
+  color:var(--lf-slate-soft-5); padding:8px; border-radius:6px;
   display:inline-flex; align-items:center; justify-content:center;
 }
-.pw-toggle:hover{ color:#059669; background:var(--accent-soft); }
+.pw-toggle:hover{ color:var(--lf-ok); background:var(--accent-soft); }
 .pw-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
 
 /* ── split-স্কোপে বাটন: কোনো transform-নয় (layout-shift-মুক্ত, কনসেপ্ট-নীতি) ── */
@@ -386,13 +386,13 @@ body.auth-split .btn-secondary{ border-radius:8px; }
   gap:10px; margin-top:14px; font-size:.86rem;
 }
 .as-row a{ color:var(--accent); font-weight:700; text-decoration:none; }
-.as-row a:hover{ color:#047857; text-decoration:underline; }
+.as-row a:hover{ color:var(--lf-ok-deep); text-decoration:underline; }
 .as-foot{
   text-align:center; margin-top:24px;
   color:var(--text-muted); font-size:.92rem;
 }
 .as-foot a{ color:var(--accent); font-weight:700; }
-.as-foot a:hover{ color:#047857; text-decoration:underline; }
+.as-foot a:hover{ color:var(--lf-ok-deep); text-decoration:underline; }
 
 /* ── বাটন লোডিং-স্টেট (সাইজ ফিক্সড) ── */
 .btn-primary.is-busy{ opacity:.85; pointer-events:none; }
@@ -406,7 +406,7 @@ body.auth-split .btn-secondary{ border-radius:8px; }
     background:
       radial-gradient(ellipse at 85% -30%, rgba(5,150,105,0.16), transparent 55%),
       repeating-linear-gradient(115deg, rgba(15,23,42,0.03) 0 1px, transparent 1px 26px),
-      linear-gradient(160deg, #ffffff 0%, #f0fdf7 58%, #e6f7ef 100%);
+      linear-gradient(160deg, var(--lf-white) 0%, var(--lf-read-tint) 58%, var(--lf-read-tint-deep) 100%);
   }
   .as-brand::after{ width:150px; height:150px; right:-55px; bottom:-95px; }
   .as-eyebrow{ margin-bottom:6px; font-size:.76rem; }
@@ -424,12 +424,12 @@ body.auth-split .btn-secondary{ border-radius:8px; }
 
 /* অটোফিল-ব্যাকআপ: JS is-filled ক্লাস দিলে লেবেল ভেসে থাকবে */
 .ff input.is-filled ~ label{
-  top:7px; font-size:.72rem; color:#047857; font-weight:700;
+  top:7px; font-size:.72rem; color:var(--lf-ok-deep); font-weight:700;
 }
 /* ক্রোম অটোফিলে হলুদ ব্যাকগ্রাউন্ড যেন না আসে */
 input:-webkit-autofill{
-  -webkit-box-shadow:0 0 0 1000px #fff inset;
-  -webkit-text-fill-color:#1e293b;
+  -webkit-box-shadow:0 0 0 1000px var(--lf-white) inset;
+  -webkit-text-fill-color:var(--lf-slate-800);
   transition:background-color 9999s ease-in-out 0s;
 }
 
@@ -437,16 +437,16 @@ input:-webkit-autofill{
 .reg-required-hint{
   display:flex; align-items:center; gap:9px;
   background:rgba(5,150,105,.08); border:1px dashed rgba(5,150,105,.35);
-  color:#475569; font-size:.84rem; line-height:1.5;
+  color:var(--lf-slate-mid); font-size:.84rem; line-height:1.5;
   padding:10px 14px; border-radius:8px; margin:-10px 0 18px;
 }
-.reg-required-hint i{color:#059669; flex:0 0 auto;}
-.reg-required-hint b{color:#047857;}
+.reg-required-hint i{color:var(--lf-ok); flex:0 0 auto;}
+.reg-required-hint b{color:var(--lf-ok-deep);}
 
 /* ── সেকশন-টাইটেল (রেজিস্ট্রেশন গ্রুপিং) ── */
 .auth-section-title{
   display:flex; align-items:center; gap:9px;
-  font-size:.92rem; font-weight:700; color:#0B1121;
+  font-size:.92rem; font-weight:700; color:var(--lf-navy-deep-2);
   margin:26px 0 14px; padding-bottom:9px;
   border-bottom:1px solid rgba(5,150,105,.22);
 }
@@ -458,17 +458,17 @@ input:-webkit-autofill{
   border-radius:8px; font-size:.8rem;
 }
 .opt-tag{
-  font-size:.68rem; font-weight:700; color:#64748b;
+  font-size:.68rem; font-weight:700; color:var(--lf-slate);
   background:rgba(15,23,42,.06); border:1px solid rgba(15,23,42,.14);
   padding:2px 8px; border-radius:99px; letter-spacing:.3px;
 }
 
 /* ── ফিল্ড-হিন্ট ── */
 .field-hint{
-  font-size:.76rem; color:#64748b; margin:-8px 0 14px;
+  font-size:.76rem; color:var(--lf-slate); margin:-8px 0 14px;
   display:flex; align-items:center; gap:6px; line-height:1.5;
 }
-.field-hint i{color:#047857; font-size:.72rem;}
+.field-hint i{color:var(--lf-ok-deep); font-size:.72rem;}
 
 /* ── পাসওয়ার্ড স্ট্রেংথ-মিটার ── */
 .pw-meter{margin:-6px 0 12px;}
@@ -478,44 +478,44 @@ input:-webkit-autofill{
 }
 .pw-meter-bar span{
   display:block; height:100%; width:0%;
-  border-radius:99px; background:#F87171;
+  border-radius:99px; background:var(--lf-danger-mid-2);
   transition:width .25s ease, background .25s ease;
 }
-.pw-meter.is-weak .pw-meter-bar span{width:33%; background:#F87171;}
-.pw-meter.is-mid  .pw-meter-bar span{width:66%; background:#FCD34D;}
-.pw-meter.is-ok   .pw-meter-bar span{width:100%; background:#059669;}
-.pw-meter-txt{font-size:.74rem; color:#64748b; margin-top:5px;}
-.pw-meter.is-weak .pw-meter-txt{color:#b91c1c;}
-.pw-meter.is-mid  .pw-meter-txt{color:#b45309;}
-.pw-meter.is-ok   .pw-meter-txt{color:#047857;}
+.pw-meter.is-weak .pw-meter-bar span{width:33%; background:var(--lf-danger-mid-2);}
+.pw-meter.is-mid  .pw-meter-bar span{width:66%; background:var(--lf-amber-300);}
+.pw-meter.is-ok   .pw-meter-bar span{width:100%; background:var(--lf-ok);}
+.pw-meter-txt{font-size:.74rem; color:var(--lf-slate); margin-top:5px;}
+.pw-meter.is-weak .pw-meter-txt{color:var(--lf-danger-deep);}
+.pw-meter.is-mid  .pw-meter-txt{color:var(--lf-soon-amber);}
+.pw-meter.is-ok   .pw-meter-txt{color:var(--lf-ok-deep);}
 
 /* ── char-counter (বায়ো) ── */
-.char-counter{margin-top:5px; color:#64748b;}
-.char-counter.is-warn{color:#b45309;}
+.char-counter{margin-top:5px; color:var(--lf-slate);}
+.char-counter.is-warn{color:var(--lf-soon-amber);}
 
 /* ── কলাপ্সিবল সোশ্যাল সেকশন ── */
 .social-details{margin:20px 0 6px;}
 .social-details summary{
   list-style:none; cursor:pointer;
   display:flex; align-items:center; gap:10px;
-  font-size:.92rem; font-weight:700; color:#0B1121;
+  font-size:.92rem; font-weight:700; color:var(--lf-navy-deep-2);
   padding:13px 16px; border-radius:10px;
-  background:#fff; border:1px solid rgba(255,255,255,.12);
+  background:var(--lf-white); border:1px solid rgba(255,255,255,.12);
   transition:background .15s, border-color .15s;
   user-select:none;
 }
 .social-details summary::-webkit-details-marker{display:none;}
 .social-details summary:hover{background:rgba(5,150,105,.08); border-color:rgba(5,150,105,.35);}
-.social-details summary i:first-child{color:#059669;}
+.social-details summary i:first-child{color:var(--lf-ok);}
 .social-details summary .chev{
-  margin-left:auto; font-size:.72rem; color:#64748b;
+  margin-left:auto; font-size:.72rem; color:var(--lf-slate);
   transition:transform .2s ease;
 }
 .social-details[open] summary .chev{transform:rotate(180deg);}
 .social-details-body{padding:14px 2px 2px;}
 
 /* ── ফাইল-ড্রপ ফাইলনেম ── */
-.file-drop .fd-name{color:#1e293b; font-weight:700;}
+.file-drop .fd-name{color:var(--lf-slate-800); font-weight:700;}
 .file-drop.is-loaded{
   border-style:solid; border-color:rgba(5,150,105,.6);
   background:rgba(5,150,105,.1);
@@ -538,12 +538,12 @@ input:-webkit-autofill{
 }
 .as-brand-points li{
   display:flex; align-items:center; gap:11px;
-  font-size:.86rem; color:#475569; line-height:1.5;
+  font-size:.86rem; color:var(--lf-slate-mid); line-height:1.5;
 }
 .as-brand-points li i{
   flex:0 0 30px; width:30px; height:30px;
   display:inline-flex; align-items:center; justify-content:center;
-  font-size:.78rem; color:#047857;
+  font-size:.78rem; color:var(--lf-ok-deep);
   background:rgba(5,150,105,.12); border:1px solid rgba(5,150,105,.3);
   border-radius:8px;
 }
@@ -558,8 +558,8 @@ body.auth-split .as-mfa{ text-align:left; }
   display:flex; align-items:center; justify-content:center;
   width:56px; height:56px; margin:4px auto 14px;
   border-radius:16px;
-  background:linear-gradient(135deg, #10b981, #047857);
-  color:#fff; font-size:1.35rem;
+  background:linear-gradient(135deg, var(--lf-emerald-500), var(--lf-ok-deep));
+  color:var(--lf-white); font-size:1.35rem;
   box-shadow:0 10px 26px rgba(5,150,105,.35);
   animation:mfaPop .5s cubic-bezier(.21,1.02,.73,1) both;
 }
@@ -638,8 +638,8 @@ body.auth-split .mfa-code-wrap label{
 @keyframes asBrandIn{ from{ opacity:0; } to{ opacity:1; } }
 
 /* ═══ সেশন ১১৫: ইমেইল-ওটিপি লগইন-চ্যালেঞ্জ — রিসেন্ড-নোট + কুলডাউন ═══ */
-.mfa-resend-note{display:flex;align-items:flex-start;gap:8px;background:#F0FDF4;border:1px solid #A7F3D0;color:#047857;border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.5;margin:0 0 12px}
-.mfa-resend-note.warn{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
+.mfa-resend-note{display:flex;align-items:flex-start;gap:8px;background:var(--lf-green-50);border:1px solid var(--lf-ok-soft-2);color:var(--lf-ok-deep);border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.5;margin:0 0 12px}
+.mfa-resend-note.warn{background:var(--lf-amber-soft);border-color:var(--lf-amber-soft-3);color:var(--lf-amber-deep)}
 .mfa-resend-note i{margin-top:2px}
 .mfa-alt form{display:block}
 #mfaResendBtn{width:100%;text-align:center}

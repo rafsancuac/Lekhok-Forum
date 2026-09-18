@@ -1815,3 +1815,25 @@ Work Log:
 Stage Summary:
 - messenger.css র্যাচেট-ওয়েভ-৪ সম্পন্ন (১৪৪→০; ৯-টোকেন); patch144 + canonical-অ্যাপটেড E2E রিপোতে
 - পরের-এজেন্ট: **session150** থেকে
+
+---
+Task ID: session150 (cron — স্টেটাস-অ্যাসেসমেন্ট → QA → ফিচার-রাউন্ড → push)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্যায়ন + agent-browser QA + ফিচার/স্টাইল রাউন্ড + হ্যান্ডওভার
+
+## Current Project Status / Assessment
+- প্রবেশ: origin/main @ 159eac3 + লোকাল-UUID-worklog-কমিট → rebase-ইউনিয়ন @ 186d52c (worklog ×২-দ্বি-UU union)
+- QA-ফেজ ALL GREEN: guard ✓ + role-policy ২৩৯/২৩৯ + cursor ২৬/২৬ + s132/s139/s144 ✓ + agent-browser ১৭-পেজ ২০০/কনসোল-০/390px ×১২-০ → বাগ-শূন্য → ফিচার-রাউন্ড
+- 🚨 বুট-গোটচা-পুনঃপ্রমাণ: sandbox-ব্যাকগ্রাউন্ড-সার্ভার Bash-কল-শেষে মৃত → প্রথম-স্যুট-রান 190-ফেইল (মৃত-সার্ভার-আর্টিফ্যাক্ট) — এক-কলে boot+test রীতি অপরিহার্য
+
+## Goals / Completed / Verification
+- **ফিচার-A og-কার্ড rx-ব্যাজ→reactors-modal (s147-①):** wrap-ভাই কাঠামো (a>button-nesting-নিষিদ্ধ-সমাধান) — comment-tools.js wrap150 (guard ×৭-সিলেক্টর-স্থানান্তর) + _ogRxTarget150 (comment|post) + data-rx-open-চুক্তি-বাটন + shared.css session150-ব্লক; openReactorsModal-সংযোগ-শূন্য
+- **ফিচার-B markdown-lite অভ্যন্তরীণ-বেয়ার-পাথ (s142-① সমাপ্তি — রাউন্ডে-আবিষ্কৃত):** plainWithLinks/_bareUrlPass — /articles|qa|questions|resources/N → a.a-link (lookahead-ট্রেলিং-বাউন্ডারি); তিন-সারফেস bare-লিংক→og-কার্ড→rx-ব্যাজ চেইন; unit ×৫
+- **ফিচার-C র্যাচেট-ওয়েভ-৫:** patch150-auth-gallery-ratchet.js — auth/gallery/calls/bookmarks ৩৬২→০ (নতুন-টোকেন ×৩৩; baseline-লক ×৪; per-নাম defs=১ অ্যাসার্টেড)
+- **latent-bug-সংস্কার:** ×১১-auth-ডকুমেন্ট tokens.css-লিংক-যোগ (প্রি-এক্সিস্টিং tokens-অনুপস্থিতি — র্যাচেটের পূর্বশর্ত; BEFORE/AFTER-computed-প্যারিটি-প্রমাণ: body #FAFAFA/brand-name/eyebrow/input-border হুবহু)
+- **চূড়ান্ত-রিগ্রেশন:** guard ✓ + role-policy **২৩৯/২৩৯** + cursor **২৭/২৭** + s132 ৩০/৩০ + s139 ২২/২২ + s144 ৩১/৩১ + s148 ২৩/২৩ + **s150 ২৯/২৯ (নতুন E2E)** + brace-০ + node --check ×৪ + 390px ×১২-০ + কনসোল-০ + স্ক্রিনশট ×৪ + টেস্ট-ক্লিনআপ ×১০-404-যাচাই
+
+## Unresolved Issues / Risks / Next Priorities
+- গোটচা ×৫ (PLANS session150-নোট): কমা-সিলেক্টর-তালিকায় suffix-শেষ-বিকল্পে-বাঁধে (বাটন-স্টেপে একক-সিলেক্টর — ৩-ঘণ্টা-ডিবাগ-মূল্য) · EJS-কমেন্টে nested `<%= %>`-বিস্ফোরণ · কমেন্ট-ভেতরে `*/`-প্রিফিক্স · synthetic KeyboardEvent-নিরীহ (playwright keyboard) · LPV-ক্যাশ-৫মি (cleanup-যাচাইয়ে নিষিদ্ধ)
+- প্রস্তাব-কিউ: style.css-র্যাচেট (১৩৯৫ — patch150-প্যাটার্ন-পুনঃব্যবহারযোগ্য) · feed.css ৮৮ + rich-editor ৬১ · member-accounts/premium/multi-image/shared-ছোট · কমেন্ট-অ্যাঙ্কর-og-কার্ড rx-ব্যাজ-লাইভ-টেস্ট · dropdown-paintList reltime (s134) · কল-ইতিহাস degrade-রেকর্ড (db)
+- **পরের-এজেন্ট: session151 থেকে**; push-পূর্বে git pull --rebase (union-মার্জ PLANS/PROJECT/worklog ×২)

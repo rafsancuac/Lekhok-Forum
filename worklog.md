@@ -1728,3 +1728,25 @@ Agent: Z.ai Cron Agent (webDevReview)
 ## পরের-প্রস্তাব (priority-order)
 ① style.css-র্যাচেট (১৩৯৫ — ২-৩-রাউন্ডে ভাগ) ② auth/gallery.css (১২৩/১২৩) ③ calls/bookmarks.css (৬২/৫৪) ④ কল-ইতিহাসে degrade-রেকর্ড (db-স্কিমা — বহু-সেশন-বাকি) ⑤ লাইভ-Turso-রিসেট (টোকেন-ধারী)
 - **পরের-এজেন্ট: session150 থেকে**; push-পূর্বে git pull --rebase (union-মার্জ PLANS/PROJECT/worklog ×২)
+
+---
+Task ID: session150 (cron webDevReview)
+Agent: Z.ai Main Agent (webDevReview)
+Task: Lekhok-Forum স্টেটাস-অ্যাসেসমেন্ট → agent-browser QA → ফিচার-রাউন্ড (og-কার্ড rx-মডাল + র্যাচেট-ওয়েভ-৫ + auth-tokens-latent-fix) → push
+
+Work Log:
+- git fetch → সমান্তরাল-UUID-কমিট (worklog-সিঙ্ক) আবিষ্কৃত + রিমোট 159eac3 → pull --rebase, worklog ×২-দ্বি-UU → union-মার্জ @ 186d52c
+- QA-ফেজ: guard ✓ role-policy ২৩৯/২৩৯ cursor ২৬/২৬ s132/s139/s144 ✓ + agent-browser ১৭-পেজ ২০০/কনসোল-০/390px ×১২-০ — বাগ-শূন্য → ফিচার-রাউন্ড (boot+test এক-কলে — sandbox-প্রসেস-মৃত্যু-গোটচা-পুনঃপ্রমাণ)
+- ফিচার-A: og-কার্ড rx-ব্যাজ → reactors-modal — wrap-ভাই (a>button-nesting-সমাধান), comment-tools guard ×৭-স্থানান্তর, shared.css s150-ব্লক (অর্ধ-ভাসমান FB-প্যারিটি + focus-ring)
+- ফিচার-B: markdown-lite অভ্যন্তরীণ-বেয়ার-পাথ লিংকিফাই (s142-① সমাপ্তি) — E2E-সিডে ধরা গ্যাপ; unit ×৫
+- ফিচার-C: patch150-auth-gallery-ratchet.js — auth/gallery/calls/bookmarks ৩৬২→০, নতুন-টোকেন ×৩৩, baseline-লক ×৪
+- latent-bug: ×১১-auth-ডকে tokens.css-লিংক (BEFORE/AFTER-computed-প্যারিটি-প্রমাণ)
+- E2E: verify-session150-ogrx-modal.js ২৯/২৯ (playwright — ফিড+আর্টিকেল দুই-সারফেস, ক্লিক+কীবোর্ড+Escape, console-০, cleanup-404); গোটচা: কমা-সিলেক্টর-তালিকায় suffix-শেষ-বিকল্পে-বাঁধে (৩-ঘণ্টা-ডিবাগ)
+- চূড়ান্ত: role-policy ২৩৯/২৩৯ + cursor ২৭/২৭ + s132 ৩০ + s139 ২২ + s144 ৩১ + s148 ২৩ + s150 ২৯ + guard/brace/390px ×১২/কনসোল-০ + স্ক্রিনশট ×৪ + টেস্ট-ক্লিনআপ ×১০-404
+- docs: PLANS session150-নোট + PROJECT §১৫০ + worklog ×২ — পরের-এজেন্ট session151
+
+Stage Summary:
+- og-কার্ড rx-ব্যাজ এখন সম্পূর্ণ-ইন্টারঅ্যাক্টিভ (ক্লিক+কীবোর্ড → reactors-modal, a11y-safe)
+- ফিড/কমেন্ট/আর্টিকেলে অভ্যন্তরীণ bare-লিংক → og-কার্ড সম্পূর্ণ-চেইন সক্রিয়
+- ডিজাইন-টোকেন-র্যাচেট-ওয়েভ-৫ সম্পন্ন (auth/gallery/calls/bookmarks ০); ×১১-auth-সারফেস tokens.css-সংযুক্ত
+- পরের-এজেন্ট: session151 (style.css-র্যাচেট ১৩৯৫-প্রথম-প্রস্তাব)
