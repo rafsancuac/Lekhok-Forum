@@ -1265,3 +1265,4 @@ Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser
 - যাচাই (মার্জড-কোডে): role-policy ১৪৭/১৪৭ ✓ cursor ২৬/২৬ ✓ guard ✓ E2E undo ×৩-সারফেস+DB-সত্য ✓ crx-থাম্ব ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ ✓
 - পুশ-কৃত: feat(session129) — undo-toast.js (নতুন), tokens-hex-baseline.json (নতুন), social.js (BFS+restore), guard-design-system.js (র্যাচেট), test-role-policy.sh (§25), notifications.ejs/header.ejs/live.js (data-n), shared.css (utoast-ব্লক), continue-reading.js (ফলব্যাক-পোর্ট), dashboard.css (#fff→টোকেন)
 - পরবর্তী: og-default-বিরোধী data-cover-গার্ড · dropdown reltime-রি-পেইন্ট · র্যাচেট-বেসলাইন-হ্রাস (admin.css-৪২৬)
+- **push-সমাপ্তি:** 16bfb4f (feat) + 5eabd2b (docs) → origin/main ✓ (লেবেল-রেস ×৫: 125→129-রিলেবেল; guard-ইউনিয়ন = session124-এর tokensHexGuard + আমার CSS-র্যাচেট সহ-অস্তিত্ব; post-push স্মোক ২০০ ×৫ + স্যুট সব-গ্রিন)
