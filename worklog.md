@@ -1693,3 +1693,21 @@ Work Log:
 
 Stage Summary:
 - session152-কাজ origin/main-এ ল্যান্ডেড; **পরের-এজেন্ট: session153 লেবেল থেকে**; settings-প্রস্তাব: সাব-রো-সার্চ, সাম্প্রতিক-কার্যক্রম-প্রিভিউ, স্পিকার-টোন-টেস্ট, env-TURN-দর্শন, /me#tab-reactions-ডিপ-লিংক
+
+---
+Task ID: 13 (Session 155 — [relabel-নোট: আমার L→155 — সমান্তরাল session148–154 আগে-ল্যান্ডেড, max+1 রীতি] — ইউজার-স্পেক: ভয়েস-মেসেজ ৩-বাগ স্থায়ী-সমাধান + Next.js-sandbox-অ্যাপের মেইন-গিটে ল্যান্ডিং)
+Agent: Messenger & Voice Agent (Next.js sandbox — user-turn)
+Task: ইউজার-রিপোর্ট (১) sandbox-এর Facebook-ক্লোন Next.js অ্যাপটি মেইন-গিটে ছিলই না (git-remote অকনফিগারড — ইউজার কখনো আপডেট পায়নি) → সম্পূর্ণ অ্যাপ রিপোতে আনা (২) ভয়েস-মেসেজ ৩-বাগ: পাঠানোর পর ০:০০ / নিজের ভয়েস শোনা যায় না / টাইম উল্টাপাল্টা — বাংলাদেশ-টাইম সর্বত্র
+
+Work Log:
+- **lekhok-forum-next/ নতুন-ডিরেক্টরি** (Express-app lekhok-forum/ হাত-না-দেওয়া): সম্পূর্ণ Next.js 16 অ্যাপ — src/ (ফিড, FB-কম্পোজার + রিচ-টেক্সট-টুলবার, ইন্টেলিজেন্ট-কোলাজ +N, স্টোরি, গ্রুপ, প্রোফাইল/ফলো, নোটিফিকেশন, রিঅ্যাকশন×৭, কমেন্ট-থ্রেড, সেভ, হ্যাশট্যাগ, ইমেজ-কমপ্রেশন, নতুন-পোস্ট-পিল) + prisma (schema+seed×৪) + মেসেঞ্জার (নতুন) + README/.env.example/.gitignore — 2.4MB, node_modules/.next/db/uploads/.env বাদ
+- **মেসেঞ্জার (Session L, নতুন)**: Prisma Conversation+Message (type TEXT|VOICE, duration, readAt) · API /api/messages/conversations (তালিকা+find-or-create+?unread=1-ব্যাজ) ও /[id] (থ্রেড+রিড-রিসিপ্ট; টেক্সট/ভয়েস-পোস্ট) · MessengerView (দুই-প্যান FB-স্টাইল, আজ/গতকাল-সেপারেটর, গ্রুপড-বাবল, পোলিং ৮/২০ সে, মোবাইল-সোয়াপ) · VoiceRecorder (রেকর্ডার-সাইড setIinterval-সেকেন্ধ → duration-পে-লোড — **০:০০-বাগের স্থায়ী সমাধান**; mime-fallback, বাতিল, লিক-শূন্য) · VoiceMessageBubble (স্পেকের হুবহু সবুজ #2EB865 ডিজাইন; গোপন <audio> + রিয়েল .play()-বাইন্ডিং — **নিজের ভয়েস ১০০% শোনা যায়**; ওয়েভফর্ম+SEEN-টিক)
+- **src/lib/formatBdTime.ts** (ইউজার-স্পেক): Intl `timeZone:'Asia/Dhaka'` — **টাইম-উল্টাপাল্টার স্থায়ী সমাধান**; বাংলা দিনভাগ (সকাল/দুপুর/বিকাল/সন্ধ্যা/রাত) + বাংলা ডিজিট; formatBdDayLabel (আজ/গতকাল); FeedPostCard-এর >৭-দিন শাখাতেও Asia/Dhaka পিন
+- E2E (agent-browser): টপনাভ-ব্যাজ (ইসমাইল ২ / monem ৩) ✓ তালিকা-বাংলা-সময় "সকাল ১০:১৯" ✓ ভয়েস-বাবল "০:০৩" ✓ প্লে-ক্লিকে paused:false/currentTime:1.42/duration:2.80 (রিয়েল-প্লেব্যাক eval-প্রমাণ) ✓ টেক্সট-পাঠানো+তালিকা-রি-অর্ডার ✓ রিড-রিসিপ্ট ✓ 390px+ডেস্কটপ স্ক্রিনশট ✓ ফিড-লাইক-রিগ্রেশন ✓ কনসোল-০ ✓
+- 🚨 শিক্ষা: Write-tool mkdir-পরেও টার্গেট-ফাইল নীরবে-অনুপস্থিত হতে পারে (conversations/route.ts → API 404) — নতুন-রুটে লেখার পরে ফাইল-অস্তিত্ব যাচাই বাধ্যতামূলক
+- sandbox-এর আলাদা worklog.md-তে Session L বিস্তারিত (এই রিপোর Express-app-কোড অক্ষত)
+
+Stage Summary:
+- lekhok-forum-next/ = ইউজার-প্রিভিউতে যা দেখছিলেন তার-ই সম্পূর্ণ কোডবেস — এখন origin/main-এ; রান: `cd lekhok-forum-next && cp .env.example .env && bun install && bun run db:push && bun prisma/seed.ts && bun prisma/seed-messenger.ts && bun run dev`
+- ইউজারের ৩-বাগ-স্পেক ১০০% প্রয়োগ (০:০০ / নিজের-ভয়েস / বাংলাদেশ-টাইম) — ব্রাউজার-প্রমাণসহ
+- পরের-এজেন্ট (Express-app): session156 থেকে; lekhok-forum-next/-এ কাজ করলে সে-ও এই-রীতিতে root-worklog-এ append করবেন

@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  name      String
+  email     String   @unique
+  avatarUrl String?
+  coverUrl  String?
+  bio       String?
+  role      String   @default("member")
+  posts     Post[]
+  comments  Comment[]
+  reactions PostReaction[]
+  bookmarks Bookmark[]
+  commentReactions CommentReaction[]
+  notifications    Notification[] @relation("NotificationRecipient")
+  actedNotifications Notification[] @relation("NotificationActor")
+  stories   Story[]
+  storyViews StoryView[]
+  storyReplies StoryReply[]
+  following Follow[] @relation("FollowFollower") // যাদের এই ইউজার ফলো করে
+  followers Follow[] @relation("FollowFollowing") // যারা এই ইউজারকে ফলো করে
+  mutedNotifTypes String? // কমা-সেপারেটেড মিউট করা নোটিফিকেশন টাইপ
+  createdGroups Group[] @relation("GroupCreator")
+  groupMemberships GroupMember[] @relation("GroupMemberships")
+  conversationsA Conversation[] @relation("ConversationA")
+  conversationsB Conversation[] @relation("ConversationB")
+  sentMessages Message[] @relation("MessageSender")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id              String   @id @default(cuid())
+  content         String   @default("")
+  audience        String   @default("PUBLIC") // PUBLIC | FRIENDS | ONLY_ME
+  backgroundColor String? // গ্রেডিয়েন্ট ক্লাস, যেমন gradient-1
+  feeling         String?
+  location        String?
+  taggedUsers     String? // কমা-সেপারেটেড ইউজার আইডি (ডেমো)
+  shares          Int      @default(0)
+  authorId        String
+  author          User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  groupId         String? // গ্রুপ-পোস্ট হলে সেট থাকে (Session K)
+  group           Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  media           MediaAttachment[]
+  reactions       PostReaction[]
+  comments        Comment[]
+  bookmarks       Bookmark[]
+  notifications   Notification[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([groupId])
+}
+
+model MediaAttachment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  url       String
+  type      String   @default("IMAGE") // IMAGE | VIDEO | AUDIO
+  posterUrl String? // ভিডিও পোস্টার (প্রথম ফ্রেম, Session K)
+  order     Int      @default(0) // কোলাজের ক্রম
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
+model PostReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   @default("LIKE") // LIKE | LOVE | CARE | HAHA | WOW | SAD | ANGRY
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  reactions CommentReaction[]
+
+  @@index([postId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([userId])
+}
+
+model CommentReaction {
+  id        String   @id @default(cuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   @default("LIKE") // LIKE | LOVE | HAHA | WOW | SAD
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+}
+
+model Story {
+  id         String   @id @default(cuid())
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  mediaUrl   String? // ছবি-স্টোরি হলে URL; পিওর-টেক্সট স্টোরি হলে null
+  text       String? // টেক্সট-ওভারলে বা পিওর-টেক্সট স্টোরির মূল লেখা
+  background String? // টেক্সট-স্টোরির গ্রেডিয়েন্ট ক্লাস (story-gradient-N)
+  views      StoryView[]
+  replies    StoryReply[]
+  notifications Notification[]
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime // createdAt + 24 ঘণ্টা
+
+  @@index([authorId, expiresAt])
+}
+
+model StoryView {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([storyId, userId])
+  @@index([userId])
+}
+
+model StoryReply {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  read      Boolean  @default(false) // Session J: লেখক পড়েছে কি না (অপঠিত ব্যাজ)
+  createdAt DateTime @default(now())
+
+  @@index([storyId])
+  @@index([userId])
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  coverUrl    String?
+  privacy     String   @default("OPEN") // OPEN | CLOSED — CLOSED = শুধু সদস্যরা দেখবে
+  creatorId   String
+  creator     User     @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([creatorId])
+}
+
+model GroupMember {
+  id       String   @id @default(cuid())
+  groupId  String
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation("GroupMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  role     String   @default("MEMBER") // ADMIN | MEMBER
+  joinedAt DateTime @default(now())
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("FollowFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("FollowFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actorId   String
+  actor     User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  type      String   // REACTION | COMMENT | REPLY | TAG | SHARE | STORY_REPLY | FOLLOW
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?
+  storyId   String?
+  story     Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+/* ─── Session L: মেসেঞ্জার (কথোপকথন + ভয়েস/টেক্সট মেসেজ) ─── */
+model Conversation {
+  id              String   @id @default(cuid())
+  participantAId  String
+  participantA    User     @relation("ConversationA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantBId  String
+  participantB    User     @relation("ConversationB", fields: [participantBId], references: [id], onDelete: Cascade)
+  messages        Message[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([participantAId, participantBId])
+  @@index([participantAId])
+  @@index([participantBId])
+  @@index([updatedAt])
+}
+
+model Message {
+  id             String     @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User       @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  type           String     @default("TEXT") // TEXT | VOICE
+  content        String? // টেক্সট মেসেজ (ভয়েস হলে null)
+  audioUrl       String? // ভয়েস ফাইলের সার্ভার-URL (/uploads/...)
+  duration       Int? // ভয়েসের সেকেন্ড — রেকর্ডার সাইড থেকে পাঠানো (০:০০-বাগ-স্থায়ী-সমাধান)
+  readAt         DateTime? // প্রাপক পড়লে টাইমস্ট্যাম্প
+  createdAt      DateTime   @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
