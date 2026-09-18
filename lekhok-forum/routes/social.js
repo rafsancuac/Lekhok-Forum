@@ -1839,7 +1839,15 @@ async function _rx143(col, id) {
   const total = rows.reduce((s, r) => s + (Number(r.n) || 0), 0);
   if (!total) return null;
   const top = rows.slice().sort((a, b) => (Number(b.n) || 0) - (Number(a.n) || 0))[0];
-  return { total: _bnNum139(total), top: _rxEmoji143(top && top.reaction_type) };
+  /* সেশন ১৪৭: reactor-faces — সর্বশেষ ৩ রিঅ্যাক্টরের অ্যাভাটার (FB-প্রিভিউ-ফেসপাইল-প্যারিটি);
+     av-অনুপস্থিতে /avatar/{uid} ফলব্যাক (site-কনভেনশন social.js:3210-মিরর) */
+  const faceRows147 = await db.prepare(
+    `SELECT l.reaction_type AS rt, u.id AS uid, u.avatar_url AS av
+       FROM likes l JOIN users u ON u.id = l.user_id
+      WHERE l.${col} = ? ORDER BY l.id DESC LIMIT 3`
+  ).all(id);
+  const faces147 = faceRows147.map((f) => ({ a: f.av || ('/avatar/' + f.uid), t: _rxEmoji143(f.rt) }));
+  return { total: _bnNum139(total), top: _rxEmoji143(top && top.reaction_type), faces: faces147 };
 }
 router.get('/api/link-preview', async (req, res) => {
   const u = String(req.query.u || '');
@@ -1869,7 +1877,7 @@ router.get('/api/link-preview', async (req, res) => {
           meta: (row.post_type === 'question' ? 'প্রশ্ন' : 'লেখা') + ': ' + (row.post_title || '').slice(0, 80) + (row.edited_at ? ' · সম্পাদিত' : ''),
           thumb: row.avatar_url || ('/avatar/' + row.author_id),
           link: (row.post_type === 'question' ? '/qa/' : '/articles/') + row.post_id + '#fc-c' + row.id,
-          ...(rx143 ? { rx_total: rx143.total, rx_top: rx143.top } : {})
+          ...(rx143 ? { rx_total: rx143.total, rx_top: rx143.top, rx_faces: rx143.faces } : {})
         };
       }
       /* ── কেস-২: আর্টিকেল ── */
@@ -1889,7 +1897,7 @@ router.get('/api/link-preview', async (req, res) => {
           meta: (row.full_name || 'সদস্য') + ' · 👁 ' + _bnNum139(row.view_count) + ' · 💬 ' + _bnNum139(row.comment_count),
           thumb: row.cover_image || null, icon: 'fa-feather-pointed',
           link: '/articles/' + row.id,
-          ...(rx143 ? { rx_total: rx143.total, rx_top: rx143.top } : {})
+          ...(rx143 ? { rx_total: rx143.total, rx_top: rx143.top, rx_faces: rx143.faces } : {})
         };
       }
       /* ── কেস-৩: প্রশ্ন (লাইভ-উত্তর-গণনা + গৃহীত-স্টেট — qa-list-চুক্তির মিরর) ── */
@@ -1910,7 +1918,7 @@ router.get('/api/link-preview', async (req, res) => {
           meta: (row.full_name || 'সদস্য') + ' · 💬 ' + _bnNum139(row.ans_count) + ' উত্তর' + (row.accepted_comment_id != null ? ' · ✅ গৃহীত' : ''),
           thumb: row.avatar_url || null, icon: 'fa-circle-question',
           link: '/qa/' + row.id,
-          ...(rx143q ? { rx_total: rx143q.total, rx_top: rx143q.top } : {})
+          ...(rx143q ? { rx_total: rx143q.total, rx_top: rx143q.top, rx_faces: rx143q.faces } : {})
         };
       }
       /* ── কেস-৪: রিসোর্স (res_type-আইকন — resource-types এক-সোর্স) ── */

@@ -1736,6 +1736,24 @@
     return (typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(href) : href.replace(/"/g, '');
   }
 
+  /* সেশন ১৪৭: og-কার্ড reactor-faces — FB-প্রিভিউ-ফেসপাইল-প্যারিটি (session146-ব্যাকলগ ②)।
+     অ্যাভস্ট্যাক (সর্বশেষ ৩ রিঅ্যাক্টর + শীর্ষ-ইমোজি-বাবল) + বাংলা-মোট; ফেস-পেলোড
+     অনুপস্থিতে ১৪৩-পিল-ফলব্যাক (পুরনো-ক্যাশ/আগের-সার্ভার-সামঞ্জস্য)। */
+  function lfOgRxHtml147(c) {
+    if (!c.rx_total) return '';
+    var faces147 = (c.rx_faces && c.rx_faces.length) ? c.rx_faces : [];
+    if (!faces147.length) {
+      return '<span class="lf-og-rx" title="প্রতিক্রিয়া"><span class="lf-og-rx-faces" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' + esc(c.rx_total) + '</span>';
+    }
+    var avs147 = faces147.map(function (f) {
+      return '<img class="lf-og-rx-av" src="' + esc(f.a) + '" alt="" loading="lazy" onerror="this.remove()">';
+    }).join('');
+    return '<span class="lf-og-rx lf-og-rx147" title="প্রতিক্রিয়া: ' + esc(c.rx_total) + '">' +
+      '<span class="lf-og-rx-avstack">' + avs147 +
+        '<span class="lf-og-rx-emb" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' +
+      '</span><span class="lf-og-rx-count">' + esc(c.rx_total) + '</span></span>';
+  }
+
   function lpvCardHtml139(href, c) {
     var thumb = c.thumb
       ? '<span class="lf-og-thumb"><img src="' + esc(c.thumb) + '" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'lf-og-noimg\');this.remove()"></span>'
@@ -1746,8 +1764,8 @@
         '<span class="lf-og-title">' + esc(c.title || '') + '</span>' +
         (c.desc ? '<span class="lf-og-desc">' + esc(c.desc) + '</span>' : '') +
         (c.meta ? '<span class="lf-og-meta">' + esc(c.meta) + '</span>' : '') +
-        /* সেশন ১৪৩: rx-ব্যাজ — টার্গেট-কনটেন্টের রিঅ্যাকশন-সত্য (likes-টেবিল — getReactionSummary-এক-সোর্স) */
-        (c.rx_total ? '<span class="lf-og-rx" title="প্রতিক্রিয়া"><span class="lf-og-rx-faces" aria-hidden="true">' + esc(c.rx_top || '👍') + '</span>' + esc(c.rx_total) + '</span>' : '') +
+        /* সেশন ১৪৩+১৪৭: rx-ব্যাজ — টার্গেট-কনটেন্টের রিঅ্যাকশন-সত্য (likes-টেবিল); ১৪৭-এ reactor-faces */
+        lfOgRxHtml147(c) +
       '</span></a>';
   }
 
@@ -1755,20 +1773,30 @@
      (session142-ব্যাকলগ ②; নেটওয়ার্ক-ফেচ-শূন্য — hostname শুধু URL থেকে বের —
      SSRF/স্যান্ডবক্স-নেটওয়ার্ক-নির্ভরতা দুটোই প্রযোজ্য নয়)। গার্ড: data-ext-u
      (og-কার্ডের data-lpv-u থেকে আলাদা — দ্বৈত-সিস্টেম-সংঘর্ষ-শূন্য)। */
-  function extChip143(bubble, href) {
+  function extChip143(bubble, href, atEl147) {
     if (!bubble || !bubble.isConnected) return;
     if (bubble.querySelector('.lf-extchip[data-ext-u="' + lpvMarkOf(href) + '"]')) return;
     var host = '';
     try { host = new URL(href).hostname.replace(/^www\./, ''); } catch (e143) { return; }
     if (!host) return;
-    bubble.insertAdjacentHTML('beforeend',
-      '<a class="lf-extchip" href="' + esc(href) + '" target="_blank" rel="noopener nofollow" data-ext-u="' + esc(href) + '">' +
-        '<span class="lf-ext-ico" aria-hidden="true"><i class="fas fa-arrow-up-right-from-square"></i></span>' +
+    /* সেশন ১৪৭: লেটার-ফেভিকন — নেটওয়ার্ক-মুক্ত (session146-ব্যাকলগ ①);
+       হোস্ট-হ্যাশ→hue + প্রথম-গ্লিফ (Google-favicon-সার্ভিস-নির্ভরতা-শূন্য) */
+    var h147 = 0, i147;
+    for (i147 = 0; i147 < host.length; i147++) { h147 = (h147 * 31 + host.charCodeAt(i147)) >>> 0; }
+    var hue147 = h147 % 360;
+    var g147 = (host.match(/[a-z0-9]/i) || ['L'])[0].toUpperCase();
+    var chipHtml147 =
+      '<a class="lf-extchip lf-og-in147" href="' + esc(href) + '" target="_blank" rel="noopener nofollow" data-ext-u="' + esc(href) + '">' +
+        '<span class="lf-ext-fav" style="background:hsl(' + hue147 + ',62%,40%)" aria-hidden="true">' + esc(g147) + '</span>' +
         '<span class="lf-ext-main"><span class="lf-ext-host">' + esc(host) + '</span>' +
-        '<span class="lf-ext-label">বাহ্যিক লিংক</span></span></a>');
+        '<span class="lf-ext-label">বাহ্যিক লিংক</span></span>' +
+        '<span class="lf-ext-ico lf-ext-ico147" aria-hidden="true"><i class="fas fa-arrow-up-right-from-square"></i></span></a>';
+    /* সেশন ১৪৭: আর্টিকেল-বডিতে অ্যাঙ্কর-পাশে-মাউন্ট (FB-অ্যাডজাসেন্ট); নইলে বাবল-শেষে */
+    if (atEl147 && atEl147.isConnected) atEl147.insertAdjacentHTML('afterend', chipHtml147);
+    else bubble.insertAdjacentHTML('beforeend', chipHtml147);
   }
 
-  function lpvMount139(bubble, href, j) {
+  function lpvMount139(bubble, href, j, atEl147) {
     if (!bubble || !bubble.isConnected) return;
     /* বাস্তব-কার্ড-গার্ড — লোডিং-প্লেসহোল্ডার বাদ (নইলে নিজের-শিমার-দেখে ফেরত!) */
     if (bubble.querySelector('.lf-ogcard:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
@@ -1779,24 +1807,31 @@
     var tmp = document.createElement('div');
     tmp.innerHTML = lpvCardHtml139(href, j.card);
     var card = tmp.firstElementChild;
-    if (card) { card.setAttribute('data-lpv-u', href); bubble.appendChild(card); }
+    if (!card) return;
+    card.setAttribute('data-lpv-u', href);
+    card.classList.add('lf-og-in147');
+    /* সেশন ১৪৭: আর্টিকেল-বডিতে অ্যাঙ্কর-পাশে-মাউন্ট; অন্য-সারফেসে বাবল-শেষ (১৪৩-আচরণ) */
+    if (atEl147 && atEl147.isConnected) atEl147.insertAdjacentElement('afterend', card);
+    else bubble.appendChild(card);
   }
 
-  function lpvFetch139(bubble, href) {
+  function lpvFetch139(bubble, href, atEl147) {
     /* বাস্তব-কার্ড-গার্ড (লোডিং বাদ) — পুনঃ-স্ক্যানে দ্বৈত-কার্ড-নিষিদ্ধ */
     if (bubble.querySelector('.lf-ogcard:not(.lf-og-loading)[data-lpv-u="' + lpvMarkOf(href) + '"]')) return;
-    if (LPV_CACHE139[href]) { lpvMount139(bubble, href, { ok: true, card: LPV_CACHE139[href] }); return; }
+    if (LPV_CACHE139[href]) { lpvMount139(bubble, href, { ok: true, card: LPV_CACHE139[href] }, atEl147); return; }
     if (bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]')) return; /* ইন-ফ্লাইট */
-    bubble.insertAdjacentHTML('beforeend',
+    var loadHtml147 =
       '<span class="lf-ogcard lf-og-loading" data-lpv-u="' + esc(href) + '" aria-hidden="true">' +
         '<span class="lf-og-thumb"></span><span class="lf-og-main">' +
           '<span class="lf-og-domain">&nbsp;</span><span class="lf-og-title">&nbsp;</span><span class="lf-og-desc">&nbsp;</span>' +
-        '</span></span>');
+        '</span></span>';
+    if (atEl147 && atEl147.isConnected) atEl147.insertAdjacentHTML('afterend', loadHtml147);
+    else bubble.insertAdjacentHTML('beforeend', loadHtml147);
     fetch('/api/link-preview?u=' + encodeURIComponent(href))
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (j && j.ok && j.card) LPV_CACHE139[href] = j.card;
-        lpvMount139(bubble, href, j);
+        lpvMount139(bubble, href, j, atEl147);
       })
       .catch(function () {
         var l = bubble.querySelector('.lf-ogcard.lf-og-loading[data-lpv-u="' + lpvMarkOf(href) + '"]');
@@ -1808,28 +1843,33 @@
     if (!body || body.getAttribute('data-lpv') === '1') return;
     var anchors = [].slice.call(body.querySelectorAll('a.a-link'));
     if (!anchors.length) return;
-    /* সেশন ১৪৩: বাবল-রিজলুশন — কমেন্টে .fc-bubble, ফিড-পোস্টে .feed-card-body
-       (og-কার্ড/চিপ পোস্ট-টেক্সটের নিচে — FB-বসানো) */
-    var bubble = body.closest('.fc-bubble') || body.closest('.feed-card-body') || body.parentElement;
+    /* সেশন ১৪৩: বাবল-রিজলুশন — কমেন্টে .fc-bubble, ফিড-পোস্টে .feed-card-body,
+       সেশন ১৪৭: আর্টিকেল-বডিতে .article-body নিজেই (og-কার্ড/চিপ পোস্ট-টেক্সটের নিচে — FB-বসানো) */
+    var bubble = body.closest('.fc-bubble') || body.closest('.feed-card-body') ||
+      (body.classList.contains('article-body') ? body : body.parentElement);
     if (!bubble) return;
+    /* সেশন ১৪৭: আর্টিকেল-বডিতে অ্যাঙ্কর-পাশে-মাউন্ট-পয়েন্ট (ব্লক-পূর্বপুরুষ) */
+    var atArticle147 = body.classList.contains('article-body');
     var seen = {};
     var hit = false;
     anchors.forEach(function (a) {
       var rawHref = a.getAttribute('href') || '';
       if (seen[rawHref]) return;
       seen[rawHref] = 1;
+      var at147 = atArticle147 ? (a.closest('p,li,blockquote,pre,td,h1,h2,h3,h4,h5,h6') || a) : null;
       /* অরিজিন-স্ট্রিপ আগে-ম্যাচ (same-origin absolute URL-ও অভ্যন্তরীণ) */
       var href = rawHref.replace(/^https?:\/\/[^\/]+/i, '');
-      if (LPV_INTERNAL_RE139.test(href)) { hit = true; lpvFetch139(bubble, href); return; }
+      if (LPV_INTERNAL_RE139.test(href)) { hit = true; lpvFetch139(bubble, href, at147); return; }
       /* সেশন ১৪৩: এক্সটার্নাল → domain-chip (ক্লায়েন্ট-সাইড, ফেচ-শূন্য) */
-      if (/^https?:\/\//i.test(rawHref)) { hit = true; extChip143(bubble, rawHref); }
+      if (/^https?:\/\//i.test(rawHref)) { hit = true; extChip143(bubble, rawHref, at147); }
     });
     if (hit) body.setAttribute('data-lpv', '1');
   }
 
   function lpvScanAll139() {
-    /* সেশন ১৪৩: .feed-text যোগ — পোস্ট-বডিতেও og-কার্ড/domain-chip (session142-ব্যাকলগ ①) */
-    document.querySelectorAll('.fc-body, .feed-text').forEach(lpvScanBody139);
+    /* সেশন ১৪৩: .feed-text — পোস্ট-বডিতেও og-কার্ড/domain-chip (session142-ব্যাকলগ ①)
+       সেশন ১৪৭: .article-body — আর্টিকেল-সিঙ্গেল-বডিতেও og-কার্ড/ext-chip (session146-ব্যাকলগ ③) */
+    document.querySelectorAll('.fc-body, .feed-text, .article-body').forEach(lpvScanBody139);
   }
 
   // MutationObserver — ড্রয়ার-লোড/reconcile/optimistic/canonical-ইনসার্ট সব-পাথ

@@ -533,3 +533,46 @@
   .lf-extchip,.lf-extchip:hover{transition:none;transform:none}
 }
 /* EOF-MARKER: session143-post-body-og-extchip-rx */
+/* ═══ session147: og-কার্ড reactor-faces + আর্টিকেল-বডি মাউন্ট + ext-লেটার-ফেভিকন ═══ */
+/* ① reactor-faces — FB-প্রিভিউ-ফেসপাইল (অ্যাভ-ওভারল্যাপ + শীর্ষ-ইমোজি-বাবল) */
+.lf-og-rx147{padding:2px 9px 2px 3px;gap:6px}
+.lf-og-rx-avstack{display:inline-flex;align-items:center}
+.lf-og-rx-av{
+  width:17px;height:17px;border-radius:50%;object-fit:cover;
+  border:2px solid var(--lf-ui-input-bg);margin-left:-5px;
+  background:var(--lf-ui-canvas);position:relative;z-index:0;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.lf-og-rx-av:first-child{margin-left:0}
+.lf-og-rx-emb{
+  position:relative;z-index:1;margin-left:-5px;width:17px;height:17px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:9px;line-height:1;background:var(--lf-ui-input-bg);
+  border:2px solid var(--lf-ui-input-bg);box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.lf-og-rx-count{font-size:11px;font-weight:700;color:var(--lf-text-secondary);line-height:1}
+.lf-ogcard:hover .lf-og-rx147{border-color:var(--lf-brand-primary)}
+/* ② আর্টিকেল-বডি মাউন্ট — অ্যাঙ্কর-পাশে-কার্ড (FB-অ্যাডজাসেন্ট) + সোফট-ইন */
+.article-body .lf-ogcard,.article-body .lf-extchip{max-width:100%}
+.article-body .lf-ogcard{margin-top:10px}
+.article-body .lf-extchip{margin-top:8px}
+.lf-og-in147{animation:lfOgIn147 .28s ease both}
+@keyframes lfOgIn147{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* ③ ext-লেটার-ফেভিকন — হোস্ট-hue ডিস্ক (নেটওয়ার্ক-মুক্ত) + ট্রেইলিং-অ্যারো ছোট */
+.lf-ext-fav{
+  flex:0 0 20px;width:20px;height:20px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--lf-white);font-size:10px;font-weight:800;line-height:1;
+  box-shadow:inset 0 -7px 10px rgba(0,0,0,.14);
+  text-shadow:0 1px 1px rgba(0,0,0,.18);
+}
+.lf-ext-ico147{flex:0 0 14px;width:14px;height:14px;font-size:7.5px;margin-left:1px}
+@media (max-width:480px){
+  .lf-ext-fav{flex-basis:18px;width:18px;height:18px;font-size:9px}
+  .lf-og-rx-av,.lf-og-rx-emb{width:15px;height:15px}
+  .article-body .lf-ogcard{margin-top:8px}
+}
+@media (prefers-reduced-motion:reduce){
+  .lf-og-in147{animation:none}
+}
+/* EOF-MARKER: session147-og-faces-article-mount-ext-fav */
