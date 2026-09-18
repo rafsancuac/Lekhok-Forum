@@ -704,34 +704,44 @@
         <button type="button" class="dlx-trigger" id="dlxTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="dlxPanel" aria-label="সেবাসমূহ ও আর্কাইভ — কদাচিৎ ব্যবহৃত সহায়ক ও প্রশাসনিক ফিচার" title="সেবাসমূহ ও আর্কাইভ" onclick="toggleDlx(event)">
           <i class="fas fa-th" aria-hidden="true"></i>
         </button>
-        <div class="dlx-panel dlx-panel--util157" id="dlxPanel" role="dialog" aria-label="সেবাসমূহ ও আর্কাইভ">
+        <%# ── সেশন ১৬৪ (ইউজার-স্পেক: ServicesArchiveFlyout কম্প্যাক্ট-রিডিজাইন):
+            প্যানেল এখন dlx-panel--util164 মডিফায়ার — ৩৩০px আঁটসাঁট প্রস্থ (ডানপাশের
+            ফাঁকা-জায়গা নিষিদ্ধ), আইটেম-লেখা কালপুরুষ-লক (--font-body — .topbar a-র
+            HindSiliguri-ওভাররাইড পরাস্ত), ২৮px নিউট্রাল আইকন-বক্স (বাম-রেল-প্যারিটি),
+            ২-লাইন clamp ডেস্ক, ব্যাজ (রেজিস্ট্রি badge ফিল্ড) ও সেকশন-ডিভাইডার।
+            হেডিং (h2/h3) HindSiliguri-তেই — ইউজার-নির্দেশ 'হেডিং ছাড়া'। বেস-অ্যানাটমি
+            ও ইঞ্জিন (dir-launcher.js toggle/Escape/বাইরে-ক্লিক) অক্ষুণ্ণ। ── %>
+        <div class="dlx-panel dlx-panel--util157 dlx-panel--util164" id="dlxPanel" role="dialog" aria-label="সেবাসমূহ ও আর্কাইভ">
           <div class="dlx-head">
             <div class="dlx-head-meta">
-              <h2>সেবাসমূহ ও আর্কাইভ</h2>
+              <h2 class="dlx-head-title164"><span class="dlx-head-ico164" aria-hidden="true"><i class="fas fa-folder-open"></i></span>সেবাসমূহ ও আর্কাইভ</h2>
               <p>ভাষা সরঞ্জাম, প্রাতিষ্ঠানিক সেবা ও সংরক্ষিত ফাইল</p>
             </div>
             <button type="button" class="dlx-close" aria-label="বন্ধ করুন" title="বন্ধ করুন" onclick="closeDlx()"><i class="fas fa-times" aria-hidden="true"></i></button>
           </div>
           <div class="dlx-body">
-            <% (typeof utilSections !== 'undefined' ? utilSections : []).forEach(function (sec) { %>
+            <% (typeof utilSections !== 'undefined' ? utilSections : []).forEach(function (sec, sIdx164) { %>
               <section class="dlx-sec">
-                <h3 class="dlx-sec-title"><%= sec.title %></h3>
+                <h3 class="dlx-sec-title dlx-sec-title164"><%= sec.title %></h3>
                 <div class="dlx-grid dlx-grid--list157">
                   <% sec.items.forEach(function (it) { %>
-                    <a href="<%= it.href %>" class="dlx-item dlx-item--row157" data-dlx-item>
-                      <span class="dlx-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
-                      <span class="dlx-meta">
-                        <span class="dlx-item-title"><%= it.label %></span>
-                        <span class="dlx-item-desc"><%= it.desc %></span>
+                    <a href="<%= it.href %>" class="dlx-item dlx-item--row157 dlx-item--row164" data-dlx-item>
+                      <span class="dlx-ico dlx-ico164" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
+                      <span class="dlx-meta dlx-meta164">
+                        <span class="dlx-title-row164">
+                          <span class="dlx-item-title dlx-item-title164"><%= it.label %></span>
+                          <% if (it.badge) { %><span class="dlx-badge164"><%= it.badge %></span><% } %>
+                        </span>
+                        <span class="dlx-item-desc dlx-item-desc164"><%= it.desc %></span>
                       </span>
-                      <span class="dlx-go157" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
                     </a>
                   <% }) %>
                 </div>
               </section>
+              <% if (sIdx164 < utilSections.length - 1) { %><div class="dlx-sep164" aria-hidden="true"></div><% } %>
             <% }) %>
           </div>
-          <div class="dlx-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+          <div class="dlx-foot dlx-foot164">লেখক ফোরাম ডিজিটাল ডেস্ক © ২০২৬</div>
         </div>
       </div>
 

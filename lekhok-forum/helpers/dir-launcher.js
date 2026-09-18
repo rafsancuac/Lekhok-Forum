@@ -112,7 +112,7 @@ const UTIL_SECTIONS = [
     key: 'admin-member',
     title: 'প্রশাসনিক ও সদস্য সনদ',
     items: [
-      { label: 'সদস্যপদ সনদ ও আইডি কার্ড',       desc: 'ডিজিটাল সদস্য সনদ ও প্রেস পাস প্রিন্ট/ডাউনলোড',            href: '/me/certificate', icon: 'fa-id-card', tone: 'gold' },
+      { label: 'সদস্যপদ সনদ ও আইডি কার্ড',       desc: 'ডিজিটাল সদস্য সনদ ও প্রেস পাস প্রিন্ট/ডাউনলোড',            href: '/me/certificate', icon: 'fa-id-card', tone: 'gold', badge: 'অফিসিয়াল' },
       { label: 'পাণ্ডুলিপি কপিরাইট ও চৌর্যবৃত্তি রিপোর্ট', desc: 'লেখাচুরির বিরুদ্ধে আনুষ্ঠানিকভাবে অভিযোগ দাখিল',       href: '/support/dmca-report', icon: 'fa-scale-balanced', tone: 'angry' }
     ]
   },

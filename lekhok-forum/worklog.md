@@ -2016,3 +2016,23 @@ Stage Summary:
 - পরিবর্তিত: UniversalComposerModal.ejs (CSS-self-contained), universal-composer.css (avatar-lock), profile.ejs (composer147-বিলুপ্ত + ট্রিগার-রূপান্তর), me.ejs, lekhok-articles.ejs, header.ejs (smart-links + ইঞ্জিন), routes/social.js (/articles/new + /qa/new → shell), views/user/compose-shell.ejs (নতুন), scripts/seed-test-users-163.js (নতুন)
 - ইউজার-প্রভাব: সব পোস্ট-তৈরি প্রবেশদ্বার (ফিড/প্রোফাইল/লেখার-পেজ/নেভ-মেনু/shell-রুট) এখন ছবি-৩২-এর একক FB-মোডালে; পুরনো ব্লগ-ফর্ম নতুন-লেখায় আর দেখা যায় না; প্রোফাইলে একক ইনপুট-বার; ভাঙা-অ্যাভাটার-মোডাল নির্মূল
 - পরের-এজেন্ট: session164 থেকে; প্রস্তাব — ① composer-modal.js-এ edit-mode (মোডাল-ই এডিটও দেবে: /articles/:id/edit-ও shell-এ) ② qa-form/article-form-ফাইল পর্যালোচনা-করে ডেড-কোড-প্রুনিং ③ dashboard.css থেকে মোডাল-ব্লক universal-composer.css-এ স্থানান্তর (single-file-পার্টিশন)
+
+## সেশন ১৬৪ (relabel অপ্রয়োজনীয় — HEAD 1ee7d8e-এর পর সরাসরি) — সেবাসমূহ-ও-আর্কাইভ প্যানেল কম্প্যাক্ট-রিডিজাইন (ইউজার-স্পেক ServicesArchiveFlyout-পোর্ট)
+
+ইউজার-স্পেক: সোশ্যাল ফিডের 'আরও' বাটনের ভেতরের কনটেন্ট প্রফেশনাল করা — ① ডানপাশের ফাঁকা-জায়গা কমিয়ে প্রয়োজনমতো ② হেডিং ছাড়া সব লেখা কালপুরুষে ③ বাম-প্যানেলের মতো আঁটসাঁট (৩২০-৩৪০px)। স্কোপ-সনাক্তকরণ: উদ্ধৃত-কনটেন্ট = UTIL_SECTIONS (header.ejs dlx-panel--util157 প্যানেল) — ইউজারের পেস্ট-করা TSX (ServicesArchiveFlyout) অন্য-AI-এর রেফারেন্স, আসল-টার্গেট EJS অ্যাপ (session163-রীতি)।
+
+Work Log:
+- প্রি-যাচাই (স্থায়ী-নির্দেশ): clone-হারানো-আবিষ্কৃত → fresh clone @1ee7d8e (session163-এর পরেই; কোনো নতুন প্যারালেল-কমিট নেই) + node_modules + server.js @3030 (SANDBOX_PORT-প্যাটার্ন); গেটওয়ে :81 এ-সেশনে 502 → agent-browser সরাসরি localhost:3030-তে (সমতুল্য-ফলাফল)
+- BASE-মাপা (computed): প্যানেল 420px×467; item-title/desc/anchor ফন্ট **HindSiliguri** (fonts.css `.topbar a`→--font-heading; body-inheritance পরাস্ত) — ইউজারের ২-নম্বর অভিযোগের রুট
+- ফিক্স-১ (মার্কআপ): header.ejs প্যানেল → `dlx-panel--util164` + হেডার-ফোল্ডার-চিপ (24px, brand-light/brand-primary) + title-row(badge)+২-লাইন-clamp-desc + dlx-go157-শেভরন-বিলোপ + সেকশন-ডিভাইডার (sIdx164-লুপ) + ফুটার 'লেখক ফোরাম ডিজিটাল ডেস্ক © ২০২৬' (TSX-স্পেক); ARIA/ids/data-dlx-item/ইঞ্জিন অক্ষুণ্ণ
+- ফিক্স-২ (CSS): style.css session164-ব্লক — 330px-ফিক্সড (min(330px,calc(100vw-40px))), 28px-নিউট্রাল-আইকন-বক্স (canvas-বিজি → hover সাদা+border-strong+shadow-sm, টোন-রঙা আইকন), টাইটেল-রো 12px/700 → hover brand-সবুজ, ব্যাজ 9px, desc 10.5px ×2-clamp, ডিভাইডার-অপাসিটি .65, সেন্টার-ফুটার; **কালপুরুষ-লক**: প্রথম-চেষ্টায় `.dlx-item--row164{font-family}` (0,1,0) computed-ব্যর্থ (`.topbar a` (0,1,1)-জয়ী) → `.dlx-panel--util164 .dlx-item--row164,... .dlx-meta` (0,2,0) → computed **Kalpurush** ✓ (h2/h3 হেডিং HindSiliguri — 'হেডিং ছাড়া' নীতি); সব নিয়ম util164-স্কোপড → পাবলিক 560px-ডিরেক্টরি-প্যানেল অস্পৃশ্য (computed 560/2col-প্রমাণ)
+- ফিক্স-৩ (রেজিস্ট্রি): dir-launcher.js UTIL_SECTIONS-এ `badge` ফিল্ড ('অফিসিয়াল' — সদস্যপদ-সনদ-আইডি-কার্ড; TSX-স্পেক-প্যারিটি; মোবাইল-সাইডবার/রেল-লুপ অজানা-ফিল্ড নিরীহ)
+- ফিক্স-৪ (guard-ঋণ পরিশোধ): guard:design HEAD-এই লাল — git-blame → **সমান্তরাল session163-কমিট 5dccfac-এর dashboard.css ২-হেক্স** (`#cbd5e1`, `#fff`-ফলব্যাক; আমার-ডিফ নয়) → `var(--lf-ui-border-strong)` + `var(--on-accent,var(--lf-white))`-এ হ্রাস-শুদ্ধি (ভিজ্যুয়াল-প্যারিটি computed-প্রমাণ: active-সাদা, hover-বর্ডার-টোকেন) → guard **গ্রিন** ✓
+- E2E (agent-browser @3030, 3-রিস্টার্ট-AV-চুক্তি-মেনে): computed panelW=330 ✓ fonts Kalpurush×৩ ✓ ব্যাজ ✓ ডিভাইডার×৩ ✓ ৮-আইটেম+৪র্থ-সেকশন+ফুটার ✓ hover সাদা-পৃষ্ঠ+border-strong+brand-টাইটেল ✓ পাবলিক-প্যানেল 560/2col ✓ মোবাইল-৩৯০ wrap-hidden+util-details+hScroll-০ ✓ filter-chips রিগ্রেশন-শূন্য ✓ কনসোল-শূন্য ✓ guard+audit ✓; স্ক্রিনশট ×৪ (s164-before/after-open/scrolled/final)
+- docs: PROJECT §১৬৪ + PLANS session164-নোট + worklog (এ-এন্ট্রি) — **পরের-এজেন্ট: session165 থেকে**
+
+Stage Summary:
+- পরিবর্তিত (EJS অ্যাপ): views/partials/header.ejs (util-প্যানেল-মার্কআপ), public/assets/css/style.css (session164-ব্লক), public/assets/css/dashboard.css (২-হেক্স→টোকেন), helpers/dir-launcher.js (badge-ফিল্ড) + PROJECT/PLANS/worklog ডক
+- ইউজার-প্রভাব: 'আরও' প্যানেল এখন 330px আঁটসাঁট (ডান-ফাঁকা-শূন্য), আইটেম-লেখা সম্পূর্ণ কালপুরুষ (হেডিং HindSiliguri), বাম-রেল-প্যারিটি আইকন-বক্স, ব্যাজ+ডিভাইডার+ডিজিটাল-ডেস্ক-ফুটারসহ প্রফেশনাল ফ্লাইআউট
+- শিক্ষা: ① (0,1,0)-ক্লাস fonts.css-এর (0,1,1) `.topbar a`-কে হারে — প্যানেল-লেখার ফন্ট-লকে (0,2,0) স্কোপ বাধ্যতামূলক ② HEAD-এ guard-লাল = প্যারালেল-কমিট-ঋণ — blame-আগে, নিজের-ডিফ-অনুমান পরে ③ গেটওয়ে-502-তে agent-browser সরাসরি-পোর্ট বিকল্প
+- পরের-এজেন্ট: session165; প্রস্তাব — util-প্যানেল কুইক-ফিল্টার, সাম্প্রতিক-ব্যবহৃত-পিন, trigger-হটকি, ব্যাজ-এনাম
