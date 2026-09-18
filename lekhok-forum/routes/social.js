@@ -2316,6 +2316,16 @@ router.post('/api/notifications/read/:id', async (req, res) => {
   res.json({ ok: true });
 });
 
+/* ── সেশন ১৪৮: প্রতি-আইটেম অপঠিত-চিহ্ন (৩-ডট কুইক-অ্যাকশন-মেনুর ব্যাকএন্ড) —
+   read/:id-এর হুবহু মিরর, বিপরীত দিক। শর্ত is_read = 1 → idempotent (দ্বিগুণ-ক্লিকে
+   badge-দ্বিগণন নেই); user_id-গার্ড (অন্যের বিজ্ঞপ্তি অপঠিত-করা অসম্ভব)।
+   changed:false = রো ইতিমধ্যে অপঠিত ছিল / নিজের নয় — ক্লায়েন্ট নীরবে থাকবে। ── */
+router.post('/api/notifications/unread/:id', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'login' });
+  const u148 = await db.prepare('UPDATE notifications SET is_read = 0 WHERE id = ? AND user_id = ? AND is_read = 1').run(req.params.id, req.session.user.id);
+  res.json({ ok: true, changed: u148.changes > 0 });
+});
+
 /* ── সেশন ১১৯-রিস্টোর: session114-এর ক্যানোনিকাল বিজ্ঞপ্তি-সরান রুট — da91a80
    (session113-followup) rebase-ইউনিয়নে নিখোঁজ হয়েছিল (af372de-এ ছিল, 5a59c1f-এ
    নেই) — ফলে নোটিফিকেশন-পেজ/ড্রপডাউনের ✕-বাটন অরিজিনে POST-404→?saveerr=1-এ

@@ -315,6 +315,10 @@ html { background: var(--lf-ui-canvas); }
   --lf-gray-900: #111827;
   --lf-blue-200: #bfdbfe;
   --lf-blue-300: #93c5fd;
+  /* সেশন ১৪৮: নোটিফ-অপঠিত-স্টেট (FB-unread প্যারিটি) — blue-200-এর সাদা-মিশ্রিত টিন্ট
+     (৩৮% ও ৫৮%; headless/পুরনো-ব্রাউজারে color-mix-অসমর্থিত — তাই প্রি-মিক্সড ক্যানোনিকাল-টোকেন) */
+  --lf-blue-soft: #e7f1ff;
+  --lf-blue-soft-2: #daeafe;
   --lf-blue-600: #2563eb;
   --lf-blue-700: #1d4ed8;
   --lf-blue-800: #1e40af;

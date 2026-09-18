@@ -281,14 +281,23 @@
       <% if (user) { %>
         <!-- Notification bell -->
         <div class="notif-bell-wrap" id="notifBell">
-          <button class="notif-bell-btn" onclick="toggleNotifs()">
+          <%# সেশন ১৪৮: onclick="toggleNotifs()" অপসারণ — main.js-এর অটো-সব-পঠিত
+              (clearNotifBadge → POST /api/notifications/read) আর ড্রপডাউন-খোলায় চলবে না;
+              অপঠিত-স্টেট FB-প্যাটার্নে সংরক্ষিত — পঠিত হবে রো-ক্লিকে/৩-ডট-টগলে/'সব পঠিত'-এ।
+              নতুন বাঁধাই নিচের session148-স্ক্রিপ্টে (ডেলিগেটেড, main.js-মিনিফাইড অস্পৃশ্য) %>
+          <button type="button" class="notif-bell-btn" aria-haspopup="true" aria-expanded="false" aria-label="বিজ্ঞপ্তি খুলুন">
             <i class="fas fa-bell"></i>
             <% if (unread > 0) { %><span class="notif-badge" id="notifBadge"><%= unread > 9 ? '৯+' : String(unread).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %></span><% } %>
           </button>
           <div class="notif-dropdown" id="notifDropdown">
-            <div class="notif-header">
-              <span>বিজ্ঞপ্তি</span>
-              <a href="/notifications" class="notif-see-all">সব দেখুন</a>
+            <%# সেশন ১৪৮: হেডার-পলিশ — 'N নতুন' পিল + 'সব পঠিত করুন' (unread>০ হলে)।
+                হেডার/চিপ/বাটন = UI-ক্রোম (font-hs); কনটেন্ট/মেনু/টাইম = কালপুরুষ (CSS-ডিকপ্লিং) %>
+            <div class="notif-header nf-hdr148">
+              <span class="nf-htitle148">বিজ্ঞপ্তি<% if (unread > 0) { %> <span class="nf-newpill148" id="nfNewPill148"><%= String(unread).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %> নতুন</span><% } else { %><span class="nf-newpill148" id="nfNewPill148" hidden></span><% } %></span>
+              <span class="nf-hact148">
+                <button type="button" class="nf-markall148" id="nfMarkAll148" title="সবগুলো পঠিত হিসেবে চিহ্নিত করুন"<% if (!unread) { %> hidden<% } %>>সব পঠিত করুন</button>
+                <a href="/notifications" class="notif-see-all">সব দেখুন</a>
+              </span>
             </div>
             <%# সেশন ১৪৪: ?type= কুইক-ফিল্টার-চিপ (session-১২১-ঐচ্ছিক-বকেয়া) —
                 রেজিস্ট্রি helpers/notif-groups.js (app.locals.notifGroups) — ফুল-পেজের
@@ -311,7 +320,8 @@
                   <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>" data-n="<%= JSON.stringify({ i: n.id, t: n.type, ti: n.title || '', b: n.body || '', l: n.link || '', r: n.is_read ? 1 : 0, ts: n.created_at || '' }) %>">
                     <%# সেশন ১০২-ইউনিয়ন: actor-avatar (actor_id JOIN + legacy link-fallback) — ছবি নাহলে টাইপ-রঙা আইকন (live.js-এর সাথে সমান) %>
                     <% if (n.actor_id) { %>
-                      <span class="notif-ico has-avatar"><img class="notif-avatar" src="<%= n.actor_avatar || ('/avatar/' + n.actor_id) %>" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-avatar');this.remove()"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
+                      <%# সেশন ১৪৮: nf-b148-<type> — অ্যাভাটার-কোণার FB-অ্যাক্টর-ব্যাজ (টাইপ-রঙা ডিস্ক) %>
+                      <span class="notif-ico has-avatar"><img class="notif-avatar" src="<%= n.actor_avatar || ('/avatar/' + n.actor_id) %>" alt="" loading="lazy" onerror="this.parentNode.classList.remove('has-avatar');this.remove()"><i class="fas <%= _ico[n.type] || 'fa-bell' %> nf-b148 nf-b148-<%= n.type %>"></i></span>
                     <% } else { %>
                       <span class="notif-ico ico-<%= n.type %>"><i class="fas <%= _ico[n.type] || 'fa-bell' %>"></i></span>
                     <% } %>
@@ -322,9 +332,16 @@
                       <% if (n.type === 'call') { %><span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %>
                     </span>
                     <% if (!n.is_read) { %><span class="notif-dot" title="অপঠিত"></span><% } %>
-                    <%# সেশন ১২১: ড্রপডাউনেও dismiss ✕ (session117-①; ফুল-পেজের .notif-dismiss-প্যারিটি) —
-                        বাটন-ইন-অ্যাঙ্কর = session114-প্রেসিডেন্সি; preventDefault-এ নেভিগেশন-বন্ধ %>
-                    <button type="button" class="notif-x" data-dismiss="<%= n.id %>" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+                    <%# সেশন ১৪৮: ✕-বাটনের বিবর্তন → FB-স্টাইল ৩-ডট কুইক-অ্যাকশন (session117-①/১২১-প্রেসিডেন্সি
+                        সম্মানে রি-স্কিন) — পপওভারে ① পঠিত↔অপঠিত টগল (নতুন unread/:id API) ② মুছুন
+                        (dismiss + আন্ডু-টোস্ট অক্ষুণ্ণ)। বাটন-ইন-অ্যাঙ্কর → preventDefault ডেলিগেটেড %>
+                    <span class="nf-act148">
+                      <button type="button" class="nf-dots148" data-nf-dots148 aria-haspopup="true" aria-expanded="false" aria-label="বিজ্ঞপ্তির বিকল্প" title="বিকল্প"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button>
+                      <span class="nf-menu148" role="menu" hidden>
+                        <button type="button" class="nf-mi148" role="menuitem" data-nf-read148="<%= n.id %>"><i class="far <%= n.is_read ? 'fa-envelope' : 'fa-check-circle' %>" aria-hidden="true"></i><span data-nf-rlabel148><%= n.is_read ? 'অপঠিত হিসেবে চিহ্নিত করুন' : 'পঠিত হিসেবে চিহ্নিত করুন' %></span></button>
+                        <button type="button" class="nf-mi148 nf-mi-danger148" role="menuitem" data-nf-del148="<%= n.id %>"><i class="far fa-trash-alt" aria-hidden="true"></i><span>বিজ্ঞপ্তিটি মুছুন</span></button>
+                      </span>
+                    </span>
                   </a>
                 <% }); %>
               <% } else { %>
@@ -427,6 +444,212 @@
               e.preventDefault(); e.stopPropagation();
               dismiss121(x);
             });
+          })();
+        </script>
+
+        <%# সেশন ১৪৮: FB-স্টাইল প্রিমিয়াম ড্রপডাউন-ইঞ্জিন —
+            ① অপঠিত-স্টেট-সংরক্ষণ: bell-এ onclick নেই (main.js toggleNotifs/clearNotifBadge
+               অটো-সব-পঠিত বাইপাস) — খুললেই সব পঠিত হয়ে যায় না; পঠিত হয় রো-ক্লিকে,
+               ৩-ডট-টগলে বা 'সব পঠিত করুন'-এ (FB-প্যাটার্ন)। ব্যাজ-সত্য সর্বদা /count।
+            ② ৩-ডট কুইক-অ্যাকশন: পঠিত↔অপঠিত (read/:id + নতুন unread/:id) + মুছুন
+               (dismiss + lfUndoShow আন্ডু-টোস্ট — session121/১২৩-চুক্তি মিরর)।
+            ③ data-n r-বিট সর্বদা-সিঙ্কড (restore-পেলোড সঠিক থাকে)।
+            ④ ডেলিগেটেড-লিসেনার (live.js-রি-রেন্ডার-নিরাপদ) + Escape/বাইরে-ক্লিকে মেনু-বন্ধ।
+            ⑤ বাংলা-অঙ্ক ব্যাজ ('৯+' রীতি — সার্ভার-রেন্ডারের সমতুল্য)। %>
+        <script>
+          (function () {
+            var wrap148 = document.getElementById('notifBell');
+            if (!wrap148 || wrap148.dataset.nfEngine148) return;
+            wrap148.dataset.nfEngine148 = '1';
+            var dd148 = document.getElementById('notifDropdown');
+            var list148 = document.getElementById('notifList');
+            var markAllBtn = document.getElementById('nfMarkAll148');
+            var pill148 = document.getElementById('nfNewPill148');
+            var BN148 = '০১২৩৪৫৬৭৮৯';
+            function bn148(n) { return String(n).replace(/[0-9]/g, function (d) { return BN148[+d]; }); }
+
+            function badge148() {
+              fetch('/api/notifications/count', { credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                  if (!d || typeof d.unread !== 'number') return;
+                  var u = d.unread;
+                  var b = document.getElementById('notifBadge');
+                  if (u <= 0) { if (b) b.remove(); }
+                  else {
+                    if (!b) {
+                      var btn = wrap148.querySelector('.notif-bell-btn');
+                      if (!btn) return;
+                      b = document.createElement('span'); b.className = 'notif-badge'; b.id = 'notifBadge';
+                      btn.appendChild(b);
+                    }
+                    b.textContent = u > 9 ? '৯+' : bn148(u);
+                  }
+                  if (markAllBtn) markAllBtn.hidden = u <= 0;
+                  if (pill148) { pill148.hidden = u <= 0; if (u > 0) pill148.textContent = bn148(u) + ' নতুন'; }
+                }).catch(function () {});
+            }
+
+            function closeMenus148(except) {
+              wrap148.querySelectorAll('.nf-act148.open').forEach(function (a) {
+                if (a === except) return;
+                a.classList.remove('open');
+                var m = a.querySelector('.nf-menu148'); if (m) m.hidden = true;
+                var db = a.querySelector('[data-nf-dots148]'); if (db) db.setAttribute('aria-expanded', 'false');
+              });
+            }
+
+            /* রো-স্টেট সিঙ্ক: ক্লাস + ডট + মেনু-লেবেল/আইকন + data-n.r (restore-চুক্তি) */
+            function rowUnread148(row, unreadFlag) {
+              if (!row) return;
+              row.classList.toggle('unread', !!unreadFlag);
+              var dot = row.querySelector('.notif-dot');
+              if (unreadFlag && !dot) {
+                dot = document.createElement('span'); dot.className = 'notif-dot'; dot.setAttribute('title', 'অপঠিত');
+                var act = row.querySelector('.nf-act148');
+                if (act) row.insertBefore(dot, act); else row.appendChild(dot);
+              } else if (!unreadFlag && dot) dot.remove();
+              var mi = row.querySelector('[data-nf-read148]');
+              if (mi) {
+                var lb = mi.querySelector('[data-nf-rlabel148]');
+                if (lb) lb.textContent = unreadFlag ? 'পঠিত হিসেবে চিহ্নিত করুন' : 'অপঠিত হিসেবে চিহ্নিত করুন';
+                var ic = mi.querySelector('i');
+                if (ic) ic.className = unreadFlag ? 'far fa-check-circle' : 'far fa-envelope';
+              }
+              try {
+                var pn = JSON.parse(row.getAttribute('data-n') || 'null');
+                if (pn) { pn.r = unreadFlag ? 0 : 1; row.setAttribute('data-n', JSON.stringify(pn)); }
+              } catch (_) {}
+            }
+
+            function toggleRead148(id, wantUnread, row) {
+              fetch('/api/notifications/' + (wantUnread ? 'unread' : 'read') + '/' + encodeURIComponent(id), { method: 'POST', credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) { if (d && d.ok) { rowUnread148(row, wantUnread); badge148(); } })
+                .catch(function () {});
+            }
+
+            /* dismiss + আন্ডু — session121-চুক্তির হুবহু মিরর (✕→৩-ডট-রি-স্কিনে পথ-অক্ষত) */
+            function dismiss148(id, row) {
+              if (!row || row.dataset.nfBusy148) return;
+              row.dataset.nfBusy148 = '1';
+              var payload = null;
+              try { payload = JSON.parse(row.getAttribute('data-n') || 'null'); } catch (_) {}
+              fetch('/api/notifications/' + encodeURIComponent(id) + '/dismiss', { method: 'POST', credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                  if (d && d.ok) {
+                    row.classList.add('dx-out');
+                    setTimeout(function () {
+                      row.remove();
+                      if (!list148.querySelector('.notif-item')) list148.innerHTML = '<div class="notif-empty"><i class="far fa-bell"></i><p>কোনো বিজ্ঞপ্তি নেই</p></div>';
+                    }, 200);
+                    badge148();
+                    if (payload && window.lfUndoShow) {
+                      window.lfUndoShow({
+                        message: 'বিজ্ঞপ্তি সরানো হয়েছে',
+                        ms: 7000,
+                        onUndo: function (after) {
+                          fetch('/api/notifications/restore', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify(payload)
+                          }).then(function (r) { return r.json(); }).then(function (j) {
+                            if (j && j.ok) {
+                              row.classList.remove('dx-out');
+                              delete row.dataset.nfBusy148;
+                              var emp = list148.querySelector('.notif-empty');
+                              if (emp) emp.remove();
+                              var first = list148.querySelector('.notif-item');
+                              if (row.parentNode) row.parentNode.removeChild(row);
+                              if (first) list148.insertBefore(row, first);
+                              else list148.appendChild(row);
+                              try { if (window.LekhokRelTime) window.LekhokRelTime.render(list148); } catch (_) {}
+                              badge148();
+                            } else if (window.showToast) showToast('বাতিল করা যায়নি', 'error');
+                            after();
+                          }).catch(function () {
+                            if (window.showToast) showToast('বাতিল করা যায়নি', 'error');
+                            after();
+                          });
+                        }
+                      });
+                    }
+                  } else { delete row.dataset.nfBusy148; }
+                })
+                .catch(function () { delete row.dataset.nfBusy148; });
+            }
+
+            function markAll148() {
+              fetch('/api/notifications/read', { method: 'POST', credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                  if (!d || !d.success) return;
+                  list148.querySelectorAll('.notif-item.unread').forEach(function (row) { rowUnread148(row, false); });
+                  badge148();
+                  if (window.showToast) showToast('সবগুলো পঠিত হিসেবে চিহ্নিত হয়েছে ✓', 'success');
+                }).catch(function () {});
+            }
+
+            /* bell — অটো-সব-পঠিত-শূন্য টগল (userDropdown-বন্ধ + ব্যাজ-সত্য-রিফ্রেশ সহ) */
+            var bellBtn148 = wrap148.querySelector('.notif-bell-btn');
+            if (bellBtn148) bellBtn148.addEventListener('click', function () {
+              var ud = document.getElementById('userDropdown');
+              if (ud) ud.classList.remove('open');
+              closeMenus148(null);
+              if (dd148) dd148.classList.toggle('open');
+              badge148();
+            });
+
+            if (markAllBtn) markAllBtn.addEventListener('click', function (e) {
+              e.preventDefault(); e.stopPropagation();
+              markAll148();
+            });
+
+            if (list148) list148.addEventListener('click', function (e) {
+              var act = e.target.closest('.nf-act148');
+              if (!act) {
+                /* রো-নেভিগেশনে অপঠিত হলে পঠিত-করা (FB-প্যাটার্ন; নেভিগেশন-বাধা-শূন্য) */
+                var nav = e.target.closest('.notif-item');
+                if (nav && nav.classList.contains('unread')) {
+                  var rid = null;
+                  try { rid = (JSON.parse(nav.getAttribute('data-n') || 'null') || {}).i; } catch (_) {}
+                  if (rid) {
+                    try { if (navigator.sendBeacon) navigator.sendBeacon('/api/notifications/read/' + encodeURIComponent(rid)); } catch (_) {}
+                    rowUnread148(nav, false);
+                    badge148();
+                  }
+                }
+                return;
+              }
+              e.preventDefault(); e.stopPropagation();
+              var dots = e.target.closest('[data-nf-dots148]');
+              if (dots) {
+                var open = act.classList.toggle('open');
+                var menu = act.querySelector('.nf-menu148');
+                if (menu) menu.hidden = !open;
+                dots.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open) closeMenus148(act);
+                return;
+              }
+              var row = e.target.closest('.notif-item');
+              var tgl = e.target.closest('[data-nf-read148]');
+              if (tgl) { closeMenus148(null); toggleRead148(tgl.getAttribute('data-nf-read148'), !row || !row.classList.contains('unread'), row); return; }
+              var del = e.target.closest('[data-nf-del148]');
+              if (del) { closeMenus148(null); dismiss148(del.getAttribute('data-nf-del148'), row); return; }
+              /* অ্যাকশন-জোনের অন্য কোথাও ক্লিক → কেবল মেনু-টগল-বন্ধ (অ্যাঙ্কর-নেভিগেশন-বন্ধ) */
+              closeMenus148(null);
+            });
+
+            document.addEventListener('click', function (e) {
+              if (!wrap148.contains(e.target)) closeMenus148(null);
+            });
+            document.addEventListener('keydown', function (e) {
+              if (e.key === 'Escape') closeMenus148(null);
+            });
+
+            badge148();
           })();
         </script>
 

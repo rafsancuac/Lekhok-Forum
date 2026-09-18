@@ -104,7 +104,7 @@
          ৪০px-বৃত্তে ছবি (img onerror → has-avatar ক্লাস সরে → আইকন আবার দৃশ্যমান);
          নইলে টাইপ-রঙা .ico-<type> আইকন-সার্কল — header.ejs-সার্ভার-মার্কআপের সাথে অভিন্ন */
       var icoHtml = n.actor_id
-        ? '<span class="notif-ico has-avatar"><img class="notif-avatar" src="' + esc(n.actor_avatar || ('/avatar/' + n.actor_id)) + '" alt="" loading="lazy" onerror="this.parentNode.classList.remove(\'has-avatar\');this.remove()"><i class="fas ' + ico + '"></i></span>'
+        ? '<span class="notif-ico has-avatar"><img class="notif-avatar" src="' + esc(n.actor_avatar || ('/avatar/' + n.actor_id)) + '" alt="" loading="lazy" onerror="this.parentNode.classList.remove(\'has-avatar\');this.remove()"><i class="fas ' + ico + ' nf-b148 nf-b148-' + esc(n.type) + '"></i></span>'
         : '<span class="notif-ico ico-' + esc(n.type) + '"><i class="fas ' + ico + '"></i></span>';
       /* সেশন ১২৫: paintList-মিরর — header.ejs-canonical-শেলের (সেশন ১২১) হুবহু প্রতিরূপ।
          আগের পেইন্ট এক-এঞ্চর-মার্কআপে ফেরত যেত — প্রতি-বেল-ওপেন রিফ্রেশে ডিসমিস-✕
@@ -122,7 +122,16 @@
         (n.type === 'call' ? '<span class="notif-missed" title="মিসড কল"><i class="fas fa-phone-slash"></i> মিসড কল</span>' : '') + /* সেশন ৯৭-মার্জ: মিসড-কল-চিপ (সার্ভার-রেন্ডারড ড্রপডাউনের সাথে অভিন্ন) */
         '</span>' +
         (n.is_read ? '' : '<span class="notif-dot" title="অপঠিত"></span>') +
-        '<button type="button" class="notif-x" data-dismiss="' + esc(n.id) + '" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>' +
+        /* সেশন ১৪৮: ✕ → ৩-ডট কুইক-অ্যাকশন (header.ejs-ক্যানোনিকাল-শেলের হুবহু প্রতিরূপ —
+           পেইন্টেড-রোতেও অ্যাক্টর-ব্যাজ + পঠিত↔অপঠিত টগল + মুছুন; ডেলিগেটেড nf148-ইঞ্জিন
+           স্বয়ংক্রিয়-প্রযোজ্য) */
+        '<span class="nf-act148">' +
+        '<button type="button" class="nf-dots148" data-nf-dots148 aria-haspopup="true" aria-expanded="false" aria-label="বিজ্ঞপ্তির বিকল্প" title="বিকল্প"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button>' +
+        '<span class="nf-menu148" role="menu" hidden>' +
+        '<button type="button" class="nf-mi148" role="menuitem" data-nf-read148="' + esc(n.id) + '"><i class="far ' + (n.is_read ? 'fa-envelope' : 'fa-check-circle') + '" aria-hidden="true"></i><span data-nf-rlabel148>' + (n.is_read ? 'অপঠিত হিসেবে চিহ্নিত করুন' : 'পঠিত হিসেবে চিহ্নিত করুন') + '</span></button>' +
+        '<button type="button" class="nf-mi148 nf-mi-danger148" role="menuitem" data-nf-del148="' + esc(n.id) + '"><i class="far fa-trash-alt" aria-hidden="true"></i><span>বিজ্ঞপ্তিটি মুছুন</span></button>' +
+        '</span>' +
+        '</span>' +
         '</a>';
     }).join('');
   }
@@ -133,14 +142,26 @@
     fetch('/api/notifications/recent', { credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (d && d.ok) { paintList(d.items); setBadge(d.unread); }
+        if (d && d.ok) {
+          /* সেশন ১৪৮: কুইক-অ্যাকশন-মেনু খোলা থাকলে DOM-repaint স্কিপ (ব্যাজ-আপডেট চলবেই) —
+             খোলা-মেনু-ধ্বংস রোধ (FB-আচরণ: ইন্টারঅ্যাকশন-চলাকালে তালিকা-চার্ন নেই) */
+          var boxNow = document.getElementById('notifList');
+          var menuOpen148 = boxNow && !!boxNow.querySelector('.nf-act148.open');
+          if (!menuOpen148) paintList(d.items);
+          setBadge(d.unread);
+        }
       })
       .catch(function () {})
       .finally(function () { refreshBusy = false; });
   }
-  /* ড্রপডাউন খোলার মুহূর্তে ফ্রেশ-ডেটা (main.js-এর toggleNotifs অক্ষত — আমরা শুধু শোনি) */
+  /* ড্রপডাউন খোলার মুহূর্তে ফ্রেশ-ডেটা — সেশন ১৪৮-গোটচা: আগে wrap-ক্যাপচারে wrap-এর ভেতরের
+     যে-কোনো ক্লিকেই (৩-ডট/মেনু-আইটেম সহ) ৮০ms-পরে repaint হতো → খোলা কুইক-অ্যাকশন-মেনু
+     ধ্বংস হয়ে যেত (E2E-ধরা)। এখন কেবল bell-বাটনের নিজের ক্লিকেই রিফ্রেশ। */
   var bell = document.getElementById('notifBell');
-  if (bell) bell.addEventListener('click', function () { setTimeout(refreshDropdown, 80); }, true);
+  if (bell) bell.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('.notif-bell-btn')) return;
+    setTimeout(refreshDropdown, 80);
+  }, true);
 
   /* ── টাইটেল-কাউন্টার (FB-প্যাটার্ন: ট্যাব-লুকানো অবস্থায় '(২) লেখক ফোরাম') ───── */
   function resetTitle() {

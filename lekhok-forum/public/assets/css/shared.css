@@ -601,3 +601,92 @@
   .share-orig147 .feed-card-head,.share-orig147 .feed-card-body{padding-left:10px;padding-right:10px}
   .share-orig-link147{margin-left:10px}
 }
+/* ═════════ session148 — FB-স্টাইল প্রিমিয়াম নোটিফিকেশন ড্রপডাউন (টোকেন-শুধু, হেক্স-শূন্য) ═════════
+   ① অপঠিত-স্টেট: নীল-টিন্ট + নীল ডট + গাঢ়-সেমিবোল্ড বডি + নীল-বোল্ড টাইম (ড্রপডাউন-খোলায় আর মুছে যায় না)
+   ② অ্যাক্টর-ব্যাজ: অ্যাভাটার-কোণায় টাইপ-রঙা ডিস্ক (nf-b148-<type> — header.ejs মার্কআপ-চুক্তি)
+   ③ ৩-ডট কুইক-অ্যাকশন: হোভারে প্রকাশ + পপওভার-মেনু (পঠিত↔অপঠিত / মুছুন)
+   ④ ফন্ট-ডিকপ্লিং: কনটেন্ট/মেনু/টাইম/খালি-অবস্থা = কালপুরুষ (--font-kp); হেডার/চিপ/বাটন = UI (--font-hs) */
+:root{
+  /* সেশন ১৪৮-গোটচা: headless/পুরনো-Chromium color-mix-অসমর্থিত → var()-রেফারেন্সে
+     ক্যানোনিকাল tokens.css টোকেন (color-mix লিখলে computed ট্রান্সপারেন্ট হতো — E2E-ধরা) */
+  --nf148-unread-bg:var(--lf-blue-soft);
+  --nf148-unread-bg-hover:var(--lf-blue-soft-2);
+  --nf148-dot:var(--lf-blue-600);
+  --nf148-time-unread:var(--lf-blue-600);
+  --nf148-c-default:var(--lf-brand-primary);
+  --nf148-c-msg:var(--lf-blue-600);
+  --nf148-c-heart:var(--lf-danger);
+  --nf148-c-follow:var(--lf-brand-primary);
+  --nf148-c-mention:var(--lf-violet-600);
+  --nf148-c-notice:var(--lf-amber-bright);
+  --nf148-c-answer:var(--lf-cyan-600);
+  --nf148-c-call:var(--lf-danger-deep);
+  --nf148-c-share:var(--lf-emerald-500);
+  --nf148-hover-soft:var(--lf-ui-input-bg);
+}
+/* ① অপঠিত-স্টেট — FB-unread প্যারিটি (অ্যাঙ্কর-ক্লিকে/৩-ডটে/'সব পঠিত'-এই কেবল পঠিত হয়)।
+   স্পেসিফিসিটি-গোটচা: session117-এর #notifList-গ্রেডিয়েন্ট (1,2,0) হারাতে (1,3,0) — ID-সহ */
+.notif-dropdown .notif-item{transition:background .18s ease}
+.notif-dropdown #notifList .notif-item.unread{background:var(--nf148-unread-bg)}
+.notif-dropdown #notifList .notif-item.unread:hover{background:var(--nf148-unread-bg-hover)}
+.notif-dropdown #notifList .notif-item.unread .notif-ico.has-avatar{box-shadow:0 0 0 2px var(--lf-white),0 0 0 3.5px var(--nf148-dot)}
+.notif-dropdown .notif-item.unread .notif-body{color:var(--lf-text-primary);font-weight:600}
+.notif-dropdown .notif-item.unread .notif-time{color:var(--nf148-time-unread);font-weight:700}
+.notif-dropdown .notif-dot{background:var(--nf148-dot);width:11px;height:11px;flex-basis:11px}
+/* ④ ফন্ট-ডিকপ্লিং — কনটেন্ট কালপুরুষ; ক্রোম (হেডার/চিপ/বাটন) UI-ফন্ট */
+.notif-text .notif-body,.notif-text .notif-time{font-family:var(--font-kp)}
+.notif-empty p{font-family:var(--font-kp)}
+.notif-header,.nq-chip,.notif-see-all{font-family:var(--font-hs)}
+/* হেডার-পলিশ: 'N নতুন' পিল + 'সব পঠিত করুন' */
+.nf-htitle148{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.nf-newpill148{font-size:11px;font-weight:700;color:var(--lf-brand-primary);background:var(--lf-brand-light);padding:2px 9px;border-radius:999px;font-family:var(--font-hs);letter-spacing:.2px;white-space:nowrap}
+.nf-hact148{display:inline-flex;align-items:center;gap:12px}
+.nf-markall148{border:0;background:transparent;padding:0;color:var(--accent);font-size:.78rem;font-weight:700;font-family:var(--font-hs);cursor:pointer}
+.nf-markall148:hover{text-decoration:underline}
+.nf-markall148:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+/* ② অ্যাক্টর-ব্যাজ — অ্যাভাটার-কোণায় FB-ধাঁচের টাইপ-রঙা ডিস্ক */
+.notif-ico.has-avatar{overflow:visible}
+.notif-ico.has-avatar .nf-b148{
+  display:inline-flex;position:absolute;right:-3px;bottom:-3px;z-index:1;
+  width:18px;height:18px;border-radius:50%;
+  align-items:center;justify-content:center;
+  font-size:8.5px;line-height:1;color:var(--lf-white);
+  background:var(--nf148-c-default);
+  box-shadow:0 0 0 2px var(--lf-white);
+}
+.notif-ico.has-avatar .nf-b148-message,
+.notif-ico.has-avatar .nf-b148-comment,
+.notif-ico.has-avatar .nf-b148-reply{background:var(--nf148-c-msg)}
+.notif-ico.has-avatar .nf-b148-like,
+.notif-ico.has-avatar .nf-b148-react,
+.notif-ico.has-avatar .nf-b148-reaction{background:var(--nf148-c-heart)}
+.notif-ico.has-avatar .nf-b148-follow{background:var(--nf148-c-follow)}
+.notif-ico.has-avatar .nf-b148-mention{background:var(--nf148-c-mention)}
+.notif-ico.has-avatar .nf-b148-notice,
+.notif-ico.has-avatar .nf-b148-complaint{background:var(--nf148-c-notice)}
+.notif-ico.has-avatar .nf-b148-answer,
+.notif-ico.has-avatar .nf-b148-answer_accepted{background:var(--nf148-c-answer)}
+.notif-ico.has-avatar .nf-b148-call{background:var(--nf148-c-call)}
+.notif-ico.has-avatar .nf-b148-share{background:var(--nf148-c-share)}
+/* ③ ৩-ডট কুইক-অ্যাকশন — হোভারে প্রকাশ, পপওভার-মেনু */
+.nf-act148{position:relative;flex:0 0 auto;align-self:flex-start;margin-top:5px}
+.nf-dots148{width:28px;height:28px;border-radius:50%;border:0;background:transparent;color:var(--lf-text-secondary);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:13px;opacity:0;transition:opacity .15s ease,background .15s ease}
+.notif-item:hover .nf-dots148,.nf-act148.open .nf-dots148,.nf-dots148:focus-visible{opacity:1}
+.nf-dots148:hover,.nf-dots148:focus-visible{background:var(--nf148-hover-soft);color:var(--lf-text-primary)}
+@media (hover:none){.nf-dots148{opacity:1}}
+.nf-menu148{position:absolute;top:32px;right:0;z-index:40;min-width:212px;background:var(--lf-white);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.16);padding:6px}
+.nf-menu148[hidden]{display:none}
+.nf-mi148{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 10px;border:0;border-radius:8px;background:transparent;color:var(--lf-text-primary);font-size:13px;line-height:1.35;font-family:var(--font-kp);cursor:pointer;white-space:nowrap}
+.nf-mi148:hover{background:var(--nf148-hover-soft)}
+.nf-mi148:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.nf-mi148 i{width:16px;text-align:center;color:var(--lf-text-secondary);font-size:12px}
+.nf-mi-danger148,.nf-mi-danger148 i{color:var(--lf-danger)}
+.nf-mi-danger148:hover{background:var(--lf-danger-soft)}
+@media (max-width:480px){
+  .nf-menu148{min-width:196px}
+  .nf-act148{margin-top:3px}
+}
+@media (prefers-reduced-motion:reduce){
+  .notif-dropdown .notif-item,.nf-dots148{transition:none}
+}
+/* EOF-MARKER: session148-notif-dropdown-premium */
