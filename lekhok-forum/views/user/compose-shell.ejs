@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= composeType === 'question' ? 'নতুন প্রশ্ন' : 'নতুন লেখা' %> | লেখক ফোরাম</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    /* ═══ সেশন ১৬৩: কম্পোজ-শেল — পুরনো বিশালাকার ফর্মের (article-form/qa-form টাইটেল+
+       কভার+স্প্লিট-মার্কডাউন) প্রতিস্থাপন: পেজ-লোডেই মাস্টার-কম্পোজার-মোডাল অটো-ওপেন
+       (ইউজার-স্পেক: সব পোস্ট-তৈরি একক FB-মোডালে)। মোডালের সম্পূর্ণ CSS+JS পার্শিয়াল-ই
+       বহন করে — এ-পেজে অন্য কোনো কম্পোজার-স্টাইল লাগে না। ═══ */
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#f8fafc 0%,#eef6f1 60%,#f8fafc 100%);
+      font-family:'Kalpurush','Noto Sans Bengali',sans-serif;color:#1e293b}
+    .shell-note{text-align:center;padding:24px}
+    .shell-note i{font-size:2rem;color:#059669;display:block;margin-bottom:12px;
+      animation:shellPulse 1.2s ease-in-out infinite}
+    @keyframes shellPulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+    .shell-note p{margin:0 0 14px;font-size:.95rem;color:#64748b}
+    .shell-note a{display:inline-flex;align-items:center;gap:8px;background:#fff;
+      border:1px solid #e2e8f0;border-radius:8px;padding:9px 16px;color:#047857;
+      font-weight:700;font-size:.88rem;text-decoration:none}
+    .shell-note a:hover{background:#f0fdf4}
+  </style>
+</head>
+<body>
+  <div class="shell-note" id="shellFallback">
+    <i class="fas fa-pen-nib" aria-hidden="true"></i>
+    <p><%= composeType === 'question' ? 'প্রশ্ন-কম্পোজার খোলা হচ্ছে…' : 'লেখা-কম্পোজার খোলা হচ্ছে…' %></p>
+    <noscript><a href="/dashboard"><i class="fas fa-arrow-left" aria-hidden="true"></i> ফিডে ফিরে যান</a></noscript>
+  </div>
+
+  <%# অটো-ওপেন-ট্রিগার — composer-modal.js ইঞ্জিন .js-composer-open-বাইন্ডিং চুক্তিতে
+      এ-বাটনে সিনথেটিক-ক্লিক করে মোডাল সঠিক টাইপে খোলে (hidden-এও .click() কাজ করে) %>
+  <button type="button" id="shellAutoTrigger" class="js-composer-open"
+          data-composer-type="<%= composeType === 'question' ? 'question' : 'article' %>"
+          hidden aria-hidden="true" tabindex="-1"></button>
+
+  <%# মাস্টার-কম্পোজার-মোডাল — সম্পূর্ণ CSS (dashboard.css + universal-composer.css) ও
+      composer-modal.js এ-পার্শিয়াল-ই লোড করে (user-গার্ডেড; ensureLoggedIn-রুট) %>
+  <%- include('../shared/post/UniversalComposerModal') %>
+
+  <script>
+    (function () {
+      'use strict';
+      var modal = document.getElementById('composerModal');
+      var trigger = document.getElementById('shellAutoTrigger');
+      var fallback = document.getElementById('shellFallback');
+      if (!modal || !trigger) { if (fallback) fallback.hidden = false; return; }
+      /* ইঞ্জিন (composer-modal.js) পার্শিয়ালে সিনক্রোনাস-লোডেড — লিসনার প্রস্তুত */
+      trigger.click();
+      /* ক্লোজ-রিডাইরেক্ট (ইউজার-স্পেক: মোডাল বন্ধ করলে ফিডে ফিরে যান) —
+         সফল-পোস্টে ইঞ্জিন নিজেই r.url-এ নেভিগেট করে (মোডাল hidden-হয় না → অবজার্ভার নিঃশব্দ) */
+      var wasOpen = !modal.hidden;
+      var obs = new MutationObserver(function () {
+        var isOpen = !modal.hidden;
+        if (wasOpen && !isOpen) { obs.disconnect(); window.location.href = '/dashboard'; return; }
+        wasOpen = isOpen;
+      });
+      obs.observe(modal, { attributes: true, attributeFilter: ['hidden'] });
+    })();
+  </script>
+</body>
+</html>

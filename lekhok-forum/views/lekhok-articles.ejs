@@ -171,7 +171,8 @@
         <h3>এখনো কোনো লেখা প্রকাশিত হয়নি</h3>
         <p>নতুন লেখা এখানে দেখা যাবে</p>
         <% if (typeof user !== 'undefined' && user) { %>
-          <a href="/articles/new" class="btn btn-primary"><i class="fas fa-plus"></i> নতুন লেখা লিখুন</a>
+          <%# সেশন ১৬৩: মাস্টার-কম্পোজার-মোডাল ট্রিগার (/articles/new নেভিগেশন বাদ) %>
+          <button type="button" class="btn btn-primary js-composer-open" data-composer-type="article"><i class="fas fa-plus"></i> নতুন লেখা লিখুন</button>
         <% } else { %>
           <a href="/login" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> লগইন করে লিখুন</a>
         <% } %>
@@ -179,3 +180,5 @@
     <% } %>
   </div>
 </section>
+<%# সেশন ১৬৩: মাস্টার-কম্পোজার-মোডাল — লেখার-পেজ থেকেও হুবহু FB-মোডাল (css+js পার্শিয়াল-ই লোড করে; user-গার্ডে লগআউটে রেন্ডার-শূন্য) %>
+<%- include('./shared/post/UniversalComposerModal') %>

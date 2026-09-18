@@ -479,9 +479,17 @@ async function popularTagNames101(limit = 16) {
   return Object.entries(c101).sort((a, b) => b[1] - a[1]).slice(0, limit).map(x => x[0]);
 }
 router.get('/articles/new', ensureLoggedIn, async (req, res) => {
-  // Session 68: me — editor draft-autosave key (per-user, shared-browser safe)
-  const tags101 = await popularTagNames101();
-  res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new', me: req.session.user, popularTags101: tags101 });
+  /* ═══ সেশন ১৬৩ (ইউজার-স্পেক: পুরনো বিশালাকার ফর্ম সম্পূর্ণ দূর): নতুন-লেখা এখন
+     কম্পোজ-শেল — লোডেই মাস্টার-কম্পোজার-মোডাল (লেখা-টাইপ) অটো-ওপেন; ক্লোজে
+     /dashboard-এ ফিরে যায়। চুক্তি-সংরক্ষণ: নিউজলেটার-ব্লাস্ট শুধু পূর্ণ-এডিটরেই —
+     স্টাফ (admin/superadmin/moderator) `?editor=1`-এ লিগ্যাসি ফর্ম পান।
+     এডিট-প্রবাহ (/articles/:id/edit) অপরিবর্তিত — article-form.ejs সেখানেই ব্যবহৃত। */
+  const isStaff163 = ['admin', 'superadmin', 'moderator'].includes(req.session.user.role);
+  if (req.query.editor === '1' && isStaff163) {
+    const tags101 = await popularTagNames101();
+    return res.render('user/article-form', { post: null, error: null, currentPath: '/articles/new', me: req.session.user, popularTags101: tags101 });
+  }
+  res.render('user/compose-shell', { composeType: 'article', currentPath: '/articles/new' });
 });
 
 // টাস্ক ১৩ (পর্ব ৪, অংশ ক): ইউজার লেখা/প্রশ্ন ফর্মে বিদ্যমান একাধিক ছবি লোড
@@ -975,7 +983,10 @@ router.get(['/qa', '/questions'], async (req, res) => {
 
 // ── New question ─────────────────────────────────────────────────────────────
 router.get(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
-  res.render('user/qa-form', { post: null, error: null, currentPath: '/qa/new' });
+  /* সেশন ১৬৩: নতুন-প্রশ্নও কম্পোজ-শেল — মাস্টার-মোডাল প্রশ্ন-টাইপে অটো-ওপেন
+     (পুরনো qa-form শুধু /qa/:id/edit-এ ব্যবহৃত থাকে)। সাবমিট-চুক্তি অক্ষুণ্ণ:
+     ইঞ্জিন POST /api/posts/compose (type=question, post_kind='question')। */
+  res.render('user/compose-shell', { composeType: 'question', currentPath: '/qa/new' });
 });
 
 router.post(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {

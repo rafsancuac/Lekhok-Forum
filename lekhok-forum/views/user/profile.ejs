@@ -104,7 +104,9 @@
         <%# অ্যাকশন-বার: মালিক → সম্পাদনা/নতুন-লেখা/••• ; ভিজিটর → অনুসরণ/মেসেজ/••• %>
         <div class="pf-actions">
           <% if (isOwner) { %>
-            <a href="/articles/new" class="pf-btn primary"><i class="fas fa-plus"></i> নতুন লেখা</a>
+            <%# সেশন ১৬৩: নতুন-লেখা = মাস্টার-কম্পোজার-মোডাল ট্রিগার (/articles/new পুরনো
+                ফর্মে নেভিগেশন বাদ — ইউজার-স্পেক: সব পোস্ট-তৈরি একক FB-মোডালে) %>
+            <button type="button" class="pf-btn primary js-composer-open" data-composer-type="article"><i class="fas fa-plus"></i> নতুন লেখা</button>
             <a href="/profile/edit" class="pf-btn gray"><i class="fas fa-pen"></i> প্রোফাইল সম্পাদনা</a>
             <div class="pf-menu-wrap">
               <button type="button" class="pf-btn gray icon-only" id="profile3DotBtn" onclick="toggleProfile3Dot(event)" title="আরও অপশন" aria-label="আরও অপশন"><i class="fas fa-ellipsis-h"></i></button>
@@ -315,21 +317,11 @@
       <%# ── কলাম ২: টাইমলাইন / ট্যাব-প্যানেলসমূহ ── %>
       <main class="pf-main">
 
-        <%# ═══ সেশন ১৪৭: FB-কম্পোজার-স্ট্রিপ (মালিক) — প্রোফাইল-টাইমলাইনের শীর্ষে
-            'আপনার মনের কথা লিখুন…' + দ্রুত-অ্যাকশন (লেখা/প্রশ্ন/ছবি) ═══ %>
-        <% if (isOwner) { %>
-          <div class="pf-card pf-composer147">
-            <div class="pf-composer-row147">
-              <img loading="lazy" decoding="async" src="<%= profile.avatar_url || '/avatar/' + profile.id %>" alt="" class="pf-composer-av147">
-              <a href="/articles/new" class="pf-composer-cta147"><%= profile.full_name.split(' ')[0] %>, আপনার মনের কথা লিখুন…</a>
-            </div>
-            <div class="pf-composer-acts147">
-              <a href="/articles/new" class="pf-composer-act147 is-green"><i class="fas fa-pen-nib" aria-hidden="true"></i> লেখা লিখুন</a>
-              <a href="/articles/new" class="pf-composer-act147 is-red"><i class="far fa-images" aria-hidden="true"></i> ছবি/ভিডিও</a>
-              <a href="/qa/new" class="pf-composer-act147 is-blue"><i class="fas fa-question-circle" aria-hidden="true"></i> প্রশ্ন করুন</a>
-            </div>
-          </div>
-        <% } %>
+        <%# ═══ সেশন ১৬৩: pf-composer147 (সেশন ১৪৭ FB-কম্পোজার-স্ট্রিপ) অপসারিত —
+            এ-টাইমলাইনে দ্বৈত-ইনপুট-বার তৈরি করত (নিচের UniversalPostTrigger-এর
+            'আপনার সাহিত্য ভাবনা প্রকাশ করুন…'-বাবলের সাথে পাশাপাশি — ইউজার-স্ক্রিনশট ৩০:
+            ডুপ্লিকেট ট্রিগার বার) + পুরনো /articles/new ফর্মে লিঙ্ক। এখন একক মাস্টার
+            ট্রিগারই (নিচে upt158) সব-প্রবেশদ্বার। ═══ %>
 
         <%# ═══ ট্যাব: পোস্টসমূহ (পিনড + ফিল্টার-পিল + FB-ফিড) ═══ %>
         <%# session139: ফিল্টার-বার tab-posts-এর বাইরে তোলা হলো — চার-প্যানেল-সুইচেও
@@ -358,7 +350,7 @@
             <div class="pf-card pf-empty">
               <i class="fas fa-pen-nib"></i>
               <p>এখনো কোনো লেখা প্রকাশ করা হয়নি।</p>
-              <% if (isOwner) { %><a href="/articles/new" class="pf-btn primary">প্রথম লেখা লিখুন</a><% } %>
+              <% if (isOwner) { %><button type="button" class="pf-btn primary js-composer-open" data-composer-type="article">প্রথম লেখা লিখুন</button><% } %>
             </div>
           <% } else { %>
             <div class="pf-feed">
@@ -376,7 +368,7 @@
             <div class="pf-card pf-empty">
               <i class="fas fa-question-circle"></i>
               <p>এখনো কোনো প্রশ্ন করা হয়নি।</p>
-              <% if (isOwner) { %><a href="/qa/new" class="pf-btn primary">প্রশ্ন করুন</a><% } %>
+              <% if (isOwner) { %><button type="button" class="pf-btn primary js-composer-open" data-composer-type="question">প্রশ্ন করুন</button><% } %>
             </div>
           <% } else { %>
             <div class="pf-feed">

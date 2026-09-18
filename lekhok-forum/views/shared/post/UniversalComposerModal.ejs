@@ -9,6 +9,13 @@
   composer-modal.js এ-পার্শিয়াল-ই লোড করে (পেজগুলোতে আর আলাদা ট্যাগ নেই —
   ডাবল-বাইন্ডিং-প্রতিরোধ)। পূর্বশর্ত: user স্কোপে আছে (include-সাইটের user-গার্ডে)।
   ═══════════════════════════════════════════════════════════════════════════ %>
+<%# ═══ সেশন ১৬৩ (ইউজার-স্পেক: মাস্টার-মোডাল সর্বত্র) — RCA-ফিক্স: মোডালের স্ক্যাফোল্ড
+    স্টাইল (cpm-*/fbm-*153) শুধু dashboard.css-এ ছিল — dashboard বাদে প্রোফাইল/me/qa/
+    articles/shell পেজে মোডাল CSS-শূন্য → অ্যাভাটার natural-size ফুল-স্ক্রিন + ভাঙা
+    লেআউট (ইউজার-স্ক্রিনশট ৩১)। এ-পার্শিয়াল-ই নিজের সম্পূর্ণ CSS বহন করে — যে-পেজেই
+    include হবে সেখানেই পূর্ণ-স্টাইলড মোডাল (single-source; identical-URL → ব্রাউজার
+    ডিডুপ, dashboard-পেজে ডাবল-ফেচ-শূন্য)। ═══ %>
+<link rel="stylesheet" href="/assets/css/dashboard.css?v=<%= AV %>">
 <link rel="stylesheet" href="/assets/css/universal-composer.css?v=<%= AV %>">
 <% if (user) { %>
 <div class="cpm-backdrop" id="composerModal" hidden>

@@ -672,8 +672,10 @@
               <a href="<%= typeof getSetting === 'function' ? (getSetting('youtube_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
               <a href="<%= typeof getSetting === 'function' ? (getSetting('twitter_url') || '#') : '#' %>" target="_blank" rel="noopener" aria-label="X"><i class="fab fa-twitter"></i></a>
             </div>
-            <a href="/articles/new"><i class="fas fa-pen-nib"></i> নতুন লেখা</a>
-            <a href="/qa/new"><i class="fas fa-question"></i> নতুন প্রশ্ন</a>
+            <%# সেশন ১৬৩: smart কম্পোজ-লিঙ্ক — পেজে মাস্টার-মোডাল থাকলে সরাসরি খোলে,
+                না-থাকলে /articles/new-shell (অটো-ওপেন-মোডাল) — href fallback অক্ষুণ্ণ %>
+            <a href="/articles/new" class="js-global-compose" data-compose-type="article"><i class="fas fa-pen-nib"></i> নতুন লেখা</a>
+            <a href="/qa/new" class="js-global-compose" data-compose-type="question"><i class="fas fa-question"></i> নতুন প্রশ্ন</a>
             <a href="/bookmarks"><i class="fas fa-bookmark"></i> সংরক্ষিত</a>
             <a href="/complaints"><i class="fas fa-user-shield"></i> অভিযোগ</a>
             <hr style="border:none;border-top:1px solid #eee;margin:6px 0">
@@ -810,8 +812,8 @@
     </details>
 
     <div class="mobile-section">
-      <a href="/articles/new"><i class="fas fa-plus"></i> নতুন লেখা</a>
-      <a href="/qa/new"><i class="fas fa-plus"></i> নতুন প্রশ্ন</a>
+      <a href="/articles/new" class="js-global-compose" data-compose-type="article"><i class="fas fa-plus"></i> নতুন লেখা</a>
+      <a href="/qa/new" class="js-global-compose" data-compose-type="question"><i class="fas fa-plus"></i> নতুন প্রশ্ন</a>
       <a href="/profile/<%= user.username %>"><i class="fas fa-user"></i> প্রোফাইল</a>
       <% if (user.role === 'moderator') { %>
         <a href="/moderator/switch"><i class="fas fa-shield-alt"></i> মডারেটর প্যানেল</a>
@@ -852,3 +854,24 @@
   <script src="/assets/js/reactors-modal.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" defer></script>
   <%# সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার-ইঞ্জিন (toggleDlx/closeDlx + Escape + বাইরে-ক্লিক) — সব-পেজ হেডার %>
   <script src="/assets/js/dir-launcher.js?v=<%= AV %><%= typeof XTPQ !== 'undefined' ? XTPQ : '' %>" defer></script>
+  <%# সেশন ১৬৩: সর্বজনীন কম্পোজ-লিঙ্ক-ইঞ্জিন — .js-global-compose ক্লিকে পেজে
+      #composerModal থাকলে সংশ্লিষ্ট ট্রিগারে সিনথেটিক-ক্লিক (মাস্টার-মোডাল তাৎক্ষণিক,
+      সঠিক data-composer-type-এ); না-থাকলে href (shell-পেজ → অটো-ওপেন)। capture-phase
+      binding — ইঞ্জিন-লিসনারের আগে চলে, trigger-নিজের listener bubble-phase-এ। %>
+  <script>
+    (function () {
+      'use strict';
+      document.addEventListener('click', function (e) {
+        var link = e.target.closest ? e.target.closest('.js-global-compose') : null;
+        if (!link) return;
+        var modal = document.getElementById('composerModal');
+        if (!modal) return; /* মোডাল-শূন্য পেজ → href fallback (shell অটো-ওপেন) */
+        var type = link.getAttribute('data-compose-type') || 'article';
+        var trigger = document.querySelector('.js-composer-open[data-composer-type="' + type + '"]') || document.getElementById('composerOpen');
+        if (!trigger) return; /* ট্রিগার-শূন্য → href fallback */
+        e.preventDefault();
+        e.stopPropagation();
+        trigger.click();
+      }, true);
+    })();
+  </script>

@@ -1996,3 +1996,23 @@ Stage Summary:
 - কোর-শর্টকাট-চুক্তি: DIR_SECTIONS-এ core:true-সেকশন = রেলে শিরোনাম-শূন্য টপ-ব্লক; নতুন-আইটেমে data-fr-hay/data-fr-sec দিতেই সার্চ-অটো-আওতা
 - হারনেস-রীতি-পরিবর্তন: ভারী ব্রাউজার-E2E এখন playwright এক-প্রসেস (fork-safe); agent-browser = হালকা স্পট-চেক
 - পরের-এজেন্ট: session162 থেকে; প্রস্তাব ×৫ PLANS session161-নোটে (সার্চ-কীবোর্ড-নেভ/লাইভ-ব্যাজ/বুকমার্ক-কাউন্ট-পিল/কোর-কোলাপ্স/সাম্প্রতিক-প্রাধান্য)
+
+---
+Task ID: 15 (Session 163 — ইউজার-স্পেক: মাস্টার-কম্পোজার সর্বত্র — পুরনো ফর্ম বিলুপ্ত + ডুপ্লিকেট-বার সমাপ্ত + ভাঙা-মোডাল RCA)
+Agent: Main agent (user-turn — rafsancuac/Lekhok-Forum, Express+EJS)
+Task: ইউজার-স্ক্রিনশট ২৭-৩১-এর ৩-ত্রুটি সমাধান — ① পুরনো বিশালাকার ফর্ম (title+cover+split-markdown — /articles/new, /qa/new) সম্পূর্ণ দূর ② প্রোফাইলের ডুপ্লিকেট ট্রিগার-বার ('আপনার মনের কথা লিখুন…' + 'আপনার সাহিত্য ভাবনা প্রকাশ করুন…' পাশাপাশি) ③ CSS-কনটেইনার-শূন্যে অ্যাভাটার natural-size ফুল-স্ক্রিন — সব পোস্ট-তৈরি ছবি-৩২-এর FB-মোডালে (UniversalComposerModal = একক মাস্টার)
+
+Work Log:
+- টার্গেট-নির্ণয় (স্থায়ী-নির্দেশ 'আগে বর্তমান অবস্থা যাচাই'): স্ক্রিনশট-সিগনেচার 'আপনার সাহিত্য ভাবনা প্রকাশ করুন…' → EJS অ্যাপ-ই (lekhok-forum-next-এ স্ট্রিং-অনুপস্থিত; session159B-রীতি) — পুরনো ফর্ম article-form.ejs/qa-form.ejs-ও EJS-এক্সক্লুসিভ
+- 🚨 RCA-৩১ (ভাঙা লেআউট): মোডালের স্ক্যাফোল্ড-স্টাইল (cpm-*/fbm-*153) **শুধু dashboard.css-এ** — dashboard.ejs extra_css-এ লোড করে, কিন্তু profile.ejs (extra_css: profile.css-ই)/me.ejs/qa-list.ejs লোড করে না → ওই পেজগুলোতে মোডাল CSS-শূন্য → .cpm-avatar natural-size ফুল-স্ক্রিন + backdrop-ভাঙা। session158-এর qa/profile-include-এ E2E-গ্যাপ (dashboard-মাত্র E2E)
+- ফিক্স-১ (single-source): UniversalComposerModal.ejs পার্শিয়াল-ই dashboard.css + universal-composer.css লিঙ্ক করে — যে-পেজেই include, সেখানেই পূর্ণ-স্টাইলড মোডাল (identical-URL → ব্রাউজার-ডিডুপ) + universal-composer.css-এ defense-in-depth অ্যাভাটার-লক (session159-messenger-রীতি: .cpm-author img 42px-দ্বৈত-লক)
+- ফিক্স-২ (ডুপ্লিকেট-বার): profile.ejs-এর pf-composer147 স্ট্রিপ (session147 — /articles/new-লিঙ্কযুক্ত) অপসারিত; UniversalPostTrigger (upt158) = একক ট্রিগার; profile-অ্যাকশন-বার/empty-state + me.ejs 'নতুন লেখা' বাটন → .js-composer-open ট্রিগার-বাটনে রূপান্তর
+- ফিক্স-৩ (পুরনো ফর্ম বিলুপ্ত): routes/social.js GET /articles/new + /qa/new → **compose-shell.ejs** (নতুন — লোডেই মাস্টার-মোডাল সঠিক টাইপে অটো-ওপেন; MutationObserver hidden-ওয়াচে ক্লোজে /dashboard-রিডাইরেক্ট; সফল-পোস্টে ইঞ্জিন-নেভ r.url অক্ষত)। চুক্তি-সংরক্ষণ: স্টাফ ?editor=1-এ লিগ্যাসি পূর্ণ-এডিটর (নিউজলেটার-ব্লাস্ট-চুক্তি) + /articles/:id/edit ও /qa/:id/edit অপরিবর্তিত
+- ফিক্স-৪ (সর্বজনীন লিঙ্ক): header.ejs-এর ৪টি নেভ-লিঙ্ক (user-dropdown + mobile) js-global-compose smart-লিঙ্ক — পেজে #composerModal থাকলে capture-phase-এ ট্রিগারে সিনথেটিক-ক্লিক (তাৎক্ষণিক মোডাল), না-থাকলে href→shell-fallback; lekhok-articles.ejs-এ মোডাল-include + CTA-ট্রিগার
+- E2E (agent-browser @gateway :81?XTransformPort=3030, testuser): **২১/২১ ALL GREEN** — login→dashboard; me/profile: composer147-শূন্য + একক upt158 + মোডাল-ইনস্ট্যান্ট + শিরোনাম সঠিক + **অ্যাভাটার-কম্পিউটেড 42×42**; /articles/new শেল→অটো-ওপেন(লেখা)+ক্লোজ→/dashboard; /qa/new→প্রশ্ন-টাইপ; সাবমিট-প্রবাহ → /articles/:id-নেভ; 390px hScroll-শূন্য ×২; কনসোল-শূন্য; স্ক্রিনশট ×২ (s163-profile-modal/s163-mobile-modal — ছবি-৩২-হুবহু)
+- গোটচা ×৩ (হারনেস): ① agent-browser eval বুলিয়ান unquoted / স্ট্রিং quoted রিটার্ন — দুই-রীতিতে আলাদা-তুলনা ② sandbox ব্যাকগ্রাউন্ড-প্রসেস কল-মাঝে reap করে — প্রতি-কলে ensure-server-প্রিফিক্স ③ sandbox-reset-এ DB-টেস্ট-ইউজারও হারায় — scripts/seed-test-users-163.js (ensureUser-মিরর) দিয়ে পুনঃসিড; টেস্ট-পোস্ট অ্যাপ-ফ্লোতে ক্লিনআপ (posts-টেবিল টেস্ট-আর্টিফ্যাক্ট-শূন্য) + seed-demo-feed-105 পুনঃসিড
+
+Stage Summary:
+- পরিবর্তিত: UniversalComposerModal.ejs (CSS-self-contained), universal-composer.css (avatar-lock), profile.ejs (composer147-বিলুপ্ত + ট্রিগার-রূপান্তর), me.ejs, lekhok-articles.ejs, header.ejs (smart-links + ইঞ্জিন), routes/social.js (/articles/new + /qa/new → shell), views/user/compose-shell.ejs (নতুন), scripts/seed-test-users-163.js (নতুন)
+- ইউজার-প্রভাব: সব পোস্ট-তৈরি প্রবেশদ্বার (ফিড/প্রোফাইল/লেখার-পেজ/নেভ-মেনু/shell-রুট) এখন ছবি-৩২-এর একক FB-মোডালে; পুরনো ব্লগ-ফর্ম নতুন-লেখায় আর দেখা যায় না; প্রোফাইলে একক ইনপুট-বার; ভাঙা-অ্যাভাটার-মোডাল নির্মূল
+- পরের-এজেন্ট: session164 থেকে; প্রস্তাব — ① composer-modal.js-এ edit-mode (মোডাল-ই এডিটও দেবে: /articles/:id/edit-ও shell-এ) ② qa-form/article-form-ফাইল পর্যালোচনা-করে ডেড-কোড-প্রুনিং ③ dashboard.css থেকে মোডাল-ব্লক universal-composer.css-এ স্থানান্তর (single-file-পার্টিশন)

@@ -59,4 +59,11 @@
 @media (prefers-reduced-motion:reduce){
   .upt158-bubble,.upt158-quick-btn,.ucs158-type-btn,.ucs158-genre{transition:none}
 }
-/* EOF-MARKER: session158-universal-composer */
+
+/* ═══ সেশন ১৬৩ — defense-in-depth অ্যাভাটার-লক (ইউজার-স্ক্রিনশট ৩১: natural-size
+   ফুল-স্ক্রিন প্রোফাইল-ছবি) — session159-messenger-রীতি: ক্লাস-হারানো img-ও
+   natural-width অসম্ভব। মোডাল + ট্রিগার — দুই-সারফেসেই দ্বৈত-লক। ═══ */
+.cpm-author img{width:42px;height:42px;max-width:42px;max-height:42px;border-radius:50%;object-fit:cover;flex:none}
+.cpm-author{display:flex;align-items:center;gap:10px;min-width:0}
+.upt158 img{max-width:40px;max-height:40px}
+/* EOF-MARKER: session163-avatar-lock */
