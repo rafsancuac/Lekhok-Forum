@@ -89,6 +89,22 @@
       </div>
     </div>
 
+    <%# সেশন ১৪৮ (ইউজার-স্পেক): 'আমার সারসংক্ষেপ' কমপ্যাক্ট-উইজেট গ্লোবাল-ফিড থেকে এ-পেজে স্থানান্তরিত —
+        গ্লোবাল ফিডে ব্যক্তিগত-ডেটা-ডুপ্লিকেশন বিলোপ; চিপে ক্লিকে নিচের ট্যাব-বারের সংশ্লিষ্ট ট্যাব সক্রিয় হয়
+        (মোট-পাঠ চিপ উপরের ইনসাইটস-কার্ডে স্ক্রল করে) %>
+    <div class="msx148-card" aria-label="আমার সারসংক্ষেপ">
+      <div class="msx148-head">
+        <h2><i class="fas fa-user" aria-hidden="true"></i> আমার সারসংক্ষেপ</h2>
+      </div>
+      <div class="msx148-grid">
+        <button type="button" class="msx148-chip" data-msx-tab="posts" title="আমার পোস্ট"><b><%= bn91(stats.posts) %></b><span>প্রকাশিত লেখা</span></button>
+        <button type="button" class="msx148-chip" data-msx-target=".ws91-card" title="পাঠ-ইনসাইটস"><b><%= bn91(totals91.views) %></b><span>মোট পাঠ</span></button>
+        <button type="button" class="msx148-chip" data-msx-tab="reactions" title="প্রাপ্ত প্রতিক্রিয়া"><b><%= bn91(stats.reactions) %></b><span>প্রতিক্রিয়া</span></button>
+        <button type="button" class="msx148-chip" data-msx-tab="comments" title="আমার মন্তব্য"><b><%= bn91(stats.comments) %></b><span>মন্তব্য</span></button>
+        <button type="button" class="msx148-chip wide" data-msx-tab="drafts" title="আমার খসড়া"><b><%= bn91(stats.drafts) %></b><span>খসড়া (ড্রাফট)</span></button>
+      </div>
+    </div>
+
     <%# সেশন ১১৮ (ইউজার-স্পেক): FB-প্রোফাইল-ঘরানার সিঙ্গেল-লাইন ট্যাব-বার —
         সাদা stat-বক্সের কাউন্টগুলো এখন ট্যাবের ভেতরে পিল-ব্যাজে; অ্যাক্টিভ = সবুজ-আন্ডারলাইন %>
     <div class="personal-tabs" role="tablist" aria-label="আমার কনটেন্ট-ট্যাব">
@@ -322,6 +338,16 @@
     });
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <%# সেশন ১৪৮: msx148-চিপ → ট্যাব-জাম্প/ইনসাইটস-স্ক্রল (এ-পেজ-লোকাল ইঞ্জিন) %>
+  <script>
+    document.addEventListener('click', function (e) {
+      var chip148 = e.target.closest('.msx148-chip'); if (!chip148) return;
+      var tab148 = chip148.getAttribute('data-msx-tab');
+      if (tab148) { var b148 = document.querySelector('.personal-tab[data-tab="' + tab148 + '"]'); if (b148) b148.click(); }
+      var tgt148 = chip148.getAttribute('data-msx-target');
+      if (tgt148) { var el148 = document.querySelector(tgt148); if (el148) el148.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  </script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
   <%# সেশন ১০৫: ক্যানোনিকাল কম্পোনেন্ট-ইঞ্জিন + রিঅ্যাক্টরস-মডাল %>

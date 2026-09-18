@@ -2284,3 +2284,17 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 .dlx-item-desc{font-size:11px;line-height:1.35;color:var(--lf-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dlx-foot{margin-top:8px;padding:8px 16px 12px;border-top:1px solid var(--lf-ui-border);font-size:10.5px;color:var(--lf-text-tertiary)}
 @media (max-width:992px){.dlx-wrap{display:none!important}}
+/* ════════ Session 153 — [relabel: আমার 148→153; কোড-মার্কার msx148 চুক্তি-নামে] — msx 'আমার সারসংক্ষেপ' উইজেট (/me) — EOF-MARKER: session148-msx-me ════════ */
+.msx148-card{background:var(--card);border-radius:var(--radius-sm);padding:14px 16px;margin:0 0 16px;box-shadow:var(--shadow-soft)}
+.msx148-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.msx148-head h2{margin:0;font-size:.95rem;color:var(--brand-text);display:flex;align-items:center;gap:8px}
+.msx148-head h2 i{color:var(--accent)}
+.msx148-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.msx148-chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;transition:var(--transition)}
+.msx148-chip:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+.msx148-chip b{font-size:1.05rem;color:var(--brand-text);line-height:1.2;font-variant-numeric:tabular-nums}
+.msx148-chip span{font-size:.68rem;color:var(--text-muted);font-weight:600;text-align:center}
+.msx148-chip.wide{grid-column:span 2}
+@media (max-width:640px){.msx148-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.msx148-chip.wide{grid-column:span 2}}
+@media (prefers-reduced-motion:reduce){.msx148-chip{transition:none;transform:none}}
+/* ════════ EOF session148-msx-me ════════ */

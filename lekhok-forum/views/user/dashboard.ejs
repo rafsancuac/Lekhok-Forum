@@ -100,51 +100,47 @@
       </div>
     </main>
 
-    <!-- Right Sidebar -->
-    <aside class="dash-right">
-      <%# সেশন ১১০: কমপ্যাক্ট 'আমার সারসংক্ষেপ' — ৪ চিপ (বড়-কার্ড নয়, ইউজারের কমপ্যাক্ট-এসথেটিক) %>
-      <% if (user && myStats) { const bn110 = n => String(n).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[d]; }); %>
-      <div class="side-card card msx-card" aria-label="আমার সারসংক্ষেপ">
-        <h4><i class="fas fa-user" style="color:var(--accent)"></i> আমার সারসংক্ষেপ</h4>
-        <div class="msx-grid">
-          <a href="/me?tab=posts" class="msx-chip" title="আমার পোস্ট"><b><%= bn110(myStats.posts) %></b><span>প্রকাশিত লেখা</span></a>
-          <a href="/me" class="msx-chip" title="লেখা-স্ট্যাটিসটিক্স"><b><%= bn110(myStats.views) %></b><span>মোট পাঠ</span></a>
-          <a href="/me?tab=reactions" class="msx-chip" title="প্রাপ্ত প্রতিক্রিয়া"><b><%= bn110(myStats.reactions) %></b><span>প্রতিক্রিয়া</span></a>
-          <a href="/me?tab=comments" class="msx-chip" title="আমার মন্তব্য"><b><%= bn110(myStats.comments) %></b><span>মন্তব্য</span></a>
-          <%# সেশন ১১২: খসড়া-চিপ — লেখকের অসমাপ্ত কাজ এক-ক্লিকে (/me?tab=drafts) %>
-          <a href="/me?tab=drafts" class="msx-chip wide" title="আমার খসড়া"><b><%= bn110(myStats.drafts || 0) %></b><span>খসড়া (ড্রাফট)</span></a>
-        </div>
-        <a href="/me" class="side-link">বিস্তারিত অ্যানালিটিক্স →</a>
-      </div>
-      <% } %>
+    <!-- Right Sidebar — সেশন ১৪৮ (ইউজার-স্পেক): প্রিমিয়াম FB-প্যারিটি রি-ডিজাইন
+         ① ব্যক্তিগত 'আমার সারসংক্ষেপ' গ্লোবাল ফিড থেকে সম্পূর্ণ অপসারণ (কেবল /me-তে থাকবে)
+         ② 'আজকের জন্মদিন' অটো-হাইড — শূন্য-অবস্থায় কার্ড-অস্তিত্বই নেই (FB-প্যারিটি)
+         ③ ট্রেন্ডিং = কেবল মৌলিক সাহিত্যকর্ম (avatar_update-বাদ + শিরোনাম-ডিডুপ — routes/dashboard.js)
+         ④ লিডারবোর্ডে ডাবল-ব্যাজ বিলোপ → স্লিম বাংলা র‍্যাঙ্ক + অ্যাভাটার-কোণে গোল্ড/সিলভার/ব্রোঞ্জ ডট + এমারেল্ড পয়েন্ট-ব্যাজ
+         ⑤ সর্বোচ্চ ৮px রেডিয়াস (--radius-sm) + সর্বত্র বাংলা অঙ্ক (toBn — session150 single-source চুক্তি) -->
+    <aside class="dash-right" aria-label="ফিড সাইডবার">
       <%# সেশন ১১২: 'পড়া চালিয়ে যান' মাউন্ট — continue-reading.js localStorage থেকে
           রেন্ডার করে; খালি তালিকায় কার্ড আঁকা হয় না (ফাঁকা-কার্ড নয়) %>
       <div id="crxMount" class="crx-mount" hidden></div>
+      <%# ১. আজকের জন্মদিন — শূন্য-অবস্থায় কার্ড আঁকা হয় না ('আজ কারো জন্মদিন নেই' লেখা-কার্ড বিলোপ) %>
+      <% if (birthdays.length) { %>
       <div class="side-card card">
         <h4><i class="fas fa-birthday-cake"></i> আজকের জন্মদিন</h4>
-        <% if (birthdays.length) { %>
-          <% birthdays.forEach(b => { %>
-            <a href="/profile/<%= b.username %>" class="side-user">
+        <% birthdays.forEach(b => { %>
+          <div class="sb148-bd-row">
+            <a href="/profile/<%= b.username %>" class="side-user-main">
               <img loading="lazy" decoding="async" src="<%= b.avatar_url || '/avatar/' + b.id %>" class="side-avatar" alt="">
               <span><strong><%= b.full_name %></strong><small>🎉 আজ তাঁর জন্মদিন</small></span>
             </a>
-          <% }); %>
-        <% } else { %>
-          <p class="side-text">আজ কারো জন্মদিন নেই।</p>
-        <% } %>
+            <a href="/profile/<%= b.username %>" class="sb148-bd-btn">শুভেচ্ছা</a>
+          </div>
+        <% }); %>
         <a href="/birthdays" class="side-link">সব দেখুন →</a>
       </div>
+      <% } %>
 
+      <%# ২. প্রস্তাবিত লেখক — '০ অনুসরণকারী'/ফাঁকা-plus-বাটন বিলোপ → বিভাগ/পরিচিতি + স্পষ্ট টেক্সট-বাটন %>
       <div class="side-card card">
-        <h4><i class="fas fa-user-plus"></i> পরিচিত হোন</h4>
+        <h4><i class="fas fa-user-plus"></i> প্রস্তাবিত লেখক</h4>
         <% if (suggested.length) { %>
           <% suggested.forEach(s => { %>
             <div class="side-user">
               <a href="/profile/<%= s.username %>" class="side-user-main">
                 <img loading="lazy" decoding="async" src="<%= s.avatar_url || '/avatar/' + s.id %>" class="side-avatar" alt="">
-                <span><strong><%= s.full_name %></strong><small><%= s.follower_count %> অনুসরণকারী</small></span>
+                <span>
+                  <strong><%= s.full_name %></strong>
+                  <small><%= s.designation || 'লেখক ফোরাম সদস্য' %></small>
+                </span>
               </a>
-              <button type="button" class="btn btn-ghost btn-sm follow-inline" data-user="<%= s.id %>"><i class="fas fa-plus"></i></button>
+              <button type="button" class="btn btn-ghost btn-sm follow-inline" data-user="<%= s.id %>"><i class="fas fa-plus"></i><span>অনুসরণ</span></button>
             </div>
           <% }); %>
         <% } else { %>
@@ -166,12 +162,16 @@
       </div>
       <% } %>
 
+      <%# ৩. আলোচিত বিষয় ও ট্যাগ — '#ট্যাগ৩'-জোড়া-লাগানো ফিক্স → '#ট্যাগ' + পৃথক বাংলা-কাউন্ট-ব্যাজ %>
       <div class="side-card card">
-        <h4><i class="fas fa-fire"></i> ট্রেন্ডিং ট্যাগ</h4>
+        <h4><i class="fas fa-fire"></i> আলোচিত বিষয় ও ট্যাগ</h4>
         <% if (trendingTags.length) { %>
           <div class="tag-cloud">
             <% trendingTags.forEach(t => { %>
-              <a href="/articles?tag=<%= encodeURIComponent(t.tag) %>" class="tag-chip">#<%= t.tag %> <small><%= t.count %></small></a>
+              <a href="/articles?tag=<%= encodeURIComponent(t.tag) %>" class="sb148-tag">
+                <span class="sb148-tag-name">#<%= t.tag %></span>
+                <span class="sb148-tag-count"><%= toBn(t.count) %>টি লেখা</span>
+              </a>
             <% }); %>
           </div>
         <% } else { %>
@@ -179,48 +179,56 @@
         <% } %>
       </div>
 
+      <%# ৪. আলোচিত লেখা — সস্তা হলুদ-বৃত্ত/ফায়ার-আইকন বিলোপ → স্লিম বাংলা র‍্যাঙ্ক (০১, ০২…) + লেখক · এনগেজমেন্ট %>
       <div class="side-card card">
-        <h4><i class="fas fa-chart-line" style="color:var(--accent)"></i> ট্রেন্ডিং পোস্ট</h4>
+        <div class="sb148-head-row">
+          <h4><i class="fas fa-chart-line" style="color:var(--accent)"></i> আলোচিত লেখা</h4>
+          <span class="sb148-win">বিগত ৩০ দিন</span>
+        </div>
         <% if (trendingPosts && trendingPosts.length) { %>
           <ul class="trending-list">
             <% trendingPosts.forEach((t, idx) => { %>
               <li class="trending-item">
-                <span class="trend-rank"><%= idx + 1 %></span>
+                <span class="sb148-rank" aria-hidden="true"><%= toBn(idx + 1).padStart(2, '০') %></span>
                 <a href="/articles/<%= t.id %>" class="trend-link">
-                  <span class="trend-title"><%= t.title.length > 42 ? t.title.substring(0, 42) + '…' : t.title %></span>
+                  <span class="trend-title"><%= t.title.length > 48 ? t.title.substring(0, 48) + '…' : t.title %></span>
                   <span class="trend-meta">
-                    <i class="fas fa-fire"></i> <%= t.engagement %> এনগেজমেন্ট
-                    · <%= t.author_name %>
+                    <%= t.author_name %> · <%= toBn(t.engagement) %> এনগেজমেন্ট
                   </span>
                 </a>
               </li>
             <% }); %>
           </ul>
         <% } else { %>
-          <p class="side-text">এখনো কোনো ট্রেন্ডিং পোস্ট নেই।</p>
+          <p class="side-text">এখনো কোনো আলোচিত লেখা নেই।</p>
         <% } %>
       </div>
 
+      <%# ৫. শীর্ষ লেখক লিডারবোর্ড — ডাবল-ব্যাজ (মেডাল-বৃত্ত + স্কোর-স্টার) বিলোপ:
+          বামে স্লিম বাংলা র‍্যাঙ্ক (শীর্ষ-৩ মেডাল), অ্যাভাটার-কোণে গোল্ড/সিলভার/ব্রোঞ্জ ডট,
+          ডানে ছোট এমারেল্ড পয়েন্ট-ব্যাজ %>
       <div class="side-card card">
-        <h4><i class="fas fa-trophy" style="color:#f59e0b"></i> লিডারবোর্ড</h4>
+        <h4><i class="fas fa-trophy" style="color:#f59e0b"></i> শীর্ষ লেখক লিডারবোর্ড</h4>
         <% if (leaderboard && leaderboard.length) { %>
           <ul class="leaderboard-list">
             <% leaderboard.forEach((u, idx) => { %>
               <li class="leaderboard-item">
-                <span class="lb-rank <%= idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : '' %>">
-                  <% if (idx === 0) { %>🥇<% } else if (idx === 1) { %>🥈<% } else if (idx === 2) { %>🥉<% } else { %><%= idx + 1 %><% } %>
+                <span class="sb148-rank" aria-hidden="true">
+                  <% if (idx === 0) { %>🥇<% } else if (idx === 1) { %>🥈<% } else if (idx === 2) { %>🥉<% } else { %><%= toBn(idx + 1).padStart(2, '০') %><% } %>
                 </span>
                 <a href="/profile/<%= u.username %>" class="lb-name">
-                  <% if (u.avatar_url) { %>
-                    <img loading="lazy" decoding="async" src="<%= u.avatar_url %>" class="lb-avatar" onerror="this.onerror=null;this.src='/avatar/<%= u.id %>'">
-                  <% } else { %>
-                    <span class="lb-avatar lb-letter"><%= u.full_name.charAt(0).toUpperCase() %></span>
-                  <% } %>
+                  <span class="lb-avatar-wrap<%= idx < 3 ? ' sb148-lb-dot ' + (idx === 0 ? 'gold' : idx === 1 ? 'silver' : 'bronze') : '' %>">
+                    <% if (u.avatar_url) { %>
+                      <img loading="lazy" decoding="async" src="<%= u.avatar_url %>" class="lb-avatar" onerror="this.onerror=null;this.src='/avatar/<%= u.id %>'">
+                    <% } else { %>
+                      <span class="lb-avatar lb-letter"><%= u.full_name.charAt(0).toUpperCase() %></span>
+                    <% } %>
+                  </span>
                   <span class="lb-info">
                     <span class="lb-fullname"><%= u.full_name %></span>
-                    <span class="lb-score"><i class="fas fa-star"></i> <%= u.score %> পয়েন্ট</span>
                   </span>
                 </a>
+                <span class="sb148-lb-points"><%= toBn(u.score) %> পয়েন্ট</span>
               </li>
             <% }); %>
           </ul>

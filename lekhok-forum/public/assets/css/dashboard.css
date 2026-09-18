@@ -320,3 +320,42 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .fr-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fr-foot{margin-top:10px;padding:8px;font-size:10.5px;line-height:1.5;color:var(--lf-text-tertiary)}
 @media (prefers-reduced-motion:reduce){.fr-me,.fr-item{transition:none}}
+/* ════════ Session 153 — ফিড-সাইডবার প্রিমিয়াম-আপগ্রেড (FB-প্যারিটি, ইউজার-স্পেক) — [relabel: আমার 148→153, max+1-রীতি; কোড-মার্কার sb148/session148-sidebar-premium চুক্তি-নামে অক্ষুণ্ণ] — EOF-MARKER: session148-sidebar-premium ════════
+   টোকেন-শুধু — নতুন-হেক্স-শূন্য। সর্বোচ্চ রেডিয়াস ৮px (--radius-sm=5px)। */
+/* স্টিকি-সাইডবার — ভিউপোর্টে লেগে থাকে, নিজস্ব পাতলা-স্ক্রলবার (FB-প্যারিটি) */
+.dash-right{max-height:calc(100vh - 40px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dash-right::-webkit-scrollbar{width:5px}
+.dash-right::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
+.dash-right::-webkit-scrollbar-track{background:transparent}
+/* জন্মদিন-রো + শুভেচ্ছা-বাটন */
+.sb148-bd-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+.sb148-bd-btn{flex-shrink:0;padding:5px 10px;border-radius:5px;background:var(--accent-soft);border:1px solid transparent;color:var(--accent-dark,var(--lf-ok-deep));font-size:.72rem;font-weight:700;text-decoration:none;transition:var(--transition)}
+.sb148-bd-btn:hover{background:var(--accent);color:var(--on-accent)}
+/* ফলো-টেক্সট-বাটন ('+ অনুসরণ' / 'অনুসৃত') — ফাঁকা-plus-আইকন-বাটনের বদলে */
+.follow-inline{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;min-width:44px;justify-content:center}
+.follow-inline span{font-size:.74rem;font-weight:700}
+.follow-inline i{font-size:.68rem}
+/* ট্যাগ-ব্যাজ: '#ট্যাগ' + পৃথক কাউন্ট-ব্যাজ (জোড়া-লাগানো '#ট্যাগ৩' বিলোপ) */
+.sb148-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;background:var(--bg,var(--lf-slate-soft));border:1px solid var(--border,var(--lf-fb-border-2));border-radius:5px;font-size:.78rem;font-weight:700;color:var(--brand-text);text-decoration:none;transition:var(--transition)}
+.sb148-tag:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--brand-text)}
+.sb148-tag-name{color:var(--accent-dark,var(--lf-ok-deep))}
+.sb148-tag:hover .sb148-tag-name{text-decoration:underline}
+.sb148-tag-count{font-size:.66rem;color:var(--text-muted);background:var(--card);border:1px solid var(--border,var(--lf-fb-border-2));padding:1px 6px;border-radius:5px;font-weight:700}
+/* আলোচিত-লেখা হেডার-রো + উইন্ডো-চিপ */
+.sb148-head-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sb148-head-row h4{margin-bottom:8px}
+.sb148-win{font-size:.66rem;color:var(--text-muted);background:var(--bg,var(--lf-slate-soft));padding:2px 8px;border-radius:5px;font-weight:600}
+/* স্লিম র‍্যাঙ্ক — হলুদ-বৃত্ত নয়, ট্যাবুলার বাংলা সংখ্যা (০১, ০২…) */
+.sb148-rank{display:inline-flex;align-items:center;justify-content:center;min-width:22px;flex-shrink:0;font-size:.76rem;font-weight:800;color:var(--text-muted,var(--lf-slate));font-variant-numeric:tabular-nums;letter-spacing:.02em}
+/* লিডারবোর্ড — অ্যাভাটার-কোণে গোল্ড/সিলভার/ব্রোঞ্জ ডট */
+.lb-avatar-wrap{position:relative;flex-shrink:0;display:inline-flex}
+.sb148-lb-dot::after{content:'';position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;border:2px solid var(--card);background:var(--lf-slate)}
+.sb148-lb-dot.gold::after{background:var(--lf-amber-bright,var(--lf-amber-deep))}
+.sb148-lb-dot.silver::after{background:var(--lf-slate-soft-3)}
+.sb148-lb-dot.bronze::after{background:var(--lf-orange-mid)}
+/* এমারেল্ড পয়েন্ট-ব্যাজ (স্কোর-স্টার-ডাবল-ব্যাজের বদলে) */
+.sb148-lb-points{flex-shrink:0;font-size:.68rem;font-weight:800;color:var(--accent-dark,var(--lf-ok-deep));background:var(--accent-soft);padding:3px 8px;border-radius:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* মোশন-সংবেদনশীল + মোবাইল-ফলব্যাক */
+@media (prefers-reduced-motion:reduce){.dash-right{scroll-behavior:auto}}
+@media (max-width:980px){.dash-right{max-height:none;overflow:visible}}
+/* ════════ EOF session148-sidebar-premium ════════ */

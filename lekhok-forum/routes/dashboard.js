@@ -428,30 +428,33 @@ router.get('/dashboard', async (req, res) => {
   `).all();
 
   // Trending posts: highest engagement in last 30 days
-  const trendingPosts = await db.prepare(`
+  // সেশন ১৪৮ (ইউজার-স্পেক): ট্রেন্ডিং-অ্যালগরিদম ফিল্টার —
+  // ① প্রোফাইল-পিকচার/স্ট্যাটাস-আপডেট (post_kind='avatar_update' ইত্যাদি নন-লিটারারি কাইন্ড) কখনোই নয় —
+  //    কেবল মৌলিক সাহিত্যকর্ম (কাইন্ড-শূন্য/writing/question)
+  // ② একই শিরোনামের ডুপ্লিকেট-পোস্ট একবারই (JS-সাইড ডিডুপ — সর্বোচ্চ-এনগেজমেন্ট-টিক আগে আসে)
+  const rawTrending148 = await db.prepare(`
     SELECT p.id, p.title, p.type,
       p.like_count + p.comment_count as engagement,
       u.full_name as author_name
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.published_at >= date('now', '-30 days')
-    ORDER BY engagement DESC, p.published_at DESC LIMIT 5
+      AND COALESCE(p.post_kind, '') NOT IN ('avatar_update')
+      AND (p.like_count + p.comment_count) > 0
+    ORDER BY engagement DESC, p.published_at DESC LIMIT 12
   `).all();
+  const seenTitles148 = new Set();
+  const trendingPosts = rawTrending148.filter(p => {
+    const key = String(p.title || '').trim().toLowerCase();
+    if (seenTitles148.has(key)) return false;
+    seenTitles148.add(key);
+    return true;
+  }).slice(0, 5);
 
   let myInterests = [];
   if (me) { try { myInterests = JSON.parse(await db.prepare('SELECT interests FROM users WHERE id = ?').get(me.id)?.interests || '[]'); } catch (_) {} }
 
-  // সেশন ১১০: সাইডবারের কমপ্যাক্ট 'আমার সারসংক্ষেপ' উইজেট — ৪ লাইট-কুয়েরি (লগড-ইনে)
-  let myStats = null;
-  if (me) {
-    try {
-      const aggP = await db.prepare("SELECT COUNT(*) c, COALESCE(SUM(view_count),0) v FROM posts WHERE author_id = ? AND status = 'published'").get(me.id);
-      const aggC = await db.prepare('SELECT COUNT(*) c FROM comments WHERE author_id = ?').get(me.id);
-      const aggR = await db.prepare("SELECT COALESCE(SUM(like_count),0) l FROM posts WHERE author_id = ? AND status = 'published'").get(me.id);
-      /* সেশন ১১২: খসড়া-সংখ্যা — msx-উইজেটের নতুন 'খসড়া (ড্রাফট)' চিপে */
-      const aggD = await db.prepare("SELECT COUNT(*) c FROM posts WHERE author_id = ? AND status = 'draft'").get(me.id);
-      myStats = { posts: aggP.c || 0, views: aggP.v || 0, reactions: aggR.l || 0, comments: aggC.c || 0, drafts: aggD.c || 0 };
-    } catch (_) { myStats = { posts: 0, views: 0, reactions: 0, comments: 0, drafts: 0 }; }
-  }
+  // সেশন ১৪৮: 'আমার সারসংক্ষেপ' উইজেট গ্লোবাল-ফিড থেকে সরে /me-তে গেছে —
+  // দৈনিক-প্রতি-রিকোয়েস্ট ৪-লাইট-কুয়েরির এ-ব্লক এখন ড্যাশবোর্ডে অপ্রয়োজনীয় (কোয়েরি-সাশ্রয়)
 
   // সেশন ৬৬+৮৯: bookmarked-প্রিফিল এখন decorateFeed()-এর সাথেই (উপরে myBookmarkedIds)
 
@@ -463,7 +466,7 @@ router.get('/dashboard', async (req, res) => {
 
   res.render('user/dashboard', {
     feed, filter, sort, birthdays, suggested, myFollowing, trendingTags, leaderboard, trendingPosts, myInterests,
-    myBookmarkedIds, cursor, myStats,
+    myBookmarkedIds, cursor,
     user: req.session.user || null,
     currentPath: '/dashboard'
   });
