@@ -1484,7 +1484,6 @@ Task: Lekhok-Forum স্টেটাস-অ্যাসেসমেন্ট + 
 - বাকি-র্যাচেট: style.css ১৩৯৫ (ভাগ-করে চালাতে হবে), article ৭১ / auth ১২৩ / gallery ১২৩ / messenger ১৪৪ / calls ৬২ / feed ৮৮ / profile ৭৮ / bookmarks ৫৪ / premium ৩২ / member-accounts ৩১ / rich-editor ৬১ / multi-image ১৭ / shared ২
 - প্রস্তাব: কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), লাইভ-Turso-রিসেট (টোকেন-ধারী)
 - পরের-এজেন্ট: **session138 থেকে**; push-পূর্বে git pull --rebase (union-মার্জ PLANS/PROJECT/worklog)
->>>>>>> 857aa51 (feat(session137): [relabel-নোট: সমান্তরাল session139-আগে-ল্যান্ডেড — docs-লেবেল 137-ই থাক, কোড-মার্কার অক্ষত; ②-প্রত্যাহার-নোটসহ] tokens-র্যাচেট-সমাপ্তি (admin.css ১৭২→০ + dashboard.css ২৩৩→০) — cron QA→ফিচার-রাউন্ড। QA-ফেজ: guard + role-policy ১৭৭/১৭৭ + cursor ২৬/২৬ + audit + brace-০ ×২২ গ্রিন; agent-browser ৭-পেজ সুইপ কনসোল-০/390px-০ → বাগ-শূন্য স্থিতিশীল-ফেজে ফিচার-রাউন্ড। (১) tokens.css session137-ব্লক — ১১৭ নতুন --lf-* (admin: info/violet/cyan-sky/rose/orange/yellow/green-ramp/tailwind-gray/fb-ink-meta-border-surface ≈৮৭; dashboard: warn-বুটস্ট্র্যাপ-লেগাসি/ok-tint/navy/google-blue ≈৩০) → admin.css ১৭২ হেক্স ও dashboard.css ২৩৩ হেক্স সম্পূর্ণ var(--lf-*)-ম্যাপ — উভয় ফাইলে হেক্স-শূন্য, র্যাচেট-বেসলাইন লক (admin:0, dashboard:0); exact-value-ম্যাপ = ভিজ্যুয়াল-পরিবর্তন-শূন্য; দীর্ঘ-হেক্স-আগে + (?![0-9a-fA-F]) বাউন্ডারি (session136-রীতি); ড্রিফট-গ্রে-ভ্যারিয়েন্ট (d8dadf/d5d8de/d8dbe0 নিকট-অভিন্ন) একত্রীকরণ-নয় — -2/-3/-4-সাফিক্সে সৎ-আলাদা-টোকেন; computed-রেজলিউশন-প্রমাণ (--lf-info #2563EB, --lf-fb-ink #1C1E21, --lf-ad-line #DDE3EA, --lf-warn-soft #FFF3CD, --lf-navy #0A1F44, --lf-ok-tint #D4EDDA) + suspicious-transparent-text-০ (২) **প্রত্যাহার-নোট (session134-রীতির ৭ম-প্রমাণ):** article-single .cmt-chain অ্যাডপশন (session134-বকেয়া) আমার রাউন্ডে বানানোর মাঝে সমান্তরাল session139-এজেন্ট তাদের _nameA135-ব্লক (same-feature-canonical) পুশ করে ফেলে — rebase-এ তাদের ক্যানোনিকাল গৃহীত, আমার _nameBy137-ব্লক সম্পূর্ণ-প্রত্যাহৃত (ডাবল-replyTo-লুপ-ঝুঁকি-শূন্য); আমার চিপ-E2E (/articles/1: SSR-চিপ "↩ আকিজ মাহমুদ" + flash + hash + no-reload-মার্কার + কনসোল-০) তাদের-বাস্তবায়নের-উপরেই-প্রমাণিত (৩) রক্ষণাবেক্ষণ: ৪-ডকের অপরিষ্কার stash-কনফ্লিক্ট-মার্কার union-রিজলভ + স্টেল-স্ট্যাশ-ড্রপ (session136-কমিটেড-ডুপ্লিকেট)। ফাইনাল (মার্জড-ট্রি): role-policy ১৭৭/১৭৭ ✓ cursor ২৬/২৬ ✓ guard-নতুন-বেসলাইন ✓ audit:views ✓ brace-০ ✓ /feed-অ্যালায়াস ৩০২ ✓ 390px ×৫-পেজ-০ ✓। গোটচা ×২: grep-c-লাইন-গোনা (minified-CSS-এ occurrence-গণনায় grep -o) + html-vs-body-ব্যাকগ্রাউন্ড-প্রোব (সাইট-ক্যানভাস html{background:var(--bg)}-এ — body-transparent সঠিক)। docs: PLANS session137-নোট (প্রত্যাহার-সংশোধনসহ) + PROJECT §১৩৭ + worklog ×২ — পরের-এজেন্ট session140 থেকে)
 
 ---
 Task ID: session137-ফাইনাল (push-সমাপ্তি)
@@ -1562,3 +1561,27 @@ Work Log:
 Stage Summary:
 - ইউজার-রিপোর্টকৃত ৩-বাগ + ১-লুকানো-রেস সম্পূর্ণ-ফিক্সড, চার-সুইট-রিগ্রেশন-সবুজ
 - পরের-এজেন্ট: session148 থেকে (PLANS-বকেয়া ×৪)
+- পরের-এজেন্ট: session146 থেকে (PLANS session145-নোটে ৪-প্রস্তাব)
+- **push-সমাপ্তি (cron-r15):** 093f97a → origin/main (d46a55a-উপরে রিবেজড; পঞ্চম-push-রেস — সমান্তরাল session144(feed-pill)-এজেন্টের সাথে লেবেল-দখল → আমার চূড়ান্ত-লেবেল session145; ডকস-ইউনিয়ন: PROJECT/PLANS/worklog দ্বি-§144-সংঘর্ষে union + আমার-অংশ 145-রিলেবেল) — পরের-এজেন্ট session146 থেকে
+Task ID: session143 (cron — স্টেটাস-অ্যাসেসমেন্ট → QA → ফিচার-রাউন্ড → push)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্যায়ন + agent-browser QA + ফিচার/স্টাইল রাউন্ড + হ্যান্ডওভার
+
+## Current Project Status / Assessment
+- প্রবেশ-অবস্থা: origin/main @ 9ecb57a (session140/137-ল্যান্ডেড) — ক্লিন-ট্রি
+- QA-ফেজ ALL GREEN: guard ✓ + role-policy ২১২/২১২ + cursor ২৬/২৬ + audit ✓ + brace-০ + node --check
+- agent-browser: ৯-পেজ 200, কনসোল-এরর-০, 390px ×৫ overflow-০ → **বাগ-শূন্য স্থিতিশীল-ফেজ** → ফিচার-রাউন্ড
+- মিথ্যা-অ্যালার্ম-নোট: social.js brace--১ (template-literal আর্টিফ্যাক্ট, node --check সত্য) + style.css [hidden]-সিলেক্টর "ম্যাঙ্গল" (ডিসপ্লে-ম্যানলিং; বাইট-অক্ষত)
+
+## Current Goals / Completed / Verification
+- **ফিচার-A notifications শূন্য-অবস্থা ব্র্যান্ডেড-পলিশ** (session140-প্রস্তাব ③): nf-branded141-স্কোপ; session114-এর self-badge+notifBell114 চুক্তি আবিষ্কার করে রিস্কিন (র‍্যাপার-ব্যাজ প্রত্যাহার); CTA-আইকন-ফাঁদ-ফিক্স (session114-নিয়ম বংশধর `<i>`-তে পড়ে); গ্রেডিয়েন্ট-প্যানেল + দুই-CTA; 390px-ফুল-উইডth-স্ট্যাক। E2E কম্পিউটেড-প্রুফ + স্ক্রিনশট ×৪
+- **ফিচার-B /qa রিচ-এডিটর ইন্টিগ্রেশন** (session140-প্রস্তাব ①): ম্যানুয়াল init {preview:false} (attr-বিহীন — auto-init-cfg-নিয়ন্ত্রণ); ড্রাফট-রিস্টোর/সাকসেস-ক্লিয়ারে input-dispatch-সিঙ্ক; জেন-Esc-গার্ড; ব্র্যান্ড-অ্যাকসেন্ট-ওভাররাইড (article-form-এমারল্ড অস্পৃশ্য); qa-list.ejs-এ ইঞ্জিন-অ্যাসেট। E2E: মাউন্ট(15-বাটন)→বোল্ড-ইনসার্ট→সাবমিট→canonical-swap→ডিটেইলে <strong>→owner-ডিলিট
+- **স্টাইল profile.css hex ৭৮→০** (র্যাচেট-ওয়েভ-৩): session83 --pf-* সিস্টেম মান-রিওয়্যার্ম + ১৪ নতুন টোকেন; **session137-৫-নাম-ভিন্ন-মান-সংঘর্ষ → -২/-৪-সাফিক্স** (ক্রস-সারফেস-ড্রিফট-এড়ানো — কম্পিউটেড-প্রোবে ধরা); **:root-স্কোপ-গোটচা-আবিষ্কার** (ব্লক `}`-পরে পড়লে টপ-লেভেল-ঘোষণা নীরবে-ড্রপ); বেসলাইন-লক 0; ভিজ্যুয়াল-শূন্য (before/after)
+- **role-policy §২৯ ×১১** (rich-editor লোড/মাউন্ট/মার্কডাউন-রেন্ডার/plainText-এক্সার্পট/ক্লিনআপ); গোটচা: ব্রাউজার-সৃষ্ট-প্রশ্ন curl-jar-ডিলিট = ownership-303-নীরব-ফেইল
+- **চূড়ান্ত (মার্জড-ট্রি):** role-policy **২২৪/২২৪ ALL GREEN** + cursor ২৬/২৬ + guard-নতুন-বেসলাইন + audit + EJS ×২ + node --check + bash -n + 390px-০ + কনসোল-০
+
+## Unresolved Issues / Risks / Next Priorities
+- **push-রেস-ইউনিয়ন:** সমান্তরাল session142 (og-লিংক-প্রিভিউ) push-পূর্বে ল্যান্ডেড → stash/rebase-ইউনিয়ন (shared.css+tokens.css দ্বি-UU union — তাদের ব্লক আগে, আমার পরে); আমার লেবেল 141→**143**-রিলেবেল (max+1; কোড-মার্কার -141 অক্ষত)
+- tokens.css-এ pre-existing ভাঙা-আর্টিফ্যাক্ট `(wip(session136)...)` :root-এর ভেতরে inert — HEAD-থেকে আছে, স্পর্শ-করা-হয়নি (ভবিষ্যৎ-পরিষ্কারণ-প্রার্থী)
+- প্রস্তাব-কিউ: style.css-র্যাচেট (১৩৯৫ — ২-৩-রাউন্ডে ভাগ) · auth/gallery/messenger.css (১২৩/১২৩/১৪৪) · /qa-মেনশন-অটোকমপ্লিট (session140-②) · og-কার্ড-পোস্ট-বডিতে (session142-①) · কল-ইতিহাসে degrade-রেকর্ড (db-স্কিমা) · লাইভ-Turso-রিসেট (টোকেন-ধারী)
+- **পরের-এজেন্ট: session144 থেকে**; push-পূর্বে git pull --rebase (union-মার্জ PLANS/PROJECT/worklog)
