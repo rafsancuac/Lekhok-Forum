@@ -2187,3 +2187,7 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 @media (prefers-reduced-motion: reduce){
   .fc-item.is-new124,.qa-answer-slot.is-new124,.fc-item.is-new124>div>.fc-bubble,.qa-answer-slot.is-new124>div>.fc-bubble,.qa-answer-slot.is-new124>.fc-bubble{animation:none}
 }
+/* ═══════════ সেশন ১২৪-ইউনিয়ন-নোট: আমার .undo-toast স্টাইল-ব্লক প্রত্যাহৃত —
+   session129-ক্যানোনিকাল (16bfb4f) undo-toast.js lfUndoShow-সিঙ্গেলটনের স্টাইল
+   shared.css-এ সেন্ট্রালি আছে (ত্রি-সারফেস)। ═══════════ */
+

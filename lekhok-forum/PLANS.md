@@ -1607,3 +1607,32 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **E2E-প্রমাণ:** session125 ২৫/২৫ ✓ (৩-পাবলিক-পেজ-বুট ×৫ + গেস্ট-নেগেটিভ + লাইভ-রিং + পাবলিক-প্রত্যাখ্যান-দ্বি-পক্ষ) + session122 ২১/২১ ✓ + role-policy ১৩১/১৩১ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard ✓ + ৩৯০px-০ + কনসোল-০ + স্ক্রিনশট ×২।
 
 **পরবর্তী-প্রথম-পছন্দ:** Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) → অটো-ভিডিও-ডিগ্রেড → গ্রুপ-রিং-অনলাইন-সীমা → parent-chain-চিপ → drawer-প্রিভিউ-ইনস্ট্যান্ট। **পরবর্তী-এজেন্ট: session131 লেবেল থেকে।**
+## ⚡ Intent Note — Session 124 (cron-QA রাউন্ড; কাজ-শুরুর-আগে intent-চুক্তি অনুযায়ী)
+
+**এই-রাউন্ডে নিচ্ছি (claim):**
+① **QA-উত্তরে optimistic-ইনসার্ট** — ⚠️ **push-পূর্ব rebase-এ session124-ক্যানোনিকাল (7ad5fb3, insertCanonical124 + syncTotals124) আবিষ্কৃত → আমার isQa-এক্সটেনশন সম্পূর্ণ-প্রত্যাহৃত** (session125/127-প্রেসিডেন্সি; ডুপ্লিকেশন-শূন্য)। **আমার-অনন্য-রক্ষিত: swapQaThread-ফিক্স ×২** (empty-state-লিঙ্গার + typeof-qaHtml + total===0-restore — ক্যানোনিকাল swapQaThread-এ হাত দেয়নি, ডিলিট/চিপ-পাথে লাগে)।
+② **swapQaThread empty-state-লিঙ্গার বাগ-ফিক্স** (আজকের বেসলাইন-অডিত-আবিষ্কৃত): `.answers-empty` লিস্টের বাইরের-সিবলিং — swap-সফলে total>0 হলেও "এখনো কোনো উত্তর নেই" মুছত না; swap-এ অপসারণ-লাইন যোগ।
+③ **নোটিফিকেশন-ডিসমিসে undo-টোস্ট** — ⚠️ **push-পূর্ব rebase-এ session129-ক্যানোনিকাল (16bfb4f) আবিষ্কৃত → আমার row-স্ন্যাপশট+/api/notifications/undo/showUndoToast124/.undo-toast-CSS সম্পূর্ণ-প্রত্যাহৃত** (তাদেরটা superset: undo-toast.js lfUndoShow সিঙ্গেলটন + data-n-কম্প্যাক্ট-কী + POST /api/notifications/restore + ত্রি-সারফেস ফুল-পেজ/ড্রপডাউন/paintList)।
+④ **স্টাইল**: style.css EOF session124-ব্লক — `.undo-toast` (ডার্ক, প্রগ্রেস-বার, safe-area, 390px, reduced-motion)।
+
+**স্পর্শ-ফাইল:** public/assets/js/comment-tools.js · routes/social.js (dismiss-রুট-পাশে) · views/user/notifications.ejs (inline-script) · public/assets/css/style.css (EOF-ব্লক) · PLANS/PROJECT/worklog। **schema-পরিবর্তন শূন্য; feed-ranking/messenger/gallery/admin লক-জোন অস্পৃশ্য।**
+
+**হল-প্রভোস্ট-নোট:** session111-④ (hall-provost সার্চ/ফিল্টার + contact_hours) **ইতোমধ্যে সম্পন্ন** (session102/103/109 — cx-prov-search + cx-today-badge লাইভ) — পুরনো-সুপারিশ-তালিকা থেকে বাদ (stale)। **গোটচা-নতুন:** PLANS-সম্পাদনায় Write-ওভাররাইট-বিপত্তি (আমার-আবিষ্কৃত, তাৎক্ষণিক-রিকভার git checkout) — বড়-ফাইলে cat >> বা Edit-ই ব্যবহার করুন।
+
+অন্য-এজেন্ট একই-আইটেমে কাজ শুরু করলে এ-নোট দেখে বিকল্প নিন।
+
+### Cross-Agent Note — Session 124 (cron-QA রাউন্ড; QA-অপটিমিস্টিক + আন-ডু-টোস্ট)
+**Date:** 2026-09-19 · **Scope:** comment-tools.js + routes/social.js + views/user/notifications.ejs + style.css
+
+**ইন্টিগ্রেশন-পয়েন্ট (পরবর্তী এজেন্টের জন্য):**
+1. **insertOptimistic-লিস্ট-সনাক্তকরণ এখন ৩-সারফেস:** `.comments-list[data-post-link]` (আর্টিকেল) → `.fc-drawer[data-comments-for]` (ফিড) → **`.qa-answers-list[data-post-link|data-post-id]` (নতুন)**। নতুন কমেন্ট-সারফেস যোগ করলে একই প্যাটার্নে শাখা যোগ করুন; QA-টপ-লেভেল উত্তরে `.qa-answer-slot--opt` র‍্যাপার + `.answers-empty`-অপসারণ হয় — নতুন-সারফেসেও র‍্যাপার-মিরর + শূন্য-অবস্থা-হ্যান্ডলিং একই রীতিতে রাখুন।
+2. **swapQaThread-চুক্তি-প্রসারণ:** `typeof j.qaHtml === 'string'`-চেক (আগে truthiness — শূন্য-উত্তরে qaHtml:'' → অযথা reload); **total===0-তে client-side empty-state ঢোকানো হয়** (qaHtml-এ এটি আসে না) — qa-html-সার্ভার-রেন্ডারার (social.js) বদলালে এ-দুটো সিঙ্কে রাখুন।
+3. **undo-টোস্ট-চুক্তি (stateless-স্ন্যাপশট) — ⚠️ প্রত্যাহৃত (session129-ক্যানোনিকাল data-n/restore-চুক্তিতে রূপান্তরিত; নিচের বর্ণনা ঐতিহাসিক):** dismiss-রেসপন্সে `row` (SELECT-স্ন্যাপশট) যায় → ক্লায়েন্ট ৬-সেকেন্ড-উইন্ডোতে `/api/notifications/undo {row}` ফেরত পাঠায় → সার্ভার re-INSERT (user_id সবসময় সেশন-ইউজারে force — ক্লায়েন্ট-মান অগ্রাহ্য; explicit-id ফ্রি হলে সেটাই, নইলে auto-id)। **undo-রুট /api/notifications/:id/*-প্যাটার্নের আগে রাখা আছে — রুট-অর্ডার বদলাবেন না।** নতুন ডিসমিস-সারফেস (ড্রপডাউন ইত্যাদি) যোগ করলে `showUndoToast124` (notifications.ejs) কপি করে একই row-চুক্তি ব্যবহার করুন।
+4. **শেষ-আইটেম-ডিসমিসে reload-বাদ:** notifications.ejs এখন client-side `.notif-empty` ঢোকায় + ফিল্টার-বার hidden করে (reload করলে undo-টোস্ট মরত) — undo-সফলে reload-ই সব সার্ভার-সত্যে ফেরায়। এ-পাথ বদলালে টোস্ট-জীবনীক্ষেপ-ইন্টারঅ্যাকশন যাচাই করুন।
+5. **`.undo-toast` স্টাইল (style.css EOF session124-ব্লক):** প্রগ্রেস-বার `undoShrink124 6s` — **JS-টাইমার (6000ms) বদলালে CSS duration-ও বদলান** (কমেন্টে নোট আছে)। z-210 (নিয়মিত .toast-এর উপরে)।
+
+**গোটচা-নতুন ×২:**
+1. **PLANS/বড়-ফাইল-সম্পাদনায় Write-টুল-ওভাররাইট বিপদ:** Write টুল ফাইল ট্রাংকেট করে — বড়-ফাইলে (PLANS.md ১৪৫৯-লাইন) আমার ভুলে ওভাররাইট হয়েছিল; git-checkout-এ তাৎক্ষণিক রিকভার, তবে `cat >> ` বা Edit-ই নিরাপদ রীতি।
+2. **agent-browser 390px-টেস্ট:** `eval`-এ body.style.width=390px দিলে scrollWidth ভিউপোর্ট-প্রস্থই রিটার্ন করে (1280) — **`agent-browser set viewport 390 844`** ব্যবহার করুন; `dialog accept` দিয়ে confirm-হ্যান্ডল (eval-এ window.confirm-ওভাররাইড সবসময় হুক-আগে-পৌঁছায় না)।
+
+**E2E-প্রমাণ:** QA-অপটিমিস্টিক ৪৯ms+`--opt`-স্লট+৩→৪-কাউন্টার ✓ reconcile-canonical+`answer-N`-আইডি ✓ নেস্টেড-রিপ্লাই ১৯ms+`.cmt-replies`-স্থান+reconcile ✓ empty-state-অপসারণ (উভয়-পাথ) ✓ শেষ-উত্তর-ডিলিটে client-side-empty-state+কাউন্টার ১→০ (reload-শূন্য) ✓ undo: টোস্ট ১৬ms+বার্তা/বাটন/প্রগ্রেস ✓ undo-ক্লিক→same-id-পুনঃস্থাপন ✓ মেয়াদ-উত্তীর্ণ→স্থায়ী-মুছে ✓ শূন্য-তালিকা-থেকে-undo ✓ API: anon-401/bad-payload-400/user_id-injection→সেশন-ইউজার-force (ismail-পেজে inj-probe অনুপস্থিত) ✓ ডিসমিস-স্ন্যাপশট-রাউন্ড-ট্রিপ ✓; রিগ্রেশন: ফিড-ড্রয়ার-অপটিমিস্টিক ১৪ms+dup-০+কাউন্টার-সিঙ্ক ✓ আর্টিকেল ২৫ms+৩→৪→৩ ✓ role-policy ১৩১/১৩১ ✓ cursor ২৫/২৫ ✓ guard:design ✓ 390px×৭-পেজ-০ ✓ কনসোল-০ ×৫ ✓ node --check ×২ ✓ EJS-compile ✓ CSS-brace-০ (কমেন্ট-স্ট্রিপ-রীতি) ✓ টেস্ট-ডেটা-ক্লিনআপ (প্রোব-প্রশ্ন/উত্তর/কমেন্ট/নোটিফিকেশন) ✓

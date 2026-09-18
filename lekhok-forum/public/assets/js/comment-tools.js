@@ -1214,10 +1214,26 @@
     fetch('/api/comments?post_id=' + postId + '&format=qa-html')
       .then(function (r) { return r.json(); })
       .then(function (j) {
-        if (j && j.qaHtml) {
+        /* session124-union (আমার-অনন্য ডেল্টা — ক্যানোনিকাল 7ad5fb3 swapQaThread-এ হাত দেয়নি):
+           typeof-চেক (আগে truthiness ছিল) — শূন্য-উত্তরে qaHtml:'' ফলসি হয়ে অযথা
+           reload-ফলব্যাকে পড়ত; খালি-স্ট্রিংও বৈধ সার্ভার-সত্য। */
+        if (j && typeof j.qaHtml === 'string') {
           list.innerHTML = j.qaHtml;
+          // session124 বাগ-ফিক্স: .answers-empty লিস্টের বাইরের-সিবলিং — শূন্য-প্রশ্নে
+          // প্রথম AJAX-উত্তরের পরেও "এখনো কোনো উত্তর নেই" লেগে থাকত; swap-সফলে অপসারণ।
+          // (submit-পাথে insertCanonical124 নিজেই সরায় — এখানে ডিলিট/চিপ-পাথ।)
+          var es124 = document.querySelector('.answers-empty');
+          if (es124) es124.remove();
           var tot = document.querySelector('.comments-total');
           if (tot && typeof (j && j.total) === 'number') tot.textContent = bnNum(j.total);
+          // session124 ফলব্যাক-উল্টো: শেষ-উত্তর-মুছে-গেলে qaHtml খালি → ফাঁকা-তালিকা
+          // নয় — সার্ভার-মার্কআপের মিরর হিসেবে empty-state ঢোকানো (qaHtml-এ এটি নেই)
+          if (!j.total) {
+            var es2124 = document.createElement('div');
+            es2124.className = 'empty-state answers-empty';
+            es2124.innerHTML = '<i class="fas fa-reply-all" aria-hidden="true"></i><p>এখনো কোনো উত্তর নেই। প্রথম উত্তরদাতা হোন!</p>';
+            list.appendChild(es2124);
+          }
           if (toastMsg && window.showToast) showToast(toastMsg, 'success');
         } else { location.reload(); }
       })
