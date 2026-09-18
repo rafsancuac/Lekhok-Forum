@@ -1826,3 +1826,23 @@ Work Log:
 Stage Summary:
 - ফিড-লেআউট ইউজার-স্পেক-অনুযায়ী সংকোচিত: কলাম-গ্যাপ ৪৫→১২px (মূল-কারণ auto-margin-বনাম-justify-center), মাঝ ৬৮০→৭০০px, বাম-রেল ২৬৫px-নো-র‍্যাপ, কার্ড-অভ্যন্তর p-3-ধাঁচ, কার্ড-রিদম ১০px
 - **পরের-এজেন্ট: session159 লেবেল থেকে**; গোটচা: ① bash-আউটপুটে `[h`-গিলধারণ (od-দিয়ে-যাচাই) ② মাঝ-কলামে mx-auto-ফেরত-আনা-নিষিদ্ধ (গ্যাপ-নষ্ট) ③ কমেন্ট-সাবমিট = Enter-কী (form/button নেই) ④ lekhok-forum-next বুট: bun install→.env→db:push→seed×৪→dev(3000)
+
+---
+Task ID: session160 (Lekhok-Forum — lekhok-forum-next/ Next.js অ্যাপ — ইউজার-স্পেক ৪-ফেজ)
+Agent: Z.ai Code (cron webDevReview)
+Task: ইউজার-স্পেক (বাংলা) — ৩-ফিচার অগ্রাধিকার-তালিকা + ক্রন: ① মোবাইলে বটম-শিট ভ্যারিয়েন্ট (P১) ② লঞ্চারে টাইপ-টু-ফিল্টার (P২) ③ রেলে লাইভ-ব্যাজ (P৩) + ১৫-মিনিট ব্যাকগ্রাউন্ড-ক্রন (এগ্রিগেট)
+
+Work Log:
+- প্রি-যাচাই: ফ্রেশ-clone @f9bae63; lekhok-forum-next/-ই টার্গেট (ইউজার-প্রিভিউ কোডবেস, session158-নোট); বুট: bun install→.env→db:push→seed×৪→dev(3000)
+- **P১ ResponsiveModal** (src/components/shared/ui/): ডেস্কটপ md:-সেন্টারড/md:-বটম-শিট হাইব্রিড — drag-handle + lf-sheet-up (cubic-bezier(0.22,1,0.36,1)) + safe-area-inset-bottom + body-স্ক্রল-লক + Esc + backdrop-ক্লিক + headerExtra-স্লট + useSyncExternalStore-মাউন্ট-গার্ড (react-hooks/set-state-in-effect-লিন্ট-কাটা); CreateGroupModal+FollowListModal মাইগ্রেট (ফলো-লিস্টের ট্যাব-স্ট্রিপ headerExtra-এ; panelRef/দ্বৈত-Esc-অপসারণ)
+- **P২ AppLauncherMenu** (src/components/navigation/): ৯-ডট টপবার-বাটন → ডেস্কটপে ৪০০px ড্রপডাউন / মোবাইলে ResponsiveModal-শিট (useIsMobile-গার্ড — উভয়-একসাথে-রেন্ডার-ব্যাকড্রপ-বাগ-কাটা); ১১-আইটেম × ৪-ক্যাটাগরি (লেখা-ও-ফিড/ফোরাম/যোগাযোগ/প্রোফাইল); টাইপ-টু-ফিল্টার title+desc+category+keywords (বাংলা+ইংরেজি: 'গ্রুপ'/'message'); অটো-ফোকাস + খালি-অবস্থা + ক্লিক-আউটসাইড-ক্লোজ; TopNavbar-নতুন-প্রপ ×৪ (onOpenComposer/onCreateGroup/onTabChange/onOpenLatestStory) + page.tsx-ওয়্যারিং; lf:open-notifications-কাস্টম-ইভেন্টে NotificationBell-প্যানেল-ওপেন; 'স্টোরি'-আইটেম → openLatestStory (ফেচ→প্রথম-রিং-এর-প্রথম-আইডি→openStory)
+- **P৩ লাইভ-ব্যাজ**: /api/user/unread-counts (notifications+messages+bookmarks এক-কল); useUnreadCounts হুক (৪৫-সে-পোল, hidden-স্কিপ, inFlight-গার্ড, lf:messages-changed+lf:notifications-changed+visibilitychange-তাৎক্ষণিক); LeftSidebar-এ 'বিজ্ঞপ্তি'-রো-নতুন + মেসেঞ্জার-লাইভ-ব্যাজ; TopNavbar-২০-সে-ডেডিকেটেড-পোল হুকে-প্রতিস্থাপন (নেটওয়ার্ক-চ্যাটার-হ্রাস); NotificationBell-এ notifyCountChanged-ডিসপ্যাচ (row-read+markAll)
+- **ক্রন**: lib/aggregates.ts (৭-দিনের স্কোর=reactions+comments×২+bookmarks×৩; টপ-১০-পোস্ট+টপ-৫-লেখক-লেডারবোর্ড; ইন-মেমরি-ক্যাশ+getAggregates(maxAge)/refreshAggregates); /api/cron/sync-aggregates (Bearer CRON_SECRET, আনসেটে ৫০৩, রেসপন্সে tookMs/postsRanked/authorsRanked); /api/aggregates/trending (ক্যাশড-টপ-৫); RightRail 'আলোচিত এই সপ্তাহে' কার্ড (র‍্যাঙ্ক-চিপ ১-অরেঞ্জ/২-অ্যাম্বার + স্কোর-মেট্রিক্স + ক্লিকে-পোস্ট-নেভ); .env-এ CRON_SECRET (গিট-বহিষ্কৃত)
+- E2E (agent-browser): ডেস্কটপ-লঞ্চার-ফিল্টার 'গ্রুপ'→২-আইটেম/'message'→১-আইটেম/'xyzabc'→খালি-অবস্থা ✓ আইটেম-ক্লিক→মেসেঞ্জার-ভিউ ✓ বিজ্ঞপ্তি-আইটেম→বেল-প্যানেল-ওপেন (expanded=true) ✓ গ্রুপ-আইটেম→মডাল ✓ আলোচিত-কার্ড-ক্লিক→পোস্ট-নেভ ✓; ৩৯০px: লঞ্চার-শিট+গ্রুপ-মডাল-শিট+ফলো-লিস্ট-শিট (handle+ট্যাব-সহ) স্ক্রিনশট-প্রমাণ ✓ hScroll-০ ✓; curl: unread-counts {notifications:0,messages:4,bookmarks:0} + cron-অননুমোদিত-৪০১/সিক্রেট-সাফল্য {postsRanked:8,authorsRanked:5,tookMs:7} ✓; কনসোল-০ ✓; tsc+eslint শূন্য ✓
+- push-রেস: session159-লেবেল-সমান্তরাল-এজেন্ট (EJS-টপবার) আগে-ল্যান্ডেড → max+1-রীতিতে সমগ্র-রিলেবেল 159→160 (১৫-ফাইল-মার্কার sed) + rebase-ইউনিয়ন (ফাইল-সেট-disjoint, কনফ্লিক্ট-শূন্য) → **0d38479..91261be pushed**
+
+Stage Summary:
+- ইউজার-স্পেক ৪-ফেজ সম্পূর্ণ: বটম-শিট-ইঞ্জিন (২-মডাল-মাইগ্রেটেড) + ৯-ডট-টাইপ-টু-ফিল্টার-ডিরেক্টরি + লাইভ-ব্যাজ (হুক+API+সাইডবার) + ক্রন-এগ্রিগেট (তাৎক্ষণিক-দৃশ্যমান 'আলোচিত' কার্ডসহ)
+- রিপো main @ 91261be; **পরের-এজেন্ট session161 লেবেল থেকে**
+- নতুন-গোটচা: ① ResponsiveModal-কে দুই-ভ্যারিয়েন্টে-রেন্ডার-করলে ব্যাকড্রপ-ডাবল — useIsMobile-গার্ড-বাধ্যতামূলক ② Next.js-dev-N-ব্যাজ (নিচ-বাম) অ্যাপের-নয় — dev-overlay, বাগ-ভাবা-নিষেধ ③ bash-আউটপুটে `[hasM`-গিলধারা (session158-গোটচা পুনঃপ্রমাণিত) ④ CRON_SECRET .env-এ — ভেরিফিকেশনে curl -H "Authorization: Bearer lf-cron-159-secret"
+- পরবর্তী-প্রায়োরিটি: লঞ্চার-আইটেমে লাইভ-কাউন্ট-ব্যাজ (বিজ্ঞপ্তি/মেসেজ-আইটেমে), শিট-ড্র্যাগ-টু-ডিসমিস (vaul), ট্রেন্ডিং-ক্যাশে revalidateTag-ইন্টিগ্রেশন, ক্রন-লগ-টেবিল (db)
