@@ -1977,3 +1977,22 @@ Stage Summary:
 - চুক্তি: duration-সেভ করতে হলে FormData 'duration' (সেকেন্ড) পাঠাতেই হবে; নতুন-ভয়েস-সারফেসে data-duration+০:০০-প্লেসহোল্ডার রেখে নরমালাইজ-ইভেন্টের ওপর ভরসা
 - পরীক্ষা-গোটচা: agent-browser eval-ক্লিকে user-activation নেই → NotAllowedError (হার্নেস-আর্টিফ্যাক্ট) — প্লে-টেস্টে agent-browser click (trusted) ব্যবহার করুন; headless-এ blob:-অডিও "URL safety check"-ব্লকড — http-URL-ই পরীক্ষা-পথ
 
+
+---
+Task ID: 14 (Session 161 — ইউজার-স্পেক: ফিড-রেল সার্চ + FB-কোর-শর্টকাট)
+Agent: Main agent (user-turn — rafsancuac/Lekhok-Forum, Express+EJS)
+Task: সোশ্যাল ফিডের বাম প্যানেলে সার্বক্ষণিক সার্চ-বার + সংরক্ষিত লেখা (Bookmarks)/মেমোরিজ/গ্রুপ/পেজ/ফিডব্যাক-বাটন (ইউজারের TSX FeedLeftSidebar-স্পেক → EJS/CSS-পোর্ট)
+
+Work Log:
+- রিপো-সিঙ্ক: fetch → origin ৩cf২8fc (session157-ডিরেক্টরি-রেল + session158-কম্পোজার আগে-ল্যান্ডেড) — আমার WIP stash → rebase → pop → ইউনিয়ন-মার্জ
+- 🚨 সমান্তরাল-কলিশন: একই FeedLeftSidebar-স্পেকের ডিরেক্টরি-অংশ session157-এ ইতোমধ্যে শিপড (fr-sec-title157/fr-item--rich157/'আজকের'-ব্যাজ + ৮-ইউটিলিটি-পেজ) → তাদের ক্যানোনিকাল রেখে আমার অংশ ইউনিয়ন; লেবেল-রেস 157→161 (session158/159/160-ও মাঝপথে ল্যান্ডেড; কোড-মার্কার fr-*-159 অনন্য-রক্ষিত)
+- dir-launcher.js: core-সেকশন 'দ্রুত অ্যাক্সেস' (bookmarks/on-this-day-স্থানান্তর/messages/press) + forum-এ complaints + bake-এ secKey/secTitle/core-ট্যাগ; রুট-ম্যাপ: /saved→/bookmarks, /memories→/on-this-day, /groups→/messages, /pages→/press, /feedback→/complaints (কোডবেস-প্রমাণিত)
+- dashboard.ejs রেল: fr-search159 + fr-me-sub159 + sec.core-গার্ড (শিরোনাম-শূন্য কোর-ব্লক) + data-fr-sec/data-fr-hay সব-আইটেমে + fr-empty159 + guarded search-IIFE; dashboard.css session159-ব্লক (-159-আইডেন্টিফায়ার, তাদের -157-পরিবারের সাথে collision-শূন্য)
+- E2E হারনেস-পরিণতি: agent-browser CLI চক্রে cgroup fork-exhaustion → ব্রাউজার-সেকশন playwright এক-প্রসেসে (lf159-browser.js); eval-আউটপুট JSON-কোট-স্ট্রিপ; mini-services সুপারভাইজার-গোটচা (:3030-প্রিভিউ = crash-loop-respawn, হারনেস :8080-স্বতন্ত্র)
+- ফলাফল: **৪৬/৪৬ ALL GREEN** (মার্কার ×১২ + রুট-স্মোক ×৫ + রেল-১৬-আইটেম + ফিল্টার-চতুষ্টয় + session156-স্ক্রল-লক-রিগ্রেশন + মোবাইল-৩৯০px + কনসোল-০) + লাইভ-৩০৩০ স্পট-চেক (items=16/core-ক্রম/feedback/search সত্য) + স্ক্রিনশট ×৩
+- পুশ-রেস ×২: প্রথম push-রিজেক্ট (আপস্ট্রিম এগিয়েছে) → rebase-কনফ্লিক্ট-শূন্য → relabel-amend 159→161 → **origin/main @ 1576b0e** + docs 01e45d4 (ক্রন-পেলোড-টোকেন-উদ্ধার — পরিচিত স্যান্ডবক্স-রিসেট-পদ্ধতি)
+
+Stage Summary:
+- কোর-শর্টকাট-চুক্তি: DIR_SECTIONS-এ core:true-সেকশন = রেলে শিরোনাম-শূন্য টপ-ব্লক; নতুন-আইটেমে data-fr-hay/data-fr-sec দিতেই সার্চ-অটো-আওতা
+- হারনেস-রীতি-পরিবর্তন: ভারী ব্রাউজার-E2E এখন playwright এক-প্রসেস (fork-safe); agent-browser = হালকা স্পট-চেক
+- পরের-এজেন্ট: session162 থেকে; প্রস্তাব ×৫ PLANS session161-নোটে (সার্চ-কীবোর্ড-নেভ/লাইভ-ব্যাজ/বুকমার্ক-কাউন্ট-পিল/কোর-কোলাপ্স/সাম্প্রতিক-প্রাধান্য)
