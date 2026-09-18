@@ -298,6 +298,21 @@ notices/events/members/gallery/resources CRUD + settings + messages (contact for
 
 ## ১০. Changelog
 
+### সেশন ১৩০ (২৩ সেপ্টেম্বর ২০২৬) — পাবলিক-পেজ গ্লোবাল কল-রিংগার (রোডম্যাপ-① পূর্ণরূপ: layout.ejs) + আসন্ন-কল পলিশ + ভাইব্রেশন (webDevReview রাউন্ড)
+
+**প্রসঙ্গ:** QA-ফেজ সব-গ্রিন (role-policy ১৩১/১৩১ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard + agent-browser ৮-পেজ কনসোল-০) → স্টেবল-ফেজ। বেসলাইন-প্রমাণ: লগড-ইন ইউজার `/`-এ `window.LekhokCall === undefined` — সেশন-৯৪-এর মেম্বার-পেজ রিংগার (header.ejs) lekhok-*.ejs পাবলিক-পেজে (দ্বি-হেডার-স্থাপত্য) পৌঁছায়নি। রোডম্যাপ-② (কল-ইতিহাস-ট্যাব) ও ⑤ (ICE-restart-রিট্রাই-UI) যথাক্রমে সেশন-৯৪/৯৭-এ সম্পন্ন যাচাইকৃত — ①-ই বাকি-থাকা গ্যাপ।
+
+**ইমপ্ল (৩-ফাইল + E2E):**
+- **views/layout.ejs:** লগড-ইন গেটেড ① head-এ calls.css ② body-শেষে `window.LekhokCallCtx` (header.ejs-চুক্তির হুবহু মিরর — me/meName/meAvatar/convId:0/peer:null) + env-TURN ওয়্যারিং (LEKHOK_TURN_URLS/USERNAME/CREDENTIAL — session97-চুক্তি) ③ webrtc-call.js। ডাবল-ইনক্লুড নিরাপদ (webrtc-call.js-এর নিজস্ব `window.LekhokCall`-গার্ড); গেস্ট-পেজে লোড-শূন্য (ওজন-গার্ড)।
+- **public/assets/js/webrtc-call.js:** showIncoming()-এ মোবাইল-ভাইব্রেশন (one-shot `[380,180,380,180,420]` — typeof-navigator.vibrate-গার্ড, iOS-নিরাপদ; লুপ-নয় তাই cleanup-অপ্রয়োজন)।
+- **public/assets/css/calls.css (session125-ব্লক EOF):** আসন্ন-কল কার্ড গ্লাস-প্যানেল (ব্যস্ত পাবলিক-পেজ-ব্যাকগ্রাউন্ডে কনট্রাস্ট-গ্যারান্টি — blur(18px)+inset-hi-lite+গভীর-ছায়া), গ্রহণ-বাটন গ্লো-পালস (lc-accept-glow — hover-এ paused), কাইন্ড-চিপে সূক্ষ্ম-শিমার, মোবাইল safe-area-inset-সচেতন কন্ট্রোল/মেটা + কার্ড-মার্জিন, reduced-motion-গার্ড। সব-রুল .lc-স্কোপড — গ্লোবাল-অস্পৃশ্য।
+
+**নতুন E2E:** `scripts/verify-session130-globalringer.js` (২৫-চেক, playwright দুই-ব্রাউজার fake-media) — ৩ পাবলিক-পেজে (/about, /, /resources) মডিউল-বুট + ctx.me + calls.css + হার্টবিট-ওয়ার্কার + idle-পোল (×৫), গেস্ট-নেগেটিভ, লাইভ-রিং (ক্যালি /about-এ থাকা-অবস্থায় কলার-কল → পাবলিক-পেজেই মোডাল + কাইন্ড-চিপ + কলার-নাম), পাবলিক-পেজ থেকেই প্রত্যাখ্যান → উভয়-পক্ষ idle। **টেস্ট-চুক্তি-নোট:** `_debug.callId` অফার-POST-সফলে সেট হয় — `S.state='outgoing'` শুরুতেই (UI-ফার্স্ট) সেট হয়ে যায়, তাই **callId-সত্য-অপেক্ষাই সঠিক** ('outgoing'-স্টেট-অপেক্ষা নয় — রেস)। ব্রাউজার-E2E বুটে CALL_RING_TIMEOUT_S=4 দিলে পাবলিক-পেজের ৫সে-পোলের সাথে ৪সে-রিং-উইন্ডো রেস করে (মিথ্যা-ফ্ল্যাকি) — **ব্রাউজার-E2E রানে ডিফল্ট-৪৫সে-ই রাখুন** (API-স্যুটে সেই env-এর দরকার আছে — দুই-ফেজ-বুট রীতি)।
+
+**E2E-প্রমাণ:** session125 **২৫/২৫** ✓ + session122-রিগ্রেশন **২১/২১** ✓ + role-policy **১৩১/১৩১** + calls **৫৫/৫৫** + groupcalls **৫০/৫০** + cursor **২৫/২৫** + guard ✓ + node --check ✓ + brace-০ ✓ + curl-সার্ভার-সত্য (৮ পাবলিক-পেজে webrtc:1 calls.css:1 — লগড-ইন) ✓ + agent-browser ৮-পেজ কনসোল-০ ✓ + 390px-ওভারফ্লো-০ ✓ + স্ক্রিনশট ডেস্কটপ/মোবাইল (scripts/s130-incoming-*.png — গ্লাস-কার্ড+গ্লো+রিপল) ✓
+
+**পরবর্তী-সুপারিশ:** ① Metered.ca-TURN (ইউজার-অ্যাকাউন্ট — env-গ্রাউন্ডওয়ার্ক তৈরি) ② quality-ভিত্তিক অটো-ভিডিও-ডিগ্রেড ③ গ্রুপ-কল-রিং শুধু-অনলাইন-সদস্যে-সীমিত ④ POST /api/comment html-রেন্ডারে parent-chain-সচেতন top-answer-chip ⑤ drawer-প্রিভিউ-ইনস্ট্যান্ট-প্রতিফলন।
+
 ### সেশন ১২৭ (২৩ সেপ্টেম্বর ২০২৬) — QA-সুইপ + ক্যানোনিকাল-প্রত্যাহার (চতুর্থ-স্বাধীন-প্রমাণ) + stale-সুপারিশ-পরিষ্কার (cron-r12-দ্বিতীয়)
 
 **স্কোপ:** docs-only। QA-বেসলাইন বাগ-শূন্য (১৮-রুট + ভিজ্যুয়াল + 390px-০ + কনসোল-০)। session116-অবশিষ্ট (QA-optimistic) সম্পূর্ণ-ইমপ্ল+E2E-প্রুফের পরে push-পূর্ব rebase-এ আবিষ্কৃত যে insertCanonical124 (7ad5fb3) + killItem/.cmt-dying (cb83da1) আমার প্রতিটি ডেল্টা-আইটেম ক্যানোনিকাল-রূপে ইতিমধ্যে-আচ্ছাদিত → সম্পূর্ণ-প্রত্যাহার (session125-প্রেসিডেন্সি; HEAD-রিসেট)। **অনন্য-রক্ষিত:** ① hall-provost-সার্চ stale-ঘোষণা (session102/103-এ ইমপ্ল — cxProvSearch; ভবিষ্যৎ-এজেন্ট আর নেবেন না) ② optimistic-পর্যবেক্ষণ-কৌশল: fetch-হুকে কেবল রিফেচ-GET বিলম্বিত করুন (`/api/comments?`-মিল — `/api/comment`-substring-মিলালে দুটোই-বিলম্বিত হয়ে প্রুফ-মিস) + in-page setTimeout-ক্যাপচার (eval-গ্যাপ টাইমিং-নষ্ট করে) ③ `[h`-খাওয়া: byte-check-এর **আউটপুটও** খাওয়া হতে পারে — দুই-স্বতন্ত্র-প্যাটার্নে ক্রস-চেক বাধ্যতামূলক ④ home `.reveal` opacity:0 = IO-আর্টিফ্যাক্ট-নোট। চতুর্থ-স্বাধীন-প্রত্যাবর্তন = ইঞ্জিন-সম্পূর্ণতার-প্রমাণ।

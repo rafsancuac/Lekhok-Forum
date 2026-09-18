@@ -1585,3 +1585,25 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **E2E-প্রমাণ:** isPrivateIp 19/19 ✓ scheme/port/loopback/localhost-ব্লক ✓ রিয়েল-ফেচ (w3.org dummy.pdf 13264B → /uploads/attachments/ + file_size 13.0 KB) ✓ API-fetched:1 ✓ SSRF-80-রো-এরর-মেসেজ ✓ ftp-ব্লক ✓ play-all ×৪ (fresh→৮৪ / done{84}→৮৫ / resume(cur ep3)→৮৬ / all-done→৮৪) ✓ chip-ব্যাজ ১/৩+৩/৩ ✓ is-done-টিক ×৩ ✓ admin rss-প্যানেল (1-কার্ড, bar 100%) ✓ rbm-হিন্ট+১১-কলাম-টেমপ্লেট ✓ role-policy 131/131 ×২ ✓ 390px-০ ✓ কনসোল-০ ✓ E2E-রো+ফাইল-ক্লিনআপ ✓ স্ক্রিনশট ×৩ (s124-admin-series/-mobile, s124-bulk-modal) ✓
 
 **পরবর্তী-প্রথম-পছন্দ:** created_at UTC→লোকাল সাইট-ওয়াইড (data-ts-কনভেনশন-সমন্বিত) → playlist stat-এ প্রতি-সিরিজ aggregate API (admin-প্যানেল এখন সার্ভার-রেন্ডারড; লাইভ-সংখ্যা চাইলে /api/resources/series-stats) → role-policy-তে bulk-fetch-SSRF-চেক-যোগ → সিরিজ-কভার-ইমেজ (চিপ-রো মিনি-প্রিভিউ এখন প্রথম-থাম্বনেইল-ভিত্তিক; সিরিজ-লেভেল-কভার-ফিল্ডের উপযুক্ত সময়)।
+
+
+---
+
+## Cross-Agent Note: Session 130 — পাবলিক-পেজ গ্লোবাল কল-রিংগার (রোডম্যাপ-① পূর্ণরূপ: layout.ejs) + আসন্ন-কল পলিশ + ভাইব্রেশন (১৮ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** views/layout.ejs · public/assets/js/webrtc-call.js (৪-লাইন) · public/assets/css/calls.css (EOF-ব্লক) · scripts/verify-session130-globalringer.js (নতুন E2E) — route/db শূন্য।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট (পরবর্তী এজেন্টদের জন্য):**
+1. **LekhokCallCtx এখন দুই-জায়গায় (হুবহু-মিরর চুক্তি):** header.ejs (মেম্বার-পেজ) + layout.ejs (পাবলিক-পেজ) — **ctx-স্কিমা বদলালে দুই-জায়গাই একসাথে** (me/meName/meAvatar/convId/convUsername/isGroup/peer + env-TURN ব্লক)। ভিন্ন-লেআউট-পরিবার বলে দুই-পেজে কখনো একসাথে লোড হয় না — ডাবল-ইনক্লুড গার্ড (`window.LekhokCall`) বাড়তি-নিরাপত্তা।
+2. **পাবলিক-পেজে কল-মোডাল UI:** webrtc-call.js-এর `ensureRoot()` নিজেই `document.body`-তে fixed-overlay বসায় — পাবলিক-পেজের কোনো মার্কআপ-সাপোর্ট লাগে না। নতুন-পাবলিক-পেজ (lekhok-*.ejs) যোগ করলে layout.ejs-ব্লকই যথেষ্ট — কিছু করতে হয় না।
+3. **calls.css session130-ব্লক (EOF):** `.lc-incoming-card`-গ্লাস + `.lc-act--accept`-গ্লো (lc-accept-glow) + safe-area — **`.lc-incoming-card`/`.lc-act--accept`-বেস-রুল এডিট করলে এ-ব্লকের অ্যাডিটিভ-ওভাররাইড মাথায় রাখুন** (ক্যাসকেড-অর্ডার: session130-ব্লক শেষে — জয়ী)।
+4. **ভাইব্রেশন-চুক্তি:** showIncoming()-এ one-shot `navigator.vibrate` — লুপ-নয়; লুপ-চাইলে stopIncomingAttention()-এ cancel করার হুক যোগ করতে হবে (এখন অপ্রয়োজনীয়)।
+
+**গোটচা-নতুন ×২:**
+1. **ব্রাউজার-E2E-বুটে CALL_RING_TIMEOUT_S=4 নিষিদ্ধ (পাবলিক-পেজ-প্রসঙ্গে):** পাবলিক-পেজের idle-পোল ৫সে-অন্তর, ৪সে-রিং-উইন্ডোর চেয়ে বড় → মোডাল পপ-হওয়ার-পরেই পরবর্তী-পোলে incoming=null → ফ্ল্যাকি। API-স্যুট (verify-session93) বনাম ব্রাউজার-E2E **দুই-ফেজ-বুট রীতি**: API-রানে env-সহ, ব্রাউজার-রানে ডিফল্ট-৪৫সে।
+2. **`_debug.callId`-অপেক্ষার চুক্তি:** কলার-সাইডে `S.state='outgoing'` start()-এর একদম-শুরুতে (UI-ফার্স্ট) সেট হয়; call_id অফার-POST-সফলে। টেস্টে **callId-truthy-wait** করুন — 'outgoing'-স্টেট-wait নয় (তাৎক্ষণিক-রেজলভ → মিথ্যা-null)।
+3. **SW-ক্যাশ-গেস্ট-মিথ্যা-নেগেটিভ (পুনঃপ্রমাণিত):** agent-browser-এ লগড-ইন-থাকাও /gallery-তে `LekhokCall===undefined` দেখাতে পারে — SW পাবলিক-HTML গেস্ট-ভার্সন ক্যাশ করে রেখেছিল; curl-সার্ভার-সত্যই প্রমাণ (৮-পেজে webrtc:1) — ব্রাউজার-যাচাইয়ের আগে unregister+caches.delete রেসিপি (session121-গোটচা-③)।
+
+**E2E-প্রমাণ:** session125 ২৫/২৫ ✓ (৩-পাবলিক-পেজ-বুট ×৫ + গেস্ট-নেগেটিভ + লাইভ-রিং + পাবলিক-প্রত্যাখ্যান-দ্বি-পক্ষ) + session122 ২১/২১ ✓ + role-policy ১৩১/১৩১ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard ✓ + ৩৯০px-০ + কনসোল-০ + স্ক্রিনশট ×২।
+
+**পরবর্তী-প্রথম-পছন্দ:** Metered.ca-TURN (ইউজার-অ্যাকাউন্ট) → অটো-ভিডিও-ডিগ্রেড → গ্রুপ-রিং-অনলাইন-সীমা → parent-chain-চিপ → drawer-প্রিভিউ-ইনস্ট্যান্ট। **পরবর্তী-এজেন্ট: session131 লেবেল থেকে।**

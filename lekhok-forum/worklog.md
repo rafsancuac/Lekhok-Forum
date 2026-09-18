@@ -1266,3 +1266,24 @@ Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser
 - পুশ-কৃত: feat(session129) — undo-toast.js (নতুন), tokens-hex-baseline.json (নতুন), social.js (BFS+restore), guard-design-system.js (র্যাচেট), test-role-policy.sh (§25), notifications.ejs/header.ejs/live.js (data-n), shared.css (utoast-ব্লক), continue-reading.js (ফলব্যাক-পোর্ট), dashboard.css (#fff→টোকেন)
 - পরবর্তী: og-default-বিরোধী data-cover-গার্ড · dropdown reltime-রি-পেইন্ট · র্যাচেট-বেসলাইন-হ্রাস (admin.css-৪২৬)
 - **push-সমাপ্তি:** 16bfb4f (feat) + 5eabd2b (docs) → origin/main ✓ (লেবেল-রেস ×৫: 125→129-রিলেবেল; guard-ইউনিয়ন = session124-এর tokensHexGuard + আমার CSS-র্যাচেট সহ-অস্তিত্ব; post-push স্মোক ২০০ ×৫ + স্যুট সব-গ্রিন)
+
+
+
+Task ID: session130 (webDevReview রাউন্ড — origin/main @ 7ad5fb3 থেকে)
+Agent: Z.ai Main Agent (webDevReview)
+Task: অবস্থা-অ্যাসেসমেন্ট + agent-browser QA → স্বাধীন-ফোকাস: রোডম্যাপ-① পূর্ণরূপ (পাবলিক-পেজ কল-রিংগার — layout.ejs) + আসন্ন-কল স্টাইল-পলিশ + ভাইব্রেশন + নতুন ব্রাউজার-E2E
+
+Work Log:
+- sync+worklog-পাঠ: session124 সর্বশেষ (ক্যানোনিকাল-ইনসার্ট); রোডম্যাপ-অডিট — ② কল-ইতিহাস-ট্যাব (সেশন-৯৪), ④ গ্রুপ-কল (১১৩), ⑤ ICE-restart-রিট্রাই-UI (৯৭) ইতোমধ্যে-সম্পন্ন যাচাই; ①-এর মেম্বার-পেজ-অর্ধ (header.ejs, সেশন-৯৪) আছে কিন্তু layout.ejs-পরিবারের পাবলিক-পেজ বাদ — সেটই অনন্য-ডেল্টা
+- QA-ফেজ: pkill→ss-ভেরিফাই→seed-qa-users (সার্ভার-বন্ধ)→এক-ইনভোকেশনে বুট+৪-স্যুট: role-policy ১৩১/১৩১ + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard — ALL GREEN; agent-browser ৬-পেজ কনসোল-০ → স্টেবল-ফেজ
+- বেসলাইন-প্রমাণ: লগড-ইন `/`-এ `LekhokCall===undefined` (দ্বি-হেডার-স্থাপত্য-গ্যাপ); ডাবল-ইনক্লুড-গার্ড (window.LekhokCall) যাচাই → layout.ejs-সম্প্রসারণ নিরাপদ
+- ইমপ্ল: layout.ejs (লগড-ইন-গেটেড calls.css + LekhokCallCtx-মিরর + env-TURN + webrtc-call.js) + webrtc-call.js showIncoming()-এ one-shot ভাইব্রেশন (typeof-গার্ড) + calls.css session130-EOF-ব্লক (গ্লাস-কার্ড/গ্লো-পালস/শিমার-চিপ/safe-area/reduced-motion)
+- নতুন E2E scripts/verify-session130-globalringer.js (২৫-চেক): ৩-পাবলিক-পেজ-বুট ×৫ + গেস্ট-নেগেটিভ + লাইভ-রিং (/about-এ ক্যালি, মোডাল+কাইন্ড-চিপ+নাম) + পাবলিক-প্রত্যাখ্যান-দ্বি-পক্ষ — ২৫/২৫ ALL GREEN (২-টেস্ট-গোটচা ডকুমেন্টেড: callId-truthy-wait + ব্রাউজার-রানে CALL_RING_TIMEOUT_S=4-নিষিদ্ধ)
+- চূড়ান্ত-রিগ্রেশন: session122-ব্রাউজার ২১/২১ + ৪-API-স্যুট পুনঃগ্রিন + curl-সার্ভার-সত্য ৮-পাবলিক-পেজ webrtc:1/calls.css:1 + agent-browser কনসোল-০ + 390px-ওভারফ্লো-০ + স্ক্রিনশট ×২ (গ্লাস-কার্ড+রিপল প্রমাণ)
+- গোটচা-পুনঃপ্রমাণ: SW-ক্যাশ-গেস্ট-মিথ্যা-নেগেটিভ (/gallery agent-browser-এ undefined, curl-এ 1) — session121-রেসিপি-ই সমাধান
+- docs: PROJECT-চেঞ্জলজ §১২৫ + PLANS session125 cross-agent-নোট (৪-ইন্টিগ্রেশন-পয়েন্ট+৩-গোটচা) + repo-worklog + রুট-worklog
+
+Stage Summary:
+- লগড-ইন ইউজার এখন সাইটের যেকোনো পেজে (পাবলিক+মেম্বার উভয়-পরিবার) আসন্ন কলের রিং+পপআপ পান — রোডম্যাপ-① পূর্ণরূপ; পরের-এজেন্ট session131 লেবেল থেকে
+- কল-ডোমেইনে অবশিষ্ট: Metered.ca-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমা
+- লেবেল-রেস-নোট (দ্বি-স্তর): প্রথমে 125-লেবেলে কাজ শুরু — push-পূর্ব fetch-এ সমান্তরাল session124-খ/125(cron-QA)/127/128 আগে-ল্যান্ডড → PLANS-পয়েন্টার-অনুযায়ী 129-এ রিলেবেল; দ্বিতীয়-push-প্রচেষ্টায় আবারও রেস — সমান্তরাল-এজেন্টের session129 (আন্ডু-টোস্ট/BFS-ফিক্স — ভিন্ন-ডোমেইন, আমার ৩-কোড-ফাইল তাদের হাতে-অস্পৃশ্য) আগে-pushকৃত → max+1 রীতিতে **130-চূড়ান্ত** (কোড+docs+স্ক্রিপ্ট+স্ক্রিনশট সমগ্র-রিলেবেল ×২)

@@ -91,6 +91,12 @@
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<%= AV %><%= XTPQ %>" />
   <%# সেশন ৫৮: প্রিমিয়াম-রেস্পন্সিভ-অ্যানিমেটেড পলিশ-লেয়ার (additive) -%>
   <link rel="stylesheet" href="/assets/css/premium.css?v=<%= AV %><%= XTPQ %>" />
+  <%# সেশন ১৩০ (রোডম্যাপ-① পূর্ণরূপ): পাবলিক-পেজ কল-রিংগার — লগড-ইন ইউজার পাবলিক
+      পেজে (হোম/আর্টিকেলস/নোটিশ/ইভেন্ট/চিত্রশালা/রিসোর্স/সম্পর্কিত) থাকলেও আসন্ন-কল
+      মোডাল দেখবেন। কল-UI-র স্টাইল calls.css — শুধু লগড-ইনে লোড (গেস্ট-ওজন-শূন্য)। %>
+  <% if (typeof user !== 'undefined' && user) { %>
+  <link rel="stylesheet" href="/assets/css/calls.css?v=<%= AV %><%= XTPQ %>" />
+  <% } %>
   <%# সেশন ৯৭: চিত্রশালা (/gallery) — গ্যালারি-এক্সক্লুসিভ স্টাইল (হিরো/মেসনারি/অ্যালবাম/লাইটবক্স) %>
   <% if (currentPath === '/gallery') { %>
   <link rel="stylesheet" href="/assets/css/gallery.css?v=<%= AV %><%= XTPQ %>" />
@@ -367,5 +373,36 @@
 
 <%# Global-search JS সরানো হয়েছে main.js-এ (session33): ডুপ্লিকেট রোধে এখানে আর inline কপি নেই। %>
 <%- include('partials/sandbox-preview') %>
+<%# ── সেশন ১৩০ (রোডম্যাপ-① পূর্ণরূপ): পাবলিক-পেজ গ্লোবাল কল-রিংগার ──────────
+    lekhok-*.ejs পাবলিক-পেজগুলো header-partial ব্যবহার করে না (দ্বি-হেডার-স্থাপত্য),
+    তাই সেশন-৯৪-এর মেম্বার-পেজ রিংগার (header.ejs) এখানে পৌঁছায়নি — লগড-ইন ইউজার
+    হোম/সম্পর্কিত/নোটিশ পড়া-অবস্থায় কল মিস হতো। এখন একই চুক্তি (LekhokCallCtx +
+    webrtc-call.js) layout.ejs-এও। ডাবল-ইনক্লুড নিরাপদ (webrtc-call.js-এর নিজস্ব
+    window.LekhokCall গার্ড); convId সবসময় ০ — পোল-লুপ নিজেই লেজি-পাঠ করে।
+    মেম্বার-পেজ (header.ejs) থেকে আসা লোডের সাথে সংঘর্ষ নেই — ভিন্ন লেআউট-পরিবার। %>
+<% if (typeof user !== 'undefined' && user) { %>
+<script>
+  window.LekhokCallCtx = {
+    me: <%- parseInt(user.id, 10) %>,
+    meName: <%- jesc(user.full_name || user.username) %>,
+    meAvatar: <%- jesc(user.avatar_url || ('/avatar/' + user.id)) %>,
+    convId: 0,
+    convUsername: null,
+    isGroup: false,
+    peer: null
+  };
+  <% /* সেশন ৯৭-চুক্তি: env-configurable TURN (header.ejs-এর মিরর) —
+        LEKHOK_TURN_URLS/USERNAME/CREDENTIAL দিলে সেটিই ব্যবহার হয়। */
+     var _turnUrls130 = String(process.env.LEKHOK_TURN_URLS || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean); %>
+  <% if (_turnUrls130.length) { %>
+  window.LekhokCallCtx.iceServers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: <%- JSON.stringify(_turnUrls130) %>, username: <%- jesc(process.env.LEKHOK_TURN_USERNAME || '') %>, credential: <%- jesc(process.env.LEKHOK_TURN_CREDENTIAL || '') %> }
+  ];
+  <% } %>
+</script>
+<script src="/assets/js/webrtc-call.js?v=<%= AV %><%= XTPQ %>"></script>
+<% } %>
 </body>
 </html>

@@ -684,3 +684,39 @@
   .lc-perm { animation: none; }
 }
 /* ════════ EOF-MARKER session122 ════════ */
+
+/* ════════ Session 130: পাবলিক-পেজ রিংগার + আসন্ন-কল পলিশ (additive — আগের ব্লক অক্ষত) ════════
+   রোডম্যাপ-① পূর্ণরূপ (layout.ejs পাবলিক-পেজ) — পাবলিক-পেজের বিচিত্র-ব্যাকগ্রাউন্ডেও
+   আসন্ন-কল কার্ড পাঠযোগ্য থাকে (গ্লাস-প্যানেল), গ্রহণ-বাটন দৃষ্টি-আকর্ষক (গ্লো-পালস),
+   মোবাইল সেফ-এরিয়া-সচেতন কন্ট্রোল-বার। সব-রুল .lc-/-lc-স্কোপড — গ্লোবাল-অস্পৃশ্য। */
+
+/* আসন্ন-কল কার্ড = গ্লাস প্যানেল (ব্যস্ত পাবলিক-পেজ-ব্যাকগ্রাউন্ডে কনট্রাস্ট-গ্যারান্টি) */
+.lc-incoming-card {
+  background: linear-gradient(165deg, rgba(20, 34, 42, .82), rgba(10, 18, 23, .92));
+  border: 1px solid rgba(233, 237, 239, .12);
+  border-radius: 26px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* গ্রহণ-বাটন গ্লো-পালস — রিং-চলাকালীন দৃষ্টি আকর্ষণ (FB-প্যারিটি) */
+.lc-act--accept { animation: lc-accept-glow 1.8s ease-in-out infinite; }
+@keyframes lc-accept-glow {
+  0%, 100% { box-shadow: 0 14px 40px rgba(0, 0, 0, .45), 0 0 0 0 rgba(16, 185, 129, .45); }
+  50%      { box-shadow: 0 14px 40px rgba(0, 0, 0, .45), 0 0 0 16px rgba(16, 185, 129, 0); }
+}
+.lc-act--accept:hover { animation-play-state: paused; }
+
+/* আসন্ন-কাইন্ড চিপে সূক্ষ্ম শিমার — কল-টাইপ প্রথম-নজরে */
+.lc-incoming-kind { box-shadow: 0 4px 18px rgba(16, 185, 129, .18); }
+
+@media (max-width: 640px) {
+  .lc-incoming-card { padding: 22px 18px; margin: 0 12px; }
+  .lc-controls { bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .lc-meta { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lc-act--accept { animation: none; }
+}
+/* ════════ EOF-MARKER session130 ════════ */

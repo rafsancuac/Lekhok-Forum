@@ -1246,6 +1246,10 @@
     }, Math.max(rtS * 1000 + 6000, 12000));
     /* সেশন ১২২: হিডেন-ট্যাব-সচেতনতা — টাইটেল-ফ্ল্যাশ + (অনুমতি থাকলে) নোটিফিকেশন */
     startIncomingAttention(inc);
+    /* সেশন ১৩০: মোবাইল-ভাইব্রেশন — পাবলিক-পেজ/অন্য-ট্যাবে থাকলেও শরীরে-অনুভূত
+       রিং (one-shot প্যাটার্ন ~১.৩সে; লুপ-নয় তাই cleanup-ছাড়াই নিরাপদ);
+       iOS-Safari vibrate নেই — typeof-গার্ড বাধ্যতামূলক */
+    try { if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') navigator.vibrate([380, 180, 380, 180, 420]); } catch (_) {}
   }
   /* সেশন ১২২: আসন্ন-কল দৃষ্টি-আকর্ষণ — FB-প্যারিটি (ট্যাব-শিরোনাম ফ্ল্যাশ + OS-নোটিফিকেশন) */
   function startIncomingAttention(inc) {
