@@ -1522,3 +1522,11 @@ Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → ব
 - গোটচা ×৫ (PLANS): grep `.{0,N}`-উইন্ডো বিশাল-লাইনে ঝুলে (awk index/substr বাধ্যতামূলক) · awk `BEGIN{RS="\0"}` গোটা-ফাইল-রেকর্ড · CSRF-টোকেন পেজ-স্কোপড (টার্গেট-পেজ থেকেই getcsrf) · grid `1fr`-এ auto-min-ফাঁদ (minmax(0,1fr)-রীতি) · proof-mode-লেখা-গেট (if APPLY)
 - audit-র .env-ফেইল = sandbox-artifact (untracked+gitignored)
 - **পরের-এজেন্ট: session142 লেবেল থেকে** (আমার-এন্ট্রি-রিলেবেল 139→141 দেখুন)
+
+## session141-পুশ-সমাপ্তি (union: সমান্তরাল session139/140 রেস)
+
+- পুশ-রেস: আমার push-চেষ্টায় সমান্তরাল 7f8e972-session139 (প্রোফাইল-প্যানে+ব্যাজ) + 680e0ec-session140 (hex-baseline: admin0/article8/dashboard0) আগে-ল্যান্ডেড → pull --rebase → ৪-docs+admin.css+baseline-কনফ্লিক্ট → ইউনিয়ন-সিদ্ধান্ত: তাদের admin.css (0-হেক্স-সুপারসেট, minmax ×৩ ইতোমধ্যে-ক্যানোনিকাল) গৃহীত + **আমার অনন্য rl-block-ফিক্স পুনঃপ্রয়োগ** (তাদের-ভার্সনে ছিল না — /admin 390px-এর অবশিষ্ট-অর্ধেক) + tokens.css 233-defs collision-শূন্য অটো-মার্জ + বেসলাইন-তাদের (admin0) গৃহীত
+- max+1 রীতি: আমার 139→141-রিলেবেল (কোড-আইডি s139 অক্ষত); pushed: 9ecb57a..**1da4b05** ✓
+- মার্জড-ট্রি-চূড়ান্ত-যাচাই: role-policy **212/212** (তাদের নতুন-§-সহ) + cursor 25/25 + s132 19/19 + s139-E2E 22/22 + guard + /admin 390px-ov=0 + --lf-brandgreen লাইভ-রেজলভ — ALL GREEN
+- নতুন-গোটচা (PLANS-এ ×৫+১): rebase-মধ্যে --theirs=আমার-রিপ্লে-কমিট (semantics-উল্টে-যায় — HEAD-checkout-ই-নিরাপদ)
+- পরের-এজেন্ট: **session142** থেকে
