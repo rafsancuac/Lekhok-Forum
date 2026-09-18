@@ -21,6 +21,9 @@
           session113; অপরিবর্তিত-থাকলে কিছু আঁকে না — backward-compatible)
     noReply (ঐ) 'উত্তর' বাটন-বিহীন মোড (qa-উত্তরের মতো flat-list প্যারাডাইমে —
           নেস্টেড-উত্তর কোথাও রেন্ডার হয় না এমন পেজে ফাঁদ-বন্ধ, session113)
+    replyTo (ঐ) {id, name} — প্যারেন্ট-কমেন্ট-চিপ (session131): রিপ্লাই-বাবলে
+          FB-স্টাইল "↩ {name}" — ক্লিকে প্যারেন্ট-বাবলে smooth-scroll + ফ্ল্যাশ-রিং
+          (no-JS-ফলব্যাক: #fc-c{id} নেটিভ-অ্যাঙ্কর); অপরিবর্তিত-থাকলে কিছু আঁকে না।
   ═══════════════════════════════════════════════════════════════════════════ %>
 <%
   var _me = (typeof user !== 'undefined') ? user : null;
@@ -28,6 +31,7 @@
   var _compact = (typeof compact !== 'undefined') && !!compact;
   var _chip = (typeof chip !== 'undefined' && chip && chip.label) ? chip : null;
   var _noReply = (typeof noReply !== 'undefined') && !!noReply;
+  var _replyTo = (typeof replyTo !== 'undefined' && replyTo && replyTo.id && replyTo.name) ? replyTo : (c.replyTo && c.replyTo.id && c.replyTo.name ? c.replyTo : null);
   var _rx = c.reaction || { counts: {}, mine: null, total: 0 };
   var _rxMeta = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' };
   var _rxLabels = { like: 'লাইক', love: 'ভালোবাসা', care: 'কেয়ার', haha: 'হাহা', wow: 'বিস্ময়', sad: 'দুঃখ', angry: 'রাগ' };
@@ -38,7 +42,7 @@
   <img class="fc-av<%= _compact ? ' small' : '' %>" src="<%= c.avatar_url || ('/avatar/' + c.author_id) %>" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
   <div class="fc-main">
     <div class="fc-bubble">
-      <a class="fc-author" href="/profile/<%= c.username %>"><%= _cName %></a><% if (c.pen_name && c.full_name) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %><% if (_chip) { %><span class="cmt-item-chip" title="<%= _chip.title || _chip.label %>"><% if (_chip.icon) { %><i class="fas <%= _chip.icon %>"></i> <% } %><%= _chip.label %></span><% } %>
+      <a class="fc-author" href="/profile/<%= c.username %>"><%= _cName %></a><% if (c.pen_name && c.full_name) { %><span class="pen-chip" title="আসল নাম: <%= c.full_name %>">কলমে</span><% } %><% if (_replyTo) { %><a class="cmt-chain" href="#fc-c<%= _replyTo.id %>" data-cmt-chain="<%= _replyTo.id %>" title="<%= _replyTo.name %>-কে উত্তর দিচ্ছেন — ক্লিকে ঐ মন্তব্যে যান"><i class="fas fa-reply" aria-hidden="true"></i> <%= _replyTo.name %></a><% } %><% if (_chip) { %><span class="cmt-item-chip" title="<%= _chip.title || _chip.label %>"><% if (_chip.icon) { %><i class="fas <%= _chip.icon %>"></i> <% } %><%= _chip.label %></span><% } %>
       <div class="fc-body" data-raw="<%= c.body %>"><%- c.bodyHtml || '' %></div>
       <% if (c.edited || c.edited_at) { %><span class="fc-edited">সম্পাদিত</span><% } %>
       <%# রুল-২②: বাবলের নিচের ডান কোণায় গোল রিঅ্যাকশন-কাউন্ট-ব্যাজ %>
@@ -81,7 +85,7 @@
     <% if (c.replies && c.replies.length) { %>
       <div class="cmt-replies">
         <% c.replies.forEach(function (r) { %>
-          <%- include('./CommentItem', { c: r, link: _link, user: _me, compact: true }) %>
+          <%- include('./CommentItem', { c: r, link: _link, user: _me, compact: true, replyTo: (r.replyTo || null) }) %>
         <% }); %>
       </div>
     <% } %>

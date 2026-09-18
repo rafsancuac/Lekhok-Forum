@@ -255,3 +255,26 @@
 @media (hover:none){#notifDropdown .notif-x{opacity:1}}
 @media (prefers-reduced-motion:reduce){#notifDropdown .notif-item,#notifDropdown .notif-x{transition:none}}
 /* EOF-MARKER: session133-toast-kbd-scroll */
+/* ── session134: parent-chain-চিপ + ড্রয়ার-ইনস্ট্যান্ট-প্রিভিউ + চেইন-ফ্ল্যাশ ──
+   FB-প্যারিটি: রিপ্লাই-বাবলে "↩ {নাম}" টার্গেট-চিপ (ডিজাইন-টোকেন-শুধু);
+   ক্লিকে প্যারেন্ট-বাবলে smooth-scroll + ফ্ল্যাশ-রিং। চিপটি bubble-header-এ
+   লেখক-লিঙ্কের পরে বসে — pen-chip/top-answer-chip-এর আগে। */
+.cmt-chain{display:inline-flex;align-items:center;gap:4px;max-width:220px;font-size:.78rem;font-weight:600;line-height:1.3;color:var(--lf-text-secondary);background:var(--lf-ui-input-bg);border-radius:var(--lf-radius-chip);padding:2px 9px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;transition:color .15s ease,background .15s ease,box-shadow .15s ease}
+.cmt-chain i{font-size:.68rem;flex-shrink:0}
+.cmt-chain:hover{color:var(--lf-social-blue);background:var(--lf-social-blue-light);text-decoration:none}
+.cmt-chain:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:2px}
+.cmt-chain:active{box-shadow:0 0 0 3px var(--lf-social-blue-light)}
+@media (max-width:640px){.cmt-chain{max-width:150px;padding:1px 7px;font-size:.72rem}}
+/* চেইন-ফ্ল্যাশ — প্যারেন্ট-বাবলে পৌঁছানোর স্বচ্ছ-রিং-পালস (saved-pulse-পথ-অস্পৃশ্য) */
+@keyframes cmtChainRing134{0%{box-shadow:0 0 0 2px var(--lf-brand-primary),0 0 0 8px var(--lf-brand-light)}100%{box-shadow:0 0 0 2px transparent,0 0 0 8px transparent}}
+.fc-bubble.cmt-chain-flash{animation:cmtChainRing134 1.3s ease .05s both}
+/* ড্রয়ার-ইনস্ট্যান্ট-প্রিভিউ — স্পিনার-ফ্ল্যাশ-বিহীন প্রথম-পেইন্ট (ক্লোন fc-preview-রো)
+   + সার্ভার-সত্য-বদলের swap-ফেড; নিষ্ক্রিয়-toggle-বাটন নিভতেন-স্টাইল */
+.fc-instaprev{animation:fcIpIn134 .22s ease both}
+.fc-instaprev .fcp-row{opacity:.82}
+.fc-instaprev .fcp-act{opacity:.6;cursor:default}
+@keyframes fcIpIn134{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@keyframes fcSwapIn134{from{opacity:0}to{opacity:1}}
+.fc-list.fc-swap-in{animation:fcSwapIn134 .28s ease both}
+@media (prefers-reduced-motion:reduce){.fc-instaprev,.fc-list.fc-swap-in,.fc-bubble.cmt-chain-flash{animation:none}.cmt-chain{transition:none}}
+/* EOF-MARKER: session134-chain-chip */

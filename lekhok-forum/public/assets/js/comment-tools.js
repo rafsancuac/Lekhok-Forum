@@ -344,6 +344,9 @@
       '<div class="fc-main">' +
         '<div class="fc-bubble">' +
           '<a class="fc-author" href="/profile/' + esc(c.username) + '">' + esc(c.author_name) + '</a>' +
+          (c.replyTo && c.replyTo.id && c.replyTo.name
+            ? '<a class="cmt-chain" href="#fc-c' + esc(c.replyTo.id) + '" data-cmt-chain="' + esc(c.replyTo.id) + '" title="' + esc(c.replyTo.name) + '-কে উত্তর দিচ্ছেন — ক্লিকে ঐ মন্তব্যে যান"><i class="fas fa-reply" aria-hidden="true"></i> ' + esc(c.replyTo.name) + '</a>'
+            : '') +
           '<div class="fc-body">' + (c.bodyHtml || esc(c.body)) + '</div>' +
           (edited ? '<span class="fc-edited">সম্পাদিত</span>' : '') +
           (total > 0
@@ -404,6 +407,32 @@
 
   // ── সেশন ১০৪: প্রিভিউ-সিঙ্ক — ফেচ-পরবর্তী সর্বশেষ-২ কমেন্ট থেকে .fc-preview
   // পুনর্নির্মাণ (সার্ভার-রেন্ডারড প্রিভিউ এডিট/ডিলিট/নতুন-কমেন্টে স্টেল হয় না)।
+  // ── সেশন ১৩১: parent-chain-চিপ ইঞ্জিন — .cmt-chain ক্লিকে প্যারেন্ট-বাবলে
+  // smooth-scroll + ফ্ল্যাশ-রিং (no-JS নেটিভ-অ্যাঙ্কর #fc-c{id}-ফলব্যাক সহ)।
+  // টার্গেট-আইডি চুক্তি: #fc-c{id} (ক্যানোনিকাল সার্ভার-রেন্ডার) বা [data-cid] (JS-ফলব্যাক)।
+  function flashTarget131(item) {
+    if (!item) return;
+    var b = bubbleOf(item) || item;
+    b.classList.remove('cmt-chain-flash');
+    void b.offsetWidth; /* reflow — পুনঃ-ক্লিকে অ্যানিমেশন-রিস্টার্ট */
+    b.classList.add('cmt-chain-flash');
+    setTimeout(function () { b.classList.remove('cmt-chain-flash'); }, 1400);
+  }
+  document.addEventListener('click', function (e) {
+    var ch = e.target.closest('.cmt-chain');
+    if (!ch) return;
+    var tid = parseInt(ch.getAttribute('data-cmt-chain'), 10);
+    if (!Number.isInteger(tid) || tid <= 0) return;
+    var tgt = document.getElementById('fc-c' + tid) || document.querySelector('[data-cid="' + tid + '"]');
+    if (!tgt) return; /* নেটিভ-অ্যাঙ্কর যাক */
+    e.preventDefault();
+    var _rm131 = false;
+    try { _rm131 = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
+    try { tgt.scrollIntoView({ behavior: _rm131 ? 'auto' : 'smooth', block: 'center' }); } catch (_) { tgt.scrollIntoView(); }
+    flashTarget131(tgt);
+    try { if (history && history.replaceState) history.replaceState(null, '', '#fc-c' + tid); } catch (_) {}
+  });
+
   function syncPreview(drawer, comments, total) {
     var card = drawer.closest('.feed-card') || drawer.closest('article');
     if (!card) return;
@@ -470,7 +499,34 @@
       drawer.dataset.loaded = '1';
       var postId = drawer.getAttribute('data-comments-for');
       var list = drawer.querySelector('.fc-list');
-      if (list) list.innerHTML = '<div class="fc-loading"><i class="fas fa-spinner fa-spin"></i> মন্তব্য লোড হচ্ছে…</div>';
+      // ── সেশন ১৩১: ইনস্ট্যান্ট-প্রিভিউ — স্পিনার-ফ্ল্যাশ-এর-বদলে কার্ডের fc-preview-রো
+      // তাৎক্ষণিক-পেইন্ট (display:none-থেকেও ক্লোনযোগ্য); ফেচ-রেজলভে সার্ভার-সত্যে swap।
+      // প্রিভিউ-শূন্য (০-কমেন্ট/আর্টিকেল-পেজ) হলে পুরনো স্পিনার-পথ।
+      var _ip131 = null;
+      if (list) {
+        var _prev131 = card.querySelector('.fc-preview');
+        var _rows131 = _prev131 ? _prev131.querySelectorAll('.fcp-row') : [];
+        if (_rows131.length) {
+          _ip131 = document.createElement('div');
+          _ip131.className = 'fc-instaprev';
+          for (var _i131 = 0; _i131 < _rows131.length; _i131++) {
+            var _row131 = _rows131[_i131].cloneNode(true);
+            /* ক্লোনে toggle-বাটন নিষ্ক্রিয় — ড্রয়ার-খোলা-অবস্থায় ক্লিক করলে
+               closeDrawer-এ পথ হত (আনিচ্ছুক-বন্ধ-বাগ-প্রতিরোধ); লিঙ্ক জীবন্ত থাকে */
+            _row131.querySelectorAll('[data-toggle-comments]').forEach(function (b131) {
+              b131.disabled = true;
+              b131.removeAttribute('data-toggle-comments');
+              b131.setAttribute('aria-hidden', 'true');
+            });
+            _ip131.appendChild(_row131);
+          }
+          list.innerHTML = '';
+          list.appendChild(_ip131);
+          drawer.dataset.hadInstaprev = '1';
+        } else {
+          list.innerHTML = '<div class="fc-loading"><i class="fas fa-spinner fa-spin"></i> মন্তব্য লোড হচ্ছে…</div>';
+        }
+      }
       refreshDrawer(drawer, postId);
     }
     return true;
@@ -495,6 +551,14 @@
         var _list105 = drawer.querySelector('.fc-list');
         if (j && j.html && _list105) { _list105.innerHTML = j.html; }
         else { renderCommentList(comments, postId, drawer); }
+        // সেশন ১৩১: ইনস্ট্যান্ট-প্রিভিউ → সার্ভার-সত্য বদলের মসৃণ swap-ফেড
+        if (drawer.dataset.hadInstaprev) {
+          delete drawer.dataset.hadInstaprev;
+          if (_list105) {
+            _list105.classList.add('fc-swap-in');
+            setTimeout(function () { _list105.classList.remove('fc-swap-in'); }, 320);
+          }
+        }
         syncPreview(drawer, comments, total);
         // কাউন্টার-আপডেট (actions-summary-র as-stat)
         var card = drawer.closest('.feed-card, article');

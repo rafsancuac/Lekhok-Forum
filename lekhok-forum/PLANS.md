@@ -1725,3 +1725,30 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 
 ## Cross-Agent Note — Session 133 (cron-r13; [relabel: 131→133 — 2c2ca6f-এর session131 (গ্রহণকৃত-উত্তর) + cbd3221-এর session132 আগে-ল্যান্ডড, max+1 রীতি] সাইট-ওয়াইড তারিখ-চুক্তি UTC→Dhaka + series-stats লাইভ-এন্ডপয়েন্ট + অ্যাডমিন লাইভ-রিফ্রেশ + role-policy §১৮) (১৮ সেপ্টেম্বর ২০২৬)
 **পরবর্তী-প্রথম-পছন্দ:** সিরিজ-লেভেল-কভার-ইমেজ ফিল্ড (RES-124-ব্যাকলগ ④-অবশিষ্ট) → bulk-ইমপোর্ট ক্রস-রিকোয়েস্ট-ডুপ-গার্ড (seen-Set ব্যাচ-লোকাল) → স্লো-ট্রিকল-হোস্টে >১০সে-ফেচ-টাইমআউট-অপশন → role-policy-তে main.js-পার্স-রিগ্রেশন-চেক (data-ts-টুলটিপ-প্যাটার্ন)। **পরবর্তী-এজেন্ট: session134 লেবেল থেকে।**
+## ⚡ Intent Note — Session 134 (cron-QA রাউন্ড; রিলেবেল max+1 — সমান্তরাল session131/132/133 আগে-ল্যান্ডড; কাজ-শুরুর-আগে intent-চুক্তি অনুযায়ী) (১৯ সেপ্টেম্বর ২০২৬)
+
+**এই-রাউন্ডে নিচ্ছি (claim):**
+① **parent-chain-চিপ (session130-পরবর্তী-তালিকা)** — FB-স্টাইল "↩ {নাম}" রিপ্লাই-টার্গেট-চিপ: CommentItem.ejs-এ নতুন ঐচ্ছিক `replyTo {id,name}` প্যারাম; সার্ভার-তিন-পাথে ডেটা (GET /api/comments JSON+html / qa-html-রিফ্রেশ / POST /api/comment-ক্যানোনিকাল-ইনসার্ট / qa-single-সার্ভার-রেন্ডার); ক্লিকে প্যারেন্ট-বাবলে smooth-scroll + ফ্ল্যাশ-রিং (কীবোর্ড-অ্যাক্সেসিবল, no-JS-অ্যাঙ্কর-ফলব্যাক)।
+② **drawer-প্রিভিউ-ইনস্ট্যান্ট (session130-পরবর্তী-তালিকা)** — ফিড-ড্রয়ার প্রথম-খোলায় স্পিনারের-বদলে বিদ্যমান fc-preview-রো তাৎক্ষণিক-পেইন্ট (fc-instaprev, opacity-.78), ফেচ-রেজলভে swap-in-ফেড; প্রিভিউ-শূন্য হলে স্পিনার-পথ অক্ষুণ্ণ।
+③ **undo-টোস্টে Enter-শর্টকাট (session129-④ — ⚠️ push-পূর্ব rebase-এ session133-ক্যানোনিকাল আবিষ্কৃত (Enter+Escape+interactive-গার্ড সুপারসেট) → আমার ভ্যারিয়েন্ট প্রত্যাহৃত)** — undo-toast.js মডিউল-লেভেল keydown (input/textarea/contenteditable-বর্জিত, busy-গার্ড)।
+④ **ড্রপডাউন-restore-এ LekhokRelTime-রি-পেইন্ট (session129-② — ⚠️ session133-ক্যানোনিকাল → আমার ডুপ্লিকেট প্রত্যাহৃত)** — header.ejs dismiss121-IIFE-এর undo-সফল-পাথে list121-স্কোপ-রেন্ডার।
+
+**স্পর্শ-ফাইল:** views/shared/comment/CommentItem.ejs · routes/social.js (৩-পাথ + qa-route-attacher) · views/user/qa-single.ejs · public/assets/js/comment-tools.js · public/assets/js/undo-toast.js · views/partials/header.ejs (restore-পাথ) · public/assets/css/shared.css (EOF session131-ব্লক)। **db-schema-শূন্য।**
+
+অন্য-এজেন্ট একই-আইটেমে কাজ শুরু করলে এ-নোট দেখে বিকল্প নিন।
+
+## Cross-Agent Note — Session 134 (রিলেবেল max+1; parent-chain-চিপ + drawer-ইনস্ট্যান্ট-প্রিভিউ) (১৯ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** CommentItem.ejs · routes/social.js (৪-পাথ + qa-route-attacher) · views/user/qa-single.ejs · comment-tools.js · shared.css (session134-EOF-ব্লক) — **route/db-স্কিমা শূন্য** (এ-রাউন্ডে আমার হাতে)।
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+1. **CommentItem.ejs নতুন ঐচ্ছিক `replyTo {id,name}` প্যারাম** — রিপ্লাই-বাবলে "↩ {name}" চিপ (`.cmt-chain`, data-cmt-chain="{id}")। নতুন-কমেন্ট-সারফেসে চিপ চাইলে: সার্ভার-রেন্ডারে c.replyTo (বা include-param replyTo) দিন + JSON-পাথে item.replyTo — ক্লিক-ইঞ্জিন (comment-tools.js `.cmt-chain`-ডেলিগেট) ও CSS session134-ব্লক স্বয়ংক্রিয়। চিপ-টার্গেট-আইডি চুক্তি: `#fc-c{id}` প্রাথমিক, `[data-cid="{id}"]` ফলব্যাক।
+2. **GET /api/comments-এ replyTo ASC-অর্ডার-নির্ভর:** byId-লুকআপ কেবল তখনই পূর্ণ যখন প্যারেন্ট-রো আগে-প্রসেস হয় (ORDER BY created_at ASC, id ASC) — **এ-রুটের ORDER বদলালে চিপ-ডেটা নীরবে হারাবে** (চিপ-শূন্য = সাইলেন্ট-ডিগ্রেড, ক্র্যাশ-নয়)।
+3. **openDrawer-এর instaprev-চুক্তি:** `drawer.dataset.hadInstaprev` ফ্ল্যাগ → refreshDrawer-সাকসেসে এক-বারের fc-swap-in-ফেড → ফ্ল্যাগ মুছে যায়। instaprev-ক্লোনের সব `[data-toggle-comments]` নিষ্ক্রিয় (আনিচ্ছুক-closeDrawer-প্রতিরোধ) — নতুন-ইন্টারঅ্যাকটিভ-এলিমেন্ট preview-রোতে যোগলে এ-নিষ্ক্রিয়করণ-তালিকায় যোগ করুন।
+4. **shared.css session134-ব্লক (EOF):** .cmt-chain + cmtChainRing134/fcIpIn134/fcSwapIn134 কীফ্রেম — সব var(--lf-*), reduced-motion-গার্ড; hex-র্যাচেটে নতুন-হেক্স-শূন্য।
+
+**প্রত্যাহার-নোট (৬ষ্ঠ-প্রমাণ):** আমার রাউন্ডে undo-toast.js Enter-শর্টকাট + header.ejs reltime-রি-পেইন্ট বানানোর মাঝে session133 (Enter+Escape+interactive-গার্ড সুপারসেট + kbd-হিন্ট) push করে ফেলেছে — rebase-এ তাদের ক্যানোনিকল গৃহীত, আমার onKey131-ব্লক + header-ডুপ্লিকেট সম্পূর্ণ-প্রত্যাহৃত (ডাবল-keydown-হ্যান্ডলার-ঝুঁকি-শূন্য নিশ্চিত: undo-toast.js-এ এখন একটিই keydown)। session131-লেবেলের accepted-answer-এজেন্টের social.js qa-html-সর্ট-ব্লকের সাথে আমার _nameBy131-ম্যাপ **union-মার্জড (উভয়-রক্ষিত)** — সর্ট-নাম-রেস নেই (আলাদা-ভেরিয়েবল)।
+
+**E2E (মার্জড-কোডে):** সার্ভার-চিপ "রিয়া আক্তার"→22 ✓ রিপ্লাই-টু-রিপ্লাই→61 ✓ ক্লিক→flash-live (brand-ring rgba(0,106,78))+hash ✓ ফ্ল্যাশ-ক্লিয়ার ✓ qa-html-চিপ ✓ ক্যানোনিকাল-ইনসার্ট-চিপ ✓ ফিড-ড্রয়ার instaprev (instant/op-.82/toggle-disabled/spinnerGone) → swap ৯-আইটেম+৩-চিপ ✓ Enter→undo→"এইমাত্র"-রি-পেইন্ট (session133-হ্যান্ডলারে) ✓ BFS removed:3 ✓ 403-গার্ড ✓ 390px×৫-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×৪ (s134-*) ✓ টেস্ট-ডেটা-ক্লিনআপ ✓
+
+**পরবর্তী-এজেন্ট: session135 লেবেল থেকে।** বকেয়া: অটো-ভিডিও-ডিগ্রেড-র গ্রুপ-কল-প্রসারণ (session132-বেসিসে), tokens.css-র্যাচেট-বেসলাইন-নামানো (admin.css ৪২৬), dropdown-paintList-পাথেও restore-reltime (header-রিলেবেল-এখন-ক্যানোনিকাল), article-কমেন্ট-মার্কআপেও .cmt-chain (article-single-এখনো পুরনো-চুক্তি — replyTo-ডেটা আছে JSON-এ)।

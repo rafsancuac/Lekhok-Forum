@@ -127,7 +127,8 @@
             <%# সেশন ১১৪: থ্রেডেড-উত্তর — রুটের reply-কোয়েরি (answerReplies113) থেকে,
                  ক্যানোনিকাল CommentItem-এর compact-মোডে (fc-reply ইনডেন্ট) একই বাবল %>
             <% (a.replies113 || []).forEach(r => { %>
-              <%- include('../shared/comment/CommentItem', { c: { id: r.id, author_id: r.author_id, username: r.username, pen_name: r.pen_name, full_name: r.full_name, avatar_url: r.avatar_url, body: r.body, bodyHtml: r.html, created_at: r.created_at, edited_at: r.edited_at, reaction: r.reaction }, link: '/qa/' + post.id, user: user, compact: true }) %>
+              <%# সেশন ১৩১: replyTo — parent-chain-চিপ (parent_name রুটে যুক্ত; অনাথে null → চিপ-শূন্য) %>
+              <%- include('../shared/comment/CommentItem', { c: { id: r.id, author_id: r.author_id, username: r.username, pen_name: r.pen_name, full_name: r.full_name, avatar_url: r.avatar_url, body: r.body, bodyHtml: r.html, created_at: r.created_at, edited_at: r.edited_at, reaction: r.reaction, replyTo: (r.parent_id && r.parent_name) ? { id: r.parent_id, name: r.parent_name } : null }, link: '/qa/' + post.id, user: user, compact: true }) %>
             <% }); %>
           </div>
         <% }); %>

@@ -983,6 +983,10 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
   (answerReplies113 || []).forEach(r => {
     let _root = r.parent_id, _guard = 0;
     while (_allCmtById113[_root] && _allCmtById113[_root].parent_id && _guard++ < 10) _root = _allCmtById113[_root].parent_id;
+    // সেশন ১৩১: parent-chain-চিপ — তাৎক্ষণিক-প্যারেন্ট-নাম (উত্তর/রিপ্লাই যেটাই হোক;
+    // প্যারেন্ট-অনাথ হলে নাম নেই → চিপ আঁকে না)
+    const _par131 = r.parent_id ? _allCmtById113[r.parent_id] : null;
+    r.parent_name = _par131 ? (displayName92(_par131) || 'সদস্য') : null;
     (_repliesByAnswer113[_root] = _repliesByAnswer113[_root] || []).push(r);
   });
   answers.forEach(a => { a.replies113 = _repliesByAnswer113[a.id] || []; });
@@ -1685,6 +1689,18 @@ router.post('/api/comment', async (req, res) => {
       const _tot124 = await db.prepare('SELECT COUNT(*) AS c FROM comments WHERE post_id = ?').get(pid);
       let _rx124 = null;
       try { _rx124 = await getReactionSummary('comment_id', _row124.id, req.session.user.id); } catch (_) {}
+      // সেশন ১৩১: parent-chain-চিপ — নতুন-রিপ্লাইয়ের ক্যানোনিকাল-বাবলেই চিপ
+      // (প্যারেন্ট-লেখক-নাম এক-কুয়েরি; প্যারেন্ট-মুছে-গেলে চিপ নেই)
+      let _replyTo124 = null;
+      if (_row124.parent_id) {
+        try {
+          const _pp124 = await db.prepare(`
+            SELECT c.id, u.full_name, u.pen_name
+            FROM comments c JOIN users u ON u.id = c.author_id WHERE c.id = ?
+          `).get(_row124.parent_id);
+          if (_pp124) _replyTo124 = { id: _pp124.id, name: displayName92(_pp124) || 'সদস্য' };
+        } catch (_) {}
+      }
       const item124 = {
         id: _row124.id, post_id: _row124.post_id, author_id: _row124.author_id,
         body: _row124.body, bodyHtml: rc124(_row124.body || ''), created_at: _row124.created_at,
@@ -1692,7 +1708,7 @@ router.post('/api/comment', async (req, res) => {
         author_name: displayName(req.session.user), pen_name: req.session.user.pen_name || null,
         avatar_url: _row124.avatar_url,
         reaction: _rx124 || { counts: {}, mine: null, total: 0 },
-        canEdit: true, canDelete: true, replies: []
+        canEdit: true, canDelete: true, replies: [], replyTo: _replyTo124
       };
       const _link124 = post.type === 'question' ? '/qa/' + pid : '/articles/' + pid;
       const _html124 = await new Promise((res2, rej2) => {
@@ -1763,6 +1779,12 @@ router.get('/api/comments', async (req, res) => {
         my_reaction: mineByComment[r.id] || null,
         replies: []
       };
+      // সেশন ১৩১: parent-chain-চিপ — রিপ্লাইয়ের প্যারেন্ট-লেখক-নাম (ASC-অর্ডারে
+      // প্যারেন্ট byId-তে আগে-থেকেই; অনাথ/টপ-লেভেলে replyTo নেই → চিপ আঁকে না)
+      if (r.parent_id && byId[r.parent_id]) {
+        const _p131 = byId[r.parent_id];
+        item.replyTo = { id: r.parent_id, name: _p131.pen_name || _p131.author_name || _p131.full_name || 'সদস্য' };
+      }
       byId[r.id] = item;
       if (r.parent_id && byId[r.parent_id]) byId[r.parent_id].replies.push(item);
       else tops.push(item);
@@ -1802,8 +1824,15 @@ router.get('/api/comments', async (req, res) => {
           // সেশন ১৩১: গ্রহণকৃত-উত্তর সর্বাগ্রে (qa-single-রুটের স্টেবল-সর্টের মিরর)
           _answers117.sort((a, b) =>
             ((b.id === _post117.accepted_comment_id) ? 1 : 0) - ((a.id === _post117.accepted_comment_id) ? 1 : 0));
+          // সেশন ১৩১: parent-chain-চিপ — id→নাম ম্যাপ (উত্তর+রিপ্লাই সব) —
+          // রিপ্লাই-টু-রিপ্লাইয়ের চিপও তাৎক্ষণিক-প্যারেন্ট-নাম দেখায়
+          const _nameBy131 = {};
+          (_answers117 || []).forEach(a => { _nameBy131[a.id] = displayName92(a) || 'সদস্য'; });
+          (_replies117 || []).forEach(r => { _nameBy131[r.id] = displayName92(r) || 'সদস্য'; });
           const _can117 = (authorId) => !!(_me117 && (authorId === _me117.id || _isMod117));
           const _renderOne117 = (row, compact) => new Promise((res2, rej2) => {
+            const _replyTo131 = (row.parent_id && _nameBy131[row.parent_id])
+              ? { id: row.parent_id, name: _nameBy131[row.parent_id] } : null;
             req.app.render('shared/comment/CommentItem', {
               c: {
                 id: row.id, author_id: row.author_id, username: row.username,
@@ -1812,6 +1841,7 @@ router.get('/api/comments', async (req, res) => {
                 created_at: row.created_at, edited_at: row.edited_at || null,
                 reaction: _rxBy117.get(row.id) || { counts: {}, mine: null, total: 0 },
                 canEdit: _can117(row.author_id), canDelete: _can117(row.author_id),
+                replyTo: _replyTo131,
               },
               link: '/qa/' + postId, user: _me117, compact: !!compact,
             }, (e, h) => e ? rej2(e) : res2(h));
