@@ -522,3 +522,24 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
   body.lf-feed-lock156 .dashboard-wrap .dash-right{flex-basis:348px}
 }
 /* ════════ EOF session156-fb-independent-scroll ════════ */
+
+/* ════════ session159 — ফিড-রেল সার্চ + কোর-শর্টকাট (ইউজার TSX FeedLeftSidebar-স্পেক) ════════
+   [relabel-নোট: আমার 157→159 — সমান্তরাল session157(dir-রেল+utilities) fr-*-157-পরিবার
+   আগে-ল্যান্ডেড — max+1-রীতি; তাদের fr-sec-title157/fr-badge157/fr-item--rich157 ক্যানোনিকাল-ব্যবহৃত,
+   collision-শূন্য] ইউনিয়ন: তাদের রিচ-ডিরেক্টরি-রেলের ওপরে ① fr-search159 সার্বক্ষণিক মেনু-সার্চ
+   (৮px রেডিয়াস; ফোকাসে সাদা-পৃষ্ঠ+বর্ডার — FB-ইনপুট-প্যারিটি; টোকেন-শুধু নতুন-হেক্স-শূন্য)
+   ② fr-me-txt159/fr-me-sub159 — 'ব্যক্তিগত প্রোফাইল' সাবটাইটেল
+   ③ fr-empty159 + fr-searching159 — সার্চ-শূন্য-অবস্থা + ক্যোয়ারি-চলাকালীন সেপারেটর-লুকানো
+   ④ কোর-ব্লক আইটেম তাদের fr-item--rich157-ই ব্যবহার করে (ভিজ্যুয়াল-সামঞ্জস্য) */
+.fr-me-txt159{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;gap:1px}
+.fr-me-sub159{font-size:10.5px;font-weight:500;color:var(--lf-text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr-search159{position:relative;margin:8px 0 2px}
+.fr-search-ico159{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--lf-text-tertiary);pointer-events:none}
+.fr-search-input159{width:100%;box-sizing:border-box;background:var(--lf-ui-canvas);border:1px solid transparent;border-radius:8px;padding:7px 26px 7px 28px;font:inherit;font-size:12px;font-weight:500;color:var(--lf-text-primary);outline:none;transition:background .15s ease,border-color .15s ease}
+.fr-search-input159::placeholder{color:var(--lf-text-tertiary)}
+.fr-search-input159:hover{border-color:var(--lf-ui-border)}
+.fr-search-input159:focus{background:var(--lf-ui-surface);border-color:var(--lf-ui-border-strong)}
+.fr-empty159{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;text-align:center;font-size:11.5px;font-weight:600;color:var(--lf-text-tertiary)}
+.fr-empty159 i{font-size:15px;opacity:.7}
+.feed-rail.fr-searching159 .fr-sep{display:none}
+/* ════════ EOF session159-rail-search-core ════════ */

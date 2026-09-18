@@ -21,6 +21,9 @@
      tone   — TONE_TOKENS-কী (tokens.css --lf-* রেফ; হেক্স-শূন্য নীতি)
      rail   — ফিড লেফট-রেলে দৃশ্যমান কি না
      railHighlight — রেলে ব্র্যান্ড-টিন্ট হাইলাইট (দৈনিক ই-পেপার)
+     core   — (সেশন ১৫৯) কোর-সেকশন-ফ্ল্যাগ — রেলে শিরোনাম-শূন্য টপ-ব্লক (FB Saved/
+              Memories/Groups/Pages প্যারিটি); হেডার-প্যানেলে sec.title দেখায়
+     secKey/secTitle — (সেশন ১৫৯) বেক-লুপে যোগ হয় — রেল-সার্চের সেকশন-গ্রুপিং-সোর্স
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* টোন → tokens.css টোকেন-রেফ (নতুন টোকেন সেশন-১৪৭-ব্লকে; শুধু এখানেই ম্যাপড) */
@@ -39,6 +42,21 @@ const TONE_TOKENS = {
 
 const DIR_SECTIONS = [
   {
+    /* সেশন ১৫৯ (ইউজার-স্পেক: FB-কোর-শর্টকাট): সংরক্ষিত লেখা/মেমোরিজ/গ্রুপ/পেজ — রেলের
+       সর্বাগ্রে শিরোনাম-শূন্য টপ-ব্লক। রুট-ম্যাপ (ইন্টেন্ট-অনুবাদ): /saved→/bookmarks,
+       /memories→/on-this-day ('এই দিনে' কোর-ব্লকে প্রতিস্থাপিত), /groups→/messages
+       (গ্রুপ-চ্যাট), /pages→/press (প্রেস-ক্লিপিং = ফোরামের পত্রিকা-পাতা)। */
+    key: 'core',
+    title: 'দ্রুত অ্যাক্সেস',
+    core: true,
+    items: [
+      { label: 'সংরক্ষিত লেখা',  desc: 'বুকমার্ক করা লেখা ও পোস্ট',   href: '/bookmarks',   icon: 'fa-bookmark',       tone: 'gold',   rail: true },
+      { label: 'স্মৃতি ও মেমোরিজ', desc: 'বিগত বছরের আজকের লেখা',      href: '/on-this-day', icon: 'fa-hourglass-half', tone: 'violet', rail: true },
+      { label: 'পাঠচক্র ও গ্রুপ',  desc: 'গ্রুপ-আলাপ ও পাঠচক্র',        href: '/messages',    icon: 'fa-users',          tone: 'social', rail: true },
+      { label: 'পত্রিকা ও পেজ',   desc: 'প্রেস, প্রকাশনা ও পাতা',       href: '/press',       icon: 'fa-flag',           tone: 'cyan',   rail: true }
+    ]
+  },
+  {
     key: 'knowledge',
     title: 'জ্ঞান ও সাহিত্য কর্নার',
     items: [
@@ -56,14 +74,14 @@ const DIR_SECTIONS = [
       { label: 'ইভেন্ট ও আয়োজন',      desc: 'সাহিত্য আড্ডা ও কর্মশালা',           href: '/events',      icon: 'fa-calendar-alt',    tone: 'angry',  rail: true },
       { label: 'সাংগঠনিক কার্যক্রম',   desc: 'কমিটি ও মিটিং এজেন্ডা',              href: '/activities',  icon: 'fa-calendar-check',  tone: 'slate',  rail: false },
       { label: 'সেরা লেখক',           desc: 'মাসিক স্বীকৃতি ও পুরস্কার',          href: '/best-writer', icon: 'fa-star',            tone: 'gold',   rail: true },
-      { label: 'অর্জন ও সম্মাননা',     desc: 'স্মারক স্বীকৃতির প্রাচীর',           href: '/achievements', icon: 'fa-trophy',         tone: 'amber',  rail: false }
+      { label: 'অর্জন ও সম্মাননা',     desc: 'স্মারক স্বীকৃতির প্রাচীর',           href: '/achievements', icon: 'fa-trophy',         tone: 'amber',  rail: false },
+      { label: 'মতামত ও ফিডব্যাক',     desc: 'অভিযোগ ও পরামর্শ জানান',            href: '/complaints',  icon: 'fa-comment-dots',    tone: 'brand',  rail: true }
     ]
   },
   {
     key: 'daily',
-    title: 'দৈনন্দিন ফিচার ও স্মৃতি',
+    title: 'দৈনন্দিন ফিচার',
     items: [
-      { label: 'এই দিনে',             desc: 'বিগত বছরের আজকের লেখা',             href: '/on-this-day', icon: 'fa-calendar-day',    tone: 'violet', rail: true },
       { label: 'আজকের জন্মদিন',       desc: 'সহ-লেখকদের শুভেচ্ছা জানান',         href: '/birthdays',   icon: 'fa-birthday-cake',   tone: 'pink',   rail: false },
       { label: 'আজকের কুইজ',          desc: 'প্রাত্যহিক সাহিত্য পরীক্ষা',         href: '/quiz',        icon: 'fa-brain',           tone: 'cyan',   rail: true }
     ]
@@ -116,11 +134,17 @@ const UTIL_SECTIONS = [
   }
 ];
 
-/* টোন → টোকেন-রেফ বেক (ভিউতে style="--dlx-t: var(<%= it.tok %>)") */
+/* টোন → টোকেন-রেফ বেক (ভিউতে style="--dlx-t: var(<%= it.tok %>)")
+   + সেকশন-ট্যাগ (সেশন ১৫৯ — রেল-সার্চের গ্রুপিং/টাইটেল-সোর্স) */
 for (const sec of [...DIR_SECTIONS, ...UTIL_SECTIONS]) {
   for (const it of sec.items) {
     it.tok = TONE_TOKENS[it.tone] || TONE_TOKENS.brand;
+    it.secKey = sec.key;
+    it.secTitle = sec.title;
   }
+}
+for (const sec of DIR_SECTIONS) {
+  if (sec.core) for (const it of sec.items) it.core = true;
 }
 
 /* ফিড লেফট-রেল: ফ্ল্যাট তালিকা — রেল-ক্রম এখানেই নিয়ন্ত্রিত (রেজিস্ট্রি-বাইরে ডুপ্লিকেট-অসম্ভব) */
