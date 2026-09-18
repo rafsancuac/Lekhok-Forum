@@ -792,18 +792,22 @@ router.post('/articles/:id/comment', ensureLoggedIn, async (req, res) => {
 // ans_count সাব-কুয়েরি (posts.comment_count হারানো-কমেন্টে বাসি হয়ে যেত — প্রমাণ:
 // id=1 কলামে ২, বাস্তবে ০)।
 router.get(['/qa', '/questions'], async (req, res) => {
-  const f118 = req.query.filter === 'unanswered' ? 'unanswered' : 'all';
+  // সেশন ১৩১: ফিল্টার-ত্রয়ী — all | unanswered | accepted (গ্রহণকৃত-উত্তর প্রশ্ন)
+  const f118 = req.query.filter === 'unanswered' ? 'unanswered' : (req.query.filter === 'accepted' ? 'accepted' : 'all');
   const rows118 = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender,
-    (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as ans_count
+    (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as ans_count,
+    (CASE WHEN p.accepted_comment_id IS NOT NULL THEN 1 ELSE 0 END) as has_accepted
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.type = 'question' AND p.status = 'published'
     ORDER BY p.published_at DESC`).all();
   const totalAll118 = rows118.length;
-  const questions = f118 === 'unanswered' ? rows118.filter(q => (q.ans_count || 0) === 0) : rows118;
+  const unansweredCount127 = rows118.filter(q => (q.ans_count || 0) === 0).length;
+  const questions = f118 === 'unanswered' ? rows118.filter(q => (q.ans_count || 0) === 0)
+    : (f118 === 'accepted' ? rows118.filter(q => q.has_accepted === 1) : rows118);
   res.render('user/qa-list', {
     questions, currentPath: '/qa',
     qaFilter: f118,
-    qaCounts: { all: totalAll118, unanswered: rows118.filter(q => (q.ans_count || 0) === 0).length },
+    qaCounts: { all: totalAll118, unanswered: unansweredCount127, accepted: rows118.filter(q => q.has_accepted === 1).length },
     metaDesc: 'লেখক ফোরামের প্রশ্নোত্তর কর্নার — সদস্যদের লেখালেখি, সাহিত্য, শিক্ষা ও সংগঠন সংক্রান্ত প্রশ্ন করুন এবং অভিজ্ঞদের কাছ থেকে উত্তর পান।',
   });
 });
@@ -876,6 +880,42 @@ router.post('/qa/:id/delete', ensureLoggedIn, async (req, res) => {
   res.redirect('/qa');
 });
 
+// ── সেশন ১৩১: গ্রহণকৃত-উত্তর (accepted answer) API ══════════════════════════
+// প্রশ্নকর্তা (বা users-টেবিলের role='admin') প্রশ্নের একটি টপ-লেভেল উত্তরকে
+// 'গ্রহণকৃত' চিহ্নিত করেন। টগল-মডেল: একই উত্তরে দ্বিতীয় কল = গ্রহণ-বাতিল।
+// JSON-API (CSRF-মুক্ত — /api/*-চুক্তি, §15-র মতোই); ensureLoggedIn /api/*-এ 401-JSON।
+// শুধু টপ-লেভেল উত্তর (parent_id NULL) গ্রহণযোগ্য — রিপ্লাই নয় (400)।
+router.post('/api/qa/:id/accept-answer', ensureLoggedIn, async (req, res) => {
+  const me = req.session.user;
+  const qid = parseInt(req.params.id, 10);
+  const cid = parseInt(req.body && req.body.comment_id, 10);
+  if (!Number.isInteger(qid) || qid <= 0 || !Number.isInteger(cid) || cid <= 0) {
+    return res.status(400).json({ ok: false, error: 'bad_request' });
+  }
+  const post = await db.prepare("SELECT id, author_id, status, accepted_comment_id FROM posts WHERE id = ? AND type = 'question'").get(qid);
+  if (!post) return res.status(404).json({ ok: false, error: 'question_not_found' });
+  const isOwner = post.author_id === me.id;
+  const isAdmin = me.role === 'admin';
+  if (!isOwner && !isAdmin) return res.status(403).json({ ok: false, error: 'forbidden' });
+  // টগল-বন্ধ: গ্রহীতা-উত্তরেই আবার কল → গ্রহণ-বাতিল
+  if (post.accepted_comment_id === cid) {
+    await db.prepare('UPDATE posts SET accepted_comment_id = NULL WHERE id = ?').run(qid);
+    return res.json({ ok: true, accepted_comment_id: null });
+  }
+  const c = await db.prepare('SELECT id, author_id, parent_id FROM comments WHERE id = ? AND post_id = ?').get(cid, qid);
+  if (!c) return res.status(404).json({ ok: false, error: 'answer_not_found' });
+  if (c.parent_id != null) return res.status(400).json({ ok: false, error: 'reply_not_acceptable' });
+  await db.prepare('UPDATE posts SET accepted_comment_id = ? WHERE id = ?').run(cid, qid);
+  // উত্তরদাতাকে জানান (প্রেফস-সম্মান; নিজের-উত্তর নিজে-গ্রহণ হলে নীরব)
+  if (c.author_id !== me.id) {
+    await notifyIfAllowed(c.author_id, 'notify_comments', 'answer_accepted',
+      displayName(me) + ' আপনার উত্তর গ্রহণ করেছেন',
+      'আপনার উত্তরটি গ্রহণকৃত উত্তর হিসেবে চিহ্নিত হয়েছে।',
+      '/qa/' + qid + '#answer-' + cid, me.id);
+  }
+  return res.json({ ok: true, accepted_comment_id: cid });
+});
+
 // ── Question detail with answers ────────────────────────────────────────────
 // BUGFIX: qa-list.ejs links every question to /questions/:id, but only the
 // /qa/:id route existed → every question link on the site 404'd. Added the
@@ -946,6 +986,10 @@ router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
     (_repliesByAnswer113[_root] = _repliesByAnswer113[_root] || []).push(r);
   });
   answers.forEach(a => { a.replies113 = _repliesByAnswer113[a.id] || []; });
+  // সেশন ১৩১: গ্রহণকৃত-উত্তর সর্বাগ্রে (Array.sort stable → ভেতরের
+  // like_count DESC, created_at ASC ক্রম অক্ষত; ভিউতে accepted-chip + is-accepted127)
+  answers.sort((a, b) =>
+    ((b.id === post.accepted_comment_id) ? 1 : 0) - ((a.id === post.accepted_comment_id) ? 1 : 0));
   // সেশন ৭২ (GSC 'Alternate page with proper canonical tag' ফিক্স):
   // আগে canonicalPath ছিল না → header.ejs-এর fallback currentPath('/qa') ব্যবহার হত,
   // অর্থাৎ প্রতিটি qa-ডিটেইল পেজ নিজেকে /qa লিস্ট-পেজের ডুপ্লিকেট ঘোষণা করত!
@@ -1733,7 +1777,9 @@ router.get('/api/comments', async (req, res) => {
     // রিলোড-নেই; qaHtml না-পেলে লিগ্যাসি-রিলোড ফলব্যাক।
     if (String(req.query.format || '') === 'qa-html') {
       try {
-        const _post117 = await db.prepare('SELECT type FROM posts WHERE id = ?').get(postId);
+        // সেশন ১৩১: accepted_comment_id + author_id সহ — থ্রেড-সোয়াপ-মার্কআপও
+        // qa-single.ejs-ক্যানোনিকালের হুবহু মিরর হতে হবে (session126-paintList-শিক্ষা)
+        const _post117 = await db.prepare('SELECT id, type, author_id, accepted_comment_id FROM posts WHERE id = ?').get(postId);
         if (_post117 && _post117.type === 'question') {
           const _me117 = req.session.user || null;
           const _myId117 = _me117 ? _me117.id : null;
@@ -1754,6 +1800,9 @@ router.get('/api/comments', async (req, res) => {
           const { renderBody: _rb117 } = require('../helpers/markdown-lite');
           const _repliesBy117 = {};
           (_replies117 || []).forEach(r => { (_repliesBy117[r.parent_id] = _repliesBy117[r.parent_id] || []).push(r); });
+          // সেশন ১৩১: গ্রহণকৃত-উত্তর সর্বাগ্রে (qa-single-রুটের স্টেবল-সর্টের মিরর)
+          _answers117.sort((a, b) =>
+            ((b.id === _post117.accepted_comment_id) ? 1 : 0) - ((a.id === _post117.accepted_comment_id) ? 1 : 0));
           const _can117 = (authorId) => !!(_me117 && (authorId === _me117.id || _isMod117));
           const _renderOne117 = (row, compact) => new Promise((res2, rej2) => {
             req.app.render('shared/comment/CommentItem', {
@@ -1770,10 +1819,22 @@ router.get('/api/comments', async (req, res) => {
           });
           const _slots117 = await Promise.all(_answers117.map(async (a, idx) => {
             const _repHtml = await Promise.all((_repliesBy117[a.id] || []).map(r => _renderOne117(r, true)));
-            const _chip117 = (idx === 0 && a.like_count > 0)
-              ? '<span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span>' : '';
-            return '<div class="qa-answer-slot" id="answer-' + a.id + '">' + _chip117
-              + await _renderOne117(a, false) + _repHtml.join('') + '</div>';
+            // সেশন ১৩১: চিপ + স্লট-ক্লাস + owner/admin টগল-বাটন — qa-single.ejs-মিরর
+            const _isAcc127 = (a.id === _post117.accepted_comment_id);
+            const _canAcc127 = !!(_me117 && (_me117.id === _post117.author_id || _me117.role === 'admin'));
+            const _chip117 = _isAcc127
+              ? '<span class="accepted-chip127"><i class="fas fa-circle-check" aria-hidden="true"></i> গ্রহণকৃত উত্তর</span>'
+              : ((idx === 0 && a.like_count > 0 && _post117.accepted_comment_id == null)
+                ? '<span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span>' : '');
+            const _accActs127 = _canAcc127
+              ? '<div class="acc-actions127"><button type="button" class="acc-btn127' + (_isAcc127 ? ' is-on' : '')
+                + '" data-acc127 data-qid="' + postId + '" data-cid="' + a.id + '" aria-pressed="' + (_isAcc127 ? 'true' : 'false') + '">'
+                + '<i class="fas fa-' + (_isAcc127 ? 'xmark' : 'check') + '" aria-hidden="true"></i><span>'
+                + (_isAcc127 ? 'গ্রহণ বাতিল' : 'গ্রহণ করুন') + '</span></button>'
+                + (_isAcc127 ? '<span class="acc-hint127">প্রশ্নকর্তা এই উত্তরটি সহায়ক হিসেবে গ্রহণ করেছেন</span>' : '')
+                + '</div>' : '';
+            return '<div class="qa-answer-slot' + (_isAcc127 ? ' is-accepted127' : '') + '" id="answer-' + a.id + '">' + _chip117
+              + await _renderOne117(a, false) + _accActs127 + _repHtml.join('') + '</div>';
           }));
           return res.json({ ok: true, total: rows.length, qaHtml: _slots117.join('') });
         }

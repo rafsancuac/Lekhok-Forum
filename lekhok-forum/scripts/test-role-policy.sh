@@ -306,6 +306,36 @@ ck "s125 restore বৈধ → ok:true" "1" "$(echo "$R1" | grep -c '"ok":true')
 R2=$(curl -s -b $JAR25A -X POST "$BASE/api/notifications/restore" -H "Content-Type: application/json" --data '{"id":992501,"type":"system","body":"rp125-undo-test"}')
 ck "s125 restore idempotent (existed)" "1" "$(echo "$R2" | grep -c '"existed":true')"
 ck "s125 ক্লিনআপ: dismiss removed:true" "1" "$(curl -s -b $JAR25A -X POST "$BASE/api/notifications/992501/dismiss" | grep -c '"removed":true')"
+# ═══ সেশন ১৩১: গ্রহণকৃত-উত্তর API — অথরাইজেশন + টগল + ভ্যালিডেশন ═══
+# self-sufficient (§15-রীতি): testuser প্রশ্ন HTTP-সিড → ismail উত্তর JSON-API-সিড →
+# টগল-চেইন → শেষ-ধাপে প্রশ্ন-ডিলিট-ই ক্লিনআপ (posts+comments+likes একসাথে)।
+echo "══ ২৬. গ্রহণকৃত-উত্তর API (session131) ══"
+TOKU127=$(getcsrf $JARU /qa/new)
+RQ127=$(curl -s -b $JARU -o /dev/null -w "%{http_code} %{redirect_url}" -X POST "$BASE/qa/new" --data-urlencode "title=rp127 গ্রহণ-টেস্ট প্রশ্ন" --data-urlencode "body=role-policy §২৬ সেলফ-সিড প্রশ্ন (session131)" --data-urlencode "_csrf=$TOKU127")
+Q127=$(strip "${RQ127#* }" | grep -o '[0-9][0-9]*$')
+if [ -z "$Q127" ]; then echo "  ✗ §26-সেলফ-সিড ব্যর্থ (POST /qa/new)"; FAIL=$((FAIL+1)); else
+  PASS=$((PASS+1)); echo "  ✓ §26-সেলফ-সিড প্রশ্ন id=$Q127"
+  A127=$(curl -s -b $JARV -X POST "$BASE/api/comment" -H "Content-Type: application/json" -d "{\"post_id\":$Q127,\"body\":\"§২৬ সেলফ-সিড উত্তর (session131)\"}" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+  if [ -z "$A127" ]; then echo "  ✗ §26-উত্তর-সিড ব্যর্থ (POST /api/comment)"; FAIL=$((FAIL+1));
+  else
+    PASS=$((PASS+1)); echo "  ✓ §26-সেলফ-সিড উত্তর id=$A127"
+    ck "anon accept → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d "{\"comment_id\":$A127}")"
+    ck "non-owner (ismail) accept → 403" "403" "$(curl -s -b $JARV -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d "{\"comment_id\":$A127}")"
+    ck "owner accept bogus-comment → 404" "404" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d '{"comment_id":999999}')"
+    ck "owner accept non-numeric → 400" "400" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d '{"comment_id":"x"}')"
+    ckc "owner accept উত্তর → 200+accepted" "\"accepted_comment_id\":$A127" "$(curl -s -b $JARU -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d "{\"comment_id\":$A127}")"
+    ckc "টগল-বন্ধ → accepted:null" '"accepted_comment_id":null' "$(curl -s -b $JARU -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d "{\"comment_id\":$A127}")"
+    # রিপ্লাই গ্রহণযোগ্য নয়: ismail নিজের-উত্তরে রিপ্লায় → owner accept → 400
+    RP127=$(curl -s -b $JARV -X POST "$BASE/api/comment" -H "Content-Type: application/json" -d "{\"post_id\":$Q127,\"body\":\"§২৬ রিপ্লাই (session131)\",\"parent_id\":$A127}" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+    [ -n "$RP127" ] && ck "owner accept রিপ্লাই → 400" "400" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d "{\"comment_id\":$RP127}")" || { echo "  ✗ §26-রিপ্লাই-সিড ব্যর্থ"; FAIL=$((FAIL+1)); }
+    ckc "পুনঃগ্রহণ (পুনরায়-সেট) → 200+accepted" "\"accepted_comment_id\":$A127" "$(curl -s -b $JARU -X POST "$BASE/api/qa/$Q127/accept-answer" -H "Content-Type: application/json" -d "{\"comment_id\":$A127}")"
+  fi
+  # ক্লিনআপ: প্রশ্ন-মালিকের ডিলিটই উত্তর/রিপ্লাই/লাইক-সহ সরায় (qa-delete ক্যাসকেড)
+  # (এ-অ্যাপের POST-রিডাইরেক্ট কনভেনশন 303 — PRG প্যাটার্ন; 302 নয়)
+  TOKU2=$(getcsrf $JARU /qa)
+  ck "§26-ক্লিনআপ প্রশ্ন-ডিলিট → 303" "303" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/qa/$Q127/delete?_csrf=$TOKU2")"
+fi
+
 echo ""
 echo "════════════════════════════════"
 echo "PASS=$PASS FAIL=$FAIL"

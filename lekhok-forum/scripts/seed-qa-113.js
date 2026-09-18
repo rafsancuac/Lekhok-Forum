@@ -46,7 +46,15 @@ const bcrypt = require('bcryptjs');
 
     const TITLE = 'নতুন লেখকরা কোথায় থেকে শুরু করবেন?';
     const exQ = await db.prepare("SELECT id FROM posts WHERE type = 'question' AND title = ?").get(TITLE);
-    if (exQ) { console.log('QA-সিড ইতিমধ্যে আছে (post', exQ.id, ') — idempotent স্কিপ'); db.saveDb(); await db.flushDb(); process.exit(0); }
+    if (exQ) {
+      console.log('QA-সিড ইতিমধ্যে আছে (post', exQ.id, ') — idempotent স্কিপ');
+      // সেশন ১৩১: পুরনো-সিড-থ্রেডেও গ্রহণকৃত-উত্তর ডেমো-স্টেট নিশ্চিত (idempotent —
+      // এখনো-না-মার্ক-হলে সর্বোচ্চ-লাইক-টপ-উত্তরটিকেই গ্রহীতা করে; ম্যানুয়ালি-মার্ক-থাকলে অস্পৃশ্য)
+      await db.prepare(`UPDATE posts SET accepted_comment_id = (
+        SELECT id FROM comments WHERE post_id = ? ORDER BY like_count DESC, created_at ASC LIMIT 1
+      ) WHERE id = ? AND accepted_comment_id IS NULL`).run(exQ.id, exQ.id);
+      db.saveDb(); await db.flushDb(); process.exit(0);
+    }
 
     const body = 'আমি **নতুন লেখক**। লেখালেখি শুরু করতে চাই —\n\n- প্রথমে ব্লগ, নাকি গল্প?\n- প্রতিদিন কতটুকু লিখা ভালো?\n\nঅভিজ্ঞদের পরামর্শ চাই।';
     const q = await db.prepare("INSERT INTO posts (author_id, type, title, body, category, tags, post_kind, status, published_at) VALUES (?, 'question', ?, ?, 'general', 'নতুন-লেখক', 'question', 'published', CURRENT_TIMESTAMP)").run(uidTest, TITLE, body);

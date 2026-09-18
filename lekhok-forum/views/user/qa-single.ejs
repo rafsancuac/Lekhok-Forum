@@ -9,6 +9,7 @@
 <%# ── সেশন ৭২ (GSC-ফিক্স): QAPage JSON-LD — Google-এ সমৃদ্ধ ফলাফল + কনটেন্ট-সিগন্যাল ── %>
 <%
   var _qText72 = (s) => String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  var _accA127 = (answers || []).find(function (a) { return a.id === post.accepted_comment_id; });
   var _qaLd72 = {
     "@context": "https://schema.org",
     "@type": "QAPage",
@@ -19,8 +20,8 @@
       "answerCount": (answers || []).length,
       "author": { "@type": "Person", "name": displayName(post) },
       "datePublished": post.published_at || post.created_at || undefined,
-      "acceptedAnswer": undefined,
-      "suggestedAnswer": (answers || []).map(function (a) {
+      "acceptedAnswer": _accA127 ? { "@type": "Answer", "text": _qText72(_accA127.body), "datePublished": _accA127.created_at || undefined, "url": '/qa/' + post.id + '#answer-' + _accA127.id, "author": { "@type": "Person", "name": displayName(_accA127) } } : undefined,
+      "suggestedAnswer": (answers || []).filter(function (a) { return a.id !== post.accepted_comment_id; }).map(function (a) {
         return { "@type": "Answer", "text": _qText72(a.body), "datePublished": a.created_at || undefined, "author": { "@type": "Person", "name": displayName(a) } };
       })
     }
@@ -106,9 +107,23 @@
             (session113-বকেয়া ③ পূর্ণ); ইঞ্জিন comment-tools.js swapQaThread। ── %>
         <div class="qa-answers-list" data-post-link="/qa/<%= post.id %>" data-post-id="<%= post.id %>">
         <% answers.forEach((a, idx) => { %>
-          <div class="qa-answer-slot" id="answer-<%= a.id %>">
-            <% if (idx === 0 && a.like_count > 0) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>
+          <%# সেশন ১৩১: গ্রহণকৃত-উত্তর — স্লটে is-accepted127 + সবুজ accepted-chip127;
+              প্রশ্নকর্তা/অ্যাডমিনের জন্য টগল-বাটন (acc-btn127) — AJAX no-reload। %>
+          <% const _isAcc127 = (post.accepted_comment_id === a.id); %>
+          <% const _canAccept127 = !!(user && (user.id === post.author_id || user.role === 'admin')); %>
+          <div class="qa-answer-slot<%= _isAcc127 ? ' is-accepted127' : '' %>" id="answer-<%= a.id %>">
+            <% if (_isAcc127) { %><span class="accepted-chip127"><i class="fas fa-circle-check" aria-hidden="true"></i> গ্রহণকৃত উত্তর</span>
+            <% } else if (idx === 0 && a.like_count > 0 && !(post.accepted_comment_id != null)) { %><span class="top-answer-chip"><i class="fas fa-arrow-up"></i> শীর্ষ উত্তর</span><% } %>
             <%- include('../shared/comment/CommentItem', { c: { id: a.id, author_id: a.author_id, username: a.username, pen_name: a.pen_name, full_name: a.full_name, avatar_url: a.avatar_url, body: a.body, bodyHtml: a.html, created_at: a.created_at, edited_at: a.edited_at, reaction: a.reaction }, link: '/qa/' + post.id, user: user }) %>
+            <% if (_canAccept127) { %>
+              <div class="acc-actions127">
+                <button type="button" class="acc-btn127<%= _isAcc127 ? ' is-on' : '' %>" data-acc127 data-qid="<%= post.id %>" data-cid="<%= a.id %>" aria-pressed="<%= _isAcc127 ? 'true' : 'false' %>">
+                  <i class="fas fa-<%= _isAcc127 ? 'xmark' : 'check' %>" aria-hidden="true"></i>
+                  <span><%= _isAcc127 ? 'গ্রহণ বাতিল' : 'গ্রহণ করুন' %></span>
+                </button>
+                <% if (_isAcc127) { %><span class="acc-hint127">প্রশ্নকর্তা এই উত্তরটি সহায়ক হিসেবে গ্রহণ করেছেন</span><% } %>
+              </div>
+            <% } %>
             <%# সেশন ১১৪: থ্রেডেড-উত্তর — রুটের reply-কোয়েরি (answerReplies113) থেকে,
                  ক্যানোনিকাল CommentItem-এর compact-মোডে (fc-reply ইনডেন্ট) একই বাবল %>
             <% (a.replies113 || []).forEach(r => { %>
@@ -183,6 +198,72 @@
         requestAnimationFrame(function () { t.classList.add('show'); });
         setTimeout(function () { t.classList.remove('show'); }, 4200);
       }
+    })();
+  </script>
+  <%# সেশন ১৩১: গ্রহণকৃত-উত্তর টগল — AJAX no-reload (session122-125-এর no-reload-চুক্তি);
+      সফল হলে ইন-প্লেস DOM-আপডেট: চিপ/ক্লাস/বাটন-স্টেট; রিলোডে সার্ভার-সত্যই (accepted-সর্বাগ্রে)। %>
+  <script>
+    (function () {
+      var list = document.querySelector('.qa-answers-list');
+      if (!list) return;
+      var csrf = function () {
+        var m = document.querySelector('meta[name="csrf-token"]');
+        return m ? m.getAttribute('content') : '';
+      };
+      function mkChip() {
+        var s = document.createElement('span');
+        s.className = 'accepted-chip127';
+        s.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i> গ্রহণকৃত উত্তর';
+        return s;
+      }
+      function setState(slot, on) {
+        slot.classList.toggle('is-accepted127', !!on);
+        var old = slot.querySelector(':scope > .accepted-chip127');
+        if (old) old.remove();
+        if (on) slot.insertBefore(mkChip(), slot.firstChild);
+        var btn = slot.querySelector('[data-acc127]');
+        if (btn) {
+          btn.classList.toggle('is-on', !!on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          btn.querySelector('i').className = 'fas fa-' + (on ? 'xmark' : 'check');
+          btn.querySelector('span').textContent = on ? 'গ্রহণ বাতিল' : 'গ্রহণ করুন';
+        }
+        var hint = slot.querySelector(':scope > .acc-actions127 .acc-hint127');
+        if (on && !hint) {
+          var acts = slot.querySelector(':scope > .acc-actions127');
+          if (acts) { var h = document.createElement('span'); h.className = 'acc-hint127'; h.textContent = 'প্রশ্নকর্তা এই উত্তরটি সহায়ক হিসেবে গ্রহণ করেছেন'; acts.appendChild(h); }
+        } else if (!on && hint) { hint.remove(); }
+      }
+      list.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-acc127]');
+        if (!btn) return;
+        e.preventDefault();
+        var qid = btn.getAttribute('data-qid'), cid = btn.getAttribute('data-cid');
+        btn.disabled = true;
+        fetch('/api/qa/' + qid + '/accept-answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf() },
+          body: JSON.stringify({ comment_id: parseInt(cid, 10) })
+        }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); }).then(function (res) {
+          btn.disabled = false;
+          if (!res.s || res.s >= 400 || !res.j || !res.j.ok) {
+            if (res.s === 401) { window.location.href = '/login?next=' + encodeURIComponent('/qa/' + qid); return; }
+            var tx = document.querySelector('.hid81-toast');
+            if (tx) { tx.textContent = 'গ্রহণ-স্টেট পরিবর্তন করা যায়নি — আবার চেষ্টা করুন।'; tx.classList.add('show'); setTimeout(function () { tx.classList.remove('show'); }, 3200); }
+            return;
+          }
+          var accId = res.j.accepted_comment_id;
+          list.querySelectorAll('.qa-answer-slot').forEach(function (slot) {
+            setState(slot, slot.id === 'answer-' + accId);
+          });
+          var target = document.getElementById('answer-' + accId);
+          if (target) {
+            target.classList.remove('flash-acc127');
+            void target.offsetWidth;
+            target.classList.add('flash-acc127');
+          }
+        }).catch(function () { btn.disabled = false; });
+      });
     })();
   </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>

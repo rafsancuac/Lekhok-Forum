@@ -1223,3 +1223,21 @@ Work Log:
 
 Stage Summary:
 - সাইট-ব্যাপী কল-রিংগার সম্পূর্ণ (পাবলিক+মেম্বার); পরের-এজেন্ট: session130; অবশিষ্ট-কল-রোডম্যাপ: Metered-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমা
+
+---
+
+Task ID: cron-r7 (session131 — QA-সুইপ → গ্রহণকৃত-উত্তর (accepted answer) ফিচার-রাউন্ড)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগ-শূন্যে ফিচার-রাউন্ড (session113-সুপারিশ ① accepted-answer-মার্কিং) → push + ডকস
+
+Work Log:
+- sync+QA @fbaf3d0 (fetch-ক্লিন): ১৪-route HTTP-ম্যাট্রিক্স + ৭-পেজ agent-browser কনসোল-০ + /me-ইন্টিগ্রিটি (statTiles-০/টগল/চার্ট/rt×৪) + ড্যাশবোর্ড-উইজেট (msx/crx/skel/rt) + /qa-ফিল্টার + সার্চ-মার্ক ×১৩ + 390px-০ → বাগ-শূন্য → ফিচার-রাউন্ড
+- ফিচার: **গ্রহণকৃত-উত্তর** — ① db.js: posts.accepted_comment_id (CREATE+defensive-ALTER) ② POST /api/qa/:id/accept-answer (owner/admin টগল; রিপ্লাই-400; notifyIfAllowed 'answer_accepted') ③ qa-single: is-accepted127+accepted-chip127+acc-btn127+acc-hint127, AJAX no-reload setState, QAPage-ld+json-বাস্তব acceptedAnswer, accepted-সর্বাগ্রে-স্টেবল-সর্ট ④ qa-list: ?filter=accepted তৃতীয়-চিপ+is-accepted127-ব্যাজ+empty-state ⑤ format=qa-html থ্রেড-সোয়াপ-মিরর (session126-শিক্ষা) ⑥ shared.css session131-ব্লক ⑦ seed-qa-113 idempotent-accepted-ডেমো ⑧ role-policy §১৮ (১২-অ্যাসারশন)
+- E2E (agent-browser, testuser-owner): গ্রহণ→চিপ+flash+হিন্ট ✓ বাতিল ✓ চিপ-উত্তর-স্থানান্তর ✓ রিলোডে accepted-প্রথম+ld+json.url ✓ থ্রেড-সোয়াপে মার্কআপ-রক্ষা ✓ md_rafsan-নোটিফিকেশন ✓ গেস্টে বাটন-শূন্য ✓ স্ক্রিনশট-ভিজ্যুয়াল ✓
+- টেস্ট-গোটচা-দুটি: ① এ-অ্যাপের POST-রিডাইরেক্ট 303 (302 নয়) ② body.scrollWidth fixed-অফ-ক্যানভাস-ড্রয়ার গুনে মিথ্যা-২১px — dW=৩৯০-ই সত্য
+- রিগ্রেশন: role-policy ১৪২/১৪২ ✓ cursor ২৫/২৫ ✓ guard ✓ audit:views ✓ brace-০ ✓ 390px-০ ✓ কনসোল-০ ✓
+- push: (এ-কমিট) + ডকস: PROJECT §১৩১ + PLANS session131-নোট + রুট-worklog
+
+Stage Summary:
+- Q&A এখন পূর্ণাঙ্গ: প্রশ্ন করুন → উত্তর দিন → রিঅ্যাক্ট → **গ্রহণ-মার্ক** → নোটিফিকেশন → ফিল্টার → SEO-লিড-ডেটা; কমেন্ট-ইঞ্জিনের সাথে তিন-সোর্স-মার্কআপ-চুক্তি (PLANS-নোট)
+- পরবর্তী-প্রার্থী: ① /dashboard-এ accepted-ব্যাজ (qa-card-এ) ② notifications-এ answer_accepted-আইকন-টোনাল ③ প্রশ্নকর্তা-মালিকানায় 'শীর্ষ উত্তর'-চিপ ও গ্রহণ-চিপের সমন্বিত-অবস্থান-পলিশ ④ role-policy §১৭-ফিলার (qa-accepted-ফিল্টারের HTTP-কভারেজ §১৮-তেই আছে — আলাদা §-এর দরকার নেই)

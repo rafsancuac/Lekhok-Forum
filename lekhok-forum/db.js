@@ -174,6 +174,7 @@ const MIGRATION_SQL = `
     view_count INTEGER DEFAULT 0,
     like_count INTEGER DEFAULT 0,
     comment_count INTEGER DEFAULT 0,
+    accepted_comment_id INTEGER DEFAULT NULL,
     reactions TEXT DEFAULT '{}',
     published_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -1304,7 +1305,11 @@ async function runMigrations() {
     "ALTER TABLE posts ADD COLUMN archive_visible INTEGER DEFAULT 1",
     // সেশন ১১২: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ (LATER_COLUMNS-এর প্রতিচ্ছবি —
     // উভয় তালিকায় থাকা নিরাপদ — duplicate-column নিরীহ catch)
-    "ALTER TABLE posts ADD COLUMN home_cover TEXT"
+    "ALTER TABLE posts ADD COLUMN home_cover TEXT",
+    // সেশন ১৩১: গ্রহণকৃত-উত্তর (accepted answer) — প্রশ্নের (type='question') কোন
+    // উত্তর (comments.id) প্রশ্নকর্তা কর্তৃক গ্রহীতা হিসেবে চিহ্নিত; NULL = এখনো নয়।
+    // টগল-মডেল API: POST /api/qa/:id/accept-answer (routes/social.js)।
+    "ALTER TABLE posts ADD COLUMN accepted_comment_id INTEGER DEFAULT NULL"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}

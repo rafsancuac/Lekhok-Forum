@@ -2618,3 +2618,17 @@ git push origin main
 - **paintList-প্যারিটি:** live.js AJAX-রেন্ডার আইটেমে data-n (restore) + data-ts (LekhokRelTime চুক্তি)।
 - **crx-ডেল্টা-পোর্ট:** session123-ক্যানোনিকলের ওপর c-বিহীন-এন্ট্রিতে ডিটারমিনিস্টিক /img/cover/crx<id> ফলব্যাক।
 - **পরীক্ষা:** role-policy §২৫ সহ ১৪৭/১৪৭ + cursor ২৬/২৬ + guard ✓ + agent-browser E2E (undo ×৩-সারফেস, crx-থাম্ব, 390px-০, কনসোল-০) + টেস্ট-ডেটা-ক্লিনআপ। বিস্তারিত PLANS.md session129-নোট।
+
+## session131 — গ্রহণকৃত-উত্তর (accepted answer) — Q&A-র সম্পূর্ণতা-ফিচার (ক্রন-রিভিউ রাউন্ড)
+
+**প্রেক্ষাপট:** QA-সুইপ বাগ-শূন্য (১৪-route ম্যাট্রিক্স + ৭-পেজ কনসোল-০ + /me-ইন্টিগ্রিটি + 390px-০) → ফিচার-রাউন্ড: session113-র সুপারিশকৃত **accepted-answer-মার্কিং** বাস্তবায়ন (qa-single-এর `acceptedAnswer: undefined` প্লেসহোল্ডার এখন পূর্ণ)।
+
+**① স্কিমা:** `posts.accepted_comment_id INTEGER DEFAULT NULL` — CREATE TABLE-এ + defensive ALTER (boot-মাইগ্রেশন, পুরনো-DB-নিরাপদ)।
+
+**② API (routes/social.js):** `POST /api/qa/:id/accept-answer` — JSON-API (CSRF-মুক্ত /api/*-চুক্তি); প্রশ্নকর্তা বা role='admin' টগল করে (একই-উত্তরে দ্বিতীয়-কল = গ্রহণ-বাতিল); শুধু টপ-লেভেল উত্তর গ্রহণযোগ্য (রিপ্লাই → 400); 400/401/403/404 সম্পূর্ণ-ম্যাট্রিক্স; গ্রহণে উত্তরদাতাকে `answer_accepted` নোটিফিকেশন (notifyIfAllowed prefs-সম্মান, নিজের-উত্তরে নীরব)।
+
+**③ ভিউ:** qa-single.ejs — স্লটে `is-accepted127` + সবুজ-সলিড `accepted-chip127`; owner/admin-টগল-বাটন (acc-btn127, aria-pressed); AJAX no-reload ইন-প্লেস-আপডেট (চিপ/ক্লাস/বাটন/হিন্ট + flash-acc127); **QAPage JSON-LD-তে বাস্তব acceptedAnswer (url অ্যাঙ্করসহ) + suggestedAnswer বাদ-গ্রহীতা** — Google সমৃদ্ধ-ফলাফল; উত্তর সার্ভার-সাইডে accepted-সর্বাগ্রে স্টেবল-সর্ট। qa-list.ejs — তৃতীয় ফিল্টার-চিপ `?filter=accepted` (কাউন্টসহ, ডিপ-লিংকযোগ্য) + `is-accepted127` স্টেট-ব্যাজ + সেলিব্রেটরি-empty-state।
+
+**④ থ্রেড-সোয়াপ-মিরর (session126-paintList-শিক্ষা প্রয়োগ):** `/api/comments?format=qa-html` রেন্ডারারেও accepted_comment_id-সর্ট + চিপ + টগল-বাটন মিরর — AJAX-কমেন্ট-সাবমিটের থ্রেড-সোয়াপেও গ্রহণ-মার্কআপ টেকনামী (E2E-প্রমাণিত)।
+
+**যাচাই:** role-policy **১৪২/১৪২** (§১৮ নতুন ১২-অ্যাসারশন) ✓ cursor ২৫/২৫ ✓ guard:design ✓ audit:views ✓ brace-০ ✓; E2E: গ্রহণ→চিপ+ফ্ল্যাশ+হিন্ট ✓ বাতিল ✓ উত্তর-বদলে চিপ-স্থানান্তর ✓ রিলোডে accepted-প্রথম+ld+json ✓ থ্রেড-সোয়াপ-রক্ষা ✓ নোটিফিকেশন ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ ✓। **গোটচা:** এ-অ্যাপের POST-রিডাইরেক্ট কনভেনশন **303** (302 নয়) — টেস্ট-দাবিতে ব্যবহার করুন।

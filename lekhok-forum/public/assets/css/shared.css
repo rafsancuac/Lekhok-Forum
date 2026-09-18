@@ -201,3 +201,35 @@
 @media (max-width:640px){.lf-utoast{left:12px;right:12px;transform:translateY(12px);min-width:0}.lf-utoast.lf-utoast-in{transform:translateY(0)}.lf-utoast.lf-utoast-out{transform:translateY(10px)}}
 @media (prefers-reduced-motion:reduce){.lf-utoast,.lf-utoast-bar{transition:none;transform:none}.lf-utoast.lf-utoast-in{opacity:1}}
 /* EOF-MARKER: session125-utoast */
+
+
+/* ═══ session131 — গ্রহণকৃত-উত্তর (accepted answer) ═══
+   [qa-single: accepted-chip127 সবুজ-সলিড পিল + is-accepted127 স্লট-টিন্ট +
+   acc-btn127 টগল (owner/admin) + flash-acc127 এন্ট্রি-হাইলাইট;
+   qa-list: is-accepted127 স্টেট-ব্যাজ + qa-filter-accepted127 ফিল্টার-চিপ;
+   brand-token-নির্ভর (tokens.css); reduced-motion-সেফ] */
+.accepted-chip127{position:absolute;top:-11px;left:12px;z-index:6;display:inline-flex;align-items:center;gap:5px;background:var(--lf-brand-primary);color:var(--lf-ui-surface);border-radius:var(--lf-radius-chip);padding:3px 11px;font-size:.68rem;font-weight:800;letter-spacing:.2px;box-shadow:0 2px 6px rgba(0,106,78,.3);white-space:nowrap}
+.accepted-chip127 i{font-size:.7rem}
+.qa-answer-slot.is-accepted127{position:relative;margin-top:18px}
+.qa-answer-slot.is-accepted127 > .cmt-item .fc-bubble{background:var(--lf-brand-light);border-color:rgba(0,106,78,.22)}
+.acc-actions127{display:flex;align-items:center;gap:10px;margin-top:6px;padding-left:2px;flex-wrap:wrap}
+.acc-btn127{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:var(--lf-radius-chip);border:1px solid var(--lf-ui-border);background:var(--lf-ui-surface);color:var(--lf-text-secondary);font-size:.74rem;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
+.acc-btn127 i{font-size:.68rem}
+.acc-btn127:hover{background:var(--lf-brand-light);color:var(--lf-brand-primary);border-color:rgba(0,106,78,.35)}
+.acc-btn127:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:2px}
+.acc-btn127.is-on{background:var(--lf-brand-primary);border-color:var(--lf-brand-primary);color:var(--lf-ui-surface);box-shadow:0 1px 4px rgba(0,106,78,.24)}
+.acc-btn127.is-on:hover{background:var(--lf-brand-primary-hover)}
+.acc-btn127:disabled{opacity:.6;cursor:progress}
+.acc-hint127{font-size:.72rem;color:var(--lf-text-secondary);display:inline-flex;align-items:center;gap:4px}
+.qa-ans-badge.is-accepted127{background:var(--lf-brand-primary);color:var(--lf-ui-surface);border:1px solid var(--lf-brand-primary);box-shadow:0 1px 3px rgba(0,106,78,.25)}
+.qa-filter-chip.qa-filter-accepted127 i{color:var(--lf-brand-primary)}
+.qa-filter-chip.qa-filter-accepted127.active i{color:var(--lf-ui-surface)}
+@keyframes accFlash127{0%{background:rgba(0,106,78,.14)}100%{background:transparent}}
+.flash-acc127{animation:accFlash127 1.1s ease-out 1;border-radius:12px}
+@media (max-width:640px){
+  .accepted-chip127{top:-9px;left:8px;padding:2px 9px;font-size:.64rem}
+  .acc-hint127{display:none}
+}
+@media (prefers-reduced-motion: reduce){.flash-acc127{animation:none}}
+
+/* EOF-MARKER: session131 */
