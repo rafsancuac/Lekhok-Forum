@@ -1787,3 +1787,20 @@ Work Log:
 Stage Summary:
 - স্বাধীন স্মুথ স্ক্রল সিস্টেম সাইট-ওয়াইড: ফিড ৩-প্যানেল + সেটিংস ২-প্যানেল + মেসেঞ্জার ২/৩-প্যানেল — সব ফ্লো-গ্রিন, মোবাইল-অক্ষত
 - পরের-এজেন্ট: **session158 লেবেল থেকে**; চুক্তি ×৭ PLANS session153-নোটে; প্রস্তাব: প্রোফাইল overscroll-পলিশ, /admin pn153-রূপান্তর, ফিড scroll-মেমরি, keyboard-scroll-রুটিং
+
+---
+Task ID: session157-push
+Agent: Z.ai Code (cron webDevReview — push-সমাপ্তি-এন্ট্রি)
+Task: session157-কমিট push-সমাপ্তি-এন্ট্রি
+
+Work Log:
+- push-রেস-ইতিহাস: দ্বি-rebase-ইউনিয়ন — ① d611f84→1fe4cab (session153×২/154/155: কম্পোজার-কোলাজ/সাইডবার-প্রিমিয়াম/নোটিফ-ড্রপডাউন/Next.js-ল্যান্ডিং) — shared.css/dashboard.css/PLANS/PROJECT/worklog ×৪-union; ② 1fe4cab→3e30220 (session156-একই-স্পেক + session157-dir-রেল) — আমার ফিড-ব্লক session149-রীতিতে প্রত্রাহৃত (তাদের body.lf-feed-lock156 + .fb-scroll canonical-গৃহীত), PLANS/worklog ×৩-union
+- relabel-চেইন: আমার-153→156→157 (multi-collision: triple-153 + double-157); কোড-মার্কার pn153/st153/session153-CSS-ব্লক অনন্য-রক্ষিত
+- 🚨 ক্রস-এজেন্ট-রিপেয়ার: তাদের utilities.css-এ hex-১ (body{background:#fff}) — guard-লাল → var(--lf-white) টোকেনাইজ, guard-গ্রিন
+- 🚨 hygiene-নোট: তাদের lf156-e2e.sh কমিটে-অনুপস্থিত (মেসেজে-দাবিত, ট্রিতে-নেই) — পরের-এজেন্ট স্ক্রিপ্ট-হারানো-গোটচা মনে রাখুন
+- মার্জড-ট্রি-চূড়ান্ত-যাচাই: guard ✓ audit:views (106-ejs) ✓ role-policy **২৫৪/২৫৪** ✓ + agent-browser: তাদের-ইঞ্জিন-ফিড (lock+১২-রেল-আইটেম+winY-0) ✓ ইউটিলিটি-পেজ-200 ✓ আমার-সেটিংস (footer-স্লট+main-স্ক্রল+winY-0) ✓
+- push: 3e30220 → **24b0285** (origin/main)
+
+Stage Summary:
+- স্বাধীন স্মুথ স্ক্রল সিস্টেম origin/main-এ ল্যান্ডেড (আমার-ডেল্টা: settings-২-প্যানেল fixed-shell + messenger তিন-স্ক্রলার + shared.css .independent-scroll/.pn153-* পরিপূরক-ইউটিলিটি; ফিড তাদের session156-canonical-এ)
+- **পরের-এজেন্ট: session158 লেবেল থেকে**; চুক্তি ×৭ PLANS session157-নোটে; গোটচা-নোট: role-policy=RP_PORT / s139=E2E_PORT / lf153=LF153_PORT(স্ব-বুট, ক্লিনআপ-পক্ষে-বাইস্ট্যান্ডার-মারে) / সার্ভার=PORT
