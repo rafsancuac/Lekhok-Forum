@@ -646,3 +646,39 @@
 /* ── সেশন ৯১ (D2): পাবলিক সংরক্ষণ-তালিকা লিংক-ট্যাব (anchor-সংস্করণ) ── */
 .pf-tab.pf-tab-href{ text-decoration:none; color:inherit; display:inline-flex; align-items:center; gap:6px; }
 .pf-tab.pf-tab-href:hover{ color:var(--pf-blue); }
+
+/* ═══ session139-ব্লক: প্রোফাইল প্রশ্ন/মন্তব্য/প্রতিক্রিয়া-প্যানে + গৃহীত-উত্তর ব্যাজ ═══
+   তিনটি নীরব-মৃত পিল (প্রশ্ন/মন্তব্য/প্রতিক্রিয়া) — প্যানে-নির্মাণ + বার-স্থানান্তর।
+   টোকেন-শুধু (var(--lf-*)) — hex-র্যাচেট-নিরাপদ; reduced-motion-সম্মানিত। */
+
+/* ফিল্টার-বার এখন সব-প্যানের উপরে শেয়ার্ড — স্টিকি পলিশ */
+.pf-filter-bar{position:sticky;top:10px;z-index:5}
+
+/* মিনি-কার্ড (প্রশ্ন/মন্তব্য/প্রতিক্রিয়া-প্যানে) */
+.pf-mini{display:flex;flex-direction:column;gap:8px;padding:14px 16px;transition:border-color .2s ease,box-shadow .2s ease}
+.pf-mini:hover{border-color:var(--lf-brand-primary);box-shadow:0 0 0 3px var(--lf-brand-light)}
+.pf-mini-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pf-mini-kind{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:var(--lf-text-secondary);background:var(--lf-ui-input-bg);border-radius:var(--lf-radius-chip);padding:3px 10px}
+.pf-mini-date{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:.72rem;color:var(--lf-text-secondary)}
+.pf-mini-title{margin:0;font-size:.98rem;line-height:1.45}
+.pf-mini-title a{color:var(--lf-text-primary);text-decoration:none}
+.pf-mini-title a:hover,.pf-mini-title a:focus-visible{color:var(--lf-brand-primary);text-decoration:underline}
+.pf-mini-excerpt{margin:0;font-size:.85rem;line-height:1.6;color:var(--lf-text-secondary);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pf-mini-meta{display:flex;align-items:center;gap:10px;font-size:.76rem;color:var(--lf-text-secondary)}
+.pf-mini-meta i{color:var(--lf-brand-primary)}
+.pf-mini-link{color:var(--lf-text-primary);text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.pf-mini-link:hover,.pf-mini-link:focus-visible{color:var(--lf-brand-primary)}
+
+/* গৃহীত-উত্তর ব্যাজ — ব্র্যান্ড-টোনাল (icon-accepted135-প্যারিটি) */
+.pf-ansbadge{display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:800;letter-spacing:.3px;padding:3px 10px;border-radius:var(--lf-radius-chip);background:var(--lf-brand-light);color:var(--lf-brand-primary);border:1px solid var(--lf-brand-primary)}
+.pf-ansbadge i{font-size:.66rem}
+.me-ansbadge139{background:var(--lf-brand-light);color:var(--lf-brand-primary);border:1px solid var(--lf-brand-primary)}
+.me-ansbadge139 i{font-size:.66rem}
+
+@media (max-width:640px){
+  .pf-mini{padding:12px 13px}
+  .pf-mini-date{margin-left:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  .pf-mini,.pf-filter-bar{transition:none}
+}

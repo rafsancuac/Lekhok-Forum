@@ -1279,8 +1279,11 @@ router.get('/profile/:username', async (req, res) => {
     isOwner ? all91("SELECT id, title, type, created_at, status FROM posts WHERE author_id = ? AND status = 'draft' ORDER BY created_at DESC LIMIT 20", profile.id) : Promise.resolve([]),
     isOwner ? all91('SELECT id, content_type, title, scheduled_date, published FROM daily_content WHERE author_id = ? ORDER BY created_at DESC LIMIT 10', profile.id) : Promise.resolve([]),
     // Comments by this user (public context)
+    // session139: accepted_flag — প্রোফাইল-মন্তব্যে 'গৃহীত উত্তর' ব্যাজ-প্যারিটি
+    // (session132-অবশিষ্ট ①; posts.accepted_comment_id = c.id হলে ১)
     all91(`
-    SELECT c.id, c.body, c.created_at, p.id AS post_id, p.title AS post_title, p.type AS post_type
+    SELECT c.id, c.body, c.created_at, p.id AS post_id, p.title AS post_title, p.type AS post_type,
+           (CASE WHEN p.accepted_comment_id = c.id THEN 1 ELSE 0 END) AS accepted_flag
     FROM comments c JOIN posts p ON p.id = c.post_id
     WHERE c.author_id = ? ORDER BY c.created_at DESC LIMIT 30
   `, profile.id),
@@ -2166,9 +2169,11 @@ router.get('/me', ensureLoggedIn, async (req, res) => {
   `).all(me.id);
 
   // My recent comments
+  // session139: accepted_flag — 'গৃহীত উত্তর' ব্যাজ-প্যারিটি (profile.ejs-প্যারিটি)
   const myComments = await db.prepare(`
     SELECT c.id, c.body, c.created_at, c.like_count,
-           p.id AS post_id, p.title AS post_title, p.type AS post_type
+           p.id AS post_id, p.title AS post_title, p.type AS post_type,
+           (CASE WHEN p.accepted_comment_id = c.id THEN 1 ELSE 0 END) AS accepted_flag
     FROM comments c JOIN posts p ON p.id = c.post_id
     WHERE c.author_id = ? ORDER BY c.created_at DESC LIMIT 30
   `).all(me.id);

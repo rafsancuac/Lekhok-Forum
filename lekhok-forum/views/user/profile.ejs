@@ -269,20 +269,22 @@
       <main class="pf-main">
 
         <%# ═══ ট্যাব: পোস্টসমূহ (পিনড + ফিল্টার-পিল + FB-ফিড) ═══ %>
-        <section class="tab-content active" id="tab-posts" role="tabpanel">
+        <%# session139: ফিল্টার-বার tab-posts-এর বাইরে তোলা হলো — চার-প্যানেল-সুইচেও
+            বার দৃশ্যমান থাকে (আগে tab-posts-এর ভেতরে থাকায় অন্য-প্যানে-গেলে বার
+            নিখোঁজ হতো + প্রশ্ন/মন্তব্য/প্রতিক্রিয়া-পিল প্যানে-অনুপস্থিতিতে নীরব-মৃত ছিল) %>
+        <div class="pf-filter-bar pf-card">
+          <button type="button" class="pf-pill active" data-tab="posts"><i class="fas fa-pen-nib"></i> লেখা</button>
+          <button type="button" class="pf-pill" data-tab="questions"><i class="fas fa-question-circle"></i> প্রশ্ন</button>
+          <button type="button" class="pf-pill" data-tab="comments"><i class="far fa-comment"></i> মন্তব্য</button>
+          <button type="button" class="pf-pill" data-tab="reactions"><i class="far fa-heart"></i> প্রতিক্রিয়া</button>
+          <a href="/articles?author=<%= encodeURIComponent(profile.username) %>" class="pf-all-posts" title="<%= profile.full_name %> এর সব লেখা"><i class="fas fa-layer-group"></i> সব লেখা</a>
+        </div>
+
+        <section class="tab-content active" id="tab-posts" role="tabpanel" aria-label="লেখাসমূহ">
           <%# পিনড-পোস্ট — টাইমলাইনের শীর্ষে — সেশন ১০৫: ক্যানোনিকাল FeedPostCard %>
           <% if (pinnedPost) { %>
             <%- include('../shared/post/FeedPostCard', { item: pinnedPost, user: user, myBookmarkedIds: (typeof myBookmarkedIds !== 'undefined' ? myBookmarkedIds : []), opts: { profileMode: true, showPin: isOwner, cardClass: 'pf-post pinned', pinnedLabel: 'পিন করা লেখা' } }) %>
           <% } %>
-
-          <%# ফিল্টার-পিল: লেখা/প্রশ্ন/মন্তব্য/প্রতিক্রিয়া (ট্যাব-প্যানেল সুইচ) + সব-লেখা লিংক %>
-          <div class="pf-filter-bar pf-card">
-            <button type="button" class="pf-pill active" data-tab="posts"><i class="fas fa-pen-nib"></i> লেখা</button>
-            <button type="button" class="pf-pill" data-tab="questions"><i class="fas fa-question-circle"></i> প্রশ্ন</button>
-            <button type="button" class="pf-pill" data-tab="comments"><i class="far fa-comment"></i> মন্তব্য</button>
-            <button type="button" class="pf-pill" data-tab="reactions"><i class="far fa-heart"></i> প্রতিক্রিয়া</button>
-            <a href="/articles?author=<%= encodeURIComponent(profile.username) %>" class="pf-all-posts" title="<%= profile.full_name %> এর সব লেখা"><i class="fas fa-layer-group"></i> সব লেখা</a>
-          </div>
 
           <% if (posts.length === 0) { %>
             <div class="pf-card pf-empty">
@@ -295,6 +297,83 @@
               <% posts.forEach(post => { %>
                 <%# সেশন ১০৫: ক্যানোনিকাল FeedPostCard — প্রোফাইল-টাইমলাইনেও একই পোস্ট-কার্ড %>
                 <%- include('../shared/post/FeedPostCard', { item: post, user: user, myBookmarkedIds: (typeof myBookmarkedIds !== 'undefined' ? myBookmarkedIds : []), opts: { profileMode: true, showPin: isOwner, cardClass: 'pf-post' } }) %>
+              <% }); %>
+            </div>
+          <% } %>
+        </section>
+
+        <%# ═══ session139: ট্যাব: প্রশ্ন (প্যানে-নির্মাণ — পিল নীরব-মৃত ছিল) ═══ %>
+        <section class="tab-content" id="tab-questions" role="tabpanel" aria-label="প্রশ্নসমূহ">
+          <% if (!questions || questions.length === 0) { %>
+            <div class="pf-card pf-empty">
+              <i class="fas fa-question-circle"></i>
+              <p>এখনো কোনো প্রশ্ন করা হয়নি।</p>
+              <% if (isOwner) { %><a href="/qa/new" class="pf-btn primary">প্রশ্ন করুন</a><% } %>
+            </div>
+          <% } else { %>
+            <div class="pf-feed">
+              <% questions.forEach(q => { %>
+                <article class="pf-card pf-mini">
+                  <div class="pf-mini-top">
+                    <span class="pf-mini-kind"><i class="fas fa-question-circle" aria-hidden="true"></i> প্রশ্ন</span>
+                    <% if (q.accepted_comment_id) { %><span class="pf-ansbadge" title="এই প্রশ্নের উত্তর গৃহীত হয়েছে"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত</span><% } %>
+                    <span class="pf-mini-date"><i class="far fa-clock" aria-hidden="true"></i> <%= bnRelTime ? bnRelTime(q.published_at || q.created_at) : new Date(q.published_at || q.created_at).toLocaleDateString('bn-BD') %></span>
+                  </div>
+                  <h3 class="pf-mini-title"><a href="/qa/<%= q.id %>"><%= q.title %></a></h3>
+                  <% if (q.body) { %><p class="pf-mini-excerpt"><%= mdPlain(q.body, 160) %></p><% } %>
+                  <div class="pf-mini-meta">
+                    <span><i class="far fa-comment" aria-hidden="true"></i> <%= bn(q.answer_count || q.ans_count || 0) %> উত্তর</span>
+                  </div>
+                </article>
+              <% }); %>
+            </div>
+          <% } %>
+        </section>
+
+        <%# ═══ session139: ট্যাব: মন্তব্য (প্যানে-নির্মাণ + গৃহীত-উত্তর ব্যাজ — session132-অবশিষ্ট ①) ═══ %>
+        <section class="tab-content" id="tab-comments" role="tabpanel" aria-label="মন্তব্যসমূহ">
+          <% if (!comments || comments.length === 0) { %>
+            <div class="pf-card pf-empty">
+              <i class="far fa-comment"></i>
+              <p>এখনো কোনো মন্তব্য নেই।</p>
+            </div>
+          <% } else { %>
+            <div class="pf-feed">
+              <% comments.forEach(c => { %>
+                <article class="pf-card pf-mini">
+                  <div class="pf-mini-top">
+                    <span class="pf-mini-kind"><i class="<%= c.post_type === 'question' ? 'fas fa-question-circle' : 'fas fa-pen-nib' %>" aria-hidden="true"></i> <%= c.post_type === 'question' ? 'প্রশ্নে' : 'লেখায়' %></span>
+                    <% if (c.accepted_flag) { %><span class="pf-ansbadge" title="এই উত্তরটি গ্রহণকৃত"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span><% } %>
+                    <span class="pf-mini-date"><i class="far fa-clock" aria-hidden="true"></i> <%= bnRelTime ? bnRelTime(c.created_at) : new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
+                  </div>
+                  <p class="pf-mini-excerpt"><%= mdPlain(c.body, 200) %></p>
+                  <div class="pf-mini-meta">
+                    <a href="<%= c.post_type === 'question' ? '/qa/' + c.post_id : '/articles/' + c.post_id %>" class="pf-mini-link"><%= c.post_title %> <i class="fas fa-angle-right" aria-hidden="true"></i></a>
+                  </div>
+                </article>
+              <% }); %>
+            </div>
+          <% } %>
+        </section>
+
+        <%# ═══ session139: ট্যাব: প্রতিক্রিয়া (প্যানে-নির্মাণ — পিল নীরব-মৃত ছিল) ═══ %>
+        <section class="tab-content" id="tab-reactions" role="tabpanel" aria-label="প্রতিক্রিয়াসমূহ">
+          <% if (!reactions || reactions.length === 0) { %>
+            <div class="pf-card pf-empty">
+              <i class="far fa-heart"></i>
+              <p>এখনো কোনো প্রতিক্রিয়া নেই।</p>
+            </div>
+          <% } else { %>
+            <% const EMO139 = { like: '👍', love: '❤️', care: '🤗', haha: '😂', wow: '😮', sad: '😢', angry: '😡' }; %>
+            <div class="pf-feed">
+              <% reactions.forEach(r => { %>
+                <article class="pf-card pf-mini">
+                  <div class="pf-mini-top">
+                    <span class="pf-mini-kind"><%= EMO139[r.reaction_type] || '👍' %> প্রতিক্রিয়া</span>
+                    <span class="pf-mini-date"><i class="far fa-clock" aria-hidden="true"></i> <%= bnRelTime ? bnRelTime(r.created_at) : new Date(r.created_at).toLocaleDateString('bn-BD') %></span>
+                  </div>
+                  <h3 class="pf-mini-title"><a href="<%= r.post_type === 'question' ? '/qa/' + r.post_id : '/articles/' + r.post_id %>"><%= r.title %></a></h3>
+                </article>
               <% }); %>
             </div>
           <% } %>

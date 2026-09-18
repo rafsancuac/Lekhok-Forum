@@ -129,6 +129,8 @@
           <div class="feed-card-body">
             <div class="feed-card-meta">
               <span class="badge"><%= c.post_type === 'question' ? 'প্রশ্নে' : 'লেখায়' %></span>
+              <%# session139: গৃহীত-উত্তর ব্যাজ — accepted_flag প্যারিটি (profile-প্যানে-সমৃদ্ধ) %>
+              <% if (c.accepted_flag) { %><span class="badge me-ansbadge139"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span><% } %>
               <span><i class="far fa-clock"></i> <%= new Date(c.created_at).toLocaleDateString('bn-BD') %></span>
             </div>
             <h3 class="feed-card-title"><a href="<%= c.post_type === 'question' ? '/qa/' + c.post_id : '/articles/' + c.post_id %>"><%= c.post_title %></a></h3>
