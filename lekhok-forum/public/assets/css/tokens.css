@@ -146,3 +146,16 @@ html { background: var(--lf-ui-canvas); }
   --lf-amber-soft-2: #FEF3C7;           /* amber-100 */
   --lf-amber-soft-3: #FDE68A;           /* amber-200 */
 }
+
+/* ── সেশন-১৪০: পড়ার-অভিজ্ঞতা প্যালেট (article.css rt-বার/toc/resume/related — hex কেবল --lf-* সংজ্ঞা-লাইনে) ── */
+:root:root {
+  --lf-read-green: #059669;             /* সেশন ৬৩ ডার্ক-গ্রিন প্যালেট — প্রাইমারি */
+  --lf-read-green-deep: #047857;        /* গাঢ় (টেক্সট/গ্রেডিয়েন্ট-শেষ) */
+  --lf-read-green-bright: #10B981;      /* উজ্জ্বল (আইকন/লিংক-হাইলাইট) */
+  --lf-read-tint: #f0fdf7;              /* টিন্ট-গ্রেডিয়েন্ট শুরু */
+  --lf-read-tint-deep: #e6f7ef;         /* টিন্ট-গ্রেডিয়েন্ট শেষ */
+  --lf-read-slate: #334155;             /* পাঠ্য-স্লেট (toc-link/resume) */
+  --lf-read-slate-light: #94a3b8;       /* হালকা-স্লেট (dismiss-✕) */
+  --lf-read-quote-ink: #3f5346;         /* a-quote পাঠ্য-কালি */
+ (wip(session136): qa-composer + hex-tokenize (pre-rebase))
+}

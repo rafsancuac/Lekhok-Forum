@@ -854,6 +854,58 @@ router.post(['/qa/new', '/questions/new'], ensureLoggedIn, async (req, res) => {
   res.redirect('/qa/' + r.lastInsertRowid);
 });
 
+// ── সেশন ১৪০: JSON API — /qa-পেজের ইনলাইন-কম্পোজার (optimistic-কার্ড → canonical-HTML-swap) ──
+// POST /qa/new-এর সম্পূর্ণ-মিরর (ডুপলিকেট-গার্ড s39 + ম্যানশন-নোটিফিকেশন + post_kind='question')
+// + session124-ক্যানোনিকাল-ইনসার্ট-রীতি: সার্ভার-রেন্ডার্ড QaListItem-HTML এক-রাউন্টট্রিপে —
+// shared/qa/QaListItem.ejs একমাত্র-উৎস (SSR-লুপের সাথে অক্ষরে-অক্ষরে এক; req.app.render লেআউট-বাইপাস)।
+// CSRF-নোট: JSON-POST এ-অ্যাপে csrf-মিডলওয়্যারের স্কোপ-বহির্ভূত (urlencoded/multipart-কেবল —
+// /api/comment-চুক্তি), তাই ক্লায়েন্ট fetch JSON-বডিতেই চলে।
+router.post('/api/qa/new', ensureLoggedIn, async (req, res) => {
+  const _t140 = String((req.body && req.body.title) || '').trim();
+  const _b140 = String((req.body && req.body.body) || '').trim();
+  if (!_t140 || !_b140) return res.status(400).json({ ok: false, error: 'missing_fields', message: 'শিরোনাম ও প্রশ্ন দুটোই আবশ্যক' });
+  if (_t140.length > 200) return res.status(400).json({ ok: false, error: 'title_too_long', message: 'শিরোনাম ২০০ অক্ষরের মধ্যে রাখুন' });
+  if (_b140.length > 5000) return res.status(400).json({ ok: false, error: 'body_too_long', message: 'বিস্তারিত ৫০০০ অক্ষরের মধ্যে রাখুন' });
+  // সেশন ৩৯-মিরর: গত ২ মিনিটে একই-শিরোনামের প্রশ্ন → নতুন-সারি নয়, সেটার id-ই (ডাবল-ক্লিক-নিরাপদ)
+  const dupQ140 = await db.prepare(`
+    SELECT id FROM posts WHERE author_id = ? AND type = 'question' AND title = ?
+      AND created_at > datetime('now', '-2 minutes') ORDER BY id DESC LIMIT 1
+  `).get(req.session.user.id, _t140);
+  if (dupQ140) {
+    console.log(`[social] api-question duplicate POST ignored (matched id ${dupQ140.id}, user ${req.session.user.id})`);
+    return res.json({ ok: true, id: Number(dupQ140.id), duplicate: true });
+  }
+  const mentions140 = await extractMentions(_b140);
+  const r140 = await db.prepare(`INSERT INTO posts (author_id, type, title, body, category, tags, mentions, post_kind) VALUES (?, 'question', ?, ?, 'general', NULL, ?, 'question')`).run(req.session.user.id, _t140, _b140, mentions140);
+  const postId140 = Number(r140.lastInsertRowid);
+  // ম্যানশন-নোটিফিকেশন — POST /qa/new-এর একই-লুপ (notify_comments-প্রেফ-সম্মান)
+  try {
+    const mentioned140 = JSON.parse(mentions140);
+    for (const m of mentioned140) {
+      if (m.id !== req.session.user.id) {
+        await notifyIfAllowed(m.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(req.session.user) + ' আপনাকে একটি প্রশ্নে ম্যানশন করেছেন', '/qa/' + postId140, req.session.user.id);
+      }
+    }
+  } catch (e) {}
+  // ক্যানোনিকাল-রো — GET /qa-র কুয়েরির কলাম-সাম্য (UNION-অমিল-গোটচা-সচেতন: ans_count/has_accepted-এলিয়াস)
+  let qRow140 = null;
+  try {
+    qRow140 = await db.prepare(`SELECT p.*, u.full_name, u.username, u.avatar_url, u.gender,
+      (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as ans_count,
+      (CASE WHEN p.accepted_comment_id IS NOT NULL THEN 1 ELSE 0 END) as has_accepted
+      FROM posts p JOIN users u ON p.author_id = u.id WHERE p.id = ?`).get(postId140);
+  } catch (e) { qRow140 = null; }
+  let html140 = null;
+  if (qRow140) {
+    try {
+      html140 = await new Promise((resolve, reject) => {
+        req.app.render('shared/qa/QaListItem', { q: qRow140 }, (err, out) => err ? reject(err) : resolve(out));
+      });
+    } catch (e) { html140 = null; } // রেন্ডার-ব্যর্থতায় ফলব্যাক-চুক্তি {ok,id}-ই যায় → ক্লায়েন্ট-টেমপ্লেট
+  }
+  res.json({ ok: true, id: postId140, html: html140 });
+});
+
 // ── Edit question (GET) ─────────────────────────────────────────────────────
 router.get('/qa/:id/edit', ensureLoggedIn, async (req, res) => {
   const post = await db.prepare('SELECT * FROM posts WHERE id = ? AND type = ?').get(req.params.id, 'question');

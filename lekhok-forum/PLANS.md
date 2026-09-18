@@ -1852,3 +1852,23 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **গোটচা-পুনঃপ্রমাণ:** `[m`-ANSI-স্ট্রিপ — টুল-আউটপুটে `meta[mine]` 'metaine]' দেখায় (node --check EXIT=0-ই সত্য; od/-F-rg-দিয়ে ক্রস-চেক রীতি) + সেশন-মধ্যে-হোভার-স্টেট-হারানো (ড্রয়ার-সোয়াপে এলিমেন্ট-প্রতিস্থাপন; synthetic .click()-এ ডেলিগেটেড-লিসেনার যায়) + undo-৭সে-উইন্ডো টুল-কল-ব্রিজে মেয়াদ-উত্তীর্ণ (এক-eval-স্ক্রিপ্ট-রীতি)।
 
 **পরবর্তী-এজেন্ট: session136 লেবেল থেকে।** বকেয়া: অটো-ভিডিও-ডিগ্রেড-র গ্রুপ-কল-প্রসারণ (session132-বেসিস), tokens.css-র্যাচেট-বেসলাইন-নামানো (admin.css ৪২৬), পুরনো-চুক্তি-মার্কআপ→canonical-মাইগ্রেশন-অবশিষ্ট (resource-detail?), কমেন্ট-পারমালিঙ্কের উপর ভবিষ্যৎ: reply-anchor-লিঙ্ক-প্রিভিউ-কার্ড (og-style)।
+
+---
+
+## Cross-Agent Note — Session 140 (cron-review: /qa ইনলাইন-কম্পোজার + article.css hex-tokenization) (২৪ সেপ্টেম্বর ২০২৬)
+
+**লেবেল-নোট:** [relabel: আমার-১৩৬→১৪০ — সমান্তরাল 415af2a-session136 + 7f8e972-session139 আগে-ল্যান্ডড; max+1 রীতিতে সমগ্র-রিলেবেল; তাদের lfSwapIn136/session136-নোট ক্যানোনিকাল-অক্ষত]
+
+**স্কোপ:** views/shared/qa/QaListItem.ejs (নতুন) · views/user/qa-list.ejs (composer+include) · routes/social.js (POST /api/qa/new) · public/assets/js/qa-composer.js (নতুন) · shared.css session140-ব্লক · tokens.css --lf-read-* · article.css টোকেনাইজেশন · test-role-policy.sh §২৮
+
+**চুক্তি-নোট (পরের-এজেন্টের জন্য):**
+1. **QA-তালিকা-আইটেম single-source:** qa-list.ejs-এর লুপ-মার্কআপ এখন পার্শিয়ালে (views/shared/qa/QaListItem.ejs) — ওখানেই সম্পাদনা করুন; data-qa-id অ্যাট্রিবিউট চুক্তি (JSON-HTML ও SSR উভয়ে)
+2. **POST /api/qa/new রেসপন্স-চুক্তি:** {ok,id,html} (html=canonical QaListItem-HTML; null-এ ক্লায়েন্ট-টেমপ্লেট-ফলব্যাক) | {ok,id,duplicate:true} (২-মিনিট-গার্ড) | 400 {error,message}; JSON-POST = csrf-স্কোপ-বহির্ভূত (/api/comment-চুক্তি-মিরর)
+3. **ফিল্টার-অখণ্ডতা চুক্তি:** ?filter=accepted-এ optimistic-প্রিপেন্ড নিষিদ্ধ — সফল হলে location.href=/qa/:id (stale-কাউন্টার-শিক্ষার QA-মিরর); all/unanswered-এই প্রিপেন্ড+chips-বাম্প
+4. **EJS-গোটচা-সম্প্রসারণ:** কমেন্ট-ট্যাগের ভেতরে কমেন্ট/স্ক্রিপ্টলেট-টোকেন-উল্লেখও fatal (QaListItem-প্রথম-সংস্করণে প্রমাণিত — "Could not find matching close tag for <%#"); ডকস-কমেন্টেও সে-টোকেন লিখবেন না
+5. **attribute-grep প্যারিটি:** JSON-এ attr-ভ্যালু `\"`-এস্কেপড, SSR-এ প্লেইন — curl-অ্যাসারশনে `data-qa-id=.{1,2}<id>`-প্যাটার্ন দুই-কনটেক্সট-কভার
+6. **hex-র্যাচেট-নতুন-ভিত্তি:** article.css 71→8 (বেসলাইন-আপডেটেড); --lf-read-* পরিবার tokens.css-এ; ভবিষ্যৎ-রঙে এ-টোকেন পুনঃব্যবহার করুন
+
+**E2E (agent-browser, testuser @8094):** এক্সপ্যান্ড→বাংলা-কাউন্টার→submit-disabled-গার্ড→optimistic-কার্ড→canonical-swap (data-qa-id বহন)→chips বাম্প (১→২, ০→১)→রিলোডে SSR-persist→localStorage-ড্রাফট-ক্লিয়ার→unanswered-ফিল্টারে অন্তর্ভুক্ত→owner-ডিলিট (303→404) ক্লিনআপ ✓; গেস্টে CTA-কার্ড ✓; 390px-০ ×৬ + কনসোল-০ ✓; রিগ্রেশন: role-policy **২১২/২১২ ALL GREEN** (merged-tree — তাদের §১৯/§১৪/§২৫/§২৬-পরিবার + আমার §২৮ সহাবস্থান) + cursor 25/25 + guard-নতুন-বেসলাইন ✓ + audit:views ✓ + brace-০ ×১৮ ✓ + node --check ×২ + bash -n ✓
+
+**পরবর্তী-এজেন্ট: session141 লেবেল থেকে।** বকেয়া-প্রস্তাব: ① qa-composer-এ রিচ-এডিটর-ইন্টিগ্রেশন (data-rich-editor-মিরর) ② /qa-অপটিমিস্টিক-প্রশ্নে মেনশন-অটোকমপ্লিট ③ notifications-শূন্য-অবস্থার ব্র্যান্ডেড-পলিশ ④ Metered.ca-TURN (ইউজার-অ্যাকাউন্ট-প্রয়োজন)

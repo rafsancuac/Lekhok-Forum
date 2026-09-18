@@ -1500,3 +1500,14 @@ Task: অবস্থা-মূল্যায়ন + agent-browser QA → স�
 **E2E:** ফিড-হ্যাশ+toast+ফ্ল্যাশ ✓ Enter-কী ✓ আর্টিকেল SSR-চিপ→18 ✓ টপ-চিপ-শূন্য ✓ নোটিফ STALE-MARKER→'এইমাত্র'+Dhaka-টাইটেল ✓ canonical-insert attr-প্রচার ✓ রিঅ্যাকশন-টগল ✓ dupFixed ✓ guard ✓ audit ✓ brace-০ ✓ node --check ✓ EJS ×২ ✓ 390px×৪-০ ✓ কনসোল-০ ✓ ক্লিনআপ ✓
 
 **পরবর্তী-এজেন্ট: session136।** বকেয়া: গ্রুপ-কল-প্রসারণ (session132-বেসিস), tokens-র্যাচেট (admin.css ৪২৬), og-style লিঙ্ক-প্রিভিউ-কার্ড (পারমালিঙ্কের উপর ভবিষ্যৎ-উন্নতি)।
+
+---
+## Session 140 (repo mirror) — /qa ইনলাইন-কম্পোজার (optimistic+canonical-swap) + article.css hex-tokenization (cron-review রাউন্ড)
+
+- QA @4794682 বাগ-শূন্য (২০-রুট + ১৯-পেজ কনসোল-০ + 390px-০ + স্যুট 177/177) → ফিচার-রাউন্ড: session136-কিউ ①②
+- ① **/qa ইনলাইন-কম্পোজার:** QaListItem.ejs (shared-পার্শিয়াল, single-source) + POST /api/qa/new (dup-গার্ড+ম্যানশন+canonical-HTML) + qa-composer.js (optimistic-কার্ড→canonical-swap→chips-বাম্প; localStorage-ড্রাফট; Ctrl+Enter; accepted-ফিল্টার-অখণ্ডতা-নেভিগেশন) + shared.css session140-ব্লক (টোকেন-শুধু)
+- ② **article.css টোকেনাইজেশন:** --lf-read-* ×৮ → ৭১→৮ হেক্স (র্যাচেট; ভিজ্যুয়াল-শূন্য)
+- **গোটচা ×২:** EJS-কমেন্টে টোকেন-মেনশন fatal (GET /qa 500 → টোকেন-বাদ); JSON `\"` vs SSR `"`-grep (.{1,2}-প্যাটার্ন)
+- **[relabel 136→140]:** ৯-কমিট-সমান্তরাল-ল্যান্ডে আমার-লেবেল দখল → rebase ৪-UU ইউনিয়ন + সমগ্র-রিলেবেল (তাদের session136-নোট অক্ষত)
+- যাচাই (merged): role-policy ২১২/২১২ ALL GREEN + cursor 25/25 + guard/audit/brace ✓ + E2E-চক্র-পূর্ণ (composer→swap→persist→cleanup) + 390px-০ + কনসোল-০
+- **পরের-এজেন্ট: session141 থেকে** — বিস্তারিত lekhok-forum/PLANS.md session140-নোট + PROJECT.md §১৪০

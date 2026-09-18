@@ -1,0 +1,38 @@
+<%# ── সেশন ১৪০: ক্যানোনিকাল QA-তালিকা-আইটেম (single-source — তিন-সোর্স-চুক্তি) ─────────────────
+    ভোক্তা: ① views/user/qa-list.ejs (SSR লুপ — include) ② POST /api/qa/new canonical-HTML
+            (req.app.render — express-layouts-বাইপাস, লেআউট-শূন্য; session124 CommentItem-রীতির QA-মিরর)
+    লোকাল: q (posts-row: id, title, body, like_count, has_accepted, ans_count, author_id,
+            username, full_name, avatar_url, created_at) + mdPlain (app.locals থেকে স্বয়ংক্রিয়)
+    নোট: bn140 স্বয়ংসম্পূর্ণ (কলারের bn-নাম-বৈচিত্র্য নিরপেক্ষ); EJS auto-escape = XSS-নিরাপদ;
+         ans_count = live-কাউন্ট (stale-comment_count নয় — session119-চুক্তি)।
+         EJS-গোটচা (session135-নোট + এ-ফাইলে-প্রমাণিত): কমেন্ট-ট্যাগের ভেতরে কমেন্ট/স্ক্রিপ্টলেট-টোকেন
+         লিখলেই "Could not find matching close tag" — তাই এ-কমেন্টে সে-টোকেন ইচ্ছাকৃত-ভাবে বাদ। %>
+<% const bn140 = n => String(n).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]); %>
+<% const _ans140 = q.ans_count || 0; %>
+<div class="qa-item" data-qa-id="<%= q.id %>">
+  <div class="qa-votes">
+    <span class="vote-count"><%= bn140(q.like_count || 0) %></span>
+    <small><i class="far fa-thumbs-up"></i>প্রাসঙ্গিক</small>
+  </div>
+  <div class="qa-content">
+    <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
+    <% if (q.body) { %><p class="qa-excerpt"><%= mdPlain(q.body, 150) %></p><% } %>
+    <div class="qa-meta">
+      <%# সেশন ১১৯/১৩১-চুক্তি: উত্তর-স্টেট ব্যাজ — গ্রহণকৃত=সবুজ-সলিড, উত্তরিত=সবুজ, অনুত্তরিত=অ্যাম্বার %>
+      <% if (Number(q.has_accepted) === 1) { %>
+        <span class="qa-ans-badge is-accepted127"><i class="fas fa-circle-check" aria-hidden="true"></i> গ্রহণকৃত উত্তর</span>
+      <% } else { %>
+        <span class="qa-ans-badge <%= _ans140 > 0 ? 'is-answered' : 'is-unanswered' %>">
+          <i class="fas fa-<%= _ans140 > 0 ? 'check' : 'hourglass-half' %>" aria-hidden="true"></i>
+          <%= _ans140 > 0 ? bn140(_ans140) + ' উত্তরিত' : 'অনুত্তরিত' %>
+        </span>
+      <% } %>
+      <img loading="lazy" decoding="async" src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar" alt="">
+      <a href="/profile/<%= q.username %>" class="qa-author"><%= q.full_name %></a>
+      <span>&middot;</span>
+      <span><i class="far fa-comment"></i> <%= bn140(_ans140) %> উত্তর</span>
+      <span>&middot;</span>
+      <span data-ts="<%= new Date(q.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
+    </div>
+  </div>
+</div>

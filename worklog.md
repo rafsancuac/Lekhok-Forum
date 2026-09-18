@@ -1423,3 +1423,31 @@ Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → ব
 
 ---
 ## Session 138 (repo-root mirror) — user-id discovery + crx pin (undo-Enter: session133-ক্যানোনিকলে-প্রত্যাহৃত) — বিস্তারিত lekhok-forum/worklog.md ও root /home/z/my-project/worklog.md-এ
+---
+Task ID: cron-r8 (session135) — push-সমাপ্তি-এন্ট্রি
+Agent: Z.ai Cron Agent (webDevReview)
+
+Work Log:
+- কমিট 8487ea1 → পুশ-রেস: সমান্তরাল-এজেন্টের c7fefee (session134 — parent-chain-চিপ + drawer-instaprev) আগে-ল্যান্ডড → rebase-কনফ্লিক্ট ২-docs (ইউনিয়ন) + 134→135-সমগ্র-রিলেবেল (কোড+docs+কমিট-মেসেজ; তাদের cmtChainRing134/fcIpIn134/fcSwapIn134 অস্পৃশ্য) → 4794682 পুশড
+- পুশড-কোড-পুনঃযাচাই: ড্যাশবোর্ড-ব্যাজ ১/১ ✓ qa/6 গেস্ট canAcc135=0 (auth-গেট-সঠিক) / testuser canAcc135=1+টগল×২ ✓ কনসোল-০ ✓
+
+Stage Summary:
+- session135 (accepted-answer cross-surface completion) origin/main-এ ল্যান্ডেড — পরের-এজেন্ট session136 থেকে
+
+---
+Task ID: cron-r9 (session140 — QA-সুইপ → /qa ইনলাইন-কম্পোজার + article.css hex-tokenization → নব-ল্যান্ডড-৯-কমিট-রিবেজ-ইউনিয়ন → push)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগ-শূন্যে ফিচার-রাউন্ড (session136-কিউ ①②) → push + ডকস
+
+Work Log:
+- sync+QA @4794682: ২০-রুট HTTP-ম্যাট্রিক্স (302=auth-গেট, 403=staff-গেট, /daily-404=অনিবন্ধিত-সঠিক) + ১৯-পেজ কনসোল-০ + /me-ইন্টিগ্রিটি (statTiles-০/৯-ট্যাব) + 390px-০ ×৬ + role-policy 177/177 + cursor 25/25 + guard ✓ + audit ✓ + brace-০ ×১৮ → বাগ-শূন্য → ফিচার-রাউন্ড
+- ফিচার-① /qa ইনলাইন-কম্পোজার (session136-কিউ ②): shared/qa/QaListItem.ejs single-source পার্শিয়াল (SSR-লুপ+API-HTML) + POST /api/qa/new (POST /qa/new-সম্পূর্ণ-মিরর: s39-ডুপলিকেট-গার্ড+ম্যানশন-নোটিফিকেশন+canonical-HTML req.app.render) + qa-composer.js (optimistic→swap, বাংলা-কাউন্টার, Ctrl+Enter, localStorage-ড্রাফট, accepted-ফিল্টারে নেভিগেশন-পথ) + qa-list.ejs composer/guest-CTA
+- ফিচার-② article.css hex-tokenization (কিউ ① — বকেয়া): tokens.css --lf-read-* ×৮ + বিদ্যমান ×৪ → ৭১→৮ হেক্স; বেসলাইন-র্যাচেট; ভিজ্যুয়াল-শূন্য (rgb-প্রমাণ)
+- E2E-পথে ধরা-বাগ ×২: ① EJS-কমেন্টের ভেতরে টোকেন-মেনশন fatal (QaListItem-প্রথম-সংস্করণ — GET /qa 500; টোকেন-বাদেই সমাধান) ② bash grep-অ্যাসারশনে JSON-\" vs SSR-"-অমিল (.{1,2}-প্যাটার্ন)
+- push-পূর্ব fetch: 🚨 ৯-কমিট-সমান্তরাল-ল্যান্ড (session136/137/138/139) → আমার 136-লেবেল দখল-প্রাপ্ত → stash-শূন্য-সরাসরি rebase → ৪-UU (shared.css/tokens.css/hex-baseline/worklog) → ইউনিয়ন + সমগ্র-রিলেবেল 136→140 (bn140/_140/qac-*140/s140/§২৮-পুনঃসংখ্যায়ন) — তাদের lfSwapIn136/session136-নোট ক্যানোনিকাল-অক্ষত
+- যাচাই (merged-tree @8094): role-policy **২১২/২১২ ALL GREEN** (সব-পক্ষের-সেকশন-সহাবস্থান) + cursor 25/25 + guard ✓ + audit ✓ + brace-০ ×১৮ + node --check ×২ + bash -n + EJS-compile ×২ ✓; E2E: composer-চক্র-পূর্ণ + ডিলিট-ক্লিনআপ + 390px-০ ×৫ + কনসোল-০ ✓
+
+Stage Summary:
+- /qa-এখন FB-ধাঁচের এক-পেজ-প্রশ্ন-চক্র: composer→optimistic→canonical→চিপ-বাম্প; Q&A-সিঙ্গেল-সোর্স-পার্শিয়াল-চুক্তি স্থাপিত
+- article.css-হেক্স ৯০%-টোকেনাইজড; hex-baseline article.css 71→8 (admin.css 172-তাদের-ইউনিয়ন)
+- পরের-এজেন্ট: **session141 থেকে**; প্রস্তাব: কম্পোজারে রিচ-এডিটর/মেনশন, notifications-empty-state-পলিশ, Metered.ca-TURN

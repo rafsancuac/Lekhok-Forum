@@ -13,6 +13,41 @@
 
     <%# সেশন ১১৯: FB-প্যারিটি ফিল্টার-চিপ — সব/অনুত্তরিত/গ্রহণকৃত (session131), কাউন্ট-ব্যাজসহ;
         ?filter=ডিপ-লিংকযোগ্য (সার্ভার-রেন্ডার্ড active-স্টেট) %>
+    <%# সেশন ১৪০: ইনলাইন-কম্পোজার — নতুন-প্রশ্ন এখন /qa-তেই (optimistic-কার্ড → /api/qa/new
+        canonical-HTML-swap; session124-CommentItem-রীতির QA-মিরর)। গেস্টে লগইন-CTA।
+        পূর্ণাঙ্গ-ফর্ম (/qa/new) পেজ-হেডারের নতুন-প্রশ্ন-বাটনে অক্ষুণ্ণ। %>
+    <% if (user) { %>
+      <div class="qa-composer140" id="qaComposer140">
+        <div class="qac-collapsed140" id="qacTrigger140" role="button" tabindex="0" aria-expanded="false" aria-controls="qacPanel140">
+          <img class="qac-avatar140" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="">
+          <span class="qac-placeholder140">আপনার প্রশ্ন করুন…</span>
+        </div>
+        <form class="qac-panel140" id="qacPanel140" hidden novalidate>
+          <input type="hidden" name="_noop" value="1">
+          <label class="sr-only" for="qacTitle140">প্রশ্নের শিরোনাম</label>
+          <input id="qacTitle140" name="title" class="qac-title140" type="text" maxlength="200" placeholder="প্রশ্নের শিরোনাম লিখুন…" autocomplete="off">
+          <div class="qac-char140" aria-live="polite"><span id="qacTitleCount140">০</span>/২০০</div>
+          <label class="sr-only" for="qacBody140">প্রশ্নের বিস্তারিত</label>
+          <textarea id="qacBody140" name="body" class="qac-body140" rows="4" maxlength="5000" placeholder="বিস্তারিত লিখুন — প্রসঙ্গ যত স্পষ্ট, উত্তর তত নিখুঁত…"></textarea>
+          <div class="qac-foot140">
+            <span class="qac-char140 qac-bodycount140" aria-live="polite"><span id="qacBodyCount140">০</span>/৫০০০</span>
+            <span class="qac-hint140" id="qacHint140" role="status"></span>
+            <span class="qac-actions140">
+              <button type="button" class="qac-cancel140" id="qacCancel140">বাতিল</button>
+              <button type="submit" class="qac-submit140" id="qacSubmit140" disabled><i class="fas fa-question-circle" aria-hidden="true"></i> প্রকাশ করুন</button>
+            </span>
+          </div>
+          <p class="qac-tip140"><i class="far fa-keyboard" aria-hidden="true"></i> Ctrl+Enter চেপেও প্রকাশ করা যায়</p>
+        </form>
+      </div>
+    <% } else { %>
+      <a class="qac-guest140" href="/login">
+        <i class="fas fa-circle-question" aria-hidden="true"></i>
+        <span>প্রশ্ন করতে লগইন করুন — উত্তর পাবেন ফোরামের অভিজ্ঞ লেখকদের কাছ থেকে</span>
+        <i class="fas fa-arrow-right qac-guest-arrow140" aria-hidden="true"></i>
+      </a>
+    <% } %>
+
     <div class="qa-filter-bar" role="navigation" aria-label="প্রশ্ন-ফিল্টার">
       <a href="/qa" class="qa-filter-chip <%= qaFilter !== 'unanswered' && qaFilter !== 'accepted' ? 'active' : '' %>" <%= qaFilter !== 'unanswered' && qaFilter !== 'accepted' ? 'aria-current="page"' : '' %>>
         <i class="fas fa-list-ul" aria-hidden="true"></i> সব প্রশ্ন <span class="qf-count"><%= bn118(qaCounts.all) %></span>
@@ -42,41 +77,18 @@
           <% } %>
         </div>
       <% } else { %>
+        <%# সেশন ১৪০: লুপ-মার্কআপ এখন shared/qa/QaListItem.ejs (single-source) —
+            /api/qa/new canonical-HTML-এর সাথে অক্ষরে-অক্ষরে এক (গার্ড: এ-মার্কআপ এখানে
+            সরাসরি সম্পাদনা নিষিদ্ধ — পার্শিয়ালেই সম্পাদনা করুন) %>
         <% questions.forEach(q => { %>
-          <% const _ans118 = q.ans_count || 0; %>
-          <div class="qa-item">
-            <div class="qa-votes">
-              <span class="vote-count"><%= bn118(q.like_count || 0) %></span>
-              <small><i class="far fa-thumbs-up"></i>প্রাসঙ্গিক</small>
-            </div>
-            <div class="qa-content">
-              <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
-              <% if (q.body) { %><p class="qa-excerpt"><%= mdPlain(q.body, 150) %></p><% } %>
-              <div class="qa-meta">
-                <%# সেশন ১১৯: উত্তর-স্টেট ব্যাজ — গ্রহণকৃত=সবুজ-সলিড (session131), উত্তরিত=সবুজ, অনুত্তরিত=অ্যাম্বার;
-                    কাউন্ট stale-comment_count নয় → live ans_count %>
-                <% if (q.has_accepted === 1) { %>
-                  <span class="qa-ans-badge is-accepted127"><i class="fas fa-circle-check" aria-hidden="true"></i> গ্রহণকৃত উত্তর</span>
-                <% } else { %>
-                  <span class="qa-ans-badge <%= _ans118 > 0 ? 'is-answered' : 'is-unanswered' %>">
-                    <i class="fas fa-<%= _ans118 > 0 ? 'check' : 'hourglass-half' %>" aria-hidden="true"></i>
-                    <%= _ans118 > 0 ? bn118(_ans118) + ' উত্তরিত' : 'অনুত্তরিত' %>
-                  </span>
-                <% } %>
-                <img loading="lazy" decoding="async" src="<%= q.avatar_url || '/avatar/' + q.author_id %>" class="mini-avatar" alt="">
-                <a href="/profile/<%= q.username %>" class="qa-author"><%= q.full_name %></a>
-                <span>&middot;</span>
-                <span><i class="far fa-comment"></i> <%= bn118(_ans118) %> উত্তর</span>
-                <span>&middot;</span>
-                <span data-ts="<%= new Date(q.created_at).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(q.created_at).toLocaleDateString('bn-BD') %></span>
-              </div>
-            </div>
-          </div>
+          <%- include('../shared/qa/QaListItem', { q }) %>
         <% }); %>
       <% } %>
     </div>
   </div>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <%# সেশন ১৪০: ইনলাইন-কম্পোজার-ইঞ্জিন (লগইন-পেজেই লোড হয়; গেস্টে স্ব-নিষ্ক্রিয়) %>
+  <script src="/assets/js/qa-composer.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </body>

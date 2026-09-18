@@ -366,6 +366,37 @@ RC=$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -L "$BASE/feed")
 ckR27 "/feed লগইন → 200 (ফিড)" "200" "$RC"
 echo ""
 
+# ═══ সেশন ১৪০: /qa ইনলাইন-কম্পোজার API — POST /api/qa/new (optimistic+canonical চুক্তি) ═══
+# সেলফ-সাফিশিয়েন্ট (§26-রীতি): testuser-প্রশ্ন JSON-সিড → শেষ-ধাপে প্রশ্ন-ডিলিট-ই ক্লিনআপ।
+# XSS-প্রোব টাইটেল-নিজেই বহন করে (EJS auto-escape = canonical-HTML নিরাপদ-প্রমাণ একসাথে)।
+echo "══ ২৮. সেশন ১৪০: /api/qa/new ইনলাইন-কম্পোজার API ══"
+ck "s140 anon POST → 401" "401" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{"title":"x","body":"y"}')"
+ck "s140 শূন্য-ফিল্ড → 400" "400" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{"title":"","body":""}')"
+LONGT=$(printf 'x%.0s' $(seq 1 210))
+ck "s140 দীর্ঘ-শিরোনাম → 400" "400" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d "{\"title\":\"$LONGT\",\"body\":\"b\"}")"
+RP140=$(curl -s -b $JARU -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{"title":"rp140 <img src=x onerror=alert(1)> কম্পোজার-টেস্ট প্রশ্ন","body":"role-policy §২৮ সেলফ-সিড প্রশ্ন (session140) — ইনলাইন-কম্পোজার"}')
+ckc "s140 বৈধ-POST → ok:true" '"ok":true' "$RP140"
+Q140=$(echo "$RP140" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+if [ -z "$Q140" ]; then echo "  ✗ §28-সেলফ-সিড ব্যর্থ (POST /api/qa/new)"; FAIL=$((FAIL+1));
+else
+  PASS=$((PASS+1)); echo "  ✓ §28-সেলফ-সিড প্রশ্ন id=$Q140"
+  ckc "s140 canonical-HTML রেজপন্সে (qa-item)" 'class=\\"qa-item' "$RP140"
+  ckc "s140 badge is-unanswered" 'is-unanswered' "$RP140"
+  ckc "s140 XSS auto-escape (&lt;img)" '&lt;img src=x' "$RP140"
+  ONERR=$(echo "$RP140" | grep -c '<img src=x' || true)
+  ck "s140 raw-<img-ট্যাগ শূন্য (XSS-নিষ্ক্রিয়)" "0" "$ONERR"
+  ck "s140 data-qa-id বহন" "1" "$(echo "$RP140" | grep -c "data-qa-id=.\{1,2\}$Q140")"
+  DUP140=$(curl -s -b $JARU -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{"title":"rp140 <img src=x onerror=alert(1)> কম্পোজার-টেস্ট প্রশ্ন","body":"ডুপলিকেট-প্রোব"}')
+  ck "s140 ২-মিনিট-ডুপলিকেট গার্ড → duplicate:true" "1" "$(echo "$DUP140" | grep -c '"duplicate":true')"
+  ck "s140 ডুপলিকেট একই-id" "1" "$(echo "$DUP140" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2 | grep -c "^$Q140$")"
+  ck "s140 SSR /qa-তে প্রশ্ন দৃশ্যমান (partial-প্যারিটি)" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "rp140")"
+  ck "s140 SSR data-qa-id প্যারিটি" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "data-qa-id=.$Q140")"
+  TOKU140=$(getcsrf $JARU /qa)
+  ck "s140 ক্লিনআপ প্রশ্ন-ডিলিট → 303" "303" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/qa/$Q140/delete?_csrf=$TOKU140")"
+  ck "s140 ডিলিট-পরবর্তী GET → 404" "404" "$(get $JARU /qa/$Q140)"
+fi
+echo ""
+
 # ═══ সেশন ১৩১: সিরিজ-স্ট্যাটস লাইভ-এন্ডপয়েন্ট গেট + বাল্ক-ইমপোর্ট SSRF-নেগেটিভ (RES-124-ব্যাকলগ ②③) ═══
 # (ক) GET /api/resources/series-stats — স্টাফ-গেটেড (anon/user → 403; mod/admin → 200 ok:true)
 # (খ) POST /admin/resources/bulk-এ fetch:1 + প্রাইভেট/লুপব্যাক/মেটাডেটা/পোর্ট/স্কিম-URL → রো-এরর
