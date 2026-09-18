@@ -1711,3 +1711,20 @@ Stage Summary:
 - lekhok-forum-next/ = ইউজার-প্রিভিউতে যা দেখছিলেন তার-ই সম্পূর্ণ কোডবেস — এখন origin/main-এ; রান: `cd lekhok-forum-next && cp .env.example .env && bun install && bun run db:push && bun prisma/seed.ts && bun prisma/seed-messenger.ts && bun run dev`
 - ইউজারের ৩-বাগ-স্পেক ১০০% প্রয়োগ (০:০০ / নিজের-ভয়েস / বাংলাদেশ-টাইম) — ব্রাউজার-প্রমাণসহ
 - পরের-এজেন্ট (Express-app): session156 থেকে; lekhok-forum-next/-এ কাজ করলে সে-ও এই-রীতিতে root-worklog-এ append করবেন
+Task ID: session149-push-সমাপ্তি (cron webDevReview)
+Agent: Z.ai Cron Agent (webDevReview)
+
+## Push-রেস-ইউনিয়ন-ইতিহাস (দ্বি-সাইকেল)
+- **রেস-১:** প্রথম push-চেষ্টায় সমান্তরাল s145 (mention-anywhere.js)/s146 (plainWithLinks+extChip143) আগে-ল্যান্ডেড → rebase @ 8728e16 → আমার 144→147-রিলেবেল; **আমার ফিড-og-কার্ড ও /qa-মেনশন ডেল্টা তাদের canonical-এ প্রত্রাহৃত** (১১শ-প্রমাণ, session134-রীতি) — আমার browser-E2E প্রমাণ তাদের-কোডেই পুনঃ-যাচাইকৃত
+- **রেস-২:** দ্বিতীয় push-চেষ্টায় s147 (7791d49 og-faces)/s148 (3052b5c কল-পলিশ) আগে-ল্যান্ডেড → দ্বিতীয়-rebase → 147→**149**-রিলেবেল (max+1)
+- docs-union ×২ + root-worklog অনাথ-মার্কার-পরিষ্কার; pushed: 3052b5c..**2b76368** ✓
+
+## চূড়ান্ত-ফল (মার্জড-ট্রি @ 2b76368)
+- **অনন্য-ডেলিভারি:** messenger.css র্যাচেট ১৪৪→০ (ওয়েভ-৪) — patch144-messenger-ratchet.js + নতুন-টোকেন ×৯ (danger-strong র‍্যাম্প + match-mark + -২-সাফিক্স-সততা); patch139-বাগ-সংশোধন (প্রমাণ-মোডে tokens.css-লেখা-শূন্য); বেসলাইন-লক ০
+- verify-session144-feed-ogcard.sh (canonical-অ্যাপটেড) — রিপোতে; **৩১/৩১ ALL GREEN**
+- রিগ্রেশন: role-policy **২৩৯/২৩৯** + cursor ২৬/২৬ + s132 ১৯/১৯ + s139 ২২/২২ + guard + 390px-০ + কনসোল-০
+- গোটচা ×৫ নথিভুক্ত (PLANS session149-নোট): delete-303-সফল · grep-BRE-ক্যারেক্টার-ক্লাস · rebase ---theirs-উল্টে · LF_QA_DISABLE_RATELIMIT · agent-browser-eval-transient
+
+## পরের-প্রস্তাব (priority-order)
+① style.css-র্যাচেট (১৩৯৫ — ২-৩-রাউন্ডে ভাগ) ② auth/gallery.css (১২৩/১২৩) ③ calls/bookmarks.css (৬২/৫৪) ④ কল-ইতিহাসে degrade-রেকর্ড (db-স্কিমা — বহু-সেশন-বাকি) ⑤ লাইভ-Turso-রিসেট (টোকেন-ধারী)
+- **পরের-এজেন্ট: session150 থেকে**; push-পূর্বে git pull --rebase (union-মার্জ PLANS/PROJECT/worklog ×২)
