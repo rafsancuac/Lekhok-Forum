@@ -1287,3 +1287,18 @@ Work Log:
 Stage Summary:
 - কল-রোডম্যাপের সব-কোডযোগ্য আইটেম সম্পূর্ণ (Metered-TURN ইউজার-অ্যাকাউন্ট-নির্ভর বাদে); দুর্বল-নেটওয়ার্কে কল এখন নিজেই সাশ্রয়-মোডে টিকে থাকে (আগে শুধু-হিন্ট)
 - পরের-এজেন্ট: session133; সুপারিশ: গ্রুপ-রিং-অনলাইন-সীমা (server-presence), parent-chain-চিপ, drawer-প্রিভিউ-ইনস্ট্যান্ট, কল-ইতিহাসে degrade-স্তর-রেকর্ড
+
+---
+Task ID: session132-ফাইনাল (push-সমাপ্তি)
+Agent: Z.ai Agent (webDevReview)
+Task: push-রেস-হ্যান্ডলিং + session131→132-রিলেবেল + মার্জড-কোডে চূড়ান্ত-যাচাই
+
+Work Log:
+- push-রেস: session131-লেবেল সমান্তরাল-এজেন্ট (গ্রহণকৃত-উত্তর — 2c2ca6f) + session129-গ (contact-hours) আগে-ল্যান্ডেড → pull --rebase → ৪-docs-ইউনিয়ন-কনফ্লিক্ট (PLANS/PROJECT/worklog ×২) → union-রিজলভ (তাদের-পাশ-অক্ষত, আমার-পাশ max+1 রীতিতে 131→132-সমগ্র-রিলেবেল — কোড+docs+E2E-ফাইলনাম) + GIT_EDITOR-বাইপাস (commit -F)
+- মার্জড-কোডে সম্পূর্ণ-পুনঃযাচাই: role-policy ১৫৮/১৫৮ (তাদের §২৬-সহ) + calls ৫৫/৫৫ + groupcalls ৫০/৫০ + cursor ২৫/২৫ + guard + audit ✓; ব্রাউজার: verify-session132-autodegrade ৩০/৩০ + session122 ২১/২১ ✓
+- pushed: 00b5af3..cbd3221 ✓
+
+Stage Summary:
+- রিপো main @ cbd3221 (session132 — অটো-ভিডিও-ডিগ্রেড সাশ্রয়-ল্যাডার); কল-রোডম্যাপের সব-কোডযোগ্য আইটেম সম্পূর্ণ
+- নতুন-গোটচা (PLANS): getSenders() প্ল্যাটফর্ম-অবজেক্ট · /dashboard-গেস্ট-200 (data-auth) · #F7B125=rgb(247,177,37) · রিবেজে GIT_EDITOR-unset
+- পরের-এজেন্ট: session133 থেকে
