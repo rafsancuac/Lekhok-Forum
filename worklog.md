@@ -1884,3 +1884,23 @@ Work Log:
 Stage Summary:
 - ইউজার-স্পেক-পূর্ণ: ৭টি বাটন (৫ ক্যাটাগরি + সর্বশেষ|জনপ্রিয়) এক লাইনে, হুবহু একই ৮px সাদা-বর্ডার ডিজাইন, কম্প্যাক্ট প্যাডিং, সক্রিয় = #006A4E-সবুজ — আলাদা ক্যাপসুল-বার চিরতরে শেষ
 - পরের-এজেন্ট: AV-ক্যাশ-গোটচা মনে রাখবেন; প্রস্তাব — ফিল্টার-স্টেট URL-সিঙ্ক পলিশ (history.replaceState), চিপে কাউন্ট-ব্যাজ, /articles-এর sort-opt-ও একই ৮px পরিবারে আনা
+
+---
+Task ID: 15 (Session 164 — ইউজার-স্পেক: FB-কম্প্যাক্ট পোস্ট-কার্ড + ব্যালেন্সড ৩-কলাম)
+Agent: Main agent (user-turn — rafsancuac/Lekhok-Forum, Express+EJS; sandbox-রিসেট-পুনরুদ্ধার; নতুন-টোকেন)
+Task: ইউজার-অভিযোগ (স্ক্রিনশট+TSX-স্পেক) — পোস্ট-কার্ড চারপাশে বিশাল ফাঁকা জায়গা; বাম-রেল কমিয়ে ডান বাড়ানো; হেডারের 'কার্যক্রম/লেখা/কলাম/২ মিনিট' ব্যাজ-সারি বিলোপ — মেটা সাবটাইটেলে (FB-স্ট্যান্ডার্ড কম্প্যাক্ট কার্ড)
+
+Work Log:
+- sandbox-রিসেট-পুনরুদ্ধার: টোকেন-ক্লোন @1ee7d8e (session163); npm ci; seed (test-users-163 + demo-feed-105 + qa-113) + :8094-হারনেস (প্রতি-কলে ensure — server-reap-গোটচা পুনঃপ্রমাণিত)
+- জ্যামিতি-মাপ (browser-eval): card 620/rail 320/right 348; **img-inset 37px** → ancestor-chain-trace-এ `.card{padding:36px}`-লিক RCA
+- reltime-বিপদ-আবিষ্কার: main.js `[data-ts]`-এর textContent প্রতি-টিকে মুছে দেয় → মেটা data-ts-এর **সিবলিং** (lf-time-row164) — AuthorLabel-এ metaHtml-প্যারাম
+- FeedPostCard: হেডার ব্যাজ-শূন্য (type/cat/rt/rank/aud/shared-চিপ বিলোপ; ডানে শুধু ৩-ডট) + মেটা-সাবটাইটেল ('তারিখ • 🌍 • কলাম • ২ মিনিট পড়া' + গৃহীত-উত্তর + rank + শেয়ারকৃত-লিংক) + দুই রিপোস্ট-ব্রাঞ্চের ইনার-ব্যাজ বিলোপ + metaHtml:''-লিক-প্রতিরোধ (EJS parent-scope-merge)
+- dashboard.css session164-ব্লক: padding:0 + radius 8px + hover-lift-বিলোপ + edge-to-edge মিডিয়া + লেগেসি-রিপোস্ট-বক্স নিজস্ব বর্ডার/ইনসেট + FB-ফুটার (summary-ডিভাইডার + বর্ডারহীন flex-বাটন + bookmark icon-only) + মেটা-স্টাইল + রেল 260/ফিড ৬০০/ডান ৩১০ (@1440: 280/330) + কার্ড-গ্যাপ ১২px
+- 🚨guard-ধরা: আমার ২-ফলব্যাক-হেক্স বাদ + **session163-এর ২-লেগেসি-হেক্স টোকেনাইজ** (pristine-origin-এও guard-ফেইল প্রমাণিত) → guard গ্রিন
+- E2E: badges/catChips/rtChips=0, metaLines=13, reltime-জীবিত, img-inset 1px, 260/600/310-জ্যামিতি, স্ক্রল-লক-রিগ্রেশন (scrollY=0/rail-আইসোলেশন/টপবার top=0), মোবাইল-৩৯০ hScroll-0, প্রোফাইল-প্যারিটি, কনসোল-0; guard ✓ audit:views(109) ✓ স্ক্রিনশট ×৪
+- ডকস: PLANS session164-নোট (চুক্তি ×৬ + প্রস্তাব ×৫) + PROJECT §১৬৪ + এই worklog
+
+Stage Summary:
+- ফিড-কার্ড এখন FB-স্ট্যান্ডার্ড কম্প্যাক্ট — ব্যাজ-শূন্য হেডার, মেটা-সাবটাইটেল, edge-to-edge ছবি, flex-ফুটার; ৩-কলাম ব্যালেন্সড (২৬০/৬০০/৩১০)
+- **push-pending:** কমিট-হেড এই-মুহূর্তে origin/main-এর ওপর rebase-আপ-টু-ডেট করে টোকেন-পুশ হবে
+- পরের-এজেন্ট: session165 থেকে; **হারানো-session164(ভয়েস-ভার্সেল-ফিক্স) এখনো অপুনঃস্থাপিত** — middleware/upload.js inlineAudioBase64-পরিবার পুনঃপ্রয়োগ প্রয়োজন (বিস্তারিত my-project worklog-এর session164-এন্ট্রি) — priority-উচ্চ
