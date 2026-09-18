@@ -2718,3 +2718,13 @@ git push origin main
 - **④ রিগ্রেশন-আটকানো-ফিক্স — admin/moderator-views-এ tokens.css:** র্যাচেটের পরে আবিষ্কার — admin.css আগে **শূন্য** var(--lf-*) ব্যবহার করত এবং ৫৭টি স্ট্যান্ডঅ্যালোন admin/moderator view (৪৪ admin + ১৩ moderator) tokens.css লোডই করত না → নতুন var()-গুলো অরিজলভ হতো (ব্যাকগ্রাউন্ড-transparent-রিগ্রেশন)। ফিক্স: প্রতিটি view-এর admin.css-লিংকের আগে `tokens.css?v=<%= AV %>` ইনজেক্ট (৫৭/৫৭, সব ক্ষেত্রে AV-উপলব্ধ)। যাচাই: admin পেজে `--lf-ok/danger/white/social-blue` computed-রেজলিউশন ✓ + ড্যাশবোর্ড/কনটেন্ট-এডিটর স্ক্রিনশটে রঙ-অক্ষত + admin 390px-০।
 - **পরীক্ষা:** role-policy ১৬১/১৬১ ✓ cursor ২৬/২৬ ✓ guard (নতুন-বেসলাইনে) ✓ audit:views ✓ admin.css brace-০ ✓; agent-browser — undo-reltime E2E + swap-fade ২-সারফেস + admin-টোকেন-রেজলিউশন + কনসোল-০ + 390px ×৫-পেজ-০ ✓। বিস্তারিত PLANS.md session136-নোট।
 >>>>>>> Stashed changes
+
+
+---
+## session138 — role-policy user-id dynamic-discovery (§২৫-পরিবার) + crx 'শেষ পড়া' পিন + undo Enter-শর্টকাট (cron-QA-রাউন্ড)
+
+- **🚨 টেস্ট-ইনফ্রা ফিক্স:** `test-role-policy.sh`-এর হার্ডকোড `MODID=47/TAID=49/TUID=48` fresh-DB-তে ভুল-ইউজার ধরত (ismail/riya ব্যান!) → ৬-fail ক্যাসকেড; username→id ডিস্ক-কুয়েরি (§২৫-প্যাটার্ন) + fallback — **141/6 → 147/147 ALL GREEN**, স্যুট এখন যে-কোনো pristine QA-DB-তে পোর্টেবল। সাথে login()/postf() হেল্পারে csrf-303 (?csrf=1)-রিট্রাই-হার্ডেনিং (বাসি "200-রেন্ডার" ধারণা সংশোধন)।
+- **crx 'শেষ পড়া' পিন (session124/125-সুপারিশ):** continue-reading.js — সর্বশেষ-পড়া এন্ট্রিতে `.crx-last-chip` 'শেষ পড়া' + `.is-last` হাইলাইট, উইজেট ও ফুল-পেজ দুই-সারফেসে; dashboard.css session131-ব্লক (টোকেন-শুধু, পালস-ডট, reduced-motion, 640px, focus-visible লিঙ্ক-রিং)।
+- **undo Enter-শর্টকাট (session129-প্রস্তাব ④):** টোস্ট-দৃশ্যমান-অবস্থায় Enter=undo (btn.click-এক-পাথ); ফর্ম-কনটেক্সট/টোস্ট-অভ্যন্তর/Ctrl±সংমিশ্রণ-গার্ড, preventDefault-গেটেড।
+- **QA-রীতি-আবিষ্কার:** `pkill -f <qa-dir>` cmdline-ম্যাচ-করে-না (cmdline=শুধু `node server.js`) → কিল-বাই-পোর্ট (ss -ltnp) বাধ্যতামূলক, নইলে স্টেল-সার্ভার স্টেল-মেমরি-DB ফ্লাশ-করে সব-seed ওভাররাইট করে; pristine-DB-পুনর্নির্মাণ-রীতি (initDb→seeds→boot) ডকুমেন্টেড (PLANS session131-গোটচা ×৩)।
+- **যাচাই:** 147/147 + cursor 25/25 + inspect-audit 0-fail + guard ✓ + agent-browser E2E (পিন-দুই-সারফেস+খালি-স্টেট+undo-id-tracked-restore+input-গার্ড+390px-০+কনসোল-০) + স্ক্রিনশট ×৩।

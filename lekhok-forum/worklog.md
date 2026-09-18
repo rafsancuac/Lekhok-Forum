@@ -1357,7 +1357,6 @@ Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browse
 - বকেয়া-নয়: স্টাইলিং-বাকি-সুপারিশ PLANS session133-নোটে (reconcile-flash-fade, crx-পিন, র্যাচেট-নামানো, full-page-reltime, Turso-রিসেট)
 - পরের-এজেন্ট: **session131 থেকে**; push-পূর্বে git pull --rebase + union-নোট পড়ুন
 
-<<<<<<< Updated upstream
 Task ID: session129 (cron-r12 — sandbox web-68dcf7c4, "Project Status & Dev Focus")
 Task ID: RES-131 (ক্রন-রিভিউ রাউন্ড ১৩ — session131)
 Task: অবস্থা-মূল্যায়ন + agent-browser QA → স্টেবল-ফেজে নতুন ফিচার: সাইট-ওয়াইড তারিখ-চুক্তি (UTC→Asia/Dhaka, RES-124-ব্যাকলগ ①) + /api/resources/series-stats লাইভ-এন্ডপয়েন্ট (②) + অ্যাডমিন লাইভ-রিফ্রেশ + role-policy §১৮ (③)
@@ -1392,7 +1391,7 @@ Stage Summary:
 - accepted-answer এখন ৪-সারফেসে দৃশ্যমান (qa-single/qa-list/dashboard-ফিড/নোটিফিকেশন) + fresh-উত্তরেও প্রশ্নকর্তার টগল তাৎক্ষণিক + reconcile-ফ্ল্যাশ মসৃণ
 - নোটিফ-টাইপ-যোগের ৫-পয়েন্ট-চেকলিস্ট ডকুমেন্টেড (PLANS) — ভবিষ্যৎ-টাইপে জেনেরিক-ফলব্যাক-রিস্ক বন্ধ
 - পরবর্তী-প্রার্থী: tokensHexGuard-বর্ধন (article.css) → /qa optimistic-নতুন-প্রশ্ন → notifications-empty-state → Metered.ca-TURN (পরের-এজেন্ট session133 থেকে)
-=======
+
 ---
 Task ID: session136 (cron-r14 — QA→ফিচার-রাউন্ড) [relabel: 134→136 — সমান্তরাল session134/135 আগে-ল্যান্ডড, max+1]
 Agent: Z.ai Cron Agent (webDevReview)
@@ -1412,7 +1411,6 @@ Stage Summary:
 - স্ট্যাটাস: বাগ-শূন্য স্থিতিশীল-ফেজ; session133-প্রস্তাবের ৩টি বাস্তব + নতুন টোকেন-সিস্টেম-সম্প্রসারণ (admin-প্যানেল এখন ডিজাইন-সিস্টেমের অন্তর্ভুক্ত)
 - গোটচা (PLANS): shared.css-সর্বশেষ-লোড-অ্যানিমেশন-এক্সক্লুশন · 404-মিনিমাল-লেআউটে CSS-প্রোব-মিথ্যা-নেগেটিভ · হেক্স-রিপ্লেস-বাউন্ডারি · admin-view-এ tokens.css-লিংক-নিয়ম
 - পরের-এজেন্ট: session137; প্রস্তাব: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, parent-chain-চিপ, drawer-প্রিভিউ-ইনস্ট্যান্ট
->>>>>>> Stashed changes
 
 ---
 Task ID: session136-ফাইনাল (push-সমাপ্তি)
@@ -1440,9 +1438,26 @@ Work Log:
 - E2E verify-session132-accepted-features.sh 19/19 (সেলফ-সিড→গ্রহণ→ব্যাজ×৪-পাথ→নোটিফ-টোনাল×৪-চেক→dismiss+ক্যাসকেড-ডিলিট+অবশিষ্ট-শূন্য); স্টেল-জার-ফাঁদ (DB-backed session-store) আবিষ্কৃত → স্ক্রিপ্টে rm -f জার-রীতি।
 - agent-browser: স্ক্রিনশট ×৩ (badge-focus2/notif-tonal/notif-390) + 390px-০ + কনসোল-০; ক্লিনআপ (নোটিফ-dismiss + প্রশ্ন-ডিলিট + dashboard-অবশিষ্ট-০)।
 - চূড়ান্ত-রিগ্রেশন (মার্জড-ট্রি): role-policy 158/158 + cursor 25/25 + guard + audit + brace-০ + node --check + s132-E2E 19/19।
-- docs: PLANS (intent+cross-agent) + PROJECT §১৩৭ + worklog ×২।
+- docs: PLANS (intent+cross-agent) + PROJECT §১৩৮ + worklog ×২।
 
 Stage Summary:
 - ফিড-কার্ডে গ্রহণকৃত-উত্তর এখন দৃশ্যমান (session131-প্রস্তাব ①) — Q&A-চক্রের ফিড-স্তর সম্পূর্ণ; answer_accepted বিজ্ঞপ্তি টোনাল-আইকন-সহ ত্রি-সারফেস (প্রস্তাব ②)।
 - QA-ইনফ্রা স্থিতিশীল: রেট-লিমিট-ফ্লেক বন্ধ (boot-flag + SKIP-গার্ড), স্টেল-জার-ফাঁদ নথিভুক্ত।
 - পরের-এজেন্ট: session138 থেকে — profile/me accepted_flag-প্যারিটি, ratchet-হ্রাস, crx-og-গার্ড, লাইভ-Turso-রিসেট (টোকেন-ধারী)।
+
+
+---
+## Session 138 — role-policy user-id dynamic-discovery (§২৫-পরিবার) + crx 'শেষ পড়া' পিন + undo Enter-শর্টকাট (cron-QA-রাউন্ড; প্রবেশ @ 8cda026)
+
+Work Log:
+- pull --rebase (126cb46→8cda026 — session129-খ সমান্তরাল-ল্যান্ড) → আইসোলেটেড QA /home/z/qa-s131 :3160 — **pristine-DB-পুনর্নির্মাণ** (rm lekhok.db → initDb+৪সে → server-বন্ধে reset-qa-logins+seed-qa-users+seed-test-users → বুট)
+- QA-সুইপ: ১৬-রুট-স্মোক (200/302-সঠিক; /reading-list-404 = প্রত্যাহৃত-প্রস্তাব, লিভ-লিংক-শূন্য — বাগ-নয়) + লগইন-E2E + ১২-পেজ কনসোল-০ + 390px ×৯-০ — অ্যাপ-বাগ-শূন্য
+- 🚨 মৃত্যু-ফাঁদ-আবিষ্কার: `pkill -f qa-sXXX` ম্যাচ-শূন্য (cmdline=শুধু `node server.js`) → স্টেল-সার্ভার স্টেল-মেমরি-DB ফ্লাশ-করে সব-seed নীরবে-ওভাররাইট + নতুন-বুট EADDRINUSE-নীরব-মৃত্যু → role-policy-র ১৪-fail "রহস্য" আসলে ২-স্তরে: (ক) স্টেল-সার্ভার (খ) হার্ডকোড MODID/TAID/TUID fresh-DB-তে ভুল-ইউজার (id48=ismail/id49=riya ব্যান!) — অ্যাপ-কোড সম্পূর্ণ-নিরীহ
+- ফিক্স §২৬: test-role-policy.sh — UIDQ131 username→id ডিস্ক-কুয়েরি (fallback 47/49/48) + login()/postf() csrf-303(?csrf=1)-রিট্রাই-হার্ডেনিং → **147/147 ALL GREEN (141/6 থেকে)**
+- ফিচার: crx 'শেষ পড়া' পিন (continue-reading.js is-last+crx-last-chip দুই-সারফেস + dashboard.css session131-EOF-ব্লক টোকেন-শুধু+পালস-ডট+reduced-motion+640px+focus-visible-রিং) + undo-toast Enter-শর্টকাট (session129-④ — ফর্ম-কনটেক্সট-গার্ড, btn.click-এক-পাথ)
+- E2E: role-policy 147/147 + cursor 25/25 + inspect-audit 0-fail + guard ✓ + brace-০ + node --check ×২ ✓; agent-browser — পিন (widget rows=3/isLast=১/টোকেন-রঙ-যাচাই + ফুল-পেজ tiles=3/brand-border+ring + খালি-স্টেট-নিরাপদ) + undo id-tracked (992504 dismiss→Enter(BODY)→restore ✓; focused-input-এ Enter→undo-না ✓ — মিথ্যা-নেগেটিভ-দুই-প্রকার নিজে-ধরা-নিজে-সংশোধন) + 390px-০ ×২ + কনসোল-০ ×৫ + স্ক্রিনশট ×৩
+- ডকস: PLANS session131-নোট (গোটচা ×৩: pkill-গোটচা/pristine-রীতি/টোস্ট-টেস্ট-মিথ্যা-নেগেটিভ) + PROJECT §১৩১ + worklog ×২
+
+Stage Summary:
+- push লক্ষ্য: session-137 (সর্বোচ্চ+১); স্যুট এখন যে-কোনো pristine QA-DB-তে পোর্টেবল — "fresh-restart=147/147" দাবি প্রথমবার সত্যিঅর্থে পুনঃপ্রমাণযোগ্য
+- পরবর্তী: drawer-প্রিভিউ-ইনস্ট্যান্ট → playlist per-series aggregate API → সিরিজ-কভার-ইমেজ → WebRTC-ত্রয়ী (Metered.ca-TURN/ভিডিও-ডিগ্রেড/গ্রুপ-রিং-সীমা)

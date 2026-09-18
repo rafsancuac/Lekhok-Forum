@@ -1326,7 +1326,6 @@ Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browse
 - বাকি-প্রস্তাব (PLANS session133-নোট): reconcile-flash-মসৃণকরণ (CSS-side), crx-'শেষ-পড়া'-পিন, tokens-র্যাচেট-বেসলাইন নামানো (admin.css ৪২৬), full-page notifications-এ reltime-রি-পেইন্ট, লাইভ-Turso-রিসেট (টোকেন-ধারী)
 - গোটচা-পুনঃপ্রমাণিত: Express res.redirect-এর Location গেটওয়ে/curl-এ absolute দেখায় — টেস্টে strip() হেল্পার বাধ্যতামূলক
 - পরের-এজেন্ট: **session131 থেকে**; শুরুতে git fetch + PLANS-সর্বশেষ Cross-Agent Note; push-পূর্বে pull --rebase (union-মার্জ PLANS/PROJECT/worklog)
-<<<<<<< Updated upstream
 ---
 Task ID: RES-133 (ক্রন-রিভিউ রাউন্ড ১৩ — session133; [relabel: 131→133 — 2c2ca6f-এর session131 + cbd3221-এর session132 আগে-ল্যান্ডড, max+1 রীতি])
 Agent: Resources-feature agent
@@ -1370,7 +1369,7 @@ Work Log:
 Stage Summary:
 - session135 ফিচার-রাউন্ড সম্পন্ন — বিস্তারিত lekhok-forum/worklog.md + PLANS.md session135-নোট + PROJECT.md §১৩২
 - পরের-এজেন্ট: session135 লেবেল থেকে
-=======
+
 
 ---
 Task ID: session136 (cron-r14 — QA→ফিচার-রাউন্ড) [relabel: 134→136 — সমান্তরাল c7fefee-session134 ও 4794682-session135 আগে-ল্যান্ডড, max+1 রীতি]
@@ -1392,7 +1391,6 @@ Task: Lekhok-Forum স্টেটাস-অ্যাসেসমেন্ট + 
 - অবশিষ্ট-১৭২-হেক্স admin.css-এ (info-blue/violet/cyan নিম্ন-ফ্রিকোয়েন্সি পরিবার) + dashboard.css (২৩৩)/style.css (১৩৯৫) র্যাচেট-প্রার্থী
 - নতুন-রীতি (PLANS-নথিভুক্ত): নতুন admin-view বানালে admin.css-এর আগে tokens.css-লিংক আবশ্যক; নতুন-এন্ট্রি-অ্যানিমেশন shared.css-এ যোগ করলে swap-fade-এক্সক্লুশন-তালিকায় ঢোকাতে হবে
 - পরের-এজেন্ট: **session137**; প্রস্তাব: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), লাইভ-Turso-রিসেট (parent-chain-চিপ ③ ও drawer-ইনস্ট্যান্ট-প্রিভিউ ④ সমান্তরাল session134-এ সম্পন্ন — c7fefee)
->>>>>>> Stashed changes
 
 Task ID: session137 (cron webDevReview রাউন্ড — কোড-আইডি s132; 132→135-রিলেবেল)
 Agent: Z.ai Main Agent (webDevReview)
@@ -1408,7 +1406,7 @@ Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → ব
 - **ফিচার-① ফিড-কার্ড accepted-ব্যাজ:** QUESTION_SQL accepted_flag + FeedPostCard fd-accepted-chip132 (token-নির্ভর s132-ব্লক) — E2E-তে UNION-arity-500 ধরা পড়ে (filter=all/ranked/more) → ARTICLE/ACTIVITY NULL-প্যাড → চার-পাথ ✓
 - **ফিচার-② answer_accepted টোনাল-আইকন:** header.ejs _ico + live.js ICONS + notifications.ejs (iconClass/_ico/G117-reply-গ্রুপ) + style.css সবুজ-সলিড টোনাল প্যালেট — ত্রি-সারফেস প্যারিটি + ফিল্টার-চিপে গণনা
 - **যাচাই:** নতুন E2E verify-session132-accepted-features.sh 19/19 ✓ স্ক্রিনশট ×৩ ✓ 390px-০ ✓ কনসোল-০ ✓ ক্লিনআপ (নোটিফ-dismiss+ক্যাসকেড-ডিলিট+অবশিষ্ট-শূন্য) ✓ চূড়ান্ত role-policy 158/158 + cursor 25/25 + guard + audit + brace-০ ✓
-- ডকস: PLANS (intent+cross-agent) + PROJECT §১৩৭ + repo-worklog + এই worklog
+- ডকস: PLANS (intent+cross-agent) + PROJECT §১৩৮ + repo-worklog + এই worklog
 
 ## Unresolved Issues / Risks / Next Priorities
 - **নতুন-গোটচা (PLANS-এ নথিভুক্ত):** ① ফিড-UNION-SQL-এ কলাম-যোগ = তিন-শাখায় সম-arity (নইলে 500 — filter=all-মিথ্যা-সবুজ ফাঁদ) ② স্টেল-জার-ফাঁদ: DB-backed session-store রিবুটেও লগইন রাখে — টেস্ট-জার rm -f বাধ্যতামূলক ③ ismail=secret123 ক্যানোনিকাল (root-নোটের 'ismail demo123' stale) ④ Write/Edit-টুল [h-ম্যানলিং — node-fs positional-patchই নিরাপদ
@@ -1421,3 +1419,7 @@ Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → ব
 - union ×২: ① session135 (4794682) — তাদের feed-acc-badge135/icon-accepted135 ক্যানোনিকাল গৃহীত, আমার ডুপ্লিকেট-মার্কআপ/CSS প্রত্যাহৃত, আমার accepted_flag-SQL + rate-limit-escape + RL-GUARD + E2E অনন্য-রক্ষিত ② session136 (415af2a) — notifications-reltime + tokens-র্যাচেট অক্ষত; ডকস-ইউনিয়ন PLANS/PROJECT/worklog ×২
 - পোস্ট-পুশ যাচাই: role-policy 177/177 (SKIP=০) + s132/137-E2E 19/19 + cursor 25/25 + guard + ৬-রুট স্মোক ২০০ — ALL GREEN
 - পরের-এজেন্ট: session138 থেকে
+
+
+---
+## Session 138 (repo-root mirror) — user-id discovery + crx pin (undo-Enter: session133-ক্যানোনিকলে-প্রত্যাহৃত) — বিস্তারিত lekhok-forum/worklog.md ও root /home/z/my-project/worklog.md-এ

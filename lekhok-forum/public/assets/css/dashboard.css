@@ -261,3 +261,19 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .crx-pinned-tag .fa-thumbtack{font-size:.6rem}
 @media (max-width:640px){.crx-row.is-pinned{margin-left:-4px;margin-right:-4px;padding-left:4px;padding-right:4px}}
 @media (prefers-reduced-motion:reduce){.crx-pin{transition:none}.crx-pin:hover{transform:none}}
+
+/* ═══ session137-ব্লক: crx অটো 'শেষ পড়া' মার্কার + focus-পলিশ ═══
+   129-গ-ম্যানুয়াল-পিনের পাশে অটো continue-পয়েন্ট (max-t এন্ট্রি)।
+   টোকেন-শুধু (var(--lf-*)); reduced-motion-সম্মানিত। */
+.crx-last-chip{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:3px 9px;border-radius:var(--lf-radius-chip);background:var(--lf-brand-primary);color:var(--lf-ui-surface);font-size:.62rem;font-weight:800;letter-spacing:.4px;line-height:1.4;transition:var(--transition)}
+.crx-last-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--lf-ui-surface);animation:crxLastPulse 2s ease-in-out infinite}
+@keyframes crxLastPulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+.crx-row.is-last{background:var(--lf-brand-light);border-radius:12px;padding:10px;margin:2px -10px;box-shadow:inset 3px 0 0 var(--lf-brand-primary)}
+.crx-tile.is-last{border-color:var(--lf-brand-primary);box-shadow:0 0 0 3px var(--lf-brand-light),var(--shadow-soft)}
+.crx-tile.is-last:hover{box-shadow:0 0 0 3px var(--lf-brand-light),var(--shadow-hover)}
+.crx-tile.is-pinned.is-last{box-shadow:0 0 0 3px var(--lf-brand-light),var(--shadow-soft),inset 3px 0 0 var(--accent)}
+.crx-tilehead{display:flex;align-items:flex-start;gap:7px;min-width:0}
+.crx-tilehead .crx-title{flex:1;min-width:0}
+.crx-link:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:2px;border-radius:10px}
+@media (max-width:640px){.crx-last-chip{font-size:.58rem;padding:2px 7px;gap:4px}.crx-row.is-last{padding:9px;margin:2px -9px}}
+@media (prefers-reduced-motion:reduce){.crx-last-chip::before{animation:none}.crx-last-chip{transition:none}}

@@ -14,7 +14,9 @@ login() {
   local J=$1 PG=$2 U=$3 PW=$4
   local TOK=$(getcsrf "$J" "$PG")
   local R=$(curl -s -b "$J" -c "$J" -o /dev/null -w "%{http_code} %{redirect_url}" -X POST "$BASE$PG" --data-urlencode "username=$U" --data-urlencode "password=$PW" --data-urlencode "_csrf=$TOK")
-  if [ "${R%% *}" = "200" ]; then
+  # session137-হার্ডেনিং: csrf-block-আসল-শেপ 303-রিডাইরেক্ট (?csrf=1) — বাসি '200-রেন্ডার'
+  # ধারণা সংশোধন; স্টেল-jar/সেশন-রাইট-রেসেও এক-রিট্রাই ফায়ার (ব্রাউজার-recovery-মিরর)।
+  if [ "${R%% *}" = "200" ] || [[ "${R#* }" == *"csrf=1"* ]]; then
     TOK=$(getcsrf "$J" "$PG")
     R=$(curl -s -b "$J" -c "$J" -o /dev/null -w "%{http_code} %{redirect_url}" -X POST "$BASE$PG" --data-urlencode "username=$U" --data-urlencode "password=$PW" --data-urlencode "_csrf=$TOK")
   fi
@@ -31,6 +33,11 @@ postf() {
   local ARGS=()
   for kv in "$@"; do ARGS+=(--data-urlencode "$kv"); done
   local R=$(curl -s -b "$J" -c "$J" -o /dev/null -w "%{http_code} %{redirect_url}" -X POST "$BASE$PATHP" "${ARGS[@]}" --data-urlencode "_csrf=$TOK")
+  # session137-হার্ডেনিং: 303 ?csrf=1-রিকভারি-রিট্রাই (login()-এর মতোই)
+  if [[ "${R#* }" == *"csrf=1"* ]]; then
+    TOK=$(getcsrf "$J" "$PG")
+    R=$(curl -s -b "$J" -c "$J" -o /dev/null -w "%{http_code} %{redirect_url}" -X POST "$BASE$PATHP" "${ARGS[@]}" --data-urlencode "_csrf=$TOK")
+  fi
   echo "${R%% *} $(strip "${R#* }")"
 }
 
@@ -100,7 +107,12 @@ HTML=$(curl -s -b $JARU "$BASE/messages?err=$MSG"); ckc "লিস্ট-পে�
 
 echo "══ ৬. সরাসরি-কানেকশন নীতি (ফলো) ══"
 login $JARM /admin/login moderator moderator123 > /dev/null
-MODID=47; TAID=49; TUID=48
+# session137-fix: user-id dynamic-discovery — হার্ডকোড (47/49/48) fresh-DB-তে ভুল-ইউজার
+# নিষেধ/ফলো করত (ismail/riya!) → ৬-fail ক্যাসকেড — §২৫-প্যাটার্নে username→id কুয়েরি।
+UIDQ137() { node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));const r=d.exec('SELECT id FROM users WHERE username=\"$1\"');console.log(r.length?r[0].values[0][0]:'')})" 2>/dev/null; }
+MODID=$(UIDQ137 moderator); [ -n "$MODID" ] || MODID=47
+TAID=$(UIDQ137 testadmin);  [ -n "$TAID" ]  || TAID=49
+TUID=$(UIDQ137 testuser);   [ -n "$TUID" ]  || TUID=48
 R=$(curl -s -b $JARU -X POST "$BASE/follow/$MODID"); ckc "user→moderator ফলো ব্লক" "role_policy" "$R"
 R=$(curl -s -b $JARM -X POST "$BASE/follow/$TUID"); ckc "moderator→user ফলো ব্লক" "role_policy" "$R"
 R=$(curl -s -b $JARM -X POST "$BASE/follow/$TAID"); ckc "moderator→admin ফলো ব্লক" "role_policy" "$R"

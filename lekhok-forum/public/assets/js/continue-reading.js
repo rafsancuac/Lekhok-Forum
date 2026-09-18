@@ -10,6 +10,8 @@
  *    খালি-অবস্থা, মোট-চিপ; সেশন-১২৩ থেকে টাইল-টপে ১৬:৯ কভার-স্ট্রিপ।
  *  • প্রতি-সারি ×-বাটনে তালিকা-থেকে-সরানো যায়; লিঙ্কে গেলে article-পেজের
  *    'যেখান থেকে ছেড়েছিলাম' ব্যানার অবস্থান-ফিরিয়ে দেয় (session ৬৩)।
+ *  • session-১৩৭-ইউনিয়ন: সর্বশেষ-পড়া (max-t) এন্ট্রিতে অটো 'শেষ পড়া' চিপ + .is-last
+ *    (129-গ-ম্যানুয়াল-পিনের সহাবস্থান — পিন=ইউজার-পছন্দ, শেষ-পড়া=অটো-পয়েন্ট)।
  */
 (function () {
   'use strict';
@@ -114,12 +116,18 @@
       + (total > 3 ? ' <b class="crx-all-n">' + bn(total) + '</b>' : '')
       + '<i class="fas fa-angle-right crx-all-arr" aria-hidden="true"></i></a></h4>'
       + '<div class="crx-list">';
+    /* session137-ইউনিয়ন: ম্যানুয়াল-পিন (129-গ, ক্যানোনিকাল) + অটো 'শেষ পড়া' = max-t
+       (ix===0 নয় — pinned-first-সর্টে ভুল-টার্গেট; দুই-স্টেট সহাবস্থান)। */
+    var lastT = -Infinity, lastId = null;
+    list.forEach(function (it) { if (it.t > lastT) { lastT = it.t; lastId = it.id; } });
     list.forEach(function (it) {
       var p = pct(it.r);
-      h += '<div class="crx-row' + (it.p > 0 ? ' is-pinned' : '') + '">'
+      var last = it.id === lastId;
+      h += '<div class="crx-row' + (it.p > 0 ? ' is-pinned' : '') + (last ? ' is-last' : '') + '">'
         + '<a class="crx-link" href="' + esc(it.u) + '" title="' + esc(it.ti) + '">'
         + '<span class="crx-rowtop">'
         + '<span class="crx-thumb" aria-hidden="true">' + thumbImg(it.c) + '<i class="fas fa-feather-alt"></i></span>'
+        + (last ? '<span class="crx-last-chip" title="সর্বশেষ পড়া লেখা">শেষ পড়া</span>' : '')
         + '<span class="crx-title">' + esc(it.ti) + '</span>'
         + '</span>'
         + '<span class="crx-bar"><span class="crx-bar-fill" style="width:' + p + '%"></span></span>'
@@ -157,13 +165,20 @@
       return;
     }
     var h = '';
+    /* session137-ইউনিয়ন: অটো 'শেষ পড়া' = max-t */
+    var lastTF = -Infinity, lastIdF = null;
+    list.forEach(function (it) { if (it.t > lastTF) { lastTF = it.t; lastIdF = it.id; } });
     list.forEach(function (it) {
       var p = pct(it.r);
-      h += '<div class="crx-tile' + (it.c ? ' has-cover' : '') + (it.p > 0 ? ' is-pinned' : '') + '" data-crx-tile="' + esc(it.id) + '">'
+      var last = it.id === lastIdF;
+      h += '<div class="crx-tile' + (it.c ? ' has-cover' : '') + (it.p > 0 ? ' is-pinned' : '') + (last ? ' is-last' : '') + '" data-crx-tile="' + esc(it.id) + '">'
         + '<a class="crx-link" href="' + esc(it.u) + '" title="' + esc(it.ti) + '">'
         + (it.p > 0 ? '<span class="crx-pinned-tag"><i class="fas fa-thumbtack" aria-hidden="true"></i> পিন করা</span>' : '')
         + '<span class="crx-tilecover" aria-hidden="true">' + thumbImg(it.c) + '<i class="fas fa-feather-alt"></i></span>'
+        + '<span class="crx-tilehead">'
+        + (last ? '<span class="crx-last-chip" title="সর্বশেষ পড়া লেখা">শেষ পড়া</span>' : '')
         + '<span class="crx-title">' + esc(it.ti) + '</span>'
+        + '</span>'
         + '<span class="crx-bar"><span class="crx-bar-fill" style="width:' + p + '%"></span></span>'
         + '<span class="crx-tile-meta"><b>' + bn(p) + '%</b>'
         + '<span class="crx-tile-day"><i class="far fa-clock" aria-hidden="true"></i> ' + relTime(it.t) + '</span></span>'
