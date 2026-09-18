@@ -1716,3 +1716,68 @@
   .page-wrap--messenger .messenger-details{scroll-behavior:auto}
 }
 /* EOF-MARKER: session153-messenger-independent-scroll */
+
+/* ═══ সেশন ১৫৯: ফরওয়ার্ড-মোডাল প্রিমিয়াম-রিরাইট + অ্যাভাটার-ডাইমেনশন-লক ═══
+   ইউজার-রিপোর্ট: মেসেজ-বাবলের ৩-ডট → ফরওয়ার্ড খুললে প্রোফাইল-ছবি বিশালাকার
+   (মডাল ভেঙে যায়) — মেসেঞ্জার-সার্চেও একই। রুট-কজ: JS-জেনারেটেড <img>-এ
+   ক্লাস-শূন্যতা → নিচের (ক) defense-in-depth-লক দুই-স্তরে বন্ধ। */
+/* (ক) defense-in-depth: ক্লাস-শূন্য <img>-ও কখনো নিজ-পিক্সেলে (natural width)
+   ফুল-স্ক্রিন হতে পারবে না — কনটেইনার/রো-স্কোপে হার্ড-লক */
+.fwd-avwrap img {
+  width: 38px; height: 38px; max-width: 38px; max-height: 38px;
+  border-radius: 50%; object-fit: cover; display: block;
+}
+.page-wrap--messenger .msr-row > img {
+  width: 40px; height: 40px; max-width: 40px; max-height: 40px;
+  border-radius: 50%; object-fit: cover; flex: 0 0 40px;
+  background: var(--fb-canvas);
+}
+/* (খ) অ্যাভাটার-পলিশ: সূক্ষ্ম-রিং + গ্রুপ-আইকন-সার্কেল */
+.fwd-av { box-shadow: 0 0 0 1px var(--lf-ui-border); }
+.fwd-av--grp { background: linear-gradient(135deg, var(--lf-social-blue), var(--lf-fb-green)); }
+.fwd-av--grp i { font-size: 13px; }
+.page-wrap--messenger .msr-avatar i { font-size: 14px; }
+/* (গ) প্রতি-সারি 'পাঠান' টগল-বাটন (পাঠান → লোডিং → ✓ পাঠানো হয়েছে) */
+.fwd-send {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border: 1px solid transparent; border-radius: 8px;
+  background: var(--lf-social-blue); color: var(--lf-ui-surface);
+  font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  flex: none; transition: background .15s, transform .12s, box-shadow .15s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+}
+.fwd-send:hover { background: var(--lf-social-blue-hover); }
+.fwd-send:active { transform: scale(.96); }
+.fwd-send.is-loading { opacity: .75; cursor: wait; }
+.fwd-send.is-sent {
+  background: var(--lf-ui-canvas); color: var(--lf-text-secondary);
+  border-color: var(--lf-ui-border); cursor: default; box-shadow: none;
+}
+.fwd-row.is-done .fwd-name { color: var(--lf-text-secondary); }
+.fwd-row.is-done .fwd-av { opacity: .75; }
+/* (ঘ) ফুটার লাইভ-কাউন্টার — margin-right:auto = বাটন-ডানে-থাকা অক্ষত */
+.fwd-sent-count {
+  margin-right: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 700; color: var(--lf-fb-green);
+}
+/* (ঙ) লিস্ট-স্ক্রলবার-পলিশ + অ্যাক্সেসিবিলিটি */
+.fwd-list { scrollbar-width: thin; scrollbar-color: var(--lf-ui-border) transparent; }
+.fwd-list::-webkit-scrollbar { width: 8px; }
+.fwd-list::-webkit-scrollbar-track { background: transparent; }
+.fwd-list::-webkit-scrollbar-thumb { background: var(--lf-ui-border); border-radius: 99px; }
+.fwd-list::-webkit-scrollbar-thumb:hover { background: var(--lf-ui-border-strong); }
+.fwd-send:focus-visible, .fwd-x:focus-visible, .fwd-cancel:focus-visible,
+.fwd-row[role="button"]:focus-visible {
+  outline: 2px solid var(--lf-social-blue); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fwd-send, .fwd-av, .fwd-row { transition: none !important; }
+  .fwd-send:active { transform: none; }
+}
+/* (চ) মোবাইল-টিউনিং */
+@media (max-width: 480px) {
+  .fwd-send { padding: 6px 10px; font-size: 12px; }
+  .fwd-row { gap: 8px; padding: 8px; }
+  .fwd-sent-count { font-size: 11.5px; }
+}
+/* EOF-MARKER: session159-forward-avatar-lock */

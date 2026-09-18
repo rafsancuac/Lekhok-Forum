@@ -32,7 +32,16 @@
     t._hide = setTimeout(function () { t.classList.remove('show'); }, 2400);
   }
 
-  /* ── ফরওয়ার্ড-মোডাল (চ্যাট + লিস্ট দুই পেজেই কাজ করে) ───────────────── */
+  /* ── ফরওয়ার্ড-মোডাল (চ্যাট + লিস্ট দুই পেজেই কাজ করে) ─────────────────
+     সেশন ১৫৯ প্রিমিয়াম-রিরাইট:
+     ① 🐛 রুট-কজ ফিক্স — <img>-এ ক্লাস ছিল না, তাই .fwd-av-এর ৩৮px-বৃত্ত
+        প্রয়োগ হতো না → হাই-রেজোলিউশন প্রোফাইল-ছবি নিজ-পিক্সেলে (natural
+        width) মডাল ভেঙে ফুল-স্ক্রিন হয়ে যেত। এখন class="fwd-av" লক + CSS
+        defense-in-depth (.fwd-avwrap img) দ্বৈত-স্তরে।
+     ② প্রতি-সারিতে 'পাঠান' টগল-বাটন (পাঠান → লোডিং-স্পিনার → ✓ পাঠানো হয়েছে)
+        — মডাল বন্ধ না করেই একাধিক কথোপকথনে ফরওয়ার্ড (মাল্টি-সেন্ড)।
+     ③ ফুটারে লাইভ-কাউন্টার (N জনকে পাঠানো হয়েছে — বাংলা-সংখ্যা চুক্তি)।
+     ④ গ্রুপ-টার্গেটে আইকন-অ্যাভাটার + ইনিশিয়াল-ফলব্যাক XSS-হার্ডেনড। */
   var fwdOverlay = document.getElementById('fwdOverlay');
   var fwdList = document.getElementById('fwdList');
   var fwdSearch = document.getElementById('fwdSearch');
@@ -40,11 +49,45 @@
   var fwdTargetsAt = 0;
   var fwdMsgId = null;
   var fwdPickHandler = null;    // লিস্ট-পেজ থেকেও ব্যবহারযোগ্য পিক-কলব্যাক
+  var fwdSentMap = {};          // সেশন ১৫৯: convId → true (মাল্টি-ফরওয়ার্ড স্টেট)
+
+  function bnNum(n) {
+    return (typeof window.toBnNumber === 'function') ? window.toBnNumber(n) : String(n);
+  }
+
+  function escFwd(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function updateFwdSentCount() {
+    var el = document.getElementById('fwdSentCount');
+    if (!el) return;
+    var n = Object.keys(fwdSentMap).length;
+    if (!n) { el.hidden = true; el.textContent = ''; return; }
+    el.hidden = false;
+    el.innerHTML = '<i class="fas fa-check-circle" aria-hidden="true"></i> ' + bnNum(n) + ' জনকে পাঠানো হয়েছে';
+  }
+
+  function fwdAvatarHtml(c) {
+    if (c.is_group) {
+      return '<span class="fwd-av fwd-av--txt fwd-av--grp"><i class="fas fa-users" aria-hidden="true"></i></span>';
+    }
+    var initial = escFwd(String(c.name || '?').charAt(0));
+    if (c.avatar) {
+      var src = escFwd(c.avatar);
+      return '<img loading="lazy" class="fwd-av" src="' + src + '" alt="" ' +
+        'onerror="this.onerror=null;this.outerHTML=\'<span class=&quot;fwd-av fwd-av--txt&quot;>' + initial + '</span>\'" />';
+    }
+    return '<span class="fwd-av fwd-av--txt">' + initial + '</span>';
+  }
 
   function openForward(msgId, onPicked) {
     if (!fwdOverlay) return;
     fwdMsgId = (msgId === null || msgId === undefined) ? null : String(msgId);
     fwdPickHandler = typeof onPicked === 'function' ? onPicked : null;
+    fwdSentMap = {};
+    updateFwdSentCount();
     fwdOverlay.hidden = false;
     if (fwdSearch) { fwdSearch.value = ''; }
     loadForwardTargets('');
@@ -56,6 +99,7 @@
     fwdOverlay.hidden = true;
     fwdMsgId = null;
     fwdPickHandler = null;
+    fwdSentMap = {};
   }
 
   async function loadForwardTargets(q) {
@@ -69,25 +113,65 @@
         fwdTargets = d.conversations || [];
         fwdTargetsAt = now;
       } catch (e) {
-        fwdList.innerHTML = '<div class="fwd-empty">লোড করা যায়নি — আবার চেষ্টা করুন।</div>';
+        fwdList.innerHTML = '<div class="fwd-empty"><i class="fas fa-triangle-exclamation"></i> লোড করা যায়নি — আবার চেষ্টা করুন।</div>';
         return;
       }
     }
     var ql = (q || '').toLowerCase().trim();
     var items = fwdTargets.filter(function (c) { return !ql || String(c.name || '').toLowerCase().indexOf(ql) !== -1; });
-    if (!items.length) { fwdList.innerHTML = '<div class="fwd-empty">কোনো কথোপকথন মেলেনি।</div>'; return; }
+    if (!items.length) { fwdList.innerHTML = '<div class="fwd-empty"><i class="fas fa-magnifying-glass"></i> কোনো কথোপকথন মেলেনি।</div>'; return; }
+    var pickMode = !!fwdPickHandler;
     fwdList.innerHTML = items.map(function (c) {
-      var av = c.avatar
-        ? '<img loading="lazy" src="' + String(c.avatar).replace(/"/g, '&quot;') + '" onerror="this.onerror=null;this.outerHTML=\'<span class=&quot;fwd-av fwd-av--txt&quot;>' + String(c.name || '?').charAt(0) + '</span>\'" alt="" />'
-        : '<span class="fwd-av fwd-av--txt">' + String(c.name || '?').charAt(0) + '</span>';
-      var sub = c.is_group ? ((c.member_count || 0) + ' সদস্য · গ্রুপ') : 'ব্যক্তিগত চ্যাট';
-      return '<button type="button" class="fwd-row" data-fwd-conv="' + c.id + '">' +
-        '<span class="fwd-avwrap">' + av + '</span>' +
+      var sub = c.is_group ? (bnNum(c.member_count || 0) + ' সদস্য · গ্রুপ') : 'ব্যক্তিগত চ্যাট';
+      var right = pickMode
+        ? '<i class="fas fa-share fwd-go"></i>'
+        : (fwdSentMap[c.id]
+          ? '<button type="button" class="fwd-send is-sent" data-fwd-send="' + c.id + '" disabled><i class="fas fa-check"></i> পাঠানো হয়েছে</button>'
+          : '<button type="button" class="fwd-send" data-fwd-send="' + c.id + '" aria-label="' + escFwd(c.name || '') + '-কে ফরওয়ার্ড করুন"><i class="fas fa-paper-plane"></i> পাঠান</button>');
+      var nav = pickMode ? ' role="button" tabindex="0"' : '';
+      return '<div class="fwd-row' + (fwdSentMap[c.id] ? ' is-done' : '') + '" data-fwd-conv="' + c.id + '"' + nav + '>' +
+        '<span class="fwd-avwrap">' + fwdAvatarHtml(c) + '</span>' +
         '<span class="fwd-meta"><span class="fwd-name">' + String(c.name || 'কথোপকথন').replace(/</g, '&lt;') + '</span>' +
         '<span class="fwd-sub">' + sub + (c.muted ? ' · <i class="fas fa-bell-slash"></i>' : '') + '</span></span>' +
-        '<i class="fas fa-share fwd-go"></i>' +
-        '</button>';
+        right +
+        '</div>';
     }).join('');
+  }
+
+  async function sendForwardTo(convNum, btn) {
+    if (!fwdMsgId || fwdSentMap[convNum]) return;
+    var oldHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>';
+    try {
+      var r = await fetch('/api/messages/' + fwdMsgId + '/forward', {
+        method: 'POST',
+        headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ conv_id: parseInt(convNum, 10) })
+      });
+      var d = await r.json();
+      if (d.ok) {
+        fwdSentMap[convNum] = true;
+        btn.classList.remove('is-loading');
+        btn.classList.add('is-sent');
+        btn.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> পাঠানো হয়েছে';
+        var row = btn.closest('[data-fwd-conv]');
+        if (row) row.classList.add('is-done');
+        updateFwdSentCount();
+        toast('মেসেজ ফরওয়ার্ড করা হয়েছে ✓');
+      } else {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+        toast(d.error === 'forbidden' ? 'অনুমতি নেই।' : 'ফরওয়ার্ড করা যায়নি।');
+      }
+    } catch (e2) {
+      btn.classList.remove('is-loading');
+      btn.disabled = false;
+      btn.innerHTML = oldHtml;
+      toast('নেটওয়ার্ক সমস্যা।');
+    }
   }
 
   if (fwdOverlay) {
@@ -95,24 +179,26 @@
     document.getElementById('fwdClose')?.addEventListener('click', closeForward);
     document.getElementById('fwdCancel')?.addEventListener('click', closeForward);
     fwdSearch?.addEventListener('input', function () { loadForwardTargets(fwdSearch.value); });
-    fwdList?.addEventListener('click', async function (e) {
+    fwdList?.addEventListener('click', function (e) {
+      var sendBtn = e.target.closest('[data-fwd-send]');
+      if (sendBtn) { sendForwardTo(sendBtn.getAttribute('data-fwd-send'), sendBtn); return; }
+      // লিস্ট-পেজ মোড: শুধু কলব্যাক (নেভিগেশন), কপি-পাঠানো নয়
+      if (!fwdPickHandler) return;
       var row = e.target.closest('[data-fwd-conv]');
       if (!row) return;
-      var convNum = row.getAttribute('data-fwd-conv');
-      // লিস্ট-পেজ মোড: শুধু কলব্যাক (নেভিগেশন), কপি-পাঠানো নয়
-      if (fwdPickHandler) { var cb = fwdPickHandler; closeForward(); cb(convNum); return; }
-      if (!fwdMsgId) return;
-      row.disabled = true;
-      try {
-        var r = await fetch('/api/messages/' + fwdMsgId + '/forward', {
-          method: 'POST',
-          headers: csrfHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ conv_id: parseInt(convNum, 10) })
-        });
-        var d = await r.json();
-        if (d.ok) { closeForward(); toast('মেসেজ ফরওয়ার্ড করা হয়েছে ✓'); }
-        else { toast(d.error === 'forbidden' ? 'অনুমতি নেই।' : 'ফরওয়ার্ড করা যায়নি।'); row.disabled = false; }
-      } catch (e2) { toast('নেটওয়ার্ক সমস্যা।'); row.disabled = false; }
+      var cb = fwdPickHandler;
+      closeForward();
+      cb(row.getAttribute('data-fwd-conv'));
+    });
+    fwdList?.addEventListener('keydown', function (e) {
+      if (!fwdPickHandler) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var row = e.target.closest('[data-fwd-conv][role="button"]');
+      if (!row) return;
+      e.preventDefault();
+      var cb = fwdPickHandler;
+      closeForward();
+      cb(row.getAttribute('data-fwd-conv'));
     });
   }
 

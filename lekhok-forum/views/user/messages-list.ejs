@@ -427,11 +427,18 @@
         const displayName = name;
         const origName = el.querySelector('.conv-name').textContent;
         const origSnippet = el.querySelector('.conv-snippet').textContent;
-        const avatar = el.querySelector('img') ? el.querySelector('img').outerHTML : '';
+        // সেশন ১৫৯ 🐛 ফিক্স: ক্লোন-করা <img>-এ ক্লাস ছিল না → .replace('class="') নো-অপ →
+        // হাই-রেজ ছবি নিজ-পিক্সেলে ড্রপডাউন ভেঙে ফেলত। এখন src থেকে সুনির্দিষ্ট
+        // class="msr-avatar"-যুক্ত অ্যাভাটার পুনর্নির্মাণ (গ্রুপে আইকন-সার্কেল)।
+        const imgEl = el.querySelector('.avatar img');
+        const peerId = el.dataset.peerId || '0';
+        const avatar = imgEl
+          ? `<img loading="lazy" decoding="async" class="msr-avatar" src="${escapeHtml(imgEl.getAttribute('src') || '')}" alt="" onerror="this.onerror=null;this.src='/avatar/${peerId}'" />`
+          : `<div class="msr-avatar"><i class="fas fa-users" aria-hidden="true"></i></div>`;
         const unread = el.querySelector('.conv-unread');
         const unreadHtml = unread ? `<span class="conv-unread">${unread.textContent}</span>` : '';
         return `<a class="msr-row" href="/messages/${encodeURIComponent(username)}">
-          ${avatar.replace('class="', 'class="msr-avatar ').replace('alt="', 'data-keep="1" alt="')}
+          ${avatar}
           <div class="msr-meta">
             <div class="msr-name">${highlight(origName, q)}</div>
             <div class="msr-sub">${highlight(origSnippet, q)}</div>

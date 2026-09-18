@@ -1919,3 +1919,22 @@ Stage Summary:
 - সর্বজনীন-কম্পোজার সম্পূর্ণ: ফিড/প্রোফাইল/QA — একই ট্রিগার + একই মোডাল, লেখা↔প্রশ্ন + ১২-শাখা-জেনার, per-type নেভিগেশন; অ্যান্টি-শিফট গ্লোবাল
 - পরের-এজেন্ট: session159 — প্রস্তাব: ① QaListItem-এ শাখা-চিপ ② /qa?topic= + /articles?cat= শাখা-ফিল্টার ③ ট্যাগ-ডায়ালগ (সহ-লেখক-পিকার) ④ প্রশ্নে শিরোনাম-ইনপুট ⑤ শাখা-অনুযায়ী অডিয়েন্স-ডিফল্ট
 - ঝুঁকি: PLANS/PROJECT-এ দ্বি-session158-নোট (Next.js-এজেন্ট f9bae63 + আমার) — session159-থেকে max+1 রীতি; হারনেস-লগইন rate-limiter → server-রিস্টার্টেই ক্লিয়ার
+
+---
+
+## session159 (১৮ সেপ্টেম্বর ২০২৬) — ইউজার-রিপোর্ট: ফরওয়ার্ড-মোডাল + সার্চে অ্যাভাটার-বিস্তার মৃত্যু-বাগ ×২ + প্রিমিয়াম মাল্টি-ফরওয়ার্ড + audit-stale-রুল-ফিক্স
+
+**রুট-কজ ডিপ-অ্যানালাইসিস:**
+- ফরওয়ার্ড-মোডাল (messenger-actions.js): `<img>`-এ ক্লাসই ছিল না → `.fwd-av{38px}` শুধু letter-ফলব্যাকে প্রযোজ্য → বাস্তব ছবি natural-width (হাই-রেজ JPG ফুল-স্ক্রিন)
+- সার্চ-ড্রপডাউন (দুই পেজ): `outerHTML.replace('class="','class="msr-avatar ')` **নো-অপ** — উৎস conv-item img-এ class অ্যাট্রিবিউট-ই নেই (letter-অ্যাভাটার-সারফেস ঠিক থাকায় বাগ আংশিক-লুকানো ছিল)
+
+**সমাধান (৫-ফাইল):**
+- messenger-actions.js: img-ক্লাস + escFwd-XSS-হার্ডেনিং + **মাল্টি-ফরওয়ার্ড** (প্রতি-সারি 'পাঠান'→spin→'✓ পাঠানো হয়েছে' disabled; fwdSentMap; মডাল-খোলা-রেখে একাধিক টার্গেট) + ফুটার লাইভ-কাউন্টার (toBn বাংলা) + গ্রুপ-আইকন-সার্কেল + row→div (nested-button-এড়াতে) + pick-mode Enter/Space
+- messages-chat.ejs: ফুটার কাউন্টার-span(aria-live) + 'সম্পন্ন'; সার্চ-অ্যাভাটার src-পুনর্নির্মাণ; ডুপ্লিকেট-কমেন্ট-অপসারণ
+- messages-list.ejs: একই সার্চ-পুনর্নির্মাণ (data-peerId)
+- messenger.css session159-ব্লক: **defense-in-depth দ্বৈত-লক** (.fwd-avwrap img ৩৮px + .msr-row>img ৪০px — ভবিষ্যতেও ক্লাস-শূন্য img natural-width অসম্ভব) + avatar-ring + fwd-send ৩-স্টেট + focus-visible + reduced-motion + ≤480px
+- inspect-audit.mjs: settings-ট্যাব রুল → session152-ক্যানোনিকাল (.st142-item/.st142-pane ×14) প্রথম + legacy-ফলব্যাক → **audit আবার 100%**
+
+**E2E (@3200 আইসোলেটেড pristine):** ২-টার্গেটে মাল্টি-ফরওয়ার্ড চক্র '১ জন→২ জনকে পাঠানো হয়েছে' ✓ অ্যাভাটার 38×38/40×40 cover-50% দুই-স্তরে ✓ লাইভ-ফিল্টার ✓ Escape ✓ সার্ভার-সত্য-কপি ✓ 390px-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩; রিগ্রেশন: guard ✓ audit-সব-সবুজ ✓ cursor 32/1 (seed-artifact, baseline-parity delta=০) ✓ node --check ✓ EJS ×২ ✓
+
+**গোটচা ×২:** sql.js-স্ট্যান্ডঅ্যালোন-UPDATE-পরে saveDb() বাধ্যতামূলক; QA-কপি git-স্টেট-স্বাধীন। **পরের-এজেন্ট: session160 থেকে।**

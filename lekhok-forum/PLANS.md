@@ -2293,3 +2293,29 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **E2E-প্রমাণ (agent-browser, ismail @8080):** ফিড: ট্রিগার+মোডাল+স্ট্রিপ(৮-অপশন)+css ✓; ❓-ক্লিকে প্রশ্ন-প্রি-সিলেক্টেড (শিরোনাম/শাখা×৪/লেবেল 'প্রশ্ন জমা দিন'/placeholder) ✓; সাবমিট→/qa/2 ✓; ✍️-ক্লিকে লেখা (শাখা×৮, 'পোস্ট করুন') ✓; সাবমিট→/articles/3 ✓; ইন-মোডাল টগলে অপশন-সোয়াপ 8↔4 লাইভ ✓; কার্ড-চিপ ('ভাষা ও ব্যাকরণ'/'কলাম') ✓। /me: ট্রিগার+মোডাল ✓। /profile/ismail (মালিক) ✓। /qa: বাবল-ই question-প্রি-সিলেক্টেড + qaComposer140-বিলোপ ✓। অতিথি: guestCTA অক্ষত, ট্রিগার/মোডাল-শূন্য ✓। অ্যান্টি-শিফট: scrollbar-gutter:stable+ovY:scroll+ovX:hidden computed ✓; স্ক্রলে scrollX=0+প্রস্থ-স্থিত ✓; 390px ×৩-পেজ h-overflow-০ ✓; কনসোল-০ ✓; স্ক্রিনশট ×২। **রিগ্রেশন:** guard:design ✓ + audit:views ✓ + s139-parity **২২/২২** + lf153-harness **৪৯/৪৯ ALL GREEN** (দ্বি-সিড-প্রোটোকল: server-kill→seed-test-users+seed-qa-113→boot) + role-policy বেসলাইন-প্যারিটি (stash-তুলনায় IDENTICAL failure-set — পরিবেশগত) + node --check + EJS-compile ×৭। **গোটচা:** ① server-চলত্তাবস্থায় seed = অদৃশ্য (sql.js-ইন-মেমরি) ② হারনেস-লগইন rate-limiter-পোলিউশন — server-রিস্টার্টেই ক্লিয়ার ③ /qa/:id সিঙ্গেল-পেজে ক্যাটাগরি-চিপ নেই (QaListItem — FeedPostCard-নয়) — ইচ্ছাকৃত।
 
 **পরবর্তী-প্রথম-পছন্দ:** ① QaListItem-এও শাখা-চিপ ② শাখা-ভিত্তিক /qa?topic= ফিল্টার + /articles?cat= ③ কম্পোজারে ট্যাগ-ডায়ালগ (সহ-লেখক-পিকার — বর্তমানে অনুভূতি-ফলব্যাক) ④ প্রশ্নে শিরোনাম-ইনপুট (≤200 — qa-form-প্যারিটি; বর্তমানে অটো-টাইটেল) ⑤ শাখা-অনুযায়ী প্রস্তাবিত-অডিয়েন্স ডিফল্ট। **পরের-এজেন্ট: session159 থেকে।**
+
+## session159-নোট (ইউজার-রিপোর্ট: মেসেঞ্জার ফরওয়ার্ড-মোডাল + সার্চে অ্যাভাটার-বিস্তার) — প্রিমিয়াম ফরওয়ার্ড + অ্যাভাটার-ডাইমেনশন-লক
+
+**ইউজার-রিপোর্ট:** মেসেজ-বাবলের ৩-ডট → ফরওয়ার্ড মোডালে নামের উপরে পুরো প্রোফাইল-ছবি বিশালাকার হয়ে মডাল ভেঙে যায়; মেসেঞ্জার-সার্চেও একই। স্পেক: ফিক্সড-সাইজ বৃত্তাকার অ্যাভাটার + লাইভ-সার্চ + প্রতি-সারি 'পাঠান' টগল — স্মুথ/প্রফেশনাল/প্রিমিয়াম।
+
+**🚨 রুট-কজ (দুই-স্তরে একই-প্যাটার্ন):**
+1. **ফরওয়ার্ড-মোডাল (messenger-actions.js):** JS-জেনারেটেড `<img>`-এ **ক্লাস ছিল না** — ফলব্যাক letter-span-এ কিন্তু `fwd-av fwd-av--txt` ছিল → `.fwd-av{38px;object-fit:cover}` কেবল ফলব্যাকে প্রযোজ্য → বাস্তব ছবি natural-width-এ (ইউজারের হাই-রেজ JPG; QA-তে 800×600 dummy) ফুল-স্ক্রিন।
+2. **সার্চ-ড্রপডাউন (দুই পেজেই):** `el.querySelector('img').outerHTML` ক্লোন + `.replace('class="','class="msr-avatar ')` — উৎস conv-item-এর `<img>`-এই **class অ্যাট্রিবিউট নেই** → replace **নো-অপ** → অ্যাভাটার-বিস্তার। (ইউজার-সার্চ-রেজাল্ট অক্ষত ছিল — সরাসরি class বসাত।)
+
+**ফিক্স + প্রিমিয়াম (৪-ফাইল):**
+1. `messenger-actions.js` — ① img-এ `class="fwd-av"` + escFwd() XSS-হার্ডেনড ইনিশিয়াল ② **মাল্টি-ফরওয়ার্ড**: প্রতি-সারিতে `.fwd-send` বাটন (পাঠান → fa-spin লোডিং → ✓ পাঠানো হয়েছে disabled) — fwdSentMap-স্টেটে মডাল খোলা রেখেই একাধিক টার্গেট ③ ফুটারে `#fwdSentCount` লাইভ-কাউন্টার (toBn-গার্ডেড বাংলা-সংখ্যা — session150-চুক্তি) ④ গ্রুপ-টার্গেটে fa-users আইকন-সার্কেল (আগে গ্রুপে খালি ফলব্যাক) ⑤ member_count-ও bnNum ⑥ pick-mode (fwdPickHandler) অক্ষত + নতুন keydown(Enter/Space) + row এখন div (nested-button-অবৈধতা এড়াতে) ⑦ open/close-এ fwdSentMap-রিসেট
+2. `messages-chat.ejs` — ফরওয়ার্ড-মোডাল ফুটার: কাউন্টার-স্প্যান (aria-live) + 'বাতিল'→'সম্পন্ন' (id fwdCancel অক্ষত); renderConvSearchResults: outerHTML-ক্লোন → src-থেকে-পুনর্নির্মাণ (class="msr-avatar" + onerror→/avatar/:peerId; গ্রুপে আইকন-সার্কেল); ডুপ্লিকেট-কমেন্ট-লাইন অপসারণ
+3. `messages-list.ejs` — renderConversationResults: একই পুনর্নির্মাণ (peer-id = el.dataset.peerId)
+4. `messenger.css` session159-EOF-ব্লক (টোকেন-শুধু, hex-০) — **(ক) defense-in-depth দ্বৈত-লক**: `.fwd-avwrap img{38px-lock}` + `.msr-row > img{40px-lock}` — ভবিষ্যতে ক্লাস-শূন্য img কখনো natural-width হতে পারবে না; (খ) avatar-ring + গ্রুপ-গ্রেডিয়েন্ট; (গ) .fwd-send ৩-স্টেট (hover/active-scale/is-loading/is-sent); (ঘ) .fwd-sent-count margin-right:auto (footer-বাটন-ডানে-অক্ষত); (ঙ) scrollbar-pollish + :focus-visible-রিং + reduced-motion; (চ) ≤480px টিউনিং
+5. `inspect-audit.mjs` — **স্টেল-রুল-ফিক্স (session১১৬-রীতি)**: settings-ট্যাব চেক `data-section×৬` প্রত্যাশা করত — কিন্তু session152-ক্যানোনিকাল /settings মাস্টার-ডিটেইলে গেছে (data-section=০, .st142-item×14/.st142-pane×14) → ক্যানোনিকাল-প্রথম + legacy-ফলব্যাক → **audit পুনরায় 100% সবুজ**
+
+**E2E-প্রমাণ (agent-browser, ismail @3200 আইসোলেটেড pristine):**
+- ফরওয়ার্ড-মোডাল: ২-টার্গেট উভয়ের img **38×38 cover 50%** ✓ (আগে: 800×600 natural) — পাঠান→'১ জনকে পাঠানো হয়েছে' ✓ দ্বিতীয়-টার্গেট→'২ জনকে...' ✓ (বাংলা-সংখ্যা) মডাল-খোলা-অক্ষত ✓ is-sent disabled ✓ is-done-রো ✓ লাইভ-সার্চ 'রিয়া'→১-রো ফিল্টার ✓ Escape-বন্ধ ✓ ফুটার 'সম্পন্ন' ✓
+- সার্ভার-সত্য: ফরওয়ার্ড-কপি তানভীর-কথোপকথনে পৌঁছেছে (HTML-প্রমাণ) ✓
+- সার্চ-ড্রপডাউন (দুই পেজেই): conv-রো img **40×40 cover 50% class=msr-avatar** ✓; letter-অ্যাভাটার (div.msr-avatar) রো-সঠিক ✓; হাইলাইট+designation-সাবটাইটেল অক্ষত ✓
+- 390px: h-overflow-শূন্য ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩ (মোডাল-ডেস্কটপ/চ্যাট-সার্চ/লিস্ট-সার্চ)
+- রিগ্রেশন: guard ✓ + inspect-audit **সব-সবুজ** (stale-রুল-ফিক্সসহ) + cursor 32/1 (seed-ভলিউম-artifact — stash-বেসলাইনে হুবহু-অভিন্ন-ফেইলসেট, delta=০) + node --check + EJS-compile ×২ + brace-০
+
+**গোটচা ×২:** ① sql.js-স্ট্যান্ডঅ্যালোন-স্ক্রিপ্টে UPDATE-এর পরে **saveDb() বাধ্যতামূলক** (module-এর `db` getter; `getDb` নেই) — না-দিলে in-memory-সুদ্ধ ফাইল-অপরিবর্তিত ② QA-কপি মূল-রিপোর থেকে স্বাধীন — মূল-রিপো-তে git stash করেও QA-ইনস্ট্যান্স-কোড বদলায় না (copy-time-স্ন্যাপশট)।
+
+**পরবর্তী-প্রথম-পছন্দ:** ① কার্সার-স্যুটের last-page hasMore-প্রত্যাশা seed-ভলিউম-ক্যালিব্রেশন ② ফরওয়ার্ড-মোডালে সাম্প্রতিক-সার্চ-মেমরি ③ মেসেঞ্জার-সার্চে গ্রুপ-সদস্য-নাম-ম্যাচিং ④ ফরওয়ার্ড-প্রিভিউ-কার্ড (মেসেজ-স্নিপেট মোডাল-টপে)। **পরের-এজেন্ট: session160 থেকে।**

@@ -436,11 +436,17 @@ section('৬', 'সেটিংস ও টাইপোগ্রাফি ইঞ�
     logFail('সেটিংস পেজ মিসিং', SET + ' নেই', 'সেটিংস ভিউ পুনরুদ্ধার করুন');
   } else {
     const st = read(SET) || '';
-    const tabs = (st.match(/data-section=/g) || []).length;
-    if (tabs >= 6) {
-      logPass('মাল্টি-সেকশন সেটিংস', `${tabs}টি সেকশন: প্রোফাইল/গোপনীয়তা/বিজ্ঞপ্তি/অ্যাকাউন্ট/নিরাপত্তা(2FA)/প্রদর্শন`);
+    // সেশন ১৫২-ক্যানোনিকাল: /settings মাস্টার-ডিটেইল — নেভ=.st142-item + প্যানে=.st142-pane (১২+১৩);
+    // সাব-ডিটেইল চুক্তি data-goto/data-detail; লিগ্যাসি ফ্ল্যাট-ট্যাব (data-section ×৬) ফলব্যাক (session১১৬-রীতি)
+    const panes = (st.match(/class="[^"]*st142-pane/g) || []).length;
+    const navs = (st.match(/class="[^"]*st142-item/g) || []).length;
+    const legacyTabs = (st.match(/data-section=/g) || []).length;
+    if (panes >= 6 && navs >= 6) {
+      logPass('মাল্টি-সেকশন সেটিংস', `মাস্টার-ডিটেইল (session১৫২-ক্যানোনিকাল): ${navs}টি নেভ-আইটেম / ${panes}টি প্যানে (legacy data-section=${legacyTabs})`);
+    } else if (legacyTabs >= 6) {
+      logPass('মাল্টি-সেকশন সেটিংস', `${legacyTabs}টি লিগ্যাসি data-section: প্রোফাইল/গোপনীয়তা/বিজ্ঞপ্তি/অ্যাকাউন্ট/নিরাপত্তা(2FA)/প্রদর্শন`);
     } else {
-      logFail('সেটিংস-ট্যাব অসম্পূর্ণ', `data-section=${tabs} (<6)`, 'settings-nav-এ ৬টি data-section পুনঃস্থাপন করুন');
+      logFail('সেটিংস-ট্যাব অসম্পূর্ণ', `st142-item=${navs}/st142-pane=${panes}/legacy data-section=${legacyTabs}`, 'settings-এ ৬টি নেভ-আইটেম+প্যানে (.st142-item/.st142-pane) বা ৬টি legacy data-section রাখুন');
     }
     if (st.includes('hashchange')) {
       logPass('ট্যাব-স্টেট URL-সিঙ্কিং', 'hashchange-লিসেনার — রিফ্রেশেও ট্যাব হারায় না (#hash-সিঙ্ক)');
