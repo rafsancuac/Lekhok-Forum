@@ -5,16 +5,11 @@
     (আগে 'অন্যান্য'-এ হারাত) ③ রুট-লেয়ারের ?type= ডিপ-লিংকে চিপ-প্রি-অ্যাকটিভেট (নিচে স্ক্রিপ্ট) %>
 <%
   const bn117 = (n) => String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[+d]);
-  const G117 = [
-    { key: 'mention',  label: 'ম্যানশন',         icon: 'fa-at',       types: ['mention'] },
-    { key: 'reply',    label: 'উত্তর ও মন্তব্য', icon: 'fa-comments', types: ['reply', 'comment', 'answer_accepted'] },
-    { key: 'reaction', label: 'প্রতিক্রিয়া',      icon: 'fa-heart',    types: ['like', 'reaction'] },
-    { key: 'message',  label: 'বার্তা ও কল',    icon: 'fa-envelope', types: ['message', 'call'] },
-    { key: 'follow',   label: 'অনুসরণ',         icon: 'fa-user-plus', types: ['follow'] },
-    /* 'other' = বাকি-সব (moderation/complaint/birthday/system/...) */
-    { key: 'other',    label: 'অন্যান্য',         icon: 'fa-bell',     types: [] }
-  ];
-  const gKeyOf117 = (t) => (G117.find(g => g.types.indexOf(t) !== -1) || G117[G117.length - 1]).key;
+  /* সেশন ১৪৪: G117/gKeyOf117 helpers/notif-groups.js-এ তোলা হলো (single-source) —
+     header.ejs-ড্রপডাউনের ?type= কুইক-চিপ (session-১২১-ঐচ্ছিক-বকেয়া) একই রেজিস্ট্রি
+     app.locals.notifGroups দিয়ে পায়। কী/লেবেল বদলাতে হলে সেই-ফাইলেই বদলান। */
+  const G117 = notifGroups.G117;
+  const gKeyOf117 = notifGroups.gKeyOf117;
   const gCount117 = {};
   items.forEach(n => { const k = gKeyOf117(n.type); gCount117[k] = (gCount117[k] || 0) + 1; });
 %>

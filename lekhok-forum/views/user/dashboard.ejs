@@ -36,6 +36,23 @@
         <% if (user) { %><a href="/dashboard?filter=following<%= sort === 'ranked' ? '&sort=ranked' : '' %>" class="filter-chip <%= filter === 'following' ? 'active' : '' %>"><i class="fas fa-user-friends"></i> অনুসরণ only</a><% } %>
       </div>
 
+      <%# সেশন ১৪৪: 'নতুন পোস্ট' লাইভ-পিল (FB-প্যারিটি) — র‍্যাংকড-মোডে রেন্ডারই হয় না
+          (র‍্যাংকিং স্কোর-ভিত্তিক — 'নতুন' ধারণা কেবল recent-ক্রমে সত্য)। anchor = টপ-আইটেমের
+          keyset-টুপল; /api/feed/fresh একই buildFeedSql-কার্সর-মোডে ফ্রেশ-কাউন্ট দেয়।
+          গোটচা-ফিক্স: অ্যাট্রিবিউট data-ff-* নামে — data-ts নাম দিলে main.js-এর
+          LekhokRelTime [data-ts]-পেইন্টার এ-কনটেইনারের ভেতরটা মুছে রিলেটিভ-টাইম বসিয়ে
+          দেয় (পিল-বাটন মুছে-যায়) — E2E-তে ধরা, চুক্তি-সংঘর্ষ-এড়ানো-রীতি। %>
+      <% if (feed.length && sort !== 'ranked') { %>
+        <div class="feed-fresh-wrap" id="feedFreshWrap" aria-live="polite"
+             data-ff-ts="<%= feed[0].created_at %>" data-ff-type="<%= feed[0].item_type %>" data-ff-id="<%= feed[0].id %>" data-ff-filter="<%= filter %>">
+          <button type="button" class="feed-fresh-pill" id="feedFreshBtn" hidden>
+            <span class="ffp-dot" aria-hidden="true"></span>
+            <span class="ffp-text" id="feedFreshText">নতুন পোস্ট</span>
+          </button>
+          <button type="button" class="feed-fresh-x" id="feedFreshX" hidden aria-label="নতুন পোস্টের সংকেত ১০ মিনিটের জন্য সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+        </div>
+      <% } %>
+
       <%# সেশন ১০০ (রোডম্যাপ-০৮): সর্ট-টগল — সর্বশেষ|জনপ্রিয় (time-decay র‍্যাংকড-ফিড) %>
       <div class="feed-sort-bar" role="tablist" aria-label="ফিড সাজানোর ধরন">
         <a href="/dashboard<%= filter !== 'all' ? '?filter=' + filter : '' %>" class="feed-sort-btn <%= sort !== 'ranked' ? 'active' : '' %>" role="tab" aria-selected="<%= sort !== 'ranked' ? 'true' : 'false' %>"><i class="fas fa-clock"></i> সর্বশেষ</a>
@@ -254,6 +271,79 @@
   <script src="/assets/js/comment-tools.js?v=<%= AV %>"></script>
   <script src="/assets/js/continue-reading.js?v=<%= AV %>" defer></script>
   <% if (user) { %><script src="/assets/js/composer-modal.js?v=<%= AV %>"></script><% } %>
+  <%# সেশন ১৪৪: 'নতুন পোস্ট' পিল-ইঞ্জিন — গার্ডেড IIFE (পেজ-নির্দিষ্ট; অন্য-কোডের সাথে নির্ভরশীলতা শূন্য)।
+      পোল: প্রথম ৮সে, পরে ৬০সে; ট্যাব-লুকানো থাকলে স্কিপ + visibilitychange-এ ভিজিবল-কিক (১৫সে-থ্রটল)।
+      ক্লিক = টপে-গিয়ে reload (scrollRestoration=manual — FB-প্যাটার্ন); × = ১০মিনিট-স্নুজ (in-memory)।
+      ব্যর্থতায় নীরব-ডিগ্রেড — পোলিং-বন্ধ ছাড়া কিছুই ভাঙে না। %>
+  <script>
+    (function () {
+      'use strict';
+      var wrap = document.getElementById('feedFreshWrap');
+      if (!wrap) return;
+      var btn = document.getElementById('feedFreshBtn');
+      var txt = document.getElementById('feedFreshText');
+      var x = document.getElementById('feedFreshX');
+      if (!btn || !txt || !x) return;
+      var ts = String(wrap.getAttribute('data-ff-ts') || '');
+      var type = String(wrap.getAttribute('data-ff-type') || '');
+      var id = parseInt(wrap.getAttribute('data-ff-id'), 10) || 0;
+      if (!ts || !type || !id) return; /* অসম্পূর্ণ anchor — ইঞ্জিন নীরবে বন্ধ */
+      var filter = String(wrap.getAttribute('data-ff-filter') || 'all');
+      var bn140 = function (s) { return String(s).replace(/[0-9]/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+      var snoozeUntil = 0;
+      var lastRun = 0;
+      var POLL_MS = 60000;
+      var FIRST_MS = 8000;
+      var busy = false;
+      function freshUrl() {
+        return '/api/feed/fresh?cursor=' + encodeURIComponent(ts) +
+          '&cursorType=' + encodeURIComponent(type) +
+          '&cursorId=' + encodeURIComponent(id) +
+          '&filter=' + encodeURIComponent(filter);
+      }
+      function showPill(n, capped) {
+        txt.textContent = bn140(n) + (capped ? '+' : '') + ' টি নতুন পোস্ট';
+        btn.hidden = false;
+        x.hidden = false;
+        wrap.classList.add('on');
+      }
+      function hidePill() {
+        btn.hidden = true;
+        x.hidden = true;
+        wrap.classList.remove('on');
+      }
+      function poll() {
+        if (busy) return;
+        if (document.hidden) return;
+        if (Date.now() < snoozeUntil) return;
+        busy = true;
+        lastRun = Date.now();
+        fetch(freshUrl(), { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) {
+            busy = false;
+            if (!d || !d.ok) return;
+            if (d.fresh > 0) showPill(d.fresh, !!d.capped);
+            else hidePill();
+          })
+          .catch(function () { busy = false; });
+      }
+      btn.addEventListener('click', function () {
+        try { history.scrollRestoration = 'manual'; } catch (_) {}
+        window.scrollTo(0, 0);
+        window.location.reload();
+      });
+      x.addEventListener('click', function () {
+        snoozeUntil = Date.now() + 10 * 60 * 1000;
+        hidePill();
+      });
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && Date.now() - lastRun > 15000) poll();
+      });
+      setTimeout(poll, FIRST_MS);
+      setInterval(poll, POLL_MS);
+    })();
+  </script>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>

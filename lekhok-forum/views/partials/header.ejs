@@ -279,6 +279,19 @@
               <span>বিজ্ঞপ্তি</span>
               <a href="/notifications" class="notif-see-all">সব দেখুন</a>
             </div>
+            <%# সেশন ১৪৪: ?type= কুইক-ফিল্টার-চিপ (session-১২১-ঐচ্ছিক-বকেয়া) —
+                রেজিস্ট্রি helpers/notif-groups.js (app.locals.notifGroups) — ফুল-পেজের
+                server-side প্রি-ফিল্টার-হোয়াইটলিস্টের সাথে সমলয়। খাঁটি-লিঙ্ক (noscript-নিরাপদ);
+                ড্রপডাউনের ভেতরের লাইভ-লিস্ট অপরিবর্তিত (লিঙ্কে-গেলেই প্রি-ফিল্টারড ফুল-পেজ)। %>
+            <% if (notifGroups && notifGroups.G117) { %>
+              <div class="nq-chiprow" role="navigation" aria-label="বিজ্ঞপ্তির ধরন-অনুযায়ী দ্রুত ফিল্টার">
+                <% notifGroups.G117.forEach(function (g140) { if (!g140.types.length) return; %>
+                  <a class="nq-chip" href="/notifications?type=<%= g140.key %>" title="<%= g140.label %> বিজ্ঞপ্তি দেখুন">
+                    <i class="fas <%= g140.icon %>" aria-hidden="true"></i><span><%= g140.label %></span>
+                  </a>
+                <% }) %>
+              </div>
+            <% } %>
             <div id="notifList">
               <% if (typeof recentNotifs !== 'undefined' && recentNotifs && recentNotifs.length) { %>
                 <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', reaction: 'fa-heart', reply: 'fa-reply', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', answer_accepted: 'fa-circle-check', call: 'fa-phone-slash' }; %>

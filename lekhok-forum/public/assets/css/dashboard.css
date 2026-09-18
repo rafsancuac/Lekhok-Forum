@@ -277,3 +277,19 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .crx-link:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:2px;border-radius:10px}
 @media (max-width:640px){.crx-last-chip{font-size:.58rem;padding:2px 7px;gap:4px}.crx-row.is-last{padding:9px;margin:2px -9px}}
 @media (prefers-reduced-motion:reduce){.crx-last-chip::before{animation:none}.crx-last-chip{transition:none}}
+
+/* ── সেশন ১৪৪: ফিড 'নতুন পোস্ট' লাইভ-পিল (FB-প্যারিটি) — টোকেন-শুধু, হেক্স-শূন্য ──
+   wrap ডিফল্ট লুকানো (JS .on + [hidden] টগল করে); পিল = ব্র্যান্ড-গ্রেডিয়েন্ট-টোনাল,
+   পালস-ডট, hover-lift, focus-visible রিং; × = ১০মিনিট-স্নুজ। */
+.feed-fresh-wrap{display:none;align-items:center;justify-content:center;gap:8px;margin:0 0 10px}
+.feed-fresh-wrap.on{display:flex}
+.feed-fresh-pill{display:inline-flex;align-items:center;gap:9px;padding:8px 20px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-light) 100%);color:var(--on-accent);font-size:.88rem;font-weight:600;cursor:pointer;box-shadow:0 6px 18px -6px var(--accent-glow);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}
+.feed-fresh-pill:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 10px 22px -8px var(--accent-glow)}
+.feed-fresh-pill:focus-visible{outline:none;box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent-dark)}
+.ffp-dot{width:8px;height:8px;border-radius:50%;background:var(--on-accent);opacity:.95;animation:ffpPulse140 1.6s ease-in-out infinite}
+@keyframes ffpPulse140{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.35);opacity:.55}}
+.feed-fresh-x{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:1px solid var(--border);border-radius:50%;background:var(--bg-card);color:var(--text-muted);cursor:pointer;transition:color .18s,border-color .18s,background .18s}
+.feed-fresh-x:hover{color:var(--text);border-color:var(--text-muted);background:var(--bg)}
+.feed-fresh-x:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+@media (max-width:640px){.feed-fresh-pill{padding:7px 16px;font-size:.84rem}}
+@media (prefers-reduced-motion:reduce){.ffp-dot{animation:none}.feed-fresh-pill,.feed-fresh-x{transition:none}}

@@ -2236,3 +2236,13 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .feed-acc-badge135,.qa-answers-list{transition:none}
   .qa-answers-list.qa-swap-fade135{opacity:1}
 }
+
+/* ── সেশন ১৪৪: নোটিফ-ড্রপডাউন ?type= কুইক-ফিল্টার-চিপ (session-১২১-ঐচ্ছিক-বকেয়া) ──
+   রেজিস্ট্রি helpers/notif-groups.js; খাঁটি-লিঙ্ক (noscript-নিরাপদ); টোকেন-শুধু। */
+.nq-chiprow{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 10px;border-bottom:1px solid var(--border)}
+.nq-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text-muted);font-size:.78rem;font-weight:600;line-height:1.4;text-decoration:none;transition:background .18s,color .18s,border-color .18s}
+.nq-chip i{font-size:.72rem}
+.nq-chip:hover{background:var(--accent-soft);color:var(--accent-dark);border-color:var(--accent-dark)}
+.nq-chip:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+@media (max-width:640px){.nq-chiprow{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px}.nq-chiprow::-webkit-scrollbar{display:none}.nq-chip{flex:0 0 auto}}
+@media (prefers-reduced-motion:reduce){.nq-chip{transition:none}}

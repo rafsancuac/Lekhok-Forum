@@ -94,6 +94,10 @@ app.locals.jesc = (v) => String(JSON.stringify(v === undefined ? null : v))
   .replace(/\u2028/g, '\\u2028')
   .replace(/\u2029/g, '\\u2029');
 
+// ── সেশন ১৪৪: বিজ্ঞপ্তি-গ্রুপ-রেজিস্ট্রি (single-source) — ফুল-পেজ (notifications.ejs)
+// ও হেডার-ড্রপডাউন (header.ejs ?type= কুইক-চিপ) দুই-জায়গাতেই একই কী/লেবেল।
+app.locals.notifGroups = require('./helpers/notif-groups');
+
 // ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
 // লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।
 // প্রোডাকশনে SANDBOX_PORT সেট না থাকায় স্ক্রিপ্ট রেন্ডারই হয় না।

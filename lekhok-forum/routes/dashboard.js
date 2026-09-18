@@ -82,9 +82,17 @@ const FEED_POOL_CAP = 150; // ranked পুল — সর্বশেষ ১৫�
 //   T > ct → টাই-সেকেন্ডের এই-শাখার সব-আইটেম কার্সারের আগে → শুধু ts < cur
 //   T = ct → টাই-সেকেন্ডে id-টাই-ব্রেকার: (ts < cur OR (ts = cur AND id < curId))
 //   T < ct → টাই-সেকেন্ডের এই-শাখার সব-আইটেম কার্সারের পরে → ts <= cur
-function feedCursorCond(branchType, tsCol, idCol, cursor) {
+function feedCursorCond(branchType, tsCol, idCol, cursor, freshMode) {
   if (!cursor || !cursor.ts || !cursor.type) return '';
   const ct = String(cursor.type);
+  /* সেশন ১৪৪: freshMode=true = দিক-মিরর — 'কার্সরের চেয়ে নতুন' (DESC-ক্রমে
+     কার্সরের আগে-সর্ট) — /api/feed/fresh-এর জন্য। legacy পেজিনেশন = পুরনো-দিক,
+     freshMode-বিহীন কলে SQL হুবহু আগের মতোই (অপরিবর্তিত-চুক্তি)। */
+  if (freshMode) {
+    if (branchType > ct) return ` AND ${tsCol} >= ?`;
+    if (branchType === ct) return ` AND (${tsCol} > ? OR (${tsCol} = ? AND ${idCol} > ?))`;
+    return ` AND ${tsCol} > ?`;
+  }
   if (branchType > ct) return ` AND ${tsCol} < ?`;
   if (branchType === ct) return ` AND (${tsCol} < ? OR (${tsCol} = ? AND ${idCol} < ?))`;
   return ` AND ${tsCol} <= ?`;
@@ -97,7 +105,7 @@ function feedCursorParams(branchType, cursor) {
   return [cursor.ts];
 }
 
-function buildFeedSql(filter, me, limit, offset, ranked, cursor) {
+function buildFeedSql(filter, me, limit, offset, ranked, cursor, freshMode) {
   const lim = Math.max(1, Math.min(30, limit | 0 || 30));
   const off = Math.max(0, offset | 0);
   const ORDER = ' ORDER BY created_at DESC, item_type DESC, id DESC'; // ১০৪: নির্ধারণী-টাই-ব্রেকার
@@ -133,9 +141,9 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor) {
     WHERE dc.content_type = 'activity' AND dc.published = 1`;
 
   // ১০৪: শাখা-প্রতি কার্সার-কন্ডিশন + প্যারাম (শাখা-যোগদান-ক্রমেই প্যারাম-ক্রম)
-  const cArt = feedCursorCond('article', 'p.published_at', 'p.id', cursor);
-  const cQues = feedCursorCond('question', 'p.published_at', 'p.id', cursor);
-  const cAct = feedCursorCond('activity', 'dc.created_at', 'dc.id', cursor);
+  const cArt = feedCursorCond('article', 'p.published_at', 'p.id', cursor, freshMode);
+  const cQues = feedCursorCond('question', 'p.published_at', 'p.id', cursor, freshMode);
+  const cAct = feedCursorCond('activity', 'dc.created_at', 'dc.id', cursor, freshMode);
   const pArt = feedCursorParams('article', cursor);
   const pQues = feedCursorParams('question', cursor);
   const pAct = feedCursorParams('activity', cursor);
@@ -443,11 +451,9 @@ router.get('/dashboard', async (req, res) => {
 // সেশন ১০৪ (রোডম্যাপ-০৫): OFFSET→keyset — recent-মোডে ?cursor=<ts>&cursorType=<type>&cursorId=<id>
 // গ্রহণ করে (last.created_at/item_type/id টুপল); উত্তরে nextCursor ফেরত। OFFSET-প্যারাম
 // অক্ষত (পুরনো-ক্যাশড ক্লায়েন্ট + ranked-মোডের ফলব্যাক)। ranked পুল-স্লাইসেই থাকে।
-router.get('/dashboard/more', async (req, res) => {
-  const me = req.session.user || null;
-  const filter = me && req.query.filter === 'following' ? 'following' : (['article', 'question', 'activity'].includes(req.query.filter) ? req.query.filter : 'all');
-  const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
-  const sort = (req.query.sort === 'ranked' || req.query.sort === 'relevant') ? 'ranked' : 'recent'; // সেশন-১০০ (০৮) + ১০২ ('relevant' অ্যালায়াস) + ১০৪ keyset
+// সেশন ১৪৪: কার্সার-পার্স এখন /dashboard/more ও /api/feed/fresh দুই-এন্ডপয়েন্টেই
+// একই parseFeedCursor হেল্পার দিয়ে (single-source — নরমালাইজেশন কখনো ভিন্ন হবে না)।
+function parseFeedCursor(req) {
   // ১০৪: কার্সার-পার্স — ts নরমালাইজ (T/ফ্র্যাকশন/Z-কেটা), type হোয়াইট-লিস্ট, id পূর্ণসংখ্যা;
   // অসম্পূর্ণ কার্সার → null (OFFSET-ফলব্যাক) — কখনোই ৫০০ নয়।
   let cursor = null;
@@ -458,6 +464,15 @@ router.get('/dashboard/more', async (req, res) => {
     const id = parseInt(req.query.cursorId, 10) || 0;
     if (ts.length === 19 && type && id > 0) cursor = { ts, type, id };
   }
+  return cursor;
+}
+
+router.get('/dashboard/more', async (req, res) => {
+  const me = req.session.user || null;
+  const filter = me && req.query.filter === 'following' ? 'following' : (['article', 'question', 'activity'].includes(req.query.filter) ? req.query.filter : 'all');
+  const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+  const sort = (req.query.sort === 'ranked' || req.query.sort === 'relevant') ? 'ranked' : 'recent'; // সেশন-১০০ (০৮) + ১০২ ('relevant' অ্যালায়াস) + ১০৪ keyset
+  const cursor = parseFeedCursor(req);
   if (!cursor && offset > 300) return res.json({ ok: true, html: '', hasMore: false, nextOffset: offset }); // রানওয়ে-গার্ড (কার্সার-মোডে অপ্রাসঙ্গিক — টুপল-বাউন্ড)
   try {
     let feed, hasMore;
@@ -490,6 +505,30 @@ router.get('/dashboard/more', async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({ ok: false, error: 'server' });
+  }
+});
+
+// ── সেশন ১৪৪: ফিড 'নতুন পোস্ট' পিল-এর ফ্রেশ-কাউন্ট API (FB-প্যারিটি) ────────────
+// GET /api/feed/fresh?cursor=<ts>&cursorType=<type>&cursorId=<id>&filter=<f>
+// → { ok: true, fresh: N, capped: bool }
+// বর্তমান-ফিডের টপ-আইটেমের keyset-টুপলের চেয়ে নতুন কতগুলো আইটেম এসেছে —
+// buildFeedSql-এর কার্সর-মোড পুনঃব্যবহারে (visibility/ফিল্টার/লগইন-নিয়ম /dashboard-এর
+// সাথে হুবহু অভিন্ন — আলাদা SQL নেই, তাই ড্রিফট-ঝুঁকি শূন্য)। ক্যাপ ৩০ (৩০+ দেখায়)।
+// কার্সর-বিহীন/অসম্পূর্ণ কল → fresh:0 (কখনোই ৫০০ নয় — পিল-ইঞ্জিন নীরবে থেমে যাবে)।
+router.get('/api/feed/fresh', async (req, res) => {
+  try {
+    const me = req.session.user || null;
+    const filter = me && req.query.filter === 'following' ? 'following' : (['article', 'question', 'activity'].includes(req.query.filter) ? req.query.filter : 'all');
+    const cursor = parseFeedCursor(req);
+    if (!cursor) return res.json({ ok: true, fresh: 0, capped: false });
+    const FRESH_CAP = 30;
+    const { sql, params } = buildFeedSql(filter, me, FRESH_CAP, 0, false, cursor, true);
+    const rows = await db.prepare(sql).all(...params);
+    const fresh = Math.min(rows.length, FRESH_CAP);
+    res.set('Cache-Control', 'no-store');
+    res.json({ ok: true, fresh, capped: rows.length > FRESH_CAP });
+  } catch (e) {
+    res.json({ ok: true, fresh: 0, capped: false }); // নীরব-ডিগ্রেড — পিল-নয়জ কখনোই ৫০০ নয়
   }
 });
 
