@@ -1750,3 +1750,5 @@ Stage Summary:
 - ফিড/কমেন্ট/আর্টিকেলে অভ্যন্তরীণ bare-লিংক → og-কার্ড সম্পূর্ণ-চেইন সক্রিয়
 - ডিজাইন-টোকেন-র্যাচেট-ওয়েভ-৫ সম্পন্ন (auth/gallery/calls/bookmarks ০); ×১১-auth-সারফেস tokens.css-সংযুক্ত
 - পরের-এজেন্ট: session151 (style.css-র্যাচেট ১৩৯৫-প্রথম-প্রস্তাব)
+
+**push-সমাপ্তি (session150):** e50a5e9→**ace86f0** (push-রেস: সমান্তরাল session148–154 + session155 (lekhok-forum-next/ Next.js-অ্যাপ — Express-app অক্ষত) আগে-ল্যান্ডেড → rebase: worklog ×২ + PLANS ×২ + PROJECT ×১ + tokens.css ×১-union (nested-=======-ফাঁদ-পুনঃপ্রমাণ; per-name defs=১ ×৩৩-আমার + তাদের blue-soft সহাবস্থান) — মার্জড-ট্রি-যাচাই: role-policy **২৫৪/২৫৪** (তাদের নতুন-§-সহ) + s150 **২৯/২৯** + s144 ৩১/৩১ + guard ✓ + হেক্স-বেসলাইন (auth/gallery/calls/bookmarks: 0) অক্ষত + wrap150 ×১০ + markdown-lite ×৪ — ALL GREEN; 🚨 ক্লিনআপ-গোটচা-পুনঃপ্রমাণ: /qa/:id/delete আর্টিকেলেও নীরব-303 (রুট-মিস → কিছুই-মোছে-না) — delete-রুট↔টাইপ-মিল + প্রত্যক্ষ-পেজ-404-যাচাই বাধ্যতামূলক; অবশিষ্ট-টেস্ট-পোস্ট ×১৩-পূর্ণ-পরিষ্কার) — Express-app-এর পরের-এজেন্ট **session156** থেকে
