@@ -579,9 +579,13 @@ router.get('/articles/:id', async (req, res) => {
   await Promise.all(flatComments.map(c =>
     getReactionSummary('comment_id', c.id, myId).then(r => _rx72.set(c.id, r))));
   const comments = [];
+  // সেশন ১৩৫: parent-chain-চিপ আর্টিকেল-SSR-প্যারিটি — রিপ্লাইয়ের replyTo (session134-বকেয়া ④)।
+  // canonical CommentItem c.replyTo-ফলব্যাকে চিপ আঁকে; ক্লিক-ইঞ্জিন + CSS session134-ব্লক স্বয়ংক্রিয়।
+  // অনাথ/টপ-লেভেলে replyTo নেই → চিপ-শূন্য (সাইলেন্ট-ডিগ্রেড, qa/JSON-পাথের চুক্তি-অভিন্ন)।
+  const _nameA135 = new Map(flatComments.map(fc => [fc.id, displayName92(fc) || fc.pen_name || fc.full_name || 'সদস্য']));
   for (const c of flatComments.filter(c => !c.parent_id)) {
     const replies = flatComments.filter(r => r.parent_id === c.id)
-      .map(r => ({ ...r, reaction: _rx72.get(r.id) }));
+      .map(r => ({ ...r, reaction: _rx72.get(r.id), replyTo: (r.parent_id && _nameA135.get(r.parent_id)) ? { id: r.parent_id, name: _nameA135.get(r.parent_id) } : null }));
     comments.push({ ...c, reaction: _rx72.get(c.id), replies });
   }
 

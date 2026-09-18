@@ -49,7 +49,7 @@
       <span class="cmt-badge"<% if (!_rx.total) { %> hidden<% } %> title="প্রতিক্রিয়া"><% if (_rx.total) { %><span class="cmt-badge-emoji">👍</span><span class="cmt-badge-count"><%= _rx.total %></span><% } %></span>
     </div>
     <div class="fc-meta">
-      <span class="fc-time" data-ts="<%= new Date(c.created_at).toISOString() %>"><%= new Date(c.created_at).toLocaleString('bn-BD') %></span>
+      <span class="fc-time" data-ts="<%= new Date(c.created_at).toISOString() %>" data-cmt-permalink="<%= c.id %>" role="link" tabindex="0" title="সময়ে ক্লিক করলে মন্তব্যের লিংক কপি হবে"><%= new Date(c.created_at).toLocaleString('bn-BD') %></span>
       <% if (_me) { %>
         <%# রুল-২②: লাইক-টেক্সট + হোভারে FB-৬-ইমোজি প্যালেট %>
         <span class="cmt-like-wrap">

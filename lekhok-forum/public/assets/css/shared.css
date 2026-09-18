@@ -255,7 +255,6 @@
 @media (hover:none){#notifDropdown .notif-x{opacity:1}}
 @media (prefers-reduced-motion:reduce){#notifDropdown .notif-item,#notifDropdown .notif-x{transition:none}}
 /* EOF-MARKER: session133-toast-kbd-scroll */
-<<<<<<< Updated upstream
 /* ── session134: parent-chain-চিপ + ড্রয়ার-ইনস্ট্যান্ট-প্রিভিউ + চেইন-ফ্ল্যাশ ──
    FB-প্যারিটি: রিপ্লাই-বাবলে "↩ {নাম}" টার্গেট-চিপ (ডিজাইন-টোকেন-শুধু);
    ক্লিকে প্যারেন্ট-বাবলে smooth-scroll + ফ্ল্যাশ-রিং। চিপটি bubble-header-এ
@@ -279,7 +278,6 @@
 .fc-list.fc-swap-in{animation:fcSwapIn134 .28s ease both}
 @media (prefers-reduced-motion:reduce){.fc-instaprev,.fc-list.fc-swap-in,.fc-bubble.cmt-chain-flash{animation:none}.cmt-chain{transition:none}}
 /* EOF-MARKER: session134-chain-chip */
-=======
 
 /* ── session136: reconcile swap-fade (CSS-side — comment-tools.js ইঞ্জিন-অক্ষত) ──
    innerHTML-সোয়াপ (QA থ্রেড/আর্টিকেল-কমেন্ট/ফিড-ড্রয়ার + প্রিভিউ-সিঙ্ক) হার্ড-কাট
@@ -308,4 +306,26 @@
   .qa-answers-list > *,.comments-list[data-post-link] > *,.fc-drawer .fc-list > *,.fc-preview > *{animation:none}
 }
 /* EOF-MARKER: session136-swap-fade */
->>>>>>> Stashed changes
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   সেশন ১৩৫ — কমেন্ট-পারমালিঙ্ক + পলিশ (session134-বকেয়া-সিরিজের ধারাবাহিকতা)
+   নিয়ম: টোকেন-শুধু (var(--lf-*)/var(--accent-*)) — নতুন-হেক্স-শূন্য (hex-র্যাচেট)।
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* ① .fc-time পারমালিঙ্ক-অ্যাফোর্ডেন্স (FB-টাইমস্ট্যাম্প-চুক্তি: ক্লিকে লিংক-কপি) —
+   dotted-আন্ডারলাইন = ইন্টারঅ্যাক্টিভ-সংকেত, হোভারে ব্র্যান্ড-গ্রিন */
+.fc-time[data-cmt-permalink]{cursor:pointer;border-bottom:1px dotted var(--lf-ui-border-strong);transition:color var(--lf-transition,.18s ease),border-color var(--lf-transition,.18s ease)}
+.fc-time[data-cmt-permalink]:hover{color:var(--lf-brand-primary);border-bottom-color:var(--lf-brand-primary)}
+.fc-time[data-cmt-permalink]:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:2px;border-radius:3px}
+/* ② কমেন্ট-ড্রয়ার কাস্টম-স্ক্রলবার — #notifList-চুক্তির হুবহু প্যারিটি (long-list-নিয়ম) */
+.fc-list{scrollbar-color:var(--lf-ui-border-strong) transparent}
+.fc-list::-webkit-scrollbar{width:6px}
+.fc-list::-webkit-scrollbar-track{background:transparent}
+.fc-list::-webkit-scrollbar-thumb{background:var(--lf-ui-border-strong);border-radius:var(--lf-radius-chip)}
+.fc-list::-webkit-scrollbar-thumb:hover{background:var(--lf-text-tertiary)}
+/* ③ নোটিফিকেশন-ড্রপডাউন আনরিড-পলিশ — ডান-প্রান্ত গ্রেডিয়েন্ট-টিন্ট (টিন্ট→স্বচ্ছ)
+   + অপঠিত-ডটে সফট-গ্লো রিং (টোকেন-রিইউজ, নতুন-রঙ-শূন্য) */
+#notifList .notif-item.unread{background:linear-gradient(90deg,var(--accent-soft),transparent 72%)}
+#notifList .notif-item.unread:hover{background:linear-gradient(90deg,var(--accent-glow),transparent 72%)}
+#notifList .notif-dot{box-shadow:0 0 0 3px var(--accent-glow)}
+@media (prefers-reduced-motion:reduce){.fc-time[data-cmt-permalink]{transition:none}}
+/* EOF-MARKER: session135-permalink-polish */

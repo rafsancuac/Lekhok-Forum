@@ -365,7 +365,7 @@
       html += '</div></span>' +
             '<button type="button" class="fc-reply-btn" data-reply-to="' + c.id + '" data-reply-name="' + esc(c.author_name) + '">উত্তর দিন</button>';
     }
-    html += '<span class="fc-time">' + relTime(c.created_at) + '</span>';
+    html += '<span class="fc-time" data-cmt-permalink="' + c.id + '" title="সময়ে ক্লিক করলে মন্তব্যের লিংক কপি হবে">' + relTime(c.created_at) + '</span>';
 
     if (AUTHED) {
       html += '<span class="fc-menu-wrap">' +
@@ -431,6 +431,52 @@
     try { tgt.scrollIntoView({ behavior: _rm131 ? 'auto' : 'smooth', block: 'center' }); } catch (_) { tgt.scrollIntoView(); }
     flashTarget131(tgt);
     try { if (history && history.replaceState) history.replaceState(null, '', '#fc-c' + tid); } catch (_) {}
+  });
+
+  // ── সেশন ১৩৫: কমেন্ট-পারমালিঙ্ক (FB-প্যারিটি) — .fc-time[data-cmt-permalink] ক্লিকে
+  // ঐ মন্তব্যের ক্যানোনিকাল-URL কপি + বাবল-ফ্ল্যাশ + হ্যাশ-আপডেট। তিন-সারফেস ডেলিগেটেড
+  // (ফিড-ড্রয়ার/আর্টিকেল/QA — সব canonical CommentItem চুক্তিতে data-cmt-permalink আসে)।
+  // keyboard: Enter/Space (role=link + tabindex=0 — aria-চুক্তি)।
+  function permalinkCopy135(url, ok) {
+    if (window.showToast) { showToast(ok ? 'লিংক কপি হয়েছে ✓' : 'কপি সম্ভব হয়নি', ok ? 'success' : 'error'); return; }
+  }
+  function permalinkGo135(t) {
+    var cid = parseInt(t.getAttribute('data-cmt-permalink'), 10);
+    if (!Number.isInteger(cid) || cid <= 0) return;
+    var item = t.closest('[data-cmt-id]') || t.closest('[data-cid]') || t.closest('.fc-item, .cmt-item');
+    /* post-link চুক্তি: রুটে data-post-link (canonical) — ফলব্যাকে বর্তমান-পাথ */
+    var base = (item && item.getAttribute('data-post-link')) || (t.closest('[data-post-link]') && t.closest('[data-post-link]').getAttribute('data-post-link')) || location.pathname;
+    var url;
+    try { url = location.origin + base + '#fc-c' + cid; } catch (_) { url = base + '#fc-c' + cid; }
+    try { if (history && history.replaceState) history.replaceState(null, '', '#fc-c' + cid); } catch (_) {}
+    if (item) flashTarget131(item);
+    var done = function (ok) { permalinkCopy135(url, ok); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { done(true); }, function () { permalinkLegacy135(url, done); });
+    } else permalinkLegacy135(url, done);
+  }
+  function permalinkLegacy135(url, done) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = url; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand('copy');
+      ta.remove(); done(ok);
+    } catch (_) { done(false); }
+  }
+  document.addEventListener('click', function (e) {
+    var pt = e.target.closest('.fc-time[data-cmt-permalink]');
+    if (!pt) return;
+    e.preventDefault();
+    permalinkGo135(pt);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var pt = e.target.closest ? e.target.closest('.fc-time[data-cmt-permalink]') : null;
+    if (!pt) return;
+    e.preventDefault();
+    permalinkGo135(pt);
   });
 
   function syncPreview(drawer, comments, total) {
@@ -981,7 +1027,7 @@
           '<span class="cmt-badge" hidden title="প্রতিক্রিয়া"></span>' +
         '</div>' +
         '<div class="fc-meta">' +
-          '<span class="fc-time" data-ts="' + new Date().toISOString() + '">এইমাত্র</span>' +
+          '<span class="fc-time" data-ts="' + new Date().toISOString() + '" data-cmt-permalink="' + esc(id) + '" title="সময়ে ক্লিক করলে মন্তব্যের লিংক কপি হবে">এইমাত্র</span>' +
           '<span class="cmt-like-wrap">' +
             '<button type="button" class="fc-act cmt-like" data-cmt-react-toggle="' + esc(id) + '" data-mine="" aria-label="প্রতিক্রিয়া দিন">লাইক</button>' +
             optPaletteHtml(id) +

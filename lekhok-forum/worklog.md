@@ -1484,3 +1484,19 @@ Task: অবস্থা-মূল্যায়ন + agent-browser QA → স�
 - **গোটচা-নতুন:** টেস্ট-ক্লিনআপ title-grep → অবশ্যই `rsxd-title">`-অ্যাঙ্কর; in-memory-DB রিস্টোর API-দিয়েই; রেজেক্স-প্যাচে ternary-প্রেসিডেন্স (পুরো-লাইন-পুনর্লিখন নিরাপদ)
 - **পরবর্তী-প্রস্তাব:** >১০সে-ফেচ-টাইমআউট-অপশন; main.js-পার্স-রিগ্রেশন-চেক role-policy-তে; হিরোতে navigator.share; series-stats-এ dupes-মেট্রিক
 - **রিমাইন্ডার:** push-এর আগে fetch+rebase (প্যারালাল-রেস); doc-union-মার্জ; RP_PORT; boot-srv.sh; পরবর্তী-এজেন্ট **session135** লেবেল থেকে
+
+---
+
+## Session 135 (cron-r14) — কমেন্ট-পারমালিঙ্ক + আর্টিকেল-চিপ-প্যারিটি + নোটিফ-রিস্টোর-রি-পেইন্ট
+
+**বেসলাইন-QA:** c7fefee (0-behind), ৩-সার্ভিস-সুস্থ; agent-browser-সুইপে বাগ-শূন্য (প্যালেট/ব্যাজ/টগল/dupFixed/390px/কনসোল সব-গ্রিন; `[m`-ANSI-স্ট্রিপে মিথ্যা 'metaine]-সিনট্যাক্স-ভয় নষ্ট — node --check EXIT=0-ই সত্য)।
+
+**ইমপ্ল (৫-ফাইল, +83/-5):**
+1. **কমেন্ট-পারমালিঙ্ক (নতুন ফিচার, FB-টাইমস্ট্যাম্প প্যারিটি):** CommentItem.ejs fc-time→data-cmt-permalink+role=link+tabindex; comment-tools.js ডেলিগেটেড ক্লিক+keydown ইঞ্জিন (clipboard→execCommand-ফলব্যাক, flashTarget131-রিইউজ, replaceState-হ্যাশ, toast); JS-পেইন্টার ×২-এ attr-প্যারিটি; CSS অ্যাফোর্ডেন্স (dotted→brand-hover→focus-ring)।
+2. **আর্টিকেল-চিপ-প্যারিটি (session134-④):** social.js /articles/:id reply-ম্যাপে replyTo (displayName92-ম্যাপ) — আর্টিকেল-রিপ্লাইয়ে '↩ নাম' চিপ SSR-লাইভ।
+3. **নোটিফ-ফুল-পেজ restore-রি-পেইন্ট (session134-③):** notifications.ejs undo-পাথে LekhokRelTime.render(list) + .notif-page-time span-এ data-ts (rel119-প্রাইমারি-পেইন্ট অক্ষুণ্ণ; title Dhaka-ক্যানোনিকাল)।
+4. **স্টাইল (session135-ব্লক):** fc-list কাস্টম-স্ক্রলবার + #notifList আনরিড গ্রেডিয়েন্ট-টিন্ট/ডট-গ্লো — টোকেন-শুধু, hex-শূন্য।
+
+**E2E:** ফিড-হ্যাশ+toast+ফ্ল্যাশ ✓ Enter-কী ✓ আর্টিকেল SSR-চিপ→18 ✓ টপ-চিপ-শূন্য ✓ নোটিফ STALE-MARKER→'এইমাত্র'+Dhaka-টাইটেল ✓ canonical-insert attr-প্রচার ✓ রিঅ্যাকশন-টগল ✓ dupFixed ✓ guard ✓ audit ✓ brace-০ ✓ node --check ✓ EJS ×২ ✓ 390px×৪-০ ✓ কনসোল-০ ✓ ক্লিনআপ ✓
+
+**পরবর্তী-এজেন্ট: session136।** বকেয়া: গ্রুপ-কল-প্রসারণ (session132-বেসিস), tokens-র্যাচেট (admin.css ৪২৬), og-style লিঙ্ক-প্রিভিউ-কার্ড (পারমালিঙ্কের উপর ভবিষ্যৎ-উন্নতি)।
