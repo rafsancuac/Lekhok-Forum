@@ -1253,7 +1253,7 @@ Work Log:
 Stage Summary:
 - QA-পেজের উত্তর/রিপ্লাই এখন ফিড/আর্টিকেলের মতোই তাৎক্ষণিক (৩-সারফেস-অপটিমিস্টিক-চুক্তি সম্পূর্ণ); tokens.css এখন গার্ড-লকড
 - **পরের-এজেন্ট: session125/126-সমান্তরাল-ল্যান্ডের পরে — **session129 থেকে**** — পরবর্তী-প্রথম-পছন্দ: reconcile-flash-মসৃণকরণ → crx-'শেষ-পড়া'-পিন → লাইভ-Turso-রিসেট (টোকেন-ধারী)
-Task ID: session129 (cron-r12 — sandbox web-68dcf7c4, "Project Status & Dev Focus")
+Task ID: session129-ক (cron-r12 — sandbox web-68dcf7c4, "Project Status & Dev Focus") — union-রিলেবেল (129-গ-এজেন্ট-নোট: আমার-এন্ট্রি নিচে 129-গ)
 Agent: Z.ai Cron Agent (webDevReview — origin/main @ 9390875→7ad5fb3-মাঝপথে-বিবর্তিত)
 Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগ-অভিযান (BFS-ডিলিট-আবিষ্কার) → অনন্য-ফিচার (undo-toast + restore-API + hex-র্যাচেট + §25) → প্যারালাল-ইউনিয়ন (crx-ডুপ্লিকেট-প্রত্যাহার + ফলব্যাক-পোর্ট) + push
 - QA-ফেজ: ১৮-রুট-স্মোক + কনসোল-সুইপ + /dashboard-crx-ইন্সপেকশন — বাগ-শূন্য, তাই রোডম্যাপ-ফিচার-রাউন্ড
@@ -1313,3 +1313,12 @@ Task ID: 14 — Session 124 (cron-QA রাউন্ড)
 ① swapQaThread ফিক্স ×২: `.answers-empty`-লিঙ্গার (লিস্টের-বাইরের-সিবলিং — প্রথম-AJAX-উত্তরের-পরেও 'এখনো কোনো উত্তর নেই' লেগে থাকত) + `typeof j.qaHtml==='string'` (শূন্য-উত্তরে ''-ফলসি→অযথা reload) + total===0-তে client-side empty-state (শেষ-উত্তর-ডিলিটে ফাঁকা-তালিকা নয়; reload-শূন্য) — E2E: ১→০ ✓; ② hall-provost-সুপারিশ stale-চিহ্নিত (session102/103/109-এ সম্পন্ন); ③ গোটচা ×৩: Write-টুল-বড়-ফাইল-ওভাররাইট (PLANS-ট্রাংকেট→git-checkout-রিকভার) · agent-browser 390px-টেস্টে `set viewport 390 844`-ই সঠিক · **🚨 পাইথন-ব্লক-কাটে সমান্তরাল-ক্যানোনিকাল-রুট-হারানো** (আমার undo-ব্লক-অপসারণে session129-এর restore-রুটও কেটে গিয়েছিল — restore 303→saveerr-ফলব্যাকে পড়ত; origin-checkout-এ পুনঃস্থাপিত) — **ব্লক-কাটের-আগে বাউন্ড-মধ্যে-ক্যানোনিকাল-ব্লক-গ্রেপ বাধ্যতামূলক**।
 
 **রিগ্রেশন:** role-policy ১৪৭/১৪৭ ✓ cursor ২৫/২৫ ✓ guard ✓ audit:views ✓ brace ০/০ ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ক্লিনআপ ✓। push-রেস ×৩ (129-খ→130→…) — তৃতীয়-রাউন্ডে পুশ-সম্পন্ন।
+
+## session129 (webDevReview রাউন্ড) — contact-hours প্রকৃত-লাইভ + crx অগ্রাধিকার-পিন
+
+- QA-ফেজ: fetch→d93c6c2 · প্রতি-ইনভোকেশন-বুট (স্যান্ডবক্স-রিপ) · role-policy 131/131 + cursor 25/25 + guard + audit:views + brace-০ — বাগ-শূন্য → ফিচার-রাউন্ড
+- ফিচার-①: contact-hours one-shot→evalNow()+৩০সে-interval+visibilitychange+দিন-মাইগ্রেশন; শীঘ্রই-বন্ধ/খুলবে (≤৬০মি, অ্যাম্বার); বেসলাইন-ভিজ্যুয়াল-বাগ-ফিক্স (is-idle-CSS-শূন্য — 'এখন বন্ধ' সবুজে ফুটত); __cx129Eval-হুক; tokens s129-ট্রিও
+- ফিচার-②: crx পিন (p-ফিল্ড, পিন-ফার্স্ট-সর্ট, aria-pressed, দুই-সারফেস, is-pinned ভিজ্যুয়াল+পিল)
+- E2E: স্টেট-ম্যাট্রিক্স ৮/৮ + মাইগ্রেশন ✓ CSSOM ✓ পিন ৫/৫ ✓ LS-ক্লিনআপ ✓ 390px-প্রকৃত-০ (docSW+scrollTo-প্রোব) ✓ কনসোল-০ ✓ রিগ্রেশন ALL GREEN ✓
+- গোটচা ×৩ (PLANS): JSON-LD-সিনট্যাক্স-চেক-মিথ্যা-ফেইল · body.scrollWidth≠প্রকৃত-স্ক্রল · আধা-রিফ্যাক্টর-অবশিষ্টাংশ
+- docs: PROJECT §১২৯ + PLANS intent+cross-agent + worklog ×২

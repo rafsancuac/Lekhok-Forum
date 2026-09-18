@@ -91,3 +91,14 @@
 /* ── ক্যানভাস-লক (রুল-৫): style.css:103-এর হার্ডকোড html{background:#f8fafc}-এর
    ক্যানোনিকাল ওভাররাইড — পুরো সাইটের ব্যাকগ্রাউন্ড মেটালিক গ্রে #F0F2F5 */
 html { background: var(--lf-ui-canvas); }
+
+/* ── সেশন-১২৯: শীঘ্রই/নিষ্ক্রিয়-স্টেট (contact-hours লাইভ-ব্যাজ) — hex কেবল --lf-* সংজ্ঞা-লাইনে (guard চুক্তি) ── */
+:root:root {
+  --lf-soon-amber: #B45309;             /* অ্যাম্বার-টেক্সট (শীঘ্রই বন্ধ/খুলবে) */
+  --lf-soon-amber-dot: #F59E0B;         /* pulse-ডট */
+  --lf-soon-amber-soft: rgba(245, 158, 11, 0.14);
+  --lf-soon-amber-border: rgba(245, 158, 11, 0.4);
+  --lf-idle-gray: #64748B;              /* এখন-বন্ধ (ধূসর-আইডল — সবুজে 'বন্ধ' বিভ্রান্তিকর) */
+  --lf-idle-gray-soft: rgba(100, 116, 139, 0.12);
+  --lf-idle-gray-border: rgba(100, 116, 139, 0.32);
+}

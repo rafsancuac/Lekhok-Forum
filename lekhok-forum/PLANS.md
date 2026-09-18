@@ -1552,6 +1552,7 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 
 **পরবর্তী-প্রথম-পছন্দ:** optimistic-থ্রেডে reconcile-flash-মসৃণকরণ (swapping-ফেড) → tokens-হেক্স-গার্ডের সুযোগ-বর্ধন (article.css-QA-ব্লক) → crx-এ 'শেষ-পড়া'-অগ্রাধিকার-পিন → লাইভ-Turso-রিসেট/সিক্রেট-রোটেশন ×৪ (টোকেন-ধারী-এজেন্ট)। **পরের-এজেন্ট: session125/126-সমান্তরাল-ল্যান্ডের পরে — **session129 থেকে**।**
 ## Cross-Agent Note — Session 129 (ডিসমিস-আন্ডু-টোস্ট + BFS-নেস্টেড-ডিলিট-বাগফিক্স + hex-র্যাচেট-গার্ড + §25-কভারেজ) (২১ সেপ্টেম্বর ২০২৬)
+**union-নোট (129): এ-নোট = সমান্তরাল-এজেন্টের (129-ক — undo-toast/BFS/hex-র্যাচেট); এরপর 129-খ (role-policy §25 post_id-ডাইনামিক); আমার-এন্ট্রি = **129-গ** (contact-hours লাইভ + crx-পিন — নিচে)। 129-গ নোটের ratchet-সংশ্লিষ্টতা: tokens.css s129-ট্রিও = স্ক্যান-বহির্ভূত (সত্য-উৎস); dashboard.css .crx-pinned-tag #fff → var(--lf-ui-surface) (র্যাচেট-নিরাপদ লেখা)।**
 **ইউনিয়ন-ইতিহাস (session123-প্যারালাল-কলিশন):** আমার রাউন্ডে crx-কভার-থাম্বনেইল + undo-toast + BFS-ফিক্স + হেক্স-র্যাচেট বানানোর মাঝে cron-r11 (তাদের session123) crx-থাম্বনেইল **push করে ফেলেছে** — rebase-এ তাদের ক্যানোনিকল গৃহীত (`.crx-rowtop`/`.crx-tilecover`/`data-cover`-চুক্তি), আমার ডুপ্লিকেট-মার্কআপ/CSS প্রত্যাহৃত; **আমার অনন্য-ডেল্টা পোর্ট**: c-বিহীন/লিগ্যাসি-এন্ট্রিতে ডিটারমিনিস্টিক `/img/cover/crx<id>/160/160` ফলব্যাক (continue-reading.js allEntries — ফেদার-আইকন-শূন্য, প্রতি-লেখায় স্থায়ী-আর্ট; routes/cover.js যেকোনো seed-এ SVG)। এছাড়া তাদের নতুন-ব্লকে ২টি `#fff` হেক্স র্যাচেট-ধরা → `var(--lf-ui-surface)`-এ রূপান্তর (গার্ড-প্রথম-প্রয়োগ)।
 1. **ডিসমিস-আন্ডু (undo-toast):** `public/assets/js/undo-toast.js` → `window.lfUndoShow({message,onUndo,ms})` (সিঙ্গেলটন, header.ejs-লোডেড — সব user-পেজে ব্যবহারযোগ্য)। **data-n JSON চুক্তি** `{i,t,ti,b,l,r,ts}` — notifications.ejs ফুল-পেজ + header.ejs ড্রপডাউন + live.js paintList তিন-সারফেসেই অভিন্ন; নতুন-নোটিফ-রেন্ডার-পাথ যোগ করলে data-n রাখুন। ব্যাকএন্ড: `POST /api/notifications/restore` (কম্প্যাক্ট-কী প্রাথমিক + লং-নাম fallback; type হোয়াইটলিস্ট-প্যাটার্ন `^[a-z][a-z_-]{0,23}$`; idempotent existed:true; শুধু নিজের user_id)। **শেষ-আইটেম-রিলোড এখন ৭সে-স্থগিত** (notifications.ejs dismiss-IIFE pendingReload + undoDone-গার্ড) — খালি-তালিকা-রিলোড-আচরণে হাত দিলে এ-গার্ড রাখুন।
 2. **BFS-কমেন্ট-ডিলিট (🚨 বাগফিক্স):** DELETE /api/comments/:id-এর session105-হ্যান্ডলার এক-লেভেল kids-মুছত (রিপ্লাই-অব-রিপ্লাই = অনাথ-রো + comment_count-ভুল); session104-এর ডুপ্লিকেট-হ্যান্ডলার (BFS-জানা) rebase-ইউনিয়নে অগম্য-জীবাশ্ম ছিল — **BFS-লজিক লাইভ-হ্যান্ডলারে মার্জড + জীবাশ্ম অপসারণ**; রেসপন্স-শেপ `{ok,removed,total}` অক্ষুণ্ণ। ভবিষ্যৎ-এজেন্ট: `router.delete('/api/comments/:id'` এখন **একটিই** — নতুন যোগ করবেন না, বিদ্যমানটা সম্পাদনা করুন।
@@ -1644,3 +1645,29 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **মোবাইল-ওভারফ্লো-মাপ-শিক্ষা:** `documentElement.scrollWidth`-ই সত্য (overflow-x:hidden-এ ক্ল্যাম্পড); `body.scrollWidth` fixed-অফ-ক্যানভাস-ড্রয়ার (topbar-right/mobile-sidebar) গুনে মিথ্যা-২১px দেখায় — in-flow-বাদ-দিয়ে মাপুন বা dW-ই বিশ্বাস করুন।
 
 **পরবর্তী-এজেন্ট: session128 লেবেল থেকে।**
+
+## ⚡ Intent Note — Session 129 (webDevReview রাউন্ড; কাজ-শুরুর-আগে claim) (২৩ সেপ্টেম্বর ২০২৬)
+
+**এই-রাউন্ডে নিচ্ছি (claim):** ① **contact_hours 'এখন খোলা?' লাইভ-রিফ্রেশ** — lekhok-contact.ejs-এর ব্যাজ-স্ক্রিপ্ট এখন one-shot (পেজ-লোডে একবার); রিফ্যাক্টর: `evalNow()` + ৩০-সে interval + visibilitychange-রি-ইভাল + মধ্যরাত-দিন-মাইগ্রেশন (is-today রো-বদল) + নতুন-স্টেট **শীঘ্রই বন্ধ/শীঘ্রই খুলবে** (≤৬০ মিনিট, অ্যাম্বার) + `window.__cx129Eval(min,dayIdx)`-টেস্ট-হুক ② **crx 'শেষ-পড়া'-অগ্রাধিকার-পিন** — continue-reading.js: এন্ট্রি-ফিল্ড `p` (পিন-টাইমস্ট্যাম্প), পিন-টগল-বাটন (row+tile, aria-pressed), পিন-ফার্স্ট-সর্ট, `.is-pinned` ভিজ্যুয়াল; dashboard.css session129-ব্লক। **স্পর্শ-ফাইল:** views/lekhok-contact.ejs (inline-script) · public/assets/style.css (EOF s129-ব্লক) · public/assets/js/continue-reading.js · public/assets/css/dashboard.css (EOF s129-ব্লক) · tokens.css (--lf-soon-amber ট্রিও) · PLANS/PROJECT/worklog ×২। **route/db শূন্য।**
+
+**ডুপ্লিকেট-বিরোধী-নোট:** session111-⑤-এর "contact_hours লাইভ-ইন্ডিকেটর" — ব্যাজ/রো-চিপ/টাইম-পার্সিং session102/109-এ আছে; আমার-ডেল্টা কেবল **লাইভ-রিফ্রেশ + soon-স্টেট** (ব্যাজ-লজিক রিরাইট নয় — রিফ্যাক্টর-রপ্তে same-আচরণ one-shot-এও প্রমাণযোগ্য)। tokensHexGuard-সম্প্রসারণ (session128-রেক ②) এ-রাউন্ডে নেই (article.css-লিগ্যাসি-হেক্স-বেসলাইন-ঝুঁকি — পরের-এজেন্টের জন্য খোলা)। অন্য-এজেন্ট ①②-এ কাজ শুরু করলে এ-নোট দেখে বিকল্প নিন।
+
+## Cross-Agent Note — Session 129 (webDevReview রাউন্ড; contact-hours লাইভ + crx পিন) (২৩ সেপ্টেম্বর ২০২৬)
+
+**স্কোপ:** views/lekhok-contact.ejs (inline-ব্যাজ-স্ক্রিপ্ট রিফ্যাক্টর) · public/assets/css/style.css (EOF s129-ব্লক) · public/assets/css/tokens.css (s129-টোকেন-ট্রিও ×২) · public/assets/js/continue-reading.js (পিন-ইঞ্জিন) · public/assets/css/dashboard.css (EOF s129-ব্লক)। **route/db শূন্য।**
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+1. **contact-hours স্টেট-মেশিন:** `evalNow()` — স্টেট-ক্লাস-রিসেট-first প্যাটার্ন (badge.className='cx-today-badge' → is-* অ্যাড); নতুন-স্টেট যোগলে এই-ফাংশনেই (ব্যাজ+রো-চিপ দুই-সারফেস এক-পাসে)। SOON=৬০-মিনিট-ধ্রুবক। `window.__cx129Eval(min,dayIdx)`-হুক ভবিষ্যৎ-ঘণ্টা-লজিক-টেস্টে পুনঃব্যবহারযোগ্য (নাল-আর্গ = ডিভাইস-ঘড়ি)।
+2. **crx এন্ট্রি-স্কিমা +1:** lf_read_pos এন্ট্রিতে `p` (পিন-টাইমস্ট্যাম্প) — **নতুন ফিল্ড যোগ করলে allEntries()র প্রজেকশন + সর্ট-কম্প্যারেটর একসাথে আপডেট** (session121-সিরিজ-চুক্তির ক্রস-সারফেস-নীতির মতোই — এখানে দুই-সারফেস = উইজেট+ফুল-পেজ, এক-ইঞ্জিন allEntries)।
+3. **tokens.css s129-ট্রিও:** --lf-soon-amber{-dot,-soft,-border} + --lf-idle-gray{-soft,-border} — soon/idle-স্টেট-UI-তে ব্যবহারযোগ্য; hex-ব্যাকডোর-নয়।
+
+**বেসলাইন-সংশোধন-নোট (session111-⑤-অবশিষ্ট-রায়):** "contact_hours লাইভ-ইন্ডিকেটর কেবল-এটাই-বাকি" — ব্যাজ/চিপ/পার্সিং session102/109-এ ছিল, কিন্তু **one-shot** + **স্টেট-CSS-শূন্য** (is-idle 'এখন বন্ধ' সবুজ-পিলে) — এ-দুটোই s129-এ বন্ধ। এ-সুপারিশ এখন **stale-ঘোষণা**।
+
+**গোটচা-নতুন ×৩:**
+1. **EJS-ইনলাইন-স্ক্রিপ্ট-সিনট্যাক্স-চেক:** JSON-LD (ld+json) ব্লক `new Function`-এ "Unexpected token ':'" — ব্লক-স্টেটমেন্ট-পার্স-আর্টিফ্যাক্ট, বাগ-নয়; regex-এ `(?!ld\+json)`-এক্সক্লুশন রীতি।
+2. **390px-ওভারফ্লো-প্রোব:** body.scrollWidth অফ-ক্যানভাস fixed-ড্রয়ারে ইনফ্লেট হয় (বেসলাইনেও ৪১১) — প্রকৃত-স্ক্রল-যাচাই = `documentElement.scrollWidth>innerWidth` + `scrollTo(99999,0)→scrollX===0`; শুধু body.scrollWidth-মিথ্যা-অ্যালার্ম নয়।
+3. **মাল্টি-এডিট-আধা-রিফ্যাক্টর-ঝুঁকি:** পুরনো-লুপের অর্ধেক রেখে গেলে অসংজ্ঞায়িত-ভেরিয়েবল-রেফারেন্স নীরবে থেকে যায় (আমার `today`-কেস — রি-রিডে ধরা) — EJS-এডিট-পরে সম্পূর্ণ-স্ক্রিপ্ট-ব্লক-নোড-চেক বাধ্যতামূলক।
+
+**E2E-প্রমাণ:** স্টেট-ম্যাট্রিক্স ৮/৮ (হুক-ভিত্তিক) + দিন-মাইগ্রেশন ✓ CSSOM-টোকেন ✓ পিন ৫/৫ (দুই-সারফেস+স্থায়িত্ব+p-desc) ✓ 390px-প্রকৃত-০ ✓ কনসোল-০ ✓ role-policy 131/131 + cursor 25/25 + guard + audit:views + brace-০ ✓
+
+**পরবর্তী-প্রথম-পছন্দ:** tokensHexGuard-সুযোগ-বর্ধন (article.css-QA-ব্লক — লিগ্যাসি-হেক্স-বেসলাইন-হোয়াইটলিস্ট-প্রয়োজন) → reconcile-flash-মসৃণকরণ (swapQaThread-ফেড) → QA-ডিলিটে স্লট-স্তরের মৃত্যু-অ্যানিমেশন (killItem-প্যারিটি — উপযোগ-যাচাই করে) → লাইভ-Turso-রিসেট/সিক্রেট-রোটেশন ×৪ (টোকেন-ধারী-এজেন্ট)। **পরের-এজেন্ট: session130 থেকে।**

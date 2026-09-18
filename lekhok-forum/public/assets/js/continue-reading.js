@@ -43,10 +43,15 @@
         /* session125-ডেল্টা: c-বিহীন এন্ট্রিতে ডিটারমিনিস্টিক /img/cover/crx<id> ফলব্যাক —
            routes/cover.js যেকোনো seed-এ সাইট-লোকাল SVG-আর্ট (প্রতি-লেখায় স্থায়ী-রঙ,
            broken/আইকন-শূন্য)। data-cover-থাকলে সেটাই প্রাধান্য (session123-চুক্তি)। */
-        arr.push({ id: id, r: +it.r || 0, t: +it.t || 0, ti: String(it.ti), u: String(it.u), c: String(it.c || ('/img/cover/crx' + id + '/160/160')) });
+        arr.push({ id: id, r: +it.r || 0, t: +it.t || 0, ti: String(it.ti), u: String(it.u), c: String(it.c || ('/img/cover/crx' + id + '/160/160')), p: +it.p || 0 });
       }
     });
-    arr.sort(function (a, b) { return b.t - a.t; });
+    /* সেশন ১২৯: পিন-ফার্স্ট-সর্ট — পিন করা (p desc) আগে, তারপর শেষ-পড়া (t desc) */
+    arr.sort(function (a, b) {
+      if ((a.p > 0) !== (b.p > 0)) return a.p > 0 ? -1 : 1;
+      if (a.p > 0 && b.p > 0 && a.p !== b.p) return b.p - a.p;
+      return b.t - a.t;
+    });
     return arr;
   }
 
@@ -63,6 +68,19 @@
   }
 
   function pct(r) { return Math.max(1, Math.min(99, Math.round(r * 100))); }
+
+  /* ── সেশন ১২৯: অগ্রাধিকার-পিন ──
+   * এন্ট্রি-ফিল্ড p (পিন-টাইমস্ট্যাম্প, ০/অনুপস্থিত = আনপিনড) — পুরনো-এন্ট্রি
+   * স্বয়ংক্রিয়-আনপিনড (backward-compatible)। পিন-বাটন row+tile-এ, aria-pressed,
+   * পিন-করা এন্ট্রি উইজেট/ফুল-পেজ দুই-সারফেসেই শীর্ষে ভাসে। */
+  function pinBtn(it) {
+    var on = it.p > 0;
+    return '<button type="button" class="crx-pin" data-crx-pin="' + esc(it.id) + '"'
+      + ' aria-pressed="' + (on ? 'true' : 'false') + '"'
+      + ' aria-label="' + (on ? 'আনপিন করুন' : 'পিন করুন') + '"'
+      + ' title="' + (on ? 'আনপিন করুন' : 'শীর্ষে পিন করুন') + '">'
+      + '<i class="fas fa-thumbtack" aria-hidden="true"></i></button>';
+  }
 
   /* ── সেশন ১২৩: কভার-থাম্বনেইল ──
    * c-URL প্রোডাকশনে যেমন-আছে তেমন ব্যবহৃত; স্যান্ডবক্স-গেটওয়েতে (server.js
@@ -93,7 +111,7 @@
       + '<div class="crx-list">';
     list.forEach(function (it) {
       var p = pct(it.r);
-      h += '<div class="crx-row">'
+      h += '<div class="crx-row' + (it.p > 0 ? ' is-pinned' : '') + '">'
         + '<a class="crx-link" href="' + esc(it.u) + '" title="' + esc(it.ti) + '">'
         + '<span class="crx-rowtop">'
         + '<span class="crx-thumb" aria-hidden="true">' + thumbImg(it.c) + '<i class="fas fa-feather-alt"></i></span>'
@@ -102,6 +120,7 @@
         + '<span class="crx-bar"><span class="crx-bar-fill" style="width:' + p + '%"></span></span>'
         + '<span class="crx-meta"><i class="far fa-clock" aria-hidden="true"></i> ' + bn(p) + '% পড়া হয়েছে</span>'
         + '</a>'
+        + pinBtn(it)
         + '<button type="button" class="crx-x" data-crx-id="' + esc(it.id) + '"'
         + ' aria-label="তালিকা থেকে সরান" title="তালিকা থেকে সরান">&times;</button>'
         + '</div>';
@@ -135,14 +154,16 @@
     var h = '';
     list.forEach(function (it) {
       var p = pct(it.r);
-      h += '<div class="crx-tile' + (it.c ? ' has-cover' : '') + '" data-crx-tile="' + esc(it.id) + '">'
+      h += '<div class="crx-tile' + (it.c ? ' has-cover' : '') + (it.p > 0 ? ' is-pinned' : '') + '" data-crx-tile="' + esc(it.id) + '">'
         + '<a class="crx-link" href="' + esc(it.u) + '" title="' + esc(it.ti) + '">'
+        + (it.p > 0 ? '<span class="crx-pinned-tag"><i class="fas fa-thumbtack" aria-hidden="true"></i> পিন করা</span>' : '')
         + '<span class="crx-tilecover" aria-hidden="true">' + thumbImg(it.c) + '<i class="fas fa-feather-alt"></i></span>'
         + '<span class="crx-title">' + esc(it.ti) + '</span>'
         + '<span class="crx-bar"><span class="crx-bar-fill" style="width:' + p + '%"></span></span>'
         + '<span class="crx-tile-meta"><b>' + bn(p) + '%</b>'
         + '<span class="crx-tile-day"><i class="far fa-clock" aria-hidden="true"></i> ' + relTime(it.t) + '</span></span>'
         + '</a>'
+        + pinBtn(it)
         + '<button type="button" class="crx-x" data-crx-id="' + esc(it.id) + '"'
         + ' aria-label="তালিকা থেকে সরান" title="তালিকা থেকে সরান">&times;</button>'
         + '</div>';
@@ -185,6 +206,20 @@
       delete m[x.getAttribute('data-crx-id')];
       writeMap(m);
       renderAll();
+      return;
+    }
+    /* সেশন ১২৯: পিন-টগল — টাইমস্ট্যাম্প-ফিল্ড p; পিন-করা সর্বশেষ-পিন অনুযায়ী শীর্ষে */
+    var pin = e.target.closest && e.target.closest('.crx-pin');
+    if (pin) {
+      e.preventDefault();
+      var mm = readMap();
+      var id2 = pin.getAttribute('data-crx-pin');
+      if (mm[id2]) {
+        if (mm[id2].p) delete mm[id2].p;
+        else mm[id2].p = Date.now();
+        writeMap(mm);
+        renderAll();
+      }
       return;
     }
     var c = e.target.closest && e.target.closest('#crxClearAll');

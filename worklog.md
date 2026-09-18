@@ -1223,6 +1223,7 @@ Work Log:
 
 Stage Summary:
 - সাইট-ব্যাপী কল-রিংগার সম্পূর্ণ (পাবলিক+মেম্বার); পরের-এজেন্ট: session130; অবশিষ্ট-কল-রোডম্যাপ: Metered-TURN (ইউজার-অ্যাকাউন্ট), অটো-ভিডিও-ডিগ্রেড, গ্রুপ-রিং-অনলাইন-সীমা
+<<<<<<< HEAD
 
 ---
 
@@ -1241,3 +1242,19 @@ Work Log:
 Stage Summary:
 - Q&A এখন পূর্ণাঙ্গ: প্রশ্ন করুন → উত্তর দিন → রিঅ্যাক্ট → **গ্রহণ-মার্ক** → নোটিফিকেশন → ফিল্টার → SEO-লিড-ডেটা; কমেন্ট-ইঞ্জিনের সাথে তিন-সোর্স-মার্কআপ-চুক্তি (PLANS-নোট)
 - পরবর্তী-প্রার্থী: ① /dashboard-এ accepted-ব্যাজ (qa-card-এ) ② notifications-এ answer_accepted-আইকন-টোনাল ③ প্রশ্নকর্তা-মালিকানায় 'শীর্ষ উত্তর'-চিপ ও গ্রহণ-চিপের সমন্বিত-অবস্থান-পলিশ ④ role-policy §১৭-ফিলার (qa-accepted-ফিল্টারের HTTP-কভারেজ §১৮-তেই আছে — আলাদা §-এর দরকার নেই)
+=======
+Task ID: session129 (cron webDevReview রাউন্ড — origin/main @ d93c6c2 থেকে)
+Agent: Z.ai Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → ফেজ-স্টেবল → ফিচার-রাউন্ড: contact-hours প্রকৃত-লাইভ (session111-⑤ অবশিষ্ট) + crx অগ্রাধিকার-পিন + push
+
+Work Log:
+- QA-ফেজ: git-fetch → d93c6c2 (session128); প্রতি-ইনভোকেশন-বুট-রীতি (nohup/setsid-ও রিপ-এলুড করে না — lf-boot.sh-হেলথ-রিট্রাই) → role-policy 131/131 + cursor 25/25 (BASE=full-URL) + guard + audit:views + brace-০ — বাগ-শূন্য; ১১-রুট স্মোক (/search-400 = curl-raw-UTF8 মিথ্যা-অ্যালার্ম পুনঃপ্রমাণ) → ফেজ-স্টেবল রায়
+- ফিচার-① (lekhok-contact.ejs): contact-hours ব্যাজ one-shot→evalNow() + ৩০-সে interval + visibilitychange-রি-ইভাল + মধ্যরাত is-today-মাইগ্রেশন; নতুন-স্টেট শীঘ্রই বন্ধ/শীঘ্রই খুলবে (≤৬০ মিনিট, অ্যাম্বার-pulse+title); __cx129Eval(min,dayIdx)-QA-হুক; বেসলাইন-ভিজ্যুয়াল-বাগ-ফিক্স — is-idle/is-live/is-on + চিপ live/idle-ক্লাসের CSS-রুল-শূন্য ছিল ('এখন বন্ধ' সবুজ-পিলে ফুটত); style.css s129-ব্লক (স্টেট-ম্যাট্রিক্স+ট্রানজিশন+reduced-motion) + tokens.css --lf-soon-amber/--lf-idle-gray ট্রিও
+- ফিচার-② (continue-reading.js + dashboard.css): crx পিন — এন্ট্রি-ফিল্ড p (টাইমস্ট্যাম্প, backward-compat), পিন-টগল (row+tile, aria-pressed, লেবেল-সোয়াপ), পিন-ফার্স্ট-সর্ট (p-desc→t-desc), .is-pinned টিন্ট+inset-রুল+পিল, hover-rotate+focus-ring
+- E2E (agent-browser, ismail): স্টেট-ম্যাট্রিক্স ৮/৮ + দিন-মাইগ্রেশন ✓; CSSOM-টোকেন-প্রয়োগ ✓; পিন ৫/৫ (শীর্ষে+স্থায়িত্ব+p-desc+আনপিন+ফুল-পেজ) ✓; LS-ক্লিনআপ ✓; 390px-প্রকৃত-০ (docSW=390+scrollX=০; body.scrollWidth-ইনফ্লেশন=ড্রয়ার-আর্টিফ্যাক্ট বেসলাইন-অভিন্ন); কনসোল-০; পোস্ট-ইমপ্ল রিগ্রেশন ALL GREEN (১৩১+২৫+guard+audit+brace-০ ×৩)
+- গোটচা ×৩ (PLANS s129-নোট): EJS-JSON-LD-ব্লক new Function-মিথ্যা-ফেইল (ld+json-এক্সক্লুশন) · body.scrollWidth≠প্রকৃত-স্ক্রল (documentElement+scrollTo-প্রোব ক্যানোনিকাল) · মাল্টি-এডিট-আধা-রিফ্যাক্টরে পুরনো-লুপ-অবশিষ্টাংশ today-অসংজ্ঞায়িত (রি-রিডে ধরা)
+- docs: PROJECT §১২৯ + PLANS intent+cross-agent (session111-⑤ stale-ঘোষণা + session130-সুপারিশ) + worklog ×২
+
+Stage Summary:
+- session111-⑤-এর শেষ-অবশিষ্ট (contact_hours লাইভ) সম্পূর্ণ — ব্যাজ এখন পেজ-খোলা-অবস্থায়ও সত্য; crx-এ ইউজার-অগ্রাধিকার (পিন) — session128-সুপারিশ-তালিকার ২-আইটেম ল্যান্ডেড
+- **পরের-এজেন্ট: session130 থেকে** — সুপারিশ: tokensHexGuard-সুযোগ-বর্ধন (article.css — বেসলাইন-হোয়াইটলিস্ট-প্রয়োজন) → reconcile-flash-মসৃণকরণ → QA-ডিলিট স্লট-মৃত্যু-অ্যানিমেশন (উপযোগ-যাচাই) → লাইভ-Turso-রিসেট (টোকেন-ধারী)

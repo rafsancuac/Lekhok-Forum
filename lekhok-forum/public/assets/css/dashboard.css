@@ -244,3 +244,20 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 @media (max-width:640px){.crx-tilecover{height:96px}}
 @media (prefers-reduced-motion:reduce){.crx-thumb img,.crx-tilecover img,.crx-all-arr{transition:none}.crx-link:hover .crx-thumb img,.crx-tile:hover .crx-tilecover img{transform:none}}
 /* ═══ EOF-MARKER session123 (crx-cover) ═══ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session129 — crx অগ্রাধিকার-পিন (পড়া-চালিয়ে-যান উইজেট + ফুল-পেজ)
+   পিন-করা এন্ট্রি শীর্ষে ভাসে (allEntries p-desc সর্ট); রঙ = var(--lf-*)/লিগ্যাসি-ভার
+   ═══════════════════════════════════════════════════════════════════════════ */
+.crx-pin{flex-shrink:0;width:26px;height:26px;border:1px solid transparent;border-radius:50%;background:transparent;color:var(--text-muted);font-size:.72rem;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:var(--transition)}
+.crx-pin:hover{background:var(--accent-soft);color:var(--accent);border-color:rgba(0,106,78,.22);transform:rotate(18deg)}
+.crx-pin:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:50%}
+.crx-row.is-pinned .crx-pin,.crx-tile.is-pinned .crx-pin{background:var(--accent-soft);color:var(--accent);border-color:rgba(0,106,78,.26)}
+.crx-row.is-pinned{border-top-color:rgba(0,106,78,.28);background:linear-gradient(90deg,var(--accent-soft),transparent 65%);border-radius:8px;padding-left:8px;padding-right:8px;margin-left:-8px;margin-right:-8px}
+.crx-row.is-pinned + .crx-row{border-top-color:transparent}
+.crx-row.is-pinned + .crx-row.is-pinned{border-top-color:rgba(0,106,78,.28)}
+.crx-tile.is-pinned{border-color:rgba(0,106,78,.42);box-shadow:var(--shadow-soft),inset 3px 0 0 var(--accent)}
+.crx-pinned-tag{position:absolute;top:10px;left:10px;z-index:2;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:.66rem;font-weight:800;letter-spacing:.3px;background:var(--lf-brand-primary);color:var(--lf-ui-surface);box-shadow:0 2px 8px rgba(0,106,78,.3);pointer-events:none}
+.crx-pinned-tag .fa-thumbtack{font-size:.6rem}
+@media (max-width:640px){.crx-row.is-pinned{margin-left:-4px;margin-right:-4px;padding-left:4px;padding-right:4px}}
+@media (prefers-reduced-motion:reduce){.crx-pin{transition:none}.crx-pin:hover{transform:none}}

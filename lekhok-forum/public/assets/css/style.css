@@ -2191,3 +2191,25 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
    session129-ক্যানোনিকাল (16bfb4f) undo-toast.js lfUndoShow-সিঙ্গেলটনের স্টাইল
    shared.css-এ সেন্ট্রালি আছে (ত্রি-সারফেস)। ═══════════ */
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session129 — contact-hours প্রকৃত-লাইভ: স্টেট-CSS
+   (বেসলাইনে is-idle/is-live/is-on + চিপ live/idle-ক্লাসের কোনো রুল ছিল না —
+   'এখন বন্ধ' ব্যাজ সবুজ-পিলে ফুটত; এ-ব্লক সম্পূর্ণ-স্টেট-ম্যাট্রিক্স + ট্রানজিশন)
+   রঙ = var(--lf-*) কেবল (tokens.css s129-ট্রিও) · rgba-শ্যাডো লিগ্যাসি-রীতি
+   ═══════════════════════════════════════════════════════════════════════════ */
+.cx102 .cx-today-badge{transition:background-color .35s ease,color .35s ease,border-color .35s ease}
+.cx102 .cx-today-badge.is-idle{background:var(--lf-idle-gray-soft);color:var(--lf-idle-gray);border-color:var(--lf-idle-gray-border)}
+.cx102 .cx-today-badge.is-idle .cx-tb-dot{background:var(--lf-idle-gray);box-shadow:0 0 0 3px rgba(100,116,139,.14);animation:none}
+.cx102 .cx-today-badge.is-soon{background:var(--lf-soon-amber-soft);color:var(--lf-soon-amber);border-color:var(--lf-soon-amber-border)}
+.cx102 .cx-today-badge.is-soon .cx-tb-dot{background:var(--lf-soon-amber-dot);box-shadow:0 0 0 3px rgba(245,158,11,.16);animation:cxPulseSoon129 2.2s ease-out infinite}
+@keyframes cxPulseSoon129{0%{box-shadow:0 0 0 0 rgba(245,158,11,.35)}70%{box-shadow:0 0 0 7px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+.cx102 .cx-hour-state{transition:background-color .35s ease,color .35s ease,border-color .35s ease}
+.cx102 .cx-hour-state.idle{background:var(--lf-idle-gray-soft);color:var(--lf-idle-gray);border-color:var(--lf-idle-gray-border)}
+.cx102 .cx-hour-state.soon{background:var(--lf-soon-amber-soft);color:var(--lf-soon-amber);border-color:var(--lf-soon-amber-border)}
+.cx102 .cx-hour-row.is-today .cx-hour-state.live{animation:cxChipPulse129 2.2s ease-out infinite}
+@keyframes cxChipPulse129{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.28)}50%{box-shadow:0 0 0 5px rgba(16,185,129,0)}}
+@media (prefers-reduced-motion: reduce){
+  .cx102 .cx-today-badge.is-soon .cx-tb-dot,.cx102 .cx-hour-row.is-today .cx-hour-state.live{animation:none}
+  .cx102 .cx-today-badge,.cx102 .cx-hour-state{transition:none}
+}
