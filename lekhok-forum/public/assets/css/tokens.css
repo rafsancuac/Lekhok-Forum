@@ -366,3 +366,22 @@ html { background: var(--lf-ui-canvas); }
   --lf-brandgreen: #0aa56d;
   --lf-brandgreen-deep: #0b6b4b;
 }
+
+:root {
+  /* session141-নোট: -২-সাফিক্স = session137-এর ভিন্ন-মান-নাম-সংঘর্ষ-এড়ানো (সৎ-আলাদা-টোকেন-রীতি) */  
+  --lf-fb-divider-2: #E9EBEE;
+  --lf-fb-hover-2: #F2F2F2;
+  --lf-fb-green: #31A24C;
+  --lf-fb-border-4: #DADDE1;
+  --lf-fb-shimmer: #F5F6F7;
+  --lf-fb-placeholder: #BCC0C4;
+  --lf-cover-navy: #1A3A6E;
+  --lf-genre-soft: #EBF0FF;
+  --lf-amber-pin: #F0B429;
+  --lf-amber-fire: #FBBF24;
+  --lf-danger-tint-2: #FDD8D8;
+  --lf-navy-deep-2: #0B1121;
+  --lf-brand-deep: #036A4E;
+  --lf-yellow-tint: #FEFCE8;
+}
+/* EOF-MARKER: session141-profile-tokens */

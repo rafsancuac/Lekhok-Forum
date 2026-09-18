@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    সেশন ৮৩ — ফেসবুক-স্ট্যান্ডার্ড পার্সোনাল প্রোফাইল (profile.css)
-   টোকেন: #1877F2 (ব্লু) • #F0F2F5 (বিজি) • #E4E6EB (বর্ডার) • #050505/#65676B (টেক্সট)
+   টোকেন: var(--lf-social-blue) (ব্লু) • var(--lf-ui-canvas) (বিজি) • var(--lf-ui-border) (বর্ডার) • var(--lf-text-primary)/var(--lf-text-secondary) (টেক্সট)
    লেআউট: হিরো-হেডার (৩:১ কভার + ওভারল্যাপ-অ্যাভাটার + CTA) → স্টিকি সাব-ন্যাভ
           → ৩৬০px সাইডবার + ফ্লেক্স টাইমলাইন (মোবাইলে সিঙ্গেল-কলাম, ফিড আগে)
    লেগেসি-সংরক্ষণ: .profile-toast, .quiz-profile-card (সেশন ৬২), .pic-menu,
@@ -8,12 +8,12 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .pf-shell{
-  --pf-blue:#1877F2; --pf-blue-hover:#166FE5;
-  --pf-bg:#F0F2F5; --pf-card:#FFFFFF;
-  --pf-border:#E4E6EB; --pf-border-soft:#E9EBEE;
-  --pf-text:#050505; --pf-text2:#65676B;
-  --pf-hover:#F2F2F2; --pf-hover2:#D8DADF;
-  --pf-green:#31A24C;
+  --pf-blue:var(--lf-social-blue); --pf-blue-hover:var(--lf-social-blue-hover);
+  --pf-bg:var(--lf-ui-canvas); --pf-card:var(--lf-ui-surface);
+  --pf-border:var(--lf-ui-border); --pf-border-soft:var(--lf-fb-divider-2);
+  --pf-text:var(--lf-text-primary); --pf-text2:var(--lf-text-secondary);
+  --pf-hover:var(--lf-fb-hover-2); --pf-hover2:var(--lf-ad-line-2);
+  --pf-green:var(--lf-fb-green); /* session141: মান-রিওয়্যার্ম — লোকাল-সিস্টেম অক্ষত */
   min-height:calc(100vh - 54px);
   background:var(--pf-bg);
   padding-bottom:48px;
@@ -36,7 +36,7 @@
   width:100%;
   aspect-ratio:3/1;
   min-height:200px;max-height:480px;
-  background:linear-gradient(135deg,#0a1f44 0,#1a3a6e 50%,#059669 100%);
+  background:linear-gradient(135deg,var(--lf-navy) 0,var(--lf-cover-navy) 50%,var(--lf-ok) 100%);
   background-size:cover;background-position:center;
   overflow:hidden;
 }
@@ -49,7 +49,7 @@
   box-shadow:0 1px 4px rgba(0,0,0,.25);
   transition:background .15s;
 }
-.pf-cover-btn:hover{background:#fff}
+.pf-cover-btn:hover{background:var(--lf-white)}
 .pf-hero-row{
   display:flex;align-items:flex-end;flex-wrap:wrap;
   gap:4px 16px;
@@ -59,7 +59,7 @@
 .pf-avatar-wrap{position:relative;display:inline-block}
 .pf-avatar{
   width:168px;height:168px;border-radius:50%;
-  border:4px solid #fff;background:#fff;
+  border:4px solid var(--lf-white);background:var(--lf-white);
   object-fit:cover;display:block;
   box-shadow:0 2px 8px rgba(0,0,0,.18);
   transition:transform .15s;
@@ -69,7 +69,7 @@
   position:absolute;bottom:10px;right:12px;
   width:22px;height:22px;border-radius:50%;
   background:var(--pf-green);
-  border:4px solid #fff;
+  border:4px solid var(--lf-white);
   box-shadow:0 1px 3px rgba(0,0,0,.2);
 }
 .pf-avatar-cam{
@@ -92,10 +92,10 @@
 .pf-pen-name{color:var(--pf-text2);font-weight:600;font-size:22px}
 .pf-verified{
   width:20px;height:20px;border-radius:50%;
-  background:var(--pf-blue);color:#fff;
+  background:var(--pf-blue);color:var(--lf-white);
   display:inline-flex;align-items:center;justify-content:center;
   font-size:10.5px;flex-shrink:0;
-  box-shadow:0 0 0 2px #fff;
+  box-shadow:0 0 0 2px var(--lf-white);
 }
 .pf-sub-line{
   margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:6px;
@@ -114,8 +114,8 @@
 .pf-mutual-avatars{display:inline-flex;padding-left:6px}
 .pf-mutual-avatars img{
   width:20px;height:20px;border-radius:50%;
-  border:2px solid #fff;object-fit:cover;
-  margin-left:-6px;background:#fff;
+  border:2px solid var(--lf-white);object-fit:cover;
+  margin-left:-6px;background:var(--lf-white);
 }
 .pf-presence{margin:6px 0 0;font-size:13px;color:var(--pf-text2)}
 .pf-presence.on{color:var(--pf-green);font-weight:600}
@@ -130,12 +130,12 @@
   transition:background .15s,transform .08s;
 }
 .pf-btn:active{transform:scale(.98)}
-.pf-btn.primary{background:var(--pf-blue);color:#fff}
+.pf-btn.primary{background:var(--pf-blue);color:var(--lf-white)}
 .pf-btn.primary:hover{background:var(--pf-blue-hover)}
 .pf-btn.gray{background:var(--pf-border);color:var(--pf-text)}
 .pf-btn.gray:hover{background:var(--pf-hover2)}
-.pf-btn.danger{background:var(--pf-border);color:#B91C1C}
-.pf-btn.danger:hover{background:#FDD8D8}
+.pf-btn.danger{background:var(--pf-border);color:var(--lf-danger-deep)}
+.pf-btn.danger:hover{background:var(--lf-danger-tint-2)}
 .pf-btn.icon-only{width:42px;padding:8px 0;font-size:15px}
 .pf-btn.sm{padding:5px 10px;font-size:12.5px}
 .pf-btn.full-w{width:100%;margin-top:12px}
@@ -160,7 +160,7 @@
 }
 .pf-menu a:hover,.pf-menu button:hover{background:var(--pf-hover);text-decoration:none}
 .pf-menu i{color:var(--pf-text2);width:16px;text-align:center}
-.pf-menu .pf-danger-item,.pf-menu .pf-danger-item i{color:#B91C1C}
+.pf-menu .pf-danger-item,.pf-menu .pf-danger-item i{color:var(--lf-danger-deep)}
 
 /* স্টিকি সাব-ন্যাভ */
 .pf-subnav{
@@ -206,7 +206,7 @@
 
 /* সাইডবার-কার্ড উইজেট */
 .pf-card-title{margin:0 0 10px;font-size:17px;font-weight:700;color:var(--pf-text)}
-.pf-card-title i{color:#059669;margin-right:6px;font-size:14px}
+.pf-card-title i{color:var(--lf-ok);margin-right:6px;font-size:14px}
 .pf-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .pf-card-head .pf-card-title{margin:0}
 .pf-card-more{
@@ -230,14 +230,14 @@
   font-size:15px;text-decoration:none;
   transition:background .15s,color .15s;
 }
-.pf-social-chip:hover{background:var(--pf-blue);color:#fff}
+.pf-social-chip:hover{background:var(--pf-blue);color:var(--lf-white)}
 .pf-interests{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 2px}
 /* সাহিত্য-ধারা ব্যাজ (সেশন ৮০-ফিচার, সেশন ৮৫-স্টাইল) */
 .pf-genres{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
 .pf-genre-badge{
   display:inline-flex;align-items:center;gap:6px;
   padding:4px 11px;border-radius:14px;
-  background:#EBF0FF;color:var(--pf-blue);
+  background:var(--lf-genre-soft);color:var(--pf-blue);
   font-size:12.5px;font-weight:600;
 }
 .pf-genre-badge i{font-size:10.5px}
@@ -249,7 +249,7 @@
   transition:background .12s;
 }
 .tag-chip:hover{background:var(--pf-hover2)}
-.tag-chip.selected{background:var(--pf-blue);color:#fff}
+.tag-chip.selected{background:var(--pf-blue);color:var(--lf-white)}
 
 /* ছবি-গ্রিড */
 .pf-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;border-radius:8px;overflow:hidden}
@@ -281,7 +281,7 @@
   background:rgba(5,150,105,.09);border:1px solid rgba(5,150,105,.25);
   font-size:13px;color:var(--pf-text);
 }
-.pf-role-chip strong{color:#047857;font-weight:700}
+.pf-role-chip strong{color:var(--lf-ok-deep);font-weight:700}
 .pf-role-chip small{color:var(--pf-text2);font-size:11.5px}
 
 /* ── টাইমলাইন-ফিড (FB পোস্ট-কার্ড) ─────────────────────────────────────── */
@@ -291,11 +291,11 @@
   border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.1);
   overflow:hidden;
 }
-.pf-post.pinned{border-top:3px solid #F0B429}
+.pf-post.pinned{border-top:3px solid var(--lf-amber-pin)}
 .pf-pinned-label{
   display:flex;align-items:center;gap:7px;
   padding:10px 16px 0;
-  color:#B45309;font-size:12.5px;font-weight:700;
+  color:var(--lf-soon-amber);font-size:12.5px;font-weight:700;
   text-transform:uppercase;letter-spacing:.04em;
 }
 .pf-post-head{display:flex;align-items:center;gap:10px;padding:12px 16px 4px}
@@ -330,7 +330,7 @@
 .pf-facepile span:first-child{margin-left:0}
 .pf-post-counts:hover .pf-facepile span{transform:translateY(-1px)}
 .pf-facepile-count{font-weight:600;color:var(--pf-text2)}
-.pf-facepile-muted{color:#8A8D91;font-size:13px}
+.pf-facepile-muted{color:var(--lf-text-tertiary);font-size:13px}
 
 /* সেশন ৯০: FB-রিঅ্যাকশন-ইঞ্জিন হোস্ট — গ্লোবাল actions-bar-কে FB ৩-কলামে রূপান্তর */
 .pf-actions-host .actions-summary{
@@ -367,7 +367,7 @@
 .pf-actions-host .main-react.active .rb-label{color:var(--pf-blue)}
 .pf-actions-host .reaction-picker{
   bottom:100%;left:50%;transform:translateX(-50%);
-  background:#fff;border:1px solid var(--pf-border);
+  background:var(--lf-white);border:1px solid var(--pf-border);
   border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.18);
 }
 .pf-actions-host .share-wrap{display:flex;flex:1}
@@ -384,11 +384,11 @@
   color:var(--pf-blue);font-size:13px;font-weight:600;text-decoration:none;
   transition:background .12s;
 }
-.pf-all-posts:hover{background:#EBF0FF}
+.pf-all-posts:hover{background:var(--lf-genre-soft)}
 
 /* পোস্ট-কার্ড হোভার-লিফট (স্টাইল-ডিটেইল পাস) */
 .pf-post{transition:box-shadow .18s,transform .18s,border-color .18s}
-.pf-post:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:#DADDE1}
+.pf-post:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:var(--lf-fb-border-4)}
 
 /* ছবি-টাইল হোভার-ক্যাপশন */
 .pf-photo-tile{position:relative}
@@ -401,14 +401,14 @@
 .pf-photo-tile:hover::after{opacity:1}
 .pf-photo-tile .pf-photo-cap{
   position:absolute;left:0;right:0;bottom:0;z-index:2;
-  padding:6px 8px;color:#fff;font-size:11px;font-weight:600;
+  padding:6px 8px;color:var(--lf-white);font-size:11px;font-weight:600;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   opacity:0;transform:translateY(4px);transition:.18s;pointer-events:none;
 }
 .pf-photo-tile:hover .pf-photo-cap{opacity:1;transform:none}
 
 /* ছবি লোড-হওয়া পর্যন্ত শিমার-স্কেলেটন */
-.pf-photo-tile{background:linear-gradient(100deg,#E9EBEE 30%,#F5F6F7 50%,#E9EBEE 70%);background-size:200% 100%;animation:pfShimmer 1.4s infinite linear}
+.pf-photo-tile{background:linear-gradient(100deg,var(--lf-fb-divider-2) 30%,var(--lf-fb-shimmer) 50%,var(--lf-fb-divider-2) 70%);background-size:200% 100%;animation:pfShimmer 1.4s infinite linear}
 @keyframes pfShimmer{to{background-position:-200% 0}}
 .pf-photo-tile img{background:transparent;animation:none}
 
@@ -432,7 +432,7 @@
 }
 .pf-modal.open{display:flex}
 .pf-modal-card{
-  width:min(680px,100%);background:#fff;border-radius:12px;
+  width:min(680px,100%);background:var(--lf-white);border-radius:12px;
   box-shadow:0 20px 60px rgba(0,0,0,.3);
   padding:20px;animation:pfModalIn .18s ease-out;
 }
@@ -474,18 +474,18 @@
   transition:background .12s,color .12s;
 }
 .pf-pill:hover:not(.active){background:var(--pf-border)}
-.pf-pill.active{background:var(--pf-blue);color:#fff}
+.pf-pill.active{background:var(--pf-blue);color:var(--lf-white)}
 
 /* ট্যাব-প্যানেল সাধারণ */
 .tab-content{display:none}
 .tab-content.active{display:block}
 .pf-empty{text-align:center;padding:44px 20px}
-.pf-empty i{font-size:40px;color:#BCC0C4;display:block;margin-bottom:12px}
+.pf-empty i{font-size:40px;color:var(--lf-fb-placeholder);display:block;margin-bottom:12px}
 .pf-empty p{color:var(--pf-text2);margin:0 0 16px}
 .pf-list-head{margin:2px 0 0}
 .pf-list-head h3{margin:0 0 2px;font-size:18px;font-weight:700;color:var(--pf-text)}
 .pf-count-badge{
-  background:#EBF0FF;color:var(--pf-blue);
+  background:var(--lf-genre-soft);color:var(--pf-blue);
   padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700;
   margin-left:6px;vertical-align:2px;
 }
@@ -501,7 +501,7 @@
 .pf-mini-title a:hover{color:var(--pf-blue);text-decoration:underline}
 .pf-mini-meta{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12.5px;color:var(--pf-text2)}
 .pf-badge{
-  background:rgba(5,150,105,.1);color:#047857;
+  background:rgba(5,150,105,.1);color:var(--lf-ok-deep);
   padding:2px 8px;border-radius:4px;font-size:11.5px;font-weight:700;
 }
 .pf-badge.muted{background:var(--pf-bg);color:var(--pf-text2)}
@@ -512,13 +512,13 @@
   color:var(--pf-text2);text-transform:uppercase;letter-spacing:.05em;
   display:flex;align-items:center;gap:7px;
 }
-.pf-about-block h4 i{color:#059669}
+.pf-about-block h4 i{color:var(--lf-ok)}
 .manage-hint{
   display:flex;align-items:center;gap:8px;
   margin:0 0 12px;padding:9px 12px;border-radius:8px;
   background:var(--pf-bg);font-size:13px;color:var(--pf-text2);
 }
-.manage-hint i{color:#059669}
+.manage-hint i{color:var(--lf-ok)}
 .side-text{font-size:13px;color:var(--pf-text2)}
 .tag-cloud{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 #interestPool{margin-bottom:12px}
@@ -531,8 +531,8 @@
   display:flex;align-items:center;gap:10px;cursor:pointer;
   animation:.3s pfSlideDown;
 }
-.profile-toast.success{background:#D1FAE5;color:#047857;border:1px solid #6EE7B7}
-.profile-toast.error{background:#FEE2E2;color:#B91C1C;border:1px solid rgba(248,113,113,.4)}
+.profile-toast.success{background:var(--lf-ok-soft-3);color:var(--lf-ok-deep);border:1px solid var(--lf-ok-mid-4)}
+.profile-toast.error{background:var(--lf-danger-soft-2);color:var(--lf-danger-deep);border:1px solid rgba(248,113,113,.4)}
 @keyframes pfSlideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
 .pic-menu{
@@ -576,21 +576,21 @@
 }
 .post-3dot-menu a:hover,.post-3dot-menu button:hover{background:var(--pf-hover);text-decoration:none}
 .post-3dot-menu i{color:var(--pf-text2);width:15px;font-size:12.5px}
-.post-3dot-menu .pf-pin-toggle i{color:#B45309}
-.post-delete-btn,.post-delete-btn i{color:#DC2626!important}
+.post-3dot-menu .pf-pin-toggle i{color:var(--lf-soon-amber)}
+.post-delete-btn,.post-delete-btn i{color:var(--lf-danger)!important}
 
 /* সেশন ৬২: কুইজ-পারফরম্যান্স কার্ড (অপরিবর্তিত — প্রোফাইল সাইডবার) */
 .quiz-profile-card{margin:0;padding:14px 16px;border-radius:10px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(240,253,247,.92));border:1px solid rgba(5,150,105,.28);box-shadow:0 10px 24px -14px rgba(0,0,0,.55)}
-.quiz-profile-card h4{display:flex;align-items:center;gap:7px;margin:0 0 10px;color:#0B1121;font-size:.86rem;text-transform:uppercase;letter-spacing:.04em}
-.quiz-profile-card h4 i{color:#059669}
+.quiz-profile-card h4{display:flex;align-items:center;gap:7px;margin:0 0 10px;color:var(--lf-navy-deep-2);font-size:.86rem;text-transform:uppercase;letter-spacing:.04em}
+.quiz-profile-card h4 i{color:var(--lf-ok)}
 .qpc-row{display:flex;flex-direction:column;gap:8px}
-.qpc-item{display:flex;align-items:center;gap:8px;font-size:.84rem;color:#64748b}
-.qpc-item i{color:#059669;width:18px;text-align:center}
-.qpc-item strong{margin-left:auto;color:#0B1121;font-size:.95rem;font-variant-numeric:tabular-nums}
-.qpc-item.has-fire{color:#FBBF24}
-.qpc-item.has-fire i{color:#F59E0B;filter:drop-shadow(0 0 5px rgba(245,158,11,.4))}
-.qpc-link{display:inline-flex;align-items:center;gap:7px;margin-top:11px;font-size:.8rem;font-weight:700;color:#047857;text-decoration:none;border-top:1px solid rgba(5,150,105,.18);padding-top:10px;transition:color .15s,gap .15s}
-.qpc-link:hover{color:#036a4e;gap:10px}
+.qpc-item{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--lf-idle-gray)}
+.qpc-item i{color:var(--lf-ok);width:18px;text-align:center}
+.qpc-item strong{margin-left:auto;color:var(--lf-navy-deep-2);font-size:.95rem;font-variant-numeric:tabular-nums}
+.qpc-item.has-fire{color:var(--lf-amber-fire)}
+.qpc-item.has-fire i{color:var(--lf-soon-amber-dot);filter:drop-shadow(0 0 5px rgba(245,158,11,.4))}
+.qpc-link{display:inline-flex;align-items:center;gap:7px;margin-top:11px;font-size:.8rem;font-weight:700;color:var(--lf-ok-deep);text-decoration:none;border-top:1px solid rgba(5,150,105,.18);padding-top:10px;transition:color .15s,gap .15s}
+.qpc-link:hover{color:var(--lf-brand-deep);gap:10px}
 .qpc-link i{font-size:.74rem}
 
 /* ── রেসপনসিভ ───────────────────────────────────────────────────────────── */
@@ -636,9 +636,9 @@
   position:relative;top:1px;
 }
 .pf-role-badge i{font-size:10px}
-.pf-role-mod{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
-.pf-role-admin{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
-.pf-role-super{background:#fefce8;color:#a16207;border-color:#fde68a}
+.pf-role-mod{background:var(--lf-ok-soft);color:var(--lf-ok-deep);border-color:var(--lf-ok-soft-2)}
+.pf-role-admin{background:var(--lf-info-soft-7);color:var(--lf-info-strong);border-color:var(--lf-info-soft-6)}
+.pf-role-super{background:var(--lf-yellow-tint);color:var(--lf-yellow-deep);border-color:var(--lf-amber-soft-3)}
 @media (max-width:600px){
   .pf-role-badge{padding:3px 9px;font-size:11px}
 }

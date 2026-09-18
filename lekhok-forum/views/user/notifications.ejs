@@ -52,7 +52,18 @@
       return new Date(d).toLocaleDateString('bn-BD'); }; %>
 
     <% if (items.length === 0) { %>
-      <div class="notif-empty"><i class="fas fa-bell-slash"></i><p>এখনও কোনো বিজ্ঞপ্তি আসেনি।</p><small style="color:var(--text-muted);">নতুন কার্যকলাপ এখানে দেখা যাবে।</small></div>
+      <%# session141: শূন্য-অবস্থা ব্র্যান্ডেড-পলিশ (session140-প্রস্তাব ৩) — nf-branded141 মডিফায়ার-স্কোপ;
+          বেস .notif-empty লাইভ-ড্রপডাউন (live.js) শেয়ার করে — তা অস্পৃশ্য রাখতেই মডিফায়ার;
+          session114-এর আইকন-নিজেই-ব্যাজ + notifBell114-অ্যানিমেশন চুক্তি অক্ষত — রিস্কিন shared.css-এ %>
+      <div class="notif-empty nf-branded141">
+        <i class="fas fa-bell-slash" aria-hidden="true"></i>
+        <p class="nf141-title">এখনও কোনো বিজ্ঞপ্তি আসেনি</p>
+        <small class="nf141-hint">নতুন কার্যকলাপ এখানে দেখা যাবে।</small>
+        <div class="nf141-cta">
+          <a class="nf141-btn" href="/dashboard"><i class="fas fa-newspaper" aria-hidden="true"></i>ফিড ব্রাউজ করুন</a>
+          <a class="nf141-btn nf141-btn-ghost" href="/articles"><i class="fas fa-feather-pointed" aria-hidden="true"></i>নতুন লেখা</a>
+        </div>
+      </div>
     <% } else { %>
       <%# সেশন ১১৭: ফিল্টার-ট্যাব — 'সব' + গণনা-সহ গ্রুপ-চিপ (শূন্য-গ্রুপ আঁকা হয় না) %>
       <div class="notif-filter-bar" role="group" aria-label="বিজ্ঞপ্তি ফিল্টার">

@@ -397,6 +397,27 @@ else
 fi
 echo ""
 
+echo "══ ২৯. সেশন ১৪১: /qa রিচ-এডিটর-ইন্টিগ্রেশন (মাউন্ট + মার্কডাউন-রেন্ডার E2E) ══"
+ck "s141 /qa rich-editor.js লোড" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "assets/js/rich-editor.js")"
+ck "s141 /qa rich-editor.css লোড" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "assets/css/rich-editor.css")"
+  ck "s141 লোড-অর্ডার: ইঞ্জিন কম্পোজারের আগে" "1" "$(curl -s -b $JARU "$BASE/qa" | tr -d '\n' | grep -o 'rich-editor.js[^>]*></script>[^<]*<script[^>]*qa-composer.js' | head -1 | grep -c .)"
+  ck "s141 qa-composer মাউন্ট-মার্কার (init(body,{preview:false}))" "1" "$(curl -s "$BASE/assets/js/qa-composer.js" | grep -c 'RichEditor.init(body, { preview: false })')"
+ck "s141 মাউন্ট preview:false (কম্প্যাক্ট-ডিফল্ট)" "1" "$(curl -s "$BASE/assets/js/qa-composer.js" | grep -c "preview: false")"
+RP141=$(curl -s -b $JARU -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{ "title": "rp141 রিচ-এডিটর মার্কডাউন-প্রোব প্রশ্ন", "body": "রিচ-এডিটর §২৯ **গুরুত্বপূর্ণ** টেক্সট এবং [লিংক](https://example.com) — সেশন ১৪১ সেলফ-সিড" }')
+ckc "s141 মার্কডাউন-POST ok:true" '"ok":true' "$RP141"
+Q141=$(echo "$RP141" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+if [ -n "$Q141" ]; then
+  PASS=$((PASS+1)); echo "  ✓ §29-সেলফ-সিড প্রশ্ন id=$Q141"
+  QDET=$(curl -s -b $JARU "$BASE/qa/$Q141")
+  ck "s141 ডিটেইলে বোল্ড রেন্ডার (<strong>)" "1" "$(echo "$QDET" | grep -c "<strong>গুরুত্বপূর্ণ</strong>")"
+  ck "s141 ডিটেইলে লিংক-রেন্ডার (a-link)" "1" "$(echo "$QDET" | grep -c "class=.a-link")"
+  ck "s141 লিস্ট-এক্সার্পট প্লেইন (plainText-চুক্তি)" "0" "$(curl -s -b $JARU "$BASE/qa" | grep -o 'qa-excerpt">[^<]*গুরুত্বপূর্ণ[^<]*' | head -1 | grep -c '\*\*')"
+  TOKU141=$(getcsrf $JARU /qa)
+  ck "s141 ক্লিনআপ 303" "303" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/qa/$Q141/delete?_csrf=$TOKU141")"
+  ck "s141 ক্লিনআপ-পরে 404" "404" "$(get $JARU /qa/$Q141)"
+fi
+echo ""
+
 # ═══ সেশন ১৩১: সিরিজ-স্ট্যাটস লাইভ-এন্ডপয়েন্ট গেট + বাল্ক-ইমপোর্ট SSRF-নেগেটিভ (RES-124-ব্যাকলগ ②③) ═══
 # (ক) GET /api/resources/series-stats — স্টাফ-গেটেড (anon/user → 403; mod/admin → 200 ok:true)
 # (খ) POST /admin/resources/bulk-এ fetch:1 + প্রাইভেট/লুপব্যাক/মেটাডেটা/পোর্ট/স্কিম-URL → রো-এরর

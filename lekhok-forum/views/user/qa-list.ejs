@@ -86,7 +86,10 @@
       <% } %>
     </div>
   </div>
+  <link rel="stylesheet" href="/assets/css/rich-editor.css?v=<%= AV %>" />
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <%# সেশন ১৪১: রিচ-এডিটর ইঞ্জিন — কম্পোজারের আগে লোড (qa-composer ম্যানুয়ালি init করে) %>
+  <script src="/assets/js/rich-editor.js?v=<%= AV %>"></script>
   <%# সেশন ১৪০: ইনলাইন-কম্পোজার-ইঞ্জিন (লগইন-পেজেই লোড হয়; গেস্টে স্ব-নিষ্ক্রিয়) %>
   <script src="/assets/js/qa-composer.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>

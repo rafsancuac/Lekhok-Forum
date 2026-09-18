@@ -421,3 +421,45 @@
   .lf-og-loading .lf-og-thumb,.lf-og-loading .lf-og-domain,.lf-og-loading .lf-og-title,.lf-og-loading .lf-og-desc{animation:none}
 }
 /* EOF-MARKER: session139-og-link-preview */
+
+/* ═══ session141: notifications শূন্য-অবস্থা ব্র্যান্ডেড-পলিশ (session140-প্রস্তাব ৩) ═══
+   স্কোপ: .nf-branded141 — ফুল-পেজ শুধু (লাইভ-ড্রপডাউনের বেস .notif-empty অস্পৃশ্য — live.js চুক্তি)
+   session114-এর আইকন-নিজেই-ব্যাজ (64px সার্কেল) + notifBell114-অ্যানিমেশন চুক্তি অক্ষত —
+   এখানে কেবল রিস্কিন (সলিড-ব্র্যান্ড সার্কেল) + প্যানেল/CTA-স্তর। টোকেন-শুধু (hex-শূন্য)। */
+.notif-empty.nf-branded141{position:relative;overflow:hidden;gap:8px;padding:56px 24px 46px;border-style:solid;border-color:var(--lf-ad-line);background:linear-gradient(180deg,var(--lf-brand-light) 0%,var(--lf-ui-surface) 62%);box-shadow:none}
+.notif-empty.nf-branded141::before{content:'';position:absolute;top:-70px;left:50%;transform:translateX(-50%);width:280px;height:140px;border-radius:50%;background:var(--accent-soft);pointer-events:none}
+.notif-empty.nf-branded141 > i{position:relative;z-index:1;background:var(--accent);color:var(--lf-ui-surface);border:3px solid var(--lf-ui-surface);box-shadow:0 8px 18px var(--accent-soft);margin-bottom:10px}
+.notif-empty.nf-branded141 .nf141-title{position:relative;z-index:1;margin:0;font-size:1.05rem;font-weight:700;color:var(--lf-text-primary)}
+.notif-empty.nf-branded141 .nf141-hint{position:relative;z-index:1;color:var(--lf-text-secondary);font-size:.86rem}
+.notif-empty.nf-branded141 .nf141-cta{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.nf141-btn{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:10px 20px;border-radius:var(--lf-radius-chip);background:var(--accent);color:var(--lf-ui-surface);font-weight:600;font-size:.9rem;text-decoration:none;transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease}
+.nf141-btn i{width:auto;height:auto;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:0;border-radius:0;box-shadow:none;opacity:1;animation:none;font-size:.85rem;color:inherit;margin:0;flex-shrink:0}
+.nf141-btn:hover{background:var(--brand-light);color:var(--lf-ui-surface);transform:translateY(-1px);box-shadow:0 6px 14px var(--accent-soft);text-decoration:none}
+.nf141-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nf141-btn.nf141-btn-ghost{background:var(--lf-ui-surface);color:var(--accent);border:1.5px solid var(--accent-soft);box-shadow:none}
+.nf141-btn.nf141-btn-ghost:hover{background:var(--lf-brand-light);color:var(--accent);transform:translateY(-1px)}
+/* ফিল্টার-শূন্য-অবস্থা — মার্কআপ-অস্পৃশ্য (JS first-span চুক্তি রক্ষা; [hidden]-গার্ড style.css-এ অক্ষত) */
+.notif-filter-empty{gap:12px;padding:16px 18px;border:1.5px dashed var(--accent-soft);background:linear-gradient(180deg,var(--lf-brand-light) 0%,var(--lf-ui-surface) 85%)}
+.notif-filter-empty i{width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);font-size:.9rem;flex-shrink:0}
+@media (max-width:640px){
+  .notif-empty.nf-branded141{padding:48px 18px 40px}
+  .notif-empty.nf-branded141 .nf141-cta{width:100%;flex-direction:column}
+  .notif-empty.nf-branded141 .nf141-btn{width:100%;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  .nf141-btn{transition:none}
+  .nf141-btn:hover{transform:none}
+}
+/* EOF-MARKER: session141-notif-empty-polish */
+
+/* ═══ session141: qa-composer × রিচ-এডিটর ইন্টিগ্রেশন (session140-প্রস্তাব ১) ═══
+   স্কোপ: .qa-composer140-এর ভেতরের re-root — ইঞ্জিন-বেস (rich-editor.css, article-form)
+   অস্পৃশ্য; এখানে ব্র্যান্ড-অ্যাকসেন্ট ওভাররাইড + কম্প্যাক্ট-ক্যানভাস (৩২০px নয়)। টোকেন-শুধু। */
+.qa-composer140 .re-root{--re-accent:var(--accent);--re-accent-deep:var(--brand-light);--re-accent-soft:var(--accent-soft);--re-border:var(--lf-ui-border);--re-bg:var(--lf-ui-surface)}
+.qa-composer140 .re-ta{min-height:130px;font-size:.95rem;line-height:1.75;padding:10px 12px}
+.qa-composer140 .re-toolbar{margin-bottom:8px}
+@media (max-width:640px){
+  .qa-composer140 .re-tb-hint{display:none}
+  .qa-composer140 .re-toolbar{flex-wrap:wrap}
+}
+/* EOF-MARKER: session141-qa-rich-editor */

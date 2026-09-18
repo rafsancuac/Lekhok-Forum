@@ -5,7 +5,10 @@
  * (নিজস্ব-পেইন্ট কখনো ক্যানোনিকাল-শেল মুছে নয় — এখানে fresh-swap-ই পথ)।
  * গেস্টে স্ব-নিষ্ক্রিয় (body[data-auth]); ড্রাফট localStorage (qacDraft140) — রিলোডেও বাঁচে।
  * ফিল্টার-সচেতন: ?filter=accepted-তে তালিকা-মিউটেশন নয় → সাফল্যে /qa/:id-নেভিগেশন
- * (stale-কাউন্টার-শিক্ষা: ফিল্টার-অখণ্ডতা > তাৎক্ষণিক-প্রদর্শন)। */
+ * (stale-কাউন্টার-শিক্ষা: ফিল্টার-অখণ্ডতা > তাৎক্ষণিক-প্রদর্শন)।
+ * সেশন ১৪১: বিস্তারিত-ফিল্ডে রিচ-এডিটর (LekhokRichEditor — {preview:false}; চোখ-বাটনে
+ * অপট-ইন প্রিভিউ) — মাউন্ট DOMContentLoaded-এ, ইঞ্জিন-অনুপস্থিতে সাদামাটা-textarea-ই থাকে
+ * (প্রগ্রেসিভ-এনহ্যান্সমেন্ট); সার্ভার renderBody-চুক্তি (session80) ফরম্যাট-রেন্ডার করে। */
 (function () {
   'use strict';
   var root = document.getElementById('qaComposer140');
@@ -149,6 +152,9 @@
     }
     bumpChips();
     title.value = ''; body.value = '';
+    /* সেশন ১৪১: ক্লিয়ার-পরে input-dispatch — ইঞ্জিন-প্রিভিউ (খোলা থাকলে) + কাউন্টার +
+       ড্রাফট সিঙ্ক; প্রোগ্রাম্যাটিক-সেটে input-ইভেন্ট হয় না → স্টেল-প্রিভিউ-প্রতিরোধ */
+    body.dispatchEvent(new Event('input', { bubbles: true }));
     updateCounts();
     collapse();
     setHint('প্রশ্ন প্রকাশিত ✓');
@@ -161,7 +167,12 @@
   });
   if (cancelBtn) cancelBtn.addEventListener('click', function () { collapse(); });
   panel.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { e.stopPropagation(); collapse(); }
+    if (e.key === 'Escape') {
+      /* সেশন ১৪১: জেন-মোড সক্রিয় হলে ইঞ্জিন নিজেই Esc-হ্যান্ডল করে — এখানে কল্যাপ্স
+         দমন (নইলে এক-Escape-এ জেন+প্যানেল দুটোই বন্ধ হয়ে যায়) */
+      if (body.closest && body.closest('.re-root.re-zen')) { e.stopPropagation(); return; }
+      e.stopPropagation(); collapse();
+    }
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); panel.requestSubmit ? panel.requestSubmit() : submit(); }
   });
   [title, body].forEach(function (f) {
@@ -209,4 +220,19 @@
 
   restoreDraft();
   updateCounts();
+
+  /* ── সেশন ১৪১: রিচ-এডিটর-মাউন্ট (ড্রাফট-রিস্টোরের পরে — প্রিভিউ সঠিক-ভ্যালুতে শুরু) ──
+     data-rich-editor অ্যাট্রিবিউট ইচ্ছাকৃতভাবে দেওয়া হয়নি — ইঞ্জিন auto-init-এর ডিফল্ট-cfg
+     (ডেস্কটপে স্প্লিট-প্রিভিউ) কম্পোজার-প্যানেলে ভারী; ম্যানুয়াল {preview:false} দেয়
+     টুলবার-সহ শান্ত ডিফল্ট (চোখ-বাটনে অপট-ইন প্রিভিউ)। */
+  function mountEditor() {
+    if (!window.LekhokRichEditor || typeof window.LekhokRichEditor.init !== 'function') return;
+    var inst = window.LekhokRichEditor.init(body, { preview: false });
+    if (inst && body.value) {
+      /* ড্রাফট-রিস্টোর-পরবর্তী সিঙ্ক (প্রোগ্রাম্যাটিক-সেটে input হয় না) */
+      body.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountEditor);
+  else mountEditor();
 })();
