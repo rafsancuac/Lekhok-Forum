@@ -1,0 +1,54 @@
+<%# সেশন ১৫৬ — সদস্যপদ সনদ (DB-চালিত, প্রিন্ট-রেডি; ইউজার-স্পেক ইউটিলিটি)
+    গোটচা-সচেতনতা: member.created_at SQLite-UTC স্ট্রিং — প্রদর্শনে সাল/তারিখ-ভাগ কেবল %>
+<%- include('../../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <%
+    var joinDt = member.created_at ? new Date(member.created_at.replace(' ', 'T') + 'Z') : new Date();
+    var joinYear = joinDt.getUTCFullYear();
+    var joinBn = joinDt.getUTCDate() + '/' + (joinDt.getUTCMonth() + 1) + '/' + joinYear;
+    var memberId = 'LF-CU-' + String(1000 + (member.id || 0));
+    var nowYear = new Date().getFullYear();
+    var toBnD = function (s) { return String(s).replace(/\d/g, function (c) { return '০১২৩৪৫৬৭৮৯'[+c]; }); };
+  %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-toolbox" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — সনদটি ব্রাউজার থেকে সরাসরি প্রিন্ট/সেভ করুন (Ctrl+P)।</p>
+      </div>
+    </div>
+
+    <div class="utl-cert" role="article" aria-label="ডিজিটাল সদস্য সনদ">
+      <span class="utl-cert-id"><%= memberId %></span>
+      <div class="utl-cert-org">লেখক ফোরাম · চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+      <h1 class="utl-cert-title">সদস্যপদ সনদপত্র</h1>
+      <p class="utl-cert-line">এই মর্মে প্রত্যয়ন করা হচ্ছে যে,</p>
+      <div class="utl-cert-name"><%= member.full_name || member.username %></div>
+      <p class="utl-cert-line">
+        তাঁর অনুপ্রেরণা, সাহিত্যচর্চা ও সাংগঠনিক অবদানের স্বীকৃতিস্বরূপ তিনি
+        <b>লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</b>-এর সম্মানিত সদস্যরূপে
+        <%= toBnD(joinYear) %> সাল থেকে কার্যরত আছেন।
+      </p>
+      <div class="utl-cert-meta">
+        <div><b><%= toBnD(joinBn) %></b>সদস্যভুক্তির তারিখ</div>
+        <div><b><%= toBnD(member.post_count || 0) %></b>প্রকাশিত লেখা</div>
+        <div><b><%= toBnD(Math.max(1, nowYear - joinYear)) %></b>বছর সদস্যপদ</div>
+        <div><b>@<%= member.username || 'member' %></b>ফোরাম আইডি</div>
+      </div>
+    </div>
+
+    <div class="utl-card utl-no-print" style="margin-top:16px">
+      <h2><i class="fas fa-print" aria-hidden="true"></i> প্রিন্ট ও শেয়ার</h2>
+      <p class="utl-sub">সনদটি সেভ করতে প্রিন্ট-ডায়ালগে "Save as PDF" বাছুন। আইডি-কার্ড প্রিন্টেও এই একই প্রিন্ট-শৈলী প্রযোজ্য।</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" class="utl-btn" onclick="window.print()"><i class="fas fa-print" aria-hidden="true"></i> সনদ প্রিন্ট করুন</button>
+        <a href="/me" class="utl-btn utl-btn--ghost"><i class="fas fa-user" aria-hidden="true"></i> আমার প্রোফাইল</a>
+      </div>
+    </div>
+  </div>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../../partials/sandbox-preview') %>
+</body>
+</html>

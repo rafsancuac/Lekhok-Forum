@@ -114,6 +114,9 @@ app.locals.toBn = require('./helpers/bn-number').toBnNumber;
 // .feed-rail) দুই-সারফেস এক-সোর্স — ডুপ্লিকেট/ড্রিফট-অসম্ভব।
 app.locals.dirSections = require('./helpers/dir-launcher').DIR_SECTIONS;
 app.locals.dirRail = require('./helpers/dir-launcher').DIR_RAIL;
+// সেশন ১৫৭: সেবাসমূহ ও আর্কাইভ (কদাচিৎ-ব্যবহৃত সহায়ক ফিচার) — হেডার-লঞ্চার-প্যানেল
+// (header.ejs) ও মোবাইল-সাইডবার এক-রেজিস্ট্রি (helpers/dir-launcher.js UTIL_SECTIONS)
+app.locals.utilSections = require('./helpers/dir-launcher').UTIL_SECTIONS;
 
 // ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
 // লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।
@@ -900,6 +903,7 @@ app.use('/',          require('./routes/member-accounts')); // টাস্ক �
 app.use('/',          require('./routes/social'));   // articles, qa, members, profile, follow, api
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
 app.use('/',          require('./routes/pages'));     // public pages: home, about, gallery, committee, contact, events, resources, notices
+app.use('/',          require('./routes/utilities')); // সেশন ১৫৭: সেবাসমূহ ও আর্কাইভ (spell-checker, font-converter, certificate, dmca, archive, peer-review, sponsorship, shortcuts)
 app.use('/',          require('./routes/dashboard'));// dashboard feed, messages, complaints
 app.use('/',          require('./routes/calls'));    // সেশন ৯৩: WebRTC কল-সিগন্যালিং (HTTP-পোলিং — Vercel-serverless-নিরাপদ)
 app.use('/avatar',    require('./routes/avatar'));   // default avatar serving

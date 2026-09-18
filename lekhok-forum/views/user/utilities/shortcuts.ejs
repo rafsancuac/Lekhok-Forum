@@ -1,0 +1,73 @@
+<%# সেশন ১৫৬ — কীবোর্ড শর্টকাটস ও টাইপিং চিটশিট (লাইভ কি-টেস্টারসহ; ইউজার-স্পেক ইউটিলিটি) %>
+<%- include('../../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-toolbox" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — কম্পোজার, ন্যাভিগেশন ও টাইপোগ্রাফির দ্রুত-পথসমূহ।</p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-keyboard" aria-hidden="true"></i> সাইট-শর্টকাট</h2>
+      <p class="utl-sub">কম্পোজার-মোডাল ও ফর্ম-এডিটরে সক্রিয়:</p>
+      <div class="utl-kbd-grid">
+        <div class="utl-kbd-row"><span>লেখা-কম্পোজার খুলুন</span><span><span class="utl-kbd">C</span></span></div>
+        <div class="utl-kbd-row"><span>সাবমিট (কম্পোজারে)</span><span><span class="utl-kbd">Ctrl</span> + <span class="utl-kbd">Enter</span></span></div>
+        <div class="utl-kbd-row"><span>খসড়া-সেভ</span><span><span class="utl-kbd">Ctrl</span> + <span class="utl-kbd">S</span></span></div>
+        <div class="utl-kbd-row"><span>মোডাল বন্ধ / বাতিল</span><span><span class="utl-kbd">Esc</span></span></div>
+        <div class="utl-kbd-row"><span>সার্চ-বারে যান</span><span><span class="utl-kbd">/</span></span></div>
+        <div class="utl-kbd-row"><span>সাইটের শীর্ষে ফিরুন</span><span><span class="utl-kbd">Home</span></span></div>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-i-cursor" aria-hidden="true"></i> টাইপোগ্রাফি চিটশিট (বাংলা)</h2>
+      <p class="utl-sub">প্রমিত বাংলা টাইপসেটিংয়ের দ্রুত-রেফারেন্স:</p>
+      <div class="utl-kbd-grid">
+        <div class="utl-kbd-row"><span>বাক্য-সমাপ্তি (দাঁড়ি)</span><span class="utl-kbd">।</span></div>
+        <div class="utl-kbd-row"><span>প্রশ্নবোধক</span><span class="utl-kbd">?</span></div>
+        <div class="utl-kbd-row"><span>বিরামচিহ্ন (যতি)</span><span class="utl-kbd">,</span></div>
+        <div class="utl-kbd-row"><span>উদ্ধৃতি-চিহ্ন</span><span class="utl-kbd">“ ”</span></div>
+        <div class="utl-kbd-row"><span>হাইফেন-জাতীয় (রেঞ্জ)</span><span class="utl-kbd">–</span></div>
+        <div class="utl-kbd-row"><span>বাংলা সংখ্যা-সেট</span><span class="utl-kbd">০১২৩৪৫৬৭৮৯</span></div>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-hand-pointer" aria-hidden="true"></i> লাইভ কি-টেস্টার</h2>
+      <p class="utl-sub">যেকোনো কি চাপুন — ইভেন্ট-শনাক্তকরণ এখানেই দেখা যাবে (শর্টকাট-ডিবাগে কাজের)।</p>
+      <div class="utl-capture" id="ktOut" aria-live="polite">কোনো কি চাপা হয়নি…</div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    var out = document.getElementById('ktOut');
+    function toBn(n) { return String(n).replace(/\d/g, function (c) { return '০১২৩৪৫৬৭৮৯'[+c]; }); }
+    function nameKey(e) {
+      var parts = [];
+      if (e.ctrlKey) parts.push('Ctrl');
+      if (e.metaKey) parts.push('⌘');
+      if (e.altKey) parts.push('Alt');
+      if (e.shiftKey) parts.push('Shift');
+      var k = e.key === ' ' ? 'Space' : (e.key.length === 1 ? e.key.toUpperCase() : e.key);
+      parts.push(k);
+      return parts;
+    }
+    document.addEventListener('keydown', function (e) {
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+      var parts = nameKey(e);
+      out.innerHTML = 'চাপা হয়েছে: ' + parts.map(function (p) { return '<span class="utl-kbd">' + p + '</span>'; }).join(' + ') +
+        ' <span style="font-size:11px;color:var(--lf-text-tertiary)">(keyCode ' + toBn(e.keyCode || 0) + ')</span>';
+    }, false);
+  })();
+  </script>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../../partials/sandbox-preview') %>
+</body>
+</html>

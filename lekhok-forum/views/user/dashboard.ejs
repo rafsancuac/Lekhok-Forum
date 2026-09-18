@@ -10,7 +10,8 @@
         helpers/dir-launcher.js এক-রেজিস্ট্রি (app.locals.dirRail) — হেডার-প্যানেলের সাথে
         ড্রিফট-অসম্ভব; রেল-ক্রম/হাইলাইট ওই রেজিস্ট্রিতেই নিয়ন্ত্রিত। ── %>
     <%# সেশন ১৫৬: fb-scroll — হোভারে দৃশ্যমান স্ক্রলবার (style.css session156-ইউটিলিটি) %>
-    <aside class="feed-rail fb-scroll" aria-label="ফিড শর্টকাট">
+    <%# সেশন ১৫৭ (relabel: সমান্তরাল session156 আগে-ল্যান্ডেড, max+1-রীতি): পূর্ণাঙ্গ ডিরেক্টরি-রেল %>
+    <aside class="feed-rail fb-scroll" aria-label="ফোরাম ডিরেক্টরি">
       <% if (user) { %>
         <a href="/me" class="fr-me">
           <img loading="lazy" decoding="async" src="<%= user.avatar_url || '/avatar/' + user.id %>" alt="" class="fr-me-avatar" onerror="this.onerror=null;this.src='/assets/avatars/neutral.svg?v=3'">
@@ -18,13 +19,27 @@
         </a>
         <div class="fr-sep" aria-hidden="true"></div>
       <% } %>
-      <% (typeof dirRail !== 'undefined' ? dirRail : []).forEach(function (it) { %>
-        <a href="<%= it.href %>" class="fr-item<%= it.railHighlight ? ' hl' : '' %>">
-          <span class="fr-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
-          <span class="fr-label"><%= it.label %></span>
-        </a>
+      <%# সেশন ১৫৭ (ইউজার-স্পেক, relabel): পূর্ণাঙ্গ ফোরাম ডিরেক্টরি — হেডার-লঞ্চারের সব ১২ আইটেম
+          এখন বাম-রেলে সেকশন-শিরোনামসহ স্থায়ী (প্রতিদিনের পড়া-লেখা সর্বদা চোখের সামনে)।
+          প্রতিটি আইটেমে Title+Desc দুই-লাইন (FB LeftRail-প্যারিটি) + 'আজকের' ব্যাজ।
+          রেজিস্ট্রি: helpers/dir-launcher.js (app.locals.dirSections) — হেডার/রেল এক-সোর্স। %>
+      <% (typeof dirSections !== 'undefined' ? dirSections : []).forEach(function (sec, sIdx) { %>
+        <p class="fr-sec-title157"><%= sec.title %></p>
+        <% sec.items.forEach(function (it) { %>
+          <a href="<%= it.href %>" class="fr-item fr-item--rich157<%= it.railHighlight ? ' hl' : '' %>">
+            <span class="fr-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
+            <span class="fr-body157">
+              <span class="fr-label-row157">
+                <span class="fr-label"><%= it.label %></span>
+                <% if (it.href === '/epaper') { %><span class="fr-badge157">আজকের</span><% } %>
+              </span>
+              <span class="fr-desc157"><%= it.desc %></span>
+            </span>
+          </a>
+        <% }) %>
+        <% if (sIdx < dirSections.length - 1) { %><div class="fr-sep" aria-hidden="true"></div><% } %>
       <% }) %>
-      <div class="fr-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+      <div class="fr-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় © ২০২৬</div>
     </aside>
     <!-- Main Feed -->
     <main class="dash-main fb-scroll">

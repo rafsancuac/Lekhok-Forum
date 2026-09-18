@@ -2285,6 +2285,19 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 .dlx-foot{margin-top:8px;padding:8px 16px 12px;border-top:1px solid var(--lf-ui-border);font-size:10.5px;color:var(--lf-text-tertiary)}
 @media (max-width:992px){.dlx-wrap{display:none!important}}
 
+/* ═════════ সেশন ১৫৭ — সেবাসমূহ ও আর্কাইভ (ইউজার-স্পেক MoreUtilitiesMenu-পোর্ট) ═════════
+   হেডার-লঞ্চার-প্যানেল এখন UTIL_SECTIONS রেন্ডার করে — ১-কলাম লিস্ট-রো (প্যানেল-প্রস্থ
+   ৪২০px-প্যারিটি), প্রতি রোতে আইকন+টাইটেল+ডেস্ক+শেভরন। টোকেন-শুধু (হেক্স-শূন্য)। */
+.dlx-panel--util157{width:min(420px,calc(100vw - 40px))}
+.dlx-grid--list157{display:flex;flex-direction:column;gap:2px}
+.dlx-item--row157{padding:7px 8px;border-radius:9px}
+.dlx-item--row157 .dlx-ico{width:34px;height:34px;border-radius:10px;font-size:14px}
+.dlx-item--row157 .dlx-meta{flex:1 1 auto}
+.dlx-item--row157 .dlx-item-title{font-size:12px}
+.dlx-go157{flex:0 0 auto;align-self:center;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:9px;color:var(--lf-text-tertiary);background:var(--lf-ui-canvas);opacity:0;transform:translateX(-4px);transition:var(--transition)}
+.dlx-item--row157:hover .dlx-go157,.dlx-item--row157:focus-visible .dlx-go157{opacity:1;transform:translateX(0);color:var(--lf-brand-primary)}
+@media (prefers-reduced-motion:reduce){.dlx-go157,.dlx-item--row157 .dlx-ico{transition:none;transform:none}}
+
 /* ═════════ ফিড-কোলাজ (fb-col153) — ইন্টেলিজেন্ট লেআউট ═════════ */
 .fb-col153{display:grid;gap:2px;border-radius:10px;overflow:hidden;margin-top:2px}
 .fb-col153-1{grid-template-columns:1fr}

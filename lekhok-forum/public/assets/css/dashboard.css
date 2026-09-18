@@ -302,8 +302,8 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
    ═══════════════════════════════════════════════════════════════════════════ */
 .feed-rail{display:none}
 @media (min-width:1200px){
-  .dashboard-wrap.two-col.has-rail{grid-template-columns:212px minmax(0,1fr) 300px;max-width:1360px}
-  .dashboard-wrap.two-col.has-rail .feed-rail{display:flex;flex-direction:column;gap:2px;position:sticky;top:76px;align-self:start;max-height:calc(100vh - 96px);overflow-y:auto;overscroll-behavior:contain;padding:4px 8px 4px 0;scrollbar-width:thin}
+  .dashboard-wrap.two-col.has-rail{grid-template-columns:264px minmax(0,1fr) 300px;max-width:1400px}
+  .dashboard-wrap.two-col.has-rail .feed-rail{display:flex;flex-direction:column;gap:2px;position:sticky;top:76px;align-self:start;max-height:calc(100vh - 96px);overflow-y:auto;overscroll-behavior:contain;padding:4px 10px 4px 0;scrollbar-width:thin}
 }
 .fr-me{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;font-weight:700;font-size:13px;color:var(--lf-text-primary);transition:var(--transition)}
 .fr-me:hover{background:var(--lf-ui-canvas)}
@@ -320,6 +320,26 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .fr-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fr-foot{margin-top:10px;padding:8px;font-size:10.5px;line-height:1.5;color:var(--lf-text-tertiary)}
 @media (prefers-reduced-motion:reduce){.fr-me,.fr-item{transition:none}}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   সেশন ১৫৭ — পূর্ণাঙ্গ ফোরাম ডিরেক্টরি রেল (ইউজার-স্পেক: FeedLeftSidebar-পোর্ট)
+   হেডার-লঞ্চারের ১২ আইটেম বাম-রেলে সেকশন-গ্রুপড — প্রতিটি আইটেম Title+Desc
+   দুই-লাইন + 'আজকের' ব্যাজ (ই-পেপার)। রেলের নিজস্ব স্ক্রল অক্ষুণ্ণ (FB-প্যারিটি)।
+   টোকেন-শুধু (হেক্স-শূন্য — ratchet-safe)।
+   ═══════════════════════════════════════════════════════════════════════ */
+.fr-sec-title157{margin:8px 0 4px;padding:0 8px;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--lf-text-tertiary)}
+.fr-item--rich157{align-items:flex-start;padding:6px 8px}
+.fr-item--rich157:hover{transform:translateX(2px)}
+.fr-item--rich157 .fr-ico{margin-top:2px}
+.fr-body157{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+.fr-label-row157{display:flex;align-items:center;gap:6px;min-width:0}
+.fr-label-row157 .fr-label{font-size:12.5px;line-height:1.3;flex:0 1 auto}
+.fr-item--rich157:hover .fr-label{color:var(--lf-brand-primary)}
+.fr-badge157{flex:0 0 auto;padding:1px 5px;border-radius:5px;font-size:9px;font-weight:800;line-height:1.4;letter-spacing:.3px;background:var(--lf-brand-light);color:var(--lf-brand-primary)}
+.fr-desc157{font-size:10.5px;line-height:1.4;color:var(--lf-text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr-item--rich157.hl{background:var(--lf-brand-light);border-radius:10px}
+.fr-item--rich157.hl .fr-desc157{color:var(--lf-brand-primary)}
+@media (prefers-reduced-motion:reduce){.fr-item--rich157{transition:none;transform:none}}
 
 /* ═════════ সেশন ১৫৩ — FB-রিচ-কম্পোজার + ইন্টেলিজেন্ট মিডিয়া-কোলাজ (ইউজার-স্পেক) ═════════
    টোকেন-শুধু (হেক্স-শূন্য — dashboard.css র্যাচেট-বেসলাইন 0 অক্ষুণ্ণ); 640px + reduced-motion। */

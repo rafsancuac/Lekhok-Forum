@@ -1,0 +1,110 @@
+<%# সেশন ১৫৬ — ইউনিকোড ও ফন্ট কনভার্টার (ক্লায়েন্ট-সাইড; ইউজার-স্পেক ইউটিলিটি) %>
+<%- include('../../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-toolbox" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — বিজয়-যুগের ফাইল থেকে পাওয়া টেক্সট প্রকাশ-উপযোগী করুন।</p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> রূপান্তর ইঞ্জিন</h2>
+      <p class="utl-sub">মোড বাছুন — টেক্সট টাইপ করলেই তাৎক্ষণিক রূপান্তর হবে (সম্পূর্ণ ব্রাউজারে)।</p>
+      <div class="utl-mode-row" role="group" aria-label="রূপান্তর মোড">
+        <button type="button" class="utl-chip is-on" data-mode="clean">স্বয়ংক্রিয় পরিষ্কার</button>
+        <button type="button" class="utl-chip" data-mode="bn">ইংরেজি → বাংলা সংখ্যা</button>
+        <button type="button" class="utl-chip" data-mode="en">বাংলা → ইংরেজি সংখ্যা</button>
+        <button type="button" class="utl-chip" data-mode="punct">যতিচিহ্ন প্রমিতকরণ</button>
+      </div>
+      <div class="utl-field">
+        <label for="fcIn">উৎস-টেক্সট <small>(পেস্ট করুন)</small></label>
+        <textarea id="fcIn" class="utl-ta" placeholder="যেমন: ২০২৬ সালের ১০% লেখা...  |  "quotes"  |  'single'">১২৩৪৫৬৭৮৯০ "উদ্ধৃতি" 'ছোট' | দাঁড়ি এভাবে নয়!</textarea>
+      </div>
+      <div class="utl-field">
+        <label for="fcOut">ফলাফল <small>(কপি করে ব্যবহার করুন)</small></label>
+        <textarea id="fcOut" class="utl-out" readonly aria-label="রূপান্তরের ফলাফল"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" id="fcCopy" class="utl-btn"><i class="fas fa-copy" aria-hidden="true"></i> ফলাফল কপি</button>
+        <button type="button" id="fcSwap" class="utl-btn utl-btn--ghost"><i class="fas fa-arrow-rotate-left" aria-hidden="true"></i> উৎসে ফেরান</button>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-circle-info" aria-hidden="true"></i> কী কী ঠিক হয়</h2>
+      <p class="utl-sub">'স্বয়ংক্রিয় পরিষ্কার' মোডে:</p>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span><b>দাঁড়ি প্রমিতকরণ:</b> পাইপ (|) → বাংলা দাঁড়ি (।), শেষে অপ্রয়োজনীয় স্পেস সরানো</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span><b>উদ্ধৃতি-চিহ্ন:</b> ইংরেজি "…" ও '…' → বাংলা প্রমিত ‘…’ ও “…”</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span><b>সংখ্যা:</b> প্রসঙ্গ অনুযায়ী ০-৯ ↔ 0-9 রূপান্তর</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span><b>স্পেস-স্বাস্থ্য:</b> ডাবল-স্পেস একত্র, যতিচিহ্নের আগের স্পেস সরানো</span></div>
+      <div class="utl-policy-li"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i><span><b>বিজয় ANSI→ইউনিকোড</b> পূর্ণাঙ্গ ইঞ্জিন (অক্ষর-ম্যাপিং টেবিলসহ) আসন্ন — বর্তমান পর্যায়ে ইউনিকোড-স্যানিটাইজেশন সক্রিয়।</span></div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    var EN = '0123456789', BN = '০১২৩৪৫৬৭৮৯';
+    var mode = 'clean';
+    var input = document.getElementById('fcIn');
+    var output = document.getElementById('fcOut');
+    function mapDigits(s, from, to) {
+      return s.replace(/[\d০-৯]/g, function (ch) {
+        var i = from.indexOf(ch);
+        return i === -1 ? ch : to[i];
+      });
+    }
+    function convert(s) {
+      switch (mode) {
+        case 'bn': return mapDigits(s, EN, BN);
+        case 'en': return mapDigits(s, BN, EN);
+        case 'punct':
+          return s
+            .replace(/\s*\|\s*/g, '। ')
+            .replace(/,/g, ',')
+            .replace(/([।,!?;:])(?=\S)/g, '$1 ')
+            .replace(/[ \t]{2,}/g, ' ');
+        default: /* clean — সব একসাথে */
+          return s
+            .replace(/[“”]/g, '“').replace(/[‘’]/g, '‘')
+            .replace(/"([^"]*)"/g, '“$1”')
+            .replace(/'([^']*)'/g, '‘$1’')
+            .replace(/\s*\|\s*/g, '। ')
+            .replace(/([।,!?;:])(?=\S)/g, '$1 ')
+            .replace(/[ \t]{2,}/g, ' ')
+            .replace(/ +([।,!?;:])/g, '$1')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+      }
+    }
+    function render() { output.value = convert(input.value); }
+    input.addEventListener('input', render);
+    document.querySelectorAll('.utl-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        document.querySelectorAll('.utl-chip').forEach(function (c) { c.classList.remove('is-on'); });
+        chip.classList.add('is-on');
+        mode = chip.dataset.mode;
+        render();
+      });
+    });
+    document.getElementById('fcCopy').addEventListener('click', function () {
+      output.select();
+      try { document.execCommand('copy'); } catch (_) { /* clipboard API fallback */ }
+      if (navigator.clipboard) navigator.clipboard.writeText(output.value).catch(function () {});
+      this.innerHTML = '<i class="fas fa-check" aria-hidden="true"></i> কপি হয়েছে';
+      var b = this; setTimeout(function () { b.innerHTML = '<i class="fas fa-copy" aria-hidden="true"></i> ফলাফল কপি'; }, 1400);
+    });
+    document.getElementById('fcSwap').addEventListener('click', function () {
+      input.value = output.value; render();
+    });
+    render();
+  })();
+  </script>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../../partials/sandbox-preview') %>
+</body>
+</html>

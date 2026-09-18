@@ -1,0 +1,56 @@
+<%# সেশন ১৫৬ — ব্লাইন্ড পিয়ার-রিভিউ প্যানেল (লেখক-অজ্ঞতা নীতি; ইউজার-স্পেক ইউটিলিটি)
+    ব্লাইন্ড-নীতি: তালিকায় ইচ্ছাকৃত লেখক-নাম বাদ — শুধু শিরোনাম/ক্যাটাগরি/দৈর্ঘ্য। %>
+<%- include('../../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <%
+    var toBnD = function (s) { return String(s).replace(/\d/g, function (c) { return '০১২৩৪৫৬৭৮৯'[+c]; }); };
+    function fmtLen(n) {
+      var m = Math.max(1, Math.round((n || 0) / 5)); /* বাংলা-গড় ৫-অক্ষর/শব্দ */
+      return toBnD(m) + '+ শব্দ';
+    }
+  %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-toolbox" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — রিভিউয়ার লেখককে চিনবেন না; কেবল লেখাটিই মূল্যায়ন করবেন।</p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-eye-slash" aria-hidden="true"></i> ব্লাইন্ড-নীতি কীভাবে কাজ করে</h2>
+      <div class="utl-policy-li"><i class="fas fa-user-secret" aria-hidden="true"></i><span>নিচের তালিকায় <b>লেখকের নাম দেখানো হয় না</b> — শুধু শিরোনাম, ক্যাটাগরি, দৈর্ঘ্য ও তারিখ।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-comments" aria-hidden="true"></i><span>মূল্যায়ন করতে লেখাটি খুলে কনস্ট্রাকটিভ মন্তব্য করুন — সাজেশনগুলো লেখকের কাছে বেনামেই পৌঁছায়।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-star-half-stroke" aria-hidden="true"></i><span>বিচার্য মানদণ্ড: কাঠামো, ভাষার স্বচ্ছতা, মৌলিকত্ব ও প্রাসঙ্গিকতা।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-chart-simple" aria-hidden="true"></i><span>এ পর্যন্ত <b><%= toBnD(reviewedCount) %></b>টি লেখা অন্তত একটি পিয়ার-মন্তব্য পেয়েছে।</span></div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-file-lines" aria-hidden="true"></i> রিভিউ-অপেক্ষায় পাণ্ডুলিপি</h2>
+      <p class="utl-sub">সাম্প্রতিক প্রকাশিত <%= toBnD(manuscripts.length) %>টি পাণ্ডুলিপি — যেকোনোটিতে বেনামে রিভিউ দিন।</p>
+      <% if (!manuscripts.length) { %>
+        <p style="font-size:13px;color:var(--lf-text-tertiary)">এই মুহূর্তে রিভিউ-অপেক্ষায় কোনো পাণ্ডুলিপি নেই।</p>
+      <% } %>
+      <% manuscripts.forEach(function (m) { %>
+        <div class="utl-ms">
+          <span class="utl-ms-ico"><i class="fas fa-feather" aria-hidden="true"></i></span>
+          <span class="utl-ms-body">
+            <a class="utl-ms-title" href="/articles/<%= m.id %>"><%= m.title %></a>
+            <span class="utl-ms-meta">
+              <% if (m.category) { %><span><i class="fas fa-tag" aria-hidden="true"></i> <%= m.category %></span><% } %>
+              <span><i class="fas fa-ruler" aria-hidden="true"></i> <%= fmtLen(m.body_len) %></span>
+              <span><i class="far fa-calendar" aria-hidden="true"></i> <%= toBnD(String(m.created_at || '').slice(0, 10)) %></span>
+              <span><i class="fas fa-eye" aria-hidden="true"></i> <%= toBnD(m.view_count || 0) %> পাঠ</span>
+            </span>
+          </span>
+          <span class="utl-blind-pill">লেখক-অজ্ঞ</span>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../../partials/sandbox-preview') %>
+</body>
+</html>

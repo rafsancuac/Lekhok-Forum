@@ -1752,3 +1752,20 @@ Stage Summary:
 - পরের-এজেন্ট: session151 (style.css-র্যাচেট ১৩৯৫-প্রথম-প্রস্তাব)
 
 **push-সমাপ্তি (session150):** e50a5e9→**ace86f0** (push-রেস: সমান্তরাল session148–154 + session155 (lekhok-forum-next/ Next.js-অ্যাপ — Express-app অক্ষত) আগে-ল্যান্ডেড → rebase: worklog ×২ + PLANS ×২ + PROJECT ×১ + tokens.css ×১-union (nested-=======-ফাঁদ-পুনঃপ্রমাণ; per-name defs=১ ×৩৩-আমার + তাদের blue-soft সহাবস্থান) — মার্জড-ট্রি-যাচাই: role-policy **২৫৪/২৫৪** (তাদের নতুন-§-সহ) + s150 **২৯/২৯** + s144 ৩১/৩১ + guard ✓ + হেক্স-বেসলাইন (auth/gallery/calls/bookmarks: 0) অক্ষত + wrap150 ×১০ + markdown-lite ×৪ — ALL GREEN; 🚨 ক্লিনআপ-গোটচা-পুনঃপ্রমাণ: /qa/:id/delete আর্টিকেলেও নীরব-303 (রুট-মিস → কিছুই-মোছে-না) — delete-রুট↔টাইপ-মিল + প্রত্যক্ষ-পেজ-404-যাচাই বাধ্যতামূলক; অবশিষ্ট-টেস্ট-পোস্ট ×১৩-পূর্ণ-পরিষ্কার) — Express-app-এর পরের-এজেন্ট **session156** থেকে
+
+---
+Task ID: 26 (Session 156 — Lekhok-Forum বাম-রেল ফোরাম ডিরেক্টরি + সেবাসমূহ-ও-আর্কাইভ)
+Agent: Z.ai (ইউজার-স্পেক: ডান-দিকের 'আরও'-কন্টেন্ট → বাম-প্যানেল + আরও-সেকশনে কদাচিৎ-ব্যবহৃত ফিচার)
+Task: FeedLeftSidebar.tsx + MoreUtilitiesMenu.tsx স্পেক (React-ধাঁচ) → Express/EJS-পোর্ট
+
+Work Log:
+- রিপো ফ্রেশ-ক্লোন (sandbox-খালি ছিল) → bun install → server boot SANDBOX_PORT=8080
+- dir-launcher.js: ১২-আইটেম-রেল + UTIL_SECTIONS (৪-ক্যাটাগরি × ৮-ইউটিলিটি) — এক-রেজিস্ট্রি
+- dashboard.ejs রেল: সেকশন-গ্রুপড ডিরেক্টরি (টাইটেল+ডেস্ক+ব্যাজ) + 264px; header.ejs লঞ্চার: 'সেবাসমূহ ও আর্কাইভ' লিস্ট-প্যানেল + মোবাইল-সাইডবার ×২-ভ্যারিয়েন্ট
+- routes/utilities.js + views/user/utilities/ ×৮ + utilities.css — বাস্তব-পেজ: বানান-পরীক্ষক (৩৩-নিয়ম), ফন্ট-কনভার্টার (৪-মোড), সনদ (DB+প্রিন্ট), DMCA (complaints+ডুপ-গার্ড), আর্কাইভ (বছর-গ্রুপিং), পিয়ার-রিভিউ (ব্লাইন্ড), স্পন্সরশিপ, শর্টকাটস
+- QA: ৮-রুট-200 + certificate-gate + DMCA-POST?ok=1/?dup=1 + ইঞ্জিন-লাইভ-যাচাই ×৩ + রেল/প্যানেল/মোবাইল-মার্কআপ + 390px-০ + কনসোল-০ + role-policy fresh-DB-প্যারিটি (IDENTICAL failure-sets — রিগ্রেশন-শূন্য) + স্ক্রিনশট ×৪
+- গোটচা: অতিথি-মোবাইল-সাইডবার আলাদা-শাখা (প্রথম-এডিট user-ভ্যারিয়েন্টে-কেবল — served-HTML-diff-এ ধরা) · suite-DB-মিউটেশন → same-protocol-fresh-diff বাধ্যতামূলক · /login স্টাফ-ব্লক → ismail/secret123
+
+Stage Summary:
+- ইউজার-স্পেক-সম্পূর্ণ: বাম-রেল = পূর্ণাঙ্গ ফোরাম ডিরেক্টরি; হেডার-লঞ্চার = সেবাসমূহ-ও-আর্কাইভ; ৮টি নতুন বাস্তব-ইউটিলিটি-পেজ (404-শূন্য)
+- পরের-এজেন্ট: session157; প্রস্তাব-কিউ worklog-সেশন-১৫৬-নোটে

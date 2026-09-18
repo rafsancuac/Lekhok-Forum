@@ -1,0 +1,53 @@
+<%# সেশন ১৫৬ — বিজ্ঞাপন ও স্পন্সরশিপ নীতিমালা (স্ট্যাটিক-নীতি-পেজ; ইউজার-স্পেক ইউটিলিটি) %>
+<%- include('../../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-toolbox" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — সাহিত্য-প্রকাশনা অব্যাহত রাখতে বিজ্ঞাপন-আয়ের স্বচ্ছ কাঠামো।</p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-coins" aria-hidden="true"></i> বিজ্ঞাপন-স্লট ও ভাড়া</h2>
+      <p class="utl-sub">সকল ভাড়া মাসিক (৳), প্রকাশনা-পত্রিকার তিন ধাপের স্লটে:</p>
+      <div style="overflow-x:auto">
+        <table class="utl-table">
+          <thead>
+            <tr><th scope="col">স্লট</th><th scope="col">অবস্থান</th><th scope="col">আকার</th><th scope="col">মাসিক ভাড়া</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>হেডলাইন</b></td><td>হোম-পেজ শীর্ষ-ব্যানার</td><td>৯৭০×২৫০</td><td class="utl-price">৳ ২,৫০০</td></tr>
+            <tr><td><b>সাইডরেল</b></td><td>ফিডের ডান কলাম</td><td>৩০০×২৫০</td><td class="utl-price">৳ ১,২০০</td></tr>
+            <tr><td><b>ইন-ফিড</b></td><td>পোস্টের মাঝে (প্রতি ৫ আইটেমে)</td><td>নেটিভ-কার্ড</td><td class="utl-price">৳ ৮০০</td></tr>
+            <tr><td><b>ই-পেপার</b></td><td>দৈনিক সাহিত্য-পাতার ফুটার</td><td>৭২৮×৯০</td><td class="utl-price">৳ ৬০০</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-scroll" aria-hidden="true"></i> স্পন্সরশিপ-নীতি</h2>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>শুধুমাত্র <b>শিক্ষা, সংস্কৃতি, প্রকাশনা ও বই-সংগঠন</b> সংশ্লিষ্ট স্পন্সরশিপ গৃহীত হয়।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>রাজনৈতিক, ধর্মীয় উসকানিমূলক বা জুয়া/বাজি-সংশ্লিষ্ট কোনো বিজ্ঞাপন নয় — নীতি অনড়।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>স্পন্সর-কনটেন্ট সবসময় 'স্পন্সরড'-লেবেলে স্পষ্টভাবে চিহ্নিত থাকবে।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>সম্পাদকীয়-সিদ্ধান্তে বিজ্ঞাপনের কোনো প্রভাব চিরকালই অগ্রহণযোগ্য।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>সদস্য-লেখকদের বই-প্রকাশোৎসবে <b>৫০% স্পন্সর-ছাড়</b> প্রযোজ্য।</span></div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-handshake" aria-hidden="true"></i> যোগাযোগ</h2>
+      <p class="utl-sub">বিজ্ঞাপন-বুকিং ও স্পন্সরশিপ-প্রস্তাবের জন্য:</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="mailto:info@lekhokforum.org?subject=বিজ্ঞাপন%20ও%20স্পন্সরশিপ" class="utl-btn"><i class="fas fa-envelope" aria-hidden="true"></i> info@lekhokforum.org</a>
+        <a href="/contact" class="utl-btn utl-btn--ghost"><i class="fas fa-address-book" aria-hidden="true"></i> যোগাযোগ-পাতা</a>
+      </div>
+    </div>
+  </div>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../../partials/sandbox-preview') %>
+</body>
+</html>

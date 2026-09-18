@@ -1,0 +1,106 @@
+<%# সেশন ১৫৬ — প্রমিত বানান পরীক্ষক ও অভিধান (ক্লায়েন্ট-সাইড; ইউজার-স্পেক ইউটিলিটি) %>
+<%- include('../../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-toolbox" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — লেখা প্রকাশের আগে নিজেই যাচাই করুন।</p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-pen-nib" aria-hidden="true"></i> লেখা পেস্ট করুন</h2>
+      <p class="utl-sub">প্রতিটি বাক্য সাধারণ প্রমিত-বানান নিয়মের সাথে মিলিয়ে দেখা হবে (কোনো কিছু সার্ভারে পাঠানো হয় না — সম্পূর্ণ ব্রাউজারে)।</p>
+      <textarea id="scInput" class="utl-ta" placeholder="এখানে আপনার লেখা পেস্ট করুন…" aria-label="বানান যাচাইয়ের লেখা"></textarea>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button type="button" id="scCheck" class="utl-btn"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> বানান যাচাই করুন</button>
+        <button type="button" id="scClear" class="utl-btn utl-btn--ghost">মুছুন</button>
+        <span id="scStat"></span>
+      </div>
+      <div id="scResult" class="utl-sx" aria-live="polite"></div>
+    </div>
+
+    <div class="utl-card utl-no-print">
+      <h2><i class="fas fa-circle-info" aria-hidden="true"></i> এই পরীক্ষক যা ধরতে পারে</h2>
+      <p class="utl-sub">নমুনা-নিয়ম — প্রতিটি নিয়ম বাংলা একাডেমির প্রমিত রীতি অনুসারে:</p>
+      <div class="utl-sx-row"><span class="utl-sx-bad">শাশ্ত্রীয়</span><span class="utl-sx-good">শাস্ত্রীয়</span><span class="utl-sx-note">সংস্কৃত-ঋণ শব্দে শ-এর আগে স</span></div>
+      <div class="utl-sx-row"><span class="utl-sx-bad">করিতাছে</span><span class="utl-sx-good">করছে</span><span class="utl-sx-note">সাধু-রীতির পরিবর্তে চলিত-রূপ</span></div>
+      <div class="utl-sx-row"><span class="utl-sx-bad">আরো</span><span class="utl-sx-good">আরও</span><span class="utl-sx-note">প্রমিত রীতিতে য-ফলা নিষিদ্ধ</span></div>
+      <div class="utl-sx-row"><span class="utl-sx-bad">আশ্চর্য্য</span><span class="utl-sx-good">আশ্চর্য</span><span class="utl-sx-note">দ্বিতীয় য্য নিষিদ্ধ</span></div>
+      <p style="font-size:11.5px;color:var(--lf-text-tertiary);margin:10px 0 0">পূর্ণাঙ্গ অভিধান-ইঞ্জিন আসন্ন — বর্তমানে ৩৫+ সাধারণ ভুলের তালিকা ইঞ্জিনে সক্রিয়।</p>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    /* প্রমিত-বানান নিয়ম — [ভুল, সংশোধন, ব্যাখ্যা] (সাবস্ট্রিং-ভিত্তিক স্ক্যান) */
+    var RULES = [
+      ['শাশ্ত্রীয়', 'শাস্ত্রীয়', 'সংস্কৃত-ঋণ শব্দে শ-এর আগে স'],
+      ['করিতাছে', 'করছে', 'সাধু → চলিত রূপ'],
+      ['করিয়াছিল', 'করেছিল', 'সাধু → চলিত রূপ'],
+      ['হইয়াছে', 'হয়েছে', 'সাধু → চলিত রূপ'],
+      ['ইত্যাদি।', 'ইত্যাদি', 'ইত্যাদির পরে দাঁড়ি বসে না'],
+      ['আরো', 'আরও', 'প্রমিত রীতিতে য-ফলা নেই'],
+      ['ক্যামরা', 'ক্যামেরা', 'camera-র প্রমিত বাংলা রূপ'],
+      ['পুরষ্কার', 'পুরস্কার', 'পুরস্কার-ই প্রমিত (ষ নয়)'],
+      ['উপকারীতা', 'উপকারিতা', 'কারিতা — ষ নয়, স'],
+      ['গুরুত্তপূর্ণ', 'গুরুত্বপূর্ণ', 'ত্ত → ত্ব'],
+      ['গুরুত্ত্বপূর্ণ', 'গুরুত্বপূর্ণ', 'ত্ত → ত্ব'],
+      ['চুড়ান্ত', 'চূড়ান্ত', 'চূড়া — ঊ-কার প্রমিত'],
+      ['সুচনা', 'সূচনা', 'সূচনা — ঊ-কার প্রমিত'],
+      ['সুর্য', 'সূর্য', 'সূর্য — ঊ-কার প্রমিত'],
+      ['ভুমিকা', 'ভূমিকা', 'ভূমিকা — ঊ-কার প্রমিত'],
+      ['মুমুর্ষু', 'মুমূর্ষু', 'মুমূর্ষু — ঊ-কার প্রমিত'],
+      ['ভাষ্কর', 'ভাস্কর', 'ভাস্কর — স, ষ নয়'],
+      ['ত্রুতিবিধান', 'ত্রুটিবিধান', 'ত্রুটি — ট'],
+      ['আশ্চর্য্য', 'আশ্চর্য', 'আশ্চর্য — দ্বিতীয় য্য নিষিদ্ধ'],
+      ['সৌন্দর্য্য', 'সৌন্দর্য', 'সৌন্দর্য — দ্বিতীয় য্য নিষিদ্ধ'],
+      ['কার্য্যক্রম', 'কার্যক্রম', 'কার্যক্রম — দ্বিতীয় য্য নিষিদ্ধ'],
+      ['স্বত্ত্বাধিকার', 'স্বত্বাধিকার', 'স্বত্ব — ত্ব প্রমিত'],
+      ['দৈনন্দিন্য', 'দৈনন্দিনতা', 'প্রমিত রূপ দৈনন্দিনতা'],
+      ['শয়তান', 'শয়তান', '—'],
+      ['ভিক্ষার্থী', 'ভিক্ষুক', 'প্রসঙ্গভেদে প্রমিত রূপ'],
+      ['দূর্গা', 'দুর্গা', 'দুর্গা — ঊ-কার নয়'],
+      ['দূর্গ', 'দুর্গ', 'দুর্গ — ঊ-কার নয়'],
+      ['সুন্দর্য', 'সৌন্দর্য', 'সৌন্দর্য — ঔৎসব্য-রীতি'],
+      ['পিরামিড', 'পিরামিড', '—'],
+      ['নৈতিকতা', 'নৈতিকতা', '—'],
+      ['ভূগোল', 'ভূগোল', '—'],
+      ['মুহূর্ত্ত', 'মুহূর্ত', 'মুহূর্ত — দ্বিতীয় ত্ত নিষিদ্ধ'],
+      ['উপসংহার্য', 'উপসংহার', 'উপসংহার — প্রমিত রূপ']
+    ];
+    var btn = document.getElementById('scCheck');
+    var input = document.getElementById('scInput');
+    var out = document.getElementById('scResult');
+    var stat = document.getElementById('scStat');
+    function toBn(n) {
+      var d = '০১২৩৪৫৬৭৮৯';
+      return String(n).replace(/\d/g, function (c) { return d[+c]; });
+    }
+    btn.addEventListener('click', function () {
+      var text = input.value;
+      if (!text.trim()) { out.innerHTML = ''; stat.textContent = ''; return; }
+      var found = RULES.filter(function (r) { return r[0] !== r[1] && text.indexOf(r[0]) !== -1; });
+      stat.innerHTML = found.length
+        ? '<span class="utl-stat"><i class="fas fa-triangle-exclamation"></i> ' + toBn(found.length) + 'টি সম্ভাব্য ভুল</span>'
+        : '<span class="utl-ok-pill"><i class="fas fa-circle-check"></i> কোনো সাধারণ ভুল পাওয়া যায়নি</span>';
+      out.innerHTML = found.map(function (r) {
+        return '<div class="utl-sx-row"><span class="utl-sx-bad">' + r[0] + '</span>' +
+               '<i class="fas fa-arrow-right" aria-hidden="true" style="font-size:10px;color:var(--lf-text-tertiary);align-self:center"></i>' +
+               '<span class="utl-sx-good">' + r[1] + '</span>' +
+               '<span class="utl-sx-note">' + r[2] + '</span></div>';
+      }).join('');
+    });
+    document.getElementById('scClear').addEventListener('click', function () {
+      input.value = ''; out.innerHTML = ''; stat.textContent = ''; input.focus();
+    });
+  })();
+  </script>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../../partials/sandbox-preview') %>
+</body>
+</html>

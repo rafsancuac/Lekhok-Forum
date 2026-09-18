@@ -1,0 +1,76 @@
+<%# সেশন ১৫৬ — পাণ্ডুলিপি কপিরাইট ও চৌর্যবৃত্তি রিপোর্ট (POST → complaints; ইউজার-স্পেক ইউটিলিটি)
+    লেগেসি-ফর্ম-রীতি: ৩০৩-রিডাইরেক্ট-নিরাপদ (POST→GET-প্যাটার্ন — session58-চুক্তি) %>
+<%- include('../../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-toolbox" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — অভিযোগ সরাসরি স্টাফ-ইনবক্সে (complaints) যায়, ট্র্যাকিং-আইডিসহ।</p>
+      </div>
+    </div>
+
+    <% if (ok) { %>
+      <div class="utl-alert utl-alert--ok" role="status">
+        <i class="fas fa-circle-check" aria-hidden="true"></i>
+        <span>অভিযোগ সফলভাবে দাখিল হয়েছে। স্টাফ-পর্যালোচনার পর আপনার <a href="/complaints">অভিযোগ-তালিকা</a> থেকে অগ্রগতি দেখতে পাবেন।</span>
+      </div>
+    <% } %>
+    <% if (dup) { %>
+      <div class="utl-alert utl-alert--dup" role="status">
+        <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+        <span>একই অভিযোগ সম্প্রতি দাখিল হয়েছে (৬০-মিনিট ডুপ্লিকেট-গার্ড) — <a href="/complaints">তালিকা দেখুন</a>।</span>
+      </div>
+    <% } %>
+    <% if (err) { %>
+      <div class="utl-alert utl-alert--err" role="alert"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i><span><%= err %></span></div>
+    <% } %>
+
+    <% if (!user) { %>
+      <div class="utl-card">
+        <h2><i class="fas fa-lock" aria-hidden="true"></i> দাখিলে লগইন প্রয়োজন</h2>
+        <p class="utl-sub">অভিযোগ ব্যক্তিগত-সত্যায়িত হয় — ভুয়া-রিপোর্ট প্রতিরোধে লগইন-আইডি বাধ্যতামূলক।</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="/login?next=/support/dmca-report" class="utl-btn"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> লগইন করে অভিযোগ করুন</a>
+          <a href="/register" class="utl-btn utl-btn--ghost">রেজিস্ট্রেশন</a>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="utl-card">
+        <h2><i class="fas fa-file-signature" aria-hidden="true"></i> অভিযোগ-ফর্ম</h2>
+        <p class="utl-sub">সব ঘর সত্য ও নির্ভুল তথ্যে পূরণ করুন — মিথ্যা অভিযোগ সাংগঠনিক শৃঙ্খলার লঙ্ঘন।</p>
+        <form method="POST" action="/support/dmca-report">
+          <div class="utl-field">
+            <label for="dmWork">মূল লেখার শিরোনাম <small>(বাধ্যতামূলক)</small></label>
+            <input id="dmWork" name="workTitle" required maxlength="120" placeholder="যে লেখাটি আপনার মৌলিক সৃষ্টি">
+          </div>
+          <div class="utl-field">
+            <label for="dmOrig">মূল লেখার লিংক <small>(প্রকাশিত হলে)</small></label>
+            <input id="dmOrig" name="workLink" type="url" placeholder="https://…">
+          </div>
+          <div class="utl-field">
+            <label for="dmInf">চৌর্যবৃত্ত-লিংক <small>(বাধ্যতামূলক — যেখানে চুরি হয়েছে)</small></label>
+            <input id="dmInf" name="infringeLink" type="url" required placeholder="https://…">
+          </div>
+          <div class="utl-field">
+            <label for="dmDetails">বিবরণ <small>(কীভাবে/কতটুকু বিশ্বাস করেন লেখাচুরি হয়েছে)</small></label>
+            <textarea id="dmDetails" name="details" placeholder="সংক্ষেপে লিখুন…"></textarea>
+          </div>
+          <button type="submit" class="utl-btn"><i class="fas fa-paper-plane" aria-hidden="true"></i> অভিযোগ দাখিল করুন</button>
+        </form>
+      </div>
+    <% } %>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-shield-halved" aria-hidden="true"></i> কপিরাইট-নীতি সংক্ষেপ</h2>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>ফোরামে প্রকাশিত প্রতিটি লেখার মৌলিক স্বত্ব লেখকের — ফোরাম কেবল প্রকাশ-প্ল্যাটফর্ম।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>অন্যের লেখা উদ্ধৃত করতে হলে সূত্র-উল্লেখ (attribution) বাধ্যতামূলক।</span></div>
+      <div class="utl-policy-li"><i class="fas fa-check" aria-hidden="true"></i><span>প্রমাণিত চৌর্যবৃত্তির ক্ষেত্রে সদস্যপদ স্থগিত/বাতিলসহ আনুষ্ঠানিক ব্যবস্থা নেওয়া হয়।</span></div>
+    </div>
+  </div>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../../partials/sandbox-preview') %>
+</body>
+</html>

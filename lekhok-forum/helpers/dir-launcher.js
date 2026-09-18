@@ -70,8 +70,54 @@ const DIR_SECTIONS = [
   }
 ];
 
+/* ── সেশন ১৫৬ (ইউজার-স্পেক: FB-স্টাইল বাম-রেল পূর্ণাঙ্গ ডিরেক্টরি) ───────────
+   ইউজার: "ডান দিকের আরও আইটেমের সকল কন্টেন্ট বাম প্যানেলে নিয়ে আসুন" — অর্থাৎ
+   হেডার-লঞ্চারের ১২ আইটেমই এখন ফিড লেফট-রেলে সেকশন-শিরোনামসহ স্থায়ীভাবে থাকবে।
+   ফলে rail:false ফ্ল্যাগ অপ্রচলিত — সব rail:true (উত্তরাধিকার-ফিল্ড রাখা হলো,
+   কেউ ব্যবহার না-ও করতে পারে)। রেলে এখন desc + badge-ও রেন্ডার হয়। ── */
+
+/* ── সেশন ১৫৭: সেবাসমূহ ও আর্কাইভ (কদাচিৎ-ব্যবহৃত সহায়ক ও প্রশাসনিক ফিচার) ──
+   ইউজার-স্পেক (MoreUtilitiesMenu): "আরও সেকশনে এমন কিছু যুক্ত করুন যা অন্য
+   কোথাও থাকবে না, কম কাজে আসে বা আসতে পারে" — হেডার-লঞ্চার-প্যানেল এখন এই
+   ইউটিলিটি-রেজিস্ট্রি রেন্ডার করবে (ডিরেক্টরি বাম-রেলে স্থায়ী)।
+   href সবই routes/utilities.js-এ বাস্তব-পেজ (404-শূন্য চুক্তি)। */
+const UTIL_SECTIONS = [
+  {
+    key: 'lang-tools',
+    title: 'ভাষা ও সম্পাদনা সরঞ্জাম',
+    items: [
+      { label: 'প্রমিত বানান পরীক্ষক ও অভিধান', desc: 'বাংলা একাডেমি প্রমিত বানান যাচাই ও সমার্থক শব্দভাণ্ডার', href: '/tools/spell-checker', icon: 'fa-spell-check', tone: 'cyan' },
+      { label: 'ইউনিকোড ও ফন্ট কনভার্টার',     desc: 'বিজয়-যুগের টেক্সট পরিষ্কার, সংখ্যা ও যতিচিহ্ন রূপান্তর টুল',   href: '/tools/font-converter', icon: 'fa-arrow-right-arrow-left', tone: 'social' }
+    ]
+  },
+  {
+    key: 'admin-member',
+    title: 'প্রশাসনিক ও সদস্য সনদ',
+    items: [
+      { label: 'সদস্যপদ সনদ ও আইডি কার্ড',       desc: 'ডিজিটাল সদস্য সনদ ও প্রেস পাস প্রিন্ট/ডাউনলোড',            href: '/me/certificate', icon: 'fa-id-card', tone: 'gold' },
+      { label: 'পাণ্ডুলিপি কপিরাইট ও চৌর্যবৃত্তি রিপোর্ট', desc: 'লেখাচুরির বিরুদ্ধে আনুষ্ঠানিকভাবে অভিযোগ দাখিল',       href: '/support/dmca-report', icon: 'fa-scale-balanced', tone: 'angry' }
+    ]
+  },
+  {
+    key: 'archive-research',
+    title: 'সংগ্রহশালা ও গবেষণা',
+    items: [
+      { label: 'ঐতিহাসিক আর্কাইভ (প্রতিষ্ঠা-অবধি)', desc: 'বিগত বছরের পুরোনো সংখ্যা, প্রকাশনা ও বিরল লেখা',          href: '/archive', icon: 'fa-box-archive', tone: 'amber' },
+      { label: 'ব্লাইন্ড পিয়ার-রিভিউ প্যানেল',     desc: 'জ্যেষ্ঠ লেখকদের নিরপেক্ষ পাণ্ডুলিপি যাচাই ব্যবস্থা',           href: '/peer-review', icon: 'fa-user-secret', tone: 'violet' }
+    ]
+  },
+  {
+    key: 'institutional',
+    title: 'প্রাতিষ্ঠানিক সংযোগ',
+    items: [
+      { label: 'বিজ্ঞাপন ও স্পন্সরশিপ নীতিমালা',   desc: 'ফোরামের সাহিত্য প্রকাশনায় বিজ্ঞাপন ও অর্থায়ন গাইড',        href: '/sponsorship', icon: 'fa-briefcase', tone: 'pink' },
+      { label: 'কীবোর্ড শর্টকাটস ও টাইপিং চিটশিট', desc: 'দ্রুত টাইপিং ও ন্যাভিগেশনের সম্পূর্ণ গাইড',                  href: '/shortcuts', icon: 'fa-keyboard', tone: 'slate' }
+    ]
+  }
+];
+
 /* টোন → টোকেন-রেফ বেক (ভিউতে style="--dlx-t: var(<%= it.tok %>)") */
-for (const sec of DIR_SECTIONS) {
+for (const sec of [...DIR_SECTIONS, ...UTIL_SECTIONS]) {
   for (const it of sec.items) {
     it.tok = TONE_TOKENS[it.tone] || TONE_TOKENS.brand;
   }
@@ -88,4 +134,4 @@ const DIR_RAIL = DIR_RAIL_ORDER
   .filter(Boolean)
   .concat(_railFlat.filter(i => !DIR_RAIL_ORDER.includes(i.href)));
 
-module.exports = { DIR_SECTIONS, DIR_RAIL, TONE_TOKENS };
+module.exports = { DIR_SECTIONS, DIR_RAIL, UTIL_SECTIONS, TONE_TOKENS };

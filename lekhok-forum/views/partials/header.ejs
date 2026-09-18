@@ -691,37 +691,38 @@
         <a href="/register" class="topbar-nav a nav-register"><i class="fas fa-user-plus"></i> <%= C('header_btn_register') %></a>
       <% } %>
 
-      <%# ── সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার (FB ৯-ডট প্যারিটি) — পুরনো ৪-কলাম
-          মেগামেনু প্রতিস্থাপন। সমস্যা-ছিল: মনোক্রোম আইকন, সাব-টাইটেল-শূন্য,
-          ক্যাটাগরি-ডুপ্লিকেট (ঘোষণা/বিজ্ঞপ্তি, আয়োজন/ইভেন্ট)। সমাধান: কমপ্যাক্ট
-          ফ্লোটিং অ্যাপ-প্যানেল — ৩-ডোমেইন × Title+Subtitle + টোন-স্কুইর্কল আইকন।
-          রেজিস্ট্রি: helpers/dir-launcher.js (app.locals.dirSections) — ফিড
-          লেফট-রেল (dashboard.ejs) একই সোর্স। ইঞ্জিন: dir-launcher.js (ARIA +
-          Escape + বাইরে-ক্লিক-বন্ধ)। <992px লুকানো — মোবাইল-সাইডবার কভার করে। ── %>
+      <%# ── সেশন ১৪৭→১৫৭: হেডার লঞ্চার — এখন "সেবাসমূহ ও আর্কাইভ" (কদাচিৎ-ব্যবহৃত
+          সহায়ক ও প্রশাসনিক ফিচার)। পূর্বের ফোরাম-ডিরেক্টরি বাম-রেলে স্থায়ী হওয়ায়
+          (ইউজার-স্পেক session156) এই প্যানেল এখন UTIL_SECTIONS রেন্ডার করে —
+          ১-কলাম লিস্ট-স্টাইল (FB MoreUtilitiesMenu-প্যারিটি)। রেজিস্ট্রি:
+          helpers/dir-launcher.js (app.locals.utilSections)। ইঞ্জিন: dir-launcher.js
+          (ARIA + Escape + বাইরে-ক্লিক-বন্ধ)। <992px লুকানো — মোবাইল-সাইডবারের
+          সেবাসমূহ-সেকশন কভার করে। ── %>
       <div class="dlx-wrap" id="dlxWrap">
-        <button type="button" class="dlx-trigger" id="dlxTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="dlxPanel" aria-label="ফোরাম ডিরেক্টরি — সব ফিচার ও আয়োজন" title="ফোরাম ডিরেক্টরি" onclick="toggleDlx(event)">
+        <button type="button" class="dlx-trigger" id="dlxTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="dlxPanel" aria-label="সেবাসমূহ ও আর্কাইভ — কদাচিৎ ব্যবহৃত সহায়ক ও প্রশাসনিক ফিচার" title="সেবাসমূহ ও আর্কাইভ" onclick="toggleDlx(event)">
           <i class="fas fa-th" aria-hidden="true"></i>
         </button>
-        <div class="dlx-panel" id="dlxPanel" role="dialog" aria-label="ফোরাম ডিরেক্টরি">
+        <div class="dlx-panel dlx-panel--util157" id="dlxPanel" role="dialog" aria-label="সেবাসমূহ ও আর্কাইভ">
           <div class="dlx-head">
             <div class="dlx-head-meta">
-              <h2>ফোরাম ডিরেক্টরি</h2>
-              <p>সকল ফিচার, আয়োজন ও সাহিত্য কর্নার</p>
+              <h2>সেবাসমূহ ও আর্কাইভ</h2>
+              <p>ভাষা সরঞ্জাম, প্রাতিষ্ঠানিক সেবা ও সংরক্ষিত ফাইল</p>
             </div>
             <button type="button" class="dlx-close" aria-label="বন্ধ করুন" title="বন্ধ করুন" onclick="closeDlx()"><i class="fas fa-times" aria-hidden="true"></i></button>
           </div>
           <div class="dlx-body">
-            <% (typeof dirSections !== 'undefined' ? dirSections : []).forEach(function (sec) { %>
+            <% (typeof utilSections !== 'undefined' ? utilSections : []).forEach(function (sec) { %>
               <section class="dlx-sec">
                 <h3 class="dlx-sec-title"><%= sec.title %></h3>
-                <div class="dlx-grid">
+                <div class="dlx-grid dlx-grid--list157">
                   <% sec.items.forEach(function (it) { %>
-                    <a href="<%= it.href %>" class="dlx-item" data-dlx-item>
+                    <a href="<%= it.href %>" class="dlx-item dlx-item--row157" data-dlx-item>
                       <span class="dlx-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
                       <span class="dlx-meta">
                         <span class="dlx-item-title"><%= it.label %></span>
                         <span class="dlx-item-desc"><%= it.desc %></span>
                       </span>
+                      <span class="dlx-go157" aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
                     </a>
                   <% }) %>
                 </div>
@@ -789,6 +790,17 @@
       <a href="/events">ইভেন্ট</a>
     </details>
 
+    <%# সেশন ১৫৭: সেবাসমূহ ও আর্কাইভ — মোবাইলে হেডার-লঞ্চার <992px লুকানো, ফলে
+        কদাচিৎ-ব্যবহৃত ইউটিলিটি ৮ আইটেম এখানে (app.locals.utilSections এক-রেজিস্ট্রি) %>
+    <details class="mobile-section">
+      <summary><i class="fas fa-toolbox"></i> সেবাসমূহ ও আর্কাইভ</summary>
+      <% (typeof utilSections !== 'undefined' ? utilSections : []).forEach(function (sec) { %>
+        <% sec.items.forEach(function (it) { %>
+          <a href="<%= it.href %>"><%= it.label %></a>
+        <% }) %>
+      <% }) %>
+    </details>
+
     <details class="mobile-section">
       <summary><i class="fas fa-users"></i> সম্প্রদায়</summary>
       <a href="/members">সদস্য</a>
@@ -816,6 +828,16 @@
       <a href="/gallery"><i class="fas fa-images"></i> গ্যালারি</a>
       <a href="/contact"><i class="fas fa-envelope"></i> যোগাযোগ</a>
     </div>
+    <%# সেশন ১৫৬: অতিথি-ভ্যারিয়েন্টেও সেবাসমূহ — পাবলিক ইউটিলিটি সরাসরি খোলে;
+        /me/certificate-লগইন-গেট ensureAuth ?next-রিটার্নে নিজেই ফেরত আনে %>
+    <details class="mobile-section">
+      <summary><i class="fas fa-toolbox"></i> সেবাসমূহ ও আর্কাইভ</summary>
+      <% (typeof utilSections !== 'undefined' ? utilSections : []).forEach(function (sec) { %>
+        <% sec.items.forEach(function (it) { %>
+          <a href="<%= it.href %>"><%= it.label %></a>
+        <% }) %>
+      <% }) %>
+    </details>
     <a href="/login" class="mobile-cta"><i class="fas fa-sign-in-alt"></i> লগইন</a>
     <a href="/register" class="mobile-cta primary"><i class="fas fa-user-plus"></i> রেজিস্ট্রেশন</a>
   <% } %>
