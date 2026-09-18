@@ -463,3 +463,22 @@
   .qa-composer140 .re-toolbar{flex-wrap:wrap}
 }
 /* EOF-MARKER: session141-qa-rich-editor */
+
+/* ═════════ সেশন ১৪৪: মেনশন-অটোকমপ্লিট সারফেস (mention-anywhere.js) ═════════
+ * textarea[data-mention] সারফেস — mention-anywhere.js-এর অ্যাংকর-র‍্যাপার;
+ *    ড্রপডাউন-মার্কআপ .cc-mention/.ccm-item পুনঃব্যবহৃত (style.css-ক্যানোনিকাল)।
+ * (শূন্য-অবস্থা-পলিশ session141-এজেন্টের nf-branded141-ক্যানোনিকাল — এখানে বাদ)
+ * সব var(--lf-*)-টোকেন — নতুন-হেক্স-শূন্য (hex-র্যাচেট-গার্ড সম্মত)। */
+.mention-wrap144{position:relative;display:block}
+.mention-wrap144 .cc-mention{left:0;right:0;bottom:calc(100% + 6px);border-color:var(--lf-ui-border)}
+.mention-wrap144 .ccm-item{border-radius:8px}
+.mention-wrap144 .ccm-av{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.mention-wrap144 .ccm-txt{display:flex;flex-direction:column;min-width:0}
+.mention-wrap144 .ccm-txt strong{font-size:.84rem;color:var(--lf-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mention-wrap144 .ccm-txt small{font-size:.72rem;color:var(--lf-text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mention-wrap144 .ccm-item.active{background:var(--lf-brand-light)}
+.mention-wrap144 .ccm-item:focus-visible{outline:2px solid var(--lf-social-blue);outline-offset:-2px}
+.ccm-loading144{padding:10px;text-align:center;color:var(--lf-text-tertiary);font-size:.8rem}
+/* ② শূন্য-অবস্থা — ব্র্যান্ডেড */
+
+/* EOF-MARKER: session144-mention-anywhere */

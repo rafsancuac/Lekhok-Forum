@@ -1744,6 +1744,27 @@ router.post('/api/comment', async (req, res) => {
       await notifyIfAllowed(parent.author_id, 'notify_comments', 'reply', 'নতুন উত্তর', `${displayName(req.session.user)} আপনার মন্তব্যে উত্তর দিয়েছেন`, _pLink113, req.session.user.id);
     }
   }
+  // ── সেশন ১৪৪: মেনশন-নোটিফিকেশন-সমতা (কমেন্ট/উত্তর-পাথ) ──────────────────────
+  // কমেন্ট-কম্পোজারে @মেনশন-অটোকমপ্লিট UI আগে থেকেই ছিল (CommentComposer/cc-mention),
+  // কিন্তু সার্ভার এখানে extractMentions চালাত না — @username লিখলেও মেনশন-ব্যক্তি
+  // বিজ্ঞপ্তি পেত না (নীরব-ফিচার-গ্যাপ: UI-প্রতিশ্রুতি, ডেলিভারি-শূন্য)। নতুন-আর্টিকেল/
+  // প্রশ্ন-পাথের (L390/L837) সমতায়: pref-গেট (notify_comments) + নিজে/পোস্ট-লেখক/
+  // প্যারেন্ট-লেখক-ডুপ্লিকেট বাদ + টাইপ-ভিত্তিক লিংক। বিজ্ঞপ্তি-ব্যর্থতা মূল-অ্যাকশন
+  // ভাঙবে না (notifyIfAllowed never-throws; try-শেল ডাবল-গার্ড)।
+  try {
+    const _mList144 = JSON.parse(await extractMentions(body));
+    const _mSeen144 = new Set([req.session.user.id, post && post.author_id]);
+    if (_parentId113) {
+      const _mp144 = await db.prepare('SELECT author_id FROM comments WHERE id = ?').get(_parentId113);
+      if (_mp144) _mSeen144.add(_mp144.author_id);
+    }
+    for (const _m144 of _mList144) {
+      if (_mSeen144.has(_m144.id)) continue;
+      _mSeen144.add(_m144.id);
+      const _mLink144 = post.type === 'question' ? '/qa/' + pid : '/articles/' + pid;
+      await notifyIfAllowed(_m144.id, 'notify_comments', 'mention', 'ম্যানশন', `${displayName(req.session.user)} মন্তব্যে আপনাকে ম্যানশন করেছেন`, _mLink144, req.session.user.id);
+    }
+  } catch (_) {}
   // ── সেশন ১২৪: ক্যানোনিকাল তাৎক্ষণিক-ইনসার্ট (session12-অপটিমিস্টিকের সার্ভার-সত্য-রূপ) —
   // নতুন মন্তব্যের একক CommentItem-HTML (সার্ভার-রেন্ডার্ড — XSS-নিরাপদ, single-source:
   // views/shared/comment/CommentItem.ejs — format=html/qa-html-পাথেরই মিরর) +
@@ -3250,6 +3271,17 @@ router.post('/qa/:id/answer', ensureLoggedIn, async (req, res) => {
   if (q && q.author_id !== me.id) {
     await notifyIfAllowed(q.author_id, 'notify_comments', 'comment', 'নতুন উত্তর', displayName(me) + ' আপনার প্রশ্নে উত্তর দিয়েছেন', '/qa/' + qid, me.id);
   }
+  // সেশন ১৪৪: মেনশন-নোটিফিকেশন — নো-জেএস-ফলব্যাক-ফর্মের /api/comment-সমতা
+  // (নিজে/প্রশ্নকর্তা-ডুপ্লিকেট বাদ; বার্তা জেনেরিক — মেনশন-ব্যক্তি প্রশ্নকর্তা নাও হতে পারে)।
+  try {
+    const _mAns144 = JSON.parse(await extractMentions(body));
+    const _mSeenA144 = new Set([me.id, q && q.author_id]);
+    for (const _m144 of _mAns144) {
+      if (_mSeenA144.has(_m144.id)) continue;
+      _mSeenA144.add(_m144.id);
+      await notifyIfAllowed(_m144.id, 'notify_comments', 'mention', 'ম্যানশন', displayName(me) + ' মন্তব্যে আপনাকে ম্যানশন করেছেন', '/qa/' + qid, me.id);
+    }
+  } catch (_) {}
   // সেশন ১১৬-ফিক্স: '#c'+id অ্যাঙ্করের কোনো টার্গেট qa-single-এ ছিল না (উত্তর-স্লটের
   // id হলো 'answer-<id>', ক্যানোনিকাল CommentItem-এর 'fc-c<id>') → ব্রাউজার স্ক্রল-ব্যর্থ,
   // নীরবে পেজ-টপে থেকে যেত। এখন আসল স্লট-id ('answer-<id>' — চিপসহ পূর্ণ-স্লট) +

@@ -1948,3 +1948,24 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **স্যুট-state-নির্ভরতা-আইটেম (উপরের-তদন্ত খোলা):** role-policy স্যুট LF_QA_DISABLE_RATELIMIT=1 + CALL_RING_TIMEOUT_S=4 + pristine-রিবিল্ড-সহ-ও এ-মেশিনে সবুজ-হয় না (পুরনো-স্যুট 98✗, আপডেটেড-স্যুট 103✗ — সেকশন-২-এর 'user /dashboard 500' থেকে ক্যাসকেড; স্যুটের-বাইরে একই-ক্রিয়া curl/ব্রাউজারে 200)। **ডেল্টা-প্রমাণ-পদ্ধতি:** git worktree @HEAD বেসলাইন-ইনস্ট্যান্স বনাম ডেল্টা-ইনস্ট্যান্স — অভিন্ন-✗-সেট diff (×২-রান) = নিজের-ডেল্টা-শূন্য। সমান্তরাল-এজেন্টদের 212/212-দাবির সাথে এ-অমিলের কারণ (তাদের-ইনস্ট্যান্স-স্টেট সম্ভবত) পরের-তদন্তের-বিষয়।
 
 **পরবর্তী-প্রথম-পছন্দ:** ① ফিড-পিলে SSE-অগ্রাধিকার (helpers/sse.js 'feed'-ইভেন্ট → পোল-বিহীন-ইনস্ট্যান্ট) ② পিল-ক্লিকে reload-বিহীন ফ্রেশ-রো-প্রিপেন্ড (/api/feed/fresh-এ html-স্লাইস) ③ role-policy-স্যুট-স্টেট-নির্ভরতা-তদন্ত (উপরের-আইটেম) ④ dropdown-paintList reltime-রি-পেইন্ট (session134-অবশিষ্ট — এখনো-খোলা)। **পরের-এজেন্ট: session145 থেকে।**
+
+
+---
+
+## Cross-Agent Note — Session 145 (cron-review: মেনশন-নোটিফিকেশন-সমতা + /qa কম্পোজার @অটোকমপ্লিট) (২৪ সেপ্টেম্বর ২০২৬)
+
+**লেবেল-নোট:** [আমার 141→143→144→145-ত্রি-রিলেবেল — সমান্তরাল session141(admin-fix)/142(og-card)/143(branded-empty+rich-editor) আগে-ল্যান্ডেড; আমার same-feature notifications-শূন্য-অবস্থা-ডেল্টা তাদের session143-ক্যানোনিকালে প্রত্যাহৃত (১০ম-প্রমাণ); mention-parity ×৪-ফাইল + role-policy §৩০ অনন্য-রক্ষিত]
+
+**স্কোপ:** routes/social.js (POST /api/comment + POST /qa/:id/answer — extractMentions+notify) · public/assets/js/mention-anywhere.js (নতুন) · views/user/qa-list.ejs (data-mention + include) · shared.css session145-ব্লক (mention-wrap145) · test-role-policy.sh §৩০ ×১৫
+
+**চুক্তি-নোট (পরের-এজেন্টের জন্য):**
+1. **মেনশন-নোটিফিকেশন-চুক্তি (সম্প্রসারিত):** কমেন্ট/উত্তর-পাথেও extractMentions → notifyIfAllowed(id, 'notify_comments', 'mention', 'ম্যানশন', '{actor} মন্তব্যে আপনাকে ম্যানশন করেছেন', type-aware-link, actorId)। বাদ-সেট: নিজে + পোস্ট-লেখক + প্যারেন্ট-লেখক (রিপ্লাই-ডুপ্লিকেট-রোধ)। নতুন-কমেন্ট-সারফেস যোগ করলে এ-ব্লক মিরর করুন।
+2. **textarea[data-mention] সারফেস-চুক্তি:** mention-anywhere.js স্বয়ংক্রিয়-বাইন্ড করে (wrap `.mention-wrap144` position:relative তৈরি করে — dropdown `.cc-mention` absolute-above)। `.cc-input` স্কিপ-হয় (তাদের নিজস্ব-ইঞ্জিন)। কীবোর্ড: Enter/Tab-ইনসার্ট (preventDefault — newline-নয়), Esc-বন্ধ stopPropagation-সহ (কম্পোজার-Esc-গার্ডের সাথে সহাবস্থান), ArrowDown/Up নেভ।
+3. **test-§৩০ পেয়ারিং-রীতি:** ?type=mention-পেজে href="/qa/QID" ↔ data-dismiss="id" tempered-grep + **sort -u বাধ্যতামূলক** (একই-নোটিফ ড্রপডাউন+পেজ দুই-সারফেসে রেন্ডার হয় — দ্বি-ম্যাচ-ফাঁদ) + **delta-গণনা** (প্রি-ডিসমিস → +1 → +1 → নেগেটিভে অপরিবর্তিত → ক্লিনআপ) — বুট-পরবর্তী আইডি-পুনঃব্যবহারে পুরানো-রেজিডু থাকলেও নির্ধারিত।
+4. **🚨 মেনশন-টার্গেট-গোটচা:** 'admin'/admin123 = অ্যাডমিন-পোর্টাল-স্বপ্রীয়োক্ত — users-টেবিলে সারি-নেই → **@admin মেনশন কিছুই রেজলভ করে না** (নীরব-শূন্য-বিজ্ঞপ্তি)! টেস্টে টার্গেট = testadmin (users-এ role='admin')। extractMentions সঠিকভাবেই অজানা-ইউজার বাদ দেয় — বাগ-নয়।
+5. **EJS/eval-গোটচা-পুনঃপ্রমাণ:** tool-আউটপুটে `[me.id` → `e.id`-ম্যানলিং (od -c-তে ফাইল অক্ষত — সন্দেহে raw-bytes); agent-browser `press` focused-element-এ keydown দেয় না (kd:0-প্রমাণ) → synthetic KeyboardEvent-রীতি; `fill`-এর পরে caret position-0 → findMention নীরব-ব্যর্থ — keyboard type-রীতি ব্যবহার করুন।
+6. **FA-গ্লিফ-গোটচা:** fa-stream FA6.5.1-free-এ ::before content-শূন্য (রেন্ডার-নীরব) — CTA-আইকন সাবধানে বাছুন (fa-globe-asia = header-প্যারিটি, নিরাপদ); legacy `.notif-empty i` 64px-বৃত্ত-রুল বংশধর-CTA-আইকনেও পড়ে — আইকন-রিসেট লাগলে !important-হার্ডেন নিন।
+
+**E2E (agent-browser, testuser @8094):** এক্সপ্যান্ড→"@te" টাইপ→ড্রপডাউন ৩-আইটেম→ArrowDown×২-নেভ→Enter→"@testagent1 " ইনসার্ট + কাউন্টার-সিঙ্ক + ড্রাফট-সেভ→Esc=ড্রপডাউন-বন্ধ-প্যানেল-খোলা→ক্লিক-বাইরে-বন্ধ→390px-০→কনসোল-০ ✓; §৩০: কমেন্ট-মেনশন→testadmin +1, নো-জেএস-উত্তর-মেনশন→+1 (মোট ২), সেলফ/অজানা→অপরিবর্তিত, ডিসমিস-ক্লিনআপ→শূন্য ✓; মার্জড-ট্রি: role-policy **239/239** ✓ cursor 25/25 ✓ guard ✓ audit ✓ brace-0 ✓
+
+**পরবর্তী-এজেন্ট: session146 থেকে।** বকেয়া-প্রস্তাব: ① উত্তর-থ্রেডে নতুন-মেনশন-চিপ (answer-bodyHtml-এ mention-লিঙ্ক আগেই আছে — নোটিফ-ডিপ-লিংকে #answer-N অ্যাঙ্কর যোগ করা যায়) ② /qa রিচ-এডিটরে (session143) @মেনশন-ইন্টিগ্রেশন — rich-editor-এর insert-মার্কআপে data-mention-সমতা ③ notifications-এ actor-avatar mention-নোটে ইতোমধ্য আছে — header-ড্রপডাউন-টুলটিপে মেনশন-কনটেক্সট-স্নিপেট ④ Metered.ca-TURN (ইউজার-অ্যাকাউন্ট-প্রয়োজন)

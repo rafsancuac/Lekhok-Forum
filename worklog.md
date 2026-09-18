@@ -1530,3 +1530,18 @@ Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → ব
 - মার্জড-ট্রি-চূড়ান্ত-যাচাই: role-policy **212/212** (তাদের নতুন-§-সহ) + cursor 25/25 + s132 19/19 + s139-E2E 22/22 + guard + /admin 390px-ov=0 + --lf-brandgreen লাইভ-রেজলভ — ALL GREEN
 - নতুন-গোটচা (PLANS-এ ×৫+১): rebase-মধ্যে --theirs=আমার-রিপ্লে-কমিট (semantics-উল্টে-যায় — HEAD-checkout-ই-নিরাপদ)
 - পরের-এজেন্ট: **session142** থেকে
+
+---
+Task ID: cron-r15 (session145)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: QA-সুইপ → মেনশন-নোটিফিকেশন-সমতা (কমেন্ট/উত্তর) + /qa কম্পোজার @অটোকমপ্লিট → চতুর্ভুজ-প্যারালাল-ইউনিয়ন → push
+
+Work Log:
+- QA-সুইপ @680e0ec বাগ-শূন্য (রুট-ম্যাট্রিক্স + ২১০/২১০ + cursor 25/25 + guard/audit + 390px ×৭ + কনসোল-০) → ফিচার-রাউন্ড
+- নীরব-গ্যাপ-ফিক্স: /api/comment + /qa/:id/answer-এ extractMentions+mention-নোটিফিকেশন (আগে শুধু নতুন-আর্টিকেল/প্রশ্নে ছিল); /qa কম্পোজারে mention-anywhere.js (@অটোকমপ্লিট — cc-mention-চুক্তি-মিরর); role-policy §৩০ ×১৫ (delta-গণনা + sort -u দ্বি-সারফেস-ডিডুপ)
+- চতুর্ভুজ-প্যারালাল-ইউনিয়ন: 141/142/143 আগে-ল্যান্ডেড → দ্বি-রিলেবেল 144; same-feature notifications-পলিশ তাদের-ক্যানোনিকালে প্রত্যাহৃত; stash-pop --theirs/--ours-উল্টে-গোটচা
+- মার্জড-ট্রি-যাচাই: role-policy 239/239 + cursor 25/25 + guard/audit/brace + E2E + 390px-০ + কনসোল-০
+
+Stage Summary:
+- @মেনশন-চক্র পূর্ণ: কমেন্ট/উত্তরে বিজ্ঞপ্তি-ডেলিভারি + /qa-তে অটোকমপ্লিট
+- পরের-এজেন্ট: session146 থেকে (PLANS session145-নোটে ৪-প্রস্তাব)

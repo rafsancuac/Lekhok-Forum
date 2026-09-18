@@ -397,24 +397,24 @@ else
 fi
 echo ""
 
-echo "══ ২৯. সেশন ১৪১: /qa রিচ-এডিটর-ইন্টিগ্রেশন (মাউন্ট + মার্কডাউন-রেন্ডার E2E) ══"
-ck "s141 /qa rich-editor.js লোড" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "assets/js/rich-editor.js")"
-ck "s141 /qa rich-editor.css লোড" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "assets/css/rich-editor.css")"
-  ck "s141 লোড-অর্ডার: ইঞ্জিন কম্পোজারের আগে" "1" "$(curl -s -b $JARU "$BASE/qa" | tr -d '\n' | grep -o 'rich-editor.js[^>]*></script>[^<]*<script[^>]*qa-composer.js' | head -1 | grep -c .)"
-  ck "s141 qa-composer মাউন্ট-মার্কার (init(body,{preview:false}))" "1" "$(curl -s "$BASE/assets/js/qa-composer.js" | grep -c 'RichEditor.init(body, { preview: false })')"
-ck "s141 মাউন্ট preview:false (কম্প্যাক্ট-ডিফল্ট)" "1" "$(curl -s "$BASE/assets/js/qa-composer.js" | grep -c "preview: false")"
-RP141=$(curl -s -b $JARU -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{ "title": "rp141 রিচ-এডিটর মার্কডাউন-প্রোব প্রশ্ন", "body": "রিচ-এডিটর §২৯ **গুরুত্বপূর্ণ** টেক্সট এবং [লিংক](https://example.com) — সেশন ১৪১ সেলফ-সিড" }')
-ckc "s141 মার্কডাউন-POST ok:true" '"ok":true' "$RP141"
-Q141=$(echo "$RP141" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
-if [ -n "$Q141" ]; then
-  PASS=$((PASS+1)); echo "  ✓ §29-সেলফ-সিড প্রশ্ন id=$Q141"
-  QDET=$(curl -s -b $JARU "$BASE/qa/$Q141")
-  ck "s141 ডিটেইলে বোল্ড রেন্ডার (<strong>)" "1" "$(echo "$QDET" | grep -c "<strong>গুরুত্বপূর্ণ</strong>")"
-  ck "s141 ডিটেইলে লিংক-রেন্ডার (a-link)" "1" "$(echo "$QDET" | grep -c "class=.a-link")"
-  ck "s141 লিস্ট-এক্সার্পট প্লেইন (plainText-চুক্তি)" "0" "$(curl -s -b $JARU "$BASE/qa" | grep -o 'qa-excerpt">[^<]*গুরুত্বপূর্ণ[^<]*' | head -1 | grep -c '\*\*')"
-  TOKU141=$(getcsrf $JARU /qa)
-  ck "s141 ক্লিনআপ 303" "303" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/qa/$Q141/delete?_csrf=$TOKU141")"
-  ck "s141 ক্লিনআপ-পরে 404" "404" "$(get $JARU /qa/$Q141)"
+echo "══ ৩০. সেশন ১৪৪: /qa রিচ-এডিটর-ইন্টিগ্রেশন (মাউন্ট + মার্কডাউন-রেন্ডার E2E) ══"
+ck "s144 /qa rich-editor.js লোড" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "assets/js/rich-editor.js")"
+ck "s144 /qa rich-editor.css লোড" "1" "$(curl -s -b $JARU "$BASE/qa" | grep -c "assets/css/rich-editor.css")"
+  ck "s144 লোড-অর্ডার: ইঞ্জিন কম্পোজারের আগে" "1" "$(curl -s -b $JARU "$BASE/qa" | tr -d '\n' | grep -o 'rich-editor.js[^>]*></script>[^<]*<script[^>]*qa-composer.js' | head -1 | grep -c .)"
+  ck "s144 qa-composer মাউন্ট-মার্কার (init(body,{preview:false}))" "1" "$(curl -s "$BASE/assets/js/qa-composer.js" | grep -c 'RichEditor.init(body, { preview: false })')"
+ck "s144 মাউন্ট preview:false (কম্প্যাক্ট-ডিফল্ট)" "1" "$(curl -s "$BASE/assets/js/qa-composer.js" | grep -c "preview: false")"
+RP144=$(curl -s -b $JARU -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{ "title": "rp141 রিচ-এডিটর মার্কডাউন-প্রোব প্রশ্ন", "body": "রিচ-এডিটর §৩০ **গুরুত্বপূর্ণ** টেক্সট এবং [লিংক](https://example.com) — সেশন ১৪১ সেলফ-সিড" }')
+ckc "s144 মার্কডাউন-POST ok:true" '"ok":true' "$RP144"
+Q144=$(echo "$RP144" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+if [ -n "$Q144" ]; then
+  PASS=$((PASS+1)); echo "  ✓ §30-সেলফ-সিড প্রশ্ন id=$Q144"
+  QDET=$(curl -s -b $JARU "$BASE/qa/$Q144")
+  ck "s144 ডিটেইলে বোল্ড রেন্ডার (<strong>)" "1" "$(echo "$QDET" | grep -c "<strong>গুরুত্বপূর্ণ</strong>")"
+  ck "s144 ডিটেইলে লিংক-রেন্ডার (a-link)" "1" "$(echo "$QDET" | grep -c "class=.a-link")"
+  ck "s144 লিস্ট-এক্সার্পট প্লেইন (plainText-চুক্তি)" "0" "$(curl -s -b $JARU "$BASE/qa" | grep -o 'qa-excerpt">[^<]*গুরুত্বপূর্ণ[^<]*' | head -1 | grep -c '\*\*')"
+  TOKU144=$(getcsrf $JARU /qa)
+  ck "s144 ক্লিনআপ 303" "303" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/qa/$Q144/delete?_csrf=$TOKU144")"
+  ck "s144 ক্লিনআপ-পরে 404" "404" "$(get $JARU /qa/$Q144)"
 fi
 echo ""
 
@@ -500,6 +500,46 @@ for rppass134 in 1 2 3 4 5; do
 done
 ck "s134 টেস্ট-রো ক্লিনআপ ×৪" "4" "$RP134DEL"
 ck "s134 ক্লিনআপ-পরে হিরো-অদৃশ্য" "0" "$(curl -s "$BASE/resources?series=RPS134" | grep -c 'section class="rsx-hero"')"
+# ═══ সেশন ১৪৩: মেনশন-নোটিফিকেশন-সমতা (কমেন্ট/উত্তর-পাথ) ═══════════════════════════
+# আগের-গ্যাপ: কমেন্ট-কম্পোজারে @মেনশন-অটোকমপ্লিট UI ছিল, কিন্তু POST /api/comment ও
+# POST /qa/:id/answer নীরবে মেনশন-বিজ্ঞপ্তি বাদ দিত (শুধু নতুন-আর্টিকেল/প্রশ্ন-পাথে ছিল)।
+# রীতি: self-seeding (§28-মিরর) — testuser-প্রশ্ন → মেনশন-টার্গেট = testadmin (JARTA —
+# users-এর role='admin' সারি; 'admin'/admin123 = পোর্টাল-স্বপ্রীয়োক্ত, users-row নয় —
+# @admin মেনশন কিছুই রেজলভ করে না!)। গণনা delta-ভিত্তিক — বুট-পরবর্তী
+# আইডি-পুনঃব্যবহারে পুরানো-রেজিডু থাকলেও নির্ধারিত: প্রি-ক্লিনআপ → +1 → +1 →
+# নেগেটিভে অপরিবর্তিত → ক্লিনআপ। পেয়ারিং: ?type=mention-পেজে
+# href="/qa/Q144" ↔ data-dismiss="id" tempered-grep + sort -u (ড্রপডাউন+পেজ দুই-সারফেস)।
+echo "══ ৩০. সেশন ১৪৪: মেনশন-নোটিফিকেশন-সমতা (কমেন্ট + নো-জেএস-উত্তর) ══"
+RP144=$(curl -s -b $JARU -X POST "$BASE/api/qa/new" -H "Content-Type: application/json" -d '{"title":"rp141 <img src=x onerror=alert(1)> মেনশন-প্যারিটি প্রশ্ন","body":"role-policy §৩০ সেলফ-সিড প্রশ্ন (session144) — মেনশন-নোটিফিকেশন"}')
+Q144=$(echo "$RP144" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
+s144count() { curl -s -b $JARTA "$BASE/notifications?type=mention" | tr '\n' ' ' | grep -oP "href=\"/qa/$Q144\"(?:(?!href=\"/qa/|data-dismiss).)*data-dismiss=\"\K[0-9]+" | sort -u | wc -l | tr -d ' '; }
+s144dismiss() { for P144ID in $(curl -s -b $JARTA "$BASE/notifications?type=mention" | tr '\n' ' ' | grep -oP "href=\"/qa/$Q144\"(?:(?!href=\"/qa/|data-dismiss).)*data-dismiss=\"\K[0-9]+" | sort -u); do curl -s -b $JARTA -X POST "$BASE/api/notifications/$P144ID/dismiss" > /dev/null; done; }
+if [ -z "$Q144" ]; then echo "  ✗ §30-সেলফ-সিড ব্যর্থ (POST /api/qa/new)"; FAIL=$((FAIL+1));
+else
+  PASS=$((PASS+1)); echo "  ✓ §30-সেলফ-সিড প্রশ্ন id=$Q144"
+  s144dismiss
+  ck "s144 প্রি-ক্লিনআপে স্কোর-শূন্য" "0" "$(s144count)"
+  CM144=$(curl -s -b $JARU -X POST "$BASE/api/comment" -H "Content-Type: application/json" -d "{\"post_id\":$Q144,\"body\":\"rp141-কমেন্ট @testadmin — মেনশন-সমতা-প্রোব\"}")
+  ck "s144 কমেন্ট-POST ok:true" "1" "$(echo "$CM144" | grep -c '"ok":true')"
+  ck "s144 কমেন্ট-মেনশন → testadmin বিজ্ঞপ্তি (+1)" "1" "$(s144count)"
+  ckc "s144 বার্তা-টেক্সট (মন্তব্যে আপনাকে ম্যানশন করেছেন)" 'মন্তব্যে আপনাকে ম্যানশন করেছেন' "$(curl -s -b $JARTA "$BASE/notifications?type=mention")"
+  ckc "s144 মেনশন-টাইটেল" '>ম্যানশন<' "$(curl -s -b $JARTA "$BASE/notifications?type=mention")"
+  TOKU144=$(getcsrf $JARU /qa/$Q144)
+  ck "s144 নো-জেএস-উত্তর POST → 303" "303" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/qa/$Q144/answer" --data-urlencode "body=rp141-নোজেএস-উত্তর @testadmin" --data-urlencode "_csrf=$TOKU144")"
+  ck "s144 উত্তর-মেনশন → testadmin বিজ্ঞপ্তি (মোট ২)" "2" "$(s144count)"
+  SM144=$(curl -s -b $JARU -X POST "$BASE/api/comment" -H "Content-Type: application/json" -d "{\"post_id\":$Q144,\"body\":\"rp141-সেলফ-মেনশন @testuser\"}")
+  ck "s144 সেলফ-মেনশন কমেন্ট ok:true" "1" "$(echo "$SM144" | grep -c '"ok":true')"
+  ck "s144 সেলফ-মেনশন → বিজ্ঞপ্তি অপরিবর্তিত" "2" "$(s144count)"
+  ck "s144 অজানা-ইউজার-মেনশন → ok:true" "1" "$(curl -s -b $JARU -X POST "$BASE/api/comment" -H "Content-Type: application/json" -d "{\"post_id\":$Q144,\"body\":\"rp141-অজানা @rp141_nosuchuser\"}" | grep -c '"ok":true')"
+  ck "s144 অজানা-ইউজার → বিজ্ঞপ্তি অপরিবর্তিত" "2" "$(s144count)"
+  s144dismiss
+  ck "s144 ক্লিনআপ-পরবর্তী mention-পেজ খালি" "0" "$(s144count)"
+  TOKU144B=$(getcsrf $JARU /qa)
+  ck "s144 ক্লিনআপ প্রশ্ন-ডিলিট → 303" "303" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -X POST "$BASE/qa/$Q144/delete?_csrf=$TOKU144B")"
+  ck "s144 ডিলিট-পরবর্তী GET → 404" "404" "$(get $JARU /qa/$Q144)"
+fi
+echo ""
+
 
 echo ""
 echo "════════════════════════════════"

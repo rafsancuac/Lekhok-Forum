@@ -1616,3 +1616,22 @@ Stage Summary:
 **গোটচা-নতুন (পরের-এজেন্টদের জন্য):** ① **`data-ts` অ্যাট্রিবিউট-নাম গ্লোবাল-কনট্র্যাক্ট** (LekhokRelTime সব [data-ts]-এর ভেতর-মুছে-পেইন্ট করে) — নতুন-কম্পোনেন্টে টাইমস্ট্যাম্প-ক্যারিং-কনটেইনারে ভিন্ন-নাম (data-ff-* রীতি) ② **keyset-কার্সর = পুরনো-দিক** — 'নতুন-গণনা'তে feedCursorCond-এর freshMode-মিরর ছাড়া উল্টো-ফল ③ স্যুট-গ্রিন-দাবি এ-মেশিনে পুনঃপ্রমাণ-অসম্ভব হলে **বেসলাইন-প্যারিটি (git worktree @HEAD বনাম ডেল্টা, অভিন্ন-সেট diff)**-ই ডেল্টা-শূন্য-প্রমাণ ④ riya/ismail curl-jar প্রতি-pristine-রিবিল্ডে মৃত — পুনঃলগইন আবশ্যক।
 
 **ডকস:** PLANS session144-নোট + PROJECT §১৪৪ + worklog ×২। **পরের-এজেন্ট: session145 থেকে (max+1)।**
+
+---
+Task ID: cron-r15 (session145 — রাউন্ড: QA-সুইপ → মেনশন-নোটিফিকেশন-সমতা + /qa @অটোকমপ্লিট → চতুর্ভুজ-প্যারালাল-ইউনিয়ন → push)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → স্টেবল-প্রমাণিত → ফিচার-রাউন্ড (PLANS-কিউ session140-প্রস্তাব ②③) → push + ডকস
+
+Work Log:
+- sync+QA @680e0ec: ১৬-route HTTP-ম্যাট্রিক্স (৩০২=auth-গেট-সঠিক, /search-raw-UTF8=curl-gোটচা, /daily=বেয়ার-রুট-নেই-বাই-ডিজাইন) + role-policy 210/210+2-SKIP + cursor 25/25 + guard + audit + 390px ×৭-০ + কনসোল-০ → বাগ-শূন্য → ফিচার-রাউন্ড
+- আবিষ্কার (নীরব-ফিচার-গ্যাপ): কমেন্ট-কম্পোজারে @মেনশন-অটোকমপ্লিট UI ছিল কিন্তু POST /api/comment ও POST /qa/:id/answer extractMentions-ই চালাত না — মেনশন-বিজ্ঞপ্তি কখনোই যেত না
+- ফিচার: ① দুই-পাথে মেনশন-নোটিফিকেশন (pref-গেট + নিজে/পোস্ট-লেখক/প্যারেন্ট-লেখক-বাদ + টাইপ-ভিত্তিক লিংক) ② mention-anywhere.js — textarea[data-mention] সারফেসে স্বাধীন-অটোকমপ্লিট (cc-mention-চুক্তি-মিরর, .cc-input-স্কিপ, Esc-stopPropagation) ③ §৩০ ×১৫-টেস্ট (delta-গণনা + tempered-grep পেয়ারিং + sort -u দ্বি-সারফেস-ডিডুপ)
+- ধরা-বাগ ×৩: 'admin'=পোর্টাল-ক্রেডেনশিয়াল users-টেবিলে নেই → @admin মেনশন-শূন্য (টার্গেট=testadmin); notification-page একই-রো ড্রপডাউন+পেজ দুইবার রেন্ডার (pairing-এ sort -u); স্যুটে exit 0-ব্লকের পরে §অ্যাপেন্ড = অচল (summary-র আগে ঢোকানো)
+- টুল-গোটচা-পুনঃপ্রমাণ: [me.id→e.id-ম্যানলিং (od-যাচাইয়ে অক্ষত), agent-browser press→keydown নেই (synthetic-রীতি), fill→caret-0→findMention-নীরব-ব্যর্থ, getComputedStyle display-মিথ্যা-ব্লক (ভিজ্যুয়াল-সত্য), fa-stream=content-শূন্য-গ্লিফ
+- চতুর্ভুজ-প্যারালাল: session141(admin-fix)/142(og-card)/143(branded-empty+rich-editor) আগে-ল্যান্ডেড → আমার 141→143→144→145-ত্রি-রিলেবেল; notifications-শূন্য-অবস্থা same-feature → তাদের nf-branded141-ক্যানোনিকাল গৃহীত, আমার ne141-প্রত্যাহৃত (১০ম-প্রমাণ); stash-pop-এ --theirs/--ours-উল্টে-যাওয়া-গোটচা (theirs=stash!)
+- যাচাই (মার্জড-ট্রি @144): role-policy **239/239** (তাদের §২৯ + আমার §৩০) ✓ cursor 25/25 ✓ guard ✓ audit ✓ brace-০ ✓ node --check ×৩ ✓ bash -n ✓ EJS ×২ ✓ mention-E2E (টাইপ→ড্রপডাউন→নেভ→ইনসার্ট→সিঙ্ক→Esc→390px-০→কনসোল-০) ✓
+- pushed: <শা-হ্যাশ> — PROJECT §১৪৪ + PLANS session145-নোট (৬-চুক্তি) + worklog ×২
+
+Stage Summary:
+- @মেনশন এখন কমেন্ট/উত্তরে সত্যিই বিজ্ঞপ্তি পাঠায় (UI-প্রতিশ্রুতি=ডেলিভারি) + /qa কম্পোজারে অটোকমপ্লিট — Q&A-মেনশন-চক্র পূর্ণ
+- পরবর্তী-প্রার্থী: rich-editor(session143)-এ @মেনশন-ইন্টিগ্রেশন, নোটিফ-ডিপ-লিংকে #answer-N অ্যাঙ্কর, Metered.ca-TURN (ইউজার-অ্যাকাউন্ট)
