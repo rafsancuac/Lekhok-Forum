@@ -1898,3 +1898,24 @@ Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্�
 - হারনেস-গোটচা: role-policy=RP_PORT / s139=E2E_PORT / সার্ভার=PORT — ভুল-ভ্যারিয়েবলে ২০৫-মিথ্যা-ফেইল
 
 **পরের-এজেন্ট: session158 লেবেল থেকে** (বিস্তারিত PLANS.md session153-নোট + PROJECT.md §১৫৩)
+---
+Task ID: 27 (Session 158 — Lekhok-Forum সর্বজনীন পোস্ট-কম্পোজার + গ্লোবাল অ্যান্টি-শিফট)
+Agent: Z.ai (ইউজার-স্পেক এক্সিকিউশন: "লেখা/প্রশ্ন/প্রোফাইলে ঠিক একই কম্পোজার-ইন্টারফেস + ক্যাটাগরি/শাখা-ড্রপডাউন + স্ক্রল-ঝাঁকুনি-স্থায়ী-সমাধান")
+Task: UniversalCreatePostModal.tsx + UniversalPostTrigger.tsx (React-স্পেক) → Express/EJS-পোর্ট (session153/157-রীতি) + globals.css-অ্যান্টি-শিফট-স্পেসিফিকেশন → shared.css-পোর্ট
+
+Work Log:
+- repo /home/z/lekhok-forum/lekhok-forum; git pull (3e30220→8299ea1, session157-docs); push-পূর্বে rebase-এ সমান্তরাল Next.js-এজেন্টের f9bae63 (lekhok-forum-next ফিড-লেআউট) ল্যান্ডেড — PLANS/PROJECT-এ union-মার্জ ×২, কোড-ফাইল-কনফ্লিক্ট-শূন্য
+- 🚨 স্পেক-ইন্টারপ্রিটেশন: ইউজারের React-কোড রেফারেন্স-স্পেসিফিকেশন — সাইটের বিদ্যমান session153 FB-রিচ-কম্পোজার-ইঞ্জিনকেই সর্বজনীন করা হয়েছে (নতুন-প্যারালাল-মোডাল নয়): DOM-id-পরিবার fbm-*153/cpm* অক্ষুণ্ণ → সমস্ত লিগ্যাসি-বাইন্ডিং/draft-key/ইঞ্জিন-চুক্তি এক-ইঞ্জিনে বহাল
+- ৩-নতুন-ফাইল: views/shared/post/UniversalPostTrigger.ejs (upt158: অ্যাভাটার+ব্যক্তিগতকৃত-বাবল+লেখা/প্রশ্ন-কুইক-বাটন, data-composer-type, composerDefaultType-প্যারাম) · UniversalComposerModal.ejs (মোডাল-মার্কআপ single-source + #ucs158Strip ক্যাটাগরি-স্ট্রিপ + css/js-সেলফ-লোড) · public/assets/css/universal-composer.css (upt158/ucs158/cat-chip — hex-০, ৮px-রেডিয়াস)
+- composer-modal.js session158-ব্লক: POST_CATS158 (article×৮/question×৪) + syncType158 (অপশন-সোয়াপ+placeholder+শিরোনাম+সাবমিট-লেবেল) + onOpenClick158 + খসড়ায় type/category; social.js compose: type/category-হোয়াইটলিস্ট + per-type-URL + 🐛dup-গার্ড-_rich-ফেচ-ফিক্স; dashboard.js ফিড-SQL তিন-শাখায় p.category (UNION-কলাম-সাম্য)
+- পেজ-ইন্টিগ্রেশন ×৪: dashboard.ejs (include-সোয়াপ + পেজ-লেভেল js-ট্যাগ-প্রত্রাহ) · me.ejs (সর্বদা) · profile.ejs (isOwner-গার্ডে) · qa-list.ejs (session140-ইনলাইন-কম্পোজার বিলোপ → প্রশ্ন-প্রি-সিলেক্টেড-ট্রিগার; qa-composer.js null-guard-এ স্ব-নিষ্ক্রিয়) + FeedPostCard.ejs শাখা-চিপ
+- shared.css session158-ব্লক: html{scrollbar-gutter:stable;overflow-y:scroll} + body{max-width:100vw;overflow-x:hidden} + .stable-scroll-panel (min-width:0; .independent-scroll-প্যারিটি)
+- E2E (agent-browser, ismail@8080): ❓→প্রশ্ন-প্রি-সিলেক্টেড→/qa/2 ✓ ✍️→/articles/3 ✓ টগলে অপশন-সোয়াপ 8↔4 ✓ চিপ ✓ /me+/profile+/qa ✓ অতিথি-গার্ড ✓ gutter:stable+ovY:scroll+ovX:hidden computed ✓ স্ক্রলে scrollX=0 ✓ 390px×৩ h-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×২
+- রিগ্রেশন: lf153-harness **৪৯/৪৯ ALL GREEN** (দ্বি-সিড-প্রোটোকল: server-kill→seed-test-users+seed-qa-113→boot — server-চলত্তাবস্থায় seed = অদৃশ্য 🚨) + s139 ২২/২২ + guard/audit ✓ + role-policy stash-বেসলাইন-প্যারিটি (IDENTICAL failure-set — পরিবেশগত) + node --check + EJS-compile ×৭
+- 🚨 গোটচা-নতুন: EJS-কমেন্টে `<% ... %>`-আক্ষরিক-লেখা = কমেন্ট আগে-বন্ধ → unclosed-tag-এরর (উভয়-পার্শিয়ালে-ধরা, রিফ্রেজ-করা)
+- push: 0aa3032 origin/main ✓ (rebase-union: f9bae63-এর উপরে)
+
+Stage Summary:
+- সর্বজনীন-কম্পোজার সম্পূর্ণ: ফিড/প্রোফাইল/QA — একই ট্রিগার + একই মোডাল, লেখা↔প্রশ্ন + ১২-শাখা-জেনার, per-type নেভিগেশন; অ্যান্টি-শিফট গ্লোবাল
+- পরের-এজেন্ট: session159 — প্রস্তাব: ① QaListItem-এ শাখা-চিপ ② /qa?topic= + /articles?cat= শাখা-ফিল্টার ③ ট্যাগ-ডায়ালগ (সহ-লেখক-পিকার) ④ প্রশ্নে শিরোনাম-ইনপুট ⑤ শাখা-অনুযায়ী অডিয়েন্স-ডিফল্ট
+- ঝুঁকি: PLANS/PROJECT-এ দ্বি-session158-নোট (Next.js-এজেন্ট f9bae63 + আমার) — session159-থেকে max+1 রীতি; হারনেস-লগইন rate-limiter → server-রিস্টার্টেই ক্লিয়ার
