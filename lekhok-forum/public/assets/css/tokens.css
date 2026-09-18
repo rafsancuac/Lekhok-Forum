@@ -145,6 +145,146 @@ html { background: var(--lf-ui-canvas); }
   --lf-amber-soft: #FFFBEB;             /* amber-50 */
   --lf-amber-soft-2: #FEF3C7;           /* amber-100 */
   --lf-amber-soft-3: #FDE68A;           /* amber-200 */
+
+  /* ── session137: ইনফো-নীল (admin.css অবশিষ্ট-র্যাচেট সমাপ্তি I) ── */
+  --lf-info: #2563EB;                   /* blue-600 */
+  --lf-info-strong: #1D4ED8;            /* blue-700 */
+  --lf-info-deep: #1E40AF;              /* blue-800 */
+  --lf-info-link: #0B5CAD;              /* কাস্টম লিংক-নীল */
+  --lf-info-ink: #3730A3;               /* indigo-800 */
+  --lf-info-mid: #93C5FD;               /* blue-300 */
+  --lf-info-soft: #E7F0FE;              /* কাস্টম নীল-টিন্ট */
+  --lf-info-soft-2: #D9F0FF;            /* কাস্টম হালকা-নীল */
+  --lf-info-soft-3: #F0F9FF;            /* sky-50 */
+  --lf-info-soft-4: #EEF2FF;            /* indigo-50 */
+  --lf-info-soft-5: #E0E7FF;            /* indigo-100 */
+  --lf-info-soft-6: #BFDBFE;            /* blue-200 */
+
+  /* ── session137: ভায়োলেট ── */
+  --lf-violet: #7C3AED;                 /* violet-600 */
+  --lf-violet-deep: #6D28D9;            /* violet-700 */
+  --lf-violet-ink: #5B21B6;             /* violet-800 */
+  --lf-violet-soft: #EDE9FE;            /* violet-100 */
+
+  /* ── session137: সায়ান/স্কাই ── */
+  --lf-cyan: #0891B2;                   /* cyan-600 */
+  --lf-cyan-ink: #075985;               /* sky-800 */
+  --lf-cyan-mid: #BAE6FD;               /* sky-200 */
+
+  /* ── session137: রোজ/লাল-টিন্ট অতিরিক্ত ── */
+  --lf-rose-mid: #FDA4AF;               /* rose-300 */
+  --lf-danger-soft-4: #FCA5A5;          /* red-300 */
+  --lf-danger-tint: #FFF5F5;            /* কাস্টম লাল-সাদা */
+
+  /* ── session137: কমলা ── */
+  --lf-orange: #D97706;                 /* amber-600 (টেক্সট) */
+  --lf-orange-mid: #FDBA74;             /* orange-300 */
+  --lf-orange-soft: #FFF7ED;            /* orange-50 */
+  --lf-orange-soft-2: #FED7AA;          /* orange-200 */
+
+  /* ── session137: হলুদ/অ্যাম্বার অতিরিক্ত ── */
+  --lf-amber-mid-2: #FCD34D;            /* amber-300 */
+  --lf-amber-ink: #78350F;              /* amber-900 */
+  --lf-yellow-soft: #FEF9C3;            /* yellow-100 */
+  --lf-yellow-deep: #A16207;            /* yellow-700 */
+  --lf-yellow-ink: #854D0E;             /* yellow-800 */
+
+  /* ── session137: সবুজ-র‍্যাম্প অতিরিক্ত (অ্যাডমিন গ্রিন) ── */
+  --lf-ok-bright: #10B981;              /* emerald-500 */
+  --lf-ok-leaf: #0AA56D;                /* কাস্টম ব্র্যান্ড-ঘেঁষা সবুজ */
+  --lf-ok-ink: #0B6B4B;                 /* --ad-accent-ink প্রমোশন */
+  --lf-green-deep: #15803D;             /* green-700 */
+  --lf-green-ink: #166534;              /* green-800 */
+  --lf-ok-mid-2: #B5E3D0;               /* কাস্টম মিড-টিন্ট */
+  --lf-ok-mid-3: #C9EDE0;               /* কাস্টম মিড-টিন্ট */
+  --lf-ok-mid-4: #6EE7B7;               /* emerald-300 */
+  --lf-ok-soft-4: #DCFCE7;              /* green-100 */
+  --lf-ok-soft-5: #E6F6EF;              /* কাস্টম */
+  --lf-ok-soft-6: #EAF7F0;              /* কাস্টম */
+  --lf-ok-soft-7: #F2FBF6;              /* কাস্টম */
+  --lf-ok-soft-8: #F0FDF7;              /* কাস্টম */
+  --lf-ok-soft-9: #F8FAF9;              /* কাস্টম */
+
+  /* ── session137: নিরপেক্ষ-ধূসর (tailwind gray) ── */
+  --lf-gray-soft: #F3F4F6;              /* gray-100 */
+  --lf-gray-soft-2: #E5E7EB;            /* gray-200 */
+  --lf-gray-soft-3: #D1D5DB;            /* gray-300 */
+  --lf-gray-mid: #9CA3AF;               /* gray-400 */
+  --lf-gray: #6B7280;                   /* gray-500 */
+  --lf-gray-deep: #4B5563;              /* gray-600 */
+  --lf-gray-ink: #374151;               /* gray-700 */
+  --lf-gray-deep-ink: #111827;          /* gray-900 */
+
+  /* ── session137: ফেসবুক-প্যালেট কালি/মেটা ── */
+  --lf-fb-ink: #1C1E21;                 /* fb প্রাইমারি কালি (--ad-ink) */
+  --lf-fb-ink-2: #444950;               /* fb কালি-২ (--ad-ink-2) */
+  --lf-fb-icon-ink: #4B4F56;            /* fb আইকন-কালি */
+  --lf-fb-meta: #8A8D93;                /* fb মেটা (tertiary-ঘেঁষা, আলাদা-মান) */
+  --lf-fb-meta-2: #909398;
+  --lf-fb-meta-3: #8A8F98;
+  --lf-fb-muted: #A5A8AD;
+  --lf-fb-muted-2: #98A2B3;
+  --lf-ink-max: #111;                   /* সর্বোচ্চ-কালি (শর্ট-হেক্স) */
+  --lf-slate-steel: #34495E;            /* কাস্টম স্টিল-নীলাভ */
+
+  /* ── session137: ফেসবুক-প্যালেট বর্ডার/ডিভাইডার ── */
+  --lf-fb-border: #CCD0D5;              /* fb শক্তিশালী বর্ডার */
+  --lf-fb-border-2: #CDD2D8;            /* ড্রপজোন-ড্যাশড ফলব্যাক */
+  --lf-fb-divider: #EEF1F5;             /* টেবিল-হেডার/অ্যাভাটার-রিং */
+  --lf-ad-line: #DDE3EA;                /* প্যানেল-বর্ডার */
+  --lf-ad-line-2: #D8DADF;
+  --lf-ad-line-3: #D7DEE7;              /* ড্যাশড */
+  --lf-ad-line-4: #D3D6DB;              /* স্ক্রলবার */
+  --lf-ad-line-5: #DFE2E7;
+
+  /* ── session137: ফেসবুক-প্যালেট সারফেস/ফিল্ড/ট্র্যাক ── */
+  --lf-fb-field: #F7F8FA;               /* readonly-ইনপুট বিজি */
+  --lf-fb-field-2: #FAFBFC;
+  --lf-fb-field-3: #F1F4F8;
+  --lf-fb-chip: #F1F2F4;                /* fb চিপ বিজি */
+  --lf-fb-chip-2: #F2F3F5;
+  --lf-fb-hover: #EEF2F7;               /* summary-হোভার */
+  --lf-fb-icon-bg: #E9EBEF;             /* --ad-icon-bg */
+  --lf-fb-icon-bg-2: #ECEFF2;
+  --lf-fb-line-soft: #F0F1F4;           /* --ad-line-soft */
+  --lf-ad-track: #D5D8DE;               /* টগল-ট্র্যাক */
+  --lf-ad-track-2: #D8DBE0;
+  --lf-ad-track-3: #C9CCD3;
+  --lf-surface-snow: #FFFAFA;
+  --lf-surface-tint: #FDFDFC;
+  --lf-surface-blue-1: #FBFCFE;
+  --lf-surface-blue-2: #FAFCFE;
+
+  /* ── session137: ড্যাশবোর্ড-র্যাচেট অতিরিক্ত (warn/বুটস্ট্র্যাপ-লেগাসি/নেভি) ── */
+  --lf-warn: #FFC107;                   /* বুটস্ট্র্যাপ-warning (বর্ডার) */
+  --lf-warn-soft: #FFF3CD;              /* বুটস্ট্র্যাপ-warning বিজি */
+  --lf-warn-soft-2: #FFF7E0;            /* কাস্টম ক্রিম */
+  --lf-warn-ink: #856404;               /* বুটস্ট্র্যাপ-warning টেক্সট */
+  --lf-amber-bright: #F59E0B;           /* amber-500 */
+  --lf-yellow-bright: #F7B928;          /* reaction-yellow-ঘেঁষা */
+  --lf-ok-ink-2: #155724;               /* বুটস্ট্র্যাপ-success টেক্সট */
+  --lf-ok-tint: #D4EDDA;                /* বুটস্ট্র্যাপ-success বিজি */
+  --lf-ok-soft-10: #ECFDF5;             /* emerald-50 */
+  --lf-danger-mid-2: #F87171;           /* red-400 */
+  --lf-danger-flat: #E74C3C;            /* ফ্ল্যাট-UI লাল */
+  --lf-info-soft-7: #EFF6FF;            /* blue-50 */
+  --lf-info-soft-8: #E8F0FE;            /* গুগল-নীল টিন্ট */
+  --lf-info-soft-9: #DBEAFE;            /* blue-100 */
+  --lf-info-soft-10: #CCE5FF;           /* বুটস্ট্র্যাপ-info বিজি */
+  --lf-info-soft-11: #C7D2FE;           /* indigo-200 */
+  --lf-info-mid-2: #60A5FA;             /* blue-400 */
+  --lf-info-ink-2: #004085;             /* বুটস্ট্র্যাপ-info টেক্সট */
+  --lf-blue-g: #1A73E8;                 /* গুগল-নীল */
+  --lf-cyan-soft: #ECFEFF;              /* cyan-50 */
+  --lf-cyan-deep: #0E7490;              /* cyan-700 */
+  --lf-cyan-mid-2: #A5F3FC;             /* cyan-200 */
+  --lf-cyan-mid-3: #7DD3FC;             /* sky-300 */
+  --lf-orange-ink: #7C2D12;             /* orange-900 */
+  --lf-violet-soft-2: #F0E6FF;          /* কাস্টম ভায়োলেট-টিন্ট */
+  --lf-navy: #0A1F44;                   /* কাস্টম নেভি */
+  --lf-navy-deep: #123A6B;              /* কাস্টম নেভি-ডিপ */
+  --lf-gray-soft-4: #F4F6F8;            /* নিরপেক্ষ-হালকা (--bg-2 ফলব্যাক) */
+  --lf-fb-border-3: #E3E6EA;            /* fb বর্ডার ফলব্যাক */
 }
 
 /* ── সেশন-১৪০: পড়ার-অভিজ্ঞতা প্যালেট (article.css rt-বার/toc/resume/related — hex কেবল --lf-* সংজ্ঞা-লাইনে) ── */

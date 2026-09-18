@@ -1511,3 +1511,20 @@ Task: অবস্থা-মূল্যায়ন + agent-browser QA → স�
 - **[relabel 136→140]:** ৯-কমিট-সমান্তরাল-ল্যান্ডে আমার-লেবেল দখল → rebase ৪-UU ইউনিয়ন + সমগ্র-রিলেবেল (তাদের session136-নোট অক্ষত)
 - যাচাই (merged): role-policy ২১২/২১২ ALL GREEN + cursor 25/25 + guard/audit/brace ✓ + E2E-চক্র-পূর্ণ (composer→swap→persist→cleanup) + 390px-০ + কনসোল-০
 - **পরের-এজেন্ট: session141 থেকে** — বিস্তারিত lekhok-forum/PLANS.md session140-নোট + PROJECT.md §১৪০
+---
+Task ID: session137 (cron — QA→ফিচার-রাউন্ড)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: অবস্থা-যাচাই + agent-browser QA → স্থিতিশীল-ফেজে session136-প্রস্তাব ①② (tokens-র্যাচেট-সমাপ্তি) + session134-বকেয়া article-chain → রিগ্রেশন ALL GREEN → push
+
+Work Log:
+- sync: fetch → main @ bfed30f + ১-stray-লোকাল-কমিট (5956657 — শুধু worklog, ৪-ডকে অপরিষ্কার-স্ট্যাশ-কনফ্লিক্ট-মার্কার) → union-রিজলভ (worklog ×২ + PLANS + PROJECT) + স্টেল-স্ট্যাশ-ড্রপ (session136-ব্যাকলগ, কমিটেড-ডুপ্লিকেট)
+- QA-ফেজ ALL GREEN: guard + role-policy ১৭৭/১৭৭ + cursor ২৬/২৬ (BASE-arg-গোটচা) + audit + brace-০ (single-file-arg-গোটচা ×২২); agent-browser ৭-পেজ সুইপ কনসোল-০ + 390px-০; ড্রয়ার no-reload-মার্কার + instaprev + share-menu--fb ৩-অ্যাকশন পুনঃপ্রমাণ → বাগ-শূন্য
+- ① tokens-র্যাচেট-সমাপ্তি: tokens.css-এ ১১৭ নতুন --lf-* → admin.css ১৭২→০ + dashboard.css ২৩৩→০ (exact-value, দীর্ঘ-হেক্স-আগে+বাউন্ডারি; ড্রিফট-গ্রে -2/-3/-4-সাফিক্সে সৎ-আলাদা); বেসলাইন admin:0/dashboard:0-লক
+- ② **[ইউনিয়ন-সংশোধন: ② প্রত্যাহৃত — সমান্তরাল session139-এজেন্টের _nameA135-ব্লক আগে-ল্যান্ডেড (same-feature-canonical); rebase-এ তাদের পাশ গৃহীত, আমার _nameBy137 প্রত্যাহৃত — session134-প্রত্যাহার-রীতি। চিপ-E2E-প্রমাণ তাদের-বাস্তবায়নের-উপরেই।]** (মূল-নোট: article-route _nameBy137 + replyTo-অ্যাটাচ — E2E /articles/1: চিপ+flash+hash+no-reload+কনসোল-০ ✓)
+- ফাইনাল: role-policy ১৭৭/১৭৭ ✓ cursor ২৬/২৬ ✓ guard-নতুন-বেসলাইন ✓ audit ✓ brace-০ ✓ /feed-৩০২ ✓ computed-token ×৬ ✓ suspicious-transparent-০ ✓ 390px ×৫-পেজ-০ ✓ কনসোল-০ ✓
+- গোটচা ×২: grep-c-লাইন-গোনা (minified-CSS) + html-vs-body-ব্যাকগ্রাউন্ড-প্রোব (ক্যানভাস html-এ)
+- docs: PLANS session137-নোট + PROJECT §১৩৭ + worklog ×২
+
+Stage Summary:
+- স্ট্যাটাস: বাগ-শূন্য স্থিতিশীল-ফেজ; tokens.css এখন ~১৭৬-টোকেন-সম্পূর্ণ-প্যালেট; admin+dashboard CSS সম্পূর্ণ টোকেন-চালিত
+- পরের-এজেন্ট: session138; প্রস্তাব: style.css-র্যাচেট (১৩৯৫ — ভাগ-করে), কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), article/auth/gallery/messenger.css-র্যাচেট, লাইভ-Turso-রিসেট (টোকেন-ধারী)

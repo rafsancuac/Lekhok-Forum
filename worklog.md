@@ -1451,3 +1451,37 @@ Stage Summary:
 - /qa-এখন FB-ধাঁচের এক-পেজ-প্রশ্ন-চক্র: composer→optimistic→canonical→চিপ-বাম্প; Q&A-সিঙ্গেল-সোর্স-পার্শিয়াল-চুক্তি স্থাপিত
 - article.css-হেক্স ৯০%-টোকেনাইজড; hex-baseline article.css 71→8 (admin.css 172-তাদের-ইউনিয়ন)
 - পরের-এজেন্ট: **session141 থেকে**; প্রস্তাব: কম্পোজারে রিচ-এডিটর/মেনশন, notifications-empty-state-পলিশ, Metered.ca-TURN
+
+---
+Task ID: session136-ফাইনাল (push-সমাপ্তি)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: push-রেস-হ্যান্ডলিং + মার্জড-কোডে চূড়ান্ত-যাচাই + হ্যান্ডওভার
+
+Work Log:
+- pushed: 4794682..415af2a (feat) + bfed30f (push-সমাপ্তি-docs)
+- প্যারালাল-ইউনিয়ন: c7fefee-session134 + 4794682-session135 আগে-ল্যান্ডড → stash/pull/pop ক্লিন-ইউনিয়ন + max+1 রীতিতে ১৩৪→১৩৬-সমগ্র-রিলেবেল + .fc-instaprev-এক্সক্লুশন-সংযোজন (তাদের fcIpIn134-রক্ষা)
+- পোস্ট-push চূড়ান্ত-যাচাই: role-policy ১৭৭/১৭৭ ✓ cursor ২৬/২৬ ✓ guard-নতুন-বেসলাইন ✓ audit ✓ ব্রাউজার-স্মোক (notifications ৮/৮ data-ts, admin-token-রেজলিউশন, drawer-কম্পোজিশন, 390px-০, কনসোল-০) ✓
+
+Stage Summary:
+- রিপো main @ bfed30f (session136 — reltime-চুক্তি + swap-fade + tokens-র্যাচেট ৪২৬→১৭২ + admin-views-টোকেন)
+- পরের-এজেন্ট: session137; সুপারিশ: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, কল-ইতিহাসে degrade-স্তর-রেকর্ড, লাইভ-Turso-রিসেট (টোকেন-ধারী)
+
+---
+Task ID: session137 (cron — QA→ফিচার-রাউন্ড)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA + স্থিতিশীল-ফেজে ফিচার/স্টাইল-রাউন্ড + push
+
+## Current Project Status / Assessment
+- রিপো main @ bfed30f (session136) + ১-stray-লোকাল-কমিট (5956657 — worklog-only, সঙ্গে ৪-ডকে অপরিষ্কার stash-কনফ্লিক্ট-মার্কার) → union-রিজলভ + স্টেল-স্ট্যাশ-ড্রপ
+- QA-ফেজ ALL GREEN: guard + role-policy ১৭৭/১৭৭ + cursor ২৬/২৬ + audit + brace-০ ×২২; agent-browser ৭-পেজ সুইপ (ismail): কনসোল-০, errors-০, 390px-০; ড্রয়ার no-reload + instaprev + share-menu ৩-অ্যাকশন পুনঃপ্রমাণ → **বাগ-শূন্য স্থিতিশীল-ফেজ** → ফিচার-রাউন্ড
+
+## Goals / Completed / Verification
+- ① tokens-র্যাচেট-সমাপ্তি (session136-প্রস্তাব ①②): ১১৭ নতুন --lf-* → admin.css ১৭২→০ + dashboard.css ২৩৩→০ hex — exact-value-ম্যাপ, ভিজ্যুয়াল-পরিবর্তন-শূন্য, বেসলাইন-লক
+- ② **[ইউনিয়ন-সংশোধন: ② প্রত্যাহৃত — সমান্তরাল session139-এজেন্টের _nameA135-ব্লক আগে-ল্যান্ডেড (same-feature-canonical); rebase-এ তাদের পাশ গৃহীত, আমার _nameBy137 প্রত্যাহৃত — session134-প্রত্যাহার-রীতি। চিপ-E2E-প্রমাণ তাদের-বাস্তবায়নের-উপরেই।]** (মূল-নোট: replyTo-ডেটা সার্ভার-সাইড, ভিউ-অস্পৃশ্য; E2E চিপ+flash+no-reload ✓)
+- ফাইনাল-রিগ্রেশন: role-policy ১৭৭/১৭৭ ✓ cursor ২৬/২৬ ✓ guard ✓ audit ✓ brace-০ ✓ /feed ✓ computed-token ×৬ ✓ 390px ×৫-০ ✓ কনসোল-০ ✓
+
+## Unresolved Issues / Risks / Next Priorities
+- বাকি-র্যাচেট: style.css ১৩৯৫ (ভাগ-করে চালাতে হবে), article ৭১ / auth ১২৩ / gallery ১২৩ / messenger ১৪৪ / calls ৬২ / feed ৮৮ / profile ৭৮ / bookmarks ৫৪ / premium ৩২ / member-accounts ৩১ / rich-editor ৬১ / multi-image ১৭ / shared ২
+- প্রস্তাব: কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), লাইভ-Turso-রিসেট (টোকেন-ধারী)
+- পরের-এজেন্ট: **session138 থেকে**; push-পূর্বে git pull --rebase (union-মার্জ PLANS/PROJECT/worklog)
+>>>>>>> 857aa51 (feat(session137): [relabel-নোট: সমান্তরাল session139-আগে-ল্যান্ডেড — docs-লেবেল 137-ই থাক, কোড-মার্কার অক্ষত; ②-প্রত্যাহার-নোটসহ] tokens-র্যাচেট-সমাপ্তি (admin.css ১৭২→০ + dashboard.css ২৩৩→০) — cron QA→ফিচার-রাউন্ড। QA-ফেজ: guard + role-policy ১৭৭/১৭৭ + cursor ২৬/২৬ + audit + brace-০ ×২২ গ্রিন; agent-browser ৭-পেজ সুইপ কনসোল-০/390px-০ → বাগ-শূন্য স্থিতিশীল-ফেজে ফিচার-রাউন্ড। (১) tokens.css session137-ব্লক — ১১৭ নতুন --lf-* (admin: info/violet/cyan-sky/rose/orange/yellow/green-ramp/tailwind-gray/fb-ink-meta-border-surface ≈৮৭; dashboard: warn-বুটস্ট্র্যাপ-লেগাসি/ok-tint/navy/google-blue ≈৩০) → admin.css ১৭২ হেক্স ও dashboard.css ২৩৩ হেক্স সম্পূর্ণ var(--lf-*)-ম্যাপ — উভয় ফাইলে হেক্স-শূন্য, র্যাচেট-বেসলাইন লক (admin:0, dashboard:0); exact-value-ম্যাপ = ভিজ্যুয়াল-পরিবর্তন-শূন্য; দীর্ঘ-হেক্স-আগে + (?![0-9a-fA-F]) বাউন্ডারি (session136-রীতি); ড্রিফট-গ্রে-ভ্যারিয়েন্ট (d8dadf/d5d8de/d8dbe0 নিকট-অভিন্ন) একত্রীকরণ-নয় — -2/-3/-4-সাফিক্সে সৎ-আলাদা-টোকেন; computed-রেজলিউশন-প্রমাণ (--lf-info #2563EB, --lf-fb-ink #1C1E21, --lf-ad-line #DDE3EA, --lf-warn-soft #FFF3CD, --lf-navy #0A1F44, --lf-ok-tint #D4EDDA) + suspicious-transparent-text-০ (২) **প্রত্যাহার-নোট (session134-রীতির ৭ম-প্রমাণ):** article-single .cmt-chain অ্যাডপশন (session134-বকেয়া) আমার রাউন্ডে বানানোর মাঝে সমান্তরাল session139-এজেন্ট তাদের _nameA135-ব্লক (same-feature-canonical) পুশ করে ফেলে — rebase-এ তাদের ক্যানোনিকাল গৃহীত, আমার _nameBy137-ব্লক সম্পূর্ণ-প্রত্যাহৃত (ডাবল-replyTo-লুপ-ঝুঁকি-শূন্য); আমার চিপ-E2E (/articles/1: SSR-চিপ "↩ আকিজ মাহমুদ" + flash + hash + no-reload-মার্কার + কনসোল-০) তাদের-বাস্তবায়নের-উপরেই-প্রমাণিত (৩) রক্ষণাবেক্ষণ: ৪-ডকের অপরিষ্কার stash-কনফ্লিক্ট-মার্কার union-রিজলভ + স্টেল-স্ট্যাশ-ড্রপ (session136-কমিটেড-ডুপ্লিকেট)। ফাইনাল (মার্জড-ট্রি): role-policy ১৭৭/১৭৭ ✓ cursor ২৬/২৬ ✓ guard-নতুন-বেসলাইন ✓ audit:views ✓ brace-০ ✓ /feed-অ্যালায়াস ৩০২ ✓ 390px ×৫-পেজ-০ ✓। গোটচা ×২: grep-c-লাইন-গোনা (minified-CSS-এ occurrence-গণনায় grep -o) + html-vs-body-ব্যাকগ্রাউন্ড-প্রোব (সাইট-ক্যানভাস html{background:var(--bg)}-এ — body-transparent সঠিক)। docs: PLANS session137-নোট (প্রত্যাহার-সংশোধনসহ) + PROJECT §১৩৭ + worklog ×২ — পরের-এজেন্ট session140 থেকে)
