@@ -255,6 +255,7 @@
 @media (hover:none){#notifDropdown .notif-x{opacity:1}}
 @media (prefers-reduced-motion:reduce){#notifDropdown .notif-item,#notifDropdown .notif-x{transition:none}}
 /* EOF-MARKER: session133-toast-kbd-scroll */
+<<<<<<< Updated upstream
 /* ── session134: parent-chain-চিপ + ড্রয়ার-ইনস্ট্যান্ট-প্রিভিউ + চেইন-ফ্ল্যাশ ──
    FB-প্যারিটি: রিপ্লাই-বাবলে "↩ {নাম}" টার্গেট-চিপ (ডিজাইন-টোকেন-শুধু);
    ক্লিকে প্যারেন্ট-বাবলে smooth-scroll + ফ্ল্যাশ-রিং। চিপটি bubble-header-এ
@@ -278,3 +279,33 @@
 .fc-list.fc-swap-in{animation:fcSwapIn134 .28s ease both}
 @media (prefers-reduced-motion:reduce){.fc-instaprev,.fc-list.fc-swap-in,.fc-bubble.cmt-chain-flash{animation:none}.cmt-chain{transition:none}}
 /* EOF-MARKER: session134-chain-chip */
+=======
+
+/* ── session136: reconcile swap-fade (CSS-side — comment-tools.js ইঞ্জিন-অক্ষত) ──
+   innerHTML-সোয়াপ (QA থ্রেড/আর্টিকেল-কমেন্ট/ফিড-ড্রয়ার + প্রিভিউ-সিঙ্ক) হার্ড-কাট
+   ফ্ল্যাশ দেয় — সোয়াপ-শিশুদের মৃদু এন্ট্রি-ফেড (240ms, ৪px রাইজ + ২৬ms ক্যাসকেড,
+   ৫-ধাপ-ক্যাপ) সেটাকে ইচ্ছাকৃত ক্রসফেডে পরিণত করে। নোট: shared.css সর্বশেষ-লোড
+   হয় — is-new124 (অপটিমিস্টিক-গ্লো, style.css), flash-acc127 (গ্রহণকৃত-উত্তর,
+   session131) ও fc-instaprev (ইনস্ট্যান্ট-প্রিভিউ fcIpIn134, session134)-এর নিজস্ব অ্যানিমেশন রক্ষায় :not()-এক্সক্লুশন বাধ্যতামূলক (specificity: .fc-drawer .fc-list > * বেশি — নইলে ওদের animation ছিঁড়ে নেয়)। */
+@keyframes lfSwapIn136{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.qa-answers-list > *:not(.is-new124):not(.flash-acc127),
+.comments-list[data-post-link] > *:not(.is-new124):not(.flash-acc127),
+.fc-drawer .fc-list > *:not(.is-new124):not(.fc-instaprev),
+.fc-preview > *{animation:lfSwapIn136 .24s ease-out both}
+.qa-answers-list > *:not(.is-new124):not(.flash-acc127):nth-child(2),
+.comments-list[data-post-link] > *:not(.is-new124):not(.flash-acc127):nth-child(2),
+.fc-drawer .fc-list > *:not(.is-new124):not(.fc-instaprev):nth-child(2),
+.fc-preview > *:nth-child(2){animation-delay:26ms}
+.qa-answers-list > *:not(.is-new124):not(.flash-acc127):nth-child(3),
+.comments-list[data-post-link] > *:not(.is-new124):not(.flash-acc127):nth-child(3),
+.fc-drawer .fc-list > *:not(.is-new124):not(.fc-instaprev):nth-child(3),
+.fc-preview > *:nth-child(3){animation-delay:52ms}
+.qa-answers-list > *:not(.is-new124):not(.flash-acc127):nth-child(n+4),
+.comments-list[data-post-link] > *:not(.is-new124):not(.flash-acc127):nth-child(n+4),
+.fc-drawer .fc-list > *:not(.is-new124):not(.fc-instaprev):nth-child(n+4),
+.fc-preview > *:nth-child(n+4){animation-delay:78ms}
+@media (prefers-reduced-motion:reduce){
+  .qa-answers-list > *,.comments-list[data-post-link] > *,.fc-drawer .fc-list > *,.fc-preview > *{animation:none}
+}
+/* EOF-MARKER: session136-swap-fade */
+>>>>>>> Stashed changes

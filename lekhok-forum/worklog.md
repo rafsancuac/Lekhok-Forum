@@ -1357,6 +1357,7 @@ Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browse
 - বকেয়া-নয়: স্টাইলিং-বাকি-সুপারিশ PLANS session133-নোটে (reconcile-flash-fade, crx-পিন, র্যাচেট-নামানো, full-page-reltime, Turso-রিসেট)
 - পরের-এজেন্ট: **session131 থেকে**; push-পূর্বে git pull --rebase + union-নোট পড়ুন
 
+<<<<<<< Updated upstream
 Task ID: session129 (cron-r12 — sandbox web-68dcf7c4, "Project Status & Dev Focus")
 Task ID: RES-131 (ক্রন-রিভিউ রাউন্ড ১৩ — session131)
 Task: অবস্থা-মূল্যায়ন + agent-browser QA → স্টেবল-ফেজে নতুন ফিচার: সাইট-ওয়াইড তারিখ-চুক্তি (UTC→Asia/Dhaka, RES-124-ব্যাকলগ ①) + /api/resources/series-stats লাইভ-এন্ডপয়েন্ট (②) + অ্যাডমিন লাইভ-রিফ্রেশ + role-policy §১৮ (③)
@@ -1391,3 +1392,24 @@ Stage Summary:
 - accepted-answer এখন ৪-সারফেসে দৃশ্যমান (qa-single/qa-list/dashboard-ফিড/নোটিফিকেশন) + fresh-উত্তরেও প্রশ্নকর্তার টগল তাৎক্ষণিক + reconcile-ফ্ল্যাশ মসৃণ
 - নোটিফ-টাইপ-যোগের ৫-পয়েন্ট-চেকলিস্ট ডকুমেন্টেড (PLANS) — ভবিষ্যৎ-টাইপে জেনেরিক-ফলব্যাক-রিস্ক বন্ধ
 - পরবর্তী-প্রার্থী: tokensHexGuard-বর্ধন (article.css) → /qa optimistic-নতুন-প্রশ্ন → notifications-empty-state → Metered.ca-TURN (পরের-এজেন্ট session133 থেকে)
+=======
+---
+Task ID: session136 (cron-r14 — QA→ফিচার-রাউন্ড) [relabel: 134→136 — সমান্তরাল session134/135 আগে-ল্যান্ডড, max+1]
+Agent: Z.ai Cron Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → স্থিতিশীল-ফেজে session133-প্রস্তাব বাস্তবায়ন (reltime-চুক্তি + swap-fade + tokens-র্যাচেট) + নিজস্ব-রিগ্রেশন-ফিক্স + push
+
+Work Log:
+- sync: git fetch → main @ 6e167ca (session133) up-to-date; PLANS-সর্বশেষ Cross-Agent-নোট পড়া
+- QA-ফেজ ALL GREEN: guard + role-policy ১৬১/১৬১ + cursor ২৬/২৬ + brace-০ (সঠিক-পাথ public/assets/js/) + audit:views; agent-browser ৭-পেজ সুইপ কনসোল-০/errors-০ → ফিচার-রাউন্ড
+- ① notifications.ejs: rel119 প্রথম-পেইন্ট রেখে `<span data-ts>` + undo-restore-পরে LekhokRelTime.render(list); E2E dismiss→undo→rows ৩→৪+রি-পেইন্ট ✓
+- ② shared.css session134-ব্লক: lfSwapIn134 swap-fade (৪-সারফেস, :not()-এক্সক্লুশন is-new124/flash-acc127, reduced-motion-সেফ); ড্রয়ার-লাইভ + আর্টিকেল-সিনথেটিক-প্রোব ✓
+- ③ tokens.css: ২৭ নতুন --lf-* (white/ok/danger/slate/amber ফ্যামিলি) → admin.css 254-হেক্স exact-value ম্যাপ (৪২৬→১৭২) + বেসলাইন-লক; দীর্ঘ-হেক্স-আগে+লুকঅ্যাহেড-স্ক্রিপ্ট (#fff/#fffbeb-কলিশন-শূন্য)
+- ④ রিগ্রেশন-আটকানো: admin/moderator views (৫৭টি স্ট্যান্ডঅ্যালোন-ডক) tokens.css লোড করত না → var()-অরিজলভ-রিগ্রেশন; ৫৭/৫৭ ফাইলে admin.css-লিংকের আগে tokens.css ইনজেক্ট; admin computed-token-রেজলিউশন + স্ক্রিনশটে রঙ-অক্ষত যাচাই
+- ফাইনাল-রিগ্রেশন: role-policy ১৬১/১৬১ + cursor ২৬/২৬ + guard-নতুন-বেসলাইন + audit ✓; কনসোল-০ + 390px ×৫-পেজ-০ (admin সহ)
+- docs: PLANS session136 + PROJECT §১৩৬ + worklog ×২
+
+Stage Summary:
+- স্ট্যাটাস: বাগ-শূন্য স্থিতিশীল-ফেজ; session133-প্রস্তাবের ৩টি বাস্তব + নতুন টোকেন-সিস্টেম-সম্প্রসারণ (admin-প্যানেল এখন ডিজাইন-সিস্টেমের অন্তর্ভুক্ত)
+- গোটচা (PLANS): shared.css-সর্বশেষ-লোড-অ্যানিমেশন-এক্সক্লুশন · 404-মিনিমাল-লেআউটে CSS-প্রোব-মিথ্যা-নেগেটিভ · হেক্স-রিপ্লেস-বাউন্ডারি · admin-view-এ tokens.css-লিংক-নিয়ম
+- পরের-এজেন্ট: session137; প্রস্তাব: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, parent-chain-চিপ, drawer-প্রিভিউ-ইনস্ট্যান্ট
+>>>>>>> Stashed changes

@@ -102,3 +102,47 @@ html { background: var(--lf-ui-canvas); }
   --lf-idle-gray-soft: rgba(100, 116, 139, 0.12);
   --lf-idle-gray-border: rgba(100, 116, 139, 0.32);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   সেশন-১৩৬: অ্যাডমিন-অপস প্যালেট (tokens-র্যাচেট — admin.css ৪২৬-হেক্স নামানো)
+   প্রতিটি মান admin.css-এর বিদ্যমান হেক্সের EXACT কপি — ভিজ্যুয়াল-পরিবর্তন-শূন্য;
+   শুধু রেফারেন্স-রূপ বদল (হেক্স → var(--lf-*))। ফ্যামিলি-রীতি: 600/700/800
+   টেক্সট-স্তর + 50/100/200 টিন্ট-স্তর (session129-ট্রিও প্যাটার্নের সম্প্রসারণ)।
+   hex কেবল --lf-* সংজ্ঞা-লাইনে (guard চুক্তি)। ═══════════════════════════ */
+:root:root {
+  --lf-white: #FFFFFF;                  /* সাদা (সারফেস/টেক্সট-অন-ডার্ক উভয় ব্যবহার) */
+
+  /* সাফল্য (emerald) — অ্যাডমিন অনুমোদন/সক্রিয় স্টেট */
+  --lf-ok: #059669;                     /* emerald-600 */
+  --lf-ok-deep: #047857;                /* emerald-700 */
+  --lf-ok-mid: #065F46;                 /* emerald-800 */
+  --lf-ok-soft: #ECFDF5;                /* emerald-50 */
+  --lf-ok-soft-2: #A7F3D0;              /* emerald-200 */
+  --lf-ok-soft-3: #D1FAE5;              /* emerald-100 */
+
+  /* বিপদ (red) — অ্যাডমিন বাতিল/সাসপেন্ড/ডিলিট */
+  --lf-danger: #DC2626;                 /* red-600 */
+  --lf-danger-deep: #B91C1C;            /* red-700 */
+  --lf-danger-mid: #991B1B;             /* red-800 */
+  --lf-danger-soft: #FEF2F2;            /* red-50 */
+  --lf-danger-soft-2: #FEE2E2;          /* red-100 */
+  --lf-danger-soft-3: #FECACA;          /* red-200 */
+
+  /* স্লেট — অ্যাডমিন নিরপেক্ষ-ধূসর (মেটালিক FB-গ্রে-এর বাইরের কুল-গ্রে ফ্যামিলি) */
+  --lf-slate: #64748B;                  /* slate-500 (--lf-idle-gray-এর সমমান-রেফারেন্স) */
+  --lf-slate-mid: #475569;              /* slate-600 */
+  --lf-slate-deep: #334155;             /* slate-700 */
+  --lf-slate-deeper: #0F172A;           /* slate-900 */
+  --lf-slate-soft: #F8FAFC;             /* slate-50 */
+  --lf-slate-soft-2: #F1F5F9;           /* slate-100 */
+  --lf-slate-soft-3: #E2E8F0;           /* slate-200 */
+  --lf-slate-soft-4: #CBD5E1;           /* slate-300 */
+  --lf-slate-soft-5: #94A3B8;           /* slate-400 */
+
+  /* অ্যাম্বার — অ্যাডমিন সতর্কতা (pending/সীমিত) */
+  --lf-amber-deep: #92400E;             /* amber-800 */
+  --lf-amber-mid: #B7791F;              /* পুরনো-টেইলউইন্ড yellow-700 */
+  --lf-amber-soft: #FFFBEB;             /* amber-50 */
+  --lf-amber-soft-2: #FEF3C7;           /* amber-100 */
+  --lf-amber-soft-3: #FDE68A;           /* amber-200 */
+}

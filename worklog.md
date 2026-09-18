@@ -1326,6 +1326,7 @@ Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browse
 - বাকি-প্রস্তাব (PLANS session133-নোট): reconcile-flash-মসৃণকরণ (CSS-side), crx-'শেষ-পড়া'-পিন, tokens-র্যাচেট-বেসলাইন নামানো (admin.css ৪২৬), full-page notifications-এ reltime-রি-পেইন্ট, লাইভ-Turso-রিসেট (টোকেন-ধারী)
 - গোটচা-পুনঃপ্রমাণিত: Express res.redirect-এর Location গেটওয়ে/curl-এ absolute দেখায় — টেস্টে strip() হেল্পার বাধ্যতামূলক
 - পরের-এজেন্ট: **session131 থেকে**; শুরুতে git fetch + PLANS-সর্বশেষ Cross-Agent Note; push-পূর্বে pull --rebase (union-মার্জ PLANS/PROJECT/worklog)
+<<<<<<< Updated upstream
 ---
 Task ID: RES-133 (ক্রন-রিভিউ রাউন্ড ১৩ — session133; [relabel: 131→133 — 2c2ca6f-এর session131 + cbd3221-এর session132 আগে-ল্যান্ডড, max+1 রীতি])
 Agent: Resources-feature agent
@@ -1369,3 +1370,26 @@ Work Log:
 Stage Summary:
 - session135 ফিচার-রাউন্ড সম্পন্ন — বিস্তারিত lekhok-forum/worklog.md + PLANS.md session135-নোট + PROJECT.md §১৩২
 - পরের-এজেন্ট: session135 লেবেল থেকে
+=======
+
+---
+Task ID: session136 (cron-r14 — QA→ফিচার-রাউন্ড) [relabel: 134→136 — সমান্তরাল c7fefee-session134 ও 4794682-session135 আগে-ল্যান্ডড, max+1 রীতি]
+Agent: Z.ai Cron Agent (webDevReview)
+Task: Lekhok-Forum স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA + স্থিতিশীল-ফেজে ফিচার/স্টাইল-রাউন্ড + push
+
+## Current Project Status / Assessment
+- রিপো main @ 6e167ca (session133) — QA-ফেজ ALL GREEN: role-policy ১৬১/১৬১ + cursor ২৬/২৬ + guard + audit:views + brace-০; agent-browser ৭-পেজ সুইপ (ismail): কনসোল-০, errors-০, 390px-০ → **বাগ-শূন্য স্থিতিশীল-ফেজ** → ফিচার-রাউন্ড (session133-প্রস্তাব ①③④ গ্রহণ)
+- আবিষ্কার: /qa-তালিকার ২টি স্টেল-লিংক 404 (পুরনো-ডেটা-অবস্থা — রিগ্রেশন নয়); brace-স্ক্রিপ্ট path-গোটচা (public/assets/js/, public/ নয়)
+
+## Goals / Completed / Verification
+- ① notifications.ejs reltime-চুক্তি (session133-প্রস্তাব-④): rel119 প্রথম-পেইন্ট + `<span data-ts>` + undo-restore-পরে `LekhokRelTime.render(list)` — E2E: ৪/৪ data-ts, dismiss→undo→rows ৩→৪, রি-পেইন্ট ✓
+- ② reconcile swap-fade (①, CSS-side — ইঞ্জিন-অক্ষত): shared.css session136-ব্লক — lfSwapIn136 240ms এন্ট্রি-ফেড + 26ms ক্যাসকেড, `.qa-answers-list`/`.comments-list[data-post-link]`/`.fc-drawer .fc-list`/`.fc-preview` চার-সারফেস; `:not(.is-new124):not(.flash-acc127)`-এক্সক্লুশন (shared.css-সর্বশেষ-লোড-ওভাররাইড-গোটচা) + reduced-motion-সেফ — ড্রয়ার-লাইভ `lfSwapIn134 0.24s` প্রমাণিত
+- ③ tokens-র্যাচেট (③): tokens.css-এ ২৭ নতুন --lf-* অ্যাডমিন-অপস-টোকেন (white/ok/danger/slate/amber ফ্যামিলি) → admin.css 254-হেক্স exact-value var()-ম্যাপ — **৪২৬→১৭২ (৬০% নামানো)**, ভিজ্যুয়াল-পরিবর্তন-শূন্য; দীর্ঘ-হেক্স-আগে + `(?![0-9a-fA-F])` বাউন্ডারি; বেসলাইন-লক
+- ④ **নিজস্ব-রিগ্রেশন-আটকানো-ফিক্স:** admin.css আগে শূন্য var() ব্যবহার করত + ৫৭টি স্ট্যান্ডঅ্যালোন admin/moderator view tokens.css লোড করত না → ৫৭/৫৭ ফাইলে admin.css-লিংকের আগে `tokens.css?v=<%= AV %>` ইনজেক্ট; admin computed-token-রেজলিউশন (--lf-ok #059669 ইত্যাদি) + ড্যাশবোর্ড/কনটেন্ট-স্ক্রিনশটে রঙ-অক্ষত ✓
+- ফাইনাল: role-policy ১৬১/১৬১ ✓ cursor ২৬/২৬ ✓ guard-নতুন-বেসলাইন ✓ audit ✓ কনসোল-০ ✓ 390px ×৫-পেজ (admin সহ) -০ ✓
+
+## Unresolved Issues / Risks / Next Priorities
+- অবশিষ্ট-১৭২-হেক্স admin.css-এ (info-blue/violet/cyan নিম্ন-ফ্রিকোয়েন্সি পরিবার) + dashboard.css (২৩৩)/style.css (১৩৯৫) র্যাচেট-প্রার্থী
+- নতুন-রীতি (PLANS-নথিভুক্ত): নতুন admin-view বানালে admin.css-এর আগে tokens.css-লিংক আবশ্যক; নতুন-এন্ট্রি-অ্যানিমেশন shared.css-এ যোগ করলে swap-fade-এক্সক্লুশন-তালিকায় ঢোকাতে হবে
+- পরের-এজেন্ট: **session137**; প্রস্তাব: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), লাইভ-Turso-রিসেট (parent-chain-চিপ ③ ও drawer-ইনস্ট্যান্ট-প্রিভিউ ④ সমান্তরাল session134-এ সম্পন্ন — c7fefee)
+>>>>>>> Stashed changes

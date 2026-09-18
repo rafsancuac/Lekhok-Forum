@@ -90,7 +90,9 @@
             <div class="notif-page-body">
               <div class="notif-page-title"><%= n.title %><% if (n.type === 'call') { %> <span class="notif-missed notif-missed--page"><i class="fas fa-phone-slash"></i> মিসড কল</span><% } %></div>
               <div class="notif-page-text"><%= n.body %></div>
-              <div class="notif-page-time"><i class="far fa-clock"></i> <span title="<%= new Date(n.created_at).toLocaleString('bn-BD') %>"><%= rel119(n.created_at) %></span></div>
+              <%# সেশন ১৩৬: [data-ts]→LekhokRelTime চুক্তি (header-ড্রপডাউন session122-প্যারিটি) —
+                  সার্ভার rel119 প্রথম-পেইন্ট, ক্লায়েন্ট DOMContentLoaded-এ রি-পেইন্ট (মিনিট-বাউন্ডারি-স্লিপ-শূন্য) %>
+              <div class="notif-page-time"><i class="far fa-clock"></i> <span data-ts="<%= n.created_at %>" title="<%= new Date(n.created_at).toLocaleString('bn-BD') %>"><%= rel119(n.created_at) %></span></div>
             </div>
             <%# সেশন ১১৪: FB-প্যারিটি সরান-বাটন (হোভারে দৃশ্যমান; নিজের-সারি-ইনভ্যারিয়েন্ট API) %>
             <button type="button" class="notif-dismiss" data-dismiss="<%= n.id %>" aria-label="বিজ্ঞপ্তিটি সরান" title="সরান"><i class="fas fa-xmark" aria-hidden="true"></i></button>
@@ -190,6 +192,9 @@
                       if (nextRef && nextRef.parentNode === list) list.insertBefore(row, nextRef);
                       else list.insertBefore(row, list.firstChild);
                       requestAnimationFrame(function () { row.classList.add('restoring'); setTimeout(function () { row.classList.remove('restoring'); }, 350); });
+                      /* সেশন ১৩৬: রিস্টোর-রো-সহ তালিকার আপেক্ষিক-সময় রি-পেইন্ট —
+                         data-ts→LekhokRelTime চুক্তি (header.ejs session133-প্যারিটি; 7s-টোস্টে বাউন্ডারি-স্লিপ প্রতিরোধ) */
+                      try { if (window.LekhokRelTime) window.LekhokRelTime.render(list); } catch (_) {}
                       if (payload.r) { /* ছিল-অপঠিত → চিপ/ব্যাজ +১ */ bumpChip(1); }
                       if (window.nftRecount117) window.nftRecount117();
                     } else {
