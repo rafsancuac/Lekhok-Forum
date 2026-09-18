@@ -576,7 +576,8 @@ export default function Home() {
       />
 
       <main className="flex-1 w-full">
-        <div className="max-w-[1240px] mx-auto flex gap-4 px-2 sm:px-4 pt-4 pb-8">
+        {/* ═══ ৩-কলাম কন্টেইনার — ইউজার-স্পেক: max-w 1360px + justify-center + gap-3 (১২px) + px-2: অপ্রয়োজনীয় সাইড-গ্যাপ দূরীকরণ ═══ */}
+        <div className="max-w-[1360px] mx-auto flex justify-center gap-3 px-2 pt-3 pb-8">
           <LeftSidebar
             current={current}
             users={users}
@@ -600,8 +601,8 @@ export default function Home() {
             onOpenMessenger={openMessenger}
           />
 
-          {/* ═══ সেন্টার কলাম (মেসেঞ্জারে চওড়া) ═══ */}
-          <div className={`flex-1 min-w-0 mx-auto flex flex-col gap-4 ${view === 'messenger' ? 'max-w-[980px]' : 'max-w-[680px]'}`}>
+          {/* ═══ সেন্টার কলাম — ইউজার-স্পেক: max-w ৭০০px + gap-2.5; mx-auto বাদ (justify-center-ই সেন্টার করে — auto-margin গ্যাপ-৩ নিষ্ক্রিয় করত) ═══ */}
+          <div className={`flex-1 min-w-0 flex flex-col gap-2.5 ${view === 'messenger' ? 'max-w-[980px]' : 'max-w-[700px]'}`}>
             {/* মোবাইল ট্যাব সুইচার */}
             <div className="flex gap-1 bg-[#242526] rounded-xl border border-[#3e4042] p-1 lg:hidden">
               <button
@@ -1010,9 +1011,9 @@ export default function Home() {
 
             {/* লোডিং স্কেলেটন */}
             {postsLoading && (
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 {[1, 2, 3].map((n) => (
-                  <div key={n} className="bg-[#242526] rounded-xl border border-[#3e4042] p-4 space-y-3">
+                  <div key={n} className="bg-[#242526] rounded-xl border border-[#3e4042] p-3 space-y-2.5">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full lf-shimmer" />
                       <div className="space-y-1.5 flex-1">
@@ -1030,7 +1031,7 @@ export default function Home() {
 
             {/* এরর স্টেট */}
             {!postsLoading && error && (
-              <div className="bg-[#242526] border border-[#3e4042] rounded-xl p-8 text-center space-y-3">
+              <div className="bg-[#242526] border border-[#3e4042] rounded-xl p-6 text-center space-y-3">
                 <p className="text-rose-400 font-semibold">{error}</p>
                 <button
                   onClick={() => loadPosts(view, searchQuery)}
@@ -1043,7 +1044,7 @@ export default function Home() {
 
             {/* খালি অবস্থা */}
             {!postsLoading && !error && posts.length === 0 && (
-              <div className="bg-[#242526] border border-[#3e4042] rounded-xl p-10 text-center space-y-3">
+              <div className="bg-[#242526] border border-[#3e4042] rounded-xl p-8 text-center space-y-3">
                 <span className="inline-flex w-14 h-14 rounded-full bg-[#3a3b3c] items-center justify-center">
                   {view === 'search' ? (
                     <SearchX className="w-7 h-7 text-[#00a86b]" />
@@ -1147,7 +1148,7 @@ export default function Home() {
 
       {/* ═══ স্টিকি ফুটার ═══ */}
       <footer className="mt-auto bg-[#242526] border-t border-[#3e4042] py-4 px-4">
-        <div className="max-w-[1240px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[12px] text-[#8a8d91]">
+        <div className="max-w-[1360px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[12px] text-[#8a8d91]">
           <p className="flex items-center gap-1.5">
             <Feather className="w-3.5 h-3.5 text-[#00a86b]" />
             লেখক ফোরাম — বাংলা লেখকদের নিজের ঠিকানা © ২০২৫

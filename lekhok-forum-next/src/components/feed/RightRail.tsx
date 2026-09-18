@@ -120,7 +120,7 @@ export default function RightRail({
   }
 
   return (
-    <aside className="hidden xl:flex flex-col gap-4 w-[300px] shrink-0 sticky top-[72px] self-start max-h-[calc(100vh-90px)] overflow-y-auto lf-scroll pb-6">
+    <aside className="hidden xl:flex flex-col gap-3 w-[290px] shrink-0 sticky top-[72px] self-start max-h-[calc(100vh-90px)] overflow-y-auto lf-scroll pb-6">
       {/* জন্মদিন */}
       <section className="bg-[#242526] rounded-xl border border-[#3e4042] p-3.5">
         <h3 className="text-[15px] font-bold text-white mb-2 flex items-center gap-2">

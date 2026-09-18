@@ -41,27 +41,27 @@ export default function LeftSidebar({
   onOpenMessenger?: () => void
 }) {
   return (
-    <aside className="hidden lg:flex flex-col gap-1 w-[260px] shrink-0 sticky top-[72px] self-start max-h-[calc(100vh-90px)] overflow-y-auto lf-scroll pb-4">
+    <aside className="hidden lg:flex flex-col gap-0.5 w-[265px] shrink-0 sticky top-[72px] self-start max-h-[calc(100vh-90px)] overflow-y-auto lf-scroll pb-4 select-none">
       {current && (
         <button
           onClick={() => onTabChange('timeline')}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition font-semibold text-[15px] ${
+          className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition font-bold text-[13px] whitespace-nowrap overflow-hidden ${
             activeTab === 'timeline'
               ? 'bg-[#3a3b3c] text-white'
               : 'text-[#e4e6eb] hover:bg-[#3a3b3c]'
           }`}
         >
           {current.avatarUrl ? (
-            <img src={current.avatarUrl} alt="" className="w-9 h-9 rounded-full" />
+            <img src={current.avatarUrl} alt="" className="w-8 h-8 rounded-full shrink-0" />
           ) : (
-            <span className="w-9 h-9 rounded-full bg-[#4e4f50]" />
+            <span className="w-8 h-8 rounded-full bg-[#4e4f50] shrink-0" />
           )}
           <span className="truncate">{current.name}</span>
         </button>
       )}
 
       <NavItem
-        icon={<Home className="w-6 h-6" />}
+        icon={<Home className="w-5 h-5" />}
         label="সোশ্যাল ফিড"
         active={activeTab === 'feed'}
         onClick={() => onTabChange('feed')}
@@ -69,30 +69,30 @@ export default function LeftSidebar({
       <NavItem
         icon={
           <UserCheck
-            className={`w-6 h-6 ${activeTab === 'following' ? 'text-[#00a86b]' : ''}`}
+            className={`w-5 h-5 ${activeTab === 'following' ? 'text-[#00a86b]' : ''}`}
           />
         }
         label="অনুসরণ করা ফিড"
         active={activeTab === 'following'}
         onClick={() => onTabChange('following')}
       />
-      <NavItem icon={<Clock className="w-6 h-6" />} label="সাম্প্রতিক" onClick={() => onTabChange('feed')} />
+      <NavItem icon={<Clock className="w-5 h-5" />} label="সাম্প্রতিক" onClick={() => onTabChange('feed')} />
       <NavItem
-        icon={<Bookmark className={`w-6 h-6 ${activeTab === 'saved' ? 'text-[#00a86b]' : ''}`} />}
+        icon={<Bookmark className={`w-5 h-5 ${activeTab === 'saved' ? 'text-[#00a86b]' : ''}`} />}
         label="সেভ করা পোস্ট"
         active={activeTab === 'saved'}
         badge={savedCount}
         onClick={() => onTabChange('saved')}
       />
       <NavItem
-        icon={<FileText className="w-6 h-6" />}
+        icon={<FileText className="w-5 h-5" />}
         label="আমার লেখা"
         onClick={() => onTabChange('timeline')}
       />
       <NavItem
         icon={
           <UsersRound
-            className={`w-6 h-6 ${groupsActive ? 'text-[#00a86b]' : ''}`}
+            className={`w-5 h-5 ${groupsActive ? 'text-[#00a86b]' : ''}`}
           />
         }
         label="গ্রুপসমূহ"
@@ -102,7 +102,7 @@ export default function LeftSidebar({
       <NavItem
         icon={
           <MessagesSquare
-            className={`w-6 h-6 ${messengerActive ? 'text-[#00a86b]' : ''}`}
+            className={`w-5 h-5 ${messengerActive ? 'text-[#00a86b]' : ''}`}
           />
         }
         label="মেসেঞ্জার"
@@ -115,23 +115,23 @@ export default function LeftSidebar({
       {/* Session K: আমার গ্রুপ শর্টকাট */}
       {groups && groups.length > 0 && (
         <>
-          <p className="px-3 py-1 text-[11px] font-bold text-[#8a8d91] uppercase tracking-wide flex items-center gap-1.5">
-            <UsersRound className="w-3.5 h-3.5" /> আমার গ্রুপ
+          <p className="px-2.5 py-1 text-[10.5px] font-bold text-[#8a8d91] uppercase tracking-wide flex items-center gap-1.5">
+            <UsersRound className="w-3.5 h-3.5 shrink-0" /> আমার গ্রুপ
           </p>
           {groups.slice(0, 5).map((g) => (
             <button
               key={g.id}
               onClick={() => onOpenGroup?.(g.id)}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-left transition group/grow hover:bg-[#3a3b3c] w-full"
+              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition group/grow hover:bg-[#3a3b3c] w-full whitespace-nowrap overflow-hidden"
             >
               <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0d4a3a] to-[#0f172a] ring-1 ring-white/10 group-hover/grow:ring-[#00a86b]/50 flex items-center justify-center shrink-0 transition-all">
                 <UsersRound className="w-4 h-4 text-[#00a86b]" />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-semibold text-[#e4e6eb] truncate">
+              <span className="min-w-0 flex-1 flex items-center justify-between gap-1">
+                <span className="text-[13px] font-semibold text-[#e4e6eb] truncate">
                   {g.name}
                 </span>
-                <span className="block text-[11px] text-[#8a8d91]">
+                <span className="text-[10.5px] text-[#8a8d91] shrink-0">
                   {bn(g.memberCount)} সদস্য
                 </span>
               </span>
@@ -149,8 +149,8 @@ export default function LeftSidebar({
         </>
       )}
 
-      <p className="px-3 py-1 text-[11px] font-bold text-[#8a8d91] uppercase tracking-wide flex items-center gap-1.5">
-        <Users className="w-3.5 h-3.5" /> লেখকবৃন্দ
+      <p className="px-2.5 py-1 text-[10.5px] font-bold text-[#8a8d91] uppercase tracking-wide flex items-center gap-1.5">
+        <Users className="w-3.5 h-3.5 shrink-0" /> লেখকবৃন্দ
       </p>
       {users.map((u) => {
         const profileActive = profileUsername === u.username
@@ -159,7 +159,7 @@ export default function LeftSidebar({
             key={u.id}
             onClick={() => onOpenProfile(u.username)}
             title={`${u.name}-এর প্রোফাইল দেখুন`}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-left transition group/writer ${
+            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left transition group/writer whitespace-nowrap overflow-hidden ${
               profileActive ? 'bg-[#3a3b3c] ring-1 ring-[#00a86b]/40' : 'hover:bg-[#3a3b3c]'
             }`}
           >
@@ -167,16 +167,16 @@ export default function LeftSidebar({
               <img
                 src={u.avatarUrl}
                 alt=""
-                className="w-8 h-8 rounded-full ring-1 ring-white/10 group-hover/writer:ring-[#00a86b]/50 transition-all"
+                className="w-8 h-8 rounded-full ring-1 ring-white/10 group-hover/writer:ring-[#00a86b]/50 transition-all shrink-0"
               />
             ) : (
-              <span className="w-8 h-8 rounded-full bg-[#4e4f50]" />
+              <span className="w-8 h-8 rounded-full bg-[#4e4f50] shrink-0" />
             )}
-            <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-semibold text-[#e4e6eb] truncate">
+            <span className="min-w-0 flex-1 flex items-center justify-between gap-1">
+              <span className="text-[13px] font-semibold text-[#e4e6eb] truncate">
                 {u.name}
               </span>
-              <span className="block text-[11px] text-[#8a8d91] truncate">@{u.username}</span>
+              <span className="text-[10.5px] text-[#8a8d91] truncate max-w-[76px]">@{u.username}</span>
             </span>
             <UserRound
               className={`w-4 h-4 shrink-0 transition ${
@@ -190,7 +190,7 @@ export default function LeftSidebar({
       })}
 
       <hr className="border-[#3e4042] my-2" />
-      <p className="px-3 text-[11px] text-[#8a8d91] leading-relaxed flex items-start gap-1.5">
+      <p className="px-2.5 text-[10.5px] text-[#8a8d91] leading-relaxed flex items-start gap-1.5">
         <Feather className="w-3.5 h-3.5 mt-0.5 shrink-0" />
         লেখক ফোরাম — বাংলা লেখকদের নিজের ঠিকানা। গল্প, কবিতা, প্রবন্ধ শেয়ার করুন।
       </p>
@@ -214,14 +214,14 @@ function NavItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-left font-semibold text-[15px] transition ${
+      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-left font-semibold text-[13px] transition whitespace-nowrap overflow-hidden ${
         active ? 'bg-[#3a3b3c] text-white' : 'text-[#e4e6eb] hover:bg-[#3a3b3c]'
       }`}
     >
       {icon}
-      <span className="flex-1 text-left">{label}</span>
+      <span className="flex-1 text-left truncate" title={label}>{label}</span>
       {typeof badge === 'number' && badge > 0 && (
-        <span className="min-w-5 h-5 px-1.5 rounded-full bg-[#006a4e] text-white text-[11px] font-bold flex items-center justify-center">
+        <span className="min-w-5 h-5 px-1.5 rounded-full bg-[#006a4e] text-white text-[10.5px] font-bold flex items-center justify-center shrink-0">
           {bn(badge)}
         </span>
       )}

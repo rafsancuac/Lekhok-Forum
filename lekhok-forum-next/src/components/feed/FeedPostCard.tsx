@@ -435,8 +435,8 @@ export default function FeedPostCard({
       data-post-id={post.id}
       className="bg-[#242526] rounded-xl border border-[#3e4042] shadow-md overflow-hidden hover:border-[#4a4c4e] transition-colors lf-rise scroll-mt-20"
     >
-      {/* ═══ হেডার ═══ */}
-      <div className="flex items-start gap-2.5 px-3.5 pt-3 pb-2">
+      {/* ═══ হেডার — ইউজার-স্পেক: কম্প্যাক্ট p-3-ধাঁচ (px-3.5/pt-3 থেকে সংকোচিত) ═══ */}
+      <div className="flex items-start gap-2.5 px-3 pt-2.5 pb-1.5">
         <button
           onClick={() => onOpenProfile?.(post.author.username)}
           aria-label={`${post.author.name}-এর প্রোফাইল দেখুন`}
@@ -576,7 +576,7 @@ export default function FeedPostCard({
         </div>
       ) : post.content ? (
         <div
-          className="lf-post-content text-[14.5px] text-[#e4e6eb] px-3.5 pb-2 cursor-pointer"
+          className="lf-post-content text-[14.5px] text-[#e4e6eb] px-3 pb-1.5 cursor-pointer"
           onClick={handleContentClick}
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
@@ -589,8 +589,8 @@ export default function FeedPostCard({
         </div>
       )}
 
-      {/* ═══ কাউন্টার বার ═══ */}
-      <div className="flex items-center justify-between px-3.5 py-2 text-[12.5px] text-[#b0b3b8]">
+      {/* ═══ কাউন্টার বার — কম্প্যাক্ট (py-2 থেকে py-1.5) ═══ */}
+      <div className="flex items-center justify-between px-3 py-1.5 text-[12.5px] text-[#b0b3b8]">
         {post.reactionTotal > 0 ? (
           <button
             ref={reactSummaryRef}
@@ -632,7 +632,7 @@ export default function FeedPostCard({
       </div>
 
       {/* ═══ অ্যাকশন বার ═══ */}
-      <div className="flex mx-3 mb-2 border-t border-[#3e4042] pt-1">
+      <div className="flex mx-2.5 mb-1.5 border-t border-[#3e4042] pt-0.5">
         {/* লাইক + রিঅ্যাকশন পপওভার */}
         <div
           className="relative flex-1"
@@ -709,7 +709,7 @@ export default function FeedPostCard({
 
       {/* ═══ কমেন্ট সেকশন ═══ */}
       {showComments && (
-        <div className="px-3.5 pb-3 lf-anim-fade">
+        <div className="px-3 pb-2.5 lf-anim-fade">
           <CommentThread
             comments={post.comments}
             me={me}
