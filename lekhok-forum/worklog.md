@@ -1356,3 +1356,16 @@ Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browse
 ## Unresolved Issues / Risks / Next Priorities
 - বকেয়া-নয়: স্টাইলিং-বাকি-সুপারিশ PLANS session133-নোটে (reconcile-flash-fade, crx-পিন, র্যাচেট-নামানো, full-page-reltime, Turso-রিসেট)
 - পরের-এজেন্ট: **session131 থেকে**; push-পূর্বে git pull --rebase + union-নোট পড়ুন
+
+Task ID: session129 (cron-r12 — sandbox web-68dcf7c4, "Project Status & Dev Focus")
+Task ID: RES-131 (ক্রন-রিভিউ রাউন্ড ১৩ — session131)
+Task: অবস্থা-মূল্যায়ন + agent-browser QA → স্টেবল-ফেজে নতুন ফিচার: সাইট-ওয়াইড তারিখ-চুক্তি (UTC→Asia/Dhaka, RES-124-ব্যাকলগ ①) + /api/resources/series-stats লাইভ-এন্ডপয়েন্ট (②) + অ্যাডমিন লাইভ-রিফ্রেশ + role-policy §১৮ (③)
+- রিসিভড 8cda026 (আমার session129-খ test-fix) → রাউন্ড-শুরুতে fetch-এ নতুন-কিছু-নেই
+- QA সুইপ: ৮-পেজ ম্যাট্রিক্স 200 + role-policy 147/147 + agent-browser (22-কার্ড/3672-CSS-rules/কনসোল-০/390px-০/স্টিকি-বার/seriplay-বাটন) → ফেজ-স্টেবল → ব্যাকলগ ①②③ নেওয়া হলো
+**🚨 তারিখ-বাগফিক্স (বাংলাদেশ-দর্শক):** SQLite CURRENT_TIMESTAMP = UTC নেম-লেস — JS new Date() লোকাল ধরে পার্স করত। BD-তে রিলেটিভ-টাইম ৬ঘ-বেশি পুরনো + সন্ধ্যা-UTC-তে তারিখ-স্খলন (প্রমাণ: created_at 2026-09-17 19:46:50 UTC → পুরনো-কোড ১৭ সেপ্টেম্বর, সঠিক ঢাকা-তারিখ ১৮)। স্যান্ডবক্স-হোস্ট UTC হওয়ায় আড়ালে ছিল। **ফিক্স:** helpers/bn-date.js (parseDbDate: নেম-লেস='Z'-জোড়া, তারিখ-মাত্র=T00:00:00Z-পিন, ISO-Z passthrough; bnDate/bnDateTime: Asia/Dhaka getUTC-কৌশল) + ৫-সারফেস (pages.js gallery / detail.ejs (রুট-থেকে bnDate-লোকাল-পাস — ভিউতে require is not defined ধরা পড়েছিল) / social.js bnDate83+bnRelTime83 / main.js LekhokRelTime _pTs131+_dTs131-ইনজেকশন / live.js relTime _pTs131L)। তিন-জায়গার রেজেক্স-কনভেনশন হুবহু-মিরর চুক্তি।
+**নতুন-ফিচার:** GET /api/resources/series-stats (স্টাফ-গেট: adminUser-সেশন বা admin/superadmin/moderator-রোল; top-N score=views+downloads×2, ?limit= 1..20-ক্ল্যাম্প, no-store) + admin rss-প্যানেল লাইভ-রিফ্রেশ (রিফ্রেশ-বাটন + হালনাগাদ-চিপ + ৬-কার্ড স্কেলেটন-শিমার → ক্লায়েন্ট-রিরেন্ডার → স্কোর-বার 0→pct অ্যানিমেশন; ব্যর্থে পূর্বের-গ্রিড-পুনরুদ্ধার + rss-err)।
+**role-policy §১৮:** series-stats-গেট ×৮ + বাল্ক SSRF-নেগেটিভ ×৮ (loopback/localhost/metadata/privrange→SSRF-গার্ড ×৪, badport, badscheme→bulk file_url-ভ্যালিডেশন, কন্ট্রোল-রো+ট্রাশ-ক্লিনআপ) — সুইট এখন 163-চেক।
+**ভেরিফিকেশন:** role-policy 163/163 ALL GREEN ✓ (রেট-লিমিটার-নয়েজ = fresh-restart-প্রমাণ) + bn-date ইউনিট ✓ + agent-browser: টুলটিপ-প্রমাণ (data-ts 04:15Z → টাইটেল ১০:১৫ AM ঢাকা — পার্স-কনভেনশন-প্রমাণ) ✓ রিফ্রেশ-ক্লিকে স্কেলেটন×৬+is-loading মিডফ্লাইট → পুনরুদ্ধার+বার+চিপ ✓ ৮-পেজ 390px-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩ (s131-admin-refresh/-mobile, s131-detail-dhaka-date, s131-resources) ✓
+- **গোটচা-নতুন ×৩ (PLANS session131-নোট):** ① ckc-নিডল BRE-রেজেক্স — আন-ইস্কেপড-ব্র্যাকেট Invalid-regex-মিথ্যা-ফেইল; সিঙ্গল-লাইন-JSON-এ grep -c-লাইন-গোনা-ফাঁদ ② bulk-প্রি-ভ্যালিডেশন আগে-চলে (ftp:// fetch-স্তরে পৌঁছায় না — bulk file_url-ভ্যালিডেশনই ধরে) ③ agent-browser 390px-প্রোব ট্রানজিয়েন্ট (admin-রেন্ডার-মিডফ্লাইটে 487px-মিথ্যা; settle-পরে প্রোব)
+- **পরবর্তী-প্রস্তাব:** ① সিরিজ-লেভেল-কভার-ইমেজ (ব্যাকলগ ④-অবশিষ্ট) ② bulk-ইমপোর্ট ক্রস-রিকোয়েস্ট-ডুপ-গার্ড ③ >১০সে-ফেচ-টাইমআউট-অপশন ④ role-policy-তে main.js-পার্স-রিগ্রেশন-চেক
+- **গোটচা-রিমাইন্ডার:** push-এর আগে fetch+rebase; doc-union; RP_PORT; node --check-আগে; স্যান্ডবক্সে detached-node প্রতি-টুল-কলে মরে (boot-srv.sh)

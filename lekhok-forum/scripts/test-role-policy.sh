@@ -348,6 +348,41 @@ ckR27 "/feed query-সংরক্ষণ" "302 /dashboard?filter=following&sort=
 RC=$(curl -s -b $JARU -o /dev/null -w "%{http_code}" -L "$BASE/feed")
 ckR27 "/feed লগইন → 200 (ফিড)" "200" "$RC"
 echo ""
+
+# ═══ সেশন ১৩১: সিরিজ-স্ট্যাটস লাইভ-এন্ডপয়েন্ট গেট + বাল্ক-ইমপোর্ট SSRF-নেগেটিভ (RES-124-ব্যাকলগ ②③) ═══
+# (ক) GET /api/resources/series-stats — স্টাফ-গেটেড (anon/user → 403; mod/admin → 200 ok:true)
+# (খ) POST /admin/resources/bulk-এ fetch:1 + প্রাইভেট/লুপব্যাক/মেটাডেটা/পোর্ট/স্কিম-URL → রো-এরর
+#     (SSRF-গার্ড প্রি-ফেচ — নেটওয়ার্ক-নিরপেক্ষ, নীরবে-রিমোট-রাখা-নয়)
+echo "══ ১৮. সিরিজ-স্ট্যাটস লাইভ + বাল্ক SSRF-নেগেটিভ ══"
+ck "s131 series-stats anon → 403" "403" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/resources/series-stats")"
+ck "s131 series-stats user → 403" "403" "$(curl -s -b $JARU -o /dev/null -w "%{http_code}" "$BASE/api/resources/series-stats")"
+ck "s131 series-stats mod → 200" "200" "$(curl -s -b $JARM -o /dev/null -w "%{http_code}" "$BASE/api/resources/series-stats")"
+SSA=$(curl -s -b $JARA "$BASE/api/resources/series-stats")
+ck "s131 series-stats admin → ok:true" "1" "$(echo "$SSA" | grep -c '"ok":true')"
+ckc "s131 series-stats → stats-array" '"stats"' "$SSA"
+ckc "s131 series-stats limit=1 → ১-সারি" '"series":' "$(curl -s -b $JARA "$BASE/api/resources/series-stats?limit=1")"
+LIMN=$(curl -s -b $JARA "$BASE/api/resources/series-stats?limit=1" | grep -o '"series":' | wc -l | tr -d ' ')
+ck "s131 limit=1 → ঠিক ১-সারি" "1" "$LIMN"
+ck "s131 limit=99-ক্ল্যাম্প → 200" "200" "$(curl -s -b $JARA -o /dev/null -w "%{http_code}" "$BASE/api/resources/series-stats?limit=99")"
+TOKA131=$(getcsrf $JARA /admin/resources)
+RP131JSON='{"csv":"title,res_type,category,link_url,file_url,fetch\nrp131-ssrf-loopback,audio,guide,,http://127.0.0.1/x.pdf,1\nrp131-ssrf-localhost,audio,guide,,http://localhost/x.pdf,1\nrp131-ssrf-metadata,audio,guide,,http://169.254.169.254/latest/meta-data,1\nrp131-ssrf-privrange,audio,guide,,http://192.168.1.10/x.pdf,1\nrp131-badport,audio,guide,,http://example.com:8080/x.pdf,1\nrp131-badscheme,audio,guide,,ftp://example.com/x.pdf,1\n"}'
+printf '%s' "$RP131JSON" > /tmp/rp131-ssrf.json
+RP131OUT=$(curl -s -b $JARA -X POST "$BASE/admin/resources/bulk" -H "Content-Type: application/json" -H "X-CSRF-Token: $TOKA131" --data-binary @/tmp/rp131-ssrf.json)
+ck "s131 SSRF-নেগেটিভ ব্যাচ → inserted:0" "0" "$(echo "$RP131OUT" | grep -o '"inserted":[0-9]*' | cut -d: -f2)"
+ck "s131 SSRF-নেগেটিভ ব্যাচ → fetched:0" "0" "$(echo "$RP131OUT" | grep -o '"fetched":[0-9]*' | cut -d: -f2)"
+ck "s131 SSRF-নেগেটিভ ব্যাচ → errors:৬" "6" "$(echo "$RP131OUT" | grep -o '"error"' | wc -l | tr -d ' ')"
+SSRFCNT=$(echo "$RP131OUT" | grep -o 'SSRF-গার্ড' | wc -l | tr -d ' ')
+ck "s131 SSRF-গার্ড-মেসেজ ×৪ (loopback/localhost/metadata/privrange)" "4" "$SSRFCNT"
+ckc "s131 পোর্ট-ব্লক মেসেজ" 'পোর্ট' "$RP131OUT"
+ckc "s131 স্কিম-ব্লক মেসেজ (bulk file_url-ভ্যালিডেশন)" 'http(s)' "$RP131OUT"
+# কন্ট্রোল-রো: fetch ছাড়া লিংক-রিসোর্স স্বাভাবিক-ইনসার্ট (পাইপলাইন-জীবন্ত-প্রমাণ) → ট্রাশ-ক্লিনআপ
+CTRL131=$(curl -s -b $JARA -X POST "$BASE/admin/resources/bulk" -H "Content-Type: application/json" -H "X-CSRF-Token: $TOKA131" --data '{"csv":"title,res_type,category,link_url\nrp131-ok-control,link,guide,https://example.com/rp131\n"}')
+ck "s131 কন্ট্রোল-রো inserted:1" "1" "$(echo "$CTRL131" | grep -o '"inserted":[0-9]*' | cut -d: -f2)"
+RP131ID=$(curl -s -b $JARA "$BASE/admin/resources" | grep -o '/admin/resources/[0-9]*/edit' | grep -o '[0-9]*' | while read i; do curl -s -b $JARA "$BASE/resources/$i" | grep -q 'rp131-ok-control' && echo $i && break; done)
+[ -n "$RP131ID" ] && curl -s -b $JARA -o /dev/null -X POST "$BASE/admin/resources/$RP131ID?_method=DELETE&_csrf=$TOKA131"
+ck "s131 কন্ট্রোল-রো ক্লিনআপ (404-যাচাই)" "404" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/resources/$RP131ID")"
+rm -f /tmp/rp131-ssrf.json
+
 echo ""
 echo "════════════════════════════════"
 echo "PASS=$PASS FAIL=$FAIL"

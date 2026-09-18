@@ -17,11 +17,16 @@
   </div>
 
 <%# সেশন ১২৯: জনপ্রিয় সিরিজ — প্রতি-সিরিজ ভিউ+ডাউনলোড ক্ষেত্রে অ্যাগ্রেগেট (top 6, স্কোর = views + downloads×2) %>
+<%# সেশন ১৩১: লাইভ-রিফ্রেশ — GET /api/resources/series-stats (স্টাফ-গেটেড) + স্কেলেটন-শিমার + হালনাগাদ-চিপ %>
 <% if (typeof seriesStats !== 'undefined' && seriesStats && seriesStats.length) {
      var ssMax = Math.max.apply(null, seriesStats.map(function (s) { return s.v + s.d * 2; })) || 1; %>  <div class="rss-section">
     <div class="rss-head">
       <span class="rss-title"><i class="fas fa-layer-group"></i> জনপ্রিয় সিরিজ</span>
       <span class="rss-sub">ভিউ + ডাউনলোড×2 স্কোরে শীর্ষ ৬</span>
+      <span class="rss-live">
+        <button type="button" class="rss-refresh" id="rssRefresh" title="লাইভ রিফ্রেশ — ভিউ/ডাউনলোড এখনই পুনঃগণনা করুন"><i class="fas fa-sync-alt" aria-hidden="true"></i> রিফ্রেশ</button>
+        <span class="rss-updated" id="rssUpdated" aria-live="polite"></span>
+      </span>
     </div>
     <div class="rss-grid">
     <% seriesStats.forEach(function (s) { var score = s.v + s.d * 2; var pct = Math.max(6, Math.round(score / ssMax * 100)); %>
@@ -52,8 +57,24 @@
     .rss-stat { font-size: .7rem; color: #64748b; display: inline-flex; gap: 4px; align-items: center; font-weight: 600; }
     .rss-bar { height: 6px; border-radius: 999px; background: #f1f5f9; overflow: hidden; display: block; }
     .rss-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #059669, #34d399); transition: width .4s ease; }
-    @media (prefers-reduced-motion: reduce) { .rss-card, .rss-bar i { transition: none; } }
-    @media (max-width: 640px) { .rss-grid { grid-template-columns: 1fr; } }
+    /* সেশন ১৩১: লাইভ-রিফ্রেশ + স্কেলেটন */
+    .rss-live { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
+    .rss-refresh { display: inline-flex; align-items: center; gap: 6px; background: #fff; color: #047857; border: 1px solid #059669; border-radius: 9px; padding: 4px 12px; font-size: .72rem; font-weight: 800; cursor: pointer; transition: all .15s ease; box-shadow: 0 1px 2px rgba(11,21,40,.06); }
+    .rss-refresh:hover { background: #ecfdf5; transform: translateY(-1px); box-shadow: 0 4px 10px -4px rgba(5,150,105,.4); }
+    .rss-refresh:focus-visible { outline: 2px solid #065f46; outline-offset: 2px; }
+    .rss-refresh.is-loading { opacity: .72; pointer-events: none; }
+    .rss-refresh.is-loading i { animation: rssSpin131 .8s linear infinite; }
+    @keyframes rssSpin131 { to { transform: rotate(360deg); } }
+    .rss-updated { font-size: .66rem; color: #64748b; font-weight: 700; }
+    .rss-updated.rss-err { color: #b91c1c; }
+    .rss-skel { display: flex; flex-direction: column; gap: 8px; background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #a7f3d0; border-radius: 11px; padding: 10px 12px 12px; }
+    .rss-skel-line, .rss-skel-bar { display: block; border-radius: 999px; background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 37%, #eef2f7 63%); background-size: 400% 100%; animation: rssShimmer131 1.2s ease infinite; }
+    .rss-skel-line { height: 10px; width: 70%; }
+    .rss-skel-line.w40 { width: 40%; }
+    .rss-skel-bar { height: 6px; width: 100%; }
+    @keyframes rssShimmer131 { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+    @media (prefers-reduced-motion: reduce) { .rss-card, .rss-bar i { transition: none; } .rss-refresh, .rss-refresh.is-loading i, .rss-skel-line, .rss-skel-bar { animation: none; } }
+    @media (max-width: 640px) { .rss-grid { grid-template-columns: 1fr; } .rss-live { margin-left: 0; } }
   </style>
   <% } %>
   <form method="POST" action="/admin/resources/bulk-delete" class="bulk-bar" id="bulkBar">
@@ -88,5 +109,58 @@
 <%# সেশন ১১৬: CSV বাল্ক-ইমপোর্ট মোডাল (শেয়ার্ড পার্শিয়াল — মডারেটর-প্যানেলও এটাই ব্যবহার করে) %>
 <%- include('../partials/resource-bulk-modal', { bulkAction: '/admin/resources/bulk', bulkCsrf: csrfToken }) %>
 <script>document.getElementById('rsxBulkBtn').addEventListener('click', function(){ window.rsxOpenBulkImport(); });</script>
+<script>
+/* সেশন ১৩১: জনপ্রিয়-সিরিজ লাইভ-রিফ্রেশ — GET /api/resources/series-stats (স্টাফ-গেটেড, no-store)।
+   স্কেলেটন-শিমার → কার্ড-রিরেন্ডার → স্কোর-বার 0→pct অ্যানিমেশন; ব্যর্থে পূর্বের-গ্রিড-পুনরুদ্ধার + চিপে এরর। */
+(function(){
+  var btn = document.getElementById('rssRefresh');
+  var grid = document.querySelector('.rss-grid');
+  var upd = document.getElementById('rssUpdated');
+  if (!btn || !grid || grid.dataset.rssLive131) return;
+  grid.dataset.rssLive131 = '1';
+  var lastTs = 0;
+  var esc = function(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var bn = function(n){ return String(n).replace(/[0-9]/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+  var relBn = function(ts){ var m = Math.floor((Date.now()-ts)/60000); if (m < 1) return 'এইমাত্র'; if (m < 60) return bn(m)+' মিনিট আগে'; var h = Math.floor(m/60); if (h < 24) return bn(h)+' ঘণ্টা আগে'; return bn(Math.floor(h/24))+' দিন আগে'; };
+  function cardHtml(s){
+    return '<a class="rss-card" href="/resources?series=' + encodeURIComponent(s.series) + '" target="_blank" rel="noopener" title="' + esc(s.series) + ' — পাবলিক পৃষ্ঠা">' +
+      '<span class="rss-name" title="' + esc(s.series) + '"><i class="fas fa-book-open"></i> ' + esc(s.series) + '</span>' +
+      '<span class="rss-meta"><span class="rss-pill">' + bn(s.n) + ' পর্ব</span><span class="rss-stat"><i class="far fa-eye"></i> ' + bn(s.v) + '</span><span class="rss-stat"><i class="fas fa-download"></i> ' + bn(s.d) + '</span></span>' +
+      '<span class="rss-bar" aria-hidden="true"><i style="width:0%"></i></span></a>';
+  }
+  function skelHtml(){
+    var out = '';
+    for (var i = 0; i < 6; i++) out += '<span class="rss-skel" aria-hidden="true"><span class="rss-skel-line"></span><span class="rss-skel-line w40"></span><span class="rss-skel-bar"></span></span>';
+    return out;
+  }
+  function setUpdated(){ if (upd && lastTs) { upd.classList.remove('rss-err'); upd.textContent = 'হালনাগাদ: ' + relBn(lastTs); } }
+  setInterval(setUpdated, 60000);
+  btn.addEventListener('click', function(){
+    if (btn.dataset.busy) return;
+    btn.dataset.busy = '1'; btn.classList.add('is-loading');
+    var prev = grid.innerHTML;
+    grid.innerHTML = skelHtml();
+    fetch('/api/resources/series-stats?limit=6', { credentials: 'same-origin' })
+      .then(function(r){ if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok || !j.stats) throw new Error('bad payload');
+        grid.innerHTML = j.stats.map(cardHtml).join('');
+        lastTs = Date.now(); setUpdated();
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){
+          var cards = grid.querySelectorAll('.rss-card');
+          for (var i = 0; i < cards.length && i < j.stats.length; i++) {
+            var bar = cards[i].querySelector('.rss-bar i');
+            if (bar) bar.style.width = j.stats[i].pct + '%';
+          }
+        }); });
+      })
+      .catch(function(){
+        grid.innerHTML = prev;
+        if (upd) { upd.classList.add('rss-err'); upd.textContent = 'রিফ্রেশ ব্যর্থ — আবার চেষ্টা করুন'; }
+      })
+      .then(function(){ btn.classList.remove('is-loading'); delete btn.dataset.busy; });
+  });
+})();
+</script>
 </body>
 </html>

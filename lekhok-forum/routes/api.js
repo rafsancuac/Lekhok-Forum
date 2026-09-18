@@ -52,6 +52,30 @@ router.get('/resources', async (req, res) => {
   res.json(await db.prepare(q).all(...params));
 });
 
+// ── সেশন ১৩১: জনপ্রিয়-সিরিজ লাইভ-এন্ডপয়েন্ট (RES-124-ব্যাকলগ ②) ──────────────
+// GET /api/resources/series-stats — স্টাফ-গেটেড (adminUser-সেশন অথবা user-রোল
+// admin/superadmin/moderator — admin/routes.js requireAdmin-এর সেশন-মডেল মিরর)।
+// admin-প্যানেলের rss-গ্রিডের হুবহু সূত্র: score = views + downloads×2, top-N।
+// ?limit= 1..20 (ডিফল্ট ৬)। নো-স্টোর — লাইভ-রিফ্রেশ-বাটনের উদ্দেশ্যেই।
+router.get('/resources/series-stats', (req, res) => {
+  const au131 = req.session && req.session.adminUser;
+  const u131 = req.session && req.session.user;
+  const role131 = u131 && u131.role;
+  const staff131 = !!au131 || role131 === 'admin' || role131 === 'superadmin' || role131 === 'moderator';
+  if (!staff131) return res.status(403).json({ ok: false, error: 'forbidden' });
+  const limit131 = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 6));
+  try {
+    const rows131 = db.prepare("SELECT TRIM(series) AS series, COUNT(*) AS n, COALESCE(SUM(views),0) AS v, COALESCE(SUM(downloads),0) AS d FROM resources WHERE series IS NOT NULL AND TRIM(series) != '' GROUP BY TRIM(series) ORDER BY (COALESCE(SUM(views),0) + COALESCE(SUM(downloads),0)*2) DESC, n DESC LIMIT ?").all(limit131);
+    const stats131 = rows131.map(r => { const score = (r.v || 0) + (r.d || 0) * 2; return { series: r.series, n: r.n, v: r.v, d: r.d, score, pct: 0 }; });
+    const max131 = stats131.reduce((m, s) => Math.max(m, s.score), 0) || 1;
+    stats131.forEach(s => { s.pct = Math.max(6, Math.round(s.score / max131 * 100)); });
+    res.set('Cache-Control', 'no-store');
+    return res.json({ ok: true, stats: stats131, max: max131, ts: Date.now() });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'series-stats failed' });
+  }
+});
+
 // ── Contact form submission ────────────────────────────────────────────────
 // সেশন ১০৩: ① ইন-মেমরি রেট-লিমিট (প্রতি IP ৫/১০মি — স্প্যাম-গার্ড) ② প্লেইন-ফর্ম-POST
 // (Accept: text/html) এখন JSON-পেজে আটকাবে না — /contact?success=|error=-এ 303-রিডাইরেক্ট

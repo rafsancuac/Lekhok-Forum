@@ -4,6 +4,7 @@ const db = require('../db');
 // হোম নেতৃত্ব সেকশনের ৮ পাতার বক্তব্য (৫০-১০০ শব্দ) — স্লট-ভিত্তিক,
 // members.bio ফাঁকা হলে ভিউ এটি ব্যবহার করে (সেশন ২৯)
 const leaderStatements = require('../data/leaderStatements');
+const bnDate131 = require('../helpers/bn-date'); // সেশন ১৩১: সাইট-ওয়াইড তারিখ-চুক্তি
 // সেশন ১১০: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ (একক-উৎস — moderator.js-এর COVERS110-এরই মিরর)
 const COVERS110 = require('../helpers/covers');
 
@@ -351,18 +352,11 @@ const GALLERY_LABELS = {
 };
 function enrichGalleryRows(rows) {
   // সেশন ৯৭: প্রদর্শন-তারিখ — event_date না থাকলে created_at-কে বাংলা-ফরম্যাটে ফলব্যাক
-  const BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-  const BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-  const bnDate = (d) => {
-    try {
-      const dt = new Date(d);
-      if (isNaN(dt)) return '';
-      return `${String(dt.getDate()).replace(/\d/g, c => BN_DIGITS[+c])} ${BN_MONTHS[dt.getMonth()]}, ${String(dt.getFullYear()).replace(/\d/g, c => BN_DIGITS[+c])}`;
-    } catch (e) { return ''; }
-  };
+  // সেশন ১৩১: bnDate → helpers/bn-date (DB-নেম-লেস = UTC পার্স + Asia/Dhaka প্রদর্শন) —
+  //   পুরনো new Date(d) হোস্ট-লোকাল পার্স করত (প্রোডাকশন-বাংলাদেশে ৬ঘ-ভুল + তারিখ-স্খলন)
   for (const g of rows) {
     g.catLabel = GALLERY_LABELS[g.category || 'general'] || g.category || 'সাধারণ';
-    g.displayDate = (g.event_date && String(g.event_date).trim()) || bnDate(g.created_at);
+    g.displayDate = (g.event_date && String(g.event_date).trim()) || bnDate131.bnDate(g.created_at);
   }
   return rows;
 }
@@ -559,6 +553,7 @@ router.get('/resources/:id(\\d+)', async (req, res) => {
     pageTitle: r.title || 'রিসোর্স',
     currentPath: '/resources',
     r, related, descHtml, isStaff,
+    bnDate: bnDate131.bnDate, /* সেশন ১৩১: ভিউতে require-নেই — হেল্পার-লোকাল হিসেবে পাস */
     staffRole: isStaff ? u.role : null,
     staffName: isStaff ? (u.username || '') : '',
     seriesName, seriesItems, seriesPrev, seriesNext, seriesPos, seriesAudioCount,

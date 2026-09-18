@@ -12,8 +12,9 @@
   const embed = (r.res_type === 'video') ? videoEmbedUrl(rUrl) : null;
   const isImg = r.res_type === 'image';
   const cover = isImg ? rUrl : (r.thumbnail_url || null);
-  const BN_MONTHS = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-  const bnDate = (d) => { try { const dt = new Date(d); if (isNaN(dt)) return ''; return bn(dt.getDate()) + ' ' + BN_MONTHS[dt.getMonth()] + ', ' + bn(dt.getFullYear()); } catch (e) { return ''; } };
+  /* সেশন ১৩১: bnDate → helpers/bn-date (DB-নেম-লেস = UTC + Asia/Dhaka) —
+     পুরনো new Date(d) হোস্ট-লোকাল পার্স ছিল (বাংলাদেশে ৬ঘ-ভুল/তারিখ-স্খলন);
+     ভিউতে require-নেই — রুট (pages.js) রেন্ডার-লোকাল হিসেবে bnDate পাস করে, এখানে সরাসরি ব্যবহার। */
 %>
 
 <div class="rsxd-wrap">

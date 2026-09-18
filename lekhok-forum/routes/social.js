@@ -1336,17 +1336,16 @@ router.get('/profile/:username', async (req, res) => {
   // বাংলা-সংখ্যা + সাপেক্ষ-সময় হেল্পার (ভিউতে পাস করা হয়)
   const BN83 = '০১২৩৪৫৬৭৮৯';
   const bn83 = (n) => String(n).replace(/\d/g, d => BN83[+d]);
-  const BN_MONTHS83 = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-  const bnDate83 = (dt) => {
-    if (!dt) return '';
-    const d = new Date(String(dt).replace(' ', 'T') + (String(dt).includes('Z') ? '' : 'Z'));
-    if (isNaN(d.getTime())) return '';
-    return `${bn83(d.getUTCDate())} ${BN_MONTHS83[d.getUTCMonth()]} ${bn83(d.getUTCFullYear())}`;
-  };
+  /* সেশন ১৩১: bnDate83/bnRelTime83 → helpers/bn-date-চুক্তি।
+     bnDate83 আগে getUTC* দিয়ে UTC ওয়াল-ক্লক দেখাত (ঢাকা-পিছিয়ে ৬ঘ) — এখন Asia/Dhaka।
+     পার্স: parseDbDate (নেম-লেস = UTC — আগের-'Z'-জোড়া-কনভেনশনের হুবহু আপগ্রেড;
+     ISO-Z/±offset/তারিখ-মাত্রও কভার)। */
+  const BND131 = require('../helpers/bn-date');
+  const bnDate83 = (dt) => BND131.bnDate(dt);
   const bnRelTime83 = (dt) => {
     if (!dt) return '';
-    const d = new Date(String(dt).replace(' ', 'T') + (String(dt).includes('Z') ? '' : 'Z'));
-    if (isNaN(d.getTime())) return '';
+    const d = BND131.parseDbDate(dt);
+    if (!d) return '';
     const diff = Math.max(0, Date.now() - d.getTime());
     const m = Math.floor(diff / 60000);
     if (m < 1) return 'এইমাত্র';
