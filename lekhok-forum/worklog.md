@@ -1669,3 +1669,23 @@ Stage Summary:
 - **নতুন-চুক্তি:** rx_faces-পেলোড (≤৩, ফলব্যাক-সুরক্ষিত), atEl147-অ্যাডজাসেন্ট-মাউন্ট, .article-body-তৃতীয়-সারফেস, lf-ext-fav hsl-ডিস্ক
 - **ঝুঁকি:** og-ইঞ্জিন-সিলেক্টর/বাবল/at-রেজলুশন এখন তিন-জায়গায়-সমলয়-রাখতে-হবে (নতুন-সারফেস-নোট PLANS-এ); markdown-<p>-না-থাকলে at-fallback=anchor (ইনলাইন-মাউন্ট — গৃহীত)
 - **পরবর্তী-প্রায়োরিটি:** ① ক্লিকযোগ্য rx-ব্যাজ→reactors-modal (nesting-সতর্কতা) ② tokens-র্যাচেট (style.css ১৩৯৫) ③ dropdown-paintList reltime ④ **পরের-এজেন্ট session148 থেকে**
+
+---
+Task ID: 24 (Session 148 — Lekhok-Forum কল-পলিশ রাউন্ড)
+Agent: Z.ai (ইউজারের লাইভ-রিপোর্ট: "প্রিভিউ আসে না, কাটার পরও রিং বাজে, ট্রানজিশন স্মুথ না")
+Task: ইউজার-রিপোর্টকৃত ৩-বাগের মূল-কারণ-বিশ্লেষণ + ফিক্স + লুকানো 409-রেস-ফিক্স + নতুন E2E
+
+Work Log:
+- repo: /home/z/lekhok-forum (Express/EJS :8080); স্যান্ডবক্স-রিসেটের পরে ফ্রেশ-ক্লোন → bun install → reset-qa-logins (ismail/secret123 প্রতিষ্ঠা) → boot SANDBOX_PORT=8080
+- 🐛 মূল-কারণ-১ (রিং-লিক): beep() ৪০-সে-পর্যন্ত প্রি-শিডিউল-অসিলেটর রাখে, stopRing() শুধু টাইমার-ক্লিয়ার — nodes[]-ট্র্যাকিং + প্রতি-নোড hard-shutdown (gain→০+stop+disconnect); AC শেয়ার্ড (SPK-ব্যবহৃত) — ctx.close() নয়
+- 🐛 মূল-কারণ-২ (PIP): .lc-local-video লুকানো .lc-videos-এর ভেতরে + srcObject-সেট-কালে display:none autoplay-মিস + স্পষ্ট-play নেই → এলিমেন্ট .lc-panel-লেভেলে + lc-root--has-local-ক্লাস (রিং-অবস্থাতেই দৃশ্যমান) + tryPlayLocal(); গ্রুপে CSS !important-নিষেধ
+- 🐛 মূল-কারণ-৩ (ট্রানজিশন): হুট-root.remove() → lc-root--closing (২২০ms unpop→টাইমার-remove; hidden-ট্যাবে সরাসরি), .is-out আসন্ন-বিদায়-ফেড, .is-in কানেক্ট-ক্রসফেড, lc-pip-in; reduced-motion-সম্প্রসারণ
+- 🚨 লুকানো-রেস-আবিষ্কার: /start-POST-পূর্বে হ্যাংআপ → end-POST-শূন্য → ৪৫-সে ringing-লক → রিডায়াল 409 busy (E2E-তে ধরা) → S.seq লাইফসাইকেল-টোকেন + লেট-স্টার্ট অটো-'cancelled' (1:1+গ্রুপ)
+- টুল-গোটচা-পুনঃপ্রমাণ: স্যান্ডবক্স Bash-কল-শেষে setsid-nohup-সার্ভারও মরে → প্রতি-রাউন্ড এক-কলে boot+test; ব্রাউজার-E2E-তে CALL_RING_TIMEOUT_S=4 নিষিদ্ধ (ইনবক্স-পোল ৫-সে > ৪-সে উইন্ডো → ইনকামিং-মিস); reset-qa-logins ফ্রেশ-রিবিল্ডে পুনঃচালনা আবশ্যক
+- যাচাই: নতুন verify-session148-callpolish.js **২৩/২৩** (হার্ডস্টপ-সিঙ্ক্রোনাস + PIP videoWidth>০ প্রি-কানেক্ট + closing-ক্লাস + ফুল-কানেক্ট + ক্যালি-পাশ-হার্ডস্টপ) · s122 ব্রাউজার ২১/২১ · s93 API ৫৫/৫৫ · s113 গ্রুপ ৫০/৫০ · guard ✓ brace-২৯৭/২৯৭ ✓ node --check ✓
+
+Stage Summary:
+- ইউজারের ৩-অভিযোগের প্রত্যেকটির সরাসরি-প্রমাণিত ফিক্স + busy-লক-রেস-ফিক্স — কলিং এখন FB/টেলিগ্রাম-প্যারিটি-পথে
+- নতুন-চুক্তি: S.ringing.nodes[]-হার্ডস্টপ · S.seq-টোকেন (নতুন async-start-পথে বাধ্যতামূলক) · .lc-local-video ক্লাস-চালিত-দৃশ্যমানতা · _qaRingState/_qaSelfPip হুক
+- পরবর্তী-প্রার্থী: কল-মিড-মিনিমাইজ-পলিশ · OS-নোটিফিকেশন অ্যাকশন-বাটন · Metered.ca-TURN · উত্তর-থ্রেড-মেনশন-চিপ (session145-বকেয়া-সহ)
+

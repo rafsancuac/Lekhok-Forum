@@ -99,7 +99,10 @@
     auth401: 0,             // টানা 401-পোল-কাউন্ট (লগআউট/মেয়াদোত্তীর্ণ → ব্যাকঅফ)
     hbWorker: null,         // ব্যাকগ্রাউন্ড-ট্যাব হার্টবিট (Worker-টাইমার থ্রটল-হয় না)
     notifT: null,           // আসন্ন-কল title-flash টাইমার
-    titleBase: null         // মূল document.title (ফ্ল্যাশ-শেষে পুনঃস্থাপন)
+    titleBase: null,        // মূল document.title (ফ্ল্যাশ-শেষে পুনঃস্থাপন)
+    seq: 0                  /* সেশন ১৪৮: কল-লাইফসাইকেল-টোকেন — দ্রুত-বাতিলে (UI-ফার্স্টে
+                               /start-POST-এর আগেই হ্যাংআপ) লেট-কমপ্লিটিং স্টার্ট-ফলাফল
+                               নতুন-কল-অ্যাডপ্ট/ঝুলে-থাকা ringing-লক দুটোই বন্ধ */
   };
 
   /* ── DOM হেল্পার ───────────────────────────────────────────────────────── */
@@ -134,6 +137,7 @@
     g.gain.linearRampToValueAtTime(0, t0 + dur);
     o.connect(g); g.connect(ac.destination);
     o.start(t0); o.stop(t0 + dur + 0.02);
+    return { o: o, g: g }; /* সেশন ১৪৮: নোড-পেয়ার ফেরত — হার্ডস্টপের জন্য ট্র্যাক */
   }
   function startRing(mode) { /* 'outgoing' রিংব্যাক | 'incoming' রিংটোন */
     stopRing();
@@ -145,16 +149,35 @@
       for (var j = 0; j < 10; j++) { seq.push([425, 0, j * 4, 1.2, 0.05]); }
     }
     var now = ac.currentTime + 0.05;
+    var nodes = [];
     seq.forEach(function (s) {
       if (s[2] === 0 && s[3] === 0) return;
-      beep(ac, s[0], now + s[2], s[3], s[4]);
-      if (s[1]) beep(ac, s[1], now + s[2], s[3], s[4]);
+      nodes.push(beep(ac, s[0], now + s[2], s[3], s[4]));
+      if (s[1]) nodes.push(beep(ac, s[1], now + s[2], s[3], s[4]));
     });
-    S.ringing = { ac: ac, stopAt: now + 40, timer: setTimeout(function () { stopRing(); }, 40000) };
+    S.ringing = { ac: ac, nodes: nodes, stopAt: now + 40, timer: setTimeout(function () { stopRing(); }, 40000) };
   }
   function stopRing() {
-    if (!S.ringing) return;
-    clearTimeout(S.ringing.timer);
+    /* সেশন ১৪৮-হার্ডস্টপ (সাউন্ড-লিক-ফিক্স): আগে শুধু সেফটি-টাইমার ক্লিয়ার হত —
+       কিন্তু beep()-নোডগুলো ৪০-সেকেন্ড পর্যন্ত ভবিষ্যতে-শিডিউল (o.start(t0)) থাকে →
+       কল-কাটার পরেও বাকি রিং-বিটগুলো বাজতে থাকত (ইউজার-রিপোর্ট: "কল কেটে দিলেও
+       আরও কিছুক্ষণ রিং হচ্ছে")। এখন প্রতিটি শিডিউল-নোড তাৎক্ষণিক: gain-cancel→০,
+       stop(now), দ্বি-disconnect — এক-মিলিসেকেন্ডে পূর্ণ নীরবতা।
+       নোট: AC শেয়ার্ড-কনটেক্সট (স্পিকার-মিটার SPK-ও ব্যবহার করে) — ctx.close()
+       নয়, প্রতি-নোড হার্ড-শাটডাউনই সঠিক। */
+    if (S.ringing) {
+      clearTimeout(S.ringing.timer);
+      var rac = S.ringing.ac, rnodes = S.ringing.nodes || [];
+      for (var i = 0; i < rnodes.length; i++) {
+        var nd = rnodes[i];
+        if (!nd) continue;
+        try { nd.g.gain.cancelScheduledValues(rac.currentTime); } catch (_) {}
+        try { nd.g.gain.setValueAtTime(0, rac.currentTime); } catch (_) {}
+        try { nd.o.stop(rac.currentTime); } catch (_) {}
+        try { nd.o.disconnect(); } catch (_) {}
+        try { nd.g.disconnect(); } catch (_) {}
+      }
+    }
     S.ringing = null;
   }
   function click() {
@@ -258,9 +281,9 @@
       '  <div class="lc-panel">' +
       '    <div class="lc-videos" hidden>' +
       '      <video class="lc-remote-video" autoplay playsinline></video>' +
-      '      <video class="lc-local-video" autoplay playsinline muted></video>' +
       '      <div class="lc-tapplay" hidden><button type="button" class="lc-tapplay-btn">' + icon('fa-play') + ' ট্যাপ করে চালু করুন</button></div>' +
       '    </div>' +
+      '    <video class="lc-local-video" autoplay playsinline muted></video>' +
       '    <div class="lc-quality" hidden><span class="lc-quality-bars"><i></i><i></i><i></i><i></i></span><span class="lc-quality-t">—</span><span class="lc-eco" hidden></span></div>' +
       '    <div class="lc-audioface">' +
       '      <div class="lc-aura"><span></span><span></span><span></span></div>' +
@@ -451,8 +474,21 @@
   }
   function showVideos(on) {
     if (!root) return;
-    root.querySelector('.lc-videos').hidden = !on;
+    var vv = root.querySelector('.lc-videos');
+    if (vv) {
+      vv.hidden = !on;
+      /* সেশন ১৪৮: রিং→কানেক্ট ক্রসফেড — হুট-করে-সোয়াপ নয়, ২৮০ms ফেড-ইন */
+      if (on) { vv.classList.remove('is-in'); void vv.offsetWidth; vv.classList.add('is-in'); }
+    }
     root.querySelector('.lc-audioface').hidden = on;
+    if (on) { tryPlayLocal(); tryPlayRemote(); }
+  }
+  /* সেশন ১৪৮: লোকাল-প্রিভিউ স্পষ্ট-প্লে — srcObject সেট-কালে এলিমেন্ট display:none
+     থাকলে Chrome autoplay-মিস করতে পারে; প্রতিবার-দৃশ্যমানতা-পরিবর্তনে পুনঃকল */
+  function tryPlayLocal() {
+    if (!root) return;
+    var lv = root.querySelector('.lc-local-video');
+    if (lv && lv.srcObject) { var p = lv.play(); if (p && p.catch) p.catch(function () {}); }
   }
   function minimize(on) {
     if (!root) return;
@@ -807,7 +843,14 @@
     spkEnsure('self', stream); /* সেশন ১১৮: নিজের-মাইক লেভেল (মিউটে অটো-নিভে) */
     if (root) {
       var lv = root.querySelector('.lc-local-video');
-      if (lv) lv.srcObject = stream;
+      /* সেশন ১৪৮: সেলফি-PIP কানেক্ট-পূর্বেই (রিং-অবস্থায়) দৃশ্যমান (FB/টেলিগ্রাম-প্যারিটি) —
+         স্ট্রিম-অ্যাটাচেই has-local-ক্লাস → PIP খোলে; স্পষ্ট play()। অডিও-ফলব্যাকে
+         (S.kind='audio') PIP নয় — আগের-মতো অ্যাভাটার-মুখ। গ্রুপে CSS-নিষেধ (গ্রিড-টাইলই সেলফি)। */
+      if (lv && S.kind === 'video') {
+        lv.srcObject = stream;
+        root.classList.add('lc-root--has-local');
+        tryPlayLocal();
+      }
     }
   }
 
@@ -1005,7 +1048,7 @@
     var t = gridTile('self', null);
     if (!t) return;
     var v = t.querySelector('.lc-tile-video');
-    if (v) v.srcObject = S.local;
+    if (v) { v.srcObject = S.local; tryPlayGrid(); /* সেশন ১৪৮: সেলফি-টাইলেও স্পষ্ট-প্লে */ }
   }
   function gridTileState(uid, st) {
     if (!root) return;
@@ -1147,6 +1190,7 @@
     S.peer = null;
     S.queue = []; S.outBuf = []; /* সেশন ১২২: S.after রিসেট নয় (গায়েব-বাগ) */
     S.peers = {}; S.meJoinedAt = null;
+    S.seq++; /* সেশন ১৪৮: নতুন-লাইফসাইকেল */
 
     ensureRoot();
     root.querySelector('.lc-ctl--cam').style.display = kind === 'video' ? '' : 'none';
@@ -1162,6 +1206,7 @@
     schedulePoll(900);
 
     try {
+      var seq0 = S.seq; /* সেশন ১৪৮: এই-লাইফসাইকেলের টোকেন */
       var stream = await getMedia(kind);
       attachLocal(stream);
       gridSelfAttach();
@@ -1170,6 +1215,11 @@
         var gmsg = { busy: 'আপনার আরেকটি কল চলছে', no_members: 'গ্রুপে অন্য কোনো সদস্য নেই', too_many_members: 'গ্রুপটি কল-সীমার (৮ জন) বেশি বড়' };
         toast(gmsg[r.error] || 'গ্রুপ-কল শুরু করা যায়নি', true);
         cleanup(true);
+        return;
+      }
+      /* সেশন ১৪৮: দ্রুত-বাতিল-রেস — নিচের ১:১-শাখার মতোই (বিস্তারিত সেখানে) */
+      if (seq0 !== S.seq) {
+        try { await api('POST', '/api/calls/' + r.call_id + '/end', { reason: 'cancelled' }); } catch (_) {}
         return;
       }
       S.callId = r.call_id;
@@ -1238,6 +1288,7 @@
     S.peer = ctx.peer;
     S.queue = [];
     S.outBuf = [];
+    S.seq++; /* সেশন ১৪৮: নতুন-লাইফসাইকেল */
     /* সেশন ১২২-বাগফিক্স: S.after=0 রিসেট নয় — কার্সার গ্লোবাল (call_signals-id);
        রিসেট করলে শুরুর প্রথম পোলেই ১০-মিনিট-উইন্ডোর পুরনো অন্য-কলের 'ended'/'cancelled'
        সিগন্যাল রিপ্লে হত → কল-UI নিজে-ই নিজেকে কেটে ফেলত (মডাল গায়েব-বাগ)। */
@@ -1261,6 +1312,7 @@
   }
 
   async function acquireAndOffer() {
+    var seq0 = S.seq; /* সেশন ১৪৮: এই-লাইফসাইকেলের টোকেন */
     status(S.kind === 'video' ? icon('fa-video') + ' ভিডিও কল দেওয়া হচ্ছে…' : icon('fa-phone') + ' অডিও কল দেওয়া হচ্ছে…');
     try {
       var stream = await getMedia(S.kind);
@@ -1282,6 +1334,15 @@
         var msgMap = { busy: 'আপনার আরেকটি কল চলছে', peer_busy: 'প্রাপক এখন অন্য কলে ব্যস্ত', group_call_unsupported: 'গ্রুপ-কল এখনো সমর্থিত নয়' };
         toast(msgMap[r.error] || 'কল শুরু করা যায়নি', true);
         cleanup(true);
+        return;
+      }
+      /* সেশন ১৪৮-রেস-ফিক্স (স্টেবিলিটি): UI-ফার্স্টে ক্লিক-মুহূর্তেই মোডাল+রিং, কিন্তু
+         /start-POST তখনও ফ্লাইটে — এই-ফাঁকেই হ্যাংআপ করলে S.callId=null → end-POST
+         কখনো যেত না → সার্ভারে ৪৫-সেকেন্ড 'ringing' ঝুলে থেকে busy-লক (৪০৯)।
+         এখন: লাইফসাইকেল-টোকেন বদলে গেলে (বাতিল/নতুন-কল) সদ্য-তৈরি কল সরাসরি
+         'cancelled'-মার্ক — সার্ভার পরিষ্কার, busy-লক শূন্য। */
+      if (seq0 !== S.seq) {
+        try { await api('POST', '/api/calls/' + r.call_id + '/end', { reason: 'cancelled' }); } catch (_) {}
         return;
       }
       S.callId = r.call_id;
@@ -1314,6 +1375,7 @@
     setPeerUI();
     var box = root.querySelector('.lc-incoming');
     box.hidden = false;
+    box.classList.remove('is-out'); /* সেশন ১৪৮: পুনঃদর্শনে বিদায়-ক্লাস রিসেট */
     box.querySelector('.lc-incoming-kind').innerHTML = inc.group
       ? (inc.kind === 'video' ? icon('fa-users') + ' গ্রুপ ভিডিও কল আসছে' : icon('fa-users') + ' গ্রুপ অডিও কল আসছে')
       : (inc.kind === 'video' ? icon('fa-video') + ' ভিডিও কল আসছে' : icon('fa-phone') + ' অডিও কল আসছে');
@@ -1360,7 +1422,15 @@
     if (S.titleBase != null) { try { document.title = S.titleBase; } catch (_) {} S.titleBase = null; }
   }
   function hideIncoming() {
-    if (root) root.querySelector('.lc-incoming').hidden = true;
+    if (root) {
+      var box = root.querySelector('.lc-incoming');
+      /* সেশন ১৪৮: গ্রহণ/প্রত্যাখ্যানে ফেড+স্কেল-ডাউন বিদায় (হুট-গায়েব নয়) —
+         is-out-ক্লাসে pointer-events:none তাৎক্ষণিক, ২০০ms পরে hidden */
+      if (box && !box.hidden) {
+        box.classList.add('is-out');
+        setTimeout(function () { if (box.isConnected) { box.hidden = true; box.classList.remove('is-out'); } }, 200);
+      } else if (box) { box.hidden = true; }
+    }
     stopRing();
   }
 
@@ -1436,6 +1506,7 @@
 
   /* ── শেষ/ক্লিনআপ ──────────────────────────────────────────────────────── */
   function cleanup(silent) {
+    S.seq++; /* সেশন ১৪৮: চলমান-লাইফসাইকেল বাতিল — লেট-কমপ্লিটিং /start আর অ্যাডপ্ট হবে না */
     stopRing();
     stopIncomingAttention(); /* সেশন ১২২ */
     clearInterval(S.tickT); S.tickT = null;
@@ -1463,8 +1534,16 @@
     S.permRetry = null; S.permBusy = false; /* সেশন ১২২: পারমিশন-ফ্লো রিসেট */
     S.state = 'idle';
     if (root) {
-      root.remove();
+      var dying = root;
       root = null;
+      /* সেশন ১৪৮: এক্সিট-অ্যানিমেশন (FB/টেলিগ্রাম-প্যারিটি) — হুট-করে-গায়েব নয়,
+         ২৪০ms ফেড+স্কেল-ডাউন; hidden-ট্যাবে টাইমার-থ্রটল/রিডিউসড-মোশনে সরাসরি remove */
+      if (document.hidden || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        try { dying.remove(); } catch (_) {}
+      } else {
+        dying.classList.add('lc-root--closing');
+        setTimeout(function () { try { dying.remove(); } catch (_) {} }, 240);
+      }
     }
     if (!silent && typeof S._onended === 'function') { try { S._onended(); } catch (_) {} }
     /* পোল-হার্টবিট পুনরায় চালু — নাহলে কল-শেষে ক্যালি আর কখনো নতুন আসন্ন-কল দেখবে না */
@@ -1732,7 +1811,10 @@
     /* সেশন ১২২ QA-হুক — পারমিশন-প্যানেল/হার্টবিট/পোল যাচাই */
     _qaShowPerm: function (msg) { ensureRoot(); showPermPanel(msg || 'ব্রাউজারে এই সাইটের মাইক্রোফোন/ক্যামেরার অনুমতি ব্লক করা আছে।'); return !!root && !root.querySelector('.lc-perm').hidden; },
     _qaPermState: function () { return { retryHooked: !!S.permRetry, busy: S.permBusy, worker: !!S.hbWorker, auth401: S.auth401, state: S.state }; },
-    _qaPollNow: function () { clearTimeout(S.pollT); poll(); return true; }
+    _qaPollNow: function () { clearTimeout(S.pollT); poll(); return true; },
+    /* সেশন ১৪৮ QA-হুক — রিং-হার্ডস্টপ + সেলফি-PIP যাচাই */
+    _qaRingState: function () { return { active: !!S.ringing, nodes: S.ringing ? (S.ringing.nodes || []).length : 0 }; },
+    _qaSelfPip: function () { var lv = root ? root.querySelector('.lc-local-video') : null; return { pip: !!root && root.classList.contains('lc-root--has-local'), visible: !!lv && lv.getClientRects().length > 0, live: !!lv && !!lv.srcObject && lv.videoWidth > 0 }; }
   };
 
   /* আইডল-অবস্থাতেও পোল-লুপ চালু — ক্যালি হিসেবে আসন্ন-কল দেখতে হলে

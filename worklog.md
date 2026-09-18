@@ -1544,5 +1544,21 @@ Work Log:
 
 Stage Summary:
 - @মেনশন-চক্র পূর্ণ: কমেন্ট/উত্তরে বিজ্ঞপ্তি-ডেলিভারি + /qa-তে অটোকমপ্লিট
-- পরের-এজেন্ট: session146 থেকে (PLANS session145-নোটে ৪-প্রস্তাব)
-- **push-সমাপ্তি (cron-r15):** 093f97a → origin/main (d46a55a-উপরে রিবেজড; পঞ্চম-push-রেস — সমান্তরাল session144(feed-pill)-এজেন্টের সাথে লেবেল-দখল → আমার চূড়ান্ত-লেবেল session145; ডকস-ইউনিয়ন: PROJECT/PLANS/worklog দ্বি-§144-সংঘর্ষে union + আমার-অংশ 145-রিলেবেল) — পরের-এজেন্ট session146 থেকে
+- পরের-এজেন্ট: session148 থেকে (PLANS session145-নোটে ৪-প্রস্তাব)
+- **push-সমাপ্তি (cron-r15):** 093f97a → origin/main (d46a55a-উপরে রিবেজড; পঞ্চম-push-রেস — সমান্তরাল session144(feed-pill)-এজেন্টের সাথে লেবেল-দখল → আমার চূড়ান্ত-লেবেল session145; ডকস-ইউনিয়ন: PROJECT/PLANS/worklog দ্বি-§144-সংঘর্ষে union + আমার-অংশ 145-রিলেবেল) — পরের-এজেন্ট session148 থেকে
+
+---
+Task ID: 24 (Session 148 — Lekhok-Forum কল-পলিশ রাউন্ড)
+Agent: Z.ai (ইউজারের লাইভ-রিপোর্ট-প্রতিক্রিয়া)
+Task: রিং-হার্ডস্টপ + সেলফি-PIP প্রি-কানেক্ট + স্মুথ-ট্রানজিশন + 409-রেস-ফিক্স → push
+
+Work Log:
+- ফ্রেশ-ক্লোন → bun install → reset-qa-logins → SANDBOX_PORT=8080-বুট (setsid; Bash-কল-শেষে প্রসেস-মৃত্যু → প্রতি-রাউন্ড এক-কলে boot+test রীতি)
+- webrtc-call.js: nodes[]-রিং-হার্ডস্টপ · tryPlayLocal+has-local-PIP · closing/is-out/is-in ট্রানজিশন · S.seq-রেস-টোকেন (409-busy-লক-ফিক্স) · QA-হুক ×২
+- calls.css: session148-ব্লক (has-local/unpop/vfade/pip-in) + reduced-motion-সম্প্রসারণ
+- যাচাই: s146-E2E ২৩/২৩ · s122 ২১/২১ · s93 ৫৫/৫৫ · s113 ৫০/৫০ · guard ✓ brace ✓
+- PLANS session148-নোট + PROJECT §১৪৮ + অভ্যন্তরীণ-worklog এন্ট্রি — push-পূর্ব সম্পন্ন
+
+Stage Summary:
+- ইউজার-রিপোর্টকৃত ৩-বাগ + ১-লুকানো-রেস সম্পূর্ণ-ফিক্সড, চার-সুইট-রিগ্রেশন-সবুজ
+- পরের-এজেন্ট: session148 থেকে (PLANS-বকেয়া ×৪)

@@ -59,7 +59,13 @@
   background: #10181d;
   z-index: 3;
   transition: opacity .2s ease, transform .2s ease;
+  /* সেশন ১৪৮: এলিমেন্ট এখন .lc-panel-লেভেল (.lc-videos-এর বাইরে) —
+     স্ট্রিম-অ্যাটাচে (রিং-অবস্থাতেই) দৃশ্যমান; অডিও-কলে লুকানো */
+  display: none;
 }
+.lc-root--has-local .lc-local-video { display: block; animation: lc-pip-in .26s cubic-bezier(.2, .9, .3, 1.1); }
+.lc-root--group .lc-local-video { display: none !important; } /* গ্রুপে গ্রিডেই সেলফি-টাইল */
+@keyframes lc-pip-in { from { opacity: 0; transform: scale(.9) translateY(6px); } to { opacity: 1; transform: none; } }
 .lc-root--camoff .lc-local-video { opacity: .25; transform: scale(.96); }
 .lc-tapplay {
   position: absolute; inset: 0; z-index: 4;
@@ -241,7 +247,27 @@
   .lc-panel, .lc-incoming-card { animation: none; }
   .lc-aura span, .lc-incoming-avatarwrap span { animation: none; opacity: .35; }
   .lc-ctl, .lc-act { transition: none; }
+  /* সেশন ১৪৮: নতুন-ট্রানজিশনগুলোও দমন (closing-এ তাৎক্ষণিক-গায়েবই সঠিক) */
+  .lc-videos.is-in, .lc-root--has-local .lc-local-video { animation: none; }
+  .lc-root--closing .lc-panel, .lc-incoming.is-out .lc-incoming-card { animation: none; opacity: 0; }
+  .lc-root--closing .lc-backdrop, .lc-root--closing .lc-incoming, .lc-root--closing .lc-minbar { transition: none; opacity: 0; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   সেশন ১৪৮ — স্মুথ-ট্রানজিশন সেট (FB/টেলিগ্রাম-প্যারিটি)
+   ① রিং→কানেক্ট ভিডিও-স্টেজ ক্রসফেড ② হ্যাংআপে এক্সিট-অ্যানিমেশন
+   ③ আসন্ন-কার্ড বিদায়-ফেড — সবই ক্লাস-চালিত, hidden-attr অক্ষুণ্ণ
+   ═══════════════════════════════════════════════════════════════════════ */
+.lc-videos.is-in { animation: lc-vfade .28s ease both; }
+@keyframes lc-vfade { from { opacity: 0; } to { opacity: 1; } }
+.lc-root--closing .lc-backdrop { opacity: 0; transition: opacity .22s ease; }
+.lc-root--closing .lc-panel { animation: lc-unpop .22s cubic-bezier(.4, 0, 1, 1) forwards; }
+.lc-root--closing .lc-incoming { opacity: 0; transition: opacity .2s ease; }
+.lc-root--closing .lc-minbar { opacity: 0; transition: opacity .2s ease; }
+@keyframes lc-unpop { to { transform: scale(.94); opacity: 0; } }
+.lc-incoming.is-out { pointer-events: none; }
+.lc-incoming.is-out .lc-incoming-card { animation: lc-unpop .19s ease forwards; }
+.lc-status { transition: color .2s ease, opacity .2s ease; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    সেশন ৯৪ — কল-ইতিহাস ট্যাব (চ্যাট-ডিটেইলস প্যানেলে .md-callrow ফ্যামিলি)

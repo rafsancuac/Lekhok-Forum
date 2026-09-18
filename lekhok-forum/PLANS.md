@@ -2011,3 +2011,29 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 6. **E2E-প্রমাণ:** আর্টিকেল-৭১০ (লিংক ×২) → og-কার্ড `/qa/3` অ্যাঙ্কর-পাশে (prevTag=A — ইনলাইন-অ্যাডজাসেন্ট) + ফেস-অ্যাভস্ট্যাক (1-অ্যাভ+👍+১) + ext-chip 'E' hsl(157)+অ্যারো ✓ ফিড-৭১১ (bare-URL) → og-কার্ড ফেস-সহ + chip 'E' + বাবল-শেষ-মাউন্ট-অক্ষুণ্ণ (order: feed-text→extchip→ogcard) ✓ API `/qa/3` → `{rx_total:'১', rx_top:'👍', rx_faces:[{a:'/avatar/52',t:'👍'}]}` ✓ কমেন্ট-বাবল ext-chip-ফেভিকন ✓ স্ক্রিনশট ×২ (s147-article-og-faces.png, s147-ext-fav.png)।
 7. **রিগ্রেশন:** role-policy **239/239 ALL GREEN** ✓ cursor **25/25** ✓ guard ✓ audit:views (97-ejs-ডুপ-শূন্য) ✓ brace-০ ×২ ✓ node --check ×২ ✓ 390px-true-overflow-০ (og-320px-ফিট, fav-18px) ✓ কনসোল-০ ×৪-পেজ ✓ ক্লিনআপ (টেস্ট-পোস্ট 710+711-ডিলিট-ক্যাসকেড + পোস্ট-৩-রিঅ্যাকশন-টগল-অফ — total:0/mine:false) ✓
 8. **পরবর্তী-প্রথম-পছন্দ:** ① og-কার্ডে ক্লিকযোগ্য rx-ব্যাজ → reactors-modal (a>span-interactive-nesting-সতর্কতা — role=button-ভেতরে-নয়, বিকল্প: কার্ড-বাইরে-সামলানো) ② tokens-র্যাচেট (style.css ১৩৯৫) ③ dropdown-paintList reltime (session134-অবশিষ্ট) ④ ext-chipে বাহ্যিক-আইকন-সার্ভিস (onerror-ফলব্যাক-সহ) ⑤ **পরের-এজেন্ট: session148 থেকে।**
+**পরবর্তী-এজেন্ট: session148 থেকে।** বকেয়া-প্রস্তাব: ① উত্তর-থ্রেডে নতুন-মেনশন-চিপ (answer-bodyHtml-এ mention-লিঙ্ক আগেই আছে — নোটিফ-ডিপ-লিংকে #answer-N অ্যাঙ্কর যোগ করা যায়) ② /qa রিচ-এডিটরে (session143) @মেনশন-ইন্টিগ্রেশন — rich-editor-এর insert-মার্কআপে data-mention-সমতা ③ notifications-এ actor-avatar mention-নোটে ইতোমধ্য আছে — header-ড্রপডাউন-টুলটিপে মেনশন-কনটেক্সট-স্নিপেট ④ Metered.ca-TURN (ইউজার-অ্যাকাউন্ট-প্রয়োজন)
+
+## Cross-Agent Note — Session 146 (কল-পলিশ: রিং-হার্ডস্টপ + সেলফি-PIP প্রি-কানেক্ট + স্মুথ-ট্রানজিশন) (২৪ সেপ্টেম্বর ২০২৬)
+
+**ইউজার-রিপোর্ট (লাইভ):** "ইন্টারফেস আসছে, অনুমতিও দিতে পারছি — কিন্তু ① ভিডিও-প্রিভিউ স্ক্রিনে আসে না ② কল কাটার পরও কিছুক্ষণ রিং বাজে ③ ট্রানজিশন FB/টেলিগ্রামের মতো স্মুথ না।"
+
+**স্কোপ:** public/assets/js/webrtc-call.js (stopRing-হার্ডস্টপ + attachLocal-PIP + cleanup-এক্সিট + hideIncoming-ফেড + S.seq-রেস-ফিক্স + tryPlayLocal) · public/assets/css/calls.css (session148-ব্লক: has-local/unpop/vfade/pip-in + reduced-motion-সম্প্রসারণ) · scripts/verify-session148-callpolish.js (নতুন E2E, ২৩-চেক)
+
+**মূল-কারণ ×৩ + ফিক্স:**
+1. **রিং-সাউন্ড-লিক:** `beep()` অসিলেটরগুলো ৪০-সেকেন্ড পর্যন্ত ভবিষ্যতে-শিডিউল (`o.start(t0)`), কিন্তু `stopRing()` শুধু সেফটি-টাইমার ক্লিয়ার করত — প্রি-শিডিউল-বিটগুলো কল-শেষেও বাজত (হুবহু ইউজার-রিপোর্ট)। ফিক্স: `S.ringing.nodes[]`-ট্র্যাক → প্রতি-নোড `gain.cancelScheduledValues→০ + stop(now) + দ্বি-disconnect`। **AC শেয়ার্ড-কনটেক্সট (SPK-মিটার ব্যবহারকারী) — ctx.close() কখনো নয়, প্রতি-নোড হার্ডশাটডাউনই সঠিক।**
+2. **সেলফি-PIP:** `.lc-local-video` লুকানো `.lc-videos`-কনটেইনারের ভেতরে ছিল — কানেক্ট-পূর্বে কখনো অদৃশ্য + srcObject-সেট-কালে display:none → autoplay-মিস + স্পষ্ট play() নেই। ফিক্স: এলিমেন্ট `.lc-panel`-লেভেলে, `lc-root--has-local`-ক্লাসে রিং-অবস্থাতেই দৃশ্যমান (FB-প্যারিটি), `tryPlayLocal()` স্পষ্ট-প্লে; অডিও-ফলব্যাকে নেই, গ্রুপে `display:none !important` (গ্রিডেই সেলফি-টাইল)।
+3. **ট্রানজিশন:** এন্ট্রি `lc-pop` ছিল, এক্সিট ছিল হুট-`root.remove()`। ফিক্স: `lc-root--closing` (backdrop-ফেড + panel `lc-unpop` ২২০ms → টাইমারে remove; hidden-ট্যাব/reduced-motion-এ সরাসরি remove), আসন্ন-কার্ডে `.is-out` বিদায়-ফেড (pointer-events:none তাৎক্ষণিক), `.lc-videos.is-in` কানেক্ট-ক্রসফেড।
+
+**🚨 নতুন-বাগ-আবিষ্কার (রেস):** UI-ফার্স্টে ক্লিক-মুহূর্তেই মোডাল+রিং, কিন্তু `/start`-POST ফ্লাইটে — এই-ফাঁকে হ্যাংআপ করলে `S.callId=null` → end-POST কখনো যেত না → সার্ভারে ৪৫-সেকেন্ড `ringing` ঝুলে **busy-লক (৪০৯)** — দ্রুত-রিডায়াল "আপনার আরেকটি কল চলছে" (স্টেবিলিটি-অভিযোগের লুকানো-অংশ)। ফিক্স: `S.seq` লাইফসাইকেল-টোকেন (start/startGroup বাড়ে, cleanup-এ বাড়ে) → acquireAndOffer/startGroup-এ POST-রেজলভে seq-মিলন-ব্যর্থ হলে সদ্য-তৈরি কল সরাসরি `'cancelled'`-মার্ক।
+
+**চুক্তি (পরের-এজেন্ট):**
+1. `S.ringing = { ac, nodes[], timer }` — nodes[]-এ {o,g}-পেয়ার; stopRing ছাড়া কোনো-পথে oscillator রেখে দেবেন না।
+2. `S.seq`-টোকেন: নতুন কোনো async-start-পথ (ভবিষ্যতে স্ক্রিন-শেয়ার ইত্যাদি) যোগ হলে একই seq-গার্ড বাধ্যতামূলক।
+3. `.lc-local-video` এখন `.lc-videos`-এর বাইরে — visibility = `lc-root--has-local` ক্লাস-চালিত; hidden-attr-নয়।
+4. QA-হুক: `_qaRingState()` (active/nodes), `_qaSelfPip()` (pip/visible/live) — verify-session148-callpolish.js ২৩-চেক রেফারেন্স।
+5. ব্রাউজার-E2E-তে `CALL_RING_TIMEOUT_S=4` নিষিদ্ধ — ইনবক্স-পেজ পোল-ইন্টারভাল ৫-সে > ৪-সে-রিং-উইন্ডো → ইনকামিং-মিস (এ-রাউন্ডে-ধরা)।
+
+**যাচাই:** session-146 নতুন-E2E **২৩/২৩** (হার্ডস্টপ-সিঙ্ক্রোনাস-প্রমাণ, PIP videoWidth>০ প্রি-কানেক্ট, closing-ক্লাস+২৪০ms-বিদায়, ফুল-কানেক্ট-রিগ্রেশন, ক্যালি-পাশ-হার্ডস্টপ) · session-122 ব্রাউজার **২১/২১** · session-93 API **৫৫/৫৫** · session-113 গ্রুপ **৫০/৫০** · guard ✓ brace-২৯৭/২৯৭ ✓ node --check ✓
+
+**পরবর্তী-এজেন্ট: session148 থেকে।** বকেয়া: ① কল-মিড মিনিমাইজ + অন্য-পেজ-ব্রাউজ সহাবস্থান-পলিশ ② OS-নোটিফিকেশনে গ্রহণ/প্রত্যাখ্যান-অ্যাকশন-বাটন ③ Metered.ca-TURN (session145-এর ④-ও খোলা) ④ উত্তর-থ্রেড-মেনশন-চিপ (session145-এর ①)
+
