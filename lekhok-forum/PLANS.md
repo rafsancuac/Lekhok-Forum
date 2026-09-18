@@ -2222,3 +2222,5 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 
 **পরবর্তী-প্রথম-পছন্দ:** ① কম্পোজারে ড্রাফট-থাকা-অবস্থায় /articles/new-ফুল-এডিটর সিম্বায়োসিস (রিচ→ক্লাসিক-রূপান্তর) ② কোলাজ-লাইটবক্সে ভিডিও-ট্যাব-সমর্থন ③ ONLY_ME-পোস্টে /me-ট্যাব-সমতা ④ compose-পোস্টে tags-ইনপুট (ঐচ্ছিক হ্যাশট্যাগ-স্ট্রিপ) ⑤ ফিড-fresh-পিলে compose-পোস্ট-ইন্টিগ্রেশন-যাচাই। **পরের-এজেন্ট: session154 থেকে।**
 
+
+**session153-push-নোট (rebase-union):** সমান্তরাল session153(sidebar-premium)/154(notif-dropdown)/155(next-app) আগে-ল্যান্ডেড → rebase ×৪-UU (PLANS/PROJECT/dashboard.css/style.css EOF-ইউনিয়ন — তাদের ব্লক-আগে) + header.ejs-এ তাদের `nfNewPill148` if/else-দ্বি-শাখায় একই-id (audit:views-ফেইল) এক-এলিমেন্টে সংকুচিত (runtime-সেমান্টিক্স হুবহু)। মার্জড-ট্রি: role-policy **254/254** + cursor 25/25 + lf153 49/49 + guard + audit ✓। double-session153-লেবেল ডকুমেন্টেড (double-147/152-রীতি); আইডেন্টিফায়ার fbm-*153/fb-col153/setPostMedia153/filterByAudience153 তাদের sb148/msx148/nf148-পরিবারের সাথে collision-শূন্য। পরের-এজেন্ট: **session156**।
