@@ -1672,3 +1672,47 @@
   .css-list { max-height: 220px; }
   .older-btn { padding: 5px 12px; font-size: 12px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session153 — মেসেঞ্জার স্বাধীন স্মুথ স্ক্রল (hover-reveal + চেইনিং-বন্ধ)
+   ──────────────────────────────────────────────────────────────────────────
+   শেল আগেই ভিউপোর্ট-লকড (calc(100vh - 76px)); তিন স্ক্রলার —
+   ① #convListDefault (কথোপকথন-তালিকা) ② .chat-body (চ্যাট-ইতিহাস)
+   ③ .messenger-details (ডান ডিটেইলস-প্যানেল) — এ-ব্লক প্রতিটিতে
+   overscroll-behavior-y:contain (এক প্যানেলের স্ক্রল শেষে উইন্ডো/পাশের
+   প্যানেলে চেইন-স্ক্রল শূন্য) + hover-reveal ফ্লুইড FB-ঘরানার স্ক্রলবার দেয়।
+   ইচ্ছাকৃত-ব্যতিক্রম: .chat-body-তে scroll-behavior:smooth দেওয়া হয়নি —
+   নতুন-বার্তা অটোস্ক্রল (messenger-actions.js: chatBody.scrollTop =
+   chatBody.scrollHeight) অ্যানিমেট-বিলম্ব-মুক্ত থাকুক; বাকি দুটিতে smooth।
+   স্ক্রলবার-টোকেন: var(--lf-ui-border-strong)/var(--lf-gray-mid) — হেক্স-শূন্য। */
+.page-wrap--messenger #convListDefault,
+.page-wrap--messenger .chat-body,
+.page-wrap--messenger .messenger-details{
+  overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:transparent transparent;
+  transition:scrollbar-color .25s ease}
+.page-wrap--messenger #convListDefault,
+.page-wrap--messenger .messenger-details{scroll-behavior:smooth}
+.page-wrap--messenger #convListDefault:hover,
+.page-wrap--messenger .chat-body:hover,
+.page-wrap--messenger .messenger-details:hover{scrollbar-color:var(--lf-ui-border-strong) transparent}
+.page-wrap--messenger #convListDefault::-webkit-scrollbar,
+.page-wrap--messenger .chat-body::-webkit-scrollbar,
+.page-wrap--messenger .messenger-details::-webkit-scrollbar{width:6px}
+.page-wrap--messenger #convListDefault::-webkit-scrollbar-track,
+.page-wrap--messenger .chat-body::-webkit-scrollbar-track,
+.page-wrap--messenger .messenger-details::-webkit-scrollbar-track{background:transparent}
+.page-wrap--messenger #convListDefault::-webkit-scrollbar-thumb,
+.page-wrap--messenger .chat-body::-webkit-scrollbar-thumb,
+.page-wrap--messenger .messenger-details::-webkit-scrollbar-thumb{background-color:transparent;border-radius:8px}
+.page-wrap--messenger #convListDefault:hover::-webkit-scrollbar-thumb,
+.page-wrap--messenger .chat-body:hover::-webkit-scrollbar-thumb,
+.page-wrap--messenger .messenger-details:hover::-webkit-scrollbar-thumb{background-color:var(--lf-ui-border-strong)}
+.page-wrap--messenger #convListDefault::-webkit-scrollbar-thumb:hover,
+.page-wrap--messenger .chat-body::-webkit-scrollbar-thumb:hover,
+.page-wrap--messenger .messenger-details::-webkit-scrollbar-thumb:hover{background-color:var(--lf-gray-mid)}
+@media (prefers-reduced-motion:reduce){
+  .page-wrap--messenger #convListDefault,
+  .page-wrap--messenger .messenger-details{scroll-behavior:auto}
+}
+/* EOF-MARKER: session153-messenger-independent-scroll */

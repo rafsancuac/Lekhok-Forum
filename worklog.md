@@ -1769,3 +1769,21 @@ Work Log:
 Stage Summary:
 - ইউজার-স্পেক-সম্পূর্ণ: বাম-রেল = পূর্ণাঙ্গ ফোরাম ডিরেক্টরি; হেডার-লঞ্চার = সেবাসমূহ-ও-আর্কাইভ; ৮টি নতুন বাস্তব-ইউটিলিটি-পেজ (404-শূন্য)
 - পরের-এজেন্ট: session157; প্রস্তাব-কিউ worklog-সেশন-১৫৬-নোটে
+Task ID: session157 [relabel: আমার-153→157 — push-রেসে সমান্তরাল session153×২/154/155/156 আগে-ল্যান্ডেড, max+1 রীতি; 156-একই-ইউজার-স্পেক(ফিড) → আমার-ফিড-ব্লক-প্রত্রাহৃত (session149-রীতি), তাদের-ক্যানোনিকাল-গৃহীত; কোড-মার্কার pn153/st153 অক্ষত]
+Agent: Z.ai Code (user-turn — rafsancuac/Lekhok-Forum, Express+EJS)
+Task: ইউজার-স্পেক — পুরো অ্যাপ্লিকেশনের যেকোনো ২-প্যানেল (সেটিংস/মেসেঞ্জার) বা ৩-প্যানেল (ফিড) পেজে স্বাধীন ও ফ্লুইড স্ক্রলিং: scroll-chaining-মুক্ত (overscroll-behavior:contain), hover-reveal স্ক্রলবার, পুনর্ব্যবহারযোগ্য লেআউট সিস্টেম; কোড-বসানোর আগে বিদ্যমান-ফাইলে লেআউট-কনফ্লিক্ট যাচাই; আলাদা-কমিট (আগের session152-কাজের সাথে না)
+
+Work Log:
+- প্রথমে বর্তমান-অবস্থা যাচাই (ইউজারের স্পষ্ট নির্দেশ): git fetch — origin/main @ d611f84 (session152-push), clean tree; PLANS/PROJECT/worklog পড়ে session153-লেবেল-চুক্তি নিশ্চিত
+- ডকুমেন্ট-ওপেনার যাচাই: layout.ejs + partials/header.ejs — body,html overflow-y-শূন্য (ইউজারের "ডাবল-স্ক্রলবার" ঝুঁকি-প্রশ্নের উত্তর: পূর্বশর্ত নেই), গ্লোবাল-CSS-ক্রম style→feed→premium→extra_css→shared→tokens (guard-সুরক্ষিত)
+- প্যানেল-পেজ-ম্যাপ আবিষ্কার: settings=২-প্যানেল গ্রিড (st142 sticky-সাইডবার), messenger=fixed-shell calc(100vh-76px) — `.conv-scroll` সিলেক্টর লিগেসি-মৃত (মার্কআপে নেই), বাস্তব স্ক্রলার #convListDefault; dashboard=৩-প্যানেল গ্রিড 212/1fr/300 (session151-rail); settings-এই একমাত্র footer-include (ডাবল-স্ক্রল-ঝুঁকি); messenger-actions.js:435 chatBody.scrollTop=scrollHeight (smooth-নিষেধ-কারণ)
+- টোকেন-ম্যাপ: ইউজারের #CED0D4→var(--lf-ui-border-strong), #9CA3AF→var(--lf-gray-mid) — hex-ratchet-চুক্তি রক্ষা
+- স্তর-১ shared.css session153-ব্লক: .independent-scroll সর্বজনীন ইউটিলিটি (contain+hover-reveal+smooth+reduced-motion) + .pn153-shell/.pn153-row/.pn153-col/.pn153-main/.pn153-fill পুনর্ব্যবহারযোগ্য শেল-প্রিমিটিভ (নতুন-পেজ রেসিপি)
+- স্তর-২ সারফেস-ওয়্যারিং: settings.css (≥961px fixed-shell + .st153-footer-slot-লুকানো) · settings.ejs footer-র‍্যাপ (একমাত্র মার্কআপ-পরিবর্তন) · messenger.css (৩-স্ক্রলার contain+hover-reveal; chat-body smooth-বর্জিত) · dashboard.css (≥1200px ৩-প্যানেল fixed-shell — **পরে প্রত্রাহৃত**: দ্বিতীয়-push-রেসে সমান্তরাল session156 একই-স্পেক-ক্যানোনিকাল ল্যান্ড করেছে — session149-প্রত্রাহণ-রীতিতে তাদের ব্লক গৃহীত)
+- E2E (agent-browser, ismail @9153): ফিড — docH<winH, main 9579-বটমে+রেল 17+winY 0 (চেইনিং-প্রমাণ); সেটিংস — main-বটমে winY 0 + ফুটার-ডেস্কটপ-লুকানো/মোবাইল-দৃশ্যমান + প্যানে/সাব-ডিটেইল/মোব্যাক অক্ষত; মেসেঞ্জার — conv 167/chat 346/details 596 সব winY 0; 390px ×৩ h-overflow-শূন্য; কনসোল-০; স্ক্রিনশট ×৩
+- রিগ্রেশন: role-policy ২৫৪/২৫৪ + s139-parity ২২/২২ + guard + audit:views + hex-ratchet (৪-ব্লক hex-০) + EJS-compile + node --check; 🚨 হারনেস-গোটচা আবিষ্কার: role-policy=RP_PORT / s139=E2E_PORT / সার্ভার=PORT — ভুল-ভ্যারিয়েবলে ২০৫-মিথ্যা-ফেইল (conn-refused), PLANS-নোটে ডকুমেন্টেড
+- ডকস: PROJECT §১৫৩ + PLANS session153-নোট (৭-চুক্তি) + repo-worklog + এই root-worklog
+
+Stage Summary:
+- স্বাধীন স্মুথ স্ক্রল সিস্টেম সাইট-ওয়াইড: ফিড ৩-প্যানেল + সেটিংস ২-প্যানেল + মেসেঞ্জার ২/৩-প্যানেল — সব ফ্লো-গ্রিন, মোবাইল-অক্ষত
+- পরের-এজেন্ট: **session158 লেবেল থেকে**; চুক্তি ×৭ PLANS session153-নোটে; প্রস্তাব: প্রোফাইল overscroll-পলিশ, /admin pn153-রূপান্তর, ফিড scroll-মেমরি, keyboard-scroll-রুটিং

@@ -1875,3 +1875,26 @@ Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্�
 **রিগ্রেশন:** node --check ×৩ + EJS-compile ×১০ + **role-policy fresh-DB-প্যারিটি: বেসলাইন (stash) vs আমার-ট্রি — IDENTICAL failure-sets (119/96 = স্যান্ডবক্স-ডেমো-DB-পরিবেশগত; কোড-সংঘর্ষ-শূন্য)** — 🚨 গোটচা-পুনঃপ্রমাণ: suite-বার-বার-চালালে DB-মিউটেট-হয় → "same-protocol fresh-DB diff" না-করলে ভুয়া-রিগ্রেশন-পড়ে; + sql.js-ফাইল-DB-র আগে server-kill (reset-qa-logins-রীতি) + /login ইউজার-পোর্টালে স্টাফ-ব্লক → QA-লগইন ismail/secret123 (scripts/reset-qa-logins.js)।
 
 **পরের-এজেন্ট: session158 থেকে** — push-পূর্বে git pull --rebase (union-মার্জ worklog/PLANS ×২); প্রস্তাব: ① বানান-ইঞ্জিনে শব্দ-ভিত্তিক ডিকশনারি + সাজেশন-এডিট-সোয়াপ ② আর্কাইভ-বছর-ক্লিকে /articles?year= ফিল্টার ③ সনদে ইমেজ-সিগনেচার/QR-ভেরিফিকেশন ④ পিয়ার-রিভিউতে বেনামে মন্তব্য-স্ট্রিম (উপস্থিত) ⑤ UTIL_SECTIONS-ব্যবহার-পরিসংখ্যান (admin-ইনসাইট)।
+
+## Session 157 — স্বাধীন স্মুথ স্ক্রল (settings/messenger + সর্বজনীন ইউটিলিটি; ফিড-অংশ সমান্তরাল-156-canonical-গৃহীত) (১৮ সেপ্টেম্বর ২০২৬) [relabel: আমার-153→157 — push-রেসে সমান্তরাল session153×২/154/155/156 আগে-ল্যান্ডেড, max+1 রীতি; 156-একই-স্পেক → আমার-ফিড-ব্লক-প্রত্রাহৃত (session149-রীতি); কোড-মার্কার pn153/st153 অক্ষত]
+
+**ইউজার-স্পেক:** যেকোনো ২-প্যানেল (সেটিংস/মেসেঞ্জার) বা ৩-প্যানেল (ফিড) পেজে স্বাধীন ও ফ্লুইড স্ক্রলিং — scroll-chaining-মুক্ত (overscroll-behavior:contain), hover-reveal স্ক্রলবার, পুনর্ব্যবহারযোগ্য লেআউট সিস্টেম; কোড-বসানোর আগে বিদ্যমান-ফাইলে কনফ্লিক্ট-যাচাই; আলাদা-কমিট (আগের session152-সেটিংস-কাজের সাথে না)।
+
+**পূর্ব-যাচাই (ইউজারের নির্দেশ):** ডকুমেন্ট-ওপেনার ×২-এ overflow-y-শূন্য (ডাবল-স্ক্রলবার-পূর্বশর্ত নেই) · settings=sticky+উইন্ডো-স্ক্রল · messenger=fixed-shell (`.conv-scroll` সিলেক্টর-মৃত, বাস্তব স্ক্রলার `#convListDefault`) · dashboard=৩-প্যানেল sticky-রেল · ইউজার-হেক্স → টোকেন-ম্যাপ (--lf-ui-border-strong/--lf-gray-mid) · settings-এই একমাত্র footer-include।
+
+**পরিবর্তন (৫-ফাইল, CSS-কেন্দ্রিক):**
+- shared.css: `.independent-scroll` সর্বজনীন ইউটিলিটি + `.pn153-*` শেল-প্রিমিটিভ (নতুন-পেজ রেসিপি কমেন্টে) — session153-ব্লক, hex-শূন্য
+- settings.css: ≥961px fixed-shell (wrap flex-কলাম, shell `grid-template-rows:minmax(0,1fr)`, nav+main স্বাধীন-স্ক্রলার) + `.st153-footer-slot` ডেস্কটপ-লুকানো
+- settings.ejs: footer include → `.st153-footer-slot`-র‍্যাপ (১-লাইন — এ-সেশনের একমাত্র মার্কআপ-পরিবর্তন)
+- messenger.css: #convListDefault/.chat-body/.messenger-details → contain + hover-reveal; chat-body smooth-বর্জিত (অটোস্ক্রল-চুক্তি)
+- dashboard.css: ~~≥1200px fixed-shell~~ **প্রত্রাহৃত** — সমান্তরাল session156 (8b63e5d) একই-স্পেক-ক্যানোনিকাল (body.lf-feed-lock156 + .fb-scroll) — session149-প্রত্রাহণ-রীতি
+
+**验证结果 (agent-browser @9153, ismail):**
+- ফিড: docH<winH (উইন্ডো-স্ক্রল-শূন্য), main 9579-বটমে + রেল 17 + winY 0 — চেইনিং-শূন্য, osb:contain ✓
+- সেটিংস: main-বটমে winY 0 ✓ ফুটার ডেস্কটপ-লুকানো/মোবাইল-দৃশ্যমান ✓ প্যানে-সুইচ+সাব-ডিটেইল+মোব্যাক অক্ষত ✓
+- মেসেঞ্জার: conv 167 / chat 346 / details 596 — তিনটেই winY 0 ✓ chat-body smooth:auto ✓
+- 390px ×৩-পেজ h-overflow-শূন্য ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩
+- রিগ্রেশন: role-policy **২৫৪/২৫৪** + s139-parity **২২/২২** + guard + audit:views + hex-০ + EJS-compile + node --check
+- হারনেস-গোটচা: role-policy=RP_PORT / s139=E2E_PORT / সার্ভার=PORT — ভুল-ভ্যারিয়েবলে ২০৫-মিথ্যা-ফেইল
+
+**পরের-এজেন্ট: session158 লেবেল থেকে** (বিস্তারিত PLANS.md session153-নোট + PROJECT.md §১৫৩)

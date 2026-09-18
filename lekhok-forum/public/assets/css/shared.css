@@ -718,3 +718,46 @@
   .notif-dropdown .notif-item,.nf-dots148{transition:none}
 }
 /* EOF-MARKER: session148-notif-dropdown-premium */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session153 — স্বাধীন স্মুথ স্ক্রল সিস্টেম (Independent Smooth Scroll System)
+   ──────────────────────────────────────────────────────────────────────────
+   ইউজার-স্পেক: যেকোনো ২-প্যানেল (সেটিংস/মেসেঞ্জার) বা ৩-প্যানেল (ফিড) পেজে
+   প্যানেল-স্বাধীন, স্ক্রল-চেইনিং-মুক্ত, ফ্লুইড স্ক্রলিং — "স্ক্রলিং স্মুথ হোক
+   সব জায়গায়"। দুই-স্তর স্থাপত্য:
+     স্তর-১ (এই ব্লক): সর্বজনীন ইউটিলিটি + পুনর্ব্যবহারযোগ্য শেল-প্রিমিটিভ
+     স্তর-২: সারফেস-ওয়্যারিং — settings.css / messenger.css / dashboard.css-এর
+             session153-ব্লক (fixed-shell + hover-reveal স্ক্রলবার)
+   রুল: শুধুমাত্র var(--lf-*) টোকেন — হেক্স-শূন্য (র্যাচেট-চুক্তি)।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── স্তর-১ক: .independent-scroll — স্ক্রল-চেইনিং-মুক্ত স্বাধীন স্ক্রলার ──
+   • overscroll-behavior-y:contain → এক প্যানেলের স্ক্রল শেষ হলে উইন্ডো বা
+     পাশের প্যানেল কাঁপতে কাঁপতে স্ক্রল হবে না (Scroll Chaining বন্ধ)
+   • hover-reveal স্ক্রলবার: মাউস-হোভারেই ফ্লুইড FB-ঘরানার বার ভেসে ওঠে
+   • মার্কআপে ক্লাস বসালেই যেকোনো কনটেইনার স্বাধীন-স্ক্রলার (নতুন-পেজ রেসিপি) */
+.independent-scroll{overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:transparent transparent;transition:scrollbar-color .25s ease}
+.independent-scroll:hover{scrollbar-color:var(--lf-ui-border-strong) transparent}
+.independent-scroll::-webkit-scrollbar{width:6px}
+.independent-scroll::-webkit-scrollbar-track{background:transparent}
+.independent-scroll::-webkit-scrollbar-thumb{background-color:transparent;border-radius:8px}
+.independent-scroll:hover::-webkit-scrollbar-thumb{background-color:var(--lf-ui-border-strong)}
+.independent-scroll::-webkit-scrollbar-thumb:hover{background-color:var(--lf-gray-mid)}
+@media (prefers-reduced-motion:reduce){.independent-scroll{scroll-behavior:auto}}
+
+/* ── স্তর-১খ: পুনর্ব্যবহারযোগ্য মাল্টি-প্যানেল শেল-প্রিমিটিভ (TwoPanel/ThreePanel) ──
+   নতুন-পেজ রেসিপি (মার্কআপ-চুক্তি):
+     <div class="pn153-shell pn153-row">
+       <aside class="pn153-col independent-scroll">…বাম প্যানেল…</aside>
+       <main class="pn153-main independent-scroll">…ডান/কেন্দ্র…</main>
+     </div>
+   ৩-প্যানেল: pn153-row-এর ভেতরে আরেকটি pn153-col। টপবার-অফসেট বদলাতে
+   --pn153-top ওভাররাইড (ডিফল্ট ৭৬px — messenger-shell-এর প্রতিষ্ঠিত ধ্রুবক)।
+   ≤767px-এ শেল ডকুমেন্ট-ফ্লোতে ফেরে (মোবাইলে ফিক্সড-হাইট অস্বস্তিকর)। */
+.pn153-shell{--pn153-top:76px;height:calc(100vh - var(--pn153-top));min-height:0;overflow:hidden}
+.pn153-row{display:flex;align-items:stretch;min-height:0}
+.pn153-col{min-height:0;min-width:0;display:flex;flex-direction:column}
+.pn153-main{flex:1 1 auto;min-width:0;min-height:0}
+.pn153-fill{flex:1 1 auto;min-height:0}
+@media (max-width:767px){.pn153-shell{height:auto;min-height:calc(100vh - var(--pn153-top));overflow:visible}}
+/* EOF-MARKER: session153-independent-scroll */

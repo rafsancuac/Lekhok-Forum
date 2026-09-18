@@ -59,7 +59,7 @@
 @media print{
   .utl-hero,.utl-card,.site-header,.topbar,header,.mobile-sidebar,.utl-no-print{display:none!important}
   .utl-cert{border-width:3px;box-shadow:none}
-  body{background:#fff}
+  body{background:var(--lf-white)}
 }
 
 /* ── DMCA ফর্ম ── */
