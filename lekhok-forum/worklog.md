@@ -1551,3 +1551,25 @@ Task: অবস্থা-যাচাই + agent-browser QA → বাগফি�
 - গোটচা ×৫ PLANS session139-নোটে (grep-উইন্ডো-ঝুলুন / awk-RS / CSRF-পেজ-স্কোপড / grid-1fr / proof-mode-গেট)
 - audit-র .env-ফেইল = sandbox-artifact (untracked+gitignored — রিপো-ঝুঁকি-শূন্য)
 - **পরের-এজেন্ট: session142 লেবেল থেকে** (আমার-এন্ট্রি-রিলেবেল 139→141 দেখুন)
+
+---
+
+## Session 142 — og-স্টাইল লিংক-প্রিভিউ কার্ড + খালি-URL অটো-লিংক (cron-QA রাউন্ড; push da945f0)
+
+### Current project status description / assessment
+- প্রবেশে বেসলাইন-QA সব-সবুজ: ৮-পেজ 200, dupFixed-অক্ষত, প্যালেট-৭-ইমোজি, পারমালিঙ্ক-attr, 390px ×৭-০, কনসোল-০ → ফেজ-স্টেবল → ফিচার-রাউন্ড।
+- session135-ব্যাকলগ ① (reply-anchor-লিঙ্ক-প্রিভিউ-কার্ড og-style) নির্বাচিত + session138-① (profile accepted_flag)।
+- push-চক্রে সমান্তরাল session139/140/141 আগে-ল্যান্ডড — লেবেল 142-তে রিলেবেল (max+1 রীতি)।
+
+### Completed modifications / verification results
+- **(১) GET /api/link-preview** — ৪-কেস আনফার্ল (comment-anchor/article/qa/resource), হোয়াইটলিস্ট+400/404+ক্যাশ (৫মি/৩০০), গেস্ট-ও; বাংলা-অঙ্ক-মেটা।
+- **(২) খালি-URL অটো-লিংক** — markdown-lite inlineMd দুই-পাস-স্প্লিট (URL-অ্যাঙ্কর আগে, ম্যানশন/#ট্যাগ পরে) + optMd মিরর; ট্রেলিং-পাংচুয়েশন-স্ট্রিপ।
+- **(৩) og-কার্ড-ইঞ্জিন** — MutationObserver-চালিত (সব-পেইন্ট-পাথ অটো-কভার), data-lpv গার্ড, LPV_CACHE, শিমার→কার্ড, per-body-ইউনিক; 🚨 স্থায়ী-শিমার-বাগ-ফিক্স (`:not(.lf-og-loading)`); সম্পাদনা-সেভ data-lpv-রিসেট ×২-পাথ।
+- **(৪) shared.css session142-ব্লক** (টোকেন-শুধু)।
+- **প্রত্যাহার:** profile-ট্যাব-ত্রয়ী আমার-সংস্করণ → সমান্তরাল session139-ক্যানোনিকালে (৯ম-ইউনিয়ন-প্রমাণ)।
+- **যাচাই:** E2E (লোড-পাথ/সাবমিট-পাথ/পারমালিঙ্ক-কমেন্ট-কার্ড/per-body-ইউনিক/স্ক্রিনশট ×২) + API ×৭ + ইউনিট ×৫ + role-policy **212/212** + cursor 25/25 + guard + audit + 390px ×১০-০ + কনসোল-০ + ক্লিনআপ (probe ×৫ + accept-রিভার্ট)।
+
+### Unresolved issues / risks, priority recommendations for next phase
+- **ঝুঁকি:** og-ইঞ্জিন কেবল অভ্যন্তরীণ-লিংক (এক্সটার্নাল = extension point — SSRF-গার্ড url-fetch.js-প্যাটার্ন); AV-ক্যাশ-গোটচা আবারও ৩-বার প্রমাণিত — স্ট্যাটিক-এডিট→রিস্টার্ট-রীতি অবিচ্ছিন্ন।
+- **পরবর্তী-প্রায়োরিটি:** ① পোস্ট-বডিতে og-কার্ড ② এক্সটার্নাল domain-chip কার্ড ③ og-কার্ডে reactors-count ④ dropdown-paintList reltime-রি-পেইন্ট।
+- **পরের-এজেন্ট: session143 লেবেল থেকে।**
