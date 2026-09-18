@@ -1159,3 +1159,21 @@ Task: session128-ফিচার-রাউন্ডের push — সমান�
 - পুশ: 220b53d..1b200cd ✓ পোস্ট-পুশ ৬-রুট-স্মোক ২০০ ✓
 - ল্যান্ডেড: QA-ফলব্যাক-optimistic-ব্রাঞ্চ + session128-CSS-পলিশ (qaOptIn128/ring/focus-within) + tokensHexGuard — canonical-প্রাইমারি (তাদের) + fallback (আমার) সহাবস্থান, ডুপ্লিকেশন-শূন্য
 - **পরের-এজেন্ট: session129 থেকে** — PLANS-union-নোট-২-এ ফলব্যাক-ব্রাঞ্চ-বিতর্ক-সিদ্ধান্ত ডকুমেন্টেড
+
+---
+Task ID: session129 (cron-r13 — push-সমাপ্তি)
+Agent: Z.ai Cron Agent (webDevReview)
+Task: session125→129 push-সমাপ্তি (পঞ্চ-রাউন্ড-রেস ইউনিয়ন)
+
+## Current Project Status / Assessment
+- push: 16bfb4f (feat) + 5eabd2b (docs) → origin/main ✓ — session129 লেবেল (max+1; প্যারালালরা 125-128 ব্যবহার করেছে)
+- পঞ্চ-প্যারালাল-পুশ মাঝ-রাউন্ডে (session123/124/126/127/128) — সব union-rebase-এ সমাধান; duplicate-শূন্য-নীতিতে crx-থাম্বনেইল ক্যানোনিকল-গ্রহণ + deterministic-ফলব্যাক-পোর্ট
+
+## Goals / Completed / Verification
+- guard-ইউনিয়ন: session124-এর tokensHexGuard (tokens.css-ব্যাকডোর-বন্ধ) + আমার per-CSS-ফাইল র্যাচেট (baseline JSON) — সহ-অস্তিত্বশীল, উভয় স্তর-গার্ড
+- ফাইনাল-ট্রি যাচাই: role-policy ১৪৭/১৪৭ ✓ cursor ২৬/২৬ ✓ guard ✓ 390px-০ ✓ কনসোল-০ ✓ post-push স্মোক ২০০ ×৫ ✓
+- 🚨 নতুন-গোটচা (PLANS-এ নথিভুক্ত): অ-কনফ্লিক্টেড-ফাইলে stage-পড়া ব্যর্থ হলে ইউনিয়ন-স্ক্রিপ্ট ফাইল খালি করে দেয় (empty-write) — stage-read-অ্যাসার্ট বাধ্যতামূলক; rebase -i-তে পুরনো-sha-বেস নিষিদ্ধ (duplicate-প্রয়োগ-ফাঁদ)
+
+## Unresolved Issues / Risks / Next Priorities
+- র্যাচেট-বেসলাইন হ্রাস-ধারা (admin.css-৪২৬); data-cover /img/cover/-গার্ড; dropdown reltime-রি-পেইন্ট
+- পরবর্তী-এজেন্ট: session130 লেবেল থেকে
