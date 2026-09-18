@@ -1302,3 +1302,14 @@ Work Log:
 Stage Summary:
 - রিপো: main @ 126cb46 (session130 — পাবলিক-পেজ কল-রিংগার পূর্ণরূপ); পরের-এজেন্ট: session131 থেকে
 - গোটচা-সংযোজন: এক-লেবেল-ত্রি-এজেন্ট-রেসও সম্ভব (129 ×৩) — push-পূর্ব re-fetch + max+1-এ-রিলেবেল ×N-সাইকেল রীতি পুনঃপ্রমাণিত
+
+---
+Task ID: 14 — Session 124 (cron-QA রাউন্ড)
+**কাজ:** QA → বেসলাইনে QA-উত্তর-পাথে optimistic-অনুপস্থিতি + `.answers-empty`-লিঙ্গার বাগ আবিষ্কৃত। ফিচার/ফিক্স চেষ্টা → push-পূর্ব rebase-এ সমান্তরাল-ক্যানোনিকাল দুটোই আবিষ্কৃত → **session125-প্রেসিডেন্সিতে দুই-ভ্যারিয়েন্ট-ই সম্পূর্ণ-প্রত্যাহৃত**:
+- QA-অপটিমিস্টিক → **session124-ক্যানোনিকাল (7ad5fb3)** `insertCanonical124` + `syncTotals124` + `/api/comment` {ok,id,html,total} — গৃহীত, E2E-পুনঃপ্রমাণ (canonical ৫০ms, no-opt-fallback, answer-N-অ্যাঙ্কর)।
+- আন-ডু-টোস্ট → **session129-ক্যানোনিকাল (16bfb4f)** `undo-toast.js lfUndoShow` + data-n + `POST /api/notifications/restore` — গৃহীত, E2E-পুনঃপ্রমাণ (dismiss→বাতিল→row-পুনঃস্থাপন itemsAfter=2)।
+
+**অনন্য-রক্ষিত (এই-রাউন্ডের স্থায়ী-ডেল্টা):**
+① swapQaThread ফিক্স ×২: `.answers-empty`-লিঙ্গার (লিস্টের-বাইরের-সিবলিং — প্রথম-AJAX-উত্তরের-পরেও 'এখনো কোনো উত্তর নেই' লেগে থাকত) + `typeof j.qaHtml==='string'` (শূন্য-উত্তরে ''-ফলসি→অযথা reload) + total===0-তে client-side empty-state (শেষ-উত্তর-ডিলিটে ফাঁকা-তালিকা নয়; reload-শূন্য) — E2E: ১→০ ✓; ② hall-provost-সুপারিশ stale-চিহ্নিত (session102/103/109-এ সম্পন্ন); ③ গোটচা ×৩: Write-টুল-বড়-ফাইল-ওভাররাইট (PLANS-ট্রাংকেট→git-checkout-রিকভার) · agent-browser 390px-টেস্টে `set viewport 390 844`-ই সঠিক · **🚨 পাইথন-ব্লক-কাটে সমান্তরাল-ক্যানোনিকাল-রুট-হারানো** (আমার undo-ব্লক-অপসারণে session129-এর restore-রুটও কেটে গিয়েছিল — restore 303→saveerr-ফলব্যাকে পড়ত; origin-checkout-এ পুনঃস্থাপিত) — **ব্লক-কাটের-আগে বাউন্ড-মধ্যে-ক্যানোনিকাল-ব্লক-গ্রেপ বাধ্যতামূলক**।
+
+**রিগ্রেশন:** role-policy ১৪৭/১৪৭ ✓ cursor ২৫/২৫ ✓ guard ✓ audit:views ✓ brace ০/০ ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ক্লিনআপ ✓। push-রেস ×৩ (129-খ→130→…) — তৃতীয়-রাউন্ডে পুশ-সম্পন্ন।
