@@ -293,7 +293,7 @@
             <%# সেশন ১৪৮: হেডার-পলিশ — 'N নতুন' পিল + 'সব পঠিত করুন' (unread>০ হলে)।
                 হেডার/চিপ/বাটন = UI-ক্রোম (font-hs); কনটেন্ট/মেনু/টাইম = কালপুরুষ (CSS-ডিকপ্লিং) %>
             <div class="notif-header nf-hdr148">
-              <span class="nf-htitle148">বিজ্ঞপ্তি<% if (unread > 0) { %> <span class="nf-newpill148" id="nfNewPill148"><%= String(unread).replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[+d]) %> নতুন</span><% } else { %><span class="nf-newpill148" id="nfNewPill148" hidden></span><% } %></span>
+              <span class="nf-htitle148">বিজ্ঞপ্তি<% if (unread > 0) { %> <span class="nf-newpill148" id="nfNewPill148"><%= toBn(unread) %> নতুন</span><% } else { %><span class="nf-newpill148" id="nfNewPill148" hidden></span><% } %></span>
               <span class="nf-hact148">
                 <button type="button" class="nf-markall148" id="nfMarkAll148" title="সবগুলো পঠিত হিসেবে চিহ্নিত করুন"<% if (!unread) { %> hidden<% } %>>সব পঠিত করুন</button>
                 <a href="/notifications" class="notif-see-all">সব দেখুন</a>
@@ -465,8 +465,9 @@
             var list148 = document.getElementById('notifList');
             var markAllBtn = document.getElementById('nfMarkAll148');
             var pill148 = document.getElementById('nfNewPill148');
-            var BN148 = '০১২৩৪৫৬৭৮৯';
-            function bn148(n) { return String(n).replace(/[0-9]/g, function (d) { return BN148[+d]; }); }
+            /* সেশন ১৪৮-রিফ্যাক্টর: session150-চুক্তি — লোকাল bn-ল্যাম্বডা নিষিদ্ধ →
+               window.toBnNumber (layout.ejs-ইনলাইন, head-এ সংজ্ঞায়িত — header-স্ক্রিপ্টের আগেই) */
+            var bn148 = (typeof window.toBnNumber === 'function') ? window.toBnNumber : function (n) { return String(n); };
 
             function badge148() {
               fetch('/api/notifications/count', { credentials: 'same-origin' })

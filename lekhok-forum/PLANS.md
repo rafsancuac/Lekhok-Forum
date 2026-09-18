@@ -2157,3 +2157,30 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **E2E-প্রমাণ:** ডেস্কটপ — msx-গ্লোবাল-ফিডে-অনুপস্থিত ✓ জন্মদিন-শূন্য-কার্ড-অনুপস্থিত ✓ প্রস্তাবিত-লেখক designation+'+ অনুসরণ' ✓ ফলো-ক্লিক→'অনুসৃত'+টোস্ট→আনফলো-রিভার্ট ✓ ট্যাগ '#সিড'+'১টি লেখা' ✓ ট্রেন্ডিং স্লিম-র‍্যাঙ্ক ০১+লেখক·এনগেজমেন্ট+৩০-দিন-চিপ ✓ লিডারবোর্ড 🥇/🥈/🥉+gold/silver/bronze-ডট+'{বাংলা} পয়েন্ট'-ব্যাজ+oldScoreStar-false ✓ এনগেজমেন্ট>0-ফিল্টারে সিড-ক্রাফট-বাদ (২-আইটেম) ✓; /me — msx148 ৫-চিপ ✓ চিপ→reactions-ট্যাব-সক্রিয় (eval: activeTab=reactions) ✓ মোট-পাঠ→insights-স্ক্রল ✓; 390px true-overflow-০ + মোবাইলে sticky-নিষ্ক্রিয় (maxHeight:none) ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩ (download/s148-*)।
 **রিগ্রেশন:** role-policy **239/239 ALL GREEN** ✓ cursor **25/25** ✓ guard:design ✓ audit:views (97-ejs-ডুপ-শূন্য) ✓ brace-০ ×২ (comment-stripped) ✓ node --check ✓ EJS-compile ×২ ✓
 **পরবর্তী-প্রথম-পছন্দ:** ① জন্মদিন-শুভেচ্ছা-বাটনে বার্তা-মোডাল (এখন profile-লিঙ্ক) ② সাইডবার-উইজেটে স্কেলেটন-শিমার (স্লো-কুয়েরি-অনুভূতি) ③ ট্রেন্ডিং-উইন্ডো ৭দিন/৩০দিন টগল-চিপ ④ rx-ব্যাজ-ক্লিকযোগ্য (session147-① অগ্রাহীত) ⑤ **পরের-এজেন্ট: session149 থেকে।**
+
+---
+
+## Session 154 — FB-স্টাইল প্রিমিয়াম নোটিফিকেশন ড্রপডাউন (ইউজার-স্পেক: অপঠিত-স্টেট + অ্যাক্টর-ব্যাজ + ৩-ডট + কালপুরুষ) (২৪ সেপ্টেম্বর ২০২৬)
+
+**প্রবেশ-অবস্থা:** ফ্রেশ-ক্লোন @ 7791d49 (session147); rebase → bd63601 (session153)। ইউজার-রিপোর্ট ৪-দুর্বলতা: ① অপঠিত/পঠিত ভিজ্যুয়াল-পার্থক্য-শূন্য ② কাঁচা-তারিখ ③ ৩-ডট-মেনু-অনুপস্থিত ④ অ্যাভাটার-ইভেন্ট-ব্যাজ-অনুপস্থিত + কালপুরুষ-ফন্ট-ডিকপ্লিং (মেনু/হেডার-ক্রোম বাদে)।
+
+**রুট-কজ (E2E-ধরা):** main.js-এর `toggleNotifs()` → `clearNotifBadge()` — ড্রপডাউন **খোলার মুহূর্তেই** সব-অপঠিত মুছে ফেলত (unread-ক্লাস-স্ট্রিপ + POST /read) — তাই অপঠিত-স্টাইলিং কখনোই দেখাতই না।
+
+**স্কোপ (৫-ফাইল):**
+1. **routes/social.js:** `POST /api/notifications/unread/:id` — read/:id-এর হুবহু-মিরর (বিপরীত-দিক); `is_read=1`-শর্ত → idempotent; user_id-গার্ড (foreign-id → changed:false)।
+2. **views/partials/header.ejs:** ① bell-এ `onclick="toggleNotifs()"` **অপসারণ** (অটো-সব-পঠিত-বাইপাস) + session148-ইঞ্জিন-স্ক্রিপ্ট (ডেলিগেটেড) ② হেডার-পলিশ: 'N নতুন'-পিল (toBn) + 'সব পঠিত করুন' (unread>০) ③ has-avatar-আইকনে `nf-b148 nf-b148-<type>` (অ্যাক্টর-ব্যাজ) ④ ✕-বাটন → ৩-ডট (fa-ellipsis-v) + পপওভার-মেনু (পঠিত↔অপঠিত-টগল + মুছুন; aria-haspopup/expanded/menu/menuitem)। ইঞ্জিন: রো-ক্লিকে unread→read (sendBeacon, নেভিগেশন-বাধা-শূন্য), data-n r-বিট-সিঙ্ক (restore-চুক্তি-সত্য), ব্যাজ-সত্য সর্বদা /count (toBn), Escape/বাইরে-ক্লিকে মেনু-বন্ধ, dismiss+lfUndoShow (session121-চুক্তি-মিরর)।
+3. **public/assets/js/live.js:** ① paintList-মিরর session148-মার্কআপে (ব্যাজ + ৩-ডট-মেনু — পেইন্টেড-রোতেও প্যারিটি) ② 🚨 **bell-wrap-ক্যাপচার-গোটচা-ফিক্স:** আগে wrap-এর ভেতরের *যেকোনো* ক্লিকে ৮০ms-পরে repaint হতো → খোলা কুইক-মেনু ধ্বংস (E2E-ধরা) — এখন কেবল `.notif-bell-btn`-ক্লিকেই রিফ্রেশ ③ refreshDropdown: মেনু-খোলা-থাকলে paint-স্কিপ (ব্যাজ-আপডেট চলবেই)।
+4. **public/assets/css/tokens.css:** `--lf-blue-soft:#e7f1ff` + `--lf-blue-soft-2:#daeafe` (blue-200-এর সাদা-মিশ্রিত ৩৮%/৫৮% প্রি-মিক্স — 🚨 headless/পুরনো-Chromium color-mix-অসমর্থিত, computed-transparent-গোটচা)।
+5. **public/assets/css/shared.css session148-ব্লক (EOF-MARKER: session148-notif-dropdown-premium):** অপঠিত-নীল-টিন্ট (স্পেসিফিসিটি-গোটচা: session117-এর `#notifList`-গ্রেডিয়েন্ট (1,2,0) হারাতে `.notif-dropdown #notifList .notif-item.unread` (1,3,0)), নীল-ডট/টাইম/বডি-গাঢ়, অ্যাক্টর-ব্যাজ-ডিস্ক (type-রঙ: message/comment/reply=blue, like/react/reaction=danger, follow=brand, mention=violet, notice/complaint=amber, answer/answer_accepted=cyan, call=danger-deep, share=emerald; white-ring), ৩-ডট (hover/focus-within-প্রকাশ, hover:none-এ সর্বদা), পপওভার (.nf-menu148[hidden] display:none), ফন্ট-ডিকপ্লিং (কনটেন্ট/মেনু/টাইম=--font-kp কালপুরুষ; হেডার/চিপ/বাটন=--font-hs Hind Siliguri); 480px + reduced-motion। **টোকেন-শুধু হেক্স-শূন্য।**
+
+**চুক্তি-নোট (পরের-এজেন্টের জন্য):**
+1. **nf148-চুক্তি:** নতুন notif-টাইপ যোগ হলে ① main.js/header.ejs-এর `_ico`-ম্যাপ + ② shared.css-এর `.nf-b148-<type>`-রঙ + ③ live.js ICONS — তিন-জায়গায় সমলয়।
+2. **data-n r-বিট:** rowUnread148 সর্বদা data-n.r সিঙ্ক রাখে — restore-পেলোড-সত্যের উৎস; রো-ক্লাস হাতে-বদলালে r-বিটও বদলান।
+3. **অপঠিত-স্টেট-দর্শন:** ড্রপডাউন-খোলা = আর সব-পঠিত নয় (FB-প্যাটার্ন) — পঠিত হয় রো-ক্লিকে (sendBeacon read/:id), ৩-ডট-টগলে (read/:id + unread/:id), বা 'সব পঠিত করুন'-এ (POST /read)। badge/pill/markall-ভিজিবিলিটি সর্বদা /count-সত্য।
+4. **paintList-মিরর-রীতি (session125-এর ধারাবাহিকতা):** header.ejs-ক্যানোনিকাল-শেল বদলালে live.js paintList-ও হুবহু মিরর করুন — নইলে প্রথম-রিফ্রেশেই মার্কআপ-ড্রিফট (১২৫-এর stale-repaint-বাগ-পরিবার)।
+5. **স্পেসিফিসিটি-গোটচা:** #notifList-স্কোপড পুরনো নিয়ম (1,2,0) ওভাররাইডে ID-সহ-সিলেক্টর (1,3,0) লাগে — শুধু-ক্লাস-সিলেক্টর নীরবে হারায়।
+6. **color-mix-নিষিদ্ধ (headless-QA-নিরাপদ):** নতুন টিন্ট tokens.css-এ প্রি-মিক্সড-টোকেন হিসেবে (session143-প্যাটার্ন)।
+
+**E2E-প্রমাণ:** curl — login→count 3 ✓ unread/:id (changed:true, count 4) ✓ read/:id ফেরত ✓ foreign-id changed:false ✓ restore ✓; ব্রাউজার — bell-openে **অপঠিত-স্টেট-সংরক্ষিত** (৩-টিন্ট-রো+ডট, #E7F1FF) ✓ অ্যাক্টর-ব্যাজ (msg-blue/heart-red/follow-green) ✓ রিলেটিভ-বাংলা-টাইম ✓ কালপুরুষ-কনটেন্ট+HindSiliguri-ক্রোম ✓ ৩-ডট-মেনু খোলা-থাকে (live.js-ফিক্স-পরে) ✓ টগল read↔unread (ব্যাজ ৩→৪→৩, লেবেল-সোয়াপ, data-n.r-সিঙ্ক) ✓ 'সব পঠিত করুন' (ব্যাজ-নিঃশেষ, pill/markall-hidden, টোস্ট) ✓ ডিলিট→আন্ডু-টোস্ট→রো-টপে-ফিরেছে (DB-প্রমাণ [1,3,4,5]) ✓ 390px-overflow-০ + hover:none-এ ডট-সর্বদা-দৃশ্যমান ✓ কনসোল-০/পেজ-এরর-০ ✓ স্ক্রিনশট ×৮ (scripts/s148-*, s154-final-menu.png)।
+**রিগ্রেশন:** role-policy মার্জড-ট্রি ডেল্টা **236/18** বনাম HEAD-বেসলাইন **235/19** (একই-ফ্রেশ-DB — ডেল্টা=**+১-পাস, শূন্য-নতুন-ফেইল**; ফ্রেশ-DB-র state-নির্ভর-বেসলাইন-ফেইলগুলো HEAD-এও-সমান) ✓ guard ✓ node --check ×২ ✓ EJS-compile ✓
+**পরবর্তী-প্রথম-পছন্দ:** ① ফুল-পেজ /notifications-এও ৩-ডট+অ্যাক্টর-ব্যাজ-প্যারিটি ② ব্যাজ-ক্লিকে টাইপ-ফিল্টার (nq-chip-সিনার্জি) ③ 'N নতুন'-পিলে ক্লিক=শুধু-অপঠিত-দেখুন ④ গ্রুপড-ডেট-হেডার ('আজ', 'গতকাল') ⑤ **পরের-এজেন্ট: session155 থেকে।**
