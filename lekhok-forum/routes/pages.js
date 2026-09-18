@@ -489,6 +489,25 @@ router.get('/resources', async (req, res) => {
   });
   const u = req.session && req.session.user;
   const isStaff = !!(u && (u.role === 'admin' || u.role === 'moderator' || u.role === 'superadmin'));
+  /* সেশন ১৩৪: সিরিজ-হিরো — সক্রিয় ?series= হলে হিরো-ব্যানারের মেটা (কভার/পর্ব-সংখ্যা/
+     অডিও-সংখ্যা/মোট-পাঠ+ডাউনলোড)। seriesList-এর কভার-সাবকোয়েরি পুনঃব্যবহার + এক-aggregate। */
+  let activeSeriesMeta = null;
+  if (initialSeries) {
+    const sm134 = seriesList.find(s => s.series === initialSeries);
+    if (sm134) {
+      const agg = await db.prepare(
+        `SELECT SUM(CASE WHEN res_type='audio' THEN 1 ELSE 0 END) AS audioN,
+                SUM(COALESCE(views,0)) AS views, SUM(COALESCE(downloads,0)) AS dls
+           FROM resources WHERE TRIM(COALESCE(series,'')) = ?`
+      ).get(initialSeries);
+      activeSeriesMeta = {
+        series: sm134.series, n: sm134.n, cover: sm134.cover,
+        audioN: (agg && agg.audioN) || 0,
+        views: (agg && agg.views) || 0,
+        downloads: (agg && agg.dls) || 0
+      };
+    }
+  }
   res.render('lekhok-resources', {
     layout: 'layout',
     pageTitle: 'রিসোর্স',
@@ -500,7 +519,7 @@ router.get('/resources', async (req, res) => {
     RES_TYPE_META: RT,
     videoEmbedUrl: RT.videoEmbedUrl,
     initialType, initialSort, initialQ,
-    initialSeries, seriesList, seriesMap
+    initialSeries, seriesList, seriesMap, activeSeriesMeta
   });
 });
 

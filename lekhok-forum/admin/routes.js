@@ -1033,7 +1033,7 @@ router.post('/resources/bulk', requireAdmin, express.json({ limit: '1mb' }), asy
     return res.status(403).json({ ok: false, error: 'নিরাপত্তা যাচাই পুরনো হয়ে গিয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।' });
   }
   const out = await resourceBulk116.bulkImport(String((req.body || {}).csv || ''), (req.session.user && req.session.user.username) || 'admin', db);
-  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, total: out.total, fetched: out.fetched, errors: out.errors });
+  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, dupes: out.dupes || 0, total: out.total, fetched: out.fetched, errors: out.errors });
 });
 
 router.get('/resources/:id/edit', requireAdmin, async (req, res) => {

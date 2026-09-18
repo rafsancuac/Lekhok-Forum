@@ -175,21 +175,37 @@ function normalizeRow(obj, seriesAutoOrder) {
   };
 }
 
-/* মূল ইমপোর্ট — ফেরত {total, inserted, skipped, fetched, errors[]} */
+/* মূল ইমপোর্ট — ফেরত {total, inserted, skipped, dupes, fetched, errors[]} */
+/* সেশন ১৩৪: ডুপ-কী — title+series+file_url+link_url (trim+lowercase নরমালাইজড)।
+ * ক্রস-রিকোয়েস্ট ডুপ-গার্ডের চুক্তি: একই CSV দ্বিতীয়বার দিলে নতুন রো তৈরি হয় না। */
+function dupKey134(t, series, fu, lu) {
+  return [String(t || '').trim().toLowerCase(), String(series || '').trim().toLowerCase(),
+          String(fu || '').trim().toLowerCase(), String(lu || '').trim().toLowerCase()].join('\u0000');
+}
+
 async function bulkImport(csvText, createdBy, db) {
   const rows = parseCsv(csvText);
-  if (!rows.length) return { total: 0, inserted: 0, skipped: 0, errors: [{ line: 1, error: 'CSV খালি' }] };
+  if (!rows.length) return { total: 0, inserted: 0, skipped: 0, dupes: 0, errors: [{ line: 1, error: 'CSV খালি' }] };
   const map = headerMap(rows[0]);
-  if (map.title == null) return { total: 0, inserted: 0, skipped: 0, errors: [{ line: 1, error: 'হেডার-রোতে "title" (বা "শিরোনাম") কলাম নেই' }] };
+  if (map.title == null) return { total: 0, inserted: 0, skipped: 0, dupes: 0, errors: [{ line: 1, error: 'হেডার-রোতে "title" (বা "শিরোনাম") কলাম নেই' }] };
 
   const dataRows = rows.slice(1).filter(cells => cells.some(c => String(c || '').trim() !== ''));
   if (dataRows.length > MAX_ROWS) dataRows.length = MAX_ROWS;
 
   const seriesAutoOrder = {}; // ব্যাচ-লোকাল অটো-ক্রম
   const seen = new Set();     // ব্যাচ-ডুপ্লিকেট (title+file_url)
-  let inserted = 0, skipped = 0, fetched = 0, fetchTries = 0;
+  let inserted = 0, skipped = 0, dupes = 0, fetched = 0, fetchTries = 0;
   const errors = [];
   const urlFetch129 = require('./url-fetch'); // ধীর-লোড — ইউনিট-টেস্টে স্টাব-বান্ধব
+  /* সেশন ১৩৪: ক্রস-রিকোয়েস্ট ডুপ-গার্ড — ডাটাবেসে আগে-থেকে-থাকা সব রো-র ডুপ-কী প্রিলোড;
+   * একই CSV দ্বিতীয়বার ইমপোর্টে dupes কাউন্টারে জানিয়ে স্কিপ (ডুপ্লিকেট-রো তৈরি নয়)।
+   * গার্ড-কোয়েরি ব্যর্থ হলে ইমপোর্ট-বাধা নয় (open-fail-safe — পুরনো আচরণেই চলবে)। */
+  const dbSeen134 = new Set();
+  try {
+    (await db.prepare('SELECT title, series, file_url, link_url FROM resources').all()).forEach(function (x) {
+      dbSeen134.add(dupKey134(x.title, x.series, x.file_url, x.link_url));
+    });
+  } catch (e134) { /* নীরব — গার্ড-ছাড়া চলবে */ }
 
   for (let i = 0; i < dataRows.length; i++) {
     const lineNo = i + 2; // হেডার-পরের লাইন-নম্বর
@@ -203,8 +219,9 @@ async function bulkImport(csvText, createdBy, db) {
       continue;
     }
     const r = res.r;
-    const key = (r.title + '\u0000' + (r.file_url || '') + '\u0000' + (r.link_url || '')).toLowerCase();
+    const key = dupKey134(r.title, r.series, r.file_url, r.link_url);
     if (seen.has(key)) { skipped++; continue; }
+    if (dbSeen134.has(key)) { dupes++; continue; } // সেশন ১৩৪: ডাটাবেসে আগেই আছে
     seen.add(key);
     if (r.series && r.series_order == null) {
       seriesAutoOrder[r.series] = (seriesAutoOrder[r.series] || 0) + 1;
@@ -235,12 +252,13 @@ async function bulkImport(csvText, createdBy, db) {
         r.file_url, r.link_url, r.res_type, r.res_type, r.file_size, r.duration,
         createdBy || null, r.thumbnail_url, r.series, r.series_order
       );
+      dbSeen134.add(key); // সেশন ১৩৪: এই-ব্যাচে ঢোকানো কী-ও গার্ডে যোগ (একই-রিকোয়েস্টে পুনরাবৃত্তি-রক্ষা)
       inserted++;
     } catch (e) {
       errors.push({ line: lineNo, title: r.title, error: 'ডেটাবেস-ত্রুটি: ' + String(e.message || e).slice(0, 80) });
     }
   }
-  return { total: dataRows.length, inserted, skipped, fetched, errors: errors.slice(0, 40) };
+  return { total: dataRows.length, inserted, skipped, dupes, fetched, errors: errors.slice(0, 40) };
 }
 
 /* নমুনা CSV (টেমপ্লেট-ডাউনলোড বাটন ও UI-হেল্পটেক্সট এক-উৎসে) */

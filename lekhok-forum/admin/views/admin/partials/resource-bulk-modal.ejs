@@ -165,7 +165,7 @@
     }).then(function (r) { return r.json().catch(function () { throw new Error('সার্ভার অপ্রত্যাশিত উত্তর দিয়েছে'); }); })
       .then(function (out) {
         if (!out || out.ok !== true) throw new Error((out && out.error) || 'ইমপোর্ট ব্যর্থ');
-        var msgs = ['<strong>' + out.inserted + 'টি রিসোর্স যোগ হয়েছে</strong>' + (out.skipped ? ' · ' + out.skipped + 'টি ডুপ্লিকেট বাদ' : '')];
+        var msgs = ['<strong>' + out.inserted + 'টি রিসোর্স যোগ হয়েছে</strong>' + (out.skipped ? ' · ' + out.skipped + 'টি ব্যাচে ডুপ্লিকেট বাদ' : '') + (out.dupes ? ' · ' + out.dupes + 'টি ডেটাবেসে আগেই ছিল (ডুপ্লিকেট)' : '')];
         if (out.fetched) msgs.push('<div style="margin-top:4px;"><i class="fas fa-cloud-arrow-down"></i> <strong>' + out.fetched + '</strong>টি ফাইল সার্ভারে সংগ্রহ হয়েছে</div>');
         if (out.errors && out.errors.length) {
           msgs.push('<ul>' + out.errors.slice(0, 8).map(function (e) {

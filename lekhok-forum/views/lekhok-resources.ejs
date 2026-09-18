@@ -80,11 +80,37 @@
             <span class="rsx-serisum-bar" aria-hidden="true"><i></i></span>
             <a class="rsx-serisum-resume" id="rsxSeriResume" hidden href="#"><i class="fas fa-play" aria-hidden="true"></i> শেষ অবস্থান থেকে</a>
           </span>
-          <button type="button" class="rsx-seriplay" id="rsxSeriPlay" title="শোনা-অশেষ পর্ব থেকে সিরিজ শুনুন">
+          <button type="button" class="rsx-seriplay" id="rsxSeriPlay" data-seriplay title="শোনা-অশেষ পর্ব থেকে সিরিজ শুনুন">
             <i class="fas fa-play" aria-hidden="true"></i> সিরিজ শুনুন
           </button>
         <% } %>
       </div>
+    <% } %>
+
+    <%# সেশন ১৩৪: সিরিজ-হিরো — ?series= সক্রিয় হলে বড়-কভার + পর্ব/অডিও/পাঠ-মেটা +
+        সিরিজ-শুনুন (play-all) + লিংক-কপি + ফিল্টার-সরান (ব্যাকলগ-④ সিরিজ-লেভেল-কভার) %>
+    <% if (activeSeriesMeta) { %>
+      <section class="rsx-hero" aria-label="সিরিজ: <%= activeSeriesMeta.series %>">
+        <div class="rsx-hero-cover<%= activeSeriesMeta.cover ? '' : ' noimg' %>">
+          <% if (activeSeriesMeta.cover) { %><img src="<%= activeSeriesMeta.cover %>" alt="<%= activeSeriesMeta.series %>" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg')"><% } %>
+          <i class="fas fa-layer-group rsx-hero-ico" aria-hidden="true"></i>
+        </div>
+        <div class="rsx-hero-body">
+          <p class="rsx-hero-eyebrow"><i class="fas fa-book-open" aria-hidden="true"></i> সিরিজ ব্রাউজ করছেন</p>
+          <h2 class="rsx-hero-title"><%= activeSeriesMeta.series %></h2>
+          <p class="rsx-hero-meta">
+            <span><i class="fas fa-layer-group" aria-hidden="true"></i> <%= bn(activeSeriesMeta.n) %>টি পর্ব</span>
+            <% if (activeSeriesMeta.audioN) { %><span><i class="fas fa-headphones" aria-hidden="true"></i> <%= bn(activeSeriesMeta.audioN) %>টি অডিও</span><% } %>
+            <span><i class="far fa-eye" aria-hidden="true"></i> <%= bn(activeSeriesMeta.views) %> পাঠ</span>
+            <span><i class="fas fa-download" aria-hidden="true"></i> <%= bn(activeSeriesMeta.downloads) %> ডাউনলোড</span>
+          </p>
+          <div class="rsx-hero-actions">
+            <button type="button" class="rsx-hero-play" data-seriplay title="শোনা-অশেষ পর্ব থেকে সিরিজ শুনুন"><i class="fas fa-play" aria-hidden="true"></i> সিরিজ শুনুন</button>
+            <button type="button" class="rsx-hero-share" id="rsxHeroShare" title="সিরিজের লিংক কপি করুন"><i class="fas fa-share-alt" aria-hidden="true"></i> লিংক কপি</button>
+            <a class="rsx-hero-clear" href="?category=<%= encodeURIComponent(activeCategory || 'all') %><%= rsxExtra.replace(/&series=[^&]*/, '') %>" title="সিরিজ-ফিল্টার সরিয়ে সব রিসোর্স দেখুন"><i class="fas fa-xmark" aria-hidden="true"></i> ফিল্টার সরান</a>
+          </div>
+        </div>
+      </section>
     <% } %>
 
     <% if (resources && resources.length) { %>
@@ -400,6 +426,57 @@
   .rsx-serisum-bar i, .rsx-seriprog i { transition: none; }
   .rsx-card.is-done::after { animation: none; }
 }
+/* ═══ সেশন ১৩৪: সিরিজ-হিরো — ?series= সক্রিয় হলে কভার+মেটা+অ্যাকশন ব্যানার ═══ */
+.rsx-hero { display: flex; align-items: center; gap: 18px; position: relative; overflow: hidden;
+  margin: 2px 0 18px; padding: 18px 20px; border-radius: 16px;
+  background: linear-gradient(135deg, rgba(0,106,78,.10), rgba(11,21,40,.05) 55%, rgba(0,106,78,.07));
+  border: 1px solid rgba(0, 106, 78, .22); box-shadow: 0 1px 2px rgba(11,21,40,.04); }
+.rsx-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(560px 190px at -6% -50%, rgba(0,106,78,.16), transparent 62%); }
+.rsx-hero-cover { position: relative; flex: 0 0 auto; width: 108px; height: 108px; border-radius: 14px;
+  overflow: hidden; background: linear-gradient(135deg, #006A4E, #0B1528);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(11,21,40,.18), inset 0 0 0 1px rgba(255,255,255,.14); }
+.rsx-hero-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rsx-hero-cover.noimg img { display: none; }
+.rsx-hero-ico { position: relative; font-size: 30px; color: rgba(255,255,255,.92); }
+.rsx-hero-cover:not(.noimg) .rsx-hero-ico { display: none; }
+.rsx-hero-body { position: relative; min-width: 0; flex: 1 1 auto; }
+.rsx-hero-eyebrow { margin: 0 0 2px; font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+  text-transform: uppercase; color: #006A4E; display: flex; align-items: center; gap: 6px; }
+.rsx-hero-eyebrow i { font-size: .74rem; }
+.rsx-hero-title { margin: 0 0 6px; font-size: 1.28rem; line-height: 1.35; font-weight: 800; color: var(--text, #0B1528);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsx-hero-meta { margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; color: var(--muted, #64748b); }
+.rsx-hero-meta i { color: #006A4E; margin-right: 2px; }
+.rsx-hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rsx-hero-play { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border: 0; border-radius: 999px;
+  background: linear-gradient(135deg, #006A4E, #00523C); color: #fff; font-size: .82rem; font-weight: 700; cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,106,78,.30); transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; }
+.rsx-hero-play:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 4px 16px rgba(0,106,78,.38); }
+.rsx-hero-play:active { transform: translateY(0); }
+.rsx-hero-share { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); color: var(--text, #0B1528); font-size: .8rem; font-weight: 600;
+  transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+.rsx-hero-share:hover { border-color: rgba(0,106,78,.45); background: rgba(0,106,78,.08); }
+.rsx-hero-clear { display: inline-flex; align-items: center; gap: 6px; margin-left: 2px; padding: 7px 11px; border-radius: 999px;
+  font-size: .76rem; font-weight: 600; color: var(--muted, #64748b); text-decoration: none;
+  transition: color .16s ease, background .16s ease; }
+.rsx-hero-clear:hover { color: #b91c1c; background: rgba(185,28,28,.07); }
+.rsx-hero-play:focus-visible, .rsx-hero-share:focus-visible, .rsx-hero-clear:focus-visible {
+  outline: 2.5px solid #059669; outline-offset: 2px; }
+@media (max-width: 640px) {
+  .rsx-hero { flex-direction: column; align-items: flex-start; gap: 14px; padding: 15px 16px; }
+  .rsx-hero-cover { width: 84px; height: 84px; }
+  .rsx-hero-title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .rsx-hero-meta { gap: 4px 12px; font-size: .76rem; }
+  .rsx-hero-actions { width: 100%; }
+  .rsx-hero-clear { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rsx-hero-play, .rsx-hero-share, .rsx-hero-clear { transition: none; }
+  .rsx-hero-play:hover { transform: none; }
+}
 </style>
 
 <script>
@@ -704,8 +781,10 @@
     setTimeout(function () { t.classList.add('show'); }, 10);
     setTimeout(function () { t.remove(); }, 2400);
   }
-  var spBtn129 = document.getElementById('rsxSeriPlay');
-  if (spBtn129 && ACTIVE && SMAP[ACTIVE] && SMAP[ACTIVE].length) {
+  /* সেশন ১৩৪: play-all দুই-সারফেস — চিপ-রোর #rsxSeriPlay + হিরোর [data-seriplay] */
+  var spBtns129 = document.querySelectorAll('[data-seriplay]');
+  if (spBtns129.length && ACTIVE && SMAP[ACTIVE] && SMAP[ACTIVE].length) {
+    Array.prototype.forEach.call(spBtns129, function (spBtn129) {
     spBtn129.addEventListener('click', function () {
       var ids129 = SMAP[ACTIVE];
       var st129 = readSt(ACTIVE);
@@ -730,6 +809,25 @@
       /* সার্ভার স্যান্ডবক্সে লিঙ্কে ইতিমধ্যেই পোর্ট-প্যারাম রেন্ডার করে (XTPQ) — id থেকে URL-পুনর্গতি, ডাবল-প্যারাম-রক্ষা (session-118 রীতি) */
       var mp = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
       location.href = '/resources/' + pick + '?play=1' + (mp ? '&XTransformPort=' + mp[1] : '');
+    });
+    });
+  }
+  /* সেশন ১৩৪: হিরো লিংক-কপি — ?series= শেয়ারেবল-URL কপি + টোস্ট */
+  var heroShare134 = document.getElementById('rsxHeroShare');
+  if (heroShare134 && ACTIVE) {
+    heroShare134.addEventListener('click', function () {
+      var url134 = location.origin + '/resources?series=' + encodeURIComponent(ACTIVE);
+      function fb134(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        ta.remove();
+      }
+      function ok134() { toast129('সিরিজের লিংক কপি হয়েছে'); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url134).then(ok134, function () { fb134(url134); ok134(); });
+      } else { fb134(url134); ok134(); }
     });
   }
 

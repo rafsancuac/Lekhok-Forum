@@ -1461,3 +1461,26 @@ Work Log:
 Stage Summary:
 - push লক্ষ্য: session-137 (সর্বোচ্চ+১); স্যুট এখন যে-কোনো pristine QA-DB-তে পোর্টেবল — "fresh-restart=147/147" দাবি প্রথমবার সত্যিঅর্থে পুনঃপ্রমাণযোগ্য
 - পরবর্তী: drawer-প্রিভিউ-ইনস্ট্যান্ট → playlist per-series aggregate API → সিরিজ-কভার-ইমেজ → WebRTC-ত্রয়ী (Metered.ca-TURN/ভিডিও-ডিগ্রেড/গ্রুপ-রিং-সীমা)
+---
+Task ID: RES-134 (cron-review রাউন্ড — session134)
+Agent: Resources-feature agent (Lekhok-Forum, /home/z/lekhok-forum)
+Task: অবস্থা-মূল্যায়ন + agent-browser QA → স্টেবল-ফেজে নতুন ফিচার: সিরিজ-হিরো (RES-124-ব্যাকলগ ④) + bulk ক্রস-রিকোয়েস্ট ডুপ-গার্ড (②) + role-policy §১৯ + 🚨৯-রো-মিথ্যা-ডিলিট-ইনসিডেন্ট-রিস্টোর
+
+## বর্তমান প্রজেক্ট অবস্থা (মূল্যায়ন)
+
+- HEAD 2edd910 (session133-docs) — রাউন্ড-শুরুতে fetch-এ প্যারালাল-পুশ নেই
+- QA সুইপ: ৯-পেজ 200 + role-policy 177/177 ALL GREEN + agent-browser (২২-কার্ড, কনসোল-০, 390px-০, সিরিজ/প্লেলিস্ট/রিজুম অক্ষত — আগের-প্রোব-সিলেক্টর-মিসম্যাচ ছিল, সত্য-ক্লাস rsxd-*/rsx-seriesrow) → ফেজ-স্টেবল → RES-133-প্রস্তাব ①② নেওয়া হলো
+
+## এই রাউন্ডের লক্ষ্য / সম্পন্ন কাজ / ভেরিফিকেশন
+
+1. **সিরিজ-হিরো:** pages.js activeSeriesMeta (audioN/views/downloads aggregate-সহ) + হিরো-সেকশন (কভার/noimg-ফলব্যাক, মেটা, সিরিজ-শুনুন[data-seriplay দ্বৈত-বাইন্ডিং], লিংক-কপি+টোস্ট, ফিল্টার-সরান) + CSS session134-ব্লক (gradient/radial/রিং/hover-lift/focus-visible/640px-স্ট্যাক/reduced-motion)
+2. **বাল্ক ডুপ-গার্ড:** resource-bulk.js dupKey134+dbSeen134+dupes (open-fail-safe; কী-এখন series-সচেতন) + দুই-রুটে dupes + rbm-মোডাল ফলাফল-লাইন
+3. **role-policy §১৯ ×১৯-চেক** — সুইট ১৯৬, **196/196 ALL GREEN** (রেট-লিমিটার-নয়েজ = fresh-restart-প্রমাণ ×১)
+4. **🚨 ইনসিডেন্ট:** §১৯-প্রথম-ক্লিনআপের loose-grep related-ব্লক-মিথ্যা-ম্যাচ → ৯-আসল-রো (2,5,6,13,15,16,19,21,28) ট্রাশ → **/admin/trash/:id/restore-এ ৯টিই রিস্টোর (২২-কার্ড + প্রতিটি detail 200 যাচাই)** → ক্লিনআপ-অ্যাঙ্কর `rsxd-title">`-হার্ডেন (§১৮-র ল্যাটেন্ট-ভ্যারিয়েন্টও)
+5. **E2E:** হিরো DOM (৩টি পর্ব/১টি অডিও/১৩০ পাঠ/২৪ ডাউনলোড) ✓ হিরো-প্লে→/resources/3?play=1 ✓ শেয়ার-টোস্ট ✓ কনসোল-০ ✓ 390px-০ ×২ ✓ স্ক্রিনশট ×২ (download/s134-hero-*) ✓ LS-রেজিডু-ক্লিন ✓ ৯-পেজ-পুনঃযাচাই ✓ node --check ×৪ ✓
+
+## অমীমাংসিত ঝুঁকি / পরবর্তী রাউন্ডের সুপারিশ
+
+- **গোটচা-নতুন:** টেস্ট-ক্লিনআপ title-grep → অবশ্যই `rsxd-title">`-অ্যাঙ্কর; in-memory-DB রিস্টোর API-দিয়েই; রেজেক্স-প্যাচে ternary-প্রেসিডেন্স (পুরো-লাইন-পুনর্লিখন নিরাপদ)
+- **পরবর্তী-প্রস্তাব:** >১০সে-ফেচ-টাইমআউট-অপশন; main.js-পার্স-রিগ্রেশন-চেক role-policy-তে; হিরোতে navigator.share; series-stats-এ dupes-মেট্রিক
+- **রিমাইন্ডার:** push-এর আগে fetch+rebase (প্যারালাল-রেস); doc-union-মার্জ; RP_PORT; boot-srv.sh; পরবর্তী-এজেন্ট **session135** লেবেল থেকে

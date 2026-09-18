@@ -2676,7 +2676,6 @@ git push origin main
 - **⑤ স্টাইল-পলিশ (shared.css session133-ব্লক, টোকেন-শুধু):** `.lf-utoast-kbd` চিপ (hover-এ ব্লু-টিন্ট) + `.lf-utoast:focus-within` এলিভেশন + `#notifList` স্ক্রোল-ক্ল্যাম্প `min(60vh,420px)` + কাস্টম-স্ক্রলবার (long-list-নিয়ম) + `.notif-x` hover/focus-reveal (hover:none-এ সদা-দৃশ্যমান — FB-প্যারিটি) + মোবাইল টোস্ট safe-area-inset।
 - **পরীক্ষা:** role-policy ১৫০/১৫০ ✓ cursor ২৬/২৬ ✓ guard ✓ audit:views ✓ brace-০ ✓; agent-browser E2E ৮-প্রোব (alias/kbd/enter/escape/typing-guard/scroll-clamp/কনসোল-০/390px-০) ✓। বিস্তারিত PLANS.md session133-নোট।
 
-<<<<<<< Updated upstream
 ## session133 — সাইট-ওয়াইড তারিখ-চুক্তি (UTC→Asia/Dhaka) + /api/resources/series-stats লাইভ-এন্ডপয়েন্ট + অ্যাডমিন লাইভ-রিফ্রেশ (RES-124-ব্যাকলগ ①②③)
 - **🚨 তারিখ-বাগফিক্স (বাংলাদেশ-দর্শক):** SQLite CURRENT_TIMESTAMP = UTC নেম-লেস — JS `new Date()` এটাকে লোকাল ধরে পার্স করত। প্রোডাকশন-বাংলাদেশে সব রিলেটিভ-টাইম ৬ঘণ্টা বেশি পুরনো দেখাত + সন্ধ্যা-UTC-সময়ে তারিখ একদিন পিছিয়ে যেত (প্রমাণ: created_at `2026-09-17 19:46:50` UTC → পুরনো-কোড ১৭ সেপ্টেম্বর, সঠিক ঢাকা-তারিখ ১৮ সেপ্টেম্বর)। স্যান্ডবক্স-হোস্ট UTC হওয়ায় বাগ লুকানো ছিল।
 - **helpers/bn-date.js (নতুন):** `parseDbDate` (নেম-লেস = 'Z'-জোড়া-পার্স; তারিখ-মাত্র = T00:00:00Z-পিন; ISO-Z passthrough) + `bnDate`/`bnDateTime` (Asia/Dhaka = UTC+6, getUTC-কৌশল — Intl-নিরপেক্ষ) + bnNum।
@@ -2708,7 +2707,6 @@ git push origin main
 **যাচাই (মার্জড-ট্রি):** role-policy **১৭৭/১৭৭** (§১৮-খ self-seeding-প্যাচসহ +২ — series-stats-অ্যাসারশন ambient-DB-নির্ভর ছিল) ✓ cursor ২৫/২৫ ✓ guard:design ✓ audit:views (৯৬ .ejs) ✓ brace-০ ✓ 390px-০ (dashboard?filter=question + /qa/6 + /notifications) ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ (প্রোব-উত্তর-ডিলিট + সিডেড-নোটিফিকেশন-অপসারণ) ✓।
 
 **গোটচা ×২ (নতুন):** ① **UNION ALL-কলাম-সাম্য** — ফিড-SQL-এর যেকোনো এক-শাখায় কলাম যোগ = তিন-শাখাতেই পজিশনাল-ম্যাচ বাধ্যতামূলক (এরর সাইলেন্ট-মোডে 200+এরর-পেজ দেয়) ② **sql.js এক্সটার্নাল-সিড রীতি-সংশোধন:** সার্ভার-জীবিত-অবস্থায় এক্সটার্নাল INSERT+persist → সার্ভার-মেমরি-ফ্লাশে কলিয়ে যায়; আর **flushDb নন-স্ন্যাপশট-মোডে no-op** (persist=200ms-debounce, process.exit টাইমার-মেরে দেয়) → সঠিক-ক্রম: **kill → INSERT+`saveDb()` (সিঙ্ক্রোনাস-রাইট) → boot** — session119-র রীতির সংশোধিত-রূপ।
-=======
 ---
 ## session136 — নোটিফিকেশন-reltime-চুক্তি + reconcile swap-fade + tokens-র্যাচেট (admin.css ৪২৬→১৭২) + admin-views-এ tokens.css [relabel: আমার-১৩৪→১৩৬ — সমান্তরাল c7fefee-session134 ও 4794682-session135 আগে-ল্যান্ডড, max+1 রীতি]
 - **QA-ফেজ (প্রথমে-যাচাই):** রিগ্রেশন role-policy ১৬১/১৬১ + cursor ২৬/২৬ + guard + audit:views + brace-০ ✓; agent-browser ৭-পেজ সুইপ (dashboard/qa/notifications/bookmarks/gallery/settings/messages) — কনসোল-০, errors-০ → স্থিতিশীল-ফেজ → ফিচার-রাউন্ড (session133-প্রস্তাব ①+③+④ গ্রহণ)।
@@ -2717,7 +2715,6 @@ git push origin main
 - **③ tokens-র্যাচেট (session133-প্রস্তাব-③):** tokens.css-এ অ্যাডমিন-অপস প্যালেট (27 নতুন --lf-*: white + ok/danger/slate/amber ফ্যামিলি — 600/700/800 টেক্সট + 50/100/200 টিন্ট রীতি) + admin.css-এ 254 হেক্স → var(--lf-*) **exact-value** ম্যাপ (৪২৬→১৭২, ৬০% নামানো; ভিজ্যুয়াল-পরিবর্তন-শূন্য) + ৬ বিদ্যমান-টোকেন পুনঃব্যবহার (social-blue/ui-border/ui-canvas/text-secondary/soon-amber ×২) + `--update-hex-baseline` নতুন-র্যাচেট-ভিত্তি। দীর্ঘ-হেক্স-আগে + `(?![0-9a-fA-F])` বাউন্ডারি — `#fff`-এর `#fffbeb`-প্রেফিক্স-কলিশন-শূন্য।
 - **④ রিগ্রেশন-আটকানো-ফিক্স — admin/moderator-views-এ tokens.css:** র্যাচেটের পরে আবিষ্কার — admin.css আগে **শূন্য** var(--lf-*) ব্যবহার করত এবং ৫৭টি স্ট্যান্ডঅ্যালোন admin/moderator view (৪৪ admin + ১৩ moderator) tokens.css লোডই করত না → নতুন var()-গুলো অরিজলভ হতো (ব্যাকগ্রাউন্ড-transparent-রিগ্রেশন)। ফিক্স: প্রতিটি view-এর admin.css-লিংকের আগে `tokens.css?v=<%= AV %>` ইনজেক্ট (৫৭/৫৭, সব ক্ষেত্রে AV-উপলব্ধ)। যাচাই: admin পেজে `--lf-ok/danger/white/social-blue` computed-রেজলিউশন ✓ + ড্যাশবোর্ড/কনটেন্ট-এডিটর স্ক্রিনশটে রঙ-অক্ষত + admin 390px-০।
 - **পরীক্ষা:** role-policy ১৬১/১৬১ ✓ cursor ২৬/২৬ ✓ guard (নতুন-বেসলাইনে) ✓ audit:views ✓ admin.css brace-০ ✓; agent-browser — undo-reltime E2E + swap-fade ২-সারফেস + admin-টোকেন-রেজলিউশন + কনসোল-০ + 390px ×৫-পেজ-০ ✓। বিস্তারিত PLANS.md session136-নোট।
->>>>>>> Stashed changes
 
 
 ---
@@ -2728,3 +2725,10 @@ git push origin main
 - **undo Enter-শর্টকাট (session129-প্রস্তাব ④):** টোস্ট-দৃশ্যমান-অবস্থায় Enter=undo (btn.click-এক-পাথ); ফর্ম-কনটেক্সট/টোস্ট-অভ্যন্তর/Ctrl±সংমিশ্রণ-গার্ড, preventDefault-গেটেড।
 - **QA-রীতি-আবিষ্কার:** `pkill -f <qa-dir>` cmdline-ম্যাচ-করে-না (cmdline=শুধু `node server.js`) → কিল-বাই-পোর্ট (ss -ltnp) বাধ্যতামূলক, নইলে স্টেল-সার্ভার স্টেল-মেমরি-DB ফ্লাশ-করে সব-seed ওভাররাইট করে; pristine-DB-পুনর্নির্মাণ-রীতি (initDb→seeds→boot) ডকুমেন্টেড (PLANS session131-গোটচা ×৩)।
 - **যাচাই:** 147/147 + cursor 25/25 + inspect-audit 0-fail + guard ✓ + agent-browser E2E (পিন-দুই-সারফেস+খালি-স্টেট+undo-id-tracked-restore+input-গার্ড+390px-০+কনসোল-০) + স্ক্রিনশট ×৩।
+
+## session134 — সিরিজ-হিরো (?series= ব্যানার: কভার+মেটা+অ্যাকশন) + CSV বাল্ক-ইমপোর্টে ক্রস-রিকোয়েস্ট ডুপ-গার্ড + role-policy §১৯ (cron-review রাউন্ড)
+- **সিরিজ-হিরো (RES-124-ব্যাকলগ ④):** /resources?series=X সক্রিয় হলে গ্রিডের উপরে হিরো-ব্যানার — 108px সিরিজ-কভার (প্রথম-থাম্বনেইল-পর্ব থেকে; শূন্যে গ্রেডিয়েন্ট+ico ফলব্যাক), eyebrow "সিরিজ ব্রাউজ করছেন", সিরিজ-টাইটেল, মেটা-রো (nটি পর্ব · অডিও-সংখ্যা · মোট-পাঠ · ডাউনলোড — নতুন aggregate-কোয়েরি), অ্যাকশন-রো: "সিরিজ শুনুন" (play-all — চিপ-রোর বাটনের সাথে `data-seriplay` দ্বৈত-বাইন্ডিং, session129 অগ্রাধিকার-লজিক অক্ষত), "লিংক কপি" (ক্লিপবোর্ড+execCommand-ফলব্যাক+টোস্ট — ?series= শেয়ারেবল-URL), "ফিল্টার সরান"। রুট-পাশে routes/pages.js `activeSeriesMeta`। CSS: গ্রেডিয়েন্ট-প্যানেল+radial-accent, কভার-রিং+ছায়া, hover-lift, focus-visible, 640px-স্ট্যাক, reduced-motion।
+- **বাল্ক ক্রস-রিকোয়েস্ট ডুপ-গার্ড:** helpers/resource-bulk.js — `dupKey134` (title+series+file_url+link_url trim+lower) + DB-প্রিলোড `dbSeen134` (open-fail-safe) + `dupes` কাউন্টার; একই CSV দ্বিতীয়বার দিলে ডুপ্লিকেট-রো তৈরি হয় না (কেস/স্পেস-ভ্যারিয়েন্ট-সহ ধরা পড়ে); ব্যাচ-অভ্যন্তরীণ `skipped` আলাদা-মেট্রিক; সফল-কী-গার্ডে-যোগ। admin+moderator দুই-রুটে `dupes` ফরওয়ার্ড; rbm-মোডালে "টি ডেটাবেসে আগেই ছিল (ডুপ্লিকেট)"।
+- **role-policy §১৯ ×১৯:** ডুপ-গার্ড ×৯ (প্রথম/২য়/নরমালাইজড/ভিন্ন-সিরিজ/ব্যাচ-অভ্যন্তরীণ/মডারেটর-রুট) + হিরো ×৮ + ক্লিনআপ ×২ — সুইট এখন **১৯৬-চেক, 196/196 ALL GREEN**।
+- **🚨 ইনসিডেন্ট+ফিক্স:** প্রথম-রানের ক্লিনআপ-grep detail-পেজের **সম্পর্কিত-রিসোর্স-ব্লকে** same-category টেস্ট-রো দেখে ৯-আসল-রো ট্রাশে পাঠিয়েছিল — /admin/trash/restore API-তে ৯টিই রিস্টোর (২২-কার্ড-যাচাই); ক্লিনআপ-অ্যাঙ্কর এখন `rsxd-title">` (নিজের-h1) — §১৮-র ল্যাটেন্ট-ভ্যারিয়েন্টও হার্ডেন।
+- **পরীক্ষা:** role-policy 196/196 ✓ + agent-browser (হিরো DOM+মেটা, হিরো-প্লে→?play=1-অটোস্টার্ট, শেয়ার-টোস্ট, কনসোল-০, 390px-০ ×২, LS-রেজিডু-ক্লিন) ✓ স্ক্রিনশট ×২। বিস্তারিত PLANS.md session134-নোট।

@@ -398,10 +398,56 @@ ck "s131 SSRF-গার্ড-মেসেজ ×৪ (loopback/localhost/metadata
 ckc "s131 পোর্ট-ব্লক মেসেজ" 'পোর্ট' "$RP131OUT"
 ckc "s131 স্কিম-ব্লক মেসেজ (bulk file_url-ভ্যালিডেশন)" 'http(s)' "$RP131OUT"
 # কন্ট্রোল-রো: fetch ছাড়া লিংক-রিসোর্স স্বাভাবিক-ইনসার্ট (পাইপলাইন-জীবন্ত-প্রমাণ) → ট্রাশ-ক্লিনআপ
-RP131ID=$(curl -s -b $JARA "$BASE/admin/resources" | grep -o '/admin/resources/[0-9]*/edit' | grep -o '[0-9]*' | while read i; do curl -s -b $JARA "$BASE/resources/$i" | grep -q 'rp131-ok-control' && echo $i && break; done)
+RP131ID=$(curl -s -b $JARA "$BASE/admin/resources" | grep -o '/admin/resources/[0-9]*/edit' | grep -o '[0-9]*' | while read i; do curl -s -b $JARA "$BASE/resources/$i" | grep -q 'rsxd-title">rp131-ok-control' && echo $i && break; done)
 [ -n "$RP131ID" ] && curl -s -b $JARA -o /dev/null -X POST "$BASE/admin/resources/$RP131ID?_method=DELETE&_csrf=$TOKA131"
 ck "s131 কন্ট্রোল-রো ক্লিনআপ (404-যাচাই)" "404" "$(curl -s -o /dev/null -w "%{http_code}" "$BASE/resources/$RP131ID")"
 rm -f /tmp/rp131-ssrf.json
+
+echo "══ ১৯. বাল্ক ক্রস-রিকোয়েস্ট ডুপ-গার্ড + সিরিজ-হিরো (সেশন ১৩৪) ══"
+TOKA134=$(getcsrf $JARA /admin/resources)
+RP134POST() { curl -s -b $JARA -X POST "$BASE/admin/resources/bulk" -H "Content-Type: application/json" -H "X-CSRF-Token: $TOKA134" --data "$1"; }
+RP134CSV1='{"csv":"title,res_type,category,link_url,series\nrp134-dupguard-a,link,guide,https://example.com/rp134a,RPS134\nrp134-dupguard-b,link,guide,https://example.com/rp134b,RPS134\n"}'
+RP134D1=$(RP134POST "$RP134CSV1")
+ck "s134 প্রথম-ইমপোর্ট inserted:2" "2" "$(echo "$RP134D1" | grep -o '"inserted":[0-9]*' | cut -d: -f2)"
+ck "s134 প্রথম-ইমপোর্ট dupes:0" "0" "$(echo "$RP134D1" | grep -o '"dupes":[0-9]*' | cut -d: -f2)"
+RP134D2=$(RP134POST "$RP134CSV1")
+ck "s134 একই-CSV ২য়বার inserted:0" "0" "$(echo "$RP134D2" | grep -o '"inserted":[0-9]*' | cut -d: -f2)"
+ck "s134 একই-CSV ২য়বার dupes:2" "2" "$(echo "$RP134D2" | grep -o '"dupes":[0-9]*' | cut -d: -f2)"
+RP134D3=$(RP134POST '{"csv":"title,res_type,category,link_url,series\n  RP134-DUPGUARD-A ,link,guide,HTTPS://EXAMPLE.COM/RP134A,RPS134\n"}')
+ck "s134 কেস/স্পেস-নরমালাইজড ভ্যারিয়েন্ট dupes:1" "1" "$(echo "$RP134D3" | grep -o '"dupes":[0-9]*' | cut -d: -f2)"
+RP134D4=$(RP134POST '{"csv":"title,res_type,category,link_url,series\nrp134-dupguard-a,link,guide,https://example.com/rp134a,RPS135\n"}')
+ck "s134 একই-title ভিন্ন-সিরিজ inserted:1 (সিরিজ-সচেতন-কী)" "1" "$(echo "$RP134D4" | grep -o '"inserted":[0-9]*' | cut -d: -f2)"
+RP134D5=$(RP134POST '{"csv":"title,res_type,category,link_url,series\nrp134-duprow-c,link,guide,https://example.com/rp134c,RPS136\nrp134-duprow-c,link,guide,https://example.com/rp134c,RPS136\n"}')
+ck "s134 ব্যাচ-অভ্যন্তরীণ ডুপ inserted:1" "1" "$(echo "$RP134D5" | grep -o '"inserted":[0-9]*' | cut -d: -f2)"
+ck "s134 ব্যাচ-অভ্যন্তরীণ ডুপ skipped:1" "1" "$(echo "$RP134D5" | grep -o '"skipped":[0-9]*' | cut -d: -f2)"
+TOKM134=$(getcsrf $JARM /moderator/resources)
+RP134D6=$(curl -s -b $JARM -X POST "$BASE/moderator/resources/bulk" -H "Content-Type: application/json" -H "X-CSRF-Token: $TOKM134" --data "$RP134CSV1")
+ck "s134 মডারেটর-রুটেও গার্ড dupes:2" "2" "$(echo "$RP134D6" | grep -o '"dupes":[0-9]*' | cut -d: -f2)"
+# সিরিজ-হিরো — ASCII-সিরিজ RPS134 (?series=RPS134; থাম্বনেইল-শূন্য → noimg-ফলব্যাক)
+RP134H=$(curl -s "$BASE/resources?series=RPS134")
+ckc "s134 হিরো-সেকশন রেন্ডার" 'section class="rsx-hero"' "$RP134H"
+ckc "s134 হিরো-টাইটেল সিরিজ-নাম" 'rsx-hero-title">RPS134' "$RP134H"
+ckc "s134 হিরো প্লে-অল বাটন" 'rsx-hero-play' "$RP134H"
+ckc "s134 হিরো লিংক-কপি বাটন" 'rsxHeroShare' "$RP134H"
+ckc "s134 হিরো মেটা-রো" 'rsx-hero-meta"' "$RP134H"
+ckc "s134 থাম্বনেইল-শূন্যে noimg-ফলব্যাক" 'rsx-hero-cover noimg' "$RP134H"
+ckc "s134 হিরো ফিল্টার-সরান-লিংক" 'rsx-hero-clear' "$RP134H"
+ck "s134 ফিল্টার-ছাড়া পেজে হিরো-মার্কআপ নেই" "0" "$(curl -s "$BASE/resources" | grep -c 'section class="rsx-hero"')"
+# ক্লিনআপ — rp134- টেস্ট-রো ×৪ (a,b RPS134 + a RPS135 + c RPS136)
+RP134DEL=0
+for rppass134 in 1 2 3 4 5; do
+  RP134FOUND=""
+  for RPID in $(curl -s -b $JARA "$BASE/admin/resources" | grep -o '/admin/resources/[0-9]*/edit' | grep -o '[0-9]*' | sort -u); do
+    if curl -s "$BASE/resources/$RPID" | grep -q 'rsxd-title">rp134-'; then RP134FOUND="$RP134FOUND $RPID"; fi
+  done
+  [ -z "$RP134FOUND" ] && break
+  for RPID in $RP134FOUND; do
+    curl -s -b $JARA -o /dev/null -X POST "$BASE/admin/resources/$RPID?_method=DELETE&_csrf=$TOKA134"
+    RP134DEL=$((RP134DEL+1))
+  done
+done
+ck "s134 টেস্ট-রো ক্লিনআপ ×৪" "4" "$RP134DEL"
+ck "s134 ক্লিনআপ-পরে হিরো-অদৃশ্য" "0" "$(curl -s "$BASE/resources?series=RPS134" | grep -c 'section class="rsx-hero"')"
 
 echo ""
 echo "════════════════════════════════"
