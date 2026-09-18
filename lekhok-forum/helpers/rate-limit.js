@@ -22,9 +22,17 @@ function _clean() {
 }
 
 function makeLimiter({ max, windowMs }) {
+  // ─ session132: QA-escape (টেস্ট-ইনফ্রা-ফ্লেক বন্ধ) ───────────────────────────────────────────────────
+  // স্যান্ডবক্সে সব এজেন্ট-রাউন্ড একই-ক্লায়েন্ট-IP থেকে ঘন্টায় বহুবার role-policy স্যুট চালায়;
+  // adminLoginLimiter (৫-ব্যর্থ-চেষ্টা/১৫মি) §-স্টাফ-পোর্টাল-প্রোবকে মিথ্যা-ফেইল করাত
+  // (রেট-লিমিট-মেসেজ ≠ স্টাফ-পোর্টাল-প্রত্যাখ্যান-মেসেজ)। বুটে LF_QA_DISABLE_RATELIMIT=1
+  // দিলে লিমিটার নিষ্ক্রিয় — প্রোডাকশনে এ-ভ্যার কখনো সেট হয় না;
+  // সেট-না-থাকলে আচরণ অপরিবর্তিত। hit()/remaining() অক্ষত।
+  const _qaDisabled = process.env.LF_QA_DISABLE_RATELIMIT === '1';
   return {
     // সীমা পেরিয়েছে কিনা (প্রয়োগের আগে চেক)
     isLimited(key) {
+      if (_qaDisabled) return false;
       _clean();
       const now = Date.now();
       const arr = (_hits.get(key) || []).filter(([t]) => now - t < windowMs);

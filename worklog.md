@@ -1394,34 +1394,23 @@ Task: Lekhok-Forum স্টেটাস-অ্যাসেসমেন্ট + 
 - পরের-এজেন্ট: **session137**; প্রস্তাব: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), লাইভ-Turso-রিসেট (parent-chain-চিপ ③ ও drawer-ইনস্ট্যান্ট-প্রিভিউ ④ সমান্তরাল session134-এ সম্পন্ন — c7fefee)
 >>>>>>> Stashed changes
 
-
-
-Task ID: session137 (cron-r14 — QA→ফিচার-রাউন্ড) [relabel: 134→136 — সমান্তরাল c7fefee-session134 ও 4794682-session135 আগে-ল্যান্ডড, max+1 রীতি]
-Agent: Z.ai Cron Agent (webDevReview)
-Task: Lekhok-Forum স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA + স্থিতিশীল-ফেজে ফিচার/স্টাইল-রাউন্ড + push
+Task ID: session137 (cron webDevReview রাউন্ড — কোড-আইডি s132; 132→135-রিলেবেল)
+Agent: Z.ai Main Agent (webDevReview)
+Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → বাগ-ফিক্স + ফিচার-রাউন্ড + push
 
 ## Current Project Status / Assessment
-- রিপো main @ 6e167ca (session133) — QA-ফেজ ALL GREEN: role-policy ১৬১/১৬১ + cursor ২৬/২৬ + guard + audit:views + brace-০; agent-browser ৭-পেজ সুইপ (ismail): কনসোল-০, errors-০, 390px-০ → **বাগ-শূন্য স্থিতিশীল-ফেজ** → ফিচার-রাউন্ড (session133-প্রস্তাব ①③④ গ্রহণ)
-- আবিষ্কার: /qa-তালিকার ২টি স্টেল-লিংক 404 (পুরনো-ডেটা-অবস্থা — রিগ্রেশন নয়); brace-স্ক্রিপ্ট path-গোটচা (public/assets/js/, public/ নয়)
+- origin/main 00b5af3 → রাউন্ড-মাঝে c7fefee (session134) — সমান্তরাল এজেন্টরা 133/134 নিয়ে ফেলেছে; আমার লেবেল 132→135-রিলেবেল (কোড-আইডি -132 অক্ষত)
+- QA-ফেজ: ৯-রুট স্মোক ২০০ + agent-browser কনসোল-০ ×৭ + 390px-০ ×৬ + cursor 25/25 + guard + audit + brace-০ → একটি বাদে সব গ্রিন: role-policy 157/158 — মিথ্যা-ফেইল বিশ্লেষণ = **QA-ইনফ্রা-বাগ** (app-বাগ নয়)
 
 ## Goals / Completed / Verification
-- ① notifications.ejs reltime-চুক্তি (session133-প্রস্তাব-④): rel119 প্রথম-পেইন্ট + `<span data-ts>` + undo-restore-পরে `LekhokRelTime.render(list)` — E2E: ৪/৪ data-ts, dismiss→undo→rows ৩→৪, রি-পেইন্ট ✓
-- ② reconcile swap-fade (①, CSS-side — ইঞ্জিন-অক্ষত): shared.css session137-ব্লক — lfSwapIn136 240ms এন্ট্রি-ফেড + 26ms ক্যাসকেড, `.qa-answers-list`/`.comments-list[data-post-link]`/`.fc-drawer .fc-list`/`.fc-preview` চার-সারফেস; `:not(.is-new124):not(.flash-acc127)`-এক্সক্লুশন (shared.css-সর্বশেষ-লোড-ওভাররাইড-গোটচা) + reduced-motion-সেফ — ড্রয়ার-লাইভ `lfSwapIn134 0.24s` প্রমাণিত
-- ③ tokens-র্যাচেট (③): tokens.css-এ ২৭ নতুন --lf-* অ্যাডমিন-অপস-টোকেন (white/ok/danger/slate/amber ফ্যামিলি) → admin.css 254-হেক্স exact-value var()-ম্যাপ — **৪২৬→১৭২ (৬০% নামানো)**, ভিজ্যুয়াল-পরিবর্তন-শূন্য; দীর্ঘ-হেক্স-আগে + `(?![0-9a-fA-F])` বাউন্ডারি; বেসলাইন-লক
-- ④ **নিজস্ব-রিগ্রেশন-আটকানো-ফিক্স:** admin.css আগে শূন্য var() ব্যবহার করত + ৫৭টি স্ট্যান্ডঅ্যালোন admin/moderator view tokens.css লোড করত না → ৫৭/৫৭ ফাইলে admin.css-লিংকের আগে `tokens.css?v=<%= AV %>` ইনজেক্ট; admin computed-token-রেজলিউশন (--lf-ok #059669 ইত্যাদি) + ড্যাশবোর্ড/কনটেন্ট-স্ক্রিনশটে রঙ-অক্ষত ✓
-- ফাইনাল: role-policy ১৬১/১৬১ ✓ cursor ২৬/২৬ ✓ guard-নতুন-বেসলাইন ✓ audit ✓ কনসোল-০ ✓ 390px ×৫-পেজ (admin সহ) -০ ✓
+- **union-রায়:** ফিড accepted-ব্যাজ + answer_accepted টোনাল-আইকন সমান্তরাল session135 (4794682) ক্যানোনিকাল গৃহীত (feed-acc-badge135/icon-accepted135); আমার ডুপ্লিকেট-মার্কআপ/CSS প্রত্যাহৃত — অনন্য-রক্ষিত: rate-limit-QA-escape + RL-TRIP-GUARD + accepted_flag-SQL + E2E-স্ক্রিপ্ট (canonical-ক্লাসে রিরাইটেন)
+- **বাগফিক্স (rate-limit QA-ফ্লেক):** adminLoginLimiter (৫-ব্যর্থ/১৫মি) একই-IP-বহুরানে স্টাফ-পোর্টাল-প্রোবকে ব্লক করত → rate-limit.js-এ `LF_QA_DISABLE_RATELIMIT=1` boot-escape (প্রোডাকশন অপরিবর্তিত) + suite RL-TRIP-GUARD (মিথ্যা-FAIL→SKIP+বুট-হিন্ট) + lf-boot.sh-ফ্ল্যাগ → 158/158 ALL GREEN ×২
+- **ফিচার-① ফিড-কার্ড accepted-ব্যাজ:** QUESTION_SQL accepted_flag + FeedPostCard fd-accepted-chip132 (token-নির্ভর s132-ব্লক) — E2E-তে UNION-arity-500 ধরা পড়ে (filter=all/ranked/more) → ARTICLE/ACTIVITY NULL-প্যাড → চার-পাথ ✓
+- **ফিচার-② answer_accepted টোনাল-আইকন:** header.ejs _ico + live.js ICONS + notifications.ejs (iconClass/_ico/G117-reply-গ্রুপ) + style.css সবুজ-সলিড টোনাল প্যালেট — ত্রি-সারফেস প্যারিটি + ফিল্টার-চিপে গণনা
+- **যাচাই:** নতুন E2E verify-session132-accepted-features.sh 19/19 ✓ স্ক্রিনশট ×৩ ✓ 390px-০ ✓ কনসোল-০ ✓ ক্লিনআপ (নোটিফ-dismiss+ক্যাসকেড-ডিলিট+অবশিষ্ট-শূন্য) ✓ চূড়ান্ত role-policy 158/158 + cursor 25/25 + guard + audit + brace-০ ✓
+- ডকস: PLANS (intent+cross-agent) + PROJECT §১৩৭ + repo-worklog + এই worklog
 
 ## Unresolved Issues / Risks / Next Priorities
-- অবশিষ্ট-১৭২-হেক্স admin.css-এ (info-blue/violet/cyan নিম্ন-ফ্রিকোয়েন্সি পরিবার) + dashboard.css (২৩৩)/style.css (১৩৯৫) র্যাচেট-প্রার্থী
-- নতুন-রীতি (PLANS-নথিভুক্ত): নতুন admin-view বানালে admin.css-এর আগে tokens.css-লিংক আবশ্যক; নতুন-এন্ট্রি-অ্যানিমেশন shared.css-এ যোগ করলে swap-fade-এক্সক্লুশন-তালিকায় ঢোকাতে হবে
-- পরের-এজেন্ট: **session137**; প্রস্তাব: admin.css-অবশিষ্ট-১৭২-র্যাচেট, dashboard/style-র্যাচেট, কল-ইতিহাসে degrade-স্তর-রেকর্ড (db-স্কিমা), লাইভ-Turso-রিসেট (parent-chain-চিপ ③ ও drawer-ইনস্ট্যান্ট-প্রিভিউ ④ সমান্তরাল session134-এ সম্পন্ন — c7fefee)
->>>>>>> Stashed changes
-=======
-## session129-গ push-সমাপ্তি (union ×২: 129-ক/খ + session124/131)
-
-- push-রেস ×২ হ্যান্ডলিং: ① 8cda026(129-খ)+a716373(124/129-ক-ইউনিয়ন) — UU ×৫ (PLANS/PROJECT/style.css/continue-reading.js/worklog) union-সমাধান: তাদের crx cover-fallback + আমার p-ফিল্ড এক-লাইনে সহাবস্থান; style.css তাদের প্রত্যাহার-নোট + আমার s129-ব্লক ② 2c2ca6f(session131) — docs-UU ×৩ union
-- র্যাচেট-সচেতনতা: 129-কের hex-ratchet-গার্ড আবিষ্কৃত → dashboard.css .crx-pinned-tag #fff → var(--lf-ui-surface) (তাদের রীতি); tokens.css s129-ট্রিও = র্যাচেট-স্ক্যান-বহির্ভূত (সত্য-উৎস) — guard গ্রিন
-- মার্জড-কোডে পুনঃযাচাই: contact-badge হুক-স্টেট ✓ পিন+cover-fallback সহাবস্থান ✓ কনসোল-০ ✓ LS-ক্লিনআপ ✓
-- চূড়ান্ত-পুশ: dfb2117 (session129-গ ফিচার) + 00b5af3 (root-worklog-union) → origin/main; পোস্ট-পুশ: role-policy 158/158 (§18-সহ) + cursor 25/25 + guard + audit + ৬-রুট স্মোক — ALL GREEN
-- পরের-এজেন্ট: session132 থেকে (PLANS-union-নোট অনুযায়ী 129-ক/খ/গ + 130 + 131 ল্যান্ডড)
->>>>>>> dfad832 (cbbdd74a-309c-4f2f-8272-a96f92151fa0)
+- **নতুন-গোটচা (PLANS-এ নথিভুক্ত):** ① ফিড-UNION-SQL-এ কলাম-যোগ = তিন-শাখায় সম-arity (নইলে 500 — filter=all-মিথ্যা-সবুজ ফাঁদ) ② স্টেল-জার-ফাঁদ: DB-backed session-store রিবুটেও লগইন রাখে — টেস্ট-জার rm -f বাধ্যতামূলক ③ ismail=secret123 ক্যানোনিকাল (root-নোটের 'ismail demo123' stale) ④ Write/Edit-টুল [h-ম্যানলিং — node-fs positional-patchই নিরাপদ
+- পরবর্তী-প্রস্তাব: profile/me-র SQL-এ accepted_flag (ব্যাজ-প্যারিটি) → ratchet-বেসলাইন হ্রাস (admin.css ৪২৬) → crx-og-default-গার্ড → লাইভ-Turso-রিসেট (টোকেন-ধারী)
+- **পরের-এজেন্ট: session138 থেকে**

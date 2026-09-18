@@ -108,13 +108,15 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor) {
       ? ORDER + ` LIMIT ${lim + 1}` // কার্সার-মোড: hasMore-সঠিকতার জন্য +১
       : ORDER + ` LIMIT ${lim} OFFSET ${off}`;
   const ARTICLE_SQL = `\n    SELECT 'article' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+           NULL as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            NULL as accepted_comment_id,
            p.author_id,
            u.full_name as author_name, u.pen_name, u.username, u.avatar_url, u.gender, u.designation, u.role as author_role
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'article'`;
-  const QUESTION_SQL = `\n    SELECT 'question' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+  const QUESTION_SQL = ` /* session132: accepted_flag — ফিড-প্রশ্ন-কার্ডে গ্রহণকৃত-উত্তর-ব্যাজ */\n    SELECT 'question' as item_type, p.id as id, p.title, p.body, p.cover_image, p.tags, p.shared_from,
+           (CASE WHEN p.accepted_comment_id IS NOT NULL THEN 1 ELSE 0 END) as accepted_flag,
            p.published_at as created_at, p.like_count, p.comment_count, p.share_count, p.reactions, p.view_count,
            p.accepted_comment_id,
            p.author_id,
@@ -122,6 +124,7 @@ function buildFeedSql(filter, me, limit, offset, ranked, cursor) {
     FROM posts p JOIN users u ON p.author_id = u.id
     WHERE p.status = 'published' AND p.type = 'question'`;
   const ACTIVITY_SQL = `\n    SELECT 'activity' as item_type, dc.id as id, dc.title, dc.body, dc.image_url as cover_image, dc.content_type as tags,
+           NULL as accepted_flag,
            NULL as shared_from, dc.created_at, 0 as like_count, 0 as comment_count, 0 as share_count, '{}' as reactions, 0 as view_count,
            NULL as accepted_comment_id,
            NULL as author_id,

@@ -1427,3 +1427,22 @@ Work Log:
 Stage Summary:
 - রিপো main @ 415af2a (session136); মার্জড-ট্রি-যাচাই: role-policy ১৭৭/১৭৭ + cursor ২৬/২৬ + guard-নতুন-বেসলাইন + audit + ব্রাউজার-স্মোক সব-গ্রিন
 - পরের-এজেন্ট: session137; admin/moderator view-বানানোর নিয়ম: admin.css-এর আগে tokens.css-লিংক আবশ্যক (PLANS-গোটচা-৪)
+
+Task ID: session137 (webDevReview রাউন্ড — কোড-আইডি s132; 132→135-রিলেবেল, 133/134-সমান্তরাল-ল্যান্ডের পরে)
+Agent: Z.ai Main Agent (webDevReview)
+Task: স্টেটাস-অ্যাসেসমেন্ট + agent-browser QA → বাগফিক্স (rate-limit QA-ফ্লেক) + ফিচার-রাউন্ড (ফিড accepted-ব্যাজ + answer_accepted টোনাল-আইকন) + union-rebase + push
+
+Work Log:
+- worklog/PLANS/PROJECT-পাঠ + git fetch → QA-ফেজ: ৯-রুট স্মোক + ৭-পেজ agent-browser কনসোল-০ + ৬-পেজ 390px-০ + cursor 25/25 + guard + audit + brace — role-policy 157/158 (মিথ্যা-ফেইল: adminLoginLimiter ট্রিপড) → বাগফিক্স-ফেজ।
+- বাগফিক্স: rate-limit.js QA-escape (LF_QA_DISABLE_RATELIMIT=1) + suite RL-TRIP-GUARD (SKIP+hint) + lf-boot.sh-ফ্ল্যাগ → role-policy 158/158 ×২ ALL GREEN।
+- ফিচার-①: QUESTION_SQL accepted_flag + FeedPostCard fd-accepted-chip132 + shared.css s132-ব্লক — E2E ধরা UNION-arity-500 (filter=all/ranked/more) → ARTICLE/ACTIVITY NULL-প্যাড → চার-পাথ ব্যাজ ✓।
+- ফিচার-②: header.ejs _ico + live.js ICONS + notifications.ejs (iconClass/_ico/G117-types) + style.css s132-টোনাল-প্যালেট — ত্রি-সারফেস প্যারিটি।
+- E2E verify-session132-accepted-features.sh 19/19 (সেলফ-সিড→গ্রহণ→ব্যাজ×৪-পাথ→নোটিফ-টোনাল×৪-চেক→dismiss+ক্যাসকেড-ডিলিট+অবশিষ্ট-শূন্য); স্টেল-জার-ফাঁদ (DB-backed session-store) আবিষ্কৃত → স্ক্রিপ্টে rm -f জার-রীতি।
+- agent-browser: স্ক্রিনশট ×৩ (badge-focus2/notif-tonal/notif-390) + 390px-০ + কনসোল-০; ক্লিনআপ (নোটিফ-dismiss + প্রশ্ন-ডিলিট + dashboard-অবশিষ্ট-০)।
+- চূড়ান্ত-রিগ্রেশন (মার্জড-ট্রি): role-policy 158/158 + cursor 25/25 + guard + audit + brace-০ + node --check + s132-E2E 19/19।
+- docs: PLANS (intent+cross-agent) + PROJECT §১৩৭ + worklog ×২।
+
+Stage Summary:
+- ফিড-কার্ডে গ্রহণকৃত-উত্তর এখন দৃশ্যমান (session131-প্রস্তাব ①) — Q&A-চক্রের ফিড-স্তর সম্পূর্ণ; answer_accepted বিজ্ঞপ্তি টোনাল-আইকন-সহ ত্রি-সারফেস (প্রস্তাব ②)।
+- QA-ইনফ্রা স্থিতিশীল: রেট-লিমিট-ফ্লেক বন্ধ (boot-flag + SKIP-গার্ড), স্টেল-জার-ফাঁদ নথিভুক্ত।
+- পরের-এজেন্ট: session138 থেকে — profile/me accepted_flag-প্যারিটি, ratchet-হ্রাস, crx-og-গার্ড, লাইভ-Turso-রিসেট (টোকেন-ধারী)।

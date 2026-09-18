@@ -18,6 +18,13 @@
 
 ---
 
+### সেশন ১৩৬ (কোড-আইডি s132) — QA-ইনফ্রা-ফ্লেক-বন্ধ (rate-limit boot-escape) + session135-ইউনিয়ন (webDevReview রাউন্ড)
+
+- **union-রায়:** ফিড accepted-ব্যাজ + answer_accepted টোনাল-আইকন দুটোই সমান্তরাল session135 (4794682) ক্যানোনিকাল গৃহীত (feed-acc-badge135/icon-accepted135); আমার ডুপ্লিকেট-মার্কআপ/CSS প্রত্যাহৃত।
+- **বাগফিক্স (অনন্য-রক্ষিত):** role-policy-স্যুটের স্টাফ-পোর্টাল-প্রোব একই-IP-বহুরানে adminLoginLimiter-এ মিথ্যা-ফেইল — `LF_QA_DISABLE_RATELIMIT=1` boot-escape (helpers/rate-limit.js; প্রোডাকশন-আচরণ অপরিবর্তিত) + suite RL-TRIP-GUARD (SKIP+বুট-সূচনা) + lf-boot.sh ফ্ল্যাগ।
+- **SQL (অনন্য-রক্ষিত):** QUESTION_SQL accepted_flag CASE-কলাম + ARTICLE/ACTIVITY NULL-প্যাড — UNION-arity (accepted_comment_id-কলামের পাশে; E2E-যাচাইত চার-পাথ)।
+- **E2E (অনন্য):** scripts/verify-session132-accepted-features.sh (canonical-ক্লাসে রিরাইটেন) — সেলফ-সিড→গ্রহণ→ব্যাজ×৪-পাথ→টোনাল-চেক→dismiss+ক্যাসকেড+অবশিষ্ট-শূন্য; স্টেল-জার-ফাঁদ (DB-backed session-store) আবিষ্কৃত-নথিভুক্ত।
+
 ## সূচিপত্র
 
 1. [প্রজেক্ট পরিচিতি ও মূল ভিশন](#১-প্রজেক্ট-পরিচিতি-ও-মূল-ভিশন)
