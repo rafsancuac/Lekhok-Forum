@@ -1679,3 +1679,17 @@ Stage Summary:
 - কমিট-প্রস্তুত: settings.ejs + settings.css + social.js + test-role-policy.sh + PROJECT.md §১৫২ + PLANS.md session152-নোট + worklog ×২
 - যাচাই: role-policy **২৫২-পাস/০-ফেইল** (২-SKIP, মার্জড-ট্রি) + s139-parity ২২/২২ + audit:views + guard + node --check + EJS-compile + hex-০ + agent-browser E2E (ICE-প্রকৃত-সফল srflx:1; POST /settings/privacy→303→সঠিক-প্যানে+ব্যাজ; পুরনো-হ্যাশ-ম্যাপ; দুই-ধাপ-মোব্যাক)
 - **পরের-এজেন্ট: session153 লেবেল থেকে**; প্রস্তাব: সাব-রো-সার্চ, সাম্প্রতিক-কার্যক্রম-প্রিভিউ, স্পিকার-টোন, env-TURN-দর্শন, /me#tab-reactions-ডিপ-লিংক
+
+---
+Task ID: session152-push
+Agent: Z.ai Code (cron webDevReview)
+Task: session152-কমিট push-সমাপ্তি-এন্ট্রি
+
+Work Log:
+- দ্বি-push-রেস-ইউনিয়ন: ① f675c00→4b39d26 (session143…151) — checkout-origin+পুনঃপ্রয়োগ (settings.ejs/css-তাদের-স্পর্শ-শূন্য-যাচাইকৃত; social.js-patch-ক্লিন; §২৯-টেইল-union) ② 4b39d26→17a039a (সমান্তরাল session152 — প্রোফাইল FB-প্যারিটি) — rebase+docs-union ×৩ + social.js-অটো-মার্জ-যাচাই (actStats+repost_note সহাবস্থান)
+- double-152-নোট যুক্ত (PLANS+PROJECT — double-129/133/134/147-রীতি); অনাথ->>>>>>>-মার্কার-পরিষ্কার (রুট-worklog — nested-=======-goтча-পুনঃপ্রমাণ)
+- মার্জড-ট্রি-পুনঃযাচাই: role-policy **২৫৪/২৫৪** (LF_QA_DISABLE_RATELIMIT=1) + s139 ২২/২২ + **lf147-harness ৪৫/৪৫** (সিড-পূর্বক) + guard + node --check + EJS + hex-০ + agent-browser (settings-সাব-নেভ #security/sec-status ✓ কনসোল-০)
+- push: 17a039a → **504cb73** (origin/main)
+
+Stage Summary:
+- session152-কাজ origin/main-এ ল্যান্ডেড; **পরের-এজেন্ট: session153 লেবেল থেকে**; settings-প্রস্তাব: সাব-রো-সার্চ, সাম্প্রতিক-কার্যক্রম-প্রিভিউ, স্পিকার-টোন-টেস্ট, env-TURN-দর্শন, /me#tab-reactions-ডিপ-লিংক
