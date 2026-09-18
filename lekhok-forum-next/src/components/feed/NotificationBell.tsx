@@ -110,6 +110,22 @@ export default function NotificationBell({
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
 
+  /* session160: ৯-ডট-লঞ্চার/সাইডবার → 'lf:open-notifications' ইভেন্টে প্যানেল-ওপেন */
+  useEffect(() => {
+    const onOpen = () => setOpen(true)
+    window.addEventListener('lf:open-notifications', onOpen as EventListener)
+    return () => window.removeEventListener('lf:open-notifications', onOpen as EventListener)
+  }, [])
+
+  /* session160: অপঠিত-কাউন্ট বদলালে সাইডবার/লঞ্চার-ব্যাজকে জানায় */
+  const notifyCountChanged = useCallback(() => {
+    try {
+      window.dispatchEvent(new CustomEvent('lf:notifications-changed'))
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
   const handleClick = (n: FrontendNotification) => {
     if (!n.read) {
       fetch('/api/notifications', {
@@ -119,6 +135,7 @@ export default function NotificationBell({
       }).then(() => {
         setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)))
         setUnread((u) => Math.max(0, u - 1))
+        notifyCountChanged()
       })
     }
     if (n.postId) {
@@ -140,6 +157,7 @@ export default function NotificationBell({
     if (res.ok) {
       setItems((prev) => prev.map((x) => ({ ...x, read: true })))
       setUnread(0)
+      notifyCountChanged()
     }
   }
 

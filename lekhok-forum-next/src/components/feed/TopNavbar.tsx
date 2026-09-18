@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Feather, Search, Users, X, UsersRound, MessagesSquare } from 'lucide-react'
 import NotificationBell from '@/components/feed/NotificationBell'
+import AppLauncherMenu from '@/components/navigation/AppLauncherMenu'
+import { useUnreadCounts } from '@/hooks/useUnreadCounts'
 import type { FrontendUser } from '@/lib/types'
 import { bn } from '@/lib/format'
 
@@ -17,6 +19,10 @@ export default function TopNavbar({
   onOpenProfile,
   onOpenGroups,
   onOpenMessenger,
+  onOpenComposer,
+  onCreateGroup,
+  onTabChange,
+  onOpenLatestStory,
 }: {
   current: FrontendUser | null
   users: FrontendUser[]
@@ -28,36 +34,18 @@ export default function TopNavbar({
   onOpenProfile?: (username: string) => void
   onOpenGroups?: () => void
   onOpenMessenger?: () => void
+  /** session160 — ৯-ডট ডিরেক্টরি-অ্যাকশনসমূহ */
+  onOpenComposer?: () => void
+  onCreateGroup?: () => void
+  onTabChange?: (t: 'feed' | 'following' | 'saved' | 'timeline') => void
+  onOpenLatestStory?: () => void
 }) {
   const [userMenu, setUserMenu] = useState(false)
   const [local, setLocal] = useState(searchQuery)
-  const [unreadMsgs, setUnreadMsgs] = useState(0)
+  /* session160: লাইভ অপঠিত-কাউন্ট — একক-হুক ৪৫-সে-পোলিং (আগের ২০-সে-ডেডিকেটেড-পোলের বদলে) */
+  const { messages: unreadMsgs } = useUnreadCounts(!!current)
   const menuRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  /* Session L: অপঠিত মেসেজ-ব্যাজ (হালকা পোলিং — hidden-ট্যাবে স্কিপ; ইউজার-সুইচে রিফ্রেশ) */
-  useEffect(() => {
-    let alive = true
-    const poll = () => {
-      if (document.hidden) return
-      fetch('/api/messages/conversations?unread=1')
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => {
-          if (alive && d && typeof d.unread === 'number') setUnreadMsgs(d.unread)
-        })
-        .catch(() => {})
-    }
-    poll()
-    const t = setInterval(poll, 20000)
-    // মেসেজ পাঠানো/পড়ার পরে ব্যাজ তাৎক্ষণিক রিফ্রেশ (window-ইভেন্ট)
-    const onMsg = () => poll()
-    window.addEventListener('lf:messages-changed', onMsg)
-    return () => {
-      alive = false
-      clearInterval(t)
-      window.removeEventListener('lf:messages-changed', onMsg)
-    }
-  }, [current?.id])
 
   useEffect(() => {
     setLocal(searchQuery)
@@ -119,6 +107,18 @@ export default function TopNavbar({
         </div>
 
         <div className="flex-1 md:hidden" />
+
+        {/* session160 — ৯-ডট ফোরাম ডিরেক্টরি (টাইপ-টু-ফিল্টার) */}
+        <AppLauncherMenu
+          current={current}
+          onOpenComposer={onOpenComposer}
+          onTabChange={onTabChange}
+          onOpenGroups={onOpenGroups}
+          onCreateGroup={onCreateGroup}
+          onOpenMessenger={onOpenMessenger}
+          onOpenProfile={onOpenProfile}
+          onOpenLatestStory={onOpenLatestStory}
+        />
 
         {/* গ্রুপসমূহ (Session K — মোবাইল সহ সর্বত্র) */}
         {onOpenGroups && (

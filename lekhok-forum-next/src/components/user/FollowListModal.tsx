@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { X, UserPlus, UserCheck, Loader2, Users, Feather, Image as ImageIcon } from 'lucide-react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { UserPlus, UserCheck, Loader2, Users, Feather, Image as ImageIcon } from 'lucide-react'
 import type { FrontendUser } from '@/lib/types'
 import { bn } from '@/lib/format'
 import { useToast } from '@/hooks/use-toast'
+import ResponsiveModal from '@/components/shared/ui/ResponsiveModal'
 
 /** কানেকশন-লিস্টের রো (API /connections রেসপন্স) */
 export interface ConnectionUser {
@@ -43,7 +43,6 @@ export default function FollowListModal({
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
 
   useEffect(() => setMounted(true), [])
@@ -75,14 +74,7 @@ export default function FollowListModal({
     setUsers(null)
   }, [tab])
 
-  /* Esc-ক্লোজ */
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  /* Esc-ক্লোজ ও body-লক ResponsiveModal-এ কেন্দ্রীভূত (session160) */
 
   /* ফলো-টগল (অপটিমিস্টিক) */
   const toggleFollow = async (u: ConnectionUser) => {
@@ -129,36 +121,22 @@ export default function FollowListModal({
 
   if (!mounted) return null
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[85] bg-black/70 backdrop-blur-[2px] flex items-center justify-center p-4 lf-anim-fade"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${displayName}-এর ফলো-লিস্ট`}
-    >
-      <div
-        ref={panelRef}
-        onClick={(e) => e.stopPropagation()}
-        className="bg-[#242526] border border-[#3e4042] rounded-2xl w-full max-w-[420px] max-h-[75vh] flex flex-col overflow-hidden shadow-2xl lf-modal-pop"
-      >
-        {/* হেডার */}
-        <div className="px-4 pt-3.5 pb-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[16px] font-extrabold text-white flex items-center gap-2">
-              <Users className="w-4.5 h-4.5 text-[#00a86b]" />
-              {displayName}
-            </h2>
-            <button
-              onClick={onClose}
-              aria-label="বন্ধ করুন"
-              className="w-8 h-8 rounded-full bg-[#3a3b3c] hover:bg-[#4a4c4e] flex items-center justify-center text-[#b0b3b8] hover:text-white transition active:scale-95 focus-visible:ring-2 focus-visible:ring-[#00a86b]"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          {/* ট্যাব */}
-          <div className="flex mt-2.5 -mb-px" role="tablist">
+  /* session160: রেসপন্সিভ-মডাল ইঞ্জিনে মাইগ্রেট — মোবাইলে বটম-শিট + ট্যাব-স্ট্রিপ headerExtra-তে */
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      title={
+        <span className="flex items-center gap-2">
+          <Users className="w-4.5 h-4.5 text-[#00a86b]" />
+          {displayName}
+        </span>
+      }
+      maxWidthClass="max-w-[420px]"
+      zIndexClass="z-[85]"
+      headerExtra={
+        <div className="px-4 -mb-px shrink-0 border-b border-[#3e4042]">
+          <div className="flex" role="tablist">
             <TabButton
               active={tab === 'followers'}
               onClick={() => setTab('followers')}
@@ -171,9 +149,8 @@ export default function FollowListModal({
             />
           </div>
         </div>
-
-        {/* লিস্ট */}
-        <div className="flex-1 overflow-y-auto lf-scroll">
+      }
+    >
           {loading && (
             <div className="space-y-3 p-4" role="status">
               {[1, 2, 3].map((n) => (
@@ -289,10 +266,7 @@ export default function FollowListModal({
               ))}
             </ul>
           )}
-        </div>
-      </div>
-    </div>,
-    document.body
+    </ResponsiveModal>
   )
 }
 

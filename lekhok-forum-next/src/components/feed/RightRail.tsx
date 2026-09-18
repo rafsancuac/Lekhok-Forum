@@ -4,13 +4,18 @@ import React, { useCallback, useEffect, useState } from 'react'
 import {
   Cake,
   TrendingUp,
+  Flame,
   Sparkles,
   UserPlus,
   Loader2,
+  ThumbsUp,
+  MessageCircle,
+  Bookmark,
 } from 'lucide-react'
 import { bn } from '@/lib/format'
 import { ToastAction } from '@/components/ui/toast'
 import { useToast } from '@/hooks/use-toast'
+import type { TrendingPost } from '@/lib/aggregates'
 
 interface SuggestionUser {
   id: string
@@ -27,10 +32,13 @@ interface SuggestionUser {
 export default function RightRail({
   onSearchTag,
   onOpenProfile,
+  onNavigateToPost,
   refreshKey = 0,
 }: {
   onSearchTag?: (tag: string) => void
   onOpenProfile?: (username: string) => void
+  /** session160 — আলোচিত-কার্ড ক্লিকে পোস্টে নেভিগেশন */
+  onNavigateToPost?: (postId: string) => void
   /** ফলো-অবস্থা বদলালে প্যারেন্ট বাড়ায় → সাজেশন রিফ্রেশ */
   refreshKey?: number
 }) {
@@ -44,7 +52,24 @@ export default function RightRail({
   const [suggestions, setSuggestions] = useState<SuggestionUser[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
+  /* session160 — আলোচিত লেখা (ক্রন-ক্যাশড এগ্রিগেট) */
+  const [trendingPosts, setTrendingPosts] = useState<TrendingPost[] | null>(null)
   const { toast } = useToast()
+
+  const loadTrending = useCallback(async () => {
+    try {
+      const res = await fetch('/api/aggregates/trending')
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setTrendingPosts(data.posts || [])
+    } catch {
+      setTrendingPosts([])
+    }
+  }, [])
+
+  useEffect(() => {
+    loadTrending()
+  }, [loadTrending, refreshKey])
 
   const loadSuggestions = useCallback(async () => {
     try {
@@ -130,6 +155,77 @@ export default function RightRail({
           আজ <b className="text-[#e4e6eb]">নুসরাত জাহান</b> ও <b className="text-[#e4e6eb]">আরও ২ জন</b>-এর
           জন্মদিন। শুভেচ্ছা জানান!
         </p>
+      </section>
+
+      {/* আলোচিত এই সপ্তাহে (session160 — ক্রন-ক্যাশড র‍্যাঙ্কিং) */}
+      <section className="bg-[#242526] rounded-xl border border-[#3e4042] p-3.5">
+        <h3 className="text-[15px] font-bold text-white mb-2.5 flex items-center gap-2">
+          <Flame className="w-4.5 h-4.5 text-orange-400 lf-trending-rank" /> আলোচিত এই সপ্তাহে
+        </h3>
+        {trendingPosts === null ? (
+          <div className="space-y-3" role="status">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-lg lf-shimmer" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-2.5 w-full lf-shimmer rounded" />
+                  <div className="h-2 w-20 lf-shimmer rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : trendingPosts.length === 0 ? (
+          <p className="text-[12px] text-[#8a8d91] leading-relaxed px-1 py-1">
+            এই সপ্তাহে এনগেজমেন্ট জমা হচ্ছে — শীঘ্রই আলোচিত লেখা এখানে দেখা যাবে।
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {trendingPosts.map((p, i) => (
+              <button
+                key={p.id}
+                onClick={() => onNavigateToPost?.(p.id)}
+                title={`স্কোর ${bn(p.score)} — পোস্টটি দেখুন`}
+                style={{ animationDelay: `${i * 40}ms` }}
+                className="lf-pop-row w-full text-left px-2 py-1.5 rounded-lg hover:bg-[#3a3b3c] focus-visible:ring-2 focus-visible:ring-[#00a86b] transition"
+              >
+                <span className="flex items-start gap-2">
+                  <span
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-extrabold shrink-0 mt-0.5 ${
+                      i === 0
+                        ? 'bg-orange-500/20 text-orange-400'
+                        : i === 1
+                          ? 'bg-amber-500/15 text-amber-400'
+                          : i === 2
+                            ? 'bg-[#3a3b3c] text-[#b0b3b8]'
+                            : 'bg-[#3a3b3c] text-[#65676b]'
+                    }`}
+                  >
+                    {bn(i + 1)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12.5px] leading-snug text-[#e4e6eb] line-clamp-2">
+                      {p.excerpt}
+                    </span>
+                    <span className="flex items-center gap-2 mt-1 text-[10.5px] text-[#8a8d91]">
+                      <span className="truncate max-w-[110px]">{p.author.name}</span>
+                      <span className="flex items-center gap-0.5 shrink-0">
+                        <ThumbsUp className="w-3 h-3" /> {bn(p.reactions)}
+                      </span>
+                      <span className="flex items-center gap-0.5 shrink-0">
+                        <MessageCircle className="w-3 h-3" /> {bn(p.comments)}
+                      </span>
+                      {p.bookmarks > 0 && (
+                        <span className="flex items-center gap-0.5 shrink-0">
+                          <Bookmark className="w-3 h-3" /> {bn(p.bookmarks)}
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ট্রেন্ডিং */}

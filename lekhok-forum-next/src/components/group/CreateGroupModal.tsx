@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { createPortal } from 'react-dom'
-import { X, Globe2, Lock, Loader2, Users } from 'lucide-react'
+import { Globe2, Lock, Loader2, Users } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import ResponsiveModal from '@/components/shared/ui/ResponsiveModal'
 
 /** নতুন গ্রুপ তৈরির মডাল (Session K) */
 export default function CreateGroupModal({
@@ -54,28 +54,14 @@ export default function CreateGroupModal({
     }
   }
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-[2px] flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="নতুন গ্রুপ তৈরি করুন"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
+  /* session160: রেসপন্সিভ-মডাল ইঞ্জিনে মাইগ্রেট — মোবাইলে বটম-শিট, ডেস্কটপে সেন্টারড */
+  return (
+    <ResponsiveModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="নতুন গ্রুপ তৈরি করুন"
+      maxWidthClass="max-w-md"
     >
-      <div className="w-full max-w-md bg-[#242526] border border-[#3e4042] rounded-2xl shadow-2xl lf-modal-pop overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#3e4042]">
-          <h2 className="font-extrabold text-white text-base">নতুন গ্রুপ তৈরি করুন</h2>
-          <button
-            onClick={onClose}
-            aria-label="বন্ধ করুন"
-            className="w-8 h-8 rounded-full bg-[#3a3b3c] hover:bg-[#4a4c4e] flex items-center justify-center text-[#b0b3b8] hover:text-white transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
         <div className="p-4 space-y-4">
           <div>
             <label htmlFor="group-name" className="block text-xs font-bold text-[#b0b3b8] mb-1.5">
@@ -168,8 +154,6 @@ export default function CreateGroupModal({
             )}
           </button>
         </div>
-      </div>
-    </div>,
-    document.body
+    </ResponsiveModal>
   )
 }

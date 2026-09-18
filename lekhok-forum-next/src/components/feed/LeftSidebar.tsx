@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Home, Clock, Bookmark, FileText, Feather, Users, UserRound, UserCheck, UsersRound, MessagesSquare } from 'lucide-react'
+import { Home, Clock, Bookmark, FileText, Feather, Users, UserRound, UserCheck, UsersRound, MessagesSquare, Bell } from 'lucide-react'
 import type { FrontendUser } from '@/lib/types'
 import { bn } from '@/lib/format'
 
@@ -21,6 +21,10 @@ export default function LeftSidebar({
   groupsActive = false,
   messengerActive = false,
   onOpenMessenger,
+  /* session160 — লাইভ অপঠিত-ব্যাজ (useUnreadCounts-থেকে) */
+  unreadNotifications = 0,
+  unreadMessages = 0,
+  onOpenNotifications,
 }: {
   current: FrontendUser | null
   users: FrontendUser[]
@@ -39,6 +43,10 @@ export default function LeftSidebar({
   /** Session L: মেসেঞ্জার */
   messengerActive?: boolean
   onOpenMessenger?: () => void
+  /** session160 — লাইভ ব্যাজ + বিজ্ঞপ্তি-প্যানেল ওপেনার */
+  unreadNotifications?: number
+  unreadMessages?: number
+  onOpenNotifications?: () => void
 }) {
   return (
     <aside className="hidden lg:flex flex-col gap-0.5 w-[265px] shrink-0 sticky top-[72px] self-start max-h-[calc(100vh-90px)] overflow-y-auto lf-scroll pb-4 select-none">
@@ -101,12 +109,23 @@ export default function LeftSidebar({
       />
       <NavItem
         icon={
+          <Bell
+            className={`w-5 h-5 ${unreadNotifications > 0 ? 'text-[#00a86b]' : ''}`}
+          />
+        }
+        label="বিজ্ঞপ্তি"
+        badge={unreadNotifications}
+        onClick={() => onOpenNotifications?.()}
+      />
+      <NavItem
+        icon={
           <MessagesSquare
             className={`w-5 h-5 ${messengerActive ? 'text-[#00a86b]' : ''}`}
           />
         }
         label="মেসেঞ্জার"
         active={messengerActive}
+        badge={unreadMessages}
         onClick={() => onOpenMessenger?.()}
       />
 

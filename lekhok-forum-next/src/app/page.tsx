@@ -35,6 +35,7 @@ import type { FrontendPost, FrontendUser } from '@/lib/types'
 import { bn } from '@/lib/format'
 import { compressImage } from '@/lib/image-compress'
 import { useToast } from '@/hooks/use-toast'
+import { useUnreadCounts } from '@/hooks/useUnreadCounts'
 
 type ViewMode = MainTab | 'search' | 'profile' | 'groups' | 'group' | 'messenger'
 
@@ -75,6 +76,9 @@ export default function Home() {
   const [followModal, setFollowModal] = useState<{ username: string; name: string; tab: 'followers' | 'following' } | null>(null)
   /* Session J: "নতুন পোস্ট" পোলিং-ব্যাজ */
   const [newPostCount, setNewPostCount] = useState(0)
+
+  /* session160 — লাইভ অপঠিত-কাউন্ট (সাইডবার-ব্যাজ; ৪৫-সে-পোলিং + ইভেন্ট-চালিত) */
+  const unreadCounts = useUnreadCounts(!!current)
   const baselineRef = useRef<{ iso: string | null; topId: string | null }>({ iso: null, topId: null })
   const deepLinkRef = useRef<string | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -188,6 +192,17 @@ export default function Home() {
     setOpenStoryId(null)
     setUrlParams({ story: null })
   }, [setUrlParams])
+
+  /* ─── session160: লঞ্চার → সর্বশেষ স্টোরি (প্রথম সক্রিয় রিং-এর প্রথম স্টোরি) ─── */
+  const openLatestStory = useCallback(() => {
+    fetch('/api/stories')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const first = d?.rings?.[0]?.stories?.[0]?.id
+        if (first) openStory(first)
+      })
+      .catch(() => {})
+  }, [openStory])
 
   /* ─── Session H: ইউজার-প্রোফাইল ওপেন/ক্লোজ (?user= ডিপ-লিংক সহ) — Session K: প্যারাম-সচেতন ─── */
   const openProfile = useCallback(
@@ -573,6 +588,22 @@ export default function Home() {
         onOpenProfile={openProfile}
         onOpenGroups={openGroups}
         onOpenMessenger={openMessenger}
+        onOpenComposer={openComposer}
+        onCreateGroup={() => {
+          closeProfile()
+          closeGroupNav()
+          closeMessenger()
+          setCreateGroupOpen(true)
+        }}
+        onTabChange={(t) => {
+          setTab(t)
+          setSearchQuery('')
+          closeProfile()
+          closeGroupNav()
+          closeMessenger()
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+        onOpenLatestStory={openLatestStory}
       />
 
       <main className="flex-1 w-full">
@@ -599,6 +630,9 @@ export default function Home() {
             groupsActive={view === 'groups' || view === 'group'}
             messengerActive={view === 'messenger'}
             onOpenMessenger={openMessenger}
+            unreadNotifications={unreadCounts.notifications}
+            unreadMessages={unreadCounts.messages}
+            onOpenNotifications={() => window.dispatchEvent(new CustomEvent('lf:open-notifications'))}
           />
 
           {/* ═══ সেন্টার কলাম — ইউজার-স্পেক: max-w ৭০০px + gap-2.5; mx-auto বাদ (justify-center-ই সেন্টার করে — auto-margin গ্যাপ-৩ নিষ্ক্রিয় করত) ═══ */}
@@ -1141,6 +1175,7 @@ export default function Home() {
             key={current?.id ?? 'anon'}
             onSearchTag={searchTag}
             onOpenProfile={openProfile}
+            onNavigateToPost={scrollToPost}
             refreshKey={followRefreshKey}
           />
         </div>
