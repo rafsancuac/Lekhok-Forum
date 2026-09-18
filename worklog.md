@@ -1303,6 +1303,7 @@ Stage Summary:
 - নতুন-গোটচা (PLANS): getSenders() প্ল্যাটফর্ম-অবজেক্ট · /dashboard-গেস্ট-200 (data-auth) · #F7B125=rgb(247,177,37) · রিবেজে GIT_EDITOR-unset
 - পরের-এজেন্ট: session133 থেকে
 
+<<<<<<< HEAD
 
 ---
 Task ID: session133 (cron-r13 — QA→ফিচার-রাউন্ড)
@@ -1326,3 +1327,21 @@ Task: প্রজেক্ট-অবস্থা-যাচাই + agent-browse
 - বাকি-প্রস্তাব (PLANS session133-নোট): reconcile-flash-মসৃণকরণ (CSS-side), crx-'শেষ-পড়া'-পিন, tokens-র্যাচেট-বেসলাইন নামানো (admin.css ৪২৬), full-page notifications-এ reltime-রি-পেইন্ট, লাইভ-Turso-রিসেট (টোকেন-ধারী)
 - গোটচা-পুনঃপ্রমাণিত: Express res.redirect-এর Location গেটওয়ে/curl-এ absolute দেখায় — টেস্টে strip() হেল্পার বাধ্যতামূলক
 - পরের-এজেন্ট: **session131 থেকে**; শুরুতে git fetch + PLANS-সর্বশেষ Cross-Agent Note; push-পূর্বে pull --rebase (union-মার্জ PLANS/PROJECT/worklog)
+=======
+---
+Task ID: RES-133 (ক্রন-রিভিউ রাউন্ড ১৩ — session133; [relabel: 131→133 — 2c2ca6f-এর session131 + cbd3221-এর session132 আগে-ল্যান্ডড, max+1 রীতি])
+Agent: Resources-feature agent
+Task: অবস্থা-মূল্যায়ন + agent-browser QA → স্টেবল-ফেজে নতুন ফিচার: সাইট-ওয়াইড তারিখ-চুক্তি (UTC→Asia/Dhaka, RES-124-ব্যাকলগ ①) + /api/resources/series-stats লাইভ-এন্ডপয়েন্ট (②) + অ্যাডমিন লাইভ-রিফ্রেশ + role-policy §১৮ (③)
+
+Work Log:
+- sync+QA: fetch (8cda026-এ নতুন-নেই) → boot-srv.sh → smoke ৮-পেজ 200 + role-policy 147/147 + agent-browser (22-কার্ড/3672-rules/কনসোল-০/390px-০) → ফেজ-স্টেবল রায়
+- 🚨 তারিখ-বাগফিক্স: DB-UTC নেম-লেস স্ট্যাম্পের JS-লোকাল-মিসপার্স — helpers/bn-date.js + ৫-সারফেস (pages.js gallery / detail.ejs রুট-লোকাল-পাস / social.js / main.js _pTs131+_dTs131 / live.js _pTs131L)
+- GET /api/resources/series-stats (স্টাফ-গেট, top-N score=v+d×2, ?limit-ক্ল্যাম্প, no-store) + অ্যাডমিন rss-প্যানেল লাইভ-রিফ্রেশ (স্কেলেটন-শিমার→রিরেন্ডার→বার-অ্যানিমেশন→error-restore)
+- role-policy §১৮ (series-stats-গেট ×৮ + বাল্ক SSRF-নেগেটিভ ×৮) — সুইট 163-চেক (my-baseline; merge-পরে origin-এর §২৬-সহ পুনঃগণনা দেখুন নিচে)
+- agent-browser E2E: টুলটিপ-প্রমাণ (data-ts 04:15Z → টাইটেল ১০:১৫ AM ঢাকা) + রিফ্রেশ-স্কেলেটন×৬+is-loading মিডফ্লাইট → পুনরুদ্ধার+বার+হালনাগাদ-চিপ + 8-পেজ 390px-০ + কনসোল-০; স্ক্রিনশট ×৩ (download/s131-*)
+- push-রেস: ৭-কমিট প্যারালাল-পুশ (2c2ca6f-এর session131 + cbd3221-এর session132 সহ) → pull --rebase → ৪-docs-কনফ্লিক্ট (test-script: উভয়-ব্লক-রক্ষা — তাদের §২৬ + আমার §১৮; PLANS/PROJECT/worklog: origin+আমার-EOF-ইউনিয়ন) → max+1 রীতিতে 131→133-রিলেবেল (docs-হেডার; কোড-আইডেন্টিফায়ার _pTs131/§১৮-লেবেল অক্ষত-ইউনিক)
+
+Stage Summary:
+- মার্জড-ট্রিতে চূড়ান্ত-যাচাই: role-policy ১৫৮/১৫৮ (তাদের ১৪২ + আমার ১৬) ALL GREEN + node --check + smoke ✓ — push: (এ-কমিট)
+- পরবর্তী-এজেন্ট: session134 লেবেল থেকে; গোটচা ×৩ PLANS session133-নোটে (ckc-রেজেক্স-ফাঁদ / bulk-প্রি-ভ্যালিডেশন / 390px-ট্রানজিয়েন্ট)
+>>>>>>> 1cff3cc (docs(session133): PLANS/PROJECT/worklog-লেবেল 131→133-রিলেবেল-নোট + রুট-worklog এন্ট্রি (rebase-পরবর্তী মার্জড-ট্রি যাচাই: role-policy 174/174 ALL GREEN — তাদের ১৫৮ + আমার §১৮-এর ১৬))
