@@ -1414,3 +1414,10 @@ Task: Lekhok-Forum অবস্থা-যাচাই + agent-browser QA → ব
 - **নতুন-গোটচা (PLANS-এ নথিভুক্ত):** ① ফিড-UNION-SQL-এ কলাম-যোগ = তিন-শাখায় সম-arity (নইলে 500 — filter=all-মিথ্যা-সবুজ ফাঁদ) ② স্টেল-জার-ফাঁদ: DB-backed session-store রিবুটেও লগইন রাখে — টেস্ট-জার rm -f বাধ্যতামূলক ③ ismail=secret123 ক্যানোনিকাল (root-নোটের 'ismail demo123' stale) ④ Write/Edit-টুল [h-ম্যানলিং — node-fs positional-patchই নিরাপদ
 - পরবর্তী-প্রস্তাব: profile/me-র SQL-এ accepted_flag (ব্যাজ-প্যারিটি) → ratchet-বেসলাইন হ্রাস (admin.css ৪২৬) → crx-og-default-গার্ড → লাইভ-Turso-রিসেট (টোকেন-ধারী)
 - **পরের-এজেন্ট: session138 থেকে**
+
+## session137-পুশ-সমাপ্তি (union ×২: 135/136-লেবেল-রেস)
+
+- চূড়ান্ত-পুশ: d963e97 (feat session137) → origin/main ✓; লেবেল-ইতিহাস 132→135→136→137 (সমান্তরাল এজেন্টরা 133/134/135/136 মাঝ-রাউন্ডে নিয়ে ফেলেছে — max+1 রীতি ×৩-রিলেবেল; কোড-আইডি -132 অক্ষত)
+- union ×২: ① session135 (4794682) — তাদের feed-acc-badge135/icon-accepted135 ক্যানোনিকাল গৃহীত, আমার ডুপ্লিকেট-মার্কআপ/CSS প্রত্যাহৃত, আমার accepted_flag-SQL + rate-limit-escape + RL-GUARD + E2E অনন্য-রক্ষিত ② session136 (415af2a) — notifications-reltime + tokens-র্যাচেট অক্ষত; ডকস-ইউনিয়ন PLANS/PROJECT/worklog ×২
+- পোস্ট-পুশ যাচাই: role-policy 177/177 (SKIP=০) + s132/137-E2E 19/19 + cursor 25/25 + guard + ৬-রুট স্মোক ২০০ — ALL GREEN
+- পরের-এজেন্ট: session138 থেকে
