@@ -558,3 +558,60 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 .fsort-sep163{flex:0 0 auto;width:1px;height:20px;background:var(--border);margin:0 3px}
 .fsort-grp163{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto}
 /* ════════ EOF session163-single-line-filter-bar ════════ */
+/* ════════ session164 — FB-কম্প্যাক্ট পোস্ট-কার্ড + ব্যালেন্সড ৩-কলাম (ইউজার-স্পেক) ════════
+   ইউজার-অভিযোগ: পোস্টের উপরে/নিচে/ডানে/বামে বিশাল ফাঁকা জায়গা + হেডারের সবুজ
+   '📅 কার্যক্রম / লেখা / কলাম / ২ মিনিট' ব্যাজ-সারি ইন্টারফেস নষ্ট করে।
+   RCA-১ (হোয়াইটস্পেস): জেনেরিক .card{padding:36px} .feed-card-এ লিক করেছিল —
+   head/body/actions/drawer-এর নিজস্ব প্যাডিং-এর ওপর ডাবল → প্রতি-পাশে ৩৭px ইনসেট।
+   RCA-২ (ব্যাজ): FeedPostCard হেডারে feed-type-badge(margin-left:auto)+cat-chip+rt-chip
+   — মার্কআপ-স্তরেই বিলোপ (সেশন-নোট: মেটা এখন lf-meta164 সাবটাইটেলে)।
+   এই ব্লক: প্যাডিং-শূন্য + edge-to-edge মিডিয়া + ৮px রেডিয়াস + FB-স্ট্যান্ডার্ড
+   ফুটার (কাউন্টার-বার-ডিভাইডার + বর্ডারহীন flex-বাটন) + মেটা-সাবটাইটেল স্টাইল।
+   নোট: dashboard.css layout.ejs দিয়ে সর্বত্র লোড হয় (style.css-এর পরে) — তাই
+   এখানেই গ্লোবাল-ওভাররাইড নিরাপদ। টোকেন-শুধু (নতুন-হেক্স-শূন্য — র্যাচেট-নীতি)। */
+.feed-card{padding:0;border-radius:8px}
+.feed-card:hover{transform:none}
+.feed-card>.feed-card-head{padding:12px 12px 8px;gap:10px}
+.feed-card>.feed-card-body{padding:2px 12px 10px}
+.feed-card>.fb-context153{margin:2px 12px 6px}
+.feed-card>.fb-rich153{padding:2px 12px 8px}
+.feed-card>.repost-note{margin:2px 12px 6px;padding:0 2px;font-size:.9rem;line-height:1.6;color:var(--lf-text-primary);white-space:pre-line}
+.feed-card>.pf-pinned-label{padding:10px 12px 0}
+.feed-card>.actions-block{border-top:0;padding:0 6px}
+.feed-card>.fc-preview{padding:0 12px 8px}
+.feed-card>.fc-drawer{padding:8px 12px 10px}
+/* মিডিয়া edge-to-edge — কার্ডের বাম-প্রান্ত থেকে ডান-প্রান্ত (FB-ফুল-ব্লিড) */
+.feed-card>.fb-col153{border-radius:0;margin-top:0}
+.feed-card>.post-gallery{width:100%}
+/* লেগেসি রিপোস্ট-বক্স — কার্ড-প্যাডিং শূন্য হওয়ায় নিজস্ব ইনসেট+বর্ডার (FB-নেস্টেড-প্যারিটি) */
+.feed-card>.repost-original:not(.share-orig147){margin:10px 12px 2px;border:1px solid var(--lf-fb-border-2,var(--border));border-radius:8px;overflow:hidden}
+.feed-card>.share-orig147{margin:0 12px}
+/* FB-স্ট্যান্ডার্ড ফুটার — কাউন্টার-বার (ডিভাইডার-সহ) + বর্ডারহীন flex-অ্যাকশন-বাটন */
+.feed-card .actions-bar{margin:0;padding:0;border:0;background:transparent;border-radius:0}
+.feed-card .actions-bar .actions-summary{border-bottom:1px solid var(--lf-fb-divider-2,var(--border));padding:8px 4px 7px;margin:0 0 3px}
+.feed-card .actions-bar .react-wrap,.feed-card .actions-bar .share-wrap{flex:1 1 0;display:flex;min-width:0}
+.feed-card .actions-bar .reaction-btn{flex:1 1 auto;justify-content:center;border:0;background:0 0;padding:9px 6px;border-radius:6px;font-size:.84rem;color:var(--lf-text-secondary,var(--text-soft))}
+.feed-card .actions-bar .reaction-btn:hover,.feed-card .actions-bar .reaction-btn:focus-visible{border-color:transparent;background:var(--lf-fb-hover,var(--bg))}
+.feed-card .actions-bar .reaction-btn.active{border-color:transparent;background:transparent;color:var(--lf-brand-primary)}
+.feed-card .actions-bar .reaction-btn.bookmark-btn{flex:0 0 auto;padding:9px 10px}
+/* মেটা-সাবটাইটেল (লেখকের সময়-লাইন — হেডার-ব্যাজের উত্তরাধিকার) */
+.lf-time-row164{display:flex;align-items:center;flex-wrap:wrap;column-gap:5px;min-width:0}
+.lf-meta164{display:inline-flex;align-items:center;flex-wrap:wrap;font-size:.72rem;line-height:1.4;color:var(--lf-text-secondary);min-width:0}
+.lf-meta164 .lf-mi164{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.lf-meta164 .lf-mi164+.lf-mi164::before{content:'•';margin:0 5px 0 1px;opacity:.7;font-weight:400}
+.lf-meta164 .lf-mi164 a{color:inherit;text-decoration:none}
+.lf-meta164 .lf-mi164 a:hover{text-decoration:underline;color:var(--lf-brand-primary)}
+.lf-meta164 .is-acc164{color:var(--lf-ok-ink-2,var(--lf-fb-green));font-weight:600}
+/* ব্যালেন্সড ৩-কলাম (ইউজার-স্পেক: বাম ২৬০px সংকুচিত, ফিড ৬০০px, ডান ৩১০px প্রশস্ত, gap ১৬px) */
+@media (min-width:1200px){
+  body.lf-feed-lock156 .dashboard-wrap .feed-rail{flex-basis:260px;padding:4px 4px 24px 0}
+  body.lf-feed-lock156 .dashboard-wrap .dash-main>*{max-width:600px}
+  body.lf-feed-lock156 .dashboard-wrap .dash-right{flex-basis:310px}
+}
+@media (min-width:1440px){
+  body.lf-feed-lock156 .dashboard-wrap .feed-rail{flex-basis:280px}
+  body.lf-feed-lock156 .dashboard-wrap .dash-right{flex-basis:330px}
+}
+/* ফিড-কার্ড উল্লম্ব-ব্যবধান কমপ্যাক্ট (FB-রিদম) */
+.dashboard-wrap .dash-main .feed-card{margin-bottom:12px}
+/* ════════ EOF session164-fb-compact-post-card ════════ */

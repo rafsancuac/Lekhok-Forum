@@ -53,14 +53,11 @@
     <div class="repost-original card-inner">
       <% var _orig = item.original; %>
       <div class="feed-card-head">
-        <%- include('../user/AuthorLabel', { u: _orig, timeIso: _orig.published_at || _orig.created_at }) %>
-        <% if (_orig.type === 'question') { %>
-          <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
-          <%# সেশন ১৩৫: গৃহীত-উত্তর-ব্যাজ — accepted_comment_id থাকলে ফিড-কার্ডেই সবুজ-চিহ্ন (qa-single-এর accepted-chip127-এর ফিড-মিরর) %>
-          <% if (_orig.accepted_comment_id != null) { %><span class="feed-acc-badge135" title="এই প্রশ্নের একটি উত্তর গৃহীত হয়েছে"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span><% } %>
-        <% } else { %>
-          <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
-        <% } %>
+        <%# সেশন ১৬৪: FB-নেস্টেড-বক্স — ভেতরের কার্ডে টাইপ-ব্যাজ নেই (শুধু লেখক+সময়);
+            গৃহীত-উত্তর সিগন্যাল মেটা-সাবটাইটেলে; metaHtml:'' = বাইরের _meta164-লিক-প্রতিরোধ %>
+        <% var _omi164 = [];
+           if (_orig.type === 'question' && _orig.accepted_comment_id != null) { _omi164.push('<span class="lf-mi164 is-acc164" title="এই প্রশ্নের একটি উত্তর গৃহীত হয়েছে"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span>'); } %>
+        <%- include('../user/AuthorLabel', { u: _orig, timeIso: _orig.published_at || _orig.created_at, metaHtml: _omi164.join('') }) %>
         <%- include('./PostActionMenu', {
           postId: _orig.id,
           editUrl: (_orig.type === 'question' ? '/qa/' : '/articles/') + _orig.id + '/edit',
@@ -119,8 +116,8 @@
     <%# ভেতরের আসল পোস্ট — FB-বর্ডারড নেস্টেড মিনি-কার্ড %>
     <div class="repost-original share-orig147">
       <div class="feed-card-head">
-        <%- include('../user/AuthorLabel', { u: _so147, timeIso: _so147.published_at || _so147.created_at }) %>
-        <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
+        <%# সেশন ১৬৪: FB-নেস্টেড-বক্স — ভেতরে শুধু লেখক+সময় (টাইপ-ব্যাজ বিলোপ); metaHtml:'' = লিক-প্রতিরোধ %>
+        <%- include('../user/AuthorLabel', { u: _so147, timeIso: _so147.published_at || _so147.created_at, metaHtml: '' }) %>
       </div>
       <% if (_so147.cover_image) { %>
         <a href="/articles/<%= _so147.id %>"><img loading="lazy" decoding="async" onload="this.classList.add('ld')" src="<%= _so147.cover_image %>" class="feed-image img-skel" alt=""></a>
@@ -153,53 +150,38 @@
   <article class="<%= _cardClass %>"<%= item.is_pinned ? ' data-pinned-post="' + item.id + '"' : '' %>>
     <% if (_o.pinnedLabel) { %><div class="pf-pinned-label"><i class="fas fa-thumbtack"></i> <%= _o.pinnedLabel %></div><% } %>
     <div class="feed-card-head">
+      <%# সেশন ১৬৪ (ইউজার-স্পেক FB-কম্প্যাক্ট-কার্ড): হেডার সম্পূর্ণ ব্যাজ-শূন্য —
+          feed-type-badge (কার্যক্রম/লেখা/প্রশ্ন) + ucs158-cat-chip (কলাম) + rt-chip (২ মিনিট) +
+          fd-rank-chip + fb-aud-chip153 সব হেডার-বিলোপ; ডানপাশে শুধুই PostActionMenu (৩-ডট)।
+          সব মেটা এখন লেখকের সময়-লাইনের সিবলিং lf-meta164-এ (FB-সাবটাইটেল:
+          'তারিখ • 🌍 • কলাম • ২ মিনিট পড়া') — reltime textContent-বিলোপ-সুরক্ষায়
+          data-ts-এর ভেতরে নয় (AuthorLabel metaHtml-চুক্তি দেখুন)।
+          ⚠️ include-data-লিক: FeedPostCard-স্কোপের metaHtml নিচের প্রতিটি AuthorLabel
+          include-এ স্পষ্টভাবে পাস/খালি-করা হয় (EJS parent-scope-merge)। %>
+      <% var _cat164 = String(item.category || '').toLowerCase();
+         var _catLbl164 = ({ essay:'প্রবন্ধ', story:'গল্প', short_story:'অনুগল্প', column:'কলাম', poem:'কবিতা',
+                             letter:'চিঠি', review:'বই পর্যালোচনা', humor:'রম্যরচনা',
+                             grammar:'ভাষা ও ব্যাকরণ', writing_style:'লেখার কৌশল', literature_history:'সাহিত্য ও ইতিহাস' })[_cat164]; %>
+      <% var _mi164 = [];
+         if (item.audience === 'ONLY_ME') { _mi164.push('<span class="lf-mi164" title="দৃশ্যমানতা: শুধুমাত্র আমি"><i class="fas fa-lock" aria-hidden="true"></i></span>'); }
+         else if (item.audience === 'FRIENDS') { _mi164.push('<span class="lf-mi164" title="দৃশ্যমানতা: বন্ধুরা"><i class="fas fa-user-friends" aria-hidden="true"></i></span>'); }
+         else { _mi164.push('<span class="lf-mi164" title="পাবলিক"><i class="fas fa-globe" aria-hidden="true"></i></span>'); }
+         if (_catLbl164) { _mi164.push('<span class="lf-mi164">' + _catLbl164 + '</span>'); }
+         if (item.read_mins) { _mi164.push('<span class="lf-mi164">' + toBn(item.read_mins) + ' মিনিট পড়া</span>'); }
+         if (_type === 'question' && item.accepted_comment_id != null) { _mi164.push('<span class="lf-mi164 is-acc164" title="এই প্রশ্নের একটি উত্তর গৃহীত হয়েছে"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span>'); }
+         if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge === 'followed') { _mi164.push('<span class="lf-mi164" title="আপনি এই লেখককে অনুসরণ করেন — সামঞ্জস্য-বোনাস"><i class="fas fa-user-check" aria-hidden="true"></i> অনুসৃত লেখক</span>'); }
+         else if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge === 'hot') { _mi164.push('<span class="lf-mi164" title="উচ্চ-এনগেজমেন্ট: রিঅ্যাকশন+মন্তব্য+শেয়ার ≥ ১০"><i class="fas fa-fire" aria-hidden="true"></i> আলোচিত</span>'); }
+         else if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge === 'fresh') { _mi164.push('<span class="lf-mi164" title="গত ২৪ ঘণ্টায় প্রকাশিত"><i class="fas fa-bolt" aria-hidden="true"></i> নতুন</span>'); }
+         if (item.shared_from) { _mi164.push('<span class="lf-mi164"><a href="/articles/' + String(item.shared_from).replace(/[^a-zA-Z0-9_-]/g, '') + '">শেয়ারকৃত পোস্ট</a></span>'); }
+         var _meta164 = _mi164.join(''); %>
       <% if (item.username === 'moderator' && !item.avatar_url) { %>
         <span class="lf-author-label">
           <img loading="lazy" decoding="async" src="/assets/img/avatar-placeholder.svg" class="lf-author-avatar lf-av-md" alt="">
           <span class="lf-author-main"><span class="lf-author-name-row"><span class="lf-author-name">মডারেটর</span><span class="verified-badge"><i class="fas fa-check-circle"></i></span></span>
-          <span class="lf-author-time" data-ts="<%= new Date(_ts).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(_ts).toLocaleString('bn-BD') %></span></span>
+          <span class="lf-time-row164"><span class="lf-author-time" data-ts="<%= new Date(_ts).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(_ts).toLocaleString('bn-BD') %></span><% if (_meta164) { %><span class="lf-meta164"><%- _meta164 %></span><% } %></span></span>
         </span>
       <% } else { %>
-        <%- include('../user/AuthorLabel', { u: item, timeIso: _ts, timeText: (typeof bnRelTime !== 'undefined' && item.published_at && _o.profileMode) ? bnRelTime(item.published_at) : undefined }) %>
-      <% } %>
-      <% if (_type === 'activity') { %>
-        <span class="feed-type-badge activity"><i class="fas fa-calendar-check"></i> কার্যক্রম</span>
-      <% } else if (_type === 'question') { %>
-        <span class="feed-type-badge question"><i class="fas fa-question-circle"></i> প্রশ্ন</span>
-        <%# সেশন ১৩৫: গৃহীত-উত্তর-ব্যাজ (মূল-কার্ড — ড্যাশবোর্ড/প্রোফাইল ফিড) %>
-        <% if (item.accepted_comment_id != null) { %><span class="feed-acc-badge135" title="এই প্রশ্নের একটি উত্তর গৃহীত হয়েছে"><i class="fas fa-circle-check" aria-hidden="true"></i> গৃহীত উত্তর</span><% } %>
-      <% } else { %>
-        <span class="feed-type-badge article"><i class="fas fa-pen-nib"></i> লেখা</span>
-      <% } %>
-      <%# সেশন ১৫৮: শাখা-লেবেল (ক্যাটাগরি) — পরিচিত-মানেই স্লিম চিপ (general/অজানা = নীরব);
-          client/server একই জেনার-মান (composer-modal.js POST_CATS158 ↔ social.js CATS158) %>
-      <% var _cat158 = String(item.category || '').toLowerCase();
-         var _catLbl158 = ({ essay:'প্রবন্ধ', story:'গল্প', short_story:'অনুগল্প', column:'কলাম', poem:'কবিতা',
-                             letter:'চিঠি', review:'বই পর্যালোচনা', humor:'রম্যরচনা',
-                             grammar:'ভাষা ও ব্যাকরণ', writing_style:'লেখার কৌশল', literature_history:'সাহিত্য ও ইতিহাস' })[_cat158]; %>
-      <% if (_catLbl158 && _type !== 'activity') { %><span class="ucs158-cat-chip" title="শাখা: <%= _catLbl158 %>"><%= _catLbl158 %></span><% } %>
-      <%# সেশন ১১০-মার্জ: আনুমানিক পড়ার-সময় (decorateFeed-গণিত) — স্লিম চিপ (সেশন ১৪৭: toBn-চুক্তি) %>
-      <% if (item.read_mins) { %>
-        <span class="rt-chip" title="আনুমানিক পড়ার সময়"><i class="fas fa-book-open"></i> <%= toBn(item.read_mins) %> মিনিট</span>
-      <% } %>
-      <%# সেশন ১১০-মার্জ (র‍্যাংকড-ফিড): "কেন-দেখছেন" চিপ — ranked-মোডে শুধু %>
-      <% if (typeof sort !== 'undefined' && sort === 'ranked' && item.rank_badge) { %>
-        <% if (item.rank_badge === 'followed') { %>
-          <span class="fd-rank-chip is-followed" title="আপনি এই লেখককে অনুসরণ করেন — সামঞ্জস্য-বোনাস"><i class="fas fa-user-check"></i> অনুসৃত লেখক</span>
-        <% } else if (item.rank_badge === 'hot') { %>
-          <span class="fd-rank-chip is-hot" title="উচ্চ-এনগেজমেন্ট: রিঅ্যাকশন+মন্তব্য+শেয়ার ≥ ১০"><i class="fas fa-fire"></i> আলোচিত</span>
-        <% } else if (item.rank_badge === 'fresh') { %>
-          <span class="fd-rank-chip is-fresh" title="গত ২৪ ঘণ্টায় প্রকাশিত"><i class="fas fa-bolt"></i> নতুন</span>
-        <% } %>
-      <% } %>
-      <% if (item.shared_from) { %>
-        <span class="shared-chip"><i class="fas fa-retweet"></i> শেয়ারকৃত পোস্ট · <a href="/articles/<%= item.shared_from %>">মূল পোস্ট</a></span>
-      <% } %>
-      <%# সেশন ১৫৩: অডিয়েন্স-চিপ (নন-পাবলিক হলেই — FB-প্যারিটি: লেখক-লাইনে দর্শক) %>
-      <% if (item.audience === 'ONLY_ME') { %>
-        <span class="fb-aud-chip153" title="দৃশ্যমানতা: শুধুমাত্র আমি"><i class="fas fa-lock" aria-hidden="true"></i> শুধু আমি</span>
-      <% } else if (item.audience === 'FRIENDS') { %>
-        <span class="fb-aud-chip153" title="দৃশ্যমানতা: বন্ধুরা (পারস্পরিক-অনুসরণ)"><i class="fas fa-user-friends" aria-hidden="true"></i> বন্ধুরা</span>
+        <%- include('../user/AuthorLabel', { u: item, timeIso: _ts, timeText: (typeof bnRelTime !== 'undefined' && item.published_at && _o.profileMode) ? bnRelTime(item.published_at) : undefined, metaHtml: _meta164 }) %>
       <% } %>
       <%- include('./PostActionMenu', {
         postId: item.id,

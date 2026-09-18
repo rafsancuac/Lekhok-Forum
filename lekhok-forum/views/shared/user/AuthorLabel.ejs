@@ -13,6 +13,11 @@
     timeIso    — ISO-টাইমস্ট্যাম্প (data-ts — LekhokRelTime লাইভ-রিলেটাইভ করে)
     timeText   — সরাসরি টেক্সট (timeIso না-দিলে)
     subtitle   — নামের নিচে ছোট-লাইন (ঐ)
+    metaHtml   — সময়-লাইনের ডানে মেটা-স্প্যান (RAW HTML — session164 FB-সাবটাইটেল;
+                 কলার নিজ দায়িত্বে escape করবে; FeedPostCard শুধু ফিক্সড-ম্যাপ/সংখ্যা
+                 দেয় — ইউজার-ইনপুট নয়)। ⚠️ reltime JS (main.js) [data-ts]-স্প্যানের
+                 textContent মুছে দেয় — তাই মেটা অবশ্যই data-ts-এর সিবলিং
+                 (lf-time-row164-রো) — ভেতরে নয়।
     verified   — true হলে নীল ভেরিফায়েড-ব্যাজ
     nameClass  — অতিরিক্ত ক্লাস
     showAvatar — ডিফল্ট true
@@ -43,10 +48,21 @@
       <% if (hasPenName(_u)) { %><span class="pen-chip" title="আসল নাম: <%= _u.full_name %>">কলমে: <%= _u.full_name %></span><% } %>
     </span>
     <% if (typeof subtitle !== 'undefined' && subtitle) { %><span class="lf-author-sub"><%= subtitle %></span><% } %>
-    <% if (typeof timeIso !== 'undefined' && timeIso) { %>
-      <span class="lf-author-time" data-ts="<%= new Date(timeIso).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(timeIso).toLocaleString('bn-BD') %></span>
-    <% } else if (typeof timeText !== 'undefined' && timeText) { %>
-      <span class="lf-author-time"><i class="far fa-clock"></i> <%= timeText %></span>
+    <%# সেশন ১৬৪: সময় + মেটা এক-রো-তে (lf-time-row164) — মেটা data-ts-স্প্যানের সিবলিং,
+        কারণ LekhokRelTime প্রতি-টিকে [data-ts]-এর textContent সম্পূর্ণ প্রতিস্থাপন করে %>
+    <% var _hasTime164 = (typeof timeIso !== 'undefined' && timeIso) || (typeof timeText !== 'undefined' && timeText);
+       var _hasMeta164 = (typeof metaHtml !== 'undefined' && metaHtml); %>
+    <% if (_hasTime164 || _hasMeta164) { %>
+    <span class="lf-time-row164">
+      <% if (_hasTime164) { %>
+        <% if (typeof timeIso !== 'undefined' && timeIso) { %>
+          <span class="lf-author-time" data-ts="<%= new Date(timeIso).toISOString() %>"><i class="far fa-clock"></i> <%= new Date(timeIso).toLocaleString('bn-BD') %></span>
+        <% } else { %>
+          <span class="lf-author-time"><i class="far fa-clock"></i> <%= timeText %></span>
+        <% } %>
+      <% } %>
+      <% if (_hasMeta164) { %><span class="lf-meta164"><%- metaHtml %></span><% } %>
+    </span>
     <% } %>
   </span>
 </span>
