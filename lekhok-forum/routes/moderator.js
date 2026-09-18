@@ -719,7 +719,7 @@ function csrfOk116(req) {
 router.post('/resources/bulk', ensureModerator, requireScope('resources'), express.json({ limit: '1mb' }), async (req, res) => {
   if (!csrfOk116(req)) return res.status(403).json({ ok: false, error: 'নিরাপত্তা যাচাই পুরনো হয়ে গিয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।' });
   const out = await resourceBulk116.bulkImport(String((req.body || {}).csv || ''), req.session.user.username || 'moderator', db);
-  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, total: out.total, errors: out.errors });
+  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, total: out.total, fetched: out.fetched, errors: out.errors });
 });
 
 /* সেশন ১১৬: মডারেটরের নিজের-আপলোড আপডেট — মালিকানা-গার্ড (created_by === নিজের-username);

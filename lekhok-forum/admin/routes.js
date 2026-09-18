@@ -998,7 +998,8 @@ function resourceFormPayload101(req, existing) {
 
 router.get('/resources', requireAdmin, async (req, res) => {
   const resources = await db.prepare('SELECT * FROM resources ORDER BY id DESC').all();
-  res.render('admin/resources/list', { resources, currentPath: '/admin/resources', RES_TYPE_META });
+  const seriesStats129 = await db.prepare("SELECT TRIM(series) AS series, COUNT(*) AS n, COALESCE(SUM(views),0) AS v, COALESCE(SUM(downloads),0) AS d FROM resources WHERE series IS NOT NULL AND TRIM(series) != '' GROUP BY TRIM(series) ORDER BY (COALESCE(SUM(views),0) + COALESCE(SUM(downloads),0)*2) DESC, n DESC LIMIT 6").all();
+  res.render('admin/resources/list', { resources, currentPath: '/admin/resources', RES_TYPE_META, seriesStats: seriesStats129 });
 });
 
 // সেশন ১০৭: সিরিজ-নামের তালিকা (ফর্মে datalist-অটোকমপ্লিট)
@@ -1032,7 +1033,7 @@ router.post('/resources/bulk', requireAdmin, express.json({ limit: '1mb' }), asy
     return res.status(403).json({ ok: false, error: 'নিরাপত্তা যাচাই পুরনো হয়ে গিয়েছে। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।' });
   }
   const out = await resourceBulk116.bulkImport(String((req.body || {}).csv || ''), (req.session.user && req.session.user.username) || 'admin', db);
-  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, total: out.total, errors: out.errors });
+  res.json({ ok: true, inserted: out.inserted, skipped: out.skipped, total: out.total, fetched: out.fetched, errors: out.errors });
 });
 
 router.get('/resources/:id/edit', requireAdmin, async (req, res) => {

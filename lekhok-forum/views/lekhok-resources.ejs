@@ -80,7 +80,7 @@
             <span class="rsx-serisum-bar" aria-hidden="true"><i></i></span>
             <a class="rsx-serisum-resume" id="rsxSeriResume" hidden href="#"><i class="fas fa-play" aria-hidden="true"></i> শেষ অবস্থান থেকে</a>
           </span>
-          <button type="button" class="rsx-seriplay" id="rsxSeriPlay" title="সিরিজের অডিও পর্ব ইন-পেজে শুনুন">
+          <button type="button" class="rsx-seriplay" id="rsxSeriPlay" title="শোনা-অশেষ পর্ব থেকে সিরিজ শুনুন">
             <i class="fas fa-play" aria-hidden="true"></i> সিরিজ শুনুন
           </button>
         <% } %>
@@ -648,28 +648,6 @@
     }
   });
 
-  /* ═══ সেশন ১১৮: সিরিজ play-all → ডিটেইল-অটোস্টার্ট ═══
-     প্রথম-অডিও-কার্ড (.rsx-audio audio[src]) খুঁজে তার ডিটেইল-লিংকে sessionStorage-ইনটেন্ট
-     + ?play=1-সহ নেভিগেট; স্যান্ডবক্সে XTransformPort বহন; অডিও-শূন্য সিরিজে টোস্ট। */
-  var seriPlay = document.getElementById('rsxSeriPlay');
-  if (seriPlay) seriPlay.addEventListener('click', function () {
-    var first = null;
-    document.querySelectorAll('.rsx-card').forEach(function (card) {
-      if (first) return;
-      var a = card.querySelector('.rsx-audio audio[src]');
-      var link = card.querySelector('a[data-rsx-detail]');
-      if (a && link) first = link.getAttribute('href');
-    });
-    if (!first) { rsxToast('এই সিরিজে অডিও পর্ব নেই'); return; }
-    var mh = /\/resources\/(\d+)/.exec(first);
-    if (!mh) return;
-    try { sessionStorage.setItem('lekhok.rplIntent', '1'); } catch (e) {}
-    /* সার্ভার স্যান্ডবক্সে লিংকে ইতিমধ্যেই পোর্ট-প্যারাম রেন্ডার করে (XTPQ) — id থেকে
-       URL-পুনর্গতি করা হয়, নইলে ডাবল-প্যারামে গেটওয়ে ব্যর্থ → অফলাইন-পাতা (E2E-তে ধরা) */
-    var mp = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
-    location.href = '/resources/' + mh[1] + '?play=1' + (mp ? '&XTransformPort=' + mp[1] : '');
-  });
-
   /* ═══ সেশন ১০৪: ডিপ-লিংক — ?r=<id> হলে কার্ডে স্ক্রল + পালস-হাইলাইট ═══ */
   (function () {
     var m = location.search.match(/[?&]r=(\d+)/);
@@ -714,6 +692,47 @@
     if (bar) { bar.hidden = false; var f = bar.querySelector('i'); if (f) f.style.width = Math.round(n / tot * 100) + '%'; }
     if (cnt) { cnt.hidden = false; cnt.textContent = bn(n) + '/' + bn(tot); }
   });
+  /* ═══ সেশন ১২৯: play-all অগ্রাধিকার — রিজুম/শোনা-অশেষ পর্ব থেকে শুরু (আগে: সর্বদা প্রথম-অডিও) ═══
+     অগ্রাধিকার: ① resume-অবস্থা (cur — 30দিনের মধ্যে, t>3সে, অ-শেষ, অডিও-পর্ব)
+     ② SMAP-ক্রমে প্রথম শোনা-অশেষ অডিও ২২২ সব-শোনা হলে প্রথম অডিও। অডিও-শূন্যে টোস্ট। */
+  function toast129(msg) {
+    if (typeof window.showToast === 'function') { window.showToast(msg, 'success'); return; }
+    var t = document.createElement('div');
+    t.className = 'toast success';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.classList.add('show'); }, 10);
+    setTimeout(function () { t.remove(); }, 2400);
+  }
+  var spBtn129 = document.getElementById('rsxSeriPlay');
+  if (spBtn129 && ACTIVE && SMAP[ACTIVE] && SMAP[ACTIVE].length) {
+    spBtn129.addEventListener('click', function () {
+      var ids129 = SMAP[ACTIVE];
+      var st129 = readSt(ACTIVE);
+      var done129 = st129.done || {};
+      var audioIds = [];
+      for (var i = 0; i < ids129.length; i++) {
+        var card = document.querySelector('.rsx-card[data-id="' + ids129[i] + '"]');
+        if (card && card.querySelector('.rsx-audio audio[src]')) audioIds.push(ids129[i]);
+      }
+      if (!audioIds.length) { toast129('এই সিরিজে অডিও পর্ব নেই'); return; }
+      var cur129 = st129.cur, pick = null;
+      if (cur129 && typeof cur129.epi === 'number' && ids129[cur129.epi] && cur129.t > 3
+          && !done129[ids129[cur129.epi]] && audioIds.indexOf(ids129[cur129.epi]) >= 0
+          && (Date.now() - (cur129.ts || 0)) < 30 * 864e5) {
+        pick = ids129[cur129.epi];
+      } else {
+        for (var j = 0; j < audioIds.length; j++) { if (!done129[audioIds[j]]) { pick = audioIds[j]; break; } }
+        if (pick == null) pick = audioIds[0];
+      }
+      if (pick == null) return;
+      try { sessionStorage.setItem('lekhok.rplIntent', '1'); } catch (e) {}
+      /* সার্ভার স্যান্ডবক্সে লিঙ্কে ইতিমধ্যেই পোর্ট-প্যারাম রেন্ডার করে (XTPQ) — id থেকে URL-পুনর্গতি, ডাবল-প্যারাম-রক্ষা (session-118 রীতি) */
+      var mp = /(?:[?&])XTransformPort=(\d+)/.exec(location.search);
+      location.href = '/resources/' + pick + '?play=1' + (mp ? '&XTransformPort=' + mp[1] : '');
+    });
+  }
+
   if (!ACTIVE || !SMAP[ACTIVE] || !SMAP[ACTIVE].length) return;
   var ids = SMAP[ACTIVE];
   var st = readSt(ACTIVE);

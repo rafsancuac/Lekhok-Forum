@@ -18,9 +18,16 @@
  * সীমা: প্রতি-ব্যাচ ≤200 ডেটা-রো; title বাধ্যতামূলক (≤200); res_type হোয়াইটলিস্ট;
  * link-টাইপে link_url বাধ্যতামূলক, ফাইল-টাইপে file_url/link_url যেকোনো একটি;
  * URL হোয়াইটলিস্ট ^https?:// অথবা সাইট-পাথ ^/ (session-101 স্যানিটাইজ-চুক্তি)।
+ *
+ * সেশন ১২৯ — সার্ভার-সাইড ফাইল-সংগ্রহ: ঐচ্ছিক `fetch`/`সংগ্রহ` কলাম (1/true/yes/হ্যাঁ)
+ * + file_url-এ পূর্ণ http(s)-URL হলে সার্ভার ফাইলটি নিজেই নামিয়ে নেয় (SSRF-গার্ডসহ —
+ * helpers/url-fetch.js: প্রাইভেট-IP/পোর্ট/স্কিম-ব্লক + DNS-যাচাই + ≤৩-হপ + ১০সে + ২৫MB)।
+ * সফল হলে file_url সাইট-পথে বদলে যায় + file_size আসল-বাইট; ব্যর্থ হলে সেই-রো
+ * এরর (নীরবে রিমোট-URL রাখা হয় না)। ব্যাচে সর্বোচ্চ ২৫টি সংগ্রহ (request-timeout-গার্ড)।
  */
 
 const MAX_ROWS = 200;
+const MAX_FETCHES = 25;
 
 const TYPE_ALIASES = {
   'pdf': 'pdf', 'পিডিএফ': 'pdf', 'পিডিএ': 'pdf',
@@ -56,8 +63,14 @@ const HEADER_ALIASES = {
   'series_order': 'series_order', 'পর্ব': 'series_order', 'পর্ব-ক্রম': 'series_order', 'ক্রম': 'series_order',
   'thumbnail_url': 'thumbnail_url', 'কভার': 'thumbnail_url', 'থাম্বনেইল': 'thumbnail_url', 'থাম্বনেইল-ইউআরএল': 'thumbnail_url',
   'duration': 'duration', 'সময়': 'duration', 'সময়সীমা': 'duration',
-  'file_size': 'file_size', 'সাইজ': 'file_size', 'আকার': 'file_size'
+  'file_size': 'file_size', 'সাইজ': 'file_size', 'আকার': 'file_size',
+  'fetch': 'fetch', 'সংগ্রহ': 'fetch', 'ফাইল-সংগ্রহ': 'fetch', 'ফাইল সংগ্রহ': 'fetch', 'নামাও': 'fetch'
 };
+
+/* সংগ্রহ-কলাম truthy — 1/true/yes/y/on/হ্যাঁ/সংগ্রহ */
+function isTruthyFetch(v) {
+  return /^(1|true|yes|y|on|হ্যাঁ|সংগ্রহ)$/i.test(String(v || '').trim());
+}
 
 /* RFC4180-lite: ডাবল-কোট (""=escaped quote), কমা, CRLF/LF — বাংলা-ইউনিকোড নিরাপদ। */
 function parseCsv(text) {
@@ -156,12 +169,13 @@ function normalizeRow(obj, seriesAutoOrder) {
       duration: String(obj.duration || '').trim().slice(0, 20) || null,
       thumbnail_url,
       series,
-      series_order
+      series_order,
+      fetch: isTruthyFetch(obj.fetch) && !!file_url && /^https?:\/\//i.test(file_url)
     }
   };
 }
 
-/* মূল ইমপোর্ট — ফেরত {total, inserted, skipped, errors[]} */
+/* মূল ইমপোর্ট — ফেরত {total, inserted, skipped, fetched, errors[]} */
 async function bulkImport(csvText, createdBy, db) {
   const rows = parseCsv(csvText);
   if (!rows.length) return { total: 0, inserted: 0, skipped: 0, errors: [{ line: 1, error: 'CSV খালি' }] };
@@ -173,8 +187,9 @@ async function bulkImport(csvText, createdBy, db) {
 
   const seriesAutoOrder = {}; // ব্যাচ-লোকাল অটো-ক্রম
   const seen = new Set();     // ব্যাচ-ডুপ্লিকেট (title+file_url)
-  let inserted = 0, skipped = 0;
+  let inserted = 0, skipped = 0, fetched = 0, fetchTries = 0;
   const errors = [];
+  const urlFetch129 = require('./url-fetch'); // ধীর-লোড — ইউনিট-টেস্টে স্টাব-বান্ধব
 
   for (let i = 0; i < dataRows.length; i++) {
     const lineNo = i + 2; // হেডার-পরের লাইন-নম্বর
@@ -195,6 +210,23 @@ async function bulkImport(csvText, createdBy, db) {
       seriesAutoOrder[r.series] = (seriesAutoOrder[r.series] || 0) + 1;
       r.series_order = seriesAutoOrder[r.series];
     }
+    /* সেশন ১২৯: সার্ভার-সাইড ফাইল-সংগ্রহ (fetch/সংগ্রহ কলাম) — SSRF-গার্ডসহ ডাউনলোড;
+       সফলে সাইট-পথ + আসল-সাইজ, ব্যর্থে রো-এরর (রিমোট-URL নীরবে রাখা হয় না) */
+    if (r.fetch) {
+      if (fetchTries >= MAX_FETCHES) {
+        errors.push({ line: lineNo, title: r.title, error: 'ব্যাচে সংগ্রহ-সীমা (২৫) শেষ — পরের ব্যাচে আনুন' });
+        continue;
+      }
+      fetchTries++;
+      const fr = await urlFetch129.fetchToFile(r.file_url);
+      if (!fr.ok) {
+        errors.push({ line: lineNo, title: r.title, error: fr.error });
+        continue;
+      }
+      r.file_url = fr.url;
+      r.file_size = urlFetch129.humanFileSize(fr.bytes) || r.file_size;
+      fetched++;
+    }
     try {
       await db.prepare(
         'INSERT INTO resources (title, content, category, author, tags, file_url, link_url, file_type, res_type, file_size, duration, created_by, thumbnail_url, series, series_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -208,16 +240,18 @@ async function bulkImport(csvText, createdBy, db) {
       errors.push({ line: lineNo, title: r.title, error: 'ডেটাবেস-ত্রুটি: ' + String(e.message || e).slice(0, 80) });
     }
   }
-  return { total: dataRows.length, inserted, skipped, errors: errors.slice(0, 40) };
+  return { total: dataRows.length, inserted, skipped, fetched, errors: errors.slice(0, 40) };
 }
 
 /* নমুনা CSV (টেমপ্লেট-ডাউনলোড বাটন ও UI-হেল্পটেক্সট এক-উৎসে) */
+/* নমুনা CSV (টেমপ্লেট-ডাউনলোড বাটন ও UI-হেল্পটেক্সট এক-উৎসে) —
+   শেষ-কলাম `সংগ্রহ` (session-129): হ্যাঁ দিলে সার্ভার ফাইলটি নিজেই নামায় (SSRF-গার্ডসহ) */
 const SAMPLE_CSV = [
-  'title,res_type,category,file_url,link_url,description,tags,author,series,series_order',
-  'বাংলা বানান রীতি নির্দেশিকা,পিডিএফ,গাইড,https://example.com/banan.pdf,,ধর্মীয় ও প্রাতিষ্ঠানিক বানানের সহজ-নির্দেশিকা,"বানান, নির্দেশিকা",রাফসান,নবীন লেখক কর্মশালা,1',
-  'প্রবন্ধ-লেখার মৌলিক কাঠামো,ডক,লেখালেখির টিপস,https://example.com/probondho.docx,,প্রবন্ধের কাঠামো ও উপস্থাপনা,"প্রবন্ধ, কাঠামো",,নবীন লেখক কর্মশালা,2',
-  'কবিতা আবৃত্তি নিয়ে আলোচনা,ভিডিও,ভিডিও ক্লাস,,https://youtu.be/dQw4w9WgXcQ,আবৃত্তি-টিপস ও উদাহরণ,"আবৃত্তি, কবিতা",,',
-  'লেখক ফোরাম ওয়েবসাইট,লিংক,special,,https://lekhok-forum.example,অফিসিয়াল সাইট,লিংক,,'
+  'title,res_type,category,file_url,link_url,description,tags,author,series,series_order,সংগ্রহ',
+  'বাংলা বানান রীতি নির্দেশিকা,পিডিএফ,গাইড,https://example.com/banan.pdf,,ধর্মীয় ও প্রাতিষ্ঠানিক বানানের সহজ-নির্দেশিকা,"বানান, নির্দেশিকা",রাফসান,নবীন লেখক কর্মশালা,1,হ্যাঁ',
+  'প্রবন্ধ-লেখার মৌলিক কাঠামো,ডক,লেখালেখির টিপস,https://example.com/probondho.docx,,প্রবন্ধের কাঠামো ও উপস্থাপনা,"প্রবন্ধ, কাঠামো",,নবীন লেখক কর্মশালা,2,',
+  'কবিতা আবৃত্তি নিয়ে আলোচনা,ভিডিও,ভিডিও ক্লাস,,https://youtu.be/dQw4w9WgXcQ,আবৃত্তি-টিপস ও উদাহরণ,"আবৃত্তি, কবিতা",,,,',
+  'লেখক ফোরাম ওয়েবসাইট,লিংক,special,,https://lekhok-forum.example,অফিসিয়াল সাইট,লিংক,,,,'
 ].join('\r\n');
 
 module.exports = { parseCsv, headerMap, normalizeRow, bulkImport, SAMPLE_CSV, MAX_ROWS };

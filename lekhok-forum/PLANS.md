@@ -1563,3 +1563,25 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 3. **restore-কী-মিসম্যাচ-শিক্ষা:** সার্ভার-রুট b.id আর ক্লায়েন্ট-পেলোড {i:...} — E2E-র আগে রুট-ইনপুট-চুক্তি আর data-ন-চুক্তি পাশাপাশি রাখুন; curl-JSON-টেস্ট (লং-কী) পাস হলেও ব্রাউজার-ফ্লো (কম্প্যাক্ট-কী) ফেইল করতে পারে।
 **E2E-প্রমাণ (মার্জড-কোডে):** ফুল-পেজ undo (dismiss→toast→বাতিল→rows=1+DB-পুনঃস্থাপন+unread-রক্ষা) ✓ ড্রপডাউন undo (/dashboard) ✓ undo-from-empty (polling-toast) ✓ crx-উইজেট ডিটারমিনিস্টিক-থাম্ব ×২ ✓ paintList data-n+data-ts ✓ role-policy ১৪৭/১৪৭ ✓ cursor ২৬/২৬ ✓ guard ✓ 390px-০ ✓ কনসোল-০ ✓ টেস্ট-ডেটা-ক্লিনআপ (কমেন্ট ৫১-৫৪ + নোটিফ-সিড সম্পূর্ণ) ✓
 **পরবর্তী-প্রস্তাব:** ① crx-টাইলেও og-default-বিরোধী-গার্ড (data-cover-এ /img/cover/ হলে deterministic-ফলব্যাক-ই ভালো) ② dropdown-dismiss-এও data-nts→LekhokRelTime-রি-পেইন্ট ③ tokens.css-র্যাচেট-বেসলাইন ধীরে-ধীরে নামানো (admin.css ৪২৬ = সর্বোচ্চ-ঝুঁকি) ④ dismiss-undo-টোস্টে Enter-শর্টকাট
+## ⚡ Intent Note — Session 129 (cron-r12; কাজ-শুরুর-আগে-intent-চুক্তি অনুযায়ী) (১৯ সেপ্টেম্বর ২০২৬)
+
+**এই-রাউন্ডে নিচ্ছি (claim):** RES-121-ব্যাকলগ ① — **CSV বাল্ক-ইমপোর্টে সার্ভার-সাইড ফাইল-সংগ্রহ (SSRF-গার্ডসহ)**: helpers/url-fetch.js নতুন-ইঞ্জিন (http(s)-only + স্কিম-ডিফল্ট-পোর্ট-ব্লক + DNS-রেজলভ-সব-অ্যাড্রেস-যাচাই + প্রাইভেট/লিংক-লোকাল/CGNAT/UL-ব্লক v4+v6+v4-ম্যাপড + ≤৩-হপ-রিডাইরেক্ট-পুনঃযাচাই + ১০সে-টাইমআউট + ২৫MB-স্ট্রিম-অ্যাবর্ট + এক্সটেনশন-হোয়াইটলিস্ট) + resource-bulk.js-এ `fetch`/`সংগ্রহ` কলাম (1/true/yes/হ্যাঁ) — সফলে file_url সাইট-পথে + file_size আসল-বাইট, ব্যর্থে রো-এরর (রিমোট-URL নীরবে রাখা হয় না), ব্যাচে সর্বোচ্চ ২৫ সংগ্রহ; রেসপনসে নতুন `fetched` ফিল্ড। সাথে RES-121 ③ **সিরিজ play-all অগ্রাধিকার** (রিজুম/শোনা-অশেষ পর্ব থেকে — lekhok-resources.ejs) + ④ **অ্যাডমিন জনপ্রিয়-সিরিজ প্যানেল** (admin/resources টপ-৬ কার্ড-গ্রিড, স্কোর = views + downloads×2)।
+
+**স্পর্শ-ফাইল:** helpers/url-fetch.js (নতুন) · helpers/resource-bulk.js (fetch-কলাম + সংগ্রহ-লুপ) · admin/views/admin/partials/resource-bulk-modal.ejs (হিন্ট+নমুনা+result-fetched) · admin/routes.js + routes/moderator.js (fetched-ফরওয়ার্ড) · views/lekhok-resources.ejs (seriplay-প্রায়োরিটি — session118-ব্লক session121-IIFE-এ সরে গেছে) · admin/views/admin/resources/list.ejs (rss-* প্যানেল)। **db-স্কিমা-শূন্য-পরিবর্তন।** অন্য-এজেন্ট একই-আইটেমে কাজ শুরু করলে এ-নোট দেখে বিকল্প নিন।
+
+## Cross-Agent Note — Session 129 (cron-r12; URL-ফেচ + play-all-অগ্রাধিকার + জনপ্রিয়-সিরিজ প্যানেল) (১৯ সেপ্টেম্বর ২০২৬)
+
+**নতুন-ইন্টিগ্রেশন-পয়েন্ট:**
+- **bulkImport-রেসপনস-চুক্তি এখন `{total, inserted, skipped, fetched, errors[]}`** — fetched = সার্ভারে-নামানো-ফাইল-সংখ্যা; ভবিষ্যতে এ-JSON ভোক্তা-কোড fetched-ফিল্ড ভাঙবে না যেন।
+- **CSV-হেডার নতুন-এলিয়াস:** `fetch`/`সংগ্রহ`/`ফাইল-সংগ্রহ`/`নামাও` → fetch-ফ্ল্যাগ (truthy: 1/true/yes/y/on/হ্যাঁ/সংগ্রহ)। ফ্ল্যাগ + file_url-পূর্ণ-http(s)-হলেই ফেচ; সাইট-পাথ (/uploads/…) বা link-টাইপে ফেচ-নয়।
+- **helpers/url-fetch.js পুনর্ব্যবহারযোগ্য:** fetchToFile(url) → {ok,url,filename,bytes,ext,mime} | {ok:false,error}; isPrivateIp/assertHostPublic ইউনিট-পরীক্ষাযোগ্য — অন্য-ফিচারে রিমোট-ফেচ দরকার হলে এটাই ব্যবহার করুন (নতুন SSRF-গার্ড-লিখবেন না)।
+- **seriplay-লজিক স্থানান্তর:** session118-এর play-all হ্যান্ডলার lekhok-resources.ejs-এ session121-IIFE-এর ভেতরে সরানো হয়েছে (SMAP/readSt-অ্যাক্সেসের জন্য) — পুরনো `var seriPlay` আর নেই, নতুন `spBtn124`; ভবিষ্যতে play-all-বদলালে session121-IIFE-ই এক-জায়গা।
+- **admin/resources ভিউ-চুক্তি:** list.ejs এখন `seriesStats` (top-6 {series,n,v,d}) পায় — rss-* ক্লাস-স্কোপ; নতুন অ্যাডমিন-কার্ড-গ্রিডে এ-প্যাটার্ন (grid auto-fill minmax + border-left-accent + score-bar) পুনর্ব্যবহারযোগ্য।
+
+**গোটচা-নতুন ×২:**
+1. **টুল-আউটপুট এখন '[m'-সিকোয়েন্সও খায়** (আগে শুধু '[h' জানা ছিল) — `cells[map[k]]` → `cellsap[k]]`-এর মতো দেখায়; node --check পাস করলে ফাইল-ভুল নয়; charCode/node-fs-বাইট-যাচাই-আগে (session-106-গোটচার সম্প্রসারণ)।
+2. **detail-page pagehide-সেভ LS-ক্লোবার:** টেস্টে সিরিজ-LS লিখে রাখলে অবশ্যই নিউট্রাল-পেজ (/articles) থেকে লিখুন — একই-সিরিজের detail-পেজ খোলা-থাকলে pagehide-সেভ (session118) আপনার-লেখা ওভাররাইট করে (E2E-মিথ্যা-ফেইলের নতুন-উৎস)।
+
+**E2E-প্রমাণ:** isPrivateIp 19/19 ✓ scheme/port/loopback/localhost-ব্লক ✓ রিয়েল-ফেচ (w3.org dummy.pdf 13264B → /uploads/attachments/ + file_size 13.0 KB) ✓ API-fetched:1 ✓ SSRF-80-রো-এরর-মেসেজ ✓ ftp-ব্লক ✓ play-all ×৪ (fresh→৮৪ / done{84}→৮৫ / resume(cur ep3)→৮৬ / all-done→৮৪) ✓ chip-ব্যাজ ১/৩+৩/৩ ✓ is-done-টিক ×৩ ✓ admin rss-প্যানেল (1-কার্ড, bar 100%) ✓ rbm-হিন্ট+১১-কলাম-টেমপ্লেট ✓ role-policy 131/131 ×২ ✓ 390px-০ ✓ কনসোল-০ ✓ E2E-রো+ফাইল-ক্লিনআপ ✓ স্ক্রিনশট ×৩ (s124-admin-series/-mobile, s124-bulk-modal) ✓
+
+**পরবর্তী-প্রথম-পছন্দ:** created_at UTC→লোকাল সাইট-ওয়াইড (data-ts-কনভেনশন-সমন্বিত) → playlist stat-এ প্রতি-সিরিজ aggregate API (admin-প্যানেল এখন সার্ভার-রেন্ডারড; লাইভ-সংখ্যা চাইলে /api/resources/series-stats) → role-policy-তে bulk-fetch-SSRF-চেক-যোগ → সিরিজ-কভার-ইমেজ (চিপ-রো মিনি-প্রিভিউ এখন প্রথম-থাম্বনেইল-ভিত্তিক; সিরিজ-লেভেল-কভার-ফিল্ডের উপযুক্ত সময়)।

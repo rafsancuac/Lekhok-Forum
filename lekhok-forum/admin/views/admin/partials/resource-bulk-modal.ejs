@@ -10,7 +10,7 @@
       <button type="button" class="rbm-x" id="rbmClose" aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
     </div>
     <div class="rbm-body">
-      <p class="rbm-hint">হেডার-রোসহ CSV পেস্ট করুন অথবা .csv ফাইল বাছুন — প্রতি-রো একটি রিসোর্স। একই <strong>সিরিজ</strong> নামের রো-গুলো এক সংকলনে যাবে; <strong>series_order</strong> ফাঁকা হলে স্বয়ংক্রিয় ক্রম বসবে। সর্বোচ্চ ২০০ রো/ব্যাচ।</p>
+      <p class="rbm-hint">হেডার-রোসহ CSV পেস্ট করুন অথবা .csv ফাইল বাছুন — প্রতি-রো একটি রিসোর্স। একই <strong>সিরিজ</strong> নামের রো-গুলো এক সংকলনে যাবে; <strong>series_order</strong> ফাঁকা হলে স্বয়ংক্রিয় ক্রম বসবে। সর্বোচ্চ ২০০ রো/ব্যাচ। ঐচ্ছিক <strong>সংগ্রহ</strong> কলামে <strong>হ্যাঁ</strong> দিলে ফাইল-URL থেকে ফাইলটি সার্ভারে নেমে সংরক্ষিত হবে (পাব্লিক http(s) URL — সর্বোচ্চ 25MB, প্রতি-ব্যাচ 25টি)।</p>
       <div class="rbm-tools">
         <label class="rbm-filebtn"><i class="fas fa-folder-open"></i> .csv ফাইল বাছুন
           <input type="file" id="rbmFile" accept=".csv,text/csv" hidden>
@@ -97,10 +97,10 @@
   });
 
   $('rbmTpl').addEventListener('click', function () {
-    var sample = 'title,res_type,category,file_url,link_url,description,tags,author,series,series_order\r\n' +
-      'বাংলা বানান রীতি নির্দেশিকা,পিডিএফ,গাইড,https://example.com/banan.pdf,,বানান-নির্দেশিকা,"বানান, নির্দেশিকা",রাফসান,নবীন লেখক কর্মশালা,1\r\n' +
-      'প্রবন্ধ-লেখার কাঠামো,ডক,লেখালেখির টিপস,https://example.com/p.docx,,প্রবন্ধ-কাঠামো,প্রবন্ধ,,নবীন লেখক কর্মশালা,2\r\n' +
-      'কবিতা আবৃত্তি,ভিডিও,ভিডিও ক্লাস,,https://youtu.be/xxxx,আবৃত্তি-টিপস,আবৃত্তি,,\r\n';
+    var sample = 'title,res_type,category,file_url,link_url,description,tags,author,series,series_order,সংগ্রহ\r\n' +
+      'বাংলা বানান রীতি নির্দেশিকা,পিডিএফ,গাইড,https://example.com/banan.pdf,,বানান-নির্দেশিকা,"বানান, নির্দেশিকা",রাফসান,নবীন লেখক কর্মশালা,1,হ্যাঁ\r\n' +
+      'প্রবন্ধ-লেখার কাঠামো,ডক,লেখালেখির টিপস,https://example.com/p.docx,,প্রবন্ধ-কাঠামো,প্রবন্ধ,,নবীন লেখক কর্মশালা,2,\r\n' +
+      'কবিতা আবৃত্তি,ভিডিও,ভিডিও ক্লাস,,https://youtu.be/xxxx,আবৃত্তি-টিপস,আবৃত্তি,,,\r\n';
     csv.value = sample;
     renderPreview();
   });
@@ -166,6 +166,7 @@
       .then(function (out) {
         if (!out || out.ok !== true) throw new Error((out && out.error) || 'ইমপোর্ট ব্যর্থ');
         var msgs = ['<strong>' + out.inserted + 'টি রিসোর্স যোগ হয়েছে</strong>' + (out.skipped ? ' · ' + out.skipped + 'টি ডুপ্লিকেট বাদ' : '')];
+        if (out.fetched) msgs.push('<div style="margin-top:4px;"><i class="fas fa-cloud-arrow-down"></i> <strong>' + out.fetched + '</strong>টি ফাইল সার্ভারে সংগ্রহ হয়েছে</div>');
         if (out.errors && out.errors.length) {
           msgs.push('<ul>' + out.errors.slice(0, 8).map(function (e) {
             return '<li>লাইন ' + esc(e.line) + (e.title ? ' (' + esc(e.title) + ')' : '') + ': ' + esc(e.error) + '</li>';
