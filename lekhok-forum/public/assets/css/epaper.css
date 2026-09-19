@@ -82,6 +82,20 @@
 .ep-empty-lead { display: flex; align-items: center; gap: 10px; background: var(--lf-brand-light); border: 1px dashed var(--lf-brand-primary); border-radius: 14px; padding: 12px 16px; color: var(--lf-brand-primary); font-size: .84rem; font-weight: 700; }
 .ep-empty-lead p { margin: 0; }
 
+/* ── ডিজিটাল-রিডার (pdf.js) ── */
+.ep-reader-load { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; }
+.ep-reader-load i.fa-spinner { font-size: 1.8rem; color: var(--lf-brand-primary); }
+.ep-reader-load p { margin: 0; font-weight: 800; color: var(--lf-text-primary); font-size: .92rem; }
+.ep-prog { width: min(360px, 80%); height: 8px; border-radius: var(--lf-radius-chip); background: var(--lf-ui-border); overflow: hidden; }
+.ep-prog i { display: block; height: 100%; background: var(--lf-brand-primary); border-radius: var(--lf-radius-chip); transition: width .25s ease; }
+.ep-prog-txt { font-size: .74rem; color: var(--lf-text-secondary); font-weight: 700; }
+.ep-load-fallback { font-size: .76rem; color: var(--lf-brand-primary); font-weight: 800; text-decoration: underline; }
+.ep-pages { position: absolute; inset: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 14px; }
+.ep-page-holder { position: relative; width: 100%; max-width: 940px; min-height: 60vh; background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border-strong); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.10); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.ep-page-holder.is-done { min-height: 0; background: transparent; border-color: var(--lf-ui-border); }
+.ep-page-holder canvas { display: block; width: 100%; height: auto; }
+.ep-page-num { position: sticky; top: 8px; margin-top: 8px; z-index: 2; font-size: .68rem; font-weight: 800; color: var(--lf-text-secondary); background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-chip); padding: 2px 10px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
 /* ── ফোকাস-দৃশ্যমানতা (অ্যাক্সেসিবিলিটি) ── */
 .ep-wrap button:focus-visible, .ep-wrap a:focus-visible, .ep-wrap input:focus-visible, .ep-wrap select:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
 

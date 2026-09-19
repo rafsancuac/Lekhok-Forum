@@ -186,11 +186,14 @@ app.set('layout', false);
 try { app.use(require('compression')()); } catch (e) {}
 const CSP_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  /* session170: script/connect +cdnjs (pdf.js-লেজি-লোড); connect +drive.usercontent (ই-পেপার-রিডারে
+     ক্লায়েন্ট-সাইড PDF-ফেচ — ACAO:*); worker blob:/cdnjs (pdf.js-ওয়ার্কার blob-বাইপাস) */
+  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
   "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
   "font-src 'self' https://cdnjs.cloudflare.com data:",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self'",
+  "connect-src 'self' https://drive.usercontent.google.com https://cdnjs.cloudflare.com",
+  "worker-src 'self' blob: https://cdnjs.cloudflare.com",
   "frame-src https://maps.google.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
