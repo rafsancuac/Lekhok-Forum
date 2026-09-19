@@ -276,6 +276,36 @@ async function ensureThumb(token: string, folderId: string, fName: string, clien
   }
 }
 
+/* ── সাইট-ক্লিন-ক্যাশ-ওয়ার্ম (session178): সিঙ্ক-পরবর্তী ফায়ার-অ্যান্ড-ফরগেট ──
+   সাইটের /api/epaper/file প্রথম-রিকোয়েস্টে ড্রাইভ-ডাউনলোড+প্রমো-ক্লিন করে (~১৬-২৭s) —
+   প্রথম-পাঠক সেই-দেরিটা খায়। সিঙ্ক শেষে বট নিজেই warm-কল দিয়ে /tmp-ক্যাশ প্রি-হিট করে রাখে,
+   ফলে যে-কেউ-ক্লিক করুক, রিডার তাৎক্ষণিক খোলে। ব্যর্থতা প্রধান-প্রবাহ ভাঙে না।
+   প্রতি-কলে ৫-ফাইল-চাংক (৫×~২৫s ≈ ১২৫s < Vercel maxDuration-১৫০s) — ধারাবাহিক-চাংক */
+async function warmSiteCache(fileIds: string[]): Promise<void> {
+  if (!SITE_URL || !SYNC_TOKEN || !fileIds.length) return
+  const CHUNK = 5
+  const uniq = [...new Set(fileIds.filter(Boolean))].slice(0, 40)
+  for (let i = 0; i < uniq.length; i += CHUNK) {
+    const chunk = uniq.slice(i, i + CHUNK)
+    try {
+      const res = await fetch(`${SITE_URL}/api/epaper/warm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SYNC_TOKEN}` },
+        body: JSON.stringify({ fileIds: chunk }),
+        signal: AbortSignal.timeout(145000),
+      })
+      const j = (await res.json().catch(() => ({}))) as { ok?: boolean; total?: number; warmed?: number; cached?: number; failed?: number; error?: string }
+      if (!res.ok || !j.ok) {
+        console.error(`⚠️ ওয়ার্ম-চাংক-${Math.floor(i / CHUNK) + 1}-ব্যর্থ (প্রধান-প্রবাহ অটুট):`, j.error || res.status)
+        continue
+      }
+      console.log(`🔥 সাইট-ক্যাশ উষ্ণ (চাংক ${Math.floor(i / CHUNK) + 1}): মোট ${j.total} — প্রি-হিট ${j.warmed}, আগেই-ছিল ${j.cached}, ব্যর্থ ${j.failed}`)
+    } catch (e) {
+      console.error('⚠️ ওয়ার্ম-ত্রুটি (প্রধান-প্রবাহ অটুট):', e instanceof Error ? e.message : e)
+    }
+  }
+}
+
 /* ── টেলিগ্রাম ── */
 async function main(): Promise<void> {
   let sessionStr = TG_SESSION
@@ -301,6 +331,7 @@ async function main(): Promise<void> {
     // পুরোনো-থেকে-নতুন ক্রমে প্রসেস — ফিচার্ড-রো-তে সর্বশেষ-পোস্ট-করা পত্রিকাটি থাকে
     const list = [...msgs].reverse()
     let attempted = 0
+    const syncedIds: string[] = [] // session178: এ-স্ক্যানে সিঙ্কড ফাইল-আইডি — লুপ-শেষে ক্যাশ-ওয়ার্ম
     for (const m of list) {
       if (!m.document) continue
       const doc = m.document as any
@@ -356,11 +387,14 @@ async function main(): Promise<void> {
         await siteSync(msgDate, fileId, paperName, thumbId)
         state[msgDate][fName] = fileId
         saveState(state)
+        if (fileId) syncedIds.push(fileId)
       } catch (err) {
         console.error('⚠️ আপলোড/সিঙ্ক-ত্রুটি:', err instanceof Error ? err.message : err)
       }
     }
     if (!attempted) console.log('↷ নতুন কিছু নেই — সব সিঙ্কড')
+    // session178: সিঙ্ক-পরবর্তী ক্যাশ-ওয়ার্ম — ইউজার-ক্লিকের-আগেই সাইটে ক্লিন-পিডিএফ প্রস্তুত (ফায়ার-অ্যান্ড-ফরগেট)
+    if (syncedIds.length) void warmSiteCache(syncedIds)
   }
 
   await scanOnce()

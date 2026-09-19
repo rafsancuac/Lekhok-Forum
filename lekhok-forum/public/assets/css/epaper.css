@@ -142,6 +142,12 @@
 .ep-ctlbtn:hover { background: var(--lf-ui-input-bg); color: var(--lf-brand-primary); border-color: var(--lf-brand-primary); }
 .ep-act-sep { width: 1px; height: 22px; background: var(--lf-ui-border); margin: 0 2px; flex-shrink: 0; }
 
+/* ── session178: পাতা-জাম্প ড্রপডাউন (রিডার-লোডে পূরণ; স্ক্রলে বর্তমান-পাতা সিঙ্ক) ── */
+.ep-jump { max-width: 148px; height: 30px; border: 1px solid var(--lf-ui-border); border-radius: 8px; background: var(--lf-ui-input-bg); color: var(--lf-text-primary); font: inherit; font-size: .72rem; font-weight: 700; padding: 0 6px; cursor: pointer; transition: border-color .15s ease, color .15s ease; }
+.ep-jump:hover { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-jump:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 1px; }
+.ep-jump:disabled { opacity: .45; cursor: default; }
+
 /* ── স্টেজ-ট্রান্সফর্ম র‍্যাপার (জুম/রোটেট) ── */
 .ep-stage-inner { position: relative; width: 100%; height: 100%; min-height: inherit; transform-origin: top center; transition: transform .18s ease; }
 .ep-stage .ep-frame { border-radius: 6px; background: var(--lf-ui-surface); }

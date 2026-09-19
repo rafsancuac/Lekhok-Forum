@@ -146,6 +146,8 @@
           <span class="ep-viewer-date" id="epCurDate"></span>
         </div>
         <div class="ep-viewer-actions">
+          <%# ── সেশন ১৭৮: পাতা-জাম্প ড্রপডাউন (রিডার-লোডে পূরণ; স্ক্রলে বর্তমান-পাতা সিঙ্ক) ── %>
+          <select class="ep-jump" id="epPageJump" hidden disabled aria-label="পাতায় যান"></select>
           <%# ── সেশন ১৭১: জুম-গ্রুপ (– % +) + রোটেট + ফুলস্ক্রিন (pdf.js/প্রচ্ছদ/iframe — সব-মোডে) ── %>
           <div class="ep-zoomgrp" role="group" aria-label="জুম নিয়ন্ত্রণ">
             <button type="button" class="ep-zbtn" id="epZoomOut" title="জুম আউট" aria-label="জুম আউট"><i class="fas fa-minus" aria-hidden="true"></i></button>
@@ -307,6 +309,7 @@
   // সেশন ১৭১: iframe-ফলব্যাক-রিডার — pdf.js-ব্যর্থতা/নন-ড্রাইভ-রোতে ড্রাইভ-/preview
   // বা docs-viewer এমবেড (frame-src CSP-অনুমোদিত); স্ক্রল-পড়া ড্রাইভ/viewer-নিজস্ব
   function renderStageIframe(p) {
+    stowActiveScroll();
     cancelReader();
     if (!p.embed) {
       elStage.innerHTML = '<div class="ep-stage-empty"><i class="fas fa-newspaper"></i><p>রিডার পাওয়া যায়নি — “খুলুন” বাটনে ক্লিক করুন</p></div>';
@@ -430,8 +433,26 @@
   /* ── ডিজিটাল-রিডার ইঞ্জিন (session170): pdf.js ক্লায়েন্ট-সাইড — থার্ড-পার্টি-কুকি-সমস্যা বাইপাস ──
      ড্রাইভের usercontent-এন্ডপয়েন্ট ACAO:* দেয় → ব্রাউজারে ফেচ + প্রগ্রেস-বার + পাতা-ধরে-স্ক্রল */
   var PDFJS_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
-  var bytesCache = {}; // fid → ArrayBuffer (শেষ-২টি রাখা হয়)
+  var bytesCache = {}; // fid → ArrayBuffer (শেষ-৩টি রাখা হয়)
   var reader = null;   // সক্রিয়-রিডার-স্টেট { fid, abort, doc, io }
+  // ── session178: keep-alive মাল্টি-রিডার — একবার-খোলা পত্রিকার পাতা/doc মেমরিতে থেকে যায়;
+  //    পেপার-সুইচ = তাৎক্ষণিক পুনঃদর্শন (শূন্য-নেটওয়ার্ক), LRU-৪ ছাড়ালে সবচেয়ে-পুরনোটি মুক্ত হয়
+  var ALIVE_MAX = 4;
+  var alive = new Map(); // fid → {wrap, doc, io, st, numPages, shownAt}
+  function aliveTouch(fid) { var a = alive.get(fid); if (a) a.shownAt = Date.now(); return a; }
+  function aliveEvictIfNeeded() {
+    while (alive.size > ALIVE_MAX) {
+      var oldFid = null, oldT = Infinity;
+      alive.forEach(function (a, fid) { if (a.shownAt < oldT) { oldT = a.shownAt; oldFid = fid; } });
+      if (!oldFid) break;
+      var a = alive.get(oldFid);
+      alive.delete(oldFid);
+      try { if (a.st && a.st.abort) a.st.abort.abort(); } catch (e) {}
+      try { if (a.io) a.io.disconnect(); } catch (e) {}
+      try { if (a.doc) a.doc.destroy(); } catch (e) {}
+      delete bytesCache[oldFid];
+    }
+  }
 
   function loadPdfJs() {
     if (window.pdfjsLib) return Promise.resolve();
@@ -484,13 +505,108 @@
     try { if (reader.abort) reader.abort.abort(); } catch (e) {}
     try { if (reader.io) reader.io.disconnect(); } catch (e) {}
     try { if (reader.doc) reader.doc.destroy(); } catch (e) {}
+    if (reader.fid) alive.delete(reader.fid);
     reader = null;
+  }
+  // session178: শুধু-বিচ্ছিন্ন — চলমান-ফেচ থামায় কিন্তু জীবিত-রিডার (doc/io/canvas) অক্ষত রাখে
+  // (নতুন-পেপারে সুইচ করলে আগেরটি মেমরিতে থেকে যায় — ফেরার-পথ শূন্য-নেটওয়ার্ক)
+  function detachReader() {
+    if (!reader) return;
+    try { if (reader.abort) reader.abort.abort(); } catch (e) {}
+    reader = null;
+  }
+  // session178: ডিট্যাচের-আগে জীবিত-র‍্যাপের স্ক্রল-অবস্থান সংরক্ষণ — DOM-থেকে-সরালে Chrome scrollTop-০ করে দেয়,
+  // তাই ফেরার-সময় পুনঃস্থাপনের-জন্য আগেই মেমরিতে রাখতে হয়
+  function stowActiveScroll() {
+    if (!reader || !reader.fid) return;
+    var a = alive.get(reader.fid);
+    if (!a || !a.wrap || a.wrap.ownerDocument === null || !a.wrap.parentNode) return;
+    a.scroll = { t: a.wrap.scrollTop, l: a.wrap.scrollLeft };
   }
 
   function fmtMb(b) { return (b / 1048576).toFixed(1) + ' MB'; }
 
+  // session178: প্রক্সি-ফেচ ×২-রিট্রাই — ট্রানজিয়েন্ট 502/504 (কোল্ড-ইনস্ট্যান্স/CPU-প্রতিযোগিতা) পুনঃচেষ্টায়
+  // প্রায়ই-সফল; দুই-বার ব্যর্থ হলেই iframe-ফলব্যাক (ব্যানারসহ ড্রাইভ-প্রিভিউ — শেষ-অবলম্বন)
+  function fetchPdfWithRetry(url, aborter, onProg) {
+    return fetchPdfProgress(url, aborter, onProg).catch(function (e1) {
+      if (e1 && e1.name === 'AbortError') throw e1;
+      return new Promise(function (res, rej) {
+        setTimeout(function () {
+          fetchPdfProgress(url, aborter, onProg).then(res, rej);
+        }, 1800);
+      }).catch(function (e2) { throw (e2 && e2.name === 'AbortError') ? e2 : e1; });
+    });
+  }
+
+  // session178: পাতা-জাম্প ড্রপডাউন — doc-লোডে পূরণ, স্ক্রলে বর্তমান-পাতা সিঙ্ক
+  // লক্ষ্য: আসল-স্ক্রলার .ep-pages (elStage নয় — ওটার scrollTop সর্বদা ০)
+  function armPageJump(st, numPages) {
+    var sel = document.getElementById('epPageJump');
+    if (!sel) return;
+    sel.hidden = false;
+    sel.disabled = false;
+    if (sel._pages !== numPages) {
+      var frag = '';
+      for (var n = 1; n <= numPages; n++) frag += '<option value="' + n + '">পাতা ' + bnDigits(n) + ' / ' + bnDigits(numPages) + '</option>';
+      sel.innerHTML = frag;
+      sel._pages = numPages;
+    }
+    sel.onchange = function () {
+      var n = parseInt(sel.value, 10) || 1;
+      var h = elStage.querySelector('.ep-page-holder[data-n="' + n + '"]');
+      if (h) { h.scrollIntoView({ behavior: 'smooth', block: 'start' }); sel.blur(); }
+    };
+    st.jumpSync = function () {
+      if (!elStage.querySelector) return;
+      var stageTop = elStage.getBoundingClientRect().top;
+      var best = 1, bestD = Infinity;
+      elStage.querySelectorAll('.ep-page-holder').forEach(function (h) {
+        var d = Math.abs(h.getBoundingClientRect().top - stageTop);
+        if (d < bestD) { bestD = d; best = Number(h.getAttribute('data-n')) || 1; }
+      });
+      if (String(sel.value) !== String(best)) sel.value = String(best);
+    };
+    if (!st._jumpBound) {
+      st._jumpBound = true;
+      var tick = false;
+      var scroller = elStage.querySelector('.ep-pages') || elStage;
+      scroller.addEventListener('scroll', function () {
+        if (tick) return;
+        tick = true;
+        requestAnimationFrame(function () { tick = false; if (reader && reader.jumpSync) reader.jumpSync(); });
+      }, { passive: true });
+    }
+    st.jumpSync(); // রি-অ্যাটাচেও বর্তমান-পাতা সঠিক (আগে বাধ্যতামূলক '১' হয়ে যেত)
+  }
+  function resetPageJump() {
+    var sel = document.getElementById('epPageJump');
+    if (!sel) return;
+    sel.hidden = true; sel.disabled = true; sel.innerHTML = ''; sel._pages = 0;
+  }
+
   function openReader(p) {
-    cancelReader();
+    // session178: keep-alive হিট — একবার-খোলা পত্রিকা শূন্য-নেটওয়ার্কে তাৎক্ষণিক ফেরে
+    var cachedAlive = alive.get(p.fid);
+    if (cachedAlive && mode === 'reader') {
+      aliveTouch(p.fid);
+      if (reader && reader !== cachedAlive.st) {
+        try { if (reader.abort) reader.abort.abort(); } catch (e) {} // চলমান-ফেচ-থামান, doc/-io জীবিত রাখুন
+      }
+      stowActiveScroll(); // reader-এখনো-পুরোনো — আগের-পত্রিকার স্ক্রল সংরক্ষণ
+      reader = cachedAlive.st;
+      var w = cachedAlive.wrap;
+      var sc = cachedAlive.scroll || { t: 0, l: 0 }; // সংরক্ষিত-অবস্থান (ডিট্যাচে scrollTop-রিসেট হয়)
+      elStage.innerHTML = '';
+      elStage.appendChild(w);
+      w.scrollTop = sc.t; w.scrollLeft = sc.l;
+      applyStageTransform();
+      armPageJump(cachedAlive.st, cachedAlive.numPages);
+      return;
+    }
+    stowActiveScroll(); // আগে-সংরক্ষণ (detach-এ reader=null হয়) — নতুন-লোড/iframe-পথ দুটোতেই আগের-স্ক্রল মনে থাকে
+    detachReader(); // আগের-জীবিত-রিডার মেমরিতে থাকে (cancelReader নয় — সে ধ্বংস করত)
+    resetPageJump();
     if (!p.fid) { renderStageIframe(p); return; }
     var st = { fid: p.fid, abort: new AbortController(), doc: null, io: null };
     reader = st;
@@ -512,15 +628,16 @@
       bytesP = Promise.reject(new Error('no-drive-id'));
     } else {
       // সেশন ১৭৫: ক্লিন-প্রক্সি — পুরোনো-পিডিএফেও সাইট-পাশে প্রমো-লেয়ার সরে (helpers/pdf-cleaner)
+      // সেশন ১৭৮: ×২-রিট্রাই — ট্রানজিয়েন্ট 502/504-এ iframe-ফলব্যাকে (ব্যানার) না-গিয়ে পুনঃচেষ্টা
       bytesP = loadPdfJs().then(function () {
-        return fetchPdfProgress('/api/epaper/file/' + encodeURIComponent(p.fid), st.abort, onProg);
+        return fetchPdfWithRetry('/api/epaper/file/' + encodeURIComponent(p.fid), st.abort, onProg);
       });
     }
     bytesP.then(function (buf) {
       if (reader !== st) return;
       bytesCache[p.fid] = buf;
       var keys = Object.keys(bytesCache);
-      if (keys.length > 2) delete bytesCache[keys[0]];
+      if (keys.length > 3) delete bytesCache[keys[0]];
       return window.pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise.then(function (doc) {
         if (reader !== st) { try { doc.destroy(); } catch (e) {} return; }
         st.doc = doc;
@@ -576,12 +693,20 @@
       ents.forEach(function (en) {
         if (en.isIntersecting) renderPage(Number(en.target.getAttribute('data-n')), en.target);
       });
-    }, { root: elStage, rootMargin: '600px 0px' });
+    }, { root: wrap, rootMargin: '600px 0px' }); // root = .ep-pages (আসল-স্ক্রলার; elStage-rootে গভীর-স্ক্রলে রেন্ডার-ট্রিগার বন্ধ হয়ে যেত)
     holders.forEach(function (h) { st.io.observe(h); });
+    // session178: জীবিত-রিডার-রেজিস্ট্রি — পরের-সুইচে শূন্য-নেটওয়ার্কে ফেরা
+    alive.set(st.fid, { wrap: wrap, doc: doc, io: st.io, st: st, numPages: doc.numPages, shownAt: Date.now() });
+    aliveEvictIfNeeded();
+    armPageJump(st, doc.numPages);
   }
 
   function renderStage(p) {
-    cancelReader();
+    if (mode !== 'reader') { // session178: প্রচ্ছদ-মোডে সক্রিয়-ফেচ-থামান (doc জীবিত থাকে — রিডারে ফেরা তাৎক্ষণিক)
+      if (reader) { try { if (reader.abort) reader.abort.abort(); } catch (e) {} }
+      stowActiveScroll(); // রিডারের-স্ক্রল মনে রাখুন — ফেরত-এলে সেখানেই
+      resetPageJump();
+    }
     if (mode === 'reader') { openReader(p); return; }
     if (p.thumbs && p.thumbs.length) {
       var chain = p.thumbs.map(function (u) { return u.replace(/'/g, '%27'); });
@@ -604,6 +729,44 @@
   }
 
   window.addEventListener('beforeunload', cancelReader);
+
+  // ── session178: আইডল-প্রিফেচ — সক্রিয়-দিনের পরবর্তী শীর্ষ-র‍্যাংকের ২টি পত্রিকা ব্যাকগ্রাউন্ডে
+  //    বাইট-ক্যাশে (সার্ভার-ক্লিন-ক্যাশ ও HTTP-ক্যাশ উষ্ণ হয়); ডাটা-সেভার/2G/লুকানো-ট্যাবে স্বয়ং-বন্ধ
+  var prefetched = {}, prefetchDate = null, prefetchBusy = false;
+  function prefetchPapers() {
+    if (document.hidden || prefetchBusy) return;
+    var d = elDate.value;
+    if (prefetchDate !== d) { prefetchDate = d; prefetched = {}; }
+    var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
+    if (conn.saveData || /^(slow-)?2g$/i.test(conn.effectiveType || '')) return;
+    var rows = (byDate[d] || []).slice().sort(rankCmp).filter(function (p) { return p.fid; });
+    var queue = [];
+    for (var i = 0; i < rows.length && queue.length < 2; i++) {
+      var p = rows[i];
+      if (!prefetched[p.fid] && !alive.get(p.fid)) queue.push(p);
+    }
+    if (!queue.length) return;
+    prefetchBusy = true;
+    var k = 0;
+    var next = function () {
+      if (k >= queue.length || document.hidden) { prefetchBusy = false; return; }
+      var pp = queue[k++];
+      prefetched[pp.fid] = true;
+      fetch('/api/epaper/file/' + encodeURIComponent(pp.fid)).then(function (r) {
+        return r.ok ? r.arrayBuffer() : null;
+      }).then(function (b) {
+        if (b && b.byteLength > 1024) {
+          bytesCache[pp.fid] = b;
+          var keys = Object.keys(bytesCache);
+          if (keys.length > 3) delete bytesCache[keys[0]];
+        }
+        setTimeout(next, 1200);
+      }).catch(function () { setTimeout(next, 1200); });
+    };
+    next();
+  }
+  setTimeout(prefetchPapers, 5000);
+  setInterval(prefetchPapers, 12000);
 
   // ── ইভেন্ট ──
   elList.addEventListener('click', function (e) {
