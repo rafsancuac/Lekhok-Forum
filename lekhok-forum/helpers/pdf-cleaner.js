@@ -1,7 +1,13 @@
 /**
- * helpers/pdf-cleaner.js — চ্যানেল-প্রমো-লেয়ার ক্লিনার (সাইট-পাশ, session175)
+ * helpers/pdf-cleaner.js — চ্যানেল-প্রমো-লেয়ার ক্লিনার (সাইট-পাশ, session175 → v3 session179)
  *
- * epaper-bot/src/cleaner.ts (v2)-এর Node/CJS-পোর্ট — ইমেজ-অপে sharp ব্যবহার করে।
+ * epaper-bot/src/cleaner.ts (v3)-এর Node/CJS-পোর্ট — ইমেজ-অপে sharp ব্যবহার করে।
+ *
+ * v3 (session179 — ইউজার-অভিযোগ "লিংক সরেছে তবে কোয়ালিটি নষ্ট হয়ে গেছে"): র‌্যাস্টার-ব্যানার-পাস এখন
+ * লসলেস — পূর্ণ-পাতা-JPEG আর রি-এনকোড হয় না (v2-র q80-রি-এনকোডই ছোট-সংবাদপত্র-অক্ষর ঝাপসা করত)।
+ * ব্যানার-ব্যান্ড শুধু sharp-এ শনাক্ত হয় (পড়া-শুধু), তারপর পাতার কনটেন্ট-স্ট্রিমের শেষে একটি
+ * সাদা-আয়ত অপারেটর যোগ হয় (ইমেজ-ড্র-অপারেটরের পরে আঁকা = ওপরে-আঁকা) — মূল-JPEG-বাইট হুবহু অক্ষত।
+ * ওভারলে-স্ট্রিমে /LF EP3 মার্কার থাকে — পুনঃপ্রক্রিয়াকরণ রোধ করে (আগে-ওভারলেড ফাইল raw-passthrough হয়)।
  *
  * আসল-চ্যানেল-পিডিএফের তিন-রকম প্রমো-কাঠামো (session175-জরিপ):
  *   ① Contents-অ্যারের অ্যাপেন্ডেড প্রমো-স্ট্রিম + প্রমো-লিংক-অ্যানোটেশন
@@ -13,6 +19,23 @@
 const {
   PDFDocument, PDFName, PDFArray, PDFRef, PDFNumber, PDFRawStream, decodePDFRawStream,
 } = require('pdf-lib');
+
+/** v3: পাতার কনটেন্ট-স্ট্রিম-অনুক্রমের শেষে সাদা-আয়ত-ওভারলে-স্ট্রিম যোগ (মূল-স্ট্রিম-বাইট অক্ষত) */
+function appendWhiteOverlay(pdfDoc, page, opsStr) {
+  const ctx = pdfDoc.context;
+  const overlayRef = ctx.register(ctx.flateStream(opsStr, { LF: 'EP3' })); // /LF EP3 = ওভারলে-মার্কার
+  const contentsRef = page.node.get(PDFName.of('Contents'));
+  const existing = ctx.lookup(contentsRef);
+  if (existing instanceof PDFArray) {
+    existing.push(overlayRef);
+    return;
+  }
+  const baseRef = contentsRef instanceof PDFRef ? contentsRef : ctx.register(existing); // ডিরেক্ট-স্ট্রিম বিরল-কেস
+  const arr = PDFArray.withContext(ctx);
+  arr.push(baseRef);
+  arr.push(overlayRef);
+  page.node.set(PDFName.of('Contents'), arr);
+}
 const sharp = require('sharp');
 const zlib = require('zlib');
 
@@ -89,6 +112,39 @@ function cutPromoTailBlocks(text) {
   }
   out += text.slice(pos);
   return { text: out, cut: cut.size };
+}
+
+/**
+ * v3 (session179-ফিক্স): কনটেন্ট-স্ট্রিম ওয়াক করে প্রতিটি /Name Do-এর সম্পূর্ণ CTM সংগ্রহ।
+ * আগের-regex শুধু Do-এর ঠিক-আগের একটি cm ধরত — pdf-lib জাতীয় উৎসে স্কেল+ট্রান্সলেট দুই-স্তরে
+ * স্তূপকৃত cm থাকে (শেষটি identity) → জ্যামিতি ভুল/অজানা হত। এখন q/Q-স্তূপসহ ক্রমিক cm-গুণন।
+ * ফর্মা: CTM' = cm × CTM (PDF §8.3.2); BI…EI ইনলাইন-ইমেজ স্কিপ।
+ */
+function collectImagePlacements(text) {
+  const placements = new Map(); // ইমেজ-নাম (slash-বিহীন) → CTM [a,b,c,d,e,f]
+  const stack = [];
+  let ctm = [1, 0, 0, 1, 0, 0];
+  const mul = (cm, c) => [
+    cm[0] * c[0] + cm[1] * c[2],
+    cm[0] * c[1] + cm[1] * c[3],
+    cm[2] * c[0] + cm[3] * c[2],
+    cm[2] * c[1] + cm[3] * c[3],
+    cm[4] * c[0] + cm[5] * c[2] + c[4],
+    cm[4] * c[1] + cm[5] * c[3] + c[5],
+  ];
+  const re = /(BI[\s\S]*?EI)|(\bq\b)|(\bQ\b)|([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+cm|\/([^\s/\[\]<>(){}]+)\s+Do/g;
+  let m;
+  while ((m = re.exec(text))) {
+    if (m[1]) continue; // ইনলাইন-ইমেজ — ভেতরের-টোকেন নয়
+    if (m[2]) { stack.push(ctm.slice()); continue; }
+    if (m[3]) { ctm = stack.pop() || [1, 0, 0, 1, 0, 0]; continue; }
+    if (m[4] !== undefined) {
+      ctm = mul([parseFloat(m[4]), parseFloat(m[5]), parseFloat(m[6]), parseFloat(m[7]), parseFloat(m[8]), parseFloat(m[9])], ctm);
+      continue;
+    }
+    if (m[10]) placements.set(m[10], ctm.slice());
+  }
+  return placements;
 }
 
 /* ════ র‌্যাস্টার-সবুজ-ব্যান্ড শনাক্তকরণ (৪-চ্যানেল raw RGBA-তে) ════ */
@@ -219,35 +275,44 @@ async function cleanEpaperPdf(inputPdfBuffer) {
         }
       }
 
-      /* ── পাস-৪: র‌্যাস্টার-সবুজ-ব্যান্ড-কভার (পূর্ণ-পাতা-JPEG) ── */
+      /* ── পাস-৪: র‌্যাস্টার-সবুজ-ব্যান্ড — v3 লসলেস-ওভারলে (session179) ──
+         v2 পূর্ণ-পাতা-JPEG q80-রি-এনকোড করত → ছোট-অক্ষর ঝাপসা হত। v3: sharp শুধু-পড়া-মোডে
+         ব্যানার-ব্যান্ড শনাক্ত করে → কনটেন্ট-স্ট্রিমে সাদা-আয়ত-ওভারলে (ইমেজের ওপরে) —
+         মূল-JPEG-বাইট হুবহু-অক্ষত = ১০০% মৌল-কোয়ালিটি। ঘূর্ণিত-ম্যাট্রিক্সে পিক্সেল-কভার-ফলব্যাক। */
       const mb = page.getMediaBox();
       const resRef = page.node.get(PDFName.of('Resources'));
       const res = resRef ? pdfDoc.context.lookup(resRef) : null;
       const xoRef = res && res.get ? res.get(PDFName.of('XObject')) : null;
       const xo = xoRef ? pdfDoc.context.lookup(xoRef) : null;
       if (xo && typeof xo.entries === 'function') {
-        const drawn = new Map();
+        // ইতিমধ্যে-ওভারলেড-চিহ্ন (/LF EP3) — আগে-v3-ক্লিন হওয়া ফাইল পুনঃপ্রক্রিয়া হবে না
+        let alreadyOverlaid = false;
+        for (const ref of streamRefs) {
+          const s = pdfDoc.context.lookup(ref);
+          if (s && s.dict && typeof s.dict.get === 'function' && s.dict.get(PDFName.of('LF'))) { alreadyOverlaid = true; break; }
+        }
         let contentText = '';
         for (const ref of streamRefs) {
           const s = pdfDoc.context.lookup(ref);
           if (s instanceof PDFRawStream) contentText += streamText(s) + '\n';
         }
-        const dre = /([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+cm\s*\/([^\s/]+)\s+Do/g;
-        let dm;
-        while ((dm = dre.exec(contentText))) drawn.set(dm[7], { a: Math.abs(parseFloat(dm[1])), d: Math.abs(parseFloat(dm[4])) });
+        const drawn = collectImagePlacements(contentText);
         const imgNames = [...xo.entries()];
         const soleImage = imgNames.length === 1;
         for (const [name, ref] of imgNames) {
+          if (alreadyOverlaid) break; // এ-পাতায় ওভারলে আছেই — র‌্যাস্টার-কাজ শেষ
           const key = String(ref);
-          if (doneImgRefs.has(key)) continue;
+          // session179-ফিক্স: xo-কী PDFName (toString='/Image…') — regex-কী slash-বিহীন —
+          // আগে মিলত-ই না (geo সবসময় অজানা হয়ে fallback চলত); এখন নরমালাইজ করে সম-কী
+          const nameKey = String(name).replace(/^\//, '');
           const s = pdfDoc.context.lookup(ref);
           const dict = (s && s.dict) || s;
           if (!dict || typeof dict.get !== 'function') continue;
           const filter = String(dict.get(PDFName.of('Filter')) || '');
           const subtype = String(dict.get(PDFName.of('Subtype')) || '');
           if (!/Image/.test(subtype) || !filter.includes('DCT')) continue;
-          const geo = drawn.get(name);
-          const fullPage = geo ? (geo.a >= mb.width * 0.5 && geo.d >= mb.height * 0.5) : soleImage;
+          const geo = drawn.get(nameKey);
+          const fullPage = geo ? (Math.abs(geo[0]) >= mb.width * 0.5 && Math.abs(geo[3]) >= mb.height * 0.5) : soleImage;
           if (!fullPage) continue;
           try {
             const W = parseInt(dict.get(PDFName.of('Width')), 10);
@@ -260,16 +325,37 @@ async function cleanEpaperPdf(inputPdfBuffer) {
             const band = findPromoBand(data, W, H, y0);
             if (!band) continue;
             const pad = Math.max(4, Math.round(H * 0.002));
-            const top = Math.max(0, band.top - pad);
-            const bh = Math.min(H, band.bottom + pad) - top;
-            const white = await sharp({ create: { width: W, height: bh, channels: 3, background: { r: 255, g: 255, b: 255 } } })
-              .png().toBuffer();
-            const outJpg = await sharp(Buffer.from(s.contents))
-              .composite([{ input: white, left: 0, top }]).jpeg({ quality: 80 }).toBuffer();
-            s.contents = new Uint8Array(outJpg);
-            dict.set(PDFName.of('Length'), PDFNumber.of(outJpg.length));
-            imagesCovered++;
-            doneImgRefs.add(key);
+            const topPx = Math.max(0, band.top - pad);
+            const botPx = Math.min(H, band.bottom + pad);
+            // অক্ষ-সংরেখিত-অনুবাদ-ম্যাট্রিক্স (b/c≈০, a/d>০) = নিরাপদ-লসলেস-ওভারলে-পথ
+            const A = geo[0], B = geo[1], C = geo[2], D = geo[3], E = geo[4], F = geo[5];
+            const axisOk = Math.abs(B) < Math.abs(A) * 0.01
+              && Math.abs(C) < Math.abs(D) * 0.01
+              && A > 0 && D > 0;
+            if (axisOk) {
+              // ইমেজ-পিক্সেল(ওপর-বাম-উৎস) → PDF-ইউজার-স্পেস(নিচ-বাম-উৎস): y_pdf = f + d·(1 − px/H)
+              const yTopPdf = F + D * (1 - topPx / H);
+              const yBotPdf = F + D * (1 - botPx / H);
+              const rx = E, ry = yBotPdf, rw = A, rh = yTopPdf - yBotPdf;
+              if (rw > 0 && rh > 0 && Number.isFinite(ry) && Number.isFinite(yTopPdf)) {
+                const ops = `q 1 1 1 rg ${rx.toFixed(2)} ${ry.toFixed(2)} ${rw.toFixed(2)} ${rh.toFixed(2)} re f Q\n`;
+                appendWhiteOverlay(pdfDoc, page, ops);
+                imagesCovered++;
+              }
+            } else {
+              // ঘূর্ণিত/তির্যক ম্যাট্রিক্স বা cm-অজানা — বিরল: পুরোনো পিক্সেল-কভার-ফলব্যাক (প্রতি-ইমেজ-একবার)
+              if (doneImgRefs.has(key)) continue;
+              const top = topPx;
+              const bh = botPx - top;
+              const white = await sharp({ create: { width: W, height: bh, channels: 3, background: { r: 255, g: 255, b: 255 } } })
+                .png().toBuffer();
+              const outJpg = await sharp(Buffer.from(s.contents))
+                .composite([{ input: white, left: 0, top }]).jpeg({ quality: 85 }).toBuffer();
+              s.contents = new Uint8Array(outJpg);
+              dict.set(PDFName.of('Length'), PDFNumber.of(outJpg.length));
+              imagesCovered++;
+              doneImgRefs.add(key);
+            }
           } catch (e) { /* প্রতি-ইমেজ-গার্ডেড */ }
         }
       }

@@ -204,6 +204,9 @@ const path = require('path');
 const { cleanEpaperPdf, coverPromoThumbBytes } = require('../helpers/pdf-cleaner');
 
 const EPDF_CACHE_DIR = path.join(os.tmpdir(), 'epdf-cache');
+// session179: ক্লিনার-ইঞ্জিন-সংস্করণ — v2 q80-রি-এনকোডে কোয়ালিটি-ক্ষয় হত; v3 লসলেস-ওভারলে।
+// ক্যাশ-কী/ETag-এ সংস্করণ যুক্ত → পুরোনো ক্ষয়িষ্ণু ক্যাশ (/tmp + ব্রাউজার + Vercel-এজ) স্বয়ং-অচল।
+const EPDF_VER = 'v3';
 const EPDF_MAX_BYTES = 150 * 1024 * 1024; // এর-বেশি হলে ক্লিন-ছাড়া সরাসরি সার্ভ
 const epdfInflight = new Map(); // একই-ফাইলে স্ট্যাম্পেড-ডাউনলোড-রোধ
 // session178: দৈনিক-পত্রিকার ক্লিন-বাইট প্রতি-ফাইল-আইডিতে অপরিবর্তনশীল (রিপ্লেস হলেও ক্লিন-কনটেন্ট কনভার্জেন্ট) —
@@ -212,8 +215,8 @@ const epdfInflight = new Map(); // একই-ফাইলে স্ট্যা�
 const EPAPER_CC_PDF = 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800';
 const EPAPER_CC_THUMB = 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800';
 
-/** etagOf — দৈর্ঘ্য-ভিত্তিক দুর্বল-ETag (ক্যাশ-বাইটের সম-দৈর্ঘ্য = সম-কনটেন্ট, এ-ইউস-কেসে) */
-function epaperEtag(buf) { return 'W/"' + buf.length + '-epdf"'; }
+/** etagOf — দৈর্ঘ্য+সংস্করণ-ভিত্তিক দুর্বল-ETag (ক্যাশ-বাইটের সম-দৈর্ঘ্য = সম-কনটেন্ট, এ-ইউস-কেসে) */
+function epaperEtag(buf) { return 'W/"' + buf.length + '-epdf-' + EPDF_VER + '"'; }
 
 /** 304-শর্ট-সার্কিট — If-None-Match মিললে বাডি-ছাড়া শেষ (ক্যাশ-হিট-পথেও লাগে) */
 function epaperNotModified(req, res, buf, headers) {
@@ -233,7 +236,7 @@ function epaperNotModified(req, res, buf, headers) {
  *  রিটার্ন {buf, clean, cacheHit}। ব্যর্থতায় throw — কলার নিজের-মতো সামলায়। */
 async function ensureCleanPdf(fid) {
   fs.mkdirSync(EPDF_CACHE_DIR, { recursive: true });
-  const cachePath = path.join(EPDF_CACHE_DIR, `${fid}.pdf`);
+  const cachePath = path.join(EPDF_CACHE_DIR, `${EPDF_VER}-${fid}.pdf`);
   if (fs.existsSync(cachePath) && fs.statSync(cachePath).size > 1024) {
     return { buf: fs.readFileSync(cachePath), clean: null, cacheHit: true };
   }
@@ -351,7 +354,7 @@ router.get('/thumb/:fid', async (req, res) => {
   const headers = { 'Content-Type': 'image/jpeg', 'Cache-Control': EPAPER_CC_THUMB };
   try {
     fs.mkdirSync(EPDF_CACHE_DIR, { recursive: true });
-    const cachePath = path.join(EPDF_CACHE_DIR, `t-${fid}.jpg`);
+    const cachePath = path.join(EPDF_CACHE_DIR, `t-${EPDF_VER}-${fid}.jpg`);
     if (fs.existsSync(cachePath) && fs.statSync(cachePath).size > 512) {
       const buf = fs.readFileSync(cachePath);
       headers['X-Epaper-Cache'] = 'hit';

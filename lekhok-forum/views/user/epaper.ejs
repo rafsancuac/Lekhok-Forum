@@ -61,8 +61,8 @@
   (papers || []).forEach(function (p) {
     const fid = p.fileId || driveIdOf(p.fileUrl);
     const cands = [];
-    if (p.thumbId) cands.push('/api/epaper/thumb/' + encodeURIComponent(p.thumbId)); // সেশন ১৭৫: পরিষ্কার-থাম্ব-প্রক্সি (ব্যানার-কভার) → ব্যর্থতায় সরাসরি-ড্রাইভ
-    if (fid) cands.push('/api/epaper/thumb/' + encodeURIComponent(fid)); // thumbId-না-থাকলেও পিডিএফ-পাতা-১-থেকে পরিষ্কার-থাম্ব (প্রক্সি PDF→ইমেজ সামলায়)
+    if (p.thumbId) cands.push('/api/epaper/thumb/' + encodeURIComponent(p.thumbId) + '?v=3'); // সেশন ১৭৫: পরিষ্কার-থাম্ব-প্রক্সি (ব্যানার-কভার) → ব্যর্থতায় সরাসরি-ড্রাইভ; ?v=3 = ক্লিনার-v3-ক্যাশ-বাস্ট
+    if (fid) cands.push('/api/epaper/thumb/' + encodeURIComponent(fid) + '?v=3'); // thumbId-না-থাকলেও পিডিএফ-পাতা-১-থেকে পরিষ্কার-থাম্ব (প্রক্সি PDF→ইমেজ সামলায়)
     if (p.thumbId) cands.push('https://lh3.googleusercontent.com/d/' + p.thumbId + '=s800');
     if (fid) cands.push('https://lh3.googleusercontent.com/d/' + fid + '=s800');
     if (fid) cands.push('https://drive.google.com/thumbnail?id=' + fid + '&sz=w800');
@@ -87,22 +87,13 @@
   let topPaper = null;
   payload.forEach(function (p) { if (!topPaper || p.rank < topPaper.rank) topPaper = p; });
   const bnNum = function (n) { try { return Number(n).toLocaleString('bn-BD'); } catch (e) { return String(n); } };
-  // মাস-তালিকা (ডেসকেন্ডিং, ইউনিক)
-  const monthKeys = {};
-  payload.forEach(function (p) { monthKeys[String(p.date).slice(0, 7)] = true; });
-  const months = Object.keys(monthKeys).sort().reverse().map(function (ym) {
-    const parts = ym.split('-');
-    let label = ym;
-    try { label = new Intl.DateTimeFormat('bn-BD', { month: 'long', year: 'numeric' }).format(new Date(Number(parts[0]), Number(parts[1]) - 1, 1)); } catch (e) {}
-    return { ym: ym, label: label };
-  });
+  // session179: মাস-ড্রপডাউন/তারিখ-চিপ বাদ (ইউজার-স্পেক) — months-গণনা ও data-months অপসৃষ্ট
   const todayIso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const hasPayload = payload.length > 0;
 %>
 
 <div class="ep-wrap" id="epApp170"
      data-papers="<%- encodeURIComponent(JSON.stringify(payload)) %>"
-     data-months="<%- encodeURIComponent(JSON.stringify(months)) %>"
      data-today="<%= todayIso %>">
 
   <%# ═══════════ হেডার-স্ট্রিপ ═══════════ %>
@@ -162,7 +153,7 @@
             <button type="button" class="ep-vt-btn is-on" id="epModeReader" role="tab" aria-selected="true">ডিজিটাল রিডার</button>
             <button type="button" class="ep-vt-btn" id="epModeThumb" role="tab" aria-selected="false">প্রচ্ছদ</button>
           </div>
-          <a class="ep-open-new" id="epOpenNew" href="#" target="_blank" rel="noopener" title="নতুন ট্যাবে পড়ুন"><i class="fas fa-up-right-from-square"></i><span> খুলুন</span></a>
+          <%# session179 (ইউজার-স্পেক): "খুলুন"-বাহ্যিক-ড্রাইভ-লিংক স্থায়ীভাবে বাদ — পাঠক প্ল্যাটফর্মের ভেতরেই পড়বেন %>
         </div>
       </div>
       <div class="ep-stage" id="epStage">
@@ -173,27 +164,19 @@
       </div>
     </section>
 
-    <aside class="ep-side" aria-label="তারিখ ও পত্রিকা তালিকা">
-      <%# ── ফিল্টার-বক্স ── %>
+    <aside class="ep-side" aria-label="পত্রিকা তালিকা">
+      <%# ── session179: প্রিমিয়াম-ফিল্টার বক্স — মাস-ড্রপডাউন, তারিখ-চিপ ও র‍্যাংকিং-ব্যানার বাদ;
+           শুধু টাইটেল+কাউন্ট ব্যাজ + মিনিমালিস্ট সার্চ (ইউজার-স্পেক) ── %>
       <div class="ep-filter">
         <div class="ep-filter-top">
-          <span class="ep-filter-title"><i class="fas fa-sliders"></i> তারিখ ভিত্তিক তালিকা</span>
+          <span class="ep-filter-title"><i class="fas fa-layer-group"></i> সংরক্ষিত সংখ্যা</span>
           <span class="ep-count" id="epCount">০</span>
         </div>
-        <div class="ep-filter-row">
-          <label class="ep-flabel" for="epMonthSel">মাস</label>
-          <select class="ep-month" id="epMonthSel">
-            <option value="">সকল মাস</option>
-            <% months.forEach(function (m) { %>
-              <option value="<%= m.ym %>"><%= m.label %></option>
-            <% }) %>
-          </select>
+        <div class="ep-search">
+          <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" id="epSearch" placeholder="পত্রিকা খুঁজুন…" aria-label="পত্রিকার নামে খুঁজুন" autocomplete="off" />
         </div>
-        <%# ── তারিখ-চিপস (দ্রুত-জাম্প; সাম্প্রতিক ১৪ দিন) ── %>
-        <div class="ep-chips" id="epChips" role="listbox" aria-label="দিন নির্বাচন"></div>
       </div>
-      <%# ── সেশন ১৭২: র‍্যাংকিং-নোট ── %>
-      <div class="ep-list-note"><i class="fas fa-trophy" aria-hidden="true"></i><span>জাতীয় প্রচারসংখ্যা ও পাঠকপ্রিয়তার <b>স্বয়ংক্রিয় র‍্যাংকিং</b> — প্রতিদিন এই ক্রমেই তালিকা</span></div>
       <%# ── পত্রিকা-তালিকা ── %>
       <div class="ep-list" id="epList" role="listbox" aria-label="পত্রিকার তালিকা"></div>
     </aside>
@@ -255,14 +238,13 @@
   var papers = JSON.parse(decodeURIComponent(root.getAttribute('data-papers') || '[]'));
   var todayIso = root.getAttribute('data-today') || '';
   var elDate = document.getElementById('epDateInput');
-  var elMonth = document.getElementById('epMonthSel');
+  var elSearch = document.getElementById('epSearch'); // session179: মাস-ড্রপডাউনের বদলে মিনিমালিস্ট-সার্চ
   var elList = document.getElementById('epList');
-  var elChips = document.getElementById('epChips');
+  var searchTerm = '';
   var elCount = document.getElementById('epCount');
   var elStage = document.getElementById('epStage');
   var elName = document.getElementById('epCurName');
   var elCurDate = document.getElementById('epCurDate');
-  var elOpen = document.getElementById('epOpenNew');
   var elReader = document.getElementById('epModeReader');
   var elThumb = document.getElementById('epModeThumb');
   var elCurRank = document.getElementById('epCurRank'); // সেশন ১৭২: ভিউয়ার-বার র‍্যাংক-চিপ
@@ -312,7 +294,7 @@
     stowActiveScroll();
     cancelReader();
     if (!p.embed) {
-      elStage.innerHTML = '<div class="ep-stage-empty"><i class="fas fa-newspaper"></i><p>রিডার পাওয়া যায়নি — “খুলুন” বাটনে ক্লিক করুন</p></div>';
+      elStage.innerHTML = '<div class="ep-stage-empty"><i class="fas fa-newspaper"></i><p>রিডার পাওয়া যায়নি — বাঁ-দিকের তালিকা থেকে অন্য সংখ্যা বেছে নিন</p></div>';
       return;
     }
     elStage.innerHTML =
@@ -336,31 +318,15 @@
   dates.sort();
   dates.reverse();
 
-  function bnShort(iso) {
-    var p = iso.split('-');
-    var md = { '01': 'জানুয়ারি', '02': 'ফেব্রুয়ারি', '03': 'মার্চ', '04': 'এপ্রিল', '05': 'মে', '06': 'জুন', '07': 'জুলাই', '08': 'আগস্ট', '09': 'সেপ্টেম্বর', '10': 'অক্টোবর', '11': 'নভেম্বর', '12': 'ডিসেম্বর' };
-    return bnDigits(parseInt(p[2], 10)) + ' ' + (md[p[1]] || p[1]);
-  }
-
-  // ── তারিখ-চিপস: সাম্প্রতিক ১৪ দিন (যেদিনে-পত্রিকা-আছে) ──
-  function renderChips() {
-    var frag = '';
-    dates.slice(0, 14).forEach(function (d) {
-      var n = byDate[d].length;
-      frag += '<button type="button" role="option" aria-selected="' + (d === elDate.value) + '" class="ep-chip' + (d === elDate.value ? ' is-on' : '') + '" data-d="' + d + '">' +
-        '<i class="far fa-calendar"></i> ' + bnShort(d) +
-        (n > 1 ? ' <b class="ep-chip-n">' + bnDigits(n) + '</b>' : '') + '</button>';
-    });
-    elChips.innerHTML = frag;
-  }
+  // ── session179: তারিখ-চিপস বাদ (ইউজার-স্পেক) — দিন-নেভিগেশন হেডারের ডেট-পিকার + আগের/পরের-বাটনেই ──
 
   function filtered() {
     var d = elDate.value;
-    var m = elMonth.value;
+    var q = searchTerm.trim().toLowerCase(); // session179: সার্চ-ফিল্টার (মাস-ড্রপডাউনের বদলে)
     var rows = papers.filter(function (p) {
       var pd = String(p.date || '').slice(0, 10);
-      if (m && pd.indexOf(m) !== 0) return false;
       if (d && pd !== d) return false;
+      if (q && String(p.name).toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
     // সেশন ১৭২: পাঠকপ্রিয়তা-র‍্যাংক অনুযায়ী স্বয়ংক্রিয় ক্রমবিন্যাস (১→২৪; বহির্ভূত সবার শেষে, নাম-ক্রমে)
@@ -401,13 +367,12 @@
         // সেশন ১৭২: র‍্যাংক-ব্যাজ (#১, #২… — শীর্ষ-৩ ব্র্যান্ড-সবুজ; বহির্ভূত '–')
         '<span class="ep-rank' + (rk && rk <= 3 ? ' is-top' : '') + '" title="' + (rk ? 'পাঠকপ্রিয়তার ক্রমে ' + bnDigits(rk) + ' নম্বর' : 'র‍্যাংক-তালিকাভুক্ত নয়') + '">' + (rk ? '#' + bnDigits(rk) : '–') + '</span>' +
         '<span class="ep-thumb">' + thumbHtml(p) + '</span>' +
-        '<span class="ep-item-meta"><b class="ep-item-name">' + p.name + '</b>' +
-        '<span class="ep-item-sub"><i class="far fa-calendar"></i> ' + p.dateBn + '</span></span>' +
+        // session179 (ইউজার-স্পেক): প্রতি-কার্ডে তারিখ-পুনরাবৃত্তি বাদ — তারিখ হেডার/ভিউয়ার-বারেই একবার
+        '<span class="ep-item-meta"><b class="ep-item-name">' + p.name + '</b></span>' +
         (on ? '<span class="ep-dot" aria-hidden="true"></span>' : '') +
         '</button>';
     });
     elList.innerHTML = frag;
-    renderChips();
     // ফিল্টারে প্রথমটি অটো-সিলেক্ট — ভিউয়ার কখনো-ফাঁকা-লাগে না
     if (!rows.some(function (p) { return p.id === activeId; })) select(rows[0].id);
   }
@@ -423,8 +388,6 @@
       else { elCurRank.hidden = true; elCurRank.textContent = ''; }
     }
     elCurDate.textContent = '· ' + p.dateBn;
-    elOpen.href = p.view || '#';
-    elOpen.style.display = p.view ? '' : 'none';
     resetView();
     renderStage(p);
     renderList();
@@ -610,10 +573,14 @@
     if (!p.fid) { renderStageIframe(p); return; }
     var st = { fid: p.fid, abort: new AbortController(), doc: null, io: null };
     reader = st;
-    elStage.innerHTML = '<div class="ep-reader-load"><i class="fas fa-spinner fa-spin"></i>' +
+    // session179 (ইউজার-স্পেক): লোডিং-স্ক্রিনের বাহ্যিক-ড্রাইভ-লিংক বাদ — লোডিং-স্ক্রিনেও বাইরের-লিংক কোথাও নয়;
+    // বদলে পোস্টার-প্রিভিউ — ক্যানভাস-রেন্ডারের আগেই পরিচিত-প্রচ্ছদ দেখা যায় (উপলব্ধি-গতি)
+    var posterSrc = (p.thumbs && p.thumbs.length) ? String(p.thumbs[0]).replace(/'/g, '%27') : '';
+    var posterHtml = posterSrc ? '<img class="ep-load-poster" src="' + posterSrc + '" alt="" onerror="this.style.display=\'none\"" />' : '';
+    elStage.innerHTML = '<div class="ep-reader-load">' + posterHtml +
+      '<i class="fas fa-spinner fa-spin"></i>' +
       '<p>পত্রিকা লোড হচ্ছে…</p><div class="ep-prog"><i style="width:6%"></i></div>' +
-      '<span class="ep-prog-txt">প্রস্তুত হচ্ছে</span>' +
-      '<a class="ep-load-fallback" href="' + p.view + '" target="_blank" rel="noopener">সরাসরি খুলুন ↗</a></div>';
+      '<span class="ep-prog-txt">প্রস্তুত হচ্ছে</span></div>';
     var progBar = elStage.querySelector('.ep-prog i');
     var progTxt = elStage.querySelector('.ep-prog-txt');
     var onProg = function (got, total) {
@@ -629,8 +596,9 @@
     } else {
       // সেশন ১৭৫: ক্লিন-প্রক্সি — পুরোনো-পিডিএফেও সাইট-পাশে প্রমো-লেয়ার সরে (helpers/pdf-cleaner)
       // সেশন ১৭৮: ×২-রিট্রাই — ট্রানজিয়েন্ট 502/504-এ iframe-ফলব্যাকে (ব্যানার) না-গিয়ে পুনঃচেষ্টা
+      // session179: ?v=3 — ক্লিনার-v3 (লসলেস)-ক্যাশ-বাস্ট (পুরোনো q80-রি-এনকোড ব্রাউজার/এজ-ক্যাশ অচল)
       bytesP = loadPdfJs().then(function () {
-        return fetchPdfWithRetry('/api/epaper/file/' + encodeURIComponent(p.fid), st.abort, onProg);
+        return fetchPdfWithRetry('/api/epaper/file/' + encodeURIComponent(p.fid) + '?v=3', st.abort, onProg);
       });
     }
     bytesP.then(function (buf) {
@@ -752,7 +720,7 @@
       if (k >= queue.length || document.hidden) { prefetchBusy = false; return; }
       var pp = queue[k++];
       prefetched[pp.fid] = true;
-      fetch('/api/epaper/file/' + encodeURIComponent(pp.fid)).then(function (r) {
+      fetch('/api/epaper/file/' + encodeURIComponent(pp.fid) + '?v=3').then(function (r) {
         return r.ok ? r.arrayBuffer() : null;
       }).then(function (b) {
         if (b && b.byteLength > 1024) {
@@ -771,20 +739,18 @@
   // ── ইভেন্ট ──
   elList.addEventListener('click', function (e) {
     var back = e.target.closest('[data-back]');
-    if (back) { elDate.value = todayIso; elMonth.value = ''; renderList(); return; }
+    if (back) { elDate.value = todayIso; renderList(); return; }
     var it = e.target.closest('.ep-item');
     if (it) select(Number(it.getAttribute('data-id')));
   });
-  elChips.addEventListener('click', function (e) {
-    var ch = e.target.closest('.ep-chip');
-    if (!ch) return;
-    elDate.value = ch.getAttribute('data-d');
+  // session179: সার্চ-ইনপুট (মাস-ড্রপডাউন/চিপসের বদলে) — টাইপ-সাথে-সাথে তালিকা ফিল্টার
+  if (elSearch) elSearch.addEventListener('input', function () {
+    searchTerm = elSearch.value || '';
     renderList();
   });
   elDate.addEventListener('change', renderList);
-  elMonth.addEventListener('change', renderList);
   document.getElementById('epTodayBtn').addEventListener('click', function () {
-    elDate.value = todayIso; elMonth.value = ''; renderList();
+    elDate.value = todayIso; renderList();
   });
   elReader.addEventListener('click', function () { setMode('reader'); });
   elThumb.addEventListener('click', function () { setMode('thumb'); });
