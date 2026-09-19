@@ -1928,3 +1928,21 @@ Stage Summary:
 - ইউজার-স্পেক-পূর্ণ + কার্যকর: ফিল্টার-বার এখন প্রকৃত ফিড-ফিল্টার চালায় (type×sort×base), কম্পোজার টাইপড-পোস্ট তৈরি করে, কার্ডে টাইপ-ব্যাজ
 - ক্রেডেনশিয়াল-নোট: GitHub-PAT (পুশ-সক্ষম) + Google-OAuth-client (ePaper-বট) + টেলিগ্রাম-নম্বর — my-project worklog-এ পথ-নির্দেশ
 - পরের-এজেন্ট: session167 থেকে; প্রস্তাব — ফিল্টার-স্টেট URL-সিঙ্ক, চিপে কাউন্ট-ব্যাজ, POPULAR-ডিপ-পেজিনেশন, ই-পেপার-বট লাইভ-বুট
+---
+Task ID: 32 (Session 167 — Telegram MTProto লগইন-সম্পূর্ণ + ePaper-বট সেশন-প্রস্তুত)
+Agent: Z.ai Code (main session — ইউজার Telegram api_id/api_hash + OTP + 2FA প্রদান করেছেন)
+
+Work Log:
+- ইউজার my.telegram.org-থেকে api_id/api_hash দিয়েছেন (App: Lekhok Forum / BTCLF, ফোন +880…) → epaper-bot/.env-এ সংরক্ষণ (gitignored)
+- নতুন দুই-ধাপ লগইন-স্ক্রিপ্ট: src/login-send.ts (sendCode → .tg-auth-state.json-এ phoneCodeHash+authKey সংরক্ষণ) + src/login-verify.ts (auth.SignIn → SESSION_PASSWORD_NEEDED হলে account.GetPassword + telegram/Password-এর computeCheck → auth.CheckPassword → .tg-session সেভ + .env-এ TG_SESSION লেখা)
+- লাইভ-ফ্লো: OTP-অনুরোধ → কোড টেলিগ্রাম-অ্যাপে ডেলিভারি → ইউজার-কোড গ্রহণ → 2FA-পাসওয়ার্ড-প্রম্পট → ইউজার 2FA পুনঃসেট করে সঠিক পাসওয়ার্ড দেন → ✅ লগইন-সফল (05:35 UTC, session-ফাইল 369B)
+- 🐛 বাগ-ফিক্স: GramJS 2.26-এ client.getPassword/client.computeCheck নেই — `import { computeCheck } from 'telegram/Password'` + `client.invoke(new Api.account.GetPassword())` সঠিক-প্যাটার্ন
+- স্মোক-টেস্ট (src/tg-smoke.ts): getMe = @rafsancu06 (ফোন 8801859569175); @ePaperXpress → Channel "ePaper Express"; getMessages(3) → #2379 TEXT + #2378 DOC(pdf) "টাইমস অব বাংলাদেশ ১৯/০৯/২০২৬" + #2377 DOC(webp) — সেশন চ্যানেল-রিড-সহ সম্পূর্ণ-কার্যকর
+- .gitignore: .tg-auth-state.json যোগ; সিক্রেট (.env / .tg-session / .tg-auth-state.json) রিপো-তে ফাঁস হয়নি
+- push: origin/main (PAT-রিমোট)
+
+Stage Summary:
+- ePaper-পাইপলাইনের টেলিগ্রাম-পা ১০০% প্রস্তুত — বট এখন চ্যানেল-স্ক্যান → PDF-ডাউনলোড পর্যন্ত যেতে পারে
+- বাকি (ইউজার/সার্ভার-নির্ভর): ① Google Cloud কনসোলে OAuth-ক্লায়েন্টে redirect-URI http://localhost:4288 যোগ → `bun run token` কনসেন্ট-ফ্লো → GOOGLE_REFRESH_TOKEN (.env) ② লাইভ-সার্ভারে EPAPER_SYNC_TOKEN env
+- 🔐 নিরাপত্তা-নোট: ইউজারের 2FA-পাসওয়ার্ড চ্যাটে শেয়ার হয়েছে — শক্তিশালী-পাসওয়ার্ডে পরিবর্তনের পরামর্শ দেওয়া হয়েছে
+- পরের-এজেন্ট: refresh-token পেলে `bun start`-এ বট-লাইভ; না-পেলে session168 (ফিল্টার-URL-সিঙ্ক, চিপ-কাউন্ট-ব্যাজ, POPULAR ডিপ-পেজিং)
