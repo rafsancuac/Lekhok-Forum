@@ -649,10 +649,19 @@
         var targetW = Math.max(wrap.clientWidth - 28, 320);
         var scale = Math.min(targetW / base.width, 2);
         var vp = page.getViewport({ scale: scale });
+        /* ── session180: HiDPI/রেটিনা-শার্পনেস (ইউজার-স্পেক "কাঁচের-মতো পরিষ্কার") ──
+           ব্যাকিং-স্টোর ডিভাইস-ঘনত্বে সুপারস্যাম্পল (dpr<২ হলেও ন্যূনতম ২×, সর্বোচ্চ ৩×) —
+           হাই-ঘনত্ব-ডিসপ্লের আপস্কেল-ঝাপসা শূন্য + CSS-জুম ২০০%-এও ডিভাইস-পিক্সেল-সমৃদ্ধ।
+           মেমরি-গার্ড: ব্যাকিং >২০Mpx হলে os স্বয়ং-নামানো (ব্রডশিট-পাতায় ট্যাব-ক্র্যাশ-রোধ)। */
+        var dpr = window.devicePixelRatio || 1;
+        var os = Math.min(Math.max(dpr, 2), 3);
+        if (vp.width * vp.height * os * os > 20000000) os = Math.max(Math.sqrt(20000000 / (vp.width * vp.height)), 1);
         var canvas = document.createElement('canvas');
-        canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+        canvas.width = Math.floor(vp.width * os); canvas.height = Math.floor(vp.height * os);
         holder.insertBefore(canvas, holder.firstChild);
-        return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise.then(function () {
+        var rparams = { canvasContext: canvas.getContext('2d', { alpha: false }), viewport: vp, background: '#ffffff' };
+        if (os !== 1) rparams.transform = [os, 0, 0, os, 0, 0]; // ফিজিক্যাল-পিক্সেল-ম্যাপিং (pdf.js HiDPI-চুক্তি)
+        return page.render(rparams).promise.then(function () {
           holder.classList.add('is-done');
         });
       }).catch(function () { rendering[n] = false; });
