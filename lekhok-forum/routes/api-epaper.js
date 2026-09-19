@@ -203,9 +203,10 @@ const EPDF_CACHE_DIR = path.join(os.tmpdir(), 'epdf-cache');
 const EPDF_MAX_BYTES = 150 * 1024 * 1024; // এর-বেশি হলে ক্লিন-ছাড়া সরাসরি সার্ভ
 const epdfInflight = new Map(); // একই-ফাইলে স্ট্যাম্পেড-ডাউনলোড-রোধ
 // session178: দৈনিক-পত্রিকার ক্লিন-বাইট প্রতি-ফাইল-আইডিতে অপরিবর্তনশীল (রিপ্লেস হলেও ক্লিন-কনটেন্ট কনভার্জেন্ট) —
-// ব্রাউজার/এজ-ক্যাশ ২৪ঘ + SWR-এ Vercel-এজ থেকে কোল্ড-ইনস্ট্যান্সেও তাৎক্ষণিক-সার্ভিং; ETag দিয়ে সস্তা-রিভ্যালিডেশন
-const EPAPER_CC_PDF = 'public, max-age=86400, stale-while-revalidate=604800';
-const EPAPER_CC_THUMB = 'public, max-age=86400, stale-while-revalidate=604800';
+// ব্রাউজার-ক্যাশ ২৪ঘ + s-maxage-এ Vercel-এজ-ক্যাশ (কোল্ড-ইনস্ট্যান্সেও এজ-থেকে তাৎক্ষণিক);
+// SWR-এ এজ-ব্যাকগ্রাউন্ড-রিফ্রেশ; ETag দিয়ে সস্তা-রিভ্যালিডেশন
+const EPAPER_CC_PDF = 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800';
+const EPAPER_CC_THUMB = 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800';
 
 /** etagOf — দৈর্ঘ্য-ভিত্তিক দুর্বল-ETag (ক্যাশ-বাইটের সম-দৈর্ঘ্য = সম-কনটেন্ট, এ-ইউস-কেসে) */
 function epaperEtag(buf) { return 'W/"' + buf.length + '-epdf"'; }
