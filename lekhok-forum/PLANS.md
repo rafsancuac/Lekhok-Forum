@@ -2380,3 +2380,10 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **গোটচা ×২:** ① রিপো ৬০-দিন নিষ্ক্রিয় থাকলে GitHub schedule-ওয়ার্কফ্লো অটো-ডিসেবল করে (Actions-ট্যাব থেকে পুনঃসক্রিয়) ② `.vercelignore` কেবল CLI-ডিপ্লয়ে — গিট-ডিপ্লয়ে Root Directory=lekhok-forum-ই কার্যকর-ফিল্টার
 - **ইউজার-অ্যাকশন-অবশিষ্ট:** ① VERCEL_TOKEN বানিয়ে `--dry-run` → আসল-রান (Functions Storage ১২.৩২ GB → প্রত্যাশিত ২-৩ GB) ② ৩-সিক্রেট বসালেই দৈনিক-অটোমেশন চালু ③ SESSION_SECRET/BLOB-এ **Sensitive**-টিক ④ ⚠️ GitHub-PAT কনভার্সেশনে-উন্মুক্ত + এখনও-ভ্যালিড-যাচাইকৃত — **অবিলম্বে revoke**
 - **পরের-এজেন্ট: session172 থেকে**
+
+## session174-নোট (প্রিমিয়াম অফলাইন-স্ক্রিন — দুই-অ্যাপ-প্যারিটি)
+- **নতুন-ফাইল (lekhok-forum-next):** `src/components/shared/OfflineScreen.tsx` + `src/components/shared/OfflineGate.tsx` (layout.tsx-এ `<OfflineGate>{children}</OfflineGate>`)
+- **রিরাইট:** `lekhok-forum/public/offline.html` + `public/sw.js` CACHE_VERSION v3→v4
+- **চুক্তি ×৪:** ① কানেকশন-স্টেটে সবসময় `useSyncExternalStore` (set-state-in-effect-লিন্ট + হাইড্রেশন-সেফ; SSR-স্ন্যাপশট=online) ② OfflineScreen-এ অটো-রিলোড কেবল মাউন্টে-অফলাইন-ছিল-হলে (mountedOfflineRef — স্ট্যান্ডঅ্যালোন-ব্যবহারে রিলোড-লুপ-অসম্ভব) ③ offline.html বদলালে **অবশ্যই** sw.js CACHE_VERSION-বাম্প — নাহলে পুরনো-ফাইল প্রিক্যাশে আটকায় ④ offline.html সম্পূর্ণ-সেলফ-কন্টেইনড — ওয়েবফন্ট/CDN/এক্সটার্নাল-অ্যাসেট নিষিদ্ধ (অফলাইনেই দেখানোর পেজ)
+- **গোটচা ×২:** ① `/saved`-রুট lekhok-forum-next-এ এখনো নেই (স্পেক-অক্ষুণ্ণ রাখা হয়েছে — রুট-যোগের সময় স্বয়ংক্রিয় জীবিত) ② Next-অ্যাপের navigator.onLine সার্ভার-বিহীন-ট্রুথ — সার্ভার-ডাউন-কিন্তু-নেট-আপ কেস ধরে না (ভবিষ্যৎ-প্রস্তাব: fetch-প্রোব-হাইব্রিড)
+- **পরের-এজেন্ট: session175 থেকে**

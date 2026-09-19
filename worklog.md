@@ -2043,3 +2043,21 @@ Work Log:
 Stage Summary:
 - কোড-পাশ ১০০% সম্পূর্ণ; ইউজার-অ্যাকশন-বাকি: ① vercel.com → Settings → Tokens → VERCEL_TOKEN → `node lekhok-forum/scripts/cleanup-vercel-deployments.mjs --dry-run` → বিনা-dry-run-রান (Functions Storage ১২.৩২ GB → প্রত্যাশিত ২-৩ GB) ② ৩-সিক্রেট বসালেই দৈনিক-অটো-ক্লিনআপ ③ SESSION_SECRET/BLOB-এ Sensitive-টিক ④ ⚠️ GitHub-PAT (কনভার্সেশনে-উন্মুক্ত, API-যাচাইয়ে এখনও-ভ্যালিড) অবিলম্বে revoke + 2FA চালু
 - পরের-এজেন্ট: session172 থেকে
+
+---
+Task ID: 38 (Session 174 — প্রিমিয়াম অফলাইন-স্ক্রিন: Next.js OfflineScreen.tsx + EJS offline.html-পোর্ট)
+Agent: Z.ai Code (main session)
+
+Work Log:
+- ইউজার-স্পেক: স্ক্রিনশটের অফলাইন-ইন্টারফেসে ৩-দুর্বলতা (আইকন অস্পষ্ট/headset-মতো, বাটন-টেক্সট-অনুপাত অসামঞ্জস্যপূর্ণ, শ্যাডো-অতিহালকা) → সম্পূর্ণ OfflineScreen.tsx কম্পোনেন্ট-কোড সহ প্রদান (WiFi-Slash + রিট্রাই-স্পিনার + ক্যাশ-ইনফো-বক্স + #006A4E-অ্যাকসেন্ট + FB ৮px-রেডিয়াস + কালপুরুষ)
+- বর্তমান-অবস্থা-যাচাই: "OfflineScreen" নামে রিপোতে কিছু ছিল না — স্ক্রিনশটের UI = EJS-অ্যাপের lekhok-forum/public/offline.html (sw.js-এর HTML-নেভিগেশন-অফলাইন-ফলব্যাক; পুরনো SVG-পাথটা সত্যিই headset); lekhok-forum-next-এ কোনো অফলাইন-হ্যান্ডলিং ছিল না (font-kalpurush @utility সুদূরপ্রান্তে ছিল)
+- Next.js (lekhok-forum-next): src/components/shared/OfflineScreen.tsx (ইউজার-স্পেক হুবহু; কানেকশন-স্টেট useSyncExternalStore-এ রূপান্তর — react-hooks/set-state-in-effect-লিন্ট-গ্রিন; স্পেকের অব্যবহৃত isOnline-কে অটো-রিলোডে অর্থবহ করা — স্পেক-টেক্সটের "স্বয়ংক্রিয়ভাবে পুনরায় চালু হবে"-প্রতিশ্রুতি পূরণ; mountedOfflineRef-লুপ-গার্ড) + নতুন OfflineGate.tsx (layout.tsx-এ children-মোড়ক; SSR-স্ন্যাপশট=online → হাইড্রেশন-মিসম্যাচ-শূন্য; অফলাইনে ফুল-টেকওভার)
+- EJS (লাইভ-সাইটের আসল ফিক্স): public/offline.html সম্পূর্ণ-রিরাইট — একই ডিজাইন-ভাষা (সবুজ-অ্যাকসেন্ট-স্ট্রাইপ, ৪২০px-কার্ড ১০px-রেডিয়াস #CED0D4-বর্ডার দ্বৈত-শ্যাডো, WiFi-Slash-এক-পাথ-SVG + amber-!-ব্যাজ, ক্যাশ-ইনফো-বক্স, স্পিনার-রিট্রাই, /bookmarks-সেকেন্ডারি-বাটন, ৪৪px-টাচ-টার্গেট, safe-area-inset, rise/pulse-অ্যানিমেশন, prefers-reduced-motion-সম্মান) — সম্পূর্ণ-সেলফ-কন্টেইনড (অফলাইনে ওয়েবফন্ট/CDN-নেই, সিস্টেম-বাংলা-স্ট্যাক); sw.js CACHE_VERSION v3→v4 (নতুন offline.html-রিপ্রিক্যাশ)
+- যাচাই (agent-browser E2E): রিয়েল `set offline on`-ইমুলেশন → টেকওভার ৪-টেক্সট ✓ → রিট্রাই-ক্লিকে ডিজেবল + "সংযোগ যাচাই করা হচ্ছে..."-স্পিনার ✓ → `set offline off` → অটো-রিলোডে অ্যাপ-ফেরা ✓ → 390px-মোবাইল ✓ → কম্পিউটেড-ফন্ট "Kalpurush, Noto Sans Bengali…" ✓ → কনসোল-শূন্য ✓; EJS offline.html file://-স্ক্রিনশট ×৩ (ডেস্কটপ/মোবাইল/আইকন-সংশোধন-পরবর্তী) ✓; eslint ৩-ফাইল গ্রিন
+- বুট: lekhok-forum-next bun-install + db:push + seed×৪ + dev:3000 — সব গ্রিন
+
+Stage Summary:
+- দুই-অ্যাপ-প্যারিটি: অফলাইনে উভয় অ্যাপেই এখন একই প্রিমিয়াম-স্ক্রিন (Next.js = React-গেট, EJS = SW-ফলব্যাক) — headset-আইকন-বিভ্রান্তি, অনুপাত-অসামঞ্জস্য, হালকা-শ্যাডো তিনটিই নিরসন
+- পুশ-নোট: offline.html ক্যাশ-ভার্সন-বাম্প বাধ্যতামূলক-ছিল (v3-ক্যাশে পুরনো-ফাইল আটকে থাকত)
+- ⚠️ GitHub-PAT কনভার্সেশনে-উন্মুক্ত — ব্যবহারকারীকে revoke/rotate-অনুস্মার (ধারাবাহিক)
+- পরের-এজেন্ট: session175 লেবেল থেকে
