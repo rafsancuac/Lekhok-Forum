@@ -119,8 +119,10 @@ router.post('/sync', async (req, res) => {
   }
 });
 
-// ── POST /api/epaper/cleanup — ডামি-ডাটা পরিষ্কার (session170) ────────────────
-// ফেক-লিংক (example.com ইত্যাদি, ড্রাইভ-বিহীন) daily_content-epaper রো মুছে দেয়;
+// ── POST /api/epaper/cleanup — ডামি-ডাটা পরিষ্কার (session170/session176) ──────
+// ① ফেক-লিংক (example.com ইত্যাদি, ড্রাইভ-বিহীন) daily_content-epaper রো মুছে দেয়;
+// ② ঐচ্ছিক body.removeDriveIds = [driveFileId,...] — নির্দিষ্ট ড্রাইভ-ফাইলের
+//    আর্কাইভ-রো + মিলে-যাওয়া featured-রো টার্গেটেড-অপসারণ (বিজ্ঞপ্তি/ডুপ্লিকেট-জাংক)।
 // আসল ড্রাইভ-রো অটুট থাকে। Bearer EPAPER_SYNC_TOKEN আবশ্যক।
 router.post('/cleanup', async (req, res) => {
   try {
@@ -138,7 +140,20 @@ router.post('/cleanup', async (req, res) => {
     ).run();
     const removedFeatured = (del1.changes ?? del1.affected_rows ?? 0);
     const removedArchive = (del2.changes ?? del2.affected_rows ?? 0);
-    return res.json({ ok: true, removedFeatured, removedArchive });
+
+    // ② টার্গেটেড-অপসারণ (session176): নির্দিষ্ট drive-ফাইল-আইডির রো
+    const removeIds = Array.isArray(req.body && req.body.removeDriveIds)
+      ? req.body.removeDriveIds.map((x) => String(x || '').trim()).filter(Boolean).slice(0, 100)
+      : [];
+    let removedTargeted = 0;
+    for (const rid of removeIds) {
+      const r1 = await db.prepare("DELETE FROM epaper_files WHERE drive_file_id = ?").run(rid);
+      const r2 = await db.prepare(
+        "DELETE FROM daily_content WHERE content_type = ? AND link_url LIKE ?"
+      ).run(EPAPER_TYPE, `%${rid}%`);
+      removedTargeted += ((r1.changes ?? r1.affected_rows ?? 0) + (r2.changes ?? r2.affected_rows ?? 0));
+    }
+    return res.json({ ok: true, removedFeatured, removedArchive, removedTargeted });
   } catch (err) {
     console.error('epaper cleanup error:', err);
     return res.status(500).json({ ok: false, error: 'ক্লিনআপ ব্যর্থ' });

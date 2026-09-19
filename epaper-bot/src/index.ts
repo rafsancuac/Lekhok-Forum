@@ -78,6 +78,14 @@ const NEWSPAPER_MAP: Array<[RegExp, string]> = [
   [/ফাইন্যান্সিয়াল\s*এক্সপ্রেস|financial\s*express/i, 'দ্য ফাইন্যান্সিয়াল এক্সপ্রেস'],
   [/ডেইলি\s*সান|daily\s*sun/i, 'ডেইলি সান'],
   [/বাংলাদেশ\s*পোস্ট|bangladesh\s*post/i, 'বাংলাদেশ পোস্ট'],
+  [/যায়যায়দিন|jaijaidin/i, 'যায়যায়দিন'],
+  [/কালবেলা|kalbela/i, 'কালবেলা'],
+  [/দিনকাল|dinkal/i, 'দিনকাল'],
+  [/করতোয়া|karatoa/i, 'করতোয়া'],
+  [/(?:^|\s)এদিন|daily\s*adin|\badin\b/i, 'এদিন'],
+  [/বিজনেস\s*বাংলাদেশ|business\s*bangladesh/i, 'বিজনেস বাংলাদেশ'],
+  [/ডেইলি\s*পোস্ট|daily\s*post/i, 'ডেইলি পোস্ট'],
+  [/জাতীয়\s*অর্থনীতি|jatio\s*arthoniti/i, 'জাতীয় অর্থনীতি'],
 ]
 function resolvePaperName(rawText: string, fileName: string): string {
   const hay = `${rawText || ''} ${fileName || ''}`
@@ -87,6 +95,16 @@ function resolvePaperName(rawText: string, fileName: string): string {
   const cleaned = line.replace(/[০-৯0-9\/\-,.:]+\s*$/g, '').replace(/\s+/g, ' ').trim()
   return cleaned.length >= 2 ? cleaned : 'দৈনিক পত্রিকা'
 }
+
+/** ম্যাপ-হিট (session176) — ম্যাপে-মিললে নিশ্চিত পত্রিকা (নন-ই-পেপার-ফিল্টারের সাদৃশ্য-সংকেত) */
+function mapHit(rawText: string, fileName: string): string | null {
+  const hay = `${rawText || ''} ${fileName || ''}`
+  for (const [re, name] of NEWSPAPER_MAP) if (re.test(hay)) return name
+  return null
+}
+/** নন-ই-পেপার (session176): চাকুরি-বিজ্ঞপ্তি/পে-স্কেল/ফলাফল/রুটিন-জাতীয় PDF —
+ *  শুধুমাত্র ম্যাপ-হিট-বিহীন হলে বাদ (আসল পত্রিকা কখনো বাদ পড়ে না) */
+const NON_EPAPER_RE = /চাকুরি|চাকরি|নিয়োগ|পে-?\s*স্কেল|বৃত্তি|ফলাফল|ভর্তি|রুটিন|বেতন\s*ও\s*ভাতাদি|আদেশ|job\s*circular|pay\s*scale|admission|exam\s*result/i
 
 /* ── স্টেট (ডিডুপ) — v2: তারিখ → { ফাইলনাম: ড্রাইভ-ফাইলআইডি } (প্রতি-দিনে-একাধিক-পত্রিকা) ── */
 type EpaperState = Record<string, Record<string, string>>
@@ -296,7 +314,13 @@ async function main(): Promise<void> {
       if (PAPER_FILTER && !(`${m.message || ''} ${fName}`.toLowerCase().includes(PAPER_FILTER))) continue
       if (!state[msgDate]) state[msgDate] = {}
       if (state[msgDate][fName]) continue // এই-ফাইল সিঙ্কড
-      const paperName = resolvePaperName(String(m.message || ''), fName)
+      const rawMsg = String(m.message || '')
+      // নন-ই-পেপার-গার্ড (session176): বিজ্ঞপ্তি/ফলাফল-জাতীয় PDF আর্কাইভে ঢুকবে না
+      if (!mapHit(rawMsg, fName) && NON_EPAPER_RE.test(`${rawMsg} ${fName}`)) {
+        console.log('↷ নন-ই-পেপার (বিজ্ঞপ্তি/ফলাফল-জাতীয়) — বাদ:', fName)
+        continue
+      }
+      const paperName = resolvePaperName(rawMsg, fName)
       console.log('📄 পাওয়া গেছে:', paperName, `(${msgDate}, ${fName})`)
       attempted++
       try {
