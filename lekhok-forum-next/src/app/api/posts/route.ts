@@ -11,6 +11,7 @@ import {
   fetchPostsForGroupPage,
   fetchUserMedia,
   searchPostsPage,
+  fetchFilteredPostsPage,
   type SerializedPost,
 } from '@/lib/post-serializer'
 import { canViewGroup } from '@/lib/group-data'
@@ -62,6 +63,11 @@ export async function GET(req: NextRequest) {
   const limitRaw = parseInt(req.nextUrl.searchParams.get('limit') || '', 10)
   const limit = Math.min(Math.max(Number.isNaN(limitRaw) ? 6 : limitRaw, 1), 30)
 
+  /* session165: FeedFilterBar — type=ARTICLE|QA|EVENT · sort=LATEST|POPULAR (POPULAR-এ cursor=অফসেট-সংখ্যা) */
+  const typeParam = req.nextUrl.searchParams.get('type') || ''
+  const typeFilter = ['ARTICLE', 'QA', 'EVENT'].includes(typeParam) ? typeParam : null
+  const sortParam = req.nextUrl.searchParams.get('sort') === 'POPULAR' ? 'POPULAR' : 'LATEST'
+
   /* সার্চ — কার্সর-পেজিনেশন সহ (Session F) */
   if (q.trim()) {
     const rows = await searchPostsPage(q, me.id, cursor, limit + 1)
@@ -71,6 +77,34 @@ export async function GET(req: NextRequest) {
       posts,
       hasMore,
       nextCursor: hasMore ? posts[posts.length - 1].id : null,
+      me: { id: me.id, name: me.name },
+    })
+  }
+
+  /* session165: FeedFilterBar-চালিত ফিল্টার্ড-ফিচ (feed/following-বেস · type · LATEST/POPULAR) */
+  if (typeFilter || sortParam === 'POPULAR') {
+    const offset =
+      sortParam === 'POPULAR' && cursor && !Number.isNaN(parseInt(cursor, 10))
+        ? Math.max(parseInt(cursor, 10), 0)
+        : 0
+    const rows = await fetchFilteredPostsPage(me.id, {
+      base: tab === 'following' ? 'following' : 'feed',
+      type: typeFilter,
+      sort: sortParam,
+      cursor: sortParam === 'POPULAR' ? null : cursor,
+      offset,
+      take: limit + 1,
+    })
+    const hasMore = rows.length > limit
+    const posts = hasMore ? rows.slice(0, limit) : rows
+    return NextResponse.json({
+      posts,
+      hasMore,
+      nextCursor: hasMore
+        ? sortParam === 'POPULAR'
+          ? String(offset + posts.length)
+          : posts[posts.length - 1].id
+        : null,
       me: { id: me.id, name: me.name },
     })
   }
@@ -148,6 +182,7 @@ export async function POST(req: NextRequest) {
       taggedUsers,
       media = [],
       groupId,
+      type,
     } = body
 
     const cleanContent = sanitizePostHtml(typeof content === 'string' ? content : '')
@@ -160,6 +195,9 @@ export async function POST(req: NextRequest) {
     const validAudience = ['PUBLIC', 'FRIENDS', 'ONLY_ME'].includes(audience)
       ? audience
       : 'PUBLIC'
+
+    /* session165: পোস্ট-টাইপ (FeedFilterBar ক্যাটাগরি-পরিবার) */
+    const validType = ['SOCIAL', 'ARTICLE', 'QA', 'EVENT'].includes(type) ? type : 'SOCIAL'
 
     /* Session K: গ্রুপ-পোস্ট — শুধু সদস্যরা গ্রুপে লিখতে পারবেন */
     let validGroupId: string | null = null
@@ -181,6 +219,7 @@ export async function POST(req: NextRequest) {
       data: {
         content: cleanContent,
         audience: validAudience,
+        type: validType,
         backgroundColor: backgroundColor || null,
         feeling: feeling || null,
         location: location || null,

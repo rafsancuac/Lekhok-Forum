@@ -48,6 +48,14 @@ const FEELINGS = [
   'ক্লান্ত অনুভব করছি 😪',
 ]
 
+/* session165: পোস্ট-টাইপ — ফিডের FeedFilterBar ক্যাটাগরি-পরিবারের সাথে সিঙ্কড */
+const POST_TYPE_OPTIONS = [
+  { value: 'SOCIAL', label: 'সাধারণ', emoji: '📝' },
+  { value: 'ARTICLE', label: 'লেখা', emoji: '✍️' },
+  { value: 'QA', label: 'প্রশ্নোত্তর', emoji: '❓' },
+  { value: 'EVENT', label: 'কার্যক্রম', emoji: '📅' },
+] as const
+
 interface UploadMedia {
   url: string
   type: string
@@ -84,6 +92,8 @@ export default function CreatePostModal({
   const [location, setLocation] = useState<string | null>(null)
   const [tagged, setTagged] = useState<string[]>([])
   const [audience, setAudience] = useState<'PUBLIC' | 'FRIENDS' | 'ONLY_ME'>('PUBLIC')
+  /* session165: পোস্ট-টাইপ (সাধারণ/লেখা/প্রশ্নোত্তর/কার্যক্রম) */
+  const [postType, setPostType] = useState<'SOCIAL' | 'ARTICLE' | 'QA' | 'EVENT'>('SOCIAL')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [compressing, setCompressing] = useState(false)
   const [subPanel, setSubPanel] = useState<'FEELING' | 'LOCATION' | 'TAG' | null>(null)
@@ -120,6 +130,7 @@ export default function CreatePostModal({
       setLocation(editPost.location)
       setTagged(editPost.taggedUsers ? editPost.taggedUsers.split(',').filter(Boolean) : [])
       setAudience((editPost.audience as typeof audience) || 'PUBLIC')
+      setPostType((editPost.type as typeof postType) || 'SOCIAL')
       setMediaFiles(
         editPost.media.map((m) => ({ url: m.url, type: m.type, name: m.url.split('/').pop() || 'media' }))
       )
@@ -241,6 +252,7 @@ export default function CreatePostModal({
       const payload = {
         content: rawContent,
         audience,
+        type: postType,
         backgroundColor: selectedBg,
         feeling,
         location,
@@ -270,6 +282,7 @@ export default function CreatePostModal({
       setLocation(null)
       setTagged([])
       setAudience('PUBLIC')
+      setPostType('SOCIAL')
       setEditorHasText(false)
       setActiveView('MAIN')
 
@@ -571,6 +584,26 @@ export default function CreatePostModal({
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* session165: পোস্ট-টাইপ নির্বাচক — ফিডের FeedFilterBar ক্যাটাগরি-পরিবার */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar" role="radiogroup" aria-label="পোস্টের ধরন">
+              {POST_TYPE_OPTIONS.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={postType === t.value}
+                  onClick={() => setPostType(t.value)}
+                  className={`shrink-0 px-2.5 py-1 rounded-lg text-[11.5px] font-bold border transition-all active:scale-[0.96] ${
+                    postType === t.value
+                      ? 'bg-[#006a4e] text-white border-[#006a4e] shadow-sm'
+                      : 'bg-[#242526] text-[#b0b3b8] border-[#3e4042] hover:border-[#00a86b]/50 hover:text-white'
+                  }`}
+                >
+                  {t.emoji} {t.label}
+                </button>
+              ))}
             </div>
 
             {/* ═══ এমএস অফিস বেসিক ফরম্যাটিং টুলবার ═══ */}

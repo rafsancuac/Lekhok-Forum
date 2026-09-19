@@ -131,6 +131,12 @@
     'Hind Siliguri', system-ui, sans-serif;
 }
 
+/* ─── session165: FeedFilterBar-এর font-kalpurush ইউটিলিটি — বাংলা-ফন্ট-স্ট্যাক ম্যাপিং (Kalpurush না-লোড হলে Noto-ফলব্যাক) ─── */
+@utility font-kalpurush {
+  font-family: 'Kalpurush', var(--font-noto-bengali), 'Noto Sans Bengali', 'Hind Siliguri',
+    system-ui, sans-serif;
+}
+
 /* ─── Facebook dark palette ─── */
 .lf-bg-page { background-color: #18191a; }
 .lf-bg-card { background-color: #242526; }

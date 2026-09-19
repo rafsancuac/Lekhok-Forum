@@ -42,6 +42,7 @@ model Post {
   id              String   @id @default(cuid())
   content         String   @default("")
   audience        String   @default("PUBLIC") // PUBLIC | FRIENDS | ONLY_ME
+  type            String   @default("SOCIAL") // SOCIAL | ARTICLE | QA | EVENT — FeedFilterBar ক্যাটাগরি (session165)
   backgroundColor String? // গ্রেডিয়েন্ট ক্লাস, যেমন gradient-1
   feeling         String?
   location        String?

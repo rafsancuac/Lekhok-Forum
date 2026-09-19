@@ -93,6 +93,7 @@ export interface FrontendPost {
   id: string
   content: string
   audience: string
+  type: string // SOCIAL | ARTICLE | QA | EVENT — session165 FeedFilterBar ক্যাটাগরি-পরিবার
   backgroundColor: string | null
   feeling: string | null
   location: string | null

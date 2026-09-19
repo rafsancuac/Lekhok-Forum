@@ -471,6 +471,27 @@ export default function FeedPostCard({
               </span>
             )}
             {post.feeling && <span className="text-xs text-[#b0b3b8]">— {post.feeling}</span>}
+            {/* session165: পোস্ট-টাইপ ব্যাজ — FeedFilterBar ক্যাটাগরি-পরিবার */}
+            {post.type && post.type !== 'SOCIAL' && (
+              <span
+                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border leading-none ${
+                  post.type === 'ARTICLE'
+                    ? 'bg-[#0d2b22] text-[#33d79f] border-[#00a86b]/40'
+                    : post.type === 'QA'
+                      ? 'bg-[#2b2410] text-amber-300 border-amber-400/40'
+                      : 'bg-[#241029] text-fuchsia-300 border-fuchsia-400/40'
+                }`}
+                title={
+                  post.type === 'ARTICLE'
+                    ? 'লেখা'
+                    : post.type === 'QA'
+                      ? 'প্রশ্নোত্তর'
+                      : 'কার্যক্রম'
+                }
+              >
+                {post.type === 'ARTICLE' ? '✍️ লেখা' : post.type === 'QA' ? '❓ প্রশ্নোত্তর' : '📅 কার্যক্রম'}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 text-[11.5px] text-[#b0b3b8] mt-0.5 flex-wrap">
             <span>{timeAgo(post.createdAt)}</span>

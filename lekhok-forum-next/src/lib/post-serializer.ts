@@ -18,6 +18,7 @@ export type SerializedPost = {
   id: string
   content: string
   audience: string
+  type: string
   backgroundColor: string | null
   feeling: string | null
   location: string | null
@@ -108,6 +109,7 @@ export function serializePost(post: PostWithRelations, currentUserId: string): S
     id: post.id,
     content: post.content,
     audience: post.audience,
+    type: post.type,
     backgroundColor: post.backgroundColor,
     feeling: post.feeling,
     location: post.location,
@@ -191,6 +193,60 @@ export function fetchPostsForFeedPage(currentUserId: string, cursor: string | nu
     cursor,
     take
   )
+}
+
+/* ─── session165: FeedFilterBar — জনপ্রিয়-সর্ট (অফসেট-পেজিনেশন; রিয়্যাকশন+কমেন্ট+শেয়ার স্কোর) ─── */
+async function fetchPagePopular(
+  where: Prisma.PostWhereInput,
+  currentUserId: string,
+  take: number,
+  offset: number
+) {
+  const posts = await db.post.findMany({
+    where,
+    include: POST_INCLUDE,
+    orderBy: [
+      { reactions: { _count: 'desc' } },
+      { comments: { _count: 'desc' } },
+      { shares: 'desc' },
+      { createdAt: 'desc' },
+    ],
+    take,
+    skip: offset,
+  })
+  return posts.map((p) => serializePost(p, currentUserId))
+}
+
+/**
+ * session165: FeedFilterBar-চালিত ফিল্টার্ড-ফিচ —
+ * base: feed|following · type: ARTICLE|QA|EVENT|null · sort: LATEST(কার্সর)|POPULAR(অফসেট)
+ */
+export function fetchFilteredPostsPage(
+  currentUserId: string,
+  opts: {
+    base: 'feed' | 'following'
+    type: string | null
+    sort: 'LATEST' | 'POPULAR'
+    cursor: string | null
+    offset: number
+    take: number
+  }
+) {
+  const baseWhere: Prisma.PostWhereInput =
+    opts.base === 'following'
+      ? {
+          authorId: { not: currentUserId },
+          author: { is: { followers: { some: { followerId: currentUserId } } } },
+          audience: { not: 'ONLY_ME' },
+        }
+      : { OR: [{ audience: { not: 'ONLY_ME' } }, { authorId: currentUserId }] }
+  const where: Prisma.PostWhereInput = {
+    AND: [baseWhere, ...(opts.type ? [{ type: opts.type }] : [])],
+  }
+  if (opts.sort === 'POPULAR') {
+    return fetchPagePopular(where, currentUserId, opts.take, Math.max(opts.offset, 0))
+  }
+  return fetchPage(where, currentUserId, opts.cursor, opts.take)
 }
 
 export function fetchPostsByAuthorPage(authorId: string, currentUserId: string, cursor: string | null, take = 6) {

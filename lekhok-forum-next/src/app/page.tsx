@@ -25,6 +25,7 @@ import DefaultCover from '@/components/feed/DefaultCover'
 import StoriesSection from '@/components/story/StoriesSection'
 import ComposerCard from '@/components/feed/ComposerCard'
 import FeedPostCard from '@/components/feed/FeedPostCard'
+import FeedFilterBar, { type FeedCategory, type FeedSort } from '@/components/feed/FeedFilterBar'
 import CreatePostModal from '@/components/post/CreatePostModal'
 import ProfileView from '@/components/profile/ProfileView'
 import GroupsView from '@/components/group/GroupsView'
@@ -76,6 +77,9 @@ export default function Home() {
   const [followModal, setFollowModal] = useState<{ username: string; name: string; tab: 'followers' | 'following' } | null>(null)
   /* Session J: "নতুন পোস্ট" পোলিং-ব্যাজ */
   const [newPostCount, setNewPostCount] = useState(0)
+  /* session165: FeedFilterBar — ক্যাটাগরি+সর্ট এক লাইনে */
+  const [feedCategory, setFeedCategory] = useState<FeedCategory>('ALL')
+  const [feedSort, setFeedSort] = useState<FeedSort>('LATEST')
 
   /* session160 — লাইভ অপঠিত-কাউন্ট (সাইডবার-ব্যাজ; ৪৫-সে-পোলিং + ইভেন্ট-চালিত) */
   const unreadCounts = useUnreadCounts(!!current)
@@ -307,6 +311,23 @@ export default function Home() {
     })()
   }, [])
 
+  /* ─── session165: ফিল্টার-বার-সচেতন ফিচ-প্যারাম — feed/following-এ type+sort যুক্ত ─── */
+  const feedParams = useCallback(
+    (mode: ViewMode) => {
+      const params = new URLSearchParams()
+      if (mode === 'feed' || mode === 'following') {
+        const base = mode === 'following' || feedCategory === 'FOLLOWING' ? 'following' : 'feed'
+        params.set('tab', base)
+        if (feedCategory !== 'ALL' && feedCategory !== 'FOLLOWING') params.set('type', feedCategory)
+        params.set('sort', feedSort)
+      } else {
+        params.set('tab', mode)
+      }
+      return params
+    },
+    [feedCategory, feedSort]
+  )
+
   /* ─── পোস্ট লোড (ফিড/টাইমলাইন/সেভড/সার্চ) — প্রথম পেজ (প্রোফাইল-ভিউ নিজেই লোড করে) ─── */
   const loadPosts = useCallback(async (mode: ViewMode, q?: string) => {
     if (mode === 'profile' || mode === 'group' || mode === 'groups') return
@@ -319,6 +340,11 @@ export default function Home() {
         params.set('limit', '12')
       } else if (mode !== 'search') {
         params.set('tab', mode)
+        /* session165: ফিল্টার-বার সচেতন — feed/following-এ type+sort ওভাররাইড */
+        if (mode === 'feed' || mode === 'following') {
+          const filtered = feedParams(mode)
+          for (const [k, v] of filtered.entries()) params.set(k, v)
+        }
       }
       const res = await fetch(`/api/posts?${params.toString()}`)
       if (!res.ok) throw new Error('পোস্ট লোড ব্যর্থ')
@@ -331,7 +357,7 @@ export default function Home() {
     } finally {
       setPostsLoading(false)
     }
-  }, [])
+  }, [feedParams])
 
   /* ─── পরের পেজ (ইনফিনিট স্ক্রল) ─── */
   const loadMore = useCallback(async () => {
@@ -343,6 +369,11 @@ export default function Home() {
         params.set('q', searchQuery.trim())
       } else if (view !== 'search') {
         params.set('tab', view)
+        /* session165: ফিল্টার-বার সচেতন — feed/following-এ type+sort ওভাররাইড */
+        if (view === 'feed' || view === 'following') {
+          const filtered = feedParams(view)
+          for (const [k, v] of filtered.entries()) params.set(k, v)
+        }
       }
       params.set('cursor', nextCursor)
       const res = await fetch(`/api/posts?${params.toString()}`)
@@ -359,7 +390,7 @@ export default function Home() {
     } finally {
       setLoadingMore(false)
     }
-  }, [nextCursor, loadingMore, postsLoading, view, searchQuery, toast])
+  }, [nextCursor, loadingMore, postsLoading, view, searchQuery, feedParams, toast])
 
   /* সেন্টিনেল ভিউপোর্টে এলেই পরের পেজ */
   useEffect(() => {
@@ -512,6 +543,12 @@ export default function Home() {
   const searchTag = useCallback((tag: string) => {
     setSearchQuery(tag)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  /* ─── session165: FeedFilterBar কলব্যাক — স্টেট-বদলে loadPosts-আইডেন্টিটি বদলায় → ইফেক্টে রিলোড ─── */
+  const handleFilterChange = useCallback((category: FeedCategory, sort: FeedSort) => {
+    setFeedCategory(category)
+    setFeedSort(sort)
   }, [])
 
   /* ─── কভার/অ্যাভাটার আপলোড → কমপ্রেস → /api/upload → /api/profile → সেশন রিফ্রেশ ─── */
@@ -1024,6 +1061,11 @@ export default function Home() {
                 onOpen={openComposer}
                 onQuickMedia={openComposer}
               />
+            )}
+
+            {/* session165: FeedFilterBar — ক্যাটাগরি+সর্ট এক লাইনে (ফিড/অনুসরণ-ভিউতে) */}
+            {(view === 'feed' || view === 'following') && (
+              <FeedFilterBar onFilterChange={handleFilterChange} />
             )}
 
             {/* মূল পোস্ট-লিস্ট (প্রোফাইল/গ্রুপ-ভিউতে লুকানো — ওরা নিজেরাই দেখায়) */}

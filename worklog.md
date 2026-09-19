@@ -1904,3 +1904,27 @@ Stage Summary:
 - ফিড-কার্ড এখন FB-স্ট্যান্ডার্ড কম্প্যাক্ট — ব্যাজ-শূন্য হেডার, মেটা-সাবটাইটেল, edge-to-edge ছবি, flex-ফুটার; ৩-কলাম ব্যালেন্সড (২৬০/৬০০/৩১০)
 - **push-pending:** কমিট-হেড এই-মুহূর্তে origin/main-এর ওপর rebase-আপ-টু-ডেট করে টোকেন-পুশ হবে
 - পরের-এজেন্ট: session165 থেকে; **হারানো-session164(ভয়েস-ভার্সেল-ফিক্স) এখনো অপুনঃস্থাপিত** — middleware/upload.js inlineAudioBase64-পরিবার পুনঃপ্রয়োগ প্রয়োজন (বিস্তারিত my-project worklog-এর session164-এন্ট্রি) — priority-উচ্চ
+
+---
+Task ID: 16 (Session 166 — lekhok-forum-next FeedFilterBar: ক্যাটাগরি+সর্ট এক লাইনে + কার্যকর ফিল্টার-ইঞ্জিন)
+Agent: Main agent (user-turn — ইউজার-স্পেক FeedFilterBar.tsx হুবহু + GitHub-PAT + OAuth-client + টেলিগ্রাম-নম্বর প্রাপ্ত)
+Task: ইউজার-দত্ত হুবহু FeedFilterBar.tsx (৫-ক্যাটাগরি + সর্বশেষ|জনপ্রিয় এক-লাইন, ৮px-বর্ডার-ইউনিফর্ম) lekhok-forum-next-এ ল্যান্ড + বাস্তব ফিল্টারিং (API/schema/composer-ওয়্যারিং) + টোকেন-পুশ
+
+Work Log:
+- sandbox-রিসেট-পুনরুদ্ধার: PAT-ক্লোন @5993db5; bun install; .env (DATABASE_URL abs-path — গোটচা: .env-ছিল-অনুপস্থিত) + db:push + db:generate
+- নতুন src/components/feed/FeedFilterBar.tsx — ইউজার-কোড **হুবহু** (FeedCategory/FeedSort export-সহ; px-2.5 sm:px-3 py-1.5 rounded-[8px] shadow-2xs; সক্রিয় #006A4E, নিষ্ক্রিয় সাদা+#CED0D4; h-5 w-[1px] ডিভাইডার; overflow-x-auto no-scrollbar)
+- স্কিমা: Post.type String @default("SOCIAL") // SOCIAL|ARTICLE|QA|EVENT (index-বিহীন ডেমো-স্কেল)
+- post-serializer: SerializedPost.type + fetchPagePopular (orderBy reactions→comments→shares→createdAt _count-desc, skip-অফসেট) + fetchFilteredPostsPage (base feed|following × type × LATEST-কার্সর|POPULAR-অফসেট)
+- api/posts GET: type=ARTICLE|QA|EVENT + sort=LATEST|POPULAR প্যারাম — POPULAR-এ nextCursor=অফসেট-স্ট্রিং (ফ্রন্টএন্ড cursor-চুক্তি অক্ষত); POST: validType গ্রহণ
+- page.tsx: feedCategory/feedSort-স্টেট + feedParams(mode)-হেল্পার (feed/following-এ type+sort; FOLLOWING-ক্যাটাগরি→tab=following; timeline/saved/search-অস্পৃশ্য) + loadPosts/loadMore-ওভাররাইড + FeedFilterBar রেন্ডার (feed|following-ভিউ, ComposerCard-এর পরে) + handleFilterChange
+- CreatePostModal: POST_TYPE_OPTIONS চিপ-সারি (📝সাধারণ|✍️লেখা|❓প্রশ্নোত্তর|📅কার্যক্রম; radiogroup+aria-checked; ডার্ক-থিম+ব্র্যান্ড-সবুজ-সক্রিয়) + payload.type + এডিট-প্রিফিল + রিসেট
+- FeedPostCard: টাইপ-ব্যাজ (লেখা-সবুজ/QA-অ্যাম্বার/EVENT-ফাকসিয়া; SOCIAL-বাদ)
+- globals.css: @utility font-kalpurush (Kalpurush→Noto-বাংলা-ফলব্যাক-স্ট্যাক — ইউজার-ক্লাস-নাম জীবন্ত; Tailwind-4 shadow-2xs নেটিভ)
+- ডেমো-ব্যাকফিল: ২×ARTICLE + ২×QA + ২×EVENT (কনটেন্ট-প্যাটার্ন-ম্যাচ)
+- QA (agent-browser @3100): API-curl ×৬ — ALL=6-মিশ্র / ARTICLE=2 / QA=2 / EVENT=2 / POPULAR=রিঅ্যাকশন-ক্রম / following=0 ✓ ; ব্রাউজার — ৭-চিপ oneLine:true @1366 ও 390px(overflowX:auto) ; সক্রিয় rgb(0,106,78)+radius 8px ; নিষ্ক্রিয় rgb(255,255,255)+border rgb(206,208,212)=#CED0D4 ; লেখা-ক্লিক→২-পোস্ট ✓ জনপ্রিয়-ক্লিক→ডাবল-সবুজ(লেখা+জনপ্রিয়) ✓ অনুসরণ→খালি-অবস্থা ✓ সর্ট-স্টেট-সংরক্ষণ ✓ composer-টাইপ-রেডিও ✓ কনসোল-শূন্য ✓ ; tsc+eslint শূন্য
+- 🚨 গোটচা ×২ ডকুমেন্টেড: (১) sandbox proc-reap → ensure-next.sh-হারনেস :3100 (২) এক-টিক-প্রোগ্রামেটিক-ডাবল-ক্লিকে FeedFilterBar-এর নিজস্ব-স্টেট stale-read (হুবহু-ইউজার-কোডের স্বাভাবিক ধর্ম) — বাস্তব-ইন্টারঅ্যাকশনে (>১-টিক) অপ্রাসঙ্গিক, পুনঃপ্রমাণিত
+
+Stage Summary:
+- ইউজার-স্পেক-পূর্ণ + কার্যকর: ফিল্টার-বার এখন প্রকৃত ফিড-ফিল্টার চালায় (type×sort×base), কম্পোজার টাইপড-পোস্ট তৈরি করে, কার্ডে টাইপ-ব্যাজ
+- ক্রেডেনশিয়াল-নোট: GitHub-PAT (পুশ-সক্ষম) + Google-OAuth-client (ePaper-বট) + টেলিগ্রাম-নম্বর — my-project worklog-এ পথ-নির্দেশ
+- পরের-এজেন্ট: session167 থেকে; প্রস্তাব — ফিল্টার-স্টেট URL-সিঙ্ক, চিপে কাউন্ট-ব্যাজ, POPULAR-ডিপ-পেজিনেশন, ই-পেপার-বট লাইভ-বুট
