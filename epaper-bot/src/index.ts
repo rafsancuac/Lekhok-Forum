@@ -13,6 +13,7 @@ import fs from 'fs'
 import path from 'path'
 import { spawnSync } from 'child_process'
 import os from 'os'
+import { stripTelegramPromoLayer } from './cleaner'
 
 /* ── কনফিগ (.env) ── */
 const TG_API_ID = parseInt(process.env.TG_API_ID || '', 10)
@@ -307,6 +308,21 @@ async function main(): Promise<void> {
         if (!fileId) {
           const buffer = await client.downloadMedia(m, {})
           pdfBytes = new Uint8Array(buffer as unknown as ArrayBuffer)
+          // সেশন ১৭৩ (ইউজার-স্পেক): সবুজ প্রমো-স্ট্যাম্প+লিংক-লেয়ার মুছে পরিষ্কার পিডিএফ
+          // (ব্যর্থতায় stripTelegramPromoLayer নিজেই মূল-বাফার ফেরত দেয় — প্রধান-প্রবাহ অটুট)
+          try {
+            console.log('⏳ ওয়াটারমার্ক পরিষ্কার করা হচ্ছে…')
+            const rawBuf = Buffer.from(pdfBytes) // ক্লিনার নো-অপে এই-রেফারেন্সই ফেরত দেয়
+            const clean = await stripTelegramPromoLayer(rawBuf)
+            if (clean !== rawBuf && clean.length) {
+              pdfBytes = new Uint8Array(clean)
+              console.log(`✅ পরিচ্ছন্ন পিডিএফ প্রস্তুত (${pdfBytes.length}B — আগে ${rawBuf.length}B)`)
+            } else {
+              console.log('↷ প্রমো-লেয়ার পাওয়া যায়নি — মূল পিডিএফ-ই রাখা হলো')
+            }
+          } catch (e) {
+            console.error('⚠️ ক্লিনার-ত্রুটি — মূল পিডিএফ আপলোড হবে:', e instanceof Error ? e.message : e)
+          }
           fileId = await driveUpload(token, folderId, fName, pdfBytes, 'application/pdf')
         } else {
           console.log('↷ ড্রাইভ-এ আগেই আছে — ডাউনলোড-স্কিপ')
