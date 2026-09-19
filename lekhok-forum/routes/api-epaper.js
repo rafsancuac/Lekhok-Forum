@@ -1,7 +1,9 @@
-// ── routes/api-epaper.js — ই-পেপার অটোমেশন সিঙ্ক API (session166-পুনর্নির্মিত; হারানো session164-এর চুক্তি-সমতুল্য) ──
-// POST /api/epaper/sync  — Bearer EPAPER_SYNC_TOKEN-সুরক্ষিত; বট দৈনিক পত্রিকার PDF (গুগল-ড্রাইভ লিংক) দিয়ে daily_content-এ UPSERT করে
-// GET  /api/epaper/papers — পাবলিক JSON তালিকা (থার্ড-পার্টি/মোবাইল-অ্যাপ ইন্টিগ্রেশনের জন্য)
-// চুক্তি: daily_content টেবিল পুনঃব্যবহৃত (content_type='epaper', scheduled_date=তারিখ, link_url=ড্রাইভ-PDF) — /epaper-পেজ শূন্য-পরিবর্তনে রেন্ডার করে
+// ── routes/api-epaper.js — ই-পেপার অটোমেশন সিঙ্ক API (session170-সম্প্রসারিত) ──
+// POST /api/epaper/sync    — Bearer EPAPER_SYNC_TOKEN-সুরক্ষিত; daily_content (featured) UPSERT
+//                            + epaper_files আর্কাইভে মার্জ (প্রতি-তারিখে-একাধিক-পত্রিকা সমর্থিত)
+// POST /api/epaper/cleanup — Bearer-সুরক্ষিত; ডামি/ফেক-লিংক (example.com ইত্যাদি) রো পরিষ্কার
+// GET  /api/epaper/papers  — পাবলিক JSON তালিকা (featured daily_content)
+// GET  /api/epaper/archive — পাবলিক JSON আর্কাইভ (epaper_files — টু-প্যানেল-পেজ/অ্যাপ-ইন্টিগ্রেশন)
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
@@ -23,6 +25,20 @@ function cleanDate(raw) {
   return dhakaDate();
 }
 
+/** ড্রাইভ-/view/-লিংক থেকে fileId বের করা — থাম্বনেইল/রিডার-এমবেডে লাগবে */
+function extractDriveId(url) {
+  const m = String(url || '').match(/drive\.google\.com\/(?:file\/d\/|id=|uc\?export=download&id=)([\w-]{10,})/);
+  return m ? m[1] : null;
+}
+
+/** ইন্টারফেস থেকে অটোমেশন-ফুটার (অটো-সংগ্রহ: @…) মুছে দেওয়া — বট-পাশেও বাদ, এখানে ডাবল-গার্ড */
+function cleanBody(b) {
+  return String(b || '')
+    .replace(/\s*[(（]\s*অটো-সংগ্রহ[^)）]*[)）]\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // ── POST /api/epaper/sync ────────────────────────────────────────────────────
 router.post('/sync', async (req, res) => {
   try {
@@ -33,17 +49,53 @@ router.post('/sync', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'অননুমোদিত — Bearer টোকেন অমিল' });
     }
 
-    const { date, title, body, fileUrl, source } = req.body || {};
+    const { date, title, body, fileUrl, source, paperName, fileId, thumbId } = req.body || {};
     const fUrl = String(fileUrl || '').trim();
     if (!/^https:\/\//.test(fUrl)) {
       return res.status(400).json({ ok: false, error: 'fileUrl প্রয়োজন (https গুগল-ড্রাইভ লিংক)' });
     }
     const d = cleanDate(date);
-    const t = String(title || 'দৈনিক পত্রিকা').slice(0, 240);
-    const b = String(body || '').slice(0, 2000);
+    const paper = String(paperName || title || 'দৈনিক পত্রিকা').slice(0, 120);
+    const t = String(title || `📰 ${paper}`).slice(0, 240);
+    const b = cleanBody(body).slice(0, 2000);
     const src = String(source || 'epaper-bot').slice(0, 80);
+    const driveId = String(fileId || extractDriveId(fUrl) || '').slice(0, 64) || null;
+    const thumbIdStr = String(thumbId || '').slice(0, 64) || null;
 
-    // লেজার-ডুপ্লিকেট-প্রতিরোধ: একই তারিখে আপডেট, নইলে ইনসার্ট
+    // ① আর্কাইভ (epaper_files) — (তারিখ + ড্রাইভ-ফাইল) দিয়ে মার্জ; প্রতি-দিনে-একাধিক-পত্রিকা
+    let archiveId = null;
+    if (driveId) {
+      const dup = await db.prepare(
+        "SELECT id FROM epaper_files WHERE scheduled_date = ? AND drive_file_id = ? ORDER BY id DESC LIMIT 1"
+      ).get(d, driveId);
+      if (dup && dup.id) {
+        await db.prepare(
+          "UPDATE epaper_files SET paper_name = ?, file_url = ?, drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?"
+        ).run(paper, fUrl, thumbIdStr, dup.id);
+        archiveId = dup.id;
+      } else {
+        const r = await db.prepare(
+          "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, source, published) VALUES (?, ?, ?, ?, ?, ?, 1)"
+        ).run(d, paper, fUrl, driveId, thumbIdStr, src);
+        archiveId = r.lastInsertRowid || r.insertId || null;
+      }
+    } else {
+      // ড্রাইভ-ID-হীন লিংক — নাম+তারিখ দিয়ে মার্জ (ফলব্যাক)
+      const dup = await db.prepare(
+        "SELECT id FROM epaper_files WHERE scheduled_date = ? AND paper_name = ? ORDER BY id DESC LIMIT 1"
+      ).get(d, paper);
+      if (dup && dup.id) {
+        await db.prepare("UPDATE epaper_files SET file_url = ?, drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?").run(fUrl, thumbIdStr, dup.id);
+        archiveId = dup.id;
+      } else {
+        const r = await db.prepare(
+          "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, source, published) VALUES (?, ?, ?, NULL, ?, ?, 1)"
+        ).run(d, paper, fUrl, thumbIdStr, src);
+        archiveId = r.lastInsertRowid || r.insertId || null;
+      }
+    }
+
+    // ② ফিচার্ড (daily_content) — হোম-উইজেট/legacy-চুক্তি: একই তারিখে আপডেট, নইলে ইনসার্ট
     const existing = await db.prepare(
       "SELECT id FROM daily_content WHERE content_type = ? AND scheduled_date = ? ORDER BY id DESC LIMIT 1"
     ).get(EPAPER_TYPE, d);
@@ -60,10 +112,36 @@ router.post('/sync', async (req, res) => {
       ).run(EPAPER_TYPE, t, b, fUrl, d);
       id = r.lastInsertRowid || r.insertId || null;
     }
-    return res.json({ ok: true, id, date: d, mode: existing && existing.id ? 'updated' : 'inserted', source: src });
+    return res.json({ ok: true, id, archiveId, date: d, paper, mode: existing && existing.id ? 'updated' : 'inserted', source: src });
   } catch (err) {
     console.error('epaper sync error:', err);
     return res.status(500).json({ ok: false, error: 'সিঙ্ক ব্যর্থ' });
+  }
+});
+
+// ── POST /api/epaper/cleanup — ডামি-ডাটা পরিষ্কার (session170) ────────────────
+// ফেক-লিংক (example.com ইত্যাদি, ড্রাইভ-বিহীন) daily_content-epaper রো মুছে দেয়;
+// আসল ড্রাইভ-রো অটুট থাকে। Bearer EPAPER_SYNC_TOKEN আবশ্যক।
+router.post('/cleanup', async (req, res) => {
+  try {
+    const token = process.env.EPAPER_SYNC_TOKEN || '';
+    if (!token) return res.status(503).json({ ok: false, error: 'EPAPER_SYNC_TOKEN কনফিগার করা হয়নি' });
+    const auth = String(req.headers.authorization || '');
+    if (auth !== `Bearer ${token}`) {
+      return res.status(401).json({ ok: false, error: 'অননুমোদিত — Bearer টোকেন অমিল' });
+    }
+    const del1 = await db.prepare(
+      "DELETE FROM daily_content WHERE content_type = ? AND (link_url IS NULL OR link_url = '' OR link_url NOT LIKE '%drive.google.com%')"
+    ).run(EPAPER_TYPE);
+    const del2 = await db.prepare(
+      "DELETE FROM epaper_files WHERE file_url IS NULL OR file_url = '' OR file_url NOT LIKE '%drive.google.com%'"
+    ).run();
+    const removedFeatured = (del1.changes ?? del1.affected_rows ?? 0);
+    const removedArchive = (del2.changes ?? del2.affected_rows ?? 0);
+    return res.json({ ok: true, removedFeatured, removedArchive });
+  } catch (err) {
+    console.error('epaper cleanup error:', err);
+    return res.status(500).json({ ok: false, error: 'ক্লিনআপ ব্যর্থ' });
   }
 });
 
@@ -79,6 +157,21 @@ router.get('/papers', async (req, res) => {
   } catch (err) {
     console.error('epaper list error:', err);
     return res.status(500).json({ ok: false, error: 'তালিকা ব্যর্থ' });
+  }
+});
+
+// ── GET /api/epaper/archive?limit=300&date=YYYY-MM-DD — পাবলিক আর্কাইভ ───────
+router.get('/archive', async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(String(req.query.limit || '300'), 10) || 300, 1), 1000);
+    const d = req.query.date ? cleanDate(req.query.date) : null;
+    const rows = d
+      ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
+      : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);
+    return res.json({ ok: true, count: rows.length, papers: rows });
+  } catch (err) {
+    console.error('epaper archive error:', err);
+    return res.status(500).json({ ok: false, error: 'আর্কাইভ ব্যর্থ' });
   }
 });
 

@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   epaper.css — টু-প্যানেল ই-পেপার আর্কাইভ (session170)
+   নিয়ম: রঙ শুধু var(--lf-*) টোকেন থেকে (hex-zero গার্ড); shadow-এ rgba অনুমোদিত।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ep-wrap { max-width: 1380px; margin: 0 auto; padding: 12px 10px 40px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ── হেডার-স্ট্রিপ ── */
+.ep-head-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-card); padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.ep-head-l { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ep-head-ico { width: 44px; height: 44px; border-radius: 12px; background: var(--lf-brand-light); color: var(--lf-brand-primary); border: 1px solid var(--lf-brand-primary); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+.ep-head-title { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--lf-text-primary); line-height: 1.3; }
+.ep-head-sub { margin: 2px 0 0; font-size: .78rem; color: var(--lf-text-secondary); }
+.ep-head-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ep-day-step { display: flex; align-items: center; gap: 6px; }
+.ep-step-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); cursor: pointer; font-size: .8rem; transition: background .15s ease, border-color .15s ease; }
+.ep-step-btn:hover { background: var(--lf-ui-input-bg); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-date-input { height: 34px; padding: 0 10px; border: 1px solid var(--lf-ui-border-strong); border-radius: 10px; background: var(--lf-ui-input-bg); color: var(--lf-text-primary); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.ep-btn-today { height: 34px; padding: 0 14px; border: none; border-radius: 10px; background: var(--lf-brand-primary); color: var(--lf-ui-surface); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.16); transition: background .15s ease; }
+.ep-btn-today:hover { background: var(--lf-brand-primary-hover); }
+
+/* ── টু-প্যানেল গ্রিড: মোবাইলে ভিউয়ার-আগে (DOM-ক্রম), ডেস্কটপে বাম-তালিকা/ডান-ভিউয়ার ── */
+.ep-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
+
+/* ── ভিউয়ার ── */
+.ep-viewer { background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-card); overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.05); display: flex; flex-direction: column; }
+.ep-viewer-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); }
+.ep-viewer-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 800; color: var(--lf-text-primary); font-size: .95rem; }
+.ep-viewer-name i { color: var(--lf-brand-primary); }
+.ep-viewer-name span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-viewer-date { font-weight: 600; font-size: .76rem; color: var(--lf-text-secondary); }
+.ep-viewer-actions { display: flex; align-items: center; gap: 8px; }
+.ep-vt { display: flex; gap: 2px; padding: 3px; background: var(--lf-ui-input-bg); border: 1px solid var(--lf-ui-border); border-radius: 10px; }
+.ep-vt-btn { border: none; background: transparent; color: var(--lf-text-secondary); font: inherit; font-size: .74rem; font-weight: 800; padding: 5px 10px; border-radius: 7px; cursor: pointer; transition: background .15s ease, color .15s ease; }
+.ep-vt-btn.is-on { background: var(--lf-ui-surface); color: var(--lf-brand-primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.ep-open-new { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border: 1px solid var(--lf-ui-border-strong); border-radius: 10px; background: var(--lf-ui-surface); color: var(--lf-text-primary); font-size: .74rem; font-weight: 800; text-decoration: none; transition: background .15s ease, border-color .15s ease; }
+.ep-open-new:hover { background: var(--lf-ui-input-bg); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-stage { position: relative; width: 100%; min-height: 440px; height: calc(100vh - 300px); max-height: 860px; background: var(--lf-ui-canvas); }
+.ep-stage .ep-frame { display: block; width: 100%; height: 100%; min-height: inherit; border: none; }
+.ep-cover-wrap { width: 100%; height: 100%; min-height: inherit; display: flex; align-items: flex-start; justify-content: center; padding: 14px; overflow: auto; }
+.ep-cover { max-width: min(720px, 100%); height: auto; border-radius: 10px; border: 1px solid var(--lf-ui-border-strong); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.ep-stage-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--lf-text-tertiary); font-weight: 700; font-size: .9rem; text-align: center; padding: 20px; }
+.ep-stage-empty i { font-size: 2.2rem; opacity: .5; }
+.ep-stage-empty p { margin: 0; }
+
+/* ── সাইড (ফিল্টার + তালিকা) ── */
+.ep-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ep-filter { background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: 14px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); display: flex; flex-direction: column; gap: 10px; }
+.ep-filter-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ep-filter-title { font-size: .8rem; font-weight: 800; color: var(--lf-text-primary); }
+.ep-filter-title i { color: var(--lf-brand-primary); margin-right: 4px; }
+.ep-count { font-size: .7rem; font-weight: 800; color: var(--lf-brand-primary); background: var(--lf-brand-light); border: 1px solid var(--lf-brand-primary); border-radius: var(--lf-radius-chip); padding: 2px 10px; }
+.ep-filter-row { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--lf-ui-border); padding-top: 10px; }
+.ep-flabel { font-size: .72rem; color: var(--lf-text-secondary); font-weight: 700; flex-shrink: 0; }
+.ep-month { flex: 1; min-width: 0; height: 32px; border: 1px solid var(--lf-ui-border); border-radius: 8px; background: var(--lf-ui-input-bg); color: var(--lf-text-primary); font: inherit; font-size: .76rem; font-weight: 700; padding: 0 8px; cursor: pointer; }
+.ep-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+.ep-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); font: inherit; font-size: .72rem; font-weight: 700; padding: 5px 11px; border-radius: var(--lf-radius-chip); cursor: pointer; transition: all .15s ease; white-space: nowrap; }
+.ep-chip:hover { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-chip.is-on { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-ui-surface); box-shadow: 0 1px 4px rgba(0,0,0,.16); }
+.ep-chip-n { background: rgba(0,0,0,.08); border-radius: var(--lf-radius-chip); padding: 0 6px; font-size: .66rem; }
+.ep-chip.is-on .ep-chip-n { background: rgba(255,255,255,.22); }
+
+/* ── পত্রিকা-তালিকা ── */
+.ep-list { display: flex; flex-direction: column; gap: 7px; max-height: calc(100vh - 300px); overflow-y: auto; padding: 2px; scrollbar-width: thin; }
+.ep-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: right; border: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); border-radius: 12px; padding: 8px 10px; cursor: pointer; font: inherit; transition: all .15s ease; }
+.ep-item:hover { background: var(--lf-ui-input-bg); border-color: var(--lf-ui-border-strong); }
+.ep-item.is-on { background: var(--lf-brand-light); border-color: var(--lf-brand-primary); box-shadow: 0 1px 4px rgba(0,0,0,.10); }
+.ep-thumb { position: relative; width: 46px; height: 58px; border-radius: 7px; overflow: hidden; background: var(--lf-ui-input-bg); border: 1px solid var(--lf-ui-border-strong); display: flex; align-items: center; justify-content: center; color: var(--lf-text-tertiary); flex-shrink: 0; }
+.ep-thumb-img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.ep-thumb-dead i { font-size: 1rem; }
+.ep-item-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ep-item-name { font-size: .82rem; font-weight: 800; color: var(--lf-text-primary); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-item.is-on .ep-item-name { color: var(--lf-brand-primary); }
+.ep-item-sub { font-size: .68rem; color: var(--lf-text-secondary); display: inline-flex; align-items: center; gap: 4px; }
+.ep-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lf-brand-primary); flex-shrink: 0; }
+.ep-list-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 34px 16px; color: var(--lf-text-secondary); font-size: .8rem; font-weight: 700; text-align: center; }
+.ep-list-empty i { font-size: 1.8rem; opacity: .45; }
+.ep-list-empty p { margin: 0; }
+.ep-empty-back { border: none; background: none; color: var(--lf-brand-primary); font: inherit; font-size: .78rem; font-weight: 800; text-decoration: underline; cursor: pointer; }
+
+/* ── খালি-আর্কাইভ ফলব্যাক ── */
+.ep-empty-lead { display: flex; align-items: center; gap: 10px; background: var(--lf-brand-light); border: 1px dashed var(--lf-brand-primary); border-radius: 14px; padding: 12px 16px; color: var(--lf-brand-primary); font-size: .84rem; font-weight: 700; }
+.ep-empty-lead p { margin: 0; }
+
+/* ── ফোকাস-দৃশ্যমানতা (অ্যাক্সেসিবিলিটি) ── */
+.ep-wrap button:focus-visible, .ep-wrap a:focus-visible, .ep-wrap input:focus-visible, .ep-wrap select:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
+
+/* ── ডেস্কটপ: বাম ৪-কলাম তালিকা, ডান ৮-কলাম ভিউয়ার (ভিউয়ার স্টিকি) ── */
+@media (min-width: 1024px) {
+  .ep-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
+  .ep-side { order: -1; position: sticky; top: 76px; }
+  .ep-viewer { order: 1; }
+  .ep-stage { min-height: 680px; height: calc(100vh - 220px); }
+  .ep-list { max-height: calc(100vh - 380px); }
+}
+
+/* ── মোবাইল ফাইন-টিউনিং ── */
+@media (max-width: 600px) {
+  .ep-wrap { padding: 8px 8px 32px; gap: 10px; }
+  .ep-head-card { padding: 12px; }
+  .ep-head-title { font-size: 1.02rem; }
+  .ep-head-r { width: 100%; justify-content: space-between; }
+  .ep-date-input { flex: 1; min-width: 0; }
+  .ep-stage { min-height: 380px; height: 60vh; }
+  .ep-list { max-height: 420px; }
+  .ep-open-new span { display: none; }
+  .ep-item-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+}
+
+/* ── কাস্টম স্ক্রলবার (তালিকা/চিপস) ── */
+.ep-list::-webkit-scrollbar, .ep-chips::-webkit-scrollbar { width: 6px; height: 6px; }
+.ep-list::-webkit-scrollbar-thumb, .ep-chips::-webkit-scrollbar-thumb { background: var(--lf-ui-border-strong); border-radius: var(--lf-radius-chip); }
+.ep-list::-webkit-scrollbar-thumb:hover, .ep-chips::-webkit-scrollbar-thumb:hover { background: var(--lf-text-tertiary); }

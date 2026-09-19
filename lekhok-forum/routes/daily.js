@@ -195,12 +195,28 @@ router.get('/on-this-day', async (req, res) => {
   res.render('user/on-this-day', { today, archive, currentPath: '/on-this-day' });
 });
 
-// ── E-Paper ──────────────────────────────────────────────────────────────────
+// ── E-Paper (session170: টু-প্যানেল আর্কাইভ — epaper_files + featured) ───────
 router.get('/epaper', async (req, res) => {
   const today = await getDailyFor('epaper');
-  const archive = await getDailyAll('epaper', 30);
-  await attachImages([today, ...archive]);
-  res.render('user/epaper', { today, archive, currentPath: '/epaper' });
+  // নতুন আর্কাইভ-টেবিল: প্রতি-তারিখে-একাধিক-পত্রিকা (বট-সিঙ্কড, আসল-নাম + ড্রাইভ-ID)
+  let papers = [];
+  try {
+    papers = await db.prepare(
+      "SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT 400"
+    ).all();
+  } catch (e) { papers = []; }
+  // টেবিল এখনো-খালি হলে legacy-আর্কাইভ দিয়ে প্রথম-রেন্ডার (মাইগ্রেশন-কাল)
+  let legacyArchive = [];
+  if (!papers.length) {
+    legacyArchive = await getDailyAll('epaper', 30);
+    await attachImages(legacyArchive);
+  }
+  await attachImages([today]);
+  res.render('user/epaper', {
+    today, archive: legacyArchive, papers,
+    currentPath: '/epaper',
+    extra_css: ['/assets/css/epaper.css'],
+  });
 });
 
 // ── Activities ───────────────────────────────────────────────────────────────

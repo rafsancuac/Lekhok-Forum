@@ -210,6 +210,20 @@ CREATE TABLE IF NOT EXISTS daily_content (
   FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+-- ── ePaper আর্কাইভ (session170) — প্রতি-তারিখে-একাধিক-পত্রিকা ──
+CREATE TABLE IF NOT EXISTS epaper_files (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  scheduled_date  TEXT    NOT NULL,
+  paper_name      TEXT    NOT NULL,
+  file_url        TEXT    NOT NULL,
+  drive_file_id   TEXT,
+  drive_thumb_id  TEXT,
+  source          TEXT    DEFAULT 'epaper-bot',
+  published       INTEGER DEFAULT 1,
+  created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_epaper_files_date ON epaper_files(scheduled_date, id);
+
 -- ── Notices ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS notices (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,

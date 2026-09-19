@@ -238,6 +238,18 @@ const MIGRATION_SQL = `
     answered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, quiz_id)
   );
+  CREATE TABLE IF NOT EXISTS epaper_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheduled_date TEXT NOT NULL,
+    paper_name TEXT NOT NULL,
+    file_url TEXT NOT NULL,
+    drive_file_id TEXT,
+    drive_thumb_id TEXT,
+    source TEXT DEFAULT 'epaper-bot',
+    published INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_epaper_files_date ON epaper_files(scheduled_date, id);
   CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -1274,6 +1286,7 @@ async function runMigrations() {
   // Defensive ALTERs (for very old DBs)
   const alt = [
     "ALTER TABLE members ADD COLUMN member_type TEXT DEFAULT 'central'",
+    "ALTER TABLE epaper_files ADD COLUMN drive_thumb_id TEXT",
     "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'",
     "ALTER TABLE complaints ADD COLUMN file_name TEXT",
     "ALTER TABLE users ADD COLUMN last_login DATETIME",
