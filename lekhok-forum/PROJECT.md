@@ -2968,3 +2968,11 @@ git push origin main
 - **EJS (লাইভ-সাইট):** `public/offline.html` রিরাইট — একই-ডিজাইন (৪২০px-কার্ড, দ্বৈত-শ্যাডো `0 1px 2px + 0 8px 24px`, এক-পাথ WiFi-Slash, ইনফো-বক্স, স্পিনার-রিট্রাই, `/bookmarks`, ৪৪px-টাচ-টার্গেট, safe-area, rise/pulse, reduced-motion-সম্মান); সম্পূর্ণ-সেলফ-কন্টেইনড (অফলাইনে CDN/ওয়েবফন্ট-নেই — সিস্টেম-বাংলা-স্ট্যাক); `sw.js` CACHE_VERSION v3→v4 (পুরনো-প্রিক্যাশ-বাইপাস)।
 - **E2E (agent-browser):** রিয়েল-অফলাইন-ইমুলেশনে টেকওভার ✓, রিট্রাই-স্পিনার ✓, অনলাইনে-অটো-রিলোড ✓, 390px ✓, font-কম্পিউটেড "Kalpurush, Noto Sans Bengali…" ✓, কনসোল-শূন্য ✓; EJS file://-স্ক্রিনশট ×৩ ✓; eslint-গ্রিন ✓।
 - **পরের-এজেন্ট: session175 থেকে।**
+
+## §১৭৫ (session175; কোড-মার্কার-শূন্য — অপস-রাউন্ড) — Functions-Storage লাইভ-ক্লিনআপ: ৩৭২-ডিপ্লয়মেন্ট-ডিলিট + দুই-প্রজেক্ট-দৈনিক-অটোমেশন লাইভ-প্রমাণিত
+
+- **টোকেন-অগ্রগতি:** ইউজার VERCEL_TOKEN বানিয়ে GitHub-Secrets-এ বসিয়েছে; /v2/user-যাচাই HTTP 200 (rafsancuac, hobby)। টোকেন রিপো/গিট-ইতিহাসে নেই (grep + git log -S ক্লিন)।
+- **লাইভ-ক্লিনআপ (session171-স্ক্রিপ্টের প্রথম বাস্তব-রান):** lekhok-forum — ড্রাই-রান ৩২৫ → আসল ৩২৫-ডিলিট (স্কিপ-০, ব্যর্থ-০, 429-রিট্রাই কার্যকর); uni-tracker (অ্যাকাউন্টের দ্বিতীয় প্রজেক্ট, production-পয়েন্টার-শূন্য) — ৪৩-ডিলিট + ৪-BLOCKED-সরাসরি-DELETE; **মোট ৩৭২**। ফাইনাল অবস্থা: lekhok-forum=৫-READY + uni-tracker=৫; লাইভ-সাইট HTTP 200।
+- **ওয়ার্কফ্লো-বর্ধন:** `.github/workflows/vercel-cleanup.yml` দুই-স্টেপ (lekhok-forum + uni-tracker); দ্বিতীয়টিতে `VERCEL_PROJECT_ID: ''` (নাম-লুকআপ-বাধ্য) + `continue-on-error: true`।
+- **লাইভ-ভেরিফাই:** workflow_dispatch → run#1 success (উভয়-স্টেপ সবুজ) — VERCEL_TOKEN-Secret প্রমাণিত; দৈনিক cron ১৮:০০ UTC (০০:০০ ঢাকা) সক্রিয়।
+- **অবশিষ্ট-ইউজার-অ্যাকশন:** ① Vercel-ড্যাশবোর্ডে SESSION_SECRET/BLOB-টোকেনে Sensitive-টিক ② ⚠️ GitHub-PAT revoke + 2FA ③ ⚠️ Vercel-টোকেন rotate (চ্যাট-এক্সপোজার)। **পরের-এজেন্ট: session176 থেকে।**
