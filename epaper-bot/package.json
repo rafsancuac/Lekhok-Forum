@@ -11,8 +11,11 @@
     "dev": "bun --hot run src/index.ts"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.0.9",
+    "@napi-rs/canvas-linux-x64-gnu": "^1.0.9",
     "googleapis": "^140.0.1",
     "input": "^1.0.1",
+    "pdf-to-img": "^7.0.0",
     "telegram": "^2.26.22"
   },
   "devDependencies": {

@@ -11,6 +11,8 @@ import { StringSession } from 'telegram/sessions/index.js'
 import { NewMessage } from 'telegram/events/index.js'
 import fs from 'fs'
 import path from 'path'
+import { spawnSync } from 'child_process'
+import os from 'os'
 
 /* ── কনফিগ (.env) ── */
 const TG_API_ID = parseInt(process.env.TG_API_ID || '', 10)
@@ -190,23 +192,65 @@ async function siteSync(date: string, fileId: string, paperName: string, thumbId
   console.log(`✅ সাইটে সিঙ্ক হয়েছে (${date}) ${paperName} → archive#${j.archiveId ?? '?'} ${link}`)
 }
 
-/* ── থাম্বনেইল (session170): টেলিগ্রামের ডকুমেন্ট-প্রিভিউ JPEG → ড্রাইভ-আপলোড ──
-   বড় PDF-এ ড্রাইভ নিজে থাম্বনেইল বানায় না (hasThumbnail:false) — তাই টেলিগ্রামের
-   তৈরি প্রিভিউ-ছবিটাই .jpg হিসেবে আপলোড করা হয় (ছবি-ফাইলের থাম্বনেইল সবসময় কাজ করে) */
-async function ensureThumb(token: string, folderId: string, fName: string, client: any, msg: any, doc: any): Promise<string | undefined> {
+/* ── থাম্বনেইল (session170): টেলিগ্রাম-প্রিভিউ বা PDF-প্রথম-পাতা-রেন্ডার → ড্রাইভ-আপলোড ──
+   বড় PDF-এ ড্রাইভ নিজে থাম্বনেইল বানায় না (hasThumbnail:false) — তাই:
+   ① টেলিগ্রামের ডকুমেন্ট-প্রিভিউ থাকলে সেটাই (সস্তা) ② নইলে PDF-এর প্রথম-পাতা node-সাবপ্রসেসে রেন্ডার */
+async function driveDownload(token: string, fileId: string): Promise<Uint8Array | null> {
+  try {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!res.ok) return null
+    return new Uint8Array(await res.arrayBuffer())
+  } catch { return null }
+}
+
+async function renderFirstPageJpg(pdfBytes: Uint8Array): Promise<Uint8Array | null> {
+  const tag = Date.now()
+  const tmpPdf = path.join(os.tmpdir(), 'ep-render-' + tag + '.pdf')
+  const tmpJpg = path.join(os.tmpdir(), 'ep-render-' + tag + '.jpg')
+  try {
+    fs.writeFileSync(tmpPdf, pdfBytes)
+    const script = path.join(import.meta.dir, 'render-page.mjs')
+    const r = spawnSync('node', [script, tmpPdf, tmpJpg, '1.1'], { cwd: import.meta.dir, timeout: 120000, encoding: 'utf8' })
+    if (r.status !== 0 || !fs.existsSync(tmpJpg)) {
+      console.error('⚠️ রেন্ডার-ব্যর্থ:', (r.stderr || r.stdout || '').slice(0, 140))
+      return null
+    }
+    const out = new Uint8Array(fs.readFileSync(tmpJpg))
+    return out.length && out.length < 4 * 1024 * 1024 ? out : null
+  } catch { return null }
+  finally {
+    try { fs.unlinkSync(tmpPdf) } catch {}
+    try { fs.unlinkSync(tmpJpg) } catch {}
+  }
+}
+
+async function ensureThumb(token: string, folderId: string, fName: string, client: any, msg: any, doc: any, pdfBytes?: Uint8Array, existingFileId?: string): Promise<string | undefined> {
   try {
     const thumbName = fName.replace(/\.pdf$/i, '') + '.jpg'
     const cached = await driveFindFile(token, folderId, thumbName)
     if (cached) return cached
+    // ① টেলিগ্রাম-ডকুমেন্ট-প্রিভিউ (চ্যানেল থাম্ব-দিলে সবচেয়ে-সস্তা)
     const thumbs = (doc.thumbs || []).filter((t: any) => typeof t?.w === 'number')
-    if (!thumbs.length) return undefined
-    const buf = await client.downloadMedia(msg, { thumb: thumbs.length - 1 })
-    if (!buf) return undefined
-    const bytes = new Uint8Array(buf as unknown as ArrayBuffer)
-    if (!bytes.length || bytes.length > 2 * 1024 * 1024) return undefined
-    const thumbId = await driveUpload(token, folderId, thumbName, bytes, 'image/jpeg')
-    console.log(`🖼️ থাম্বনেইল-আপলোড: ${thumbName} (${bytes.length}B)`)
-    return thumbId
+    if (thumbs.length) {
+      const buf = await client.downloadMedia(msg, { thumb: thumbs.length - 1 })
+      if (buf) {
+        const bytes = new Uint8Array(buf as unknown as ArrayBuffer)
+        if (bytes.length && bytes.length < 2 * 1024 * 1024) {
+          const tid = await driveUpload(token, folderId, thumbName, bytes, 'image/jpeg')
+          console.log(`🖼️ থাম্বনেইল (টেলিগ্রাম-প্রিভিউ): ${thumbName} (${bytes.length}B)`)
+          return tid
+        }
+      }
+    }
+    // ② PDF-প্রথম-পাতা-রেন্ডার — বাফার না-থাকলে ড্রাইভ থেকে এক-বার ডাউনলোড (ব্যাকফিল)
+    let bytes = pdfBytes
+    if ((!bytes || !bytes.length) && existingFileId) bytes = (await driveDownload(token, existingFileId)) || undefined
+    if (!bytes || !bytes.length) return undefined
+    const jpg = await renderFirstPageJpg(bytes)
+    if (!jpg) return undefined
+    const tid = await driveUpload(token, folderId, thumbName, jpg, 'image/jpeg')
+    console.log(`🖼️ থাম্বনেইল (PDF-রেন্ডার): ${thumbName} (${jpg.length}B)`)
+    return tid
   } catch (e) {
     console.error('⚠️ থাম্বনেইল-ব্যর্থতা (প্রধান-প্রবাহ অটুট):', e instanceof Error ? e.message : e)
     return undefined
@@ -259,15 +303,16 @@ async function main(): Promise<void> {
         const folderId = await driveEnsureFolder(token)
         // ড্রাইভ-এ আগেই থাকলে ডাউনলোড-স্কিপ — সরাসরি sync-রিট্রাই (ব্যান্ডউইডথ-সাশ্রয়)
         let fileId = await driveFindFile(token, folderId, fName)
+        let pdfBytes: Uint8Array | undefined
         if (!fileId) {
           const buffer = await client.downloadMedia(m, {})
-          const bytes = new Uint8Array(buffer as unknown as ArrayBuffer)
-          fileId = await driveUpload(token, folderId, fName, bytes, 'application/pdf')
+          pdfBytes = new Uint8Array(buffer as unknown as ArrayBuffer)
+          fileId = await driveUpload(token, folderId, fName, pdfBytes, 'application/pdf')
         } else {
           console.log('↷ ড্রাইভ-এ আগেই আছে — ডাউনলোড-স্কিপ')
         }
-        // থাম্বনেইল: টেলিগ্রাম-প্রিভিউ → ড্রাইভ .jpg (ডাউনলোড-স্কিপের-পরেও দরকার)
-        const thumbId = await ensureThumb(token, folderId, fName, client, m, doc)
+        // থাম্বনেইল: টেলিগ্রাম-প্রিভিউ → PDF-প্রথম-পাতা-রেন্ডার (ডাউনলোড-স্কিপ হলে ড্রাইভ-থেকে-এক-বার)
+        const thumbId = await ensureThumb(token, folderId, fName, client, m, doc, pdfBytes, fileId || undefined)
         await siteSync(msgDate, fileId, paperName, thumbId)
         state[msgDate][fName] = fileId
         saveState(state)
