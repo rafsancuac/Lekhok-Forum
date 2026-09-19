@@ -16,7 +16,7 @@
  */
 'use strict';
 
-var CACHE_VERSION = 'lekhok-shell-v3';
+var CACHE_VERSION = 'lekhok-shell-v4'; /* v4: session174-প্রিমিয়াম offline.html-রিপ্রিক্যাশ */
 
 /* স্যান্ডবক্স-সচেতনতা: SW-স্ক্রিপ্ট URL-এ XTransformPort থাকলে (গেটওয়ে-প্রিভিউ)
  * প্রি-ক্যাশ-ও অফলাইন-ফলব্যাক-URL-এ সেই-কী যোগ করতে হয় — নাহলে গেটওয়ে

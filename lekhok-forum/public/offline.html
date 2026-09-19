@@ -2,62 +2,178 @@
 <html lang="bn" dir="ltr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>অফলাইন — লেখক ফোরাম</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/assets/img/icon-192.png">
 <style>
-  :root { --navy:#0F2A4A; --green:#065F46; --muted:#5B6B7C; }
-  * { margin:0; padding:0; box-sizing:border-box; }
+  /* session174: প্রিমিয়াম অফলাইন-স্ক্রিন — Next.js OfflineScreen.tsx-এর হুবহু
+     ডিজাইন-ভাষা (#006A4E অ্যাকসেন্ট, ৮-১০px FB-রেডিয়াস, WiFi-Slash আইকন,
+     ক্যাশ-ইনফো-বক্স, রিট্রাই-স্পিনার)। সম্পূর্ণ-সেলফ-কন্টেইনড: অফলাইনে
+     কোনো ওয়েবফন্ট/CDN-নির্ভরতা নেই — সিস্টেম-বাংলা-স্ট্যাক। */
+  :root {
+    --green:#006A4E; --green-dark:#00523C; --ink:#050505;
+    --muted:#65676B; --line:#CED0D4; --line-soft:#E4E6EB;
+    --surface:#F0F2F5; --card:#FFFFFF; --chip:#FAFBFB;
+    --amber:#F59E0B; --footer:#8A8D91;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { min-height:100%; }
   body {
-    font-family:'Hind Siliguri','Noto Sans Bengali',system-ui,sans-serif;
+    font-family:'Hind Siliguri','Noto Sans Bengali','Kalpurush',system-ui,-apple-system,sans-serif;
     min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:linear-gradient(180deg,#ffffff 0%,#f0fdf7 55%,#e6f7ef 100%);
-    color:#1e293b; text-align:center; padding:24px;
+    background:var(--surface); color:var(--ink); text-align:center;
+    padding:16px; padding-bottom:max(16px, env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased; user-select:none;
   }
   .card {
-    max-width:420px; width:100%; background:#fff; border:1px solid #e2e8f0;
-    border-radius:16px; padding:36px 28px; box-shadow:0 8px 30px rgba(6,95,70,.08);
+    position:relative; overflow:hidden;
+    max-width:420px; width:100%; background:var(--card);
+    border:1px solid var(--line); border-radius:10px;
+    padding:24px; box-shadow:0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.07);
+    display:flex; flex-direction:column; align-items:center;
+    animation:rise .45s cubic-bezier(.22,.9,.32,1) both;
   }
+  @keyframes rise { from { opacity:0; transform:translateY(14px) scale(.985); } to { opacity:1; transform:none; } }
+  .accent { position:absolute; top:0; left:0; right:0; height:4px; background:var(--green); }
+
+  .badge-wrap { position:relative; margin:8px 0 0; }
   .badge {
-    width:72px; height:72px; margin:0 auto 18px; border-radius:50%;
-    background:#e6f6ef; display:flex; align-items:center; justify-content:center;
+    width:64px; height:64px; border-radius:50%;
+    background:#F0FDF9; border:1px solid #D1FAE5;
+    display:flex; align-items:center; justify-content:center; color:var(--green);
+    box-shadow:0 1px 2px rgba(0,0,0,.05);
+    animation:pulse 2.4s ease-in-out infinite;
   }
-  .badge svg { width:38px; height:38px; }
-  h1 { font-size:1.45rem; color:var(--navy); margin-bottom:8px; }
-  p  { font-size:.95rem; color:var(--muted); line-height:1.7; margin-bottom:6px; }
-  .hint { font-size:.8rem; margin:14px 0 22px; }
-  .dot { color:#d97706; font-weight:600; }
-  a.btn {
-    display:inline-flex; align-items:center; gap:8px; text-decoration:none;
-    background:var(--green); color:#fff; font-weight:600; font-size:.95rem;
-    padding:12px 26px; border-radius:10px; transition:background .15s;
+  .badge svg { width:32px; height:32px; }
+  @keyframes pulse {
+    0%,100% { box-shadow:0 0 0 0 rgba(0,106,78,.16); }
+    50% { box-shadow:0 0 0 10px rgba(0,106,78,0); }
   }
-  a.btn:hover { background:#047857; }
-  a.btn:active { transform:translateY(1px); }
-  footer { margin-top:26px; font-size:.75rem; color:#94a3b8; }
+  .status-dot {
+    position:absolute; right:-2px; bottom:-2px; width:16px; height:16px;
+    background:var(--amber); border:2px solid #fff; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font:700 9px/1 ui-monospace,monospace;
+  }
+
+  h1 { font-size:1.15rem; font-weight:700; letter-spacing:-.01em; margin:14px 0 6px; }
+  p.desc { font-size:.82rem; color:var(--muted); line-height:1.75; padding:0 8px; }
+
+  .info {
+    width:100%; margin-top:16px; background:var(--chip);
+    border:1px solid var(--line-soft); border-radius:8px;
+    padding:10px 12px; display:flex; gap:10px; align-items:flex-start; text-align:left;
+  }
+  .info .emoji { font-size:1rem; line-height:1.4; flex-shrink:0; }
+  .info b { display:block; font-size:.76rem; color:var(--ink); }
+  .info span.tx { font-size:.72rem; color:var(--muted); line-height:1.6; }
+
+  .actions { width:100%; margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+  button.btn {
+    all:unset; box-sizing:border-box; cursor:pointer; width:100%;
+    background:var(--green); color:#fff; font-weight:700; font-size:.82rem;
+    padding:11px 16px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,.08);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:background .15s, transform .1s, opacity .15s;
+    font-family:inherit; text-align:center; min-height:44px;
+  }
+  button.btn:hover { background:var(--green-dark); }
+  button.btn:active { transform:scale(.99); }
+  button.btn[disabled] { opacity:.75; cursor:default; }
+  a.btn-ghost {
+    width:100%; min-height:40px; box-sizing:border-box; text-decoration:none;
+    background:var(--surface); color:#4B4C4F; font-weight:700; font-size:.78rem;
+    padding:10px 16px; border-radius:8px; border:1px solid transparent;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:background .15s, color .15s; font-family:inherit;
+  }
+  a.btn-ghost:hover { background:var(--line-soft); color:var(--ink); }
+  .spinner {
+    width:16px; height:16px; border-radius:50%;
+    border:2px solid #fff; border-top-color:transparent;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  footer { margin-top:16px; font-size:.72rem; font-weight:700; color:var(--footer); letter-spacing:.02em; }
+
+  @media (min-width:640px) {
+    body { padding:24px; }
+    .card { padding:28px; }
+    h1 { font-size:1.25rem; }
+    p.desc { font-size:.84rem; }
+    button.btn { font-size:.88rem; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    .card, .badge { animation:none; }
+  }
 </style>
 </head>
 <body>
-  <main class="card">
-    <div class="badge" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#065F46" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3a7 7 0 0 0-7 7v4a2 2 0 0 0 2 2h1v-6H6.5A5.5 5.5 0 0 1 12 5a5.5 5.5 0 0 1 5.5 5H16v6h1a2 2 0 0 0 2-2v-4a7 7 0 0 0-7-7z"/>
-        <path d="M4 16.5V18a2 2 0 0 0 2 2h1"/>
-      </svg>
+  <main class="card" role="main">
+    <div class="accent" aria-hidden="true"></div>
+
+    <div class="badge-wrap" aria-hidden="true">
+      <div class="badge">
+        <!-- স্পষ্ট WiFi-Slash ভেক্টর (পুরনো বিভ্রান্তিকর headset-আইকনের বদলে) —
+             OfflineScreen.tsx-স্পেকের হুবহু এক-পাথ-জ্যামিতি -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3l18 18M12 18.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM8.5 12.5a5 5 0 017 0m-9.5-3.5a9 9 0 0112 0m-14.5-3.5a13 13 0 0117 0"/>
+        </svg>
+      </div>
+      <span class="status-dot">!</span>
     </div>
-    <h1>ইন্টারনেট-সংযোগ নেই</h1>
-    <p>আপনি এখন অফলাইনে আছেন। সংযোগ ফিরলে লেখক ফোরামের সব লেখা, আলোচনা ও কুইজ আবার ঠিক আগের মতোই চলবে।</p>
-    <p class="hint"><span class="dot">●</span> আগে পড়া পাতাগুলো অফলাইনেও খোলা যেতে পারে।</p>
-    <a class="btn" href="/" id="retry">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-      আবার চেষ্টা করুন
-    </a>
+
+    <h1>ইন্টারনেট-সংযোগ বিচ্ছিন্ন রয়েছে</h1>
+    <p class="desc">আপনার ডিভাইসটি বর্তমানে অফলাইনে আছে। সংযোগ সক্রিয় হলে লেখক ফোরামের লেখা, লাইভ আলোচনা ও ই-পেপার সেবা স্বয়ংক্রিয়ভাবে পুনরায় চালু হবে।</p>
+
+    <div class="info">
+      <span class="emoji" aria-hidden="true">💾</span>
+      <div>
+        <b>অফলাইন ক্যাশ রিডিং সুবিধা</b>
+        <span class="tx">আগে ভিজিট করা লেখা ও ই-পেপার পাতাগুলো এখনও মেমোরি থেকে পড়া যাবে।</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="retry" type="button">
+        <svg id="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15"/></svg>
+        <span id="bt">আবার চেষ্টা করুন</span>
+      </button>
+      <a class="btn-ghost" href="/bookmarks"><span aria-hidden="true">🔖</span> সংরক্ষিত লেখাগুলো পড়ুন</a>
+    </div>
   </main>
-  <footer>লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</footer>
+
+  <footer>চট্টগ্রাম বিশ্ববিদ্যালয় লেখক ফোরাম</footer>
+
   <script>
-    // সংযোগ ফিরলে স্বয়ংক্রিয়ভাবে হোমে ফেরানো
-    window.addEventListener('online', function () { location.href = '/'; });
+    var btn = document.getElementById('retry');
+    var bt = document.getElementById('bt');
+    var ic = document.getElementById('ic');
+    var busy = false;
+
+    // রিট্রাই: স্পিনার + সংযোগ-থাকলে রিলোড, না-থাকলে ১.২ সেকেন্ড পরে রিসেট
+    btn.addEventListener('click', function () {
+      if (busy) return;
+      busy = true;
+      btn.disabled = true;
+      bt.textContent = 'সংযোগ যাচাই করা হচ্ছে...';
+      ic.outerHTML = '<span class="spinner" id="ic"></span>';
+      setTimeout(function () {
+        if (navigator.onLine) { location.replace('/'); }
+        else {
+          busy = false;
+          btn.disabled = false;
+          bt.textContent = 'আবার চেষ্টা করুন';
+          var sp = document.getElementById('ic');
+          sp.outerHTML = '<svg id="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15"/></svg>';
+        }
+      }, 1200);
+    });
+
+    // সংযোগ ফিরে এলেই স্বয়ংক্রিয়ভাবে অ্যাপে ফেরা
+    window.addEventListener('online', function () { location.replace('/'); });
   </script>
 </body>
 </html>

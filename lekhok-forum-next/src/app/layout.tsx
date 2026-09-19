@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Bengali } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import OfflineGate from "@/components/shared/OfflineGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoBengali.variable} antialiased`}
       >
-        {children}
+        <OfflineGate>{children}</OfflineGate>
         <Toaster />
       </body>
     </html>
