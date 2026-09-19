@@ -2026,3 +2026,20 @@ Stage Summary:
 - নোট: স্যান্ডবক্স-হেডলেস-ব্রাউজারে drive.usercontent CORS-ফেচ ব্লকড (নেটওয়ার্ক-বিশেষ) — আসল-ব্রাউজারে ACAO:* নির্ভরযোগ্য; ফলব্যাক-চেইন সব-ক্ষেত্রে কাভার
 - বট চালু (২০-মিনিট পোল); কাল থেকে দৈনিক অটো-সিঙ্ক নতুন-চুক্তিতে
 - পরের-এজেন্ট: reader-এ PDF-সাইজ-হিন্ট (epaper_files-এ size_bytes কলাম), মাস-ব্রাউজ-পেজিনেশন, /epaper-সার্চ
+
+---
+Task ID: 37 (Session 171 — Vercel Functions-Storage ক্লিনআপ অটোমেশন) [relabel-নোট: 36→37 — সমান্তরাল session170-ডক-এজেন্টও Task 36 নিয়েছিল; max+1-রীতি]
+Agent: Z.ai Code (main session)
+
+Work Log:
+- ইউজার-রিপোর্ট: Vercel Functions Storage ১২.৩২ GB / ১০ GB (ড্যাশবোর্ড-স্ক্রিনশট) + স্পেক "শেষ ৫টা ছাড়া বাকি সব ডিপ্লয়মেন্ট কোডিং/টার্মিনাল-দিয়ে ডিলিট + দৈনিক-এক-বার অটো-ক্লিনআপ-অটোমেশন"
+- বর্তমান-অবস্থা-যাচাই: ফ্রেশ-ক্লোন @a0c0bd7 (session170-ব); vercel.json-বিশ্লেষণ — includeFiles-বান্ডেল (node_modules + views/** + admin/views/** + public/**) প্রতিটি ডিপ্লয়মেন্টে জমে = ১২ GB-এর কারণ; রিপো git-size-pack ২৮.৫ MiB (GitHub-পাশ সুস্থ)
+- স্ক্রিপ্ট (নতুন): lekhok-forum/scripts/cleanup-vercel-deployments.mjs — নির্ভরতা-শূন্য Node 18+; /v9/projects নাম-অটোডিসকভারি; /v6/deployments পেজিনেটেড; সর্বশেষ-৫-রাখা (--keep/KEEP_COUNT); --dry-run; BUILDING/QUEUED-অস্পৃশ্য; DEPLOYMENT_IS_CURRENT-গ্রেসফুল-স্কিপ; 429/5xx-রিট্রাই; GITHUB_STEP_SUMMARY-টেবিল; বাংলা-আউটপুট
+- যাচাই (মক-Vercel @127.0.0.1:4661 E2E): ৯-ডিপ্লয়মেন্ট → ড্রাই-রান "৩টি মোছা হতো" ✓ → আসল-রান ঠিক-২-ডিলিট + IS_CURRENT-স্কিপ ✓ → BUILDING-অস্পৃশ্য ✓ → exit-কোড 0/1 ✓ → টোকেন-বিহীন-হেল্পার ✓ — ALL GREEN (লাইভ-API-স্পর্শ-শূন্য)
+- অটোমেশন (নতুন): .github/workflows/vercel-cleanup.yml — cron '0 18 * * *' (রাত ১২:০০ ঢাকা) + workflow_dispatch(keep); secrets VERCEL_TOKEN/VERCEL_ORG_ID/VERCEL_PROJECT_ID; permissions:{}
+- পাশাপাশি: lekhok-forum/.vercelignore (CLI-বান্ডেল-হ্রাস) + lekhok-forum/VERCEL-CLEANUP.md (পূর্ণ-বাংলা-গাইড) + DEPLOYMENT.md-হাউজকিপিং-সেকশন + PROJECT §১৭১ + PLANS session171-নোট
+- পুশ: branch chore/vercel-cleanup-171 → main-মার্জ (schedule-ওয়ার্কফ্লো main-এ থাকলেই সক্রিয়)
+
+Stage Summary:
+- কোড-পাশ ১০০% সম্পূর্ণ; ইউজার-অ্যাকশন-বাকি: ① vercel.com → Settings → Tokens → VERCEL_TOKEN → `node lekhok-forum/scripts/cleanup-vercel-deployments.mjs --dry-run` → বিনা-dry-run-রান (Functions Storage ১২.৩২ GB → প্রত্যাশিত ২-৩ GB) ② ৩-সিক্রেট বসালেই দৈনিক-অটো-ক্লিনআপ ③ SESSION_SECRET/BLOB-এ Sensitive-টিক ④ ⚠️ GitHub-PAT (কনভার্সেশনে-উন্মুক্ত, API-যাচাইয়ে এখনও-ভ্যালিড) অবিলম্বে revoke + 2FA চালু
+- পরের-এজেন্ট: session172 থেকে

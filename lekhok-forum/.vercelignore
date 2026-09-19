@@ -1,0 +1,11 @@
+# CLI-ডিপ্লয়ে (vercel / deploy-to-vercel.ps1) ফাংশন-বান্ডেলে না-যাওয়ার কথা —
+# রানটাইমে লাগে না (vercel.json includeFiles-এ কেবল views/admin-views/public/sql.js)
+# নোট: GitHub-গিট-ডিপ্লয়ে .vercelignore প্রযোজ্য নয়।
+scripts/
+tests/
+download/
+worklog.md
+PROJECT.md
+PLANS.md
+DEPLOYMENT.md
+VERCEL-CLEANUP.md
