@@ -132,3 +132,12 @@ To migrate:
 - **Cold start**: First request after deploy may take 1-2s while Turso connection is established
 - **Serverless timeout**: Vercel free tier = 10s. Multer maxes at 10MB so this should be safe; for larger files, use a direct-to-Blob client upload (not yet implemented)
 - **No persistent disk**: All temp files, logs, or local DB writes fail on Vercel
+
+## Deployment Housekeeping — Functions Storage (session171)
+
+প্রতিটি ডিপ্লয়মেন্টের ফাংশন-বান্ডেল Vercel-এ জমা হয়; পুরনো ডিপ্লয়মেন্ট জমলে Functions Storage
+সীমা (Hobby: ১০ GB) পার হয়ে যায়। সমাধান — **[VERCEL-CLEANUP.md](./VERCEL-CLEANUP.md)** দেখুন:
+
+- টার্মিনাল-ক্লিনআপ: `VERCEL_TOKEN=… node lekhok-forum/scripts/cleanup-vercel-deployments.mjs --dry-run`
+- দৈনিক অটোমেশন: `.github/workflows/vercel-cleanup.yml` (প্রতিদিন রাত ১২টা ঢাকা-সময়ে, সর্বশেষ ৫টি রেখে)
+- Env-ওয়ার্নিং (SESSION_SECRET / BLOB): Variables-এ **Sensitive** টিক দিন
