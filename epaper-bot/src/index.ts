@@ -25,6 +25,7 @@ const SITE_URL = (process.env.SITE_URL || '').replace(/\/+$/, '')
 const SYNC_TOKEN = process.env.SITE_SYNC_TOKEN || ''
 const CHANNEL = process.env.EPAPER_CHANNEL || 'ePaperXpress'
 const POLL_MINUTES = Math.max(parseInt(process.env.POLL_MINUTES || '20', 10) || 20, 3)
+const PAPER_FILTER = (process.env.PAPER_FILTER || '').trim().toLowerCase() // খালি = সর্বশেষ-পোস্ট-করা পত্রিকাই সিঙ্ক হবে; যেমন: "prothom alo"
 
 const SESS_FILE = path.join(import.meta.dir, '..', '.tg-session')
 const STATE_FILE = path.join(import.meta.dir, '..', '.sync-state.json')
@@ -83,17 +84,16 @@ async function driveEnsureFolder(token: string): Promise<string> {
   return created.id
 }
 
-async function driveUpload(token: string, folderId: string, name: string, bytes: Uint8Array, mime: string): Promise<string> {
-  // ডুপ্লিকেট-রোধ: একই-ফোল্ডারে একই-নামের ফাইল থাকলে পুনঃআপলোড নয় — আগেরটাই ব্যবহার
-  // (sync-ব্যর্থতায় রিট্রাই করলে ড্রাইভ-এ একই পত্রিকা জমতে থাকবে না)
+/** ফোল্ডারে একই-নামের (ট্র্যাশ-বাদে) ফাইল আগে থাকলে তার id — নইলে null */
+async function driveFindFile(token: string, folderId: string, name: string): Promise<string | null> {
   const q = encodeURIComponent(`'${folderId}' in parents and name = '${name.replace(/'/g, "\\'")}' and trashed = false`)
   const found = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&pageSize=1`, {
     headers: { Authorization: `Bearer ${token}` },
   }).then((r) => r.json() as Promise<{ files?: { id: string }[] }>)
-  if (found.files?.[0]?.id) {
-    console.log('↷ ড্রাইভ-এ আগেই আছে — পুরোনো ফাইলই ব্যবহার হবে:', name)
-    return found.files[0].id
-  }
+  return found.files?.[0]?.id || null
+}
+
+async function driveUpload(token: string, folderId: string, name: string, bytes: Uint8Array, mime: string): Promise<string> {
   const meta = { name, parents: [folderId] }
   const boundary = 'lfepaper' + Date.now()
   const body =
@@ -165,14 +165,23 @@ async function main(): Promise<void> {
       // আজকের (বা সর্বশেষ অসিন্কড) পত্রিকা
       const attrs = (doc.attributes || []) as any[]
       const fName = (attrs.find((a) => a.fileName)?.fileName) || `epaper-${msgDate}.pdf`
-      console.log('📄 পাওয়া গেছে:', fName, `(${msgDate})`)
+      // PAPER_FILTER দিলে শুধু মিলে-যাওয়া পত্রিকা (মেসেজ-টেক্সট/ফাইলনামে সার্চ)
+      if (PAPER_FILTER && !(`${m.message || ''} ${fName}`.toLowerCase().includes(PAPER_FILTER))) continue
+      const paperName = String(m.message || '').split('\n')[0].trim().replace(/\s+/g, ' ') || 'দৈনিক পত্রিকা'
+      console.log('📄 পাওয়া গেছে:', paperName, `(${msgDate})`)
       try {
-        const buffer = await client.downloadMedia(m, {})
-        const bytes = new Uint8Array(buffer as unknown as ArrayBuffer)
         const token = await driveAccessToken()
         const folderId = await driveEnsureFolder(token)
-        const fileId = await driveUpload(token, folderId, fName, bytes, 'application/pdf')
-        await siteSync(msgDate, fileId, 'দৈনিক পত্রিকা')
+        // ড্রাইভ-এ আগেই থাকলে ডাউনলোড-স্কিপ — সরাসরি sync-রিট্রাই (ব্যান্ডউইডথ-সাশ্রয়)
+        let fileId = await driveFindFile(token, folderId, fName)
+        if (!fileId) {
+          const buffer = await client.downloadMedia(m, {})
+          const bytes = new Uint8Array(buffer as unknown as ArrayBuffer)
+          fileId = await driveUpload(token, folderId, fName, bytes, 'application/pdf')
+        } else {
+          console.log('↷ ড্রাইভ-এ আগেই আছে — ডাউনলোড-স্কিপ')
+        }
+        await siteSync(msgDate, fileId, paperName)
         state[msgDate] = fileId
         saveState(state)
         break // এক-পাসে এক-পত্রিকা
