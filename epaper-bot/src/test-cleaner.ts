@@ -15,7 +15,7 @@ import { PDFDocument, StandardFonts, rgb, PDFName, PDFRawStream, PDFString } fro
 import zlib from 'zlib'
 import fs from 'fs'
 import path from 'path'
-import { stripTelegramPromoLayer } from './cleaner'
+import { stripTelegramPromoLayer, stripTelegramPromoLayerDetailed } from './cleaner'
 
 async function buildDirtyPdf(): Promise<Buffer> {
   const pdf = await PDFDocument.create()
@@ -134,6 +134,20 @@ async function main() {
   const plainOut = await stripTelegramPromoLayer(plain)
   if (plainOut !== plain) { ok = false; console.error('✗ নো-প্রমো পিডিএফে নো-অপ হয়নি (বাইট বদলেছে)') }
   else console.log('◆ নো-প্রমো পিডিএফ: নো-অপ ✓ (মূল-বাফার অপরিবর্তিত)')
+
+  /* ── টেস্ট ৩: ডিটেইলড-রিপোর্ট (session174 — ব্যাকফিলের ভিত্তি) ── */
+  const det = await stripTelegramPromoLayerDetailed(dirty)
+  if (!det.changed || det.streams !== 1 || det.annots !== 1 || det.pages !== 2 || det.error) {
+    ok = false
+    console.error(`✗ ডিটেইলড-রিপোর্ট ভুল: changed=${det.changed} streams=${det.streams} annots=${det.annots} pages=${det.pages} error=${det.error || '—'}`)
+  } else console.log('◆ ডিটেইলড-রিপোর্ট (প্রমো-পিডিএফ): changed ✓ স্ট্রিম×১ ✓ লিংক×১ ✓ পাতা×২ ✓')
+  const detClean = await stripTelegramPromoLayerDetailed(plain)
+  if (detClean.changed || detClean.buffer !== plain || detClean.error) {
+    ok = false
+    console.error('✗ ডিটেইলড-রিপোর্ট (নো-প্রমো): নো-অপ/সম-রেফারেন্স চুক্তি ভাঙা')
+  } else console.log('◆ ডিটেইলড-রিপোর্ট (নো-প্রমো): নো-অপ ✓ সম-বাফার-রেফারেন্স ✓')
+  if (det.buffer.length !== clean.length) { ok = false; console.error('✗ সরল-রূপ ও ডিটেইলড-রূপের আউটপুট ভিন্ন') }
+  else console.log('◆ সরল-রূপ ≡ ডিটেইলড-রূপ (বাইট-সমতা) ✓')
 
   /* ── রেন্ডার-তুলনা ── */
   try {

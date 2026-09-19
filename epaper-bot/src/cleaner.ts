@@ -54,7 +54,26 @@ function isPromoText(text: string): boolean {
   return PROMO_MARKERS.some((m) => low.includes(m))
 }
 
-export async function stripTelegramPromoLayer(inputPdfBuffer: Buffer): Promise<Buffer> {
+export interface PromoStripReport {
+  /** ক্লিন-বাইট — কিছু-বদলাতে-না-হলে ওই-বাফারের-ই একই-রেফারেন্স (নো-অপ-শনাক্তকরণের চুক্তি) */
+  buffer: Buffer
+  /** প্রমো-স্ট্রিম/অ্যানোটেশন পেয়ে কিছু কাটা হয়েছে কি না */
+  changed: boolean
+  /** বাদ-পড়া প্রমো-কনটেন্ট-স্ট্রিম সংখ্যা */
+  streams: number
+  /** বাদ-পড়া প্রমো-লিংক-অ্যানোটেশন সংখ্যা */
+  annots: number
+  /** পিডিএফ-পাতার সংখ্যা */
+  pages: number
+  /** ব্যর্থতায় ত্রুটি-বার্তা (ব্যর্থতায় buffer = মূল-বাফার) */
+  error?: string
+}
+
+/**
+ * ডিটেইলড-রূপ (session174 — রেট্রো-ক্লিন ব্যাকফিলের জন্য): কী-কী বাদ পড়ল তার রিপোর্টসহ।
+ * আচরণ-চুক্তি stripTelegramPromoLayer-এরই: ব্যর্থতা/নো-অপে ওই-একই-বাফার-রেফারেন্স।
+ */
+export async function stripTelegramPromoLayerDetailed(inputPdfBuffer: Buffer): Promise<PromoStripReport> {
   try {
     const pdfDoc = await PDFDocument.load(inputPdfBuffer, {
       ignoreEncryption: true,
@@ -129,14 +148,38 @@ export async function stripTelegramPromoLayer(inputPdfBuffer: Buffer): Promise<B
     }
 
     if (!strippedStreams && !strippedAnnots) {
-      return inputPdfBuffer // কিছু-পাওয়া যায়নি → মূল-টাই রাখা (বাইট-অপরিবর্তিত)
+      return { buffer: inputPdfBuffer, changed: false, streams: 0, annots: 0, pages: pages.length } // কিছু-পাওয়া যায়নি → মূল-টাই (বাইট-অপরিবর্তিত)
     }
 
     const cleanedBytes = await pdfDoc.save({ useObjectStreams: false })
-    console.log(`✨ প্রমো-লেয়ার অপসারণ: ${strippedStreams}টি স্ট্রিম, ${strippedAnnots}টি লিংক-অ্যানোটেশন (${pages.length} পাতা)`)
-    return Buffer.from(cleanedBytes)
+    return {
+      buffer: Buffer.from(cleanedBytes),
+      changed: true,
+      streams: strippedStreams,
+      annots: strippedAnnots,
+      pages: pages.length,
+    }
   } catch (error) {
-    console.error('⚠️ ওয়াটারমার্ক সরানোর সমস্যা — মূল ফাইল রাখা হলো:', error instanceof Error ? error.message : error)
-    return inputPdfBuffer
+    return {
+      buffer: inputPdfBuffer,
+      changed: false,
+      streams: 0,
+      annots: 0,
+      pages: 0,
+      error: error instanceof Error ? error.message : String(error),
+    }
   }
+}
+
+/** সরল-রূপ (session173-চুক্তি, index.ts ব্যবহার করে): রিপোর্ট-লগসহ শুধু বাফার ফেরত */
+export async function stripTelegramPromoLayer(inputPdfBuffer: Buffer): Promise<Buffer> {
+  const report = await stripTelegramPromoLayerDetailed(inputPdfBuffer)
+  if (report.error) {
+    console.error('⚠️ ওয়াটারমার্ক সরানোর সমস্যা — মূল ফাইল রাখা হলো:', report.error)
+    return report.buffer
+  }
+  if (report.changed) {
+    console.log(`✨ প্রমো-লেয়ার অপসারণ: ${report.streams}টি স্ট্রিম, ${report.annots}টি লিংক-অ্যানোটেশন (${report.pages} পাতা)`)
+  }
+  return report.buffer
 }

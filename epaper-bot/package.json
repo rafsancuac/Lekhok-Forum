@@ -7,6 +7,7 @@
     "login": "bun run src/login.ts",
     "token": "bun run src/getRefreshToken.ts",
     "test-drive": "bun run src/test-drive.ts",
+    "backfill": "bun run src/backfill.ts",
     "start": "bun run src/index.ts",
     "dev": "bun --hot run src/index.ts"
   },
