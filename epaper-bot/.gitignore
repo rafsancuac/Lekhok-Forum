@@ -3,3 +3,4 @@ node_modules
 .tg-session
 .sync-state.json
 .tg-auth-state.json
+.qa/
