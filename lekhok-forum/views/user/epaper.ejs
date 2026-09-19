@@ -61,8 +61,8 @@
   (papers || []).forEach(function (p) {
     const fid = p.fileId || driveIdOf(p.fileUrl);
     const cands = [];
-    if (p.thumbId) cands.push('/api/epaper/thumb/' + encodeURIComponent(p.thumbId) + '?v=3'); // সেশন ১৭৫: পরিষ্কার-থাম্ব-প্রক্সি (ব্যানার-কভার) → ব্যর্থতায় সরাসরি-ড্রাইভ; ?v=3 = ক্লিনার-v3-ক্যাশ-বাস্ট
-    if (fid) cands.push('/api/epaper/thumb/' + encodeURIComponent(fid) + '?v=3'); // thumbId-না-থাকলেও পিডিএফ-পাতা-১-থেকে পরিষ্কার-থাম্ব (প্রক্সি PDF→ইমেজ সামলায়)
+    if (p.thumbId) cands.push('/api/epaper/thumb/' + encodeURIComponent(p.thumbId) + '?v=4'); // সেশন ১৭৫: পরিষ্কার-থাম্ব-প্রক্সি (ব্যানার-কভার) → ব্যর্থতায় সরাসরি-ড্রাইভ; ?v=4 = ক্লিনার-v3-ক্যাশ-বাস্ট
+    if (fid) cands.push('/api/epaper/thumb/' + encodeURIComponent(fid) + '?v=4'); // thumbId-না-থাকলেও পিডিএফ-পাতা-১-থেকে পরিষ্কার-থাম্ব (প্রক্সি PDF→ইমেজ সামলায়)
     if (p.thumbId) cands.push('https://lh3.googleusercontent.com/d/' + p.thumbId + '=s800');
     if (fid) cands.push('https://lh3.googleusercontent.com/d/' + fid + '=s800');
     if (fid) cands.push('https://drive.google.com/thumbnail?id=' + fid + '&sz=w800');
@@ -612,9 +612,9 @@
     } else {
       // সেশন ১৭৫: ক্লিন-প্রক্সি — পুরোনো-পিডিএফেও সাইট-পাশে প্রমো-লেয়ার সরে (helpers/pdf-cleaner)
       // সেশন ১৭৮: ×২-রিট্রাই — ট্রানজিয়েন্ট 502/504-এ iframe-ফলব্যাকে (ব্যানার) না-গিয়ে পুনঃচেষ্টা
-      // session179: ?v=3 — ক্লিনার-v3 (লসলেস)-ক্যাশ-বাস্ট (পুরোনো q80-রি-এনকোড ব্রাউজার/এজ-ক্যাশ অচল)
+      // session181: ?v=4 — ড্রাইভ-উৎস-লসলেস-রিপ্লেস-পরবর্তী ক্যাশ-বাস্ট (session179-এর ?v=3-ক্যাশও অচল)
       bytesP = loadPdfJs().then(function () {
-        return fetchPdfWithRetry('/api/epaper/file/' + encodeURIComponent(p.fid) + '?v=3', st.abort, onProg);
+        return fetchPdfWithRetry('/api/epaper/file/' + encodeURIComponent(p.fid) + '?v=4', st.abort, onProg);
       });
     }
     bytesP.then(function (buf) {
@@ -789,8 +789,8 @@
     var load = bytesCache[p.fid]
       ? Promise.resolve(bytesCache[p.fid])
       : loadPdfJs().then(function () {
-          // ক্লিন-প্রক্সি (?v=3) — সার্ভার-ক্লিন-ক্যাশও উষ্ণ হয়, পরের-পাঠকও লাভবান
-          return fetch('/api/epaper/file/' + encodeURIComponent(p.fid) + '?v=3').then(function (r) {
+          // ক্লিন-প্রক্সি (?v=4) — সার্ভার-ক্লিন-ক্যাশও উষ্ণ হয়, পরের-পাঠকও লাভবান
+          return fetch('/api/epaper/file/' + encodeURIComponent(p.fid) + '?v=4').then(function (r) {
             if (!r.ok) throw new Error('warm-http-' + r.status);
             return r.arrayBuffer();
           });
