@@ -920,6 +920,7 @@ app.use('/avatar',    require('./routes/avatar'));   // default avatar serving
 app.use('/img/cover', require('./routes/cover'));    // সেশন ৭৩: লোকাল ডিটারমিনিস্টিক SVG কভার-আর্ট (picsum প্রতিস্থাপন — Googlebot-ব্লক ফিক্স)
 app.use('/moderator', require('./routes/moderator'));// scoped moderator posting panel
 app.use('/api',      require('./routes/api'));
+app.use('/api/epaper', require('./routes/api-epaper')); // session166: ই-পেপার অটোমেশন সিঙ্ক (Bearer EPAPER_SYNC_TOKEN) + পাবলিক তালিকা
 app.use('/admin',    require('./admin/routes'));
 
 // ── 404 handler ──────────────────────────────────────────────────────────────

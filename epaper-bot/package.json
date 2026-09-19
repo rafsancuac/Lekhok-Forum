@@ -1,0 +1,22 @@
+{
+  "name": "epaper-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "লেখক ফোরাম ই-পেপার বট — @ePaperXpress টেলিগ্রাম-চ্যানেলের দৈনিক পত্রিকার PDF → গুগল-ড্রাইভ → সাইটের /epaper",
+  "scripts": {
+    "login": "bun run src/login.ts",
+    "token": "bun run src/getRefreshToken.ts",
+    "test-drive": "bun run src/test-drive.ts",
+    "start": "bun run src/index.ts",
+    "dev": "bun --hot run src/index.ts"
+  },
+  "dependencies": {
+    "googleapis": "^140.0.1",
+    "input": "^1.0.1",
+    "telegram": "^2.26.22"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}
