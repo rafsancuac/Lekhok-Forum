@@ -165,9 +165,9 @@
     </section>
 
     <aside class="ep-side" aria-label="পত্রিকা তালিকা">
-      <%# ── session179: প্রিমিয়াম-ফিল্টার বক্স — মাস-ড্রপডাউন, তারিখ-চিপ ও র‍্যাংকিং-ব্যানার বাদ;
-           শুধু টাইটেল+কাউন্ট ব্যাজ + মিনিমালিস্ট সার্চ (ইউজার-স্পেক) ── %>
-      <div class="ep-filter">
+      <%# ── session182: একক-প্যানেল প্রিমিয়াম ডিরেক্টরি (ইউজার-স্পেক) — হেডার+সার্চ+তালিকা+ওয়ার্ম-স্ট্যাটাস
+           একই কার্ডে; তালিকা Apple-News-রীতি ফ্ল্যাট-কার্ড (ক্যাপসুল/পিল বাদ) ── %>
+      <div class="ep-side-head">
         <div class="ep-filter-top">
           <span class="ep-filter-title"><i class="fas fa-layer-group"></i> সংরক্ষিত সংখ্যা</span>
           <span class="ep-count" id="epCount">০</span>
@@ -175,10 +175,19 @@
         <div class="ep-search">
           <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
           <input type="search" id="epSearch" placeholder="পত্রিকা খুঁজুন…" aria-label="পত্রিকার নামে খুঁজুন" autocomplete="off" />
+          <button type="button" class="ep-search-clear" id="epSearchClear" aria-label="খোঁজা মুছুন" hidden><i class="fas fa-xmark" aria-hidden="true"></i></button>
         </div>
       </div>
       <%# ── পত্রিকা-তালিকা ── %>
       <div class="ep-list" id="epList" role="listbox" aria-label="পত্রিকার তালিকা"></div>
+      <%# ── session182: সিকুয়েন্সিয়াল-আইডল-ওয়ার্মার স্ট্যাটাস — "সব পেপার লোড করে রাখবে" (ইউজার-স্পেক) ── %>
+      <div class="ep-warmbar" id="epWarmBar" hidden aria-live="polite">
+        <i class="fas fa-bolt" aria-hidden="true"></i>
+        <div class="ep-warmbar-main">
+          <span class="ep-warmbar-txt" id="epWarmTxt">বাকি পত্রিকাগুলোও আগে থেকেই প্রস্তুত হচ্ছে…</span>
+          <span class="ep-warmbar-track" aria-hidden="true"><i id="epWarmFill"></i></span>
+        </div>
+      </div>
     </aside>
   </div>
   <% } else { %>
@@ -239,6 +248,7 @@
   var todayIso = root.getAttribute('data-today') || '';
   var elDate = document.getElementById('epDateInput');
   var elSearch = document.getElementById('epSearch'); // session179: মাস-ড্রপডাউনের বদলে মিনিমালিস্ট-সার্চ
+  var elSearchClear = document.getElementById('epSearchClear'); // session182: স্লিক-ক্লিয়ার-বাটন
   var elList = document.getElementById('epList');
   var searchTerm = '';
   var elCount = document.getElementById('epCount');
@@ -363,13 +373,16 @@
     rows.forEach(function (p) {
       var on = p.id === activeId;
       var rk = p.rank && p.rank < 999 ? p.rank : 0;
+      // session182: ওয়ার্ম-অবস্থা — প্রি-লোডড/জীবিত হলে 'প্রস্তুত' চিপ, প্রস্তুতি-চলছে হলে স্পিনার-চিপ
+      var warm = (warmState[p.fid] === 'done' || alive.get(p.fid)) ? 'done' : (warmState[p.fid] === 'busy' ? 'busy' : '');
       frag += '<button type="button" role="option" aria-selected="' + on + '" class="ep-item' + (on ? ' is-on' : '') + '" data-id="' + p.id + '">' +
-        // সেশন ১৭২: র‍্যাংক-ব্যাজ (#১, #২… — শীর্ষ-৩ ব্র্যান্ড-সবুজ; বহির্ভূত '–')
-        '<span class="ep-rank' + (rk && rk <= 3 ? ' is-top' : '') + '" title="' + (rk ? 'পাঠকপ্রিয়তার ক্রমে ' + bnDigits(rk) + ' নম্বর' : 'র‍্যাংক-তালিকাভুক্ত নয়') + '">' + (rk ? '#' + bnDigits(rk) : '–') + '</span>' +
+        // session182 (ইউজার-স্পেক): ব্যাজ-বাক্সের বদলে টাইপোগ্রাফিক র‍্যাংক — প্রফেশনাল সংবাদ-ক্রম
+        '<span class="ep-ranktxt' + (rk && rk <= 3 ? ' is-top' : '') + '" title="' + (rk ? 'পাঠকপ্রিয়তার ক্রমে ' + bnDigits(rk) + ' নম্বর' : 'র‍্যাংক-তালিকাভুক্ত নয়') + '">#' + (rk ? bnDigits(rk) : '–') + '</span>' +
         '<span class="ep-thumb">' + thumbHtml(p) + '</span>' +
         // session179 (ইউজার-স্পেক): প্রতি-কার্ডে তারিখ-পুনরাবৃত্তি বাদ — তারিখ হেডার/ভিউয়ার-বারেই একবার
-        '<span class="ep-item-meta"><b class="ep-item-name">' + p.name + '</b></span>' +
-        (on ? '<span class="ep-dot" aria-hidden="true"></span>' : '') +
+        '<span class="ep-item-meta"><b class="ep-item-name">' + p.name + '</b>' +
+        (warm === 'done' ? '<span class="ep-warmchip"><i class="fas fa-bolt" aria-hidden="true"></i>প্রস্তুত</span>' : (warm === 'busy' ? '<span class="ep-warmchip is-busy"><i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>প্রস্তুত হচ্ছে</span>' : '')) +
+        '</span>' +
         '</button>';
     });
     elList.innerHTML = frag;
@@ -400,7 +413,10 @@
   var reader = null;   // সক্রিয়-রিডার-স্টেট { fid, abort, doc, io }
   // ── session178: keep-alive মাল্টি-রিডার — একবার-খোলা পত্রিকার পাতা/doc মেমরিতে থেকে যায়;
   //    পেপার-সুইচ = তাৎক্ষণিক পুনঃদর্শন (শূন্য-নেটওয়ার্ক), LRU-৪ ছাড়ালে সবচেয়ে-পুরনোটি মুক্ত হয়
-  var ALIVE_MAX = 4;
+  // session182 (ইউজার-স্পেক "সব পেপার লোড করে রাখবে"): keep-alive ক্যাপ ডাইনামিক —
+  // সাধারণ-ডিভাইসে সক্রিয়-দিনের প্রায়-সব পত্রিকা জীবিত থাকে; কম-মেমরি ডিভাইসে সংকুচিত
+  var LOWMEM = (navigator.deviceMemory || 8) <= 4;
+  var ALIVE_MAX = LOWMEM ? 8 : 28;
   var alive = new Map(); // fid → {wrap, doc, io, st, numPages, shownAt}
   function aliveTouch(fid) { var a = alive.get(fid); if (a) a.shownAt = Date.now(); return a; }
   function aliveEvictIfNeeded() {
@@ -621,7 +637,9 @@
     });
   }
 
-  function buildPages(st, p) {
+  // session182: opts.detach — প্রি-ওয়ার্ম-পথে স্টেজে-অ্যাটাচ নয় (ডিট্যাচড-স্কেলিটন); opts.preRender — পেজ-১ আগেই রেন্ডার
+  function buildPages(st, p, opts) {
+    var detached = !!(opts && opts.detach);
     var doc = st.doc;
     var wrap = document.createElement('div');
     wrap.className = 'ep-pages';
@@ -637,16 +655,19 @@
       wrap.appendChild(h);
       holders.push(h);
     }
-    elStage.innerHTML = '';
-    elStage.appendChild(wrap);
+    if (!detached) {
+      elStage.innerHTML = '';
+      elStage.appendChild(wrap);
+    }
     var rendering = {};
     var renderPage = function (n, holder) {
-      if (rendering[n] || reader !== st) return;
+      if (rendering[n] || (!detached && reader !== st)) return;
       rendering[n] = true;
       doc.getPage(n).then(function (page) {
-        if (reader !== st) return;
+        if ((!detached && reader !== st)) return;
         var base = page.getViewport({ scale: 1 });
-        var targetW = Math.max(wrap.clientWidth - 28, 320);
+        // session182: ডিট্যাচড-পথে wrap.clientWidth=০ — স্টেজ-প্রস্থ থেকে স্কেল (পরে CSS width:100%-এই ফিট)
+        var targetW = Math.max((detached ? (elStage.clientWidth || 860) : wrap.clientWidth) - 28, 320);
         var scale = Math.min(targetW / base.width, 2);
         var vp = page.getViewport({ scale: scale });
         /* ── session180: HiDPI/রেটিনা-শার্পনেস (ইউজার-স্পেক "কাঁচের-মতো পরিষ্কার") ──
@@ -675,7 +696,14 @@
     // session178: জীবিত-রিডার-রেজিস্ট্রি — পরের-সুইচে শূন্য-নেটওয়ার্কে ফেরা
     alive.set(st.fid, { wrap: wrap, doc: doc, io: st.io, st: st, numPages: doc.numPages, shownAt: Date.now() });
     aliveEvictIfNeeded();
-    armPageJump(st, doc.numPages);
+    if (detached) {
+      // session182: প্রি-ওয়ার্ম-পথ — ডিট্যাচড অবস্থায় IO-ফায় না-ই-করে; ঐচ্ছিক পেজ-১ প্রি-রেন্ডার
+      // (ক্লিকে সাথে-সাথে প্রথম-পাতা দৃশ্যমান — লোডিং-স্ক্রিন-শূন্য অভিজ্ঞতা)
+      var pre = Math.max(0, (opts && opts.preRender) || 0);
+      for (var q = 1; q <= Math.min(pre, doc.numPages); q++) renderPage(q, holders[q - 1]);
+    } else {
+      armPageJump(st, doc.numPages);
+    }
   }
 
   function renderStage(p) {
@@ -707,59 +735,158 @@
 
   window.addEventListener('beforeunload', cancelReader);
 
-  // ── session178: আইডল-প্রিফেচ — সক্রিয়-দিনের পরবর্তী শীর্ষ-র‍্যাংকের ২টি পত্রিকা ব্যাকগ্রাউন্ডে
-  //    বাইট-ক্যাশে (সার্ভার-ক্লিন-ক্যাশ ও HTTP-ক্যাশ উষ্ণ হয়); ডাটা-সেভার/2G/লুকানো-ট্যাবে স্বয়ং-বন্ধ
-  var prefetched = {}, prefetchDate = null, prefetchBusy = false;
-  function prefetchPapers() {
-    if (document.hidden || prefetchBusy) return;
-    var d = elDate.value;
-    if (prefetchDate !== d) { prefetchDate = d; prefetched = {}; }
+  // ── session182: সিকুয়েন্সিয়াল-আইডল-ওয়ার্মার (ইউজার-স্পেক "সব পেপার লোড করে রাখবে — ইন্সট্যান্ট একটা থেকে একটা পড়বে") ──
+  //  সক্রিয়-দিনের প্রতিটি পত্রিকা এক-এক-করে (শীর্ষ-র‍্যাংক-আগে) নিঃশব্দে প্রস্তুত:
+  //  বাইট-ফেচ → pdf.js-doc → ডিট্যাচড-পেজ-স্কেলিটন (alive-রেজিস্ট্রি + পেজ-১ প্রি-রেন্ডার) → পরেরটা।
+  //  একবার প্রস্তুত = ক্লিকে DOM-রি-অ্যাটাচ (শূন্য-নেটওয়ার্ক, লোডিং-স্ক্রিন-শূন্য)।
+  //  সীমা: ডেটা-সেভার/2G → শীর্ষ-৪ · কম-মেমরি → শীর্ষ-৮ · অন্যথায় সকল। পরপর-দুইটির মাঝে বিরতি —
+  //  পাঠকের-চলমান-স্ক্রল/রেন্ডারের-সাথে CPU-প্রতিযোগিতা না-করতে।
+  var warmState = {};  // fid → 'busy' | 'done'
+  var warmFails = {};  // fid → ব্যর্থতা-সংখ্যা (২ হলে আর-চেষ্টা নয় — স্থায়ী-ভাঙা ফাইল-রোধ)
+  var warmQueue = [], warmToken = 0, warmRunning = false;
+  var WARM_GAP = 650;
+  function warmCapNow() {
     var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection || {};
-    if (conn.saveData || /^(slow-)?2g$/i.test(conn.effectiveType || '')) return;
-    var rows = (byDate[d] || []).slice().sort(rankCmp).filter(function (p) { return p.fid; });
-    var queue = [];
-    for (var i = 0; i < rows.length && queue.length < 2; i++) {
-      var p = rows[i];
-      if (!prefetched[p.fid] && !alive.get(p.fid)) queue.push(p);
-    }
-    if (!queue.length) return;
-    prefetchBusy = true;
-    var k = 0;
-    var next = function () {
-      if (k >= queue.length || document.hidden) { prefetchBusy = false; return; }
-      var pp = queue[k++];
-      prefetched[pp.fid] = true;
-      fetch('/api/epaper/file/' + encodeURIComponent(pp.fid) + '?v=3').then(function (r) {
-        return r.ok ? r.arrayBuffer() : null;
-      }).then(function (b) {
-        if (b && b.byteLength > 1024) {
-          bytesCache[pp.fid] = b;
-          var keys = Object.keys(bytesCache);
-          if (keys.length > 3) delete bytesCache[keys[0]];
-        }
-        setTimeout(next, 1200);
-      }).catch(function () { setTimeout(next, 1200); });
-    };
-    next();
+    if (conn.saveData || /^(slow-)?2g$/i.test(conn.effectiveType || '')) return 4;
+    if (LOWMEM) return 8;
+    return 40;
   }
-  setTimeout(prefetchPapers, 5000);
-  setInterval(prefetchPapers, 12000);
+  function warmEligibleRows() {
+    var d = elDate.value;
+    return (byDate[d] || []).slice().sort(rankCmp).filter(function (p) {
+      return p.fid && warmState[p.fid] !== 'done' && warmState[p.fid] !== 'busy' &&
+        (warmFails[p.fid] || 0) < 2 && !alive.get(p.fid) && !(reader && reader.fid === p.fid);
+    });
+  }
+  function queueWarm() {
+    warmToken++;
+    warmQueue = warmEligibleRows().slice(0, warmCapNow());
+    updateWarmBar();
+    setTimeout(function () { runWarm(warmToken); }, 500);
+  }
+  function runWarm(token) {
+    if (warmRunning || token !== warmToken) return;
+    if (!warmQueue.length) { updateWarmBar(); return; }
+    warmRunning = true;
+    var step = function () {
+      if (token !== warmToken) { warmRunning = false; return; }
+      if (!warmQueue.length) { warmRunning = false; updateWarmBar(); return; }
+      var p = warmQueue.shift();
+      warmOne(p).catch(function () {
+        warmFails[p.fid] = (warmFails[p.fid] || 0) + 1;
+        if (warmState[p.fid] === 'busy') delete warmState[p.fid];
+        unmarkWarm(p.id);
+      }).then(function () { setTimeout(step, WARM_GAP); });
+    };
+    step();
+  }
+  function warmOne(p) {
+    if (alive.get(p.fid) || (reader && reader.fid === p.fid)) {
+      warmState[p.fid] = 'done'; markWarm(p.id, 'done'); return Promise.resolve();
+    }
+    warmState[p.fid] = 'busy';
+    markWarm(p.id, 'busy');
+    var load = bytesCache[p.fid]
+      ? Promise.resolve(bytesCache[p.fid])
+      : loadPdfJs().then(function () {
+          // ক্লিন-প্রক্সি (?v=3) — সার্ভার-ক্লিন-ক্যাশও উষ্ণ হয়, পরের-পাঠকও লাভবান
+          return fetch('/api/epaper/file/' + encodeURIComponent(p.fid) + '?v=3').then(function (r) {
+            if (!r.ok) throw new Error('warm-http-' + r.status);
+            return r.arrayBuffer();
+          });
+        });
+    return load.then(function (buf) {
+      if (warmState[p.fid] !== 'busy') return;
+      return window.pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise.then(function (doc) {
+        // মাঝপথে-ইউজার-ক্লিকে openReader-নিজেই বানিয়ে নিতে পারে — ডুপ্লিকেট-doc-রোধ
+        if (warmState[p.fid] !== 'busy' || alive.get(p.fid) || (reader && reader.fid === p.fid)) {
+          try { doc.destroy(); } catch (e) {}
+          if (alive.get(p.fid) || (reader && reader.fid === p.fid)) { warmState[p.fid] = 'done'; markWarm(p.id, 'done'); }
+          return;
+        }
+        var pst = { fid: p.fid, abort: new AbortController(), doc: doc, io: null };
+        buildPages(pst, p, { detach: true, preRender: LOWMEM ? 0 : 1 });
+        warmState[p.fid] = 'done';
+        if (bytesCache[p.fid]) delete bytesCache[p.fid]; // doc-নিজের-ডাটা-ধারণ করে — বাইট-ডুপ্লিকেট-মুক্ত
+        markWarm(p.id, 'done');
+        updateWarmBar();
+      });
+    });
+  }
+  // তালিকা-আইটেমে প্রস্তুত-চিপ লাইভ-প্যাচ (renderList-রিবিল্ট ছাড়া — স্ক্রল/ফোকাস-নিরাপদ)
+  function markWarm(id, state) {
+    var btn = elList.querySelector('.ep-item[data-id="' + id + '"]');
+    if (!btn) return;
+    var meta = btn.querySelector('.ep-item-meta');
+    if (!meta) return;
+    var chip = meta.querySelector('.ep-warmchip');
+    var html = state === 'busy'
+      ? '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>প্রস্তুত হচ্ছে'
+      : '<i class="fas fa-bolt" aria-hidden="true"></i>প্রস্তুত';
+    var cls = state === 'busy' ? 'ep-warmchip is-busy' : 'ep-warmchip';
+    if (!chip) {
+      chip = document.createElement('span');
+      meta.appendChild(chip);
+    }
+    chip.className = cls;
+    chip.innerHTML = html;
+  }
+  function unmarkWarm(id) {
+    var btn = elList.querySelector('.ep-item[data-id="' + id + '"]');
+    if (!btn) return;
+    var chip = btn.querySelector('.ep-warmchip');
+    if (chip) chip.remove();
+  }
+  // সাইড-প্যানেল ওয়ার্ম-স্ট্যাটাস বার — "সব সংখ্যা প্রস্তুত" অবধি অগ্রগতি
+  function updateWarmBar() {
+    var bar = document.getElementById('epWarmBar');
+    if (!bar) return;
+    var d = elDate.value;
+    var rows = (byDate[d] || []).filter(function (p) { return p.fid; });
+    if (rows.length <= 1) { bar.hidden = true; return; }
+    var done = rows.filter(function (p) { return warmState[p.fid] === 'done' || alive.get(p.fid); }).length;
+    var total = Math.min(rows.length, Math.max(warmCapNow(), done));
+    var fill = document.getElementById('epWarmFill');
+    var txt = document.getElementById('epWarmTxt');
+    if (fill) fill.style.width = Math.round((done / total) * 100) + '%';
+    if (done >= total) {
+      bar.classList.add('is-done');
+      if (txt) txt.textContent = 'সব সংখ্যা প্রস্তুত — যে-কোনোটায় তাৎক্ষণিক পড়ুন';
+    } else {
+      bar.classList.remove('is-done');
+      if (txt) txt.textContent = 'বাকি পত্রিকাগুলোও আগে থেকেই প্রস্তুত হচ্ছে… ' + bnDigits(done) + ' / ' + bnDigits(total);
+    }
+    bar.hidden = false;
+  }
+  setTimeout(queueWarm, 3500); // প্রথম-পত্রিকার নিজস্ব-লোড শান্ত হওয়ার পর
+  // প্রতি-২৫সে: নেটওয়ার্ক-এররে বাদ-পড়াগুলোর পুনঃচেষ্টা + প্রস্তুতি-নিশ্চিতকরণ (সস্তা-নো-ওপ)
+  setInterval(function () { if (!warmRunning) queueWarm(); }, 25000);
 
   // ── ইভেন্ট ──
   elList.addEventListener('click', function (e) {
     var back = e.target.closest('[data-back]');
-    if (back) { elDate.value = todayIso; renderList(); return; }
+    if (back) { elDate.value = todayIso; renderList(); queueWarm(); return; }
     var it = e.target.closest('.ep-item');
     if (it) select(Number(it.getAttribute('data-id')));
   });
   // session179: সার্চ-ইনপুট (মাস-ড্রপডাউন/চিপসের বদলে) — টাইপ-সাথে-সাথে তালিকা ফিল্টার
+  // session182: ক্লিয়ার-বাটন টগল
   if (elSearch) elSearch.addEventListener('input', function () {
     searchTerm = elSearch.value || '';
+    if (elSearchClear) elSearchClear.hidden = !searchTerm;
     renderList();
   });
-  elDate.addEventListener('change', renderList);
+  if (elSearchClear) elSearchClear.addEventListener('click', function () {
+    elSearch.value = '';
+    searchTerm = '';
+    elSearchClear.hidden = true;
+    renderList();
+    elSearch.focus();
+  });
+  // session182: দিন-পরিবর্তনে সেই-দিনের সব-পত্রিকার প্রস্তুতি-পুনরারম্ভ
+  elDate.addEventListener('change', function () { renderList(); queueWarm(); });
   document.getElementById('epTodayBtn').addEventListener('click', function () {
-    elDate.value = todayIso; renderList();
+    elDate.value = todayIso; renderList(); queueWarm();
   });
   elReader.addEventListener('click', function () { setMode('reader'); });
   elThumb.addEventListener('click', function () { setMode('thumb'); });
@@ -807,6 +934,7 @@
     if (nx < 0 || nx >= dates.length) return;
     elDate.value = dates[nx];
     renderList();
+    queueWarm();
   }
 
   // ── বুট: আজকের (বা সর্বশেষ সিঙ্কড) দিন + সেই-দিনের শীর্ষ-র‍্যাংকের পত্রিকা (session172) ──

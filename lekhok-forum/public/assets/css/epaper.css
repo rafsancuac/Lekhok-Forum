@@ -216,3 +216,64 @@
    flex-shrink পাতা-হোল্ডারকে চুঁচড়া-দিয়ে ২৮px-উইন্ডো-স্ট্রিপ বানাত (canvas-ক্লিপ);
    flex:none-এ প্রতিটি পাতা পূর্ণ-উচ্চতায় থাকবে, .ep-pages-এর overflow-y স্ক্রল-করবে ── */
 .ep-pages > .ep-page-holder { flex: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session182 — প্রিমিয়াম ফ্ল্যাট-কার্ড ডিরেক্টরি + সিকুয়েন্সিয়াল-আইডল-ওয়ার্মার
+   (ইউজার-স্পেক: ক্যাপসুল/পিল ও সবুজ-ডট বাদ → Apple-News-রীতি ৮px ফ্ল্যাট-কার্ড,
+   বাম-অ্যাকসেন্ট-স্ট্রাইপ, ৩:৪ থাম্বনেইল, টাইপোগ্রাফিক-র‍্যাংক, 'প্রস্তুত'-চিপ,
+   একক-প্যানেল: হেডার+সার্চ+তালিকা+ওয়ার্ম-স্ট্যাটাস এক-কার্ডে।
+   নিয়ম অক্ষুণ্ণ: রঙ শুধু var(--lf-*) টোকেন; shadow-এ rgba অনুমোদিত)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── একক-প্যানেল: বাইরের আলাদা-আলাদা কার্ড নয় — এক-টুকরো প্রিমিয়াম ক্যাবিনেট ── */
+.ep-side { gap: 0; background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.ep-side-head { padding: 12px 12px 11px; border-bottom: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); display: flex; flex-direction: column; gap: 10px; }
+.ep-search { border-radius: 9px; }
+.ep-search-clear { width: 22px; height: 22px; border: none; background: transparent; color: var(--lf-text-tertiary); border-radius: 6px; cursor: pointer; font-size: .68rem; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s ease, color .15s ease; }
+.ep-search-clear:hover { background: var(--lf-ui-input-bg); color: var(--lf-text-primary); }
+.ep-search-clear[hidden] { display: none; }
+
+/* ── তালিকা: হালকা-ধূসর বেড়ের উপর সাদা ফ্ল্যাট-কার্ড — সংবাদ-অ্যাপের শান্ত গাম্ভীর্য ──
+   session182-RCA: flex-column + max-height-এ আইটেম flex-shrink-এ চুঁচড়াত (থাম্বনেইল-কাটা-র আসল-মূল);
+   flex:none → প্রতিটি কার্ড পূর্ণ-উচ্চতায়, .ep-list-এর overflow-y-ই স্ক্রল-করে ── */
+.ep-list { gap: 4px; padding: 8px; background: var(--lf-ui-input-bg); border-top: 1px solid var(--lf-ui-border); }
+.ep-item { flex: none; border-radius: 8px; border-color: transparent; padding: 8px 10px 8px 13px; gap: 10px; transform: none; will-change: auto; }
+.ep-item:hover { background: var(--lf-ui-surface); border-color: var(--lf-ui-border); transform: none; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.ep-item.is-on { background: var(--lf-ui-surface); border-color: var(--lf-brandgreen-soft-3); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.ep-item.is-on::before { top: 7px; bottom: 7px; width: 3.5px; }
+.ep-item.is-on:hover { box-shadow: 0 1px 5px rgba(0,106,78,.14); }
+
+/* ৩:৪ সংবাদপত্র-অনুপাতের থাম্বনেইল — সংকুচিত-ক্যাপসুলে-কাটা-ছবির সমস্যা শেষ */
+.ep-thumb { width: 42px; height: 56px; border-radius: 5px; }
+
+/* ── টাইপোগ্রাফিক র‍্যাংক (ব্যাজ-বক্স বাদ) — ট্যাবুলার-সংখ্যায় শান্ত সংবাদ-ক্রম ── */
+.ep-ranktxt { width: 26px; flex-shrink: 0; text-align: center; font-size: .78rem; font-weight: 800; letter-spacing: .2px; color: var(--lf-text-tertiary); font-variant-numeric: tabular-nums; transition: color .15s ease; }
+.ep-ranktxt.is-top { color: var(--lf-brand-primary); }
+.ep-item:hover .ep-ranktxt { color: var(--lf-text-secondary); }
+.ep-item:hover .ep-ranktxt.is-top { color: var(--lf-brand-primary); }
+.ep-item.is-on .ep-ranktxt { color: var(--lf-brand-primary); }
+
+/* ── প্রস্তুত-চিপ: ওয়ার্মড/জীবিত পত্রিকায় তাৎক্ষণিক-পঠনের ইঙ্গিত ── */
+.ep-warmchip { display: inline-flex; align-items: center; gap: 4px; font-size: .62rem; font-weight: 800; letter-spacing: .2px; color: var(--lf-brand-primary); background: var(--lf-brand-light); border: 1px solid var(--lf-brandgreen-soft-3); border-radius: var(--lf-radius-chip); padding: 1px 8px; line-height: 1.7; }
+.ep-warmchip i { font-size: .58rem; }
+.ep-warmchip.is-busy { color: var(--lf-text-secondary); background: var(--lf-ui-input-bg); border-color: var(--lf-ui-border-strong); }
+
+/* ── ওয়ার্ম-স্ট্যাটাস বার: "সব সংখ্যা প্রস্তুত" অবধি নিঃশব্দে-অগ্রগতি ── */
+.ep-warmbar { display: flex; align-items: center; gap: 10px; padding: 9px 12px 10px; border-top: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); }
+.ep-warmbar[hidden] { display: none; }
+.ep-warmbar > i { color: var(--lf-brand-primary); font-size: .8rem; flex-shrink: 0; }
+.ep-warmbar-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.ep-warmbar-txt { font-size: .68rem; font-weight: 700; color: var(--lf-text-secondary); line-height: 1.4; }
+.ep-warmbar-track { display: block; height: 4px; border-radius: var(--lf-radius-chip); background: var(--lf-ui-border); overflow: hidden; }
+.ep-warmbar-track i { display: block; height: 100%; width: 0; background: var(--lf-brand-primary); border-radius: var(--lf-radius-chip); transition: width .4s ease; }
+.ep-warmbar.is-done .ep-warmbar-txt { color: var(--lf-brand-primary); font-weight: 800; }
+.ep-warmbar.is-done .ep-warmbar-track i { opacity: .55; }
+
+/* ── ডেস্কটপ: প্যানেল-উচ্চতা হিসাবে হেডার+ওয়ার্মবার যুক্ত ── */
+@media (min-width: 1024px) {
+  .ep-list { max-height: calc(100vh - 440px); min-height: 240px; }
+}
+@media (max-width: 600px) {
+  .ep-list { max-height: 380px; }
+  .ep-side-head { padding: 10px 10px 9px; }
+}
