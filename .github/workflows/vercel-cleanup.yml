@@ -3,6 +3,8 @@ name: Vercel Deployment Cleanup
 # প্রতিদিন রাত ১২:০০ (ঢাকা, UTC+৬) = ১৮:০০ UTC — পুরনো ডিপ্লয়মেন্ট পরিষ্কার।
 # কেন: প্রতিটি ডিপ্লয়মেন্টের ফাংশন-বান্ডেল Vercel-এ জমা হয়; Functions Storage
 # সীমা (Hobby: ১০ GB) পার হলে অ্যাকাউন্ট অবরুদ্ধ হতে পারে।
+# session175: এখন দুই-প্রজেক্টই ক্লিন হয় (lekhok-forum + uni-tracker) —
+# Functions-Storage সীমা অ্যাকাউন্ট-জুড়ে গোনা হয়, তাই প্রতিটি সক্রিয় প্রজেক্ট দরকার।
 # বিস্তারিত: lekhok-forum/VERCEL-CLEANUP.md
 #
 # ম্যানুয়ালি চালাতে: GitHub → Actions ট্যাব → এই ওয়ার্কফ্লো → Run workflow
@@ -34,10 +36,20 @@ jobs:
         with:
           node-version: '20'
 
-      - name: ক্লিনআপ-স্ক্রিপ্ট চালু
+      - name: ক্লিনআপ — lekhok-forum (শেষ ৫ রেখে)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          KEEP_COUNT: ${{ github.event.inputs.keep || '5' }}
+        run: node lekhok-forum/scripts/cleanup-vercel-deployments.mjs
+
+      - name: ক্লিনআপ — uni-tracker (শেষ ৫ রেখে)
+        continue-on-error: true # ভবিষ্যতে প্রজেক্ট-মুছে-গেলেও দৈনিক-জব লাল হবে না
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: '' # খালি = নাম-লুকআপ (uni-tracker)
+          VERCEL_PROJECT_NAME: uni-tracker
           KEEP_COUNT: ${{ github.event.inputs.keep || '5' }}
         run: node lekhok-forum/scripts/cleanup-vercel-deployments.mjs
