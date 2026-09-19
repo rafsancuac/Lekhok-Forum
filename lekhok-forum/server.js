@@ -182,7 +182,9 @@ app.set('layout', false);
 // বহু inline <script> ব্যবহৃত (nonce-মাইগ্রেশন ভবিষ্যৎ উন্নতি হিসেবে ডকুমেন্ট করা)।
 // সেশন ১০২ ফিক্স: frame-src যোগ — যোগাযোগ-পেজের গুগল-ম্যাপ আইফ্রেম CSP-র
 // default-src 'self'-ফলব্যাকে ব্লক হচ্ছিল (আইফ্রেমে ভাঙা-আইকন দেখার মূল-কারণ)।
-// শুধুমাত্র গুগল-ম্যাপস অরিজিনগুলো অনুমোদিত — অন্য সব এমবেড এখনো ব্লকড।
+// সেশন ১৭১ ফিক্স (ই-পেপার RCA): frame-src + drive.google.com + docs.google.com —
+// pdf.js-রিডার-ব্যর্থতার ফলব্যাক iframe-/preview-এমবেড ও নন-ড্রাইভ-পিডিএফ
+// docs-viewer frame-src-ব্লকে ভাঙা-আইকন দেখাচ্ছিল।
 try { app.use(require('compression')()); } catch (e) {}
 const CSP_POLICY = [
   "default-src 'self'",
@@ -194,7 +196,7 @@ const CSP_POLICY = [
   "img-src 'self' data: blob: https:",
   "connect-src 'self' https://drive.usercontent.google.com https://cdnjs.cloudflare.com",
   "worker-src 'self' blob: https://cdnjs.cloudflare.com",
-  "frame-src https://maps.google.com https://www.google.com",
+  "frame-src https://maps.google.com https://www.google.com https://drive.google.com https://docs.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
