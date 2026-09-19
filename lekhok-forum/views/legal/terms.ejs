@@ -1,0 +1,104 @@
+<%# session168 — ব্যবহারের শর্তাবলি (দ্বিভাষিক; Google-OAuth-consent-স্পেক — routes/legal.js) %>
+<%- include('../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-scale-balanced" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — সর্বশেষ হালনাগাদ: সেপ্টেম্বর ২০২৬।</p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-handshake" aria-hidden="true"></i> ১. গ্রহণযোগ্যতা</h2>
+      <p class="utl-sub">শর্ত প্রযোজ্য হওয়ার পরিধি:</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        লেখক ফোরামের ওয়েবসাইট (<span style="font-weight:700">lekhok-forum.vercel.app</span>), এর পাতাসমূহ, পরিষেবা ও সহায়ক সরঞ্জাম ব্যবহার করলে আপনি এই শর্তাবলিতে বাধ্য থাকবেন বলে গণ্য হবেন। কোনো শর্ত মানতে না চাইলে সাইটটি ব্যবহার করবেন না। এই শর্তাবলি প্রাইভেসি পলিসির (<a href="/privacy" style="color:var(--lf-brand-primary);font-weight:700">/privacy</a>) সাথে একত্রে পাঠযোগ্য।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-user-lock" aria-hidden="true"></i> ২. অ্যাকাউন্ট ও নিরাপত্তা</h2>
+      <p class="utl-sub">নিবন্ধন ও অ্যাকাউন্ট-ব্যবহারের নিয়ম:</p>
+      <div class="utl-sx">
+        <div class="utl-sx-row"><b class="utl-sx-good">সঠিক তথ্য</b><span>নিবন্ধনে প্রদত্ত তথ্য সত্য ও হালনাগাদ রাখা আপনার দায়িত্ব।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-good">গোপনীয়তা</b><span>পাসওয়ার্ড নিজের জিম্মায় রাখুন; অন্যের অ্যাকাউন্টে অনুপ্রবেশ কঠোরভাবে নিষিদ্ধ।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-good">দায়িত্ব</b><span>আপনার অ্যাকাউন্ট থেকে ঘটে যাওয়া কার্যক্রমের দায় আপনার; নিয়ম-ভঙ্গে সাময়িক বা স্থায়ী ব্লক দেওয়া হতে পারে।</span></div>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-pen-nib" aria-hidden="true"></i> ৩. কনটেন্ট-নীতি</h2>
+      <p class="utl-sub">প্রকাশযোগ্য ও নিষিদ্ধ কনটেন্ট:</p>
+      <div class="utl-sx">
+        <div class="utl-sx-row"><b class="utl-sx-good">নিজের লেখা</b><span>প্রকাশ করুন কেবল আপনার নিজস্ব বা স্বত্ব-অনুমোদিত রচনা।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-bad">নিষিদ্ধ</b><span>চৌর্যবৃত্তি, কপিরাইট-ভঙ্গ, ঘৃণা-উসকানি, সহিংসতা, বেআইনি বা অশ্লীল কনটেন্ট।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-bad">অভিযোগ</b><span>কপিরাইট/চৌর্যবৃত্তি-অভিযোগ দাখিল করুন <a href="/support/dmca-report" style="color:var(--lf-brand-primary);font-weight:700">/support/dmca-report</a>-এ — যাচাই হলে কনটেন্ট অপসারণ করা হবে।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-good">মডারেশন</b><span>ফোরাম কনটেন্ট পরিমার্জন, সম্পাদনা বা অপসারণের অধিকার সংরক্ষণ করে।</span></div>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-copyright" aria-hidden="true"></i> ৪. ব্যবহারকারী-কনটেন্টের স্বত্ব</h2>
+      <p class="utl-sub">আপনার লেখা, আপনার সম্পদ:</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        আপনার প্রকাশিত রচনার সম্পূর্ণ স্বত্ব আপনারই থাকবে। তবে প্ল্যাটফর্মে প্রদর্শন, সংরক্ষণ ও প্রচারের উদ্দেশ্যে আপনি ফোরামকে একটি <b>অ-একচেটিয়া, রাজ্য-মুক্ত লাইসেন্স</b> প্রদান করছেন। কনটেন্ট মুছে ফেললে প্রচলিত ক্যাশ/ব্যাকআপ-সীমা পর্যন্ত অবশিষ্টাংশ স্বাভাবিকভাবে মুছে যাবে।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-server" aria-hidden="true"></i> ৫. পরিষেবার প্রাপ্যতা</h2>
+      <p class="utl-sub">পরিষেবা দেওয়ার শর্ত:</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        পরিষেবা "যেমন আছে" (as is) ভিত্তিতে দেওয়া। ফোরাম প্রযুক্তিগত কারণে বৈশিষ্ট্য পরিবর্তন, সাময়িক বিরতি বা পরিষেবা-বন্ধের অধিকার সংরক্ষণ করে। দৈনিক ই-পেপার-সংকলন তৃতীয় উৎস থেকে স্বয়ংক্রিয়ভাবে প্রকাশ হয় — প্রকাশের নিশ্চয়তা বা নির্দিষ্ট সময়-বাধ্যতা নেই।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-scale-unbalanced" aria-hidden="true"></i> ৬. দায়সীমা</h2>
+      <p class="utl-sub">দায় কোথায় কোথায়:</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        প্রকাশিত মত ও কনটেন্টের জন্য পূর্ণ দায় সংশ্লিষ্ট মূল-লেখকের। ফোরাম কোনো কনটেন্টের নির্ভুলতা বা ফলাফলের নিশ্চয়তা দেয় না এবং আইনের সীমার মধ্যে পরোক্ষ বা অনুষঙ্গী ক্ষতির দায় বহন করে না।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-arrows-rotate" aria-hidden="true"></i> ৭. শর্ত-পরিবর্তন</h2>
+      <p class="utl-sub">ভবিষ্যৎ পরিবর্তনের নিয়ম:</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        ফোরাম প্রয়োজনে এই শর্তাবলি হালনাগাদ করতে পারে। হালনাগাদ এই পাতায় প্রকাশের সাথে সাথেই কার্যকর হবে এবং শীর্ষে "সর্বশেষ হালনাগাদ"-তারিখ বদলে যাবে।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-language" aria-hidden="true"></i> ৮. English Summary</h2>
+      <p class="utl-sub">Concise English version of the terms above:</p>
+      <div style="background:var(--lf-ui-canvas);border:1px solid var(--lf-ui-border);border-radius:10px;padding:14px 16px">
+        <p style="margin:0;font-size:13px;line-height:1.8;color:var(--lf-text-primary)">
+          • Use of Lekhok Forum means acceptance of these terms.<br>
+          • Keep your account details accurate and your credentials safe.<br>
+          • Publish only your own or properly licensed content; plagiarism, copyright infringement, hate speech and unlawful content are strictly prohibited.<br>
+          • Copyright complaints can be filed at /support/dmca-report; verified content is removed.<br>
+          • You retain full ownership of your writings and grant the forum a non-exclusive license to display and promote them.<br>
+          • The service is provided "as is"; features may change or pause without prior notice.<br>
+          • Content authors bear full responsibility for their own posts; the forum's liability is limited to the extent permitted by law.<br>
+          • Updates to these terms take effect once published on this page.
+        </p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-envelope" aria-hidden="true"></i> ৯. যোগাযোগ</h2>
+      <p class="utl-sub">শর্তাবলি-সংক্রান্ত প্রশ্নে:</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="mailto:rafsan.cu.ac@gmail.com?subject=Terms%20of%20Service%20—%20Lekhok%20Forum" class="utl-btn"><i class="fas fa-envelope" aria-hidden="true"></i> rafsan.cu.ac@gmail.com</a>
+        <a href="/privacy" class="utl-btn utl-btn--ghost"><i class="fas fa-user-shield" aria-hidden="true"></i> প্রাইভেসি পলিসি</a>
+      </div>
+    </div>
+  </div>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../partials/sandbox-preview') %>
+</body>
+</html>

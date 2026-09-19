@@ -41,6 +41,9 @@ const STATIC_PAGES = [
   { path: '/team',              priority: '0.5', changefreq: 'monthly' },
   { path: '/birthdays',         priority: '0.4', changefreq: 'daily'   },
   { path: '/on-this-day',       priority: '0.4', changefreq: 'daily'   },
+  // session168: আইনি-পেজ (Google consent-screen Branding-লিঙ্ক)
+  { path: '/terms',             priority: '0.3', changefreq: 'yearly'  },
+  { path: '/privacy',           priority: '0.3', changefreq: 'yearly'  },
 ];
 
 // SQLite CURRENT_TIMESTAMP → ISO 8601 (treated as UTC), safe fallback to null

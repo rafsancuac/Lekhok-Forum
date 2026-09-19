@@ -337,7 +337,7 @@ app.use((req, res, next) => {
 // multipart গার্ড করে, তাই এপিমেরাল টোকেন যথেষ্ট; নেটিভ ফর্মের বিরল ক্ষেত্রে
 // আগের থেকেই গ্রেসফুল 303-রিকভারি (?csrf=1) আছে। লগইন-ইউজারের রেসপন্স
 // কখনো ক্যাশ-হেডার পায় না।
-const PUBLIC_CACHE_RE72 = /^\/$|^\/(about|articles|qa|notices|events|gallery|members|committee|team|press|constitution|resources|activities|achievements|contact|best-writer|birthdays|on-this-day|epaper|quiz)(\/(\d+|past|advisory|permanent))?\/?$/;
+const PUBLIC_CACHE_RE72 = /^\/$|^\/(about|articles|qa|notices|events|gallery|members|committee|team|press|constitution|resources|activities|achievements|contact|best-writer|birthdays|on-this-day|epaper|quiz|terms|privacy)(\/(\d+|past|advisory|permanent))?\/?$/;
 app.use((req, res, next) => {
   const _hasQuery72 = req.url && req.url.indexOf('?') !== -1;
   const _anon72 = !(req.session && (req.session.user || req.session.adminUser));
@@ -513,6 +513,9 @@ const PATH_SEO_FALLBACK72 = {
   '/on-this-day': { title: 'এই দিনে ইতিহাসে | লেখক ফোরাম', desc: 'আজকের দিনে ঘটে যাওয়া উল্লেখযোগ্য ঐতিহাসিক ঘটনাবলি — প্রতিদিন নতুন।' },
   '/epaper':      { title: 'আজকের ই-পেপার | লেখক ফোরাম', desc: 'লেখক ফোরামের দৈনিক ই-পেপার — সাহিত্য ও মতামত পাতার নির্বাচিত সংকলন।' },
   '/birthdays':   { title: 'আজকের জন্মদিন | লেখক ফোরাম', desc: 'লেখক ফোরামের আজকের ও আসন্ন জন্মদিনের সদস্যদের শুভেচ্ছা-তালিকা।' },
+  // session168: আইনি-পেজ (Google consent-screen Branding-লিঙ্ক)
+  '/terms':       { title: 'ব্যবহারের শর্তাবলি | লেখক ফোরাম', desc: 'লেখক ফোরাম ব্যবহারের শর্তাবলি — অ্যাকাউন্ট, কনটেন্ট-নীতি, স্বত্ব ও দায়সীমা।' },
+  '/privacy':     { title: 'প্রাইভেসি পলিসি | লেখক ফোরাম', desc: 'লেখক ফোরামের প্রাইভেসি পলিসি — তথ্য-সংগ্রহ, ব্যবহার-পদ্ধতি ও আপনার অধিকার।' },
 };
 app.use(async (req, res, next) => {
   try {
@@ -914,6 +917,7 @@ app.use('/',          require('./routes/social'));   // articles, qa, members, p
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
 app.use('/',          require('./routes/pages'));     // public pages: home, about, gallery, committee, contact, events, resources, notices
 app.use('/',          require('./routes/utilities')); // সেশন ১৫৭: সেবাসমূহ ও আর্কাইভ (spell-checker, font-converter, certificate, dmca, archive, peer-review, sponsorship, shortcuts)
+app.use('/',          require('./routes/legal'));    // session168: /terms + /privacy — আইনি-পেজ (Google consent-screen-স্পেক, পাবলিক)
 app.use('/',          require('./routes/dashboard'));// dashboard feed, messages, complaints
 app.use('/',          require('./routes/calls'));    // সেশন ৯৩: WebRTC কল-সিগন্যালিং (HTTP-পোলিং — Vercel-serverless-নিরাপদ)
 app.use('/avatar',    require('./routes/avatar'));   // default avatar serving

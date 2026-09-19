@@ -1,0 +1,94 @@
+<%# session168 — প্রাইভেসি পলিসি (দ্বিভাষিক; Google-OAuth-consent-স্পেক — routes/legal.js) %>
+<%- include('../partials/header', { title: meta.title + ' | লেখক ফোরাম', extra_css: ['/assets/css/utilities.css'] }) %>
+  <div class="utl-wrap">
+    <div class="utl-hero" style="--utl-t: <%= meta.tok %>">
+      <span class="utl-hero-ico"><i class="fas <%= meta.icon %>" aria-hidden="true"></i></span>
+      <div class="utl-hero-text">
+        <span class="utl-crumb"><i class="fas fa-scale-balanced" aria-hidden="true"></i> <%= meta.crumbs %></span>
+        <h1><%= meta.title %></h1>
+        <p><%= meta.desc %> — সর্বশেষ হালনাগাদ: সেপ্টেম্বর ২০২৬।</p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-circle-info" aria-hidden="true"></i> সংক্ষিপ্ত পরিচিতি</h2>
+      <p class="utl-sub">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় একটি শিক্ষামূলক, অলাভজনক ও অরাজনৈতিক সাহিত্য-সংগঠন। আপনার গোপনীয়তা আমাদের কাছে গুরুত্বপূর্ণ।</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        এই প্রাইভেসি পলিসিতে ব্যাখ্যা করা হয়েছে — ওয়েবসাইট (<span style="font-weight:700">lekhok-forum.vercel.app</span>) ও এর সহায়ক স্বয়ংক্রিয় সরঞ্জাম কোন কোন তথ্য সংগ্রহ করে, সেগুলো কেন ব্যবহৃত হয়, কোথায় সংরক্ষিত থাকে এবং আপনি কীভাবে নিজের তথ্যের ওপর নিয়ন্ত্রণ রাখতে পারেন। সাইটটি ব্যবহারের মাধ্যমে আপনি এই পলিসিতে সম্মত বলে গণ্য হবেন।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-database" aria-hidden="true"></i> আমরা কী তথ্য সংগ্রহ করি</h2>
+      <p class="utl-sub">কেবল পরিষেবা চালানোর জন্য প্রয়োজনীয় তথ্য:</p>
+      <div class="utl-sx">
+        <div class="utl-sx-row"><b class="utl-sx-good">অ্যাকাউন্ট-তথ্য</b><span>নিবন্ধনের সময় আপনার দেওয়া নাম, ইমেইল ও ব্যবহারকারী-নাম।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-good">প্রকাশিত কনটেন্ট</b><span>আপনার লেখা, প্রশ্ন, মন্তব্য ও আপলোডকৃত ছবি — যা আপনি ইচ্ছাকৃতভাবে প্ল্যাটফর্মে প্রকাশ করেন।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-good">কারিগরি তথ্য</b><span>লগইন-সেশন বজায় রাখার কুকি ও নিরাপত্তা-নিরীক্ষার সাধারণ লগ।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-bad">আমরা করি না</b><span>বিজ্ঞাপন-ট্র্যাকার চালাই না; ব্যক্তিগত তথ্য বিক্রি, ভাড়া বা বিজ্ঞাপনদাতার সাথে শেয়ার করি না।</span></div>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fab fa-google-drive" aria-hidden="true"></i> Google ব্যবহারকারী-তথ্য ও ই-পেপার সিঙ্ক</h2>
+      <p class="utl-sub">সাইট-মালিকের স্বয়ংক্রিয় সরঞ্জাম (ই-পেপার-সিঙ্ক) কেবল নিম্নলিখিত উদ্দেশ্যে Google-এর সাথে অনুমোদিত:</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0 0 10px">
+        স্বয়ংক্রিয় সরঞ্জামটি Google OAuth-এর মাধ্যমে <b>কেবল একটি নির্দিষ্ট Google Drive ফোল্ডারের</b> ই-পেপার PDF ফাইলগুলো পড়ে এবং সেগুলো এই সাইটের <a href="/epaper" style="color:var(--lf-brand-primary);font-weight:700">/epaper</a> পাতায় প্রকাশ করে। দর্শকদের নিজস্ব Google-অ্যাকাউন্ট দিয়ে কোনো লগইন বা অনুমোদনের প্রয়োজন হয় না।
+      </p>
+      <div style="background:var(--lf-ui-canvas);border:1px solid var(--lf-ui-border);border-radius:10px;padding:14px 16px;margin-bottom:10px">
+        <p style="margin:0 0 8px;font-size:12.5px;font-weight:800;color:var(--lf-text-secondary);letter-spacing:.4px;text-transform:uppercase">English</p>
+        <p style="margin:0;font-size:13px;line-height:1.75;color:var(--lf-text-primary)">
+          Lekhok Forum uses Google OAuth only to let the site owner's automated tool read files from one designated Google Drive folder and publish them to this website (e-paper sync). The tool accesses only the files needed for this purpose.
+        </p>
+        <p style="margin:8px 0 0;font-size:13px;line-height:1.75;color:var(--lf-text-primary)">
+          We do not collect, sell, or share personal data of visitors or third parties. Google account data accessed through this authorization is used solely for the sync described above and is not disclosed to anyone else. Authorization tokens are stored securely on the owner's server and can be revoked at any time from the Google Account permissions page.
+        </p>
+      </div>
+      <div style="background:var(--lf-ui-canvas);border-left:3px solid var(--lf-brand-primary);border-radius:0 10px 10px 0;padding:12px 14px">
+        <p style="margin:0;font-size:12.5px;line-height:1.7;color:var(--lf-text-secondary)">
+          <b>লিমিটেড-ইউজ স্বীকারোক্তি:</b> Lekhok Forum's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener nofollow" style="color:var(--lf-brand-primary);font-weight:700">Google API Services User Data Policy</a>, including the Limited Use requirements.
+        </p>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-lock" aria-hidden="true"></i> সংরক্ষণ ও নিরাপত্তা</h2>
+      <p class="utl-sub">তথ্য কোথায় ও কীভাবে থাকে:</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        সকল ডেটা সুরক্ষিত সার্ভারে সংরক্ষিত থাকে। OAuth অনুমোদন-টোকেন কেবল সাইট-মালিকের সার্ভারেই রাখা হয় — কোনো তৃতীয় পক্ষের অ্যাপে হস্তান্তর করা হয় না। আপনি চাইলে <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener nofollow" style="color:var(--lf-brand-primary);font-weight:700">Google অ্যাকাউন্ট-পারমিশন পাতা</a> থেকে যেকোনো সময় অনুমোদন প্রত্যাহার করতে পারেন।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-user-check" aria-hidden="true"></i> আপনার অধিকার</h2>
+      <p class="utl-sub">আপনি চাইলে:</p>
+      <div class="utl-sx">
+        <div class="utl-sx-row"><b class="utl-sx-good">১</b><span>নিজের অ্যাকাউন্ট ও প্রকাশিত কনটেন্ট মুছে ফেলার অনুরোধ জানাতে পারেন।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-good">২</b><span>ভুল তথ্য সংশোধনের অনুরোধ করতে পারেন।</span></div>
+        <div class="utl-sx-row"><b class="utl-sx-good">৩</b><span>যেকোনো সময় ডেটা-প্রসেসিং-সম্মতি প্রত্যাহার করতে পারেন।</span></div>
+      </div>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-arrows-rotate" aria-hidden="true"></i> নীতি-পরিবর্তন</h2>
+      <p class="utl-sub">এই পলিসি মাঝে মাঝে হালনাগাদ হতে পারে।</p>
+      <p style="font-size:13.5px;line-height:1.8;color:var(--lf-text-primary);margin:0">
+        গুরুত্বপূর্ণ পরিবর্তনের কথা এই পাতায় প্রকাশ করা হবে এবং পাতার শীর্ষে "সর্বশেষ হালনাগাদ"-তারিখ বদলে যাবে। পরিবর্তন-প্রকাশের পর সাইট ব্যবহার অব্যাহত রাখা মানে হালনাগাদ পলিসিতে সম্মতি।
+      </p>
+    </div>
+
+    <div class="utl-card">
+      <h2><i class="fas fa-envelope" aria-hidden="true"></i> যোগাযোগ</h2>
+      <p class="utl-sub">প্রাইভেসি-সংক্রান্ত যেকোনো প্রশ্ন বা অনুরোধে:</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="mailto:rafsan.cu.ac@gmail.com?subject=Privacy%20Policy%20—%20Lekhok%20Forum" class="utl-btn"><i class="fas fa-envelope" aria-hidden="true"></i> rafsan.cu.ac@gmail.com</a>
+        <a href="/contact" class="utl-btn utl-btn--ghost"><i class="fas fa-address-book" aria-hidden="true"></i> যোগাযোগ-পাতা</a>
+        <a href="/terms" class="utl-btn utl-btn--ghost"><i class="fas fa-file-contract" aria-hidden="true"></i> ব্যবহারের শর্তাবলি</a>
+      </div>
+    </div>
+  </div>
+  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<%- include('../partials/sandbox-preview') %>
+</body>
+</html>
