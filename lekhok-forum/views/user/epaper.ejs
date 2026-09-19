@@ -61,6 +61,8 @@
   (papers || []).forEach(function (p) {
     const fid = p.fileId || driveIdOf(p.fileUrl);
     const cands = [];
+    if (p.thumbId) cands.push('/api/epaper/thumb/' + encodeURIComponent(p.thumbId)); // সেশন ১৭৫: পরিষ্কার-থাম্ব-প্রক্সি (ব্যানার-কভার) → ব্যর্থতায় সরাসরি-ড্রাইভ
+    if (fid) cands.push('/api/epaper/thumb/' + encodeURIComponent(fid)); // thumbId-না-থাকলেও পিডিএফ-পাতা-১-থেকে পরিষ্কার-থাম্ব (প্রক্সি PDF→ইমেজ সামলায়)
     if (p.thumbId) cands.push('https://lh3.googleusercontent.com/d/' + p.thumbId + '=s800');
     if (fid) cands.push('https://lh3.googleusercontent.com/d/' + fid + '=s800');
     if (fid) cands.push('https://drive.google.com/thumbnail?id=' + fid + '&sz=w800');
@@ -502,9 +504,18 @@
       if (progTxt) progTxt.textContent = fmtMb(got) + (total ? ' / ' + fmtMb(total) : '') + ' ডাউনলোড হয়েছে';
       if (progBar) progBar.style.width = total ? Math.min(Math.max((got / total) * 100, 4), 100) + '%' : '100%';
     };
-    var bytesP = bytesCache[p.fid]
-      ? Promise.resolve(bytesCache[p.fid])
-      : loadPdfJs().then(function () { return fetchPdfProgress('https://drive.usercontent.google.com/download?id=' + p.fid + '&export=download', st.abort, onProg); });
+    var bytesP;
+    if (bytesCache[p.fid]) {
+      bytesP = Promise.resolve(bytesCache[p.fid]);
+    } else if (!p.fid) {
+      // নন-ড্রাইভ রো — সরাসরি iframe-ফলব্যাক (session171-আচরণ)
+      bytesP = Promise.reject(new Error('no-drive-id'));
+    } else {
+      // সেশন ১৭৫: ক্লিন-প্রক্সি — পুরোনো-পিডিএফেও সাইট-পাশে প্রমো-লেয়ার সরে (helpers/pdf-cleaner)
+      bytesP = loadPdfJs().then(function () {
+        return fetchPdfProgress('/api/epaper/file/' + encodeURIComponent(p.fid), st.abort, onProg);
+      });
+    }
     bytesP.then(function (buf) {
       if (reader !== st) return;
       bytesCache[p.fid] = buf;
@@ -515,7 +526,8 @@
         st.doc = doc;
         if (progTxt) progTxt.textContent = 'পাতা প্রস্তুত হচ্ছে…';
         if (progBar) progBar.style.width = '100%';
-        return doc.metadata.then ? doc.metadata : null;
+        // সেশন ১৭৫-ফিক্স: pdf.js v3-তে `doc.metadata` প্রোপার্টি-নেই (getMetadata()-মেথড) —
+        // পুরোনো `doc.metadata.then`-গার্ড রিয়েল-পিডিএফেই ক্র্যাশ করে iframe-ফলব্যাকে ফেলত → প্রমো-ব্যানার দেখাত
       }).then(function () { if (reader === st) buildPages(st, p); });
     }).catch(function (e) {
       if (reader !== st || (e && e.name === 'AbortError')) return;

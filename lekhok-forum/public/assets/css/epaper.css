@@ -213,3 +213,8 @@
   .ep-item { transition: none; }
   .ep-item:hover { transform: none; }
 }
+
+/* ── সেশন ১৭৫: রিয়েল-পিডিএফ-রেন্ডার ফিক্স — .ep-pages(fixed-height flex-column)-এ
+   flex-shrink পাতা-হোল্ডারকে চুঁচড়া-দিয়ে ২৮px-উইন্ডো-স্ট্রিপ বানাত (canvas-ক্লিপ);
+   flex:none-এ প্রতিটি পাতা পূর্ণ-উচ্চতায় থাকবে, .ep-pages-এর overflow-y স্ক্রল-করবে ── */
+.ep-pages > .ep-page-holder { flex: none; }

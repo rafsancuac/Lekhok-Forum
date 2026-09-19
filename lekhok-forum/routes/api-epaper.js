@@ -190,4 +190,126 @@ router.get('/archive', async (req, res) => {
   }
 });
 
+// ── GET /api/epaper/file/:fid — ক্লিন-পিডিএফ-প্রক্সি (session175) ────────────
+// ড্রাইভ থেকে বাইট → চ্যানেল-প্রমো-লেয়ার ক্লিন (helpers/pdf-cleaner) → ডিস্ক-ক্যাশে
+// → স্ট্রিম। একই fileId-তে রিপ্লেস-হলেও ক্লিন-কনটেন্ট অপরিবর্তিত থাকে বলে ক্যাশ-নিরাপদ।
+// ক্লিন-ব্যর্থতায় মূল-বাইটই যায় (প্রধান-প্রবাহ অটুট)।
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { cleanEpaperPdf, coverPromoThumbBytes } = require('../helpers/pdf-cleaner');
+
+const EPDF_CACHE_DIR = path.join(os.tmpdir(), 'epdf-cache');
+const EPDF_MAX_BYTES = 150 * 1024 * 1024; // এর-বেশি হলে ক্লিন-ছাড়া সরাসরি সার্ভ
+const epdfInflight = new Map(); // একই-ফাইলে স্ট্যাম্পেড-ডাউনলোড-রোধ
+
+function epaperFidValid(fid) {
+  return /^[A-Za-z0-9_-]{10,64}$/.test(String(fid || ''));
+}
+
+async function fetchDriveBytes(fid) {
+  const urls = [
+    `https://drive.usercontent.google.com/download?id=${fid}&export=download`,
+    `https://drive.google.com/uc?export=download&id=${fid}`,
+  ];
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, { redirect: 'follow', signal: AbortSignal.timeout(90000) });
+      if (!r.ok) continue;
+      const buf = Buffer.from(await r.arrayBuffer());
+      // HTML-কনফার্ম-পেজ/এরর-রোধ: PDF হলে %PDF-দিয়ে শুরু
+      if (buf.length > 1024 && buf.slice(0, 5).toString('latin1') === '%PDF-') return buf;
+    } catch (e) { /* পরের-উৎস */ }
+  }
+  return null;
+}
+
+router.get('/file/:fid', async (req, res) => {
+  const fid = String(req.params.fid || '');
+  if (!epaperFidValid(fid)) return res.status(400).json({ ok: false, error: 'অবৈধ ফাইল-আইডি' });
+  const headers = {
+    'Content-Type': 'application/pdf',
+    'Cache-Control': 'public, max-age=21600',
+    'Content-Disposition': `inline; filename="epaper-${fid.slice(0, 10)}.pdf"`,
+  };
+  try {
+    fs.mkdirSync(EPDF_CACHE_DIR, { recursive: true });
+    const cachePath = path.join(EPDF_CACHE_DIR, `${fid}.pdf`);
+    if (fs.existsSync(cachePath) && fs.statSync(cachePath).size > 1024) {
+      headers['X-Epaper-Cache'] = 'hit';
+      res.set(headers);
+      return res.end(fs.readFileSync(cachePath));
+    }
+    let job = epdfInflight.get('pdf:' + fid);
+    if (!job) {
+      job = (async () => {
+        const raw = await fetchDriveBytes(fid);
+        if (!raw) throw new Error('ড্রাইভ-ডাউনলোড ব্যর্থ');
+        if (raw.length > EPDF_MAX_BYTES) return { buf: raw, clean: 'skipped-large' };
+        let out = raw, info = 'raw';
+        try {
+          const r = await cleanEpaperPdf(raw);
+          if (r.changed) {
+            out = r.buffer;
+            info = `clean(s${r.streams},a${r.annots},t${r.tailBlocks},i${r.imagesCovered})`;
+          } else info = r.error ? `raw-err:${String(r.error).slice(0, 60)}` : 'no-promo';
+        } catch (e) { info = 'raw-err:' + (e && e.message ? String(e.message).slice(0, 60) : '?'); }
+        try { fs.writeFileSync(cachePath, out); } catch (e) { /* ক্যাশ-ঐচ্ছিক */ }
+        return { buf: out, clean: info };
+      })().finally(() => epdfInflight.delete('pdf:' + fid));
+      epdfInflight.set('pdf:' + fid, job);
+    }
+    const { buf, clean } = await job;
+    headers['X-Epaper-Cache'] = 'miss';
+    headers['X-Epaper-Clean'] = clean;
+    headers['Content-Length'] = String(buf.length);
+    res.set(headers);
+    return res.end(buf);
+  } catch (err) {
+    console.error('epaper file-proxy error:', fid, err && err.message);
+    return res.status(502).json({ ok: false, error: 'পিডিএফ আনা যায়নি' });
+  }
+});
+
+// ── GET /api/epaper/thumb/:fid — পরিষ্কার-থাম্বনেইল-প্রক্সি (session175) ──────
+// থাম্ব-JPEG-এও ব্যানার-ব্যান্ড বেক-করা থাকে — একই সবুজ-ব্যান্ড-কভার চালিয়ে সার্ভ।
+router.get('/thumb/:fid', async (req, res) => {
+  const fid = String(req.params.fid || '');
+  if (!epaperFidValid(fid)) return res.status(400).json({ ok: false, error: 'অবৈধ ফাইল-আইডি' });
+  const headers = { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=21600' };
+  try {
+    fs.mkdirSync(EPDF_CACHE_DIR, { recursive: true });
+    const cachePath = path.join(EPDF_CACHE_DIR, `t-${fid}.jpg`);
+    if (fs.existsSync(cachePath) && fs.statSync(cachePath).size > 512) {
+      headers['X-Epaper-Cache'] = 'hit';
+      res.set(headers);
+      return res.end(fs.readFileSync(cachePath));
+    }
+    let job = epdfInflight.get('thumb:' + fid);
+    if (!job) {
+      job = (async () => {
+        const raw = await fetchDriveBytes(fid);
+        if (!raw) throw new Error('ড্রাইভ-ডাউনলোড ব্যর্থ');
+        let out = null, info = 'raw';
+        try {
+          out = await coverPromoThumbBytes(raw); // JPEG-কভার অথবা PDF-পাতা-১-ইমেজ-এক্সট্র্যাক্ট+কভার
+          info = out ? 'clean' : 'no-image';
+        } catch (e) { info = 'err:' + (e && e.message ? String(e.message).slice(0, 60) : '?'); }
+        if (!out || !out.length) throw new Error('থাম্ব-প্রস্তুত ব্যর্থ (' + info + ')');
+        try { fs.writeFileSync(cachePath, out); } catch (e) { /* ক্যাশ-ঐচ্ছিক */ }
+        return { buf: out, info };
+      })().finally(() => epdfInflight.delete('thumb:' + fid));
+      epdfInflight.set('thumb:' + fid, job);
+    }
+    const { buf } = await job;
+    headers['X-Epaper-Cache'] = 'miss';
+    headers['Content-Length'] = String(buf.length);
+    res.set(headers);
+    return res.end(buf);
+  } catch (err) {
+    console.error('epaper thumb-proxy error:', fid, err && err.message);
+    return res.status(502).json({ ok: false, error: 'থাম্বনেইল আনা যায়নি' });
+  }
+});
+
 module.exports = router;

@@ -203,7 +203,7 @@ async function refreshThumb(token: string, folderId: string, pdfName: string, cl
 }
 
 /* ── স্টেট (রিজিউম) — fileId → ফলাফল; 'clean'/'replaced' ফাইল আর-স্ক্যান হয় না (--force ব্যতীত) ── */
-interface BackfillEntry { status: 'clean' | 'replaced'; streams: number; annots: number; bytes: number; name: string; at: string }
+interface BackfillEntry { status: 'clean' | 'replaced'; streams: number; annots: number; tailBlocks?: number; imagesCovered?: number; bytes: number; name: string; at: string }
 type BackfillState = Record<string, BackfillEntry>
 function loadState(): BackfillState {
   try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) as BackfillState } catch { return {} }
@@ -226,7 +226,7 @@ async function main(): Promise<void> {
   if (!pdfs.length) return
 
   const state = loadState()
-  const results: Array<{ id: string; name: string; action: string; streams?: number; annots?: number; fromBytes?: number; toBytes?: number; error?: string }> = []
+  const results: Array<{ id: string; name: string; action: string; streams?: number; annots?: number; tailBlocks?: number; imagesCovered?: number; fromBytes?: number; toBytes?: number; error?: string }> = []
   const tally = { scanned: 0, skippedState: 0, alreadyClean: 0, wouldClean: 0, replaced: 0, thumbRefreshed: 0, errors: 0 }
   let processed = 0
 
@@ -259,7 +259,7 @@ async function main(): Promise<void> {
 
       if (!APPLY) {
         tally.wouldClean++
-        console.log(`${tag} 🟠 প্রমো-পাওয়া গেছে — ${f.name}: স্ট্রিম ×${report.streams}, লিংক ×${report.annots} (${mb(bytes.length)}) → apply-মোডে রিপ্লেস হবে`)
+        console.log(`${tag} 🟠 প্রমো-পাওয়া গেছে — ${f.name}: স্ট্রিম ×${report.streams}, লিংক ×${report.annots}, ভেক্টর-টেইল ×${report.tailBlocks}, ইমেজ-ব্যান্ড ×${report.imagesCovered} (${mb(bytes.length)}) → apply-মোডে রিপ্লেস হবে`)
         results.push({ id: f.id, name: f.name, action: 'would-clean', streams: report.streams, annots: report.annots, fromBytes: bytes.length })
         await sleep(300)
         continue
@@ -270,9 +270,9 @@ async function main(): Promise<void> {
       tally.replaced++
       const thumbDone = await refreshThumb(token, folderId, f.name, cleanBytes)
       if (thumbDone) tally.thumbRefreshed++
-      console.log(`${tag} 🧼 রিপ্লেস সম্পন্ন — ${f.name}: স্ট্রিম ×${report.streams}, লিংক ×${report.annots} (${mb(bytes.length)} → ${mb(cleanBytes.length)}; ফাইল-আইডি অপরিবর্তিত)`)
-      results.push({ id: f.id, name: f.name, action: 'replaced', streams: report.streams, annots: report.annots, fromBytes: bytes.length, toBytes: cleanBytes.length })
-      state[f.id] = { status: 'replaced', streams: report.streams, annots: report.annots, bytes: cleanBytes.length, name: f.name, at: new Date().toISOString() }
+      console.log(`${tag} 🧼 রিপ্লেস সম্পন্ন — ${f.name}: স্ট্রিম ×${report.streams}, লিংক ×${report.annots}, ভেক্টর-টেইল ×${report.tailBlocks}, ইমেজ-ব্যান্ড ×${report.imagesCovered} (${mb(bytes.length)} → ${mb(cleanBytes.length)}; ফাইল-আইডি অপরিবর্তিত)`)
+      results.push({ id: f.id, name: f.name, action: 'replaced', streams: report.streams, annots: report.annots, tailBlocks: report.tailBlocks, imagesCovered: report.imagesCovered, fromBytes: bytes.length, toBytes: cleanBytes.length })
+      state[f.id] = { status: 'replaced', streams: report.streams, annots: report.annots, tailBlocks: report.tailBlocks, imagesCovered: report.imagesCovered, bytes: cleanBytes.length, name: f.name, at: new Date().toISOString() }
       saveState(state)
       await sleep(800) // আপলোডের পরে একটু বেশি বিরতি
     } catch (e) {
