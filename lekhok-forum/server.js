@@ -408,7 +408,10 @@ app.use(async (req, res, next) => {
     // CSRF-গার্ড urlencoded/multipart-এ সীমাবদ্ধ।
     // সেশন ৭৩: ইমেজ/অ্যাসেট-পাথ (img/cover, avatar, uploads) একই কুকি-স্কিপে —
     // নাহলে প্রতি ইমেজ-রেসপন্সে _csrfTok+connect.sid যেত → এজ-ক্যাশ বাতিল।
-    const ASSET_RE73 = /^\/(img\/cover|avatar|assets|uploads)\//;
+    // সেশন ১৭৮: ই-পেপার-পাবলিক-বাইনারি/JSON (file/thumb/archive/papers) একই কুকি-স্কিপে —
+    // কুকি-বাহিত রেসপন্স Vercel Edge-কখনো-ক্যাশ করে না (x-vercel-cache: MISS-চিরস্থায়ী);
+    // এ-পথগুলো স্টেটলেস-পাবলিক GET (ওয়ার্ম POST Bearer-সুরক্ষিত, কুকি/CSRF-বহির্ভূত)
+    const ASSET_RE73 = /^\/(img\/cover|avatar|assets|uploads|api\/epaper\/(file|thumb|archive|papers))(\/|$)/;
     if (res.locals._cacheablePublic72 || ASSET_RE73.test(req.path)) {
       res.locals.csrfToken = tok57;
     } else {

@@ -168,6 +168,8 @@ router.get('/papers', async (req, res) => {
     const rows = d
       ? await db.prepare("SELECT id, title, body, link_url AS fileUrl, scheduled_date AS date, created_at FROM daily_content WHERE content_type = ? AND scheduled_date = ? AND published = 1 ORDER BY id DESC").all(EPAPER_TYPE, d)
       : await db.prepare("SELECT id, title, body, link_url AS fileUrl, scheduled_date AS date, created_at FROM daily_content WHERE content_type = ? AND published = 1 ORDER BY scheduled_date DESC, id DESC LIMIT ?").all(EPAPER_TYPE, limit);
+    // session178: স্বল্প-এজ-ক্যাশ — তালিকা-সতেজতা ≤৬০s (নতুন-সিঙ্ক দ্রুত-দৃশ্যমান), SWR-এ বার্স্ট-সুরক্ষা
+    res.set('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=300');
     return res.json({ ok: true, count: rows.length, papers: rows });
   } catch (err) {
     console.error('epaper list error:', err);
@@ -183,6 +185,8 @@ router.get('/archive', async (req, res) => {
     const rows = d
       ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
       : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);
+    // session178: স্বল্প-এজ-ক্যাশ — আর্কাইভ-তালিকা ≤৬০s, SWR-৫মি (বট-সিঙ্কের-পরে দ্রুত-দৃশ্যমান)
+    res.set('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=300');
     return res.json({ ok: true, count: rows.length, papers: rows });
   } catch (err) {
     console.error('epaper archive error:', err);
