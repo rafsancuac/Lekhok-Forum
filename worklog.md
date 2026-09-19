@@ -1946,3 +1946,25 @@ Stage Summary:
 - বাকি (ইউজার/সার্ভার-নির্ভর): ① Google Cloud কনসোলে OAuth-ক্লায়েন্টে redirect-URI http://localhost:4288 যোগ → `bun run token` কনসেন্ট-ফ্লো → GOOGLE_REFRESH_TOKEN (.env) ② লাইভ-সার্ভারে EPAPER_SYNC_TOKEN env
 - 🔐 নিরাপত্তা-নোট: ইউজারের 2FA-পাসওয়ার্ড চ্যাটে শেয়ার হয়েছে — শক্তিশালী-পাসওয়ার্ডে পরিবর্তনের পরামর্শ দেওয়া হয়েছে
 - পরের-এজেন্ট: refresh-token পেলে `bun start`-এ বট-লাইভ; না-পেলে session168 (ফিল্টার-URL-সিঙ্ক, চিপ-কাউন্ট-ব্যাজ, POPULAR ডিপ-পেজিং)
+---
+Task ID: 33 (Session 168 — /terms + /privacy আইনি-পেজ লাইভ — Google consent-screen স্পেক)
+Agent: Z.ai Code (main session — ইউজার Google Branding-সেটআপের জন্য দুই পাবলিক-পেজ চেয়েছেন)
+
+Work Log:
+- ইউজার-অনুরোধ: https://lekhok-forum.vercel.app/terms ও /privacy তৈরি — Google OAuth consent-screen Branding-ফর্মের home-page/privacy/ToS-লিঙ্কের জন্য
+- রেকন: Express-অ্যাপ (lekhok-forum/ = Vercel-ডিপ্লয়েড) — routes/ + views/ + server.js-এ PATH_SEO_FALLBACK72/PUBLIC_CACHE_RE72/মাউন্ট-প্যাটার্ন শিখে নেওয়া হয়েছে
+- নতুন: routes/legal.js (/terms + /privacy — পাবলিক, LEGAL_META) + views/legal/{terms,privacy}.ejs — partials/header স্টাইল + utilities.css-শেল (.utl-hero/.utl-card পুনঃব্যবহার — নতুন CSS শূন্য, টোকেন-শুধু, 640px-রেসপন্সিভ)
+- privacy.ejs: বাংলা-সেকশন (সংগ্রহ/সংরক্ষণ/অধিকার/পরিবর্তন) + ইউজার-প্রদত্ত ইংরেজি-টেক্সট হুবহু + Google API Services User Data Policy Limited-Use-স্বীকারোক্তি + যোগাযোগ rafsan.cu.ac@gmail.com
+- terms.ejs: ৯-ধারা (গ্রহণযোগ্যতা/অ্যাকাউন্ট/কনটেন্ট-নীতি+DMCA-লিঙ্ক/স্বত্ব/প্রাপ্যতা/দায়সীমা/পরিবর্তন/English-summary/যোগাযোগ)
+- server.js: PATH_SEO_FALLBACK72 += terms/privacy; PUBLIC_CACHE_RE72 += terms|privacy; routes/legal মাউন্ট (utilities-এর পরে)
+- seo.js: STATIC_PAGES += /terms /privacy (priority 0.3, yearly)
+- লোকাল-টেস্ট (node server.js @8090, sql.js lekhok.db): /terms=200 9-card, /privacy=200 ইংরেজি-টেক্সট+ইমেইল উপস্থিত; sitemap-এ দুই-URL; cache-header স্মার্ট; রিগ্রেশন শূন্য (home/epaper/sponsorship=200)
+- push: 5deecc4 (acc9789..5deecc4) — সিক্রেট-স্ক্যান ক্লিন
+- লাইভ-যাচাই: /terms=200 "ব্যবহারের শর্তাবলি | লেখক ফোরাম"; /privacy=200 "প্রাইভেসি পলিসি | লেখক ফোরাম" + "Google Drive folder"/"rafsan.cu.ac@gmail.com"/"Limited Use" সব উপস্থিত
+
+Stage Summary:
+- দুই-আইনি-পেজ লাইভ ও Google-যাচাইযোগ্য — Branding-ফর্মে এখন বসানো যাবে:
+  home=https://lekhok-forum.vercel.app/ ; privacy=https://lekhok-forum.vercel.app/privacy ; terms=https://lekhok-forum.vercel.app/terms
+- ইউজার-কনফিউশন-সমাধান দেওয়া হয়েছে: localhost:4288 Branding-পেজে নয় — Credentials → OAuth 2.0 Client → "Authorized redirect URIs"-এ বসবে
+- বাকি: OAuth redirect-URI যোগ → কনসেন্ট-ফ্লো (রিডাইরেক্ট-URL ইউজার-পেস্ট) → GOOGLE_REFRESH_TOKEN; সার্ভারে EPAPER_SYNC_TOKEN
+- পরের-এজেন্ট: refresh-token পেলে epaper-bot .env-এ বসিয়ে `bun start` (টেলিগ্রাম-সেশন প্রস্তুত, session167)
