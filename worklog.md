@@ -2101,6 +2101,7 @@ Stage Summary:
 - দৈনিক-অটোমেশন **লাইভ-প্রমাণিত** (run#1 success, দুই-প্রজেক্ট-কভার) — ইউজারের পক্ষে আর কোনো অ্যাকশন-অবশিষ্ট নেই এই-কাজে
 - ⚠️ দ্বৈত-টোকেন-অনুস্মার: ① GitHub-PAT (ghp_gCDG…) কনভার্সেশনে-উন্মুক্ত + এখনও-ভ্যালিড — অবিলম্বে revoke ② Vercel-টোকেন চ্যাটে-পেস্ট-করা — Secrets-এ থাকলেও চ্যাট-লগ-এক্সপোজারের কারণে অটোমেশন-নিশ্চিত-হওয়ার পরে rotate-করা বাঞ্ছনীয়
 - পরের-এজেন্ট: session176 লেবেল থেকে
+
 ---
 Task ID: 41 (Session 176 — ePaper-আর্কাইভ ফলপ্রুফ: ১৯-তারিখের-জাংক-লাইভ-পরিষ্কার + নন-ই-পেপার-ফিল্টার + টার্গেটেড-রিমুভাল API)
 Agent: Z.ai Code (main session)
@@ -2119,3 +2120,25 @@ Stage Summary:
 - ১৯-সেপ্টেম্বর-আর্কাইভ এখন ২৪-পত্রিকা/শূন্য-জাংক/একক-আমার-দেশ; featured = প্রথম আলো; লাইভ-UI ডেস্কটপ+মোবাইল ভেরিফাইড
 - ভবিষ্যৎ-প্রতিরোধ: বট এখন বিজ্ঞপ্তি-জাতীয় PDF আর্কাইভে ঢুকতে দেবে না; প্রয়োজনে cleanup removeDriveIds দিয়ে যেকোনো রো লাইভ-অপসারণ সম্ভব
 - পরের-এজেন্ট: session177 লেবেল থেকে
+
+---
+Task ID: 42 (Session 177 — Vercel Env-Vars Sensitive-টিক: SESSION_SECRET + BLOB_READ_WRITE_TOKEN, API-সম্পন্ন)
+Agent: Z.ai Code (main session)
+Task: ইউজার-অনুরোধ: "Sensitive-টিক — Vercel ড্যাশবোর্ডে SESSION_SECRET ও BLOB-টোকেন → Edit → 'Sensitive' চেক। এটা তুমি করে দাও!" — VERCEL-CLEANUP.md §Needs-Attention-এর ম্যানুয়াল-ধাপটি API দিয়ে সম্পাদন
+
+Work Log:
+- সেশন-আরম্ভে sync: pull --ff-only (behind 1 → session176-এপিপার-কমিট 5732819 ল্যান্ডেড)
+- টোকেন-নিরাপত্তা-চূড়ান্ত-রায় (আগের "গিটে যুক্ত করেছই" বক্তব্যের): git log --all -S "vcp_61pf" ফাঁকা + ওয়ার্কিং-ট্রি-grep শূন্য + ghp_-প্যাটার্ন শূন্য → টোকেন গিটে কখনো যায়নি (Secrets-পথই ছিল — সঠিক)
+- অবস্থা-আবিষ্কার (/v9/projects + /env): uni-tracker-এ BLOB/JWT/CRON/SMTP_* আগে-থেকেই sensitive (ইউজার সেখানে নিজে করেছেন); lekhok-forum-এ বাকি — SESSION_SECRET (encrypted, target=[production]) + BLOB_READ_WRITE_TOKEN (encrypted, target=[development,preview,production])
+- PATCH-রণ: decrypt=true-দিয়ে বর্তমান-মান পড়া (len=40/62) → হুবহু সেই মান + মূল target-সহ PATCH type=sensitive — মান-পরিবর্তন-ঝুঁকি শূন্য
+- গোছা: BLOB প্রথম-প্রচেষ্টাতেই ✓; SESSION_SECRET 400 দিল "type: sensitive must use visibility: secret" → visibility:"secret"-যোগে পুনঃPATCH ✓ (নতুন API-মডেলে দুই-ক্ষেত্র-যুগল বাধ্যতামূলক — শেখা)
+- প্রমাণ: উভয়ের decrypt-GET এখন value-বিহীন (আগে পড়া যেত); তালিকায় type=sensitive visibility=secret; target অপরিবর্তিত
+- লাইভ-যাচাই: https://lekhok-forum.vercel.app → HTTP 200 (চলমান-ডিপ্লয়মেন্ট ডিপ্লয়-টাইম-স্ন্যাপশটে চলে — প্রভাব-শূন্য)
+- ডক: VERCEL-CLEANUP.md §Needs-Attention → "✅ সম্পন্ন (session177)" + ওভাররাইট-নোট + ঐচ্ছিক-বাকি-তালিকা + vercel env pull-সতর্কতা
+
+Stage Summary:
+- lekhok-forum-এর SESSION_SECRET ও BLOB_READ_WRITE_TOKEN এখন Sensitive — ড্যাশবোর্ডের "Needs Attention"-ওয়ার্নিং নেমে যাবে; ইউজার-অ্যাকশন-শূন্য
+- মান দুটোই অপরিবর্তিত (সেশন/ব্লব-আপলোড কিছুই ভাঙবে না); ভবিষ্যৎ-বদল: Edit → নতুন-মান-ওভাররাইট
+- ঐচ্ছিক-অবশিষ্ট: RESEND_API_KEY, EPAPER_SYNC_TOKEN, TURSO_AUTH_TOKEN এখনো encrypted (sensitive-করলে vercel env pull মান দেবে না — bot-সংযোগ আগে-যাচাই)
+- ⚠️ GitHub-PAT (ghp_gCDG…) এখনও-ভ্যালিড — revoke-অনুস্মার ধারাবাহিক
+- পরের-এজেন্ট: session178 লেবেল থেকে

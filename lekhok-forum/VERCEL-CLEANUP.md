@@ -66,13 +66,17 @@ VERCEL_TOKEN=xxxx node lekhok-forum/scripts/cleanup-vercel-deployments.mjs
   > নোট: GitHub-গিট-ডিপ্লয়ে `.vercelignore` প্রযোজ্য নয়; সেখানে Root Directory = `lekhok-forum`
   > সেট-থাকায় `epaper-bot/` ও `legacy-static-site/` আগে থেকেই আপলোডের বাইরে।
 
-## Vercel-এর "Needs Attention" ওয়ার্নিং (Environment Variables)
+## Vercel-এর "Needs Attention" ওয়ার্নিং (Environment Variables) — ✅ সম্পন্ন (session177)
 
-`SESSION_SECRET` ও `BLOB_READ_WRITE_TOKEN`-এর পাশে এ-ওয়ার্নিং আসার কারণ: সিক্রেটগুলো
-প্লেইন-টেক্সট ভেরিয়েবল হিসেবে সেভ করা। সমাধান (২ মিনিট):
-1. প্রজেক্ট → Settings → Environment Variables
-2. প্রতিটির ডানপাশে **⋯ → Edit** → **"Sensitive"** চেকবক্সে টিক → Save
-3. Sensitive হলে মান আর ড্যাশবোর্ডে পড়া যায় না (বদলাতে হলে নতুন মান দিয়ে ওভাররাইট)
+`SESSION_SECRET` ও `BLOB_READ_WRITE_TOKEN` — দুটোই এখন **Sensitive** (session177-এ Vercel API
+দিয়ে টিক করা হয়েছে; মান হুবহু অপরিবর্তিত, শুধু ড্যাশবোর্ড/API থেকে আর পড়া যায় না —
+decrypt-GET value-বিহীন প্রমাণিত)। uni-tracker-এর টোকেনগুলো আগে-ই sensitive ছিল।
+ওয়ার্নিং এখন আর দেখাবে না।
+
+- ভবিষ্যতে মান বদলাতে হলে: Settings → Environment Variables → ⋯ → Edit → নতুন মান দিয়ে ওভাররাইট
+- এখনো encrypted (ঐচ্ছিক বাকি): `RESEND_API_KEY`, `EPAPER_SYNC_TOKEN`, `TURSO_AUTH_TOKEN`
+  > ⚠️ সতর্কতা: Sensitive করলে `vercel env pull` আর মান দেয় না — bot/লোকাল-টুল যদি কোনোটা
+  > pull করে থাকে, sensitive-করার আগে যাচাই করুন।
 
 ## ভবিষ্যৎ যাতে আবার না জমে
 
