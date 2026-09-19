@@ -26,6 +26,23 @@
     if (/^(দৈনিক|দ্য|ডেইলি|daily|the|সাপ্তাহিক|নিউ)/i.test(t)) return t;
     return 'দৈনিক ' + t;
   };
+  // সেশন ১৭২ (ইউজার-স্পেক): জাতীয় প্রচারসংখ্যা ও পাঠকপ্রিয়তার র‍্যাংক-ম্যাপ (১–২৪) —
+  // টেলিগ্রামে যে-ক্রমেই আপলোড হোক, বাম-প্যানেল প্রতিদিন এই ক্রমেই স্বয়ংক্রিয় সাজানো থাকে
+  const PAPER_RANK = [
+    'প্রথম আলো', 'ডেইলি স্টার', 'যুগান্তর', 'কালের কণ্ঠ', 'ইত্তেফাক', 'সমকাল',
+    'আমার দেশ', 'নয়া দিগন্ত', 'কালবেলা', 'ইনকিলাব', 'বিজনেস স্ট্যান্ডার্ড', 'বণিক বার্তা',
+    'দেশ রূপান্তর', 'আজকের পত্রিকা', 'যায়যায়দিন', 'দিনকাল', 'নিউ এজ', 'করতোয়া',
+    'রূপালি বাংলাদেশ', 'বিজনেস বাংলাদেশ', 'জাতীয় অর্থনীতি', 'ডেইলি পোস্ট', 'টাইমস অব বাংলাদেশ', 'এদিন'
+  ];
+  // ইংরেজি-উৎস-নামের উপনাম (The Daily Star / New Age ইত্যাদি বট-ফরম্যাট)
+  const PAPER_RANK_ALIAS = { 'daily star': 2, 'business standard': 11, 'new age': 17, 'daily post': 22, 'times of bangladesh': 23 };
+  const rankOf = function (name) {
+    const s = String(name || '');
+    for (let i = 0; i < PAPER_RANK.length; i++) { if (s.indexOf(PAPER_RANK[i]) !== -1) return i + 1; }
+    const low = s.toLowerCase();
+    for (const k in PAPER_RANK_ALIAS) { if (low.indexOf(k) !== -1) return PAPER_RANK_ALIAS[k]; }
+    return 999; // র‍্যাংক-তালিকাভুক্ত নয় — তালিকার সবার শেষে
+  };
   // সেশন ১৭১ (ইউজার-স্পেক sanitizeDriveEmbedUrl): এমবেড-উপযোগী রিডার-লিংক —
   // ড্রাইভ-আইডি থাকলে /preview, নইলে পাবলিক-https-ডকুমেন্টে docs-viewer ফলব্যাক
   // (pdf.js-ব্যর্থতা/নন-ড্রাইভ-রোতে iframe-ফলব্যাক-রিডারে ব্যবহৃত)
@@ -38,21 +55,36 @@
   };
   // ক্লায়েন্ট-পেলোড: প্রতিটি পত্রিকার থাম্বনেইল-চেইন + এমবেড-রিডার লিংক প্রি-কম্পিউট
   // থাম্বনেইল-চেইন: টেলিগ্রাম-প্রিভিউ-জেপিজি (নির্ভরযোগ্য) → ড্রাইভ-পিডিএফ-থাম্ব → ড্রাইভ-ক্লাসিক-এন্ডপয়েন্ট
-  const payload = (papers || []).map(function (p) {
+  // সেশন ১৭২: ডুপ্লিকেট-বর্জন (একই পত্রিকা+তারিখ) + র‍্যাংক প্রি-কম্পিউট
+  const seenPaper = {};
+  const payload = [];
+  (papers || []).forEach(function (p) {
     const fid = p.fileId || driveIdOf(p.fileUrl);
     const cands = [];
     if (p.thumbId) cands.push('https://lh3.googleusercontent.com/d/' + p.thumbId + '=s800');
     if (fid) cands.push('https://lh3.googleusercontent.com/d/' + fid + '=s800');
     if (fid) cands.push('https://drive.google.com/thumbnail?id=' + fid + '&sz=w800');
-    return {
-      id: p.id, date: p.date, name: fmtPaperTitle(p.paperName),
+    const name = fmtPaperTitle(p.paperName);
+    const key = String(p.date).slice(0, 10) + '|' + name;
+    if (seenPaper[key]) return; // ডুপ্লিকেট (একই পত্রিকা+দিন) বাদ
+    seenPaper[key] = true;
+    payload.push({
+      id: p.id, date: p.date, name: name,
       dateBn: bnDay(p.date),
       thumbs: cands,
       embed: embedOf(p),
       view: fid ? ('https://drive.google.com/file/d/' + fid + '/view') : p.fileUrl,
-      fid: fid
-    };
+      fid: fid,
+      rank: rankOf(p.paperName)
+    });
   });
+  // সেশন ১৭২: হেডার-স্ট্যাট (মোট-সংখ্যা, মোট-দিন, শীর্ষ-পত্রিকা)
+  const daySet = {};
+  payload.forEach(function (p) { daySet[String(p.date).slice(0, 10)] = true; });
+  const statDays = Object.keys(daySet).length;
+  let topPaper = null;
+  payload.forEach(function (p) { if (!topPaper || p.rank < topPaper.rank) topPaper = p; });
+  const bnNum = function (n) { try { return Number(n).toLocaleString('bn-BD'); } catch (e) { return String(n); } };
   // মাস-তালিকা (ডেসকেন্ডিং, ইউনিক)
   const monthKeys = {};
   payload.forEach(function (p) { monthKeys[String(p.date).slice(0, 7)] = true; });
@@ -78,6 +110,15 @@
       <div>
         <h1 class="ep-head-title">ই-পেপার আর্কাইভ</h1>
         <p class="ep-head-sub"><i class="far fa-calendar"></i> <span id="epTodayBn"><%= bnDay(todayIso) %></span> · দৈনিক পত্রিকার সংরক্ষিত সংস্করণ</p>
+        <% if (hasPayload) { %>
+        <div class="ep-head-stats">
+          <span class="ep-hstat"><b><%= bnNum(payload.length) %></b> সংখ্যা</span>
+          <span class="ep-hstat"><b><%= bnNum(statDays) %></b> দিন</span>
+          <% if (topPaper && topPaper.rank < 999) { %>
+            <span class="ep-hstat is-top"><i class="fas fa-trophy" aria-hidden="true"></i> শীর্ষে <b><%= topPaper.name %></b></span>
+          <% } %>
+        </div>
+        <% } %>
       </div>
     </div>
     <div class="ep-head-r">
@@ -98,6 +139,7 @@
       <div class="ep-viewer-bar">
         <div class="ep-viewer-name">
           <i class="fas fa-book-open"></i>
+          <span class="ep-cur-rank" id="epCurRank" hidden></span>
           <span id="epCurName">—</span>
           <span class="ep-viewer-date" id="epCurDate"></span>
         </div>
@@ -145,6 +187,8 @@
         <%# ── তারিখ-চিপস (দ্রুত-জাম্প; সাম্প্রতিক ১৪ দিন) ── %>
         <div class="ep-chips" id="epChips" role="listbox" aria-label="দিন নির্বাচন"></div>
       </div>
+      <%# ── সেশন ১৭২: র‍্যাংকিং-নোট ── %>
+      <div class="ep-list-note"><i class="fas fa-trophy" aria-hidden="true"></i><span>জাতীয় প্রচারসংখ্যা ও পাঠকপ্রিয়তার <b>স্বয়ংক্রিয় র‍্যাংকিং</b> — প্রতিদিন এই ক্রমেই তালিকা</span></div>
       <%# ── পত্রিকা-তালিকা ── %>
       <div class="ep-list" id="epList" role="listbox" aria-label="পত্রিকার তালিকা"></div>
     </aside>
@@ -216,6 +260,7 @@
   var elOpen = document.getElementById('epOpenNew');
   var elReader = document.getElementById('epModeReader');
   var elThumb = document.getElementById('epModeThumb');
+  var elCurRank = document.getElementById('epCurRank'); // সেশন ১৭২: ভিউয়ার-বার র‍্যাংক-চিপ
   var mode = 'thumb'; // ডিফল্ট: প্রচ্ছদ (তাৎক্ষণিক); রিডারে ক্লিক করলে প্রগ্রেসসহ PDF-লোড
   var activeId = null;
   if (!papers.length || !elList) return;
@@ -306,12 +351,20 @@
   function filtered() {
     var d = elDate.value;
     var m = elMonth.value;
-    return papers.filter(function (p) {
+    var rows = papers.filter(function (p) {
       var pd = String(p.date || '').slice(0, 10);
       if (m && pd.indexOf(m) !== 0) return false;
       if (d && pd !== d) return false;
       return true;
     });
+    // সেশন ১৭২: পাঠকপ্রিয়তা-র‍্যাংক অনুযায়ী স্বয়ংক্রিয় ক্রমবিন্যাস (১→২৪; বহির্ভূত সবার শেষে, নাম-ক্রমে)
+    rows.sort(rankCmp);
+    return rows;
+  }
+  function rankCmp(a, b) {
+    var ra = a.rank || 999, rb = b.rank || 999;
+    if (ra !== rb) return ra - rb;
+    return String(a.name).localeCompare(String(b.name), 'bn');
   }
 
   function thumbHtml(p) {
@@ -337,7 +390,10 @@
     var frag = '';
     rows.forEach(function (p) {
       var on = p.id === activeId;
+      var rk = p.rank && p.rank < 999 ? p.rank : 0;
       frag += '<button type="button" role="option" aria-selected="' + on + '" class="ep-item' + (on ? ' is-on' : '') + '" data-id="' + p.id + '">' +
+        // সেশন ১৭২: র‍্যাংক-ব্যাজ (#১, #২… — শীর্ষ-৩ ব্র্যান্ড-সবুজ; বহির্ভূত '–')
+        '<span class="ep-rank' + (rk && rk <= 3 ? ' is-top' : '') + '" title="' + (rk ? 'পাঠকপ্রিয়তার ক্রমে ' + bnDigits(rk) + ' নম্বর' : 'র‍্যাংক-তালিকাভুক্ত নয়') + '">' + (rk ? '#' + bnDigits(rk) : '–') + '</span>' +
         '<span class="ep-thumb">' + thumbHtml(p) + '</span>' +
         '<span class="ep-item-meta"><b class="ep-item-name">' + p.name + '</b>' +
         '<span class="ep-item-sub"><i class="far fa-calendar"></i> ' + p.dateBn + '</span></span>' +
@@ -355,6 +411,11 @@
     var p = papers.filter(function (x) { return x.id === id; })[0];
     if (!p) return;
     elName.textContent = p.name;
+    // সেশন ১৭২: ভিউয়ার-বারে সক্রিয় পত্রিকার র‍্যাংক-চিপ
+    if (elCurRank) {
+      if (p.rank && p.rank < 999) { elCurRank.hidden = false; elCurRank.textContent = '#' + bnDigits(p.rank); }
+      else { elCurRank.hidden = true; elCurRank.textContent = ''; }
+    }
     elCurDate.textContent = '· ' + p.dateBn;
     elOpen.href = p.view || '#';
     elOpen.style.display = p.view ? '' : 'none';
@@ -597,10 +658,11 @@
     renderList();
   }
 
-  // ── বুট: আজকের (বা সর্বশেষ সিঙ্কড) দিন + প্রথম পত্রিকা (select() দিয়ে — ভিউয়ার সঙ্গে-সঙ্গে ভরা থাকে) ──
+  // ── বুট: আজকের (বা সর্বশেষ সিঙ্কড) দিন + সেই-দিনের শীর্ষ-র‍্যাংকের পত্রিকা (session172) ──
   var bootDate = dates.indexOf(todayIso) >= 0 ? todayIso : dates[0];
   elDate.value = bootDate;
-  select(byDate[bootDate][0].id);
+  var bootRows = byDate[bootDate].slice().sort(rankCmp);
+  select(bootRows[0].id);
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>

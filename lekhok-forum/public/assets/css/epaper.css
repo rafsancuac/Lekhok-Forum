@@ -164,3 +164,52 @@
   .ep-zpct { min-width: 40px; }
   .ep-act-sep { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session172 — পাঠকপ্রিয়তা-র‍্যাংকিং + প্রিমিয়াম পলিশ
+   (র‍্যাংক-ব্যাজ #১–২৪, হেডার-স্ট্যাট, র‍্যাংকিং-নোট, মস্টহেড-অ্যাকসেন্ট)
+   নিয়ম অক্ষুণ্ণ: রঙ শুধু var(--lf-*) টোকেন; shadow/overlay-এ rgba অনুমোদিত
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── মস্টহেড-অ্যাকসেন্ট: সংবাদপত্র-মাস্টহেডের মতো উপরে ব্র্যান্ড-বার ── */
+.ep-head-card { border-top: 3px solid var(--lf-brand-primary); }
+
+/* ── হেডার-স্ট্যাট চিপ (মোট-সংখ্যা · দিন · শীর্ষ-পত্রিকা) ── */
+.ep-head-stats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
+.ep-hstat { display: inline-flex; align-items: center; gap: 5px; font-size: .68rem; font-weight: 700; color: var(--lf-text-secondary); background: var(--lf-ui-input-bg); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-chip); padding: 3px 10px; line-height: 1.5; }
+.ep-hstat b { color: var(--lf-text-primary); font-weight: 800; }
+.ep-hstat.is-top { background: var(--lf-brand-light); border-color: var(--lf-brandgreen-soft-3); color: var(--lf-brand-deep); }
+.ep-hstat.is-top i { color: var(--lf-amber-mid); font-size: .74rem; }
+.ep-hstat.is-top b { color: var(--lf-brand-primary); }
+
+/* ── তালিকার র‍্যাংক-ব্যাজ (#১…#২৪; শীর্ষ-৩ সলিড-সবুজ) ── */
+.ep-rank { width: 34px; height: 24px; border-radius: 8px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 800; letter-spacing: .2px; color: var(--lf-text-secondary); background: var(--lf-ui-input-bg); border: 1px solid var(--lf-ui-border); transition: color .15s ease, background .15s ease, border-color .15s ease; }
+.ep-rank.is-top { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-ui-surface); box-shadow: 0 2px 6px rgba(0,106,78,.28); }
+.ep-item:hover .ep-rank:not(.is-top) { color: var(--lf-text-primary); border-color: var(--lf-ui-border-strong); }
+.ep-item.is-on .ep-rank:not(.is-top) { color: var(--lf-brand-primary); background: var(--lf-ui-surface); border-color: var(--lf-brandgreen-soft-3); }
+
+/* ── ভিউয়ার-বারে সক্রিয়-পত্রিকার র‍্যাংক-চিপ ── */
+.ep-cur-rank { display: inline-flex; align-items: center; flex-shrink: 0; font-size: .66rem; font-weight: 800; letter-spacing: .3px; color: var(--lf-ui-surface); background: var(--lf-brand-primary); border-radius: var(--lf-radius-chip); padding: 2px 8px; box-shadow: 0 1px 4px rgba(0,106,78,.25); }
+.ep-cur-rank[hidden] { display: none; }
+
+/* ── র‍্যাংকিং-নোট (তালিকার উপরে) ── */
+.ep-list-note { display: flex; align-items: flex-start; gap: 8px; background: var(--lf-brandgreen-soft); border: 1px solid var(--lf-brandgreen-soft-3); border-radius: 12px; padding: 8px 12px; color: var(--lf-brand-deep); font-size: .72rem; font-weight: 700; line-height: 1.55; }
+.ep-list-note i { color: var(--lf-amber-mid); font-size: .82rem; flex-shrink: 0; margin-top: 1px; }
+.ep-list-note b { font-weight: 800; color: var(--lf-brand-primary); }
+
+/* ── প্রিমিয়াম মাইক্রো-পলিশ: আইটেম-হোভার লিফট + থাম্বনেইল শ্যাডো ── */
+.ep-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+.ep-item { will-change: transform; }
+.ep-thumb { border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.02); }
+.ep-item.is-on { box-shadow: 0 1px 5px rgba(0,106,78,.16); }
+
+/* ── মোবাইল ফাইন-টিউনিং (session172) ── */
+@media (max-width: 600px) {
+  .ep-rank { width: 30px; height: 22px; font-size: .64rem; }
+  .ep-list-note { font-size: .68rem; padding: 7px 10px; }
+  .ep-hstat { font-size: .64rem; padding: 2px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ep-item { transition: none; }
+  .ep-item:hover { transform: none; }
+}
