@@ -1968,3 +1968,40 @@ Stage Summary:
 - ইউজার-কনফিউশন-সমাধান দেওয়া হয়েছে: localhost:4288 Branding-পেজে নয় — Credentials → OAuth 2.0 Client → "Authorized redirect URIs"-এ বসবে
 - বাকি: OAuth redirect-URI যোগ → কনসেন্ট-ফ্লো (রিডাইরেক্ট-URL ইউজার-পেস্ট) → GOOGLE_REFRESH_TOKEN; সার্ভারে EPAPER_SYNC_TOKEN
 - পরের-এজেন্ট: refresh-token পেলে epaper-bot .env-এ বসিয়ে `bun start` (টেলিগ্রাম-সেশন প্রস্তুত, session167)
+
+---
+Task ID: 34 (Session 169 — OAuth-কনসেন্ট-প্রস্তুতি: লাইভ-যাচাই + কনসেন্ট-লিঙ্ক + EPAPER_SYNC_TOKEN)
+Agent: Z.ai Code (main session)
+
+Work Log:
+- ইউজার Google Cloud-কাজ শেষ করেছে: OAuth-অ্যাপ In production, Desktop-ক্লায়েন্ট (redirect-URI রেজিস্ট্রেশন লাগবে না — loopback-স্বয়ংক্রিয়)
+- লাইভ-যাচাই: /privacy=200 + /terms=200 + home=200; privacy-কনটেন্টে rafsan.cu.ac@gmail.com + Google Drive + Limited-Use-স্বীকারোক্তি সব উপস্থিত — Branding-ফর্মের লিঙ্ক Google-যাচাইযোগ্য
+- নোট: পেজ-দুটো lekhok-forum/ (Express)=Vercel-ডিপ্লয়ড-অ্যাপে আগেই গিয়েছিল (session168/task33) — সঠিক জায়গাতেই
+- epaper-bot/.env: SITE_SYNC_TOKEN প্লেসহোল্ডার → openssl rand -hex 32 দিয়ে আসল-টোকেন (Vercel-এ EPAPER_SYNC_TOKEN নামে একই-ভ্যালু বসবে)
+- getRefreshToken.ts আপগ্রেড: CLI-arg-মোড (`bun run token "<localhost-URL|code>"`) → সরাসরি এক্সচেঞ্জ + .env-এর GOOGLE_REFRESH_TOKEN-অটোরিপ্লেস; ইন্টারঅ্যাক্টিভ-মোডও অটুট
+- push: 168bf7e (সিক্রেট-মুক্ত — .env gitignored)
+
+Stage Summary:
+- বট-লাইভের এখন এক-টাই পদক্ষেপ বাকি: ইউজার কনসেন্ট-URL-এ Allow → localhost:4288/?code=... পেস্ট → `bun run token "<url>"` → GOOGLE_REFRESH_TOKEN সেভ → `bun run test-drive` → `bun start`
+- কনসেন্ট-URL-স্পেক: client_id=401426…kceт3g, redirect_uri=http://localhost:4288, scope=drive.file, access_type=offline, prompt=consent
+- EPAPER_SYNC_TOKEN=125c0f69…cfeac (Vercel-env-এ বসানোর অপেক্ষায়, Redeploy-আবশ্যক)
+- পরের-এজেন্ট: refresh-token+sync-token দুই-পা-ই সেট থাকলে পাইপলাইন-টেস্ট করো (টেলিগ্রাম-স্ক্যান → ড্রাইভ-আপলোড → সাইট-sync); পরে session168-ব্যাকলগ
+
+---
+Task ID: 35 (Session 169-ব — 🎉 ePaper-বট এন্ড-টু-এন্ড লাইভ — ফুল-পাইপলাইন ভেরিফাইড)
+Agent: Z.ai Code (main session)
+
+Work Log:
+- ইউজার কনসেন্ট-দিয়ে localhost:4288/?code=... URL দিয়েছে → `bun run token "<url>"` → রিফ্রেশ-টোকেন এক্সচেঞ্জ ✅ + .env-অটোসেভ
+- `bun run test-drive` → অ্যাক্সেস-টোকেন + আপলোড + পাবলিক-পারমিশন সফল
+- বগ-ফিক্স: বটের .env-এ SITE_URL=http://localhost:8080 ছিল → https://lekhok-forum.vercel.app করা হয়েছে (সিঙ্ক এখন লাইভ-সাইটে যায়)
+- অপ্টিমাইজেশন (push 16dce74): ① driveFindFile — ড্রাইভ-এ একই-নামের ফাইল থাকলে ডাউনলোড-স্কিপ (প্রতি-পোলে ১০+ পত্রিকা পুনঃডাউনলোড-বন্ধ) ② পত্রিকার-নাম মেসেজ-টেক্সট থেকে ③ PAPER_FILTER env (নির্দিষ্ট-পত্রিকা-বাছাই, খালি=সর্বশেষ)
+- আবিষ্কার: মাঝপথে ইউজার Vercel-এ EPAPER_SYNC_TOKEN বসিয়েছে → পুরোনো-বট-প্রসেসের এক-ট্রাই সফলভাবে সাইটে সিঙ্ক হয়েছে (state["2026-09-19"] সেট)
+- এন্ড-টু-এন্ড ভেরিফাই: /api/epaper/sync প্রোব=401 (টোকেন-লাইভ) → লাইভ /epaper পেজে "📰 দৈনিক পত্রিকা — শনিবার, ১৯ সেপ্টেম্বর, ২০২৬" + drive.google.com/uc?id=10vq2VZZ… = HTTP 200, ৭৮MB PDF পাবলিকলি-ডাউনলোডযোগ্য
+- বট-রিস্টার্ট করে নতুন-কোডে চালু: `setsid bun start > /tmp/epaper-bot.log 2>&1 &` — "↷ 2026-09-19 ইতোমধ্যে সিঙ্কড" (ডিডুপ-কাজ করছে), পোল ২০-মিনিট
+
+Stage Summary:
+- 🎉 ePaper-বট ১০০% লাইভ: টেলিগ্রাম @ePaperXpress-স্ক্যান → PDF-ডাউনলোড → ড্রাইভ-আপলোড(যে-কেউ-পড়বে) → সাইট-/epaper-সিঙ্ক — সব-পা যাচাইকৃত
+- আজকের পেপার লাইভ; কাল (2026-09-20) থেকে অটো-সিঙ্ক + টাইটেলে আসল-পত্রিকার-নাম দেখাবে
+- বট-প্রসেস স্যান্ডবক্স-নির্ভর — রিসেট হলে চালু-কমান্ড: `cd /home/z/lekhok-forum/epaper-bot && setsid bun start > /tmp/epaper-bot.log 2>&1 &`
+- ভবিষ্যৎ-সম্ভাবনা: দিনে-একাধিক-পত্রিকা (বর্তমানে দিনে-একটি, PAPER_FILTER দিয়ে বাছাই), /epaper-আর্কাইভ-ব্রাউজ
