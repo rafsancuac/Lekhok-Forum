@@ -33,6 +33,17 @@ const BACKFILL_DAYS = Math.max(parseInt(process.env.BACKFILL_DAYS || '2', 10) ||
 
 const SESS_FILE = path.join(import.meta.dir, '..', '.tg-session')
 const STATE_FILE = path.join(import.meta.dir, '..', '.sync-state.json')
+const HEARTBEAT_FILE = path.join(import.meta.dir, '..', '.bot-heartbeat')
+
+/* ── ক্র্যাশ-প্রুফ-গার্ড (session184): ধাক্কা-খাওয়া-অ্যাসিঙ্ক-এররে পোল-লুপ কখনো-মরবে-না ──
+   আগে: কোনো-প্রমিস-রিজেক্ট-এস্কেপ করলে পুরো-প্রসেস মারা-যেত (ইউজার-অভিযোগের-মূল-কারণগুলোর-একটি)
+   এখন: লগ-হবে, প্রসেস-বেঁচে-থাকবে — পরের-পোলেই-আবার-চেষ্টা। হার্টবিট-ফাইলে bot-keeper.sh তাকায়। */
+process.on('uncaughtException', (e) => console.error('💥 uncaughtException (লুপ-চলমান):', e instanceof Error ? e.stack : e))
+process.on('unhandledRejection', (e) => console.error('💥 unhandledRejection (লুপ-চলমান):', e instanceof Error ? e.stack : e))
+function beat(): void {
+  try { fs.writeFileSync(HEARTBEAT_FILE, new Date().toISOString()) } catch {}
+}
+setInterval(beat, 60_000) // প্রসেস-জীবিত-সংকেত (স্ক্যান-ঝুলে-গেলেও keeper পার্থক্য-করতে-পারে না, তাই-মিনিটে-ই-বিট)
 
 for (const [k, v] of Object.entries({ TG_API_ID, TG_API_HASH, TG_PHONE, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, SITE_URL, SYNC_TOKEN })) {
   if (!v) { console.error(`❌ .env-এ ${k} দিন`); process.exit(1) }
@@ -127,19 +138,30 @@ const state = loadState()
 
 /* ── গুগল-ড্রাইভ ── */
 async function driveAccessToken(): Promise<string> {
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      refresh_token: REFRESH_TOKEN,
-      grant_type: 'refresh_token',
-    }),
-  })
-  const j = (await res.json()) as { access_token?: string; error_description?: string }
-  if (!j.access_token) throw new Error('ড্রাইভ-টোকেন রিফ্রেশ ব্যর্থ: ' + (j.error_description || ''))
-  return j.access_token
+  // session184: ৩-চেষ্টা-রিট্রাই (৪সে/১২সে-ব্যাকঅফ) — এক-রিকোয়েস্ট-ফেইলে আর-আটকে-থাকবে-না
+  let lastErr = ''
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          refresh_token: REFRESH_TOKEN,
+          grant_type: 'refresh_token',
+        }),
+        signal: AbortSignal.timeout(20000),
+      })
+      const j = (await res.json()) as { access_token?: string; error_description?: string }
+      if (j.access_token) return j.access_token
+      lastErr = j.error_description || `HTTP-${res.status}`
+      // invalid_grant = রিফ্রেশ-টোকেন-ই-মৃত — রিট্রাই-বৃথা, সরাসরি-ফেটক
+      if (/invalid_grant/i.test(lastErr)) break
+    } catch (e) { lastErr = e instanceof Error ? e.message : String(e) }
+    if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 4000))
+  }
+  throw new Error(`ড্রাইভ-টোকেন রিফ্রেশ ব্যর্থ (${lastErr})`)
 }
 
 async function driveEnsureFolder(token: string): Promise<string> {
@@ -397,8 +419,8 @@ async function main(): Promise<void> {
     if (syncedIds.length) void warmSiteCache(syncedIds)
   }
 
-  await scanOnce()
-  setInterval(() => scanOnce().catch((e) => console.error('পোল-ত্রুটি:', e)), POLL_MINUTES * 60 * 1000)
+  await scanOnce().catch((e) => console.error('প্রথম-স্ক্যান-ত্রুটি (পরের-পোলে-আবার):', e instanceof Error ? e.stack : e))
+  setInterval(() => scanOnce().catch((e) => console.error('পোল-ত্রুটি (লুপ-অটুট):', e instanceof Error ? e.stack : e)), POLL_MINUTES * 60 * 1000)
 }
 
 main().catch((e) => { console.error('ফেটাল:', e); process.exit(1) })

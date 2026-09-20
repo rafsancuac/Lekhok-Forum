@@ -5,3 +5,5 @@ node_modules
 .tg-auth-state.json
 .qa/
 .backfill-state.json
+.bot-heartbeat
+bot.log
