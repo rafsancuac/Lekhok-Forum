@@ -1712,6 +1712,24 @@
     // (duration-শূন্য) ভয়েস-বাবলের জন্য পৃষ্ঠা-লোডে ধাপে-ধাপে metadata-probe।
     (function voicePlayer() {
       let audio = null, cur = null;
+      // ── session183: মৃত-ভয়েস-অবস্থা — ফাইল-লোড-ব্যর্থতায় স্পষ্ট ⚠ (নীরব-ডেড-বাটন নয়) ──
+      // পুরোনো ভয়েস-রো যার file_url এখন আর রিচেবল নয় (এফিমারাল-স্টোরেজ-যুগের) —
+      // আগে চুপচাপ কিছু-ই-হতো-না; এখন বাবলে ⚠ + এক-বারের-টোস্ট।
+      function markDead(p) {
+        if (!p || p.classList.contains('bv-dead')) return;
+        resetUI(p, true);
+        p.classList.add('bv-dead');
+        const ic = p.querySelector('.bv-play i');
+        if (ic) ic.className = 'fas fa-triangle-exclamation';
+        p.title = 'এই ভয়েস ফাইলটি আর পাওয়া যাচ্ছে না (পুরোনো স্টোরেজ-সমস্যা)';
+      }
+      let lastDeadToast = 0;
+      function bvDeadToast() {
+        const now = Date.now();
+        if (now - lastDeadToast < 3000) return;
+        lastDeadToast = now;
+        if (typeof fbToast === 'function') fbToast('ভয়েস ফাইলটি পাওয়া যাচ্ছে না — পুরোনো বার্তার স্টোরেজ সরে গেছে');
+      }
       function resetUI(p, backToDur) {
         p.classList.remove('is-playing');
         const ic = p.querySelector('.bv-play i');
@@ -1733,8 +1751,8 @@
         const a = new Audio();
         a.preload = 'metadata';
         let done = false;
-        const finish = function (d) { if (done) return; done = true; a.removeAttribute('src'); try { a.load(); } catch (_) {} cb(d); };
-        a.addEventListener('error', function () { finish(0); });
+        const finish = function (d, err) { if (done) return; done = true; a.removeAttribute('src'); try { a.load(); } catch (_) {} cb(d, err); };
+        a.addEventListener('error', function () { finish(0, true); });
         a.addEventListener('loadedmetadata', function () {
           if (isFinite(a.duration) && a.duration > 0) return finish(Math.round(a.duration));
           a.ontimeupdate = function () {
@@ -1766,7 +1784,8 @@
           const p = pend.shift();
           if (!p) return;
           if (!document.contains(p)) return next();
-          probeDuration(p.dataset.src, function (d) {
+          probeDuration(p.dataset.src, function (d, err) {
+            if (err) markDead(p); // session183: মৃত-ফাইল — লেগেসি ০:০০-র বদলে স্পষ্ট ⚠
             if (d > 0 && document.contains(p)) showDur(p, d);
             setTimeout(next, 120);
           });
@@ -1781,6 +1800,7 @@
         if (!btn) return;
         const player = btn.closest('.bubble-voice');
         if (!player || !player.dataset.src) return;
+        if (player.classList.contains('bv-dead')) { bvDeadToast(); return; } // session183
         if (!audio) {
           audio = new Audio();
           audio.preload = 'metadata';
@@ -1800,6 +1820,8 @@
           audio.addEventListener('ended', function () {
             if (cur) { resetUI(cur, true); cur = null; }
           });
+          // session183: লোড/ডিকোড-ব্যর্থতা (404/নেটওয়ার্ক/ফরম্যাট) → স্পষ্ট ⚠ অবস্থা
+          audio.addEventListener('error', function () { if (cur) { markDead(cur); bvDeadToast(); } });
         }
         if (cur === player && !audio.paused) { audio.pause(); resetUI(player, false); return; }
         if (cur !== player) {
@@ -1809,7 +1831,11 @@
           try { audio.currentTime = 0; } catch (_) {}
         }
         const ic = btn.querySelector('i');
-        audio.play().then(function () { if (ic) ic.className = 'fas fa-pause'; player.classList.add('is-playing'); }).catch(function () {});
+        audio.play().then(function () { if (ic) ic.className = 'fas fa-pause'; player.classList.add('is-playing'); }).catch(function () {
+          // session183: প্লে-ব্যর্থতা — audio.error থাকলে মৃত-ফাইল (⚠); নইলে শুধু UI-রিসেট
+          if (audio.error) { markDead(player); bvDeadToast(); }
+          else resetUI(player, true);
+        });
         /* সেশন ১৫৮: duration-আয় — DB-মান আগে (সঙ্গে-সঙ্গে দৃশ্যমান); ফাইল-হেডারে
            সত্যিকারের মান এলে সেটাই গ্রহণ; Infinity হলে সিক-হ্যাক */
         if (parseInt(player.dataset.duration, 10) > 0) showDur(player, parseInt(player.dataset.duration, 10));

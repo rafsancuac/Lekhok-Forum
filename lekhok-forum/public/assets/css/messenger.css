@@ -1490,6 +1490,15 @@
 .page-wrap--messenger .bubble.me .bv-time { color: rgba(255, 255, 255, .9); }
 .page-wrap--messenger .bubble-voice.is-playing .bv-wave { animation: bv-breathe 1.6s ease-in-out infinite; }
 @keyframes bv-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .8; } }
+/* ── session183: মৃত-ভয়েস (ফাইল-লোড-ব্যর্থ) — স্পষ্ট ⚠ অবস্থা, নীরব-ডেড-বাটন নয় ── */
+.page-wrap--messenger .bubble-voice.bv-dead { opacity: .85; }
+.page-wrap--messenger .bubble-voice.bv-dead .bv-play {
+  background: #fdecea; color: #b3261e; border: 1px solid #f3c1bd; cursor: not-allowed; box-shadow: none;
+}
+.page-wrap--messenger .bubble-voice.bv-dead .bv-play:hover { transform: none; }
+.page-wrap--messenger .bubble.me .bubble-voice.bv-dead .bv-play { background: rgba(255, 255, 255, .88); color: #b3261e; }
+.page-wrap--messenger .bubble-voice.bv-dead .bv-wave { opacity: .4; }
+.page-wrap--messenger .bubble-voice.bv-dead .bv-time { font-style: italic; }
 @media (prefers-reduced-motion: reduce) {
   .page-wrap--messenger .vr-wave i, .page-wrap--messenger .vr-dot, .page-wrap--messenger .bubble-voice.is-playing .bv-wave { animation: none; }
 }

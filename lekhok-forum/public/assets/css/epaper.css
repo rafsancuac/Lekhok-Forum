@@ -216,6 +216,12 @@
    flex-shrink পাতা-হোল্ডারকে চুঁচড়া-দিয়ে ২৮px-উইন্ডো-স্ট্রিপ বানাত (canvas-ক্লিপ);
    flex:none-এ প্রতিটি পাতা পূর্ণ-উচ্চতায় থাকবে, .ep-pages-এর overflow-y স্ক্রল-করবে ── */
 .ep-pages > .ep-page-holder { flex: none; }
+/* ── session183: জেসচার-জুম — স্কেল-র‍্যাপার (.ep-zoomwrap) + ctrl-কার্সার ──
+   .ep-pages = একমাত্র-স্ক্রলার; র‍্যাপারে transform-স্কেলে স্কেল-করা overflow
+   স্ক্রলারের scrollable-overflow-তেই গণনা হয় → জুমে স্বাভাবিক প্যান/স্ক্রলবার */
+.ep-pages > .ep-zoomwrap { flex: none; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.ep-zoomwrap > .ep-page-holder { flex: none; }
+.ep-stage.is-ctrlhover { cursor: zoom-in; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    session182 — প্রিমিয়াম ফ্ল্যাট-কার্ড ডিরেক্টরি + সিকুয়েন্সিয়াল-আইডল-ওয়ার্মার

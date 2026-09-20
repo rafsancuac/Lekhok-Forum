@@ -263,11 +263,20 @@
   if (!papers.length || !elList) return;
 
   // ── সেশন ১৭১: জুম/রোটেট/ফুলস্ক্রিন-স্টেট + স্টেজ-ট্রান্সফর্ম (সব-মোডে: pdf.js/প্রচ্ছদ/iframe) ──
+  // session183: জুম-টার্গেট এখন স্ক্রলার-নয়-এমন ভেতরের-র‍্যাপার (.ep-zoomwrap/.ep-cover/.ep-stage-inner) —
+  // transform স্ক্রলার-নিজেকে স্কেল করলে দ্বি-স্ক্রল-বিভ্রান্তি হতো; সন্তান-র‍্যাপার স্কেলে
+  // স্কেল-করা overflow স্ক্রলারের scrollable-overflow-তেই গণনা হয় → এক-স্ক্রলারে স্বাভাবিক প্যান।
   var zoomLevel = 100, rotation = 0;
+  var ZOOM_MIN = 50, ZOOM_MAX = 300;
   var elViewer = document.querySelector('.ep-viewer');
   var elFsIcon = document.getElementById('epFsIcon');
+  function zoomTargetEl() {
+    return elStage.querySelector('.ep-zoomwrap') || elStage.querySelector('.ep-cover') ||
+           elStage.querySelector('.ep-stage-inner') || null;
+  }
+  function activeScroller() { return elStage.querySelector('.ep-pages') || elStage; }
   function applyStageTransform() {
-    var inner = elStage.firstElementChild;
+    var inner = zoomTargetEl();
     if (inner) {
       inner.style.transform = 'scale(' + (zoomLevel / 100) + ') rotate(' + rotation + 'deg)';
       inner.style.transformOrigin = (rotation % 360 !== 0) ? 'center center' : 'top center';
@@ -275,6 +284,24 @@
     var lbl = document.getElementById('epZoomReset');
     if (lbl) lbl.textContent = bnDigits(zoomLevel) + '%';
   }
+  // session183: জুম-সেট + ভিউ-অ্যাংকর — স্কেলের পরে ভিউপোর্ট-কেন্দ্রের অনুপাত অটুট থাকে
+  // (পিঞ্চ/হুইলে যে-অংশ পড়ছেন সেটাই চোখের-সামনে থাকে, কনটেন্ট লাফিয়ে যায় না)
+  function setZoom(z) {
+    var nz = Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)));
+    var sc = activeScroller();
+    var rx = 0.5, ry = 0.5;
+    try {
+      if (sc && sc.scrollWidth > sc.clientWidth) rx = (sc.scrollLeft + sc.clientWidth / 2) / sc.scrollWidth;
+      if (sc && sc.scrollHeight > sc.clientHeight) ry = (sc.scrollTop + sc.clientHeight / 2) / sc.scrollHeight;
+    } catch (_) {}
+    zoomLevel = nz;
+    applyStageTransform();
+    try {
+      if (sc && sc.scrollWidth > sc.clientWidth) sc.scrollLeft = rx * sc.scrollWidth - sc.clientWidth / 2;
+      if (sc && sc.scrollHeight > sc.clientHeight) sc.scrollTop = ry * sc.scrollHeight - sc.clientHeight / 2;
+    } catch (_) {}
+  }
+  function zoomStep(dir) { setZoom(zoomLevel + dir * 15); }
   function resetView() { zoomLevel = 100; rotation = 0; applyStageTransform(); }
   function armLoadTimeout() {
     if (armLoadTimeout._t) clearTimeout(armLoadTimeout._t);
@@ -284,8 +311,9 @@
     }, 12000);
   }
   function centerStage() {
-    elStage.scrollTop = (elStage.scrollHeight - elStage.clientHeight) / 2;
-    elStage.scrollLeft = (elStage.scrollWidth - elStage.clientWidth) / 2;
+    var sc = activeScroller();
+    sc.scrollTop = (sc.scrollHeight - sc.clientHeight) / 2;
+    sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2;
   }
   function toggleFs() {
     if (!elViewer) return;
@@ -401,8 +429,7 @@
       else { elCurRank.hidden = true; elCurRank.textContent = ''; }
     }
     elCurDate.textContent = '· ' + p.dateBn;
-    resetView();
-    renderStage(p);
+    renderStage(p); // session183: জুম পেপার-সুইচেও ধরে থাকে — ধারাবাহিক পাঠ-অভিজ্ঞতা
     renderList();
   }
 
@@ -643,6 +670,9 @@
     var doc = st.doc;
     var wrap = document.createElement('div');
     wrap.className = 'ep-pages';
+    var zw = document.createElement('div');
+    zw.className = 'ep-zoomwrap'; // session183: জুম-স্কেল-র‍্যাপার (স্ক্রলার .ep-pages অস্পৃষ্ট)
+    wrap.appendChild(zw);
     var holders = [];
     for (var n = 1; n <= doc.numPages; n++) {
       var h = document.createElement('div');
@@ -652,12 +682,13 @@
       lbl.className = 'ep-page-num';
       lbl.textContent = bnDigits(n) + ' / ' + bnDigits(doc.numPages);
       h.appendChild(lbl);
-      wrap.appendChild(h);
+      zw.appendChild(h);
       holders.push(h);
     }
     if (!detached) {
       elStage.innerHTML = '';
       elStage.appendChild(wrap);
+      applyStageTransform(); // session183: নতুন-নির্মিত রিডারেও চলমান-জুম প্রয়োগ
     }
     var rendering = {};
     var renderPage = function (n, holder) {
@@ -891,12 +922,8 @@
   elReader.addEventListener('click', function () { setMode('reader'); });
   elThumb.addEventListener('click', function () { setMode('thumb'); });
   // ── সেশন ১৭১: জুম-ইন/আউট/রিসেট + রোটেট + ফুলস্ক্রিন-ইভেন্ট (সব-মোডে প্রযোজ্য) ──
-  document.getElementById('epZoomIn').addEventListener('click', function () {
-    zoomLevel = Math.min(zoomLevel + 20, 200); applyStageTransform();
-  });
-  document.getElementById('epZoomOut').addEventListener('click', function () {
-    zoomLevel = Math.max(zoomLevel - 20, 70); applyStageTransform();
-  });
+  document.getElementById('epZoomIn').addEventListener('click', function () { zoomStep(1); });
+  document.getElementById('epZoomOut').addEventListener('click', function () { zoomStep(-1); });
   document.getElementById('epZoomReset').addEventListener('click', resetView);
   document.getElementById('epRotate').addEventListener('click', function () {
     rotation = (rotation + 90) % 360; applyStageTransform(); centerStage();
@@ -909,13 +936,43 @@
       if (elFsIcon) elFsIcon.className = fs ? 'fas fa-compress' : 'fas fa-expand';
     });
   });
+  // ── session183: টাচপ্যাড-পিঞ্চ / ctrl+wheel / মাউস-জেসচার জুম ──
+  //  (ইউজার-স্পেক: "হেন্ড-গেসচার ব্যবহার করে টাচ প্যাড দিয়ে পেপার বড় ছোট করে মন মত পড়া")
+  //  · Win/Linux Chrome-Edge-Firefox-এ টাচপ্যাড-পিঞ্চ = ctrlKey-সহ wheel-ইভেন্ট —
+  //    preventDefault করে ব্রাউজার-পেজ-জুম আটকে নিজস্ব স্মুথ-জুম (magnitude-অনুপাতে)
+  //  · macOS Safari = gesturestart/gesturechange (scale-অনুপাত)
+  //  · মাউস = ctrl+wheel নচ; ডাবল-ক্লিকে ১০০%↔২০০% টগল
+  //  · জুমের-সময় ভিউ-অ্যাংকর (setZoom) — পড়া-অংশ চোখের-সামনেই থাকে
+  elStage.addEventListener('wheel', function (e) {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    var mag = Math.min(26, Math.max(4, Math.abs(e.deltaY) * 0.14));
+    setZoom(zoomLevel + (e.deltaY < 0 ? mag : -mag));
+  }, { passive: false });
+  var gestBase = 0;
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
+    elStage.addEventListener(ev, function (e) {
+      e.preventDefault();
+      if (ev === 'gesturestart') gestBase = zoomLevel;
+      else if (ev === 'gesturechange') setZoom(gestBase * (e.scale || 1));
+    }, { passive: false });
+  });
+  elStage.addEventListener('dblclick', function (e) {
+    if (e.target && e.target.closest && e.target.closest('.ep-frame')) return; // iframe-ফলব্যাকের নিজস্ব-ক্লিক অস্পৃশ্য
+    setZoom(zoomLevel > 115 ? 100 : 200);
+  });
+  // ctrl/⌘ ধরলে স্টেজে zoom-কার্সার — জেসচার-আবিষ্কারযোগ্যতা
+  function ctrlHover(on) { if (elStage) elStage.classList.toggle('is-ctrlhover', on); }
+  document.addEventListener('keydown', function (e) { if (e.ctrlKey || e.metaKey) ctrlHover(true); });
+  document.addEventListener('keyup', function (e) { if (!(e.ctrlKey || e.metaKey)) ctrlHover(false); });
+  window.addEventListener('blur', function () { ctrlHover(false); });
   // কীবোর্ড-শর্টকাট: +/− জুম · r ঘোরান · f ফুলস্ক্রিন · 0 রিসেট (ইনপুট-ফোকাসে নিষ্ক্রিয়)
   document.addEventListener('keydown', function (e) {
     var t = e.target;
     if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.key === '+' || e.key === '=') { zoomLevel = Math.min(zoomLevel + 20, 200); applyStageTransform(); }
-    else if (e.key === '-' || e.key === '_') { zoomLevel = Math.max(zoomLevel - 20, 70); applyStageTransform(); }
+    if (e.key === '+' || e.key === '=') { zoomStep(1); }
+    else if (e.key === '-' || e.key === '_') { zoomStep(-1); }
     else if (e.key === 'r' || e.key === 'R') { rotation = (rotation + 90) % 360; applyStageTransform(); centerStage(); }
     else if (e.key === 'f' || e.key === 'F') { toggleFs(); }
     else if (e.key === '0') { resetView(); }

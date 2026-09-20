@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { messageUpload, complaintUpload, attachmentUpload, withUpload } = require('../middleware/upload');
+const { messageUpload, complaintUpload, attachmentUpload, messageAudioUpload, withUpload } = require('../middleware/upload');
 const rolePolicy = require('../helpers/role-policy');
 const { displayName } = require('../helpers/display-name');
 const sseHub = require('../helpers/sse'); // সেশন ৯৯ (রোডম্যাপ-০১): SSE রিয়েল-টাইম হাব
@@ -598,6 +598,19 @@ async function reactionMapFor(messages) {
   return map;
 }
 
+// ── session183: ভয়েস-নোট স্থায়িত্ব — data-URI-in-DB + হালকা-প্রদর্শন লিংক ──────
+// অডিও-বাইটস messages.file_url-এ data-URI হয়ে DB-তেই থাকে (middleware/upload.js
+// messageAudioUpload) — বার্তার-সাথেই অমর, বাইরের-স্টোরেজ/ফাইল-সিস্টেম-যা-ই-হোক।
+// তালিকা/পোল/প্যান/EJS-প্রদর্শনে ভারী data-URI-এর বদলে সংক্ষিপ্ত স্ট্রিম-লিংক যায়
+// (GET /api/messages/audio/:id — নিচে)। লিংকে '-voice.webm' প্রত্যয় — সব-জায়গার
+// এক্সটেনশন-ভিত্তিক isAud চেক (বাবল/সাইডবার/প্যান) নির্বিঘ্নে কাজ করে।
+function voiceStreamUrl(id, url) {
+  const u = String(url || '');
+  if (u.slice(0, 11) !== 'data:audio/') return url;
+  const nid = parseInt(id, 10);
+  return nid > 0 ? ('/api/messages/audio/' + nid + '-voice.webm') : url;
+}
+
 // সেশন ৭৬: মিউট-স্টেট হেল্পার — মিউট করা সদস্যকে নোটিফিকেশন যাবে না
 async function isConvMuted(convId, userId) {
   try {
@@ -608,7 +621,7 @@ async function isConvMuted(convId, userId) {
 // সেশন ৭৬: চ্যাট-মেসেজ লোড — রিপ্লাই-টার্গেট প্রিভিউ + এডিট-ট্রেসসহ
 async function chatMessagesFor(convId) {
   try {
-    return await db.prepare(`
+    const rows = await db.prepare(`
       SELECT m.*,
         rb.body AS reply_body, rb.file_url AS reply_file_url, rb.file_name AS reply_file_name,
         ru.full_name AS reply_sender_name, ru.username AS reply_sender_username
@@ -618,8 +631,16 @@ async function chatMessagesFor(convId) {
       WHERE m.conversation_id = ?
       ORDER BY m.created_at ASC
     `).all(convId);
+    // session183: ভয়েস data-URI → সংক্ষিপ্ত স্ট্রিম-লিংক (পেজ-পেলোড হালকা)
+    rows.forEach(r => {
+      r.file_url = voiceStreamUrl(r.id, r.file_url);
+      if (r.reply_file_url) r.reply_file_url = voiceStreamUrl(r.reply_to_id, r.reply_file_url);
+    });
+    return rows;
   } catch (e) {
-    return await db.prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(convId);
+    const rows = await db.prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(convId);
+    rows.forEach(r => { r.file_url = voiceStreamUrl(r.id, r.file_url); });
+    return rows;
   }
 }
 
@@ -701,6 +722,7 @@ async function convListFor(me) {
       '/messages/' || (CASE WHEN c.user_a = ? THEN ub.username ELSE ua.username END) as conv_link,
       (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_body,
       (SELECT sender_id FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_sender_id,
+      (SELECT id FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_msg_id,
       (SELECT file_url FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_file_url,
       (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count,
       IFNULL((SELECT pinned FROM conversation_members WHERE conversation_id = c.id AND user_id = ?), 0) as pinned,
@@ -717,6 +739,7 @@ async function convListFor(me) {
         '/messages/g/' || c.id as conv_link,
         (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_body,
         (SELECT sender_id FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_sender_id,
+        (SELECT id FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_msg_id,
         (SELECT u.full_name FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) as last_sender_name,
         (SELECT m.file_url FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) as last_file_url,
         (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = 0) as unread_count,
@@ -726,6 +749,8 @@ async function convListFor(me) {
       WHERE IFNULL(c.is_group, 0) = 1
     `).all(me, me);
   } catch (e) {}
+  // session183: সাইডবার-প্রিভিউতেও ভয়েস data-URI → '🎙️ ভয়েস মেসেজ' (MiniBubblePreview)
+  one.concat(groups).forEach(r => { r.last_file_url = voiceStreamUrl(r.last_msg_id, r.last_file_url); });
   // সেশন ৭৬: পিন-করা কথোপকথন সবার আগে (FB চ্যাট-হেড আচরণ)
   return one.concat(groups).sort((a, b) => ((b.pinned || 0) - (a.pinned || 0)) || String(b.last_message_at || '').localeCompare(String(a.last_message_at || '')));
 }
@@ -800,7 +825,7 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
     olderState: { hasOlder: _win93.hasOlder, oldestId: _win93.oldestId }, aroundMode: _win93.aroundMode, hlMsgId: _hl93, chatShared, lastOwnReadId });
 });
 
-router.post('/messages/:username', ensureAuth, withUpload(attachmentUpload), async (req, res) => {
+router.post('/messages/:username', ensureAuth, withUpload(messageAudioUpload), async (req, res) => {
   const me = req.session.user.id;
   const other = await db.prepare('SELECT * FROM users WHERE username = ?').get(req.params.username);
   if (!other) return res.redirect('/messages');
@@ -938,7 +963,7 @@ router.get('/messages/g/:id', ensureAuth, async (req, res) => {
 });
 
 // গ্রুপে মেসেজ পাঠানো
-router.post('/messages/g/:id', ensureAuth, withUpload(attachmentUpload), async (req, res) => {
+router.post('/messages/g/:id', ensureAuth, withUpload(messageAudioUpload), async (req, res) => {
   const me = req.session.user.id;
   const conv = await convAccess(parseInt(req.params.id), me);
   if (!conv || !conv.is_group) {
@@ -1348,7 +1373,7 @@ router.get('/api/messages/check', ensureAuth, async (req, res) => {
   res.json(rows.map(r => ({
     id: r.id,
     body: r.body,
-    file_url: r.file_url,
+    file_url: voiceStreamUrl(r.id, r.file_url), // session183: ভয়েস data-URI → স্ট্রিম-লিংক
     file_name: r.file_name,
     sender_id: r.sender_id,
     sender_name: r.sender_name,
@@ -1357,6 +1382,29 @@ router.get('/api/messages/check', ensureAuth, async (req, res) => {
     is_me: r.sender_id === me,
     created_at: r.created_at
   })));
+});
+
+// ── session183: ভয়েস-বাইট স্ট্রিম — DB-র file_url data-URI থেকে অডিও সার্ভ ────
+// সদস্যতা-যাচাই + immutable-ক্যাশ-হেডার (একবার-প্লেতেই ব্রাউজার-ক্যাশে, দ্বিতীয়-
+// প্লে নেটওয়ার্ক-শূন্য)। রেঞ্জ-রিকোয়েস্ট দরকার নেই — ভয়েস-নোট ≤৪MB।
+router.get('/api/messages/audio/:id', ensureAuth, async (req, res) => {
+  try {
+    const nid = parseInt(req.params.id, 10);
+    if (!nid) return res.status(400).json({ ok: false, error: 'bad-id' });
+    const row = await db.prepare('SELECT id, conversation_id, sender_id, file_url FROM messages WHERE id = ?').get(nid);
+    if (!row || String(row.file_url || '').slice(0, 11) !== 'data:audio/') return res.status(404).json({ ok: false, error: 'not-found' });
+    const conv = await convAccess(row.conversation_id, req.session.user.id);
+    if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+    const m = String(row.file_url).match(/^data:(audio\/[a-z0-9.+-]+);base64,([\s\S]+)$/);
+    if (!m) return res.status(404).json({ ok: false, error: 'bad-data' });
+    const buf = Buffer.from(m[2], 'base64');
+    res.setHeader('Content-Type', m[1]);
+    res.setHeader('Content-Length', buf.length);
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    return res.status(200).send(buf);
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'audio-stream-failed' });
+  }
 });
 
 // Poll: returns all conversations with new activity since timestamp (for sidebar refresh)
@@ -1543,9 +1591,10 @@ router.get('/api/messages/conv/:id/media', ensureAuth, async (req, res) => {
   const files = [];
   const seen = new Set();
   for (const m of rows) {
-    const item = { id: m.id, url: m.file_url, name: m.file_name || m.file_url.split('/').pop() || 'ফাইল', by: m.sender_name, at: m.created_at, duration: parseInt(m.duration, 10) || 0 };
+    const shownUrl = voiceStreamUrl(m.id, m.file_url); // session183: ভয়েস → স্ট্রিম-লিংক (.webm-প্রত্যয় → isAud ধরে)
+    const item = { id: m.id, url: shownUrl, name: m.file_name || 'ফাইল', by: m.sender_name, at: m.created_at, duration: parseInt(m.duration, 10) || 0 };
     if (isImg(m.file_url)) images.push(item);
-    else if (isAud(m.file_url)) voice.push(item);
+    else if (isAud(shownUrl)) voice.push(item);
     else { if (!seen.has(m.file_url)) { seen.add(m.file_url); files.push(item); } }
   }
 
