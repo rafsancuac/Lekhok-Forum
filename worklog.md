@@ -2439,3 +2439,20 @@ Stage Summary:
 - কার্ড-ডিজাইন: কনটেন্ট-চালিত-উচ্চতা (মৃত-স্পেস-শূন্য), রো-স্ট্রেচে-সমান-ভাই-কার্ড, প্রিমিয়াম-ইন্টারঅ্যাকশন-সেট
 - বট-ইনফ্রা: প্রাইভেট-রিপো-সহনশীল (keeper→origin-টোকেন→ensure-bot→ক্লোন); বট-চলছে (হার্টবিট-সুস্থ), ২১-সেপ্টেম্বর-সকালের-অটো-আগমন-প্রত্যাশিত
 - পরের-এজেন্ট: Vercel-ডিপ্লয়-পরে /admin/home-leadership→302-login-যাচাই + হোম-CSS-এ min-height:0-নিশ্চিত; পুরনো-অজেন্ডা (DOM-pool/ভয়েস-প্লেয়ার/promo-ব্যাকফিল) অক্ষুণ্ণ
+
+---
+Task ID: 56 (Session 55-রাউন্ড-২ — Task-55-এর স্বাধীন এন্ড-টু-এন্ড যাচাই + অবশিষ্ট কী-মিসম্যাচ ফিক্স)
+Agent: Z.ai Code (main session — user-turn-এর ধারাবাহিকতা)
+Task: session188-কমিট (8af7f64) লোকাল+প্রোডাকশনে যাচাই; অবশিষ্ট বাগ-ফিক্স; ব্রাউজার-প্রমাণ
+
+Work Log:
+- লোকাল-সার্ভার (sql.js seed DB) দিয়ে সম্পূর্ণ এন্ড-টু-এন্ড: admin/admin123 লগইন → /admin/home-leadership 8-স্লট রেন্ডার ✓ (session188-এর Promise-বাণী-ফিক্স কার্যকর — '[object Promise]' শূন্য)
+- ব্রাউজার-মডাল ফ্লো (agent-browser): current_president এডিট → fetch(X-CSRF-Token)+JSON সেভ → হোমে নতুন বাণী ✓; ?saved=1 ব্যানার ✓; sync_profile=1 → users.full_name আপডেট ✓ (admin/users-এ প্রমাণ); advisor-role-গার্ড এরর-JSON ✓; খালি-স্লটে ফলব্যাক-বাণী-কেবল সেভ ✓
+- হোম-ডিজাইন-যাচাই: min-height:0px computed ✓; ডেস্কটপ ৪-কার্ড/রো (২×২ পেয়ার-গ্রিড) + মোবাইল ১-কার্ড/রো; পদবি-ব্যাজ, কোট-অর্নামেন্ট, গ্রেডিয়েন্ট-টপ-অ্যাকসেন্ট, সোশ্যাল-বটম-পিন (gap 29px) — মৃত-স্পেস শূন্য
+- অবশিষ্ট-বাগ-ফিক্স (আমার-রাউন্ড): content-registry DEFAULTS-এ home_statement_current_gs → home_statement_current_general_secretary (SLOT_META↔registry ALL-MATCH এখন true)
+- প্রোডাকশন-প্রোব (push-পরবর্তী): /admin/home-leadership → 404, CSS-এ session55-ব্লক অনুপস্থিত = Vercel এখনো পুরনো-ডিপ্লয়; vcp_-টোকেন 401 (Not authorized) — git-push-ই একমাত্র ডিপ্লয়-ট্রিগার; এই-কমিটেই ট্রিগার করা হলো
+
+Stage Summary:
+- কোড-অবস্থা: 8af7f64-এর-উপর আমার registry-কী-ফিক্স — লোকালে সব-গ্রিন; প্রোডাকশন-ডিপ্লয় পর্যবেক্ষণ-প্রয়োজন (CSS session55-ব্লক + /admin/home-leadership 302→login হলেই সম্পূর্ণ)
+- লিঙ্কড-নোট: founder-স্লট খালি-থাকলে হোম past_leaders-ফলব্যাক দেখায়, প্যানেল গাইডেন্স-দেখায় — ডেমো-DB-জনিত; প্রোডে founder-মেম্বার থাকলে সমস্যা নেই
+- পরের-এজেন্ট: প্রোড-যাচাই (curl দুই-প্রোব) ফেল করলে Vercel-বিল্ড-লগ RCA; পুরনো-অজেন্ডা (DOM-pool/ভয়েস-প্লেয়ার/promo-ব্যাকফিল) অক্ষুণ্ণ

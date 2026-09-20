@@ -554,7 +554,7 @@ const DEFAULTS = {
   home_statement_founding_advisor_1: LS55.founding_advisor_1,
   home_statement_founding_advisor_2: LS55.founding_advisor_2,
   home_statement_current_president: LS55.current_president,
-  home_statement_current_gs: LS55.current_general_secretary,
+  home_statement_current_general_secretary: LS55.current_general_secretary,
   home_statement_current_advisor_1: LS55.current_advisor_1,
   home_statement_current_advisor_2: LS55.current_advisor_2,
   // হোম — জিজ্ঞাসা ও ফিড
