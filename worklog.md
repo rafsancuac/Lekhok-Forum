@@ -2369,3 +2369,21 @@ Stage Summary:
 - u35/38/41/42-এর নতুন designation অপরিবর্তিত (প্রোফাইল-ডেটা সঠিক — লিংক-নীতির বাইরে)
 - general-টাইপের ৮-টেস্ট-রো (Mode Check/Probe/ভেরিফাই…) এখনো আছে — ভবিষ্যতে-ডিলিট-প্রার্থী
 - পরের-এজেন্ট: বট-পুনঃঅথ এখনো-একমাত্র-ব্লকার (Task49/50); সদস্য-ক্লেইম-শুরু-হলে moderator-অ্যাপ্রোভাল-ফ্লো প্রস্তুত
+
+---
+Task ID: 52 (Keeper-round — cron Job 401248, ২০২৬-০৯-২১ ০১:৫৮ +08 / ঢাকা ২১-সেপ্টেম্বর ০০:০৩)
+Agent: Z.ai Code (cron keeper — ২৪/৭ রাউন্ড)
+Task: bot-keeper রাউন্ড + ইউজার-বার্তার নতুন-ক্রেডেনশিয়াল (api_hash, GOOGLE_CLIENT_ID/SECRET, vcp_…-টোকেন) প্রক্রিয়াকরণ
+
+Work Log:
+- সমান্তরাল-সেশন-অবস্থা: .env mtime ১৭:৫৭:৫৮Z — TG_API_HASH/GOOGLE_CLIENT_ID/SECRET/SITE_SYNC_TOKEN(1714a259…হেক্স-৬৪) পূর্বেই-বসানো + ১৮:০০:২৫Z-এ login-send-ও-সম্পন্ন (phoneCodeHash .tg-auth-state.json-এ) → ডুপ্লিকেট-OTP-পাঠাইনি, পরিপূরক-যাচাই-পথ নিয়েছি
+- vcp_-টোকেন-রূপনির্ণয়: পুরোনো-worklog-ক্রস-রেফ → **vcp_ = Vercel-অ্যাক্সেস-টোকেন** (SITE_SYNC_TOKEN নয়); লাইভ-প্রোবেও 401-নিশ্চিত
+- সাইট-সিঙ্ক-টোকেন-প্রোব (POST /api/epaper/sync খালি-বডি): garbage→401 · **1714a259…→400 (auth-পাস — সাইটে-লাইভ)** · vcp_→401 → বট↔সাইট-টোকেন-চেইন-সম্পূর্ণ (সমান্তরাল-সেশন Vercel-সাইডও-সেট-করে-গেছে)
+- ভল্ট-সেভ (স্থায়ী-ক্রেড): TG_API_HASH + GOOGLE_CLIENT_ID/SECRET + SITE_SYNC_TOKEN গিস্ট-ভল্টে ✓ (roundtrip-যাচাই-পাস) — এখন-থেকে-স্যান্ডবক্স-রিসেটেও-এগুলো-হারাবে-না
+- bot-keeper.sh → **exit 4**: ensure-bot-স্টার্ট-ব্যর্থ; bot.log RCA "❌ .env-এ REFRESH_TOKEN দিন" = index.ts খালি-GOOGLE_REFRESH_TOKEN-এ exit(1) (ডিজাইন-অনুযায়ী — degraded-জম্বি-বট-নেই)
+- সাইট-প্রোব: count:1, সর্বশেষ 2026-09-19 — ২০-সেপ্টেম্বর-মিস-অব্যাহত; ঢাকা-তারিখ-এখন ০৯-২১ (সকাল-প্রকাশ-আগে 'আজকের'-প্রোব-ফেলবে-ই — স্বাভাবিক)
+- ইউজারকে-একত্রিত-অনুরোধ: ① OTP (১৮:০০Z-এ-পাঠানো-কোড পুরোনো-হলে 'নতুন কোড') ② TG_2FA-পাসওয়ার্ড (session181-প্রমাণ: ২FA-চালু) ③ Google-consent-URL→Allow→ফেরত-URL
+
+Stage Summary:
+- বট-অবস্থা: ইনফ্রা-সম্পূর্ণ + টোকেন-চেইন-যাচাইকৃত; **একমাত্র-ব্লকার ইউজার-পুনঃঅথ** (OTP+2FA+consent) — স্থায়ী-ক্রেড-ভল্টে, রিসেট-সহনশীল
+- পরের-এজেন্ট: TG_OTP+TG_2FA পেলে `TG_OTP=… TG_2FA=… bun run src/login-verify.ts` → consent-ফেরত-URL/কোড পেলে `bun run token "<url>"` → `bun run test-drive` → `bash ensure-bot.sh` (বট-না-চললে-নতুন-env-নিয়েই-চালু-হবে; চললে-আগে-pkill) → **save-env-to-gist.sh চূড়ান্ত-সেভ** → BACKFILL_DAYS=3-এ ১৯/২০/২১-সেপ্টেম্বর-অটো-সিঙ্ক
