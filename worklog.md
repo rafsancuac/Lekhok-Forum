@@ -2336,3 +2336,36 @@ Work Log:
 Stage Summary:
 - বট-অবস্থা: অপরিবর্তিত — ইনফ্রা-প্রস্তুত, **ইউজার-পুনঃঅথ-ই-একমাত্র-ব্লকার**; বট-বন্ধ-থাকায় ২০-সেপ্টেম্বর-সংখ্যা-মিস চলমান
 - পরের-এজেন্ট: ইউজার-বার্তায় TG_API_HASH(+TG_2FA)/GOOGLE_CLIENT_ID+SECRET/SITE_SYNC_TOKEN পেলে README-র পুনঃঅথ-চেকলিস্ট-৫-ধাপ (login-send→TG_OTP→consent→token→test-drive→ensure-bot→**vault-save-অবশ্যই**); BACKFILL_DAYS=3-এ বট-জীবিত-হলে ১৯→২০-সেপ্টেম্বর-একসাথে-সিঙ্ক-হবে
+
+---
+Session: 185
+Task: ২০২৫-২৬ কার্যবর্ষের কার্যনির্বাহী কমিটি প্রোডাকশনে যোগ (user request)
+
+Work Log:
+- Turso প্রোডাকশন members-এ ১৫-সদস্যের নতুন কমিটি (term_year '২০২৫-২৬', member_id MEM-00093..107, sort 0-14)
+- ৭-জন user_id-লিংকড (u35 সভাপতি, u41 সাধারণ সম্পাদক, u38 যুগ্ম-সা-সম্পাদক, u3/u42/u4/u5); ৮-জনের একাউন্ট নেই
+- পদোন্নত ৪-ইউজারের users.designation আপডেট; লাইভ /committee + /team যাচাই (১৫ জন, ৭ লিংক 200)
+- db/seed-committee.js নতুন-কমিটি-তে রিরাইট, commit 2e1c38f push
+
+Stage Summary:
+- /committee ডিফল্ট এখন ২০২৫-২৬; পুরোনো-কার্যবর্ষ ড্রপডাউনে অটুট
+
+---
+Task ID: 51 (Session 186 — user request: "কমিটি, উপদেষ্টা, সদস্য সহ সবার আইডি প্রথমে আনলিংক; পরে যারা যুক্ত হবে তাদের লিংক করব")
+Agent: Z.ai Code (main)
+Task: সব member→user অটো-লিংক তুলে নেওয়া + লিংক-নীতি প্রতিষ্ঠা
+
+Work Log:
+- জরিপ: ৮৯টি লিংকড-রো (central 75 + permanent 5 + advisory 1 + general-test 8); account_claims খালি, claimed_at/verified_at সর্বত্র NULL — কোনো প্রকৃত ক্লেইম নেই → সম্পূর্ণ-নিরাপদ রিসেট
+- ব্যাকআপ: db/backups/members-user-links-2026-09-20.json (৮৯-লিংক + রিস্টোর-SQL-হিন্ট) — কমিটেড
+- Turso: UPDATE members SET user_id=NULL, account_status='unclaimed' WHERE user_id IS NOT NULL → ৮৯-affected; যাচাই still_linked=0, ১০৭/১০৭ unclaimed
+- লাইভ-যাচাই: /committee, /committee/permanent, /committee/advisory, /team সব 200 + profile-links=0; agent-browser-স্ক্রিনশটে আনলিংকড-কার্ড; /claim?memberId=MEM-00093 → 200 (ক্লেইম-ফ্লো অটুট)
+- seed-committee.js: AUTO_LINK_USERS=false — ডিফল্ট অটো-লিংক বন্ধ, মেকানিজম সংরক্ষিত
+- git: autostash-rebase-কনফ্লিক্ট (Task49/50 বনাম আমার-session185) union-সমাধান; bbd1cca push
+
+Stage Summary:
+- লিংক-নীতি (এখন থেকে): ① সদস্য নিজে /claim-এ member_id+নাম দিলে claim-service auto-link+activate করে; ② অ্যাডমিন ম্যানুয়ালি UPDATE members SET user_id=<id> WHERE member_id='MEM-XXXXX'
+- ফিরিয়ে-আনতে-চাইলে: ব্যাকআপ-JSON-এর restoration_hint অনুযায়ী প্রতি-রো UPDATE
+- u35/38/41/42-এর নতুন designation অপরিবর্তিত (প্রোফাইল-ডেটা সঠিক — লিংক-নীতির বাইরে)
+- general-টাইপের ৮-টেস্ট-রো (Mode Check/Probe/ভেরিফাই…) এখনো আছে — ভবিষ্যতে-ডিলিট-প্রার্থী
+- পরের-এজেন্ট: বট-পুনঃঅথ এখনো-একমাত্র-ব্লকার (Task49/50); সদস্য-ক্লেইম-শুরু-হলে moderator-অ্যাপ্রোভাল-ফ্লো প্রস্তুত
