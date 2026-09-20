@@ -1,0 +1,56 @@
+name: Production Deploy
+
+# session188 (২০২৬-০৯-২১): রিপো-প্রাইভেট-হওয়ার-পর Vercel-GitHub-ইন্টিগ্রেশনের
+# অটো-ডিপ্লয় আর ট্রিগার-হচ্ছিল-না (push-এর-পর ২০+ মিনিটে-ও-নীরব)। এই-ওয়ার্কফ্লো
+# VERCEL_TOKEN-সিক্রেট দিয়ে CLI-আপলোড-ডিপ্লয়-করে — গিট-ইন্টিগ্রেশন-স্বাধীন,
+# প্রাইভেট-রিপো-নির্ভরযোগ্য-পথ। প্রতিটি push-এ (lekhok-forum/** বদলালে) + ম্যানুয়ালি।
+#
+# ম্যানুয়ালি: GitHub → Actions → Production Deploy → Run workflow
+# টোকেন-কেবল-secrets-এ — ফাইলে-কখনো-নয় (নিরাপত্তা-নীতি)।
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - 'lekhok-forum/**'
+      - '.github/workflows/production-deploy.yml'
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Vercel প্রোডাকশন-ডিপ্লয়
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: রিপো চেকআউট
+        uses: actions/checkout@v4
+
+      - name: Node 20 সেটআপ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: টোকেন↔প্রজেক্ট-মালিকানা-যাচাই + লিংক-ফাইল
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -e
+          ORG_ID=$(curl -sf https://api.vercel.com/v2/user -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "import sys,json;print(json.load(sys.stdin)['user']['uid'])")
+          echo "orgId=$ORG_ID"
+          HTTP=$(curl -sf -o /tmp/proj.json -w '%{http_code}' "https://api.vercel.com/v9/projects/prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4" -H "Authorization: Bearer $VERCEL_TOKEN" || echo 000)
+          if [ "$HTTP" != "200" ]; then echo "❌ VERCEL_TOKEN দিয়ে প্রজেক্ট prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4 পাওয়া যায়নি (HTTP $HTTP) — সিক্রেট-আপডেট-দরকার"; exit 1; fi
+          NAME=$(python3 -c "import json;print(json.load(open('/tmp/proj.json')).get('name',''))")
+          echo "✓ প্রজেক্ট: $NAME (prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4)"
+          mkdir -p lekhok-forum/.vercel
+          printf '{"orgId":"%s","projectId":"prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4"}\n' "$ORG_ID" > lekhok-forum/.vercel/project.json
+
+      - name: প্রোডাকশন-ডিপ্লয় (vercel CLI)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          cd lekhok-forum
+          npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN" --archive=tgz
