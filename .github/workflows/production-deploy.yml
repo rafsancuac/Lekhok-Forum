@@ -26,7 +26,7 @@ jobs:
   deploy:
     name: Vercel প্রোডাকশন-ডিপ্লয়
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
       - name: রিপো চেকআউট
         uses: actions/checkout@v4
