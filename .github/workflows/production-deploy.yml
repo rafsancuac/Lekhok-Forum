@@ -7,6 +7,8 @@ name: Production Deploy
 #
 # ম্যানুয়ালি: GitHub → Actions → Production Deploy → Run workflow
 # টোকেন-কেবল-secrets-এ — ফাইলে-কখনো-নয় (নিরাপত্তা-নীতি)।
+# v2: /v2/user-এ 'uid'-কী-আর-নেই → orgId-আবিষ্কার-বাদ; `vercel link --project`
+# নিজেই scope-resolve-করে (.vercel/project.json তৈরি-করে)।
 
 on:
   workflow_dispatch: {}
@@ -34,19 +36,24 @@ jobs:
         with:
           node-version: '20'
 
-      - name: টোকেন↔প্রজেক্ট-মালিকানা-যাচাই + লিংক-ফাইল
+      - name: টোকেন↔প্রজেক্ট-যাচাই
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -e
-          ORG_ID=$(curl -sf https://api.vercel.com/v2/user -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "import sys,json;print(json.load(sys.stdin)['user']['uid'])")
-          echo "orgId=$ORG_ID"
           HTTP=$(curl -sf -o /tmp/proj.json -w '%{http_code}' "https://api.vercel.com/v9/projects/prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4" -H "Authorization: Bearer $VERCEL_TOKEN" || echo 000)
           if [ "$HTTP" != "200" ]; then echo "❌ VERCEL_TOKEN দিয়ে প্রজেক্ট prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4 পাওয়া যায়নি (HTTP $HTTP) — সিক্রেট-আপডেট-দরকার"; exit 1; fi
           NAME=$(python3 -c "import json;print(json.load(open('/tmp/proj.json')).get('name',''))")
           echo "✓ প্রজেক্ট: $NAME (prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4)"
-          mkdir -p lekhok-forum/.vercel
-          printf '{"orgId":"%s","projectId":"prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4"}\n' "$ORG_ID" > lekhok-forum/.vercel/project.json
+
+      - name: প্রজেক্ট-লিংক (vercel link)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -e
+          NAME=$(python3 -c "import json;print(json.load(open('/tmp/proj.json')).get('name',''))")
+          cd lekhok-forum
+          npx --yes vercel@latest link --yes --project "$NAME" --token "$VERCEL_TOKEN"
 
       - name: প্রোডাকশন-ডিপ্লয় (vercel CLI)
         env:
