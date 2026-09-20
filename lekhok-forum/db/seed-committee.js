@@ -3,14 +3,19 @@
  * db/seed-committee.js — Seed the ২০২৫-২৬ কার্যবর্ষের ১৫-সদস্যের কার্যনির্বাহী কমিটি।
  *
  * Idempotent: clears all rows where member_type='central' and re-inserts.
- * user_id linking: resolves by username (candidate order = prod pre-created accounts first,
- * then legacy dev accounts) — silently skips if the user doesn't exist locally.
+ *
+ * user_id linking POLICY (২০২৫-০৯-২০): links are NOT auto-created anymore.
+ * AUTO_LINK_USERS=false মানে সব কার্ড আনলিংকড থাকবে — সদস্য নিজে /claim করলে
+ * (বা অ্যাডমিন UPDATE members SET user_id=.. WHERE member_id=.. করলে) লিংক হবে।
+ * AUTO_LINK_USERS=true করলে নিচের usernames ক্যান্ডিডেট দিয়ে dev-এ লিংক হবে।
  *
  * Usage: node db/seed-committee.js
  */
 
 const fs   = require('fs');
 const path = require('path');
+
+const AUTO_LINK_USERS = false;
 
 (async () => {
   const initSqlJs = require('sql.js');
@@ -91,7 +96,7 @@ const path = require('path');
   );
   let linked = 0;
   committee.forEach(m => {
-    const uid = uidFor(m.usernames);
+    const uid = AUTO_LINK_USERS ? uidFor(m.usernames) : null;
     if (uid) linked++;
     insert.run([m.name, m.role, 'central', m.sort_order, TERM_YEAR, uid, m.member_id, 'unclaimed']);
   });
