@@ -64,7 +64,7 @@ jobs:
           echo "প্রজেক্ট-নাম: $NAME"
           HTTP=$(curl -s -o /tmp/dep.json -w '%{http_code}' -X POST "https://api.vercel.com/v13/deployments?skipAutoDetectionChanged=1" \
             -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
-            -d "{\"name\":\"$NAME\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"owner\":\"rafsancuac\",\"repo\":\"Lekhok-Forum\",\"ref\":\"main\"}}" || echo 000)
+            -d "{\"name\":\"$NAME\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"repoId\":1354883101,\"ref\":\"main\"}}" || echo 000)
           echo "gitSource-HTTP=$HTTP"
           head -c 500 /tmp/dep.json 2>/dev/null || true; echo
           DEP_ID=$(python3 -c "import json;print(json.load(open('/tmp/dep.json')).get('id',''))" 2>/dev/null || echo "")
