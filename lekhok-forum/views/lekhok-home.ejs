@@ -421,9 +421,14 @@
       }
     %>
 
+    <%# সেশন ৫৫: ফলব্যাক-বাণী এখন অ্যাডমিন-এডিটেবল — প্রাধিকার:
+          settings('content_home_statement_<slot>') → data/leaderStatements.js ডিফল্ট।
+          স্লট-কী-গুলো helpers/home-leadership.js SLOT_META-র সাথে অভিন্ন। %>
+    <% const stmtSlot55 = (k) => { const v = (typeof getSetting === 'function' ? getSetting('content_home_statement_' + k) : null); return (v && String(v).trim()) ? String(v) : (leaderStatements[k] || ''); }; %>
+
     <div class="leadership-matrix">
-      <%- leaderPair(founders, [C('home_role_founder_president'), C('home_role_founder_gs')], C('home_year_founding'), [leaderStatements.founder_president, leaderStatements.founder_general_secretary]) %>
-      <%- leaderPair(foundingAdvisors, [C('home_role_founding_advisor1'), C('home_role_founding_advisor2')], C('home_year_founding'), [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2]) %>
+      <%- leaderPair(founders, [C('home_role_founder_president'), C('home_role_founder_gs')], C('home_year_founding'), [stmtSlot55('founder_president'), stmtSlot55('founder_general_secretary')]) %>
+      <%- leaderPair(foundingAdvisors, [C('home_role_founding_advisor1'), C('home_role_founding_advisor2')], C('home_year_founding'), [stmtSlot55('founding_advisor_1'), stmtSlot55('founding_advisor_2')]) %>
     </div>
   </div>
 </section>
@@ -440,8 +445,8 @@
     </div>
 
     <div class="leadership-matrix">
-      <%- leaderPair(currentLeaders, [C('home_role_current_president'), C('home_role_current_gs')], C('home_year_current'), [leaderStatements.current_president, leaderStatements.current_general_secretary]) %>
-      <%- leaderPair(currentAdvisors, [C('home_role_current_advisor1'), C('home_role_current_advisor2')], C('home_year_current'), [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2]) %>
+      <%- leaderPair(currentLeaders, [C('home_role_current_president'), C('home_role_current_gs')], C('home_year_current'), [stmtSlot55('current_president'), stmtSlot55('current_general_secretary')]) %>
+      <%- leaderPair(currentAdvisors, [C('home_role_current_advisor1'), C('home_role_current_advisor2')], C('home_year_current'), [stmtSlot55('current_advisor_1'), stmtSlot55('current_advisor_2')]) %>
     </div>
   </div>
 </section>

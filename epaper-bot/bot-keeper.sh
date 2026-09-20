@@ -10,6 +10,18 @@ HB="$BOT/.bot-heartbeat"
 LOG="$BOT/bot.log"
 say(){ echo "[bot-keeper] $*"; }
 
+# সেশন ৫৫+ (২০২৬-০৯-২১): রিপো-প্রাইভেট — ensure-bot-এর ফ্রেশ-ক্লোন-যাতে-
+# ভাঙা-না-লাগে, GITHUB_TOKEN-না-থাকলে বিদ্যমান-ক্লোনের origin-URL-থেকে
+# টোকেন-বের-করে env-এ-দেওয়া হয় (কেবল-রানটাইম-env, কোনো-ফাইলে-নয়)।
+if [ -z "${GITHUB_TOKEN:-}" ] && [ -d "$ROOT/.git" ]; then
+  _ORIGIN_URL="$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)"
+  case "$_ORIGIN_URL" in
+    https://ghp_*@github.com/*|https://github_pat_*@github.com/*)
+      _T="${_ORIGIN_URL#https://}"; export GITHUB_TOKEN="${_T%%@github.com/*}" ;;
+  esac
+  unset _ORIGIN_URL _T
+fi
+
 # ① প্রসেস
 if ! pgrep -f "bun run src/index.ts" >/dev/null 2>&1; then
   say "⚠️ বট-প্রসেস-মৃত — পুনঃস্টার্ট-চেষ্টা…"

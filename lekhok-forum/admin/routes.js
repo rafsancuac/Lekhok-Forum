@@ -12,6 +12,9 @@ const claimService = require('../helpers/claim-service');
 const { adminLoginLimiter, clientIp } = require('../helpers/rate-limit');
 const totp = require('../helpers/totp');
 const rolePolicy = require('../helpers/role-policy');
+// সেশন ৫৫: হোম-নেতৃত্ব প্যানেল — ৮-স্লট কম্পিউটার (ছবি-আপলোড মিডলওয়্যার
+// memberPhotoUpload55 নিচে makeContentImageUpload-ডিক্লারেশনের পরে তৈরি হয়)
+const HL55 = require('../helpers/home-leadership');
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 // Admin  = admin_users session OR user session with role='admin'  → full access
@@ -56,6 +59,7 @@ const ADMIN_PATH_AREAS = [
   { re: /^\/daily(\/|$)/,                key: 'daily' },
   { re: /^\/complaints(\/|$)/,           key: 'complaints' },
   { re: /^\/(members|claims|members\b)(\/|$)/, key: 'members' },
+  { re: /^\/home-leadership(\/|$)/,     key: 'members' },  // সেশন ৫৫: হোম-নেতৃত্ব = কমিটি-সদস্য-এরিয়ার অংশ
   { re: /^\/(users|moderators)(\/|$)/,    key: 'users' },
   { re: /^\/(settings|security)(\/|$)/,  key: 'settings' },
   { re: /^\/resources(\/|$)/,            key: 'resources' },
@@ -598,6 +602,100 @@ router.post('/members/:id/restore', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
+// ── সেশন ৫৫: হোম নেতৃত্ব প্যানেল (/admin/home-leadership) ─────────────────────
+// হোম-পেজের "নেতৃত্বের ধারা" + "বর্তমান নেতৃত্ব" সেকশনের ৮টি কার্ডের নাম, ছবি,
+// পদবি, কার্যবর্ষ, বাণী ও সোশ্যাল-লিংক — কোড না ছুঁয়ে ব্রাউজার থেকেই সম্পাদনা।
+// স্লট-কম্পিউটেশন helpers/home-leadership.js-এ (হোম-রুটের হুবহু নিয়ম) —
+// প্যানেলে যা দেখা যায়, হোমে ঠিক তা-ই রেন্ডার হয়।
+// ══════════════════════════════════════════════════════════════════════════════
+
+router.get('/home-leadership', requireAdmin, async (req, res) => {
+  const rows = await HL55.fetchHomeLeadershipRows(db);
+  // সেশন ৫৫-ফিক্স (session188): db.getSetting অ্যাসিনক্রোনাস — না-অপেক্ষা-করে
+  // ব্যবহার-করলে বাণী-ফলব্যাক নিজেই Promise হয়ে যেত (ভিউতে '[object Promise]'
+  // রেন্ডার-বাগ)। এক-কোয়েরিতে সব-সেটিংস এনে sync-ম্যাপ থেকে পড়া হলো।
+  let _settingsMap55 = {};
+  try { _settingsMap55 = await db.getSettingsAll(); } catch (e) { /* খালি-ম্যাপ = ফাইল-ডিফল্ট */ }
+  // প্রতি স্লটের ফলব্যাক-বাণী: settings-ওভাররাইড প্রাধান্য, খালি হলে ফাইল-ডিফল্ট
+  const statementOf = (slotKey) => {
+    const v = _settingsMap55['content_home_statement_' + slotKey];
+    return (v && String(v).trim()) ? String(v) : (HL55.LEADER_STATEMENTS[slotKey] || '');
+  };
+  const slots = HL55.buildHomeLeadershipSlots(rows, statementOf);
+  res.render('admin/home-leadership', {
+    slots,
+    latestTerm: rows.latestTerm || null,
+    saved: req.query.saved === '1',
+    error: req.query.err ? String(req.query.err) : null,
+    currentPath: '/admin/home-leadership'
+  });
+});
+
+router.post('/home-leadership/slot', requireAdmin, (req, res, next) => memberPhotoUpload55(req, res, next), async (req, res) => {
+  const wantsJson = String(req.headers.accept || '').includes('application/json');
+  const done = (ok, payload) => {
+    if (wantsJson) return res.status(ok ? 200 : 400).json(payload);
+    return ok ? res.redirect('/admin/home-leadership?saved=1#slot-' + encodeURIComponent(payload.slot || ''))
+              : res.redirect('/admin/home-leadership?err=' + encodeURIComponent(payload.error || 'সংরক্ষণ ব্যর্থ'));
+  };
+  const slotKey = String(req.body.slot || '').trim();
+  const meta = HL55.SLOT_META.find((s) => s.key === slotKey);
+  if (!meta) return done(false, { ok: false, error: 'অজানা স্লট' });
+  if (req.uploadError) return done(false, { ok: false, error: req.uploadError });
+
+  try {
+    // ১) ফলব্যাক-বাণী ওভাররাইড — সবসময় সেভযোগ্য (স্লটে সদস্য না থাকলেও)
+    if ('statement' in req.body) {
+      const val = String(req.body.statement || '').replace(/\r\n/g, '\n').trim();
+      await setSetting('content_home_statement_' + slotKey, val);
+    }
+
+    // ২) সদস্য-ক্ষেত্র — স্লটে সদস্য থাকলে আপডেট
+    const memberId = parseInt(req.body.member_id, 10);
+    if (memberId) {
+      const member = await db.prepare('SELECT * FROM members WHERE id = ?').get(memberId);
+      if (!member) return done(false, { ok: false, error: 'সদস্য পাওয়া যায়নি' });
+
+      const name = String(req.body.name || '').trim();
+      if (!name) return done(false, { ok: false, error: 'নাম আবশ্যক' });
+      const role = String(req.body.role || '').trim();
+      // কেন্দ্রীয়-কমিটি গার্ড (কমিটি প্যানেলের সাথে অভিন্ন নীতি)
+      if (member.member_type === 'central' && /উপদেষ্টা/.test(role)) {
+        return done(false, { ok: false, error: 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।' });
+      }
+      const termYear = String(req.body.term_year || '').trim();
+      const message = String(req.body.message || '').replace(/\r\n/g, '\n').trim();
+      const imageUrlFile = (req.filesContent && req.filesContent.member_photo && req.filesContent.member_photo.url) || '';
+      const imageUrl = imageUrlFile || String(req.body.image_url || '').trim();
+      const socialFb = String(req.body.social_fb || '').trim();
+      const socialLinkedin = String(req.body.social_linkedin || '').trim();
+      const socialEmail = String(req.body.social_email || '').trim();
+      const profileUrl = String(req.body.profile_url || '').trim();
+
+      await db.prepare('UPDATE members SET name=?, role=?, term_year=?, message=?, image_url=?, social_fb=?, social_linkedin=?, social_email=?, profile_url=? WHERE id=?')
+        .run(name, role, termYear || null, message, imageUrl, socialFb, socialLinkedin, socialEmail, profileUrl, memberId);
+
+      // ৩) লিংকড-অ্যাকাউন্ট সিঙ্ক — হোম-কার্ডে নাম/ছবি user-টেবিল থেকে আসে;
+      //    অ্যাডমিন চাইলে প্রোফাইলেও এক-ক্লিকে প্রতিফলিত করা যায়।
+      if (member.user_id && (req.body.sync_profile === '1')) {
+        const u = await db.prepare('SELECT id FROM users WHERE id = ?').get(member.user_id);
+        if (u) {
+          await db.prepare('UPDATE users SET full_name = COALESCE(?, full_name), avatar_url = COALESCE(?, avatar_url) WHERE id = ?')
+            .run(name || null, imageUrl || null, member.user_id);
+        }
+      }
+      await TA42.audit(db, req, 'home-leadership-update', 'members', memberId, meta.title);
+    }
+
+    await TA42.audit(db, req, 'home-leadership-statement', 'settings', null, meta.title + ' ফলব্যাক-বাণী');
+    return done(true, { ok: true, slot: slotKey });
+  } catch (e) {
+    console.error('[admin:home-leadership] save failed:', e.message);
+    return done(false, { ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
 // ── টাস্ক ১৪: মেম্বার অ্যাকাউন্ট ক্লেইম / রেজিস্ট্রেশন রিভিউ ড্যাশবোর্ড ──────
 // ══════════════════════════════════════════════════════════════════════════════
 const CLAIM_STATUS_LABEL = { pending: 'অপেক্ষমাণ', approved: 'অনুমোদিত', rejected: 'প্রত্যাখ্যাত', more_info: 'আরও তথ্য চাওয়া হয়েছে' };
@@ -1072,6 +1170,13 @@ const contentImageUpload = makeContentImageUpload({
   subdir: 'content',
   maxBytes: 5 * 1024 * 1024,
   fieldNames: CONTENT_IMAGE_KEYS.map(k => 'img_' + k)
+});
+
+// সেশন ৫৫: হোম-নেতৃত্ব স্লট-এডিটের ছবি-আপলোড (এক-ফাইল ফিল্ড member_photo)
+const memberPhotoUpload55 = makeContentImageUpload({
+  subdir: 'content',
+  maxBytes: 4 * 1024 * 1024,
+  fieldNames: ['member_photo']
 });
 
 router.get('/content', requireAdmin, async (req, res) => {

@@ -14,6 +14,8 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
+const LS55 = require('../data/leaderStatements'); // সেশন ৫৫: ফলব্যাক-বাণীর এক-সোর্স
+
 const PAGES = [
   {
     key: 'home', label: 'হোম পেইজ', icon: 'fas fa-home', path: '/',
@@ -103,7 +105,18 @@ const PAGES = [
           { key: 'home_role_current_president', label: 'পদবি | বর্তমান সভাপতি', type: 'text' },
           { key: 'home_role_current_gs', label: 'পদবি | বর্তমান সাধারণ সম্পাদক', type: 'text' },
           { key: 'home_role_current_advisor1', label: 'পদবি | বর্তমান উপদেষ্টা (১ম)', type: 'text' },
-          { key: 'home_role_current_advisor2', label: 'পদবি | বর্তমান উপদেষ্টা (২য়)', type: 'text' }
+          { key: 'home_role_current_advisor2', label: 'পদবি | বর্তমান উপদেষ্টা (২য়)', type: 'text' },
+          { key: 'home_statement_founder_president', label: 'বাণী | প্রতিষ্ঠাতা সভাপতি (ফলব্যাক)', type: 'textarea', rows: 4 },
+          { key: 'home_statement_founder_general_secretary', label: 'বাণী | প্রতিষ্ঠাতা সা.সম্পাদক (ফলব্যাক)', type: 'textarea', rows: 4 },
+          { key: 'home_statement_founding_advisor_1', label: 'বাণী | প্রতিষ্ঠাকালীন উপদেষ্টা ১ (ফলব্যাক)', type: 'textarea', rows: 4 },
+          { key: 'home_statement_founding_advisor_2', label: 'বাণী | প্রতিষ্ঠাকালীন উপদেষ্টা ২ (ফলব্যাক)', type: 'textarea', rows: 4 },
+          { key: 'home_statement_current_president', label: 'বাণী | বর্তমান সভাপতি (ফলব্যাক)', type: 'textarea', rows: 4 },
+          // সেশন ৫৫-ফিক্স (session188): কী-টি SLOT_META-র 'current_general_secretary'-এর
+          // সাথে অভিন্ন হতে হবে — 'current_gs' থাকলে কনটেন্ট-ম্যানেজারের-ওভাররাইড
+          // হোম-ভিউ (stmtSlot55) ও হোম-নেতৃত্ব-প্যানেল কেউই-পড়ত-না।
+          { key: 'home_statement_current_general_secretary', label: 'বাণী | বর্তমান সা.সম্পাদক (ফলব্যাক)', type: 'textarea', rows: 4 },
+          { key: 'home_statement_current_advisor_1', label: 'বাণী | বর্তমান উপদেষ্টা ১ (ফলব্যাক)', type: 'textarea', rows: 4 },
+          { key: 'home_statement_current_advisor_2', label: 'বাণী | বর্তমান উপদেষ্টা ২ (ফলব্যাক)', type: 'textarea', rows: 4 }
         ]
       },
       {
@@ -533,6 +546,17 @@ const DEFAULTS = {
   home_role_current_gs: 'বর্তমান সাধারণ সম্পাদক (২য় জন)',
   home_role_current_advisor1: 'বর্তমান উপদেষ্টা (১ম জন)',
   home_role_current_advisor2: 'বর্তমান উপদেষ্টা (২য় জন)',
+  // সেশন ৫৫: হোম-নেতৃত্বের ৮ স্লটের ফলব্যাক-বাণী — data/leaderStatements.js
+  // থেকেই এক সোর্স (ডুপ্লিকেশন নয়)। অ্যাডমিন কনটেন্ট-ম্যানেজার/হোম-নেতৃত্ব
+  // প্যানেল থেকে ওভাররাইড করা যায়; খালি রাখলে এই ডিফল্ট দেখাবে।
+  home_statement_founder_president: LS55.founder_president,
+  home_statement_founder_general_secretary: LS55.founder_general_secretary,
+  home_statement_founding_advisor_1: LS55.founding_advisor_1,
+  home_statement_founding_advisor_2: LS55.founding_advisor_2,
+  home_statement_current_president: LS55.current_president,
+  home_statement_current_gs: LS55.current_general_secretary,
+  home_statement_current_advisor_1: LS55.current_advisor_1,
+  home_statement_current_advisor_2: LS55.current_advisor_2,
   // হোম — জিজ্ঞাসা ও ফিড
   home_qa_title: 'সাধারণ জিজ্ঞাসা',
   home_qa_more: 'সকল প্রশ্ন',

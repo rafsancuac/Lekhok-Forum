@@ -10,6 +10,12 @@ ROOT="${EPAPER_ROOT:-/home/z/lekhok-forum}"
 BOT="$ROOT/epaper-bot"
 LOG="$BOT/bot.log"
 REPO_URL="https://github.com/rafsancuac/Lekhok-Forum.git"
+# সেশন ৫৫+ (২০২৬-০৯-২১): রিপো-এখন-প্রাইভেট — GITHUB_TOKEN (কেবল-env) থাকলে
+# টোকেন-সহ-ক্লোন-URL; না-থাকলে খালি-URL (পুরনো-পাবলিক-আচরণ)। টোকেন-কোনো-
+# ফাইলে-লেখা-হয়-না (ক্লোন-পরবর্তী .git/config-ছাড়া-কোথাও-নয় — gitignored-এলাকা)।
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  REPO_URL="https://${GITHUB_TOKEN}@github.com/rafsancuac/Lekhok-Forum.git"
+fi
 say(){ echo "[ensure-bot] $*"; }
 
 # ১) রিপো

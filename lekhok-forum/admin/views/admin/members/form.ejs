@@ -35,7 +35,7 @@
       <div class="form-group"><label>পদবি</label><input type="text" name="designation" value="<%= member ? (member.designation || '') : '' %>" placeholder="যেমন: কেন্দ্রীয় কমিটি"></div>
       <div class="form-group"><label>ডিপার্টমেন্ট</label><input type="text" name="department" value="<%= member ? (member.department || '') : '' %>" placeholder="যেমন: বাংলা বিভাগ"></div>
       <div class="form-group"><label>বায়ো</label><textarea name="bio" rows="3"><%= member ? (member.bio || '') : '' %></textarea></div>
-      <div class="form-group"><label>বাণী (message/quote)</label><textarea name="message" rows="3" placeholder="কার্ডে দেখানো সংক্ষিপ্ত বাণী — খালি রাখলে বায়ো দেখাবে"><%= member ? (member.message || '') : '' %></textarea></div>
+      <div class="form-group"><label>বাণী (হোম-নেতৃত্ব কার্ডের উক্তি)</label><textarea name="message" rows="3" placeholder="হোমপেজের নেতৃত্ব-কার্ডে এই উক্তিটি আগে দেখাবে — খালি হলে বায়ো, তারপর ডিফল্ট বাণী"><%= member ? (member.message || '') : '' %></textarea></div>
       <div class="form-group">
         <label>ছবির URL</label>
         <input type="url" name="image_url" value="<%= member ? (member.image_url || '') : '' %>" placeholder="https://… (না দিলে প্লেসহোল্ডার অবতার)">
