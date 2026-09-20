@@ -55,9 +55,25 @@ jobs:
           cd lekhok-forum
           npx --yes vercel@latest link --yes --project "$NAME" --token "$VERCEL_TOKEN"
 
-      - name: প্রোডাকশন-ডিপ্লয় (vercel CLI)
+      - name: প্রোডাকশন-ডিপ্লয় (gitSource-API — Task-52-প্রমাণিত-পথ)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          cd lekhok-forum
-          npx --yes vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN" --archive=tgz
+          set -e
+          NAME=$(curl -sf "https://api.vercel.com/v9/projects/prj_K93Nw5Fl4xngOclbPCXdlOVqLbC4" -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "import sys,json;print(json.load(sys.stdin)['name'])")
+          echo "প্রজেক্ট-নাম: $NAME"
+          RESP=$(curl -sf -X POST "https://api.vercel.com/v13/deployments?skipAutoDetectionChanged=1" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+            -d "{\"name\":\"$NAME\",\"target\":\"production\",\"gitSource\":{\"type\":\"github\",\"owner\":\"rafsancuac\",\"repo\":\"Lekhok-Forum\",\"ref\":\"main\"}}")
+          DEP_ID=$(echo "$RESP" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('id') or d.get('error',{}).get('message','UNKNOWN'))")
+          echo "ডিপ্লয়মেন্ট: $DEP_ID"
+          for i in $(seq 1 60); do
+            sleep 20
+            STATE=$(curl -s "https://api.vercel.com/v13/deployments/$DEP_ID" -H "Authorization: Bearer $VERCEL_TOKEN" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('readyState') or d.get('state') or 'UNKNOWN')")
+            echo "  poll$i: $STATE"
+            case "$STATE" in
+              READY|READY_1) echo "✅ প্রোডাকশন-ডিপ্লয় READY"; exit 0;;
+              ERROR|CANCELED) echo "❌ ডিপ্লয় ব্যর্থ ($STATE)"; exit 1;;
+            esac
+          done
+          echo "❌ ২০-মিনিটে-ও-শেষ-হয়নি"; exit 1
