@@ -1,11 +1,15 @@
+'use client'
+
 /**
  * অ্যাডমিন ড্যাশবোর্ড — ওভারভিউ (/admin)
  *
  * পেজ-বাই-পেজ, সেকশন-বাই-সেকশন কার্ড-ম্যাপ: এক নজরে সব সম্পাদনাযোগ্য সেকশন,
  * এক-ক্লিকে সংশ্লিষ্ট প্যানেলে প্রবেশ। প্রতিটি প্যানেল নিজের গেট নিজেই চালায়।
+ * session202 — সাপোর্ট-কেন্দ্র কার্ডে লাইভ পেন্ডিং-ব্যাজ (useSupportPending)
  */
 
 import Link from 'next/link'
+import { useSupportPending } from '@/hooks/useSupportPending'
 
 interface OverviewCard {
   label: string
@@ -114,6 +118,9 @@ const GROUPS: OverviewGroup[] = [
 ]
 
 export default function AdminOverviewPage() {
+  // session202 — রিভিউ-ডেস্ক কার্ডে নতুন-অভিযোগ লাইভ-চিপ (মেম্বারে null → চিপ-শূন্য)
+  const { pending } = useSupportPending()
+
   return (
     <div className="font-hind text-[#050505] space-y-5">
       {/* হেডার */}
@@ -150,9 +157,19 @@ export default function AdminOverviewPage() {
                 href={card.href}
                 className="bg-white border border-[#CED0D4] hover:border-[#006A4E]/60 hover:shadow-md rounded-[10px] p-4 transition-all group"
               >
-                <span className="text-xl block mb-2" aria-hidden>
-                  {card.icon}
-                </span>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-xl block mb-2" aria-hidden>
+                    {card.icon}
+                  </span>
+                  {card.href === '/admin/support/reports' && pending !== null && pending > 0 && (
+                    <span
+                      aria-label={`নতুন অভিযোগ ${pending}টি অপেক্ষমাণ`}
+                      className="shrink-0 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-extrabold lf-anim-fade shadow-2xs"
+                    >
+                      {pending} নতুন
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-[13px] font-bold text-[#050505] group-hover:text-[#006A4E] transition-colors">
                   {card.label}
                 </h3>

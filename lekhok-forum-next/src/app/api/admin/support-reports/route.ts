@@ -8,6 +8,7 @@ import { getSupportAdminId } from '@/lib/support'
  * Task 43 — অভিযোগ-রিভিউ ডেস্ক API
  *
  * GET /api/admin/support-reports?status=PENDING  → অভিযোগ-তালিকা + স্টেটাস-কাউন্ট
+ * GET /api/admin/support-reports?counts=1        → শুধু স্টেটাস-কাউন্ট (লাইট-মোড, ব্যাজ-পোলিং)
  * PUT /api/admin/support-reports  {id, status?, adminNote?} → স্টেটাস/নোট আপডেট
  *
  * অ্যাক্সেস: ম্যানেজার (admin/super_admin) অথবা নির্বাচিত সাপোর্ট-অ্যাডমিন নিজে
@@ -34,6 +35,18 @@ export async function GET(req: NextRequest) {
     const sp = req.nextUrl.searchParams
     const statusParam = sp.get('status')
     const status = STATUSES.includes(statusParam as Status) ? (statusParam as Status) : undefined
+
+    // লাইট-মোড (session202): শুধু কাউন্ট — সাইডবার/ড্যাশবোর্ড ব্যাজের ৩০-সে পোলিংয়ের জন্য
+    // ২০০-রেকর্ড findMany বাদ → এক groupBy-ই যথেষ্ট
+    if (sp.get('counts') === '1') {
+      const groups = await db.userReport.groupBy({ by: ['status'], _count: { id: true } })
+      const counts: Record<Status, number> = { PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0 }
+      for (const g of groups) counts[g.status] = g._count.id
+      return NextResponse.json({
+        counts,
+        total: Object.values(counts).reduce((a, b) => a + b, 0),
+      })
+    }
 
     const where = status ? { status } : {}
     const [reports, groups] = await Promise.all([

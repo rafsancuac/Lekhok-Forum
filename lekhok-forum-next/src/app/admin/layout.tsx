@@ -13,6 +13,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSupportPending } from '@/hooks/useSupportPending'
 
 interface MenuItem {
   label: string
@@ -63,6 +64,8 @@ const ADMIN_NAVIGATION: NavGroup[] = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  // session202 — সাপোর্ট-কেন্দ্র লাইভ পেন্ডিং-ব্যাজ (নীরব ৪০৩-ইগনোর; মেম্বারে null)
+  const { pending } = useSupportPending()
 
   const navLinkCls = (isActive: boolean) =>
     `flex items-center gap-2.5 px-2.5 py-1.5 rounded-[6px] text-xs font-semibold transition cursor-pointer ${
@@ -99,6 +102,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <span aria-hidden>{item.icon}</span>
                 <span>{item.label}</span>
+                {item.href === '/admin/support/reports' && pending !== null && pending > 0 && (
+                  <span className="min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9.5px] font-extrabold flex items-center justify-center lf-anim-fade">
+                    {pending}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -124,10 +132,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </span>
                 {group.items.map((item) => {
                   const isActive = pathname === item.href
+                  const showPending = item.href === '/admin/support/reports' && pending !== null && pending > 0
                   return (
                     <Link key={item.href} href={item.href} className={navLinkCls(isActive)}>
                       <span aria-hidden>{item.icon}</span>
                       <span>{item.label}</span>
+                      {showPending && (
+                        <span
+                          aria-label={`নতুন অভিযোগ ${pending}টি`}
+                          className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-white text-[10px] font-extrabold flex items-center justify-center lf-anim-fade shadow-2xs"
+                        >
+                          {pending}
+                        </span>
+                      )}
                     </Link>
                   )
                 })}

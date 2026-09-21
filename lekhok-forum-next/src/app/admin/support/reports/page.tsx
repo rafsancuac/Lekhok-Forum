@@ -7,19 +7,31 @@
  *   • স্টেটাস-ট্যাব: PENDING / IN_PROGRESS / RESOLVED (লাইভ-কাউন্টসহ)
  *   • অভিযোগ-কার্ড: প্রেরক + সময় + লেখা + মিডিয়া-প্রিভিউ (ছবি/অডিও/ভিডিও)
  *   • অ্যাকশন: স্টেটাস-পরিবর্তন + অ্যাডমিন-নোট (সেভ)
+ * session202 — অ্যাওয়্যারনেস-প্যাক:
+ *   • CSV-এক্সপোর্ট (UTF-8 BOM, বাংলা-হেডার, RFC-4180-escape)
+ *   • স্টেটাস-রঙা বাম-অ্যাকসেন্ট বর্ডার + প্রেরক-অ্যাভাটার (ডিটারমিনিস্টিক রঙ)
+ *   • বাংলা আপেক্ষিক-সময় (টাইটেলে পূর্ণ-স্ট্যাম্প) + লেখা-কপি বাটন
+ *   • ছবি-লাইটবক্স (Esc/ব্যাকড্রপ-বন্ধ) + শীল্ড ইম্পটি-স্টেট
+ *   • আপডেটে 'lf:support-changed' ডিসপ্যাচ → সাইডবার/ড্যাশবোর্ড ব্যাজ তাৎক্ষণিক
  */
 
 import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
+  Check,
   CheckCircle2,
+  Copy,
+  Download,
   Image as ImageIcon,
   Loader2,
   Mic,
   ShieldAlert,
+  ShieldCheck,
   Video,
+  X,
 } from 'lucide-react'
 import AdminGate, { useAdminGate } from '@/components/admin/AdminGate'
+import { bn } from '@/lib/format'
 
 type Status = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED'
 
@@ -48,6 +60,40 @@ const STATUS_LABEL: Record<Status, string> = {
   RESOLVED: 'সমাধান',
 }
 
+/** session202 — স্টেটাস-ভিত্তিক বাম-অ্যাকসেন্ট বর্ডার (কার্ডে এক-নজরে স্টেটাস) */
+const ACCENT: Record<Status, string> = {
+  PENDING: 'border-l-amber-500',
+  IN_PROGRESS: 'border-l-sky-600',
+  RESOLVED: 'border-l-emerald-600',
+}
+
+/** session202 — প্রেরক-অ্যাভাটারের ডিটারমিনিস্টিক রঙ (নাম-হ্যাশ → ফিক্সড প্যালেট) */
+const AVATAR_COLORS = ['#006A4E', '#7C3AED', '#B45309', '#0E7490', '#BE185D', '#4D7C0F', '#DC2626', '#0369A1']
+function avatarColorFor(name: string): string {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return AVATAR_COLORS[h % AVATAR_COLORS.length]
+}
+
+/** বাংলা আপেক্ষিক-সময় — এখনই / X মিনিট আগে / X ঘণ্টা আগে / X দিন আগে / তারিখ */
+function relTimeBn(iso: string): string {
+  const t = new Date(iso).getTime()
+  if (Number.isNaN(t)) return ''
+  const m = Math.floor((Date.now() - t) / 60000)
+  if (m < 1) return 'এখনই'
+  if (m < 60) return `${bn(m)} মিনিট আগে`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${bn(h)} ঘণ্টা আগে`
+  const d = Math.floor(h / 24)
+  if (d < 30) return `${bn(d)} দিন আগে`
+  return new Date(iso).toLocaleDateString('bn-BD', { dateStyle: 'medium' })
+}
+
+/** RFC-4180 CSV-সেল-escape */
+function csvCell(v: string): string {
+  return `"${String(v ?? '').replace(/"/g, '""')}"`
+}
+
 export default function SupportReportsPage() {
   const { state, adminCandidates } = useAdminGate(false)
 
@@ -70,6 +116,10 @@ function SupportReportsPanel() {
   const [busy, setBusy] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [toast, setToast] = useState<string | null>(null)
+  // session202 — লেখা-কপি + ছবি-লাইটবক্স + CSV-ব্যাস্ট
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [lightbox, setLightbox] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   const flash = useCallback((msg: string) => {
     setToast(msg)
@@ -99,6 +149,69 @@ function SupportReportsPanel() {
     return () => clearInterval(t)
   }, [load])
 
+  /** ছবি-লাইটবক্স Esc-বন্ধ (session202) */
+  useEffect(() => {
+    if (!lightbox) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightbox])
+
+  /** অভিযোগের লেখা কপি — clipboard API + legacy-fallback (session202) */
+  const copyMsg = useCallback(async (r: Report) => {
+    try {
+      await navigator.clipboard.writeText(r.messageText)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = r.messageText
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+      } catch {
+        /* নীরব */
+      }
+      ta.remove()
+    }
+    setCopiedId(r.id)
+    setTimeout(() => setCopiedId((c) => (c === r.id ? null : c)), 1600)
+  }, [])
+
+  /** CSV-এক্সপোর্ট — সব-স্টেটাস, UTF-8 BOM (এক্সেলে বাংলা ঠিক), RFC-4180 (session202) */
+  const exportCsv = useCallback(async () => {
+    setExporting(true)
+    try {
+      const header = ['তারিখ', 'প্রেরক', 'ইমেইল', 'স্টেটাস', 'মিডিয়া', 'অভিযোগ', 'অ্যাডমিন-নোট']
+      const rows = reports.map((r) => [
+        new Date(r.createdAt).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }),
+        r.senderName,
+        r.senderEmail ?? '',
+        STATUS_LABEL[r.status],
+        r.mediaType,
+        r.messageText,
+        r.adminNote ?? '',
+      ])
+      const csv =
+        '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `lekhok-support-reports-${new Date().toISOString().slice(0, 10)}.csv`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      flash(`CSV ডাউনলোড শুরু — ${bn(reports.length)}টি রেকর্ড`)
+    } finally {
+      setExporting(false)
+    }
+  }, [reports, flash])
+
   const update = useCallback(
     async (id: string, payload: { status?: Status; adminNote?: string }) => {
       setBusy(id)
@@ -112,6 +225,8 @@ function SupportReportsPanel() {
         if (!res.ok) throw new Error(data?.error || 'আপডেট ব্যর্থ')
         setReports((prev) => prev.map((r) => (r.id === id ? { ...r, ...data.report } : r)))
         await load() // কাউন্ট-রিফ্রেশ
+        // session202 — সাইডবার/ড্যাশবোর্ড ব্যাজ তাৎক্ষণিক-রিফ্রেশ
+        window.dispatchEvent(new Event('lf:support-changed'))
         flash(payload.status ? `স্টেটাস → ${STATUS_LABEL[payload.status]}` : 'নোট সংরক্ষিত')
       } catch (err) {
         flash(err instanceof Error ? err.message : 'আপডেট ব্যর্থ')
@@ -150,12 +265,23 @@ function SupportReportsPanel() {
             <b>{total}টি</b> রেকর্ড
           </p>
         </div>
-        <Link
-          href="/admin"
-          className="px-3 py-2 bg-[#F0F2F5] hover:bg-[#E4E6EB] text-[#050505] rounded-[8px] text-xs font-bold transition shrink-0"
-        >
-          ← ড্যাশবোর্ড
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={exportCsv}
+            disabled={reports.length === 0 || exporting}
+            type="button"
+            className="px-3 py-2 bg-white border border-[#CED0D4] hover:border-[#006A4E] hover:text-[#006A4E] text-[#4B4C4F] rounded-[8px] text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+          >
+            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            <span>CSV</span>
+          </button>
+          <Link
+            href="/admin"
+            className="px-3 py-2 bg-[#F0F2F5] hover:bg-[#E4E6EB] text-[#050505] rounded-[8px] text-xs font-bold transition"
+          >
+            ← ড্যাশবোর্ড
+          </Link>
+        </div>
       </div>
 
       {/* স্টেটাস-ট্যাব (লাইভ-কাউন্ট) */}
@@ -194,8 +320,10 @@ function SupportReportsPanel() {
         </div>
       ) : shown.length === 0 ? (
         <div className="bg-white border border-[#CED0D4] rounded-[10px] p-10 text-center">
-          <p className="text-sm text-[#65676B]">
-            {STATUS_LABEL[tab]} স্টেটাসে কোনো অভিযোগ নেই
+          <ShieldCheck className="w-8 h-8 text-[#CED0D4] mx-auto mb-2" aria-hidden />
+          <p className="text-sm text-[#65676B]">{STATUS_LABEL[tab]} স্টেটাসে কোনো অভিযোগ নেই</p>
+          <p className="text-[11px] text-[#8A8D91] mt-1">
+            সাপোর্ট-চ্যাটে নতুন অভিযোগ এলে এখানে লাইভ দেখা যাবে
           </p>
         </div>
       ) : (
@@ -203,25 +331,37 @@ function SupportReportsPanel() {
           {shown.map((r) => (
             <article
               key={r.id}
-              className="bg-white border border-[#CED0D4] rounded-[10px] p-4 shadow-2xs space-y-3"
+              className={`bg-white border border-[#CED0D4] rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 ${ACCENT[r.status]} lf-anim-fade`}
             >
-              {/* প্রেরক-বার */}
+              {/* প্রেরক-বার (session202: অ্যাভাটার + আপেক্ষিক-সময়) */}
               <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0">
-                  <p className="text-[13px] font-bold flex items-center gap-2 flex-wrap">
-                    {r.senderName}
-                    {r.senderEmail && (
-                      <span className="text-[10.5px] font-normal text-[#65676B]">
-                        ({r.senderEmail})
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-[10.5px] text-[#65676B] mt-0.5">
-                    {new Date(r.createdAt).toLocaleString('bn-BD', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    })}
-                  </p>
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <span
+                    aria-hidden
+                    style={{ backgroundColor: avatarColorFor(r.senderName) }}
+                    className="w-8 h-8 rounded-full text-white text-[12px] font-extrabold flex items-center justify-center shrink-0 select-none"
+                  >
+                    {r.senderName.trim().charAt(0) || '?'}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold flex items-center gap-2 flex-wrap">
+                      {r.senderName}
+                      {r.senderEmail && (
+                        <span className="text-[10.5px] font-normal text-[#65676B]">
+                          ({r.senderEmail})
+                        </span>
+                      )}
+                    </p>
+                    <p
+                      className="text-[10.5px] text-[#65676B] mt-0.5"
+                      title={new Date(r.createdAt).toLocaleString('bn-BD', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                    >
+                      {relTimeBn(r.createdAt)}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {TABS.filter((t) => t.key !== r.status).map((t) => (
@@ -239,10 +379,25 @@ function SupportReportsPanel() {
                 </div>
               </div>
 
-              {/* অভিযোগ-লেখা */}
-              <p className="text-[13px] leading-relaxed whitespace-pre-wrap break-words bg-[#F7F8FA] border border-[#E4E6EB] rounded-[8px] p-3">
-                {r.messageText}
-              </p>
+              {/* অভিযোগ-লেখা (session202: হোভার-কপি বাটন) */}
+              <div className="relative group/msg">
+                <p className="text-[13px] leading-relaxed whitespace-pre-wrap break-words bg-[#F7F8FA] border border-[#E4E6EB] rounded-[8px] p-3 pr-9">
+                  {r.messageText}
+                </p>
+                <button
+                  onClick={() => copyMsg(r)}
+                  type="button"
+                  aria-label="অভিযোগের লেখা কপি করুন"
+                  title="লেখা কপি"
+                  className="absolute top-2 right-2 p-1.5 rounded-[6px] bg-white border border-[#E4E6EB] text-[#65676B] hover:text-[#006A4E] hover:border-[#006A4E]/50 transition cursor-pointer"
+                >
+                  {copiedId === r.id ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" aria-hidden />
+                  )}
+                </button>
+              </div>
 
               {/* মিডিয়া-প্রিভিউ */}
               {r.mediaType !== 'TEXT' && r.mediaUrl && (
@@ -255,11 +410,18 @@ function SupportReportsPanel() {
                   </span>
                   <div className="min-w-0 flex-1">
                     {r.mediaType === 'IMAGE' && (
-                      <img
-                        src={r.mediaUrl}
-                        alt="অভিযোগের সংযুক্তি"
-                        className="max-h-56 rounded-[8px] border border-[#E4E6EB] object-contain"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setLightbox(r.mediaUrl)}
+                        className="p-0 border-0 bg-transparent cursor-zoom-in rounded-[8px] overflow-hidden block"
+                        aria-label="ছবি বড় করে দেখুন"
+                      >
+                        <img
+                          src={r.mediaUrl}
+                          alt="অভিযোগের সংযুক্তি"
+                          className="max-h-56 rounded-[8px] border border-[#E4E6EB] object-contain hover:opacity-90 transition"
+                        />
+                      </button>
                     )}
                     {r.mediaType === 'AUDIO' && (
                       <audio controls src={r.mediaUrl} className="w-full max-w-md" preload="none" />
@@ -308,6 +470,31 @@ function SupportReportsPanel() {
               </div>
             </article>
           ))}
+        </div>
+      )}
+
+      {/* ছবি-লাইটবক্স (session202) — Esc/ব্যাকড্রপ-ক্লিকে বন্ধ */}
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="অভিযোগের ছবি — পূর্ণ-ভিউ"
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-6 cursor-zoom-out lf-anim-fade"
+        >
+          <img
+            src={lightbox}
+            alt="অভিযোগের সংযুক্তি — পূর্ণ-ভিউ"
+            className="max-h-[85vh] max-w-full rounded-[10px] shadow-2xl object-contain"
+          />
+          <button
+            type="button"
+            aria-label="বন্ধ করুন"
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/90 text-[#050505] hover:bg-white transition cursor-pointer"
+          >
+            <X className="w-5 h-5" aria-hidden />
+          </button>
         </div>
       )}
     </div>
