@@ -2571,3 +2571,137 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 .dlx-login192:focus-visible{outline:2px solid var(--lf-brand-primary);outline-offset:1px;border-radius:4px}
 @media (prefers-reduced-motion:reduce){.dlx-item--tile192 .dlx-ico--soft192{transition:none;transform:none}}
 /* ════════ EOF session192-pub-directory ════════ */
+/* ═══════════ সেশন ১৯৩: নেতৃত্ব-কার্ড কম্প্যাক্ট + মসৃণ-অ্যানিমেশন পুনরুদ্ধার + সেকশন-ব্যাকগ্রাউন্ড প্রিমিয়াম-সরলীকরণ + "আজকের কন্টেন্ট" ইউজার-ফিড-আদলে ═══════════
+   ইউজার-ফিডব্যাক (২০২৬-০৯-২১, স্ক্রিনশট-সহ): ① কার্ডের নিচে বিশাল ফাঁকা জায়গা —
+   RCA: .leader-card-featured{min-height:760px} ফিক্সড-উচ্চতা; ② "আগের অ্যানিমেশন
+   সরিয়েছ কেন" — RCA: সেশন-১৮০-এর কার্ড-লেভেল ইফেক্ট (হ্যালো/৮px-লিফট/ডাবল-রিং/
+   কার্যবর্ষ-চিপ) সব .leaders-row স্কোপে লেখা — মার্কআপে ওই ক্লাস নেই-ই → ডেড CSS;
+   ③ ডট-ম্যাট্রিক্স + মাল্টি-অরোরা ভারী লাগছে → সফট-গ্রেডিয়েন্ট + একক অ্যাম্বিয়েন্ট-আভা।
+   সমাধান: সব কার্ড-লেভেল রুল এবার #leadership/#current-leadership ID-স্কোপে
+   (মার্কআপ-যাচাইকৃত) — হোভার-লিফট, শিমার-টপবার, ফটো-জুম+ডাবল-রিং, বাণী-কোট-বক্স,
+   রোল/কার্যবর্ষ-চিপ, সোশ্যাল-বিভাজক; ব্যাকগ্রাউন্ড = মিন্ট-গ্রেডিয়েন্ট + ধীর-আভা।
+   "আজকের কন্টেন্ট" = feed-showcase আদলের ব্যান্ড (partials/home/today.ejs)। */
+
+/* ── ১. সেকশন-ব্যাকগ্রাউন্ড: ডট-ম্যাট্রিক্স/মাল্টি-অরোরা বাদ → মসৃণ প্রিমিয়াম ── */
+#leadership, #current-leadership {
+  border-top: 1px solid rgba(5,150,105,.16);
+  border-image: none;
+  background-image: linear-gradient(180deg, rgb(244,248,246) 0%, rgb(250,251,251) 42%, rgb(255,255,255) 100%);
+  box-shadow: none;
+}
+/* একক সফট অ্যাম্বিয়েন্ট-আভা — কেন্দ্রে ব্লার-করা এমারেল্ড-টিল গ্লো (স্পেক: 700×350 blur-ঘন) */
+#leadership::before, #current-leadership::before {
+  content: ''; position: absolute; inset: auto; left: 50%; top: 50%;
+  width: min(780px, 92%); height: 400px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(16,185,129,.13), rgba(13,148,136,.06) 55%, transparent 78%);
+  filter: blur(46px);
+  animation: lfw193-ambience 30s ease-in-out infinite alternate;
+  will-change: transform;
+}
+#current-leadership::before { animation-duration: 36s; animation-direction: alternate-reverse; }
+@keyframes lfw193-ambience {
+  0%   { transform: translate(-50%, -50%) translate3d(-1.5%, -1%, 0) scale(1); }
+  100% { transform: translate(-50%, -50%) translate3d(1.5%, 1%, 0) scale(1.05); }
+}
+/* ডট-ম্যাট্রিক্স স্তর সম্পূর্ণ বাদ (সেশন-১৮০-এর ::after নিষ্ক্রিয়) */
+#leadership::after, #current-leadership::after { content: none; }
+#leadership .container, #current-leadership .container { position: relative; z-index: 1; }
+
+/* ── ২. কার্ড: ফিক্সড-উচ্চতা বাদ (নিচের ফাঁকা জায়গা শূন্য) + প্রিমিয়াম-রূপ ── */
+#leadership .leader-card-featured, #current-leadership .leader-card-featured {
+  min-height: 0 !important;
+  border-radius: 14px;
+}
+/* স্থায়ী সবুজ-হ্যালো (বিশ্রামেই) + হোভারে মসৃণ ৭px-ভেসে-ওঠা (আগের অ্যানিমেশন ফেরত) */
+#leadership .leader-card.has-image, #current-leadership .leader-card.has-image {
+  border-color: rgba(5,150,105,.24);
+  box-shadow: 0 2px 4px rgba(15,23,42,.04), 0 16px 38px -18px rgba(4,120,87,.30);
+  will-change: transform;
+}
+#leadership .leader-card.has-image:hover, #current-leadership .leader-card.has-image:hover {
+  transform: translateY(-7px);
+  border-color: rgba(5,150,105,.52);
+  box-shadow: 0 12px 26px -12px rgba(4,120,87,.28), 0 34px 64px -24px rgba(4,120,87,.42) !important;
+}
+#leadership .leader-card:hover .leader-name, #current-leadership .leader-card:hover .leader-name {
+  color: var(--accent-dark, #047857);
+}
+/* টপ-অ্যাকসেন্ট → গ্রেডিয়েন্ট শিমার-বার (ফ্ল্যাট ৪px-এর বদলে ৩px ত্রি-স্টপ) */
+#leadership .leader-card::before, #current-leadership .leader-card::before {
+  height: 3px;
+  background: linear-gradient(90deg, rgb(52,211,153), rgb(5,150,105) 45%, rgb(13,148,136));
+  opacity: .85;
+  transition: opacity .2s;
+}
+#leadership .leader-card:hover::before, #current-leadership .leader-card:hover::before { opacity: 1; }
+
+/* ── ৩. ছবি: ডাবল-রিং + হোভার-গ্লো + সফট-জুম (মার্কআপ-সঠিক স্কোপে ফেরত) ── */
+#leadership .leader-photo, #current-leadership .leader-photo {
+  outline: 2px solid rgba(5,150,105,.26); outline-offset: 3px;
+  box-shadow: 0 10px 26px -8px rgba(4,120,87,.45);
+  transition: transform .35s cubic-bezier(.22,.61,.36,1), outline-color .25s, box-shadow .25s;
+}
+#leadership .leader-card:hover .leader-photo, #current-leadership .leader-card:hover .leader-photo {
+  transform: scale(1.05);
+  outline-color: rgba(5,150,105,.5);
+  box-shadow: 0 0 0 3px rgb(255,255,255), 0 0 0 5px rgba(5,150,105,.28), 0 14px 34px -8px rgba(4,120,87,.55);
+}
+
+/* ── ৪. পদবী-চিপ ও কার্যবর্ষ-চিপ (ইউজার-স্পেক: সফট-এমারেল্ড টিন্ট) ── */
+#leadership .leader-role, #current-leadership .leader-role {
+  display: inline-block; font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+  color: var(--accent-dark, #047857);
+  background: rgba(5,150,105,.10); border: 1px solid rgba(5,150,105,.22);
+  border-radius: 6px; padding: 2.5px 11px;
+}
+#leadership .leader-year, #current-leadership .leader-year {
+  display: inline-block; padding: 2.5px 12px; border-radius: 6px;
+  background: rgba(5,150,105,.10); border: 1px solid rgba(5,150,105,.22);
+  color: var(--accent-dark, #047857); font-weight: 600; letter-spacing: .02em;
+}
+
+/* ── ৫. বাণী → কোট-বক্স (❝ + সফট-সারফেস) — ফাঁকা-জায়গা নয়, নকশা-ভর্তি জায়গা ── */
+#leadership .leader-card-featured .leader-bani, #current-leadership .leader-card-featured .leader-bani {
+  position: relative; background: rgb(250,251,251); border: 1px solid rgb(233,236,239);
+  border-radius: 10px; padding: 17px 12px 10px 14px; margin: 0 0 14px;
+  font-style: normal; text-align: justify; text-align-last: left;
+  font-size: 13.5px; line-height: 1.75; color: rgb(75,76,79); flex: 1; width: 100%;
+  transition: background .25s, border-color .25s;
+}
+#leadership .leader-card-featured .leader-bani::before, #current-leadership .leader-card-featured .leader-bani::before {
+  content: '❝'; position: absolute; top: 4px; left: 10px;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 19px; line-height: 1;
+  color: rgba(5,150,105,.30); pointer-events: none;
+}
+#leadership .leader-card-featured:hover .leader-bani, #current-leadership .leader-card-featured:hover .leader-bani {
+  background: rgb(242,248,245); border-color: rgba(5,150,105,.25);
+}
+/* সোশ্যাল-রো কার্ডের ঠিক নিচেই — সূক্ষ্ম বিভাজকসহ */
+#leadership .leader-card-featured .leader-social, #current-leadership .leader-card-featured .leader-social {
+  border-top: 1px solid rgb(240,242,245); padding-top: 12px; margin-top: auto;
+}
+
+/* ── ৬. "আজকের কন্টেন্ট" — ইউজার-ফিড (feed-showcase) আদলের ব্যান্ড ── */
+.ts-showcase193 {
+  background: linear-gradient(115deg, rgb(242,248,245) 0%, rgb(250,253,251) 48%, rgb(242,248,245) 100%);
+  border-color: rgba(5,150,105,.24);
+  box-shadow: 0 20px 48px -22px rgba(4,120,87,.30), 0 4px 18px rgba(15,23,42,.05);
+}
+.ts-showcase193 .fs-title { font-size: 29px; }
+.ts-showcase193 .fs-title .accent { color: var(--accent-dark, #047857); -webkit-text-fill-color: currentColor; }
+.ts-grid193 { position: relative; z-index: 2; display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 40px; align-items: center; }
+.ts-decor-193a { width: 260px; height: 260px; top: -90px; right: -60px; opacity: .5; }
+.ts-decor-193b { width: 200px; height: 200px; bottom: -80px; left: -50px; opacity: .35; }
+@media (max-width: 980px) {
+  .ts-grid193 { grid-template-columns: 1fr; gap: 26px; }
+  .ts-showcase193 .fs-title { font-size: 26px; }
+}
+
+/* ── ৭. অ্যাক্সেসিবিলিটি: কম-মোশন-পছন্দীদের জন্য সব অ্যানিমেশন/লিফট বন্ধ ── */
+@media (prefers-reduced-motion: reduce) {
+  #leadership::before, #current-leadership::before { animation: none; }
+  #leadership .leader-card.has-image:hover, #current-leadership .leader-card.has-image:hover { transform: none; }
+  #leadership .leader-card:hover .leader-photo, #current-leadership .leader-card:hover .leader-photo { transform: none; }
+}
+/* ═══════════ EOF সেশন ১৯৩ ═══════════ */

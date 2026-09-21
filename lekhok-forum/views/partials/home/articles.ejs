@@ -1,0 +1,57 @@
+<%# ── সেশন ৭২ (GSC-ফিক্স): সাম্প্রতিক লেখা — হোম থেকে আর্টিকেল-ক্রল-পাথ
+    (আগে হোমে কোনো আর্টিকেল-লিংক ছিল না; /articles/22-30 GSC-তে 'Discovered' ছিল)
+    সেশন ৯০ (হোম-কিউরেশন): তালিকা এখন মডারেটর/এডমিন-নির্বাচিত
+    (home_featured) — অ্যাভাটার/কভার-আপডেট বা প্রশ্নের মতো সোশ্যাল-
+    অ্যাক্টিভিটি কখনোই এখানে আসতে পারে না (post_kind='writing' ফিল্টার)।
+    সেশন ৯৪: শেয়ার-করা পোস্টও কঠোরভাবে বাদ (shared_from IS NULL) —
+    কেবল মূল লেখকের অরিজিনাল পোস্টই এই সারিতে আসে। ── %>
+<% if (typeof recentArticles !== 'undefined' && recentArticles && recentArticles.length) { %>
+<section class="section reveal">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow"><i class="fas fa-pen-nib"></i> লেখকদের কালি</span>
+        <h2 class="section-title">সাম্প্রতিক <span class="accent">লেখা</span>
+          <% if (typeof homeCurated !== 'undefined' && homeCurated) { %>
+            <span class="ink-curate-badge" title="মডারেটর/এডমিন নির্বাচিত লেখা"><i class="fas fa-check-double"></i> সম্পাদক-নির্বাচিত</span>
+          <% } %>
+        </h2>
+        <span class="accent-divider"></span>
+      </div>
+      <a href="/articles" class="link-more">সব লেখা দেখুন <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="notice-list notice-list--home reveal-stagger">
+      <% recentArticles.forEach(a => { %>
+        <a href="/articles/<%= a.id %>" class="notice-row notice-row--compact">
+          <%# সেশন ১১০: শৈল্পিক প্রচ্ছদ (posts.home_cover) — প্রিসেট=গ্রেডিয়েন্ট+কলম, টাইপোগ্রাফি=আদ্যক্ষর, কাস্টম=ইমেজ %>
+          <% if (a.cover) { %>
+          <span class="notice-row-icon inkc110<%= a.cover.type === 'typo' ? ' inkc110-typo' : '' %>" <% if (a.cover.grad) { %>style="background:<%= a.cover.grad %>"<% } %><% if (a.cover.type === 'typo' && a.cover.initial) { %> data-initial="<%= a.cover.initial %>"<% } %>>
+            <% if (a.cover.type === 'custom') { %>
+              <img class="inkc110-img" src="<%= a.cover.url %>" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('inkc110-fallback');this.remove()">
+            <% } else if (a.cover.type === 'preset') { %>
+              <i class="fas fa-feather-alt"></i>
+            <% } %>
+          </span>
+          <% } else { %>
+          <span class="notice-row-icon cat-general">
+            <i class="fas fa-feather-alt"></i>
+          </span>
+          <% } %>
+          <span class="notice-row-main">
+            <span class="notice-row-top">
+              <span class="notice-row-title"><%= a.title %></span>
+            </span>
+            <% if (a.excerpt) { %>
+              <span class="notice-row-sub ink-excerpt"><%= mdPlain(a.excerpt, 110) %></span>
+            <% } %>
+          </span>
+          <span class="notice-row-meta">
+            <span class="notice-row-date"><i class="far fa-user"></i><%= a.author_name %></span>
+            <i class="fas fa-chevron-right notice-row-arrow"></i>
+          </span>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>

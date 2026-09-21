@@ -12,9 +12,6 @@ const claimService = require('../helpers/claim-service');
 const { adminLoginLimiter, clientIp } = require('../helpers/rate-limit');
 const totp = require('../helpers/totp');
 const rolePolicy = require('../helpers/role-policy');
-// সেশন ৫৫: হোম-নেতৃত্ব প্যানেল — ৮-স্লট কম্পিউটার (ছবি-আপলোড মিডলওয়্যার
-// memberPhotoUpload55 নিচে makeContentImageUpload-ডিক্লারেশনের পরে তৈরি হয়)
-const HL55 = require('../helpers/home-leadership');
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
 // Admin  = admin_users session OR user session with role='admin'  → full access
@@ -59,11 +56,11 @@ const ADMIN_PATH_AREAS = [
   { re: /^\/daily(\/|$)/,                key: 'daily' },
   { re: /^\/complaints(\/|$)/,           key: 'complaints' },
   { re: /^\/(members|claims|members\b)(\/|$)/, key: 'members' },
-  { re: /^\/home-leadership(\/|$)/,     key: 'members' },  // সেশন ৫৫: হোম-নেতৃত্ব = কমিটি-সদস্য-এরিয়ার অংশ
   { re: /^\/(users|moderators)(\/|$)/,    key: 'users' },
   { re: /^\/(settings|security)(\/|$)/,  key: 'settings' },
   { re: /^\/resources(\/|$)/,            key: 'resources' },
   { re: /^\/(content|sections|navigation|search-index)(\/|$)/, key: 'content' },
+  { re: /^\/home-reorder(\/|$)/, key: 'content' },   // সেশন ১৯৩: হোমপেজ রি-অর্ডারিং → কনটেন্ট-এরিয়া
   { re: /^\/(achievements|constitution|past-leaders)(\/|$)/,   key: 'organization' },
   { re: /^\/media(\/|$)/,                key: 'media' },
   { re: /^\/(analytics|activity|audit|trash)(\/|$)/,            key: 'oversight' },
@@ -670,360 +667,6 @@ router.post('/members/bulk-unsuspend', requireAdmin, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ── সেশন ৫৫: হোম নেতৃত্ব প্যানেল (/admin/home-leadership) ─────────────────────
-// হোম-পেজের "নেতৃত্বের ধারা" + "বর্তমান নেতৃত্ব" সেকশনের ৮টি কার্ডের নাম, ছবি,
-// পদবি, কার্যবর্ষ, বাণী ও সোশ্যাল-লিংক — কোড না ছুঁয়ে ব্রাউজার থেকেই সম্পাদনা।
-// স্লট-কম্পিউটেশন helpers/home-leadership.js-এ (হোম-রুটের হুবহু নিয়ম) —
-// প্যানেলে যা দেখা যায়, হোমে ঠিক তা-ই রেন্ডার হয়।
-// ══════════════════════════════════════════════════════════════════════════════
-
-router.get('/home-leadership', requireAdmin, async (req, res) => {
-  const rows = await HL55.fetchHomeLeadershipRows(db);
-  // সেশন ৫৫-ফিক্স (session188): db.getSetting অ্যাসিনক্রোনাস — না-অপেক্ষা-করে
-  // ব্যবহার-করলে বাণী-ফলব্যাক নিজেই Promise হয়ে যেত (ভিউতে '[object Promise]'
-  // রেন্ডার-বাগ)। এক-কোয়েরিতে সব-সেটিংস এনে sync-ম্যাপ থেকে পড়া হলো।
-  let _settingsMap55 = {};
-  try { _settingsMap55 = await db.getSettingsAll(); } catch (e) { /* খালি-ম্যাপ = ফাইল-ডিফল্ট */ }
-  // প্রতি স্লটের ফলব্যাক-বাণী: settings-ওভাররাইড প্রাধান্য, খালি হলে ফাইল-ডিফল্ট
-  const statementOf = (slotKey) => {
-    const v = _settingsMap55['content_home_statement_' + slotKey];
-    return (v && String(v).trim()) ? String(v) : (HL55.LEADER_STATEMENTS[slotKey] || '');
-  };
-  const slots = HL55.buildHomeLeadershipSlots(rows, statementOf);
-  // সেশন ৬৩: প্রতি-স্লট হোম-ভিজিবিলিটি — settings 'home_hidden_slots' (CSV)
-  // প্যানেলের অন/অফ সুইচের প্রাথমিক-অবস্থা; লুকানো স্লট হোমপেজে রেন্ডার হয় না।
-  // সেশন ৬৪: সেটিং অনুপস্থিত হলে ডিফল্ট current_advisor_1/2 লুকানো ধরা হয়
-  // (উপদেষ্টা নিয়োগ না-দেওয়া পর্যন্ত — seed-ডেমো প্রোডে আর দেখাবে না)।
-  let hiddenSlots63 = HL55.DEFAULT_HIDDEN_SLOTS.slice();
-  try {
-    hiddenSlots63 = HL55.effectiveHiddenSlots(await db.getSetting('home_hidden_slots'));
-  } catch (e) { /* ডিফল্টই থাকুক */ }
-  // সেশন ৬৪: অতিরিক্ত-উপদেষ্টা (বাউন্ডারি-কার্যবর্ষের তৃতীয়+ সদস্য) — প্যানেলে
-  // সম্পাদনা/টগলযোগ্য; home_extra_members (opt-in CSV)-এ থাকলেই হোমপেজে দেখা যায়।
-  let legacyExtras64 = [], currentExtras64 = [], extraActive64 = [];
-  try {
-    const groups64 = await HL55.fetchAdvisoryGroups(db);
-    legacyExtras64 = groups64.founding.slice(2);
-    currentExtras64 = groups64.current.slice(2);
-    extraActive64 = HL55.parseCsvList(await db.getSetting('home_extra_members')).map(Number);
-  } catch (e) { /* ব্যর্থ হলে খালি — প্যানেলে শুধু ৮-স্লটই থাকবে */ }
-  // সেশন ৬২: কার্যবর্ষ-ড্রপডাউনের অপশন-তালিকা — DB-র বিদ্যমান কার্যবর্ষগুলো +
-  // আদর্শ পরিসর (২০১৮-১৯ … ২০৩২-৩৩), ডুপ-বিহীন, নবীনতম-আগে সাজানো।
-  const _bn62 = '০১২৩৪৫৬৭৮৯';
-  const _toBn62 = (n) => String(n).replace(/\d/g, (d) => _bn62[+d]);
-  const _termSet62 = new Set();
-  for (let y = 2018; y <= 2032; y++) _termSet62.add(_toBn62(y) + '-' + _toBn62(y + 1).slice(-2));
-  try {
-    const dbTerms = await db.prepare("SELECT DISTINCT term_year FROM members WHERE term_year IS NOT NULL AND term_year != ''").all();
-    (dbTerms || []).forEach((r) => _termSet62.add(String(r.term_year).trim()));
-  } catch (e) { /* ব্যর্থ হলে শুধু আদর্শ-পরিসরই থাকবে */ }
-  const termOptions = Array.from(_termSet62).sort((a, b) => HL55.bnLead(b) - HL55.bnLead(a));
-  res.render('admin/home-leadership', {
-    slots,
-    latestTerm: rows.latestTerm || null,
-    termOptions,
-    hiddenSlots: hiddenSlots63,
-    legacyExtras: legacyExtras64,
-    currentExtras: currentExtras64,
-    extraActive: extraActive64,
-    saved: req.query.saved === '1',
-    error: req.query.err ? String(req.query.err) : null,
-    currentPath: '/admin/home-leadership'
-  });
-});
-
-// সেশন ৬২: স্লট→member_type/অর্ডার-ম্যাপ — খালি-স্লটে সরাসরি-ইনপুটে নতুন
-// members-রো তৈরির সময় কোন-ধরনে বসবে তা এখান থেকে আসে (হোম-কুয়েরির সাথে অভিন্ন)।
-const HL62_SLOT_TYPE = {
-  founder_president:         { type: 'founder',  pos: 'first' },
-  founder_general_secretary: { type: 'founder',  pos: 'last'  },
-  founding_advisor_1:        { type: 'advisory', pos: 'oldest' },
-  founding_advisor_2:        { type: 'advisory', pos: 'oldest' },
-  current_president:         { type: 'central',  pos: 'last'  },
-  current_general_secretary: { type: 'central',  pos: 'last'  },
-  current_advisor_1:         { type: 'advisory', pos: 'newest' },
-  current_advisor_2:         { type: 'advisory', pos: 'newest' }
-};
-
-router.post('/home-leadership/slot', requireAdmin, (req, res, next) => memberPhotoUpload55(req, res, next), async (req, res) => {
-  const wantsJson = String(req.headers.accept || '').includes('application/json');
-  const done = (ok, payload) => {
-    if (wantsJson) return res.status(ok ? 200 : 400).json(payload);
-    return ok ? res.redirect('/admin/home-leadership?saved=1#slot-' + encodeURIComponent(payload.slot || ''))
-              : res.redirect('/admin/home-leadership?err=' + encodeURIComponent(payload.error || 'সংরক্ষণ ব্যর্থ'));
-  };
-  const slotKey = String(req.body.slot || '').trim();
-  const meta = HL55.SLOT_META.find((s) => s.key === slotKey);
-  if (!meta) return done(false, { ok: false, error: 'অজানা স্লট' });
-  if (req.uploadError) return done(false, { ok: false, error: req.uploadError });
-
-  // সেভ-শেষে কার্ড ইন-প্লেস-আপডেটের জন্য প্রদর্শন-মান হিসাবকারী (এক-ই নিয়ম
-  // ভিউ ও হোম-ভিউ ব্যবহার করে — helpers/displayOf)। ফলব্যাক-বাণী হিসাবেও
-  // settings-ওভাররাইড প্রাধান্য (GET-রুটের statementOf-এর হুবহু প্রতিরূপ)।
-  const respondDisplay = async (memberId, slotKey) => {
-    const rows = await db.prepare(HL55.MEMBER_JOIN + ' WHERE m.id = ?').all(memberId);
-    let st = HL55.LEADER_STATEMENTS[slotKey] || '';
-    try {
-      const v = await db.getSetting('content_home_statement_' + slotKey);
-      if (v && String(v).trim()) st = String(v);
-    } catch (e) { /* ফাইল-ডিফল্টই থাকুক */ }
-    return HL55.displayOf((rows && rows[0]) || null, st);
-  };
-
-  try {
-    // ১) ফলব্যাক-বাণী ওভাররাইড — সবসময় সেভযোগ্য (স্লটে সদস্য না থাকলেও)
-    if ('statement' in req.body) {
-      const val = String(req.body.statement || '').replace(/\r\n/g, '\n').trim();
-      await setSetting('content_home_statement_' + slotKey, val);
-    }
-
-    const memberId = parseInt(req.body.member_id, 10);
-    const name = String(req.body.name || '').trim();
-    const role = String(req.body.role || '').trim();
-    const termYear = String(req.body.term_year || '').trim();
-    const message = String(req.body.message || '').replace(/\r\n/g, '\n').trim();
-    const imageUrlFile = (req.filesContent && req.filesContent.member_photo && req.filesContent.member_photo.url) || '';
-    const imageUrl = imageUrlFile || String(req.body.image_url || '').trim();
-    const socialFb = String(req.body.social_fb || '').trim();
-    const socialLinkedin = String(req.body.social_linkedin || '').trim();
-    const socialEmail = String(req.body.social_email || '').trim();
-    const profileUrl = String(req.body.profile_url || '').trim();
-
-    if (memberId) {
-      // ২ক) সদস্য-ক্ষেত্র — স্লটে সদস্য থাকলে আপডেট
-      const member = await db.prepare('SELECT * FROM members WHERE id = ?').get(memberId);
-      if (!member) return done(false, { ok: false, error: 'সদস্য পাওয়া যায়নি' });
-
-      if (!name) return done(false, { ok: false, error: 'নাম আবশ্যক' });
-      // কেন্দ্রীয়-কমিটি গার্ড (কমিটি প্যানেলের সাথে অভিন্ন নীতি)
-      if (member.member_type === 'central' && /উপদেষ্টা/.test(role)) {
-        return done(false, { ok: false, error: 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।' });
-      }
-
-      await db.prepare('UPDATE members SET name=?, role=?, term_year=?, message=?, image_url=?, social_fb=?, social_linkedin=?, social_email=?, profile_url=? WHERE id=?')
-        .run(name, role, termYear || null, message, imageUrl, socialFb, socialLinkedin, socialEmail, profileUrl, memberId);
-
-      // সেশন ১৭৯: বর্তমান-জোড়ার কার্যবর্ষ-সুরক্ষা — সভাপতি/সা.সম্পাদকের এক-কার্ডে
-      // কার্যবর্ষ বদলালে একই-পুরনো-কার্যবর্ষের জোড়া-পদের কার্যবর্ষও একই করে দিই
-      // (নইলে home-কুয়েরির term_year=latestTerm ফিল্টারে জোড়া ভেঙে অন্য কার্ড
-      // গায়েব হয় — "এক-কার্ডে ২০২৬-২৭ দিলে অন্যটি ২০২৫-২৬-তেই থেকে যায়")।
-      // শুধু একই-পুরনো-কার্যবর্ষের সহ-পদই সিঙ্ক হয় — ঐতিহাসিক পুরনো-কমিটি রো অক্ষত।
-      // সাথে হোমের "বর্তমান কার্যবর্ষ লেখা" (home_year_current) লেবেলও হালনাগাদ —
-      // কারণ হোম-কার্ডে যে-বছর-লেখা দেখা যায় সেটি এ-সেটিং থেকেই আসে (সদস্যের
-      // term_year থেকে নয়) — নইলে কার্ড ২০২৬-২৭ হয়েও লেবেল ২০২৫-২৬-ই থেকে যেত!
-      let pairNote179 = '';
-      if (member.member_type === 'central' && termYear && String(member.term_year || '') !== termYear) {
-        try {
-          const oldTerm179 = String(member.term_year || '');
-          const mates179 = await db.prepare("SELECT id FROM members WHERE member_type='central' AND id != ? AND role IN ('সভাপতি','সাধারণ সম্পাদক') AND term_year = ?")
-            .all(memberId, oldTerm179);
-          for (const mt179 of (mates179 || [])) {
-            await db.prepare('UPDATE members SET term_year=? WHERE id=?').run(termYear, mt179.id);
-            await TA42.audit(db, req, 'home-leadership-pair-term-sync', 'members', mt179.id, meta.title + ' — জোড়ার কার্যবর্ষ → ' + termYear);
-          }
-          if (mates179 && mates179.length) pairNote179 = 'জোড়ার পদের কার্যবর্ষও ' + termYear + ' করা হয়েছে';
-          // হোম-লেবেল সিঙ্ক: বর্তমান-লেবেলে পুরনো-কার্যবর্ষ-স্ট্রিং থাকলে সেটিই বদলাই
-          // (কাস্টম-সাফিক্স যেমন " কার্যবর্ষ" অক্ষুণ্ণ); লেবেল ফাঁকা হলে আদর্শ-ফরম্যাট লিখি;
-          // পুরনো-কার্যবর্ষ-উল্লেখ-বিহীন কাস্টম-লেবেল থাকলে অক্ষত রাখি।
-          let lbl179 = null;
-          try { lbl179 = await db.getSetting('home_year_current'); } catch (_) {}
-          if (lbl179 && oldTerm179 && String(lbl179).indexOf(oldTerm179) !== -1) {
-            await setSetting('home_year_current', String(lbl179).split(oldTerm179).join(termYear));
-            pairNote179 += (pairNote179 ? ' · ' : '') + 'হোমের "বর্তমান কার্যবর্ষ লেখা"-ও হালনাগাদ';
-          } else if (!lbl179 || !String(lbl179).trim()) {
-            await setSetting('home_year_current', termYear + ' কার্যবর্ষ');
-            pairNote179 += (pairNote179 ? ' · ' : '') + 'হোমের "বর্তমান কার্যবর্ষ লেখা"-ও হালনাগাদ';
-          }
-        } catch (e179) {
-          console.error('[admin:home-leadership] pair term sync failed:', e179.message);
-        }
-      }
-
-      // ৩) লিংকড-অ্যাকাউন্ট সিঙ্ক — হোম-কার্ডে নাম/ছবি user-টেবিল থেকে আসে;
-      //    অ্যাডমিন চাইলে প্রোফাইলেও এক-ক্লিকে প্রতিফলিত করা যায়।
-      if (member.user_id && (req.body.sync_profile === '1')) {
-        const u = await db.prepare('SELECT id FROM users WHERE id = ?').get(member.user_id);
-        if (u) {
-          await db.prepare('UPDATE users SET full_name = COALESCE(?, full_name), avatar_url = COALESCE(?, avatar_url) WHERE id = ?')
-            .run(name || null, imageUrl || null, member.user_id);
-        }
-      }
-      await TA42.audit(db, req, 'home-leadership-update', 'members', memberId, meta.title);
-      const display = await respondDisplay(memberId, slotKey);
-      return done(true, { ok: true, slot: slotKey, created: false, display, note: pairNote179 });
-    }
-
-    // ২খ) সেশন ৬২: খালি-স্লটে সরাসরি-ইনপুট — নাম দেওয়া থাকলে সঠিক ধরনে নতুন
-    //     members-রো তৈরি হয় (কমিটি প্যানেলে যাওয়ার দরকার নেই); হোম-কুয়েরি
-    //     সঙ্গে-সঙ্গে স্লটটা তুলে নেয়।
-    if (name) {
-      const cfg = HL62_SLOT_TYPE[slotKey];
-      if (!cfg) return done(false, { ok: false, error: 'অজানা স্লট' });
-      if (cfg.type === 'central' && /উপদেষ্টা/.test(role)) {
-        return done(false, { ok: false, error: 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।' });
-      }
-      // কার্যবর্ষ: বর্তমান-কেন্দ্রীয় স্লটে না-দিলে সর্বশেষ কার্যবর্ষই ধরা হয়
-      // (নইলে হোম-কুয়েরির term_year=latestTerm ফিল্টারে নতুন সদস্য বাদ পড়ে)
-      let effTerm = termYear;
-      if (!effTerm && cfg.type === 'central') {
-        const t = await db.prepare("SELECT DISTINCT term_year FROM members WHERE member_type='central' AND term_year IS NOT NULL").all();
-        effTerm = (t || []).map((r) => r.term_year).sort((a, b) => HL55.bnLead(b) - HL55.bnLead(a))[0] || '';
-      }
-      // sort_order — স্লট-অবস্থান-সচেতন: প্রতিষ্ঠাতা-সভাপতি সবার-আগে, বাকিরা শেষে
-      let sortOrder = 0;
-      const so = await db.prepare('SELECT MIN(sort_order) AS mn, MAX(sort_order) AS mx FROM members WHERE member_type = ?').get(cfg.type);
-      if (cfg.pos === 'first') sortOrder = (so && so.mn != null ? so.mn : 1) - 1;
-      else sortOrder = ((so && so.mx != null) ? so.mx : 0) + 1;
-      const mid = await db.nextMemberId();
-      const ins = await db.prepare('INSERT INTO members (name, role, member_type, term_year, message, image_url, profile_url, social_fb, social_linkedin, social_email, sort_order, member_id, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-        .run(name, role, cfg.type, effTerm || null, message, imageUrl, profileUrl, socialFb, socialLinkedin, socialEmail, sortOrder, mid, 'unclaimed');
-      const newId = ins && ins.lastInsertRowid != null ? Number(ins.lastInsertRowid) : null;
-      if (newId) {
-        await TA42.audit(db, req, 'home-leadership-create', 'members', newId, meta.title);
-        const display = await respondDisplay(newId, slotKey);
-        return done(true, { ok: true, slot: slotKey, created: true, memberId: newId, display });
-      }
-      return done(false, { ok: false, error: 'নতুন সদস্য তৈরি ব্যর্থ হয়েছে' });
-    }
-
-    await TA42.audit(db, req, 'home-leadership-statement', 'settings', null, meta.title + ' ফলব্যাক-বাণী');
-    return done(true, { ok: true, slot: slotKey, statementOnly: true });
-  } catch (e) {
-    console.error('[admin:home-leadership] save failed:', e.message);
-    return done(false, { ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
-  }
-});
-
-// সেশন ৬৩: স্লট-ভিজিবিলিটি টগল — {slot, hidden} → settings 'home_hidden_slots' (CSV)।
-// প্যানেলের অন/অফ সুইচ থেকে fetch-কল আসে (কোনো রিলোড/পপ-আপ নেই — ইন-প্লেস আপডেট)।
-// লুকানো স্লটের কার্ড হোমপেজের leaderPair-এ রেন্ডার-ই হয় না (views/lekhok-home.ejs)।
-// ডাটা-নিরপেক্ষ: members-রো অক্ষুণ্ণ থাকে — শুধু হোম-প্রদর্শন বন্ধ/চালু (আবার-টগলযোগ্য)।
-// সেশন ৬৪: ① প্রাথমিক-তালিকা এখন ডিফল্ট-সচেতন (সেটিং অনুপস্থিত = current_advisor_1/2
-//   লুকানো — প্রথম-টগলেও ডিফল্ট-অবস্থা না-হারিয়ে স্পষ্ট-তালিকায় রূপ নেয়)
-// ② {member_id, active}-ব্রাঞ্চ: অতিরিক্ত-উপদেষ্টার opt-in টগল → 'home_extra_members'।
-router.post('/home-leadership/visibility', requireAdmin, async (req, res) => {
-  const slotKey = String(req.body.slot || '').trim();
-  const memberId64 = parseInt(req.body.member_id, 10);
-
-  // ── অতিরিক্ত-উপদেষ্টা opt-in টগল (মেম্বার-কী) ──
-  if (!slotKey && memberId64) {
-    const active64 = req.body.active === true || req.body.active === '1' || req.body.active === 1;
-    try {
-      const member64 = await db.prepare('SELECT id, name, member_type FROM members WHERE id = ?').get(memberId64);
-      if (!member64 || member64.member_type !== 'advisory') {
-        return res.status(400).json({ ok: false, error: 'অজানা সদস্য' });
-      }
-      const cur64 = HL55.parseCsvList(await db.getSetting('home_extra_members'));
-      const next64 = active64
-        ? Array.from(new Set(cur64.concat([String(memberId64)])))
-        : cur64.filter((x) => Number(x) !== memberId64);
-      await setSetting('home_extra_members', next64.join(','));
-      await TA42.audit(db, req, 'home-leadership-extra-visibility', 'settings', null,
-        'member#' + memberId64 + (active64 ? ' → হোমে দৃশ্যমান' : ' → হোমে লুকানো'));
-      return res.status(200).json({ ok: true, memberId: memberId64, active: active64, extraMembers: next64 });
-    } catch (e) {
-      console.error('[admin:home-leadership] extra visibility failed:', e.message);
-      return res.status(500).json({ ok: false, error: 'টগল ব্যর্থ: ' + e.message });
-    }
-  }
-
-  if (!HL55.SLOT_META.some(s => s.key === slotKey)) {
-    return res.status(400).json({ ok: false, error: 'অজানা স্লট' });
-  }
-  const hidden = req.body.hidden === true || req.body.hidden === '1' || req.body.hidden === 1;
-  try {
-    // সেশন ৬৪: সেটিং অনুপস্থিত হলে ডিফল্ট-লুকানো-তালিকা থেকে শুরু (present-beats-default)
-    let current63 = HL55.DEFAULT_HIDDEN_SLOTS.slice();
-    try {
-      const raw63 = await db.getSetting('home_hidden_slots');
-      if (raw63 !== null && raw63 !== undefined) current63 = HL55.parseCsvList(raw63);
-    } catch (e) { /* ডিফল্টই থাকুক */ }
-    const next63 = hidden
-      ? Array.from(new Set(current63.concat([slotKey])))
-      : current63.filter(k => k !== slotKey);
-    // SLOT_META-ক্রমে গুছিয়ে রাখা (মানবপাঠ্য CSV)
-    const ordered63 = HL55.SLOT_META.map(s => s.key).filter(k => next63.indexOf(k) !== -1);
-    await setSetting('home_hidden_slots', ordered63.join(','));
-    await TA42.audit(db, req, 'home-leadership-visibility', 'settings', null, slotKey + (hidden ? ' → হোমে লুকানো' : ' → হোমে দৃশ্যমান'));
-    return res.status(200).json({ ok: true, slot: slotKey, hidden, hiddenSlots: ordered63 });
-  } catch (e) {
-    console.error('[admin:home-leadership] visibility failed:', e.message);
-    return res.status(500).json({ ok: false, error: 'টগল ব্যর্থ: ' + e.message });
-  }
-});
-
-// সেশন ৬৪: নতুন উপদেষ্টা/সদস্য তৈরি — {group: 'legacy'|'current', name, role, …}।
-// কার্যবর্ষ না-দিলে গ্রুপের বাউন্ডারি-কার্যবর্ষ ধরা হয় (legacy→প্রাচীনতম, current→নবীনতম);
-// sort_order = advisory-র MAX+1 → current-গ্রুপে নতুনজন প্রথমে (advisor_1-অবস্থানে) বসে,
-// আর ডিফল্ট-লুকানো-স্লট নীতিতে নিয়োগ-ঘোষণা না-হওয়া পর্যন্ত হোমপেজে দেখাবেই না।
-router.post('/home-leadership/extra', requireAdmin, (req, res, next) => memberPhotoUpload55(req, res, next), async (req, res) => {
-  const wantsJson = String(req.headers.accept || '').includes('application/json');
-  const done = (ok, payload) => {
-    if (wantsJson) return res.status(ok ? 200 : 400).json(payload);
-    return ok ? res.redirect('/admin/home-leadership?saved=1')
-              : res.redirect('/admin/home-leadership?err=' + encodeURIComponent(payload.error || 'সংরক্ষণ ব্যর্থ'));
-  };
-  try {
-    const group = String(req.body.group || 'current') === 'legacy' ? 'legacy' : 'current';
-    const name = String(req.body.name || '').trim();
-    if (!name) return done(false, { ok: false, error: 'নাম আবশ্যক' });
-    if (req.uploadError) return done(false, { ok: false, error: req.uploadError });
-    const role = String(req.body.role || '').trim() || 'উপদেষ্টা';
-    const message = String(req.body.message || '').replace(/\r\n/g, '\n').trim();
-    const imageUrlFile = (req.filesContent && req.filesContent.member_photo && req.filesContent.member_photo.url) || '';
-    const imageUrl = imageUrlFile || String(req.body.image_url || '').trim();
-    const profileUrl = String(req.body.profile_url || '').trim();
-    const socialFb = String(req.body.social_fb || '').trim();
-    const socialLinkedin = String(req.body.social_linkedin || '').trim();
-    const socialEmail = String(req.body.social_email || '').trim();
-
-    const groups64 = await HL55.fetchAdvisoryGroups(db);
-    let effTerm = String(req.body.term_year || '').trim();
-    if (!effTerm) effTerm = (group === 'legacy' ? groups64.oldest : groups64.newest) || '';
-    const so64 = await db.prepare('SELECT MAX(sort_order) AS mx FROM members WHERE member_type = ?').get('advisory');
-    const sortOrder64 = ((so64 && so64.mx != null) ? so64.mx : 0) + 1;
-    const mid64 = await db.nextMemberId();
-    const ins64 = await db.prepare('INSERT INTO members (name, role, member_type, term_year, message, image_url, profile_url, social_fb, social_linkedin, social_email, sort_order, member_id, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(name, role, 'advisory', effTerm || null, message, imageUrl, profileUrl, socialFb, socialLinkedin, socialEmail, sortOrder64, mid64, 'unclaimed');
-    const newId64 = ins64 && ins64.lastInsertRowid != null ? Number(ins64.lastInsertRowid) : null;
-    if (!newId64) return done(false, { ok: false, error: 'নতুন সদস্য তৈরি ব্যর্থ হয়েছে' });
-    await TA42.audit(db, req, 'home-leadership-extra-create', 'members', newId64, group + ' গ্রুপে নতুন উপদেষ্টা');
-    const rows64 = await db.prepare(HL55.MEMBER_JOIN + ' WHERE m.id = ?').all(newId64);
-    return done(true, { ok: true, memberId: newId64, group, display: HL55.displayOf((rows64 && rows64[0]) || null, '') });
-  } catch (e) {
-    console.error('[admin:home-leadership] extra create failed:', e.message);
-    return done(false, { ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
-  }
-});
-
-// সেশন ৬৪: অতিরিক্ত-উপদেষ্টা মুছে ফেলা — শুধুই আনক্লেইমড + লিংকড-অ্যাকাউন্ট-বিহীন
-// advisory-রো (প্যানেল-তৈরি); লিংকড/ক্লেইম-করা সদস্য কমিটি-প্যানেলের ডাটাও — সে-ক্ষেত্রে
-// শুধু টগল-অফ (লুকানো) প্রযোজ্য। টু-স্টেপ-কনফার্ম UI-তে; কোনো confirm()-পপ-আপ নেই।
-router.delete('/home-leadership/extra', requireAdmin, async (req, res) => {
-  const memberId64 = parseInt(req.query.id, 10);
-  if (!memberId64) return res.status(400).json({ ok: false, error: 'ID প্রয়োজন' });
-  try {
-    const m64 = await db.prepare('SELECT * FROM members WHERE id = ?').get(memberId64);
-    if (!m64) return res.status(404).json({ ok: false, error: 'সদস্য পাওয়া যায়নি' });
-    if (m64.member_type !== 'advisory' || m64.user_id || (m64.account_status && m64.account_status !== 'unclaimed')) {
-      return res.status(400).json({ ok: false, error: 'লিংকড/ক্লেইম-করা সদস্য এখান থেকে মোছা যাবে না — শুধু লুকিয়ে রাখুন।' });
-    }
-    await db.prepare('DELETE FROM members WHERE id = ?').run(memberId64);
-    // home_extra_members-থেকেও বাদ (ছাঁটাই)
-    try {
-      const cur64 = HL55.parseCsvList(await db.getSetting('home_extra_members'));
-      const next64 = cur64.filter((x) => Number(x) !== memberId64);
-      if (next64.length !== cur64.length) await setSetting('home_extra_members', next64.join(','));
-    } catch (e) { /* ছাঁটাই-ব্যর্থতা মূল-ডিলিটকে বাধা দেবে না */ }
-    await TA42.audit(db, req, 'home-leadership-extra-delete', 'members', memberId64, m64.name || '');
-    return res.status(200).json({ ok: true, memberId: memberId64 });
-  } catch (e) {
-    console.error('[admin:home-leadership] extra delete failed:', e.message);
-    return res.status(500).json({ ok: false, error: 'ডিলিট ব্যর্থ: ' + e.message });
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════════════════
 // ── টাস্ক ১৪: মেম্বার অ্যাকাউন্ট ক্লেইম / রেজিস্ট্রেশন রিভিউ ড্যাশবোর্ড ──────
 // ══════════════════════════════════════════════════════════════════════════════
 const CLAIM_STATUS_LABEL = { pending: 'অপেক্ষমাণ', approved: 'অনুমোদিত', rejected: 'প্রত্যাখ্যাত', more_info: 'আরও তথ্য চাওয়া হয়েছে' };
@@ -1499,13 +1142,6 @@ const contentImageUpload = makeContentImageUpload({
   subdir: 'content',
   maxBytes: 5 * 1024 * 1024,
   fieldNames: CONTENT_IMAGE_KEYS.map(k => 'img_' + k)
-});
-
-// সেশন ৫৫: হোম-নেতৃত্ব স্লট-এডিটের ছবি-আপলোড (এক-ফাইল ফিল্ড member_photo)
-const memberPhotoUpload55 = makeContentImageUpload({
-  subdir: 'content',
-  maxBytes: 4 * 1024 * 1024,
-  fieldNames: ['member_photo']
 });
 
 router.get('/content', requireAdmin, async (req, res) => {
@@ -2732,6 +2368,89 @@ router.post('/sections/:id/delete', requireStaff, async (req, res) => {
   if (wantsJson42(req)) return res.json({ ok: true, action: 'delete', section: row ? row.section : '', id: Number(req.params.id) });
   res.redirect('/admin/sections?section=' + (row ? row.section : '') + '&saved=1' + (tid42 ? '&trashed=' + tid42 : ''));
 });
+
+// ═══ সেশন ১৯৩: হোমপেজ লেআউট ও কনটেন্ট রি-অর্ডারিং (/admin/home-reorder) ═══
+// অ্যাডমিন হোমপেজের মূল সেকশনগুলোর ক্রম (উপরে-নিচে + দৃশ্যমানতা) এবং
+// ভেতরের কার্ডের ক্রম (নেতৃত্বের সদস্য প্রতি-গ্রুপে, ফিড-স্লাইডার আইটেম)
+// নিয়ন্ত্রণ করতে পারেন — স্টোরেজ: settings.home_section_order /
+// home_member_order / home_feed_order (helpers/home-layout.js রেজিস্ট্রি)।
+const homeLayout193 = require('../helpers/home-layout');
+const MEMBER_JOIN193 = `
+  SELECT m.*, u.username AS user_username, u.avatar_url AS user_avatar_url,
+         u.full_name AS user_full_name, u.designation AS user_designation
+  FROM members m
+  LEFT JOIN users u ON u.id = m.user_id
+`;
+const bnToAscii193 = (s) => String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d));
+const memberItem193 = (m) => ({
+  id: String(m.id),
+  name: m.user_full_name || m.name || ('সদস্য #' + m.id),
+  role: m.role || '',
+  term: m.term_year || ''
+});
+router.get('/home-reorder', requireStaff, async (req, res) => {
+  const [termRows, founders, foundingAdvisors, currentAdvisors, secRaw, memRaw, feedRaw] = await Promise.all([
+    db.prepare("SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL").all(),
+    db.prepare(MEMBER_JOIN193 + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all(),
+    db.prepare(MEMBER_JOIN193 + " WHERE m.member_type = 'advisory' ORDER BY m.term_year ASC, m.sort_order ASC LIMIT 2").all(),
+    db.prepare(MEMBER_JOIN193 + " WHERE m.member_type = 'advisory' ORDER BY m.term_year DESC, m.sort_order DESC LIMIT 2").all(),
+    getSetting('home_section_order'),
+    getSetting('home_member_order'),
+    getSetting('home_feed_order')
+  ]);
+  // বর্তমান জোড়া = সর্বশেষ কার্যবর্ষের সভাপতি + সা.সম্পাদক (routes/pages.js হোমের মিরর)
+  const years193 = termRows.map(r => r.term_year).sort((a, b) => bnToAscii193(b).localeCompare(bnToAscii193(a), 'en', { numeric: true }));
+  const latest193 = years193[0] || null;
+  let centralPair193 = latest193
+    ? await db.prepare(MEMBER_JOIN193 + " WHERE m.member_type = 'central' AND m.term_year = ? AND m.role IN ('সভাপতি','সাধারণ সম্পাদক') ORDER BY CASE m.role WHEN 'সভাপতি' THEN 0 ELSE 1 END, m.sort_order LIMIT 2").all(latest193)
+    : await db.prepare(MEMBER_JOIN193 + " WHERE m.member_type = 'central' AND m.role IN ('সভাপতি','সাধারণ সম্পাদক') ORDER BY m.sort_order LIMIT 2").all();
+  if (!centralPair193 || centralPair193.length < 2) {
+    centralPair193 = latest193
+      ? await db.prepare(MEMBER_JOIN193 + " WHERE m.member_type = 'central' AND m.term_year = ? ORDER BY m.sort_order LIMIT 2").all(latest193)
+      : await db.prepare(MEMBER_JOIN193 + " WHERE m.member_type = 'central' ORDER BY m.sort_order LIMIT 2").all();
+  }
+  // সেভ-করা ক্রম প্রয়োগ করে প্যানেলে বর্তমান-প্রদর্শন ক্রমই দেখানো হয়
+  let memMap193 = {};
+  try { memMap193 = homeLayout193.sanitizeMemberOrderMap(JSON.parse(memRaw || '{}')); } catch (e) { memMap193 = {}; }
+  const memberGroups193 = [
+    { key: 'FOUNDERS',          sectionKey: 'LEADERSHIP_FOUNDING', label: 'প্রতিষ্ঠাতা সভাপতি ও সাধারণ সম্পাদক', icon: 'fa-landmark',
+      items: homeLayout193.applyMemberOrder(founders, memMap193.FOUNDERS).map(memberItem193) },
+    { key: 'FOUNDING_ADVISORS', sectionKey: 'LEADERSHIP_FOUNDING', label: 'প্রতিষ্ঠাকালীন উপদেষ্টা', icon: 'fa-user-shield',
+      items: homeLayout193.applyMemberOrder(foundingAdvisors, memMap193.FOUNDING_ADVISORS).map(memberItem193) },
+    { key: 'CURRENT_PAIR',      sectionKey: 'LEADERSHIP_CURRENT',  label: 'বর্তমান সভাপতি ও সাধারণ সম্পাদক', icon: 'fa-user-tie',
+      items: homeLayout193.applyMemberOrder(centralPair193, memMap193.CURRENT_PAIR).map(memberItem193) },
+    { key: 'CURRENT_ADVISORS',  sectionKey: 'LEADERSHIP_CURRENT',  label: 'বর্তমান উপদেষ্টা', icon: 'fa-user-shield',
+      items: homeLayout193.applyMemberOrder(currentAdvisors, memMap193.CURRENT_ADVISORS).map(memberItem193) }
+  ];
+  res.render('admin/home-reorder', {
+    currentPath: '/admin/home-reorder',
+    sections193: homeLayout193.resolveOrder(secRaw),
+    memberGroups193,
+    feedSlides193: homeLayout193.orderFeedSlides(feedRaw),
+    saved: req.query.saved || null
+  });
+});
+router.post('/home-reorder', requireStaff, async (req, res) => {
+  const P193 = (v) => { try { return JSON.parse(v); } catch (e) { return null; } };
+  try {
+    const secPayload = homeLayout193.sanitizeOrderPayload(P193(req.body.sectionsJson || 'null'));
+    const memPayload = homeLayout193.sanitizeMemberOrderMap(P193(req.body.membersJson || '{}'));
+    const feedPayload = homeLayout193.sanitizeKeyList(P193(req.body.feedJson || 'null'), homeLayout193.FEED_SLIDES.map(s => s.key));
+    if (!secPayload || !memPayload || !feedPayload) {
+      if (wantsJson42(req)) return res.status(400).json({ ok: false, error: 'অবৈধ ডেটা — আবার চেষ্টা করুন' });
+      return res.redirect('/admin/home-reorder');
+    }
+    await setSetting('home_section_order', JSON.stringify(secPayload));
+    await setSetting('home_member_order', JSON.stringify(memPayload));
+    await setSetting('home_feed_order', JSON.stringify(feedPayload));
+    if (wantsJson42(req)) return res.json({ ok: true, action: 'home-reorder' });
+    return res.redirect('/admin/home-reorder?saved=1');
+  } catch (e) {
+    if (wantsJson42(req)) return res.status(500).json({ ok: false, error: 'সংরক্ষণ ব্যর্থ হয়েছে' });
+    return res.redirect('/admin/home-reorder');
+  }
+});
+// ═══ EOF সেশন ১৯৩: হোমপেজ রি-অর্ডারিং ═══
 
 // ═══ সেশন ৪৩: কনটেন্ট রিভিশন হিস্ট্রি ═══
 router.get('/content/history', requireAdmin, async (req, res) => {

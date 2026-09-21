@@ -106,7 +106,6 @@
 
     <% if (_isAdmin) { %>
     <div class="nav-group-label">সংগঠন</div>
-    <a href="/admin/home-leadership" class="<%= _active('/admin/home-leadership') %>"><i class="fas fa-user-tie"></i> হোম নেতৃত্ব</a>
     <a href="/admin/members"        class="<%= _active('/admin/members') %>"><i class="fas fa-users"></i> কমিটি সদস্য</a>
     <a href="/admin/claims"         class="<%= _active('/admin/claims') %>"><i class="fas fa-id-card"></i> ক্লেইম রিভিউ</a>
     <a href="/admin/achievements"   class="<%= _active('/admin/achievements') %>"><i class="fas fa-trophy"></i> অর্জন</a>
@@ -143,6 +142,8 @@
     <a href="/admin/activity"       class="<%= _active('/admin/activity') %>"><i class="fas fa-clock-rotate-left"></i> অ্যাক্টিভিটি লগ</a>
     <a href="<%= _isAdmin ? '/admin/trash' : '/moderator/trash' %>" class="<%= _active(_isAdmin ? '/admin/trash' : '/moderator/trash') %>"><i class="fas fa-trash-can"></i> ট্র্যাশ<% if (typeof trashCount42 !== 'undefined' && trashCount42 > 0) { %> <span style="background:#dc2626;color:#fff;border-radius:8px;padding:1px 7px;font-size:.68rem;font-weight:700;"><%= trashCount42 %></span><% } %></a>
     <a href="<%= _isAdmin ? '/admin/sections' : '/moderator/sections' %>" class="<%= _active(_isAdmin ? '/admin/sections' : '/moderator/sections') %>"><i class="fas fa-layer-group"></i> সেকশন আইটেম</a>
+    <%# সেশন ১৯৩: হোমপেজ লেআউট ও কার্ডের রি-অর্ডারিং — সেকশন উপরে-নিচে + ভেতরের কার্ড %>
+    <a href="/admin/home-reorder" class="<%= _active('/admin/home-reorder') %>"><i class="fas fa-arrow-up-down"></i> হোমপেজ সাজান</a>
     <% if (_isAdmin) { %>
     <a href="/admin/audit" class="<%= _active('/admin/audit') %>"><i class="fas fa-file-shield"></i> অডিট লগ</a>
     <a href="/admin/media" class="<%= _active('/admin/media') %>"><i class="fas fa-photo-film"></i> মিডিয়া লাইব্রেরি</a>

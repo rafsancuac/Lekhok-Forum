@@ -4,9 +4,10 @@ const db = require('../db');
 // হোম নেতৃত্ব সেকশনের ৮ পাতার বক্তব্য (৫০-১০০ শব্দ) — স্লট-ভিত্তিক,
 // members.bio ফাঁকা হলে ভিউ এটি ব্যবহার করে (সেশন ২৯)
 const leaderStatements = require('../data/leaderStatements');
-// সেশন ৬৪: ডাইনামিক উপদেষ্টা-গ্রুপ + ডিফল্ট-লুকানো-স্লট (হোম-রুট ও অ্যাডমিন-প্যানেল এক-সোর্স)
-const HL64 = require('../helpers/home-leadership');
 const bnDate131 = require('../helpers/bn-date'); // সেশন ১৩১: সাইট-ওয়াইড তারিখ-চুক্তি
+// সেশন ১৯৩: হোমপেজ লেআউট রেজিস্ট্রি — সেকশন/কার্ড/স্লাইড ক্রম অ্যাডমিন-নিয়ন্ত্রিত
+// (/admin/home-reorder প্যানেল সেভ করে settings-এ; এখানে পড়ে ভিউতে পাস হয়)
+const homeLayout = require('../helpers/home-layout');
 // সেশন ১১০: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ (একক-উৎস — moderator.js-এর COVERS110-এরই মিরর)
 const COVERS110 = require('../helpers/covers');
 
@@ -26,12 +27,12 @@ router.get('/', async (req, res) => {
   // Turso-তে প্রতিটি await = ১টি নেটওয়ার্ক রাউন্ড-ট্রিপ → ওয়ার্ম TTFB-ই ৩-৭ সেকেন্ড,
   // যা Googlebot-এর ক্রল-রেট কমিয়ে দিত (GSC: "Discovered – currently not indexed")।
   // এখন স্বাধীন কুয়েরিগুলো এক প্যারালাল ব্যাচে ছোড়া হয়।
-  const [recentNotices, homeTermYearRows, founders, advisoryAll64, advisors, todayRows, recentArticles, faqItems42] = await Promise.all([
+  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, recentArticles, faqItems42, sectionOrderRaw193, memberOrderRaw193, feedOrderRaw193] = await Promise.all([
     db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all(),
     db.prepare("SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL").all(),
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all(),
-    // সেশন ৬৪: সব advisory এক-কুয়েরিতে (N-কার্ড-সক্ষম) — বাউন্ডারি-কার্যবর্ষ-গ্রুপিং নিচে
-    db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order ASC").all(),
+    db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year ASC, m.sort_order ASC LIMIT 2").all(),
+    db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year DESC, m.sort_order DESC LIMIT 2").all(),
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all(),
     db.prepare("SELECT * FROM daily_content WHERE scheduled_date = ? AND published = 1 ORDER BY id").all(new Date().toISOString().slice(0, 10)),
     // সেশন ৯০ (হোম-কিউরেশন): 'লেখকদের কালি / সাম্প্রতিক লেখা' এখন পুরোপুরি
@@ -49,6 +50,11 @@ router.get('/', async (req, res) => {
                    AND p.shared_from IS NULL
                  ORDER BY p.home_featured_at DESC, p.published_at DESC LIMIT 6`).all(),
     db.getSectionItems('home_faq'),
+    // সেশন ১৯৩: অ্যাডমিন-সংরক্ষিত হোমপেজ লেআউট (ক্রম/সক্রিয়তা) — তিনটেই ক্যাশড
+    // getSettingsAll-পাইপে settings টেবিল থেকে (getSetting সস্তা)
+    db.getSetting('home_section_order'),
+    db.getSetting('home_member_order'),
+    db.getSetting('home_feed_order'),
   ]);
   // সেশন ৯০: ফলব্যাক — এডমিন/মডারেটর এখনো কিছু বাছাই না করলে সেকশন ফাঁকা
   // না রেখে সর্বশেষ ৬টি খাঁটি writing (avatar/cover/প্রশ্ন কঠোরভাবে বাদ)
@@ -95,33 +101,6 @@ router.get('/', async (req, res) => {
     ]);
     foundersFinal = [...pastPres, ...pastGS];
   }
-
-  // ── সেশন ৬৪: ডাইনামিক উপদেষ্টা-গ্রুপ + ভিজিবিলিটি (প্যানেল ↔ হোম এক-সোর্স) ──
-  // ① advisory বাউন্ডারি-কার্যবর্ষ-গ্রুপ: প্রাচীনতম = প্রতিষ্ঠাকালীন, নবীনতম = বর্তমান;
-  //    প্রথম ২জন আগের হুবহু advisor_1/2 ম্যাপিংয়ে, বাকিরা অতিরিক্ত (opt-in)।
-  // ② কার্যকর-লুকানো-স্লট: settings 'home_hidden_slots' অনুপস্থিত হলে ডিফল্ট
-  //    current_advisor_1/2 লুকানো (উপদেষ্টা নিয়োগ না-দেওয়া পর্যন্ত ডামি-কার্ড বন্ধ)।
-  // ③ অতিরিক্ত-উপদেষ্টা opt-in: settings 'home_extra_members' (member-id CSV)।
-  let advGroups64 = { all: advisoryAll64, oldest: null, newest: null, founding: [], current: [] };
-  try { advGroups64 = await HL64.fetchAdvisoryGroups(db); } catch (e64) { advGroups64.founding = []; advGroups64.current = []; }
-  const foundingAdvisors = advGroups64.founding;
-  const currentAdvisors = advGroups64.current;
-  let homeHiddenSlots64 = HL64.DEFAULT_HIDDEN_SLOTS.slice();
-  let homeExtraMembers64 = [];
-  try { homeHiddenSlots64 = HL64.effectiveHiddenSlots(await db.getSetting('home_hidden_slots')); } catch (e64) { /* ডিফল্টই থাকুক */ }
-  try { homeExtraMembers64 = HL64.parseCsvList(await db.getSetting('home_extra_members')).map(Number); } catch (e64) { /* ফাঁকা */ }
-  // ফ্ল্যাট কার্ড-তালিকা — ভিউ একটি flex-center সারিতে Nটি কার্ড রেন্ডার করে
-  // (২টা=মাঝের-জোড়া, ৩টা=ত্রয়ী, ৪টা=পূর্ণ-সারি); slotKey=null হলে অতিরিক্ত-সদস্য
-  // (home_extra_members-এ টগল-অন থাকলেই দৃশ্যমান)।
-  const mkCard64 = (m, slotKey) => ({ m, slotKey: slotKey || null });
-  const homeLegacyCards64 = [
-    ...foundersFinal.map((m, i) => mkCard64(m, i === 0 ? 'founder_president' : (i === 1 ? 'founder_general_secretary' : null))),
-    ...foundingAdvisors.map((m, i) => mkCard64(m, i === 0 ? 'founding_advisor_1' : (i === 1 ? 'founding_advisor_2' : null))),
-  ];
-  const homeCurrentCards64 = [
-    ...currentLeaders.map((m, i) => mkCard64(m, i === 0 ? 'current_president' : (i === 1 ? 'current_general_secretary' : null))),
-    ...currentAdvisors.map((m, i) => mkCard64(m, i === 0 ? 'current_advisor_1' : (i === 1 ? 'current_advisor_2' : null))),
-  ];
 
   // Today's daily content — split by content_type for the home page cards
   const todayByType = {
@@ -186,25 +165,48 @@ router.get('/', async (req, res) => {
     } catch (e) { /* কুইজ-চ্যালেঞ্জ ডেটা-ব্যর্থ → সেকশন লুকানো থাকবে */ }
   }
 
+  // ── সেশন ১৯৩: অ্যাডমিন-নির্ধারিত ক্রম প্রয়োগ ──
+  // ① সেকশন-ক্রম (home_section_order) → ভিউ ordered partials লুপে রেন্ডার করে
+  const homeSections193 = homeLayout.resolveOrder(sectionOrderRaw193);
+  // ② নেতৃত্ব-কার্ডের ভেতরের ক্রম (home_member_order) — গ্রুপ-ভিত্তিক ম্যাপ;
+  //    applyMemberOrder স্টেবল — সেভ-করা তালিকায় না-থাকা সদস্য আগের ক্রমে শেষে
+  const moMap193 = homeLayout.sanitizeMemberOrderMap(
+    (() => { try { return JSON.parse(memberOrderRaw193 || '{}'); } catch (e) { return {}; } })()
+  );
+  const foundersOrdered193      = homeLayout.applyMemberOrder(foundersFinal, moMap193.FOUNDERS);
+  const foundingAdvisors193     = homeLayout.applyMemberOrder(foundingAdvisors, moMap193.FOUNDING_ADVISORS);
+  const currentLeaders193       = homeLayout.applyMemberOrder(currentLeaders, moMap193.CURRENT_PAIR);
+  const currentAdvisors193      = homeLayout.applyMemberOrder(currentAdvisors, moMap193.CURRENT_ADVISORS);
+  // ③ ইউজার-ফিড স্লাইডারের ক্রম (home_feed_order)
+  const feedSlides193 = homeLayout.orderFeedSlides(feedOrderRaw193);
+  // ④ 'আজকের কন্টেন্ট' ব্যান্ডের ⚡ এক নজরে স্লাইড — আজকের বাস্তব daily_content
+  //    থেকে (আগের today-grid কার্ডেরই ডেটা; কুইজ-চ্যালেঞ্জ ব্যান্ড সক্রিয় থাকলে
+  //    ডুপ্লিকেশন এড়াতে কুইজ-স্লাইড বাদ — আগের today-grid-এর সেইম চুক্তি)
+  const todaySlides193 = [];
+  const tnCut193 = (t) => String(t || '').replace(/\s+/g, ' ').trim().slice(0, 110);
+  if (todayByType.this_day) todaySlides193.push({ key: 'this_day', icon: 'fa-calendar-day', title: 'এই দিনে ইতিহাসে', sub: tnCut193(todayByType.this_day.title), href: '/on-this-day' });
+  if (todayByType.quiz && !quizChallenge) todaySlides193.push({ key: 'quiz', icon: 'fa-question-circle', title: 'আজকের কুইজ', sub: tnCut193(todayByType.quiz.title), href: '/quiz' });
+  if (todayByType.activity) todaySlides193.push({ key: 'activity', icon: 'fa-running', title: 'আজকের কার্যক্রম', sub: tnCut193(todayByType.activity.title), href: '/activities' });
+  if (todayByType.epaper) todaySlides193.push({ key: 'epaper', icon: 'fa-newspaper', title: 'আজকের ই-পেপার', sub: tnCut193(todayByType.epaper.title), href: todayByType.epaper.link_url || todayByType.epaper.file_url || '/epaper' });
+  if (todayByType.best_writer) todaySlides193.push({ key: 'best_writer', icon: 'fa-crown', title: 'সেরা লেখক', sub: tnCut193(todayByType.best_writer.title), href: todayByType.best_writer.link_url || '/best-writer' });
+
   res.render('lekhok-home', { faqItems42,
     layout: 'layout',
     pageTitle: 'হোম',
     currentPath: '/',
     recentNotices,
-    currentLeaders,
+    currentLeaders: currentLeaders193,
     leaderStatements,
-    founders: foundersFinal,
-    foundingAdvisors,
-    currentAdvisors,
+    founders: foundersOrdered193,
+    foundingAdvisors: foundingAdvisors193,
+    currentAdvisors: currentAdvisors193,
     advisors,
-    // সেশন ৬৪: N-কার্ড ফ্ল্যাট-তালিকা + ভিজিবিলিটি-সেট
-    homeLegacyCards: homeLegacyCards64,
-    homeCurrentCards: homeCurrentCards64,
-    homeHiddenSlots: homeHiddenSlots64,
-    homeExtraMembers: homeExtraMembers64,
     recentArticles,
     homeCurated,
     todayByType,
+    todaySlides: todaySlides193,
+    feedSlides: feedSlides193,
+    homeSections: homeSections193,
     hasToday,
     quizChallenge
   });

@@ -2286,3 +2286,29 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **গোটচা (পরের-এজেন্ট):** ① sql.js সার্ভার-রানিং-অবস্থায় reset-স্ক্রিপ্ট চালালে সার্ভার-শাটডাউনে ফাইল-ওভাররাইট — স্ক্রিপ্টের-আগে সার্ভার-বন্ধ ② লোকাল lekhok.db = প্রোডাকশন-কপি (৪৭ বাস্তব-ইউজার) — ডেমো-লগইন: ismail/riya/tanvir · secret123 (scripts/reset-qa-logins.js সার্ভার-বন্ধ-করে-চালান) ③ ইউজার-স্পেকের React-কম্পোনেন্ট (ForumDirectoryMenu.tsx) মকআপ — href মকআপ-রুট, প্রয়োগের-আগে রুট-ম্যাপ-চুক্তি মানুন।
 
 **পরের-এজেন্ট: session193 থেকে।**
+
+---
+
+## session193-নোট (হোমপেজ লেআউট রি-অর্ডারিং + নেতৃত্ব-কার্ড কম্প্যাক্ট/অ্যানিমেশন-পুনরুদ্ধার + আজকের-কন্টেন্ট ফিড-আদল)
+
+**স্পেক (ইউজার, স্ক্রিনশট-সহ):** ① নেতৃত্ব-কার্ডের নিচের ফাঁকা-জায়গা দূর + মসৃণ-অ্যানিমেশন ফেরত ② নেতৃত্ব-সেকশনের ব্যাকগ্রাউন্ড প্রিমিয়াম/প্রফেশনাল (থিম-সামঞ্জস্যপূর্ণ) ③ "আজকের কন্টেন্ট" সেকশন হুবহু ইউজার-ফিড কার্ডের আদলে ④ অ্যাডমিন প্যানেল থেকে পুরো হোমপেজের সেকশন ও ভেতরের কার্ডের রি-অর্ডারিং।
+
+**RCA (দুটো মূল-বাগ):**
+- **ফাঁকা-জায়গা:** `.leader-card-featured{min-height:760px}` ফিক্সড-উচ্চতা — কনটেন্ট খাটো হলে নিচে বিশাল স্থির-ফাঁকা।
+- **অ্যানিমেশন-অদৃশ্য:** session180-এর সব কার্ড-লেভেল ইফেক্ট (হ্যালো/৮px-লিফট/ডাবল-রিং/কার্যবর্ষ-চিপ) `.leaders-row` স্কোপে লেখা — মার্কআপে ওই ক্লাস **কোথাও নেই-ই** → ডেড CSS। সেশন-১৮০-এর "প্রোডে কিছুই দেখা যায়নি" অভিযোগের আসল-কারণ এটাই ছিল (ও-সময় aurora-দৃশ্যমানতায় ভুল-RCA হয়েছিল)। **শিক্ষা: ID-স্কোপ (#leadership/#current-leadership) মার্কআপ-যাচাই করে লিখুন।**
+
+**পরিবর্তন (১১-ফাইল):**
+- **helpers/home-layout.js (নতুন):** HOME_SECTIONS রেজিস্ট্রি (১০-সেকশন → partials/home/*.ejs) + FEED_SLIDES + resolveOrder/sanitizeOrderPayload/sanitizeMemberOrderMap/applyMemberOrder (স্টেবল)/orderFeedSlides — নতুন/অজানা-কী সবসময় রেজিস্ট্রি-ক্রমে ফলব্যাক (present-beats-default)।
+- **settings চুক্তি:** `home_section_order` (JSON [{key,enabled}]) · `home_member_order` (JSON {FOUNDERS[],FOUNDING_ADVISORS[],CURRENT_PAIR[],CURRENT_ADVISORS[]}) · `home_feed_order` (JSON keys)।
+- **routes/pages.js:** হোম-রুটে ৩-সেটিং প্যারালাল-লোড + member-order প্রয়োগ (founders/foundingAdvisors/currentLeaders/currentAdvisors) + todaySlides বিল্ড (কুইজ-চ্যালেঞ্জ সক্রিয় থাকলে কুইজ-স্লাইড বাদ — পুরনো today-grid-চুক্তি) + feedSlides + homeSections → ভিউ।
+- **views/lekhok-home.ejs:** অর্ডার-চালিত partials-লুপে রিফ্যাক্টর — শেয়ার্ড হেল্পার (lfSafeUrl/lfEsc/leaderCard/leaderPair) টপে ডিফাইন হয়ে **locals-এ attach** (EJS-include আলাদা-স্কোপ!); গেট: TODAY/QUIZ_CHALLENGE/ARTICLES ডেটা-শূন্যে যে-অবস্থানেই থাকুক রেন্ডার-বাদ।
+- **views/partials/home/*.ejs (১০টি নতুন):** hero/today/quiz/mission/leadership-founding/leadership-current/faq/feed/notices/articles — feed-এ স্লাইড-লুপ (feedSlides), today সম্পূর্ণ-নতুন ব্যান্ড।
+- **admin/routes.js:** GET/POST `/admin/home-reorder` (requireStaff; ADMIN_PATH_AREAS-এ content-এরিয়া) — member-groups = হোম-কোয়েরির হুবহু মিরর (latest-term pair + ফলব্যাক)।
+- **admin/views/admin/home-reorder.ejs (নতুন):** ২-কলাম প্যানেল (বাম ৭col সেকশন-ক্রম+eye-টগল, ডান ৫col ভেতরের-কার্ড) — **সেভ অবশ্যই fetch-AJAX (_ajax=1)**: সাধারণ form-POST প্রিভিউ-গেটওয়েতে XTransformPort হারায় (sections.ejs-এর sec-ajax যে সব-AJAX সেটাই-কারণ)।
+- **style.css session193-ব্লক (EOF):** ID-স্কোপে কার্ড-ইফেক্ট (min-height:0!important + ৭px-লিফট + ৩px-গ্রেডিয়েন্ট-টপবার + ডাবল-রিং/জুম + রোল/কার্যবর্ষ-চিপ + কোট-বক্স❝ + সোশ্যাল-বিভাজক) + সেকশন-ব্যাকগ্রাউন্ড (ডট-ম্যাট্রিক্স content:none; মিন্ট-গ্রেডিয়েন্ট + একক অ্যাম্বিয়েন্ট-আভা 30s-drift) + ts-showcase193 ব্যান্ড। নতুন-ব্লক হেক্স-প্রায়-শূন্য (rgb() নোটেশন); **tokens-hex-baseline.json 1395→1403 রি-ফ্রিজ** (session180/192-এর অবিস্ফোটিত বৃদ্ধি আত্তীকৃত — guard এবার গ্রিন)।
+
+**E2E-প্রমাণ (লোকাল :8094 + agent-browser + curl):** সেকশন-রি-অর্ডার TODAY-first রেন্ডার ✓ → রিভার্ট HERO-first ✓; ভেতরের-কার্ড GS-first (মেসবাহ উদ্দিন মিহির আগে) ✓ → রিভার্ট president-first ✓; feed-slides epaper-first ✓ → ডিফল্ট ✓; প্যানেল reload-এ সেভ-করা ক্রমই দেখায় ✓; AJAX-সেভ toast "সফলভাবে সংরক্ষিত" + ?saved=1 ✓; কার্ড-উচ্চতা 703–750px কনটেন্ট-অনুযায়ী (আগে 760+ফাঁকা), সোশ্যাল-রো-পরে gap 29px (প্যাডিং-ই) ✓; মোবাইল-390 hScroll-০ ✓; কনসোল-০ ✓। রিগ্রেশন: node --check ×৪ + EJS-compile ×১২ + audit:views (১১৬-ejs) + guard:design গ্রিন ✓।
+
+**গোটচা (পরের-এজেন্ট):** ① EJS-include আলাদা-ফাংশন-স্কোপ — নতুন partial-এ শেয়ার্ড-হেল্পার লাগলে lekhok-home.ejs-এ `locals.x = x` করুন ② home_member_order হোমের ক্রম-ওভাররাইড মাত্র — members.sort_order স্পর্শ করে না (কমিটি-পেজের ক্রম অক্ষত) ③ sql.js-লোকালে debounced-persist (200ms) — SIGKILL-এ শেষ-রাইট হারাতে পারে; প্রোড (Turso)-এ durable ④ স্যান্ডব্যাক্সে ব্যাকগ্রাউন্ড-প্রসেস টুল-কল-শেষে মরে — E2E-র সব-স্টেপ এক-কলে; গেটওয়ে-URL ফরম্যাট `http://localhost:81/<path>?XTransformPort=<port>` (path-আগে, query-পরে — উল্টো লিখলে path=/ হয়ে যায়)।
+
+**পরের-এজেন্ট: session194 থেকে।**

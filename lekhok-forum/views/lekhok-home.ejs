@@ -1,679 +1,89 @@
-<!-- Hero — brand-style full animated -->
-<section class="hero brand-hero">
-  <% if (C('home_hero_banner')) { %><div class="hero-banner-img" style="background-image:url('<%= C('home_hero_banner') %>')"></div><% } %>
-  <div class="particles">
-    <div class="particle p1"></div>
-    <div class="particle p2"></div>
-    <div class="particle p3"></div>
-    <div class="particle p4"></div>
-    <div class="particle p5"></div>
-    <div class="particle p6"></div>
-  </div>
-  <div class="container hero-inner">
-    <div>
-      <div class="hero-eyebrow"><i class="fas fa-feather-alt"></i> <%= C('home_hero_eyebrow') %></div>
-      <h1 class="hero-title"><%= C('home_hero_title') %><br/><span class="accent"><%= C('home_hero_title_accent') %></span></h1>
-      <p class="hero-sub"><%= C('home_hero_sub') %></p>
-      <div class="hero-cta">
-        <a href="/about" class="btn btn-primary"><i class="fas fa-book-open"></i> <%= C('home_hero_btn1') %></a>
-        <a href="/register" class="btn btn-outline"><i class="fas fa-user-plus"></i> <%= C('home_hero_btn2') %></a>
-      </div>
-    </div>
-    <div class="hero-stats">
-      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat1_num') %>">০</span><span class="stat-label"><%= C('home_stat1_label') %></span></div>
-      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat2_num') %>">০</span><span class="stat-label"><%= C('home_stat2_label') %></span></div>
-      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat3_num') %>">০</span><span class="stat-label"><%= C('home_stat3_label') %></span></div>
-      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat4_num') %>">০</span><span class="stat-label"><%= C('home_stat4_label') %></span></div>
-    </div>
-  </div>
+<%
+  /* ═══ সেশন ১৯৩: হোমপেজ এখন অর্ডার-চালিত partials ═══
+     সেকশন-ক্রম helpers/home-layout.js রেজিস্ট্রি + settings.home_section_order
+     (অ্যাডমিন প্যানেল /admin/home-reorder থেকে সংরক্ষিত) অনুযায়ী routes/pages.js
+     homeSections হিসেবে পাস করে। গেট: TODAY/QUIZ_CHALLENGE/ARTICLES-এর ডেটা
+     না-থাকলে সেটি যে-অবস্থানেই থাকুক রেন্ডার হয় না।
 
-<%# সেশন ৩৫: হিরোর ডান পাশের স্লাইডিং উইজেট সরানো হয়েছে — এটি হিরোর লেখা ঢেকে দিত;
-এখন 'ইউজার ফিড' শোকেস সেকশনে ইন্টিগ্রেট করা হয়েছে (নিচে feed-showcase) %>
-</section>
+     শেয়ার্ড হেল্পার (আগে lekhok-home.ejs-এর মাঝে ডিফাইন হত — এখন টপে একবার,
+     locals-এ যুক্ত; EJS include আলাদা-ফাংশন-স্কোপ, তাই দুই নেতৃত্ব-partial
+     leaderPair/leaderCard locals-থেকে পায় — সেকশন-অর্ডার যে-ই হোক নিরাপদ):
 
-<% if (hasToday) { %>
-<!-- Today's daily content — auto-shows scheduled items for today -->
-<section class="section section-alt today-content reveal">
-  <div class="container">
-    <div class="section-head center">
-      <span class="eyebrow"><i class="far fa-calendar-alt"></i> <%= C('home_today_eyebrow') %></span>
-      <h2 class="section-title"><%= C('home_today_t1') %> <span class="accent"><%= C('home_today_accent') %></span> <%= C('home_today_t2') %></h2>
-      <span class="accent-divider center"></span>
-      <p class="lead"><%= C('home_today_lead') %></p>
-    </div>
-    <div class="today-grid reveal-stagger">
-      <%# সেশন ৭৯: ইন্টারঅ্যাক্টিভ কুইজ-চ্যালেঞ্জ ব্যান্ড দেখালে স্ট্যাটিক কুইজ-কার্ড বাদ — ডুপ্লিকেশন নয় %>
-      <% if (todayByType.quiz && !quizChallenge) { %>
-        <a href="<%= todayByType.quiz.link_url || '/quiz' %>" class="today-card today-quiz">
-          <div class="today-icon"><i class="fas fa-question-circle"></i></div>
-          <h3>আজকের কুইজ</h3>
-          <p class="today-title"><%= todayByType.quiz.title %></p>
-          <% if (todayByType.quiz.body) { %><p class="today-body"><%= mdPlain(todayByType.quiz.body, 110) %></p><% } %>
-          <span class="today-cta">কুইজে অংশ নিন <i class="fas fa-arrow-right"></i></span>
-        </a>
-      <% } %>
-      <% if (todayByType.this_day) { %>
-        <a href="/on-this-day" class="today-card today-thisday">
-          <div class="today-icon"><i class="fas fa-history"></i></div>
-          <h3>এই দিনে</h3>
-          <p class="today-title"><%= todayByType.this_day.title %></p>
-          <% if (todayByType.this_day.body) { %><p class="today-body"><%= mdPlain(todayByType.this_day.body, 110) %></p><% } %>
-          <span class="today-cta">বিস্তারিত পড়ুন <i class="fas fa-arrow-right"></i></span>
-        </a>
-      <% } %>
-      <% if (todayByType.activity) { %>
-        <div class="today-card today-activity">
-          <div class="today-icon"><i class="fas fa-running"></i></div>
-          <h3>আজকের কার্যক্রম</h3>
-          <p class="today-title"><%= todayByType.activity.title %></p>
-          <% if (todayByType.activity.body) { %><p class="today-body"><%= mdPlain(todayByType.activity.body, 110) %></p><% } %>
-        </div>
-      <% } %>
-      <% if (todayByType.epaper) { %>
-        <a href="<%= todayByType.epaper.link_url || todayByType.epaper.file_url || '/quiz' %>" target="_blank" rel="noopener" class="today-card today-epaper">
-          <div class="today-icon"><i class="far fa-newspaper"></i></div>
-          <h3>আজকের ই-পেপার</h3>
-          <p class="today-title"><%= todayByType.epaper.title %></p>
-          <% if (todayByType.epaper.body) { %><p class="today-body"><%= mdPlain(todayByType.epaper.body, 110) %></p><% } %>
-          <span class="today-cta">পড়ুন / ডাউনলোড <i class="fas fa-external-link-alt"></i></span>
-        </a>
-      <% } %>
-      <% if (todayByType.best_writer) { %>
-        <a href="<%= todayByType.best_writer.link_url || '/committee' %>" class="today-card today-best">
-          <div class="today-icon"><i class="fas fa-crown"></i></div>
-          <h3>সেরা লেখক</h3>
-          <p class="today-title"><%= todayByType.best_writer.title %></p>
-          <% if (todayByType.best_writer.body) { %><p class="today-body"><%= mdPlain(todayByType.best_writer.body, 110) %></p><% } %>
-          <span class="today-cta">পরিচয় দেখুন <i class="fas fa-arrow-right"></i></span>
-        </a>
-      <% } %>
-    </div>
-  </div>
-</section>
-<% } %>
-
-<% if (quizChallenge) { %>
-<%# সেশন ৭৯: কুইজ চ্যালেঞ্জ — হোমপেজেই উত্তর দেওয়া যায় এমন ইন্টারঅ্যাক্টিভ প্রমো-ব্যান্ড %>
-<% const qcBn = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
-<section class="section quiz-challenge-section reveal" id="quizChallengeSection">
-  <div class="container">
-    <div class="qc-band">
-      <div class="qc-main">
-        <div class="qc-head">
-          <span class="qc-badge"><i class="fas fa-bolt"></i> আজকের কুইজ চ্যালেঞ্জ</span>
-          <span class="qc-live"><i class="fas fa-circle qc-live-dot"></i> সরাসরি উত্তর দিন</span>
-        </div>
-        <h3 class="qc-question"><i class="fas fa-quote-right qc-q-ic"></i> <%= quizChallenge.title %></h3>
-        <% if (quizChallenge.body) { %><p class="qc-hint"><%= mdPlain(quizChallenge.body, 180) %></p><% } %>
-        <div class="qc-options" id="qcOptions" data-qid="<%= quizChallenge.id %>">
-          <% const qcLetters = ['ক', 'খ', 'গ', 'ঘ', 'ঙ', 'চ']; %>
-          <% quizChallenge.options.forEach((opt, i) => { %>
-            <button type="button" class="qc-opt" data-i="<%= i %>"<%= quizChallenge.myAttempt ? ' disabled' : '' %>>
-              <span class="qc-opt-letter"><%= qcLetters[i] || (i + 1) %></span>
-              <span class="qc-opt-text"><%= opt %></span>
-              <i class="fas fa-check qc-opt-ic qc-opt-check"></i>
-              <i class="fas fa-times qc-opt-ic qc-opt-x"></i>
-            </button>
-          <% }); %>
-        </div>
-        <div class="qc-result" id="qcResult" hidden>
-          <i class="fas fa-circle-check qc-result-ic"></i>
-          <div class="qc-result-txt">
-            <strong id="qcResultTitle"></strong>
-            <p id="qcResultBody"></p>
-          </div>
-          <button type="button" class="qc-share" id="qcShare" hidden><i class="fas fa-share-nodes"></i> ফলাফল শেয়ার</button>
-        </div>
-        <div class="qc-foot">
-          <a href="/quiz" class="qc-more">সব কুইজ, ইতিহাস ও লিডারবোর্ড <i class="fas fa-arrow-right"></i></a>
-          <span class="qc-note"><i class="fas fa-lock"></i> প্রথম উত্তরই চূড়ান্ত</span>
-        </div>
-      </div>
-      <aside class="qc-side">
-        <div class="qc-stat-grid">
-          <div class="qc-stat-card">
-            <i class="fas fa-users qc-stat-ic"></i>
-            <strong><%= qcBn(quizChallenge.participants) %></strong>
-            <span>আজ অংশগ্রহণ</span>
-          </div>
-          <% if (quizChallenge.myStats) { %>
-          <div class="qc-stat-card qc-stat-streak">
-            <i class="fas fa-fire qc-stat-ic"></i>
-            <strong><%= qcBn(quizChallenge.myStats.streak) %> দিন</strong>
-            <span>আপনার স্ট্রিক</span>
-          </div>
-          <div class="qc-stat-card qc-stat-score">
-            <i class="fas fa-bullseye qc-stat-ic"></i>
-            <strong><%= qcBn(quizChallenge.myStats.correct) %>/<%= qcBn(quizChallenge.myStats.answered) %></strong>
-            <span>সঠিক উত্তর</span>
-          </div>
-          <% } else { %>
-          <div class="qc-stat-card qc-stat-join">
-            <i class="fas fa-user-plus qc-stat-ic"></i>
-            <a href="/login">লগইন করে স্কোর জমা রাখুন</a>
-          </div>
-          <% } %>
-        </div>
-        <div class="qc-leaders">
-          <div class="qc-leaders-head"><i class="fas fa-trophy"></i> লিডারবোর্ড — সর্বকালের সেরা</div>
-          <% if (quizChallenge.leaders.length) { %>
-            <% quizChallenge.leaders.forEach((l, i) => { %>
-              <a href="/profile/<%= l.username %>" class="qc-leader <%= i === 0 ? 'is-first' : '' %>">
-                <span class="qc-rank r<%= i + 1 %>"><%= ['১ম', '২য়', '৩য়'][i] %></span>
-                <img src="<%= l.avatar_url || '/avatar/' + l.id %>" onerror="this.onerror=null;this.src='/avatar/0'" alt="<%= l.full_name %>">
-                <span class="qc-leader-name"><%= l.full_name %></span>
-                <span class="qc-leader-score"><%= qcBn(l.correct_n) %> সঠিক</span>
-              </a>
-            <% }); %>
-          <% } else { %>
-            <p class="qc-leaders-empty"><i class="fas fa-seedling"></i> এখনো কেউ অংশ নেননি — প্রথম হওয়ার সুযোগ আপনার!</p>
-          <% } %>
-          <a href="/quiz#leaderboard" class="qc-leaders-more">পূর্ণ লিডারবোর্ড দেখুন <i class="fas fa-chevron-right"></i></a>
-        </div>
-      </aside>
-    </div>
-  </div>
-</section>
-<script>
-/* সেশন ৭৯: কুইজ-চ্যালেঞ্জ ইন্টারঅ্যাকশন — sandbox-fetch-গার্ড সাপেক্ষে
-   (session-77 guard রিলেটিভ fetch-এ XTransformPort যোগ করে দেয়)। */
-(function () {
-  var wrap = document.getElementById('qcOptions');
-  if (!wrap) return;
-  var resultBox = document.getElementById('qcResult');
-  var resultTitle = document.getElementById('qcResultTitle');
-  var resultBody = document.getElementById('qcResultBody');
-  var shareBtn = document.getElementById('qcShare');
-  var lastShareText = '';
-
-  /* সেশন ৭৯: ফলাফল-শেয়ার — Web Share API, না থাকলে WhatsApp-ফলব্যাক */
-  shareBtn.addEventListener('click', function () {
-    var url = location.origin + '/quiz';
-    var text = lastShareText || 'আজকের কুইজ চ্যালেঞ্জ';
-    if (navigator.share) {
-      navigator.share({ title: 'লেখক ফোরাম কুইজ', text: text, url: url }).catch(function () {});
-    } else {
-      window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank', 'noopener');
-    }
-  });
-
-  function setShareText(t) {
-    lastShareText = t;
-    if (shareBtn) shareBtn.hidden = false;
+     সেশন ৫৭: প্রোফাইল-লিংক স্যানিটাইজার — শুধু http(s)/সাইট-রিলেটিভ পাথ গ্রহণ
+     (javascript: ইত্যাদি ইনজেকশন রোধ)। */
+  function lfSafeUrl(u) {
+    if (!u) return '';
+    const s = String(u).trim();
+    if (/^https?:\/\//i.test(s) || s.startsWith('/')) return s;
+    return '';
   }
-  var qid = parseInt(wrap.getAttribute('data-qid'), 10);
-  var myAttempt = <%- jesc(quizChallenge.myAttempt) %>;
-  /* সার্ভার-সত্য (res.locals.user) — main.js-এর LekhokAuthed-এর লোড-টাইমিং
-     নির্ভরতা এড়াতে ইনলাইন-স্ক্রিপ্ট চলার সময়েই নিশ্চিত মান */
-  var authed = <%- jesc(!!(typeof user !== 'undefined' && user)) %>;
-
-  /* সেশন ৮৪: অ্যাননিমাস localStorage-পারসিস্ট — /quiz পেজের quiz.js-এর
-     সাথে একই স্টোর (lf_quiz_v1) শেয়ার করে: হোম-ব্যান্ডে উত্তর দিলে সেটি
-     /quiz পেজেও ফিরে আসে (এবং উল্টোটাও)। লগইন-ইউজারের সার্ভার-উত্তর
-     (myAttempt) সবসময় প্রাধান্য পায় — DB-ই সত্য। */
-  var LS_KEY = 'lf_quiz_v1';
-  function loadLs() {
-    try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; }
+  /* সেশন ৯১: HTML-অ্যাট্রিবিউট-এস্কেপ — leaderCard-এর টেমপ্লেট-লিটারালে
+     ইউজার-কনটেন্ট (full_name/avatar_url/bio/সোশ্যাল-ইউআরএল) কাঁচা বসানো
+     stored-XSS দেয়; সব ইন্টারপোলেশন esc() দিয়ে যায়। */
+  function lfEsc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
-  function saveLs(s) {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) { /* প্রাইভেট-মোড */ }
-  }
-  if (!myAttempt) {
-    var lsPrev = loadLs()[String(qid)];
-    if (lsPrev && lsPrev.answered) {
-      myAttempt = { choice: lsPrev.choice, correct: !!lsPrev.correct, ls: true, answer: lsPrev.answer, body: lsPrev.body };
-    }
-  }
-  var letters = ['ক', 'খ', 'গ', 'ঘ', 'ঙ', 'চ'];
-  var opts = [].slice.call(wrap.querySelectorAll('.qc-opt'));
-
-  function bn(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
-
-  /* প্রি-অ্যানসার্ড স্টেট (সার্ভারে আজকের চূড়ান্ত উত্তর আছে; সেশন ৮৪:
-     অ্যাননিমাস হলে localStorage-থেকেও) */
-  if (myAttempt) {
-    lockAll();
-    var chosen = opts[myAttempt.choice];
-    if (chosen) chosen.classList.add(myAttempt.correct ? 'is-correct' : 'is-wrong-picked');
-    if (!myAttempt.correct && myAttempt.answer !== null && myAttempt.answer !== undefined && opts[myAttempt.answer]) {
-      opts[myAttempt.answer].classList.add('is-correct');
-    }
-    resultBox.hidden = false;
-    resultBox.className = 'qc-result ' + (myAttempt.correct ? 'is-correct' : 'is-wrong');
-    resultTitle.innerHTML = myAttempt.correct
-      ? '<i class="fas fa-clipboard-check"></i> আপনি আজকের উত্তর দিয়েছেন — সঠিক!'
-      : '<i class="fas fa-clipboard-check"></i> আপনি আজকের উত্তর দিয়েছেন';
-    resultBody.textContent = 'প্রথম উত্তরই চূড়ান্ত — আগামীকাল নতুন প্রশ্নে আবার চেষ্টা করুন।';
-    if (myAttempt.ls && !authed) {
-      resultBody.innerHTML = 'এই ব্রাউজারে আপনার উত্তর সংরক্ষিত — <a href="/login" class="qc-ls-login">লগইন করুন</a> স্কোর ও স্ট্রিক সার্ভারে জমা রাখতে।';
-    }
-    setShareText(myAttempt.correct ? 'আজকের কুইজে সঠিক উত্তর দিয়েছি! 🔥 — লেখক ফোরাম' : 'আজকের কুইজ চ্যালেঞ্জে অংশ নিয়েছি — আপনিও দেখুন!');
-  }
-
-  opts.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      if (wrap.classList.contains('qc-busy') || wrap.classList.contains('qc-done')) return;
-      wrap.classList.add('qc-busy');
-      var choice = parseInt(btn.getAttribute('data-i'), 10);
-      fetch('/quiz/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ id: qid, choice: choice })
-      }).then(function (r) { return r.json(); })
-        .then(function (d) {
-          wrap.classList.remove('qc-busy');
-          if (!d || !d.ok) {
-            resultBox.hidden = false;
-            resultBox.className = 'qc-result is-wrong';
-            resultTitle.textContent = 'উত্তর যাচাই করা যায়নি';
-            resultBody.textContent = 'ইন্টারনেট সমস্যা — আবার চেষ্টা করুন।';
-            return;
-          }
-          wrap.classList.add('qc-done');
-          lockAll();
-          var shown = d.final && typeof d.final.choice === 'number' ? d.final.choice : choice;
-          var isCorrect = d.final ? !!d.final.correct : !!d.correct;
-          if (opts[shown]) opts[shown].classList.add(isCorrect ? 'is-correct' : 'is-wrong-picked');
-          if (!isCorrect && d.answer !== null && opts[d.answer]) {
-            opts[d.answer].classList.add('is-correct');
-          }
-          resultBox.hidden = false;
-          resultBox.className = 'qc-result ' + (isCorrect ? 'is-correct' : 'is-wrong');
-          resultTitle.innerHTML = isCorrect
-            ? '<i class="fas fa-circle-check"></i> অভিনন্দন! সঠিক উত্তর'
-            : '<i class="fas fa-circle-xmark"></i> সঠিক উত্তরটি হলো: ' + letters[d.answer] + ') ' + (d.correctText || '');
-          resultBody.textContent = isCorrect
-            ? 'চমৎকার! আগামীকালের প্রশ্নেও স্ট্রিক ধরে রাখুন।'
-            : 'ভুল হয়েছে — আগামীকাল নতুন প্রশ্নে আবার চেষ্টা করুন।';
-          setShareText(isCorrect ? 'আজকের কুইজে সঠিক উত্তর দিয়েছি! 🔥 — লেখক ফোরাম' : 'আজকের কুইজ চ্যালেঞ্জে অংশ নিয়েছি — আপনিও দেখুন!');
-          /* সেশন ৮৪: উত্তর lf_quiz_v1-এ সেভ — রিলোডে প্রি-অ্যানসার্ড স্টেট
-             ফিরবে (quiz.js-এর স্টোর-ফরম্যাটের মিরর — answer/body সহ, যাতে
-             /quiz পেজে ব্যাখ্যাসহ রিস্টোর হয়)। সার্ভারে final থাকলে সেটিই সেভ। */
-          try {
-            var lsStore = loadLs();
-            lsStore[String(qid)] = {
-              answered: true, choice: shown, correct: isCorrect,
-              answer: (d.answer !== null && d.answer !== undefined) ? d.answer : null,
-              body: d.body || '', ts: Date.now()
-            };
-            saveLs(lsStore);
-          } catch (e) { /* প্রাইভেট-মোড — নন-ব্লকিং */ }
-        })
-        .catch(function () {
-          wrap.classList.remove('qc-busy');
-          resultBox.hidden = false;
-          resultBox.className = 'qc-result is-wrong';
-          resultTitle.textContent = 'নেটওয়ার্ক সমস্যা';
-          resultBody.textContent = 'সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
-        });
-    });
-  });
-
-  function lockAll() {
-    wrap.classList.add('qc-done');
-    opts.forEach(function (b) { b.disabled = true; });
-  }
-})();
-</script>
-<% } %>
-
-<!-- Mission — section-alt with reveal -->
-<section class="section section-alt reveal">
-  <div class="container">
-    <div class="section-head center">
-      <span class="eyebrow"><%= C('home_mission_eyebrow') %></span>
-      <h2 class="section-title"><%= C('home_mission_t1') %> <span class="accent"><%= C('home_mission_accent') %></span></h2>
-      <span class="accent-divider center"></span>
-      <p class="lead"><%= C('home_mission_lead') %></p>
-    </div>
-    <div class="feature-grid reveal-stagger">
-      <div class="feature"><i class="fas <%= C('home_feature1_icon') %>"></i><h3><%= C('home_feature1_title') %></h3><p><%= C('home_feature1_text') %></p></div>
-      <div class="feature"><i class="fas <%= C('home_feature2_icon') %>"></i><h3><%= C('home_feature2_title') %></h3><p><%= C('home_feature2_text') %></p></div>
-      <div class="feature"><i class="fas <%= C('home_feature3_icon') %>"></i><h3><%= C('home_feature3_title') %></h3><p><%= C('home_feature3_text') %></p></div>
-      <div class="feature"><i class="fas <%= C('home_feature4_icon') %>"></i><h3><%= C('home_feature4_title') %></h3><p><%= C('home_feature4_text') %></p></div>
-      <div class="feature"><i class="fas <%= C('home_feature5_icon') %>"></i><h3><%= C('home_feature5_title') %></h3><p><%= C('home_feature5_text') %></p></div>
-      <div class="feature"><i class="fas <%= C('home_feature6_icon') %>"></i><h3><%= C('home_feature6_title') %></h3><p><%= C('home_feature6_text') %></p></div>
-      <div class="feature"><i class="fas <%= C('home_feature7_icon') %>"></i><h3><%= C('home_feature7_title') %></h3><p><%= C('home_feature7_text') %></p></div>
-      <div class="feature"><i class="fas <%= C('home_feature8_icon') %>"></i><h3><%= C('home_feature8_title') %></h3><p><%= C('home_feature8_text') %></p></div>
-    </div>
-  </div>
-</section>
-
-<!-- Stats banner removed (moved to about page) -->
-
-<!-- ═══ Section 1: Founding leaders ═══ -->
-<section class="section reveal" id="leadership">
-  <div class="container">
-    <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
-      <div>
-        <span class="eyebrow"><%= C('home_lead1_eyebrow') %></span>
-        <h2 class="section-title"><%= C('home_lead1_t1') %> <span class="accent"><%= C('home_lead1_accent') %></span></h2>
-        <span class="accent-divider center"></span>
+  function leaderCard(m, roleLabel, yearLabel, statement) {
+    const displayName = m.user_full_name || m.name;
+    const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg?v=2';
+    // সেশন ৫৭: আইডির ইউয়ারএল (অ্যাডমিন-সেট profile_url) → প্রাধিকার;
+    // না থাকলে লিংকড অ্যাকাউন্টের সাইট-প্রোফাইল।
+    const profileHref = lfSafeUrl(m.profile_url) || (m.user_username ? '/profile/' + m.user_username : '');
+    // সেশন ৪৯: বাণী প্রাধিকার — message (আলাদা বাণী ফিল্ড) → bio → slot statement
+    const rawBio = (m.message && String(m.message).trim()) ? String(m.message)
+                 : ((m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || ''));
+    const displayBio = rawBio.substring(0, 700);
+    const fb    = lfSafeUrl(m.social_fb);
+    const email = m.social_email;
+    const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || profileHref);
+    const inner = `
+      <img loading="lazy" decoding="async" src="${lfEsc(displayImg)}" alt="${lfEsc(displayName)}" class="leader-photo" />
+      <div class="leader-body">
+        <h3 class="leader-name">${lfEsc(displayName)}</h3>
+        <p class="role leader-role">${lfEsc(roleLabel || m.role || '')}</p>
+        ${yearLabel ? `<p class="leader-year">${lfEsc(yearLabel)}</p>` : ''}
+        ${displayBio ? `<p class="leader-bani">${lfEsc(displayBio)}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
+        ${hasSocial ? `
+        <div class="leader-social">
+          ${profileHref ? `<a href="${lfEsc(profileHref)}" ${/^https?:\/\//i.test(profileHref) ? 'target="_blank" rel="noopener noreferrer"' : ''} class="leader-soc-id" aria-label="প্রোফাইল / আইডি"><i class="fas fa-id-card"></i></a>` : ''}
+          ${fb ? `<a href="${lfEsc(fb)}" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>` : ''}
+          ${email ? `<a href="mailto:${lfEsc(email)}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
+          ${m.social_twitter ? `<a href="${lfEsc(lfSafeUrl(m.social_twitter))}" target="_blank" rel="noopener noreferrer" class="leader-soc-tw" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
+          ${m.social_linkedin ? `<a href="${lfEsc(lfSafeUrl(m.social_linkedin))}" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>` : ''}
+        </div>` : ''}
       </div>
-    </div>
-
-    <%
-      // সেশন ৫৭: প্রোফাইল-লিংক স্যানিটাইজার — শুধু http(s)/সাইট-রিলেটিভ পাথ গ্রহণ
-      // (javascript: ইত্যাদি ইনজেকশন রোধ)।
-      function safeLeaderUrl(u) {
-        if (!u) return '';
-        const s = String(u).trim();
-        if (/^https?:\/\//i.test(s) || s.startsWith('/')) return s;
-        return '';
-      }
-      // সেশন ৯১: HTML-অ্যাট্রিবিউট-এস্কেপ — leaderCard-এর টেমপ্লেট-লিটারালে
-      // ইউজার-কনটেন্ট (full_name/avatar_url/bio/সোশ্যাল-ইউআরএল) কাঁচা বসানো
-      // stored-XSS দেয়; সব ইন্টারপোলেশন এখন esc() দিয়ে যায়।
-      function esc(s) {
-        return String(s == null ? '' : s)
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      }
-      function leaderCard(m, roleLabel, yearLabel, statement) {
-        const displayName = m.user_full_name || m.name;
-        const displayImg  = m.user_avatar_url || m.image_url || m.photo_url || '/assets/img/avatar-placeholder.svg?v=2';
-        // সেশন ৫৭: আইডির ইউয়ারএল (অ্যাডমিন-সেট profile_url) → প্রাধিকার;
-        // না থাকলে লিংকড অ্যাকাউন্টের সাইট-প্রোফাইল।
-        const profileHref = safeLeaderUrl(m.profile_url) || (m.user_username ? '/profile/' + m.user_username : '');
-        // সেশন ৪৯: বাণী প্রাধিকার — message (আলাদা বাণী ফিল্ড) → bio → slot statement
-        const rawBio = (m.message && String(m.message).trim()) ? String(m.message)
-                     : ((m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || ''));
-        const displayBio = rawBio.substring(0, 700);
-        const fb    = safeLeaderUrl(m.social_fb);
-        const email = m.social_email;
-        const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || profileHref);
-        const inner = `
-          <img loading="lazy" decoding="async" src="${esc(displayImg)}" alt="${esc(displayName)}" class="leader-photo" />
-          <div class="leader-body">
-            <h3 class="leader-name">${esc(displayName)}</h3>
-            <p class="role leader-role">${esc(roleLabel || m.role || '')}</p>
-            ${yearLabel ? `<p class="leader-year">${esc(yearLabel)}</p>` : ''}
-            ${displayBio ? `<p class="leader-bani">${esc(displayBio)}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
-            ${hasSocial ? `
-            <div class="leader-social">
-              ${profileHref ? `<a href="${esc(profileHref)}" ${/^https?:\/\//i.test(profileHref) ? 'target="_blank" rel="noopener noreferrer"' : ''} class="leader-soc-id" aria-label="প্রোফাইল / আইডি"><i class="fas fa-id-card"></i></a>` : ''}
-              ${fb ? `<a href="${esc(fb)}" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>` : ''}
-              ${email ? `<a href="mailto:${esc(email)}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
-              ${m.social_twitter ? `<a href="${esc(safeLeaderUrl(m.social_twitter))}" target="_blank" rel="noopener noreferrer" class="leader-soc-tw" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
-              ${m.social_linkedin ? `<a href="${esc(safeLeaderUrl(m.social_linkedin))}" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>` : ''}
-            </div>` : ''}
-          </div>
-        `;
-        // সেশন ৩০ (আসল বাগফিক্স): কার্ড সবসময় <div> — আগে linked কার্ড
-        // (user_username যাদের) পুরোটা <a href="/profile/...">-তে মোড়ানো হত,
-        // অথচ ভেতরের সোশ্যাল রো-তেও <a> ছিল। <a>-র ভেতর <a> invalid HTML —
-        // ব্রাউজার পার্সার বাইরের <a> আগেই বন্ধ করে দিয়ে কার্ডটাকে ৩টি বিচ্ছিন্ন
-        // DOM টুকরোতে ফেলত, ফলে বর্তমান সভাপতি/সা.সম্পাদক কার্ড ভেঙে যেত।
-        // এখন প্রোফাইল লিংক থাকে সোশ্যাল আইকনে + পুরো কার্ড ক্লিকযোগ্য
-        // data-href + main.js-এর delegated হ্যান্ডলারে — nested anchor সম্ভবই নেই।
-        // সেশন ৫৭: profileHref থাকলে কার্ডে data-href — main.js ক্লিকে নেভিগেট করে
-        // (ভেতরের <a>-তে ক্লিক হলে সেটাই প্রাধিন্য পায়)।
-        return `<div class="leader-card has-image leader-card-featured${profileHref ? ' is-linked' : ''}"${profileHref ? ` data-href="${profileHref}"` : ''}>${inner}</div>`;
-      }
-      /* সেশন ৬৪: leaderPair সরিয়ে leaderRow64 — N-কার্ড flex-center সারি (নিচে)।
-         পুরনো ২-কার্ড-পেয়ার-গ্রিডে লুকালে ফাঁকা-কলাম থেকে যেত — সেন্টার-সমস্যার মূল-কারণ। */
-    %>
-
-    <%# সেশন ৫৫: ফলব্যাক-বাণী এখন অ্যাডমিন-এডিটেবল — প্রাধিকার:
-          settings('content_home_statement_<slot>') → data/leaderStatements.js ডিফল্ট।
-          স্লট-কী-গুলো helpers/home-leadership.js SLOT_META-র সাথে অভিন্ন। %>
-    <% const stmtSlot55 = (k) => { const v = (typeof getSetting === 'function' ? getSetting('content_home_statement_' + k) : null); return (v && String(v).trim()) ? String(v) : (leaderStatements[k] || ''); }; %>
-    <%# সেশন ৬৪: ভিজিবিলিটি-সেট রুট-থেকে আসে (ডিফল্ট-লুকানো-স্লট-সচেতন):
-          • homeHiddenSlots — কার্যকর লুকানো-স্লট-তালিকা (settings অনুপস্থিত হলে
-            current_advisor_1/2 — উপদেষ্টা নিয়োগ না-দেওয়া পর্যন্ত ডামি-কার্ড বন্ধ)
-          • homeExtraMembers — অতিরিক্ত-উপদেষ্টাদের opt-in member-id তালিকা
-          পুরনো getSetting-ভিত্তিক ফলব্যাকও রাখা হলো (ক্যাশ/পুরনো-কল-সুরক্ষা)। %>
-    <%
-      var hiddenList64 = Array.isArray(homeHiddenSlots) ? homeHiddenSlots : [];
-      if (!Array.isArray(homeHiddenSlots)) {
-        try {
-          const raw64 = (typeof getSetting === 'function' ? getSetting('home_hidden_slots') : null);
-          if (raw64) String(raw64).split(',').map(s => s.trim()).filter(Boolean).forEach(k => hiddenList64.push(k));
-        } catch (e64) { /* ফাঁকা সেট = সব স্লট দৃশ্যমান */ }
-      }
-      var extraIds64 = (Array.isArray(homeExtraMembers) ? homeExtraMembers : []).map(Number);
-      var hiddenSet64 = new Set(hiddenList64);
-      // কার্ড লুকানো? স্লট-কার্ড → স্লট-কী লুকানো-তালিকায়; অতিরিক্ত-কার্ড → opt-in তালিকায় নেই
-      var isHidden64 = (c64) => c64.slotKey ? hiddenSet64.has(c64.slotKey) : !extraIds64.includes(Number(c64.m.id));
-    %>
-
-    <%# সেশন ৬৪: N-কার্ড সেন্টার-রো — flex flex-wrap justify-center সমতুল্য CSS।
-        ২টা কার্ড = মাঝের-জোড়া (৪-সারির ২ ও ৩ নং-অবস্থান), ৩/৪টা = সমদূরত্বে পূর্ণ-সারি,
-        আরও হলে পরের সারিতে কেন্দ্রে। খালি-নাম ও লুকানো কার্ড রেন্ডার-ই হয় না। %>
-    <%
-      function leaderRow64(cards64) {
-        const list64 = (Array.isArray(cards64) ? cards64 : []).filter(c64 => c64 && c64.m && String(c64.m.user_full_name || c64.m.name || '').trim() && !isHidden64(c64));
-        if (!list64.length) return '';
-        /* সেশন ৬৫-ফিক্স: কার্যবর্ষ-লেবেলের একক-উৎস — member.term_year-প্রথম।
-           ব্যবহারকারী-রিপোর্ট: অ্যাডমিনে কমিটি-সদস্যের কার্যবর্ষ ২০২৬-২৭ সেট করা
-           সত্ত্বেও হোম দেখাত ২০২৫-২৬ — কারণ স্লট-কার্ড আগে শুধু settings-লেবেল
-           (content 'home_year_current') দেখাত, members.term_year-এর খবর নিত না।
-           নিয়ম (নেতৃত্ব-সেকশন):  • founder/founding-স্লট → আগের মতো settings-লেবেল
-           (প্রতিষ্ঠাকালীন-যুগ-লেবেল, সদস্য-সারির সাথে সম্পর্কহীন)
-           • current/অতিরিক্ত-কার্ড → member.term_year থাকলে সেটাই ('কার্যবর্ষ'
-             সাফিক্স-নরমালাইজার, ডাবল-সাফিক্স-নিষেধ); শূন্য হলে settings-ফলব্যাক। */
-        function yearLabel65(ty, fallback) {
-          const s65 = String(ty || '').trim();
-          if (!s65) return String(fallback || '').trim();
-          return /কার্যবর্ষ/.test(s65) ? s65 : (s65 + ' কার্যবর্ষ');
-        }
-        return '<div class="leaders-row">' + list64.map((c64) => {
-          const isFounding64 = c64.slotKey && (c64.slotKey.indexOf('found') === 0 || c64.slotKey.indexOf('founding') === 0);
-          const role64 = c64.slotKey ? C('home_role_' + c64.slotKey) : (c64.m.role || '');
-          const year64 = isFounding64
-            ? yearLabel65('', C('home_year_founding'))
-            : yearLabel65(c64.m.term_year, C('home_year_current'));
-          const st64 = c64.slotKey ? stmtSlot55(c64.slotKey) : '';
-          return leaderCard(c64.m, role64, year64, st64);
-        }).join('') + '</div>';
-      }
-    %>
-
-    <%# সেশন ৬৪: matrix-গ্রিড-র‍্যাপার বাদ — leaders-row নিজেই পূর্ণ-প্রস্থ flex-center %>
-    <%- leaderRow64(homeLegacyCards) %>
-  </div>
-</section>
-
-<!-- ═══ Section 2: Current leaders ═══ -->
-<section class="section section-alt reveal" id="current-leadership">
-  <div class="container">
-    <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
-      <div>
-        <span class="eyebrow"><%= C('home_lead2_eyebrow') %></span>
-        <h2 class="section-title"><%= C('home_lead2_t1') %> <span class="accent"><%= C('home_lead2_accent') %></span></h2>
-        <span class="accent-divider center"></span>
-      </div>
-    </div>
-
-    <%- leaderRow64(homeCurrentCards) %>
-  </div>
-</section>
-
-<%# ── সাধারণ জিজ্ঞাসা (সেশন ৩৫ ফিক্স: আগে এই ব্লকটা container/section-এর বাইরে ছিল —
-      তাই দুই পাশে প্যাডিং ছাড়া একদম কিনারায় লেগে যেত। এখন পূর্ণ সেকশন-কাঠামোয়) ── %>
-<%# ── সেশন ৪০: সাধারণ জিজ্ঞাসা — এলিগ্যান্ট +/− অ্যাকর্ডিয়ন (কারেটেড ১৫ প্রশ্ন; ইউজার-লিংক বাদ) ── %>
-<section class="section qa-section reveal" id="qa">
-  <div class="container">
-    <div class="section-head center">
-      <div>
-        <span class="eyebrow"><i class="fas fa-comments"></i> <%= C('home_qa_eyebrow') %></span>
-        <h2 class="section-title"><%= C('home_qa_title') %></h2>
-        <span class="accent-divider center"></span>
-      </div>
-    </div>
-    <%
-      // সেশন ৪২: FAQ এখন DB-চালিত (অ্যাডমিন/মডারেটর → সেকশন আইটেম ম্যানেজার)
-      const FAQ40 = (typeof faqItems42 !== 'undefined' ? faqItems42 : []).map(x => [x.title, x.body]);
-      const BN40 = '০১২৩৪৫৬৭৮৯';
-      const bn40 = (n) => String(n).replace(/\d/g, d => BN40[+d]);
-    %>
-    <div class="faq-accordion">
-      <% FAQ40.forEach((f, i) => { %>
-        <details class="faq-item" <%= i === 0 ? 'open' : '' %>>
-          <summary class="faq-summary">
-            <span class="faq-q"><span class="faq-num"><%= bn40(i + 1) %></span><span><%= f[0] %></span></span>
-            <span class="faq-icon" aria-hidden="true"></span>
-          </summary>
-          <div class="faq-a"><p><%= f[1] %></p></div>
-        </details>
-      <% }) %>
-    </div>
-    <div style="text-align:center; margin-top:22px;">
-      <a href="/qa" class="link-more"><%= C('home_qa_more') %> <i class="fas fa-arrow-right"></i></a>
-    </div>
-  </div>
-</section>
-
-<%# ── ইউজার ফিড শোকেস (সেশন ৩৫: হিরোর স্লাইডিং উইজেট এখানেই ইন্টিগ্রেট) ── %>
-<section class="section feed-showcase-section reveal" id="user-feed">
-  <div class="container">
-    <div class="feed-showcase">
-      <% if (C('home_feed_banner')) { %><div class="fs-banner-img" style="background-image:url('<%= C('home_feed_banner') %>')"></div><% } %>
-      <div class="fs-decor fs-decor-1"></div>
-      <div class="fs-decor fs-decor-2"></div>
-      <div class="fs-grid">
-        <div class="fs-info">
-          <span class="fs-eyebrow"><i class="fas fa-stream"></i> <%= C('home_feed_eyebrow') %></span>
-          <h2 class="fs-title"><%= C('home_feed_title') %></h2>
-          <p class="fs-lead"><%= C('home_feed_desc') %></p>
-          <ul class="fs-points">
-            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point1') %></li>
-            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point2') %></li>
-            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point3') %></li>
-          </ul>
-          <div class="fs-cta">
-            <a href="/dashboard" class="btn fs-btn-main"><i class="fas fa-arrow-right"></i> <%= C('home_feed_btn') %></a>
-            <a href="/register" class="btn fs-btn-ghost"><i class="fas fa-user-plus"></i> <%= C('home_feed_btn2') %></a>
-          </div>
+    `;
+    // সেশন ৩০ (আসল বাগফিক্স): কার্ড সবসময় <div> — আগে linked কার্ড
+    // (user_username যাদের) পুরোটা <a href="/profile/...">-তে মোড়ানো হত,
+    // অথচ ভেতরের সোশ্যাল রো-তেও <a> ছিল। <a>-র ভেতর <a> invalid HTML —
+    // ব্রাউজার পার্সার বাইরের <a> আগেই বন্ধ করে দিয়ে কার্ডটাকে ৩টি বিচ্ছিন্ন
+    // DOM টুকরোতে ফেলত, ফলে বর্তমান সভাপতি/সা.সম্পাদক কার্ড ভেঙে যেত।
+    // এখন প্রোফাইল লিংক থাকে সোশ্যাল আইকনে + পুরো কার্ড ক্লিকযোগ্য
+    // data-href + main.js-এর delegated হ্যান্ডলারে — nested anchor সম্ভবই নেই।
+    // সেশন ৫৭: profileHref থাকলে কার্ডে data-href — main.js ক্লিকে নেভিগেট করে
+    // (ভেতরের <a>-তে ক্লিক হলে সেটাই প্রাধিন্য পায়)।
+    return `<div class="leader-card has-image leader-card-featured${profileHref ? ' is-linked' : ''}"${profileHref ? ` data-href="${lfEsc(profileHref)}"` : ''}>${inner}</div>`;
+  }
+  function leaderPair(members, roles, yearLabel, statements) {
+    if (!members || !members.length) return '';
+    return `
+      <div class="leadership-cell">
+        <div class="leaders-grid leaders-grid-pair">
+          ${members.map((m, i) => leaderCard(m, roles[i], yearLabel, statements[i])).join('')}
         </div>
-        <div class="fs-side">
-          <div class="fs-side-label"><i class="fas fa-bolt"></i> <%= C('home_feed_widget_label') %></div>
-          <div class="fs-carousel" id="feedCarousel" aria-roledescription="carousel" aria-label="ফোরামের সার-আকর্ষণ">
-            <div class="fc-track" id="fcTrack">
-              <a class="fc-slide" href="/quiz">
-                <span class="fc-icon"><i class="fas fa-brain"></i></span>
-                <span class="fc-body"><strong>আজকের কুইজ</strong><small>প্রতিদিন নতুন প্রশ্ন, মেধা যাচাই করুন</small></span>
-                <i class="fas fa-arrow-right fc-go"></i>
-              </a>
-              <a class="fc-slide" href="/on-this-day">
-                <span class="fc-icon"><i class="fas fa-calendar-day"></i></span>
-                <span class="fc-body"><strong>এই দিনে ইতিহাসে</strong><small>আজকের দিনের তাৎপর্য জেনে নিন</small></span>
-                <i class="fas fa-arrow-right fc-go"></i>
-              </a>
-              <a class="fc-slide" href="/epaper">
-                <span class="fc-icon"><i class="fas fa-newspaper"></i></span>
-                <span class="fc-body"><strong>আজকের ই-পেপার</strong><small>সাহিত্য ও মতামত পাতার নির্বাচন</small></span>
-                <i class="fas fa-arrow-right fc-go"></i>
-              </a>
-              <a class="fc-slide" href="/best-writer">
-                <span class="fc-icon"><i class="fas fa-crown"></i></span>
-                <span class="fc-body"><strong>মাসিক সেরা লেখক</strong><small>এই মাসের শ্রেষ্ঠ লেখক কে, দেখুন</small></span>
-                <i class="fas fa-arrow-right fc-go"></i>
-              </a>
-            </div>
-            <div class="fc-dots" id="fcDots" role="tablist" aria-label="স্লাইড নির্বাচন"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Recent notices — professional card grid -->
-<section class="section section-alt reveal">
-  <div class="container">
-    <div class="section-head">
-      <div>
-        <span class="eyebrow"><i class="fas fa-bullhorn"></i> <%= C('home_notices_eyebrow') %></span>
-        <h2 class="section-title"><%= C('home_notices_t1') %> <span class="accent"><%= C('home_notices_accent') %></span></h2>
-        <span class="accent-divider"></span>
-      </div>
-      <a href="/notices" class="link-more"><%= C('home_notices_more') %> <i class="fas fa-arrow-right"></i></a>
-    </div>
-    <% if (recentNotices && recentNotices.length) { %>
-      <div class="notice-list notice-list--home reveal-stagger">
-        <% recentNotices.slice(0, 6).forEach(n => { %>
-          <a href="/notices/<%= n.id %>" class="notice-row notice-row--compact">
-            <span class="notice-row-icon cat-<%= n.category %>">
-              <i class="fas fa-<%= n.category === 'press' ? 'bullhorn' : n.category === 'event' ? 'calendar-alt' : 'bell' %>"></i>
-            </span>
-            <span class="notice-row-main">
-              <span class="notice-row-top">
-                <span class="notice-row-title"><%= n.title %></span>
-                <span class="notice-badge badge-<%= n.category %>"><%= n.category === 'press' ? 'প্রেস' : n.category === 'event' ? 'ইভেন্ট' : 'নোটিশ' %></span>
-              </span>
-            </span>
-            <span class="notice-row-meta">
-              <span class="notice-row-date"><i class="far fa-calendar"></i><%= n.date || '' %></span>
-              <i class="fas fa-chevron-right notice-row-arrow"></i>
-            </span>
-          </a>
-        <% }) %>
-      </div>
-    <% } else { %>
-      <div class="empty-state">
-        <i class="fas fa-bullhorn"></i>
-        <h3>এখনও কোনো বিজ্ঞপ্তি প্রকাশিত হয়নি</h3>
-        <p>নতুন বিজ্ঞপ্তি এখানে দেখা যাবে</p>
-      </div>
-    <% } %>
-  </div>
-</section>
-
-<%# ── সেশন ৭২ (GSC-ফিক্স): সাম্প্রতিক লেখা — হোম থেকে আর্টিকেল-ক্রল-পাথ
-    (আগে হোমে কোনো আর্টিকেল-লিংক ছিল না; /articles/22-30 GSC-তে 'Discovered' ছিল)
-    সেশন ৯০ (হোম-কিউরেশন): তালিকা এখন মডারেটর/এডমিন-নির্বাচিত
-    (home_featured) — অ্যাভাটার/কভার-আপডেট বা প্রশ্নের মতো সোশ্যাল-
-    অ্যাক্টিভিটি কখনোই এখানে আসতে পারে না (post_kind='writing' ফিল্টার)।
-    সেশন ৯৪: শেয়ার-করা পোস্টও কঠোরভাবে বাদ (shared_from IS NULL) —
-    কেবল মূল লেখকের অরিজিনাল পোস্টই এই সারিতে আসে। ── %>
-<% if (typeof recentArticles !== 'undefined' && recentArticles && recentArticles.length) { %>
-<section class="section reveal">
-  <div class="container">
-    <div class="section-head">
-      <div>
-        <span class="eyebrow"><i class="fas fa-pen-nib"></i> লেখকদের কালি</span>
-        <h2 class="section-title">সাম্প্রতিক <span class="accent">লেখা</span>
-          <% if (typeof homeCurated !== 'undefined' && homeCurated) { %>
-            <span class="ink-curate-badge" title="মডারেটর/এডমিন নির্বাচিত লেখা"><i class="fas fa-check-double"></i> সম্পাদক-নির্বাচিত</span>
-          <% } %>
-        </h2>
-        <span class="accent-divider"></span>
-      </div>
-      <a href="/articles" class="link-more">সব লেখা দেখুন <i class="fas fa-arrow-right"></i></a>
-    </div>
-    <div class="notice-list notice-list--home reveal-stagger">
-      <% recentArticles.forEach(a => { %>
-        <a href="/articles/<%= a.id %>" class="notice-row notice-row--compact">
-          <%# সেশন ১১০: শৈল্পিক প্রচ্ছদ (posts.home_cover) — প্রিসেট=গ্রেডিয়েন্ট+কলম, টাইপোগ্রাফি=আদ্যক্ষর, কাস্টম=ইমেজ %>
-          <% if (a.cover) { %>
-          <span class="notice-row-icon inkc110<%= a.cover.type === 'typo' ? ' inkc110-typo' : '' %>" <% if (a.cover.grad) { %>style="background:<%= a.cover.grad %>"<% } %><% if (a.cover.type === 'typo' && a.cover.initial) { %> data-initial="<%= a.cover.initial %>"<% } %>>
-            <% if (a.cover.type === 'custom') { %>
-              <img class="inkc110-img" src="<%= a.cover.url %>" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('inkc110-fallback');this.remove()">
-            <% } else if (a.cover.type === 'preset') { %>
-              <i class="fas fa-feather-alt"></i>
-            <% } %>
-          </span>
-          <% } else { %>
-          <span class="notice-row-icon cat-general">
-            <i class="fas fa-feather-alt"></i>
-          </span>
-          <% } %>
-          <span class="notice-row-main">
-            <span class="notice-row-top">
-              <span class="notice-row-title"><%= a.title %></span>
-            </span>
-            <% if (a.excerpt) { %>
-              <span class="notice-row-sub ink-excerpt"><%= mdPlain(a.excerpt, 110) %></span>
-            <% } %>
-          </span>
-          <span class="notice-row-meta">
-            <span class="notice-row-date"><i class="far fa-user"></i><%= a.author_name %></span>
-            <i class="fas fa-chevron-right notice-row-arrow"></i>
-          </span>
-        </a>
-      <% }) %>
-    </div>
-  </div>
-</section>
+      </div>`;
+  }
+  // EJS-include আলাদা স্কোপ — with(locals) দিয়ে partial-এ দৃশ্যমান হয়:
+  locals.lfSafeUrl = lfSafeUrl;
+  locals.lfEsc = lfEsc;
+  locals.leaderCard = leaderCard;
+  locals.leaderPair = leaderPair;
+  const homeSections193 = Array.isArray(homeSections) ? homeSections : [];
+%>
+<% for (const _sec193 of homeSections193) { %>
+<% if (_sec193.key === 'TODAY' && !hasToday) { continue; } %>
+<% if (_sec193.key === 'QUIZ_CHALLENGE' && !quizChallenge) { continue; } %>
+<% if (_sec193.key === 'ARTICLES' && !(typeof recentArticles !== 'undefined' && recentArticles && recentArticles.length)) { continue; } %>
+<%- include('partials/home/' + _sec193.partial); %>
 <% } %>

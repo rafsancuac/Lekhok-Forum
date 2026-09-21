@@ -1,0 +1,32 @@
+<!-- Hero — brand-style full animated -->
+<section class="hero brand-hero">
+  <% if (C('home_hero_banner')) { %><div class="hero-banner-img" style="background-image:url('<%= C('home_hero_banner') %>')"></div><% } %>
+  <div class="particles">
+    <div class="particle p1"></div>
+    <div class="particle p2"></div>
+    <div class="particle p3"></div>
+    <div class="particle p4"></div>
+    <div class="particle p5"></div>
+    <div class="particle p6"></div>
+  </div>
+  <div class="container hero-inner">
+    <div>
+      <div class="hero-eyebrow"><i class="fas fa-feather-alt"></i> <%= C('home_hero_eyebrow') %></div>
+      <h1 class="hero-title"><%= C('home_hero_title') %><br/><span class="accent"><%= C('home_hero_title_accent') %></span></h1>
+      <p class="hero-sub"><%= C('home_hero_sub') %></p>
+      <div class="hero-cta">
+        <a href="/about" class="btn btn-primary"><i class="fas fa-book-open"></i> <%= C('home_hero_btn1') %></a>
+        <a href="/register" class="btn btn-outline"><i class="fas fa-user-plus"></i> <%= C('home_hero_btn2') %></a>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat1_num') %>">০</span><span class="stat-label"><%= C('home_stat1_label') %></span></div>
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat2_num') %>">০</span><span class="stat-label"><%= C('home_stat2_label') %></span></div>
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat3_num') %>">০</span><span class="stat-label"><%= C('home_stat3_label') %></span></div>
+      <div class="stat-card"><span class="stat-num" data-count="<%= C('home_stat4_num') %>">০</span><span class="stat-label"><%= C('home_stat4_label') %></span></div>
+    </div>
+  </div>
+
+<%# সেশন ৩৫: হিরোর ডান পাশের স্লাইডিং উইজেট সরানো হয়েছে — এটি হিরোর লেখা ঢেকে দিত;
+এখন 'ইউজার ফিড' শোকেস সেকশনে ইন্টিগ্রেট করা হয়েছে (নিচে feed-showcase) %>
+</section>

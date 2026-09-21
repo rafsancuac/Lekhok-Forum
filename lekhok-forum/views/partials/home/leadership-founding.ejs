@@ -1,0 +1,20 @@
+<!-- ═══ Section 1: Founding leaders ═══
+     সেশন ১৯৩: leaderCard/leaderPair/safeLeaderUrl/esc হেল্পার এখন lekhok-home.ejs-এ
+     একবার ডিফাইন হয়ে locals-এ যুক্ত হয় (include আলাদা-স্কোপ — দুই নেতৃত্ব-partial
+     উভয়ে একই হেল্পার শেয়ার করে; সেকশন-অর্ডার যে-ই হোক নিরাপদ)। -->
+<section class="section reveal" id="leadership">
+  <div class="container">
+    <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
+      <div>
+        <span class="eyebrow"><%= C('home_lead1_eyebrow') %></span>
+        <h2 class="section-title"><%= C('home_lead1_t1') %> <span class="accent"><%= C('home_lead1_accent') %></span></h2>
+        <span class="accent-divider center"></span>
+      </div>
+    </div>
+
+    <div class="leadership-matrix">
+      <%- leaderPair(founders, [C('home_role_founder_president'), C('home_role_founder_gs')], C('home_year_founding'), [leaderStatements.founder_president, leaderStatements.founder_general_secretary]) %>
+      <%- leaderPair(foundingAdvisors, [C('home_role_founding_advisor1'), C('home_role_founding_advisor2')], C('home_year_founding'), [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2]) %>
+    </div>
+  </div>
+</section>

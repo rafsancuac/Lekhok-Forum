@@ -1,0 +1,44 @@
+<%# ── ইউজার ফিড শোকেস (সেশন ৩৫: হিরোর স্লাইডিং উইজেট এখানেই ইন্টিগ্রেট) ──
+    সেশন ১৯৩: স্লাইডগুলো এখন helpers/home-layout.js FEED_SLIDES রেজিস্ট্রি থেকে
+    আসে — ক্রম অ্যাডমিন প্যানেল (/admin/home-reorder) থেকে home_feed_order
+    সেটিংয়ে সাজানো যায় (আগের হার্ডকোডেড ৪ স্লাইডের হুবহু এই ডেটা)। ── %>
+<section class="section feed-showcase-section reveal" id="user-feed">
+  <div class="container">
+    <div class="feed-showcase">
+      <% if (C('home_feed_banner')) { %><div class="fs-banner-img" style="background-image:url('<%= C('home_feed_banner') %>')"></div><% } %>
+      <div class="fs-decor fs-decor-1"></div>
+      <div class="fs-decor fs-decor-2"></div>
+      <div class="fs-grid">
+        <div class="fs-info">
+          <span class="fs-eyebrow"><i class="fas fa-stream"></i> <%= C('home_feed_eyebrow') %></span>
+          <h2 class="fs-title"><%= C('home_feed_title') %></h2>
+          <p class="fs-lead"><%= C('home_feed_desc') %></p>
+          <ul class="fs-points">
+            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point1') %></li>
+            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point2') %></li>
+            <li><i class="fas fa-check-circle"></i> <%= C('home_feed_point3') %></li>
+          </ul>
+          <div class="fs-cta">
+            <a href="/dashboard" class="btn fs-btn-main"><i class="fas fa-arrow-right"></i> <%= C('home_feed_btn') %></a>
+            <a href="/register" class="btn fs-btn-ghost"><i class="fas fa-user-plus"></i> <%= C('home_feed_btn2') %></a>
+          </div>
+        </div>
+        <div class="fs-side">
+          <div class="fs-side-label"><i class="fas fa-bolt"></i> <%= C('home_feed_widget_label') %></div>
+          <div class="fs-carousel" id="feedCarousel" aria-roledescription="carousel" aria-label="ফোরামের সার-আকর্ষণ">
+            <div class="fc-track" id="fcTrack">
+              <% (typeof feedSlides !== 'undefined' && feedSlides ? feedSlides : []).forEach(s => { %>
+              <a class="fc-slide" href="<%= s.href %>">
+                <span class="fc-icon"><i class="fas <%= s.icon %>"></i></span>
+                <span class="fc-body"><strong><%= s.title %></strong><small><%= s.sub %></small></span>
+                <i class="fas fa-arrow-right fc-go"></i>
+              </a>
+              <% }) %>
+            </div>
+            <div class="fc-dots" id="fcDots" role="tablist" aria-label="স্লাইড নির্বাচন"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

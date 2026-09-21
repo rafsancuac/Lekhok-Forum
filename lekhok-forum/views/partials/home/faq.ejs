@@ -1,0 +1,34 @@
+<%# ── সাধারণ জিজ্ঞাসা (সেশন ৩৫ ফিক্স: আগে এই ব্লকটা container/section-এর বাইরে ছিল —
+      তাই দুই পাশে প্যাডিং ছাড়া একদম কিনারায় লেগে যেত। এখন পূর্ণ সেকশন-কাঠামোয়) ── %>
+<%# ── সেশন ৪০: সাধারণ জিজ্ঞাসা — এলিগ্যান্ট +/− অ্যাকর্ডিয়ন (কারেটেড ১৫ প্রশ্ন; ইউজার-লিংক বাদ) ── %>
+<section class="section qa-section reveal" id="qa">
+  <div class="container">
+    <div class="section-head center">
+      <div>
+        <span class="eyebrow"><i class="fas fa-comments"></i> <%= C('home_qa_eyebrow') %></span>
+        <h2 class="section-title"><%= C('home_qa_title') %></h2>
+        <span class="accent-divider center"></span>
+      </div>
+    </div>
+    <%
+      // সেশন ৪২: FAQ এখন DB-চালিত (অ্যাডমিন/মডারেটর → সেকশন আইটেম ম্যানেজার)
+      const FAQ40 = (typeof faqItems42 !== 'undefined' ? faqItems42 : []).map(x => [x.title, x.body]);
+      const BN40 = '০১২৩৪৫৬৭৮৯';
+      const bn40 = (n) => String(n).replace(/\d/g, d => BN40[+d]);
+    %>
+    <div class="faq-accordion">
+      <% FAQ40.forEach((f, i) => { %>
+        <details class="faq-item" <%= i === 0 ? 'open' : '' %>>
+          <summary class="faq-summary">
+            <span class="faq-q"><span class="faq-num"><%= bn40(i + 1) %></span><span><%= f[0] %></span></span>
+            <span class="faq-icon" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-a"><p><%= f[1] %></p></div>
+        </details>
+      <% }) %>
+    </div>
+    <div style="text-align:center; margin-top:22px;">
+      <a href="/qa" class="link-more"><%= C('home_qa_more') %> <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </div>
+</section>

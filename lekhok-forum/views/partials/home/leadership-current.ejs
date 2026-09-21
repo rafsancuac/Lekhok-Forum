@@ -1,0 +1,17 @@
+<!-- ═══ Section 2: Current leaders ═══ -->
+<section class="section section-alt reveal" id="current-leadership">
+  <div class="container">
+    <div class="section-head" style="flex-direction:column; align-items:center; text-align:center;">
+      <div>
+        <span class="eyebrow"><%= C('home_lead2_eyebrow') %></span>
+        <h2 class="section-title"><%= C('home_lead2_t1') %> <span class="accent"><%= C('home_lead2_accent') %></span></h2>
+        <span class="accent-divider center"></span>
+      </div>
+    </div>
+
+    <div class="leadership-matrix">
+      <%- leaderPair(currentLeaders, [C('home_role_current_president'), C('home_role_current_gs')], C('home_year_current'), [leaderStatements.current_president, leaderStatements.current_general_secretary]) %>
+      <%- leaderPair(currentAdvisors, [C('home_role_current_advisor1'), C('home_role_current_advisor2')], C('home_year_current'), [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2]) %>
+    </div>
+  </div>
+</section>

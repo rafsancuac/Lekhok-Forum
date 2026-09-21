@@ -1,0 +1,225 @@
+<% if (quizChallenge) { %>
+<%# সেশন ৭৯: কুইজ চ্যালেঞ্জ — হোমপেজেই উত্তর দেওয়া যায় এমন ইন্টারঅ্যাক্টিভ প্রমো-ব্যান্ড %>
+<% const qcBn = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
+<section class="section quiz-challenge-section reveal" id="quizChallengeSection">
+  <div class="container">
+    <div class="qc-band">
+      <div class="qc-main">
+        <div class="qc-head">
+          <span class="qc-badge"><i class="fas fa-bolt"></i> আজকের কুইজ চ্যালেঞ্জ</span>
+          <span class="qc-live"><i class="fas fa-circle qc-live-dot"></i> সরাসরি উত্তর দিন</span>
+        </div>
+        <h3 class="qc-question"><i class="fas fa-quote-right qc-q-ic"></i> <%= quizChallenge.title %></h3>
+        <% if (quizChallenge.body) { %><p class="qc-hint"><%= mdPlain(quizChallenge.body, 180) %></p><% } %>
+        <div class="qc-options" id="qcOptions" data-qid="<%= quizChallenge.id %>">
+          <% const qcLetters = ['ক', 'খ', 'গ', 'ঘ', 'ঙ', 'চ']; %>
+          <% quizChallenge.options.forEach((opt, i) => { %>
+            <button type="button" class="qc-opt" data-i="<%= i %>"<%= quizChallenge.myAttempt ? ' disabled' : '' %>>
+              <span class="qc-opt-letter"><%= qcLetters[i] || (i + 1) %></span>
+              <span class="qc-opt-text"><%= opt %></span>
+              <i class="fas fa-check qc-opt-ic qc-opt-check"></i>
+              <i class="fas fa-times qc-opt-ic qc-opt-x"></i>
+            </button>
+          <% }); %>
+        </div>
+        <div class="qc-result" id="qcResult" hidden>
+          <i class="fas fa-circle-check qc-result-ic"></i>
+          <div class="qc-result-txt">
+            <strong id="qcResultTitle"></strong>
+            <p id="qcResultBody"></p>
+          </div>
+          <button type="button" class="qc-share" id="qcShare" hidden><i class="fas fa-share-nodes"></i> ফলাফল শেয়ার</button>
+        </div>
+        <div class="qc-foot">
+          <a href="/quiz" class="qc-more">সব কুইজ, ইতিহাস ও লিডারবোর্ড <i class="fas fa-arrow-right"></i></a>
+          <span class="qc-note"><i class="fas fa-lock"></i> প্রথম উত্তরই চূড়ান্ত</span>
+        </div>
+      </div>
+      <aside class="qc-side">
+        <div class="qc-stat-grid">
+          <div class="qc-stat-card">
+            <i class="fas fa-users qc-stat-ic"></i>
+            <strong><%= qcBn(quizChallenge.participants) %></strong>
+            <span>আজ অংশগ্রহণ</span>
+          </div>
+          <% if (quizChallenge.myStats) { %>
+          <div class="qc-stat-card qc-stat-streak">
+            <i class="fas fa-fire qc-stat-ic"></i>
+            <strong><%= qcBn(quizChallenge.myStats.streak) %> দিন</strong>
+            <span>আপনার স্ট্রিক</span>
+          </div>
+          <div class="qc-stat-card qc-stat-score">
+            <i class="fas fa-bullseye qc-stat-ic"></i>
+            <strong><%= qcBn(quizChallenge.myStats.correct) %>/<%= qcBn(quizChallenge.myStats.answered) %></strong>
+            <span>সঠিক উত্তর</span>
+          </div>
+          <% } else { %>
+          <div class="qc-stat-card qc-stat-join">
+            <i class="fas fa-user-plus qc-stat-ic"></i>
+            <a href="/login">লগইন করে স্কোর জমা রাখুন</a>
+          </div>
+          <% } %>
+        </div>
+        <div class="qc-leaders">
+          <div class="qc-leaders-head"><i class="fas fa-trophy"></i> লিডারবোর্ড — সর্বকালের সেরা</div>
+          <% if (quizChallenge.leaders.length) { %>
+            <% quizChallenge.leaders.forEach((l, i) => { %>
+              <a href="/profile/<%= l.username %>" class="qc-leader <%= i === 0 ? 'is-first' : '' %>">
+                <span class="qc-rank r<%= i + 1 %>"><%= ['১ম', '২য়', '৩য়'][i] %></span>
+                <img src="<%= l.avatar_url || '/avatar/' + l.id %>" onerror="this.onerror=null;this.src='/avatar/0'" alt="<%= l.full_name %>">
+                <span class="qc-leader-name"><%= l.full_name %></span>
+                <span class="qc-leader-score"><%= qcBn(l.correct_n) %> সঠিক</span>
+              </a>
+            <% }); %>
+          <% } else { %>
+            <p class="qc-leaders-empty"><i class="fas fa-seedling"></i> এখনো কেউ অংশ নেননি — প্রথম হওয়ার সুযোগ আপনার!</p>
+          <% } %>
+          <a href="/quiz#leaderboard" class="qc-leaders-more">পূর্ণ লিডারবোর্ড দেখুন <i class="fas fa-chevron-right"></i></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+<script>
+/* সেশন ৭৯: কুইজ-চ্যালেঞ্জ ইন্টারঅ্যাকশন — sandbox-fetch-গার্ড সাপেক্ষে
+   (session-77 guard রিলেটিভ fetch-এ XTransformPort যোগ করে দেয়)। */
+(function () {
+  var wrap = document.getElementById('qcOptions');
+  if (!wrap) return;
+  var resultBox = document.getElementById('qcResult');
+  var resultTitle = document.getElementById('qcResultTitle');
+  var resultBody = document.getElementById('qcResultBody');
+  var shareBtn = document.getElementById('qcShare');
+  var lastShareText = '';
+
+  /* সেশন ৭৯: ফলাফল-শেয়ার — Web Share API, না থাকলে WhatsApp-ফলব্যাক */
+  shareBtn.addEventListener('click', function () {
+    var url = location.origin + '/quiz';
+    var text = lastShareText || 'আজকের কুইজ চ্যালেঞ্জ';
+    if (navigator.share) {
+      navigator.share({ title: 'লেখক ফোরাম কুইজ', text: text, url: url }).catch(function () {});
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(text + ' ' + url), '_blank', 'noopener');
+    }
+  });
+
+  function setShareText(t) {
+    lastShareText = t;
+    if (shareBtn) shareBtn.hidden = false;
+  }
+  var qid = parseInt(wrap.getAttribute('data-qid'), 10);
+  var myAttempt = <%- jesc(quizChallenge.myAttempt) %>;
+  /* সার্ভার-সত্য (res.locals.user) — main.js-এর LekhokAuthed-এর লোড-টাইমিং
+     নির্ভরতা এড়াতে ইনলাইন-স্ক্রিপ্ট চলার সময়েই নিশ্চিত মান */
+  var authed = <%- jesc(!!(typeof user !== 'undefined' && user)) %>;
+
+  /* সেশন ৮৪: অ্যাননিমাস localStorage-পারসিস্ট — /quiz পেজের quiz.js-এর
+     সাথে একই স্টোর (lf_quiz_v1) শেয়ার করে: হোম-ব্যান্ডে উত্তর দিলে সেটি
+     /quiz পেজেও ফিরে আসে (এবং উল্টোটাও)। লগইন-ইউজারের সার্ভার-উত্তর
+     (myAttempt) সবসময় প্রাধান্য পায় — DB-ই সত্য। */
+  var LS_KEY = 'lf_quiz_v1';
+  function loadLs() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveLs(s) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch (e) { /* প্রাইভেট-মোড */ }
+  }
+  if (!myAttempt) {
+    var lsPrev = loadLs()[String(qid)];
+    if (lsPrev && lsPrev.answered) {
+      myAttempt = { choice: lsPrev.choice, correct: !!lsPrev.correct, ls: true, answer: lsPrev.answer, body: lsPrev.body };
+    }
+  }
+  var letters = ['ক', 'খ', 'গ', 'ঘ', 'ঙ', 'চ'];
+  var opts = [].slice.call(wrap.querySelectorAll('.qc-opt'));
+
+  function bn(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
+
+  /* প্রি-অ্যানসার্ড স্টেট (সার্ভারে আজকের চূড়ান্ত উত্তর আছে; সেশন ৮৪:
+     অ্যাননিমাস হলে localStorage-থেকেও) */
+  if (myAttempt) {
+    lockAll();
+    var chosen = opts[myAttempt.choice];
+    if (chosen) chosen.classList.add(myAttempt.correct ? 'is-correct' : 'is-wrong-picked');
+    if (!myAttempt.correct && myAttempt.answer !== null && myAttempt.answer !== undefined && opts[myAttempt.answer]) {
+      opts[myAttempt.answer].classList.add('is-correct');
+    }
+    resultBox.hidden = false;
+    resultBox.className = 'qc-result ' + (myAttempt.correct ? 'is-correct' : 'is-wrong');
+    resultTitle.innerHTML = myAttempt.correct
+      ? '<i class="fas fa-clipboard-check"></i> আপনি আজকের উত্তর দিয়েছেন — সঠিক!'
+      : '<i class="fas fa-clipboard-check"></i> আপনি আজকের উত্তর দিয়েছেন';
+    resultBody.textContent = 'প্রথম উত্তরই চূড়ান্ত — আগামীকাল নতুন প্রশ্নে আবার চেষ্টা করুন।';
+    if (myAttempt.ls && !authed) {
+      resultBody.innerHTML = 'এই ব্রাউজারে আপনার উত্তর সংরক্ষিত — <a href="/login" class="qc-ls-login">লগইন করুন</a> স্কোর ও স্ট্রিক সার্ভারে জমা রাখতে।';
+    }
+    setShareText(myAttempt.correct ? 'আজকের কুইজে সঠিক উত্তর দিয়েছি! 🔥 — লেখক ফোরাম' : 'আজকের কুইজ চ্যালেঞ্জে অংশ নিয়েছি — আপনিও দেখুন!');
+  }
+
+  opts.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (wrap.classList.contains('qc-busy') || wrap.classList.contains('qc-done')) return;
+      wrap.classList.add('qc-busy');
+      var choice = parseInt(btn.getAttribute('data-i'), 10);
+      fetch('/quiz/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ id: qid, choice: choice })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          wrap.classList.remove('qc-busy');
+          if (!d || !d.ok) {
+            resultBox.hidden = false;
+            resultBox.className = 'qc-result is-wrong';
+            resultTitle.textContent = 'উত্তর যাচাই করা যায়নি';
+            resultBody.textContent = 'ইন্টারনেট সমস্যা — আবার চেষ্টা করুন।';
+            return;
+          }
+          wrap.classList.add('qc-done');
+          lockAll();
+          var shown = d.final && typeof d.final.choice === 'number' ? d.final.choice : choice;
+          var isCorrect = d.final ? !!d.final.correct : !!d.correct;
+          if (opts[shown]) opts[shown].classList.add(isCorrect ? 'is-correct' : 'is-wrong-picked');
+          if (!isCorrect && d.answer !== null && opts[d.answer]) {
+            opts[d.answer].classList.add('is-correct');
+          }
+          resultBox.hidden = false;
+          resultBox.className = 'qc-result ' + (isCorrect ? 'is-correct' : 'is-wrong');
+          resultTitle.innerHTML = isCorrect
+            ? '<i class="fas fa-circle-check"></i> অভিনন্দন! সঠিক উত্তর'
+            : '<i class="fas fa-circle-xmark"></i> সঠিক উত্তরটি হলো: ' + letters[d.answer] + ') ' + (d.correctText || '');
+          resultBody.textContent = isCorrect
+            ? 'চমৎকার! আগামীকালের প্রশ্নেও স্ট্রিক ধরে রাখুন।'
+            : 'ভুল হয়েছে — আগামীকাল নতুন প্রশ্নে আবার চেষ্টা করুন।';
+          setShareText(isCorrect ? 'আজকের কুইজে সঠিক উত্তর দিয়েছি! 🔥 — লেখক ফোরাম' : 'আজকের কুইজ চ্যালেঞ্জে অংশ নিয়েছি — আপনিও দেখুন!');
+          /* সেশন ৮৪: উত্তর lf_quiz_v1-এ সেভ — রিলোডে প্রি-অ্যানসার্ড স্টেট
+             ফিরবে (quiz.js-এর স্টোর-ফরম্যাটের মিরর — answer/body সহ, যাতে
+             /quiz পেজে ব্যাখ্যাসহ রিস্টোর হয়)। সার্ভারে final থাকলে সেটিই সেভ। */
+          try {
+            var lsStore = loadLs();
+            lsStore[String(qid)] = {
+              answered: true, choice: shown, correct: isCorrect,
+              answer: (d.answer !== null && d.answer !== undefined) ? d.answer : null,
+              body: d.body || '', ts: Date.now()
+            };
+            saveLs(lsStore);
+          } catch (e) { /* প্রাইভেট-মোড — নন-ব্লকিং */ }
+        })
+        .catch(function () {
+          wrap.classList.remove('qc-busy');
+          resultBox.hidden = false;
+          resultBox.className = 'qc-result is-wrong';
+          resultTitle.textContent = 'নেটওয়ার্ক সমস্যা';
+          resultBody.textContent = 'সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।';
+        });
+    });
+  });
+
+  function lockAll() {
+    wrap.classList.add('qc-done');
+    opts.forEach(function (b) { b.disabled = true; });
+  }
+})();
+</script>
+<% } %>

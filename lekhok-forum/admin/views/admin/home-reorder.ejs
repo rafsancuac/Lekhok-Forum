@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>হোমপেজ সাজান | লেখক ফোরাম</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <style>
+    /* সেশন ১৯৩: হোমপেজ লেআউট ও কনটেন্ট রি-অর্ডারিং প্যানেল — ইউজার-স্পেক
+       (২-কলাম: বামে মূল-সেকশন ক্রম ৭col, ডানে নির্বাচিত-সেকশনের ভেতরের কার্ড ৫col) */
+    .hr-wrap { max-width: 1180px; }
+    .hr-head { background:#fff; border:1px solid #ced0d4; border-radius:10px; padding:16px 20px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    .hr-head h1 { margin:0; font-size:1.05rem; font-weight:800; color:#050505; display:flex; align-items:center; gap:10px; }
+    .hr-head h1 .hr-emblem { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#10b981,#047857); color:#fff; display:flex; align-items:center; justify-content:center; font-size:.9rem; }
+    .hr-head p { margin:3px 0 0; font-size:.78rem; color:#65676b; }
+    .hr-save { background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-weight:800; font-size:.82rem; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:8px; box-shadow:0 8px 20px -8px rgba(16,185,129,.7); transition:transform .15s, box-shadow .15s; }
+    .hr-save:hover { transform:translateY(-1px); }
+    .hr-save:disabled { opacity:.55; cursor:wait; }
+    .hr-grid { display:grid; grid-template-columns:7fr 5fr; gap:18px; align-items:start; }
+    @media (max-width: 980px) { .hr-grid { grid-template-columns:1fr; } }
+    .hr-panel { background:#fff; border:1px solid #ced0d4; border-radius:10px; padding:14px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    .hr-panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #e4e6eb; padding-bottom:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .hr-panel-head h2 { margin:0; font-size:.85rem; font-weight:800; color:#050505; }
+    .hr-panel-head .hr-hint { font-size:.7rem; color:#65676b; }
+    .hr-active-label { font-size:.72rem; font-weight:700; color:#047857; }
+    .hr-sec-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid #e4e6eb; border-radius:8px; margin-bottom:8px; cursor:pointer; transition:background .15s, border-color .15s; background:#fff; }
+    .hr-sec-row:hover { background:#f2f4f7; }
+    .hr-sec-row.active { background:#ecfdf5; border-color:#059669; }
+    .hr-sec-row.off { opacity:.55; }
+    .hr-sec-id { flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:#f0f2f5; color:#65676b; font-size:.7rem; font-weight:800; display:flex; align-items:center; justify-content:center; }
+    .hr-sec-row.active .hr-sec-id { background:#059669; color:#fff; }
+    .hr-sec-meta { flex:1; min-width:0; }
+    .hr-sec-meta h3 { margin:0; font-size:.78rem; font-weight:700; color:#050505; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hr-sec-meta span { font-size:.65rem; font-family:ui-monospace,monospace; color:#8a8d91; }
+    .hr-sec-row.off .hr-sec-meta h3 { text-decoration:line-through; }
+    .hr-btns { display:flex; gap:5px; flex:0 0 auto; }
+    .hr-btn { width:27px; height:27px; border:1px solid #d1d5db; background:#f9fafb; border-radius:6px; font-size:.68rem; cursor:pointer; color:#374151; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:background .12s; }
+    .hr-btn:hover { background:#e5e7eb; }
+    .hr-btn:disabled { opacity:.35; cursor:default; }
+    .hr-eye { width:auto; padding:0 9px; gap:5px; font-size:.66rem; font-weight:700; }
+    .hr-inner-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 11px; background:#fafbfb; border:1px solid #e4e6eb; border-radius:8px; margin-bottom:7px; }
+    .hr-inner-row .hr-item-id { flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:#d1fae5; color:#047857; font-size:.65rem; font-weight:800; display:flex; align-items:center; justify-content:center; }
+    .hr-inner-meta { flex:1; min-width:0; }
+    .hr-inner-meta h4 { margin:0; font-size:.76rem; font-weight:700; color:#050505; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hr-inner-meta p { margin:0; font-size:.68rem; color:#65676b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hr-subgroup { margin-bottom:14px; }
+    .hr-subgroup-label { display:flex; align-items:center; gap:7px; font-size:.7rem; font-weight:800; color:#047857; margin-bottom:7px; letter-spacing:.02em; }
+    .hr-empty { padding:34px 12px; text-align:center; color:#8a8d91; font-size:.78rem; }
+    .hr-empty i { display:block; font-size:1.5rem; margin-bottom:8px; color:#cbd5e1; }
+    .hr-toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:200; background:#065f46; color:#fff; padding:11px 18px; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.22); font-size:.82rem; display:flex; align-items:center; gap:9px; }
+    .hr-toast-err { background:#991b1b; }
+    .hr-note { margin-top:14px; font-size:.7rem; color:#8a8d91; background:#f9fafb; border:1px dashed #d1d5db; border-radius:8px; padding:10px 12px; line-height:1.6; }
+    .hr-note b { color:#4b5563; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1 style="margin:0;font-size:1.15rem;font-weight:800;">হোমপেজ সাজান</h1>
+      <p style="margin:2px 0 0;font-size:.8rem;color:#6b7280;">সর্বশেষ সংরক্ষণ সাথে সাথেই পাবলিক হোমপেজে প্রতিফলিত হয়</p>
+    </div>
+  </div>
+  <div class="admin-content hr-wrap">
+    <% if (saved) { %>
+      <div class="hr-toast" id="hrSavedToast"><i class="fas fa-check-circle"></i> হোমপেজের নতুন ক্রম সফলভাবে সংরক্ষিত হয়েছে!</div>
+    <% } %>
+
+    <form method="post" action="/admin/home-reorder" id="hrForm">
+      <input type="hidden" name="_csrf" value="" />
+      <input type="hidden" name="sectionsJson" id="sectionsJson193" value="" />
+      <input type="hidden" name="membersJson" id="membersJson193" value="" />
+      <input type="hidden" name="feedJson" id="feedJson193" value="" />
+
+      <div class="hr-head">
+        <div>
+          <h1><span class="hr-emblem"><i class="fas fa-arrow-up-down"></i></span> হোমপেজ লেআউট ও কন্টেন্ট রি-অর্ডারিং</h1>
+          <p>মূল সেকশনসমূহ ও ভেতরের কার্ডগুলোর ক্রম উপরে-নিচে পরিবর্তন করুন — বাঁ-পাশের তালিকা থেকে সেকশন বেছে নিন</p>
+        </div>
+        <button type="submit" class="hr-save" id="hrSaveBtn"><i class="fas fa-check"></i> পরিবর্তন সংরক্ষণ করুন</button>
+      </div>
+
+      <div class="hr-grid">
+        <!-- ১. মূল সেকশনের ক্রম -->
+        <div class="hr-panel">
+          <div class="hr-panel-head">
+            <h2>১. মূল সেকশনের ক্রম (Homepage Structure)</h2>
+            <span class="hr-hint">সারিতে ক্লিক করে ভেতরের কার্ড সাজান</span>
+          </div>
+          <div id="hrSectionList"></div>
+          <div class="hr-note">
+            <b>নোট:</b> আইকনের পাশের <b>চোখ</b> বাটনে ক্লিক করে যেকোনো সেকশন সাময়িকভাবে লুকানো যায়।
+            আজকের কন্টেন্ট/কুইজ চ্যালেঞ্জ/সাম্প্রতিক লেখা — এই তিনটির ডেটা না-থাকলে সে-সেকশন সক্রিয় থাকলেও সেদিন হোমে আসে না (খালি-সেকশন দেখায় না)।
+          </div>
+        </div>
+
+        <!-- ২. নির্বাচিত সেকশনের ভেতরের কার্ড -->
+        <div class="hr-panel">
+          <div class="hr-panel-head">
+            <div>
+              <h2>২. নির্বাচিত সেকশনের ভেতরের কার্ডের ক্রম</h2>
+              <div class="hr-active-label" id="hrActiveLabel"></div>
+            </div>
+            <span class="hr-hint">▲▼ দিয়ে ক্রম বদলান</span>
+          </div>
+          <div id="hrInnerList"></div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var SECTIONS = <%- JSON.stringify(sections193) %>;
+  var MEMBER_GROUPS = <%- JSON.stringify(memberGroups193) %>;
+  var FEED_SLIDES = <%- JSON.stringify(feedSlides193) %>;
+  var activeKey = 'LEADERSHIP_CURRENT';
+
+  var listEl = document.getElementById('hrSectionList');
+  var innerEl = document.getElementById('hrInnerList');
+  var activeLabel = document.getElementById('hrActiveLabel');
+
+  var bnNum = function (n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function move(arr, i, dir) {
+    var j = i + dir;
+    if (j < 0 || j >= arr.length) return false;
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    return true;
+  }
+
+  function renderSections() {
+    listEl.innerHTML = '';
+    SECTIONS.forEach(function (sec, i) {
+      var row = document.createElement('div');
+      row.className = 'hr-sec-row' + (sec.key === activeKey ? ' active' : '') + (sec.enabled ? '' : ' off');
+      row.innerHTML =
+        '<span class="hr-sec-id">' + bnNum(i + 1) + '</span>' +
+        '<div class="hr-sec-meta"><h3>' + esc(sec.label) + '</h3><span>কী: ' + esc(sec.key) + '</span></div>' +
+        '<div class="hr-btns">' +
+          '<button type="button" class="hr-btn hr-eye" data-eye="' + i + '" title="' + (sec.enabled ? 'লুকিয়ে রাখুন' : 'দৃশ্যমান করুন') + '"><i class="fas ' + (sec.enabled ? 'fa-eye' : 'fa-eye-slash') + '"></i></button>' +
+          '<button type="button" class="hr-btn" data-up="' + i + '" title="উপরে নিন" ' + (i === 0 ? 'disabled' : '') + '>▲</button>' +
+          '<button type="button" class="hr-btn" data-down="' + i + '" title="নিচে নিন" ' + (i === SECTIONS.length - 1 ? 'disabled' : '') + '>▼</button>' +
+        '</div>';
+      row.addEventListener('click', function (e) {
+        if (e.target.closest('[data-eye]') || e.target.closest('[data-up]') || e.target.closest('[data-down]')) return;
+        activeKey = sec.key;
+        renderSections(); renderInner();
+      });
+      listEl.appendChild(row);
+    });
+    listEl.querySelectorAll('[data-eye]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var i = +b.getAttribute('data-eye');
+        SECTIONS[i].enabled = !SECTIONS[i].enabled;
+        renderSections();
+      });
+    });
+    listEl.querySelectorAll('[data-up]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (move(SECTIONS, +b.getAttribute('data-up'), -1)) renderSections();
+      });
+    });
+    listEl.querySelectorAll('[data-down]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (move(SECTIONS, +b.getAttribute('data-down'), 1)) renderSections();
+      });
+    });
+  }
+
+  function innerRow(idx, total, idTxt, title, sub, onUp, onDown) {
+    var row = document.createElement('div');
+    row.className = 'hr-inner-row';
+    row.innerHTML =
+      '<span class="hr-item-id">' + bnNum(idx + 1) + '</span>' +
+      '<div class="hr-inner-meta"><h4>' + esc(title) + '</h4>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div>' +
+      '<div class="hr-btns">' +
+        '<button type="button" class="hr-btn" ' + (onUp ? '' : 'disabled') + '>▲</button>' +
+        '<button type="button" class="hr-btn" ' + (onDown ? '' : 'disabled') + '>▼</button>' +
+      '</div>';
+    var btns = row.querySelectorAll('.hr-btn:not(.hr-eye)');
+    if (onUp) btns[0].addEventListener('click', onUp);
+    if (onDown) btns[1].addEventListener('click', onDown);
+    return row;
+  }
+
+  function renderInner() {
+    innerEl.innerHTML = '';
+    var sec = SECTIONS.filter(function (s) { return s.key === activeKey; })[0];
+    activeLabel.textContent = sec ? ('সক্রিয়: ' + sec.label) : '';
+
+    if (activeKey === 'USER_FEED') {
+      var box = document.createElement('div');
+      box.className = 'hr-subgroup';
+      var lbl = document.createElement('div');
+      lbl.className = 'hr-subgroup-label';
+      lbl.innerHTML = '<i class="fas fa-bolt"></i> ফিড-স্লাইডারের স্লাইডসমূহ';
+      box.appendChild(lbl);
+      FEED_SLIDES.forEach(function (s, i) {
+        box.appendChild(innerRow(i, FEED_SLIDES.length, s.key, s.title, s.sub,
+          i === 0 ? null : function () { move(FEED_SLIDES, i, -1); renderInner(); },
+          i === FEED_SLIDES.length - 1 ? null : function () { move(FEED_SLIDES, i, 1); renderInner(); }));
+      });
+      innerEl.appendChild(box);
+      return;
+    }
+
+    var groups = MEMBER_GROUPS.filter(function (g) { return g.sectionKey === activeKey; });
+    if (!groups.length) {
+      innerEl.innerHTML = '<div class="hr-empty"><i class="fas fa-layer-group"></i>এই সেকশনে আলাদা কোনো অভ্যন্তরীণ কার্ড-তালিকা নেই</div>';
+      return;
+    }
+    groups.forEach(function (g) {
+      var box = document.createElement('div');
+      box.className = 'hr-subgroup';
+      var lbl = document.createElement('div');
+      lbl.className = 'hr-subgroup-label';
+      lbl.innerHTML = '<i class="fas ' + esc(g.icon || 'fa-users') + '"></i> ' + esc(g.label);
+      box.appendChild(lbl);
+      if (!g.items.length) {
+        var em = document.createElement('div');
+        em.className = 'hr-empty';
+        em.innerHTML = '<i class="fas fa-seedling"></i>এই গ্রুপে কোনো সদস্য নেই';
+        box.appendChild(em);
+      }
+      g.items.forEach(function (it, i) {
+        box.appendChild(innerRow(i, g.items.length, it.id, it.name,
+          [it.role, it.term ? (it.term + ' কার্যবর্ষ') : ''].filter(Boolean).join(' • '),
+          i === 0 ? null : function () { move(g.items, i, -1); renderInner(); },
+          i === g.items.length - 1 ? null : function () { move(g.items, i, 1); renderInner(); }));
+      });
+      innerEl.appendChild(box);
+    });
+  }
+
+  /* সাবমিট → AJAX সেভ (সেশন ১৯৩) — sections.ejs-এর sec-ajax-প্যাটার্নের মিরর।
+     সাধারণ form-POST প্রিভিউ-গেটওয়েতে XTransformPort হারায়, তাই fetch-ই চুক্তি। */
+  var hrForm = document.getElementById('hrForm');
+  hrForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    var btn = document.getElementById('hrSaveBtn');
+    var fd = new URLSearchParams();
+    fd.set('_csrf', meta ? meta.content : '');
+    fd.set('_ajax', '1');
+    fd.set('sectionsJson', JSON.stringify(SECTIONS.map(function (s) { return { key: s.key, enabled: !!s.enabled }; })));
+    var memMap = {};
+    MEMBER_GROUPS.forEach(function (g) { memMap[g.key] = g.items.map(function (it) { return it.id; }); });
+    fd.set('membersJson', JSON.stringify(memMap));
+    fd.set('feedJson', JSON.stringify(FEED_SLIDES.map(function (s) { return s.key; })));
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে...'; }
+    fetch(hrForm.getAttribute('action'), { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'অপ্রত্যাশিত রেসপন্স' }; }); })
+      .then(function (d) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> পরিবর্তন সংরক্ষণ করুন'; }
+        showToast(d && d.ok, d && d.ok ? 'হোমপেজের নতুন ক্রম সফলভাবে সংরক্ষিত হয়েছে!' : ((d && d.error) || 'সংরক্ষণ ব্যর্থ'));
+        if (d && d.ok) {
+          try { history.replaceState(null, '', location.pathname + '?saved=1'); } catch (err) {}
+        }
+      })
+      .catch(function () {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> পরিবর্তন সংরক্ষণ করুন'; }
+        showToast(false, 'নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন');
+      });
+  });
+
+  function showToast(ok, msg) {
+    var t = document.createElement('div');
+    t.className = 'hr-toast' + (ok ? '' : ' hr-toast-err');
+    t.innerHTML = '<i class="fas ' + (ok ? 'fa-check-circle' : 'fa-triangle-exclamation') + '"></i> ' + msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.style.transition = 'opacity .5s'; t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 550); }, 3500);
+  }
+
+  /* সেভ-টোস্ট অটো-হাইড */
+  var toast = document.getElementById('hrSavedToast');
+  if (toast) setTimeout(function () { toast.style.transition = 'opacity .5s'; toast.style.opacity = '0'; setTimeout(function () { toast.remove(); }, 550); }, 4000);
+
+  renderSections();
+  renderInner();
+})();
+</script>
+</body>
+</html>
