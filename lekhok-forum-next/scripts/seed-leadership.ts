@@ -61,6 +61,11 @@ const CURRENT: [string, string, string | null][] = [
   ['ঋতু আক্তার', 'কার্যনির্বাহী সদস্য', null],
 ]
 
+/* Task61: উপদেষ্টা পরিষদ — [নাম, পদবী, username(অ্যাপ-অ্যাকাউন্ট থাকলে), বাণী] */
+const ADVISOR: Array<[string, string, string, string | null]> = [
+  ['অধ্যাপক ড. রফিকুল আলম', 'উপদেষ্টা', 'rafik.alam', null],
+]
+
 async function main() {
   const force = process.argv.includes('--force')
 
@@ -100,10 +105,19 @@ async function main() {
         quote: quote ?? '',
         order: i + 1,
       })),
+      ...ADVISOR.map(([name, role, username, quote], i) => ({
+        category: 'ADVISOR',
+        name,
+        role,
+        username,
+        term: '',
+        quote: quote ?? '',
+        order: i + 1,
+      })),
     ],
   })
   const total = await db.leadershipMember.count()
-  console.log(`leadership: seeded — মোট ${total} জন (FOUNDING ${FOUNDING.length} + CURRENT ${CURRENT.length})`)
+  console.log(`leadership: seeded — মোট ${total} জন (FOUNDING ${FOUNDING.length} + CURRENT ${CURRENT.length} + ADVISOR ${ADVISOR.length})`)
 }
 
 main()

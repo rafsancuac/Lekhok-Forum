@@ -1,10 +1,11 @@
 /**
  * Session 189 — নেতৃত্ব-ব্যবস্থাপনা API (শুধু অ্যাডমিন)
  *
- * GET    /api/admin/leadership        → সব সদস্য (FOUNDING+CURRENT, order-অনুসারে)
+ * GET    /api/admin/leadership        → সব সদস্য (FOUNDING+CURRENT+ADVISOR, order-অনুসারে)
  * POST   /api/admin/leadership        → নতুন সদস্য
  * PUT    /api/admin/leadership        → সম্পাদনা (body-তে id বাধ্যতামূলক)
  * DELETE /api/admin/leadership?id=…   → মুছে ফেলা
+ * ড্র্যাগ-ড্রপ-পুনঃসাজাই: POST /api/admin/leadership/reorder (Task61)
  *
  * গার্ড: সেশন-ইউজারের role==='admin' হতে হবে (ডেমো-সেশন: ইউজার-সুইচার থেকে)।
  */
@@ -14,8 +15,14 @@ import { getCurrentUser } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
-const CATEGORIES = ['FOUNDING', 'CURRENT'] as const
+const CATEGORIES = ['FOUNDING', 'CURRENT', 'ADVISOR'] as const
 const MAX_IMAGE_CHARS = 2_000_000 // ~১.৫MB data-URI নিরাপদ-সীমা
+
+/** username স্যানিটাইজ: ছোট-হাতের ল্যাটিন+সংখ্যা+._— অন্যথায় খালি (হোম-ভিউ ?user= ডিপ-লিঙ্কের জন্য) */
+function sanitizeUsername(v: unknown): string {
+  if (typeof v !== 'string') return ''
+  return v.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 40)
+}
 
 async function requireAdmin() {
   const user = await getCurrentUser()
@@ -76,6 +83,7 @@ export async function POST(req: NextRequest) {
         term: typeof body?.term === 'string' ? body.term.trim() : '',
         quote: typeof body?.quote === 'string' ? body.quote.trim() : '',
         imageUrl: body?.imageUrl ? body.imageUrl : null,
+        username: sanitizeUsername(body?.username),
         category,
         order: Number.isFinite(Number(body?.order)) ? Number(body.order) : 1,
       },
@@ -119,6 +127,7 @@ export async function PUT(req: NextRequest) {
         term: typeof body?.term === 'string' ? body.term.trim() : '',
         quote: typeof body?.quote === 'string' ? body.quote.trim() : '',
         imageUrl: typeof body?.imageUrl === 'string' && body.imageUrl ? body.imageUrl : null,
+        username: sanitizeUsername(body?.username),
         order: Number.isFinite(Number(body?.order)) ? Number(body.order) : existing.order,
       },
     })

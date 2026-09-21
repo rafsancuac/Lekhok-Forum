@@ -791,7 +791,7 @@ export default function Home() {
             )}
 
             {/* ═══ Session 189: নেতৃত্ব-ভিউ (প্রতিষ্ঠাতা + বর্তমান পরিষদ) ═══ */}
-            {view === 'leadership' && <LeadershipView current={current} />}
+            {view === 'leadership' && <LeadershipView current={current} onOpenProfile={openProfile} />}
 
             {/* ═══ Session K: গ্রুপ-লিস্ট ভিউ ═══ */}
             {view === 'groups' && (

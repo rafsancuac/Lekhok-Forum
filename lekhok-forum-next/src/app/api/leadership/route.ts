@@ -21,6 +21,7 @@ export async function GET() {
         term: true,
         quote: true,
         imageUrl: true,
+        username: true,
         order: true,
       },
     })

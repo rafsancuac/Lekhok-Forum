@@ -2561,3 +2561,19 @@ Stage Summary:
 - ইউজার-উত্তর: **প্রিভিউ-প্যানেলে /admin/leadership** (নাম/ছবি/পদবী/কার্যবর্ষ/বাণী/Order সম্পূর্ণ Add/Edit/Delete) + **প্রোডাকশনে /admin/home-leadership** (Express-৮-স্লট)
 - প্যানেল-ফিচার-সেট সম্পূর্ণ-কার্যকর; ডেটা-স্তর /home/z/my-project/db/custom.db (রিসেট-প্রুফ)
 - পরের-এজেন্ট: session192; প্রস্তাব — প্যানেলে drag-drop-সর্ট (@dnd-kit), উপদেষ্টা-ক্যাটাগরি-তৃতীয়-ট্যাব, কার্ডে-প্রোফাইল-লিঙ্ক, no-cookie-fallback-প্রোডাকশন-রেডিনেস-ফ্ল্যাগ
+Task ID: 61 (Session cron-续-3 — নেতৃত্ব-প্যানেল Task61: উপদেষ্টা-ক্যাটাগরি + ড্র্যাগ-ড্রপ-পুনঃসাজাই + প্রোফাইল-লিঙ্ক — session189/60-প্রস্তাব-ফলায়ন)
+Agent: Z.ai Code (keeper+continue-রাউন্ড)
+Task: আগের-ইনকার্নেশনের অসমাপ্ত (অনকমিটেড) Task61-কাজ যাচাই-সম্পূর্ণ করা: ① LeadershipMember-এ ADVISOR-ক্যাটাগরি + username-ফিল্ড ② @dnd-kit ড্র্যাগ-ড্রপ + batch-reorder-API ③ হোম-ভিউতে উপদেষ্টা-সেকশন + ক্লিকেবল-প্রোফাইল-লিঙ্ক
+
+Work Log:
+- working-tree-তে পাওয়া অর্ধসমাপ্ত-কাজ পূর্ণতা-যাচাই: tsc --noEmit=0, eslint --max-warnings=0=0, prisma db push (username-কলাম) সফল
+- E2E (agent-browser @ :3100): অ্যাডমিন-প্যানেল ৩-ট্যাব (প্রতিষ্ঠাতা ৮/বর্তমান ১৫/উপদেষ্টা ১) ✓; মাউস-স্টেপ-ড্র্যাগ (dnd-kit PointerSensor) #১→#৩, POST /api/admin/leadership/reorder 200×N, DB-স্থায়িত্ব প্রমাণিত (api/leadership-এ ক্রম-পরিবর্তন) ✓; ↑↓-পথও reorder-API-ই ব্যবহার করে (#৩→#২→#১ পুনরুদ্ধার) ✓
+- হোম ?leadership=1: ৩-সেকশন রেন্ডার (নেতৃত্বের ধারা/উপদেষ্টা পরিষদ/বর্তমান নেতৃত্ব) ✓; প্রোফাইল-লিঙ্ক — ফেক-username (@rafik.alam) গ্রেসফুল 'কোনো-লেখক-নেই' স্টেট, বাস্তব-username (ismail-এ PUT করে) পূর্ণ-প্রোফাইল-ভিউ (h1=মোহাম্মদ ইসমাইল, বায়ো) ✓; পরে রাফিকুল-username পুনঃস্থাপিত
+- PUT-username-sanitize (ছোট-হাতের latin+._-, ৪০-চর) 200-যাচাই ✓; মোবাইল-৩৯০: hScroll=false + উপদেষ্টা-সেকশন দৃশ্যমান ✓; কনসোল-এরর শূন্য ✓
+- seed-leadership.ts: ADVISOR-অ্যারে যোগ (রফিকুল আলম, @rafik.alam) — ফ্রেশ-DB-তে --force-সিডে ২৪ সদস্য; ড্রাই-রান-স্কিপ-পাথ অক্ষত
+- গোটচা: agent-browser-রেফ রি-রেন্ডারে প্রত্যাহার হয় ('Unknown ref') — এক-কমান্ডে স্ন্যাপশট+অ্যাকশন; ডেমো-অ্যাডমিন-সেশন মাঝে-মাঝে গেট-স্ক্রিনে ফেরত যায় — 'সুইচ করুন'-বাটনেই আনলক
+
+Stage Summary:
+- ইউজার-প্রভাব: নেতৃত্ব-প্যানেলে এখন উপদেষ্টা-পরিষদ ব্যবস্থাপনাও; কার্ড টেনে বা ↑↓ দিয়ে ক্রম-সাজাই (batch-ট্রানজেকশন, রেস-মুক্ত); অ্যাপ-অ্যাকাউন্ট-যুক্ত নেতার নামে ক্লিকে প্রোফাইল খোলে
+- পরিবর্তিত: schema.prisma (ADVISOR-কমেন্ট+username), admin/leadership/page.tsx (৩-ট্যাব+SortableLeaderCard), api/admin/leadership/route.ts (ADVISOR+username), api/admin/leadership/reorder/route.ts (নতুন), api/leadership/route.ts (username-সিলেক্ট), page.tsx+LeadershipView.tsx (৩-সেকশন+onOpenProfile), seed-leadership.ts (ADVISOR)
+- পরের-এজেন্ট: session192; প্রস্তাব — প্রোড-ডিপ্লয়-পরবর্তী Turso-পোর্টে LeadershipMember, বাণী-সম্পন্ন উপদেষ্টা-তথ্য পূরণ (ইউজার-ইনপুট), ড্র্যাগ-হ্যান্ডেলে touch-action-মোবাইল-অপ্টিমাইজ

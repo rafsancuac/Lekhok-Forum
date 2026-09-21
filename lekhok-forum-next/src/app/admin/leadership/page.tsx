@@ -9,23 +9,44 @@
  * অথবা সরাসরি ইমেজ URL — দুটোই সমর্থিত (স্পেক-অনুযায়ী)।
  * স্পেক-বাইরে সংযোজন: role-গার্ড (অ্যাডমিন-না-হলে সুইচ-গেট), টোস্ট-ফিডব্যাক,
  * কার্ডে উপরে/নিচে দ্রুত-ক্রম-বিনিময়, লাইভ-কাউন্ট ব্যাজ।
+ * Task61: ৩-ট্যাব (প্রতিষ্ঠাতা/বর্তমান/উপদেষ্টা), @dnd-kit ড্র্যাগ-ড্রপ-পুনঃসাজাই (batch-reorder-API),
+ * প্রোফাইল-ইউজারনেম ফিল্ড (হোম-ভিউতে ?user= ডিপ-লিঙ্ক)।
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, GripVertical, Loader2 } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useToast } from '@/hooks/use-toast'
 import { bn } from '@/lib/format'
 import type { FrontendUser } from '@/lib/types'
 
 export interface LeaderItem {
   id: string
-  category: 'FOUNDING' | 'CURRENT'
+  category: 'FOUNDING' | 'CURRENT' | 'ADVISOR'
   name: string
   role: string
   term: string
   quote: string
   imageUrl?: string | null
+  username?: string | null
   order: number
 }
 
@@ -80,7 +101,7 @@ async function compressAvatar(file: File): Promise<string> {
   })
 }
 
-type Category = 'FOUNDING' | 'CURRENT'
+type Category = 'FOUNDING' | 'CURRENT' | 'ADVISOR'
 
 const CATEGORY_META: Record<Category, { label: string; emptyHint: string }> = {
   FOUNDING: {
@@ -91,6 +112,137 @@ const CATEGORY_META: Record<Category, { label: string; emptyHint: string }> = {
     label: '🌟 বর্তমান নেতৃত্ব',
     emptyHint: 'বর্তমান নেতৃত্বের সদস্য যুক্ত নেই।',
   },
+  ADVISOR: {
+    label: '🎓 উপদেষ্টা পরিষদ',
+    emptyHint: 'উপদেষ্টা পরিষদের সদস্য যুক্ত নেই।',
+  },
+}
+
+/* ─── Task61: ড্র্যাগ-সর্টেবল কার্ড — গ্রিপ-হ্যান্ডেল থেকে টেনে সাজানো যায় ─── */
+function SortableLeaderCard({
+  item,
+  idx,
+  total,
+  isBusy,
+  onMove,
+  onEdit,
+  onDelete,
+}: {
+  item: LeaderItem
+  idx: number
+  total: number
+  isBusy: boolean
+  onMove: (item: LeaderItem, dir: -1 | 1) => void
+  onEdit: (item: LeaderItem) => void
+  onDelete: (id: string, name: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id, disabled: isBusy })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.9 : undefined,
+    zIndex: isDragging ? 30 : undefined,
+    boxShadow: isDragging ? '0 14px 30px rgba(0, 0, 0, 0.18)' : undefined,
+    borderColor: isDragging ? '#006A4E' : undefined,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className="bg-white border border-[#CED0D4] rounded-[10px] p-4 shadow-2xs flex flex-col justify-between relative group hover:border-[#006A4E]/50 transition"
+    >
+      <div>
+        {/* ছবি ও মেটাডাটা */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-14 h-14 rounded-full overflow-hidden border border-emerald-200 bg-emerald-50 shrink-0 flex items-center justify-center">
+            {item.imageUrl ? (
+              <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-lg text-[#006A4E] font-bold">{item.name.slice(0, 2)}</span>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-[#050505] truncate">{item.name}</h3>
+            <p className="text-xs font-semibold text-[#006A4E] truncate">{item.role}</p>
+            <span className="text-[11px] text-[#65676B] block">{item.term}</span>
+          </div>
+        </div>
+
+        {/* বাণী প্রিভিউ */}
+        <div className="bg-[#FAFBFB] border border-[#E4E6EB] rounded-[6px] p-2 mb-3 min-h-[52px]">
+          <p className="text-[11.5px] text-[#4B4C4F] font-kalpurush line-clamp-3 leading-relaxed">
+            {item.quote ? `“${item.quote}”` : <span className="italic text-[#8a8d91]">বাণী যোগ করা হয়নি</span>}
+          </p>
+        </div>
+      </div>
+
+      {/* অ্যাকশন বাটনসমূহ (গ্রিপ + ক্রম + সম্পাদনা + মুছুন) */}
+      <div className="flex items-center gap-1.5 pt-2 border-t border-[#E4E6EB]">
+        <button
+          ref={setActivatorNodeRef}
+          {...listeners}
+          type="button"
+          aria-label="টেনে ক্রম পরিবর্তন করুন"
+          title="টেনে সাজান"
+          className="p-2 -ml-1 rounded-[6px] text-[#8a8d91] hover:text-[#006A4E] hover:bg-[#E4E6EB] cursor-grab active:cursor-grabbing transition touch-none disabled:opacity-40"
+          disabled={isBusy}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <div className="flex items-center rounded-[6px] overflow-hidden border border-[#E4E6EB]">
+          <button
+            type="button"
+            disabled={idx === 0 || isBusy}
+            onClick={() => onMove(item, -1)}
+            className="px-2 py-1.5 bg-[#F0F2F5] hover:bg-[#E4E6EB] disabled:opacity-40 disabled:cursor-not-allowed text-[#050505] text-xs font-bold transition cursor-pointer"
+            title="এক ধাপ উপরে"
+          >
+            ↑
+          </button>
+          <span className="px-1.5 py-1.5 bg-white text-[10px] text-[#65676B] border-x border-[#E4E6EB] tabular-nums">
+            #{bn(item.order)}
+          </span>
+          <button
+            type="button"
+            disabled={idx === total - 1 || isBusy}
+            onClick={() => onMove(item, 1)}
+            className="px-2 py-1.5 bg-[#F0F2F5] hover:bg-[#E4E6EB] disabled:opacity-40 disabled:cursor-not-allowed text-[#050505] text-xs font-bold transition cursor-pointer"
+            title="এক ধাপ নিচে"
+          >
+            ↓
+          </button>
+        </div>
+        {item.username && (
+          <span
+            className="px-1.5 py-0.5 rounded-full bg-emerald-50 text-[#006A4E] text-[10px] font-bold truncate max-w-[72px]"
+            title={`প্রোফাইল-লিঙ্ক: ${item.username}`}
+          >
+            @{item.username}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => onEdit(item)}
+          className="flex-1 py-1.5 bg-[#F0F2F5] hover:bg-[#E4E6EB] text-[#050505] rounded-[6px] text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+        >
+          <span>✏️</span>
+          <span>সম্পাদনা</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(item.id, item.name)}
+          className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-[6px] text-xs font-bold transition cursor-pointer"
+          title="মুছে ফেলুন"
+        >
+          🗑️
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default function AdminLeadershipPage() {
@@ -110,12 +262,20 @@ export default function AdminLeadershipPage() {
     term: '',
     quote: '',
     imageUrl: '',
+    username: '',
     order: 1,
   })
   const [imagePreview, setImagePreview] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  /* ─── Task61: ড্র্যাগ-সেন্সর (মাউস-দূরত্ব-গেট + টাচ-বিলম্ব-গেট = স্ক্রল-বান্ধব + কিবোর্ড-অ্যাক্সেসিবল) ─── */
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 10 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   /* ─── সেশন-গার্ড: অ্যাডমিন না হলে ডেমো-সুইচ-গেট ─── */
   useEffect(() => {
@@ -187,9 +347,10 @@ export default function AdminLeadershipPage() {
     setFormData({
       name: '',
       role: '',
-      term: activeCategory === 'FOUNDING' ? '(২০২০-২১ কার্যবর্ষ)' : '(২০২৫-২৬ কার্যবর্ষ)',
+      term: activeCategory === 'FOUNDING' ? '(২০২০-২১ কার্যবর্ষ)' : activeCategory === 'ADVISOR' ? '' : '(২০২৫-২৬ কার্যবর্ষ)',
       quote: '',
       imageUrl: '',
+      username: '',
       order: currentList.length + 1,
     })
     setImagePreview('')
@@ -205,34 +366,69 @@ export default function AdminLeadershipPage() {
       term: item.term,
       quote: item.quote,
       imageUrl: item.imageUrl || '',
+      username: item.username || '',
       order: item.order || 1,
     })
     setImagePreview(item.imageUrl || '')
     setIsModalOpen(true)
   }
 
-  // ক্রম-বিনিময় (উপরে/নিচে) — প্রতিবেশীর সাথে order অদলবদল
+  /* ─── Task61: batch-পুনঃসাজাই (↑↓ ও ড্র্যাগ-ড্রপ উভয়ের জন্য এক-রিকোয়েস্ট) ─── */
+  const persistOrders = async (pairs: { id: string; order: number }[]) => {
+    const res = await fetch('/api/admin/leadership/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: pairs }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => null)
+      throw new Error(data?.error || 'reorder failed')
+    }
+  }
+
+  // ক্রম-বিনিময় (উপরে/নিচে) — প্রতিবেশীর সাথে order অদলবদল (batch-API)
   const handleMove = async (item: LeaderItem, dir: -1 | 1) => {
     const idx = currentList.findIndex((x) => x.id === item.id)
     const neighbor = currentList[idx + dir]
     if (!neighbor) return
     setBusyId(item.id)
     try {
-      await Promise.all([
-        fetch('/api/admin/leadership', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...item, order: neighbor.order }),
-        }),
-        fetch('/api/admin/leadership', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...neighbor, order: item.order }),
-        }),
+      await persistOrders([
+        { id: item.id, order: neighbor.order },
+        { id: neighbor.id, order: item.order },
       ])
       await fetchLeaders()
     } catch {
       toast({ title: 'ক্রম পরিবর্তন ব্যর্থ', variant: 'destructive' })
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  /* ─── Task61: ড্র্যাগ-ড্রপ-শেষে অপটিমিস্টিক পুনঃসাজাই + পার্সিস্ট ─── */
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = currentList.findIndex((x) => x.id === active.id)
+    const newIndex = currentList.findIndex((x) => x.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+
+    const before = currentList.map((x) => ({ id: x.id, order: x.order }))
+    const ordered = arrayMove(currentList, oldIndex, newIndex)
+    const renumbered = ordered.map((x, i) => ({ ...x, order: i + 1 }))
+    setLeaders((prev) => prev.map((p) => renumbered.find((r) => r.id === p.id) || p))
+
+    setBusyId(String(active.id))
+    try {
+      // আইডি-ভিত্তিক তুলনা (index-সারিবদ্ধ নয় — ধারাবাহিক 1..n-এ ফাঁদ!)
+      const prevOrderById = new Map(before.map((b) => [b.id, b.order]))
+      const changed = renumbered
+        .filter((r) => prevOrderById.get(r.id) !== r.order)
+        .map(({ id, order }) => ({ id, order }))
+      if (changed.length > 0) await persistOrders(changed)
+    } catch {
+      toast({ title: 'ক্রম পরিবর্তন ব্যর্থ — আবার চেষ্টা করুন', variant: 'destructive' })
+      await fetchLeaders()
     } finally {
       setBusyId(null)
     }
@@ -371,7 +567,7 @@ export default function AdminLeadershipPage() {
               <span>নেতৃত্ব ও উপদেষ্টা পরিষদ ব্যবস্থাপনা</span>
             </h1>
             <p className="text-xs text-[#65676B] mt-0.5">
-              হোমপেজের প্রতিষ্ঠাতা ও বর্তমান কমিটির নাম, পদবী, ছবি ও বাণী পরিবর্তন করুন
+              প্রতিষ্ঠাতা, বর্তমান কমিটি ও উপদেষ্টাদের নাম, পদবী, ছবি ও বাণী পরিবর্তন করুন — গ্রিপে-টেনে সাজান
             </p>
           </div>
 
@@ -433,80 +629,22 @@ export default function AdminLeadershipPage() {
               {CATEGORY_META[activeCategory].emptyHint} উপরে &quot;নতুন সদস্য যুক্ত করুন&quot; বাটনে ক্লিক করুন।
             </div>
           ) : (
-            currentList.map((item, idx) => (
-              <div
-                key={item.id}
-                className="bg-white border border-[#CED0D4] rounded-[10px] p-4 shadow-2xs flex flex-col justify-between relative group hover:border-[#006A4E]/50 transition"
-              >
-                <div>
-                  {/* ছবি ও মেটাডাটা */}
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-14 h-14 rounded-full overflow-hidden border border-emerald-200 bg-emerald-50 shrink-0 flex items-center justify-center">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-lg text-[#006A4E] font-bold">{item.name.slice(0, 2)}</span>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-[#050505] truncate">{item.name}</h3>
-                      <p className="text-xs font-semibold text-[#006A4E] truncate">{item.role}</p>
-                      <span className="text-[11px] text-[#65676B] block">{item.term}</span>
-                    </div>
-                  </div>
-
-                  {/* বাণী প্রিভিউ */}
-                  <div className="bg-[#FAFBFB] border border-[#E4E6EB] rounded-[6px] p-2 mb-3 min-h-[52px]">
-                    <p className="text-[11.5px] text-[#4B4C4F] font-kalpurush line-clamp-3 leading-relaxed">
-                      {item.quote ? `“${item.quote}”` : <span className="italic text-[#8a8d91]">বাণী যোগ করা হয়নি</span>}
-                    </p>
-                  </div>
-                </div>
-
-                {/* অ্যাকশন বাটনসমূহ (ক্রম + সম্পাদনা + মুছুন) */}
-                <div className="flex items-center gap-1.5 pt-2 border-t border-[#E4E6EB]">
-                  <div className="flex items-center rounded-[6px] overflow-hidden border border-[#E4E6EB]">
-                    <button
-                      type="button"
-                      disabled={idx === 0 || busyId === item.id}
-                      onClick={() => handleMove(item, -1)}
-                      className="px-2 py-1.5 bg-[#F0F2F5] hover:bg-[#E4E6EB] disabled:opacity-40 disabled:cursor-not-allowed text-[#050505] text-xs font-bold transition cursor-pointer"
-                      title="এক ধাপ উপরে"
-                    >
-                      ↑
-                    </button>
-                    <span className="px-1.5 py-1.5 bg-white text-[10px] text-[#65676B] border-x border-[#E4E6EB] tabular-nums">
-                      #{bn(item.order)}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={idx === currentList.length - 1 || busyId === item.id}
-                      onClick={() => handleMove(item, 1)}
-                      className="px-2 py-1.5 bg-[#F0F2F5] hover:bg-[#E4E6EB] disabled:opacity-40 disabled:cursor-not-allowed text-[#050505] text-xs font-bold transition cursor-pointer"
-                      title="এক ধাপ নিচে"
-                    >
-                      ↓
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(item)}
-                    className="flex-1 py-1.5 bg-[#F0F2F5] hover:bg-[#E4E6EB] text-[#050505] rounded-[6px] text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <span>✏️</span>
-                    <span>সম্পাদনা</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(item.id, item.name)}
-                    className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-[6px] text-xs font-bold transition cursor-pointer"
-                    title="মুছে ফেলুন"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            ))
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={currentList.map((x) => x.id)} strategy={rectSortingStrategy}>
+                {currentList.map((item, idx) => (
+                  <SortableLeaderCard
+                    key={item.id}
+                    item={item}
+                    idx={idx}
+                    total={currentList.length}
+                    isBusy={busyId === item.id}
+                    onMove={handleMove}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>
@@ -602,13 +740,18 @@ export default function AdminLeadershipPage() {
               {/* কার্যবর্ষ ও ডিসপ্লে ক্রম */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-xs font-bold text-[#050505] block mb-1">কার্যবর্ষ / সেশন:</label>
+                  <label className="text-xs font-bold text-[#050505] block mb-1">
+                    কার্যবর্ষ / সেশন:
+                    {activeCategory === 'ADVISOR' && (
+                      <span className="font-normal text-[#65676B]"> (উপদেষ্টা-হলে ঐচ্ছিক)</span>
+                    )}
+                  </label>
                   <input
                     type="text"
-                    required
+                    required={activeCategory !== 'ADVISOR'}
                     value={formData.term}
                     onChange={(e) => setFormData({ ...formData, term: e.target.value })}
-                    placeholder="(২০২০-২১ কার্যবর্ষ)"
+                    placeholder="(২০২৫-২৬ কার্যবর্ষ)"
                     className="w-full bg-[#F0F2F5] focus:bg-white border border-[#CED0D4] focus:border-[#006A4E] rounded-[6px] px-2.5 py-1.5 text-xs outline-none"
                   />
                 </div>
@@ -622,6 +765,20 @@ export default function AdminLeadershipPage() {
                     className="w-full bg-[#F0F2F5] focus:bg-white border border-[#CED0D4] focus:border-[#006A4E] rounded-[6px] px-2.5 py-1.5 text-xs outline-none tabular-nums"
                   />
                 </div>
+              </div>
+
+              {/* প্রোফাইল-লিঙ্ক (Task61) */}
+              <div>
+                <label className="text-xs font-bold text-[#050505] block mb-1">
+                  প্রোফাইল ইউজারনেম <span className="font-normal text-[#65676B]">(ঐচ্ছিক — অ্যাপে অ্যাকাউন্ট থাকলে)</span>:
+                </label>
+                <input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder="যেমন: ismail — হোম-ভিউতে কার্ড-নাম প্রোফাইল-লিঙ্ক হবে"
+                  className="w-full bg-[#F0F2F5] focus:bg-white border border-[#CED0D4] focus:border-[#006A4E] rounded-[6px] px-2.5 py-1.5 text-xs outline-none"
+                />
               </div>
 
               {/* উক্তি / বাণী */}

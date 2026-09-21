@@ -3,25 +3,27 @@
 /**
  * Session 189 — হোমপেজের নেতৃত্ব-ভিউ
  *
- * দুই সেকশন: 🏛️ নেতৃত্বের ধারা (প্রতিষ্ঠাতা পরিষদ) + 🌟 বর্তমান নেতৃত্ব।
+ * তিন সেকশন: 🏛️ নেতৃত্বের ধারা (প্রতিষ্ঠাতা পরিষদ) + 🌟 বর্তমান নেতৃত্ব + 🎓 উপদেষ্টা পরিষদ (Task61)।
  * ডেটা আসে /api/leadership থেকে (অ্যাডমিন প্যানেল /admin/leadership-এ সম্পাদনাযোগ্য)।
  * অ্যাপের ডার্ক-থিম টোকেন (bg-[#242526]/border-[#3e4042]/accent #00a86b) ব্যবহার।
+ * Task61: username-যুক্ত সদস্যের নাম ক্লিকেবল — অ্যাপের প্রোফাইল-ভিউ (?user= ডিপ-লিঙ্ক) খোলে।
  */
 
 import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Crown, Landmark, Loader2, PencilLine, RefreshCw, ShieldCheck } from 'lucide-react'
+import { Crown, GraduationCap, Landmark, Loader2, PencilLine, RefreshCw, ShieldCheck } from 'lucide-react'
 import { bn } from '@/lib/format'
 import type { FrontendUser } from '@/lib/types'
 
 interface LeaderCard {
   id: string
-  category: 'FOUNDING' | 'CURRENT'
+  category: 'FOUNDING' | 'CURRENT' | 'ADVISOR'
   name: string
   role: string
   term: string
   quote: string
   imageUrl: string | null
+  username?: string | null
   order: number
 }
 
@@ -35,6 +37,11 @@ const SECTION_META = {
     title: 'বর্তমান নেতৃত্ব',
     subtitle: 'চলমান কার্যবর্ষের কার্যনির্বাহী পরিষদ',
     icon: <Crown className="w-4 h-4" />,
+  },
+  ADVISOR: {
+    title: 'উপদেষ্টা পরিষদ',
+    subtitle: 'সংগঠনের পরামর্শদাতামণ্ডলী — অভিজ্ঞতার আলো',
+    icon: <GraduationCap className="w-4 h-4" />,
   },
 } as const
 
@@ -52,13 +59,25 @@ function LeaderAvatar({ name, url, size = 'w-14 h-14' }: { name: string; url: st
   )
 }
 
-function LeaderCardView({ item }: { item: LeaderCard }) {
+function LeaderCardView({ item, onOpenProfile }: { item: LeaderCard; onOpenProfile?: (username: string) => void }) {
+  const openable = Boolean(item.username && onOpenProfile)
   return (
     <div className="bg-[#242526] border border-[#3e4042] rounded-xl p-4 flex flex-col gap-3 hover:border-[#00a86b]/40 transition-colors group">
       <div className="flex items-center gap-3">
         <LeaderAvatar name={item.name} url={item.imageUrl} />
         <div className="min-w-0 flex-1">
-          <h3 className="text-[14px] font-bold text-[#e4e6eb] truncate leading-snug">{item.name}</h3>
+          {openable ? (
+            <button
+              type="button"
+              onClick={() => onOpenProfile!(item.username as string)}
+              title={`প্রোফাইল দেখুন: @${item.username}`}
+              className="block max-w-full text-left text-[14px] font-bold text-[#e4e6eb] truncate leading-snug hover:text-[#33d79f] hover:underline cursor-pointer transition-colors"
+            >
+              {item.name}
+            </button>
+          ) : (
+            <h3 className="text-[14px] font-bold text-[#e4e6eb] truncate leading-snug">{item.name}</h3>
+          )}
           <span className="inline-flex items-center max-w-full mt-1 px-2 py-0.5 rounded-full bg-[#0d4a3a] text-[#33d79f] text-[11px] font-bold truncate">
             {item.role}
           </span>
@@ -85,7 +104,13 @@ function LeaderCardView({ item }: { item: LeaderCard }) {
   )
 }
 
-export default function LeadershipView({ current }: { current: FrontendUser | null }) {
+export default function LeadershipView({
+  current,
+  onOpenProfile,
+}: {
+  current: FrontendUser | null
+  onOpenProfile?: (username: string) => void
+}) {
   const [members, setMembers] = useState<LeaderCard[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -142,8 +167,8 @@ export default function LeadershipView({ current }: { current: FrontendUser | nu
     )
   }
 
-  const founding = members.filter((m) => m.category === 'FOUNDING').sort((a, b) => a.order - b.order)
-  const currentOnes = members.filter((m) => m.category === 'CURRENT').sort((a, b) => a.order - b.order)
+  const byCategory = (cat: 'FOUNDING' | 'CURRENT' | 'ADVISOR') =>
+    members.filter((m) => m.category === cat).sort((a, b) => a.order - b.order)
 
   return (
     <div className="space-y-3">
@@ -154,7 +179,7 @@ export default function LeadershipView({ current }: { current: FrontendUser | nu
             <ShieldCheck className="w-4.5 h-4.5 text-[#00a86b]" /> সংগঠনের নেতৃত্ব
           </h2>
           <p className="text-xs text-[#8a8d91] mt-0.5">
-            প্রতিষ্ঠাতা পরিষদ থেকে বর্তমান কার্যনির্বাহী পরিষদ — {bn(members.length)} জন
+            প্রতিষ্ঠাতা, উপদেষ্টা ও বর্তমান কার্যনির্বাহী পরিষদ — {bn(members.length)} জন
           </p>
         </div>
         {current?.role === 'admin' && (
@@ -167,8 +192,8 @@ export default function LeadershipView({ current }: { current: FrontendUser | nu
         )}
       </div>
 
-      {(['FOUNDING', 'CURRENT'] as const).map((cat) => {
-        const list = cat === 'FOUNDING' ? founding : currentOnes
+      {(['FOUNDING', 'CURRENT', 'ADVISOR'] as const).map((cat) => {
+        const list = byCategory(cat)
         const meta = SECTION_META[cat]
         return (
           <section key={cat} className="bg-[#242526] border border-[#3e4042] rounded-xl p-4">
@@ -195,7 +220,7 @@ export default function LeadershipView({ current }: { current: FrontendUser | nu
             ) : (
               <div className="grid sm:grid-cols-2 gap-3">
                 {list.map((item) => (
-                  <LeaderCardView key={item.id} item={item} />
+                  <LeaderCardView key={item.id} item={item} onOpenProfile={onOpenProfile} />
                 ))}
               </div>
             )}
