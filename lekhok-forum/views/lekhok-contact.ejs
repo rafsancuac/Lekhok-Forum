@@ -64,7 +64,7 @@
           <li><i class="fab fa-telegram-plane"></i><div><strong><%= C('contact_tg_label') %></strong><span><%= C('contact_tg_text') %></span></div></li>
         </ul>
       </div>
-      <form class="contact-form card" id="cxForm103" method="POST" action="/api/contact">
+      <form class="contact-form card" id="cxForm103" method="POST" action="/api/contact" data-noguard="1">
         <%# সেশন ১০৩-ফিক্স: মূল-ফর্মে _csrf-ফিল্ডই ছিল না → সাবমিট সবসময় 303/?csrf=1-বাউন্স (কখনো সেভ হতো না) — টোকেন এখন ফর্মেই রেন্ডার %>
         <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
         <h3 style="margin-top:0;"><i class="fas fa-paper-plane" style="color:var(--accent);"></i> <%= C('contact_form_title') %></h3>
@@ -693,7 +693,12 @@
   };
 })();
 
-/* ── ফর্ম fetch-ইন্টারসেপ্ট (no-JS-এ প্লেইন POST → রুটে 303-রিডাইরেক্ট — উভয়-পথ কাজ করে) ── */
+/* ── ফর্ম fetch-ইন্টারসেপ্ট (no-JS-এ প্লেইন POST → রুটে 303-রিডাইরেক্ট — উভয়-পথ কাজ করে) ──
+   সেশন ২০১-স্পিনার-ল্যাচ-ফিক্স: main.js-গ্লোবাল-গার্ড capture-ফেজে 'প্রসেসিং...' বসায় → এই হ্যান্ডলার
+   data-orig-স্ন্যাপশটে গার্ডের স্পিনার-HTML-ই পয়জন করে ফেরত বসাত → গিয়ার চিরতরে ঘুরত।
+   প্রতিকার: ① ফর্মে data-noguard="1" (গার্ড বাদ — নিজস্ব busy-ম্যানেজমেন্ট যথেষ্ট)
+             ② ১০-সেকেন্ড AbortController-টাইমআউট (নেটওয়ার্ক-জ্যামেও চেইন অবশ্যই সেটল হবে)
+             ③ origHtml একবারই স্ন্যাপশট — data-orig রিডব্যাক নেই (পয়জনিং অসম্ভব) */
 (function () {
   var f = document.getElementById('cxForm103');
   var note = document.getElementById('cxFormNote');
@@ -709,10 +714,11 @@
     };
     if (!name || !msg) { show(false, 'নাম এবং বার্তা আবশ্যক'); return; }
     var btn = f.querySelector('button[type="submit"]');
+    var origHtml = btn ? btn.innerHTML : ''; /* একবারই স্ন্যাপশট — পয়জনিং অসম্ভব */
     var setBusy = function (busy) {
       if (!btn) return;
-      if (busy) { btn.disabled = true; btn.setAttribute('data-orig', btn.innerHTML); btn.innerHTML = 'পাঠানো হচ্ছে…'; }
-      else { btn.disabled = false; btn.innerHTML = btn.getAttribute('data-orig') || btn.innerHTML; }
+      if (busy) { btn.disabled = true; btn.innerHTML = 'পাঠানো হচ্ছে…'; }
+      else { btn.disabled = false; btn.innerHTML = origHtml; }
     };
     var buildBody = function (tok) {
       var b = new URLSearchParams(new FormData(f));
@@ -725,14 +731,26 @@
     /* সেশন ১০৩-গোটচা-হিল: /contact ক্যাশেবল-পাবলিক → রেন্ডার-টোকেন এফেমেরাল
        (সেশন/কুকি-তে নেই) → প্রথম POST 403-csrf দিতে পারে। রিকভারি: fresh
        ?_u= GET (ক্যাশ-বাইপাস → Set-Cookie + বৈধ-টোকেন) → রিট্রায়। */
+    /* ১০-সেকেন্ড স্ট্রিক্ট টাইমআউট — fetch জ্যামে পড়লেও চেইন সেটল হয় (স্পিনার-ল্যাচ-প্রুফ) */
+    var withTimeout = function (ms) {
+      var c = new AbortController();
+      var t = setTimeout(function () { try { c.abort(); } catch (e) {} }, ms || 10000);
+      return { signal: c.signal, done: function () { clearTimeout(t); } };
+    };
     var post = function (tok) {
+      var w = withTimeout(10000);
       return fetch(f.action, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
         body: buildBody(tok),
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        signal: w.signal
       }).then(function (r) {
-        return r.json().then(function (j) { return { ok: r.ok, j: j }; }, function () { return { ok: r.ok, j: {} }; });
+        w.done();
+        return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }, function () { return { ok: r.ok, status: r.status, j: {} }; });
+      }, function (err) {
+        w.done();
+        throw err;
       });
     };
     var refreshTok = function () {
@@ -741,8 +759,9 @@
       var qs = u.search ? u.search.replace(/^\?/, '') : '';
       var params = new URLSearchParams(qs);
       params.set('_u', String(Date.now())); // ক্যাশ-বাইপাস + গেটওয়ে-কুয়েরি (XTransformPort) প্রিজার্ভ
-      return fetch(u.pathname + '?' + params.toString(), { credentials: 'same-origin' })
-        .then(function (r) { return r.text(); })
+      var w = withTimeout(8000);
+      return fetch(u.pathname + '?' + params.toString(), { credentials: 'same-origin', signal: w.signal })
+        .then(function (r) { w.done(); return r.text(); }, function (err) { w.done(); throw err; })
         .then(function (html) {
           var m = html.match(/name="_csrf" value="([^"]+)"/);
           return m ? m[1] : '';
