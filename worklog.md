@@ -3072,3 +3072,9 @@ Stage Summary:
 - টোকেন-নীতি: নতুন-সিক্রেট → .secrets/lekhok-tokens.env বা app-.env শুধু; session199-এর split-encoded-ভল্ট-চুক্তি অক্ষত; raw-ghp_-কোথাও-নয়
 - **গোটচা-পরের-সব-এজেন্ট**: কমিটের-আগে `git config user.email` যাচাই — rafsancuac@users.noreply.github.com ছাড়া অন্য-অথরে Vercel-BLOCK
 - পরের-এজেন্ট: session201 লেবেল
+
+## session200-অবধারিত (ক্রিয়া-সমাপ্তি)
+- epaper-bot আপ: ভল্ট-রিস্টোর (৭-সিক্রেট, TG_SESSION-সহ) → ensure-bot.sh (EPAPER_ROOT=/home/z/my-project) — আজকের টাইমস-অব-বাংলাদেশ + আগামীর-সময় প্রোডে-সিঙ্ক ✓
+- প্রোড-ব্রাউজার-যাচাই (agent-browser @ lekhok-forum.vercel.app): হিরো+স্ট্যাট-গ্রিড ✓, বর্তমান-নেতৃত্ব ৪-কার্ড (চিপ/ডাবল-রিং/কোট-বক্স, উচ্চতা 726px — কনটেন্ট-চালিত) ✓, "এক নজরে"-ব্যান্ড ✓, কনসোল-ত্রুটি-শূন্য
+- webDevReview-ক্রন তৈরি: প্রতি-১৫-মিনিট (fixed_rate 900s, Job 403869)
+- পরের-এজেন্ট: session201 লেবেল — git author অবশ্যই rafsancuac@users.noreply.github.com (repo-config-সেট-আছে)
