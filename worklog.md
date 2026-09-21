@@ -2617,3 +2617,22 @@ Stage Summary:
 - পরিবর্তিত: lekhok-forum/{admin/routes.js (GET termOptions + POST create-পথ+display-জবাব), admin/views/admin/home-leadership.ejs (পূর্ণ-রিরাইট), helpers/home-leadership.js (displayOf)}
 - নোট: working-tree-তে lekhok-forum-next/{admin/home-leadership, api/home-leadership, schema.prisma, LeadershipView}-পরিবর্তন অন্য-প্যারালাল-এজেন্টের — অস্পৃশ্য-রাখা-হয়েছে (কমিট-বাইরে)
 - পরের-এজেন্ট: প্রোড-ডিপ্লয়ের-পর lekhok-forum.vercel.app/admin/home-leadership-প্রোব; ইউজার-প্রোডে ৩-খালি-স্লট ম্যানুয়ালি-পূরণ-করবেন
+
+---
+Task ID: 62-b (Session user-turn — next-প্ল্যাটফর্ম-ট্র্যাক: /admin/home-leadership ইনলাইন-প্যানেল + হোম-স্লট-সিঙ্ক)
+Agent: Z.ai Code (user-turn — lekhok-forum-next ট্র্যাক, Task-62-Express-ট্র্যাকের সমান্তরাল)
+Task: ইউজার-পেস্ট-করা ChatGPT-স্পেক ফলায়ন (src/app/... পাথ-লক্ষ্য = Next.js): ৮-স্লট হোম-নেতৃত্ব প্যানেল — ইনলাইন-এডিট, নো-পপআপ, কার্যবর্ষ-ড্রপডাউন, খালি-স্লটে সরাসরি-ইনপুট, হোমপেজে হুবহু-সিঙ্ক
+
+Work Log:
+- **প্রোড-স্ট্যাক-আবিষ্কার**: lekhok-forum.vercel.app = Express-অ্যাপ (Next-API-গুলো 404, /api/epaper/papers জীবিত, CSP-EJS-স্টাইল) — ইউজারের স্ক্রিনশটের বাগগুলো Express-প্যানেলের; সে-টা Task-62-এ ঠিক হয়েছে (ec06846 পুশড); আমি next-প্ল্যাটফর্মে একই-ফিচার বানাই (স্পেক-লক্ষ্য-কোডবেস)
+- Prisma: HomeLeadershipSlot (slotKey @id হোয়াইটলিস্ট-৮, section, name/role/term/quote/imageUrl, updatedAt) — db push (SQLite-এ @db.Text-অগ্রহণযোগ্য ছিল, বাদ দিয়ে পুশ-OK)
+- API ×২: ① /api/admin/home-leadership — requireAdmin(session), GET=৮-স্লট পূর্ণ-ম্যাপ (ডিফল্ট-খালি রেকর্ড-সহ), POST=slotKey-হোয়াইটলিস্ট-upsert, **সফল-সবসময় 200+রেকর্ড** (ভুয়া-ব্যর্থ-এরর-কারণ-শ্রেণি নিষিদ্ধ), image ≤2M-char গার্ড ② /api/home-leadership (public, force-dynamic, স্থির-প্রদর্শন-ক্রম) — হোমপেজের একমাত্র সোর্স
+- Admin প্যানেল /admin/home-leadership (লাইট-থিম, /admin/leadership-র গেট-প্যাটার্ন): **মডাল/অ্যালার্ট/টোস্ট-শূন্য** — কার্ডেই ভিউ↔ইনলাইন-ফর্ম টগল; সেভে কার্ডের-ভেতরে "✓ সংরক্ষিত হয়েছে" (২.৫সে-অটোক্লিয়ার, timer-ref-ক্লিনআপ), ব্যর্থে ইনলাইন-লাল; খালি-স্লটে ড্যাশড "সদস্য যুক্ত নেই — তথ্য দিন" (কোনো সতর্কবার্তা নয়); কার্যবর্ষ <select> (২০২০-২১…২০২৭-২৮) + "✍️ নিজে লিখি" ফ্রি-টেক্সট-এস্কেপ; ছবি=compressImage→data-URI; হেডারে "হোমপেজ-ভিউ দেখুন" লিঙ্ক
+- হোমপেজ LeadershipView রি-রাইট (ডার্ক-থিম): /api/home-leadership-থেকে ২-সেকশন (নেতৃত্বের ধারা/বর্তমান নেতৃত্ব); **খালি-স্লট ও খালি-সেকশন পাবলিক-ভিউতে রেন্ডার-ই হয় না**; সব-খালি হলে অ্যাডমিন-লিঙ্ক-সহ ফ্রেন্ডলি-স্টেট; কমিটি-প্যানেল /admin/leadership+API অক্ষত (ভবিষ্যৎ-ব্যবহারের জন্য)
+- **E2E (agent-browser @ :3000)**: গেট→সুইচ→৮-কার্ড(৪+৪)→founder_president "তথ্য দিন"→ইনলাইন-ফর্ম(নাম/পদবি-প্রি-ফিল/ড্রপডাউন/বাণী)→সেভ→**CHIP_VISIBLE (eval-প্রমাণ)**+কার্ড-ডিসপ্লে-মোড+৭-তথ্য-দিন-অবশিষ্ট; current_general_secretary-তে কাস্টম-কার্যবর্ষ "(২০২৬-২৭ কার্যবর্ষ)" ফ্রি-টেক্সট-পার্সিস্ট; বাতিল-ফ্লো CANCEL_OK; API: [founder_president:আরমান শেখ, current_general_secretary:মোনেম শাহরিয়ার শাওন]; হোম ?leadership=1: ১-জন-সেকশন+খালি-সেকশন-লুকানো; মোবাইল-৩৯০ hScroll=0; console-এরর=০; নন-অ্যাডমিন POST=403
+- গোটচা: dev-সার্ভার bash-কল-শেষে মরে → প্রতি-ধাপে সার্ভার-চালু+ফ্লো এক-ইনভোকেশনে চেইন; agent-browser `find text` হিন্ট-প্যারাগ্রাফে মিথ্যা-ম্যাচ করে → role/name-লোকেটর বাধ্যতামূলক; snapshot-লেটেন্সিতে ২.৫সে-চিপ মিস হয় → eval দিয়ে তাৎক্ষণিক-যাচাই
+
+Stage Summary:
+- ইউজার-প্রভাব: next-প্ল্যাটফর্মে ৮-স্লটের-যে-কোনো খালি-স্লটে সরাসরি নাম/ছবি/পদবি/কার্যবর্ষ/বাণী লিখে সেভ — পপ-আপ-শূন্য, ভুয়া-এরর-শূন্য, হোমপেজে হুবহু-তাৎক্ষণিক-সিঙ্ক (প্রোড-Express-এ Task-62 একই-UX ডেলিভার করেছে)
+- পরিবর্তিত: lekhok-forum-next/{prisma/schema.prisma, src/app/api/admin/home-leadership/route.ts-নতুন, src/app/api/home-leadership/route.ts-নতুন, src/app/admin/home-leadership/page.tsx-নতুন, src/components/leadership/LeadershipView.tsx-রিরাইট}
+- পরের-এজেন্ট: next-প্ল্যাটফর্ম প্রোডে-গেলে /api/home-leadership+প্যানেল-প্রোব; স্লটে username/প্রোফাইল-লিঙ্ক-প্রসারণ (চাইলে); টেস্ট-ডাটা (আরমান/মোনেম) স্যান্ডবক্স-DB-তেই — প্রোড-প্রভাব-শূন্য

@@ -288,3 +288,20 @@ model LeadershipMember {
 
   @@index([category, order])
 }
+
+// ─── হোম-নেতৃত্ব-স্লট (অ্যাডমিন প্যানেল /admin/home-leadership) ───
+// হোমপেজের নেতৃত্ব-সেকশনে যা দেখাবে তার সরাসরি-নিয়ন্ত্রণ: ৮টি স্থির-স্লট।
+// slotKey-হোয়াইটলিস্ট: founder_president, founder_general_secretary,
+//   founding_advisor_1/2 (section=FOUNDING), current_president,
+//   current_general_secretary, current_advisor_1/2 (section=CURRENT)।
+// খালি-স্লট (name="") হোমপেজে রেন্ডার-ই হয় না — কোনো "সদস্য বসেনি" সতর্কবার্তা নেই।
+model HomeLeadershipSlot {
+  slotKey   String   @id // উপরের হোয়াইটলিস্টের একটি
+  section   String   @default("FOUNDING") // FOUNDING | CURRENT
+  name      String   @default("")
+  role      String   @default("")
+  term      String   @default("")
+  quote     String   @default("")
+  imageUrl  String   @default("")
+  updatedAt DateTime @updatedAt
+}
