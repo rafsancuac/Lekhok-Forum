@@ -3083,3 +3083,24 @@ Stage Summary:
 - **ঘটনা**: cron-এজেন্ট `.secrets/lekhok-tokens.env` (র-টোকেন) কমিট-করেছিল (junk-UUID 0e99cb3) — .gitignore-রুল stash-এ-চলে-যাওয়ায়-আনপ্রোটেক্টেড-হয়ে-গিয়েছিল। **পুশ-হয়নি** (origin-কখনো-দেখেনি), কোনো-টোকেন-প্রকাশ/রিভোকেশন-হয়নি।
 - **প্রতিকার**: mixed-reset → .gitignore-রুল **স্থায়ী-কমিট** (daf0b1f) → পুরনো-.git-সম্পূর্ণ-বদল (ফ্রেশ-ক্লোন-সোয়াপ; প্যাকে-আটকে-থাকা-অবজেক্ট-সহ-পুরনো-স্টোর-মুছে-ফেলা) → batch-all-objects-স্ক্যানে-ghp_-প্যাটার্ন-**শূন্য-প্রমাণিত** → core.fileMode=false পুনঃসেট → union-attributes/author-config/remote-URL পুনরুদ্ধার
 - **সব-এজেন্টের-নিয়ম**: ① কখনো `git add -A`/`git add .` দিয়ে-অন্ধ-স্টেজ-নয় — `.secrets/`, `*.env` gitignored-সত্ত্বেও-যাচাই-করুন ② নতুন-সিক্রেট → শুধু `.secrets/lekhok-tokens.env` বা-নির্দিষ্ট-.env ③ কমিটের-আগে `git status`-এ-.secrets-দেখা-গেলে-সাথে-সাথে-বন্ধ ④ stash-এ-রুল-রেখে-যাবেন-না — .gitignore-পরিবর্তন-হলে-আলাদা-কমিট-করুন
+## session201 — মেনু-হাইড পার্মানেন্ট-ফিক্স প্রয়োগ+পুশ (eye-টগল=অটো-সেভ, শূন্য-ক্যাশ-দেরি)
+
+Time: 2026-09-22 Dhaka
+Agent: Z.ai Code (main session)
+
+Work Log:
+- স্যান্ডবক্স-রিসেট-পর session194-র recovery-kit (recovery/session193-restore/) দিয়ে মেনু-হাইড ফিক্স প্রয়োগ; **গোটচা: kit-এর server.js/layout.ejs পুরোনো (session158/170/171/179/192-এর ফিক্স অনুপস্থিত) → সরাসরি-ওভাররাইট নিষিদ্ধ, সার্জিক্যাল-এডিট করা হয়েছে**
+- Fix-A views/layout.ejs: টপবার + মোবাইল-সাইডবার উভয়ে টেমপ্লেট-লেভেল দ্বৈত-ফিল্টার (top: `navConfig.filter(item => item && item.enabled !== false)`; child: `_kids193`; সব-চাইল্ড-লুকানো → প্যারেন্ট প্লেইন-লিংক-এ অবনমিত — খালি-ড্রপডাউন নয়)
+- Fix-B server.js: `_settingsCache72` (১০s TTL) সম্পূর্ণ অপসারণ → প্রতি-রিকোয়েস্ট `await db.getSettingsAll()` — অ্যাডমিন-সেভের পরের রিকোয়েস্ট থেকেই সাইট আপডেটেড (sql.js-মোডে অতিরিক্ত-খরচ শূন্য)
+- Fix-C server.js: এজ-ক্যাশ `s-maxage=60/SWR=300` → `s-maxage=15/SWR=45` (অ্যানোনিমাস স্টেল-সিলিং ≤~১ মিনিট; TTFB-অপটিমাইজেশন বহাল)
+- Fix-D public/assets/js/nav-editor-autosave.js (নতুন): eye-টগল (.nv-toggle/.nc-toggle) ক্লিকের-পরে (bubble+setTimeout0) সিরিয়াল-কিউতে fetch-POST location.pathname; payload `nav_json+_csrf` (urlencoded) + হেডার `x-csrf-token`; CSRF meta→`_csrfTok`-কুকি-ফলব্যাক; টোস্ট সবুজ #006A4E/লাল #b91c1c (aria-live); **গুরুত্বপূর্ণ-সংশোধন: nav-editor.js শুধু beforeSubmit-এ JSON-ফিল্ড লেখে → autosave নিজেই `NavEditor.syncFromDOM()` চালিয়ে JSON-বানায় (না-হলে ফিল্ড-খালি → নীরব-স্কিপ)**
+- মাউন্ট: admin/views/admin/navigation.ejs + views/user/moderator-navigation.ejs-এ `</body>`-র আগে `<script src="/assets/js/nav-editor-autosave.js?v=1" defer>`
+- **QA-এনভায়রনমেন্ট-গোটচা (নতুন-এজেন্টদের জন্য)**: package.json-এ ejs `^6.0.1` কিন্তু package-lock (Vercel=npm ci) পিন `3.1.10` — bun install ejs 6 নিলে lekhok-home-এর include-locals-প্যাটার্ন (leaderPair/leaderCard) ভাঙে ("leaderPair is not defined" → হোমপেজ 500)। লোকাল-QA-তে `npm install --no-save ejs@3.1.10` (এ-সেশনে package.json+bun.lock স্থায়ীভাবে `3.1.10`-এ পিন-করা হলো — prod-lock অপরিবর্তিত)
+- E2E (curl, :8094): hide-POST → হোমপেজ advisory/permanent 2/2→0/0 **তৎক্ষণাৎ** (১০s-ক্যাশ-দেরি শূন্য-প্রমাণিত); restore → 2/2; সব-চাইল্ড-লুকানো → প্যারেন্ট topbar-tab প্লেইন-লিংক (dropdown-menu ব্লক 4→3); cache-header `s-maxage=15, stale-while-revalidate=45` ✓
+- E2E (agent-browser): এডিটরে `[nav-autosave] সক্রিয়` console-মার্কার ✓; eye-ক্লিক → অটো-সেভ → সার্ভার+হোমপেজ সাথে-সাথে (0→2) ✓; স্যান্ডবক্স fetch-ব্লক-হলে লাল-টোস্ট → ম্যানুয়াল-"সংরক্ষণ করুন"-ফলব্যাক (ডিজাইন-অনুযায়ী); মোবাইল-390 সাইডবার+কনসোল-শূন্য ✓
+- git-গোটচা: স্যান্ডবক্স-রিসেটে repo-config author আবার z@container হয়ে ছিল → rafsancuac@users.noreply.github.com পুনঃসেট (Vercel COMMIT_AUTHOR_REQUIRED-ব্লক প্রতিরোধ)
+
+Stage Summary:
+- প্রোড-প্রভাব: eye-টগল=তৎক্ষণাৎ-সেভ+প্রয়োগ (লগড-ইন সাথে-সাথে; অ্যানোনিমাস ≤~১ মিনিট এজ-স্টেল); দুই আইটেমের বর্তমান hidden-অবস্থা অপরিবর্তিত (ইউজার-অভিপ্রায়)
+- 'উপদেষ্টাদের তালিকা'/'স্থায়ী পরিষদ' পুনরায় দেখাতে: মেনু-এডিটরে eye-টগল → অটো-সেভই যথেষ্ট (আর আলাদা-সেভ-বোতাম লাগবে না)
+- পরের-এজেন্ট: session202 লেবেল; QA-সার্ভারে ejs-পিন নোট মেনে চলবে

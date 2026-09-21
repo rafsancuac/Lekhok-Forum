@@ -338,10 +338,10 @@ app.use((req, res, next) => {
 // Turso কুয়ারি (ওয়ার্ম TTFB ৩-৭s)। Googlebot ধীর হোস্টে ক্রল-রেট কমায় → GSC-তে
 // ৩২টি পেজ "Discovered – currently not indexed"।
 // সমাধান: লগ-আউট ভিজিটরের জন্য নির্দিষ্ট পাবলিক GET পেজে (কুয়েরি-স্ট্রিং ছাড়া)
-//  ১) s-maxage=60 + stale-while-revalidate=300 — Vercel Edge ক্যাশ করে (~50ms TTFB)
-//     (সেশন ১৭৯: আগে s-maxage=300 + SWR=86400 ছিল — অ্যাডমিন-সেভ (যেমন কার্যবর্ষ)
-//     এজ-কপিতে ঘণ্টার-পর-ঘণ্টা পুরনো দেখাত; এখন সর্বোচ্চ ~১–৬ মিনিটে সাইটব্যাপী
-//     প্রতিফলন, TTFB-সুবিধা অক্ষুণ্ণ — ক্রলার-রেটে প্রভাব নগণ্য)
+//  ১) s-maxage=15 + stale-while-revalidate=45 — Vercel Edge ক্যাশ করে (~50ms TTFB)
+//     (সেশন ১৭৯: 300/86400 → 60/300 করেছিল; মেনু-হাইড পার্মানেন্ট-ফিক্সে আরও
+//     টাইট: অ্যাডমিন-মেনু সেভের পর অ্যানোনিমাস ভিজিটরের স্টেল-সিলিং ≤ ~১ মিনিট —
+//     TTFB-সুবিধা অক্ষুণ্ণ, ক্রলার-রেটে প্রভাব নগণ্য)
 //  ২) ঐ রিকোয়েস্টে CSRF-কুকি/সেশন-রাইট স্কিপ — Set-Cookie-ই থাকে না
 // নিরাপত্তা-নোট: অ্যানোনিমাস পাবলিক পেজের ইন্টারঅ্যাকটিভ এন্ডপয়েন্ট (রিঅ্যাকশন/
 // বুকমার্ক/শেয়ার/নিউজলেটার) সব JSON/fetch — CSRF-মিডলওয়্যার শুধু urlencoded/
@@ -354,7 +354,7 @@ app.use((req, res, next) => {
   const _anon72 = !(req.session && (req.session.user || req.session.adminUser));
   if ((req.method === 'GET' || req.method === 'HEAD') && !_hasQuery72 && _anon72 && PUBLIC_CACHE_RE72.test(req.path)) {
     res.locals._cacheablePublic72 = true;
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=45');
   }
   next();
 });
@@ -536,9 +536,10 @@ const contentRegistry = require('./helpers/content-registry');
 const { C, Cbr } = require('./helpers/content-view-helpers')(contentRegistry);
 
 // ── Locals middleware (async — DB awaited; settings pre-loaded once) ────────
-// সেশন ৭২: settings-এর ১০-সেকেন্ড ইন-প্রসেস TTL ক্যাশ — প্রতি রিকোয়েস্টে একটি
-// Turso রাউন্ড-ট্রিপ বাঁচে (অ্যাডমিন-এডিট সর্বোচ্চ ১০s দেরিতে দেখায় — গ্রহণযোগ্য)।
-const _settingsCache72 = { at: 0, data: null };
+// মেনু-হাইড পার্মানেন্ট-ফিক্স: সেশন ৭২-র ১০-সেকেন্ড ইন-প্রসেস TTL ক্যাশ
+// (_settingsCache72) সরানো হলো — প্রতি রিকোয়েস্টেই getSettingsAll() ফ্রেশ-রিড;
+// অ্যাডমিন মেনু/সেটিংস সেভ করলে পরের রিকোয়েস্ট থেকেই সাইট আপডেটেড (শূন্য-দেরি)।
+// খরচ: প্রতি রিকোয়েস্টে +১ Turso রাউন্ড-ট্রিপ (sql.js-মোডে ইন-মেমোরি, শূন্য-খরচ)।
 // সেশন ৭২ (GSC-ফিক্স): registry-তে নেই-এমন পাবলিক পেজের ইউনিক মেটা —
 // /constitution "Crawled – not indexed" ও বাকিদের ডুপ্লিকেট-ডেসক্রিপশন রোধে।
 const PATH_SEO_FALLBACK72 = {
@@ -560,16 +561,8 @@ app.use(async (req, res, next) => {
     runBirthdayCheck().catch(() => {});  // cheap date-guarded check, once per day per process
     // One settings query per request; EJS templates get a SYNC accessor via
     // res.locals.getSetting (templates cannot await) — identical behaviour
-    // on the sql.js and Turso backends. (সেশন ৭২: ১০s TTL)
-    let settings;
-    const _now72 = Date.now();
-    if (_settingsCache72.data && (_now72 - _settingsCache72.at) < 10000) {
-      settings = _settingsCache72.data;
-    } else {
-      settings = await db.getSettingsAll();
-      _settingsCache72.at = _now72;
-      _settingsCache72.data = settings;
-    }
+    // on the sql.js and Turso backends. (মেনু-হাইড ফিক্স: প্রতি-রিকোয়েস্ট ফ্রেশ-রিড)
+    const settings = await db.getSettingsAll();
     res.locals.siteName   = settings['site_name'] || 'লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়';
     res.locals.tagline    = settings['tagline']   || 'সুপ্ত প্রতিভা বিকশিত হোক লেখনীর ধারায়।';
     res.locals.motto      = settings['motto']     || 'তারুণ্যের শাণিত কলমে আলোকিত ধরনী';

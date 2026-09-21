@@ -230,12 +230,13 @@
         </div>
       </a>
       <nav class="topbar-tabs">
-        <% navConfig.forEach(item => { const _navActive = navItemActive(item, currentPath); %>
-          <% if (item.children && item.children.length) { %>
+        <% /* মেনু-হাইড ফিক্স: টেমপ্লেট-লেভেল দ্বৈত-ফিল্টার — visibleNav-এর-পরেও ইনস্যুরেন্স; সব-চাইল্ড লুকালে প্যারেন্ট সাধারণ লিংক */ %>
+        <% navConfig.filter(item => item && item.enabled !== false).forEach(item => { const _navActive = navItemActive(item, currentPath); const _kids193 = (item.children || []).filter(c => c && c.enabled !== false); %>
+          <% if (_kids193.length) { %>
             <div class="topbar-dropdown">
               <a href="<%= item.href %>" class="topbar-tab <%= _navActive ? 'active' : '' %>"><i class="fas <%= item.icon || 'fa-angle-down' %>"></i> <%= item.label %> <i class="fas fa-chevron-down" style="font-size:10px"></i></a>
               <div class="topbar-dropdown-menu">
-                <% item.children.forEach(c => { %>
+                <% _kids193.forEach(c => { %>
                   <a href="<%= c.href %>"><i class="fas <%= c.icon || 'fa-circle' %>"></i> <%= c.label %></a>
                 <% }) %>
               </div>
@@ -326,9 +327,10 @@
   <div class="mobile-overlay" id="mobileOverlay" onclick="closeMenu()"></div>
   <aside class="mobile-sidebar" id="mobileSidebar">
     <button class="close-btn" id="closeSidebar"><i class="fas fa-times"></i></button>
-    <% navConfig.forEach(item => { %>
+    <% /* মেনু-হাইড ফিক্স: মোবাইল-সাইডবারেও enabled-ফিল্টার */ %>
+    <% navConfig.filter(item => item && item.enabled !== false).forEach(item => { %>
       <a href="<%= item.href %>"><i class="fas <%= item.icon || 'fa-link' %>"></i> <%= item.label %></a>
-      <% (item.children || []).forEach(c => { %>
+      <% (item.children || []).filter(c => c && c.enabled !== false).forEach(c => { %>
         <a href="<%= c.href %>" style="padding-left:34px;font-size:14px;"><i class="fas <%= c.icon || 'fa-angle-right' %>"></i> <%= c.label %></a>
       <% }) %>
     <% }) %>
