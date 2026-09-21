@@ -31,7 +31,13 @@
  *   • পোল-ডিফ নতুন-অভিযোগ-টোস্ট (প্রথম-লোডে নয়) + ট্যাব-টাইটেলে PENDING-ব্যাজ "(৩) …" (আনমাউন্টে মূল-ফেরত)
  *   • স্টিকি ফিল্টার-বার (top-2, backdrop-blur) — দীর্ঘ-তালিকায় ফিল্টার-সবসময়-হাতের-নাগালে
  *   • CSV-ফাইলনামে ফিল্টার-প্রসঙ্গ (ট্যাব + মিডিয়া) — স্প্রেডশিট-সংগঠন-সহজ
- */
+ * session214 — অপারেটর-দক্ষতা প্যাক:
+ *   • প্রেরক-ঝলক পপওভার: অ্যাভাটার/নাম-ক্লিকে ওই প্রেরকের সব-অভিযোগের পরিসংখ্যান (মোট/স্টেটাস/মিডিয়া/সর্বশেষ),
+ *     "এ-প্রেরকের সব অভিযোগ দেখুন" বাটনে অনুসন্ধান-ফিল্টার — ক্লায়েন্ট-সাইড, API/schema-বদল-শূন্য
+ *   • নতুন-অভিযোগ শব্দ-সংকেত (Web Audio two-tone চাইম, অ্যাসেট-শূন্য) — পোল-ডিফ fresh>0-তে টোস্টের-সাথে;
+ *     টুলবার-টগল (aria-pressed) + localStorage (lf-desk-sound) স্থায়িত্ব; চালু-মুহূর্তে জেসচারে AudioContext-তৈরি
+ *   • a11y: prefers-reduced-motion সম্মান — lf-anim-* এন্ট্রি-অ্যানিমেশন বন্ধ (globals.css)
+*/
 
 import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -59,6 +65,8 @@ import {
   Trash2,
   Undo2,
   Video,
+  Volume2,
+  VolumeX,
   X,
   XCircle,
 } from 'lucide-react'
@@ -185,6 +193,41 @@ function avatarColorFor(name: string): string {
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
   return AVATAR_COLORS[h % AVATAR_COLORS.length]
+}
+
+/** session214 — নতুন-অভিযোগ শব্দ-সংকেত: Web Audio two-tone চাইম (অ্যাসেট-শূন্য; অডিও-ব্লক = নীরব-সেফ) */
+type DeskWindow = Window & { __lfAudioCtx?: AudioContext; __lfDeskBeeps?: number }
+function playDeskChime(): void {
+  try {
+    const w = window as DeskWindow
+    const AC = (window as unknown as { AudioContext?: typeof AudioContext }).AudioContext
+    if (!AC) return
+    let ctx = w.__lfAudioCtx
+    if (!ctx) {
+      ctx = new AC()
+      w.__lfAudioCtx = ctx
+    }
+    if (ctx.state === 'suspended') void ctx.resume()
+    const t0 = ctx.currentTime
+    ;[880, 1318.51].forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      const ts = t0 + i * 0.16
+      gain.gain.setValueAtTime(0.0001, ts)
+      gain.gain.exponentialRampToValueAtTime(0.12, ts + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.0001, ts + 0.15)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(ts)
+      osc.stop(ts + 0.16)
+    })
+    // E2E-পর্যবেক্ষণ-চুক্তি: বিপ-প্রচেষ্টা-কাউন্টার (হেডলেসে শব্দ-শোনা-যায়-না)
+    w.__lfDeskBeeps = (w.__lfDeskBeeps || 0) + 1
+  } catch {
+    /* নীরব — অডিও-পলিসি/ব্লক হলেও UI-বাগ নয় */
+  }
 }
 
 /** বাংলা আপেক্ষিক-সময় — এখনই / X মিনিট আগে / X ঘণ্টা আগে / X দিন আগে / তারিখ */
@@ -480,6 +523,12 @@ function SupportReportsPanel() {
   const knownPendingRef = React.useRef<Set<string> | null>(null)
   /** session213 — ট্যাব-টাইটেল-ব্যাজের ভিত্তি (মাউন্টে ধরা; আনমাউন্টে ফেরত) */
   const baseTitleRef = React.useRef('')
+  /** session214 — নতুন-অভিযোগ শব্দ-সংকেত (localStorage: lf-desk-sound); ref-মিরর = পোল-কলব্যাক-নির্ভরতা-শূন্য */
+  const [soundOn, setSoundOn] = useState(false)
+  const soundOnRef = React.useRef(false)
+  /** session214 — প্রেরক-ঝলক পপওভার (fixed-এনকর; senderStats = লোডেড-রিপোর্ট থেকে ক্লায়েন্ট-সাইড) */
+  const [glance, setGlance] = useState<{ name: string; email: string | null; x: number; y: number } | null>(null)
+  const glanceRef = React.useRef<HTMLDivElement>(null)
 
   const flash = useCallback(
     (msg: string, undo?: { id: string; index: number; entry: HistoryEntry }, timeoutMs = 3000) => {
@@ -508,7 +557,11 @@ function SupportReportsPanel() {
           .map((r: Report) => r.id)
         if (known) {
           const fresh = pendingIds.filter((id: string) => !known.has(id))
-          if (fresh.length > 0) flash(`${bn(fresh.length)}টি নতুন অভিযোগ এসেছে`)
+          if (fresh.length > 0) {
+            flash(`${bn(fresh.length)}টি নতুন অভিযোগ এসেছে`)
+            // session214 — শব্দ-সংকেত একই fresh>0-শর্তে (session213 টোস্ট-চুক্তি অটুট)
+            if (soundOnRef.current) playDeskChime()
+          }
         }
         knownPendingRef.current = new Set(pendingIds)
       }
@@ -557,6 +610,66 @@ function SupportReportsPanel() {
   useEffect(() => {
     setCursor(-1)
   }, [tab, mediaFilter, dateRange, query, sortAsc])
+
+  /** session214 — শব্দ-পছন্দ লোড (hydration-নিরাপদ: মাউন্টে একবার localStorage-থেকে) */
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('lf-desk-sound') === '1') {
+        setSoundOn(true)
+        soundOnRef.current = true
+      }
+    } catch {
+      /* প্রাইভেসি-মোড — নীরব */
+    }
+  }, [])
+
+  /** session214 — শব্দ-টগল: চালু-মুহূর্তেই চাইম (ইউজার-জেসচার = autoplay-পলিসি-সুরক্ষিত) */
+  const toggleSound = useCallback(() => {
+    const next = !soundOnRef.current
+    soundOnRef.current = next
+    setSoundOn(next)
+    try {
+      localStorage.setItem('lf-desk-sound', next ? '1' : '0')
+    } catch {
+      /* প্রাইভেসি-মোড */
+    }
+    if (next) playDeskChime()
+  }, [])
+
+  /** session214 — প্রেরক-ভিত্তিক পরিসংখ্যান (লোডেড-রিপোর্ট থেকে; API/schema-বদল-শূন্য) */
+  const senderStats = React.useMemo(() => {
+    const m = new Map<
+      string,
+      { total: number; PENDING: number; IN_PROGRESS: number; RESOLVED: number; lastAt: string; media: Record<string, number> }
+    >()
+    for (const r of reports) {
+      const e =
+        m.get(r.senderName) ||
+        { total: 0, PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0, lastAt: r.createdAt, media: {} as Record<string, number> }
+      e.total += 1
+      e[r.status] += 1
+      e.media[r.mediaType] = (e.media[r.mediaType] || 0) + 1
+      if (new Date(r.createdAt).getTime() > new Date(e.lastAt).getTime()) e.lastAt = r.createdAt
+      m.set(r.senderName, e)
+    }
+    return m
+  }, [reports])
+
+  const openGlance = useCallback((name: string, email: string | null, anchor: HTMLElement) => {
+    const rect = anchor.getBoundingClientRect()
+    setGlance({ name, email, x: rect.left, y: rect.bottom + 6 })
+  }, [])
+
+  /** session214 — ঝলক-খোলা অবস্থায় Esc-বন্ধ + ফোকাস */
+  useEffect(() => {
+    if (!glance) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setGlance(null)
+    }
+    window.addEventListener('keydown', onKey)
+    glanceRef.current?.focus()
+    return () => window.removeEventListener('keydown', onKey)
+  }, [glance])
 
   /** session211 — মাউন্টে URL-প্যারাম হাইড্রেট (?tab/&media/&date/&q/&sort/&report) — এক-বার */
   useEffect(() => {
@@ -1137,13 +1250,29 @@ function SupportReportsPanel() {
               )}
             </p>
           )}
+          {/* session214 — নতুন-অভিযোগ শব্দ-সংকেত টগল (localStorage দ্বারা স্থায়ী; ডিফল্ট বন্ধ) */}
+          <button
+            onClick={toggleSound}
+            type="button"
+            aria-pressed={soundOn}
+            aria-label={soundOn ? 'নতুন-অভিযোগ শব্দ-সংকেত বন্ধ করুন' : 'নতুন-অভিযোগ শব্দ-সংকেত চালু করুন'}
+            title="নতুন অভিযোগ এলে শব্দ-সংকেত (চালু/বন্ধ)"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0 ${
+              soundOn
+                ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+            }`}
+          >
+            {soundOn ? <Volume2 className="w-3 h-3" aria-hidden /> : <VolumeX className="w-3 h-3" aria-hidden />}
+            শব্দ
+          </button>
           {/* session212 — শর্টকাট-সহায়িকা হিন্ট (সবসময়-দৃশ্যমান) */}
           <button
             onClick={() => setHelpOpen(true)}
             type="button"
             title="কীবোর্ড শর্টকাট দেখুন (? চাপুন)"
             aria-label="কীবোর্ড শর্টকাট সহায়িকা খুলুন"
-            className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0"
           >
             <Keyboard className="w-3 h-3" aria-hidden />
             শর্টকাট
@@ -1277,16 +1406,25 @@ function SupportReportsPanel() {
                     aria-label={`${r.senderName}-এর অভিযোগ নির্বাচন করুন`}
                     className="w-4 h-4 mt-1 accent-[#006A4E] cursor-pointer transition-transform active:scale-90 shrink-0"
                   />
-                  <span
-                    aria-hidden
+                  <button
+                    type="button"
+                    onClick={(e) => openGlance(r.senderName, r.senderEmail, e.currentTarget)}
+                    aria-label={`${r.senderName}-এর অভিযোগ-পরিসংখ্যান ঝলক খুলুন`}
+                    title={`${r.senderName} — ঝলক দেখুন`}
                     style={{ backgroundColor: avatarColorFor(r.senderName) }}
-                    className="w-8 h-8 rounded-full text-white text-[12px] font-extrabold flex items-center justify-center shrink-0 select-none"
+                    className="w-8 h-8 rounded-full text-white text-[12px] font-extrabold flex items-center justify-center shrink-0 select-none cursor-pointer transition-transform hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/50"
                   >
                     {r.senderName.trim().charAt(0) || '?'}
-                  </span>
+                  </button>
                   <div className="min-w-0">
                     <p className="text-[13px] font-bold flex items-center gap-2 flex-wrap">
-                      {r.senderName}
+                      <button
+                        type="button"
+                        onClick={(e) => openGlance(r.senderName, r.senderEmail, e.currentTarget)}
+                        className="hover:text-[#006A4E] hover:underline underline-offset-2 decoration-[#006A4E]/40 rounded cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/50"
+                      >
+                        {r.senderName}
+                      </button>
                       {r.senderEmail && (
                         <span className="text-[10.5px] font-normal text-[#65676B]">
                           ({r.senderEmail})
@@ -1520,6 +1658,92 @@ function SupportReportsPanel() {
           </div>
         </div>
       )}
+
+      {/* session214 — প্রেরক-ঝলক পপওভার (fixed-এনকর + backdrop/Esc-বন্ধ; z-চুক্তি: help z-[70]-এর নিচে) */}
+      {glance &&
+        (() => {
+          const st = senderStats.get(glance.name)
+          const vw = typeof window !== 'undefined' ? window.innerWidth : 1280
+          const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+          const left = Math.max(Math.min(glance.x, vw - 276), 12)
+          const top = Math.max(Math.min(glance.y, vh - 272), 12)
+          return (
+            <>
+              <div className="fixed inset-0 z-[60]" aria-hidden onClick={() => setGlance(null)} />
+              <div
+                ref={glanceRef}
+                role="dialog"
+                aria-label={`${glance.name}-এর অভিযোগ ঝলক`}
+                tabIndex={-1}
+                data-glance-open="1"
+                style={{ left, top }}
+                className="fixed z-[61] w-[264px] max-w-[calc(100vw-24px)] bg-white border border-[#CED0D4] rounded-[10px] shadow-lg p-3.5 space-y-2.5 lf-anim-pop focus:outline-none"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span
+                    aria-hidden
+                    style={{ backgroundColor: avatarColorFor(glance.name) }}
+                    className="w-9 h-9 rounded-full text-white text-[13px] font-extrabold flex items-center justify-center shrink-0 select-none"
+                  >
+                    {glance.name.trim().charAt(0) || '?'}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-extrabold text-[#050505] truncate">{glance.name}</p>
+                    {glance.email && <p className="text-[10.5px] text-[#65676B] truncate">{glance.email}</p>}
+                  </div>
+                </div>
+                {st ? (
+                  <>
+                    <div className="flex items-center gap-1.5 flex-wrap text-[10.5px] font-bold">
+                      <span className="rounded-full bg-[#F0F2F5] px-2 py-0.5 text-[#4B4C4F]">মোট {bn(st.total)}টি</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 px-2 py-0.5">
+                        <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        নতুন {bn(st.PENDING)}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 text-sky-800 px-2 py-0.5">
+                        <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-sky-600" />
+                        চলমান {bn(st.IN_PROGRESS)}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-800 px-2 py-0.5">
+                        <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                        সমাধান {bn(st.RESOLVED)}
+                      </span>
+                    </div>
+                    {Object.keys(st.media).length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {Object.entries(st.media).map(([mt, n]) => (
+                          <span
+                            key={mt}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#F0F2F5] px-1.5 py-px text-[9.5px] font-bold text-[#4B4C4F]"
+                          >
+                            {MEDIA_FILTER_ICON[mt]}
+                            {MEDIA_FILTERS.find((m) => m.key === mt)?.label || mt} ×{bn(n)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-[10.5px] text-[#65676B]">
+                      সর্বশেষ সক্রিয়তা: <span className="font-bold text-[#4B4C4F]">{relTimeBn(st.lastAt)}</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery(glance.name)
+                        setGlance(null)
+                        flash(`অনুসন্ধান-ফিল্টার: ${glance.name}`)
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-[6px] text-[11px] font-bold bg-[#006A4E] text-white hover:bg-[#005540] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+                    >
+                      এ-প্রেরকের সব অভিযোগ দেখুন
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-[#65676B]">পরিসংখ্যান পাওয়া যায়নি।</p>
+                )}
+              </div>
+            </>
+          )
+        })()}
 
       {/* session212 — কীবোর্ড-শর্টকাট সহায়িকা (? ওভারলে; Esc/ব্যাকড্রপ-বন্ধ) */}
       {helpOpen && (

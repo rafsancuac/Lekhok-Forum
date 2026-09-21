@@ -249,6 +249,17 @@
 }
 .lf-anim-hl { animation: lf-hl-pulse 1.1s ease-out 2; }
 
+/* ─── session214 — prefers-reduced-motion সম্মান (a11y): এন্ট্রি/হাইলাইট অ্যানিমেশন বন্ধ ─── */
+@media (prefers-reduced-motion: reduce) {
+  .lf-anim-right,
+  .lf-anim-left,
+  .lf-anim-pop,
+  .lf-anim-fade,
+  .lf-anim-hl {
+    animation: none !important;
+  }
+}
+
 /* ─── রিঅ্যাকশন পপওভার হোভার ─── */
 .lf-reaction-btn { transition: transform 0.15s ease; }
 .lf-reaction-btn:hover { transform: scale(1.35) translateY(-4px); }
