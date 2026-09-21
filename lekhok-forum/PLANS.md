@@ -2381,3 +2381,11 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **adminNote-সিঙ্ক:** সর্বশেষ note-এন্ট্রিই "বর্তমান জবাব" — edit/delete-এর-পরে PATCH-নিজেই adminNote সর্বশেষ-নোটে রি-সিঙ্ক করে (নোট-শূন্য-হলে NULL)। my-reports-স্পষ্ট-ফিল্ড-ম্যাপ অপরিবর্তিত — editedAt/editedBy ইউজার-দিকে-যায়-না।
 - **UI-নোট:** hover-reveal বাটন `group/entry` + `focus-within:opacity-100` (কিবোর্ড-অ্যাক্সেসিবল); ইনলাইন-এডিটর Esc=বাতিল/Ctrl+Enter=সংরক্ষণ; **agent-browser-গোটচা:** বাংলা-টেক্সট CSS-attribute-selector ব্যর্থ হতে-পারে ("Element not found" মিথ্যা) → `eval document.querySelector('[aria-label="..."]')` ব্যবহার করুন — React-controlled textarea-য় native-setter + input-event দিন।
 - **পরের-এজেন্ট: session209 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট; সার্ভার-পুশ (SSE/WebSocket)।
+
+### session209 — ইতিহাস-আন্ডু + ইউজার-সম্পাদিত-চিহ্ন প্যাক (cross-agent নোট)
+
+- **restore-note-চুক্তি:** `PATCH {id, action:'restore-note', index?, entry}` — entry সার্ভারে **full-sanitize** হয় (t-বলশাই note, ROLES-হোয়াইটলিস্ট, at-পার্স-ব্যর্থ-হলে now, অজানা-ফিল্ড-ড্রপ) → ক্লায়েন্ট-থেকে-কাঁচা-JSON-পাঠালেও নিরাপদ; index-অনুপস্থিত/অতিরিক্ত-হলে শেষে-যোগ (ক্ল্যাম্প, 404-নয়)।
+- **আন্ডু-উইন্ডো:** ডেস্কে delete-সফল-হলেই undo-payload স্টেটে-থাকে (৮-সে); যেকোনো-অন্য-flash() স্টেল-আন্ডু-ক্লিয়ার-করে; টোস্ট-টাইমার এখন single-ref (আগের stacked-setTimeout-গোটচা-ফিক্স)।
+- **my-reports-চুক্তি-সম্প্রসারণ:** noteHistory-এন্ট্রিতে **`edited: boolean`** যোগ-হয়েছে ({note, at, edited}) — গ্রাহক-কোড যদি এই-ম্যাপ-খায় সে-এটা-সামলাবে; by/byRole/editedAt/editedBy আগের-মতোই-বাদ (লিক-শূন্য E2E-যাচাইকৃত)।
+- **agent-browser-গোটচা ×৪:** cookies-set-আর্গ-ভাঙা (JS-cookie ব্যবহার-করুন); ডেমন-রিপ → এক-ব্যাশে-অ্যাটমিক-কুকি+নেভিগেশন; `?chat=1`-ডিপ-লিংক-রেস (লঞ্চার-ক্লিক-নির্ভরযোগ্য); সাপোর্ট-রো = `button[aria-label*="অফিসিয়াল সাপোর্ট"]`।
+- **পরের-এজেন্ট: session210 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট; সার্ভার-পুশ (SSE/WebSocket)।

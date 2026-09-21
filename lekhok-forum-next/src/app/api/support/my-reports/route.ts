@@ -43,15 +43,16 @@ export async function GET() {
     const counts: Record<Status, number> = { PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0 }
     for (const r of reports) if (counts[r.status as Status] !== undefined) counts[r.status as Status]++
 
-    /** session205 — নোট-ইতিহাস পার্স; শুধু {note, at} (by/byRole বাদ) + নতুন-আগে, সর্বোচ্চ ২০ */
-    const replyHistoryFor = (raw: string | null): { note: string; at: string }[] => {
+    /** session205 — নোট-ইতিহাস পার্স; শুধু {note, at} (by/byRole বাদ) + নতুন-আগে, সর্বোচ্চ ২০;
+     *  session209 — edited-ফ্ল্যাগ যোগ (editedAt-এর-উপস্থিতি; সম্পূর্ণ editedAt/editedBy ইউজার-দিকে-যায়-না) */
+    const replyHistoryFor = (raw: string | null): { note: string; at: string; edited: boolean }[] => {
       if (!raw) return []
       try {
         const arr = JSON.parse(raw)
         if (!Array.isArray(arr)) return []
         return arr
           .filter((e) => e && e.t === 'note' && typeof e.note === 'string' && e.note.trim())
-          .map((e) => ({ note: String(e.note), at: typeof e.at === 'string' ? e.at : '' }))
+          .map((e) => ({ note: String(e.note), at: typeof e.at === 'string' ? e.at : '', edited: Boolean(e.editedAt) }))
           .reverse()
           .slice(0, 20)
       } catch {

@@ -40,6 +40,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Trash2,
+  Undo2,
   Video,
   X,
   XCircle,
@@ -198,7 +199,7 @@ function ActionHistory({
   reportId: string
   busy: boolean
   onEdit: (index: number, note: string) => void
-  onDelete: (index: number) => void
+  onDelete: (index: number, entry: HistoryEntry) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const [editing, setEditing] = useState<number | null>(null)
@@ -355,7 +356,7 @@ function ActionHistory({
                       <button
                         type="button"
                         onClick={() => {
-                          onDelete(i)
+                          onDelete(i, e)
                           setConfirmDel(null)
                         }}
                         disabled={busy}
@@ -421,6 +422,9 @@ function SupportReportsPanel() {
   const [busy, setBusy] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [toast, setToast] = useState<string | null>(null)
+  // session209 — আন্ডু-উইন্ডো: মুছে-ফেলা নোট-এন্ট্রি ৮-সেকেন্ড পর্যন্ত পুনরুদ্ধারযোগ্য
+  const [undoData, setUndoData] = useState<{ id: string; index: number; entry: HistoryEntry } | null>(null)
+  const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   // session202 — লেখা-কপি + ছবি-লাইটবক্স + CSV-ব্যাস্ট
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
@@ -436,10 +440,18 @@ function SupportReportsPanel() {
   const [sortAsc, setSortAsc] = useState(false)
   const searchRef = React.useRef<HTMLInputElement>(null)
 
-  const flash = useCallback((msg: string) => {
-    setToast(msg)
-    setTimeout(() => setToast(null), 3000)
-  }, [])
+  const flash = useCallback(
+    (msg: string, undo?: { id: string; index: number; entry: HistoryEntry }, timeoutMs = 3000) => {
+      setToast(msg)
+      setUndoData(undo ?? null)
+      if (toastTimer.current) clearTimeout(toastTimer.current)
+      toastTimer.current = setTimeout(() => {
+        setToast(null)
+        setUndoData(null)
+      }, timeoutMs)
+    },
+    [],
+  )
 
   const load = useCallback(async () => {
     try {
@@ -603,8 +615,14 @@ function SupportReportsPanel() {
   const patchHistory = useCallback(
     async (
       id: string,
-      payload: { historyIndex: number; action: 'edit-note' | 'delete-note'; note?: string },
+      payload: {
+        historyIndex?: number
+        action: 'edit-note' | 'delete-note' | 'restore-note'
+        note?: string
+        entry?: HistoryEntry
+      },
       okMsg: string,
+      undo?: { id: string; index: number; entry: HistoryEntry },
     ) => {
       setBusy(id)
       try {
@@ -617,7 +635,7 @@ function SupportReportsPanel() {
         if (!res.ok) throw new Error(data?.error || 'ইতিহাস-আপডেট ব্যর্থ')
         setReports((prev) => prev.map((r) => (r.id === id ? { ...r, ...data.report } : r)))
         window.dispatchEvent(new Event('lf:support-changed'))
-        flash(okMsg)
+        flash(okMsg, undo, undo ? 8000 : 3000) // session209 — আন্ডু-উইন্ডো ৮-সে
       } catch (err) {
         flash(err instanceof Error ? err.message : 'ইতিহাস-আপডেট ব্যর্থ')
       } finally {
@@ -626,6 +644,18 @@ function SupportReportsPanel() {
     },
     [flash],
   )
+
+  /** session209 — আন্ডু-উইন্ডোতে মুছে-ফেলা নোট-এন্ট্রি পুনরুদ্ধার */
+  const undoDelete = useCallback(() => {
+    if (!undoData) return
+    const { id, index, entry } = undoData
+    setUndoData(null)
+    void patchHistory(
+      id,
+      { historyIndex: index, action: 'restore-note', entry },
+      'ইতিহাস-এন্ট্রি পুনরুদ্ধার হয়েছে · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে',
+    )
+  }, [undoData, patchHistory])
 
   const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED
   const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL' || dateRange !== 'ALL'
@@ -679,6 +709,17 @@ function SupportReportsPanel() {
         >
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{toast}</span>
+          {undoData && (
+            <button
+              type="button"
+              onClick={undoDelete}
+              title="মুছে-ফেলা এন্ট্রি ফিরিয়ে আনুন (৮ সেকেন্ড)"
+              className="ml-1 flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-extrabold text-white hover:bg-white/25 transition cursor-pointer"
+            >
+              <Undo2 className="w-3.5 h-3.5" aria-hidden />
+              পুনরুদ্ধার
+            </button>
+          )}
         </div>
       )}
 
@@ -1116,11 +1157,12 @@ function SupportReportsPanel() {
                     'ইতিহাস-নোট সম্পাদিত · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে',
                   )
                 }
-                onDelete={(idx) =>
+                onDelete={(idx, entry) =>
                   patchHistory(
                     r.id,
                     { historyIndex: idx, action: 'delete-note' },
                     'ইতিহাস-এন্ট্রি মুছে ফেলা হয়েছে · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে',
+                    { id: r.id, index: idx, entry },
                   )
                 }
               />

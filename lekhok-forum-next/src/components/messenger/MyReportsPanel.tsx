@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Loader2, ShieldCheck, X, MessageSquare, Image as ImageIcon, Mic, Video, RefreshCw, BellRing } from 'lucide-react';
+import { Loader2, ShieldCheck, X, MessageSquare, Image as ImageIcon, Mic, Video, RefreshCw, BellRing, Pencil } from 'lucide-react';
 import { bn } from '@/lib/format';
 import { getSeenMs, markSeen, hasNewReply, MY_REPORTS_SEEN_EVENT } from '@/lib/my-reports-seen';
 
@@ -20,7 +20,8 @@ interface MyReport {
   status: 'PENDING' | 'IN_PROGRESS' | 'RESOLVED';
   adminNote: string | null;
   // session205 — নোট-ইতিহাস ({note, at} নতুন-আগে; by/byRole সার্ভারেই বাদ)
-  noteHistory?: { note: string; at: string }[];
+  // session209 — নোট-ইতিহাসে সম্পাদিত-চিহ্ন (my-reports API-র edited-ফিল্ড)
+  noteHistory?: { note: string; at: string; edited?: boolean }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -306,8 +307,16 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
                   </p>
                   {r.adminNote && (
                     <div className="rounded-lg rounded-l-none bg-[#006a4e]/15 border border-l-2 border-[#00a86b]/25 border-l-[#00a86b]/60 px-2.5 py-2" role="note" aria-label="অ্যাডমিনের জবাব">
-                      <p className="text-[10px] font-extrabold text-[#33d79f] uppercase tracking-wide mb-0.5">
+                      <p className="text-[10px] font-extrabold text-[#33d79f] uppercase tracking-wide mb-0.5 flex items-center gap-1.5">
                         ম্যানেজমেন্টের জবাব
+                        {r.noteHistory?.[0]?.edited && (
+                          <span
+                            className="inline-flex items-center gap-0.5 rounded-full bg-amber-400/10 px-1.5 py-px text-[8.5px] font-extrabold normal-case tracking-normal text-amber-300 border border-amber-400/25"
+                            title="এই জবাবটি ম্যানেজমেন্ট কর্তৃক সম্পাদিত হয়েছে"
+                          >
+                            <Pencil className="w-2 h-2" aria-hidden /> সম্পাদিত
+                          </span>
+                        )}
                       </p>
                       <p className="text-[12px] text-[#cdeee1] leading-relaxed break-words whitespace-pre-wrap">
                         {r.adminNote}
@@ -325,7 +334,17 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
                         {r.noteHistory!.slice(1).map((h, i) => (
                           <div key={i} className="rounded-lg rounded-l-none bg-[#ffffff]/[0.03] border border-l-2 border-[#3e4042] border-l-[#00a86b]/30 px-2.5 py-1.5">
                             <p className="text-[11.5px] text-[#b9c8c1] leading-relaxed break-words whitespace-pre-wrap">{h.note}</p>
-                            <p className="text-[9.5px] text-[#65676b] text-right mt-0.5">{h.at ? timeAgo(h.at) : ''}</p>
+                            <p className="text-[9.5px] text-[#65676b] text-right mt-0.5 flex items-center justify-end gap-1.5">
+                              {h.edited && (
+                                <span
+                                  className="inline-flex items-center gap-0.5 rounded-full bg-amber-400/10 px-1.5 py-px text-[8.5px] font-extrabold text-amber-300 border border-amber-400/25"
+                                  title="এই জবাবটি ম্যানেজমেন্ট কর্তৃক সম্পাদিত হয়েছে"
+                                >
+                                  <Pencil className="w-2 h-2" aria-hidden /> সম্পাদিত
+                                </span>
+                              )}
+                              {h.at ? timeAgo(h.at) : ''}
+                            </p>
                           </div>
                         ))}
                       </div>
