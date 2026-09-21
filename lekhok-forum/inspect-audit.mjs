@@ -57,7 +57,7 @@ function walk(dir, exts, acc = []) {
   }
   return acc;
 }
-// কোড-ফাইলে করাপ্টেড-সিলেক্টর গণনা: "idden]" সংখ্যা − "hidden]" সংখ্যা।
+// কোড-ফাইলে করাপ্টেড-সিলেক্টর গণনা: "[hidden]" সংখ্যা − "hidden]" সংখ্যা।
 // সঠিক ফর্ম ([hidden]/[aria-hidden]) সবই "hidden]" ধারণ করে; করাপ্টেড ফর্মে h নেই।
 // (bash-টুল ডিসপ্লে "[:h" খেয়ে ফেলে — তাই বাইট-স্তরে এই বিয়োগফলই একমাত্র সত্য।)
 function corruptedSelectorCount(p) {
@@ -215,7 +215,7 @@ section('২', 'মেসেজিং ও চ্যাট-বাবল আর্
   }
 
   // 🚨 সিলেক্টর-করাপশন বাইট-চেক (সেশন-৯২ ফাঁদের স্থায়ী গার্ড): সব কোড-ফাইলে
-  // "idden]" − "hidden]" = 0 হতে হবে (করাপ্টেড :not(…)/CSS-সিলেক্টর রেক্স-প্রুফ)
+  // "[hidden]" − "hidden]" = 0 হতে হবে (করাপ্টেড :not(…)/CSS-সিলেক্টর রেক্স-প্রুফ)
   const codeFiles = [...walk('views', ['.ejs']), ...walk('public/assets', ['.js', '.css']), 'server.js', 'db.js', ...walk('routes', ['.js']), ...walk('admin', ['.js'])];
   const corrupt = codeFiles.map(f => [f, corruptedSelectorCount(f)]).filter(([, n]) => n > 0);
   if (corrupt.length === 0) {
