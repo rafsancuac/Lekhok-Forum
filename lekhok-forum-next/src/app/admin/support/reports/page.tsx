@@ -13,16 +13,25 @@
  *   • বাংলা আপেক্ষিক-সময় (টাইটেলে পূর্ণ-স্ট্যাম্প) + লেখা-কপি বাটন
  *   • ছবি-লাইটবক্স (Esc/ব্যাকড্রপ-বন্ধ) + শীল্ড ইম্পটি-স্টেট
  *   • আপডেটে 'lf:support-changed' ডিসপ্যাচ → সাইডবার/ড্যাশবোর্ড ব্যাজ তাৎক্ষণিক
+ * session207 — অ্যানালিটিক্স + ফিল্টার-ডেপথ প্যাক:
+ *   • পরিসংখ্যান মিনি-কার্ড ×৪ (মোট/নতুন/চলমান/সমাধান — ক্লিকে ট্যাব-সুইচ, শেয়ার-বার)
+ *   • তারিখ-সীমা চিপ (আজ/৭ দিন/৩০ দিন) + ক্রম-টগল (সাম্প্রতক↔পুরাতন)
+ *   • CSV এখন বর্তমান-ফিল্টার-অনুযায়ী রপ্তানি (Task57-প্রস্তাব-④)
+ *   • "/" কীবোর্ড-শর্টকাটে অনুসন্ধান-ফোকাস
  */
 
 import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
+  ArrowDownWideNarrow,
+  CalendarDays,
   Check,
   CheckCircle2,
   Copy,
   Download,
   History,
+  Hourglass,
+  Inbox,
   Image as ImageIcon,
   Loader2,
   Mic,
@@ -100,6 +109,31 @@ const MEDIA_FILTER_ICON: Record<string, React.ReactNode> = {
   IMAGE: <ImageIcon className="w-3 h-3" aria-hidden />,
   AUDIO: <Mic className="w-3 h-3" aria-hidden />,
   VIDEO: <Video className="w-3 h-3" aria-hidden />,
+}
+
+/** session207 — তারিখ-সীমা ফিল্টার (ক্লায়েন্ট-সাইড, API-বদল-শূন্য) */
+const DATE_RANGES: { key: string; label: string }[] = [
+  { key: 'ALL', label: 'সব-সময়' },
+  { key: 'TODAY', label: 'আজ' },
+  { key: '7D', label: '৭ দিন' },
+  { key: '30D', label: '৩০ দিন' },
+]
+function dateCutoff(key: string): number | null {
+  if (key === 'TODAY') {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+  }
+  if (key === '7D') return Date.now() - 7 * 864e5
+  if (key === '30D') return Date.now() - 30 * 864e5
+  return null
+}
+
+/** session207 — পরিসংখ্যান-কার্ডের রঙ (ট্যাব-রঙের সাথে সমস্বর) */
+const STAT_TONE: Record<Status, { tBorder: string; bar: string; text: string }> = {
+  PENDING: { tBorder: 'border-t-amber-500', bar: 'bg-amber-500', text: 'text-amber-700' },
+  IN_PROGRESS: { tBorder: 'border-t-sky-600', bar: 'bg-sky-600', text: 'text-sky-700' },
+  RESOLVED: { tBorder: 'border-t-emerald-600', bar: 'bg-emerald-600', text: 'text-emerald-700' },
 }
 
 /** session202 — স্টেটাস-ভিত্তিক বাম-অ্যাকসেন্ট বর্ডার (কার্ডে এক-নজরে স্টেটাস) */
@@ -251,6 +285,10 @@ function SupportReportsPanel() {
   const [selected, setSelected] = useState<string[]>([])
   const [bulkBusy, setBulkBusy] = useState(false)
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 })
+  // session207 — তারিখ-সীমা + ক্রম + অনুসন্ধান-ফোকাস-রেফ
+  const [dateRange, setDateRange] = useState('ALL')
+  const [sortAsc, setSortAsc] = useState(false)
+  const searchRef = React.useRef<HTMLInputElement>(null)
 
   const flash = useCallback((msg: string) => {
     setToast(msg)
@@ -279,6 +317,21 @@ function SupportReportsPanel() {
     }, 15000)
     return () => clearInterval(t)
   }, [load])
+
+  /** session207 — "/" চাপলে অনুসন্ধান-ফোকাস (ইনপুট/টেক্সট-এরিয়ায় না-থাকলে) */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null
+      const typing =
+        el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)
+      if (e.key === '/' && !typing) {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   /** ছবি-লাইটবক্স Esc-বন্ধ (session202) */
   useEffect(() => {
@@ -312,12 +365,34 @@ function SupportReportsPanel() {
     setTimeout(() => setCopiedId((c) => (c === r.id ? null : c)), 1600)
   }, [])
 
-  /** CSV-এক্সপোর্ট — সব-স্টেটাস, UTF-8 BOM (এক্সেলে বাংলা ঠিক), RFC-4180 (session202) */
+  /** session207 — দৃশ্যমান-তালিকা: ট্যাব + মিডিয়া + তারিখ-সীমা + অনুসন্ধান + ক্রম (সব-ক্লায়েন্ট-সাইড) */
+  const shown = React.useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const cutoff = dateCutoff(dateRange)
+    const list = reports.filter(
+      (r) =>
+        r.status === tab &&
+        (mediaFilter === 'ALL' || r.mediaType === mediaFilter) &&
+        (!cutoff || new Date(r.createdAt).getTime() >= cutoff) &&
+        (!q ||
+          r.senderName.toLowerCase().includes(q) ||
+          (r.senderEmail ?? '').toLowerCase().includes(q) ||
+          r.messageText.toLowerCase().includes(q)),
+    )
+    // session207 — ক্রম-টগল: সাম্প্রতক-আগে (ডিফল্ট) ↔ পুরাতন-আগে
+    return list.sort((a, b) => {
+      const da = new Date(a.createdAt).getTime()
+      const db = new Date(b.createdAt).getTime()
+      return sortAsc ? da - db : db - da
+    })
+  }, [reports, tab, mediaFilter, query, dateRange, sortAsc])
+
+  /** CSV-এক্সপোর্ট — session207: বর্তমান-ফিল্টার-অনুযায়ী (ট্যাব+অনুসন্ধান+মিডিয়া+তারিখ+ক্রম), UTF-8 BOM, RFC-4180 */
   const exportCsv = useCallback(async () => {
     setExporting(true)
     try {
       const header = ['তারিখ', 'প্রেরক', 'ইমেইল', 'স্টেটাস', 'মিডিয়া', 'অভিযোগ', 'অ্যাডমিন-নোট']
-      const rows = reports.map((r) => [
+      const rows = shown.map((r) => [
         new Date(r.createdAt).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }),
         r.senderName,
         r.senderEmail ?? '',
@@ -337,11 +412,11 @@ function SupportReportsPanel() {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
-      flash(`CSV ডাউনলোড শুরু — ${bn(reports.length)}টি রেকর্ড`)
+      flash(`CSV ডাউনলোড শুরু — বর্তমান-ফিল্টারে ${bn(shown.length)}টি রেকর্ড`)
     } finally {
       setExporting(false)
     }
-  }, [reports, flash])
+  }, [shown, flash])
 
   const update = useCallback(
     async (id: string, payload: { status?: Status; adminNote?: string }) => {
@@ -372,26 +447,14 @@ function SupportReportsPanel() {
     [flash, load, reports]
   )
 
-  const shown = React.useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return reports.filter(
-      (r) =>
-        r.status === tab &&
-        (mediaFilter === 'ALL' || r.mediaType === mediaFilter) &&
-        (!q ||
-          r.senderName.toLowerCase().includes(q) ||
-          (r.senderEmail ?? '').toLowerCase().includes(q) ||
-          r.messageText.toLowerCase().includes(q)),
-    )
-  }, [reports, tab, mediaFilter, query])
-
-  /** session206 — ট্যাব/ফিল্টার-বদলে নির্বাচন-পরিষ্কার (অদৃশ্য-কার্ডে বাল্ক-অ্যাকশন আটকায়) */
+  /** session206/207 — ট্যাব/ফিল্টার/তারিখ-বদলে নির্বাচন-পরিষ্কার (অদৃশ্য-কার্ডে বাল্ক-অ্যাকশন আটকায়) */
   useEffect(() => {
     setSelected([])
-  }, [tab, mediaFilter, query])
+  }, [tab, mediaFilter, query, dateRange])
 
   const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED
-  const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL'
+  const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL' || dateRange !== 'ALL'
+  const statPct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
 
   /** session206 — বাল্ক-স্টেটাস: নির্বাচিত-কার্ডে ক্রমিক PUT + প্রগ্রেস; শেষে একবার reload+ব্যাজ-সিঙ্ক */
   const bulkUpdate = useCallback(
@@ -459,12 +522,16 @@ function SupportReportsPanel() {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={exportCsv}
-            disabled={reports.length === 0 || exporting}
+            disabled={shown.length === 0 || exporting}
             type="button"
+            title="বর্তমান ফিল্টার-অনুযায়ী CSV রপ্তানি (session207)"
             className="px-3 py-2 bg-white border border-[#CED0D4] hover:border-[#006A4E] hover:text-[#006A4E] text-[#4B4C4F] rounded-[8px] text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
           >
             {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             <span>CSV</span>
+            <span className="text-[10px] font-extrabold text-[#006A4E] bg-[#006A4E]/10 rounded-full px-1.5 py-px min-w-4 text-center">
+              {bn(shown.length)}
+            </span>
           </button>
           <Link
             href="/admin"
@@ -473,6 +540,55 @@ function SupportReportsPanel() {
             ← ড্যাশবোর্ড
           </Link>
         </div>
+      </div>
+
+      {/* session207 — পরিসংখ্যান মিনি-কার্ড ×৪ (স্টেটাস-কার্ড ক্লিকে ট্যাব-সুইচ; শেয়ার-বার = মোটের অনুপাত) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5" role="group" aria-label="অভিযোগ-পরিসংখ্যান">
+        <div
+          className="bg-white border border-[#CED0D4] border-t-[3px] border-t-[#006A4E] rounded-[10px] p-3 shadow-2xs transition-all"
+          aria-label={`মোট ${bn(total)}টি অভিযোগ`}
+        >
+          <p className="text-[10.5px] font-bold text-[#65676B] flex items-center gap-1">
+            <Inbox className="w-3.5 h-3.5 text-[#006A4E]" aria-hidden />
+            মোট অভিযোগ
+          </p>
+          <p className="text-xl font-extrabold mt-1 leading-none">{bn(total)}</p>
+          <div className="mt-2 h-1 rounded-full bg-[#F0F2F5] overflow-hidden">
+            <div className="h-full w-full bg-[#006A4E] rounded-full" />
+          </div>
+          <p className="mt-1 text-[9.5px] text-[#8A8D91]">সব স্টেটাস মিলিয়ে</p>
+        </div>
+        {TABS.map((t) => {
+          const tone = STAT_TONE[t.key]
+          const n = counts[t.key]
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              aria-pressed={tab === t.key}
+              aria-label={`${t.label}: ${bn(n)}টি — ক্লিকে ট্যাব-বদল`}
+              className={`bg-white border border-[#CED0D4] border-t-[3px] ${tone.tBorder} rounded-[10px] p-3 shadow-2xs text-left transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
+                tab === t.key ? 'ring-2 ring-[#006A4E]/25 border-[#006A4E]' : ''
+              }`}
+            >
+              <p className="text-[10.5px] font-bold text-[#65676B] flex items-center gap-1">
+                {t.key === 'PENDING' && <ShieldAlert className={`w-3.5 h-3.5 ${tone.text}`} aria-hidden />}
+                {t.key === 'IN_PROGRESS' && <Hourglass className={`w-3.5 h-3.5 ${tone.text}`} aria-hidden />}
+                {t.key === 'RESOLVED' && <CheckCircle2 className={`w-3.5 h-3.5 ${tone.text}`} aria-hidden />}
+                {t.label}
+              </p>
+              <p className={`text-xl font-extrabold mt-1 leading-none ${tone.text}`}>{bn(n)}</p>
+              <div className="mt-2 h-1 rounded-full bg-[#F0F2F5] overflow-hidden">
+                <div
+                  className={`h-full ${tone.bar} rounded-full transition-all`}
+                  style={{ width: `${statPct(n)}%` }}
+                />
+              </div>
+              <p className="mt-1 text-[9.5px] text-[#8A8D91]">মোটের {bn(statPct(n))}%</p>
+            </button>
+          )
+        })}
       </div>
 
       {/* স্টেটাস-ট্যাব (লাইভ-কাউন্ট) */}
@@ -512,14 +628,16 @@ function SupportReportsPanel() {
             aria-hidden
           />
           <input
+            ref={searchRef}
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="নাম, ইমেইল বা অভিযোগের লেখা দিয়ে খুঁজুন..."
             aria-label="অভিযোগ অনুসন্ধান"
+            title="দ্রুত-অনুসন্ধান: / চেপে ফোকাস করুন"
             className="w-full text-[12.5px] bg-[#F7F8FA] border border-[#CED0D4] focus:bg-white focus:border-[#006A4E] focus:ring-2 focus:ring-[#006A4E]/15 rounded-[8px] pl-9 pr-9 py-2.5 outline-none transition placeholder:text-[#8A8D91]"
           />
-          {query && (
+          {query ? (
             <button
               onClick={() => setQuery('')}
               type="button"
@@ -528,6 +646,13 @@ function SupportReportsPanel() {
             >
               <X className="w-3.5 h-3.5" aria-hidden />
             </button>
+          ) : (
+            <kbd
+              aria-hidden
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9.5px] font-bold text-[#8A8D91] bg-white border border-[#E4E6EB] rounded px-1.5 py-px shadow-2xs pointer-events-none"
+            >
+              /
+            </kbd>
           )}
         </div>
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -557,6 +682,8 @@ function SupportReportsPanel() {
                   onClick={() => {
                     setQuery('')
                     setMediaFilter('ALL')
+                    setDateRange('ALL')
+                    setSortAsc(false)
                   }}
                   type="button"
                   className="ml-1.5 text-[#006A4E] hover:underline cursor-pointer"
@@ -566,6 +693,41 @@ function SupportReportsPanel() {
               )}
             </p>
           )}
+        </div>
+        {/* session207 — তারিখ-সীমা চিপ + ক্রম-টগল (সব-ক্লায়েন্ট-সাইড) */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="তারিখ-সীমা ফিল্টার">
+            <CalendarDays className="w-3.5 h-3.5 text-[#8A8D91] shrink-0" aria-hidden />
+            {DATE_RANGES.map((d) => (
+              <button
+                key={d.key}
+                onClick={() => setDateRange(d.key)}
+                type="button"
+                aria-pressed={dateRange === d.key}
+                className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer ${
+                  dateRange === d.key
+                    ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                    : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setSortAsc((v) => !v)}
+            type="button"
+            aria-label={sortAsc ? 'এখন পুরাতন-আগে — বদলে সাম্প্রতক-আগে করুন' : 'এখন সাম্প্রতক-আগে — বদলে পুরাতন-আগে করুন'}
+            title="তালিকার ক্রম বদলান"
+            className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+              sortAsc
+                ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+            }`}
+          >
+            <ArrowDownWideNarrow className={`w-3.5 h-3.5 transition-transform ${sortAsc ? 'rotate-180' : ''}`} aria-hidden />
+            {sortAsc ? 'পুরাতন আগে' : 'সাম্প্রতক আগে'}
+          </button>
         </div>
       </div>
 
@@ -579,8 +741,8 @@ function SupportReportsPanel() {
           {filtersActive ? (
             <>
               <XCircle className="w-8 h-8 text-[#CED0D4] mx-auto mb-2" aria-hidden />
-              <p className="text-sm text-[#65676B]">অনুসন্ধানে কোনো অভিযোগ মেলেনি</p>
-              <p className="text-[11px] text-[#8A8D91] mt-1">বানান বদলে বা ফিল্টার-রিসেট করে আবার চেষ্টা করুন</p>
+              <p className="text-sm text-[#65676B]">ফিল্টার-শর্তে কোনো অভিযোগ মেলেনি</p>
+              <p className="text-[11px] text-[#8A8D91] mt-1">অনুসন্ধান/মিডিয়া/তারিখ-ফিল্টার বদলে বা রিসেট করে আবার চেষ্টা করুন</p>
             </>
           ) : (
             <>
@@ -617,7 +779,7 @@ function SupportReportsPanel() {
           {shown.map((r) => (
             <article
               key={r.id}
-              className={`bg-white border rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 transition-all lf-anim-fade ${
+              className={`bg-white border rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 transition-all hover:shadow-md lf-anim-fade ${
                 selected.includes(r.id)
                   ? 'border-[#006A4E] ring-2 ring-[#006A4E]/20 ' + ACCENT[r.status].replace('border-l-', 'border-l-')
                   : `border-[#CED0D4] ${ACCENT[r.status]}`
