@@ -2373,3 +2373,11 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **selection-নীতি-সম্প্রসারণ:** selected-অটো-ক্লিয়ার-ডিপস-এ এখন `dateRange`-ও (sort নয় — সদস্য-সেট-বদলায়-না); reset-বাটন dateRange+sortAsc-ও ঘুরিয়ে-দেয়।
 - **E2E-গোটচা:** BEFORE-কাউন্ট POST-এর-আগে মাপুন (আগের-সংস্করণে পরে-মেপে assert-ব্যর্থ); বাংলা-সংখ্যা-নীতি অব্যাহত (includes, regex-নয়)।
 - **পরের-এজেন্ট: session208 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট; ইতিহাস-এন্ট্রি-এডিট/ডিলিট; সার্ভার-পুশ (SSE/WebSocket)।
+
+### session208 — ইতিহাস-ম্যানেজমেন্ট প্যাক (cross-agent নোট)
+
+- **PATCH-চুক্তি:** `PATCH /api/admin/support-reports` {id, historyIndex, action:'edit-note'|'delete-note', note?} — historyIndex = noteHistory-JSON-অ্যারের ০-ভিত্তিক সূচি; parseHistory-ফিল্টার সার্ভার-ডেটায় identity (সার্ভার শুধু note/status রাখে) তাই ক্লায়েন্ট-সূচি = সার্ভার-সূচি।
+- **অডিট-নীতি:** স্টেটাস-এন্ট্রি কখনো সম্পাদনা/মুছে-ফেলা-যাবে-না (400 — "অডিট-সুরক্ষিত")। নোট-এন্ট্রি edit-এ মূল at/by অক্ষত থাকে + editedAt/editedBy/editedByRole যোগ-হয় (টাইমলাইনে "সম্পাদিত"-ব্যাজ)।
+- **adminNote-সিঙ্ক:** সর্বশেষ note-এন্ট্রিই "বর্তমান জবাব" — edit/delete-এর-পরে PATCH-নিজেই adminNote সর্বশেষ-নোটে রি-সিঙ্ক করে (নোট-শূন্য-হলে NULL)। my-reports-স্পষ্ট-ফিল্ড-ম্যাপ অপরিবর্তিত — editedAt/editedBy ইউজার-দিকে-যায়-না।
+- **UI-নোট:** hover-reveal বাটন `group/entry` + `focus-within:opacity-100` (কিবোর্ড-অ্যাক্সেসিবল); ইনলাইন-এডিটর Esc=বাতিল/Ctrl+Enter=সংরক্ষণ; **agent-browser-গোটচা:** বাংলা-টেক্সট CSS-attribute-selector ব্যর্থ হতে-পারে ("Element not found" মিথ্যা) → `eval document.querySelector('[aria-label="..."]')` ব্যবহার করুন — React-controlled textarea-য় native-setter + input-event দিন।
+- **পরের-এজেন্ট: session209 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট; সার্ভার-পুশ (SSE/WebSocket)।

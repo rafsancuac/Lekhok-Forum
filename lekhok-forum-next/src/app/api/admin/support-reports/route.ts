@@ -11,6 +11,7 @@ import { notify } from '@/lib/notify'
  * GET /api/admin/support-reports?status=PENDING  → অভিযোগ-তালিকা + স্টেটাস-কাউন্ট
  * GET /api/admin/support-reports?counts=1        → শুধু স্টেটাস-কাউন্ট (লাইট-মোড, ব্যাজ-পোলিং)
  * PUT /api/admin/support-reports  {id, status?, adminNote?} → স্টেটাস/নোট আপডেট
+ * PATCH /api/admin/support-reports {id, historyIndex, action, note?} → ইতিহাস-এন্ট্রি সম্পাদনা/মুছে-ফেলা (session208)
  *
  * অ্যাক্সেস: ম্যানেজার (admin/super_admin) অথবা নির্বাচিত সাপোর্ট-অ্যাডমিন নিজে
  * রোল-ম্যাট্রিক্স (curl-যাচাইকৃত): member 403 · member+সাপোর্ট 200 · admin 200 · super 200
@@ -154,5 +155,101 @@ export async function PUT(req: NextRequest) {
   } catch (err) {
     console.error('support-reports PUT error:', err)
     return NextResponse.json({ error: 'আপডেট ব্যর্থ' }, { status: 500 })
+  }
+}
+
+/**
+ * session208 (Task 59) — ইতিহাস-এন্ট্রি ম্যানেজমেন্ট
+ *
+ * PATCH /api/admin/support-reports  {id, historyIndex, action: 'edit-note' | 'delete-note', note?}
+ *
+ * নীতি:
+ * - শুধু t==='note' এন্ট্রি সম্পাদনযোগ্য/মুছে-ফেল-যায় — স্টেটাস-এন্ট্রি = অডিট, অপরিবর্তনীয়
+ *   (কে-কখন-স্টেটাস-বদলেছে তা পরে-সম্পাদনা-করা-যাবে-না — জবাবদিহিতা)
+ * - edit: at/by অক্ষত রেখে note বদলায় + editedAt/editedBy/editedByRole যোগ হয় (টাইমলাইনে "সম্পাদিত"-ব্যাজ)
+ * - delete: splice; মুছে-ফেলা-এন্ট্রিটি সর্বশেষ note হলে adminNote পরবর্তী-সর্বশেষ note-এ সিঙ্ক (না-থাকলে null) —
+ *   ইউজার-দিকের my-reports-এ "ম্যানেজমেন্টের জবাব" সবসময় সর্বশেষ note-এর সাথে সামঞ্জস্যপূর্ণ থাকে
+ * - edit/delete ইউজার-দৃশ্যমান-কনটেন্ট বদলায় → SUPPORT_UPDATE নোটিফিকেশন (থ্রটল notify()-এ)
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const gate = await requireReviewer()
+    if (gate.error) return gate.error
+
+    const body = await req.json().catch(() => null)
+    const id = body?.id as string | undefined
+    const action = body?.action as string | undefined
+    const idx = Number(body?.historyIndex)
+    if (!id || !Number.isInteger(idx) || idx < 0)
+      return NextResponse.json({ error: 'id ও historyIndex প্রয়োজন' }, { status: 400 })
+    if (action !== 'edit-note' && action !== 'delete-note')
+      return NextResponse.json({ error: 'অবৈধ অ্যাকশন' }, { status: 400 })
+
+    const existing = await db.userReport.findUnique({ where: { id } })
+    if (!existing) return NextResponse.json({ error: 'অভিযোগ পাওয়া যায়নি' }, { status: 404 })
+
+    let historyArr: Record<string, unknown>[] = []
+    if (existing.noteHistory) {
+      try {
+        const parsed = JSON.parse(existing.noteHistory)
+        if (Array.isArray(parsed)) historyArr = parsed
+      } catch {
+        /* করাপ্ট-হিস্ট্রি → খালি */
+      }
+    }
+    if (idx >= historyArr.length)
+      return NextResponse.json({ error: 'ইতিহাস-এন্ট্রি পাওয়া যায়নি' }, { status: 404 })
+
+    const entry = historyArr[idx] as Record<string, unknown>
+    if (entry?.t !== 'note')
+      return NextResponse.json(
+        { error: 'শুধু নোট-এন্ট্রি পরিবর্তনযোগ্য (স্টেটাস-এন্ট্রি অডিট-সুরক্ষিত)' },
+        { status: 400 },
+      )
+
+    if (action === 'edit-note') {
+      const note = (body?.note as string | undefined)?.trim()
+      if (!note) return NextResponse.json({ error: 'নোট প্রয়োজন' }, { status: 400 })
+      if (note.length > 2000)
+        return NextResponse.json({ error: 'নোট খুব বড় (সর্বোচ্চ ২০০০ অক্ষর)' }, { status: 400 })
+      historyArr[idx] = {
+        ...entry,
+        note,
+        editedAt: new Date().toISOString(),
+        editedBy: gate.me.name || gate.me.username,
+        editedByRole: gate.me.role,
+      }
+    } else {
+      historyArr.splice(idx, 1)
+    }
+
+    // adminNote-সিঙ্ক: সর্বশেষ note-এন্ট্রিই বর্তমান জবাব
+    let lastNote: string | null = null
+    for (let i = historyArr.length - 1; i >= 0; i--) {
+      if (historyArr[i]?.t === 'note') {
+        lastNote = (historyArr[i] as { note?: string }).note ?? null
+        break
+      }
+    }
+    const adminNoteSynced = lastNote !== (existing.adminNote ?? null)
+
+    const updated = await db.userReport.update({
+      where: { id },
+      data: {
+        noteHistory: JSON.stringify(historyArr.slice(-50)),
+        ...(adminNoteSynced ? { adminNote: lastNote } : {}),
+      },
+    })
+
+    await notify({
+      actorId: gate.me.id,
+      recipientId: existing.senderId,
+      type: 'SUPPORT_UPDATE',
+    })
+
+    return NextResponse.json({ report: updated })
+  } catch (err) {
+    console.error('support-reports PATCH error:', err)
+    return NextResponse.json({ error: 'ইতিহাস-আপডেট ব্যর্থ' }, { status: 500 })
   }
 }

@@ -35,9 +35,11 @@ import {
   Image as ImageIcon,
   Loader2,
   Mic,
+  Pencil,
   Search,
   ShieldAlert,
   ShieldCheck,
+  Trash2,
   Video,
   X,
   XCircle,
@@ -61,7 +63,8 @@ interface Report {
   createdAt: string
 }
 
-/** session205 (Task 56) — অ্যাকশন-ইতিহাস-এন্ট্রি (noteHistory JSON থেকে) */
+/** session205 (Task 56) — অ্যাকশন-ইতিহাস-এন্ট্রি (noteHistory JSON থেকে);
+ *  session208 — নোট-এন্ট্রিতে সম্পাদনা-মেটাডেটা (editedAt/editedBy/editedByRole) ঐচ্ছিক */
 interface HistoryEntry {
   t: 'note' | 'status'
   note?: string
@@ -70,6 +73,9 @@ interface HistoryEntry {
   at: string
   by?: string
   byRole?: string
+  editedAt?: string
+  editedBy?: string
+  editedByRole?: string
 }
 
 /** noteHistory JSON-পার্স — করাপ্ট/অবৈধ হলে খালি-অ্যারে (নিরাপদ) */
@@ -178,12 +184,46 @@ const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
 }
 
 /** session205 (Task 56) — অ্যাকশন-ইতিহাস টাইমলাইন: নোট + স্টেটাস-বদল এক-সুতোয় (নতুন-নিচে);
- *  ৪-এর-বেশি হলে পুরোনোগুলো কোলাপ্সড — "আরও Nটি" টগল। */
-function ActionHistory({ entries }: { entries: HistoryEntry[] }) {
+ *  ৪-এর-বেশি হলে পুরোনোগুলো কোলাপ্সড — "আরও Nটি" টগল;
+ *  session208 — নোট-এন্ট্রি hover-রিভিল সম্পাদনা/মুছে-ফেলা (স্টেটাস-এন্ট্রি অডিট — লক),
+ *  ইনলাইন-এডিট (Esc-বাতিল) + নিশ্চিত-মুছে-ফেলা + "সম্পাদিত"-ব্যাজ। */
+function ActionHistory({
+  entries,
+  reportId,
+  busy,
+  onEdit,
+  onDelete,
+}: {
+  entries: HistoryEntry[]
+  reportId: string
+  busy: boolean
+  onEdit: (index: number, note: string) => void
+  onDelete: (index: number) => void
+}) {
   const [expanded, setExpanded] = useState(false)
+  const [editing, setEditing] = useState<number | null>(null)
+  const [draft, setDraft] = useState('')
+  const [confirmDel, setConfirmDel] = useState<number | null>(null)
   if (entries.length === 0) return null
   const visible = expanded ? entries : entries.slice(-4)
   const hiddenCount = entries.length - visible.length
+
+  const startEdit = (i: number, note: string) => {
+    setConfirmDel(null)
+    setEditing(i)
+    setDraft(note ?? '')
+  }
+  const cancelEdit = () => {
+    setEditing(null)
+    setDraft('')
+  }
+  const saveEdit = (i: number) => {
+    const note = draft.trim()
+    if (!note) return
+    onEdit(i, note)
+    cancelEdit()
+  }
+
   return (
     <div className="rounded-[8px] bg-[#FAFBFC] border border-[#E4E6EB] p-3">
       <button
@@ -203,8 +243,10 @@ function ActionHistory({ entries }: { entries: HistoryEntry[] }) {
       <div className="mt-2.5 ml-1.5 border-l-2 border-[#E4E6EB] space-y-3 lf-anim-fade">
         {visible.map((e, i) => {
           const badge = ROLE_BADGE[e.byRole ?? ''] ?? null
+          const isEditing = editing === i
+          const isConfirming = confirmDel === i
           return (
-            <div key={i} className="relative pl-4">
+            <div key={i} className="relative pl-4 group/entry">
               <span
                 aria-hidden
                 className={`absolute -left-[7px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm ${
@@ -226,11 +268,115 @@ function ActionHistory({ entries }: { entries: HistoryEntry[] }) {
                 >
                   {relTimeBn(e.at)}
                 </span>
+                {e.t === 'note' && e.editedAt && (
+                  <span
+                    className="text-[9px] font-extrabold px-1.5 py-px rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-0.5"
+                    title={`সম্পাদিত ${relTimeBn(e.editedAt)} — ${e.editedBy || 'অ্যাডমিন'}`}
+                  >
+                    <Pencil className="w-2.5 h-2.5" aria-hidden />
+                    সম্পাদিত
+                  </span>
+                )}
+                {/* session208 — hover-রিভিল অ্যাকশন (শুধু নোট-এন্ট্রি; স্টেটাস = অডিট-লক) */}
+                {e.t === 'note' && !isEditing && !isConfirming && (
+                  <span className="ml-auto flex items-center gap-0.5 opacity-0 group-hover/entry:opacity-100 focus-within:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(i, e.note ?? '')}
+                      disabled={busy}
+                      aria-label="নোট সম্পাদনা"
+                      title="নোট সম্পাদনা"
+                      className="p-1 rounded-md text-[#8A8D91] hover:text-[#006A4E] hover:bg-[#006A4E]/10 disabled:opacity-40 transition cursor-pointer bg-transparent border-0"
+                    >
+                      <Pencil className="w-3 h-3" aria-hidden />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDel(i)}
+                      disabled={busy}
+                      aria-label="নোট মুছে ফেলুন"
+                      title="নোট মুছে ফেলুন"
+                      className="p-1 rounded-md text-[#8A8D91] hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition cursor-pointer bg-transparent border-0"
+                    >
+                      <Trash2 className="w-3 h-3" aria-hidden />
+                    </button>
+                  </span>
+                )}
               </div>
               {e.t === 'note' ? (
-                <p className="text-[11.5px] text-[#4B4C4F] leading-relaxed whitespace-pre-wrap break-words mt-0.5">
-                  {e.note}
-                </p>
+                isEditing ? (
+                  <div className="mt-1.5 space-y-1.5">
+                    <textarea
+                      value={draft}
+                      onChange={(ev) => setDraft(ev.target.value)}
+                      onKeyDown={(ev) => {
+                        if (ev.key === 'Escape') {
+                          ev.preventDefault()
+                          cancelEdit()
+                        } else if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) {
+                          ev.preventDefault()
+                          saveEdit(i)
+                        }
+                      }}
+                      rows={3}
+                      maxLength={2000}
+                      autoFocus
+                      aria-label="নোট সম্পাদনা"
+                      className="w-full text-[11.5px] text-[#050505] bg-white border border-[#006A4E]/40 focus:border-[#006A4E] focus:ring-2 focus:ring-[#006A4E]/15 rounded-[8px] px-2.5 py-2 leading-relaxed resize-y outline-none transition"
+                    />
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => saveEdit(i)}
+                        disabled={busy || !draft.trim()}
+                        className="px-2.5 py-1 rounded-[6px] bg-[#006A4E] hover:bg-[#00523C] text-white text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+                      >
+                        সংরক্ষণ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelEdit}
+                        className="px-2.5 py-1 rounded-[6px] bg-white border border-[#CED0D4] hover:bg-[#F0F2F5] text-[#4B4C4F] text-[10px] font-bold transition cursor-pointer"
+                      >
+                        বাতিল
+                      </button>
+                      <span className="text-[9px] text-[#8A8D91] ml-auto">Esc = বাতিল · Ctrl+Enter = সংরক্ষণ</span>
+                    </div>
+                  </div>
+                ) : isConfirming ? (
+                  <div
+                    className="mt-1.5 flex items-center gap-2 flex-wrap bg-red-50 border border-red-200 rounded-[8px] px-2.5 py-2"
+                    role="alertdialog"
+                    aria-label="নোট-মুছে-ফেলা নিশ্চিতকরণ"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-600 shrink-0" aria-hidden />
+                    <span className="text-[10.5px] font-bold text-red-700">এই জবাবটি মুছে ফেলবেন?</span>
+                    <span className="flex items-center gap-1.5 ml-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onDelete(i)
+                          setConfirmDel(null)
+                        }}
+                        disabled={busy}
+                        className="px-2.5 py-1 rounded-[6px] bg-red-600 hover:bg-red-500 text-white text-[10px] font-bold transition disabled:opacity-50 cursor-pointer"
+                      >
+                        মুছুন
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDel(null)}
+                        className="px-2.5 py-1 rounded-[6px] bg-white border border-[#CED0D4] hover:bg-[#F0F2F5] text-[#4B4C4F] text-[10px] font-bold transition cursor-pointer"
+                      >
+                        বাতিল
+                      </button>
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-[11.5px] text-[#4B4C4F] leading-relaxed whitespace-pre-wrap break-words mt-0.5">
+                    {e.note}
+                  </p>
+                )
               ) : (
                 <p className="text-[11px] text-[#4B4C4F] mt-0.5 flex items-center gap-1.5">
                   <span>স্টেটাস:</span>
@@ -451,6 +597,35 @@ function SupportReportsPanel() {
   useEffect(() => {
     setSelected([])
   }, [tab, mediaFilter, query, dateRange])
+
+  /** session208 (Task 59) — ইতিহাস-এন্ট্রি সম্পাদনা/মুছে-ফেলা (PATCH); কাউন্ট-অপরিবর্তিত → load()-ছাড়াই
+   *  লোকাল-স্টেট-আপডেট; ইউজার-দিকের my-reports-ও লাইভ-ইভেন্টে সিঙ্ক হয় */
+  const patchHistory = useCallback(
+    async (
+      id: string,
+      payload: { historyIndex: number; action: 'edit-note' | 'delete-note'; note?: string },
+      okMsg: string,
+    ) => {
+      setBusy(id)
+      try {
+        const res = await fetch('/api/admin/support-reports', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, ...payload }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data?.error || 'ইতিহাস-আপডেট ব্যর্থ')
+        setReports((prev) => prev.map((r) => (r.id === id ? { ...r, ...data.report } : r)))
+        window.dispatchEvent(new Event('lf:support-changed'))
+        flash(okMsg)
+      } catch (err) {
+        flash(err instanceof Error ? err.message : 'ইতিহাস-আপডেট ব্যর্থ')
+      } finally {
+        setBusy(null)
+      }
+    },
+    [flash],
+  )
 
   const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED
   const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL' || dateRange !== 'ALL'
@@ -928,8 +1103,27 @@ function SupportReportsPanel() {
                 </button>
               </div>
 
-              {/* অ্যাকশন-ইতিহাস টাইমলাইন (session205) — নোট + স্টেটাস-বদল */}
-              <ActionHistory entries={parseHistory(r.noteHistory)} />
+              {/* অ্যাকশন-ইতিহাস টাইমলাইন (session205) — নোট + স্টেটাস-বদল;
+                  session208 — নোট-এন্ট্রি hover-সম্পাদনা/মুছে-ফেলা */}
+              <ActionHistory
+                entries={parseHistory(r.noteHistory)}
+                reportId={r.id}
+                busy={busy === r.id}
+                onEdit={(idx, note) =>
+                  patchHistory(
+                    r.id,
+                    { historyIndex: idx, action: 'edit-note', note },
+                    'ইতিহাস-নোট সম্পাদিত · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে',
+                  )
+                }
+                onDelete={(idx) =>
+                  patchHistory(
+                    r.id,
+                    { historyIndex: idx, action: 'delete-note' },
+                    'ইতিহাস-এন্ট্রি মুছে ফেলা হয়েছে · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে',
+                  )
+                }
+              />
             </article>
           ))}
         </div>
