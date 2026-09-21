@@ -21,9 +21,6 @@
      tone   — TONE_TOKENS-কী (tokens.css --lf-* রেফ; হেক্স-শূন্য নীতি)
      rail   — ফিড লেফট-রেলে দৃশ্যমান কি না
      railHighlight — রেলে ব্র্যান্ড-টিন্ট হাইলাইট (দৈনিক ই-পেপার)
-     core   — (সেশন ১৫৯) কোর-সেকশন-ফ্ল্যাগ — রেলে শিরোনাম-শূন্য টপ-ব্লক (FB Saved/
-              Memories/Groups/Pages প্যারিটি); হেডার-প্যানেলে sec.title দেখায়
-     secKey/secTitle — (সেশন ১৫৯) বেক-লুপে যোগ হয় — রেল-সার্চের সেকশন-গ্রুপিং-সোর্স
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* টোন → tokens.css টোকেন-রেফ (নতুন টোকেন সেশন-১৪৭-ব্লকে; শুধু এখানেই ম্যাপড) */
@@ -42,21 +39,6 @@ const TONE_TOKENS = {
 
 const DIR_SECTIONS = [
   {
-    /* সেশন ১৫৯ (ইউজার-স্পেক: FB-কোর-শর্টকাট): সংরক্ষিত লেখা/মেমোরিজ/গ্রুপ/পেজ — রেলের
-       সর্বাগ্রে শিরোনাম-শূন্য টপ-ব্লক। রুট-ম্যাপ (ইন্টেন্ট-অনুবাদ): /saved→/bookmarks,
-       /memories→/on-this-day ('এই দিনে' কোর-ব্লকে প্রতিস্থাপিত), /groups→/messages
-       (গ্রুপ-চ্যাট), /pages→/press (প্রেস-ক্লিপিং = ফোরামের পত্রিকা-পাতা)। */
-    key: 'core',
-    title: 'দ্রুত অ্যাক্সেস',
-    core: true,
-    items: [
-      { label: 'সংরক্ষিত লেখা',  desc: 'বুকমার্ক করা লেখা ও পোস্ট',   href: '/bookmarks',   icon: 'fa-bookmark',       tone: 'gold',   rail: true },
-      { label: 'স্মৃতি ও মেমোরিজ', desc: 'বিগত বছরের আজকের লেখা',      href: '/on-this-day', icon: 'fa-hourglass-half', tone: 'violet', rail: true },
-      { label: 'পাঠচক্র ও গ্রুপ',  desc: 'গ্রুপ-আলাপ ও পাঠচক্র',        href: '/messages',    icon: 'fa-users',          tone: 'social', rail: true },
-      { label: 'পত্রিকা ও পেজ',   desc: 'প্রেস, প্রকাশনা ও পাতা',       href: '/press',       icon: 'fa-flag',           tone: 'cyan',   rail: true }
-    ]
-  },
-  {
     key: 'knowledge',
     title: 'জ্ঞান ও সাহিত্য কর্নার',
     items: [
@@ -74,14 +56,14 @@ const DIR_SECTIONS = [
       { label: 'ইভেন্ট ও আয়োজন',      desc: 'সাহিত্য আড্ডা ও কর্মশালা',           href: '/events',      icon: 'fa-calendar-alt',    tone: 'angry',  rail: true },
       { label: 'সাংগঠনিক কার্যক্রম',   desc: 'কমিটি ও মিটিং এজেন্ডা',              href: '/activities',  icon: 'fa-calendar-check',  tone: 'slate',  rail: false },
       { label: 'সেরা লেখক',           desc: 'মাসিক স্বীকৃতি ও পুরস্কার',          href: '/best-writer', icon: 'fa-star',            tone: 'gold',   rail: true },
-      { label: 'অর্জন ও সম্মাননা',     desc: 'স্মারক স্বীকৃতির প্রাচীর',           href: '/achievements', icon: 'fa-trophy',         tone: 'amber',  rail: false },
-      { label: 'মতামত ও ফিডব্যাক',     desc: 'অভিযোগ ও পরামর্শ জানান',            href: '/complaints',  icon: 'fa-comment-dots',    tone: 'brand',  rail: true }
+      { label: 'অর্জন ও সম্মাননা',     desc: 'স্মারক স্বীকৃতির প্রাচীর',           href: '/achievements', icon: 'fa-trophy',         tone: 'amber',  rail: false }
     ]
   },
   {
     key: 'daily',
-    title: 'দৈনন্দিন ফিচার',
+    title: 'দৈনন্দিন ফিচার ও স্মৃতি',
     items: [
+      { label: 'এই দিনে',             desc: 'বিগত বছরের আজকের লেখা',             href: '/on-this-day', icon: 'fa-calendar-day',    tone: 'violet', rail: true },
       { label: 'আজকের জন্মদিন',       desc: 'সহ-লেখকদের শুভেচ্ছা জানান',         href: '/birthdays',   icon: 'fa-birthday-cake',   tone: 'pink',   rail: false },
       { label: 'আজকের কুইজ',          desc: 'প্রাত্যহিক সাহিত্য পরীক্ষা',         href: '/quiz',        icon: 'fa-brain',           tone: 'cyan',   rail: true }
     ]
@@ -112,7 +94,7 @@ const UTIL_SECTIONS = [
     key: 'admin-member',
     title: 'প্রশাসনিক ও সদস্য সনদ',
     items: [
-      { label: 'সদস্যপদ সনদ ও আইডি কার্ড',       desc: 'ডিজিটাল সদস্য সনদ ও প্রেস পাস প্রিন্ট/ডাউনলোড',            href: '/me/certificate', icon: 'fa-id-card', tone: 'gold', badge: 'অফিসিয়াল' },
+      { label: 'সদস্যপদ সনদ ও আইডি কার্ড',       desc: 'ডিজিটাল সদস্য সনদ ও প্রেস পাস প্রিন্ট/ডাউনলোড',            href: '/me/certificate', icon: 'fa-id-card', tone: 'gold' },
       { label: 'পাণ্ডুলিপি কপিরাইট ও চৌর্যবৃত্তি রিপোর্ট', desc: 'লেখাচুরির বিরুদ্ধে আনুষ্ঠানিকভাবে অভিযোগ দাখিল',       href: '/support/dmca-report', icon: 'fa-scale-balanced', tone: 'angry' }
     ]
   },
@@ -134,17 +116,50 @@ const UTIL_SECTIONS = [
   }
 ];
 
-/* টোন → টোকেন-রেফ বেক (ভিউতে style="--dlx-t: var(<%= it.tok %>)")
-   + সেকশন-ট্যাগ (সেশন ১৫৯ — রেল-সার্চের গ্রুপিং/টাইটেল-সোর্স) */
-for (const sec of [...DIR_SECTIONS, ...UTIL_SECTIONS]) {
+/* ── সেশন ১৯২ (ইউজার-স্পেক: ForumDirectoryMenu — কম্প্যাক্ট প্রিমিয়াম পাবলিক ডিরেক্টরি) ──
+   পাবলিক-হোম (layout.ejs #dlxPanel--pub192) প্যানেলের নিজস্ব-রেজিস্ট্রি —
+   DIR_SECTIONS (ফিড-রেল) ও UTIL_SECTIONS (হেডার-লঞ্চার) অক্ষত রেখে আলাদা
+   ৩-সেকশন × ১০-আইটেম কম্প্যাক্ট-টাইল ডেটা। ইউজার-স্পেকের মকআপ-রুটের বাস্তব-ম্যাপ
+   (404-শূন্য-চুক্তি): /saved→/bookmarks · /memories→/on-this-day ·
+   /reading-circles→/quiz (গ্রুপ-ফিচার-অনুপস্থিত, নিয়মিত-পাঠচর্চার-নিকটতম) ·
+   /publications→/press · /posts→/articles · /faq→/qa · বাকিরা অপরিবর্তিত।
+   badge ফিল্ড = টাইটেল-পাশে ছোট উজ্জ্বল-পিল (ই-পেপারে 'লাইভ')। */
+const PUB_SECTIONS = [
+  {
+    key: 'quick-access',
+    title: 'দ্রুত অ্যাক্সেস',
+    items: [
+      { label: 'সংরক্ষিত লেখা',    desc: 'বুকমার্ক করা লেখা ও পোস্ট',      href: '/bookmarks',   icon: 'fa-bookmark',        tone: 'amber' },
+      { label: 'স্মৃতি ও মেমোরিজ',  desc: 'বিগত বছরের আজকের লেখা',        href: '/on-this-day', icon: 'fa-calendar-day',    tone: 'violet' },
+      { label: 'পাঠচক্র ও কুইজ',   desc: 'প্রাত্যহিক পাঠচর্চা ও সাহিত্য কুইজ', href: '/quiz',     icon: 'fa-brain',           tone: 'social' },
+      { label: 'পত্রিকা ও পেজ',    desc: 'প্রেস, প্রকাশনা ও সাহিত্য পাতা',   href: '/press',       icon: 'fa-flag',            tone: 'cyan' }
+    ]
+  },
+  {
+    key: 'knowledge',
+    title: 'জ্ঞান ও সাহিত্য কর্নার',
+    items: [
+      { label: 'সকল লেখা',          desc: 'সাম্প্রতিক সাহিত্যকর্ম ও ফিচার',   href: '/articles',  icon: 'fa-pen-nib',         tone: 'brand' },
+      { label: 'প্রশ্নোত্তর (Q&A)',  desc: 'পাঠ ও লেখার জিজ্ঞাসা',           href: '/qa',        icon: 'fa-question-circle', tone: 'social' },
+      { label: 'রিসোর্স ও ফাইল',     desc: 'গবেষণা, পাণ্ডুলিপি ও সহায়ক বই',  href: '/resources', icon: 'fa-folder-open',     tone: 'amber' },
+      { label: 'আজকের ই-পেপার',     desc: 'দৈনিক সাহিত্য পাতা ও বুলেটিন',    href: '/epaper',    icon: 'fa-newspaper',       tone: 'love', badge: 'লাইভ' }
+    ]
+  },
+  {
+    key: 'forum',
+    title: 'ফোরাম ও প্রাতিষ্ঠানিক কার্যক্রম',
+    items: [
+      { label: 'বিজ্ঞপ্তি ও ঘোষণা',  desc: 'দাপ্তরিক নোটিশ বোর্ড',           href: '/notices', icon: 'fa-bullhorn',     tone: 'cyan' },
+      { label: 'ইভেন্ট ও আয়োজন',    desc: 'সাহিত্য আড্ডা ও কর্মশালা',       href: '/events',  icon: 'fa-calendar-alt', tone: 'angry' }
+    ]
+  }
+];
+
+/* টোন → টোকেন-রেফ বেক (ভিউতে style="--dlx-t: var(<%= it.tok %>)") */
+for (const sec of [...DIR_SECTIONS, ...UTIL_SECTIONS, ...PUB_SECTIONS]) {
   for (const it of sec.items) {
     it.tok = TONE_TOKENS[it.tone] || TONE_TOKENS.brand;
-    it.secKey = sec.key;
-    it.secTitle = sec.title;
   }
-}
-for (const sec of DIR_SECTIONS) {
-  if (sec.core) for (const it of sec.items) it.core = true;
 }
 
 /* ফিড লেফট-রেল: ফ্ল্যাট তালিকা — রেল-ক্রম এখানেই নিয়ন্ত্রিত (রেজিস্ট্রি-বাইরে ডুপ্লিকেট-অসম্ভব) */
@@ -158,4 +173,4 @@ const DIR_RAIL = DIR_RAIL_ORDER
   .filter(Boolean)
   .concat(_railFlat.filter(i => !DIR_RAIL_ORDER.includes(i.href)));
 
-module.exports = { DIR_SECTIONS, DIR_RAIL, UTIL_SECTIONS, TONE_TOKENS };
+module.exports = { DIR_SECTIONS, DIR_RAIL, UTIL_SECTIONS, PUB_SECTIONS, TONE_TOKENS };

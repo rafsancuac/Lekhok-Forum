@@ -1898,161 +1898,27 @@ Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্�
 - হারনেস-গোটচা: role-policy=RP_PORT / s139=E2E_PORT / সার্ভার=PORT — ভুল-ভ্যারিয়েবলে ২০৫-মিথ্যা-ফেইল
 
 **পরের-এজেন্ট: session158 লেবেল থেকে** (বিস্তারিত PLANS.md session153-নোট + PROJECT.md §১৫৩)
----
-Task ID: 27 (Session 158 — Lekhok-Forum সর্বজনীন পোস্ট-কম্পোজার + গ্লোবাল অ্যান্টি-শিফট)
-Agent: Z.ai (ইউজার-স্পেক এক্সিকিউশন: "লেখা/প্রশ্ন/প্রোফাইলে ঠিক একই কম্পোজার-ইন্টারফেস + ক্যাটাগরি/শাখা-ড্রপডাউন + স্ক্রল-ঝাঁকুনি-স্থায়ী-সমাধান")
-Task: UniversalCreatePostModal.tsx + UniversalPostTrigger.tsx (React-স্পেক) → Express/EJS-পোর্ট (session153/157-রীতি) + globals.css-অ্যান্টি-শিফট-স্পেসিফিকেশন → shared.css-পোর্ট
-
-Work Log:
-- repo /home/z/lekhok-forum/lekhok-forum; git pull (3e30220→8299ea1, session157-docs); push-পূর্বে rebase-এ সমান্তরাল Next.js-এজেন্টের f9bae63 (lekhok-forum-next ফিড-লেআউট) ল্যান্ডেড — PLANS/PROJECT-এ union-মার্জ ×২, কোড-ফাইল-কনফ্লিক্ট-শূন্য
-- 🚨 স্পেক-ইন্টারপ্রিটেশন: ইউজারের React-কোড রেফারেন্স-স্পেসিফিকেশন — সাইটের বিদ্যমান session153 FB-রিচ-কম্পোজার-ইঞ্জিনকেই সর্বজনীন করা হয়েছে (নতুন-প্যারালাল-মোডাল নয়): DOM-id-পরিবার fbm-*153/cpm* অক্ষুণ্ণ → সমস্ত লিগ্যাসি-বাইন্ডিং/draft-key/ইঞ্জিন-চুক্তি এক-ইঞ্জিনে বহাল
-- ৩-নতুন-ফাইল: views/shared/post/UniversalPostTrigger.ejs (upt158: অ্যাভাটার+ব্যক্তিগতকৃত-বাবল+লেখা/প্রশ্ন-কুইক-বাটন, data-composer-type, composerDefaultType-প্যারাম) · UniversalComposerModal.ejs (মোডাল-মার্কআপ single-source + #ucs158Strip ক্যাটাগরি-স্ট্রিপ + css/js-সেলফ-লোড) · public/assets/css/universal-composer.css (upt158/ucs158/cat-chip — hex-০, ৮px-রেডিয়াস)
-- composer-modal.js session158-ব্লক: POST_CATS158 (article×৮/question×৪) + syncType158 (অপশন-সোয়াপ+placeholder+শিরোনাম+সাবমিট-লেবেল) + onOpenClick158 + খসড়ায় type/category; social.js compose: type/category-হোয়াইটলিস্ট + per-type-URL + 🐛dup-গার্ড-_rich-ফেচ-ফিক্স; dashboard.js ফিড-SQL তিন-শাখায় p.category (UNION-কলাম-সাম্য)
-- পেজ-ইন্টিগ্রেশন ×৪: dashboard.ejs (include-সোয়াপ + পেজ-লেভেল js-ট্যাগ-প্রত্রাহ) · me.ejs (সর্বদা) · profile.ejs (isOwner-গার্ডে) · qa-list.ejs (session140-ইনলাইন-কম্পোজার বিলোপ → প্রশ্ন-প্রি-সিলেক্টেড-ট্রিগার; qa-composer.js null-guard-এ স্ব-নিষ্ক্রিয়) + FeedPostCard.ejs শাখা-চিপ
-- shared.css session158-ব্লক: html{scrollbar-gutter:stable;overflow-y:scroll} + body{max-width:100vw;overflow-x:hidden} + .stable-scroll-panel (min-width:0; .independent-scroll-প্যারিটি)
-- E2E (agent-browser, ismail@8080): ❓→প্রশ্ন-প্রি-সিলেক্টেড→/qa/2 ✓ ✍️→/articles/3 ✓ টগলে অপশন-সোয়াপ 8↔4 ✓ চিপ ✓ /me+/profile+/qa ✓ অতিথি-গার্ড ✓ gutter:stable+ovY:scroll+ovX:hidden computed ✓ স্ক্রলে scrollX=0 ✓ 390px×৩ h-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×২
-- রিগ্রেশন: lf153-harness **৪৯/৪৯ ALL GREEN** (দ্বি-সিড-প্রোটোকল: server-kill→seed-test-users+seed-qa-113→boot — server-চলত্তাবস্থায় seed = অদৃশ্য 🚨) + s139 ২২/২২ + guard/audit ✓ + role-policy stash-বেসলাইন-প্যারিটি (IDENTICAL failure-set — পরিবেশগত) + node --check + EJS-compile ×৭
-- 🚨 গোটচা-নতুন: EJS-কমেন্টে `<% ... %>`-আক্ষরিক-লেখা = কমেন্ট আগে-বন্ধ → unclosed-tag-এরর (উভয়-পার্শিয়ালে-ধরা, রিফ্রেজ-করা)
-- push: 0aa3032 origin/main ✓ (rebase-union: f9bae63-এর উপরে)
-
-Stage Summary:
-- সর্বজনীন-কম্পোজার সম্পূর্ণ: ফিড/প্রোফাইল/QA — একই ট্রিগার + একই মোডাল, লেখা↔প্রশ্ন + ১২-শাখা-জেনার, per-type নেভিগেশন; অ্যান্টি-শিফট গ্লোবাল
-- পরের-এজেন্ট: session159 — প্রস্তাব: ① QaListItem-এ শাখা-চিপ ② /qa?topic= + /articles?cat= শাখা-ফিল্টার ③ ট্যাগ-ডায়ালগ (সহ-লেখক-পিকার) ④ প্রশ্নে শিরোনাম-ইনপুট ⑤ শাখা-অনুযায়ী অডিয়েন্স-ডিফল্ট
-- ঝুঁকি: PLANS/PROJECT-এ দ্বি-session158-নোট (Next.js-এজেন্ট f9bae63 + আমার) — session159-থেকে max+1 রীতি; হারনেস-লগইন rate-limiter → server-রিস্টার্টেই ক্লিয়ার
 
 ---
 
-## session159 (১৮ সেপ্টেম্বর ২০২৬) — ইউজার-রিপোর্ট: ফরওয়ার্ড-মোডাল + সার্চে অ্যাভাটার-বিস্তার মৃত্যু-বাগ ×২ + প্রিমিয়াম মাল্টি-ফরওয়ার্ড + audit-stale-রুল-ফিক্স
+## session192 — পাবলিক ফোরাম ডিরেক্টরি কম্প্যাক্ট রি-ডিজাইন (ইউজার-স্পেক ForumDirectoryMenu-পোর্ট)
 
-**রুট-কজ ডিপ-অ্যানালাইসিস:**
-- ফরওয়ার্ড-মোডাল (messenger-actions.js): `<img>`-এ ক্লাসই ছিল না → `.fwd-av{38px}` শুধু letter-ফলব্যাকে প্রযোজ্য → বাস্তব ছবি natural-width (হাই-রেজ JPG ফুল-স্ক্রিন)
-- সার্চ-ড্রপডাউন (দুই পেজ): `outerHTML.replace('class="','class="msr-avatar ')` **নো-অপ** — উৎস conv-item img-এ class অ্যাট্রিবিউট-ই নেই (letter-অ্যাভাটার-সারফেস ঠিক থাকায় বাগ আংশিক-লুকানো ছিল)
+**স্পেক:** হোমপেজ (লগ-ইন-পূর্ব) নেভবারের ৯-ডট "ফোরাম ডিরেক্টরি" প্যানেল — কম্প্যাক্ট, প্রিমিয়াম, প্রফেশনাল; অপ্রয়োজনীয় ফাঁকা-জায়গা শূন্য; টাইটেল Hind Siliguri + ডিটেইল Kalpurush।
 
-**সমাধান (৫-ফাইল):**
-- messenger-actions.js: img-ক্লাস + escFwd-XSS-হার্ডেনিং + **মাল্টি-ফরওয়ার্ড** (প্রতি-সারি 'পাঠান'→spin→'✓ পাঠানো হয়েছে' disabled; fwdSentMap; মডাল-খোলা-রেখে একাধিক টার্গেট) + ফুটার লাইভ-কাউন্টার (toBn বাংলা) + গ্রুপ-আইকন-সার্কেল + row→div (nested-button-এড়াতে) + pick-mode Enter/Space
-- messages-chat.ejs: ফুটার কাউন্টার-span(aria-live) + 'সম্পন্ন'; সার্চ-অ্যাভাটার src-পুনর্নির্মাণ; ডুপ্লিকেট-কমেন্ট-অপসারণ
-- messages-list.ejs: একই সার্চ-পুনর্নির্মাণ (data-peerId)
-- messenger.css session159-ব্লক: **defense-in-depth দ্বৈত-লক** (.fwd-avwrap img ৩৮px + .msr-row>img ৪০px — ভবিষ্যতেও ক্লাস-শূন্য img natural-width অসম্ভব) + avatar-ring + fwd-send ৩-স্টেট + focus-visible + reduced-motion + ≤480px
-- inspect-audit.mjs: settings-ট্যাব রুল → session152-ক্যানোনিকাল (.st142-item/.st142-pane ×14) প্রথম + legacy-ফলব্যাক → **audit আবার 100%**
+**পরিবর্তন (৪-ফাইল):**
+- helpers/dir-launcher.js — PUB_SECTIONS রেজিস্ট্রি (৩×১০; মকআপ-রুট→বাস্তব-রুট ম্যাপ, 404-শূন্য) + বেক-লুপ + export
+- server.js — app.locals.pubSections
+- views/layout.ejs — #dlxPanel--pub192 কম্প্যাক্ট-মার্কআপ + কন্ডিশনাল ভিজিটর-ফুটার-স্ট্রিপ
+- public/assets/css/style.css — session192-ব্লক (স্কোপড, হেক্স-শূন্য, color-mix সফট-টিন্ট)
 
-**E2E (@3200 আইসোলেটেড pristine):** ২-টার্গেটে মাল্টি-ফরওয়ার্ড চক্র '১ জন→২ জনকে পাঠানো হয়েছে' ✓ অ্যাভাটার 38×38/40×40 cover-50% দুই-স্তরে ✓ লাইভ-ফিল্টার ✓ Escape ✓ সার্ভার-সত্য-কপি ✓ 390px-০ ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩; রিগ্রেশন: guard ✓ audit-সব-সবুজ ✓ cursor 32/1 (seed-artifact, baseline-parity delta=০) ✓ node --check ✓ EJS ×২ ✓
+**验证结果 (agent-browser @9192):**
+- ভিজিটর: প্যানেল 406×461px (আগে 560px), ৩-সেকশন/১০-আইটেম/লাইভ-ব্যাজ/লগইন-ফুট ✓
+- ফন্ট (computed): টাইটেল=HindSiliguri, ডেস্ক=Kalpurush, সেকশন=HindSiliguri ✓
+- বাইরে-ক্লিক-ক্লোজ + ✕-ক্লোজ + টাইল-ক্লিকথ্রু (/on-this-day) ✓
+- মোবাইল 390px: wrap-hidden, hScroll-শূন্য ✓
+- লগড-ইন (ismail/secret123): ড্যাশবোর্ড util157 (৪০৭px/৮-রো) + রেল ১৩ অক্ষত, pub192-মার্কার-শূন্য; পাবলিক-পেজে লিগ্যাসি-ফুট ✓
+- রুট-হেলথ: ১০/১০ curl -L 200; কনসোল-০; node --check ×২; audit:views (১০৬-ejs) ✓; guard:design ✓
 
-**গোটচা ×২:** sql.js-স্ট্যান্ডঅ্যালোন-UPDATE-পরে saveDb() বাধ্যতামূলক; QA-কপি git-স্টেট-স্বাধীন। **পরের-এজেন্ট: session160 থেকে।**
+**গোটচা:** sql.js-সার্ভার-রানিং-অবস্থায় reset-স্ক্রিপ্ট = ফাইল-ওভাররাইট (স্ক্রিপ্টের-আগে সার্ভার-বন্ধ); লোকাল lekhok.db প্রোডাকশন-কপি — ডেমো: ismail/riya/tanvir · secret123।
 
-
----
-Task ID: SESSION-159B (double-159)
-Agent: Public-layout fix agent (cron-free direct user request)
-Task: হোম/পাবলিক পেজের মেনুবার স্ক্রলে স্থির + ডার্ক-নেভিতে ডার্ক-সবুজ টেক্সট উজ্জ্বল এমারেল্ড (সর্বত্র)
-
-Work Log:
-- পূর্ব-যাচাই: git fetch/log — সমান্তরাল session158 (lekhok-forum-next) ট্রি-তে; এ-টাস্ক EJS-অ্যাপে (vercel.json = vercel-প্রিভিউ-প্রমাণ)
-- RCA-১ (sticky): body,html{overflow-x:hidden} → body scroll-container → .btclf-topbar sticky মৃত-scrollport-এ; E2E-প্রমাণ scrollTo-800→top-800
-- RCA-২ (কনট্রাস্ট): tokens.css :root:root --accent/--accent-light→006A4E; computed-প্রমাণ: btn-ghost+gal-hero__accent = rgb(0,106,78)
-- ফিক্স: style.css body-overflow-বিভাজন (html hidden + body clip) + shared.css সেশন-১৫৯ ডার্ক-সারফেস-ব্লক (টপবার/গ্যালারি-হিরো/ফুটার/মোবাইল-CTA; টোকেন-শুধু, লাইট-সারফেস-অস্পৃশ্য)
-- E2E: হোম/গ্যালারি স্ক্রল-লক top=০; সব-টার্গেট rgb(52,211,153); ৩৯০px-স্টিক+hScroll-০; ১০-পেজ-২০০; কনসোল-পরিষ্কার; guard:design (কমেন্ট-হেক্স ×৩ ধরা-পড়া→শুদ্ধি→গ্রিন) + audit:views ✓; স্ক্রিনশট ×৩
-
-Stage Summary:
-- পরিবর্তিত: public/assets/css/style.css (১-লাইন-বিভাজন) + public/assets/css/shared.css (সেশন-১৫৯-ব্লক) + PLANS/PROJECT/worklog
-- ইউজার-প্রভাব: হোম+সব-পাবলিক-পেজে মেনুবার এখন স্ক্রলেও উপরে স্থির; "ফিডে যান"/"লগইন"/"গ্যালারি"/ফুটার-সবুজ সব উজ্জ্বল এমারেল্ড (#34D399-টোকেন)
-- শিক্ষা: CSS-কমেন্টের হেক্স-উল্লেখও guard-র্যাচেটে গোনা হয়; CSS-এডিটের পর AV-bump-এ সার্ভার-রিস্টার্ট বাধ্যতামূলক
-- পরের-এজেন্ট: session160 থেকে
-
----
-Task ID: session158
-Agent: Main verification agent (Session 158)
-Task: ভয়েস-মেসেজ ৩-বাগের গভীর-বিশ্লেষণ ও স্থায়ী ফিক্স (EJS অ্যাপ — ইউজারের আসল ব্যবহৃত অ্যাপ)
-
-Work Log:
-- RCA: ইউজারের "আগের ফিক্স" (session155) গিয়েছিল lekhok-forum-next-এ; ইউজার ব্যবহার করছেন Express/EJS অ্যাপ (স্ক্রিনশটের "মিসড অডিও কল" বাবল শুধু EJS-অ্যাপের calls.js-পথ) — ভুল-অ্যাপে-ফিক্স-ই মূল কারণ
-- বাগ-১ (ডকুমেন্ট-বাবল): appendMessage optimistic-পথে শুধু ইমেজ-এক্সটেনশন চেক — blob: URL-এ .webm নেই বলে 📎 ফাইল-বাবল
-- বাগ-২ (রিফ্রেশে ০:০০): messages টেবিলে duration কলাম-ই নেই + MediaRecorder webm-হেডারে Duration নেই (Infinity) + bv-time প্লে-ছাড়া ফিল হয় না
-- বাগ-৩ (শোনা যায় না/প্রগ্রেস-আটকে): timeupdate-এ `audio.duration || fallback` — Infinity-truthy-পাইট্র্যাপ; + mime-db .webm→video/webm
-- ফিক্স: db.js duration-কলাম (CREATE+LATER_COLUMNS) · dashboard.js ৩-INSERT (1:1/গ্রুপ/ফরওয়ার্ড) · MessengerBubble.ejs data-duration+বাংলা-টাইম সার্ভার-রেন্ডার · messages-chat.ejs optimistic-ভয়েস-বাবল (isVoice+file_name-নিক-চেক) + Chromium Infinity-সিক-হ্যাক (১e101) + পৃষ্ঠা-লোডে নরমালাইজ+লেগেসি-প্রোব-কিউ + AJAX-পেইন্টে lf:voice-nodes-added ইভেন্ট · server.js setHeaders-এ attachments-webm→audio/webm (স্কোপড — কম্পোজার-ভিডিও অক্ষত)
-- E2E (curl+agent-browser, 9158): duration=8-পে-লোড → DB-রো [1,'voice-…webm',8] → রেন্ডার data-duration="8"+০:০৮ (মেইন+মিডিয়া-প্যান ×৪) → Content-Type audio/webm → trusted-ক্লিকে playing:true+বার-প্রগ্রেস+timeupdate-বাংলা-টাইম → EBML-Duration=Infinity-ফাইলে সিক-হ্যাক=৮-সেকেন্ড/12ms → optimistic appendMessage → bubble-voice (hasFile:false, ০:১১)
-- রিগ্রেশন: fresh-DB-parity IDENTICAL (210=210, git-stash-বেসলাইন-diff-শূন্য) + node --check ×৩ + audit:views (১০৬-ejs পরিষ্কার) + কনসোল-০
-
-Stage Summary:
-- নতুন-ভয়েসে duration DB-তে স্থায়ী → রিফ্রেশেও সঠিক সময়; পাঠানো-মুহূর্তেই প্লেযোগ্য ভয়েস-বাবল; লেগেসি-রো (duration=০) প্রোব-হ্যাকে আসল সময় পায়
-- চুক্তি: duration-সেভ করতে হলে FormData 'duration' (সেকেন্ড) পাঠাতেই হবে; নতুন-ভয়েস-সারফেসে data-duration+০:০০-প্লেসহোল্ডার রেখে নরমালাইজ-ইভেন্টের ওপর ভরসা
-- পরীক্ষা-গোটচা: agent-browser eval-ক্লিকে user-activation নেই → NotAllowedError (হার্নেস-আর্টিফ্যাক্ট) — প্লে-টেস্টে agent-browser click (trusted) ব্যবহার করুন; headless-এ blob:-অডিও "URL safety check"-ব্লকড — http-URL-ই পরীক্ষা-পথ
-
-
----
-Task ID: 14 (Session 161 — ইউজার-স্পেক: ফিড-রেল সার্চ + FB-কোর-শর্টকাট)
-Agent: Main agent (user-turn — rafsancuac/Lekhok-Forum, Express+EJS)
-Task: সোশ্যাল ফিডের বাম প্যানেলে সার্বক্ষণিক সার্চ-বার + সংরক্ষিত লেখা (Bookmarks)/মেমোরিজ/গ্রুপ/পেজ/ফিডব্যাক-বাটন (ইউজারের TSX FeedLeftSidebar-স্পেক → EJS/CSS-পোর্ট)
-
-Work Log:
-- রিপো-সিঙ্ক: fetch → origin ৩cf২8fc (session157-ডিরেক্টরি-রেল + session158-কম্পোজার আগে-ল্যান্ডেড) — আমার WIP stash → rebase → pop → ইউনিয়ন-মার্জ
-- 🚨 সমান্তরাল-কলিশন: একই FeedLeftSidebar-স্পেকের ডিরেক্টরি-অংশ session157-এ ইতোমধ্যে শিপড (fr-sec-title157/fr-item--rich157/'আজকের'-ব্যাজ + ৮-ইউটিলিটি-পেজ) → তাদের ক্যানোনিকাল রেখে আমার অংশ ইউনিয়ন; লেবেল-রেস 157→161 (session158/159/160-ও মাঝপথে ল্যান্ডেড; কোড-মার্কার fr-*-159 অনন্য-রক্ষিত)
-- dir-launcher.js: core-সেকশন 'দ্রুত অ্যাক্সেস' (bookmarks/on-this-day-স্থানান্তর/messages/press) + forum-এ complaints + bake-এ secKey/secTitle/core-ট্যাগ; রুট-ম্যাপ: /saved→/bookmarks, /memories→/on-this-day, /groups→/messages, /pages→/press, /feedback→/complaints (কোডবেস-প্রমাণিত)
-- dashboard.ejs রেল: fr-search159 + fr-me-sub159 + sec.core-গার্ড (শিরোনাম-শূন্য কোর-ব্লক) + data-fr-sec/data-fr-hay সব-আইটেমে + fr-empty159 + guarded search-IIFE; dashboard.css session159-ব্লক (-159-আইডেন্টিফায়ার, তাদের -157-পরিবারের সাথে collision-শূন্য)
-- E2E হারনেস-পরিণতি: agent-browser CLI চক্রে cgroup fork-exhaustion → ব্রাউজার-সেকশন playwright এক-প্রসেসে (lf159-browser.js); eval-আউটপুট JSON-কোট-স্ট্রিপ; mini-services সুপারভাইজার-গোটচা (:3030-প্রিভিউ = crash-loop-respawn, হারনেস :8080-স্বতন্ত্র)
-- ফলাফল: **৪৬/৪৬ ALL GREEN** (মার্কার ×১২ + রুট-স্মোক ×৫ + রেল-১৬-আইটেম + ফিল্টার-চতুষ্টয় + session156-স্ক্রল-লক-রিগ্রেশন + মোবাইল-৩৯০px + কনসোল-০) + লাইভ-৩০৩০ স্পট-চেক (items=16/core-ক্রম/feedback/search সত্য) + স্ক্রিনশট ×৩
-- পুশ-রেস ×২: প্রথম push-রিজেক্ট (আপস্ট্রিম এগিয়েছে) → rebase-কনফ্লিক্ট-শূন্য → relabel-amend 159→161 → **origin/main @ 1576b0e** + docs 01e45d4 (ক্রন-পেলোড-টোকেন-উদ্ধার — পরিচিত স্যান্ডবক্স-রিসেট-পদ্ধতি)
-
-Stage Summary:
-- কোর-শর্টকাট-চুক্তি: DIR_SECTIONS-এ core:true-সেকশন = রেলে শিরোনাম-শূন্য টপ-ব্লক; নতুন-আইটেমে data-fr-hay/data-fr-sec দিতেই সার্চ-অটো-আওতা
-- হারনেস-রীতি-পরিবর্তন: ভারী ব্রাউজার-E2E এখন playwright এক-প্রসেস (fork-safe); agent-browser = হালকা স্পট-চেক
-- পরের-এজেন্ট: session162 থেকে; প্রস্তাব ×৫ PLANS session161-নোটে (সার্চ-কীবোর্ড-নেভ/লাইভ-ব্যাজ/বুকমার্ক-কাউন্ট-পিল/কোর-কোলাপ্স/সাম্প্রতিক-প্রাধান্য)
-
----
-Task ID: 15 (Session 163 — ইউজার-স্পেক: মাস্টার-কম্পোজার সর্বত্র — পুরনো ফর্ম বিলুপ্ত + ডুপ্লিকেট-বার সমাপ্ত + ভাঙা-মোডাল RCA)
-Agent: Main agent (user-turn — rafsancuac/Lekhok-Forum, Express+EJS)
-Task: ইউজার-স্ক্রিনশট ২৭-৩১-এর ৩-ত্রুটি সমাধান — ① পুরনো বিশালাকার ফর্ম (title+cover+split-markdown — /articles/new, /qa/new) সম্পূর্ণ দূর ② প্রোফাইলের ডুপ্লিকেট ট্রিগার-বার ('আপনার মনের কথা লিখুন…' + 'আপনার সাহিত্য ভাবনা প্রকাশ করুন…' পাশাপাশি) ③ CSS-কনটেইনার-শূন্যে অ্যাভাটার natural-size ফুল-স্ক্রিন — সব পোস্ট-তৈরি ছবি-৩২-এর FB-মোডালে (UniversalComposerModal = একক মাস্টার)
-
-Work Log:
-- টার্গেট-নির্ণয় (স্থায়ী-নির্দেশ 'আগে বর্তমান অবস্থা যাচাই'): স্ক্রিনশট-সিগনেচার 'আপনার সাহিত্য ভাবনা প্রকাশ করুন…' → EJS অ্যাপ-ই (lekhok-forum-next-এ স্ট্রিং-অনুপস্থিত; session159B-রীতি) — পুরনো ফর্ম article-form.ejs/qa-form.ejs-ও EJS-এক্সক্লুসিভ
-- 🚨 RCA-৩১ (ভাঙা লেআউট): মোডালের স্ক্যাফোল্ড-স্টাইল (cpm-*/fbm-*153) **শুধু dashboard.css-এ** — dashboard.ejs extra_css-এ লোড করে, কিন্তু profile.ejs (extra_css: profile.css-ই)/me.ejs/qa-list.ejs লোড করে না → ওই পেজগুলোতে মোডাল CSS-শূন্য → .cpm-avatar natural-size ফুল-স্ক্রিন + backdrop-ভাঙা। session158-এর qa/profile-include-এ E2E-গ্যাপ (dashboard-মাত্র E2E)
-- ফিক্স-১ (single-source): UniversalComposerModal.ejs পার্শিয়াল-ই dashboard.css + universal-composer.css লিঙ্ক করে — যে-পেজেই include, সেখানেই পূর্ণ-স্টাইলড মোডাল (identical-URL → ব্রাউজার-ডিডুপ) + universal-composer.css-এ defense-in-depth অ্যাভাটার-লক (session159-messenger-রীতি: .cpm-author img 42px-দ্বৈত-লক)
-- ফিক্স-২ (ডুপ্লিকেট-বার): profile.ejs-এর pf-composer147 স্ট্রিপ (session147 — /articles/new-লিঙ্কযুক্ত) অপসারিত; UniversalPostTrigger (upt158) = একক ট্রিগার; profile-অ্যাকশন-বার/empty-state + me.ejs 'নতুন লেখা' বাটন → .js-composer-open ট্রিগার-বাটনে রূপান্তর
-- ফিক্স-৩ (পুরনো ফর্ম বিলুপ্ত): routes/social.js GET /articles/new + /qa/new → **compose-shell.ejs** (নতুন — লোডেই মাস্টার-মোডাল সঠিক টাইপে অটো-ওপেন; MutationObserver hidden-ওয়াচে ক্লোজে /dashboard-রিডাইরেক্ট; সফল-পোস্টে ইঞ্জিন-নেভ r.url অক্ষত)। চুক্তি-সংরক্ষণ: স্টাফ ?editor=1-এ লিগ্যাসি পূর্ণ-এডিটর (নিউজলেটার-ব্লাস্ট-চুক্তি) + /articles/:id/edit ও /qa/:id/edit অপরিবর্তিত
-- ফিক্স-৪ (সর্বজনীন লিঙ্ক): header.ejs-এর ৪টি নেভ-লিঙ্ক (user-dropdown + mobile) js-global-compose smart-লিঙ্ক — পেজে #composerModal থাকলে capture-phase-এ ট্রিগারে সিনথেটিক-ক্লিক (তাৎক্ষণিক মোডাল), না-থাকলে href→shell-fallback; lekhok-articles.ejs-এ মোডাল-include + CTA-ট্রিগার
-- E2E (agent-browser @gateway :81?XTransformPort=3030, testuser): **২১/২১ ALL GREEN** — login→dashboard; me/profile: composer147-শূন্য + একক upt158 + মোডাল-ইনস্ট্যান্ট + শিরোনাম সঠিক + **অ্যাভাটার-কম্পিউটেড 42×42**; /articles/new শেল→অটো-ওপেন(লেখা)+ক্লোজ→/dashboard; /qa/new→প্রশ্ন-টাইপ; সাবমিট-প্রবাহ → /articles/:id-নেভ; 390px hScroll-শূন্য ×২; কনসোল-শূন্য; স্ক্রিনশট ×২ (s163-profile-modal/s163-mobile-modal — ছবি-৩২-হুবহু)
-- গোটচা ×৩ (হারনেস): ① agent-browser eval বুলিয়ান unquoted / স্ট্রিং quoted রিটার্ন — দুই-রীতিতে আলাদা-তুলনা ② sandbox ব্যাকগ্রাউন্ড-প্রসেস কল-মাঝে reap করে — প্রতি-কলে ensure-server-প্রিফিক্স ③ sandbox-reset-এ DB-টেস্ট-ইউজারও হারায় — scripts/seed-test-users-163.js (ensureUser-মিরর) দিয়ে পুনঃসিড; টেস্ট-পোস্ট অ্যাপ-ফ্লোতে ক্লিনআপ (posts-টেবিল টেস্ট-আর্টিফ্যাক্ট-শূন্য) + seed-demo-feed-105 পুনঃসিড
-
-Stage Summary:
-- পরিবর্তিত: UniversalComposerModal.ejs (CSS-self-contained), universal-composer.css (avatar-lock), profile.ejs (composer147-বিলুপ্ত + ট্রিগার-রূপান্তর), me.ejs, lekhok-articles.ejs, header.ejs (smart-links + ইঞ্জিন), routes/social.js (/articles/new + /qa/new → shell), views/user/compose-shell.ejs (নতুন), scripts/seed-test-users-163.js (নতুন)
-- ইউজার-প্রভাব: সব পোস্ট-তৈরি প্রবেশদ্বার (ফিড/প্রোফাইল/লেখার-পেজ/নেভ-মেনু/shell-রুট) এখন ছবি-৩২-এর একক FB-মোডালে; পুরনো ব্লগ-ফর্ম নতুন-লেখায় আর দেখা যায় না; প্রোফাইলে একক ইনপুট-বার; ভাঙা-অ্যাভাটার-মোডাল নির্মূল
-- পরের-এজেন্ট: session164 থেকে; প্রস্তাব — ① composer-modal.js-এ edit-mode (মোডাল-ই এডিটও দেবে: /articles/:id/edit-ও shell-এ) ② qa-form/article-form-ফাইল পর্যালোচনা-করে ডেড-কোড-প্রুনিং ③ dashboard.css থেকে মোডাল-ব্লক universal-composer.css-এ স্থানান্তর (single-file-পার্টিশন)
-
-## সেশন ১৬৪ (relabel অপ্রয়োজনীয় — HEAD 1ee7d8e-এর পর সরাসরি) — সেবাসমূহ-ও-আর্কাইভ প্যানেল কম্প্যাক্ট-রিডিজাইন (ইউজার-স্পেক ServicesArchiveFlyout-পোর্ট)
-
-ইউজার-স্পেক: সোশ্যাল ফিডের 'আরও' বাটনের ভেতরের কনটেন্ট প্রফেশনাল করা — ① ডানপাশের ফাঁকা-জায়গা কমিয়ে প্রয়োজনমতো ② হেডিং ছাড়া সব লেখা কালপুরুষে ③ বাম-প্যানেলের মতো আঁটসাঁট (৩২০-৩৪০px)। স্কোপ-সনাক্তকরণ: উদ্ধৃত-কনটেন্ট = UTIL_SECTIONS (header.ejs dlx-panel--util157 প্যানেল) — ইউজারের পেস্ট-করা TSX (ServicesArchiveFlyout) অন্য-AI-এর রেফারেন্স, আসল-টার্গেট EJS অ্যাপ (session163-রীতি)।
-
-Work Log:
-- প্রি-যাচাই (স্থায়ী-নির্দেশ): clone-হারানো-আবিষ্কৃত → fresh clone @1ee7d8e (session163-এর পরেই; কোনো নতুন প্যারালেল-কমিট নেই) + node_modules + server.js @3030 (SANDBOX_PORT-প্যাটার্ন); গেটওয়ে :81 এ-সেশনে 502 → agent-browser সরাসরি localhost:3030-তে (সমতুল্য-ফলাফল)
-- BASE-মাপা (computed): প্যানেল 420px×467; item-title/desc/anchor ফন্ট **HindSiliguri** (fonts.css `.topbar a`→--font-heading; body-inheritance পরাস্ত) — ইউজারের ২-নম্বর অভিযোগের রুট
-- ফিক্স-১ (মার্কআপ): header.ejs প্যানেল → `dlx-panel--util164` + হেডার-ফোল্ডার-চিপ (24px, brand-light/brand-primary) + title-row(badge)+২-লাইন-clamp-desc + dlx-go157-শেভরন-বিলোপ + সেকশন-ডিভাইডার (sIdx164-লুপ) + ফুটার 'লেখক ফোরাম ডিজিটাল ডেস্ক © ২০২৬' (TSX-স্পেক); ARIA/ids/data-dlx-item/ইঞ্জিন অক্ষুণ্ণ
-- ফিক্স-২ (CSS): style.css session164-ব্লক — 330px-ফিক্সড (min(330px,calc(100vw-40px))), 28px-নিউট্রাল-আইকন-বক্স (canvas-বিজি → hover সাদা+border-strong+shadow-sm, টোন-রঙা আইকন), টাইটেল-রো 12px/700 → hover brand-সবুজ, ব্যাজ 9px, desc 10.5px ×2-clamp, ডিভাইডার-অপাসিটি .65, সেন্টার-ফুটার; **কালপুরুষ-লক**: প্রথম-চেষ্টায় `.dlx-item--row164{font-family}` (0,1,0) computed-ব্যর্থ (`.topbar a` (0,1,1)-জয়ী) → `.dlx-panel--util164 .dlx-item--row164,... .dlx-meta` (0,2,0) → computed **Kalpurush** ✓ (h2/h3 হেডিং HindSiliguri — 'হেডিং ছাড়া' নীতি); সব নিয়ম util164-স্কোপড → পাবলিক 560px-ডিরেক্টরি-প্যানেল অস্পৃশ্য (computed 560/2col-প্রমাণ)
-- ফিক্স-৩ (রেজিস্ট্রি): dir-launcher.js UTIL_SECTIONS-এ `badge` ফিল্ড ('অফিসিয়াল' — সদস্যপদ-সনদ-আইডি-কার্ড; TSX-স্পেক-প্যারিটি; মোবাইল-সাইডবার/রেল-লুপ অজানা-ফিল্ড নিরীহ)
-- ফিক্স-৪ (guard-ঋণ পরিশোধ): guard:design HEAD-এই লাল — git-blame → **সমান্তরাল session163-কমিট 5dccfac-এর dashboard.css ২-হেক্স** (`#cbd5e1`, `#fff`-ফলব্যাক; আমার-ডিফ নয়) → `var(--lf-ui-border-strong)` + `var(--on-accent,var(--lf-white))`-এ হ্রাস-শুদ্ধি (ভিজ্যুয়াল-প্যারিটি computed-প্রমাণ: active-সাদা, hover-বর্ডার-টোকেন) → guard **গ্রিন** ✓
-- E2E (agent-browser @3030, 3-রিস্টার্ট-AV-চুক্তি-মেনে): computed panelW=330 ✓ fonts Kalpurush×৩ ✓ ব্যাজ ✓ ডিভাইডার×৩ ✓ ৮-আইটেম+৪র্থ-সেকশন+ফুটার ✓ hover সাদা-পৃষ্ঠ+border-strong+brand-টাইটেল ✓ পাবলিক-প্যানেল 560/2col ✓ মোবাইল-৩৯০ wrap-hidden+util-details+hScroll-০ ✓ filter-chips রিগ্রেশন-শূন্য ✓ কনসোল-শূন্য ✓ guard+audit ✓; স্ক্রিনশট ×৪ (s164-before/after-open/scrolled/final)
-- docs: PROJECT §১৬৪ + PLANS session164-নোট + worklog (এ-এন্ট্রি) — **পরের-এজেন্ট: session165 থেকে**
-
-Stage Summary:
-- পরিবর্তিত (EJS অ্যাপ): views/partials/header.ejs (util-প্যানেল-মার্কআপ), public/assets/css/style.css (session164-ব্লক), public/assets/css/dashboard.css (২-হেক্স→টোকেন), helpers/dir-launcher.js (badge-ফিল্ড) + PROJECT/PLANS/worklog ডক
-- ইউজার-প্রভাব: 'আরও' প্যানেল এখন 330px আঁটসাঁট (ডান-ফাঁকা-শূন্য), আইটেম-লেখা সম্পূর্ণ কালপুরুষ (হেডিং HindSiliguri), বাম-রেল-প্যারিটি আইকন-বক্স, ব্যাজ+ডিভাইডার+ডিজিটাল-ডেস্ক-ফুটারসহ প্রফেশনাল ফ্লাইআউট
-- শিক্ষা: ① (0,1,0)-ক্লাস fonts.css-এর (0,1,1) `.topbar a`-কে হারে — প্যানেল-লেখার ফন্ট-লকে (0,2,0) স্কোপ বাধ্যতামূলক ② HEAD-এ guard-লাল = প্যারালেল-কমিট-ঋণ — blame-আগে, নিজের-ডিফ-অনুমান পরে ③ গেটওয়ে-502-তে agent-browser সরাসরি-পোর্ট বিকল্প
-- পরের-এজেন্ট: session165; প্রস্তাব — util-প্যানেল কুইক-ফিল্টার, সাম্প্রতিক-ব্যবহৃত-পিন, trigger-হটকি, ব্যাজ-এনাম
-
-## সেশন ১৭১ (HEAD 99b1d50-এর পর সরাসরি) — ই-পেপার রিডার প্রফেশনাল-আপগ্রেড (ইউজার-স্পেক: পিডিএফ-দেখানো + জুম/রোটেট/ফুলস্ক্রিন + লেফট-অ্যালাইন + 'দৈনিক'-প্রিফিক্স)
-
-ইউজার-স্পেক (স্ক্রিনশটসহ): ইন্টারফেস ভালো কিন্তু ① ডান-প্যানেলে পিডিএফ দেখাচ্ছে না (ভাঙা-পেজ-আইকন) — দেখাতে হবে ও স্ক্রল-করে-এখানেই-পড়া যাবে ② জুম-ইন/আউট/রোটেট/ফুলস্ক্রিন কন্ট্রোল ③ বাম-প্যানেলের পত্রিকার নাম লেফট-অ্যালাইনড ④ নামের আগে 'দৈনিক' প্রিফিক্স (দৈনিক ইত্তেফাক-রীতি)। ইউজার-পেস্ট TSX (sanitizeDriveEmbedUrl/formatPaperTitle/zoom-toolbar) = অন্য-AI-রেফারেন্স → EJS-পোর্ট (session163/164-রীতি)।
-
-Work Log:
-- প্রি-যাচাই (স্থায়ী-নির্দেশ): /home/z/lekhok-forum clone-হারানো (sandbox-reset) → fresh clone @d563ed2 + npm install + server @3030 (SANDBOX_PORT-প্যাটার্ন); worklog-পাঠে স্কোপ-নির্ণয়: টার্গেট = session170-এর views/user/epaper.ejs (টু-প্যানেল-আর্কাইভ)
-- RCA (প্রমাণিত): **server.js CSP frame-src = maps+www মাত্র** — ড্রাইভ-/preview-আইফ্রেম (ও session170-ব-এর নিজস্ব catch-ফলব্যাক iframe-ও) frame-src-ব্লকড → ভাঙা-পেজ-আইকন; session102-এর কমেন্টই স্বীকার করত "অন্য সব এমবেড ব্লকড"
-- ফিক্স-১ (server.js): frame-src + **drive.google.com + docs.google.com** (session170-ব-এর script/connect/worker-যোগের সাথে ইউনিয়ন)
-- ফিক্স-২ (epaper.ejs prep): driveIdOf (/open?id=, uc?id= সামলায়) + **fmtPaperTitle** ('দৈনিক' প্রিফিক্স; আগেথেকে-দৈনিক/দ্য/ডেইলি/daily/the/সাপ্তাহিক/নিউ বাদ — "দ্য এজ" অক্ষত) + **embedOf** (ড্রাইভ→/preview; নন-ড্রাইভ-https→docs-viewer?embedded=true) + view-লিঙ্ক fid-থাকলে /view
-- ফিক্স-৩ (ইউজার-স্পেক কন্ট্রোলবার): জুম-গ্রুপ [– ১০০% +] (৭০–২০০%, স্টেপ-২০, বাংলা-লেবেল, রিসেট-অন-ক্লিক) + ৯০°-রোটেট + ফুলস্ক্রিন (আইকন-সোয়াপ expand/compress, :fullscreen/.is-fs CSS) + কীবোর্ড (+ − r f 0; ইনপুট-ফোকাসে নিষ্ক্রিয়) — applyStageTransform generic firstElementChild-targeted → **pdf.js-পেজ/প্রচ্ছদ/iframe তিন-মোডেই কাজ করে**
-- ফিক্স-৪ (ফলব্যাক-চেইন): openReader-এর !p.fid ডেড-এন্ড → renderStageIframe (স্পিনার+ট্রান্সফর্ম-র‍্যাপারসহ iframe) + bytesP-catch-ও renderStageIframe-এ; iframe-onload-এ স্পিনার-লুকানো + ১২s-টাইমআউট-গার্ড
-- 🚨 সমান্তরাল-কলিশন: প্রথম push-রিজেক্ট → pull --rebase-এ কনফ্লিক্ট ×২ (session170-ব a0c0bd7 pdf.js-রিডার + CSP আগে-ল্যান্ডেড) → **ইউনিয়ন-রেজল**: তাদের pdf.js-ইঞ্জিন প্রাইমারি-রেখে আমার কন্ট্রোল/ফলব্যাক/প্রিফিক্স ওপরে; CSS-অটোমার্জ যাচাই (ep-pages×7 + zoomgrp×11 উভয়-পরিবার) → EJS-কম্পাইল+JS-সিনট্যাক্স-গ্রিন → **origin/main @ 115db1d**
-- E2E (agent-browser @3030): পেলোড-নাম 'দৈনিক দিনকাল|দৈনিক করতোয়া|দ্য এজ|দৈনিক ইত্তেফাক' ✓ ডিফল্ট-প্রচ্ছদ ✓ রিডারে pdf.js-ফেল(Fake-ID)→iframe-ফলব্যাক-অটো ✓ iframe src=/preview ✓ স্পিনার-লুকানো-onload ✓ জুম scale(1.2)+rotate(90)+লেবেল-১২০% ✓ রিসেট ✓ **docs-viewer-রোতে "Dummy PDF file" রেন্ডার-প্রমাণ** (নন-ড্রাইভ-পিডিএফও পড়া-যায়) ✓ ফুলস্ক্রিন true+fa-compress ✓ ৩৯০px hScroll-শূন্য ✓ কনসোল-শূন্য (শুধু ইচ্ছাকৃত-fallback-warn) ✓ স্ক্রিনশট ×৫
-- শিক্ষা: ① CSP frame-src-এ নতুন-এমবেড-অরিজিন যোগ করা হলে তা-ই iframe-জীবন-মরণ — পেজ-কোড আগে-দেখে হতাশ হওয়া যাবে না ② সমান্তরাল-এজেন্টের রিডার-ইঞ্জিন থাকলে transform-টার্গেট generic firstElementChild রাখলে ইউনিয়ন-মার্জ ট্রিভিয়াল ③ ফেক-ড্রাইভ-আইডি QA-তেই ফলব্যাক-চেইন এন্ড-টু-এন্ড প্রমাণ করে
-
-Stage Summary:
-- পরিবর্তিত: server.js (frame-src), views/user/epaper.ejs (prep+কন্ট্রোলবার+ফলব্যাক+কীবোর্ড), public/assets/css/epaper.css (লেফট-অ্যালাইন+stage-overflow+zoomgrp/spinner/fullscreen ব্লক)
-- ইউজার-প্রভাব: ই-পেপার পিডিএফ এখন ডান-প্যানেলে সত্যিই দেখা যায় (pdf.js প্রাইমারি, /preview-iframe ফলব্যাক, নন-ড্রাইভে docs-viewer); জুম-রোটেট-ফুলস্ক্রিন-কীবোর্ড সব-মোডে; তালিকার নাম লেফট-অ্যালাইনড+'দৈনিক' প্রিফিক্স
-- পরের-এজেন্ট: session172 থেকে; প্রস্তাব — pdf.js-মোডে রিয়েল-স্কেল-রিরেন্ডার (CSS-zoom-এর বদলে), পাতা-জাম্প-ইনপুট, পিডিএফ-টেক্সট-সার্চ, বাইট-ক্যাশ localStorage-এ
+**পরের-এজেন্ট: session193 থেকে** (PLANS.md session192-নোট + PROJECT.md §১৯২)।

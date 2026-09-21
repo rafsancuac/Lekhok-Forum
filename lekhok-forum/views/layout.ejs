@@ -272,12 +272,15 @@
         <%# ── সেশন ১৪৭: ফোরাম ডিরেক্টরি লঞ্চার (৯-ডট) — পাবলিক-পেজ টপবারেও
             (header.ejs-সদৃশ মার্কআপ; একই রেজিস্ট্রি helpers/dir-launcher.js +
             একই ইঞ্জিন dir-launcher.js + একই style.css session147-ব্লক)।
-            আগে পাবলিক-টপবারে কোনো ডিরেক্টরি-মেনুই ছিল না — নতুন-সক্ষমতা। ── %>
+            আগে পাবলিক-টপবারে কোনো ডিরেক্টরি-মেনুই ছিল না — নতুন-সক্ষমতা।
+            ── সেশন ১৯২ (ইউজার-স্পেক ForumDirectoryMenu-পোর্ট): কম্প্যাক্ট প্রিমিয়াম
+            টাইল-গ্রিড (dlx-panel--pub192) — ৩৯০/৪১০px, ৩২px সফট-টিন্ট আইকন,
+            টাইটেল=Hind Siliguri + সাব-টেক্সট=Kalpurush, ভিজিটর-ফুটার লগইন-স্ট্রিপ। ── %>
         <div class="dlx-wrap" id="dlxWrap">
           <button type="button" class="dlx-trigger" id="dlxTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="dlxPanel" aria-label="ফোরাম ডিরেক্টরি — সব ফিচার ও আয়োজন" title="ফোরাম ডিরেক্টরি" onclick="toggleDlx(event)">
             <i class="fas fa-th" aria-hidden="true"></i>
           </button>
-          <div class="dlx-panel" id="dlxPanel" role="dialog" aria-label="ফোরাম ডিরেক্টরি">
+          <div class="dlx-panel dlx-panel--pub192" id="dlxPanel" role="dialog" aria-label="ফোরাম ডিরেক্টরি">
             <div class="dlx-head">
               <div class="dlx-head-meta">
                 <h2>ফোরাম ডিরেক্টরি</h2>
@@ -285,16 +288,16 @@
               </div>
               <button type="button" class="dlx-close" aria-label="বন্ধ করুন" title="বন্ধ করুন" onclick="closeDlx()"><i class="fas fa-times" aria-hidden="true"></i></button>
             </div>
-            <div class="dlx-body">
-              <% (typeof dirSections !== 'undefined' ? dirSections : []).forEach(function (sec) { %>
+            <div class="dlx-body dlx-body--pub192">
+              <% (typeof pubSections !== 'undefined' ? pubSections : []).forEach(function (sec) { %>
                 <section class="dlx-sec">
                   <h3 class="dlx-sec-title"><%= sec.title %></h3>
                   <div class="dlx-grid">
                     <% sec.items.forEach(function (it) { %>
-                      <a href="<%= it.href %>" class="dlx-item" data-dlx-item>
-                        <span class="dlx-ico" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
+                      <a href="<%= it.href %>" class="dlx-item dlx-item--tile192" data-dlx-item>
+                        <span class="dlx-ico dlx-ico--soft192" style="--dlx-t: var(<%= it.tok %>)" aria-hidden="true"><i class="fas <%= it.icon %>"></i></span>
                         <span class="dlx-meta">
-                          <span class="dlx-item-title"><%= it.label %></span>
+                          <span class="dlx-item-title"><span class="dlx-item-title-text"><%= it.label %></span><% if (it.badge) { %><span class="dlx-live192"><%= it.badge %></span><% } %></span>
                           <span class="dlx-item-desc"><%= it.desc %></span>
                         </span>
                       </a>
@@ -303,7 +306,15 @@
                 </section>
               <% }) %>
             </div>
-            <div class="dlx-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+            <% if (typeof user === 'undefined' || !user) { %>
+              <%# সেশন ১৯২: লগ-ইন-ছাড়া ভিজিটরদের জন্য প্রিমিয়াম প্রম্পট ফুটার-স্ট্রিপ %>
+              <div class="dlx-foot dlx-foot--pub192">
+                <span>সব সুবিধা পেতে একাউন্টে প্রবেশ করুন</span>
+                <a href="/login" class="dlx-login192" onclick="closeDlx()">লগইন <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+              </div>
+            <% } else { %>
+              <div class="dlx-foot">লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয়</div>
+            <% } %>
           </div>
         </div>
         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>

@@ -117,6 +117,9 @@ app.locals.dirRail = require('./helpers/dir-launcher').DIR_RAIL;
 // সেশন ১৫৭: সেবাসমূহ ও আর্কাইভ (কদাচিৎ-ব্যবহৃত সহায়ক ফিচার) — হেডার-লঞ্চার-প্যানেল
 // (header.ejs) ও মোবাইল-সাইডবার এক-রেজিস্ট্রি (helpers/dir-launcher.js UTIL_SECTIONS)
 app.locals.utilSections = require('./helpers/dir-launcher').UTIL_SECTIONS;
+// সেশন ১৯২: পাবলিক-হোম কম্প্যাক্ট ডিরেক্টরি (layout.ejs #dlxPanel--pub192) —
+// ইউজার-স্পেক ForumDirectoryMenu-পোর্ট; DIR_SECTIONS/UTIL_SECTIONS অক্ষত
+app.locals.pubSections = require('./helpers/dir-launcher').PUB_SECTIONS;
 
 // ── স্যান্ডবক্স-প্রিভিউ পোর্ট (ঐচ্ছিক) ──────────────────────────────────────
 // লোকাল-প্রিভিউ গেটওয়েতে ইফ্রেমে চললে XTransformPort-গার্ড স্ক্রিপ্টের জন্য।
@@ -182,21 +185,16 @@ app.set('layout', false);
 // বহু inline <script> ব্যবহৃত (nonce-মাইগ্রেশন ভবিষ্যৎ উন্নতি হিসেবে ডকুমেন্ট করা)।
 // সেশন ১০২ ফিক্স: frame-src যোগ — যোগাযোগ-পেজের গুগল-ম্যাপ আইফ্রেম CSP-র
 // default-src 'self'-ফলব্যাকে ব্লক হচ্ছিল (আইফ্রেমে ভাঙা-আইকন দেখার মূল-কারণ)।
-// সেশন ১৭১ ফিক্স (ই-পেপার RCA): frame-src + drive.google.com + docs.google.com —
-// pdf.js-রিডার-ব্যর্থতার ফলব্যাক iframe-/preview-এমবেড ও নন-ড্রাইভ-পিডিএফ
-// docs-viewer frame-src-ব্লকে ভাঙা-আইকন দেখাচ্ছিল।
+// শুধুমাত্র গুগল-ম্যাপস অরিজিনগুলো অনুমোদিত — অন্য সব এমবেড এখনো ব্লকড।
 try { app.use(require('compression')()); } catch (e) {}
 const CSP_POLICY = [
   "default-src 'self'",
-  /* session170: script/connect +cdnjs (pdf.js-লেজি-লোড); connect +drive.usercontent (ই-পেপার-রিডারে
-     ক্লায়েন্ট-সাইড PDF-ফেচ — ACAO:*); worker blob:/cdnjs (pdf.js-ওয়ার্কার blob-বাইপাস) */
-  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+  "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
   "font-src 'self' https://cdnjs.cloudflare.com data:",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://drive.usercontent.google.com https://cdnjs.cloudflare.com",
-  "worker-src 'self' blob: https://cdnjs.cloudflare.com",
-  "frame-src https://maps.google.com https://www.google.com https://drive.google.com https://docs.google.com",
+  "connect-src 'self'",
+  "frame-src https://maps.google.com https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -242,16 +240,6 @@ app.use(express.static(path.join(__dirname, 'public'), {
       res.setHeader('Cache-Control', 'no-cache');
     } else if (rel.startsWith('/assets/fonts/') || rel.startsWith('/assets/') || rel.startsWith('/uploads/')) {
       res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
-      // সেশন ১৫৮: ভয়েস-নোট Content-Type স্ট্রেটার — mime-db-তে .webm → video/webm;
-      // মেসেঞ্জার-অ্যাটাচমেন্টে webm = শুধুমাত্র-অডিও MediaRecorder-আউটট (রেকর্ডার
-      // audio/webm-ই পাঠায়) → সঠিক audio/webm হেডারই <audio> ডিকোড-নিশ্চিত করে।
-      // স্কোপড-শুধু /uploads/attachments/ — কম্পোজার/রিসোর্সের আসল ভিডিও-webm
-      // video/webm-ই থাকবে। setHeaders হেডার-ফ্লাশের আগে চলে — এখানেই ওভাররাইড কার্যকর।
-      if (/^\/uploads\/attachments\/[^/]+\.webm$/i.test(rel)) {
-        res.setHeader('Content-Type', 'audio/webm');
-      } else if (/^\/uploads\/attachments\/[^/]+\.oga$/i.test(rel)) {
-        res.setHeader('Content-Type', 'audio/ogg');
-      }
     } else {
       res.setHeader('Cache-Control', 'public, max-age=86400');
     }
@@ -335,47 +323,20 @@ app.use((req, res, next) => {
 // Turso কুয়ারি (ওয়ার্ম TTFB ৩-৭s)। Googlebot ধীর হোস্টে ক্রল-রেট কমায় → GSC-তে
 // ৩২টি পেজ "Discovered – currently not indexed"।
 // সমাধান: লগ-আউট ভিজিটরের জন্য নির্দিষ্ট পাবলিক GET পেজে (কুয়েরি-স্ট্রিং ছাড়া)
-//  ১) s-maxage=60 + stale-while-revalidate=300 — Vercel Edge ক্যাশ করে (~50ms TTFB)
-//     (সেশন ১৭৯: আগে s-maxage=300 + SWR=86400 ছিল — অ্যাডমিন-সেভ (যেমন কার্যবর্ষ)
-//     এজ-কপিতে ঘণ্টার-পর-ঘণ্টা পুরনো দেখাত; এখন সর্বোচ্চ ~১–৬ মিনিটে সাইটব্যাপী
-//     প্রতিফলন, TTFB-সুবিধা অক্ষুণ্ণ — ক্রলার-রেটে প্রভাব নগণ্য)
+//  ১) s-maxage=300 + stale-while-revalidate — Vercel Edge ক্যাশ করে (~50ms TTFB)
 //  ২) ঐ রিকোয়েস্টে CSRF-কুকি/সেশন-রাইট স্কিপ — Set-Cookie-ই থাকে না
 // নিরাপত্তা-নোট: অ্যানোনিমাস পাবলিক পেজের ইন্টারঅ্যাকটিভ এন্ডপয়েন্ট (রিঅ্যাকশন/
 // বুকমার্ক/শেয়ার/নিউজলেটার) সব JSON/fetch — CSRF-মিডলওয়্যার শুধু urlencoded/
 // multipart গার্ড করে, তাই এপিমেরাল টোকেন যথেষ্ট; নেটিভ ফর্মের বিরল ক্ষেত্রে
 // আগের থেকেই গ্রেসফুল 303-রিকভারি (?csrf=1) আছে। লগইন-ইউজারের রেসপন্স
 // কখনো ক্যাশ-হেডার পায় না।
-const PUBLIC_CACHE_RE72 = /^\/$|^\/(about|articles|qa|notices|events|gallery|members|committee|team|press|constitution|resources|activities|achievements|contact|best-writer|birthdays|on-this-day|epaper|quiz|terms|privacy)(\/(\d+|past|advisory|permanent))?\/?$/;
+const PUBLIC_CACHE_RE72 = /^\/$|^\/(about|articles|qa|notices|events|gallery|members|committee|team|press|constitution|resources|activities|achievements|contact|best-writer|birthdays|on-this-day|epaper|quiz)(\/(\d+|past|advisory|permanent))?\/?$/;
 app.use((req, res, next) => {
   const _hasQuery72 = req.url && req.url.indexOf('?') !== -1;
   const _anon72 = !(req.session && (req.session.user || req.session.adminUser));
   if ((req.method === 'GET' || req.method === 'HEAD') && !_hasQuery72 && _anon72 && PUBLIC_CACHE_RE72.test(req.path)) {
     res.locals._cacheablePublic72 = true;
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-  }
-  next();
-});
-
-// ── সেশন ১৭৯: মাল্টি-ইনস্ট্যান্স স্ন্যাপশট হট-রি-সিঙ্ক (sql.js + Vercel Blob মোড) ────
-// Vercel-এ একাধিক উষ্ণ ল্যাম্বডা ইনস্ট্যান্স নিজেদের ইন-মেমোরি DB-কপি নিয়ে চলে —
-// এক-ইনস্ট্যান্সের অ্যাডমিন-রাইট অন্যটি কখনো দেখত না (কোল্ড-বুটেই কেবল স্ন্যাপশট
-// লোড)। ফলে অ্যাডমিন প্যানেলে সেভ করা কার্যবর্ষ/নাম হোমপেজ বা এমনকি প্যানেলের
-// পরের লোডেই পুরনো দেখাত (ইনস্ট্যান্স-রুলেট)। এ-মিডলওয়্যার:
-//  • অ্যাডমিন GET/POST → force-সিঙ্ক (২সে-থ্রটল) — প্যানেল সর্বদা সর্বশেষ-ডাটায়,
-//    সেভও সর্বশেষ-বেসের বিপরীতে হয় (ক্লবার-ঝুঁকি হ্রাস)
-//  • পাবলিক ক্যাশেবল-পেজ → থ্রটল্ড-সিঙ্ক (৪৫সে) — দর্শক ≤৪৫সে-এ সদ্য-ডাটা দেখেন
-// Turso/লোকাল-মোডে db.syncIfStale নিজেই no-op — ওভারহেড শূন্য।
-app.use((req, res, next) => {
-  if (typeof db.syncIfStale !== 'function') return next();
-  const _p179 = req.path || '';
-  const _isAdmin179 = _p179 === '/admin' || _p179.indexOf('/admin/') === 0;
-  if (_isAdmin179 && (req.method === 'GET' || req.method === 'POST')) {
-    db.syncIfStale(true).then(() => next()).catch(() => next());
-    return;
-  }
-  if ((req.method === 'GET' || req.method === 'HEAD') && PUBLIC_CACHE_RE72.test(_p179)) {
-    db.syncIfStale(false).then(() => next()).catch(() => next());
-    return;
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
   }
   next();
 });
@@ -435,10 +396,7 @@ app.use(async (req, res, next) => {
     // CSRF-গার্ড urlencoded/multipart-এ সীমাবদ্ধ।
     // সেশন ৭৩: ইমেজ/অ্যাসেট-পাথ (img/cover, avatar, uploads) একই কুকি-স্কিপে —
     // নাহলে প্রতি ইমেজ-রেসপন্সে _csrfTok+connect.sid যেত → এজ-ক্যাশ বাতিল।
-    // সেশন ১৭৮: ই-পেপার-পাবলিক-বাইনারি/JSON (file/thumb/archive/papers) একই কুকি-স্কিপে —
-    // কুকি-বাহিত রেসপন্স Vercel Edge-কখনো-ক্যাশ করে না (x-vercel-cache: MISS-চিরস্থায়ী);
-    // এ-পথগুলো স্টেটলেস-পাবলিক GET (ওয়ার্ম POST Bearer-সুরক্ষিত, কুকি/CSRF-বহির্ভূত)
-    const ASSET_RE73 = /^\/(img\/cover|avatar|assets|uploads|api\/epaper\/(file|thumb|archive|papers))(\/|$)/;
+    const ASSET_RE73 = /^\/(img\/cover|avatar|assets|uploads)\//;
     if (res.locals._cacheablePublic72 || ASSET_RE73.test(req.path)) {
       res.locals.csrfToken = tok57;
     } else {
@@ -548,9 +506,6 @@ const PATH_SEO_FALLBACK72 = {
   '/on-this-day': { title: 'এই দিনে ইতিহাসে | লেখক ফোরাম', desc: 'আজকের দিনে ঘটে যাওয়া উল্লেখযোগ্য ঐতিহাসিক ঘটনাবলি — প্রতিদিন নতুন।' },
   '/epaper':      { title: 'আজকের ই-পেপার | লেখক ফোরাম', desc: 'লেখক ফোরামের দৈনিক ই-পেপার — সাহিত্য ও মতামত পাতার নির্বাচিত সংকলন।' },
   '/birthdays':   { title: 'আজকের জন্মদিন | লেখক ফোরাম', desc: 'লেখক ফোরামের আজকের ও আসন্ন জন্মদিনের সদস্যদের শুভেচ্ছা-তালিকা।' },
-  // session168: আইনি-পেজ (Google consent-screen Branding-লিঙ্ক)
-  '/terms':       { title: 'ব্যবহারের শর্তাবলি | লেখক ফোরাম', desc: 'লেখক ফোরাম ব্যবহারের শর্তাবলি — অ্যাকাউন্ট, কনটেন্ট-নীতি, স্বত্ব ও দায়সীমা।' },
-  '/privacy':     { title: 'প্রাইভেসি পলিসি | লেখক ফোরাম', desc: 'লেখক ফোরামের প্রাইভেসি পলিসি — তথ্য-সংগ্রহ, ব্যবহার-পদ্ধতি ও আপনার অধিকার।' },
 };
 app.use(async (req, res, next) => {
   try {
@@ -952,14 +907,12 @@ app.use('/',          require('./routes/social'));   // articles, qa, members, p
 app.use('/',          require('./routes/daily'));    // quiz, on-this-day, epaper, activities, birthdays, etc.
 app.use('/',          require('./routes/pages'));     // public pages: home, about, gallery, committee, contact, events, resources, notices
 app.use('/',          require('./routes/utilities')); // সেশন ১৫৭: সেবাসমূহ ও আর্কাইভ (spell-checker, font-converter, certificate, dmca, archive, peer-review, sponsorship, shortcuts)
-app.use('/',          require('./routes/legal'));    // session168: /terms + /privacy — আইনি-পেজ (Google consent-screen-স্পেক, পাবলিক)
 app.use('/',          require('./routes/dashboard'));// dashboard feed, messages, complaints
 app.use('/',          require('./routes/calls'));    // সেশন ৯৩: WebRTC কল-সিগন্যালিং (HTTP-পোলিং — Vercel-serverless-নিরাপদ)
 app.use('/avatar',    require('./routes/avatar'));   // default avatar serving
 app.use('/img/cover', require('./routes/cover'));    // সেশন ৭৩: লোকাল ডিটারমিনিস্টিক SVG কভার-আর্ট (picsum প্রতিস্থাপন — Googlebot-ব্লক ফিক্স)
 app.use('/moderator', require('./routes/moderator'));// scoped moderator posting panel
 app.use('/api',      require('./routes/api'));
-app.use('/api/epaper', require('./routes/api-epaper')); // session166: ই-পেপার অটোমেশন সিঙ্ক (Bearer EPAPER_SYNC_TOKEN) + পাবলিক তালিকা
 app.use('/admin',    require('./admin/routes'));
 
 // ── 404 handler ──────────────────────────────────────────────────────────────

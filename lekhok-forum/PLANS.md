@@ -2267,129 +2267,22 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 
 **পরবর্তী-প্রথম-পছন্দ:** ① প্রোফাইল-পেজের অভ্যন্তরীণ-স্ক্রল-অঞ্চলেও ইউটিলিটি-পলিশ (FB-প্রোফাইল উইন্ডো-স্ক্রল-ই-রাখে — শুধু overscroll-পলিশ প্রযোজ্য) ② /admin ড্যাশবোর্ডে pn153-শেল-রূপান্তর ③ ফিডে স্ক্রল-পজিশন-মেমরি (back/forward-এ dash-main scrollTop রিস্টোর) ④ keyboard-scroll (Space/PgDn) ফোকাস-প্যানেলে রুটিং। **পরের-এজেন্ট: session158 থেকে।**
 
-## session158-নোট (lekhok-forum-next/ Next.js অ্যাপ) — ফিড-লেআউট সংকোচন: কলাম-গ্যাপ ৪৫→১২px + মাঝ-প্যানেল ৭০০px + বাম-রেল ২৬৫px নো-র‍্যাপ (ইউজার-স্পেক)
-
-**টার্গেট-নির্ধারণ:** ইউজার-স্পেক Next.js-ধাঁচে (page.tsx/FeedLeftSidebar/SharedPostCard) — root-worklog session155-নোট-অনুযায়ী **lekhok-forum-next/ = ইউজার-প্রিভিউয়ের কোডবেস**; স্পেক-কম্পোনেন্ট-নাম এখানে LeftSidebar/RightRail/FeedPostCard নামে বিদ্যমান; SharedPostCard-ধারণাটি এ-অ্যাপে নেই (শেয়ার = কাউন্টার-অনলি) — স্পেসিং-অংশ FeedPostCard-এ প্রয়োগিত।
-
-**পরিবর্তন (৪-ফাইল, মার্কআপ-লজিক-স্পর্শ-শূন্য):**
-1. `src/app/page.tsx` — কন্টেইনার max-w-1240/gap-4/sm:px-4/pt-4 → **max-w-1360/justify-center/gap-3/px-2/pt-3** (ফুটার ১৩৬০-সারিবদ্ধ); মাঝ-কলাম max-w-680/gap-4/mx-auto → **max-w-700/gap-2.5/mx-auto-বাদ**; স্কেলেটন p-4→p-3; এরর p-8→p-6; খালি-অবস্থা p-10→p-8
-2. `LeftSidebar.tsx` — w-260→**265**; রো gap-3/px-3/py-2.5 → **gap-2.5/px-2.5/py-1.5**; টেক্সট 15→13px; আইকন w-6→w-5; **সব-রোতে whitespace-nowrap+truncate**; badge shrink-0
-3. `RightRail.tsx` — w-300→**290**
-4. `FeedPostCard.tsx` — হেডার px-3.5/pt-3/pb-2→**px-3/pt-2.5/pb-1.5**; কন্টেন্ট px-3/pb-1.5; কাউন্টার px-3/py-1.5; অ্যাকশন-বার **mx-2.5/mb-1.5/pt-0.5**; কমেন্ট px-3/pb-2.5
-
-**🚨 মূল-আবিষ্কার (পরের-এজেন্ট অবশ্যই মানবেন):** মাঝ-কলাম `flex-1 + max-w-[700px] + mx-auto` হলে ফ্লেক্স-অবশিষ্ট (কন্টেইনার−সাইডবার−গ্যাপ−৭০০) **auto-margin শোষণ করে** → কলাম-গ্যাপ ঘোষিত gap-3-এর বদলে ৪৫px হয়ে যায় (১৪৪০px-এ প্রমাণিত)। **mx-auto বাদ** দিলে justify-center গ্রুপ-সেন্টার করে → গ্যাপ হুবহু ১২px, বহির্ভাগ ৮১/৮১ সুষম। **mx-auto ফেরত আনা নিষিদ্ধ।**
-
-**E2E-প্রমাণ (agent-browser):** ১৪৪০px — 265/700/290, gapLM=gapMR=**12**, edges 81/81, docHScroll-০; ১১০০px — ডান-রেল-লুকান, গ্যাপ-১২ ✓; ৩৯০px — hScroll-০ (স্টোরি-স্ট্রিপ অভ্যন্তরে-স্ক্রল) ✓; বাম-রেল wrappedRows-০/hOverflowRows-০ (২য়-লাইন-শূন্য-প্রমাণ); কার্ড-গ্যাপ [10×5]=gap-2.5; স্টিকি-রেল winY-400-এ অক্ষত; রিঅ্যাক্ট-চক্র '১ জন' (বাংলা-সংখ্যা-চুক্তি); কমেন্ট Enter-সাবমিট→পোস্ট→API-ক্লিনআপ (DB-০); মেসেঞ্জার 765px + প্রোফাইল 700px অক্ষত; কনসোল-০; tsc+eslint-শূন্য।
-
-**গোটচা ×৪:** ① bash-আউটপুট-স্তর `[h`-অনুক্রম গিলে ফেলে (`[hasMore`→`asMore` রেন্ডার) — মিথ্যা-বাগ; od/Read-দিয়ে-যাচাই ② MultiEdit-আংশিক-প্রয়োগ লক্ষ্যণীয় — ব্যাচ-ব্যর্থিতে অবস্থা-পুনঃপড়া ③ কমেন্ট-ইনপুটে form/বাটন নেই — Enter-কীই সাবমিট ④ ডেমো-DB বিনাশযোগ্য — E2E-টেস্ট-ডেটা সর্বদা ক্লিনআপ। **পরের-এজেন্ট: session159 থেকে।**
-## Session 158 — সর্বজনীন পোস্ট-কম্পোজার (সব-পেজ একই ইন্টারফেস) + গ্লোবাল অ্যান্টি-শিফট (ইউজার-স্পেক) (১৮ সেপ্টেম্বর ২০২৬)
-
-**ইউজার-স্পেক:** ① লেখা/প্রশ্ন/ইউজার-প্রোফাইলের নতুন-পোস্ট অংশে ঠিক একই কম্পোজার-ইন্টারফেস + ক্যাটাগরি (লেখা নাকি প্রশ্ন) + লেখার শাখা-ড্রপডাউন (গল্প/অনুগল্প/কলাম/চিঠি/প্রবন্ধ/কবিতা/…) — সব FB-স্টাইলে, বাড়তি-ফিচারসহ ② যেকোনো ইন্টারফেসে স্ক্রলিংয়ে ডানে-বামে/ছোট-বড় হওয়া (Layout Shift) স্থায়ী সমাধান। রেফারেন্স: UniversalCreatePostModal.tsx + UniversalPostTrigger.tsx (React-স্পেক → EJS-পোর্ট, session153/157-রীতি)।
-
-**স্কোপ (১২-ফাইল):** ① `views/shared/post/UniversalPostTrigger.ejs` (নতুন — upt158 ট্রিগার: অ্যাভাটার+বাবল+লেখা/প্রশ্ন কুইক-বাটন; বাবল=#composerOpen লিগ্যাসি-চুক্তি + data-composer-type; composerDefaultType-প্যারাম) ② `views/shared/post/UniversalComposerModal.ejs` (নতুন — session153-এর dashboard-ইনলাইন-মোডালের single-source-স্থানান্তর + ক্যাটাগরি-স্ট্রিপ #ucs158Strip + css/js-সেলফ-লোড) ③ `public/assets/css/universal-composer.css` (নতুন — upt158/ucs158/cat-chip; টোকেন-শুধু hex-০, ৮px-রেডিয়াস) ④ `shared.css` — গ্লোবাল অ্যান্টি-শিফট ব্লক: html{scrollbar-gutter:stable;overflow-y:scroll} + body{max-width:100vw;overflow-x:hidden} + **.stable-scroll-panel** ইউটিলিটি (.independent-scroll-প্যারিটি + min-width:0) ⑤ `composer-modal.js` — session158-ব্লক: POST_CATS158 (article×৮/question×৪ জেনার-ম্যাপ), syncType158 (অপশন-সোয়াপ+placeholder+শিরোনাম+সাবমিট-লেবেল), onOpenClick158 (data-composer-type→প্রি-সিলেকশন), খসড়ায় type/category ⑥ `routes/social.js` /api/posts/compose — type/category-হোয়াইটলিস্ট (CATS158), INSERT-এ type/post_kind/category, per-type URL (/articles/:id ↔ /qa/:id), dup-গার্ড rich_content-ফেচ-ফিক্স (আগে _rich-অনুপস্থিতিতে সর্বদা-false — এখন প্রকৃত-সক্রিয়) ⑦ `routes/dashboard.js` — ফিড-SQL তিন-শাখায় p.category (UNION-কলাম-সাম্য) ⑧ dashboard.ejs — ট্রিগার+মোডাল include-সোয়াপ, composer-modal.js-ট্যাগ-প্রত্রাহ ⑨ me.ejs / ⑩ profile.ejs (isOwner-গার্ডে) — ট্রিগার+মোডাল ⑪ qa-list.ejs — session140-ইনলাইন-কম্পোজার→ট্রিগার (composerDefaultType:'question'; qa-composer.js null-guard-এ স্ব-নিষ্ক্রিয়) ⑫ FeedPostCard.ejs — .ucs158-cat-chip (পরিচিত-জেনারেই)।
-
-**চুক্তি-নোট:** ① ক্যাটাগরি-মান client/server যমজ-ম্যাপ (composer-modal.js POST_CATS158 ↔ social.js CATS158) — নতুন-জেনার = দুই-জায়গায় একসাথে ② মোডাল-পার্শিয়াল css+js নিজেই লোড করে — পেজে ডাবল composer-modal.js-ট্যাগ নিষিদ্ধ (ডাবল-বাইন্ডিং) ③ ইন-বডি `<link>`-প্যাটার্ন = qa-list.ejs:rich-editor-রীতি ④ EJS-কমেন্টে `<% ... %>`-আক্ষরিক-লেখা নিষিদ্ধ — কমেন্ট আগে-বন্ধ হয়ে unclosed-tag-এরর (আজ-ধরা) ⑤ .stable-scroll-panel ও .independent-scroll প্রতিবেশী-ইউটিলিটি — নতুন-মার্কআপে যেকোনো-একটি ⑥ html.cpm-open/body.lf-feed-lock156-স্ক্রল-লক অক্ষুণ্ণ (স্পেসিফিসিটি-চুক্তি)।
-
-**E2E-প্রমাণ (agent-browser, ismail @8080):** ফিড: ট্রিগার+মোডাল+স্ট্রিপ(৮-অপশন)+css ✓; ❓-ক্লিকে প্রশ্ন-প্রি-সিলেক্টেড (শিরোনাম/শাখা×৪/লেবেল 'প্রশ্ন জমা দিন'/placeholder) ✓; সাবমিট→/qa/2 ✓; ✍️-ক্লিকে লেখা (শাখা×৮, 'পোস্ট করুন') ✓; সাবমিট→/articles/3 ✓; ইন-মোডাল টগলে অপশন-সোয়াপ 8↔4 লাইভ ✓; কার্ড-চিপ ('ভাষা ও ব্যাকরণ'/'কলাম') ✓। /me: ট্রিগার+মোডাল ✓। /profile/ismail (মালিক) ✓। /qa: বাবল-ই question-প্রি-সিলেক্টেড + qaComposer140-বিলোপ ✓। অতিথি: guestCTA অক্ষত, ট্রিগার/মোডাল-শূন্য ✓। অ্যান্টি-শিফট: scrollbar-gutter:stable+ovY:scroll+ovX:hidden computed ✓; স্ক্রলে scrollX=0+প্রস্থ-স্থিত ✓; 390px ×৩-পেজ h-overflow-০ ✓; কনসোল-০ ✓; স্ক্রিনশট ×২। **রিগ্রেশন:** guard:design ✓ + audit:views ✓ + s139-parity **২২/২২** + lf153-harness **৪৯/৪৯ ALL GREEN** (দ্বি-সিড-প্রোটোকল: server-kill→seed-test-users+seed-qa-113→boot) + role-policy বেসলাইন-প্যারিটি (stash-তুলনায় IDENTICAL failure-set — পরিবেশগত) + node --check + EJS-compile ×৭। **গোটচা:** ① server-চলত্তাবস্থায় seed = অদৃশ্য (sql.js-ইন-মেমরি) ② হারনেস-লগইন rate-limiter-পোলিউশন — server-রিস্টার্টেই ক্লিয়ার ③ /qa/:id সিঙ্গেল-পেজে ক্যাটাগরি-চিপ নেই (QaListItem — FeedPostCard-নয়) — ইচ্ছাকৃত।
-
-**পরবর্তী-প্রথম-পছন্দ:** ① QaListItem-এও শাখা-চিপ ② শাখা-ভিত্তিক /qa?topic= ফিল্টার + /articles?cat= ③ কম্পোজারে ট্যাগ-ডায়ালগ (সহ-লেখক-পিকার — বর্তমানে অনুভূতি-ফলব্যাক) ④ প্রশ্নে শিরোনাম-ইনপুট (≤200 — qa-form-প্যারিটি; বর্তমানে অটো-টাইটেল) ⑤ শাখা-অনুযায়ী প্রস্তাবিত-অডিয়েন্স ডিফল্ট। **পরের-এজেন্ট: session159 থেকে।**
-
-## session159-নোট (ইউজার-রিপোর্ট: মেসেঞ্জার ফরওয়ার্ড-মোডাল + সার্চে অ্যাভাটার-বিস্তার) — প্রিমিয়াম ফরওয়ার্ড + অ্যাভাটার-ডাইমেনশন-লক
-
-**ইউজার-রিপোর্ট:** মেসেজ-বাবলের ৩-ডট → ফরওয়ার্ড মোডালে নামের উপরে পুরো প্রোফাইল-ছবি বিশালাকার হয়ে মডাল ভেঙে যায়; মেসেঞ্জার-সার্চেও একই। স্পেক: ফিক্সড-সাইজ বৃত্তাকার অ্যাভাটার + লাইভ-সার্চ + প্রতি-সারি 'পাঠান' টগল — স্মুথ/প্রফেশনাল/প্রিমিয়াম।
-
-**🚨 রুট-কজ (দুই-স্তরে একই-প্যাটার্ন):**
-1. **ফরওয়ার্ড-মোডাল (messenger-actions.js):** JS-জেনারেটেড `<img>`-এ **ক্লাস ছিল না** — ফলব্যাক letter-span-এ কিন্তু `fwd-av fwd-av--txt` ছিল → `.fwd-av{38px;object-fit:cover}` কেবল ফলব্যাকে প্রযোজ্য → বাস্তব ছবি natural-width-এ (ইউজারের হাই-রেজ JPG; QA-তে 800×600 dummy) ফুল-স্ক্রিন।
-2. **সার্চ-ড্রপডাউন (দুই পেজেই):** `el.querySelector('img').outerHTML` ক্লোন + `.replace('class="','class="msr-avatar ')` — উৎস conv-item-এর `<img>`-এই **class অ্যাট্রিবিউট নেই** → replace **নো-অপ** → অ্যাভাটার-বিস্তার। (ইউজার-সার্চ-রেজাল্ট অক্ষত ছিল — সরাসরি class বসাত।)
-
-**ফিক্স + প্রিমিয়াম (৪-ফাইল):**
-1. `messenger-actions.js` — ① img-এ `class="fwd-av"` + escFwd() XSS-হার্ডেনড ইনিশিয়াল ② **মাল্টি-ফরওয়ার্ড**: প্রতি-সারিতে `.fwd-send` বাটন (পাঠান → fa-spin লোডিং → ✓ পাঠানো হয়েছে disabled) — fwdSentMap-স্টেটে মডাল খোলা রেখেই একাধিক টার্গেট ③ ফুটারে `#fwdSentCount` লাইভ-কাউন্টার (toBn-গার্ডেড বাংলা-সংখ্যা — session150-চুক্তি) ④ গ্রুপ-টার্গেটে fa-users আইকন-সার্কেল (আগে গ্রুপে খালি ফলব্যাক) ⑤ member_count-ও bnNum ⑥ pick-mode (fwdPickHandler) অক্ষত + নতুন keydown(Enter/Space) + row এখন div (nested-button-অবৈধতা এড়াতে) ⑦ open/close-এ fwdSentMap-রিসেট
-2. `messages-chat.ejs` — ফরওয়ার্ড-মোডাল ফুটার: কাউন্টার-স্প্যান (aria-live) + 'বাতিল'→'সম্পন্ন' (id fwdCancel অক্ষত); renderConvSearchResults: outerHTML-ক্লোন → src-থেকে-পুনর্নির্মাণ (class="msr-avatar" + onerror→/avatar/:peerId; গ্রুপে আইকন-সার্কেল); ডুপ্লিকেট-কমেন্ট-লাইন অপসারণ
-3. `messages-list.ejs` — renderConversationResults: একই পুনর্নির্মাণ (peer-id = el.dataset.peerId)
-4. `messenger.css` session159-EOF-ব্লক (টোকেন-শুধু, hex-০) — **(ক) defense-in-depth দ্বৈত-লক**: `.fwd-avwrap img{38px-lock}` + `.msr-row > img{40px-lock}` — ভবিষ্যতে ক্লাস-শূন্য img কখনো natural-width হতে পারবে না; (খ) avatar-ring + গ্রুপ-গ্রেডিয়েন্ট; (গ) .fwd-send ৩-স্টেট (hover/active-scale/is-loading/is-sent); (ঘ) .fwd-sent-count margin-right:auto (footer-বাটন-ডানে-অক্ষত); (ঙ) scrollbar-pollish + :focus-visible-রিং + reduced-motion; (চ) ≤480px টিউনিং
-5. `inspect-audit.mjs` — **স্টেল-রুল-ফিক্স (session১১৬-রীতি)**: settings-ট্যাব চেক `data-section×৬` প্রত্যাশা করত — কিন্তু session152-ক্যানোনিকাল /settings মাস্টার-ডিটেইলে গেছে (data-section=০, .st142-item×14/.st142-pane×14) → ক্যানোনিকাল-প্রথম + legacy-ফলব্যাক → **audit পুনরায় 100% সবুজ**
-
-**E2E-প্রমাণ (agent-browser, ismail @3200 আইসোলেটেড pristine):**
-- ফরওয়ার্ড-মোডাল: ২-টার্গেট উভয়ের img **38×38 cover 50%** ✓ (আগে: 800×600 natural) — পাঠান→'১ জনকে পাঠানো হয়েছে' ✓ দ্বিতীয়-টার্গেট→'২ জনকে...' ✓ (বাংলা-সংখ্যা) মডাল-খোলা-অক্ষত ✓ is-sent disabled ✓ is-done-রো ✓ লাইভ-সার্চ 'রিয়া'→১-রো ফিল্টার ✓ Escape-বন্ধ ✓ ফুটার 'সম্পন্ন' ✓
-- সার্ভার-সত্য: ফরওয়ার্ড-কপি তানভীর-কথোপকথনে পৌঁছেছে (HTML-প্রমাণ) ✓
-- সার্চ-ড্রপডাউন (দুই পেজেই): conv-রো img **40×40 cover 50% class=msr-avatar** ✓; letter-অ্যাভাটার (div.msr-avatar) রো-সঠিক ✓; হাইলাইট+designation-সাবটাইটেল অক্ষত ✓
-- 390px: h-overflow-শূন্য ✓ কনসোল-০ ✓ স্ক্রিনশট ×৩ (মোডাল-ডেস্কটপ/চ্যাট-সার্চ/লিস্ট-সার্চ)
-- রিগ্রেশন: guard ✓ + inspect-audit **সব-সবুজ** (stale-রুল-ফিক্সসহ) + cursor 32/1 (seed-ভলিউম-artifact — stash-বেসলাইনে হুবহু-অভিন্ন-ফেইলসেট, delta=০) + node --check + EJS-compile ×২ + brace-০
-
-**গোটচা ×২:** ① sql.js-স্ট্যান্ডঅ্যালোন-স্ক্রিপ্টে UPDATE-এর পরে **saveDb() বাধ্যতামূলক** (module-এর `db` getter; `getDb` নেই) — না-দিলে in-memory-সুদ্ধ ফাইল-অপরিবর্তিত ② QA-কপি মূল-রিপোর থেকে স্বাধীন — মূল-রিপো-তে git stash করেও QA-ইনস্ট্যান্স-কোড বদলায় না (copy-time-স্ন্যাপশট)।
-
-**পরবর্তী-প্রথম-পছন্দ:** ① কার্সার-স্যুটের last-page hasMore-প্রত্যাশা seed-ভলিউম-ক্যালিব্রেশন ② ফরওয়ার্ড-মোডালে সাম্প্রতিক-সার্চ-মেমরি ③ মেসেঞ্জার-সার্চে গ্রুপ-সদস্য-নাম-ম্যাচিং ④ ফরওয়ার্ড-প্রিভিউ-কার্ড (মেসেজ-স্নিপেট মোডাল-টপে)। **পরের-এজেন্ট: session160 থেকে।**
-
-
 ---
 
-## Cross-Agent Note: Session 159-বি (double-159-রীতি) — পাবলিক-লেআউট ফিক্সড টপবার + ডার্ক-সারফেস এমারেল্ড কনট্রাস্ট (১৮ সেপ্টেম্বর ২০২৬)
+## session192-নোট (পাবলিক ফোরাম ডিরেক্টরি কম্প্যাক্ট রি-ডিজাইন — ইউজার-স্পেক ForumDirectoryMenu-পোর্ট)
 
-**ইউজার-স্পেক:** (১) হোম/পাবলিক পেজের মেনুবার স্ক্রলে নেমে যাচ্ছে — সোশ্যাল-ফিডের মতো স্থির থাকুক। (২) ডার্ক/নেভি ব্যাকগ্রাউন্ডে ডার্ক-সবুজ লেখা (টপবারের "ফিডে যান", গ্যালারির "ইমেজ গ্যালারি"-র "গ্যালারি") প্রায় অদৃশ্য — উজ্জ্বল এমারেল্ড করতে হবে; "এরকম আরও থাকতে পারে, সবগুলো ফিক্স কর"। প্রিভিউ = lekhok-forum.vercel.app = **এ-ই-ইজেএস অ্যাপ** (vercel.json-প্রমাণিত) — lekhok-forum-next নয়।
+**স্পেক:** হোমপেজ (লগ-ইন-পূর্ব) নেভবারের ৯-ডট প্যানেল "ফোরাম ডিরেক্টরি" কম্প্যাক্ট/প্রিমিয়াম/প্রফেশনাল — অপ্রয়োজনীয় ফাঁকা-জায়গা শূন্য; মূল-টাইটেল Hind Siliguri, ছোট-ডিটেইল Kalpurush।
 
-**RCA ×২:**
-1. **sticky-ভাঙা:** style.css-এ `body,html{overflow-x:hidden}` — html-এ non-visible overflow থাকায় body-র overflow ভিউপোর্টে propagate হয় না (CSS-overflow-§3.3) → **body নিজেই scroll-container** (overflow-y:hidden→auto) হয়ে যায় → `.btclf-topbar`-এর `position:sticky` নিকটতম scrollport (= body; body কখনো স্ক্রল করে না, html স্ক্রল করে) -এ আটকে যায় → স্ক্রলে টপবার ভেসে নামে (E2E-প্রমাণ: scrollTo-800 → topbar top=-800)। session156-র "home-topbar-sticky ✓" টেস্ট computed-style-মাত্র দেখেছিল — আচরণ নয়।
-2. **কনট্রাস্ট:** tokens.css `:root:root` (সর্বশেষে-লোড) `--accent` ও `--accent-light`-কে `var(--lf-brand-primary)` (006A4E) -এ রিম্যাপ করেছে → ডার্ক সারফেসে সব অ্যাকসেন্ট-টেক্সট 006A4E (~২.৮:১ নেভিতে)।
+**পরিবর্তন (৪-ফাইল, স্কোপড):**
+- helpers/dir-launcher.js: `PUB_SECTIONS` (৩-সেকশন × ১০-আইটেম) — DIR_SECTIONS (ফিড-রেল) ও UTIL_SECTIONS (হেডার-লঞ্চার) অক্ষত; বেক-লুপে যুক্ত; export-যোগ
+- server.js: `app.locals.pubSections`
+- views/layout.ejs: #dlxPanel → `dlx-panel--pub192` (কম্প্যাক্ট-হেডার + টাইল-গ্রিড + কন্ডিশনাল ভিজিটর-ফুটার-স্ট্রিপ "সব সুবিধা... / লগইন→"; লগড-ইন-ইউজারে লিগ্যাসি-ফুট)
+- style.css: session192-ব্লক EOF (স্কোপড — util157/রেল অস্পৃশ্য; হেক্স-শূন্য — সফট-টিন্ট = color-mix(token 12%, --lf-white))
 
-**ফিক্স (২-ফাইল, মার্কআপ-লজিক-স্পর্শ-শূন্য):**
-1. `style.css` — `body,html{...overflow-x:hidden}` বিভক্ত: `html{overflow-x:hidden}` + `body{overflow-x:clip}` (clip = scroll-container তৈরি করে না → sticky ভিউপোর্টে সঠিক; ভিজ্যুয়াল-ক্লিপিং আগের মতোই)।
-2. `shared.css` সেশন-১৫৯-ব্লক (EOF) — শুধু ডার্ক-সারফেস স্কোপে টোকেন-ভিত্তিক ওভাররাইড: টপবার `.btn-ghost`/`.nav-login` (emerald-400 টেক্সট+বর্ডার+এমারেল্ড-টিন্টেড-বিজি, !important — আগের !important-চেইন হারাতে) + `.topbar-tab.active::after` (emerald-400+গ্লো) + `.gal-hero .gal-hero__accent` (emerald-400+টেক্সট-শ্যাডো-গ্লো) + ফুটার (f-links/f-contact-আইকন-বুলেট, hover-emerald-300, f-socials-hover, newsletter-বাটন emerald-400-বিজি+নেভি-টেক্সট) + মোবাইল-সাইডবার CTA। **লাইট-ব্যাকগ্রাউন্ড (page-header হিরো, home hero, section) অপরিবর্তিত** — ইউজার-নীতি: লাইটে ব্র্যান্ড-গ্রিন থাকবে।
+**ইউজার-মকআপ-রুট → বাস্তব-রুট ম্যাপ (404-শূন্য-চুক্তি):** /saved→/bookmarks · /memories→/on-this-day · /reading-circles→/quiz (গ্রুপ-ফিচার-অনুপস্থিত) · /publications→/press · /posts→/articles · /faq→/qa; বাকিরা সরাসরি। সব কোডবেস-প্রমাণিত রুট, curl -L ১০/১০ = 200।
 
-**E2E-প্রমাণ (agent-browser, gateway :81?XTransformPort=3030):** হোম scrollTo-700/800 → topbar top=**0** ✓; body overflowX=clip ✓; লগইন/ফিডে-যান/অ্যাক্টিভ-আন্ডারলাইন = rgb(52,211,153) ✓; গ্যালারি accent+ফুটার-বুলেট emerald-400 ✓; নিউজলেটার-বাটন emerald-400-বিজি+নেভি-টেক্সট ✓; ৩৯০px topbar-স্টিক+hScroll-০+মোবাইল-CTA-emerald ✓; ১০-পেজ-ম্যাট্রিক্স ২০০; কনসোল-শুধু-লগ; guard:design ✓ (কমেন্টে-হেক্স-লেখাও র্যাচেট-গোনা যায় — গোটচা); audit:views ✓; স্ক্রিনশট ×৩ (download/s159-*)।
+**E2E-প্রমাণ (agent-browser @9192):** ভিজিটর-প্যানেল 406×461px (আগে 560px) · ৩-সেকশন/১০-আইটেম/লাইভ-ব্যাজ/ভিজিটর-ফুট ✓ · টাইটেল=HindSiliguri, ডেস্ক=Kalpurush, সেকশন-টাইটেল=HindSiliguri (computed-style-প্রমাণ) · সফট-টিন্ট আইকন color(srgb …) ✓ · বাইরে-ক্লিক ও ✕-ক্লোজ ✓ · টাইল-ক্লিকথ্রু → /on-this-day ✓ · মোবাইল 390px wrap-hidden + hScroll-শূন্য ✓ · লগড-ইন (ismail): ড্যাশবোর্ড util157-প্যানেল অক্ষত (৪০৭px, ৮-রো) + রেল ১৩ + pub192-মার্কার-শূন্য (স্কোপ-আইসোলেশন) + পাবলিক-পেজে লিগ্যাসি-ফুট ✓ · কনসোল-০ ✓
 
-**গোটচা ×৩:** ① guard-র্যাচেট CSS-কমেন্টের হেক্স-উল্লেখও গোনে — ডকুমেন্টে "006A4E" (# ছাড়া) লিখুন ② AV ভার্সন-প্যারাম সার্ভার-বুটে-নির্ধারিত — CSS-এডিটের পর ব্রাউজার-যাচাইয়ের আগে সার্ভার-রিস্টার্ট বাধ্যতামূলক ③ sticky-ডিবাগে computed position দেখলে হবে না — scrollTo করে getBoundingClientRect-প্রমাণ নিন। **পরের-এজেন্ট: session160 থেকে।**
+**গোটচা (পরের-এজেন্ট):** ① sql.js সার্ভার-রানিং-অবস্থায় reset-স্ক্রিপ্ট চালালে সার্ভার-শাটডাউনে ফাইল-ওভাররাইট — স্ক্রিপ্টের-আগে সার্ভার-বন্ধ ② লোকাল lekhok.db = প্রোডাকশন-কপি (৪৭ বাস্তব-ইউজার) — ডেমো-লগইন: ismail/riya/tanvir · secret123 (scripts/reset-qa-logins.js সার্ভার-বন্ধ-করে-চালান) ③ ইউজার-স্পেকের React-কম্পোনেন্ট (ForumDirectoryMenu.tsx) মকআপ — href মকআপ-রুট, প্রয়োগের-আগে রুট-ম্যাপ-চুক্তি মানুন।
 
-**union-শুদ্ধি-নোট (১৫৯-বি):** আগে-ল্যান্ডেড session158-antishift-ব্লকের `body{overflow-x:hidden}` shared.css-এ (style.css-পরবর্তী-লোড) আমার style.css-clip-ফিক্সকে পুনঃভাঙত — rebase-union-এ সে-রুল **overflow-x:clip**-এ সংশোধিত (anti-shift-লক্ষ্য অক্ষত; scroll-container-না-হওয়ায় sticky জীবিত)। ভবিষ্যতে body/html-এ overflow-x:hidden ফেরত-আনা **নিষিদ্ধ** — sticky-টপবার-চুক্তি।
-## session158-নোট (ভয়েস-মেসেজ স্থায়ী-ফিক্স — EJS অ্যাপ; ইউজার-স্পেক Next.js-টার্মে → EJS-পোর্ট)
-- **RCA-চুক্তি:** ইউজারের ভয়েস-স্পেক (prisma/upload-route/React) লক্ষ্য করে lekhok-forum-next — কিন্তু ইউজারের আসল অ্যাপ Express/EJS (স্ক্রিনশটের মিসড-কল-বাবল প্রমাণ)। ভবিষ্যতে ভয়েস/মেসেঞ্জার-স্পেকে **উভয় অ্যাপ যাচাই** — কোনটি আসলে ব্যবহৃত তা স্ক্রিনশটের UI-সিগনেচার থেকে নিশ্চিত করুন।
-- **চুক্তি ×৪:** ① messages.duration (INTEGER সেকেন্ড) — নতুন-ভয়েস-পথে FormData 'duration' বাধ্যতামূলক; ফরওয়ার্ড-রুটে কপি ② ভয়েস-সনাক্তকরণ নিক-হোয়াইটলিস্ট: isVoice-ফ্ল্যাগ OR file_name/URL-এক্সটেনশন (webm|ogg|oga|m4a|mp3|wav|aac|opus) — blob:-URL-এ file_name-চেক-ই একমাত্র ③ ভয়েস-বাবল-মার্কআপ এক-সোর্স: MessengerBubble.ejs (data-duration + সার্ভার-রেন্ডার-বাংলা-টাইম) — optimistic-টিউম্প হুবহু-রেপ্লিকা ④ .webm-Content-Type: attachments-webm=audio/webm (static setHeaders, স্কোপড) — কম্পোজার/রিসোর্স-ভিডিও-webm অক্ষত video/webm
-- **গোটচা ×৩:** ① Infinity-truthy-পাইট্র্যাপ — `audio.duration || fallback` কখনো নয় (Infinity-ই জেতে; ওয়েভফর্ম ০-তে আটকায়) — isFinite-গার্ড ② Chromium MediaRecorder-webm duration=Infinity → সিক-হ্যাক (currentTime=1e101 → ontimeupdate → 0) — প্রমাণিত ৮-সে-ফাইল 12ms-এ ③ মিডিয়া-প্যান AJAX-পেইন্ট DOMContentLoaded-পরে — নরমালাইজে lf:voice-nodes-added ইভেন্ট পাঠাতেই হয়
-- **হারনেস-লেসন ×২:** agent-browser eval-ক্লিকে user-activation শূন্য → audio.play() NotAllowedError (trusted click দিন) · headless-এ blob:-অডিও "Media load rejected by URL safety check" — ফাইল-হ্যাক-টেস্টে http-serve করুন
-- **পরবর্তী-প্রস্তাব:** ① ভয়েস-ট্রান্সক্রিপ্ট (ASR-স্কিল) ② ওয়েভফর্ম-ক্লিক-সিক ③ ১x/২x-প্লেব্যাক-গতি ④ রেকর্ডিং-পিক-মিটার ⑤ voice-বাবলে ডাউনলোড-বাটন
-
-## session161-নোট (ফিড-রেল সার্চ + কোর-শর্টকাট — session157-রেলের ওপর ইউনিয়ন)
-- **চুক্তি ×৫:** ① কোর-শর্টকাট = DIR_SECTIONS-এ `core:true`-সেকশন — রেলে শিরোনাম-শূন্য, হেডার-প্যানেল (utilSections-যুগে অরেন্ডার) শিরোনাম দেখাতে পারে ② রেল-সার্চ-চুক্তি: আইটেমে `data-fr-hay="label desc"` + সেকশনে `data-fr-sec` — নতুন-আইটেম যোগ করলে অ্যাট্রি-দুটি দিতেই হবে (IIFE অটো-আওতায় আনে) ③ সার্চ = client-side ফিল্টার (hidden-attr + fr-searching159-ক্লাস) — সার্ভার-কোয়েরি নয় ④ স্মৃতি = /on-this-day-এক-আইটেম (daily-থেকে স্থানান্তরিত — href-ডুপ্লিকেট-নিষিদ্ধ, রেজিস্ট্রি-রীতি) ⑤ খালি-সেকশন-টাইটেল অটো-লুকানো — titles.forEach-ভিসিবিলিটি-চুক্তি
-- **রুট-ম্যাপ-রীতি (ইন্টেন্ট-অনুবাদ):** ইউজার-স্পেকের অস্তিত্বহীন-রুট (/saved,/memories,/groups,/pages,/feedback) → কোডবেস-প্রমাণিত নিকটতম বাস্তব-রুটে (/bookmarks,/on-this-day,/messages,/press,/complaints) — নতুন-পেজ-সৃষ্টি নয়; PLANS-এ ম্যাপ-রেকর্ড
-- **হারনেস-লেসন ×৩:** ① agent-browser CLI per-call fork → cgroup fork-exhaustion (fork: Resource temporarily unavailable) — ব্রাউজার-E2E playwright এক-প্রসেসে (lf159-browser.js-রীতি, verify-session150-সমতুল্য) ② agent-browser eval-আউটপুট JSON-কোটে-মোড়া → bash-chk-এ মিথ্যা-ফেইল (got="/quiz" want=/quiz) — কোট-স্ট্রিপ বাধ্যতামূলক ③ mini-services/lekhok-forum/start.sh সুপারভাইজার = ইউজার-প্রিভিউ :3030 (crash-loop-respawn) — হারনেস pkill-এ সে-সার্ভারও মরে (২-সে-পরে সুপারভাইজার ফেরত-বুট করে, নতুন-কোডসহ); হারনেস-সার্ভার :8080-স্বতন্ত্র
-- **মোবাইল-চেক-গোটচা:** scrollWidth−clientWidth **নেগেটিভ** হতে পারে (session158 অ্যান্টি-শিফট — কনটেন্ট ভিউপোর্টের চেয়ে সংকীর্ণ) — overflow-চেকে `Math.max(0, …)` বাধ্যতামূলক
-- **পরবর্তী-প্রস্তাব:** ① সার্চে কীবোর্ড-নেভিগেশন (↑↓+Enter) ② রেল-আইটেমে লাইভ-ব্যাজ (অপঠিত-কাউন্ট) ③ সংরক্ষিত-লেখা-কাউন্ট-পিল (/bookmarks-রোতে) ④ কোর-ব্লক কোলাপ্স/এক্সপ্যান্ড (FB-Your-shortcuts-চুক্তি) ⑤ সার্চ-ফলাফলে সাম্প্রতিক-ব্যবহৃত-প্রাধান্য
-
-## session163-নোট (মাস্টার-কম্পোজার সর্বত্র — পুরনো ফর্ম বিলুপ্ত + ডুপ্লিকেট-বার সমাপ্ত + CSS-RCA)
-- **চুক্তি ×৫:** ① UniversalComposerModal.ejs পার্শিয়াল = সম্পূর্ণ CSS-বাহক (dashboard.css + universal-composer.css নিজে লিঙ্ক করে) — নতুন include-সাইটে আর CSS-চিন্তা নেই; identical-URL-ডিডুপে dashboard-পেজে ডাবল-ফেচ-শূন্য ② ট্রিগার-চুক্তি অক্ষুণ্ণ: #composerOpen + .js-composer-open[data-composer-type] (session158-ওয়্যারিং) — নতুন ট্রিগার-বাটনও এ-িই জোড়া ③ /articles/new ও /qa/new = compose-shell (অটো-ওপেন + ক্লোজে /dashboard-রিডাইরেক্ট — MutationObserver hidden-ওয়াচ; সফল-পোস্টে ইঞ্জিন-নেভে অবজার্ভার-নীরব) ④ নিউজলেটার-ব্লাস্ট-চুক্তি সংরক্ষিত: স্টাফ ?editor=1 → লিগ্যাসি article-form; /articles/:id/edit + /qa/:id/edit অপরিবর্তিত ⑤ header smart-links (.js-global-compose): পেজে মোডাল-থাকলে capture-phase সিনথেটিক-ক্লিক, না-থাকলে href-fallback — মোডাল-DOM-অনুপস্থিত পেজে ডাবল-বাইন্ডিং-অসম্ভব (পার্শিয়াল-নীতি অক্ষুণ্ণ)
-- **RCA-পুনরাবৃত্তি-শিক্ষা (session159-রীতি):** JS-সারফেসে ক্লাস-হারানো <img>-এর natural-width মৃত্যু — এবার মোডালের .cpm-avatar (CSS dashboard.css-বন্দি, অন্য-পেজে অনুপস্থিত) → universal-composer.css-এ .cpm-author img{42px-দ্বৈত-লক} defense-in-depth
-- **হারনেস-লেসন ×৩:** ① agent-browser eval — বুলিয়ান unquoted, স্ট্রিং quoted রিটার্ন (bash-তুলনায় দুই-রীতি) ② sandbox ব্যাকগ্রাউন্ড-প্রসেস কল-মাঝে reap — প্রতি-কলে ensure-server + ভারী-স্যুট এক-কলে ③ sandbox-reset DB-টেস্ট-ইউজার-ও-মুছে — seed-test-users-163 (server-বন্ধে চালানো, saveDb×2-চুক্তি)
-- **পরবর্তী-প্রস্তাব:** ① composer-modal.js edit-mode (মোডাল-ই /articles/:id/edit-ও নেবে — title-first-line চুক্তি বজায়) ② article-form/qa-form-ডেড-কোড প্রুনিং-বিশ্লেষণ ③ মোডাল-স্টাইল dashboard.css → universal-composer.css স্থানান্তর (single-file) ④ shell-পেজে draft-restored-ব্যানার দৃশ্যমানতা-নিশ্চিতি
-
-## session164-নোট (সেবাসমূহ-ও-আর্কাইভ প্যানেল কম্প্যাক্ট-রিডিজাইন — ইউজার-স্পেক ServicesArchiveFlyout-পোর্ট)
-- **চুক্তি ×৪:** ① util-প্যানেল-স্টাইলিং সব `.dlx-panel--util164`-স্কোপড — পাবলিক ফোরাম-ডিরেক্টরি (layout.ejs, 560px 2-col) ও বেস dlx-147/157-রুল অস্পৃশ্য ② আইটেম-লেখা-ফন্ট `.dlx-panel--util164 .dlx-item--row164` (0,2,0) — fonts.css-এর `.topbar a` (0,1,1)-ওভাররাইডের একমাত্র টোকেন-শুদ্ধ পথ; সাধারণ (0,1,0) ক্লাস হারে ③ নতুন ডেটা (ব্যাজ) রেজিস্ট্রিতেই (`dir-launcher.js` badge ফিল্ড) — ভিউতে হার্ডকোড নিষিদ্ধ; মোবাইল-সাইডবার/রেল-লুপ অজানা-ফিল্ড নিরীহভাবে উপেক্ষা করে ④ ফন্ট-নীতি: হেডিং (h2/h3) HindSiliguri, বাকি সব Kalpurush (--font-body) — ইউজার-নির্দেশ 'হেডিং ছাড়া'।
-- **গোটচা ×২:** ① guard-র্যাচেট প্যারালেল-কমিটের হেক্সও ধরে — HEAD-এ guard-লাল হলে আগে git-blame, নিজের-ডিফ অনুমান নয় (এ-রাউন্ডে 5dccfac-এর dashboard.css ২-হেক্স পাওয়া-পড়াল — টোকেনে হ্রাস-শুদ্ধি) ② `var(--on-accent,#fff)`-জাতীয় হেক্স-ফলব্যাকও র্যাচেটে গোনা হয় — ফলব্যাকেও টোকেন (`var(--on-accent,var(--lf-white))`)।
-- **পরবর্তী-প্রস্তাব:** ① প্যানেলে রেল-সার্চ-সমতুল্য কুইক-ফিল্টার (utilSections বড় হলে) ② সাম্প্রতিক-ব্যবহৃত-ইউটিলিটি টপ-পিন ③ trigger-এ aria-keyshortcuts + '/'-হটকি ④ ব্যাজ-ভ্যারিয়েন্ট (নতুন/বিটা) রেজিস্ট্রি-এনাম।
-
-[relabel-নোট: আমার session164→165 — সমান্তরাল session164 (সেবাসমূহ-ও-আর্কাইভ-ফ্লাইআউট) আগে-ল্যান্ডেড (45396fe) — max+1-রীতি; কোড-মার্কার lf-meta164/lf-time-row164 অক্ষুণ্ণ (session161-রীতি)]
-## session165-নোট (FB-কম্প্যাক্ট পোস্ট-কার্ড + ব্যালেন্সড ৩-কলাম — ইউজার-স্ক্রিনশট-স্পেক)
-<!-- session165: FB-compact card; session164 = parallel util-flyout -->
-- **RCA-হোয়াইটস্পেস:** জেনেরিক `.card{padding:36px}` `.feed-card`-এ লিক — head(12/16)+body(4/16/8)+actions(margin 12/16)-এর নিজস্ব প্যাডিং-এর ওপর ডাবল → প্রতি-পাশে ৩৭px ইনসেট (ছবি 546px/620px)। RCA-ব্যাজ: FeedPostCard-হেডারে feed-type-badge(margin-left:auto)+ucs158-cat-chip+rt-chip+rank/aud-chips।
-- **চুক্তি ×৬:** ① `.feed-card{padding:0}` — ভবিষ্যতে FeedPostCard-এ নতুন সেকশন যোগ করলে **নিজস্ব প্যাডিং বাধ্যতামূলক** (কার্ড-লেভেল প্যাডিং আর নেই); ② AuthorLabel `metaHtml` = RAW HTML, **data-ts-স্প্যানের সিবলিং** (`lf-time-row164`-রো-তে) — main.js reltime `[data-ts]`-এর textContent প্রতি-টিকে মুছে দেয়, ভেতরে দিলে বিলুপ্ত; ③ include-data-লিক: EJS parent-scope-merge-এ FeedPostCard-স্কোপের `metaHtml` নিচের প্রতিটি AuthorLabel-include-এ স্পষ্ট পাস/`''`-বাধ্যতামূলক (নেস্টেড-বক্সে লিক-প্রতিরোধ); ④ metaHtml-এ শুধু ফিক্সড-ম্যাপ/toBn-মান — ইউজার-ইনপুট escape-ছাড়া নিষিদ্ধ; ⑤ নতুন-হেক্স-শূন্য (র্যাচেট): ফলব্যাকসহ টোকেন-শুধু — session163-এর অবশিষ্ট ২-হেক্সও এ-সেশনে টোকেনাইজ (guard 0→2→green); ⑥ ৩-কলাম: রেল 260 (283@1440), ফিড 600, ডান 310 (330@1440) — session156-লক-সেলেক্টর অক্ষত।
-- **হারনেস-লেসন:** ব্রাউজার-যাচাইয়ের আগে সার্ভার-রিস্টার্ট (AV-বাস্ট) — CSS-এডিট পুরোনো-AV-তে অদৃশ্য; agent-browser wait-টাইমআউট → এক-ইনভোকেশনে re-ensure+eval পুনঃপ্রমাণ (ব্রাউজার-সেশন টিকে থাকে)।
-- **পরের-এজেন্ট: session166 থেকে**
-- **পরবর্তী-প্রস্তাব:** ① কমেন্ট-প্রিভিউ/ড্রয়ার FB-বাবল-রিস্টাইল (বর্তমানে হালকা-গ্রেডিয়েন্ট) ② activity-কার্ডের জন্য নির্দিষ্ট 📅-মেটা (বর্তমানে টাইপ-বিহীন গ্লোব) ③ কার্ড-হেডারে hover-এ ৩-ডট-ফোকাস-রিং টোকেন-প্যারিটি ④ ranked-মোডে rank_badge-ডেটা-সিড (E2E-মেটা-কভারেজ) ⑤ ucs158-cat-chip/feed-type-badge-ডেড-CSS প্রুনিং-বিশ্লেষণ (qa-single ব্যবহার-অক্ষত)
-
-## session171-নোট (Vercel ডিপ্লয়মেন্ট-ক্লিনআপ অটোমেশন — অপস-রাউন্ড, অ্যাপ-কোড-স্পর্শ-শূন্য)
-- **নতুন-ফাইল:** `lekhok-forum/scripts/cleanup-vercel-deployments.mjs` + রিপো-রুট `.github/workflows/vercel-cleanup.yml` + `lekhok-forum/VERCEL-CLEANUP.md` + `lekhok-forum/.vercelignore` (DEPLOYMENT.md-তে হাউজকিপিং-লিঙ্ক-সেকশন)
-- **চুক্তি ×৪:** ① schedule-ওয়ার্কফ্লো কেবল ডিফল্ট-ব্রাঞ্চে (main) চলে — ফাইলটা main-এ থাকতেই হবে ② স্ক্রিপ্ট সর্বশেষ KEEP_COUNT-এর ভেতরের কিছু কখনো স্পর্শ করে না + BUILDING/QUEUED-স্কিপ — লাইভ-ডিপ্লয়মেন্ট-ক্ষতি কাঠামোগতভাবে অসম্ভব ③ VERCEL_TOKEN কমিট/ডক/ইস্যুতে লেখা **নিষিদ্ধ** — কেবল GitHub-Secret বা রান-টাইম env ④ `VERCEL_API_BASE` env = মক-টেস্ট-হুক — ভবিষ্যৎ-স্ক্রিপ্ট-পরিবর্তনে লাইভ-API-ছাড়াই E2E
-- **গোটচা ×২:** ① রিপো ৬০-দিন নিষ্ক্রিয় থাকলে GitHub schedule-ওয়ার্কফ্লো অটো-ডিসেবল করে (Actions-ট্যাব থেকে পুনঃসক্রিয়) ② `.vercelignore` কেবল CLI-ডিপ্লয়ে — গিট-ডিপ্লয়ে Root Directory=lekhok-forum-ই কার্যকর-ফিল্টার
-- **ইউজার-অ্যাকশন-অবশিষ্ট:** ① VERCEL_TOKEN বানিয়ে `--dry-run` → আসল-রান (Functions Storage ১২.৩২ GB → প্রত্যাশিত ২-৩ GB) ② ৩-সিক্রেট বসালেই দৈনিক-অটোমেশন চালু ③ SESSION_SECRET/BLOB-এ **Sensitive**-টিক ④ ⚠️ GitHub-PAT কনভার্সেশনে-উন্মুক্ত + এখনও-ভ্যালিড-যাচাইকৃত — **অবিলম্বে revoke**
-- **পরের-এজেন্ট: session172 থেকে**
-
-## session174-নোট (প্রিমিয়াম অফলাইন-স্ক্রিন — দুই-অ্যাপ-প্যারিটি)
-- **নতুন-ফাইল (lekhok-forum-next):** `src/components/shared/OfflineScreen.tsx` + `src/components/shared/OfflineGate.tsx` (layout.tsx-এ `<OfflineGate>{children}</OfflineGate>`)
-- **রিরাইট:** `lekhok-forum/public/offline.html` + `public/sw.js` CACHE_VERSION v3→v4
-- **চুক্তি ×৪:** ① কানেকশন-স্টেটে সবসময় `useSyncExternalStore` (set-state-in-effect-লিন্ট + হাইড্রেশন-সেফ; SSR-স্ন্যাপশট=online) ② OfflineScreen-এ অটো-রিলোড কেবল মাউন্টে-অফলাইন-ছিল-হলে (mountedOfflineRef — স্ট্যান্ডঅ্যালোন-ব্যবহারে রিলোড-লুপ-অসম্ভব) ③ offline.html বদলালে **অবশ্যই** sw.js CACHE_VERSION-বাম্প — নাহলে পুরনো-ফাইল প্রিক্যাশে আটকায় ④ offline.html সম্পূর্ণ-সেলফ-কন্টেইনড — ওয়েবফন্ট/CDN/এক্সটার্নাল-অ্যাসেট নিষিদ্ধ (অফলাইনেই দেখানোর পেজ)
-- **গোটচা ×২:** ① `/saved`-রুট lekhok-forum-next-এ এখনো নেই (স্পেক-অক্ষুণ্ণ রাখা হয়েছে — রুট-যোগের সময় স্বয়ংক্রিয় জীবিত) ② Next-অ্যাপের navigator.onLine সার্ভার-বিহীন-ট্রুথ — সার্ভার-ডাউন-কিন্তু-নেট-আপ কেস ধরে না (ভবিষ্যৎ-প্রস্তাব: fetch-প্রোব-হাইব্রিড)
-- **পরের-এজেন্ট: session175 থেকে**
-
-## session175-নোট (Functions-Storage লাইভ-ক্লিনআপ + দুই-প্রজেক্ট-অটোমেশন)
-- **সেশন171-স্ক্রিপ্ট প্রথম বাস্তব-রান প্রমাণিত:** ৩২৫+৪৩+৪ = ৩৭২-ডিলিট, শূন্য-ব্যর্থতা, 429-রিট্রাই কার্যকর, IS_CURRENT/শেষ-৫-সুরক্ষা অক্ষত
-- **চুক্তি ×৩:** ① ওয়ার্কফ্লোতে নতুন-প্রজেক্ট-স্টেপে `VERCEL_PROJECT_ID: ''`-ফোর্স-নাম-লুকআপ আবশ্যক (সিক্রেট-আইডি থাকলে সেটিই জেতে — ভুল-প্রজেক্ট-ক্লিন-ঝুঁকি) ② ঐচ্ছিক-প্রজেক্ট-স্টেপে `continue-on-error: true` (প্রজেক্ট-বিলোপেও দৈনিক-জব-সবুজ) ③ Storage-সীমা অ্যাকাউন্ট-জুড়ে — নতুন-প্রজেক্ট-যোগ হলে ওয়ার্কফ্লোতে স্টেপ-যোগ করতে হবে
-- **গোটচা:** BLOCKED-স্টেট স্ক্রিপ্টের DELETABLE-বাইরে (রক্ষণশীল-ডিজাইন) — নিষ্ক্রিয়-প্রজেক্টে production-পয়েন্টার-যাচাই করে সরাসরি /v13 DELETE-ই পথ; ড্যাশবোর্ড Storage-মেট্রিকে কয়েক-মিনিট বিলম্ব
-- **পরের-এজেন্ট: session176 থেকে**
+**পরের-এজেন্ট: session193 থেকে।**

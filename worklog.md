@@ -1806,40 +1806,37 @@ Stage Summary:
 - **পরের-এজেন্ট: session158 লেবেল থেকে**; চুক্তি ×৭ PLANS session157-নোটে; গোটচা-নোট: role-policy=RP_PORT / s139=E2E_PORT / lf153=LF153_PORT(স্ব-বুট, ক্লিনআপ-পক্ষে-বাইস্ট্যান্ডার-মারে) / সার্ভার=PORT
 
 ---
-Task ID: session158 (Next.js-app ফিড-লেআউট সংকোচন — ইউজার-স্পেক: গ্যাপ-হ্রাস + মাঝ-প্যানেল প্রশস্ত + বাম-রেল ঘনীভূত)
-Agent: Z.ai Code (cron webDevReview — lekhok-forum-next/ Next.js অ্যাপ)
-Task: সোশ্যাল ফিডের মাঝ-প্যানেলের দু-পাশে অতিরিক্ত গ্যাপ দূরীকরণ + পোস্টের চারপাশের ফাঁকা জায়গা সংকোচন + বাম-প্যানেল অনুপাতে ছোট (লেখা ২য়-লাইনে কাটবে না) — ইউজার-স্পেক: gap-6→gap-3, বাম ৩৪০→২৬৫px (nowrap/truncate), মাঝ ৬২০→৭০০px, পোস্ট-কার্ড p-4→p-3/mb-4→mb-2.5
+Task ID: session158
+Agent: Main agent (Lekhok-Forum voice-message deep-analysis fix)
+Task: ভয়েস-মেসেজ ৩-বাগ (ডকুমেন্ট-বাবল / রিফ্রেশে ০:০০ / প্লে-ব্যর্থ) গভীর-বিশ্লেষণ ও স্থায়ী ফিক্স — rafsancuac/Lekhok-Forum
 
 Work Log:
-- প্রি-যাচাই (ইউজারের স্থায়ী-নির্দেশ): ফ্রেশ-clone @8299ea1 (স্যান্ডবক্স-রিসেটে পুরনো-clone বিলুপ্ত); টার্গেট-নির্ধারণ — root-worklog session155-নোট অনুযায়ী **lekhok-forum-next/ = ইউজার-প্রিভিউয়ের কোডবেস** (EJS-অ্যাপ নয়); বুট: bun install + .env + db:push + seed ×৪ (৫-ইউজার/৬-পোস্ট/গ্রুপ/মেসেঞ্জার)
-- 🚨 **tooling-গোটচা (মিথ্যা-বাগ-প্রমাণিত):** bash-আউটপুট-স্তর `[h`-অনুক্রম গিলে ফেলে — `[hasMore` রেন্ডার হয় `asMore` রূপে (grep/head-এ `const asMore, setHasMore]` দেখায়) — od -C-তে ফাইল-আসল-বাইট `const [hasMore...]` সঠিক; **কোনো কম্পাইল-বাগ ছিল না** — সন্দেহজনক-আউটপুট od/Read-দিয়ে যাচাই বাধ্যতামূলক
-- page.tsx: কন্টেইনার `max-w-[1240px] gap-4 px-2 sm:px-4 pt-4` → `max-w-[1360px] justify-center gap-3 px-2 pt-3` (ফুটারও ১৩৬০-সারিবদ্ধ); মাঝ-কলাম `max-w-[680px] gap-4` → `max-w-[700px] gap-2.5` + **mx-auto-বাদ** (🚨 মূল-আবিষ্কার: flex-1+max-w-ক্যাপের পর অবশিষ্ট ৬৫px auto-margin শোষণ করত → গ্যাপ ৪৫px হয়ে যাচ্ছিল; justify-center-ই সেন্টার করে → গ্যাপ এখন হুবহু ১২px); স্কেলেটন p-4→p-3/space-y-4→2.5; এরর p-8→p-6/খালি p-10→p-8
-- LeftSidebar.tsx: w-260→**265px**; NavItem/প্রোফাইল-স্ট্রিপ/গ্রুপ/লেখক-রো gap-3 px-3 py-2.5 → gap-2.5 px-2.5 py-1.5; টেক্সট 15px→13px; আইকন w-6→w-5; **প্রতিটি রোতে whitespace-nowrap + truncate** (লেখা ২য়-লাইনে কাটার সম্ভাবনা শূন্য); badge shrink-0; aside gap-1→gap-0.5
-- RightRail.tsx: w-300→**290px** (gap-4→gap-3)
-- FeedPostCard.tsx: হেডার px-3.5 pt-3 pb-2 → **px-3 pt-2.5 pb-1.5**; কন্টেন্ট px-3.5 pb-2→px-3 pb-1.5; কাউন্টার-বার px-3.5 py-2→px-3 py-1.5; অ্যাকশন-বার mx-3 mb-2 pt-1→**mx-2.5 mb-1.5 pt-0.5**; কমেন্ট-ড্রয়ার px-3.5 pb-3→px-3 pb-2.5
-- E2E-জ্যামিতি-প্রমাণ (agent-browser, 1440px): left 265 / mid **700** / right 290 / **gapLM 12 = gapMR 12** (mx-auto-পূর্বে 45!) / leftEdge=rightEdge=81 (সুষম-সেন্টার) / docHScroll শূন্য; 1100px (lg): বাম+মাঝ-700+গ্যাপ-১২, ডান-লুকান ✓; 390px: hScroll-শূন্য (স্টোরি-স্ট্রিপ অভ্যন্তরে-স্ক্রল) ✓
-- বাম-রেল-নো-র‍্যাপ-প্রমাণ: wrappedRows ০ / hOverflowRows ০ (সব-লেখা স্বাভাবিকেই-ফিট, truncate-কল্যাণে); navHeights {32,44} সম-শ্রেণি
-- কার্ড-রিদম: কার্ড-পরম্পর গ্যাপ [10,10,10,10,10] = gap-2.5 হুবহু; স্টিকি-রেল স্ক্রলে অক্ষত (winY 400-এ দুই-রেল দৃশ্যমান)
-- গোল্ডেন-পাথ: রিঅ্যাক্ট-চক্র লাইক→'👍লাইক'+সামারি **'১ জন'** (বাংলা-সংখ্যা-চুক্তি অক্ষত)→আনলাইক-ফেরত; কমেন্ট-ড্রয়ার→INPUT-এ টাইপ→**Enter-সাবমিট** (form-নেই)→পোস্টেড-যাচাই→API-DELETE-ক্লিনআপ (DB remaining:০); মেসেঞ্জার-ভিউ (মাঝ 765px flex-fill, hScroll-শূন্য) + প্রোফাইল-ভিউ (700px) অক্ষত; কনসোল-০/এরর-০; tsc + eslint **শূন্য-ত্রুটি**
-- স্ক্রিনশট ×২: download/s158-feed-desktop-1440.png + s158-feed-mobile-390.png
+- ফ্রেশ-ক্লোনে আগে-যাচাই (parallel-agent protocol): session157-পর্যন্ত ল্যান্ডেড; RCA — ইউজারের "আগের ফিক্স" (session155) lekhok-forum-next-এ গিয়েছিল, ইউজারের আসল অ্যাপ Express/EJS (স্ক্রিনশটের মিসড-কল-বাবল = EJS calls.js-পথ-প্রমাণ)
+- ৩-বাগের root-cause: ① appendMessage optimistic-পথে শুধু-ইমেজ-চেক → blob:-URL-এ .webm নেই বলে 📎 ডকুমেন্ট-বাবল ② messages টেবিলে duration-কলাম-নেই + MediaRecorder-webm-হেডারে Duration-নেই (Infinity) → রিফ্রেশে ০:০০ ③ timeupdate-এ Infinity-truthy-পাইট্র্যাপ + mime-db .webm→video/webm
+- ফিক্স ×৫-ফাইল: db.js (duration INTEGER — CREATE+LATER_COLUMNS দ্বি-মাইগ্রেশন) · routes/dashboard.js (১:১/গ্রুপ/ফরওয়ার্ড INSERT-এ duration) · views/shared/messenger/MessengerBubble.ejs (data-duration + সার্ভার-রেন্ডার-বাংলা-টাইম) · views/user/messages-chat.ejs (optimistic-ভয়েস-বাবল isVoice+নিক-চেক, Chromium Infinity-সিক-হ্যাক ১e101, পৃষ্ঠা-লোডে নরমালাইজ+লেগেসি-প্রোব-কিউ, AJAX-paintে lf:voice-nodes-added re-normalize, রেকর্ডার duration-পে-লোড) · server.js (static setHeaders: attachments-webm→audio/webm, স্কোপড)
+- E2E (curl+agent-browser @9158): duration=8 → DB-রো [1,'voice-…webm',8] ✓ রেন্ডার ০:০৮ ×৪-সারফেস ✓ Content-Type audio/webm ✓ trusted-ক্লিকে playing:true+ওয়েভফর্ম-প্রগ্রেস+timeupdate ✓ EBML-Duration=Infinity-ফাইলে হ্যাক=৮সে/12ms ✓ optimistic bubble-voice (hasFile:false) ✓
+- রিগ্রেশন: fresh-DB-parity IDENTICAL (210=210, stash-বেসলাইন-diff-শূন্য) + node --check ×৩ + audit:views ✓ কনসোল-০ ✓
+- পুশ: rebase-union ×২ (session159/160 parallel-ল্যান্ড — docs-only conflict, union-মার্জ) → b9eaa50 origin/main ✓
 
 Stage Summary:
-- ফিড-লেআউট ইউজার-স্পেক-অনুযায়ী সংকোচিত: কলাম-গ্যাপ ৪৫→১২px (মূল-কারণ auto-margin-বনাম-justify-center), মাঝ ৬৮০→৭০০px, বাম-রেল ২৬৫px-নো-র‍্যাপ, কার্ড-অভ্যন্তর p-3-ধাঁচ, কার্ড-রিদম ১০px
-- **পরের-এজেন্ট: session159 লেবেল থেকে**; গোটচা: ① bash-আউটপুটে `[h`-গিলধারণ (od-দিয়ে-যাচাই) ② মাঝ-কলামে mx-auto-ফেরত-আনা-নিষিদ্ধ (গ্যাপ-নষ্ট) ③ কমেন্ট-সাবমিট = Enter-কী (form/button নেই) ④ lekhok-forum-next বুট: bun install→.env→db:push→seed×৪→dev(3000)
+- নতুন-ভয়েস: duration DB-স্থায়ী → রিফ্রেশে সঠিক বাংলা-সময়; পাঠানো-মুহূর্তেই প্লেযোগ্য ভয়েস-বাবল (ডকুমেন্ট-নয়); লেগেসি-রো প্রোব-হ্যাকে আসল সময় পায়
+- হারনেস-লেসন: agent-browser eval-ক্লিকে user-activation নেই → NotAllowedError (trusted click দরকার); headless-এ blob:-অডিও URL-safety-ব্লক — http-serve করে টেস্ট
+- পরের-এজেন্ট: repo session159-নোট দেখুন (PLANS.md); প্রস্তাব: ভয়েস-ট্রান্সক্রিপ্ট (ASR), ওয়েভফর্ম-সিক, প্লেব্যাক-গতি
 
 ---
-Task ID: session160 (Lekhok-Forum — lekhok-forum-next/ Next.js অ্যাপ — ইউজার-স্পেক ৪-ফেজ)
-Agent: Z.ai Code (cron webDevReview)
-Task: ইউজার-স্পেক (বাংলা) — ৩-ফিচার অগ্রাধিকার-তালিকা + ক্রন: ① মোবাইলে বটম-শিট ভ্যারিয়েন্ট (P১) ② লঞ্চারে টাইপ-টু-ফিল্টার (P২) ③ রেলে লাইভ-ব্যাজ (P৩) + ১৫-মিনিট ব্যাকগ্রাউন্ড-ক্রন (এগ্রিগেট)
+Task ID: session192
+Agent: Z.ai Code (user-turn — rafsancuac/Lekhok-Forum, Express+EJS)
+Task: হোমপেজ (লগ-ইন-পূর্ব) নেভবারের ৯-ডট "ফোরাম ডিরেক্টরি" প্যানেল কম্প্যাক্ট/প্রিমিয়াম/প্রফেশনাল — ইউজার-স্পেক (React ForumDirectoryMenu.tsx → EJS-পোর্ট); আগে-বর্তমান-অবস্থা-যাচাই (প্যারালাল-এজেন্ট-প্রোটোকল), আলাদা-কমিট
 
 Work Log:
-- প্রি-যাচাই: ফ্রেশ-clone @f9bae63; lekhok-forum-next/-ই টার্গেট (ইউজার-প্রিভিউ কোডবেস, session158-নোট); বুট: bun install→.env→db:push→seed×৪→dev(3000)
-- **P১ ResponsiveModal** (src/components/shared/ui/): ডেস্কটপ md:-সেন্টারড/md:-বটম-শিট হাইব্রিড — drag-handle + lf-sheet-up (cubic-bezier(0.22,1,0.36,1)) + safe-area-inset-bottom + body-স্ক্রল-লক + Esc + backdrop-ক্লিক + headerExtra-স্লট + useSyncExternalStore-মাউন্ট-গার্ড (react-hooks/set-state-in-effect-লিন্ট-কাটা); CreateGroupModal+FollowListModal মাইগ্রেট (ফলো-লিস্টের ট্যাব-স্ট্রিপ headerExtra-এ; panelRef/দ্বৈত-Esc-অপসারণ)
-- **P২ AppLauncherMenu** (src/components/navigation/): ৯-ডট টপবার-বাটন → ডেস্কটপে ৪০০px ড্রপডাউন / মোবাইলে ResponsiveModal-শিট (useIsMobile-গার্ড — উভয়-একসাথে-রেন্ডার-ব্যাকড্রপ-বাগ-কাটা); ১১-আইটেম × ৪-ক্যাটাগরি (লেখা-ও-ফিড/ফোরাম/যোগাযোগ/প্রোফাইল); টাইপ-টু-ফিল্টার title+desc+category+keywords (বাংলা+ইংরেজি: 'গ্রুপ'/'message'); অটো-ফোকাস + খালি-অবস্থা + ক্লিক-আউটসাইড-ক্লোজ; TopNavbar-নতুন-প্রপ ×৪ (onOpenComposer/onCreateGroup/onTabChange/onOpenLatestStory) + page.tsx-ওয়্যারিং; lf:open-notifications-কাস্টম-ইভেন্টে NotificationBell-প্যানেল-ওপেন; 'স্টোরি'-আইটেম → openLatestStory (ফেচ→প্রথম-রিং-এর-প্রথম-আইডি→openStory)
-- **P৩ লাইভ-ব্যাজ**: /api/user/unread-counts (notifications+messages+bookmarks এক-কল); useUnreadCounts হুক (৪৫-সে-পোল, hidden-স্কিপ, inFlight-গার্ড, lf:messages-changed+lf:notifications-changed+visibilitychange-তাৎক্ষণিক); LeftSidebar-এ 'বিজ্ঞপ্তি'-রো-নতুন + মেসেঞ্জার-লাইভ-ব্যাজ; TopNavbar-২০-সে-ডেডিকেটেড-পোল হুকে-প্রতিস্থাপন (নেটওয়ার্ক-চ্যাটার-হ্রাস); NotificationBell-এ notifyCountChanged-ডিসপ্যাচ (row-read+markAll)
-- **ক্রন**: lib/aggregates.ts (৭-দিনের স্কোর=reactions+comments×২+bookmarks×৩; টপ-১০-পোস্ট+টপ-৫-লেখক-লেডারবোর্ড; ইন-মেমরি-ক্যাশ+getAggregates(maxAge)/refreshAggregates); /api/cron/sync-aggregates (Bearer CRON_SECRET, আনসেটে ৫০৩, রেসপন্সে tookMs/postsRanked/authorsRanked); /api/aggregates/trending (ক্যাশড-টপ-৫); RightRail 'আলোচিত এই সপ্তাহে' কার্ড (র‍্যাঙ্ক-চিপ ১-অরেঞ্জ/২-অ্যাম্বার + স্কোর-মেট্রিক্স + ক্লিকে-পোস্ট-নেভ); .env-এ CRON_SECRET (গিট-বহিষ্কৃত)
-- E2E (agent-browser): ডেস্কটপ-লঞ্চার-ফিল্টার 'গ্রুপ'→২-আইটেম/'message'→১-আইটেম/'xyzabc'→খালি-অবস্থা ✓ আইটেম-ক্লিক→মেসেঞ্জার-ভিউ ✓ বিজ্ঞপ্তি-আইটেম→বেল-প্যানেল-ওপেন (expanded=true) ✓ গ্রুপ-আইটেম→মডাল ✓ আলোচিত-কার্ড-ক্লিক→পোস্ট-নেভ ✓; ৩৯০px: লঞ্চার-শিট+গ্রুপ-মডাল-শিট+ফলো-লিস্ট-শিট (handle+ট্যাব-সহ) স্ক্রিনশট-প্রমাণ ✓ hScroll-০ ✓; curl: unread-counts {notifications:0,messages:4,bookmarks:0} + cron-অননুমোদিত-৪০১/সিক্রেট-সাফল্য {postsRanked:8,authorsRanked:5,tookMs:7} ✓; কনসোল-০ ✓; tsc+eslint শূন্য ✓
-- push-রেস: session159-লেবেল-সমান্তরাল-এজেন্ট (EJS-টপবার) আগে-ল্যান্ডেড → max+1-রীতিতে সমগ্র-রিলেবেল 159→160 (১৫-ফাইল-মার্কার sed) + rebase-ইউনিয়ন (ফাইল-সেট-disjoint, কনফ্লিক্ট-শূন্য) → **0d38479..91261be pushed**
+- প্রথমে বর্তমান-অবস্থা যাচাই: fetch — origin/main @ 189d7b9 (keeper-round); লোকাল junk-কমিট 093c193 (UUID-মেসেজ, mode-change+junk — cron-কিপারের) NOT-in-origin → mixed-reset দ্বারা বাদ, ওয়ার্কিং-ট্রি-অক্ষত
+- স্ক্রিনশট-সোর্স-রিজলিউশন: "দ্রুত অ্যাক্সেস"-সেকশন/স্পেক-হ্রেফ রিপোতে-অনুপস্থিত → ইউজার-মকআপ নিশ্চিত; আসল প্যানেল = Express layout.ejs #dlxPanel (session147) — ইউজারের React-স্পেক EJS-পোর্ট-রীতি (session157-প্যাটার্ন)
+- ফন্ট-যাচাই: fonts.css — HindSiliguri(৩০০-৭০০)=--font-hs, Kalpurush=--font-kp ✓; রুট-যাচাই: /qa ✓, /bookmarks ✓ (auth-গেট→/login), /press ✓, /users=মডারেটর-অনলি ✗
+- ৪-ফাইল-পরিবর্তন: helpers/dir-launcher.js PUB_SECTIONS (৩×১০; মকআপ-রুট→বাস্তব-ম্যাপ: /saved→/bookmarks, /memories→/on-this-day, /reading-circles→/quiz, /publications→/press, /posts→/articles, /faq→/qa — 404-শূন্য-চুক্তি) · server.js app.locals.pubSections · views/layout.ejs #dlxPanel--pub192 (কম্প্যাক্ট-হেডার + টাইল-গ্রিড + কন্ডিশনাল ভিজিটর-ফুটার) · style.css session192-ব্লক (স্কোপড, হেক্স-শূন্য, color-mix সফট-টিন্ট ৩২px আইকন, টাইটেল=--font-hs/ডেস্ক=--font-kp)
+- E2E (agent-browser @9192): ভিজিটর-প্যানেল 406×461px (পূর্বে 560px) — ৩-সেকশন/১০-আইটেম/লাইভ-ব্যাজ/লগইন-ফুট; computed-font HindSiliguri/Kalpurush-প্রমাণ; বাইরে-ক্লিক+✕-ক্লোজ; টাইল-ক্লিকথ্রু→/on-this-day; মোবাইল-390 wrap-hidden/hScroll-০; রুট-হেলথ ১০/১০ curl 200; কনসোল-০
+- রিগ্রেশন (লগড-ইন ismail/secret123): ড্যাশবোর্ড util157-প্যানেল (৪০৭px/৮-রো) + ফিড-রেল ১৩ অক্ষত + pub192-মার্কার-শূন্য (স্কোপ-আইসোলেশন); পাবলিক-পেজে লিগ্যাসি-ফুট; node --check ×২ + audit:views (১০৬) + guard:design ✓
+- হারনেস-গোটচা: sql.js-সার্ভার-রানিং-অবস্থায় reset-স্ক্রিপ্ট = শাটডাউনে ফাইল-ওভাররাইট (স্ক্রিপ্টের-আগে সার্ভার-বন্ধ); লোকাল lekhok.db = প্রোডাকশন-কপি (৪৭-বাস্তব-ইউজার) — ডেমো ismail/riya/tanvir · secret123
+- docs: PLANS session192-নোট + PROJECT §১৯২ + repo-worklog + এই root-worklog
 
 Stage Summary:
 - ইউজার-স্পেক ৪-ফেজ সম্পূর্ণ: বটম-শিট-ইঞ্জিন (২-মডাল-মাইগ্রেটেড) + ৯-ডট-টাইপ-টু-ফিল্টার-ডিরেক্টরি + লাইভ-ব্যাজ (হুক+API+সাইডবার) + ক্রন-এগ্রিগেট (তাৎক্ষণিক-দৃশ্যমান 'আলোচিত' কার্ডসহ)
@@ -2824,3 +2821,5 @@ Stage Summary:
 - style.css: দুই v2-ব্লক → একটিমাত্র 'সেশন ১৮০-একত্র' ফাইনাল-ব্লক (ফাইলের একদম শেষে); lekhok-home.ejs: leader-year প্যারেন-বাদ (চিপ-জোড়া)
 - ডিপ্লয়-নোট: AV boot-epoch-XOR → পুশ+কোল্ড-স্টার্টেই ?v= বদলাবে, ইউজার-ব্রাউজারে নতুন CSS আসবে; অ্যানিমেশন সত্ত্বেও পারফ-প্রভাব নগণ্য (transform/box-shadow কেবল, কোনো layout-paint-loop নেই)
 - স্ক্রিনশট: download/s180-foundings-premium.png, s180-current-premium.png, s180-current-mobile.png
+- পাবলিক ডিরেক্টরি-প্যানেল কম্প্যাক্ট-প্রিমিয়াম (৫৬০→৪০৬px, ফাঁকা-জায়গা-শূন্য গুগল/FB-স্টাইল গ্রিড), টাইপোগ্রাফি-বিভাজন নিখুঁত, ভিজিটর-লগইন-স্ট্রিপ যোগ; লগড-ইন সারফেস (রেল+util157) সম্পূর্ণ-অস্পৃশ্য
+- পরের-এজেন্ট: **session193 লেবেল থেকে**; মকআপ-React-স্পেকে বাস্তব-রুট-ম্যাপ-চুক্তি মনে রাখুন
