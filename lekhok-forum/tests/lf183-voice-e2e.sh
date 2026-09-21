@@ -23,7 +23,7 @@ login() {
 
 echo "── [0] সার্ভার-রিস্টার্ট (ফাইল-ডিবির সাম্প্রতিকতম-অবস্থা লোড)"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash "$(dirname "$0")/../ensure-server.sh" > /dev/null 2>&1
+bash /home/z/lekhok-forum/ensure-server.sh > /dev/null 2>&1
 sleep 1
 
 echo "── [1] লগইন"
@@ -47,7 +47,7 @@ MID=$(echo "$RESP" | rg -o '"id":[0-9]+' | rg -o '[0-9]+' | head -1)
 [ -n "${MID:-}" ] && ok "মেসেজ তৈরি id=$MID" || bad "মেসেজ তৈরি হয়নি: $RESP"
 
 echo "── [3] DB-যাচাই — file_url = data:audio/... (২০০ms-ডিবাউন্স-সেভের জন্য রি-ট্রাই)"
-cd "$(cd "$(dirname "$0")/.." && pwd)/lekhok-forum"
+cd "$(cd "$(dirname "$0")/.." && pwd)"
 DBOK=0
 for i in $(seq 1 10); do
   if node -e "
@@ -98,7 +98,7 @@ echo "$SB" | rg -q "🎙️ ভয়েস মেসেজ" && ok "সাইড
 
 echo "── [8] সার্ভার-রিস্টার্ট-স্থায়িত্ব (আসল-অভিযোগ: 'পরে শুনতে পারছি না')"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash "$(dirname "$0")/../ensure-server.sh" > /dev/null 2>&1 || bash "$(dirname "$0")/../ensure-server.sh"
+bash /home/z/lekhok-forum/ensure-server.sh
 sleep 1
 S5=$(curl -s -m 10 -b "$J2" -c "$J2" -o /tmp/lf183-a2.bin -w "%{http_code} %{content_type} %{size_download}" "$BASE/api/messages/audio/$MID-voice.webm")
 echo "  after-restart: $S5"

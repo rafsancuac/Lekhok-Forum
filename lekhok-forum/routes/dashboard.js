@@ -598,17 +598,28 @@ async function reactionMapFor(messages) {
   return map;
 }
 
-// ── session183: ভয়েস-নোট স্থায়িত্ব — data-URI-in-DB + হালকা-প্রদর্শন লিংক ──────
-// অডিও-বাইটস messages.file_url-এ data-URI হয়ে DB-তেই থাকে (middleware/upload.js
-// messageAudioUpload) — বার্তার-সাথেই অমর, বাইরের-স্টোরেজ/ফাইল-সিস্টেম-যা-ই-হোক।
-// তালিকা/পোল/প্যান/EJS-প্রদর্শনে ভারী data-URI-এর বদলে সংক্ষিপ্ত স্ট্রিম-লিংক যায়
-// (GET /api/messages/audio/:id — নিচে)। লিংকে '-voice.webm' প্রত্যয় — সব-জায়গার
-// এক্সটেনশন-ভিত্তিক isAud চেক (বাবল/সাইডবার/প্যান) নির্বিঘ্নে কাজ করে।
+// ── session183/190: মেসেঞ্জার-মিডিয়া স্থায়িত্ব — data-URI-in-DB + হালকা-প্রদর্শন লিংক ──
+// অডিও ও ছবির বাইটস messages.file_url-এ data-URI হয়ে DB-তেই থাকে (middleware/upload.js
+// messageAudioUpload: session183-অডিও + session190-ছবি) — বার্তার-সাথেই অমর,
+// বাইরের-স্টোরেজ/ফাইল-সিস্টেম-যা-ই-হোক। তালিকা/পোল/প্যান/EJS-প্রদর্শনে ভারী data-URI-
+// এর বদলে সংক্ষিপ্ত স্ট্রিম-লিংক যায়:
+//   data:audio/* → /api/messages/audio/<id>-voice.webm  (audio-রুট)
+//   data:image/* → /api/messages/media/<id>-img.<ext>   (media-রুট, নিচে)
+// প্রত্যয়-এক্সটেনশন (.webm/.webp/…) — সব-জায়গার এক্সটেনশন-ভিত্তিক isAud/isImg চেক
+// (বাবল/সাইডবার/প্যান/পোল-ক্লায়েন্ট) নির্বিঘ্নে কাজ করে।
 function voiceStreamUrl(id, url) {
   const u = String(url || '');
-  if (u.slice(0, 11) !== 'data:audio/') return url;
+  if (u.slice(0, 5) !== 'data:') return url;
   const nid = parseInt(id, 10);
-  return nid > 0 ? ('/api/messages/audio/' + nid + '-voice.webm') : url;
+  if (!(nid > 0)) return url;
+  if (u.slice(0, 11) === 'data:audio/') return '/api/messages/audio/' + nid + '-voice.webm';
+  if (u.slice(0, 11) === 'data:image/') {
+    const m = u.match(/^data:\s*image\/([a-z0-9.+-]+)\s*;/i);
+    const sub = (m && m[1]) || 'webp';
+    const ext = sub === 'jpeg' ? 'jpg' : sub.replace(/[^a-z0-9]/gi, '');
+    return '/api/messages/media/' + nid + '-img.' + ext;
+  }
+  return url;
 }
 
 // সেশন ৭৬: মিউট-স্টেট হেল্পার — মিউট করা সদস্যকে নোটিফিকেশন যাবে না
@@ -1290,7 +1301,7 @@ router.get('/api/messages/poll', ensureAuth, async (req, res) => {
   const messages = rows.map(r => ({
     id: r.id,
     body: r.body,
-    file_url: r.file_url,
+    file_url: voiceStreamUrl(r.id, r.file_url), // session190-ফিক্স: /api/messages/check যেখানে ছিল, এই-পোলেও — data-URI-পেলোড-ফাঁস বন্ধ
     file_name: r.file_name,
     sender_id: r.sender_id,
     sender_name: r.sender_name,
@@ -1404,6 +1415,33 @@ router.get('/api/messages/audio/:id', ensureAuth, async (req, res) => {
     return res.status(200).send(buf);
   } catch (e) {
     return res.status(500).json({ ok: false, error: 'audio-stream-failed' });
+  }
+});
+
+// ── session190: মেসেঞ্জার-ছবির বাইট স্ট্রিম — DB-র data:image URI থেকে সার্ভ ────
+// ভয়েস-রুটের হুবহু নিরাপত্তা-ছাঁচ: ensureAuth + convAccess-সদস্যতা + immutable-ক্যাশ।
+// মাইম-অনুমতিপত্র কঠোর: কেবল image/(webp|png|jpeg|gif) — SVG সবসময় বাদ
+// (same-origin <img>-এ SVG-স্ক্রিপ্ট = stored-XSS ভেক্টর; আপলোড-স্তরেও SVG নেই)।
+// nosniff + Content-Disposition:inline — ব্রাউজার কখনো অন্য-কিছু ভাববে না।
+router.get('/api/messages/media/:id', ensureAuth, async (req, res) => {
+  try {
+    const nid = parseInt(req.params.id, 10);
+    if (!nid) return res.status(400).json({ ok: false, error: 'bad-id' });
+    const row = await db.prepare('SELECT id, conversation_id, sender_id, file_url FROM messages WHERE id = ?').get(nid);
+    if (!row || String(row.file_url || '').slice(0, 11) !== 'data:image/') return res.status(404).json({ ok: false, error: 'not-found' });
+    const conv = await convAccess(row.conversation_id, req.session.user.id);
+    if (!conv) return res.status(403).json({ ok: false, error: 'forbidden' });
+    const m = String(row.file_url).match(/^data:(image\/(?:webp|png|jpeg|gif));base64,([\s\S]+)$/);
+    if (!m) return res.status(404).json({ ok: false, error: 'bad-data' });
+    const buf = Buffer.from(m[2], 'base64');
+    res.setHeader('Content-Type', m[1]);
+    res.setHeader('Content-Length', buf.length);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    return res.status(200).send(buf);
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'media-stream-failed' });
   }
 });
 
@@ -1593,7 +1631,7 @@ router.get('/api/messages/conv/:id/media', ensureAuth, async (req, res) => {
   for (const m of rows) {
     const shownUrl = voiceStreamUrl(m.id, m.file_url); // session183: ভয়েস → স্ট্রিম-লিংক (.webm-প্রত্যয় → isAud ধরে)
     const item = { id: m.id, url: shownUrl, name: m.file_name || 'ফাইল', by: m.sender_name, at: m.created_at, duration: parseInt(m.duration, 10) || 0 };
-    if (isImg(m.file_url)) images.push(item);
+    if (isImg(shownUrl)) images.push(item); // session190-ফিক্স: raw data:image-এ এক্সটেনশন-টেস্ট ফেল করত — সংক্ষিপ্ত-লিঙ্কে চেক
     else if (isAud(shownUrl)) voice.push(item);
     else { if (!seen.has(m.file_url)) { seen.add(m.file_url); files.push(item); } }
   }

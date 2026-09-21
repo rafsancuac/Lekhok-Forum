@@ -184,16 +184,21 @@ function makeUpload({ subdir, maxBytes, allowedTypes, allowedExts, inlineAudio }
       // consume req.file.buffer, so one call covers both).
       await optimizeToWebp(req.file);
 
-      // ── session183: মেসেঞ্জার ভয়েস-নোট স্থায়িত্ব (inlineAudio) ────────────────
-      // ছোট অডিও (≤৪MB — ভয়েস-নোট বাস্তবে ≤৪০০KB) ডিস্ক/Blob-নির্ভরতা-শূন্যভাবে
-      // data-URI হয়ে বার্তার file_url-এই DB-তে স্থায়ী থাকে — বার্তার-সাথেই অমর।
+      // ── session183/190: মেসেঞ্জার মিডিয়া স্থায়িত্ব (inlineAudio → audio+image) ──
+      // ছোট অডিও (≤৪MB — ভয়েস-নোট বাস্তবে ≤৪০০KB) ও ছোট ছবি (≤৪MB — WebP-অপটিমাইজ-
+      // পরবর্তী চ্যাট-ফটো সাধারণত ১০০-৬০০KB) ডিস্ক/Blob-নির্ভরতা-শূন্যভাবে data-URI
+      // হয়ে বার্তার file_url-এই DB-তে স্থায়ী থাকে — বার্তার-সাথেই অমর।
       // Vercel-এর এফিমারাল ফাইল-সিস্টেম, ব্লব-টোকেন-অনুপস্থিতি বা ব্লব-ব্যর্থতায়ও
-      // "পাঠানো ভয়েস পরে শোনা যাচ্ছে না"-বাগ আর সম্ভব নয়।
+      // "পাঠানো ভয়েস/ছবি পরে দেখা/শোনা যাচ্ছে না"-বাগ আর সম্ভব নয়।
       // (তালিকা/পোল-পেলোড হালকা রাখতে প্রদর্শনের-সময় voiceStreamUrl() সংক্ষিপ্ত
-      // স্ট্রিম-লিংক দেয় — routes/dashboard.js → /api/messages/audio/:id)
+      // স্ট্রিম-লিংক দেয় — routes/dashboard.js → /api/messages/audio|media/:id)
+      // নোট: SVG এখানে আসেই না (DOC_TYPES-এ নেই) — stored-XSS-ভেক্টর অবশিষ্ট নেই।
       if (inlineAudio && req.file && req.file.buffer) {
         const rawMime = String(req.file.mimetype || '').split(';')[0].trim();
-        if (/^audio\//.test(rawMime) && req.file.buffer.length <= 4 * 1024 * 1024) {
+        const small = req.file.buffer.length <= 4 * 1024 * 1024;
+        const isAudioMime = /^audio\//.test(rawMime);
+        const isImageMime = /^image\/(webp|png|jpeg|gif)$/.test(rawMime); // svg ইচ্ছাকৃত-বাদ
+        if ((isAudioMime || isImageMime) && small) {
           req.file.url      = 'data:' + rawMime + ';base64,' + req.file.buffer.toString('base64');
           req.file.path     = req.file.url;
           req.file.filename = req.file.originalname;
