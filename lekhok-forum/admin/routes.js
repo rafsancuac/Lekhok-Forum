@@ -622,6 +622,23 @@ router.get('/home-leadership', requireAdmin, async (req, res) => {
     return (v && String(v).trim()) ? String(v) : (HL55.LEADER_STATEMENTS[slotKey] || '');
   };
   const slots = HL55.buildHomeLeadershipSlots(rows, statementOf);
+  // সেশন ৬৩: প্রতি-স্লট হোম-ভিজিবিলিটি — settings 'home_hidden_slots' (CSV)
+  // প্যানেলের অন/অফ সুইচের প্রাথমিক-অবস্থা; লুকানো স্লট হোমপেজে রেন্ডার হয় না।
+  // সেশন ৬৪: সেটিং অনুপস্থিত হলে ডিফল্ট current_advisor_1/2 লুকানো ধরা হয়
+  // (উপদেষ্টা নিয়োগ না-দেওয়া পর্যন্ত — seed-ডেমো প্রোডে আর দেখাবে না)।
+  let hiddenSlots63 = HL55.DEFAULT_HIDDEN_SLOTS.slice();
+  try {
+    hiddenSlots63 = HL55.effectiveHiddenSlots(await db.getSetting('home_hidden_slots'));
+  } catch (e) { /* ডিফল্টই থাকুক */ }
+  // সেশন ৬৪: অতিরিক্ত-উপদেষ্টা (বাউন্ডারি-কার্যবর্ষের তৃতীয়+ সদস্য) — প্যানেলে
+  // সম্পাদনা/টগলযোগ্য; home_extra_members (opt-in CSV)-এ থাকলেই হোমপেজে দেখা যায়।
+  let legacyExtras64 = [], currentExtras64 = [], extraActive64 = [];
+  try {
+    const groups64 = await HL55.fetchAdvisoryGroups(db);
+    legacyExtras64 = groups64.founding.slice(2);
+    currentExtras64 = groups64.current.slice(2);
+    extraActive64 = HL55.parseCsvList(await db.getSetting('home_extra_members')).map(Number);
+  } catch (e) { /* ব্যর্থ হলে খালি — প্যানেলে শুধু ৮-স্লটই থাকবে */ }
   // সেশন ৬২: কার্যবর্ষ-ড্রপডাউনের অপশন-তালিকা — DB-র বিদ্যমান কার্যবর্ষগুলো +
   // আদর্শ পরিসর (২০১৮-১৯ … ২০৩২-৩৩), ডুপ-বিহীন, নবীনতম-আগে সাজানো।
   const _bn62 = '০১২৩৪৫৬৭৮৯';
@@ -637,6 +654,10 @@ router.get('/home-leadership', requireAdmin, async (req, res) => {
     slots,
     latestTerm: rows.latestTerm || null,
     termOptions,
+    hiddenSlots: hiddenSlots63,
+    legacyExtras: legacyExtras64,
+    currentExtras: currentExtras64,
+    extraActive: extraActive64,
     saved: req.query.saved === '1',
     error: req.query.err ? String(req.query.err) : null,
     currentPath: '/admin/home-leadership'
@@ -766,6 +787,135 @@ router.post('/home-leadership/slot', requireAdmin, (req, res, next) => memberPho
   } catch (e) {
     console.error('[admin:home-leadership] save failed:', e.message);
     return done(false, { ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+  }
+});
+
+// সেশন ৬৩: স্লট-ভিজিবিলিটি টগল — {slot, hidden} → settings 'home_hidden_slots' (CSV)।
+// প্যানেলের অন/অফ সুইচ থেকে fetch-কল আসে (কোনো রিলোড/পপ-আপ নেই — ইন-প্লেস আপডেট)।
+// লুকানো স্লটের কার্ড হোমপেজের leaderPair-এ রেন্ডার-ই হয় না (views/lekhok-home.ejs)।
+// ডাটা-নিরপেক্ষ: members-রো অক্ষুণ্ণ থাকে — শুধু হোম-প্রদর্শন বন্ধ/চালু (আবার-টগলযোগ্য)।
+// সেশন ৬৪: ① প্রাথমিক-তালিকা এখন ডিফল্ট-সচেতন (সেটিং অনুপস্থিত = current_advisor_1/2
+//   লুকানো — প্রথম-টগলেও ডিফল্ট-অবস্থা না-হারিয়ে স্পষ্ট-তালিকায় রূপ নেয়)
+// ② {member_id, active}-ব্রাঞ্চ: অতিরিক্ত-উপদেষ্টার opt-in টগল → 'home_extra_members'।
+router.post('/home-leadership/visibility', requireAdmin, async (req, res) => {
+  const slotKey = String(req.body.slot || '').trim();
+  const memberId64 = parseInt(req.body.member_id, 10);
+
+  // ── অতিরিক্ত-উপদেষ্টা opt-in টগল (মেম্বার-কী) ──
+  if (!slotKey && memberId64) {
+    const active64 = req.body.active === true || req.body.active === '1' || req.body.active === 1;
+    try {
+      const member64 = await db.prepare('SELECT id, name, member_type FROM members WHERE id = ?').get(memberId64);
+      if (!member64 || member64.member_type !== 'advisory') {
+        return res.status(400).json({ ok: false, error: 'অজানা সদস্য' });
+      }
+      const cur64 = HL55.parseCsvList(await db.getSetting('home_extra_members'));
+      const next64 = active64
+        ? Array.from(new Set(cur64.concat([String(memberId64)])))
+        : cur64.filter((x) => Number(x) !== memberId64);
+      await setSetting('home_extra_members', next64.join(','));
+      await TA42.audit(db, req, 'home-leadership-extra-visibility', 'settings', null,
+        'member#' + memberId64 + (active64 ? ' → হোমে দৃশ্যমান' : ' → হোমে লুকানো'));
+      return res.status(200).json({ ok: true, memberId: memberId64, active: active64, extraMembers: next64 });
+    } catch (e) {
+      console.error('[admin:home-leadership] extra visibility failed:', e.message);
+      return res.status(500).json({ ok: false, error: 'টগল ব্যর্থ: ' + e.message });
+    }
+  }
+
+  if (!HL55.SLOT_META.some(s => s.key === slotKey)) {
+    return res.status(400).json({ ok: false, error: 'অজানা স্লট' });
+  }
+  const hidden = req.body.hidden === true || req.body.hidden === '1' || req.body.hidden === 1;
+  try {
+    // সেশন ৬৪: সেটিং অনুপস্থিত হলে ডিফল্ট-লুকানো-তালিকা থেকে শুরু (present-beats-default)
+    let current63 = HL55.DEFAULT_HIDDEN_SLOTS.slice();
+    try {
+      const raw63 = await db.getSetting('home_hidden_slots');
+      if (raw63 !== null && raw63 !== undefined) current63 = HL55.parseCsvList(raw63);
+    } catch (e) { /* ডিফল্টই থাকুক */ }
+    const next63 = hidden
+      ? Array.from(new Set(current63.concat([slotKey])))
+      : current63.filter(k => k !== slotKey);
+    // SLOT_META-ক্রমে গুছিয়ে রাখা (মানবপাঠ্য CSV)
+    const ordered63 = HL55.SLOT_META.map(s => s.key).filter(k => next63.indexOf(k) !== -1);
+    await setSetting('home_hidden_slots', ordered63.join(','));
+    await TA42.audit(db, req, 'home-leadership-visibility', 'settings', null, slotKey + (hidden ? ' → হোমে লুকানো' : ' → হোমে দৃশ্যমান'));
+    return res.status(200).json({ ok: true, slot: slotKey, hidden, hiddenSlots: ordered63 });
+  } catch (e) {
+    console.error('[admin:home-leadership] visibility failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'টগল ব্যর্থ: ' + e.message });
+  }
+});
+
+// সেশন ৬৪: নতুন উপদেষ্টা/সদস্য তৈরি — {group: 'legacy'|'current', name, role, …}।
+// কার্যবর্ষ না-দিলে গ্রুপের বাউন্ডারি-কার্যবর্ষ ধরা হয় (legacy→প্রাচীনতম, current→নবীনতম);
+// sort_order = advisory-র MAX+1 → current-গ্রুপে নতুনজন প্রথমে (advisor_1-অবস্থানে) বসে,
+// আর ডিফল্ট-লুকানো-স্লট নীতিতে নিয়োগ-ঘোষণা না-হওয়া পর্যন্ত হোমপেজে দেখাবেই না।
+router.post('/home-leadership/extra', requireAdmin, (req, res, next) => memberPhotoUpload55(req, res, next), async (req, res) => {
+  const wantsJson = String(req.headers.accept || '').includes('application/json');
+  const done = (ok, payload) => {
+    if (wantsJson) return res.status(ok ? 200 : 400).json(payload);
+    return ok ? res.redirect('/admin/home-leadership?saved=1')
+              : res.redirect('/admin/home-leadership?err=' + encodeURIComponent(payload.error || 'সংরক্ষণ ব্যর্থ'));
+  };
+  try {
+    const group = String(req.body.group || 'current') === 'legacy' ? 'legacy' : 'current';
+    const name = String(req.body.name || '').trim();
+    if (!name) return done(false, { ok: false, error: 'নাম আবশ্যক' });
+    if (req.uploadError) return done(false, { ok: false, error: req.uploadError });
+    const role = String(req.body.role || '').trim() || 'উপদেষ্টা';
+    const message = String(req.body.message || '').replace(/\r\n/g, '\n').trim();
+    const imageUrlFile = (req.filesContent && req.filesContent.member_photo && req.filesContent.member_photo.url) || '';
+    const imageUrl = imageUrlFile || String(req.body.image_url || '').trim();
+    const profileUrl = String(req.body.profile_url || '').trim();
+    const socialFb = String(req.body.social_fb || '').trim();
+    const socialLinkedin = String(req.body.social_linkedin || '').trim();
+    const socialEmail = String(req.body.social_email || '').trim();
+
+    const groups64 = await HL55.fetchAdvisoryGroups(db);
+    let effTerm = String(req.body.term_year || '').trim();
+    if (!effTerm) effTerm = (group === 'legacy' ? groups64.oldest : groups64.newest) || '';
+    const so64 = await db.prepare('SELECT MAX(sort_order) AS mx FROM members WHERE member_type = ?').get('advisory');
+    const sortOrder64 = ((so64 && so64.mx != null) ? so64.mx : 0) + 1;
+    const mid64 = await db.nextMemberId();
+    const ins64 = await db.prepare('INSERT INTO members (name, role, member_type, term_year, message, image_url, profile_url, social_fb, social_linkedin, social_email, sort_order, member_id, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(name, role, 'advisory', effTerm || null, message, imageUrl, profileUrl, socialFb, socialLinkedin, socialEmail, sortOrder64, mid64, 'unclaimed');
+    const newId64 = ins64 && ins64.lastInsertRowid != null ? Number(ins64.lastInsertRowid) : null;
+    if (!newId64) return done(false, { ok: false, error: 'নতুন সদস্য তৈরি ব্যর্থ হয়েছে' });
+    await TA42.audit(db, req, 'home-leadership-extra-create', 'members', newId64, group + ' গ্রুপে নতুন উপদেষ্টা');
+    const rows64 = await db.prepare(HL55.MEMBER_JOIN + ' WHERE m.id = ?').all(newId64);
+    return done(true, { ok: true, memberId: newId64, group, display: HL55.displayOf((rows64 && rows64[0]) || null, '') });
+  } catch (e) {
+    console.error('[admin:home-leadership] extra create failed:', e.message);
+    return done(false, { ok: false, error: 'সংরক্ষণ ব্যর্থ: ' + e.message });
+  }
+});
+
+// সেশন ৬৪: অতিরিক্ত-উপদেষ্টা মুছে ফেলা — শুধুই আনক্লেইমড + লিংকড-অ্যাকাউন্ট-বিহীন
+// advisory-রো (প্যানেল-তৈরি); লিংকড/ক্লেইম-করা সদস্য কমিটি-প্যানেলের ডাটাও — সে-ক্ষেত্রে
+// শুধু টগল-অফ (লুকানো) প্রযোজ্য। টু-স্টেপ-কনফার্ম UI-তে; কোনো confirm()-পপ-আপ নেই।
+router.delete('/home-leadership/extra', requireAdmin, async (req, res) => {
+  const memberId64 = parseInt(req.query.id, 10);
+  if (!memberId64) return res.status(400).json({ ok: false, error: 'ID প্রয়োজন' });
+  try {
+    const m64 = await db.prepare('SELECT * FROM members WHERE id = ?').get(memberId64);
+    if (!m64) return res.status(404).json({ ok: false, error: 'সদস্য পাওয়া যায়নি' });
+    if (m64.member_type !== 'advisory' || m64.user_id || (m64.account_status && m64.account_status !== 'unclaimed')) {
+      return res.status(400).json({ ok: false, error: 'লিংকড/ক্লেইম-করা সদস্য এখান থেকে মোছা যাবে না — শুধু লুকিয়ে রাখুন।' });
+    }
+    await db.prepare('DELETE FROM members WHERE id = ?').run(memberId64);
+    // home_extra_members-থেকেও বাদ (ছাঁটাই)
+    try {
+      const cur64 = HL55.parseCsvList(await db.getSetting('home_extra_members'));
+      const next64 = cur64.filter((x) => Number(x) !== memberId64);
+      if (next64.length !== cur64.length) await setSetting('home_extra_members', next64.join(','));
+    } catch (e) { /* ছাঁটাই-ব্যর্থতা মূল-ডিলিটকে বাধা দেবে না */ }
+    await TA42.audit(db, req, 'home-leadership-extra-delete', 'members', memberId64, m64.name || '');
+    return res.status(200).json({ ok: true, memberId: memberId64 });
+  } catch (e) {
+    console.error('[admin:home-leadership] extra delete failed:', e.message);
+    return res.status(500).json({ ok: false, error: 'ডিলিট ব্যর্থ: ' + e.message });
   }
 });
 

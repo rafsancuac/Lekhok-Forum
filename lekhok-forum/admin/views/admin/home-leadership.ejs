@@ -24,6 +24,18 @@
     .hl-slot { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s, border-color .15s; }
     .hl-slot:hover { box-shadow: 0 6px 18px rgba(15,23,42,.08); border-color: #a7f3d0; }
     .hl-slot.editing { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.18); }
+    /* সেশন ৬৩: প্রতি-স্লট হোম-ভিজিবিলিটি সুইচ — অন = সবুজ/দৃশ্যমান, অফ = ধূসর/লুকানো;
+       লুকানো কার্ড কিছুটা ম্লাট (opacity) — ডাটা না-হারিয়ে শুধু হোম-প্রদর্শন বন্ধ */
+    .hl-vis { display: inline-flex; align-items: center; gap: 6px; }
+    .hl-vis-label { font-size: 10.5px; font-weight: 700; color: #059669; white-space: nowrap; }
+    .hl-vis.is-off .hl-vis-label { color: #94a3b8; }
+    .hl-switch { width: 36px; height: 20px; border-radius: 999px; background: #10b981; border: none; padding: 2px; cursor: pointer; display: inline-flex; align-items: center; transition: background .18s; flex-shrink: 0; }
+    .hl-switch .hl-knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(15,23,42,.25); transform: translateX(16px); transition: transform .18s; }
+    .hl-switch.off { background: #cbd5e1; }
+    .hl-switch.off .hl-knob { transform: translateX(0); }
+    .hl-switch:disabled { opacity: .55; cursor: wait; }
+    .hl-slot.vis-hidden { opacity: .62; }
+    .hl-slot.vis-hidden:hover { opacity: 1; }
     .hl-slot-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .hl-slot-tag { align-self: flex-start; font-size: 11px; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 999px; padding: 3px 10px; }
     .hl-okbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #065f46; background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 999px; padding: 3px 9px; }
@@ -70,6 +82,16 @@
     .hl-banner { border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 13.5px; }
     .hl-banner.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
     .hl-banner.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    /* সেশন ৬৪: অতিরিক্ত-উপদেষ্টা কার্ড + নতুন-যোগ টাইল */
+    .hl-addtile { border: 1.5px dashed #6ee7b7; border-radius: 10px; background: #f0fdf4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px 14px; min-height: 130px; text-align: center; cursor: pointer; transition: background .15s, border-color .15s; }
+    .hl-addtile:hover { background: #ecfdf5; border-color: #10b981; }
+    .hl-addtile i { font-size: 20px; color: #10b981; }
+    .hl-addtile strong { font-size: 13px; color: #065f46; }
+    .hl-addtile span.sub { font-size: 11px; color: #64748b; }
+    .hl-addtile.editing { cursor: default; align-items: stretch; text-align: left; background: #fff; }
+    .hl-delbtn { font-size: 11px; color: #e11d48; background: none; border: none; cursor: pointer; padding: 4px 2px; font-weight: 600; }
+    .hl-delbtn:hover { text-decoration: underline; }
+    .hl-delbtn.armed { color: #fff; background: #e11d48; border-radius: 6px; padding: 4px 8px; }
   </style>
 </head>
 <body>
@@ -77,7 +99,7 @@
 <div class="admin-main">
   <div class="admin-header">
     <h1>হোম নেতৃত্ব ব্যবস্থাপনা</h1>
-    <p>হোমপেজের <strong>“নেতৃত্বের ধারা”</strong> ও <strong>“বর্তমান নেতৃত্ব”</strong> সেকশনের ৮টি কার্ড — প্রতিটি কার্ডের ভেতরেই <strong>সম্পাদনা</strong> চেপে নাম, ছবি, পদবি, কার্যবর্ষ ও বাণী বদলান; সংরক্ষণের সাথে-সাথে হোমপেজে দেখা যাবে
+    <p>হোমপেজের <strong>“নেতৃত্বের ধারা”</strong> ও <strong>“বর্তমান নেতৃত্ব”</strong> সেকশনের কার্ডগুলো — প্রতিটি কার্ডের ভেতরেই <strong>সম্পাদনা</strong> চেপে নাম, ছবি, পদবি, কার্যবর্ষ ও বাণী বদলান; সংরক্ষণের সাথে-সাথে হোমপেজে দেখা যাবে। প্রতিটি কার্ডের কোণার <strong>অন/অফ সুইচে</strong> ক্লিক করলেই সেটি হোমপেজে দেখা বা লুকানো যায় (যেমন: উপদেষ্টা নিয়োগ না-দেওয়া পর্যন্ত উপদেষ্টা-কার্ড লুকিয়ে রাখুন)। <strong>“＋ নতুন উপদেষ্টা যোগ করুন”</strong> টাইল থেকে যত-খুশি নতুন উপদেষ্টা যোগ করা যায় — তৈরির পর টগল-অন করলেই হোমপেজে চলে আসবে
       | <a href="/" target="_blank"><i class="fas fa-up-right-from-square"></i> হোমপেজ দেখুন</a></p>
   </div>
 
@@ -99,10 +121,15 @@
            const baniSource  = m ? ((m.message && String(m.message).trim()) ? 'বাণী ফিল্ড' : ((m.bio && String(m.bio).trim()) ? 'বায়ো' : 'ফলব্যাক-বাণী')) : 'ফলব্যাক-বাণী';
            const selTerm     = (m && m.term_year) ? m.term_year : (sec === 'current' && latestTerm ? latestTerm : '');
       %>
-      <div class="hl-slot" id="slot-<%= slot.key %>" data-slot="<%= slot.key %>">
+      <div class="hl-slot<%= hiddenSlots.includes(slot.key) ? ' vis-hidden' : '' %>" id="slot-<%= slot.key %>" data-slot="<%= slot.key %>">
         <div class="hl-slot-head">
           <span class="hl-slot-tag"><%= slot.title %></span>
           <span class="hl-okbadge" data-role="saveOk" hidden><i class="fas fa-check"></i> সংরক্ষিত হয়েছে</span>
+          <%# সেশন ৬৩: অন/অফ সুইচ — ক্লিকেই হোমপেজে দেখা/লুকানো (রিলোড-পপআপ-শূন্য) %>
+          <div class="hl-vis <%= hiddenSlots.includes(slot.key) ? 'is-off' : '' %>" data-role="visWrap">
+            <span class="hl-vis-label" data-role="visLabel"><%= hiddenSlots.includes(slot.key) ? 'লুকানো' : 'দৃশ্যমান' %></span>
+            <button type="button" class="hl-switch <%= hiddenSlots.includes(slot.key) ? 'off' : '' %>" data-vis data-slot="<%= slot.key %>" aria-pressed="<%= hiddenSlots.includes(slot.key) ? 'false' : 'true' %>" aria-label="হোমপেজে কার্ড দেখান বা লুকান" title="<%= hiddenSlots.includes(slot.key) ? 'হোমপেজে দেখাতে ক্লিক করুন' : 'হোমপেজ থেকে লুকাতে ক্লিক করুন' %>"><span class="hl-knob"></span></button>
+          </div>
         </div>
 
         <%# ═══════════ ভিউ-মোড ═══════════ %>
@@ -211,6 +238,154 @@
         </div>
       </div>
       <% }); %>
+      <%# ═══════════ সেশন ৬৪: অতিরিক্ত-উপদেষ্টা কার্ড (বাউন্ডারি-কার্যবর্ষের ৩য়+ সদস্য) ═══════════
+          home_extra_members (opt-in)-এ থাকলেই হোমপেজে দেখায়; সম্পাদনা/টগল/ডিলিট-সমর্থ।
+          এডিট-ফর্ম /home-leadership/slot-এই POST করে (slot=বেস-স্লট শুধু মেটা-ফলব্যাকে)। %>
+      <% const extras64 = (sec === 'legacy' ? (typeof legacyExtras !== 'undefined' ? legacyExtras : []) : (typeof currentExtras !== 'undefined' ? currentExtras : [])); %>
+      <% const baseSlot64 = sec === 'legacy' ? 'founding_advisor_2' : 'current_advisor_2'; %>
+      <% const extraActive64 = (typeof extraActive !== 'undefined' ? extraActive : []); %>
+      <% extras64.forEach(x => { const xActive = extraActive64.includes(Number(x.id)); const xName = x.user_full_name || x.name || ''; const xImg = x.user_avatar_url || x.image_url || '/assets/img/avatar-placeholder.svg?v=2'; const xBani = (x.message && String(x.message).trim()) ? x.message : (x.bio || ''); %>
+      <div class="hl-slot<%= xActive ? '' : ' vis-hidden' %>" id="extra-<%= x.id %>" data-extra="<%= x.id %>">
+        <div class="hl-slot-head">
+          <span class="hl-slot-tag">অতিরিক্ত উপদেষ্টা</span>
+          <span class="hl-okbadge" data-role="saveOk" hidden><i class="fas fa-check"></i> সংরক্ষিত হয়েছে</span>
+          <div class="hl-vis <%= xActive ? '' : 'is-off' %>" data-role="visWrap">
+            <span class="hl-vis-label" data-role="visLabel"><%= xActive ? 'দৃশ্যমান' : 'লুকানো' %></span>
+            <button type="button" class="hl-switch <%= xActive ? '' : 'off' %>" data-vis aria-pressed="<%= xActive ? 'true' : 'false' %>" aria-label="হোমপেজে কার্ড দেখান বা লুকান" title="<%= xActive ? 'হোমপেজ থেকে লুকাতে ক্লিক করুন' : 'হোমপেজে দেখাতে ক্লিক করুন' %>"><span class="hl-knob"></span></button>
+          </div>
+        </div>
+        <div data-role="view">
+          <div data-role="person">
+            <div class="hl-person">
+              <img class="hl-photo" data-role="photo" src="<%= xImg %>" alt="<%= xName %>" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+              <div>
+                <h3 data-role="name"><%= xName || '(নাম খালি)' %></h3>
+                <p class="role" data-role="role"><%= x.role || '—' %></p>
+                <p class="term" data-role="term"><%= x.term_year ? '(' + x.term_year + ')' : '' %><%= x.user_id ? ' · লিংকড অ্যাকাউন্ট' : '' %></p>
+              </div>
+            </div>
+          </div>
+          <p class="hl-bani" data-role="bani" <%= xBani ? '' : 'hidden' %>><%= xBani || '—' %></p>
+          <span class="hl-src" data-role="src" <%= xBani ? '' : 'hidden' %>><i class="fas fa-quote-left"></i> উৎস: <%= (x.message && String(x.message).trim()) ? 'বাণী ফিল্ড' : 'বায়ো' %></span>
+        </div>
+        <form class="hl-edit" hidden method="POST" action="/admin/home-leadership/slot" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+          <input type="hidden" name="slot" value="<%= baseSlot64 %>">
+          <input type="hidden" name="member_id" value="<%= x.id %>">
+          <div class="hl-photo-edit">
+            <img class="hl-photo-preview" data-role="preview" src="<%= xImg %>" alt="প্রিভিউ" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+            <div class="hl-fieldstack">
+              <input type="file" name="member_photo" data-role="file" accept="image/jpeg,image/png,image/webp,image/gif">
+              <input type="url" name="image_url" data-role="url" placeholder="অথবা ছবির সরাসরি লিংক (https://…)" value="<%= x.image_url || '' %>">
+              <small>ফাইল দিলে সেটাই প্রাধান্য পাবে (WebP-অপটিমাইজ); নইলে URL।</small>
+            </div>
+          </div>
+          <div class="hl-row2">
+            <div class="form-group">
+              <label>নাম *</label>
+              <input type="text" name="name" required placeholder="পূর্ণ নাম লিখুন…" value="<%= x.name || '' %>">
+            </div>
+            <div class="form-group">
+              <label>পদবি</label>
+              <input type="text" name="role" placeholder="যেমন: উপদেষ্টা" value="<%= x.role || '' %>">
+            </div>
+          </div>
+          <div class="hl-row2">
+            <div class="form-group">
+              <label>কার্যবর্ষ</label>
+              <select name="term_year">
+                <option value="">(কার্যবর্ষ নেই)</option>
+                <% (termOptions || []).forEach(t => { %>
+                <option value="<%= t %>" <%= t === x.term_year ? 'selected' : '' %>><%= t %></option>
+                <% }); %>
+                <% if (x.term_year && !(termOptions || []).includes(x.term_year)) { %>
+                <option value="<%= x.term_year %>" selected><%= x.term_year %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>আইডি / প্রোফাইল লিংক</label>
+              <input type="url" name="profile_url" placeholder="https://facebook.com/… বা /profile/username" value="<%= x.profile_url || '' %>">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>বাণী (কার্ডে প্রাধান্য পায়)</label>
+            <textarea name="message" rows="3" placeholder="এই লেখাটিই কার্ডে দেখাবে"><%= x.message || '' %></textarea>
+          </div>
+          <details class="hl-extra">
+            <summary><i class="fas fa-link"></i> সোশ্যাল-লিংক (ঐচ্ছিক)</summary>
+            <div class="hl-row2">
+              <div class="form-group"><label>ফেসবুক</label><input type="url" name="social_fb" value="<%= x.social_fb || '' %>"></div>
+              <div class="form-group"><label>LinkedIn</label><input type="url" name="social_linkedin" value="<%= x.social_linkedin || '' %>"></div>
+            </div>
+            <div class="form-group"><label>ইমেইল</label><input type="email" name="social_email" value="<%= x.social_email || '' %>"></div>
+          </details>
+          <div class="hl-statusline" data-role="status"></div>
+          <div class="hl-edit-actions">
+            <button type="button" class="btn btn-sm" data-cancel>বাতিল</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-floppy-disk"></i> সংরক্ষণ করুন</button>
+          </div>
+        </form>
+        <div class="hl-actions">
+          <% if (!x.user_id && (!x.account_status || x.account_status === 'unclaimed')) { %>
+          <button type="button" class="hl-delbtn" data-del data-member="<%= x.id %>">মুছে ফেলুন</button>
+          <% } else { %>
+          <span class="hl-slot-id">লিংকড — শুধু লুকানো যাবে</span>
+          <% } %>
+          <button type="button" class="btn btn-primary btn-sm" data-edit>
+            <i class="fas fa-pen-to-square"></i> সম্পাদনা
+          </button>
+        </div>
+      </div>
+      <% }); %>
+      <%# ═══════════ সেশন ৬৪: "＋ নতুন উপদেষ্টা যোগ করুন" টাইল — যত-খুশি নতুন কার্ড ═══════════ %>
+      <div class="hl-addtile" data-addtile data-group="<%= sec %>">
+        <div data-role="addprompt">
+          <i class="fas fa-user-plus"></i>
+          <strong>＋ নতুন উপদেষ্টা / সদস্য যোগ করুন</strong>
+          <span class="sub"><%= sec === 'legacy' ? 'প্রতিষ্ঠাকালীন উপদেষ্টা' : 'বর্তমান উপদেষ্টা' %> — তৈরির পর টগল-অন করলেই হোমপেজে দেখাবে</span>
+        </div>
+        <form class="hl-edit" hidden method="POST" action="/admin/home-leadership/extra" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+          <input type="hidden" name="group" value="<%= sec %>">
+          <div class="hl-photo-edit">
+            <img class="hl-photo-preview" data-role="preview" src="/assets/img/avatar-placeholder.svg?v=2" alt="প্রিভিউ" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+            <div class="hl-fieldstack">
+              <input type="file" name="member_photo" data-role="file" accept="image/jpeg,image/png,image/webp,image/gif">
+              <input type="url" name="image_url" data-role="url" placeholder="অথবা ছবির সরাসরি লিংক (https://…)">
+              <small>ছবি ঐচ্ছিক — খালি রাখলে অ্যাভাটার-প্লেসহোল্ডার দেখাবে।</small>
+            </div>
+          </div>
+          <div class="hl-row2">
+            <div class="form-group">
+              <label>নাম *</label>
+              <input type="text" name="name" required placeholder="পূর্ণ নাম লিখুন…">
+            </div>
+            <div class="form-group">
+              <label>পদবি</label>
+              <input type="text" name="role" placeholder="যেমন: উপদেষ্টা" value="উপদেষ্টা">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>কার্যবর্ষ (খালি রাখলে <%= sec === 'legacy' ? 'প্রাচীনতম' : 'সর্বশেষ' %> কার্যবর্ষ ধরা হবে)</label>
+            <select name="term_year">
+              <option value="">(স্বয়ংক্রিয় — গ্রুপের বর্তমান কার্যবর্ষ)</option>
+              <% (termOptions || []).forEach(t => { %>
+              <option value="<%= t %>"><%= t %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>বাণী (ঐচ্ছিক)</label>
+            <textarea name="message" rows="2" placeholder="কার্ডে দেখাতে চাইলে লিখুন"></textarea>
+          </div>
+          <div class="hl-statusline" data-role="status"></div>
+          <div class="hl-edit-actions">
+            <button type="button" class="btn btn-sm" data-cancel>বাতিল</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> তৈরি করুন</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
   <% }); %>
@@ -221,7 +396,9 @@
    • সম্পাদনা → কার্ডের ভেতরেই ফর্ম; সংরক্ষণ → fetch + কার্ড ইন-প্লেস-আপডেট।
    • ফলস-এরর-ফিক্স: আগের কোড {s,j}-অবজেক্টে res.ok দেখত (সবসময় undefined) —
      ফলে সফল-সেভেও "সংরক্ষণ ব্যর্থ" অ্যালার্ট আসত। এখন স্ট্যাটাস-কোড যাচাই।
-   • খালি-স্লটে নাম দিলে নতুন সদস্য-রো তৈরি হয় (created:true → member_id-বসানো)। */
+   • খালি-স্লটে নাম দিলে নতুন সদস্য-রো তৈরি হয় (created:true → member_id-বসানো)।
+   সেশন ৬৩ — প্রতি-স্লট ভিজিবিলিটি-সুইচ: ক্লিকেই POST /home-leadership/visibility →
+   settings 'home_hidden_slots' → হোমপেজে সাথে-সাথে কার্ড দেখা/লুকানো (রিলোড নেই)। */
 (function () {
   var PLACEHOLDER = '/assets/img/avatar-placeholder.svg?v=2';
 
@@ -240,6 +417,104 @@
     var urlIn    = form.querySelector('[data-role="url"]');
     var submitBtn = form.querySelector('button[type="submit"]');
     var okTimer = null;
+
+    /* ── সেশন ৬৩: ভিজিবিলিটি-সুইচ — অপটিমিস্টিক টগল + সার্ভার-কনফার্ম; ব্যর্থে রোলব্যাক ──
+       সেশন ৬৪: অতিরিক্ত-উপদেষ্টা (data-extra) হলে {member_id, active}-ব্রাঞ্চ —
+       active = !willHide (সুইচ-অন = opt-in তালিকায়, অফ = বাইরে) */
+    var visBtn   = card.querySelector('[data-vis]');
+    var visWrap  = card.querySelector('[data-role="visWrap"]');
+    var visLabel = card.querySelector('[data-role="visLabel"]');
+    var isExtra64 = card.hasAttribute('data-extra');
+    if (visBtn && visWrap && visLabel) {
+      visBtn.addEventListener('click', function () {
+        var willHide = !visBtn.classList.contains('off'); /* এখন অন → ক্লিকে অফ(লুকাও) */
+        var oldLabel = visLabel.textContent;
+        visBtn.disabled = true;
+        /* অপটিমিস্টিক: সাথে-সাথে সুইচ-অবস্থা বদলাও */
+        visBtn.classList.toggle('off', willHide);
+        visWrap.classList.toggle('is-off', willHide);
+        visLabel.textContent = willHide ? 'লুকানো' : 'দৃশ্যমান';
+        visBtn.setAttribute('aria-pressed', willHide ? 'false' : 'true');
+        card.classList.toggle('vis-hidden', willHide);
+        var tok = (form.querySelector('input[name="_csrf"]') || {}).value || '';
+        var body64 = isExtra64
+          ? { member_id: card.getAttribute('data-extra'), active: !willHide }
+          : { slot: card.getAttribute('data-slot'), hidden: willHide };
+        fetch('/admin/home-leadership/visibility', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': tok },
+          credentials: 'same-origin',
+          body: JSON.stringify(body64)
+        }).then(function (r) {
+          return r.json().then(function (j) { return { s: r.status, j: j }; });
+        }).then(function (res) {
+          var ok = res.s >= 200 && res.s < 300 && res.j && res.j.ok;
+          if (!ok) {
+            /* রোলব্যাক — আগের-অবস্থায় ফিরে যাও */
+            visBtn.classList.toggle('off', !willHide);
+            visWrap.classList.toggle('is-off', !willHide);
+            visLabel.textContent = oldLabel;
+            visBtn.setAttribute('aria-pressed', willHide ? 'true' : 'false');
+            card.classList.toggle('vis-hidden', !willHide);
+            okBadge.innerHTML = '<i class="fas fa-triangle-exclamation"></i> টগল ব্যর্থ';
+            okBadge.hidden = false;
+            setTimeout(function () { okBadge.hidden = true; }, 2600);
+          } else {
+            showOk();
+          }
+          visBtn.disabled = false;
+        }).catch(function () {
+          visBtn.classList.toggle('off', !willHide);
+          visWrap.classList.toggle('is-off', !willHide);
+          visLabel.textContent = oldLabel;
+          visBtn.disabled = false;
+        });
+      });
+    }
+
+    /* ── সেশন ৬৪: টু-স্টেপ-ডিলিট (শুধু অতিরিক্ত-উপদেষ্টা — পপ-আপ/confirm() শূন্য):
+       ১ম-ক্লিকে বাটন লাল "নিশ্চিত?" (৩.৫সে-পরে নিজেই থিতিয়ে যায়), ২য়-ক্লিকে DELETE →
+       সফল হলে কার্ড DOM-থেকেই সরে যায় */
+    var delBtn64 = card.querySelector('[data-del]');
+    if (delBtn64) {
+      var disarm64 = null;
+      delBtn64.addEventListener('click', function () {
+        if (!delBtn64.classList.contains('armed')) {
+          delBtn64.classList.add('armed');
+          delBtn64.textContent = 'নিশ্চিতভাবে মুছবেন?';
+          disarm64 = setTimeout(function () {
+            delBtn64.classList.remove('armed');
+            delBtn64.textContent = 'মুছে ফেলুন';
+          }, 3500);
+          return;
+        }
+        if (disarm64) clearTimeout(disarm64);
+        delBtn64.disabled = true;
+        var tok64 = (form.querySelector('input[name="_csrf"]') || {}).value || '';
+        fetch('/admin/home-leadership/extra?id=' + encodeURIComponent(card.getAttribute('data-del') || delBtn64.getAttribute('data-member')), {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json', 'X-CSRF-Token': tok64 },
+          credentials: 'same-origin'
+        }).then(function (r) {
+          return r.json().then(function (j) { return { s: r.status, j: j }; });
+        }).then(function (res) {
+          if (res.s >= 200 && res.s < 300 && res.j && res.j.ok) {
+            card.remove();
+          } else {
+            delBtn64.disabled = false;
+            delBtn64.classList.remove('armed');
+            delBtn64.textContent = 'মুছে ফেলুন';
+            okBadge.innerHTML = '<i class="fas fa-triangle-exclamation"></i> ' + ((res.j && res.j.error) || 'ডিলিট ব্যর্থ');
+            okBadge.hidden = false;
+            setTimeout(function () { okBadge.hidden = true; }, 3200);
+          }
+        }).catch(function () {
+          delBtn64.disabled = false;
+          delBtn64.classList.remove('armed');
+          delBtn64.textContent = 'মুছে ফেলুন';
+        });
+      });
+    }
 
     function enterEdit() {
       statusEl.textContent = ''; statusEl.classList.remove('err');
@@ -298,7 +573,7 @@
           var d = res.j.display || {};
           var hasMember = !!(d.name || res.j.memberId);
           if (hasMember) {
-            person.hidden = false; empty.hidden = true;
+            person.hidden = false; if (empty) empty.hidden = true; /* সেশন ৬৪: অতিরিক্ত-কার্ডে empty-নোড নেই */
             bani.hidden = false; src.hidden = false;
             if (d.name) view.querySelector('[data-role="name"]').textContent = d.name;
             if (d.img)  view.querySelector('[data-role="photo"]').src = d.img;
@@ -328,6 +603,76 @@
   }
 
   document.querySelectorAll('.hl-slot').forEach(wireCard);
+
+  /* ── সেশন ৬৪: "＋ নতুন উপদেষ্টা" টাইল — টাইল-ক্লিকে ইনলাইন-ফর্ম; তৈরির পর
+     নতুন কার্ডের অ্যাঙ্করে স্ক্রল-সহ রিলোড (কোনো পপ-আপ নেই)। ছবি-প্রিভিউ এক-ই নিয়ম। */
+  document.querySelectorAll('[data-addtile]').forEach(function (tile) {
+    var prompt64 = tile.querySelector('[data-role="addprompt"]');
+    var aForm    = tile.querySelector('form.hl-edit');
+    var aStatus  = aForm.querySelector('[data-role="status"]');
+    var aFile    = aForm.querySelector('[data-role="file"]');
+    var aUrl     = aForm.querySelector('[data-role="url"]');
+    var aPrev    = aForm.querySelector('[data-role="preview"]');
+    var aSubmit  = aForm.querySelector('button[type="submit"]');
+    tile.addEventListener('click', function (ev) {
+      if (ev.target.closest('form') || ev.target.closest('button') || ev.target.closest('a')) return;
+      if (aForm.hidden) {
+        prompt64.hidden = true;
+        aForm.hidden = false;
+        tile.classList.add('editing');
+        var n64 = aForm.querySelector('input[name="name"]');
+        if (n64) n64.focus();
+      }
+    });
+    aForm.querySelector('[data-cancel]').addEventListener('click', function () {
+      aForm.reset();
+      aPrev.src = '/assets/img/avatar-placeholder.svg?v=2';
+      aStatus.textContent = ''; aStatus.classList.remove('err');
+      aForm.hidden = true;
+      prompt64.hidden = false;
+      tile.classList.remove('editing');
+    });
+    aFile.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        var rr = new FileReader();
+        rr.onload = function (ev2) { aPrev.src = ev2.target.result; };
+        rr.readAsDataURL(this.files[0]);
+        aUrl.value = '';
+      }
+    });
+    aUrl.addEventListener('input', function () {
+      aPrev.src = this.value.trim() || '/assets/img/avatar-placeholder.svg?v=2';
+    });
+    aForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      aStatus.textContent = ''; aStatus.classList.remove('err');
+      var oldHtml64 = aSubmit.innerHTML;
+      aSubmit.disabled = true;
+      aSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> তৈরি হচ্ছে…';
+      var fd64 = new FormData(aForm);
+      var tok64 = (aForm.querySelector('input[name="_csrf"]') || {}).value || '';
+      fetch(aForm.action, {
+        method: 'POST', body: fd64,
+        headers: { 'Accept': 'application/json', 'X-CSRF-Token': tok64 },
+        credentials: 'same-origin'
+      }).then(function (r) {
+        return r.json().then(function (j) { return { s: r.status, j: j }; });
+      }).then(function (res) {
+        if (res.s >= 200 && res.s < 300 && res.j && res.j.ok && res.j.memberId) {
+          window.location.hash = 'extra-' + res.j.memberId;
+          window.location.reload();
+        } else {
+          aStatus.textContent = (res.j && res.j.error) ? res.j.error : 'তৈরি ব্যর্থ হয়েছে — আবার চেষ্টা করুন।';
+          aStatus.classList.add('err');
+          aSubmit.disabled = false; aSubmit.innerHTML = oldHtml64;
+        }
+      }).catch(function () {
+        aStatus.textContent = 'নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন।';
+        aStatus.classList.add('err');
+        aSubmit.disabled = false; aSubmit.innerHTML = oldHtml64;
+      });
+    });
+  });
 
   // Esc — খোলা ইনলাইন-এডিটর বন্ধ (পরিবর্তন না-সেভ করেই)
   document.addEventListener('keydown', function (e) {

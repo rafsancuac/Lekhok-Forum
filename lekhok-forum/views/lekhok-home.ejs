@@ -410,25 +410,52 @@
         // (ভেতরের <a>-তে ক্লিক হলে সেটাই প্রাধিন্য পায়)।
         return `<div class="leader-card has-image leader-card-featured${profileHref ? ' is-linked' : ''}"${profileHref ? ` data-href="${profileHref}"` : ''}>${inner}</div>`;
       }
-      function leaderPair(members, roles, yearLabel, statements) {
-        if (!members || !members.length) return '';
-        return `
-          <div class="leadership-cell">
-            <div class="leaders-grid leaders-grid-pair">
-              ${members.map((m, i) => leaderCard(m, roles[i], yearLabel, statements[i])).join('')}
-            </div>
-          </div>`;
-      }
+      /* সেশন ৬৪: leaderPair সরিয়ে leaderRow64 — N-কার্ড flex-center সারি (নিচে)।
+         পুরনো ২-কার্ড-পেয়ার-গ্রিডে লুকালে ফাঁকা-কলাম থেকে যেত — সেন্টার-সমস্যার মূল-কারণ। */
     %>
 
     <%# সেশন ৫৫: ফলব্যাক-বাণী এখন অ্যাডমিন-এডিটেবল — প্রাধিকার:
           settings('content_home_statement_<slot>') → data/leaderStatements.js ডিফল্ট।
           স্লট-কী-গুলো helpers/home-leadership.js SLOT_META-র সাথে অভিন্ন। %>
     <% const stmtSlot55 = (k) => { const v = (typeof getSetting === 'function' ? getSetting('content_home_statement_' + k) : null); return (v && String(v).trim()) ? String(v) : (leaderStatements[k] || ''); }; %>
+    <%# সেশন ৬৪: ভিজিবিলিটি-সেট রুট-থেকে আসে (ডিফল্ট-লুকানো-স্লট-সচেতন):
+          • homeHiddenSlots — কার্যকর লুকানো-স্লট-তালিকা (settings অনুপস্থিত হলে
+            current_advisor_1/2 — উপদেষ্টা নিয়োগ না-দেওয়া পর্যন্ত ডামি-কার্ড বন্ধ)
+          • homeExtraMembers — অতিরিক্ত-উপদেষ্টাদের opt-in member-id তালিকা
+          পুরনো getSetting-ভিত্তিক ফলব্যাকও রাখা হলো (ক্যাশ/পুরনো-কল-সুরক্ষা)। %>
+    <%
+      var hiddenList64 = Array.isArray(homeHiddenSlots) ? homeHiddenSlots : [];
+      if (!Array.isArray(homeHiddenSlots)) {
+        try {
+          const raw64 = (typeof getSetting === 'function' ? getSetting('home_hidden_slots') : null);
+          if (raw64) String(raw64).split(',').map(s => s.trim()).filter(Boolean).forEach(k => hiddenList64.push(k));
+        } catch (e64) { /* ফাঁকা সেট = সব স্লট দৃশ্যমান */ }
+      }
+      var extraIds64 = (Array.isArray(homeExtraMembers) ? homeExtraMembers : []).map(Number);
+      var hiddenSet64 = new Set(hiddenList64);
+      // কার্ড লুকানো? স্লট-কার্ড → স্লট-কী লুকানো-তালিকায়; অতিরিক্ত-কার্ড → opt-in তালিকায় নেই
+      var isHidden64 = (c64) => c64.slotKey ? hiddenSet64.has(c64.slotKey) : !extraIds64.includes(Number(c64.m.id));
+    %>
+
+    <%# সেশন ৬৪: N-কার্ড সেন্টার-রো — flex flex-wrap justify-center সমতুল্য CSS।
+        ২টা কার্ড = মাঝের-জোড়া (৪-সারির ২ ও ৩ নং-অবস্থান), ৩/৪টা = সমদূরত্বে পূর্ণ-সারি,
+        আরও হলে পরের সারিতে কেন্দ্রে। খালি-নাম ও লুকানো কার্ড রেন্ডার-ই হয় না। %>
+    <%
+      function leaderRow64(cards64) {
+        const list64 = (Array.isArray(cards64) ? cards64 : []).filter(c64 => c64 && c64.m && String(c64.m.user_full_name || c64.m.name || '').trim() && !isHidden64(c64));
+        if (!list64.length) return '';
+        return '<div class="leaders-row">' + list64.map((c64) => {
+          const isFounding64 = c64.slotKey && (c64.slotKey.indexOf('found') === 0 || c64.slotKey.indexOf('founding') === 0);
+          const role64 = c64.slotKey ? C('home_role_' + c64.slotKey) : (c64.m.role || '');
+          const year64 = c64.slotKey ? (isFounding64 ? C('home_year_founding') : C('home_year_current')) : (c64.m.term_year || '');
+          const st64 = c64.slotKey ? stmtSlot55(c64.slotKey) : '';
+          return leaderCard(c64.m, role64, year64, st64);
+        }).join('') + '</div>';
+      }
+    %>
 
     <div class="leadership-matrix">
-      <%- leaderPair(founders, [C('home_role_founder_president'), C('home_role_founder_gs')], C('home_year_founding'), [stmtSlot55('founder_president'), stmtSlot55('founder_general_secretary')]) %>
-      <%- leaderPair(foundingAdvisors, [C('home_role_founding_advisor1'), C('home_role_founding_advisor2')], C('home_year_founding'), [stmtSlot55('founding_advisor_1'), stmtSlot55('founding_advisor_2')]) %>
+      <%- leaderRow64(homeLegacyCards) %>
     </div>
   </div>
 </section>
@@ -445,8 +472,7 @@
     </div>
 
     <div class="leadership-matrix">
-      <%- leaderPair(currentLeaders, [C('home_role_current_president'), C('home_role_current_gs')], C('home_year_current'), [stmtSlot55('current_president'), stmtSlot55('current_general_secretary')]) %>
-      <%- leaderPair(currentAdvisors, [C('home_role_current_advisor1'), C('home_role_current_advisor2')], C('home_year_current'), [stmtSlot55('current_advisor_1'), stmtSlot55('current_advisor_2')]) %>
+      <%- leaderRow64(homeCurrentCards) %>
     </div>
   </div>
 </section>
