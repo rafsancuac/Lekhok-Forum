@@ -2577,3 +2577,23 @@ Stage Summary:
 - ইউজার-প্রভাব: নেতৃত্ব-প্যানেলে এখন উপদেষ্টা-পরিষদ ব্যবস্থাপনাও; কার্ড টেনে বা ↑↓ দিয়ে ক্রম-সাজাই (batch-ট্রানজেকশন, রেস-মুক্ত); অ্যাপ-অ্যাকাউন্ট-যুক্ত নেতার নামে ক্লিকে প্রোফাইল খোলে
 - পরিবর্তিত: schema.prisma (ADVISOR-কমেন্ট+username), admin/leadership/page.tsx (৩-ট্যাব+SortableLeaderCard), api/admin/leadership/route.ts (ADVISOR+username), api/admin/leadership/reorder/route.ts (নতুন), api/leadership/route.ts (username-সিলেক্ট), page.tsx+LeadershipView.tsx (৩-সেকশন+onOpenProfile), seed-leadership.ts (ADVISOR)
 - পরের-এজেন্ট: session192; প্রস্তাব — প্রোড-ডিপ্লয়-পরবর্তী Turso-পোর্টে LeadershipMember, বাণী-সম্পন্ন উপদেষ্টা-তথ্য পূরণ (ইউজার-ইনপুট), ড্র্যাগ-হ্যান্ডেলে touch-action-মোবাইল-অপ্টিমাইজ
+
+---
+Task ID: 61 (Session cron-续 — নেতৃত্ব-সিস্টেম Task58-পরবর্তী-প্রস্তাব: উপদেষ্টা-ক্যাটাগরি + ড্র্যাগ-ড্রপ + প্রোফাইল-লিঙ্ক)
+Agent: Z.ai Code (keeper-session — user 'continue' ডেভ-রাউন্ড)
+Task: Session189-প্রস্তাব ফলায়ন: ① উপদেষ্টা (ADVISOR) ক্যাটাগরি ② @dnd-kit ড্র্যাগ-ড্রপ-পুনঃসাজাই ③ হোম-ভিউতে প্রোফাইল-লিঙ্ক (username ফিল্ড)
+
+Work Log:
+- Prisma: LeadershipMember.username (String @default("")) — db:push OK; sandbox-reset-পরবর্তী তাজা DB-তে seed-leadership পুনঃচালনা (23 জন = 8+15)
+- API ×৩: ① admin/route — CATEGORIES+=ADVISOR, sanitizeUsername() (ল্যাটিন-ছোট+._- , ≤40), POST/PUT username গ্রহণ ② **নতুন /api/admin/leadership/reorder** — batch {items:[{id,order}]} → এক-$transaction, আইডি-অস্তিত্ব-যাচাই, 401/403/404/400 ③ public GET select+=username
+- Admin panel: ৩-ট্যাব (live কাউন্ট), Category/CATEGORY_META+ADVISOR ('🎓 উপদেষ্টা পরিষদ'), উপদেষ্টায় term-ঐচ্ছিক (required কন্ডিশনাল), মোডালে প্রোফাইল-ইউজারনেম ইনপুট, কার্ডে @username ব্যাজ; **SortableLeaderCard** (useSortable, গ্রিপ-হ্যান্ডেল touch-none, isDragging-শ্যাডো/বর্ডার) + DndContext (PointerSensor distance:6 + TouchSensor delay:180 + KeyboardSensor) + rectSortingStrategy; handleMove এখন batch-API (২-PUT-রেস বন্ধ)
+- LeadershipView: তৃতীয় সেকশন (GraduationCap), byCategory(), username-কার্ডে নাম=বাটন → onOpenProfile → page.tsx-এর openProfile (?user= ডিপ-লিঙ্ক-সম-আচরণ, নিজের-নামে টাইমলাইন)
+- **agent-browser E2E**: গেট→সুইচ→৩-ট্যাব(৮/১৫/০)→↑↓-অদলবদল (API-যাচাই)→**ম্যানুয়াল pointer-ড্র্যাগ সফল** (mouse move/down/up ধাপে; card1→pos3 → [রাফছান,নেজাম,আরমান], DB-পার্সিস্ট) → ফেরত-ড্র্যাগ; উপদেষ্টা-যোগ (term-খালি OK, username 'rafik.alam' স্যানিটাইজ); সভাপতি ইসমাইল হোসেন ইমনে username=ismail + @ব্যাজ; হোম ৩-সেকশন + সভাপতি-নাম-ক্লিক → নিজের টাইমলাইন; অবৈধ ?user=rafik.alam → graceful fallback (ক্র্যাশ-শূন্য); মোবাইল ৩৯০: হোম+প্যানেল hScroll=0; গার্ড: reorder নো-কুকি/নন-অ্যাডমিন 403; console+dev.log শূন্য
+- **বাগ-ফিক্স (E2E-তে ধরা)**: handleDragEnd-এর changed-তুলনা index-সারিবদ্ধ ছিল — ধারাবাহিক 1..n-অর্ডারে সব-অপরিবর্তিত দেখায় → ড্র্যাগ-শেষে কিছু-পার্সিস্ট-হত-না; **আইডি-ভিত্তিক Map-তুলনায় সংশোধন**
+- গোটচা: agent-browser ডেমন মাঝে-মাঝে bash-কলের-মধ্যে মরে (refs/cookie হারায়, "launched browser" stderr=চিহ্ন) — ref-নির্ভর মাল্টি-স্টেপ ফ্লো এক-ইনভোকেশনে চেইন করা বাধ্যতামূলক; window.confirm পেতে --no-auto-dialog + dialog accept
+- টেস্ট-উপদেষ্টা ডিলিট (API-পথ, session-cookie জার) — DB-ক্লিন, president-username ধরে-রাখা
+
+Stage Summary:
+- ইউজার-প্রভাব: অ্যাডমিন এখন ৩-পরিষদ চালাতে পারে (প্রতিষ্ঠাতা/বর্তমান/উপদেষ্টা), গ্রিপে-টেনে বা ↑↓-তে সাজাতে পারে (এক-ট্রানজেকশন, রেস-মুক্ত), অ্যাপ-সদস্য-নেতাদের কার্ড-নাম প্রোফাইল-লিঙ্ক হয়
+- পরিবর্তিত: lekhok-forum-next/{prisma/schema.prisma, src/app/api/admin/leadership/route.ts, src/app/api/admin/leadership/reorder/route.ts-নতুন, src/app/api/leadership/route.ts, src/app/admin/leadership/page.tsx, src/components/leadership/LeadershipView.tsx, src/app/page.tsx-১লাইন}
+- পরের-এজেন্ট: প্রোডে-ভেরিফিকেশন (Actions-ডিপ্লয়ের পর ?leadership=1 প্রোব), উপদেষ্টা-তালিকার প্রকৃত-ডেটা (ইউজার-ইনপুট লাগবে), lf183-হারনেস-আধুনিকায়ন অক্ষুণ্ণ
