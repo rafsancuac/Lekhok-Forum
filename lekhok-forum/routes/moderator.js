@@ -79,7 +79,8 @@ router.post('/navigation', ensureModerator, async (req, res) => {
 // ── Committee members management (admin + moderators) ────────────────────────
 // Drives /committee (member_type='central') and /committee/advisory
 // (member_type='advisory') public pages. Each row carries কার্যবর্ষ (term_year).
-const MEMBER_TYPES = ['central', 'advisory'];
+// সেশন ১৯২: কমিটি-উইং সম্প্রসারণ (প্রকাশনা/দপ্তর/আইটি-প্রচার) — সংরক্ষণ-কী 'central' অপরিবর্তিত
+const MEMBER_TYPES = ['central', 'advisory', 'publication', 'office', 'it-promo'];
 
 async function resolveMemberUserId(username) {
   const uname = String(username || '').trim();
@@ -116,7 +117,7 @@ function parseImages(v) {
 // উপদেষ্টারা কেবল উপদেষ্টা পরিষদ (advisory) টাইপে থাকবেন (ব্যাকএন্ড গার্ড)।
 function advisorRoleError(v) {
   if (v.member_type === 'central' && /উপদেষ্টা/.test(v.role)) {
-    return 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।';
+    return 'কার্যনির্বাহী পরিষদে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" উইং-এ যোগ করুন।';
   }
   return null;
 }

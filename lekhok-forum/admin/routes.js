@@ -499,9 +499,45 @@ router.delete('/events/:id', requireScope('events'), async (req, res) => {
 // Helper — fetch all users for the "link to account" dropdown.
 const fetchAllUsers = () => db.prepare("SELECT id, username, full_name FROM users ORDER BY full_name").all();
 
+// ── সেশন ১৯২: কমিটি-উইং রেজিস্ট্রি ──────────────────────────────────────────
+// একক-বিশ্ববিদ্যালয় সংগঠনে "কেন্দ্রীয়" শব্দটি অর্থহীন (ইউজার-স্পেক) — প্রদর্শন ও
+// ফর্মে কার্যকরী উইং-নাম; সংরক্ষণ-কী 'central' অপরিবর্তিত (সব-পুরোনো-কুয়েরি-সামঞ্জস্য)।
+const MEMBER_WINGS = [
+  { key: 'central',     label: 'কার্যনির্বাহী পরিষদ' },
+  { key: 'advisory',    label: 'উপদেষ্টা পরিষদ' },
+  { key: 'publication', label: 'প্রকাশনা ও সাহিত্য সেল' },
+  { key: 'office',      label: 'দপ্তর ও সাংগঠনিক উইং' },
+  { key: 'it-promo',    label: 'আইটি, ই-পেপার ও প্রচার সেল' },
+  { key: 'founder',     label: 'প্রতিষ্ঠাতা সদস্য' },
+  { key: 'permanent',   label: 'স্থায়ী পরিষদ' },
+  { key: 'branch',      label: 'বিশ্ববিদ্যালয় শাখা' },
+  { key: 'general',     label: 'সাধারণ সদস্য' }
+];
+const MEMBER_WING_LABEL = Object.fromEntries(MEMBER_WINGS.map(w => [w.key, w.label]));
+const safeMemberType = (t) => (MEMBER_WING_LABEL[t] ? t : 'central');
+// বাংলা-অঙ্কের কার্যবর্ষ সাজানো (pages.js bnLead-এর অ্যাডমিন-অনুলিপি)
+const bnLeadAdmin = (s) => parseInt(String(s || '').replace(/[০-৯]/g, d => '০১২৩৪৫৬৭৮৯'.indexOf(d)), 10) || 0;
+
 router.get('/members', requireAdmin, async (req, res) => {
-  const members = await db.prepare("SELECT * FROM members ORDER BY IFNULL(term_year,'') DESC, member_type, sort_order").all();
-  res.render('admin/members/list', { members, currentPath: '/admin/members' });
+  // কার্যবর্ষ + উইং ফিল্টার — হোমপেজের /committee কার্যবর্ষ-ড্রপডাউনের অ্যাডমিন-অনুলিপি
+  const selTerm = String(req.query.term || '').trim();
+  const selType = String(req.query.type || '').trim();
+  const conds = [], args = [];
+  if (selTerm && selTerm !== 'ALL') { conds.push('term_year = ?'); args.push(selTerm); }
+  if (selType && MEMBER_WING_LABEL[selType]) { conds.push('member_type = ?'); args.push(selType); }
+  const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
+  const members = await db.prepare(`SELECT * FROM members ${where} ORDER BY IFNULL(term_year,'') DESC, member_type, sort_order`).all(...args);
+  // ফিল্টার-নিরপেক্ষ কাউন্ট (ড্রপডাউনের বন্ধনী-সংখ্যা)
+  const yearCounts = {}, typeCounts = {};
+  (await db.prepare("SELECT term_year, COUNT(*) AS c FROM members WHERE term_year IS NOT NULL AND term_year != '' GROUP BY term_year").all())
+    .forEach(r => { yearCounts[r.term_year] = r.c; });
+  (await db.prepare('SELECT member_type, COUNT(*) AS c FROM members GROUP BY member_type').all())
+    .forEach(r => { typeCounts[r.member_type] = r.c; });
+  const totalAll = (await db.prepare('SELECT COUNT(*) AS c FROM members').get()).c;
+  const years = Object.keys(yearCounts).sort((a, b) => bnLeadAdmin(b) - bnLeadAdmin(a));
+  const suspendN = parseInt(req.query.suspend, 10) || 0;
+  const restoreN = parseInt(req.query.restore, 10) || 0;
+  res.render('admin/members/list', { members, currentPath: '/admin/members', selTerm, selType, yearCounts, typeCounts, totalAll, years, suspendN, restoreN, MEMBER_WINGS, MEMBER_WING_LABEL });
 });
 
 router.get('/members/new', requireAdmin, async (req, res) => {
@@ -517,10 +553,11 @@ router.post('/members', requireAdmin, async (req, res) => {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'নাম আবশ্যক', allUsers, currentPath: '/admin/members' });
   }
-  // টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয়তে উপদেষ্টা role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
-  if ((member_type || 'central') === 'central' && /উপদেষ্টা/.test(role || '')) {
+  // টাস্ক ১২ (পর্ব ৩, অংশ খ) + সেশন ১৯২: কার্যনির্বাহী পরিষদে উপদেষ্টা-role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
+  const typeNew = safeMemberType(member_type);
+  if (typeNew === 'central' && /উপদেষ্টা/.test(role || '')) {
     const allUsers = await fetchAllUsers();
-    return res.render('admin/members/form', { member: req.body, error: 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।', allUsers, currentPath: '/admin/members' });
+    return res.render('admin/members/form', { member: req.body, error: 'কার্যনির্বাহী পরিষদে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" উইং-এ যোগ করুন।', allUsers, currentPath: '/admin/members' });
   }
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
@@ -541,7 +578,7 @@ router.post('/members', requireAdmin, async (req, res) => {
   }
   const acctStatus = userIdNum ? 'active' : 'unclaimed';
   try {
-    await db.prepare('INSERT INTO members (name, role, designation, bio, message, image_url, profile_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', message || '', image_url || '', String(profile_url || '').trim(), social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, mid, department || '', acctStatus);
+    await db.prepare('INSERT INTO members (name, role, designation, bio, message, image_url, profile_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, member_id, department, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(name, role || '', designation || '', bio || '', message || '', image_url || '', String(profile_url || '').trim(), social_fb || '', social_linkedin || '', social_email || '', typeNew, termYear, parseInt(sort_order) || 0, userIdNum, mid, department || '', acctStatus);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: req.body, error: 'এই নাম, কার্যবর্ষ ও ধরনে একজন সদস্য ইতিমধ্যে যোগ করা আছেন।', allUsers, currentPath: '/admin/members' });
@@ -558,15 +595,16 @@ router.get('/members/:id/edit', requireAdmin, async (req, res) => {
 
 router.put('/members/:id', requireAdmin, async (req, res) => {
   const { name, role, designation, bio, message, image_url, profile_url, social_fb, social_linkedin, social_email, member_type, term_year, sort_order, user_id, department } = req.body;
-  // টাস্ক ১২ (পর্ব ৩, অংশ খ): কেন্দ্রীয়তে উপদেষ্টা role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
-  if ((member_type || 'central') === 'central' && /উপদেষ্টা/.test(role || '')) {
+  // টাস্ক ১২ (পর্ব ৩, অংশ খ) + সেশন ১৯২: কার্যনির্বাহী পরিষদে উপদেষ্টা-role নিষিদ্ধ (ব্যাকএন্ড গার্ড)
+  const typeEdit = safeMemberType(member_type);
+  if (typeEdit === 'central' && /উপদেষ্টা/.test(role || '')) {
     const allUsers = await fetchAllUsers();
-    return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'কেন্দ্রীয় কমিটিতে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" ধরনে যোগ করুন।', allUsers, currentPath: '/admin/members' });
+    return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'কার্যনির্বাহী পরিষদে "উপদেষ্টা" পদ রাখা যাবে না — উপদেষ্টারা "উপদেষ্টা পরিষদ" উইং-এ যোগ করুন।', allUsers, currentPath: '/admin/members' });
   }
   const userIdNum = user_id && String(user_id).trim() !== '' ? parseInt(user_id, 10) : null;
   const termYear = term_year && String(term_year).trim() !== '' ? String(term_year).trim() : null;
   try {
-    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, message=?, image_url=?, profile_url=?, social_fb=?, social_linkedin=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=?, department=? WHERE id=?').run(name, role || '', designation || '', bio || '', message || '', image_url || '', String(profile_url || '').trim(), social_fb || '', social_linkedin || '', social_email || '', member_type || 'central', termYear, parseInt(sort_order) || 0, userIdNum, department || '', req.params.id);
+    await db.prepare('UPDATE members SET name=?, role=?, designation=?, bio=?, message=?, image_url=?, profile_url=?, social_fb=?, social_linkedin=?, social_email=?, member_type=?, term_year=?, sort_order=?, user_id=?, department=? WHERE id=?').run(name, role || '', designation || '', bio || '', message || '', image_url || '', String(profile_url || '').trim(), social_fb || '', social_linkedin || '', social_email || '', typeEdit, termYear, parseInt(sort_order) || 0, userIdNum, department || '', req.params.id);
   } catch (e) {
     const allUsers = await fetchAllUsers();
     return res.render('admin/members/form', { member: { ...req.body, id: req.params.id }, error: 'এই নাম, কার্যবর্ষ ও ধরনে আরেকজন সদস্য ইতিমধ্যে আছেন।', allUsers, currentPath: '/admin/members' });
@@ -599,6 +637,36 @@ router.post('/members/:id/restore', requireAdmin, async (req, res) => {
   if (m.user_id) await db.prepare("UPDATE users SET status = 'active' WHERE id = ?").run(m.user_id);
   await TA42.audit(db, req, 'member-restore', 'members', m.id, m.member_id || '');
   res.redirect('/admin/members?saved=1&restore=1');
+});
+
+// ── সেশন ১৯২: বাল্ক স্থগিত / পুনঃসক্রিয় (মার্ক-অল/আনমার্ক-অল বাল্ক-বারের অ্যাকশন) ──
+router.post('/members/bulk-suspend', requireAdmin, async (req, res) => {
+  const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+  let n = 0;
+  for (const id of ids) {
+    const m = await db.prepare('SELECT * FROM members WHERE id = ?').get(id);
+    if (!m) continue;
+    await db.prepare("UPDATE members SET account_status = 'suspended' WHERE id = ?").run(id);
+    if (m.user_id) await db.prepare("UPDATE users SET status = 'banned' WHERE id = ?").run(m.user_id);
+    n++;
+  }
+  await TA42.audit(db, req, 'member-bulk-suspend', 'members', null, n + 'টি অ্যাকাউন্ট স্থগিত');
+  res.redirect('/admin/members?saved=1&suspend=' + n);
+});
+
+router.post('/members/bulk-unsuspend', requireAdmin, async (req, res) => {
+  const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+  let n = 0;
+  for (const id of ids) {
+    const m = await db.prepare('SELECT * FROM members WHERE id = ?').get(id);
+    if (!m) continue;
+    const status = m.user_id ? 'active' : 'unclaimed';
+    await db.prepare('UPDATE members SET account_status = ? WHERE id = ?').run(status, id);
+    if (m.user_id) await db.prepare("UPDATE users SET status = 'active' WHERE id = ?").run(m.user_id);
+    n++;
+  }
+  await TA42.audit(db, req, 'member-bulk-unsuspend', 'members', null, n + 'টি অ্যাকাউন্ট পুনঃসক্রিয়');
+  res.redirect('/admin/members?saved=1&restore=' + n);
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1077,7 +1145,8 @@ router.post('/members/import', requireAdmin, (req, res) => {
     const iCategory = col(['category', 'member_type', 'membertype', 'ধরন', 'ক্যাটাগরি']);
     const iPosition = col(['position', 'role', 'designation', 'পদ', 'পজিশন']);
     if (iName < 0) return render('প্রয়োজনীয় কলাম "Name" পাওয়া যায়নি');
-    const CATEGORY_MAP = { 'কেন্দ্রীয়': 'central', 'কেন্দ্রীয় কমিটি': 'central', 'central': 'central', 'উপদেষ্টা': 'advisory', 'উপদেষ্টা পরিষদ': 'advisory', 'advisory': 'advisory', 'permanent': 'permanent', 'স্থায়ী': 'permanent', 'স্থায়ী পরিষদ': 'permanent', 'founder': 'founder', 'প্রতিষ্ঠাতা': 'founder', 'branch': 'branch', 'বিশ্ববিদ্যালয়': 'branch', 'general': 'general', 'সাধারণ': 'general' };
+    // সেশন ১৯২: উইং-নামসহ ইমপোর্ট-ম্যাপ ('কেন্দ্রীয়' কী-গুলো পুরোনো CSV-সামঞ্জস্যে রাখা)
+  const CATEGORY_MAP = { 'কেন্দ্রীয়': 'central', 'কেন্দ্রীয় কমিটি': 'central', 'কার্যনির্বাহী': 'central', 'কার্যনির্বাহী পরিষদ': 'central', 'কার্যনির্বাহী কমিটি': 'central', 'central': 'central', 'executive': 'central', 'উপদেষ্টা': 'advisory', 'উপদেষ্টা পরিষদ': 'advisory', 'advisory': 'advisory', 'প্রকাশনা': 'publication', 'প্রকাশনা ও সাহিত্য সেল': 'publication', 'publication': 'publication', 'দপ্তর': 'office', 'দপ্তর ও সাংগঠনিক উইং': 'office', 'সাংগঠনিক': 'office', 'office': 'office', 'আইটি': 'it-promo', 'আইটি, ই-পেপার ও প্রচার সেল': 'it-promo', 'ই-পেপার': 'it-promo', 'প্রচার': 'it-promo', 'it-promo': 'it-promo', 'permanent': 'permanent', 'স্থায়ী': 'permanent', 'স্থায়ী পরিষদ': 'permanent', 'founder': 'founder', 'প্রতিষ্ঠাতা': 'founder', 'branch': 'branch', 'বিশ্ববিদ্যালয়': 'branch', 'general': 'general', 'সাধারণ': 'general' };
     let created = 0; const skipped = [];
     let seq = await db.nextMemberSeq();
     const seen = new Set();
@@ -2481,7 +2550,8 @@ router.get('/trash', requireStaff, async (req, res) => {
   try { tables43 = await db.prepare('SELECT table_name, COUNT(*) AS c FROM trash GROUP BY table_name ORDER BY c DESC').all(); } catch (e) {}
   const left = await (async () => { try { return (await db.prepare("SELECT COUNT(*) AS c FROM trash WHERE deleted_at < datetime('now','-30 days','localtime')").get()).c; } catch (e) { return 0; } })();
   if (left) await TA42.purgeExpired(db);
-  res.render('admin/trash', { rows, q42, tbl43, tables43, currentPath: '/admin/trash' });
+  const purgeN = parseInt(req.query.purged, 10) || 0;
+  res.render('admin/trash', { rows, q42, tbl43, tables43, purgeN, currentPath: '/admin/trash' });
 });
 router.post('/trash/:id/restore', requireStaff, async (req, res) => {
   const r = await TA42.restoreTrash(db, req.params.id, req);
@@ -2501,6 +2571,25 @@ router.post('/trash/restore-all', requireStaff, async (req, res) => {
   for (const r of rows.slice(0, 500)) { const rr = await TA42.restoreTrash(db, r.id, req); if (rr.ok) n++; }
   await TA42.audit(db, req, 'restore-all', tbl || 'trash', null, n + 'টি আইটেম ফেরত');
   res.redirect('/admin/trash?restored=' + n);
+});
+
+// ── সেশন ১৯২: নির্বাচিত-আইটেম বাল্ক ফেরত / স্থায়ী ডিলিট (মার্ক-অল/আনমার্ক-অল UI) ──
+router.post('/trash/bulk-restore', requireStaff, async (req, res) => {
+  const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+  let n = 0;
+  for (const id of ids) { const r = await TA42.restoreTrash(db, id, req); if (r.ok) n++; }
+  await TA42.audit(db, req, 'bulk-restore', 'trash', null, n + 'টি আইটেম ফেরত');
+  res.redirect('/admin/trash?restored=' + n);
+});
+
+router.post('/trash/bulk-purge', requireAdmin, async (req, res) => {
+  const ids = [].concat(req.body.ids || []).map(Number).filter(n => Number.isInteger(n) && n > 0).slice(0, 500);
+  let n = 0;
+  for (const id of ids) {
+    try { await TA42.purgeTrash(db, id); n++; } catch (e) {}
+  }
+  await TA42.audit(db, req, 'bulk-purge', 'trash', null, n + 'টি স্থায়ী মুছে ফেলা');
+  res.redirect('/admin/trash?saved=1&purged=' + n);
 });
 
 router.post('/trash/:id/purge', requireAdmin, async (req, res) => {

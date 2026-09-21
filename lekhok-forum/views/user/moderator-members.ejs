@@ -11,6 +11,12 @@
 </head>
 <body>
 <%- include('../../admin/views/admin/partials/sidebar') %>
+<%# ── সেশন ১৯২: কমিটি-উইং অপশন (মডারেটর-প্যানেল — সব-উইং দৃশ্যমান, কেউ-হারাবে-না) ── %>
+<% const MT_OPTIONS = [
+  ['central', 'কার্যনির্বাহী পরিষদ'], ['advisory', 'উপদেষ্টা পরিষদ'], ['publication', 'প্রকাশনা ও সাহিত্য সেল'],
+  ['office', 'দপ্তর ও সাংগঠনিক উইং'], ['it-promo', 'আইটি, ই-পেপার ও প্রচার সেল'], ['founder', 'প্রতিষ্ঠাতা সদস্য'],
+  ['permanent', 'স্থায়ী পরিষদ'], ['branch', 'বিশ্ববিদ্যালয় শাখা'], ['general', 'সাধারণ সদস্য']
+]; %>
 <div class="admin-main">
 <div class="mod-page">
   <div class="mod-hero">
@@ -43,10 +49,11 @@
         <div class="mem-field"><label>পদ (রোল)</label><input type="text" name="role" maxlength="120" placeholder="যেমন: সভাপতি / সাধারণ সম্পাদক (উপদেষ্টা → উপদেষ্টা পরিষদ ধরন)" /></div>
         <div class="mem-field"><label>শ্রেণি / বিভাগ</label><input type="text" name="designation" maxlength="160" placeholder="যেমন: সদস্য / ডেপার্টমেন্ট" /></div>
         <div class="mem-field"><label>কার্যবর্ষ</label><input type="text" name="term_year" maxlength="40" placeholder="যেমন: ২০২৪-২৫" /></div>
-        <div class="mem-field"><label>ধরন</label>
+        <div class="mem-field"><label>কমিটি উইং</label>
           <select name="member_type">
-            <option value="central">কার্যনির্বাহী কমিটি</option>
-            <option value="advisory">উপদেষ্টা পর্ষদ</option>
+            <% MT_OPTIONS.forEach(wo => { %>
+            <option value="<%= wo[0] %>"><%= wo[1] %></option>
+            <% }) %>
           </select>
         </div>
         <div class="mem-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="0" /></div>
@@ -63,101 +70,39 @@
   </div>
 
   <% const central = members.filter(m => m.member_type === 'central');
-     const advisory = members.filter(m => m.member_type !== 'central'); %>
+     const wingGroups = MT_OPTIONS.slice(1).map(([wk, wl]) => [wk, wl, members.filter(m => m.member_type === wk)]);
+     const knownTypes = MT_OPTIONS.map(w => w[0]);
+     const otherRows = members.filter(m => !knownTypes.includes(m.member_type)); %>
 
   <%# ── কার্যনির্বাহী কমিটি তালিকা ── %>
   <div class="mod-card">
-    <h2><i class="fas fa-users-cog"></i> কার্যনির্বাহী কমিটি <span class="mem-section-count"><%= central.length %> জন</span></h2>
+    <h2><i class="fas fa-users-cog"></i> কার্যনির্বাহী পরিষদ <span class="mem-section-count"><%= central.length %> জন</span></h2>
     <p class="mod-hint">যেকোনো সদস্যের নামে ক্লিক করে সম্পাদনা করুন। "কার্যবর্ষ" বদলালে সেই বছরের তালিকায় স্বয়ংক্রিয়ভাবে চলে যাবে।</p>
     <% if (!central.length) { %><p class="mod-hint"><i class="fas fa-info-circle"></i> এখনো কোনো সদস্য নেই।</p><% } %>
     <% central.forEach(m => { %>
-      <details class="mem-row">
-        <summary>
-          <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:2px;">
-          <i class="fas fa-chevron-right mem-chevron"></i>
-          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg?v=2' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'" />
-          <div>
-            <div class="mem-name"><%= m.name %></div>
-            <div class="mem-sub"><%= [m.role, m.term_year].filter(Boolean).join(' · ') || 'পদ নেই' %></div>
-          </div>
-          <span class="mem-chip"><%= m.term_year || 'কার্যবর্ষ নেই' %></span>
-        </summary>
-        <div style="padding:16px 14px;">
-          <form method="POST" action="/moderator/members/<%= m.id %>">
-            <div class="mem-grid">
-              <div class="mem-field"><label>নাম *</label><input type="text" name="name" required maxlength="120" value="<%= m.name %>" /></div>
-              <div class="mem-field"><label>পদ (রোল)</label><input type="text" name="role" maxlength="120" value="<%= m.role || '' %>" /></div>
-              <div class="mem-field"><label>শ্রেণি / বিভাগ</label><input type="text" name="designation" maxlength="160" value="<%= m.designation || '' %>" /></div>
-              <div class="mem-field"><label>কার্যবর্ষ</label><input type="text" name="term_year" maxlength="40" value="<%= m.term_year || '' %>" /></div>
-              <div class="mem-field"><label>ধরন</label>
-                <select name="member_type">
-                  <option value="central" <%= m.member_type === 'central' ? 'selected' : '' %>>কার্যনির্বাহী কমিটি</option>
-                  <option value="advisory" <%= m.member_type !== 'central' ? 'selected' : '' %>>উপদেষ্টা পর্ষদ</option>
-                </select>
-              </div>
-              <div class="mem-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= m.sort_order || 0 %>" /></div>
-              <div class="mem-field"><label>ছবি URL</label><input type="text" name="image_url" maxlength="400" value="<%= m.image_url || '' %>" /></div>
-              <div class="mem-field"><label>ফেসবুক লিংক</label><input type="text" name="social_fb" maxlength="300" value="<%= m.social_fb || '' %>" /></div>
-              <div class="mem-field"><label>ইমেইল</label><input type="text" name="social_email" maxlength="160" value="<%= m.social_email || '' %>" /></div>
-              <div class="mem-field"><label>ইউজারনেম (অ্যাকাউন্ট লিংক)</label><input type="text" name="username" maxlength="60" value="<%= m.user_username || '' %>" placeholder="বদলাতে চাইলে নতুন ইউজারনেম" /></div>
-              <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200"><%= m.bio || '' %></textarea></div>
-            </div>
-            <div class="mem-actions">
-              <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
-              <button type="submit" class="mem-del" formaction="/moderator/members/<%= m.id %>/delete" formnovalidate><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
-            </div>
-          </form>
-        </div>
-      </details>
+      <%- include('../shared/mod-member-row', { m: m, adv: false, MT_OPTIONS: MT_OPTIONS }) %>
     <% }) %>
   </div>
 
-  <%# ── উপদেষ্টা পর্ষদ তালিকা ── %>
+  <%# ── উইং-ভিত্তিক তালিকা (উপদেষ্টা/প্রকাশনা/দপ্তর/আইটি-প্রচার/অন্যান্য) — সেশন ১৯২ ── %>
+  <% wingGroups.forEach(([wkey, wlabel, wrows]) => { if (!wrows.length) return; %>
   <div class="mod-card">
-    <h2><i class="fas fa-user-tie"></i> উপদেষ্টা পর্ষদ <span class="mem-section-count"><%= advisory.length %> জন</span></h2>
-    <p class="mod-hint">উপদেষ্টাদের তথ্য এখান থেকে সম্পাদনা করুন। /committee/advisory পেজে সাথে সাথে প্রযোজ্য হবে।</p>
-    <% if (!advisory.length) { %><p class="mod-hint"><i class="fas fa-info-circle"></i> এখনো কোনো উপদেষ্টা নেই।</p><% } %>
-    <% advisory.forEach(m => { %>
-      <details class="mem-row">
-        <summary>
-          <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:2px;">
-          <i class="fas fa-chevron-right mem-chevron"></i>
-          <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg?v=2' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'" />
-          <div>
-            <div class="mem-name"><%= m.name %></div>
-            <div class="mem-sub"><%= [m.role, m.term_year].filter(Boolean).join(' · ') || 'পদ নেই' %></div>
-          </div>
-          <span class="mem-chip adv"><%= m.term_year || 'কার্যবর্ষ নেই' %></span>
-        </summary>
-        <div style="padding:16px 14px;">
-          <form method="POST" action="/moderator/members/<%= m.id %>">
-            <div class="mem-grid">
-              <div class="mem-field"><label>নাম *</label><input type="text" name="name" required maxlength="120" value="<%= m.name %>" /></div>
-              <div class="mem-field"><label>পদ (রোল)</label><input type="text" name="role" maxlength="120" value="<%= m.role || '' %>" /></div>
-              <div class="mem-field"><label>শ্রেণি / বিভাগ</label><input type="text" name="designation" maxlength="160" value="<%= m.designation || '' %>" /></div>
-              <div class="mem-field"><label>কার্যবর্ষ</label><input type="text" name="term_year" maxlength="40" value="<%= m.term_year || '' %>" /></div>
-              <div class="mem-field"><label>ধরন</label>
-                <select name="member_type">
-                  <option value="central" <%= m.member_type === 'central' ? 'selected' : '' %>>কার্যনির্বাহী কমিটি</option>
-                  <option value="advisory" <%= m.member_type !== 'central' ? 'selected' : '' %>>উপদেষ্টা পর্ষদ</option>
-                </select>
-              </div>
-              <div class="mem-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= m.sort_order || 0 %>" /></div>
-              <div class="mem-field"><label>ছবি URL</label><input type="text" name="image_url" maxlength="400" value="<%= m.image_url || '' %>" /></div>
-              <div class="mem-field"><label>ফেসবুক লিংক</label><input type="text" name="social_fb" maxlength="300" value="<%= m.social_fb || '' %>" /></div>
-              <div class="mem-field"><label>ইমেইল</label><input type="text" name="social_email" maxlength="160" value="<%= m.social_email || '' %>" /></div>
-              <div class="mem-field"><label>ইউজারনেম (অ্যাকাউন্ট লিংক)</label><input type="text" name="username" maxlength="60" value="<%= m.user_username || '' %>" placeholder="বদলাতে চাইলে নতুন ইউজারনেম" /></div>
-              <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200"><%= m.bio || '' %></textarea></div>
-            </div>
-            <div class="mem-actions">
-              <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
-              <button type="submit" class="mem-del" formaction="/moderator/members/<%= m.id %>/delete" formnovalidate><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
-            </div>
-          </form>
-        </div>
-      </details>
+    <h2><i class="fas fa-user-tie"></i> <%= wlabel %> <span class="mem-section-count"><%= wrows.length %> জন</span></h2>
+    <p class="mod-hint">এই উইং-এর সদস্যদের তথ্য এখান থেকে সম্পাদনা করুন — সাইটে সাথে সাথে প্রযোজ্য হবে।</p>
+    <% wrows.forEach(m => { %>
+      <%- include('../shared/mod-member-row', { m: m, adv: true, MT_OPTIONS: MT_OPTIONS }) %>
     <% }) %>
   </div>
+  <% }) %>
+  <% if (otherRows.length) { %>
+  <div class="mod-card">
+    <h2><i class="fas fa-user"></i> অন্যান্য ধরন <span class="mem-section-count"><%= otherRows.length %> জন</span></h2>
+    <p class="mod-hint">অজানা/লেগেসি ধরনের সদস্য — সম্পাদনা করে সঠিক উইং নির্বাচন করুন।</p>
+    <% otherRows.forEach(m => { %>
+      <%- include('../shared/mod-member-row', { m: m, adv: true, MT_OPTIONS: MT_OPTIONS }) %>
+    <% }) %>
+  </div>
+  <% } %>
 </div>
 </div><!-- /admin-main -->
   <script src="/assets/js/main.js?v=<%= AV %>"></script>

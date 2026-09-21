@@ -27,7 +27,8 @@ function publicMember(m) {
   };
 }
 
-const CATEGORY_LABEL = { central: 'কার্যনির্বাহী কমিটি', advisory: 'উপদেষ্টা পরিষদ', permanent: 'স্থায়ী পরিষদ', general: 'সাধারণ সদস্য' };
+// সেশন ১৯২: উইং-লেবেল সম্প্রসারণ (প্রকাশনা/দপ্তর/আইটি-প্রচার সেল)
+const CATEGORY_LABEL = { central: 'কার্যনির্বাহী পরিষদ', advisory: 'উপদেষ্টা পরিষদ', permanent: 'স্থায়ী পরিষদ', general: 'সাধারণ সদস্য', founder: 'প্রতিষ্ঠাতা সদস্য', branch: 'বিশ্ববিদ্যালয় শাখা', publication: 'প্রকাশনা ও সাহিত্য সেল', office: 'দপ্তর ও সাংগঠনিক উইং', 'it-promo': 'আইটি, ই-পেপার ও প্রচার সেল' };
 
 // ── Claim ফর্ম (GET) — শুধু safe/public ফিল্ড দেখায় ─────────────────────────
 router.get('/claim', async (req, res) => {

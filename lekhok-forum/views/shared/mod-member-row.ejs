@@ -1,0 +1,40 @@
+<%# সেশন ১৯২: মডারেটর-প্যানেলের সদস্য-সারি (details/summary + সম্পাদনা-ফর্ম) — moderator-members.ejs থেকে বের করা। ব্যবহার: include('../shared/mod-member-row', { m, adv, MT_OPTIONS }) %>
+<details class="mem-row">
+  <summary>
+    <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:2px;">
+    <i class="fas fa-chevron-right mem-chevron"></i>
+    <img class="mem-thumb" src="<%= m.image_url || '/assets/img/avatar-placeholder.svg?v=2' %>" alt="" loading="lazy" decoding="async" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'" />
+    <div>
+      <div class="mem-name"><%= m.name %></div>
+      <div class="mem-sub"><%= [m.role, m.term_year].filter(Boolean).join(' · ') || 'পদ নেই' %></div>
+    </div>
+    <span class="mem-chip<%= adv ? ' adv' : '' %>"><%= m.term_year || 'কার্যবর্ষ নেই' %></span>
+  </summary>
+  <div style="padding:16px 14px;">
+    <form method="POST" action="/moderator/members/<%= m.id %>">
+      <div class="mem-grid">
+        <div class="mem-field"><label>নাম *</label><input type="text" name="name" required maxlength="120" value="<%= m.name %>" /></div>
+        <div class="mem-field"><label>পদ (রোল)</label><input type="text" name="role" maxlength="120" value="<%= m.role || '' %>" /></div>
+        <div class="mem-field"><label>শ্রেণি / বিভাগ</label><input type="text" name="designation" maxlength="160" value="<%= m.designation || '' %>" /></div>
+        <div class="mem-field"><label>কার্যবর্ষ</label><input type="text" name="term_year" maxlength="40" value="<%= m.term_year || '' %>" /></div>
+        <div class="mem-field"><label>কমিটি উইং</label>
+          <select name="member_type">
+            <% MT_OPTIONS.forEach(wo => { %>
+            <option value="<%= wo[0] %>" <%= (m.member_type || 'central') === wo[0] ? 'selected' : '' %>><%= wo[1] %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="mem-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="<%= m.sort_order || 0 %>" /></div>
+        <div class="mem-field"><label>ছবি URL</label><input type="text" name="image_url" maxlength="400" value="<%= m.image_url || '' %>" /></div>
+        <div class="mem-field"><label>ফেসবুক লিংক</label><input type="text" name="social_fb" maxlength="300" value="<%= m.social_fb || '' %>" /></div>
+        <div class="mem-field"><label>ইমেইল</label><input type="text" name="social_email" maxlength="160" value="<%= m.social_email || '' %>" /></div>
+        <div class="mem-field"><label>ইউজারনেম (অ্যাকাউন্ট লিংক)</label><input type="text" name="username" maxlength="60" value="<%= m.user_username || '' %>" placeholder="বদলাতে চাইলে নতুন ইউজারনেম" /></div>
+        <div class="mem-field" style="grid-column: 1 / -1;"><label>সংক্ষিপ্ত পরিচিতি</label><textarea name="bio" maxlength="1200"><%= m.bio || '' %></textarea></div>
+      </div>
+      <div class="mem-actions">
+        <button type="submit" class="mod-back-btn" style="background:#059669;border-color:#059669;"><i class="fas fa-save"></i> সংরক্ষণ করুন</button>
+        <button type="submit" class="mem-del" formaction="/moderator/members/<%= m.id %>/delete" formnovalidate><i class="fas fa-trash-alt"></i> মুছে ফেলুন</button>
+      </div>
+    </form>
+  </div>
+</details>

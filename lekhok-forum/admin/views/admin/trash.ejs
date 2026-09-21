@@ -35,6 +35,16 @@
   </div>
 
   <% if (typeof restoredFlag !== 'undefined' && restoredFlag) { %><div class="flash ok"><i class="fas fa-undo"></i> <%= restoredFlag %> টি আইটেম ফেরত দেওয়া হয়েছে।</div><% } %>
+  <% if (typeof purgeN !== 'undefined' && purgeN) { %><div class="flash ok"><i class="fas fa-fire"></i> <%= purgeN %> টি আইটেম স্থায়ীভাবে মুছে ফেলা হয়েছে।</div><% } %>
+
+  <%# ── সেশন ১৯২: নির্বাচিত-আইটেম বাল্ক ফেরত/স্থায়ী-ডিলিট (মার্ক-অল/আনমার্ক-অল) — অ্যাডমিন-ভিউতে ── %>
+  <% if (!(typeof moderatorView !== 'undefined' && moderatorView)) { %>
+  <form method="POST" action="/admin/trash/bulk-restore" class="bulk-bar" id="bulkBar">
+    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
+    <button type="submit" class="btn btn-primary btn-sm" data-bulk-msg="নির্বাচিত আইটেমগুলো ট্র্যাশ থেকে ফেরত আনা হবে?"><i class="fas fa-undo"></i> রিস্টোর</button>
+    <button type="submit" formaction="/admin/trash/bulk-purge" class="btn btn-danger btn-sm" data-bulk-msg="⚠️ সতর্কতা: নির্বাচিত আইটেমগুলো ডাটাবেজ থেকে চিরতরে মুছে যাবে — ফেরত আনা যাবে না! নিশ্চিত?"><i class="fas fa-fire"></i> স্থায়ী ডিলিট</button>
+  </form>
+  <% } %>
 
   <div style="display:flex;gap:10px;margin:0 0 14px;flex-wrap:wrap;">
     <form method="POST" action="<%= (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin' %>/trash/restore-all">
@@ -55,7 +65,7 @@
     <div class="table-wrap">
     <table class="table">
       <thead>
-        <tr><th style="width:60px;">আইডি</th><th style="width:150px;">টেবিল</th><th>স্ন্যাপশট</th><th style="width:130px;">মুছেছেন</th><th style="width:140px;">সময়</th><th style="width:170px;">অ্যাকশন</th></tr>
+        <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট/আনসিলেক্ট" title="সব মার্ক / সব আনমার্ক"></th><th style="width:60px;">আইডি</th><th style="width:150px;">টেবিল</th><th>স্ন্যাপশট</th><th style="width:130px;">মুছেছেন</th><th style="width:140px;">সময়</th><th style="width:170px;">অ্যাকশন</th></tr>
       </thead>
       <tbody>
         <% rows.forEach(r => {
@@ -65,6 +75,7 @@
              const base = (typeof moderatorView !== 'undefined' && moderatorView) ? '/moderator' : '/admin';
         %>
         <tr>
+          <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= r.id %>" aria-label="সিলেক্ট"></td>
           <td>#<%= r.id %></td>
           <td><code><%= r.table_name %></code></td>
           <td>

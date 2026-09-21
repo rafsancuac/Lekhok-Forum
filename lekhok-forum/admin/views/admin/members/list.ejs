@@ -14,16 +14,49 @@
 <div class="admin-main">
   <div class="admin-header">
     <h1>কমিটি সদস্য</h1>
-    <p><%= members.length %> জন সদস্য |
+    <p><% if ((selTerm && selTerm !== 'ALL') || selType) { %>ফিল্টারে <%= toBn(members.length) %> জন • মোট <%= toBn(totalAll) %> জন<% } else { %><%= toBn(members.length) %> জন সদস্য<% } %> |
       <a href="/admin/members/new">+ নতুন সদস্য</a> |
       <a href="/admin/members/import"><i class="fas fa-upload"></i> বাল্ক ইমপোর্ট</a> |
       <a href="/admin/members/export.csv"><i class="fas fa-download"></i> এক্সপোর্ট</a>
     </p>
   </div>
 
+  <%# ── সেশন ১৯২: কার্যবর্ষ + উইং ফিল্টার (হোমপেজের কার্যনির্বাহী কমিটি ড্রপডাউনের অ্যাডমিন-অনুলিপি) ── %>
+  <form method="GET" action="/admin/members" class="mem-filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px;padding:12px 14px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <i class="fas fa-calendar-alt" style="color:#6b7280;"></i>
+      <label style="font-size:.8rem;font-weight:700;color:#4b5563;">কার্যবর্ষ:</label>
+      <select name="term" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;font-weight:600;cursor:pointer;background:#f9fafb;">
+        <option value="ALL">সকল কার্যবর্ষ (<%= toBn(totalAll) %> জন)</option>
+        <% years.forEach(y => { %>
+        <option value="<%= y %>" <%= selTerm === y ? 'selected' : '' %>><%= y %> (সদস্য <%= toBn(yearCounts[y]) %> জন)</option>
+        <% }) %>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <i class="fas fa-users" style="color:#6b7280;"></i>
+      <label style="font-size:.8rem;font-weight:700;color:#4b5563;">উইং:</label>
+      <select name="type" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;font-weight:600;cursor:pointer;background:#f9fafb;">
+        <option value="">সব উইং</option>
+        <% MEMBER_WINGS.forEach(w => { %>
+        <option value="<%= w.key %>" <%= selType === w.key ? 'selected' : '' %>><%= w.label %><%= typeCounts[w.key] ? ' (' + toBn(typeCounts[w.key]) + ' জন)' : '' %></option>
+        <% }) %>
+      </select>
+    </div>
+    <% if ((selTerm && selTerm !== 'ALL') || selType) { %>
+    <a href="/admin/members" class="btn btn-sm" style="align-self:center;"><i class="fas fa-times"></i> ফিল্টার সরান</a>
+    <% } %>
+    <noscript><button class="btn btn-primary btn-sm" type="submit">ফিল্টার</button></noscript>
+  </form>
+
+  <% if (suspendN) { %><div class="flash ok"><i class="fas fa-pause"></i> <%= toBn(suspendN) %> টি অ্যাকাউন্ট স্থগিত করা হয়েছে।</div><% } %>
+  <% if (restoreN) { %><div class="flash ok"><i class="fas fa-rotate-left"></i> <%= toBn(restoreN) %> টি অ্যাকাউন্ট পুনঃসক্রিয় হয়েছে।</div><% } %>
+
   <form method="POST" action="/admin/members/bulk-delete" class="bulk-bar" id="bulkBar">
     <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
-    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
+    <button type="submit" class="btn btn-sm" formaction="/admin/members/bulk-suspend" data-bulk-msg="নির্বাচিত সদস্যদের অ্যাকাউন্ট স্থগিত করা হবে? (লিংকড ইউজার লগইন ব্লক হবে)"><i class="fas fa-pause"></i> স্থগিত করুন</button>
+    <button type="submit" class="btn btn-sm" formaction="/admin/members/bulk-unsuspend" data-bulk-msg="নির্বাচিত সদস্যদের অ্যাকাউন্ট পুনঃসক্রিয় করা হবে?"><i class="fas fa-rotate-left"></i> পুনঃসক্রিয়</button>
+    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="নির্বাচিত সদস্যরা ট্র্যাশে যাবে — ট্র্যাশ থেকে ফেরত আনা যায়। নিশ্চিত?"><i class="fas fa-trash"></i> ট্র্যাশে পাঠান</button>
   </form>
   <% if (members.length === 0) { %>
     <div class="card empty">কোনো সদস্য নেই</div>
@@ -39,7 +72,7 @@
           <td><%= m.role || '—' %></td>
           <td><%= m.department || '—' %></td>
           <td><%= m.term_year || '—' %></td>
-          <td><%= m.member_type === 'central' ? 'কেন্দ্রীয়' : m.member_type === 'advisory' ? 'উপদেষ্টা' : m.member_type === 'permanent' ? 'স্থায়ী পরিষদ' : m.member_type === 'founder' ? 'প্রতিষ্ঠাতা' : 'বিশ্ববিদ্যালয়' %></td>
+          <td><span class="badge badge-<%= m.member_type === 'central' ? 'success' : m.member_type === 'advisory' ? 'info' : 'warn' %>"><%= MEMBER_WING_LABEL[m.member_type] || m.member_type %></span></td>
           <td>
             <% const st = m.account_status || (m.user_id ? 'active' : 'unclaimed'); %>
             <span class="badge badge-<%= st === 'active' ? 'success' : st === 'pending' ? 'info' : st === 'suspended' ? 'danger' : 'warn' %>">

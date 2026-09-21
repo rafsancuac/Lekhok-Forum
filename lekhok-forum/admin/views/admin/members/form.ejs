@@ -32,7 +32,7 @@
         <% } %>
       </div>
       <div class="form-group"><label>পদ</label><input type="text" name="role" value="<%= member ? (member.role || '') : '' %>" placeholder="যেমন: সভাপতি"></div>
-      <div class="form-group"><label>পদবি</label><input type="text" name="designation" value="<%= member ? (member.designation || '') : '' %>" placeholder="যেমন: কেন্দ্রীয় কমিটি"></div>
+      <div class="form-group"><label>পদবি</label><input type="text" name="designation" value="<%= member ? (member.designation || '') : '' %>" placeholder="যেমন: কার্যনির্বাহী পরিষদ"></div>
       <div class="form-group"><label>ডিপার্টমেন্ট</label><input type="text" name="department" value="<%= member ? (member.department || '') : '' %>" placeholder="যেমন: বাংলা বিভাগ"></div>
       <div class="form-group"><label>বায়ো</label><textarea name="bio" rows="3"><%= member ? (member.bio || '') : '' %></textarea></div>
       <div class="form-group"><label>বাণী (হোম-নেতৃত্ব কার্ডের উক্তি)</label><textarea name="message" rows="3" placeholder="হোমপেজের নেতৃত্ব-কার্ডে এই উক্তিটি আগে দেখাবে — খালি হলে বায়ো, তারপর ডিফল্ট বাণী"><%= member ? (member.message || '') : '' %></textarea></div>
@@ -92,15 +92,20 @@
       <div class="form-group"><label>LinkedIn</label><input type="url" name="social_linkedin" value="<%= member ? (member.social_linkedin || '') : '' %>"></div>
       <div class="form-group"><label>ইমেইল</label><input type="email" name="social_email" value="<%= member ? (member.social_email || '') : '' %>"></div>
       <div class="form-group">
-        <label>ধরন</label>
+        <label>কমিটি উইং (ধরন)</label>
+        <% const _wingSel = member ? (member.member_type || 'central') : 'central'; %>
         <select name="member_type">
-          <option value="central"  <%= member && member.member_type === 'central'  ? 'selected' : '' %>>কেন্দ্রীয় কমিটি</option>
-          <option value="advisory" <%= member && member.member_type === 'advisory' ? 'selected' : '' %>>উপদেষ্টা পরিষদ</option>
-          <option value="founder"  <%= member && member.member_type === 'founder'  ? 'selected' : '' %>>প্রতিষ্ঠাতা সদস্য</option>
-          <option value="branch"   <%= member && member.member_type === 'branch'   ? 'selected' : '' %>>বিশ্ববিদ্যালয় শাখা</option>
-          <option value="permanent" <%= member && member.member_type === 'permanent' ? 'selected' : '' %>>স্থায়ী পরিষদ</option>
+          <% ((typeof MEMBER_WINGS !== 'undefined' && MEMBER_WINGS) || [
+            { key: 'central', label: 'কার্যনির্বাহী পরিষদ' }, { key: 'advisory', label: 'উপদেষ্টা পরিষদ' },
+            { key: 'publication', label: 'প্রকাশনা ও সাহিত্য সেল' }, { key: 'office', label: 'দপ্তর ও সাংগঠনিক উইং' },
+            { key: 'it-promo', label: 'আইটি, ই-পেপার ও প্রচার সেল' }, { key: 'founder', label: 'প্রতিষ্ঠাতা সদস্য' },
+            { key: 'permanent', label: 'স্থায়ী পরিষদ' }, { key: 'branch', label: 'বিশ্ববিদ্যালয় শাখা' },
+            { key: 'general', label: 'সাধারণ সদস্য' }
+          ]).forEach(w => { %>
+          <option value="<%= w.key %>" <%= _wingSel === w.key ? 'selected' : '' %>><%= w.label %></option>
+          <% }) %>
         </select>
-        <small style="color:#64748b">হোম-পেজের ৮টি নেতৃত্ব কার্ড এখান থেকেই তৈরি: “প্রতিষ্ঠাতা সদস্য” ২টি + “উপদেষ্টা পরিষদ” ৪টি (পুরনো ২ + বর্তমান ২) + সর্বশেষ কার্যবর্ষের কেন্দ্রীয় “সভাপতি” ও “সাধারণ সম্পাদক” ২টি। প্রতিটি কার্ডে উপরের ছবির URL ও আইডির ইউয়ারএল কাজ করে।</small>
+        <small style="color:#64748b">হোম-পেজের ৮টি নেতৃত্ব কার্ড এখান থেকেই তৈরি: “প্রতিষ্ঠাতা সদস্য” ২টি + “উপদেষ্টা পরিষদ” ৪টি (পুরনো ২ + বর্তমান ২) + সর্বশেষ কার্যবর্ষের কার্যনির্বাহী পরিষদের “সভাপতি” ও “সাধারণ সম্পাদক” ২টি। প্রতিটি কার্ডে উপরের ছবির URL ও আইডির ইউয়ারএল কাজ করে।</small>
       </div>
       <div class="form-group">
         <label>কার্যবর্ষ</label>

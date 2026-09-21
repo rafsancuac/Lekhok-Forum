@@ -328,6 +328,10 @@
       });
       bulkBar.addEventListener('submit', function (e) {
         if (!bulkBar.querySelectorAll('input[type="hidden"][name="ids"]').length) { e.preventDefault(); return; }
+        /* সেশন ১৯২: data-bulk-msg কনফার্ম-ওয়্যারিং (আগে অ্যাট্রিবিউট ছিল কিন্তু হ্যান্ডলার ছিল না) */
+        var sub = e.submitter || (document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null);
+        var msg = sub && sub.getAttribute ? sub.getAttribute('data-bulk-msg') : null;
+        if (msg && !window.confirm(msg)) e.preventDefault();
       });
       sync();
     } catch (e) {}
