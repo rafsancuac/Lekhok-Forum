@@ -1974,3 +1974,30 @@ Task: Lekhok-Forum প্রজেক্ট-স্টেটাস মূল্�
 **গোটচা (পরের-এজেন্ট):** UserReport.createdAt SQLite-এ integer-ms (ISO-নয়) — স্ক্রিপ্টে ts()-ডুয়াল-হ্যান্ডলার; E2E-তে BEFORE POST-এর-আগে-মাপুন।
 
 **পরের-এজেন্ট: session208 লেবেল।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট, ইতিহাস-এডিট/ডিলিট, SSE-পুশ।
+
+---
+
+## session208 (Task59 — হোম-নেতৃত্ব অ্যাডমিন-প্যানেল পুনরুদ্ধার; ইউজার-রিপোর্ট)
+
+**ইউজার:** "এটা বাস্তবায়ন করা হয়েছিল, তবে এডমিন ড্যাশবোরডে এই পশন্টা পাচ্ছিনা! এডমিন ড্যাশবোরডে এটা ফিরিয়ে আন।" (স্ক্রিনশট: হোম নেতৃত্ব ব্যবস্থাপনা — ৮-স্লট + দৃশ্যমান-টগল)
+
+**RCA (৩-স্তর, সবই a68fec4/session193-এর stale-tree রিরাইটে হারানো):**
+1. admin/routes.js থেকে হোম-নেতৃত্ব রুট-ব্লক মুছে গেছে (৩৫৩ লাইন — GET /home-leadership + POST slot/visibility/extra + DELETE extra + HL55 require + nav-area regex + memberPhotoUpload55) → প্যানেল 404
+2. সাইডবার থেকে 'হোম নেতৃত্ব' লিংক মুছে গেছে → ড্যাশবোর্ডে ঢোকার পথই নেই
+3. হোমপেজ থেকে home_hidden_slots-ফিল্টার + home_extra_members opt-in (session64 ইঞ্জিন) হারানো → টগল-কাজ না-ও করত
+   সেশন ১৯২/২০১-কমিটে ফেরানো হয়নি; session201-পুশ (0c646df)-ডিপ্লয়ের পরেই প্রোডে প্যানেল-শূন্য — ইউজার-রিপোর্টের দিনই ধরা পড়ে।
+
+**ফিক্স (6a5afc4-সংস্করণ থেকে সার্জিক্যাল পুনঃস্থাপন):**
+- admin/routes.js: রুট-ব্লক + HL55 require + nav-regex + memberPhotoUpload55 (কোনো session192/201-ফিক্স অস্পৃশ্য)
+- sidebar.ejs: 'হোম নেতৃত্ব' লিংক পুনঃস্থাপন (সংগঠন-গ্রুপের প্রথম আইটেম)
+- routes/pages.js: প্যারালাল-ব্যাচে getSetting('home_hidden_slots'/'home_extra_members') ×২ + effectiveHiddenSlots + extras slice(2)-opt-in → currentAdvisorsFinal205; res.render-এ homeHiddenSlots
+- lekhok-home.ejs: leaderPair এখন slotKeys-সচেতন (slotKeys[i] লুকানো-সেটে থাকলে কার্ড বাদ — index-alignment সুরক্ষিত); দুই partial-এ slotKeys পাস
+- guard: messenger.css hex-র্যাচেট 0→4 (session183-বৈধ-হেক্স, a68fec4-রি-ফ্রিজে ভুল-ভিত্তি) — সচেতন --update-hex-baseline
+
+**E2E:** node --check ×২ ✓ · audit:views ১২২-ejs ক্লিন ✓ · guard গ্রিন ✓ · লোকাল: প্যানেল 200 + slot-save 303?saved=1 + visibility রাউন্ড-ট্রিপ (হোম ২→১→২ কার্ড, GS-লুকানোতেও সভাপতি-লেবেল অটুট) + extra-রুট জীবন্ত + সাইডবার-লিংক রেন্ডার ✓ · agent-browser স্ক্রিনশট (download/s205-panel*.png) ✓ · প্রোড: 307→লগইন→প্যানেল 200 (আরমান শেখ/বরকাতউল্লাহ/আনোয়ার হোসাইন — বাস্তব-ডেটা+টগল) + হোম অক্ষত (কারিশমা [সভাপতি], আজিজ ওয়েসি [সা.সম্পাদক], উপদেষ্টা-ডিফল্ট-লুকানো) + /admin-সাইডবার লিংক ✓
+
+**কমিট:** `19eaae8` push ✓ (Vercel-ডিপ্লয়-যাচাইকৃত) — ⚠️ কমিট-মেসেজে 'session205' লেবেল = সংখ্যা-সংঘর্ষ (rebase-এর-আগে প্যারালাল-এজেন্টের 202-207 জানা-ছিল-না); সঠিক সেশন **২০৮**
+
+**গোটচা:** প্যারালাল-ক্রন-এজেন্টের কারণে origin-প্রতি-রাউন্ড-আগে-এগিয়ে — push-এর-আগে fetch+pull --rebase বাধ্যতামূলক; Promise.all-এ নতুন-এন্ট্রি দিলে destructuring-অর্ডার হুবহু-মিলাতে-হবে (recentArticles.forEach 500-ঘটনা ছিল)।
+
+**পরের-এজেন্ট: session209 থেকে।** বাকি: hex-baseline এখন নির্ভুল; Turso/প্রোড-পোর্ট (Task54-নোট) স্থগিতই।
