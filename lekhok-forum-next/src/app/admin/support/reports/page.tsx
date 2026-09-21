@@ -18,15 +18,21 @@
  *   • তারিখ-সীমা চিপ (আজ/৭ দিন/৩০ দিন) + ক্রম-টগল (সাম্প্রতক↔পুরাতন)
  *   • CSV এখন বর্তমান-ফিল্টার-অনুযায়ী রপ্তানি (Task57-প্রস্তাব-④)
  *   • "/" কীবোর্ড-শর্টকাটে অনুসন্ধান-ফোকাস
+ * session210 — অপারেশনস-ডেপথ প্যাক:
+ *   • CSV-এ "ইতিহাস" কলাম (Task60-প্রস্তাব-④) — noteHistory → কমপ্যাক্ট বাংলা অডিট-সারি (lib/support-history)
+ *   • বয়স-SLA চিপ (আজকের সবুজ / X দিন ধরে অ্যাম্বার / ৩+ দিন লাল) + ৩+-দিন-স্টেল অ্যালার্ট-বার (ক্লিকে পুরাতন-আগে)
+ *   • স্টাইল: মোট-কার্ড hover-লিফট (অন্য-স্ট্যাট-কার্ডের সাথে সামঞ্জস্য) + অ্যাকশন-বাটনে focus-ring
  */
 
 import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
+  AlertTriangle,
   ArrowDownWideNarrow,
   CalendarDays,
   Check,
   CheckCircle2,
+  Clock,
   Copy,
   Download,
   History,
@@ -47,6 +53,7 @@ import {
 } from 'lucide-react'
 import AdminGate, { useAdminGate } from '@/components/admin/AdminGate'
 import { bn } from '@/lib/format'
+import { agingInfo, historySummaryBn, staleCount } from '@/lib/support-history'
 
 type Status = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED'
 
@@ -549,7 +556,8 @@ function SupportReportsPanel() {
   const exportCsv = useCallback(async () => {
     setExporting(true)
     try {
-      const header = ['তারিখ', 'প্রেরক', 'ইমেইল', 'স্টেটাস', 'মিডিয়া', 'অভিযোগ', 'অ্যাডমিন-নোট']
+      // session210 — "ইতিহাস" কলাম: অ্যাকশন-টাইমলাইন CSV-তেই (জবাবদিহিতা-ট্রেইল)
+      const header = ['তারিখ', 'প্রেরক', 'ইমেইল', 'স্টেটাস', 'মিডিয়া', 'অভিযোগ', 'অ্যাডমিন-নোট', 'ইতিহাস']
       const rows = shown.map((r) => [
         new Date(r.createdAt).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' }),
         r.senderName,
@@ -558,6 +566,7 @@ function SupportReportsPanel() {
         r.mediaType,
         r.messageText,
         r.adminNote ?? '',
+        historySummaryBn(r.noteHistory),
       ])
       const csv =
         '\uFEFF' + [header, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')
@@ -658,6 +667,8 @@ function SupportReportsPanel() {
   }, [undoData, patchHistory])
 
   const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED
+  /** session210 — ৩+ দিন-পুরাতন অমীমাংসিত (অ্যালার্ট-বারের কাউন্ট) */
+  const staleN = staleCount(reports)
   const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL' || dateRange !== 'ALL'
   const statPct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
 
@@ -740,7 +751,7 @@ function SupportReportsPanel() {
             onClick={exportCsv}
             disabled={shown.length === 0 || exporting}
             type="button"
-            title="বর্তমান ফিল্টার-অনুযায়ী CSV রপ্তানি (session207)"
+            title="বর্তমান ফিল্টার-অনুযায়ী CSV রপ্তানি — ইতিহাস-কলামসহ (session210)"
             className="px-3 py-2 bg-white border border-[#CED0D4] hover:border-[#006A4E] hover:text-[#006A4E] text-[#4B4C4F] rounded-[8px] text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
           >
             {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
@@ -761,7 +772,7 @@ function SupportReportsPanel() {
       {/* session207 — পরিসংখ্যান মিনি-কার্ড ×৪ (স্টেটাস-কার্ড ক্লিকে ট্যাব-সুইচ; শেয়ার-বার = মোটের অনুপাত) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5" role="group" aria-label="অভিযোগ-পরিসংখ্যান">
         <div
-          className="bg-white border border-[#CED0D4] border-t-[3px] border-t-[#006A4E] rounded-[10px] p-3 shadow-2xs transition-all"
+          className="bg-white border border-[#CED0D4] border-t-[3px] border-t-[#006A4E] rounded-[10px] p-3 shadow-2xs transition-all hover:shadow-md hover:-translate-y-0.5"
           aria-label={`মোট ${bn(total)}টি অভিযোগ`}
         >
           <p className="text-[10.5px] font-bold text-[#65676B] flex items-center gap-1">
@@ -947,6 +958,24 @@ function SupportReportsPanel() {
         </div>
       </div>
 
+      {/* session210 — স্টেল-অ্যালার্ট: ৩+ দিন-পুরাতন অমীমাংসিত; ক্লিকে নতুন-ট্যাব + পুরাতন-আগে-ক্রম */}
+      {staleN > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            setTab('PENDING')
+            setSortAsc(true)
+          }}
+          aria-label={`${bn(staleN)}টি অভিযোগ ৩ দিনের-বেশি ধরে অমীমাংসিত — পুরাতন-আগে ক্রমে দেখুন`}
+          className="w-full flex items-center gap-2 bg-red-50 border border-red-200 hover:bg-red-100 text-red-800 rounded-[10px] px-3.5 py-2.5 text-[12px] font-bold text-left transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 lf-anim-fade"
+        >
+          <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" aria-hidden />
+          <span>
+            {bn(staleN)}টি অভিযোগ ৩+ দিন ধরে অমীমাংসিত — পুরাতন-আগে দেখতে ক্লিক করুন
+          </span>
+        </button>
+      )}
+
       {/* তালিকা */}
       {loading ? (
         <div className="bg-white border border-[#CED0D4] rounded-[10px] p-10 flex items-center justify-center">
@@ -1036,6 +1065,18 @@ function SupportReportsPanel() {
                     >
                       {relTimeBn(r.createdAt)}
                     </p>
+                    {(() => {
+                      const ag = agingInfo(r.createdAt, r.status)
+                      return ag ? (
+                        <span
+                          className={`mt-1 inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[9.5px] font-extrabold ${ag.cls}`}
+                          title={`অভিযোগ-বয়স (SLA) — ${ag.label}`}
+                        >
+                          <Clock className="w-2.5 h-2.5" aria-hidden />
+                          {ag.label}
+                        </span>
+                      ) : null
+                    })()}
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -1044,7 +1085,7 @@ function SupportReportsPanel() {
                       key={t.key}
                       onClick={() => update(r.id, { status: t.key })}
                       disabled={busy === r.id}
-                      className="px-2.5 py-1.5 rounded-[6px] text-[10.5px] font-bold border transition disabled:opacity-50 cursor-pointer bg-white border-[#CED0D4] hover:border-[#006A4E] hover:text-[#006A4E]"
+                      className="px-2.5 py-1.5 rounded-[6px] text-[10.5px] font-bold border transition disabled:opacity-50 cursor-pointer bg-white border-[#CED0D4] hover:border-[#006A4E] hover:text-[#006A4E] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
                       type="button"
                     >
                       → {STATUS_LABEL[t.key]}

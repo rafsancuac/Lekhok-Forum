@@ -2389,3 +2389,11 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **my-reports-চুক্তি-সম্প্রসারণ:** noteHistory-এন্ট্রিতে **`edited: boolean`** যোগ-হয়েছে ({note, at, edited}) — গ্রাহক-কোড যদি এই-ম্যাপ-খায় সে-এটা-সামলাবে; by/byRole/editedAt/editedBy আগের-মতোই-বাদ (লিক-শূন্য E2E-যাচাইকৃত)।
 - **agent-browser-গোটচা ×৪:** cookies-set-আর্গ-ভাঙা (JS-cookie ব্যবহার-করুন); ডেমন-রিপ → এক-ব্যাশে-অ্যাটমিক-কুকি+নেভিগেশন; `?chat=1`-ডিপ-লিংক-রেস (লঞ্চার-ক্লিক-নির্ভরযোগ্য); সাপোর্ট-রো = `button[aria-label*="অফিসিয়াল সাপোর্ট"]`।
 - **পরের-এজেন্ট: session210 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট; সার্ভার-পুশ (SSE/WebSocket)।
+
+### session210 — অপারেশনস-ডেপথ প্যাক (cross-agent নোট)
+
+- **নতুন-lib চুক্তি:** `src/lib/support-history.ts` — পিওর-ফাংশন (রিঅ্যাক্ট-মুক্ত, relative-import মাত্র): `historySummaryBn(noteHistoryJSON) → string` (করাপ্ট→'' — কলার-নিরাপদ), `agingInfo(createdAtISO, status) → {days,label,cls,tier}|null` (RESOLVED/অবৈধ→null), `staleCount(reports) → number`। STATUS_LABEL_BN lib-এ-ডুপ্লিকেট (page.tsx-এর STATUS_LABEL-এর-সাথে-সমস্বর) — bun-ইউনিট-টেস্ট ব্রাউজার-বহির্ভূত-চালানোর-জন্য। **UI-চিপ ও CSV-কলাম একই-ফাংশন খায় — এক-উৎস-সত্য।**
+- **CSV-চুক্তি-সম্প্রসারণ:** হেডার ৭→৮-কলাম — সর্বশেষ **"ইতিহাস"**; সেল = অ্যাকশন-টাইমলাইন (`স্টেটাস: X→Y (তারিখ — কে); জবাব: "…" (…) [সম্পাদিত]`), নোট-ক্লিপ ১২০-অক্ষর, RFC-4180 csvCell-অপরিবর্তিত; গ্রাহক-পার্সার যদি কলাম-সংখ্যা-হার্ডকোড-করে সে-৮-এ-আপডেট-করবে।
+- **SLA-টিয়ার:** fresh <২৪ঘ ("আজকের" সবুজ) · aging ১-২দিন (অ্যাম্বার) · stale ৩+দিন (লাল); স্টেল-অ্যালার্ট-বার = global (সব-রিপোর্টে) — ক্লিকে setTab('PENDING')+setSortAsc(true)।
+- **agent-browser-গোটচা ×১ (নতুন):** `viewport <w> <h>` standalone = Unknown-command → **`set viewport <w> <h>`**; ব্যর্থ-সিনট্যাক্সে ভিউপোর্ট-আগের-মানে-থেকে-যায় → hScroll-মিথ্যা-পাস/ফেল — মোবাইল-চেকের-আগে `window.innerWidth`-যাচাই-বাধ্যতামূলক।
+- **পরের-এজেন্ট: session211 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট; সার্ভার-পুশ (SSE/WebSocket)।
