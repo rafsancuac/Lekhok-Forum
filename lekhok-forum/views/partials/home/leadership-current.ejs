@@ -10,8 +10,8 @@
     </div>
 
     <div class="leadership-matrix">
-      <%- leaderPair(currentLeaders, [C('home_role_current_president'), C('home_role_current_gs')], C('home_year_current'), [leaderStatements.current_president, leaderStatements.current_general_secretary]) %>
-      <%- leaderPair(currentAdvisors, [C('home_role_current_advisor1'), C('home_role_current_advisor2')], C('home_year_current'), [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2]) %>
+      <%- leaderPair(currentLeaders, [C('home_role_current_president'), C('home_role_current_gs')], C('home_year_current'), [leaderStatements.current_president, leaderStatements.current_general_secretary], ['current_president', 'current_general_secretary']) %>
+      <%- leaderPair(currentAdvisors, [C('home_role_current_advisor1'), C('home_role_current_advisor2')], C('home_year_current'), [leaderStatements.current_advisor_1, leaderStatements.current_advisor_2], ['current_advisor_1', 'current_advisor_2']) %>
     </div>
   </div>
 </section>

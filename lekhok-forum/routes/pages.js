@@ -10,6 +10,11 @@ const bnDate131 = require('../helpers/bn-date'); // সেশন ১৩১: স�
 const homeLayout = require('../helpers/home-layout');
 // সেশন ১১০: হোম-কিউরেশন শৈল্পিক প্রচ্ছদ (একক-উৎস — moderator.js-এর COVERS110-এরই মিরর)
 const COVERS110 = require('../helpers/covers');
+// সেশন ২০৫ (পুনরুদ্ধার, মূল সেশন ৫৫/৬৩/৬৪): হোম-স্লট ভিজিবিলিটি + অতিরিক্ত-উপদেষ্টা —
+// a68fec4(session193)-এর stale-tree রিরাইটে হোম-রেন্ডার থেকে home_hidden_slots-ফিল্টার
+// ও home_extra_members opt-in হারিয়ে গিয়েছিল (অ্যাডমিন /admin/home-leadership-এর
+// দৃশ্যমান-টগল হোমপেজে প্রয়োগ হত না)। স্লট-কী অভিন্ন SLOT_META-উৎস।
+const HL205 = require('../helpers/home-leadership');
 
 // ── Home ─────────────────────────────────────────────────────────────────────
 // Member query with LEFT JOIN so any member linked to a user account inherits
@@ -27,7 +32,7 @@ router.get('/', async (req, res) => {
   // Turso-তে প্রতিটি await = ১টি নেটওয়ার্ক রাউন্ড-ট্রিপ → ওয়ার্ম TTFB-ই ৩-৭ সেকেন্ড,
   // যা Googlebot-এর ক্রল-রেট কমিয়ে দিত (GSC: "Discovered – currently not indexed")।
   // এখন স্বাধীন কুয়েরিগুলো এক প্যারালাল ব্যাচে ছোড়া হয়।
-  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, recentArticles, faqItems42, sectionOrderRaw193, memberOrderRaw193, feedOrderRaw193] = await Promise.all([
+  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, hiddenSlotsRaw205, extraMembersRaw205, recentArticles, faqItems42, sectionOrderRaw193, memberOrderRaw193, feedOrderRaw193] = await Promise.all([
     db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all(),
     db.prepare("SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL").all(),
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all(),
@@ -35,6 +40,9 @@ router.get('/', async (req, res) => {
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.term_year DESC, m.sort_order DESC LIMIT 2").all(),
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order LIMIT 4").all(),
     db.prepare("SELECT * FROM daily_content WHERE scheduled_date = ? AND published = 1 ORDER BY id").all(new Date().toISOString().slice(0, 10)),
+    // সেশন ২০৫: স্লট-ভিজিবিলিটি + অতিরিক্ত-উপদেষ্টা opt-in (প্যারালাল-ব্যাচে — রাউন্ডট্রিপ সাশ্রয়)
+    db.getSetting('home_hidden_slots'),
+    db.getSetting('home_extra_members'),
     // সেশন ৯০ (হোম-কিউরেশন): 'লেখকদের কালি / সাম্প্রতিক লেখা' এখন পুরোপুরি
     // মডারেটর/এডমিন-নির্বাচিত (home_featured, সর্বোচ্চ ৬)। কঠোর-ফিল্টার:
     // • post_kind='writing' — অ্যাভাটার/কভার-আপডেট + প্রশ্নের মতো সোশ্যাল-
@@ -177,6 +185,22 @@ router.get('/', async (req, res) => {
   const foundingAdvisors193     = homeLayout.applyMemberOrder(foundingAdvisors, moMap193.FOUNDING_ADVISORS);
   const currentLeaders193       = homeLayout.applyMemberOrder(currentLeaders, moMap193.CURRENT_PAIR);
   const currentAdvisors193      = homeLayout.applyMemberOrder(currentAdvisors, moMap193.CURRENT_ADVISORS);
+  // ── সেশন ২০৫: স্লট-ভিজিবিলিটি সেট (ভিউ leaderPair-এ slotKeys-ভিত্তিক ফিল্টার হয়) ──
+  // settings অনুপস্থিত হলে effectiveHiddenSlots ডিফল্ট current_advisor_1/2 লুকায়
+  // (উপদেষ্টা নিয়োগ না-দেওয়া পর্যন্ত — মূল সেশন ৬৪-এর নিয়ম)।
+  let hiddenSlots205 = HL205.DEFAULT_HIDDEN_SLOTS.slice();
+  try { hiddenSlots205 = HL205.effectiveHiddenSlots(hiddenSlotsRaw205); } catch (e) { /* ডিফল্টই থাকুক */ }
+  // অতিরিক্ত-উপদেষ্টা (মূল সেশন ৬৪): নবীনতম-কার্যবর্ষের তৃতীয়+ সদস্য — শুধু
+  // home_extra_members (opt-in CSV)-এ থাকলেই হোমপেজে যোগ হয়।
+  let currentExtras205 = [];
+  try {
+    const extraIds205 = HL205.parseCsvList(extraMembersRaw205).map(Number);
+    if (extraIds205.length) {
+      const groups205 = await HL205.fetchAdvisoryGroups(db);
+      currentExtras205 = (groups205.current || []).slice(2).filter(m => extraIds205.includes(Number(m.id)));
+    }
+  } catch (e) { /* ব্যর্থ হলে শুধু ৮-স্লটই থাকবে */ }
+  const currentAdvisorsFinal205 = [...currentAdvisors193, ...currentExtras205];
   // ③ ইউজার-ফিড স্লাইডারের ক্রম (home_feed_order)
   const feedSlides193 = homeLayout.orderFeedSlides(feedOrderRaw193);
   // ④ 'আজকের কন্টেন্ট' ব্যান্ডের ⚡ এক নজরে স্লাইড — আজকের বাস্তব daily_content
@@ -199,7 +223,8 @@ router.get('/', async (req, res) => {
     leaderStatements,
     founders: foundersOrdered193,
     foundingAdvisors: foundingAdvisors193,
-    currentAdvisors: currentAdvisors193,
+    currentAdvisors: currentAdvisorsFinal205,
+    homeHiddenSlots: hiddenSlots205,
     advisors,
     recentArticles,
     homeCurated,

@@ -65,12 +65,21 @@
     // (ভেতরের <a>-তে ক্লিক হলে সেটাই প্রাধিন্য পায়)।
     return `<div class="leader-card has-image leader-card-featured${profileHref ? ' is-linked' : ''}"${profileHref ? ` data-href="${lfEsc(profileHref)}"` : ''}>${inner}</div>`;
   }
-  function leaderPair(members, roles, yearLabel, statements) {
+  function leaderPair(members, roles, yearLabel, statements, slotKeys) {
     if (!members || !members.length) return '';
+    // সেশন ২০৫ (পুনরুদ্ধার, মূল সেশন ৬৩/৬৪): অ্যাডমিন-প্যানেলের দৃশ্যমান-টগল —
+    // slotKeys[i] কার্যকর-লুকানো-স্লট-তালিকায় (home_hidden_slots) থাকলে সেই কার্ড
+    // রেন্ডার-ই হয় না; অতিরিক্ত-উপদেষ্টা (slotKeys-বহির্ভূত) সবসময় দৃশ্যমান।
+    const hiddenSet205 = new Set(Array.isArray(homeHiddenSlots) ? homeHiddenSlots : []);
+    const cells205 = members
+      .map((m, i) => ({ m, i }))
+      .filter(({ i }) => !(slotKeys && slotKeys[i] && hiddenSet205.has(slotKeys[i])))
+      .map(({ m, i }) => leaderCard(m, roles[i], yearLabel, statements[i]));
+    if (!cells205.length) return '';
     return `
       <div class="leadership-cell">
         <div class="leaders-grid leaders-grid-pair">
-          ${members.map((m, i) => leaderCard(m, roles[i], yearLabel, statements[i])).join('')}
+          ${cells205.join('')}
         </div>
       </div>`;
   }

@@ -13,8 +13,8 @@
     </div>
 
     <div class="leadership-matrix">
-      <%- leaderPair(founders, [C('home_role_founder_president'), C('home_role_founder_gs')], C('home_year_founding'), [leaderStatements.founder_president, leaderStatements.founder_general_secretary]) %>
-      <%- leaderPair(foundingAdvisors, [C('home_role_founding_advisor1'), C('home_role_founding_advisor2')], C('home_year_founding'), [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2]) %>
+      <%- leaderPair(founders, [C('home_role_founder_president'), C('home_role_founder_gs')], C('home_year_founding'), [leaderStatements.founder_president, leaderStatements.founder_general_secretary], ['founder_president', 'founder_general_secretary']) %>
+      <%- leaderPair(foundingAdvisors, [C('home_role_founding_advisor1'), C('home_role_founding_advisor2')], C('home_year_founding'), [leaderStatements.founding_advisor_1, leaderStatements.founding_advisor_2], ['founding_advisor_1', 'founding_advisor_2']) %>
     </div>
   </div>
 </section>
