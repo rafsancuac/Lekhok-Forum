@@ -74,3 +74,6 @@ upload/
 /eslint.config.mjs
 /next-env.d.ts
 /public
+
+# ── Agent credentials store ( NEVER commit — raw tokens ) ──
+.secrets/
