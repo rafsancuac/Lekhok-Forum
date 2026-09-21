@@ -3053,3 +3053,22 @@ Stage Summary:
 - সেলফ-হিলিং-চেইন-পূর্ণ: sandbox-reset → ensure-bot.sh → anon-raw-restore (টোকেন-ছাড়াই) → split-পুনর্গঠন → বট-আপ — সব-পাথ-টেস্টেড
 - ভবিষ্যৎ-নীতি: নতুন-সিক্রেট-এলে শুধু .env-এ-যোগ → patched save-env-to-gist.sh → স্বয়ংক্রিয়-এনকোড; raw-কিছুই-গিস্টে-যাবে-না
 - পরের-এজেন্ট: **session200 লেবেল**; keeper-রুটিন-আগের-মতোই; টোকেন-সংকট-সমাপ্ত
+
+---
+Task ID: session200
+Agent: Z.ai Code (main session)
+Task: ইউজার-নির্দেশ — ① টোকেন-গোপনীয়তা (public-display-বারণ + revocation-বারণ) ② নতুন-ক্রেডেনশিয়াল-সেটআপ ③ session193-আনপুশড-কমিট ডিপ্লয়
+
+Work Log:
+- ক্রেডেনশিয়াল-সুরক্ষা: /home/z/my-project/.secrets/lekhok-tokens.env (chmod 600, .gitignore-যোগ) — GitHub V3/V2/V1, Vercel ×2, Turso URL+JWT, TG api_id/hash/phone, Google OAuth, Resend, Search-API শুধু-লোকাল; worklog/কমিটে প্রিফিক্স-মাস্ক-নীতি (ghp_O9… / vcp_7eF…)
+- সিকিউরিটি-অডিট: git grep (ghp_/re_/AIzaSy/GOCSPX-/vcp_/eyJ/api_hash) HEAD → শুধু ২টা .env.example-প্লেসহোল্ডার — ট্র্যাকড-ট্রি-লিক-শূন্য ✓
+- V3-টোকেন-যাচাই: ls-remote 200 (login rafsancuac) → origin-URL আপডেট; epaper-bot/.env তৈরি (.env.example-থেকে TG+Google-ভরাট, gitignored)
+- push-ব্লক-রিকভারি: লোকাল junk UUID-কমিট 5d038e5 (cron-কিপার, 55-ফাইল) mixed-reset → stash (keeper-junk-artifacts-5d038e5); c4aae8e (session193) union-attribute (.git/info/attributes worklog×৩) দিয়ে origin/main-এ রিবেজ — কোড-কনফ্লিক্ট-শূন্য, node --check ×৪ গ্রিন → push a68fec4 ✓
+- **Vercel-BLOCKED RCA**: সাম্প্রতিক-সব-git-push-ডিপ্লয় (198c/199/session193-a68fec4) BLOCKED — seatBlock.blockCode=COMMIT_AUTHOR_REQUIRED: অথর z@container GitHub-অ্যাকাউন্টে-ম্যাপ-হয়-না → seat-শূন্য; আগের READY@dpl-গুলো = ম্যানুয়াল-redeploy — অর্থাৎ session198/199-কোডও-প্রোডে-যায়নি; ফিক্স: repo git-config user=rafsancuac <rafsancuac@users.noreply.github.com> (ইতিহাসে-যাচাইকৃত-নোরিপ্লাই, সর্বশেষ 2026-09-19) — এই-কমিট-থেকে-প্রযোজ্য
+- prod-স্থিতি: READY@7944fdc-কনটেন্ট — এই-পুশের-ডিপ্লয়ে session192-e026979-6a5afc4-199-a68fec4 সব-একসাথে-লাইভ
+
+Stage Summary:
+- session193 (হোমপেজ-রি-অর্ডার + নেতৃত্ব-কার্ড-ফিক্স + আজকের-কন্টেন্ট-ব্যান্ড) origin/main-এ ল্যান্ডেড — Vercel-অথর-ম্যাপিং-ফিক্স-সহ ডিপ্লয়-অবরোধ-মুক্ত
+- টোকেন-নীতি: নতুন-সিক্রেট → .secrets/lekhok-tokens.env বা app-.env শুধু; session199-এর split-encoded-ভল্ট-চুক্তি অক্ষত; raw-ghp_-কোথাও-নয়
+- **গোটচা-পরের-সব-এজেন্ট**: কমিটের-আগে `git config user.email` যাচাই — rafsancuac@users.noreply.github.com ছাড়া অন্য-অথরে Vercel-BLOCK
+- পরের-এজেন্ট: session201 লেবেল
