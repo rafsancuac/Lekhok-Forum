@@ -26,10 +26,12 @@ import {
   Image as ImageIcon,
   Loader2,
   Mic,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Video,
   X,
+  XCircle,
 } from 'lucide-react'
 import AdminGate, { useAdminGate } from '@/components/admin/AdminGate'
 import { bn } from '@/lib/format'
@@ -83,6 +85,21 @@ const STATUS_LABEL: Record<Status, string> = {
   PENDING: 'নতুন',
   IN_PROGRESS: 'চলমান',
   RESOLVED: 'সমাধান',
+}
+
+/** session206 (Task 57) — মিডিয়া-টাইপ ফিল্টার-চিপ */
+const MEDIA_FILTERS: { key: string; label: string }[] = [
+  { key: 'ALL', label: 'সব মিডিয়া' },
+  { key: 'TEXT', label: 'লেখা' },
+  { key: 'IMAGE', label: 'ছবি' },
+  { key: 'AUDIO', label: 'অডিও' },
+  { key: 'VIDEO', label: 'ভিডিও' },
+]
+const MEDIA_FILTER_ICON: Record<string, React.ReactNode> = {
+  TEXT: null,
+  IMAGE: <ImageIcon className="w-3 h-3" aria-hidden />,
+  AUDIO: <Mic className="w-3 h-3" aria-hidden />,
+  VIDEO: <Video className="w-3 h-3" aria-hidden />,
 }
 
 /** session202 — স্টেটাস-ভিত্তিক বাম-অ্যাকসেন্ট বর্ডার (কার্ডে এক-নজরে স্টেটাস) */
@@ -228,6 +245,12 @@ function SupportReportsPanel() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
+  // session206 (Task 57) — অনুসন্ধান + মিডিয়া-ফিল্টার + বাল্ক-অ্যাকশন
+  const [query, setQuery] = useState('')
+  const [mediaFilter, setMediaFilter] = useState('ALL')
+  const [selected, setSelected] = useState<string[]>([])
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 })
 
   const flash = useCallback((msg: string) => {
     setToast(msg)
@@ -349,8 +372,64 @@ function SupportReportsPanel() {
     [flash, load, reports]
   )
 
-  const shown = reports.filter((r) => r.status === tab)
+  const shown = React.useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return reports.filter(
+      (r) =>
+        r.status === tab &&
+        (mediaFilter === 'ALL' || r.mediaType === mediaFilter) &&
+        (!q ||
+          r.senderName.toLowerCase().includes(q) ||
+          (r.senderEmail ?? '').toLowerCase().includes(q) ||
+          r.messageText.toLowerCase().includes(q)),
+    )
+  }, [reports, tab, mediaFilter, query])
+
+  /** session206 — ট্যাব/ফিল্টার-বদলে নির্বাচন-পরিষ্কার (অদৃশ্য-কার্ডে বাল্ক-অ্যাকশন আটকায়) */
+  useEffect(() => {
+    setSelected([])
+  }, [tab, mediaFilter, query])
+
   const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED
+  const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL'
+
+  /** session206 — বাল্ক-স্টেটাস: নির্বাচিত-কার্ডে ক্রমিক PUT + প্রগ্রেস; শেষে একবার reload+ব্যাজ-সিঙ্ক */
+  const bulkUpdate = useCallback(
+    async (status: Status) => {
+      if (selected.length === 0 || bulkBusy) return
+      setBulkBusy(true)
+      setBulkProgress({ done: 0, total: selected.length })
+      let ok = 0
+      for (const id of selected) {
+        try {
+          const res = await fetch('/api/admin/support-reports', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status }),
+          })
+          if (res.ok) ok++
+        } catch {
+          /* একটা-ব্যর্থ হলেও বাকিগুলো চলবে */
+        }
+        setBulkProgress((p) => ({ ...p, done: p.done + 1 }))
+      }
+      setBulkBusy(false)
+      setSelected([])
+      setBulkProgress({ done: 0, total: 0 })
+      await load()
+      window.dispatchEvent(new Event('lf:support-changed'))
+      flash(
+        `${bn(ok)}টি অভিযোগ → ${STATUS_LABEL[status]}${ok < selected.length ? ` (${bn(selected.length - ok)}টি ব্যর্থ)` : ''} · অভিযোগকারীরা নোটিফিকেশন পেয়েছেন`,
+      )
+    },
+    [selected, bulkBusy, load, flash],
+  )
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }, [])
+
+  const allShownSelected = shown.length > 0 && shown.every((r) => selected.includes(r.id))
 
   return (
     <div className="font-hind text-[#050505] space-y-4">
@@ -425,6 +504,71 @@ function SupportReportsPanel() {
         ))}
       </div>
 
+      {/* session206 — অনুসন্ধান + মিডিয়া-ফিল্টার + ফলাফল-গণনা */}
+      <div className="bg-white border border-[#CED0D4] rounded-[10px] p-3 shadow-2xs space-y-2.5">
+        <div className="relative">
+          <Search
+            className="w-4 h-4 text-[#8A8D91] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            aria-hidden
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="নাম, ইমেইল বা অভিযোগের লেখা দিয়ে খুঁজুন..."
+            aria-label="অভিযোগ অনুসন্ধান"
+            className="w-full text-[12.5px] bg-[#F7F8FA] border border-[#CED0D4] focus:bg-white focus:border-[#006A4E] focus:ring-2 focus:ring-[#006A4E]/15 rounded-[8px] pl-9 pr-9 py-2.5 outline-none transition placeholder:text-[#8A8D91]"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              type="button"
+              aria-label="অনুসন্ধান মুছুন"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#8A8D91] hover:text-[#050505] hover:bg-[#E4E6EB] transition cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" aria-hidden />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="মিডিয়া-ফিল্টার">
+            {MEDIA_FILTERS.map((m) => (
+              <button
+                key={m.key}
+                onClick={() => setMediaFilter(m.key)}
+                type="button"
+                aria-pressed={mediaFilter === m.key}
+                className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer flex items-center gap-1.5 ${
+                  mediaFilter === m.key
+                    ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                    : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+                }`}
+              >
+                {MEDIA_FILTER_ICON[m.key]}
+                {m.label}
+              </button>
+            ))}
+          </div>
+          {filtersActive && (
+            <p className="text-[10.5px] text-[#65676B] font-bold whitespace-nowrap" role="status">
+              {bn(shown.length)}/{bn(total)}টি দেখানো হচ্ছে
+              {shown.length < total && (
+                <button
+                  onClick={() => {
+                    setQuery('')
+                    setMediaFilter('ALL')
+                  }}
+                  type="button"
+                  className="ml-1.5 text-[#006A4E] hover:underline cursor-pointer"
+                >
+                  রিসেট
+                </button>
+              )}
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* তালিকা */}
       {loading ? (
         <div className="bg-white border border-[#CED0D4] rounded-[10px] p-10 flex items-center justify-center">
@@ -432,22 +576,63 @@ function SupportReportsPanel() {
         </div>
       ) : shown.length === 0 ? (
         <div className="bg-white border border-[#CED0D4] rounded-[10px] p-10 text-center">
-          <ShieldCheck className="w-8 h-8 text-[#CED0D4] mx-auto mb-2" aria-hidden />
-          <p className="text-sm text-[#65676B]">{STATUS_LABEL[tab]} স্টেটাসে কোনো অভিযোগ নেই</p>
-          <p className="text-[11px] text-[#8A8D91] mt-1">
-            সাপোর্ট-চ্যাটে নতুন অভিযোগ এলে এখানে লাইভ দেখা যাবে
-          </p>
+          {filtersActive ? (
+            <>
+              <XCircle className="w-8 h-8 text-[#CED0D4] mx-auto mb-2" aria-hidden />
+              <p className="text-sm text-[#65676B]">অনুসন্ধানে কোনো অভিযোগ মেলেনি</p>
+              <p className="text-[11px] text-[#8A8D91] mt-1">বানান বদলে বা ফিল্টার-রিসেট করে আবার চেষ্টা করুন</p>
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="w-8 h-8 text-[#CED0D4] mx-auto mb-2" aria-hidden />
+              <p className="text-sm text-[#65676B]">{STATUS_LABEL[tab]} স্টেটাসে কোনো অভিযোগ নেই</p>
+              <p className="text-[11px] text-[#8A8D91] mt-1">
+                সাপোর্ট-চ্যাটে নতুন অভিযোগ এলে এখানে লাইভ দেখা যাবে
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
+          {/* session206 — সম্পূর্ণ-নির্বাচন বার (বাল্ক-মোডে) */}
+          <div className="flex items-center justify-between gap-2 bg-white border border-[#CED0D4] rounded-[8px] px-3 py-2 shadow-2xs">
+            <label className="flex items-center gap-2 text-[11px] font-bold text-[#4B4C4F] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allShownSelected}
+                onChange={() =>
+                  setSelected(allShownSelected ? [] : shown.map((r) => r.id))
+                }
+                aria-label={allShownSelected ? 'নির্বাচন সরান' : 'দেখানো সব অভিযোগ নির্বাচন করুন'}
+                className="w-4 h-4 accent-[#006A4E] cursor-pointer"
+              />
+              সব নির্বাচন ({bn(shown.length)})
+            </label>
+            {selected.length > 0 && (
+              <span className="text-[10.5px] text-[#006A4E] font-extrabold" role="status">
+                {bn(selected.length)}টি নির্বাচিত
+              </span>
+            )}
+          </div>
           {shown.map((r) => (
             <article
               key={r.id}
-              className={`bg-white border border-[#CED0D4] rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 ${ACCENT[r.status]} lf-anim-fade`}
+              className={`bg-white border rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 transition-all lf-anim-fade ${
+                selected.includes(r.id)
+                  ? 'border-[#006A4E] ring-2 ring-[#006A4E]/20 ' + ACCENT[r.status].replace('border-l-', 'border-l-')
+                  : `border-[#CED0D4] ${ACCENT[r.status]}`
+              }`}
             >
-              {/* প্রেরক-বার (session202: অ্যাভাটার + আপেক্ষিক-সময়) */}
+              {/* বাল্ক-নির্বাচন + প্রেরক-বার (session202: অ্যাভাটার + আপেক্ষিক-সময়) */}
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="flex items-start gap-2.5 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(r.id)}
+                    onChange={() => toggleSelect(r.id)}
+                    aria-label={`${r.senderName}-এর অভিযোগ নির্বাচন করুন`}
+                    className="w-4 h-4 mt-1 accent-[#006A4E] cursor-pointer transition-transform active:scale-90 shrink-0"
+                  />
                   <span
                     aria-hidden
                     style={{ backgroundColor: avatarColorFor(r.senderName) }}
@@ -585,6 +770,63 @@ function SupportReportsPanel() {
               <ActionHistory entries={parseHistory(r.noteHistory)} />
             </article>
           ))}
+        </div>
+      )}
+
+      {/* session206 — ফ্লোটিং বাল্ক-অ্যাকশন বার (নির্বাচন-সক্রিয় হলে slide-up) */}
+      {selected.length > 0 && (
+        <div
+          role="toolbar"
+          aria-label="বাল্ক-স্টেটাস অ্যাকশন"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-xl bg-[#050505] text-white rounded-[12px] shadow-2xl border border-[#3e4042] px-4 py-3 flex items-center justify-between gap-3 flex-wrap lf-anim-pop"
+          style={{ animationDuration: '0.18s' }}
+        >
+          <div className="min-w-0">
+            <p className="text-[12px] font-extrabold flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-[#33d79f]" aria-hidden />
+              {bn(selected.length)}টি নির্বাচিত
+            </p>
+            {bulkBusy && bulkProgress.total > 0 && (
+              <div className="mt-1.5" aria-live="polite">
+                <div className="h-1.5 w-40 bg-white/15 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#33d79f] rounded-full transition-all"
+                    style={{ width: `${Math.round((bulkProgress.done / bulkProgress.total) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-[9.5px] text-[#b0b3b8] mt-0.5">
+                  {bn(bulkProgress.done)}/{bn(bulkProgress.total)} সম্পন্ন...
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {TABS.filter((t) => t.key !== 'PENDING').map((t) => (
+              <button
+                key={t.key}
+                onClick={() => bulkUpdate(t.key)}
+                disabled={bulkBusy}
+                type="button"
+                className={`px-3 py-1.5 rounded-[8px] text-[11px] font-bold transition disabled:opacity-50 cursor-pointer flex items-center gap-1 ${
+                  t.key === 'RESOLVED'
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                    : 'bg-sky-600 hover:bg-sky-500 text-white'
+                }`}
+              >
+                {bulkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '→'} {STATUS_LABEL[t.key]}
+              </button>
+            ))}
+            <button
+              onClick={() => setSelected([])}
+              disabled={bulkBusy}
+              type="button"
+              aria-label="নির্বাচন বাতিল"
+              title="নির্বাচন বাতিল"
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition disabled:opacity-50 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" aria-hidden />
+            </button>
+          </div>
         </div>
       )}
 
