@@ -387,7 +387,7 @@
           <div class="leader-body">
             <h3 class="leader-name">${esc(displayName)}</h3>
             <p class="role leader-role">${esc(roleLabel || m.role || '')}</p>
-            ${yearLabel ? `<p class="leader-year">(${esc(yearLabel)})</p>` : ''}
+            ${yearLabel ? `<p class="leader-year">${esc(yearLabel)}</p>` : ''}
             ${displayBio ? `<p class="leader-bani">${esc(displayBio)}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
             ${hasSocial ? `
             <div class="leader-social">

@@ -2455,51 +2455,145 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 @media (max-width:820px){.leaders-row .leader-card{width:calc(50% - 10px)}}
 @media (max-width:540px){.leaders-row{gap:16px}.leaders-row .leader-card{width:100%;min-width:0;max-width:420px}}
 /* ════════ EOF session64-leaders-row ════════ */
-/* ═══════════ সেশন ১৭৯: নেতৃত্ব-সেকশন প্রিমিয়াম অ্যাম্বিয়েন্ট-ব্যাকগ্রাউন্ড ═══════════
-   "নেতৃত্বের ধারা" (#leadership) ও "বর্তমান নেতৃত্ব" (#current-leadership) — দুটিতেই:
-   ① মৃদু এমারেল্ড রেডিয়াল-গ্লো (প্রাতিষ্ঠানিক-সাহিত্যিক আবহ) ② ফেডিং ডট-ম্যাট্রিক্স
-   (মাঝে দৃশ্যমান, কিনারায় মিলিয়ে যায়) ③ কার্ড-এলিভেশন (হোভারে ভেসে ওঠা + সবুজ রিম)
-   ④ ছবি-রিম গ্লো ⑤ সেকশন-টপ হেয়ারলাইন। সব বিশুদ্ধ CSS — JS-মুক্ত। */
-#leadership, #current-leadership { position: relative; overflow: hidden; }
+/* ═══════════ সেশন ১৮০ (একত্রীকৃত-ফাইনাল): নেতৃত্ব-সেকশন প্রিমিয়াম-ব্যাকগ্রাউন্ড v2 ═══════════
+   ইউজার-ফিডব্যাক (২০২৬-০৯-২১): সেশন-১৭৯-এর মৃদু-গ্লো (আলফা .05–.08) চাক্ষুষভাবে ধরাই
+   পড়ত না — "ব্যাকগ্রাউন্ড তো আগের মতই"। দুই সমান্তরাল-এজেন্টের v2-ব্লক একত্রীভূত:
+   ① মিন্ট-ওয়াশ গ্রেডিয়েন্ট (উপরে-নিচে, মাঝে স্বচ্ছ) ② অ্যানিমেটেড অরোরা-অর্ব
+   (আলফা .10–.16, ২৬/৩২সে-মৃদু-ড্রিফট — সত্যিকারের ডায়নামিক) ③ দৃশ্যমান ডট-ম্যাট্রিক্স
+   ④ গ্রেডিয়েন্ট-টপ-হেয়ারলাইন ⑤ ব্যাজ-পিল + পালস-ডট ⑥ লাইন-ডট-লাইন অর্নামেন্ট-ডিভাইডার
+   ⑦ গ্রেডিয়েন্ট-টেক্সট অ্যাকসেন্ট ⑧ কার্ডে স্থায়ী-হ্যালো + হোভারে ৮px-ভেসে-ওঠা ⑨
+   ছবি-ডাবল-রিং ⑩ কার্যবর্ষ-চিপ (EJS-প্যারেন-বাদের সাথে জোড়া)। বিশুদ্ধ CSS — JS-মুক্ত। */
+
+/* ── ১. সেকশন-ভিত্তি: স্ট্যাকিং + ক্লিপ + হেয়ারলাইন + মিন্ট-ওয়াশ ── */
+#leadership, #current-leadership {
+  position: relative; overflow: hidden;
+  border-top: 3px solid transparent;
+  border-image-source: linear-gradient(90deg, transparent, rgba(5,150,105,.55) 26%, rgba(16,185,129,.55) 74%, transparent);
+  border-image-slice: 1;
+  background-image: linear-gradient(180deg,
+    rgba(209,250,229,.50) 0%, rgba(236,253,245,.26) 24%,
+    rgba(255,255,255,0) 48%,
+    rgba(236,253,245,.30) 80%, rgba(209,250,229,.50) 100%);
+}
+#leadership { box-shadow: inset 0 1px 0 rgba(5,150,105,.20), inset 0 2px 6px -4px rgba(4,120,87,.16); }
+
+/* ── ২. অ্যানিমেটেড অরোরা-অর্ব — ধীরে-ভাসমান এমারেল্ড আলোক-ছটা (এবার চোখে-লাগে) ──
+   (নোট: এই background-shorthand ১৭৯/পূর্ব-স্তরের .section-alt::before নেভি-ডটকে
+   এ-দুই-সেকশনে স্বয়ংক্রিয়ভাবে প্রতিস্থাপন করে — আলাদা kill-rule-এর দরকার নেই) */
 #leadership::before, #current-leadership::before {
-  content: ''; position: absolute; inset: -35% -12%; pointer-events: none; z-index: 0;
+  content: ''; position: absolute; inset: -30% -12%; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(42% 40% at 20% 16%, rgba(5,150,105,.08), transparent 70%),
-    radial-gradient(40% 36% at 82% 88%, rgba(16,185,129,.065), transparent 72%),
-    radial-gradient(30% 28% at 64% 6%, rgba(4,120,87,.05), transparent 70%);
-}
-#leadership::after, #current-leadership::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
-  background-image: radial-gradient(rgba(5,150,105,.5) .75px, transparent .75px);
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(ellipse 72% 62% at 50% 46%, #000 26%, transparent 100%);
-  mask-image: radial-gradient(ellipse 72% 62% at 50% 46%, #000 26%, transparent 100%);
-}
-#leadership .container, #current-leadership .container { position: relative; z-index: 1; }
-/* বর্তমান-সেকশনের ওপরের সূক্ষ্ম সবুজ-হেয়ারলাইন (section-alt-বর্ডারের ওপর স্তর) */
-#current-leadership { box-shadow: inset 0 1px 0 rgba(5,150,105,.22), inset 0 2px 6px -4px rgba(4,120,87,.18); }
-/* কার্ড-এলিভেশন — ডিফল্টে মৃদু সবুজ-ছায়া + রিম; হোভারে ভেসে-ওঠা */
-.leaders-row .leader-card.has-image {
-  border-color: rgba(5,150,105,.14);
-  box-shadow: 0 1px 2px rgba(15,23,42,.05), 0 10px 28px -14px rgba(4,120,87,.20);
+    radial-gradient(46% 42% at 18% 12%, rgba(16,185,129,.16), transparent 70%),
+    radial-gradient(40% 38% at 84% 20%, rgba(5,150,105,.11), transparent 72%),
+    radial-gradient(44% 40% at 78% 90%, rgba(16,185,129,.14), transparent 72%),
+    radial-gradient(36% 34% at 12% 88%, rgba(4,120,87,.10), transparent 70%);
+  animation: lfw180-aurora 26s ease-in-out infinite alternate;
   will-change: transform;
 }
-.leaders-row .leader-card.has-image:hover {
-  transform: translateY(-6px);
-  border-color: rgba(5,150,105,.38);
-  box-shadow: 0 8px 18px -8px rgba(4,120,87,.22), 0 28px 52px -22px rgba(4,120,87,.30);
+#current-leadership::before { animation-duration: 32s; animation-direction: alternate-reverse; }
+@keyframes lfw180-aurora {
+  0%   { transform: translate3d(-2.5%, -1.5%, 0) scale(1); }
+  50%  { transform: translate3d(2%, 1.5%, 0) scale(1.06); }
+  100% { transform: translate3d(-1.5%, 2.5%, 0) scale(1.02); }
 }
-/* ছবি-রিম — সূক্ষ্ম অভ্যন্তরীণ সবুজ রিং + হোভার-গ্লো */
+
+/* ── ৩. ডট-ম্যাট্রিক্স — ১px এমারেল্ড ডট, কেন্দ্রে দৃশ্যমান, কিনারায় মিলিয়ে-যাওয়া ── */
+#leadership::after, #current-leadership::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .6;
+  background-image: radial-gradient(rgba(4,120,87,.55) 1px, transparent 1.1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 30%, transparent 100%);
+}
+#leadership .container, #current-leadership .container { position: relative; z-index: 1; }
+
+/* ── ৪. আইব্রো → প্রিমিয়াম ব্যাজ-পিল + পালস-ডট (অ্যাডমিন-টেক্সট অক্ষুণ্ণ) ── */
+#leadership .eyebrow, #current-leadership .eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 16px 7px 13px; border-radius: 999px;
+  background: linear-gradient(180deg, rgba(236,253,245,.95), rgba(209,250,229,.55));
+  border: 1px solid rgba(5,150,105,.34);
+  color: var(--accent-dark, #047857);
+  font-size: 12.5px; font-weight: 700; letter-spacing: .05em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 1px 2px rgba(4,120,87,.10), 0 8px 20px -10px rgba(4,120,87,.32);
+}
+#leadership .eyebrow::before, #current-leadership .eyebrow::before {
+  content: ''; flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #34d399, #059669);
+  box-shadow: 0 0 0 0 rgba(5,150,105,.5);
+  animation: lfw180-ping 2.2s cubic-bezier(.4,0,.6,1) infinite;
+}
+@keyframes lfw180-ping {
+  0%   { box-shadow: 0 0 0 0 rgba(5,150,105,.5); }
+  70%  { box-shadow: 0 0 0 9px rgba(5,150,105,0); }
+  100% { box-shadow: 0 0 0 0 rgba(5,150,105,0); }
+}
+
+/* ── ৫. ডিভাইডার → লাইন-ডট-লাইন অর্নামেন্ট ── */
+#leadership .accent-divider, #current-leadership .accent-divider {
+  width: 200px; height: 14px; margin: 18px auto 24px; position: relative;
+  background: radial-gradient(circle, var(--accent) 0 3px, transparent 3.6px);
+  background-size: 14px 14px; background-position: center; background-repeat: no-repeat;
+}
+#leadership .accent-divider::before, #current-leadership .accent-divider::before,
+#leadership .accent-divider::after, #current-leadership .accent-divider::after {
+  content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+  width: 84px; height: 2px; border-radius: 2px;
+}
+#leadership .accent-divider::before, #current-leadership .accent-divider::before {
+  left: 0; background: linear-gradient(90deg, transparent, rgba(5,150,105,.65));
+}
+#leadership .accent-divider::after, #current-leadership .accent-divider::after {
+  right: 0; background: linear-gradient(270deg, transparent, rgba(5,150,105,.65));
+}
+
+/* ── ৬. শিরোনামের অ্যাকসেন্ট → গ্রেডিয়েন্ট-টেক্সট ── */
+#leadership .section-title .accent, #current-leadership .section-title .accent {
+  background: linear-gradient(90deg, var(--accent-dark), var(--accent-light));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── ৭. কার্ড: স্থায়ী সবুজ-হ্যালো (বিশ্রামেই দৃশ্যমান) + হোভারে ৮px-ভেসে-ওঠা ── */
+.leaders-row .leader-card.has-image {
+  border-color: rgba(5,150,105,.24);
+  box-shadow: 0 2px 4px rgba(15,23,42,.04), 0 16px 38px -18px rgba(4,120,87,.30);
+  will-change: transform;
+}
+.leaders-row .leader-card.has-image:hover,
+.leaders-row .leader-card-featured.has-image:hover {
+  transform: translateY(-8px);
+  border-color: rgba(5,150,105,.5);
+  box-shadow: 0 10px 22px -10px rgba(4,120,87,.30), 0 34px 64px -24px rgba(4,120,87,.42) !important;
+}
+.leaders-row .leader-card-featured:hover { transform: translateY(-8px); }
+.leaders-row .leader-card.has-image:hover .leader-name { color: var(--accent-dark, #047857); }
+
+/* ── ৮. ছবি-রিম — সবুজ ডাবল-রিং + হোভার-গ্লো ── */
 .leaders-row .leader-photo {
-  outline: 1px solid rgba(5,150,105,.20); outline-offset: -5px;
-  box-shadow: 0 6px 18px -6px rgba(4,120,87,.35);
+  outline: 2px solid rgba(5,150,105,.28); outline-offset: 3px;
+  box-shadow: 0 10px 26px -8px rgba(4,120,87,.45);
   transition: var(--transition);
 }
-.leaders-row .leader-card.has-image:hover .leader-photo {
-  outline-color: rgba(5,150,105,.38);
-  box-shadow: 0 10px 28px -8px rgba(4,120,87,.5);
+.leaders-row .leader-card:hover .leader-photo,
+.leaders-row .leader-card-featured:hover .leader-photo {
+  outline-color: rgba(5,150,105,.5);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(5,150,105,.30), 0 14px 34px -8px rgba(4,120,87,.55);
 }
-/* কম-মোশন-পছন্দীদের জন্য হোভার-লিফট বন্ধ (অ্যাক্সেসিবিলিটি) */
+
+/* ── ৯. কার্যবর্ষ-লেবেল → চিপ (EJS-প্যারেন-বাদের সাথে জোড়া) ── */
+.leaders-row .leader-year {
+  display: inline-block; padding: 3px 12px; border-radius: 5px;
+  background: rgba(5,150,105,.10); border: 1px solid rgba(5,150,105,.22);
+  color: var(--accent-dark, #047857); letter-spacing: .02em;
+}
+
+/* ── ১০. অ্যাক্সেসিবিলিটি: কম-মোশন-পছন্দীদের জন্য সব অ্যানিমেশন/লিফট বন্ধ ── */
 @media (prefers-reduced-motion: reduce) {
-  .leaders-row .leader-card.has-image:hover { transform: none; }
+  #leadership::before, #current-leadership::before,
+  #leadership .eyebrow::before, #current-leadership .eyebrow::before { animation: none; }
+  .leaders-row .leader-card.has-image:hover,
+  .leaders-row .leader-card-featured.has-image:hover,
+  .leaders-row .leader-card-featured:hover { transform: none; }
 }
+/* ═══════════ EOF সেশন ১৮০-একত্র ═══════════ */
