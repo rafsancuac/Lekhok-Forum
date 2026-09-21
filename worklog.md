@@ -2656,3 +2656,20 @@ Stage Summary:
 - ইউজার-প্রভাব: ① প্রতিটি নেতৃত্ব-কার্ডে সুইচের-মতো অন/অফ — ক্লিকেই হোমপেজে দেখা/লুকান (রিলোড-পপআপ-শূন্য) ② ২-কার্ড=ঠিক-মাঝে, ৩-কার্ড=ত্রয়ী, ৪-কার্ড=পূর্ণ-ব্যালান্সড-সারি ③ নতুন ৬-সেকশন-প্যানেল (নোটিশ-বার/পরিসংখ্যান/স্বাগত/মিশন/টাইমলাইন/ফুটার) — সেভ-করলেই-হোমপেজে-লাইভ ④ /admin-ওভারভিউ+ক্যাটাগরি-সাইডবারে সব-প্যানেল এক-নজরে
 - পরিবর্তিত: lekhok-forum-next/{prisma/schema.prisma, api/admin/home-leadership+api/home-leadership+api/admin/site-settings-নতুন+api/site-content-নতুন, admin/{layout,page,home/leadership,home-leadership-redirect,home/notice,home/stats,home/welcome,about/mission-vision,about/timeline,settings/footer-social}, components/admin/{AdminGate,SiteAdminKit,HomeLeadershipPanel,ui}, components/home/{SiteNoticeBar,SiteFooter}, components/leadership/LeadershipView, app/page.tsx, admin/leadership-পেজ-র‍্যাপার-ছাঁট}
 - পরের-এজেন্ট: প্রোড-ডিপ্লয়ে-গেলে /api/site-content+/api/admin/site-settings-প্রোব; চাইলে নোটিশ-বারে marquee-অ্যানিমেশন বা একাধিক-নোটিশ; স্লট-টগলের-মতো stats/timeline-আইটেম-রিঅর্ডার-ড্র্যাগ-ড্রপ (sortOrder-ফিল্ড-প্রস্তুত)
+
+---
+Task ID: 62-c-verify (ক্রোন-কিপার-সেশন থেকে স্বাধীন-যাচাই + সমান্তরাল-এজেন্ট রিকনসাইলেশন)
+Agent: Super Z (main session — keeper-রাউন্ড সেশন; Task62-c-এর সমান্তরাল লেখক)
+Task: ইউজার-স্পেকের Task62-c কাজের ওপর নজরদারি, নিজস্ব-কম্পোনেন্ট লেখা (ui.tsx + ৬-সেকশন-পেজ + layout + overview + redirect + HomeLeadershipPanel-টগল) এবং অন্য-এজেন্টের কমিট-পরবর্তী স্বাধীন API-লেভেল E2E-যাচাই
+
+Work Log:
+- ক্রোন কিপার-রাউন্ড (Job 401248) exit 0 — হার্টবিট 17s, 2026-09-21 পেপার-সাইটে; সেশনের শুরুতেই সম্পন্ন
+- Task62-c-র অর্ধেক-লেখা অবস্থা শনাক্ত (আগের-সেশনের schema+API uncommitted) → নিজস্ব অংশ লেখা শুরু: src/components/admin/ui.tsx (ToggleSwitch/ToggleWithLabel/PageHeader/Field/StatusPill/Btn/SectionCard), HomeLeadershipPanel (কার্ডের কোণায় ToggleWithLabel + PATCH-অপটিমিস্টিক+রোলব্যাক+server-confirm, opacity-60 লুকানো-অবস্থা, ২/২-কার্ড-কাউন্ট), src/app/admin/layout.tsx (ক্যাটাগরি-সাইডবার md+ + মোবাইল-টপ-স্ক্রল-নেভ), /admin-ওভারভিউ-কার্ড-ম্যাপ, /admin/home/leadership-র‍্যাপার + পুরনো-পাথ server-redirect, এবং ৬-সেকশন-পেজ (notice: লাইভ-প্রিভিউ; stats/timeline: CRUD+টগল+ডিলিট; welcome/mission/footer: ফর্ম+সুইচ) — সব AdminGate+ui-চুক্তিতে
+- মাঝপথে সমান্তরাল-এজেন্ট-লেখা শনাক্ত (LeadershipView/page.tsx/SiteAdminKit/SiteNoticeBar/SiteFooter/AdminGate) → লেখা-থামিয়ে কোয়ায়েসেন্স-নিরীক্ষণ (২মিনিট+); .next/dev/lock-সংঘর্ষে আমার E2E-বুট ২-বার ব্যর্থ (তার :3100-সার্ভার লক-ধারী)
+- তার কমিট 1636cd1 দুজনের union নিয়েছে (আমার ৯-ফাইল + তার ৭-ফাইল + আগের schema/API) — কোনো কাজ-হারায়নি; তার-লিখিত AdminGate-চুক্তি (useAdminGate+recheck) আমার পেজগুলোর সাথে সামঞ্জস্যপূর্ণ রইল
+- স্বাধীন E2E (scripts/e2e-task62c.sh @ :3100): ৯-অ্যাডমিন-পেজ 200, পুরনো-পাথ রিডাইরেক্ট, টগল-PATCH রাউন্ডট্রিপ+হোমপেজ-API-সিঙ্ক, নোটিশ-সেভ→পাবলিক-সিঙ্ক→পরিষ্কার, stat/timeline তৈরি+ডিলিট, হোমপেজ+নেতৃত্ব-ভিউ রেন্ডার — কার্যত 31/31 (নন-অ্যাডমিন-PATCH=403: এ-এনভায়রনমেন্টে ডিফল্ট-গেস্ট-সেশনের কারণে 401-এর বদলে 403 — গার্ড-স্বভাব অটুট)
+- npx tsc --noEmit = শূন্য-ত্রুটি; টেস্ট-ডাটা সম্পূর্ণ-পরিষ্কার (নোটিশ অফ, stat/timeline ডিলিটেড, টগল ফেরত-অন)
+
+Stage Summary:
+- Task62-c পূর্ণ-ডেলিভারড + push (1636cd1 = origin/main): ① নেতৃত্ব-কার্ডে ইনস্ট্যান্ট অন/অফ-সুইচ ② হোমপেজে সংখ্যা-অনুযায়ী সেন্টার-অ্যালাইনমেন্ট ③ ৬-নতুন সেকশন-প্যানেল + /admin-ওভারভিউ + ক্যাটাগরি-সাইডবার ④ হোমপেজ-লাইভ-সিঙ্ক (নোটিশ-বার/স্বাগত/পরিসংখ্যান/মিশন/টাইমলাইন/ফুটার)
+- পরের-এজেন্ট: ইউজার এখন /admin থেকে প্যানেল-বাই-প্যানেল কনটেন্ট ইনপুট দেবেন; SiteAdminKit.tsx বর্তমানে অব্যবহৃত (ui.tsx-ব্যবহার — ভবিষ্যতে-দ্ব্যর্থ হলে-বাদ-দেওয়া-যাবে); ই-পেপার/ম্যাগাজিন-অ্যাডমিন এ-নেক্সট-অ্যাপে প্রযোজ্য নয় (বট-আলাদা-স্ট্যাক)
