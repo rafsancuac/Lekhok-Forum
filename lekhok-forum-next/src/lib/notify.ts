@@ -8,6 +8,8 @@ export type NotificationType =
   | 'SHARE'
   | 'STORY_REPLY'
   | 'FOLLOW'
+  | 'SUPPORT'
+  | 'SUPPORT_UPDATE'
 
 export const VALID_NOTIF_TYPES: NotificationType[] = [
   'REACTION',
@@ -17,6 +19,8 @@ export const VALID_NOTIF_TYPES: NotificationType[] = [
   'SHARE',
   'STORY_REPLY',
   'FOLLOW',
+  'SUPPORT',
+  'SUPPORT_UPDATE',
 ]
 
 /**
@@ -46,8 +50,9 @@ export async function notify(params: {
       .filter(Boolean)
     if (muted.includes(type)) return
 
-    // REACTION/SHARE/FOLLOW-এর ক্ষেত্রে ৫ মিনিটের মধ্যে একই অ্যাক্টর+পোস্ট+টাইপ থ্রটল
-    if (type === 'REACTION' || type === 'SHARE' || type === 'FOLLOW') {
+    // REACTION/SHARE/FOLLOW/SUPPORT-এর ক্ষেত্রে ৫ মিনিটের মধ্যে একই অ্যাক্টর+পোস্ট+টাইপ থ্রটল
+    // session203: SUPPORT-ও থ্রটলড — টানা মেসেজে সাপোর্ট-অ্যাডমিনের বেল স্প্যাম-শূন্য (ব্যাজ useSupportPending-এই লাইভ)
+    if (type === 'REACTION' || type === 'SHARE' || type === 'FOLLOW' || type === 'SUPPORT') {
       const since = new Date(Date.now() - 5 * 60 * 1000)
       const dup = await db.notification.findFirst({
         where: { userId: recipientId, actorId, type, postId: postId ?? null, createdAt: { gte: since } },

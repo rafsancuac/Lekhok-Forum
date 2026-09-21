@@ -2329,3 +2329,13 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **CSV-এক্সপোর্ট:** ক্লায়েন্ট-সাইড জেনারেশন (সার্ভার-এন্ডপয়েন্ট-নেই) — UTF-8 BOM ছাড়া এক্সেলে বাংলা ভাঙে; নতুন-কলাম-যোগ হলে `csvCell()`-escape ভুলবেন-না।
 - **আর্টিফ্যাক্ট-সতর্কতা:** bash-টুল-আউটপুটে `[h`-প্যাটার্ন (`[hasMore`→`asMore`, `[hidden`→`idden`) প্রায়ই **ডিসপ্লে-পিপেই** কাটে — ফাইল-নয়। সন্দেহ হলে `node -e` দিয়ে বাইট-যাচাই (`s.includes('[hasMore')` ইত্যাদি) বা my-project/scripts/s202-bracket-scan.js — সরাসরি-সম্পাদনা-নয়।
 - **পরের-এজেন্ট: session203 থেকে।** Task43-এরিয়া স্পর্শ-করলে রোল-ম্যাট্রিক্স-রিগ্রেশন বাধ্যতামূলক।
+
+---
+### session203 — অভিযোগ-লুপ-বন্ধ প্যাক (cross-agent নোট)
+
+- **নতুন API চুক্তি:** `GET /api/support/my-reports` → `{ reports[{id,messageText(≤২২০),mediaType,status,adminNote,createdAt,updatedAt}], counts{PENDING,IN_PROGRESS,RESOLVED}, total }` — senderId-গেটেড (নিজেরটা-ই), senderEmail/senderId ইচ্ছাকৃত-বাদ; adminNote দেখানো-ই-উদ্দেশ্য (অভিযোগকারীর জবাব)।
+- **নতুন নোটিফিকেশন-টাইপ:** `SUPPORT` (নতুন-অভিযোগ → সাপোর্ট-অ্যাডমিন; notify()-এ ৫-মিনিট-থ্রটল-গ্রুপে যুক্ত — REACTION/SHARE/FOLLOW-র সাথে) ও `SUPPORT_UPDATE` (স্টেটাস/নোট-বদল → অভিযোগকারী; থ্রটল-নেই)। নতুন-টাইপ-যোগের রীতি: notify.ts-union+VALID + types.ts NOTIFICATION_META+NOTIF_PREF_OPTIONS + NotificationBell ACTION_TEXT — চার-জায়গা-একসাথে।
+- **ইভেন্ট-হাব:** `window.dispatchEvent(new CustomEvent('lf:open-support-chat'))` — page.tsx শুনে messenger-ভিউ খোলে; MessengerView শুনে সাপোর্ট-রো-রেজলভ (placeholder হলে find-or-create) + MyReportsPanel অটো-ওপেন। নোটিফিকেশন-ক্লিক ছাড়া অন্য-উৎস-ও এ-ইভেন্ট ব্যবহার করতে পারে।
+- **ডেমো-সেশন-নোট (প্রি-একজিস্টিং, অপরিবর্তিত):** `lib/session.ts getCurrentUser()` কুকি-শূন্যে প্রথম-ইউজার (ismail/super) রিটার্ন করে — anon-curl-এ ম্যানেজার-API 200 দেখাটা এ-ডিজাইনের-ফল; রোল-ম্যাট্রিক্স-যাচাই সবসময় স্পষ্ট-কুকি-সেট-করে করুন।
+- **MessengerView-নতুন-স্টেট:** `myReportsOpen` — হিন্ট-বার-বাটন ও lf:open-support-chat দুটোই টগল করে; প্যানেল `open`-প্রপ-ড্রিভেন, ভেতরে-ই ফেচ (খোলা-মাত্র ফ্রেশ)।
+- **পরের-এজেন্ট: session204 থেকে।** রিভিউ-ডেস্কের update-callback এখন `reports`-ডিপেন্ডেন্ট (টোস্ট-তুলনার-জন্য) — deps-তালিকা অক্ষত রাখুন।

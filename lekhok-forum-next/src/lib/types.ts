@@ -139,6 +139,9 @@ export const NOTIFICATION_META: Record<string, { emoji: string; color: string }>
   SHARE: { emoji: '🔗', color: 'text-[#f7b125]' },
   STORY_REPLY: { emoji: '📸', color: 'text-[#e9710f]' },
   FOLLOW: { emoji: '🤝', color: 'text-[#00a86b]' },
+  // session203 (Task 54) — সাপোর্ট-কেন্দ্র নোটিফিকেশন
+  SUPPORT: { emoji: '🛡️', color: 'text-amber-400' },
+  SUPPORT_UPDATE: { emoji: '✅', color: 'text-sky-400' },
 }
 
 /** নোটিফিকেশন মিউট-প্রেফারেন্সের অপশন (Session F + H: ফলো) */
@@ -150,4 +153,6 @@ export const NOTIF_PREF_OPTIONS: { type: string; emoji: string; label: string }[
   { type: 'SHARE', emoji: '🔗', label: 'শেয়ার' },
   { type: 'STORY_REPLY', emoji: '📸', label: 'স্টোরি রিপ্লাই' },
   { type: 'FOLLOW', emoji: '🤝', label: 'নতুন ফলোয়ার' },
+  { type: 'SUPPORT', emoji: '🛡️', label: 'নতুন অভিযোগ (সাপোর্ট)' },
+  { type: 'SUPPORT_UPDATE', emoji: '✅', label: 'অভিযোগের স্টেটাস আপডেট' },
 ]

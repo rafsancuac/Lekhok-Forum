@@ -227,14 +227,18 @@ function SupportReportsPanel() {
         await load() // কাউন্ট-রিফ্রেশ
         // session202 — সাইডবার/ড্যাশবোর্ড ব্যাজ তাৎক্ষণিক-রিফ্রেশ
         window.dispatchEvent(new Event('lf:support-changed'))
-        flash(payload.status ? `স্টেটাস → ${STATUS_LABEL[payload.status]}` : 'নোট সংরক্ষিত')
+        // session203 — অভিযোগকারীকে SUPPORT_UPDATE নোটিফিকেশন গেছে-জানানো (স্টেটাস/নোট বদলেই)
+        const statusChanged = payload.status && payload.status !== reports.find((r) => r.id === id)?.status
+        const noteChanged = payload.adminNote !== undefined && payload.adminNote.trim() !== (reports.find((r) => r.id === id)?.adminNote ?? '')
+        const notified = (statusChanged || noteChanged) ? ' · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে' : ''
+        flash(payload.status ? `স্টেটাস → ${STATUS_LABEL[payload.status]}${notified}` : `নোট সংরক্ষিত${notified}`)
       } catch (err) {
         flash(err instanceof Error ? err.message : 'আপডেট ব্যর্থ')
       } finally {
         setBusy(null)
       }
     },
-    [flash, load]
+    [flash, load, reports]
   )
 
   const shown = reports.filter((r) => r.status === tab)

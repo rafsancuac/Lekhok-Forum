@@ -26,6 +26,9 @@ const ACTION_TEXT: Record<string, string> = {
   SHARE: 'আপনার পোস্ট শেয়ার করেছে',
   STORY_REPLY: 'আপনার স্টোরিতে রিপ্লাই দিয়েছে',
   FOLLOW: 'আপনাকে অনুসরণ করছেন',
+  // session203 (Task 54) — সাপোর্ট-কেন্দ্র
+  SUPPORT: 'সাপোর্ট কেন্দ্রে নতুন অভিযোগ পাঠিয়েছে',
+  SUPPORT_UPDATE: 'আপনার অভিযোগ হালনাগাদ করেছে (স্টেটাস/জবাব দেখুন)',
 }
 
 export default function NotificationBell({
@@ -149,6 +152,19 @@ export default function NotificationBell({
       // Session H: নতুন ফলোয়ার → অ্যাক্টরের প্রোফাইল
       onOpenProfile?.(n.actor.username)
       setOpen(false)
+    } else if (n.type === 'SUPPORT') {
+      // session203: নতুন অভিযোগ → রিভিউ ডেস্ক (প্রাপক সাপোর্ট-অ্যাডমিন/ম্যানেজার — অ্যাক্সেস-গ্যারান্টেড)
+      setOpen(false)
+      window.location.href = '/admin/support/reports'
+    } else if (n.type === 'SUPPORT_UPDATE') {
+      // session203: স্টেটাস-আপডেট → মেসেঞ্জারের সাপোর্ট-থ্রেডে "আমার অভিযোগ" প্যানেল খোলার-ইভেন্ট
+      // (লিস্টে ক্লিকে থ্রেড-নেভিগেশন: হোম-পেজের messenger-ভিউ ইভেন্ট-হাবে যুক্ত)
+      setOpen(false)
+      try {
+        window.dispatchEvent(new CustomEvent('lf:open-support-chat'))
+      } catch {
+        /* ignore */
+      }
     }
   }
 

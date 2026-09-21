@@ -295,6 +295,14 @@ export default function Home() {
     setUrlParams({ chat: null })
   }, [setUrlParams])
 
+  /* ─── session203 (Task 54): SUPPORT_UPDATE-নোটিফিকেশন ক্লিকে মেসেঞ্জার-ভিউ ───
+     থ্রেড-রেজলভ + "আমার অভিযোগ" প্যানেল MessengerView-নিজেই ইভেন্ট-শুনে করে */
+  useEffect(() => {
+    const onOpenSupportChat = () => openMessenger()
+    window.addEventListener('lf:open-support-chat', onOpenSupportChat as EventListener)
+    return () => window.removeEventListener('lf:open-support-chat', onOpenSupportChat as EventListener)
+  }, [openMessenger])
+
   /* ─── Session 189: নেতৃত্ব-ভিউ (?leadership=1 ডিপ-লিংক সহ) ─── */
   const openLeadership = useCallback(() => {
     setSearchQuery('')

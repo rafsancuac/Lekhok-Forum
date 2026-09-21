@@ -32,6 +32,7 @@ import { bn } from '@/lib/format';
 import { formatBdTime, formatBdDayLabel } from '@/lib/formatBdTime';
 import VoiceRecorder from './VoiceRecorder';
 import VoiceMessageBubble from './VoiceMessageBubble';
+import MyReportsPanel from './MyReportsPanel';
 
 interface Me {
   id: string;
@@ -84,6 +85,8 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
   const [mobileThread, setMobileThread] = useState(false);
   // ইনলাইন এরর-টোস্ট (ব্রাউজারের alert() পপ-আপ-মুক্ত — FB-প্যারিটি)
   const [actionError, setActionError] = useState<string | null>(null);
+  // session203 (Task 54) — ইউজার-দিকের "আমার অভিযোগ" স্টেটাস-প্যানেল
+  const [myReportsOpen, setMyReportsOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<string | null>(null);
@@ -296,6 +299,21 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
     [openConversation, startWith]
   );
 
+  /* ─── session203 (Task 54): SUPPORT_UPDATE-নোটিফিকেশন ক্লিকে সাপোর্ট-থ্রেড খোলা
+     + "আমার অভিযোগ" স্টেটাস-প্যানেল ওপেন (হোম-পেজ মেসেঞ্জার-ভিউ ইতোমধ্যে খুলে দেয়) ─── */
+  useEffect(() => {
+    const onOpenSupport = () => {
+      const supportRow = conversations.find((c) => c.isSupportOfficial);
+      if (supportRow) {
+        void openConvRow(supportRow);
+        setMobileThread(true);
+      }
+      setMyReportsOpen(true);
+    };
+    window.addEventListener('lf:open-support-chat', onOpenSupport as EventListener);
+    return () => window.removeEventListener('lf:open-support-chat', onOpenSupport as EventListener);
+  }, [conversations, openConvRow]);
+
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users.filter((u) => u.id !== me.id && (!q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)));
@@ -374,7 +392,7 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
             </button>
           </div>
 
-          {/* Task 43: সাপোর্ট-কেন্দ্র স্ট্যাটিক-হিন্ট (শুধু অফিসিয়াল সাপোর্ট-থ্রেডে) */}
+          {/* Task 43: সাপোর্ট-কেন্দ্র স্ট্যাটিক-হিন্ট (শুধু অফিসিয়াল সাপোর্ট-থ্রেডে) + session203: আমার-অভিযোগ বাটন */}
           {activeConv.isSupportOfficial && (
             <div
               role="note"
@@ -382,7 +400,20 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
               className="flex items-center gap-2 px-3 py-1.5 bg-[#006a4e]/20 border-b border-[#00a86b]/25 text-[11px] text-[#33d79f] shrink-0"
             >
               <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden />
-              সাপোর্ট কেন্দ্র — এখানে পাঠানো প্রতিটি অভিযোগ ম্যানেজমেন্টের রিভিউ-ডেস্কে রেকর্ড হয়
+              <span className="min-w-0 flex-1 truncate">
+                সাপোর্ট কেন্দ্র — এখানে পাঠানো প্রতিটি অভিযোগ ম্যানেজমেন্টের রিভিউ-ডেস্কে রেকর্ড হয়
+              </span>
+              <button
+                type="button"
+                onClick={() => setMyReportsOpen(true)}
+                className="shrink-0 inline-flex items-center gap-1 text-[10.5px] font-extrabold px-2 py-0.5 rounded-full bg-[#00a86b]/20 border border-[#00a86b]/40 text-[#33d79f] hover:bg-[#00a86b]/30 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#00a86b]"
+                aria-haspopup="dialog"
+                aria-expanded={myReportsOpen}
+                title="আমার পাঠানো অভিযোগের স্টেটাস ও ম্যানেজমেন্টের জবাব"
+              >
+                <ShieldCheck className="w-3 h-3" aria-hidden />
+                আমার অভিযোগ
+              </button>
             </div>
           )}
 
@@ -726,6 +757,9 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
           <div className="flex-1 min-h-0">{threadPane}</div>
         </div>
       </div>
+
+      {/* session203 (Task 54) — "আমার অভিযোগ" স্টেটাস-প্যানেল */}
+      <MyReportsPanel open={myReportsOpen} onClose={() => setMyReportsOpen(false)} />
     </div>
   );
 }

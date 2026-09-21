@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { isManager } from '@/lib/roles'
 import { getSupportAdminId } from '@/lib/support'
+import { notify } from '@/lib/notify'
 
 /**
  * Task 43 — অভিযোগ-রিভিউ ডেস্ক API
@@ -99,6 +100,18 @@ export async function PUT(req: NextRequest) {
         ...(adminNote !== undefined ? { adminNote: adminNote.trim() || null } : {}),
       },
     })
+
+    // session203 (Task 54): অভিযোগকারীকে বেল-নোটিফিকেশন (SUPPORT_UPDATE) —
+    // স্টেটাস বদলালে বা নতুন জবাব (adminNote) এলেই; নীরব-ব্যর্থতা (notify নিজেই ক্যাচ করে)
+    const statusChanged = status !== undefined && status !== existing.status
+    const noteChanged = adminNote !== undefined && (adminNote.trim() || null) !== existing.adminNote
+    if (statusChanged || noteChanged) {
+      await notify({
+        actorId: gate.me.id,
+        recipientId: existing.senderId,
+        type: 'SUPPORT_UPDATE',
+      })
+    }
 
     return NextResponse.json({ report: updated })
   } catch (err) {

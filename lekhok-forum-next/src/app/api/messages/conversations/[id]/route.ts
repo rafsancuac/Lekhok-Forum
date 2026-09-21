@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { getSupportAdminId } from '@/lib/support'
+import { notify } from '@/lib/notify'
 
 /**
  * GET  /api/messages/conversations/[id] → থ্রেডের মেসেজগুলো (খুললেই আমার কাছে আসা মেসেজ 'পড়া' হয়ে যায়)
@@ -51,6 +52,9 @@ async function mirrorSupportReport(
         mediaUrl: payload.mediaUrl ?? null,
       },
     })
+    // session203 (Task 54): সাপোর্ট-অ্যাডমিনকে বেল-নোটিফিকেশন (SUPPORT টাইপ — ৫-মিনিট-থ্রটলড,
+    // মিউট-প্রেফারেন্স সম্মান; নীরব-ব্যর্থতা — notify() নিজেই ক্যাচ করে)
+    await notify({ actorId: me.id, recipientId: supportId, type: 'SUPPORT' })
   } catch (err) {
     console.error('UserReport mirror failed (non-blocking):', err)
   }
