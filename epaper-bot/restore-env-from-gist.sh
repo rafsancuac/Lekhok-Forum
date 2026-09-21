@@ -41,8 +41,13 @@ fi
 
 # পুনর্গঠন: KEY_P1/KEY_P2 → KEY=value (অবস্থান-সংরক্ষণ); অন্য-লাইন-অপরিবর্তিত
 python3 - "$CONTENT_FILE" "$OUT" <<'PY'
-import base64, re, sys
-lines = open(sys.argv[1], encoding='utf-8').read().splitlines()
+import base64, json, re, sys
+raw = open(sys.argv[1], encoding='utf-8').read()
+if raw.lstrip().startswith('{'):
+    # অথ-API-পাথ JSON-রিসপন্স-দেয় — ভেতরের-ফাইল-কনটেন্ট-বের-করে-নিতে-হয়
+    d = json.loads(raw)
+    raw = d["files"]["epaper-bot.env"]["content"]
+lines = raw.splitlines()
 p2 = {}
 for line in lines:
     m = re.match(r'^(\S+)_P2=(.*)$', line)
