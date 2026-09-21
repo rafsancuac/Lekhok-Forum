@@ -27,6 +27,10 @@
  *   • ১/২/৩ (ও 1/2/3): ট্যাব-সুইচ · ?: শর্টকাট-সহায়িকা-ওভারলে (Esc/ব্যাকড্রপ-বন্ধ) · Esc: কার্সর/সহায়িকা বন্ধ
  *   • টুলবারে "শর্টকাট ?" হিন্ট-বাটন + lf-kbd কী-ক্যাপ স্টাইল (globals.css)
  *   • হাউজকিপিং-চুক্তি: QA-সুইট নিজের-জঞ্জাল নিজেই-মোছে (task52/54-সুইটে স্বয়ংক্রিয়-ক্লিনআপ)
+ * session213 — লাইভ-সচেতনতা প্যাক:
+ *   • পোল-ডিফ নতুন-অভিযোগ-টোস্ট (প্রথম-লোডে নয়) + ট্যাব-টাইটেলে PENDING-ব্যাজ "(৩) …" (আনমাউন্টে মূল-ফেরত)
+ *   • স্টিকি ফিল্টার-বার (top-2, backdrop-blur) — দীর্ঘ-তালিকায় ফিল্টার-সবসময়-হাতের-নাগালে
+ *   • CSV-ফাইলনামে ফিল্টার-প্রসঙ্গ (ট্যাব + মিডিয়া) — স্প্রেডশিট-সংগঠন-সহজ
  */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -472,6 +476,10 @@ function SupportReportsPanel() {
   const [helpOpen, setHelpOpen] = useState(false)
   const hydratedRef = React.useRef(false)
   const linkIdRef = React.useRef<string | null>(null)
+  /** session213 — পোল-ডিফ স্টেট: পরিচিত PENDING-আইডি-সেট (null = প্রথম-লোড, টোস্ট-নয়) */
+  const knownPendingRef = React.useRef<Set<string> | null>(null)
+  /** session213 — ট্যাব-টাইটেল-ব্যাজের ভিত্তি (মাউন্টে ধরা; আনমাউন্টে ফেরত) */
+  const baseTitleRef = React.useRef('')
 
   const flash = useCallback(
     (msg: string, undo?: { id: string; index: number; entry: HistoryEntry }, timeoutMs = 3000) => {
@@ -493,13 +501,23 @@ function SupportReportsPanel() {
       if (res.ok) {
         setReports(data.reports || [])
         setCounts(data.counts || counts)
+        // session213 — লাইভ-সচেতনতা: পোলে PENDING-আইডি-ডিফ → নতুন-অভিযোগ-টোস্ট (প্রথম-লোডে নয়)
+        const known = knownPendingRef.current
+        const pendingIds = (data.reports || [])
+          .filter((r: Report) => r.status === 'PENDING')
+          .map((r: Report) => r.id)
+        if (known) {
+          const fresh = pendingIds.filter((id: string) => !known.has(id))
+          if (fresh.length > 0) flash(`${bn(fresh.length)}টি নতুন অভিযোগ এসেছে`)
+        }
+        knownPendingRef.current = new Set(pendingIds)
       }
     } catch {
       /* পোল-নীরব */
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [flash])
 
   useEffect(() => {
     load()
@@ -508,6 +526,17 @@ function SupportReportsPanel() {
     }, 15000)
     return () => clearInterval(t)
   }, [load])
+
+  /** session213 — ট্যাব-টাইটেলে নতুন-অভিযোগ-ব্যাজ (মাল্টিটাস্ক-সিগনাল); আনমাউন্টে মূল-টাইটেল-ফেরত */
+  useEffect(() => {
+    if (!baseTitleRef.current) baseTitleRef.current = document.title || 'লেখক ফোরাম'
+    const base = baseTitleRef.current
+    const p = counts.PENDING || 0
+    document.title = p > 0 ? `(${bn(p)}) ${base}` : base
+    return () => {
+      document.title = baseTitleRef.current || base
+    }
+  }, [counts.PENDING])
 
   /** session207 — "/" চাপলে অনুসন্ধান-ফোকাস (ইনপুট/টেক্সট-এরিয়ায় না-থাকলে) */
   useEffect(() => {
@@ -697,7 +726,10 @@ function SupportReportsPanel() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `lekhok-support-reports-${new Date().toISOString().slice(0, 10)}.csv`
+      // session213 — ফাইলনামে ফিল্টার-প্রসঙ্গ (ট্যাব + মিডিয়া) — স্প্রেডশিট-সংগঠন-সহজ
+      const nameParts = ['lekhok-support', tab.toLowerCase()]
+      if (mediaFilter !== 'ALL') nameParts.push(mediaFilter.toLowerCase())
+      a.download = `${nameParts.join('-')}-${new Date().toISOString().slice(0, 10)}.csv`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -1032,8 +1064,8 @@ function SupportReportsPanel() {
         ))}
       </div>
 
-      {/* session206 — অনুসন্ধান + মিডিয়া-ফিল্টার + ফলাফল-গণনা */}
-      <div className="bg-white border border-[#CED0D4] rounded-[10px] p-3 shadow-2xs space-y-2.5">
+      {/* session206 — অনুসন্ধান + মিডিয়া-ফিল্টার + ফলাফল-গণনা (session213: স্টিকি — দীর্ঘ-তালিকায় ফিল্টার-হাতের-নাগালে) */}
+      <div className="sticky top-2 z-20 bg-white/95 backdrop-blur-sm border border-[#CED0D4] rounded-[10px] p-3 shadow-sm space-y-2.5">
         <div className="relative">
           <Search
             className="w-4 h-4 text-[#8A8D91] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
