@@ -444,10 +444,25 @@
       function leaderRow64(cards64) {
         const list64 = (Array.isArray(cards64) ? cards64 : []).filter(c64 => c64 && c64.m && String(c64.m.user_full_name || c64.m.name || '').trim() && !isHidden64(c64));
         if (!list64.length) return '';
+        /* সেশন ৬৫-ফিক্স: কার্যবর্ষ-লেবেলের একক-উৎস — member.term_year-প্রথম।
+           ব্যবহারকারী-রিপোর্ট: অ্যাডমিনে কমিটি-সদস্যের কার্যবর্ষ ২০২৬-২৭ সেট করা
+           সত্ত্বেও হোম দেখাত ২০২৫-২৬ — কারণ স্লট-কার্ড আগে শুধু settings-লেবেল
+           (content 'home_year_current') দেখাত, members.term_year-এর খবর নিত না।
+           নিয়ম (নেতৃত্ব-সেকশন):  • founder/founding-স্লট → আগের মতো settings-লেবেল
+           (প্রতিষ্ঠাকালীন-যুগ-লেবেল, সদস্য-সারির সাথে সম্পর্কহীন)
+           • current/অতিরিক্ত-কার্ড → member.term_year থাকলে সেটাই ('কার্যবর্ষ'
+             সাফিক্স-নরমালাইজার, ডাবল-সাফিক্স-নিষেধ); শূন্য হলে settings-ফলব্যাক। */
+        function yearLabel65(ty, fallback) {
+          const s65 = String(ty || '').trim();
+          if (!s65) return String(fallback || '').trim();
+          return /কার্যবর্ষ/.test(s65) ? s65 : (s65 + ' কার্যবর্ষ');
+        }
         return '<div class="leaders-row">' + list64.map((c64) => {
           const isFounding64 = c64.slotKey && (c64.slotKey.indexOf('found') === 0 || c64.slotKey.indexOf('founding') === 0);
           const role64 = c64.slotKey ? C('home_role_' + c64.slotKey) : (c64.m.role || '');
-          const year64 = c64.slotKey ? (isFounding64 ? C('home_year_founding') : C('home_year_current')) : (c64.m.term_year || '');
+          const year64 = isFounding64
+            ? yearLabel65('', C('home_year_founding'))
+            : yearLabel65(c64.m.term_year, C('home_year_current'));
           const st64 = c64.slotKey ? stmtSlot55(c64.slotKey) : '';
           return leaderCard(c64.m, role64, year64, st64);
         }).join('') + '</div>';
