@@ -289,22 +289,26 @@ model LeadershipMember {
   @@index([category, order])
 }
 
-// ─── হোম-নেতৃত্ব-স্লট (অ্যাডমিন প্যানেল /admin/home-leadership) ───
-// হোমপেজের নেতৃত্ব-সেকশনে যা দেখাবে তার সরাসরি-নিয়ন্ত্রণ: ৮টি স্থির-স্লট।
-// slotKey-হোয়াইটলিস্ট: founder_president, founder_general_secretary,
-//   founding_advisor_1/2 (section=FOUNDING), current_president,
-//   current_general_secretary, current_advisor_1/2 (section=CURRENT)।
-// খালি-স্লট (name="") হোমপেজে রেন্ডার-ই হয় না — কোনো "সদস্য বসেনি" সতর্কবার্তা নেই।
-model HomeLeadershipSlot {
-  slotKey   String   @id // উপরের হোয়াইটলিস্টের একটি
-  section   String   @default("FOUNDING") // FOUNDING | CURRENT
+// ─── হোম-নেতৃত্ব কার্ড (Task63: ডাইনামিক — স্থির ৮-স্লটের বদলে ইচ্ছামতো কার্ড) ───
+// ইউজার-স্পেক: উপদেষ্টা বেশি হলে যত-খুশি নতুন কার্ড যোগ করা যাবে; প্রতিটি কার্ডের
+// কোণায় অন/অফ টগল (isActive — নতুন-কার্ড ডিফল্ট লুকানো, তথ্য-পূর্ণ করে টগল-অন);
+// order দিয়ে সেকশনের ভেতরে প্রদর্শন-ক্রম। খালি-নাম (name="") কার্ড কখনোই হোমে রেন্ডার হয় না।
+// নাম-নোট: ইউজার-ব্লুপ্রিন্টের "LeadershipMember" নামটি আগে-থেকেই কমিটি-প্যানেল
+// (সেশন ১৮৯, /admin/leadership) মডেল হিসেবে ব্যবহৃত — সংঘর্ষ-এড়াতে HomeLeaderCard।
+model HomeLeaderCard {
+  id        String   @id @default(cuid())
+  category  String   @default("CURRENT") // FOUNDING (নেতৃত্বের ধারা) | CURRENT (বর্তমান নেতৃত্ব)
   name      String   @default("")
-  role      String   @default("")
-  term      String   @default("")
+  role      String   @default("") // যেমন: সভাপতি, সাধারণ সম্পাদক, উপদেষ্টা
+  term      String   @default("") // যেমন: (২০২৬-২৭ কার্যবর্ষ)
   quote     String   @default("")
   imageUrl  String   @default("")
-  isActive  Boolean  @default(true) // অ্যাডমিন-টগল: অফ = হোমপেজে লুকানো (Task62-c)
+  isActive  Boolean  @default(false) // অন/অফ টগল-সুইচ — অফ = হোমপেজে লুকানো
+  order     Int      @default(0) // সেকশনের ভেতরে সিরিয়াল-ক্রম
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([category, order])
 }
 
 // ─── সাইট-কনটেন্ট পরিবার (Task62-c: মডুলার অ্যাডমিন ড্যাশবোর্ড) ───

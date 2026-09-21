@@ -1,10 +1,13 @@
 /**
- * পাবলিক হোম-নেতৃত্ব-স্লট API — হোমপেজের নেতৃত্ব-সেকশনের একমাত্র ডাটা-সোর্স
+ * পাবলিক হোম-নেতৃত্ব কার্ড API — হোমপেজের নেতৃত্ব-সেকশনের একমাত্র ডাটা-সোর্স
  *
- * GET /api/home-leadership → ৮-স্লট (slotKey, section, name, role, term, quote, imageUrl, isActive)
- * খালি-স্লট (name="") ফ্রন্টএন্ডে রেন্ডার-ই হয় না — তাই পাবলিক-ভিউতে কোনো
- * "সদস্য বসেনি" সতর্কবার্তা আসার প্রশ্নই নেই।
- * isActive=false (অ্যাডমিন-টগল অফ) ফ্রন্টএন্ডে ফিল্টার হয় — কার্ড লুকানো থাকে।
+ * Task63: ডাইনামিক কার্ড (HomeLeaderCard) — স্থির ৮-স্লটের বদলে যত-খুশি কার্ড।
+ *
+ * GET /api/home-leadership → { cards: [{ id, category, name, role, term, quote, imageUrl, order }] }
+ *   • শুধু isActive=true (অ্যাডমিন টগল-অন) কার্ড
+ *   • শুধু নাম-আছে (name != "") কার্ড — অর্ধেক-ভরা কার্ড পাবলিকে কখনো যায় না
+ *   • FOUNDING আগে, পরে CURRENT; প্রতিটির ভেতরে order-ক্রম
+ *   • isActive=false মানে অ্যাডমিন লুকিয়ে রেখেছেন (যেমন: উপদেষ্টা নিয়োগ ঘোষণার আগে)
  * force-dynamic: অ্যাডমিন-প্যানেলে সেভ করলেই হোমপেজে সাথে-সাথে দেখা যায় (হুবহু-সিঙ্ক)।
  */
 import { NextResponse } from 'next/server'
@@ -12,36 +15,28 @@ import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-/** প্রদর্শন-ক্রম স্থির — অ্যাডমিন প্যানেলের হোয়াইটলিস্ট-ক্রমের সমান */
-const SLOT_ORDER = [
-  'founder_president',
-  'founder_general_secretary',
-  'founding_advisor_1',
-  'founding_advisor_2',
-  'current_president',
-  'current_general_secretary',
-  'current_advisor_1',
-  'current_advisor_2',
-] as const
-
 export async function GET() {
   try {
-    const rows = await db.homeLeadershipSlot.findMany()
-    const byKey = new Map(rows.map((r) => [r.slotKey, r]))
-    const slots = SLOT_ORDER.map((slotKey) => {
-      const r = byKey.get(slotKey)
-      return {
-        slotKey,
-        section: r?.section ?? (slotKey.startsWith('current_') ? 'CURRENT' : 'FOUNDING'),
-        name: r?.name ?? '',
-        role: r?.role ?? '',
-        term: r?.term ?? '',
-        quote: r?.quote ?? '',
-        imageUrl: r?.imageUrl ?? '',
-        isActive: r?.isActive ?? true,
-      }
+    const rows = await db.homeLeaderCard.findMany({
+      where: { isActive: true, name: { not: '' } },
+      orderBy: [{ category: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
+      select: {
+        id: true,
+        category: true,
+        name: true,
+        role: true,
+        term: true,
+        quote: true,
+        imageUrl: true,
+        order: true,
+      },
     })
-    return NextResponse.json({ slots }, { status: 200 })
+    /* FOUNDING আগে — lexicographic-ক্রম নয়, অর্থবহ প্রদর্শন-ক্রম */
+    const ordered = [...rows].sort((a, b) => {
+      const rankOf = (c: string) => (c === 'FOUNDING' ? 0 : 1)
+      return rankOf(a.category) - rankOf(b.category)
+    })
+    return NextResponse.json({ cards: ordered }, { status: 200 })
   } catch (error) {
     console.error('home-leadership:publicGET', error)
     return NextResponse.json({ error: 'লোড ব্যর্থ' }, { status: 500 })

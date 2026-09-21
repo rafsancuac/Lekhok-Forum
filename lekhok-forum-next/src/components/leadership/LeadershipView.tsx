@@ -1,16 +1,18 @@
 'use client'
 
 /**
- * হোমপেজের নেতৃত্ব-ভিউ — হোম-নেতৃত্ব-স্লট-ভিত্তিক হুবহু-সিঙ্ক + সাইট-কনটেন্ট (রি-রাইট Task62-c)
+ * হোমপেজের নেতৃত্ব-ভিউ — হোম-নেতৃত্ব কার্ড-ভিত্তিক হুবহু-সিঙ্ক + সাইট-কনটেন্ট (রি-রাইট Task63)
  *
  * ডাটা-সোর্স:
- *   • /api/home-leadership (HomeLeadershipSlot) — অ্যাডমিন প্যানেল /admin/home/leadership-এর
- *     হুবহু প্রতিবিম্ব; isActive=false (অন/অফ সুইচ-অফ) কার্ড এখানে রেন্ডার-ই হয় না।
+ *   • /api/home-leadership (HomeLeaderCard — ডাইনামিক কার্ড) — অ্যাডমিন প্যানেল
+ *     /admin/home/leadership-এর হুবহু প্রতিবিম্ব; isActive=false (অন/অফ সুইচ-অফ)
+ *     বা খালি-নামের কার্ড এখানে রেন্ডার-ই হয় না (উপদেষ্টা-ঘোষণার আগে লুকানো থাকে)।
  *   • /api/site-content — স্বাগত-বক্তব্য, পরিসংখ্যান-কাউন্টার, লক্ষ্য-উদ্দেশ্য, টাইমলাইন
  *     (সবই /admin/home/welcome, /admin/home/stats, /admin/about/*-প্যানেল থেকে নিয়ন্ত্রিত)।
  *
  * সেন্টার-অ্যালাইনমেন্ট (ইউজার-স্পেক): flex flex-wrap justify-center —
- *   ২টি সক্রিয় কার্ড = ঠিক মাঝের জোড়া; ৪টি = পূর্ণ-সারিতে ব্যালান্সড; কার্ড-প্রস্থ সংখ্যা-অনুযায়ী।
+ *   ২টি সক্রিয় কার্ড = ঠিক মাঝের জোড়া (ওভারল্যাপ-ছাড়া পাশাপাশি); ৪টি = পূর্ণ-সারিতে
+ *   ব্যালান্সড; কার্ড-প্রস্থ সংখ্যা-অনুযায়ী।
  * অ্যাপের ডার্ক-থিম টোকেন (bg-[#242526]/border-[#3e4042]/accent #00a86b)।
  */
 
@@ -20,15 +22,15 @@ import { Crown, Landmark, Loader2, PencilLine, RefreshCw, ShieldCheck } from 'lu
 import { bn } from '@/lib/format'
 import type { FrontendUser } from '@/lib/types'
 
-interface HomeSlot {
-  slotKey: string
-  section: string
+interface HomeCard {
+  id: string
+  category: string
   name: string
   role: string
   term: string
   quote: string
   imageUrl: string
-  isActive: boolean
+  order: number
 }
 
 interface SiteContentData {
@@ -63,23 +65,23 @@ function SlotAvatar({ name, url }: { name: string; url: string }) {
   )
 }
 
-function SlotCard({ slot }: { slot: HomeSlot }) {
+function SlotCard({ card }: { card: HomeCard }) {
   return (
     <div className="bg-[#242526] border border-[#3e4042] rounded-xl p-4 flex flex-col gap-3 hover:border-[#00a86b]/40 transition-colors w-full text-left">
       <div className="flex items-center gap-3">
-        <SlotAvatar name={slot.name} url={slot.imageUrl} />
+        <SlotAvatar name={card.name} url={card.imageUrl} />
         <div className="min-w-0 flex-1">
-          <h3 className="text-[14px] font-bold text-[#e4e6eb] truncate leading-snug">{slot.name}</h3>
-          {slot.role && (
+          <h3 className="text-[14px] font-bold text-[#e4e6eb] truncate leading-snug">{card.name}</h3>
+          {card.role && (
             <span className="inline-flex items-center max-w-full mt-1 px-2 py-0.5 rounded-full bg-[#0d4a3a] text-[#33d79f] text-[11px] font-bold truncate">
-              {slot.role}
+              {card.role}
             </span>
           )}
-          {slot.term && <span className="block mt-1 text-[11px] text-[#8a8d91]">{slot.term}</span>}
+          {card.term && <span className="block mt-1 text-[11px] text-[#8a8d91]">{card.term}</span>}
         </div>
       </div>
 
-      {slot.quote && (
+      {card.quote && (
         <div className="relative bg-[#1c1d1f] border border-[#3e4042] rounded-lg px-3 py-2.5">
           <span
             aria-hidden
@@ -87,7 +89,7 @@ function SlotCard({ slot }: { slot: HomeSlot }) {
           >
             “
           </span>
-          <p className="font-kalpurush text-[12.5px] leading-relaxed text-[#bcc0c4]">{slot.quote}</p>
+          <p className="font-kalpurush text-[12.5px] leading-relaxed text-[#bcc0c4]">{card.quote}</p>
         </div>
       )}
     </div>
@@ -108,20 +110,20 @@ export default function LeadershipView({
   current: FrontendUser | null
   onOpenProfile?: (username: string) => void
 }) {
-  const [slots, setSlots] = useState<HomeSlot[] | null>(null)
+  const [cards, setCards] = useState<HomeCard[] | null>(null)
   const [content, setContent] = useState<SiteContentData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [slotsRes, contentRes] = await Promise.all([
+      const [cardsRes, contentRes] = await Promise.all([
         fetch('/api/home-leadership'),
         fetch('/api/site-content').catch(() => null),
       ])
-      if (!slotsRes.ok) throw new Error('fail')
-      const data = await slotsRes.json()
-      setSlots(Array.isArray(data.slots) ? data.slots : [])
+      if (!cardsRes.ok) throw new Error('fail')
+      const data = await cardsRes.json()
+      setCards(Array.isArray(data.cards) ? data.cards : [])
       if (contentRes && contentRes.ok) {
         const c = await contentRes.json()
         setContent({
@@ -155,7 +157,7 @@ export default function LeadershipView({
     )
   }
 
-  if (slots === null) {
+  if (cards === null) {
     return (
       <div className="bg-[#242526] border border-[#3e4042] rounded-xl p-6 space-y-4">
         <div className="h-5 w-44 bg-[#3a3b3c] rounded animate-pulse" />
@@ -177,9 +179,11 @@ export default function LeadershipView({
     )
   }
 
-  /* টগল-অন + নাম-আছে — দুটোই শর্ত (হুবহু-সিঙ্ক) */
-  const filled = slots.filter((s) => s.name.trim() && s.isActive !== false)
-  const bySection = (sec: 'FOUNDING' | 'CURRENT') => filled.filter((s) => s.section === sec)
+  /* টগল-অন + নাম-আছে — সার্ভার-সাইডেও ফিল্টার-করা থাকে; ক্লায়েন্টে দ্বিতীয়-রক্ষাকবচ + order-ক্রম */
+  const filled = cards
+    .filter((c) => c.name.trim() !== '')
+    .sort((a, b) => a.order - b.order)
+  const bySection = (sec: 'FOUNDING' | 'CURRENT') => filled.filter((c) => c.category === sec)
 
   const welcome = content?.welcome
   const stats = content?.stats ?? []
@@ -286,11 +290,11 @@ export default function LeadershipView({
                 </span>
               </div>
 
-              {/* সেন্টার-অ্যালাইনমেন্ট: ২টা থাকলে ঠিক মাঝে, ৪টা থাকলে পূর্ণ-সারি */}
+              {/* সেন্টার-অ্যালাইনমেন্ট: ২টা থাকলে ঠিক মাঝে পাশাপাশি, ৪টা থাকলে পূর্ণ-সারি */}
               <div className="flex flex-wrap justify-center gap-3 items-stretch">
-                {list.map((slot) => (
-                  <div key={slot.slotKey} className={`${cardWidthClass(list.length)} flex`}>
-                    <SlotCard slot={slot} />
+                {list.map((card) => (
+                  <div key={card.id} className={`${cardWidthClass(list.length)} flex`}>
+                    <SlotCard card={card} />
                   </div>
                 ))}
               </div>

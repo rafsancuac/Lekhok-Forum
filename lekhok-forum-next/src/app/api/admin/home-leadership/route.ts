@@ -1,13 +1,18 @@
 /**
- * হোম-নেতৃত্ব-স্লট API (শুধু অ্যাডমিন) — অ্যাডমিন প্যানেল /admin/home/leadership
+ * হোম-নেতৃত্ব কার্ড API (শুধু অ্যাডমিন) — অ্যাডমিন প্যানেল /admin/home/leadership
  *
- * GET   /api/admin/home-leadership  → ৮-স্লটের বর্তমান ডাটা (না-থাকা স্লট = ডিফল্ট-খালি রেকর্ড সহ)
- * POST  /api/admin/home-leadership  → এক-স্লট upsert (slotKey হোয়াইটলিস্ট-বাধ্যতামূলক)
- * PATCH /api/admin/home-leadership  → তাৎক্ষণিক ভিজিবিলিটি-টগল { slotKey, isActive } (Task62-c)
+ * Task63: স্থির ৮-স্লট (HomeLeadershipSlot) → ডাইনামিক কার্ড (HomeLeaderCard)।
+ * ইউজার-স্পেক: উপদেষ্টা বেশি হলে যত-খুশি নতুন কার্ড তৈরি করা যাবে; প্রতিটি কার্ডের
+ * কোণায় অন/অফ টগল-সুইচ (isActive); কার্ড মোছাও যাবে।
  *
- * ডিজাইন-নোট (ইউজার-স্পেক): সেভ/টগল-সফল সবসময় 200 + সংরক্ষিত-রেকর্ড — ফ্রন্টএন্ডে
- * কোনো মিথ্যা "সম্পাদনা ব্যর্থ" ফলস-পজিটিভ না হয়। খালি-স্লট সরাসরি ম্যানুয়াল-ইনপুটযোগ্য —
- * কোনো কমিটি-রিলেশন খোঁজা হয় না। টগল = নো-পপআপ ইনস্ট্যান্ট সুইচ (কার্ডের কোণায়)।
+ * GET    /api/admin/home-leadership       → সব-কার্ড (category, order অনুযায়ী)
+ * POST   /api/admin/home-leadership       → নতুন-কার্ড তৈরি (id ছাড়া) অথবা আপডেট (id সহ)
+ * PATCH  /api/admin/home-leadership       → তাৎক্ষণিক অন/অফ টগল { id, isActive }
+ * DELETE /api/admin/home-leadership?id=…  → কার্ড মুছে ফেলা
+ *
+ * ডিজাইন-নোট (ইউজার-স্পেক): সেভ/টগল/ডিলিট-সফল সবসময় 200 + রেকর্ড/ok — ফ্রন্টএন্ডে
+ * কোনো মিথ্যা "সম্পাদনা ব্যর্থ" ফলস-পজিটিভ না হয়। নতুন-কার্ড ডিফল্ট isActive=false
+ * (লুকানো) — অ্যাডমিন তথ্য-পূর্ণ করে টগল-অন করলেই হোমপেজে লাইভ।
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
@@ -15,21 +20,8 @@ import { getCurrentUser } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
-const MAX_IMAGE_CHARS = 2_000_000 // ~১.৫MB data-URI নিরাপদ-সীমা (leadership-API-র সমান)
-
-/** ৮টি স্থির-স্লটের হোয়াইটলিস্ট — অর্ডারই প্যানেলের প্রদর্শন-ক্রম */
-const HOME_LEADERSHIP_SLOTS = [
-  { slotKey: 'founder_president', slotLabel: 'প্রতিষ্ঠাতা সভাপতি', section: 'FOUNDING', defaultRole: 'প্রতিষ্ঠাতা সভাপতি', defaultTerm: '(২০২০-২১ কার্যবর্ষ)' },
-  { slotKey: 'founder_general_secretary', slotLabel: 'প্রতিষ্ঠাতা সাধারণ সম্পাদক', section: 'FOUNDING', defaultRole: 'সাধারণ সম্পাদক', defaultTerm: '(২০২০-২১ কার্যবর্ষ)' },
-  { slotKey: 'founding_advisor_1', slotLabel: 'প্রতিষ্ঠাকালীন উপদেষ্টা ১', section: 'FOUNDING', defaultRole: 'উপদেষ্টা', defaultTerm: '(২০২০-২১ কার্যবর্ষ)' },
-  { slotKey: 'founding_advisor_2', slotLabel: 'প্রতিষ্ঠাকালীন উপদেষ্টা ২', section: 'FOUNDING', defaultRole: 'উপদেষ্টা', defaultTerm: '(২০২২-২৩ কার্যবর্ষ)' },
-  { slotKey: 'current_president', slotLabel: 'বর্তমান সভাপতি', section: 'CURRENT', defaultRole: 'সভাপতি', defaultTerm: '(২০২৫-২৬ কার্যবর্ষ)' },
-  { slotKey: 'current_general_secretary', slotLabel: 'বর্তমান সাধারণ সম্পাদক', section: 'CURRENT', defaultRole: 'সাধারণ সম্পাদক', defaultTerm: '(২০২৫-২৬ কার্যবর্ষ)' },
-  { slotKey: 'current_advisor_1', slotLabel: 'বর্তমান উপদেষ্টা ১', section: 'CURRENT', defaultRole: 'উপদেষ্টা', defaultTerm: '(২০২৫-২৬ কার্যবর্ষ)' },
-  { slotKey: 'current_advisor_2', slotLabel: 'বর্তমান উপদেষ্টা ২', section: 'CURRENT', defaultRole: 'উপদেষ্টা', defaultTerm: '(২০২৫-২৬ কার্যবর্ষ)' },
-] as const
-
-type SlotDef = (typeof HOME_LEADERSHIP_SLOTS)[number]
+const MAX_IMAGE_CHARS = 2_000_000 // ~১.৫MB data-URI নিরাপদ-সীমা
+const CATEGORIES = ['FOUNDING', 'CURRENT'] as const
 
 async function requireAdmin() {
   const user = await getCurrentUser()
@@ -47,108 +39,143 @@ function str(v: unknown, max = 400): string {
   return typeof v === 'string' ? v.trim().slice(0, max) : ''
 }
 
-/** GET — ৮-স্লটের পূর্ণ ম্যাপ (DB-তে না-থাকা স্লটও খালি-রেকর্ড হিসেবে আসে, প্যানেল সহজ) */
+/** GET — সব-কার্ড (FOUNDING আগে, তারপর CURRENT; প্রতিটির ভেতরে order-ক্রম) */
 export async function GET() {
   const guard = await requireAdmin()
   if ('error' in guard) return guard.error
 
   try {
-    const rows = await db.homeLeadershipSlot.findMany()
-    const byKey = new Map(rows.map((r) => [r.slotKey, r]))
-    const slots = HOME_LEADERSHIP_SLOTS.map((def: SlotDef) => {
-      const row = byKey.get(def.slotKey)
-      return {
-        slotKey: def.slotKey,
-        slotLabel: def.slotLabel,
-        section: def.section,
-        name: row?.name ?? '',
-        role: row?.name ? (row?.role || def.defaultRole) : def.defaultRole,
-        term: row?.term ?? def.defaultTerm,
-        quote: row?.quote ?? '',
-        imageUrl: row?.imageUrl ?? '',
-        isActive: row?.isActive ?? true,
-      }
+    const rows = await db.homeLeaderCard.findMany({
+      orderBy: [{ category: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
     })
-    return NextResponse.json(slots, { status: 200 })
+    /* FOUNDING আগে — category 'CURRENT' < 'FOUNDING' lexicographically, তাই ম্যানুয়াল-ক্রম */
+    const ordered = [...rows].sort((a, b) => {
+      const rankOf = (c: string) => (c === 'FOUNDING' ? 0 : 1)
+      return rankOf(a.category) - rankOf(b.category)
+    })
+    return NextResponse.json(ordered, { status: 200 })
   } catch (error) {
     console.error('home-leadership:GET', error)
     return NextResponse.json({ error: 'ডাটা লোড ব্যর্থ' }, { status: 500 })
   }
 }
 
-/** POST — এক-স্লট upsert (সবসময় 200 + সংরক্ষিত-রেকর্ড রিটার্ন) */
+/** POST — নতুন-কার্ড তৈরি (id ছাড়া) অথবা আপডেট (id সহ); সফল সবসময় 200 + সংরক্ষিত-রেকর্ড */
 export async function POST(req: NextRequest) {
   const guard = await requireAdmin()
   if ('error' in guard) return guard.error
 
   try {
     const body = await req.json()
-    const slotKey = str(body?.slotKey, 60)
-    const def = HOME_LEADERSHIP_SLOTS.find((s) => s.slotKey === slotKey)
-    if (!def) {
-      return NextResponse.json({ error: 'অজানা স্লট-কী' }, { status: 400 })
-    }
-
-    const name = str(body?.name, 120)
-    const role = str(body?.role, 120) || def.defaultRole
-    const term = str(body?.term, 60) || def.defaultTerm
-    const quote = str(body?.quote, 4000)
-    const imageUrl = str(body?.imageUrl, MAX_IMAGE_CHARS)
-    /* isActive: টগল-স্টেট সংরক্ষণ — বডিতে না-এলে আগের-মান (না-থাকলে true) অক্ষুণ্ণ */
-    const existing = await db.homeLeadershipSlot.findUnique({ where: { slotKey } })
-    const isActive = typeof body?.isActive === 'boolean' ? body.isActive : (existing?.isActive ?? true)
+    const id = str(body?.id, 60)
 
     if (typeof body?.imageUrl === 'string' && body.imageUrl.length > MAX_IMAGE_CHARS) {
       return NextResponse.json({ error: 'ছবিটি খুব বড় — ছোট ছবি দিন' }, { status: 413 })
     }
 
-    const saved = await db.homeLeadershipSlot.upsert({
-      where: { slotKey },
-      update: { section: def.section, name, role, term, quote, imageUrl, isActive },
-      create: { slotKey, section: def.section, name, role, term, quote, imageUrl, isActive },
-    })
+    /* ── আপডেট-পথ ── */
+    if (id) {
+      const existing = await db.homeLeaderCard.findUnique({ where: { id } })
+      if (!existing) {
+        return NextResponse.json({ error: 'কার্ড পাওয়া যায়নি' }, { status: 404 })
+      }
+      const isActive =
+        typeof body?.isActive === 'boolean' ? body.isActive : existing.isActive
+      const saved = await db.homeLeaderCard.update({
+        where: { id },
+        data: {
+          name: str(body?.name, 120),
+          role: str(body?.role, 120) || existing.role || 'সদস্য',
+          term: str(body?.term, 60),
+          quote: str(body?.quote, 4000),
+          imageUrl: str(body?.imageUrl, MAX_IMAGE_CHARS),
+          isActive,
+          order: Number.isFinite(Number(body?.order)) ? Number(body.order) : existing.order,
+        },
+      })
+      return NextResponse.json(saved, { status: 200 })
+    }
 
-    return NextResponse.json({ ...saved, slotLabel: def.slotLabel }, { status: 200 })
+    /* ── তৈরি-পথ ── */
+    const category = CATEGORIES.includes(body?.category) ? body.category : 'CURRENT'
+
+    /* নতুন-কার্ড সেকশনের একদম শেষে বসে (order = max+1) */
+    const last = await db.homeLeaderCard.findFirst({
+      where: { category },
+      orderBy: { order: 'desc' },
+      select: { order: true },
+    })
+    const order = Number.isFinite(Number(body?.order))
+      ? Number(body.order)
+      : (last?.order ?? 0) + 1
+
+    const saved = await db.homeLeaderCard.create({
+      data: {
+        category,
+        name: str(body?.name, 120),
+        role: str(body?.role, 120) || 'উপদেষ্টা',
+        term: str(body?.term, 60),
+        quote: str(body?.quote, 4000),
+        imageUrl: str(body?.imageUrl, MAX_IMAGE_CHARS),
+        /* নতুন-কার্ড ডিফল্ট লুকানো (isActive=false) — ব্যতিক্রম: বডিতে স্পষ্ট-boolean */
+        isActive: typeof body?.isActive === 'boolean' ? body.isActive : false,
+        order,
+      },
+    })
+    return NextResponse.json(saved, { status: 200 })
   } catch (error) {
     console.error('home-leadership:POST', error)
     return NextResponse.json({ error: 'সংরক্ষণ ব্যর্থ হয়েছে' }, { status: 500 })
   }
 }
 
-/** PATCH — তাৎক্ষণিক অন/অফ টগল (কোনো রিলোড/পপআপ ছাড়াই; সবসময় 200 + রেকর্ড) */
+/** PATCH — তাৎক্ষণিক অন/অফ টগল { id, isActive } (কোনো রিলোড/পপআপ ছাড়াই; সবসময় 200 + রেকর্ড) */
 export async function PATCH(req: NextRequest) {
   const guard = await requireAdmin()
   if ('error' in guard) return guard.error
 
   try {
     const body = await req.json()
-    const slotKey = str(body?.slotKey, 60)
-    const def = HOME_LEADERSHIP_SLOTS.find((s) => s.slotKey === slotKey)
-    if (!def) {
-      return NextResponse.json({ error: 'অজানা স্লট-কী' }, { status: 400 })
+    const id = str(body?.id, 60)
+    if (!id) {
+      return NextResponse.json({ error: 'id প্রয়োজন' }, { status: 400 })
     }
     if (typeof body?.isActive !== 'boolean') {
       return NextResponse.json({ error: 'isActive বুলিয়ান প্রয়োজন' }, { status: 400 })
     }
-
-    const saved = await db.homeLeadershipSlot.upsert({
-      where: { slotKey },
-      update: { isActive: body.isActive },
-      create: {
-        slotKey,
-        section: def.section,
-        name: '',
-        role: def.defaultRole,
-        term: def.defaultTerm,
-        quote: '',
-        imageUrl: '',
-        isActive: body.isActive,
-      },
+    const existing = await db.homeLeaderCard.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'কার্ড পাওয়া যায়নি' }, { status: 404 })
+    }
+    const saved = await db.homeLeaderCard.update({
+      where: { id },
+      data: { isActive: body.isActive },
     })
-
-    return NextResponse.json({ ...saved, slotLabel: def.slotLabel }, { status: 200 })
+    return NextResponse.json(saved, { status: 200 })
   } catch (error) {
     console.error('home-leadership:PATCH', error)
     return NextResponse.json({ error: 'টগল ব্যর্থ হয়েছে' }, { status: 500 })
+  }
+}
+
+/** DELETE — কার্ড মুছে ফেলা (?id=…); সফল হলে 200 { ok: true } */
+export async function DELETE(req: NextRequest) {
+  const guard = await requireAdmin()
+  if ('error' in guard) return guard.error
+
+  try {
+    const id = str(req.nextUrl.searchParams.get('id') || '', 60)
+    if (!id) {
+      return NextResponse.json({ error: 'id প্রয়োজন' }, { status: 400 })
+    }
+    const existing = await db.homeLeaderCard.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'কার্ড পাওয়া যায়নি' }, { status: 404 })
+    }
+    await db.homeLeaderCard.delete({ where: { id } })
+    return NextResponse.json({ ok: true, id }, { status: 200 })
+  } catch (error) {
+    console.error('home-leadership:DELETE', error)
+    return NextResponse.json({ error: 'ডিলিট ব্যর্থ হয়েছে' }, { status: 500 })
   }
 }
