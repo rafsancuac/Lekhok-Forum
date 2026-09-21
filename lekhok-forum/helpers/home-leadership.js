@@ -99,4 +99,25 @@ function buildHomeLeadershipSlots(rows, statementOf) {
   });
 }
 
-module.exports = { MEMBER_JOIN, SLOT_META, LEADER_STATEMENTS, bnLead, fetchHomeLeadershipRows, buildHomeLeadershipSlots };
+/**
+ * displayOf(m, statement) — সেশন ৬২: একটি joined member-row থেকে কার্ডের
+ * প্রদর্শন-মানগুলো (নাম/ছবি/পদবি/কার্যবর্ষ-লেখা/বাণী/উৎস) হিসাব করে।
+ * ভিউ (home-leadership.ejs) ও সেভ-API (admin/routes.js POST /home-leadership/slot)
+ * দুই জায়গাতেই এক-ই নিয়ম চলে — API-জবাবে এই মানগুলো ফিরিয়ে দিলে ফ্রন্টএন্ড
+ * পেজ-রিলোড ছাড়াই কার্ড ইন-প্লেস আপডেট করতে পারে (drift-বিহীন)।
+ */
+function displayOf(m, statement) {
+  if (!m) {
+    return { name: '', img: '/assets/img/avatar-placeholder.svg?v=2', role: '', termText: '', bani: statement || '', src: 'ফলব্যাক-বাণী', linked: false };
+  }
+  const displayName = m.user_full_name || m.name;
+  const displayImg  = m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg?v=2';
+  const shownBani   = (m.message && String(m.message).trim()) ? String(m.message)
+                    : ((m.bio && String(m.bio).trim()) ? String(m.bio) : (statement || ''));
+  const baniSource  = (m.message && String(m.message).trim()) ? 'বাণী ফিল্ড'
+                    : ((m.bio && String(m.bio).trim()) ? 'বায়ো' : 'ফলব্যাক-বাণী');
+  const termText    = (m.term_year ? '(' + m.term_year + ')' : '') + (m.user_id ? ' · লিংকড অ্যাকাউন্ট' : '');
+  return { name: displayName || '', img: displayImg, role: m.role || '', termText: termText.trim(), bani: shownBani || '', src: baniSource, linked: !!m.user_id };
+}
+
+module.exports = { MEMBER_JOIN, SLOT_META, LEADER_STATEMENTS, bnLead, fetchHomeLeadershipRows, buildHomeLeadershipSlots, displayOf };

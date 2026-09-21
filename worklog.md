@@ -2597,3 +2597,23 @@ Stage Summary:
 - ইউজার-প্রভাব: অ্যাডমিন এখন ৩-পরিষদ চালাতে পারে (প্রতিষ্ঠাতা/বর্তমান/উপদেষ্টা), গ্রিপে-টেনে বা ↑↓-তে সাজাতে পারে (এক-ট্রানজেকশন, রেস-মুক্ত), অ্যাপ-সদস্য-নেতাদের কার্ড-নাম প্রোফাইল-লিঙ্ক হয়
 - পরিবর্তিত: lekhok-forum-next/{prisma/schema.prisma, src/app/api/admin/leadership/route.ts, src/app/api/admin/leadership/reorder/route.ts-নতুন, src/app/api/leadership/route.ts, src/app/admin/leadership/page.tsx, src/components/leadership/LeadershipView.tsx, src/app/page.tsx-১লাইন}
 - পরের-এজেন্ট: প্রোডে-ভেরিফিকেশন (Actions-ডিপ্লয়ের পর ?leadership=1 প্রোব), উপদেষ্টা-তালিকার প্রকৃত-ডেটা (ইউজার-ইনপুট লাগবে), lf183-হারনেস-আধুনিকায়ন অক্ষুণ্ণ
+
+---
+Task ID: 62 (Session user-turn — হোম-নেতৃত্ব প্যানেল: ইনলাইন-এডিটর + খালি-স্লট-সরাসরি-ইনপুট + কার্যবর্ষ-ড্রপডাউন + ফলস-এরর-ফিক্স)
+Agent: Z.ai Code (user-turn — Express-প্রোড-প্যানেল /admin/home-leadership)
+Task: ইউজার-রিপোর্ট ৩-সমস্যা: ① খালি-স্লটে (founder_president/founder_general_secretary/current_general_secretary) "কমিটি-প্যানেল-থেকে-যোগ-করুন" হলুদ-সতর্কবার্তা — সরাসরি-ইনপুট চাই ② কার্যবর্ষ ড্রপডাউন চাই ③ সেভে "সংরক্ষণ ব্যর্থ" ভুয়া-এরর কিন্তু সেভ-হয় + পপ-আপ-মডাল/অ্যালার্ট সম্পূর্ণ-বাদ; প্যানেলে-যা-দেখাবে হোমে-তাই
+
+Work Log:
+- **RCA ① ভুয়া-এরর**: home-leadership.ejs-এর fetch-চেইনে `{s,j}`-অবজেক্ট বানিয়ে `res.ok` চেক — সেটা সবসময় undefined → সফল-সেভেও alert('সংরক্ষণ ব্যর্থ'); **ফিক্স: স্ট্যাটাস-কোড যাচাই (s>=200 && s<300)**
+- **RCA ② খালি-স্লট**: মডাল খালি-স্লটে member-ফিল্ড লুকাত + POST-এ member_id-ছাড়া create-পথ ছিল-ই না → ফিক্স: HL62_SLOT_TYPE-ম্যাপ অনুযায়ী নতুন members-রো-তৈরি (founder→'founder'/central→'central'+latestTerm-ফলব্যাক/advisory, sort_order স্লট-অবস্থান-সচেতন: president=min-1, বাকি max+1, db.nextMemberId() অটো MEM-XXXXX, account_status='unclaimed')
+- **ভিউ-রিরাইট** (admin/home-leadership.ejs): মডাল সম্পূর্ণ-অপসারণ; প্রতি-কার্ডে সার্ভার-রেন্ডারড ইনলাইন-এডিটর (ভিউ↔ফর্ম টগল, editing-রিং); কার্যবর্ষ `<select>` (DB-ডিস্টিন্ট + আদর্শ ২০১৮-১৯…২০৩২-৩৩, নবীনতম-আগে, বর্তমান-সেকশনে latestTerm-প্রি-সিলেক্ট); খালি-স্লটে সবুজ-ড্যাশড "সদস্য যুক্ত নেই — তথ্য দিন চেপে সরাসরি ইনপুট" (হলুদ-সতর্কবাতা বাদ); সফলতায় কার্ডের-ভেতরে ✓-ব্যাজ (২.৬সে), ত্রুটিতে ইনলাইন-লাল-লেখা — **কোনো alert()/মডাল নেই**; সোশ্যাল+sync `<details>`-এ গুটানো
+- **API-জবাব এনরিচ**: সেভ-শেষে display{name,img,role,termText,bani,src} ফেরত (helpers/displayOf — settings-ওভাররাইড-সচেতন) → ফ্রন্টএন্ড পেজ-রিলোড-ছাড়াই কার্ড-প্যাচ; created:true-তে member_id-ইনপুট-বসিয়ে পরবর্তী-এডিট-আপডেট-পথে
+- **বাগ-ফিক্স (E2E-তে ধরা)**: `.hl-okbadge{display:inline-flex}` hidden-অ্যাট্রিবিউট-চাপা-পড়া → সব-কার্ডে ✓-ব্যাজ-দৃশ্যমান; `.hl-slot [hidden]{display:none!important}`-ফিক্স
+- **E2E (agent-browser @ :8080 local)**: লগইন→৮-স্লট(২-খালি,০-মডাল,০-পুরনো-সতর্কবাতা)→founder_president "তথ্য দিন"→ইনলাইন-ফর্ম(ড্রপডাউন-সহ)→সেভ → ✓-ব্যাজ+কার্ড-ইন-প্লেস-আপডেট+**alertFired:0**; DB: members#186 founder/২০২০-২১/MEM-00085/unclaimed; রিলোড-পর SSR-অবস্থা-সঠিক (member_id=186 ধরে-রাখা, বাটন "সম্পাদনা"); **হোম-সিঙ্ক: /-তে নতুন-প্রতিষ্ঠাতা-দৃশ্যমান**; বিদ্যমান-সদস্য(161 linked) এডিট → নাম-DB-আপডেট, ডিসপ্লে-নাম user_full_name-প্রাধান্য (আগের-আচরণ), alertFired:0; founder_gs-তৈরি → হোম-অর্ডার [সভাপতি, সা-সম্পাদক, রাফছান, কালাম] সঠিক; মোবাইল-৩৯০: hScroll=false; সার্ভার-লগ-এরর-শূন্য
+- টেস্ট-ডেটা-ক্লিন (২-সদস্য-ডিলিট); লোকাল-lekhok.db-তে admin-পাসওয়ার্ড-রিসেট-ছিল (E2E-র-জন্য, gitignored-dev-DB)
+
+Stage Summary:
+- ইউজার-প্রভাব: ৮-স্লটের-যে-কোনো-খালি-স্লটে সরাসরি নাম/ছবি/পদবি/কার্যবর্ষ(ড্রপডাউন)/বাণী লিখে সেভ — কমিটি-প্যানেল-ঘুরতে-হয় না; সেভ/এরর সব-কার্ডের-ভেতরেই (পপ-আপ/ভুয়া-এরর-শূন্য); হোমপেজে সঙ্গে-সঙ্গে-সিঙ্ক (এক-ই কুয়েরি-সোর্স)
+- পরিবর্তিত: lekhok-forum/{admin/routes.js (GET termOptions + POST create-পথ+display-জবাব), admin/views/admin/home-leadership.ejs (পূর্ণ-রিরাইট), helpers/home-leadership.js (displayOf)}
+- নোট: working-tree-তে lekhok-forum-next/{admin/home-leadership, api/home-leadership, schema.prisma, LeadershipView}-পরিবর্তন অন্য-প্যারালাল-এজেন্টের — অস্পৃশ্য-রাখা-হয়েছে (কমিট-বাইরে)
+- পরের-এজেন্ট: প্রোড-ডিপ্লয়ের-পর lekhok-forum.vercel.app/admin/home-leadership-প্রোব; ইউজার-প্রোডে ৩-খালি-স্লট ম্যানুয়ালি-পূরণ-করবেন

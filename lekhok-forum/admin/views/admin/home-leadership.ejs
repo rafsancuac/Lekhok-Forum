@@ -9,43 +9,67 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
   <style>
-    /* সেশন ৫৫: হোম-নেতৃত্ব প্যানেল — সেকশন-ভিত্তিক স্লট-গ্রিড + এডিট-মডাল */
+    /* সেশন ৫৫: হোম-নেতৃত্ব প্যানেল — সেকশন-ভিত্তিক স্লট-গ্রিড।
+       সেশন ৬২ (এই সংস্করণ): পপ-আপ-মডাল সম্পূর্ণ বাদ — প্রতিটি কার্ডের ভেতরেই
+       ইনলাইন-এডিটর; সেভ/ত্রুটির প্রতিক্রিয়া কার্ডের ভেতরেই (alert-শূন্য);
+       খালি-স্লটে সরাসরি-ইনপুট (নতুন সদস্য-রো স্বয়ংক্রিয়-তৈরি); কার্যবর্ষ ড্রপডাউন। */
     .hl-section { margin-bottom: 34px; }
     .hl-section-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
     .hl-section-head h2 { margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; }
     .hl-section-head h2 i { color: #059669; }
     .hl-section-head .hint { font-size: 12px; color: #64748b; }
     .hl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+    /* hidden-অ্যাট্রিবিউট যেন লেখক-স্টাইল (display:inline-flex ইত্যাদি) দিয়ে চাপা না পড়ে */
+    .hl-slot [hidden] { display: none !important; }
     .hl-slot { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s, border-color .15s; }
     .hl-slot:hover { box-shadow: 0 6px 18px rgba(15,23,42,.08); border-color: #a7f3d0; }
+    .hl-slot.editing { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.18); }
+    .hl-slot-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .hl-slot-tag { align-self: flex-start; font-size: 11px; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 999px; padding: 3px 10px; }
+    .hl-okbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #065f46; background: #d1fae5; border: 1px solid #6ee7b7; border-radius: 999px; padding: 3px 9px; }
+    .hl-errbadge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #991b1b; background: #fee2e2; border: 1px solid #fecaca; border-radius: 999px; padding: 3px 9px; }
     .hl-slot-id { font-size: 11px; color: #94a3b8; }
     .hl-person { display: flex; align-items: center; gap: 12px; }
     .hl-photo { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; }
     .hl-person h3 { margin: 0; font-size: 14.5px; }
     .hl-person .role { margin: 2px 0 0; font-size: 12px; color: #059669; font-weight: 600; }
     .hl-person .term { margin: 1px 0 0; font-size: 11px; color: #64748b; }
-    .hl-bani { font-size: 12px; color: #475569; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .hl-bani { font-size: 12px; color: #475569; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; margin: 0; }
     .hl-src { font-size: 10.5px; color: #94a3b8; display: inline-flex; align-items: center; gap: 4px; }
     .hl-actions { margin-top: auto; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
-    .hl-empty { font-size: 12.5px; color: #b45309; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 8px; padding: 10px 12px; }
-    .hl-modal { position: fixed; inset: 0; z-index: 90; background: rgba(15,23,42,.45); display: none; align-items: flex-start; justify-content: center; padding: 30px 16px; overflow-y: auto; }
-    .hl-modal.open { display: flex; }
-    .hl-modal-card { background: #fff; border-radius: 12px; width: 100%; max-width: 640px; padding: 20px 22px; box-shadow: 0 20px 50px rgba(2,6,23,.25); }
-    .hl-modal-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px; }
-    .hl-modal-head h3 { margin: 0; font-size: 16px; }
-    .hl-modal-head .x { background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; }
-    .hl-modal-head .x:hover { color: #475569; }
-    .hl-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    /* খালি-স্লটের বন্ধুত্বপূর্ণ নোট (সেশন ৬২: হলুদ-সতর্কবার্তার বদলে সবুজ নির্দেশনা) */
+    .hl-empty-new { font-size: 12px; color: #047857; background: #f0fdf4; border: 1.5px dashed #6ee7b7; border-radius: 8px; padding: 12px 12px; text-align: center; }
+    .hl-empty-new i { font-size: 15px; display: block; margin-bottom: 5px; color: #10b981; }
+    .hl-empty-new strong { display: block; font-size: 12.5px; margin-bottom: 2px; }
+    .hl-empty-new span.sub { color: #64748b; font-size: 11px; }
+    /* ইনলাইন-এডিটর */
+    .hl-edit { display: flex; flex-direction: column; gap: 9px; }
+    .hl-edit[hidden] { display: none; }
+    .hl-photo-edit { display: flex; gap: 12px; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 10px; }
+    .hl-photo-preview { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid #a7f3d0; background: #fff; flex-shrink: 0; }
+    .hl-fieldstack { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+    .hl-fieldstack input[type="file"] { font-size: 11px; max-width: 100%; }
+    .hl-fieldstack small { color: #64748b; font-size: 10.5px; line-height: 1.4; }
+    .hl-edit .form-group { margin: 0; }
+    .hl-edit label { font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 3px; display: block; }
+    .hl-edit input[type="text"], .hl-edit input[type="url"], .hl-edit input[type="email"],
+    .hl-edit select, .hl-edit textarea { width: 100%; font-size: 12.5px; padding: 7px 9px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #0f172a; outline: none; transition: border-color .12s, box-shadow .12s; }
+    .hl-edit input:focus, .hl-edit select:focus, .hl-edit textarea:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,.14); }
+    .hl-edit select { cursor: pointer; }
+    .hl-edit textarea { resize: vertical; min-height: 52px; }
+    .hl-extra { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; background: #fcfcfd; }
+    .hl-extra summary { font-size: 11.5px; font-weight: 700; color: #64748b; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+    .hl-extra[open] summary { margin-bottom: 8px; }
+    .hl-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
     @media (max-width: 560px) { .hl-row2 { grid-template-columns: 1fr; } }
-    .hl-photo-edit { display: flex; gap: 12px; align-items: center; }
-    .hl-photo-preview { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid #e2e8f0; background: #f8fafc; }
-    .hl-fieldstack { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .hl-sync { display: flex; align-items: center; gap: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #166534; }
+    .hl-sync { display: flex; align-items: flex-start; gap: 7px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 7px; padding: 7px 9px; font-size: 11.5px; color: #166534; }
+    .hl-sync label { margin: 0 !important; cursor: pointer; font-weight: 600 !important; }
+    .hl-statusline { font-size: 11.5px; min-height: 16px; font-weight: 600; }
+    .hl-statusline.err { color: #b91c1c; }
+    .hl-edit-actions { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
     .hl-banner { border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 13.5px; }
     .hl-banner.ok { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
     .hl-banner.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .hl-linkednote { font-size: 11px; color: #b45309; background: #fffbeb; border-radius: 6px; padding: 6px 9px; }
   </style>
 </head>
 <body>
@@ -53,9 +77,8 @@
 <div class="admin-main">
   <div class="admin-header">
     <h1>হোম নেতৃত্ব ব্যবস্থাপনা</h1>
-    <p>হোমপেজের <strong>“নেতৃত্বের ধারা”</strong> ও <strong>“বর্তমান নেতৃত্ব”</strong> সেকশনের ৮টি কার্ড — নাম, ছবি, পদবি, কার্যবর্ষ ও বাণী এখান থেকেই বদলান
-      | <a href="/" target="_blank"><i class="fas fa-up-right-from-square"></i> হোমপেজ দেখুন</a>
-      | <a href="/admin/members"><i class="fas fa-users"></i> কমিটি সদস্য প্যানেল</a></p>
+    <p>হোমপেজের <strong>“নেতৃত্বের ধারা”</strong> ও <strong>“বর্তমান নেতৃত্ব”</strong> সেকশনের ৮টি কার্ড — প্রতিটি কার্ডের ভেতরেই <strong>সম্পাদনা</strong> চেপে নাম, ছবি, পদবি, কার্যবর্ষ ও বাণী বদলান; সংরক্ষণের সাথে-সাথে হোমপেজে দেখা যাবে
+      | <a href="/" target="_blank"><i class="fas fa-up-right-from-square"></i> হোমপেজ দেখুন</a></p>
   </div>
 
   <% if (saved) { %><div class="hl-banner ok"><i class="fas fa-circle-check"></i> সফলভাবে সংরক্ষিত হয়েছে — হোমপেজে এখনই দেখা যাবে।</div><% } %>
@@ -74,30 +97,116 @@
            const displayImg  = m ? (m.user_avatar_url || m.image_url || '/assets/img/avatar-placeholder.svg?v=2') : '/assets/img/avatar-placeholder.svg?v=2';
            const shownBani   = m ? ((m.message && String(m.message).trim()) ? String(m.message) : ((m.bio && String(m.bio).trim()) ? String(m.bio) : slot.statement)) : slot.statement;
            const baniSource  = m ? ((m.message && String(m.message).trim()) ? 'বাণী ফিল্ড' : ((m.bio && String(m.bio).trim()) ? 'বায়ো' : 'ফলব্যাক-বাণী')) : 'ফলব্যাক-বাণী';
+           const selTerm     = (m && m.term_year) ? m.term_year : (sec === 'current' && latestTerm ? latestTerm : '');
       %>
-      <div class="hl-slot" id="slot-<%= slot.key %>">
-        <span class="hl-slot-tag"><%= slot.title %></span>
-        <% if (m) { %>
-          <div class="hl-person">
-            <img class="hl-photo" src="<%= displayImg %>" alt="<%= displayName %>" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
-            <div>
-              <h3><%= displayName %></h3>
-              <p class="role"><%= m.role || '—' %></p>
-              <p class="term"><%= m.term_year ? '(' + m.term_year + ')' : '' %> <%= m.user_id ? '· লিংকড অ্যাকাউন্ট' : '' %></p>
+      <div class="hl-slot" id="slot-<%= slot.key %>" data-slot="<%= slot.key %>">
+        <div class="hl-slot-head">
+          <span class="hl-slot-tag"><%= slot.title %></span>
+          <span class="hl-okbadge" data-role="saveOk" hidden><i class="fas fa-check"></i> সংরক্ষিত হয়েছে</span>
+        </div>
+
+        <%# ═══════════ ভিউ-মোড ═══════════ %>
+        <div data-role="view">
+          <div data-role="person" <%= m ? '' : 'hidden' %>>
+            <div class="hl-person">
+              <img class="hl-photo" data-role="photo" src="<%= displayImg %>" alt="<%= displayName %>" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+              <div>
+                <h3 data-role="name"><%= displayName %></h3>
+                <p class="role" data-role="role"><%= m ? (m.role || '—') : '' %></p>
+                <p class="term" data-role="term"><%= m ? ((m.term_year ? '(' + m.term_year + ')' : '') + (m.user_id ? ' · লিংকড অ্যাকাউন্ট' : '')) : '' %></p>
+              </div>
             </div>
           </div>
-          <p class="hl-bani"><%= shownBani || '—' %></p>
-          <span class="hl-src"><i class="fas fa-quote-left"></i> উৎস: <%= baniSource %></span>
-        <% } else { %>
-          <div class="hl-empty">
-            <i class="fas fa-user-slash"></i> এই স্লটে এখনো সদস্য বসেনি।
-            <a href="/admin/members/new">কমিটি সদস্য প্যানেল</a> থেকে সঠিক ধরনে সদস্য যোগ করুন।
+          <div class="hl-empty-new" data-role="empty" <%= m ? 'hidden' : '' %>>
+            <i class="fas fa-user-plus"></i>
+            <strong>সদস্য যুক্ত নেই</strong>
+            <span class="sub">নিচের <strong>তথ্য দিন</strong> বাটনে ক্লিক করে সরাসরি নাম, ছবি, পদবি ও বাণী লিখে সংরক্ষণ করুন — স্লটেই বসে যাবে।</span>
           </div>
-        <% } %>
+          <p class="hl-bani" data-role="bani" <%= m ? '' : 'hidden' %>><%= m ? (shownBani || '—') : '' %></p>
+          <span class="hl-src" data-role="src" <%= m ? '' : 'hidden' %>><i class="fas fa-quote-left"></i> উৎস: <%= baniSource %></span>
+        </div>
+
+        <%# ═══════════ ইনলাইন-এডিটর (কার্ডের ভেতরেই — কোনো পপ-আপ নেই) ═══════════ %>
+        <form class="hl-edit" hidden method="POST" action="/admin/home-leadership/slot" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+          <input type="hidden" name="slot" value="<%= slot.key %>">
+          <input type="hidden" name="member_id" value="<%= m ? m.id : '' %>">
+
+          <div class="hl-photo-edit">
+            <img class="hl-photo-preview" data-role="preview" src="<%= displayImg %>" alt="প্রিভিউ" onerror="this.src='/assets/img/avatar-placeholder.svg?v=2'">
+            <div class="hl-fieldstack">
+              <input type="file" name="member_photo" data-role="file" accept="image/jpeg,image/png,image/webp,image/gif">
+              <input type="url" name="image_url" data-role="url" placeholder="অথবা ছবির সরাসরি লিংক (https://…)" value="<%= m ? (m.image_url || '') : '' %>">
+              <small>ফাইল দিলে সেটাই প্রাধান্য পাবে (WebP-অপটিমাইজ); নইলে URL।</small>
+            </div>
+          </div>
+
+          <div class="hl-row2">
+            <div class="form-group">
+              <label>নাম <%= m ? '*' : '' %></label>
+              <input type="text" name="name" required placeholder="পূর্ণ নাম লিখুন…" value="<%= m ? (m.name || '') : '' %>">
+            </div>
+            <div class="form-group">
+              <label>পদবি</label>
+              <input type="text" name="role" placeholder="যেমন: সভাপতি" value="<%= m ? (m.role || '') : '' %>">
+            </div>
+          </div>
+
+          <div class="hl-row2">
+            <div class="form-group">
+              <label>কার্যবর্ষ</label>
+              <select name="term_year">
+                <option value="">(কার্যবর্ষ নেই)</option>
+                <% (termOptions || []).forEach(t => { %>
+                <option value="<%= t %>" <%= t === selTerm ? 'selected' : '' %>><%= t %></option>
+                <% }); %>
+                <% if (selTerm && !(termOptions || []).includes(selTerm)) { %>
+                <option value="<%= selTerm %>" selected><%= selTerm %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>আইডি / প্রোফাইল লিংক</label>
+              <input type="url" name="profile_url" placeholder="https://facebook.com/… বা /profile/username" value="<%= m ? (m.profile_url || '') : '' %>">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>বাণী (কার্ডে প্রাধান্য পায়)</label>
+            <textarea name="message" rows="3" placeholder="এই লেখাটিই কার্ডে দেখাবে — খালি রাখলে বায়ো, তারপর ফলব্যাক-বাণী"><%= m ? (m.message || '') : '' %></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>ফলব্যাক-বাণী (বাণী ও বায়ো খালি হলে এটা দেখাবে)</label>
+            <textarea name="statement" rows="2"><%= slot.statement || '' %></textarea>
+          </div>
+
+          <details class="hl-extra">
+            <summary><i class="fas fa-link"></i> সোশ্যাল-লিংক ও অ্যাকাউন্ট-সিঙ্ক (ঐচ্ছিক)</summary>
+            <div class="hl-row2">
+              <div class="form-group"><label>ফেসবুক</label><input type="url" name="social_fb" value="<%= m ? (m.social_fb || '') : '' %>"></div>
+              <div class="form-group"><label>LinkedIn</label><input type="url" name="social_linkedin" value="<%= m ? (m.social_linkedin || '') : '' %>"></div>
+            </div>
+            <div class="form-group"><label>ইমেইল</label><input type="email" name="social_email" value="<%= m ? (m.social_email || '') : '' %>"></div>
+            <% if (m && m.user_id) { %>
+            <div class="hl-sync">
+              <input type="checkbox" name="sync_profile" id="sync-<%= slot.key %>" value="1">
+              <label for="sync-<%= slot.key %>">এই নাম ও ছবি লিংকড অ্যাকাউন্টের প্রোফাইলেও বসিয়ে দিন (<%= m.user_full_name || displayName %>)</label>
+            </div>
+            <% } %>
+          </details>
+
+          <div class="hl-statusline" data-role="status"></div>
+          <div class="hl-edit-actions">
+            <button type="button" class="btn btn-sm" data-cancel>বাতিল</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-floppy-disk"></i> সংরক্ষণ করুন</button>
+          </div>
+        </form>
+
         <div class="hl-actions">
           <span class="hl-slot-id">স্লট: <code><%= slot.key %></code></span>
-          <button type="button" class="btn btn-primary btn-sm" data-open='<%= JSON.stringify({ key: slot.key, title: slot.title, member: m ? { id: m.id, name: m.name || '', role: m.role || '', term_year: m.term_year || '', message: m.message || '', image_url: m.image_url || '', social_fb: m.social_fb || '', social_linkedin: m.social_linkedin || '', social_email: m.social_email || '', profile_url: m.profile_url || '', user_id: m.user_id || null, user_full_name: m.user_full_name || '', user_avatar_url: m.user_avatar_url || '' } : null, statement: slot.statement || '', displayImg: displayImg, displayName: displayName }) %>'>
-            <i class="fas fa-pen-to-square"></i> সম্পাদনা
+          <button type="button" class="btn btn-primary btn-sm" data-edit>
+            <i class="fas fa-pen-to-square"></i> <%= m ? 'সম্পাদনা' : 'তথ্য দিন' %>
           </button>
         </div>
       </div>
@@ -105,171 +214,131 @@
     </div>
   </div>
   <% }); %>
-
-  <%# ── এডিট মডাল ── %>
-  <div class="hl-modal" id="hlModal" role="dialog" aria-modal="true" aria-labelledby="hlModalTitle">
-    <div class="hl-modal-card">
-      <div class="hl-modal-head">
-        <h3 id="hlModalTitle">সম্পাদনা</h3>
-        <button type="button" class="x" data-close aria-label="বন্ধ করুন"><i class="fas fa-xmark"></i></button>
-      </div>
-      <form method="POST" action="/admin/home-leadership/slot" enctype="multipart/form-data" id="hlForm">
-        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-        <input type="hidden" name="slot" id="f_slot">
-        <input type="hidden" name="member_id" id="f_member_id">
-
-        <%# সদস্য-যুক্ত ক্ষেত্রগুলো — খালি-স্লটে লুকানো থাকে %>
-        <div id="f_memberFields">
-
-        <div class="form-group">
-          <label>ছবি</label>
-          <div class="hl-photo-edit">
-            <img class="hl-photo-preview" id="f_photoPreview" src="/assets/img/avatar-placeholder.svg?v=2" alt="প্রিভিউ">
-            <div class="hl-fieldstack">
-              <input type="file" name="member_photo" id="f_photoFile" accept="image/jpeg,image/png,image/webp,image/gif">
-              <input type="url" name="image_url" id="f_image_url" placeholder="অথবা ছবির সরাসরি লিংক (https://…)">
-              <small style="color:#64748b">ফাইল আপলোড দিলে সেটাই প্রাধান্য পাবে; নইলে URL ব্যবহৃত হবে। ফাইল স্বয়ংক্রিয়ভাবে WebP-তে অপটিমাইজ হয়।</small>
-            </div>
-          </div>
-        </div>
-
-        <div class="hl-row2">
-          <div class="form-group"><label>নাম *</label><input type="text" name="name" id="f_name" required></div>
-          <div class="form-group"><label>পদবি</label><input type="text" name="role" id="f_role" placeholder="যেমন: সভাপতি"></div>
-        </div>
-        <div class="hl-row2">
-          <div class="form-group">
-            <label>কার্যবর্ষ</label>
-            <input type="text" name="term_year" id="f_term_year" list="hlTermYears" placeholder="যেমন: ২০২৫-২৬">
-            <datalist id="hlTermYears">
-              <option value="২০২৫-২৬"><option value="২০২৪-২৫"><option value="২০২৩-২৪">
-              <option value="২০২২-২৩"><option value="২০২১-২২"><option value="২০২০-২১">
-            </datalist>
-          </div>
-          <div class="form-group"><label>আইডি / প্রোফাইল লিংক</label><input type="url" name="profile_url" id="f_profile_url" placeholder="https://facebook.com/… বা /profile/username"></div>
-        </div>
-
-        <div class="form-group">
-          <label>বাণী (কার্ডে প্রাধান্য পায়)</label>
-          <textarea name="message" id="f_message" rows="4" placeholder="এই লেখাটিই কার্ডে দেখাবে — খালি রাখলে বায়ো, তারপর ফলব্যাক-বাণী"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>ফলব্যাক-বাণী (বাণী ও বায়ো খালি হলে এটা দেখাবে)</label>
-          <textarea name="statement" id="f_statement" rows="3"></textarea>
-          <small style="color:#64748b">এটি স্লটের সাধারণ বক্তব্য — নির্দিষ্ট সদস্য-বাণী না-ও লেখা থাকলে এটা কার্ডে আসে।</small>
-        </div>
-
-        <div class="hl-row2">
-          <div class="form-group"><label>ফেসবুক</label><input type="url" name="social_fb" id="f_social_fb"></div>
-          <div class="form-group"><label>LinkedIn</label><input type="url" name="social_linkedin" id="f_social_linkedin"></div>
-        </div>
-        <div class="form-group"><label>ইমেইল</label><input type="email" name="social_email" id="f_social_email"></div>
-        </div><!-- /f_memberFields -->
-
-        <div class="hl-sync" id="f_syncRow" style="display:none; margin: 10px 0;">
-          <input type="checkbox" name="sync_profile" id="f_sync_profile" value="1">
-          <label for="f_sync_profile" style="margin:0; cursor:pointer;">এই নাম ও ছবি লিংকড অ্যাকাউন্টের <strong>প্রোফাইলেও</strong> বসিয়ে দিন (<span id="f_syncName"></span>)</label>
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
-          <button type="button" class="btn btn-sm" data-close>বাতিল</button>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> সংরক্ষণ করুন</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>
 
 <script>
+/* সেশন ৬২ — ইনলাইন-এডিটর: কোনো মডাল নেই, কোনো alert() নেই।
+   • সম্পাদনা → কার্ডের ভেতরেই ফর্ম; সংরক্ষণ → fetch + কার্ড ইন-প্লেস-আপডেট।
+   • ফলস-এরর-ফিক্স: আগের কোড {s,j}-অবজেক্টে res.ok দেখত (সবসময় undefined) —
+     ফলে সফল-সেভেও "সংরক্ষণ ব্যর্থ" অ্যালার্ট আসত। এখন স্ট্যাটাস-কোড যাচাই।
+   • খালি-স্লটে নাম দিলে নতুন সদস্য-রো তৈরি হয় (created:true → member_id-বসানো)। */
 (function () {
-  var modal = document.getElementById('hlModal');
-  var form  = document.getElementById('hlForm');
-  var F = function (id) { return document.getElementById(id); };
   var PLACEHOLDER = '/assets/img/avatar-placeholder.svg?v=2';
 
-  function fill(d) {
-    F('f_slot').value = d.key;
-    F('hlModalTitle').textContent = 'সম্পাদনা: ' + d.title;
-    F('f_member_id').value = d.member ? d.member.id : '';
-    F('f_photoPreview').src = d.displayImg || PLACEHOLDER;
-    F('f_image_url').value = d.member ? d.member.image_url : '';
-    F('f_photoFile').value = '';
-    F('f_name').value = d.member ? d.member.name : '';
-    F('f_name').disabled = !d.member;
-    F('f_name').required = !!d.member;
-    F('f_role').value = d.member ? d.member.role : '';
-    F('f_role').disabled = !d.member;
-    F('f_term_year').value = d.member ? d.member.term_year : '';
-    F('f_term_year').disabled = !d.member;
-    F('f_profile_url').value = d.member ? d.member.profile_url : '';
-    F('f_message').value = d.member ? d.member.message : '';
-    F('f_statement').value = d.statement || '';
-    F('f_social_fb').value = d.member ? d.member.social_fb : '';
-    F('f_social_linkedin').value = d.member ? d.member.social_linkedin : '';
-    F('f_social_email').value = d.member ? d.member.social_email : '';
-    var linked = !!(d.member && d.member.user_id);
-    F('f_syncRow').style.display = linked ? 'flex' : 'none';
-    F('f_sync_profile').checked = false;
-    if (linked) F('f_syncName').textContent = d.member.user_full_name || d.displayName || '';
-    F('f_memberFields').style.display = d.member ? 'block' : 'none';
-    modal.classList.add('open');
+  function wireCard(card) {
+    var view   = card.querySelector('[data-role="view"]');
+    var form   = card.querySelector('form.hl-edit');
+    var person = view.querySelector('[data-role="person"]');
+    var empty  = view.querySelector('[data-role="empty"]');
+    var bani   = view.querySelector('[data-role="bani"]');
+    var src    = view.querySelector('[data-role="src"]');
+    var okBadge  = card.querySelector('[data-role="saveOk"]');
+    var statusEl = form.querySelector('[data-role="status"]');
+    var editBtn  = card.querySelector('[data-edit]');
+    var preview  = form.querySelector('[data-role="preview"]');
+    var fileIn   = form.querySelector('[data-role="file"]');
+    var urlIn    = form.querySelector('[data-role="url"]');
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var okTimer = null;
+
+    function enterEdit() {
+      statusEl.textContent = ''; statusEl.classList.remove('err');
+      okBadge.hidden = true;
+      view.hidden = true; form.hidden = false; card.classList.add('editing');
+      var f = form.querySelector('input[name="name"]');
+      if (f && !f.value) f.focus();
+    }
+    function exitEdit() {
+      form.hidden = true; view.hidden = false; card.classList.remove('editing');
+      statusEl.textContent = ''; statusEl.classList.remove('err');
+    }
+    function showOk() {
+      okBadge.hidden = false;
+      if (okTimer) clearTimeout(okTimer);
+      okTimer = setTimeout(function () { okBadge.hidden = true; }, 2600);
+    }
+
+    editBtn.addEventListener('click', function () {
+      if (form.hidden) enterEdit(); else exitEdit();
+    });
+    form.querySelector('[data-cancel]').addEventListener('click', exitEdit);
+
+    // ছবি-প্রিভিউ: ফাইল বাছলে সেটা, নইলে URL
+    fileIn.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        var r = new FileReader();
+        r.onload = function (ev) { preview.src = ev.target.result; };
+        r.readAsDataURL(this.files[0]);
+        urlIn.value = '';
+      }
+    });
+    urlIn.addEventListener('input', function () {
+      var v = this.value.trim();
+      preview.src = v || PLACEHOLDER;
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      statusEl.textContent = ''; statusEl.classList.remove('err');
+      var old = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে…';
+      var fd = new FormData(form);
+      var tok = (form.querySelector('input[name="_csrf"]') || {}).value || '';
+      fetch(form.action, {
+        method: 'POST', body: fd,
+        headers: { 'Accept': 'application/json', 'X-CSRF-Token': tok },
+        credentials: 'same-origin'
+      }).then(function (r) {
+        return r.json().then(function (j) { return { s: r.status, j: j }; });
+      }).then(function (res) {
+        // ── ফিক্স: স্ট্যাটাস-কোড যাচাই (আগে res.ok — সবসময় undefined) ──
+        var statusOk = res.s >= 200 && res.s < 300;
+        if (statusOk && res.j && res.j.ok) {
+          var d = res.j.display || {};
+          var hasMember = !!(d.name || res.j.memberId);
+          if (hasMember) {
+            person.hidden = false; empty.hidden = true;
+            bani.hidden = false; src.hidden = false;
+            if (d.name) view.querySelector('[data-role="name"]').textContent = d.name;
+            if (d.img)  view.querySelector('[data-role="photo"]').src = d.img;
+            view.querySelector('[data-role="role"]').textContent = d.role || '—';
+            view.querySelector('[data-role="term"]').textContent = d.termText || '';
+            view.querySelector('[data-role="bani"]').textContent = d.bani || '—';
+            var srcEl = view.querySelector('[data-role="src"]');
+            srcEl.innerHTML = '<i class="fas fa-quote-left"></i> উৎস: ' + (d.src || 'ফলব্যাক-বাণী');
+            if (res.j.memberId) form.querySelector('input[name="member_id"]').value = res.j.memberId;
+            editBtn.innerHTML = '<i class="fas fa-pen-to-square"></i> সম্পাদনা';
+          }
+          exitEdit();
+          showOk();
+          submitBtn.disabled = false; submitBtn.innerHTML = old;
+        } else {
+          statusEl.textContent = (res.j && res.j.error) ? res.j.error : 'সংরক্ষণ ব্যর্থ হয়েছে — আবার চেষ্টা করুন।';
+          statusEl.classList.add('err');
+          submitBtn.disabled = false; submitBtn.innerHTML = old;
+        }
+      }).catch(function (err) {
+        console.error('hl save failed', err);
+        statusEl.textContent = 'নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন।';
+        statusEl.classList.add('err');
+        submitBtn.disabled = false; submitBtn.innerHTML = old;
+      });
+    });
   }
 
-  document.querySelectorAll('[data-open]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      try { fill(JSON.parse(b.getAttribute('data-open'))); }
-      catch (e) { console.error('slot data parse failed', e); }
-    });
-  });
+  document.querySelectorAll('.hl-slot').forEach(wireCard);
 
-  modal.querySelectorAll('[data-close]').forEach(function (b) {
-    b.addEventListener('click', function () { modal.classList.remove('open'); });
-  });
-  modal.addEventListener('click', function (e) { if (e.target === modal) modal.classList.remove('open'); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') modal.classList.remove('open'); });
-
-  // ছবি-প্রিভিউ: ফাইল বাছলে সেটা, নইলে URL
-  F('f_photoFile').addEventListener('change', function () {
-    if (this.files && this.files[0]) {
-      var r = new FileReader();
-      r.onload = function (ev) { F('f_photoPreview').src = ev.target.result; };
-      r.readAsDataURL(this.files[0]);
-      F('f_image_url').value = '';
+  // Esc — খোলা ইনলাইন-এডিটর বন্ধ (পরিবর্তন না-সেভ করেই)
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var openForm = document.querySelector('.hl-slot.editing');
+      if (openForm) {
+        openForm.classList.remove('editing');
+        openForm.querySelector('form.hl-edit').hidden = true;
+        openForm.querySelector('[data-role="view"]').hidden = false;
+      }
     }
-  });
-  F('f_image_url').addEventListener('input', function () {
-    var v = this.value.trim();
-    F('f_photoPreview').src = v || PLACEHOLDER;
-  });
-
-  // সেশন ৫৫: fetch-সাবমিট (multipart-এ CSRF-গার্ড X-CSRF-Token হেডার চায় —
-  // কোডবেস-প্যাটার্ন: admin/content.ejs, resource-bulk-modal) + JSON-জবাব
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var btn = form.querySelector('button[type=submit]');
-    var old = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> সংরক্ষণ হচ্ছে…'; }
-    var fd = new FormData(form);
-    var tok = (form.querySelector('input[name=_csrf]') || {}).value || '';
-    fetch(form.action, {
-      method: 'POST', body: fd,
-      headers: { 'Accept': 'application/json', 'X-CSRF-Token': tok },
-      credentials: 'same-origin'
-    }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
-      .then(function (res) {
-        if (res.ok && res.j.ok) {
-          window.location.href = '/admin/home-leadership?saved=1#slot-' + encodeURIComponent(res.j.slot || F('f_slot').value);
-        } else {
-          alert(res.j.error || 'সংরক্ষণ ব্যর্থ হয়েছে');
-          if (btn) { btn.disabled = false; btn.innerHTML = old; }
-        }
-      })
-      .catch(function (err) {
-        console.error('hl save failed', err);
-        alert('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন');
-        if (btn) { btn.disabled = false; btn.innerHTML = old; }
-      });
   });
 })();
 </script>
