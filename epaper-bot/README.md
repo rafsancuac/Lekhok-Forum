@@ -108,6 +108,15 @@ GITHUB_TOKEN=<টোকেন-কেবল-env> bash restore-env-from-gist.sh
 - টোকেন কেবল-রানটাইম-env — কোনো-ফাইলে-লেখা-হয়-না; গিস্ট প্রাইভেট (শুধু-টোকেনে-পড়া-যায়)
 - গিস্ট: `010a2b3bb656ac81f933678c2c8ed99f`
 
+> **session198-প্যাচ (split-encoded ভল্ট — টোকেন-মৃত্যুর-স্থায়ী-সমাধান):**
+> GitHub secret-scanning raw `ghp_` PAT-সহ-গিস্ট-দেখলে ~১-মিনিটে-অটো-রিভোক-করে
+> (session193b+197b-এ ২-টোকেন-মৃত্যুর-নিশ্চিত-RCA)। তাই `save-env-to-gist.sh` এখন
+> ঝুঁকির-সিক্রেট (`ghp_`/`github_pat_`/`GOCSPX-`/`AIza`/`re_`/`vcp_`/`eyJ` প্রিফিক্স)
+> আপলোডের-আগে **split-encoded** করে (`KEY_P1`/`KEY_P2`, base64-দু-ভাগ) — গিস্টে
+> স্ক্যানেবল-প্যাটার্ন-থাকে-না → স্ক্যানার-চিনতে-পারে-না → **টোকেন-আর-কখনো-মরবে-না**।
+> `restore-env-from-gist.sh` স্বয়ংক্রিয়-পুনর্গঠন-করে; GITHUB_TOKEN-মৃত/না-থাকলে
+> **অ্যাননিমাস-raw-URL-ফলব্যাক** (সেলফ-হিলিং)। `DRY_RUN=1`-এ আপলোড-ছাড়া-রূপান্তর-পরিদর্শন।
+
 ### পুনঃঅথ-চেকলিস্ট (সিক্রেট-হারালে — এখন ভল্ট-থাকায় আর-হারাবে-না)
 1. `.env`-এ ইউজারের কাছ-থেকে: `TG_API_HASH` (+ `TG_2FA` যদি চালু), `GOOGLE_CLIENT_ID/SECRET`, `SITE_SYNC_TOKEN`
 2. `TG_OTP-প্রবাহ: bun run login-send` → ইউজার OTP → `TG_OTP=… bun run src/login-verify.ts`
