@@ -22,6 +22,11 @@
  *   • CSV-এ "ইতিহাস" কলাম (Task60-প্রস্তাব-④) — noteHistory → কমপ্যাক্ট বাংলা অডিট-সারি (lib/support-history)
  *   • বয়স-SLA চিপ (আজকের সবুজ / X দিন ধরে অ্যাম্বার / ৩+ দিন লাল) + ৩+-দিন-স্টেল অ্যালার্ট-বার (ক্লিকে পুরাতন-আগে)
  *   • স্টাইল: মোট-কার্ড hover-লিফট (অন্য-স্ট্যাট-কার্ডের সাথে সামঞ্জস্য) + অ্যাকশন-বাটনে focus-ring
+ * session212 — কীবোর্ড-দক্ষতা প্যাক:
+ *   • j/k: কার্ড-কার্সর নেভিগেশন (smooth-scroll-center + সবুজ-রিং) · x: কার্সর-কার্ড বাল্ক-নির্বাচন টগল
+ *   • ১/২/৩ (ও 1/2/3): ট্যাব-সুইচ · ?: শর্টকাট-সহায়িকা-ওভারলে (Esc/ব্যাকড্রপ-বন্ধ) · Esc: কার্সর/সহায়িকা বন্ধ
+ *   • টুলবারে "শর্টকাট ?" হিন্ট-বাটন + lf-kbd কী-ক্যাপ স্টাইল (globals.css)
+ *   • হাউজকিপিং-চুক্তি: QA-সুইট নিজের-জঞ্জাল নিজেই-মোছে (task52/54-সুইটে স্বয়ংক্রিয়-ক্লিনআপ)
  */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -38,6 +43,7 @@ import {
   History,
   Hourglass,
   Inbox,
+  Keyboard,
   Image as ImageIcon,
   Link2,
   Loader2,
@@ -52,6 +58,17 @@ import {
   X,
   XCircle,
 } from 'lucide-react'
+
+/** session212 — শর্টকাট-সহায়িকা (?-ওভারলে) */
+const SHORTCUTS: { keys: string[]; desc: string }[] = [
+  { keys: ['j'], desc: 'পরের অভিযোগে যান' },
+  { keys: ['k'], desc: 'আগের অভিযোগে যান' },
+  { keys: ['x'], desc: 'কার্সর-কার্ড নির্বাচন টগল (বাল্ক-টুলবার)' },
+  { keys: ['১', '২', '৩'], desc: 'ট্যাব: নতুন / চলমান / সমাধান' },
+  { keys: ['/'], desc: 'অনুসন্ধান-বক্সে ফোকাস' },
+  { keys: ['?'], desc: 'এই সহায়িকা খোলা/বন্ধ' },
+  { keys: ['Esc'], desc: 'কার্সর বা সহায়িকা বন্ধ' },
+]
 import AdminGate, { useAdminGate } from '@/components/admin/AdminGate'
 import { bn } from '@/lib/format'
 import { agingInfo, historySummaryBn, staleCount } from '@/lib/support-history'
@@ -450,6 +467,9 @@ function SupportReportsPanel() {
   // session211 — URL-স্টেট-সিঙ্ক + রিপোর্ট-ডিপ-লিংক (?report=<id> শেয়ারযোগ্য)
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null)
   const [hlId, setHlId] = useState<string | null>(null)
+  /** session212 — কীবোর্ড-কার্সর (shown-ইনডেক্স; -1 = নিষ্ক্রিয়) + শর্টকাট-সহায়িকা-ওভারলে */
+  const [cursor, setCursor] = useState(-1)
+  const [helpOpen, setHelpOpen] = useState(false)
   const hydratedRef = React.useRef(false)
   const linkIdRef = React.useRef<string | null>(null)
 
@@ -503,6 +523,11 @@ function SupportReportsPanel() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  /** session212 — ফিল্টার-বদলে কীবোর্ড-কার্সর রিসেট (১৫-সেকেন্ড-পোল-রিফ্রেশে অটুট-থাকে) */
+  useEffect(() => {
+    setCursor(-1)
+  }, [tab, mediaFilter, dateRange, query, sortAsc])
 
   /** session211 — মাউন্টে URL-প্যারাম হাইড্রেট (?tab/&media/&date/&q/&sort/&report) — এক-বার */
   useEffect(() => {
@@ -646,6 +671,9 @@ function SupportReportsPanel() {
       return sortAsc ? da - db : db - da
     })
   }, [reports, tab, mediaFilter, query, dateRange, sortAsc])
+
+  /** session212 — ক্ল্যাম্পড-কার্সর (পোলে রেকর্ড-কমলে ইনডেক্স-অসফল-এড়াই) */
+  const cursorIdx = cursor >= 0 && cursor < shown.length ? cursor : -1
 
   /** CSV-এক্সপোর্ট — session207: বর্তমান-ফিল্টার-অনুযায়ী (ট্যাব+অনুসন্ধান+মিডিয়া+তারিখ+ক্রম), UTF-8 BOM, RFC-4180 */
   const exportCsv = useCallback(async () => {
@@ -802,6 +830,68 @@ function SupportReportsPanel() {
   const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }, [])
+
+  /** session212 — ডেস্ক কীবোর্ড-দক্ষতা: j/k নেভিগেট · x নির্বাচন-টগল · ১/২/৩ ট্যাব · ? সহায়িকা · Esc বন্ধ */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null
+      const typing = el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)
+      if (e.key === 'Escape') {
+        if (lightbox) return
+        if (helpOpen) {
+          e.preventDefault()
+          setHelpOpen(false)
+          return
+        }
+        if (!typing) setCursor(-1)
+        return
+      }
+      if (helpOpen || typing || bulkBusy || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault()
+        setHelpOpen((h) => !h)
+        return
+      }
+      if (shown.length === 0) return
+      if (e.key === 'j' || e.key === 'J') {
+        e.preventDefault()
+        const base = cursor >= 0 && cursor < shown.length ? cursor : -1
+        const next = Math.min(base + 1, shown.length - 1)
+        setCursor(next)
+        try {
+          document
+            .querySelector(`[data-report="${shown[next].id}"]`)
+            ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        } catch {
+          /* ignore */
+        }
+        return
+      }
+      if (e.key === 'k' || e.key === 'K') {
+        e.preventDefault()
+        const base = cursor >= 0 && cursor < shown.length ? cursor : shown.length
+        const next = Math.max(base - 1, 0)
+        setCursor(next)
+        try {
+          document
+            .querySelector(`[data-report="${shown[next].id}"]`)
+            ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        } catch {
+          /* ignore */
+        }
+        return
+      }
+      if ((e.key === 'x' || e.key === 'X') && cursor >= 0 && cursor < shown.length) {
+        toggleSelect(shown[cursor].id)
+        return
+      }
+      if (e.key === '1' || e.key === '১') setTab('PENDING')
+      else if (e.key === '2' || e.key === '২') setTab('IN_PROGRESS')
+      else if (e.key === '3' || e.key === '৩') setTab('RESOLVED')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [shown, cursor, helpOpen, lightbox, bulkBusy, toggleSelect])
 
   const allShownSelected = shown.length > 0 && shown.every((r) => selected.includes(r.id))
 
@@ -1015,6 +1105,20 @@ function SupportReportsPanel() {
               )}
             </p>
           )}
+          {/* session212 — শর্টকাট-সহায়িকা হিন্ট (সবসময়-দৃশ্যমান) */}
+          <button
+            onClick={() => setHelpOpen(true)}
+            type="button"
+            title="কীবোর্ড শর্টকাট দেখুন (? চাপুন)"
+            aria-label="কীবোর্ড শর্টকাট সহায়িকা খুলুন"
+            className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0"
+          >
+            <Keyboard className="w-3 h-3" aria-hidden />
+            শর্টকাট
+            <kbd className="lf-kbd" aria-hidden>
+              ?
+            </kbd>
+          </button>
         </div>
         {/* session207 — তারিখ-সীমা চিপ + ক্রম-টগল (সব-ক্লায়েন্ট-সাইড) */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -1116,15 +1220,20 @@ function SupportReportsPanel() {
               </span>
             )}
           </div>
-          {shown.map((r) => (
+          {shown.map((r, i) => (
             <article
               key={r.id}
               data-report={r.id}
+              aria-current={cursorIdx === i || undefined}
               className={`bg-white border rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 transition-all hover:shadow-md lf-anim-fade ${
                 selected.includes(r.id)
                   ? 'border-[#006A4E] ring-2 ring-[#006A4E]/20 ' + ACCENT[r.status]
                   : `border-[#CED0D4] ${ACCENT[r.status]}`
-              } ${hlId === r.id ? 'ring-2 ring-[#F59E0B]/70 lf-anim-hl' : ''}`}
+              } ${hlId === r.id ? 'ring-2 ring-[#F59E0B]/70 lf-anim-hl' : ''} ${
+                cursorIdx === i && !selected.includes(r.id) && hlId !== r.id
+                  ? 'ring-2 ring-[#006A4E]/60 shadow-md'
+                  : ''
+              }`}
             >
               {/* বাল্ক-নির্বাচন + প্রেরক-বার (session202: অ্যাভাটার + আপেক্ষিক-সময়) */}
               <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -1376,6 +1485,55 @@ function SupportReportsPanel() {
             >
               <X className="w-3.5 h-3.5" aria-hidden />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* session212 — কীবোর্ড-শর্টকাট সহায়িকা (? ওভারলে; Esc/ব্যাকড্রপ-বন্ধ) */}
+      {helpOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 lf-anim-fade"
+          onClick={() => setHelpOpen(false)}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="কীবোর্ড শর্টকাট সহায়িকা"
+            onClick={(e) => e.stopPropagation()}
+            className="lf-anim-pop bg-white border border-[#CED0D4] rounded-[14px] shadow-2xl max-w-sm w-full p-5 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-[14px] font-extrabold text-[#050505] flex items-center gap-2">
+                <Keyboard className="w-4 h-4 text-[#006A4E]" aria-hidden />
+                কীবোর্ড শর্টকাট
+              </h2>
+              <button
+                onClick={() => setHelpOpen(false)}
+                type="button"
+                aria-label="সহায়িকা বন্ধ করুন"
+                className="p-1.5 rounded-full text-[#65676B] hover:bg-[#F0F2F5] hover:text-[#050505] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+              >
+                <X className="w-4 h-4" aria-hidden />
+              </button>
+            </div>
+            <ul className="divide-y divide-[#F0F2F5] text-[12px]">
+              {SHORTCUTS.map((s) => (
+                <li key={s.keys.join('+')} className="flex items-center justify-between gap-3 py-2">
+                  <span className="text-[#4B4C4F] font-medium">{s.desc}</span>
+                  <span className="flex items-center gap-1 shrink-0">
+                    {s.keys.map((k) => (
+                      <kbd key={k} className="lf-kbd">
+                        {k}
+                      </kbd>
+                    ))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[10.5px] text-[#65676B]">
+              টিপ: ইনপুট বা টেক্সট-এরিয়ায় লেখার-সময় শর্টকাট নিষ্ক্রিয় থাকে।
+            </p>
           </div>
         </div>
       )}
