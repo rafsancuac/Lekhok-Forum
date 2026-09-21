@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
+import { getSupportAdminId } from '@/lib/support'
 
 /**
  * GET  /api/messages/conversations/[id] → থ্রেডের মেসেজগুলো (খুললেই আমার কাছে আসা মেসেজ 'পড়া' হয়ে যায়)
  * POST /api/messages/conversations/[id] → মেসেজ পাঠানো
  *      টেক্সট:  { content: "..." }
  *      ভয়েস:   { type: 'VOICE', audioUrl: '/uploads/...', duration: 12 }  ← রেকর্ডার-সাইড সেকেন্ড (০:০০-বাগ-স্থায়ী-সমাধান)
+ *
+ * Task 43 — সাপোর্ট-মিরর: সাপোর্ট-অ্যাডমিনকে পাঠানো প্রতিটি মেসেজ UserReport-এ মিরর হয়
+ * (VOICE→AUDIO ম্যাপ) — নীরব-ব্যর্থতা: মিরর-ব্যর্থ হলেও মূল মেসেজ-প্রবাহ অক্ষুণ্ণ।
  */
 
 const MAX_TEXT = 2000
@@ -22,6 +26,34 @@ async function getConversation(id: string, meId: string) {
     },
     include: { participantA: true, participantB: true },
   })
+}
+
+/**
+ * Task 43 — সাপোর্ট-উদ্দিষ্ট মেসেজের UserReport-মিরর (নীরব-ব্যর্থতা)
+ * প্রাপক বর্তমান সাপোর্ট-অ্যাডমিন হলে UserReport-রো লেখে — রিভিউ-ডেস্কে সাজানোর জন্য।
+ */
+async function mirrorSupportReport(
+  me: { id: string; name: string; email: string },
+  conv: { participantAId: string; participantBId: string },
+  payload: { text: string; type: 'TEXT' | 'IMAGE' | 'AUDIO' | 'VIDEO'; mediaUrl?: string | null }
+) {
+  try {
+    const otherId = conv.participantAId === me.id ? conv.participantBId : conv.participantAId
+    const supportId = await getSupportAdminId()
+    if (!supportId || otherId !== supportId) return
+    await db.userReport.create({
+      data: {
+        senderId: me.id,
+        senderName: me.name,
+        senderEmail: me.email,
+        messageText: payload.text,
+        mediaType: payload.type,
+        mediaUrl: payload.mediaUrl ?? null,
+      },
+    })
+  } catch (err) {
+    console.error('UserReport mirror failed (non-blocking):', err)
+  }
 }
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -107,6 +139,12 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         },
       })
       await db.conversation.update({ where: { id }, data: { updatedAt: new Date() } })
+      // Task 43: সাপোর্ট-মিরর (VOICE→AUDIO, নীরব-ব্যর্থতা)
+      await mirrorSupportReport(me, conv, {
+        text: `🎙️ ভয়েস মেসেজ (${Math.round(duration)} সেকেন্ড)`,
+        type: 'AUDIO',
+        mediaUrl: audioUrl,
+      })
       return NextResponse.json({
         message: { ...message, isMine: true },
       })
@@ -121,6 +159,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       data: { conversationId: id, senderId: me.id, type: 'TEXT', content },
     })
     await db.conversation.update({ where: { id }, data: { updatedAt: new Date() } })
+    // Task 43: সাপোর্ট-মিরর (TEXT, নীরব-ব্যর্থতা)
+    await mirrorSupportReport(me, conv, { text: content, type: 'TEXT' })
 
     return NextResponse.json({ message: { ...message, isMine: true } })
   } catch (err) {

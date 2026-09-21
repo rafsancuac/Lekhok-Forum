@@ -19,8 +19,10 @@ import {
   MessageCircleDashed,
   MessagesSquare,
   Mic,
+  Pin,
   Send,
   Search,
+  ShieldCheck,
   Phone,
   Video,
   X,
@@ -51,6 +53,10 @@ interface ConvItem {
     isMine: boolean;
   } | null;
   unreadCount: number;
+  // Task 43 — অফিসিয়াল সাপোর্ট-পিন (সার্ভার-ইনজেক্টেড, আনপিন/ডিলিট-অযোগ্য)
+  isSupportOfficial?: boolean;
+  isPinned?: boolean;
+  supportUserId?: string; // প্লেসহোল্ডার-রো ক্লিকে find-or-create রেজলভ
 }
 
 interface MsgItem {
@@ -276,6 +282,20 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
     [loadConversations, openConversation, reportError]
   );
 
+  /* ─── তালিকা-রো ক্লিক: প্লেসহোল্ডার-সাপোর্ট হলে find-or-create রেজলভ, না-হলে সরাসরি খোলা ───
+     RCA (Task 43): threadIdRef(API-আইডি) বনাম activeIdRef(তালিকা-আইডি) আলাদা —
+     প্লেসহোল্ডার-আইডি 'system-support-chat' কখনো থ্রেড-ফেচে যায় না; আগে বাস্তব-আইডি নিয়ে আসি। */
+  const openConvRow = useCallback(
+    async (c: ConvItem) => {
+      if (c.id === 'system-support-chat' && c.supportUserId) {
+        await startWith(c.supportUserId);
+        return;
+      }
+      openConversation(c.id);
+    },
+    [openConversation, startWith]
+  );
+
   const filteredUsers = useMemo(() => {
     const q = search.trim().toLowerCase();
     return users.filter((u) => u.id !== me.id && (!q || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)));
@@ -294,6 +314,8 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
     if (m.type === 'VOICE') return '🎙️ ভয়েস মেসেজ';
     return m.content || '';
   };
+
+  const isSupportRow = (c: ConvItem) => !!c.isSupportOfficial;
 
   /* ═══ থ্রেড-প্যান ═══ */
   const threadPane = (
@@ -320,8 +342,17 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
               <span className="w-10 h-10 rounded-full bg-[#4e4f50]" />
             )}
             <div className="min-w-0 flex-1">
-              <p className="font-bold text-white text-[15px] leading-tight truncate">
-                {activeConv.other.name}
+              <p className="font-bold text-white text-[15px] leading-tight truncate flex items-center gap-1.5">
+                <span className="truncate">{activeConv.other.name}</span>
+                {activeConv.isSupportOfficial && (
+                  <span
+                    className="shrink-0 inline-flex items-center gap-1 text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-[#00a86b]/20 text-[#33d79f] border border-[#00a86b]/40"
+                    title="অফিসিয়াল সাপোর্ট — পিন-লক"
+                  >
+                    <ShieldCheck className="w-3 h-3" aria-hidden />
+                    অফিসিয়াল সাপোর্ট
+                  </span>
+                )}
               </p>
               <p className="text-[11px] text-[#8a8d91] truncate">@{activeConv.other.username}</p>
             </div>
@@ -342,6 +373,18 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
               <Video className="w-4.5 h-4.5" />
             </button>
           </div>
+
+          {/* Task 43: সাপোর্ট-কেন্দ্র স্ট্যাটিক-হিন্ট (শুধু অফিসিয়াল সাপোর্ট-থ্রেডে) */}
+          {activeConv.isSupportOfficial && (
+            <div
+              role="note"
+              aria-label="সাপোর্ট কেন্দ্র বিজ্ঞপ্তি"
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#006a4e]/20 border-b border-[#00a86b]/25 text-[11px] text-[#33d79f] shrink-0"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden />
+              সাপোর্ট কেন্দ্র — এখানে পাঠানো প্রতিটি অভিযোগ ম্যানেজমেন্টের রিভিউ-ডেস্কে রেকর্ড হয়
+            </div>
+          )}
 
           {/* মেসেজ-লিস্ট */}
           <div
@@ -365,7 +408,9 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
                 )}
                 <p className="font-bold text-white">{activeConv.other.name}</p>
                 <p className="text-xs text-[#8a8d91]">
-                  কথোপকথন শুরু করুন — টেক্সট লিখুন বা ভয়েস পাঠান 🎙️
+                  {activeConv.isSupportOfficial
+                    ? 'সাপোর্ট কেন্দ্রে স্বাগতম — অভিযোগ লিখুন বা ভয়েস পাঠান 🛡️'
+                    : 'কথোপকথন শুরু করুন — টেক্সট লিখুন বা ভয়েস পাঠান 🎙️'}
                 </p>
               </div>
             ) : (
@@ -558,53 +603,81 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
                 )}
 
                 {/* কথোপকথনের রো */}
-                {filteredConvs.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => openConversation(c.id)}
-                    className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-left transition group/conv ${
-                      activeId === c.id ? 'bg-[#3a3b3c]' : 'hover:bg-[#3a3b3c]/70'
-                    }`}
-                    type="button"
-                  >
-                    <span className="relative shrink-0">
-                      {c.other.avatarUrl ? (
-                        <img
-                          src={c.other.avatarUrl}
-                          alt=""
-                          className="w-12 h-12 rounded-full ring-1 ring-white/10"
-                        />
-                      ) : (
-                        <span className="w-12 h-12 rounded-full bg-[#4e4f50] block" />
-                      )}
-                      {c.unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#00a86b] text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-[#242526] lf-unread-chip">
-                          {bn(c.unreadCount)}
+                {filteredConvs.map((c) => {
+                  const support = isSupportRow(c);
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => void openConvRow(c)}
+                      className={`w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-left transition group/conv ${
+                        activeId === c.id ? 'bg-[#3a3b3c]' : 'hover:bg-[#3a3b3c]/70'
+                      } ${support ? 'bg-[#006a4e]/10 border-l-[3px] border-[#00a86b]' : ''}`}
+                      type="button"
+                      aria-label={
+                        support
+                          ? `${c.other.name} — অফিসিয়াল সাপোর্ট, পিন-লক করা, আনপিন করা যাবে না`
+                          : `${c.other.name} — কথোপকথন খুলুন`
+                      }
+                    >
+                      <span className="relative shrink-0">
+                        {c.other.avatarUrl ? (
+                          <img
+                            src={c.other.avatarUrl}
+                            alt=""
+                            className={`w-12 h-12 rounded-full ring-1 ring-white/10 ${support ? 'ring-2 ring-[#00a86b]/50' : ''}`}
+                          />
+                        ) : (
+                          <span className="w-12 h-12 rounded-full bg-[#4e4f50] block" />
+                        )}
+                        {support && (
+                          <span
+                            className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#00a86b] flex items-center justify-center ring-2 ring-[#242526]"
+                            title="অফিসিয়াল সাপোর্ট"
+                            aria-hidden
+                          >
+                            <ShieldCheck className="w-3 h-3 text-white" />
+                          </span>
+                        )}
+                        {c.unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-[#00a86b] text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-[#242526] lf-unread-chip">
+                            {bn(c.unreadCount)}
+                          </span>
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="text-[14.5px] font-bold text-white truncate flex items-center gap-1.5 min-w-0">
+                            <span className="truncate">{c.other.name}</span>
+                            {support && (
+                              <span
+                                className="shrink-0 inline-flex items-center gap-0.5 text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-full bg-[#00a86b]/20 text-[#33d79f] border border-[#00a86b]/40"
+                                title="অফিসিয়াল সাপোর্ট — পিন-লক (আনপিন/ডিলিট করা যাবে না)"
+                              >
+                                <Pin className="w-2.5 h-2.5" aria-hidden />
+                                সাপোর্ট
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-[10.5px] text-[#8a8d91] shrink-0 font-semibold">
+                            {c.lastMessage ? formatBdTime(c.lastMessage.createdAt) : ''}
+                          </span>
                         </span>
-                      )}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center justify-between gap-2">
-                        <span className="text-[14.5px] font-bold text-white truncate">
-                          {c.other.name}
-                        </span>
-                        <span className="text-[10.5px] text-[#8a8d91] shrink-0 font-semibold">
-                          {c.lastMessage ? formatBdTime(c.lastMessage.createdAt) : ''}
+                        <span className="flex items-center gap-1 mt-0.5">
+                          <span
+                            className={`text-[12.5px] truncate ${
+                              c.unreadCount > 0 ? 'text-white font-semibold' : 'text-[#b0b3b8]'
+                            }`}
+                          >
+                            {c.lastMessage?.isMine && <span className="text-[#8a8d91]">আপনি: </span>}
+                            {support && !c.lastMessage
+                              ? 'অভিযোগ বা সহায়তা-চাহিদা জানাতে মেসেজ লিখুন'
+                              : previewText(c.lastMessage).slice(0, 46)}
+                          </span>
                         </span>
                       </span>
-                      <span className="flex items-center gap-1 mt-0.5">
-                        <span
-                          className={`text-[12.5px] truncate ${
-                            c.unreadCount > 0 ? 'text-white font-semibold' : 'text-[#b0b3b8]'
-                          }`}
-                        >
-                          {c.lastMessage?.isMine && <span className="text-[#8a8d91]">আপনি: </span>}
-                          {previewText(c.lastMessage).slice(0, 46)}
-                        </span>
-                      </span>
-                    </span>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
 
                 {/* নতুন-কথোপকথন সেকশন */}
                 {filteredUsers.length > 0 && (

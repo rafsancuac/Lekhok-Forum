@@ -16,6 +16,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isManager } from '@/lib/roles'
 import { getCurrentUser } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -28,7 +29,7 @@ async function requireAdmin() {
   if (!user) {
     return { error: NextResponse.json({ error: 'লগইন প্রয়োজন' }, { status: 401 }) } as const
   }
-  if (user.role !== 'admin') {
+  if (!isManager(user.role)) {
     return { error: NextResponse.json({ error: 'শুধু অ্যাডমিনের জন্য অনুমোদিত' }, { status: 403 }) } as const
   }
   return { user } as const

@@ -2312,3 +2312,11 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 **গোটচা (পরের-এজেন্ট):** ① EJS-include আলাদা-ফাংশন-স্কোপ — নতুন partial-এ শেয়ার্ড-হেল্পার লাগলে lekhok-home.ejs-এ `locals.x = x` করুন ② home_member_order হোমের ক্রম-ওভাররাইড মাত্র — members.sort_order স্পর্শ করে না (কমিটি-পেজের ক্রম অক্ষত) ③ sql.js-লোকালে debounced-persist (200ms) — SIGKILL-এ শেষ-রাইট হারাতে পারে; প্রোড (Turso)-এ durable ④ স্যান্ডব্যাক্সে ব্যাকগ্রাউন্ড-প্রসেস টুল-কল-শেষে মরে — E2E-র সব-স্টেপ এক-কলে; গেটওয়ে-URL ফরম্যাট `http://localhost:81/<path>?XTransformPort=<port>` (path-আগে, query-পরে — উল্টো লিখলে path=/ হয়ে যায়)।
 
 **পরের-এজেন্ট: session194 থেকে।**
+
+---
+### session201 — Task43 সাপোর্ট-কেন্দ্র (cross-agent নোট)
+
+- **ইন্টিগ্রেশন-পয়েন্ট:** `SystemSetting(SUPPORT_ADMIN_ID)`-কে অন্য-কোথাও লাগলে `lib/support.ts`-এর হেল্পার ব্যবহার করুন — কাঁচা-কুয়েরি নয়। রোল-যাচাইয়ে `lib/roles.ts` (isManager/isSuperAdmin) — নতুন অ্যাডমিন-API-তে `user.role !== 'admin'`-স্টাইল-হার্ডকোড লিখলে super_admin বাদ-পড়বে।
+- **conversations-GET-চুক্তি:** প্রথম-আইটেম = সাপোর্ট-পিন (placeholder হলে id='system-support-chat' + supportUserId) — ফ্রন্টএন্ডে তালিকা-ম্যানিপুলেশন করলে এ-আইটেম সরাবেন-না।
+- **UserReport:** User-FK-বিহীন (senderId শুধু-স্ট্রিং) — JOIN-লাগলে অ্যাপ-স্তরে করুন; seed-reset-এ `db.userReport.deleteMany()` অবশ্যই (ক্যাসকেড-নেই)।
+- **Vercel-পোর্ট-নোট:** Task43-Next-অ্যাপ এখনো লোকাল-ডেমো-DB (prisma/dev.db) — প্রোডে এ-ফিচার Turso-পোর্টের-পরে যাবে (তখন db push-তে enum মনে-রাখবেন)।

@@ -49,6 +49,13 @@ const ADMIN_NAVIGATION: NavGroup[] = [
     ],
   },
   {
+    title: '🛡️ সাপোর্ট কেন্দ্র',
+    items: [
+      { label: 'অভিযোগ রিভিউ ডেস্ক', href: '/admin/support/reports', icon: '🛡️' },
+      { label: 'সাপোর্ট-অ্যাডমিন নির্ধারণ', href: '/admin/support/settings', icon: '📌' },
+    ],
+  },
+  {
     title: 'সাইট কনফিগারেশন',
     items: [{ label: 'ফুটার, হেল্পলাইন ও সোশ্যাল লিঙ্ক', href: '/admin/settings/footer-social', icon: '⚙️' }],
   },

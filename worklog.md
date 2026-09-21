@@ -3104,3 +3104,15 @@ Stage Summary:
 - প্রোড-প্রভাব: eye-টগল=তৎক্ষণাৎ-সেভ+প্রয়োগ (লগড-ইন সাথে-সাথে; অ্যানোনিমাস ≤~১ মিনিট এজ-স্টেল); দুই আইটেমের বর্তমান hidden-অবস্থা অপরিবর্তিত (ইউজার-অভিপ্রায়)
 - 'উপদেষ্টাদের তালিকা'/'স্থায়ী পরিষদ' পুনরায় দেখাতে: মেনু-এডিটরে eye-টগল → অটো-সেভই যথেষ্ট (আর আলাদা-সেভ-বোতাম লাগবে না)
 - পরের-এজেন্ট: session202 লেবেল; QA-সার্ভারে ejs-পিন নোট মেনে চলবে
+---
+## session201 (Task43-পুনঃনির্মাণ — অফিসিয়াল সাপোর্ট-অ্যাডমিন পিন + অভিযোগ-রিভিউ ডেস্ক)
+
+**বর্তমান-অবস্থা:** sandbox-reset-এ হারানো Task43-কোড ইউজারের নতুন GitHub-PAT (V3, .secrets/gh-token, চ্যাটে-প্রিন্ট-নয়) দিয়ে fresh-clone @daf0b1f-এ সম্পূর্ণ-পুনঃনির্মাণ হয়েছে — worklog "Task ID: 43"-স্পেক + task43-playbook ধাপ ০-৯ হুবহু অনুসৃত।
+
+**কাজ:** Prisma SystemSetting/UserReport/ReportStatus + lib/roles.ts+support.ts + conversations-GET সার্ভার-পিন-ইনজেকশন (placeholder 'system-support-chat') + MessengerView পিন-লক-UI (ShieldCheck/পিন-চিপ/aria-লক/সাপোর্ট-পিল/হিন্ট-বার) + [id]/POST UserReport-মিরর (VOICE→AUDIO, নীরব) + /api/admin/support-admin (super-only) + /api/admin/support-reports (manager∨সাপোর্ট) + প্যানেল ×২ (/admin/support/settings+reports) + অ্যাডমিন-নেভ "🛡️ সাপোর্ট কেন্দ্র" + ওভারভিউ-কার্ড ×২ + সিড (ismail=super, nusrat=admin+ডিফল্ট-সাপোর্ট, seed-support idempotent) + ৪-পুরনো-অ্যাডমিন-API isManager-আপগ্রেড + AdminGate requireSuper।
+
+**E2E:** রোল-ম্যাট্রিক্স (member 403/403 · admin 200/403 · super 200/200) ✓ · পিন-রো+aria ✓ · ক্লিক-রেজলভ ✓ · মিরর-DB-প্রমাণ (curl+ব্রাউজার-মেসেজ ডেস্কে) ✓ · টোস্ট-নির্ধারণ/স্টেটাস/নোট ✓ · কাউন্ট-লাইভ (4→3/0→1) ✓ · মোবাইল-390 সোয়াপ hScroll-০ ✓ · লক-স্ক্রিন (member+admin-ও-ব্লক) ✓ · কনসোল-০ ✓ · tsc+eslint-০ ✓
+
+**গোটচা:** শেল-গ্লোবাল DATABASE_URL-ওভাররাইডে প্রথম-বুট স্যান্ডবক্স-DB-তে লিখেছিল — .env+rebuild-script-এ এক্সপ্লিসিট-পাথ-ফিক্স; dev.db .gitignore-যোগ; অথর-config rafsancuac@users.noreply.github.com যাচাইকৃত।
+
+**পরের-এজেন্ট: session202 লেবেল।**

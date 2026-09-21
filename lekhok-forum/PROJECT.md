@@ -2898,3 +2898,25 @@ git push origin main
 ## §১৯৩ (session193 — ইউজার-স্পেক: নেতৃত্ব-কার্ড কম্প্যাক্ট+অ্যানিমেশন-পুনরুদ্ধার + আজকের-কন্টেন্ট ফিড-আদল + হোমপেজ রি-অর্ডারিং) — অ্যাডমিন-নিয়ন্ত্রিত হোমপেজ লেআউট সিস্টেম (২১ সেপ্টেম্বর ২০২৬)
 
 চার-অংশের ইউজার-স্পেক: **① নেতৃত্ব-কার্ড** — `.leader-card-featured`-এর min-height:760px বাদ (কনটেন্ট-অনুযায়ী ৭০৩–৭৫০px, নিচের ফাঁকা-জায়গা শূন্য); session180-এর ডেড-CSS-রহস্য RCA (`.leaders-row` ক্লাস মার্কআপেই নেই) — সব ইফেক্ট এবার #leadership/#current-leadership ID-স্কোপে জীবন্ত: ৭px-হোভার-লিফট + গ্রেডিয়েন্ট-শিমার-টপবার + ফটো-ডাবল-রিং/সফট-জুম + রোল-ও কার্যবর্ষ-চিপ + বাণী কোট-বক্স (❝ + সফট-সারফেস, হোভারে মিন্ট) + সোশ্যাল-বিভাজক। **② সেকশন-ব্যাকগ্রাউন্ড** — ডট-ম্যাট্রিক্স/মাল্টি-অরোরা বাদ; মিন্ট-গ্রেডিয়েন্ট (#f4f8f6→#fff) + একক অ্যাম্বিয়েন্ট-আভা (blur-ঘন, 30/36s-ধীর-ড্রিফট, reduced-motion-অফ)। **③ "আজকের কন্টেন্ট"** — ইউজার-ফিড-আদলে ২-কলাম ব্যান্ড: বামে ব্যাজ+শিরোনাম+চেকমার্ক-৩+ডুয়াল-বাটন, ডানে "⚡ এক নজরে" অটো-স্লাইডার (আজকের বাস্তব daily_content-থেকে স্লাইড; অটো-৪সে+ডট+হোভার-বিরতি+reduced-motion-সম্মান)। **④ হোমপেজ রি-অর্ডারিং** — helpers/home-layout.js রেজিস্ট্রি (১০-সেকশন→partials/home/)+ হোম অর্ডার-চালিত partials-লুপে রিফ্যাক্টর; অ্যাডমিন /admin/home-reorder প্যানেল (সেকশন ▲▼+eye-টগল; ভেতরের কার্ড: নেতৃত্বের ৪-গ্রুপ + ফিড-স্লাইড; AJAX-সেভ) → settings.home_section_order/home_member_order/home_feed_order — সেভ-মুহূর্তেই পাবলিক হোমে প্রতিফলিত। E2E: সেকশন/কার্ড/স্লাইড রি-অর্ডার+রিভার্ট রাউন্ড-ট্রিপ, প্যানেল-persistence, মোবাইল-390 hScroll-০, কনসোল-০; guard/audit/compile গ্রিন; hex-baseline 1403-রি-ফ্রিজ। বিস্তারিত PLANS.md session193-নোট। **পরের-এজেন্ট: session194 থেকে।**
+
+## §২০১ (session201 — ইউজার-স্পেক Task43: অফিসিয়াল সাপোর্ট-অ্যাডমিন পিন + অভিযোগ-রিভিউ ডেস্ক) — lekhok-forum-next সম্পূর্ণ-পুনঃনির্মাণ (২১ সেপ্টেম্বর ২০২৬)
+
+**স্পেক:** (১) সব ইউজারের মেসেঞ্জার-তালিকার শীর্ষে অফিসিয়াল সাপোর্ট-অ্যাডমিন ডিফল্ট-পিন — আনপিন/ডিলিট-অযোগ্য, নতুন-ইউজারের তালিকাতেও; (২) সুপার-অ্যাডমিন যে-কোনো অ্যাডমিন-ইউজারকে সাপোর্ট-অ্যাডমিন নির্ধারণ/সরান; (৩) সব অভিযোগের (লেখা/ছবি/অডিও/ভিডিও) রিভিউ-ডেস্ক।
+
+**ইমপ্ল (lekhok-forum-next/):**
+- Prisma: `SystemSetting` (key="SUPPORT_ADMIN_ID") + `UserReport` (mediaType TEXT|IMAGE|AUDIO|VIDEO, status PENDING|IN_PROGRESS|RESOLVED, ক্যাসকেড-বিহীন → seed-reset-এ স্পষ্ট-ডিলিট) + enum `ReportStatus`
+- রোল-মডেল: `lib/roles.ts` (super_admin/admin/member; isManager/isSuperAdmin/roleLabel) — বিদ্যমান ৪ অ্যাডমিন-API-র role-check `isManager`-এ আপগ্রেড (super_admin-ও ঢুকতে পারে); AdminGate এখন admin+super গ্রহণ করে + `useAdminGate(requireSuper=true)` super-only মোড
+- `lib/support.ts`: getSupportAdmin/setSupportAdmin/clearSupportAdmin (SystemSetting-মাধ্যমী)
+- conversations-GET সার্ভার-সাইড পিন-ইনজেকশন: সাপোর্ট-সহ-বাস্তব-কথোপকথন splice+unshift (isSupportOfficial+isPinned), না-থাকলে প্লেসহোল্ডার `id='system-support-chat'` + supportUserId — ইউজার যা-ই-করুক সার্ভারে শীর্ষে-ই ফেরে
+- MessengerView: পিন-রো (ShieldCheck-ব্যাজ + পিন-সাপোর্ট-চিপ + বাম-বর্ডার-অ্যাকসেন্ট + aria "পিন-লক করা, আনপিন করা যাবে না"), থ্রেড-হেডার "অফিসিয়াল সাপোর্ট"-পিল + সাপোর্ট-কেন্দ্র-স্ট্যাটিক-হিন্ট-বার, প্লেসহোল্ডার-ক্লিকে find-or-create রেজলভ (threadIdRef/activeIdRef RCA), সার্চে-দৃশ্যমান
+- [id]/POST সাপোর্ট-মিরর: সাপোর্ট-উদ্দিষ্ট মেসেজ → UserReport (VOICE→AUDIO + mediaUrl) — নীরব-ব্যর্থতা (মূল-প্রবাহ অক্ষুণ্ণ)
+- API: `/api/admin/support-admin` (GET manager-view / POST super-only রোল-যাচাইসহ / DELETE super-only) + `/api/admin/support-reports` (GET status-filter+counts / PUT status+adminNote; অ্যাক্সেস manager বা নির্বাচিত-সাপোর্ট)
+- প্যানেল: `/admin/support/settings` (super-only: বর্তমান-কার্ড+রোল-ব্যাজ+সরান; ক্যান্ডিডেট-পিকার রোল∈[ADMIN,SUPER_ADMIN] + সার্চ + টোস্ট) + `/admin/support/reports` (স্টেটাস-ট্যাব-লাইভ-কাউন্ট + অভিযোগ-কার্ড + ছবি/অডিও/ভিডিও-প্রিভিউ + adminNote-সেভ + ১৫-সে-অটো-রিফ্রেশ)
+- নেভ: অ্যাডমিন-সাইডবার+মোবাইল-স্ক্রল "🛡️ সাপোর্ট কেন্দ্র" গ্রুপ (২-আইটেম) + ড্যাশবোর্ড-ওভারভিউ-কার্ড ×২
+- সিড: seed.ts-এ ismail=super_admin, nusrat=admin + UserReport/SystemSetting-স্পষ্ট-ডিলিট; `prisma/seed-support.ts` (username-লুকআপ — seed-messenger-এর position-RCA-প্যাচ): ডিফল্ট-সাপোর্ট=nusrat + ডেমো-সাপোর্ট-কথোপকথন + ২-অভিযোগ (TEXT+IMAGE) — idempotent
+
+**E2E-প্রমাণ (curl + agent-browser):** রোল-ম্যাট্রিক্স member 403/403 · admin 200/403 · super 200/200 ✓; পিন-রো aria-লক ✓; ক্লিক-রেজলভ-থ্রেড ✓; ব্রাউজার-মেসেজ → ডেস্কে মিরর (PENDING 4→3-পরিবর্তনে-লাইভ) ✓; সেটিংস-নির্ধারণ-টোস্ট "✅ মোহাম্মদ ইসমাইল এখন অফিসিয়াল সাপোর্ট-অ্যাডমিন" → রিস্টোর ✓; স্টেটাস-ট্রানজিশন + নোট-সেভ-টোস্ট ✓; মোবাইল-390 সোয়াপ hScroll-০ ✓; মেম্বার-লক-স্ক্রিন (settings super-only, admin-ও-ব্লক) ✓; কনসোল-০ ✓; tsc+eslint-০ ✓।
+
+**গোটচা (পরের-এজেন্ট):** ① শেল-এর গ্লোবাল DATABASE_URL=/home/z/my-project/db/custom.db prisma/seed/dev-সব-কিছু ওভাররাইড করে — ফোরাম-অ্যাপে সবসময় `DATABASE_URL="file:/home/z/lekhok-forum/lekhok-forum/lekhok-forum-next/prisma/dev.db"` এক্সপ্লিসিট (rebuild-script-এ ফিক্সড) ② UserReport/SystemSetting-এ User-FK নেই — seed-reset-এ deleteMany স্পষ্ট-রাখুন ③ placeholder-আইডি 'system-support-chat' কখনো থ্রেড-ফেচে যায় না — openConvRow আগে রেজলভ করে ④ সাপোর্ট-অ্যাডমিন নিজের তালিকায় সেলফ-পিন-পায় না (support.id!==me.id)।
+
+**পরের-এজেন্ট: session202 থেকে।**

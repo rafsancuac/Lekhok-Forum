@@ -9,6 +9,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isManager } from '@/lib/roles'
 import { getCurrentUser } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: 'লগইন প্রয়োজন' }, { status: 401 })
   }
-  if (user.role !== 'admin') {
+  if (!isManager(user.role)) {
     return NextResponse.json({ error: 'শুধু অ্যাডমিনের জন্য অনুমোদিত' }, { status: 403 })
   }
 

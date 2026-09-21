@@ -15,7 +15,13 @@ import type { FrontendUser } from '@/lib/types'
 
 export type GateState = 'loading' | 'ok' | 'denied'
 
-export function useAdminGate() {
+/**
+ * অ্যাডমিন-গেট-হুক।
+ * Task 43: requireSuper=true হলে শুধু super_admin ঢুকতে পারে (সাপোর্ট-অ্যাডমিন নির্ধারণ-প্যানেল);
+ * ডিফল্টে admin + super_admin — বিদ্যমান সব প্যানেল অক্ষত।
+ * ক্যান্ডিডেট-তালিকায় দুই-রোলই থাকে (ডেমো-সুইচার)।
+ */
+export function useAdminGate(requireSuper = false) {
   const [state, setState] = useState<GateState>('loading')
   const [adminCandidates, setAdminCandidates] = useState<FrontendUser[]>([])
 
@@ -23,12 +29,21 @@ export function useAdminGate() {
     try {
       const res = await fetch('/api/session')
       const sess = await res.json().catch(() => ({}))
-      setAdminCandidates((sess.users || []).filter((u: FrontendUser) => u.role === 'admin'))
-      setState(sess.current?.role === 'admin' ? 'ok' : 'denied')
+      setAdminCandidates(
+        (sess.users || []).filter(
+          (u: FrontendUser) => u.role === 'admin' || u.role === 'super_admin'
+        )
+      )
+      const role = sess.current?.role
+      setState(
+        (requireSuper ? role === 'super_admin' : role === 'admin' || role === 'super_admin')
+          ? 'ok'
+          : 'denied'
+      )
     } catch {
       setState('denied')
     }
-  }, [])
+  }, [requireSuper])
 
   useEffect(() => {
     let alive = true
@@ -38,8 +53,17 @@ export function useAdminGate() {
         const res = await fetch('/api/session')
         const sess = await res.json().catch(() => ({}))
         if (!alive) return
-        setAdminCandidates((sess.users || []).filter((u: FrontendUser) => u.role === 'admin'))
-        setState(sess.current?.role === 'admin' ? 'ok' : 'denied')
+        setAdminCandidates(
+          (sess.users || []).filter(
+            (u: FrontendUser) => u.role === 'admin' || u.role === 'super_admin'
+          )
+        )
+        const role = sess.current?.role
+        setState(
+          (requireSuper ? role === 'super_admin' : role === 'admin' || role === 'super_admin')
+            ? 'ok'
+            : 'denied'
+        )
       } catch {
         if (alive) setState('denied')
       }
@@ -47,7 +71,7 @@ export function useAdminGate() {
     return () => {
       alive = false
     }
-  }, [])
+  }, [requireSuper])
 
   return { state, adminCandidates, recheck: check }
 }

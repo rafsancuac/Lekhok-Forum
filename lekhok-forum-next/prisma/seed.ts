@@ -14,6 +14,10 @@ async function main() {
   console.log('🌱 Seeding Lekhok Forum demo data...')
 
   // পুরনো ডেটা পরিষ্কার (ডেমো রিসেট)
+  // Task 43: UserReport/SystemSetting ক্যাসকেড-বিহীন (User-র সাথে FK নেই) —
+  // ইউজার-ডিলিটে অটো-মুছে না-ও-যেতে পারে, তাই স্পষ্ট-ডিলিট (রিসেট-অর্ডার: স্বাধীন-টেবিল আগে)
+  await db.userReport.deleteMany()
+  await db.systemSetting.deleteMany()
   await db.comment.deleteMany()
   await db.postReaction.deleteMany()
   await db.mediaAttachment.deleteMany()
@@ -28,6 +32,7 @@ async function main() {
         email: 'ismail@lekhokforum.bd',
         bio: 'সাহিত্য সম্পাদক, লেখক ফোরাম। ছোটগল্প ও প্রবন্ধ লেখি।',
         avatarColor: '#006A4E',
+        role: 'super_admin', // Task 43: সুপার-অ্যাডমিন — সাপোর্ট-অ্যাডমিন নির্ধারণ-ক্ষমতা
       },
       {
         username: 'monem',
@@ -56,6 +61,7 @@ async function main() {
         email: 'nusrat@lekhokforum.bd',
         bio: 'ফ্ল্যাশ ফিকশন ও ছড়া লেখি। লেখক ফোরাম মডারেটর।',
         avatarColor: '#E11D48',
+        role: 'admin', // Task 43: ম্যানেজার — ডিফল্ট সাপোর্ট-অ্যাডমিন (seed-support সেট করে)
       },
     ].map(async (u) => {
       const initials = u.name
@@ -72,6 +78,7 @@ async function main() {
           email: u.email,
           bio: u.bio,
           avatarUrl,
+          role: (u as { role?: string }).role ?? 'member', // Task 43: রোল-সচেতন সিড
         },
       })
     })

@@ -368,3 +368,35 @@ model FooterSetting {
   isOn          Boolean  @default(true)
   updatedAt     DateTime @updatedAt
 }
+
+// ─── Task 43: অফিসিয়াল সাপোর্ট-অ্যাডমিন + অভিযোগ-রিভিউ ডেস্ক ───
+// SystemSetting = সাইট-স্তরের key-value কনফিগ (key: "SUPPORT_ADMIN_ID" = নির্বাচিত সাপোর্ট-অ্যাডমিনের User.id)
+// UserReport = সাপোর্ট-চ্যাটে পাঠানো প্রতিটি অভিযোগের মিরর (টেক্সট/ছবি/অডিও/ভিডিও) —
+// ক্যাসকেড-বিহীন স্বাধীন টেবিল (ইউজার-ডিলিটেও অভিযোগ-রেকর্ড টিকে থাকে) — seed-reset-এ স্পষ্ট-ডিলিট প্রয়োজন।
+model SystemSetting {
+  key       String   @id // "SUPPORT_ADMIN_ID"
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model UserReport {
+  id          String       @id @default(cuid())
+  senderId    String
+  senderName  String
+  senderEmail String?
+  messageText String
+  mediaType   String       @default("TEXT") // TEXT | IMAGE | AUDIO | VIDEO
+  mediaUrl    String?
+  status      ReportStatus @default(PENDING)
+  adminNote   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([status, createdAt])
+}
+
+enum ReportStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+}
