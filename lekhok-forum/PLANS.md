@@ -2397,3 +2397,12 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **SLA-টিয়ার:** fresh <২৪ঘ ("আজকের" সবুজ) · aging ১-২দিন (অ্যাম্বার) · stale ৩+দিন (লাল); স্টেল-অ্যালার্ট-বার = global (সব-রিপোর্টে) — ক্লিকে setTab('PENDING')+setSortAsc(true)।
 - **agent-browser-গোটচা ×১ (নতুন):** `viewport <w> <h>` standalone = Unknown-command → **`set viewport <w> <h>`**; ব্যর্থ-সিনট্যাক্সে ভিউপোর্ট-আগের-মানে-থেকে-যায় → hScroll-মিথ্যা-পাস/ফেল — মোবাইল-চেকের-আগে `window.innerWidth`-যাচাই-বাধ্যতামূলক।
 - **পরের-এজেন্ট: session211 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট; সার্ভার-পুশ (SSE/WebSocket)।
+
+### session211 — শেয়ারেবল-ডেস্ক-স্টেট প্যাক (cross-agent নোট)
+
+- **URL-চুক্তি (রিভিউ-ডেস্ক):** `?tab=PENDING|IN_PROGRESS|RESOLVED&media=ALL|TEXT|IMAGE|AUDIO|VIDEO&date=<DATE_RANGES.key>&q=<২০০-ক্লিপ>&sort=asc&report=<id>` — **ডিফল্ট-মান কখনো-ই URL-এ লেখা-হয়-না** (PENDING/ALL/asc/q-শূন্য); sync = ২৫০ms-ডিবাউন্স `history.replaceState` (pushState-নয় — back-button-অক্ষত); হাইড্রেট হোয়াইটলিস্ট-ভ্যালিডেশন (অবৈধ-মান → নীরবে-ডিফল্ট)।
+- **ডিপ-লিঙ্ক-চুক্তি:** `?report=<id>` এক-শট — লোড-শেষে (loading=false + reports>0) ট্যাব-অটো-মিলাই → scrollIntoView-center → `lf-anim-hl` (globals.css, `lf-hl-pulse` অ্যাম্বার-পালস) ৩.২s → স্ব-পরিষ্কার (URL থেকে report-প্যারাম নেমে-যায়, linkIdRef=null); অবৈধ-আইডে টোস্ট + URL-পরিষ্কার। কার্ড-টার্গেটিং = `article[data-report="<id>"]` — নতুন-গ্রাহক-কোড এ-অ্যাট্রিবিউটই ব্যবহার-করবে।
+- **কপি-লিঙ্ক-চুক্তি:** কার্ডের লেখা-ব্লকে বাটন-জোড়া (লিঙ্ক + লেখা) — `absolute top-2 right-2 flex gap-1` র‍্যাপারে; নতুন-বাটন-যোগ হলে সে-র‍্যাপারেই।
+- **a11y-র‍্যাচেট:** ডেস্কের সব-ইন্টারঅ্যাক্টিভ (ট্যাব-পিল/মিডিয়া-চিপ/তারিখ-চিপ/ক্রম-টগল/কপি-বাটন) এখন `focus-visible:ring-2 focus-visible:ring-[#006A4E]/40` — নতুন-বাটন-যোগেও এ-প্যাটার্ন-রক্ষা-করুন।
+- **গোটচা-পুনঃপ্রমাণ:** সাপোর্ট-অ্যাডমিন (নুসরাত) নিজের তালিকায় সেলফ-পিন-পায়-না (`support.id !== me.id` — সঠিক); সাধারণ-সদস্যে (মাহফুজ) ShieldCheck+Pin-পিন-রো-প্রথমে — ব্রাউজার-প্রমাণিত।
+- **পরের-এজেন্ট: session212 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট (স্বতন্ত্র-Vercel-প্রজেক্ট, rootDir=lekhok-forum-next); সার্ভার-পুশ (SSE/WebSocket) — দুটোই সাবধানে-পরিকল্পনা-ছাড়া-শুরু-নয়।

@@ -39,6 +39,7 @@ import {
   Hourglass,
   Inbox,
   Image as ImageIcon,
+  Link2,
   Loader2,
   Mic,
   Pencil,
@@ -446,6 +447,11 @@ function SupportReportsPanel() {
   const [dateRange, setDateRange] = useState('ALL')
   const [sortAsc, setSortAsc] = useState(false)
   const searchRef = React.useRef<HTMLInputElement>(null)
+  // session211 — URL-স্টেট-সিঙ্ক + রিপোর্ট-ডিপ-লিংক (?report=<id> শেয়ারযোগ্য)
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null)
+  const [hlId, setHlId] = useState<string | null>(null)
+  const hydratedRef = React.useRef(false)
+  const linkIdRef = React.useRef<string | null>(null)
 
   const flash = useCallback(
     (msg: string, undo?: { id: string; index: number; entry: HistoryEntry }, timeoutMs = 3000) => {
@@ -498,6 +504,72 @@ function SupportReportsPanel() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  /** session211 — মাউন্টে URL-প্যারাম হাইড্রেট (?tab/&media/&date/&q/&sort/&report) — এক-বার */
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search)
+      const tabP = sp.get('tab')
+      if (tabP === 'PENDING' || tabP === 'IN_PROGRESS' || tabP === 'RESOLVED') setTab(tabP)
+      const mediaP = sp.get('media')
+      if (mediaP && ['ALL', 'TEXT', 'IMAGE', 'AUDIO', 'VIDEO'].includes(mediaP)) setMediaFilter(mediaP)
+      const dateP = sp.get('date')
+      if (dateP && DATE_RANGES.some((d) => d.key === dateP)) setDateRange(dateP)
+      const qP = sp.get('q')
+      if (qP) setQuery(qP.slice(0, 200))
+      if (sp.get('sort') === 'asc') setSortAsc(true)
+      const rP = sp.get('report')
+      if (rP) linkIdRef.current = rP
+    } catch {
+      /* ignore */
+    }
+    hydratedRef.current = true
+  }, [])
+
+  /** session211 — ফিল্টার-স্টেট → URL replaceState (শেয়ারযোগ্য ডেস্ক-লিঙ্ক; ডিফল্ট-মান বাদ; ২৫০ms-ডিবাউন্স) */
+  useEffect(() => {
+    if (!hydratedRef.current) return
+    const t = setTimeout(() => {
+      try {
+        const sp = new URLSearchParams()
+        if (tab !== 'PENDING') sp.set('tab', tab)
+        if (mediaFilter !== 'ALL') sp.set('media', mediaFilter)
+        if (dateRange !== 'ALL') sp.set('date', dateRange)
+        if (query.trim()) sp.set('q', query.trim().slice(0, 200))
+        if (sortAsc) sp.set('sort', 'asc')
+        if (linkIdRef.current) sp.set('report', linkIdRef.current)
+        const qs = sp.toString()
+        history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+      } catch {
+        /* ignore */
+      }
+    }, 250)
+    return () => clearTimeout(t)
+  }, [tab, mediaFilter, dateRange, query, sortAsc])
+
+  /** session211 — ?report=<id> ডিপ-লিংক: লোড-শেষে ট্যাব-মিলাই + স্ক্রল + অ্যাম্বার-পালস-হাইলাইট (এক-বার) */
+  useEffect(() => {
+    const target = linkIdRef.current
+    if (!target || loading || reports.length === 0) return
+    linkIdRef.current = null
+    const r = reports.find((x) => x.id === target)
+    if (!r) {
+      flash('লিঙ্ক-করা অভিযোগটি আর পাওয়া যায়নি')
+      return
+    }
+    setTab(r.status)
+    setHlId(r.id)
+    const t = setTimeout(() => {
+      document
+        .querySelector(`article[data-report="${r.id}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 80)
+    const clear = setTimeout(() => setHlId(null), 3200)
+    return () => {
+      clearTimeout(t)
+      clearTimeout(clear)
+    }
+  }, [loading, reports, flash])
+
   /** ছবি-লাইটবক্স Esc-বন্ধ (session202) */
   useEffect(() => {
     if (!lightbox) return
@@ -528,6 +600,29 @@ function SupportReportsPanel() {
     }
     setCopiedId(r.id)
     setTimeout(() => setCopiedId((c) => (c === r.id ? null : c)), 1600)
+  }, [])
+
+  /** session211 — রিপোর্ট-ডিপ-লিঙ্ক কপি (?report=<id>) — clipboard API + legacy-fallback */
+  const copyLink = useCallback(async (r: Report) => {
+    const url = `${window.location.origin}${window.location.pathname}?report=${r.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+      } catch {
+        /* নীরব */
+      }
+      ta.remove()
+    }
+    setCopiedLinkId(r.id)
+    setTimeout(() => setCopiedLinkId((c) => (c === r.id ? null : c)), 1600)
   }, [])
 
   /** session207 — দৃশ্যমান-তালিকা: ট্যাব + মিডিয়া + তারিখ-সীমা + অনুসন্ধান + ক্রম (সব-ক্লায়েন্ট-সাইড) */
@@ -825,7 +920,7 @@ function SupportReportsPanel() {
             key={t.key}
             onClick={() => setTab(t.key)}
             type="button"
-            className={`px-3.5 py-2 rounded-[8px] text-xs font-bold border transition cursor-pointer flex items-center gap-2 ${
+            className={`px-3.5 py-2 rounded-[8px] text-xs font-bold border transition cursor-pointer flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
               tab === t.key
                 ? 'bg-[#006A4E] text-white border-[#006A4E] shadow-sm'
                 : 'bg-white text-[#4B4C4F] border-[#CED0D4] hover:border-[#006A4E]/50'
@@ -890,7 +985,7 @@ function SupportReportsPanel() {
                 onClick={() => setMediaFilter(m.key)}
                 type="button"
                 aria-pressed={mediaFilter === m.key}
-                className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
                   mediaFilter === m.key
                     ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
                     : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
@@ -931,7 +1026,7 @@ function SupportReportsPanel() {
                 onClick={() => setDateRange(d.key)}
                 type="button"
                 aria-pressed={dateRange === d.key}
-                className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer ${
+                className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
                   dateRange === d.key
                     ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
                     : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
@@ -946,7 +1041,7 @@ function SupportReportsPanel() {
             type="button"
             aria-label={sortAsc ? 'এখন পুরাতন-আগে — বদলে সাম্প্রতক-আগে করুন' : 'এখন সাম্প্রতক-আগে — বদলে পুরাতন-আগে করুন'}
             title="তালিকার ক্রম বদলান"
-            className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
+            className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer flex items-center gap-1.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
               sortAsc
                 ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
                 : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
@@ -1024,11 +1119,12 @@ function SupportReportsPanel() {
           {shown.map((r) => (
             <article
               key={r.id}
+              data-report={r.id}
               className={`bg-white border rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 transition-all hover:shadow-md lf-anim-fade ${
                 selected.includes(r.id)
-                  ? 'border-[#006A4E] ring-2 ring-[#006A4E]/20 ' + ACCENT[r.status].replace('border-l-', 'border-l-')
+                  ? 'border-[#006A4E] ring-2 ring-[#006A4E]/20 ' + ACCENT[r.status]
                   : `border-[#CED0D4] ${ACCENT[r.status]}`
-              }`}
+              } ${hlId === r.id ? 'ring-2 ring-[#F59E0B]/70 lf-anim-hl' : ''}`}
             >
               {/* বাল্ক-নির্বাচন + প্রেরক-বার (session202: অ্যাভাটার + আপেক্ষিক-সময়) */}
               <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -1100,19 +1196,34 @@ function SupportReportsPanel() {
                 <p className="text-[13px] leading-relaxed whitespace-pre-wrap break-words bg-[#F7F8FA] border border-[#E4E6EB] rounded-[8px] p-3 pr-9">
                   {r.messageText}
                 </p>
-                <button
-                  onClick={() => copyMsg(r)}
-                  type="button"
-                  aria-label="অভিযোগের লেখা কপি করুন"
-                  title="লেখা কপি"
-                  className="absolute top-2 right-2 p-1.5 rounded-[6px] bg-white border border-[#E4E6EB] text-[#65676B] hover:text-[#006A4E] hover:border-[#006A4E]/50 transition cursor-pointer"
-                >
-                  {copiedId === r.id ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" aria-hidden />
-                  )}
-                </button>
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button
+                    onClick={() => void copyLink(r)}
+                    type="button"
+                    aria-label="অভিযোগের শেয়ার-লিঙ্ক কপি করুন"
+                    title="লিঙ্ক কপি (?report=…) — লিঙ্ক খুললে এ-কার্ডে স্ক্রল-হাইলাইট"
+                    className="p-1.5 rounded-[6px] bg-white border border-[#E4E6EB] text-[#65676B] hover:text-[#006A4E] hover:border-[#006A4E]/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+                  >
+                    {copiedLinkId === r.id ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden />
+                    ) : (
+                      <Link2 className="w-3.5 h-3.5" aria-hidden />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => void copyMsg(r)}
+                    type="button"
+                    aria-label="অভিযোগের লেখা কপি করুন"
+                    title="লেখা কপি"
+                    className="p-1.5 rounded-[6px] bg-white border border-[#E4E6EB] text-[#65676B] hover:text-[#006A4E] hover:border-[#006A4E]/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+                  >
+                    {copiedId === r.id ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600" aria-hidden />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" aria-hidden />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* মিডিয়া-প্রিভিউ */}
