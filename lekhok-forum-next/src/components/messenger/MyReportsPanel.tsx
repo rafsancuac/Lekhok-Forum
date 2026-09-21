@@ -9,8 +9,9 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Loader2, ShieldCheck, X, MessageSquare, Image as ImageIcon, Mic, Video, RefreshCw } from 'lucide-react';
+import { Loader2, ShieldCheck, X, MessageSquare, Image as ImageIcon, Mic, Video, RefreshCw, BellRing } from 'lucide-react';
 import { bn } from '@/lib/format';
+import { getSeenMs, markSeen, hasNewReply, MY_REPORTS_SEEN_EVENT } from '@/lib/my-reports-seen';
 
 interface MyReport {
   id: string;
@@ -62,6 +63,9 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterKey>('ALL');
   const panelRef = useRef<HTMLDivElement>(null);
+  // session204 (Task 55) — "নতুন জবাব" অপঠিত-ট্র্যাকিং (localStorage last-seen)
+  const [seenMs, setSeenMs] = useState(0);
+  const loadedRef = useRef(false); // এই-ওপেনে সফল-লোড হয়েছে? (error-অবস্থায় markSeen নয়)
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -72,6 +76,8 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
       const data = await res.json();
       setReports(data.reports || []);
       setCounts(data.counts || { PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0 });
+      loadedRef.current = true;
+      setSeenMs(getSeenMs());
     } catch (err) {
       console.error('[আমার অভিযোগ]', err);
       setError(err instanceof Error ? err.message : 'অভিযোগ লোড ব্যর্থ');
@@ -84,6 +90,22 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
   useEffect(() => {
     if (open) load();
   }, [open, load]);
+
+  // session204 — প্যানেল বন্ধ হলে সফল-লোড-হলে "দেখা হলো" চিহ্নিত (পড়ার-সময় ব্যাজ থাকে,
+  // পরের-ওপেনে নতুন-আপডেট ছাড়া ব্যাজ নেই — স্ট্যান্ডার্ড unread-প্যাটার্ন)
+  useEffect(() => {
+    if (!open && loadedRef.current) {
+      markSeen();
+      setSeenMs(getSeenMs());
+    }
+  }, [open]);
+
+  // session204 — অন্য-কোথাও markSeen হলে (ইভেন্ট) seenMs লাইভ-সিঙ্ক
+  useEffect(() => {
+    const sync = () => setSeenMs(getSeenMs());
+    window.addEventListener(MY_REPORTS_SEEN_EVENT, sync);
+    return () => window.removeEventListener(MY_REPORTS_SEEN_EVENT, sync);
+  }, []);
 
   // Esc-এ বন্ধ
   useEffect(() => {
@@ -98,6 +120,12 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
   if (!open) return null;
 
   const filtered = filter === 'ALL' ? reports : reports.filter((r) => r.status === filter);
+
+  // session204 — অপঠিত-জবাব সেট (আপডেট > max(lastSeen, createdAt))
+  const unreadIds = new Set(
+    reports.filter((r) => hasNewReply(r.updatedAt, r.createdAt, seenMs)).map((r) => r.id)
+  );
+  const unreadCount = unreadIds.size;
 
   const FILTERS: { key: FilterKey; label: string; count: number }[] = [
     { key: 'ALL', label: 'সব', count: reports.length },
@@ -127,6 +155,15 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
               <ShieldCheck className="w-4 h-4" aria-hidden />
             </span>
             আমার অভিযোগ
+            {unreadCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 lf-anim-fade"
+                aria-label={`${bn(unreadCount)}টি নতুন জবাব`}
+              >
+                <BellRing className="w-3 h-3 animate-pulse" aria-hidden />
+                {bn(unreadCount)} নতুন
+              </span>
+            )}
           </h2>
           <div className="flex items-center gap-1">
             <button
@@ -215,10 +252,15 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
           ) : (
             filtered.map((r) => {
               const meta = STATUS_META[r.status] || STATUS_META.PENDING;
+              const isNew = unreadIds.has(r.id);
               return (
                 <article
                   key={r.id}
-                  className="rounded-xl border border-[#3e4042] bg-[#2c2d2e] p-3 space-y-2 lf-anim-fade hover:border-[#00a86b]/30 transition-colors"
+                  aria-label={isNew ? 'এই অভিযোগে নতুন জবাব এসেছে' : undefined}
+                  className={`relative rounded-xl border border-[#3e4042] bg-[#2c2d2e] p-3 space-y-2 lf-anim-fade transition-all hover:border-[#00a86b]/30 hover:-translate-y-px hover:shadow-lg hover:shadow-black/20 ${
+                    isNew ? 'ring-1 ring-amber-400/35' : ''
+                  }`}
+                  style={{ borderLeftWidth: '3px', borderLeftColor: isNew ? '#fbbf24' : 'rgba(62,64,66,1)' }}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1 text-[10.5px] font-bold text-[#b0b3b8]">
@@ -227,18 +269,26 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
                       </span>
                       {MEDIA_LABEL[r.mediaType] || 'লেখা'}
                     </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 text-[10.5px] font-extrabold px-2 py-0.5 rounded-full border ${meta.chip}`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} aria-hidden />
-                      {meta.label}
+                    <span className="inline-flex items-center gap-1.5">
+                      {isNew && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/45 text-amber-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden />
+                          নতুন জবাব
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-[10.5px] font-extrabold px-2 py-0.5 rounded-full border ${meta.chip}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} aria-hidden />
+                        {meta.label}
+                      </span>
                     </span>
                   </div>
                   <p className="text-[12.5px] text-[#e4e6eb] leading-relaxed break-words whitespace-pre-wrap line-clamp-4">
                     {r.messageText}
                   </p>
                   {r.adminNote && (
-                    <div className="rounded-lg bg-[#006a4e]/15 border border-[#00a86b]/25 px-2.5 py-2" role="note" aria-label="অ্যাডমিনের জবাব">
+                    <div className="rounded-lg rounded-l-none bg-[#006a4e]/15 border border-l-2 border-[#00a86b]/25 border-l-[#00a86b]/60 px-2.5 py-2" role="note" aria-label="অ্যাডমিনের জবাব">
                       <p className="text-[10px] font-extrabold text-[#33d79f] uppercase tracking-wide mb-0.5">
                         ম্যানেজমেন্টের জবাব
                       </p>

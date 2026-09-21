@@ -33,6 +33,7 @@ import { formatBdTime, formatBdDayLabel } from '@/lib/formatBdTime';
 import VoiceRecorder from './VoiceRecorder';
 import VoiceMessageBubble from './VoiceMessageBubble';
 import MyReportsPanel from './MyReportsPanel';
+import { getSeenMs, hasNewReply, MY_REPORTS_SEEN_EVENT } from '@/lib/my-reports-seen';
 
 interface Me {
   id: string;
@@ -87,6 +88,8 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
   const [actionError, setActionError] = useState<string | null>(null);
   // session203 (Task 54) — ইউজার-দিকের "আমার অভিযোগ" স্টেটাস-প্যানেল
   const [myReportsOpen, setMyReportsOpen] = useState(false);
+  // session204 (Task 55) — হিন্ট-বার-বাটনে "নতুন জবাব" লাইভ-কাউন্ট (localStorage last-seen)
+  const [myUnread, setMyUnread] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<string | null>(null);
@@ -141,6 +144,33 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  /* ─── session204: হিন্ট-বারে অপঠিত-জবাব কাউন্ট — মাউন্টে + markSeen-ইভেন্টে +
+         প্যানেল-বন্ধে রিফ্রেশ; anon/401-এ নীরব-শূন্য ─── */
+  const refreshMyUnread = useCallback(async () => {
+    try {
+      const res = await fetch('/api/support/my-reports');
+      if (!res.ok) {
+        setMyUnread(0);
+        return;
+      }
+      const data = await res.json();
+      const seen = getSeenMs();
+      const n = (data.reports || []).filter((r: { updatedAt: string; createdAt: string }) =>
+        hasNewReply(r.updatedAt, r.createdAt, seen)
+      ).length;
+      setMyUnread(n);
+    } catch {
+      setMyUnread(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshMyUnread();
+    const onSeen = () => refreshMyUnread();
+    window.addEventListener(MY_REPORTS_SEEN_EVENT, onSeen as EventListener);
+    return () => window.removeEventListener(MY_REPORTS_SEEN_EVENT, onSeen as EventListener);
+  }, [refreshMyUnread]);
 
   /* ─── থ্রেড লোড (খুললেই অপঠিত 'পড়া' হয় — তালিকাও রিফ্রেশ) ─── */
   const loadThread = useCallback(
@@ -409,10 +439,16 @@ export default function MessengerView({ me, users }: { me: Me; users: FrontendUs
                 className="shrink-0 inline-flex items-center gap-1 text-[10.5px] font-extrabold px-2 py-0.5 rounded-full bg-[#00a86b]/20 border border-[#00a86b]/40 text-[#33d79f] hover:bg-[#00a86b]/30 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#00a86b]"
                 aria-haspopup="dialog"
                 aria-expanded={myReportsOpen}
-                title="আমার পাঠানো অভিযোগের স্টেটাস ও ম্যানেজমেন্টের জবাব"
+                title={myUnread > 0 ? `আমার অভিযোগ — ${bn(myUnread)}টি নতুন জবাব এসেছে` : 'আমার পাঠানো অভিযোগের স্টেটাস ও ম্যানেজমেন্টের জবাব'}
               >
                 <ShieldCheck className="w-3 h-3" aria-hidden />
                 আমার অভিযোগ
+                {myUnread > 0 && (
+                  <span className="inline-flex items-center gap-0.5 text-[9.5px] font-extrabold px-1.5 py-px rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 lf-anim-fade">
+                    <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse" aria-hidden />
+                    {bn(myUnread)}
+                  </span>
+                )}
               </button>
             </div>
           )}

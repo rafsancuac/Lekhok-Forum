@@ -11,9 +11,9 @@ import { getCurrentUser } from '@/lib/session'
  *   { success: true, media: [{ url, type, name, size }], storage: 'disk' | 'inline' }
  *
  * তিন-স্তরের নিরাপত্তা-জাল (ক্লাউড-প্রিভিউ/আইফ্রেম-সেফ):
- * ১. সেশন: getCurrentUser() আইফ্রেমে কুকি-ব্লক হলে ডেমো-ফলব্যাক ইউজার দেয়
- *    (lib/session-চুক্তি) — আপলোড নিজে কোনো মেসেজ তৈরি করে না; মেসেজ POST-এ
- *    আলাদা করে অনুমোদিত হয়, তাই এখানে 401 ছোঁড়ার দরকার নেই।
+ * ১. সেশন: getCurrentUser() — session204 (Task 55)-এ ডেমো-ফলব্যাক অপসারণের
+ *    পর এখানে স্পষ্ট 401-গার্ড বাধ্যতামূলক (anon ডিস্ক-রাইট বন্ধ);
+ *    মেসেজ POST-এ আলাদা অনুমোদন আগের মতোই।
  * ২. ডিস্ক: public/uploads/{audio,images,videos}-এ লেখা — সফল হলে '/uploads/...' URL।
  * ৩. ফলব্যাক: রিড-ওনলি কনটেইনার (Vercel/স্যান্ডবক্স) হলে Base64 Data-URI —
  *    ব্রাউজার সরাসরি বাজবে, DB-তে স্থায়ী থাকবে (রিফ্রেশ-ধারণ ✓)।
@@ -47,10 +47,10 @@ function mediaKind(mime: string): 'audio' | 'image' | 'video' | null {
 
 export async function POST(req: NextRequest) {
   try {
-    // ১) ডেমো-সেশন (আইফ্রেম-ফলব্যাকসহ) — ইউজার-কনটেক্সট শুধু নামকরণে
+    // ১) সেশন-গার্ড — লগইন-ছাড়া আপলোড নিষিদ্ধ (session204 নিরাপত্তা-সংশোধন)
     const me = await getCurrentUser()
     if (!me) {
-      return NextResponse.json({ error: 'কোনো ইউজার নেই — সিড চালান' }, { status: 500 })
+      return NextResponse.json({ error: 'লগইন প্রয়োজন' }, { status: 401 })
     }
 
     const form = await req.formData().catch(() => null)
