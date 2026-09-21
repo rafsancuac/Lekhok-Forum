@@ -318,7 +318,7 @@
             <% } %>
           </div>
         </div>
-        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <button class="menu-toggle" id="menuToggle" aria-label="মেনু খুলুন"><i class="fas fa-bars"></i></button>
       </div>
     </div>
   </div>
@@ -326,7 +326,7 @@
   <!-- Mobile sidebar (public) -->
   <div class="mobile-overlay" id="mobileOverlay" onclick="closeMenu()"></div>
   <aside class="mobile-sidebar" id="mobileSidebar">
-    <button class="close-btn" id="closeSidebar"><i class="fas fa-times"></i></button>
+    <button class="close-btn" id="closeSidebar" aria-label="মেনু বন্ধ করুন"><i class="fas fa-times"></i></button>
     <% /* মেনু-হাইড ফিক্স: মোবাইল-সাইডবারেও enabled-ফিল্টার */ %>
     <% navConfig.filter(item => item && item.enabled !== false).forEach(item => { %>
       <a href="<%= item.href %>"><i class="fas <%= item.icon || 'fa-link' %>"></i> <%= item.label %></a>
@@ -366,7 +366,7 @@
         </div>
       </div>
       <div>
-        <h4 class="f-widget-title">প্রয়োজনীয় লিংক</h4>
+        <h3 class="f-widget-title">প্রয়োজনীয় লিংক</h3>
         <ul class="f-links">
           <li><a href="/about"><i class="fas fa-circle"></i> আমাদের সম্পর্কে</a></li>
           <li><a href="/committee"><i class="fas fa-circle"></i> কমিটি সদস্য</a></li>
@@ -380,7 +380,7 @@
           ইন্টারনাল লিংক (Googlebot-এর ক্রল-পাথ ও লিংক-ইকুইটি প্রবাহ)
           সেশন ৭৭: ইউজার-নির্দেশ — 'আরও দেখুন' এখন নিজস্ব ৩য় কলামে %>
       <div>
-        <h4 class="f-widget-title">আরও দেখুন</h4>
+        <h3 class="f-widget-title">আরও দেখুন</h3>
         <ul class="f-links">
           <li><a href="/articles"><i class="fas fa-circle"></i> সকল লেখা</a></li>
           <li><a href="/qa"><i class="fas fa-circle"></i> প্রশ্নোত্তর</a></li>
@@ -394,14 +394,14 @@
       </div>
       <%# সেশন ৭৭: 'যোগাযোগ' ৪র্থ কলামে নিউজলেটারের উপরে (ইউজার-নির্দেশ) %>
       <div class="f-col-contact">
-        <h4 class="f-widget-title">যোগাযোগ</h4>
+        <h3 class="f-widget-title">যোগাযোগ</h3>
         <ul class="f-contact">
           <li><i class="fas fa-map-marker-alt"></i> <span>চট্টগ্রাম বিশ্ববিদ্যালয়, চট্টগ্রাম</span></li>
           <li><i class="fas fa-envelope"></i> <span>info@lekhokforum.org</span></li>
           <li><i class="fas fa-phone-alt"></i> <span>০১********* (বিকাশ/নগদ)</span></li>
         </ul>
         <div class="f-newsletter">
-          <h4 class="f-widget-title f-newsletter-title">নিউজলেটার</h4>
+          <h3 class="f-widget-title f-newsletter-title">নিউজলেটার</h3>
           <p class="f-newsletter-desc">নতুন লেখা প্রকাশের খবর সরাসরি ইমেইলে পেতে সাবস্ক্রাইব করুন।</p>
           <form class="newsletter-form" id="newsletterForm" action="/api/newsletter/subscribe" method="post">
             <input type="email" name="email" id="newsletterEmail" placeholder="আপনার ইমেইল" required>

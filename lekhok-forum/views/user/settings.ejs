@@ -1126,7 +1126,7 @@
         var pwd = vPwd && vPwd.value;
         var del = vDel && vDel.value.trim().toUpperCase();
         if (!pwd || del !== 'DELETE') {
-          alert('অ্যাকাউন্ট মুছতে: পাসওয়ার্ড দিন এবং নিশ্চিত-ঘরে ঠিক DELETE লিখুন।');
+          if (window.showToast) showToast('অ্যাকাউন্ট মুছতে: পাসওয়ার্ড দিন এবং নিশ্চিত-ঘরে ঠিক DELETE লিখুন।', 'info');
           return;
         }
         if (!window.confirm('সত্যিই চিরতরে মুছে ফেলবেন? এটি ফেরানো যাবে না!')) return;

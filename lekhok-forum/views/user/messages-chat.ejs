@@ -2092,10 +2092,10 @@
         if (res.ok) {
           window.location.href = '/messages';
         } else {
-          alert('মুছতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+          if (window.showToast) showToast('মুছতে সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
         }
       } catch (e) {
-        alert('নেটওয়ার্ক সমস্যা।');
+        if (window.showToast) showToast('নেটওয়ার্ক সমস্যা।', 'error');
       }
     }
   </script>

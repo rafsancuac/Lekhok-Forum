@@ -44,7 +44,7 @@
   --lf-reaction-angry: #E9710F;
 
   /* ── ৬. রেডিয়াস ── */
-  --lf-radius-card: 16px;         /* পোস্ট কার্ড, মডাল ও বড় প্যানেল */
+  --lf-radius-card: 8px;          /* পোস্ট কার্ড, মডাল ও বড় প্যানেল (ডক-স্পেক: ৮px স্ট্যান্ডার্ড) */
   --lf-radius-bubble: 18px;       /* চ্যাট ও কমেন্ট বাবল */
   --lf-radius-chip: 9999px;       /* পিল ফিল্টার ও ব্যাজ */
 
@@ -73,6 +73,7 @@
   --brand-light: var(--lf-brand-primary-hover);
 
   /* রেডিয়াস-লিগ্যাসি */
+  --radius: var(--lf-radius-card);      /* style.css legacy --radius (5px) → ৮px কার্ড-স্ট্যান্ডার্ড (Q3-কনফার্মড) */
   --radius-lg: var(--lf-radius-card);   /* কার্ড/মডাল/প্যানেল */
   --radius-pill: var(--lf-radius-chip); /* পিল/ব্যাজ */
 

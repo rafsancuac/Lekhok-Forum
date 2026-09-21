@@ -105,7 +105,6 @@
         if (repBtn) { repBtn.classList.add('reported'); repBtn.innerHTML = '<i class="fas fa-flag"></i> রিপোর্ট করা হয়েছে'; repBtn.disabled = true; }
       } else {
         if (window.showToast) showToast(j.error || 'রিপোর্ট পাঠানো যায়নি', 'error');
-        else alert(j.error || 'রিপোর্ট পাঠানো যায়নি');
       }
     } catch (err) {
       if (window.showToast) showToast('নেটওয়ার্ক সমস্যা — আবার চেষ্টা করুন', 'error');
