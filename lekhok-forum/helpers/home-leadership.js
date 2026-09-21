@@ -120,4 +120,44 @@ function displayOf(m, statement) {
   return { name: displayName || '', img: displayImg, role: m.role || '', termText: termText.trim(), bani: shownBani || '', src: baniSource, linked: !!m.user_id };
 }
 
-module.exports = { MEMBER_JOIN, SLOT_META, LEADER_STATEMENTS, bnLead, fetchHomeLeadershipRows, buildHomeLeadershipSlots, displayOf };
+/* ═════════════════════════════════════════════════════════════════════════════
+ * সেশন ৬৪ — ডাইনামিক উপদেষ্টা-কার্ড ও ডিফল্ট-লুকানো-স্লট
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ① DEFAULT_HIDDEN_SLOTS: বর্তমান-উপদেষ্টা এখনো নিয়োগ দেওয়া হয়নি — seed-ডেমো
+ *    (অধ্যাপক সুফিয়া বেগম / মো. তৌহিদুল ইসলাম) যেন প্রোড-হোমপেজে আর না-দেখায়,
+ *    তাই settings 'home_hidden_slots' **অনুপস্থিত** থাকলে এ-দুটি স্লট ডিফল্টভাবে
+ *    লুকানো ধরা হয়। অ্যাডমিন প্যানেলের সুইচ একবার টগল করলেই সেটিংটি স্পষ্টভাবে
+ *    লেখা হয় — তখন থেকে অ্যাডমিনের স্পষ্ট-তালিকাই প্রাধান্য পায় (present-beats-default)।
+ * ② fetchAdvisoryGroups: উপদেষ্টা এখন N-জন হতে পারে — সব advisory এক-কুয়েরিতে
+ *    এনে বাউন্ডারি-কার্যবর্ষ (প্রাচীনতম/নবীনতম) অনুযায়ী দুই গ্রুপে ভাগ। প্রথম ২জন
+ *    আগের হুবহু advisor_1/2 ম্যাপিংয়ে থাকে (ক্রম-অপরিবর্তিত), বাকিরা "অতিরিক্ত
+ *    উপদেষ্টা" — home_extra_members (opt-in CSV)-এ টগল-অন করলেই হোমপেজে দেখা যায়।
+ * ═════════════════════════════════════════════════════════════════════════ */
+const DEFAULT_HIDDEN_SLOTS = ['current_advisor_1', 'current_advisor_2'];
+
+function parseCsvList(v) {
+  return String(v == null ? '' : v).split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+/* settings-value → কার্যকর-লুকানো-তালিকা: absent(null/undefined) = ডিফল্ট, present = স্পষ্ট */
+function effectiveHiddenSlots(rawSetting) {
+  return (rawSetting === null || rawSetting === undefined)
+    ? DEFAULT_HIDDEN_SLOTS.slice()
+    : parseCsvList(rawSetting);
+}
+
+/* সব advisory সদস্য → { all, oldest, newest, founding[], current[] } —
+ * founding = প্রাচীনতম কার্যবর্ষের সবাই (sort_order ASC); current = নবীনতম কার্যবর্ষের
+ * সবাই (sort_order DESC — আগের top-2 = advisor_1/2 ম্যাপিং হুবহু অক্ষুণ্ণ রাখতে)। */
+async function fetchAdvisoryGroups(db) {
+  const all = await db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'advisory' ORDER BY m.sort_order ASC").all();
+  const terms = Array.from(new Set(all.map((r) => String(r.term_year || '').trim()).filter(Boolean)))
+    .sort((a, b) => bnLead(a) - bnLead(b));
+  const oldest = terms[0] || null;
+  const newest = terms.length ? terms[terms.length - 1] : null;
+  const founding = oldest ? all.filter((r) => String(r.term_year || '').trim() === oldest) : [];
+  const current = newest ? all.filter((r) => String(r.term_year || '').trim() === newest).slice().reverse() : [];
+  return { all, oldest, newest, founding, current };
+}
+
+module.exports = { MEMBER_JOIN, SLOT_META, LEADER_STATEMENTS, bnLead, fetchHomeLeadershipRows, buildHomeLeadershipSlots, displayOf, DEFAULT_HIDDEN_SLOTS, parseCsvList, effectiveHiddenSlots, fetchAdvisoryGroups };

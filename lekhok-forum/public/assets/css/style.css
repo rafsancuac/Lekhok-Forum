@@ -2445,3 +2445,13 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .leader-card-featured::before,.leader-card-featured .leader-photo,.leader-card-featured.is-linked::after{transition:none}
 }
 /* ════════ EOF session55-home-leadership ════════ */
+
+/* ════════ Session64: N-কার্ড সেন্টার-রো (হোম-নেতৃত্ব) ════════
+   ২টা কার্ড = মাঝের-জোড়া (৪-ট্র্যাকের ২ ও ৩ নং-অবস্থান), ৩/৪টা = সমদূরত্বে পূর্ণ-সারি,
+   ৫+ হলে পরের সারিতে কেন্দ্রে — কোনো ওভারল্যাপ/ফাঁকা-কলাম নেই। */
+.leaders-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:20px}
+.leaders-row .leader-card{width:calc(25% - 15px);min-width:245px;max-width:330px;display:flex;flex-direction:column}
+@media (max-width:1024px){.leaders-row .leader-card{width:calc(33.333% - 14px)}}
+@media (max-width:820px){.leaders-row .leader-card{width:calc(50% - 10px)}}
+@media (max-width:540px){.leaders-row{gap:16px}.leaders-row .leader-card{width:100%;min-width:0;max-width:420px}}
+/* ════════ EOF session64-leaders-row ════════ */
