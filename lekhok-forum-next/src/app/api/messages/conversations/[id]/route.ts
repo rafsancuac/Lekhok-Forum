@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/session'
 import { getSupportAdminId } from '@/lib/support'
 import { notify } from '@/lib/notify'
+import { emitSupportChange } from '@/lib/support-events'
 
 /**
  * GET  /api/messages/conversations/[id] → থ্রেডের মেসেজগুলো (খুললেই আমার কাছে আসা মেসেজ 'পড়া' হয়ে যায়)
@@ -55,6 +56,8 @@ async function mirrorSupportReport(
     // session203 (Task 54): সাপোর্ট-অ্যাডমিনকে বেল-নোটিফিকেশন (SUPPORT টাইপ — ৫-মিনিট-থ্রটলড,
     // মিউট-প্রেফারেন্স সম্মান; নীরব-ব্যর্থতা — notify() নিজেই ক্যাচ করে)
     await notify({ actorId: me.id, recipientId: supportId, type: 'SUPPORT' })
+    // session215 — সার্ভার-পুশ: নতুন-অভিযোগ-মিররে সংযুক্ত-ডেস্কগুলোকে তাৎক্ষণিক-সিগন্যাল
+    emitSupportChange()
   } catch (err) {
     console.error('UserReport mirror failed (non-blocking):', err)
   }

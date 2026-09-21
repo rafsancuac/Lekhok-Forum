@@ -37,6 +37,11 @@
  *   • নতুন-অভিযোগ শব্দ-সংকেত (Web Audio two-tone চাইম, অ্যাসেট-শূন্য) — পোল-ডিফ fresh>0-তে টোস্টের-সাথে;
  *     টুলবার-টগল (aria-pressed) + localStorage (lf-desk-sound) স্থায়িত্ব; চালু-মুহূর্তে জেসচারে AudioContext-তৈরি
  *   • a11y: prefers-reduced-motion সম্মান — lf-anim-* এন্ট্রি-অ্যানিমেশন বন্ধ (globals.css)
+ * session215 — রেসপন্স-গতি প্যাক:
+ *   • সার্ভার-পুশ (SSE /api/admin/support-stream): নতুন-অভিযোগ/স্টেটাস/নোট-বদলে তাৎক্ষণিক load() —
+ *     ১৫-সে-পোল ফলব্যাক-হিসেবে অটুট; ২৫০ms-ডিবাউন্স (বার্স্ট-সিগন্যালে স্প্যাম-শূন্য)
+ *   • লাইভ-ইন্ডিকেটর চিপ (লাইভ=সবুজ-পালস / পোলিং=ধূসর) — সংযোগ-অবস্থা এক-নজরে
+ *   • অ্যাডমিন-নোট দ্রুত-টেমপ্লেট (৫-বাংলা-স্নিপেট; ক্লিকে নোট-ইনপুটে যোগ — পুরনো-লেখা সংরক্ষিত)
 */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -62,6 +67,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
   Trash2,
   Undo2,
   Video,
@@ -154,6 +160,15 @@ const MEDIA_FILTER_ICON: Record<string, React.ReactNode> = {
   AUDIO: <Mic className="w-3 h-3" aria-hidden />,
   VIDEO: <Video className="w-3 h-3" aria-hidden />,
 }
+
+/** session215 — অ্যাডমিন-নোট দ্রুত-টেমপ্লেট (বাংলা; ক্লিকে নোট-ইনপুটে যোগ — পুরনো-লেখা সংরক্ষিত) */
+const NOTE_TEMPLATES = [
+  'সমস্যাটি সমাধান করা হয়েছে — ধন্যবাদ জানাই।',
+  'বিষয়টি পরীক্ষা করে দ্রুত জানানো হবে।',
+  'অতিরিক্ত তথ্য বা স্ক্রিনশট প্রয়োজন — অনুগ্রহ করে পাঠান।',
+  'প্রযুক্তিগত টিমকে বিষয়টি জানানো হয়েছে।',
+  'আপনার পরামর্শটি গ্রহণ করা হয়েছে — ধন্যবাদ।',
+]
 
 /** session207 — তারিখ-সীমা ফিল্টার (ক্লায়েন্ট-সাইড, API-বদল-শূন্য) */
 const DATE_RANGES: { key: string; label: string }[] = [
@@ -529,6 +544,10 @@ function SupportReportsPanel() {
   /** session214 — প্রেরক-ঝলক পপওভার (fixed-এনকর; senderStats = লোডেড-রিপোর্ট থেকে ক্লায়েন্ট-সাইড) */
   const [glance, setGlance] = useState<{ name: string; email: string | null; x: number; y: number } | null>(null)
   const glanceRef = React.useRef<HTMLDivElement>(null)
+  /** session215 — SSE-সংযোগ-অবস্থা (live = তাৎক্ষণিক-পুশ; polling = ১৫-সে-ফলব্যাক) */
+  const [live, setLive] = useState<'connecting' | 'live' | 'polling'>('connecting')
+  /** session215 — নোট-টেমপ্লেট খোলা-কার্ড (id; null = বন্ধ) */
+  const [tplOpenFor, setTplOpenFor] = useState<string | null>(null)
 
   const flash = useCallback(
     (msg: string, undo?: { id: string; index: number; entry: HistoryEntry }, timeoutMs = 3000) => {
@@ -670,6 +689,54 @@ function SupportReportsPanel() {
     glanceRef.current?.focus()
     return () => window.removeEventListener('keydown', onKey)
   }, [glance])
+
+  /** session215 — সার্ভার-পুশ (SSE): changed-সিগন্যালে তাৎক্ষণিক load() (২৫০ms-ডিবাউন্স);
+   *  EventSource নিজেই পুনঃসংযোগ-চেষ্টা করে; ১৫-সে-পোল ফলব্যাক-হিসেবে অপরিবর্তিত;
+   *  watchdog: ৪০s+ নীরবতা (hb=২৫s-মার্জিন) → জোর-করে-রিসেট — stalled/zombie-স্ট্রিম-স্বয়ংক্রিয়-হিল */
+  useEffect(() => {
+    let es: EventSource | null = null
+    let deb: ReturnType<typeof setTimeout> | null = null
+    let watchdog: ReturnType<typeof setInterval> | null = null
+    let lastMsgAt = Date.now()
+    let closed = false
+
+    const openES = () => {
+      if (closed) return
+      try {
+        es = new EventSource('/api/admin/support-stream')
+        es.onopen = () => setLive('live')
+        es.onmessage = () => {
+          lastMsgAt = Date.now()
+          if (document.hidden) return
+          if (deb) clearTimeout(deb)
+          deb = setTimeout(() => void load(), 250)
+        }
+        es.onerror = () => setLive('polling')
+      } catch {
+        setLive('polling')
+      }
+    }
+    openES()
+    watchdog = setInterval(() => {
+      if (closed || !es) return
+      if (Date.now() - lastMsgAt > 40000) {
+        lastMsgAt = Date.now()
+        try {
+          es.close()
+        } catch {
+          /* নীরব */
+        }
+        setLive('connecting')
+        openES()
+      }
+    }, 10000)
+    return () => {
+      closed = true
+      if (watchdog) clearInterval(watchdog)
+      if (deb) clearTimeout(deb)
+      es?.close()
+    }
+  }, [load])
 
   /** session211 — মাউন্টে URL-প্যারাম হাইড্রেট (?tab/&media/&date/&q/&sort/&report) — এক-বার */
   useEffect(() => {
@@ -1250,6 +1317,19 @@ function SupportReportsPanel() {
               )}
             </p>
           )}
+          {/* session215 — লাইভ-ইন্ডিকেটর: SSE-সংযোগ-অবস্থা (লাইভ=তাৎক্ষণিক-পুশ / পোলিং=১৫-সে-ফলব্যাক) */}
+          <span
+            data-live={live}
+            title={live === 'live' ? 'লাইভ-পুশ সক্রিয় — নতুন অভিযোগ/আপডেট সাথে-সাথে দেখা যাবে' : 'পোলিং-মোড — ১৫ সেকেন্ড অন্তর আপডেট'}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-extrabold border transition shrink-0 ${
+              live === 'live'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-[#F0F2F5] text-[#65676B] border-[#E4E6EB]'
+            }`}
+          >
+            <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${live === 'live' ? 'bg-emerald-500 animate-pulse' : 'bg-[#8A8D91]'}`} />
+            {live === 'live' ? 'লাইভ' : 'পোলিং'}
+          </span>
           {/* session214 — নতুন-অভিযোগ শব্দ-সংকেত টগল (localStorage দ্বারা স্থায়ী; ডিফল্ট বন্ধ) */}
           <button
             onClick={toggleSound}
@@ -1544,15 +1624,51 @@ function SupportReportsPanel() {
                 </div>
               )}
 
-              {/* অ্যাডমিন-নোট */}
+              {/* অ্যাডমিন-নোট (session215 — দ্রুত-টেমপ্লেট টগল + চিপ-রো) */}
               <div className="flex items-end gap-2">
                 <div className="flex-1 min-w-0">
-                  <label
-                    htmlFor={`note-${r.id}`}
-                    className="text-[10.5px] font-bold text-[#65676B] block mb-1"
-                  >
-                    অ্যাডমিন-নোট (অভ্যন্তরীণ)
-                  </label>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <label
+                      htmlFor={`note-${r.id}`}
+                      className="text-[10.5px] font-bold text-[#65676B]"
+                    >
+                      অ্যাডমিন-নোট (অভ্যন্তরীণ)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setTplOpenFor((v) => (v === r.id ? null : r.id))}
+                      aria-expanded={tplOpenFor === r.id}
+                      aria-label="দ্রুত-নোট টেমপ্লেট দেখান/লুকান"
+                      title="প্রস্তুত-জবাব টেমপ্লেট — ক্লিকে নোটে যোগ হয়"
+                      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9.5px] font-extrabold border transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
+                        tplOpenFor === r.id
+                          ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                          : 'bg-white text-[#65676B] border-[#E4E6EB] hover:text-[#006A4E] hover:border-[#006A4E]/40'
+                      }`}
+                    >
+                      <Sparkles className="w-3 h-3" aria-hidden />
+                      টেমপ্লেট
+                    </button>
+                  </div>
+                  {tplOpenFor === r.id && (
+                    <div className="flex items-center gap-1 flex-wrap mb-1.5 lf-anim-pop" role="group" aria-label="নোট-টেমপ্লেট তালিকা">
+                      {NOTE_TEMPLATES.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() =>
+                            setNotes((p) => {
+                              const cur = (p[r.id] ?? r.adminNote ?? '').trimEnd()
+                              return { ...p, [r.id]: cur ? `${cur} ${t}` : t }
+                            })
+                          }
+                          className="px-2 py-0.5 rounded-full text-[9.5px] font-bold border bg-[#F0F8F5] text-[#00523C] border-[#006A4E]/25 hover:border-[#006A4E]/60 hover:bg-[#E6F2EE] transition cursor-pointer text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <textarea
                     id={`note-${r.id}`}
                     value={notes[r.id] ?? r.adminNote ?? ''}

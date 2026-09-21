@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/session'
 import { isManager } from '@/lib/roles'
 import { getSupportAdminId } from '@/lib/support'
 import { notify } from '@/lib/notify'
+import { emitSupportChange } from '@/lib/support-events'
 
 /**
  * Task 43 — অভিযোগ-রিভিউ ডেস্ক API
@@ -151,6 +152,9 @@ export async function PUT(req: NextRequest) {
       })
     }
 
+    // session215 — সার্ভার-পুশ: স্টেটাস/নোট-আপডেটে সংযুক্ত-ডেস্কগুলোকে তাৎক্ষণিক-সিগন্যাল
+    emitSupportChange()
+
     return NextResponse.json({ report: updated })
   } catch (err) {
     console.error('support-reports PUT error:', err)
@@ -275,6 +279,9 @@ export async function PATCH(req: NextRequest) {
       recipientId: existing.senderId,
       type: 'SUPPORT_UPDATE',
     })
+
+    // session215 — সার্ভার-পুশ: ইতিহাস-সম্পাদনা/মুছে-ফেলা/পুনরুদ্ধারেও তাৎক্ষণিক-সিগন্যাল
+    emitSupportChange()
 
     return NextResponse.json({ report: updated })
   } catch (err) {
