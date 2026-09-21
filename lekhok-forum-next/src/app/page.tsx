@@ -33,6 +33,8 @@ import GroupsView from '@/components/group/GroupsView'
 import GroupDetailView from '@/components/group/GroupDetailView'
 import CreateGroupModal from '@/components/group/CreateGroupModal'
 import LeadershipView from '@/components/leadership/LeadershipView'
+import SiteNoticeBar from '@/components/home/SiteNoticeBar'
+import SiteFooter from '@/components/home/SiteFooter'
 import MessengerView from '@/components/messenger/MessengerView'
 import type { FrontendPost, FrontendUser } from '@/lib/types'
 import { bn } from '@/lib/format'
@@ -706,7 +708,10 @@ export default function Home() {
           />
 
           {/* ═══ সেন্টার কলাম — ইউজার-স্পেক: max-w ৭০০px + gap-2.5; mx-auto বাদ (justify-center-ই সেন্টার করে — auto-margin গ্যাপ-৩ নিষ্ক্রিয় করত) ═══ */}
-          <div className={`flex-1 min-w-0 flex flex-col gap-2.5 ${view === 'messenger' ? 'max-w-[980px]' : 'max-w-[700px]'}`}>
+          <div className={`flex-1 min-w-0 flex flex-col gap-2.5 ${view === 'messenger' || view === 'leadership' ? 'max-w-[980px]' : 'max-w-[700px]'}`}>
+            {/* জরুরি নোটিশ-বার (অ্যাডমিন-নিয়ন্ত্রিত — Task62-c) */}
+            <SiteNoticeBar />
+
             {/* মোবাইল ট্যাব সুইচার */}
             <div className="flex gap-1 bg-[#242526] rounded-xl border border-[#3e4042] p-1 lg:hidden">
               <button
@@ -1262,30 +1267,21 @@ export default function Home() {
             )}
           </div>
 
-          <RightRail
-            key={current?.id ?? 'anon'}
-            onSearchTag={searchTag}
-            onOpenProfile={openProfile}
-            onNavigateToPost={scrollToPost}
-            refreshKey={followRefreshKey}
-          />
+          {/* নেতৃত্ব-ভিউতে ৪-কার্ড-সারিতে পূর্ণ-জায়গা — সহায়ক-রেল লুকানো (Task62-c) */}
+          {view !== 'leadership' && (
+            <RightRail
+              key={current?.id ?? 'anon'}
+              onSearchTag={searchTag}
+              onOpenProfile={openProfile}
+              onNavigateToPost={scrollToPost}
+              refreshKey={followRefreshKey}
+            />
+          )}
         </div>
       </main>
 
-      {/* ═══ স্টিকি ফুটার ═══ */}
-      <footer className="mt-auto bg-[#242526] border-t border-[#3e4042] py-4 px-4">
-        <div className="max-w-[1360px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[12px] text-[#8a8d91]">
-          <p className="flex items-center gap-1.5">
-            <Feather className="w-3.5 h-3.5 text-[#00a86b]" />
-            লেখক ফোরাম — বাংলা লেখকদের নিজের ঠিকানা © ২০২৫
-          </p>
-          <div className="flex items-center gap-3">
-            <span className="hover:text-[#e4e6eb] cursor-pointer transition">গোপনীয়তা</span>
-            <span className="hover:text-[#e4e6eb] cursor-pointer transition">শর্তাবলী</span>
-            <span className="hover:text-[#e4e6eb] cursor-pointer transition">সহায়তা</span>
-          </div>
-        </div>
-      </footer>
+      {/* ═══ স্টিকি ফুটার — DB-চালিত (অ্যাডমিন /admin/settings/footer-social থেকে নিয়ন্ত্রিত) ═══ */}
+      <SiteFooter />
 
       {/* ═══ back-to-top ═══ */}
       {showTop && (

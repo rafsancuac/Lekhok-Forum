@@ -509,7 +509,7 @@ export default function AdminLeadershipPage() {
   /* ─── সেশন-গেট স্ক্রিন ─── */
   if (sessionState !== 'ok') {
     return (
-      <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center p-4 font-hind text-[#050505]">
+      <div className="flex items-center justify-center p-4 py-16 font-hind text-[#050505]">
         <div className="bg-white border border-[#CED0D4] rounded-[10px] p-6 max-w-sm w-full text-center shadow-2xs">
           {sessionState === 'loading' ? (
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#006A4E]" />
@@ -556,8 +556,8 @@ export default function AdminLeadershipPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] font-hind text-[#050505] select-none">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+    <div className="font-hind text-[#050505] select-none">
+      <div className="max-w-6xl mx-auto">
 
         {/* হেডার ও অ্যাকশন বার */}
         <div className="bg-white border border-[#CED0D4] rounded-[10px] p-4 sm:p-5 shadow-2xs mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

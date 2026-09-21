@@ -303,5 +303,64 @@ model HomeLeadershipSlot {
   term      String   @default("")
   quote     String   @default("")
   imageUrl  String   @default("")
+  isActive  Boolean  @default(true) // অ্যাডমিন-টগল: অফ = হোমপেজে লুকানো (Task62-c)
   updatedAt DateTime @updatedAt
+}
+
+// ─── সাইট-কনটেন্ট পরিবার (Task62-c: মডুলার অ্যাডমিন ড্যাশবোর্ড) ───
+// প্রতিটি সেকশন অ্যাডমিন-প্যানেল থেকে সম্পাদনাযোগ্য + isOn-টগলযোগ্য;
+// হোমপেজ /api/site-content থেকে লাইভ-সিঙ্ক করে।
+
+// জরুরি নোটিশ-বার (হোমপেজ-ফিডের উপরে সরু ঘোষণা-পট্টি) — সিঙ্গলটন
+model SiteNotice {
+  id        String   @id @default("main")
+  text      String   @default("")
+  linkUrl   String   @default("")
+  isOn      Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+// পরিসংখ্যান-কাউন্টার (সদস্য/গ্রন্থ/আসর...) — তালিকা, অ্যাডমিন CRUD
+model SiteStat {
+  id        String   @id @default(cuid())
+  label     String   @default("")
+  value     String   @default("")
+  icon      String   @default("📊")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+// সাধারণ টেক্সট-ব্লক — key: welcome_msg (স্বাগত বক্তব্য) | mission_vision (লক্ষ্য ও উদ্দেশ্য)
+model SiteContent {
+  key       String   @id
+  title     String   @default("")
+  body      String   @default("")
+  isOn      Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+// ঐতিহাসিক মাইলফলক (টাইমলাইন) — তালিকা, অ্যাডমিন CRUD
+model TimelineItem {
+  id          String   @id @default(cuid())
+  year        String   @default("")
+  title       String   @default("")
+  description String   @default("")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+}
+
+// ফুটার কনফিগারেশন (যোগাযোগ + সোশ্যাল + কপিরাইট) — সিঙ্গলটন
+model FooterSetting {
+  id            String   @id @default("main")
+  aboutText     String   @default("")
+  contactEmail  String   @default("")
+  helpline      String   @default("")
+  facebookUrl   String   @default("")
+  youtubeUrl    String   @default("")
+  telegramUrl   String   @default("")
+  copyrightText String   @default("")
+  isOn          Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
 }

@@ -1,12 +1,13 @@
 /**
- * হোম-নেতৃত্ব-স্লট API (শুধু অ্যাডমিন) — অ্যাডমিন প্যানেল /admin/home-leadership
+ * হোম-নেতৃত্ব-স্লট API (শুধু অ্যাডমিন) — অ্যাডমিন প্যানেল /admin/home/leadership
  *
- * GET  /api/admin/home-leadership  → ৮-স্লটের বর্তমান ডাটা (না-থাকা স্লট = ডিফল্ট-খালি রেকর্ড সহ)
- * POST /api/admin/home-leadership  → এক-স্লট upsert (slotKey হোয়াইটলিস্ট-বাধ্যতামূলক)
+ * GET   /api/admin/home-leadership  → ৮-স্লটের বর্তমান ডাটা (না-থাকা স্লট = ডিফল্ট-খালি রেকর্ড সহ)
+ * POST  /api/admin/home-leadership  → এক-স্লট upsert (slotKey হোয়াইটলিস্ট-বাধ্যতামূলক)
+ * PATCH /api/admin/home-leadership  → তাৎক্ষণিক ভিজিবিলিটি-টগল { slotKey, isActive } (Task62-c)
  *
- * ডিজাইন-নোট (ইউজার-স্পেক): সেভ-সফল সবসময় 200 + সংরক্ষিত-রেকর্ড — ফ্রন্টএন্ডে
+ * ডিজাইন-নোট (ইউজার-স্পেক): সেভ/টগল-সফল সবসময় 200 + সংরক্ষিত-রেকর্ড — ফ্রন্টএন্ডে
  * কোনো মিথ্যা "সম্পাদনা ব্যর্থ" ফলস-পজিটিভ না হয়। খালি-স্লট সরাসরি ম্যানুয়াল-ইনপুটযোগ্য —
- * কোনো কমিটি-রিলেশন খোঁজা হয় না।
+ * কোনো কমিটি-রিলেশন খোঁজা হয় না। টগল = নো-পপআপ ইনস্ট্যান্ট সুইচ (কার্ডের কোণায়)।
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
@@ -65,6 +66,7 @@ export async function GET() {
         term: row?.term ?? def.defaultTerm,
         quote: row?.quote ?? '',
         imageUrl: row?.imageUrl ?? '',
+        isActive: row?.isActive ?? true,
       }
     })
     return NextResponse.json(slots, { status: 200 })
@@ -92,6 +94,9 @@ export async function POST(req: NextRequest) {
     const term = str(body?.term, 60) || def.defaultTerm
     const quote = str(body?.quote, 4000)
     const imageUrl = str(body?.imageUrl, MAX_IMAGE_CHARS)
+    /* isActive: টগল-স্টেট সংরক্ষণ — বডিতে না-এলে আগের-মান (না-থাকলে true) অক্ষুণ্ণ */
+    const existing = await db.homeLeadershipSlot.findUnique({ where: { slotKey } })
+    const isActive = typeof body?.isActive === 'boolean' ? body.isActive : (existing?.isActive ?? true)
 
     if (typeof body?.imageUrl === 'string' && body.imageUrl.length > MAX_IMAGE_CHARS) {
       return NextResponse.json({ error: 'ছবিটি খুব বড় — ছোট ছবি দিন' }, { status: 413 })
@@ -99,13 +104,51 @@ export async function POST(req: NextRequest) {
 
     const saved = await db.homeLeadershipSlot.upsert({
       where: { slotKey },
-      update: { section: def.section, name, role, term, quote, imageUrl },
-      create: { slotKey, section: def.section, name, role, term, quote, imageUrl },
+      update: { section: def.section, name, role, term, quote, imageUrl, isActive },
+      create: { slotKey, section: def.section, name, role, term, quote, imageUrl, isActive },
     })
 
     return NextResponse.json({ ...saved, slotLabel: def.slotLabel }, { status: 200 })
   } catch (error) {
     console.error('home-leadership:POST', error)
     return NextResponse.json({ error: 'সংরক্ষণ ব্যর্থ হয়েছে' }, { status: 500 })
+  }
+}
+
+/** PATCH — তাৎক্ষণিক অন/অফ টগল (কোনো রিলোড/পপআপ ছাড়াই; সবসময় 200 + রেকর্ড) */
+export async function PATCH(req: NextRequest) {
+  const guard = await requireAdmin()
+  if ('error' in guard) return guard.error
+
+  try {
+    const body = await req.json()
+    const slotKey = str(body?.slotKey, 60)
+    const def = HOME_LEADERSHIP_SLOTS.find((s) => s.slotKey === slotKey)
+    if (!def) {
+      return NextResponse.json({ error: 'অজানা স্লট-কী' }, { status: 400 })
+    }
+    if (typeof body?.isActive !== 'boolean') {
+      return NextResponse.json({ error: 'isActive বুলিয়ান প্রয়োজন' }, { status: 400 })
+    }
+
+    const saved = await db.homeLeadershipSlot.upsert({
+      where: { slotKey },
+      update: { isActive: body.isActive },
+      create: {
+        slotKey,
+        section: def.section,
+        name: '',
+        role: def.defaultRole,
+        term: def.defaultTerm,
+        quote: '',
+        imageUrl: '',
+        isActive: body.isActive,
+      },
+    })
+
+    return NextResponse.json({ ...saved, slotLabel: def.slotLabel }, { status: 200 })
+  } catch (error) {
+    console.error('home-leadership:PATCH', error)
+    return NextResponse.json({ error: 'টগল ব্যর্থ হয়েছে' }, { status: 500 })
   }
 }
