@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   Copy,
   Download,
+  History,
   Image as ImageIcon,
   Loader2,
   Mic,
@@ -45,7 +46,31 @@ interface Report {
   mediaUrl: string | null
   status: Status
   adminNote: string | null
+  noteHistory?: string | null
   createdAt: string
+}
+
+/** session205 (Task 56) — অ্যাকশন-ইতিহাস-এন্ট্রি (noteHistory JSON থেকে) */
+interface HistoryEntry {
+  t: 'note' | 'status'
+  note?: string
+  from?: string
+  to?: string
+  at: string
+  by?: string
+  byRole?: string
+}
+
+/** noteHistory JSON-পার্স — করাপ্ট/অবৈধ হলে খালি-অ্যারে (নিরাপদ) */
+function parseHistory(raw: string | null | undefined): HistoryEntry[] {
+  if (!raw) return []
+  try {
+    const arr = JSON.parse(raw)
+    if (!Array.isArray(arr)) return []
+    return arr.filter((e) => e && (e.t === 'note' || e.t === 'status')) as HistoryEntry[]
+  } catch {
+    return []
+  }
 }
 
 const TABS: { key: Status; label: string; cls: string }[] = [
@@ -92,6 +117,89 @@ function relTimeBn(iso: string): string {
 /** RFC-4180 CSV-সেল-escape */
 function csvCell(v: string): string {
   return `"${String(v ?? '').replace(/"/g, '""')}"`
+}
+
+/** session205 — রোল-ব্যাজ (ইতিহাসে কে-কাজ-টা-করেছে) */
+const ROLE_BADGE: Record<string, { label: string; cls: string }> = {
+  super_admin: { label: 'সুপার অ্যাডমিন', cls: 'bg-violet-50 text-violet-700 border-violet-200' },
+  admin: { label: 'অ্যাডমিন', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  member: { label: 'সাপোর্ট-এজেন্ট', cls: 'bg-sky-50 text-sky-700 border-sky-200' },
+}
+
+/** session205 (Task 56) — অ্যাকশন-ইতিহাস টাইমলাইন: নোট + স্টেটাস-বদল এক-সুতোয় (নতুন-নিচে);
+ *  ৪-এর-বেশি হলে পুরোনোগুলো কোলাপ্সড — "আরও Nটি" টগল। */
+function ActionHistory({ entries }: { entries: HistoryEntry[] }) {
+  const [expanded, setExpanded] = useState(false)
+  if (entries.length === 0) return null
+  const visible = expanded ? entries : entries.slice(-4)
+  const hiddenCount = entries.length - visible.length
+  return (
+    <div className="rounded-[8px] bg-[#FAFBFC] border border-[#E4E6EB] p-3">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        type="button"
+        className="flex items-center gap-1.5 text-[10.5px] font-extrabold text-[#65676B] hover:text-[#006A4E] transition cursor-pointer bg-transparent border-0 p-0"
+        aria-expanded={expanded}
+      >
+        <History className="w-3.5 h-3.5" aria-hidden />
+        <span>অ্যাকশন-ইতিহাস ({bn(entries.length)})</span>
+        {entries.length > 4 && (
+          <span className="text-[10px] font-bold text-[#006A4E]">
+            {expanded ? '— সংক্ষিপ্ত' : `— আরও ${bn(hiddenCount)}টি`}
+          </span>
+        )}
+      </button>
+      <div className="mt-2.5 ml-1.5 border-l-2 border-[#E4E6EB] space-y-3 lf-anim-fade">
+        {visible.map((e, i) => {
+          const badge = ROLE_BADGE[e.byRole ?? ''] ?? null
+          return (
+            <div key={i} className="relative pl-4">
+              <span
+                aria-hidden
+                className={`absolute -left-[7px] top-1 w-3 h-3 rounded-full border-2 border-white shadow-sm ${
+                  e.t === 'note' ? 'bg-[#006A4E]' : 'bg-sky-500'
+                }`}
+              />
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-bold text-[#050505]">{e.by || 'অ্যাডমিন'}</span>
+                {badge && (
+                  <span
+                    className={`text-[9.5px] font-extrabold px-1.5 py-px rounded-full border ${badge.cls}`}
+                  >
+                    {badge.label}
+                  </span>
+                )}
+                <span
+                  className="text-[9.5px] text-[#8A8D91]"
+                  title={new Date(e.at).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' })}
+                >
+                  {relTimeBn(e.at)}
+                </span>
+              </div>
+              {e.t === 'note' ? (
+                <p className="text-[11.5px] text-[#4B4C4F] leading-relaxed whitespace-pre-wrap break-words mt-0.5">
+                  {e.note}
+                </p>
+              ) : (
+                <p className="text-[11px] text-[#4B4C4F] mt-0.5 flex items-center gap-1.5">
+                  <span>স্টেটাস:</span>
+                  <span className="font-bold">{STATUS_LABEL[(e.from as Status) ?? 'PENDING']}</span>
+                  <span className="text-[#8A8D91]">→</span>
+                  <span
+                    className={`font-bold px-1.5 rounded ${
+                      e.to === 'RESOLVED' ? 'text-emerald-700 bg-emerald-50' : e.to === 'IN_PROGRESS' ? 'text-sky-700 bg-sky-50' : 'text-amber-700 bg-amber-50'
+                    }`}
+                  >
+                    {STATUS_LABEL[(e.to as Status) ?? 'PENDING']}
+                  </span>
+                </p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 export default function SupportReportsPage() {
@@ -472,6 +580,9 @@ function SupportReportsPanel() {
                   নোট সেভ
                 </button>
               </div>
+
+              {/* অ্যাকশন-ইতিহাস টাইমলাইন (session205) — নোট + স্টেটাস-বদল */}
+              <ActionHistory entries={parseHistory(r.noteHistory)} />
             </article>
           ))}
         </div>

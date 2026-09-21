@@ -93,18 +93,55 @@ export async function PUT(req: NextRequest) {
     const existing = await db.userReport.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'অভিযোগ পাওয়া যায়নি' }, { status: 404 })
 
+    // session205 (Task 56): অ্যাকশন-ইতিহাস (noteHistory) — নোট-পরিবর্তন + স্টেটাস-পরিবর্তন
+    // একটাই টাইমলাইনে; সর্বোচ্চ ৫০-এন্ট্রি (পুরোনো স্লাইস-আউট)। করাপ্ট-JSON হলে নিরাপদে রিসেট।
+    const statusChanged = status !== undefined && status !== existing.status
+    const newNote = adminNote !== undefined ? adminNote.trim() || null : undefined
+    const noteChanged = newNote !== undefined && newNote !== existing.adminNote
+
+    let historyArr: Record<string, unknown>[] = []
+    if (existing.noteHistory) {
+      try {
+        const parsed = JSON.parse(existing.noteHistory)
+        if (Array.isArray(parsed)) historyArr = parsed
+      } catch {
+        /* করাপ্ট-হিস্ট্রি → খালি-দিয়ে শুরু */
+      }
+    }
+    let historyTouched = false
+    if (statusChanged) {
+      historyArr.push({
+        t: 'status',
+        from: existing.status,
+        to: status,
+        at: new Date().toISOString(),
+        by: gate.me.name || gate.me.username,
+        byRole: gate.me.role,
+      })
+      historyTouched = true
+    }
+    if (noteChanged && newNote) {
+      historyArr.push({
+        t: 'note',
+        note: newNote,
+        at: new Date().toISOString(),
+        by: gate.me.name || gate.me.username,
+        byRole: gate.me.role,
+      })
+      historyTouched = true
+    }
+
     const updated = await db.userReport.update({
       where: { id },
       data: {
         ...(status !== undefined ? { status: status as Status } : {}),
-        ...(adminNote !== undefined ? { adminNote: adminNote.trim() || null } : {}),
+        ...(newNote !== undefined ? { adminNote: newNote } : {}),
+        ...(historyTouched ? { noteHistory: JSON.stringify(historyArr.slice(-50)) } : {}),
       },
     })
 
     // session203 (Task 54): অভিযোগকারীকে বেল-নোটিফিকেশন (SUPPORT_UPDATE) —
     // স্টেটাস বদলালে বা নতুন জবাব (adminNote) এলেই; নীরব-ব্যর্থতা (notify নিজেই ক্যাচ করে)
-    const statusChanged = status !== undefined && status !== existing.status
-    const noteChanged = adminNote !== undefined && (adminNote.trim() || null) !== existing.adminNote
     if (statusChanged || noteChanged) {
       await notify({
         actorId: gate.me.id,

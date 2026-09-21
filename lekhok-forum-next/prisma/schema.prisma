@@ -389,6 +389,8 @@ model UserReport {
   mediaUrl    String?
   status      ReportStatus @default(PENDING)
   adminNote   String?
+  // session205 (Task 56): নোট-ইতিহাস — JSON অ্যারে [{note, at, by, byRole}] (সর্বোচ্চ ৫০-এন্ট্রি)
+  noteHistory String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 

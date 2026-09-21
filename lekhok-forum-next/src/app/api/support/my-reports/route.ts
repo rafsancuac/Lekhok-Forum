@@ -12,6 +12,7 @@ import { getCurrentUser } from '@/lib/session'
  * - শুধু নিজের পাঠানো অভিযোগ (senderId = সেশন-ইউজার)
  * - adminNote দেখানো হয় — এটাই ম্যানেজমেন্টের অফিসিয়াল জবাব
  * - senderEmail/senderId ফেরত যায় না (অপ্রয়োজনীয়-তথ্য-লিক-শূন্য)
+ * - session205: নোট-ইতিহাস ফেরত যায়, কিন্তু শুধু {note, at} — by/byRole (অভ্যন্তরীণ-তথ্য) বাদ
  * রোল-নিরপেক্ষ: যে-কোনো লগড-ইন ইউজার নিজের অভিযোগ দেখতে পারে (member-ও)।
  */
 
@@ -33,6 +34,7 @@ export async function GET() {
         mediaType: true,
         status: true,
         adminNote: true,
+        noteHistory: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -41,11 +43,32 @@ export async function GET() {
     const counts: Record<Status, number> = { PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0 }
     for (const r of reports) if (counts[r.status as Status] !== undefined) counts[r.status as Status]++
 
+    /** session205 — নোট-ইতিহাস পার্স; শুধু {note, at} (by/byRole বাদ) + নতুন-আগে, সর্বোচ্চ ২০ */
+    const replyHistoryFor = (raw: string | null): { note: string; at: string }[] => {
+      if (!raw) return []
+      try {
+        const arr = JSON.parse(raw)
+        if (!Array.isArray(arr)) return []
+        return arr
+          .filter((e) => e && e.t === 'note' && typeof e.note === 'string' && e.note.trim())
+          .map((e) => ({ note: String(e.note), at: typeof e.at === 'string' ? e.at : '' }))
+          .reverse()
+          .slice(0, 20)
+      } catch {
+        return []
+      }
+    }
+
     return NextResponse.json({
       reports: reports.map((r) => ({
-        ...r,
-        // লিস্ট-ভিউতে দীর্ঘ টেক্সট কেটে — সম্পূর্ণ টেক্সট মেসেঞ্জার-থ্রেডেই আছে
-        messageText: r.messageText.length > 220 ? r.messageText.slice(0, 220) + '…' : r.messageText,
+        // স্পষ্ট-ফিল্ড ম্যাপ — ...r-স্প্রেড নয় (noteHistory-র by/byRole ভেতরের-তথ্য, বাইরে যায় না)
+        id: r.id,
+        messageText: r.messageText,
+        mediaType: r.mediaType,
+        status: r.status,
+        adminNote: r.adminNote,
+        noteHistory: replyHistoryFor(r.noteHistory),
+        messageTextTrunc: r.messageText.length > 220 ? r.messageText.slice(0, 220) + '…' : undefined,
         createdAt: r.createdAt.toISOString(),
         updatedAt: r.updatedAt.toISOString(),
       })),

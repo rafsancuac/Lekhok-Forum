@@ -19,6 +19,8 @@ interface MyReport {
   mediaType: string; // TEXT | IMAGE | AUDIO | VIDEO
   status: 'PENDING' | 'IN_PROGRESS' | 'RESOLVED';
   adminNote: string | null;
+  // session205 — নোট-ইতিহাস ({note, at} নতুন-আগে; by/byRole সার্ভারেই বাদ)
+  noteHistory?: { note: string; at: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -67,8 +69,8 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
   const [seenMs, setSeenMs] = useState(0);
   const loadedRef = useRef(false); // এই-ওপেনে সফল-লোড হয়েছে? (error-অবস্থায় markSeen নয়)
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/support/my-reports');
@@ -89,6 +91,21 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
   // খোলা হলে ফ্রেশ-লোড (অভিযোগ পাঠানোর পরেও লাইভ-স্টেট)
   useEffect(() => {
     if (open) load();
+  }, [open, load]);
+
+  // session205 (Task 56) — প্যানেল খোলা-অবস্থায় লাইভ-সিঙ্ক: ৩০-সে সাইলেন্ট-পোল (ট্যাব-দৃশ্যমান হলে)
+  // + 'lf:support-changed' ইভেন্টে তাৎক্ষণিক-রিফ্রেশ (রিভিউ-ডেস্ক আপডেট করলেই ইউজার-দিকে আসে)
+  useEffect(() => {
+    if (!open) return;
+    const t = setInterval(() => {
+      if (!document.hidden) load(true);
+    }, 30000);
+    const onChanged = () => load(true);
+    window.addEventListener('lf:support-changed', onChanged);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('lf:support-changed', onChanged);
+    };
   }, [open, load]);
 
   // session204 — প্যানেল বন্ধ হলে সফল-লোড-হলে "দেখা হলো" চিহ্নিত (পড়ার-সময় ব্যাজ থাকে,
@@ -167,7 +184,7 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
           </h2>
           <div className="flex items-center gap-1">
             <button
-              onClick={load}
+              onClick={() => load()}
               disabled={loading}
               aria-label="রিফ্রেশ"
               title="রিফ্রেশ"
@@ -227,7 +244,7 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
               <ShieldCheck className="w-8 h-8 text-[#65676b]" aria-hidden />
               <p className="text-[13px] text-rose-300">{error}</p>
               <button
-                onClick={load}
+                onClick={() => load()}
                 className="text-[12px] font-bold text-[#00a86b] hover:text-[#00c471] transition"
               >
                 আবার চেষ্টা করুন
@@ -296,6 +313,23 @@ export default function MyReportsPanel({ open, onClose }: { open: boolean; onClo
                         {r.adminNote}
                       </p>
                     </div>
+                  )}
+                  {/* session205 — পূর্ববর্তী জবাব (নোট-ইতিহাস; সর্বশেষটি উপরের ব্লকেই) */}
+                  {(r.noteHistory?.length ?? 0) > 1 && (
+                    <details className="group/hist">
+                      <summary className="text-[10px] font-bold text-[#00a86b]/80 hover:text-[#33d79f] cursor-pointer select-none list-none flex items-center gap-1 transition">
+                        <span className="group-open/hist:hidden">পূর্ববর্তী জবাব দেখুন ({bn((r.noteHistory?.length ?? 0) - 1)})</span>
+                        <span className="hidden group-open/hist:inline">পূর্ববর্তী জবাব লুকান</span>
+                      </summary>
+                      <div className="mt-1.5 space-y-1.5 lf-anim-fade">
+                        {r.noteHistory!.slice(1).map((h, i) => (
+                          <div key={i} className="rounded-lg rounded-l-none bg-[#ffffff]/[0.03] border border-l-2 border-[#3e4042] border-l-[#00a86b]/30 px-2.5 py-1.5">
+                            <p className="text-[11.5px] text-[#b9c8c1] leading-relaxed break-words whitespace-pre-wrap">{h.note}</p>
+                            <p className="text-[9.5px] text-[#65676b] text-right mt-0.5">{h.at ? timeAgo(h.at) : ''}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
                   )}
                   <p className="text-[10px] text-[#65676b] text-right">
                     পাঠানো: {timeAgo(r.createdAt)}
