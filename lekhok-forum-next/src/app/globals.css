@@ -137,6 +137,12 @@
     system-ui, sans-serif;
 }
 
+/* ─── session189: অ্যাডমিন-প্যানেলের font-hind ইউটিলিটি — Hind Siliguri-প্রথম স্ট্যাক (না-লোড হলে Noto-ফলব্যাক) ─── */
+@utility font-hind {
+  font-family: 'Hind Siliguri', var(--font-noto-bengali), 'Noto Sans Bengali', 'Kalpurush',
+    system-ui, sans-serif;
+}
+
 /* ─── Facebook dark palette ─── */
 .lf-bg-page { background-color: #18191a; }
 .lf-bg-card { background-color: #242526; }

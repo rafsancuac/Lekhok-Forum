@@ -11,6 +11,7 @@ import {
   Bookmark,
   Camera,
   ArrowUp,
+  Landmark,
   Pencil,
   UserCheck,
   Users,
@@ -31,6 +32,7 @@ import ProfileView from '@/components/profile/ProfileView'
 import GroupsView from '@/components/group/GroupsView'
 import GroupDetailView from '@/components/group/GroupDetailView'
 import CreateGroupModal from '@/components/group/CreateGroupModal'
+import LeadershipView from '@/components/leadership/LeadershipView'
 import MessengerView from '@/components/messenger/MessengerView'
 import type { FrontendPost, FrontendUser } from '@/lib/types'
 import { bn } from '@/lib/format'
@@ -38,7 +40,7 @@ import { compressImage } from '@/lib/image-compress'
 import { useToast } from '@/hooks/use-toast'
 import { useUnreadCounts } from '@/hooks/useUnreadCounts'
 
-type ViewMode = MainTab | 'search' | 'profile' | 'groups' | 'group' | 'messenger'
+type ViewMode = MainTab | 'search' | 'profile' | 'groups' | 'group' | 'messenger' | 'leadership'
 
 export default function Home() {
   const [current, setCurrent] = useState<FrontendUser | null>(null)
@@ -68,6 +70,8 @@ export default function Home() {
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
   /* Session L: মেসেঞ্জার-ভিউ (?chat=1 ডিপ-লিংক সহ) */
   const [messengerOpen, setMessengerOpen] = useState(false)
+  /* Session 189: নেতৃত্ব-ভিউ (?leadership=1 ডিপ-লিংক সহ) */
+  const [leadershipOpen, setLeadershipOpen] = useState(false)
   const [groupsList, setGroupsList] = useState<{ id: string; name: string; memberCount: number }[]>([])
   const [groupsRefreshKey, setGroupsRefreshKey] = useState(0)
   /* Session I: ফলো-অবস্থা বদলালে সাজেশন-রেইল রিফ্রেশ (window-ইভেন্ট ডিকাপলড) */
@@ -100,7 +104,9 @@ export default function Home() {
           ? 'groups'
           : messengerOpen && !loading
             ? 'messenger'
-            : tab
+            : leadershipOpen && !loading
+              ? 'leadership'
+              : tab
 
   /* ─── Session K: URL-প্যারাম হেল্পার — ?post=/?story=/?user=/?group=/?groups= একসাথে সামলানো ─── */
   const setUrlParams = useCallback((changes: Record<string, string | null>) => {
@@ -130,6 +136,7 @@ export default function Home() {
       if (g) setGroupId(g)
       if (sp.get('groups') === '1') setGroupsView(true)
       if (sp.get('chat') === '1') setMessengerOpen(true)
+      if (sp.get('leadership') === '1') setLeadershipOpen(true)
     } catch {
       /* ignore */
     }
@@ -143,7 +150,8 @@ export default function Home() {
       setProfileUsername(null)
       setGroupsView(false)
       setGroupId(null)
-      setUrlParams({ post: postId, story: null, user: null, group: null, groups: null })
+      setLeadershipOpen(false)
+      setUrlParams({ post: postId, story: null, user: null, group: null, groups: null, leadership: null })
       // পোস্ট-লিস্ট রিলোড (tab switch) হলে এলিমেন্ট আনমাউন্ট/রিমাউন্ট হয় —
       // তাই ~৩ সেকেন্ড পর্যন্ত বারবার খুঁজে স্ক্রল করি, শেষে হাইলাইট সরাই।
       let attempts = 0
@@ -216,17 +224,19 @@ export default function Home() {
       if (current && username === current.username) {
         setProfileUsername(null)
         setTab('timeline')
-        setUrlParams({ user: null, post: null, story: null, group: null, groups: null })
+        setUrlParams({ user: null, post: null, story: null, group: null, groups: null, leadership: null })
         setGroupsView(false)
         setGroupId(null)
+        setLeadershipOpen(false)
         window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
       setProfileUsername(username)
       setGroupsView(false)
       setGroupId(null)
+      setLeadershipOpen(false)
       window.scrollTo({ top: 0, behavior: 'smooth' })
-      setUrlParams({ user: username, post: null, story: null, group: null, groups: null })
+      setUrlParams({ user: username, post: null, story: null, group: null, groups: null, leadership: null })
     },
     [current, setUrlParams]
   )
@@ -242,7 +252,8 @@ export default function Home() {
     setProfileUsername(null)
     setGroupId(null)
     setGroupsView(true)
-    setUrlParams({ groups: '1', group: null, user: null, post: null, story: null })
+    setLeadershipOpen(false)
+    setUrlParams({ groups: '1', group: null, user: null, post: null, story: null, leadership: null })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [setUrlParams])
 
@@ -252,7 +263,8 @@ export default function Home() {
       setProfileUsername(null)
       setGroupsView(false)
       setGroupId(id)
-      setUrlParams({ group: id, groups: null, user: null, post: null, story: null })
+      setLeadershipOpen(false)
+      setUrlParams({ group: id, groups: null, user: null, post: null, story: null, leadership: null })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     },
     [setUrlParams]
@@ -271,13 +283,31 @@ export default function Home() {
     setGroupId(null)
     setGroupsView(false)
     setMessengerOpen(true)
-    setUrlParams({ chat: '1', group: null, groups: null, user: null, post: null, story: null })
+    setLeadershipOpen(false)
+    setUrlParams({ chat: '1', group: null, groups: null, user: null, post: null, story: null, leadership: null })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [setUrlParams])
 
   const closeMessenger = useCallback(() => {
     setMessengerOpen(false)
     setUrlParams({ chat: null })
+  }, [setUrlParams])
+
+  /* ─── Session 189: নেতৃত্ব-ভিউ (?leadership=1 ডিপ-লিংক সহ) ─── */
+  const openLeadership = useCallback(() => {
+    setSearchQuery('')
+    setProfileUsername(null)
+    setGroupId(null)
+    setGroupsView(false)
+    setMessengerOpen(false)
+    setLeadershipOpen(true)
+    setUrlParams({ leadership: '1', chat: null, group: null, groups: null, user: null, post: null, story: null })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [setUrlParams])
+
+  const closeLeadership = useCallback(() => {
+    setLeadershipOpen(false)
+    setUrlParams({ leadership: null })
   }, [setUrlParams])
 
   /* Session K: সাইডবার/মোবাইল-স্ট্রিপের জন্য আমার গ্রুপ-তালিকা */
@@ -330,7 +360,7 @@ export default function Home() {
 
   /* ─── পোস্ট লোড (ফিড/টাইমলাইন/সেভড/সার্চ) — প্রথম পেজ (প্রোফাইল-ভিউ নিজেই লোড করে) ─── */
   const loadPosts = useCallback(async (mode: ViewMode, q?: string) => {
-    if (mode === 'profile' || mode === 'group' || mode === 'groups') return
+    if (mode === 'profile' || mode === 'group' || mode === 'groups' || mode === 'leadership') return
     setPostsLoading(true)
     setError(null)
     try {
@@ -657,6 +687,7 @@ export default function Home() {
               closeProfile()
               closeGroupNav()
               closeMessenger()
+              closeLeadership()
             }}
             onSwitchUser={switchUser}
             onOpenProfile={openProfile}
@@ -667,6 +698,8 @@ export default function Home() {
             groupsActive={view === 'groups' || view === 'group'}
             messengerActive={view === 'messenger'}
             onOpenMessenger={openMessenger}
+            leadershipActive={view === 'leadership'}
+            onOpenLeadership={openLeadership}
             unreadNotifications={unreadCounts.notifications}
             unreadMessages={unreadCounts.messages}
             onOpenNotifications={() => window.dispatchEvent(new CustomEvent('lf:open-notifications'))}
@@ -682,6 +715,7 @@ export default function Home() {
                   setSearchQuery('')
                   closeProfile()
                   closeGroupNav()
+                  closeLeadership()
                 }}
                 className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition ${
                   view === 'feed' ? 'bg-[#006a4e] text-white' : 'text-[#b0b3b8] hover:bg-[#3a3b3c]'
@@ -695,6 +729,7 @@ export default function Home() {
                   setSearchQuery('')
                   closeProfile()
                   closeGroupNav()
+                  closeLeadership()
                 }}
                 className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition flex items-center justify-center gap-1 ${
                   view === 'following' ? 'bg-[#006a4e] text-white' : 'text-[#b0b3b8] hover:bg-[#3a3b3c]'
@@ -709,6 +744,7 @@ export default function Home() {
                   setSearchQuery('')
                   closeProfile()
                   closeGroupNav()
+                  closeLeadership()
                 }}
                 className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition ${
                   view === 'timeline' ? 'bg-[#006a4e] text-white' : 'text-[#b0b3b8] hover:bg-[#3a3b3c]'
@@ -722,12 +758,22 @@ export default function Home() {
                   setSearchQuery('')
                   closeProfile()
                   closeGroupNav()
+                  closeLeadership()
                 }}
                 className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition ${
                   view === 'saved' ? 'bg-[#006a4e] text-white' : 'text-[#b0b3b8] hover:bg-[#3a3b3c]'
                 }`}
               >
                 সেভ
+              </button>
+              <button
+                onClick={openLeadership}
+                className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition flex items-center justify-center gap-1 ${
+                  view === 'leadership' ? 'bg-[#006a4e] text-white' : 'text-[#b0b3b8] hover:bg-[#3a3b3c]'
+                }`}
+              >
+                <Landmark className="w-3.5 h-3.5" />
+                কমিটি
               </button>
             </div>
 
@@ -743,6 +789,9 @@ export default function Home() {
                 users={users}
               />
             )}
+
+            {/* ═══ Session 189: নেতৃত্ব-ভিউ (প্রতিষ্ঠাতা + বর্তমান পরিষদ) ═══ */}
+            {view === 'leadership' && <LeadershipView current={current} />}
 
             {/* ═══ Session K: গ্রুপ-লিস্ট ভিউ ═══ */}
             {view === 'groups' && (

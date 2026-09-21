@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Home, Clock, Bookmark, FileText, Feather, Users, UserRound, UserCheck, UsersRound, MessagesSquare, Bell } from 'lucide-react'
+import { Home, Clock, Bookmark, FileText, Feather, Users, UserRound, UserCheck, UsersRound, MessagesSquare, Bell, Landmark } from 'lucide-react'
 import type { FrontendUser } from '@/lib/types'
 import { bn } from '@/lib/format'
 
@@ -21,6 +21,9 @@ export default function LeftSidebar({
   groupsActive = false,
   messengerActive = false,
   onOpenMessenger,
+  /* session189 — নেতৃত্ব ও কমিটি ভিউ */
+  leadershipActive = false,
+  onOpenLeadership,
   /* session160 — লাইভ অপঠিত-ব্যাজ (useUnreadCounts-থেকে) */
   unreadNotifications = 0,
   unreadMessages = 0,
@@ -43,6 +46,9 @@ export default function LeftSidebar({
   /** Session L: মেসেঞ্জার */
   messengerActive?: boolean
   onOpenMessenger?: () => void
+  /** session189: নেতৃত্ব ও কমিটি */
+  leadershipActive?: boolean
+  onOpenLeadership?: () => void
   /** session160 — লাইভ ব্যাজ + বিজ্ঞপ্তি-প্যানেল ওপেনার */
   unreadNotifications?: number
   unreadMessages?: number
@@ -96,6 +102,16 @@ export default function LeftSidebar({
         icon={<FileText className="w-5 h-5" />}
         label="আমার লেখা"
         onClick={() => onTabChange('timeline')}
+      />
+      <NavItem
+        icon={
+          <Landmark
+            className={`w-5 h-5 ${leadershipActive ? 'text-[#00a86b]' : ''}`}
+          />
+        }
+        label="নেতৃত্ব ও কমিটি"
+        active={leadershipActive}
+        onClick={() => onOpenLeadership?.()}
       />
       <NavItem
         icon={

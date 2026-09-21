@@ -269,3 +269,21 @@ model Message {
   @@index([conversationId, createdAt])
   @@index([senderId])
 }
+
+// ─── Session 189: নেতৃত্ব-ব্যবস্থাপনা (অ্যাডমিন প্যানেল /admin/leadership) ───
+// FOUNDING = নেতৃত্বের ধারা (প্রতিষ্ঠাতা পরিষদ), CURRENT = বর্তমান নেতৃত্ব
+// ছবি: ক্লায়েন্ট-কমপ্রেস-করা data-URI (ছোট অ্যাভাটার) অথবা বাহ্যিক URL
+model LeadershipMember {
+  id        String   @id @default(cuid())
+  category  String   @default("FOUNDING") // FOUNDING | CURRENT
+  name      String
+  role      String
+  term      String   @default("")
+  quote     String   @default("")
+  imageUrl  String?
+  order     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, order])
+}
