@@ -735,6 +735,42 @@ router.post('/home-leadership/slot', requireAdmin, (req, res, next) => memberPho
       await db.prepare('UPDATE members SET name=?, role=?, term_year=?, message=?, image_url=?, social_fb=?, social_linkedin=?, social_email=?, profile_url=? WHERE id=?')
         .run(name, role, termYear || null, message, imageUrl, socialFb, socialLinkedin, socialEmail, profileUrl, memberId);
 
+      // সেশন ১৭৯: বর্তমান-জোড়ার কার্যবর্ষ-সুরক্ষা — সভাপতি/সা.সম্পাদকের এক-কার্ডে
+      // কার্যবর্ষ বদলালে একই-পুরনো-কার্যবর্ষের জোড়া-পদের কার্যবর্ষও একই করে দিই
+      // (নইলে home-কুয়েরির term_year=latestTerm ফিল্টারে জোড়া ভেঙে অন্য কার্ড
+      // গায়েব হয় — "এক-কার্ডে ২০২৬-২৭ দিলে অন্যটি ২০২৫-২৬-তেই থেকে যায়")।
+      // শুধু একই-পুরনো-কার্যবর্ষের সহ-পদই সিঙ্ক হয় — ঐতিহাসিক পুরনো-কমিটি রো অক্ষত।
+      // সাথে হোমের "বর্তমান কার্যবর্ষ লেখা" (home_year_current) লেবেলও হালনাগাদ —
+      // কারণ হোম-কার্ডে যে-বছর-লেখা দেখা যায় সেটি এ-সেটিং থেকেই আসে (সদস্যের
+      // term_year থেকে নয়) — নইলে কার্ড ২০২৬-২৭ হয়েও লেবেল ২০২৫-২৬-ই থেকে যেত!
+      let pairNote179 = '';
+      if (member.member_type === 'central' && termYear && String(member.term_year || '') !== termYear) {
+        try {
+          const oldTerm179 = String(member.term_year || '');
+          const mates179 = await db.prepare("SELECT id FROM members WHERE member_type='central' AND id != ? AND role IN ('সভাপতি','সাধারণ সম্পাদক') AND term_year = ?")
+            .all(memberId, oldTerm179);
+          for (const mt179 of (mates179 || [])) {
+            await db.prepare('UPDATE members SET term_year=? WHERE id=?').run(termYear, mt179.id);
+            await TA42.audit(db, req, 'home-leadership-pair-term-sync', 'members', mt179.id, meta.title + ' — জোড়ার কার্যবর্ষ → ' + termYear);
+          }
+          if (mates179 && mates179.length) pairNote179 = 'জোড়ার পদের কার্যবর্ষও ' + termYear + ' করা হয়েছে';
+          // হোম-লেবেল সিঙ্ক: বর্তমান-লেবেলে পুরনো-কার্যবর্ষ-স্ট্রিং থাকলে সেটিই বদলাই
+          // (কাস্টম-সাফিক্স যেমন " কার্যবর্ষ" অক্ষুণ্ণ); লেবেল ফাঁকা হলে আদর্শ-ফরম্যাট লিখি;
+          // পুরনো-কার্যবর্ষ-উল্লেখ-বিহীন কাস্টম-লেবেল থাকলে অক্ষত রাখি।
+          let lbl179 = null;
+          try { lbl179 = await db.getSetting('home_year_current'); } catch (_) {}
+          if (lbl179 && oldTerm179 && String(lbl179).indexOf(oldTerm179) !== -1) {
+            await setSetting('home_year_current', String(lbl179).split(oldTerm179).join(termYear));
+            pairNote179 += (pairNote179 ? ' · ' : '') + 'হোমের "বর্তমান কার্যবর্ষ লেখা"-ও হালনাগাদ';
+          } else if (!lbl179 || !String(lbl179).trim()) {
+            await setSetting('home_year_current', termYear + ' কার্যবর্ষ');
+            pairNote179 += (pairNote179 ? ' · ' : '') + 'হোমের "বর্তমান কার্যবর্ষ লেখা"-ও হালনাগাদ';
+          }
+        } catch (e179) {
+          console.error('[admin:home-leadership] pair term sync failed:', e179.message);
+        }
+      }
+
       // ৩) লিংকড-অ্যাকাউন্ট সিঙ্ক — হোম-কার্ডে নাম/ছবি user-টেবিল থেকে আসে;
       //    অ্যাডমিন চাইলে প্রোফাইলেও এক-ক্লিকে প্রতিফলিত করা যায়।
       if (member.user_id && (req.body.sync_profile === '1')) {
@@ -746,7 +782,7 @@ router.post('/home-leadership/slot', requireAdmin, (req, res, next) => memberPho
       }
       await TA42.audit(db, req, 'home-leadership-update', 'members', memberId, meta.title);
       const display = await respondDisplay(memberId, slotKey);
-      return done(true, { ok: true, slot: slotKey, created: false, display });
+      return done(true, { ok: true, slot: slotKey, created: false, display, note: pairNote179 });
     }
 
     // ২খ) সেশন ৬২: খালি-স্লটে সরাসরি-ইনপুট — নাম দেওয়া থাকলে সঠিক ধরনে নতুন

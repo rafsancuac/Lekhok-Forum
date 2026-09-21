@@ -44,6 +44,15 @@ let _uploadTimer   = null;
 let _snapshotDirty = false;   // সেশন ৩৮: আপলোড-বেকি রাইট থাকলে true
 let _bootRestored  = false;
 let _bootSeeded    = false;
+// সেশন ১৭৯: মাল্টি-ইনস্ট্যান্স হট-রি-সিঙ্ক — Vercel-এ একাধিক উষ্ণ ল্যাম্বডা প্রত্যেকে
+// নিজের ইন-মেমোরি sql.js কপি নিয়ে চলে; আগে এক-ইনস্ট্যান্সের রাইট অন্যটি কখনোই
+// দেখত না (শুধু কোল্ড-বুটে স্ন্যাপশট লোড) — ফলে অ্যাডমিন-সেভ (যেমন কার্যবর্ষ)
+// হোমপ্যানেল/হোমপেজে হারিয়ে যেত বা পুরনো দেখাত। এখন প্রতিটি ইনস্ট্যান্স
+// ব্লবের uploadedAt দেখে বুঝবে অন্য কেউ নতুন স্ন্যাপশট দিয়েছে কি না — দিলে
+// নিজের কপি হট-রি-প্লেস করবে (নিজের অ-আপলোডেড রাইট থাকলে নয়)।
+let _lastBlobUploadAt = 0;    // আমার-শেষ-জানা ব্লব-আপলোড (নিজেরটি সহ)
+let _lastSyncCheckAt  = 0;    // শেষ রি-সিঙ্ক-যাচাই (থ্রটল)
+let _syncInFlight     = null; // একক-ফ্লাইট প্রমিজ
 
 // ────────────────────────────────────────────────────────────────────────────
 // Migration SQL (kept in-sync with db/schema.sql for local-dev convenience)
@@ -1165,10 +1174,50 @@ function saveDb() {
         token: BLOB_TOKEN,
         contentType: 'application/octet-stream'
       });
+      _lastBlobUploadAt = Date.now(); // সেশন ১৭৯: নিজের আপলোড মনে রাখি — রি-সিঙ্ক এড়াতে
       console.log('[db] Snapshot saved to Vercel Blob (' + data.length + ' bytes)');
     } catch (e) {
       console.error('[db] Snapshot upload failed:', e.message);
     }
+  }
+
+  // ── সেশন ১৭৯: হট-রি-সিঙ্ক — অন্য ইনস্ট্যান্সের নতুন স্ন্যাপশট এলে নিজের কপি
+  // বদলে ফেলা। force=true → থ্রটল প্রায়-বন্ধ (অ্যাডমিন-পেজ/সেভ), নইলে ৪৫সে থ্রটল।
+  // রেস-সেফটি: সোয়াপ-এর ঠিক-আগে _snapshotDirty রিচেক — ফেচ-চলাকালীন রাইট
+  // এলে সোয়াপ বাতিল (রাইট হারানো-রোধ); রিচেক-থেকে-সোয়াপ সিঙ্ক্রোনাস ব্লক।
+  async function syncIfStale(force) {
+    if (!USE_DB_SNAPSHOT) return false;
+    if (_snapshotDirty) return false; // আমার অ-আপলোডেড রাইট আছে — রিলোডে হারাবে; ডিবাউন্স-আপলোডই পথ
+    const now = Date.now();
+    if (now - _lastSyncCheckAt < (force ? 2000 : 45000)) return false;
+    if (_syncInFlight) return _syncInFlight;
+    _lastSyncCheckAt = now;
+    _syncInFlight = (async () => {
+      try {
+        const { list } = require('@vercel/blob');
+        const res = await list({ prefix: SNAPSHOT_PATH, limit: 1, token: BLOB_TOKEN });
+        const hit = res.blobs && res.blobs.length ? res.blobs[0] : null;
+        if (!hit) return false;
+        const ua = typeof hit.uploadedAt === 'number' ? hit.uploadedAt : (Date.parse(hit.uploadedAt || '') || 0);
+        if (!(ua > _lastBlobUploadAt + 1500)) return false; // অন্য-ইনস্ট্যান্স-আপলোড নেই
+        const r = await fetch(hit.url);
+        if (!r.ok) return false;
+        const buf = Buffer.from(await r.arrayBuffer());
+        if (_snapshotDirty) return false; // ফেচ-চলাকালীন রাইট এসেছে → সোয়াপ বাতিল
+        const fresh = new SQL.Database(buf);
+        try { _sqlJsDb.close(); } catch (_) {}
+        _sqlJsDb = fresh;
+        _lastBlobUploadAt = ua;
+        console.log('[db] Hot re-sync from Vercel Blob (' + buf.length + ' bytes, uploadedAt=' + new Date(ua).toISOString() + ')');
+        return true;
+      } catch (e) {
+        console.warn('[db] Hot re-sync skipped:', e.message);
+        return false;
+      } finally {
+        _syncInFlight = null;
+      }
+    })();
+    return _syncInFlight;
   }
   function persist() {
     clearTimeout(_saveTimer);
@@ -1206,6 +1255,7 @@ function saveDb() {
     exec:    (sql) => { _sqlJsDb.exec(sql); persist(); },
     save:    saveDb,
     flush:   uploadSnapshot,
+    syncIfStale,
     type:    'sqljs'
   };
 }
@@ -1221,6 +1271,10 @@ async function fetchSnapshot() {
     const r = await fetch(hit.url);
     if (!r.ok) return null;
     const buf = Buffer.from(await r.arrayBuffer());
+    // সেশন ১৭৯: বুটে যে-স্ন্যাপশট লোড হলো তার সময় মনে রাখি — নইলে প্রথম
+    // রি-সিঙ্ক-যাচাইয়েই নিজের-সদ্য-লোড-করা স্ন্যাপশটকে "নতুন" ভেবে আবার নামাতাম।
+    const ua = typeof hit.uploadedAt === 'number' ? hit.uploadedAt : (Date.parse(hit.uploadedAt || '') || 0);
+    if (ua) _lastBlobUploadAt = ua;
     console.log('[db] Snapshot restored from Vercel Blob (' + buf.length + ' bytes)');
     return buf;
   } catch (e) {
@@ -3123,6 +3177,17 @@ async function getTransportSchedule() {
   return require('./helpers/transport-schedule');
 }
 
+// সেশন ১৭৯: মডিউল-স্তরের রি-সিঙ্ক র‍্যাপার — sql.js+Blob ব্যাকএন্ডে হট-রি-সিঙ্ক চালায়;
+// Turso/লোকাল-মোডে no-op (backend.syncIfStale নেই)। server.js মিডলওয়্যার এটাই ডাকে।
+async function syncIfStale(force) {
+  try {
+    if (backend && typeof backend.syncIfStale === 'function') return await backend.syncIfStale(force);
+  } catch (e) {
+    console.warn('[db] syncIfStale wrapper:', e.message);
+  }
+  return false;
+}
+
 module.exports = {
   initDb,
   get db()       { return _sqlJsDb; },  // legacy direct access (sql.js only)
@@ -3140,6 +3205,7 @@ module.exports = {
   flushDb,
   get snapshotActive() { return USE_DB_SNAPSHOT; },  // Vercel Blob-snapshot mode কিনা
   get snapshotDirty()  { return _snapshotDirty; },   // ফ্লাশ-না-হওয়া রাইট আছে কিনা
+  syncIfStale, // সেশন ১৭৯: মাল্টি-ইনস্ট্যান্স হট-রি-সিঙ্ক (sql.js+Blob মোডেই কার্যকর)
   MODERATOR_SCOPES,
   SCOPE_ALIASES,
   DAILY_CONTENT_SCOPES,

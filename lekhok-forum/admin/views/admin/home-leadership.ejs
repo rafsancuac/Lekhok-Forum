@@ -587,6 +587,8 @@
           }
           exitEdit();
           showOk();
+          /* সেশন ১৭৯: জোড়ার কার্যবর্ষ-সিঙ্ক হলে ছোট-নোট (উদা: "জোড়ার পদের কার্যবর্ষও ২০২৬-২৭ করা হয়েছে") */
+          if (res.j.note) statusEl.textContent = res.j.note;
           submitBtn.disabled = false; submitBtn.innerHTML = old;
         } else {
           statusEl.textContent = (res.j && res.j.error) ? res.j.error : 'সংরক্ষণ ব্যর্থ হয়েছে — আবার চেষ্টা করুন।';

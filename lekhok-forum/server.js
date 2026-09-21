@@ -335,7 +335,10 @@ app.use((req, res, next) => {
 // Turso কুয়ারি (ওয়ার্ম TTFB ৩-৭s)। Googlebot ধীর হোস্টে ক্রল-রেট কমায় → GSC-তে
 // ৩২টি পেজ "Discovered – currently not indexed"।
 // সমাধান: লগ-আউট ভিজিটরের জন্য নির্দিষ্ট পাবলিক GET পেজে (কুয়েরি-স্ট্রিং ছাড়া)
-//  ১) s-maxage=300 + stale-while-revalidate — Vercel Edge ক্যাশ করে (~50ms TTFB)
+//  ১) s-maxage=60 + stale-while-revalidate=300 — Vercel Edge ক্যাশ করে (~50ms TTFB)
+//     (সেশন ১৭৯: আগে s-maxage=300 + SWR=86400 ছিল — অ্যাডমিন-সেভ (যেমন কার্যবর্ষ)
+//     এজ-কপিতে ঘণ্টার-পর-ঘণ্টা পুরনো দেখাত; এখন সর্বোচ্চ ~১–৬ মিনিটে সাইটব্যাপী
+//     প্রতিফলন, TTFB-সুবিধা অক্ষুণ্ণ — ক্রলার-রেটে প্রভাব নগণ্য)
 //  ২) ঐ রিকোয়েস্টে CSRF-কুকি/সেশন-রাইট স্কিপ — Set-Cookie-ই থাকে না
 // নিরাপত্তা-নোট: অ্যানোনিমাস পাবলিক পেজের ইন্টারঅ্যাকটিভ এন্ডপয়েন্ট (রিঅ্যাকশন/
 // বুকমার্ক/শেয়ার/নিউজলেটার) সব JSON/fetch — CSRF-মিডলওয়্যার শুধু urlencoded/
@@ -348,7 +351,31 @@ app.use((req, res, next) => {
   const _anon72 = !(req.session && (req.session.user || req.session.adminUser));
   if ((req.method === 'GET' || req.method === 'HEAD') && !_hasQuery72 && _anon72 && PUBLIC_CACHE_RE72.test(req.path)) {
     res.locals._cacheablePublic72 = true;
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  }
+  next();
+});
+
+// ── সেশন ১৭৯: মাল্টি-ইনস্ট্যান্স স্ন্যাপশট হট-রি-সিঙ্ক (sql.js + Vercel Blob মোড) ────
+// Vercel-এ একাধিক উষ্ণ ল্যাম্বডা ইনস্ট্যান্স নিজেদের ইন-মেমোরি DB-কপি নিয়ে চলে —
+// এক-ইনস্ট্যান্সের অ্যাডমিন-রাইট অন্যটি কখনো দেখত না (কোল্ড-বুটেই কেবল স্ন্যাপশট
+// লোড)। ফলে অ্যাডমিন প্যানেলে সেভ করা কার্যবর্ষ/নাম হোমপেজ বা এমনকি প্যানেলের
+// পরের লোডেই পুরনো দেখাত (ইনস্ট্যান্স-রুলেট)। এ-মিডলওয়্যার:
+//  • অ্যাডমিন GET/POST → force-সিঙ্ক (২সে-থ্রটল) — প্যানেল সর্বদা সর্বশেষ-ডাটায়,
+//    সেভও সর্বশেষ-বেসের বিপরীতে হয় (ক্লবার-ঝুঁকি হ্রাস)
+//  • পাবলিক ক্যাশেবল-পেজ → থ্রটল্ড-সিঙ্ক (৪৫সে) — দর্শক ≤৪৫সে-এ সদ্য-ডাটা দেখেন
+// Turso/লোকাল-মোডে db.syncIfStale নিজেই no-op — ওভারহেড শূন্য।
+app.use((req, res, next) => {
+  if (typeof db.syncIfStale !== 'function') return next();
+  const _p179 = req.path || '';
+  const _isAdmin179 = _p179 === '/admin' || _p179.indexOf('/admin/') === 0;
+  if (_isAdmin179 && (req.method === 'GET' || req.method === 'POST')) {
+    db.syncIfStale(true).then(() => next()).catch(() => next());
+    return;
+  }
+  if ((req.method === 'GET' || req.method === 'HEAD') && PUBLIC_CACHE_RE72.test(_p179)) {
+    db.syncIfStale(false).then(() => next()).catch(() => next());
+    return;
   }
   next();
 });
