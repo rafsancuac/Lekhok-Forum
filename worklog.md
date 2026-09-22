@@ -3480,3 +3480,12 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়)
 - পরের-এজেন্ট: **session224 লেবেল**; PLANS session223-নোট পড়ুন (KPI-এক-উৎস + জাম্প + stdin/দ্বৈত-পার্স গোটচা)
 - রিমোট main = এ-রাউন্ডের push (session223-অপারেটর-KPI-প্যাক); working-tree ক্লিন
+
+---
+## NEXT-REMOVE (2026-09-22) — lekhok-forum-next সম্পূর্ণ অপসারণ + Support-Center Express-পোর্ট
+- **ইউজার-নির্দেশ**: Next.js-সংক্রান্ত সব কিছু বাদ — আগে গুরুত্বপূর্ণ কিছু থাকলে Express-এ মুভ
+- **অডিট**: একমাত্র unique-ফিচার = Support-Center; বাকি সব সমতুল্য/ডেমো-লেভেল
+- **Support-Center পোর্ট (fd13763)**: user_reports + designation (নাম-সার্চ) + রিভিউ-ডেস্ক + মেসেঞ্জার-মিরর + server-pinned অফিসিয়াল-থ্রেড + my-reports API/প্যানেল + দুইমুখী নোটিফিকেশন + CSV + SLA-এজিং + SSE; E2E ৮/৮ সবুজ; banner r8
+- **অপসারণ (c0029a6)**: lekhok-forum-next/ গিট-ট্রি থেকে মুছে (archive-tag: `archive/lekhok-forum-next`); AGENT-NOTICE.md যোগ — এই রিপোতে Express ছাড়া অন্য অ্যাপে কাজ নিষিদ্ধ
+- **গোটচা**: ডাইনামিক-ফর্মে sidebar CSRF-প্যাচার পড়ে না → ?_csrf= ম্যানুয়াল-যোগ; sql.js: সার্ভার-চলন্ত-অবস্থায় বাইরে-থেকে seed করবেন না (debounced saveDb ওভাররাইট করে)
+- **লাইভ**: উভয় কমিট Vercel-প্রোডাকশন READY; home r8 ✓, ডেস্ক-রুট 403-gated ✓, ePaper 200 ✓, কনসোল-এরর শূন্য
