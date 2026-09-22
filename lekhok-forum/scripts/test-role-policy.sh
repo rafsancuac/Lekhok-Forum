@@ -1,6 +1,8 @@
 #!/bin/bash
 # ═══ সেশন ৮১: রোল-হায়ারার্কি ও লগইন-বিভাজন E2E v2 ═══
-P=${RP_PORT:-8080}; BASE="http://localhost:$P"
+# session251: পোর্ট-চুক্তি s-পরিবারের-সমতুল্য — RP_PORT > PORT-পরিবেশ (ব্যাটারি) > 8094-স্থায়ী-QA-সার্ভার
+# (পুরাতন ডিফল্ট 8080 = lf-পরিবারের-স্বয়ংশাসিত-সার্ভার-পোর্ট — ব্যাটারিতে 213-মিথ্যা-ফেলের-কারণ ছিল)
+P=${RP_PORT:-${PORT:-8094}}; BASE="http://localhost:$P"
 PASS=0; FAIL=0; SKIP=0
 ck() { if [ "$2" == "$3" ]; then PASS=$((PASS+1)); echo "  ✓ $1"; else FAIL=$((FAIL+1)); echo "  ✗ $1 (expected [$2] got [$3])"; fi }
 ckc() { if echo "$3" | grep -q "$2"; then PASS=$((PASS+1)); echo "  ✓ $1"; else FAIL=$((FAIL+1)); echo "  ✗ $1 (missing: $2)"; fi }
@@ -73,9 +75,25 @@ ckc "ইউজার-লগইন লিংক" "/login" "$MSGHTML"
 fi
 
 echo "══ ২. সেশন প্রস্তুতি (fresh jars) ══"
-login $JARU /login testuser demo123 > /dev/null
-login $JARM /admin/login moderator moderator123 > /dev/null
+# session251: সুপার/মডারেটর-জার-প্রথম + স্বাস্থ্য-স্বাভাবিকীকরণ — স্টেল-DB-প্রজন্ম-ড্রিফট
+# (testadmin-ডিমোশন/ব্যান-লিক, session250-RCA-শ্রেণি) JARU/JARTA-লগইনে মিথ্যা-ক্যাসকেড আটকায়।
+# ডিসকভারি-হেল্পার: /admin/users-HTML (ব্যাজ user/mod/admin ↔ role user/moderator/admin);
+# পুরাতন ডিস্ক-sql.js-রিড স্টেল — in-memory sql.js শাটডাউন-ফ্লাশ-নির্ভর (PLANS session249/250)।
 login $JARA /admin/login admin admin123 > /dev/null
+login $JARM /admin/login moderator moderator123 > /dev/null
+ADHTML251() { curl -s -b $JARA "$BASE/admin/users"; }
+ROW251() { ADHTML251 | awk -v RS='<tr' -v u="profile/$1\"" '$0 ~ u {print; exit}'; }
+UID251() { ROW251 "$1" | grep -oE '/admin/users/[0-9]+/edit' | head -1 | grep -oE '[0-9]+'; }
+ROLE251() { ROW251 "$1" | grep -oE 'badge badge-(user|mod|admin)' | head -1 | sed 's/badge badge-//'; }
+STATUS251() { ROW251 "$1" | grep -oE 'status-dot status-[a-z]+' | head -1 | sed 's/status-dot status-//'; }
+if [ "$(STATUS251 testuser)" = "active" ]; then PASS=$((PASS+1)); echo "  ✓ testuser স্ট্যাটাস-স্বাস্থ্য (active) পূর্ব-স্থাপিত"; else
+  R=$(postf $JARM /moderator/users "/moderator/users/$(UID251 testuser)/status" "status=active"); ck "testuser স্ট্যাটাস-স্বাস্থ্য-পুনর্স্থাপন 303" "303" "${R%% *}"; fi
+if [ "$(ROLE251 testadmin)" = "admin" ]; then PASS=$((PASS+1)); echo "  ✓ testadmin রোল-স্বাস্থ্য (admin) পূর্ব-স্থাপিত"; else
+  R=$(postf $JARA /admin/moderators "/admin/users/$(UID251 testadmin)/role" "role=admin"); ck "testadmin রোল-স্বাস্থ্য-পুনর্স্থাপন (admin) 303" "303" "${R%% *}"; fi
+# session251-নোট: ensure-server.sh এখন LF_QA_DISABLE_RATELIMIT=1-এ-বুট — বহু-রাউন্ড-চক্রে
+# ১৫-মিনিট-রেট-লিমিট-ট্রিপ (auth.js loginLimited, ip|username-কী) আর JARTA-জাতীয় লগইনে
+# মিথ্যা-ক্যাসকেড আনে না (প্রোড/Vercel পতাকাহীন-ই)।
+login $JARU /login testuser demo123 > /dev/null
 login $JARTA /admin/login testadmin demo123 > /dev/null
 ck "user /dashboard 200" "200" "$(get $JARU /dashboard)"
 ck "moderator /moderator 200" "200" "$(get $JARM /moderator)"
@@ -108,11 +126,12 @@ HTML=$(curl -s -b $JARU "$BASE/messages?err=$MSG"); ckc "লিস্ট-পে�
 echo "══ ৬. সরাসরি-কানেকশন নীতি (ফলো) ══"
 login $JARM /admin/login moderator moderator123 > /dev/null
 # session137-fix: user-id dynamic-discovery — হার্ডকোড (47/49/48) fresh-DB-তে ভুল-ইউজার
-# নিষেধ/ফলো করত (ismail/riya!) → ৬-fail ক্যাসকেড — §২৫-প্যাটার্নে username→id কুয়েরি।
-UIDQ137() { node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));const r=d.exec('SELECT id FROM users WHERE username=\"$1\"');console.log(r.length?r[0].values[0][0]:'')})" 2>/dev/null; }
-MODID=$(UIDQ137 moderator); [ -n "$MODID" ] || MODID=47
-TAID=$(UIDQ137 testadmin);  [ -n "$TAID" ]  || TAID=49
-TUID=$(UIDQ137 testuser);   [ -n "$TUID" ]  || TUID=48
+# নিষেধ/ফলো করত (ismail/riya!) → ৬-fail ক্যাসকেড।
+# session251: UIDQ137-ডিস্ক-রিড → ২b-র UID251 HTML-ডিসকভারি; ফলব্যাক-ও-বর্তমান-প্রজন্মের-প্রকৃত
+# (moderator=47, testadmin=55, testuser=52 — স্টেল-প্রজন্মে 48/49=fbtest1-জাতীয়-ভিন্ন-ইউজার!)।
+MODID=$(UID251 moderator); [ -n "$MODID" ] || MODID=47
+TAID=$(UID251 testadmin);  [ -n "$TAID" ]  || TAID=55
+TUID=$(UID251 testuser);   [ -n "$TUID" ]  || TUID=52
 R=$(curl -s -b $JARU -X POST "$BASE/follow/$MODID"); ckc "user→moderator ফলো ব্লক" "role_policy" "$R"
 R=$(curl -s -b $JARM -X POST "$BASE/follow/$TUID"); ckc "moderator→user ফলো ব্লক" "role_policy" "$R"
 R=$(curl -s -b $JARM -X POST "$BASE/follow/$TAID"); ckc "moderator→admin ফলো ব্লক" "role_policy" "$R"
@@ -120,28 +139,23 @@ R=$(curl -s -b $JARU -X POST "$BASE/follow/5"); ckc "user→user ফলো OK" "
 
 echo "══ ৭. রোল-নিয়োগ হায়ারার্কি ══"
 R=$(postf $JARTA /admin/moderators /admin/users/$TUID/role "role=admin"); ck "user-role admin→admin নিয়োগ অবাঞ্ছিত (302, role ignored)" "303" "${R%% *}"
-sleep 1; ROLE=$(node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));console.log(d.exec('SELECT role FROM users WHERE id=$TUID')[0].values[0][0])})" 2>/dev/null)
-ck "testuser role অপরিবর্তিত (user)" "user" "$ROLE"
+ck "testuser role অপরিবর্তিত (user)" "user" "$(ROLE251 testuser)"
 R=$(postf $JARTA /admin/moderators /admin/users/$TUID/role "role=moderator"); ck "user-role admin→moderator নিয়োগ 303" "303" "${R%% *}"
-sleep 1; ROLE=$(node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));console.log(d.exec('SELECT role FROM users WHERE id=$TUID')[0].values[0][0])})" 2>/dev/null)
-ck "testuser এখন moderator" "moderator" "$ROLE"
+ck "testuser এখন moderator (badge-mod ↔ role=moderator)" "mod" "$(ROLE251 testuser)"
 R=$(postf $JARA /admin/moderators /admin/users/$TUID/role "role=user"); ck "সুপার→role=user পুনরুদ্ধার 303" "303" "${R%% *}"
-sleep 1; ROLE=$(node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));console.log(d.exec('SELECT role FROM users WHERE id=$TUID')[0].values[0][0])})" 2>/dev/null)
-ck "testuser role user-এ ফিরেছে" "user" "$ROLE"
+ck "testuser role user-এ ফিরেছে" "user" "$(ROLE251 testuser)"
 
 echo "══ ৮. মডারেটর ইউজার-তদারকি ══"
 ck "moderator /moderator/users 200" "200" "$(get $JARM /moderator/users)"
 HTML=$(curl -s -b $JARM "$BASE/moderator/users"); ckc "তদারকি-পেজে testuser" "testuser" "$HTML"
 R=$(postf $JARM /moderator/users /moderator/users/$TUID/status "status=banned"); ck "moderator→testuser নিষেধ 303" "303" "${R%% *}"
-sleep 1; ST=$(node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));console.log(d.exec('SELECT status FROM users WHERE id=$TUID')[0].values[0][0])})" 2>/dev/null)
-ck "testuser DB status=banned" "banned" "$ST"
+# session251: ডিস্ক-রিড → লাইভ-সারফেস-প্রমাণ (POST-সিঙ্ক্রোনাস — sleep-অপ্রয়োজনীয়)
+ck "testuser status=banned (surface-প্রমাণ)" "banned" "$(STATUS251 testuser)"
 R=$(login /tmp/jar_ban /login testuser demo123); ck "ব্যান-করা ইউজার লগইন আটকায় (200)" "200" "${R%% *}"
 R=$(postf $JARM /moderator/users /moderator/users/$TUID/status "status=active"); ck "moderator→ফেরত 303" "303" "${R%% *}"
-sleep 1; ST=$(node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));console.log(d.exec('SELECT status FROM users WHERE id=$TUID')[0].values[0][0])})" 2>/dev/null)
-ck "testuser status=active ফেরত" "active" "$ST"
+ck "testuser status=active ফেরত" "active" "$(STATUS251 testuser)"
 R=$(postf $JARM /moderator/users /moderator/users/$TAID/status "status=banned"); ckc "moderator→স্টাফ-নিষেধ ব্লক" "err=staff" "$R"
-sleep 1; ST=$(node -e "const i=require('./node_modules/sql.js'),f=require('fs');i().then(S=>{const d=new S.Database(f.readFileSync('./lekhok.db'));console.log(d.exec('SELECT status FROM users WHERE id=$TAID')[0].values[0][0])})" 2>/dev/null)
-ck "testadmin অক্ষত (active)" "active" "$ST"
+ck "testadmin অক্ষত (active)" "active" "$(STATUS251 testadmin)"
 ck "user /moderator/users 403" "403" "$(get $JARU /moderator/users)"
 HTML=$(curl -s -b $JARM "$BASE/moderator"); ckc "মডারেটর-সাইডবারে তদারকি লিংক" "/moderator/users" "$HTML"
 HTML=$(curl -s -b $JARM "$BASE/moderator"); ckc "সাইডবারে সোয়াপ বাটন" "ইউজার ইন্টারফেসে সোয়াপ" "$HTML"
@@ -150,6 +164,12 @@ echo "══ ৯. UI স্মোক ══"
 HTML=$(curl -s "$BASE/admin/login"); ckc "স্টাফ-লগইন শিরোনাম" "স্টাফ লগইন" "$HTML"
 ckc "স্টাফ-লগইনে ইউজার-লিংক" "/login" "$HTML"
 HTML=$(curl -s "$BASE/login"); ckc "ইউজার-লগইন ব্যাজ" "সাধারণ ব্যবহারকারীদের লগইন" "$HTML"
+# session251: অ্যাডমিন-ইউজার তাৎক্ষণিক-ফিল্টার (au251) — কাঠামো-স্মোক (বিস্তারিত tests/s251-ausearch-suite.sh)
+HTML=$(curl -s -b $JARA "$BASE/admin/users")
+ckc "au251 তাৎক্ষণিক-ফিল্টার ইনপুট" 'id="au251-filter"' "$HTML"
+ckc "au251 সারি-কীওয়ার্ড data-kw" 'data-kw=' "$HTML"
+ckc "au251 শূন্য-অবস্থা সারি" 'data-au-empty' "$HTML"
+ckc "au251 QA-হুক __auQA" '__auQA' "$HTML"
 
 echo "══ ১০. পাবলিক রিগ্রেশন স্মোক ══"
 for pg in / /about /articles /qa /notices /events /gallery /committee /members /contact /quiz /epaper /resources /activities /best-writer /birthdays /on-this-day /search; do

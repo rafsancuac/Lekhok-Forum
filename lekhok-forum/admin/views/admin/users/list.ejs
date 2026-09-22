@@ -37,6 +37,18 @@
     <% } %>
   </form>
 
+  <%# session251: তাৎক্ষণিক-ফিল্টার স্ট্রিপ — সার্ভার-রাউন্ড-ট্রিপ-হীন ক্লায়েন্ট-সাইড সংকীর্ণ
+      (GET ফিল্টার-বার অক্ষুণ্ণ; ২০০-সারি পর্যন্ত তালিকায় তাৎক্ষণিক-মিল); 'f'-কী ফোকাস + Escape-ক্লিয়ার;
+      QA-হুক __auQA (সারফেস-নেমস্পেস-রীতি) %>
+  <div class="au251-wrap">
+    <div class="au251-field">
+      <input type="text" id="au251-filter" class="form-input au251-input" placeholder="তাৎক্ষণিক ফিল্টার — নাম, @ইউজারনেম, রোল..." aria-label="তাৎক্ষণিক ফিল্টার" autocomplete="off">
+      <kbd class="au251-kbd" aria-hidden="true">f</kbd>
+    </div>
+    <span id="au251-count" class="au251-count" title="দৃশ্যমান সারি"><%= users.length %></span>
+    <button type="button" id="au251-clear" class="au251-clear" hidden aria-label="ফিল্টার পরিষ্কার"><i class="fas fa-times"></i></button>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -55,7 +67,7 @@
         <tr><td colspan="8" class="empty-row">কোনো ইউজার পাওয়া যায়নি</td></tr>
       <% } %>
       <% users.forEach(u => { %>
-        <tr>
+        <tr data-au-row data-kw="<%= (u.username + ' ' + (u.full_name || '') + ' ' + (u.email || '') + ' ' + u.role + ' ' + u.status).toLowerCase() %>">
           <td>
             <div class="user-cell">
               <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="user-avatar-sm" alt="">
@@ -84,6 +96,8 @@
           </td>
         </tr>
       <% }); %>
+        <%# session251: তাৎক্ষণিক-ফিল্টার-শূন্য-অবস্থা (ক্লায়েন্ট-সাইডেই টগল হয়) %>
+        <tr data-au-empty hidden><td colspan="8" class="empty-row">এই ফিল্টারে কোনো ইউজার মেলেনি</td></tr>
     </tbody>
   </table>
 
@@ -109,6 +123,69 @@
 .status-active  { background: #16a34a; }
 .status-pending { background: #f59e0b; }
 .status-banned  { background: #dc2626; }
+
+/* ── session251 — তাৎক্ষণিক-ফিল্টার (টোকেন-শুধু; guard-হেক্স-র্যাচেট-নিরাপদ; fr-kbd249-প্যাটার্ন-মিরর) ── */
+.au251-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.au251-field { position: relative; flex: 0 1 420px; }
+.au251-input { width: 100%; padding-right: 52px; transition: border-color .15s ease, box-shadow .15s ease; }
+.au251-input:focus { outline: none; border-color: var(--lf-brandgreen); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lf-brandgreen) 14%, transparent); }
+.au251-kbd { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); pointer-events: none; font: inherit; font-size: 10px; font-weight: 700; line-height: 1; color: var(--lf-text-tertiary); background: var(--lf-ui-canvas); border: 1px dashed var(--lf-ui-border-strong); border-radius: 4px; padding: 2px 6px; transition: opacity .15s ease; }
+.au251-field:focus-within .au251-kbd { opacity: 0; }
+.au251-count { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; padding: 6px 10px; border-radius: 999px; background: var(--lf-ui-canvas); border: 1px solid var(--lf-ui-border); color: var(--lf-text-secondary); font-weight: 700; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.au251-count.au251-dim { color: var(--lf-text-tertiary); }
+.au251-clear { border: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); color: var(--lf-text-tertiary); border-radius: 5px; padding: 8px 11px; cursor: pointer; transition: color .15s ease, border-color .15s ease; }
+.au251-clear:hover { color: var(--lf-green-ink); border-color: var(--lf-brandgreen); }
+.au251-clear:active { transform: scale(.96); }
+@media (max-width: 640px) { .au251-field { flex-basis: 100%; } .au251-input { padding-right: 12px; } .au251-kbd { display: none; } }
+@media (prefers-reduced-motion: reduce) { .au251-input, .au251-kbd { transition: none; } .au251-clear:active { transform: none; } }
 </style>
+
+<script>
+(function () {
+  'use strict';
+  var input = document.getElementById('au251-filter');
+  var count = document.getElementById('au251-count');
+  var clearBtn = document.getElementById('au251-clear');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-au-row]'));
+  var emptyRow = document.querySelector('tr[data-au-empty]');
+  var total = rows.length;
+  function apply251() {
+    var v = (input.value || '').trim().toLowerCase();
+    var vis = 0;
+    rows.forEach(function (r) {
+      var kw = r.getAttribute('data-kw') || '';
+      var hit = !v || kw.indexOf(v) >= 0;
+      r.hidden = !hit;
+      if (hit) vis++;
+    });
+    count.textContent = vis;
+    count.classList.toggle('au251-dim', !!v && vis !== total);
+    if (emptyRow) emptyRow.hidden = vis !== 0;
+    if (clearBtn) clearBtn.hidden = !v;
+  }
+  if (input) {
+    input.addEventListener('input', apply251);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { input.value = ''; apply251(); input.blur(); }
+    });
+  }
+  if (clearBtn) clearBtn.addEventListener('click', function () { input.value = ''; apply251(); input.focus(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'f' || e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target && e.target.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+    e.preventDefault();
+    input.focus();
+    input.select();
+  });
+  /* session251 QA-হুক (__auQA — সারফেস-নেমস্পেস-রীতি; print/গাঢ়-অংশের পরে ক্রমের-শেষ) */
+  window.__auQA = {
+    focus: function () { input.focus(); return true; },
+    clear: function () { input.value = ''; apply251(); return true; },
+    count: function () { return document.querySelectorAll('tr[data-au-row]:not([hidden])').length; },
+    total: function () { return total; }
+  };
+})();
+</script>
 </body>
 </html>
