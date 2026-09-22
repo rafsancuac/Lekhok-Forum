@@ -115,6 +115,18 @@ function staleCount(rows) {
   return (rows || []).filter(r => r && r.status !== 'RESOLVED' && agingInfo(r.created_at, r.status).days >= 3).length;
 }
 
+// session237 — তুলনামূলক সময় (এক-উৎস; createdAtMs-UTC-রীতি — ক্লায়েন্ট-TZ-গণনা-শূন্য; never-throws — করাপ্ট-তারিখে খালি)
+function relTimeBn(createdAt) {
+  const t = createdAtMs(createdAt);
+  if (t === null) return '';
+  const mins = Math.floor((Date.now() - t) / 60000);
+  if (mins < 1) return 'এখনই';
+  if (mins < 60) return bnNum(mins) + ' মি আগে';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return bnNum(hrs) + ' ঘ আগে';
+  return bnNum(Math.floor(hrs / 24)) + ' দিন আগে';
+}
+
 // CSV-এর "ইতিহাস" কলামের কমপ্যাক্ট বাংলা সারাংশ
 function historySummaryBn(historyJson) {
   const arr = parseHistory(historyJson);
@@ -246,5 +258,5 @@ module.exports = {
   SUPPORT_ADMIN_KEY, STATUSES, STATUS_LABEL, MEDIA_TYPES,
   getSupportAdminId, getSupportAdmin, setSupportAdmin, clearSupportAdmin, isSupportAdmin,
   parseHistory, appendHistory, lastNoteOf, agingInfo, staleCount, historySummaryBn, bnNum,
-  createdAtMs, resolvedAtMs, trend7, digestStats
+  createdAtMs, resolvedAtMs, trend7, digestStats, relTimeBn
 };

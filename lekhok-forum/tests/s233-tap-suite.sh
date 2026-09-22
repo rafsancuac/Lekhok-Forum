@@ -9,7 +9,7 @@
 #         ক্লিক-পরবর্তী-ট্রেলিং-mouseout → MutationObserver-ক্যাপচার + সিনথেটিক-ক্লিকে স্থায়িত্ব-প্রমাণ ·
 #         grep-BRE-ব্র্যাকেট-এস্কেপ (\[data-on="1"\]) · ক্ষণস্থায়ী-টোস্ট-অ্যাসার্ট-বর্জন
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

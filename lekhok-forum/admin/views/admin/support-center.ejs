@@ -108,6 +108,16 @@
     .sc-tpl button{font-size:.72rem;font-weight:600;border:1px dashed var(--ad-line);background:var(--ad-bg);color:var(--ad-muted);
       border-radius:999px;padding:3px 10px;cursor:pointer;font-family:inherit}
     .sc-tpl button:hover{color:var(--ad-accent-ink);border-color:var(--ad-accent-ring)}
+    <%# session237 — অক্ষর-গণনা + তুলনামূলক-সময়-চিপ + কপি-বাটন (reduced-motion-নিরাপদ — কোনো-অ্যানিমেশন-নেই) %>
+    .sc-note-count{align-self:flex-end;font-size:.66rem;font-weight:600;color:var(--ad-muted);font-variant-numeric:tabular-nums;background:var(--ad-bg);border:1px solid var(--ad-line-soft);border-radius:999px;padding:1px 8px;margin-top:-2px}
+    .sc-note-count.warn{color:var(--lf-amber-ink);border-color:var(--lf-amber-ink);background:rgba(255,183,77,.12)}
+    .sc-note-count.full{color:#b3261e;border-color:#b3261e;background:rgba(179,38,30,.10)}
+    .sc-compact .sc-note-count{font-size:.62rem;padding:0 6px}
+    .sc-rel{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;color:var(--ad-muted);background:var(--ad-bg);border:1px solid var(--ad-line-soft);border-radius:999px;padding:1px 8px;line-height:1.5;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .sc-rel i{font-size:.58rem;opacity:.75}
+    .sc-compact .sc-rel{font-size:.62rem;padding:0 6px}
+    .sc-tpl .sc-tpl-copy{margin-left:auto;border-style:solid}
+    .sc-hbtns button[data-hcopy]:hover{color:var(--ad-accent-ink)}
     .sc-hist{margin-top:12px;border-top:1px dashed var(--ad-line);padding-top:10px}
     .sc-hist-title{font-size:.78rem;font-weight:700;color:var(--ad-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
     .sc-hentry{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;padding:6px 0;border-bottom:1px dashed var(--ad-line-soft)}
@@ -407,6 +417,8 @@
         <small>
           <% if (r.sender_username) { %><a href="/profile/<%= r.sender_username %>" target="_blank">@<%= r.sender_username %></a> · <% } %>
           <span title="<%= r.created_at %>"><%= r.created_at %></span>
+          <%# session237 — তুলনামূলক-সময় চিপ (helpers relTimeBn এক-উৎস; সার্ভার-গণনা — ক্লায়েন্ট-TZ-ঝুঁকি-শূন্য; title-এ পূর্ণ-তারিখ) %>
+          <% if (r.rel) { %><span class="sc-rel" title="<%= r.created_at %>"><i class="fas fa-clock" aria-hidden="true"></i><%= r.rel %></span><% } %>
         </small>
       </div>
       <span class="sc-badge m-<%= r.media_type %>"><i class="fas <%= r.media_type === 'TEXT' ? 'fa-pen' : r.media_type === 'IMAGE' ? 'fa-image' : r.media_type === 'AUDIO' ? 'fa-microphone' : 'fa-video' %>"></i><%= r.media_type === 'TEXT' ? 'লেখা' : r.media_type === 'IMAGE' ? 'ছবি' : r.media_type === 'AUDIO' ? 'ভয়েস' : 'ভিডিও' %></span>
@@ -434,12 +446,16 @@
       </select>
       <div class="sc-note-box">
         <textarea data-sc-note maxlength="2000" placeholder="ম্যানেজমেন্টের জবাব লিখুন (রিপোর্টার দেখতে পাবেন)…"><%= r.admin_note || '' %></textarea>
+        <%# session237 — অক্ষর-গণনা (bnNum-এক-উৎস EJS-প্রথম-পেইন্ট; JS-ইনপুটে bnJs-এক-উৎস; aria-hidden — maxlength-ই-বাস্তব-সীমা) %>
+        <span class="sc-note-count" data-note-count aria-hidden="true"><%= bnNum((r.admin_note || '').length) %>/<%= bnNum(2000) %></span>
         <div class="sc-tpl">
           <button type="button" data-tpl="আপনার অভিযোগ গৃহীত হয়েছে — ধন্যবাদ।">গৃহীত</button>
           <button type="button" data-tpl="আপনার অভিযোগ পর্যালোচনাধীন আছে — শীঘ্রই হালনাগাদ জানানো হবে।">পর্যালোচনাধীন</button>
           <button type="button" data-tpl="প্রয়োজনীয় ব্যবস্থা নেওয়া হয়েছে। সহযোগিতার জন্য ধন্যবাদ।">ব্যবস্থা নেওয়া হয়েছে</button>
           <button type="button" data-tpl="অতিরিক্ত তথ্য/প্রমাণ পেলে এই থ্রেডে পাঠান।">তথ্য চাওয়া হয়েছে</button>
           <button type="button" data-tpl="অভিযোগটি সমাধান হয়েছে। আরও সমস্যা হলে জানাবেন।">সমাধান</button>
+          <%# session237 — লেখা-কপি (ক্লিপবোর্ড-API → execCommand-ফলব্যাক headless-নিরাপদ; খালি-লেখায় টোস্ট) %>
+          <button type="button" class="sc-tpl-copy" data-note-copy title="লেখা ক্লিপবোর্ডে কপি করুন" aria-label="লেখা ক্লিপবোর্ডে কপি করুন"><i class="fas fa-copy" aria-hidden="true"></i> কপি</button>
         </div>
       </div>
       <button type="button" class="btn btn-primary btn-sm" data-sc-save><i class="fas fa-save"></i> সংরক্ষণ</button>
@@ -462,6 +478,8 @@
         </div>
         <% if (h.t === 'note') { %>
         <div class="sc-hbtns">
+          <%# session237 — জবাব-কপি (edit/delete-সহ এক-সারি; DOM-টেক্সট-উৎস — data-entry-পুনঃপার্স-শূন্য) %>
+          <button type="button" data-hcopy title="জবাব কপি করুন" aria-label="জবাব কপি করুন"><i class="fas fa-copy"></i></button>
           <button type="button" data-hedit title="জবাব সম্পাদনা" aria-label="জবাব সম্পাদনা"><i class="fas fa-pen"></i></button>
           <button type="button" data-hdel title="জবাব মুছুন" aria-label="জবাব মুছুন"><i class="fas fa-trash"></i></button>
         </div>
@@ -493,6 +511,7 @@
     <div class="sc-help-row"><span>রিফ্রেশ-এখন — গণনা তৎক্ষণাৎ আনুন (বিরতি-অবস্থায়-ও চলে)</span><span class="keys"><kbd class="sc-kbd">r</kbd></span></div>
     <div class="sc-help-row"><span>অটো-হালনাগাদ বিরতি/চালু — পোল+SSE-স্বয়ংক্রিয়-রিলোড (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">p</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে হোভার — দিনভিত্তিক-গণনা টুলটিপ</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
+    <div class="sc-help-row"><span>জবাব/লেখা এক-ক্লিকে ক্লিপবোর্ডে কপি (মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
@@ -562,13 +581,76 @@
   });
   function reloadSoon(ms) { clearDirty(); setTimeout(function () { location.reload(); }, ms || 0); }
 
-  // ── টেমপ্লেট-বাটন ──
-  document.querySelectorAll('.sc-tpl button').forEach(function (b) {
+  // ── টেমপ্লেট-বাটন ── (session237 — [data-tpl]-ফিল্টার বাধ্যতমূলক: .sc-tpl-এ এখন কপি-বাটনও-আছে — না-হলে value='null'-দূষণ)
+  document.querySelectorAll('.sc-tpl button[data-tpl]').forEach(function (b) {
     b.addEventListener('click', function () {
       var box = b.closest('.sc-actions').querySelector('[data-sc-note]');
       box.value = b.getAttribute('data-tpl');
       box.focus();
     });
+  });
+
+  // ── session237 — অক্ষর-গণনা (bnJs-এক-উৎস; EJS-প্রথম-পেইন্ট-সমতুল্য; ১৮০০-এ warn amber, ২০০০-এ full red) ──
+  var NOTE_MAX = 2000;
+  function noteCountSync(box) {
+    var cnt = box.parentElement ? box.parentElement.querySelector('[data-note-count]') : null;
+    if (!cnt) return;
+    var n = box.value.length;
+    cnt.textContent = bnJs(n) + '/' + bnJs(NOTE_MAX);
+    cnt.classList.toggle('warn', n >= 1800 && n < NOTE_MAX);
+    cnt.classList.toggle('full', n >= NOTE_MAX);
+  }
+  document.querySelectorAll('[data-sc-note]').forEach(function (box) {
+    noteCountSync(box); // টেমপ্লেট-ফিল-পরেও-সঠিক (আগে-সিঙ্ক)
+    box.addEventListener('input', function () { noteCountSync(box); });
+  });
+  // টেমপ্লেট-ফিল-হুকেও-গণনা (উপরের-হ্যান্ডলার-রান-করে — এক-উৎস-বজায়)
+  document.querySelectorAll('.sc-tpl button[data-tpl]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var box = b.closest('.sc-note-box').querySelector('[data-sc-note]');
+      if (box) noteCountSync(box);
+    });
+  });
+
+  // ── session237 — কপি-সহায়ক (ক্লিপবোর্ড-API → hidden-textarea+execCommand ফলব্যাক — headless-নিরাপদ; Promise-চুক্তি) ──
+  function legacyCopy(txt) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, txt.length);
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return !!ok;
+    } catch (_) { return false; }
+  }
+  function copyText(txt) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(txt).then(function () { return true; }).catch(function () { return legacyCopy(txt); });
+    }
+    return Promise.resolve(legacyCopy(txt));
+  }
+  // কম্পোজার-কপি (লেখা-বক্স বর্তমান-মান; খালি-হলে টোস্ট)
+  document.querySelectorAll('[data-note-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var box = btn.closest('.sc-note-box').querySelector('[data-sc-note]');
+      var txt = box ? box.value.trim() : '';
+      if (!txt) { toast('কপি করার মতো লেখা নেই', true); return; }
+      copyText(txt).then(function (ok) { toast(ok ? 'লেখা কপি হয়েছে ✓' : 'কপি ব্যর্থ', !ok); });
+    });
+  });
+  // ইতিহাস-জবাব-কপি (data-hnote-DOM-টেক্সট-উৎস; ডেলিগেশন — হিস্ট্রি-সম্পাদনা-বক্স-অবস্থায়-নিরাপদ)
+  document.addEventListener('click', function (e) {
+    var cb = e.target.closest && e.target.closest('[data-hcopy]');
+    if (!cb) return;
+    var row = cb.closest('.sc-hentry');
+    var el = row ? row.querySelector('[data-hnote]') : null;
+    var txt = el ? el.textContent.trim() : '';
+    if (!txt) { toast('কপি করার মতো লেখা নেই', true); return; }
+    copyText(txt).then(function (ok) { toast(ok ? 'জবাব কপি হয়েছে ✓' : 'কপি ব্যর্থ', !ok); });
   });
 
   // ── session232 — স্পার্ক/ট্রেন্ড-টুলটিপ (এক-শেয়ার্ড #scSparkTip; data-d/data-v/data-unit এক-উৎস; টেক্সট-নোড-শুধু — innerHTML-নিষিদ্ধ-রীতি; কার্ড-ফোকাসে আজ-বার) ──

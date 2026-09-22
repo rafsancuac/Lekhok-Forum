@@ -2316,7 +2316,8 @@ function scDecorate(rows) {
   return rows.map(r => ({
     ...r,
     history: SC.parseHistory(r.note_history),
-    aging: SC.agingInfo(r.created_at, r.status)
+    aging: SC.agingInfo(r.created_at, r.status),
+    rel: SC.relTimeBn(r.created_at) // session237 — তুলনামূলক-সময় (helpers-এক-উৎস; ক্লায়েন্ট-TZ-গণনা-শূন্য)
   }));
 }
 

@@ -9,7 +9,7 @@
 #         রিয়েল-ক্লিকে তল-বার (i.today/span.today) · MutationObserver-ক্যাপচার + সিনথেটিক-স্থায়িত্ব ·
 #         grep-BRE-ব্র্যাকেট-এস্কেপ
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0
