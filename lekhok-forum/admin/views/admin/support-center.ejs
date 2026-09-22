@@ -100,6 +100,29 @@
     .sc-media{margin-top:10px}
     .sc-media img{max-width:100%;max-height:300px;border-radius:var(--ad-radius-sm);border:1px solid var(--ad-line)}
     .sc-media audio,.sc-media video{width:100%;max-width:420px}
+    <%# session238 — কার্ড-লাইটবক্স (কার্ডেই-বড়; z-স্তর-চুক্তি: বাল্ক 80 < লাইটবক্স 90 < টোস্ট 1300; reduced-motion-নিরাপদ) %>
+    .sc-media a[data-lbox]{display:inline-block;cursor:zoom-in;position:relative}
+    .sc-media a[data-lbox]:hover img{border-color:var(--ad-accent-ring);box-shadow:var(--ad-shadow-lg)}
+    .sc-media a[data-lbox]::after{content:'\f00e';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;top:6px;right:6px;
+      width:26px;height:26px;border-radius:8px;background:rgba(15,18,25,.55);color:#fff;display:flex;align-items:center;justify-content:center;
+      font-size:.68rem;opacity:0;transition:opacity .15s ease;pointer-events:none}
+    .sc-media a[data-lbox]:hover::after,.sc-media a[data-lbox]:focus-visible::after{opacity:1}
+    .sc-media a[data-lbox]:focus-visible{outline:2px solid var(--ad-accent);outline-offset:2px}
+    #scLbox{position:fixed;inset:0;z-index:90;background:rgba(15,18,25,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+      display:flex;align-items:center;justify-content:center;padding:22px;animation:scLboxIn .18s ease}
+    <%# gotcha-session230 — display:flex UA-এর [hidden]-চাপা-দেয় → স্পষ্ট-নিয়ম-বাধ্যতমূলক %>
+    #scLbox[hidden]{display:none}
+    #scLbox figure{margin:0;max-width:min(1100px,94vw);display:flex;flex-direction:column;gap:10px}
+    #scLbox img{max-width:100%;max-height:80vh;border-radius:var(--ad-radius);box-shadow:0 18px 60px rgba(0,0,0,.5);background:#fff}
+    #scLbox figcaption{color:#e7eaf0;font-size:.82rem;font-weight:600;text-align:center;font-variant-numeric:tabular-nums}
+    #scLboxClose{position:absolute;top:14px;right:16px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
+      background:rgba(255,255,255,.12);color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:background .15s ease}
+    #scLboxClose:hover{background:rgba(255,255,255,.28)}
+    #scLboxClose:focus-visible{outline:2px solid var(--ad-accent);outline-offset:2px}
+    @keyframes scLboxIn{from{opacity:0}to{opacity:1}}
+    @media (prefers-reduced-motion: reduce){#scLbox{animation:none}}
+    @media (max-width:640px){#scLbox{padding:12px}#scLbox img{max-height:74vh}}
     .sc-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:12px;padding-top:12px;border-top:1px solid var(--ad-line-soft)}
     .sc-actions select{width:auto}
     .sc-note-box{flex:1;min-width:230px;display:flex;flex-direction:column;gap:6px}
@@ -429,7 +452,8 @@
     <p class="sc-body"><%= r.message_text %></p>
 
     <% if (r.media_url && r.media_type === 'IMAGE') { %>
-      <div class="sc-media"><a href="<%= r.media_url %>" target="_blank" rel="noopener"><img src="<%= r.media_url %>" alt="অভিযোগ-সংযুক্তি" loading="lazy" /></a></div>
+      <%# session238 — লাইটবক্স-হুক (data-lbox+data-lcap; href/target_শূন্য-বদল — মধ্য-ক্লিক/সংশোধক-কী = নেটিভ-নতুন-ট্যাব) %>
+      <div class="sc-media"><a href="<%= r.media_url %>" target="_blank" rel="noopener" data-lbox data-lcap="<%= (r.sender_name || 'অজানা ব্যবহারকারী') %> · <%= r.created_at %>"><img src="<%= r.media_url %>" alt="অভিযোগ-সংযুক্তি" loading="lazy" /></a></div>
     <% } else if (r.media_url && r.media_type === 'AUDIO') { %>
       <div class="sc-media"><audio controls preload="none" src="<%= r.media_url %>"></audio></div>
     <% } else if (r.media_url && r.media_type === 'VIDEO') { %>
@@ -512,6 +536,7 @@
     <div class="sc-help-row"><span>অটো-হালনাগাদ বিরতি/চালু — পোল+SSE-স্বয়ংক্রিয়-রিলোড (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">p</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে হোভার — দিনভিত্তিক-গণনা টুলটিপ</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
     <div class="sc-help-row"><span>জবাব/লেখা এক-ক্লিকে ক্লিপবোর্ডে কপি (মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
+    <div class="sc-help-row"><span>সংযুক্তি-ছবি কার্ড ছাড়াই বড় করে দেখুন — ক্লিকে খোলে, Esc/বাইরে-ক্লিকে বন্ধ (Ctrl+ক্লিক = নতুন-ট্যাব)</span><span class="keys"><kbd class="sc-kbd">ক্লিক</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
@@ -538,6 +563,14 @@
 <div id="scSparkTip" role="tooltip" aria-hidden="true"></div>
 <%# session233 — সপ্তাহ-ওভারভিউ চিপ (বারের-নিচে; aria-hidden — সজ্জা; #scSparkTip-এর-textContent-চুক্তি-অক্ষুণ্ণ রাখতে আলাদা-এলিমেন্ট) %>
 <div id="scSparkTipWk" aria-hidden="true"></div>
+<%# session238 — কার্ড-লাইটবক্স ডায়ালগ (এক-শেয়ার্ড; Esc/ব্যাকড্রপ/বাটন-বন্ধ; z-স্তর ৯০ — বাল্ক 80 এর-উপরে, টোস্ট 1300 এর-নিচে) %>
+<div id="scLbox" role="dialog" aria-modal="true" aria-label="সংযুক্তি বড় করে দেখুন" hidden>
+  <button type="button" id="scLboxClose" aria-label="বন্ধ করুন (Esc)"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+  <figure>
+    <img id="scLboxImg" alt="" />
+    <figcaption id="scLboxCap"></figcaption>
+  </figure>
+</div>
 <div id="scToast" role="status" aria-live="polite"></div>
 <script>
 (function () {
@@ -563,9 +596,47 @@
   }
   var lastDeleted = null; // আনডু-উইন্ডো (কার্ড-প্রতি শেষ মুছে-ফেলা জবাব)
 
+  // ── session238 — কার্ড-লাইটবক্স (IMAGE-সংযুক্তি কার্ডেই-বড়; এক-শেয়ার্ড-ডায়ালগ; ফোকাস-ফেরত) ──
+  // চুক্তি: href/target_শূন্য-বদল — মধ্য-ক্লিক/সংশোধক-কী (Ctrl/Meta/Shift/Alt) = নেটিভ-নতুন-ট্যাব (E2E-নিরাপদ);
+  // Esc-হ্যান্ডল = নিচের-মূল-keydown-এর Esc-শৃঙ্খলে-সর্বপ্রথম (মোডাল-অগ্রাধিকার); body-স্ক্রল-লক (খোলা-অবস্থায়)
+  var lbox = document.getElementById('scLbox');
+  var lboxImg = document.getElementById('scLboxImg');
+  var lboxCap = document.getElementById('scLboxCap');
+  var lboxClose = document.getElementById('scLboxClose');
+  var lboxSrc = null; // ফোকাস-ফেরত-উৎস (ট্রিগার-লিঙ্ক)
+  function lboxOpen(a) {
+    lboxSrc = a;
+    lboxImg.src = a.getAttribute('href');
+    var cap = a.getAttribute('data-lcap') || '';
+    lboxImg.alt = cap;
+    lboxCap.textContent = cap;
+    lbox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    lboxClose.focus();
+  }
+  function lboxHide() {
+    if (lbox.hidden) return;
+    lbox.hidden = true;
+    lboxImg.src = '';
+    lboxCap.textContent = '';
+    document.body.style.overflow = '';
+    if (lboxSrc) { try { lboxSrc.focus(); } catch (_) {} lboxSrc = null; }
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[data-lbox]') : null;
+    if (!a) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // নেটিভ-নতুন-ট্যাব
+    e.preventDefault();
+    lboxOpen(a);
+  });
+  lboxClose.addEventListener('click', lboxHide);
+  lbox.addEventListener('click', function (e) { if (e.target === lbox || e.target.tagName === 'FIGURE') lboxHide(); }); // ব্যাকড্রপ-ক্লিক
+
+
   // ── session228 — অসংরক্ষিত-জবাব সুরক্ষা (dirty-guard: লেখা-বদলে অটু-রিফ্রেশ/বন্ধ-আটকায়) ──
   var dirty = false, dirtyWarned = false;
   window.__scQA = { dirty: false, paused: false, refreshing: false }; // session236 — ফিল্ড-স্টাইল (রিফ্রেশ/বিরতি-অবস্থা-একই-অবজেক্টে)
+  window.__scQA.lboxOpen = function () { return !lbox.hidden; }; // session238 — QA-হুক (অবশ্যই __scQA-পুনঃসৃজনের-পরে — রাউন্ডে-ধরা-বাগ)
   function markDirty() { dirty = true; window.__scQA.dirty = true; }
   function clearDirty() { dirty = false; dirtyWarned = false; window.__scQA.dirty = false; }
   clearDirty();
@@ -1140,6 +1211,7 @@
     }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'Escape' || e.key === 'Esc') {
+      if (!lbox.hidden) { lboxHide(); return; } // session238 — লাইটবক্স-সর্বপ্রথম (মোডাল-অগ্রাধিকার; help/নির্বাচন/কার্সর-শৃঙ্খলের-আগে)
       if (scHelp.classList.contains('open')) { helpClose(); return; }
       if (typing) return;
       if (sel.size) { bulkClear(); return; } // session230 — Esc-স্তর: নির্বাচন → কার্সর
