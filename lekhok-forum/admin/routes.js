@@ -2451,7 +2451,15 @@ router.get('/support-center/export.csv', requireSupportReviewer, async (req, res
     ].map(esc).join(','));
   }
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="support-reports' + (filters.status ? '-' + filters.status.toLowerCase() : '') + '.csv"');
+  // session229 — ফাইলনাম-প্রসঙ্গ (Next-session213-চুক্তি-সমৃদ্ধ): lekhok-support-<tab>[-<media>][-<range>]-<YYYY-MM-DD>.csv
+  const fnameParts = [
+    'lekhok-support',
+    filters.status ? filters.status.toLowerCase() : '',
+    filters.media ? filters.media.toLowerCase() : '',
+    filters.range || '',
+  ].filter(Boolean);
+  const fname = fnameParts.join('-') + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+  res.setHeader('Content-Disposition', 'attachment; filename="' + fname + '"');
   res.send('\uFEFF' + lines.join('\r\n'));
 });
 

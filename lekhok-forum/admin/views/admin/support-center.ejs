@@ -118,6 +118,12 @@
     #scToast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--lf-fb-ink);color:var(--lf-white);
       border-radius:var(--ad-radius-sm);padding:10px 18px;font-size:.88rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;z-index:1300;max-width:90vw}
     #scToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    #scToast::before{content:'✓ ';font-weight:800}
+    #scToast.error{background:var(--lf-danger-deep)}
+    #scToast.error::before{content:'✗ ';font-weight:800}
+    .sc-search-clear{border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-muted);border-radius:var(--ad-radius-sm);
+      width:32px;cursor:pointer;font-size:.8rem;flex:none}
+    .sc-search-clear:hover{color:var(--lf-danger-deep);border-color:var(--lf-danger-soft-3)}
     @media (max-width:640px){ .sc-stats{grid-template-columns:1fr 1fr 1fr;gap:6px} .sc-stat b{font-size:1.15rem} .sc-search{margin-left:0;width:100%} .sc-search input{flex:1} }
     @media (prefers-reduced-motion: reduce){ .sc-live.on .dot{animation:none} .sc-stat:hover{transform:none} }
     /* ── session228 — স্টাইল-সমৃদ্ধি (সব-রঙ var()-টোকেন; reduced-motion-সম্মানী) ── */
@@ -262,6 +268,7 @@
       <% if (media) { %><input type="hidden" name="media" value="<%= media %>" /><% } %>
       <% if (range) { %><input type="hidden" name="range" value="<%= range %>" /><% } %>
       <input type="search" name="q" value="<%= q %>" placeholder="বার্তা বা প্রেরক খুঁজুন…" aria-label="ডেস্ক-সার্চ" />
+      <% if (q) { %><button type="button" class="sc-search-clear" id="scSearchClear" title="অনুসন্ধান সরান" aria-label="অনুসন্ধান সরান"><i class="fas fa-xmark"></i></button><% } %>
       <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i></button>
     </form>
   </div>
@@ -366,6 +373,7 @@
     <div class="sc-help-row"><span>স্ট্যাটাস-ভিউ: নতুন / চলমান / সমাধান</span><span class="keys"><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>সব-অভিযোগ ভিউ</span><span class="keys"><kbd class="sc-kbd">0</kbd></span></div>
     <div class="sc-help-row"><span>সার্চ-বক্সে ফোকাস</span><span class="keys"><kbd class="sc-kbd">/</kbd></span></div>
+    <div class="sc-help-row"><span>কার্সর-কার্ডে দ্রুত-স্ট্যাটাস সেট (নতুন / চলমান / সমাধান)</span><span class="keys"><kbd class="sc-kbd">Shift</kbd><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>লেখা-বদলে রিফ্রেশ-আটকে-রাখা (অসংরক্ষিত-জবাব-সুরক্ষা)</span><span class="keys"><kbd class="sc-kbd">স্বয়ংক্রিয়</kbd></span></div>
@@ -380,9 +388,10 @@
   var deskPath = '/admin/support-center' + location.search;
   var toastEl = document.getElementById('scToast');
   var toastTimer = null;
-  function toast(msg) {
+  function toast(msg, isError) {
     toastEl.textContent = msg;
     toastEl.classList.add('show');
+    toastEl.classList.toggle('error', !!isError);
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
   }
@@ -433,8 +442,8 @@
       api('/admin/support-center/' + id, 'PUT', { status: status, adminNote: note }).then(function (res) {
         btn.disabled = false;
         if (res.ok) { toast(res.unchanged ? 'কোনো পরিবর্তন নেই' : 'সংরক্ষিত হয়েছে ✓'); reloadSoon(650); }
-        else toast(res.error || 'সংরক্ষণ ব্যর্থ', 'error');
-      }).catch(function () { btn.disabled = false; toast('নেটওয়ার্ক ব্যর্থ', 'error'); });
+        else toast(res.error || 'সংরক্ষণ ব্যর্থ', true);
+      }).catch(function () { btn.disabled = false; toast('নেটওয়ার্ক ব্যর্থ', true); });
     });
   });
 
@@ -462,7 +471,7 @@
         api('/admin/support-center/' + card.getAttribute('data-id') + '/history', 'PATCH',
           { index: parseInt(row.getAttribute('data-hidx'), 10), action: 'edit-note', note: nv }).then(function (res) {
           if (res.ok) { toast('জবাব সম্পাদিত ✓'); reloadSoon(600); }
-          else toast(res.error || 'সম্পাদনা ব্যর্থ');
+          else toast(res.error || 'সম্পাদনা ব্যর্থ', true);
         });
       });
       btns[1].addEventListener('click', function () { box.remove(); noteEl.style.display = ''; });
@@ -484,7 +493,7 @@
           if (undo && entry) { undo.style.display = ''; }
           toast('জবাব মুছে ফেলা হয়েছে — ৮ সেকেন্ডে ফেরাতে পারবেন');
           reloadSoon(8000);
-        } else toast(res.error || 'মুছে ফেলা ব্যর্থ');
+        } else toast(res.error || 'মুছে ফেলা ব্যর্থ', true);
       });
       return;
     }
@@ -494,7 +503,7 @@
       api('/admin/support-center/' + (lastDeleted.id || ucard.getAttribute('data-id')) + '/history', 'PATCH',
         { index: lastDeleted.index, action: 'restore-note', entry: lastDeleted.entry }).then(function (res) {
         if (res.ok) { toast('জবাব ফেরত আনা হয়েছে ✓'); reloadSoon(600); }
-        else toast(res.error || 'ফেরত আনা ব্যর্থ');
+        else toast(res.error || 'ফেরত আনা ব্যর্থ', true);
       });
       return;
     }
@@ -558,6 +567,16 @@
   if (scHelpBtn) scHelpBtn.addEventListener('click', function () {
     if (scHelp.classList.contains('open')) helpClose(); else helpOpen();
   });
+  // ── session229 — সার্চ-ক্লিয়ার (q-চিহ্নিত হলে ✕-বাটন: status/media/range-সংরক্ষণে q-সরান) ──
+  var scSearchClear = document.getElementById('scSearchClear');
+  if (scSearchClear) scSearchClear.addEventListener('click', function () {
+    var sp = new URLSearchParams(location.search);
+    var parts = [];
+    if (sp.get('status')) parts.push('status=' + sp.get('status'));
+    if (sp.get('media')) parts.push('media=' + sp.get('media'));
+    if (sp.get('range')) parts.push('range=' + sp.get('range'));
+    location.href = '/admin/support-center?' + parts.filter(Boolean).join('&');
+  });
 
   var cards = Array.prototype.slice.call(document.querySelectorAll('.sc-card'));
   var cursor = -1;
@@ -608,6 +627,23 @@
     if (e.key === 'j' || e.key === 'J') { e.preventDefault(); cursorMove(1); return; }
     if (e.key === 'k' || e.key === 'K') { e.preventDefault(); cursorMove(-1); return; }
     if (e.key === '/') { e.preventDefault(); var si = document.querySelector('.sc-search input'); if (si) si.focus(); return; }
+    // ── session229 — Shift+1/2/3 কার্সর-কার্ডে দ্রুত-স্ট্যাটাস (Next-session222-চুক্তি: e.code-লেআউট-স্বাধীন; সম-স্টেটাসে নীরব-স্কিপ) ──
+    if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
+      if (cursor < 0 || !cards[cursor]) { toast('কার্সর-কার্ড নেই — আগে j/k দিয়ে কার্ড বাছুন'); return; }
+      var stQ = e.code === 'Digit1' ? 'PENDING' : e.code === 'Digit2' ? 'IN_PROGRESS' : 'RESOLVED';
+      var qcard = cards[cursor];
+      if (qcard.getAttribute('data-status') === stQ) return;
+      var qsel = qcard.querySelector('[data-sc-status]');
+      if (qsel) qsel.value = stQ;
+      var stLbl = stQ === 'PENDING' ? 'নতুন' : stQ === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান';
+      api('/admin/support-center/' + qcard.getAttribute('data-id'), 'PUT',
+        { status: stQ, adminNote: qcard.querySelector('[data-sc-note]').value.trim() }).then(function (res) {
+        if (res.ok && !res.unchanged) { toast('স্ট্যাটাস হালনাগাদ → ' + stLbl); reloadSoon(650); }
+        else if (res.ok) { toast('কোনো পরিবর্তন নেই'); }
+        else toast(res.error || 'স্ট্যাটাস-বদল ব্যর্থ', true);
+      }).catch(function () { toast('নেটওয়ার্ক ব্যর্থ', true); });
+      return;
+    }
     if (e.key === '1') { statusJump('PENDING'); return; }
     if (e.key === '2') { statusJump('IN_PROGRESS'); return; }
     if (e.key === '3') { statusJump('RESOLVED'); return; }
