@@ -2919,3 +2919,83 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .te-sync233 { flex-direction: column; align-items: flex-start; gap: 4px; }
 }
 /* ═══════════ EOF সেশন-২৩৩ আজকের ই-পেপার ব্যান্ড ═══════════ */
+
+/* ═══════════ সেশন ২৫০ (lfw250-leadership-premium): ইউজার-স্পেক ৫-পয়েন্ট ═══════════
+   ইউজার: ① প্রতিষ্ঠা-অংশে ১ম-লাইনে প্রতিষ্ঠাতা সভাপতি + প্রতিষ্ঠাতা সা.সম্পাদক, নিচের-লাইনে
+   উপদেষ্টারা ② বর্তমান-নেতৃত্বে দুইজন ১-লাইনে (হরাইজন্টাল) ③ ছবি সবসময় রঙিন — grayscale
+   "মরা-মানুষের-মত" ④ সোশ্যাল-আইকন ব্র্যান্ড-নিজস্ব-কালারে, কার্ডের নিচে-ডানে ⑤ অ্যানিমেশন
+   আরও প্রফেশনাল + কার্ড আরও প্রিমিয়াম।
+   রঙ-নীতি: সব-নতুন-রঙ rgba()/var() — হেক্স-র্যাচেট (baseline 1449) অক্ষুণ্ণ। */
+/* lfw250-leadership-premium */
+
+/* ── ১. লেআউট: প্রতি-সারিতে জোড়া (কার্ড ২-কলাম), জোড়া-সারি উল্লম্ব-স্ট্যাক ── */
+#leadership .leadership-matrix, #current-leadership .leadership-matrix { grid-template-columns: 1fr !important; gap: 22px !important; }
+#leadership .leaders-grid-pair, #current-leadership .leaders-grid-pair { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 20px !important; align-items: stretch; }
+#leadership .leaders-grid-pair .leader-card:only-child, #current-leadership .leaders-grid-pair .leader-card:only-child { grid-column: 1 / -1; }
+@media (max-width: 900px) {
+  #leadership .leaders-grid-pair, #current-leadership .leaders-grid-pair { grid-template-columns: 1fr !important; }
+}
+
+/* ── ২. ছবি সবসময় রঙিন — grayscale বিলুপ্ত (রেস্ট+হোভার উভয়ে) ── */
+#leadership .leader-card-featured .leader-photo, #current-leadership .leader-card-featured .leader-photo { filter: none !important; }
+
+/* ── ৩. কার্ড-সারফেস প্রিমিয়াম: সফট-গ্রেডিয়েন্ট + সবুজ-টিন্ট-বর্ডার + লেয়ার্ড-শ্যাডো ── */
+#leadership .leader-card-featured, #current-leadership .leader-card-featured {
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, rgba(255,255,255,1), rgba(250,253,252,1)) !important;
+  border: 1px solid rgba(0,106,78,.16) !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.05), 0 14px 34px -18px rgba(4,120,87,.3) !important;
+  transition: transform .45s cubic-bezier(.22,.61,.36,1), box-shadow .45s cubic-bezier(.22,.61,.36,1), border-color .3s ease;
+}
+#leadership .leader-card-featured:hover, #current-leadership .leader-card-featured:hover {
+  transform: translateY(-7px) !important;
+  border-color: rgba(0,106,78,.5) !important;
+  box-shadow: 0 24px 50px -22px rgba(4,120,87,.48), 0 8px 18px -10px rgba(4,120,87,.22) !important;
+}
+
+/* ── ৪. মিডিয়া-ফ্রেম: সবুজ-রিং + ডেপথ + হোভার-জুম (রঙিন) ── */
+#leadership .leader-card-featured .leader-media, #current-leadership .leader-card-featured .leader-media {
+  box-shadow: 0 0 0 1px rgba(0,106,78,.18), 0 14px 30px -18px rgba(4,120,87,.55);
+  transition: box-shadow .4s ease;
+}
+#leadership .leader-card-featured:hover .leader-media, #current-leadership .leader-card-featured:hover .leader-media {
+  box-shadow: 0 0 0 1px rgba(0,106,78,.42), 0 20px 40px -20px rgba(4,120,87,.65);
+}
+#leadership .leader-card-featured:hover .leader-photo, #current-leadership .leader-card-featured:hover .leader-photo { transform: scale(1.06); }
+
+/* ── ৫. সোশ্যাল-রো: নিচে-ডানে + ব্র্যান্ড-নিজস্ব-কালার (Facebook/Twitter/LinkedIn/Mail/ID) ── */
+#leadership .leader-card-featured .leader-social, #current-leadership .leader-card-featured .leader-social {
+  justify-content: flex-end; gap: 10px;
+  border-top: 1px solid rgba(0,106,78,.12);
+}
+#leadership .leader-social a, #current-leadership .leader-social a {
+  width: 32px; height: 32px; font-size: 14px;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, background-color .2s ease, color .2s ease;
+}
+#leadership .leader-social a:hover, #current-leadership .leader-social a:hover { transform: translateY(-3px) scale(1.06); }
+#leadership .leader-social a.leader-soc-fb, #current-leadership .leader-social a.leader-soc-fb { color: rgba(24,119,242,1); background: rgba(24,119,242,.12); }
+#leadership .leader-social a.leader-soc-fb:hover, #current-leadership .leader-social a.leader-soc-fb:hover { background: rgba(24,119,242,1); color: rgba(255,255,255,1); box-shadow: 0 8px 18px -6px rgba(24,119,242,.55); }
+#leadership .leader-social a.leader-soc-tw, #current-leadership .leader-social a.leader-soc-tw { color: rgba(29,161,242,1); background: rgba(29,161,242,.12); }
+#leadership .leader-social a.leader-soc-tw:hover, #current-leadership .leader-social a.leader-soc-tw:hover { background: rgba(29,161,242,1); color: rgba(255,255,255,1); box-shadow: 0 8px 18px -6px rgba(29,161,242,.55); }
+#leadership .leader-social a.leader-soc-in, #current-leadership .leader-social a.leader-soc-in { color: rgba(10,102,194,1); background: rgba(10,102,194,.12); }
+#leadership .leader-social a.leader-soc-in:hover, #current-leadership .leader-social a.leader-soc-in:hover { background: rgba(10,102,194,1); color: rgba(255,255,255,1); box-shadow: 0 8px 18px -6px rgba(10,102,194,.55); }
+#leadership .leader-social a.leader-soc-mail, #current-leadership .leader-social a.leader-soc-mail { color: rgba(234,67,53,1); background: rgba(234,67,53,.12); }
+#leadership .leader-social a.leader-soc-mail:hover, #current-leadership .leader-social a.leader-soc-mail:hover { background: rgba(234,67,53,1); color: rgba(255,255,255,1); box-shadow: 0 8px 18px -6px rgba(234,67,53,.5); }
+#leadership .leader-social a.leader-soc-id, #current-leadership .leader-social a.leader-soc-id { color: rgba(0,106,78,1); background: rgba(0,106,78,.12); }
+#leadership .leader-social a.leader-soc-id:hover, #current-leadership .leader-social a.leader-soc-id:hover { background: rgba(0,106,78,1); color: rgba(255,255,255,1); box-shadow: 0 8px 18px -6px rgba(0,106,78,.5); }
+
+/* ── ৬. এন্ট্রি-অ্যানিমেশন: reveal-স্কোপড স্ট্যাগার (পেজ-লোড leadIn বিলুপ্ত — প্রফেশনাল সিকোয়েন্স) ── */
+#leadership .leader-card, #current-leadership .leader-card { animation: none; }
+#leadership.in .leader-card, #current-leadership.in .leader-card { animation: leadUp250 .8s cubic-bezier(.22,.61,.36,1) both; }
+#leadership.in .leader-card:nth-child(2), #current-leadership.in .leader-card:nth-child(2) { animation-delay: .14s; }
+#leadership.in .leadership-cell:nth-child(2) .leader-card:nth-child(1), #current-leadership.in .leadership-cell:nth-child(2) .leader-card:nth-child(1) { animation-delay: .12s; }
+#leadership.in .leadership-cell:nth-child(2) .leader-card:nth-child(2), #current-leadership.in .leadership-cell:nth-child(2) .leader-card:nth-child(2) { animation-delay: .26s; }
+@keyframes leadUp250 { from { opacity: 0; transform: translateY(28px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* ── ৭. নাম-ট্রানজিশন মসৃণ (হোভারে সবুজ) ── */
+#leadership .leader-name, #current-leadership .leader-name { transition: color .25s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  #leadership.in .leader-card, #current-leadership.in .leader-card { animation: none; }
+}
+/* ═══════════ EOF সেশন ২৫০ ═══════════ */

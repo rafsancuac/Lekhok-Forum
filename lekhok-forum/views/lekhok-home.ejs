@@ -53,7 +53,7 @@
         <div class="leader-social">
           ${profileHref ? `<a href="${lfEsc(profileHref)}" ${/^https?:\/\//i.test(profileHref) ? 'target="_blank" rel="noopener noreferrer"' : ''} class="leader-soc-id" aria-label="প্রোফাইল / আইডি"><i class="fas fa-id-card"></i></a>` : ''}
           ${fb ? `<a href="${lfEsc(fb)}" target="_blank" rel="noopener noreferrer" class="leader-soc-fb" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>` : ''}
-          ${email ? `<a href="mailto:${lfEsc(email)}" aria-label="Email"><i class="fas fa-envelope"></i></a>` : ''}
+          ${email ? `<a href="mailto:${lfEsc(email)}" aria-label="Email" class="leader-soc-mail"><i class="fas fa-envelope"></i></a>` : ''}
           ${m.social_twitter ? `<a href="${lfEsc(lfSafeUrl(m.social_twitter))}" target="_blank" rel="noopener noreferrer" class="leader-soc-tw" aria-label="Twitter"><i class="fab fa-twitter"></i></a>` : ''}
           ${m.social_linkedin ? `<a href="${lfEsc(lfSafeUrl(m.social_linkedin))}" target="_blank" rel="noopener noreferrer" class="leader-soc-in" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>` : ''}
         </div>` : ''}
