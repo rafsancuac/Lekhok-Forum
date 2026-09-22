@@ -197,6 +197,11 @@ const CSP_POLICY = [
   "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
   "font-src 'self' https://cdnjs.cloudflare.com data:",
   "img-src 'self' data: blob: https:",
+  /* session224-ফিক্স: media-src ছিল না → <audio> default-src 'self'-এ পড়ত —
+     ① optimistic-ভয়েস-বাবলের blob:-URL আর ② পুরোনো Vercel-Blob-যুগের ক্রস-অরিজিন
+     ভয়েস-URL — দুটোইই CSP-ব্লকড হয়ে "রিফ্রেশ দিলে তবেই শোনা যায় / পুরোনো ভয়েস
+     শোনা যায় না" বাগ। img-src-র মতোই media-অনুমতিপত্র (audio+video উভয় কভার)। */
+  "media-src 'self' data: blob: https:",
   "connect-src 'self' https://drive.usercontent.google.com https://cdnjs.cloudflare.com",
   "worker-src 'self' blob: https://cdnjs.cloudflare.com",
   "frame-src https://maps.google.com https://www.google.com https://drive.google.com https://docs.google.com",

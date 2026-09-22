@@ -1819,7 +1819,15 @@
         if (!btn) return;
         const player = btn.closest('.bubble-voice');
         if (!player || !player.dataset.src) return;
-        if (player.classList.contains('bv-dead')) { bvDeadToast(); return; } // session183
+        if (player.classList.contains('bv-dead')) {
+          /* session224: এক-ক্লিক রিট্রাই — আগে মৃত-চিহ্নে কেবল টোস্ট হতো (একমাত্র
+             উপায় পেজ-রিফ্রেশ); এখন ক্লিকেই মৃত-চিহ্ন সরিয়ে লোড-পুনঃচেষ্টা। সাময়িক
+             নেটওয়ার্ক-ব্যর্থতা আর কখনো রিফ্রেশ-দাবি করবে না। */
+          player.classList.remove('bv-dead');
+          player.removeAttribute('title');
+          const icR224 = btn.querySelector('i');
+          if (icR224) icR224.className = 'fas fa-play';
+        }
         if (!audio) {
           audio = new Audio();
           audio.preload = 'metadata';
@@ -1847,7 +1855,13 @@
           if (cur) resetUI(cur, true);
           cur = player;
           if (!audio.src || audio.src !== player.dataset.src) audio.src = player.dataset.src;
+          else { audio.src = player.dataset.src; try { audio.load(); } catch (_) {} } /* session224: রিট্রাই-পথ — একই-src হলে জোর-করে রিলোড */
           try { audio.currentTime = 0; } catch (_) {}
+        } else if (audio.error) {
+          /* session224: রিট্রাই-পথ-২ — মৃত-বাবলে cur অপরিবর্তিত থাকে; এরর-স্টেটে
+             পুনঃচেষ্টায় src পুনঃসেট+load() না-করলে play() আবারই একই এররে ব্যর্থ হতো */
+          audio.src = player.dataset.src;
+          try { audio.load(); } catch (_) {}
         }
         const ic = btn.querySelector('i');
         audio.play().then(function () { if (ic) ic.className = 'fas fa-pause'; player.classList.add('is-playing'); }).catch(function () {
