@@ -204,9 +204,47 @@ function trend7(rows, now) {
   }
 }
 
+// ── ২৪ঘ-সারাংশ KPI (session227 — trend7-এর-সাথে-একই-উৎস-পরিবার; পিওর, never-throws) ──
+// fresh24       — ২৪ঘ-এর-কম-পুরোনো অমীমাংসিত (এখন-স্ট্যাটাস-খোলা)
+// resolved24    — গত-২৪ঘ-বে-সমাধান (note_history-র-সর্বশেষ RESOLVED)
+// stale         — staleCount(rows) সরাসরি (এক-উৎস — স্টেল-ব্যানার/ট্রেন্ড-সমস্বর)
+// oldestOpenDays— স্টেল-সাব-টেক্সট (সর্বোচ্চ-বয়স-দিন; স্টেল-নেই → null)
+// avgResolveHours— সমাধান-সময়ের-গড় (×১০-রাউন্ড); ইতিহাস-নেই → null
+// সব-গণনা rows-স্কোপড (ডেস্কের-অন্য-প্যানেলের-মতোই বর্তমান-ফিল্টারের-উপর — এক-পৃষ্ঠা-এক-স্কোপ-চুক্তি)
+function digestStats(rows, now) {
+  try {
+    const NOW = Number(now) || Date.now();
+    const DAY = 86400000, HOUR = 3600000;
+    let fresh24 = 0, resolved24 = 0;
+    const durations = [];
+    let oldestOpenDays = null;
+    for (const r of (rows || [])) {
+      if (!r) continue;
+      const created = createdAtMs(r.created_at);
+      if (created === null) continue;
+      if (r.status === 'RESOLVED') {
+        const rat = resolvedAtMs(r.note_history);
+        if (rat !== null) {
+          if (NOW - rat < DAY) resolved24++;
+          const durH = (rat - created) / HOUR;
+          if (durH >= 0) durations.push(durH);
+        }
+      } else {
+        if (NOW - created < DAY) fresh24++;
+        const days = Math.floor((NOW - created) / DAY);
+        if (days >= 3 && (oldestOpenDays === null || days > oldestOpenDays)) oldestOpenDays = days;
+      }
+    }
+    const avg = durations.length ? Math.round((durations.reduce((a, b) => a + b, 0) / durations.length) * 10) / 10 : null;
+    return { fresh24, resolved24, stale: staleCount(rows), oldestOpenDays, avgResolveHours: avg };
+  } catch (_) {
+    return { fresh24: 0, resolved24: 0, stale: 0, oldestOpenDays: null, avgResolveHours: null };
+  }
+}
+
 module.exports = {
   SUPPORT_ADMIN_KEY, STATUSES, STATUS_LABEL, MEDIA_TYPES,
   getSupportAdminId, getSupportAdmin, setSupportAdmin, clearSupportAdmin, isSupportAdmin,
   parseHistory, appendHistory, lastNoteOf, agingInfo, staleCount, historySummaryBn, bnNum,
-  createdAtMs, resolvedAtMs, trend7
+  createdAtMs, resolvedAtMs, trend7, digestStats
 };

@@ -33,6 +33,30 @@
     .sc-search input{border:1px solid var(--ad-line);border-radius:var(--ad-radius-sm);padding:6px 10px;font-family:inherit;min-width:170px;background:var(--ad-card);color:var(--ad-ink)}
     .sc-stale{background:var(--lf-amber-soft);border:1px solid var(--lf-amber-soft-3);color:var(--lf-amber-ink);
       border-radius:var(--ad-radius);padding:9px 14px;font-size:.86rem;font-weight:600;margin-bottom:12px}
+    /* session227 — ২৪ঘ-সারাংশ KPI (digestStats এক-উৎস; টোন-ব্যান্ড + hover-লিফট + focus-ring; সব-রঙ var()-টোকেন) */
+    .sc-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 12px}
+    @media (max-width:640px){.sc-kpis{grid-template-columns:repeat(2,1fr)}}
+    .sc-kpi{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:11px 13px;
+      display:flex;flex-direction:column;gap:3px;text-decoration:none;cursor:pointer;
+      transition:box-shadow .2s, transform .2s, border-color .2s}
+    .sc-kpi:hover{box-shadow:var(--ad-shadow-lg);transform:translateY(-1px);border-color:var(--ad-accent-ring)}
+    .sc-kpi:focus-visible{outline:2px solid var(--ad-accent);outline-offset:2px}
+    .sc-kpi .k-head{display:flex;align-items:center;gap:7px;font-size:.72rem;font-weight:700;color:var(--ad-muted)}
+    .sc-kpi .k-ic{width:24px;height:24px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;flex:none}
+    .sc-kpi b{font-size:1.3rem;font-family:var(--font-heading);line-height:1}
+    .sc-kpi small{font-size:.68rem;color:var(--ad-muted);font-weight:600}
+    .sc-kpi.k-fresh{border-top:3px solid var(--lf-amber-deep)}
+    .sc-kpi.k-fresh .k-ic{background:var(--lf-amber-soft-2);color:var(--lf-amber-ink)}
+    .sc-kpi.k-fresh b{color:var(--lf-amber-deep)}
+    .sc-kpi.k-res{border-top:3px solid var(--lf-ok-deep)}
+    .sc-kpi.k-res .k-ic{background:var(--lf-ok-soft);color:var(--lf-ok-deep)}
+    .sc-kpi.k-res b{color:var(--lf-ok-deep)}
+    .sc-kpi.k-stale{border-top:3px solid var(--lf-danger-deep)}
+    .sc-kpi.k-stale .k-ic{background:var(--lf-danger-soft);color:var(--lf-danger-deep)}
+    .sc-kpi.k-stale b{color:var(--lf-danger-deep)}
+    .sc-kpi.k-avg{border-top:3px solid var(--ad-accent)}
+    .sc-kpi.k-avg .k-ic{background:var(--ad-accent-soft);color:var(--ad-accent-ink)}
+    .sc-kpi.k-avg b{color:var(--ad-accent-ink)}
     /* session226 — ৭-দিনের প্রবণতা (trend7 এক-উৎস; বার স্ট্যাটিক — reduced-motion-নিরাপদ; সব-রঙ var()-টোকেন) */
     .sc-trend{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:12px 14px;margin-bottom:12px}
     .sc-trend-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -141,30 +165,67 @@
     <% }) %>
   </div>
 
+  <%# session227 — ২৪ঘ-সারাংশ KPI (helpers digestStats এক-উৎস; ক্লিকে ফিল্টার-ভিউ-জাম্প: status+range) %>
+  <div class="sc-kpis" role="group" aria-label="২৪ ঘণ্টার সারসংক্ষেপ">
+    <a class="sc-kpi k-fresh" href="/admin/support-center?status=PENDING&range=today"
+       aria-label="২৪ ঘণ্টায় <%= bnNum(digest.fresh24) %>টি নতুন অমীমাংসিত — আজকের নতুন-ভিউতে যান">
+      <span class="k-head"><span class="k-ic"><i class="fas fa-inbox"></i></span>২৪ ঘণ্টায় নতুন</span>
+      <b><%= bnNum(digest.fresh24) %></b>
+      <small>২৪ঘ-এর-কম-পুরোনো অমীমাংসিত</small>
+    </a>
+    <a class="sc-kpi k-res" href="/admin/support-center?status=RESOLVED&range=today"
+       aria-label="গত ২৪ ঘণ্টায় <%= bnNum(digest.resolved24) %>টি সমাধান — আজকের সমাধান-ভিউতে যান">
+      <span class="k-head"><span class="k-ic"><i class="fas fa-circle-check"></i></span>২৪ ঘণ্টায় সমাধান</span>
+      <b><%= bnNum(digest.resolved24) %></b>
+      <small>গত-২৪ঘ-বে-সমাধান-হওয়া</small>
+    </a>
+    <a class="sc-kpi k-stale" href="/admin/support-center?status=PENDING"
+       aria-label="<%= bnNum(digest.stale) %>টি স্টেল অভিযোগ (৩+ দিন অমীমাংসিত) — নতুন-তালিকায় যান">
+      <span class="k-head"><span class="k-ic"><i class="fas fa-hourglass-half"></i></span>স্টেল (৩+ দিন)</span>
+      <b><%= bnNum(digest.stale) %></b>
+      <small><%= digest.oldestOpenDays !== null ? 'পুরোনোতম ' + bnNum(digest.oldestOpenDays) + ' দিন ধরে' : '৩+ দিন ধরে অমীমাংসিত' %></small>
+    </a>
+    <a class="sc-kpi k-avg" href="/admin/support-center?status=RESOLVED"
+       aria-label="<%= digest.avgResolveHours !== null ? 'গড় সমাধান-সময় ' + bnNum(digest.avgResolveHours) + ' ঘণ্টা' : 'গড় সমাধান-সময় এখনো-গণনাযোগ্য নয়' %> — সমাধান-তালিকায় যান">
+      <span class="k-head"><span class="k-ic"><i class="fas fa-clock"></i></span>গড় সমাধান-সময়</span>
+      <b><%= digest.avgResolveHours !== null ? bnNum(digest.avgResolveHours) + ' ঘ' : '—' %></b>
+      <small><%= digest.avgResolveHours !== null ? 'সমাধান-ইতিহাসের-গড়' : 'সমাধান-ইতিহাস-নেই' %></small>
+    </a>
+  </div>
+
   <div class="sc-stats">
-    <button type="button" class="sc-stat s-pending" onclick="location.href='/admin/support-center?<%= media ? 'media='+media+'&' : '' %><%= q ? 'q='+encodeURIComponent(q) : '' %>'">
+    <button type="button" class="sc-stat s-pending" onclick="location.href='/admin/support-center?<%= [media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>'">
       <b><%= counts.PENDING %></b><span>নতুন অভিযোগ</span>
     </button>
-    <button type="button" class="sc-stat s-progress" onclick="location.href='/admin/support-center?status=IN_PROGRESS<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>'">
+    <button type="button" class="sc-stat s-progress" onclick="location.href='/admin/support-center?<%= ['status=IN_PROGRESS', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>'">
       <b><%= counts.IN_PROGRESS %></b><span>চলমান</span>
     </button>
-    <button type="button" class="sc-stat s-resolved" onclick="location.href='/admin/support-center?status=RESOLVED<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>'">
+    <button type="button" class="sc-stat s-resolved" onclick="location.href='/admin/support-center?<%= ['status=RESOLVED', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>'">
       <b><%= counts.RESOLVED %></b><span>সমাধান হয়েছে</span>
     </button>
   </div>
 
   <div class="sc-filters">
-    <a class="sc-chip <%= !status ? 'active' : '' %>" href="/admin/support-center?<%= media ? 'media='+media+'&' : '' %><%= q ? 'q='+encodeURIComponent(q) : '' %>">সব</a>
-    <a class="sc-chip <%= status === 'PENDING' ? 'active' : '' %>" href="/admin/support-center?status=PENDING<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>">নতুন (<%= counts.PENDING %>)</a>
-    <a class="sc-chip <%= status === 'IN_PROGRESS' ? 'active' : '' %>" href="/admin/support-center?status=IN_PROGRESS<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>">চলমান (<%= counts.IN_PROGRESS %>)</a>
-    <a class="sc-chip <%= status === 'RESOLVED' ? 'active' : '' %>" href="/admin/support-center?status=RESOLVED<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>">সমাধান (<%= counts.RESOLVED %>)</a>
+    <a class="sc-chip <%= !status ? 'active' : '' %>" href="/admin/support-center?<%= [media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">সব</a>
+    <a class="sc-chip <%= status === 'PENDING' ? 'active' : '' %>" href="/admin/support-center?<%= ['status=PENDING', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">নতুন (<%= counts.PENDING %>)</a>
+    <a class="sc-chip <%= status === 'IN_PROGRESS' ? 'active' : '' %>" href="/admin/support-center?<%= ['status=IN_PROGRESS', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">চলমান (<%= counts.IN_PROGRESS %>)</a>
+    <a class="sc-chip <%= status === 'RESOLVED' ? 'active' : '' %>" href="/admin/support-center?<%= ['status=RESOLVED', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">সমাধান (<%= counts.RESOLVED %>)</a>
     <span style="width:1px;height:20px;background:var(--ad-line)"></span>
-    <a class="sc-chip <%= media === 'TEXT' ? 'active' : '' %>" href="/admin/support-center?<%= status ? 'status='+status+'&' : '' %><%= q ? 'q='+encodeURIComponent(q)+'&' : '' %>media=TEXT">লেখা</a>
-    <a class="sc-chip <%= media === 'IMAGE' ? 'active' : '' %>" href="/admin/support-center?<%= status ? 'status='+status+'&' : '' %><%= q ? 'q='+encodeURIComponent(q)+'&' : '' %>media=IMAGE">ছবি</a>
-    <a class="sc-chip <%= media === 'AUDIO' ? 'active' : '' %>" href="/admin/support-center?<%= status ? 'status='+status+'&' : '' %><%= q ? 'q='+encodeURIComponent(q)+'&' : '' %>media=AUDIO">ভয়েস</a>
+    <%# session227 — সময়-সীমা chips (range প্যারাম; অন্য-ফিল্টার-সংরক্ষণ) %>
+    <% ['today', '7d', '30d'].forEach(function(r){ var lbl = r === 'today' ? 'আজ' : (r === '7d' ? '৭ দিন' : '৩০ দিন'); %>
+    <a class="sc-chip <%= range === r ? 'active' : '' %>" aria-current="<%= range === r ? 'true' : 'false' %>" href="/admin/support-center?<%= [status?'status='+status:'', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', 'range='+r].filter(Boolean).join('&') %>"><i class="fas fa-clock"></i> <%= lbl %></a>
+    <% }) %>
+    <% if (range) { %>
+    <a class="sc-chip" href="/admin/support-center?<%= [status?'status='+status:'', media?'media='+media:'', q?'q='+encodeURIComponent(q):''].filter(Boolean).join('&') %>" title="সময়-সীমা সরান"><i class="fas fa-xmark"></i> সময়-সীমা</a>
+    <% } %>
+    <span style="width:1px;height:20px;background:var(--ad-line)"></span>
+    <a class="sc-chip <%= media === 'TEXT' ? 'active' : '' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=TEXT'].filter(Boolean).join('&') %>">লেখা</a>
+    <a class="sc-chip <%= media === 'IMAGE' ? 'active' : '' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=IMAGE'].filter(Boolean).join('&') %>">ছবি</a>
+    <a class="sc-chip <%= media === 'AUDIO' ? 'active' : '' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=AUDIO'].filter(Boolean).join('&') %>">ভয়েস</a>
     <form class="sc-search" method="GET" action="/admin/support-center">
       <% if (status) { %><input type="hidden" name="status" value="<%= status %>" /><% } %>
       <% if (media) { %><input type="hidden" name="media" value="<%= media %>" /><% } %>
+      <% if (range) { %><input type="hidden" name="range" value="<%= range %>" /><% } %>
       <input type="search" name="q" value="<%= q %>" placeholder="বার্তা বা প্রেরক খুঁজুন…" aria-label="ডেস্ক-সার্চ" />
       <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i></button>
     </form>

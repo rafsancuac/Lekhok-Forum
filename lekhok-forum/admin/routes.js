@@ -2275,10 +2275,22 @@ function scFilters(query) {
   const status = SC.STATUSES.includes(query.status) ? query.status : '';
   const media = SC.MEDIA_TYPES.includes(query.media) ? query.media : '';
   const q = String(query.q || '').trim().slice(0, 80);
-  return { status, media, q };
+  const range = ['today', '7d', '30d'].includes(query.range) ? query.range : '';
+  return { status, media, q, range };
 }
 
-function scWhere({ status, media, q }) {
+// session227 — range → created_at-কাট-অফ (UTC-naive স্ট্রিং — স্টোরড CURRENT_TIMESTAMP-ফরম্যাট-সমতুল্য;
+// 'today' = স্থানীয়-মাঝরাত (অপারেটর-দিন) — createdAtMs-রীতি-সমস্বর)
+function scRangeCutoff(range) {
+  if (!range) return null;
+  const nowMs = Date.now();
+  let ms;
+  if (range === 'today') { const d = new Date(nowMs); d.setHours(0, 0, 0, 0); ms = d.getTime(); }
+  else ms = nowMs - (range === '7d' ? 7 : 30) * 86400000;
+  return new Date(ms).toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function scWhere({ status, media, q, range }) {
   let where = ' WHERE 1=1';
   const params = [];
   if (status) { where += ' AND r.status = ?'; params.push(status); }
@@ -2288,6 +2300,7 @@ function scWhere({ status, media, q }) {
     const like = '%' + q + '%';
     params.push(like, like, like);
   }
+  if (range) { where += ' AND r.created_at >= ?'; params.push(scRangeCutoff(range)); }
   return { where, params };
 }
 
@@ -2322,9 +2335,9 @@ router.get('/support-center', requireSupportReviewer, async (req, res) => {
   const supportAdmin = await SC.getSupportAdmin();
   res.render('admin/support-center', {
     reports: scDecorate(rows), counts, total, supportAdmin,
-    status: filters.status, media: filters.media, q: filters.q,
+    status: filters.status, media: filters.media, q: filters.q, range: filters.range,
     staleN: SC.staleCount(rows), currentPath: '/admin/support-center',
-    trend: SC.trend7(rows), bnNum: SC.bnNum
+    trend: SC.trend7(rows), digest: SC.digestStats(rows), bnNum: SC.bnNum
   });
 });
 

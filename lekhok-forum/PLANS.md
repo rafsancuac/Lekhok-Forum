@@ -2525,3 +2525,11 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **Express-QA-লগইন-গোটা:** POST /admin/login-এ `_csrf`-লাগবে (303 → ?csrf=1 = সিগন্যাল); agent-browser: fill → `click 'button[type="submit"]'` (Enter-নয়); লোকাল-সিড admin/admin123 (বুট-লগে-ডক — QA-শুধু); session.user-পথে গেলে SUPPORT_ADMIN_ID-সেটিং + isSupportAdmin-চেক।
 - **ensure-server.sh-cwd:** repo-root (bash ensure-server.sh app-dir-থেকে = "No such file" → নীরব-ব্যর্থ → ব্রাউজারে refused-to-connect-মিথ্যা-রূপ; ডায়াগনোসিস: curl-ফার্স্ট, ব্রাউজার-পরে)।
 - **পরের-এজেন্ট: session227 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট — পরিকল্পনা-গেটে-অক্ষুণ্ণ; AGENT-NOTICE-চেকলিস্ট-মানুন।
+
+### session227 — KPI-সারাংশ + সময়-সীমা-ফিল্টার (cross-agent নোট)
+
+- **digestStats-এক-উৎস-চুক্তি:** `helpers/support-center.js digestStats(rows, now)` — KPI-কার্ড শুধু-রেন্ডার; নতুন-মেট্রিক দরকার হলে এখানেই-বাড়ান (s227-unit ১০-অ্যাসার্ট); গণনা rows-স্কোপড (ডেস্কের-সব-প্যানেল বর্তমান-ফিল্টারের-উপর — এক-পৃষ্ঠা-এক-স্কোপ); stale/resolved গণনায় createdAtMs/resolvedAtMs/staleCount **পুনঃব্যবহার-বাধ্যতমূল** (থ্রেশহোল্ড-ডুপ্লিকেট-নিষিদ্ধ)।
+- **range-ফিল্টার-চুক্তি:** scFilters-এ-parse (whitelist today/7d/30d) + scWhere-এ cutoff-প্রয়োগ — route/data/export.csv একই-scFilters-ভাগ-করে (নতুন-ফিল্টার যোগ করলে তিন-ভোক্তাই-স্বয়ংক্রিয়); **কাট-অফ-স্ট্রিং = UTC-naive "YYYY-MM-DD HH:MM:SS"** (স্টোরড-ফরম্যাট-সমতুল্য — স্ট্রিং-তুলনা সঠিক); 'today' = স্থানীয়-মাঝরাত (অপারেটর-দিন — createdAtMs-রীতি)।
+- **URL-প্যাটার্ন-চুক্তি:** সব-চিপ/কার্ড-জাম্প `[k?'k=v':'', ...].filter(Boolean).join('&')` — ম্যানুয়াল-&-জোড়া নিষিদ্ধ (আংশিক-&-ভাঙা-URL-ঝুঁকি); নতুন-ফিল্টার যোগ হলে পুরাতন-চিপগুলোতেও-সংরক্ষণ-প্যারাম-যোগ-করুন (রেস-ফ্রি-ফিল্টার-স্ট্যাক)।
+- **KPI-জাম্প-ম্যাপ:** fresh→status=PENDING&range=today · resolved→RESOLVED&today · stale→PENDING (range-নেই — সব-স্টেল-দেখা) · avg→RESOLVED (range-নেই); বদলাতে-চাইলে EJS-এর-চার-href-ই-এক-জায়গায়।
+- **পরের-এজেন্ট: session228 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট — পরিকল্পনা-গেটে-অক্ষুণ্ণ; AGENT-NOTICE-চেকলিস্ট-মানুন।

@@ -3562,3 +3562,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ
 - পরের-এজেন্ট: **session227 লেবেল**; PLANS session226-নোট পড়ুন (trend7-এক-উৎস + sql.js/SIGTERM/CSRF-গোটা); AGENT-NOTICE-চেকলিস্ট-প্রতি-টাস্কে-মানুন (Express-only)
 - রিমোট main = এ-রাউন্ডের push (session226-Express-স্পার্ক-পোর্ট); working-tree ক্লিন
+
+---
+Task ID: session227
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`6f52e06` (session226), working-tree ক্লিন; টোকেন ২০০-ভ্যালিড (GH+Vercel, .secrets/); live 200
+- **রাউন্ড-শুরু-রিগ্রেশন:** s226-qa **৭/৭** (লগইন + trend-প্যানেল + ডেল্টা + 390px + কনসোল + জঞ্জাল-শূন্য) প্রথম-রানেই-গ্রিন → বাগ-শূন্য → ফিচার-রাউন্ড
+
+## এ-রাউন্ডে সম্পন্ন (Express support-center — session227)
+- **[ফিচার ①] KPI-সারাংশ কার্ড ×৪:** helpers/support-center.js-এ `digestStats(rows, now)` পিওর-ফাংশন (trend7-এর-এক-উৎস-পরিবার; createdAtMs/resolvedAtMs/staleCount-পুনঃব্যবহার — থ্রেশহোল্ড-ডুপ্লিকেট-শূন্য; never-throws): fresh24 (২৪ঘ-এর-কম-পুরোনো-অমীমাংসিত) / resolved24 (গত-২৪ঘ-সমাধান, note_history-র-সর্বশেষ RESOLVED) / stale (=staleCount — ব্যানার/ট্রেন্ড-সমস্বর) / oldestOpenDays (স্টেল-সাব) / avgResolveHours (×১০-রাউন্ড, ইতিহাস-নেই → null); ডেস্কে ৪-কার্ড-সারি (amber/emerald/red/accent টোন-ব্যান্ড + FA icon-চিপ + hover-লিফট + focus-visible-ring + tabular বড়-মান + পূর্ণ-বাংলা aria-label) — **ক্লিকে ফিল্টার-ভিউ-জাম্প** (fresh→status=PENDING&range=today · res→RESOLVED&today · stale→PENDING · avg→RESOLVED)
+- **[ফিচার ②] সময়-সীমা ফিল্টার:** scFilters-এ `range` ∈ {today,7d,30d} (ডিফল্ট-সব) + `scRangeCutoff()` (UTC-naive-স্ট্রিং-কাট-অফ — স্টোরড CURRENT_TIMESTAMP-ফরম্যাট-সমতুল্য; 'today' = স্থানীয়-মাঝরাত = createdAtMs-রীতি-সমস্বর) + scWhere `r.created_at >= ?` — **route + /data + export.csv স্বয়ংক্রিয়-প্যারিটি** (এক-scFilters-তিন-ভোক্তা); ডেস্কে আজ/৭-দিন/৩০-দিন chips (FA-clock, aria-current, active-স্টেট) + সময়-সীমা-সরান ✕-chip (range-সেট-থাকলে); **সব-চিপ/স্ট্যাট-কার্ড-জাম্প এখন range-সংরক্ষণ-করে** (uniform filter/join-URL-প্যাটার্ন — ৮-চিপ+৩-কার্ড+সার্চ-hidden-সহ)
+- **[স্টাইল] KPI-কার্ড:** border-t-৩px টোন-ব্যান্ড + k-ic রঙিন-চিপ + b-বড়-মান (font-heading) + small-সাব + mobile-2-কল (640px-breakpoint) + hover-lift/border-accent + focus-visible; সম্পূর্ণ var()-টোকেন (hex-ratchet-সেফ); স্ট্যাটিক (reduced-motion-নিরাপদ)
+- **টেস্ট:** s227-unit.js **১০/১০** (TZ-নিরপেক্ষ-ভেক্টর; fresh/resolved ২৪ঘ-সীমা-এজ + stale-এক-উৎস-সমস্বর + ×১০-রাউন্ড 4.125→৪.১ + null-চুক্তি + never-throws + digestStats.stale===trend7.stalePerDay[6]) · s227-qa.sh **১১/১১ প্রথম-রানেই** (KPI-গ্রুপ+trend-রিগ্রেশন; V0→V1-ডেল্টা ×৩ (fresh/stale/resolved +১ — সার্ভার-বন্ধ-সিডিং ×৩); range=today ১০দিন-পুরোনো-বাদ + range=30d-অন্তর্ভুক্ত + আজ-চিপ-active; fresh-জাম্প-URL-চুক্তি; 390px-শূন্য; কনসোল-শূন্য; শেষ-pkill-পরবর্তী-ক্লিনআপ) · স্ক্রিনশট ×২ (s227-sc-kpi / mobile390)
+- ডক ×২ (এ-ওয়ার্কলগ + PLANS session227-নোট) → secret-scan-ক্লিন → fetch+rebase → push
+
+## ঝুঁকি ও পরবর্তী
+- **নতুন-গোটচা (PLANS-নোটে):** ① scWhere-এর range-কাট-অফ = স্ট্রিং-তুলনা — created_at-কলাম-ফরম্যাট বদলালে scRangeCutoff-ও-বদলাতে-হবে (এক-জায়গা-চুক্তি) ② EJS-চিপ-URL-গুলো এখন uniform `[...].filter(Boolean).join('&')`-প্যাটার্ন — নতুন-চিপ-যোগ-করলে-এই-প্যাটার্নই-ব্যবহার-করুন (ম্যানুয়াল-&-জোড়ায় আংশিক-&-ভাঙা-URL-ঝুঁকি — s227-প্রথম-attempt-এ-ধরা-পড়েছে) ③ পুরোনো-গোটা-সমূহ বলবৎ (sql.js-সিডিং-সার্ভার-বন্ধে, CSRF-লগইন, ensure-cwd, জম্বি-pkill)
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ
+- পরের-এজেন্ট: **session228 লেবেল**; PLANS session227-নোট পড়ুন; বাকি-প্রস্তাব: range-চিপে "৭ দিন"-প্রিসেটের-সাথে KPI-কার্ডে ৭-দিন-মিনি-স্পার্ক ইন্টিগ্রেশন, CSV-তে range-প্রসঙ্গ-ফাইলনাম
+- রিমোট main = এ-রাউন্ডের push (session227-KPI-রেঞ্জ-প্যাক); working-tree ক্লিন
