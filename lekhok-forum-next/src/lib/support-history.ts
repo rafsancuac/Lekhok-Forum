@@ -109,6 +109,19 @@ export function staleCount(reports: { createdAt: string; status: StatusKey }[]):
 }
 
 /**
+ * session222 — বয়স-তাপ-অরা: কার্ড-বাম-প্রান্তের গ্রেডিয়েন্ট-ওয়াশ ক্লাস।
+ *   aging (১-২ দিন)  → 'lf-heat-aging' (অ্যাম্বার-ওয়াশ)
+ *   stale (৩+ দিন)   → 'lf-heat-stale' (লাল-ওয়াশ)
+ *   fresh / RESOLVED / অবৈধ-তারিখ → '' (শূন্য = পরিষ্কার-কার্ড)
+ * এক-উৎস-সত্য: agingInfo()-র tier-এর-উপর-দাঁড়িয়ে — কখনো-ডুপ্লিকেট-থ্রেশহোল্ড-লিখবেন-না।
+ */
+export function heatAuraClass(iso: string, status: StatusKey): string {
+  const a = agingInfo(iso, status)
+  if (!a) return ''
+  return a.tier === 'stale' ? 'lf-heat-stale' : a.tier === 'aging' ? 'lf-heat-aging' : ''
+}
+
+/**
  * session219 — শিফট-হস্তান্তর সারসংক্ষেপ (পিওর-ফাংশন; ডেস্ক-ডায়ালগ + প্যালেট-কমান্ড + E2E এক-উৎস)।
  *
  * অপারেটর-সিরিজের ধারাবাহিকতা: ট্রায়াজ(s217) → স্মৃতি(s216) → গতি(s215) → প্যালেট(s218) → হস্তান্তর(s219)।

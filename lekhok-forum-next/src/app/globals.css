@@ -602,3 +602,11 @@ section[aria-label="স্টোরি"]:hover .lf-story-arrow { opacity: 1; }
     animation: none;
   }
 }
+
+/* session222 — বয়স-তাপ-অরা (SLA-গ্রেডিয়েন্ট-ওয়াশ; সম্পূর্ণ-স্ট্যাটিক = prefers-reduced-motion-স্বাভাবিক-নিরাপদ) */
+.lf-heat-aging {
+  background-image: linear-gradient(90deg, rgba(245, 158, 11, 0.08), transparent 40%);
+}
+.lf-heat-stale {
+  background-image: linear-gradient(90deg, rgba(239, 68, 68, 0.11), transparent 48%);
+}

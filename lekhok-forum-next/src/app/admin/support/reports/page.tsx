@@ -120,6 +120,8 @@ const SHORTCUTS: { keys: string[]; desc: string }[] = [
   { keys: ['?'], desc: 'এই সহায়িকা খোলা/বন্ধ' },
   { keys: ['Ctrl', 'K'], desc: 'কমান্ড প্যালেট খোলা/বন্ধ' },
   { keys: ['Ctrl', 'Shift', 'H'], desc: 'শিফট-হস্তান্তর সারসংক্ষেপ (কপি-প্রস্তুত)' },
+  { keys: ['Shift', '১/২/৩'], desc: 'কার্সর-কার্ড স্টেটাস দ্রুত-সেট (নতুন/চলমান/সমাধান)' },
+  { keys: ['Ctrl', 'Z'], desc: 'শেষ স্টেটাস-পরিবর্তন আন্ডু' },
   { keys: ['Esc'], desc: 'কার্সর বা সহায়িকা বন্ধ' },
 ]
 
@@ -127,7 +129,7 @@ const SHORTCUTS: { keys: string[]; desc: string }[] = [
 const WEEKDAY_BN = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি']
 import AdminGate, { useAdminGate } from '@/components/admin/AdminGate'
 import { bn } from '@/lib/format'
-import { agingInfo, handoverDigest, historySummaryBn, staleCount } from '@/lib/support-history'
+import { agingInfo, handoverDigest, heatAuraClass, historySummaryBn, staleCount } from '@/lib/support-history'
 
 type Status = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED'
 
@@ -626,6 +628,8 @@ function SupportReportsPanel() {
   // session209 — আন্ডু-উইন্ডো: মুছে-ফেলা নোট-এন্ট্রি ৮-সেকেন্ড পর্যন্ত পুনরুদ্ধারযোগ্য
   const [undoData, setUndoData] = useState<{ id: string; index: number; entry: HistoryEntry } | null>(null)
   const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  // session222 — স্টেটাস-আন্ডু-স্ট্যাক: সেশন-স্কোপড (ls-স্থায়িত্ব-নেই — ইচ্ছাকৃত), নতুন-আগে, ক্যাপ ১০
+  const [statusUndo, setStatusUndo] = useState<{ id: string; from: Status; to: Status; at: number; label: string }[]>([])
   // session202 — লেখা-কপি + ছবি-লাইটবক্স + CSV-ব্যাস্ট
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
@@ -1263,8 +1267,9 @@ function SupportReportsPanel() {
   }, [shown, flash])
 
   const update = useCallback(
-    async (id: string, payload: { status?: Status; adminNote?: string }) => {
+    async (id: string, payload: { status?: Status; adminNote?: string }, undoable = true) => {
       setBusy(id)
+      const prev = reports.find((r) => r.id === id)
       try {
         const res = await fetch('/api/admin/support-reports', {
           method: 'PUT',
@@ -1278,10 +1283,20 @@ function SupportReportsPanel() {
         // session202 — সাইডবার/ড্যাশবোর্ড ব্যাজ তাৎক্ষণিক-রিফ্রেশ
         window.dispatchEvent(new Event('lf:support-changed'))
         // session203 — অভিযোগকারীকে SUPPORT_UPDATE নোটিফিকেশন গেছে-জানানো (স্টেটাস/নোট বদলেই)
-        const statusChanged = payload.status && payload.status !== reports.find((r) => r.id === id)?.status
-        const noteChanged = payload.adminNote !== undefined && payload.adminNote.trim() !== (reports.find((r) => r.id === id)?.adminNote ?? '')
+        const statusChanged = payload.status && payload.status !== prev?.status
+        const noteChanged = payload.adminNote !== undefined && payload.adminNote.trim() !== (prev?.adminNote ?? '')
         const notified = (statusChanged || noteChanged) ? ' · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে' : ''
-        flash(payload.status ? `স্টেটাস → ${STATUS_LABEL[payload.status]}${notified}` : `নোট সংরক্ষিত${notified}`)
+        // session222 — আন্ডুযোগ্য স্টেটাস-পরিবর্তন স্ট্যাকে-ঠেলে (আন্ডু-পুনঃস্থাপন নিজে স্ট্যাকে-যায়-না)
+        if (statusChanged && undoable && prev) {
+          setStatusUndo((s) =>
+            [{ id, from: prev.status, to: payload.status as Status, at: Date.now(), label: prev.senderName }, ...s].slice(0, 10),
+          )
+        }
+        flash(
+          payload.status
+            ? `${undoable ? 'স্টেটাস' : 'স্টেটাস আন্ডু'} → ${STATUS_LABEL[payload.status]}${notified}`
+            : `নোট সংরক্ষিত${notified}`,
+        )
       } catch (err) {
         flash(err instanceof Error ? err.message : 'আপডেট ব্যর্থ')
       } finally {
@@ -1342,6 +1357,17 @@ function SupportReportsPanel() {
       'ইতিহাস-এন্ট্রি পুনরুদ্ধার হয়েছে · অভিযোগকারীকে নোটিফিকেশন পাঠানো হয়েছে',
     )
   }, [undoData, patchHistory])
+
+  /** session222 — Ctrl+Z স্টেটাস-আন্ডু: স্ট্যাক-শীর্ষ (নতুনতম) পরিবর্তন পুনঃস্থাপন; আন্ডু-পুনঃস্থাপন নিজে স্ট্যাকে-যায়-না (undoable=false) */
+  const undoLastStatus = useCallback(() => {
+    const last = statusUndo[0]
+    if (!last) {
+      flash('আন্ডুযোগ্য স্টেটাস-পরিবর্তন নেই')
+      return
+    }
+    setStatusUndo((s) => s.slice(1))
+    void update(last.id, { status: last.from }, false)
+  }, [statusUndo, update, flash])
 
   const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED
   /** session210 — ৩+ দিন-পুরাতন অমীমাংসিত (অ্যালার্ট-বারের কাউন্ট) */
@@ -1620,10 +1646,21 @@ function SupportReportsPanel() {
       () => toggleFeed(),
       ['f'],
     )
+    push('অ্যাকশন', 'export-csv', 'CSV এক্সপোর্ট (বর্তমান-ফিল্টার)', Download, () => {
+      void exportCsv()
+    })
+    push(
+      'অ্যাকশন',
+      'undo-status',
+      `শেষ স্টেটাস-পরিবর্তন আন্ডু${statusUndo.length ? ` (${bn(statusUndo.length)})` : ''}`,
+      Undo2,
+      () => undoLastStatus(),
+      ['Ctrl', 'Z'],
+    )
     push('অ্যাকশন', 'open-help', 'কীবোর্ড সহায়িকা দেখুন', Keyboard, () => setHelpOpen(true), ['?'])
     const q = cmdQuery.trim().toLowerCase()
     return q ? items.filter((c) => `${c.label} ${c.group}`.toLowerCase().includes(q)) : items
-  }, [cmdQuery, counts, presets, laterOnly, sortAsc, soundOn, density, feedOpen, resetFilters, copyViewLink, toggleSound, toggleDensity, openDigest, toggleFeed])
+  }, [cmdQuery, counts, presets, laterOnly, sortAsc, soundOn, density, feedOpen, resetFilters, copyViewLink, toggleSound, toggleDensity, openDigest, toggleFeed, exportCsv, undoLastStatus, statusUndo])
   const runCmd = useCallback((c: CmdItem) => {
     setCmdOpen(false)
     c.run()
@@ -1695,6 +1732,13 @@ function SupportReportsPanel() {
         else openDigest()
         return
       }
+      // session222 — Ctrl/Cmd+Z স্টেটাস-আন্ডু (typing-অবস্থায় নেটিভ-টেক্সট-আন্ডু ছেড়ে-দেয় — নীরব-return)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        if (typing) return
+        e.preventDefault()
+        undoLastStatus()
+        return
+      }
       if (helpOpen || cmdOpen || typing || bulkBusy || e.metaKey || e.ctrlKey || e.altKey) return
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault()
@@ -1744,13 +1788,24 @@ function SupportReportsPanel() {
         toggleFeed()
         return
       }
+      // session222 — Shift+১/২/৩ কার্সর-কার্ড কুইক-স্টেটাস (e.code = কিবোর্ড-লেআউট-স্বাধীন;
+      // সম-স্টেটাসে নীরব-স্কিপ — অপ্রয়োজনীয় PUT/নোটিফিকেশন-বর্জন)
+      if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
+        if (cursor >= 0 && cursor < shown.length) {
+          e.preventDefault()
+          const target: Status = e.code === 'Digit1' ? 'PENDING' : e.code === 'Digit2' ? 'IN_PROGRESS' : 'RESOLVED'
+          const cur = shown[cursor]
+          if (cur.status !== target) void update(cur.id, { status: target })
+        }
+        return
+      }
       if (e.key === '1' || e.key === '১') setTab('PENDING')
       else if (e.key === '2' || e.key === '২') setTab('IN_PROGRESS')
       else if (e.key === '3' || e.key === '৩') setTab('RESOLVED')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [shown, cursor, helpOpen, cmdOpen, digestOpen, feedOpen, closeDigest, openDigest, closeFeed, toggleFeed, lightbox, bulkBusy, toggleSelect, toggleLater])
+  }, [shown, cursor, helpOpen, cmdOpen, digestOpen, feedOpen, closeDigest, openDigest, closeFeed, toggleFeed, lightbox, bulkBusy, toggleSelect, toggleLater, undoLastStatus, update])
 
   const allShownSelected = shown.length > 0 && shown.every((r) => selected.includes(r.id))
 
@@ -2488,6 +2543,8 @@ function SupportReportsPanel() {
               data-report={r.id}
               aria-current={cursorIdx === i || undefined}
               className={`bg-white border rounded-[10px] ${density === 'compact' ? 'p-2.5 space-y-2' : 'p-4 space-y-3'} shadow-2xs border-l-4 transition-all hover:shadow-md lf-anim-fade ${
+                heatAuraClass(r.createdAt, r.status)
+              } ${
                 selected.includes(r.id)
                   ? 'border-[#006A4E] ring-2 ring-[#006A4E]/20 ' + ACCENT[r.status]
                   : `border-[#CED0D4] ${ACCENT[r.status]}`
