@@ -327,6 +327,22 @@
     .sc-compact .sc-media audio,.sc-compact .sc-media video{max-width:340px}
     @media (max-width:640px){#scSparkTip{font-size:.72rem;padding:5px 9px}#scSparkTipWk{font-size:.64rem;padding:3px 7px}.sc-tip-strip{height:10px;margin-left:5px;padding-left:5px}.sc-tip-strip i{width:3px}.sc-tip-daychip{font-size:.6rem;margin-left:5px;padding-left:5px}}
     @media (prefers-reduced-motion: reduce){#scSparkTip{transition:none}#scSparkTipWk{transition:none}.sc-tip-strip i{transition:none}}
+    /* ── session242 — প্রিন্ট-প্যাক (স্ক্রিনে print-head/note অদৃশ্য; প্রিন্টে অ্যাকশন-স্তর-লুকানো পরিষ্কার-রিপোর্ট) ── */
+    .sc-print-head,.sc-print-note{display:none}
+    @media print{
+      @page{margin:12mm}
+      body{background:#fff!important;color:#000!important}
+      .admin-sidebar,.admin-header .header-actions,.sc-filters,.sc-search,.sc-actions,.sc-sel,.sc-cfg-chip,.sc-live,#scRefreshBtn,#scPauseBtn,#scCompactBtn,#scHelpBtn,#scPrintBtn,#scWkCopyBtn,#scSparkTip,#scSparkTipWk,.sc-tip-daychip,#scBulk,#scLbox,#scHelp,#scToast,.sc-note-count{display:none!important}
+      .sc-print-head{display:block!important;border-bottom:2.5px solid #000;padding-bottom:8px;margin:0 0 12px}
+      .sc-print-title{font-size:15pt;font-weight:800;display:flex;align-items:center;gap:7px}
+      .sc-print-meta{font-size:9.5pt;margin-top:4px;color:#222;font-variant-numeric:tabular-nums}
+      .sc-print-note{display:block!important;font-size:9.5pt;border-left:3px solid #999;padding:2px 8px;margin:4px 0 0;color:#111}
+      .sc-kpis{gap:6px;margin-bottom:10px}
+      .sc-kpi,.sc-card,.sc-hist{box-shadow:none!important;transform:none!important;break-inside:avoid;page-break-inside:avoid}
+      .sc-card{border:1px solid #bbb!important;margin-bottom:10px}
+      .sc-media audio,.sc-media video{display:none!important}
+      .sc-badge{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    }
   </style>
 </head>
 <body>
@@ -355,6 +371,8 @@
       <button type="button" class="btn btn-sm" id="scHelpBtn" title="কীবোর্ড শর্টকাট দেখুন" aria-label="কীবোর্ড শর্টকাট সহায়িকা খুলুন"><i class="fas fa-keyboard"></i> শর্টকাট <kbd class="sc-kbd" style="margin-left:2px">?</kbd></button>
       <%# session241 — CSV range-সচেতন (bug-fix: href-এ range-প্যারাম-বাদ-পড়ছিল — রুট s229-থেকেই range-ফিল্টার+ফাইলনাম-সমর্থিত) + সক্রিয়-ফিল্টার-ডট + ফিল্টার-টুলটিপ %>
       <a class="btn btn-sm" href="/admin/support-center/export.csv?<%= [status ? 'status='+status : '', media ? 'media='+media : '', q ? 'q='+encodeURIComponent(q) : '', range ? 'range='+range : ''].filter(Boolean).join('&') %>" title="<%= [status ? 'স্ট্যাটাস: ' + status : '', media ? 'মাধ্যম: ' + media : '', q ? 'সার্চ: ' + q : '', range ? 'সময়-সীমা: ' + range : ''].filter(Boolean).join(' · ') || 'সব-অভিযোগ (ফিল্টার-শূন্য)' %>"><i class="fas fa-file-csv"></i> CSV<% if (status || media || q || range) { %><span class="sc-csv-dot" aria-hidden="true"></span><% } %></a>
+      <%# session242 — প্রিন্ট-বাটন (নেটিভ Ctrl+P-সমতুল্য; প্রিন্ট-CSS ডেস্ক-রিপোর্ট পরিষ্কার-রূপ দেয়) %>
+      <button type="button" class="btn btn-sm" id="scPrintBtn" title="প্রিন্ট / PDF সংরক্ষণ (Ctrl+P)" aria-label="ডেস্ক-রিপোর্ট প্রিন্ট বা PDF সংরক্ষণ করুন"><i class="fas fa-print" aria-hidden="true"></i> প্রিন্ট</button>
     </div>
   </div>
 
@@ -440,6 +458,11 @@
     return L.join('\n');
   } catch (_) { return ''; } } %>
   <%# session227 — ২৪ঘ-সারাংশ KPI (helpers digestStats এক-উৎস; ক্লিকে ফিল্টার-ভিউ-জাম্প: status+range) %>
+  <%# session242 — প্রিন্ট-হেডার (print-only; ফিল্টার-সারাংশ EJS-এক-উৎস; স্ক্রিনে .sc-print-head{display:none}) %>
+  <div class="sc-print-head" id="scPrintHead" aria-hidden="true">
+    <div class="sc-print-title"><i class="fas fa-headset" aria-hidden="true"></i> সাপোর্ট ডেস্ক — অভিযোগ-রিপোর্ট</div>
+    <div class="sc-print-meta">প্রিন্ট: <span id="scPrintTime">—</span> · বর্তমান-স্কোপ: <%= [status ? 'স্ট্যাটাস ' + (status === 'PENDING' ? 'নতুন' : status === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান') : '', media ? 'মাধ্যম ' + (media === 'TEXT' ? 'লেখা' : media === 'IMAGE' ? 'ছবি' : 'ভয়েস') : '', q ? 'সার্চ "' + q + '"' : '', range ? 'সময়-সীমা ' + range : ''].filter(Boolean).join(' · ') || 'সব-অভিযোগ (ফিল্টার-শূন্য)' %> · মোট <%= reports.length %> টি</div>
+  </div>
   <div class="sc-kpis" role="group" aria-label="২৪ ঘণ্টার সারসংক্ষেপ">
     <a class="sc-kpi k-fresh" href="/admin/support-center?status=PENDING&range=today"
        aria-label="২৪ ঘণ্টায় <%= bnNum(digest.fresh24) %>টি নতুন অমীমাংসিত — আজকের নতুন-ভিউতে যান">
@@ -591,6 +614,8 @@
       </div>
       <button type="button" class="btn btn-primary btn-sm" data-sc-save><i class="fas fa-save"></i> সংরক্ষণ</button>
     </div>
+    <%# session242 — প্রিন্ট-নোট (print-only; textarea-মান প্রিন্টে নির্ভরযোগ্য-নয় — পাঠ্য-মিরর) %>
+    <% if (r.admin_note) { %><div class="sc-print-note" aria-hidden="true"><b>জবাব:</b> <%= r.admin_note %></div><% } %>
 
     <% if (r.history.length) { %>
     <div class="sc-hist">
@@ -886,6 +911,23 @@
     var el = document.querySelector('.sc-mediabar-track');
     if (!el) return { present: false };
     return { present: true, t: +el.getAttribute('data-mt'), i: +el.getAttribute('data-mi'), a: +el.getAttribute('data-ma'), v: +el.getAttribute('data-mv'), total: +el.getAttribute('data-mtotal') };
+  };
+
+  // ── session242 — প্রিন্ট-প্যাক (বাটন → window.print(); beforeprint-এ স্ট্যাম্প-রিফ্রেশ; bnJs-এক-উৎস বাংলা-অঙ্ক) ──
+  var printBtn = document.getElementById('scPrintBtn');
+  var printTimeEl = document.getElementById('scPrintTime');
+  var scMonthsBn = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+  function scPrintStamp() {
+    if (!printTimeEl) return;
+    var d = new Date();
+    var mm = (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+    printTimeEl.textContent = bnJs(d.getDate()) + ' ' + scMonthsBn[d.getMonth()] + ' ' + bnJs(d.getFullYear()) + ' · ' + bnJs(d.getHours()) + ':' + bnJs(mm);
+  }
+  scPrintStamp();
+  try { window.addEventListener('beforeprint', scPrintStamp); } catch (_) {}
+  if (printBtn) printBtn.addEventListener('click', function () { try { window.print(); } catch (_) {} });
+  window.__scQA.print = function () { // QA-হুক (mediaBreak-এর-পরে — পুনঃসৃজন-চুক্তি)
+    return { btn: !!printBtn, head: !!document.getElementById('scPrintHead'), stampOn: !!(printTimeEl && printTimeEl.textContent), stamp: (printTimeEl && printTimeEl.textContent) || '' };
   };
 
   // ── session232 — স্পার্ক/ট্রেন্ড-টুলটিপ (এক-শেয়ার্ড #scSparkTip; data-d/data-v/data-unit এক-উৎস; টেক্সট-নোড-শুধু — innerHTML-নিষিদ্ধ-রীতি; কার্ড-ফোকাসে আজ-বার) ──

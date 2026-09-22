@@ -3760,3 +3760,21 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়)
 - পরের-এজেন্ট: **session242 লেবেল (worklog Task ID 83)**; PLANS session241-নোট অবশ্যই-পড়ুন (রেন্ডার-অর্ডার + মান-প্যাটার্ন-টেবিল + CSV-গণনা + রেন্ডার্ড-অ্যাসার্ট); push-আগে fetch+rebase; নতুন-সুইট tests/ এ-কমিট
 - রিমোট main = এ-রাউন্ডের session241-কমিট; working-tree ক্লিন
+---
+Task ID: 84 (session242 — cron 403679; প্রিন্ট-প্যাক)
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`2d20766` (session241) — tracking-ref স্টেল ছিল, fetch-পরে 0/0; টোকেন ২০০-ভ্যালিদ (GH+Vercel, .secrets/); live 200; working-tree ক্লিন
+- স্টেল-সামারি-সতর্কতা আবার-প্রমাণিত ×১৩: সামারি Task43/49-যুগ দেখাচ্ছিল — প্রকৃত origin session241
+
+## এ-রাউন্ডে সম্পন্ন (session242 — প্রিন্ট-প্যাক)
+- রাউন্ড-শুরু QA: পূর্ণ-ব্যাটারি ৩৭৯/৩৭৯ প্রথম-রানে — বাগ-শূন্য → ফাঁক-স্ক্যানে প্রিন্ট-স্টাইল-অনুপস্থিতি (grep ০) → ফিচার-রাউন্ড
+- [Mandatory-ফিচার]: `#scPrintBtn` (window.print; Ctrl+P-নেটিভ-অক্ষুণ্ণ) + print-only `#scPrintHead` (bnJs-স্ট্যাম্প + beforeprint-রিফ্রেশ + EJS-এক-উৎস স্কোপ-সারাংশ + মোট) + `.sc-print-note` মিরর (r.admin_note-গেট)
+- [Mandatory-স্টাইল]: @media print — @page 12mm + hide-তালিকা (ওভারলে-স্তর-সহ) + break-inside:avoid + শ্যাডো-শূন্য + print-color-adjust:exact দ্বৈত + স্ক্রিনে print-head/note-অদৃশ্য
+- QA-হুক `__scQA.print` (mediaBreak-এর-পরে); টেস্ট: tests/s242-print-suite.sh ৩৭/৩৭ ×২ (সিড-শূন্য; print-spy restore-চুক্তি; প্রথম-রানে শর্তসাপেক্ষ-মিরর-গোটচা → সোর্স-অ্যাসার্ট)
+- পূর্ণ-রিগ্রেশন ৪১৬/৪১৬ + secret-scan-ক্লিন + স্ক্রিনশট ×২ (repo download-ও কমিটেড) + ডক ×৩ + এ-এন্ট্রি → fetch+rebase → push → Vercel/live-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- গোটচা ×১ (PLANS session242): শর্তসাপেক্ষ print-only মিরর = সোর্স-অ্যাসার্ট (রেন্ডার্ড-নয়); vacuous-every-সচেতনতা
+- পরের-এজেন্ট: **session243 লেবেল (Task ID 85)**; বাকি-প্রস্তাব: Turso (পরিকল্পনা-গেটে), stale-সুইট-আধুনিকীকরণ; PLANS session242-নোট পড়ুন; push-আগে fetch+rebase
+- রিমোট main = এ-রাউন্ডের session242-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
