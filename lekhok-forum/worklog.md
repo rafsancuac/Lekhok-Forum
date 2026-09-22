@@ -2030,3 +2030,22 @@ Work Log:
 Stage Summary:
 - লাইভ-ডেস্ক: সংরক্ষিত-ভিউ-সারি সহ স্টিকি-টুলবার; টোস্টে জীবনকাল-বার; স্ক্রোলে স্টিকি-ছায়া — সব-ক্লায়েন্ট-সাইড, API/schema-অস্পৃশ্য
 - পরের-এজেন্ট: session217; PLANS session216-নোট অবশ্যই পড়ুন (৩-নতুন-গোটচা); বাকি-প্রস্তাব Turso/প্রোড-পোর্ট (পরিকল্পনা-গেট)
+
+---
+## MESSENGER-VOICE-CSP (session225) — নতুন-ভয়েস-রিফ্রেশ-বাধ্যতামূলক + পুরোনো-ভয়েস-মৃত — একক-মূল-কারণ: CSP media-src অনুপস্থিত
+
+Task: ইউজার-রিপোর্ট (স্ক্রিনশটসহ) — ① নতুন-পাঠানো ভয়েস বাজতে রিফ্রেশ দিতে হয় ② ২০-সেপ্টেম্বরের পুরোনো ভয়েসগুলো আর বাজে না (⚠ "ভয়েস ফাইলটি পাওয়া যাচ্ছে না")।
+
+Work Log:
+- **RCA (প্রমাণসহ)**: server.js CSP_POLICY-তে `media-src` ছিল না → `<audio>` `default-src 'self'`-এ পড়ত → ① optimistic-বাবলের `blob:`-URL আর ② Vercel-Blob-যুগের ক্রস-অরিজিন `*.public.blob.vercel-storage.com` ভয়েস-URL — দুটোই CSP-ব্লকড → audio-error → markDead ⚠। রিফ্রেশে ক্যানোনিকাল-বাবল same-origin `/api/messages/audio/:id` পায় → বাজে (উপসর্গ-১ ব্যাখ্যা)। পুরোনো-ভয়েস রিফ্রেশেও ক্রস-অরিজিন-ই থাকত (উপসর্গ-২)।
+- **পুরোনো-ভয়েস হারায়নি!** Turso-ডিরেক্ট-কোয়েরি: ৮টি ভয়েস-রো (id 118-131, সেপ্টেম্বর ১৭-২০) `https://…public.blob.vercel-storage.com` URL-এ — curl-এ **সবগুলোই 200 OK audio/webm** (ব্লব-স্টোর জীবিত; "স্টোরেজ সরে গেছে" ধারণাটি ভুল ছিল — ব্লক করছিল শুধু CSP)
+- **ফিক্স-A (server.js)**: CSP_POLICY-তে `media-src 'self' data: blob: https:` (img-src-র সমতুল্য; audio+video কভার; media-src কখনোই ছিল না)
+- **ফিক্স-B (messages-chat.ejs)**: bv-dead-বাবলে এক-ক্লিক-রিট্রাই — আগে শুধু-টোস্ট+return (একমাত্র পথ রিফ্রেশ); এখন ক্লিকে bv-dead সরে, `src` পুনঃসেট+`audio.load()` জোর-করে (same-src-শর্তেও), error-স্টেটেও (cur===player পথে audio.error-গার্ড) — ভবিষ্যতের যেকোনো সাময়িক-ব্যর্থতা রিফ্রেশ-ছাড়াই পুনরুদ্ধারযোগ্য
+- **ফিক্স-C (ডেটা-মাইগ্রেশন, tmp-tools/backfill-voice-blobs.py)**: ৮টি পুরোনো ভয়েস ব্লব থেকে ফেচ → base64 → Turso-তে `data:audio/webm;base64,` হিসেবে guarded-UPDATE (`WHERE id=? AND file_url=<পুরোনো-সঠিক-মান>`; backup JSON-আগে) → এখন বার্তার-সাথেই-অমর (session183-স্থাপত্য; ব্লব-স্টোর-মুছলেও বাঁচবে) + same-origin স্ট্রিম-লিঙ্কে CSP-নিরাপদ। Turso-গোটচা: v2/pipeline-integer-arg-মানও অবশ্যই **স্ট্রিং** ("118", 118 নয়) — নইলে JSON 400 "expected a borrowed string"; urllib-এ Vercel-Blob 400 (curl-এ 200) → ফেচ curl-বাইনারি-মোডে
+- **QA (one-shot E2E, :8094 sql.js)**: ইউজার-লগইন (গোটচা: /login স্টাফ-রোল-প্রত্যাখ্যান — moderator হলে /admin/login; তাই user-রোল-অ্যাকাউন্টে পরীক্ষা) → multipart-ভয়েস-আপলোড `{ok,id:1}` → পেজ-বাবল `data-src="/api/messages/audio/1-voice.webm"` → রুট 200 audio/webm 1536/1536-বাইট-হুবহু → নিরানন্দেশ-গার্ড 401 → CSP-হেডার media-src উপস্থিত; node --check ✓ audit:views (122-ejs) ✓
+- স্যান্ডবক্স-গোটচা: ব্যাকগ্রাউন্ড-প্রসেস টুল-কল-শেষে রিপ হয় → one-shot-স্ক্রিপ্টে বুট+টেস্ট+কিল এক-কলে; প্রতিযোগী-কিপার-আগে pkill
+
+Stage Summary:
+- উভয়-উপসর্গের-মূল-কারণ এক: CSP media-src-অনুপস্থিতি — ১-লাইন-ফিক্স + ক্লায়েন্ট-রিট্রাই + ৮-পুরোনো-ভয়েসের DB-মাইগ্রেশন
+- কমিট d320e8c (server.js + messages-chat.ejs); ডেটা-মাইগ্রেশন Turso-লাইভ-সম্পন্ন (backup: tmp-tools/voice-blob-backup-*.json)
+- পরের-এজেন্ট: session226; CSP-স্পর্শ করলে media-src-রেখা-অক্ষত-রাখুন; নতুন-ভয়েস ≤4MB data-URI (session183), >4MB ব্লব (এখন media-src https:-কৃতজ্ঞতায় বাজবে)
