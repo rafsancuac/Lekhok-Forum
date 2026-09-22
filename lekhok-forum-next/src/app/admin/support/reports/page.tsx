@@ -42,6 +42,12 @@
  *     ১৫-সে-পোল ফলব্যাক-হিসেবে অটুট; ২৫০ms-ডিবাউন্স (বার্স্ট-সিগন্যালে স্প্যাম-শূন্য)
  *   • লাইভ-ইন্ডিকেটর চিপ (লাইভ=সবুজ-পালস / পোলিং=ধূসর) — সংযোগ-অবস্থা এক-নজরে
  *   • অ্যাডমিন-নোট দ্রুত-টেমপ্লেট (৫-বাংলা-স্নিপেট; ক্লিকে নোট-ইনপুটে যোগ — পুরনো-লেখা সংরক্ষিত)
+ * session216 — অপারেটর-স্মৃতি প্যাক:
+ *   • সংরক্ষিত-ফিল্টার-ভিউ (lf-desk-presets; সর্বোচ্চ ৬) + টোস্ট-জীবনকাল-বার + স্টিকি-স্ক্রোল-ছায়া
+ * session217 — অপারেটর-ট্রায়াজ প্যাক:
+ *   • "পরে দেখুন" তারা-বুকমার্ক (localStorage lf-desk-later; কার্ডে স্টার-টগল + ফিল্টার-চিপ + s-শর্টকাট)
+ *   • ৭-দিনের প্রবণতা-স্ট্রিপ (ক্লায়েন্ট-সাইড দৈনিক-আগমন-বার; আজ-সবুজ; টুলটিপে গণনা)
+ *   • কার্ড-ঘনত্ব টগল (ঘন/স্বাভাবিক; localStorage lf-desk-density)
 */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -65,11 +71,14 @@ import {
   Loader2,
   Mic,
   Pencil,
+  Rows3,
   Search,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Star,
   Trash2,
+  TrendingUp,
   Undo2,
   Video,
   Volume2,
@@ -83,11 +92,15 @@ const SHORTCUTS: { keys: string[]; desc: string }[] = [
   { keys: ['j'], desc: 'পরের অভিযোগে যান' },
   { keys: ['k'], desc: 'আগের অভিযোগে যান' },
   { keys: ['x'], desc: 'কার্সর-কার্ড নির্বাচন টগল (বাল্ক-টুলবার)' },
+  { keys: ['s'], desc: 'কার্সর-কার্ড "পরে দেখুন" টগল' },
   { keys: ['১', '২', '৩'], desc: 'ট্যাব: নতুন / চলমান / সমাধান' },
   { keys: ['/'], desc: 'অনুসন্ধান-বক্সে ফোকাস' },
   { keys: ['?'], desc: 'এই সহায়িকা খোলা/বন্ধ' },
   { keys: ['Esc'], desc: 'কার্সর বা সহায়িকা বন্ধ' },
 ]
+
+/** session217 — সপ্তাহের-দিন-লেবেল (প্রবণতা-স্ট্রিপ) */
+const WEEKDAY_BN = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি']
 import AdminGate, { useAdminGate } from '@/components/admin/AdminGate'
 import { bn } from '@/lib/format'
 import { agingInfo, historySummaryBn, staleCount } from '@/lib/support-history'
@@ -574,6 +587,29 @@ function SupportReportsPanel() {
   }, [])
   /** session215 — নোট-টেমপ্লেট খোলা-কার্ড (id; null = বন্ধ) */
   const [tplOpenFor, setTplOpenFor] = useState<string | null>(null)
+  /** session217 — পরে-দেখুন-বুকমার্ক (localStorage: lf-desk-later; {id: ts} ম্যাপ, সর্বোচ্চ ৫০০, FIFO-প্রুন) */
+  const [later, setLater] = useState<Record<string, number>>({})
+  const [laterOnly, setLaterOnly] = useState(false)
+  /** session217 — কার্ড-ঘনত্ব (localStorage: lf-desk-density; compact = লম্বা-তালিকায় বেশি-দেখা) */
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('lf-desk-later')
+      if (raw) {
+        const obj: unknown = JSON.parse(raw)
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          const clean: Record<string, number> = {}
+          for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+            if (typeof v === 'number') clean[k] = v
+          }
+          setLater(clean)
+        }
+      }
+      if (localStorage.getItem('lf-desk-density') === 'compact') setDensity('compact')
+    } catch {
+      /* নীরব */
+    }
+  }, [])
 
   const flash = useCallback(
     (msg: string, undo?: { id: string; index: number; entry: HistoryEntry }, timeoutMs = 3000) => {
@@ -928,6 +964,7 @@ function SupportReportsPanel() {
         r.status === tab &&
         (mediaFilter === 'ALL' || r.mediaType === mediaFilter) &&
         (!cutoff || new Date(r.createdAt).getTime() >= cutoff) &&
+        (!laterOnly || !!later[r.id]) &&
         (!q ||
           r.senderName.toLowerCase().includes(q) ||
           (r.senderEmail ?? '').toLowerCase().includes(q) ||
@@ -939,7 +976,7 @@ function SupportReportsPanel() {
       const db = new Date(b.createdAt).getTime()
       return sortAsc ? da - db : db - da
     })
-  }, [reports, tab, mediaFilter, query, dateRange, sortAsc])
+  }, [reports, tab, mediaFilter, query, dateRange, sortAsc, laterOnly, later])
 
   /** session212 — ক্ল্যাম্পড-কার্সর (পোলে রেকর্ড-কমলে ইনডেক্স-অসফল-এড়াই) */
   const cursorIdx = cursor >= 0 && cursor < shown.length ? cursor : -1
@@ -1064,8 +1101,33 @@ function SupportReportsPanel() {
   const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED
   /** session210 — ৩+ দিন-পুরাতন অমীমাংসিত (অ্যালার্ট-বারের কাউন্ট) */
   const staleN = staleCount(reports)
-  const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL' || dateRange !== 'ALL'
+  const filtersActive = query.trim() !== '' || mediaFilter !== 'ALL' || dateRange !== 'ALL' || laterOnly
   const statPct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
+  /** session217 — ৭-দিনের আগমন-প্রবণতা (সব-স্টেটাস; ক্লায়েন্ট-সাইড) */
+  const trend = React.useMemo(() => {
+    const now = new Date()
+    const days: { key: string; label: string; count: number; isToday: boolean }[] = []
+    for (let i = 6; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i + 1)
+      const count = reports.filter((r) => {
+        const t = new Date(r.createdAt).getTime()
+        return t >= start.getTime() && t < end.getTime()
+      }).length
+      days.push({
+        key: start.toISOString().slice(0, 10),
+        label: WEEKDAY_BN[start.getDay()],
+        count,
+        isToday: i === 0,
+      })
+    }
+    return days
+  }, [reports])
+  const trendMax = Math.max(1, ...trend.map((t) => t.count))
+  const trendTotal = trend.reduce((s, t) => s + t.count, 0)
+  const trendToday = trend.find((t) => t.isToday)?.count ?? 0
+  /** session217 — তারাচিহ্নিত-সংখ্যা (চিপ-ব্যাজ) */
+  const starN = Object.keys(later).length
 
   /** session206 — বাল্ক-স্টেটাস: নির্বাচিত-কার্ডে ক্রমিক PUT + প্রগ্রেস; শেষে একবার reload+ব্যাজ-সিঙ্ক */
   const bulkUpdate = useCallback(
@@ -1101,6 +1163,40 @@ function SupportReportsPanel() {
 
   const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }, [])
+
+  /** session217 — পরে-দেখুন টগল (localStorage-স্থায়ী; ৫০০-ক্যাপে প্রাচীনতম-প্রুন) */
+  const toggleLater = useCallback((id: string) => {
+    setLater((prev) => {
+      const next = { ...prev }
+      if (next[id]) delete next[id]
+      else {
+        next[id] = Date.now()
+        const ids = Object.keys(next)
+        if (ids.length > 500) {
+          ids.sort((a, b) => next[a] - next[b])
+          for (const k of ids.slice(0, ids.length - 500)) delete next[k]
+        }
+      }
+      try {
+        localStorage.setItem('lf-desk-later', JSON.stringify(next))
+      } catch {
+        /* নীরব */
+      }
+      return next
+    })
+  }, [])
+  /** session217 — ঘনত্ব-টগল (localStorage-স্থায়ী) */
+  const toggleDensity = useCallback(() => {
+    setDensity((d) => {
+      const next = d === 'compact' ? 'comfortable' : 'compact'
+      try {
+        localStorage.setItem('lf-desk-density', next)
+      } catch {
+        /* নীরব */
+      }
+      return next
+    })
   }, [])
 
   /** session212 — ডেস্ক কীবোর্ড-দক্ষতা: j/k নেভিগেট · x নির্বাচন-টগল · ১/২/৩ ট্যাব · ? সহায়িকা · Esc বন্ধ */
@@ -1157,13 +1253,17 @@ function SupportReportsPanel() {
         toggleSelect(shown[cursor].id)
         return
       }
+      if ((e.key === 's' || e.key === 'S') && cursor >= 0 && cursor < shown.length) {
+        toggleLater(shown[cursor].id)
+        return
+      }
       if (e.key === '1' || e.key === '১') setTab('PENDING')
       else if (e.key === '2' || e.key === '২') setTab('IN_PROGRESS')
       else if (e.key === '3' || e.key === '৩') setTab('RESOLVED')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [shown, cursor, helpOpen, lightbox, bulkBusy, toggleSelect])
+  }, [shown, cursor, helpOpen, lightbox, bulkBusy, toggleSelect, toggleLater])
 
   const allShownSelected = shown.length > 0 && shown.every((r) => selected.includes(r.id))
 
@@ -1277,6 +1377,47 @@ function SupportReportsPanel() {
         })}
       </div>
 
+      {/* session217 — ৭-দিনের প্রবণতা-স্ট্রিপ (দৈনিক-আগমন-বার; আজ-সবুজ; টুলটিপে তারিখ+গণনা) */}
+      <div
+        role="img"
+        aria-label={`৭-দিনের প্রবণতা: সাত-দিনে মোট ${bn(trendTotal)}টি অভিযোগ এসেছে; আজ ${bn(trendToday)}টি`}
+        className="bg-white border border-[#CED0D4] border-t-[3px] border-t-[#006A4E] rounded-[10px] p-3 shadow-2xs"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10.5px] font-bold text-[#65676B] flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5 text-[#006A4E]" aria-hidden />
+            ৭-দিনের প্রবণতা
+          </p>
+          <span className="text-[9.5px] text-[#8A8D91] font-bold">
+            সাত-দিনে মোট {bn(trendTotal)}টি · আজ {bn(trendToday)}টি
+          </span>
+        </div>
+        <div className="mt-2 flex items-stretch gap-1.5 h-16" aria-hidden>
+          {trend.map((d) => (
+            <div
+              key={d.key}
+              title={`${bn(d.count)}টি — ${d.key}`}
+              className="flex-1 flex flex-col items-center justify-end gap-1 min-w-0"
+            >
+              <span
+                className={`text-[9.5px] font-extrabold leading-none ${d.count > 0 ? (d.isToday ? 'text-[#006A4E]' : 'text-[#4B4C4F]') : 'text-[#CED0D4]'}`}
+              >
+                {bn(d.count)}
+              </span>
+              <div className="w-full max-w-8 h-9 flex items-end">
+                <div
+                  className={`w-full rounded-t-[3px] transition-all ${d.isToday ? 'bg-[#006A4E]' : 'bg-[#CED0D4]'}`}
+                  style={{ height: d.count > 0 ? `${Math.max(14, Math.round((d.count / trendMax) * 100))}%` : '2px' }}
+                />
+              </div>
+              <span className={`text-[9px] font-bold leading-none ${d.isToday ? 'text-[#006A4E]' : 'text-[#8A8D91]'}`}>
+                {d.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* স্টেটাস-ট্যাব (লাইভ-কাউন্ট) */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {TABS.map((t) => (
@@ -1374,6 +1515,7 @@ function SupportReportsPanel() {
                     setMediaFilter('ALL')
                     setDateRange('ALL')
                     setSortAsc(false)
+                    setLaterOnly(false)
                   }}
                   type="button"
                   className="ml-1.5 text-[#006A4E] hover:underline cursor-pointer"
@@ -1412,6 +1554,22 @@ function SupportReportsPanel() {
             {soundOn ? <Volume2 className="w-3 h-3" aria-hidden /> : <VolumeX className="w-3 h-3" aria-hidden />}
             শব্দ
           </button>
+          {/* session217 — কার্ড-ঘনত্ব টগল (ঘন = লম্বা-তালিকায় বেশি-কার্ড-দেখা; localStorage-স্থায়ী) */}
+          <button
+            onClick={toggleDensity}
+            type="button"
+            aria-pressed={density === 'compact'}
+            aria-label={density === 'compact' ? 'স্বাভাবিক কার্ড-ঘনত্বে ফেরুন' : 'ঘন কার্ড-ঘনত্ব চালু করুন'}
+            title="কার্ড-ঘনত্ব: ঘন ↔ স্বাভাবিক"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0 ${
+              density === 'compact'
+                ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+            }`}
+          >
+            <Rows3 className="w-3 h-3" aria-hidden />
+            ঘন
+          </button>
           {/* session212 — শর্টকাট-সহায়িকা হিন্ট (সবসময়-দৃশ্যমান) */}
           <button
             onClick={() => setHelpOpen(true)}
@@ -1447,6 +1605,22 @@ function SupportReportsPanel() {
               </button>
             ))}
           </div>
+          {/* session217 — পরে-দেখুন ফিল্টার-চিপ (শুধু-তারাচিহ্নিত; চলতি-ট্যাব+অন্যান্য-ফিল্টারের-সাথে-মিলে) */}
+          <button
+            onClick={() => setLaterOnly((v) => !v)}
+            type="button"
+            aria-pressed={laterOnly}
+            aria-label={laterOnly ? 'পরে-দেখুন ফিল্টার বন্ধ করুন' : 'শুধু তারাচিহ্নিত অভিযোগ দেখুন'}
+            title="শুধু তারাচিহ্নিত অভিযোগ দেখান"
+            className={`px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer flex items-center gap-1.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
+              laterOnly
+                ? 'bg-amber-50 text-amber-600 border-amber-300'
+                : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-amber-300 hover:text-amber-500'
+            }`}
+          >
+            <Star className={`w-3 h-3 ${laterOnly ? 'fill-current' : ''}`} aria-hidden />
+            পরে দেখুন{starN > 0 ? ` (${bn(starN)})` : ''}
+          </button>
           <button
             onClick={() => setSortAsc((v) => !v)}
             type="button"
@@ -1593,7 +1767,7 @@ function SupportReportsPanel() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className={density === 'compact' ? 'space-y-2' : 'space-y-3'}>
           {/* session206 — সম্পূর্ণ-নির্বাচন বার (বাল্ক-মোডে) */}
           <div className="flex items-center justify-between gap-2 bg-white border border-[#CED0D4] rounded-[8px] px-3 py-2 shadow-2xs">
             <label className="flex items-center gap-2 text-[11px] font-bold text-[#4B4C4F] cursor-pointer select-none">
@@ -1619,7 +1793,7 @@ function SupportReportsPanel() {
               key={r.id}
               data-report={r.id}
               aria-current={cursorIdx === i || undefined}
-              className={`bg-white border rounded-[10px] p-4 shadow-2xs space-y-3 border-l-4 transition-all hover:shadow-md lf-anim-fade ${
+              className={`bg-white border rounded-[10px] ${density === 'compact' ? 'p-2.5 space-y-2' : 'p-4 space-y-3'} shadow-2xs border-l-4 transition-all hover:shadow-md lf-anim-fade ${
                 selected.includes(r.id)
                   ? 'border-[#006A4E] ring-2 ring-[#006A4E]/20 ' + ACCENT[r.status]
                   : `border-[#CED0D4] ${ACCENT[r.status]}`
@@ -1645,7 +1819,7 @@ function SupportReportsPanel() {
                     aria-label={`${r.senderName}-এর অভিযোগ-পরিসংখ্যান ঝলক খুলুন`}
                     title={`${r.senderName} — ঝলক দেখুন`}
                     style={{ backgroundColor: avatarColorFor(r.senderName) }}
-                    className="w-8 h-8 rounded-full text-white text-[12px] font-extrabold flex items-center justify-center shrink-0 select-none cursor-pointer transition-transform hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/50"
+                    className={`${density === 'compact' ? 'w-7 h-7' : 'w-8 h-8'} rounded-full text-white text-[12px] font-extrabold flex items-center justify-center shrink-0 select-none cursor-pointer transition-transform hover:scale-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/50`}
                   >
                     {r.senderName.trim().charAt(0) || '?'}
                   </button>
@@ -1688,6 +1862,25 @@ function SupportReportsPanel() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {/* session217 — পরে-দেখুন স্টার-টগল (কার্ড-প্রতি; localStorage-স্থায়ী) */}
+                  <button
+                    onClick={() => toggleLater(r.id)}
+                    type="button"
+                    aria-pressed={!!later[r.id]}
+                    aria-label={
+                      later[r.id]
+                        ? `${r.senderName}-এর অভিযোগ থেকে পরে-দেখুন চিহ্ন সরান`
+                        : `${r.senderName}-এর অভিযোগ পরে দেখার জন্য চিহ্নিত করুন`
+                    }
+                    title="পরে দেখুন (s)"
+                    className={`p-1.5 rounded-[6px] border transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
+                      later[r.id]
+                        ? 'bg-amber-50 border-amber-300 text-amber-500'
+                        : 'bg-white border-[#CED0D4] text-[#8A8D91] hover:text-amber-500 hover:border-amber-300'
+                    }`}
+                  >
+                    <Star className={`w-3.5 h-3.5 ${later[r.id] ? 'fill-current' : ''}`} aria-hidden />
+                  </button>
                   {TABS.filter((t) => t.key !== r.status).map((t) => (
                     <button
                       key={t.key}
@@ -1705,7 +1898,7 @@ function SupportReportsPanel() {
 
               {/* অভিযোগ-লেখা (session202: হোভার-কপি বাটন) */}
               <div className="relative group/msg">
-                <p className="text-[13px] leading-relaxed whitespace-pre-wrap break-words bg-[#F7F8FA] border border-[#E4E6EB] rounded-[8px] p-3 pr-9">
+                <p className={`${density === 'compact' ? 'text-[12px] p-2' : 'text-[13px] p-3'} leading-relaxed whitespace-pre-wrap break-words bg-[#F7F8FA] border border-[#E4E6EB] rounded-[8px] pr-9`}>
                   {r.messageText}
                 </p>
                 <div className="absolute top-2 right-2 flex gap-1">
