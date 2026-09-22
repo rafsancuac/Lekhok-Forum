@@ -102,6 +102,27 @@
     .sc-wkr-btn[aria-pressed="true"]:focus-visible{outline-color:var(--ad-accent-ink)}
     @media (prefers-reduced-motion: reduce){.sc-wkr-btn{transition:none !important}}
     @media (max-width:640px){.sc-wkr-btn{padding:4px 8px;font-size:.68rem}}
+    /* session241 — মিডিয়া-ডিস্ট্রিবিউশন স্ট্রিপ + CSV-ডট (সম্পূর্ণ-স্ট্যাটিক — কোনো-transition/animation-নেই — reduced-motion-স্বাভাবিক-নিরাপদ; সব-রঙ var()-টোকেন) */
+    .sc-mediabar{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:10px 14px;margin-bottom:12px}
+    .sc-mediabar-track{display:flex;align-items:stretch;height:8px;border-radius:4px;overflow:hidden;background:var(--ad-icon-bg)}
+    .sc-mb{flex-basis:0;min-width:0;height:100%}
+    .sc-mb.m-text{background:var(--ad-accent)}
+    .sc-mb.m-image{background:var(--lf-amber-deep)}
+    .sc-mb.m-audio{background:var(--lf-ok-deep)}
+    .sc-mb.m-video{background:var(--lf-danger-deep)}
+    .sc-mb-none{flex:1;height:100%}
+    .sc-mediabar-legend{display:flex;align-items:center;gap:14px;margin-top:7px;flex-wrap:wrap}
+    .sc-mediabar-legend .lg{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;color:var(--ad-muted)}
+    .sc-mediabar-legend .lg b{color:var(--ad-ink);font-variant-numeric:tabular-nums}
+    .lg-dot{width:8px;height:8px;border-radius:2px;display:inline-block}
+    .lg-dot.lg-text{background:var(--ad-accent)}
+    .lg-dot.lg-image{background:var(--lf-amber-deep)}
+    .lg-dot.lg-audio{background:var(--lf-ok-deep)}
+    .lg-dot.lg-video{background:var(--lf-danger-deep)}
+    .sc-mediabar-legend .lg-total{margin-left:auto;font-size:.72rem;font-weight:700;color:var(--ad-ink-2)}
+    .sc-mediabar-legend .lg-total b{font-variant-numeric:tabular-nums}
+    .sc-csv-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--lf-amber-deep);margin-left:5px;vertical-align:middle}
+    @media (max-width:640px){.sc-mediabar{padding:8px 10px}.sc-mediabar-legend{gap:10px}.sc-mediabar-legend .lg{font-size:.68rem}}
     .sc-card{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:16px;margin-bottom:14px;box-shadow:var(--ad-shadow)}
     .sc-card.sc-heat-stale{border-color:var(--lf-amber-soft-3);box-shadow:0 0 0 3px var(--lf-amber-soft-2)}
     .sc-card-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
@@ -332,7 +353,8 @@
       <%# session232 — কমপ্যাক্ট-মোড টগল (d-কী-সমতুল্য; aria-pressed স্টেট-স্টাইল) %>
       <button type="button" class="btn btn-sm" id="scCompactBtn" aria-pressed="false" title="ঘনত্ব কমান/বাড়ান (d)" aria-label="কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব কমান"><i class="fas fa-table-columns" aria-hidden="true"></i> কমপ্যাক্ট</button>
       <button type="button" class="btn btn-sm" id="scHelpBtn" title="কীবোর্ড শর্টকাট দেখুন" aria-label="কীবোর্ড শর্টকাট সহায়িকা খুলুন"><i class="fas fa-keyboard"></i> শর্টকাট <kbd class="sc-kbd" style="margin-left:2px">?</kbd></button>
-      <a class="btn btn-sm" href="/admin/support-center/export.csv?<%= [status ? 'status='+status : '', media ? 'media='+media : '', q ? 'q='+encodeURIComponent(q) : ''].filter(Boolean).join('&') %>"><i class="fas fa-file-csv"></i> CSV</a>
+      <%# session241 — CSV range-সচেতন (bug-fix: href-এ range-প্যারাম-বাদ-পড়ছিল — রুট s229-থেকেই range-ফিল্টার+ফাইলনাম-সমর্থিত) + সক্রিয়-ফিল্টার-ডট + ফিল্টার-টুলটিপ %>
+      <a class="btn btn-sm" href="/admin/support-center/export.csv?<%= [status ? 'status='+status : '', media ? 'media='+media : '', q ? 'q='+encodeURIComponent(q) : '', range ? 'range='+range : ''].filter(Boolean).join('&') %>" title="<%= [status ? 'স্ট্যাটাস: ' + status : '', media ? 'মাধ্যম: ' + media : '', q ? 'সার্চ: ' + q : '', range ? 'সময়-সীমা: ' + range : ''].filter(Boolean).join(' · ') || 'সব-অভিযোগ (ফিল্টার-শূন্য)' %>"><i class="fas fa-file-csv"></i> CSV<% if (status || media || q || range) { %><span class="sc-csv-dot" aria-hidden="true"></span><% } %></a>
     </div>
   </div>
 
@@ -364,6 +386,16 @@
     <% }) %>
   </div>
   <%# session239 — সপ্তাহ-রিপোর্ট-কপি পেলোড (EJS-এক-উৎস-টেক্সট — ক্লায়েন্ট JSON-এক-পার্স; গণনা-শূন্য; টেলিগ্রাম-প্রস্তুত) %>
+  <%# session241 — মিডিয়া-বিভাজন (EJS-এক-উৎস — composer+strip দুই-গ্রাহক; rows-স্কোপ = ডেস্ক-ফিল্টার-সমস্বর — এক-পৃষ্ঠা-এক-স্কোপ-চুক্তি; never-throws) %>
+  <% function scMediaBreakdown(rowsArr){ try {
+    var L = { TEXT: 0, IMAGE: 0, AUDIO: 0, VIDEO: 0, total: 0 };
+    for (var i = 0; i < (rowsArr || []).length; i++) {
+      var m = rowsArr[i] && rowsArr[i].media_type;
+      if (L[m] !== undefined) { L[m]++; L.total++; }
+    }
+    return L;
+  } catch (_) { return { TEXT: 0, IMAGE: 0, AUDIO: 0, VIDEO: 0, total: 0 }; } } %>
+  <% var mediaBreak = scMediaBreakdown(reports); %>
   <script type="application/json" id="scWkReport"><%- JSON.stringify({ text: scWkReportText() }) %></script>
   <%# session240 — ৩০-দিন-রিপোর্ট-পেলোড (একই-কম্পোজার; D=30 — ক্লায়েন্ট-গণনা-শূন্য) %>
   <script type="application/json" id="scWkReport30"><%- JSON.stringify({ text: scWkReportText(trend30, 30) }) %></script>
@@ -380,6 +412,7 @@
       var n = v == null ? 0 : v; var h = (n > 0 && mx > 0) ? Math.max(2, Math.round(n / mx * 14)) : 2;
       return '<i class="' + (i === 6 ? 'today' : '') + '" style="height:' + h + 'px" data-d="' + trend.dayLabels[i] + '" data-v="' + bnNum(n) + '"></i>'; }).join('') + '</span>'; } %>
   <%# session239 — সপ্তাহ-রিপোর্ট-টেক্সট কম্পোজার (EJS-এক-উৎস; bnNum-এক-উৎস; ক্লায়েন্ট-গণনা-শূন্য; never-throws) %>
+
   <%# session239+240 — রিপোর্ট-টেক্সট কম্পোজার (EJS-এক-উৎস; bnNum-এক-উৎস; ক্লায়েন্ট-গণনা-শূন্য; never-throws;
     D=৭-পথ বাইট-অভিন্ন — s239-অ্যাসার্ট-রক্ষা; D=30-এ টাইটেল/ব্যাপ্তি/মোট-লেবেল ৩০-দিন-রূপ) %>
   <% function scWkReportText(t, days){ try {
@@ -395,6 +428,9 @@
     L.push('');
     L.push('▪ বর্তমান অবস্থা (সব-স্কোপ)');
     L.push('নতুন অভিযোগ: ' + bnNum(counts.PENDING) + ' · চলমান: ' + bnNum(counts.IN_PROGRESS) + ' · সমাধান: ' + bnNum(counts.RESOLVED));
+    L.push('');
+    L.push('▪ মিডিয়া বিভাজন (বর্তমান-স্কোপ)');
+    L.push('লেখা ' + bnNum(mediaBreak.TEXT) + ' · ছবি ' + bnNum(mediaBreak.IMAGE) + ' · ভয়েস ' + bnNum(mediaBreak.AUDIO) + ' · ভিডিও ' + bnNum(mediaBreak.VIDEO) + ' — মোট ' + bnNum(mediaBreak.total) + ' টি');
     L.push('');
     L.push('▪ ' + (D === 30 ? '৩০-দিনের' : '৭-দিনের') + ' প্রবণতা (নতুন / সমাধান / গড়-সমাধান)');
     for (var i = 0; i < t.dayLabels.length; i++) {
@@ -433,6 +469,20 @@
       <small><%= digest.avgResolveHours !== null ? 'সমাধান-ইতিহাসের-গড়' : 'সমাধান-ইতিহাস-নেই' %></small>
       <%- scSpark('avg', trend.avgPerDay, 'ঘ') %>
     </a>
+  </div>
+
+  <%# session241 — মিডিয়া-ডিস্ট্রিবিউশন স্ট্রিপ (EJS-এক-উৎস mediaBreak; flex-grow-অনুপাত — ক্লায়েন্ট-গণনা-শূন্য; সম্পূর্ণ-স্ট্যাটিক — reduced-motion-নিরাপদ; var()-টোকেন) %>
+  <div class="sc-mediabar">
+    <div class="sc-mediabar-track" role="img" aria-label="মিডিয়া বিভাজন — লেখা <%= bnNum(mediaBreak.TEXT) %>, ছবি <%= bnNum(mediaBreak.IMAGE) %>, ভয়েস <%= bnNum(mediaBreak.AUDIO) %>, ভিডিও <%= bnNum(mediaBreak.VIDEO) %> (মোট <%= bnNum(mediaBreak.total) %>)" data-mt="<%= mediaBreak.TEXT %>" data-mi="<%= mediaBreak.IMAGE %>" data-ma="<%= mediaBreak.AUDIO %>" data-mv="<%= mediaBreak.VIDEO %>" data-mtotal="<%= mediaBreak.total %>">
+      <% if (mediaBreak.total > 0) { %><span class="sc-mb m-text" style="flex-grow:<%= mediaBreak.TEXT %>"></span><span class="sc-mb m-image" style="flex-grow:<%= mediaBreak.IMAGE %>"></span><span class="sc-mb m-audio" style="flex-grow:<%= mediaBreak.AUDIO %>"></span><span class="sc-mb m-video" style="flex-grow:<%= mediaBreak.VIDEO %>"></span><% } else { %><span class="sc-mb-none" aria-hidden="true"></span><% } %>
+    </div>
+    <div class="sc-mediabar-legend">
+      <span class="lg"><i class="lg-dot lg-text"></i>লেখা <b><%= bnNum(mediaBreak.TEXT) %></b></span>
+      <span class="lg"><i class="lg-dot lg-image"></i>ছবি <b><%= bnNum(mediaBreak.IMAGE) %></b></span>
+      <span class="lg"><i class="lg-dot lg-audio"></i>ভয়েস <b><%= bnNum(mediaBreak.AUDIO) %></b></span>
+      <span class="lg"><i class="lg-dot lg-video"></i>ভিডিও <b><%= bnNum(mediaBreak.VIDEO) %></b></span>
+      <span class="lg-total">মোট <b><%= bnNum(mediaBreak.total) %></b></span>
+    </div>
   </div>
 
   <div class="sc-stats">
@@ -831,6 +881,11 @@
     var p30ok = false;
     try { p30ok = ((JSON.parse((wkReportEl30 || {}).textContent || '{}') || {}).text || '').indexOf('৩০-দিনের') >= 0; } catch (_) {}
     return { r: wkRange, b7: !!(wkR7 && wkR7.getAttribute('aria-pressed') === 'true'), b30: !!(wkR30 && wkR30.getAttribute('aria-pressed') === 'true'), p7: !!wkReportEl, p30: !!wkReportEl30, ok30: p30ok };
+  };
+  window.__scQA.mediaBreak = function () { // session241 QA-হুক (wkRange-র-পরে — পুনঃসৃজন-চুক্তি; EJS-ডেটা-হুক-থেকে)
+    var el = document.querySelector('.sc-mediabar-track');
+    if (!el) return { present: false };
+    return { present: true, t: +el.getAttribute('data-mt'), i: +el.getAttribute('data-mi'), a: +el.getAttribute('data-ma'), v: +el.getAttribute('data-mv'), total: +el.getAttribute('data-mtotal') };
   };
 
   // ── session232 — স্পার্ক/ট্রেন্ড-টুলটিপ (এক-শেয়ার্ড #scSparkTip; data-d/data-v/data-unit এক-উৎস; টেক্সট-নোড-শুধু — innerHTML-নিষিদ্ধ-রীতি; কার্ড-ফোকাসে আজ-বার) ──
