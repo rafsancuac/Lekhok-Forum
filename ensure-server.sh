@@ -3,7 +3,7 @@
 if curl -s -o /dev/null -m 2 http://localhost:8094/; then
   exit 0
 fi
-cd /home/z/lekhok-forum/lekhok-forum/lekhok-forum
+cd /home/z/lekhok-forum/lekhok-forum
 PORT=8094 setsid nohup node server.js > /tmp/qa-server-8094.log 2>&1 < /dev/null &
 for i in $(seq 1 30); do
   sleep 0.5

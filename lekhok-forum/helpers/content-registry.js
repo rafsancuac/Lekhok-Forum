@@ -538,14 +538,19 @@ const DEFAULTS = {
   home_lead2_t1: 'বর্তমান', home_lead2_accent: 'নেতৃত্ব',
   home_year_founding: '২০২০-২১ কার্যবর্ষ',
   home_year_current: '২০২৫-২৬ কার্যবর্ষ',
-  home_role_founder_president: 'প্রতিষ্ঠাতা সভাপতি (১ম জন)',
-  home_role_founder_gs: 'সাধারণ সম্পাদক (২য় জন)',
-  home_role_founding_advisor1: 'প্রতিষ্ঠাকালীন উপদেষ্টা (১ম জন)',
-  home_role_founding_advisor2: 'প্রতিষ্ঠাকালীন উপদেষ্টা (২য় জন)',
-  home_role_current_president: 'বর্তমান সভাপতি (১ম জন)',
-  home_role_current_gs: 'বর্তমান সাধারণ সম্পাদক (২য় জন)',
-  home_role_current_advisor1: 'বর্তমান উপদেষ্টা (১ম জন)',
-  home_role_current_advisor2: 'বর্তমান উপদেষ্টা (২য় জন)',
+  // সেশন ২২৫: home_role_* ডিফল্ট = SLOT_META-টাইটেলের হুবহু প্রতিরূপ
+  // (helpers/home-leadership.js) — নইলে ফ্রেশ-ইনস্টলে অ্যাডমিন-প্যানেলের
+  // স্লট-টাইটেল আর হোম-কার্ডের পদবির ড্রিফট হয় (রাফছান-বাগ: অ্যাডমিনে
+  // 'প্রতিষ্ঠাতা সাধারণ সম্পাদক', হোমে 'সাধারণ সম্পাদক')। সেভ-রো সবসময়
+  // প্রাধান্য পায় (WYSIWYG) — এই ডিফল্ট কেবল কখনো-সেভ-না-হওয়া-কী-তে।
+  home_role_founder_president: 'প্রতিষ্ঠাতা সভাপতি',
+  home_role_founder_gs: 'প্রতিষ্ঠাতা সাধারণ সম্পাদক',
+  home_role_founding_advisor1: 'প্রতিষ্ঠাকালীন উপদেষ্টা ১',
+  home_role_founding_advisor2: 'প্রতিষ্ঠাকালীন উপদেষ্টা ২',
+  home_role_current_president: 'বর্তমান সভাপতি',
+  home_role_current_gs: 'বর্তমান সাধারণ সম্পাদক',
+  home_role_current_advisor1: 'বর্তমান উপদেষ্টা ১',
+  home_role_current_advisor2: 'বর্তমান উপদেষ্টা ২',
   // সেশন ৫৫: হোম-নেতৃত্বের ৮ স্লটের ফলব্যাক-বাণী — data/leaderStatements.js
   // থেকেই এক সোর্স (ডুপ্লিকেশন নয়)। অ্যাডমিন কনটেন্ট-ম্যানেজার/হোম-নেতৃত্ব
   // প্যানেল থেকে ওভাররাইড করা যায়; খালি রাখলে এই ডিফল্ট দেখাবে।
