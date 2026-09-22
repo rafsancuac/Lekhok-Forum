@@ -246,3 +246,61 @@
   .sec-method-card{transition:none}
   .sec-method-card:hover{transform:none}
 }
+
+/* ══════════ P0-3: LeadershipCard প্রিমিয়াম-এনিমেশন (সিদ্ধান্ত-৪a) ══════════
+   ডিজাইন অক্ষত — শুধু এনিমেশন-ডেপথ: ① স্ক্রল-প্রবেশ (CSS scroll-driven,
+   @supports-গেটেড — Firefox/Safari-তে কার্ড স্বাভাবিক-দৃশ্যমান) ② হোভার-শিন-সুইপ
+   ③ অ্যাভাটার-রিং-গ্লো ④ নাম-আন্ডারলাইন-ড্র ⑤ সোশ্যাল-আইকন মাইক্রোলিফট+স্ট্যাগার
+   ⑥ prefers-reduced-motion: সব নিষ্ক্রিয়। হোম (leadership-cell) + কমিটি (leaders-grid) দুই সারফেসই কভার। */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .leadership-cell .leader-card,
+    .leaders-grid .leader-card{
+      animation:lfLeadIn .6s linear both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 45%;
+    }
+  }
+}
+@keyframes lfLeadIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+
+/* শিন-সুইপ — .has-image কার্ডে ::after অব্যবহৃত ছিল; overflow:hidden ✓ */
+.leader-card.has-image::after{
+  content:'';position:absolute;top:0;left:-90%;width:55%;height:100%;
+  pointer-events:none;z-index:2;transform:skewX(-18deg);
+  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.42) 50%,transparent 100%);
+}
+.leader-card.has-image:hover::after{left:150%;transition:left .7s cubic-bezier(.25,.8,.3,1)}
+
+/* অ্যাভাটার-রিং-গ্লো (হোভারে ডাবল-রিং জ্বলে-ওঠে) */
+.leader-card.has-image .leader-photo{transition:box-shadow .4s ease}
+.leader-card.has-image:hover .leader-photo{
+  box-shadow:0 0 0 3px var(--card),0 0 0 6px var(--lf-brand-primary),0 12px 28px rgba(0,106,78,.30);
+}
+
+/* নাম-আন্ডারলাইন-ড্র (রঙ-পরিবর্তন আগেই ছিল; রেখা-আঁকা যোগ) */
+.leader-card.has-image .leader-name{
+  background-image:linear-gradient(var(--lf-brand-primary),var(--lf-brand-primary));
+  background-repeat:no-repeat;background-position:0 100%;background-size:0% 2px;
+  padding-bottom:2px;
+  transition:background-size .45s cubic-bezier(.25,.8,.3,1),color .2s;
+}
+.leader-card.has-image:hover .leader-name{background-size:100% 2px}
+
+/* সোশ্যাল-আইকন মাইক্রোলিফট + কার্ড-হোভারে ধাপে-ধাপে ওঠা */
+.leader-social a{transition:transform .2s ease,box-shadow .2s ease,background .15s,color .15s}
+.leader-card:hover .leader-social a{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,106,78,.18)}
+.leader-card:hover .leader-social a:nth-child(2){transition-delay:.05s}
+.leader-card:hover .leader-social a:nth-child(3){transition-delay:.1s}
+.leader-card:hover .leader-social a:nth-child(4){transition-delay:.15s}
+.leader-card:hover .leader-social a:nth-child(5){transition-delay:.2s}
+
+@media (prefers-reduced-motion: reduce){
+  .leadership-cell .leader-card,.leaders-grid .leader-card{animation:none}
+  .leader-card.has-image::after{display:none}
+  .leader-card.has-image:hover .leader-photo{box-shadow:none}
+  .leader-card.has-image .leader-name{transition:none;background-size:0% 2px}
+  .leader-card:hover .leader-social a{transform:none;box-shadow:none;transition-delay:0s}
+}
+/* ══════════ /P0-3 ══════════ */

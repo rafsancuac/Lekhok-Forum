@@ -1717,6 +1717,7 @@
       // আগে চুপচাপ কিছু-ই-হতো-না; এখন বাবলে ⚠ + এক-বারের-টোস্ট।
       function markDead(p) {
         if (!p || p.classList.contains('bv-dead')) return;
+        p.classList.remove('bv-probing'); /* P0-5: মৃত-অবস্থায় স্কেলেটন-পালস বন্ধ */
         resetUI(p, true);
         p.classList.add('bv-dead');
         const ic = p.querySelector('.bv-play i');
@@ -1784,9 +1785,16 @@
           const p = pend.shift();
           if (!p) return;
           if (!document.contains(p)) return next();
+          /* P0-5: প্রোব-অপেক্ষায় কঠিন ০:০০ নয় — স্কেলেটন-পালস; duration এলে স্মুথ-ফেড */
+          p.classList.add('bv-probing');
           probeDuration(p.dataset.src, function (d, err) {
+            p.classList.remove('bv-probing');
             if (err) markDead(p); // session183: মৃত-ফাইল — লেগেসি ০:০০-র বদলে স্পষ্ট ⚠
-            if (d > 0 && document.contains(p)) showDur(p, d);
+            if (d > 0 && document.contains(p)) {
+              showDur(p, d);
+              p.classList.add('bv-set');
+              setTimeout(function () { p.classList.remove('bv-set'); }, 420);
+            }
             setTimeout(next, 120);
           });
         })();

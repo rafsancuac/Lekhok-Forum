@@ -1790,3 +1790,15 @@
   .fwd-sent-count { font-size: 11.5px; }
 }
 /* EOF-MARKER: session159-forward-avatar-lock */
+/* ══════════ P0-5: ভয়েস-প্রোব অপেক্ষার স্কেলেটন-পালস + স্মুথ-সেট (লেগেসি ০-ডিউরেশন বাবল) ══════════
+   ক্রমিক-প্রোব কিউতে অপেক্ষারত বাবলে কঠিন ০:০০ নয় — নরম পালস; duration এলে স্মুথ-ফেড-ইন। */
+.bubble-voice .bv-time{transition:opacity .25s ease}
+.bubble-voice.bv-probing .bv-time{opacity:.4;animation:bvProbePulse 1.5s ease-in-out infinite}
+@keyframes bvProbePulse{0%,100%{opacity:.4}50%{opacity:.85}}
+.bubble-voice.bv-set .bv-time{animation:bvTimeIn .35s ease both}
+@keyframes bvTimeIn{from{opacity:.15}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  .bubble-voice.bv-probing .bv-time,.bubble-voice.bv-set .bv-time{animation:none}
+  .bubble-voice.bv-probing .bv-time{opacity:.55}
+}
+/* ══════════ /P0-5 ══════════ */

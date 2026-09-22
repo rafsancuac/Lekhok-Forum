@@ -76,7 +76,7 @@ function openMenu(){const e=document.getElementById("mobileSidebar"),t=document.
 
 /* ── সেশন ৮৯: FB-২০২৪ ফেসপাইল লাইভ-আপডেট + ফিড ইনফিনিট-স্ক্রল (B1) ────────── */
 (function () {
-  console.log('%cলেখক ফোরাম · main.js build 2026-09-22-r6 (p0-accent-radius)', 'color:#006A4E;font-weight:600');
+  console.log('%cলেখক ফোরাম · main.js build 2026-09-22-r7 (p0-premium-voice)', 'color:#006A4E;font-weight:600');
 
   // (১) ফেসপাইল: /api/react সফল হলে মিনিফায়েড আপডেটার 'lf:reactupdate' ছড়ায় —
   // এখানে .rs-faces হালনাগাদ করি (data-uid-ম্যাচে আমার অ্যাভাটার যোগ/বাদ)।
