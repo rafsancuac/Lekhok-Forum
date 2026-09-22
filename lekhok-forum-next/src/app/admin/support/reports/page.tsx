@@ -226,6 +226,25 @@ function feedDotCls(ev: FeedEntry): string {
   return 'bg-amber-500'
 }
 
+/** session221 — ফিড-কাইন্ড-ফিল্টার চিপ-ক্যাটালগ (এক-উৎস: চিপ-লেবেল + aria) */
+const FEED_KINDS: { key: 'ALL' | FeedEntry['kind']; label: string }[] = [
+  { key: 'ALL', label: 'সব' },
+  { key: 'new', label: 'নতুন' },
+  { key: 'status', label: 'স্টেটাস' },
+  { key: 'note', label: 'নোট' },
+]
+
+/** session221 — এন্ট্রি-দিন-লেবেল (প্যানেল ডে-গ্রুপ-বিভাজক): আজ / গতকাল / বাংলা-তারিখ (local-midnight) */
+function feedDayLabelBn(ts: number): string {
+  const now = new Date()
+  const d = new Date(ts)
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const startThat = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  if (startThat === startToday) return 'আজ'
+  if (startToday - startThat === 86400000) return 'গতকাল'
+  return d.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long' })
+}
+
 const TABS: { key: Status; label: string; cls: string }[] = [
   { key: 'PENDING', label: 'নতুন অভিযোগ', cls: 'bg-amber-500' },
   { key: 'IN_PROGRESS', label: 'চলমান', cls: 'bg-sky-600' },
@@ -690,6 +709,9 @@ function SupportReportsPanel() {
   /** session220 — দীর্ঘ-অভিযোগ-লেখা ফোল্ড-স্টেট ({rid: বিস্তৃত}) — সেশন-স্কোপড (স্থায়িত্ব-নেই) */
   const [msgOpen, setMsgOpen] = useState<Record<string, boolean>>({})
 
+  /** session221 — ফিড-কাইন্ড-ফিল্টার (সেশন-স্কোপড; ALL = চিপ-শূন্য-ডিফল্ট) */
+  const [feedKind, setFeedKind] = useState<'ALL' | FeedEntry['kind']>('ALL')
+
   /** session218 — কমান্ড-প্যালেট (Ctrl+K): অপারেটর-অ্যাকশন-লঞ্চার (সব-ক্লায়েন্ট-সাইড) */
   const [cmdOpen, setCmdOpen] = useState(false)
   const [cmdQuery, setCmdQuery] = useState('')
@@ -818,17 +840,27 @@ function SupportReportsPanel() {
       if (!r) return
       setTab(r.status)
       closeFeed()
-      setTimeout(() => {
-        try {
-          document
-            .querySelector(`[data-report="${rid}"]`)
-            ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-          setHlId(rid)
-          setTimeout(() => setHlId((cur) => (cur === rid ? null : cur)), 3400)
-        } catch {
-          /* নীরব */
-        }
-      }, 150)
+      const tryScroll = (attempt: number) => {
+        setTimeout(() => {
+          try {
+            const el = document.querySelector(`[data-report="${rid}"]`)
+            if (!el && attempt === 0) {
+              setQuery('')
+              setMediaFilter('ALL')
+              setDateRange('ALL')
+              setLaterOnly(false)
+              tryScroll(1)
+              return
+            }
+            el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+            setHlId(rid)
+            setTimeout(() => setHlId((cur) => (cur === rid ? null : cur)), 3400)
+          } catch {
+            /* নীরব */
+          }
+        }, attempt === 0 ? 300 : 400)
+      }
+      tryScroll(0)
     },
     [reports, closeFeed],
   )
@@ -1341,6 +1373,23 @@ function SupportReportsPanel() {
   const trendToday = trend.find((t) => t.isToday)?.count ?? 0
   /** session217 — তারাচিহ্নিত-সংখ্যা (চিপ-ব্যাজ) */
   const starN = Object.keys(later).length
+  /** session221 — ফিড-কাইন্ড-গণনা + কাইন্ড-ফিল্টার + ডে-গ্রুপিং (প্যানেল-রেন্ডার-ভিত্তিক; ক্যাপ-৩০-ছোট) */
+  const feedKindCounts: Record<'ALL' | FeedEntry['kind'], number> = {
+    ALL: feed.length,
+    new: 0,
+    status: 0,
+    note: 0,
+  }
+  for (const ev of feed) feedKindCounts[ev.kind]++
+  const feedFiltered = feedKind === 'ALL' ? feed : feed.filter((ev) => ev.kind === feedKind)
+  const feedVisible = feedFiltered.slice(0, 12)
+  const feedGroups: { label: string; items: { ev: FeedEntry; idx: number }[] }[] = []
+  feedVisible.forEach((ev, idx) => {
+    const label = feedDayLabelBn(ev.at)
+    const lastGrp = feedGroups[feedGroups.length - 1]
+    if (lastGrp && lastGrp.label === label) lastGrp.items.push({ ev, idx })
+    else feedGroups.push({ label, items: [{ ev, idx }] })
+  })
 
   /** session206 — বাল্ক-স্টেটাস: নির্বাচিত-কার্ডে ক্রমিক PUT + প্রগ্রেস; শেষে একবার reload+ব্যাজ-সিঙ্ক */
   const bulkUpdate = useCallback(
@@ -2263,6 +2312,33 @@ function SupportReportsPanel() {
                 </button>
               </div>
             </div>
+            {feed.length > 0 && (
+              <div
+                className="flex items-center gap-1 flex-wrap px-2.5 py-2 border-b border-[#E4E6EB] bg-[#FAFBFC]"
+                role="group"
+                aria-label="ফিড-ফিল্টার"
+              >
+                {FEED_KINDS.map((k) => (
+                  <button
+                    key={k.key}
+                    onClick={() => setFeedKind(k.key)}
+                    type="button"
+                    aria-pressed={feedKind === k.key}
+                    title={k.key === 'ALL' ? 'সব-ধরনের কার্যক্রম' : `শুধু ${k.label}-ধরনের কার্যক্রম`}
+                    className={`px-2 py-1 rounded-full text-[9.5px] font-extrabold border transition cursor-pointer inline-flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
+                      feedKind === k.key
+                        ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                        : 'bg-white text-[#65676B] border-[#E4E6EB] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+                    }`}
+                  >
+                    {k.label}
+                    <span className="text-[8.5px] font-bold bg-[#F0F2F5] text-[#65676B] rounded-full px-1 py-px min-w-3.5 text-center">
+                      {bn(feedKindCounts[k.key])}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
             {feed.length === 0 ? (
               <div className="px-4 py-7 text-center">
                 <Bell className="w-6 h-6 text-[#CED0D4] mx-auto mb-2" aria-hidden />
@@ -2271,46 +2347,72 @@ function SupportReportsPanel() {
                   নতুন অভিযোগ, স্টেটাস-বদল ও নোট-হালনাগাদ এখানে জমা হবে (সর্বশেষ ৪৮ ঘণ্টা)
                 </p>
               </div>
+            ) : feedVisible.length === 0 ? (
+              <div className="px-4 py-7 text-center">
+                <Bell className="w-6 h-6 text-[#CED0D4] mx-auto mb-2" aria-hidden />
+                <p className="text-[11.5px] text-[#65676B] font-bold">এই ধরনের কোনো কার্যক্রম নেই</p>
+                <button
+                  onClick={() => setFeedKind('ALL')}
+                  type="button"
+                  className="mt-1.5 text-[10.5px] font-extrabold text-[#006A4E] hover:underline cursor-pointer bg-transparent border-0"
+                >
+                  সব-কার্যক্রম দেখুন
+                </button>
+              </div>
             ) : (
-              <ul className="max-h-[55vh] overflow-y-auto divide-y divide-[#F0F2F5]">
-                {feed.slice(0, 12).map((ev, i) => {
-                  const gone = !reports.some((r) => r.id === ev.rid)
-                  return (
-                    <li key={ev.id}>
-                      <button
-                        onClick={() => jumpToReport(ev.rid)}
-                        disabled={gone}
-                        type="button"
-                        title={gone ? 'মূল অভিযোগ-আর-নেই' : 'এই অভিযোগে যান'}
-                        className="w-full text-left px-3 py-2.5 hover:bg-[#F7F8FA] transition lf-anim-up flex items-start gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer bg-transparent border-0"
-                        style={{ animationDelay: `${Math.min(i * 30, 240)}ms` }}
-                      >
-                        <span
-                          aria-hidden
-                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${feedDotCls(ev)}`}
-                        />
-                        <span className="flex-1 min-w-0">
-                          <span className="text-[11.5px] font-bold text-[#050505] block truncate">
-                            {ev.sender}
-                          </span>
-                          <span className="text-[10.5px] text-[#65676B]">{feedEntryText(ev)}</span>
-                        </span>
-                        <time
-                          dateTime={new Date(ev.at).toISOString()}
-                          title={new Date(ev.at).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' })}
-                          className="text-[9.5px] text-[#8A8D91] shrink-0 mt-0.5"
-                        >
-                          {relTimeBn(new Date(ev.at).toISOString())}
-                        </time>
-                      </button>
+              <ul className="max-h-[55vh] overflow-y-auto">
+                {feedGroups.map((g, gi) => (
+                  <React.Fragment key={`${g.label}-${gi}`}>
+                    <li
+                      aria-hidden
+                      className="px-3 pt-2 pb-1 bg-[#FAFBFC] border-b border-[#F0F2F5] text-[9px] font-extrabold uppercase tracking-wide text-[#8A8D91] flex items-center gap-1.5"
+                    >
+                      <CalendarDays className="w-2.5 h-2.5" aria-hidden />
+                      {g.label}
+                      <span className="ml-auto text-[8.5px] font-bold bg-white border border-[#E4E6EB] rounded-full px-1.5 py-px normal-case">
+                        {bn(g.items.length)}টি
+                      </span>
                     </li>
-                  )
-                })}
+                    {g.items.map(({ ev, idx }) => {
+                      const gone = !reports.some((r) => r.id === ev.rid)
+                      return (
+                        <li key={ev.id} className="border-b border-[#F7F8FA] last:border-b-0">
+                          <button
+                            onClick={() => jumpToReport(ev.rid)}
+                            disabled={gone}
+                            type="button"
+                            title={gone ? 'মূল অভিযোগ-আর-নেই' : 'এই অভিযোগে যান'}
+                            className="w-full text-left px-3 py-2.5 hover:bg-[#F7F8FA] transition lf-anim-up flex items-start gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer bg-transparent border-0"
+                            style={{ animationDelay: `${Math.min(idx * 30, 240)}ms` }}
+                          >
+                            <span
+                              aria-hidden
+                              className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${feedDotCls(ev)}`}
+                            />
+                            <span className="flex-1 min-w-0">
+                              <span className="text-[11.5px] font-bold text-[#050505] block truncate">
+                                {ev.sender}
+                              </span>
+                              <span className="text-[10.5px] text-[#65676B]">{feedEntryText(ev)}</span>
+                            </span>
+                            <time
+                              dateTime={new Date(ev.at).toISOString()}
+                              title={new Date(ev.at).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' })}
+                              className="text-[9.5px] text-[#8A8D91] shrink-0 mt-0.5"
+                            >
+                              {relTimeBn(new Date(ev.at).toISOString())}
+                            </time>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </React.Fragment>
+                ))}
               </ul>
             )}
-            {feed.length > 12 && (
+            {feedFiltered.length > 12 && (
               <p className="px-3 py-1.5 text-[9.5px] text-[#8A8D91] bg-[#FAFBFC] border-t border-[#E4E6EB]">
-                …আরও {bn(feed.length - 12)}টি পুরোনো কার্যক্রম
+                …আরও {bn(feedFiltered.length - 12)}টি পুরোনো কার্যক্রম
               </p>
             )}
           </div>
