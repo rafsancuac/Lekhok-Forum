@@ -3797,3 +3797,5 @@ Stage Summary:
 - DB-জঞ্জাল-শূন্য (cleanup CLEANUP-COUNT=0); নতুন-গোটচা ×৩ ডক-কৃত (PLANS session243: টুল-আউটপুট-আর্টিফ্যাক্ট od -c · headless-focus · ক্যাননিক্যাল-ব্যাটারি)
 - পরের-এজেন্ট: **session244 লেবেল (Task ID 86)**; PLANS session243-নোট অবশ্যই-পড়ুন; push-আগে fetch+rebase-বাধ্যতমূলক
 - রিমোট main = এ-রাউন্ডের session243-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
+
+- **session243-fix (সংযোজন):** প্রথম-পুশ (`8c9bc2e`) পরে লাইভ-ডেস্ক+/data ৫০০-আবিষ্কৃত → মূল-কারণ P1 prod-schema-drift (`user_reports`-মিডিয়া-ট্রায়ো-কলাম-প্রোডে-অনুপস্থিত — defensive-ALTER-শূন্য; প্রোডে মিডিয়া-ফিচার-সাইলেন্টলি-ডেড-ছিল) → db.js boot-ALTER ×৩ (idempotent) → পুশ `43258fb` → লাইভ-যাচাই: desk+/data ২০০ + mediaCounts-ফিল্ড + VIDEO-chip-aria ✓; পূর্ণ-ব্যাটারি ৪৮১/৪৮১-অক্ষুণ্ণ
