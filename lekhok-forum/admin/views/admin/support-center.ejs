@@ -57,6 +57,15 @@
     .sc-kpi.k-avg{border-top:3px solid var(--ad-accent)}
     .sc-kpi.k-avg .k-ic{background:var(--ad-accent-soft);color:var(--ad-accent-ink)}
     .sc-kpi.k-avg b{color:var(--ad-accent-ink)}
+    /* session231 — KPI স্পার্ক (trend7-সিরিজ মিনি-বার; সম্পূর্ণ-স্ট্যাটিক — reduced-motion-নিরাপদ; সব-রঙ var()-টোকেন) */
+    .k-spark{display:flex;align-items:flex-end;gap:2px;height:16px;margin-top:4px}
+    .k-spark i{flex:1;min-width:3px;border-radius:2px 2px 0 0;background:var(--ad-icon-bg)}
+    .k-fresh .k-spark i{background:linear-gradient(180deg,var(--lf-amber-deep),var(--lf-amber-soft-2))}
+    .k-res .k-spark i{background:linear-gradient(180deg,var(--lf-ok-deep),var(--lf-ok-soft))}
+    .k-stale .k-spark i{background:linear-gradient(180deg,var(--lf-danger-deep),var(--lf-danger-soft))}
+    .k-avg .k-spark i{background:linear-gradient(180deg,var(--ad-accent-ink),var(--ad-accent-soft))}
+    .k-spark i.today{box-shadow:0 0 0 1.5px var(--ad-accent-ring);filter:brightness(.9)}
+    @media (max-width:640px){.k-spark{height:12px}}
     /* session226 — ৭-দিনের প্রবণতা (trend7 এক-উৎস; বার স্ট্যাটিক — reduced-motion-নিরাপদ; সব-রঙ var()-টোকেন) */
     .sc-trend{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:12px 14px;margin-bottom:12px}
     .sc-trend-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -121,6 +130,8 @@
     #scToast::before{content:'✓ ';font-weight:800}
     #scToast.error{background:var(--lf-danger-deep)}
     #scToast.error::before{content:'✗ ';font-weight:800}
+    /* session231 — আন্ডু-টোস্ট আইকন (CSS ::before — innerHTML-নিষিদ্ধ চুক্তি-সমতুল্য রীতি) */
+    #scToast.undo::before{content:'↩ ';font-weight:800}
     .sc-search-clear{border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-muted);border-radius:var(--ad-radius-sm);
       width:32px;cursor:pointer;font-size:.8rem;flex:none}
     .sc-search-clear:hover{color:var(--lf-danger-deep);border-color:var(--lf-danger-soft-3)}
@@ -232,6 +243,11 @@
     <% }) %>
   </div>
 
+  <%# session231 — KPI স্পার্ক হেল্পার (trend7-সিরিজ এক-উৎস-পুনঃব্যবহার; EJS নিজে-কোনো-তারিখ-গণনা-নয় — শুধু-রেন্ডার; মান bnNum-এক-উৎস) %>
+  <% function scSpark(cls, series, unit){ var mx = 0; for (var i = 0; i < series.length; i++){ var v = series[i] == null ? 0 : series[i]; if (v > mx) mx = v; }
+    return '<span class="k-spark" data-spark="' + cls + '" aria-hidden="true">' + series.map(function(v, i){
+      var n = v == null ? 0 : v; var h = (n > 0 && mx > 0) ? Math.max(2, Math.round(n / mx * 14)) : 2;
+      return '<i class="' + (i === 6 ? 'today' : '') + '" style="height:' + h + 'px" title="' + trend.dayLabels[i] + ' — ' + bnNum(n) + ' ' + (unit || 'টি') + '"></i>'; }).join('') + '</span>'; } %>
   <%# session227 — ২৪ঘ-সারাংশ KPI (helpers digestStats এক-উৎস; ক্লিকে ফিল্টার-ভিউ-জাম্প: status+range) %>
   <div class="sc-kpis" role="group" aria-label="২৪ ঘণ্টার সারসংক্ষেপ">
     <a class="sc-kpi k-fresh" href="/admin/support-center?status=PENDING&range=today"
@@ -239,24 +255,28 @@
       <span class="k-head"><span class="k-ic"><i class="fas fa-inbox"></i></span>২৪ ঘণ্টায় নতুন</span>
       <b><%= bnNum(digest.fresh24) %></b>
       <small>২৪ঘ-এর-কম-পুরোনো অমীমাংসিত</small>
+      <%- scSpark('fresh', trend.newPerDay) %>
     </a>
     <a class="sc-kpi k-res" href="/admin/support-center?status=RESOLVED&range=today"
        aria-label="গত ২৪ ঘণ্টায় <%= bnNum(digest.resolved24) %>টি সমাধান — আজকের সমাধান-ভিউতে যান">
       <span class="k-head"><span class="k-ic"><i class="fas fa-circle-check"></i></span>২৪ ঘণ্টায় সমাধান</span>
       <b><%= bnNum(digest.resolved24) %></b>
       <small>গত-২৪ঘ-বে-সমাধান-হওয়া</small>
+      <%- scSpark('res', trend.resolvedPerDay) %>
     </a>
     <a class="sc-kpi k-stale" href="/admin/support-center?status=PENDING"
        aria-label="<%= bnNum(digest.stale) %>টি স্টেল অভিযোগ (৩+ দিন অমীমাংসিত) — নতুন-তালিকায় যান">
       <span class="k-head"><span class="k-ic"><i class="fas fa-hourglass-half"></i></span>স্টেল (৩+ দিন)</span>
       <b><%= bnNum(digest.stale) %></b>
       <small><%= digest.oldestOpenDays !== null ? 'পুরোনোতম ' + bnNum(digest.oldestOpenDays) + ' দিন ধরে' : '৩+ দিন ধরে অমীমাংসিত' %></small>
+      <%- scSpark('stale', trend.stalePerDay) %>
     </a>
     <a class="sc-kpi k-avg" href="/admin/support-center?status=RESOLVED"
        aria-label="<%= digest.avgResolveHours !== null ? 'গড় সমাধান-সময় ' + bnNum(digest.avgResolveHours) + ' ঘণ্টা' : 'গড় সমাধান-সময় এখনো-গণনাযোগ্য নয়' %> — সমাধান-তালিকায় যান">
       <span class="k-head"><span class="k-ic"><i class="fas fa-clock"></i></span>গড় সমাধান-সময়</span>
       <b><%= digest.avgResolveHours !== null ? bnNum(digest.avgResolveHours) + ' ঘ' : '—' %></b>
       <small><%= digest.avgResolveHours !== null ? 'সমাধান-ইতিহাসের-গড়' : 'সমাধান-ইতিহাস-নেই' %></small>
+      <%- scSpark('avg', trend.avgPerDay, 'ঘ') %>
     </a>
   </div>
 
@@ -403,6 +423,7 @@
     <div class="sc-help-row"><span>সার্চ-বক্সে ফোকাস</span><span class="keys"><kbd class="sc-kbd">/</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ডে দ্রুত-স্ট্যাটাস সেট (নতুন / চলমান / সমাধান)</span><span class="keys"><kbd class="sc-kbd">Shift</kbd><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ড নির্বাচন/বাদ — বাল্ক-স্ট্যাটাস (Esc-এ নির্বাচন-পরিষ্কার)</span><span class="keys"><kbd class="sc-kbd">x</kbd><kbd class="sc-kbd">Esc</kbd></span></div>
+    <div class="sc-help-row"><span>শেষ স্ট্যাটাস-বদল আন্ডু (বাল্ক-গ্রুপ-সহ; লেখা-বক্সে নেটিভ-আন্ডু)</span><span class="keys"><kbd class="sc-kbd">Ctrl</kbd><kbd class="sc-kbd">Z</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>লেখা-বদলে রিফ্রেশ-আটকে-রাখা (অসংরক্ষিত-জবাব-সুরক্ষা)</span><span class="keys"><kbd class="sc-kbd">স্বয়ংক্রিয়</kbd></span></div>
@@ -431,10 +452,11 @@
   var deskPath = '/admin/support-center' + location.search;
   var toastEl = document.getElementById('scToast');
   var toastTimer = null;
-  function toast(msg, isError) {
+  function toast(msg, isError, isUndo) {
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     toastEl.classList.toggle('error', !!isError);
+    toastEl.classList.toggle('undo', !!isUndo); // session231 — ↩-আইকন (CSS ::before; error-ওভাররাইড-নিরাপদ)
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
   }
@@ -479,12 +501,16 @@
     btn.addEventListener('click', function () {
       var card = btn.closest('.sc-card');
       var id = card.getAttribute('data-id');
+      var fromStatus = card.getAttribute('data-status'); // session231 — আন্ডু-স্ট্যাকের-জন্য-পূর্ব-স্ট্যাটাস
       var status = card.querySelector('[data-sc-status]').value;
       var note = card.querySelector('[data-sc-note]').value.trim();
       btn.disabled = true;
       api('/admin/support-center/' + id, 'PUT', { status: status, adminNote: note }).then(function (res) {
         btn.disabled = false;
-        if (res.ok) { toast(res.unchanged ? 'কোনো পরিবর্তন নেই' : 'সংরক্ষিত হয়েছে ✓'); reloadSoon(650); }
+        if (res.ok) {
+          if (!res.unchanged) undoPush({ id: id, from: fromStatus, to: status });
+          toast(res.unchanged ? 'কোনো পরিবর্তন নেই' : 'সংরক্ষিত হয়েছে ✓'); reloadSoon(650);
+        }
         else toast(res.error || 'সংরক্ষণ ব্যর্থ', true);
       }).catch(function () { btn.disabled = false; toast('নেটওয়ার্ক ব্যর্থ', true); });
     });
@@ -689,11 +715,13 @@
       bulkEl.querySelectorAll('button').forEach(function (x) { x.disabled = true; });
       toast('বাল্ক হালনাগাদ চলছে…');
       var done = 0, okN = 0, skipN = 0, failN = 0;
+      var okItems = []; // session231 — গ্রুপ-আন্ডু-এন্ট্রির-জন্য-সফল-বদলের-তালিকা
       function finish() {
         bulkBusy = false;
         bulkEl.querySelectorAll('button').forEach(function (x) { x.disabled = false; });
         if (failN) { toast(bnJs(okN) + ' হালনাগাদ, ' + bnJs(failN) + ' ব্যর্থ — নির্বাচন অক্ষত আছে', true); return; }
         if (!okN) { toast('কোনো পরিবর্তন নেই'); return; }
+        if (okItems.length) undoPush({ group: 1, items: okItems }); // session231 — এক-গ্রুপ-এন্ট্রি (Ctrl+Z-এ সমগ্র-ব্যাচ ফেরত)
         toast(bnJs(okN) + ' টি → ' + lbl + ' হালনাগাদ ✓');
         reloadSoon(750);
       }
@@ -703,14 +731,54 @@
         if (c.getAttribute('data-status') === st) { skipN++; next(); return; } // সম-স্টেটাস = নীরব-স্কিপ (PUT/ইতিহাস/নোটিফিকেশন-শূন্য)
         api('/admin/support-center/' + c.getAttribute('data-id'), 'PUT',
           { status: st, adminNote: c.querySelector('[data-sc-note]').value.trim() }).then(function (res) {
-          if (res.ok && !res.unchanged) okN++; else if (res.ok) skipN++; else failN++;
+          if (res.ok && !res.unchanged) { okN++; okItems.push({ id: c.getAttribute('data-id'), from: c.getAttribute('data-status'), to: st }); }
+          else if (res.ok) skipN++; else failN++;
         }).catch(function () { failN++; }).then(next);
       })();
     });
   });
+  // ── session231 — Ctrl+Z স্ট্যাটাস-আন্ডু-স্ট্যাক (Next-session222-চুক্তি-পোর্ট, Express-রূপ) ──
+  // Express-ডেস্কে প্রতিটি-বদল reload-করে → স্ট্যাক sessionStorage-এ (reload-টিকষ্ণ; ট্যাব-স্কোপড = সেশন-চুক্তি-সমতুল্য); ক্যাপ ১০
+  var UNDO_KEY = 'sc-undo';
+  var undoStack = (function () {
+    try { var a = JSON.parse(sessionStorage.getItem(UNDO_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; }
+  })();
+  function undoSave() { try { sessionStorage.setItem(UNDO_KEY, JSON.stringify(undoStack.slice(-10))); } catch (_) {} }
+  function undoPush(entry) { undoStack.push(entry); if (undoStack.length > 10) undoStack.shift(); undoSave(); }
+  var undoBusy = false;
+  function undoPop() {
+    if (undoBusy) return;
+    if (!undoStack.length) { toast('আন্ডু-স্ট্যাক খালি'); return; }
+    var entry = undoStack.pop(); undoSave();
+    var items = entry.group ? entry.items : [entry];
+    undoBusy = true;
+    toast('আন্ডু চলছে… ' + bnJs(items.length) + ' টি', false, true);
+    var doneU = 0, okU = 0, failU = 0;
+    function finishU() {
+      undoBusy = false;
+      if (failU) { undoStack.push(entry); undoSave(); toast(bnJs(okU) + ' ফেরত, ' + bnJs(failU) + ' ব্যর্থ — আবার চেষ্টা করা যাবে', true); return; }
+      toast(bnJs(okU) + ' টি পূর্বাবস্থায় ✓' + (undoStack.length ? ' (বাকি ' + bnJs(undoStack.length) + ')' : ''), false, true);
+      reloadSoon(650);
+    }
+    (function nextU() {
+      if (doneU >= items.length) { finishU(); return; }
+      var it = items[doneU++];
+      // আন্ডু-PUT = status-শুধু (note-অস্পৃষ্ট); আন্ডু-কল কখনো-স্ট্যাকে-ফেরে-না (পিং-পং-বর্জন — session222-চুক্তি)
+      api('/admin/support-center/' + it.id, 'PUT', { status: it.from }).then(function (res) {
+        if (res.ok) okU++; else failU++;
+      }).catch(function () { failU++; }).then(nextU);
+    })();
+  }
   document.addEventListener('keydown', function (e) {
     var t = e.target;
     var typing = t && ((t.closest && t.closest('input, textarea, select')) || t.isContentEditable);
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'z' || e.key === 'Z')) {
+      if (typing) return; // নেটিভ-টেক্সট-আন্ডু অক্ষুণ্ণ (preventDefault-নেই — session222-চুক্তি)
+      if (scHelp.classList.contains('open')) return; // সহায়িকা-খোলা থাকলে ব্রাউজার-ডিফল্ট
+      e.preventDefault();
+      undoPop();
+      return;
+    }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'Escape' || e.key === 'Esc') {
       if (scHelp.classList.contains('open')) { helpClose(); return; }
@@ -738,9 +806,10 @@
       var qsel = qcard.querySelector('[data-sc-status]');
       if (qsel) qsel.value = stQ;
       var stLbl = stQ === 'PENDING' ? 'নতুন' : stQ === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান';
+      var qFrom = qcard.getAttribute('data-status'); // session231 — আন্ডু-এন্ট্রির-জন্য-পূর্ব-স্ট্যাটাস
       api('/admin/support-center/' + qcard.getAttribute('data-id'), 'PUT',
         { status: stQ, adminNote: qcard.querySelector('[data-sc-note]').value.trim() }).then(function (res) {
-        if (res.ok && !res.unchanged) { toast('স্ট্যাটাস হালনাগাদ → ' + stLbl); reloadSoon(650); }
+        if (res.ok && !res.unchanged) { undoPush({ id: qcard.getAttribute('data-id'), from: qFrom, to: stQ }); toast('স্ট্যাটাস হালনাগাদ → ' + stLbl); reloadSoon(650); }
         else if (res.ok) { toast('কোনো পরিবর্তন নেই'); }
         else toast(res.error || 'স্ট্যাটাস-বদল ব্যর্থ', true);
       }).catch(function () { toast('নেটওয়ার্ক ব্যর্থ', true); });
