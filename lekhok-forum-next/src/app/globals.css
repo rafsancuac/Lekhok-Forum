@@ -544,3 +544,22 @@ section[aria-label="স্টোরি"]:hover .lf-story-arrow { opacity: 1; }
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   box-shadow: 0 1px 0 rgba(5, 5, 5, 0.04);
 }
+
+/* session216 — টোস্ট-জীবনকাল-বার (৩সে/আন্ডু-৮সে; duration ইনলাইন-স্টাইলে ইনজেক্ট) */
+.lf-anim-toastbar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  transform-origin: left center;
+  animation: lf-toast-life linear forwards;
+}
+@keyframes lf-toast-life {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lf-anim-toastbar { animation: none; opacity: 0.35; }
+}

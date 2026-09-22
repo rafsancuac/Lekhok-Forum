@@ -49,6 +49,7 @@ import Link from 'next/link'
 import {
   AlertTriangle,
   ArrowDownWideNarrow,
+  Bookmark,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -497,6 +498,9 @@ export default function SupportReportsPage() {
   )
 }
 
+/** session216 — সংরক্ষিত-ফিল্টার-ভিউ-প্রিসেট (localStorage: lf-desk-presets; সর্বোচ্চ ৬; একই-নাম = ওভাররাইট) */
+type DeskPreset = { name: string; tab: Status; media: string; date: string; q: string; sortAsc: boolean; at: number }
+
 function SupportReportsPanel() {
   const [reports, setReports] = useState<Report[]>([])
   const [counts, setCounts] = useState<Record<Status, number>>({
@@ -546,6 +550,28 @@ function SupportReportsPanel() {
   const glanceRef = React.useRef<HTMLDivElement>(null)
   /** session215 — SSE-সংযোগ-অবস্থা (live = তাৎক্ষণিক-পুশ; polling = ১৫-সে-ফলব্যাক) */
   const [live, setLive] = useState<'connecting' | 'live' | 'polling'>('connecting')
+  /** session216 — সংরক্ষিত-ভিউ স্টেট + স্টিকি-বার স্ক্রোল-ছায়া */
+  const [presets, setPresets] = useState<DeskPreset[]>([])
+  const [presetNameOpen, setPresetNameOpen] = useState(false)
+  const [presetName, setPresetName] = useState('')
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('lf-desk-presets')
+      if (raw) {
+        const arr: unknown = JSON.parse(raw)
+        if (Array.isArray(arr)) setPresets(arr.slice(-6).filter((p) => p && typeof p.name === 'string'))
+      }
+    } catch {
+      /* নীরব */
+    }
+  }, [])
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 6)
+    on()
+    window.addEventListener('scroll', on, { passive: true })
+    return () => window.removeEventListener('scroll', on)
+  }, [])
   /** session215 — নোট-টেমপ্লেট খোলা-কার্ড (id; null = বন্ধ) */
   const [tplOpenFor, setTplOpenFor] = useState<string | null>(null)
 
@@ -561,6 +587,40 @@ function SupportReportsPanel() {
     },
     [],
   )
+
+  /** session216 — সংরক্ষিত-ভিউ: সংরক্ষণ/প্রয়োগ/মুছা (সব-ক্লায়েন্ট-সাইড; API-চুক্তি-অস্পৃশ্য) */
+  const persistPresets = (next: DeskPreset[]) => {
+    setPresets(next)
+    try {
+      localStorage.setItem('lf-desk-presets', JSON.stringify(next))
+    } catch {
+      /* নীরব */
+    }
+  }
+  const savePreset = () => {
+    const name = presetName.trim().slice(0, 40)
+    if (!name) return
+    const existed = presets.some((p) => p.name === name)
+    const p: DeskPreset = { name, tab, media: mediaFilter, date: dateRange, q: query.slice(0, 200), sortAsc, at: Date.now() }
+    persistPresets([...presets.filter((x) => x.name !== name), p].slice(-6))
+    setPresetNameOpen(false)
+    setPresetName('')
+    flash(existed ? `"${name}" ভিউ হালনাগাদ হয়েছে` : `"${name}" ভিউ সংরক্ষিত হয়েছে`)
+  }
+  const applyPreset = (p: DeskPreset) => {
+    setTab(p.tab)
+    setMediaFilter(p.media)
+    setDateRange(p.date)
+    setQuery(p.q)
+    setSortAsc(p.sortAsc)
+    flash(`"${p.name}" ভিউ প্রয়োগ হয়েছে`)
+  }
+  const deletePreset = (p: DeskPreset) => {
+    persistPresets(presets.filter((x) => x.name !== p.name))
+    flash(`"${p.name}" ভিউ মুছে ফেলা হয়েছে`)
+  }
+  const presetActive = (p: DeskPreset) =>
+    tab === p.tab && mediaFilter === p.media && dateRange === p.date && query === p.q && sortAsc === p.sortAsc
 
   const load = useCallback(async () => {
     try {
@@ -1113,7 +1173,7 @@ function SupportReportsPanel() {
       {toast && (
         <div
           role="status"
-          className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg bg-[#006A4E] px-4 py-2.5 text-[12.5px] font-bold text-white shadow-lg lf-anim-fade"
+          className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg bg-[#006A4E] px-4 py-2.5 text-[12.5px] font-bold text-white shadow-lg lf-anim-fade relative overflow-hidden"
         >
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{toast}</span>
@@ -1128,6 +1188,8 @@ function SupportReportsPanel() {
               পুনরুদ্ধার
             </button>
           )}
+          {/* session216 — টোস্ট-জীবনকাল-বার (৩সে/আন্ডু-৮সে প্রত্যাশা-সংকেত; prefers-reduced-motion-সম্মান) */}
+          <span aria-hidden className="lf-anim-toastbar" style={{ animationDuration: undoData ? '8000ms' : '3000ms' }} />
         </div>
       )}
 
@@ -1245,7 +1307,11 @@ function SupportReportsPanel() {
       </div>
 
       {/* session206 — অনুসন্ধান + মিডিয়া-ফিল্টার + ফলাফল-গণনা (session213: স্টিকি — দীর্ঘ-তালিকায় ফিল্টার-হাতের-নাগালে) */}
-      <div className="sticky top-2 z-20 bg-white/95 backdrop-blur-sm border border-[#CED0D4] rounded-[10px] p-3 shadow-sm space-y-2.5">
+      <div
+        className={`sticky top-2 z-20 bg-white/95 backdrop-blur-sm border rounded-[10px] p-3 space-y-2.5 transition-shadow duration-200 ${
+          scrolled ? 'shadow-md border-[#B4B8BE]' : 'shadow-sm border-[#CED0D4]'
+        }`}
+      >
         <div className="relative">
           <Search
             className="w-4 h-4 text-[#8A8D91] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -1395,6 +1461,93 @@ function SupportReportsPanel() {
             <ArrowDownWideNarrow className={`w-3.5 h-3.5 transition-transform ${sortAsc ? 'rotate-180' : ''}`} aria-hidden />
             {sortAsc ? 'পুরাতন আগে' : 'সাম্প্রতক আগে'}
           </button>
+        </div>
+        {/* session216 — সংরক্ষিত-ভিউ (প্রিসেট) চিপ-সারি: বর্তমান tab+media+date+q+sort এক-ক্লিকে পুনরুদ্ধার */}
+        <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="সংরক্ষিত ফিল্টার ভিউ">
+          <Bookmark className="w-3.5 h-3.5 text-[#8A8D91] shrink-0" aria-hidden />
+          {presets.length === 0 && !presetNameOpen && (
+            <span className="text-[10.5px] text-[#8A8D91]">বর্তমান ফিল্টার-সেট নাম দিয়ে জমান — পরে এক-ক্লিকে ফেরান</span>
+          )}
+          {presets.map((p) => (
+            <span key={p.name} className="relative inline-flex items-center">
+              <button
+                onClick={() => applyPreset(p)}
+                type="button"
+                aria-pressed={presetActive(p)}
+                title={`${p.tab === 'PENDING' ? 'নতুন' : p.tab === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান'} · ${p.media} · ${p.date}${p.q ? ` · "${p.q}"` : ''} — ক্লিকে প্রয়োগ`}
+                className={`pl-2.5 pr-6 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 ${
+                  presetActive(p)
+                    ? 'bg-[#006A4E] text-white border-[#006A4E]'
+                    : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+                }`}
+              >
+                <Bookmark className={`w-3 h-3 ${presetActive(p) ? 'text-white' : 'text-[#8A8D91]'}`} aria-hidden />
+                {p.name}
+              </button>
+              <button
+                onClick={() => deletePreset(p)}
+                type="button"
+                aria-label={`"${p.name}" ভিউ মুছুন`}
+                title="ভিউ মুছুন"
+                className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white border border-[#CED0D4] text-[#65676B] hover:text-white hover:bg-red-500 hover:border-red-500 flex items-center justify-center transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+              >
+                <X className="w-2.5 h-2.5" aria-hidden />
+              </button>
+            </span>
+          ))}
+          {presetNameOpen ? (
+            <span className="inline-flex items-center gap-1">
+              <input
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    savePreset()
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault()
+                    setPresetNameOpen(false)
+                    setPresetName('')
+                  }
+                }}
+                autoFocus
+                maxLength={40}
+                placeholder="ভিউ-এর নাম..."
+                aria-label="ভিউ-এর নাম"
+                className="text-[11px] font-bold border border-[#006A4E]/50 rounded-full px-3 py-1.5 w-36 bg-white focus:outline-none focus:ring-2 focus:ring-[#006A4E]/20 placeholder:text-[#8A8D91] placeholder:font-normal"
+              />
+              <button
+                onClick={savePreset}
+                type="button"
+                title="সংরক্ষণ (Enter)"
+                aria-label="ভিউ সংরক্ষণ নিশ্চিত করুন"
+                className="p-1.5 rounded-full bg-[#006A4E] text-white hover:bg-[#00523D] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+              >
+                <Check className="w-3.5 h-3.5" aria-hidden />
+              </button>
+              <button
+                onClick={() => {
+                  setPresetNameOpen(false)
+                  setPresetName('')
+                }}
+                type="button"
+                title="বাতিল (Esc)"
+                aria-label="ভিউ-সংরক্ষণ বাতিল করুন"
+                className="p-1.5 rounded-full bg-white border border-[#CED0D4] text-[#65676B] hover:text-[#050505] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+              >
+                <X className="w-3.5 h-3.5" aria-hidden />
+              </button>
+            </span>
+          ) : (
+            <button
+              onClick={() => setPresetNameOpen(true)}
+              type="button"
+              title="বর্তমান ফিল্টার-সেট সংরক্ষিত ভিউ হিসেবে জমান"
+              className="px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border border-dashed bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/60 hover:text-[#006A4E] transition cursor-pointer inline-flex items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+            >
+              + সংরক্ষণ
+            </button>
+          )}
         </div>
       </div>
 
