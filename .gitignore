@@ -44,10 +44,14 @@ lekhok-forum/lekhok-forum/
 /scripts/
 skills/
 
-# user-uploaded files (session screenshots etc.)
-upload/
-# ব্যতিক্রম: Next.js-অ্যাপের API-রুট-ডিরেক্টরি (session162 — bare-upload-রুল একে ভুলভাবে ধরে)
-!lekhok-forum-next/src/app/api/upload/
+# ── ⛔ Next.js-অ্যাপ (lekhok-forum-next) — ২০২৬-০৯-২২ ব্যবহারকারীর নির্দেশে চিরতরে-বিলুপ্ত ──
+# স্ট্যাক-সিদ্ধান্ত: এক-মাত্র লাইভ স্ট্যাক = Node.js + Express + EJS (AGENT_INSTRUCTIONS.md দেখুন)।
+# এ-ডিরেক্টরি আর-কখনো-পুনঃসৃজন/ট্র্যাক-করা-যাবে-না — গার্ড-রুল:
+lekhok-forum-next/
+
+# runtime user-uploads (লাইভ-অ্যাপের আপলোড-ডিরেক্টরি — শুধু .gitkeep ট্র্যাকড থাকবে)
+lekhok-forum/public/uploads/*
+!lekhok-forum/public/uploads/.gitkeep
 
 # ── Sandbox Next.js scaffold / env (lekhok-forum প্রজেক্টের অংশ নয় — root-অ্যাংকড) ──
 /.next/

@@ -1,71 +1,36 @@
-# লেখক ফোরাম — Lekhok Forum
+# লেখক ফোরাম, চট্টগ্রাম বিশ্ববিদ্যালয় — মনোরিপো
 
-A clean, responsive Bengali-language website for the **লেখক ফোরাম**.
+> ⚠️ **এজেন্ট/ডেভেলপার-হলে প্রথমে [`AGENT_INSTRUCTIONS.md`](./AGENT_INSTRUCTIONS.md) পড়ো** —
+> স্ট্যাক-নিয়ম কঠোরভাবে প্রযোজ্য: **এক-মাত্র লাইভ স্ট্যাক = Node.js + Express + EJS (SSR)**।
+> Next.js সম্পূর্ণ নিষিদ্ধ (পুরনো `lekhok-forum-next/` প্রোটোটাইপ ২০২৬-০৯-২২ গিট-থেকে বিলুপ্ত)।
 
-> A clean Bengali-language site built with semantic HTML, custom CSS, and vanilla JavaScript.
+## 📁 গঠন
 
-## ✨ Features
+| পথ | কী |
+|---|---|
+| `lekhok-forum/` | **লাইভ অ্যাপ** — Express + EJS (`server.js` এন্ট্রি, `views/`, `routes/`, `helpers/`, `admin/`, `public/assets/`, `api/index.js` = Vercel-এন্ট্রি) |
+| `epaper-bot/` | ২৪/৭ টেলিগ্রাম→গুগল-ড্রাইভ→সাইট ই-পেপার-সিঙ্ক-বট (রানবুক: `epaper-bot/README.md`) |
+| `legacy-static-site/` | পুরনো static-HTML ভার্সন — শুধু-সংরক্ষণাগার |
+| `ensure-server.sh` | লোকাল-QA সার্ভার (:8094) |
+| `worklog.md` | সেশন-ধারাবাহিক হাতোভার-ডক — কাজের-আগে-পড়ো, শেষে-যোগ-করো |
 
-- **Fully responsive** (mobile, tablet, desktop)
-- **Bengali-first typography** using [SolaimanLipi](https://github.com/maateen/font-solaimanlipi)
-- **Sticky navigation** with mobile sidebar drawer
-- **Animated counter** for statistics (Bengali numerals)
-- **Pages included**:
-  - Home (hero, mission, leaders, recent notices)
-  - পরিচিতি (About)
-  - সংগঠন (Committee)
-  - বিজ্ঞপ্তি (Notices)
-  - যোগাযোগ (Contact + emergency hotlines)
-- **No build step** — pure HTML, CSS, vanilla JS
-- **Fast** — single CSS file, single JS file, CDN assets
+## 🚀 লোকাল QA
 
-## 📁 Structure
-
-```
-lekhok-forum/
-├── index.html          # Home page
-├── about.html          # About / পরিচিতি
-├── committee.html      # Committee / সংগঠন
-├── notices.html        # Notices / বিজ্ঞপ্তি
-├── contact.html        # Contact / যোগাযোগ
-└── assets/
-    ├── css/style.css   # All styles
-    └── js/main.js      # Counter + mobile menu
+```bash
+bash ensure-server.sh        # → http://localhost:8094
 ```
 
-## 🚀 Quick Start
+## 🚀 ডিপ্লয়
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/rafsancuac/Lekhok-Forum.git
-   cd Lekhok-Forum
-   ```
-2. Open `index.html` in any browser — that's it!
+- **Vercel** — প্রজেক্ট `lekhok-forum` (Express via `api/index.js`, region `bom1`, কনফিগ: `lekhok-forum/vercel.json`)।
+- **গোটচা**: কমিট-অথর অবশ্যই `rafsancuac@users.noreply.github.com` — নইলে Vercel `COMMIT_AUTHOR_REQUIRED`-ব্লক।
 
-## 🛠 Customization
+## 🤖 বট-অপারেশন
 
-Before deploying, replace these placeholders across all HTML files:
-
-| Placeholder | Replace with |
-|-------------|--------------|
-| `আপনার ক্যাম্পাস ঠিকানা` | Your campus address |
-| `info@your-branch.org` | Your branch email |
-| `০১XXXXXXXXX` | Your contact number |
-| Committee names in `committee.html` | Real committee members |
-
-## 🎨 Design System
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--brand` | `#0a1f44` | Deep navy — headers, footer |
-| `--accent` | `#C5A059` | Gold — CTAs, highlights |
-| `--bg` | `#f8fafc` | Page background |
-| Font | `SolaimanLipi` | Bengali body text |
-
-## 📜 License
-
-Open source under MIT. Free to use, modify, and distribute.
+```bash
+bash epaper-bot/bot-keeper.sh    # exit 0=সুস্থ · 2=.env-নেই · 3=প্রতীক্ষিত · 4=স্টার্ট-ব্যর্থ
+```
 
 ---
 
-Built with ❤️ for the Bangladeshi student-writer community.
+লাইভ: https://lekhok-forum.vercel.app — বাংলাদেশের শিক্ষার্থী-লেখক-সম্প্রদায়ের জন্য ❤️-দিয়ে-নির্মিত।
