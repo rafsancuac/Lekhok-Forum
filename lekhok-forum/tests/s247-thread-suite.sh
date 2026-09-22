@@ -19,6 +19,7 @@ J=/tmp/s247-jar.txt
 ev(){ agent-browser eval "$1" 2>/dev/null; }
 installErrs(){ ev "window.__scErrs=[]; window.addEventListener('error',function(e){window.__scErrs.push(String(e&&e.message||e));}); window.addEventListener('unhandledrejection',function(e){window.__scErrs.push(String(e&&e.reason||e));}); 'errs-installed'" >/dev/null 2>&1; }
 TAG='Task243-VIDEO'
+. "$APP/tests/lib-qa-browser.sh" # session248 — browser-health গার্ড (ব্যাটারি-ক্রমে Chrome-মৃত্যু-শ্রেণি)
 
 echo "── ধাপ-০: পরিবেশ (সার্ভার-বন্ধে-seed → বুট → লগইন) ──"
 pkill -TERM -f "node server.js" 2>/dev/null; sleep 1.2
@@ -89,13 +90,15 @@ contains "ক্যাপচার /messages/md_rafsan" "$OP" 'first..:../messag
 ev "(function(){ if(window.__s247ow) window.open=window.__s247ow; return 'override-restored'; })()" >/dev/null 2>&1
 
 echo "── ধাপ-৪: কনসোল-শূন্য + 390px + স্ক্রিনশট ──"
+BHC=$(agent-browser get url 2>/dev/null || echo '')
+if [ -z "$BHC" ]; then balive || true; agent-browser open "$BASE/admin/support-center?q=$TAG" >/dev/null 2>&1; sleep 1.2; installErrs >/dev/null 2>&1; fi # session248 — Chrome-মৃত্যু-প্রমাণিত-হলে-রিলাঞ্চ-অপেক্ষা+ডেস্ক-পুনঃলোড (সুস্থ-পথ-অপরিবর্তিত)
 ER=$(ev "JSON.stringify({ n:(window.__scErrs||[]).length })" 2>/dev/null)
 contains "কনসোল-ত্রুটি-শূন্য" "$ER" 'n..:0'
-agent-browser screenshot tests/s247-thread-desk.png >/dev/null 2>&1 && ok "s247-thread-desk.png" || bad "স্ক্রিনশট-ব্যর্থ"
+agent-browser screenshot "$APP/tests/s247-thread-desk.png" >/dev/null 2>&1 && ok "s247-thread-desk.png" || bad "স্ক্রিনশট-ব্যর্থ" # session248 — সম্পূর্ণ-পথ (ব্যাটারি-CWD-গোটচা: suite-cd-শূন্য → আপেক্ষিক tests/-পথ রিপো-রুটে মিথ্যা-ফেল)
 agent-browser set viewport 390 844 >/dev/null 2>&1; sleep 0.8
 HS=$(ev "JSON.stringify({ h:document.documentElement.scrollWidth>document.documentElement.clientWidth })" 2>/dev/null)
 contains "390px hScroll-শূন্য" "$HS" 'h..:false'
-agent-browser screenshot tests/s247-thread-mobile390.png >/dev/null 2>&1 && ok "s247-thread-mobile390.png" || bad "মোবাইল-স্ক্রিনশট-ব্যর্থ"
+agent-browser screenshot "$APP/tests/s247-thread-mobile390.png" >/dev/null 2>&1 && ok "s247-thread-mobile390.png" || bad "মোবাইল-স্ক্রিনশট-ব্যর্থ"
 agent-browser set viewport 1280 900 >/dev/null 2>&1
 
 echo "── ধাপ-৫: সিড-cleanup ──"

@@ -28,7 +28,7 @@
     .sc-chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;padding:5px 12px;border-radius:999px;
       border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-ink-2);cursor:pointer}
     .sc-chip:hover{border-color:var(--ad-accent-ring)}
-    .sc-chip.active{background:var(--ad-accent-soft);border-color:var(--ad-accent);color:var(--ad-accent-ink)}
+    .sc-chip.active{background:var(--ad-accent-soft);border-color:var(--ad-accent);color:var(--ad-accent-ink);box-shadow:inset 0 -2px 0 var(--ad-accent)} /* session248 — active-chip inset-underline (transition-শূন্য; var()-এক-উৎস) */
     /* session243 — মিডিয়া-চিপ-সম্পূর্ণতা: আইকন+বাংলা-গণনা-ব্যাজ+aria-current (bnNum-এক-উৎস) */
     .sc-mchip i{font-size:.72rem;opacity:.8}
     .sc-mchip[data-mh="TEXT"] i{color:var(--ad-accent)}
@@ -37,7 +37,9 @@
     .sc-mchip[data-mh="VIDEO"] i{color:var(--lf-danger-deep)}
     .sc-mcount{display:inline-block;min-width:17px;padding:0 5px;border-radius:999px;font-size:.68rem;font-weight:700;line-height:15px;text-align:center;font-variant-numeric:tabular-nums;background:var(--ad-accent-soft);color:var(--ad-accent-ink)}
     .sc-chip.active .sc-mcount{background:var(--ad-accent);color:#fff}
-    @media (max-width:640px){.sc-mcount{min-width:14px;padding:0 4px;font-size:.62rem;line-height:13px}}
+    .sc-cycle-hint{display:inline-flex;align-items:center;gap:4px;font-size:.68rem;font-weight:600;color:var(--ad-muted);border:1px dashed var(--ad-line);border-radius:999px;padding:3px 9px} /* session248 — s-কী affordance (চিপ-পরিবারেই-বসে; transition-শূন্য reduced-motion-নিরাপদ) */
+    .sc-cycle-hint:hover{color:var(--ad-accent);border-color:var(--ad-accent-ring)}
+    @media (max-width:640px){.sc-mcount{min-width:14px;padding:0 4px;font-size:.62rem;line-height:13px}.sc-cycle-hint{display:none}} /* session248 — affordance-সংকোচন (media-ব্লক বেস-রুলের-পরে — ক্যাসকেড-অর্ডার-গোটচা) */
     .sc-search{display:flex;gap:6px;margin-left:auto}
     .sc-search input{border:1px solid var(--ad-line);border-radius:var(--ad-radius-sm);padding:6px 10px;font-family:inherit;min-width:170px;background:var(--ad-card);color:var(--ad-ink)}
     .sc-stale{background:var(--lf-amber-soft);border:1px solid var(--lf-amber-soft-3);color:var(--lf-amber-ink);
@@ -560,6 +562,7 @@
     <a class="sc-chip <%= status === 'PENDING' ? 'active' : '' %>" aria-current="<%= status === 'PENDING' ? 'true' : 'false' %>" href="/admin/support-center?<%= ['status=PENDING', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">নতুন (<%= counts.PENDING %>)</a>
     <a class="sc-chip <%= status === 'IN_PROGRESS' ? 'active' : '' %>" aria-current="<%= status === 'IN_PROGRESS' ? 'true' : 'false' %>" href="/admin/support-center?<%= ['status=IN_PROGRESS', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">চলমান (<%= counts.IN_PROGRESS %>)</a>
     <a class="sc-chip <%= status === 'RESOLVED' ? 'active' : '' %>" aria-current="<%= status === 'RESOLVED' ? 'true' : 'false' %>" href="/admin/support-center?<%= ['status=RESOLVED', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">সমাধান (<%= counts.RESOLVED %>)</a>
+    <span class="sc-cycle-hint" title="স্ট্যাটাস-সাইকেল: s-কী — সব→নতুন→চলমান→সমাধান (বাকি-ফিল্টার-সংরক্ষিত)"><kbd class="sc-kbd">s</kbd> সাইকেল</span>
     <span style="width:1px;height:20px;background:var(--ad-line)"></span>
     <%# session227 — সময়-সীমা chips (range প্যারাম; অন্য-ফিল্টার-সংরক্ষণ) %>
     <% ['today', '7d', '30d'].forEach(function(r){ var lbl = r === 'today' ? 'আজ' : (r === '7d' ? '৭ দিন' : '৩০ দিন'); %>
@@ -698,7 +701,7 @@
     <p class="sc-help-sub">ডেস্ক-নেভিগেশন দ্রুত করুন — লেখা-বক্স/সার্চে টাইপ-করার-সময় শর্টকাট-নিষ্ক্রিয়</p>
     <div class="sc-help-group"><i class="fas fa-compass" aria-hidden="true"></i> নেভিগেশন ও ফিল্টার <span class="sc-hg-n">১-৮</span></div>
     <div class="sc-help-row"><span>পরবর্তী/পূর্ববর্তী কার্ড-কার্সর</span><span class="keys"><kbd class="sc-kbd">j</kbd><kbd class="sc-kbd">k</kbd></span></div>
-    <div class="sc-help-row"><span>স্ট্যাটাস-ভিউ: নতুন / চলমান / সমাধান</span><span class="keys"><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
+    <div class="sc-help-row"><span>স্ট্যাটাস-ভিউ: নতুন / চলমান / সমাধান + সাইকেল সব→নতুন→চলমান→সমাধান (বাকি-ফিল্টার-সংরক্ষিত)</span><span class="keys"><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd><kbd class="sc-kbd">s</kbd></span></div>
     <div class="sc-help-row"><span>সব-অভিযোগ ভিউ</span><span class="keys"><kbd class="sc-kbd">0</kbd></span></div>
     <div class="sc-help-row"><span>মাধ্যম-ফিল্টার সাইকেল — সব→লেখা→ছবি→ভয়েস→ভিডিও→সব (স্ট্যাটাস/সার্চ/সময়-সংরক্ষিত)</span><span class="keys"><kbd class="sc-kbd">m</kbd></span></div>
     <div class="sc-help-row"><span>সার্চ-বক্সে ফোকাস</span><span class="keys"><kbd class="sc-kbd">/</kbd></span></div>
@@ -1049,6 +1052,13 @@
     return { links: ls.length, first: ls.length ? ls[0].getAttribute('href') : null };
   };
   window.__scQA.threadOpen = threadOpen; // session247 — t-কী-প্রবেশপথ (stub-window.open-যাচাই)
+  window.__scQA.statusCycle = function () { // session248 QA-হুক (threadOpen-এর-পরে — ক্রমের-শেষ; mediaCycle-হুক-আকৃতি-মিরর)
+    var sp = new URLSearchParams(location.search);
+    var order = ['', 'PENDING', 'IN_PROGRESS', 'RESOLVED'];
+    var cur = sp.get('status') || '';
+    var i = order.indexOf(cur); if (i < 0) i = 0;
+    return { cur: cur, next: order[(i + 1) % order.length] };
+  };
   // ── session243 — মিডিয়া-চিপ ↔ স্ট্রিপ-সেগমেন্ট ক্রস-হাইলাইট (তাৎক্ষণিক-ক্লাস — transition-শূন্য, reduced-motion-স্বাভাবিক-নিরাপদ; স্ট্যাটিক-ফার্নিচার-বাইন্ড — লাইভ-কার্ড-রিরেন্ডার-স্বাধীন; innerHTML-নিষিদ্ধ-রীতি-অটুট) ──
   (function () {
     var MH = ['TEXT', 'IMAGE', 'AUDIO', 'VIDEO'];
@@ -1468,6 +1478,19 @@
     if (sp.get('range')) parts.push('range=' + sp.get('range'));
     location.href = '/admin/support-center?' + parts.filter(Boolean).join('&');
   }
+  function statusCycle() { // session248 — s-কী: স্ট্যাটাস-ফিল্টার সাইকেল (সব→নতুন→চলমান→সমাধান→সব; mediaCycle-চুক্তি-সমস্বর — মাধ্যম/সার্চ/ব্যাপ্তি-সংরক্ষণ)
+    var sp = new URLSearchParams(location.search);
+    var order = ['', 'PENDING', 'IN_PROGRESS', 'RESOLVED'];
+    var i = order.indexOf(sp.get('status') || '');
+    if (i < 0) i = 0;
+    var next = order[(i + 1) % order.length];
+    var parts = [];
+    if (next) parts.push('status=' + next);
+    if (sp.get('media')) parts.push('media=' + sp.get('media'));
+    if (sp.get('q')) parts.push('q=' + encodeURIComponent(sp.get('q')));
+    if (sp.get('range')) parts.push('range=' + sp.get('range'));
+    location.href = '/admin/support-center?' + parts.filter(Boolean).join('&');
+  }
   function clearFilters() { // session245 — c-কী: সব-ফিল্টার এক-কীতে পরিষ্কার (স্ট্যাটাস+মাধ্যম+সার্চ+ব্যাপ্তি; পরিষ্কার-অবস্থায় টোস্ট — অপ্রয়োজনীয়-নেভিগেশন-শূন্য)
     var sp = new URLSearchParams(location.search);
     if (!(sp.get('status') || sp.get('media') || sp.get('q') || sp.get('range'))) { toast('ফিল্টার ইতিমধ্যে পরিষ্কার'); return; }
@@ -1624,6 +1647,7 @@
     if (e.key === 'u' || e.key === 'U') { e.preventDefault(); firstPendingJump(); return; } // session244 — প্রথম-নতুন-কার্ডে জাম্প (typing-গার্ডের-পরে)
     if (e.key === 'c' || e.key === 'C') { e.preventDefault(); clearFilters(); return; } // session245 — সব-ফিল্টার পরিষ্কার (typing-গার্ডের-পরে)
     if (e.key === 't' || e.key === 'T') { e.preventDefault(); threadOpen(); return; } // session247 — প্রেরক-থ্রেড নতুন-ট্যাবে (typing-গার্ডের-পরে)
+    if (e.key === 's' || e.key === 'S') { e.preventDefault(); statusCycle(); return; } // session248 — স্ট্যাটাস-ফিল্টার সাইকেল (typing-গার্ডের-পরে)
     // ── session229 — Shift+1/2/3 কার্সর-কার্ডে দ্রুত-স্ট্যাটাস (Next-session222-চুক্তি: e.code-লেআউট-স্বাধীন; সম-স্টেটাসে নীরব-স্কিপ) ──
     if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
       if (cursor < 0 || !cards[cursor]) { toast('কার্সর-কার্ড নেই — আগে j/k দিয়ে কার্ড বাছুন'); return; }

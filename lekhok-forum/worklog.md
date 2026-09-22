@@ -2226,3 +2226,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session247 লেবেল (worklog Task ID 89)**; PLANS session246-নোট অবশ্যই-পড়ুন (ensureUser-প্যাটার্ন + অ্যাসেট-জেনারেশন + anchor-প্রিফিক্স-গোটচা + clipboard-স্টাব-চুক্তি); push-আগে fetch+rebase-বাধ্যতমূলক; নতুন-সুইট tests/ এ-কমিট
 - বাকি-প্রস্তাব: stale-তৃতীয়-ঢেউ (lf147 fbtest-ইউজার+articles, lf153 অডিয়েন্স-চিপ+cursor-সিড, lf159 রেল-DOM ১২≠১৬, test-role-policy.sh ২০৯-ফেল), Turso/প্রোড-পোর্ট
 - রিমোট main = এ-রাউন্ডের session246-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
+
+---
+Task ID: 90 (session248 — cron 403679; QA-ইনফ্রা-হার্ডেনিং ×৩-শ্রেণি + s-কী স্ট্যাটাস-সাইকেল + চিপ-স্টাইল)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- স্ন্যাপশট stale-ক্লোন (session242-যুগ) সিঙ্ক-করে HEAD=origin=`a60ca06` (session247); টোকেন-ভ্যালিদ (GH /user→200; মুখোশ-নীতি-অটুট); live 200; স্টেল-সামারি ×১৪-খণ্ডন ('Task43/commit-হয়নি'-যুগ — ইউজারের 'সব-কমিট?'-প্রশ্নের সংশোধিত-উত্তর: **হ্যাঁ, session247-পর্যন্ত সব-পুশকৃত**)
+- QA: ব্যাটারি প্রথম-রানে ১৯/২২ — ফেল-পয়েন্ট-স্থানান্তর = টাইমিং-ফ্লেক-ফিঙ্গারপ্রিন্ট; প্রোডাক্ট-বাগ-শূন্য, তিন-QA-ইনফ্রা-শ্রেণি আবিষ্কৃত ও ফিক্সড
+
+## এ-রাউন্ডে সম্পন্ন (session248)
+- **P1-ফিক্স ×৩:** ① lf147 fixed-sleep→poll ×৪ (health ≤20s / লগইন-URL ≤10s / **শেয়ার-DB-flush ≤15s** / রেন্ডার ≤8s) → ৪৮/৪৮ ×৩-solo + ব্যাটারি-স্থায়ী ② **Chrome-মৃত্যু-শ্রেণি** → নতুন tests/lib-qa-browser.sh `balive()` + dead-detect ×৪-পয়েন্ট (লগইন/স্ক্রিনশট-পূর্ব; সুস্থ-পথ-অপরিবর্তিত) ③ s247 ব্যাটারি-CWD-গোটচা: আপেক্ষিক tests/-স্ক্রিনশট-পথ → $APP-সম্পূর্ণ-পথ
+- **[Mandatory-ফিচার] s-কী স্ট্যাটাস-সাইকেল:** statusCycle() (সব→নতুন→চলমান→সমাধান→সব; mediaCycle-চুক্তি-মিরর — মাধ্যম/সার্চ/ব্যাপ্তি-সংরক্ষণ) + keydown s-ব্রাঞ্চ + QA-হুক `__scQA.statusCycle` (cur/next — ক্রমের-শেষ) + সহায়িকা-s-মার্জ (**ব্যাজ-শূন্য-ক্যাসকেড** কৌশল)
+- **[Mandatory-স্টাইল]:** .sc-chip.active inset-underline (box-shadow inset 0 -2px 0 var(--ad-accent); transition-শূন্য) + .sc-cycle-hint affordance (dashed-পিল s-ইঙ্গিত + hover-accent + 640px-সংকোচন — media-ব্লক-বেস-পরে-গোটচা-সহ)
+- **টেস্ট:** নতুন tests/s248-status-suite.sh **২৯/২৯** (s-সাইকেল ×৪-ধাপ রিয়েল-নেভিগেশন + সংরক্ষণ + computed boxShadow `bs..:.*inset` color-first-গোটচা + hint-390px-none) + **s244-MORDER-ক্রস-মডার্নাইজেশন** (২→৪) + **পূর্ণ-রিগ্রেশন ৭৬২-অ্যাসার্ট ২২/২২-সুইট ×২-ধারাবাহিক** + secret-scan-ক্লিন + স্ক্রিনশট-restore-নীতি + নতুন-স্ক্রিনশট ×২
+- ডক ×৩ (PROJECT §২৪৮ + PLANS session248-নোট + repo-worklog Task 90) + এ-এন্ট্রি → secret-scan → fetch+rebase → push → Vercel/live-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অপ্রয়োজনীয়
+- পরের-এজেন্ট: **session249 লেবেল (worklog Task ID 91)**; PLANS session248-নোট অবশ্যই-পড়ুন (poll-চুক্তি + balive/dead-detect + ব্যাটারি-CWD + CSS-ক্যাসকেড-অর্ডার + boxShadow-সিরিয়ালাইজ + কাউন্ট-অ্যাসার্ট-স্ক্যান); push-আগে fetch+rebase-বাধ্যতমূলক; নতুন-সুইটে lib-qa-browser.sh-চুক্তি
+- বাকি-প্রস্তাব: stale-তৃতীয়-ঢেউ-বাকি (lf153/lf159/test-role-policy.sh ২০৯-ফেল), Turso/প্রোড-পোর্ট
+- রিমোট main = এ-রাউন্ডের session248-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন

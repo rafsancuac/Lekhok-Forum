@@ -10,6 +10,7 @@ PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); echo "  ✓ $1"; }
 bad(){ FAIL=$((FAIL+1)); echo "  ✗ $1"; }
 chk(){ if [ "$1" = "$2" ]; then ok "$3"; else bad "$3 (got=$1 want=$2)"; fi; }
+. tests/lib-qa-browser.sh # session248 — browser-health গার্ড (ব্যাটারি-ক্রমে Chrome-মৃত্যু-শ্রেণি)
 
 echo "── [0] সার্ভার (pkill -9 → সিড → বুট → health)"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1.5 # session247 — settle-বৃদ্ধি (ব্যাটারি-ক্রমে dying-server DB-রাইট-রেস-সুরক্ষা)
@@ -17,8 +18,7 @@ SD=$(node tests/lf147-seed.js 2>&1) # session247 — suite-স্বয়ংস
 echo "$SD" | rg -q 'SEEDED ✓' && ok "সিড (fbtest×৩ + লেখা + শেয়ার + মূল-id3)" || bad "সিড-ব্যর্থ: $SD"
 PORT=8080 LF_QA_DISABLE_RATELIMIT=1 node server.js > /tmp/lf147-server.log 2>&1 &
 SRV=$!
-sleep 6
-H=$(curl -s http://localhost:8080/api/health)
+H=''; for i in $(seq 1 40); do H=$(curl -s -m 2 http://localhost:8080/api/health); echo "$H" | rg -q '"status":"healthy"' && break; sleep 0.5; done # session248 — fixed-sleep→poll (cold-sandbox flake নির্মূল; ≤20s)
 echo "$H" | rg -q '"status":"healthy"' && ok "health=healthy" || bad "health: $H"
 
 echo "── [1] গেস্ট-পৃষ্ঠা HTTP-স্মোক (নেস্টেড-শেয়ার সার্ফেস)"
@@ -44,13 +44,14 @@ echo "$PROF" | rg -q 'upt158' && bad "গেস্টে upt158-লিক (isOwn
 
 echo "── [2] agent-browser: লগইন (fbtest2) → প্রোফাইল-ভিজিটর অভিজ্ঞতা"
 agent-browser close --all > /dev/null 2>&1 || true
+BHC=$(agent-browser get url 2>/dev/null || echo '')
+[ -z "$BHC" ] && balive || true # session248 — Chrome-মৃত্যু-রিলাঞ্চ-গার্ড (লগইন about:blank-ফ্লেক-শ্রেণি)
 agent-browser open "http://localhost:8080/login" > /dev/null 2>&1
 agent-browser wait 'input[name="username"]' > /dev/null 2>&1
 agent-browser fill 'input[name="username"]' "fbtest2" > /dev/null 2>&1
 agent-browser fill 'input[name="password"]' "demo123" > /dev/null 2>&1
 agent-browser click 'button[type="submit"]' > /dev/null 2>&1
-sleep 2
-URL=$(agent-browser get url 2>/dev/null | head -1)
+URL=''; for i in $(seq 1 20); do URL=$(agent-browser get url 2>/dev/null | head -1); echo "$URL" | rg -q "dashboard|profile|articles" && break; sleep 0.5; done # session248 — poll (≤10s)
 echo "$URL" | rg -q "dashboard|profile|articles" && ok "লগইন-রিডাইরেক্ট ($URL)" || bad "লগইন ব্যর্থ ($URL)"
 
 agent-browser open "http://localhost:8080/profile/fbtest1" > /dev/null 2>&1
@@ -78,8 +79,7 @@ agent-browser eval "var bs=document.querySelectorAll('[data-share-note]'); var b
 sleep 0.8
 agent-browser eval "document.getElementById('shareNoteText') ? (document.getElementById('shareNoteText').value='LF147-E2E মন্তব্য-সহ শেয়ার!', true) : false" > /dev/null 2>&1
 agent-browser eval "document.getElementById('shareNoteSubmit') ? (document.getElementById('shareNoteSubmit').click(),'submitted') : 'no-submit'" > /dev/null 2>&1
-sleep 2.5
-POST=$(cnt147)
+POST=$PRE; for i in $(seq 1 30); do POST=$(cnt147); if [ "${POST:-0}" -gt "$PRE" ] 2>/dev/null; then break; fi; sleep 0.5; done # session248 — DB-flush poll (fixed sleep 2.5 → ≤15s নির্ধারক; sql.js-অসমলিত-রাইট-রেস-নিরাপদ)
 DEL=$((POST-PRE))
 chk "$DEL" 1 "শিট-শেয়ার DB-তে (+delta; pre=$PRE → post=$POST)"
 
@@ -87,8 +87,7 @@ echo "── [4] fbtest2-এর প্রোফাইলে নতুন শে�
 # শেয়ার-কপি শেয়ারকারীর (fbtest2) টাইমলাইনে যায় — fbtest1-এর নয় (FB-নিয়ম)
 agent-browser open "http://localhost:8080/profile/fbtest2" > /dev/null 2>&1
 agent-browser wait '.pf-hero' > /dev/null 2>&1
-sleep 1
-NEWCAP=$(agent-browser eval "[...document.querySelectorAll('.share-note147')].some(x=>x.textContent.includes('LF147-E2E'))" 2>/dev/null | head -1)
+NEWCAP=false; for i in $(seq 1 16); do NEWCAP=$(agent-browser eval "[...document.querySelectorAll('.share-note147')].some(x=>x.textContent.includes('LF147-E2E'))" 2>/dev/null | head -1); [ "$NEWCAP" = "true" ] && break; sleep 0.5; done # session248 — poll (≤8s)
 chk "$NEWCAP" true "নতুন-শেয়ারের নেস্টেড-কার্ড + ক্যাপশন রেন্ডার"
 SHEETER=$(agent-browser eval "(document.querySelector('.share-nested147 > .feed-card-head .lf-author-name')||{}).textContent || ''" 2>/dev/null | head -1)
 echo "$SHEETER" | rg -q 'সেঁজুতি' && ok "শেয়ারকারী-হেডার fbtest2-তে (সেঁজুতি)" || bad "শেয়ারকারী: $SHEETER"
@@ -128,6 +127,8 @@ chk "$RX" true "রিঅ্যাকশন-সারফেস অক্ষত"
 
 echo "── [8] স্ক্রিনশট"
 mkdir -p tests
+BHC=$(agent-browser get url 2>/dev/null || echo '')
+if [ -z "$BHC" ]; then balive || true; agent-browser open "http://localhost:8080/profile/fbtest1" > /dev/null 2>&1; agent-browser wait '.pf-hero' > /dev/null 2>&1; sleep 1; fi # session248 — রিলাঞ্চ-পরে ডেস্ক-পুনঃলোড (সুস্থ-পথ-অপরিবর্তিত)
 agent-browser screenshot tests/lf147-share-nested.png > /dev/null 2>&1 && ok "lf147-share-nested.png" || bad "স্ক্রিনশট-ব্যর্থ"
 agent-browser set viewport 390 844 > /dev/null 2>&1 || true
 agent-browser open "http://localhost:8080/profile/fbtest1" > /dev/null 2>&1

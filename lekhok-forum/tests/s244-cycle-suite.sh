@@ -41,7 +41,7 @@ contains "CSS সেগমেন্ট-একো (.sc-mb.sc-mb-cur{)" "$SRC" '.s
 contains "QA-হুক mediaCycle" "$SRC" '__scQA.mediaCycle'
 contains "QA-হুক uJump" "$SRC" '__scQA.uJump'
 MORDER=$(echo "$SRC" | grep -c 'var order = ')
-if [ "$MORDER" = "2" ]; then ok "সাইকেল-অর্ডার-এক-উৎস ×২ (fn+হুক)"; else bad "অর্ডার-গণনা (প্রত্যাশা ২, পাওয়া $MORDER)"; fi
+if [ "$MORDER" = "4" ]; then ok "সাইকেল-অর্ডার-এক-উৎস ×৪ (m/s-fn+হুক — session248-statusCycle-সমস্বর)"; else bad "অর্ডার-গণনা (প্রত্যাশা ৪, পাওয়া $MORDER)"; fi
 
 echo "── ধাপ-২: রেন্ডার-প্রমাণ ──"
 DT=$(curl -s -b "$J" "$BASE/admin/support-center?media=TEXT")
