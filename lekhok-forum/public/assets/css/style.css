@@ -2638,14 +2638,14 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 
 /* ── ৩. ছবি: ডাবল-রিং + হোভার-গ্লো + সফট-জুম (মার্কআপ-সঠিক স্কোপে ফেরত) ── */
 #leadership .leader-photo, #current-leadership .leader-photo {
-  outline: 2px solid rgba(5,150,105,.26); outline-offset: 3px;
+  outline: 2px solid rgba(0,106,78,.26); outline-offset: 3px;
   box-shadow: 0 10px 26px -8px rgba(4,120,87,.45);
   transition: transform .35s cubic-bezier(.22,.61,.36,1), outline-color .25s, box-shadow .25s;
 }
 #leadership .leader-card:hover .leader-photo, #current-leadership .leader-card:hover .leader-photo {
   transform: scale(1.05);
-  outline-color: rgba(5,150,105,.5);
-  box-shadow: 0 0 0 3px rgb(255,255,255), 0 0 0 5px rgba(5,150,105,.28), 0 14px 34px -8px rgba(4,120,87,.55);
+  outline-color: rgba(0,106,78,.5);
+  box-shadow: 0 0 0 3px rgb(255,255,255), 0 0 0 5px rgba(0,106,78,.28), 0 14px 34px -8px rgba(4,120,87,.55);
 }
 
 /* ── ৪. পদবী-চিপ ও কার্যবর্ষ-চিপ (ইউজার-স্পেক: সফট-এমারেল্ড টিন্ট) ── */
