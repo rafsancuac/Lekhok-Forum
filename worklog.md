@@ -3426,3 +3426,36 @@ Stage Summary:
 - **P0 ৭/৭ লাইভ-সম্পূর্ণ** (কমিট: 503a87c → 77211a8 → 38ae8ed; HEAD=origin=38ae8ed, tree-ক্লিন)
 - পরের ফেজ **P1**: নাম-সার্চ+রোল-সিলেক্ট নিয়োগ UI / reorder-কন্ট্রোল যাচাই / Support-Center→Express পোর্ট / readTime+views+verified DB-এক্সটেনশন / zoom-clamp 60-220
 - guard:design গ্রিন; টোকেন-নীতি অক্ষুণ্ণ
+
+---
+Task ID: 72 (session223 — user-session)
+Agent: Z.ai Code (main session)
+Task: মডারেটর-প্যানেল লেআউট বগ ফিক্স — "স্ক্রল করলেই ডানের ড্যাশবোর্ড ডানে সরে যায়, লম্বা হয়ে সরু হয়ে যায়" (স্ক্রিনশট: পত্রিকা-কাটিং পেজ)
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`c9c56ef` (এ-ফিক্স); push-পূর্ব rebase-ক্লিন (eaa8426 থেকে); author rafsancuac-যাচাইকৃত (Vercel-বাধা-প্রতিরোধ)
+
+## মূল-কারণ (agent-browser-এ লাইভ-রিপ্রোডিউস + প্রমাণিত)
+1. সব admin/moderator-ভিউ `main.js` লোড করে (পাবলিক-সাইট স্ক্রিপ্ট)
+2. main.js **আনকন্ডিশনালি** `#scrollProgress` div body-র প্রথম child হিসেবে ইনজেক্ট করে
+3. এর CSS (`position:fixed;height:3px`) শুধু style.css-এ — admin-পৃষ্ঠায় সেটি লোড-ই হয় না (admin.css) → div = আনস্টাইলড **static flex-child**
+4. স্ক্রলে main.js `scrollProgress.style.width = scrollY%` সেট করে → অদৃশ্য div **স্ক্রলের-সাথে চওড়া** হয় (মাপা: 1452px @81%)
+5. `body{display:flex}` + `.admin-main{flex:1;margin-left:288px}` → div flex-স্পেস খেয়ে `.admin-main`-কে সংকুচিত করে (মাপা: **1508px → 56px**) → কলাম লম্বা+সরু, docSW 1796→2017 = আনুভূমিক-ওভারফ্লো = ট্র্যাকপ্যাডে ডানে-সরা
+- ম্যাথ-মিল: 1796 − 1452 (div) − 288 (margin) = 56px = মাপা mainW ✓
+
+## ফিক্স (c9c56ef)
+- **main.js**: ইনজেকশন-গার্ড `!document.querySelector(".admin-sidebar")` — admin-chrome পৃষ্ঠায় বার তৈরিই হবে না; পাবলিক-সাইটে অক্ষত (হোমে স্ক্রলে width 11.83% প্রমাণিত)
+- **admin.css সেফটি-নেট**: `.scroll-progress` নিউট্রালাইজার (fixed/3px/width:0/pointer-events-none) + `html,body{overflow-x:clip}` — `clip` (hidden নয়) scroll-container তৈরি করে না → fixed সাইডবার/স্টিকি bulk-bar অক্ষত; "ডানে-বামে শূন্য নড়াচড়া" গ্যারান্টি
+- **press ফর্ম-গ্রিড (ইউজার-স্পেক)**: `.clip-grid` লক ১(মোবাইল)→২(≥640)→৪(≥1024); `.clip-field-wide` = আপলোড+URL দ্বিতীয়-সারিতে পূর্ণ-প্রস্থ (span 2+2)
+- **বোনাস বগ-ফিক্স (ক্যাশ-বাস্ট-গ্যাপ)**: server.js-এর `/assets/*` immutable 30-দিন ক্যাশ `?v=<AV>`-নির্ভর — কিন্তু ২০-ভিউয়ে admin.css + section-form/multi-image/admin-url-upload.js + 404 style.css **unversioned** → ব্রাউজারে ৩০-দিন স্টেল-স্টাইল আটকে থাকত (ফিক্স ইউজারের-কাছে-পৌঁছানোরই বাধা) → সব ?v=<AV> যোগ
+
+## E2E (agent-browser, QA :8094, moderator/moderator123)
+- deep-scroll স্কুইপ 375/390/768/1024/1280/1440/1806/1920: **hOverflow=০ সর্বত্র**, `.admin-main` পূর্ণ-প্রস্থ অটল (1508@1806 — আগে স্ক্রলে 56px-এ ডুবত)
+- #scrollProgress admin-পৃষ্ঠায় অনুপস্থিত ✓; পাবলিক হোমে উপস্থিত+অ্যানিমেটিং ✓
+- bulk select-all → bulkBar.show ✓ sticky ✓; ফর্ম POST (requestSubmit) → ?posted=1 + রো-তৈরি ✓ (নোট: স্যান্ডবক্সে submit-বাটনে click@ref নেভিগেট-করে না — requestSubmit প্রমাণ; আসল-ব্রাউজার অক্ষত)
+- গার্ড: design-system ✓ ভিউ-অডিট ১২২-ejs ✓ node --check ✓
+
+## ঝুঁকি ও পরের-এজেন্ট নোট
+- **QA-গোটচা**: sql.js ইন-মেমরি — ভিউ-টেস্টের আগে সার্ভার-kill→প্যাচ→boot রীতি; মৃত্যুমুখী-ফ্লাশ stale-ডেটা লিখতে পারে
+- press-পেজের `.sf-section` সম্পাদনা-উইজেট ও `.mi-widget`-এর JS (section-form.js/multi-image.js) পেজে লোড-ই হয় না → সম্পাদনা-ফর্ম রিডঅনলি-দৃশ্যমান — পৃথক ফিচার-গ্যাপ, এ-ফিক্সের বাইরে
+- পরের-এজেন্ট: **session224 লেবেল**; কমিটের আগে `git config user.email` যাচাই (shell-fallback identity = Vercel-ব্লক)
