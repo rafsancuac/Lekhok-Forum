@@ -37,11 +37,16 @@
     const fb    = lfSafeUrl(m.social_fb);
     const email = m.social_email;
     const hasSocial = !!(fb || email || m.social_twitter || m.social_linkedin || profileHref);
+    /* সেশন ২৪৯: এডিটোরিয়াল-কার্ড পোর্ট (user-অনুমোদিত রেফারেন্স-ডিজাইন) —
+       ছবি বামে .leader-media-তে (রেক্টাঙুলার, inset, রাউন্ডেড; grayscale→hover-কালার),
+       বডি ডানে: রোল-লেবেল (ছোট সবুজ) → নাম → কার্যবর্ষ → বাণী → সোশ্যাল।
+       সব ক্লাস (leader-card/has-image/leader-card-featured/leader-photo/leader-body/
+       leader-name/leader-role/leader-bani/leader-social) অক্ষুণ্ণ — lf64-চুক্তি। */
     const inner = `
-      <img loading="lazy" decoding="async" src="${lfEsc(displayImg)}" alt="${lfEsc(displayName)}" class="leader-photo" />
+      <div class="leader-media"><img loading="lazy" decoding="async" src="${lfEsc(displayImg)}" alt="${lfEsc(displayName)}" class="leader-photo" /></div>
       <div class="leader-body">
-        <h3 class="leader-name">${lfEsc(displayName)}</h3>
         <p class="role leader-role">${lfEsc(roleLabel || m.role || '')}</p>
+        <h3 class="leader-name">${lfEsc(displayName)}</h3>
         ${yearLabel ? `<p class="leader-year">${lfEsc(yearLabel)}</p>` : ''}
         ${displayBio ? `<p class="leader-bani">${lfEsc(displayBio)}${rawBio.length > 700 ? '…' : ''}</p>` : ''}
         ${hasSocial ? `

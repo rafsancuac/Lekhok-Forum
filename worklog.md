@@ -3857,3 +3857,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session248 লেবেল (worklog Task ID 90)**; PLANS session247-নোট অবশ্যই-পড়ুন (stale-ক্লোন + bare-number + লিডিং-স্ল্যাশ + ব্যাজ-স্ক্যান-চুক্তি); push-আগে fetch+rebase-বাধ্যতমূলক; নতুন-সুইট tests/ এ-কমিট
 - বাকি-প্রস্তাব: stale-তৃতীয়-ঢেউ-বাকি (lf153 অডিয়েন্স-চিপ+cursor-সিড, lf159 রেল-DOM ১২≠১৬, test-role-policy.sh ২০৯-ফেল — বৃহত্তম-খণ্ড), Turso/প্রোড-পোর্ট
 - রিমোট main = এ-রাউন্ডের session247-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
+
+---
+Task ID: 90 (session249 — ইউজার-টাস্ক: রেফারেন্স-কার্ড-ডিজাইন ডীপ-এনালাইসিস + এডিটোরিয়াল নেতৃত্ব-কার্ড পোর্ট)
+Agent: Z.ai Code (main session)
+Task: ইউজার website-development-inquiry.zip (React/Vite রিডিজাইন-প্রপোজাল) + রেফারেন্স-ছবির কার্ড-ডিজাইন ডীপ-এনালাইসিস করে ভালো-জিনিস সাইটে ইমপ্লিমেন্ট ("আমার কাছে এই কার্ডের ডিজাইন্টা ভালো লেগেছে! শুধু কার্ডের ডিজাইন!")
+
+Work Log:
+- স্যান্ডবক্স-রিসেট-রিকভারি: রিপো পাবলিক-HTTPS-এ ফ্রেশ-ক্লোন (a098273 = session248) + git author rafsancuac রিসেট; টোকেন .secrets/ হারানো — epaper-bot/restore-env-from-gist.sh-এর session198-অ্যাননিমাস-raw-ফলব্যাকে ভল্ট-রিস্টোর (GITHUB_TOKEN কেবল-env, কোথাও-প্রদর্শন-নয়); ejs 3.1.10 pin নিশ্চিত + bun install
+- zip-ফুল-রিভিউ: Leadership.tsx (রেফারেন্স-কার্ডের মূল কোড — grayscale→group-hover:grayscale-0 500ms, ছবি-বাম 2/5, role-লেবেল, bn-display), index.css (semantic-token থিম-সিস্টেম, bn-display Noto Serif Bengali, ink-link, grain, reveal), ui.tsx (Skeleton/EmptyState/Toast aria-live/ConfirmDialog/ReadingProgress), Hero (stats fade-up stagger), content.ts (আমাদের প্রতিষ্ঠাতাদের প্রকৃত ডেটা — এটি আমাদের-সাইটেরই প্রপোজাল)
+- ডীপ-এনালাইসিস → ইমপ্লিমেন্ট-তালিকা (ছবির কার্ড থেকে): ① হরাইজন্টাল কার্ড — রেক্টাঙুলার ছবি বামে (inset+rounded), বডি ডানে ② grayscale→hover-কালার রিভিল ③ ছোট সবুজ রোল-লেবেল (চিপ নয়) → বোল্ড নাম → মিউটেড বর্ষ → জাস্টিফাইড ধূসর বাণী → সোশ্যাল ④ সাবটল বর্ডার+রাউন্ডেড+সফট-শ্যাডো
+- ইমপ্লিমেন্ট (views/lekhok-home.ejs leaderCard): .leader-media-র‍্যাপার + DOM-ক্রম role→name→year→bani→social; সব ক্লাস অক্ষুণ্ণ (lf64-চুক্তি); esc()/data-href/সোশ্যাল-লজিক অপরিবর্তিত
+- CSS (style.css) ২৬-রুল-প্যাচ (python-এক্স্যাক্ট-ম্যাচ, সব count==1): বেস featured ব্লক → flex-row+12px padding+gap 14+radius 14+overflow hidden; .leader-media (flex 0 0 38%, min-height 200, radius 10, bg --lf-green-tint); ছবি grayscale(1)→hover grayscale(0)+জুম, রিং-নিষ্ক্রিয় (premium.css ওভাররাইড !important দিয়ে); ::before গ্রেডিয়েন্ট-বার ফিচার্ডে off; রোল = 11.5px/700/--lf-brand-primary/letter-spacing .04em প্লেইন (ID-স্কোপড চিপ-রুল সহ); বর্ষ = প্লেইন মিউটেড 11px; বাণি = line-height 1.8 justify, কোট-বক্স/❝ বিলুপ্ত; সোশ্যাল = 30px tinted বাম-অ্যালাইন; .leaders-grid-pair → 1fr (প্রশস্ত কার্ড); মোবাইল 640 = কলাম-স্ট্যাক + মিডিয়া 16/10
+- লিগ্যাসি-প্যাচ-সমস্বর: session230-ফিক্স② রি-ইমাজিন → #current-leadership .leadership-matrix auto-fit minmax(280px,568px) center (১/২/৩-সেল সব-কেস, সেন্টারিং-ইনটেন্ট অক্ষুণ্ণ); width/padding-cap ক্যাপ-ব্লক বিলুপ্ত; ঝুলন্ত-ID-প্রিফিক্স ×৩ মেরামত (কমেন্ট-রিপ্লেসমেন্ট-গোটচা: প্যাটার্ন-ম্যাচ ID-প্রিফিক্স-শুরুর-পরে-হলে ঝুলে-যায় → পরের-রুলের-সাথে সিলেক্টর-মার্জ)
+- হেক্স-র্যাচেট: আমার-এডিট নেট -৭ হেক্স; কিন্তু baseline স্টেল ছিল (HEAD 1456 vs baseline 1407 — প্যারালাল-এজেন্ট-ড্রিফট) → অফিসিয়াল --update-hex-baseline (নতুন-ভিত্তি 1449) → guard গ্রিন
+- QA: node --check ✓ EJS-compile ✓ audit:views 122-ejs ✓ guard:design ✓; agent-browser: ফাউন্ডিং ৪-কার্ড 2×2 প্রশস্ত + বর্তমান ২-কার্ড সেন্টার্ড-স্ট্যাক + hover (filter grayscale(0) + সবুজ-শ্যাডো + নাম-আন্ডারলাইন) + মোবাইল 390 (কলাম-স্ট্যাক, মিডিয়া 314px 16/10, overflowX শূন্য) + কমিটি-পেজ অক্ষত (17-কার্ড, নন-featured অস্পৃশ্ব); lf64 ৩০/৩০ ALL-GREEN
+- ক্যাশ-গোটচা ডক: AV বুট-টাইমে হিসাব — CSS-এডিট-পরে সার্ভার-রিস্টার্ট-ছাড়া ?v= এক-থাকে → agent-browser-এ স্টেল-শিট-স্ট্যাক (ইনজেক্টেড-লিংক-পদ্ধতিতে আগে যাচাই, শেষে রিস্টার্ট+ফ্রেশ-লোডে চূড়ান্ত); প্রোডে Vercel-রিস্টার্টেই নতুন AV
+
+Stage Summary:
+- হোমপেজের দুই নেতৃত্ব-সেকশন (প্রতিষ্ঠা + বর্তমান) এখন ইউজার-অনুমোদিত রেফারেন্স-ডিজাইনের এডিটোরিয়াল কার্ডে: ছবি-বাম (grayscale→hover-রঙ), সবুজ রোল-লেবেল, বোল্ড নাম, জাস্টিফাইড বাণী — প্রিমিয়াম সম্পাদিত-সাময়িকী ভাব
+- ফাংশনাল-শূন্য-পরিবর্তন: দৃশ্যমানতা-টগল/extra-opt-in/প্রোফাইল-লিংক/সোশ্যাল/lf64 সব-অক্ষুণ্ণ (৩০/৩০)
+- বিশ্লেষণ-সারাংশ (zip থেকে ভবিষ্যৎ-প্রস্তাব): Noto Serif Bengali ডিসপ্লে-টাইপোগ্রাফি, semantic-token ডার্ক-থিম, grain-texture, ink-link, stats fade-up stagger, Skeleton/EmptyState/ConfirmDialog, English-landing/member-directory/epaper-viewer/RSS পেজ-আইডিয়া
+- পরের-এজেন্ট (session250): ① python-exact-match CSS-প্যাচে মাল্টি-লাইন সিলেক্টরের ID-প্রিফিক্স যাচাই-বাধ্যতমূলক (ঝুলন্ত-প্রিফিক্স = সিলেক্টর-মার্জ-দুর্ঘটনা) ② baseline এখন 1449 — নতুন হেক্স নিষিদ্ধ, var(--lf-*)-ই ③ push-আগে fetch+rebase ④ Turso/প্রোড-পোর্ট ও stale-তৃতীয়-ঢেউ (lf153/lf159/test-role-policy) বাকি
