@@ -8,8 +8,11 @@
  *   res.locals.Cbr = (key) => Cbr(key, settings);
  *
  * C(key, settings):
- *   1. settings['content_' + key] থাকলে ও খালি না-হলে → অ্যাডমিনের লেখা মান
- *   2. নইলে → রেজিস্ট্রির DEFAULTS[key]
+ *   1. settings['content_' + key] সেভ-হওয়া (রো-আছে) → অ্যাডমিনের লেখা মান
+ *      (সেশন ২৩০: **ফাঁকা-সেভও সম্মানিত** — অ্যাডমিনে মুছলে সাইটেও মুছবে, WYSIWYG;
+ *       আগে "ফাঁকা = ডিফল্ট-ফেরত" আচরণে অ্যাডমিনের মুছা কার্যবর্ষ/টেক্সট প্রতিদান
+ *       ফিরে আসত — হোম-নেতৃত্বের '২০২০-২১ কার্যবর্ষ' বাগের মূল-কারণ)
+ *   2. কখনো-সেভ-না-হওয়া কী (fresh install) → রেজিস্ট্রির DEFAULTS[key]
  *   3. অজানা key → '' (ভিউ কখনো ক্র্যাশ করবে না)
  *
  * Cbr = C + HTML-escape + \n → <br/>  (multiline textarea ফিল্ডের জন্য;
@@ -22,7 +25,9 @@ module.exports = function makeContentHelpers(registry) {
   function C(key, settings) {
     const s = settings || {};
     const v = s['content_' + key];
-    if (v !== undefined && v !== null && String(v).trim() !== '') return v;
+    // সেশন ২৩০ (WYSIWYG-ফিক্স): রো সেভ-হলেই অ্যাডমিনের মান — ফাঁকা হলেও।
+    // null/undefined (রো-নেই) হলেই কেবল ডিফল্ট-ফলব্যাক।
+    if (v !== undefined && v !== null) return String(v);
     return (key in DEFAULTS) ? DEFAULTS[key] : '';
   }
 

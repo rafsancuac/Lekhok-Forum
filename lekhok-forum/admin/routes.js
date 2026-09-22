@@ -828,13 +828,16 @@ router.post('/home-leadership/slot', requireAdmin, (req, res, next) => memberPho
           // হোম-লেবেল সিঙ্ক: বর্তমান-লেবেলে পুরনো-কার্যবর্ষ-স্ট্রিং থাকলে সেটিই বদলাই
           // (কাস্টম-সাফিক্স যেমন " কার্যবর্ষ" অক্ষুণ্ণ); লেবেল ফাঁকা হলে আদর্শ-ফরম্যাট লিখি;
           // পুরনো-কার্যবর্ষ-উল্লেখ-বিহীন কাস্টম-লেবেল থাকলে অক্ষত রাখি।
+          // সেশন ২৩০-ফিক্স: কী-এ 'content_' প্রিফিক্স মিসিং ছিল — সিঙ্ক কাঁচা
+          // 'home_year_current' কী-তে লিখত/পড়ত, অথচ ভিউ পড়ে content_home_year_current
+          // (C() হেল্পার) — ফলে সিঙ্ক নীরবে ব্যর্থ হত।
           let lbl179 = null;
-          try { lbl179 = await db.getSetting('home_year_current'); } catch (_) {}
+          try { lbl179 = await db.getSetting('content_home_year_current'); } catch (_) {}
           if (lbl179 && oldTerm179 && String(lbl179).indexOf(oldTerm179) !== -1) {
-            await setSetting('home_year_current', String(lbl179).split(oldTerm179).join(termYear));
+            await setSetting('content_home_year_current', String(lbl179).split(oldTerm179).join(termYear));
             pairNote179 += (pairNote179 ? ' · ' : '') + 'হোমের "বর্তমান কার্যবর্ষ লেখা"-ও হালনাগাদ';
           } else if (!lbl179 || !String(lbl179).trim()) {
-            await setSetting('home_year_current', termYear + ' কার্যবর্ষ');
+            await setSetting('content_home_year_current', termYear + ' কার্যবর্ষ');
             pairNote179 += (pairNote179 ? ' · ' : '') + 'হোমের "বর্তমান কার্যবর্ষ লেখা"-ও হালনাগাদ';
           }
         } catch (e179) {

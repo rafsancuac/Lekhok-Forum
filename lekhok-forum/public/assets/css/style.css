@@ -2705,3 +2705,59 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   #leadership .leader-card:hover .leader-photo, #current-leadership .leader-card:hover .leader-photo { transform: none; }
 }
 /* ═══════════ EOF সেশন ১৯৩ ═══════════ */
+
+/* ═══ সেশন ২৩০ (lfw230-leadership-fix): হোম-নেতৃত্ব WYSIWYG ৪-ফিক্স ═══════════
+   ইউজার-রিপোর্ট + agent-browser-লাইভ-মাপা RCA (২০২৬-০৯-২২):
+   ① কার্যবর্ষ ফাঁকা হলে রেন্ডার-ই হবে না (EJS-স্ট্রিক্ট + নিচের :empty-গার্ড)
+   ② বর্তমান-নেতৃত্বে ১টি .leadership-cell থাকলেও কার্ড স্ক্রিনের মাঝে —
+      আগে .leadership-matrix grid 1fr 1fr-এ বাম-কলামে আটকে ডান-পাশ ফাঁকা ছিল
+   ③ বাণী-বক্সের টেক্সট ক্রিস্প near-black — আগে ধূসর rgb(75,76,79)-এ ঘোলা লাগত
+   ④ সোশ্যাল-আইকনের নিচের বাড়তি ফাঁকা কম্প্যাক্ট (padding-bottom 28→14px) */
+/* lfw230-leadership-fix */
+
+/* ── ফিক্স ②: বর্তমান নেতৃত্ব — ১/২/৩ সেল যাই থাকুক, স্ট্যাক-সেন্টার ── */
+#current-leadership .leadership-matrix {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+#current-leadership .leadership-cell { flex: 0 1 auto; width: auto; max-width: 100%; }
+#current-leadership .leaders-grid {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 16px !important;
+}
+#current-leadership .leader-card-featured { width: 276px; max-width: 100%; }
+
+/* ── ফিক্স ①-বেল্ট: কার্যবর্ষ ফাঁকা হলে চিপ-ই রেন্ডার হবে না ── */
+.leader-year:empty { display: none !important; }
+
+/* ── ফিক্স ③: বাণী-বক্স সলিড-সারফেস + হাই-কনট্রাস্ট ক্রিস্প টেক্সট ── */
+#leadership .leader-card-featured .leader-bani,
+#current-leadership .leader-card-featured .leader-bani {
+  background: #F8FAF9 !important;
+  border: 1px solid #E5E9E7 !important;
+  color: #1C1E21 !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+#leadership .leader-card-featured:hover .leader-bani,
+#current-leadership .leader-card-featured:hover .leader-bani {
+  background: #F2F8F5 !important;
+  border-color: rgba(5,150,105,.25) !important;
+}
+
+/* ── ফিক্স ④: কার্ডের নিচের ফাঁকা কম্প্যাক্ট (28px → 14px) + সোশ্যাল-রো টাইট ── */
+#leadership .leader-card-featured,
+#current-leadership .leader-card-featured { padding-bottom: 14px !important; }
+#leadership .leader-card-featured .leader-social,
+#current-leadership .leader-card-featured .leader-social { padding-top: 10px; }
+
+/* ── মোবাইল: কার্ড মাঝে, পূর্ণ-প্রস্থের কাছে ── */
+@media (max-width: 700px) {
+  #current-leadership .leader-card-featured { width: 100%; max-width: 340px; }
+}
+/* ═══════════ EOF সেশন-২৩০ নেতৃত্ব-ফিক্স (lfw230-leadership-fix) ═══════════ */
