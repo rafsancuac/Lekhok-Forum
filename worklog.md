@@ -3527,3 +3527,19 @@ Stage Summary:
 - main @ 8750e46 — ৪-বাগ লাইভ-ফিক্সড + Next.js-মুক্ত (সাইট/গিট/Vercel)
 - নীতি: C() WYSIWYG; সেটিংস-কী সবসময় content_-প্রিফিক্সসহ
 - ঝুঁকি: প্যারালাল-এজেন্ট-রেস — push-এর আগে fetch+rebase অভ্যাস করো
+
+---
+Task ID: session202 (keeper 401248 + NEXT-REMOVE-স্বাধীন-যাচাই)
+Agent: Z.ai Code (keeper session)
+Task: ① ১৩:১৮–১৩:৩৮ কিপার-রাউন্ড ② Next.js-বিলুপ্তির-স্বাধীন-দ্বিতীয়-যাচাই ③ ডিপ্লয়-চ্যানেল-সুস্থকরণ
+
+Work Log:
+- কিপার ×৩: exit 3 সুস্থ (হার্টবিট 1–13s; আজকের-পেপার-চ্যানেল-পোস্ট-প্রতীক্ষিত — ভোররাতের-স্বাভাবিক) — বট-সংকট-শূন্য
+- স্বাধীন-যাচাই (NEXT-REMOVE/NEXT-REMOVE-2-এর-কাজের-ওপর): লাইভ-প্রোব x-powered-by: Express ✓; Express-schema-তে next-মডেল-সমতুল্য (follows/messages/conversations ইত্যাদি) ✓; lekhok-forum-next-এর-বাহ্যিক-রেফারেন্স-শূন্য ✓; Vercel-প্রজেক্ট rootDirectory=lekhok-forum, framework=None (API-যাচাই) ✓ — স্ট্যাক-লক-নিশ্চিত-প্রমাণিত
+- **Production-Deploy-রান ৩/৩-FAILURE RCA**: প্রথম-ধাপ 'টোকেন↔প্রজেক্ট-যাচাই'-তে-মৃত্যু → Actions-সিক্রেট VERCEL_TOKEN-নিষ্ক্রিয়; ভল্টের-জীবিত VERCEL_API_TOKEN-দিয়ে-সিক্রেট-আপডেট (sealed-box PUT, HTTP 204; স্ক্রিপ্ট: my-project/scripts/fix-vercel-token-secret.py) + সর্বশেষ-ব্যর্থ-রান (a5527c4 messenger-voice) rerun (HTTP 201)
+- **স্যান্ডবক্স-গোটচা (পরের-সব-এজেন্ট-সতর্কতা)**: এ-সেশনে-ফাইল/অবজেক্ট-পড়া-বারবার-পুরনো-স্ন্যাপশট-দেখিয়েছে (একই-ব্লব এক-পড়ায় `ain]`, আরেক-পড়ায় `[main]`) — এক-পড়ায়-সিদ্ধান্ত-নয়; ২–৩-পড়ায়-মিললে-তবেই-ধরো; git-বিহেভিয়ার (runs-ট্রিগার/ls-remote/API) = শ্রেষ্ঠ-সত্য-উৎস; .git/info/attributes-এর union-মার্জ-রেখা-ও-রিসেটে-হারায় — প্রতি-রাউন্ডে-পুনঃস্থাপন-করো
+
+Stage Summary:
+- auto-deploy-চ্যানেল পুনরুজ্জীবিত (সিক্রেট-ফিক্স) — rerun-সবুজ-হলে d320e8c messenger-voice-ফিক্স-প্রোডে-ল্যান্ড
+- Next.js-বিলুপ্তি-প্রকল্প স্বাধীনভাবে-পুনঃনিশ্চিত; epaper-bot-অক্ষত
+- পরের-এজেন্ট: session203 লেবেল; রান-স্টেট-যাচাই করে-নেবে (Actions-ট্যাব/jobs-API)
