@@ -46,6 +46,7 @@ WK=$(echo "$DESK" | grep -o 'data-wk="' | wc -l | tr -d ' ')
 assert "রিগ্রেশন: data-wk ৬-হোস্ট অক্ষুণ্ণ" "6" "$WK"
 
 echo "── ধাপ-২: ব্রাউজার-সেশন (রোবাস্ট-লগইন retry-চুক্তি) ──"
+agent-browser set viewport 1280 900 >/dev/null 2>&1 # session236-হার্ডেনিং — ডেমন-স্থায়ী-ছোট-ভিউপোর্ট-প্রতিষ্কার
 agent-browser open "$BASE/admin/login" >/dev/null 2>&1; sleep 1
 for i in 1 2 3; do
   U=$(agent-browser get url 2>/dev/null || echo '')
@@ -75,7 +76,12 @@ contains "বাইরে-ক্লিক→daychip-স্টেট-পরিষ
 echo "── ধাপ-৪: দিন-চিপ-পুনঃক্ল্যাম্প (প্রান্ত-বারে) + 390px + কনসোল ──"
 CL=$(ev "(function(){ var t=document.querySelectorAll('.sc-trend-bars span.today')[0]||document.querySelector('.sc-trend-bars span'); if(!t)return 'no-trend'; t.dispatchEvent(new MouseEvent('mouseover',{bubbles:true})); var c=document.getElementById('scSparkTipWk'); var m=c.querySelectorAll('.sc-tip-strip i'); m[0].dispatchEvent(new MouseEvent('mouseover',{bubbles:true})); var r=c.getBoundingClientRect(); var okl=r.left>=-1&&r.right<=window.innerWidth+1; t.dispatchEvent(new MouseEvent('mouseout',{bubbles:true})); return JSON.stringify({l:Math.round(r.left),rt:Math.round(r.right),w:window.innerWidth,ok:okl}); })()")
 contains "দিন-চিপে-পুনঃক্ল্যাম্প (ভিউপোর্টের-ভিতরে)" "$CL" 'ok..:true'
-MOB=$(ev "(function(){ var m=window.matchMedia('(max-width:640px)'); if(m.matches) return 'mobile-view'; var css=''; for (var i=0;i<document.styleSheets.length;i++){ try{ var rs=document.styleSheets[i].cssRules; for (var j=0;j<rs.length;j++){ if (rs[j].media && rs[j].conditionText && rs[j].conditionText.indexOf('640')>=0){ css+=rs[j].cssRules.length; } } }catch(_){} } return 'css-rules:'+css; })()")
+MOB=''
+for i in 1 2 3; do # session236-হার্ডেনিং — অস্থায়ী-eval-শূন্য-ফেরত (agent-browser আর্টিফ্যাক্ট)-প্রতিষ্কার
+  MOB=$(ev "(function(){ var m=window.matchMedia('(max-width:640px)'); if(m.matches) return 'mobile-view'; var css=''; for (var i=0;i<document.styleSheets.length;i++){ try{ var rs=document.styleSheets[i].cssRules; for (var j=0;j<rs.length;j++){ if (rs[j].media && rs[j].conditionText && rs[j].conditionText.indexOf('640')>=0){ css+=rs[j].cssRules.length; } } }catch(_){} } return 'css-rules:'+css; })()")
+  echo "$MOB" | grep -q 'css-rules:[1-9]' && break
+  sleep 1
+done
 contains "640px-দিন-চিপ-সংকোচন-নিয়ম-উপস্থিত" "$MOB" 'css-rules:[1-9]'
 CONS=$(ev "(function(){ return JSON.stringify({errs:(window.__scErrs||[]).length}); })()")
 contains "কনসোল-ত্রুটি-শূন্য" "$CONS" 'errs..:0'

@@ -232,6 +232,14 @@
     @media (hover:none){.sc-tip-strip i{position:relative}.sc-tip-strip i::after{content:'';position:absolute;left:-3px;right:-3px;top:-7px;bottom:-7px}}
     #scCompactBtn[aria-pressed="true"]{background:var(--ad-accent);border-color:var(--ad-accent);color:var(--lf-white)}
     #scCompactBtn[aria-pressed="true"]:focus-visible{outline:2px solid var(--ad-accent-ink);outline-offset:2px}
+    /* ── session236 — রিফ্রেশ-নিয়ন্ত্রণ (রিফ্রেশ-এখন + অটো-হালনাগাদ-বিরতি; সব-রঙ var()-টোকেন) ── */
+    .sc-refresh-busy i{animation:scSpin .8s linear infinite}
+    @keyframes scSpin{to{transform:rotate(360deg)}}
+    @media (prefers-reduced-motion: reduce){.sc-refresh-busy i{animation:none}}
+    #scPauseBtn[aria-pressed="true"]{background:var(--lf-amber-ink);border-color:var(--lf-amber-ink);color:var(--lf-white)}
+    #scPauseBtn[aria-pressed="true"]:focus-visible{outline:2px solid var(--lf-amber-ink);outline-offset:2px}
+    .sc-live.paused{color:var(--lf-amber-ink);border-color:var(--lf-amber-ink)}
+    .sc-live.paused .dot{background:var(--lf-amber-ink);animation:none}
     .sc-compact .sc-card{padding:10px 12px;margin-bottom:8px}
     .sc-compact .sc-card-head img.sc-av{width:30px;height:30px}
     .sc-compact .sc-who b{font-size:.9rem}
@@ -263,6 +271,9 @@
         <a href="/admin/super/support-settings" class="sc-cfg-chip" style="color:var(--lf-amber-ink)"><i class="fas fa-triangle-exclamation"></i> কোনো সাপোর্ট-অ্যাডমিন নির্ধারিত নেই</a>
       <% } %>
       <span class="sc-live" id="scLive"><span class="dot"></span> <span id="scLiveTxt">লাইভ</span></span>
+      <%# session236 — রিফ্রেশ-এখন (r-কী-সমতুল্য; ফেচ-চলাকালে স্পিন) + অটো-হালনাগাদ-বিরতি (p-কী; localStorage স্মরণ) %>
+      <button type="button" class="btn btn-sm" id="scRefreshBtn" title="এখনই হালনাগাদ আনুন (r)" aria-label="রিফ্রেশ-এখন — নতুন অভিযোগ-গণনা তৎক্ষণাৎ আনুন"><i class="fas fa-rotate-right" aria-hidden="true"></i> রিফ্রেশ</button>
+      <button type="button" class="btn btn-sm" id="scPauseBtn" aria-pressed="false" title="অটো-হালনাগাদ বিরত/চালু (p)" aria-label="অটো-হালনাগাদ বিরতি টগল — পোল ও SSE-স্বয়ংক্রিয়-রিলোড বন্ধ-চালু"><i class="fas fa-pause" aria-hidden="true"></i> বিরতি</button>
       <%# session232 — কমপ্যাক্ট-মোড টগল (d-কী-সমতুল্য; aria-pressed স্টেট-স্টাইল) %>
       <button type="button" class="btn btn-sm" id="scCompactBtn" aria-pressed="false" title="ঘনত্ব কমান/বাড়ান (d)" aria-label="কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব কমান"><i class="fas fa-table-columns" aria-hidden="true"></i> কমপ্যাক্ট</button>
       <button type="button" class="btn btn-sm" id="scHelpBtn" title="কীবোর্ড শর্টকাট দেখুন" aria-label="কীবোর্ড শর্টকাট সহায়িকা খুলুন"><i class="fas fa-keyboard"></i> শর্টকাট <kbd class="sc-kbd" style="margin-left:2px">?</kbd></button>
@@ -479,6 +490,8 @@
     <div class="sc-help-row"><span>কার্সর-কার্ড নির্বাচন/বাদ — বাল্ক-স্ট্যাটাস (Esc-এ নির্বাচন-পরিষ্কার)</span><span class="keys"><kbd class="sc-kbd">x</kbd><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>শেষ স্ট্যাটাস-বদল আন্ডু (বাল্ক-গ্রুপ-সহ; লেখা-বক্সে নেটিভ-আন্ডু)</span><span class="keys"><kbd class="sc-kbd">Ctrl</kbd><kbd class="sc-kbd">Z</kbd></span></div>
     <div class="sc-help-row"><span>কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">d</kbd></span></div>
+    <div class="sc-help-row"><span>রিফ্রেশ-এখন — গণনা তৎক্ষণাৎ আনুন (বিরতি-অবস্থায়-ও চলে)</span><span class="keys"><kbd class="sc-kbd">r</kbd></span></div>
+    <div class="sc-help-row"><span>অটো-হালনাগাদ বিরতি/চালু — পোল+SSE-স্বয়ংক্রিয়-রিলোড (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">p</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে হোভার — দিনভিত্তিক-গণনা টুলটিপ</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
@@ -532,9 +545,10 @@
   var lastDeleted = null; // আনডু-উইন্ডো (কার্ড-প্রতি শেষ মুছে-ফেলা জবাব)
 
   // ── session228 — অসংরক্ষিত-জবাব সুরক্ষা (dirty-guard: লেখা-বদলে অটু-রিফ্রেশ/বন্ধ-আটকায়) ──
-  var dirty = false;
-  function markDirty() { dirty = true; window.__scQA = { dirty: true }; }
-  function clearDirty() { dirty = false; window.__scQA = { dirty: false }; }
+  var dirty = false, dirtyWarned = false;
+  window.__scQA = { dirty: false, paused: false, refreshing: false }; // session236 — ফিল্ড-স্টাইল (রিফ্রেশ/বিরতি-অবস্থা-একই-অবজেক্টে)
+  function markDirty() { dirty = true; window.__scQA.dirty = true; }
+  function clearDirty() { dirty = false; dirtyWarned = false; window.__scQA.dirty = false; }
   clearDirty();
   document.addEventListener('input', function (e) {
     if (e.target.closest && e.target.closest('.sc-note-box, [data-heditbox]')) markDirty();
@@ -804,34 +818,76 @@
   var reloading = false;
   function maybeReload(reason) {
     if (reloading || document.hidden) return;
+    if (dirty) { // session236 — s228-চুক্তি-পুনঃস্থাপন: অসংরক্ষিত-লেখা থাকলে স্বয়ংক্রিয়-রিলোড আটকায় (প্রতি-পর্বে এক-টোস্ট)
+      if (!dirtyWarned) { dirtyWarned = true; toast('অসংরক্ষিত লেখা আছে — স্বয়ংক্রিয়-রিফ্রেশ পিছিয়েছে', true); }
+      return;
+    }
     reloading = true;
     toast((reason || 'হালনাগাদ') + ' — রিফ্রেশ হচ্ছে…');
     setTimeout(function () { reloadSoon(0); }, 900);
   }
-  function pollCounts() {
-    if (document.hidden || reloading) return;
-    fetch('/admin/support-center/data' + location.search, { credentials: 'same-origin' })
+  var paused = false, refreshing = false, liveUp = false;
+  try { paused = localStorage.getItem('sc-pause') === '1'; } catch (_) {}
+  function pollCounts(force) { // session236 — Promise-ফেরত + force (রিফ্রেশ-এখন: বিরতি-অবস্থায়-ও চলে)
+    if (document.hidden || reloading) return Promise.resolve(0);
+    if (!force && paused) return Promise.resolve(0);
+    return fetch('/admin/support-center/data' + location.search, { credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (!d || !d.ok || reloading) return;
+        if (!d || !d.ok || reloading) return 0;
         ['PENDING', 'IN_PROGRESS', 'RESOLVED'].forEach(function (k) {
           if (d.counts[k] !== knownCounts[k]) maybeReload('নতুন অভিযোগ-কার্যক্রম');
         });
-      }).catch(function () {});
+        return 1;
+      }).catch(function () { return 0; });
+  }
+  function updateLiveText() { // session236 — বিরতি/লাইভ/পোলিং এক-উৎস-টেক্সট (SSE-হ্যান্ডলার-সমস্বর)
+    var t = document.getElementById('scLiveTxt'), el = document.getElementById('scLive');
+    if (!t || !el) return;
+    window.__scQA.paused = paused;
+    if (paused) { t.textContent = 'বিরতি'; el.classList.add('paused'); }
+    else { t.textContent = liveUp ? 'লাইভ' : 'পোলিং'; el.classList.remove('paused'); }
   }
   try {
     var es = new EventSource('/api/events');
     es.addEventListener('open', function () {
+      liveUp = true;
       document.getElementById('scLive').classList.add('on');
-      document.getElementById('scLiveTxt').textContent = 'লাইভ';
+      updateLiveText();
     });
-    es.addEventListener('support-changed', function () { maybeReload('সাপোর্ট-হালনাগাদ'); });
+    es.addEventListener('support-changed', function () { if (!paused) maybeReload('সাপোর্ট-হালনাগাদ'); }); // session236 — বিরতি-সম্মান
     es.addEventListener('error', function () {
+      liveUp = false;
       document.getElementById('scLive').classList.remove('on');
-      document.getElementById('scLiveTxt').textContent = 'পোলিং';
+      updateLiveText();
     });
   } catch (_) {}
   setInterval(pollCounts, 30000);
+
+  // ── session236 — রিফ্রেশ-নিয়ন্ত্রণ (রিফ্রেশ-এখন + অটো-হালনাগাদ-বিরতি; localStorage sc-pause স্মরণ; dirty-সম্মত) ──
+  var refreshBtn = document.getElementById('scRefreshBtn');
+  var pauseBtn = document.getElementById('scPauseBtn');
+  function refreshNow() {
+    if (refreshing || reloading) return;
+    if (dirty) { toast('অসংরক্ষিত লেখা আছে — আগে সংরক্ষণ/বাতিল করুন', true); return; }
+    refreshing = true; window.__scQA.refreshing = true;
+    if (refreshBtn) { refreshBtn.classList.add('sc-refresh-busy'); refreshBtn.setAttribute('aria-busy', 'true'); }
+    pollCounts(true).then(function () {
+      refreshing = false; window.__scQA.refreshing = false;
+      if (refreshBtn) { refreshBtn.classList.remove('sc-refresh-busy'); refreshBtn.removeAttribute('aria-busy'); }
+    });
+  }
+  function setPaused(v) {
+    paused = v;
+    try { if (v) localStorage.setItem('sc-pause', '1'); else localStorage.removeItem('sc-pause'); } catch (_) {}
+    if (pauseBtn) pauseBtn.setAttribute('aria-pressed', v ? 'true' : 'false');
+    updateLiveText();
+    toast(v ? 'অটো-হালনাগাদ বিরত — রিফ্রেশ-বাটন বা r-দিয়ে নিজে আনুন' : 'অটো-হালনাগাদ চালু');
+  }
+  if (refreshBtn) refreshBtn.addEventListener('click', refreshNow);
+  if (pauseBtn) pauseBtn.addEventListener('click', function () { setPaused(!paused); });
+  if (paused && pauseBtn) pauseBtn.setAttribute('aria-pressed', 'true');
+  updateLiveText();
 
   // ── session228 — কীবোর্ড-দক্ষতা (Next-সেশন212-চুক্তি-পোর্ট: j/k কার্সর + 1/2/3/0 ভিউ + / সার্চ + ? সহায়িকা + Esc-স্তর) ──
   var scHelp = document.getElementById('scHelp');
@@ -1019,6 +1075,8 @@
     if (e.key === 'x' || e.key === 'X') { e.preventDefault(); if (!bulkBusy) { if (cursor < 0) cursorMove(1); selToggle(cursor); } return; } // session230 — নির্বাচন-টগল
     if (e.key === '/') { e.preventDefault(); var si = document.querySelector('.sc-search input'); if (si) si.focus(); return; }
     if (e.key === 'd' || e.key === 'D') { e.preventDefault(); compactToggle(); return; } // session232 — কমপ্যাক্ট-টগল (typing-গার্ডের-পরে-ই-আসে)
+    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); refreshNow(); return; } // session236 — রিফ্রেশ-এখন (typing-গার্ডের-পরে)
+    if (e.key === 'p' || e.key === 'P') { e.preventDefault(); setPaused(!paused); return; } // session236 — অটো-হালনাগাদ-বিরতি
     // ── session229 — Shift+1/2/3 কার্সর-কার্ডে দ্রুত-স্ট্যাটাস (Next-session222-চুক্তি: e.code-লেআউট-স্বাধীন; সম-স্টেটাসে নীরব-স্কিপ) ──
     if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
       if (cursor < 0 || !cards[cursor]) { toast('কার্সর-কার্ড নেই — আগে j/k দিয়ে কার্ড বাছুন'); return; }

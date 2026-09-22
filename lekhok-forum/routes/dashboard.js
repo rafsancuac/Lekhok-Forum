@@ -1506,8 +1506,16 @@ router.get('/api/messages/unread', ensureAuth, async (req, res) => {
 // লগইন-গার্ডেড ইভেন্ট-স্ট্রিম। নোটিফিকেশন-বেল + মেসেঞ্জার পুশ-গন্তব্য।
 // হেডার নোট: 'no-transform' → compression মিডলওয়্যার এই রেসপন্স স্কিপ করে
 // (বাফারিং করলে ইভেন্ট আটকে যেত); X-Accel-Buffering → nginx-স্টাইল প্রক্সি।
-router.get('/api/events', ensureAuth, (req, res) => {
-  const uid = req.session.user.id;
+// session236 — অ্যাডমিন-সেশনও গ্রহণ (support-center admin-only; ensureAuth member-শুধু ছিল → EventSource 401 → লাইভ-ব্যাজ-মৃত)।
+// uid-namespaced 'admin:N' — নোটিফিকেশন-hub-এর member-uid-এর সাথে cross-table-আইডি-সংঘর্ষ-নিরাপদ; publishToAll সব-কী-তে-পৌঁছায়।
+router.get('/api/events', (req, res) => {
+  const uid = (req.session.user && req.session.user.id)
+    || (req.session.adminUser && ('admin:' + req.session.adminUser.id))
+    || null;
+  if (!uid) {
+    if (req.originalUrl.startsWith('/api/') || req.xhr) return res.status(401).json({ error: 'login' });
+    return res.redirect('/login?next=' + encodeURIComponent(req.originalUrl));
+  }
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
     'Cache-Control': 'no-cache, no-transform',
