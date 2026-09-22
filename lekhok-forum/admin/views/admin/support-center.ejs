@@ -160,6 +160,32 @@
       background:var(--ad-bg);border:1px solid var(--ad-line);border-bottom-width:2px;border-radius:6px;padding:2px 6px}
     .sc-help-close{margin-top:12px;width:100%;justify-content:center}
     @media (prefers-reduced-motion: reduce){ .sc-card{animation:none} .sc-empty-reset:hover{box-shadow:none} }
+    /* ── session230 — x-নির্বাচন + বাল্ক-স্ট্যাটাস (সব-রঙ var()-টোকেন; z-স্তর-চুক্তি: বাল্ক-টুলবার 80 > সহায়িকা 70; টোস্ট 1300 সর্বোচ্চ) ── */
+    .sc-sel{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--ad-line);background:var(--ad-card);color:transparent;
+      cursor:pointer;font-size:.62rem;flex:none;display:inline-flex;align-items:center;justify-content:center;margin-top:2px;
+      transition:background .15s,border-color .15s,color .15s}
+    .sc-sel:hover{border-color:var(--ad-accent-ring)}
+    .sc-sel.on{background:var(--ad-accent);border-color:var(--ad-accent);color:var(--lf-white)}
+    .sc-card.sc-selcard{border-color:var(--ad-accent);box-shadow:0 0 0 3px var(--ad-accent-soft)}
+    .sc-bulk{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:80;
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;
+      background:var(--ad-card);border:1px solid var(--ad-accent-ring);border-radius:999px;
+      padding:8px 12px;box-shadow:var(--ad-shadow-lg);max-width:94vw;animation:scBulkIn .25s ease}
+    .sc-bulk[hidden]{display:none}
+    @keyframes scBulkIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+    .sc-bulk-count{font-size:.8rem;font-weight:800;color:var(--ad-accent-ink);white-space:nowrap}
+    .sc-bulk-sep{width:1px;height:18px;background:var(--ad-line)}
+    .sc-bulk-lbl{font-size:.72rem;font-weight:700;color:var(--ad-muted);white-space:nowrap}
+    .sc-bulk-btn{border:1px solid var(--ad-line);background:var(--ad-bg);color:var(--ad-ink-2);border-radius:999px;
+      padding:5px 12px;font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .sc-bulk-btn:hover{border-color:var(--ad-accent-ring);color:var(--ad-accent-ink)}
+    .sc-bulk-btn.sc-bulk-res{background:var(--lf-ok-soft);border-color:var(--lf-ok-deep);color:var(--lf-ok-deep)}
+    .sc-bulk-btn:disabled{opacity:.55;cursor:progress}
+    .sc-bulk-x{border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-muted);border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:.72rem;flex:none}
+    .sc-bulk-x:hover{color:var(--lf-danger-deep);border-color:var(--lf-danger-soft-3)}
+    .sc-bulk button:focus-visible{outline:2px solid var(--ad-accent);outline-offset:2px}
+    @media (max-width:640px){ .sc-bulk{gap:6px;padding:7px 10px;border-radius:var(--ad-radius);bottom:12px} }
+    @media (prefers-reduced-motion: reduce){ .sc-bulk{animation:none} .sc-sel{transition:none} }
   </style>
 </head>
 <body>
@@ -288,6 +314,8 @@
   <% reports.forEach(r => { %>
   <div class="sc-card <%= r.aging.cls %>" data-id="<%= r.id %>" data-status="<%= r.status %>">
     <div class="sc-card-head">
+      <%# session230 — x-নির্বাচন বাটন (ক্লিক/x-কী; aria-pressed) %>
+      <button type="button" class="sc-sel" data-sel aria-pressed="false" title="নির্বাচন (x)" aria-label="অভিযোগ নির্বাচন করুন"><i class="fas fa-check" aria-hidden="true"></i></button>
       <img class="sc-av" src="<%= r.sender_avatar || '/avatar/' + r.sender_id %>" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
       <div class="sc-who">
         <b><%= r.sender_name || 'অজানা ব্যবহারকারী' %></b>
@@ -374,11 +402,26 @@
     <div class="sc-help-row"><span>সব-অভিযোগ ভিউ</span><span class="keys"><kbd class="sc-kbd">0</kbd></span></div>
     <div class="sc-help-row"><span>সার্চ-বক্সে ফোকাস</span><span class="keys"><kbd class="sc-kbd">/</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ডে দ্রুত-স্ট্যাটাস সেট (নতুন / চলমান / সমাধান)</span><span class="keys"><kbd class="sc-kbd">Shift</kbd><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
+    <div class="sc-help-row"><span>কার্সর-কার্ড নির্বাচন/বাদ — বাল্ক-স্ট্যাটাস (Esc-এ নির্বাচন-পরিষ্কার)</span><span class="keys"><kbd class="sc-kbd">x</kbd><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>লেখা-বদলে রিফ্রেশ-আটকে-রাখা (অসংরক্ষিত-জবাব-সুরক্ষা)</span><span class="keys"><kbd class="sc-kbd">স্বয়ংক্রিয়</kbd></span></div>
     <button type="button" class="btn btn-primary btn-sm sc-help-close" id="scHelpClose">বন্ধ করুন</button>
   </div>
+</div>
+
+<%# session230 — বাল্ক-স্ট্যাটাস টুলবার (x-নির্বাচন; z-স্তর-চুক্তি: বাল্ক-টুলবার 80 > সহায়িকা 70; টোস্ট সর্বোচ্চ) %>
+<div class="sc-bulk" id="scBulk" hidden role="toolbar" aria-label="বাল্ক-স্ট্যাটাস টুলবার">
+  <span class="sc-bulk-count" id="scBulkCount">০ টি নির্বাচিত</span>
+  <span class="sc-bulk-sep" aria-hidden="true"></span>
+  <button type="button" class="sc-bulk-btn" id="scBulkAll">সব-নির্বাচন</button>
+  <button type="button" class="sc-bulk-btn" id="scBulkNone">পরিষ্কার</button>
+  <span class="sc-bulk-sep" aria-hidden="true"></span>
+  <span class="sc-bulk-lbl">স্ট্যাটাস →</span>
+  <button type="button" class="sc-bulk-btn sc-bulk-go" data-bulk-st="PENDING"><i class="fas fa-inbox" aria-hidden="true"></i> নতুন</button>
+  <button type="button" class="sc-bulk-btn sc-bulk-go" data-bulk-st="IN_PROGRESS"><i class="fas fa-spinner" aria-hidden="true"></i> চলমান</button>
+  <button type="button" class="sc-bulk-btn sc-bulk-go sc-bulk-res" data-bulk-st="RESOLVED"><i class="fas fa-circle-check" aria-hidden="true"></i> সমাধান</button>
+  <button type="button" class="sc-bulk-x" id="scBulkClose" aria-label="নির্বাচন পরিষ্কার করুন"><i class="fas fa-xmark" aria-hidden="true"></i></button>
 </div>
 
 <div id="scToast" role="status" aria-live="polite"></div>
@@ -608,6 +651,63 @@
     if (sp.get('range')) parts.push('range=' + sp.get('range'));
     location.href = '/admin/support-center?' + parts.filter(Boolean).join('&');
   }
+  // ── session230 — x-নির্বাচন + বাল্ক-স্ট্যাটাস (Next-session206/212-চুক্তি-পোর্ট; sequential-PUT; সম-স্টেটাস নীরব-স্কিপ session229-চুক্তি; toast-ত্রুটি true-প্যারাম) ──
+  var bulkEl = document.getElementById('scBulk');
+  var bulkCount = document.getElementById('scBulkCount');
+  var sel = new Set();
+  var bulkBusy = false;
+  function bnJs(n) { var d = '০১২৩৪৫৬৭৮৯'; return String(n).replace(/[0-9]/g, function (c) { return d[+c]; }); }
+  function selSync() {
+    cards.forEach(function (c, i) {
+      var on = sel.has(i);
+      var b = c.querySelector('[data-sel]');
+      if (b) { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+      c.classList.toggle('sc-selcard', on);
+    });
+    bulkEl.hidden = sel.size === 0;
+    bulkCount.textContent = bnJs(sel.size) + ' টি নির্বাচিত';
+  }
+  function selToggle(i) { if (sel.has(i)) sel.delete(i); else sel.add(i); selSync(); }
+  function bulkClear() { sel.clear(); selSync(); }
+  document.querySelectorAll('[data-sel]').forEach(function (b) {
+    b.addEventListener('click', function () { if (!bulkBusy) selToggle(cards.indexOf(b.closest('.sc-card'))); });
+  });
+  document.getElementById('scBulkAll').addEventListener('click', function () {
+    if (bulkBusy) return;
+    cards.forEach(function (_, i) { sel.add(i); });
+    selSync();
+  });
+  document.getElementById('scBulkNone').addEventListener('click', function () { if (!bulkBusy) bulkClear(); });
+  document.getElementById('scBulkClose').addEventListener('click', function () { if (!bulkBusy) bulkClear(); });
+  document.querySelectorAll('[data-bulk-st]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (bulkBusy || !sel.size) return;
+      var st = b.getAttribute('data-bulk-st');
+      var targets = cards.filter(function (_, i) { return sel.has(i); });
+      var lbl = st === 'PENDING' ? 'নতুন' : st === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান';
+      bulkBusy = true;
+      bulkEl.querySelectorAll('button').forEach(function (x) { x.disabled = true; });
+      toast('বাল্ক হালনাগাদ চলছে…');
+      var done = 0, okN = 0, skipN = 0, failN = 0;
+      function finish() {
+        bulkBusy = false;
+        bulkEl.querySelectorAll('button').forEach(function (x) { x.disabled = false; });
+        if (failN) { toast(bnJs(okN) + ' হালনাগাদ, ' + bnJs(failN) + ' ব্যর্থ — নির্বাচন অক্ষত আছে', true); return; }
+        if (!okN) { toast('কোনো পরিবর্তন নেই'); return; }
+        toast(bnJs(okN) + ' টি → ' + lbl + ' হালনাগাদ ✓');
+        reloadSoon(750);
+      }
+      (function next() {
+        if (done >= targets.length) { finish(); return; }
+        var c = targets[done++];
+        if (c.getAttribute('data-status') === st) { skipN++; next(); return; } // সম-স্টেটাস = নীরব-স্কিপ (PUT/ইতিহাস/নোটিফিকেশন-শূন্য)
+        api('/admin/support-center/' + c.getAttribute('data-id'), 'PUT',
+          { status: st, adminNote: c.querySelector('[data-sc-note]').value.trim() }).then(function (res) {
+          if (res.ok && !res.unchanged) okN++; else if (res.ok) skipN++; else failN++;
+        }).catch(function () { failN++; }).then(next);
+      })();
+    });
+  });
   document.addEventListener('keydown', function (e) {
     var t = e.target;
     var typing = t && ((t.closest && t.closest('input, textarea, select')) || t.isContentEditable);
@@ -615,6 +715,7 @@
     if (e.key === 'Escape' || e.key === 'Esc') {
       if (scHelp.classList.contains('open')) { helpClose(); return; }
       if (typing) return;
+      if (sel.size) { bulkClear(); return; } // session230 — Esc-স্তর: নির্বাচন → কার্সর
       if (cursor >= 0) { cursorClear(); return; }
       return;
     }
@@ -626,6 +727,7 @@
     }
     if (e.key === 'j' || e.key === 'J') { e.preventDefault(); cursorMove(1); return; }
     if (e.key === 'k' || e.key === 'K') { e.preventDefault(); cursorMove(-1); return; }
+    if (e.key === 'x' || e.key === 'X') { e.preventDefault(); if (!bulkBusy) { if (cursor < 0) cursorMove(1); selToggle(cursor); } return; } // session230 — নির্বাচন-টগল
     if (e.key === '/') { e.preventDefault(); var si = document.querySelector('.sc-search input'); if (si) si.focus(); return; }
     // ── session229 — Shift+1/2/3 কার্সর-কার্ডে দ্রুত-স্ট্যাটাস (Next-session222-চুক্তি: e.code-লেআউট-স্বাধীন; সম-স্টেটাসে নীরব-স্কিপ) ──
     if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
