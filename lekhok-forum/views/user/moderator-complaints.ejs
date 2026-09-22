@@ -21,10 +21,21 @@
     <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড অভিযোগগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
   </form>
 
+  <%# ── session254: তাৎক্ষণিক-ফিল্টার স্ট্রিপ (mr253/au251-চুক্তি-মিরর; বাল্ক-বার-অক্ষুণ্ণ) ── %>
+  <div class="mc254-wrap">
+    <div class="mc254-field">
+      <input type="text" id="mc254-filter" class="mc254-input" placeholder="তাৎক্ষণিক ফিল্টার — বিষয়, নাম, ইউজারনেম, বিবরণ..." aria-label="তাৎক্ষণিক ফিল্টার" autocomplete="off">
+      <kbd class="mc254-kbd" aria-hidden="true">f</kbd>
+    </div>
+    <span id="mc254-count" class="mc254-count" title="দৃশ্যমান অভিযোগ"><%= items.length %></span>
+    <button type="button" id="mc254-clear" class="mc254-clear" hidden aria-label="ফিল্টার পরিষ্কার"><i class="fas fa-times"></i></button>
+  </div>
+
     <p style="color:#666;">এই তালিকা শুধু এডমিন ও অনুমোদিত মডারেটররাই দেখতে পান।</p>
     <% if (items.length === 0) { %><p style="color:#999;">কোনো অভিযোগ নেই।</p><% } %>
+    <%# session254: data-kw = ফিল্টার-সূচক (বিষয় + স্ট্যাটাস + নাম + ইউজারনেম + বিবরণ + নোট — ছোট-হাতের) %>
     <% items.forEach(c => { %>
-      <div class="complaint-card">
+      <div class="complaint-card" data-mc-row data-kw="<%= ((c.subject + ' ' + c.status + ' ' + (c.full_name || '') + ' @' + (c.username || '') + ' ' + (c.body || '') + ' ' + (c.admin_notes || '')).toLowerCase()) %>">
         <input type="checkbox" name="bulk_ids" value="<%= c.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-bottom:8px;">
         <div style="display:flex; justify-content:space-between;">
           <strong><%= c.subject %></strong>
@@ -45,7 +56,87 @@
         </form>
       </div>
     <% }) %>
+
+    <%# session254: তাৎক্ষণিক-ফিল্টার-শূন্য-অবস্থা (ক্লায়েন্ট-সাইডেই টগল হয়) %>
+    <div class="mc254-empty" data-mc-empty hidden>
+      <i class="fas fa-filter-circle-xmark"></i>
+      <h3>এই ফিল্টারে কোনো অভিযোগ মেলেনি</h3>
+      <p>ফিল্টার-কীওয়ার্ড বদলে আবার চেষ্টা করুন — বা Escape দিয়ে পরিষ্কার করুন।</p>
+    </div>
   </div>
+
+<style>
+/* ── session254 — অভিযোগ-তালিকা তাৎক্ষণিক-ফিল্টার (টোকেন-শুধু; mr253-প্যাটার্ন-মিরর; guard-হেক্স-র্যাচেট-নিরাপদ) ── */
+.mc254-wrap { display: flex; align-items: center; gap: 10px; margin: 2px 0 14px; }
+.mc254-field { position: relative; flex: 0 1 420px; }
+.mc254-input { width: 100%; padding: 10px 52px 10px 13px; font-family: inherit; font-size: .95rem; color: var(--lf-text-primary); background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border-strong); border-radius: 8px; transition: border-color .15s ease, box-shadow .15s ease; }
+.mc254-input::placeholder { color: var(--lf-text-tertiary); }
+.mc254-input:focus { outline: none; border-color: var(--lf-brandgreen); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lf-brandgreen) 14%, transparent); }
+.mc254-kbd { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); pointer-events: none; font: inherit; font-size: 10px; font-weight: 700; line-height: 1; color: var(--lf-text-tertiary); background: var(--lf-ui-canvas); border: 1px dashed var(--lf-ui-border-strong); border-radius: 4px; padding: 2px 6px; transition: opacity .15s ease; }
+.mc254-field:focus-within .mc254-kbd { opacity: 0; }
+.mc254-count { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; padding: 6px 10px; border-radius: 999px; background: var(--lf-ui-canvas); border: 1px solid var(--lf-ui-border); color: var(--lf-text-secondary); font-weight: 700; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.mc254-count.mc254-dim { color: var(--lf-text-tertiary); }
+.mc254-clear { border: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); color: var(--lf-text-tertiary); border-radius: 5px; padding: 8px 11px; cursor: pointer; transition: color .15s ease, border-color .15s ease; }
+.mc254-clear:hover { color: var(--lf-green-ink); border-color: var(--lf-brandgreen); }
+.mc254-clear:active { transform: scale(.96); }
+.mc254-empty { text-align: center; padding: 34px 16px; border: 1px dashed var(--lf-ui-border-strong); border-radius: 10px; background: var(--lf-ui-canvas); color: var(--lf-text-secondary); margin: 10px 0; }
+.mc254-empty i { font-size: 1.7rem; color: var(--lf-text-tertiary); margin-bottom: 8px; display: inline-block; }
+.mc254-empty h3 { margin: 4px 0 6px; font-size: 1.05rem; color: var(--lf-text-primary); }
+.mc254-empty p { margin: 0; font-size: .9rem; color: var(--lf-text-tertiary); }
+/* hidden-গার্ড — কার্ড-সারফেসে (admin.css .complaint-card) filter-hide নির্ভরযোগ্য */
+.complaint-card[data-mc-row][hidden] { display: none !important; }
+@media (max-width: 640px) { .mc254-field { flex-basis: 100%; } .mc254-input { padding-right: 13px; } .mc254-kbd { display: none; } }
+@media (prefers-reduced-motion: reduce) { .mc254-input, .mc254-kbd { transition: none; } .mc254-clear:active { transform: none; } }
+</style>
+
+<script>
+  /* ── session254: তাৎক্ষণিক-ফিল্টার (mr253-চুক্তি-মিরর — field-গার্ড keydown; Escape-ক্লিয়ার+ব্লার; __mcQA হুক) ── */
+  (function () {
+    'use strict';
+    var input = document.getElementById('mc254-filter');
+    var count = document.getElementById('mc254-count');
+    var clearBtn = document.getElementById('mc254-clear');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('[data-mc-row]'));
+    var emptyBox = document.querySelector('[data-mc-empty]');
+    var total = cards.length;
+    function apply254() {
+      var v = (input.value || '').trim().toLowerCase();
+      var vis = 0;
+      cards.forEach(function (c) {
+        var hit = !v || (c.getAttribute('data-kw') || '').indexOf(v) >= 0;
+        c.hidden = !hit;
+        if (hit) vis++;
+      });
+      count.textContent = String(vis);
+      count.classList.toggle('mc254-dim', !!v && vis !== total);
+      if (emptyBox) emptyBox.hidden = vis !== 0;
+      if (clearBtn) clearBtn.hidden = !v;
+    }
+    function clear254() { input.value = ''; apply254(); }
+    if (input) {
+      input.addEventListener('input', apply254);
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { clear254(); input.blur(); }
+      });
+    }
+    if (clearBtn) clearBtn.addEventListener('click', function () { clear254(); input.focus(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'f' || e.ctrlKey || e.metaKey || e.altKey) return;
+      var t = e.target && e.target.tagName;
+      if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+      e.preventDefault();
+      input.focus();
+    });
+    /* session254 QA-হুক (__mcQA — সারফেস-নেমস্পেস-রীতি; ক্রমের-শেষ) */
+    window.__mcQA = {
+      total: function () { return total; },
+      count: function () { return document.querySelectorAll('[data-mc-row]:not([hidden])').length; },
+      apply: apply254,
+      clear: function () { clear254(); }
+    };
+  })();
+</script>
+
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
