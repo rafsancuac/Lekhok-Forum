@@ -574,3 +574,31 @@ section[aria-label="স্টোরি"]:hover .lf-story-arrow { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .lf-anim-toastbar { animation: none; opacity: 0.35; }
 }
+
+/* session220 — দীর্ঘ-অভিযোগ-লেখা ফোল্ড (৪-লাইন clamp; "আরও দেখুন"-টগলে বিস্তার) */
+.lf-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* session220 — ফিড-অদেখা-ব্যাজ পালস (অ্যাম্বার রিং; prefers-reduced-motion-সম্মানী) */
+.lf-badge-pulse {
+  animation: lf-badge-pulse 1.6s ease-in-out infinite;
+}
+@keyframes lf-badge-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lf-badge-pulse {
+    animation: none;
+  }
+}

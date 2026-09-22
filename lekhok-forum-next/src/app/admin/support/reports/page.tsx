@@ -59,6 +59,13 @@
  *     সারসংক্ষেপ (গণনা/স্টেল/২৪ঘ/গড়-সমাধান-সময়/মিডিয়া/শীর্ষ-প্রেরক/সমাধান-হার) — পেস্ট-উপযোগী প্লেইন-টেক্সট
  *   • কপি = clipboard-race-প্যাটার্ন (s218-গোটচা); a11y: dialog/aria-modal + ফোকাস-ফেরত; help-টায়ার z-[70]/z-[71]
  *   • lib/support-history handoverDigest() = এক-উৎস-সত্য (now-ইনজেকশন → ডিটারমিনিস্টিক ইউনিট-টেস্টযোগ্য)
+ * session220 — অপারেটর-ইনসাইট প্যাক:
+ *   • লাইভ অ্যাক্টিভিটি-ফিড (bell + অদেখা-ব্যাজ + f-শর্টকাট + প্যালেট-কমান্ড): load()-ডিফ-উৎস — নতুন-অভিযোগ /
+ *     স্টেটাস-বদল / নোট-হালনাগাদ এন্ট্রি জমা হয় (localStorage lf-desk-feed, সর্বোচ্চ ৩০, ৪৮ঘ-বয়স-প্রুন);
+ *     এন্ট্রি-ক্লিকে রিপোর্টে জাম্প (ট্যাব-অটু-মিল + স্ক্রল + হাইলাইট); Esc-চেইনে feed = help-পরে, cursor-আগে
+ *   • দীর্ঘ-অভিযোগ-লেখা ফোল্ড (৪-লাইন clamp + "আরও দেখুন" টগল; lf-clamp-4)
+ *   • স্টাইল: গ্রেডিয়েন্ট-হেডার ফিড-প্যানেল (sticky-বারে এনকোর), এন্ট্রি-স্টেজার lf-anim-up,
+ *     অদেখা-ব্যাজ lf-badge-pulse (prefers-reduced-motion-সম্মানী)
 */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -66,6 +73,7 @@ import Link from 'next/link'
 import {
   AlertTriangle,
   ArrowDownWideNarrow,
+  Bell,
   Bookmark,
   CalendarDays,
   Check,
@@ -106,6 +114,7 @@ const SHORTCUTS: { keys: string[]; desc: string }[] = [
   { keys: ['k'], desc: 'আগের অভিযোগে যান' },
   { keys: ['x'], desc: 'কার্সর-কার্ড নির্বাচন টগল (বাল্ক-টুলবার)' },
   { keys: ['s'], desc: 'কার্সর-কার্ড "পরে দেখুন" টগল' },
+  { keys: ['f'], desc: 'লাইভ অ্যাক্টিভিটি ফিড খোলা/বন্ধ' },
   { keys: ['১', '২', '৩'], desc: 'ট্যাব: নতুন / চলমান / সমাধান' },
   { keys: ['/'], desc: 'অনুসন্ধান-বক্সে ফোকাস' },
   { keys: ['?'], desc: 'এই সহায়িকা খোলা/বন্ধ' },
@@ -161,6 +170,60 @@ function parseHistory(raw: string | null | undefined): HistoryEntry[] {
   } catch {
     return []
   }
+}
+
+/** session220 — লাইভ অ্যাক্টিভিটি-ফিড এন্ট্রি (load()-ডিফ-উৎস; localStorage lf-desk-feed স্থায়িত্ব);
+ *  at = epoch-ms; rid = সংশ্লিষ্ট-রিপোর্ট (ক্লিকে-জাম্প); from/to = স্টেটাস-বদলের-প্রান্ত */
+interface FeedEntry {
+  id: string
+  at: number
+  kind: 'new' | 'status' | 'note'
+  sender: string
+  rid: string
+  from?: Status
+  to?: Status
+}
+
+/** ফিড-ক্যাপ (নতুন-আগে রাখা হয়) + পুরাতন-এন্ট্রি-বয়সসীমা (৪৮ ঘণ্টা অতবাহী প্রুন) */
+const FEED_CAP = 30
+const FEED_MAX_AGE_MS = 48 * 3600 * 1000
+
+function feedLoad(): FeedEntry[] {
+  try {
+    const raw = localStorage.getItem('lf-desk-feed')
+    if (!raw) return []
+    const arr = JSON.parse(raw)
+    if (!Array.isArray(arr)) return []
+    const cutoff = Date.now() - FEED_MAX_AGE_MS
+    return arr
+      .filter((e) => e && typeof e.id === 'string' && typeof e.at === 'number' && e.at >= cutoff)
+      .slice(0, FEED_CAP) as FeedEntry[]
+  } catch {
+    return []
+  }
+}
+
+function feedSave(list: FeedEntry[]) {
+  try {
+    localStorage.setItem('lf-desk-feed', JSON.stringify(list.slice(0, FEED_CAP)))
+  } catch {
+    /* নীরব */
+  }
+}
+
+/** ফিড-এন্ট্রির মানব-পঠন লেখা (STATUS_LABEL ঘুরিয়ে); ডট-রঙ আলাদা-ম্যাপে */
+function feedEntryText(ev: FeedEntry): string {
+  if (ev.kind === 'new') return 'নতুন অভিযোগ পাঠিয়েছেন'
+  if (ev.kind === 'note') return 'অ্যাডমিন-নোট হালনাগাদ হয়েছে'
+  return `স্টেটাস: ${STATUS_LABEL[ev.from ?? 'PENDING']} → ${STATUS_LABEL[ev.to ?? 'PENDING']}`
+}
+
+function feedDotCls(ev: FeedEntry): string {
+  if (ev.kind === 'new') return 'bg-amber-500'
+  if (ev.kind === 'note') return 'bg-[#006A4E]'
+  if (ev.to === 'RESOLVED') return 'bg-emerald-500'
+  if (ev.to === 'IN_PROGRESS') return 'bg-sky-500'
+  return 'bg-amber-500'
 }
 
 const TABS: { key: Status; label: string; cls: string }[] = [
@@ -611,6 +674,22 @@ function SupportReportsPanel() {
   const [laterOnly, setLaterOnly] = useState(false)
   /** session217 — কার্ড-ঘনত্ব (localStorage: lf-desk-density; compact = লম্বা-তালিকায় বেশি-দেখা) */
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')
+
+  /** session220 — লাইভ অ্যাক্টিভিটি-ফিড: এন্ট্রি-তালিকা (নতুন-আগে) + প্যানেল-ওপেন + অদেখা-গণক;
+   *  refs = load()-ক্লোজার-নির্ভরতা-শূন্য (soundOnRef-প্যাটার্ন) + বাইরে-ক্লিক/ফোকাস-হাতল */
+  const [feed, setFeed] = useState<FeedEntry[]>([])
+  const [feedOpen, setFeedOpen] = useState(false)
+  const [feedUnseen, setFeedUnseen] = useState(0)
+  const prevStatusRef = React.useRef<Map<string, Status> | null>(null)
+  const prevNoteRef = React.useRef<Map<string, string | null> | null>(null)
+  const feedOpenRef = React.useRef(false)
+  const feedUnseenRef = React.useRef(0)
+  const feedPanelRef = React.useRef<HTMLDivElement>(null)
+  const feedBtnRef = React.useRef<HTMLButtonElement>(null)
+
+  /** session220 — দীর্ঘ-অভিযোগ-লেখা ফোল্ড-স্টেট ({rid: বিস্তৃত}) — সেশন-স্কোপড (স্থায়িত্ব-নেই) */
+  const [msgOpen, setMsgOpen] = useState<Record<string, boolean>>({})
+
   /** session218 — কমান্ড-প্যালেট (Ctrl+K): অপারেটর-অ্যাকশন-লঞ্চার (সব-ক্লায়েন্ট-সাইড) */
   const [cmdOpen, setCmdOpen] = useState(false)
   const [cmdQuery, setCmdQuery] = useState('')
@@ -683,6 +762,88 @@ function SupportReportsPanel() {
   const presetActive = (p: DeskPreset) =>
     tab === p.tab && mediaFilter === p.media && dateRange === p.date && query === p.q && sortAsc === p.sortAsc
 
+  /** session220 — ফিড-এন্ট্রি-যোগ (নতুন-আগে, ক্যাপ+স্থায়িত্ব); প্যানেল-বন্ধ-অবস্থায় অদেখা-গণক-বৃদ্ধি */
+  const appendFeed = useCallback((events: FeedEntry[]) => {
+    if (events.length === 0) return
+    setFeed((prev) => {
+      const next = [...[...events].reverse(), ...prev].slice(0, FEED_CAP)
+      feedSave(next)
+      return next
+    })
+    if (!feedOpenRef.current) {
+      feedUnseenRef.current += events.length
+      setFeedUnseen(feedUnseenRef.current)
+    }
+  }, [])
+
+  /** session220 — মাউন্টে স্থায়ী-ফিড-হাইড্রেশন (৪৮ঘ-প্রুন feedLoad-এই) + ref-সিঙ্ক */
+  useEffect(() => {
+    setFeed(feedLoad())
+  }, [])
+  useEffect(() => {
+    feedOpenRef.current = feedOpen
+  }, [feedOpen])
+
+  const toggleFeed = useCallback(() => {
+    const next = !feedOpenRef.current
+    feedOpenRef.current = next
+    setFeedOpen(next)
+    if (next) {
+      feedUnseenRef.current = 0
+      setFeedUnseen(0)
+    }
+  }, [])
+  const closeFeed = useCallback(() => {
+    feedOpenRef.current = false
+    setFeedOpen(false)
+  }, [])
+
+  /** session220 — বাইরে-ক্লিকে ফিড-বন্ধ (নন-মোডাল popover চুক্তি — glance-জাতীয়) */
+  useEffect(() => {
+    if (!feedOpen) return
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (feedPanelRef.current?.contains(t) || feedBtnRef.current?.contains(t)) return
+      closeFeed()
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [feedOpen, closeFeed])
+
+  /** session220 — ফিড-এন্ট্রি-ক্লিকে রিপোর্টে জাম্প: ট্যাব-অটু-মিল (চলতি-স্টেটাস) → স্ক্রল-সেন্টার →
+   *  অ্যাম্বার-হাইলাইট (lf-anim-hl ৩.২সে — ডিপ-লিংক-চুক্তি-অনুরূপ); ফিল্টার-অস্পৃষ্ট (শুধু-ট্যাব) */
+  const jumpToReport = useCallback(
+    (rid: string) => {
+      const r = reports.find((x) => x.id === rid)
+      if (!r) return
+      setTab(r.status)
+      closeFeed()
+      setTimeout(() => {
+        try {
+          document
+            .querySelector(`[data-report="${rid}"]`)
+            ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+          setHlId(rid)
+          setTimeout(() => setHlId((cur) => (cur === rid ? null : cur)), 3400)
+        } catch {
+          /* নীরব */
+        }
+      }, 150)
+    },
+    [reports, closeFeed],
+  )
+
+  const clearFeed = useCallback(() => {
+    setFeed([])
+    try {
+      localStorage.removeItem('lf-desk-feed')
+    } catch {
+      /* নীরব */
+    }
+    feedUnseenRef.current = 0
+    setFeedUnseen(0)
+  }, [])
+
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/support-reports')
@@ -692,11 +853,13 @@ function SupportReportsPanel() {
         setCounts(data.counts || counts)
         // session213 — লাইভ-সচেতনতা: পোলে PENDING-আইডি-ডিফ → নতুন-অভিযোগ-টোস্ট (প্রথম-লোডে নয়)
         const known = knownPendingRef.current
-        const pendingIds = (data.reports || [])
+        const list: Report[] = data.reports || []
+        const pendingIds = list
           .filter((r: Report) => r.status === 'PENDING')
           .map((r: Report) => r.id)
+        let fresh: string[] = []
         if (known) {
-          const fresh = pendingIds.filter((id: string) => !known.has(id))
+          fresh = pendingIds.filter((id: string) => !known.has(id))
           if (fresh.length > 0) {
             flash(`${bn(fresh.length)}টি নতুন অভিযোগ এসেছে`)
             // session214 — শব্দ-সংকেত একই fresh>0-শর্তে (session213 টোস্ট-চুক্তি অটুট)
@@ -704,13 +867,38 @@ function SupportReportsPanel() {
           }
         }
         knownPendingRef.current = new Set(pendingIds)
+        // session220 — ফিড-ডিফ: নতুন-অভিযোগ / স্টেটাস-বদল / নোট-হালনাগাদ → অ্যাক্টিভিটি-ফিডে
+        // (সব-লোড-পাথ এখান-দিয়েই-যায় — session213 পোল-চুক্তি অটুট; প্রথম-লোডে ডিফ-নেই)
+        const prevS = prevStatusRef.current
+        const prevN = prevNoteRef.current
+        if (prevS && prevN) {
+          const now = Date.now()
+          const events: FeedEntry[] = []
+          for (const r of list) {
+            const ps = prevS.get(r.id)
+            const pn = prevN.get(r.id)
+            if (ps && ps !== r.status) {
+              events.push({ id: `${r.id}-${now}-s`, at: now, kind: 'status', sender: r.senderName, rid: r.id, from: ps, to: r.status })
+            }
+            if (pn !== undefined && pn !== null && (r.adminNote ?? '') !== pn) {
+              events.push({ id: `${r.id}-${now}-n`, at: now, kind: 'note', sender: r.senderName, rid: r.id })
+            }
+          }
+          for (const id of fresh) {
+            const r = list.find((x) => x.id === id)
+            if (r) events.push({ id: `${id}-${now}-w`, at: now, kind: 'new', sender: r.senderName, rid: id })
+          }
+          appendFeed(events)
+        }
+        prevStatusRef.current = new Map(list.map((r: Report) => [r.id, r.status]))
+        prevNoteRef.current = new Map(list.map((r: Report) => [r.id, r.adminNote ?? null]))
       }
     } catch {
       /* পোল-নীরব */
     } finally {
       setLoading(false)
     }
-  }, [flash])
+  }, [flash, appendFeed])
 
   useEffect(() => {
     load()
@@ -1375,10 +1563,18 @@ function SupportReportsPanel() {
       void copyViewLink()
     })
     push('অ্যাকশন', 'handover-digest', 'শিফট-হস্তান্তর সারসংক্ষেপ দেখুন/কপি করুন', ClipboardList, () => openDigest(), ['Ctrl', 'Shift', 'H'])
+    push(
+      'অ্যাকশন',
+      'activity-feed',
+      feedOpen ? 'লাইভ অ্যাক্টিভিটি ফিড বন্ধ করুন' : 'লাইভ অ্যাক্টিভিটি ফিড খুলুন',
+      Bell,
+      () => toggleFeed(),
+      ['f'],
+    )
     push('অ্যাকশন', 'open-help', 'কীবোর্ড সহায়িকা দেখুন', Keyboard, () => setHelpOpen(true), ['?'])
     const q = cmdQuery.trim().toLowerCase()
     return q ? items.filter((c) => `${c.label} ${c.group}`.toLowerCase().includes(q)) : items
-  }, [cmdQuery, counts, presets, laterOnly, sortAsc, soundOn, density, resetFilters, copyViewLink, toggleSound, toggleDensity, openDigest])
+  }, [cmdQuery, counts, presets, laterOnly, sortAsc, soundOn, density, feedOpen, resetFilters, copyViewLink, toggleSound, toggleDensity, openDigest, toggleFeed])
   const runCmd = useCallback((c: CmdItem) => {
     setCmdOpen(false)
     c.run()
@@ -1425,6 +1621,12 @@ function SupportReportsPanel() {
         if (helpOpen) {
           e.preventDefault()
           setHelpOpen(false)
+          return
+        }
+        // session220 — ফিড = নন-মোডাল popover → Esc-চেইনে help-পরে, cursor-আগে
+        if (feedOpen) {
+          e.preventDefault()
+          closeFeed()
           return
         }
         if (!typing) setCursor(-1)
@@ -1487,13 +1689,19 @@ function SupportReportsPanel() {
         toggleLater(shown[cursor].id)
         return
       }
+      // session220 — f = লাইভ অ্যাক্টিভিটি-ফিড টগল (typing-গার্ড-পরবর্তী — স্ট্যান্ডার্ড-পথ)
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault()
+        toggleFeed()
+        return
+      }
       if (e.key === '1' || e.key === '১') setTab('PENDING')
       else if (e.key === '2' || e.key === '২') setTab('IN_PROGRESS')
       else if (e.key === '3' || e.key === '৩') setTab('RESOLVED')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [shown, cursor, helpOpen, cmdOpen, digestOpen, closeDigest, openDigest, lightbox, bulkBusy, toggleSelect, toggleLater])
+  }, [shown, cursor, helpOpen, cmdOpen, digestOpen, feedOpen, closeDigest, openDigest, closeFeed, toggleFeed, lightbox, bulkBusy, toggleSelect, toggleLater])
 
   const allShownSelected = shown.length > 0 && shown.every((r) => selected.includes(r.id))
 
@@ -1844,6 +2052,36 @@ function SupportReportsPanel() {
               Ctrl ⇧ H
             </kbd>
           </button>
+          {/* session220 — লাইভ অ্যাক্টিভিটি-ফিড বেল (অদেখা-ব্যাজ; f-শর্টকাট) */}
+          <button
+            ref={feedBtnRef}
+            onClick={toggleFeed}
+            type="button"
+            aria-expanded={feedOpen}
+            aria-label={
+              feedUnseen > 0
+                ? `লাইভ অ্যাক্টিভিটি ফিড — ${bn(feedUnseen)}টি নতুন কার্যক্রম অদেখা`
+                : 'লাইভ অ্যাক্টিভিটি ফিড খুলুন'
+            }
+            aria-keyshortcuts="f"
+            title="লাইভ অ্যাক্টিভিটি ফিড (f চাপুন) — নতুন অভিযোগ/স্টেটাস/নোট-বদল এখানে জমা হয়"
+            className={`relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0 ${
+              feedOpen
+                ? 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/40'
+                : 'bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E]'
+            }`}
+          >
+            <Bell className="w-3 h-3" aria-hidden />
+            ফিড
+            {feedUnseen > 0 && (
+              <span
+                aria-hidden
+                className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-extrabold flex items-center justify-center shadow lf-badge-pulse"
+              >
+                {bn(feedUnseen)}
+              </span>
+            )}
+          </button>
         </div>
         {/* session207 — তারিখ-সীমা চিপ + ক্রম-টগল (সব-ক্লায়েন্ট-সাইড) */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -1983,6 +2221,100 @@ function SupportReportsPanel() {
             </button>
           )}
         </div>
+        {/* session220 — লাইভ অ্যাক্টিভিটি-ফিড প্যানেল: sticky-বারে এনকোর (absolute top-full — বার-সহ
+            স্ক্রলে-স্থির); গ্রেডিয়েন্ট-হেডার + এন্ট্রি-স্টেজার lf-anim-up; এন্ট্রি-ক্লিকে রিপোর্টে জাম্প */}
+        {feedOpen && (
+          <div
+            ref={feedPanelRef}
+            role="region"
+            aria-label="লাইভ অ্যাক্টিভিটি ফিড"
+            className="absolute right-3 top-full mt-2 z-[60] w-[min(380px,calc(100vw-2rem))] bg-white border border-[#CED0D4] rounded-[12px] shadow-lg overflow-hidden lf-anim-pop"
+          >
+            <div className="bg-gradient-to-r from-[#006A4E] to-[#00523C] px-3 py-2.5 flex items-center justify-between gap-2">
+              <p className="text-[11.5px] font-extrabold text-white flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5" aria-hidden />
+                লাইভ অ্যাক্টিভিটি
+                {feed.length > 0 && (
+                  <span className="text-[9.5px] font-bold bg-white/15 rounded-full px-1.5 py-px">
+                    সর্বশেষ {bn(feed.length)}টি
+                  </span>
+                )}
+              </p>
+              <div className="flex items-center gap-1">
+                {feed.length > 0 && (
+                  <button
+                    onClick={clearFeed}
+                    type="button"
+                    aria-label="ফিড পরিষ্কার করুন"
+                    title="ফিড পরিষ্কার"
+                    className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/15 transition cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden />
+                  </button>
+                )}
+                <button
+                  onClick={closeFeed}
+                  type="button"
+                  aria-label="ফিড বন্ধ করুন"
+                  title="বন্ধ (Esc)"
+                  className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/15 transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" aria-hidden />
+                </button>
+              </div>
+            </div>
+            {feed.length === 0 ? (
+              <div className="px-4 py-7 text-center">
+                <Bell className="w-6 h-6 text-[#CED0D4] mx-auto mb-2" aria-hidden />
+                <p className="text-[11.5px] text-[#65676B] font-bold">কোনো কার্যক্রম নেই</p>
+                <p className="text-[10.5px] text-[#8A8D91] mt-1">
+                  নতুন অভিযোগ, স্টেটাস-বদল ও নোট-হালনাগাদ এখানে জমা হবে (সর্বশেষ ৪৮ ঘণ্টা)
+                </p>
+              </div>
+            ) : (
+              <ul className="max-h-[55vh] overflow-y-auto divide-y divide-[#F0F2F5]">
+                {feed.slice(0, 12).map((ev, i) => {
+                  const gone = !reports.some((r) => r.id === ev.rid)
+                  return (
+                    <li key={ev.id}>
+                      <button
+                        onClick={() => jumpToReport(ev.rid)}
+                        disabled={gone}
+                        type="button"
+                        title={gone ? 'মূল অভিযোগ-আর-নেই' : 'এই অভিযোগে যান'}
+                        className="w-full text-left px-3 py-2.5 hover:bg-[#F7F8FA] transition lf-anim-up flex items-start gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer bg-transparent border-0"
+                        style={{ animationDelay: `${Math.min(i * 30, 240)}ms` }}
+                      >
+                        <span
+                          aria-hidden
+                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${feedDotCls(ev)}`}
+                        />
+                        <span className="flex-1 min-w-0">
+                          <span className="text-[11.5px] font-bold text-[#050505] block truncate">
+                            {ev.sender}
+                          </span>
+                          <span className="text-[10.5px] text-[#65676B]">{feedEntryText(ev)}</span>
+                        </span>
+                        <time
+                          dateTime={new Date(ev.at).toISOString()}
+                          title={new Date(ev.at).toLocaleString('bn-BD', { dateStyle: 'medium', timeStyle: 'short' })}
+                          className="text-[9.5px] text-[#8A8D91] shrink-0 mt-0.5"
+                        >
+                          {relTimeBn(new Date(ev.at).toISOString())}
+                        </time>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+            {feed.length > 12 && (
+              <p className="px-3 py-1.5 text-[9.5px] text-[#8A8D91] bg-[#FAFBFC] border-t border-[#E4E6EB]">
+                …আরও {bn(feed.length - 12)}টি পুরোনো কার্যক্রম
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* session210 — স্টেল-অ্যালার্ট: ৩+ দিন-পুরাতন অমীমাংসিত; ক্লিকে নতুন-ট্যাব + পুরাতন-আগে-ক্রম */}
@@ -2156,11 +2488,39 @@ function SupportReportsPanel() {
                 </div>
               </div>
 
-              {/* অভিযোগ-লেখা (session202: হোভার-কপি বাটন) */}
+              {/* অভিযোগ-লেখা (session202: হোভার-কপি বাটন; session220: দীর্ঘ-লেখা ৪-লাইন-ফোল্ড + বিস্তার-টগল) */}
               <div className="relative group/msg">
-                <p className={`${density === 'compact' ? 'text-[12px] p-2' : 'text-[13px] p-3'} leading-relaxed whitespace-pre-wrap break-words bg-[#F7F8FA] border border-[#E4E6EB] rounded-[8px] pr-9`}>
-                  {r.messageText}
-                </p>
+                {(() => {
+                  const isLong = r.messageText.length > 180 || r.messageText.split('\n').length > 4
+                  const isOpen = !!msgOpen[r.id]
+                  return (
+                    <>
+                      <p
+                        className={`${density === 'compact' ? 'text-[12px] p-2' : 'text-[13px] p-3'} leading-relaxed whitespace-pre-wrap break-words bg-[#F7F8FA] border border-[#E4E6EB] rounded-[8px] pr-9 ${
+                          isLong && !isOpen ? 'lf-clamp-4' : ''
+                        }`}
+                      >
+                        {r.messageText}
+                      </p>
+                      {isLong && (
+                        <button
+                          onClick={() => setMsgOpen((p) => ({ ...p, [r.id]: !p[r.id] }))}
+                          type="button"
+                          aria-expanded={isOpen}
+                          aria-label={
+                            isOpen
+                              ? 'অভিযোগের লেখা ছাঁটুন'
+                              : 'অভিযোগের সম্পূর্ণ লেখা দেখুন'
+                          }
+                          title={isOpen ? 'লেখা ছাঁটুন' : 'সম্পূর্ণ লেখা দেখুন'}
+                          className="mt-1 inline-flex items-center gap-1 text-[10px] font-extrabold text-[#006A4E] hover:underline underline-offset-2 cursor-pointer bg-transparent border-0 p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 rounded"
+                        >
+                          {isOpen ? '▲ ছাঁটুন' : '▼ আরও দেখুন'}
+                        </button>
+                      )}
+                    </>
+                  )
+                })()}
                 <div className="absolute top-2 right-2 flex gap-1">
                   <button
                     onClick={() => void copyLink(r)}
