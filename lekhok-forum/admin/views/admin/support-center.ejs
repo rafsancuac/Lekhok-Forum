@@ -29,6 +29,15 @@
       border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-ink-2);cursor:pointer}
     .sc-chip:hover{border-color:var(--ad-accent-ring)}
     .sc-chip.active{background:var(--ad-accent-soft);border-color:var(--ad-accent);color:var(--ad-accent-ink)}
+    /* session243 — মিডিয়া-চিপ-সম্পূর্ণতা: আইকন+বাংলা-গণনা-ব্যাজ+aria-current (bnNum-এক-উৎস) */
+    .sc-mchip i{font-size:.72rem;opacity:.8}
+    .sc-mchip[data-mh="TEXT"] i{color:var(--ad-accent)}
+    .sc-mchip[data-mh="IMAGE"] i{color:var(--lf-amber-deep)}
+    .sc-mchip[data-mh="AUDIO"] i{color:var(--lf-ok-deep)}
+    .sc-mchip[data-mh="VIDEO"] i{color:var(--lf-danger-deep)}
+    .sc-mcount{display:inline-block;min-width:17px;padding:0 5px;border-radius:999px;font-size:.68rem;font-weight:700;line-height:15px;text-align:center;font-variant-numeric:tabular-nums;background:var(--ad-accent-soft);color:var(--ad-accent-ink)}
+    .sc-chip.active .sc-mcount{background:var(--ad-accent);color:#fff}
+    @media (max-width:640px){.sc-mcount{min-width:14px;padding:0 4px;font-size:.62rem;line-height:13px}}
     .sc-search{display:flex;gap:6px;margin-left:auto}
     .sc-search input{border:1px solid var(--ad-line);border-radius:var(--ad-radius-sm);padding:6px 10px;font-family:inherit;min-width:170px;background:var(--ad-card);color:var(--ad-ink)}
     .sc-stale{background:var(--lf-amber-soft);border:1px solid var(--lf-amber-soft-3);color:var(--lf-amber-ink);
@@ -111,6 +120,10 @@
     .sc-mb.m-audio{background:var(--lf-ok-deep)}
     .sc-mb.m-video{background:var(--lf-danger-deep)}
     .sc-mb-none{flex:1;height:100%}
+    /* session243 — ক্রস-হাইলাইট (তাৎক্ষণিক-ক্লাস — transition-শূন্য; s241-স্ট্যাটিক-চুক্তি-অক্ষুণ্ণ) */
+    .sc-mb[data-mh]:hover{filter:brightness(1.18)}
+    .sc-mb.seg-hot{filter:brightness(1.18);box-shadow:inset 0 0 0 1px var(--ad-accent-ring)}
+    .sc-chip.chip-hot{border-color:var(--ad-accent-ring)}
     .sc-mediabar-legend{display:flex;align-items:center;gap:14px;margin-top:7px;flex-wrap:wrap}
     .sc-mediabar-legend .lg{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;color:var(--ad-muted)}
     .sc-mediabar-legend .lg b{color:var(--ad-ink);font-variant-numeric:tabular-nums}
@@ -497,7 +510,7 @@
   <%# session241 — মিডিয়া-ডিস্ট্রিবিউশন স্ট্রিপ (EJS-এক-উৎস mediaBreak; flex-grow-অনুপাত — ক্লায়েন্ট-গণনা-শূন্য; সম্পূর্ণ-স্ট্যাটিক — reduced-motion-নিরাপদ; var()-টোকেন) %>
   <div class="sc-mediabar">
     <div class="sc-mediabar-track" role="img" aria-label="মিডিয়া বিভাজন — লেখা <%= bnNum(mediaBreak.TEXT) %>, ছবি <%= bnNum(mediaBreak.IMAGE) %>, ভয়েস <%= bnNum(mediaBreak.AUDIO) %>, ভিডিও <%= bnNum(mediaBreak.VIDEO) %> (মোট <%= bnNum(mediaBreak.total) %>)" data-mt="<%= mediaBreak.TEXT %>" data-mi="<%= mediaBreak.IMAGE %>" data-ma="<%= mediaBreak.AUDIO %>" data-mv="<%= mediaBreak.VIDEO %>" data-mtotal="<%= mediaBreak.total %>">
-      <% if (mediaBreak.total > 0) { %><span class="sc-mb m-text" style="flex-grow:<%= mediaBreak.TEXT %>"></span><span class="sc-mb m-image" style="flex-grow:<%= mediaBreak.IMAGE %>"></span><span class="sc-mb m-audio" style="flex-grow:<%= mediaBreak.AUDIO %>"></span><span class="sc-mb m-video" style="flex-grow:<%= mediaBreak.VIDEO %>"></span><% } else { %><span class="sc-mb-none" aria-hidden="true"></span><% } %>
+      <% if (mediaBreak.total > 0) { %><span class="sc-mb m-text" data-mh="TEXT" style="flex-grow:<%= mediaBreak.TEXT %>"></span><span class="sc-mb m-image" data-mh="IMAGE" style="flex-grow:<%= mediaBreak.IMAGE %>"></span><span class="sc-mb m-audio" data-mh="AUDIO" style="flex-grow:<%= mediaBreak.AUDIO %>"></span><span class="sc-mb m-video" data-mh="VIDEO" style="flex-grow:<%= mediaBreak.VIDEO %>"></span><% } else { %><span class="sc-mb-none" aria-hidden="true"></span><% } %>
     </div>
     <div class="sc-mediabar-legend">
       <span class="lg"><i class="lg-dot lg-text"></i>লেখা <b><%= bnNum(mediaBreak.TEXT) %></b></span>
@@ -521,10 +534,10 @@
   </div>
 
   <div class="sc-filters">
-    <a class="sc-chip <%= !status ? 'active' : '' %>" href="/admin/support-center?<%= [media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">সব</a>
-    <a class="sc-chip <%= status === 'PENDING' ? 'active' : '' %>" href="/admin/support-center?<%= ['status=PENDING', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">নতুন (<%= counts.PENDING %>)</a>
-    <a class="sc-chip <%= status === 'IN_PROGRESS' ? 'active' : '' %>" href="/admin/support-center?<%= ['status=IN_PROGRESS', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">চলমান (<%= counts.IN_PROGRESS %>)</a>
-    <a class="sc-chip <%= status === 'RESOLVED' ? 'active' : '' %>" href="/admin/support-center?<%= ['status=RESOLVED', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">সমাধান (<%= counts.RESOLVED %>)</a>
+    <a class="sc-chip <%= !status ? 'active' : '' %>" aria-current="<%= !status ? 'true' : 'false' %>" href="/admin/support-center?<%= [media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">সব</a>
+    <a class="sc-chip <%= status === 'PENDING' ? 'active' : '' %>" aria-current="<%= status === 'PENDING' ? 'true' : 'false' %>" href="/admin/support-center?<%= ['status=PENDING', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">নতুন (<%= counts.PENDING %>)</a>
+    <a class="sc-chip <%= status === 'IN_PROGRESS' ? 'active' : '' %>" aria-current="<%= status === 'IN_PROGRESS' ? 'true' : 'false' %>" href="/admin/support-center?<%= ['status=IN_PROGRESS', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">চলমান (<%= counts.IN_PROGRESS %>)</a>
+    <a class="sc-chip <%= status === 'RESOLVED' ? 'active' : '' %>" aria-current="<%= status === 'RESOLVED' ? 'true' : 'false' %>" href="/admin/support-center?<%= ['status=RESOLVED', media?'media='+media:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:''].filter(Boolean).join('&') %>">সমাধান (<%= counts.RESOLVED %>)</a>
     <span style="width:1px;height:20px;background:var(--ad-line)"></span>
     <%# session227 — সময়-সীমা chips (range প্যারাম; অন্য-ফিল্টার-সংরক্ষণ) %>
     <% ['today', '7d', '30d'].forEach(function(r){ var lbl = r === 'today' ? 'আজ' : (r === '7d' ? '৭ দিন' : '৩০ দিন'); %>
@@ -534,9 +547,10 @@
     <a class="sc-chip" href="/admin/support-center?<%= [status?'status='+status:'', media?'media='+media:'', q?'q='+encodeURIComponent(q):''].filter(Boolean).join('&') %>" title="সময়-সীমা সরান"><i class="fas fa-xmark"></i> সময়-সীমা</a>
     <% } %>
     <span style="width:1px;height:20px;background:var(--ad-line)"></span>
-    <a class="sc-chip <%= media === 'TEXT' ? 'active' : '' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=TEXT'].filter(Boolean).join('&') %>">লেখা</a>
-    <a class="sc-chip <%= media === 'IMAGE' ? 'active' : '' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=IMAGE'].filter(Boolean).join('&') %>">ছবি</a>
-    <a class="sc-chip <%= media === 'AUDIO' ? 'active' : '' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=AUDIO'].filter(Boolean).join('&') %>">ভয়েস</a>
+    <a class="sc-chip sc-mchip <%= media === 'TEXT' ? 'active' : '' %>" data-mh="TEXT" aria-current="<%= media === 'TEXT' ? 'true' : 'false' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=TEXT'].filter(Boolean).join('&') %>"><i class="fas fa-font" aria-hidden="true"></i>লেখা <b class="sc-mcount"><%= bnNum(mediaCounts.TEXT) %></b></a>
+    <a class="sc-chip sc-mchip <%= media === 'IMAGE' ? 'active' : '' %>" data-mh="IMAGE" aria-current="<%= media === 'IMAGE' ? 'true' : 'false' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=IMAGE'].filter(Boolean).join('&') %>"><i class="fas fa-image" aria-hidden="true"></i>ছবি <b class="sc-mcount"><%= bnNum(mediaCounts.IMAGE) %></b></a>
+    <a class="sc-chip sc-mchip <%= media === 'AUDIO' ? 'active' : '' %>" data-mh="AUDIO" aria-current="<%= media === 'AUDIO' ? 'true' : 'false' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=AUDIO'].filter(Boolean).join('&') %>"><i class="fas fa-microphone" aria-hidden="true"></i>ভয়েস <b class="sc-mcount"><%= bnNum(mediaCounts.AUDIO) %></b></a>
+    <a class="sc-chip sc-mchip <%= media === 'VIDEO' ? 'active' : '' %>" data-mh="VIDEO" aria-current="<%= media === 'VIDEO' ? 'true' : 'false' %>" href="/admin/support-center?<%= [status?'status='+status:'', q?'q='+encodeURIComponent(q):'', range?'range='+range:'', 'media=VIDEO'].filter(Boolean).join('&') %>"><i class="fas fa-video" aria-hidden="true"></i>ভিডিও <b class="sc-mcount"><%= bnNum(mediaCounts.VIDEO) %></b></a>
     <form class="sc-search" method="GET" action="/admin/support-center">
       <% if (status) { %><input type="hidden" name="status" value="<%= status %>" /><% } %>
       <% if (media) { %><input type="hidden" name="media" value="<%= media %>" /><% } %>
@@ -672,6 +686,7 @@
     <div class="sc-help-row"><span>সপ্তাহ-রিপোর্ট ক্লিপবোর্ডে কপি — KPI+গণনা-সারাংশ (টেলিগ্রামে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">w</kbd></span></div>
     <div class="sc-help-row"><span>রিপোর্ট-ব্যাপ্তি ৭/৩০ দিন — কপি-রিপোর্টের সময়সীমা বদল (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">৭/৩০</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
+    <div class="sc-help-row"><span>মিডিয়া-চিপে হোভার/ফোকাস — স্ট্রিপ-সেগমেন্ট উজ্জ্বল (সেগমেন্ট-হোভারে চিপ-হাইলাইট — উল্টো-দিকও)</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>লেখা-বদলে রিফ্রেশ-আটকে-রাখা (অসংরক্ষিত-জবাব-সুরক্ষা)</span><span class="keys"><kbd class="sc-kbd">স্বয়ংক্রিয়</kbd></span></div>
@@ -929,6 +944,29 @@
   window.__scQA.print = function () { // QA-হুক (mediaBreak-এর-পরে — পুনঃসৃজন-চুক্তি)
     return { btn: !!printBtn, head: !!document.getElementById('scPrintHead'), stampOn: !!(printTimeEl && printTimeEl.textContent), stamp: (printTimeEl && printTimeEl.textContent) || '' };
   };
+
+  // ── session243 — মিডিয়া-চিপ ↔ স্ট্রিপ-সেগমেন্ট ক্রস-হাইলাইট (তাৎক্ষণিক-ক্লাস — transition-শূন্য, reduced-motion-স্বাভাবিক-নিরাপদ; স্ট্যাটিক-ফার্নিচার-বাইন্ড — লাইভ-কার্ড-রিরেন্ডার-স্বাধীন; innerHTML-নিষিদ্ধ-রীতি-অটুট) ──
+  (function () {
+    var MH = ['TEXT', 'IMAGE', 'AUDIO', 'VIDEO'];
+    function hot(mh, on, sel, cls) {
+      var t = document.querySelector(sel.replace('%M%', mh));
+      if (t) t.classList[on ? 'add' : 'remove'](cls);
+    }
+    function bindPair(el, mh, sel, cls) {
+      if (!el) return;
+      el.addEventListener('mouseenter', function () { hot(mh, true, sel, cls); });
+      el.addEventListener('mouseleave', function () { hot(mh, false, sel, cls); });
+      // focusin/focusout (bubbling) + focus/blur (element-নিজস্ব — headless-সিনথেটিক focus()-নিরাপদ)
+      el.addEventListener('focusin', function () { hot(mh, true, sel, cls); });
+      el.addEventListener('focusout', function () { hot(mh, false, sel, cls); });
+      el.addEventListener('focus', function () { hot(mh, true, sel, cls); });
+      el.addEventListener('blur', function () { hot(mh, false, sel, cls); });
+    }
+    MH.forEach(function (mh) {
+      bindPair(document.querySelector('.sc-mchip[data-mh="' + mh + '"]'), mh, '.sc-mb[data-mh="%M%"]', 'seg-hot');
+      bindPair(document.querySelector('.sc-mb[data-mh="' + mh + '"]'), mh, '.sc-mchip[data-mh="%M%"]', 'chip-hot');
+    });
+  })();
 
   // ── session232 — স্পার্ক/ট্রেন্ড-টুলটিপ (এক-শেয়ার্ড #scSparkTip; data-d/data-v/data-unit এক-উৎস; টেক্সট-নোড-শুধু — innerHTML-নিষিদ্ধ-রীতি; কার্ড-ফোকাসে আজ-বার) ──
   var tipEl = document.getElementById('scSparkTip');

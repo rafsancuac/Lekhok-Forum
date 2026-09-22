@@ -3778,3 +3778,22 @@ Task ID: 84 (session242 — cron 403679; প্রিন্ট-প্যাক)
 - গোটচা ×১ (PLANS session242): শর্তসাপেক্ষ print-only মিরর = সোর্স-অ্যাসার্ট (রেন্ডার্ড-নয়); vacuous-every-সচেতনতা
 - পরের-এজেন্ট: **session243 লেবেল (Task ID 85)**; বাকি-প্রস্তাব: Turso (পরিকল্পনা-গেটে), stale-সুইট-আধুনিকীকরণ; PLANS session242-নোট পড়ুন; push-আগে fetch+rebase
 - রিমোট main = এ-রাউন্ডের session242-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
+
+---
+Task ID: 85 (session243 — cron 403679; মিডিয়া-চিপ-সম্পূর্ণতা প্যাক)
+
+Task: প্রজেক্ট-স্টেটাস যাচাই + QA → বাগ-শূন্য হলে নতুন-ফিচার (P2-গ্যাপ-ফিক্স + ব্যাজ + ক্রস-হাইলাইট) + [Mandatory] স্টাইল-ডিটেইল + ডক/সুইট/পুশ
+
+Work Log:
+- রাউন্ড-শুরু: স্যান্ডবক্স-পুনঃসূচনার-পরে স্টেল-লোকাল-কপি (session234-ব্রাঞ্চ) সত্য-উৎস-যাচাই — fetch-পরে HEAD=origin=`d8fa986` (session242); GH /user→200 + Vercel /v2/user→200 + live 200; স্টেল-সামারি-বিপরীতে-worklog-ই-সত্য
+- QA: ক্যাননিক্যাল-ব্যাটারি ৪২৮/৪২৮ (s231→s242 ×১৪) প্রথম-রানে — বাগ-শূন্য → ফাঁক-স্ক্যানে P2-গ্যাপ: VIDEO-মিডিয়া-চিপ-অনুপস্থিত (রুট-সাইড-সমর্থিত, ভিউ-শুধু-অন্ধ)
+- বাগ-ফিক্স (P2): ভিডিও-চিপ যোগ + [Mandatory-ফিচার ①] scMediaCounts (scope-সমস্বর status/q/range, media-বাদ; /data-JSON-সহ) → চিপে bnNum-বাংলা-গণনা-ব্যাজ ×৪
+- [Mandatory-ফিচার ② + স্টাইল]: চিপ-আইকন ×৪ (লেজেন্ড-রঙ-মানচিত্র) + aria-current ×৮ + স্ট্রিপ data-mh ×৪ + ক্রস-হাইলাইট (seg-hot/chip-hot — তাৎক্ষণিক-ক্লাস, transition-শূন্য; focus-চতুর্গামী-বাইন্ড) + সহায়িকা-সারি + 640px-সংকোচন
+- টেস্ট: tests/s243-seed-video.js (TAG Task243-VIDEO ×৬; সার্ভার-বন্ধে) + tests/s243-video-suite.sh **৫৩/৫৩ ×২-ধারাবাহিক** (রেন্ডার-প্রমাণ /data {2,1,1,2} নিখুত + href-সংরক্ষণ + আচরণ ×৭ + খালি-অবস্থা ×৫)
+- পূর্ণ-রিগ্রেশন **৪৮১/৪৮১** (পুরাতন ৪২৮ + s243 ৫৩) + secret-scan-ক্লিন + স্ক্রিনশট ×২ (repo download-ও কমিটেড) + ডক ×৩ + এ-এন্ট্রি → fetch+rebase → push → Vercel/live-যাচাই
+
+Stage Summary:
+- routes.js (scMediaCounts + /data mediaCounts) + support-center.ejs (চিপ/ব্যাজ/aria/ক্রস-হাইলাইট — এক-ফাইল-ফিচার-অংশ; API/স্কিমা-অপরিবর্তিত) + tests/s243 ×২ + ডক ×৩
+- DB-জঞ্জাল-শূন্য (cleanup CLEANUP-COUNT=0); নতুন-গোটচা ×৩ ডক-কৃত (PLANS session243: টুল-আউটপুট-আর্টিফ্যাক্ট od -c · headless-focus · ক্যাননিক্যাল-ব্যাটারি)
+- পরের-এজেন্ট: **session244 লেবেল (Task ID 86)**; PLANS session243-নোট অবশ্যই-পড়ুন; push-আগে fetch+rebase-বাধ্যতমূলক
+- রিমোট main = এ-রাউন্ডের session243-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন

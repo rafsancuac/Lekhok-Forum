@@ -2312,6 +2312,23 @@ async function scCounts() {
   return { counts, total };
 }
 
+// session243 — মিডিয়া-চিপ-গণনা (scope-সমস্বর: status/q/range প্রযোজ্য, media-বাদ — ব্যাজ=বর্তমান-ভিউ-স্কোপে-প্রতি-মাধ্যম-গণনা; s241-rows-স্কোপ-চুক্তি-সমস্বর)
+async function scMediaCounts({ status, q, range }) {
+  let where = ' WHERE 1=1';
+  const params = [];
+  if (status) { where += ' AND r.status = ?'; params.push(status); }
+  if (q) {
+    where += ' AND (r.message_text LIKE ? OR u.full_name LIKE ? OR u.username LIKE ?)';
+    const like = '%' + q + '%';
+    params.push(like, like, like);
+  }
+  if (range) { where += ' AND r.created_at >= ?'; params.push(scRangeCutoff(range)); }
+  const rows = await db.prepare('SELECT r.media_type AS mt, COUNT(*) AS c FROM user_reports r LEFT JOIN users u ON r.sender_id = u.id' + where + ' GROUP BY r.media_type').all(...params);
+  const counts = { TEXT: 0, IMAGE: 0, AUDIO: 0, VIDEO: 0 };
+  for (const r of rows) if (counts[r.mt] !== undefined) counts[r.mt] = r.c;
+  return counts;
+}
+
 function scDecorate(rows) {
   return rows.map(r => ({
     ...r,
@@ -2333,10 +2350,12 @@ router.get('/support-center', requireSupportReviewer, async (req, res) => {
   const { where, params } = scWhere(filters);
   const rows = await db.prepare(SC_REPORT_SELECT + where + ' ORDER BY r.created_at DESC, r.id DESC LIMIT 200').all(...params);
   const { counts, total } = await scCounts();
+  const mediaCounts = await scMediaCounts(filters);
   const supportAdmin = await SC.getSupportAdmin();
   res.render('admin/support-center', {
     reports: scDecorate(rows), counts, total, supportAdmin,
     status: filters.status, media: filters.media, q: filters.q, range: filters.range,
+    mediaCounts,
     staleN: SC.staleCount(rows), currentPath: '/admin/support-center',
     trend: SC.trend7(rows), trend30: SC.trendN(rows, null, 30), digest: SC.digestStats(rows), bnNum: SC.bnNum
   });
@@ -2348,7 +2367,8 @@ router.get('/support-center/data', requireSupportReviewer, async (req, res) => {
   const { where, params } = scWhere(filters);
   const rows = await db.prepare(SC_REPORT_SELECT + where + ' ORDER BY r.created_at DESC, r.id DESC LIMIT 200').all(...params);
   const { counts, total } = await scCounts();
-  res.json({ ok: true, reports: scDecorate(rows), counts, total });
+  const mediaCounts = await scMediaCounts(filters);
+  res.json({ ok: true, reports: scDecorate(rows), counts, mediaCounts, total });
 });
 
 // স্ট্যাটাস-বদল + জবাব-সংরক্ষণ (JSON) — হিস্ট্রি-অ্যাপেন্ড + রিপোর্টার-নোটিফিকেশন + SSE
