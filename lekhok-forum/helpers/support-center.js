@@ -153,28 +153,32 @@ function resolvedAtMs(historyJson) {
   return last;
 }
 
-// ── ৭-দিনের প্রবণতা (session226 — Next session224 trend7-পোর্ট; পিওর-ফাংশন, never-throws) ──
-// সাত-দৈর্ঘ্যের সিরিজ; index 0 = ৬-দিন-আগে … 6 = আজ; দিন-সীমা = স্থানীয়-মাঝরাত; now-ইনজেকশন = ডিটারমিনিস্টিক-টেস্ট
+// ── প্রবণতা-সিরিজ (session226 trend7 → session240 trendN-সাধারণীকরণ; পিওর-ফাংশন, never-throws) ──
+// N-দৈর্ঘ্যের সিরিজ; index 0 = (N-1)-দিন-আগে … N-1 = আজ; দিন-সীমা = স্থানীয়-মাঝরাত; now-ইনজেকশন = ডিটারমিনিস্টিক-টেস্ট
 //   newPerDay      — ওই-দিনে-তৈরি (যে-কোনো-বর্তমান-স্ট্যাটাস)
 //   resolvedPerDay — ওই-দিনে-সমাধান (note_history-র সর্বশেষ RESOLVED)
-//   stalePerDay    — আজ (6) = staleCount(rows)-সমস্বর (কার্ড-মান-স্পর্শক-গ্যারান্টি);
-//                    পুরাতন-দিন (0..5) = প্রত্ন: দিন-শুরুতে খোলা ও বয়স ≥৭২ঘ (সমাধান-হওয়া = resolve-দিন-পর্যন্ত)
+//   stalePerDay    — আজ (N-1) = staleCount(rows)-সমস্বর (কার্ড-মান-স্পর্শক-গ্যারান্টি);
+//                    পুরাতন-দিন (0..N-2) = প্রত্ন: দিন-শুরুতে খোলা ও বয়স ≥৭২ঘ (সমাধান-হওয়া = resolve-দিন-পর্যন্ত)
 //   avgPerDay      — ওই-দিনে-সমাধান-হওয়ার-গড়-সময় (ঘণ্টা ×১০-রাউন্ড); কেউ-নেই → null
 //   dayLabels      — bn-BD সংক্ষিপ্ত ("২২ সে") — EJS কখনো-নিজে-তারিখ-গণনা-করবে-না
-function trend7(rows, now) {
+// session240-গেট: ব্যাপ্তি-নির্বাচন শুধু ৭/৩০-দিন — অন্য/অবৈধ-মানে ৭-ফলব্যাক (চুক্তি); trend7 = trendN(…,7)-ডেলিগেশন
+// (হুবহু-পুরোনো-আউটপুট — সব-সুইট-অ্যাসার্ট-রক্ষা)
+function trendN(rows, now, days) {
+  const D = (Number(days) === 30) ? 30 : 7;
+  const LAST = D - 1;
   try {
     const NOW = Number(now) || Date.now();
     const DAY = 86400000, HOUR = 3600000;
     const t0d = new Date(NOW); t0d.setHours(0, 0, 0, 0);
     const t0 = t0d.getTime();
-    const newPerDay = [0, 0, 0, 0, 0, 0, 0];
-    const resolvedPerDay = [0, 0, 0, 0, 0, 0, 0];
-    const stalePerDay = [0, 0, 0, 0, 0, 0, 0];
-    const durSum = [0, 0, 0, 0, 0, 0, 0];
-    const durCnt = [0, 0, 0, 0, 0, 0, 0];
+    const newPerDay = new Array(D).fill(0);
+    const resolvedPerDay = new Array(D).fill(0);
+    const stalePerDay = new Array(D).fill(0);
+    const durSum = new Array(D).fill(0);
+    const durCnt = new Array(D).fill(0);
     const bucketOf = (ts) => {
-      const i = Math.floor((ts - (t0 - 6 * DAY)) / DAY);
-      return (i >= 0 && i <= 6 && ts >= t0 - 6 * DAY) ? i : -1;
+      const i = Math.floor((ts - (t0 - LAST * DAY)) / DAY);
+      return (i >= 0 && i <= LAST && ts >= t0 - LAST * DAY) ? i : -1;
     };
     for (const r of (rows || [])) {
       if (!r) continue;
@@ -191,30 +195,34 @@ function trend7(rows, now) {
           if (durH >= 0) { durSum[ri] += durH; durCnt[ri]++; }
         }
       }
-      // প্রত্ন-স্টেল (index 0..5): দিন-D-শুরুতে খোলা ও বয়স ≥৭২ঘ (আজ = staleCount সরাসরি — সমস্বর-গ্যারান্টি)
-      for (let i = 0; i < 6; i++) {
-        const dS = t0 - (6 - i) * DAY;
+      // প্রত্ন-স্টেল (index 0..LAST-1): দিন-D-শুরুতে খোলা ও বয়স ≥৭২ঘ (আজ = staleCount সরাসরি — সমস্বর-গ্যারান্টি)
+      for (let i = 0; i < LAST; i++) {
+        const dS = t0 - (LAST - i) * DAY;
         if (created <= dS - 3 * DAY) {
           const openOnD = r.status !== 'RESOLVED' ? true : (rat !== null && rat >= dS);
           if (openOnD) stalePerDay[i]++;
         }
       }
     }
-    stalePerDay[6] = staleCount(rows);
+    stalePerDay[LAST] = staleCount(rows);
     const avgPerDay = durCnt.map((c, i) => (c > 0 ? Math.round((durSum[i] / c) * 10) / 10 : null));
     let dayLabels;
     try {
-      dayLabels = Array.from({ length: 7 }, (_, i) =>
-        new Date(t0 - (6 - i) * DAY).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short' }));
+      dayLabels = Array.from({ length: D }, (_, i) =>
+        new Date(t0 - (LAST - i) * DAY).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short' }));
     } catch (_) {
-      dayLabels = Array.from({ length: 7 }, (_, i) => bnNum(new Date(t0 - (6 - i) * DAY).getDate()));
+      dayLabels = Array.from({ length: D }, (_, i) => bnNum(new Date(t0 - (LAST - i) * DAY).getDate()));
     }
     return { newPerDay, resolvedPerDay, stalePerDay, avgPerDay, dayLabels };
   } catch (_) {
-    const z = [0, 0, 0, 0, 0, 0, 0];
-    return { newPerDay: z.slice(), resolvedPerDay: z.slice(), stalePerDay: z.slice(), avgPerDay: [null, null, null, null, null, null, null], dayLabels: ['', '', '', '', '', '', ''] };
+    const z = new Array(D).fill(0);
+    const zn = new Array(D).fill(null);
+    const zs = new Array(D).fill('');
+    return { newPerDay: z.slice(), resolvedPerDay: z.slice(), stalePerDay: z.slice(), avgPerDay: zn.slice(), dayLabels: zs.slice() };
   }
 }
+
+function trend7(rows, now) { return trendN(rows, now, 7); } // session240 — ডেলিগেশন (আউটপুট-হুবহু-অপরিবর্তিত)
 
 // ── ২৪ঘ-সারাংশ KPI (session227 — trend7-এর-সাথে-একই-উৎস-পরিবার; পিওর, never-throws) ──
 // fresh24       — ২৪ঘ-এর-কম-পুরোনো অমীমাংসিত (এখন-স্ট্যাটাস-খোলা)
@@ -258,5 +266,5 @@ module.exports = {
   SUPPORT_ADMIN_KEY, STATUSES, STATUS_LABEL, MEDIA_TYPES,
   getSupportAdminId, getSupportAdmin, setSupportAdmin, clearSupportAdmin, isSupportAdmin,
   parseHistory, appendHistory, lastNoteOf, agingInfo, staleCount, historySummaryBn, bnNum,
-  createdAtMs, resolvedAtMs, trend7, digestStats, relTimeBn
+  createdAtMs, resolvedAtMs, trend7, trendN, digestStats, relTimeBn
 };

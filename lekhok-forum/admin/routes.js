@@ -2338,7 +2338,7 @@ router.get('/support-center', requireSupportReviewer, async (req, res) => {
     reports: scDecorate(rows), counts, total, supportAdmin,
     status: filters.status, media: filters.media, q: filters.q, range: filters.range,
     staleN: SC.staleCount(rows), currentPath: '/admin/support-center',
-    trend: SC.trend7(rows), digest: SC.digestStats(rows), bnNum: SC.bnNum
+    trend: SC.trend7(rows), trend30: SC.trendN(rows, null, 30), digest: SC.digestStats(rows), bnNum: SC.bnNum
   });
 });
 

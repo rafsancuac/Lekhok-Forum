@@ -91,6 +91,17 @@
     @keyframes scWkPop{0%{transform:scale(.55)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
     @media (prefers-reduced-motion: reduce){.sc-wk-copy{transition:none !important}.sc-wk-copy.sc-wk-ok i{animation:none !important}}
     @media (max-width:640px){.sc-wk-copy{padding:4px 9px;font-size:.7rem;gap:4px}}
+    /* session240 — রিপোর্ট-ব্যাপ্তি-নির্বাচন (৭/৩০-দিন সেগমেন্ট; aria-pressed-চুক্তি; সব-রঙ var()-টোকেন; reduced-motion-নিরাপদ) */
+    .sc-wkr{margin-left:auto;display:inline-flex;align-items:center;border:1px solid var(--ad-line);border-radius:8px;background:var(--ad-card);overflow:hidden}
+    .sc-trend-head .sc-wkr + .sc-wk-copy{margin-left:8px}
+    .sc-wkr-btn{border:0;background:transparent;color:var(--ad-ink-2);font-family:inherit;font-size:.72rem;font-weight:700;padding:5px 10px;cursor:pointer;font-variant-numeric:tabular-nums;transition:color .15s ease,background .15s ease}
+    .sc-wkr-btn + .sc-wkr-btn{border-left:1px solid var(--ad-line)}
+    .sc-wkr-btn:hover{color:var(--ad-accent-ink);background:var(--ad-accent-soft)}
+    .sc-wkr-btn:focus-visible{outline:2px solid var(--ad-accent);outline-offset:-2px}
+    .sc-wkr-btn[aria-pressed="true"]{background:var(--ad-accent);color:var(--lf-white)}
+    .sc-wkr-btn[aria-pressed="true"]:focus-visible{outline-color:var(--ad-accent-ink)}
+    @media (prefers-reduced-motion: reduce){.sc-wkr-btn{transition:none !important}}
+    @media (max-width:640px){.sc-wkr-btn{padding:4px 8px;font-size:.68rem}}
     .sc-card{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:16px;margin-bottom:14px;box-shadow:var(--ad-shadow)}
     .sc-card.sc-heat-stale{border-color:var(--lf-amber-soft-3);box-shadow:0 0 0 3px var(--lf-amber-soft-2)}
     .sc-card-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
@@ -333,6 +344,11 @@
     <div class="sc-trend-head">
       <b>৭-দিনের প্রবণতা</b>
       <span><%= trend.dayLabels[0] %> → <%= trend.dayLabels[6] %></span>
+    <%# session240 — রিপোর্ট-ব্যাপ্তি-নির্বাচন (৭/৩০-দিন; aria-pressed; localStorage sc-wkr স্মরণ — কপি-বাটনের-ব্যাপ্তি নির্ধারণ) %>
+    <div class="sc-wkr" role="group" aria-label="রিপোর্ট-ব্যাপ্তি নির্বাচন (৭/৩০ দিন)">
+      <button type="button" class="sc-wkr-btn" id="scWkR7" aria-pressed="true" title="৭-দিনের রিপোর্ট কপি">৭ দিন</button>
+      <button type="button" class="sc-wkr-btn" id="scWkR30" aria-pressed="false" title="৩০-দিনের রিপোর্ট কপি">৩০ দিন</button>
+    </div>
       <%# session239 — সপ্তাহ-রিপোর্ট-কপি বাটন (w-কী-সমতুল্য; copyText-চুক্তি; টেলিগ্রামে-পেস্ট-প্রস্তুত) %>
       <button type="button" class="btn btn-sm sc-wk-copy" id="scWkCopyBtn" title="সপ্তাহ-রিপোর্ট কপি করুন (w)" aria-label="সপ্তাহ-রিপোর্ট ক্লিপবোর্ডে কপি — KPI ও গণনা-সারাংশ, টেলিগ্রামে-পেস্ট-প্রস্তুত"><i class="fas fa-clipboard-list" aria-hidden="true"></i> রিপোর্ট কপি</button>
     </div>
@@ -349,6 +365,8 @@
   </div>
   <%# session239 — সপ্তাহ-রিপোর্ট-কপি পেলোড (EJS-এক-উৎস-টেক্সট — ক্লায়েন্ট JSON-এক-পার্স; গণনা-শূন্য; টেলিগ্রাম-প্রস্তুত) %>
   <script type="application/json" id="scWkReport"><%- JSON.stringify({ text: scWkReportText() }) %></script>
+  <%# session240 — ৩০-দিন-রিপোর্ট-পেলোড (একই-কম্পোজার; D=30 — ক্লায়েন্ট-গণনা-শূন্য) %>
+  <script type="application/json" id="scWkReport30"><%- JSON.stringify({ text: scWkReportText(trend30, 30) }) %></script>
 
   <%# session231 — KPI স্পার্ক হেল্পার (trend7-সিরিজ এক-উৎস-পুনঃব্যবহার; EJS নিজে-কোনো-তারিখ-গণনা-নয় — শুধু-রেন্ডার; মান bnNum-এক-উৎস) %>
   <%# session232 — data-d/data-v/data-unit টুলটিপ-হুক (native-title-বাদ — শেয়ার্ড #scSparkTip-এ-স্থানান্তর; এক-উৎস dayLabels/bnNum) %>
@@ -362,12 +380,15 @@
       var n = v == null ? 0 : v; var h = (n > 0 && mx > 0) ? Math.max(2, Math.round(n / mx * 14)) : 2;
       return '<i class="' + (i === 6 ? 'today' : '') + '" style="height:' + h + 'px" data-d="' + trend.dayLabels[i] + '" data-v="' + bnNum(n) + '"></i>'; }).join('') + '</span>'; } %>
   <%# session239 — সপ্তাহ-রিপোর্ট-টেক্সট কম্পোজার (EJS-এক-উৎস; bnNum-এক-উৎস; ক্লায়েন্ট-গণনা-শূন্য; never-throws) %>
-  <% function scWkReportText(){ try {
-    var sumA = function(a){ var t = 0; for (var i = 0; i < a.length; i++) t += (a[i] == null ? 0 : a[i]); return t; };
-    var nSum = sumA(trend.newPerDay), rSum = sumA(trend.resolvedPerDay);
+  <%# session239+240 — রিপোর্ট-টেক্সট কম্পোজার (EJS-এক-উৎস; bnNum-এক-উৎস; ক্লায়েন্ট-গণনা-শূন্য; never-throws;
+    D=৭-পথ বাইট-অভিন্ন — s239-অ্যাসার্ট-রক্ষা; D=30-এ টাইটেল/ব্যাপ্তি/মোট-লেবেল ৩০-দিন-রূপ) %>
+  <% function scWkReportText(t, days){ try {
+    t = t || trend; var D = (Number(days) === 30) ? 30 : 7;
+    var sumA = function(a){ var t2 = 0; for (var i = 0; i < a.length; i++) t2 += (a[i] == null ? 0 : a[i]); return t2; };
+    var nSum = sumA(t.newPerDay), rSum = sumA(t.resolvedPerDay);
     var L = [];
-    L.push('লেখক ফোরাম — সাপোর্ট সাপ্তাহিক রিপোর্ট');
-    L.push('ব্যাপ্তি: ' + trend.dayLabels[0] + ' → ' + trend.dayLabels[6]);
+    L.push('লেখক ফোরাম — সাপোর্ট ' + (D === 30 ? '৩০-দিনের রিপোর্ট' : 'সাপ্তাহিক রিপোর্ট'));
+    L.push('ব্যাপ্তি: ' + t.dayLabels[0] + ' → ' + t.dayLabels[t.dayLabels.length - 1]);
     L.push('');
     L.push('▪ ২৪ ঘণ্টার সারসংক্ষেপ');
     L.push('নতুন: ' + bnNum(digest.fresh24) + ' টি · সমাধান: ' + bnNum(digest.resolved24) + ' টি · স্টেল (৩+ দিন): ' + bnNum(digest.stale) + ' টি · গড় সমাধান-সময়: ' + (digest.avgResolveHours !== null ? bnNum(digest.avgResolveHours) + ' ঘ' : '—'));
@@ -375,11 +396,11 @@
     L.push('▪ বর্তমান অবস্থা (সব-স্কোপ)');
     L.push('নতুন অভিযোগ: ' + bnNum(counts.PENDING) + ' · চলমান: ' + bnNum(counts.IN_PROGRESS) + ' · সমাধান: ' + bnNum(counts.RESOLVED));
     L.push('');
-    L.push('▪ ৭-দিনের প্রবণতা (নতুন / সমাধান / গড়-সমাধান)');
-    for (var i = 0; i < 7; i++) {
-      L.push(trend.dayLabels[i] + ' — ' + bnNum(trend.newPerDay[i] || 0) + ' / ' + bnNum(trend.resolvedPerDay[i] || 0) + ' / ' + (trend.avgPerDay[i] != null ? bnNum(trend.avgPerDay[i]) + ' ঘ' : '—'));
+    L.push('▪ ' + (D === 30 ? '৩০-দিনের' : '৭-দিনের') + ' প্রবণতা (নতুন / সমাধান / গড়-সমাধান)');
+    for (var i = 0; i < t.dayLabels.length; i++) {
+      L.push(t.dayLabels[i] + ' — ' + bnNum(t.newPerDay[i] || 0) + ' / ' + bnNum(t.resolvedPerDay[i] || 0) + ' / ' + (t.avgPerDay[i] != null ? bnNum(t.avgPerDay[i]) + ' ঘ' : '—'));
     }
-    L.push('সপ্তাহে মোট নতুন: ' + bnNum(nSum) + ' টি (দৈনিক গড় ' + bnNum(Math.round(nSum / 7 * 10) / 10) + ') · মোট সমাধান: ' + bnNum(rSum) + ' টি (দৈনিক গড় ' + bnNum(Math.round(rSum / 7 * 10) / 10) + ')');
+    L.push((D === 30 ? '৩০-দিনে' : 'সপ্তাহে') + ' মোট নতুন: ' + bnNum(nSum) + ' টি (দৈনিক গড় ' + bnNum(Math.round(nSum / D * 10) / 10) + ') · মোট সমাধান: ' + bnNum(rSum) + ' টি (দৈনিক গড় ' + bnNum(Math.round(rSum / D * 10) / 10) + ')');
     return L.join('\n');
   } catch (_) { return ''; } } %>
   <%# session227 — ২৪ঘ-সারাংশ KPI (helpers digestStats এক-উৎস; ক্লিকে ফিল্টার-ভিউ-জাম্প: status+range) %>
@@ -574,6 +595,7 @@
     <div class="sc-help-row"><span>জবাব/লেখা এক-ক্লিকে ক্লিপবোর্ডে কপি (মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
     <div class="sc-help-row"><span>সংযুক্তি-ছবি কার্ড ছাড়াই বড় করে দেখুন — ক্লিকে খোলে, Esc/বাইরে-ক্লিকে বন্ধ (Ctrl+ক্লিক = নতুন-ট্যাব)</span><span class="keys"><kbd class="sc-kbd">ক্লিক</kbd></span></div>
     <div class="sc-help-row"><span>সপ্তাহ-রিপোর্ট ক্লিপবোর্ডে কপি — KPI+গণনা-সারাংশ (টেলিগ্রামে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">w</kbd></span></div>
+    <div class="sc-help-row"><span>রিপোর্ট-ব্যাপ্তি ৭/৩০ দিন — কপি-রিপোর্টের সময়সীমা বদল (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">৭/৩০</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
@@ -761,17 +783,34 @@
     copyText(txt).then(function (ok) { toast(ok ? 'জবাব কপি হয়েছে ✓' : 'কপি ব্যর্থ', !ok); });
   });
 
-  // ── session239 — সপ্তাহ-রিপোর্ট-কপি (EJS-এক-উৎস #scWkReport-JSON; ক্লায়েন্ট-গণনা-শূন্য; copyText-চুক্তি-পুনঃব্যবহার) ──
+  // ── session239+240 — সপ্তাহ/৩০-দিন-রিপোর্ট-কপি + ব্যাপ্তি-নির্বাচন (EJS-এক-উৎস দ্বৈত-পেলোড
+  //    #scWkReport/#scWkReport30; ক্লায়েন্ট-গণনা-শূন্য; copyText-চুক্তি-পুনঃব্যবহার; localStorage sc-wkr স্মরণ) ──
   var wkReportEl = document.getElementById('scWkReport');
+  var wkReportEl30 = document.getElementById('scWkReport30');
   var wkCopyBtn = document.getElementById('scWkCopyBtn');
+  var wkR7 = document.getElementById('scWkR7');
+  var wkR30 = document.getElementById('scWkR30');
+  var wkRange = '7';
+  try { if (localStorage.getItem('sc-wkr') === '30') wkRange = '30'; } catch (_) {}
+  function wkPayloadEl() { return wkRange === '30' ? (wkReportEl30 || wkReportEl) : (wkReportEl || wkReportEl30); }
+  function applyWkRange() {
+    if (wkR7) wkR7.setAttribute('aria-pressed', wkRange === '7' ? 'true' : 'false');
+    if (wkR30) wkR30.setAttribute('aria-pressed', wkRange === '30' ? 'true' : 'false');
+  }
+  function setWkRange(r) {
+    wkRange = (r === '30') ? '30' : '7';
+    try { if (wkRange === '30') localStorage.setItem('sc-wkr', '30'); else localStorage.removeItem('sc-wkr'); } catch (_) {}
+    applyWkRange();
+  }
   function wkReportCopy() {
-    if (!wkReportEl) { toast('রিপোর্ট-ডেটা নেই', true); return; }
+    var el = wkPayloadEl();
+    if (!el) { toast('রিপোর্ট-ডেটা নেই', true); return; }
     var txt = '';
-    try { txt = (JSON.parse(wkReportEl.textContent) || {}).text || ''; } catch (_) { txt = ''; }
+    try { txt = (JSON.parse(el.textContent) || {}).text || ''; } catch (_) { txt = ''; }
     if (!txt) { toast('কপি করার মতো রিপোর্ট নেই', true); return; }
     copyText(txt).then(function (ok) {
       if (!ok) { toast('কপি ব্যর্থ', true); return; }
-      toast('সপ্তাহ-রিপোর্ট কপি হয়েছে ✓');
+      toast(wkRange === '30' ? '৩০-দিনের রিপোর্ট কপি হয়েছে ✓' : 'সপ্তাহ-রিপোর্ট কপি হয়েছে ✓');
       if (wkCopyBtn) { // [স্টাইল] সফল-ফিডব্যাক — আইকন-সোয়াপ + ok-টোন (reduced-motion-নিরাপদ)
         var ic = wkCopyBtn.querySelector('i');
         wkCopyBtn.classList.add('sc-wk-ok');
@@ -784,7 +823,15 @@
     });
   }
   if (wkCopyBtn) wkCopyBtn.addEventListener('click', wkReportCopy);
-  window.__scQA.wkCopy = function () { wkReportCopy(); return { btn: !!wkCopyBtn, payload: !!wkReportEl }; }; // QA-হুক (অবশ্যই __scQA-পুনঃসৃজনের-পরে — গোটচা-অক্ষুণ্ণ)
+  if (wkR7) wkR7.addEventListener('click', function () { setWkRange('7'); });
+  if (wkR30) wkR30.addEventListener('click', function () { setWkRange('30'); });
+  applyWkRange(); // প্রথম-পেইন্টে স্মরণ-পুনঃস্থাপন (aria-pressed-সরাসরি — ফ্লিকার-শূন্য)
+  window.__scQA.wkCopy = function () { wkReportCopy(); return { btn: !!wkCopyBtn, payload: !!wkPayloadEl() }; }; // QA-হুক (অবশ্যই __scQA-পুনঃসৃজনের-পরে — গোটচা-অক্ষুণ্ণ)
+  window.__scQA.wkRange = function () { // session240 QA-হুক (wkCopy-র-পরে — একই-পুনঃসৃজন-চুক্তি)
+    var p30ok = false;
+    try { p30ok = ((JSON.parse((wkReportEl30 || {}).textContent || '{}') || {}).text || '').indexOf('৩০-দিনের') >= 0; } catch (_) {}
+    return { r: wkRange, b7: !!(wkR7 && wkR7.getAttribute('aria-pressed') === 'true'), b30: !!(wkR30 && wkR30.getAttribute('aria-pressed') === 'true'), p7: !!wkReportEl, p30: !!wkReportEl30, ok30: p30ok };
+  };
 
   // ── session232 — স্পার্ক/ট্রেন্ড-টুলটিপ (এক-শেয়ার্ড #scSparkTip; data-d/data-v/data-unit এক-উৎস; টেক্সট-নোড-শুধু — innerHTML-নিষিদ্ধ-রীতি; কার্ড-ফোকাসে আজ-বার) ──
   var tipEl = document.getElementById('scSparkTip');

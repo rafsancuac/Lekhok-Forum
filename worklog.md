@@ -3716,3 +3716,25 @@ Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
 - LEKHOK_ROOT-এক্সপ্লিসিট-রীতি: স্যান্ডবক্স-পুনঃসূচনার-পরে সুইট-রানে সর্বদা `LEKHOK_ROOT=<রিপো-রুট>` দিন
 - Task43-ফিচার-এরিয়া QA-রিগ্রেশন-ছাড়া স্পর্শ-নয়; বাকি-প্রস্তাব: Turso/проД-পোর্ট (পরিকল্পনা-গেট), পুরোনো-stale-সুইট (scripts/test-role-policy.sh) আধুনিকীকরণ — পরিকল্পনা-ছাড়া-বড়-কাজ-শুরু-নয়
 - পরের-এজেন্ট: session236 লেবেল; PLANS session235-নোট অবশ্যই পড়ুন; push-আগে fetch+rebase-বাধ্যতমূলক
+
+---
+Task ID: 81 (session240 — cron 403679; রিপোর্ট-ব্যাপ্তি-নির্বাচন ৭/৩০-দিন + trendN-সাধারণীকরণ প্যাক)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`9f1aafa` (session239) থেকে রাউন্ড-শুরু (behind 0/ahead 0; working-tree ক্লিন); টোকেন ২০০-ভ্যালিড (GH /user + Vercel /v9, .secrets/); live 200
+- **stale-হ্যান্ডওভার-সামারি ×১০-বার-খণ্ডনিত:** সামারি Task43/device-code-যুগ ("commit-হয়নি/টোকেন-নেই") দেখাচ্ছিল — প্রকৃত-অবস্থা origin session239-পুশড, টোকেন-সক্রিয়; my-project-worklog session236-এ-শেষ থাকলেও repo-র সত্য-উৎস = repo-worklog+PLANS+HEAD (parallel-রাউন্ড session237-239 repo-তে-নথিভুক্ত)
+- রাউন্ড-শুরু QA: **পূর্ণ-ব্যাটারি ২৯৫/২৯৫** প্রথম-রানেই-গ্রিন + CLEANUP-শূন্য → বাগ-শূন্য → ফিচার-রাউন্ড (session239-বাকি-প্রস্তাব: রিপোর্ট-ব্যাপ্তি-নির্বাচন)
+
+## এ-রাউন্ডে সম্পন্ন
+- **[Mandatory-ফিচার] রিপোর্ট-ব্যাপ্তি-নির্বাচন (৭/৩০-দিন):** helpers `trendN(rows, now, days)` (D-গেট শুধু ৭/৩০; trend7 = ডেলিগেশন — আউটপুট-বাইট-অভিন্ন; export+trendN) + রুটে trend30 + সেগমেন্ট `#scWkR7/#scWkR30` (aria-pressed) + দ্বৈত-পেলোড `#scWkReport`(id-অপরিবর্তিত)+`#scWkReport30` + কম্পোজার `scWkReportText(t, days)` (D=৭-বাইট-অভিন্ন) + ক্লায়েন্ট wkRange/localStorage `sc-wkr`-স্মরণ + QA-হুক `__scQA.wkRange` + সহায়িকা-সারি
+- **[Mandatory-স্টাইল]:** সেগমেন্ট-কন্ট্রোল (এক-টুকরা-বর্ডার + বিভাজক + pressed=accent-ভরাট tabular-nums + hover-soft + focus-inset-রিং + 640px + reduced-motion-নিরাপদ)
+- **টেস্ট:** tests/s240-unit.js **১২/১২** (trend7≡trendN(7)-বাইট-সমতা + গেট + never-throws) + tests/s240-rng-suite.sh **৪৪/৪৪** (রিপো-কমিটেড; ভিতরে-ইউনিট-গেট; সিড-শূন্য; শেষে sc-wkr-পরিষ্কার); **পূর্ণ-রিগ্রেশন ৩৫১/৩৫১** (পুরাতন ২৯৫ + s240 ×২) + secret-scan-ক্লিন + স্ক্রিনশট ×২ (s240-rng-desk, s240-rng-mobile390)
+- **নতুন-গোটচা ×১ (PLANS session240-নোট):** agent-browser eval-ফেরত বাইরের-স্তরে-আবার-JSON-এনকোডড (`{\"k\":\"v\"}`) → স্ট্রিং-মান-গ্রেপ `k..:..v` (কোলন-পরবর্তী ২-ডট); বুলিয়ান `k..:true`-অপরিবর্তিত — s240-প্রথম-রানের ৫-মিথ্যা-ফেলের-মূল-কারণ
+- ডক ×৩ (PROJECT §২৪০ + PLANS session240-নোট + repo-worklog এ-এন্ট্রি) + my-project-worklog Task 81 → push
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়)
+- পরের-এজেন্ট: **session241 লেবেল (worklog Task ID 82)**; PLANS session240-নোট অবশ্যই-পড়ুন (trendN-গেট + দ্বৈত-পেলোড + eval-এনকোড-গোটচা); push-আগে fetch+rebase-বাধ্যতমূলক; নতুন-সুইট tests/ এ-কমিট
+- রিমোট main = এ-রাউন্ডের session240-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
