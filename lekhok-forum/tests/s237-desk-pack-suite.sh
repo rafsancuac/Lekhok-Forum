@@ -12,7 +12,7 @@
 #         বাংলা-মান-তুলনা JS-এ · dirty-অবস্থায়-ম্যানুয়াল-reload-নিষিদ্ধ (কাউন্টার-টেস্ট সবার-শেষে) ·
 #         ভিউপোর্ট-রিসেট + MOB-রিট্রাই ×৩ (s235-হার্ডেনিং) · LEKHOK_ROOT-সেমান্টিক্স=রিপো-রুট
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

@@ -7,7 +7,7 @@
 # চুক্তি: ① সার্ভার-বন্ধে-seed ② CSRF-লগইন admin/admin123 ③ eval-প্যাটার্ন: বুলিয়ান k..:true, সংখ্যা k..:N, স্ট্রিং k..:..v (session241-টেবিল)
 #         ④ বাংলা-অঙ্ক-যাচাই JS-textContent (grep-range-নিষিদ্ধ-রীতি) ⑤ s241-স্ট্যাটিক-স্ট্রিপ-অক্ষুণ্ণ (data-mh-attr-যোগ-মাত্র)
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

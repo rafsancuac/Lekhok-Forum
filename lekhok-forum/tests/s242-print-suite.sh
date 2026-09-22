@@ -6,7 +6,7 @@
 # চুক্তি: ① সিড-শূন্য (রিড-ওনলি-UI — DB-রাইট-শূন্য → CLEANUP-COUNT=0) ② CSRF-লগইন admin/admin123 ③ eval-প্যাটার্ন: বুলিয়ান k..:true, সংখ্যা k..:N, স্ট্রিং k..:..v (session241-টেবিল)
 #         ④ রেন্ডার্ড-HTML-অ্যাসার্ট = ফেচ-ফলাফল (EJS-সোর্স-ফ্র্যাগমেন্ট-নয় — session241-গোটচা)
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

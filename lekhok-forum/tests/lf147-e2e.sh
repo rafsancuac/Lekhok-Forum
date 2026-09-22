@@ -11,8 +11,10 @@ ok(){ PASS=$((PASS+1)); echo "  ✓ $1"; }
 bad(){ FAIL=$((FAIL+1)); echo "  ✗ $1"; }
 chk(){ if [ "$1" = "$2" ]; then ok "$3"; else bad "$3 (got=$1 want=$2)"; fi; }
 
-echo "── [0] সার্ভার (pkill -9 → বুট → health)"
-pkill -9 -f "node server.js" 2>/dev/null; sleep 0.8
+echo "── [0] সার্ভার (pkill -9 → সিড → বুট → health)"
+pkill -9 -f "node server.js" 2>/dev/null; sleep 1.5 # session247 — settle-বৃদ্ধি (ব্যাটারি-ক্রমে dying-server DB-রাইট-রেস-সুরক্ষা)
+SD=$(node tests/lf147-seed.js 2>&1) # session247 — suite-স্বয়ংসম্পূর্ণ (সার্ভার-বন্ধে-seed চুক্তি; ensureUser/স্টেল-ইউজার-অনুপস্থিতি-সহনশীল)
+echo "$SD" | rg -q 'SEEDED ✓' && ok "সিড (fbtest×৩ + লেখা + শেয়ার + মূল-id3)" || bad "সিড-ব্যর্থ: $SD"
 PORT=8080 LF_QA_DISABLE_RATELIMIT=1 node server.js > /tmp/lf147-server.log 2>&1 &
 SRV=$!
 sleep 6
@@ -38,6 +40,7 @@ echo "$PROF" | rg -q 'হাইলাইটস' && ok "সাইডবার হ
 echo "$PROF" | rg -q 'pf-hl-card147' && ok "হাইলাইটস কার্ড-মার্কআপ" || bad "হাইলাইটস-মার্কআপ অনুপস্থিত"
 echo "$PROF" | rg -q 'নীলকণ্ঠ' && ok "কলমী-নাম রেন্ডার (AuthorLabel)" || bad "কলমী-নাম অনুপস্থিত"
 echo "$PROF" | rg -cq 'সদস্য</a>' && bad "AuthorLabel অন্ধ ('সদস্য' লিক)" || ok "AuthorLabel সব-নাম সচেতন"
+echo "$PROF" | rg -q 'upt158' && bad "গেস্টে upt158-লিক (isOwner-গেট ভাঙা)" || ok "গেস্টে upt158-অনুপস্থিত (isOwner-গেট)"
 
 echo "── [2] agent-browser: লগইন (fbtest2) → প্রোফাইল-ভিজিটর অভিজ্ঞতা"
 agent-browser close --all > /dev/null 2>&1 || true
@@ -95,7 +98,9 @@ JAR=$(mktemp)
 CS=$(curl -s -c "$JAR" http://localhost:8080/login | rg -o 'name="_csrf"[^>]*value="[^"]+"' | rg -o 'value="[^"]+"' | head -1 | sed 's/value="//;s/"//')
 LP=$(curl -s -o /dev/null -w "%{http_code}" -b "$JAR" -c "$JAR" -d "username=fbtest1&password=demo123&_csrf=$CS" http://localhost:8080/login)
 own=$(curl -s -b "$JAR" http://localhost:8080/profile/fbtest1)
-echo "$own" | rg -q 'pf-composer147' && echo "$own" | rg -q 'pf-composer-cta147' && ok "মালিক-কম্পোজার-স্ট্রিপ (login POST=$LP)" || bad "মালিক-কম্পোজার-স্ট্রিপ (login POST=$LP)"
+# session247 — ডম-ড্রিফট-আধুনিকীকরণ: pf-composer147 সেশন-163-এ অপসারিত (ইউনিভার্সালপোস্টট্রিগার upt158 = একমাত্র-মাস্টার-ট্রিগার; isOwner-গেট)
+echo "$own" | rg -q 'upt158' && ok "মালিক-মাস্টার-ট্রিগার upt158 (login POST=$LP; s163-উত্তরাধিকার)" || bad "মালিক-মাস্টার-ট্রিগার upt158 (login POST=$LP)"
+echo "$own" | rg -q 'pf-composer147' && bad "পুরনো composer147-লিক (s163-অপসারণ ভাঙা)" || ok "পুরনো composer147-শূন্য (s163-অপসারণ-অক্ষুণ্ণ)"
 OWNSH=$(echo "$own" | rg -q 'share-nested147' && echo yes || echo no)
 [ "$OWNSH" = "yes" ] && ok "মালিক-প্রোফাইলে শেয়ার-কার্ড (৩-ডট-সহ)" || bad "মালিক-প্রোফাইলে শেয়ার-কার্ড অনুপস্থিত"
 rm -f "$JAR"

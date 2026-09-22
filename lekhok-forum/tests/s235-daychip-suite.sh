@@ -9,7 +9,7 @@
 #         grep-BRE-ব্র্যাকেট-এস্কেপ (\[data-on=\"1\"\]) · সিনথেটিক-mouseover-স্থায়িত্ব (MutationObserver-অপ্রয়োজনীয় —
 #         দিন-চিপ data-on-অ্যাট্রিবিউট-স্টেট রাখে) · LEKHOK_ROOT-সেমান্টিক্স=রিপো-রুট
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

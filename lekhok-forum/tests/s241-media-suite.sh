@@ -7,7 +7,7 @@
 #         ③ eval-স্ট্রিং-মান-গ্রেপ k..:..v (session240-গোটচা); বুলিয়ান k..:true; বাংলা-অঙ্ক-যাচাই JS-এ (grep-range-নিষিদ্ধ)
 #         ④ স্কোপ-চুক্তি সুবিধায় q=TAG → mediaBreak নিখুত-গণনা (বেস-DB-নিরপেক্ষ)
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

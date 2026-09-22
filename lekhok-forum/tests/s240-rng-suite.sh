@@ -8,7 +8,7 @@
 # গোটচা-সম্মতি (PLANS session231-239-নোট): __scQA-হুক-পুনঃসৃজনের-পরে · ভিউপোর্ট-রিসেট + MOB-রিট্রাই ×৩ ·
 #         grep-প্যাটার্নে বাংলা-অঙ্ক-রেঞ্জ-নিষিদ্ধ (লিটারাল-নিরাপদ) · typeof-অ্যাসার্টে বুলিয়ান-চুক্তি (কোট-যুক্ত-ফাংশন-প্যাটার্ন-নিষিদ্ধ)
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

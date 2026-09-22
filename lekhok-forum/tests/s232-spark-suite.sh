@@ -7,7 +7,7 @@
 # গোটচা-সম্মতি (PLANS session231-নোট): eval-IIFE })()-ইনভোকড · কোট-এস্কেপ-দ্বি-স্তর (k..: + ..ভ্যালু) ·
 #         reloadSoon-রেসে pollst · ক্ষণস্থায়ী-টোস্ট-অ্যাসার্ট-বর্জন (ক্লাস/লোকালস্টোরেজ-ই-সত্য-সিগনাল)
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

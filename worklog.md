@@ -3833,3 +3833,27 @@ Work Log:
 Stage Summary:
 - শিক্ষা: বট-হার্টবিট ≠ পোল-সফলতা — ভবিষ্যৎ-কিপারে poll-error-freshness-চেক-যোগ-সুপারিশ (log-এ "পোল-ত্রুটি" স্ট্রিক-ডিটেকশন)
 - রিকভারি-প্রবাহ চলমান — ইউজার-OTP-প্রতীক্ষিত; AUTH_KEY_DUPLICATED-এর একমাত্র-সমাধান ফ্রেশ-লগইন (রিস্টার্টে-হয়-না)
+---
+Task ID: 89 (session247 — cron 403679; QA-ইনফ্রা-ফিক্স + stale-তৃতীয়-ঢেউ-১ + প্রেরক-থ্রেড-লিঙ্ক)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`cf5f42d` (session246) থেকে রাউন্ড-শুরু (ls-remote-প্রমাণ; tracking-ref স্টেল = URL-fetch-গোটচা); টোকেন-ভ্যালিদ (GH /user→200; Vercel-টোকেন /v2/user 403 — পুরোনো-ফাইল; live-200-ই-মূল-সিগনাল), live 200; working-tree ক্লিন
+- রাউন্ড-শুরু QA: ব্যাটারি-প্রথম-রানে s243→s246 ভুয়া-ফেল + unit-EXIT-2 → **P1-QA-ইনফ্রা-বাগ-আবিষ্কৃত** (নিচে) → ফিক্স-পরে সব-গ্রিন
+
+## এ-রাউন্ডে সম্পন্ন (session247)
+- **P1-ফিক্স: self-locating ROOT ×১৬-সুইট** — সুইট-ডিফল্ট `/home/z/lekhok-forum/lekhok-forum` = পূর্ব-স্যান্ডবক্সের-বেঁচে-থাকা-স্টেল-ক্লোন (d8fa986 = session242) → ভুয়া-গ্রেপ-ফল (ফেল+পাস-দুই-দিক), seed-MODULE_NOT_FOUND, স্টেল-অ্যাপ-সার্ভার-বুট-ঝুঁকি → `ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"` (python-লাইন-প্যাচ; LEKHOK_ROOT-চুক্তি-রক্ষা)
+- **[ব্যাকলগ-ফিক্স] lf147 পুনরুজ্জীবিত ৪৩/৪৫→৪৮/৪৮:** সিডে id=3-"মূল"-আর্টিকেল idempotent (/articles/3 ৪০৪-ফিক্স) + ধাপ-০-স্বয়ংসম্পূর্ণ-সিড + DOM-ড্রিফট-আধুনিকীকরণ (pf-composer147→upt158; s163-চুক্তি) + নেগেটিভ ×২ (গেস্টে-upt158-অনুপস্থিত; পুরনো-মার্কার-লিক-শূন্য)
+- **[Mandatory-ফিচার] প্রেরক-থ্রেড-লিঙ্ক:** কার্ড-হেডে `data-thread` বাটন (`/messages/<sender_username>` — noopener-নতুন-ট্যাব) + **t-কী** threadOpen (কার্সর-শূন্যে/প্রেরক-শূন্যে টোস্ট) + stopPropagation-বাইন্ডিং + QA-হুক ×২ (thread/threadOpen — ক্রমের-শেষ) + সহায়িকা ×২ (G2 ৯-১২ · G4 ১৭-২৬)
+- **[Mandatory-স্টাইল]:** `.sc-cp.sc-th` — sc-cp-উত্তরাধিকার + accent-আইকন-বিশ্রাম (.8→1 hover/focus) — transition-শূন্য reduced-motion-নিরাপদ
+- **টেস্ট:** নতুন tests/s247-thread-suite.sh **৩৩/৩৩** (সিড=s243-পুনঃব্যবহার+cleanup-শূন্য; window.open-স্টাব-ক্যাপচার `/messages/md_rafsan`; কাঠামো ×১৫ + রেন্ডার ×৪ + আচরণ ×৫); **পূর্ণ-রিগ্রেশন ৭৩৩/৭৩৩ ×২-ধারাবাহিক** (shell ৫৮৩ + lf64 ৩০ + lf147 ৪৮ + lf183 ২২ + lf190 ২৫ + units ২৫) + secret-scan-ক্লিন + স্ক্রিনশট ×২
+- **ক্রস-সুইট-মডার্নাইজেশন:** s246-ব্যাজ-অ্যাসার্ট ১৭-২৫→১৭-২৬ + lf147-settle 0.8→1.5 (dying-server DB-রাইট-রেস)
+- **নতুন-গোটচা ×৩ (PLANS session247):** ① stale-ক্লোন-ঝুঁকি (নতুন-শ্রেণি) — self-locating-ROOT-ই-স্থায়ী-সমাধান; নতুন-সুইটে-এ-প্যাটার্ন ② eval bare-number (`:0`-মিথ্যা-ফেল → JSON-wrapper+n..:0) ③ স্ট্রিং-প্যাটার্নে লিডিং-স্ল্যাশ (v = আসল-মান-হুবহু) + ট্রিপল-ব্যাকস্ল্যাশ-বাইন্ডিং-অ্যাসার্ট-ভুল
+- ডক ×৩ (PROJECT §২৪৭ + PLANS session247-নোট + repo-worklog Task 89) + এ-এন্ট্রি → secret-scan → fetch+rebase → push → Vercel/live-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অপ্রয়োজনীয়
+- পরের-এজেন্ট: **session248 লেবেল (worklog Task ID 90)**; PLANS session247-নোট অবশ্যই-পড়ুন (stale-ক্লোন + bare-number + লিডিং-স্ল্যাশ + ব্যাজ-স্ক্যান-চুক্তি); push-আগে fetch+rebase-বাধ্যতমূলক; নতুন-সুইট tests/ এ-কমিট
+- বাকি-প্রস্তাব: stale-তৃতীয়-ঢেউ-বাকি (lf153 অডিয়েন্স-চিপ+cursor-সিড, lf159 রেল-DOM ১২≠১৬, test-role-policy.sh ২০৯-ফেল — বৃহত্তম-খণ্ড), Turso/প্রোড-পোর্ট
+- রিমোট main = এ-রাউন্ডের session247-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন

@@ -86,6 +86,14 @@ const initSqlJs = require('sql.js');
     }
   } catch (e) { console.log('likes-skip', e.message); }
 
+  // ── session247 — "মূল" আর্টিকেল id=3 (লিগ্যাসি-চুক্তি /articles/3; নতুন-DB-তে id-3-অনুপস্থিত → 404-ছিল) ──
+  if (!q('SELECT 1 x FROM posts WHERE id = 3').length) {
+    run(`INSERT INTO posts (id, author_id, type, title, body, excerpt, category, status, view_count, like_count, comment_count, reactions, published_at, created_at)
+         VALUES (3, ?, 'article', 'লেখক-ফোরামের প্রথম কলাম', 'সাহিত্য-আঙিনায় নতুন যাত্রার শুভেচ্ছা-কলাম — সব লেখকের জন্য উন্মুক্ত মঞ্চ।', 'সাহিত্য-আঙিনায় নতুন যাত্রার শুভেচ্ছা-কলাম।', 'general', 'published', 5, 2, 0, '{}', datetime('now','localtime'), datetime('now','localtime'))`,
+      [ids.fbtest1]);
+    console.log('orig+ id=3');
+  }
+
   fs.writeFileSync(dbPath, Buffer.from(db.export()));
   const fsyncCheck = q("SELECT COUNT(*) c FROM posts WHERE post_kind='share'")[0].c;
   console.log('SEEDED ✓ shares:', fsyncCheck, '| users:', JSON.stringify(ids), '| arts:', art1, art2, art3);

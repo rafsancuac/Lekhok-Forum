@@ -244,6 +244,10 @@
     .sc-cp:hover{color:var(--ad-accent);border-color:var(--ad-accent-ring);background:var(--ad-icon-bg)}
     .sc-cp:focus-visible{outline:2px solid var(--ad-accent);outline-offset:2px}
     .sc-cp.sc-cp-ok{color:var(--lf-ok-deep);border-color:var(--lf-ok-deep);background:var(--lf-ok-soft)}
+    /* session247 — প্রেরক-থ্রেড-বাটন (sc-cp-অবস্থা-উত্তরাধিকার; accent-আইকন-বিশ্রাম = কপি-বাটন-পার্থক্য; transition-শূন্য reduced-motion-নিরাপদ) */
+    .sc-cp.sc-th{text-decoration:none}
+    .sc-cp.sc-th i{color:var(--ad-accent);opacity:.8}
+    .sc-cp.sc-th:hover i,.sc-cp.sc-th:focus-visible i{opacity:1}
     /* session246 — সূক্ষ্ম-স্ক্রলবার (ডেস্ক-ব্রাউজার-ডিফল্ট-অশোভন; var()-টোকেন-এক-উৎস) */
     ::-webkit-scrollbar{width:8px;height:8px}
     ::-webkit-scrollbar-track{background:transparent}
@@ -611,6 +615,8 @@
       <span class="sc-badge st-<%= r.status %>"><%= r.status === 'PENDING' ? 'নতুন' : r.status === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান হয়েছে' %></span>
       <%# session246 — কার্ড-রিপোর্ট-কপি (মেসেঞ্জার/টেলিগ্রামে-পেস্ট-প্রস্তুত; DOM-টেক্সট-উৎস — innerHTML-নিষিদ্ধ-রীতি) %>
       <button type="button" class="sc-cp" data-card-copy data-id="<%= r.id %>" title="রিপোর্ট-তথ্য কপি" aria-label="রিপোর্ট #<%= r.id %> তথ্য কপি করুন"><i class="fas fa-copy" aria-hidden="true"></i></button>
+      <%# session247 — প্রেরক-থ্রেড-লিঙ্ক (অভিযোগ → প্রেরকের-সাথে-সরাসরি-কথা; নেটিভ target=_blank noopener) %>
+      <% if (r.sender_username) { %><a class="sc-cp sc-th" data-thread href="/messages/<%= r.sender_username %>" target="_blank" rel="noopener" title="প্রেরকের সাথে কথা বলুন" aria-label="প্রেরকের সাথে কথা বলুন — @<%= r.sender_username %>"><i class="fas fa-comments" aria-hidden="true"></i></a><% } %>
     </div>
 
     <p class="sc-body"><%= r.message_text %></p>
@@ -698,15 +704,16 @@
     <div class="sc-help-row"><span>সার্চ-বক্সে ফোকাস</span><span class="keys"><kbd class="sc-kbd">/</kbd></span></div>
     <div class="sc-help-row"><span>প্রথম-নতুন (অমীমাংসিত)-কার্ডে কার্সর-জাম্প</span><span class="keys"><kbd class="sc-kbd">u</kbd></span></div>
     <div class="sc-help-row"><span>সব-ফিল্টার এক-কীতে পরিষ্কার — স্ট্যাটাস+মাধ্যম+সার্চ+সময় (পরিষ্কার-অবস্থায় টোস্ট)</span><span class="keys"><kbd class="sc-kbd">c</kbd></span></div>
-    <div class="sc-help-group"><i class="fas fa-bolt" aria-hidden="true"></i> কার্ড-অ্যাকশন <span class="sc-hg-n">৯-১১</span></div>
+    <div class="sc-help-group"><i class="fas fa-bolt" aria-hidden="true"></i> কার্ড-অ্যাকশন <span class="sc-hg-n">৯-১২</span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ডে দ্রুত-স্ট্যাটাস সেট (নতুন / চলমান / সমাধান)</span><span class="keys"><kbd class="sc-kbd">Shift</kbd><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ড নির্বাচন/বাদ — বাল্ক-স্ট্যাটাস (Esc-এ নির্বাচন-পরিষ্কার)</span><span class="keys"><kbd class="sc-kbd">x</kbd><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>শেষ স্ট্যাটাস-বদল আন্ডু (বাল্ক-গ্রুপ-সহ; লেখা-বক্সে নেটিভ-আন্ডু)</span><span class="keys"><kbd class="sc-kbd">Ctrl</kbd><kbd class="sc-kbd">Z</kbd></span></div>
+    <div class="sc-help-row"><span>কার্সর-কার্ডের প্রেরককে মেসেঞ্জারে লিখুন — থ্রেড নতুন-ট্যাবে (প্রেরক-অ্যাকাউন্ট-শূন্যে টোস্ট)</span><span class="keys"><kbd class="sc-kbd">t</kbd></span></div>
     <div class="sc-help-group"><i class="fas fa-sliders-h" aria-hidden="true"></i> ডেস্ক-নিয়ন্ত্রণ <span class="sc-hg-n">১২-১৬</span></div>
     <div class="sc-help-row"><span>কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">d</kbd></span></div>
     <div class="sc-help-row"><span>রিফ্রেশ-এখন — গণনা তৎক্ষণাৎ আনুন (বিরতি-অবস্থায়-ও চলে)</span><span class="keys"><kbd class="sc-kbd">r</kbd></span></div>
     <div class="sc-help-row"><span>অটো-হালনাগাদ বিরতি/চালু — পোল+SSE-স্বয়ংক্রিয়-রিলোড (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">p</kbd></span></div>
-    <div class="sc-help-group"><i class="fas fa-hand-pointer" aria-hidden="true"></i> মাউস-ও-টাচ <span class="sc-hg-n">১৭-২৫</span></div>
+    <div class="sc-help-group"><i class="fas fa-hand-pointer" aria-hidden="true"></i> মাউস-ও-টাচ <span class="sc-hg-n">১৭-২৬</span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে হোভার — দিনভিত্তিক-গণনা টুলটিপ</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
     <div class="sc-help-row"><span>জবাব/লেখা এক-ক্লিকে ক্লিপবোর্ডে কপি (মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
     <div class="sc-help-row"><span>সংযুক্তি-ছবি কার্ড ছাড়াই বড় করে দেখুন — ক্লিকে খোলে, Esc/বাইরে-ক্লিকে বন্ধ (Ctrl+ক্লিক = নতুন-ট্যাব)</span><span class="keys"><kbd class="sc-kbd">ক্লিক</kbd></span></div>
@@ -715,6 +722,7 @@
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
     <div class="sc-help-row"><span>মিডিয়া-চিপে হোভার/ফোকাস — স্ট্রিপ-সেগমেন্ট উজ্জ্বল (সেগমেন্ট-হোভারে চিপ-হাইলাইট — উল্টো-দিকও)</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
     <div class="sc-help-row"><span>কার্ডে কপি-বাটন — রিপোর্ট-তথ্য ক্লিপবোর্ডে (প্রেরক/সময়/মাধ্যম/অবস্থা/লেখা; মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
+    <div class="sc-help-row"><span>কার্ডে কথা-বাটন — প্রেরকের মেসেঞ্জার-থ্রেড নতুন-ট্যাবে (সরাসরি-জবাব-প্রবাহ)</span><span class="keys"><kbd class="sc-kbd">কথা-বাটন</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>লেখা-বদলে রিফ্রেশ-আটকে-রাখা (অসংরক্ষিত-জবাব-সুরক্ষা)</span><span class="keys"><kbd class="sc-kbd">স্বয়ংক্রিয়</kbd></span></div>
@@ -918,6 +926,10 @@
       });
     });
   });
+  // session247 — প্রেরক-থ্রেড-লিঙ্ক বাইন্ডিং (stopPropagation = কার্ড-ক্লিক-শৃঙ্খল-অক্ষুণ্ণ; নেভিগেশন নেটিভ)
+  document.querySelectorAll('[data-thread]').forEach(function (a) {
+    a.addEventListener('click', function (ev) { ev.stopPropagation(); });
+  });
   document.querySelectorAll('[data-note-copy]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var box = btn.closest('.sc-note-box').querySelector('[data-sc-note]');
@@ -1032,6 +1044,11 @@
     for (var i = 0; i < btns.length; i++) { var c = btns[i].closest('.sc-card'); if (c) { first = cardReportText(c); break; } }
     return { buttons: btns.length, preview: first ? first.slice(0, 40) : null };
   };
+  window.__scQA.thread = function () { // session247 QA-হুক (cardCopy-এর-পরে — ক্রমের-শেষ)
+    var ls = document.querySelectorAll('[data-thread]');
+    return { links: ls.length, first: ls.length ? ls[0].getAttribute('href') : null };
+  };
+  window.__scQA.threadOpen = threadOpen; // session247 — t-কী-প্রবেশপথ (stub-window.open-যাচাই)
   // ── session243 — মিডিয়া-চিপ ↔ স্ট্রিপ-সেগমেন্ট ক্রস-হাইলাইট (তাৎক্ষণিক-ক্লাস — transition-শূন্য, reduced-motion-স্বাভাবিক-নিরাপদ; স্ট্যাটিক-ফার্নিচার-বাইন্ড — লাইভ-কার্ড-রিরেন্ডার-স্বাধীন; innerHTML-নিষিদ্ধ-রীতি-অটুট) ──
   (function () {
     var MH = ['TEXT', 'IMAGE', 'AUDIO', 'VIDEO'];
@@ -1471,6 +1488,13 @@
     cards[cursor].setAttribute('aria-current', 'true');
     cards[cursor].scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
+  function threadOpen() { // session247 — t-কী: কার্সর-কার্ডের প্রেরক-মেসেঞ্জার-থ্রেড নতুন-ট্যাবে (window.open noopener)
+    var c = cards[cursor];
+    if (!c) { toast('কার্সর-কার্ড নেই — আগে j/k দিয়ে কার্ড বাছুন'); return; }
+    var a = c.querySelector('[data-thread]');
+    if (!a) { toast('এ-কার্ডে প্রেরক-অ্যাকাউন্ট নেই'); return; }
+    window.open(a.getAttribute('href'), '_blank', 'noopener');
+  }
   // ── session230 — x-নির্বাচন + বাল্ক-স্ট্যাটাস (Next-session206/212-চুক্তি-পোর্ট; sequential-PUT; সম-স্টেটাস নীরব-স্কিপ session229-চুক্তি; toast-ত্রুটি true-প্যারাম) ──
   var bulkEl = document.getElementById('scBulk');
   var bulkCount = document.getElementById('scBulkCount');
@@ -1599,6 +1623,7 @@
     if (e.key === 'm' || e.key === 'M') { e.preventDefault(); mediaCycle(); return; } // session244 — মাধ্যম-ফিল্টার সাইকেল (typing-গার্ডের-পরে)
     if (e.key === 'u' || e.key === 'U') { e.preventDefault(); firstPendingJump(); return; } // session244 — প্রথম-নতুন-কার্ডে জাম্প (typing-গার্ডের-পরে)
     if (e.key === 'c' || e.key === 'C') { e.preventDefault(); clearFilters(); return; } // session245 — সব-ফিল্টার পরিষ্কার (typing-গার্ডের-পরে)
+    if (e.key === 't' || e.key === 'T') { e.preventDefault(); threadOpen(); return; } // session247 — প্রেরক-থ্রেড নতুন-ট্যাবে (typing-গার্ডের-পরে)
     // ── session229 — Shift+1/2/3 কার্সর-কার্ডে দ্রুত-স্ট্যাটাস (Next-session222-চুক্তি: e.code-লেআউট-স্বাধীন; সম-স্টেটাসে নীরব-স্কিপ) ──
     if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
       if (cursor < 0 || !cards[cursor]) { toast('কার্সর-কার্ড নেই — আগে j/k দিয়ে কার্ড বাছুন'); return; }

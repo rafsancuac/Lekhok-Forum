@@ -6,7 +6,7 @@
 # চুক্তি: ① সিড = s243-seed-video.js পুনঃব্যবহার (TAG Task243-VIDEO ×৬ PENDING; সার্ভার-বন্ধে-seed) ② CSRF-লগইন admin/admin123
 #         ③ eval-প্যাটার্ন: বুলিয়ান k..:true, সংখ্যা k..:N, স্ট্রিং k..:..v (session241-টেবিল) ④ keydown-dispatch = body-বাবল (s233-সিনথেটিক-চুক্তি)
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

@@ -9,7 +9,7 @@
 # গোটচা-সম্মতি (PLANS session231-237-নোট): eval-IIFE })()-ইনভোকেড · [hidden]-স্পষ্ট-নিয়ম (display:flex-চাপা) ·
 #         __scQA-হুক-অবশ্যই-পুনঃসৃজনের-পরে · ভিউপোর্ট-রিসেট + MOB-রিট্রাই ×৩ · LEKHOK_ROOT-সেমান্টিক্স=রিপো-রুট
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0

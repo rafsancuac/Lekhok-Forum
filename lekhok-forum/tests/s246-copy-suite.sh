@@ -7,7 +7,7 @@
 # চুক্তি: ① সিড = s243-seed-video.js পুনঃব্যবহার (TAG Task243-VIDEO ×৬; সার্ভার-বন্ধে-seed) ② CSRF-লগইন admin/admin123
 #         ③ eval-প্যাটার্ন: বুলিয়ান k..:true, সংখ্যা k..:N, স্ট্রিং k..:..v (session241-টেবিল) ④ clipboard-বিষয়বস্তু-অ্যাসার্ট = headless-অবিশ্বস্ত → toast+class-প্রক্সি
 set -u
-ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum/lekhok-forum}"
+ROOT="${LEKHOK_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../.." && pwd)}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0
@@ -43,7 +43,7 @@ contains "CSS কার্ড-হোভার" "$SRC" '.sc-card:hover{border-col
 contains "CSS স্ক্রলবার" "$SRC" '::-webkit-scrollbar-thumb{background:var(--ad-line)'
 contains "QA-হুক cardCopy" "$SRC" '__scQA.cardCopy'
 contains "সহায়িকা-সারি কপি" "$SRC" 'কার্ডে কপি-বাটন — রিপোর্ট-তথ্য ক্লিপবোর্ডে'
-contains "G4-ব্যাজ আপডেট ১৭-২৫" "$SRC" 'মাউস-ও-টাচ <span class="sc-hg-n">১৭-২৫</span>'
+contains "G4-ব্যাজ আপডেট ১৭-২৫" "$SRC" 'মাউস-ও-টাচ <span class="sc-hg-n">১৭-২৬</span>'
 
 echo "── ধাপ-২: রেন্ডার-প্রমাণ ──"
 D=$(curl -s -b "$J" "$BASE/admin/support-center?q=$TAG")
