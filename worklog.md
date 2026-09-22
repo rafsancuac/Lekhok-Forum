@@ -3508,3 +3508,22 @@ Stage Summary:
 - **স্ট্যাক-লক-সম্পন্ন**: রিপো-তে-এখন-এক-মাত্র-অ্যাপ = `lekhok-forum/` (Express+EJS); Next.js-গিট/ডিস্ক/Vercel-সব-জায়গা-থেকে-বিলুপ্ত + ৩-স্তরের-গার্ড (AGENT_INSTRUCTIONS.md + AGENT-NOTICE.md + .gitignore-গার্ড)
 - প্রোড-অক্ষত: docs-only-কমিট — ডিপ্লয়-ঝুঁকি-শূন্য; epaper-bot-প্রভাবিত-নয় (EPAPER_ROOT my-project-স্যান্ডবক্স, সাইট-সিঙ্ক /api/epaper Express-মাউন্টেড)
 - পরের-এজেন্ট: **session202 লেবেল**; কাজ-শুধু `lekhok-forum/`-এ; কমিট-অথর-যাচাই-আগে; QA = `bash ensure-server.sh` (:8094); webDevReview-ক্রন-এখন-Express-অনলি-নির্দেশনা-সহ-পুনঃস্থাপিত
+
+---
+Task ID: session224
+Agent: Z.ai Code (main sandbox agent)
+Task: ইউজার-নির্দেশ — Next.js-সবকিছু বাদ (সাইট/গিট/Vercel) + Next.js-সেশনে-আটকে-থাকা গুরুত্বপূর্ণ কাজ Express/EJS-এ মাইগ্রেশন
+
+Work Log:
+- অডিট: Vercel-এ ২ প্রজেক্ট (lekhok-forum=Express ✓, uni-tracker=nextjs ✗); GitHub-এ UniTracker=Next.js ✗
+- lekhok-forum-next/ পোর্টে ফিচার-প্যারিটি অডিট — Express-এ সব-বিদ্যমান → অনন্য-আটকে-থাকা কাজ = session160-র ৪-বাগ নেতৃত্ব-ফিক্স (আনডিপ্লয়ড)
+- RCA লাইভ-রি-মাপা: ① C()-হেল্পারের DEFAULTS-প্রতিদান (content-registry.js:539) ② .leadership-matrix 1fr 1fr-এ ১-সেল বামে-আটকে ③ .leader-bani rgb(75,76,79) ঘোলা ④ padding-bottom 28px
+- ফিক্স (commit 8750e46): C()-WYSIWYG (সেভ-ফাঁকা সম্মানিত, ইউনিট ৫/৫) + admin/routes.js content_-প্রিফিক্স-ফিক্স + style.css lfw230-ব্লক
+- লাইভ-Turso: content_home_year_founding='' (ব্যবহারকারীর ইচ্ছা), home_year_current='২০২৫-২৬' অক্ষত
+- Turso-ব্যাকড E2E + লাইভ-এজেন্ট-ব্রাউজার-যাচাই: প্রতিষ্ঠাতা-চিপ শূন্য, pairCenterOffset −5px, বাণী ক্রিস্প, padBottom 14px, ৩৯০px নো-হস্ক্রল
+- ক্লিনআপ: Vercel uni-tracker ডিলিট (204); GitHub UniTracker ডিলিট (204; tarball-ব্যাকআপ lekhok-fix/backups/) — উভয়-প্ল্যাটফর্মে শুধু Express-পরিবার
+
+Stage Summary:
+- main @ 8750e46 — ৪-বাগ লাইভ-ফিক্সড + Next.js-মুক্ত (সাইট/গিট/Vercel)
+- নীতি: C() WYSIWYG; সেটিংস-কী সবসময় content_-প্রিফিক্সসহ
+- ঝুঁকি: প্যারালাল-এজেন্ট-রেস — push-এর আগে fetch+rebase অভ্যাস করো
