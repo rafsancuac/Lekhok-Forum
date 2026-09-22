@@ -75,7 +75,9 @@ echo "$DASH" | rg -q "fb-bg153-fbg1" && ok "ফিডে গ্রেডিয�
 echo "$DASH" | rg -q 'fb-rich153' && ok "ফিডে রিচ-বডি (fb-rich153)" || bad "রিচ-বডি অনুপস্থিত"
 echo "$DASH" | rg -q 'খুশি 😊' && ok "অনুভূতি-চিপ ফিডে" || bad "অনুভূতি-চিপ অনুপস্থিত"
 echo "$DASH" | rg -q 'চট্টগ্রাম বিশ্ববিদ্যালয়' && ok "লোকেশন-চিপ ফিডে" || bad "লোকেশন-চিপ অনুপস্থিত"
-echo "$DASH" | rg -q 'fb-aud-chip153' && bad "পাবলিক-পোস্টে অডিয়েন্স-চিপ লিক" || ok "পাবলিকে অডিয়েন্স-চিপ শূন্য"
+# session249-আধুনিকীকরণ: fb-aud-chip153 session164-এ বিলোপ-ইচ্ছাকৃত (হেডার-শূন্য FB-কম্প্যাক্ট-কার্ড) —
+# প্রতিস্থাপক = লেখক-সময়-লাইনের visibility-meta (গ্লোব title="পাবলিক") — পাবলিক-পোস্টে গ্লোব-প্রমাণ
+echo "$DASH" | rg -q 'title="পাবলিক"' && ok "পাবলিক-পোস্টে গ্লোব-মেটা (session164-প্রতিস্থাপক)" || bad "গ্লোব-মেটা অনুপস্থিত"
 echo "$DASH" | rg -q 'LF153 গ্রেডিয়েন্ট-শিরোনাম' && ok "রিচ-কনটেন্ট ফিডে দৃশ্যমান" || bad "রিচ-কনটেন্ট অনুপস্থিত"
 
 echo "── [4] ৫-মিডিয়া কোলাজ (+N ওভারলে)"
@@ -98,7 +100,8 @@ echo "$R" | rg -q '"ok":true' && ok "ONLY_ME পোস্ট তৈরি" || ba
 OID=$(echo "$R" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)
 PRIV=$(curl -s -b "$J1" "$BASE/dashboard")
 echo "$PRIV" | rg -q 'LF153 গোপন পোস্ট' && ok "লেখকের ফিডে ONLY_ME দৃশ্যমান" || bad "লেখকেও ONLY_ME অদৃশ্য"
-echo "$PRIV" | rg -q 'fb-aud-chip153' && ok "লেখকে অডিয়েন্স-চিপ (শুধু আমি)" || bad "অডিয়েন্স-চিপ অনুপস্থিত"
+# session249-আধুনিকীকরণ: চিপ-বিলোপ-পরবর্তী প্রতিস্থাপক = visibility-lock meta (title-অ্যাট্রি)
+echo "$PRIV" | rg -q 'দৃশ্যমানতা: শুধুমাত্র আমি' && ok "লেখকে দৃশ্যমানতা-লক (শুধুমাত্র আমি)" || bad "দৃশ্যমানতা-লক অনুপস্থিত"
 P=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/articles/$OID")
 chk "$P" 404 "গেস্ট সরাসরি-URL ONLY_ME → 404"
 P=$(curl -s -o /dev/null -w "%{http_code}" -b "$J1" "$BASE/articles/$OID")

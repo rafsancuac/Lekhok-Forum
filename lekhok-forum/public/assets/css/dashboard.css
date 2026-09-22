@@ -615,3 +615,16 @@ html.cpm-open,body:has(.cpm-backdrop:not([hidden])){overflow:hidden}
 /* ফিড-কার্ড উল্লম্ব-ব্যবধান কমপ্যাক্ট (FB-রিদম) */
 .dashboard-wrap .dash-main .feed-card{margin-bottom:12px}
 /* ════════ EOF session164-fb-compact-post-card ════════ */
+
+/* ════════ session249 — '/'-কী রেল-সার্চ-ফোকাস affordance + প্রেস-ফিডব্যাক
+   (টোকেন-শুধু — নতুন-হেক্স-শূন্য; kbd-পিল রেল-অভ্যন্তরীণ, রেল-নিজেই <1200px
+   লুকানো বলে বাড়তি media-ব্লক-অপ্রয়োজন; ফোকাস-রিং বেস-:focus-র পরেই —
+   ক্যাসকেড-অর্ডার-নিরাপদ) ════════ */
+.fr-kbd249{position:absolute;right:9px;top:50%;transform:translateY(-50%);pointer-events:none;font:inherit;font-size:10px;font-weight:700;line-height:1;color:var(--lf-text-tertiary);background:var(--lf-ui-canvas);border:1px dashed var(--lf-ui-border-strong);border-radius:4px;padding:2px 6px;transition:opacity .15s ease}
+.fr-search159:focus-within .fr-kbd249{opacity:0}
+.fr-search-input159:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--lf-brand-primary) 16%,transparent)}
+.fr-item--rich157:active{background:var(--lf-ui-canvas);transform:scale(.995)}
+@media (prefers-reduced-motion:reduce){
+  .fr-item--rich157:active{transform:none}
+}
+/* ════════ EOF session249-rail-kbd-focus ════════ */

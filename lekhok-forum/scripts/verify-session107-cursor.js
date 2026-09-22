@@ -60,17 +60,29 @@ function feedSection(html) {
   const cut = html.indexOf('dash-right');
   return cut > 0 ? html.slice(0, cut) : html;
 }
+/* session249: শেয়ার/রিপোস্ট-এমবেড-বর্জন — extractKeys ও lastArticleId উভয়ের সাধারণ-চুক্তি */
+function stripEmbeds(html) {
+  return String(html)
+    .replace(/<article[^>]*\b(?:repost-card|share-nested147)\b[\s\S]*?<\/article>/g, '')
+    .replace(/<a[^>]*>শেয়ারকৃত পোস্ট<\/a>/g, '');
+}
+/* session249-সংশোধন (RCA: শেয়ার-কার্ড-এমবেড-লিঙ্ক মিথ্যা-ডুপ): শেয়ার/রিপোস্ট-কার্ড
+   (repost-card / share-nested147) ভেতরে মূল-আর্টিকেলের এমবেডেড-লিঙ্ক বহন করে
+   (FeedPostCard.ejs _so147/_orig — title+cover+'মূল পোস্ট দেখুন') + লিগেসি-ফলব্যাক
+   নরমাল-কার্ডের 'শেয়ারকৃত পোস্ট' মেটা-চিপ-লিঙ্ক। ওগুলো কার্ড-আইডেন্টিটি নয় —
+   শেয়ার-যুক্ত সিড (lf147-সিড শেয়ার a:1/a:2/a:3) দিলে কার্সার-চেইন দুষ্টভাবে
+   ক্রস-পেজ-ডুপ দেখাত (keyset-নিজে নির্দোষ) → স্ট্রিপ-পরেই key-সংগ্রহ। */
 function extractKeys(html) {
   const keys = new Set();
   const re = /href="\/(articles|qa)\/(\d+)(?:\/edit)?"/g;
+  const scope = feedSection(stripEmbeds(html));
   let m;
-  const scope = feedSection(html);
   while ((m = re.exec(scope)) !== null) keys.add(m[1] === 'articles' ? 'a:' + m[2] : 'q:' + m[2]);
   return keys;
 }
 function lastArticleId(html) {
   const ids = [];
-  const scope = feedSection(html);
+  const scope = feedSection(stripEmbeds(html));
   const re = /href="\/articles\/(\d+)"/g; let m;
   while ((m = re.exec(scope)) !== null) ids.push(parseInt(m[1], 10));
   return ids.length ? ids[ids.length - 1] : null;
@@ -136,7 +148,10 @@ function lastArticleId(html) {
     let cursor = cur0, pages = [], guard = 0, dupAcross = 0, okAll = true;
     function nextQ(nc) { return nc && nc.ts ? '&cursor=' + encodeURIComponent(nc.ts) + '&cursorType=' + encodeURIComponent(nc.type) + '&cursorId=' + nc.id : ''; }
     const seen = new Set();
-    while (guard++ < 12) {
+    /* session249-হার্ডেনিং: গার্ড 12→40 — প্রোডাকশন-কপি-সিড বৃদ্ধিতে ফিড >১২০-আইটেম
+       হলে চেইন গার্ডে-আটকে 'শেষ-পেজ hasMore=false' মিথ্যা-ফেল দিত (প্রমাণিত-ফেল-শ্রেণি);
+       keyset-চেইন স্বয়ং-সীমাবদ্ধ (hasMore=false-এ বিরতি), গার্ড = শুধু অসীম-লুপ-নিরাপত্তা */
+    while (guard++ < 40) {
       const r = await req(s, 'GET', '/dashboard/more?filter=all&sort=recent' + nextQ(cursor));
       if (!r.json || !r.json.ok) { okAll = false; break; }
       const html = r.json.html || '';

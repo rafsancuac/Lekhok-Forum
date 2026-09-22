@@ -39,6 +39,25 @@ const TONE_TOKENS = {
 
 const DIR_SECTIONS = [
   {
+    /* সেশন ২৪৯-পুনরুদ্ধার (RCA: session192-র dir-launcher-রিরাইটে session161-এর
+       core-ব্লক অনিচ্ছাকৃতভাবে বিলোপ — কমিট-মেসেজ 'DIR_SECTIONS অক্ষত' দাবি
+       করলেও git-show-প্রমাণ অন্যথা; ভিউ-গার্ড (dashboard.ejs sec.core) ও
+       lf159-সুইট দুই-ই ১৬-আইটেম কাঠামো প্রত্যাশা করেছিল)।
+       সেশন ১৫৯/১৬১ (ইউজার-স্পেক: FB-কোর-শর্টকাট): সংরক্ষিত লেখা/মেমোরিজ/গ্রুপ/পেজ —
+       রেলের সর্বাগ্রে শিরোনাম-শূন্য টপ-ব্লক। রুট-ম্যাপ (ইন্টেন্ট-অনুবাদ):
+       /saved→/bookmarks, /memories→/on-this-day ('এই দিনে' কোর-ব্লকে
+       প্রতিস্থাপিত), /groups→/messages (গ্রুপ-চ্যাট), /pages→/press। */
+    key: 'core',
+    title: 'দ্রুত অ্যাক্সেস',
+    core: true,
+    items: [
+      { label: 'সংরক্ষিত লেখা',   desc: 'বুকমার্ক করা লেখা ও পোস্ট',   href: '/bookmarks',   icon: 'fa-bookmark',       tone: 'gold',   rail: true },
+      { label: 'স্মৃতি ও মেমোরিজ', desc: 'বিগত বছরের আজকের লেখা',      href: '/on-this-day', icon: 'fa-hourglass-half', tone: 'violet', rail: true },
+      { label: 'পাঠচক্র ও গ্রুপ',  desc: 'গ্রুপ-আলাপ ও পাঠচক্র',        href: '/messages',    icon: 'fa-users',          tone: 'social', rail: true },
+      { label: 'পত্রিকা ও পেজ',   desc: 'প্রেস, প্রকাশনা ও পাতা',       href: '/press',       icon: 'fa-flag',           tone: 'cyan',   rail: true }
+    ]
+  },
+  {
     key: 'knowledge',
     title: 'জ্ঞান ও সাহিত্য কর্নার',
     items: [
@@ -56,14 +75,16 @@ const DIR_SECTIONS = [
       { label: 'ইভেন্ট ও আয়োজন',      desc: 'সাহিত্য আড্ডা ও কর্মশালা',           href: '/events',      icon: 'fa-calendar-alt',    tone: 'angry',  rail: true },
       { label: 'সাংগঠনিক কার্যক্রম',   desc: 'কমিটি ও মিটিং এজেন্ডা',              href: '/activities',  icon: 'fa-calendar-check',  tone: 'slate',  rail: false },
       { label: 'সেরা লেখক',           desc: 'মাসিক স্বীকৃতি ও পুরস্কার',          href: '/best-writer', icon: 'fa-star',            tone: 'gold',   rail: true },
-      { label: 'অর্জন ও সম্মাননা',     desc: 'স্মারক স্বীকৃতির প্রাচীর',           href: '/achievements', icon: 'fa-trophy',         tone: 'amber',  rail: false }
+      { label: 'অর্জন ও সম্মাননা',     desc: 'স্মারক স্বীকৃতির প্রাচীর',           href: '/achievements', icon: 'fa-trophy',         tone: 'amber',  rail: false },
+      { label: 'মতামত ও ফিডব্যাক',     desc: 'অভিযোগ ও পরামর্শ জানান',            href: '/complaints',  icon: 'fa-comment-dots',    tone: 'brand',  rail: true }
     ]
   },
   {
+    /* সেশন ২৪৯-পুনরুদ্ধার: 'এই দিনে' core-ব্লকে স্থানান্তরিত (s161-কাঠামো) —
+       শিরোনামও s161-রীতিতে ফেরত ('দৈনন্দিন ফিচার') */
     key: 'daily',
-    title: 'দৈনন্দিন ফিচার ও স্মৃতি',
+    title: 'দৈনন্দিন ফিচার',
     items: [
-      { label: 'এই দিনে',             desc: 'বিগত বছরের আজকের লেখা',             href: '/on-this-day', icon: 'fa-calendar-day',    tone: 'violet', rail: true },
       { label: 'আজকের জন্মদিন',       desc: 'সহ-লেখকদের শুভেচ্ছা জানান',         href: '/birthdays',   icon: 'fa-birthday-cake',   tone: 'pink',   rail: false },
       { label: 'আজকের কুইজ',          desc: 'প্রাত্যহিক সাহিত্য পরীক্ষা',         href: '/quiz',        icon: 'fa-brain',           tone: 'cyan',   rail: true }
     ]

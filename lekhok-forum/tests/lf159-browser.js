@@ -55,8 +55,11 @@ const chk = (got, want, m) => { if (String(got) === String(want)) ok(m); else ba
 
   console.log('── session156 স্ক্রল-লক রিগ্রেশন + জ্যামিতি');
   chk(await page.evaluate(() => { window.scrollTo(0, 3000); return window.scrollY; }), 0, 'window-লক (scrollY=0)');
-  chk(await page.evaluate(() => Math.round(document.querySelector('.feed-rail').getBoundingClientRect().width)), 320, 'রেল 320px (@1440+)');
-  chk(await page.evaluate(() => Math.round(document.querySelector('.dash-right').getBoundingClientRect().width)), 348, 'ডান-সাইডবার 348px');
+  /* session249-আধুনিকীকরণ: session164-এর 'ব্যালেন্সড ৩-কলাম' (ইউজার-স্পেক —
+     বাম ২৬০/২৮০@1440, ফিড ৬০০, ডান ৩১০/৩৩০@1440) ইচ্ছাকৃত-ডিজাইন —
+     পুরনো 320/348 (session156-যুগ) প্রত্যাশা আর-সঠিক নয় */
+  chk(await page.evaluate(() => Math.round(document.querySelector('.feed-rail').getBoundingClientRect().width)), 280, 'রেল 280px (@1440+ — ব্যালেন্সড-৩-কলাম session164)');
+  chk(await page.evaluate(() => Math.round(document.querySelector('.dash-right').getBoundingClientRect().width)), 330, 'ডান-সাইডবার 330px (@1440+ — ব্যালেন্সড-৩-কলাম session164)');
   chk(await page.evaluate(() => {
     const m = document.querySelector('.dash-main'), r = document.querySelector('.feed-rail');
     m.scrollTop = 800; return r.scrollTop;

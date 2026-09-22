@@ -33,6 +33,9 @@
       <div class="fr-search159">
         <i class="fas fa-search fr-search-ico159" aria-hidden="true"></i>
         <input type="search" id="frSearch159" class="fr-search-input159" placeholder="ফিচার বা মেনু খুঁজুন…" aria-label="ফিড মেনু খুঁজুন" autocomplete="off">
+        <%# সেশন ২৪৯: 'r'-কী affordance (রেল-সার্চ) — '/' main.js-গ্লোবাল-সার্চে অধিকৃত,
+            তাই দুই-স্তরের চুক্তি: '/' = গ্লোবাল, 'r' = রেল-মেনু; পিলটি ফোকাসে মিলিয়ে যায় %>
+        <kbd class="fr-kbd249" aria-hidden="true">r</kbd>
       </div>
       <div class="fr-sep" aria-hidden="true"></div>
       <%# সেশন ১৫৭ (ইউজার-স্পেক, relabel): পূর্ণাঙ্গ ফোরাম ডিরেক্টরি — হেডার-লঞ্চারের সব আইটেম
@@ -402,6 +405,38 @@
         });
         if (empty) empty.hidden = any || !q;
       });
+      /* সেশন ২৪৯: 'r'-কী → রেল-সার্চ-ফোকাস + Escape → ক্লিয়ার+ব্লার।
+         '/'-গ্লোবাল-সার্চ main.js-এ অধিকৃত (globalSearchInput) — সংঘর্ষ-বর্জনে রেলের জন্য 'r'
+         (dashboard-স্কোপড, বাকি কোথাও-অবাদ্ধ — grep-প্রমাণিত)। ফিল্ড-গার্ড:
+         ইনপুট/টেক্সটেরিয়া/সিলেক্ট/কনটেন্টেডিটেবলে টাইপরত অবস্থায় 'r'-ব্রাঞ্চ অকার্যকর;
+         modifier-যুক্ত চাপও বাদ। */
+      function isTyping249(el) {
+        if (!el) return false;
+        var tag = (el.tagName || '').toLowerCase();
+        return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable === true;
+      }
+      function focusSearch249() {
+        input.focus();
+        if (input.select) input.select();
+      }
+      function clearSearch249() {
+        if (!input.value) { input.blur(); return; }
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.blur();
+      }
+      document.addEventListener('keydown', function (e) {
+        if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+        if ((e.key === 'r' || e.key === 'R') && !isTyping249(e.target)) {
+          e.preventDefault();
+          focusSearch249();
+        } else if (e.key === 'Escape' && e.target === input) {
+          e.preventDefault();
+          clearSearch249();
+        }
+      });
+      /* QA-হুক (s249-সুইট-চুক্তি): __frQA159.focusSearch()/clearSearch()/input() */
+      window.__frQA159 = { focusSearch: focusSearch249, clearSearch: clearSearch249, input: function () { return input; } };
     })();
   </script>
 <%- include('../partials/sandbox-preview') %>
