@@ -36,7 +36,7 @@ sharp({create:{width:900,height:600,channels:3,background:{r:30,g:106,b:78}}})
 
 echo "── [0b] সার্ভার-রিস্টার্ট (seed-পরবর্তী ফাইল-DB লোড)"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash /home/z/lekhok-forum/ensure-server.sh > /dev/null 2>&1  # রিস্ট্রাকচার-পরবর্তী সঠিক-পথ
+bash "$APP/../ensure-server.sh" > /dev/null 2>&1  # রিস্ট্রাকচার-পরবর্তী সঠিক-পথ
 sleep 1
 curl -s -o /dev/null -m 3 "$BASE/" && ok "সার্ভার @8094" || bad "সার্ভার নেই"
 
@@ -71,9 +71,9 @@ sharp('$IMG',{failOn:'none'}).rotate().resize({width:2000,height:2000,fit:'insid
 CIDSRC=$(curl -s -b "$J1" -c "$J1" "$BASE/messages/monem")
 CID=$(echo "$CIDSRC" | grep -o 'const convId = [0-9]*' | grep -o '[0-9]*' | head -1)
 [ -n "${CID:-}" ] && ok "কথোপকথন id=$CID (পাতা-উৎস)" || bad "CID পাওয়া যায়নি"
-cat > /tmp/lf190-dump.js << 'EOF'
-const fs=require('fs'),S=require('/home/z/lekhok-forum/lekhok-forum/node_modules/sql.js');
-S().then(s=>{try{const d=new s.Database(fs.readFileSync('/home/z/lekhok-forum/lekhok-forum/lekhok.db'));const r=d.exec('SELECT id FROM messages');console.log(JSON.stringify(r.length?r[0].values:[]))}catch(e){console.log('ERR:'+e.message.slice(0,40))}});
+cat > /tmp/lf190-dump.js << EOF
+const fs=require('fs'),S=require('$APP/node_modules/sql.js');
+S().then(s=>{try{const d=new s.Database(fs.readFileSync('$APP/lekhok.db'));const r=d.exec('SELECT id FROM messages');console.log(JSON.stringify(r.length?r[0].values:[]))}catch(e){console.log('ERR:'+e.message.slice(0,40))}});
 EOF
 
 echo "── [3] স্থায়িত্ব-স্থাপত্য-প্রমাণ — সার্ভ করা-বাইট = অপটিমাইজার-বাইট (একমাত্র data:image-in-DB-পথেই সম্ভব)"
@@ -130,7 +130,7 @@ const db=require('$APP/db'); db.initDb().then(async()=>{
   console.log('CLEAN:OK');
 });" 2>&1 | tail -1
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash /home/z/lekhok-forum/ensure-server.sh > /dev/null 2>&1  # রিস্ট্রাকচার-পরবর্তী সঠিক-পথ (রিপো-রুটে)
+bash "$APP/../ensure-server.sh" > /dev/null 2>&1  # রিস্ট্রাকচার-পরবর্তী সঠিক-পথ (রিপো-রুটে)
 ok "ক্লিনআপ + সার্ভার-রিস্টার্ট"
 
 echo ""

@@ -4,6 +4,7 @@
 # data-URI-in-DB আপলোড → স্ট্রিম-লিংক রেন্ডার → /api/messages/audio/:id সার্ভ
 # ═══════════════════════════════════════════════════════════════════════════
 set -u
+APP="$(cd "$(dirname "$0")/.." && pwd)"
 BASE=http://localhost:8094
 J1=/tmp/lf183-j1.txt; J2=/tmp/lf183-j2.txt; J3=/tmp/lf183-j3.txt
 PASS=0; FAIL=0
@@ -23,7 +24,7 @@ login() {
 
 echo "── [0] সার্ভার-রিস্টার্ট (ফাইল-ডিবির সাম্প্রতিকতম-অবস্থা লোড)"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash /home/z/lekhok-forum/ensure-server.sh > /dev/null 2>&1
+bash "$APP/../ensure-server.sh" > /dev/null 2>&1
 sleep 1
 
 echo "── [1] লগইন"
@@ -98,7 +99,7 @@ echo "$SB" | rg -q "🎙️ ভয়েস মেসেজ" && ok "সাইড
 
 echo "── [8] সার্ভার-রিস্টার্ট-স্থায়িত্ব (আসল-অভিযোগ: 'পরে শুনতে পারছি না')"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash /home/z/lekhok-forum/ensure-server.sh
+bash "$APP/../ensure-server.sh"
 sleep 1
 S5=$(curl -s -m 10 -b "$J2" -c "$J2" -o /tmp/lf183-a2.bin -w "%{http_code} %{content_type} %{size_download}" "$BASE/api/messages/audio/$MID-voice.webm")
 echo "  after-restart: $S5"

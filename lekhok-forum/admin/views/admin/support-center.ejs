@@ -255,6 +255,10 @@
       max-width:430px;width:100%;max-height:86vh;overflow:auto;padding:18px 20px}
     .sc-help-panel h2{font-size:.95rem;margin:0 0 4px;display:flex;align-items:center;gap:8px}
     .sc-help-panel p.sc-help-sub{font-size:.76rem;color:var(--ad-muted);margin:0 0 12px}
+    .sc-help-group{margin:14px 0 2px;font-size:.72rem;font-weight:800;letter-spacing:.4px;color:var(--ad-muted);
+      border-top:1px solid var(--ad-line);padding-top:10px;display:flex;align-items:center;gap:6px}
+    .sc-help-group .sc-hg-n{color:var(--ad-accent);font-size:.66rem;font-variant-numeric:tabular-nums}
+    .sc-help-panel .sc-help-group:first-of-type{border-top:0;margin-top:4px;padding-top:0}
     .sc-help-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--ad-line-soft);font-size:.84rem}
     .sc-help-row:last-of-type{border-bottom:0}
     .sc-help-row .keys{display:flex;gap:4px;flex:none}
@@ -672,18 +676,23 @@
   <div class="sc-help-panel" id="scHelpPanel" tabindex="-1">
     <h2><i class="fas fa-keyboard" style="color:var(--ad-accent)"></i> কীবোর্ড শর্টকাট</h2>
     <p class="sc-help-sub">ডেস্ক-নেভিগেশন দ্রুত করুন — লেখা-বক্স/সার্চে টাইপ-করার-সময় শর্টকাট-নিষ্ক্রিয়</p>
+    <div class="sc-help-group"><i class="fas fa-compass" aria-hidden="true"></i> নেভিগেশন ও ফিল্টার <span class="sc-hg-n">১-৮</span></div>
     <div class="sc-help-row"><span>পরবর্তী/পূর্ববর্তী কার্ড-কার্সর</span><span class="keys"><kbd class="sc-kbd">j</kbd><kbd class="sc-kbd">k</kbd></span></div>
     <div class="sc-help-row"><span>স্ট্যাটাস-ভিউ: নতুন / চলমান / সমাধান</span><span class="keys"><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>সব-অভিযোগ ভিউ</span><span class="keys"><kbd class="sc-kbd">0</kbd></span></div>
     <div class="sc-help-row"><span>মাধ্যম-ফিল্টার সাইকেল — সব→লেখা→ছবি→ভয়েস→ভিডিও→সব (স্ট্যাটাস/সার্চ/সময়-সংরক্ষিত)</span><span class="keys"><kbd class="sc-kbd">m</kbd></span></div>
     <div class="sc-help-row"><span>সার্চ-বক্সে ফোকাস</span><span class="keys"><kbd class="sc-kbd">/</kbd></span></div>
-    <div class="sc-help-row"><span>কার্সর-কার্ডে দ্রুত-স্ট্যাটাস সেট (নতুন / চলমান / সমাধান)</span><span class="keys"><kbd class="sc-kbd">Shift</kbd><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>প্রথম-নতুন (অমীমাংসিত)-কার্ডে কার্সর-জাম্প</span><span class="keys"><kbd class="sc-kbd">u</kbd></span></div>
+    <div class="sc-help-row"><span>সব-ফিল্টার এক-কীতে পরিষ্কার — স্ট্যাটাস+মাধ্যম+সার্চ+সময় (পরিষ্কার-অবস্থায় টোস্ট)</span><span class="keys"><kbd class="sc-kbd">c</kbd></span></div>
+    <div class="sc-help-group"><i class="fas fa-bolt" aria-hidden="true"></i> কার্ড-অ্যাকশন <span class="sc-hg-n">৯-১১</span></div>
+    <div class="sc-help-row"><span>কার্সর-কার্ডে দ্রুত-স্ট্যাটাস সেট (নতুন / চলমান / সমাধান)</span><span class="keys"><kbd class="sc-kbd">Shift</kbd><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ড নির্বাচন/বাদ — বাল্ক-স্ট্যাটাস (Esc-এ নির্বাচন-পরিষ্কার)</span><span class="keys"><kbd class="sc-kbd">x</kbd><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>শেষ স্ট্যাটাস-বদল আন্ডু (বাল্ক-গ্রুপ-সহ; লেখা-বক্সে নেটিভ-আন্ডু)</span><span class="keys"><kbd class="sc-kbd">Ctrl</kbd><kbd class="sc-kbd">Z</kbd></span></div>
+    <div class="sc-help-group"><i class="fas fa-sliders-h" aria-hidden="true"></i> ডেস্ক-নিয়ন্ত্রণ <span class="sc-hg-n">১২-১৬</span></div>
     <div class="sc-help-row"><span>কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">d</kbd></span></div>
     <div class="sc-help-row"><span>রিফ্রেশ-এখন — গণনা তৎক্ষণাৎ আনুন (বিরতি-অবস্থায়-ও চলে)</span><span class="keys"><kbd class="sc-kbd">r</kbd></span></div>
     <div class="sc-help-row"><span>অটো-হালনাগাদ বিরতি/চালু — পোল+SSE-স্বয়ংক্রিয়-রিলোড (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">p</kbd></span></div>
+    <div class="sc-help-group"><i class="fas fa-hand-pointer" aria-hidden="true"></i> মাউস-ও-টাচ <span class="sc-hg-n">১৭-২৪</span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে হোভার — দিনভিত্তিক-গণনা টুলটিপ</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
     <div class="sc-help-row"><span>জবাব/লেখা এক-ক্লিকে ক্লিপবোর্ডে কপি (মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
     <div class="sc-help-row"><span>সংযুক্তি-ছবি কার্ড ছাড়াই বড় করে দেখুন — ক্লিকে খোলে, Esc/বাইরে-ক্লিকে বন্ধ (Ctrl+ক্লিক = নতুন-ট্যাব)</span><span class="keys"><kbd class="sc-kbd">ক্লিক</kbd></span></div>
@@ -960,6 +969,11 @@
     var first = null;
     for (var i = 0; i < cards.length; i++) { if (cards[i].getAttribute('data-status') === 'PENDING') { first = cards[i]; break; } }
     return { found: !!first, id: first ? first.getAttribute('data-id') : null, total: cards.length };
+  };
+  window.__scQA.clearFilters = function () { // session245 QA-হুক (uJump-এর-পরে — ক্রমের-শেষ)
+    var sp = new URLSearchParams(location.search);
+    var dirty = !!(sp.get('status') || sp.get('media') || sp.get('q') || sp.get('range'));
+    return { dirty: dirty, target: '/admin/support-center?' };
   };
   // ── session243 — মিডিয়া-চিপ ↔ স্ট্রিপ-সেগমেন্ট ক্রস-হাইলাইট (তাৎক্ষণিক-ক্লাস — transition-শূন্য, reduced-motion-স্বাভাবিক-নিরাপদ; স্ট্যাটিক-ফার্নিচার-বাইন্ড — লাইভ-কার্ড-রিরেন্ডার-স্বাধীন; innerHTML-নিষিদ্ধ-রীতি-অটুট) ──
   (function () {
@@ -1380,6 +1394,11 @@
     if (sp.get('range')) parts.push('range=' + sp.get('range'));
     location.href = '/admin/support-center?' + parts.filter(Boolean).join('&');
   }
+  function clearFilters() { // session245 — c-কী: সব-ফিল্টার এক-কীতে পরিষ্কার (স্ট্যাটাস+মাধ্যম+সার্চ+ব্যাপ্তি; পরিষ্কার-অবস্থায় টোস্ট — অপ্রয়োজনীয়-নেভিগেশন-শূন্য)
+    var sp = new URLSearchParams(location.search);
+    if (!(sp.get('status') || sp.get('media') || sp.get('q') || sp.get('range'))) { toast('ফিল্টার ইতিমধ্যে পরিষ্কার'); return; }
+    location.href = '/admin/support-center?';
+  }
   function firstPendingJump() { // session244 — u-কী: প্রথম-নতুন (PENDING)-কার্ডে কার্সর-জাম্প (cursorMove-সেট-লজিক-মিরর — cursorMove-বাইট-অক্ষুণ্ণ s231-চুক্তি)
     var idx = -1;
     for (var i = 0; i < cards.length; i++) {
@@ -1522,6 +1541,7 @@
     if (e.key === 'w' || e.key === 'W') { e.preventDefault(); wkReportCopy(); return; } // session239 — সপ্তাহ-রিপোর্ট-কপি (typing-গার্ডের-পরে)
     if (e.key === 'm' || e.key === 'M') { e.preventDefault(); mediaCycle(); return; } // session244 — মাধ্যম-ফিল্টার সাইকেল (typing-গার্ডের-পরে)
     if (e.key === 'u' || e.key === 'U') { e.preventDefault(); firstPendingJump(); return; } // session244 — প্রথম-নতুন-কার্ডে জাম্প (typing-গার্ডের-পরে)
+    if (e.key === 'c' || e.key === 'C') { e.preventDefault(); clearFilters(); return; } // session245 — সব-ফিল্টার পরিষ্কার (typing-গার্ডের-পরে)
     // ── session229 — Shift+1/2/3 কার্সর-কার্ডে দ্রুত-স্ট্যাটাস (Next-session222-চুক্তি: e.code-লেআউট-স্বাধীন; সম-স্টেটাসে নীরব-স্কিপ) ──
     if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
       if (cursor < 0 || !cards[cursor]) { toast('কার্সর-কার্ড নেই — আগে j/k দিয়ে কার্ড বাছুন'); return; }

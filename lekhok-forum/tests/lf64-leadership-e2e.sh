@@ -25,8 +25,6 @@ login() {
   rm -f "$J"
   local TOK=$(getcsrf "$J" /admin/login)
   curl -s -b "$J" -c "$J" -o /dev/null -X POST "$BASE/admin/login" --data-urlencode "username=$U" --data-urlencode "password=$P" --data-urlencode "_csrf=$TOK"
-  TOK=$(getcsrf "$J" /login)
-  curl -s -b "$J" -c "$J" -o /dev/null -X POST "$BASE/admin/login" --data-urlencode "username=$U" --data-urlencode "password=$P" --data-urlencode "_csrf=$TOK"
 }
 
 echo "── [0] DB-প্রি-স্টেট: ভিজিবিলিটি-সেটিংস মুছে ফ্রেশ-বুট (ডিফল্ট-অবস্থা সিমুলেট)"
@@ -40,17 +38,17 @@ fs.writeFileSync(p, Buffer.from(db.export()));
 console.log('settings-cleared');
 })();"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash /home/z/lekhok-forum/ensure-server.sh > /dev/null 2>&1 || { echo "server-failed"; exit 1; }
+bash "$APP/../ensure-server.sh" > /dev/null 2>&1 || { echo "server-failed"; exit 1; }
 ok "সার্ভার-বুট (:8094)"
 
 echo "── [1] অ্যাডমিন-লগইন (testadmin)"
-login "$J" testadmin demo123
+login "$J" admin admin123
 ADMIN_OK=$(curl -s -b "$J" -c "$J" -o /dev/null -w "%{http_code}" "$BASE/admin/home-leadership")
 [ "$ADMIN_OK" = "200" ] && ok "প্যানেল 200 (অ্যাডমিন-সেশন)" || bad "প্যানেল=$ADMIN_OK"
 
 echo "── [2] হোমপেজ ডিফল্ট-অবস্থা (সেটিং-অনুপস্থিত → উপদেষ্টা-লুকানো)"
 H=$(curl -s "$BASE/")
-echo "$H" | rg -q 'leaders-row' && ok ".leaders-row কন্টেইনার আছে" || bad "leaders-row নেই"
+echo "$H" | rg -q 'leaders-grid' && ok ".leaders-grid কন্টেইনার আছে" || bad "leaders-grid নেই"
 echo "$H" | rg -q 'সুফিয়া' && bad "ডিফল্টে সুফিয়া দেখাচ্ছে (লুকানো-করা-উচিত)" || ok "ডিফল্টে সুফিয়া লুকানো"
 echo "$H" | rg -q 'তৌহিদুল ইসলাম' && bad "ডিফল্টে তৌহিদুল দেখাচ্ছে" || ok "ডিফল্টে তৌহিদুল লুকানো"
 echo "$H" | rg -q 'current-leadership' && ok "বর্তমান-নেতৃত্ব সেকশন আছে" || bad "সেকশন নেই"
@@ -81,17 +79,17 @@ echo "── [5] অতিরিক্ত-উপদেষ্টা opt-in টগ
 EXTRA_ID=$(node -e "
 const initSqlJs = require('$APP/node_modules/sql.js'); const fs=require('fs');
 (async()=>{ const SQL=await initSqlJs(); const db=new SQL.Database(fs.readFileSync('$APP/lekhok.db'));
-const r=db.exec(\"SELECT id FROM members WHERE member_type='advisory' AND name='অধ্যাপক ড. মো. আবুল কালাম'\");
+const r=db.exec(\"SELECT id FROM members WHERE member_type='advisory' AND term_year='২০২৪-২৫' AND name='মো. ফারুক আহমেদ'\");
 console.log(r[0].values[0][0]); })();")
-[ -n "$EXTRA_ID" ] && ok "অতিরিক্ত-সদস্য id=$EXTRA_ID" || bad "অতিরিক্ত-সদস্য পাওয়া যায়নি"
+[ -n "$EXTRA_ID" ] && ok "extra-অঞ্চল-সদস্য (slice-২+) id=$EXTRA_ID" || bad "অতিরিক্ত-সদস্য পাওয়া যায়নি"
 RE=$(curl -s -b "$J" -c "$J" -X POST "$BASE/admin/home-leadership/visibility" -H "Content-Type: application/json" -H "Accept: application/json" -H "X-CSRF-Token: $CSRF" -d "{\"member_id\":$EXTRA_ID,\"active\":true}")
 echo "$RE" | rg -q '"ok":true' && ok "opt-in টগল API 200" || bad "opt-in: $RE"
 HE=$(curl -s "$BASE/")
-echo "$HE" | rg -q 'আবুল কালাম' && ok "অতিরিক্ত-উপদেষ্টা হোমপেজে দেখা যাচ্ছে" || bad "হোমপেজে অতিরিক্ত-উপদেষ্টা নেই"
+echo "$HE" | rg -q 'ফারুক আহমেদ' && ok "অতিরিক্ত-উপদেষ্টা হোমপেজে দেখা যাচ্ছে" || bad "হোমপেজে অতিরিক্ত-উপদেষ্টা নেই"
 RE2=$(curl -s -b "$J" -c "$J" -X POST "$BASE/admin/home-leadership/visibility" -H "Content-Type: application/json" -H "Accept: application/json" -H "X-CSRF-Token: $CSRF" -d "{\"member_id\":$EXTRA_ID,\"active\":false}")
 echo "$RE2" | rg -q '"ok":true' && ok "opt-out API 200" || bad "opt-out: $RE2"
 HE2=$(curl -s "$BASE/")
-echo "$HE2" | rg -q 'আবুল কালাম' && bad "opt-out-পরেও দেখাচ্ছে" || ok "opt-out-পরে লুকানো ✓"
+echo "$HE2" | rg -q 'ফারুক আহমেদ' && bad "opt-out-পরেও দেখাচ্ছে" || ok "opt-out-পরে লুকানো ✓"
 
 echo "── [6] নতুন উপদেষ্টা তৈরি (multipart) → প্যানেল-হোম-অবস্থা"
 RN=$(curl -s -b "$J" -c "$J" -X POST "$BASE/admin/home-leadership/extra" -H "Accept: application/json" -H "X-CSRF-Token: $CSRF" -F "group=current" -F "name=টেস্ট উপদেষ্টা ষষ্টিচত্বার্থ" -F "role=উপদেষ্টা" -F "_csrf=$CSRF")
@@ -128,7 +126,7 @@ db.run(\"INSERT INTO settings (key, value) VALUES ('home_hidden_slots', '')\");
 fs.writeFileSync('$APP/lekhok.db', Buffer.from(db.export()));
 console.log('restored-empty-setting'); })();"
 pkill -9 -f "node server.js" 2>/dev/null; sleep 1
-bash /home/z/lekhok-forum/ensure-server.sh > /dev/null 2>&1  # sql.js-মেমোরির চেয়ে ফাইল-সত্য — রিস্টার্টে লোড
+bash "$APP/../ensure-server.sh" > /dev/null 2>&1  # sql.js-মেমোরির চেয়ে ফাইল-সত্য — রিস্টার্টে লোড
 H4=$(curl -s "$BASE/")
 echo "$H4" | rg -q 'সুফিয়া' && ok "স্যান্ডবক্স-রিস্টোর: সেটিং='' → উপদেষ্টা দৃশ্যমান (আগের-আচরণ)" || bad "রিস্টোর-পরেও লুকানো"
 

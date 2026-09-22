@@ -2179,3 +2179,27 @@ Stage Summary:
 ## ঝুঁকি ও পরবর্তী
 - গোটচা ×১ ডক-কৃত (PLANS session239): QA-হুক-অ্যাসার্টে typeof-কোট → বুলিয়ান-চুক্তি
 - পরের-এজেন্ট: **session240 লেবেল (Task ID 84)**; বাকি-প্রস্তাব: রিপোর্ট-ব্যাপ্তি-নির্বাচন (৭/৩০-দিন), Turso (পরিকল্পনা-গেটে), stale-সুইট-আধুনিকীকরণ; PLANS session239-নোট পড়ুন; push-আগে fetch+rebase
+
+---
+Task ID: 87 (session245 — cron 403679; স্টেল-সুইট-পুনরুজ্জীবন + c-কী ফিল্টার-পরিষ্কার + সহায়িকা-গ্রুপ প্যাক)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- স্যান্ডবক্স-পুনঃসূচনায় remote.origin.url ক্রেডেনশিয়াল-হীন হয়েছিল (fetch 'could not read Username') → টোকেন-URL-fetch (stderr-মাস্কড) = সত্য-সিঙ্ক; HEAD=origin=`889b4d2` (session244), টোকেন-ভ্যালিদ (GH /user→200; Vercel /v2/user→200), live 200, working-tree ক্লিন
+- stale-হ্যান্ডওভার-সামারি আবার-খণ্ডনিত (Task43/'commit-হয়নি'-যুগ দেখাচ্ছিল — প্রকৃত origin ইতিমধ্যে session244); repo-র সত্য-উৎস = repo-worklog+PLANS+HEAD
+- রাউন্ড-শুরু QA: ক্যাননিক্যাল-ব্যাটারি ৫১৫/৫১৫ (s231→s244 ×১৬-ফাইল) প্রথম-রানে-গ্রিন + agent-browser live-যাচাই (console-শূন্য; m-সাইকেল ×৫-ধাপ; u-খালি-নিরাপদ; হুক ×৪; 390px-hScroll-শূন্য) — বাগ-শূন্য
+
+## এ-রাউন্ডে সম্পন্ন (session245 — স্টেল-সুইট-পুনরুজ্জীবন + ফিচার/স্টাইল)
+- **[ব্যাকলগ-ফিক্স] স্টেল-সুইট-আধুনিকীকরণ প্রথম-ঢেউ:** lf64 ১২/৩০→**৩০/৩০** (পথ-পোর্টেবল ×৮ — lf64/lf183/lf190; লগইন admin/admin123 এক-POST-এ; [৫]-অনুচ্ছেদ extra-টার্গেট id=171→177 সিমান্টিক-ফিক্স — founding-ক্রসপথ-ব্যাখ্যা PLANS; `.leaders-grid` DOM-আধুনিকীকরণ); lf183/lf190 পথ-ফিক্স-হয়ে-চলে (অথ-প্রবাহ-ফেল বাকি — দ্বিতীয়-ঢেউ)
+- **[Mandatory-ফিচার] c-কী সব-ফিল্টার-পরিষ্কার:** clearFilters() (dirty-গার্ডে টোস্ট; টার্গেট trailing-? — statusJump-চুক্তি-সমস্বর) + keydown-ব্রাঞ্চ + QA-হুক `__scQA.clearFilters` ({dirty,target} — ক্রমের-শেষ) + সহায়িকা-সারি
+- **[Mandatory-স্টাইল] সহায়িকা-গ্রুপ ×৪:** .sc-help-group (আইকন+টাইটেল+tabular-nums-সংখ্যা-ব্যাজ; :first-of-type সংকোচ) — নেভিগেশন/অ্যাকশন/নিয়ন্ত্রণ/মাউস-টাচ; u-সারি-স্থানান্তর (গ্রুপ-ধারাবাহিকতা)
+- **টেস্ট:** নতুন tests/s245-clear-suite.sh **৩০/৩০** (রিপো-কমিটেড; সিড-শূন্য; কাঠামো ×১৩ + রেন্ডার ×৪ + আচরণ ×৮ + সহায়িকা ×২ + কনসোল/390px); **পূর্ণ-রিগ্রেশন ৫৭৫/৫৭৫** (battery ৫১৫ + lf64 ৩০ + s245 ৩০) + secret-scan-ক্লিন + স্ক্রিনশট-restore
+- **গোটচা ×২ ডক-কৃত (PLANS session245):** ① toast = #scToast id + .show-ক্লাস (getElementById-অ্যাসার্ট) ② extra-opt-in-টার্গেট = current-slice(2)-অঞ্চল (create-পথ MAX+1→current[0]→অঞ্চল-বাইরে — অবৈধ)
+- ডক ×৩ (PROJECT §২৪৫ + PLANS session245-নোট + repo-worklog Task 87) + এ-এন্ট্রি → secret-scan → fetch+rebase → push → Vercel/live-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অপ্রয়োজনীয়
+- পরের-এজেন্ট: **session246 লেবেল (worklog Task ID 88)**; PLANS session245-নোট অবশ্যই-পড়ুন (lf64-তিন-স্তর + extra-টার্গেট-গোটচা + toast-চুক্তি + গ্রুপ-ব্যাজ-আপডেট); push-আগে fetch+rebase-বাধ্যতমূলক; নতুন-সুইট tests/ এ-কমিট
+- বাকি-প্রস্তাব: stale-সুইট-দ্বিতীয়-ঢেউ (lf183/lf190-অথ-প্রবাহ, lf147/153/159, test-role-policy.sh ২০৯-ফেল), Turso/প্রোড-পোর্ট
+- রিমোট main = এ-রাউন্ডের session245-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
