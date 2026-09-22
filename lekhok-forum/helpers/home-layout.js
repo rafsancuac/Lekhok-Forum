@@ -14,7 +14,7 @@
 // ── ১. হোমপেজের মূল সেকশন-রেজিস্ট্রি (lekhok-home.ejs-এর partials-এর সাথে জোড়া) ──
 const HOME_SECTIONS = [
   { key: 'HERO',                 label: 'টপ হিরো ব্যানার ও স্লোগান',                icon: 'fa-star',        partial: 'hero' },
-  { key: 'TODAY',                label: 'আজকের কন্টেন্ট (আজ বিশেষ কী আছে?)',       icon: 'fa-sun',         partial: 'today' },
+  { key: 'TODAY',                label: 'আজকের ই-পেপার ব্যান্ড (প্রিমিয়াম শোকেস)',   icon: 'fa-sun',         partial: 'today' },
   { key: 'QUIZ_CHALLENGE',       label: 'আজকের কুইজ চ্যালেঞ্জ (ইন্টারঅ্যাক্টিভ)',    icon: 'fa-bolt',        partial: 'quiz' },
   { key: 'MISSION',              label: 'লক্ষ্য ও উদ্দেশ্য (ফিচার গ্রিড)',           icon: 'fa-bullseye',    partial: 'mission' },
   { key: 'LEADERSHIP_FOUNDING',  label: 'নেতৃত্বের ধারা (প্রতিষ্ঠাতা পরিষদ)',        icon: 'fa-landmark',    partial: 'leadership-founding' },

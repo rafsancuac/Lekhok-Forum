@@ -44,12 +44,12 @@ const PAGES = [
         ]
       },
       {
-        key: 'today', label: 'আজকের কন্টেন্ট সেকশন', fields: [
-          { key: 'home_today_eyebrow', label: 'ছোট লেখা (eyebrow)', type: 'text' },
-          { key: 'home_today_t1', label: 'শিরোনাম (শুরু)', type: 'text' },
-          { key: 'home_today_accent', label: 'শিরোনাম (সবুজ মাঝের অংশ)', type: 'text' },
-          { key: 'home_today_t2', label: 'শিরোনাম (শেষ)', type: 'text' },
-          { key: 'home_today_lead', label: 'সেকশন বিবরণ', type: 'textarea', rows: 2 }
+        key: 'today', label: 'আজকের ই-পেপার ব্যান্ড (হোম — সেশন ২৩৩)', fields: [
+          { key: 'home_ep_eyebrow', label: 'ব্যাজ-লেখা', type: 'text' },
+          { key: 'home_ep_t1', label: 'শিরোনাম (শুরু)', type: 'text' },
+          { key: 'home_ep_accent', label: 'শিরোনাম (সবুজ অংশ)', type: 'text' },
+          { key: 'home_ep_t2', label: 'শিরোনাম (শেষ)', type: 'text' },
+          { key: 'home_ep_lead', label: 'সেকশন বিবরণ', type: 'textarea', rows: 2 }
         ]
       },
       {
@@ -506,10 +506,11 @@ const DEFAULTS = {
   home_stat2_num: '48',   home_stat2_label: 'বিশ্ববিদ্যালয় শাখা',
   home_stat3_num: '320',  home_stat3_label: 'প্রকাশনা',
   home_stat4_num: '85',   home_stat4_label: 'ইভেন্ট',
-  // হোম — আজকের কন্টেন্ট
-  home_today_eyebrow: 'আজকের কন্টেন্ট',
-  home_today_t1: 'আজ', home_today_accent: 'বিশেষ', home_today_t2: 'কী আছে?',
-  home_today_lead: 'প্রতিদিনের জন্য নির্বাচিত কুইজ, এই দিনে ইতিহাস, ই-পেপার ও সেরা লেখক সব এক জায়গায়।',
+  // হোম — আজকের ই-পেপার ব্যান্ড (সেশন ২৩৩: today.ejs ই-পেপার-কেন্দ্রিক পুনর্লিখন;
+  // পুরনো home_today_* কী বাদ — সেভ-রো থাকলেও আর কোনো ভিউ পড়ে না)
+  home_ep_eyebrow: 'আজকের ই-পেপার • লাইভ সংস্করণ',
+  home_ep_t1: 'মুদ্রিত', home_ep_accent: 'সংবাদপত্র', home_ep_t2: 'ও সাহিত্য সাময়িকী',
+  home_ep_lead: 'প্রতিদিন ভোরে জাতীয় শীর্ষ দৈনিক ও বিশ্ববিদ্যালয়ের সাহিত্য পাতার মূল মুদ্রিত রূপ — ওয়াটারমার্ক ও বিজ্ঞাপনহীন হাই-ডেফিনিশন ফরম্যাটে সরাসরি পড়ুন।',
   // হোম — লক্ষ্য ও উদ্দেশ্য
   home_mission_eyebrow: 'আমাদের পরিচয়',
   home_mission_t1: 'লক্ষ্য ও', home_mission_accent: 'উদ্দেশ্য',

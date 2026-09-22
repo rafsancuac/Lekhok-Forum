@@ -91,7 +91,7 @@
   const homeSections193 = Array.isArray(homeSections) ? homeSections : [];
 %>
 <% for (const _sec193 of homeSections193) { %>
-<% if (_sec193.key === 'TODAY' && !hasToday) { continue; } %>
+<% if (_sec193.key === 'TODAY' && !hasToday && !(typeof epaperLatest !== 'undefined' && epaperLatest && epaperLatest.length)) { continue; } %>
 <% if (_sec193.key === 'QUIZ_CHALLENGE' && !quizChallenge) { continue; } %>
 <% if (_sec193.key === 'ARTICLES' && !(typeof recentArticles !== 'undefined' && recentArticles && recentArticles.length)) { continue; } %>
 <%- include('partials/home/' + _sec193.partial); %>

@@ -28,11 +28,14 @@ const MEMBER_JOIN = `
 `;
 
 router.get('/', async (req, res) => {
+  // সেশন ২৩৩: ঢাকা-ক্যালেন্ডার-তারিখ (en-CA Asia/Dhaka) — /epaper-পাতার todayIso-চুক্তির
+  // হুবহু প্রতিরূপ; epaper_files.scheduled_date বট-এই ফরম্যাটে লেখে
+  const dhakaToday233 = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   // সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স — ক্রল-স্পিড): আগে ~১২টি সিরিয়াল await ছিল;
   // Turso-তে প্রতিটি await = ১টি নেটওয়ার্ক রাউন্ড-ট্রিপ → ওয়ার্ম TTFB-ই ৩-৭ সেকেন্ড,
   // যা Googlebot-এর ক্রল-রেট কমিয়ে দিত (GSC: "Discovered – currently not indexed")।
   // এখন স্বাধীন কুয়েরিগুলো এক প্যারালাল ব্যাচে ছোড়া হয়।
-  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, hiddenSlotsRaw205, extraMembersRaw205, recentArticles, faqItems42, sectionOrderRaw193, memberOrderRaw193, feedOrderRaw193] = await Promise.all([
+  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, hiddenSlotsRaw205, extraMembersRaw205, recentArticles, faqItems42, sectionOrderRaw193, memberOrderRaw193, feedOrderRaw193, epaperTodayRows233, epaperLatestRows233] = await Promise.all([
     db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all(),
     db.prepare("SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL").all(),
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all(),
@@ -63,6 +66,10 @@ router.get('/', async (req, res) => {
     db.getSetting('home_section_order'),
     db.getSetting('home_member_order'),
     db.getSetting('home_feed_order'),
+    // সেশন ২৩৩: 'আজকের ই-পেপার' প্রিমিয়াম ব্যান্ড — আজকের (ঢাকা-তারিখ) বট-সিঙ্কড সংখ্যা +
+    // ফলব্যাকের জন্য সর্বশেষ সিঙ্কড-দিন (দুটোই প্যারালাল-ব্যাচে — অতিরিক্ত-রাউন্ডট্রিপ শূন্য)
+    db.prepare("SELECT id, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, scheduled_date AS paperDate FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC LIMIT 6").all(dhakaToday233),
+    db.prepare("SELECT id, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, scheduled_date AS paperDate FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT 6").all(),
   ]);
   // সেশন ৯০: ফলব্যাক — এডমিন/মডারেটর এখনো কিছু বাছাই না করলে সেকশন ফাঁকা
   // না রেখে সর্বশেষ ৬টি খাঁটি writing (avatar/cover/প্রশ্ন কঠোরভাবে বাদ)
@@ -214,6 +221,14 @@ router.get('/', async (req, res) => {
   if (todayByType.epaper) todaySlides193.push({ key: 'epaper', icon: 'fa-newspaper', title: 'আজকের ই-পেপার', sub: tnCut193(todayByType.epaper.title), href: todayByType.epaper.link_url || todayByType.epaper.file_url || '/epaper' });
   if (todayByType.best_writer) todaySlides193.push({ key: 'best_writer', icon: 'fa-crown', title: 'সেরা লেখক', sub: tnCut193(todayByType.best_writer.title), href: todayByType.best_writer.link_url || '/best-writer' });
 
+  // ── সেশন ২৩৩: 'আজকের ই-পেপার' প্রিমিয়াম ব্যান্ডের ডেটা (today.ejs পুনর্লিখন) ──
+  // আজকের বট-সিঙ্কড ফাইল না-থাকলে সর্বশেষ সিঙ্কড-দিন দেখাই ("সংস্করণ আসন্ন"-অবস্থা) —
+  // deep-link: /epaper?file=<id> (epaper-অ্যাপের session233-boot-hook সরাসরি খোলে)
+  const epaperToday233 = Array.isArray(epaperTodayRows233) ? epaperTodayRows233 : [];
+  const epaperLatest233 = epaperToday233.length ? epaperToday233 : (Array.isArray(epaperLatestRows233) ? epaperLatestRows233 : []);
+  const epaperLatestDateBn233 = (epaperLatest233.length && epaperLatest233[0].paperDate) ? bnDate131.bnDate(epaperLatest233[0].paperDate) : '';
+  const todayBn233 = bnDate131.bnDate(dhakaToday233);
+
   res.render('lekhok-home', { faqItems42,
     layout: 'layout',
     pageTitle: 'হোম',
@@ -233,7 +248,13 @@ router.get('/', async (req, res) => {
     feedSlides: feedSlides193,
     homeSections: homeSections193,
     hasToday,
-    quizChallenge
+    quizChallenge,
+    // সেশন ২৩৩: আজকের ই-পেপার ব্যান্ড
+    epaperToday: epaperToday233,
+    epaperLatest: epaperLatest233,
+    epaperHasToday: epaperToday233.length > 0,
+    epaperLatestDateBn: epaperLatestDateBn233,
+    todayBn: todayBn233
   });
 });
 

@@ -2761,3 +2761,163 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   #current-leadership .leader-card-featured { width: 100%; max-width: 340px; }
 }
 /* ═══════════ EOF সেশন-২৩০ নেতৃত্ব-ফিক্স (lfw230-leadership-fix) ═══════════ */
+
+/* ═══════════ সেশন-২৩৩: 'আজকের ই-পেপার' প্রিমিয়াম ব্যান্ড (today.ejs পুনর্লিখন) ═══════════
+   ইউজার-স্পেক: ডিজিটাল নিউজস্ট্যান্ড-লুক — গ্র্যাডিয়েন্ট ব্যান্ড, লাইভ-পালস ব্যাজ,
+   চেকমার্ক-পয়েন্ট, ডুয়াল-CTA, ডানে তাজা-সংস্করণ কার্ড + কুইক-সুইচ পিলস + সিঙ্ক-স্ট্যাটাস।
+   সাইট-টোকেনে রূপান্তর: --accent পরিবার + --font-heading (HindSiliguri) + --font-body (Kalpurush)। */
+.today-epaper-section { padding-top: 34px; }
+.te-band233 {
+  position: relative; overflow: hidden;
+  background: linear-gradient(105deg, rgba(5,150,105,0.07) 0%, rgba(255,255,255,0.65) 42%, rgba(5,150,105,0.06) 100%),
+              var(--bg-card, #fff);
+  border: 1px solid rgba(5,150,105,0.22);
+  border-radius: 16px;
+  padding: 30px 30px 26px;
+  box-shadow: var(--shadow-sm);
+}
+.te-decor233 {
+  position: absolute; right: -48px; bottom: -48px; width: 260px; height: 260px;
+  border-radius: 50%; background: rgba(5,150,105,0.06); filter: blur(48px);
+  pointer-events: none;
+}
+.te-grid233 {
+  position: relative; z-index: 1; display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 34px; align-items: center;
+}
+/* ── বাম কলাম ── */
+.te-left233 { display: flex; flex-direction: column; align-items: flex-start; gap: 13px; min-width: 0; }
+.te-badge233 {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 13px; border-radius: 999px;
+  background: var(--bg-card, #fff); border: 1px solid rgba(5,150,105,0.32);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-heading); font-size: 11.5px; font-weight: 700;
+  color: var(--accent-dark, #047857); letter-spacing: 0.4px; text-transform: uppercase;
+}
+.te-live233 { width: 8px; height: 8px; border-radius: 50%; background: #f43f5e; animation: tePulse233 1.6s ease-in-out infinite; }
+@keyframes tePulse233 { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.8); } }
+@media (prefers-reduced-motion: reduce) { .te-live233 { animation: none; } }
+.te-title233 {
+  margin: 2px 0 0; font-family: var(--font-heading);
+  font-size: clamp(21px, 2.6vw, 29px); font-weight: 700; line-height: 1.25;
+  color: var(--text, #1e293b); letter-spacing: -0.2px;
+}
+.te-title233 .accent { color: var(--accent, #059669); }
+.te-bar233 { width: 48px; height: 4px; border-radius: 999px; background: var(--accent, #059669); }
+.te-lead233 {
+  margin: 0; max-width: 560px;
+  font-family: var(--font-body); font-size: 13.5px; line-height: 1.75;
+  color: var(--text-muted, #64748b);
+}
+.te-points233 { display: flex; flex-direction: column; gap: 9px; margin: 3px 0 0; padding: 0; list-style: none; }
+.te-points233 li {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-body); font-size: 13px; color: var(--text, #1e293b); line-height: 1.55;
+}
+.te-tick233 {
+  width: 19px; height: 19px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent, #059669); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; font-family: var(--font-heading);
+}
+.te-ctas233 { display: flex; flex-wrap: wrap; align-items: center; gap: 11px; margin-top: 7px; }
+.te-btn233 {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 19px; border-radius: 9px;
+  font-family: var(--font-heading); font-size: 13px; font-weight: 700;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  min-height: 44px;
+}
+.te-btn-main233 { background: var(--accent, #059669); color: #fff; box-shadow: 0 2px 8px rgba(5,150,105,0.28); }
+.te-btn-main233:hover { background: var(--accent-dark, #047857); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(5,150,105,0.34); }
+.te-btn-main233 .te-arrow233 { transition: transform 0.18s ease; font-size: 11px; }
+.te-btn-main233:hover .te-arrow233 { transform: translateX(3px); }
+.te-btn-ghost233 { background: var(--bg-card, #fff); color: var(--accent-dark, #047857); border: 1px solid rgba(5,150,105,0.42); }
+.te-btn-ghost233:hover { background: var(--accent-soft, rgba(5,150,105,0.10)); border-color: var(--accent, #059669); }
+/* ── ডান কলাম ── */
+.te-right233 { display: flex; flex-direction: column; gap: 11px; min-width: 0; }
+.te-sidehead233 { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: var(--font-heading); font-size: 12px; font-weight: 700; color: var(--text-muted, #64748b); }
+.te-fresh233 { display: inline-flex; align-items: center; gap: 6px; }
+.te-fresh233 .fa-bolt { color: #f59e0b; }
+.te-date233 {
+  background: var(--accent-soft, rgba(5,150,105,0.10)); color: var(--accent-dark, #047857);
+  border: 1px solid rgba(5,150,105,0.25);
+  padding: 3px 9px; border-radius: 7px; font-size: 10.5px; white-space: nowrap;
+}
+.te-card233 {
+  background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px; padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.te-card233:hover { border-color: rgba(5,150,105,0.5); box-shadow: var(--shadow); transform: translateY(-2px); }
+.te-cardhead233 { display: flex; align-items: center; gap: 13px; }
+.te-ico233 {
+  width: 48px; height: 48px; border-radius: 11px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent, #059669), var(--accent-dark, #047857));
+  color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px;
+  box-shadow: 0 2px 8px rgba(5,150,105,0.3);
+  transition: transform 0.2s ease;
+}
+.te-card233:hover .te-ico233 { transform: scale(1.06); }
+.te-cardbody233 { flex: 1; min-width: 0; }
+.te-namerow233 { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.te-name233 {
+  margin: 0; font-family: var(--font-heading); font-size: 14px; font-weight: 700;
+  color: var(--text, #1e293b); transition: color 0.18s ease;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.te-card233:hover .te-name233 { color: var(--accent, #059669); }
+.te-freshbadge233 {
+  flex-shrink: 0; font-family: var(--font-heading); font-size: 9px; font-weight: 700;
+  background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;
+  padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+}
+.te-cardsub233 { margin: 3px 0 0; font-family: var(--font-body); font-size: 11.5px; color: var(--text-muted, #64748b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.te-go233 {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: #f1f5f9; color: var(--text-muted, #64748b);
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.te-go233:hover { background: var(--accent, #059669); color: #fff; }
+.te-pillrow233 {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-top: 13px; padding-top: 12px; border-top: 1px solid #f1f5f9;
+}
+.te-pilllabel233 { font-family: var(--font-body); font-size: 10.5px; color: #94a3b8; white-space: nowrap; padding-top: 5px; }
+.te-pills233 { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.te-pill233 {
+  padding: 4px 10px; border-radius: 7px;
+  background: #fafbfc; border: 1px solid var(--border, #e2e8f0);
+  font-family: var(--font-heading); font-size: 11px; font-weight: 600; color: var(--text, #1e293b);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  min-height: 26px; display: inline-flex; align-items: center;
+}
+.te-pill233:hover { background: var(--accent-soft, rgba(5,150,105,0.10)); color: var(--accent-dark, #047857); border-color: rgba(5,150,105,0.4); }
+.te-pillsoon233 { font-family: var(--font-body); font-size: 10.5px; color: var(--text-muted, #64748b); align-self: center; }
+.te-sync233 { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 3px; font-family: var(--font-body); font-size: 11px; color: var(--text-muted, #64748b); }
+.te-sync-l233 { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.te-dot233 { width: 6px; height: 6px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+.te-sync-r233 { font-family: var(--font-heading); font-weight: 700; font-size: 10px; color: var(--accent-dark, #047857); white-space: nowrap; }
+/* ── রেসপনসিভ ── */
+@media (max-width: 1023px) {
+  .te-grid233 { grid-template-columns: 1fr; gap: 24px; }
+  .te-band233 { padding: 24px 20px 22px; }
+}
+@media (max-width: 480px) {
+  .te-band233 { padding: 20px 14px 18px; border-radius: 13px; }
+  .te-title233 { font-size: 19px; }
+  .te-lead233 { font-size: 12.5px; }
+  .te-points233 li { font-size: 12px; align-items: flex-start; }
+  .te-btn233 { width: 100%; justify-content: center; }
+  .te-cardhead233 { gap: 11px; }
+  .te-ico233 { width: 42px; height: 42px; font-size: 17px; }
+  .te-name233 { white-space: normal; font-size: 13px; }
+  .te-cardsub233 { white-space: normal; }
+  .te-sidehead233 { flex-wrap: wrap; }
+  .te-sync233 { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+/* ═══════════ EOF সেশন-২৩৩ আজকের ই-পেপার ব্যান্ড ═══════════ */

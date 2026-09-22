@@ -995,10 +995,19 @@
   }
 
   // ── বুট: আজকের (বা সর্বশেষ সিঙ্কড) দিন + সেই-দিনের শীর্ষ-র‍্যাংকের পত্রিকা (session172) ──
-  var bootDate = dates.indexOf(todayIso) >= 0 ? todayIso : dates[0];
+  // session233-boot-hook: হোমের 'আজকের ই-পেপার' ব্যান্ডের deep-link /epaper?file=<id> —
+  // সেই-পত্রিকার দিনে বুট করে সেটাকেই সরাসরি খুলে দেয়; id-অজানা/অনুপস্থিত হলে
+  // ডিফল্ট-বুটে মসৃণ-ফলব্যাক (আজকের দিন, না-থাকলে সর্বশেষ সিঙ্কড দিন)।
+  var bootFile = '';
+  try { bootFile = new URLSearchParams(location.search).get('file') || ''; } catch (e) { bootFile = ''; }
+  var bootPaper = bootFile ? papers.filter(function (p) { return String(p.id) === String(bootFile); })[0] : null;
+  var bootDate = bootPaper
+    ? String(bootPaper.date || '').slice(0, 10)
+    : (dates.indexOf(todayIso) >= 0 ? todayIso : dates[0]);
   elDate.value = bootDate;
-  var bootRows = byDate[bootDate].slice().sort(rankCmp);
-  select(bootRows[0].id);
+  var bootRows = (byDate[bootDate] || []).slice().sort(rankCmp);
+  if (bootPaper) { select(bootPaper.id); }
+  else if (bootRows.length) { select(bootRows[0].id); }
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>
