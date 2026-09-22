@@ -1427,7 +1427,14 @@ async function runMigrations() {
     "ALTER TABLE posts ADD COLUMN audience TEXT DEFAULT 'PUBLIC'",
     // post_images.media_type: 'image' | 'video' | 'audio' — একই টেবিলে মিডিয়া-কোলাজের
     // সমস্ত অ্যাটাচমেন্ট (sort_order = কোলাজ-ক্রম); ডিফল্ট 'image' = পুরনো-রো অক্ষত।
-    "ALTER TABLE post_images ADD COLUMN media_type TEXT DEFAULT 'image'"
+    "ALTER TABLE post_images ADD COLUMN media_type TEXT DEFAULT 'image'",
+    // session243 — user_reports-মিডিয়া-ট্রায়ো (prod-schema-drift ফিক্স): CREATE-টেবিলে কলাম-তিনটি
+    // ছিল কিন্তু পুরনো-প্রোড DB-তে অনুপস্থিত (defensive-ALTER-শূন্য) — ফলে প্রোডে মিডিয়া-ফিল্টার/
+    // ব্যাজ/মিরর-সাইলেন্টলি-ডেড ছিল; scMediaCounts-এর-অবাধ-SELECT-ই-প্রথম-উন্মোচন (৫০০)।
+    // বুটে idempotent-ALTER = স্বয়ং-নিরাময় (duplicate-column-ত্রুটি-নীরব-স্বাভাবিক)।
+    "ALTER TABLE user_reports ADD COLUMN media_type TEXT DEFAULT 'TEXT'",
+    "ALTER TABLE user_reports ADD COLUMN media_url TEXT",
+    "ALTER TABLE user_reports ADD COLUMN media_name TEXT"
   ];
   for (const s of alt) {
     try { await backend.exec(s); } catch (_) {}
