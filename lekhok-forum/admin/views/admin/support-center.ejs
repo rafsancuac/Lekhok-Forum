@@ -124,6 +124,8 @@
     .sc-mb[data-mh]:hover{filter:brightness(1.18)}
     .sc-mb.seg-hot{filter:brightness(1.18);box-shadow:inset 0 0 0 1px var(--ad-accent-ring)}
     .sc-chip.chip-hot{border-color:var(--ad-accent-ring)}
+    /* session244 — সক্রিয়-মাধ্যম-সেগমেন্ট-একো (EJS-এক-উৎস sc-mb-cur; স্ট্যাটিক — transition-শূন্য, reduced-motion-স্বাভাবিক-নিরাপদ) */
+    .sc-mb.sc-mb-cur{box-shadow:inset 0 0 0 2px rgba(255,255,255,.65);filter:saturate(1.2) brightness(1.08)}
     .sc-mediabar-legend{display:flex;align-items:center;gap:14px;margin-top:7px;flex-wrap:wrap}
     .sc-mediabar-legend .lg{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;color:var(--ad-muted)}
     .sc-mediabar-legend .lg b{color:var(--ad-ink);font-variant-numeric:tabular-nums}
@@ -510,7 +512,7 @@
   <%# session241 — মিডিয়া-ডিস্ট্রিবিউশন স্ট্রিপ (EJS-এক-উৎস mediaBreak; flex-grow-অনুপাত — ক্লায়েন্ট-গণনা-শূন্য; সম্পূর্ণ-স্ট্যাটিক — reduced-motion-নিরাপদ; var()-টোকেন) %>
   <div class="sc-mediabar">
     <div class="sc-mediabar-track" role="img" aria-label="মিডিয়া বিভাজন — লেখা <%= bnNum(mediaBreak.TEXT) %>, ছবি <%= bnNum(mediaBreak.IMAGE) %>, ভয়েস <%= bnNum(mediaBreak.AUDIO) %>, ভিডিও <%= bnNum(mediaBreak.VIDEO) %> (মোট <%= bnNum(mediaBreak.total) %>)" data-mt="<%= mediaBreak.TEXT %>" data-mi="<%= mediaBreak.IMAGE %>" data-ma="<%= mediaBreak.AUDIO %>" data-mv="<%= mediaBreak.VIDEO %>" data-mtotal="<%= mediaBreak.total %>">
-      <% if (mediaBreak.total > 0) { %><span class="sc-mb m-text" data-mh="TEXT" style="flex-grow:<%= mediaBreak.TEXT %>"></span><span class="sc-mb m-image" data-mh="IMAGE" style="flex-grow:<%= mediaBreak.IMAGE %>"></span><span class="sc-mb m-audio" data-mh="AUDIO" style="flex-grow:<%= mediaBreak.AUDIO %>"></span><span class="sc-mb m-video" data-mh="VIDEO" style="flex-grow:<%= mediaBreak.VIDEO %>"></span><% } else { %><span class="sc-mb-none" aria-hidden="true"></span><% } %>
+      <% if (mediaBreak.total > 0) { %><span class="sc-mb<%= media === 'TEXT' ? ' sc-mb-cur' : '' %> m-text" data-mh="TEXT" style="flex-grow:<%= mediaBreak.TEXT %>"></span><span class="sc-mb<%= media === 'IMAGE' ? ' sc-mb-cur' : '' %> m-image" data-mh="IMAGE" style="flex-grow:<%= mediaBreak.IMAGE %>"></span><span class="sc-mb<%= media === 'AUDIO' ? ' sc-mb-cur' : '' %> m-audio" data-mh="AUDIO" style="flex-grow:<%= mediaBreak.AUDIO %>"></span><span class="sc-mb<%= media === 'VIDEO' ? ' sc-mb-cur' : '' %> m-video" data-mh="VIDEO" style="flex-grow:<%= mediaBreak.VIDEO %>"></span><% } else { %><span class="sc-mb-none" aria-hidden="true"></span><% } %>
     </div>
     <div class="sc-mediabar-legend">
       <span class="lg"><i class="lg-dot lg-text"></i>লেখা <b><%= bnNum(mediaBreak.TEXT) %></b></span>
@@ -673,8 +675,10 @@
     <div class="sc-help-row"><span>পরবর্তী/পূর্ববর্তী কার্ড-কার্সর</span><span class="keys"><kbd class="sc-kbd">j</kbd><kbd class="sc-kbd">k</kbd></span></div>
     <div class="sc-help-row"><span>স্ট্যাটাস-ভিউ: নতুন / চলমান / সমাধান</span><span class="keys"><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
     <div class="sc-help-row"><span>সব-অভিযোগ ভিউ</span><span class="keys"><kbd class="sc-kbd">0</kbd></span></div>
+    <div class="sc-help-row"><span>মাধ্যম-ফিল্টার সাইকেল — সব→লেখা→ছবি→ভয়েস→ভিডিও→সব (স্ট্যাটাস/সার্চ/সময়-সংরক্ষিত)</span><span class="keys"><kbd class="sc-kbd">m</kbd></span></div>
     <div class="sc-help-row"><span>সার্চ-বক্সে ফোকাস</span><span class="keys"><kbd class="sc-kbd">/</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ডে দ্রুত-স্ট্যাটাস সেট (নতুন / চলমান / সমাধান)</span><span class="keys"><kbd class="sc-kbd">Shift</kbd><kbd class="sc-kbd">1</kbd><kbd class="sc-kbd">2</kbd><kbd class="sc-kbd">3</kbd></span></div>
+    <div class="sc-help-row"><span>প্রথম-নতুন (অমীমাংসিত)-কার্ডে কার্সর-জাম্প</span><span class="keys"><kbd class="sc-kbd">u</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-কার্ড নির্বাচন/বাদ — বাল্ক-স্ট্যাটাস (Esc-এ নির্বাচন-পরিষ্কার)</span><span class="keys"><kbd class="sc-kbd">x</kbd><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>শেষ স্ট্যাটাস-বদল আন্ডু (বাল্ক-গ্রুপ-সহ; লেখা-বক্সে নেটিভ-আন্ডু)</span><span class="keys"><kbd class="sc-kbd">Ctrl</kbd><kbd class="sc-kbd">Z</kbd></span></div>
     <div class="sc-help-row"><span>কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">d</kbd></span></div>
@@ -945,6 +949,18 @@
     return { btn: !!printBtn, head: !!document.getElementById('scPrintHead'), stampOn: !!(printTimeEl && printTimeEl.textContent), stamp: (printTimeEl && printTimeEl.textContent) || '' };
   };
 
+  window.__scQA.mediaCycle = function () { // session244 QA-হুক (print-এর-পরে — পুনঃসৃজন-চুক্তি-ক্রমের-শেষ)
+    var sp = new URLSearchParams(location.search);
+    var order = ['', 'TEXT', 'IMAGE', 'AUDIO', 'VIDEO'];
+    var cur = sp.get('media') || '';
+    var i = order.indexOf(cur); if (i < 0) i = 0;
+    return { cur: cur, next: order[(i + 1) % order.length] };
+  };
+  window.__scQA.uJump = function () { // session244 QA-হুক (mediaCycle-এর-পরে)
+    var first = null;
+    for (var i = 0; i < cards.length; i++) { if (cards[i].getAttribute('data-status') === 'PENDING') { first = cards[i]; break; } }
+    return { found: !!first, id: first ? first.getAttribute('data-id') : null, total: cards.length };
+  };
   // ── session243 — মিডিয়া-চিপ ↔ স্ট্রিপ-সেগমেন্ট ক্রস-হাইলাইট (তাৎক্ষণিক-ক্লাস — transition-শূন্য, reduced-motion-স্বাভাবিক-নিরাপদ; স্ট্যাটিক-ফার্নিচার-বাইন্ড — লাইভ-কার্ড-রিরেন্ডার-স্বাধীন; innerHTML-নিষিদ্ধ-রীতি-অটুট) ──
   (function () {
     var MH = ['TEXT', 'IMAGE', 'AUDIO', 'VIDEO'];
@@ -1351,6 +1367,34 @@
     if (sp.get('range')) parts.push('range=' + sp.get('range'));
     location.href = '/admin/support-center?' + parts.filter(Boolean).join('&');
   }
+  function mediaCycle() { // session244 — m-কী: মাধ্যম-ফিল্টার সাইকেল (সব→লেখা→ছবি→ভয়েস→ভিডিও→সব; statusJump-URLSearchParams-চুক্তি-সমস্বর — স্ট্যাটাস/সার্চ/ব্যাপ্তি-সংরক্ষণ)
+    var sp = new URLSearchParams(location.search);
+    var order = ['', 'TEXT', 'IMAGE', 'AUDIO', 'VIDEO'];
+    var i = order.indexOf(sp.get('media') || '');
+    if (i < 0) i = 0;
+    var next = order[(i + 1) % order.length];
+    var parts = [];
+    if (sp.get('status')) parts.push('status=' + sp.get('status'));
+    if (next) parts.push('media=' + next);
+    if (sp.get('q')) parts.push('q=' + encodeURIComponent(sp.get('q')));
+    if (sp.get('range')) parts.push('range=' + sp.get('range'));
+    location.href = '/admin/support-center?' + parts.filter(Boolean).join('&');
+  }
+  function firstPendingJump() { // session244 — u-কী: প্রথম-নতুন (PENDING)-কার্ডে কার্সর-জাম্প (cursorMove-সেট-লজিক-মিরর — cursorMove-বাইট-অক্ষুণ্ণ s231-চুক্তি)
+    var idx = -1;
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].getAttribute('data-status') === 'PENDING') { idx = i; break; }
+    }
+    if (idx < 0) { toast('কোনো নতুন অভিযোগ নেই'); return; }
+    if (cursor >= 0 && cards[cursor]) {
+      cards[cursor].classList.remove('sc-cursor');
+      cards[cursor].removeAttribute('aria-current');
+    }
+    cursor = idx;
+    cards[cursor].classList.add('sc-cursor');
+    cards[cursor].setAttribute('aria-current', 'true');
+    cards[cursor].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
   // ── session230 — x-নির্বাচন + বাল্ক-স্ট্যাটাস (Next-session206/212-চুক্তি-পোর্ট; sequential-PUT; সম-স্টেটাস নীরব-স্কিপ session229-চুক্তি; toast-ত্রুটি true-প্যারাম) ──
   var bulkEl = document.getElementById('scBulk');
   var bulkCount = document.getElementById('scBulkCount');
@@ -1476,6 +1520,8 @@
     if (e.key === 'r' || e.key === 'R') { e.preventDefault(); refreshNow(); return; } // session236 — রিফ্রেশ-এখন (typing-গার্ডের-পরে)
     if (e.key === 'p' || e.key === 'P') { e.preventDefault(); setPaused(!paused); return; } // session236 — অটো-হালনাগাদ-বিরতি
     if (e.key === 'w' || e.key === 'W') { e.preventDefault(); wkReportCopy(); return; } // session239 — সপ্তাহ-রিপোর্ট-কপি (typing-গার্ডের-পরে)
+    if (e.key === 'm' || e.key === 'M') { e.preventDefault(); mediaCycle(); return; } // session244 — মাধ্যম-ফিল্টার সাইকেল (typing-গার্ডের-পরে)
+    if (e.key === 'u' || e.key === 'U') { e.preventDefault(); firstPendingJump(); return; } // session244 — প্রথম-নতুন-কার্ডে জাম্প (typing-গার্ডের-পরে)
     // ── session229 — Shift+1/2/3 কার্সর-কার্ডে দ্রুত-স্ট্যাটাস (Next-session222-চুক্তি: e.code-লেআউট-স্বাধীন; সম-স্টেটাসে নীরব-স্কিপ) ──
     if (e.shiftKey && (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3')) {
       if (cursor < 0 || !cards[cursor]) { toast('কার্সর-কার্ড নেই — আগে j/k দিয়ে কার্ড বাছুন'); return; }
