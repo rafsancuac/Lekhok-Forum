@@ -3489,3 +3489,22 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - **অপসারণ (c0029a6)**: lekhok-forum-next/ গিট-ট্রি থেকে মুছে (archive-tag: `archive/lekhok-forum-next`); AGENT-NOTICE.md যোগ — এই রিপোতে Express ছাড়া অন্য অ্যাপে কাজ নিষিদ্ধ
 - **গোটচা**: ডাইনামিক-ফর্মে sidebar CSRF-প্যাচার পড়ে না → ?_csrf= ম্যানুয়াল-যোগ; sql.js: সার্ভার-চলন্ত-অবস্থায় বাইরে-থেকে seed করবেন না (debounced saveDb ওভাররাইট করে)
 - **লাইভ**: উভয় কমিট Vercel-প্রোডাকশন READY; home r8 ✓, ডেস্ক-রুট 403-gated ✓, ePaper 200 ✓, কনসোল-এরর শূন্য
+
+---
+## NEXT-REMOVE-2 (session201) — স্ট্যাক-অডিট-নিশ্চিত + গার্ডরেল-একত্রীকরণ + Vercel-যাচাই
+
+Task: ইউজার-নির্দেশ — ① Next.js-এ-গুরুত্বপূর্ণ-কিছু-আছে-কি-না-যাচাই → থাকলে Express/EJS-মুভ ② Next.js-সাইট/গিট/Vercel-থেকে-সম্পূর্ণ-বিলুপ্ত ③ ভবিষ্যৎ-এজেন্ট-বিভ্রান্তি-প্রতিরোধ।
+
+Work Log:
+- **অডিট (স্বাধীন-পুনঃযাচাই)**: Next.js-অ্যাপের সব-প্রধান-ফিচার (messenger/voice/reactions/hashtag/follow/bookmark/notification/stories/groups) Express-অ্যাপেই-আছে (routes/social.js, calls.js, pages.js — session144-193-পোর্ট); ইউজারের ৩-নির্দিষ্ট-ফিক্স-ও-লাইভ-প্রমাণিত: ① nav sub-menu দৃশ্যমানতা = `server.js:636 res.locals.navConfig = visibleNav(parseNav(...))` + helpers/nav.js `enabled` (top+children-ফিল্টার) ② অ্যাডমিন per-slot ভিজিবিলিটি-টগল = admin/views/admin/home-leadership.ejs `.hl-vis` সুইচ (session63) + save-API ③ leaderCard-কার্যবর্ষ-কন্ডিশনাল `${yearLabel ? … : ''}` + ID-স্কোপ `min-height:0 !important` (a68fec4) → **প্রোড-প্রমাণ (agent-browser): ৬-কার্ড 728–752px কনটেন্ট-উচ্চতা, computed min-height: 0px** — মাইগ্রেশন-দরকার-নেই-ই
+- Support-Center (একমাত্র-unique) সমান্তরাল-এজেন্ট-কর্তৃক-ই-Express-পোর্টেড (fd13763, E2E ৮/৮) — স্বীকৃত ও AGENT_INSTRUCTIONS-এ-ডক-কৃত
+- **পার্জ**: lekhok-forum-next ১৯৩-ফাইল `git rm` → কমিট (রিবেজ-পরে 3984dea) — সমান্তরাল-এজেন্টের c0029a6-এর-সাথে-সামঞ্জস্যপূর্ণ; archive-tag `archive/lekhok-forum-next` (শুধু-পাঠ)
+- **গার্ডরেল**: AGENT_INSTRUCTIONS.md (রুট, ৭-ধারা: NO-Next.js/স্ট্যাক-টেবিল/আর্কিটেকচার-ম্যাপ/নিষিদ্ধ-আমলা/ডিপ্লয়-গোটচা/বট/চুক্তি) ⇄ AGENT-NOTICE.md ক্রস-রেফারেন্সড + archive-tag/uni-tracker/CSRF/Support-Center-গোটচা-অন্তর্ভুক্ত (6118708); .gitignore: `lekhok-forum-next/` পুনঃসৃজন-গার্ড + `lekhok-forum/public/uploads/*` runtime-আপলোড-রুল (পুরনো un-anchored `upload/`-রেখার-প্রতিস্থাপন); রুট-README.md: legacy-static-বিভ্রান্তি → সঠিক মনোরিপো-ম্যাপ
+- **Vercel-যাচাই (API)**: প্রজেক্ট-তালিকা = `lekhok-forum` (framework None, Express) + `uni-tracker` (framework nextjs, **rafsancuac/UniTracker — ব্যবহারকারীর-আলাদা-প্রজেক্ট, অস্পৃশ্য**); lekhok-Next.js-প্রজেক্ট-নেই-ই
+- **গোটচা-ফিক্স**: repo git-author ছিল `z@container` (Vercel COMMIT_AUTHOR_REQUIRED-কারক) → `rafsancuac@users.noreply.github.com` সেট (local config); আমার-২-কমিট-সহ-সব-পুশ-সেই-অথরে
+- push: `b4ce5ed..6118708` (প্যারালাল-রাউন্ড-সহ-rebase, কনফ্লিক্ট-শূন্য)
+
+Stage Summary:
+- **স্ট্যাক-লক-সম্পন্ন**: রিপো-তে-এখন-এক-মাত্র-অ্যাপ = `lekhok-forum/` (Express+EJS); Next.js-গিট/ডিস্ক/Vercel-সব-জায়গা-থেকে-বিলুপ্ত + ৩-স্তরের-গার্ড (AGENT_INSTRUCTIONS.md + AGENT-NOTICE.md + .gitignore-গার্ড)
+- প্রোড-অক্ষত: docs-only-কমিট — ডিপ্লয়-ঝুঁকি-শূন্য; epaper-bot-প্রভাবিত-নয় (EPAPER_ROOT my-project-স্যান্ডবক্স, সাইট-সিঙ্ক /api/epaper Express-মাউন্টেড)
+- পরের-এজেন্ট: **session202 লেবেল**; কাজ-শুধু `lekhok-forum/`-এ; কমিট-অথর-যাচাই-আগে; QA = `bash ensure-server.sh` (:8094); webDevReview-ক্রন-এখন-Express-অনলি-নির্দেশনা-সহ-পুনঃস্থাপিত
