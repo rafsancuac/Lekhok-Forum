@@ -3407,3 +3407,22 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - নতুন-গোটচা ×২ ডক-কৃত (PLANS): ① dev-রিস্টার্টে shell-DATABASE_URL-উত্তরাধিকার (সার্ভার-রূপ; লক্ষণ: /api/session-ইউজার-id ≠ dev.db) ② `[m`-আর্টিফ্যাক্ট — grep/node-আউটপুটে-ও-মিথ্যা-প্রদর্শিত, tsc-ই-চূড়ান্ত-রেফারি
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়)
 - পরের-এজেন্ট: **session222 লেবেল**; PLANS session221-নোট (WIP-বহন-চুক্তি + কাইন্ড-ফিল্টার/ডে-গ্রুপ/জাম্প-চুক্তি) অবশ্যই পড়ুন
+
+---
+Task ID: P0-REST (মেইন-সেশন; playbook P0-সমাপ্তি)
+Agent: Z.ai Code (user-session; cron-এর বাইরে)
+Task: অবশিষ্ট P0 (P0-3a premium-animation / P0-5 voice-edge / P0-6 dead-code) + QA-found rgba-রেমন্যান্ট সুইপ → push → প্রোড-QA
+
+Work Log:
+- P0-3a: premium.css-এ LeadershipCard এনিমেশন-লেয়ার — scroll-driven entrance (animation-timeline:view(), @supports-গেটেড), hover sheen (::after), ring-glow, name-underline-draw, social microlift+stagger; reduced-motion-সেফ; কমিটি img-fallback selector (ওখানকার img-এ .leader-photo ক্লাস নেই)
+- P0-5: messages-chat.ejs প্রোব-কিউতে bv-probing স্কেলেটন-পালস + bv-set স্মুথ-ফেড (কঠিন ০:০০-র বদলে); messenger.css keyframes; রেকর্ডার-সাইড duration (session158) অক্ষত-যাচাইকৃত
+- P0-6: dashboard.css-এর ডেড .messages-wrap ×২ বাদ (গ্রেপ-শূন্য-রেফারেন্স); playbook-এর today.ejs ts-* আইটেম অবসোলিট (ফাইল নেই)
+- **গুরুত্বপূর্ণ ডিপ্লয়-লেসন**: শেল-fallback গিট-আইডেন্টিটি (Z User <z@container>) দিয়ে কমিট → Vercel প্রোডাকশন-ডিপ্লয় **BLOCKED** (অলিঙ্কড-অথর); rafsancuac <rafsancuac@users.noreply.github.com>-এ amend+force-with-lease → READY। সব এজেন্ট: কমিটের আগে `git config user.email` যাচাই করুন
+- **QA-found P0-1 রেমন্যান্ট**: session180-যুগের rgba(5,150,105,*) রিং-ফ্যামিলি (hex-ratchet rgba ধরে না) — .leaders-row hover + leader-year চিপ + #leadership/#current-leadership hover (rgb(255,255,255)-ফরম্যাট ভ্যারিয়েন্ট কপি) + base-outline .26 → সব rgba(0,106,78,*)-এ; প্রোড-হোভারে ব্র্যান্ড-রিং কম্পিউটেড-স্টাইল-প্রমাণিত
+- প্রোড-E2E: হোম/কমিটি hover-ring+underline+social-lift ✓, মোবাইল-390 hScroll-শূন্য ✓, কনসোল-শূন্য ✓ (banner 2026-09-22-r7)
+- গোটচা: warm-instance-এর ?v= স্যাম-সেকেন্ড-বুটে কোলাইড করে পুরানো CSS ক্যাশ হতে পারে → লাইভ-QA-তে URL-এ ?cb=N দিন
+
+Stage Summary:
+- **P0 ৭/৭ লাইভ-সম্পূর্ণ** (কমিট: 503a87c → 77211a8 → 38ae8ed; HEAD=origin=38ae8ed, tree-ক্লিন)
+- পরের ফেজ **P1**: নাম-সার্চ+রোল-সিলেক্ট নিয়োগ UI / reorder-কন্ট্রোল যাচাই / Support-Center→Express পোর্ট / readTime+views+verified DB-এক্সটেনশন / zoom-clamp 60-220
+- guard:design গ্রিন; টোকেন-নীতি অক্ষুণ্ণ
