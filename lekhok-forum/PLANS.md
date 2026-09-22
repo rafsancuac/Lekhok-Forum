@@ -2516,3 +2516,12 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **দ্বৈত-JSON-পার্স-গোটচা:** agent-browser eval-এর অ্যারে-ফেরত = JSON-স্ট্রিং-এ-মোড়ানো → সুইটে `json.loads(json.load(sys.stdin))`; এক-বার-পার্সে ইনডেক্সিং = অক্ষর-স্তরে (v[0]='[') — নীরব-ভুল-গণনা।
 - **E2E-জাম্প-অ্যাসার্ট-চুক্তি:** URL-sync ২৫০ms-ডিবাউন্ড → ক্লিক-পরে sleep ≥০.৮; **ডিফল্ট-মান-অনুপস্থিতি-অ্যাসার্টও-করুন** (tab=PENDING/date=ALL/sort=false URL-এ আসে-না — `?date=TODAY`-শুধু-আসা-ই-প্রমাণ); সিঙ্ক্রোনাস-বিহেভিয়ার (visibilitychange→load) যাচাইতে fetch-wrap + dispatch-পরে-তাৎক্ষণিক-গণনা (কোনো-স্লিপ-নেই — window-স্কোপ-কাউন্টার)।
 - **পরের-এজেন্ট: session224 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট — পরিকল্পনা-গেটে-অক্ষুণ্ণ।
+
+### session226 — Express support-center ৭-দিন-প্রবণতা (cross-agent নোট)
+
+- **trend7-এক-উৎস-চুক্তি (Express):** `helpers/support-center.js trend7(rows, now)` — ডেস্ক-প্যানেল শুধু-রেন্ডার; নতুন-সিরিজ দরকার হলে এখানেই-বাড়ান (s226-unit ১৪-অ্যাসার্ট সেখানেই-দাঁড়িয়ে); **created_at-পার্স = createdAtMs() এক-উৎস** (agingInfo + trend7 একই-রীতি: naive → UTC 'Z'-যোগ) — কখনো-আলাদা-পার্স-লিখবেন-না; never-throws-চুক্তি (করাপ্ট-ইনপুটে খালি-সিরিজ)।
+- **stale[6]-সমস্বর:** trend7.stalePerDay[6] = staleCount(rows) সরাসরি — স্টেল-ব্যানার-আর-আজকের-বার-কখনো-বিচ্ছিন্ন-হবে-না।
+- **sql.js-মেমোরি-আইসোলেশন + SIGTERM-সেভ (QA-লেখকের-জন্য বাধ্যতমূলক):** চলমান-সার্ভার ফাইল-লেভেল-লেখা-দেখে-না; বন্ধ-হওয়ার-সময় মেমোরি→ফাইল-সেভ-করে — **ফাইল-লেভেল-DB-এডিট (seed/cleanup) সার্ভার-বন্ধ-অবস্থায়-করুন** (seed: pkill-এর-পরে; cleanup: শেষ-pkill-এর-পরে) — নইলে পরীক্ষা-রো-বিলুপ্ত/পুনরুত্থান-হয় (s226-প্রথম-২-রান-ব্যর্থতার-মূল-কারণ)।
+- **Express-QA-লগইন-গোটা:** POST /admin/login-এ `_csrf`-লাগবে (303 → ?csrf=1 = সিগন্যাল); agent-browser: fill → `click 'button[type="submit"]'` (Enter-নয়); লোকাল-সিড admin/admin123 (বুট-লগে-ডক — QA-শুধু); session.user-পথে গেলে SUPPORT_ADMIN_ID-সেটিং + isSupportAdmin-চেক।
+- **ensure-server.sh-cwd:** repo-root (bash ensure-server.sh app-dir-থেকে = "No such file" → নীরব-ব্যর্থ → ব্রাউজারে refused-to-connect-মিথ্যা-রূপ; ডায়াগনোসিস: curl-ফার্স্ট, ব্রাউজার-পরে)।
+- **পরের-এজেন্ট: session227 থেকে।** বাকি-প্রস্তাব: Turso/প্রোড-পোর্ট — পরিকল্পনা-গেটে-অক্ষুণ্ণ; AGENT-NOTICE-চেকলিস্ট-মানুন।

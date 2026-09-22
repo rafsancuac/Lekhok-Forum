@@ -3543,3 +3543,22 @@ Stage Summary:
 - auto-deploy-চ্যানেল পুনরুজ্জীবিত (সিক্রেট-ফিক্স) — rerun-সবুজ-হলে d320e8c messenger-voice-ফিক্স-প্রোডে-ল্যান্ড
 - Next.js-বিলুপ্তি-প্রকল্প স্বাধীনভাবে-পুনঃনিশ্চিত; epaper-bot-অক্ষত
 - পরের-এজেন্ট: session203 লেবেল; রান-স্টেট-যাচাই করে-নেবে (Actions-ট্যাব/jobs-API)
+Task ID: session226
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- **স্টেল-হ্যান্ডওভার-সামারি-প্রতিরোধ (তৃতীয়বার):** হ্যান্ডওভার-সামারি Next-যুগের-অবস্থা বহন করেছিল (lekhok-forum-next + Next-ডেস্ক QA) — কিন্তু **রাউন্ড-মাঝেই ইউজার-সিদ্ধান্তে স্ট্যাক-বদল ঘটেছে**: HEAD=origin এখন Express-only (AGENT-NOTICE.md: ইউজার-নির্দেশে lekhok-forum-next রিপো-থেকে-অপসারিত; একমাত্র-অ্যাপ = lekhok-forum/ Express+EJS; Support-Center পোর্ট-সম্পন্ন fd13763)। **HEAD+origin+worklog-যাচাই-ই-সত্য-উৎস** — parallel-লাইনের session224/225-কমিট (8750e46, d320e8c, fff5495) এ-স্থানান্তর-সম্পন্ন-করেছে
+- রাউন্ড-শুরুতে Next-যুগ-QA সম্পন্ন হয়েছিল (একুশ-সুইট+৩-ইউনিট সব-গ্রিন + Next-স্পার্ক-ফিচার লেখা) — কিন্তু স্ট্যাক-অপসারণের-পরে সে-কাজ **পুশ-অযোগ্য**; স্থানীয়-ব্রাঞ্চ `archive/session224-next-spark`-এ-সংরক্ষিত (AGENT-NOTICE-নিয়ম: Next-ইতিহাস-শুধু-পাঠযোগ্য, নতুন-কাজ-শুধু-Express-এ)
+- টোকেন ২০০-ভ্যালিড (GH+Vercel, .secrets/); live 200; এ-রাউন্ডের-কাজ **Express support-center-এ**
+
+## এ-রাউন্ডে সম্পন্ন (Express-native — session224-মূল্য-বহন)
+- **[ফিচার] support-center-এ ৭-দিনের প্রবণতা:** helpers/support-center.js-এ `trend7(rows, now)` পিওর-ফাংশন (Next session224 trend7-পোর্ট): newPerDay/resolvedPerDay (note_history-র-সর্বশেষ RESOLVED)/stalePerDay (আজ = staleCount-সমস্বর; পুরাতন-দিন = প্রত্ন ≥৭২ঘ-খোলা)/avgPerDay (×১০-রাউন্ড, খালি-দিন null)/dayLabels (bn-BD) — **never-throws** (সাপোর্ট-সেন্টার-চুক্তি); created_at-পার্স-এক-উৎস `createdAtMs()` (agingInfo-রিফ্যাক্টর-সহ — রীতি-ডুপ্লিকেট-শূন্য); routes.js রেন্ডারে trend+bnNum-পাস; **EJS-প্যানেল** (admin/support-center.ejs): ২-সারি (নতুন=অ্যাম্বার / সমাধান=এমারল্ড) × ৭-বার + পরিসর-লেজেন্ড + আজ-গাঢ়-হাইলাইট + প্রতি-বার-বাংলা-day-title + সম্পূর্ণ-var()-টোকেন (hex-ratchet-সেফ) + স্ট্যাটিক (reduced-motion-নিরাপদ) + aria-group/bars-hidden
+- **টেস্ট:** s226-unit.js **১৪/১৪** (node, TZ-নিরপেক্ষ-ভেক্টর; বাকেট-এজ + প্রত্ন-স্টেল + stale[6]===staleCount + never-throws + agingInfo-রিফ্যাক্টর-অক্ষুণ্ণ) · s226-qa.sh **৭/৭** (agent-browser E2E: প্যানেল-কাঠামো + আজ-হাইলাইট + V0→V1-ডেল্টা +১ + 390px-hScroll-শূন্য + কনসোল-শূন্য + নিজের-জঞ্জাল-নিজে-মোছা) · স্ক্রিনশট ×২ (s226-sc-trend / mobile390 — ডেস্কে-চাক্ষুষষ-যাচাইকৃত)
+- ডক ×২ (এ-ওয়ার্কলগ + PLANS session226-নোট) → secret-scan-ক্লিন → push
+
+## ঝুঁকি ও পরবর্তী
+- **নতুন-গোটচা ×৩ (গুরুত্বপূর্ণ — PLANS-নোটে):** ① **sql.js-মেমোরি-আইসোলেশন:** চলমান-সার্ভার ফাইল-লেভেল-লেখা-দেখে-না; **SIGTERM-সেভ:** বন্ধ-হওয়া-সার্ভার নিজের-মেমোরি-ফাইলে-লিখে-যায় → **ফাইল-লেভেল-DB-এডিট (seed/cleanup) অবশ্যই সার্ভার-বন্ধ-অবস্থায়** (seed: pkill-এর-পরে; cleanup: শেষ-pkill-এর-পরে — নইলে মুছে-যাওয়া-রো-পুনরুত্থান/নতুন-রো-বিলুপ্ত) ② **Express-QA-লগইন:** POST /admin/login-এ `_csrf`-হিডেন-ফিল্ড-লাগবে; agent-browser-এ fill → **submit-বাটন-ক্লিক** (Enter-অনির্ভরযোগ্য); লোকাল-সিড অ্যাডমিন admin/admin123 (বুট-লগে-ডক) ③ ensure-server.sh-এর-cwd = **repo-root** (app-dir-থেকে-ডাকলে নীরব-ব্যর্থ → "refused to connect"-মিথ্যা-রূপ)
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ
+- পরের-এজেন্ট: **session227 লেবেল**; PLANS session226-নোট পড়ুন (trend7-এক-উৎস + sql.js/SIGTERM/CSRF-গোটা); AGENT-NOTICE-চেকলিস্ট-প্রতি-টাস্কে-মানুন (Express-only)
+- রিমোট main = এ-রাউন্ডের push (session226-Express-স্পার্ক-পোর্ট); working-tree ক্লিন

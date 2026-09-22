@@ -2323,7 +2323,8 @@ router.get('/support-center', requireSupportReviewer, async (req, res) => {
   res.render('admin/support-center', {
     reports: scDecorate(rows), counts, total, supportAdmin,
     status: filters.status, media: filters.media, q: filters.q,
-    staleN: SC.staleCount(rows), currentPath: '/admin/support-center'
+    staleN: SC.staleCount(rows), currentPath: '/admin/support-center',
+    trend: SC.trend7(rows), bnNum: SC.bnNum
   });
 });
 

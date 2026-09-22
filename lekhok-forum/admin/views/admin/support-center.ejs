@@ -33,6 +33,20 @@
     .sc-search input{border:1px solid var(--ad-line);border-radius:var(--ad-radius-sm);padding:6px 10px;font-family:inherit;min-width:170px;background:var(--ad-card);color:var(--ad-ink)}
     .sc-stale{background:var(--lf-amber-soft);border:1px solid var(--lf-amber-soft-3);color:var(--lf-amber-ink);
       border-radius:var(--ad-radius);padding:9px 14px;font-size:.86rem;font-weight:600;margin-bottom:12px}
+    /* session226 — ৭-দিনের প্রবণতা (trend7 এক-উৎস; বার স্ট্যাটিক — reduced-motion-নিরাপদ; সব-রঙ var()-টোকেন) */
+    .sc-trend{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:12px 14px;margin-bottom:12px}
+    .sc-trend-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+    .sc-trend-head b{font-size:.86rem}
+    .sc-trend-head span{font-size:.72rem;color:var(--ad-muted);font-weight:600}
+    .sc-trend-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+    .sc-trend-lbl{width:64px;flex:none;text-align:right;font-size:.74rem;font-weight:700;color:var(--ad-muted)}
+    .sc-trend-bars{flex:1;display:flex;align-items:flex-end;gap:2px;height:26px;border-bottom:1px solid var(--ad-line)}
+    .sc-trend-bars span{flex:1;min-width:3px;border-radius:2px 2px 0 0;background:var(--ad-icon-bg)}
+    .sc-trend-bars .sc-tb-new{background:var(--lf-amber-soft-2)}
+    .sc-trend-bars .sc-tb-new.today{background:var(--lf-amber-deep)}
+    .sc-trend-bars .sc-tb-res{background:var(--lf-ok-soft)}
+    .sc-trend-bars .sc-tb-res.today{background:var(--lf-ok-deep)}
+    @media (prefers-reduced-motion: reduce){.sc-trend *{transition:none !important;animation:none !important}}
     .sc-card{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:16px;margin-bottom:14px;box-shadow:var(--ad-shadow)}
     .sc-card.sc-heat-stale{border-color:var(--lf-amber-soft-3);box-shadow:0 0 0 3px var(--lf-amber-soft-2)}
     .sc-card-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
@@ -109,6 +123,23 @@
   <% if (staleN > 0) { %>
   <div class="sc-stale"><i class="fas fa-hourglass-half"></i> <%= staleN %> টি অভিযোগ ৩ দিনের বেশি সময় ধরে অমীমাংসিত — দ্রুত নিষ্পত্তির অনুরোধ</div>
   <% } %>
+  <%# session226 — ৭-দিনের প্রবণতা (helpers trend7 এক-উৎস; বার aria-hidden, লেবেল দৃশ্যমান; আজ-বার গাড়-টোকেন) %>
+  <div class="sc-trend" role="group" aria-label="৭ দিনের প্রবণতা">
+    <div class="sc-trend-head">
+      <b>৭-দিনের প্রবণতা</b>
+      <span><%= trend.dayLabels[0] %> → <%= trend.dayLabels[6] %></span>
+    </div>
+    <% [['নতুন', trend.newPerDay, 'sc-tb-new'], ['সমাধান', trend.resolvedPerDay, 'sc-tb-res']].forEach(function(row){ var maxV = Math.max.apply(null, row[1].concat([0])); %>
+    <div class="sc-trend-row">
+      <span class="sc-trend-lbl"><%= row[0] %></span>
+      <div class="sc-trend-bars" aria-hidden="true">
+        <% row[1].forEach(function(v, i){ %>
+        <span class="<%= row[2] %> <%= i === 6 ? 'today' : '' %>" style="height:<%= v > 0 && maxV > 0 ? Math.max(3, Math.round(v / maxV * 20)) : 2 %>px" title="<%= trend.dayLabels[i] %> — <%= bnNum(v) %> টি"></span>
+        <% }) %>
+      </div>
+    </div>
+    <% }) %>
+  </div>
 
   <div class="sc-stats">
     <button type="button" class="sc-stat s-pending" onclick="location.href='/admin/support-center?<%= media ? 'media='+media+'&' : '' %><%= q ? 'q='+encodeURIComponent(q) : '' %>'">
