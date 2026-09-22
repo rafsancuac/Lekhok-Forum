@@ -72,6 +72,18 @@
     </a>
   </div>
 
+  <%# session253: তাৎক্ষণিক-ফিল্টার স্ট্রিপ — সার্ভার-রাউন্ড-ট্রিপ-হীন ক্লায়েন্ট-সাইড সংকীর্ণ
+      (ট্যাব-GET অক্ষুণ্ণ; কারণ/শিরোনাম/লেখক/রিপোর্টকারী/স্ট্যাটাস/বর্ণনায় তাৎক্ষণিক-মিল);
+      'f'-কী ফোকাস + Escape-ক্লিয়ার; QA-হুক __mrQA (সারফেস-নেমস্পেস-রীতি) %>
+  <div class="mr253-wrap">
+    <div class="mr253-field">
+      <input type="text" id="mr253-filter" class="mr253-input" placeholder="তাৎক্ষণিক ফিল্টার — কারণ, শিরোনাম, লেখক, রিপোর্টকারী..." aria-label="তাৎক্ষণিক ফিল্টার" autocomplete="off">
+      <kbd class="mr253-kbd" aria-hidden="true">f</kbd>
+    </div>
+    <span id="mr253-count" class="mr253-count" title="দৃশ্যমান রিপোর্ট"><%= reports.length %></span>
+    <button type="button" id="mr253-clear" class="mr253-clear" hidden aria-label="ফিল্টার পরিষ্কার"><i class="fas fa-times"></i></button>
+  </div>
+
   <%# ── তালিকা ── %>
   <% if (reports.length === 0) { %>
   <div class="mrq81-empty">
@@ -92,7 +104,8 @@
   <% } %>
 
   <% reports.forEach(r => { %>
-    <div class="mrq81-card st-<%= r.status %> <%= r.status === 'open' ? 'mrq85-selectable' : '' %>" data-id85="<%= r.status === 'open' ? r.id : '' %>">
+    <%# session253: data-kw = ফিল্টার-সূচক (কারণ + টার্গেট + লেখক + রিপোর্টকারী + স্ট্যাটাস + বর্ণনা — ছোট-হাতের) %>
+    <div class="mrq81-card st-<%= r.status %> <%= r.status === 'open' ? 'mrq85-selectable' : '' %>" data-id85="<%= r.status === 'open' ? r.id : '' %>" data-mr-row data-kw="<%= ((r.reasonMeta.label + ' ' + (r.targetLabel || '') + ' ' + (r.post_title || '') + ' ' + (r.post_author_name || '') + ' ' + (r.post_author_username || '') + ' ' + (r.reporter_name || '') + ' ' + (r.reporter_username || '') + ' ' + r.status + ' ' + (r.details || '')).toLowerCase()) %>">
       <div class="mrq81-card-head">
         <% if (r.status === 'open') { %>
         <label class="mrq85-check" title="বাল্ক-অ্যাকশনের জন্য নির্বাচন">
@@ -180,6 +193,13 @@
     </div>
   <% }) %>
 
+  <%# session253: তাৎক্ষণিক-ফিল্টার-শূন্য-অবস্থা (ক্লায়েন্ট-সাইডেই টগল হয়) %>
+  <div class="mrq81-empty" data-mr-empty hidden>
+    <i class="fas fa-filter-circle-xmark"></i>
+    <h3>এই ফিল্টারে কোনো রিপোর্ট মেলেনি</h3>
+    <p>ফিল্টার-কীওয়ার্ড বদলে আবার চেষ্টা করুন — বা Escape দিয়ে পরিষ্কার করুন।</p>
+  </div>
+
   <% if (reports.length > 0) { %>
   <p class="mrq81-footnote"><i class="fas fa-lightbulb"></i> টিপ: একাধিক রিপোর্ট একসাথে সামলাতে কার্ডের চেকবক্স নির্বাচন করে নিচের বাল্ক-বার ব্যবহার করুন। লেখক-নিজেও পারেন নিজের লেখা লুকাতে/ফেরাতে — সেক্ষেত্রে নোটিফিকেশন যায় না। মডারেটর-লুকালে লেখক জানতে পারেন (কিন্তু কে রিপোর্ট করেছে জানতে পারেন না)।</p>
   <% } %>
@@ -204,6 +224,72 @@
 </div>
 <% } %>
 
+<style>
+/* ── session253 — রিপোর্ট-কিউ তাৎক্ষণিক-ফিল্টার (টোকেন-শুধু; au251-প্যাটার্ন-মিরর; guard-হেক্স-র্যাচেট-নিরাপদ) ── */
+.mr253-wrap { display: flex; align-items: center; gap: 10px; margin: 2px 0 14px; }
+.mr253-field { position: relative; flex: 0 1 420px; }
+.mr253-input { width: 100%; padding: 10px 52px 10px 13px; font-family: inherit; font-size: .95rem; color: var(--lf-text-primary); background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border-strong); border-radius: 8px; transition: border-color .15s ease, box-shadow .15s ease; }
+.mr253-input::placeholder { color: var(--lf-text-tertiary); }
+.mr253-input:focus { outline: none; border-color: var(--lf-brandgreen); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lf-brandgreen) 14%, transparent); }
+.mr253-kbd { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); pointer-events: none; font: inherit; font-size: 10px; font-weight: 700; line-height: 1; color: var(--lf-text-tertiary); background: var(--lf-ui-canvas); border: 1px dashed var(--lf-ui-border-strong); border-radius: 4px; padding: 2px 6px; transition: opacity .15s ease; }
+.mr253-field:focus-within .mr253-kbd { opacity: 0; }
+.mr253-count { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; padding: 6px 10px; border-radius: 999px; background: var(--lf-ui-canvas); border: 1px solid var(--lf-ui-border); color: var(--lf-text-secondary); font-weight: 700; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.mr253-count.mr253-dim { color: var(--lf-text-tertiary); }
+.mr253-clear { border: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); color: var(--lf-text-tertiary); border-radius: 5px; padding: 8px 11px; cursor: pointer; transition: color .15s ease, border-color .15s ease; }
+.mr253-clear:hover { color: var(--lf-green-ink); border-color: var(--lf-brandgreen); }
+.mr253-clear:active { transform: scale(.96); }
+/* hidden-গার্ড — কার্ড-অ্যানিমেশন (hid81in)-যুক্ত সারফেসেও filter-hide নির্ভরযোগ্য */
+.mrq81-card[data-mr-row][hidden] { display: none !important; }
+@media (max-width: 640px) { .mr253-field { flex-basis: 100%; } .mr253-input { padding-right: 13px; } .mr253-kbd { display: none; } }
+@media (prefers-reduced-motion: reduce) { .mr253-input, .mr253-kbd { transition: none; } .mr253-clear:active { transform: none; } }
+</style>
+<script>
+  /* ── session253: তাৎক্ষণিক-ফিল্টার (au251-চুক্তি-মিরর — field-গার্ড keydown; Escape-ক্লিয়ার+ব্লার; __mrQA হুক) ── */
+  (function () {
+    'use strict';
+    var input = document.getElementById('mr253-filter');
+    var count = document.getElementById('mr253-count');
+    var clearBtn = document.getElementById('mr253-clear');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('[data-mr-row]'));
+    var emptyBox = document.querySelector('[data-mr-empty]');
+    var total = cards.length;
+    function apply253() {
+      var v = (input.value || '').trim().toLowerCase();
+      var vis = 0;
+      cards.forEach(function (c) {
+        var hit = !v || (c.getAttribute('data-kw') || '').indexOf(v) >= 0;
+        c.hidden = !hit;
+        if (hit) vis++;
+      });
+      count.textContent = String(vis);
+      count.classList.toggle('mr253-dim', !!v && vis !== total);
+      if (emptyBox) emptyBox.hidden = vis !== 0;
+      if (clearBtn) clearBtn.hidden = !v;
+    }
+    function clear253() { input.value = ''; apply253(); }
+    if (input) {
+      input.addEventListener('input', apply253);
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { clear253(); input.blur(); }
+      });
+    }
+    if (clearBtn) clearBtn.addEventListener('click', function () { clear253(); input.focus(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'f' || e.ctrlKey || e.metaKey || e.altKey) return;
+      var t = e.target && e.target.tagName;
+      if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+      e.preventDefault();
+      input.focus();
+    });
+    /* session253 QA-হুক (__mrQA — সারফেস-নেমস্পেস-রীতি; ক্রমের-শেষ) */
+    window.__mrQA = {
+      total: function () { return total; },
+      count: function () { return document.querySelectorAll('[data-mr-row]:not([hidden])').length; },
+      apply: apply253,
+      clear: function () { clear253(); }
+    };
+  })();
+</script>
 <script>
   (function () {
     document.querySelectorAll('form[data-confirm81]').forEach(function (f) {

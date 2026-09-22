@@ -60,13 +60,17 @@ contains "প্রেস-ফিডব্যাক (:active scale)" "$AUCSS" '.a
 echo "── ধাপ-৩: আচরণ (agent-browser — সুপার সেশন) ──"
 agent-browser set viewport 1280 900 >/dev/null 2>&1
 BHC=$(agent-browser get url 2>/dev/null || echo ''); [ -z "$BHC" ] && balive || true
-agent-browser open "$BASE/admin/login" >/dev/null 2>&1; sleep 1
-U=$(agent-browser get url 2>/dev/null || echo '')
-if echo "$U" | grep -q '/admin/login'; then :; else agent-browser open "$BASE/admin/login" >/dev/null 2>&1; sleep 1; balive || true; fi
-agent-browser fill 'input[name="username"]' admin >/dev/null 2>&1
-agent-browser fill 'input[name="password"]' admin123 >/dev/null 2>&1
-agent-browser click 'button[type="submit"]' >/dev/null 2>&1; sleep 1
+# session253-ইনফ্রা-ফিক্স: ফর্ম-ক্লিক-লগইন logout-চক্রের-পরে নীরব-ব্যর্থ (click-স্বালো-হজম — এ-রাউন্ডে-প্রমাণিত);
+# URL-ব্রাঞ্চ + পৃষ্ঠা-csrf fetch-POST (redirect:"manual" — follow-মোডের রেন্ডার-চেইন eval-টাইমআউট-এ-খালি-ফেরত)
 agent-browser open "$BASE/admin/users" >/dev/null 2>&1; sleep 1.2
+PREURL=$(agent-browser get url 2>/dev/null || echo '')
+if echo "$PREURL" | grep -q '/admin/users'; then
+  : # পূর্ব-সক্রিয় সুপার-সেশন
+else
+  agent-browser open "$BASE/admin/login" >/dev/null 2>&1; sleep 1
+  ev 'fetch("/admin/login",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},redirect:"manual",body:"username=admin&password=admin123&_csrf="+encodeURIComponent(document.querySelector("input[name=_csrf]").value)}).then(function(r){return String(r.status)+":"+r.type})' >/dev/null 2>&1
+  agent-browser open "$BASE/admin/users" >/dev/null 2>&1; sleep 1.2
+fi
 contains "ব্রাউজারে /admin/users খোলা" "$(agent-browser get url 2>/dev/null)" '/admin/users'
 contains "__auQA সংজ্ঞায়িত" "$(ev 'typeof window.__auQA')" 'object'
 T=$(ev 'window.__auQA.total()' | tr -d '"')
