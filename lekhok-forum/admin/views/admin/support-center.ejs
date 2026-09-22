@@ -218,6 +218,11 @@
     #scSparkTipWk[data-on="1"]{opacity:1;transform:translate(-50%,0)}
     #scSparkTipWk::before{content:'';position:absolute;left:50%;bottom:100%;transform:translateX(-50%);
       border:5px solid transparent;border-bottom-color:var(--lf-fb-ink)}
+    /* session234 — চিপে ৭-দিন-মিনি-বার-স্ট্রিপ (স্পার্ক-নান্দনিকতা-সমস্বর; আজ-বার = উজ্জ্বল-সাদা+রিং) */
+    .sc-tip-wklbl{vertical-align:middle}
+    .sc-tip-strip{display:inline-flex;align-items:flex-end;gap:1px;height:12px;margin-left:7px;padding-left:7px;border-left:1px solid rgba(255,255,255,.28);vertical-align:middle}
+    .sc-tip-strip i{width:4px;border-radius:1.5px 1.5px 0 0;background:rgba(255,255,255,.38)}
+    .sc-tip-strip i.today{background:var(--lf-white);box-shadow:0 0 0 1px rgba(255,255,255,.35)}
     #scCompactBtn[aria-pressed="true"]{background:var(--ad-accent);border-color:var(--ad-accent);color:var(--lf-white)}
     #scCompactBtn[aria-pressed="true"]:focus-visible{outline:2px solid var(--ad-accent-ink);outline-offset:2px}
     .sc-compact .sc-card{padding:10px 12px;margin-bottom:8px}
@@ -229,7 +234,7 @@
     .sc-compact .sc-hist{margin-top:8px;padding-top:6px}
     .sc-compact .sc-media img{max-height:200px}
     .sc-compact .sc-media audio,.sc-compact .sc-media video{max-width:340px}
-    @media (max-width:640px){#scSparkTip{font-size:.72rem;padding:5px 9px}#scSparkTipWk{font-size:.64rem;padding:3px 7px}}
+    @media (max-width:640px){#scSparkTip{font-size:.72rem;padding:5px 9px}#scSparkTipWk{font-size:.64rem;padding:3px 7px}.sc-tip-strip{height:10px;margin-left:5px;padding-left:5px}.sc-tip-strip i{width:3px}}
     @media (prefers-reduced-motion: reduce){#scSparkTip{transition:none}#scSparkTipWk{transition:none}}
   </style>
 </head>
@@ -270,7 +275,7 @@
     <% [['নতুন', trend.newPerDay, 'sc-tb-new'], ['সমাধান', trend.resolvedPerDay, 'sc-tb-res']].forEach(function(row){ var maxV = Math.max.apply(null, row[1].concat([0])); var tsum = 0; row[1].forEach(function(v){ tsum += (v || 0); }); var tavg = Math.round(tsum / 7 * 10) / 10; %>
     <div class="sc-trend-row">
       <span class="sc-trend-lbl"><%= row[0] %></span>
-      <div class="sc-trend-bars" aria-hidden="true" data-unit="টি" data-wk="সপ্তাহে মোট <%= bnNum(tsum) %> টি · দৈনিক গড় <%= bnNum(tavg) %> টি">
+      <div class="sc-trend-bars" aria-hidden="true" data-unit="টি" data-wk="সপ্তাহে মোট <%= bnNum(tsum) %> টি · দৈনিক গড় <%= bnNum(tavg) %> টি" data-bars="<%= row[1].map(function(v){ return v || 0; }).join(',') %>">
         <% row[1].forEach(function(v, i){ %>
         <span class="<%= row[2] %> <%= i === 6 ? 'today' : '' %>" style="height:<%= v > 0 && maxV > 0 ? Math.max(3, Math.round(v / maxV * 20)) : 2 %>px" data-d="<%= trend.dayLabels[i] %>" data-v="<%= bnNum(v) %>"></span>
         <% }) %>
@@ -282,10 +287,11 @@
   <%# session231 — KPI স্পার্ক হেল্পার (trend7-সিরিজ এক-উৎস-পুনঃব্যবহার; EJS নিজে-কোনো-তারিখ-গণনা-নয় — শুধু-রেন্ডার; মান bnNum-এক-উৎস) %>
   <%# session232 — data-d/data-v/data-unit টুলটিপ-হুক (native-title-বাদ — শেয়ার্ড #scSparkTip-এ-স্থানান্তর; এক-উৎস dayLabels/bnNum) %>
   <%# session233 — data-wk সপ্তাহ-ওভারভিউ হুক (EJS-এক-উৎস গণনা — ক্লায়েন্ট-পার্স-শূন্য; unit ঘ হলে গড়-লেবেল, নয়তো মোট+দৈনিক-গড়) %>
+  <%# session234 — data-bars কাঁচা-সিরিজ-CSV হুক (মিনি-বার-স্ট্রিপ এক-উৎস; ক্লায়েন্ট-শুধু-রেন্ডার — গণনা-নয়) %>
   <% function scSpark(cls, series, unit){ var mx = 0, tot = 0, nn = 0; for (var i = 0; i < series.length; i++){ var v = series[i] == null ? 0 : series[i]; if (v > mx) mx = v; tot += v; if (series[i] != null) nn++; }
     var avg = nn > 0 ? Math.round(tot / nn * 10) / 10 : 0;
     var wk = (unit === 'ঘ') ? ('৭-দিন গড় ' + bnNum(avg) + ' ঘ') : ('সপ্তাহে মোট ' + bnNum(tot) + ' টি · দৈনিক গড় ' + bnNum(avg) + ' টি');
-    return '<span class="k-spark" data-spark="' + cls + '" data-unit="' + (unit || 'টি') + '" data-wk="' + wk + '" aria-hidden="true">' + series.map(function(v, i){
+    return '<span class="k-spark" data-spark="' + cls + '" data-unit="' + (unit || 'টি') + '" data-wk="' + wk + '" data-bars="' + series.map(function(v){ return v == null ? 0 : v; }).join(',') + '" aria-hidden="true">' + series.map(function(v, i){
       var n = v == null ? 0 : v; var h = (n > 0 && mx > 0) ? Math.max(2, Math.round(n / mx * 14)) : 2;
       return '<i class="' + (i === 6 ? 'today' : '') + '" style="height:' + h + 'px" data-d="' + trend.dayLabels[i] + '" data-v="' + bnNum(n) + '"></i>'; }).join('') + '</span>'; } %>
   <%# session227 — ২৪ঘ-সারাংশ KPI (helpers digestStats এক-উৎস; ক্লিকে ফিল্টার-ভিউ-জাম্প: status+range) %>
@@ -557,11 +563,37 @@
     tipEl.setAttribute('data-on', '1');
     tipEl.setAttribute('aria-hidden', 'false');
     // session233 — সপ্তাহ-ওভারভিউ চিপ (বারের-নিচে; data-wk EJS-এক-উৎস; #scSparkTip-textContent-চুক্তি-অক্ষুণ্ণ — s232-সুইট-সামঞ্জস্য)
+    // session234 — চিপে ৭-দিন-মিনি-বার-স্ট্রিপ (data-bars কাঁচা-CSV; DOM-API-নির্মাণ — innerHTML-নিষিদ্ধ-রীতি-অটুট; label-span-textContent = data-wk-হুবহু — s233-সমতা-রক্ষা)
     if (wkEl) {
       var wk = bar.closest('[data-wk]');
       if (wk && wk.getAttribute('data-wk')) {
-        wkEl.textContent = wk.getAttribute('data-wk');
+        while (wkEl.firstChild) wkEl.removeChild(wkEl.firstChild);
+        var lbl = document.createElement('span');
+        lbl.className = 'sc-tip-wklbl';
+        lbl.textContent = wk.getAttribute('data-wk');
+        wkEl.appendChild(lbl);
+        var barsAttr = wk.getAttribute('data-bars');
+        if (barsAttr) {
+          var arr = barsAttr.split(','), mxS = 0, si, sn;
+          for (si = 0; si < arr.length; si++) { sn = +arr[si] || 0; if (sn > mxS) mxS = sn; }
+          var strip = document.createElement('span');
+          strip.className = 'sc-tip-strip';
+          for (si = 0; si < arr.length; si++) {
+            sn = +arr[si] || 0;
+            var sb = document.createElement('i');
+            if (si === 6) sb.className = 'today';
+            sb.style.height = (sn > 0 && mxS > 0 ? Math.max(3, Math.round(sn / mxS * 10)) : 2) + 'px';
+            strip.appendChild(sb);
+          }
+          wkEl.appendChild(strip);
+        }
+        // session234 — চিপ-অনুভূমিক-ক্ল্যাম্প (স্ট্রিপে-চিপ-প্রশস্ত — প্রান্তে-কাটা-প্রতিরোধ; অফসেট-মাপা-পরে ক্ল্যাম্প)
         wkEl.style.left = tipEl.style.left;
+        var ww = wkEl.offsetWidth || 0;
+        if (ww > 0) {
+          var half = ww / 2 + 8;
+          wkEl.style.left = Math.min(Math.max(r.left + r.width / 2, half), window.innerWidth - half) + 'px';
+        }
         wkEl.style.top = Math.min(r.bottom + 6, window.innerHeight - 40) + 'px';
         wkEl.setAttribute('data-on', '1');
       } else {
