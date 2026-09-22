@@ -107,3 +107,149 @@ export function staleCount(reports: { createdAt: string; status: StatusKey }[]):
   const cutoff = Date.now() - 3 * 864e5
   return reports.filter((r) => r.status !== 'RESOLVED' && new Date(r.createdAt).getTime() < cutoff).length
 }
+
+/**
+ * session219 — শিফট-হস্তান্তর সারসংক্ষেপ (পিওর-ফাংশন; ডেস্ক-ডায়ালগ + প্যালেট-কমান্ড + E2E এক-উৎস)।
+ *
+ * অপারেটর-সিরিজের ধারাবাহিকতা: ট্রায়াজ(s217) → স্মৃতি(s216) → গতি(s215) → প্যালেট(s218) → হস্তান্তর(s219)।
+ * শিফট-বদলের-সময় এক-ক্লিকে বাংলা-সারসংক্ষেপ তৈরি — চ্যাট/ইমেইলে পেস্ট-উপযোগী প্লেইন-টেক্সট।
+ *
+ * গণনা-উৎস (সব ক্লায়েন্ট-সাইড, API-অস্পৃশ্য):
+ *   • গণনা/মিডিয়া/শীর্ষ-প্রেরক — সরাসরি রিপোর্ট-ফিল্ড
+ *   • গত-২৪ঘ-সমাধান ও গড়-সমাধান-সময় — noteHistory-তে সর্বশেষ status→RESOLVED টাইমস্ট্যাম্প
+ *     (history-করাপ্ট/অনুপস্থিত → ওই-মেট্রিক বাদ — কখনো ব্যর্থ-হবে-না)
+ *   • `now`-ইনজেকশন = ডিটারমিনিস্টিক ইউনিট-টেস্ট (task61-unit-চুক্তি)
+ */
+export interface DigestReport {
+  id: string
+  senderName: string
+  mediaType: string
+  status: StatusKey
+  createdAt: string
+  noteHistory?: string | null
+}
+
+export interface DigestStats {
+  total: number
+  pending: number
+  progress: number
+  resolved: number
+  stale: number
+  oldestOpenDays: number | null
+  fresh24: number
+  resolvedToday: number
+  avgResolveHours: number | null
+  media: { TEXT: number; IMAGE: number; AUDIO: number; VIDEO: number }
+  topSenders: { name: string; count: number }[]
+}
+
+/** noteHistory JSON → সর্বশেষ status→RESOLVED-টাইমস্ট্যাম্প (মিলি-সেকেন্ড) বা null */
+function resolvedAtOf(raw: string | null | undefined): number | null {
+  if (!raw) return null
+  let arr: HistoryEntryLike[] = []
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) arr = parsed as HistoryEntryLike[]
+  } catch {
+    return null
+  }
+  let last: number | null = null
+  for (const e of arr) {
+    if (e && e.t === 'status' && e.to === 'RESOLVED' && e.at) {
+      const t = new Date(e.at).getTime()
+      if (!Number.isNaN(t)) last = last === null ? t : Math.max(last, t)
+    }
+  }
+  return last
+}
+
+export function handoverDigest(reports: DigestReport[], now: number = Date.now()): { lines: string[]; stats: DigestStats } {
+  const media = { TEXT: 0, IMAGE: 0, AUDIO: 0, VIDEO: 0 }
+  const senders = new Map<string, number>()
+  let pending = 0
+  let progress = 0
+  let resolved = 0
+  let stale = 0
+  let oldestOpenDays: number | null = null
+  let fresh24 = 0
+  let resolvedToday = 0
+  const resolveDurations: number[] = []
+
+  for (const r of reports) {
+    const m = (r.mediaType ?? 'TEXT') as keyof typeof media
+    if (m in media) media[m]++
+    if (r.status === 'PENDING') pending++
+    else if (r.status === 'IN_PROGRESS') progress++
+    else resolved++
+    const sender = (r.senderName || '').trim() || 'অজানা'
+    senders.set(sender, (senders.get(sender) ?? 0) + 1)
+
+    const created = new Date(r.createdAt).getTime()
+    if (!Number.isNaN(created)) {
+      const ageH = (now - created) / 3600e3
+      if (r.status === 'RESOLVED') {
+        const rat = resolvedAtOf(r.noteHistory)
+        if (rat !== null) {
+          if (now - rat < 864e5) resolvedToday++
+          const durH = (rat - created) / 3600e3
+          if (durH >= 0) resolveDurations.push(durH)
+        }
+      } else {
+        if (ageH < 24) fresh24++
+        if (ageH >= 72) {
+          stale++
+          const days = Math.floor(ageH / 24)
+          if (oldestOpenDays === null || days > oldestOpenDays) oldestOpenDays = days
+        }
+      }
+    }
+  }
+
+  const avgResolveHours =
+    resolveDurations.length > 0
+      ? Math.round((resolveDurations.reduce((a, b) => a + b, 0) / resolveDurations.length) * 10) / 10
+      : null
+  const topSenders = [...senders.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'bn'))
+    .slice(0, 3)
+  const total = reports.length
+  const resolvePct = total > 0 ? Math.round((resolved / total) * 100) : 0
+
+  const stamp = new Date(now).toLocaleString('bn-BD', { dateStyle: 'short', timeStyle: 'short' })
+  const lines: string[] = []
+  lines.push(`শিফট-হস্তান্তর সারসংক্ষেপ — ${stamp}`)
+  lines.push(`অভিযোগ: মোট ${bn(total)} · নতুন ${bn(pending)} · চলমান ${bn(progress)} · সমাধান ${bn(resolved)}`)
+  if (stale > 0)
+    lines.push(
+      `স্টেল (৩+ দিন অমীমাংসিত): ${bn(stale)} টি${oldestOpenDays !== null ? ` · পুরোনোতম ${bn(oldestOpenDays)} দিন ধরে` : ''}`,
+    )
+  else lines.push('স্টেল (৩+ দিন অমীমাংসিত): নেই ✓')
+  lines.push(`গত ২৪ ঘণ্টায়: নতুন ${bn(fresh24)} টি · সমাধান ${bn(resolvedToday)} টি`)
+  if (avgResolveHours !== null)
+    lines.push(`গড় সমাধান-সময়: ${bn(avgResolveHours)} ঘণ্টা (${bn(resolveDurations.length)} টির-উপর-গড়)`)
+  lines.push(`মিডিয়া: লেখা ${bn(media.TEXT)} · ছবি ${bn(media.IMAGE)} · অডিও ${bn(media.AUDIO)} · ভিডিও ${bn(media.VIDEO)}`)
+  lines.push(
+    topSenders.length > 0
+      ? `শীর্ষ প্রেরক: ${topSenders.map((s) => `${s.name} (${bn(s.count)})`).join(', ')}`
+      : 'শীর্ষ প্রেরক: —',
+  )
+  lines.push(`সমাধান-হার: ${bn(resolvePct)}%`)
+
+  return {
+    lines,
+    stats: {
+      total,
+      pending,
+      progress,
+      resolved,
+      stale,
+      oldestOpenDays,
+      fresh24,
+      resolvedToday,
+      avgResolveHours,
+      media,
+      topSenders,
+    },
+  }
+}

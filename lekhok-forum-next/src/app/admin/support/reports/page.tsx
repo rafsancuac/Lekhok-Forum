@@ -54,6 +54,11 @@
  *     এক-ইন্টারফেসে; ↑↓ নেভিগেট + Enter চালান + Esc/ব্যাকড্রপ বন্ধ; ইনপুটে-সার্চ (লেবেল+গ্রুপ)
  *   • a11y: role=dialog/combobox/listbox/option + aria-activedescendant + ফোকাস-ফেরত;
  *     সারি-স্টেজার lf-anim-up (prefers-reduced-motion-সম্মানী); টুলবারে "কমান্ড Ctrl K" হিন্ট-বাটন
+ * session219 — শিফট-হস্তান্তর প্যাক:
+ *   • "হস্তান্তর" ডায়ালগ (Ctrl+Shift+H / টুলবার-বাটন / প্যালেট-কমান্ড): এক-ক্লিকে বাংলা শিফট-হস্তান্তর
+ *     সারসংক্ষেপ (গণনা/স্টেল/২৪ঘ/গড়-সমাধান-সময়/মিডিয়া/শীর্ষ-প্রেরক/সমাধান-হার) — পেস্ট-উপযোগী প্লেইন-টেক্সট
+ *   • কপি = clipboard-race-প্যাটার্ন (s218-গোটচা); a11y: dialog/aria-modal + ফোকাস-ফেরত; help-টায়ার z-[70]/z-[71]
+ *   • lib/support-history handoverDigest() = এক-উৎস-সত্য (now-ইনজেকশন → ডিটারমিনিস্টিক ইউনিট-টেস্টযোগ্য)
 */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -65,6 +70,7 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
+  ClipboardList,
   Clock,
   Command as CommandIcon,
   Copy,
@@ -104,6 +110,7 @@ const SHORTCUTS: { keys: string[]; desc: string }[] = [
   { keys: ['/'], desc: 'অনুসন্ধান-বক্সে ফোকাস' },
   { keys: ['?'], desc: 'এই সহায়িকা খোলা/বন্ধ' },
   { keys: ['Ctrl', 'K'], desc: 'কমান্ড প্যালেট খোলা/বন্ধ' },
+  { keys: ['Ctrl', 'Shift', 'H'], desc: 'শিফট-হস্তান্তর সারসংক্ষেপ (কপি-প্রস্তুত)' },
   { keys: ['Esc'], desc: 'কার্সর বা সহায়িকা বন্ধ' },
 ]
 
@@ -111,7 +118,7 @@ const SHORTCUTS: { keys: string[]; desc: string }[] = [
 const WEEKDAY_BN = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি']
 import AdminGate, { useAdminGate } from '@/components/admin/AdminGate'
 import { bn } from '@/lib/format'
-import { agingInfo, historySummaryBn, staleCount } from '@/lib/support-history'
+import { agingInfo, handoverDigest, historySummaryBn, staleCount } from '@/lib/support-history'
 
 type Status = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED'
 
@@ -557,6 +564,10 @@ function SupportReportsPanel() {
   /** session212 — কীবোর্ড-কার্সর (shown-ইনডেক্স; -1 = নিষ্ক্রিয়) + শর্টকাট-সহায়িকা-ওভারলে */
   const [cursor, setCursor] = useState(-1)
   const [helpOpen, setHelpOpen] = useState(false)
+  /** session219 — শিফট-হস্তান্তর ডায়ালগ (help-টায়ার; Esc-চেইনে cmd-পরে help-আগে) + ফোকাস-ফেরত-চুক্তি (s218-অনুরূপ) */
+  const [digestOpen, setDigestOpen] = useState(false)
+  const digestPanelRef = React.useRef<HTMLDivElement>(null)
+  const digestReturnFocusRef = React.useRef<HTMLElement | null>(null)
   const hydratedRef = React.useRef(false)
   const linkIdRef = React.useRef<string | null>(null)
   /** session213 — পোল-ডিফ স্টেট: পরিচিত PENDING-আইডি-সেট (null = প্রথম-লোড, টোস্ট-নয়) */
@@ -1248,6 +1259,50 @@ function SupportReportsPanel() {
     flash('বর্তমান ভিউ-লিঙ্ক কপি হয়েছে')
   }, [flash])
 
+  /** session219 — শিফট-হস্তান্তর সারসংক্ষেপ: তৈরি (এক-উৎস lib; reports-বদলে স্বয়ংক্রিয়-হালনাগাদ) +
+   *  কপি = clipboard-race-প্যাটার্ন (s218-গোটচা: headless-হ্যাং → ৮০০ms-ফলব্যাক) + টোস্ট */
+  const digest = React.useMemo(() => handoverDigest(reports), [reports])
+  const digestText = digest.lines.join('\n')
+  const openDigest = useCallback((e?: React.MouseEvent) => {
+    digestReturnFocusRef.current = (e ? e.currentTarget : document.activeElement) as HTMLElement | null
+    setCmdOpen(false)
+    setHelpOpen(false)
+    setDigestOpen(true)
+  }, [])
+  const closeDigest = useCallback(() => {
+    setDigestOpen(false)
+    const t = digestReturnFocusRef.current
+    if (t && document.contains(t)) t.focus()
+    digestReturnFocusRef.current = null
+  }, [])
+  useEffect(() => {
+    if (!digestOpen) return
+    const t = setTimeout(() => digestPanelRef.current?.focus(), 30)
+    return () => clearTimeout(t)
+  }, [digestOpen])
+  const copyDigest = useCallback(async () => {
+    try {
+      await Promise.race([
+        navigator.clipboard.writeText(digestText),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('clipboard-timeout')), 800)),
+      ])
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = digestText
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+      } catch {
+        /* নীরব */
+      }
+      ta.remove()
+    }
+    flash('সারসংক্ষেপ কপি হয়েছে — চ্যাট/ইমেইলে পেস্ট করুন')
+  }, [digestText, flash])
+
   /** session218 — কমান্ড-ক্যাটালগ: গ্রুপ-সংরক্ষিত-অর্ডার; লেবেল/গ্রুপ-উপর-সার্চ; setter-ই-এক-উৎস */
   type CmdItem = {
     id: string
@@ -1319,10 +1374,11 @@ function SupportReportsPanel() {
     push('অ্যাকশন', 'copy-view-link', 'বর্তমান ভিউ-লিঙ্ক কপি করুন', Link2, () => {
       void copyViewLink()
     })
+    push('অ্যাকশন', 'handover-digest', 'শিফট-হস্তান্তর সারসংক্ষেপ দেখুন/কপি করুন', ClipboardList, () => openDigest(), ['Ctrl', 'Shift', 'H'])
     push('অ্যাকশন', 'open-help', 'কীবোর্ড সহায়িকা দেখুন', Keyboard, () => setHelpOpen(true), ['?'])
     const q = cmdQuery.trim().toLowerCase()
     return q ? items.filter((c) => `${c.label} ${c.group}`.toLowerCase().includes(q)) : items
-  }, [cmdQuery, counts, presets, laterOnly, sortAsc, soundOn, density, resetFilters, copyViewLink, toggleSound, toggleDensity])
+  }, [cmdQuery, counts, presets, laterOnly, sortAsc, soundOn, density, resetFilters, copyViewLink, toggleSound, toggleDensity, openDigest])
   const runCmd = useCallback((c: CmdItem) => {
     setCmdOpen(false)
     c.run()
@@ -1361,6 +1417,11 @@ function SupportReportsPanel() {
           setCmdOpen(false)
           return
         }
+        if (digestOpen) {
+          e.preventDefault()
+          closeDigest()
+          return
+        }
         if (helpOpen) {
           e.preventDefault()
           setHelpOpen(false)
@@ -1374,6 +1435,13 @@ function SupportReportsPanel() {
       if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault()
         setCmdOpen((o) => !o)
+        return
+      }
+      // session219 — Ctrl/Cmd+Shift+H শিফট-হস্তান্তর সারসংক্ষেপ (typing-গার্ড-বাইপাস; Ctrl+K-চুক্তি-অনুরূপ)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'h' || e.key === 'H')) {
+        e.preventDefault()
+        if (digestOpen) closeDigest()
+        else openDigest()
         return
       }
       if (helpOpen || cmdOpen || typing || bulkBusy || e.metaKey || e.ctrlKey || e.altKey) return
@@ -1425,7 +1493,7 @@ function SupportReportsPanel() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [shown, cursor, helpOpen, cmdOpen, lightbox, bulkBusy, toggleSelect, toggleLater])
+  }, [shown, cursor, helpOpen, cmdOpen, digestOpen, closeDigest, openDigest, lightbox, bulkBusy, toggleSelect, toggleLater])
 
   const allShownSelected = shown.length > 0 && shown.every((r) => selected.includes(r.id))
 
@@ -1759,6 +1827,21 @@ function SupportReportsPanel() {
             শর্টকাট
             <kbd className="lf-kbd" aria-hidden>
               ?
+            </kbd>
+          </button>
+          {/* session219 — হস্তান্তর-হিন্ট বাটন (Ctrl+Shift+H / প্যালেটেও-আছে) */}
+          <button
+            onClick={(e) => openDigest(e)}
+            type="button"
+            title="শিফট-হস্তান্তর সারসংক্ষেপ (Ctrl+Shift+H চাপুন)"
+            aria-label="শিফট-হস্তান্তর সারসংক্ষেপ খুলুন"
+            aria-keyshortcuts="Control+Shift+H Meta+Shift+H"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0"
+          >
+            <ClipboardList className="w-3 h-3" aria-hidden />
+            হস্তান্তর
+            <kbd className="lf-kbd" aria-hidden>
+              Ctrl ⇧ H
             </kbd>
           </button>
         </div>
@@ -2563,6 +2646,121 @@ function SupportReportsPanel() {
               </span>
               <span className="ml-auto" aria-hidden>
                 {bn(cmdItems.length)}টি কমান্ড
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* session219 — শিফট-হস্তান্তর সারসংক্ষেপ (Ctrl+Shift+H / টুলবার / প্যালেট) — help-টায়ার:
+          backdrop z-[70] + panel z-[71]; Esc/ব্যাকড্রপ-বন্ধ + ফোকাস-ফেরত; কপি = clipboard-race;
+          গ্রেডিয়েন্ট-হেডার + রঙ-কোডেড চিপ-সারি + পেস্ট-উপযোগী নির্বাচনযোগ্য প্যানেল; reduced-motion-সম্মানী */}
+      {digestOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 lf-anim-fade"
+          onClick={closeDigest}
+          role="presentation"
+        >
+          <div
+            ref={digestPanelRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label="শিফট-হস্তান্তর সারসংক্ষেপ"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault()
+                closeDigest()
+              } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'h' || e.key === 'H')) {
+                e.preventDefault()
+                closeDigest()
+              }
+            }}
+            className="lf-anim-pop bg-white border border-[#CED0D4] rounded-[14px] shadow-2xl w-full max-w-lg max-h-[86vh] overflow-y-auto focus:outline-none"
+          >
+            {/* গ্রেডিয়েন্ট-হেডার (প্যালেট-স্টাইল-চুক্তি-সামঞ্জস্য; sticky = লম্বা-সারসংক্ষেপেও-শিরোনাম-দৃশ্যমান) */}
+            <div className="bg-gradient-to-r from-[#006A4E] to-[#0A7D5C] px-5 py-4 flex items-center gap-3 sticky top-0 z-10">
+              <ClipboardList className="w-5 h-5 text-white shrink-0" aria-hidden />
+              <div className="min-w-0">
+                <h2 className="text-[14px] font-extrabold text-white leading-tight">শিফট-হস্তান্তর সারসংক্ষেপ</h2>
+                <p className="text-[10.5px] text-white/80 font-medium">পরবর্তী দায়িত্বশীলের জন্য কপি-প্রস্তুত সারাংশ</p>
+              </div>
+              <span className="ml-auto shrink-0 text-[9.5px] font-bold text-white/90 border border-white/30 bg-white/10 rounded-full px-2 py-0.5" aria-hidden>
+                স্বয়ংক্রিয়
+              </span>
+            </div>
+
+            {/* পরিসংখ্যান-চিপ-সারি (স্টেটাস-রঙ-চুক্তি: নতুন=অ্যাম্বার, চলমান=নীল, সমাধান=এমারল্ড, স্টেল=লাল) */}
+            <div className="px-5 pt-4" role="group" aria-label="পরিসংখ্যান চিপ">
+              <div className="grid grid-cols-4 gap-2">
+                <div className="rounded-[10px] border border-amber-200 bg-amber-50 px-2 py-2 text-center min-w-0">
+                  <div className="text-[15px] font-extrabold text-amber-800 leading-none">{bn(digest.stats.pending)}</div>
+                  <div className="mt-1 text-[9.5px] font-bold text-amber-700/90 truncate">নতুন</div>
+                </div>
+                <div className="rounded-[10px] border border-blue-200 bg-blue-50 px-2 py-2 text-center min-w-0">
+                  <div className="text-[15px] font-extrabold text-blue-800 leading-none">{bn(digest.stats.progress)}</div>
+                  <div className="mt-1 text-[9.5px] font-bold text-blue-700/90 truncate">চলমান</div>
+                </div>
+                <div className="rounded-[10px] border border-emerald-200 bg-emerald-50 px-2 py-2 text-center min-w-0">
+                  <div className="text-[15px] font-extrabold text-emerald-800 leading-none">{bn(digest.stats.resolved)}</div>
+                  <div className="mt-1 text-[9.5px] font-bold text-emerald-700/90 truncate">সমাধান</div>
+                </div>
+                <div
+                  className={`rounded-[10px] border px-2 py-2 text-center min-w-0 ${
+                    digest.stats.stale > 0 ? 'border-red-200 bg-red-50' : 'border-[#E4E6EB] bg-[#F7F8FA]'
+                  }`}
+                >
+                  <div className={`text-[15px] font-extrabold leading-none ${digest.stats.stale > 0 ? 'text-red-800' : 'text-[#65676B]'}`}>
+                    {bn(digest.stats.stale)}
+                  </div>
+                  <div className={`mt-1 text-[9.5px] font-bold truncate ${digest.stats.stale > 0 ? 'text-red-700/90' : 'text-[#8A8D91]'}`}>স্টেল</div>
+                </div>
+              </div>
+              {digest.stats.stale > 0 && (
+                <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-[8px] px-2.5 py-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                  <span>
+                    {bn(digest.stats.stale)} টি অভিযোগ ৩+ দিন ধরে অমীমাংসিত{digest.stats.oldestOpenDays !== null ? ` · পুরোনোতম ${bn(digest.stats.oldestOpenDays)} দিন` : ''} — এ-শিফটে অগ্রাধিকার
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* পেস্ট-উপযোগী সারসংক্ষেপ-প্যানেল (নির্বাচনযোগ্য; lib handoverDigest = এক-উৎস) */}
+            <div className="px-5 pt-3">
+              <pre
+                aria-label="সারসংক্ষেপ-লেখা (নির্বাচনযোগ্য)"
+                className="whitespace-pre-wrap select-text bg-[#F7F8FA] border border-[#E4E6EB] rounded-[10px] px-3.5 py-3 text-[12px] leading-relaxed text-[#050505] font-medium"
+              >
+                {digestText}
+              </pre>
+            </div>
+
+            {/* ফুটার-অ্যাকশন (কপি = race-প্যাটার্ন; বন্ধ = ফোকাস-ফেরত) */}
+            <div className="px-5 py-4 flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => void copyDigest()}
+                aria-label="সারসংক্ষেপ ক্লিপবোর্ডে কপি করুন"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11.5px] font-bold bg-[#006A4E] text-white hover:bg-[#005A42] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/50 shadow-sm"
+              >
+                <Copy className="w-3.5 h-3.5" aria-hidden />
+                কপি করুন
+              </button>
+              <button
+                type="button"
+                onClick={closeDigest}
+                aria-label="সারসংক্ষেপ বন্ধ করুন"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-[11.5px] font-bold border bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40"
+              >
+                বন্ধ
+                <kbd className="lf-kbd" aria-hidden>
+                  Esc
+                </kbd>
+              </button>
+              <span className="ml-auto text-[10px] text-[#8A8D91] font-medium" aria-hidden>
+                উৎস: লোডেড {bn(digest.stats.total)} টি অভিযোগ
               </span>
             </div>
           </div>
