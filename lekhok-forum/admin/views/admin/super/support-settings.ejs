@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সাপোর্ট-অ্যাডমিন নিয়োগ — সুপার এডমিন</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* সাপোর্ট-নিয়োগ (Next-পোর্ট) — টোকেন-ভিত্তিক */
+    .ss-current{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .ss-current img{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--ad-icon-bg)}
+    .ss-role-badge{font-size:.7rem;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--ad-accent-soft);color:var(--ad-accent-ink)}
+    .ss-pin-tag{font-size:.7rem;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--lf-amber-soft-2);color:var(--lf-amber-ink)}
+    .ss-search{position:relative}
+    .ss-search input{width:100%}
+    .ss-cands{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+    .ss-cand{display:flex;align-items:center;gap:10px;border:1px solid var(--ad-line);border-radius:var(--ad-radius-sm);padding:8px 10px;background:var(--ad-card)}
+    .ss-cand img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--ad-icon-bg)}
+    .ss-cand .ss-info{flex:1;min-width:0}
+    .ss-cand small{color:var(--ad-muted);display:block}
+    .ss-empty{color:var(--ad-muted);font-size:.86rem;padding:10px 0}
+  </style>
+</head>
+<body>
+<%- include('../partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-user-gear"></i> সাপোর্ট-সেন্টার নিয়োগ</h1>
+      <p>নির্ধারিত সাপোর্ট-অ্যাডমিনের মেসেঞ্জার-থ্রেড দিয়ে ইউজারদের অভিযোগ রিভিউ-ডেস্কে রেকর্ড হয়</p>
+    </div>
+    <div class="header-actions">
+      <span class="chip chip-super"><i class="fas fa-crown"></i> সুপার এডমিন এক্সক্লুসিভ</span>
+    </div>
+  </div>
+
+  <% if (flash) { %><div class="success"><%= flash %></div><% } %>
+  <% if (err) { %><div class="error" style="background:var(--lf-danger-soft);color:var(--lf-danger-deep);border-radius:var(--ad-radius-sm);padding:10px 14px;margin-bottom:12px"><%= err %></div><% } %>
+
+  <div class="card">
+    <h3 class="card-title"><i class="fas fa-headset"></i> বর্তমান নির্ধারিত সাপোর্ট-অ্যাডমিন</h3>
+    <% if (current) { %>
+      <div class="ss-current">
+        <img src="<%= current.avatar_url || '/avatar/' + current.id %>" alt="" />
+        <div style="flex:1;min-width:160px">
+          <strong><%= current.full_name %></strong> <span class="ss-role-badge"><%= current.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন' %></span>
+          <small style="color:var(--ad-muted);display:block">@<%= current.username %> — ইউজাররা এই অ্যাকাউন্টে মেসেজ করলেই অভিযোগ-ডেস্কে রেকর্ড হবে</small>
+        </div>
+        <span class="ss-pin-tag"><i class="fas fa-lock"></i> পিন-লক থ্রেড</span>
+        <form method="POST" action="/admin/super/support-settings/clear" class="js-confirm" data-msg="সাপোর্ট-অ্যাডমিন নিয়োগ বাতিল করবেন? এরপর নতুন নিয়োগ না হওয়া পর্যন্ত অভিযোগ-মিরর বন্ধ থাকবে।">
+          <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-user-minus"></i> নিয়োগ বাতিল</button>
+        </form>
+      </div>
+    <% } else { %>
+      <p class="ss-empty"><i class="fas fa-triangle-exclamation" style="color:var(--lf-amber-mid)"></i> কেউ নির্ধারিত নেই — নিচের সার্চ থেকে একজন অ্যাডমিন নিয়োগ দিন। নিয়োগ ছাড়া ইউজার-অভিযোগ ডেস্কে জমা হবে না।</p>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><i class="fas fa-magnifying-glass"></i> নাম-সার্চ করে নিয়োগ দিন</h3>
+    <p style="color:var(--ad-muted);font-size:.86rem;margin-bottom:10px">শুধু সক্রিয় <strong>অ্যাডমিন / সুপার-অ্যাডমিন</strong> অ্যাকাউন্ট নির্বাচনযোগ্য। নাম বা ইউজারনেম লিখতে শুরু করুন:</p>
+    <div class="ss-search">
+      <input type="search" id="ssQ" placeholder="যেমন: রাফসান / nusrat…" aria-label="অ্যাডমিন-সার্চ" autocomplete="off" />
+    </div>
+    <div class="ss-cands" id="ssCands">
+      <div class="ss-empty">নাম লিখলে প্রার্থী-তালিকা এখানে দেখা যাবে</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><i class="fas fa-circle-info"></i> নিয়োগের পর কী হয়</h3>
+    <ul style="color:var(--ad-ink-2);font-size:.88rem;line-height:1.8;padding-left:18px">
+      <li>সব ইউজারের মেসেঞ্জার-তালিকায় এই অ্যাকাউন্টের থ্রেড <strong>উপরে পিন</strong> হয়ে যাবে (অপসারণ-অযোগ্য)।</li>
+      <li>ইউজার সেখানে লেখা/ছবি/ভয়েস পাঠালে প্রতিটি বার্তা <a href="/admin/support-center">সাপোর্ট ডেস্কে</a> রেকর্ড হবে।</li>
+      <li>ডেস্কে স্ট্যাটাস/জবাব দিলে রিপোর্টার নোটিফিকেশন + "আমার অভিযোগ" প্যানেলে জবাব দেখতে পাবেন।</li>
+    </ul>
+  </div>
+</div>
+<script>
+(function () {
+  var q = document.getElementById('ssQ');
+  var box = document.getElementById('ssCands');
+  var timer = null;
+  function esc(s) { return String(s || '').replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  // সাইডবারের CSRF-প্যাচার DOMContentLoaded-এ একবারই চলে — ডাইনামিক candidate-ফর্মে
+  // টোকেন এখানেই বসাতে হয় (নইলে POST /admin/super/support-settings CSRF-block হয়)
+  var CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+  function render(users) {
+    if (!users.length) { box.innerHTML = '<div class="ss-empty">কোনো যোগ্য অ্যাকাউন্ট পাওয়া যায়নি</div>'; return; }
+    box.innerHTML = users.map(function (u) {
+      return '<div class="ss-cand">' +
+        '<img src="' + (u.avatar_url || '/avatar/' + u.id) + '" alt="" />' +
+        '<div class="ss-info"><strong>' + esc(u.full_name) + '</strong>' +
+        '<small>@' + esc(u.username) + ' · ' + (u.role === 'superadmin' ? 'সুপার অ্যাডমিন' : 'অ্যাডমিন') + '</small></div>' +
+        '<form method="POST" action="/admin/super/support-settings?_csrf=' + encodeURIComponent(CSRF) + '">' +
+        '<input type="hidden" name="user_id" value="' + u.id + '" />' +
+        '<button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-user-check"></i> নিয়োগ দিন</button>' +
+        '</form></div>';
+    }).join('');
+  }
+  function run() {
+    var v = q.value.trim();
+    if (v.length < 1) { box.innerHTML = '<div class="ss-empty">নাম লিখলে প্রার্থী-তালিকা এখানে দেখা যাবে</div>'; return; }
+    fetch('/admin/super/support-settings/search?q=' + encodeURIComponent(v), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { render(d.users || []); })
+      .catch(function () { box.innerHTML = '<div class="ss-empty">সার্চ ব্যর্থ — আবার চেষ্টা করুন</div>'; });
+  }
+  q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 220); });
+  document.querySelectorAll('form.js-confirm').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      if (!window.confirm(f.dataset.msg || 'নিশ্চিত?')) e.preventDefault();
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -133,6 +133,11 @@
     <a href="/admin/messages"       class="<%= _active('/admin/messages') %>"><i class="fas fa-envelope"></i> বার্তা<% if (typeof unreadMsg105 !== 'undefined' && unreadMsg105 > 0) { %> <span class="msg-badge105" aria-label="অপঠিত বার্তা"><%= unreadMsg105 %></span><% } %></a>
     <a href="/admin/subscribers"    class="<%= _active('/admin/subscribers') %>"><i class="fas fa-paper-plane"></i> নিউজলেটার</a>
     <a href="/admin/complaints"     class="<%= _active('/admin/complaints') %>"><i class="fas fa-flag"></i> অভিযোগ</a>
+    <%# সাপোর্ট-সেন্টার (lekhok-forum-next → Express পোর্ট): রিভিউ-ডেস্ক + নিয়োগ-সেটিংস %>
+    <a href="/admin/support-center" class="<%= _active('/admin/support-center') %>"><i class="fas fa-headset"></i> সাপোর্ট ডেস্ক<% if (typeof supportPending !== 'undefined' && supportPending > 0) { %> <span class="msg-badge105" aria-label="অপেক্ষমাণ সাপোর্ট-অভিযোগ"><%= supportPending %></span><% } %></a>
+    <% if (_isSuper) { %>
+    <a href="/admin/super/support-settings" class="<%= _active('/admin/super/support-settings') %>"><i class="fas fa-user-gear"></i> সাপোর্ট নিয়োগ</a>
+    <% } %>
 
     <div class="nav-group-label">সিস্টেম</div>
     <% if (_isAdmin) { %>

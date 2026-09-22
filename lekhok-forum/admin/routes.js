@@ -10,6 +10,8 @@ const setSetting = db.setSetting;
 const { validateNavJson, parseNav } = require('../helpers/nav');
 const claimService = require('../helpers/claim-service');
 const { adminLoginLimiter, clientIp } = require('../helpers/rate-limit');
+const SC = require('../helpers/support-center');   // সাপোর্ট-সেন্টার (Next-পোর্ট)
+const sseHub = require('../helpers/sse');
 const totp = require('../helpers/totp');
 const rolePolicy = require('../helpers/role-policy');
 // সেশন ৫৫: হোম-নেতৃত্ব প্যানেল — ৮-স্লট কম্পিউটার (ছবি-আপলোড মিডলওয়্যার
@@ -2255,6 +2257,185 @@ router.delete('/complaints/:id', requireScope('complaints'), async (req, res) =>
   const tid42 = await TA42.trashDelete(db, 'complaints', req.params.id, req);
   await TA42.audit(db, req, 'delete', 'complaints', req.params.id, '');
   res.redirect('/admin/complaints?saved=1&trashed=' + tid42);
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── সাপোর্ট-সেন্টার: রিভিউ ডেস্ক (lekhok-forum-next → Express পোর্ট) ───────────
+// অ্যাক্সেস: complaints-স্কোপ-স্টাফ (অ্যাডমিন/সুপার-অ্যাডমিন/নিয়োজিত-সাপোর্ট-অ্যাডমিন)।
+// ইউজার সাপোর্ট-অ্যাডমিনকে মেসেঞ্জারে লিখলে user_reports-এ মিরর হয় (routes/dashboard.js)।
+// ══════════════════════════════════════════════════════════════════════════════
+const SC_REPORT_SELECT = `
+  SELECT r.*, u.full_name AS sender_name, u.username AS sender_username, u.avatar_url AS sender_avatar
+  FROM user_reports r LEFT JOIN users u ON r.sender_id = u.id`;
+
+function scFilters(query) {
+  const status = SC.STATUSES.includes(query.status) ? query.status : '';
+  const media = SC.MEDIA_TYPES.includes(query.media) ? query.media : '';
+  const q = String(query.q || '').trim().slice(0, 80);
+  return { status, media, q };
+}
+
+function scWhere({ status, media, q }) {
+  let where = ' WHERE 1=1';
+  const params = [];
+  if (status) { where += ' AND r.status = ?'; params.push(status); }
+  if (media) { where += ' AND r.media_type = ?'; params.push(media); }
+  if (q) {
+    where += ' AND (r.message_text LIKE ? OR u.full_name LIKE ? OR u.username LIKE ?)';
+    const like = '%' + q + '%';
+    params.push(like, like, like);
+  }
+  return { where, params };
+}
+
+async function scCounts() {
+  const rows = await db.prepare('SELECT status, COUNT(*) AS c FROM user_reports GROUP BY status').all();
+  const counts = { PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0 };
+  for (const r of rows) if (counts[r.status] !== undefined) counts[r.status] = r.c;
+  const total = counts.PENDING + counts.IN_PROGRESS + counts.RESOLVED;
+  return { counts, total };
+}
+
+function scDecorate(rows) {
+  return rows.map(r => ({
+    ...r,
+    history: SC.parseHistory(r.note_history),
+    aging: SC.agingInfo(r.created_at, r.status)
+  }));
+}
+
+async function requireSupportReviewer(req, res, next) {
+  if (await hasScope(req, 'complaints')) return next();
+  const u = req.session && req.session.user;
+  if (u && await SC.isSupportAdmin(u.id)) return next();
+  return res.status(403).render('admin/denied', { currentPath: '/admin/support-center', homePath: '/admin' });
+}
+
+router.get('/support-center', requireSupportReviewer, async (req, res) => {
+  const filters = scFilters(req.query);
+  const { where, params } = scWhere(filters);
+  const rows = await db.prepare(SC_REPORT_SELECT + where + ' ORDER BY r.created_at DESC, r.id DESC LIMIT 200').all(...params);
+  const { counts, total } = await scCounts();
+  const supportAdmin = await SC.getSupportAdmin();
+  res.render('admin/support-center', {
+    reports: scDecorate(rows), counts, total, supportAdmin,
+    status: filters.status, media: filters.media, q: filters.q,
+    staleN: SC.staleCount(rows), currentPath: '/admin/support-center'
+  });
+});
+
+// JSON ডেটা-এন্ডপয়েন্ট — ডেস্কের লাইভ-রিফ্রেশ + ব্যাজ-পোলিং (Next ?counts=1 সমতুল্য)
+router.get('/support-center/data', requireSupportReviewer, async (req, res) => {
+  const filters = scFilters(req.query);
+  const { where, params } = scWhere(filters);
+  const rows = await db.prepare(SC_REPORT_SELECT + where + ' ORDER BY r.created_at DESC, r.id DESC LIMIT 200').all(...params);
+  const { counts, total } = await scCounts();
+  res.json({ ok: true, reports: scDecorate(rows), counts, total });
+});
+
+// স্ট্যাটাস-বদল + জবাব-সংরক্ষণ (JSON) — হিস্ট্রি-অ্যাপেন্ড + রিপোর্টার-নোটিফিকেশন + SSE
+router.put('/support-center/:id', requireSupportReviewer, async (req, res) => {
+  const rep = await db.prepare('SELECT * FROM user_reports WHERE id = ?').get(req.params.id);
+  if (!rep) return res.status(404).json({ ok: false, error: 'অভিযোগ পাওয়া যায়নি' });
+  const actor = (req.session.adminUser && req.session.adminUser.display_name) ||
+    (req.session.user && req.session.user.full_name) || 'স্টাফ';
+  const actorRole = req.session.adminUser ? (req.session.adminUser.role || 'admin')
+    : (req.session.user && req.session.user.role) || 'admin';
+  const entries = [];
+  let nextStatus = rep.status;
+  if (req.body.status !== undefined) {
+    if (!SC.STATUSES.includes(req.body.status)) return res.status(400).json({ ok: false, error: 'অবৈধ স্ট্যাটাস' });
+    if (req.body.status !== rep.status) {
+      nextStatus = req.body.status;
+      entries.push({ t: 'status', from: rep.status, to: nextStatus, at: new Date().toISOString(), by: actor, byRole: actorRole });
+    }
+  }
+  let nextNote = rep.admin_note;
+  if (req.body.adminNote !== undefined) {
+    const note = String(req.body.adminNote || '').trim().slice(0, 2000);
+    if (note && note !== rep.admin_note) {
+      entries.push({ t: 'note', note, at: new Date().toISOString(), by: actor, byRole: actorRole });
+      nextNote = note;
+    } else if (!note) {
+      nextNote = null; // খালি-জমায় জবাব সরানো হলো (হিস্ট্রি-এন্ট্রি ছাড়া)
+    }
+  }
+  if (!entries.length && nextNote === rep.admin_note) {
+    return res.json({ ok: true, unchanged: true });
+  }
+  const hist = SC.appendHistory(rep.note_history, entries);
+  await db.prepare("UPDATE user_reports SET status = ?, admin_note = ?, note_history = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    .run(nextStatus, nextNote, hist, rep.id);
+  // রিপোর্টারকে জানান (স্ট্যাটাস/জবাব বদলেছে) — never-throws
+  try {
+    if (entries.length) {
+      const { notifyUser } = require('../helpers/notify');
+      const msg = entries.some(e => e.t === 'note')
+        ? 'আপনার অভিযোগে ম্যানেজমেন্টের জবাব এসেছে'
+        : 'আপনার অভিযোগের স্ট্যাটাস হালনাগাদ হয়েছে: ' + SC.STATUS_LABEL[nextStatus];
+      await notifyUser(rep.sender_id, 'support_update', 'সাপোর্ট-হালনাগাদ', msg, '/messages');
+    }
+  } catch (_) {}
+  try { sseHub.publishToAll('support-changed', {}); } catch (_) {}
+  const fresh = await db.prepare(SC_REPORT_SELECT + ' WHERE r.id = ?').get(rep.id);
+  res.json({ ok: true, report: scDecorate([fresh])[0] });
+});
+
+// হিস্ট্রি-ব্যবস্থাপনা: edit-note / delete-note / restore-note (স্ট্যাটাস-এন্ট্রি ইমিউটেবল)
+router.patch('/support-center/:id/history', requireSupportReviewer, async (req, res) => {
+  const rep = await db.prepare('SELECT * FROM user_reports WHERE id = ?').get(req.params.id);
+  if (!rep) return res.status(404).json({ ok: false, error: 'অভিযোগ পাওয়া যায়নি' });
+  const arr = SC.parseHistory(rep.note_history);
+  const idx = parseInt(req.body.index, 10);
+  if (!(idx >= 0 && idx < arr.length)) return res.status(404).json({ ok: false, error: 'এন্ট্রি নেই' });
+  const entry = arr[idx];
+  if (entry.t !== 'note') return res.status(400).json({ ok: false, error: 'স্ট্যাটাস-এন্ট্রি অপরিবর্তনীয়' });
+  const actor = (req.session.adminUser && req.session.adminUser.display_name) ||
+    (req.session.user && req.session.user.full_name) || 'স্টাফ';
+  const actorRole = req.session.adminUser ? (req.session.adminUser.role || 'admin')
+    : (req.session.user && req.session.user.role) || 'admin';
+  const action = String(req.body.action || '');
+  if (action === 'edit-note') {
+    const note = String(req.body.note || '').trim().slice(0, 2000);
+    if (!note) return res.status(400).json({ ok: false, error: 'খালি নোট' });
+    entry.note = note; entry.editedAt = new Date().toISOString(); entry.editedBy = actor; entry.editedByRole = actorRole;
+  } else if (action === 'delete-note') {
+    arr.splice(idx, 1);
+  } else if (action === 'restore-note') {
+    // আনডু-উইন্ডো: ক্লায়েন্ট মুছে-ফেলা এন্ট্রি ফেরত পাঠায় — সার্ভার-সাইড স্যানিটাইজ
+    const e = req.body.entry || {};
+    if (e.t !== 'note' || !String(e.note || '').trim()) return res.status(400).json({ ok: false, error: 'অবৈধ এন্ট্রি' });
+    const clean = { t: 'note', note: String(e.note).trim().slice(0, 2000), at: String(e.at || new Date().toISOString()).slice(0, 30), by: String(e.by || actor).slice(0, 80), byRole: ['admin', 'superadmin', 'moderator'].includes(e.byRole) ? e.byRole : actorRole };
+    arr.splice(Math.min(idx, arr.length), 0, clean);
+  } else {
+    return res.status(400).json({ ok: false, error: 'অজানা অ্যাকশন' });
+  }
+  const hist = JSON.stringify(arr.slice(-50));
+  await db.prepare("UPDATE user_reports SET admin_note = ?, note_history = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    .run(SC.lastNoteOf(hist), hist, rep.id);
+  try { sseHub.publishToAll('support-changed', {}); } catch (_) {}
+  const fresh = await db.prepare(SC_REPORT_SELECT + ' WHERE r.id = ?').get(rep.id);
+  res.json({ ok: true, report: scDecorate([fresh])[0] });
+});
+
+// CSV এক্সপোর্ট (UTF-8 BOM + RFC-4180) — ফিল্টার-সচেতন
+router.get('/support-center/export.csv', requireSupportReviewer, async (req, res) => {
+  const filters = scFilters(req.query);
+  const { where, params } = scWhere(filters);
+  const rows = await db.prepare(SC_REPORT_SELECT + where + ' ORDER BY r.created_at DESC, r.id DESC LIMIT 2000').all(...params);
+  const esc = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const head = ['আইডি', 'প্রেরক', 'ইউজারনেম', 'ধরন', 'বার্তা', 'স্ট্যাটাস', 'জবাব', 'ইতিহাস', 'তারিখ', 'সর্বশেষ-হালনাগাদ'];
+  const lines = [head.map(esc).join(',')];
+  for (const r of rows) {
+    lines.push([
+      r.id, r.sender_name || 'অজানা', r.sender_username || '', r.media_type,
+      r.message_text, SC.STATUS_LABEL[r.status] || r.status, r.admin_note || '', SC.historySummaryBn(r.note_history),
+      r.created_at, r.updated_at
+    ].map(esc).join(','));
+  }
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="support-reports' + (filters.status ? '-' + filters.status.toLowerCase() : '') + '.csv"');
+  res.send('\uFEFF' + lines.join('\r\n'));
 });
 
 // ══════════════════════════════════════════════════════════════════════════════

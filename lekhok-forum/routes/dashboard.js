@@ -761,9 +761,34 @@ async function convListFor(me) {
     `).all(me, me);
   } catch (e) {}
   // session183: সাইডবার-প্রিভিউতেও ভয়েস data-URI → '🎙️ ভয়েস মেসেজ' (MiniBubblePreview)
-  one.concat(groups).forEach(r => { r.last_file_url = voiceStreamUrl(r.last_msg_id, r.last_file_url); });
+  const rows76 = one.concat(groups);
+  rows76.forEach(r => { r.last_file_url = voiceStreamUrl(r.last_msg_id, r.last_file_url); });
+  // ── সাপোর্ট-সেন্টার (Next-পোর্ট): নিয়োজিত সাপোর্ট-অ্যাডমিনের থ্রেড সার্ভার-পিন ──
+  // ইউজার নিজের পিন সরালেও প্রতি-লোডে আবার বসে যায় (অপসারণ-অযোগ্য অফিসিয়াল থ্রেড)।
+  // কথোপকথন না-থাকলে প্লেসহোল্ডার-রো: লিংকে ক্লিক করলেই চ্যাট-পেজ find-or-create করে।
+  try {
+    const SC76 = require('../helpers/support-center');
+    const sa76 = await SC76.getSupportAdmin();
+    if (sa76 && sa76.id !== me) {
+      const found = rows76.find(r => !r.is_group_flag && (r.user_a === sa76.id || r.user_b === sa76.id));
+      if (found) {
+        found.is_support_official = 1;
+        found.pinned = 2; // ইউজার-পিন (1)-এর উপরে
+      } else {
+        rows76.push({
+          id: -1, is_group_flag: 0, is_support_official: 1, pinned: 2,
+          user_a: 0, user_b: 0,
+          other_name: sa76.full_name, other_username: sa76.username,
+          other_avatar: sa76.avatar_url, other_gender: null,
+          conv_link: '/messages/' + sa76.username,
+          last_body: null, last_sender_id: null, last_msg_id: null, last_file_url: null,
+          unread_count: 0
+        });
+      }
+    }
+  } catch (e) {}
   // সেশন ৭৬: পিন-করা কথোপকথন সবার আগে (FB চ্যাট-হেড আচরণ)
-  return one.concat(groups).sort((a, b) => ((b.pinned || 0) - (a.pinned || 0)) || String(b.last_message_at || '').localeCompare(String(a.last_message_at || '')));
+  return rows76.sort((a, b) => ((b.pinned || 0) - (a.pinned || 0)) || String(b.last_message_at || '').localeCompare(String(a.last_message_at || '')));
 }
 
 router.get('/messages', ensureAuth, async (req, res) => {
@@ -833,6 +858,7 @@ router.get('/messages/:username', ensureAuth, async (req, res) => {
   try { myFlags = await db.prepare('SELECT muted, pinned FROM conversation_members WHERE conversation_id = ? AND user_id = ?').get(conv.id, me) || myFlags; } catch (e) {}
 
   res.render('user/messages-chat', { other, messages, conversations, conv, isGroup: false, members: [], reactionMap, myFlags, currentPath: '/messages', err: req.query.err || null,
+    isSupportThread: await (require('../helpers/support-center')).isSupportAdmin(other.id),
     olderState: { hasOlder: _win93.hasOlder, oldestId: _win93.oldestId }, aroundMode: _win93.aroundMode, hlMsgId: _hl93, chatShared, lastOwnReadId });
 });
 
@@ -885,6 +911,25 @@ router.post('/messages/:username', ensureAuth, withUpload(messageAudioUpload), a
   // লেটেন্সি ২.৫সে → ~০ করে)। প্রেরকের ট্যাবগুলো ইচ্ছাকৃতভাবে বাদ — optimistic-
   // append-রেসে ডুপ্লিকেট-বাবল ঝুঁকি; সেখানে ২.৫সে-পোলই যথেষ্ট।
   try { sseHub.publishToUsers([other.id], 'message', { conv_id: conv.id, id: Number(ins.lastInsertRowid), from: me, at: Date.now() }, me); } catch (_) {}
+  // ── সাপোর্ট-সেন্টার মিরর (Next-পোর্ট): প্রাপক = নিয়োজিত সাপোর্ট-অ্যাডমিন হলে ──
+  // প্রতিটি বার্তা user_reports-এ রেকর্ড হয় (ভয়েস → AUDIO); ব্যর্থ হলে নীরব-স্কিপ —
+  // মেসেঞ্জারের প্রাইমারি-ফ্লো কখনো ভাঙে না।
+  try {
+    const SCM = require('../helpers/support-center');
+    if (other.id !== me && await SCM.isSupportAdmin(other.id)) {
+      const mime = (req.file && req.file.mimetype) || '';
+      const mt = fileUrl ? (/^image\//.test(mime) ? 'IMAGE' : /^audio\//.test(mime) ? 'AUDIO' : /^video\//.test(mime) ? 'VIDEO' : 'TEXT') : 'TEXT';
+      const rtext = (body && body.trim())
+        ? body.trim()
+        : (fileUrl && mt === 'AUDIO' ? '🎙️ ভয়েস মেসেজ (' + voiceDur158 + ' সেকেন্ড)' : (fileUrl ? '📎 সংযুক্তি: ' + (fileName || mt) : ''));
+      if (rtext) {
+        await db.prepare('INSERT INTO user_reports (sender_id, message_text, media_type, media_url, media_name) VALUES (?, ?, ?, ?, ?)')
+          .run(me, rtext, mt, fileUrl, fileName);
+        await notifyOnce(other.id, 'support', 'নতুন সাপোর্ট-অভিযোগ', displayName(req.session.user) + ' সাপোর্ট-ডেস্কে অভিযোগ রেকর্ড করেছেন', '/admin/support-center', 5, 'notify_messages');
+        try { sseHub.publishToAll('support-changed', {}); } catch (_) {}
+      }
+    }
+  } catch (eSCM) { console.error('[support-mirror]', eSCM.message); }
   // Notify recipient (dedup: ১০ মিনিটে একই বডির দ্বিতীয় নোটিফিকেশন নয়; মিউট-হলে নয়)
   if (other.id !== me && !(await isConvMuted(conv.id, other.id))) {
     await notifyOnce(other.id, 'message', 'নতুন বার্তা', `${displayName(req.session.user)} আপনাকে মেসেজ করেছেন`, '/messages/' + req.session.user.username, 10, 'notify_messages');
@@ -1472,6 +1517,40 @@ router.get('/api/events', ensureAuth, (req, res) => {
   res.write('retry: 3000\n: connected\n\n');
   sseHub.addClient(uid, res);
   req.on('close', () => sseHub.removeClient(uid, res));
+});
+
+// ── সাপোর্ট-সেন্টার (Next-পোর্ট): আমার জমা দেওয়া অভিযোগ (user-side) ────────────
+// নিজের রিপোর্টই শুধু; স্পষ্ট ফিল্ড-ম্যাপ (privacy চুক্তি): হিস্ট্রি থেকে by/byRole/
+// editedBy বাদ — রিপোর্টার শুধু জবাব-টেক্সট + সম্পাদিত-কি-না দেখে।
+router.get('/api/support/my-reports', ensureAuth, async (req, res) => {
+  try {
+    const me = req.session.user.id;
+    const rows = await db.prepare('SELECT * FROM user_reports WHERE sender_id = ? ORDER BY created_at DESC, id DESC LIMIT 50').all(me);
+    const reports = rows.map(r => {
+      let hist = [];
+      try { hist = JSON.parse(r.note_history || '[]'); } catch (_) {}
+      const notes = (Array.isArray(hist) ? hist : [])
+        .filter(h => h && h.t === 'note')
+        .slice(-20).reverse()
+        .map(h => ({ note: String(h.note || '').slice(0, 2000), at: h.at || null, edited: !!h.editedAt }));
+      return {
+        id: r.id,
+        message_text: r.message_text,
+        media_type: r.media_type,
+        status: r.status,
+        admin_note: r.admin_note,
+        note_history: notes,
+        created_at: r.created_at,
+        updated_at: r.updated_at
+      };
+    });
+    const counts = { PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0 };
+    rows.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+    res.json({ ok: true, reports, counts, total: rows.length });
+  } catch (e) {
+    console.error('[my-reports]', e.message);
+    res.status(500).json({ ok: false, error: 'লোড ব্যর্থ' });
+  }
 });
 
 // হেলথ-প্রোব (সেশন-৮৯-এ ছিল, মার্জে হারিয়েছিল — SSE-স্ট্যাটসহ পুনর্নির্মাণ):

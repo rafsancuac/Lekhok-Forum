@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>সাপোর্ট ডেস্ক — লেখক ফোরাম অ্যাডমিন</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* সাপোর্ট-ডেস্ক (Next-পোর্ট) — সব রঙ var() টোকেন (hex-ratchet-সেফ) */
+    .sc-wrap{max-width:960px}
+    .sc-live{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--ad-muted);
+      border:1px solid var(--ad-line);border-radius:999px;padding:3px 10px;background:var(--ad-card)}
+    .sc-live .dot{width:8px;height:8px;border-radius:50%;background:var(--ad-muted)}
+    .sc-live.on{color:var(--ad-accent-ink);border-color:var(--ad-accent-ring)}
+    .sc-live.on .dot{background:var(--ad-accent);animation:scPulse 1.6s ease infinite}
+    @keyframes scPulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .sc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+    .sc-stat{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:12px 14px;cursor:pointer;
+      display:flex;flex-direction:column;gap:2px;transition:box-shadow .2s, transform .2s}
+    .sc-stat:hover{box-shadow:var(--ad-shadow-lg);transform:translateY(-1px)}
+    .sc-stat b{font-size:1.5rem;font-family:var(--font-heading)}
+    .sc-stat span{font-size:.8rem;color:var(--ad-muted);font-weight:600}
+    .sc-stat.s-pending b{color:var(--ad-red)} .sc-stat.s-progress b{color:var(--lf-amber-deep)} .sc-stat.s-resolved b{color:var(--lf-ok-deep)}
+    .sc-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+    .sc-chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;padding:5px 12px;border-radius:999px;
+      border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-ink-2);cursor:pointer}
+    .sc-chip:hover{border-color:var(--ad-accent-ring)}
+    .sc-chip.active{background:var(--ad-accent-soft);border-color:var(--ad-accent);color:var(--ad-accent-ink)}
+    .sc-search{display:flex;gap:6px;margin-left:auto}
+    .sc-search input{border:1px solid var(--ad-line);border-radius:var(--ad-radius-sm);padding:6px 10px;font-family:inherit;min-width:170px;background:var(--ad-card);color:var(--ad-ink)}
+    .sc-stale{background:var(--lf-amber-soft);border:1px solid var(--lf-amber-soft-3);color:var(--lf-amber-ink);
+      border-radius:var(--ad-radius);padding:9px 14px;font-size:.86rem;font-weight:600;margin-bottom:12px}
+    .sc-card{background:var(--ad-card);border:1px solid var(--ad-line);border-radius:var(--ad-radius);padding:16px;margin-bottom:14px;box-shadow:var(--ad-shadow)}
+    .sc-card.sc-heat-stale{border-color:var(--lf-amber-soft-3);box-shadow:0 0 0 3px var(--lf-amber-soft-2)}
+    .sc-card-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+    .sc-card-head img.sc-av{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--ad-icon-bg)}
+    .sc-who{flex:1;min-width:150px}
+    .sc-who b{font-size:.98rem}
+    .sc-who small{display:block;color:var(--ad-muted);font-size:.78rem;margin-top:1px}
+    .sc-badge{font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+    .sc-badge.m-TEXT{background:var(--ad-icon-bg);color:var(--ad-ink-2)}
+    .sc-badge.m-IMAGE{background:var(--ad-accent-soft);color:var(--ad-accent-ink)}
+    .sc-badge.m-AUDIO{background:var(--lf-ok-soft);color:var(--lf-ok-deep)}
+    .sc-badge.m-VIDEO{background:var(--lf-amber-soft-2);color:var(--lf-amber-ink)}
+    .sc-badge.st-PENDING{background:var(--lf-danger-soft);color:var(--lf-danger-deep)}
+    .sc-badge.st-IN_PROGRESS{background:var(--lf-amber-soft-2);color:var(--lf-amber-ink)}
+    .sc-badge.st-RESOLVED{background:var(--lf-ok-soft);color:var(--lf-ok-deep)}
+    .sc-aging{font-size:.72rem;font-weight:700;color:var(--lf-amber-ink);background:var(--lf-amber-soft-2);border-radius:999px;padding:2px 9px}
+    .sc-body{margin:10px 0 0;white-space:pre-wrap;line-height:1.6;font-size:.94rem}
+    .sc-media{margin-top:10px}
+    .sc-media img{max-width:100%;max-height:300px;border-radius:var(--ad-radius-sm);border:1px solid var(--ad-line)}
+    .sc-media audio,.sc-media video{width:100%;max-width:420px}
+    .sc-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:12px;padding-top:12px;border-top:1px solid var(--ad-line-soft)}
+    .sc-actions select{width:auto}
+    .sc-note-box{flex:1;min-width:230px;display:flex;flex-direction:column;gap:6px}
+    .sc-note-box textarea{min-height:64px;resize:vertical;font-family:inherit}
+    .sc-tpl{display:flex;gap:6px;flex-wrap:wrap}
+    .sc-tpl button{font-size:.72rem;font-weight:600;border:1px dashed var(--ad-line);background:var(--ad-bg);color:var(--ad-muted);
+      border-radius:999px;padding:3px 10px;cursor:pointer;font-family:inherit}
+    .sc-tpl button:hover{color:var(--ad-accent-ink);border-color:var(--ad-accent-ring)}
+    .sc-hist{margin-top:12px;border-top:1px dashed var(--ad-line);padding-top:10px}
+    .sc-hist-title{font-size:.78rem;font-weight:700;color:var(--ad-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+    .sc-hentry{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;padding:6px 0;border-bottom:1px dashed var(--ad-line-soft)}
+    .sc-hentry:last-child{border-bottom:0}
+    .sc-hico{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.66rem;flex-shrink:0;margin-top:1px}
+    .sc-hico.t-status{background:var(--ad-accent-soft);color:var(--ad-accent-ink)}
+    .sc-hico.t-note{background:var(--lf-ok-soft);color:var(--lf-ok-deep)}
+    .sc-hbody{flex:1}
+    .sc-hmeta{font-size:.72rem;color:var(--ad-muted);margin-top:2px}
+    .sc-hedited{font-size:.68rem;font-weight:700;color:var(--lf-amber-ink);background:var(--lf-amber-soft-2);border-radius:6px;padding:1px 6px;margin-left:6px}
+    .sc-hbtns{display:flex;gap:4px;flex-shrink:0}
+    .sc-hbtns button{border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-muted);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:.72rem}
+    .sc-hbtns button:hover{color:var(--ad-accent-ink);border-color:var(--ad-accent-ring)}
+    .sc-empty{background:var(--ad-card);border:1px dashed var(--ad-line);border-radius:var(--ad-radius);padding:34px;text-align:center;color:var(--ad-muted)}
+    .sc-cfg-chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;color:var(--ad-ink-2);background:var(--ad-card);border:1px solid var(--ad-line);border-radius:999px;padding:3px 10px 3px 4px}
+    .sc-cfg-chip img{width:22px;height:22px;border-radius:50%;object-fit:cover}
+    #scToast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--lf-fb-ink);color:var(--lf-white);
+      border-radius:var(--ad-radius-sm);padding:10px 18px;font-size:.88rem;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;z-index:1300;max-width:90vw}
+    #scToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media (max-width:640px){ .sc-stats{grid-template-columns:1fr 1fr 1fr;gap:6px} .sc-stat b{font-size:1.15rem} .sc-search{margin-left:0;width:100%} .sc-search input{flex:1} }
+    @media (prefers-reduced-motion: reduce){ .sc-live.on .dot{animation:none} .sc-stat:hover{transform:none} }
+  </style>
+</head>
+<body>
+<%- include('./partials/sidebar') %>
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h1><i class="fas fa-headset"></i> সাপোর্ট-অভিযোগ রিভিউ ডেস্ক</h1>
+      <p>ইউজাররা নির্ধারিত সাপোর্ট-অ্যাডমিনকে মেসেঞ্জারে লিখলে এখানে রেকর্ড হয় — স্ট্যাটাস, জবাব ও ইতিহাস এখানে ম্যানেজ হয়</p>
+    </div>
+    <div class="header-actions">
+      <% if (supportAdmin) { %>
+        <span class="sc-cfg-chip" title="নির্ধারিত সাপোর্ট-অ্যাডমিন">
+          <img src="<%= supportAdmin.avatar_url || '/avatar/' + supportAdmin.id %>" alt="" />
+          <i class="fas fa-headset" style="color:var(--ad-accent)"></i> <%= supportAdmin.full_name %>
+        </span>
+      <% } else { %>
+        <a href="/admin/super/support-settings" class="sc-cfg-chip" style="color:var(--lf-amber-ink)"><i class="fas fa-triangle-exclamation"></i> কোনো সাপোর্ট-অ্যাডমিন নির্ধারিত নেই</a>
+      <% } %>
+      <span class="sc-live" id="scLive"><span class="dot"></span> <span id="scLiveTxt">লাইভ</span></span>
+      <a class="btn btn-sm" href="/admin/support-center/export.csv?<%= [status ? 'status='+status : '', media ? 'media='+media : '', q ? 'q='+encodeURIComponent(q) : ''].filter(Boolean).join('&') %>"><i class="fas fa-file-csv"></i> CSV</a>
+    </div>
+  </div>
+
+  <% if (staleN > 0) { %>
+  <div class="sc-stale"><i class="fas fa-hourglass-half"></i> <%= staleN %> টি অভিযোগ ৩ দিনের বেশি সময় ধরে অমীমাংসিত — দ্রুত নিষ্পত্তির অনুরোধ</div>
+  <% } %>
+
+  <div class="sc-stats">
+    <button type="button" class="sc-stat s-pending" onclick="location.href='/admin/support-center?<%= media ? 'media='+media+'&' : '' %><%= q ? 'q='+encodeURIComponent(q) : '' %>'">
+      <b><%= counts.PENDING %></b><span>নতুন অভিযোগ</span>
+    </button>
+    <button type="button" class="sc-stat s-progress" onclick="location.href='/admin/support-center?status=IN_PROGRESS<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>'">
+      <b><%= counts.IN_PROGRESS %></b><span>চলমান</span>
+    </button>
+    <button type="button" class="sc-stat s-resolved" onclick="location.href='/admin/support-center?status=RESOLVED<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>'">
+      <b><%= counts.RESOLVED %></b><span>সমাধান হয়েছে</span>
+    </button>
+  </div>
+
+  <div class="sc-filters">
+    <a class="sc-chip <%= !status ? 'active' : '' %>" href="/admin/support-center?<%= media ? 'media='+media+'&' : '' %><%= q ? 'q='+encodeURIComponent(q) : '' %>">সব</a>
+    <a class="sc-chip <%= status === 'PENDING' ? 'active' : '' %>" href="/admin/support-center?status=PENDING<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>">নতুন (<%= counts.PENDING %>)</a>
+    <a class="sc-chip <%= status === 'IN_PROGRESS' ? 'active' : '' %>" href="/admin/support-center?status=IN_PROGRESS<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>">চলমান (<%= counts.IN_PROGRESS %>)</a>
+    <a class="sc-chip <%= status === 'RESOLVED' ? 'active' : '' %>" href="/admin/support-center?status=RESOLVED<%= media ? '&media='+media : '' %><%= q ? '&q='+encodeURIComponent(q) : '' %>">সমাধান (<%= counts.RESOLVED %>)</a>
+    <span style="width:1px;height:20px;background:var(--ad-line)"></span>
+    <a class="sc-chip <%= media === 'TEXT' ? 'active' : '' %>" href="/admin/support-center?<%= status ? 'status='+status+'&' : '' %><%= q ? 'q='+encodeURIComponent(q)+'&' : '' %>media=TEXT">লেখা</a>
+    <a class="sc-chip <%= media === 'IMAGE' ? 'active' : '' %>" href="/admin/support-center?<%= status ? 'status='+status+'&' : '' %><%= q ? 'q='+encodeURIComponent(q)+'&' : '' %>media=IMAGE">ছবি</a>
+    <a class="sc-chip <%= media === 'AUDIO' ? 'active' : '' %>" href="/admin/support-center?<%= status ? 'status='+status+'&' : '' %><%= q ? 'q='+encodeURIComponent(q)+'&' : '' %>media=AUDIO">ভয়েস</a>
+    <form class="sc-search" method="GET" action="/admin/support-center">
+      <% if (status) { %><input type="hidden" name="status" value="<%= status %>" /><% } %>
+      <% if (media) { %><input type="hidden" name="media" value="<%= media %>" /><% } %>
+      <input type="search" name="q" value="<%= q %>" placeholder="বার্তা বা প্রেরক খুঁজুন…" aria-label="ডেস্ক-সার্চ" />
+      <button class="btn btn-sm" type="submit"><i class="fas fa-search"></i></button>
+    </form>
+  </div>
+
+  <% if (reports.length === 0) { %>
+    <div class="sc-empty"><i class="fas fa-inbox" style="font-size:1.6rem;display:block;margin-bottom:8px"></i> কোনো অভিযোগ নেই — ফিল্টার বদলে দেখুন বা অপেক্ষা করুন</div>
+  <% } %>
+
+  <% reports.forEach(r => { %>
+  <div class="sc-card <%= r.aging.cls %>" data-id="<%= r.id %>" data-status="<%= r.status %>">
+    <div class="sc-card-head">
+      <img class="sc-av" src="<%= r.sender_avatar || '/avatar/' + r.sender_id %>" alt="" onerror="this.src='/assets/img/avatar-placeholder.svg'" />
+      <div class="sc-who">
+        <b><%= r.sender_name || 'অজানা ব্যবহারকারী' %></b>
+        <small>
+          <% if (r.sender_username) { %><a href="/profile/<%= r.sender_username %>" target="_blank">@<%= r.sender_username %></a> · <% } %>
+          <span title="<%= r.created_at %>"><%= r.created_at %></span>
+        </small>
+      </div>
+      <span class="sc-badge m-<%= r.media_type %>"><%= r.media_type === 'TEXT' ? 'লেখা' : r.media_type === 'IMAGE' ? 'ছবি' : r.media_type === 'AUDIO' ? 'ভয়েস' : 'ভিডিও' %></span>
+      <% if (r.aging.label) { %><span class="sc-aging"><%= r.aging.label %></span><% } %>
+      <span class="sc-badge st-<%= r.status %>"><%= r.status === 'PENDING' ? 'নতুন' : r.status === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান হয়েছে' %></span>
+    </div>
+
+    <p class="sc-body"><%= r.message_text %></p>
+
+    <% if (r.media_url && r.media_type === 'IMAGE') { %>
+      <div class="sc-media"><a href="<%= r.media_url %>" target="_blank" rel="noopener"><img src="<%= r.media_url %>" alt="অভিযোগ-সংযুক্তি" loading="lazy" /></a></div>
+    <% } else if (r.media_url && r.media_type === 'AUDIO') { %>
+      <div class="sc-media"><audio controls preload="none" src="<%= r.media_url %>"></audio></div>
+    <% } else if (r.media_url && r.media_type === 'VIDEO') { %>
+      <div class="sc-media"><video controls preload="metadata" src="<%= r.media_url %>"></video></div>
+    <% } else if (r.media_url) { %>
+      <div class="sc-media"><a class="btn btn-sm" href="<%= r.media_url %>" target="_blank"><i class="fas fa-paperclip"></i> সংযুক্তি</a></div>
+    <% } %>
+
+    <div class="sc-actions">
+      <select data-sc-status aria-label="স্ট্যাটাস">
+        <option value="PENDING" <%= r.status === 'PENDING' ? 'selected' : '' %>>নতুন</option>
+        <option value="IN_PROGRESS" <%= r.status === 'IN_PROGRESS' ? 'selected' : '' %>>চলমান</option>
+        <option value="RESOLVED" <%= r.status === 'RESOLVED' ? 'selected' : '' %>>সমাধান হয়েছে</option>
+      </select>
+      <div class="sc-note-box">
+        <textarea data-sc-note maxlength="2000" placeholder="ম্যানেজমেন্টের জবাব লিখুন (রিপোর্টার দেখতে পাবেন)…"><%= r.admin_note || '' %></textarea>
+        <div class="sc-tpl">
+          <button type="button" data-tpl="আপনার অভিযোগ গৃহীত হয়েছে — ধন্যবাদ।">গৃহীত</button>
+          <button type="button" data-tpl="আপনার অভিযোগ পর্যালোচনাধীন আছে — শীঘ্রই হালনাগাদ জানানো হবে।">পর্যালোচনাধীন</button>
+          <button type="button" data-tpl="প্রয়োজনীয় ব্যবস্থা নেওয়া হয়েছে। সহযোগিতার জন্য ধন্যবাদ।">ব্যবস্থা নেওয়া হয়েছে</button>
+          <button type="button" data-tpl="অতিরিক্ত তথ্য/প্রমাণ পেলে এই থ্রেডে পাঠান।">তথ্য চাওয়া হয়েছে</button>
+          <button type="button" data-tpl="অভিযোগটি সমাধান হয়েছে। আরও সমস্যা হলে জানাবেন।">সমাধান</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" data-sc-save><i class="fas fa-save"></i> সংরক্ষণ</button>
+    </div>
+
+    <% if (r.history.length) { %>
+    <div class="sc-hist">
+      <div class="sc-hist-title"><i class="fas fa-clock-rotate-left"></i> অ্যাকশন-ইতিহাস</div>
+      <% r.history.forEach((h, hi) => { %>
+      <div class="sc-hentry" data-hidx="<%= hi %>" data-entry="<%= encodeURIComponent(JSON.stringify(h)) %>">
+        <span class="sc-hico t-<%= h.t %>"><i class="fas <%= h.t === 'status' ? 'fa-arrow-right-arrow-left' : 'fa-reply' %>"></i></span>
+        <div class="sc-hbody">
+          <% if (h.t === 'status') { %>
+            স্ট্যাটাস: <strong><%= h.from === 'PENDING' ? 'নতুন' : h.from === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান' %> → <%= h.to === 'PENDING' ? 'নতুন' : h.to === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান' %></strong>
+            <div class="sc-hmeta"><%= h.by %> · <%= String(h.at || '').replace('T', ' ').slice(0, 16) %></div>
+          <% } else { %>
+            <span data-hnote><%= h.note %></span><% if (h.editedAt) { %><span class="sc-hedited">সম্পাদিত</span><% } %>
+            <div class="sc-hmeta"><%= h.by %> · <%= String(h.at || '').replace('T', ' ').slice(0, 16) %><%= h.editedAt ? ' · সম্পাদনা: ' + String(h.editedAt).replace('T', ' ').slice(0, 16) : '' %></div>
+          <% } %>
+        </div>
+        <% if (h.t === 'note') { %>
+        <div class="sc-hbtns">
+          <button type="button" data-hedit title="জবাব সম্পাদনা" aria-label="জবাব সম্পাদনা"><i class="fas fa-pen"></i></button>
+          <button type="button" data-hdel title="জবাব মুছুন" aria-label="জবাব মুছুন"><i class="fas fa-trash"></i></button>
+        </div>
+        <% } %>
+      </div>
+      <% }) %>
+      <div data-hundo style="display:none;margin-top:8px">
+        <button type="button" class="btn btn-sm" data-hundo-btn><i class="fas fa-rotate-left"></i> মুছে-ফেলা জবাব ফেরত আনুন</button>
+      </div>
+    </div>
+    <% } %>
+  </div>
+  <% }) %>
+</div>
+
+<div id="scToast" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  'use strict';
+  var deskPath = '/admin/support-center' + location.search;
+  var toastEl = document.getElementById('scToast');
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+  }
+  function api(url, method, body) {
+    return fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (r) { return r.json().catch(function () { return { ok: false, error: 'রেসপন্স পার্স ব্যর্থ' }; }); });
+  }
+  var lastDeleted = null; // আনডু-উইন্ডো (কার্ড-প্রতি শেষ মুছে-ফেলা জবাব)
+
+  // ── টেমপ্লেট-বাটন ──
+  document.querySelectorAll('.sc-tpl button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var box = b.closest('.sc-actions').querySelector('[data-sc-note]');
+      box.value = b.getAttribute('data-tpl');
+      box.focus();
+    });
+  });
+
+  // ── সংরক্ষণ (স্ট্যাটাস + জবাব) ──
+  document.querySelectorAll('[data-sc-save]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.sc-card');
+      var id = card.getAttribute('data-id');
+      var status = card.querySelector('[data-sc-status]').value;
+      var note = card.querySelector('[data-sc-note]').value.trim();
+      btn.disabled = true;
+      api('/admin/support-center/' + id, 'PUT', { status: status, adminNote: note }).then(function (res) {
+        btn.disabled = false;
+        if (res.ok) { toast(res.unchanged ? 'কোনো পরিবর্তন নেই' : 'সংরক্ষিত হয়েছে ✓'); setTimeout(function () { location.reload(); }, 650); }
+        else toast(res.error || 'সংরক্ষণ ব্যর্থ', 'error');
+      }).catch(function () { btn.disabled = false; toast('নেটওয়ার্ক ব্যর্থ', 'error'); });
+    });
+  });
+
+  // ── হিস্ট্রি: সম্পাদনা ──
+  document.addEventListener('click', function (e) {
+    var editBtn = e.target.closest('[data-hedit]');
+    if (editBtn) {
+      var row = editBtn.closest('.sc-hentry');
+      var noteEl = row.querySelector('[data-hnote]');
+      if (row.querySelector('[data-heditbox]')) return;
+      var cur = noteEl.textContent;
+      var box = document.createElement('div');
+      box.setAttribute('data-heditbox', '1');
+      box.style.cssText = 'display:flex;gap:6px;margin-top:4px';
+      box.innerHTML = '<textarea style="flex:1;min-height:52px;font-family:inherit" maxlength="2000"></textarea>' +
+        '<button type="button" class="btn btn-primary btn-sm">ঠিক</button><button type="button" class="btn btn-sm">বাতিল</button>';
+      box.querySelector('textarea').value = cur;
+      noteEl.style.display = 'none';
+      noteEl.after(box);
+      var btns = box.querySelectorAll('button');
+      btns[0].addEventListener('click', function () {
+        var nv = box.querySelector('textarea').value.trim();
+        if (!nv) { toast('খালি জবাব রাখা যায় না'); return; }
+        var card = row.closest('.sc-card');
+        api('/admin/support-center/' + card.getAttribute('data-id') + '/history', 'PATCH',
+          { index: parseInt(row.getAttribute('data-hidx'), 10), action: 'edit-note', note: nv }).then(function (res) {
+          if (res.ok) { toast('জবাব সম্পাদিত ✓'); setTimeout(function () { location.reload(); }, 600); }
+          else toast(res.error || 'সম্পাদনা ব্যর্থ');
+        });
+      });
+      btns[1].addEventListener('click', function () { box.remove(); noteEl.style.display = ''; });
+      return;
+    }
+    // ── হিস্ট্রি: মুছে-ফেলা + আনডু ──
+    var delBtn = e.target.closest('[data-hdel]');
+    if (delBtn) {
+      var drow = delBtn.closest('.sc-hentry');
+      var dcard = delBtn.closest('.sc-card');
+      var idx = parseInt(drow.getAttribute('data-hidx'), 10);
+      var entry = null;
+      try { entry = JSON.parse(decodeURIComponent(drow.getAttribute('data-entry') || 'null')); } catch (_) { entry = null; }
+      if (!window.confirm('এই জবাবটি মুছে ফেলবেন? (ফেরত আনা যাবে)')) return;
+      api('/admin/support-center/' + dcard.getAttribute('data-id') + '/history', 'PATCH', { index: idx, action: 'delete-note' }).then(function (res) {
+        if (res.ok) {
+          lastDeleted = { id: dcard.getAttribute('data-id'), index: idx, entry: entry };
+          var undo = dcard.querySelector('[data-hundo]');
+          if (undo && entry) { undo.style.display = ''; }
+          toast('জবাব মুছে ফেলা হয়েছে — ৮ সেকেন্ডে ফেরাতে পারবেন');
+          setTimeout(function () { location.reload(); }, 8000);
+        } else toast(res.error || 'মুছে ফেলা ব্যর্থ');
+      });
+      return;
+    }
+    var undoBtn = e.target.closest('[data-hundo-btn]');
+    if (undoBtn && lastDeleted) {
+      var ucard = undoBtn.closest('.sc-card');
+      api('/admin/support-center/' + (lastDeleted.id || ucard.getAttribute('data-id')) + '/history', 'PATCH',
+        { index: lastDeleted.index, action: 'restore-note', entry: lastDeleted.entry }).then(function (res) {
+        if (res.ok) { toast('জবাব ফেরত আনা হয়েছে ✓'); setTimeout(function () { location.reload(); }, 600); }
+        else toast(res.error || 'ফেরত আনা ব্যর্থ');
+      });
+      return;
+    }
+  });
+
+  // ── লাইভ: SSE (support-changed) + ৩০সে-পোল-ফলব্যাক ──
+  var knownCounts = { PENDING: <%= counts.PENDING %>, IN_PROGRESS: <%= counts.IN_PROGRESS %>, RESOLVED: <%= counts.RESOLVED %> };
+  var reloading = false;
+  function maybeReload(reason) {
+    if (reloading || document.hidden) return;
+    reloading = true;
+    toast((reason || 'হালনাগাদ') + ' — রিফ্রেশ হচ্ছে…');
+    setTimeout(function () { location.reload(); }, 900);
+  }
+  function pollCounts() {
+    if (document.hidden || reloading) return;
+    fetch('/admin/support-center/data' + location.search, { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.ok || reloading) return;
+        ['PENDING', 'IN_PROGRESS', 'RESOLVED'].forEach(function (k) {
+          if (d.counts[k] !== knownCounts[k]) maybeReload('নতুন অভিযোগ-কার্যক্রম');
+        });
+      }).catch(function () {});
+  }
+  try {
+    var es = new EventSource('/api/events');
+    es.addEventListener('open', function () {
+      document.getElementById('scLive').classList.add('on');
+      document.getElementById('scLiveTxt').textContent = 'লাইভ';
+    });
+    es.addEventListener('support-changed', function () { maybeReload('সাপোর্ট-হালনাগাদ'); });
+    es.addEventListener('error', function () {
+      document.getElementById('scLive').classList.remove('on');
+      document.getElementById('scLiveTxt').textContent = 'পোলিং';
+    });
+  } catch (_) {}
+  setInterval(pollCounts, 30000);
+})();
+</script>
+</body>
+</html>

@@ -288,6 +288,26 @@ CREATE TABLE IF NOT EXISTS complaints (
   FOREIGN KEY (against_user) REFERENCES users(id) ON DELETE SET NULL
 );
 
+-- ── Support-Center user reports (lekhok-forum-next → Express পোর্ট) ──────────
+-- সাপোর্ট-অ্যাডমিনকে পাঠানো মেসেঞ্জার-বার্তার রিভিউ-ডেস্ক মিরর।
+-- note_history = JSON অ্যারে (ক্যাপ ৫০): {t:'status',from,to,at,by,byRole} ইমিউটেবল
+-- অডিট + {t:'note',note,at,by,byRole,editedAt?,editedBy?} এডিটেবল জবাব-এন্ট্রি।
+CREATE TABLE IF NOT EXISTS user_reports (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  sender_id    INTEGER NOT NULL,
+  message_text TEXT    NOT NULL,
+  media_type   TEXT    DEFAULT 'TEXT',   -- TEXT | IMAGE | AUDIO | VIDEO
+  media_url    TEXT,
+  media_name   TEXT,
+  status       TEXT    DEFAULT 'PENDING', -- PENDING | IN_PROGRESS | RESOLVED
+  admin_note   TEXT,                      -- ম্যানেজমেন্টের অফিসিয়াল জবাব (সর্বশেষ নোট-সিঙ্কড)
+  note_history TEXT,
+  created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at   DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_user_reports_status ON user_reports(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_user_reports_sender ON user_reports(sender_id, created_at);
+
 -- ── Moderator scopes ────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS moderator_scopes (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,

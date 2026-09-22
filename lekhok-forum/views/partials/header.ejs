@@ -316,7 +316,7 @@
             <% } %>
             <div id="notifList">
               <% if (typeof recentNotifs !== 'undefined' && recentNotifs && recentNotifs.length) { %>
-                <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', reaction: 'fa-heart', reply: 'fa-reply', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', answer_accepted: 'fa-circle-check', call: 'fa-phone-slash' }; %>
+                <% var _ico = { message: 'fa-comment-dots', like: 'fa-thumbs-up', react: 'fa-heart', reaction: 'fa-heart', reply: 'fa-reply', comment: 'fa-comment', share: 'fa-share', follow: 'fa-user-plus', complaint: 'fa-flag', notice: 'fa-bullhorn', mention: 'fa-at', answer: 'fa-question-circle', answer_accepted: 'fa-circle-check', call: 'fa-phone-slash', support: 'fa-headset', support_update: 'fa-shield-heart' }; %>
                 <% recentNotifs.forEach(n => { %>
                   <%# সেশন ১২৩: data-n restore-পেলোড — ফুল-পেজ (notifications.ejs) ও paintList-চুক্তি অভিন্ন %>
                   <a href="<%= n.link || '/notifications' %>" class="notif-item <%= n.is_read ? '' : 'unread' %>" data-n="<%= JSON.stringify({ i: n.id, t: n.type, ti: n.title || '', b: n.body || '', l: n.link || '', r: n.is_read ? 1 : 0, ts: n.created_at || '' }) %>">

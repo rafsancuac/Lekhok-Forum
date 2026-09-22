@@ -14,6 +14,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 const TA42 = require('../helpers/trash-audit');
+const SC = require('../helpers/support-center');   // সাপোর্ট-সেন্টার (Next-পোর্ট)
 
 const getSetting = db.getSetting;
 const setSetting = db.setSetting;
@@ -101,7 +102,14 @@ const FLASH = {
   maint_on: 'রক্ষণাবেক্ষণ-মোড চালু হয়েছে — দর্শকরা সাইট দেখছেন না',
   maint_off: 'রক্ষণাবেক্ষণ-মোড বন্ধ — সাইট স্বাভাবিক',
   user_role: 'ইউজারের রোল পরিবর্তিত হয়েছে',
-  scope_revoke: "মডারেটরের 'ইউজার তদারকি' স্কোপ প্রত্যাহার হয়েছে — সে এখন /moderator/users-এ ঢুকতে পারবে না" // সেশন ৯০
+  scope_revoke: "মডারেটরের 'ইউজার তদারকি' স্কোপ প্রত্যাহার হয়েছে — সে এখন /moderator/users-এ ঢুকতে পারবে না", // সেশন ৯০
+  support_admin: 'নির্ধারিত সাপোর্ট-অ্যাডমিন সংরক্ষিত হয়েছে',   // সাপোর্ট-সেন্টার (Next-পোর্ট)
+  support_clear: 'সাপোর্ট-অ্যাডমিন নিয়োগ বাতিল করা হয়েছে'
+};
+
+const SUPPORT_ERR = {
+  not_eligible: 'এই অ্যাকাউন্টটি সাপোর্ট-অ্যাডমিন হতে পারবে না — শুধু সক্রিয় অ্যাডমিন/সুপার-অ্যাডমিন নির্বাচনযোগ্য',
+  no_user: 'ইউজার পাওয়া যায়নি'
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -446,6 +454,47 @@ router.post('/maintenance', async (req, res) => {
   const back = req.get('referer') || '/admin/super';
   res.redirect(nextv === '1' ? '/admin/super?saved=maint_on' : '/admin/super?saved=maint_off');
   void back;
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// সাপোর্ট-সেন্টার নিয়োগ (lekhok-forum-next → Express পোর্ট) — নাম-সার্চ + রোল-যাচাই
+// সুপার-অ্যাডমিন একজন সক্রিয় admin/superadmin-কে "নিয়োজিত সাপোর্ট-অ্যাডমিন" করেন;
+// ইউজারদের অভিযোগ তার মেসেঞ্জার-থ্রেড দিয়ে রিভিউ-ডেস্কে মিরর হয়।
+// ══════════════════════════════════════════════════════════════════════════════
+router.get('/support-settings', async (req, res) => {
+  const current = await SC.getSupportAdmin();
+  res.render('admin/super/support-settings', {
+    current,
+    flash: FLASH[req.query.saved] || null,
+    err: SUPPORT_ERR[req.query.err] || null,
+    currentPath: '/admin/super/support-settings'
+  });
+});
+
+// নাম-সার্চ (JSON) — ইউজার-কনফার্মড সিদ্ধান্ত-⑥ প্যাটার্ন: নাম লিখে খুঁজে নিয়োগ
+router.get('/support-settings/search', async (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 60);
+  if (!q) return res.json({ users: [] });
+  const like = '%' + q + '%';
+  const rows = await db.prepare(
+    "SELECT id, full_name, username, avatar_url, role FROM users WHERE status = 'active' AND role IN ('admin','superadmin') AND (full_name LIKE ? OR username LIKE ?) ORDER BY full_name LIMIT 10"
+  ).all(like, like);
+  res.json({ users: rows });
+});
+
+router.post('/support-settings', async (req, res) => {
+  const uid = parseInt(req.body.user_id, 10);
+  const ok = uid && await SC.setSupportAdmin(uid);
+  if (!ok) return res.redirect('/admin/super/support-settings?err=not_eligible');
+  const target = await db.prepare('SELECT username FROM users WHERE id = ?').get(uid);
+  await TA42.audit(db, req, 'support-admin-assign', 'settings', null, 'SUPPORT_ADMIN_ID=' + uid + (target ? ' (' + target.username + ')' : ''));
+  res.redirect('/admin/super/support-settings?saved=support_admin');
+});
+
+router.post('/support-settings/clear', async (req, res) => {
+  await SC.clearSupportAdmin();
+  await TA42.audit(db, req, 'support-admin-clear', 'settings', null, 'SUPPORT_ADMIN_ID=');
+  res.redirect('/admin/super/support-settings?saved=support_clear');
 });
 
 // ══════════════════════════════════════════════════════════════════════════════

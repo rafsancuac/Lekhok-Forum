@@ -462,6 +462,15 @@ app.use(async (req, res, next) => {
       if (isAdmin105) {
         try { const rm = await db.prepare('SELECT COUNT(*) AS c FROM contact_submissions WHERE is_read = 0 AND is_archived = 0').get(); res.locals.unreadMsg105 = rm ? rm.c : 0; } catch (e) {}
       }
+      // সাপোর্ট-সেন্টার (Next-পোর্ট): অপেক্ষমাণ অভিযোগ-ব্যাজ — অ্যাডমিন-প্যানেল সেশন
+      // বা অ্যাডমিন-রোল ইউজারের সাইডবারে দেখানো হয় (ডেস্ক-গার্ড requireScope নিজেই যাচাই করে)
+      try {
+        const _scAdmin = isAdmin105 || (req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'superadmin'));
+        if (_scAdmin) {
+          const rp = await db.prepare("SELECT COUNT(*) AS c FROM user_reports WHERE status = 'PENDING'").get();
+          res.locals.supportPending = rp ? rp.c : 0;
+        }
+      } catch (e) {}
     }
     res.locals.restoredFlag = req.query.restored || null;
   } catch (e) { /* কুকি-পার্স ব্যর্থ হলেও রুট চালু থাকে */ }

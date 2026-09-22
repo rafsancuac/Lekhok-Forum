@@ -345,6 +345,21 @@ const MIGRATION_SQL = `
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS user_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender_id INTEGER NOT NULL,
+    message_text TEXT NOT NULL,
+    media_type TEXT DEFAULT 'TEXT',
+    media_url TEXT,
+    media_name TEXT,
+    status TEXT DEFAULT 'PENDING',
+    admin_note TEXT,
+    note_history TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE INDEX IF NOT EXISTS idx_user_reports_status ON user_reports(status, created_at);
+  CREATE INDEX IF NOT EXISTS idx_user_reports_sender ON user_reports(sender_id, created_at);
   CREATE TABLE IF NOT EXISTS moderator_scopes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,

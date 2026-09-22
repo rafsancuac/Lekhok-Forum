@@ -106,7 +106,7 @@
             <span class="online-dot" id="otherOnlineDot" data-user-id="<%= other.id %>" style="display:none"></span>
           </div>
           <div class="info">
-            <h3><% if (isGroup) { %><i class="fas fa-users" style="color:var(--fb-blue);font-size:13px"></i> <%= other.full_name %><% } else { %><a href="/profile/<%= other.username %>"><%= other.full_name %></a><% } %></h3>
+            <h3><% if (isGroup) { %><i class="fas fa-users" style="color:var(--fb-blue);font-size:13px"></i> <%= other.full_name %><% } else { %><a href="/profile/<%= other.username %>"><%= other.full_name %></a><% } %><% if (typeof isSupportThread !== 'undefined' && isSupportThread) { %> <span title="অফিসিয়াল সাপোর্ট-থ্রেড — প্রতিটি বার্তা রিভিউ-ডেস্কে রেকর্ড হয়" style="font-size:10px;font-weight:700;background:var(--lf-ok-soft);color:var(--lf-ok-deep);border-radius:999px;padding:2px 8px;vertical-align:middle"><i class="fas fa-headset"></i> অফিসিয়াল সাপোর্ট</span><% } %></h3>
             <div class="status" id="otherStatus">
               <% if (isGroup) { %><i class="fas fa-users" style="font-size:9px"></i> <%= members.length %> সদস্য<% } else { %><i class="fas fa-circle" style="font-size:6px"></i> <span id="otherStatusText"><%= other.online_text || '@' + other.username %></span><% } %>
             </div>
@@ -138,8 +138,19 @@
             <button type="button" class="fb-icon-btn" title="গ্রুপ ভিডিও কল" onclick="LekhokCall.start('video')" aria-label="গ্রুপে ভিডিও কল দিন"><i class="fas fa-video"></i></button>
             <% } %>
             <button type="button" class="fb-icon-btn" id="fbInfoBtn" title="তথ্য প্যানেল"><i class="fas fa-circle-info"></i></button>
+            <%# সাপোর্ট-সেন্টার (Next-পোর্ট): অফিসিয়াল থ্রেডে "আমার অভিযোগ" প্যানেল-বাটন %>
+            <% if (typeof isSupportThread !== 'undefined' && isSupportThread) { %>
+            <button type="button" class="fb-icon-btn" id="myReportsBtn" title="আমার অভিযোগ ও ম্যানেজমেন্টের জবাব" aria-label="আমার অভিযোগ প্যানেল খুলুন"><i class="fas fa-clipboard-list"></i><span id="myReportsDot" hidden style="position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--lf-amber-bright,#F59E0B);border:2px solid #fff"></span></button>
+            <% } %>
           </div>
         </header>
+
+        <%# সাপোর্ট-সেন্টার: অফিসিয়াল থ্রেডে রেকর্ড-নোটিশ বার %>
+        <% if (typeof isSupportThread !== 'undefined' && isSupportThread) { %>
+        <div style="background:var(--lf-ok-soft);border-bottom:1px solid var(--lf-ok-soft-2);color:var(--lf-ok-deep);font-size:12.5px;padding:8px 16px;display:flex;gap:8px;align-items:center;">
+          <i class="fas fa-circle-info"></i><span>এটি অফিসিয়াল সাপোর্ট-থ্রেড — আপনার প্রতিটি অভিযোগ ম্যানেজমেন্টের রিভিউ-ডেস্কে রেকর্ড হয় ও নিশ্চিত-জবাব পাবে।</span>
+        </div>
+        <% } %>
 
         <%# ── সেশন ৭৬: থিম-স্ট্রিপ (চ্যাট-হেডারের নিচে রঙিন ৩px ব্যান্ড, FB-থিমের মতো) ── %>
         <div class="chat-theme-strip" aria-hidden="true"></div>
@@ -2107,6 +2118,147 @@
       }
     }
   </script>
+
+  <%# ══ সাপোর্ট-সেন্টার (Next-পোর্ট): "আমার অভিযোগ" প্যানেল — অফিসিয়াল থ্রেডে ══ %>
+  <% if (typeof isSupportThread !== 'undefined' && isSupportThread) { %>
+  <style>
+    .mr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;display:none;align-items:flex-end;justify-content:center}
+    .mr-overlay.open{display:flex}
+    @media (min-width:640px){.mr-overlay{align-items:center}}
+    .mr-panel{background:var(--lf-white,#fff);width:100%;max-width:560px;max-height:82vh;border-radius:16px 16px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.25)}
+    @media (min-width:640px){.mr-panel{border-radius:16px}}
+    .mr-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--lf-ui-border,#e4e6eb)}
+    .mr-head b{flex:1;font-size:1rem}
+    .mr-body{overflow-y:auto;padding:12px 16px 18px}
+    .mr-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+    .mr-chip{font-size:.78rem;font-weight:600;border:1px solid var(--lf-ui-border,#e4e6eb);border-radius:999px;padding:4px 12px;background:transparent;color:var(--lf-fb-ink-2,#65676b);cursor:pointer;font-family:inherit}
+    .mr-chip.active{background:var(--lf-ok-soft);border-color:var(--lf-ok);color:var(--lf-ok-deep)}
+    .mr-card{border:1px solid var(--lf-ui-border,#e4e6eb);border-radius:12px;padding:12px;margin-bottom:10px}
+    .mr-card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+    .mr-status{font-size:.7rem;font-weight:700;border-radius:999px;padding:2px 9px}
+    .mr-status.s-PENDING{background:var(--lf-danger-soft);color:var(--lf-danger-deep)}
+    .mr-status.s-IN_PROGRESS{background:var(--lf-amber-soft-2);color:var(--lf-amber-ink)}
+    .mr-status.s-RESOLVED{background:var(--lf-ok-soft);color:var(--lf-ok-deep)}
+    .mr-msg{font-size:.9rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+    .mr-time{font-size:.72rem;color:var(--lf-text-secondary,#8a8d91);margin-top:6px}
+    .mr-reply{background:var(--lf-ok-soft);border-radius:10px;padding:10px 12px;margin-top:10px}
+    .mr-reply b{font-size:.76rem;color:var(--lf-ok-deep);display:block;margin-bottom:3px}
+    .mr-reply p{margin:0;font-size:.88rem;white-space:pre-wrap}
+    .mr-edited{font-size:.68rem;font-weight:700;color:var(--lf-amber-ink);background:var(--lf-amber-soft-2);border-radius:6px;padding:1px 6px;margin-left:6px}
+    .mr-prev{margin-top:8px}
+    .mr-prev summary{font-size:.76rem;color:var(--lf-text-secondary,#8a8d91);cursor:pointer}
+    .mr-prev .mr-reply{margin-top:6px;opacity:.85}
+    .mr-unread{font-size:.68rem;font-weight:700;color:var(--lf-amber-ink);background:var(--lf-amber-soft-3);border-radius:999px;padding:2px 8px}
+    .mr-empty{text-align:center;color:var(--lf-text-secondary,#8a8d91);padding:26px 0;font-size:.9rem}
+  </style>
+  <div class="mr-overlay" id="mrOverlay" role="dialog" aria-modal="true" aria-label="আমার অভিযোগ">
+    <div class="mr-panel">
+      <div class="mr-head">
+        <i class="fas fa-clipboard-list" style="color:var(--lf-ok-deep)"></i>
+        <b>আমার অভিযোগ</b>
+        <button type="button" id="mrClose" class="fb-icon-btn" title="বন্ধ করুন" aria-label="বন্ধ করুন"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="mr-body">
+        <div class="mr-chips" id="mrChips"></div>
+        <div id="mrList"><div class="mr-empty">লোড হচ্ছে…</div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+  (function () {
+    'use strict';
+    var overlay = document.getElementById('mrOverlay');
+    var btn = document.getElementById('myReportsBtn');
+    if (!overlay || !btn) return;
+    var list = document.getElementById('mrList');
+    var chips = document.getElementById('mrChips');
+    var dot = document.getElementById('myReportsDot');
+    var filter = '';
+    var data = null;
+    var LS_KEY = 'lf_myreports_lastseen';
+    function seenMs() { try { return parseInt(localStorage.getItem(LS_KEY), 10) || 0; } catch (_) { return 0; } }
+    function markSeen() { try { localStorage.setItem(LS_KEY, String(Date.now())); } catch (_) {} updateDot(); }
+    function ts(s) { try { return new Date(String(s).replace(' ', 'T') + (String(s).indexOf('Z') > -1 ? '' : 'Z')).getTime(); } catch (_) { return 0; } }
+    function hasNew(r) { return r.updated_at && ts(r.updated_at) > Math.max(seenMs(), ts(r.created_at) || 0) && r.admin_note; }
+    function esc(s) { return String(s || '').replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function bn(n) { var d = ['০','১','২','৩','৪','৫','৬','৭','৮','৯']; return String(n == null ? '' : n).replace(/[0-9]/g, function (x) { return d[+x]; }); }
+    var SL = { PENDING: 'নতুন', IN_PROGRESS: 'চলমান', RESOLVED: 'সমাধান হয়েছে' };
+    function updateDot() {
+      if (!data) { dot.hidden = true; return; }
+      var any = (data.reports || []).some(hasNew);
+      dot.hidden = !any;
+    }
+    function renderChips() {
+      var c = (data && data.counts) || { PENDING: 0, IN_PROGRESS: 0, RESOLVED: 0 };
+      var total = (c.PENDING || 0) + (c.IN_PROGRESS || 0) + (c.RESOLVED || 0);
+      var items = [['', 'সব (' + bn(total) + ')'], ['PENDING', 'নতুন (' + bn(c.PENDING || 0) + ')'], ['IN_PROGRESS', 'চলমান (' + bn(c.IN_PROGRESS || 0) + ')'], ['RESOLVED', 'সমাধান (' + bn(c.RESOLVED || 0) + ')']];
+      chips.innerHTML = items.map(function (it) {
+        return '<button type="button" class="mr-chip' + (filter === it[0] ? ' active' : '') + '" data-f="' + it[0] + '">' + it[1] + '</button>';
+      }).join('');
+    }
+    function render() {
+      if (!data || !data.ok) { list.innerHTML = '<div class="mr-empty">লোড ব্যর্থ — আবার খুলুন</div>'; return; }
+      var rs = (data.reports || []).filter(function (r) { return !filter || r.status === filter; });
+      if (!rs.length) { list.innerHTML = '<div class="mr-empty">এই ফিল্টারে কোনো অভিযোগ নেই</div>'; renderChips(); return; }
+      list.innerHTML = rs.map(function (r) {
+        var replies = (r.note_history || []);
+        var last = replies.length ? replies[0] : null;
+        var older = replies.slice(1);
+        var h = '<div class="mr-card">';
+        h += '<div class="mr-card-top"><span class="mr-status s-' + esc(r.status) + '">' + (SL[r.status] || esc(r.status)) + '</span>';
+        if (r.media_type && r.media_type !== 'TEXT') h += '<span style="font-size:.7rem;color:var(--lf-text-secondary,#8a8d91)"><i class="fas ' + (r.media_type === 'AUDIO' ? 'fa-microphone' : r.media_type === 'IMAGE' ? 'fa-image' : 'fa-film') + '"></i> ' + (r.media_type === 'AUDIO' ? 'ভয়েস' : r.media_type === 'IMAGE' ? 'ছবি' : 'ভিডিও') + '</span>';
+        if (hasNew(r)) h += '<span class="mr-unread">নতুন জবাব</span>';
+        h += '</div>';
+        h += '<div class="mr-msg">' + esc(r.message_text) + '</div>';
+        h += '<div class="mr-time">' + esc(String(r.created_at || '').replace('T', ' ').slice(0, 16)) + '</div>';
+        if (last) {
+          h += '<div class="mr-reply"><b><i class="fas fa-shield-halved"></i> ম্যানেজমেন্টের জবাব</b><p>' + esc(last.note) + (last.edited ? '<span class="mr-edited">সম্পাদিত</span>' : '') + '</p></div>';
+          if (older.length) {
+            h += '<details class="mr-prev"><summary>আগের ' + bn(older.length) + 'টি জবাব</summary>';
+            older.forEach(function (n) { h += '<div class="mr-reply"><b>জবাব</b><p>' + esc(n.note) + (n.edited ? '<span class="mr-edited">সম্পাদিত</span>' : '') + '</p></div>'; });
+            h += '</details>';
+          }
+        } else {
+          h += '<div class="mr-time" style="color:var(--lf-amber-ink)"><i class="fas fa-hourglass-half"></i> ম্যানেজমেন্টের জবাবের অপেক্ষায়…</div>';
+        }
+        h += '</div>';
+        return h;
+      }).join('');
+      renderChips();
+      updateDot();
+    }
+    function load() {
+      return fetch('/api/support/my-reports', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { data = d; render(); })
+        .catch(function () { data = null; render(); });
+    }
+    chips.addEventListener('click', function (e) {
+      var b = e.target.closest('.mr-chip');
+      if (!b) return;
+      filter = b.getAttribute('data-f') || '';
+      render();
+    });
+    function open() { overlay.classList.add('open'); filter = ''; load().then(function () { markSeen(); }); }
+    function close() { overlay.classList.remove('open'); markSeen(); }
+    btn.addEventListener('click', open);
+    document.getElementById('mrClose').addEventListener('click', close);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay.classList.contains('open')) close(); });
+    // খোলা অবস্থায় ৩০সে-সাইলেন্ট-পোল + SSE 'support-changed' লাইভ-সিঙ্ক
+    setInterval(function () { if (overlay.classList.contains('open') && !document.hidden) load(); }, 30000);
+    try {
+      var es = new EventSource('/api/events');
+      es.addEventListener('support-changed', function () {
+        if (overlay.classList.contains('open')) load();
+        else fetch('/api/support/my-reports', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) { data = d; updateDot(); }).catch(function () {});
+      });
+    } catch (_) {}
+    // প্রথম-লোডে ডট-যাচাই (প্যানেল না-খুললেও নতুন-জবাব টোস্ট-ডট)
+    fetch('/api/support/my-reports', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) { data = d; updateDot(); }).catch(function () {});
+  })();
+  </script>
+  <% } %>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>
