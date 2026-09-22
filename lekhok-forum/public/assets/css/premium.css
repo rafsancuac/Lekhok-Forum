@@ -273,11 +273,11 @@
 }
 .leader-card.has-image:hover::after{left:150%;transition:left .7s cubic-bezier(.25,.8,.3,1)}
 
-/* অ্যাভাটার-রিং-গ্লো (হোভারে ডাবল-রিং জ্বলে-ওঠে) */
-.leader-card.has-image .leader-photo{transition:box-shadow .4s ease}
-.leader-card.has-image:hover .leader-photo{
-  box-shadow:0 0 0 3px var(--card),0 0 0 6px var(--lf-brand-primary),0 12px 28px rgba(0,106,78,.30);
-}
+/* অ্যাভাটার-রিং-গ্লো (হোভারে ডাবল-রিং জ্বলে-ওঠে; committee-র img-এ ক্লাস নেই → img-fallback) */
+.leader-card.has-image:hover .leader-photo,
+.leader-card.has-image:hover img{box-shadow:0 0 0 3px var(--card),0 0 0 6px var(--lf-brand-primary),0 12px 28px rgba(0,106,78,.30)}
+.leader-card.has-image .leader-photo,
+.leader-card.has-image img{transition:box-shadow .4s ease,transform .4s ease}
 
 /* নাম-আন্ডারলাইন-ড্র (রঙ-পরিবর্তন আগেই ছিল; রেখা-আঁকা যোগ) */
 .leader-card.has-image .leader-name{

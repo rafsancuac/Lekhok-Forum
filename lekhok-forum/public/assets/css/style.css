@@ -2515,20 +2515,20 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 
 /* ── ৮. ছবি-রিম — সবুজ ডাবল-রিং + হোভার-গ্লো ── */
 .leaders-row .leader-photo {
-  outline: 2px solid rgba(5,150,105,.28); outline-offset: 3px;
+  outline: 2px solid rgba(0,106,78,.28); outline-offset: 3px;
   box-shadow: 0 10px 26px -8px rgba(4,120,87,.45);
   transition: var(--transition);
 }
 .leaders-row .leader-card:hover .leader-photo,
 .leaders-row .leader-card-featured:hover .leader-photo {
-  outline-color: rgba(5,150,105,.5);
-  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(5,150,105,.30), 0 14px 34px -8px rgba(4,120,87,.55);
+  outline-color: rgba(0,106,78,.5);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(0,106,78,.30), 0 14px 34px -8px rgba(4,120,87,.55);
 }
 
 /* ── ৯. কার্যবর্ষ-লেবেল → চিপ (EJS-প্যারেন-বাদের সাথে জোড়া) ── */
 .leaders-row .leader-year {
   display: inline-block; padding: 3px 12px; border-radius: 5px;
-  background: rgba(5,150,105,.10); border: 1px solid rgba(5,150,105,.22);
+  background: rgba(0,106,78,.10); border: 1px solid rgba(0,106,78,.22);
   color: var(--accent-dark, #047857); letter-spacing: .02em;
 }
 
