@@ -3819,3 +3819,17 @@ Stage Summary:
 - DB-জঞ্জাল-শূন্য (cleanup CLEANUP-COUNT=0); গোটচা ×২ ডক-কৃত (PLANS session244: ট্রেইলিং-?-URL + প্যারাম-ক্রম status→media→q→range)
 - পরের-এজেন্ট: **session245 লেবেল (Task ID 87)**; PLANS session244-নোট অবশ্যই-পড়ুন; push-আগে fetch+rebase-বাধ্যতমূলক
 - রিমোট main = এ-রাউন্ডের session244-কমিট (push-পরবর্তী hash কমিট-লগে); working-tree ক্লিন
+
+## session233-cont — কিপার-রাউন্ড ১৮:০০ UTC + সংকট-RCA: TG-সেশন-মৃত্যু (AUTH_KEY_DUPLICATED)
+
+Task: ইউজার-প্রশ্ন — "২২-তারিখের পেপার TG-গ্রুপে আছে, সাইটে কেন আসেনি?" + কিপার-রাউন্ড
+
+Work Log:
+- RCA: bot.log-এ ২১-সেপ্টেম্বর-সিঙ্কের (archive#47–66) পর প্রতিটি GetHistory পোল 406 AUTH_KEY_DUPLICATED — একই TG_SESSION দুই-IP/ইনস্ট্যান্সে ব্যবহৃত হয়ে টেলিগ্রাম কী-বাতিল করেছে; প্রসেস জীবিত (bun PID 1600, /epaper-bot) কিন্তু ফেচ-অক্ষম → ২২-তারিখের পেপার ডাউনলোড/সিঙ্ক-ব্যর্থ
+- কিপার-ব্লাইন্ড-স্পট: exit 3 = কেবল "সাইটে আজকের-পেপার-নেই"; হার্টবিট = প্রসেস-লাইভনেস, পোল-সাফল্য নয় → সেশন-মৃত্যু ~২০-ঘণ্টা অলক্ষিত ছিল
+- অ্যাকশন: bun run src/login-send.ts সফল — OTP-অনুরোধ ইউজারের TG-অ্যাপে (+88018***) পাঠানো, phoneCodeHash → .tg-auth-state.json
+- পেন্ডিং: ইউজার-OTP → TG_OTP=… TG_2FA(.env-এ-আছে) bun run src/login-verify.ts → bun run test-drive → bash ensure-bot.sh → BACKFILL_DAYS=3 উইন্ডোয় (০৯-২০→আজ) ২২-তারিখ-অটো-সিঙ্ক → GITHUB_TOKEN-সহ save-env-to-gist.sh
+
+Stage Summary:
+- শিক্ষা: বট-হার্টবিট ≠ পোল-সফলতা — ভবিষ্যৎ-কিপারে poll-error-freshness-চেক-যোগ-সুপারিশ (log-এ "পোল-ত্রুটি" স্ট্রিক-ডিটেকশন)
+- রিকভারি-প্রবাহ চলমান — ইউজার-OTP-প্রতীক্ষিত; AUTH_KEY_DUPLICATED-এর একমাত্র-সমাধান ফ্রেশ-লগইন (রিস্টার্টে-হয়-না)
