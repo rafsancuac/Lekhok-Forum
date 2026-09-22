@@ -249,13 +249,24 @@
 }
 .lf-anim-hl { animation: lf-hl-pulse 1.1s ease-out 2; }
 
+/* ─── session218 — কমান্ড-প্যালেট: সারি-স্টেজার-এন্ট্রি (animation-delay-সহ; reduced-motion-অন্তর্ভুক্ত) ─── */
+@keyframes lf-row-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.lf-anim-up { animation: lf-row-up 0.18s ease-out both; }
+.lf-cmd-scroll::-webkit-scrollbar { width: 6px; }
+.lf-cmd-scroll::-webkit-scrollbar-thumb { background: #CED0D4; border-radius: 3px; }
+.lf-cmd-scroll::-webkit-scrollbar-track { background: transparent; }
+
 /* ─── session214 — prefers-reduced-motion সম্মান (a11y): এন্ট্রি/হাইলাইট অ্যানিমেশন বন্ধ ─── */
 @media (prefers-reduced-motion: reduce) {
   .lf-anim-right,
   .lf-anim-left,
   .lf-anim-pop,
   .lf-anim-fade,
-  .lf-anim-hl {
+  .lf-anim-hl,
+  .lf-anim-up {
     animation: none !important;
   }
 }

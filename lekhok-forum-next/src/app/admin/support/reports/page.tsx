@@ -48,6 +48,12 @@
  *   • "পরে দেখুন" তারা-বুকমার্ক (localStorage lf-desk-later; কার্ডে স্টার-টগল + ফিল্টার-চিপ + s-শর্টকাট)
  *   • ৭-দিনের প্রবণতা-স্ট্রিপ (ক্লায়েন্ট-সাইড দৈনিক-আগমন-বার; আজ-সবুজ; টুলটিপে গণনা)
  *   • কার্ড-ঘনত্ব টগল (ঘন/স্বাভাবিক; localStorage lf-desk-density)
+ *
+ * session218 — অপারেটর কমান্ড-প্যালেট:
+ *   • Ctrl/Cmd+K ওভারলে (help-টায়ার z-[70]/z-[71]) — ট্যাব/মিডিয়া/তারিখ/ফিল্টার/প্রিসেট/টগল/অ্যাকশন
+ *     এক-ইন্টারফেসে; ↑↓ নেভিগেট + Enter চালান + Esc/ব্যাকড্রপ বন্ধ; ইনপুটে-সার্চ (লেবেল+গ্রুপ)
+ *   • a11y: role=dialog/combobox/listbox/option + aria-activedescendant + ফোকাস-ফেরত;
+ *     সারি-স্টেজার lf-anim-up (prefers-reduced-motion-সম্মানী); টুলবারে "কমান্ড Ctrl K" হিন্ট-বাটন
 */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -60,6 +66,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Command as CommandIcon,
   Copy,
   Download,
   History,
@@ -96,6 +103,7 @@ const SHORTCUTS: { keys: string[]; desc: string }[] = [
   { keys: ['১', '২', '৩'], desc: 'ট্যাব: নতুন / চলমান / সমাধান' },
   { keys: ['/'], desc: 'অনুসন্ধান-বক্সে ফোকাস' },
   { keys: ['?'], desc: 'এই সহায়িকা খোলা/বন্ধ' },
+  { keys: ['Ctrl', 'K'], desc: 'কমান্ড প্যালেট খোলা/বন্ধ' },
   { keys: ['Esc'], desc: 'কার্সর বা সহায়িকা বন্ধ' },
 ]
 
@@ -592,6 +600,12 @@ function SupportReportsPanel() {
   const [laterOnly, setLaterOnly] = useState(false)
   /** session217 — কার্ড-ঘনত্ব (localStorage: lf-desk-density; compact = লম্বা-তালিকায় বেশি-দেখা) */
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')
+  /** session218 — কমান্ড-প্যালেট (Ctrl+K): অপারেটর-অ্যাকশন-লঞ্চার (সব-ক্লায়েন্ট-সাইড) */
+  const [cmdOpen, setCmdOpen] = useState(false)
+  const [cmdQuery, setCmdQuery] = useState('')
+  const [cmdIdx, setCmdIdx] = useState(0)
+  const cmdInputRef = React.useRef<HTMLInputElement>(null)
+  const cmdReturnFocusRef = React.useRef<HTMLElement | null>(null)
   useEffect(() => {
     try {
       const raw = localStorage.getItem('lf-desk-later')
@@ -1199,6 +1213,142 @@ function SupportReportsPanel() {
     })
   }, [])
 
+  /** session218 — কমান্ড-প্যালেট: ফিল্টার-রিসেট (টুলবার-রিসেটের-সাথে-এক-আচরণ) */
+  const resetFilters = useCallback(() => {
+    setQuery('')
+    setMediaFilter('ALL')
+    setDateRange('ALL')
+    setSortAsc(false)
+    setLaterOnly(false)
+  }, [])
+  /** session218 — বর্তমান-ভিউ-লিঙ্ক কপি (session211-URL-চুক্তি অনুযায়ী replaceState-সিঙ্ক-করা-URL);
+   *  clipboard-API ৮০০ms-রেস-টাইমআউট (headless/অনুমতি-শূন্য-কনটেক্সটে writeText হ্যাং-করতে-পারে →
+   *  ফলব্যাক-ও-টোস্ট-নিশ্চিত) */
+  const copyViewLink = useCallback(async () => {
+    const url = window.location.href
+    try {
+      await Promise.race([
+        navigator.clipboard.writeText(url),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('clipboard-timeout')), 800)),
+      ])
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+      } catch {
+        /* নীরব */
+      }
+      ta.remove()
+    }
+    flash('বর্তমান ভিউ-লিঙ্ক কপি হয়েছে')
+  }, [flash])
+
+  /** session218 — কমান্ড-ক্যাটালগ: গ্রুপ-সংরক্ষিত-অর্ডার; লেবেল/গ্রুপ-উপর-সার্চ; setter-ই-এক-উৎস */
+  type CmdItem = {
+    id: string
+    group: string
+    label: string
+    keys?: string[]
+    icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>
+    run: () => void
+  }
+  const cmdItems = React.useMemo<CmdItem[]>(() => {
+    const items: CmdItem[] = []
+    const push = (
+      group: string,
+      id: string,
+      label: string,
+      icon: CmdItem['icon'],
+      run: () => void,
+      keys?: string[],
+    ) => {
+      items.push({ group, id, label, icon, run, keys })
+    }
+    push('ট্যাব', 'tab-pending', `ট্যাব: নতুন (${bn(counts.PENDING)})`, Inbox, () => setTab('PENDING'), ['১'])
+    push('ট্যাব', 'tab-progress', `ট্যাব: চলমান (${bn(counts.IN_PROGRESS)})`, Hourglass, () => setTab('IN_PROGRESS'), ['২'])
+    push('ট্যাব', 'tab-resolved', `ট্যাব: সমাধান (${bn(counts.RESOLVED)})`, CheckCircle2, () => setTab('RESOLVED'), ['৩'])
+    for (const m of MEDIA_FILTERS) {
+      push(
+        'মিডিয়া',
+        `media-${m.key}`,
+        `মিডিয়া: ${m.label}`,
+        m.key === 'IMAGE' ? ImageIcon : m.key === 'AUDIO' ? Mic : m.key === 'VIDEO' ? Video : Search,
+        () => setMediaFilter(m.key),
+      )
+    }
+    for (const d of DATE_RANGES) {
+      push('তারিখ', `date-${d.key}`, `তারিখ: ${d.label}`, CalendarDays, () => setDateRange(d.key))
+    }
+    push(
+      'ফিল্টার',
+      'later-toggle',
+      laterOnly ? 'পরে-দেখুন ফিল্টার বন্ধ করুন' : 'শুধু তারাচিহ্নিত অভিযোগ দেখুন',
+      Star,
+      () => setLaterOnly((v) => !v),
+    )
+    push(
+      'ফিল্টার',
+      'sort-toggle',
+      sortAsc ? 'ক্রম: পুরাতন-আগে → সাম্প্রতক-আগে' : 'ক্রম: সাম্প্রতক-আগে → পুরাতন-আগে',
+      ArrowDownWideNarrow,
+      () => setSortAsc((v) => !v),
+    )
+    push('ফিল্টার', 'reset-filters', 'সব-ফিল্টার রিসেট', Undo2, resetFilters)
+    for (const p of presets) {
+      push('সংরক্ষিত ভিউ', `preset-${p.name}`, `প্রয়োগ: ${p.name}`, Bookmark, () => applyPreset(p))
+    }
+    push(
+      'টগল',
+      'sound-toggle',
+      soundOn ? 'শব্দ-সংকেত বন্ধ করুন' : 'শব্দ-সংকেত চালু করুন',
+      soundOn ? VolumeX : Volume2,
+      toggleSound,
+    )
+    push(
+      'টগল',
+      'density-toggle',
+      density === 'compact' ? 'স্বাভাবিক কার্ড-ঘনত্বে ফেরুন' : 'ঘন কার্ড-ঘনত্ব চালু করুন',
+      Rows3,
+      toggleDensity,
+    )
+    push('অ্যাকশন', 'copy-view-link', 'বর্তমান ভিউ-লিঙ্ক কপি করুন', Link2, () => {
+      void copyViewLink()
+    })
+    push('অ্যাকশন', 'open-help', 'কীবোর্ড সহায়িকা দেখুন', Keyboard, () => setHelpOpen(true), ['?'])
+    const q = cmdQuery.trim().toLowerCase()
+    return q ? items.filter((c) => `${c.label} ${c.group}`.toLowerCase().includes(q)) : items
+  }, [cmdQuery, counts, presets, laterOnly, sortAsc, soundOn, density, resetFilters, copyViewLink, toggleSound, toggleDensity])
+  const runCmd = useCallback((c: CmdItem) => {
+    setCmdOpen(false)
+    c.run()
+  }, [])
+  /** session218 — প্যালেট-ফোকাস-চুক্তি: খোলায় ইনপুট-ফোকাস, বন্ধে আগের-উপাদানে-ফেরত (a11y) */
+  useEffect(() => {
+    if (!cmdOpen) return
+    cmdReturnFocusRef.current = document.activeElement as HTMLElement | null
+    const t = setTimeout(() => cmdInputRef.current?.focus(), 30)
+    return () => clearTimeout(t)
+  }, [cmdOpen])
+  useEffect(() => {
+    if (cmdOpen) return
+    const el = cmdReturnFocusRef.current
+    cmdReturnFocusRef.current = null
+    el?.focus?.()
+  }, [cmdOpen])
+  /** সংকুচিত-তালিকায় সূচি-ক্ল্যাম্প + সক্রিয়-সারি-ভিউপোর্টে-স্ক্রল */
+  useEffect(() => {
+    setCmdIdx((i) => Math.min(i, Math.max(0, cmdItems.length - 1)))
+  }, [cmdItems.length])
+  useEffect(() => {
+    const id = cmdItems[cmdIdx]?.id
+    if (id) document.getElementById(`lf-cmd-${id}`)?.scrollIntoView({ block: 'nearest' })
+  }, [cmdIdx, cmdItems])
+
   /** session212 — ডেস্ক কীবোর্ড-দক্ষতা: j/k নেভিগেট · x নির্বাচন-টগল · ১/২/৩ ট্যাব · ? সহায়িকা · Esc বন্ধ */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1206,6 +1356,11 @@ function SupportReportsPanel() {
       const typing = el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)
       if (e.key === 'Escape') {
         if (lightbox) return
+        if (cmdOpen) {
+          e.preventDefault()
+          setCmdOpen(false)
+          return
+        }
         if (helpOpen) {
           e.preventDefault()
           setHelpOpen(false)
@@ -1214,7 +1369,14 @@ function SupportReportsPanel() {
         if (!typing) setCursor(-1)
         return
       }
-      if (helpOpen || typing || bulkBusy || e.metaKey || e.ctrlKey || e.altKey) return
+      // session218 — Ctrl/Cmd+K কমান্ড-প্যালেট (typing-গার্ড-বাইপাস: ইনপুটের-ভিতর-থেকেও-ডাকা-যায়;
+      // e.preventDefault = ব্রাউজারের-অ্যাড্রেস-বার-ফোকাস-আটকায়)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault()
+        setCmdOpen((o) => !o)
+        return
+      }
+      if (helpOpen || cmdOpen || typing || bulkBusy || e.metaKey || e.ctrlKey || e.altKey) return
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault()
         setHelpOpen((h) => !h)
@@ -1263,7 +1425,7 @@ function SupportReportsPanel() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [shown, cursor, helpOpen, lightbox, bulkBusy, toggleSelect, toggleLater])
+  }, [shown, cursor, helpOpen, cmdOpen, lightbox, bulkBusy, toggleSelect, toggleLater])
 
   const allShownSelected = shown.length > 0 && shown.every((r) => selected.includes(r.id))
 
@@ -1569,6 +1731,21 @@ function SupportReportsPanel() {
           >
             <Rows3 className="w-3 h-3" aria-hidden />
             ঘন
+          </button>
+          {/* session218 — কমান্ড-প্যালেট বাটন (Ctrl+K) */}
+          <button
+            onClick={() => setCmdOpen(true)}
+            type="button"
+            title="কমান্ড প্যালেট (Ctrl+K চাপুন)"
+            aria-label="কমান্ড প্যালেট খুলুন"
+            aria-keyshortcuts="Control+K Meta+K"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10.5px] font-bold border bg-white text-[#65676B] border-[#CED0D4] hover:border-[#006A4E]/40 hover:text-[#006A4E] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 shrink-0"
+          >
+            <CommandIcon className="w-3 h-3" aria-hidden />
+            কমান্ড
+            <kbd className="lf-kbd" aria-hidden>
+              Ctrl K
+            </kbd>
           </button>
           {/* session212 — শর্টকাট-সহায়িকা হিন্ট (সবসময়-দৃশ্যমান) */}
           <button
@@ -2252,6 +2429,142 @@ function SupportReportsPanel() {
             <p className="text-[10.5px] text-[#65676B]">
               টিপ: ইনপুট বা টেক্সট-এরিয়ায় লেখার-সময় শর্টকাট নিষ্ক্রিয় থাকে।
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* session218 — কমান্ড-প্যালেট (Ctrl+K) — help-টায়ারে-যোগদান: backdrop z-[70] + panel z-[71];
+          Esc/ব্যাকড্রপ-বন্ধ; ↑↓/Enter/সার্চ; সারি-স্টেজার = lf-anim-up (reduced-motion-সম্মানী) */}
+      {cmdOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 pt-[12vh] lf-anim-fade"
+          onClick={() => setCmdOpen(false)}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="কমান্ড প্যালেট"
+            onClick={(e) => e.stopPropagation()}
+            className="lf-anim-pop bg-white border border-[#CED0D4] rounded-[14px] shadow-2xl w-full max-w-md overflow-hidden"
+          >
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#F0F2F5] bg-gradient-to-r from-[#006A4E]/8 via-transparent to-transparent">
+              <CommandIcon className="w-4 h-4 text-[#006A4E] shrink-0" aria-hidden />
+              <input
+                ref={cmdInputRef}
+                value={cmdQuery}
+                onChange={(e) => {
+                  setCmdQuery(e.target.value)
+                  setCmdIdx(0)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    setCmdIdx((i) => Math.min(i + 1, Math.max(0, cmdItems.length - 1)))
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    setCmdIdx((i) => Math.max(i - 1, 0))
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const c = cmdItems[cmdIdx]
+                    if (c) runCmd(c)
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault()
+                    setCmdOpen(false)
+                  }
+                }}
+                role="combobox"
+                aria-expanded="true"
+                aria-controls="lf-cmd-list"
+                aria-activedescendant={cmdItems[cmdIdx] ? `lf-cmd-${cmdItems[cmdIdx].id}` : undefined}
+                placeholder="কমান্ড খুঁজুন — ট্যাব, ফিল্টার, প্রিসেট…"
+                aria-label="কমান্ড অনুসন্ধান"
+                className="flex-1 bg-transparent text-[13px] font-medium text-[#050505] placeholder:text-[#8A8D91] placeholder:font-normal focus:outline-none min-w-0"
+              />
+              <kbd className="lf-kbd" aria-hidden>
+                Esc
+              </kbd>
+            </div>
+            <ul
+              id="lf-cmd-list"
+              role="listbox"
+              aria-label="কমান্ড তালিকা"
+              className="lf-cmd-scroll max-h-[46vh] overflow-y-auto py-1.5"
+            >
+              {cmdItems.length === 0 ? (
+                <li
+                  role="option"
+                  aria-selected="false"
+                  aria-disabled="true"
+                  className="px-4 py-8 text-center text-[12px] text-[#8A8D91]"
+                >
+                  কোনো কমান্ড মেলেনি — অন্য শব্দ চেষ্টা করুন
+                </li>
+              ) : (
+                cmdItems.map((c, i) => (
+                  <React.Fragment key={c.id}>
+                    {(i === 0 || cmdItems[i - 1].group !== c.group) && (
+                      <li
+                        role="presentation"
+                        className="px-4 pt-2.5 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-[#8A8D91] select-none"
+                      >
+                        {c.group}
+                      </li>
+                    )}
+                    <li
+                      id={`lf-cmd-${c.id}`}
+                      role="option"
+                      aria-selected={i === cmdIdx}
+                      onMouseEnter={() => setCmdIdx(i)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => runCmd(c)}
+                      style={{ animationDelay: `${Math.min(i, 10) * 16}ms` }}
+                      className={`lf-anim-up flex items-center gap-2.5 mx-1.5 px-2.5 py-2 rounded-[8px] cursor-pointer transition-colors ${
+                        i === cmdIdx ? 'bg-[#006A4E]/10 text-[#006A4E]' : 'text-[#4B4C4F]'
+                      }`}
+                    >
+                      <c.icon
+                        className={`w-3.5 h-3.5 shrink-0 ${i === cmdIdx ? 'text-[#006A4E]' : 'text-[#8A8D91]'}`}
+                        aria-hidden
+                      />
+                      <span className="flex-1 text-[12.5px] font-medium truncate">{c.label}</span>
+                      {c.keys && (
+                        <span className="flex items-center gap-1 shrink-0">
+                          {c.keys.map((k) => (
+                            <kbd key={k} className="lf-kbd">
+                              {k}
+                            </kbd>
+                          ))}
+                        </span>
+                      )}
+                    </li>
+                  </React.Fragment>
+                ))
+              )}
+            </ul>
+            <div className="flex items-center gap-3 px-4 py-2 border-t border-[#F0F2F5] bg-[#F7F8FA] text-[10px] font-bold text-[#8A8D91]">
+              <span className="inline-flex items-center gap-1">
+                <kbd className="lf-kbd" aria-hidden>
+                  ↑↓
+                </kbd>
+                নেভিগেট
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <kbd className="lf-kbd" aria-hidden>
+                  Enter
+                </kbd>
+                চালান
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <kbd className="lf-kbd" aria-hidden>
+                  Esc
+                </kbd>
+                বন্ধ
+              </span>
+              <span className="ml-auto" aria-hidden>
+                {bn(cmdItems.length)}টি কমান্ড
+              </span>
+            </div>
           </div>
         </div>
       )}
