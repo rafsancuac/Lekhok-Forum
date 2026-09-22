@@ -8,6 +8,7 @@
 # ═══════════════════════════════════════════════════════════════════════════
 set -u
 APP="$(cd "$(dirname "$0")/.." && pwd)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-seed-users.sh"
 BASE=http://localhost:8094
 J1=/tmp/lf190-j1.txt; J2=/tmp/lf190-j2.txt; J3=/tmp/lf190-j3.txt
 IMG=/tmp/lf190-photo.jpg
@@ -41,6 +42,21 @@ sleep 1
 curl -s -o /dev/null -m 3 "$BASE/" && ok "সার্ভার @8094" || bad "সার্ভার নেই"
 
 echo "── [1] লগইন ×৩ (seed-ল-বাস্তব-ইউজার: testuser/monem/riya)"
+echo "── [০.৫] ডেমো-ইউজার নিশ্চিত (register-API — session246)"
+for SPEC in "testuser|demo123|টেস্ট ইউজার" "monem|demo123|মোনেম হোসেন" "riya|secret123|রিয়া আক্তার"; do
+  U="${SPEC%%|*}"; REST="${SPEC#*|}"; P="${REST%%|*}"; N="${REST#*|}"
+  ST=$(ensureUser "$J1" "$U" "$P" "$N") && ok "$ST" || bad "ensureUser-ব্যর্থ: $ST"
+  rm -f "$J1"
+done
+login "$J1" testuser demo123
+# ── টেস্ট-অ্যাসেট: বৈধ-ন্যূনতম JPEG (১×১ — স্বয়ংসম্পূর্ণ; /tmp-রিসেট-প্রমাণ, session246) ──
+if [ ! -s /tmp/lf190-photo.jpg ]; then
+  python3 -c "
+import base64
+b64='/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q=='
+open('/tmp/lf190-photo.jpg','wb').write(base64.b64decode(b64))"
+fi
+[ -s /tmp/lf190-photo.jpg ] && ok "অ্যাসেট JPEG-প্রস্তুত ($(wc -c < /tmp/lf190-photo.jpg) বাইট)" || { echo "FATAL: jpg-তৈরি-ব্যর্থ"; exit 1; }
 login "$J1" testuser demo123 && ok "testuser"   || bad "testuser"
 login "$J2" monem demo123   && ok "monem"      || bad "monem"
 login "$J3" riya secret123  && ok "riya"       || bad "riya"

@@ -237,6 +237,18 @@
     .sc-card:nth-child(8){animation-delay:.315s} .sc-card:nth-child(n+9){animation-delay:.34s}
     @keyframes scCardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     .sc-card.sc-cursor{outline:2px solid var(--ad-accent);outline-offset:2px;box-shadow:var(--ad-shadow-lg)}
+    /* session246 — কার্ড-হোভার (কীবোর্ড-cursor-এর-নিচে-এক-ধাপ — outline-স্পর্শ-শূন্য; স্ট্যাটিক transition-শূন্য — reduced-motion-স্বাভাবিক-নিরাপদ) */
+    .sc-card:hover{border-color:var(--ad-accent-ring);box-shadow:var(--ad-shadow)}
+    /* session246 — কার্ড-কপি-বাটন (সফল-ফিডব্যাগ sc-wk-ok-মিরর — lf-ok-টোকেন) */
+    .sc-cp{width:26px;height:26px;border-radius:var(--ad-radius-sm);border:1px solid var(--ad-line);background:var(--ad-card);color:var(--ad-muted);cursor:pointer;font-size:.68rem;display:inline-flex;align-items:center;justify-content:center;flex:none;margin-left:2px;padding:0}
+    .sc-cp:hover{color:var(--ad-accent);border-color:var(--ad-accent-ring);background:var(--ad-icon-bg)}
+    .sc-cp:focus-visible{outline:2px solid var(--ad-accent);outline-offset:2px}
+    .sc-cp.sc-cp-ok{color:var(--lf-ok-deep);border-color:var(--lf-ok-deep);background:var(--lf-ok-soft)}
+    /* session246 — সূক্ষ্ম-স্ক্রলবার (ডেস্ক-ব্রাউজার-ডিফল্ট-অশোভন; var()-টোকেন-এক-উৎস) */
+    ::-webkit-scrollbar{width:8px;height:8px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--ad-line);border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--ad-muted)}
     .sc-tpl button:active{transform:translateY(1px)}
     .sc-tpl button:focus-visible,.sc-chip:focus-visible,.sc-hbtns button:focus-visible,.sc-search button:focus-visible{outline:2px solid var(--ad-accent);outline-offset:2px}
     .sc-note-box textarea:focus-visible,.sc-search input:focus-visible,.sc-actions select:focus-visible{outline:2px solid var(--ad-accent);outline-offset:1px}
@@ -597,6 +609,8 @@
       <span class="sc-badge m-<%= r.media_type %>"><i class="fas <%= r.media_type === 'TEXT' ? 'fa-pen' : r.media_type === 'IMAGE' ? 'fa-image' : r.media_type === 'AUDIO' ? 'fa-microphone' : 'fa-video' %>"></i><%= r.media_type === 'TEXT' ? 'লেখা' : r.media_type === 'IMAGE' ? 'ছবি' : r.media_type === 'AUDIO' ? 'ভয়েস' : 'ভিডিও' %></span>
       <% if (r.aging.label) { %><span class="sc-aging"><%= r.aging.label %></span><% } %>
       <span class="sc-badge st-<%= r.status %>"><%= r.status === 'PENDING' ? 'নতুন' : r.status === 'IN_PROGRESS' ? 'চলমান' : 'সমাধান হয়েছে' %></span>
+      <%# session246 — কার্ড-রিপোর্ট-কপি (মেসেঞ্জার/টেলিগ্রামে-পেস্ট-প্রস্তুত; DOM-টেক্সট-উৎস — innerHTML-নিষিদ্ধ-রীতি) %>
+      <button type="button" class="sc-cp" data-card-copy data-id="<%= r.id %>" title="রিপোর্ট-তথ্য কপি" aria-label="রিপোর্ট #<%= r.id %> তথ্য কপি করুন"><i class="fas fa-copy" aria-hidden="true"></i></button>
     </div>
 
     <p class="sc-body"><%= r.message_text %></p>
@@ -692,7 +706,7 @@
     <div class="sc-help-row"><span>কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">d</kbd></span></div>
     <div class="sc-help-row"><span>রিফ্রেশ-এখন — গণনা তৎক্ষণাৎ আনুন (বিরতি-অবস্থায়-ও চলে)</span><span class="keys"><kbd class="sc-kbd">r</kbd></span></div>
     <div class="sc-help-row"><span>অটো-হালনাগাদ বিরতি/চালু — পোল+SSE-স্বয়ংক্রিয়-রিলোড (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">p</kbd></span></div>
-    <div class="sc-help-group"><i class="fas fa-hand-pointer" aria-hidden="true"></i> মাউস-ও-টাচ <span class="sc-hg-n">১৭-২৪</span></div>
+    <div class="sc-help-group"><i class="fas fa-hand-pointer" aria-hidden="true"></i> মাউস-ও-টাচ <span class="sc-hg-n">১৭-২৫</span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে হোভার — দিনভিত্তিক-গণনা টুলটিপ</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
     <div class="sc-help-row"><span>জবাব/লেখা এক-ক্লিকে ক্লিপবোর্ডে কপি (মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
     <div class="sc-help-row"><span>সংযুক্তি-ছবি কার্ড ছাড়াই বড় করে দেখুন — ক্লিকে খোলে, Esc/বাইরে-ক্লিকে বন্ধ (Ctrl+ক্লিক = নতুন-ট্যাব)</span><span class="keys"><kbd class="sc-kbd">ক্লিক</kbd></span></div>
@@ -700,6 +714,7 @@
     <div class="sc-help-row"><span>রিপোর্ট-ব্যাপ্তি ৭/৩০ দিন — কপি-রিপোর্টের সময়সীমা বদল (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">৭/৩০</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
     <div class="sc-help-row"><span>মিডিয়া-চিপে হোভার/ফোকাস — স্ট্রিপ-সেগমেন্ট উজ্জ্বল (সেগমেন্ট-হোভারে চিপ-হাইলাইট — উল্টো-দিকও)</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
+    <div class="sc-help-row"><span>কার্ডে কপি-বাটন — রিপোর্ট-তথ্য ক্লিপবোর্ডে (প্রেরক/সময়/মাধ্যম/অবস্থা/লেখা; মেসেঞ্জারে-পেস্ট-প্রস্তুত)</span><span class="keys"><kbd class="sc-kbd">কপি-বাটন</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>লেখা-বদলে রিফ্রেশ-আটকে-রাখা (অসংরক্ষিত-জবাব-সুরক্ষা)</span><span class="keys"><kbd class="sc-kbd">স্বয়ংক্রিয়</kbd></span></div>
@@ -867,6 +882,42 @@
     return Promise.resolve(legacyCopy(txt));
   }
   // কম্পোজার-কপি (লেখা-বক্স বর্তমান-মান; খালি-হলে টোস্ট)
+  // ── session246 — কার্ড-রিপোর্ট-কপি (DOM-টেক্সট-উৎস; copyText-এক-উৎস; toast+আইকন-সোয়াপ wk-মিরর; reduced-motion-নিরাপদ) ──
+  function cardReportText(card) {
+    var id = card.getAttribute('data-id') || '?';
+    var who = card.querySelector('.sc-who b');
+    var un = card.querySelector('.sc-who a');
+    var tm = card.querySelector('.sc-who small span[title]');
+    var med = card.querySelector('.sc-badge.m-TEXT') || card.querySelector('.sc-badge.m-IMAGE') || card.querySelector('.sc-badge.m-AUDIO') || card.querySelector('.sc-badge.m-VIDEO');
+    var body = card.querySelector('.sc-body');
+    var st = card.getAttribute('data-status') || '';
+    var stBn = st === 'PENDING' ? 'নতুন' : st === 'IN_PROGRESS' ? 'চলমান' : st === 'RESOLVED' ? 'সমাধান হয়েছে' : st;
+    var parts = ['▪ রিপোর্ট #' + id,
+      'প্রেরক: ' + ((who && who.textContent.trim()) || 'অজানা') + (un ? ' (' + un.textContent.trim() + ')' : ''),
+      'সময়: ' + ((tm && tm.getAttribute('title')) || ''),
+      'মাধ্যম: ' + ((med && med.textContent.trim()) || '—') + ' · অবস্থা: ' + stBn];
+    if (body && body.textContent.trim()) parts.push('', body.textContent.trim());
+    return parts.join('\n');
+  }
+  document.querySelectorAll('[data-card-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation(); // কার্ড-অন্যান্য-ক্লিক-হস্তক্ষেপ-শূন্য (লাইটবক্স/নির্বাচন-অক্ষুণ্ণ)
+      var card = btn.closest('.sc-card');
+      var t = card ? cardReportText(card) : '';
+      if (!t) { toast('কপি করার মতো রিপোর্ট নেই', true); return; }
+      copyText(t).then(function (ok) {
+        if (!ok) { toast('কপি ব্যর্থ', true); return; }
+        toast('রিপোর্ট #' + btn.getAttribute('data-id') + ' কপি হয়েছে ✓');
+        var ic = btn.querySelector('i');
+        btn.classList.add('sc-cp-ok');
+        if (ic) { if (!btn.getAttribute('data-ic0')) btn.setAttribute('data-ic0', ic.className); ic.className = 'fas fa-circle-check'; }
+        setTimeout(function () {
+          btn.classList.remove('sc-cp-ok');
+          if (ic && btn.getAttribute('data-ic0')) ic.className = btn.getAttribute('data-ic0');
+        }, 1600);
+      });
+    });
+  });
   document.querySelectorAll('[data-note-copy]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var box = btn.closest('.sc-note-box').querySelector('[data-sc-note]');
@@ -974,6 +1025,12 @@
     var sp = new URLSearchParams(location.search);
     var dirty = !!(sp.get('status') || sp.get('media') || sp.get('q') || sp.get('range'));
     return { dirty: dirty, target: '/admin/support-center?' };
+  };
+  window.__scQA.cardCopy = function () { // session246 QA-হুক (clearFilters-এর-পরে — ক্রমের-শেষ)
+    var btns = document.querySelectorAll('[data-card-copy]');
+    var first = null;
+    for (var i = 0; i < btns.length; i++) { var c = btns[i].closest('.sc-card'); if (c) { first = cardReportText(c); break; } }
+    return { buttons: btns.length, preview: first ? first.slice(0, 40) : null };
   };
   // ── session243 — মিডিয়া-চিপ ↔ স্ট্রিপ-সেগমেন্ট ক্রস-হাইলাইট (তাৎক্ষণিক-ক্লাস — transition-শূন্য, reduced-motion-স্বাভাবিক-নিরাপদ; স্ট্যাটিক-ফার্নিচার-বাইন্ড — লাইভ-কার্ড-রিরেন্ডার-স্বাধীন; innerHTML-নিষিদ্ধ-রীতি-অটুট) ──
   (function () {

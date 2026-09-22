@@ -5,6 +5,7 @@
 # ═══════════════════════════════════════════════════════════════════════════
 set -u
 APP="$(cd "$(dirname "$0")/.." && pwd)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib-seed-users.sh"
 BASE=http://localhost:8094
 J1=/tmp/lf183-j1.txt; J2=/tmp/lf183-j2.txt; J3=/tmp/lf183-j3.txt
 PASS=0; FAIL=0
@@ -28,7 +29,21 @@ bash "$APP/../ensure-server.sh" > /dev/null 2>&1
 sleep 1
 
 echo "── [1] লগইন"
-login "$J1" testuser && ok "testuser লগইন" || bad "testuser লগইন"
+echo "── [0.৫] ডেমো-ইউজার নিশ্চিত (register-API পুনঃব্যবহারযোগ্য-সেটআপ — session246)"
+for SPEC in "testuser|demo123|টেস্ট ইউজার" "qa113user|demo123|QA ভয়েস ইউজার" "testuser2|demo123|টেস্ট ইউজার টু"; do
+  U="${SPEC%%|*}"; REST="${SPEC#*|}"; P="${REST%%|*}"; N="${REST#*|}"
+  ST=$(ensureUser "$J1" "$U" "$P" "$N") && ok "$ST" || bad "ensureUser-ব্যর্থ: $ST"
+  rm -f "$J1"
+done
+login "$J1" testuser
+# ── টেস্ট-অ্যাসেট: বৈধ-ন্যূনতম WAV (RIFF+PCM — স্বয়ংসম্পূর্ণ; /tmp-রিসেট-প্রমাণ, session246) ──
+if [ ! -s /tmp/lf183-voice.wav ]; then
+  python3 -c "
+import struct
+sr=8000; data=bytes([128]*16)
+open('/tmp/lf183-voice.wav','wb').write(b'RIFF'+struct.pack('<I',36+len(data))+b'WAVEfmt '+struct.pack('<IHHIIHH',16,1,1,sr,sr,1,8)+b'data'+struct.pack('<I',len(data))+data)"
+fi
+[ -s /tmp/lf183-voice.wav ] && ok "অ্যাসেট WAV-প্রস্তুত ($(wc -c < /tmp/lf183-voice.wav) বাইট)" || { echo "FATAL: wav-তৈরি-ব্যর্থ"; exit 1; }
 login "$J2" qa113user && ok "qa113user লগইন" || bad "qa113user লগইন"
 login "$J3" testuser2 && ok "testuser2 লগইন" || bad "testuser2 লগইন"
 
