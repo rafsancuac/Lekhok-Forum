@@ -3459,3 +3459,24 @@ Task: মডারেটর-প্যানেল লেআউট বগ ফি�
 - **QA-গোটচা**: sql.js ইন-মেমরি — ভিউ-টেস্টের আগে সার্ভার-kill→প্যাচ→boot রীতি; মৃত্যুমুখী-ফ্লাশ stale-ডেটা লিখতে পারে
 - press-পেজের `.sf-section` সম্পাদনা-উইজেট ও `.mi-widget`-এর JS (section-form.js/multi-image.js) পেজে লোড-ই হয় না → সম্পাদনা-ফর্ম রিডঅনলি-দৃশ্যমান — পৃথক ফিচার-গ্যাপ, এ-ফিক্সের বাইরে
 - পরের-এজেন্ট: **session224 লেবেল**; কমিটের আগে `git config user.email` যাচাই (shell-fallback identity = Vercel-ব্লক)
+Task ID: 73 (session223 — cron 403679; অপারেটর-KPI প্যাক)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- স্টেল-হ্যান্ডওভার-সামারি-প্রতিরোধ (আবার): হ্যান্ডওভার-সামারি Task43/49-যুগের-অবস্থা বহন করেছিল ("কমিট-হয়নি", device-code-দরকার) — **worklog+HEAD+origin-যাচাই-ই-সত্য-উৎস**: রাউন্ড-শুরুতেই HEAD=`381a6ee` (session222), origin=`6a48388` (প্যারালাল-এজেন্টের Express-P0-কমিট) → ক্লিন-ff-সিঙ্ক → টোকেন ২০০ (GH+Vercel), live 200, working-tree ক্লিন → device-flow-যুগ-শেষ, কোনো-কোড-ইস্যু-নেই
+- **উনিশ-ফাইল-রিগ্রেশন (task52…61 ×৮ + s213…s222 ×১০ + ইউনিট ×২) প্রথম-রানেই সব-গ্রিন → বাগ-শূন্য → ফিচার-রাউন্ড**
+
+## এ-রাউন্ডে সম্পন্ন
+- **[Mandatory-ফিচার] KPI glance সারি:** trend-strip-পরে ৪-কার্ড — ২৪ঘ-নতুন / ২৪ঘ-সমাধান / স্টেল(৩+দিন, oldestOpenDays-সাব) / গড়-সমাধান-সময় (avgResolveHours); **handoverDigest-stats এক-উৎস** (kpiCards useMemo — গণনা-ডুপ্লিকেট-শূন্য); কার্ড-ক্লিকে ফিল্টার-ভিউ-জাম্প (fresh→PENDING+TODAY · resolved→RESOLVED+TODAY · stale→PENDING+asc+ALL · avg→RESOLVED+ALL; presetActive-স্বয়ংক্রিয়-সম্মত)
+- **[Mandatory-ফিচার] ট্যাব-ফোকাস-ফেরত সিঙ্ক:** visibilitychange → !hidden হলে তাৎক্ষণিক load() (hidden-স্কিপ-টিকের-সাথে-সাথে-পাল্টানো; unmount-ক্লিনআপ)
+- **[Mandatory-স্টাইল] KPI-কার্ড:** border-t টোন-ব্যান্ড (amber/emerald/red/sky = STAT_TONE-সমস্বর) + icon-চিপ (bg-*-50/text-*-600; শূন্য-নতুন-আমদানি) + tabular-nums + স্টেজার lf-anim-up (৬০ms; reduced-motion-সম্মানী) + hover-লিফট/shadow + focus-visible-ring; role=group + পূর্ণ-বাংলা aria
+- **টেস্ট:** নতুন s223-e2e.sh **১৩/১৩** (TAG=Task223-KPI; V0→V1-delta-প্যাটার্ন = গ্লোবাল-গণনায় লিজিটিমেট-রো-প্রতিরোধী; URL-জাম্প ×৩; fetch-wrap-সিঙ্ক্রোনাস-গণনা; 390px; fresh-সেশন-কনসোল-০; ক্লিনআপ) · **পোস্ট-চেঞ্জ উনিশ-ফাইল-রিগ্রেশন সব-গ্রিন** + ইউনিট ২৫+১১ · tsc+eslint-০ · secret-scan-ক্লিন · DB-জঞ্জাল-শূন্য
+- ডক ×২ (PROJECT §২২৩ / PLANS session223-নোট) → push
+
+## ঝুঁকি ও পরবর্তী
+- **নতুন-গোটচা ×২ ডক-কৃত (PROJECT+PLANS):** ① পাইপ-শূন্য-পাইথন-হেল্পারের stdin-অবরোধ (argv-পাস/`</dev/null`-ই-সমাধান; বাইরের-timeout-ও-আটকায়) ② agent-browser eval-অ্যারের দ্বৈত-JSON-পার্স (`json.loads(json.load(...))`)
+- KPI-জাম্পে sortAsc-নরমালাইজ-প্রশ্ন খোলা (stale=asc-সেট, অন্যরা-স্পর্শ-নয় → avg-জাম্পে sort=asc-থেকে-যায়) — নরমালাইজ-করতে-হলে সব-কার্ডে-একসাথে (PLANS-নোট)
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়)
+- পরের-এজেন্ট: **session224 লেবেল**; PLANS session223-নোট পড়ুন (KPI-এক-উৎস + জাম্প + stdin/দ্বৈত-পার্স গোটচা)
+- রিমোট main = এ-রাউন্ডের push (session223-অপারেটর-KPI-প্যাক); working-tree ক্লিন

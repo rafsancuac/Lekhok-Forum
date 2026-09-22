@@ -66,6 +66,13 @@
  *   • দীর্ঘ-অভিযোগ-লেখা ফোল্ড (৪-লাইন clamp + "আরও দেখুন" টগল; lf-clamp-4)
  *   • স্টাইল: গ্রেডিয়েন্ট-হেডার ফিড-প্যানেল (sticky-বারে এনকোর), এন্ট্রি-স্টেজার lf-anim-up,
  *     অদেখা-ব্যাজ lf-badge-pulse (prefers-reduced-motion-সম্মানী)
+ * session223 — অপারেটর-KPI প্যাক:
+ *   • KPI glance সারি (trend-strip-পরে ৪-কার্ড): ২৪ঘ-নতুন / ২৪ঘ-সমাধান / স্টেল / গড়-সমাধান-সময় —
+ *     গণনা = handoverDigest-stats এক-উৎস (lib-স্পর্শ-শূন্য); কার্ড-ক্লিকে প্রচলিত-ফিল্টার-ভিউ-জাম্প
+ *     (presetActive-লিঙ্ক-স্বয়ংক্রিয়; স্টেল-কার্ড = stale-banner-সমস্বর জাম্প + dateRange-ALL)
+ *   • ট্যাব-ফোকাস-ফেরতে তাৎক্ষণিক সিঙ্ক (visibilitychange → load(): hidden-স্কিপ-টিকের সাথে-সাথে পাল্টানো)
+ *   • স্টাইল: টোন-কোঅর্ডিনেটেড border-t রঙ-ব্যান্ড + রঙিন icon-চিপ + tabular-nums + স্টেজার lf-anim-up
+ *     (reduced-motion-সম্মানী) + hover:-translate-y-0.5/shadow-md
 */
 
 import React, { useCallback, useEffect, useState } from 'react'
@@ -941,7 +948,16 @@ function SupportReportsPanel() {
     const t = setInterval(() => {
       if (!document.hidden) load()
     }, 15000)
-    return () => clearInterval(t)
+    /** session223 — ট্যাব-ফোকাস-ফেরতে তাৎক্ষণিক সিঙ্ক: hidden-স্কিপ-করা-টিকে-পাল্টানো
+     *  (অন্য-ট্যাবে-থাকাকালীন ১৫-সে-টিক-স্কিপ-হয়; ফেরতে পরবর্তী-টিক-অপেক্ষা-না-করে সাথে-সাথে লোড) */
+    const onVis = () => {
+      if (!document.hidden) load()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      clearInterval(t)
+      document.removeEventListener('visibilitychange', onVis)
+    }
   }, [load])
 
   /** session213 — ট্যাব-টাইটেলে নতুন-অভিযোগ-ব্যাজ (মাল্টিটাস্ক-সিগনাল); আনমাউন্টে মূল-টাইটেল-ফেরত */
@@ -1526,6 +1542,84 @@ function SupportReportsPanel() {
    *  কপি = clipboard-race-প্যাটার্ন (s218-গোটচা: headless-হ্যাং → ৮০০ms-ফলব্যাক) + টোস্ট */
   const digest = React.useMemo(() => handoverDigest(reports), [reports])
   const digestText = digest.lines.join('\n')
+
+  /** session223 — KPI glance কার্ড-কনফিগ (handoverDigest-stats এক-উৎস — গণনা-কখনো-ডুপ্লিকেট-নয়);
+   *  ক্লিক = প্রচলিত-সেটারে-ফিল্টার-ভিউ-জাম্প (presetActive-লিঙ্ক-স্বয়ংক্রিয়;
+   *  স্টেল-কার্ড = stale-banner-সমস্বর জাম্প + dateRange-ALL-নিশ্চিত — জাম্প-পরে-কার্ড-দৃশ্যমানতা-গ্যারান্টি) */
+  const kpiCards = React.useMemo(() => {
+    const s = digest.stats
+    const oldest = s.oldestOpenDays !== null ? `পুরোনোতম ${bn(s.oldestOpenDays)} দিন ধরে` : '৩+ দিন ধরে অমীমাংসিত'
+    return [
+      {
+        key: 'fresh',
+        Icon: Inbox,
+        label: '২৪ ঘণ্টায় নতুন',
+        value: bn(s.fresh24),
+        sub: '২৪ঘ-এর-কম-পুরোনো অমীমাংসিত',
+        aria: `২৪ ঘণ্টায় ${bn(s.fresh24)}টি অমীমাংসিত নতুন অভিযোগ — আজকের নতুন-ভিউতে যান`,
+        tBorder: 'border-t-amber-500',
+        iconBg: 'bg-amber-50',
+        iconText: 'text-amber-600',
+        valText: 'text-amber-700',
+        jump: () => {
+          setTab('PENDING')
+          setDateRange('TODAY')
+        },
+      },
+      {
+        key: 'resolved',
+        Icon: CheckCircle2,
+        label: '২৪ ঘণ্টায় সমাধান',
+        value: bn(s.resolvedToday),
+        sub: 'গত-২৪ঘ-বে-সমাধান-হওয়া',
+        aria: `গত ২৪ ঘণ্টায় ${bn(s.resolvedToday)}টি সমাধান — আজকের সমাধান-ভিউতে যান`,
+        tBorder: 'border-t-emerald-600',
+        iconBg: 'bg-emerald-50',
+        iconText: 'text-emerald-600',
+        valText: 'text-emerald-700',
+        jump: () => {
+          setTab('RESOLVED')
+          setDateRange('TODAY')
+        },
+      },
+      {
+        key: 'stale',
+        Icon: AlertTriangle,
+        label: 'স্টেল (৩+ দিন)',
+        value: bn(s.stale),
+        sub: oldest,
+        aria: `${bn(s.stale)}টি স্টেল অভিযোগ (৩+ দিন অমীমাংসিত) — পুরাতন-আগে ক্রমে দেখুন`,
+        tBorder: 'border-t-red-500',
+        iconBg: 'bg-red-50',
+        iconText: 'text-red-600',
+        valText: 'text-red-700',
+        jump: () => {
+          setTab('PENDING')
+          setSortAsc(true)
+          setDateRange('ALL')
+        },
+      },
+      {
+        key: 'avg',
+        Icon: Clock,
+        label: 'গড় সমাধান-সময়',
+        value: s.avgResolveHours !== null ? `${bn(s.avgResolveHours)} ঘ` : '—',
+        sub: s.avgResolveHours !== null ? 'সমাধান-সময়ের-গড়' : 'সমাধান-ইতিহাস-নেই',
+        aria:
+          s.avgResolveHours !== null
+            ? `গড় সমাধান-সময় ${bn(s.avgResolveHours)} ঘণ্টা — সমাধান-তালিকায় যান`
+            : 'গড় সমাধান-সময় এখনো-গণনাযোগ্য নয় — সমাধান-তালিকায় যান',
+        tBorder: 'border-t-sky-600',
+        iconBg: 'bg-sky-50',
+        iconText: 'text-sky-600',
+        valText: 'text-sky-700',
+        jump: () => {
+          setTab('RESOLVED')
+          setDateRange('ALL')
+        },
+      },
+    ]
+  }, [digest])
   const openDigest = useCallback((e?: React.MouseEvent) => {
     digestReturnFocusRef.current = (e ? e.currentTarget : document.activeElement) as HTMLElement | null
     setCmdOpen(false)
@@ -1958,6 +2052,30 @@ function SupportReportsPanel() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* session223 — KPI glance সারি (handoverDigest-stats এক-উৎস; ৪-কার্ড ক্লিকে ফিল্টার-ভিউ-জাম্প;
+           স্টেজার lf-anim-up + hover-লিফট + tabular-nums — reduced-motion-সম্মানী) */}
+      <div role="group" aria-label="KPI সারসংক্ষেপ" className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {kpiCards.map((k, i) => (
+          <button
+            key={k.key}
+            type="button"
+            onClick={k.jump}
+            aria-label={k.aria}
+            className={`bg-white border border-[#CED0D4] border-t-[3px] ${k.tBorder} rounded-[10px] p-3 shadow-2xs text-left transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#006A4E]/40 lf-anim-up`}
+            style={{ animationDelay: `${i * 60}ms` }}
+          >
+            <div className="flex items-center gap-2">
+              <span className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${k.iconBg}`} aria-hidden>
+                <k.Icon className={`w-4 h-4 ${k.iconText}`} />
+              </span>
+              <p className="text-[10.5px] font-bold text-[#65676B] leading-tight">{k.label}</p>
+            </div>
+            <p className={`text-xl font-extrabold mt-1.5 leading-none tabular-nums ${k.valText}`}>{k.value}</p>
+            <p className="mt-1 text-[9.5px] text-[#8A8D91] leading-tight">{k.sub}</p>
+          </button>
+        ))}
       </div>
 
       {/* স্টেটাস-ট্যাব (লাইভ-কাউন্ট) */}
