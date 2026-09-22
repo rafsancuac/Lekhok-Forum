@@ -829,3 +829,18 @@ details[open]>summary .clip-chevron{transform:rotate(90deg)}
   .inbox-print108,.act-btn108-print{transition:none}
   .act-btn108-print:hover{transform:none}
 }
+
+/* ── সেশন ২২৩: প্যানেল-লেআউট স্থিতিশীলতা — ডানে-বামে শূন্য নড়াচড়া ──
+   মূল-কারণ: main.js-এর পাবলিক-সাইট scroll-progress বার (স্টাইল style.css-এ)
+   admin.css-পৃষ্ঠায় আনস্টাইলড static flex-child হয়ে body-র flex-রো-তে জায়গা
+   খেয়ে ফেলত → স্ক্রলের-সাথে .admin-main সংকুচিত (লম্বা+সরু কলাম) ও
+   আনুভূমিক-ওভারফ্লো। main.js-এ .admin-sidebar-গার্ড দেওয়া হয়েছে;
+   নিচের নিয়মগুলো সেফটি-নেট। `clip` ব্যবহার (hidden নয়) — scroll-container
+   তৈরি করে না, তাই fixed সাইডবার/স্টিকি bulk-bar অক্ষত থাকে। */
+.scroll-progress{position:fixed!important;top:0!important;left:0!important;height:3px!important;width:0!important;pointer-events:none!important;z-index:200!important}
+html,body{overflow-x:clip}
+/* পত্রিকা-কাটিং ফর্ম-গ্রিড: সুষম লক-গ্রিড (মোবাইল ১ → ≥640px ২ → ≥1024px ৪)
+   — স্ক্রলে কলাম-সংকোচন আর হবে না */
+.clip-grid{grid-template-columns:1fr}
+@media (min-width:640px){.clip-grid{grid-template-columns:repeat(2,1fr)}.clip-grid .clip-field-wide{grid-column:span 2}}
+@media (min-width:1024px){.clip-grid{grid-template-columns:repeat(4,1fr)}}

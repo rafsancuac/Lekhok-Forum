@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
-  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>">
 </head>
 <body>
 <%- include('../../admin/views/admin/partials/sidebar') %>
@@ -38,8 +38,8 @@
         <div class="clip-field"><label>পত্রিকার নাম</label><input type="text" name="paper_name" maxlength="120" placeholder="যেমন: দৈনিক আজাদ / প্রথম আলো" /></div>
         <div class="clip-field"><label>প্রকাশের তারিখ</label><input type="text" name="published_date" maxlength="40" placeholder="যেমন: জানুয়ারি ২০২৬" /></div>
         <div class="clip-field"><label>প্রদর্শন ক্রম</label><input type="number" name="sort_order" min="0" value="0" /></div>
-        <div class="clip-field"><label>ছবি আপলোড</label><input type="file" name="image" accept="image/*" /></div>
-        <div class="clip-field"><label>অথবা ছবির URL</label><input type="text" name="image_url" maxlength="600" placeholder="https://… (আপলোড না দিলে)" /></div>
+        <div class="clip-field clip-field-wide"><label>ছবি আপলোড</label><input type="file" name="image" accept="image/*" /></div>
+        <div class="clip-field clip-field-wide"><label>অথবা ছবির URL</label><input type="text" name="image_url" maxlength="600" placeholder="https://… (আপলোড না দিলে)" /></div>
         <div class="clip-field" style="grid-column:1/-1;"><label>একাধিক ছবি (টেনে সাজান)</label><%- include('../../admin/views/admin/partials/multi-image', { images: [] }) %></div>
         <div class="clip-field"><label>প্রদর্শন অবস্থা</label>
           <select name="is_active">
