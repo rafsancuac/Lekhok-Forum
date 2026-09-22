@@ -200,6 +200,9 @@
     /* ── session232 — স্পার্ক/ট্রেন্ড-টুলটিপ + কমপ্যাক্ট-মোড (সব-রঙ var()-টোকেন; z-স্তর-চুক্তি: বাল্ক 80 > সহায়িকা 70 > টুলটিপ 60 > স্টিকি 20; টোস্ট 1300 সর্বোচ্চ) ── */
     .k-spark i, .sc-trend-bars span{cursor:default}
     .k-spark i:hover, .sc-trend-bars span:hover{filter:brightness(.82)}
+    /* session233 — টাচ-স্ক্রিনে বার-ট্যাপ-সংকেত (hover-চুক্তি-অক্ষুণ্ণ) + অদৃশ্য-হিট-এরিয়া-বর্ধন (২px-স্টাব-বারও ট্যাপযোগ্য — ভিজ্যুয়াল-বদল-শূন্য) */
+    @media (hover:none){.k-spark i,.sc-trend-bars span{cursor:pointer;position:relative}}
+    @media (hover:none){.k-spark i::after,.sc-trend-bars span::after{content:'';position:absolute;left:0;right:0;top:-6px;bottom:0}}
     #scSparkTip{position:fixed;left:0;top:0;z-index:60;background:var(--lf-fb-ink);color:var(--lf-white);
       border-radius:var(--ad-radius-sm);padding:6px 11px;font-size:.76rem;font-weight:700;pointer-events:none;
       opacity:0;transform:translate(-50%,calc(-100% + 6px));transition:opacity .16s ease, transform .16s ease;
@@ -207,6 +210,14 @@
     #scSparkTip[data-on="1"]{opacity:1;transform:translate(-50%,calc(-100% - 7px))}
     #scSparkTip::after{content:'';position:absolute;left:50%;top:100%;transform:translateX(-50%);
       border:5px solid transparent;border-top-color:var(--lf-fb-ink)}
+    /* session233 — সপ্তাহ-ওভারভিউ চিপ (বারের-নিচে; আলাদা-এলিমেন্ট — #scSparkTip-textContent-চুক্তি-অক্ষুণ্ণ; z-60-এক-স্তর) */
+    #scSparkTipWk{position:fixed;left:0;top:0;z-index:60;background:var(--lf-fb-ink);color:var(--lf-white);
+      border-radius:var(--ad-radius-sm);padding:4px 9px;font-size:.68rem;font-weight:600;pointer-events:none;
+      opacity:0;transform:translate(-50%,6px);transition:opacity .16s ease, transform .16s ease;
+      box-shadow:var(--ad-shadow-lg);white-space:nowrap;max-width:88vw}
+    #scSparkTipWk[data-on="1"]{opacity:1;transform:translate(-50%,0)}
+    #scSparkTipWk::before{content:'';position:absolute;left:50%;bottom:100%;transform:translateX(-50%);
+      border:5px solid transparent;border-bottom-color:var(--lf-fb-ink)}
     #scCompactBtn[aria-pressed="true"]{background:var(--ad-accent);border-color:var(--ad-accent);color:var(--lf-white)}
     #scCompactBtn[aria-pressed="true"]:focus-visible{outline:2px solid var(--ad-accent-ink);outline-offset:2px}
     .sc-compact .sc-card{padding:10px 12px;margin-bottom:8px}
@@ -218,8 +229,8 @@
     .sc-compact .sc-hist{margin-top:8px;padding-top:6px}
     .sc-compact .sc-media img{max-height:200px}
     .sc-compact .sc-media audio,.sc-compact .sc-media video{max-width:340px}
-    @media (max-width:640px){#scSparkTip{font-size:.72rem;padding:5px 9px}}
-    @media (prefers-reduced-motion: reduce){#scSparkTip{transition:none}}
+    @media (max-width:640px){#scSparkTip{font-size:.72rem;padding:5px 9px}#scSparkTipWk{font-size:.64rem;padding:3px 7px}}
+    @media (prefers-reduced-motion: reduce){#scSparkTip{transition:none}#scSparkTipWk{transition:none}}
   </style>
 </head>
 <body>
@@ -256,10 +267,10 @@
       <b>৭-দিনের প্রবণতা</b>
       <span><%= trend.dayLabels[0] %> → <%= trend.dayLabels[6] %></span>
     </div>
-    <% [['নতুন', trend.newPerDay, 'sc-tb-new'], ['সমাধান', trend.resolvedPerDay, 'sc-tb-res']].forEach(function(row){ var maxV = Math.max.apply(null, row[1].concat([0])); %>
+    <% [['নতুন', trend.newPerDay, 'sc-tb-new'], ['সমাধান', trend.resolvedPerDay, 'sc-tb-res']].forEach(function(row){ var maxV = Math.max.apply(null, row[1].concat([0])); var tsum = 0; row[1].forEach(function(v){ tsum += (v || 0); }); var tavg = Math.round(tsum / 7 * 10) / 10; %>
     <div class="sc-trend-row">
       <span class="sc-trend-lbl"><%= row[0] %></span>
-      <div class="sc-trend-bars" aria-hidden="true" data-unit="টি">
+      <div class="sc-trend-bars" aria-hidden="true" data-unit="টি" data-wk="সপ্তাহে মোট <%= bnNum(tsum) %> টি · দৈনিক গড় <%= bnNum(tavg) %> টি">
         <% row[1].forEach(function(v, i){ %>
         <span class="<%= row[2] %> <%= i === 6 ? 'today' : '' %>" style="height:<%= v > 0 && maxV > 0 ? Math.max(3, Math.round(v / maxV * 20)) : 2 %>px" data-d="<%= trend.dayLabels[i] %>" data-v="<%= bnNum(v) %>"></span>
         <% }) %>
@@ -270,8 +281,11 @@
 
   <%# session231 — KPI স্পার্ক হেল্পার (trend7-সিরিজ এক-উৎস-পুনঃব্যবহার; EJS নিজে-কোনো-তারিখ-গণনা-নয় — শুধু-রেন্ডার; মান bnNum-এক-উৎস) %>
   <%# session232 — data-d/data-v/data-unit টুলটিপ-হুক (native-title-বাদ — শেয়ার্ড #scSparkTip-এ-স্থানান্তর; এক-উৎস dayLabels/bnNum) %>
-  <% function scSpark(cls, series, unit){ var mx = 0; for (var i = 0; i < series.length; i++){ var v = series[i] == null ? 0 : series[i]; if (v > mx) mx = v; }
-    return '<span class="k-spark" data-spark="' + cls + '" data-unit="' + (unit || 'টি') + '" aria-hidden="true">' + series.map(function(v, i){
+  <%# session233 — data-wk সপ্তাহ-ওভারভিউ হুক (EJS-এক-উৎস গণনা — ক্লায়েন্ট-পার্স-শূন্য; unit ঘ হলে গড়-লেবেল, নয়তো মোট+দৈনিক-গড়) %>
+  <% function scSpark(cls, series, unit){ var mx = 0, tot = 0, nn = 0; for (var i = 0; i < series.length; i++){ var v = series[i] == null ? 0 : series[i]; if (v > mx) mx = v; tot += v; if (series[i] != null) nn++; }
+    var avg = nn > 0 ? Math.round(tot / nn * 10) / 10 : 0;
+    var wk = (unit === 'ঘ') ? ('৭-দিন গড় ' + bnNum(avg) + ' ঘ') : ('সপ্তাহে মোট ' + bnNum(tot) + ' টি · দৈনিক গড় ' + bnNum(avg) + ' টি');
+    return '<span class="k-spark" data-spark="' + cls + '" data-unit="' + (unit || 'টি') + '" data-wk="' + wk + '" aria-hidden="true">' + series.map(function(v, i){
       var n = v == null ? 0 : v; var h = (n > 0 && mx > 0) ? Math.max(2, Math.round(n / mx * 14)) : 2;
       return '<i class="' + (i === 6 ? 'today' : '') + '" style="height:' + h + 'px" data-d="' + trend.dayLabels[i] + '" data-v="' + bnNum(n) + '"></i>'; }).join('') + '</span>'; } %>
   <%# session227 — ২৪ঘ-সারাংশ KPI (helpers digestStats এক-উৎস; ক্লিকে ফিল্টার-ভিউ-জাম্প: status+range) %>
@@ -452,6 +466,7 @@
     <div class="sc-help-row"><span>শেষ স্ট্যাটাস-বদল আন্ডু (বাল্ক-গ্রুপ-সহ; লেখা-বক্সে নেটিভ-আন্ডু)</span><span class="keys"><kbd class="sc-kbd">Ctrl</kbd><kbd class="sc-kbd">Z</kbd></span></div>
     <div class="sc-help-row"><span>কমপ্যাক্ট-মোড টগল — কার্ড-ঘনত্ব (স্মরণ-রাখে)</span><span class="keys"><kbd class="sc-kbd">d</kbd></span></div>
     <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে হোভার — দিনভিত্তিক-গণনা টুলটিপ</span><span class="keys"><kbd class="sc-kbd">হোভার</kbd></span></div>
+    <div class="sc-help-row"><span>স্পার্ক/ট্রেন্ড-বারে ট্যাপ (টাচ-স্ক্রিন) — সপ্তাহ-ওভারভিউসহ টুলটিপ</span><span class="keys"><kbd class="sc-kbd">ট্যাপ</kbd></span></div>
     <div class="sc-help-row"><span>সহায়িকা খুলুন/বন্ধ করুন</span><span class="keys"><kbd class="sc-kbd">?</kbd></span></div>
     <div class="sc-help-row"><span>কার্সর-সরান (সহায়িকা-খোলা-থাকলে আগে-বন্ধ)</span><span class="keys"><kbd class="sc-kbd">Esc</kbd></span></div>
     <div class="sc-help-row"><span>লেখা-বদলে রিফ্রেশ-আটকে-রাখা (অসংরক্ষিত-জবাব-সুরক্ষা)</span><span class="keys"><kbd class="sc-kbd">স্বয়ংক্রিয়</kbd></span></div>
@@ -475,6 +490,8 @@
 
 <%# session232 — স্পার্ক/ট্রেন্ড-বার টুলটিপ (এক-শেয়ার্ড-এলিমেন্ট; JS-এ পজিশন/কনটেন্ট; z-স্তর-চুক্তি ৬০) %>
 <div id="scSparkTip" role="tooltip" aria-hidden="true"></div>
+<%# session233 — সপ্তাহ-ওভারভিউ চিপ (বারের-নিচে; aria-hidden — সজ্জা; #scSparkTip-এর-textContent-চুক্তি-অক্ষুণ্ণ রাখতে আলাদা-এলিমেন্ট) %>
+<div id="scSparkTipWk" aria-hidden="true"></div>
 <div id="scToast" role="status" aria-live="polite"></div>
 <script>
 (function () {
@@ -528,6 +545,7 @@
 
   // ── session232 — স্পার্ক/ট্রেন্ড-টুলটিপ (এক-শেয়ার্ড #scSparkTip; data-d/data-v/data-unit এক-উৎস; টেক্সট-নোড-শুধু — innerHTML-নিষিদ্ধ-রীতি; কার্ড-ফোকাসে আজ-বার) ──
   var tipEl = document.getElementById('scSparkTip');
+  var wkEl = document.getElementById('scSparkTipWk');
   function tipShow(bar) {
     var d = bar.getAttribute('data-d'), v = bar.getAttribute('data-v');
     if (!d || !v || !tipEl) return;
@@ -538,11 +556,22 @@
     tipEl.style.top = Math.max(r.top, 44) + 'px';
     tipEl.setAttribute('data-on', '1');
     tipEl.setAttribute('aria-hidden', 'false');
+    // session233 — সপ্তাহ-ওভারভিউ চিপ (বারের-নিচে; data-wk EJS-এক-উৎস; #scSparkTip-textContent-চুক্তি-অক্ষুণ্ণ — s232-সুইট-সামঞ্জস্য)
+    if (wkEl) {
+      var wk = bar.closest('[data-wk]');
+      if (wk && wk.getAttribute('data-wk')) {
+        wkEl.textContent = wk.getAttribute('data-wk');
+        wkEl.style.left = tipEl.style.left;
+        wkEl.style.top = Math.min(r.bottom + 6, window.innerHeight - 40) + 'px';
+        wkEl.setAttribute('data-on', '1');
+      } else {
+        wkEl.removeAttribute('data-on');
+      }
+    }
   }
   function tipHide() {
-    if (!tipEl) return;
-    tipEl.removeAttribute('data-on');
-    tipEl.setAttribute('aria-hidden', 'true');
+    if (tipEl) { tipEl.removeAttribute('data-on'); tipEl.setAttribute('aria-hidden', 'true'); }
+    if (wkEl) wkEl.removeAttribute('data-on');
   }
   document.addEventListener('mouseover', function (e) {
     var b = e.target.closest && e.target.closest('.k-spark i, .sc-trend-bars span');
@@ -563,6 +592,18 @@
     if (e.target.closest && e.target.closest('.sc-kpi')) tipHide();
   });
   window.addEventListener('scroll', tipHide, { passive: true });
+  // ── session233 — টাচ-ট্যাপ: বারে ট্যাপে টুলটিপ+সপ্তাহ-ওভারভিউ, বাইরে ট্যাপ/ক্লিকে লুকায় ──
+  // KPI-কার্ড-ভিতরের-স্পার্ক-বারে ট্যাপ = টুলটিপ-অভিপ্রায় (নেভিগেশন-নয়) → closest('a')-হলে preventDefault;
+  // কার্ডের-বাকি-অঞ্চল (বড়-সংখ্যা/লেবেল) স্বাভাবিক-জাম্প-অক্ষুণ্ণ; hover-চুক্তি-অপরিবর্তিত
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.k-spark i, .sc-trend-bars span');
+    if (b) {
+      if (b.closest('a')) e.preventDefault();
+      tipShow(b);
+    } else {
+      tipHide();
+    }
+  });
 
   // ── session232 — কমপ্যাক্ট-মোড (d-কী + বাটন; localStorage sc-compact স্মরণ; cursor/bulk-রিং-অক্ষুণ্ণ) ──
   var compactBtn = document.getElementById('scCompactBtn');

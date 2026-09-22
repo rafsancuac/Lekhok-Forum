@@ -4,7 +4,7 @@
 # চুক্তি: ① ফাইল-লেভেল-DB-এডিট (seed/cleanup) সার্ভার-বন্ধ-অবস্থায় ② রিপার-চুক্তি — পুরো-সুইট এক-টুল-কলে ③ CSRF-লগইন admin/admin123 (লোকাল-সিড) ④ TAG=Task231-UNDO জঞ্জাল-শূন্য
 # গোটচা (এ-সুইটের-প্রথম-রানে-ধরা): eval-আউটপুট কোট-এস্কেপড (\"k\":v) → প্যাটার্নে k..: (দুই-ডট); eval-ত্রুটি = {} আউটপুট; undoN = JSON.parse().length (স্ট্রিং-দৈর্ঘ্য-নয়)
 set -u
-ROOT=/home/z/lekhok-forum/lekhok-forum
+ROOT="${LEKHOK_ROOT:-/home/z/lekhok-forum}"
 APP=$ROOT/lekhok-forum
 BASE=http://localhost:8094
 PASS=0; FAIL=0
