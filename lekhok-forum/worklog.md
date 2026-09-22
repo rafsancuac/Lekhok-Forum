@@ -2158,3 +2158,24 @@ Task ID: 81 (session237 — সুইট-ROOT-ফিক্স + অক্ষর-
 ## ঝুঁকি ও পরবর্তী
 - গোটচা ×৩ ডক-কৃত (PLANS session237): IIFE-ক্লোজার-অদৃশ্য-eval · .sc-tpl-সিলেক্টর-অন্তর্ভুক্তি · ডিসপ্লে-আর্টিফ্যাক্টে od -c-সত্য
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; পরের-এজেন্ট: **session238 লেবেল**; PLANS session237-নোট পড়ুন; push-আগে fetch+rebase
+
+---
+Task ID: 83 (session239 — cron 403679; সপ্তাহ-রিপোর্ট-কপি প্যাক)
+Agent: Main agent (session239)
+Task: প্রজেক্ট-স্টেটাস যাচাই + QA → বাগ-শূন্য হলে নতুন-ফিচার (session238-বাকি-প্রস্তাব গ্রহণ) + [Mandatory] স্টাইল-ডিটেইল + ডক/সুইট/পুশ
+
+Work Log:
+- রাউন্ড-শুরু: worklog-ACTIVE-LOCK পড়ে স্টেল-সামারি-সতর্কতা নিশ্চিত (সামারি Task43-যুগ দেখাচ্ছিল — প্রকৃত origin = session238/`a45260f`); GH /user→200 + Vercel /v2/user→200 + fetch-sync-যাচাই
+- QA: পূর্ণ-ব্যাটারি ২৬০/২৬০ প্রথম-রানে — বাগ-শূন্য → ফিচার-রাউন্ড (session238-বাকি-প্রস্তাব = সপ্তাহ-রিপোর্ট-কপি)
+- [Mandatory-ফিচার]: `#scWkCopyBtn` (w-কী) — EJS-এক-উৎস `scWkReportText()` → `#scWkReport`-JSON-পেলোড → copyText-চুক্তি; সহায়িকা-সারি + QA-হুক `__scQA.wkCopy` (পুনঃসৃজনের-পরে)
+- [Mandatory-স্টাইল]: ok-টোন + আইকন-সোয়াপ + scWkPop (reduced-motion-নিরাপদ) + focus-visible + hover-রিং + 640px-সংকোচন
+- টেস্ট: tests/s239-wkcopy-suite.sh ৩৫/৩৫ ×২ (সিড-শূন্য — রিড-ওনলি-UI; typeof-কোট-গোটচা প্রথম-রানে-ধরা→বুলিয়ান-চুক্তি)
+- পূর্ণ-রিগ্রেশন ২৯৫/২৯৫ + secret-scan-ক্লিন + স্ক্রিনশট ×২ (পুরাতন-ওভাররাইট restore)
+
+Stage Summary:
+- support-center.ejs এক-ফাইল-ফিচার (CSS+EJS+JS; API/স্কিমা/URL-চুক্তি-বদল-শূন্য) + tests/s239-wkcopy-suite.sh + ডক ×৩
+- DB-জঞ্জাল-শূন্য (রিড-ওনলি-সুইট); রেস-প্রতিরোধে fetch+rebase-পরে push (নীতি-অনুযায়ী)
+
+## ঝুঁকি ও পরবর্তী
+- গোটচা ×১ ডক-কৃত (PLANS session239): QA-হুক-অ্যাসার্টে typeof-কোট → বুলিয়ান-চুক্তি
+- পরের-এজেন্ট: **session240 লেবেল (Task ID 84)**; বাকি-প্রস্তাব: রিপোর্ট-ব্যাপ্তি-নির্বাচন (৭/৩০-দিন), Turso (পরিকল্পনা-গেটে), stale-সুইট-আধুনিকীকরণ; PLANS session239-নোট পড়ুন; push-আগে fetch+rebase
