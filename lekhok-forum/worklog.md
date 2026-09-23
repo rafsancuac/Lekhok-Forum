@@ -2635,3 +2635,28 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session272 লেবেল (worklog Task ID 112)**; PLANS session271-নোট অবশ্যই-পড়ুন (লাইভ-সারফেস-চার্ন + domcount + cancelable + JSON-আউটার-কোট + আইকন-সংঘর্ষ); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা (trash-সুইট-স্তর-যাচাই; security.ejs-স্কোপ-ম্যাপ-পূর্বক; content-history.ejs/super-users-প্রার্থী), multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
 - রিমোট main = push-পরবর্তী HEAD (session271-জোড়া: feature + worklog); working-tree ক্লিন
+
+---
+Task ID: 112 (session272 — ইউজার-টাস্ক: আপলোডেড-অডিট যাচাই (Roadmap.md + ৩-ZIP) + সত্য-দাবি-ফিক্স ×৪)
+Agent: Z.ai Code (main session, user-direct; epaper-কিপার-সেশন web-db1dc502)
+Task: ইউজার-প্রশ্ন "এরা কি বলছে দেখো" — অন্য-AI-অডিটের প্রতিটি দাবি আসল-রিপো/লাইভে প্রমাণসহ যাচাই → সত্যগুলো সার্জিক্যাল-ফিক্স
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু: লোকাল-ক্লোন স্টেল ছিল (session244-যুগ); fetch-পরে origin=session271/Task111 আবিষ্কৃত — rebase-এ png-আর্টিফ্যাক্ট-সংঘর্ষ ×২৬ (--ours=রিমোট-নতুন-আর্টিফ্যাক্ট নেয়া) + কোড-ফাইল ক্লিন-মার্জ
+- লাইভ-প্রমাণ (curl): sitemap=31-URL (২৫-স্ট্যাটিক+৬-নোটিশ, আর্টিকেল/QA=শূন্য!) + x-powered-by: Express-উন্মুক্ত + /questions/12 ও /qa/12 উভয়ে 200
+- অডিট-দাবি-ভেরডিক্ট: ① sitemap-ক্র্যাশ=সত্যি (seo.js posts.updated_at সিলেক্ট — কলাম-স্কিমাতেই-নেই (db.js CREATE TABLE posts লাইন-169 প্রমাণ), নীরব catch) ② URL-দ্বৈত=সত্যি (social.js অ্যালিয়াস-দ্বৈত-200; canonical ঠিক ছিল) ③ PII-ব্যাকআপ-git-এ=সত্যি (members-user-links-2026-09-20.json — ৮৯-সদস্য-লিঙ্ক+SQL-hint) ④ x-powered-by=সত্যি ⑤ মোনোলিথ-সাইজ=সত্যি (db.js 241KB/social.js 268KB/dashboard.js 124KB/server.js 87KB — তবে-এটা-দীর্ঘমেয়াদি) ⑥ "রিপো-রুটে Next.js-দূষণ"=মিথ্যা (আসল-রিপো পরিষ্কার; দূষণ ছিল অন্য-AI-এর-নিজস্ব-স্যান্ডবক্স-ZIP-এ) — তাদের rm -rf-কমান্ড চালানো-উচিত-নয়
+
+## এ-রাউন্ডে সম্পন্ন (session272)
+- **[sitemap-ক্র্যাশ-ফিক্স — Critical SEO]:** routes/seo.js posts-কুয়েরি updated_at→বাদ; lastmod=COALESCE(published_at, created_at); ফিল্টার=/articles-তালিকার-হুবহু-মিরর (article: post_kind='writing'+archive_visible=1+shared_from IS NULL; question: post_kind='question') — avatar_update/share-জাতীয়-সিস্টেম-পোস্ট-সাইটম্যাপে-ফাঁসবে-না; নীরব-catch→console.error (session243-শিক্ষা-প্রয়োগ)
+- **[RSS-বিশুদ্ধতা]:** /rss.xml-কুয়েরিতেও-একই-writing/question-ফিল্টার — প্রোফাইল-পিকচার-নোটিফিকেশন-পোস্ট-ফিড-থেকে-বাদ (অডিট-অবজারভেশন-ফিক্স)
+- **[URL-একীকরণ]:** /questions/:id→301→/qa/:id (social.js — অ্যালিয়াস-200-বিলোপ; encodeURIComponent) + QaListItem.ejs-লিঙ্ক /qa/:id-তে (রিডাইরেক্ট-চেইন-শূন্য); /questions/new-ফর্ম-অ্যালিয়াস-অক্ষুণ্ণ
+- **[x-powered-by]:** server.js app.disable('x-powered-by') — স্ট্যাক-ফিঙ্গারপ্রিন্ট-হাইড
+- **[PII-ক্লিনআপ]:** git rm --cached lekhok-forum/db/backups/members-user-links-2026-09-20.json + রুট-.gitignore-এ lekhok-forum/db/backups/ (runtime-কোড-backups-পড়ে-না — rg-প্রমাণ); ⚠️ git-হিস্ট্রি-পার্জ (filter-repo+force-push) এখনো-বাকি — ইউজার-সম্মতিতে-করণীয় (প্যারালাল-ক্লোন/ভল্ট-প্রভাব)
+- **টেস্ট:** ব্যাটারি s231→s246+lf64 ALL-GREEN (LEKHOK_ROOT=/home/z/lekhok-forum-এক্সপোর্ট-গোটচা — সুইট-ডিফল্ট-ROOT-স্টেল); sql.js-স্মোক-সিড-প্রমাণ (TAG Task245-SM: writing-article→sitemap-ভুক্ত ✓, question→/qa-200 ✓, /questions→301 ✓, avatar_update→sitemap+RSS-বর্জিত ✓, x-powered-by-অনুপস্থিত ✓; cleanup-পরে CLEANUP-ROWS=[] জঞ্জাল-শূন্য); rebase-পরে মার্জড-ট্রি পুনঃযাচাই s244+lf64 ALL-GREEN + node --check ×৩
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ; device-flow-অবসর
+- **গিট-হিস্ট্রিতে PII এখনো আছে** (পুরনো-কমিটে) — GSC/ক্রলার ইতোমধ্যে-সাইটম্যাপ-ছাড়া-পেজ-আবিষ্কার-করতে-পারে; পরবর্তী-রাউন্ডে filter-repo+force-push-সিদ্ধান্ত + প্রয়োজনে-সদস্য-সচেতনতা
+- অডিটের-বাকি-বৈধ-প্রস্তাব (মোনোলিথ-ভাঙা social.js/db.js, Gist-ভল্ট-বিকল্প) = দীর্ঘমেয়াদি — ধাপে-ধাপে
+- পরের-এজেন্ট: **session273 লেবেল (worklog Task ID 113)**; PLANS session272-নোট-অবশ্যই-পড়ুন (seo-ফিল্টার-চুক্তি + LEKHOK_ROOT-এক্সপোর্ট); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- রিমোট main = push-পরবর্তী HEAD (session272-জোড়া: feature + worklog); working-tree ক্লিন
