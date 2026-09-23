@@ -183,11 +183,19 @@
           <span class="ep-cal-title"><i class="fas fa-calendar-days" aria-hidden="true"></i> পুরোনো সংখ্যা</span>
           <span class="ep-cal-nav">
             <button type="button" class="ep-cal-btn" id="epCalPrev" aria-label="আগের মাস"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
-            <span class="ep-cal-month" id="epCalMonth">—</span>
+            <button type="button" class="ep-cal-month" id="epCalMonth" aria-haspopup="true" aria-expanded="false" title="মাস-তালিকা খুলুন">—</button>
             <button type="button" class="ep-cal-btn" id="epCalNext" aria-label="পরের মাস"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
           </span>
         </div>
         <div class="ep-cal-grid" id="epCalGrid"></div>
+        <div class="ep-cal-mpanel" id="epCalMPanel" hidden>
+          <div class="ep-cal-myear">
+            <button type="button" class="ep-cal-btn" id="epCalMYPrev" aria-label="আগের বছর"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            <span class="ep-cal-mylabel" id="epCalMY">—</span>
+            <button type="button" class="ep-cal-btn" id="epCalMYNext" aria-label="পরের বছর"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+          </div>
+          <div class="ep-cal-mgrid" id="epCalMGrid" role="listbox" aria-label="মাস নির্বাচন"></div>
+        </div>
       </div>
       <div class="ep-side-head">
         <div class="ep-filter-top">
@@ -1218,6 +1226,90 @@
   var elCalPrev = document.getElementById('epCalPrev'), elCalNext = document.getElementById('epCalNext');
   if (elCalPrev) elCalPrev.addEventListener('click', function () { calM++; if (calM > 11) { calM = 0; calY++; } calRender(); });
   if (elCalNext) elCalNext.addEventListener('click', function () { calM--; if (calM < 0) { calM = 11; calY--; } calRender(); });
+
+  /* ═══════════ session283 (cron 403679): ক্যালেন্ডারে মাস-তালিকা-শর্টকাট (ep283) ═══════════
+     মাস-লেবেল-ক্লিকে ইন-কার্ড ডিসক্লোজার-প্যানেল: বছর-স্টেপার + ১২-মাস-গ্রিড (তথ্য-আছে-মাস-ডট);
+     মাস-ক্লিকে সেই-মাসের প্রথম-সংরক্ষিত-দিনে calJump (দূর-মাসে এক-ক্লিক — prev/next-পুনরাবৃত্তি-শূন্য);
+     Escape/বাইরে-ক্লিকে-বন্ধ; ক্যালেন্ডার-বুট-চুক্তি অক্ষুণ্ণ; __ep283QA হুক। */
+  var elCalMPanel = document.getElementById('epCalMPanel');
+  var elCalMY = document.getElementById('epCalMY');
+  var elCalMYPrev = document.getElementById('epCalMYPrev');
+  var elCalMYNext = document.getElementById('epCalMYNext');
+  var elCalMGrid = document.getElementById('epCalMGrid');
+  var ep283Open = false, ep283Year = 0, ep283Last = '', ep283HasN = 0;
+  function ep283Avail() {
+    var m = {};
+    Object.keys(byDate).forEach(function (iso) {
+      var p = /^(\d{4})-(\d{2})/.exec(iso); if (!p) return;
+      var y = +p[1], mo = +p[2] - 1;
+      if (!m[y]) m[y] = {};
+      m[y][mo] = true;
+    });
+    return m;
+  }
+  function ep283Render() {
+    if (!elCalMGrid || !elCalMY) return;
+    var av = ep283Avail();
+    if (!ep283Year) ep283Year = calY || new Date().getFullYear();
+    elCalMY.textContent = bnDigits(ep283Year);
+    var frag = '', has = 0;
+    for (var mo = 0; mo < 12; mo++) {
+      var ok = !!(av[ep283Year] && av[ep283Year][mo]);
+      if (ok) has++;
+      var cur = (ep283Year === calY && mo === calM);
+      frag += '<button type="button" class="ep-cal-m' + (ok ? ' has' : '') + (cur ? ' is-cur' : '') +
+        '" data-m="' + mo + '" role="option"' + (ok ? '' : ' disabled') +
+        ' aria-selected="' + (cur ? 'true' : 'false') + '">' + bnMonths279[mo].slice(0, 2) + '</button>';
+    }
+    elCalMGrid.innerHTML = frag;
+    ep283HasN = has;
+  }
+  function ep283OpenPanel() {
+    if (!elCalMPanel || ep283Open) return;
+    ep283Open = true;
+    ep283Year = calY;
+    ep283Render();
+    elCalMPanel.hidden = false;
+    if (elCalMonth) { elCalMonth.setAttribute('aria-expanded', 'true'); elCalMonth.classList.add('is-open'); }
+  }
+  function ep283ClosePanel() {
+    if (!elCalMPanel || !ep283Open) return;
+    ep283Open = false;
+    elCalMPanel.hidden = true;
+    if (elCalMonth) { elCalMonth.setAttribute('aria-expanded', 'false'); elCalMonth.classList.remove('is-open'); }
+  }
+  if (elCalMonth) elCalMonth.addEventListener('click', function () { ep283Open ? ep283ClosePanel() : ep283OpenPanel(); });
+  if (elCalMYPrev) elCalMYPrev.addEventListener('click', function () { ep283Year--; ep283Render(); });
+  if (elCalMYNext) elCalMYNext.addEventListener('click', function () { ep283Year++; ep283Render(); });
+  if (elCalMGrid) elCalMGrid.addEventListener('click', function (e) {
+    var b = e.target.closest('.ep-cal-m'); if (!b || b.disabled) return;
+    var mo = +b.getAttribute('data-m');
+    var pre = ep283Year + '-' + ('0' + (mo + 1)).slice(-2) + '-';
+    var first = Object.keys(byDate).filter(function (iso) { return String(iso).indexOf(pre) === 0; }).sort()[0];
+    if (!first) return;
+    ep283Last = first;
+    ep283ClosePanel();
+    calJump(first);
+  });
+  document.addEventListener('click', function (e) {
+    if (!ep283Open) return;
+    var card = elCalMPanel ? elCalMPanel.closest('.ep-cal280') : null;
+    if (card && card.contains(e.target)) return;
+    ep283ClosePanel();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && ep283Open) { e.preventDefault(); ep283ClosePanel(); }
+  });
+  /* session283 QA-হুক (__ep283QA — সারফেস-নেমস্পেস-রীতি; মাস-প্যানেল-প্রমাণ) */
+  window.__ep283QA = {
+    isOpen: function () { return ep283Open; },
+    year: function () { return ep283Year; },
+    has: function () { return ep283HasN; },
+    jumped: function () { return ep283Last; },
+    open: function () { ep283OpenPanel(); },
+    close: function () { ep283ClosePanel(); },
+    render: function () { ep283Render(); }
+  };
 
   /* ── ৪. বার-তারিখ-টেক্সট (বার-সহ পূর্ণ বাংলা তারিখ) ── */
   var bnDayFmt280 = null;

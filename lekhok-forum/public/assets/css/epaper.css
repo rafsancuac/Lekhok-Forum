@@ -613,3 +613,22 @@
 .ep-ps-empty { padding: 14px 12px; font-family: var(--font-heading); font-size: .74rem; font-weight: 700; color: var(--lf-text-tertiary); text-align: center; }
 @media (max-width: 600px) { .ep-ps-combo { max-width: 150px; font-size: .74rem; } .ep-ps-panel { min-width: 236px; } }
 @media (prefers-reduced-motion: reduce) { .ep-ps-panel { animation: none; } .ep-ps-combo-chev { transition: none; } .ep-ps-opt, .ep-ps-sclear, .ep-ps-combo { transition: none; } }
+
+/* ═══ session283 — ক্যালেন্ডারে মাস-তালিকা-শর্টকাট (ep283 — হেক্স-শূন্য টোকেন-শুধু;
+       ইন-কার্ড ডিসক্লোজার: বছর-স্টেপার + ১২-মাস-গ্রিড + তথ্য-ডট + এক-ক্লিক-জাম্প) ═══ */
+.ep-cal-month { border: none; background: transparent; cursor: pointer; border-radius: 7px; padding: 3px 6px; transition: background .15s ease, color .15s ease; }
+.ep-cal-month:hover, .ep-cal-month.is-open { background: var(--lf-green-tint); color: var(--lf-brand-primary); }
+.ep-cal-month:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 1px; }
+.ep-cal-mpanel { border-top: 1px dashed var(--lf-ui-border-strong); margin-top: 9px; padding-top: 9px; animation: ep-cal-m-in .16s ease; }
+@keyframes ep-cal-m-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.ep-cal-myear { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 7px; }
+.ep-cal-mylabel { font-family: var(--font-heading); font-size: .78rem; font-weight: 800; color: var(--lf-brand-primary); min-width: 64px; text-align: center; }
+.ep-cal-mgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.ep-cal-m { position: relative; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--lf-text-primary); font-family: var(--font-heading); font-size: .62rem; font-weight: 700; padding: 7px 0 8px; cursor: pointer; transition: background .12s ease, color .12s ease, border-color .12s ease; }
+.ep-cal-m:hover:not(:disabled) { background: var(--lf-green-tint); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-cal-m:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
+.ep-cal-m:disabled { opacity: .32; cursor: default; }
+.ep-cal-m.has::after { content: ''; position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--lf-brand-primary); }
+.ep-cal-m.is-cur { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); font-weight: 800; }
+.ep-cal-m.is-cur::after { background: var(--lf-white); }
+@media (prefers-reduced-motion: reduce) { .ep-cal-mpanel { animation: none; } .ep-cal-month, .ep-cal-m { transition: none; } }
