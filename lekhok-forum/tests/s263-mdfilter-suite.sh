@@ -95,7 +95,7 @@ agent-browser open "$BASE/logout" >/dev/null 2>&1; sleep 0.4
 agent-browser open "$BASE/admin/logout" >/dev/null 2>&1; sleep 0.4
 agent-browser open "$BASE/moderator" >/dev/null 2>&1; sleep 1.2
 PREURL=$(agent-browser get url 2>/dev/null || echo '')
-if echo "$PREURL" | grep -q '/moderator'; then
+if echo "$PREURL" | grep -qE '/moderator/?$'; then # session265: অ্যাঙ্করড-চেক (session264-গোটচা-প্রথা — /moderator/login ভবিষ্যৎ-সুরক্ষা)
   ok "testadmin-সেশন-সক্রিয় (সরাসরি-পথ)"
 else
   agent-browser open "$BASE/admin/login" >/dev/null 2>&1; sleep 1

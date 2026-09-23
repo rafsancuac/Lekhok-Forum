@@ -8,6 +8,25 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* session265 — অ্যাডমিন কমপ্লেইন্স তাৎক্ষণিক-ফিল্টার (ac265 — হেক্স-শূন্য টোকেন-শুধু; adf264-প্যাটার্ন-মিরর) */
+    .ac-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .ac-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .ac-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .ac-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .ac-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .ac-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .ac-instant-clear:active { transform: scale(.96); }
+    .ac-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .ac-count-chip[hidden] { display: none; }
+    .ac-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .ac-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .ac-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .ac-zero[hidden] { display: none; }
+    .card[data-ac-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .ac-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .ac-kbd-hint { display: none; } .ac-instant { padding: 9px 11px; } }
+  </style>
 </head>
 <body>
 <%- include('./partials/sidebar') %>
@@ -23,6 +42,17 @@
     <a href="/admin/complaints?status=resolved" class="btn <%= status === 'resolved' ? 'btn-primary' : '' %> btn-sm">সমাধান হয়েছে</a>
     <a href="/admin/complaints?status=dismissed" class="btn <%= status === 'dismissed' ? 'btn-primary' : '' %> btn-sm">বাতিল</a>
   </div>
+  <div class="ac-instant" id="acInstant265">
+    <i class="fas fa-filter ac-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="acFilter265" class="ac-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — অভিযোগ / জমাদানকারী / স্ট্যাটাস" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="acClear265" class="ac-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="ac-count-chip" id="acCount265" hidden></span>
+    <span class="ac-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
+  <div class="ac-zero" id="acZero265" data-ac-empty hidden>
+    <i class="fas fa-inbox" aria-hidden="true"></i>
+    <span>কোনো অভিযোগ মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
   <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>
   <form method="POST" action="/admin/complaints/bulk-delete" class="bulk-bar" id="bulkBar">
     <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
@@ -31,8 +61,9 @@
   <% if (complaints.length === 0) { %>
     <div class="card empty">কোনো অভিযোগ নেই</div>
   <% } else { %>
-    <% complaints.forEach(c => { %>
-    <div class="card" style="margin-bottom:14px;">
+    <% complaints.forEach((c, i) => { %>
+    <% var acST265 = { 'new': 'নতুন new', 'in_review': 'পর্যালোচনাধীন in_review review', 'resolved': 'সমাধান হয়েছে resolved done', 'dismissed': 'বাতিল dismissed closed' }; %>
+    <div class="card" style="margin-bottom:14px;" data-ac-row="<%= i %>" data-kw="#<%= c.id %> অভিযোগ complaint <%= c.subject || '' %> <%= c.submitter_name || '' %> @<%= c.submitter_username || '' %> /profile/<%= c.submitter_username || '' %> <%= acST265[c.status] || c.status %> <%= c.created_at || '' %> <%= ((c.body || '') + ' ').replace(/\s+/g, ' ').trim().slice(0, 140) %> <%= c.file_name || '' %> সংযুক্তি attachment <%= c.admin_notes || '' %>">
       <label style="display:inline-flex;align-items:center;gap:8px;font-size:.8rem;color:#65676b;margin-bottom:6px;cursor:pointer;"><input type="checkbox" name="bulk_ids" value="<%= c.id %>" style="width:16px;height:16px;"> সিলেক্ট</label>
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
         <div>
@@ -76,5 +107,54 @@
     <% }) %>
   <% } %>
 </div>
+<script>
+  (function () {
+    /* session265 — ac265 তাৎক্ষণিক-ফিল্টার (adf264-প্যাটার্ন-মিরর: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __acQA) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-ac-row]'));
+    var input = document.getElementById('acFilter265');
+    var clearBtn = document.getElementById('acClear265');
+    var countChip = document.getElementById('acCount265');
+    var zeroBox = document.getElementById('acZero265');
+    if (!input) { return; }
+    var total = rows.length;
+    function acApply265() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function acClear265() {
+      input.value = '';
+      acApply265();
+      input.blur();
+    }
+    input.addEventListener('input', acApply265);
+    if (clearBtn) { clearBtn.addEventListener('click', acClear265); }
+    input.addEventListener('keydown', function (ac) {
+      if (ac.key === 'Escape') { ac.stopPropagation(); acClear265(); }
+    });
+    document.addEventListener('keydown', function (ac) {
+      if (ac.key !== 'f' || ac.altKey || ac.ctrlKey || ac.metaKey) { return; }
+      var t = ac.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ac.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__acQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: acApply265,
+      clear: acClear265
+    };
+  })();
+</script>
 </body>
 </html>
