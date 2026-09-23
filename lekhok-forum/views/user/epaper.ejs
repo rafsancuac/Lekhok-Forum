@@ -114,21 +114,50 @@
         <% } %>
       </div>
     </div>
-    <div class="ep-head-r">
-      <div class="ep-day-step">
-        <button type="button" class="ep-step-btn" id="epPrevDay" title="আগের দিন" aria-label="আগের দিনের ই-পেপার"><i class="fas fa-chevron-right"></i></button>
-        <input type="date" class="ep-date-input" id="epDateInput" value="<%= todayIso %>" aria-label="তারিখ নির্বাচন" />
-        <button type="button" class="ep-step-btn" id="epNextDay" title="পরের দিন" aria-label="পরের দিনের ই-পেপার"><i class="fas fa-chevron-left"></i></button>
-      </div>
-      <button type="button" class="ep-btn-today" id="epTodayBtn"><i class="fas fa-rotate-left"></i> আজকের পত্রিকা</button>
-    </div>
   </div>
 
   <% if (hasPayload) { %>
+  <%# ── session279 (ইউজার-স্পেক, PressReader-স্থাপত্য): কুইক-সুইচ স্ট্রিপ — কন্ট্রোল-বারের ঠিক উপরে
+      জনপ্রিয় পত্রিকাগুলোর স্ক্রলেবল পিল-বাড়ি; এক-ক্লিকেই ড্রপডাউন না-খুলে পত্রিকা বদল।
+      পিলগুলো JS নিজেই ভরে (বর্তমান-তারিখের র‍্যাংক-ক্রম) — পেজ-রিলোড শূন্য ── %>
+  <div class="ep-switchstrip" id="epSwitchStrip" role="tablist" aria-label="দ্রুত পত্রিকা পরিবর্তন">
+    <span class="ep-ss-label"><i class="fas fa-newspaper" aria-hidden="true"></i> শীর্ষ পত্রিকা:</span>
+    <div class="ep-ss-pills" id="epSsPills"></div>
+    <a href="#epDir226" class="ep-ss-all" id="epSsAll">
+      সকল পত্রিকা (<%= (newspapers || []).length %>+) <i class="fas fa-arrow-right" aria-hidden="true"></i>
+    </a>
+  </div>
   <%# ═══════════ টু-প্যানেল ওয়ার্কস্পেস ═══════════ %>
   <div class="ep-grid">
     <%# ───────── ডান-কলামের-আগে মোবাইলে ভিউয়ার — order দিয়ে ডেস্কটপে বাম/ডান ───────── %>
     <section class="ep-viewer" aria-label="ই-পেপার ভিউয়ার">
+      <%# ── session279 (ইউজার-স্পেক): প্রেসরিডার-ধাঁচের কন্ট্রোল বার —
+          বামে [প্রধান পত্রিকা-সিলেক্টর ▾] (তারিখের ঠিক বামে) → [তারিখ] → [সংখ্যা ▾];
+          ডানে [পাতা-পেজিনেশন] + [সব পাতা]। সব কন্ট্রোল ভিউয়ারের-ভেতরে — ফুলস্ক্রিনেও পাওয়া যায় ── %>
+      <div class="ep-ctlbar">
+        <div class="ep-ctlbar-l">
+          <div class="ep-ps-wrap">
+            <i class="fas fa-building-columns ep-ps-ico" aria-hidden="true"></i>
+            <select class="ep-paper-select" id="epPaperSelect" aria-label="পত্রিকা নির্বাচন"></select>
+          </div>
+          <div class="ep-day-step ep-day-step-sm">
+            <button type="button" class="ep-step-btn" id="epPrevDay" title="আগের দিন" aria-label="আগের দিনের ই-পেপার"><i class="fas fa-chevron-right"></i></button>
+            <input type="date" class="ep-date-input" id="epDateInput" value="<%= todayIso %>" aria-label="তারিখ নির্বাচন" />
+            <button type="button" class="ep-step-btn" id="epNextDay" title="পরের দিন" aria-label="পরের দিনের ই-পেপার"><i class="fas fa-chevron-left"></i></button>
+          </div>
+          <select class="ep-issue-select" id="epIssueSelect" aria-label="এই পত্রিকার সংরক্ষিত সংখ্যা" hidden></select>
+          <button type="button" class="ep-btn-today" id="epTodayBtn"><i class="fas fa-rotate-left"></i> আজকের পত্রিকা</button>
+        </div>
+        <div class="ep-ctlbar-r">
+          <div class="ep-pagepager" id="epPagePager" hidden role="group" aria-label="পাতা নেভিগেশন">
+            <button type="button" class="ep-pg-nav" id="epPgPrev" title="পূর্ববর্তী পাতা" aria-label="পূর্ববর্তী পাতা"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            <div class="ep-pg-nums" id="epPgNums"></div>
+            <button type="button" class="ep-pg-nav" id="epPgNext" title="পরবর্তী পাতা" aria-label="পরবর্তী পাতা"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+            <span class="ep-pg-count" id="epPgCount">১/১</span>
+          </div>
+          <button type="button" class="ep-btn-allpages" id="epAllPagesBtn" hidden aria-pressed="false"><i class="fas fa-table-cells" aria-hidden="true"></i> সব পাতা</button>
+        </div>
+      </div>
       <div class="ep-viewer-bar">
         <div class="ep-viewer-name">
           <i class="fas fa-book-open"></i>
@@ -390,6 +419,7 @@
 
   function renderList() {
     var rows = filtered();
+    syncStrip(); // session279: কুইক-সুইচ স্ট্রিপ তারিখ-অনুযায়ী পুনর্নির্মাণ (active সিঙ্কসহ)
     elCount.textContent = bnDigits(rows.length) + ' টি';
     if (!rows.length) {
       elList.innerHTML = '<div class="ep-list-empty"><i class="far fa-folder-open"></i>' +
@@ -429,6 +459,7 @@
       else { elCurRank.hidden = true; elCurRank.textContent = ''; }
     }
     elCurDate.textContent = '· ' + p.dateBn;
+    syncPaperSelect(p); syncIssueSelect(p); syncStripActive(); // session279: প্রেসরিডার-কন্ট্রোল সিঙ্ক
     renderStage(p); // session183: জুম পেপার-সুইচেও ধরে থাকে — ধারাবাহিক পাঠ-অভিজ্ঞতা
     renderList();
   }
@@ -563,6 +594,7 @@
       var h = elStage.querySelector('.ep-page-holder[data-n="' + n + '"]');
       if (h) { h.scrollIntoView({ behavior: 'smooth', block: 'start' }); sel.blur(); }
     };
+    buildPager(numPages); // session279: সংখ্যাযুক্ত পেজিনেশন + কাউন্টার সক্রিয়
     st.jumpSync = function () {
       if (!elStage.querySelector) return;
       var stageTop = elStage.getBoundingClientRect().top;
@@ -572,6 +604,7 @@
         if (d < bestD) { bestD = d; best = Number(h.getAttribute('data-n')) || 1; }
       });
       if (String(sel.value) !== String(best)) sel.value = String(best);
+      syncPager(best); // session279: পেজিনেশন বাটন/কাউন্টারও স্ক্রলে সিঙ্ক
     };
     if (!st._jumpBound) {
       st._jumpBound = true;
@@ -589,6 +622,7 @@
     var sel = document.getElementById('epPageJump');
     if (!sel) return;
     sel.hidden = true; sel.disabled = true; sel.innerHTML = ''; sel._pages = 0;
+    hidePager(); // session279: পেজিনেশন/সব-পাতা-গ্রিডও রিসেট (iframe-ফলব্যাক/প্রচ্ছদ-মোডে অদৃশ্য)
   }
 
   function openReader(p) {
@@ -606,6 +640,7 @@
       elStage.innerHTML = '';
       elStage.appendChild(w);
       w.scrollTop = sc.t; w.scrollLeft = sc.l;
+      setGrid(false); // session279: পেপার-সুইচে গ্রিড-মোড রিসেট (নতুন-র‍্যাপে ক্লাস নেই)
       applyStageTransform();
       armPageJump(cachedAlive.st, cachedAlive.numPages);
       return;
@@ -993,6 +1028,186 @@
     renderList();
     queueWarm();
   }
+
+  /* ═══════════ session279 (ইউজার-স্পেক): প্রেসরিডার-স্থাপত্যের কন্ট্রোল-মডিউল ═══════════
+     ১) প্রধান পত্রিকা-সিলেক্টর (optgroup: জাতীয় / চট্টগ্রাম-আঞ্চলিক / ইংরেজি) — কন্ট্রোল-বারের শুরুতে
+     ২) সংখ্যা-সিলেক্টর — নির্বাচিত পত্রিকার সংরক্ষিত সব তারিখ (একাধিক হলে)
+     ৩) সংখ্যাযুক্ত পেজিনেশন (‹ ১ ২ ৩ › + কাউন্টার) — pdf.js-পাতার সাথে স্ক্রল-সিঙ্ক
+     ৪) "সব পাতা" গ্রিড-মোড — একই .ep-pages ধারকে CSS-টগলে ২-কলাম পাতার-জাল; পাতায়-ক্লিকে জাম্প
+     ৫) কুইক-সুইচ স্ট্রিপ — বর্তমান-তারিখের পত্রিকাগুলোর পিল; এক-ক্লিকে সুইচ, পেজ-রিলোড শূন্য ═══════════ */
+  var elPaperSel = document.getElementById('epPaperSelect');
+  var elIssueSel = document.getElementById('epIssueSelect');
+  var pagerWrap = document.getElementById('epPagePager');
+  var pagerNums = document.getElementById('epPgNums');
+  var pagerCount = document.getElementById('epPgCount');
+  var elAllPagesBtn = document.getElementById('epAllPagesBtn');
+  var pagerTotal = 0, pagerCur = 1, gridOn = false;
+  var bnMonths279 = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+  function bnShort279(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!m) return String(iso || '');
+    return bnDigits(+m[3]) + ' ' + bnMonths279[+m[2] - 1] + ' ' + bnDigits(+m[1]);
+  }
+  function shortName279(n) { return String(n || '').replace(/^দৈনিক\s+/, ''); }
+  // গ্রুপ-শ্রেণিবিন্যাস: নাম-হিউরিস্টিক (বট-সিঙ্কড আসল-নাম ও ফরম্যাটেড-টাইটেল দুই-রকমই সামলায়)
+  function paperGroup279(name) {
+    if (/আজাদী|পূর্বকোণ|সুপ্রভাত|চট্টগ্রাম|করণফুলী|আগামীর সময়|দক্ষিণ|জার্নাল অফ চট্টগ্রাম/.test(name)) return 'regional';
+    if (/[A-Za-z]{3,}/.test(name) || /স্টার|অবজারভার|ট্রিবিউন|নিউ এজ|টাইমস অব|ডেইলি পোস্ট|স্ট্যান্ডার্ড/.test(name)) return 'english';
+    return 'national';
+  }
+  var groupLabels279 = { national: 'জাতীয় দৈনিক', regional: 'চট্টগ্রাম ও আঞ্চলিক', english: 'ইংরেজি দৈনিক' };
+
+  /* ── ১. প্রধান পত্রিকা-সিলেক্টর: একবার-নির্মাণ (payload প্রতি-লোডে স্থির) ── */
+  function buildPaperSelect() {
+    if (!elPaperSel) return;
+    var seen = {}, byGrp = { national: [], regional: [], english: [] };
+    papers.forEach(function (p) {
+      if (seen[p.name]) return; seen[p.name] = true;
+      byGrp[paperGroup279(p.name)].push(p);
+    });
+    var frag = '';
+    ['national', 'regional', 'english'].forEach(function (g) {
+      var rows = byGrp[g].sort(rankCmp);
+      if (!rows.length) return;
+      frag += '<optgroup label="' + groupLabels279[g] + '">';
+      rows.forEach(function (p) { frag += '<option value="' + p.name.replace(/"/g, '&quot;') + '">' + p.name + '</option>'; });
+      frag += '</optgroup>';
+    });
+    elPaperSel.innerHTML = frag;
+  }
+  function syncPaperSelect(p) {
+    if (!elPaperSel) return;
+    if (elPaperSel.value !== p.name) elPaperSel.value = p.name;
+  }
+  if (elPaperSel) elPaperSel.addEventListener('change', function () {
+    var name = elPaperSel.value; if (!name) return;
+    var rows = papers.filter(function (p) { return p.name === name; })
+      .sort(function (a, b) { return String(a.date) < String(b.date) ? 1 : -1; });
+    if (!rows.length) return;
+    var d = elDate.value;
+    var pick = rows.filter(function (p) { return String(p.date).slice(0, 10) === d; })[0] || rows[0];
+    if (String(pick.date).slice(0, 10) !== d) elDate.value = String(pick.date).slice(0, 10);
+    select(pick.id); queueWarm();
+  });
+
+  /* ── ২. সংখ্যা-সিলেক্টর: একই পত্রিকার সব সংরক্ষিত তারিখ ── */
+  function syncIssueSelect(p) {
+    if (!elIssueSel) return;
+    var rows = papers.filter(function (x) { return x.name === p.name; });
+    if (rows.length < 2) { elIssueSel.hidden = true; elIssueSel.innerHTML = ''; return; }
+    var frag = '';
+    rows.forEach(function (r) {
+      var d = String(r.date).slice(0, 10);
+      frag += '<option value="' + r.id + '"' + (String(r.id) === String(p.id) ? ' selected' : '') + '>' +
+        bnShort279(d) + (d === todayIso ? ' • আজ' : '') + '</option>';
+    });
+    elIssueSel.innerHTML = frag;
+    elIssueSel.hidden = false;
+  }
+  if (elIssueSel) elIssueSel.addEventListener('change', function () {
+    var p = papers.filter(function (x) { return String(x.id) === String(elIssueSel.value); })[0];
+    if (!p) return;
+    elDate.value = String(p.date).slice(0, 10);
+    select(p.id); queueWarm();
+  });
+
+  /* ── ৩. সংখ্যাযুক্ত পেজিনেশন (pdf.js-ডকের numPages-এ) ── */
+  function buildPager(numPages) {
+    if (!pagerWrap) return;
+    if (!numPages || numPages < 2) { pagerWrap.hidden = true; pagerTotal = 0; return; }
+    pagerTotal = numPages;
+    pagerWrap.hidden = false;
+    if (elAllPagesBtn) elAllPagesBtn.hidden = false;
+    renderPagerNums(1); syncPager(1);
+  }
+  function renderPagerNums(cur) {
+    var maxB = 7, s, e;
+    if (pagerTotal <= maxB) { s = 1; e = pagerTotal; }
+    else { s = Math.max(1, cur - 3); e = Math.min(pagerTotal, s + maxB - 1); s = Math.max(1, e - maxB + 1); }
+    var frag = '';
+    for (var n = s; n <= e; n++) frag += '<button type="button" class="ep-pg-btn" data-n="' + n + '" aria-label="পাতা ' + bnDigits(n) + '" aria-current="' + (n === cur) + '">' + bnDigits(n) + '</button>';
+    pagerNums.innerHTML = frag; pagerCur = cur;
+  }
+  function syncPager(cur) {
+    if (!pagerWrap || !pagerTotal) return;
+    pagerCur = Math.min(Math.max(1, cur), pagerTotal);
+    if (!pagerNums.querySelector('.ep-pg-btn[data-n="' + pagerCur + '"]')) renderPagerNums(pagerCur);
+    pagerNums.querySelectorAll('.ep-pg-btn').forEach(function (b) {
+      var on = Number(b.getAttribute('data-n')) === pagerCur;
+      b.classList.toggle('is-on', on); b.setAttribute('aria-current', on);
+    });
+    if (pagerCount) pagerCount.textContent = bnDigits(pagerCur) + '/' + bnDigits(pagerTotal);
+    var pv = document.getElementById('epPgPrev'), nx = document.getElementById('epPgNext');
+    if (pv) pv.disabled = pagerCur <= 1;
+    if (nx) nx.disabled = pagerCur >= pagerTotal;
+  }
+  function gotoPage(n) {
+    var h = elStage.querySelector('.ep-page-holder[data-n="' + n + '"]'); if (!h) return;
+    if (gridOn) setGrid(false);
+    h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function hidePager() {
+    if (pagerWrap) pagerWrap.hidden = true;
+    pagerTotal = 0;
+    if (elAllPagesBtn) { elAllPagesBtn.hidden = true; elAllPagesBtn.setAttribute('aria-pressed', 'false'); elAllPagesBtn.classList.remove('is-on'); }
+    setGrid(false);
+  }
+  if (pagerNums) pagerNums.addEventListener('click', function (e) {
+    var b = e.target.closest('.ep-pg-btn'); if (b) gotoPage(Number(b.getAttribute('data-n')));
+  });
+  var pgPrev = document.getElementById('epPgPrev'), pgNext = document.getElementById('epPgNext');
+  if (pgPrev) pgPrev.addEventListener('click', function () { gotoPage(pagerCur - 1); });
+  if (pgNext) pgNext.addEventListener('click', function () { gotoPage(pagerCur + 1); });
+
+  /* ── ৪. "সব পাতা" গ্রিড-মোড — CSS-টগল (.ep-pages.is-grid) + পাতায়-ক্লিকে জাম্প ── */
+  function setGrid(on) {
+    gridOn = !!on;
+    var pages = elStage.querySelector('.ep-pages');
+    if (pages) pages.classList.toggle('is-grid', gridOn);
+    if (elAllPagesBtn) { elAllPagesBtn.setAttribute('aria-pressed', String(gridOn)); elAllPagesBtn.classList.toggle('is-on', gridOn); }
+  }
+  if (elAllPagesBtn) elAllPagesBtn.addEventListener('click', function () { setGrid(!gridOn); });
+  elStage.addEventListener('click', function (e) {
+    if (!gridOn) return;
+    var h = e.target.closest('.ep-page-holder'); if (!h) return;
+    var n = Number(h.getAttribute('data-n')) || 1;
+    setGrid(false); gotoPage(n);
+  });
+
+  /* ── ৫. কুইক-সুইচ স্ট্রিপ: বর্তমান-তারিখের পত্রিকা-পিল ── */
+  var elStrip = document.getElementById('epSwitchStrip');
+  var elStripPills = document.getElementById('epSsPills');
+  function syncStrip() {
+    if (!elStrip || !elStripPills) return;
+    var rows = (byDate[elDate.value] || []).slice().sort(rankCmp);
+    if (!rows.length) { elStrip.hidden = true; return; }
+    elStrip.hidden = false;
+    var frag = '';
+    rows.slice(0, 14).forEach(function (p) {
+      frag += '<button type="button" role="tab" aria-selected="' + (p.id === activeId) + '" class="ep-ss-pill' + (p.id === activeId ? ' is-on' : '') +
+        '" data-id="' + p.id + '" title="' + p.name.replace(/"/g, '&quot;') + '">' + shortName279(p.name) + '</button>';
+    });
+    if (rows.length > 14) frag += '<span class="ep-ss-more">+' + bnDigits(rows.length - 14) + '</span>';
+    elStripPills.innerHTML = frag;
+  }
+  function syncStripActive() {
+    if (!elStripPills) return;
+    elStripPills.querySelectorAll('.ep-ss-pill').forEach(function (b) {
+      var on = Number(b.getAttribute('data-id')) === activeId;
+      b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on);
+    });
+  }
+  if (elStripPills) elStripPills.addEventListener('click', function (e) {
+    var b = e.target.closest('.ep-ss-pill'); if (b) select(Number(b.getAttribute('data-id')));
+  });
+  var elSsAll = document.getElementById('epSsAll');
+  if (elSsAll) elSsAll.addEventListener('click', function (e) {
+    e.preventDefault();
+    var t = document.getElementById('epDir226TabDir'); // ডিরেক্টরি-ট্যাবে নরম-সুইচ (রিলোড শূন্য)
+    if (t) t.click(); else { try { location.hash = '#epDir226'; } catch (_) {} }
+  });
+
+  buildPaperSelect(); // বুটে-একবার (select() চেইনের আগে — নইলে প্রথম sync-এ value-মিলবে না)
 
   // ── বুট: আজকের (বা সর্বশেষ সিঙ্কড) দিন + সেই-দিনের শীর্ষ-র‍্যাংকের পত্রিকা (session172) ──
   // session233-boot-hook: হোমের 'আজকের ই-পেপার' ব্যান্ডের deep-link /epaper?file=<id> —

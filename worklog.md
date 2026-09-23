@@ -4025,3 +4025,21 @@ Work Log:
 
 Stage Summary:
 - ইউজার-দৃষ্টিতে পেপার-সমস্যা সমাধান ✓; এই-সার্ভারের বট-কপি এখনও মৃত-session-এ — হয় বন্ধ-রাখা (এক-সেশন-এক-কপি-নিয়ম) নয়তো নতুন-session-এ-রিস্টার্ট — ইউজার/প্যারালাল-এজেন্ট-সিদ্ধান্ত-প্রতীক্ষিত; কিপার পরের-রাউন্ডেও exit 0 দেখতে-পাবে
+
+---
+Task ID: 119 (Session 279)
+Agent: Z.ai Code (main session)
+Task: ইউজার-স্পেক — ই-পেপার রিডারে PressReader-মানের পত্রিকা-নাম স্থাপত্য: ① কন্ট্রোল-বারের শুরুতে প্রধান পত্রিকা-সিলেক্টর ড্রপডাউন (তারিখের ঠিক বামে) ② কন্ট্রোল-বারের উপরে কুইক-ট্যাব স্ট্রিপ (এক-ক্লিক পত্রিকা-সুইচ) + সংখ্যাযুক্ত পেজিনেশন + সব-পাতা
+
+Work Log:
+- স্যান্ডবক্স-রিসেট-রিকভারি: রিপো-পুনঃক্লোন (ইউজারের নতুন website-PAT, env-ট্রানজিয়েন্ট) + epaper-bot/.env ভল্ট-গিস্ট-থেকে-পুনরুদ্ধার (১৩-কি; TG_SESSION=fresh-লগইন-মিল-প্রমাণিত md5)
+- বট: pm2-পুনঃস্থাপন (npm -g) + epaper-bot অনলাইন — AUTH_KEY_DUPLICATED (অন্য-কপি-সক্রিয়; পেপার-প্রবাহ-চালু প্রমাণ: id46=২৩-সেপ্টে সাইটে) → ৫-মি-পলিট-ফলব্যাক-মোড (one-session-one-copy-নিয়ম-সম্মত)
+- views/user/epaper.ejs: ① epSwitchStrip (শীর্ষ-পত্রিকা-পিল ≤১৪ + সকল-পত্রিকা(৮৩+)→ডিরেক্টরি-ট্যাব) ② ep-ctlbar (epPaperSelect optgroup×৩ [জাতীয়/চট্টগ্রাম-আঞ্চলিক/ইংরেজি — নাম-হিউরিস্টিক] + দিন-স্টেপার head-card-থেকে-স্থানান্তর(ID-অক্ষুণ্ণ) + epIssueSelect [একই-পত্রিকার-সব-তারিখ <২ hidden] + আজকের-বাটন; ডানে epPagePager ‹১-৭›+কাউন্টার + epAllPagesBtn) ③ কন্ট্রোল-মডিউল-JS (buildPaperSelect/syncPaperSelect/syncIssueSelect/buildPager/renderPagerNums/syncPager/gotoPage/hidePager/setGrid/syncStrip/syncStripActive — select()/renderList()/armPageJump()/resetPageJump()/cached-alive-পথে-হুক)
+- epaper.css session279-ব্লক (hex-zero 0→0): পিল-ক্যাপসুল+সিলেক্টর-ব্র্যান্ড-বর্ডার+পেজার-বাটন+গ্রিড-মোড (.ep-pages.is-grid .ep-zoomwrap flex-wrap — zoomwrap-গোটচা) + 600px-মোবাইল + reduced-motion + ফন্ট-চুক্তি (Hind Siliguri=নিয়ন্ত্রণ, Kalpurush=উপ-টেক্সট)
+- QA (agent-browser ই২ই, sql.js-লোকাল): ৮-রো-সিড (২-তারিখ × ৭-পত্রিকা) → স্ট্রিপ-৬-পিল/সিলেক্টর-৭-অপশন-৩-গ্রুপ/issue-২-এডিশন; fetch-intercept ৫-পাতা-PDF → পেজার-১-৫+কাউন্টার-স্ক্রল-সিঙ্ক (৩/৫→৪/৫); গ্রিড-২-কলাম (জ্যামিতি-প্রমাণ 523/853); গ্রিড-ক্লিকে-জাম্প; আজাদী-পিল/ইত্তেফাক-সিলেক্টর/২২-সেপ্টে-issue-সুইচ; দিন-স্টেপার/আজকের-বাটন/সকল-পত্রিকা→ডিরেক্টরি/খালি-তারিখ-ফেরত/deep-link ?file=2; মোবাইল-390 hScroll-শূন্য; guard:design + audit:views(১২২) গ্রিন
+- ডক: PROJECT §২৭৯ + PLANS session279-নোট (zoomwrap-ফ্লেক্স/lekhok.db-পথ/flush-ওভাররাইট/fetch-intercept-কৌশল/ক্যাশ-গোটচা)
+
+Stage Summary:
+- /epaper রিডার এখন প্রেসরিডার-স্থাপত্য: স্ট্রিপে-এক-ক্লিকে পত্রিকা-সুইচ (রিলোড-শূন্য), কন্ট্রোল-বারে পত্রিকা▾+তারিখ+সংখ্যা▾+পেজিনেশন+সব-পাতা; সব-ডেটা বট-সিঙ্কড epaper_files-থেকে-ডাইনামিক (মক-নয়)
+- ফাংশনাল-চুক্তি-অক্ষুণ্ণ: সব-পুরাতন-ID (epDateInput/epPrevDay/epNextDay/epTodayBtn/epPageJump/epCurName...) অপরিবর্তিত; keep-alive-ওয়ার্মার/জুম/ফুলস্ক্রিন/deep-link-সব-আগের-মতো
+- পরের-এজেন্ট (session280, Task-120): push-আগে fetch+rebase; বাকি-প্রস্তাব — সার্চযোগ্য-পত্রিকা-ড্রপডাউন, গ্রিড-মোডে ছোট-ক্যানভাস-প্রি-রেন্ডার, Vercel-কোটা-reset-পরবর্তী-পুশ-যাচাই

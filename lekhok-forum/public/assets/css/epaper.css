@@ -489,3 +489,88 @@
   .epd226-card:hover .epd226-thumb { transform: none; }
 }
 /* ====== session-227 end ====== */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session279 — প্রেসরিডার-স্থাপত্য (ইউজার-স্পেক): কুইক-সুইচ স্ট্রিপ + কন্ট্রোল বার
+   (প্রধান পত্রিকা-সিলেক্টর ▾ + তারিখ + সংখ্যা ▾ + পেজিনেশন + সব-পাতা গ্রিড)
+   নিয়ম অক্ষুণ্ণ: রঙ শুধু var(--lf-*) টোকেন; shadow-এ rgba অনুমোদিত; hex-zero।
+   ফন্ট-চুক্তি: শিরোনাম/ব্যাজ/বাটন = var(--font-heading) (Hind Siliguri);
+                বর্ণনা/উপ-টেক্সট = var(--font-body) (Kalpurush)।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ১. কুইক-সুইচ স্ট্রিপ (কন্ট্রোল-বারের ঠিক উপরে, ফুল-প্রস্থ) ── */
+.ep-switchstrip { display: flex; align-items: center; gap: 10px; background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-card); padding: 8px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.ep-ss-label { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-family: var(--font-heading); font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--lf-text-tertiary); }
+.ep-ss-label i { color: var(--lf-brand-primary); font-size: .74rem; }
+.ep-ss-pills { display: flex; align-items: center; gap: 6px; overflow-x: auto; scroll-behavior: smooth; padding: 2px; min-width: 0; flex: 1; scrollbar-width: none; }
+.ep-ss-pills::-webkit-scrollbar { display: none; }
+.ep-ss-pill { flex-shrink: 0; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); font-family: var(--font-heading); font-size: .76rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.ep-ss-pill:hover { background: var(--lf-green-tint); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-ss-pill.is-on { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); box-shadow: 0 2px 8px rgba(0,0,0,.16); }
+.ep-ss-pill:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 1px; }
+.ep-ss-more { flex-shrink: 0; font-family: var(--font-heading); font-size: .72rem; font-weight: 800; color: var(--lf-text-tertiary); padding: 0 4px; }
+.ep-ss-all { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-heading); font-size: .74rem; font-weight: 800; color: var(--lf-brand-primary); text-decoration: none; padding: 4px 4px 4px 12px; border-left: 1px solid var(--lf-ui-border); white-space: nowrap; transition: opacity .15s ease; }
+.ep-ss-all:hover { text-decoration: underline; }
+.ep-ss-all i { font-size: .68rem; }
+
+/* ── ২. কন্ট্রোল বার (ভিউয়ারের-শীর্ষে: পত্রিকা ▾ │ তারিখ │ সংখ্যা ▾ ··· পেজিনেশন │ সব-পাতা) ── */
+.ep-ctlbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--lf-ui-border); background: linear-gradient(180deg, var(--lf-ui-input-bg), var(--lf-ui-surface)); }
+.ep-ctlbar-l, .ep-ctlbar-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.ep-ps-wrap { position: relative; display: inline-flex; align-items: center; min-width: 0; }
+.ep-ps-ico { position: absolute; left: 11px; font-size: .68rem; color: var(--lf-brand-primary); pointer-events: none; z-index: 1; }
+.ep-paper-select { min-width: 0; max-width: 240px; height: 34px; padding: 0 26px 0 31px; border: 2px solid var(--lf-brand-primary); border-radius: 9px; background: var(--lf-ui-surface); color: var(--lf-brand-primary); font-family: var(--font-heading); font-size: .8rem; font-weight: 800; cursor: pointer; text-overflow: ellipsis; box-shadow: 0 1px 3px rgba(0,0,0,.08); transition: background .15s ease, box-shadow .15s ease; }
+.ep-paper-select:hover { background: var(--lf-green-tint); }
+.ep-paper-select:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
+.ep-day-step-sm { gap: 4px; }
+.ep-day-step-sm .ep-step-btn { width: 30px; height: 30px; border-radius: 8px; }
+.ep-day-step-sm .ep-date-input { height: 30px; font-size: .76rem; border-radius: 8px; }
+.ep-issue-select { height: 34px; max-width: 200px; padding: 0 8px; border: 1px solid var(--lf-ui-border-strong); border-radius: 9px; background: var(--lf-ui-surface); color: var(--lf-text-primary); font-family: var(--font-heading); font-size: .76rem; font-weight: 700; cursor: pointer; transition: border-color .15s ease, color .15s ease; }
+.ep-issue-select:hover { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-issue-select:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
+.ep-ctlbar .ep-btn-today { height: 30px; padding: 0 11px; font-size: .74rem; border-radius: 8px; }
+
+/* ── ৩. সংখ্যাযুক্ত পেজিনেশন ── */
+.ep-pagepager { display: flex; align-items: center; gap: 5px; }
+.ep-pg-nav { width: 30px; height: 30px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); border-radius: 8px; cursor: pointer; font-size: .68rem; display: inline-flex; align-items: center; justify-content: center; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.ep-pg-nav:hover:not(:disabled) { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
+.ep-pg-nav:disabled { opacity: .38; cursor: default; }
+.ep-pg-nums { display: flex; align-items: center; gap: 3px; }
+.ep-pg-btn { min-width: 30px; height: 30px; padding: 0 5px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); border-radius: 8px; font-family: var(--font-heading); font-size: .74rem; font-weight: 800; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.ep-pg-btn:hover { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
+.ep-pg-btn.is-on { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); box-shadow: 0 1px 4px rgba(0,0,0,.14); }
+.ep-pg-count { min-width: 54px; height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: 0 8px; border: 1px solid var(--lf-ui-border); background: var(--lf-ui-input-bg); border-radius: 8px; font-family: var(--font-heading); font-size: .72rem; font-weight: 800; color: var(--lf-text-secondary); white-space: nowrap; }
+
+/* ── ৪. "সব পাতা" টগল-বাটন ── */
+.ep-btn-allpages { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border: 1px solid var(--lf-brand-primary); background: var(--lf-ui-surface); color: var(--lf-brand-primary); border-radius: 9px; font-family: var(--font-heading); font-size: .76rem; font-weight: 800; cursor: pointer; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
+.ep-btn-allpages:hover { background: var(--lf-green-tint); }
+.ep-btn-allpages.is-on { background: var(--lf-brand-primary); color: var(--lf-white); box-shadow: 0 1px 4px rgba(0,0,0,.14); }
+.ep-btn-allpages i { font-size: .7rem; }
+
+/* ── ৫. সব-পাতা গ্রিড-মোড (ধারক: .ep-pages > .ep-zoomwrap > .ep-page-holder —
+       ফ্লেক্স-প্যারেন্ট .ep-zoomwrap-কেই গ্রিড করতে হয়; .ep-pages-শুধু স্ক্রলার) ── */
+.ep-pages.is-grid .ep-zoomwrap { display: flex; flex-flow: row wrap; justify-content: center; align-items: flex-start; gap: 10px; }
+.ep-pages.is-grid .ep-page-holder { width: min(46%, 320px); min-height: 150px; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
+.ep-pages.is-grid .ep-page-holder:hover { border-color: var(--lf-brand-primary); box-shadow: 0 6px 18px rgba(0,0,0,.16); }
+.ep-pages.is-grid .ep-page-num { font-size: .6rem; padding: 1px 8px; }
+
+/* ── ফুলস্ক্রিনে কন্ট্রোল-বার সমান-শ্বাস ── */
+.ep-viewer:fullscreen .ep-ctlbar, .ep-viewer.is-fs .ep-ctlbar { padding: 10px 18px; }
+
+/* ── মোবাইল ফাইন-টিউনিং (session279) ── */
+@media (max-width: 600px) {
+  .ep-switchstrip { padding: 7px 9px; gap: 7px; }
+  .ep-ss-label { font-size: .6rem; }
+  .ep-ss-pill { font-size: .72rem; padding: 4px 10px; }
+  .ep-ss-all { font-size: .7rem; padding-left: 9px; }
+  .ep-ctlbar { padding: 8px 9px; gap: 7px; }
+  .ep-paper-select { max-width: 168px; font-size: .76rem; }
+  .ep-issue-select { max-width: 148px; height: 30px; font-size: .72rem; }
+  .ep-pg-btn { min-width: 26px; height: 26px; font-size: .68rem; }
+  .ep-pg-nav { width: 26px; height: 26px; }
+  .ep-pg-count { min-width: 44px; height: 26px; font-size: .66rem; }
+  .ep-btn-allpages { height: 30px; font-size: .72rem; padding: 0 9px; }
+  .ep-pages.is-grid .ep-page-holder { width: min(90%, 280px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ep-ss-pills { scroll-behavior: auto; }
+}
