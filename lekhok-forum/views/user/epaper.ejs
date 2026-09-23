@@ -1015,3 +1015,176 @@
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>
+
+<%# ============================================================
+     session-226 · e-paper DUAL VIEW (Tab: সংবাদপত্র ডিরেক্টরি)
+     এই ব্লকটি নিজে নিজেই DOM-এ সঠিক জায়গায় বসে (self-positioning):
+     ট্যাব-বার → .ep-head-card-এর পরে; ডিরেক্টরি সেকশন → #epApp170-এর পরে।
+     রিডার (epApp170) অক্ষত থাকে — ট্যাব শুধু দৃশ্যমানতা টগল করে।
+     ============================================================ %>
+<% const epd226Papers = (typeof newspapers !== 'undefined' && Array.isArray(newspapers)) ? newspapers : []; %>
+<% const epd226Bn = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
+<section id="epDir226" class="epd226-root" hidden aria-label="অনলাইন সংবাদপত্র ডিরেক্টরি">
+  <div class="epd226-head">
+    <span class="epd226-head-ico" aria-hidden="true">🌐</span>
+    <div class="epd226-head-txt">
+      <h2 class="epd226-head-title">অনলাইন সংবাদপত্র ডিরেক্টরি</h2>
+      <p class="epd226-head-sub">জাতীয়, চট্টগ্রাম ও আঞ্চলিক, ইংরেজি ও আন্তর্জাতিক পত্রিকার অফিসিয়াল ই-পেপার পোর্টাল</p>
+    </div>
+  </div>
+  <div class="epd226-toolbar">
+    <div class="epd226-pills" role="tablist" aria-label="পত্রিকার ক্যাটাগরি">
+      <button type="button" class="epd226-pill is-active" data-cat="all" role="tab" aria-selected="true">সকল পত্রিকা</button>
+      <button type="button" class="epd226-pill" data-cat="national" role="tab" aria-selected="false">জাতীয় দৈনিক</button>
+      <button type="button" class="epd226-pill" data-cat="regional" role="tab" aria-selected="false">চট্টগ্রাম ও আঞ্চলিক 🏛️</button>
+      <button type="button" class="epd226-pill" data-cat="english" role="tab" aria-selected="false">English Papers</button>
+      <button type="button" class="epd226-pill" data-cat="international" role="tab" aria-selected="false">আন্তর্জাতিক</button>
+    </div>
+    <div class="epd226-search">
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input type="text" id="epDir226Search" placeholder="পত্রিকার নাম দিয়ে খুঁজুন…"
+             autocomplete="off" aria-label="পত্রিকা সার্চ" />
+      <button type="button" class="epd226-sclear" id="epDir226SClear" hidden aria-label="সার্চ মুছুন">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="epd226-meta">
+    <span id="epDir226Count" class="epd226-count">মোট <b><%= epd226Bn(epd226Papers.length) %></b> টি সংবাদপত্র</span>
+    <span class="epd226-hint">ক্লিক করলে পত্রিকাটির অফিসিয়াল ই-পেপার নতুন ট্যাবে খুলবে</span>
+  </div>
+
+  <% if (epd226Papers.length === 0) { %>
+    <div class="epd226-empty">পত্রিকার তালিকা লোড হয়নি — routes/epaper.js-এ newspapers লোকাল যাচাই করুন (session-226 প্যাচ)।</div>
+  <% } else { %>
+    <div class="epd226-grid" id="epDir226Grid">
+      <% epd226Papers.forEach(function (p) { %>
+        <a class="epd226-card<%= p.isPopular ? ' is-popular' : '' %>" href="<%= p.url %>"
+           target="_blank" rel="noopener noreferrer"
+           data-cat="<%= p.category %>" data-name="<%= String(p.name).toLowerCase() %>">
+          <i class="epd226-star fas fa-star" aria-hidden="true" title="জনপ্রিয়"></i>
+          <span class="epd226-ico" aria-hidden="true">🗞️</span>
+          <span class="epd226-name"><%= p.name %></span>
+          <span class="epd226-foot">
+            <span class="epd226-footlabel">অনলাইন পোর্টাল</span>
+            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+          </span>
+        </a>
+      <% }); %>
+    </div>
+    <div class="epd226-noresult" id="epDir226NoResult" hidden>
+      এই নামে কোনো সংবাদপত্র মেলেনি। অন্য নাম দিয়ে সন্ধান করুন।
+    </div>
+  <% } %>
+</section>
+
+<div class="epd226-tabs" id="epDir226Tabs" role="tablist" aria-label="ই-পেপার ভিউ নির্বাচক">
+  <button type="button" class="epd226-tab is-active" id="epDir226TabReader" data-view="reader"
+          role="tab" aria-selected="true" aria-controls="epApp170">
+    <span aria-hidden="true">📖</span><span>ডিজিটাল পেপার রিডার</span>
+  </button>
+  <button type="button" class="epd226-tab" id="epDir226TabDir" data-view="dir"
+          role="tab" aria-selected="false" aria-controls="epDir226">
+    <span aria-hidden="true">🌐</span><span>সংবাদপত্র ডিরেক্টরি (<%= epd226Bn(epd226Papers.length) %>+)</span>
+  </button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var SEL = { root: '#epDir226', tabs: '#epDir226Tabs', reader: '#epApp170', head: '.ep-head-card', wrap: '.ep-wrap' };
+
+  var root = document.querySelector(SEL.root);
+  var tabs = document.querySelector(SEL.tabs);
+  var reader = document.querySelector(SEL.reader);
+  if (!root || !tabs) return;
+
+  /* ---- ১. DOM স্ব-স্থানান্তর: পার্স-চলাকালীনই (first paint-এর আগে) — ফ্ল্যাশ-শূন্য।
+       ⚠️ ট্যাব-বার অবশ্যই রিডার-রুটের (epApp170) বাইরে থাকবে — নইলে ডিরেক্টরি
+       ভিউতে রিডার hidden হলে ট্যাব-বারও গায়েব হয়ে ব্যাক-সুইচ অসম্ভব হয়ে যায়। ---- */
+  try {
+    var readerParent = reader && reader.parentNode;
+    if (tabs && readerParent) reader.insertAdjacentElement('beforebegin', tabs);
+    else if (tabs && document.querySelector(SEL.head) && document.querySelector(SEL.head).closest(SEL.reader) === null) {
+      document.querySelector(SEL.head).insertAdjacentElement('afterend', tabs);
+    }
+    if (readerParent) readerParent.insertBefore(root, reader.nextSibling);
+  } catch (e) { /* যে-অবস্থায়-আছে সেখানেই কার্যকর থাকবে */ }
+
+  /* ---- ২. মূল ট্যাব স্যুইচার (রিডার ↔ ডিরেক্টরি) ---- */
+  function setView(view) {
+    var isDir = view === 'dir';
+    root.hidden = !isDir;
+    if (reader) reader.hidden = isDir;
+    document.querySelectorAll('.epd226-tab').forEach(function (b) {
+      var on = (b.dataset.view === view);
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    if (!isDir) return;
+    applyFilter(); /* ভিউ-স্যুইচে সর্বশেষ ফিল্টার অবস্থা পুনঃপ্রয়োগ */
+  }
+
+  tabs.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.epd226-tab');
+    if (b) setView(b.dataset.view);
+  });
+
+  /* ---- ৩. ক্যাটাগরি ফিল্টার + লাইভ সার্চ (একক ফিল্টার-পাইপলাইন) ---- */
+  var cat = 'all';
+  var q = '';
+  var search = document.getElementById('epDir226Search');
+  var clearBtn = document.getElementById('epDir226SClear');
+  var noResult = document.getElementById('epDir226NoResult');
+  var countEl = document.getElementById('epDir226Count');
+
+  function applyFilter() {
+    var cards = root.querySelectorAll('.epd226-card');
+    var shown = 0;
+    cards.forEach(function (card) {
+      var okCat = (cat === 'all') || (card.dataset.cat === cat);
+      var okQ = !q || card.dataset.name.indexOf(q) !== -1;
+      var show = okCat && okQ;
+      card.hidden = !show;
+      if (show) shown++;
+    });
+    if (noResult) noResult.hidden = shown > 0;
+    if (countEl) {
+      var bn = String(shown).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; });
+      countEl.innerHTML = 'খুঁজে পাওয়া গেছে <b>' + bn + '</b> টি সংবাদপত্র';
+    }
+  }
+
+  root.addEventListener('click', function (ev) {
+    var pill = ev.target.closest('.epd226-pill');
+    if (!pill) return;
+    cat = pill.dataset.cat;
+    root.querySelectorAll('.epd226-pill').forEach(function (p) {
+      var on = p === pill;
+      p.classList.toggle('is-active', on);
+      p.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    applyFilter();
+  });
+
+  if (search) {
+    search.addEventListener('input', function () {
+      q = search.value.trim().toLowerCase();
+      if (clearBtn) clearBtn.hidden = !q;
+      applyFilter();
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      search.value = ''; q = ''; clearBtn.hidden = true; applyFilter(); search.focus();
+    });
+  }
+
+  /* ---- ৪. ?view=dir ডিপ-লিংক সমর্থন ---- */
+  try {
+    if (new URLSearchParams(location.search).get('view') === 'dir') setView('dir');
+  } catch (e) { /* পুরনো ব্রাউজার — ডিফল্ট রিডারই থাকবে */ }
+})();
+</script>
+

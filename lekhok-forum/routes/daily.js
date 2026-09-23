@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const epd226Newspapers = require('../data/newspaperLinks'); // session-226 e-paper dual view
 const {
   CONSTITUTION_CHAPTERS,
   CHAPTER_IDS,
@@ -221,6 +222,7 @@ router.get('/epaper', async (req, res) => {
   }
   await attachImages([today]);
   res.render('user/epaper', {
+    newspapers: epd226Newspapers, // session-226
     today, archive: legacyArchive, papers,
     currentPath: '/epaper',
     extra_css: ['/assets/css/epaper.css'],
