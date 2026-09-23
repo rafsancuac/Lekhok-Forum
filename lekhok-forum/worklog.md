@@ -2384,3 +2384,21 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - বাকি-প্রস্তাব: moderator-press/sections/notices-সারফেস ফিল্টার-প্যাক (tr257-প্যাটার্ন-মিরর), s255-'f'-অ্যাসার্ট bubbles:true-হার্ডেনিং, Turso/প্রোড-পোর্ট
 - রিমোট main = `684a434` (session256-worklog `842a2e7`-পরে session257); working-tree ক্লিন
 
+---
+Task ID: 98
+Agent: Main cron agent (session258 — cron 403679)
+Task: প্রথমে অবস্থা-যাচাই + agent-browser QA → বাগ-শূন্য প্রমাণে ফিচার-রাউন্ড: পত্রিকা-কাটিং (/moderator/press) তাৎক্ষণিক-ফিল্টার pr258 (session257-বাকি-প্রস্তাব গ্রহণ) + [Mandatory] স্টাইল + সুইট + ডক + push
+
+## এ-রাউন্ডে সম্পন্ন (session258)
+- **রাউন্ড-আরম্ভ-যাচাই:** স্টেল-সামারি-সংশোধন ×২৪ (সামারি Task43/'commit-হয়নি'/device-flow যুগ — সব-ভুল; worklog ACTIVE-LOCK Task97/session257 `684a434`-ই-সত্য)। HEAD=origin=`b4957bd` clean-tree; প্রোড-স্পট agent-browser 200×৩ + console-পরিষ্কার
+- **[Mandatory-ফিচার] পত্রিকা-কাটিং তাৎক্ষণিক-ফিল্টার (pr258):** /moderator/press — data-pr-row + data-kw (#আইডি+শিরোনাম+পত্রিকা+তারিখ+অবস্থা-শব্দ+ক্রম+ছবি-URL) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা + 'f'-ফোকাস (field-গার্ড) + Escape + clear + **__prQA হুক**; bulk-bar/multipart-যোগ-ফর্ম/clip-count/sf-section অক্ষুণ্ণ; hidden-গার্ড ×৩ (session256-শিক্ষা প্রি-অ্যাপ্লাইড)
+- **[Mandatory-স্টাইল]:** pr258-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px)
+- **সিড-চুক্তি-বর্ধন (multipart-ক্লাস):** মার্কার-কাটিং multipart-POST ('qa258press' — image_url-পথ, ফাইল-অবশ্যক-নয়) + **x-csrf-token-হেডার** (multipart-CSRF-গোটচা — body._csrf-মিডলওয়্যারে-শূন্য) → পরিষ্কারক delete→ট্র্যাহ→bulk-purge (s257-চুক্তি-পুনঃব্যবহার; #১৩০-প্রমাণ অবশিষ্ট=০)
+- **টেস্ট:** নতুন tests/s258-pressfilter-suite.sh **৪৬/৪৬ + ৪৮/৪৮ ×২-ধারাবাহিক** (কাঠামো×১৫+স্টাইল×৯+আচরণ×১২ রিয়েল-ব্রাউজার + 390px-hScroll-শূন্য + স্ক্রিনশট×২) + role-policy **২৬০/২৬০** + s257-স্লাইস **৪৩/৪৩** + guard:design + audit:views গ্রিন + EJS-compile-প্রমাণ
+- **গোটচা ×২ ডক-কৃত (PLANS session258):** multipart-CSRF-হেডার (x-csrf-token-ই-পথ) · HTML-id-আবিষ্কার-অ্যাঙ্কর (bulk_ids-অ্যাঙ্কর + gsub — যোগ-ফর্ম value="0"-ফ্যান্টম-বিতাড়ন)
+- প্যাচ: scripts/s258-patch.py (skip-if-present + ইনভেন্টরি) + ডক ×৩ (PROJECT §২৫৮ + PLANS session258 + এ-এন্ট্রি) → fetch+rebase (সংঘর্ষ-শূন্য) → push → Vercel-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session259 লেবেল (worklog Task ID 99)**; PLANS session258-নোট অবশ্যই-পড়ুন (multipart-CSRF-হেডার + id-অ্যাঙ্কর-শ্রেণি); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: moderator-notices/sections-সারফেস ফিল্টার-প্যাক (pr258-প্যাটার্ন-মিরর), s255-'f'-অ্যাসার্ট bubbles:true-হার্ডেনিং, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
