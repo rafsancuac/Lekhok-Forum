@@ -2434,3 +2434,25 @@ Task: প্রথমে অবস্থা-যাচাই + agent-browser QA �
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session263 লেবেল (worklog Task ID 103)**; PLANS session262-নোট অবশ্যই-পড়ুন (ডেটা-নির্ভর-প্রোব-চুক্তি + নেমস্পেস-ম্যাপ-প্রথা); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: multipart-ব্রাউজার-পাথ-যাচাই, moderator-dashboard-সারফেস-ফিল্টার, Turso/প্রোড-পোর্ট
+
+---
+Task ID: 103 (session263 — cron 403679; মডারেটর ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার mdf263 + মিশ্র-ট্যাগ-গার্ড-শ্রেণি)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`02e2104` (session262/Task102), working-tree ক্লিন, টোকেন-ভ্যালিদ (GH /user→200 + Vercel /v2/user→200), live 200; device-flow-অবসর; প্যারালাল-সংঘর্ষ-শূন্য
+- রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s262 ৪৮/৪৮ + s261 ৫০/৫০ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session262-বাকি-প্রস্তাব গ্রহণ: moderator-dashboard-সারফেস-ফিল্টার)
+
+## এ-রাউন্ডে সম্পন্ন (session263)
+- **[Mandatory-ফিচার] মডারেটর ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার (mdf263):** /moderator (views/user/moderator-dashboard.ejs) — **টাইল ×১৫ পূর্ণ-কভারেজ** (scope ×১১ allowed/locked ২-শাখা + এক্সট্রা ×৪ স্ট্যাটিক-kw) — data-mdf-row + দ্বি-ভাষা data-kw (লেবেল+বর্ণনা+key+লিংক+খোলা/লকড unlocked/locked) + ফিল্টার-স্ট্রিপ (mdfFilter263/mdfClear263/mdfCount263/kbd-hint) + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + **__mdfQA হুক** (total/count/apply/clear); hero/stats/section-head/mrq81-badge/switch/logout অক্ষুণ্ণ; hidden-গার্ড ×৩
+- **[Mandatory-স্টাইল]:** mdf263-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px) + **inline-flex-টাইল-গার্ড** `.mod-tile[data-mdf-row][hidden]{display:none!important}` (session256-শ্রেণির inline-স্তর-বিস্তার)
+- **নেমস্পেস-ম্যাপ:** .mod-* পূর্ব-দখলকৃত → **mdf-প্রিফিক্স** (session262-প্রথা প্রয়োগ; grep-প্রমাণ সংঘর্ষ-শূন্য)
+- **টেস্ট:** নতুন tests/s263-mdfilter-suite.sh **৫৩/৫৩ ×২-ধারাবাহিক (SKIP=১ ডেটা-নির্ভর)** (কাঠামো×১৮+স্টাইল×৯+আচরণ×১৮ রিয়েল-ব্রাউজার + নির্ধারক-প্রোব ×৬ + inline-flex-hidden-প্রমাণ ১৫/১৫ + 390px-hScroll-শূন্য + স্ক্রিনশট×২ + রিড-ওনলি টাইল ১৫→১৫) + role-policy **২৬০/২৬০** + s262 ৪৮/৪৮ + guard:design + audit:views-গ্রিন (১২২ ejs) + EJS-compile-প্রমাণ + secret-scan-ক্লিন
+- **গোটচা ×২ ডক-কৃত (PLANS session263):** মিশ্র-ট্যাগ-সারফেস hidden-গার্ড (a+div+inline-flex — class-prefix+!important-ই-পথ) · স্ট্যাটিক-টাইল-ইনডেক্সিং (EJS-গণিত ইনডেক্স + শর্তসাপেক্ষ-টাইলে গ্যাপ — JS-ইনডেক্স-অনিরপেক্ষ)
+- প্যাচ: scripts/s263-patch.py (skip-if-present idempotent — পুনঃরান SKIP-প্রমাণ) + ডক ×৩ (PROJECT §২৬৩ + PLANS session263 + এ-এন্ট্রি) → fetch+rebase → push → Vercel-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session264 লেবেল (worklog Task ID 104)**; PLANS session263-নোট অবশ্যই-পড়ুন (মিশ্র-ট্যাগ-গার্ড + স্ট্যাটিক-ইনডেক্সিং + স্ট্যাটিক-kw-চুক্তি); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: multipart-ব্রাউজার-পাথ-যাচাই (press ই২ই), admin-dashboard (/admin) সারফেস-ফিল্টার (mdf263-মিরর), Turso/প্রোড-পোর্ট
