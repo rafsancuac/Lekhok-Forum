@@ -2402,3 +2402,19 @@ Task: প্রথমে অবস্থা-যাচাই + agent-browser QA �
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session259 লেবেল (worklog Task ID 99)**; PLANS session258-নোট অবশ্যই-পড়ুন (multipart-CSRF-হেডার + id-অ্যাঙ্কর-শ্রেণি); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: moderator-notices/sections-সারফেস ফিল্টার-প্যাক (pr258-প্যাটার্ন-মিরর), s255-'f'-অ্যাসার্ট bubbles:true-হার্ডেনিং, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`bfce6c5` (session260/Task100, clean-tree) — স্টেল-সামারি-সংশোধন ×২৭ (সামারি Task43/'commit-হয়নি'/device-flow যুগ — সব-ভুল)। GH /user→200 (দুই-টোকেনই-ভ্যালিড); স্থায়ী-সার্ভার-জীবিত (৮০৯৪); device-flow-অবসর।
+
+## এ-রাউন্ডে সম্পন্ন (session261)
+- **রাউন্ড-আরম্ভ-যাচাই:** s260 ৫২/৫২ প্রথম-রানে + role-policy ২৬০/২৬০ + guard:design + audit:views — বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session260-বাকি-প্রস্তাব: resources-ফিল্টার-প্যাক)।
+- **[Mandatory-ফিচার] রিসোর্স তাৎক্ষণিক-ফিল্টার (re261):** /moderator/resources — data-re-row + data-kw (১৪-ক্ষেত্র) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + clear + **__reQA হুক**; mrForm/টাইপ-পিকার/বাল্ক-ইমপোর্ট/মুছুন-ফর্ম/এডিট-লিংক অক্ষুণ্ণ; hidden-গার্ড ×৩; **[Mandatory-ফিচার-সংযোগ] .re-cat-chip** (৯-ক্যাটাগরি-ম্যাপ প্রতি-সারি-পিল)।
+- **[Mandatory-স্টাইল]:** re261-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px + hidden-গার্ড-ত্রয়ী)।
+- **সিড-চুক্তি-বর্ধন:** res_type=link-সিড urlencoded-POST (multer-নন-মাল্টিপার্ট-পাসথ্রু — body._csrf-পথ; x-csrf-token-অপ্রয়োজনীয়) + পরিষ্কারক /resources/:id/delete→ট্র্যাহ→bulk-purge (#১৭৩-প্রমাণ অবশিষ্ট=০)।
+- **টেস্ট:** নতুন tests/s261-resfilter-suite.sh **৫০/৫০ ×২-ধারাবাহিক** (কাঠামো×১৫+স্টাইল×১০+আচরণ×১৩ রিয়েল-ব্রাউজার + সিড×৪ + 390px + স্ক্রিনশট×২ + পরিষ্কারক) + role-policy **২৬০/২৬০** + s260 ৫২/৫২ + guard/audit-গ্রিন + EJS-compile-প্রমাণ
+- প্যাচ: scripts/s261-patch.py (skip-if-present idempotent) + ডক ×৩ (PROJECT §২৬১ + PLANS session261 + এ-এন্ট্রি) → fetch+rebase → push → Vercel-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session262 লেবেল (worklog Task ID 102)**; PLANS session261-নোট অবশ্যই-পড়ুন (urlencoded-link-ক্লাস-সীমানা + RS-অ্যাঙ্কর-ভ্যারিয়েন্ট); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: moderator-users-স্কোপড-ফিল্টার-ভ্যারিয়েন্ট, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট

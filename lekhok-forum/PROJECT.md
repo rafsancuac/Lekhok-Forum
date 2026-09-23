@@ -3133,6 +3133,22 @@ Task53-প্রস্তাবকৃত পরবর্তী-ধাপ বা�
 
 **গোটচা (PLANS session254 ×৪):** testadmin-ভিউয়ার (moderator=403) · _csrfTok-কুকি-দ্বি-সমর্পণ (নেস্টেড-GET-টোকেন-রোটেশন) · s251-কোল্ড-স্টার্ট-ট্রানজিয়েন্ট (eval-empty শ্রেণি — ম্যানুয়াল-ওয়ার্ম-আপ-প্রোব → পুনঃরান) · `[h`-প্রদর্শন-আর্টিফ্যাক্ট (টুল-আউটপুটে `[hidden]`→`]idden]` দেখায়; od -c-ই-সত্য-উৎস)।
 
+## §২৬১ (session261 — cron 403679: রিসোর্স তাৎক্ষণিক-ফিল্টার re261 + ক্যাটাগরি-চিপ-সারি-সমৃদ্ধি) — s261 ৫০/৫০ ×২ (২৩ সেপ্টেম্বর ২০২৬)
+
+**রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`bfce6c5` (session260/Task100, clean-tree); GH /user→200 (gh-token + gh-token-v3 দুটোই); live-200; স্টেল-সামারি-সংশোধন ×২৭ (সামারি Task43/'commit-হয়নি'/device-flow/'token-ভ্যালিড-নয়' যুগ — সব-ভুল; ACTIVE-LOCK Task100/session260-ই-সত্য; device-flow-অবসর পুনঃপ্রমাণিত)। রাউন্ড-শুরু QA: s260 ৫২/৫২ + role-policy ২৬০/২৬০ + guard:design + audit:views (১২২ ejs) — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session260-বাকি-প্রস্তাব গ্রহণ: resources-সারফেস ফিল্টার-প্যাক)।
+
+**[Mandatory-ফিচার] রিসোর্স তাৎক্ষণিক-ফিল্টার (re261):** /moderator/resources — `data-re-row`-সারি-সূচক (.mr-res-row) + `data-kw` (#আইডি+শিরোনাম+ধরন-লেবেল+ধরন-সংক্ষেপ+ক্যাটাগরি-লেবেল+ক্যাটাগরি-কী+ট্যাগ+লেখক+ফাইল-আকার+সময়সীমা+সিরিজ+পর্ব-ক্রম+আপলোডকারী+লিংক-URL) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + clear-বাটন + **__reQA হুক (total/count/apply/clear)**; mrForm/টাইপ-পিকার (mrTypeInput)/বাল্ক-ইমপোর্ট (rsxBulkBtn)/প্রতি-সারি-মুছুন-ফর্ম/এডিট-লিংক সম্পূর্ণ অক্ষুণ্ণ; hidden-গার্ড ×৩ (session256-শিক্ষা প্রি-অ্যাপ্লাইড)।
+
+**[Mandatory-ফিচার-সংযোগ] ক্যাটাগরি-চিপ:** প্রতি-সারিতে `.re-cat-chip` (৯-ক্যাটাগরি-ম্যাপ — guide/document/report/form/anthology/reference/scholarship/writing-tips/general → বাংলা-লেবেল; অজানা-কী-তে raw-key-ফলব্যাক) — no259 .no-cat-chip-চুক্তি-মিরর; ভিজ্যুয়াল-সমৃদ্ধি + ফিল্টারেবল-ক্ষেত্র একসাথে (ক্যাটাগরি-লেবেল+কী দুটোই data-kw-তে)।
+
+**[Mandatory-স্টাইল]:** re261 ব্লক **হেক্স-শূন্য টোকেন-শুধু** (guard-র্যাচেট-নিরাপদ) — ফোকাস-রিং color-mix brandgreen-tint + dashed kbd-পিল + :active প্রেস-ফিডব্যাক + reduced-motion-জোড়া + 640px-সংকোচন (kbd/chip-none) + re-zero টোকেন-বক্স + সারি/চিপ/শূন্য-বক্স hidden-গার্ড-ত্রয়ী।
+
+**সিড/পরিষ্কারক-চুক্তি-বর্ধন (link-ক্লাস-আবিষ্কার):** রিসোর্স-ফর্ম multipart হলেও **res_type=link-সিড urlencoded-POST-এই চলে** (multer নন-মাল্টিপার্ট-পাসথ্রু — body._csrf-পথ সরাসরি প্রযোজ্য; x-csrf-token-হেডার অপ্রয়োজনীয়) — marker 'qa261resource' + tags 'qa261tag' + author 'qa261author' + link_url; পরিষ্কারক POST /resources/:id/delete → trashed=<tid> → /admin/trash/bulk-purge (s260-চুক্তি পুনঃব্যবহার; স্বয়ং-নিরাময়ী idempotent)। id-আবিষ্কার-অ্যাঙ্কর: RS='<div class="mr-res-row"' + /resources/<id>/delete-gsub (bulk_ids-অ্যাঙ্করের resources-ভ্যারিয়েন্ট — রো-চেকবক্স-বিহীন তালিকা)।
+
+**টেস্ট:** নতুন tests/s261-resfilter-suite.sh **৫০/৫০ ×২-ধারাবাহিক** (কাঠামো ×১৫ + স্টাইল ×১০ + আচরণ ×১৩ রিয়েল-ব্রাউজার + সিড ×৪ + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ + পরিষ্কারক ×২) + role-policy **২৬০/২৬০** + s260 **৫২/৫২** + guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs) + EJS-compile-প্রমাণ + স্ক্রিনশট ×২ কমিটেড।
+
+**গোটচা ×১ (PLANS session261):** urlencoded-সিড-পথ-multer-পাসথ্রু (ফাইল-ঐচ্ছিক-রুটে multipart-এনক্রিপশন-বাধ্যতামূলক-নয় — s258-মাল্টিপার্ট-হেডার-চুক্তির সীমানা স্পষ্ট: শুধুই-ফাইল-অবশ্যক রুটে প্রযোজ্য)। **পরের-এজেন্ট: session262 (Task ID 102)** — PLANS session261-নোট অবশ্যই-পড়ুন; push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!); বাকি-প্রস্তাব: moderator-users-স্কোপড-ফিল্টার-ভ্যারিয়েন্ট, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)।
+
 ## §২৬০ (session260 — cron 403679: ইভেন্ট তাৎক্ষণিক-ফিল্টার ev260 + আসন্ন/সমাপ্ত স্ট্যাটাস-চিপ) — s260 ৫২/৫২ ×২ (২৩ সেপ্টেম্বর ২০২৬)
 
 **রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`a92517f` (session259/Task99, clean-tree); GH /user→200; live-200; স্টেল-সামারি-সংশোধন ×২৬ (সামারি Task43/'commit-হয়নি'/device-flow যুগ — সব-ভুল; ACTIVE-LOCK Task99/session259-ই-সত্য)। রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s259 ৪৯/৪৯ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session259-বাকি-প্রস্তাব গ্রহণ: events-সারফেস ফিল্টার-প্যাক)।
