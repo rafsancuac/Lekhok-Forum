@@ -1,47 +1,32 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>বিজ্ঞপ্তি | মডারেটর প্যানেল</title>
-  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
-  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>">
-</head>
-<body>
-<%- include('../../admin/views/admin/partials/sidebar') %>
-<div class="admin-main">
-<div class="mod-wrap">
-    <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
-    <h2><i class="fas fa-bullhorn"></i> বিজ্ঞপ্তি পোস্ট করুন</h2>
-    <% if (typeof posted !== 'undefined') { %><p style="color:#166534;">✓ সফলভাবে পোস্ট হয়েছে এবং সব ইউজারকে নোটিফিকেশন পাঠানো হয়েছে।</p><% } %>
-    <form method="POST" action="/moderator/notices" class="mod-form">
-      <label>শিরোনাম</label>
-      <input type="text" name="title" required>
-      <label>বিস্তারিত</label>
-      <textarea name="content" rows="4"></textarea>
-      <label>ক্যাটাগরি</label>
-      <select name="category">
-        <option value="notice">সাধারণ বিজ্ঞপ্তি</option>
-        <option value="urgent">জরুরি</option>
-        <option value="event">ইভেন্ট সংক্রান্ত</option>
-      </select>
-      <label>তারিখ</label>
-      <input type="date" name="date">
-      <%- include('../../admin/views/admin/partials/multi-image', { images: [] }) %>
-      <button class="btn btn-primary" type="submit">পোস্ট করুন</button>
-    </form>
-    <h3>সাম্প্রতিক বিজ্ঞপ্তি<label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:10px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label></h3>
-  <form method="POST" action="/moderator/notices/bulk-delete" class="bulk-bar" id="bulkBar">
-    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
-    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড বিজ্ঞপ্তিগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
-    <button type="submit" name="mode" value="publish" formaction="/moderator/notices/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড নোটিশগুলো প্রকাশ করবে?"><i class="fas fa-eye"></i> প্রকাশ</button>
-    <button type="submit" name="mode" value="hide" formaction="/moderator/notices/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড নোটিশগুলো লুকাবে?"><i class="fas fa-eye-slash"></i> লুকান</button>
-  </form>
+#!/usr/bin/env python3
+# s259-patch.py — session259: বিজ্ঞপ্তি (/moderator/notices) তাৎক্ষণিক-ফিল্টার (no259)
+# চুক্তি: pr258/tr257/cu256-প্যাটার্ন-মিরর — data-kw-সারি + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + __noQA হুক
+# স্টাইল: no259-ব্লক হেক্স-শূন্য টোকেন-শুধু (guard-র্যাচেট-নিরাপদ) + [hidden]-গার্ড-জোড়া (চিপ+শূন্য-বক্স — session256-শিক্ষা) + সারি-hidden-গার্ড + cat-chip টোকেন-টিন্ট
+# নো-রিগ্রেশন: bulk-bar (bulk-delete/bulk-toggle) + যোগ-ফর্ম (mod-form) + data-bulk-all সম্পূর্ণ অক্ষুণ্ণ
+import sys, io
 
-    <div class="no-instant" id="noInstant259">
+VIEW = "/home/z/lekhok-forum/lekhok-forum/lekhok-forum/views/user/moderator-notices.ejs"
+
+with io.open(VIEW, "r", encoding="utf-8") as f:
+    src = f.read()
+
+if "data-no-row" in src:
+    print("SKIP: no259 already present (idempotent)")
+    sys.exit(0)
+
+edits = []
+
+# ── এডিট-১: তালিকার-আগে ফিল্টার-বার + শূন্য-অবস্থা + forEach-সূচক + data-kw কনস্ট + ক্যাটাগরি-চিপ ──
+old1 = """    <% notices.forEach(n => { %>
+      <div class="mod-item">
+        <input type="checkbox" name="bulk_ids" value="<%= n.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:4px;">
+        <div style="flex:1;"><strong><%= n.title %></strong><div style="color:#999; font-size:0.85rem;"><%= n.date %></div></div>
+        <form method="POST" action="/moderator/notices/<%= n.id %>?_method=DELETE">
+          <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
+        </form>
+      </div>
+    <% }) %>"""
+new1 = """    <div class="no-instant" id="noInstant259">
       <i class="fas fa-filter no-instant-ico" aria-hidden="true"></i>
       <input type="text" id="noFilter259" class="no-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / ক্যাটাগরি / তারিখ / #আইডি" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
       <button type="button" id="noClear259" class="no-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
@@ -64,11 +49,13 @@
           <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
         </form>
       </div>
-    <% }) %>
-  </div>
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
-<%- include('../partials/sandbox-preview') %>
-  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+    <% }) %>"""
+edits.append((old1, new1))
+
+# ── এডিট-২: premium.js-include-পরে স্টাইল-ব্লক + স্ক্রিপ্ট-ব্লক (</body>-আগে) ──
+old2 = """  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+</body>"""
+new2 = """  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 <style>
 /* session259 — বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার (no259 — হেক্স-শূন্য টোকেন-শুধু; pr258/tr257/cu256-মিরর) */
 .no-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 10px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
@@ -139,5 +126,15 @@
   };
 })();
 </script>
-</body>
-</html>
+</body>"""
+edits.append((old2, new2))
+
+for i, (o, n) in enumerate(edits, 1):
+    if o not in src:
+        print(f"FATAL: এডিট-{i}-অ্যাঙ্কর অনুপস্থিত (ভিউ-পরিবর্তিত?)")
+        sys.exit(1)
+    src = src.replace(o, n, 1)
+
+with io.open(VIEW, "w", encoding="utf-8") as f:
+    f.write(src)
+print("OK: no259 প্রয়োগ-সম্পন্ন (ফিল্টার-বার + শূন্য-অবস্থা + data-kw-সারি + cat-chip + স্টাইল + __noQA)")

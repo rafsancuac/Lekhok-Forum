@@ -3133,6 +3133,20 @@ Task53-প্রস্তাবকৃত পরবর্তী-ধাপ বা�
 
 **গোটচা (PLANS session254 ×৪):** testadmin-ভিউয়ার (moderator=403) · _csrfTok-কুকি-দ্বি-সমর্পণ (নেস্টেড-GET-টোকেন-রোটেশন) · s251-কোল্ড-স্টার্ট-ট্রানজিয়েন্ট (eval-empty শ্রেণি — ম্যানুয়াল-ওয়ার্ম-আপ-প্রোব → পুনঃরান) · `[h`-প্রদর্শন-আর্টিফ্যাক্ট (টুল-আউটপুটে `[hidden]`→`]idden]` দেখায়; od -c-ই-সত্য-উৎস)।
 
+## §২৫৯ (session259 — cron 403679: বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার no259 + ক্যাটাগরি-চিপ-সারি-সমৃদ্ধি) — s259 ৪৯/৪৯ ×২ (২৩ সেপ্টেম্বর ২০২৬)
+
+**রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`058800b` (session258/Task98, clean-tree); GH /user→200 + Vercel /v2/user→200; live-200; স্টেল-সামারি-সংশোধন ×২৫ (সামারি Task43/'commit-হয়নি'/device-flow/'১২-ট্রিগার' যুগ — সব-ভুল; ACTIVE-LOCK Task98/session258-ই-সত্য)। রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s258 ৪৮/৪৮ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session258-বাকি-প্রস্তাব গ্রহণ: notices-সারফেস ফিল্টার-প্যাক)।
+
+**[Mandatory-ফিচার] বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার (no259):** /moderator/notices (views/user/moderator-notices.ejs) — pr258/tr257/cu256-চুক্তি-মিরর: `data-no-row`-সারি-সূচক (.mod-item) + `data-kw` (#আইডি + শিরোনাম + ক্যাটাগরি-লেবেল + ক্যাটাগরি-কী + তারিখ — ছোট-হাতের) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-কী ফোকাস (field-গার্ড + modifier-বাদ) + Escape ক্লিয়ার+ব্লার + clear-বাটন + **__noQA হুক (total/count/apply/clear)**; bulk-bar (bulk-delete/bulk-toggle) + data-bulk-all + mod-form যোগ-ফর্ম + প্রতি-সারি-মুছুন-ফর্ম সম্পূর্ণ অক্ষুণ্ণ; hidden-গার্ড ×৩ (`.mod-item[data-no-row][hidden]` + `.no-count-chip[hidden]` + `.no-zero[hidden]` — session256-শিক্ষা প্রি-অ্যাপ্লাইড)।
+
+**[Mandatory-স্টাইল]:** no259 ব্লক **হেক্স-শূন্য টোকেন-শুধু** (guard-র্যাচেট-নিরাপদ) — ফোকাস-রিং color-mix brandgreen-tint + kbd-পিল (dashed affordance) + :active প্রেস-ফিডব্যাক + reduced-motion-জোড়া + 640px-সংকোচন (kbd-none + cat-chip-none) + no-zero টোকেন-বক্স + **নতুন `.no-cat-chip`** (প্রতি-বিজ্ঞপ্তি-সারিতে ক্যাটাগরি-পিল — ভিজ্যুয়াল-সমৃদ্ধি + ফিল্টারেবল-ক্ষেত্র একসাথে; টোকেন-টিন্ট-শুধু)।
+
+**সিড/পরিষ্কারক-চুক্তি:** urlencoded-POST /moderator/notices (marker 'qa259notice' + category=urgent — body._csrf-পথ, multipart-নয়) + পরিষ্কারক POST `?_method=DELETE` → trashed=<tid>-পার্সিং → /admin/trash/bulk-purge (s257/s258-পুনঃব্যবহার — স্বয়ং-নিরাময়ী idempotent); id-আবিষ্কার RS='<div class="mod-item"'-অ্যাঙ্কর + bulk_ids-value-gsub (PLANS session258-শিক্ষা)।
+
+**টেস্ট:** নতুন tests/s259-noticefilter-suite.sh **৪৯/৪৯ ×২-ধারাবাহিক** (কাঠামো ×১৫ + স্টাইল ×১০ + আচরণ ×১২ রিয়েল-ব্রাউজার + সিড ×৩ + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ + পরিষ্কারক) + role-policy ২৬০/২৬০ + s258 ৪৮/৪৮ + guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs) + EJS-রেন্ডার-প্রমাণ (৮-সারি data-no-row)।
+
+**প্যাচ:** scripts/s259-patch.py (skip-if-present idempotent — s255-প্যাটার্ন) + ডক ×৩ (PROJECT §২৫৯ + PLANS session259-নোট + repo-worklog Task 99)।
+
 ## §২৫৮ (session258 — cron 403679: পত্রিকা-কাটিং তাৎক্ষণিক-ফিল্টার pr258 + multipart-CSRF-হেডার-চুক্তি) — s258 ৪৬/৪৬ + ৪৮/৪৮ (২৩ সেপ্টেম্বর ২০২৬)
 
 **রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`b4957bd` (session257-worklog, clean-tree); স্টেল-সামারি-সংশোধন ×২৪ (সামারি Task43/'commit-হয়নি'/device-flow/'১২-ট্রিগার' যুগ — সব-ভুল; ACTIVE-LOCK Task97/session257-ই-সত্য; push-যুগ প্রমাণ `684a434`)। প্রোড-স্পট agent-browser: home/press/login 200×৩ + console-পরিষ্কার (main.js build-log শুধু)। বাগ-শূন্য → ফিচার-রাউন্ড (session257-বাকি-প্রস্তাব গ্রহণ: press-সারফেস)।
