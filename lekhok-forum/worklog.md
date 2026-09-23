@@ -2803,3 +2803,28 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - বাকি-প্রস্তাব: admin-সাব-তালিকা-অবশিষ্ট (gallery/members/resources-list — admin-ভার্সন-অফিল্টারড), security.ejs-স্কোপ-ম্যাপ-পূর্বক, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
 - রিমোট main = push-পরবর্তী HEAD (session277-ev277); working-tree ক্লিন
 
+
+---
+Task ID: 118 (session278 — ইউজার-রাউন্ড: e-paper থাম্বনেইল নাম-অনুযায়ী মিশ্রণ-শূন্য ইন্টিগ্রেশন)
+Agent: Z.ai Code (main session, web-9d4762c4)
+Task: ইউজার-নির্দেশ — bycwf সংগ্রহের থাম্বনেইলগুলো নাম অনুযায়ী যোগ করা; এক ই-পেপারের থাম্বনেইল অন্য ই-পেপারে যাওয়া যেন সম্পূর্ণ অসম্ভব হয়
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=a89cf8d (session226 e-paper ডুয়াল-ভিউ); পুশ-মুহূর্তে origin 276/277-অতিক্রম — প্যারালাল-রাউন্ড-সক্রিয়
+- ইনপুট: /home/z/my-project/upload/ — manifest.csv (৮৪ রো: number/category/name/epaper_url/original_file/card_file/sha256) + epaper-thumbnails.zip (cards ৮৪ × 500×196 PNG + originals ৮৪)
+
+## এ-রাউন্ডে সম্পন্ন (session278)
+- **চতুঃস্তর আইডেন্টিটি-লক:** নাম ↔ URL-ডোমেইন (authority) ↔ manifest-নম্বর ↔ original-sha256; কার্ড=PNG 500×196 IHDR-যাচাই + original/card NNN-স্টেম-সমতা; ফাইলনেম NNN-ডোমেইন.png
+- **data/newspaperLinks.js ৪৫→৮৩:** সব ৪৫-এ thumb; নতুন ৩৮ (জাতীয়+৩২, english+৪, আন্তর্জাতিক+২); #57 ডুপ-স্কিপ; #52 (বাংলাদেশ)-বিভাজন; নাম-ইউনিক-অ্যাসার্ট; ক্যাটাগরি: national ৫৬/regional ৭/english ১২/international ৮
+- **৮৩ ইমেজ** public/assets/img/epaper/; কপি-পশ্চাদমুখী sha+IHDR-যাচাই; reload-যাচাই (ডোমেইন-সমলয় ×৮৩)
+- **epaper.ejs:** .epd226-thumb img (lazy/CLS-শূন্য/alt) + ইমোজি-ফলব্যাক + load-error-স্যাপ (১.৫-সেকশন); epaper.css session-227-ব্লক (রিবেজ-পরবর্তী hex-ratchet-সমলয় — var(--lf-white)/var(--lf-ui-border)); রিডার epApp170 শূন্য-স্পর্শ
+- **sync-টুল:** /home/z/lekhok-fix/session227/sync-thumbs.mjs — মক-ধাপে ২-বাগ-ধরা+ফিক্স (manifest-sha=original; ESM require.cache) → dry-run/apply/idempotent, ৮৪/৮৪-গ্রিন
+- **E2E (:3271 আইসোলেটেড, agent-browser):** ৮৩/৮৩ লোডেড, ব্রোকেন ০; পূর্ণ-DOM মিসম্যাচ-স্ক্যান **০**; স্পট ×৩ ✓; সার্চ/পিল (৫৬/১২/৮৩)/ট্যাব-উভয়-দিক/no-result ✓; 390px hScroll-০; কনসোল-এরর ০; স্ক্রিনশট ×২ (ডেস্কটপে লোগো↔নাম দৃশ্যত-মিল)
+- **রিগ্রেশন:** EJS-কম্পাইল ✓ node --check ✓ guard:design ✓ (রিবেজ-পরবর্তী hex 2→0-সংশোধন)
+- **push-রেস ×২:** 3f5d4b5-মেসেজ session277 (push-সময় max) — ev277-দ্বৈত-হওয়ায় **session-278-রেলেবেল**; fetch+rebase ×২ ক্লিন; Vercel: ed64e4c-ডিপ্লয় READY, আমার কমিটে webhook-মিস → API-manual-deploy **402 কোটা-শেষ (100/দিন)** → docs-কমিট-পুশ = webhook-পুনঃফায়ার-কৌশল (PLANS session278-নোট) → লাইভ-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- লাইভ-ডিপ্লয়-নোট: git-webhook-পুশ-পরে-ও ডিপ্লয়-না-হলে API-কোটা-reset (24h) পর্যন্ত অপেক্ষা ছাড়া উপায় নেই — পরের-এজেন্ট পুশের-পরে sha-ভিত্তিক deployment-যাচাই করবে (s276-গোটচা + এ-নোট)
+- পরের-এজেন্ট: **session279 লেবেল**; PLANS session278-নোট অবশ্যই-পড়ুন (মিশ্রণ-প্রতিরোধ-প্যাটার্ন + manifest-sha-গোটচা + ESM ×২ + Vercel-কোটা + lazy-load-গোটচা)
+- বাকি-প্রস্তাব: ডিরেক্টরি-কার্ডে ডোমেইন-ব্যাজ/Favicon-ফলব্যাক-পলিশ, বিখ্যাত-পত্রিকা-দ্রুত-চিপস, সার্চ-হাইলাইট, কালকোড-গেজেট-পাতা-থাম্ব
+- টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-প্রদর্শন-নয়); Turso/প্রোড-পোর্ট অক্ষুণ্ণ
