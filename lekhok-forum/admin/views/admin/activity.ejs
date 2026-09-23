@@ -18,6 +18,13 @@
       <p class="subtitle">সর্বশেষ ২০০টি সফল পরিবর্তন — কে, কখন, কোথায় কী করল</p>
     </div>
   </div>
+  <div class="av-instant" id="avInstant271">
+    <i class="fas fa-filter av-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="avFilter271" class="av-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — ব্যবহারকারী / অ্যাকশন / টার্গেট / বিবরণ" autocomplete="off" aria-label="অ্যাক্টিভিটি-লগ তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="avClear271" class="av-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="av-count-chip" id="avCount271" hidden></span>
+    <span class="av-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
 
   <div class="card" style="padding:0;overflow:hidden;">
     <% if (!rows.length) { %>
@@ -28,8 +35,8 @@
         <tr><th style="width:170px;">সময়</th><th style="width:150px;">ব্যবহারকারী</th><th style="width:100px;">অ্যাকশন</th><th style="width:230px;">টার্গেট</th><th>বিস্তারিত</th></tr>
       </thead>
       <tbody>
-        <% rows.forEach(r => { %>
-        <tr>
+        <% rows.forEach((r, avI271) => { %>
+        <tr data-av-row="<%= avI271 %>" data-kw="#<%= r.id %> অ্যাক্টিভিটি activity এন্ট্রি entry সময় time <%= r.created_at || '' %> ব্যবহারকারী user <%= r.username || '' %> রোল role <%= r.role === 'admin' ? 'অ্যাডমিন admin' : 'মডারেটর moderator' %> অ্যাকশন action <%= r.action %> টার্গেট target <%= r.target || '' %> বিস্তারিত detail <%= String(r.detail || '').replace(/\s+/g, ' ') %>">
           <td style="white-space:nowrap;color:#65676b;font-size:.86rem;"><%= r.created_at %></td>
           <td>
             <strong><%= r.username || '—' %></strong>
@@ -48,6 +55,77 @@
     </table>
     <% } %>
   </div>
-</div>
+  <div class="av-zero" id="avZero271" data-av-empty hidden>
+    <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+    <span>কোনো অ্যাক্টিভিটি এন্ট্রি মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
+<script>
+  (function () {
+    /* session271 — av271 তাৎক্ষণিক-ফিল্টার (mo268-প্যাটার্ন-মিরর, একক-স্ট্রিপ — 'f'-ফোকাস-মালিকানা-নির্দ্বিধা: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __avQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-av-row]'));
+    var input = document.getElementById('avFilter271');
+    var clearBtn = document.getElementById('avClear271');
+    var countChip = document.getElementById('avCount271');
+    var zeroBox = document.getElementById('avZero271');
+    if (!input) { return; }
+    var total = rows.length;
+    function avApply271() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function avClearFn271() {
+      input.value = '';
+      avApply271();
+      input.blur();
+    }
+    input.addEventListener('input', avApply271);
+    if (clearBtn) { clearBtn.addEventListener('click', avClearFn271); }
+    input.addEventListener('keydown', function (av) {
+      if (av.key === 'Escape') { av.stopPropagation(); avClearFn271(); }
+    });
+    document.addEventListener('keydown', function (av) {
+      if (av.key !== 'f' || av.altKey || av.ctrlKey || av.metaKey) { return; }
+      var t = av.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      av.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__avQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: avApply271,
+      clear: avClearFn271
+    };
+  })();
+</script>
+<style>
+    /* session271 — av271 তাৎক্ষণিক-ফিল্টার স্টাইল (mo268-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু) */
+    .av-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .av-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .av-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .av-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .av-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .av-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .av-instant-clear:active { transform: scale(.96); }
+    .av-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .av-count-chip[hidden] { display: none; }
+    .av-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .av-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .av-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .av-zero[hidden] { display: none; }
+    tr[data-av-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .av-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .av-kbd-hint { display: none; } .av-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
