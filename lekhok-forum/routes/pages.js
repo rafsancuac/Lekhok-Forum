@@ -286,6 +286,19 @@ router.get('/', async (req, res) => {
   // এই শীর্ষ-পত্রিকাগুলো কিয়স্কের সামনের-সারিতে। নাম-মিল epaperThumbByName291-এরই রীতি:
   // বট paper_name-এর অগ্র-"দৈনিক "/"দ্য " স্ট্রিপ-করে মিল; র‍্যাংক-বহির্ভূত পত্রিকা
   // স্থিতিশীল-ক্রমে (id ASC) পরে থাকে — ভুল-মিল-অসম্ভব (কেবল সম্পূর্ণ-নাম)।
+  // ── সেশন ২৯৬-পলিশ: নাম-ডিডুপ — প্রতি-পত্রিকার সর্বশেষ-সারি (বট-পুনঃআপলোডে ডুপ-সারি
+  // ফিল্ম-স্লট-নষ্ট করে; session295 /epaper-স্ট্রিপ-চুক্তিরই হোম-সাইড সামঞ্জস্য)।
+  // কী = স্বাভাবিকীকৃত-নাম (অগ্র-দৈনিক/দ্য-স্ট্রিপ); বৃহত্তর-id = সর্বশেষ-আপলোড জয়ী।
+  const epNameBest296 = new Map();
+  epaperLatest233.forEach(function (p) {
+    const nm296 = String(p.paperName || '').trim().replace(/\s+/g, ' ');
+    const key296 = nm296.replace(/^(?:দৈনিক|দ্য)\s+/u, '') || nm296;
+    const prev296 = epNameBest296.get(key296);
+    if (!prev296 || p.id > prev296.id) epNameBest296.set(key296, p);
+  });
+  const epDeduped296 = Array.from(epNameBest296.values());
+  epaperLatest233.length = 0;
+  Array.prototype.push.apply(epaperLatest233, epDeduped296);
   const epPopularRank296 = ['প্রথম আলো', 'যুগান্তর', 'সমকাল', 'কালের কণ্ঠ', 'ইত্তেফাক', 'আমার দেশ', 'মানবকণ্ঠ'];
   function epPopularIndex296(rawName) {
     const nm296 = String(rawName || '').trim().replace(/\s+/g, ' ');
