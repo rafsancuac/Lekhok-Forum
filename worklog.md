@@ -3122,7 +3122,7 @@ Stage Summary:
 **বর্তমান-অবস্থা:** HEAD @ 3dabe86 (session201-Task43) — ফিচার-এরিয়া সম্পূর্ণ-গ্রিন; agent-browser-QA-সুইপ (হোম/মেসেঞ্জার-পিন-লক/রিভিউ-ডেস্ক/গেট-লক/মোবাইল-৩৯০/কনসোল-০) বাগ-শূন্য → ফিচার-রাউন্ড।
 
 **কাজ:**
-- **লাইভ পেন্ডিং-ব্যাজ:** `GET /api/admin/support-reports?counts=1` লাইট-মোড (এক-groupBy, ২০০-রেকর্ড-findMany-বাদ) + `src/hooks/useSupportPending.ts` (৩০-সে-পোল + hidden-স্কিপ + `lf:support-changed`-ইভেন্ট + 403-নীরব→null) + অ্যাডমিন-লেআউট সাইডবার/মোবাইল-নেভ "অভিযোগ রিভিউ ডেস্ক"-আইটেমে অ্যাম্বার-ব্যাজ (PENDING>0) + ড্যাশবোর্ড-কার্ডে "N নতুন" চিপ
+- **লাইভ পেন্ডিং-ব্যাজ:** `GET /api/admin/support-reports?counts=1` লাইট-মোড (এক-groupBy, ২০০-রেকর্ড-findMany-বাদ) + `src/hooks/useSupportPending.ts` (৩০-সে-পোল + hidden-স্কিপ + `lf:support-changed`-ইভেন্ট + 403-নীরব→null) + অ্যাডমিন-লেআউট সাইডবার/মোবাইল-নেভ "অভিযোগ রিভিউ ডেস্ক"-আইটেমে অ্যাম্বার-ব্যাজ (280a83c>0) + ড্যাশবোর্ড-কার্ডে "N নতুন" চিপ
 - **CSV-এক্সপোর্ট:** রিভিউ-ডেস্ক হেডারে CSV-বাটন — সব-স্টেটাস, UTF-8 BOM (এক্সেলে বাংলা-ঠিক), RFC-4180-escape, বাংলা-হেডার, `lekhok-support-reports-YYYY-MM-DD.csv` নাম, বাংলা-সংখ্যা-টোস্ট
 - **স্টাইল-পলিশ:** স্টেটাস-রঙা বাম-অ্যাকসেন্ট-বর্ডার (amber/sky/emerald) + প্রেরক-অ্যাভাটার (নাম-হ্যাশ→৮-রঙা-প্যালেট, ইনিশিয়াল) + বাংলা-আপেক্ষিক-সময় (title-এ পূর্ণ-স্ট্যাম্প) + লেখা-কপি-বাটন (clipboard-API + legacy-fallback + ✓-স্টেট) + ছবি-লাইটবক্স (role=dialog, Esc/ব্যাকড্রপ-বন্ধ) + ShieldCheck-ইম্পটি-স্টেট
 - আপডেট-সফলে `lf:support-changed` ডিসপ্যাচ → ব্যাজ তাৎক্ষণিক (৪→৩ লাইভ-যাচাইকৃত)
@@ -3244,8 +3244,8 @@ Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
 - HEAD=origin=`0c5c765` (session212), টোকেন 200-ভ্যালিড, dev:3000 লাইভ — রাউন্ড-শুরুতে আট-সুইট-রিগ্রেশন সব-গ্রিন + ব্রাউজার-সুইপ (ডেস্ক ৩-কার্ড — পরিচ্ছন্নতা-চুক্তি-কার্যকর; কনসোল-০; 390px-ঠিক) → **বাগ-শূন্য** → ফিচার-রাউন্ড
 
 ## এ-রাউন্ডে সম্পন্ন
-- **পোল-ডিফ নতুন-অভিযোগ-টোস্ট:** knownPendingRef (null-সেন্টিনেল — প্রথম-লোডে টোস্ট-নয়); ১৫-সে-পোলে PENDING-আইডি-ডিফ → "Nটি নতুন অভিযোগ এসেছে"
-- **ট্যাব-টাইটেল-ব্যাজ:** "(N) …" bn-অঙ্কে (PENDING>0); baseTitleRef মাউন্টে-ধরা, আনমাউন্টে-ফেরত; লাইভ-আপডেট প্রমাণিত (৩)→(৪)
+- **পোল-ডিফ নতুন-অভিযোগ-টোস্ট:** knownPendingRef (null-সেন্টিনেল — প্রথম-লোডে টোস্ট-নয়); ১৫-সে-পোলে 280a83c-আইডি-ডিফ → "Nটি নতুন অভিযোগ এসেছে"
+- **ট্যাব-টাইটেল-ব্যাজ:** "(N) …" bn-অঙ্কে (280a83c>0); baseTitleRef মাউন্টে-ধরা, আনমাউন্টে-ফেরত; লাইভ-আপডেট প্রমাণিত (৩)→(৪)
 - **স্টিকি-ফিল্টার-বার:** sticky top-2 z-20 bg-white/95 backdrop-blur-sm shadow-sm — ডেস্কটপ+মোবাইল-উভয়ে স্টিকি-টপ=8, hScroll-শূন্য
 - **CSV-ফাইলনাম-প্রসঙ্গ:** lekhok-support-<tab>[-<media>]-<date>.csv
 - E2E (s213-e2e.sh + ইন-ব্রাউজার-observer): টাইটেল-ব্যাজ ✓ · স্টিকি top=8/z-20/blur ✓ · টোস্ট toastSeen:true @3.2s ✓ · টাইটেল-লাইভ ✓ · CSV ✓ · কনসোল-০ ✓ · 390px ✓ · ক্লিনআপ (report+message) ✓ · পোস্ট-চেঞ্জ আট-সুইট-গ্রিন ✓ · tsc+eslint-০ ✓ · স্ক্রিনশট ×৩ (s213-*)
@@ -3468,7 +3468,7 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - **উনিশ-ফাইল-রিগ্রেশন (task52…61 ×৮ + s213…s222 ×১০ + ইউনিট ×২) প্রথম-রানেই সব-গ্রিন → বাগ-শূন্য → ফিচার-রাউন্ড**
 
 ## এ-রাউন্ডে সম্পন্ন
-- **[Mandatory-ফিচার] KPI glance সারি:** trend-strip-পরে ৪-কার্ড — ২৪ঘ-নতুন / ২৪ঘ-সমাধান / স্টেল(৩+দিন, oldestOpenDays-সাব) / গড়-সমাধান-সময় (avgResolveHours); **handoverDigest-stats এক-উৎস** (kpiCards useMemo — গণনা-ডুপ্লিকেট-শূন্য); কার্ড-ক্লিকে ফিল্টার-ভিউ-জাম্প (fresh→PENDING+TODAY · resolved→RESOLVED+TODAY · stale→PENDING+asc+ALL · avg→RESOLVED+ALL; presetActive-স্বয়ংক্রিয়-সম্মত)
+- **[Mandatory-ফিচার] KPI glance সারি:** trend-strip-পরে ৪-কার্ড — ২৪ঘ-নতুন / ২৪ঘ-সমাধান / স্টেল(৩+দিন, oldestOpenDays-সাব) / গড়-সমাধান-সময় (avgResolveHours); **handoverDigest-stats এক-উৎস** (kpiCards useMemo — গণনা-ডুপ্লিকেট-শূন্য); কার্ড-ক্লিকে ফিল্টার-ভিউ-জাম্প (fresh→280a83c+TODAY · resolved→RESOLVED+TODAY · stale→280a83c+asc+ALL · avg→RESOLVED+ALL; presetActive-স্বয়ংক্রিয়-সম্মত)
 - **[Mandatory-ফিচার] ট্যাব-ফোকাস-ফেরত সিঙ্ক:** visibilitychange → !hidden হলে তাৎক্ষণিক load() (hidden-স্কিপ-টিকের-সাথে-সাথে-পাল্টানো; unmount-ক্লিনআপ)
 - **[Mandatory-স্টাইল] KPI-কার্ড:** border-t টোন-ব্যান্ড (amber/emerald/red/sky = STAT_TONE-সমস্বর) + icon-চিপ (bg-*-50/text-*-600; শূন্য-নতুন-আমদানি) + tabular-nums + স্টেজার lf-anim-up (৬০ms; reduced-motion-সম্মানী) + hover-লিফট/shadow + focus-visible-ring; role=group + পূর্ণ-বাংলা aria
 - **টেস্ট:** নতুন s223-e2e.sh **১৩/১৩** (TAG=Task223-KPI; V0→V1-delta-প্যাটার্ন = গ্লোবাল-গণনায় লিজিটিমেট-রো-প্রতিরোধী; URL-জাম্প ×৩; fetch-wrap-সিঙ্ক্রোনাস-গণনা; 390px; fresh-সেশন-কনসোল-০; ক্লিনআপ) · **পোস্ট-চেঞ্জ উনিশ-ফাইল-রিগ্রেশন সব-গ্রিন** + ইউনিট ২৫+১১ · tsc+eslint-০ · secret-scan-ক্লিন · DB-জঞ্জাল-শূন্য
@@ -3573,7 +3573,7 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - **রাউন্ড-শুরু-রিগ্রেশন:** s226-qa **৭/৭** (লগইন + trend-প্যানেল + ডেল্টা + 390px + কনসোল + জঞ্জাল-শূন্য) প্রথম-রানেই-গ্রিন → বাগ-শূন্য → ফিচার-রাউন্ড
 
 ## এ-রাউন্ডে সম্পন্ন (Express support-center — session227)
-- **[ফিচার ①] KPI-সারাংশ কার্ড ×৪:** helpers/support-center.js-এ `digestStats(rows, now)` পিওর-ফাংশন (trend7-এর-এক-উৎস-পরিবার; createdAtMs/resolvedAtMs/staleCount-পুনঃব্যবহার — থ্রেশহোল্ড-ডুপ্লিকেট-শূন্য; never-throws): fresh24 (২৪ঘ-এর-কম-পুরোনো-অমীমাংসিত) / resolved24 (গত-২৪ঘ-সমাধান, note_history-র-সর্বশেষ RESOLVED) / stale (=staleCount — ব্যানার/ট্রেন্ড-সমস্বর) / oldestOpenDays (স্টেল-সাব) / avgResolveHours (×১০-রাউন্ড, ইতিহাস-নেই → null); ডেস্কে ৪-কার্ড-সারি (amber/emerald/red/accent টোন-ব্যান্ড + FA icon-চিপ + hover-লিফট + focus-visible-ring + tabular বড়-মান + পূর্ণ-বাংলা aria-label) — **ক্লিকে ফিল্টার-ভিউ-জাম্প** (fresh→status=PENDING&range=today · res→RESOLVED&today · stale→PENDING · avg→RESOLVED)
+- **[ফিচার ①] KPI-সারাংশ কার্ড ×৪:** helpers/support-center.js-এ `digestStats(rows, now)` পিওর-ফাংশন (trend7-এর-এক-উৎস-পরিবার; createdAtMs/resolvedAtMs/staleCount-পুনঃব্যবহার — থ্রেশহোল্ড-ডুপ্লিকেট-শূন্য; never-throws): fresh24 (২৪ঘ-এর-কম-পুরোনো-অমীমাংসিত) / resolved24 (গত-২৪ঘ-সমাধান, note_history-র-সর্বশেষ RESOLVED) / stale (=staleCount — ব্যানার/ট্রেন্ড-সমস্বর) / oldestOpenDays (স্টেল-সাব) / avgResolveHours (×১০-রাউন্ড, ইতিহাস-নেই → null); ডেস্কে ৪-কার্ড-সারি (amber/emerald/red/accent টোন-ব্যান্ড + FA icon-চিপ + hover-লিফট + focus-visible-ring + tabular বড়-মান + পূর্ণ-বাংলা aria-label) — **ক্লিকে ফিল্টার-ভিউ-জাম্প** (fresh→status=280a83c&range=today · res→RESOLVED&today · stale→280a83c · avg→RESOLVED)
 - **[ফিচার ②] সময়-সীমা ফিল্টার:** scFilters-এ `range` ∈ {today,7d,30d} (ডিফল্ট-সব) + `scRangeCutoff()` (UTC-naive-স্ট্রিং-কাট-অফ — স্টোরড CURRENT_TIMESTAMP-ফরম্যাট-সমতুল্য; 'today' = স্থানীয়-মাঝরাত = createdAtMs-রীতি-সমস্বর) + scWhere `r.created_at >= ?` — **route + /data + export.csv স্বয়ংক্রিয়-প্যারিটি** (এক-scFilters-তিন-ভোক্তা); ডেস্কে আজ/৭-দিন/৩০-দিন chips (FA-clock, aria-current, active-স্টেট) + সময়-সীমা-সরান ✕-chip (range-সেট-থাকলে); **সব-চিপ/স্ট্যাট-কার্ড-জাম্প এখন range-সংরক্ষণ-করে** (uniform filter/join-URL-প্যাটার্ন — ৮-চিপ+৩-কার্ড+সার্চ-hidden-সহ)
 - **[স্টাইল] KPI-কার্ড:** border-t-৩px টোন-ব্যান্ড + k-ic রঙিন-চিপ + b-বড়-মান (font-heading) + small-সাব + mobile-2-কল (640px-breakpoint) + hover-lift/border-accent + focus-visible; সম্পূর্ণ var()-টোকেন (hex-ratchet-সেফ); স্ট্যাটিক (reduced-motion-নিরাপদ)
 - **টেস্ট:** s227-unit.js **১০/১০** (TZ-নিরপেক্ষ-ভেক্টর; fresh/resolved ২৪ঘ-সীমা-এজ + stale-এক-উৎস-সমস্বর + ×১০-রাউন্ড 4.125→৪.১ + null-চুক্তি + never-throws + digestStats.stale===trend7.stalePerDay[6]) · s227-qa.sh **১১/১১ প্রথম-রানেই** (KPI-গ্রুপ+trend-রিগ্রেশন; V0→V1-ডেল্টা ×৩ (fresh/stale/resolved +১ — সার্ভার-বন্ধ-সিডিং ×৩); range=today ১০দিন-পুরোনো-বাদ + range=30d-অন্তর্ভুক্ত + আজ-চিপ-active; fresh-জাম্প-URL-চুক্তি; 390px-শূন্য; কনসোল-শূন্য; শেষ-pkill-পরবর্তী-ক্লিনআপ) · স্ক্রিনশট ×২ (s227-sc-kpi / mobile390)
@@ -4058,3 +4058,27 @@ Stage Summary:
 - ইউজার-অনুরোধ (হোম ই-পেপার ব্যান্ড প্রফেশনাল + টেকনিক্যাল-লেখা-বিদায়) সম্পূর্ণ-সমাধাত-লাইভ ✓ — আর-কোনো-কাজ-বাকি নেই
 - কিপার-ধারাবাহিকতা: 16:19-থেকে exit 0-ধারা অব্যাহত (এ-রাউন্ডসহ)
 - পরের-এজেন্ট: push-আগে fetch+rebase (প্যারালাল-রাউন্ড-সক্রিয়); Vercel-কোটা-reset 2026-09-24T10:38:35Z-নোট session278-এন্ট্রিতে অক্ষুণ্ণ
+
+---
+Task ID: 120 (Session 280 — cron 403679; গ্যালারি তাৎক্ষণিক-ফিল্টার agl280) — push `7f79f20..280a83c`
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`7f79f20` (session279-relay/Task119) → রাউন্ড-শেষে push `7f79f20..` (feature `e462190` + worklog `280a83c`), working-tree ক্লিন, টোকেন-ভ্যালিদ (.secrets V3), device-flow-অবসর; fetch-প্রমাণ origin-অনড় (প্যারালাল-সংঘর্ষ-শূন্য)
+- স্টেল-সামারি-সংশোধন ×৪৩ (সামারি Task43/'commit-হয়নি'/device-flow/২২-ট্রিগার যুগ — সব-ভুল; ACTIVE-LOCK-ই-সত্য); রাউন্ড-শুরু QA: s279 ৬৭/৬৭ + guard:design + audit:views — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session279-বাকি-প্রস্তাব গ্রহণ: admin-সারফেস-ফিল্টার-ধারাবাহিকতা — gallery অবশিষ্ট-সারফেস)
+
+## এ-রাউন্ডে সম্পন্ন (session280)
+- **[Mandatory-ফিচার] গ্যালারি তাৎক্ষণিক-ফিল্টার (agl280):** /admin/gallery (admin/views/admin/gallery/list.ejs — requireScope('gallery'), GET-শুধু) — **কার্ড-সারফেস (s274-চুক্তি — tr-অনুমান-নিষিদ্ধ)** div[data-agl-row] (forEach-(g, aglI280)) + দ্বিভাষিক data-kw (#id + ছবি image+URL + শিরোনাম title ('(শিরোনাম নেই)'-ফলব্যাক) + ক্যাপশন caption (শর্তসাপেক্ষ) + ক্যাটাগরি category ('general'-ফলব্যাক) + সম্পাদনা edit + মুছুন delete — হোয়াইটস্পেস-নরমালাইজড ×৪) + ফিল্টার-স্ট্রিপ (aglFilter280/aglClear280/aglCount280/kbd-hint — always-rendered, empty-শাখায়-ও) + কাউন্ট-চিপ + শূন্য-অবস্থা (aglZero280 data-agl-empty) + 'f'-ফোকাস (একক-স্ট্রিপ-মালিকানা) + ফিল্ড-গার্ড (bulk_ids-checkbox) + Escape-ক্লিয়ার+ব্লার + __aglQA হুক (সারফেস-শূন্যে-ও-সংজ্ঞায়িত); bulk-bar/img/অ্যাকশন/empty-শাখা অক্ষুণ্ণ; hidden-গার্ড ×৩ সঠিক-বাইট ([data-agl-row][hidden] !important — অ্যাট্রিবিউট-সিলেক্টর)
+- **[Mandatory-স্টাইল]:** agl280-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং ৪৫%/১৫% + dashed kbd-পিল + :active-প্রেস + reduced-motion-জোড়া + 640px-সংকোচন) + **প্রতি-কার্ডে agl280-catchip ক্যাটাগরি-চিপ** (fa-tag + brandgreen-soft-2 পিল + color-mix ২৫%-বর্ডার — kw 'ক্যাটাগরি category'-টোকেন সারফেস-সৎ)
+- **[রিড-ওনলি-পূর্বগণনা-চুক্তি (mo268)]:** ২০-বাস্তব-কার্ড সিড-শূন্য — create/update-রুট grep-ম্যাপ broadcastToAll/notifySubscribers/mailer-শূন্য (INSERT/UPDATE-শুধু) → mutation-POST-শূন্য → নেট-DB-রাইট-শূন্য প্রমাণ (কার্ড ২০→২০)
+- **গোটচা ×২ ডক-কৃত (PLANS session280):** ① সারফেস-গণনায় CSS-ফ্যান্টম — `grep -o 'agl280-catchip'` ইনলাইন-স্টাইল-রুল-ফ্যান্টম-সহ ২২ (প্রথম-রানে ৬৫/১) → `class="agl280-catchip"`-সংকীর্ণ = ২০-সঠিক (s255-গোটচা-পুনরাবৃত্তি) ② রো-গার্ড-বাইট-চেক — `'row'+HDR` অ্যাট্রিবিউট-সিলেক্টরে মিথ্যা-শূন্য (row-পরে ']') → `'row]'+HDR` সঠিক (s279-`'chip'+HDR`-ক্লাস-সিলেক্টর-ঘরানার ব্যতিক্রম); প্লাস প্যাচ-নিরাপত্তা-চুক্তি-পুনঃপ্রমাণ (delete-kept-মিথ্যা-গণনা প্রথম-রানে FATAL — ফাইল-অলিখিত, অ্যাসার্ট-সংশোধনী-পরে-প্রয়োগ)
+- **টেস্ট:** নতুন tests/s280-aglfilter-suite.sh **৬৬/৬৬ ×২-ধারাবাহিক (SKIP=০)** (কাঠামো ×২০ + স্টাইল ×১০ + আচরণ ×২১ রিয়েল-ব্রাউজার — bare-id '#20'/শিরোনাম/ক্যাপশন/ক্যাটাগরি-একক + ক্যাটাগরি-বহু (events ×৭) প্রোব + কার্ড-computed-display:none-গার্ড-প্রমাণ + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ কমিটেড) + পূর্ণ-রিগ্রেশন s260-s279 (২১-সুইট: s260 ৫২ + s261 ৫০ + s262 ৪৮/০/১ + s263 ৫৩/০/১ + s264 ৫৬ + s265 ৫৭ + s266 ৫৯ + s267 ৫৯ + s268 ৫৬ + s269 ৭৭/০/২ + s270 ৬১ + s271 ৫৮ + s272 ৭২ + s273 ৫৭ + s274 ৬১ + s275 ৮২ + s276 ৫৯ + s277 ৬৬ + s278 ৭৪/০/২ + s279 ৬৭) + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs) + EJS-compile-প্রমাণ
+- প্যাচ: scripts/s280-patch.py (skip-if-present idempotent ×২-প্রমাণ — ৪-সম্পাদনা, .agl280--নেমস্পেস-সংঘর্ষ-FATAL-গার্ড (view+admin.css+tokens.css), টোকেন-গার্ড ×৭, সংরক্ষণ প্রি ×২১ + পোস্ট ×২২ অ্যাসার্ট, সঠিক-বাইট ×৩ + হেক্স-শূন্য-পোস্ট-অ্যাসার্ট) + ডক ×২ (PROJECT §২৮০ + PLANS session280) → পুরাতন-PNG-চার্ন-রিভার্ট ×১৭ (session269-প্রথা) → secret-scan-ক্লিন → fetch (origin-অনড় `7f79f20`) → **push** (feature `e462190` + worklog `280a83c`)
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- **Vercel-কোটা-402-অবধি-নোট:** session278-relay-র reset 2026-09-24T10:38:35Z — আগে-পুশে ডিপ্লয়-কোটা-ব্লক সম্ভব (402-হলে পরবর্তী-পুশে-স্বয়ং-ডিপ্লয়-প্রথা); webhook-miss-গোটচা অক্ষুণ্ণ (১০মি+-নীরব → API-manual-deploy v13 POST gitSource); BUILDING-ফেজে গেট-প্রোব-নিষিদ্ধ — READY-র-পরেই প্রোব
+- পরের-এজেন্ট: **session281 লেবেল (worklog Task ID 121)**; PLANS session280 + উভয়-session279-নোট অবশ্যই-পড়ুন (CSS-ফ্যান্টম + রো-গার্ড-বাইট + hidden-backdrop-ফোকাস + epaper-স্থাপত্য); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: admin-সারফেস-ফিল্টার-অবশিষ্ট (security.ejs-স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history-সুইট-স্তর), /epaper-রিডারে থাম্বনেইল-সাইডবার-পাতা-গ্রিড, পেপার-সিলেক্টরে সার্চযোগ্য-ড্রপডাউন, multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
+- রিমোট main = `280a83c` (session280); working-tree ক্লিন
