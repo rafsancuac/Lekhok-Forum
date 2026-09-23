@@ -420,6 +420,35 @@
   color: var(--lf-fb-ink);
   text-align: justify;
 }
+/* ── গণনা/পদবিন্যাস-তালিকা (গেজেট v2 — "০১. সভাপতি" জাতীয় ধারা) ── */
+.const-enum {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 0 0 0 10px;
+}
+.const-enum-no {
+  flex-shrink: 0;
+  min-width: 34px;
+  padding: 2px 8px;
+  border-radius: var(--lf-radius-chip);
+  background: transparent;
+  border: 1px solid var(--lf-brandgreen-soft-3);
+  color: var(--lf-brand-primary);
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 2px;
+}
+.const-enum-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--lf-fb-ink);
+  font-weight: 600;
+}
 .const-hr { border: 0; border-top: 1px solid var(--lf-ui-border); margin: 18px 0; }
 
 /* ── সংকলনাধীন-অবস্থা ── */
@@ -591,7 +620,7 @@
   .const-grid { display: block; }
   .const-article { border: 0; box-shadow: none; padding: 0; }
   .const-stripe { display: none; }
-  .const-item-text, .const-sec-lead { color: var(--lf-ink-max); }
+  .const-item-text, .const-sec-lead, .const-enum-text { color: var(--lf-ink-max); }
   .const-sec.reveal, .const-empty.reveal { opacity: 1 !important; transform: none !important; }
   .const-pn { display: none; }
 }

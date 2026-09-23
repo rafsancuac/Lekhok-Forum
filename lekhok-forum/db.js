@@ -867,16 +867,62 @@ async function applyLaterMigrations() {
 //   (১) লিগ্যাসি-ডিমোশন — chapter কলাম-হীন (''  বা NULL) পুরাতন সংক্ষিপ্ত-ধারা
 //       সারিগুলো 'legacy'-এ চিহ্নিত হয় → পাবলিক /constitution এদের রেন্ডার করে
 //       না (অ্যাডমিন-তালিকায় 'পুরাতন' ট্যাগসহ থেকে যায় — কোনো ডেটা-লস নেই)।
-//   (২) গেজেট-সিড — প্রাতিষ্ঠানিকভাবে প্রদত্ত ষষ্ঠ-অধ্যায়ের পূর্ণ পাঠ
-//       (ধারা-৪১/৪২/৪৩ — data/constitution.js CONSTITUTION_SECTIONS_V1)।
+//   (১.ক) গেজেট v2 সিঙ্ক (সেশন ২৩০) — constitutionGazetteSyncV2(): পুরাতন
+//       ষষ্ঠ-অধ্যায় সারির প্যারাফ্রেজ-পাঠ → প্রাতিষ্ঠানিক verbatim পাঠে একবার-ই
+//       সিঙ্ক (settings-মার্কার-গেটেড — পরবর্তী এডমিন-সম্পাদনা ওভাররাইট-মুক্ত)।
+//   (২) গেজেট-সিড — পূর্ণাঙ্গ গঠনতন্ত্র (পূর্বকথা + অধ্যায় ১–৪ + অধ্যায় ৬ —
+//       data/constitution.js CONSTITUTION_SECTIONS_V1)।
 //       NOT EXISTS(chapter, section_title)-গার্ড: একবার ঢুকলে আর দ্বিতীয়বার
 //       ঢোকে না, আর এডমিন ওই ধারা সম্পাদনা করলে সম্পাদনা ওভাররাইট হয় না।
+async function constitutionGazetteSyncV2() {
+  const MARKER = 'constitution_gazette_v2';
+  try {
+    const done = await backend.prepare('SELECT id FROM settings WHERE key = ?').get(MARKER);
+    if (done) return 0;
+  } catch (e) { return 0; /* settings টেবিল-হীন পুরনো ডিপ্লয় — পরের বুটে চেষ্টা */ }
+  const { CONSTITUTION_SECTIONS_V1, splitSectionTitle } = require('./data/constitution');
+  let synced = 0;
+  for (const s of CONSTITUTION_SECTIONS_V1) {
+    const badge = splitSectionTitle(s.section_title).badge;
+    if (!badge) continue; // ব্যাজ-হীন (পূর্বকথা) → সিঙ্ক-পরিসরের বাইরে; insert-লুপ সামলায়
+    try {
+      // একই অধ্যায়ে একই ধারা-ব্যাজ-প্রিফিক্সধারী পুরাতন সারি (শিরোনাম-ভ্যারিয়েন্টসহ,
+      // যেমন 'ধারা-৪৩ : হিসাব নিরীক্ষণ (অডিট)') — স্পেস-বাউন্ডারি ধারা-১০≠ধারা-১ নিশ্চিত করে
+      const row = await backend.prepare(
+        `SELECT id FROM constitution
+         WHERE chapter = ? AND (section_title = ? OR section_title LIKE ?)
+         ORDER BY id LIMIT 1`
+      ).get(s.chapter, s.section_title, badge + ' %');
+      if (!row) continue;
+      await backend.prepare(
+        'UPDATE constitution SET section_title = ?, content = ?, sort_order = ? WHERE id = ?'
+      ).run(s.section_title, s.content, s.sort_order, row.id);
+      synced++;
+    } catch (e) {
+      console.error('[db] gazette v2 sync row failed (' + s.section_title + '):', e.message);
+    }
+  }
+  try {
+    await backend.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)')
+      .run(MARKER, 'full-gazette-sync');
+  } catch (e) { /* পরের বুটে আবার */ }
+  return synced;
+}
+
 async function constitutionGazetteSeed206() {
   try {
     await backend.exec(
       "UPDATE constitution SET chapter = 'legacy' WHERE chapter IS NULL OR chapter = ''"
     );
   } catch (e) { /* কলাম এখনো নেই (পুরনো ডিপ্লয়) — LATER_COLUMNS পরের বুটে যোগ করবে */ return; }
+  // (১.ক) গেজেট v2 — পুরাতন সারির verbatim-সিঙ্ক আগে (insert-লুপের ডুপ্লিকেট-শিরোনাম
+  // ঝুঁকি, যেমন ধারা-৪৩-এর '(অডিট)' ভ্যারিয়েন্ট, এটিই দূর করে)
+  try {
+    const n = await constitutionGazetteSyncV2();
+    if (n) console.log('[db] constitutionGazetteSyncV2: ' + n + ' সারি verbatim-সিঙ্কড');
+  } catch (e) {
+    console.error('[db] constitutionGazetteSyncV2 failed:', e.message);
+  }
   const { CONSTITUTION_SECTIONS_V1 } = require('./data/constitution');
   let seeded = 0;
   for (const s of CONSTITUTION_SECTIONS_V1) {

@@ -1,7 +1,8 @@
 <%# ═══════════════════════════════════════════════════════════════════════════
-    গঠনতন্ত্র — প্রিমিয়াম গেজেট-রিডার (সেশন ২০৬)
+    গঠনতন্ত্র — প্রিমিয়াম গেজেট-রিডার (সেশন ২০৬ → পূর্ণাঙ্গ গেজেট v2)
     • স্টিকি সূচিপত্র-সাইডবার (ডেস্কটপ) / ড্রপডাউন (মোবাইল)
-    • ধারা-ব্যাজ + (ক)(খ) উপধারা-সুষম বিন্যাস — কালপুরুষ বডি + হিন্দ শিলিগুড়ি UI
+    • ধারা-ব্যাজ + (ক)(খ) উপধারা + "০১." গণনা/পদবিন্যাস-তালিকা — অর্ডার-সংরক্ষী
+      parsed.groups রেন্ডার (কালপুরুষ বডি + হিন্দ শিলিগুড়ি UI)
     • রিডিং-প্রোগ্রেস বার, রিভিল-অ্যানিমেশন, অ্যাংকর-কপি, প্রিন্ট-ফ্রেন্ডলি
     ডেটা: DB-চালিত (chapter-কলাম-গ্রুপড) — routes/daily.js + data/constitution.js
    ═════════════════════════════════════════════════════════════════════ %>
@@ -19,7 +20,7 @@
     <div class="const-hero-meta">
       <span><i class="fas fa-layer-group" aria-hidden="true"></i> <%= toBn(chapters.length) %>টি অধ্যায়</span>
       <span><i class="fas fa-gavel" aria-hidden="true"></i> <%= toBn(totalSections) %>টি প্রকাশিত ধারা</span>
-      <span><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> সর্বশেষ সংশোধন: জুলাই ২০২৬</span>
+      <span><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> কার্যকর: ১৪ জুলাই ২০২০ (ধারা-০৯)</span>
     </div>
   </header>
 
@@ -110,21 +111,26 @@
                   <i class="fas fa-link" aria-hidden="true"></i>
                 </button>
               </div>
-              <% if (s.parsed.lead.length > 0) { %>
-                <% s.parsed.lead.forEach((p) => { %>
-                  <p class="const-sec-lead"><%= p %></p>
-                <% }) %>
-              <% } %>
-              <% if (s.parsed.items.length > 0) { %>
-                <ol class="const-items">
-                  <% s.parsed.items.forEach((it) => { %>
-                    <li class="const-item">
-                      <span class="const-item-marker"><%= it.marker %></span>
-                      <span class="const-item-text"><%= it.text %></span>
-                    </li>
-                  <% }) %>
-                </ol>
-              <% } %>
+              <%# অর্ডার-সংরক্ষী গুচ্ছ-রেন্ডার: lead → প্যারাগ্রাফ, enum → গণনা-তালিকা, items → (ক)-চিপ <ol> %>
+              <% s.parsed.groups.forEach((g) => { %>
+                <% if (g.type === 'items') { %>
+                  <ol class="const-items">
+                    <% g.items.forEach((it) => { %>
+                      <li class="const-item">
+                        <span class="const-item-marker"><%= it.marker %></span>
+                        <span class="const-item-text"><%= it.text %></span>
+                      </li>
+                    <% }) %>
+                  </ol>
+                <% } else if (g.type === 'enum') { %>
+                  <p class="const-enum">
+                    <span class="const-enum-no"><%= g.no %>.</span>
+                    <span class="const-enum-text"><%= g.text %></span>
+                  </p>
+                <% } else { %>
+                  <p class="const-sec-lead"><%= g.text %></p>
+                <% } %>
+              <% }) %>
             </section>
             <% if (si < active.sections.length - 1) { %><hr class="const-hr" /><% } %>
           <% }) %>
@@ -148,7 +154,7 @@
       </nav>
 
       <footer class="const-art-foot">
-        <span>সর্বশেষ সংশোধন: জুলাই ২০২৬</span>
+        <span>গঠনতন্ত্র কার্যকর: ১৪ জুলাই ২০২০ • ধারা-০৯</span>
         <span class="const-art-foot-brand">লেখক ফোরাম গঠনতান্ত্রিক সংসদ</span>
       </footer>
     </article>
