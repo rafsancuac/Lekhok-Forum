@@ -2779,3 +2779,27 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - বাকি-প্রস্তাব: admin-সাব-তালিকা-অবশিষ্ট (events/gallery/members/resources-list — admin-ভার্সন-অফিল্টারড; notices-সম্পন্ন), security.ejs-স্কোপ-ম্যাপ-পূর্বক, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
 - রিমোট main = push-পরবর্তী HEAD (session276-জোড়া: fix + feature + worklog); working-tree ক্লিন
 
+---
+Task ID: 117 (session277 — cron 403679; অ্যাডমিন ইভেন্ট তাৎক্ষণিক-ফিল্টার ev277 + while-read-প্রোব-সংশোধনী)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD(রাউন্ড-শুরু)=origin=`75a0688` (session276/Task116 + টুল-কমিট), working-tree ক্লিন (PNG-চার্ন-রিভার্ট-পূর্বে), টোকেন-ভ্যালিদ (/home/z/my-project/.secrets/gh-token — 200), স্থায়ী-সার্ভার-জীবিত (৮০৯৪); device-flow-অবসর
+- রাউন্ড-শুরু QA: s276 ৫৯/৫৯ (SKIP=০) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session276-বাকি-প্রস্তাব গ্রহণ: admin-সাব-তালিকা — events সারফেস; requireScope('events') → admin/admin123 ভিউয়ার, s231-প্রথা)
+
+## এ-রাউন্ডে সম্পন্ন (session277)
+- **[Mandatory-ফিচার] অ্যাডমিন ইভেন্ট তাৎক্ষণিক-ফিল্টার (ev277):** /admin/events (admin/views/admin/events/list.ejs — moderator-ভার্সন s260-সুইটেড; admin-ভার্সন-অফিল্টারড-ছিল) — সারি-সারফেস tr data-ev-row (forEach-(e, evI277)) + দ্বিভাষিক data-kw (#id + ইভেন্ট event + শিরোনাম title + তারিখ date + স্থান location — হোয়াইটস্পেস-নরমালাইজড ×৩ + featured-মান-অ্যালায়াস (বিশেষ featured/সাধারণ normal — s273-চুক্তি) + সম্পাদনা edit + মুছুন delete) + ফিল্টার-স্ট্রিপ (evFilter277/evClear277/evCount277/kbd-hint — always-rendered) + কাউন্ট-চিপ + শূন্য-অবস্থা (evZero277 data-ev-empty) + 'f'-ফোকাস (একক-স্ট্রিপ) + ফিল্ড-গার্ড (bulk_ids-checkbox) + Escape + __evQA হুক; bulk-bar/data-bulk-all/data-bulk-msg ×৩/bulk-toggle ×২/empty-শাখা/sidebar অক্ষুণ্ণ
+- **[Mandatory-স্টাইল]:** ev277-ব্লক হেক্স-শূন্য টোকেন-শুধু (brandgreen-পরিবার — color-mix রিং + dashed kbd-পিল + :active-প্রেস + reduced-motion-জোড়া + 640px-সংকোচন + hidden-গার্ড ×৩ সঠিক-বাইট — tr[data-ev-row]idden] !important)
+- **রিড-ওনলি-চুক্তি (mo268-অনুলিপি):** POST /admin/events broadcastToAll করে (auto-notify) → marker-seed-নেট-শূন্য-ই২ই-নিষিদ্ধ (s276-চুক্তি-পুনঃপ্রয়োগ) → সিড-শূন্য + রেন্ডার্ড-HTML-পূর্বগণনা + মিউটেশন-POST-শূন্য → নেট-DB-রাইট-শূন্য-প্রমাণ (সারি ৪→৪) + প্রোব-অবশেষ-শূন্য
+- **গোটচা ×২ ডক-কৃত (PLANS session277):** ① fa-filter ⊂ fa-filter-circle-xmark-সাবস্ট্রিং-অ্যাসার্ট (in-memory-ধরা, ফাইল-অলিখিত — প্যাচ-নিরাপত্তা-চুক্তি-পুনঃপ্রমাণ) ② while-read-সেগমেন্ট-প্রোব (for-loop word-splitting মাল্টি-ওয়ার্ড-প্রোব ভাঙে — প্রথম-রানে শিরোনাম-প্রোব SKIP ৬৪/২; while IFS= read -r-সংশোধনীতে পূর্ণ-সেগমেন্ট-প্রোব ৬৬/৬৬ ×২)
+- **টেস্ট:** নতুন tests/s277-evfilter-suite.sh **৬৬/৬৬ ×২-ধারাবাহিক (SKIP=০)** (কাঠামো ×১৯ + স্টাইল ×৯ + আচরণ ×২৪ রিয়েল-ব্রাউজার + পূর্বশর্ত ×৮ — নির্ধারক-প্রোব ×৪ (#4 একক / পূর্ণ-শিরোনাম 'আন্তর্জাতিক মাতৃভাষা দিবস উদযাপন' / তারিখ '২০২৬-০২-১৫' / স্থান 'অনলাইন (জুম)') + featured/normal-অ্যালায়াস ২/৪-জোড়া + সর্বজনীন-টোকেন ×৩ + নো-ম্যাচ→শূন্য + computed-display:none + শূন্য-বক্স-বিপরীত + clear-পুনরুদ্ধার + চিপ-text/hidden/display-none + 'f'-ফোকাস + ফিল্ড-গার্ড + Escape-ব্লার + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ কমিটেড + নেট-শূন্য) + পূর্ণ-রিগ্রেশন s276 ৫৯/৫৯ + s275 ৮২/৮২ + s274 ৬১/৬১ + s273 ৫৭/৫৭ + s272 ৭২/৭২ + s271 ৫৮/৫৮ + s270 ৬১/৬১ + s269 ৭৭/০/২ + s268 ৫৬/৫৬ + s267 ৫৯/৫৯ + s266 ৫৯/৫৯ + s265 ৫৭/৫৭ + s264 ৫৬/৫৬ + s263 ৫৩/০/১ + s262 ৪৮/০/১ + s261 ৫০/৫০ + s260 ৫২/৫২ + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs)
+- প্যাচ: scripts/s277-patch.py (idempotent ×২, .ev277--নেমস্পেস-গার্ড ×৩-ফাইল, আইকন-প্রি-গার্ড সাবস্ট্রিং-সচেতন, প্রি/পোস্ট-অ্যাসার্ট ×২২, হেক্স-শূন্য-পোস্ট-অ্যাসার্ট, সঠিক-বাইট ×৩) + ডক ×৩ (PROJECT §২৭৭ + PLANS session277 + repo-worklog Task-117) → fetch → push → Vercel-যাচাই (webhook-miss-গোটচা-সচেতন — API-manual-deploy-ফলব্যাক)
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- **প্যারালাল-রাউন্ড-সচেতনতা:** push-পূর্ব fetch+rebase-প্রথা (force-push-পার্জ-পুনরাবৃত্তি-হলে `--onto`); রিবেজ-পরবর্তী guard:design-পুনঃরান (s276-গোটচা)
+- পরের-এজেন্ট: **session278 লেবেল (worklog Task ID 118)**; PLANS session277-নোট অবশ্যই-পড়ুন (while-read-প্রোব-প্রথা + সাবস্ট্রিং-অ্যাসার্ট + broadcast-ম্যাপ + সিবলিং-নির্বাচন gallery/members/resources-list); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: admin-সাব-তালিকা-অবশিষ্ট (gallery/members/resources-list — admin-ভার্সন-অফিল্টারড), security.ejs-স্কোপ-ম্যাপ-পূর্বক, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
+- রিমোট main = push-পরবর্তী HEAD (session277-ev277); working-tree ক্লিন
+
