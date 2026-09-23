@@ -2849,3 +2849,23 @@ Stage Summary:
 - রিড-ওনলি-চুক্তি (mo268): নেট-DB-রাইট-শূন্য-প্রমাণ (সারি ৮৭→৮৭) + প্রোব-অবশেষ-শূন্য
 - পরের-এজেন্ট: **session279 লেবেল (worklog Task ID 119)**; PLANS session278-নোট অবশ্যই-পড়ুন (while-read-প্রথা + দ্বি-ফিল্ড-গার্ড-ম্যাপ + admin-সাব-তালিকা-অবশিষ্ট gallery/resources-list); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - রিমোট main = push-পরবর্তী HEAD (session278-aml278); working-tree ক্লিন
+
+---
+Task ID: 119 (session279 — cron 403679; অ্যাডমিন রিসোর্স তালিকা তাৎক্ষণিক-ফিল্টার arl279 + hidden-backdrop-ফোকাস-গোটচা)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+Work Log:
+- রাউন্ড-শুরু-যাচাই: HEAD=origin=`1b750b1` (session278-aml278 + রিলে-নোট), working-tree ক্লিন, টোকেন-ভ্যালিদ, স্থায়ী-সার্ভার-জীবিত (৮০৯৪); device-flow-অবসর
+- **স্টেল-সামারি-সংশোধন ×৪৪:** কনটেক্সট-সামারি-যুগ-দাবি পুনরায়-অস্বীকৃত; ACTIVE-LOCK + HEAD=origin-প্রমাণে-ই-সত্য
+- রাউন্ড-শুরু QA: s278 ৭৪/৭৪ (SKIP=২) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (উভয়-session278-নোট-পঠিত; admin-সাব-তালিকা-ধারাবাহিকতা — resources সারফেস নির্বাচিত; gallery-পরিদর্শনে-কার্ড-সারফেস-প্রমাণ → পরবর্তী-রাউন্ডের-জন্য-স্থগিত — s274-কার্ড-চুক্তি-প্রযোজ্য)
+- **সারফেস-প্রস্তুতি:** view-পরিদর্শন (১৬৮-লাইন, tr-সারফেস, seriesStats+bulk-modal-সমৃদ্ধ) + সম্পাদনা-প্রভাব-মানচিত্র (প্রি-কাউন্ট ×২১) + নেমস্পেস-যাচাই (.arl279- শূন্য ×৩-ফাইল) + create-রুট-সাইড-এফেক্ট-ম্যাপ (broadcast/notify/mailer-শূন্য grep-প্রমাণ)
+- **[Mandatory-ফিচার]** arl279 তাৎক্ষণিক-ফিল্টার + **[Mandatory-স্টাইল]** হেক্স-শূন্য টোকেন-শুধু brandgreen-ব্লক (বিস্তারিত PROJECT §২৭৯)
+- **গোটচা-ধরা-ফিক্স:** hidden-backdrop-ফোকাস-গোটচা (rbmCsv focus()-অক্ষম — প্রথম-রানে ৬৬/১) → backdrop-খোলা-প্রোব-সংশোধনী → ৬৭/৬৭ ×২
+- **টেস্ট:** নতুন tests/s279-arlfilter-suite.sh **৬৭/৬৭ ×২-ধারাবাহিক (SKIP=০)** + পূর্ণ-রিগ্রেশন s260-s278 সব-গ্রিন + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs)
+- PNG-চার্ন-রিভার্ট (session269-প্রথা) + secret-scan-ক্লিন + EJS-কম্পাইল-প্রমাণ
+- ডক ×৩ (PROJECT §২৭৯ + PLANS session279 + repo-worklog Task-119) + কমিট-জোড়া (ফিচার + ডক) → fetch+rebase → push (push-পরবর্তী HEAD = এ-কমিট) → Vercel READY → প্রোড-স্পট
+
+Stage Summary:
+- রিমোট main = push-পরবর্তী HEAD (session279-arl279); working-tree ক্লিন
+- পরের-এজেন্ট: **session280 লেবেল (worklog Task ID 120)**; PLANS session279-নোট অবশ্যই-পড়ুন (hidden-backdrop-ফোকাস-গোটচা + create-রুট-সাইড-এফেক্ট-ম্যাপ + ধরন-দ্বি-স্তর-অ্যালায়াস + gallery-কার্ড-সারফেস-প্রস্তাব); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
