@@ -694,3 +694,22 @@
 @media (prefers-reduced-motion: reduce) {
   .ep-rail-item.is-lazy .ep-rail-thumb.is-pending::after { animation: none; }
 }
+
+/* ═══ session294 — কুইক-সুইচ স্ট্রিপ (ep294 — ইউজার-স্পেক অবস্থান ২: কন্ট্রোল-বারের ঠিক উপরে)
+   চুক্তি: হেক্স-শূন্য টোকেন-শুধু + Hind Siliguri (পিল/লেবেল) + Kalpurush (সাব-টেক্সট)
+   + no-scrollbar + shrink-0 পিল + reduced-motion-সম্মান + 640px-সংকোচন ═══ */
+.ep-strip294 { display: flex; align-items: center; gap: .4rem; overflow-x: auto; padding: .5rem .85rem; background: var(--lf-surface-tint); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-card); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.ep-strip294::-webkit-scrollbar { display: none; }
+.ep-strip294-lbl { flex-shrink: 0; font-family: var(--font-heading); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--lf-ink-mute); white-space: nowrap; margin-right: .1rem; }
+.ep-strip294-pill { flex-shrink: 0; display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; padding: .32rem .7rem; border-radius: var(--lf-radius-chip); font-family: var(--font-heading); font-size: .76rem; font-weight: 700; color: var(--lf-text-primary); background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); cursor: pointer; transition: color .15s ease, border-color .15s ease, background .15s ease, transform .15s ease; }
+.ep-strip294-pill:hover { color: var(--lf-brand-primary); border-color: var(--lf-brand-primary); transform: translateY(-1px); }
+.ep-strip294-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lf-brandgreen-soft-3); flex-shrink: 0; }
+.ep-strip294-pill.is-active { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); box-shadow: 0 1px 2px rgba(0, 0, 0, .14); }
+.ep-strip294-pill.is-active .ep-strip294-dot { background: var(--lf-white); }
+.ep-strip294-pill.is-active:hover { transform: none; }
+.ep-strip294-stale { font-family: var(--font-body); font-size: .6rem; font-weight: 600; opacity: .68; margin-left: .12rem; }
+.ep-strip294-pill.is-active .ep-strip294-stale { opacity: .85; }
+.ep-strip294-all { flex-shrink: 0; margin-left: auto; white-space: nowrap; font-family: var(--font-heading); font-size: .74rem; font-weight: 700; color: var(--lf-brand-primary); text-decoration: none; padding: .3rem .25rem; }
+.ep-strip294-all:hover { text-decoration: underline; }
+@media (max-width: 640px) { .ep-strip294 { padding: .45rem .6rem; gap: .32rem; } .ep-strip294-lbl { display: none; } .ep-strip294-pill { font-size: .72rem; padding: .28rem .6rem; } }
+@media (prefers-reduced-motion: reduce) { .ep-strip294-pill { transition: none; } }

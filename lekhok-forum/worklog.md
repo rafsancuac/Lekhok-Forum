@@ -3130,3 +3130,21 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session294 লেবেল (worklog Task ID 134)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান + **দীর্ঘ-রান চাঙ্কে-ই** + কমিট-মেসেজ -F-পথ + **eval-এ IIFE-র‍্যাপ**; PLANS session293 + session292 + session291 + session290 পড়ুন
 - বাকি-প্রস্তাব: content.ejs/home-leadership.ejs/sections.ejs-ফিল্টার-প্রার্থী (আসল-শূন্য — স্ক্যান-প্রমাণিত), multipart-ব্রাউজার-পাথ-ই২ই (press-ফর্ম রিয়েল-ফাইল-আপলোড — s258-হেডার-চুক্তি), page-count-ব্যাজ (গেটেড — epaper-bot-স্তরে কলাম-যোগ-হলে), LOWMEM-ক্যাপ-টিউনিং, ফিল্মস্ট্রিপ-স্ন্যাপ-পলিশ, daily-স্ট্যাটিক-চিপ→ক্লিকেবল-ফ্যাসেট (dcf293-সম্প্রসারণ), Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+
+---
+Task ID: 134 (session294 — ইউজার-স্পেক অবস্থান ২: ই-পেপার রিডার কুইক-সুইচ স্ট্রিপ ep294 + প্রোড-ডিপ্লয়)
+Agent: Z.ai Code (main session, web-655ece34)
+Task: ইউজার-রিপোর্ট "এই ডিজাইন তো https://lekhok-forum.vercel.app/ এ দেখছি না" — রিডারের কুইক-সুইচ স্ট্রিপ (অবস্থান ২) প্রোডে অনুপস্থিত; সম্পূর্ণ-ইমপ্লিমেন্ট + প্রোড-যাচাই। সাথে স্যান্ডবক্স-হাইড্রেশন-রিপোর্ট (my-project — এ-প্রজেক্ট-বহির্ভূত)।
+
+Work Log:
+- RCA (প্রোড-স্ক্যান-প্রমাণিত): /epaper-এ epPs282 (অবস্থান ১) লাইভ (১৭ মার্কার) কিন্তু স্ট্রিপ-মার্কার-শূন্য; হোম epk291/te-band233 লাইভ (৬৭) — সমস্যা-একমাত্র স্ট্রিপ; session281-প্যাচ-প্যাকেজ (ep-switch-strip.js) পুরোনো-স্থাপত্য-লক্ষ্যী (ep-head-card/epGrid280-ব্যবধানে ক্লায়েন্ট-ইনজেকশন) — session280 ৩-প্যানেল-বিলোপে অচল → বর্জন, সার্ভার-রেন্ডারড EJS নতুন-বাস্তবায়ন
+- views/user/epaper.ejs: ep-head-card↔epGrid280-মাঝে স্ট্রিপ (ep-wrap flex gap-14px-স্বয়ং-স্পেসড) — নাম-ডিডুপ (প্রতি-পত্রিকার সর্বশেষ) + র‍্যাংক-ক্রম শীর্ষ-পিল ≤৮ + সততা-ব্যাজ (আজকের-না-হলে bn d/m — stripStale294) + aria-label + সকল-পত্রিকা (bnNum N+)→?view=dir; পিল-ক্লিকে নেটিভ-সিলেক্টর change-চেইন (date-aware — বিদ্যমান-লজিক-পুনঃব্যবহার, ডুপ্লিকেশন-শূন্য); syncPaperSelect-এ guarded হুক (window.__epStrip294Sync — IIFE, ইঞ্জিন-স্ক্রিপ্ট-পূর্বে-সংজ্ঞা → প্রথম বুট-select-এই সিঙ্ক)
+- epaper.css session294-ব্লক: হেক্স-শূন্য টোকেন-শুধু (surface-tint/ui-border/radius-card; পিল radius-chip ক্যাপসুল + brandgreen-soft-3 ডট; Hind Siliguri পিল/লেবেল, Kalpurush স্টেল-ব্যাজ) + no-scrollbar + hover translateY(-1px) + 640px-লেবেল-বিলোপ + reduced-motion; ফুলস্ক্রিন-রুট (#epGrid280)-বহির্ভূত → পূর্ণ-পাঠ-মোডে স্ট্রিপ-বিলোপ
+- টেস্ট: নতুন tests/s294-strip-suite.sh **১৯/১৯ ×২-ধারাবাহিক (SKIP=০)** — কাঠামো ×৭ + SSR ×৩ + ব্রাউজার ×৮ (বুটে সক্রিয়-পিল top-rank/aria-current/ক্লিকে-সক্রিয়-স্থানান্তর/বার-তারিখ-সিঙ্ক/মোবাইল-390 পৃষ্ঠা-hScroll-শূন্য) + রিগ্রেশন ×২; ম্যানুয়াল agent-browser E2E: যুগান্তর-পিলে ২৪→২৩-সেপ্টে সুইচ ✓ বিপরীতে বর্তমান-তারিখ-সংরক্ষণ ✓; guard:design ✓ + audit:views (১২২ ejs) ✓ + EJS-compile ✓
+- গোটচা ×৪ (PLANS session294): agent-browser eval-রিটার্ন JSON-এনকোডেড-স্ট্রিং → বাশে unj-unescape; সিডার সার্ভার-বন্ধে-চালান (SIGTERM-save-clobber); sed-রেঞ্জে বাংলা-ইনলাইন-রেজেক্স-কলিশন → grep -nF+লাইন-বিস্তার; suite-রুট-পাথ দ্বৈত-nesting (SCRIPT_DIR/../..)
+- ডেপ্লয়মেন্ট: কমিট-অথর rafsancuac@users.noreply.github.com (COMMIT_AUTHOR_REQUIRED-গেট) → push (Vercel অটো) → প্রোড-মার্কার-কার্ল যাচাই
+- স্যান্ডবক্স-নোট: my-project (Next.js) hydration-ত্রুটি ফিক্স — এ-রিপোর-স্কোপ-বহির্ভূত (AGENT_INSTRUCTIONS §১), স্যান্ডবক্স-প্রিভিউ-স্তরেই সীমাবদ্ধ
+
+Stage Summary:
+- ই-পেপার রিডার এখন PressReader-সম্পূর্ণ: অবস্থান ১ (সার্চযোগ্য কম্বো) + অবস্থান ২ (কুইক-সুইচ স্ট্রিপ) — দুই-অবস্থানই সার্ভার-রেন্ডারড রিয়েল-ডেটা, ইঞ্জিন-অস্পৃশ্য (শুধু guarded হুক), ফুলস্ক্রিন-স্তর-অক্ষুণ্ণ
+- পরের-এজেন্ট: session295 লেবেল (Task ID 135); push-আগে fetch+rebase; বাকি-প্রস্তাব PLANS session294-নোট দেখুন

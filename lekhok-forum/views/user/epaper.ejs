@@ -120,6 +120,72 @@
   <%# ═══════════ session280 (ইউজার-স্পেক, PressReader ৩-প্যানেল) ═══════════
       একক কন্ট্রোল-বার (রিপিট-শূন্য) + বাম পাতা-রেল + মাঝে বড় ভিউ + ডানে ক্যালেন্ডার ও তালিকা;
       ফুলস্ক্রিন-রুট = এই পুরো গ্রিড (#epGrid280) — বার/রেল/তালিকাসহ পূর্ণ-পাঠ-মোড ── %>
+  <%# ═══════════ session294 (ইউজার-স্পেক অবস্থান ২): কুইক-সুইচ স্ট্রিপ — কন্ট্রোল-বারের ঠিক উপরে ═══════════
+      নাম-ভিত্তিক ডিডুপ (প্রতি-পত্রিকার সর্বশেষ সংখ্যা) + পাঠকপ্রিয়তা-র‍্যাংক-ক্রমে শীর্ষ-পিল ≤৮;
+      সব-ডেটা বট-সিঙ্কড epaper_files-থেকে-সার্ভার-রেন্ডারড (মক-নয়); আজকের-না-হলে সততা-ব্যাজ (d/m);
+      পিল-ক্লিকে নেটিভ-সিলেক্টর change-চেইন (date-aware — ইঞ্জিন-লজিক-পুনঃব্যবহার, ডুপ্লিকেশন-শূন্য) ── %>
+  <%
+    const stripSeen294 = {};
+    const stripList294 = [];
+    payload.forEach(function (p) {
+      if (stripSeen294[p.name]) return;
+      stripSeen294[p.name] = true;
+      stripList294.push(p);
+    });
+    stripList294.sort(function (a, b) {
+      return (a.rank || 999) - (b.rank || 999) || String(a.name).localeCompare(String(b.name), 'bn');
+    });
+    const stripShow294 = stripList294.slice(0, 8);
+    const stripStale294 = function (iso) {
+      const pr = String(iso || '').slice(0, 10).split('-');
+      return pr.length === 3 ? bnNum(+pr[2]) + '/' + bnNum(+pr[1]) : '';
+    };
+  %>
+  <nav class="ep-strip294" id="epStrip294" aria-label="শীর্ষ পত্রিকা দ্রুত-সুইচ">
+    <span class="ep-strip294-lbl">শীর্ষ পত্রিকা:</span>
+    <% stripShow294.forEach(function (p) { const stale294 = String(p.date).slice(0, 10) !== todayIso; %>
+    <button type="button" class="ep-strip294-pill" data-ep-strip294="<%= p.name %>" title="<%= p.dateBn %>">
+      <span class="ep-strip294-dot" aria-hidden="true"></span><span class="ep-strip294-name"><%= p.name %></span><% if (stale294) { %><span class="ep-strip294-stale" title="সর্বশেষ প্রাপ্ত সংখ্যা"><%= stripStale294(p.date) %></span><% } %>
+    </button>
+    <% }); %>
+    <a class="ep-strip294-all" href="/epaper?view=dir">সকল পত্রিকা (<%= bnNum(stripList294.length) %>+)<span aria-hidden="true"> ➔</span></a>
+  </nav>
+  <script>
+  /* session294: স্ট্রিপ-ক্লায়েন্ট — পিল-ক্লিকে নেটিভ-সিলেক্টর change-চেইন (date-aware);
+     syncPaperSelect-হুকে সক্রিয়-পিল-সিঙ্ক — বুট/deep-link/ক্যালেন্ডার/তালিকা/কম্বো সব-পথে-সঠিক।
+     এ-স্ক্রিপ্ট ইঞ্জিন-স্ক্রিপ্টের আগে চলে → প্রথম বুট-select-এই সক্রিয়-পিল স্থাপিত হয়। */
+  (function () {
+    'use strict';
+    var strip = document.getElementById('epStrip294');
+    if (!strip) return;
+    function sync294(p) {
+      var name = (p && typeof p === 'object') ? p.name : p;
+      if (!name) return;
+      var found = null;
+      strip.querySelectorAll('.ep-strip294-pill').forEach(function (b) {
+        var on = b.getAttribute('data-ep-strip294') === name;
+        b.classList.toggle('is-active', on);
+        if (on) { b.setAttribute('aria-current', 'page'); found = b; }
+        else { b.removeAttribute('aria-current'); }
+      });
+      if (found && found.scrollIntoView) { try { found.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {} }
+    }
+    window.__epStrip294Sync = sync294;
+    strip.addEventListener('click', function (ev) {
+      var pill = ev.target.closest('.ep-strip294-pill');
+      if (!pill) return; // "সকল পত্রিকা"-লিংক স্বাভাবিক-নেভিগেট করবে
+      var sel = document.getElementById('epPaperSelect');
+      var name = pill.getAttribute('data-ep-strip294') || '';
+      if (!sel || !name || !sel.options || !sel.options.length) return;
+      var has = false;
+      Array.prototype.forEach.call(sel.options, function (o) { if (o.value === name) has = true; });
+      if (!has) return;
+      ev.preventDefault();
+      sel.value = name;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  })();
+  </script>
   <div class="ep-grid" id="epGrid280">
     <%# ── ① একক স্লিক কন্ট্রোল-বার: [পত্রিকা-সিলেক্টর ▾] · [বাংলা তারিখ] │ [পাতা X/Y ▾] [জুম] [ঘোরান] [⛶] [মোড] ── %>
     <div class="ep-ctlbar">
@@ -1054,6 +1120,7 @@
     if (!elPaperSel) return;
     if (elPaperSel.value !== p.name) elPaperSel.value = p.name;
     ps282SyncLabel(); // session282: কম্বো-ট্রিগার-লেবেল সিঙ্ক (hoisted-ঘোষণা — বুট-পূর্ব-কল-নিরাপদ)
+    if (window.__epStrip294Sync) window.__epStrip294Sync(p); // session294: স্ট্রিপ-সক্রিয়-পিল-সিঙ্ক (guarded — স্ট্রিপ-অনুপস্থিতে-শূন্য-কস্ট)
   }
   if (elPaperSel) elPaperSel.addEventListener('change', function () {
     var name = elPaperSel.value; if (!name) return;
