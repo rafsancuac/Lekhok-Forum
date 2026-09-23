@@ -124,9 +124,22 @@
     <%# ── ① একক স্লিক কন্ট্রোল-বার: [পত্রিকা-সিলেক্টর ▾] · [বাংলা তারিখ] │ [পাতা X/Y ▾] [জুম] [ঘোরান] [⛶] [মোড] ── %>
     <div class="ep-ctlbar">
       <div class="ep-ctlbar-l">
-        <div class="ep-ps-wrap">
+        <div class="ep-ps-wrap" id="epPs282">
           <i class="fas fa-building-columns ep-ps-ico" aria-hidden="true"></i>
           <select class="ep-paper-select" id="epPaperSelect" aria-label="পত্রিকা নির্বাচন"></select>
+          <button type="button" class="ep-ps-combo" id="epPs282Btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="epPs282Opts" aria-label="পত্রিকা নির্বাচন — খুঁজে বেছে নিন">
+            <span class="ep-ps-combo-label is-empty" id="epPs282Label">পত্রিকা…</span>
+            <i class="fas fa-chevron-down ep-ps-combo-chev" aria-hidden="true"></i>
+          </button>
+          <div class="ep-ps-panel" id="epPs282Panel" hidden>
+            <div class="ep-ps-search">
+              <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+              <input type="search" id="epPs282Search" placeholder="নাম লিখে খুঁজুন…" aria-label="পত্রিকার নামে খুঁজুন" autocomplete="off" />
+              <button type="button" class="ep-ps-sclear" id="epPs282Clear" aria-label="খোঁজা মুছুন" hidden><i class="fas fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <div class="ep-ps-opts" id="epPs282Opts" role="listbox" aria-label="পত্রিকার তালিকা"></div>
+            <div class="ep-ps-empty" id="epPs282Empty" hidden role="status">কোনো পত্রিকা মেলেনি</div>
+          </div>
         </div>
         <span class="ep-ctl-sep" aria-hidden="true">·</span>
         <span class="ep-bardate" id="epBarDate">—</span>
@@ -1030,6 +1043,7 @@
   function syncPaperSelect(p) {
     if (!elPaperSel) return;
     if (elPaperSel.value !== p.name) elPaperSel.value = p.name;
+    ps282SyncLabel(); // session282: কম্বো-ট্রিগার-লেবেল সিঙ্ক (hoisted-ঘোষণা — বুট-পূর্ব-কল-নিরাপদ)
   }
   if (elPaperSel) elPaperSel.addEventListener('change', function () {
     var name = elPaperSel.value; if (!name) return;
@@ -1238,6 +1252,133 @@
   if (_bm) { calY = +_bm[1]; calM = +_bm[2] - 1; }
   else { var _n = new Date(); calY = _n.getFullYear(); calM = _n.getMonth(); }
   calRender();
+
+  /* ═══════════ session282 (cron 403679): পত্রিকা-সিলেক্টরে সার্চযোগ্য-ড্রপডাউন (ep282) ═══════════
+     নেটিভ #epPaperSelect = একক-উৎস (পূর্ব-জারি change-লজিক অক্ষুণ্ণ — ওভারলে-স্তর মাত্র);
+     কম্বো-ট্রিগার + সার্চ-প্যানেল (optgroup-হেডারসহ) + কী-বোর্ড (↑↓ নেভ, Enter-নির্বাচন, Escape-বন্ধ)
+     + বাইরে-ক্লিকে-বন্ধ; no-JS ফলব্যাকে নেটিভ select-ই থাকে (ep282-armed JS-যোগিত)। */
+  var elPsWrap = document.getElementById('epPs282');
+  var elPsBtn = document.getElementById('epPs282Btn');
+  var elPsLabel = document.getElementById('epPs282Label');
+  var elPsPanel = document.getElementById('epPs282Panel');
+  var elPsSearch = document.getElementById('epPs282Search');
+  var elPsClear = document.getElementById('epPs282Clear');
+  var elPsOpts = document.getElementById('epPs282Opts');
+  var elPsEmpty = document.getElementById('epPs282Empty');
+  var ep282Open = false, ep282Q = '', ep282Active = -1, ep282Picked = '', ep282VisibleN = 0;
+  function ps282Norm(s) { return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function ps282SyncLabel() {
+    if (!elPsLabel || !elPaperSel) return;
+    var v = elPaperSel.value;
+    elPsLabel.textContent = v ? v : 'পত্রিকা…';
+    elPsLabel.classList.toggle('is-empty', !v);
+  }
+  function ps282Vis() { return elPsOpts ? Array.prototype.slice.call(elPsOpts.querySelectorAll('.ep-ps-opt')) : []; }
+  function ps282Activate(i, silent) {
+    var vis = ps282Vis();
+    if (!vis.length) { ep282Active = -1; return; }
+    if (i < 0) i = vis.length - 1;
+    if (i >= vis.length) i = 0;
+    vis.forEach(function (b, j) { b.classList.toggle('is-act', j === i); });
+    ep282Active = i;
+    if (!silent && vis[i].scrollIntoView) { try { vis[i].scrollIntoView({ block: 'nearest' }); } catch (e) {} }
+  }
+  function ps282Render() {
+    if (!elPsOpts || !elPaperSel) return;
+    var q = ps282Norm(ep282Q), frag = '', n = 0, cur = elPaperSel.value, lastGrp = null;
+    var opts = elPaperSel.options;
+    for (var i = 0; i < opts.length; i++) {
+      var o = opts[i];
+      var og = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode : null;
+      if (og) {
+        var g = og.getAttribute('label') || '';
+        if (g !== lastGrp) { lastGrp = g; frag += '<div class="ep-ps-grp">' + g + '</div>'; }
+      }
+      var hit = !q || ps282Norm(o.value).indexOf(q) !== -1 || ps282Norm(o.textContent).indexOf(q) !== -1;
+      if (!hit) continue;
+      var sel = o.value === cur;
+      frag += '<button type="button" class="ep-ps-opt' + (sel ? ' is-sel' : '') + '" role="option" data-v="' +
+        o.value.replace(/"/g, '&quot;') + '" aria-selected="' + (sel ? 'true' : 'false') + '">' + o.textContent + '</button>';
+      n++;
+    }
+    elPsOpts.innerHTML = frag;
+    ep282VisibleN = n;
+    ep282Active = -1;
+    if (elPsEmpty) elPsEmpty.hidden = n > 0;
+    if (elPsOpts) elPsOpts.hidden = n === 0;
+    ps282Activate(0, true);
+  }
+  function ps282OpenPanel() {
+    if (!elPsPanel || ep282Open) return;
+    ep282Open = true; ep282Q = '';
+    if (elPsSearch) elPsSearch.value = '';
+    if (elPsClear) elPsClear.hidden = true;
+    elPsPanel.hidden = false;
+    if (elPsBtn) { elPsBtn.setAttribute('aria-expanded', 'true'); elPsBtn.classList.add('is-open'); }
+    ps282Render();
+    if (elPsSearch) { try { elPsSearch.focus(); } catch (e) {} }
+  }
+  function ps282Close() {
+    if (!elPsPanel || !ep282Open) return;
+    ep282Open = false;
+    elPsPanel.hidden = true;
+    if (elPsBtn) { elPsBtn.setAttribute('aria-expanded', 'false'); elPsBtn.classList.remove('is-open'); }
+  }
+  function ps282Pick(name) {
+    if (!name || !elPaperSel) return;
+    ep282Picked = name;
+    if (elPaperSel.value !== name) elPaperSel.value = name;
+    try { elPaperSel.dispatchEvent(new Event('change')); } catch (e) {}
+    ps282SyncLabel();
+    ps282Close();
+  }
+  if (elPsBtn) elPsBtn.addEventListener('click', function () { ep282Open ? ps282Close() : ps282OpenPanel(); });
+  if (elPsSearch) elPsSearch.addEventListener('input', function () {
+    ep282Q = elPsSearch.value;
+    if (elPsClear) elPsClear.hidden = !ep282Q;
+    ps282Render();
+  });
+  if (elPsSearch) elPsSearch.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); ps282Activate(ep282Active + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); ps282Activate(ep282Active - 1); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      var vis = ps282Vis();
+      if (ep282Active >= 0 && vis[ep282Active]) ps282Pick(vis[ep282Active].getAttribute('data-v'));
+    } else if (e.key === 'Escape') { e.preventDefault(); ps282Close(); }
+  });
+  if (elPsClear) elPsClear.addEventListener('click', function () {
+    ep282Q = '';
+    if (elPsSearch) { elPsSearch.value = ''; try { elPsSearch.focus(); } catch (e) {} }
+    if (elPsClear) elPsClear.hidden = true;
+    ps282Render();
+  });
+  if (elPsOpts) elPsOpts.addEventListener('click', function (e) {
+    var b = e.target.closest('.ep-ps-opt'); if (!b) return;
+    ps282Pick(b.getAttribute('data-v'));
+  });
+  document.addEventListener('click', function (e) {
+    if (!ep282Open || !elPsWrap) return;
+    if (elPsWrap.contains(e.target)) return;
+    ps282Close();
+  });
+  if (elPaperSel) elPaperSel.addEventListener('change', ps282SyncLabel);
+  if (elPsWrap) elPsWrap.classList.add('ep282-armed');
+  ps282SyncLabel();
+  /* session282 QA-হুক (__ep282QA — সারফেস-নেমস্পেস-রীতি; কম্বো-প্রমাণ) */
+  window.__ep282QA = {
+    isOpen: function () { return ep282Open; },
+    visible: function () { return ep282VisibleN; },
+    query: function () { return ep282Q; },
+    picked: function () { return ep282Picked; },
+    active: function () { return ep282Active; },
+    open: function () { ps282OpenPanel(); },
+    close: function () { ps282Close(); },
+    render: function () { ps282Render(); },
+    pick: function (i) { var v = ps282Vis()[i]; if (v) ps282Pick(v.getAttribute('data-v')); },
+    label: function () { return elPsLabel ? elPsLabel.textContent : ''; },
+    options: function () { return elPaperSel ? elPaperSel.options.length : 0; }
+  };
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>
