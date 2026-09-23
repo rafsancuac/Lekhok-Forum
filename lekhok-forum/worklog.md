@@ -2934,3 +2934,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session285 লেবেল (worklog Task ID 125)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session284 + session283 + session282 + উভয়-session280-নোট পড়ুন
 - বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), ep282-প্যানেলে aria-activedescendant-বিস্তার, **ep284-স্ট্রিপে কী-বোর্ড-নেভিগেশন (↑↓/Home/End — ep282-র-ই-প্যাটার্ন)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
 - রিমোট main = push-পরবর্তী HEAD (session284-ep284); working-tree ক্লিন
+
+---
+Task ID: 125 (session285 — cron 403679; বছর-স্ট্রিপে কী-বোর্ড-নেভিগেশন ep285)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609232333)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=`cfcf198` (session284-ep284), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (BEHIND=০)
+- QA: প্রোড-স্পট home/health/epaper-200 + agent-browser-প্রোড ep284-স্ট্রিপ-ক্যানারি (strip=true, chips=১, is-cur=১, ep285=undefined-প্রত্যাশিত) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session284-শীর্ষ-প্রস্তাব গ্রহণ: **বছর-স্ট্রিপে কী-বোর্ড-নেভিগেশন**)
+
+## এ-রাউন্ডে সম্পন্ন (session285)
+- **[Mandatory-ফিচার] ep285:** ep284-বছর-স্ট্রিপে **↑↓←→-চিপ-রোভিং (wrap)** + **Home/End** + **Enter/Space-সক্রিয়** (active-chip-ক্লিক — জাম্প-লজিক-পুনঃব্যবহার); **is-cur-চিপে প্রারম্ভিক-ফোকাস** (খোলায়-আর্ম) + **রোভিং-ট্যাবইনডেক্স** (active=0, বাকি=-1) + **is-act-শ্রেণি**; **জাম্পে ফোকাস-ফেরত epCalMY-তে**; **রি-রেন্ডারে সফট-আর্ম** (ফোকাস-চুরি-শূন্য); বন্ধে active-রিসেট; **__ep285QA হুক ×৫**; সম্পূর্ণ-র‍্যাপার-স্তর (ep283/ep284-বডি-অস্পৃশ্য)
+- **[Mandatory-স্টাইল]:** ep285-ব্লক হেক্স-শূন্য টোকেন-শুধু — is-act-টিন্ট (brand-border+green-tint+brand-text) + is-act.is-cur-আউটলাইন + reduced-motion-গার্ড
+- **টেস্ট:** নতুন tests/s285-calkey-suite.sh **৪৯/৪৯ ×২-ধারাবাহিক (SKIP=০)** + প্রি-ক্লিন-প্রথা (কিল→ক্লিন→বুট — স্টেল-মার্কার-মুক্ত PRE) + পূর্ণ-রিগ্রেশন s260-s284 (২৬-সুইট সব-গ্রিন) + role-policy **২৬০/২৬০** + guard:design + audit:views-গ্রিন (১২২ ejs)
+- **গোটচা ×৩ (PLANS session285):** ① **wrapper-ভেরিয়েবল-নাম-মিল** — ep284RenderListBase-ঘোষণা/ep284RenderBase-ডাক-ভিন্ননাম → ReferenceError-নীরব-রেন্ডার-চেইন-মৃত (চিপ-শূন্য + হুক-সুস্থ-মিথ্যা-দৃশ্য; try-catch-eval-ই-শনাক্তকারী) ② **ylist-রিবিল্ড-বাবল-ডিট্যাচ (s284-ল্যাটেন্ট)** — চিপ-ক্লিক-বাবলের-মাঝে ylist-innerHTML-রিবিল্ড → contains(detached)=false → প্যানেল-মিথ্যা-বন্ধ → capture-ফ্ল্যাগ (ep285InChip) + চিপ-ক্লিকে রিবিল্ড-স্কিপ ③ **tr-d-কোট-পরে sed-কোট-শূন্য-প্যাটার্ন** — `"z":`-কখনো-মেলে-না → `z:`-ই
+- **পাইপলাইন:** প্যাচ scripts/s285-patch.py (idempotent ×২, ×২-এডিট) + feature-commit + ডক ×৩ (PROJECT §২৮৫ + PLANS session285 + repo-worklog Task-125; s285-docs.py idempotent ×২) + docs-commit + PNG-চার্ন-রিভার্ট (tracked-M-শুধু) + secret-scan-ক্লিন + fetch (BEHIND=০) + **push** → Vercel READY → প্রোড-স্পট + **ep285-লাইভ-যাচাই (প্রোড single-year-এ ফোকাস/roving-প্রমাণ)** + স্ক্রিনশট download/s285-prod-*.png
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session286 লেবেল (worklog Task ID 126)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session285 + session284 + session283 + উভয়-session280-নোট পড়ুন
+- বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), ep282-প্যানেলে aria-activedescendant-বিস্তার, **ep284-মাস-গ্রিডেও কী-বোর্ড-নেভিগেশন (ep285-র-ই-প্যাটার্ন — ৪-কলাম-গ্রিড-রোভিং)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+- রিমোট main = push-পরবর্তী HEAD (session285-ep285); working-tree ক্লিন
