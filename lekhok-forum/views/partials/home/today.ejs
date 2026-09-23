@@ -9,6 +9,8 @@
       কোনোভাবেই যায় না (ইউজার-নীতি: এক ই-পেপারের থাম্বনিল অন্য ইপেপারে যায় না)।
     • থাম্ব-লোড-ব্যর্থতায় JS নিজেই টেক্সট-মাস্টহেডে ফিরে যায় (কখনো ভাঙা-ছবি নয়)।
     • deep-link: /epaper?file=<id> — epaper-অ্যাপের session233-boot-hook সরাসরি খোলে।
+    • session292: ফিল্মস্ট্রিপ বাটনে মিনি-থাম্ব-প্রিভিউ — একই epaperThumbByName291 নাম-মিল-সোর্স
+      (ভুল-পত্রিকার-ছবি-অসম্ভব); লোড-ব্যর্থতায় JS থাম্ব-স্প্যান লুকায় — টেক্সট-অনলি-ফলব্যাক।
     • a11y: tablist/tab + aria-selected + aria-live ঘোষণা + focus-visible + reduced-motion।
     ডেটা: routes/pages.js হোম-রাউন্ড (epaperToday/epaperLatest + p.thumb)। ── %>
 <% const bnN233 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
@@ -122,6 +124,7 @@
                         aria-selected="<%= i === 0 ? 'true' : 'false' %>"
                         data-epk-i="<%= i %>"
                         style="--epkAcc291: <%= teAcc291(i) %>">
+                  <% if (p.thumb) { %><span class="epk291-film-thumb" aria-hidden="true"><img class="epk291-film-thumb-img" src="<%= p.thumb %>" alt="" loading="lazy" decoding="async"></span><% } %>
                   <span class="epk291-film-kicker">দৈনিক</span>
                   <span class="epk291-film-name"><%= p.paperName %></span>
                 </button>
@@ -262,6 +265,22 @@
     img.removeAttribute('src');
     mock.hidden = false;
   });
+
+  // session292: ফিল্ম-মিনি-থাম্ব লোড-ব্যর্থতায় থাম্ব-স্প্যান লুকান — টেক্সট-অনলি-ফলব্যাক
+  // (ভাঙা-ছবি-কখনো-নয়); error ইভেন্ট non-bubbling → film-কনটেইনারে capture-ফেজে শোনা হয়
+  if (film) {
+    film.addEventListener('error', function (e) {
+      var t = e.target;
+      if (!t || !t.classList || !t.classList.contains('epk291-film-thumb-img')) return;
+      var w = t.parentNode;
+      if (w && w.classList && w.classList.contains('epk291-film-thumb')) w.hidden = true;
+    }, true);
+    window.__epk292QA = {
+      total: function () { return film.querySelectorAll('.epk291-film-thumb').length; },
+      hidden: function () { return film.querySelectorAll('.epk291-film-thumb[hidden]').length; },
+      imgs: function () { return film.querySelectorAll('.epk291-film-thumb-img').length; }
+    };
+  }
 
   applyPaper(0);
   startTimer();

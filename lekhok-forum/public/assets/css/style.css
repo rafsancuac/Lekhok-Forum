@@ -3317,4 +3317,32 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .epk291-front.is-flip { animation: none; }
   .epk291-film-btn, .epk291-front { transition: none; }
 }
+/* ═══ সেশন ২৯২ (session292): ফিল্মস্ট্রিপ মিনি-থাম্ব-প্রিভিউ — হেক্স-শূন্য টোকেন-শুধু ═══
+   একই epaperThumbByName291 নাম-মিল-সোর্স (ভুল-পত্রিকার-ছবি-অসম্ভব); লোড-ব্যর্থতায় JS
+   থাম্ব-স্প্যান লুকায় (টেক্সট-অনলি-ফলব্যাক); aria-hidden — নাম-টেক্সট-ই-SR-যথেষ্ট। */
+.epk291-film-btn { gap: 3px; }
+.epk291-film-thumb {
+  width: 30px;
+  height: 40px;
+  flex: none;
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--lf-ui-border);
+  border-radius: var(--radius-sm, 5px);
+  background: var(--lf-amber-soft);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.epk291-film-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.epk291-film-btn[aria-selected="true"] .epk291-film-thumb {
+  border-color: var(--epkAcc291, var(--lf-brand-primary));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+@media (max-width: 480px) {
+  .epk291-film-thumb { width: 26px; height: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .epk291-film-thumb { transition: none; }
+}
+/* ═══════════ EOF সেশন ২৯২ (session292 ফিল্ম-থাম্ব) ═══════════ */
 /* ═══════════ EOF সেশন ২৯১ (epk291 কিয়স্ক) ═══════════ */
