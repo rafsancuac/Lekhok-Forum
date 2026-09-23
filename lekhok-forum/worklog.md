@@ -3043,3 +3043,24 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session290 লেবেল (worklog Task ID 130)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান + **ব্যাকগ্রাউন্ড-জব-টুল-কল-ছেদে-মারা-যায় — দীর্ঘ-রান চাঙ্কে (প্রতি-কলে ≤৫-মিনিট-মান) অথবা সামনের-কলেই**; PLANS session289 + session288 + session287 + session286 + উভয়-session280-নোট পড়ুন
 - বাকি-প্রস্তাব: ep282-প্যানেলে aria-activedescendant-বিস্তার (ep289-aria-চেইন-বর্ধন), LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
 - রিমোট main = push-পরবর্তী HEAD (session289-ep289); working-tree ক্লিন
+---
+Task ID: 130 (session290 — cron 403679; কম্বোতে aria-activedescendant ep290) — push `666594a..HEAD` (feature + docs)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609240253)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=`666594a` (session289-ep289), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (BEHIND=০)
+- QA: প্রোড-ক্যানারি সবুজ (home/epaper ২০০ + ep289-বুট-নীরব + ep288-labeled=৩০/৩০ + ক্যারেট-রেন্ডারড) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session289-শীর্ষ-প্রস্তাব গ্রহণ: **ep282-প্যানেলে aria-activedescendant-বিস্তার**)
+
+## এ-রাউন্ডে সম্পন্ন (session290)
+- **[Mandatory-ফিচার] ep290:** ep282-কম্বো-প্যানেলে **aria-activedescendant-সিঙ্ক** — সেটআপে elPsSearch-এ role=combobox + aria-autocomplete=list + aria-controls + aria-expanded=false (APG); **রেন্ডার-র‍্যাপারে স্থিতিশীল-আইডি** (epPsOpt290-<i> — প্রতি-রেন্ডারে-পুনঃনির্ধারণ); **অ্যাক্টিভেট-র‍্যাপারে দ্বৈত-মালিক-সিঙ্ক** (elPsSearch — DOM-ফোকাস-ধারক + elPsBtn — aria-controls-মালিক); খোলা/বন্ধ-র‍্যাপারে aria-expanded-সিঙ্ক + বন্ধে পরিষ্কারণ; **Home/End** (প্যানেল-খোলা + অপশন-উপস্থিত → প্রথম/শেষ — APG); বডি-অস্পৃশ্য (র‍্যাপার ×৪) + **__ep290QA হুক ×৫** (ad/adSearch/ids/activeId/expSearch)
+- **[Mandatory-স্টাইল]:** ep290-ব্লক হেক্স-শূন্য টোকেন-শুধু — **is-act = অ্যাক্টিভ-ডিসেনডেন্ট-দৃশ্যমান-দ্বৈত** (inset-৩px-brand-বার + weight-৮০০) + reduced-motion-অক্ষুণ্ণ
+- **টেস্ট:** নতুন tests/s290-comboad-suite.sh **৪৭/৪৭ ×২-ধারাবাহিক (SKIP=০)** (বুট-স্টেট + খোলা-সিঙ্ক-দ্বৈত-মালিক + ↓/↑-ad-সিঙ্ক + End/Home-বাউন্ড + ফিল্টারে-আইডি-পুনঃসিঙ্ক + Enter-নির্বাচন-বন্ধ-পরিষ্কারণ + ep282-অক্ষুণ্ণ + স্ক্রিনশট ×২) + **সিড-হেল্পার-পুনঃব্যবহার (s281-seedpaper — নেট-শূন্য PRE=০→FINAL=০)** + **পূর্ণ-রিগ্রেশন s260-s290 (৩২-সুইট সব-গ্রিন — রানার s290-regression.sh; চাঙ্ক-নির্বাহ)** + role-policy **২৬০/২৬০** + guard:design + audit:views-গ্রিন
+- **গোটচা ×৩ (PLANS session290):** ① **অ্যাঙ্কর-যা-রিপ্লেসমেন্টে-নিলীন** — অ্যাঙ্কর `…};\n})();` রিপ্লেস-ব্লকে-নিলীন → রান-২-অ্যাঙ্কর-অ্যাসার্ট-ক্র্যাশ; **মার্কার-গার্ড-সর্বদা-অ্যাঙ্কর-অ্যাসার্টের-আগে** ② **tr '-0-9'-ব্যাড-অপশন** — সেট-ড্যাশ = অপশন-পার্স; '0-9'-ই ③ **এক-অপশনে wrap-ইন-প্লেস** — স্থানান্তর-অ্যাসার্ট-অসম্ভব; অ্যাসার্ট = প্রতি-কলে-ad-সিঙ্ক + End/Home + ফিল্টার-পুনঃসিঙ্ক
+- **পাইপলাইন:** প্যাচ scripts/s290-patch.py (idempotent ×৩, ×২-এডিট, পোস্ট-অ্যাসার্ট+হেক্স-শূন্য-অ্যাসার্ট) + feature-commit (৮-ফাইল; git commit -F-পথ) + ডক ×৩ (PROJECT §২৯০ + PLANS session290 + repo-worklog Task-130; s290-docs.py idempotent ×২) + docs-commit + PNG-চার্ন-রিভার্ট (tracked-M-শুধু; -C "$ROOT") + secret-scan-ক্লিন + fetch (BEHIND=০) + **push** → Vercel READY → প্রোড-স্পট + **ep290-লাইভ-যাচাই** + স্ক্রিনশট download/s290-prod-*.png
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session291 লেবেল (worklog Task ID 131)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান + **দীর্ঘ-রান চাঙ্কে-ই** + কমিট-মেসেজ -F-পথ; PLANS session290 + session289 + session288 + session287 + উভয়-session280-নোট পড়ুন
+- বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই (press-ফর্ম রিয়েল-ফাইল-আপলোড — s258-হেডার-চুক্তি), admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), কম্বো-প্যানেল-অপশনে aria-selected-সার্চ-সিঙ্ক-পুনঃযাচাই, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+- রিমোট main = push-পরবর্তী HEAD (session290-ep290); working-tree ক্লিন
