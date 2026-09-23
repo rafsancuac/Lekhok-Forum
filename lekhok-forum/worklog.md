@@ -3177,3 +3177,22 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - **যাচাই:** tests/s295-stripkeys-suite.sh **৩১/৩১ ×২ (SKIP=০)** — কাঠামো ×১২ + SSR ×৩ (data-papers-JSON নাম-ডিডুপ-মডেল: ৫-সারি→৪-পিল) + E2E ×১৩ (ArrowRight/Left/wrap + ফিল্ড-গার্ড #epPs282Btn + error-capture + ফ্রেশ-লোড + hScroll-শূন্য + স্ক্রিনশট ×২); পূর্ণ-রিগ্রেশন **s260-s295 ৩৭-সুইট সব-গ্রিন** (scripts/s295-regression.sh; চাঙ্ক ১৩+১২+১২) + role-policy ২৬০/২৬০ + guard:design + audit:views (৯২ ejs); প্যাচ s295-stripkeys-patch.py idempotent ×২।
 - **গোটচা ×৩:** নাম-ডিডুপ-প্রত্যাশা-মডেল (payload-দৈর্ঘ্য≠পিল) · display:none-সিলেক্ট-ফোকাস-অক্ষম (দৃশ্যমান-কন্ট্রোল-প্রোব) · fake-fid-সর্বলুকানো-বুট (h≤t; দৃশ্যমান-করে-dispatch) — বিস্তারিত PLANS session295।
 - **পরের-এজেন্ট: session296 (Task ID 136)** — PLANS session295-নোট পড়ুন; push-আগে fetch+rebase; প্রস্তাব: daily-চিপ→ক্লিকেবল-ফ্যাসেট (dcf293-সম্প্রসারণ), home-leadership/sections-ফিল্টার, multipart-ই২ই, page-count-ব্যাজ (গেটেড), body+21px-overflow-তদন্ত, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)।
+
+---
+Task ID: 136 (session296 — হোম ই-পেপার প্রশস্ত-প্রিমিয়াম কিয়স্ক ep296 + প্রোড-ডিপ্লয়)
+Agent: Z.ai Code (main session)
+Task: ইউজার-রিপোর্ট — হোম 'আজকের ই-পেপার' কার্ড সংকীর্ণ, থাম্বনেইল কাটা যায়; শীর্ষ-জনপ্রিয় পত্রিকা (প্রথম আলো, যুগান্তর, সমকাল, কালের কণ্ঠ, ইত্তেফাক, আমার দেশ, মানবকণ্ঠ) সামনে-রাখা; ডিজাইন আরও প্রিমিয়াম।
+
+Work Log:
+- RCA: মূল-কার্ড থাম্ব = data/newspaperLinks .thumb — আবিষ্কৃত ৫০০×১৯৬ লোগো-ব্যানার; 236px-শিটে object-fit:cover-ক্রপেই ব্যানার-কাটা। আসল প্রথম-পাতা = প্রতিটি epaper_files-সারির নিজের drive_thumb_id/drive_file_id (বট-আপলোড; /api/epaper/thumb প্রক্সি session175 — ব্যানার-ক্লিনার + PDF-পাতা-১)
+- routes/pages.js: LIMIT 6→14 + ফলব্যাক MAX(scheduled_date)-সম্পূর্ণ-দিন + drive_thumb_id AS thumbId + epPopularRank296 (৭-জনপ্রিয়-প্রথমে; স্ট্রিপ-মিল-রীতি; বহির্ভূত id-ASC) + p.thumbs চেইন-গঠন + ফিল্ম-ক্যাপ ৮ + স্ট্যাট-কুয়েরি (একই-প্যারালাল-ব্যাচ)
+- views/partials/home/today.ejs: চেকলিস্ট-৭-পত্রিকা + hover-ওভারলে 'পূর্ণাঙ্গ পাতা পড়ুন' (hover:none-টাচে-বিলোপ) + চেইন-ইঞ্জিন setImg296/showImg296 (stale-error-গার্ড) + স্ট্যাট-রো (role=list); s292-মার্কার-বাইট-অক্ষুণ্ণ
+- style.css session296-ব্লক (হেক্স-শূন্য, ক্যাসকেড-শেষ): শিট 330px + aspect-ratio 20/29 + contain + ফিল্ম ৪-কলাম গ্রিড (≥640px) + মিনি-থাম্ব 42×52 + স্ট্যাট-রো + reduced-motion
+- **গোটচা-ফিক্স: lazy→eager মূল-img** — hidden(display:none)+lazy = চির-স্থগিত-লোড (layout-box-বিহীন) — প্রোডে-ই-পাতা-আসত-না; E2E-তে ধরা পড়ে (poll চির-WAIT → probe-img-তুলনায় ধরা)
+- সুইট: tests/s296-epkwide-suite.sh ৫২/৫২ ×২ (open-url-যাচাই + mouseenter-পজ + synthetic-error-ডিসপ্যাচ + poll-exit-code-চুক্তি); সিড-নেট-শূন্য (scripts/s296-seedhome.js); রানার scripts/s296-regression.sh (৩৮-সুইট); রিগ্রেশন s292 ৪৬/৪৬ + s295-stripkeys ৩১/৩১ + guard:design + audit:views সবুজ
+- **লেবেল-সংঘর্ষ-গোটচা:** push-পরবর্তী-fetchে দেখা যায় session295/Task-135 গৃহীত (আপস্ট্রিম 92abf98 stripkeys) → রিলেবেল 295→296 (ফাইল+মার্কার+qa-source; HEAD-এ 295-টোকেন-শূন্য-যাচাই-পূর্বক) → stash→rebase→pop-নির্দ্বন্দ্ব
+- ডিপ্লয়: commit 13d15f1 (author-gate সম্মত) → push 4687808..13d15f1; প্রোড-মার্কার-যাচাই চলমান-পর্যবেক্ষণ (পুরনো-ফাংশন-স্থগিত-দেখা → docs-কমিট-পুনঃট্রিগার-কৌশল)
+
+Stage Summary:
+- হোম কিয়স্ক এখন প্রশস্ত (330px, aspect-ratio) — প্রথম-পাতা-চেইনে সম্পূর্ণ পাতা (contain — কাটা-যাবে-না), জনপ্রিয়-৭ প্রথমে, hover-ওভারলে, রিয়েল-আর্কাইভ-স্ট্যাট
+- পরের-এজেন্ট: session297 লেবেল (Task ID 137); push-আগে fetch+rebase; বাকি-প্রস্তাব PLANS session296-নোট
