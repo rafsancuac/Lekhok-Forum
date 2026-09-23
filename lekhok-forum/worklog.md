@@ -2731,4 +2731,27 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session275 লেবেল (worklog Task ID 115)**; PLANS session274-নোট অবশ্যই-পড়ুন (কার্ড-সারফেস-গার্ড + প্রোব-বিচ্ছিন্নতা + id-বিহীন-গার্ড + marker-seed-ই২ই + সিবলিং-নির্বাচন); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়! force-push-পার্জ-পুনরাবৃত্তি-সম্ভব — `--onto`-rebase-প্রথা)
 - বাকি-প্রস্তাব: admin-প্যানেল-সাব-তালিকা (notices/events/gallery/members/resources-list — admin-ভার্সন-অফিল্টারড), super/dashboard.ejs (সিবলিং), security.ejs-স্কোপ-ম্যাপ-পূর্বক, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
 - রিমোট main = push-পরবর্তী HEAD (session274-জোড়া: feature + worklog); working-tree ক্লিন
+---
+Task ID: 115 (session275 — cron 403679; সুপার-এডমিন ড্যাশবোর্ড দ্বৈত তাৎক্ষণিক-ফিল্টার sd275+se275 + li-সারফেস-বিস্তার + রিড-ওনলি-নেট-শূন্য)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD(রাউন্ড-শুরু)=origin=`0da017a` (session274/Task114 + টুল-কমিট), working-tree ক্লিন, টোকেন-ভ্যালিদ, স্থায়ী-সার্ভার-জীবিত (৮০৯৪); device-flow-অবসর
+- **স্টেল-সামারি-সংশোধন ×৪১:** কনটেক্সট-সামারির-পুরাতন-যুগ-দাবি (Task43/'commit-হয়নি'/device-flow/'২০-ট্রিগার-ব্যাকলগ') — সব-ভুল; ACTIVE-LOCK/রিপো-HEAD+origin-প্রমাণে-ই-সত্য
+- রাউন্ড-শুরু QA: s274 ৬১/৬১ (SKIP=০) + role-policy ২৬০/২৬০ — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (session274-সিবলিং-নির্বাচন গৃহীত: super/dashboard.ejs)
+
+## এ-রাউন্ডে সম্পন্ন (session275)
+- **[Mandatory-ফিচার] সুপার-এডমিন ড্যাশবোর্ড দ্বৈত তাৎক্ষণিক-ফিল্টার (sd275+se275):** /admin/super — **sd275 = তদারকি-স্কোপধারী মডারেটর তালিকা** (li[data-sd-row] + দ্বিভাষিক data-kw (#id+মডারেটর moderator+@username+নাম name+তদারকি oversight user_mgmt+শেষ লগইন — নরমালাইজড) + স্ট্রিপ (sdFilter275/sdClear275/sdCount275/kbd-hint — always-rendered) + চিপ + শূন্য-অবস্থা sdZero275); **se275 = অ্যাডমিন অ্যাকাউন্ট সারসংক্ষেপ** (li[data-se-row] + data-kw (#id+অ্যাডমিন admin+@username+নাম name+রোল role অ্যালায়াস+লকড locked/আনলকড unlocked+শেষ লগইন) + স্ট্রিপ + চিপ + শূন্য-অবস্থা seZero275); **'f'-একক-মালিকানা (s269)** — listener শুধু sd275; __sdQA/__seQA হুক; Escape ×২-স্বাধীন; সাইট-স্ট্যাটাস/মেইনটেন্যান্স-ফর্ম/stat-box ×৮/ov-chain/লগ-দুই-কলাম অক্ষুণ্ণ
+- **[Mandatory-স্টাইল]:** sd275-ভায়োলেট-পরিবার + se275-ব্লু-পরিবার — উভয় হেক্স-শূন্য টোকেন-শুধু (color-mix রিং + dashed kbd-পিল + :active-প্রেস + reduced-motion + 640px) + hidden-গার্ড ×৫ সঠিক-বাইট (**[data-sd-row][hidden],[data-se-row][hidden] !important — li-সারফেসে-ও অ্যাট্রিবিউট-সিলেক্টর**)
+- **রিড-ওনলি-নেট-শূন্য-চুক্তি (mo268):** সিড/ক্লিনার-POST-শূন্য (লগইন-ব্যতীত) → নেট-প্রমাণ sd ২→২ + se ১→১ (ids PRE == FINAL) + প্রোব-অবশেষ-শূন্য
+- **গোটচা ×৩ ডক-কৃত (PLANS session275):** ① li-গার্ড + computed-display-প্রমাণ ② দ্বৈত-স্ট্রিপ-এক-রাউন্ডে ('f'-একক-মালিকানা + দ্বিতীয়-ইনপুট-ই-ফিল্ড-গার্ড-প্রোব + aria-label +৪-প্রথম-রানে-ধরা — in-memory-ফেল, ফাইল-অলিখিত) ③ আইকন ×১-প্রতি-নতুন (দুই-স্ট্রিপে আইকন-বৈচিত্র্য)
+- **টেস্ট:** নতুন tests/s275-sdfilter-suite.sh **৮২/৮২ ×২-ধারাবাহিক (SKIP=০)** (কাঠামো ×২০ + স্টাইল ×১২ + আচরণ ×৩১ রিয়েল-ব্রাউজার + পূর্বশর্ত ×৮ — নির্ধারক-প্রোব ×৬ পূর্বগণনা-মিল + নো-ম্যাচ→শূন্য ×২ + computed-display:none-গার্ড-প্রমাণ + শূন্য-বক্স-বিপরীত-প্রমাণ + clear-পুনরুদ্ধার ×২ + চিপ-ত্রয়ী + 'f'-একক-মালিকানা + fokus-দ্বন্দ্ব-শূন্য + ফিল্ড-গার্ড + Escape ×২ + দ্বৈত-সহ-অস্তিত্ব + স্কোপ-বিচ্ছিন্নতা + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ কমিটেড + নেট-শূন্য) + পূর্ণ-রিগ্রেশন s274 ৬১/৬১ + s273 ৫৭/৫৭ + s272 ৭২/৭২ + s271 ৫৮/৫৮ + s270 ৬১/৬১ + s269 ৭৭/০/২ + s268 ৫৬/৫৬ + s267 ৫৯/৫৯ + s266 ৫৯/৫৯ + s265 ৫৭/৫৭ + s264 ৫৬/৫৬ + s263 ৫৩/০/১ + s262 ৪৮/০/১ + s261 ৫০/৫০ + s260 ৫২/৫২ + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs) + পুরাতন-PNG-চার্ন-রিভার্ট ×১৫ + anchor-scan ০-ঝুঁকি
+- প্যাচ: scripts/s275-patch.py (idempotent ×২, দ্বি-নেমস্পেস-গার্ড, আইকন-প্রি-গার্ড ×৫, PRESERVE-মানচিত্র, হেক্স-শূন্য-পোস্ট-অ্যাসার্ট, সঠিক-বাইট ×৫) + ডক ×৩ (PROJECT §২৭৫ + PLANS session275 + worklog) → secret-scan-ক্লিন → fetch (origin-অনড়) → push → Vercel READY → প্রোড-স্পট
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session276 লেবেল (worklog Task ID 116)**; PLANS session275-নোট অবশ্যই-পড়ুন (li-গার্ড + দ্বৈত-স্ট্রিপ-চুক্তি + আইকন ×১ + রিড-ওনলি-সীমা + aria-label-গণনা + সিবলিং-নির্বাচন); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: super/settings.ejs + super/support-settings.ejs (সিবলিং), admin-সাব-তালিকা (notices/events/gallery/members/resources-list), security.ejs-স্কোপ-ম্যাপ-পূর্বক, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
+- রিমোট main = push-পরবর্তী HEAD (session275-জোড়া: feature + worklog); working-tree ক্লিন
 
