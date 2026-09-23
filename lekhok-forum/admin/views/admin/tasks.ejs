@@ -9,6 +9,25 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* session267 — মডারেটর টাস্ক তাৎক্ষণিক-ফিল্টার (tk267 — হেক্স-শূন্য টোকেন-শুধু; ms266-প্যাটার্ন-মিরর) */
+    .tk-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .tk-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .tk-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .tk-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .tk-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .tk-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .tk-instant-clear:active { transform: scale(.96); }
+    .tk-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .tk-count-chip[hidden] { display: none; }
+    .tk-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .tk-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .tk-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .tk-zero[hidden] { display: none; }
+    tr[data-tk-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .tk-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .tk-kbd-hint { display: none; } .tk-instant { padding: 9px 11px; } }
+  </style>
 </head>
 <body>
 <%- include('partials/sidebar', { adminUser, currentPath }) %>
@@ -72,6 +91,19 @@
           <% if (typeof page42 !== 'undefined' && page42 < pages42) { %><a class="btn btn-sm" href="?page=<%= page42 + 1 %>">→</a><% } %>
         </span>
       </h3>
+
+      <div class="tk-instant" id="tkInstant267">
+        <i class="fas fa-filter tk-instant-ico" aria-hidden="true"></i>
+        <input type="text" id="tkFilter267" class="tk-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — টাস্ক / মডারেটর / অগ্রাধিকার / স্ট্যাটাস" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+        <button type="button" id="tkClear267" class="tk-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+        <span class="tk-count-chip" id="tkCount267" hidden></span>
+        <span class="tk-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+      </div>
+      <div class="tk-zero" id="tkZero267" data-tk-empty hidden>
+        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+        <span>কোনো টাস্ক মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+      </div>
+
       <% if (tasks && tasks.length) { %>
         <div class="table-wrap">
   <label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label>
@@ -92,8 +124,8 @@
             </tr>
           </thead>
           <tbody>
-            <% tasks.forEach(t => { %>
-              <tr>
+            <% tasks.forEach((t, idx) => { %>
+              <tr data-tk-row="<%= idx %>" data-kw="#<%= t.id %> টাস্ক task <%= t.title %> <%= ((t.description || '') + ' ').replace(/\s+/g, ' ').trim().slice(0, 120) %> <%= t.assignee_name || 'অনাবণ্ডিত unassigned' %> মডারেটর moderator <%= t.priority === 'urgent' ? 'জরুরি urgent' : t.priority === 'high' ? 'উচ্চ high' : 'সাধারণ normal' %> <%= t.status === 'pending' ? 'বাকি pending' : t.status === 'in_progress' ? 'চলমান in_progress' : 'সম্পন্ন done' %> <%= t.due_date || '' %> ডেডলাইন deadline">
                 <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= t.id %>" aria-label="সিলেক্ট"></td>
                 <td>
                   <strong><%= t.title %></strong>
@@ -134,5 +166,54 @@
     </div>
   </div>
 </div>
+<script>
+  (function () {
+    /* session267 — tk267 তাৎক্ষণিক-ফিল্টার (ms266-প্যাটার্ন-মিরর: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __tkQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-tk-row]'));
+    var input = document.getElementById('tkFilter267');
+    var clearBtn = document.getElementById('tkClear267');
+    var countChip = document.getElementById('tkCount267');
+    var zeroBox = document.getElementById('tkZero267');
+    if (!input) { return; }
+    var total = rows.length;
+    function tkApply267() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function tkClear267() {
+      input.value = '';
+      tkApply267();
+      input.blur();
+    }
+    input.addEventListener('input', tkApply267);
+    if (clearBtn) { clearBtn.addEventListener('click', tkClear267); }
+    input.addEventListener('keydown', function (tk) {
+      if (tk.key === 'Escape') { tk.stopPropagation(); tkClear267(); }
+    });
+    document.addEventListener('keydown', function (tk) {
+      if (tk.key !== 'f' || tk.altKey || tk.ctrlKey || tk.metaKey) { return; }
+      var t = tk.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      tk.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__tkQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: tkApply267,
+      clear: tkClear267
+    };
+  })();
+</script>
 </body>
 </html>
