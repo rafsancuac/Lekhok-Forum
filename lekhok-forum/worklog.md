@@ -2546,3 +2546,19 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session268 লেবেল (worklog Task ID 108)**; PLANS session267-নোট অবশ্যই-পড়ুন (eval-JSON-এস্কেপ-গ্রেপ + tr-গার্ড-জোড়া + admin-form-সিড-চুক্তি + ক্র্যাশ-অবশেষ-ক্লিনার); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা (moderators/subscribers/activity/audit — ms266/ac265/tk267-প্যাটার্ন-মিরর; subscribers দ্বৈত-টেবিল — স্কোপ-সিদ্ধান্ত-পূর্বক), multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin/main=`cf082c0` (session267/Task107 — fetch-প্রমাণিত, working-tree ক্লিন); স্থায়ী-সার্ভার জীবিত (৮০৯৪, health-healthy); Vercel-প্রোড লাইভ (home/health/admin-login ২০০×৩); রাউন্ড-শুরু QA: s267 ৫৯/৫৯ — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড
+
+## এ-রাউন্ডে সম্পন্ন (session268 — Task ID 108)
+- **[Mandatory-ফিচার] mo268:** /admin/moderators তাৎক্ষণিক-ফিল্টার — tr[data-mo-row] users-টেবিল-সারফেস (staff-সহ-সর্বজনীন — রুট-কোয়েরিতে users=সব-ইউজার) + দ্বিভাষিক data-kw (#আইডি/ইউজার user/নাম/@username/রোল-জোড়/স্ট্যাটাস-জোড়/যোগদান-তারিখ/joined) + স্ট্রিপ (moFilter268/moClear268/moCount268/kbd-hint — always-rendered) + শূন্য-অবস্থা (moZero268 data-mo-empty) + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape-ক্লিয়ার+ব্লার + __moQA হুক (সারফেস-শূন্যে-ও); no-regression: person-card/role/scopes/scope-toggle/header-চিপ/section-head/empty-state-full/status-select/count-pill/sidebar অক্ষুণ্ণ
+- **[Mandatory-স্টাইল]:** mo268-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px + hidden-গার্ড ×৩ সঠিক-বাইট — tr[data-mo-row][hidden] !important — tr-সারফেস-গার্ড-প্রথম)
+- **[রিড-ওনলি-চুক্তি]:** ইউজার-তালিকা মিউটেশন-অযোগ্য → সিড-বাদ; প্রোব-পূর্বগণনা (রেন্ডার্ড-HTML: '@qa113user'-একক / 'মডারেটর moderator'-রোল / 'সক্রিয় active' ৬৩/৬৩) + মিউটেশন-POST-শূন্য → নেট-রাইট-শূন্য-প্রমাণ (৬৩→৬৩)
+- **টেস্ট:** নতুন tests/s268-mofilter-suite.sh ৫৬/৫৬ ×২-ধারাবাহিক (কাঠামো ×২০ + স্টাইল ×৯ + আচরণ ×১৬ রিয়েল-ব্রাউজার + ফিল্ড-গার্ড-প্রোব select[name=status] + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ কমিটেড) + পূর্ণ-রিগ্রেশন s260-২৬৭ (৫২/৫০/৪৮/৫৩/৫৬/৫৭/৫৯/৫৯ সব-গ্রিন) + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs)
+- **গোটচা ×৩ ডক-কৃত (PLANS session268):** রিড-ওনলি-পূর্বগণনা-চুক্তি (সিড-অনুপস্থি-সারফেস) · EJS-শর্তসাপেক্ষ-শাখা রেন্ডার্ড-HTML-এ-নেই → স্ট্রিপ+সোর্স-দ্বি-অ্যাসার্ট · সংরক্ষণ-মার্কার সম্পাদনা-প্রভাব-সচেতন (`<tr`-প্রিফিক্স)
+- প্যাচ: scripts/s268-patch.py (skip-if-present idempotent — ৪-সম্পাদনা, SKIP-পুনঃরান-প্রমাণ, `.mo-`-সংঘর্ষ+টোকেন-উপস্থিতি-FATAL-গার্ড, সংরক্ষণ ×৮) + ডক ×৩ (PROJECT §২৬৮ + PLANS session268 + এ-এন্ট্রি) → secret-scan-ক্লিন → fetch+rebase → push → Vercel-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session269 লেবেল (worklog Task ID 109)**; PLANS session268-নোট অবশ্যই-পড়ুন (রিড-ওনলি-পূর্বগণনা-চুক্তি + EJS-শাখা-সোর্স-অ্যাসার্ট + সংরক্ষণ-মার্কার-গোটচা + tr-গার্ড-জোড়া); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা (audit/subscribers — mo268-প্যাটার্ন-মিরর; audit=রিড-ওনলি-পূর্বগণনা-প্রযোজ্য; subscribers দ্বৈত-টেবিল — স্কোপ-সিদ্ধান্ত-পূর্বক), multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
+- রিমোট main = push-পরবর্তী HEAD (session268-জোড়া: feature + worklog); working-tree ক্লিন
