@@ -2912,3 +2912,25 @@ Stage Summary:
 - **[Mandatory-স্টাইল]** ep283-ব্লক হেক্স-শূন্য (ডিসক্লোজার + ডট + is-cur-ফিল + অ্যানিমেশন + reduced-motion)
 - পরের-এজেন্ট: **session284 লেবেল (worklog Task ID 124)**; PLANS session283-নোট অবশ্যই-পড়ুন (hasPayload-চুক্তি + প্রক্সি-ক্যাশ-বাস্টার + গণনা-ভিত্তিক-অ্যাসার্ট); **ফিচার-কোড-লেখার-আগেই fetch**; push-আগে পুনঃ-fetch+rebase-বাধ্যতমূলক
 - রিমোট main = push-পরবর্তী HEAD (session283-ep283); working-tree ক্লিন
+
+---
+Task ID: 124 (session284 — cron 403679; মাস-প্যানেলে বছর-তালিকা-শর্টকাট ep284)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609232303)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=`fe69e53` (session283-ep283), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (BEHIND=০ — সমান্তরাল-রাউন্ড-শূন্য)
+- QA: প্রোড-স্পট home/health/epaper-200 + agent-browser-প্রোড ep283-প্যানেল-হুক-যাচাই (open→isOpen/year/has সব-সঠিক) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session283-শীর্ষ-প্রস্তাব গ্রহণ: বছর-তালিকা-শর্টকাট)
+
+## এ-রাউন্ডে সম্পন্ন (session284)
+- **[Mandatory-ফিচার] ep284:** বছর-লেবেল (ep-cal-mylabel) span→button — ক্লিকে মাস-প্যানেলের-ভেতরে **ইন-প্যানেল বছর-তালিকা-স্ট্রিপ** (epCalYList — avail-উদ্ভূত তথ্য-আছে-বছর-ই, অবতরণ-ক্রম, is-cur-ফিল); **বছর-চিপ-ক্লিকে স্টেপার-জাম্প** (ep283Year-সেট + ep283Render + স্ট্রিপ-বন্ধ — দূর-বছরে ±১-পুনরাবৃত্তি-শূন্য) + **স্টেপার-চলাকালে is-cur-পুনঃসিঙ্ক** (ep283Render-র‍্যাপার-স্তর — ep283-বডি-অস্পৃশ্য, late-bound) + প্যানেল-খোলা/বন্ধে স্ট্রিপ-রিসেট (Open/Close-র‍্যাপার) + Escape-পূর্ণ-বন্ধ-সেমান্টিক-অক্ষুণ্ণ + aria-পূর্ণ + __ep284QA ×৭
+- **[Mandatory-স্টাইল]:** ep284-ব্লক হেক্স-শূন্য টোকেন-শুধু — লেবেল-ট্রিগার-রিসেট+হোভার-টিন্ট+is-open+focus-ring, স্ট্রিপ flex-wrap+dashed-বিভাজক+এন্ট্রি-অ্যানিমেশন ep-cal-y-in, চিপ bordered+হোভার+is-cur-ফিল, মোবাইল-সংকোচন 640px, reduced-motion-গার্ড
+- **টেস্ট:** নতুন tests/s284-calyear-suite.sh **৪৮/৪৮ ×২-ধারাবাহিক (SKIP=০)** + **বহু-বছর-মার্কার-সিড/ক্লিন নেট-শূন্য** (নতুন scripts/s284-seedyear.js — স্থির-তারিখ ২০২৬-০৩-১৫+২০২৫-১১-২০; PRE=০→FINAL=০) + **পূর্ণ-রিগ্রেশন s260-s283 (২৫-সুইট সব-গ্রিন)** + role-policy **২৬০/২৬০** + guard:design + audit:views-গ্রিন (১২২ ejs)
+- **গোটচা ×২ (PLANS session284):** ① **grep-অ্যাট্রিবিউট-বাউন্ডারি** — রেন্ডার্ড-HTML-এ `epCalMY ` (স্পেস) মেলে-না — `epCalMY"` (কোট)-ই-সঠিক + epCalMYPrev/Next-সাবস্ট্রিং-বাদ ② **ডেটা-বিহীন-বছরে is-cur-চিপ-অনুপস্থিত-সঠিক** — স্টেপারে ডেটা-শূন্য-বছরে চিপ-ই-নেই (avail-উদ্ভূত) → Prev→Next-ফেরত-যাত্রায়-অ্যাসার্ট
+- **পাইপলাইন:** প্যাচ scripts/s284-patch.py (idempotent ×২, ×৪-এডিট) + feature-commit + ডক ×৩ (PROJECT §২৮৪ + PLANS session284 + repo-worklog Task-124; s284-docs.py idempotent ×২) + docs-commit + PNG-চার্ন-রিভার্ট (tracked-M-শুধু) + secret-scan-ক্লিন + fetch (BEHIND=০) + **push** → Vercel READY → প্রোড-স্পট + **ep284-লাইভ-যাচাই** + স্ক্রিনশট download/s284-prod-*.png
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session285 লেবেল (worklog Task ID 125)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session284 + session283 + session282 + উভয়-session280-নোট পড়ুন
+- বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), ep282-প্যানেলে aria-activedescendant-বিস্তার, **ep284-স্ট্রিপে কী-বোর্ড-নেভিগেশন (↑↓/Home/End — ep282-র-ই-প্যাটার্ন)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+- রিমোট main = push-পরবর্তী HEAD (session284-ep284); working-tree ক্লিন
