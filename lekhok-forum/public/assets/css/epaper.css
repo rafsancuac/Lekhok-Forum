@@ -652,3 +652,11 @@
 .ep-cal-y.is-act { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
 .ep-cal-y.is-act.is-cur { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
 @media (prefers-reduced-motion: reduce) { .ep-cal-y.is-act { transition: none; } }
+
+/* ═══ session286 — মাস-গ্রিডে কী-বোর্ড-নেভিগেশন (ep286 — হেক্স-শূন্য টোকেন-শুধু;
+       ৪-কলাম-গ্রিড-রোভিং + is-act-টিন্ট + মোবাইল-সংকোচন) ═══ */
+.ep-cal-m.is-act { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
+.ep-cal-m.is-act.has::after { background: var(--lf-brand-primary); }
+.ep-cal-m.is-act.is-cur { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
+@media (max-width: 640px) { .ep-cal-mgrid { gap: 2px; } .ep-cal-m { padding: 6px 0 7px; font-size: .6rem; } }
+@media (prefers-reduced-motion: reduce) { .ep-cal-m.is-act { transition: none; } }
