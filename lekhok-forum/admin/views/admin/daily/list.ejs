@@ -65,11 +65,12 @@
        const totalItems = items.length; %>
   <% /* session293: dcf293 ফিল্টার-সহায়ক — সারি-কীওয়ার্ড (শিরোনাম+বডি+ধরন-লেবেল+তারিখ; ১৪০-অক্ষর-ক্যাপ) */ %>
   <% var dcfKw293 = function (it) { return [it.title, it.body, (DAILY_TYPES[it.content_type] ? DAILY_TYPES[it.content_type].label : it.content_type), (it.scheduled_date || '')].filter(Boolean).join(' ').replace(/\s+/g, ' ').slice(0, 140); }; %>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-      <span class="chip chip-accent"><i class="fas fa-layer-group"></i> সব <%= totalItems %></span>
+    <!-- session296: dcf296 চিপ-facet — স্ট্যাটিক-চিপ → ক্লিকেবল-প্রিসেট (dcfType293-সেট + change-চেইন; role=button + tabindex + aria-pressed) -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="dcfChipbar296" role="group" aria-label="ধরন অনুযায়ী দ্রুত-ফিল্টার">
+      <span class="chip chip-accent" data-dcf-chip296 data-dcf-type296="" role="button" tabindex="0" aria-pressed="true"><i class="fas fa-layer-group"></i> সব <%= totalItems %></span>
       <% Object.keys(DAILY_TYPES).forEach(t => {
            if (types[t]) { %>
-            <span class="chip"><i class="<%= DAILY_TYPES[t].icon || 'fas fa-circle' %>"></i> <%= DAILY_TYPES[t].label %> <%= types[t] %></span>
+            <span class="chip" data-dcf-chip296 data-dcf-type296="<%= t %>" role="button" tabindex="0" aria-pressed="false"><i class="<%= DAILY_TYPES[t].icon || 'fas fa-circle' %>"></i> <%= DAILY_TYPES[t].label %> <%= types[t] %></span>
       <% } }); %>
     </div>
 
@@ -168,6 +169,15 @@
   tr[data-dcf-row][hidden] { display: none !important; }
   @media (prefers-reduced-motion: reduce) { .dcf-instant-clear:active { transform: none; } }
   @media (max-width: 640px) { .dcf-kbd-hint { display: none; } .dcf-instant { padding: 9px 11px; } }
+  /* session296 — dcf296 চিপ-facet স্টাইল (dcf293-পরিবার-সম্মত — হেক্স-শূন্য টোকেন-শুধু) */
+  [data-dcf-chip296] { cursor: pointer; transition: none; user-select: none; -webkit-user-select: none; }
+  [data-dcf-chip296]:hover { border-color: color-mix(in srgb, var(--lf-amber-deep) 40%, transparent); background: var(--lf-amber-soft); color: var(--lf-amber-deep); }
+  [data-dcf-chip296]:active { transform: scale(.97); }
+  [data-dcf-chip296]:focus-visible { outline: 2px solid var(--lf-amber-deep); outline-offset: 2px; }
+  [data-dcf-chip296][aria-pressed="true"] { background: var(--lf-amber-deep); border-color: var(--lf-amber-deep); color: var(--lf-white); box-shadow: 0 1px 4px color-mix(in srgb, var(--lf-amber-deep) 30%, transparent); }
+  [data-dcf-chip296][aria-pressed="true"]:hover { background: var(--lf-amber-deep); color: var(--lf-white); }
+  @media (prefers-reduced-motion: reduce) { [data-dcf-chip296]:active { transform: none; } }
+  @media (max-width: 640px) { [data-dcf-chip296] { padding: 5px 10px; font-size: .78rem; } }
 </style>
 <script>
 (function () {
@@ -203,6 +213,7 @@
     if (countChip) { countChip.hidden = !act; if (act && countTxt) { countTxt.textContent = bn293(shown) + ' / ' + bn293(total); } }
     if (clearBtn) { clearBtn.hidden = !act; }
     if (zeroBox) { zeroBox.hidden = !(act && shown === 0); }
+    if (window.__dcfChipSync296) { window.__dcfChipSync296(); } /* session296: চিপ-aria-pressed-সিঙ্ক (একক-ফানেল-হুক) */
   }
   function dcfClear293() {
     input.value = '';
@@ -215,6 +226,35 @@
   typeSel.addEventListener('change', dcfApply293);
   pubSel.addEventListener('change', dcfApply293);
   if (clearBtn) { clearBtn.addEventListener('click', dcfClear293); }
+  /* session296 — dcf296 চিপ-facet: ক্লিকেবল-প্রিসেট (একক-ফানেল: dcfType293-মান-সেট + change-dispatch —
+     dcfApply293-পুনঃব্যবহার; নতুন-ফিল্টার-লজিক-শূন্য) + Enter/Space-কীবোর্ড + aria-pressed-স্টেট-মেশিন */
+  var chips296 = Array.prototype.slice.call(document.querySelectorAll('[data-dcf-chip296]'));
+  function dcfChipSync296() {
+    var cur = typeSel.value || '';
+    chips296.forEach(function (c) {
+      c.setAttribute('aria-pressed', (c.getAttribute('data-dcf-type296') || '') === cur ? 'true' : 'false');
+    });
+  }
+  function dcfChipFire296(c) {
+    typeSel.value = c.getAttribute('data-dcf-type296') || '';
+    typeSel.dispatchEvent(new Event('change'));
+  }
+  chips296.forEach(function (c) {
+    c.addEventListener('click', function () { dcfChipFire296(c); });
+    c.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); dcfChipFire296(c); }
+    });
+  });
+  if (chips296.length) { dcfChipSync296(); }
+  window.__dcfChipSync296 = dcfChipSync296;
+  window.__dcf296QA = {
+    chips: function () { return chips296.length; },
+    pressed: function () { return chips296.filter(function (c) { return c.getAttribute('aria-pressed') === 'true'; }).length; },
+    pressedType: function () { var c = chips296.filter(function (x) { return x.getAttribute('aria-pressed') === 'true'; })[0]; return c ? (c.getAttribute('data-dcf-type296') || '') : null; },
+    type: function () { return typeSel.value || ''; },
+    clickAt: function (i) { var c = chips296[i]; if (c) { dcfChipFire296(c); } return chips296.length; },
+    sync: dcfChipSync296
+  };
   input.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape') { ev.stopPropagation(); dcfClear293(); }
   });
