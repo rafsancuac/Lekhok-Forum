@@ -573,3 +573,9 @@
 .ep-grid:fullscreen .ep-stage, .ep-grid.is-fs .ep-stage { height: calc(100vh - 200px); max-height: none; min-height: 480px; }
 .ep-grid:fullscreen .ep-rail-scroll, .ep-grid.is-fs .ep-rail-scroll { max-height: calc(100vh - 190px); }
 .ep-grid:fullscreen .ep-list, .ep-grid.is-fs .ep-list { max-height: calc(100vh - 480px); }
+
+/* ═══ session281 — রেল-থাম্বনেইল-ক্যাশ (ep281 — হেক্স-শূন্য টোকেন-শুধু;
+       dataURL-পুনঃদর্শন-পথ — alive-এন্ট্রি railThumbs; canvas-রূপ-মিরর) ═══ */
+.ep-rail-thumb img { display: block; width: 100%; height: auto; user-select: none; }
+.ep-rail-thumb img { -webkit-user-drag: none; }
+@media (prefers-reduced-motion: reduce) { .ep-rail-thumb img { transition: none; } }

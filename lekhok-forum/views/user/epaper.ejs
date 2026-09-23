@@ -1054,6 +1054,7 @@
 
   /* ── ২. বাম পাতা-রেল ── */
   var railTok = 0, railLastCur = 0;
+  var ep281Stored = 0, ep281Restored = 0; // session281: ক্যাশ-QA-কাউন্টার (stored=নতুন-রেন্ডার-সংরক্ষণ, restored=dataURL-পুনঃদর্শন)
   function railReset() {
     railTok++;
     railLastCur = 0;
@@ -1084,6 +1085,11 @@
     }
     elRail.innerHTML = '';
     elRail.appendChild(frag);
+    // session281: রেল-থাম্বনেইল-ক্যাশ — alive-এন্ট্রিতে dataURL (JPEG ০.৭২ — প্রতি-পাতা ~১৫KB = LOWMEM-বান্ধব-ফরম্যাট);
+    // dataURL-ই-মেমরি-সাশ্রয়ী-রূপ (ক্যানভাস-রিটেনশন-নয়) — সব-ডিভাইসে ক্যাশ (LOWMEM-এ ALIVE_MAX-৮-ই-সীমা টানে);
+    // এন্ট্রি-বিতাড়নে ক্যাশ-স্বয়ং-মৃত (doc-সহ)
+    var aentry = st ? alive.get(st.fid) : null;
+    var cache = (aentry && numPages >= 2) ? (aentry.railThumbs || (aentry.railThumbs = [])) : null;
     // অলস-ক্রমিক থাম্বনেইল-রেন্ডার — ছোট-ক্যানভাস (২×-শার্পনেস, মেমরি-সামান্য), পেপার-সুইচে টোকেন-বাতিল
     var TW = 176; // ব্যাকিং-প্রস্থ (≈৯২px CSS × ২ — রেটিনা-শার্প)
     var idx = 0;
@@ -1092,7 +1098,18 @@
       if (idx >= items.length) return;
       var n = idx + 1;
       idx++;
+      var host = items[n - 1].querySelector('.ep-rail-thumb');
+      var cached = cache ? cache[n] : null;
+      if (host && cached) {
+        // session281: ক্যাশ-হিট — dataURL-তাৎক্ষণিক-পুনঃদর্শন (pdf.js-রেন্ডার-শূন্য, বিরতি-শূন্য)
+        host.classList.remove('is-pending');
+        host.innerHTML = '<img alt="" draggable="false" src="' + cached + '" />';
+        ep281Restored++;
+        step();
+        return;
+      }
       var done = function () { setTimeout(step, 40); }; // CPU-শ্বাস-বিরতি — মূল-রেন্ডারের-সাথে-প্রতিযোগিতা-শূন্য
+      if (!host) return done();
       st.doc.getPage(n).then(function (page) {
         if (tok !== railTok) return;
         var base = page.getViewport({ scale: 1 });
@@ -1100,12 +1117,13 @@
         var vp = page.getViewport({ scale: scale });
         var cv = document.createElement('canvas');
         cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
-        var host = items[n - 1].querySelector('.ep-rail-thumb');
-        if (!host) return done();
         host.classList.remove('is-pending');
         host.innerHTML = '';
         host.appendChild(cv);
-        return page.render({ canvasContext: cv.getContext('2d', { alpha: false }), viewport: vp, background: '#ffffff' }).promise;
+        return page.render({ canvasContext: cv.getContext('2d', { alpha: false }), viewport: vp, background: '#ffffff' }).promise.then(function () {
+          // session281: রেন্ডার-সফল → dataURL-সংরক্ষণ (tok-গার্ড — সুইচ-পরবর্তী-স্টোর-নিষিদ্ধ)
+          if (cache && tok === railTok) { try { cache[n] = cv.toDataURL('image/jpeg', 0.72); ep281Stored++; } catch (e) {} }
+        });
       }).then(function () { if (tok === railTok) done(); }).catch(function () { if (tok === railTok) done(); });
     };
     step();
@@ -1127,6 +1145,13 @@
     var b = e.target.closest('.ep-rail-item'); if (!b) return;
     gotoPage(Number(b.getAttribute('data-n')) || 1);
   });
+  /* session281 QA-হুক (__ep281QA — সারফেস-নেমস্পেস-রীতি; রেল-ক্যাশ-প্রমাণ) */
+  window.__ep281QA = {
+    stored: function () { return ep281Stored; },
+    restored: function () { return ep281Restored; },
+    lowmem: function () { return !!LOWMEM; },
+    cacheArmed: function () { var a = (reader && reader.fid) ? alive.get(reader.fid) : null; return !!(a && a.railThumbs); }
+  };
 
   /* ── ৩. ডান ক্যালেন্ডার (পুরোনো সংখ্যা) ── */
   var elCalMonth = document.getElementById('epCalMonth');
