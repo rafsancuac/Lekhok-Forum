@@ -79,6 +79,13 @@
 
   /* রিঅ্যাকশন-ইঞ্জিন (main.js hold+slide পিকার সিলেক্টেড-স্টেট) */
   --lf-react-liked: var(--lf-social-blue);
+  /* session276-epaper-family — s226-epaper.css-ব্যবহৃত-অনুপস্থিত lf-টোকেন-সংযোজন (ফলব্যাক-নির্ভরতা-অপসারণ) */
+  --lf-ink: var(--lf-fb-ink);
+  --lf-ink-mute: var(--lf-text-tertiary);
+  --lf-ink-soft: #4B4C4F;
+  --lf-accent-soft: var(--accent-soft);
+  --lf-accent-glow: var(--accent-glow);
+  --lf-gold-badge: #E8A700;
 }
 
 /* ── সার্বজনীন টাইপোগ্রাফি-স্যান্ড (রুল-৫: নাম ডিপ-ব্ল্যাক, সেকেন্ডারি গ্রে) ──
