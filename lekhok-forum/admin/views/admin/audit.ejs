@@ -29,6 +29,13 @@
       <a class="btn btn-primary btn-sm" href="/admin/audit/export.csv?q=<%= encodeURIComponent(q42) %>&action=<%= encodeURIComponent(act43) %>&from=<%= from43 %>&to=<%= to43 %>"><i class="fas fa-file-csv"></i> CSV</a>
     </form>
   </div>
+  <div class="au-instant" id="auInstant270">
+    <i class="fas fa-filter au-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="auFilter270" class="au-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — ব্যবহারকারী / অ্যাকশন / টেবিল / বিবরণ" autocomplete="off" aria-label="অডিট-লগ তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="auClear270" class="au-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="au-count-chip" id="auCount270" hidden></span>
+    <span class="au-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
 
   <div class="card" style="padding:0;overflow:hidden;">
     <% if (!rows.length) { %>
@@ -40,8 +47,8 @@
         <tr><th style="width:160px;">সময়</th><th style="width:140px;">ব্যবহারকারী</th><th style="width:130px;">অ্যাকশন</th><th style="width:200px;">টেবিল</th><th style="width:80px;">আইটেম</th><th>বিস্তারিত</th></tr>
       </thead>
       <tbody>
-        <% rows.forEach(r => { %>
-        <tr>
+        <% rows.forEach((r, auI270) => { %>
+        <tr data-au-row="<%= auI270 %>" data-kw="#<%= r.id %> অডিট audit এন্ট্রি entry সময় time <%= r.created_at || '' %> ব্যবহারকারী user actor <%= r.actor_name || '' %> অ্যাকশন action <%= r.action %> টেবিল table <%= r.table_name || '' %> আইটেম item <%= r.item_id || '' %> বিস্তারিত detail <%= String(r.detail || '').replace(/\s+/g, ' ') %>">
           <td><%= r.created_at %></td>
           <td><%= r.actor_name || '—' %></td>
           <td><span class="badge"><%= r.action %></span></td>
@@ -60,6 +67,77 @@
     </div>
     <% } %>
   </div>
-</div>
+  <div class="au-zero" id="auZero270" data-au-empty hidden>
+    <i class="fas fa-file-shield" aria-hidden="true"></i>
+    <span>কোনো অডিট এন্ট্রি মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
+<script>
+  (function () {
+    /* session270 — au270 তাৎক্ষণিক-ফিল্টার (mo268-প্যাটার্ন-মিরর, একক-স্ট্রিপ — 'f'-ফোকাস-মালিকানা-নির্দ্বিধা: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __auQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-au-row]'));
+    var input = document.getElementById('auFilter270');
+    var clearBtn = document.getElementById('auClear270');
+    var countChip = document.getElementById('auCount270');
+    var zeroBox = document.getElementById('auZero270');
+    if (!input) { return; }
+    var total = rows.length;
+    function auApply270() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function auClearFn270() {
+      input.value = '';
+      auApply270();
+      input.blur();
+    }
+    input.addEventListener('input', auApply270);
+    if (clearBtn) { clearBtn.addEventListener('click', auClearFn270); }
+    input.addEventListener('keydown', function (au) {
+      if (au.key === 'Escape') { au.stopPropagation(); auClearFn270(); }
+    });
+    document.addEventListener('keydown', function (au) {
+      if (au.key !== 'f' || au.altKey || au.ctrlKey || au.metaKey) { return; }
+      var t = au.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      au.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__auQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: auApply270,
+      clear: auClearFn270
+    };
+  })();
+</script>
+<style>
+    /* session270 — au270 তাৎক্ষণিক-ফিল্টার স্টাইল (mo268-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু) */
+    .au-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .au-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .au-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .au-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .au-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .au-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .au-instant-clear:active { transform: scale(.96); }
+    .au-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .au-count-chip[hidden] { display: none; }
+    .au-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .au-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .au-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .au-zero[hidden] { display: none; }
+    tr[data-au-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .au-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .au-kbd-hint { display: none; } .au-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
