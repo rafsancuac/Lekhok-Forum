@@ -8,6 +8,27 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* session264 — অ্যাডমিন ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার (adf264 — হেক্স-শূন্য টোকেন-শুধু; mdf263-প্যাটার্ন-মিরর) */
+    .adf-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .adf-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .adf-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .adf-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .adf-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .adf-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .adf-instant-clear:active { transform: scale(.96); }
+    .adf-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .adf-count-chip[hidden] { display: none; }
+    .adf-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .adf-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .adf-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .adf-zero[hidden] { display: none; }
+    .stat-box[data-adf-row][hidden] { display: none !important; }
+    .card[data-adf-row][hidden] { display: none !important; }
+    .quick-actions .btn[data-adf-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .adf-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .adf-kbd-hint { display: none; } .adf-instant { padding: 9px 11px; } }
+  </style>
 </head>
 <body>
   <%- include('partials/sidebar') %>
@@ -20,20 +41,32 @@
       <span class="wb-emoji">✒️</span>
     </div>
 
+    <div class="adf-instant" id="adfInstant264">
+      <i class="fas fa-filter adf-instant-ico" aria-hidden="true"></i>
+      <input type="text" id="adfFilter264" class="adf-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — স্ট্যাট / কার্ড / কুইক-অ্যাকশন" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+      <button type="button" id="adfClear264" class="adf-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+      <span class="adf-count-chip" id="adfCount264" hidden></span>
+      <span class="adf-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+    </div>
+    <div class="adf-zero" id="adfZero264" data-adf-empty hidden>
+      <i class="fas fa-th-large" aria-hidden="true"></i>
+      <span>কোনো সারফেস মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+    </div>
+
     <div class="stat-grid">
-      <a href="/admin/users"       class="stat-box v-blue"><span class="stat-ico"><i class="fas fa-users-cog"></i></span><div><strong><%= counts.users %></strong><span>সক্রিয় ইউজার</span></div></a>
-      <a href="/admin/notices"     class="stat-box v-green"><span class="stat-ico"><i class="fas fa-bell"></i></span><div><strong><%= counts.notices %></strong><span>বিজ্ঞপ্তি</span></div></a>
-      <a href="/admin/events"      class="stat-box v-gold"><span class="stat-ico"><i class="fas fa-calendar"></i></span><div><strong><%= counts.events %></strong><span>ইভেন্ট</span></div></a>
-      <a href="/admin/members"     class="stat-box v-navy"><span class="stat-ico"><i class="fas fa-users"></i></span><div><strong><%= counts.members %></strong><span>সদস্য</span></div></a>
-      <a href="/admin/gallery"     class="stat-box v-violet"><span class="stat-ico"><i class="fas fa-images"></i></span><div><strong><%= counts.gallery %></strong><span>গ্যালারি</span></div></a>
-      <a href="/admin/daily"       class="stat-box v-cyan"><span class="stat-ico"><i class="fas fa-sun"></i></span><div><strong><%= counts.daily %></strong><span>ডেইলি কনটেন্ট</span></div></a>
-      <a href="/admin/resources"   class="stat-box v-amber"><span class="stat-ico"><i class="fas fa-book"></i></span><div><strong><%= counts.resources %></strong><span>রিসোর্স</span></div></a>
-      <a href="/admin/messages"    class="stat-box v-green"><span class="stat-ico"><i class="fas fa-envelope"></i></span><div><strong><%= counts.messages %></strong><span>বার্তা</span></div><% if (counts.unreadMessages > 0) { %><span class="dash-unread105" title="অপঠিত বার্তা"><%= counts.unreadMessages %></span><% } %></a>
-      <a href="/admin/complaints"  class="stat-box v-rose"><span class="stat-ico"><i class="fas fa-flag"></i></span><div><strong><%= counts.complaints %></strong><span>নতুন অভিযোগ</span></div></a>
+      <a href="/admin/users"       class="stat-box v-blue" data-adf-row="0" data-kw="ইউজার ব্যবস্থাপনা সক্রিয় অ্যাকাউন্ট /admin/users users accounts"><span class="stat-ico"><i class="fas fa-users-cog"></i></span><div><strong><%= counts.users %></strong><span>সক্রিয় ইউজার</span></div></a>
+      <a href="/admin/notices"     class="stat-box v-green" data-adf-row="1" data-kw="বিজ্ঞপ্তি নোটিশ ঘোষণা সংবাদ /admin/notices notices announcement"><span class="stat-ico"><i class="fas fa-bell"></i></span><div><strong><%= counts.notices %></strong><span>বিজ্ঞপ্তি</span></div></a>
+      <a href="/admin/events"      class="stat-box v-gold" data-adf-row="2" data-kw="ইভেন্ট অনুষ্ঠান ক্যালেন্ডার /admin/events events calendar"><span class="stat-ico"><i class="fas fa-calendar"></i></span><div><strong><%= counts.events %></strong><span>ইভেন্ট</span></div></a>
+      <a href="/admin/members"     class="stat-box v-navy" data-adf-row="3" data-kw="সদস্য কমিটি কার্যনির্বাহী উপদেষ্টা /admin/members members committee"><span class="stat-ico"><i class="fas fa-users"></i></span><div><strong><%= counts.members %></strong><span>সদস্য</span></div></a>
+      <a href="/admin/gallery"     class="stat-box v-violet" data-adf-row="4" data-kw="গ্যালারি ছবি অ্যালবাম ফটো /admin/gallery gallery photos"><span class="stat-ico"><i class="fas fa-images"></i></span><div><strong><%= counts.gallery %></strong><span>গ্যালারি</span></div></a>
+      <a href="/admin/daily"       class="stat-box v-cyan" data-adf-row="5" data-kw="ডেইলি কনটেন্ট দৈনিক আজকের /admin/daily daily content"><span class="stat-ico"><i class="fas fa-sun"></i></span><div><strong><%= counts.daily %></strong><span>ডেইলি কনটেন্ট</span></div></a>
+      <a href="/admin/resources"   class="stat-box v-amber" data-adf-row="6" data-kw="রিসোর্স ডাউনলোড সামগ্রী বই /admin/resources resources downloads"><span class="stat-ico"><i class="fas fa-book"></i></span><div><strong><%= counts.resources %></strong><span>রিসোর্স</span></div></a>
+      <a href="/admin/messages"    class="stat-box v-green" data-adf-row="7" data-kw="বার্তা যোগাযোগ ইনবক্স অপঠিত /admin/messages messages inbox"><span class="stat-ico"><i class="fas fa-envelope"></i></span><div><strong><%= counts.messages %></strong><span>বার্তা</span></div><% if (counts.unreadMessages > 0) { %><span class="dash-unread105" title="অপঠিত বার্তা"><%= counts.unreadMessages %></span><% } %></a>
+      <a href="/admin/complaints"  class="stat-box v-rose" data-adf-row="8" data-kw="অভিযোগ রিপোর্ট নতুন ফ্ল্যাগ /admin/complaints complaints reports"><span class="stat-ico"><i class="fas fa-flag"></i></span><div><strong><%= counts.complaints %></strong><span>নতুন অভিযোগ</span></div></a>
     </div>
 
     <div class="dash-cols">
-      <div class="card">
+      <div class="card" data-adf-row="9" data-kw="সাম্প্রতিক কনটেন্ট লেখা বিজ্ঞপ্তি ইভেন্ট প্রকাশিত recent content">
         <h3 class="card-title"><i class="fas fa-bolt"></i> সাম্প্রতিক কনটেন্ট</h3>
         <ul class="recent-list">
           <% (recent.notices || []).forEach(n => { %>
@@ -60,7 +93,7 @@
         </ul>
       </div>
 
-      <div class="card">
+      <div class="card" data-adf-row="10" data-kw="সাম্প্রতিক বার্তা অভিযোগ নতুন সদস্য ইনবক্স recent messages complaints">
         <h3 class="card-title"><i class="fas fa-inbox"></i> সাম্প্রতিক বার্তা ও অভিযোগ</h3>
         <ul class="recent-list">
           <% (recent.messages || []).forEach(m => { %>
@@ -94,17 +127,67 @@
     </div>
     <div class="quick-actions">
       <% if (adminUser || (user && user.role === 'admin')) { %>
-      <a href="/admin/content"       class="btn btn-gold"><i class="fas fa-pen-square"></i> কনটেন্ট সম্পাদক</a>
+      <a href="/admin/content"       class="btn btn-gold" data-adf-row="11" data-kw="কনটেন্ট সম্পাদক এডিটর লেখা /admin/content content editor"><i class="fas fa-pen-square"></i> কনটেন্ট সম্পাদক</a>
       <% } %>
-      <a href="/admin/notices/new"   class="btn btn-primary"><i class="fas fa-plus"></i> নতুন বিজ্ঞপ্তি</a>
-      <a href="/admin/events/new"    class="btn"><i class="fas fa-plus"></i> নতুন ইভেন্ট</a>
-      <a href="/admin/gallery/new"   class="btn"><i class="fas fa-plus"></i> নতুন ছবি</a>
-      <a href="/admin/daily/new"     class="btn"><i class="fas fa-plus"></i> ডেইলি কনটেন্ট</a>
+      <a href="/admin/notices/new"   class="btn btn-primary" data-adf-row="12" data-kw="নতুন বিজ্ঞপ্তি তৈরি যোগ /admin/notices/new new notice create"><i class="fas fa-plus"></i> নতুন বিজ্ঞপ্তি</a>
+      <a href="/admin/events/new"    class="btn" data-adf-row="13" data-kw="নতুন ইভেন্ট তৈরি যোগ /admin/events/new new event create"><i class="fas fa-plus"></i> নতুন ইভেন্ট</a>
+      <a href="/admin/gallery/new"   class="btn" data-adf-row="14" data-kw="নতুন ছবি আপলোড গ্যালারি /admin/gallery/new new photo upload"><i class="fas fa-plus"></i> নতুন ছবি</a>
+      <a href="/admin/daily/new"     class="btn" data-adf-row="15" data-kw="নতুন ডেইলি কনটেন্ট তৈরি /admin/daily/new new daily"><i class="fas fa-plus"></i> ডেইলি কনটেন্ট</a>
       <% if (adminUser || (user && user.role === 'admin')) { %>
-      <a href="/admin/members/new"   class="btn"><i class="fas fa-plus"></i> নতুন সদস্য</a>
-      <a href="/admin/subscribers"   class="btn"><i class="fas fa-paper-plane"></i> নিউজলেটার</a>
+      <a href="/admin/members/new"   class="btn" data-adf-row="16" data-kw="নতুন সদস্য যোগ কমিটি /admin/members/new new member create"><i class="fas fa-plus"></i> নতুন সদস্য</a>
+      <a href="/admin/subscribers"   class="btn" data-adf-row="17" data-kw="নিউজলেটার সাবস্ক্রাইবার ইমেইল প্রেরণ /admin/subscribers newsletter subscribers"><i class="fas fa-paper-plane"></i> নিউজলেটার</a>
       <% } %>
     </div>
   </div>
+
+  <script>
+  (function () {
+    /* session264 — adf264 তাৎক্ষণিক-ফিল্টার (mdf263-প্যাটার্ন-মিরর: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __adfQA) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-adf-row]'));
+    var input = document.getElementById('adfFilter264');
+    var clearBtn = document.getElementById('adfClear264');
+    var countChip = document.getElementById('adfCount264');
+    var zeroBox = document.getElementById('adfZero264');
+    if (!input || !rows.length) { return; }
+    var total = rows.length;
+    function adfApply264() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function adfClear264() {
+      input.value = '';
+      adfApply264();
+      input.blur();
+    }
+    input.addEventListener('input', adfApply264);
+    if (clearBtn) { clearBtn.addEventListener('click', adfClear264); }
+    input.addEventListener('keydown', function (ad) {
+      if (ad.key === 'Escape') { ad.stopPropagation(); adfClear264(); }
+    });
+    document.addEventListener('keydown', function (ad) {
+      if (ad.key !== 'f' || ad.altKey || ad.ctrlKey || ad.metaKey) { return; }
+      var t = ad.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ad.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__adfQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: adfApply264,
+      clear: adfClear264
+    };
+  })();
+  </script>
 </body>
 </html>

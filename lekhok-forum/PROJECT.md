@@ -3133,6 +3133,20 @@ Task53-প্রস্তাবকৃত পরবর্তী-ধাপ বা�
 
 **গোটচা (PLANS session254 ×৪):** testadmin-ভিউয়ার (moderator=403) · _csrfTok-কুকি-দ্বি-সমর্পণ (নেস্টেড-GET-টোকেন-রোটেশন) · s251-কোল্ড-স্টার্ট-ট্রানজিয়েন্ট (eval-empty শ্রেণি — ম্যানুয়াল-ওয়ার্ম-আপ-প্রোব → পুনঃরান) · `[h`-প্রদর্শন-আর্টিফ্যাক্ট (টুল-আউটপুটে `[hidden]`→`]idden]` দেখায়; od -c-ই-সত্য-উৎস)।
 
+## §২৬৪ (session264 — cron 403679: অ্যাডমিন ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার adf264 — mdf263-প্যাটার্ন-মিরর) — s264 ৫৬/৫৬ ×২ (২৩ সেপ্টেম্বর ২০২৬)
+
+**রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`57d6b73` (session263/Task103, clean-tree); স্থায়ী-সার্ভার-জীবিত (৮০৯৪ — canonical ক্লোনে session263-কোড); রাউন্ড-শুরু QA: s263 ৫৩/৫৩ (SKIP=১) + role-policy ২৬০/২৬০ + guard:design + audit:views (১২২ ejs) — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session263-বাকি-প্রস্তাব গ্রহণ: admin-dashboard-সারফেস-ফিল্টার)।
+
+**[Mandatory-ফিচার] অ্যাডমিন ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার (adf264):** /admin (admin/views/admin/dashboard.ejs) — **পূর্ণ-সারফেস-কভারেজ: মিশ্র-ট্যাগ সারফেস ×১৮** = stat-box ×৯ (users/notices/events/members/gallery/daily/resources/messages/complaints — সব `<a class="stat-box">`) + কার্ড ×২ (সাম্প্রতিক কনটেন্ট / সাম্প্রতিক বার্তা-অভিযোগ — `<div class="card">`) + কুইক-অ্যাকশন বাটন ×৭ (কনটেন্ট-সম্পাদক/নতুন-বিজ্ঞপ্তি/নতুন-ইভেন্ট/নতুন-ছবি/ডেইলি/নতুন-সদস্য/নিউজলেটার — ৩-টি admin-শর্তসাপেক্ষ, নন-অ্যাডমিনে ইনডেক্স-গ্যাপ অনুমোদিত, JS-ইনডেক্স-মান-নিরপেক্ষ); `data-kw` = লেবেল+প্রতিশব্দ+লিংক-পাথ+ইংরেজি-অ্যালায়াস (দ্বি-ভাষা — ব্যবহারকারী যে-ভাষাতেই-লিখুক মেলে) + ফিল্টার-স্ট্রিপ (adfFilter264 + adfClear264 + adfCount264 + adf-kbd-hint) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স (adfZero264 data-adf-empty) + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + **__adfQA হুক (total/count/apply/clear)**; welcome-banner/stat-grid/dash-cols/recent-list/dash-unread105/section-head/quick-actions-লিংক/sidebar সম্পূর্ণ অক্ষুণ্ণ।
+
+**[Mandatory-স্টাইল] adf264-ব্লক হেক্স-শূন্য টোকেন-শুধু:** color-mix(in srgb, var(--lf-brandgreen) …) ফোকাস-রিং + dashed kbd-পিল + :active-প্রেস + reduced-motion-জোড়া + 640px-সংকোচন (kbd-none) + **hidden-গার্ড ×৩** (মিশ্র-ট্যাগ সারফেস — `.stat-box[data-adf-row][hidden]`/`.card[data-adf-row][hidden]`/`.quick-actions .btn[data-adf-row][hidden]` সব `display:none!important` — **.stat-box-এর author display:flex UA-[hidden]-বিকৃত-করে, session256-শিক্ষা এ-পেজেও প্রমাণিত**) + `.adf-count-chip[hidden]`/`.adf-zero[hidden]` জোড়া।
+
+**টেস্ট:** নতুন tests/s264-adfilter-suite.sh **৫৬/৫৬ ×২-ধারাবাহিক** (কাঠামো ×২০ + স্টাইল ×১২ + আচরণ ×১৮ রিয়েল-ব্রাউজার — নির্ধারক-প্রোব ×৬ 'গ্যালারি'/'gallery'/'বিজ্ঞপ্তি'/'/admin/notices'/'inbox'/'নিউজলেটার' পূর্বগণনা-মিল + নো-ম্যাচ→শূন্য-অবস্থা + সব-hidden ১৮/১৮ + clear-পুনরুদ্ধার + চিপ-text/display-none + 'f'-ফোকাস bubbles:true + Escape-ব্লার + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ + রিড-ওনলি সারফেস ১৮→১৮) + পূর্ণ-রিগ্রেশন s263 ৫৩/৫৩ + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন + EJS-compile/রেন্ডার-প্রমাণ (৫৩,৬০৯-বাইট, ১৮-সারফেস)।
+
+**গোটচা ×২ (PLANS session264):** ① **মিথ্যা-সেশন-সক্রিয়-গার্ড** — লগআউট-পরে `/admin` → `/admin/login` রিডাইরেক্ট; `grep '/admin'` সাবস্ট্রিং-চেক লগইন-পেজেও মেলে → ব্রাউজার লগইন-পেজে-আটকে __adfQA-শূন্য (১৩-মিথ্যা-ফেল, প্রথম-রানে ধরা) — **অ্যাঙ্করড-চেক `/admin/?$` বাধ্যতমূলক** (s263-এর '/moderator'-চেক আকস্মিকভাবে নিরাপদ ছিল — login-পেজে ও-সাবস্ট্রিং নেই)। ② **aligned multi-space অ্যাঙ্কর** — dashboard.ejs-এ href→class মাঝে ২-৭-স্পেস সারিবদ্ধ; নির্দিষ্ট-স্পেস-স্ট্রিং-অ্যাঙ্কর ব্যর্থ → হোয়াইটস্পেস-নমনীয় রেজেক্স (href\s+class) + re.subn(count=1)-ই-পথ।
+
+**প্যাচ:** scripts/s264-patch.py (skip-if-present idempotent — ২১-সম্পাদনা, পুনঃরান SKIP-প্রমাণ) + ডক ×৩ (PROJECT §২৬৪ + PLANS session264 + এ-এন্ট্রি)।
+
 ## §২৬৩ (session263 — cron 403679: মডারেটর ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার mdf263 — muf262-প্যাটার্ন-মিরর) — s263 ৫৩/৫৩ ×২ (২৩ সেপ্টেম্বর ২০২৬)
 
 **রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`02e2104` (session262/Task102, clean-tree); GH /user→200 + Vercel /v2/user→200; স্থায়ী-সার্ভার-জীবিত (৮০৯৪); রাউন্ড-শুরু QA: s262 ৪৮/৪৮ + s261 ৫০/৫০ + role-policy ২৬০/২৬০ + guard:design + audit:views (১২২ ejs) — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session262-বাকি-প্রস্তাব গ্রহণ: moderator-dashboard-সারফেস-ফিল্টার)।
