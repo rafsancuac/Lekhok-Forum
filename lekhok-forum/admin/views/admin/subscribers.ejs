@@ -56,6 +56,13 @@
     </span>
     <a class="btn btn-primary btn-sm" href="/admin/subscribers/export"><i class="fas fa-file-csv"></i> CSV ডাউনলোড</a>
   </div>
+  <div class="sb-instant" id="sbInstant269">
+    <i class="fas fa-filter sb-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="sbFilter269" class="sb-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — ইমেইল / নাম / অবস্থা" autocomplete="off" aria-label="সাবস্ক্রাইবার তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="sbClear269" class="sb-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="sb-count-chip" id="sbCount269" hidden></span>
+    <span class="sb-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
   <% if (subs.length === 0) { %>
     <div class="card empty">এখনো কোনো সাবস্ক্রাইবার নেই — ফুটারের নিউজলেটার ফর্মে সাবস্ক্রাইব করলে এখানে দেখা যাবে।</div>
   <% } else { %>
@@ -71,8 +78,8 @@
       <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট"></th><th>#</th><th>ইমেইল</th><th>নাম</th><th>সাবস্ক্রিপশনের তারিখ</th><th>অবস্থা</th><th>অ্যাকশন</th></tr>
     </thead>
     <tbody>
-      <% subs.forEach(s => { %>
-        <tr>
+      <% subs.forEach((s, sbI269) => { %>
+        <tr data-sb-row="<%= sbI269 %>" data-kw="#<%= s.id %> সাবস্ক্রাইবার subscriber ইমেইল email <%= s.email %> <%= s.name || '' %> <%= s.created_at || '' %> সাবস্ক্রিপশন subscribed <%= s.is_active ? 'সক্রিয় active' : 'বাতিল inactive বন্ধ off' %>">
           <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= s.id %>" aria-label="সিলেক্ট"></td>
           <td><%= s.id %></td>
           <td><strong><%= s.email %></strong></td>
@@ -99,9 +106,20 @@
     </tbody>
   </table>
   <% } %>
+  <div class="sb-zero" id="sbZero269" data-sb-empty hidden>
+    <i class="fas fa-users" aria-hidden="true"></i>
+    <span>কোনো সাবস্ক্রাইবার মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
 
   <div class="admin-header" style="margin-top:28px;">
     <h2 style="font-size:1.15rem;">ইমেইল নোটিফিকেশন রেকর্ড</h2>
+  </div>
+  <div class="sl-instant" id="slInstant269">
+    <i class="fas fa-filter sl-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="slFilter269" class="sl-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / ধরন / প্রেরক / অবস্থা" autocomplete="off" aria-label="নোটিফিকেশন-রেকর্ড তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="slClear269" class="sl-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="sl-count-chip" id="slCount269" hidden></span>
+    <span class="sl-kbd-hint" aria-hidden="true"><kbd>Esc</kbd> মুছুন</span>
   </div>
   <% if (logs.length === 0) { %>
     <div class="card empty">এখনো কোনো নোটিফিকেশন পাঠানো হয়নি। এডমিন/মডারেটর নতুন লেখা বা বিজ্ঞপ্তি পোস্ট করলে এখানে রেকর্ড দেখা যাবে।</div>
@@ -111,8 +129,8 @@
       <tr><th>শিরোনাম</th><th>ধরন</th><th>প্রেরক</th><th>তারিখ</th><th>প্রাপক</th><th>পাঠানো / ব্যর্থ</th><th>অ্যাকশন</th></tr>
     </thead>
     <tbody>
-      <% logs.forEach(l => { %>
-        <tr>
+      <% logs.forEach((l, slI269) => { %>
+        <tr data-sl-row="<%= slI269 %>" data-kw="#<%= l.id %> রেকর্ড log নোটিফিকেশন notification <%= l.title %> <%= l.kind === 'notice' ? 'বিজ্ঞপ্তি notice' : 'লেখা post' %> <%= l.author_name || '' %> <%= l.created_at || '' %> <%= l.subscriber_count %> প্রাপক recipient <%= (l.sent_count + l.failed_count) < l.subscriber_count ? 'কিউতে queued আবার-পাঠান retry' : 'পাঠানো-সম্পন্ন done' %>">
           <td><strong><%= l.title %></strong></td>
           <td><%= l.kind === 'notice' ? 'বিজ্ঞপ্তি' : 'লেখা' %></td>
           <td><%= l.author_name || '—' %></td>
@@ -136,6 +154,116 @@
     </tbody>
   </table>
   <% } %>
-</div>
+  <div class="sl-zero" id="slZero269" data-sl-empty hidden>
+    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+    <span>কোনো নোটিফিকেশন রেকর্ড মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
+<script>
+  (function () {
+    /* session269 — sb269 তাৎক্ষণিক-ফিল্টার (mo268-প্যাটার্ন-মিরর: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __sbQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-sb-row]'));
+    var input = document.getElementById('sbFilter269');
+    var clearBtn = document.getElementById('sbClear269');
+    var countChip = document.getElementById('sbCount269');
+    var zeroBox = document.getElementById('sbZero269');
+    if (!input) { return; }
+    var total = rows.length;
+    function sbApply269() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function sbClear269() {
+      input.value = '';
+      sbApply269();
+      input.blur();
+    }
+    input.addEventListener('input', sbApply269);
+    if (clearBtn) { clearBtn.addEventListener('click', sbClear269); }
+    input.addEventListener('keydown', function (sb) {
+      if (sb.key === 'Escape') { sb.stopPropagation(); sbClear269(); }
+    });
+    document.addEventListener('keydown', function (sb) {
+      if (sb.key !== 'f' || sb.altKey || sb.ctrlKey || sb.metaKey) { return; }
+      var t = sb.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      sb.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__sbQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: sbApply269,
+      clear: sbClear269
+    };
+  })();
+  (function () {
+    /* session269 — sl269 তাৎক্ষণিক-ফিল্টার (দ্বৈত-সারফেস-দ্বিতীয়: 'f'-ফোকাস একক-মালিকানা sb269-এ — ফোকাস-দ্বন্দ্ব-নিষিদ্ধ; sl269 = input/Escape/clear স্বাধীন + __slQA সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-sl-row]'));
+    var input = document.getElementById('slFilter269');
+    var clearBtn = document.getElementById('slClear269');
+    var countChip = document.getElementById('slCount269');
+    var zeroBox = document.getElementById('slZero269');
+    if (!input) { return; }
+    var total = rows.length;
+    function slApply269() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function slClear269() {
+      input.value = '';
+      slApply269();
+      input.blur();
+    }
+    input.addEventListener('input', slApply269);
+    if (clearBtn) { clearBtn.addEventListener('click', slClear269); }
+    input.addEventListener('keydown', function (sl) {
+      if (sl.key === 'Escape') { sl.stopPropagation(); slClear269(); }
+    });
+    window.__slQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: slApply269,
+      clear: slClear269
+    };
+  })();
+</script>
+<style>
+    /* session269 — sb269/sl269 তাৎক্ষণিক-ফিল্টার স্টাইল (mo268-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু) */
+    .sb-instant, .sl-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .sb-instant-ico, .sl-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .sb-instant-input, .sl-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .sb-instant-input:focus, .sl-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .sb-instant-clear, .sl-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .sb-instant-clear:hover, .sl-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .sb-instant-clear:active, .sl-instant-clear:active { transform: scale(.96); }
+    .sb-count-chip, .sl-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .sb-count-chip[hidden], .sl-count-chip[hidden] { display: none; }
+    .sb-kbd-hint, .sl-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .sb-kbd-hint kbd, .sl-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .sb-zero, .sl-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .sb-zero[hidden], .sl-zero[hidden] { display: none; }
+    tr[data-sb-row][hidden], tr[data-sl-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .sb-instant-clear:active, .sl-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .sb-kbd-hint, .sl-kbd-hint { display: none; } .sb-instant, .sl-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
