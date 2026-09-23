@@ -2892,3 +2892,23 @@ Stage Summary:
 - **[Mandatory-স্টাইল]** ep282-ব্লক হেক্স-শূন্য (এন্ট্রি-অ্যানিমেশন + is-act/is-sel + স্ক্রলবার + মোবাইল + reduced-motion)
 - পরের-এজেন্ট: **session283 লেবেল (worklog Task ID 123)**; PLANS session282-নোট অবশ্যই-পড়ুন (stale-view-cache fresh-reboot-প্রথা + blockification + containsF-চুক্তি); **ফিচার-কোড-লেখার-আগেই fetch**; push-আগে পুনঃ-fetch+rebase-বাধ্যতমূলক
 - রিমোট main = push-পরবর্তী HEAD (session282-ep282); working-tree ক্লিন
+
+---
+Task ID: 123 (session283 — cron 403679; ক্যালেন্ডারে মাস-তালিকা-শর্টকাট ep283) — push (feature + docs)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609232227)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+Work Log:
+- রাউন্ড-শুরু-যাচাই: HEAD=origin=`4912094` (session282-ep282), working-tree ক্লিন; ফিচার-কোড-লেখার-আগেই fetch (BEHIND=০); PLANS session282+session281+উভয়-session280-নোট পঠিত
+- রাউন্ড-শুরু QA: প্রোড-স্পট 200-ত্রয় + s282 ক্যানারি — বাগ-শূন্য → ফিচার-রাউন্ড (session282-শীর্ষ-প্রস্তাব গ্রহণ)
+- **[Mandatory-ফিচার]** ep283 মাস-তালিকা-শর্টকাট (ইন-কার্ড ডিসক্লোজার: বছর-স্টেপার + ১২-মাস-গ্রিড + has-ডট + এক-ক্লিক-জাম্প + Escape/বাইরে-ক্লিক + aria + __ep283QA ×৭) + **[Mandatory-স্টাইল]** ep283-ব্লক হেক্স-শূন্য (বিস্তারিত PROJECT §২৮৩)
+- **টেস্ট:** নতুন tests/s283-calmonth-suite.sh **৪৯/৪৯ ×২-ধারাবাহিক (SKIP=০)** + মার্কার-সিড/ক্লিন নেট-শূন্য + পূর্ণ-রিগ্রেশন s260-s282 (২৪-সুইট) + role-policy ২৬০/২৬০ + guard/audit-গ্রিন
+- **গোটচা ×২:** hasPayload-শর্তসাপেক্ষ-রেন্ডার (PRE=০-এ রিডার-মার্কআপ-সম্পূর্ণ-অনুপস্থিত — অ্যাসার্ট payload-অবস্থায়) + প্রক্সি-HTML-ক্যাশ (curl-এ ?nc=$RANDOM-বাধ্যতমূলক)
+- প্যাচ: scripts/s283-patch.py (idempotent ×২) + ডক ×৩ (PROJECT §২৮৩ + PLANS session283 + repo-worklog Task-123; s283-docs.py)
+- PNG-চার্ন-রিভার্ট (১৭-ফাইল — রিগ্রেশন-পুনঃরান-জাত; s283-PNG ×২ ইনটেনশনাল) + secret-scan-ক্লিন + push-পূর্ব পুনঃ-fetch
+
+Stage Summary:
+- **[Mandatory-ফিচার]** ep283 মাস-তালিকা-শর্টকাট — দূর-মাসে এক-ক্লিক-জাম্প (prev/next-পুনরাবৃত্তি-শূন্য); ক্যালেন্ডার-চুক্তি অক্ষুণ্ণ
+- **[Mandatory-স্টাইল]** ep283-ব্লক হেক্স-শূন্য (ডিসক্লোজার + ডট + is-cur-ফিল + অ্যানিমেশন + reduced-motion)
+- পরের-এজেন্ট: **session284 লেবেল (worklog Task ID 124)**; PLANS session283-নোট অবশ্যই-পড়ুন (hasPayload-চুক্তি + প্রক্সি-ক্যাশ-বাস্টার + গণনা-ভিত্তিক-অ্যাসার্ট); **ফিচার-কোড-লেখার-আগেই fetch**; push-আগে পুনঃ-fetch+rebase-বাধ্যতমূলক
+- রিমোট main = push-পরবর্তী HEAD (session283-ep283); working-tree ক্লিন
