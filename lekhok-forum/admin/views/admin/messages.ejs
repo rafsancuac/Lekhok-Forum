@@ -8,6 +8,25 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* session266 — যোগাযোগ-বার্তা তাৎক্ষণিক-ফিল্টার (ms266 — হেক্স-শূন্য টোকেন-শুধু; ac265-প্যাটার্ন-মিরর) */
+    .ms-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .ms-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .ms-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .ms-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .ms-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .ms-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .ms-instant-clear:active { transform: scale(.96); }
+    .ms-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .ms-count-chip[hidden] { display: none; }
+    .ms-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .ms-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .ms-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .ms-zero[hidden] { display: none; }
+    .msg105-card[data-ms-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .ms-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .ms-kbd-hint { display: none; } .ms-instant { padding: 9px 11px; } }
+  </style>
 </head>
 <body>
 <%- include('partials/sidebar') %>
@@ -61,6 +80,18 @@
     <% } %>
   </form>
 
+  <div class="ms-instant" id="msInstant266">
+    <i class="fas fa-filter ms-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="msFilter266" class="ms-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — নাম / ইমেইল / বিষয় / বার্তা" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="msClear266" class="ms-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="ms-count-chip" id="msCount266" hidden></span>
+    <span class="ms-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
+  <div class="ms-zero" id="msZero266" data-ms-empty hidden>
+    <i class="fas fa-inbox" aria-hidden="true"></i>
+    <span>কোনো বার্তা মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
+
   <% if (messages.length === 0) { %>
     <div class="card empty inbox-empty105">
       <i class="fas <%= q105 ? 'fa-magnifying-glass' : (filter105 === 'archived' ? 'fa-box-archive' : (filter105 === 'unread' ? 'fa-envelope-open' : 'fa-inbox')) %>"></i>
@@ -79,7 +110,7 @@
     <% const tint105 = TINTS105[m.id % TINTS105.length]; %>
     <% const replySub105 = m.subject ? ( /^রে:/i.test(m.subject) || /^re:/i.test(m.subject) ? m.subject : 'Re: ' + m.subject ) : 'Re: আপনার বার্তা'; %>
     <% const qs109 = (filter105 !== 'all' || q105 || page105 > 1) ? '?' + [filter105 !== 'all' ? 'f=' + filter105 : '', q105 ? 'q=' + encodeURIComponent(q105) : '', page105 > 1 ? 'page=' + page105 : ''].filter(Boolean).join('&') : ''; %>
-    <div class="msg105-card<%= isUnread105 ? ' unread' : '' %><%= m.is_archived ? ' archived' : '' %>" id="msg<%= m.id %>">
+    <div class="msg105-card<%= isUnread105 ? ' unread' : '' %><%= m.is_archived ? ' archived' : '' %>" id="msg<%= m.id %>" data-ms-row="<%= idx %>" data-kw="#<%= m.id %> বার্তা message <%= m.name || '' %> <%= m.email || '' %> mail <%= m.subject || '' %> <%= ((m.message || '') + ' ').replace(/\s+/g, ' ').trim().slice(0, 140) %> <%= m.created_at || '' %> <%= !m.is_read ? 'অপঠিত unread' : 'পঠিত read' %><%= m.is_archived ? ' আর্কাইভ archived' : '' %><%= m.admin_reply ? ' নোট note উত্তর reply' : '' %>">
       <div class="msg-select105">
         <input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট <%= m.id %>">
       </div>
@@ -278,6 +309,55 @@
     });
   }
 })();
+</script>
+<script>
+  (function () {
+    /* session266 — ms266 তাৎক্ষণিক-ফিল্টার (ac265-প্যাটার্ন-মিরর: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __msQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-ms-row]'));
+    var input = document.getElementById('msFilter266');
+    var clearBtn = document.getElementById('msClear266');
+    var countChip = document.getElementById('msCount266');
+    var zeroBox = document.getElementById('msZero266');
+    if (!input) { return; }
+    var total = rows.length;
+    function msApply266() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function msClear266() {
+      input.value = '';
+      msApply266();
+      input.blur();
+    }
+    input.addEventListener('input', msApply266);
+    if (clearBtn) { clearBtn.addEventListener('click', msClear266); }
+    input.addEventListener('keydown', function (ms) {
+      if (ms.key === 'Escape') { ms.stopPropagation(); msClear266(); }
+    });
+    document.addEventListener('keydown', function (ms) {
+      if (ms.key !== 'f' || ms.altKey || ms.ctrlKey || ms.metaKey) { return; }
+      var t = ms.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ms.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__msQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: msApply266,
+      clear: msClear266
+    };
+  })();
 </script>
 </body>
 </html>
