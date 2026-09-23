@@ -670,3 +670,8 @@
 .ep-cal-day:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
 @media (max-width: 640px) { .ep-cal-grid { gap: 1px; } .ep-cal-day { min-height: 25px; font-size: .64rem; } }
 @media (prefers-reduced-motion: reduce) { .ep-cal-day.is-act { transition: none; } }
+
+/* ═══ session288 — ক্যালেন্ডার-কার্ডে a11y-ভার্বালাইজেশন (ep288 — হেক্স-শূন্য টোকেন-শুধু;
+       aria-live-স্ক্রিন-রিডার-লাইভ-রিজিয়ন (sr-only) + aria-current-দৃশ্যমান-রিং) ═══ */
+.ep-cal-live { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+.ep-cal-day[aria-current="date"] { outline: 2px solid var(--lf-white); outline-offset: -3px; }

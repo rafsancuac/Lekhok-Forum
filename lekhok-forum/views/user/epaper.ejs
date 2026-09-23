@@ -182,12 +182,13 @@
         <div class="ep-cal-head">
           <span class="ep-cal-title"><i class="fas fa-calendar-days" aria-hidden="true"></i> পুরোনো সংখ্যা</span>
           <span class="ep-cal-nav">
-            <button type="button" class="ep-cal-btn" id="epCalPrev" aria-label="আগের মাস"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            <button type="button" class="ep-cal-btn" id="epCalPrev" aria-label="পরের মাস"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
             <button type="button" class="ep-cal-month" id="epCalMonth" aria-haspopup="true" aria-expanded="false" title="মাস-তালিকা খুলুন">—</button>
-            <button type="button" class="ep-cal-btn" id="epCalNext" aria-label="পরের মাস"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+            <button type="button" class="ep-cal-btn" id="epCalNext" aria-label="আগের মাস"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
           </span>
         </div>
         <div class="ep-cal-grid" id="epCalGrid"></div>
+        <span class="ep-cal-live" id="epCalLive" role="status" aria-live="polite"></span>
         <div class="ep-cal-mpanel" id="epCalMPanel" hidden>
           <div class="ep-cal-myear">
             <button type="button" class="ep-cal-btn" id="epCalMYPrev" aria-label="আগের বছর"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
@@ -1623,6 +1624,72 @@
     days: function () { return ep287Btns().length; },
     enabled: function () { return ep287Btns().filter(function (b) { return !b.disabled; }).length; },
     tabbed: function () { return ep287Btns().filter(function (b) { return b.getAttribute('tabindex') === '0'; }).length; }
+  };
+
+  /* ═══════════ session288 (cron 403679): ক্যালেন্ডার-কার্ডে a11y-ভার্বালাইজেশন (ep288) ═══════════
+     aria-live (polite/role=status) লাইভ-রিজিয়নে বাংলা-ঘোষণা: রোভিং-নেভে দিন (আজ/নির্বাচিত/
+     সংরক্ষিত-সাফিক্স), স্টেপার/মাস-জাম্পে মাস-ঘোষণা; **বুট-নীরব (engaged-গেট — প্রথম
+     ব্যবহারকারী-ইনপুটেই সক্রিয় — লোডে-ঘোষণা-কোলাহল-শূন্য)**; দিন-বাটনে aria-label (বাংলা-তারিখ +
+     অবস্থা-সাফিক্স) + is-sel-দিনে aria-current="date"; স্টেপার-aria-label আচরণ-মিল-সংশোধন
+     (epCalPrev=calM++ → "পরের মাস"; epCalNext=calM-- → "আগের মাস"); র‍্যাপার-স্তর
+     (ep287SetActive/calRender-বডি-অস্পৃশ্য; ঘোষণা-আর-ডাক-এক-নাম — s285-নাম-মিল-গোটচা); __ep288QA হুক। */
+  var ep288Last = '', ep288Engaged = false, ep288LastMY = '';
+  var elCalLive = document.getElementById('epCalLive');
+  function ep288Say(msg) {
+    ep288Last = String(msg || '');
+    if (elCalLive) { try { elCalLive.textContent = ep288Last; } catch (e) {} }
+  }
+  function ep288DayLabel(d, b) {
+    var s = bnShort279(d);
+    if (!b) return s;
+    if (b.classList.contains('is-today')) s += ' (আজ)';
+    if (b.classList.contains('is-sel')) s += ' (নির্বাচিত)';
+    else if (b.classList.contains('has')) s += ' — সংরক্ষিত সংখ্যা আছে';
+    return s;
+  }
+  function ep288SyncAria() {
+    if (!elCalGrid) return;
+    elCalGrid.querySelectorAll('.ep-cal-day').forEach(function (b) {
+      var d = b.getAttribute('data-d') || '';
+      b.setAttribute('aria-label', ep288DayLabel(d, b));
+      if (b.classList.contains('is-sel')) b.setAttribute('aria-current', 'date');
+      else b.removeAttribute('aria-current');
+    });
+  }
+  /* engaged-গেট: গ্রিড-কীবোর্ড/স্টেপার/মাস-ট্রিগার-ইনপুটেই সক্রিয় — বুট/প্রোগ্রাম্যাটিক-আর্ম-নীরব */
+  if (elCalGrid) elCalGrid.addEventListener('keydown', function () { ep288Engaged = true; }, true);
+  if (elCalPrev) elCalPrev.addEventListener('click', function () { ep288Engaged = true; });
+  if (elCalNext) elCalNext.addEventListener('click', function () { ep288Engaged = true; });
+  if (elCalMonth) elCalMonth.addEventListener('click', function () { ep288Engaged = true; });
+  /* ep287SetActive-র‍্যাপার — রোভিং/জাম্প/আর্ম-পরে দিন-ঘোষণা (engaged-গেট; ep287-বডি-অস্পৃশ্য) */
+  var ep288SetActiveBase = ep287SetActive;
+  ep287SetActive = function (d, doFocus) {
+    ep288SetActiveBase(d, doFocus);
+    if (ep288Engaged && ep287Active) {
+      var b = elCalGrid ? elCalGrid.querySelector('.ep-cal-day[data-d="' + ep287Active + '"]') : null;
+      ep288Say(ep288DayLabel(ep287Active, b));
+    }
+  };
+  /* calRender-র‍্যাপার — aria-সিঙ্ক (aria-label + aria-current) + মাস-পরিবর্তনে মাস-ঘোষণা
+     (ep287-র‍্যাপার-চেইনের-পরে — মাস-ঘোষণা দিন-ঘোষণা-ওভাররাইট করে; engaged-গেট) */
+  var ep288CalRenderBase = calRender;
+  calRender = function () {
+    var my = calY + '-' + calM;
+    ep288CalRenderBase();
+    ep288SyncAria();
+    if (ep288Engaged && my !== ep288LastMY) {
+      ep288Say('মাস: ' + bnMonths279[calM] + ' ' + bnDigits(calY));
+    }
+    ep288LastMY = calY + '-' + calM;
+  };
+  /* session288 QA-হুক (__ep288QA — সারফেস-নেমস্পেস-রীতি; লাইভ-রিজিয়ন-প্রমাণ) */
+  window.__ep288QA = {
+    last: function () { return ep288Last; },
+    say: function (m) { ep288Say(m); },
+    engaged: function () { return ep288Engaged; },
+    label: function (d) { var b = elCalGrid ? elCalGrid.querySelector('.ep-cal-day[data-d="' + d + '"]') : null; return ep288DayLabel(d, b); },
+    current: function () { var b = elCalGrid ? elCalGrid.querySelector('.ep-cal-day[aria-current="date"]') : null; return b ? (b.getAttribute('data-d') || '') : ''; },
+    labeled: function () { return elCalGrid ? elCalGrid.querySelectorAll('.ep-cal-day[aria-label]').length : 0; }
   };
 
   /* ── ৪. বার-তারিখ-টেক্সট (বার-সহ পূর্ণ বাংলা তারিখ) ── */
