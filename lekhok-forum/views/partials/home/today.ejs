@@ -1,4 +1,4 @@
-<%# ── সেশন ২৩৩ + ২৯১ + ২৯৫: "আজকের ই-পেপার" — প্রশস্ত প্রিমিয়াম ৩ডি নিউজপেপার কিয়স্ক ──
+<%# ── সেশন ২৩৩ + ২৯১ + ২৯৬: "আজকের ই-পেপার" — প্রশস্ত প্রিমিয়াম ৩ডি নিউজপেপার কিয়স্ক ──
     সেশন ২৩৩-এর প্রিমিয়াম ব্যান্ডের ওপর সেশন ২৯১-এ ইউজার-স্পেক কিয়স্ক:
     • ডান কলাম = ৩ডি পেপার-স্টেজ (পেছনের ২ শিট + সামনের ইন্টারঅ্যাকটিভ শিট) +
       ফিল্মস্ট্রিপ (প্রতি পত্রিকায় এক বাটন, accent-আন্ডারলাইন)।
@@ -31,7 +31,7 @@
   const teAccents291 = ['var(--lf-danger)', 'var(--lf-ink-max)', 'var(--lf-brand-primary)', 'var(--lf-danger-deep)', 'var(--lf-cyan-ink)', 'var(--lf-amber-deep)', 'var(--lf-dlx-gold)'];
   const teAcc291 = (i) => teAccents291[i % teAccents291.length];
   const teDateBn291 = (typeof todayBn !== 'undefined' && todayBn) ? todayBn : '';
-  // সেশন ২৯৫: মূল-কার্ড-উৎস — সারির-নিজ প্রথম-পাতা-চেইনের প্রথম-প্রার্থী, নইলে নাম-মিলে লোগো-ব্যানার
+  // সেশন ২৯৬: মূল-কার্ড-উৎস — সারির-নিজ প্রথম-পাতা-চেইনের প্রথম-প্রার্থী, নইলে নাম-মিলে লোগো-ব্যানার
   const teFirstSrc296 = teActive233 ? ((teActive233.thumbs && teActive233.thumbs[0]) || teActive233.thumb || '') : '';
   // একক-ট্যাগ-গঠন (audit:views duplicate-id-নিরাপদ): img-এ src/alt/hidden — খালি-src কখনো নয়
   const teImgAttrs291 = teFirstSrc296
@@ -78,7 +78,7 @@
             </a>
           </div>
 
-          <%# সেশন ২৯৫: রিয়েল-ডেটা স্ট্যাট-রো (রেফারেন্স-ডিজাইনের প্রিমিয়াম-ব্যালান্স) %>
+          <%# সেশন ২৯৬: রিয়েল-ডেটা স্ট্যাট-রো (রেফারেন্স-ডিজাইনের প্রিমিয়াম-ব্যালান্স) %>
           <div class="te-stats296" role="list" aria-label="ই-পেপার আর্কাইভ পরিসংখ্যান">
             <span role="listitem"><b><%= bnN233(teStats296.papers) %></b> জনপ্রিয় পত্রিকা</span>
             <i aria-hidden="true"></i>
@@ -121,14 +121,14 @@
                 </span>
                 <span class="epk291-media">
                   <%# সেশন ২৯১: প্রথম-পেপারের থাম্ব SSR-প্রি-রেন্ডার (no-JS-এও সঠিক; একক-ট্যাগ — দ্বৈত-id-শূন্য)
-                      সেশন ২৯৫: lazy→eager — hidden(display:none)-অবস্থায় lazy-লোড চিরকাল-স্থগিত হয়
+                      সেশন ২৯৬: lazy→eager — hidden(display:none)-অবস্থায় lazy-লোড চিরকাল-স্থগিত হয়
                       (ব্রাউজার-লেআউট-বক্স-বিহীন → intersection-স্থগিত); হিরো-প্রথম-পাতা eager-ই সঠিক %>
                   <img class="epk291-img" id="epk291Img" <%- teImgAttrs291 %> loading="eager" decoding="async">
                   <span class="epk291-mockcols" id="epk291Mock" aria-hidden="true" <%- teFirstSrc296 ? '' : 'hidden' %>>
                     <span class="epk291-mcol"></span><span class="epk291-mcol epk291-mcol-mid"></span><span class="epk291-mcol"></span>
                   </span>
                 </span>
-                <%# সেশন ২৯৫: প্রিমিয়াম হোভার-ওভারলে — পূর্ণাঙ্গ পাতা পড়ুন (front-anchor-সন্নিবেশিত — ক্লিকই রিডার) %>
+                <%# সেশন ২৯৬: প্রিমিয়াম হোভার-ওভারলে — পূর্ণাঙ্গ পাতা পড়ুন (front-anchor-সন্নিবেশিত — ক্লিকই রিডার) %>
                 <span class="epk291-hover296" aria-hidden="true">
                   <span class="epk291-hoverbtn296"><i class="fas fa-book-open" aria-hidden="true"></i>পূর্ণাঙ্গ পাতা পড়ুন</span>
                 </span>
@@ -222,7 +222,7 @@
 
   var current = 0, timer = null, paused = false;
 
-  // সেশন ২৯৫: প্রথম-পাতা-থাম্ব-চেইন — সারির-নিজ সম্পদ (মিসম্যাচ-অসম্ভব); ব্যর্থতায়
+  // সেশন ২৯৬: প্রথম-পাতা-থাম্ব-চেইন — সারির-নিজ সম্পদ (মিসম্যাচ-অসম্ভব); ব্যর্থতায়
   // পরের-প্রার্থী → শেষে নাম-মিলে লোগো-ব্যানার → সব-ব্যর্থে টেক্সট-মাস্টহেড (কখনো ভাঙা-ছবি নয়)।
   // নেগোশিয়েশন-চলাকালীন মাস্টহেড+মক-কলাম দৃশ্যমান থাকে — ফাঁকা-শিট-ফ্ল্যাশ-শূন্য।
   var chain = [];

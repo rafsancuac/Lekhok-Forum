@@ -72,11 +72,11 @@ router.get('/', async (req, res) => {
     db.getSetting('home_feed_order'),
     // সেশন ২৩৩: 'আজকের ই-পেপার' প্রিমিয়াম ব্যান্ড — আজকের (ঢাকা-তারিখ) বট-সিঙ্কড সংখ্যা +
     // ফলব্যাকের জন্য সর্বশেষ সিঙ্কড-দিন (দুটোই প্যারালাল-ব্যাচে — অতিরিক্ত-রাউন্ডট্রিপ শূন্য)।
-    // সেশন ২৯৫: LIMIT 6→14 (প্রশস্ত কিয়স্কে শীর্ষ-পত্রিকাগুলোর পূর্ণ-সারি); ফলব্যাক-কুয়েরি
+    // সেশন ২৯৬: LIMIT 6→14 (প্রশস্ত কিয়স্কে শীর্ষ-পত্রিকাগুলোর পূর্ণ-সারি); ফলব্যাক-কুয়েরি
     // এখন MAX(scheduled_date)-সাবকুয়েরিতে সম্পূর্ণ-সর্বশেষ-দিন (আগে দুই-দিন-মিশ্রণ-সম্ভব ছিল)
     db.prepare("SELECT id, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, scheduled_date AS paperDate FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC LIMIT 14").all(dhakaToday233),
     db.prepare("SELECT id, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, scheduled_date AS paperDate FROM epaper_files WHERE published = 1 AND scheduled_date = (SELECT MAX(scheduled_date) FROM epaper_files WHERE published = 1) ORDER BY id ASC LIMIT 14").all(),
-    // সেশন ২৯৫: বাম-কলাম স্ট্যাট-রো (রিয়েল আর্কাইভ-পরিসংখ্যান — একই প্যারালাল-ব্যাচ)
+    // সেশন ২৯৬: বাম-কলাম স্ট্যাট-রো (রিয়েল আর্কাইভ-পরিসংখ্যান — একই প্যারালাল-ব্যাচ)
     db.prepare("SELECT COUNT(*) AS totalIssues, COUNT(DISTINCT paper_name) AS totalPapers FROM epaper_files WHERE published = 1").get(),
   ]);
   // সেশন ৯০: ফলব্যাক — এডমিন/মডারেটর এখনো কিছু বাছাই না করলে সেকশন ফাঁকা
@@ -265,23 +265,26 @@ router.get('/', async (req, res) => {
   }
   epaperLatest233.forEach(function (p) { p.thumb = epaperThumbByName291(p.paperName); });
 
-  // ── সেশন ২৯৫: প্রথম-পাতা-থাম্ব-চেইন (ইউজার-স্পেক — "সম্পূর্ণ প্রথম পাতা দেখা যায়") ──
+  // ── সেশন ২৯৬: প্রথম-পাতা-থাম্ব-চেইন (ইউজার-স্পেক — "সম্পূর্ণ প্রথম পাতা দেখা যায়") ──
   // newspaperLinks-থাম্ব আসলে ৫০০×১৯৬ লোগো-ব্যানার — সম্পূর্ণ প্রথম পাতা নয়। আসল প্রথম-পাতা
   // প্রতিটি epaper_files-সারির নিজের drive_thumb_id/drive_file_id-এ (বট-আপলোড) — সারির-নিজ-সম্পদ
   // বলে নাম-মিসম্যাচ-প্রশ্নই-ওঠে-না (session278-নীতি-আরও-কঠোরভাবে-মানা)। /epaper-পাতার
   // session175-চুক্তিরই প্রতিরূপ: /api/epaper/thumb/:fid প্রক্সি (ব্যানার-কভার-ক্লিনার + PDF-পাতা-১)।
-  // ফলব্যাচ-চেইন: প্রক্সি(thumbId) → প্রক্সি(fileId) → lh3 → drive-thumbnail → লোগো-ব্যানার(p.thumb) → টেক্সট-মাস্টহেড।
+  // ফলব্যাচ-চেইন: প্রক্সি(fileId) → প্রক্সি(thumbId) → lh3(thumbId) → drive-thumbnail(fileId) → লোগো-ব্যানার(p.thumb) → টেক্সট-মাস্টহেড।
+  // সেশন ২৯৬-পলিশ (প্রোড-প্রমাণ): প্রোডে drive_thumb_id-প্রক্সি ৫/৫ ৫০২ (thumb-আইডি-নিজেই-অকেজো)
+  // → fileId-প্রক্সি (PDF-পাতা-১) প্রথমে — প্রমাণিত-কর্মী-পথে এক-হপে সম্পূর্ণ পাতা; thumbId-পরে
+  // (বট-ভবিষ্যৎ-ফিক্সে স্বয়ং-কাজে-ফেরে), শেষে lh3/drive-কাঁচা-ফলব্যাক।
   epaperLatest233.forEach(function (p) {
     const t296 = String(p.thumbId || ''), f296 = String(p.fileId || '');
     const chain296 = [];
-    if (t296) chain296.push('/api/epaper/thumb/' + encodeURIComponent(t296) + '?v=4');
     if (f296) chain296.push('/api/epaper/thumb/' + encodeURIComponent(f296) + '?v=4');
+    if (t296) chain296.push('/api/epaper/thumb/' + encodeURIComponent(t296) + '?v=4');
     if (t296) chain296.push('https://lh3.googleusercontent.com/d/' + encodeURIComponent(t296) + '=s800');
     if (f296) chain296.push('https://drive.google.com/thumbnail?id=' + encodeURIComponent(f296) + '&sz=w800');
     if (chain296.length) p.thumbs = chain296;
   });
 
-  // ── সেশন ২৯৫: জনপ্রিয়-পত্রিকা প্রাধিকার-ক্রম (ইউজার-স্পেক) ──
+  // ── সেশন ২৯৬: জনপ্রিয়-পত্রিকা প্রাধিকার-ক্রম (ইউজার-স্পেক) ──
   // ইউজার-চাহিদা: প্রথম আলো, যুগান্তর, সমকাল, কালের কণ্ঠ, ইত্তেফাক, আমার দেশ, মানবকণ্ঠ —
   // এই শীর্ষ-পত্রিকাগুলো কিয়স্কের সামনের-সারিতে। নাম-মিল epaperThumbByName291-এরই রীতি:
   // বট paper_name-এর অগ্র-"দৈনিক "/"দ্য " স্ট্রিপ-করে মিল; র‍্যাংক-বহির্ভূত পত্রিকা
@@ -334,13 +337,13 @@ router.get('/', async (req, res) => {
     homeSections: homeSections193,
     hasToday,
     quizChallenge,
-    // সেশন ২৩৩: আজকের ই-পেপার ব্যান্ড (সেশন ২৯৫: উভয়-সারিতেই ফিল্মস্ট্রিপ-ক্যাপ ৮ — র‍্যাংক-বাছাইয়ের পরে)
+    // সেশন ২৩৩: আজকের ই-পেপার ব্যান্ড (সেশন ২৯৬: উভয়-সারিতেই ফিল্মস্ট্রিপ-ক্যাপ ৮ — র‍্যাংক-বাছাইয়ের পরে)
     epaperToday: epaperToday233.slice(0, 8),
     epaperLatest: epaperLatest233.slice(0, 8),
     epaperHasToday: epaperToday233.length > 0,
     epaperLatestDateBn: epaperLatestDateBn233,
     todayBn: todayBn233,
-    // সেশন ২৯৫: বাম-কলাম স্ট্যাট-রো
+    // সেশন ২৯৬: বাম-কলাম স্ট্যাট-রো
     epaperStats296: { papers: epaperToday233.length, totalPapers: (epaperStatsRow296 && epaperStatsRow296.totalPapers) || 0, totalIssues: (epaperStatsRow296 && epaperStatsRow296.totalIssues) || 0 }
   });
 });
