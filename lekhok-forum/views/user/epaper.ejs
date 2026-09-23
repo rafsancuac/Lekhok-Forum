@@ -145,7 +145,7 @@
     <span class="ep-strip294-lbl">শীর্ষ পত্রিকা:</span>
     <% stripShow294.forEach(function (p) { const stale294 = String(p.date).slice(0, 10) !== todayIso; %>
     <button type="button" class="ep-strip294-pill" data-ep-strip294="<%= p.name %>" title="<%= p.dateBn %>">
-      <span class="ep-strip294-dot" aria-hidden="true"></span><span class="ep-strip294-name"><%= p.name %></span><% if (stale294) { %><span class="ep-strip294-stale" title="সর্বশেষ প্রাপ্ত সংখ্যা"><%= stripStale294(p.date) %></span><% } %>
+      <% if (p.thumbs && p.thumbs.length) { %><span class="ep-strip294-thumb" aria-hidden="true"><img class="ep-strip294-thumb-img" src="<%= p.thumbs[0] %>" alt="" loading="lazy" decoding="async"></span><% } %><span class="ep-strip294-dot" aria-hidden="true"></span><span class="ep-strip294-name"><%= p.name %></span><% if (stale294) { %><span class="ep-strip294-stale" title="সর্বশেষ প্রাপ্ত সংখ্যা"><%= stripStale294(p.date) %></span><% } %>
     </button>
     <% }); %>
     <a class="ep-strip294-all" href="/epaper?view=dir">সকল পত্রিকা (<%= bnNum(stripList294.length) %>+)<span aria-hidden="true"> ➔</span></a>
@@ -184,6 +184,39 @@
       sel.value = name;
       sel.dispatchEvent(new Event('change', { bubbles: true }));
     });
+    /* session295 (ep295): মিনি-থাম্ব লোড-ব্যর্থতায় স্প্যান-লুকান — টেক্সট-অনলি-ফলব্যাক (ep292-প্যাটার্ন-মিরর);
+       error ইভেন্ট non-bubbling → স্ট্রিপে capture-ফেজে শোনা হয় (ep292-নীতি-উত্তরাধিকার)। */
+    strip.addEventListener('error', function (e) {
+      var t = e.target;
+      if (!t || !t.classList || !t.classList.contains('ep-strip294-thumb-img')) return;
+      var w = t.parentNode;
+      if (w && w.classList && w.classList.contains('ep-strip294-thumb')) w.hidden = true;
+    }, true);
+    /* session295 (ep295): ←/→ কীবোর্ড-নেভ — ফোকাস-পিলে-থাকলে পিল-থেকে-পিল (wrap);
+       সক্রিয়করণ = নেটিভ-সিলেক্টর change-চেইন-পুনঃব্যবহার (next.click() — একক-ফানেল, date-aware ফ্রি);
+       লিসনার স্ট্রিপ-স্কোপড → বাইন্ডিং-স্কোপই-ফিল্ড-গার্ড (স্ট্রিপ-বহির্ভূত-ফোকাসে-হস্তক্ষেপ-শূন্য)। */
+    strip.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+      var pills = strip.querySelectorAll('.ep-strip294-pill');
+      if (!pills.length) return;
+      var cur = ev.target && ev.target.closest ? ev.target.closest('.ep-strip294-pill') : null;
+      if (!cur) return;
+      var idx = Array.prototype.indexOf.call(pills, cur);
+      if (idx < 0) return;
+      var next = ev.key === 'ArrowRight' ? pills[(idx + 1) % pills.length] : pills[(idx - 1 + pills.length) % pills.length];
+      if (!next) return;
+      ev.preventDefault();
+      next.focus();
+      next.click();
+    });
+    /* session295: QA-হুক (সারফেস-শূন্যে-ও-সংজ্ঞায়িত — পরিবার-চুক্তি) */
+    window.__epStrip295QA = {
+      pills: function () { return strip.querySelectorAll('.ep-strip294-pill').length; },
+      thumbs: function () { return strip.querySelectorAll('.ep-strip294-thumb').length; },
+      thumbsHidden: function () { return strip.querySelectorAll('.ep-strip294-thumb[hidden]').length; },
+      imgs: function () { return strip.querySelectorAll('.ep-strip294-thumb-img').length; },
+      keynav: true
+    };
   })();
   </script>
   <div class="ep-grid" id="epGrid280">

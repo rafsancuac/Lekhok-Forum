@@ -713,3 +713,15 @@
 .ep-strip294-all:hover { text-decoration: underline; }
 @media (max-width: 640px) { .ep-strip294 { padding: .45rem .6rem; gap: .32rem; } .ep-strip294-lbl { display: none; } .ep-strip294-pill { font-size: .72rem; padding: .28rem .6rem; } }
 @media (prefers-reduced-motion: reduce) { .ep-strip294-pill { transition: none; } }
+
+/* ═══ session295 — স্ট্রিপ মিনি-থাম্ব + কীবোর্ড-নেভ (ep295 — ep294-স্ট্রিপ-বিস্তার; PLANS session294-প্রস্তাব ①+②)
+   চুক্তি: হেক্স-শূন্য টোকেন-শুধু + hidden-গার্ড বাইট-সঠিক + focus-visible-রিং (কীবোর্ড-নেভ-সামন্বয়)
+   + reduced-motion-সম্মান + 640px-সংকোচন ═══ */
+.ep-strip294-thumb { display: inline-flex; width: 22px; height: 30px; border-radius: var(--radius-sm); border: 1px solid var(--lf-ui-border); background: var(--lf-brandgreen-soft-3); overflow: hidden; flex-shrink: 0; }
+.ep-strip294-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ep-strip294-thumb[hidden] { display: none !important; }
+.ep-strip294-pill.is-active .ep-strip294-thumb { border-color: var(--lf-white); box-shadow: 0 0 0 1px color-mix(in srgb, var(--lf-brand-primary) 40%, transparent); }
+.ep-strip294-pill:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
+.ep-strip294-pill.is-active:focus-visible { outline-color: var(--lf-white); }
+@media (max-width: 640px) { .ep-strip294-thumb { width: 18px; height: 24px; } }
+@media (prefers-reduced-motion: reduce) { .ep-strip294-pill:focus-visible { outline-offset: 0; } }
