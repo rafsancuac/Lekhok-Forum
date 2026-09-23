@@ -1064,7 +1064,12 @@
            target="_blank" rel="noopener noreferrer"
            data-cat="<%= p.category %>" data-name="<%= String(p.name).toLowerCase() %>">
           <i class="epd226-star fas fa-star" aria-hidden="true" title="জনপ্রিয়"></i>
-          <span class="epd226-ico" aria-hidden="true">🗞️</span>
+          <% if (p.thumb) { %>
+            <img class="epd226-thumb" src="<%= p.thumb %>" alt="<%= p.name %> পত্রিকার লোগো"
+                 loading="lazy" decoding="async" width="500" height="196">
+          <% } else { %>
+            <span class="epd226-ico" aria-hidden="true">🗞️</span>
+          <% } %>
           <span class="epd226-name"><%= p.name %></span>
           <span class="epd226-foot">
             <span class="epd226-footlabel">অনলাইন পোর্টাল</span>
@@ -1111,6 +1116,17 @@
     }
     if (readerParent) readerParent.insertBefore(root, reader.nextSibling);
   } catch (e) { /* যে-অবস্থায়-আছে সেখানেই কার্যকর থাকবে */ }
+
+  /* ---- ১.৫ থাম্বনেইল লোড-ব্যর্থতায় ইমোজি-ফলব্যাক (session-227) ---- */
+  root.querySelectorAll('.epd226-thumb').forEach(function (t) {
+    t.addEventListener('error', function () {
+      var i = document.createElement('span');
+      i.className = 'epd226-ico';
+      i.setAttribute('aria-hidden', 'true');
+      i.textContent = '🗞️';
+      t.replaceWith(i);
+    });
+  });
 
   /* ---- ২. মূল ট্যাব স্যুইচার (রিডার ↔ ডিরেক্টরি) ---- */
   function setView(view) {
