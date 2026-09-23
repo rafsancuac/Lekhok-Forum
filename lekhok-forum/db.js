@@ -2380,8 +2380,10 @@ async function runMigrations() {
 const BOOT_CACHE_VERSION = 'v2';
 function bootFingerprint() {
   const crypto = require('crypto');
+  // গেজেট-ফাংশনদুটিও ফিঙ্গারপ্রিন্টে — নইলে Turso-বুট-ক্যাশ-হিটে নতুন গেজেট-সিড/সিঙ্ক স্কিপ হয়
+  // (গেজেট v2 ফিক্স: constitutionGazetteSeed206+constitutionGazetteSyncV2 যোগ)
   const fns = [runMigrations, applyLaterMigrations, applySession42Migrations, seedAdmin, seedIfEmptyLocal,
-               seedDemoContent, ensureDemoModerator];
+               seedDemoContent, ensureDemoModerator, constitutionGazetteSeed206, constitutionGazetteSyncV2];
   return crypto.createHash('md5')
     .update(BOOT_CACHE_VERSION + '|' + fns.map(f => f.toString()).join('§')
             + '|' + JSON.stringify(LATER_COLUMNS))
