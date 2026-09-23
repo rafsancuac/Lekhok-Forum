@@ -363,6 +363,7 @@ CREATE TABLE IF NOT EXISTS constitution (
   section_title  TEXT    NOT NULL,
   content        TEXT,
   sort_order     INTEGER DEFAULT 0,
+  chapter        TEXT    DEFAULT '',
   created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at     DATETIME DEFAULT CURRENT_TIMESTAMP
 );

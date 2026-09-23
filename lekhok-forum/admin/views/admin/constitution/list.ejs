@@ -26,13 +26,17 @@
   <% } else { %>
   <table>
     <thead>
-      <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>ক্রম</th><th>কার্যক্রম</th></tr>
+      <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>অধ্যায়</th><th>ক্রম</th><th>কার্যক্রম</th></tr>
     </thead>
     <tbody>
-      <% items.forEach(c => { %>
+      <% items.forEach(c => {
+        const chp = (c.chapter && c.chapter !== 'legacy') ? chapters.find(x => x.id === c.chapter) : null;
+        const chpLabel = chp ? chp.title : (c.chapter === 'legacy' ? 'পুরাতন-সংক্ষিপ্ত' : '—');
+      %>
         <tr>
           <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= c.id %>" aria-label="সিলেক্ট"></td>
           <td><strong><%= c.section_title %></strong></td>
+          <td><span style="font-size:12px; padding:2px 8px; border-radius:9999px; white-space:nowrap; <%= chp ? 'background:var(--lf-brand-light,#E8F5E9); color:var(--lf-brand-primary,#006A4E); font-weight:700;' : (c.chapter === 'legacy' ? 'background:var(--lf-gray-soft-2,#E5E7EB); color:var(--lf-text-secondary,#65676B);' : 'color:var(--lf-text-tertiary,#8A8D91);') %>"><%= chpLabel %></span></td>
           <td><%= c.sort_order || 0 %></td>
           <td>
             <a href="/admin/constitution/<%= c.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>

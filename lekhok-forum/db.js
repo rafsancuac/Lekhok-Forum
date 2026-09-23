@@ -273,7 +273,8 @@ const MIGRATION_SQL = `
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     section_title TEXT NOT NULL,
     content TEXT,
-    sort_order INTEGER DEFAULT 0
+    sort_order INTEGER DEFAULT 0,
+    chapter TEXT DEFAULT ''
   );
   CREATE TABLE IF NOT EXISTS past_leaders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -524,6 +525,9 @@ const MIGRATION_SQL = `
 // Columns added in later migrations — applied to existing installs during initDb().
 const LATER_COLUMNS = [
   // [table, column, definition]
+  // সেশন ২০৬: গঠনতন্ত্র গেজেট — ধারা → অধ্যায়-লিংক ('preface'/'chapter-1'..'chapter-7';
+  // ''/NULL = লিগ্যাসি-সংক্ষিপ্ত সারি → বুটে 'legacy'-এ ডিমোট — data/constitution.js দেখুন)
+  ['constitution', 'chapter', "TEXT DEFAULT ''"],
   ['posts', 'repost_of',   'INTEGER'],
   ['posts', 'repost_note', 'TEXT'],
   // Member/past-leader linkage to registered user accounts — added 2026-09
@@ -824,6 +828,11 @@ async function applyLaterMigrations() {
   try { await brandRenameMigration(); } catch (e) {
     console.error('[db] brandRenameMigration failed:', e.message);
   }
+  // সেশন ২০৬: গঠনতন্ত্র গেজেট — লিগ্যাসি-ডিমোশন + অধ্যায়-সিড (idempotent,
+  // এডমিন-সম্পাদনা রক্ষাকারী NOT EXISTS-গার্ড — বিস্তারিত ফাংশন-কমেন্টে)
+  try { await constitutionGazetteSeed206(); } catch (e) {
+    console.error('[db] constitutionGazetteSeed206 failed:', e.message);
+  }
   // After columns are guaranteed, auto-link members/past_leaders to users by
   // exact full_name match. Idempotent — only fills rows where user_id is null.
   try { await autoLinkMembersToUsers(); } catch (e) {
@@ -851,6 +860,42 @@ async function applyLaterMigrations() {
   try { await tocDemoArticle67(); } catch (e) {
     console.error('[db] tocDemoArticle67 failed:', e.message);
   }
+}
+
+// ── সেশন ২০৬: গঠনতন্ত্র গেজেট-সিড ──────────────────────────────────────────
+// দুই-ধাপ (উভয়ই idempotent, প্রতি বুটে নিরাপদ):
+//   (১) লিগ্যাসি-ডিমোশন — chapter কলাম-হীন (''  বা NULL) পুরাতন সংক্ষিপ্ত-ধারা
+//       সারিগুলো 'legacy'-এ চিহ্নিত হয় → পাবলিক /constitution এদের রেন্ডার করে
+//       না (অ্যাডমিন-তালিকায় 'পুরাতন' ট্যাগসহ থেকে যায় — কোনো ডেটা-লস নেই)।
+//   (২) গেজেট-সিড — প্রাতিষ্ঠানিকভাবে প্রদত্ত ষষ্ঠ-অধ্যায়ের পূর্ণ পাঠ
+//       (ধারা-৪১/৪২/৪৩ — data/constitution.js CONSTITUTION_SECTIONS_V1)।
+//       NOT EXISTS(chapter, section_title)-গার্ড: একবার ঢুকলে আর দ্বিতীয়বার
+//       ঢোকে না, আর এডমিন ওই ধারা সম্পাদনা করলে সম্পাদনা ওভাররাইট হয় না।
+async function constitutionGazetteSeed206() {
+  try {
+    await backend.exec(
+      "UPDATE constitution SET chapter = 'legacy' WHERE chapter IS NULL OR chapter = ''"
+    );
+  } catch (e) { /* কলাম এখনো নেই (পুরনো ডিপ্লয়) — LATER_COLUMNS পরের বুটে যোগ করবে */ return; }
+  const { CONSTITUTION_SECTIONS_V1 } = require('./data/constitution');
+  let seeded = 0;
+  for (const s of CONSTITUTION_SECTIONS_V1) {
+    try {
+      await backend.prepare(
+        `INSERT INTO constitution (section_title, content, sort_order, chapter)
+         SELECT ?, ?, ?, ?
+         WHERE NOT EXISTS (
+           SELECT 1 FROM constitution WHERE chapter = ? AND section_title = ?
+         )`
+      ).run(s.section_title, s.content, s.sort_order, s.chapter, s.chapter, s.section_title);
+      // sql.js/libsql উভয় ব্যাকএন্ডে changes-সংখ্যা ভিন্নভাবে এক্সপোজ হতে পারে —
+      // লগের জন্য statement-changes না-ভরসা করে শুধু সফল-রান গোনি।
+      seeded++;
+    } catch (e) {
+      console.error('[db] gazette seed row failed (' + s.section_title + '):', e.message);
+    }
+  }
+  if (seeded) console.log('[db] constitutionGazetteSeed206: ' + seeded + ' গেজেট-ধারা যাচাই/সিড-সম্পন্ন');
 }
 
 // সেশন ৬০: পরিচিত সিড-কুইজগুলোর বিকল্প-সেট (শিরোনাম/বডির ইউনিক অংশ দিয়ে ম্যাচ)।

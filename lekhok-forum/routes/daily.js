@@ -1,6 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const {
+  CONSTITUTION_CHAPTERS,
+  CHAPTER_IDS,
+  parseSectionContent,
+  splitSectionTitle,
+  toBn,
+} = require('../data/constitution');
+const CHAPTER_ID_SET = new Set(CHAPTER_IDS);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function today() {
@@ -241,10 +249,45 @@ router.get('/achievements', async (req, res) => {
   res.render('user/achievements', { items, currentPath: '/achievements' });
 });
 
-// ── Constitution ─────────────────────────────────────────────────────────────
+// ── Constitution (সেশন ২০৬ — প্রিমিয়াম গেজেট-রিডার) ─────────────────────────
+// চ্যাপ্টার-গ্রুপিং: DB-র `chapter` কলাম (data/constitution.js রেজিস্ট্রি-আইডি) অনুযায়ী
+// ধারাসমূহ অধ্যায়ে ভাগ হয়; 'legacy' = পুরাতন-সংক্ষিপ্ত সারি (পাবলিকে বাদ)।
+// ?chapter=<id> → সেই অধ্যায়; প্যারাম-হীন → প্রথম অ-খালি অধ্যায় (বইয়ের-ক্রম)।
 router.get('/constitution', async (req, res) => {
   const sections = await db.prepare('SELECT * FROM constitution ORDER BY sort_order, id').all();
-  res.render('user/constitution', { sections, currentPath: '/constitution' });
+  const byChapter = {};
+  for (const s of sections) {
+    if (!s.chapter || !CHAPTER_ID_SET.has(s.chapter)) continue; // legacy/অজানা → পাবলিক-বহিষ্কৃত
+    (byChapter[s.chapter] = byChapter[s.chapter] || []).push({
+      ...s,
+      parsed: parseSectionContent(s.content),
+      badge: splitSectionTitle(s.section_title).badge,
+      sectionHeading: splitSectionTitle(s.section_title).title,
+    });
+  }
+  const chapters = CONSTITUTION_CHAPTERS.map((ch, i) => ({
+    ...ch,
+    index: i + 1,
+    sections: byChapter[ch.id] || [],
+  }));
+
+  let active = null;
+  const asked = String(req.query.chapter || '');
+  if (asked) active = chapters.find((c) => c.id === asked) || null; // অজানা-প্যারাম → null → ডিফল্ট
+  if (!active) active = chapters.find((c) => c.sections.length > 0) || chapters[0];
+
+  const activeIdx = chapters.indexOf(active);
+  res.render('user/constitution', {
+    title: 'গঠনতন্ত্র | লেখক ফোরাম',
+    chapters,
+    active,
+    activeIndex: activeIdx,
+    prevChapter: chapters[activeIdx - 1] || null,
+    nextChapter: chapters[activeIdx + 1] || null,
+    totalSections: sections.filter((s) => s.chapter && CHAPTER_ID_SET.has(s.chapter)).length,
+    toBn, // ভিউ-লোকাল: বাংলা-সংখ্যা রূপান্তর (data/constitution.js)
+    currentPath: '/constitution',
+  });
 });
 
 // ── Past Leaders ─────────────────────────────────────────────────────────────

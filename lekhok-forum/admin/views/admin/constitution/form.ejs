@@ -21,7 +21,18 @@
     <form method="POST" action="<%= item ? '/admin/constitution/' + item.id + '?_method=PUT' : '/admin/constitution' %>">
       <div class="form-group">
         <label>ধারার শিরোনাম *</label>
-        <input type="text" name="section_title" value="<%= item ? item.section_title : '' %>" required placeholder="যেমন: সংগঠনের নাম ও ঠিকানা">
+        <input type="text" name="section_title" value="<%= item ? item.section_title : '' %>" required placeholder="যেমন: ধারা-৪১ : আয়ের উৎস">
+      </div>
+      <%# সেশন ২০৬: অধ্যায়-লিংক — পাবলিক গেজেট-রিডারের সূচিপত্রে সঠিক অধ্যায়ে রেন্ডার হয় %>
+      <div class="form-group">
+        <label>অধ্যায় *</label>
+        <select name="chapter" required>
+          <option value="" disabled <%= item ? '' : 'selected' %> hidden>— অধ্যায় নির্বাচন করুন —</option>
+          <% chapters.forEach((chp) => { %>
+            <option value="<%= chp.id %>" <%= item && item.chapter === chp.id ? 'selected' : '' %>><%= chp.title %></option>
+          <% }) %>
+          <option value="legacy" <%= item && item.chapter === 'legacy' ? 'selected' : '' %>>পুরাতন-সংক্ষিপ্ত (পাবলিকে প্রদর্শিত হয় না)</option>
+        </select>
       </div>
       <div class="form-group">
         <label>বিষয়বস্তু *</label>

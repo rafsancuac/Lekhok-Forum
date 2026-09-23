@@ -1,23 +1,220 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<%- include('../partials/header', { title: 'গঠনতন্ত্র | লেখক ফোরাম' }) %>
-  <div class="page-wrap" style="max-width:800px">
-    <div class="page-header">
-      <h1><i class="fas fa-scroll"></i> গঠনতন্ত্র</h1>
+<%# ═══════════════════════════════════════════════════════════════════════════
+    গঠনতন্ত্র — প্রিমিয়াম গেজেট-রিডার (সেশন ২০৬)
+    • স্টিকি সূচিপত্র-সাইডবার (ডেস্কটপ) / ড্রপডাউন (মোবাইল)
+    • ধারা-ব্যাজ + (ক)(খ) উপধারা-সুষম বিন্যাস — কালপুরুষ বডি + হিন্দ শিলিগুড়ি UI
+    • রিডিং-প্রোগ্রেস বার, রিভিল-অ্যানিমেশন, অ্যাংকর-কপি, প্রিন্ট-ফ্রেন্ডলি
+    ডেটা: DB-চালিত (chapter-কলাম-গ্রুপড) — routes/daily.js + data/constitution.js
+   ═════════════════════════════════════════════════════════════════════ %>
+<%- include('../partials/header', { title: 'গঠনতন্ত্র | লেখক ফোরাম', extra_css: ['/assets/css/constitution.css'] }) %>
+
+<div class="const-shell">
+  <!-- রিডিং-প্রোগ্রেস বার -->
+  <div class="const-progress const-print-hide" aria-hidden="true"><span id="constProgressBar"></span></div>
+
+  <!-- ═══════════ হিরো-ব্যানার ═══════════ -->
+  <header class="const-hero const-print-hide">
+    <span class="const-hero-badge"><i class="fas fa-balance-scale" aria-hidden="true"></i> প্রাতিষ্ঠানিক সংবিধান ও নীতিমালা</span>
+    <h1 class="const-hero-title">সংগঠনের মূল গঠনতন্ত্র</h1>
+    <p class="const-hero-sub">গণতান্ত্রিক চর্চা, সাহিত্যিক শৃঙ্খলা ও সাংগঠনিক জবাবদিহিতা নিশ্চিতকরণে প্রণীত সার্বিক বিধিমালার সংকলন।</p>
+    <div class="const-hero-meta">
+      <span><i class="fas fa-layer-group" aria-hidden="true"></i> <%= toBn(chapters.length) %>টি অধ্যায়</span>
+      <span><i class="fas fa-gavel" aria-hidden="true"></i> <%= toBn(totalSections) %>টি প্রকাশিত ধারা</span>
+      <span><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> সর্বশেষ সংশোধন: জুলাই ২০২৬</span>
     </div>
-    <% if (sections.length === 0) { %>
-      <div class="empty-state-full"><i class="fas fa-scroll"></i><p>গঠনতন্ত্র এখনো যোগ করা হয়নি।</p></div>
-    <% } else { %>
-      <div class="constitution-sections">
-        <% sections.forEach(s => { %>
-          <div class="constitution-item" id="section-<%= s.id %>">
-            <h2><i class="fas fa-gavel"></i> <%= s.section_title %></h2>
-            <div class="constitution-content"><%- s.content.replace(/\n/g, '<br>') %></div>
-          </div>
-        <% }); %>
+  </header>
+
+  <!-- ═══════════ মূল গ্রিড ═══════════ -->
+  <div class="const-grid">
+    <!-- ───────── বাম: সূচিপত্র ───────── -->
+    <aside class="const-aside const-print-hide">
+      <button type="button" id="constMobToggle" class="const-mob-toggle" aria-expanded="false" aria-controls="constIndexBody">
+        <span><i class="fas fa-list-ol" aria-hidden="true"></i> সূচিপত্র অধ্যায়সমূহ</span>
+        <i class="fas fa-chevron-down" id="constMobChevron" aria-hidden="true"></i>
+      </button>
+
+      <div class="const-index" id="constIndexBody">
+        <div class="const-index-head">
+          <span class="const-index-title">অধ্যায় সূচিপত্র</span>
+          <span class="const-index-count"><%= toBn(chapters.length) %>টি অধ্যায়</span>
+        </div>
+        <nav class="const-index-list" aria-label="গঠনতন্ত্রের অধ্যায় তালিকা">
+          <% chapters.forEach((ch) => { %>
+            <a href="/constitution?chapter=<%= ch.id %>"
+               class="const-index-item <%= ch.id === active.id ? 'is-active' : '' %>"
+               <%= ch.id === active.id ? 'aria-current="page"' : '' %>>
+              <span class="const-index-bubble"><% if (ch.id === 'preface') { %><i class="fas fa-feather-pointed" aria-hidden="true" style="font-size:10px;"></i><% } else { %><%= toBn(ch.id.split('-')[1]) %><% } %></span>
+              <span class="const-index-text">
+                <span class="const-index-name"><%= ch.title %></span>
+                <span class="const-index-sub"><%= ch.subtitle %></span>
+              </span>
+              <% if (ch.sections.length > 0) { %>
+                <span class="const-index-chips"><%= toBn(ch.sections.length) %> ধারা</span>
+              <% } else if (ch.id === active.id) { %>
+                <i class="fas fa-arrow-left const-index-arrow" aria-hidden="true"></i>
+              <% } else { %>
+                <span class="const-index-soon">সংকলনাধীন</span>
+              <% } %>
+            </a>
+          <% }) %>
+        </nav>
+        <div class="const-index-foot">
+          <button type="button" class="const-print-btn" onclick="window.print()">
+            <i class="fas fa-print" aria-hidden="true"></i> প্রিন্ট কপি
+          </button>
+        </div>
       </div>
-    <% } %>
+    </aside>
+
+    <!-- ───────── ডান: রিডিং-এরিয়া ───────── -->
+    <article class="const-article">
+      <div class="const-stripe" aria-hidden="true"></div>
+
+      <header class="const-art-head">
+        <div class="const-art-eyebrow">
+          <span><i class="fas fa-bookmark" aria-hidden="true"></i> অফিসিয়াল গেজেট ও নথি</span>
+          <span class="const-art-no"><%= active.id === 'preface' ? 'ভূমিকা' : 'অধ্যায় ' + toBn(active.id.split('-')[1]) %></span>
+        </div>
+        <h2 class="const-art-title"><%= active.title %></h2>
+        <p class="const-art-sub"><%= active.subtitle %></p>
+        <% if (active.sections.length > 0) { %>
+          <div class="const-art-chips">
+            <span class="const-chip">
+              <i class="fas fa-gavel" aria-hidden="true"></i>
+              <%= toBn(active.sections.length) %>টি ধারা
+            </span>
+            <% if (active.sections.length > 1) { %>
+              <span class="const-chip const-chip-soft">
+                <%= active.sections[0].badge %> হতে <%= active.sections[active.sections.length - 1].badge %>
+              </span>
+            <% } %>
+          </div>
+        <% } %>
+      </header>
+
+      <div class="const-body">
+        <% if (active.sections.length === 0) { %>
+          <!-- সংকলনাধীন-অবস্থা -->
+          <div class="const-empty">
+            <span class="const-empty-icon"><i class="fas <%= active.icon %>" aria-hidden="true"></i></span>
+            <h3>এই অধ্যায়ের ধারাসমূহ সংকলনাধীন</h3>
+            <p>অনুমোদিত গেজেট-পাঠ প্রস্তুত হলে এখানে প্রকাশিত হবে। উপাত্ত-সংযোজন কর্তৃপক্ষ: লেখক ফোরাম গঠনতান্ত্রিক সংসদ।</p>
+          </div>
+        <% } else { %>
+          <% active.sections.forEach((s, si) => { %>
+            <section class="const-sec" id="s-<%= s.id %>" aria-labelledby="s<%= s.id %>-h">
+              <div class="const-sec-head">
+                <% if (s.badge) { %><span class="const-sec-badge"><%= s.badge %></span><% } %>
+                <h3 class="const-sec-title" id="s<%= s.id %>-h"><%= s.sectionHeading %></h3>
+                <button type="button" class="const-sec-link" data-const-copy="/constitution?chapter=<%= active.id %>#s-<%= s.id %>"
+                        aria-label="<%= s.section_title %> — লিংক কপি করুন" title="লিংক কপি করুন">
+                  <i class="fas fa-link" aria-hidden="true"></i>
+                </button>
+              </div>
+              <% if (s.parsed.lead.length > 0) { %>
+                <% s.parsed.lead.forEach((p) => { %>
+                  <p class="const-sec-lead"><%= p %></p>
+                <% }) %>
+              <% } %>
+              <% if (s.parsed.items.length > 0) { %>
+                <ol class="const-items">
+                  <% s.parsed.items.forEach((it) => { %>
+                    <li class="const-item">
+                      <span class="const-item-marker"><%= it.marker %></span>
+                      <span class="const-item-text"><%= it.text %></span>
+                    </li>
+                  <% }) %>
+                </ol>
+              <% } %>
+            </section>
+            <% if (si < active.sections.length - 1) { %><hr class="const-hr" /><% } %>
+          <% }) %>
+        <% } %>
+      </div>
+
+      <!-- পূর্ব/পরবর্তী অধ্যায়-নেভিগেশন -->
+      <nav class="const-pn const-print-hide" aria-label="অধ্যায় পরিবর্তন">
+        <% if (prevChapter) { %>
+          <a class="const-pn-card const-pn-prev" href="/constitution?chapter=<%= prevChapter.id %>" rel="prev">
+            <span class="const-pn-dir"><i class="fas fa-arrow-left" aria-hidden="true"></i> পূর্ববর্তী অধ্যায়</span>
+            <span class="const-pn-title"><%= prevChapter.title %></span>
+          </a>
+        <% } else { %><span class="const-pn-spacer"></span><% } %>
+        <% if (nextChapter) { %>
+          <a class="const-pn-card const-pn-next" href="/constitution?chapter=<%= nextChapter.id %>" rel="next">
+            <span class="const-pn-dir">পরবর্তী অধ্যায় <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+            <span class="const-pn-title"><%= nextChapter.title %></span>
+          </a>
+        <% } else { %><span class="const-pn-spacer"></span><% } %>
+      </nav>
+
+      <footer class="const-art-foot">
+        <span>সর্বশেষ সংশোধন: জুলাই ২০২৬</span>
+        <span class="const-art-foot-brand">লেখক ফোরাম গঠনতান্ত্রিক সংসদ</span>
+      </footer>
+    </article>
   </div>
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
+</div>
+
+<script src="/assets/js/main.js?v=<%= AV %>"></script>
+<script>
+  (function () {
+    'use strict';
+    /* ── মোবাইল সূচিপত্র-টগল ── */
+    var tog = document.getElementById('constMobToggle');
+    var idx = document.getElementById('constIndexBody');
+    var chev = document.getElementById('constMobChevron');
+    if (tog && idx) {
+      tog.addEventListener('click', function () {
+        var open = idx.classList.toggle('is-open');
+        tog.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (chev) chev.classList.toggle('is-flipped', open);
+      });
+    }
+
+    /* ── রিডিং-প্রোগ্রেস বার ── */
+    var bar = document.getElementById('constProgressBar');
+    function onScroll() {
+      if (!bar) return;
+      var h = document.documentElement;
+      var max = h.scrollHeight - h.clientHeight;
+      var pct = max > 0 ? Math.min(100, Math.max(0, (h.scrollTop / max) * 100)) : 0;
+      bar.style.width = pct + '%';
+    }
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* ── রিভিল-অ্যানিমেশন (কম-মোশন-সম্মানী) ── */
+    var secs = document.querySelectorAll('.const-sec, .const-empty');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce && 'IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.04 });
+      secs.forEach(function (el) { el.classList.add('reveal'); io.observe(el); });
+    }
+
+    /* ── ধারা-অ্যাংকর কপি ── */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.const-sec-link') : null;
+      if (!btn) return;
+      e.preventDefault();
+      var url = location.origin + btn.getAttribute('data-const-copy');
+      var done = function () {
+        if (typeof showToast === 'function') showToast('ধারার লিংক কপি হয়েছে', 'success');
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(function () {});
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = url; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (_) {}
+        document.body.removeChild(ta);
+      }
+    });
+  })();
+</script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </body>

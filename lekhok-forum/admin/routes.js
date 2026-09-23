@@ -12,6 +12,10 @@ const claimService = require('../helpers/claim-service');
 const { adminLoginLimiter, clientIp } = require('../helpers/rate-limit');
 const SC = require('../helpers/support-center');   // সাপোর্ট-সেন্টার (Next-পোর্ট)
 const sseHub = require('../helpers/sse');
+// সেশন ২০৬: গঠনতন্ত্র গেজেট — অধ্যায়-রেজিস্ট্রি (ফর্ম-ড্রপডাউন + তালিকা-লেবেল)
+const { CONSTITUTION_CHAPTERS } = require('../data/constitution');
+const CONST_CHAPTER_IDS = CONSTITUTION_CHAPTERS.map((c) => c.id);
+const CONST_VALID_CHAPTERS = CONST_CHAPTER_IDS.concat(['legacy']);
 const totp = require('../helpers/totp');
 const rolePolicy = require('../helpers/role-policy');
 // সেশন ৫৫: হোম-নেতৃত্ব প্যানেল — ৮-স্লট কম্পিউটার (ছবি-আপলোড মিডলওয়্যার
@@ -2624,24 +2628,26 @@ router.delete('/achievements/:id', requireAdmin, async (req, res) => {
 // ── v2.2: Constitution CRUD ──────────────────────────────────────────────────
 router.get('/constitution', requireAdmin, async (req, res) => {
   const items = await db.prepare('SELECT * FROM constitution ORDER BY sort_order, id').all();
-  res.render('admin/constitution/list', { items, currentPath: '/admin/constitution' });
+  res.render('admin/constitution/list', { items, chapters: CONSTITUTION_CHAPTERS, currentPath: '/admin/constitution' });
 });
 router.get('/constitution/new', requireAdmin, async (req, res) => {
-  res.render('admin/constitution/form', { item: null, error: null, currentPath: '/admin/constitution' });
+  res.render('admin/constitution/form', { item: null, error: null, chapters: CONSTITUTION_CHAPTERS, currentPath: '/admin/constitution' });
 });
 router.post('/constitution', requireAdmin, async (req, res) => {
   const { section_title, content, sort_order } = req.body;
-  await db.prepare('INSERT INTO constitution (section_title, content, sort_order) VALUES (?, ?, ?)').run(section_title, content, parseInt(sort_order) || 0);
+  const chapter = CONST_VALID_CHAPTERS.includes(req.body.chapter) ? req.body.chapter : 'legacy';
+  await db.prepare('INSERT INTO constitution (section_title, content, sort_order, chapter) VALUES (?, ?, ?, ?)').run(section_title, content, parseInt(sort_order) || 0, chapter);
   res.redirect('/admin/constitution?saved=1');
 });
 router.get('/constitution/:id/edit', requireAdmin, async (req, res) => {
   const item = await db.prepare('SELECT * FROM constitution WHERE id = ?').get(req.params.id);
   if (!item) return res.redirect('/admin/constitution?saved=1');
-  res.render('admin/constitution/form', { item, error: null, currentPath: '/admin/constitution' });
+  res.render('admin/constitution/form', { item, error: null, chapters: CONSTITUTION_CHAPTERS, currentPath: '/admin/constitution' });
 });
 router.put('/constitution/:id', requireAdmin, async (req, res) => {
   const { section_title, content, sort_order } = req.body;
-  await db.prepare('UPDATE constitution SET section_title=?, content=?, sort_order=? WHERE id=?').run(section_title, content, parseInt(sort_order) || 0, req.params.id);
+  const chapter = CONST_VALID_CHAPTERS.includes(req.body.chapter) ? req.body.chapter : 'legacy';
+  await db.prepare('UPDATE constitution SET section_title=?, content=?, sort_order=?, chapter=? WHERE id=?').run(section_title, content, parseInt(sort_order) || 0, chapter, req.params.id);
   res.redirect('/admin/constitution?saved=1');
 });
 router.delete('/constitution/:id', requireAdmin, async (req, res) => {
