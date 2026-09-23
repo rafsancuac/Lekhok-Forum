@@ -3064,3 +3064,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session291 লেবেল (worklog Task ID 131)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান + **দীর্ঘ-রান চাঙ্কে-ই** + কমিট-মেসেজ -F-পথ; PLANS session290 + session289 + session288 + session287 + উভয়-session280-নোট পড়ুন
 - বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই (press-ফর্ম রিয়েল-ফাইল-আপলোড — s258-হেডার-চুক্তি), admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), কম্বো-প্যানেল-অপশনে aria-selected-সার্চ-সিঙ্ক-পুনঃযাচাই, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
 - রিমোট main = push-পরবর্তী HEAD (session290-ep290); working-tree ক্লিন
+
+---
+Task ID: 131 (session291 — cron 403679; LOWMEM-রেল-থাম্ব-আগাম-ক্যাপ + অলস-IO-পথ ep291) — push `4bc2268..HEAD` (feature + docs)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609240319)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=`4bc2268` (session290-ep290), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (BEHIND=০)
+- QA: প্রোড-ক্যানারি সবুজ (home/health ২০০ + ep290-বুট expSearch=false+ad=শূন্য + ep288-labeled=৩০/৩০ + aria-current) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session290-শীর্ষ-প্রস্তাব গ্রহণ: **LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ**)
+
+## এ-রাউন্ডে সম্পন্ন (session291)
+- **[Mandatory-ফিচার] ep291:** রেল-থাম্ব **RAIL_PRE_MAX = LOWMEM?৬:০ আগাম-ক্যাপ** + **IntersectionObserver-অলস-পথ** — eager-লুপে ক্যাপ-গেট (ক্যাশ-হিট-পরে — হিট-ক্যাপের-উপরে); ep291Queue (is-lazy + IO root=elRail rootMargin-৮০px + unobserve-একক-পেইন্ট + no-IO-ফলব্যাক) + ep291Paint (tok-গার্ড + s281-ক্যাশ-চুক্তি-মিরর); eager-বডি-অস্পৃশ্য; **__ep291QA হুক ×৭** (preMax/setPreMax(ন,reset)/lazy/eager/pending/canvases/imgs)
+- **[Mandatory-স্টাইল]:** ep291-ব্লক হেক্স-শূন্য টোকেন-শুধু — **is-lazy-শান্ত-প্লেসহোল্ডার** (dashed + ধীর-শিমার ২.২s + opacity .৫৫) + reduced-motion-অক্ষুণ্ণ
+- **টেস্ট:** নতুন tests/s291-railcap-suite.sh **৫০/৫০ ×২-ধারাবাহিক (SKIP=০)** (বুট-LOWMEM-বাস্তব eager=৬+canvas=৬+pending=৩ + setPreMax(6,true)-eager+৬ + is-lazy×৩ + স্ক্রলে lazy ০→৩ + canvas-মোট ৯ + হিট-পথ-ক্যাপের-উপরে img×৯/canvas-শূন্য/eager-অপরিবর্তিত + পুনঃ-ভিজিট restored+৯ + রেল-ক্লিক পাতা-৯ poll+fallback + স্ক্রিনশট ×২) + **৯-পাতা-s291-genpdf.js** + সিড-পুনঃব্যবহার (নেট-শূন্য PRE=০→FINAL=০) + **পূর্ণ-রিগ্রেশন s260-s291 (৩৩-সুইট সব-গ্রিন — s291-regression.sh; চাঙ্ক ১২+১১+১০)** + role-policy **২৬০/২৬০** + guard:design + audit:views (৯২ ejs)
+- **গোটচা ×৪ (PLANS session291):** ① **else-বিহীন-ternary=SyntaxError** — poll-এ খালি-ফেরত; `cond && expr`-রীতি-ই ② **is-pending .ep-rail-thumb স্প্যানে** — item-সেলেক্টর শূন্য-সত্য-অ্যাসার্ট (patch3) ③ **QA-ব্রাউজার deviceMemory=৪ = বাস্তব-LOWMEM** — বুট-অ্যাসার্ট preMax-শর্তাধীন; LOWMEM-পথ সরাসরি-ই২ই-প্রমাণিত ④ **stale-পেজ-পুনঃব্যবহার** — ইউনিক-কোয়েরি-open + তালিকা-প্রোব; কাউন্টার-cumulative → আপেক্ষিক-অ্যাসার্ট; is-lazy=স্থায়ী-কিউ-সাক্ষী
+- **পাইপলাইন:** প্যাচ scripts/s291-patch.py (+patch2 eager-কাউন্টার +patch3 pending-সেলেক্টর) (idempotent ×২-করে, মার্কার-গার্ড-প্রথম, পোস্ট-অ্যাসার্ট+s281-স্ট্রিং-অক্ষুণ্ণ+হেক্স-শূন্য) + feature-commit (১১-ফাইল; git commit -F-পথ) + ডক ×৩ (PROJECT §২৯১ + PLANS session291 + repo-worklog Task-131; s291-docs.py idempotent ×২) + docs-commit + PNG-চার্ন-রিভার্ট (tracked-M-শুধু; -C "$ROOT") + secret-scan-ক্লিন + fetch (BEHIND=০) + **push** → Vercel READY → প্রোড-স্পট + **ep291-লাইভ-যাচাই** + স্ক্রিনশট download/s291-prod-railcap.png
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session292 লেবেল (worklog Task ID 132)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান + **দীর্ঘ-রান চাঙ্কে-ই** + কমিট-মেসেজ -F-পথ; PLANS session291 + session290 + session289 + session288 + উভয়-session280-নোট পড়ুন
+- বাকি-প্রস্তাব: multipart-ব্রাউজার-পাথ-ই২ই (press-ফর্ম রিয়েল-ফাইল-আপলোড — s258-হেডার-চুক্তি), admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), কম্বো-প্যানেল (ep282)-অপশনে aria-selected-সার্চ-সিঙ্ক-পুনঃযাচাই, LOWMEM-ক্যাপ-মান-টিউনিং (রেল-স্ক্রল-টেলিমেট্রি), Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+- রিমোট main = push-পরবর্তী HEAD (session291-ep291); working-tree ক্লিন
