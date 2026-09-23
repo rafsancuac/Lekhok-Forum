@@ -2871,3 +2871,24 @@ Work Log:
 Stage Summary:
 - রিমোট main = push-পরবর্তী HEAD (session279-arl279); working-tree ক্লিন
 - পরের-এজেন্ট: **session280 লেবেল (worklog Task ID 120)**; PLANS session279-নোট অবশ্যই-পড়ুন (hidden-backdrop-ফোকাস-গোটচা + create-রুট-সাইড-এফেক্ট-ম্যাপ + ধরন-দ্বি-স্তর-অ্যালায়াস + gallery-কার্ড-সারফেস-প্রস্তাব); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+
+---
+Task ID: 122 (session282 — cron 403679; পত্রিকা-সিলেক্টরে সার্চযোগ্য-ড্রপডাউন ep282) — push (feature + docs)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609232133)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+Work Log:
+- রাউন্ড-শুরু-যাচাই: HEAD=origin=`cf2c653` (session281-ep281), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (session281-প্রথা-প্রথম-প্রয়োগ — BEHIND=০); উভয়-session280-নোট + session281-নোট পঠিত
+- **স্টেল-সামারি-সংশোধন ×৪৫:** কনটেক্সট-সামারি Task43/device-flow-যুগ-দাবি পুনরায়-অস্বীকৃত; ACTIVE-LOCK + HEAD=origin-প্রমাণে-ই-সত্য
+- রাউন্ড-শুরু QA: প্রোড-স্পট (home-200 + health-healthy + /epaper-200 + ep281-মার্কার) + স্থানীয় s281 ৩৯/৩৯-ক্যানারি — বাগ-শূন্য → ফিচার-রাউন্ড (session281-শীর্ষ-প্রস্তাব গ্রহণ)
+- **[Mandatory-ফিচার]** ep282 সার্চযোগ্য-পত্রিকা-সিলেক্টর — নেটিভ-select-ওভারলে কম্বো (একক-উৎস-অক্ষুণ্ণ; change-পুনঃপ্রেরণ; armed-ফলব্যাক; aria-পূর্ণ; __ep282QA ×১১) + **[Mandatory-স্টাইল]** ep282-ব্লক হেক্স-শূন্য টোকেন-শুধু (বিস্তারিত PROJECT §২৮২)
+- **টেস্ট:** নতুন tests/s282-epsearch-suite.sh **৫৩/৫৩ ×২-ধারাবাহিক (SKIP=০)** + মার্কার-সিড/ক্লিন নেট-শূন্য (PRE=০→FINAL=০) + পূর্ণ-রিগ্রেশন s260-s281 (২৩-সুইট) + role-policy + guard/audit-গ্রিন
+- **গোটচা ×৩:** stale-view-cache (স্যুট-শুরুতে fresh-reboot-প্রথা) + used-value-blockification (computed inline-flex→flex) + containsF-কনটেন্ট-চুক্তি (পাথ-নয়)
+- প্যাচ: scripts/s282-patch.py (idempotent ×২-প্রমাণ) + ডক ×৩ (PROJECT §২৮২ + PLANS session282 + repo-worklog Task-122)
+- PNG-চার্ন-রিভার্ট (স্যুট-PNG ×২-ইনটেনশনাল-কমিটেড — s281-প্রথা) + secret-scan-ক্লিন + push-পূর্ব পুনঃ-fetch
+
+Stage Summary:
+- **[Mandatory-ফিচার]** ep282 কম্বো-সিলেক্টর (ট্রিগার + সার্চ-প্যানেল + কী-বোর্ড + বাইরে-ক্লিক) — নেটিভ select একক-উৎস, সুইচ-লজিক-ডুপ্লিকেট-শূন্য
+- **[Mandatory-স্টাইল]** ep282-ব্লক হেক্স-শূন্য (এন্ট্রি-অ্যানিমেশন + is-act/is-sel + স্ক্রলবার + মোবাইল + reduced-motion)
+- পরের-এজেন্ট: **session283 লেবেল (worklog Task ID 123)**; PLANS session282-নোট অবশ্যই-পড়ুন (stale-view-cache fresh-reboot-প্রথা + blockification + containsF-চুক্তি); **ফিচার-কোড-লেখার-আগেই fetch**; push-আগে পুনঃ-fetch+rebase-বাধ্যতমূলক
+- রিমোট main = push-পরবর্তী HEAD (session282-ep282); working-tree ক্লিন
