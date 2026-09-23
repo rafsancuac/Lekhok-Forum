@@ -2337,3 +2337,26 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর।
 - পরের-এজেন্ট: **session256 লেবেল (worklog Task ID 96)**; PLANS session255-নোট অবশ্যই-পড়ুন (MultiEdit-গোটচা + mm255-সারফেস-চুক্তি + wlabel + আর্টিফ্যাক্ট-পুনঃপ্রমাণ); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!); বাকি-প্রস্তাব: moderator-curation-ফিল্টার-প্যাক, moderator-users-স্কোপড-ভ্যারিয়েন্ট, Turso/প্রোড-পোর্ট।
 - রিমোট main = push-পরবর্তী hash (কমিট-লগে); working-tree ক্লিন।
+---
+Task ID: 96 (session256 — cron 403679; লেখা-কিউরেশন তাৎক্ষণিক-ফিল্টার cu256 + [hidden]-ডিসপ্লে-ওভাররাইড বাগ-ফিক্স + KeyboardEvent-bubbles-false-সুইট-শ্রেণি) — push `51047f5`
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- স্টেল-সামারি-সংশোধন (×২২): সামারি Task43/'commit-হয়নি'/device-flow/'১১-ট্রিগার-বাকি' যুগ দেখাচ্ছিল — সব-ভুল; প্রকৃত: HEAD=origin=`d2abbf7` (session255/Task95), working-tree ক্লিন, টোকেন-ভ্যালিদ (GH /user→200), live 200; device-flow-অবসর
+- ইউজারের 'সব কমিট করেছ? গিটে?'-প্রশ্নের চূড়ান্ত-উত্তর: হ্যাঁ — session255-পর্যন্ত সব-কমিটেড-ও-pushকৃত ছিল; এ-রাউন্ডের session256-ও pushকৃত (`51047f5`)
+- রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s255 ৩৯/৩৯ + s254 ৩৬/৩৬ + s253 ৩৫/৩৫ + s251 ৩১/৩১ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (session255-বাকি-প্রস্তাব গ্রহণ: curation-ফিল্টার-প্যাক)
+
+## এ-রাউন্ডে সম্পন্ন (session256)
+- **[Mandatory-ফিচার] লেখা-কিউরেশন তাৎক্ষণিক-ফিল্টার (cu256):** /moderator/curation — data-cu-row-সূচক + data-kw (শিরোনাম+অনুচ্ছেদ+লেখক-নাম+@ইউজারনেম+ধরন-লেবেল+অবস্থা-শব্দ হোম/প্রচ্ছদ/সেরা-লেখক/লুকানো/তালিকায়-বাদ/সোশ্যাল) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-ফোকাস (field-গার্ড+modifier-বাদ) + Escape-ক্লিয়ার+ব্লার + clear-বাটন + **__cuQA হুক (total/count/apply/clear)**; GET-সার্চ+kindchips+quick-নির্বাচন/খালি+curList অক্ষুণ্ণ; hidden-গার্ড (`.cur-item[data-cu-row][hidden]` display:none!important); keydown-স্ক্যান (main.js/premium.js/sandbox-preview শূন্য — 'f'-মুক্ত)
+- **[Mandatory-স্টাইল]:** cu256-ব্লক হেক্স-শূন্য টোকেন-শুধু — color-mix brandgreen ফোকাস-রিং + dashed kbd-পিল + :active প্রেস-ফিডব্যাক + reduced-motion-জোড়া + 640px-সংকোচন + cu-zero টোকেন-বক্স
+- **প্রোডাক্ট-বাগ-ফিক্স (ভিজ্যুয়াল-QA-আবিষ্কৃত):** `.cu-count-chip{display:inline-flex}` UA-`[hidden]{display:none}`-ওভাররাইড — খালি-ইনপুটে স্টেল '০ / ১২' চিপ স্ক্রিনশটে-ধরা-পড়া → `.cu-count-chip[hidden]{display:none}` গার্ড + সুইটে computed-display-অ্যাসার্ট
+- **টেস্ট:** নতুন tests/s256-cufilter-suite.sh **৩৮/৩৮ ×২-ধারাবাহিক** (কাঠামো×১৩+স্টাইল×৮+আচরণ×১২ রিয়েল-ব্রাউজার — ১২-বাস্তব-সারি সিড-শূন্য + @ইউজারনেম-প্রোব + 390px-hScroll-শূন্য + স্ক্রিনশট×২) + role-policy ২৬০/২৬০ + guard:design + audit:views গ্রিন + EJS-compile+রেন্ডার-প্রমাণ
+- **গোটচা ×৩ ডক-কৃত (PLANS session256):** ① **KeyboardEvent-bubbles-false-শ্রেণি** (body-dispatch document-লিসেনারে-পৌঁছায়-না — প্রোব no-bubble/bubbled-true; **s255-এর 'f'-অ্যাসার্ট অবশিষ্ট-ফোকাস-মিথ্যা-পাস ছিল** — mm255-clear blur-হীন, cu256-clear blur-যুক্ত-বলে-উন্মোচিত; document-লিসেনার-টেস্টে bubbles:true বাধ্যতমূলক) ② **[hidden]-display-ওভাররাইড-শ্রেণি** (display-set-এলিমেন্টে hidden-অকার্যকর — গার্ড-জোড়া+computed-অ্যাসার্ট) ③ **grep-regex `[hidden]`-ক্যারেক্টার-ক্লাস** (containsF-ই-সত্য — od-বাইট-যাচাইয়ে ফাইল-অক্ষত-প্রমাণিত)
+- প্যাচ: scripts/s256-patch.py (skip-if-present idempotent — s255-প্যাটার্ন) + ডক ×৩ (PROJECT §২৫৬ + PLANS session256 + repo-worklog Task 96) → secret-scan-ক্লিন → fetch+rebase (সংঘর্ষ-শূন্য) → **push `d2abbf7..51047f5`** → Vercel **READY @ 51047f5e** (২০-সেকেন্ড) → প্রোড-স্পট home/login 200×২ + curation-গেট 307
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session257 লেবেল (worklog Task ID 97)**; PLANS session256-নোট অবশ্যই-পড়ুন (bubbles:true-সুইট-চুক্তি + [hidden]-গার্ড-জোড়া + containsF-ব্র্যাকেট); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: moderator-users-স্কোপড-ভ্যারিয়েন্ট, s255-'f'-অ্যাসার্ট bubbles:true-হার্ডেনিং (ঐচ্ছিক-সুইট-স্বাস্থ্য), Turso/প্রোড-পোর্ট
+- রিমোট main = `51047f5` (session256); working-tree ক্লিন
