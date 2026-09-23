@@ -31,13 +31,34 @@
     ── অ্যাডমিন তালিকা — প্রতিটি কার্ডে: পরিচয়, রোল-ব্যাজ, 2FA, শেষ-লগইন,
     ─ কাজের-এরিয়ার অনুমোদন-ফর্ম (চেকবক্স গ্রিড), পাসওয়ার্ড-রিসেট, লক, রিমুভ
   %>
+  <%# ── session274 — sa274 তাৎক্ষণিক-ফিল্টার (su273/ch272-প্যাটার্ন-মিরর, একক-স্ট্রিপ, কার্ড-সারফেস) ── %>
+  <div class="sa274-instant" id="saInstant274">
+    <i class="fas fa-filter sa274-ico" aria-hidden="true"></i>
+    <input type="text" id="saFilter274" class="sa274-input" placeholder="তাৎক্ষণিক ফিল্টার — রোল / নাম / স্কোপ / লক / 2FA" autocomplete="off" aria-label="অ্যাডমিন-তালিকা তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="saClear274" class="sa274-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="sa274-count-chip" id="saCount274" hidden></span>
+    <span class="sa274-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
+
   <div class="section-head"><h2>অ্যাডমিন অ্যাকাউন্ট</h2></div>
 
-  <% admins.forEach(a => {
+  <% admins.forEach((a, saI274) => {
        const isSelf = (meAdminId === a.id);
        const aScopes = (a.scopes && (() => { try { const x = JSON.parse(a.scopes); return Array.isArray(x) ? x : null; } catch (_) { return null; } })()) || null;
+       /* session274 — sa274 দ্বিভাষিক data-kw (রোল/লক/2FA/স্কোপ-মান-অ্যালায়াসসহ — হোয়াইটস্পেস-নরমালাইজড) */
+       const saKw274 = [
+         '#' + a.id,
+         'অ্যাডমিন admin',
+         '@' + a.username,
+         'নাম name', String(a.display_name || a.username || '').replace(/\s+/g, ' '),
+         'রোল role', a.role === 'superadmin' ? 'সুপার-এডমিন superadmin' : 'এডমিন admin',
+         a.locked ? 'লকড locked' : 'আনলকড unlocked',
+         a.totp_enabled ? '2FA totp দুই-স্তর' : '',
+         aScopes ? 'স্কোপ scope ' + aScopes.join(' ') : 'স্কোপ scope সীমাহীন unlimited',
+         'যুক্ত added ' + String(a.created_at || '').slice(0, 10)
+       ].filter(Boolean).join(' ');
   %>
-    <div class="card super-admin-card <%= a.locked ? 'is-locked' : '' %>">
+    <div class="card super-admin-card <%= a.locked ? 'is-locked' : '' %>" data-sa-row="<%= saI274 %>" data-kw="<%= saKw274 %>">
       <div class="sac-head">
         <span class="sac-avatar <%= a.role === 'superadmin' ? 'sa-super' : 'sa-admin' %>">
           <i class="fas <%= a.role === 'superadmin' ? 'fa-crown' : 'fa-user-shield' %>"></i>
@@ -134,6 +155,11 @@
     </div>
   <% }) %>
 
+    <div class="sa274-zero" id="saZero274" data-sa-empty hidden>
+    <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+    <span>কোনো অ্যাডমিন মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
+
   <%# ── নতুন অ্যাডমিন যুক্ত ── %>
   <div class="section-head" style="margin-top:28px;"><h2>নতুন অ্যাডমিন যুক্ত করুন</h2></div>
   <div class="card">
@@ -183,5 +209,73 @@
   });
 })();
 </script>
+<script>
+  (function () {
+    /* session274 — sa274 তাৎক্ষণিক-ফিল্টার (su273/ch272-প্যাটার্ন-মিরর, একক-স্ট্রিপ — 'f'-ফোকাস-মালিকানা-নির্দ্বিধা: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __saQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত; কার্ড-ভিত্তিক: div[data-sa-row]-hidden-গার্ড) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-sa-row]'));
+    var input = document.getElementById('saFilter274');
+    var clearBtn = document.getElementById('saClear274');
+    var countChip = document.getElementById('saCount274');
+    var zeroBox = document.getElementById('saZero274');
+    if (!input) { return; }
+    var total = rows.length;
+    function saApply274() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function saClearFn274() {
+      input.value = '';
+      saApply274();
+      input.blur();
+    }
+    input.addEventListener('input', saApply274);
+    if (clearBtn) { clearBtn.addEventListener('click', saClearFn274); }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { ev.stopPropagation(); saClearFn274(); }
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+      var t = ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ev.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__saQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: saApply274,
+      clear: saClearFn274
+    };
+  })();
+</script>
+<style>
+    /* session274 — sa274 তাৎক্ষণিক-ফিল্টার স্টাইল (su273-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু) */
+    .sa274-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .sa274-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .sa274-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .sa274-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .sa274-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .sa274-clear:hover { background: var(--lf-brandgreen-soft); }
+    .sa274-clear:active { transform: scale(.96); }
+    .sa274-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .sa274-count-chip[hidden] { display: none; }
+    .sa274-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .sa274-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .sa274-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .sa274-zero[hidden] { display: none; }
+    [data-sa-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .sa274-clear:active { transform: none; } }
+    @media (max-width: 640px) { .sa274-kbd-hint { display: none; } .sa274-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
