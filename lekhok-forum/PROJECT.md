@@ -3133,6 +3133,20 @@ Task53-প্রস্তাবকৃত পরবর্তী-ধাপ বা�
 
 **গোটচা (PLANS session254 ×৪):** testadmin-ভিউয়ার (moderator=403) · _csrfTok-কুকি-দ্বি-সমর্পণ (নেস্টেড-GET-টোকেন-রোটেশন) · s251-কোল্ড-স্টার্ট-ট্রানজিয়েন্ট (eval-empty শ্রেণি — ম্যানুয়াল-ওয়ার্ম-আপ-প্রোব → পুনঃরান) · `[h`-প্রদর্শন-আর্টিফ্যাক্ট (টুল-আউটপুটে `[hidden]`→`]idden]` দেখায়; od -c-ই-সত্য-উৎস)।
 
+## §২৫৬ (session256 — cron 403679: লেখা-কিউরেশন তাৎক্ষণিক-ফিল্টার cu256 + [hidden]-ডিসপ্লে-ওভাররাইড বাগ-ফিক্স) — s256 ৩৮/৩৮ ×২ (২৩ সেপ্টেম্বর ২০২৬)
+
+**রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`d2abbf7` (session255, clean-tree); GH /user→200; live-200; স্টেল-সামারি-সংশোধন ×২২ (সামারি Task43/'commit-হয়নি'/device-flow যুগ — সব-ভুল; ACTIVE-LOCK-ই-সত্য)। রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s255 ৩৯/৩৯ + s254 ৩৬/৩৬ + s253 ৩৫/৩৫ + s251 ৩১/৩১ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (session255-বাকি-প্রস্তাব গ্রহণ: curation-ফিল্টার-প্যাক)।
+
+**[Mandatory-ফিচার] লেখা-কিউরেশন তাৎক্ষণিক-ফিল্টার (cu256):** /moderator/curation-এ সার্ভার-রাউন্ড-ট্রিপ-হীন ক্লায়েন্ট-সাইড সংকীর্ণ (mm255/mc254-চুক্তি-মিরর) — `data-cu-row`-সারি-সূচক + `data-kw` (শিরোনাম + অনুচ্ছেদ + লেখক-নাম + @ইউজারনেম + ধরন-লেবেল + অবস্থা-শব্দ হোম/প্রচ্ছদ/সেরা-লেখক/লুকানো/তালিকায়-বাদ/সোশ্যাল) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-কী ফোকাস (field-গার্ড + modifier-বাদ) + Escape ক্লিয়ার+ব্লার + clear-বাটন + **__cuQA হুক (total/count/apply/clear)**; GET-সার্চ + kindchips + quick-নির্বাচন/খালি + curList সম্পূর্ণ অক্ষুণ্ণ; hidden-গার্ড (`.cur-item[data-cu-row][hidden] { display:none !important }`)।
+
+**[Mandatory-স্টাইল]:** cu256 ব্লক **হেক্স-শূন্য টোকেন-শুধু** (guard-র্যাচেট-নিরাপদ) — ফোকাস-রিং color-mix brandgreen-tint + kbd-পিল (dashed affordance) + :active প্রেস-ফিডব্যাক + reduced-motion-জোড়া + 640px-সংকোচন (kbd-none) + cu-zero টোকেন-বক্স।
+
+**বাগ-ফিক্স (ভিজ্যুয়াল-QA-আবিষ্কৃত):** `.cu-count-chip{display:inline-flex}` UA-`[hidden]{display:none}`-কে ওভাররাইড করত — স্ক্রিনশটে খালি-ইনপুটে স্টেল "০ / ১২" চিপ ধরা পড়েছে → `.cu-count-chip[hidden] { display: none; }` গার্ড + সুইটে clear-পরবর্তী computed-display-অ্যাসার্ট।
+
+**টেস্ট:** নতুন tests/s256-cufilter-suite.sh **৩৮/৩৮ ×২-ধারাবাহিক** (কাঠামো ×১৩ + স্টাইল ×৮ + আচরণ ×১২ রিয়েল-ব্রাউজার — ১২-বাস্তব-সারি সিড-শূন্য + @ইউজারনেম-প্রোব + 390px-hScroll-শূন্য + স্ক্রিনশট ×২) + role-policy ২৬০/২৬০ + guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs)।
+
+**গোটচা (PLANS session256):** KeyboardEvent-bubbles-false (synthetic dispatch-এ document-লিসেনার-বিহীন; s255-এর 'f'-অ্যাসার্ট অবশিষ্ট-ফোকাস-মিথ্যা-পাস ছিল) · [hidden]-display-ওভাররাইড (display-set-এলিমেন্টে hidden-অকার্যকর — গার্ড-জোড়া বাধ্যতমূলক) · grep-regex-এ `[hidden]`-ক্যারেক্টার-ক্লাস (containsF-ই-সত্য)।
+
 ## §২৫৫ (session255 — cron 403679: সদস্য-তালিকা তাৎক্ষণিক-ফিল্টার + grouped-list সেকশন-অটো-হাইড) — s255 ৩৯/৩৯ ×২ (২৩ সেপ্টেম্বর ২০২৬)
 
 **রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`29ebb81` (session254, clean-tree); GH /user→200 + Vercel /v2/user→200 + live-200; স্টেল-সামারি-সংশোধন ×২১ (সামারি Task43/device-flow/'১১-ট্রিগার' যুগ — সব-ভুল; ACTIVE-LOCK-ই-সত্য)। QA-মিথ্যা-সংকেত-বিতাড়ন: mod-member-row-এ `mem-sub`-লাইন Read/od-প্রদর্শনে `[m`-খাওয়া দেখায় — EJS-compile + বাস্তব-রেন্ডার (`সভাপতি · ২০২৪-২৫`) প্রমাণ ফাইল-অক্ষত (session254-প্রদর্শন-আর্টিফ্যাক্ট-শ্রেণি-পুনঃপ্রমাণ; od -c/node-render-ই-সত্য-উৎস)। বাগ-শূন্য → ফিচার-রাউন্ড (session254-বাকি-প্রস্তাব গ্রহণ)।

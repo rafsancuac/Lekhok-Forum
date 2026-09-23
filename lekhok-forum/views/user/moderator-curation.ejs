@@ -51,6 +51,17 @@
       <a href="/moderator/curation?kind=avatar_update<%= searchQ ? '&q=' + encodeURIComponent(searchQ) : '' %>" class="cur-kindchip <%= kindFilter === 'avatar_update' ? 'is-on' : '' %>"><i class="fas fa-user-circle"></i> প্রোফাইল-আপডেট</a>
       <a href="/moderator/curation?kind=cover_update<%= searchQ ? '&q=' + encodeURIComponent(searchQ) : '' %>" class="cur-kindchip <%= kindFilter === 'cover_update' ? 'is-on' : '' %>"><i class="fas fa-image"></i> কভার-আপডেট</a>
     </div>
+    <div class="cu-instant" id="cuInstant256">
+      <i class="fas fa-filter cu-instant-ico" aria-hidden="true"></i>
+      <input type="text" id="cuFilter256" class="cu-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / লেখক / ধরন / অবস্থা" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+      <button type="button" id="cuClear256" class="cu-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+      <span class="cu-count-chip" id="cuCount256" hidden></span>
+      <span class="cu-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+    </div>
+    <div class="cu-zero" id="cuZero256" data-cu-empty hidden>
+      <i class="fas fa-feather-pointed" aria-hidden="true"></i>
+      <span>কোনো লেখা মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+    </div>
     <div class="cur-quick">
       <button type="button" class="cur-qbtn" id="curQuickLatest" title="সর্বশেষ ৬টি খাঁটি সাহিত্য-লেখা হোমপেজে তুলে দিন">
         <i class="fas fa-bolt"></i> সর্বশেষ ৬টি নির্বাচন
@@ -70,12 +81,13 @@
   <% } else { %>
   <div class="cur-list" id="curList">
     <% const _fmt90 = (s) => { try { return new Date(s).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return ''; } }; %>
-    <% writings.forEach(a => {
+    <% writings.forEach((a, cuI256) => {
          const isWriting90 = (a.post_kind || 'writing') === 'writing';
          const kindLabel90 = a.post_kind === 'avatar_update' ? 'প্রোফাইল-আপডেট' : a.post_kind === 'cover_update' ? 'কভার-আপডেট' : 'সাহিত্য-লেখা';
          const kindIco90 = a.post_kind === 'avatar_update' ? 'fa-user-circle' : a.post_kind === 'cover_update' ? 'fa-image' : 'fa-feather-alt';
+         const cuKw256 = [(a.title || ''), (a.excerpt || ''), (a.author_name || ''), '@' + (a.author_username || ''), kindLabel90, (a.home_featured ? 'হোম নির্বাচিত featured' : ''), (a.home_cover ? 'প্রচ্ছদ cover' : ''), (a.featured ? 'সেরা-লেখক best' : ''), (a.status === 'hidden' ? 'লুকানো hidden' : ''), (!a.archive_visible ? 'তালিকায়-বাদ excluded' : ''), (!isWriting90 ? 'সোশ্যাল social' : '')].filter(Boolean).join(' ');
     %>
-      <div class="cur-item <%= a.home_featured ? 'is-featured' : '' %> <%= !isWriting90 ? 'is-social' : '' %>" data-id="<%= a.id %>" data-kind="<%= a.post_kind || 'writing' %>">
+      <div class="cur-item <%= a.home_featured ? 'is-featured' : '' %> <%= !isWriting90 ? 'is-social' : '' %>" data-id="<%= a.id %>" data-kind="<%= a.post_kind || 'writing' %>" data-cu-row="<%= cuI256 %>" data-kw="<%= cuKw256 %>">
         <label class="cur-check <%= !isWriting90 ? 'is-disabled' : '' %>" title="<%= isWriting90 ? 'হোমপেজে দেখান' : 'সোশ্যাল-অ্যাক্টিভিটি — নির্বাচনযোগ্য নয়' %>">
           <input type="checkbox" class="cur-check-input" data-field="home_featured" <%= a.home_featured ? 'checked' : '' %> <%= !isWriting90 ? 'disabled' : '' %> aria-label="হোমপেজে দেখান: <%= a.title %>" />
           <span class="cur-check-box"><i class="fas fa-check"></i></span>
@@ -471,6 +483,75 @@
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && covModal.classList.contains('is-open')) closeCover();
   });
+})();
+</script>
+<style>
+/* session256 — লেখা-কিউরেশন তাৎক্ষণিক-ফিল্টার (cu256 — হেক্স-শূন্য টোকেন-শুধু; au251/mc254/mm255-মিরর) */
+.cu-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 6px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+.cu-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+.cu-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+.cu-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+.cu-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+.cu-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+.cu-instant-clear:active { transform: scale(.96); }
+.cu-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+.cu-count-chip[hidden] { display: none; }
+.cu-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+.cu-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+.cu-zero { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+.cu-zero[hidden] { display: none; }
+.cur-item[data-cu-row][hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .cu-instant-clear:active { transform: none; } }
+@media (max-width: 640px) { .cu-kbd-hint { display: none; } .cu-instant { padding: 9px 11px; border-radius: 12px; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  /* session256 — cu256 তাৎক্ষণিক-ফিল্টার (mc254/mm255-চুক্তি-মিরর: data-kw-সারি + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __cuQA) */
+  var rows = Array.prototype.slice.call(document.querySelectorAll('.cur-item[data-cu-row]'));
+  var input = document.getElementById('cuFilter256');
+  var clearBtn = document.getElementById('cuClear256');
+  var countChip = document.getElementById('cuCount256');
+  var zeroBox = document.getElementById('cuZero256');
+  if (!input || !rows.length) { return; }
+  var total = rows.length;
+  function cuApply256() {
+    var q = (input.value || '').trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function (row) {
+      var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+      var hit = !q || kw.indexOf(q) !== -1;
+      row.hidden = !hit;
+      if (hit) { shown++; }
+    });
+    if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+    if (clearBtn) { clearBtn.hidden = !q; }
+    if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+  }
+  function cuClear256() {
+    input.value = '';
+    cuApply256();
+    input.blur();
+  }
+  input.addEventListener('input', cuApply256);
+  if (clearBtn) { clearBtn.addEventListener('click', cuClear256); }
+  input.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { ev.stopPropagation(); cuClear256(); }
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+    var t = ev.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+    ev.preventDefault();
+    input.focus();
+    input.select();
+  });
+  window.__cuQA = {
+    total: function () { return total; },
+    count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+    apply: cuApply256,
+    clear: cuClear256
+  };
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>
