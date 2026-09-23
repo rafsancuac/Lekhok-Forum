@@ -2978,3 +2978,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session287 লেবেল (worklog Task ID 127)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session286 + session285 + session284 + উভয়-session280-নোট পড়ুন
 - বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), ep282-প্যানেলে aria-activedescendant-বিস্তার, **দিন-গ্রিডে (epCalGrid) কী-বোর্ড-নেভিগেশন (ep286-র-ই-প্যাটার্ন — ৭-কলাম-রোভিং + মাস-সীমা-স্কিপ)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
 - রিমোট main = push-পরবর্তী HEAD (session286-ep286); working-tree ক্লিন
+
+---
+Task ID: 127 (session287 — cron 403679; দিন-গ্রিডে কী-বোর্ড-নেভিগেশন ep287)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609240048)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=`0ab3ac3` (session286-ep286), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (BEHIND=০)
+- QA: প্রোড-স্পট home/epaper/health-200 + agent-browser-প্রোড ep286-ক্যানারি (প্যানেল-খোলায় আর্ম active=focused=৮-সেপ্টেম্বর + Home=৮/End=৮/wrap=৮ — একমাত্র-সেপ্টেম্বর-enabled + Escape-ফোকাস-ফেরত epCalMonth) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session286-শীর্ষ-প্রস্তাব গ্রহণ: **দিন-গ্রিডে কী-বোর্ড-নেভিগেশন**)
+
+## এ-রাউন্ডে সম্পন্ন (session287)
+- **[Mandatory-ফিচার] ep287:** epCalGrid-দিন-গ্রিডে (৭-কলাম) **←→=±1, ↑=−7, ↓=+7-রোভিং (wrap + disabled-স্কিপ-লুপ — ভবিষ্যৎ-দিন-লাফ; সব-disabled-নো-অপ tries≥len-গার্ড; মাস-সীমা-স্কিপ = সীমা-অতিক্রম-নয় — wrap-এ-সীমা-লাফ)** + **Home/End-enabled** + **Enter/Space-সক্রিয়** (grid-ক্লিক-হ্যান্ডলার-পুনঃব্যবহার — calJump-ডুপ্লিকেট-নিষিদ্ধ) + **জাম্পে-ফোকাস-ফেরত is-sel-দিন** (সিঙ্ক্রোনাস-calRender-পুনঃরেন্ডার-পরে — পতাকা-বিহীন-সরল) + **বুট/রি-রেন্ডার-সফট-আর্ম (is-sel→is-today→প্রথম-enabled — calRender-র‍্যাপার)** + **রোভিং-ট্যাবইনডেক্স (disabled-স্পর্শ-শূন্য)** + is-act-শ্রেণি + **সম্পূর্ণ-ভবিষ্যৎ-মাসে z=0-বৈধ** + **__ep287QA হুক ×৮**; roving-কী = ISO-string data-d
+- **[Mandatory-স্টাইল]:** ep287-ব্লক হেক্স-শূন্য টোকেন-শুধু — is-act-টিন্ট + is-act.has-ডট-সংরক্ষণ + **is-act.is-sel-সলিড-সংরক্ষণ+আউটলাইন** + focus-visible-রিং + **মোবাইল-সংকোচন 640px (gap 1px + কমপ্যাক্ট)** + reduced-motion-গার্ড
+- **টেস্ট:** নতুন tests/s287-calday-suite.sh **৫৯/৫৯ ×২-ধারাবাহিক (SKIP=০)** + **নতুন সিড-হেল্পার scripts/s287-seedday.js** (২০২৬-০৯-১৫ ×১ — hasPayload + বুট-মাস-গ্যারান্টি; নেট-শূন্য PRE=০→FINAL=০) + **পূর্ণ-রিগ্রেশন s260-s287 (২৯-সুইট সব-গ্রিন — রানার scripts/s287-regression.sh)** + role-policy **২৬০/২৬০** + guard:design + audit:views-গ্রিন
+- **গোটচা ×২ (PLANS session287):** ① **স্টেপার-দিক-উল্টো** — epCalPrev=calM++ (অক্টোবর = সম্পূর্ণ-ভবিষ্যৎ → সফট-আর্ম-বৈধ-শূন্য-মিথ্যা-ফেল) → প্রোব epCalNext + ভবিষ্যৎ-মাস-প্রোবে দ্বি-ক্লিক ② **সম্পূর্ণ-ভবিষ্যৎ-মাসে z=0-বৈধ** (নো-ট্যাবয়েবল-সঠিক; ফেরত-এলে soft-arm পুনঃ-আর্ম)
+- **পাইপলাইন:** প্যাচ scripts/s287-patch.py (idempotent ×২, ×২-এডিট, পোস্ট-অ্যাসার্ট+হেক্স-শূন্য-অ্যাসার্ট) + feature-commit + ডক ×৩ (PROJECT §২৮৭ + PLANS session287 + repo-worklog Task-127; s287-docs.py idempotent ×২) + docs-commit + PNG-চার্ন-রিভার্ট (tracked-M-শুধু) + secret-scan-ক্লিন + fetch (BEHIND=০) + **push** → Vercel READY → প্রোড-স্পট + **ep287-লাইভ-যাচাই** + স্ক্রিনশট download/s287-prod-*.png
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session288 লেবেল (worklog Task ID 128)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session287 + session286 + session285 + session284 + উভয়-session280-নোট পড়ুন
+- বাকি-প্রস্তাব: ep282-প্যানেলে aria-activedescendant-বিস্তার, LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), **ক্যালেন্ডার-কার্ডে aria-live/is-sel-ঘোষণা (ep287-পরবর্তী a11y-স্তর)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+- রিমোট main = push-পরবর্তী HEAD (session287-ep287); working-tree ক্লিন
