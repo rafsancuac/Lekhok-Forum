@@ -23,6 +23,14 @@
     <button type="submit" name="mode" value="publish" formaction="/admin/events/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড ইভেন্টগুলো প্রকাশ করবে?"><i class="fas fa-eye"></i> প্রকাশ</button>
     <button type="submit" name="mode" value="hide" formaction="/admin/events/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড ইভেন্টগুলো লুকাবে?"><i class="fas fa-eye-slash"></i> লুকান</button>
   </form>
+  <%# ── session277 — ev277 তাৎক্ষণিক-ফিল্টার (s276/s275-প্যাটার্ন-মিরর; একক-স্ট্রিপ — 'f'-মালিকানা-নির্দ্বিধা) ── %>
+  <div class="ev277-instant" id="evInstant277">
+    <i class="fas fa-filter ev277-ico" aria-hidden="true"></i>
+    <input type="text" id="evFilter277" class="ev277-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / তারিখ / স্থান" autocomplete="off" aria-label="ইভেন্ট-তালিকা তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="evClear277" class="ev277-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="ev277-count-chip" id="evCount277" hidden></span>
+    <span class="ev277-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
   <% if (events.length === 0) { %>
     <div class="card empty">কোনো ইভেন্ট নেই</div>
   <% } else { %>
@@ -31,8 +39,19 @@
       <tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>শিরোনাম</th><th>তারিখ</th><th>স্থান</th><th>বিশেষ</th><th>কার্যক্রম</th></tr>
     </thead>
     <tbody>
-      <% events.forEach(e => { %>
-        <tr>
+      <% events.forEach((e, evI277) => { %>
+        <%# session277 — ev277 দ্বিভাষিক data-kw (হোয়াইটস্পেস-নরমালাইজড; featured-মান-অ্যালায়াস s273-চুক্তি) %>
+        <% const evKw277 = [
+             '#' + e.id,
+             'ইভেন্ট event',
+             'শিরোনাম title', String(e.title || '').replace(/\s+/g, ' '),
+             'তারিখ date', String(e.date || '').replace(/\s+/g, ' '),
+             'স্থান location', String(e.location || '').replace(/\s+/g, ' '),
+             e.featured ? 'বিশেষ featured' : 'সাধারণ normal',
+             'সম্পাদনা edit',
+             'মুছুন delete'
+           ].filter(Boolean).join(' '); %>
+        <tr data-ev-row="<%= evI277 %>" data-kw="<%= evKw277 %>">
           <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= e.id %>" aria-label="সিলেক্ট"></td>
           <td><strong><%= e.title %></strong></td>
           <td><%= e.date || '—' %></td>
@@ -49,6 +68,78 @@
     </tbody>
   </table>
   <% } %>
+  <div class="ev277-zero" id="evZero277" data-ev-empty hidden>
+    <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+    <span>কোনো ইভেন্ট মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
 </div>
+<script>
+  (function () {
+    /* session277 — ev277 তাৎক্ষণিক-ফিল্টার (s276/an276-প্যাটার্ন-মিরর, একক-স্ট্রিপ — 'f'-ফোকাস-মালিকানা-নির্দ্বিধা: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __evQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত; tr-সারফেস: tr[data-ev-row]-hidden-গার্ড) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-ev-row]'));
+    var input = document.getElementById('evFilter277');
+    var clearBtn = document.getElementById('evClear277');
+    var countChip = document.getElementById('evCount277');
+    var zeroBox = document.getElementById('evZero277');
+    if (!input) { return; }
+    var total = rows.length;
+    function evApply277() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function evClearFn277() {
+      input.value = '';
+      evApply277();
+      input.blur();
+    }
+    input.addEventListener('input', evApply277);
+    if (clearBtn) { clearBtn.addEventListener('click', evClearFn277); }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { ev.stopPropagation(); evClearFn277(); }
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+      var t = ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ev.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__evQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: evApply277,
+      clear: evClearFn277
+    };
+  })();
+</script>
+<style>
+    /* session277 — ev277 তাৎক্ষণিক-ফিল্টার স্টাইল (s276-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু; brandgreen-পরিবার) */
+    .ev277-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .ev277-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .ev277-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .ev277-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .ev277-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .ev277-clear:hover { background: var(--lf-brandgreen-soft); }
+    .ev277-clear:active { transform: scale(.96); }
+    .ev277-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .ev277-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .ev277-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .ev277-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .ev277-count-chip[hidden] { display: none; }
+    .ev277-zero[hidden] { display: none; }
+    tr[data-ev-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .ev277-clear:active { transform: none; } }
+    @media (max-width: 640px) { .ev277-kbd-hint { display: none; } .ev277-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
