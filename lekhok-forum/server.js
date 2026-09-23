@@ -44,6 +44,10 @@ const { parseNav, visibleNav, navItemActive } = require('./helpers/nav');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// session245 (অডিট-ফিক্স): ফ্রেমওয়ার্ক-ফিঙ্গারপ্রিন্ট হাইড — x-powered-by: Express
+// হেডার স্ক্যানার/হ্যাকারকে স্ট্যাক-তথ্য দেয়; disable করলে হেডারই যায় না।
+app.disable('x-powered-by');
+
 // Vercel runs behind a CDN/proxy — tell Express to trust it so req.protocol,
 // req.secure, and secure cookies work correctly.
 app.set('trust proxy', 1);

@@ -15,7 +15,8 @@
     <small><i class="far fa-thumbs-up"></i>প্রাসঙ্গিক</small>
   </div>
   <div class="qa-content">
-    <a href="/questions/<%= q.id %>" class="qa-title"><%= q.title %></a>
+    <%# session245: ক্যানোনিকাল /qa/:id লিঙ্ক — /questions/:id এখন 301 %>
+    <a href="/qa/<%= q.id %>" class="qa-title"><%= q.title %></a>
     <% if (q.body) { %><p class="qa-excerpt"><%= mdPlain(q.body, 150) %></p><% } %>
     <div class="qa-meta">
       <%# সেশন ১১৯/১৩১-চুক্তি: উত্তর-স্টেট ব্যাজ — গ্রহণকৃত=সবুজ-সলিড, উত্তরিত=সবুজ, অনুত্তরিত=অ্যাম্বার %>

@@ -77,17 +77,35 @@ router.get('/sitemap.xml', async (req, res) => {
     }));
 
     // Published articles + Q&A questions (public singles)
+    // session245 (অডিট-ফিক্স — ক্রিটিক্যাল SEO বাগ):
+    //  • পুরনো কুয়েরি posts.updated_at সিলেক্ট করত — কলামটি স্কিমাতেই নেই (শুধু
+    //    published_at/created_at) → কুয়েরি প্রতিবারই ব্যর্থ, আর নীরব catch এটা
+    //    চাপা দিত → sitemap-এ আর্টিকেল/QA কখনোই যেত না (GSC-তে ০ ইনডেক্স)।
+    //  • এখন lastmod = COALESCE(published_at, created_at) — কলাম-ড্রিফট-মুক্ত।
+    //  • /articles + /qa পাবলিক-তালিকার হুবহু মিরর: article মানে post_kind='writing'
+    //    + archive_visible=1 + shared_from IS NULL (avatar_update/share-জাতীয়
+    //    সিস্টেম-পোস্ট সাইটম্যাপে ফাঁস করে বেড়াবে না), question মানে post_kind='question'।
+    //  • নীরব catch বন্ধ — ব্যর্থ হলে console.error-এ দৃশ্যমান (session243-শিক্ষা:
+    //    প্রোড-স্কিমা-ড্রিফট সাইলেন্টলি ফিচার-মেরে রাখে)।
     try {
-      const posts = await db.prepare("SELECT id, type, created_at, updated_at FROM posts WHERE status = 'published' AND type IN ('article', 'question') ORDER BY id DESC LIMIT 2000").all();
+      const posts = await db.prepare(
+        "SELECT id, type, published_at, created_at FROM posts " +
+        "WHERE status = 'published' AND (" +
+        "  (type = 'article' AND post_kind = 'writing' AND archive_visible = 1 AND shared_from IS NULL)" +
+        "  OR (type = 'question' AND post_kind = 'question')" +
+        ") ORDER BY id DESC LIMIT 2000"
+      ).all();
       for (const p of posts) {
         urls.push({
           loc: `${siteUrl}/${p.type === 'question' ? 'qa' : 'articles'}/${p.id}`,
-          lastmod: (toISO(p.updated_at || p.created_at) || '').split('T')[0] || null,
+          lastmod: (toISO(p.published_at || p.created_at) || '').split('T')[0] || null,
           changefreq: 'monthly',
           priority: p.type === 'article' ? '0.8' : '0.5',
         });
       }
-    } catch (_) { /* posts query failed — static entries still served */ }
+    } catch (e) {
+      console.error('[sitemap] posts query failed — articles/QA skipped:', e.message);
+    }
 
     // Notice detail pages
     try {
@@ -128,10 +146,13 @@ router.get('/rss.xml', async (req, res) => {
     const siteUrl = (process.env.SITE_URL || `${req.protocol}://${req.get('host')}`).replace(/\/+$/, '');
     let items = [];
     try {
+      // session245: RSS-বিশুদ্ধতা — শুধু খাঁটি লেখা (writing) ও প্রশ্ন; সিস্টেম-পোস্ট
+      // (avatar_update ইত্যাদি) আর ফিডে ফাঁস করে বেড়াবে না (অডিট-অবজারভেশন)।
       const rows = await db.prepare(
         "SELECT p.id, p.type, p.title, p.excerpt, p.body, p.published_at, p.created_at, u.full_name AS author_name " +
         "FROM posts p JOIN users u ON p.author_id = u.id " +
-        "WHERE p.status = 'published' AND p.type IN ('article','question') " +
+        "WHERE p.status = 'published' AND ((p.type = 'article' AND p.post_kind = 'writing' AND p.archive_visible = 1 AND p.shared_from IS NULL) " +
+        "OR (p.type = 'question' AND p.post_kind = 'question')) " +
         "ORDER BY COALESCE(p.published_at, p.created_at) DESC LIMIT 20").all();
       items = rows;
     } catch (_) { /* DB না থাকলে খালি ফিড */ }

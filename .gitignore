@@ -81,3 +81,6 @@ lekhok-forum/public/uploads/*
 
 # ── Agent credentials store ( NEVER commit — raw tokens ) ──
 .secrets/
+
+# Member-data backups (PII) — কখনো ট্র্যাক নয় (session245 অডিট-ফিক্স)
+lekhok-forum/db/backups/

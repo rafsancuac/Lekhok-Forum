@@ -1144,7 +1144,12 @@ router.post('/api/qa/:id/accept-answer', ensureLoggedIn, async (req, res) => {
 // BUGFIX: qa-list.ejs links every question to /questions/:id, but only the
 // /qa/:id route existed → every question link on the site 404'd. Added the
 // missing /questions/:id alias (also /questions/new already exists).
-router.get(['/qa/:id', '/questions/:id'], async (req, res) => {
+// session245 (অডিট-ফিক্স): /questions/:id এখন আর 200 দেয় না — 301 → ক্যানোনিকাল
+// /qa/:id। আগে দুটো URL-ই 200 দিত (ডুপলিকেট-কনটেন্ট-সিগন্যাল; canonical ট্যাগ
+// থাকলেও 301-ই পরিষ্কার হাইজিন)। অভ্যন্তরীণ-লিঙ্কও QaListItem.ejs-এ /qa/:id-তে
+// স্যুইচ করা হয়েছে — রিডাইরেক্ট-চেইন হবে না।
+router.get('/questions/:id', (req, res) => res.redirect(301, '/qa/' + encodeURIComponent(req.params.id)));
+router.get('/qa/:id', async (req, res) => {
   // সেশন ৭২ (GSC ইনডেক্সিং-ফিক্স): post + answers + related একসাথে (আগে সিরিয়াল —
   // Turso-তে প্রতিটি await একটি নেটওয়ার্ক রাউন্ড-ট্রিপ ছিল)।
   const [post, answers, answerReplies113, relatedQ72] = await Promise.all([
