@@ -117,88 +117,68 @@
   </div>
 
   <% if (hasPayload) { %>
-  <%# ── session279 (ইউজার-স্পেক, PressReader-স্থাপত্য): কুইক-সুইচ স্ট্রিপ — কন্ট্রোল-বারের ঠিক উপরে
-      জনপ্রিয় পত্রিকাগুলোর স্ক্রলেবল পিল-বাড়ি; এক-ক্লিকেই ড্রপডাউন না-খুলে পত্রিকা বদল।
-      পিলগুলো JS নিজেই ভরে (বর্তমান-তারিখের র‍্যাংক-ক্রম) — পেজ-রিলোড শূন্য ── %>
-  <div class="ep-switchstrip" id="epSwitchStrip" role="tablist" aria-label="দ্রুত পত্রিকা পরিবর্তন">
-    <span class="ep-ss-label"><i class="fas fa-newspaper" aria-hidden="true"></i> শীর্ষ পত্রিকা:</span>
-    <div class="ep-ss-pills" id="epSsPills"></div>
-    <a href="#epDir226" class="ep-ss-all" id="epSsAll">
-      সকল পত্রিকা (<%= (newspapers || []).length %>+) <i class="fas fa-arrow-right" aria-hidden="true"></i>
-    </a>
-  </div>
-  <%# ═══════════ টু-প্যানেল ওয়ার্কস্পেস ═══════════ %>
-  <div class="ep-grid">
-    <%# ───────── ডান-কলামের-আগে মোবাইলে ভিউয়ার — order দিয়ে ডেস্কটপে বাম/ডান ───────── %>
+  <%# ═══════════ session280 (ইউজার-স্পেক, PressReader ৩-প্যানেল) ═══════════
+      একক কন্ট্রোল-বার (রিপিট-শূন্য) + বাম পাতা-রেল + মাঝে বড় ভিউ + ডানে ক্যালেন্ডার ও তালিকা;
+      ফুলস্ক্রিন-রুট = এই পুরো গ্রিড (#epGrid280) — বার/রেল/তালিকাসহ পূর্ণ-পাঠ-মোড ── %>
+  <div class="ep-grid" id="epGrid280">
+    <%# ── ① একক স্লিক কন্ট্রোল-বার: [পত্রিকা-সিলেক্টর ▾] · [বাংলা তারিখ] │ [পাতা X/Y ▾] [জুম] [ঘোরান] [⛶] [মোড] ── %>
+    <div class="ep-ctlbar">
+      <div class="ep-ctlbar-l">
+        <div class="ep-ps-wrap">
+          <i class="fas fa-building-columns ep-ps-ico" aria-hidden="true"></i>
+          <select class="ep-paper-select" id="epPaperSelect" aria-label="পত্রিকা নির্বাচন"></select>
+        </div>
+        <span class="ep-ctl-sep" aria-hidden="true">·</span>
+        <span class="ep-bardate" id="epBarDate">—</span>
+        <input type="date" class="ep-date-input" id="epDateInput" value="<%= todayIso %>" hidden aria-label="নির্বাচিত তারিখ" />
+      </div>
+      <div class="ep-ctlbar-r">
+        <select class="ep-jump" id="epPageJump" hidden disabled aria-label="পাতায় যান"></select>
+        <div class="ep-zoomgrp" role="group" aria-label="জুম নিয়ন্ত্রণ">
+          <button type="button" class="ep-zbtn" id="epZoomOut" title="জুম আউট" aria-label="জুম আউট"><i class="fas fa-minus" aria-hidden="true"></i></button>
+          <button type="button" class="ep-zpct" id="epZoomReset" title="জুম রিসেট" aria-label="জুম রিসেট">১০০%</button>
+          <button type="button" class="ep-zbtn" id="epZoomIn" title="জুম ইন" aria-label="জুম ইন"><i class="fas fa-plus" aria-hidden="true"></i></button>
+        </div>
+        <button type="button" class="ep-ctlbtn" id="epRotate" title="পেজ ঘোরান (৯০°)" aria-label="পেজ ঘোরান"><i class="fas fa-rotate-right" aria-hidden="true"></i></button>
+        <button type="button" class="ep-ctlbtn" id="epFs" title="ফুলস্ক্রিন রিডার" aria-label="ফুলস্ক্রিন রিডার"><i class="fas fa-expand" id="epFsIcon" aria-hidden="true"></i></button>
+        <div class="ep-vt" role="tablist" aria-label="ভিউ মোড">
+          <button type="button" class="ep-vt-btn is-on" id="epModeReader" role="tab" aria-selected="true">ডিজিটাল রিডার</button>
+          <button type="button" class="ep-vt-btn" id="epModeThumb" role="tab" aria-selected="false">প্রচ্ছদ</button>
+        </div>
+      </div>
+    </div>
+    <%# ── ② বাম প্যানেল: সব পাতার থাম্বনেইল-রেল (pdf.js ছোট-ক্যানভাস অলস-ক্রমিক; পাতায়-ক্লিকে জাম্প) ── %>
+    <aside class="ep-rail" aria-label="সব পাতার থাম্বনেইল">
+      <div class="ep-rail-head"><i class="fas fa-table-cells" aria-hidden="true"></i> সব পাতা <span class="ep-rail-count" id="epRailCount"></span></div>
+      <div class="ep-rail-scroll" id="epRail" role="listbox" aria-label="পাতা নির্বাচন">
+        <div class="ep-rail-empty"><i class="fas fa-layer-group" aria-hidden="true"></i><p>পত্রিকা বেছে নিলে পাতাগুলো এখানে দেখা যাবে</p></div>
+      </div>
+    </aside>
+    <%# ── ③ মাঝের প্যানেল: বড় ভিউয়ার (session170-ইঞ্জিন অক্ষুণ্ণ) ── %>
     <section class="ep-viewer" aria-label="ই-পেপার ভিউয়ার">
-      <%# ── session279 (ইউজার-স্পেক): প্রেসরিডার-ধাঁচের কন্ট্রোল বার —
-          বামে [প্রধান পত্রিকা-সিলেক্টর ▾] (তারিখের ঠিক বামে) → [তারিখ] → [সংখ্যা ▾];
-          ডানে [পাতা-পেজিনেশন] + [সব পাতা]। সব কন্ট্রোল ভিউয়ারের-ভেতরে — ফুলস্ক্রিনেও পাওয়া যায় ── %>
-      <div class="ep-ctlbar">
-        <div class="ep-ctlbar-l">
-          <div class="ep-ps-wrap">
-            <i class="fas fa-building-columns ep-ps-ico" aria-hidden="true"></i>
-            <select class="ep-paper-select" id="epPaperSelect" aria-label="পত্রিকা নির্বাচন"></select>
-          </div>
-          <div class="ep-day-step ep-day-step-sm">
-            <button type="button" class="ep-step-btn" id="epPrevDay" title="আগের দিন" aria-label="আগের দিনের ই-পেপার"><i class="fas fa-chevron-right"></i></button>
-            <input type="date" class="ep-date-input" id="epDateInput" value="<%= todayIso %>" aria-label="তারিখ নির্বাচন" />
-            <button type="button" class="ep-step-btn" id="epNextDay" title="পরের দিন" aria-label="পরের দিনের ই-পেপার"><i class="fas fa-chevron-left"></i></button>
-          </div>
-          <select class="ep-issue-select" id="epIssueSelect" aria-label="এই পত্রিকার সংরক্ষিত সংখ্যা" hidden></select>
-          <button type="button" class="ep-btn-today" id="epTodayBtn"><i class="fas fa-rotate-left"></i> আজকের পত্রিকা</button>
-        </div>
-        <div class="ep-ctlbar-r">
-          <div class="ep-pagepager" id="epPagePager" hidden role="group" aria-label="পাতা নেভিগেশন">
-            <button type="button" class="ep-pg-nav" id="epPgPrev" title="পূর্ববর্তী পাতা" aria-label="পূর্ববর্তী পাতা"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
-            <div class="ep-pg-nums" id="epPgNums"></div>
-            <button type="button" class="ep-pg-nav" id="epPgNext" title="পরবর্তী পাতা" aria-label="পরবর্তী পাতা"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
-            <span class="ep-pg-count" id="epPgCount">১/১</span>
-          </div>
-          <button type="button" class="ep-btn-allpages" id="epAllPagesBtn" hidden aria-pressed="false"><i class="fas fa-table-cells" aria-hidden="true"></i> সব পাতা</button>
-        </div>
-      </div>
-      <div class="ep-viewer-bar">
-        <div class="ep-viewer-name">
-          <i class="fas fa-book-open"></i>
-          <span class="ep-cur-rank" id="epCurRank" hidden></span>
-          <span id="epCurName">—</span>
-          <span class="ep-viewer-date" id="epCurDate"></span>
-        </div>
-        <div class="ep-viewer-actions">
-          <%# ── সেশন ১৭৮: পাতা-জাম্প ড্রপডাউন (রিডার-লোডে পূরণ; স্ক্রলে বর্তমান-পাতা সিঙ্ক) ── %>
-          <select class="ep-jump" id="epPageJump" hidden disabled aria-label="পাতায় যান"></select>
-          <%# ── সেশন ১৭১: জুম-গ্রুপ (– % +) + রোটেট + ফুলস্ক্রিন (pdf.js/প্রচ্ছদ/iframe — সব-মোডে) ── %>
-          <div class="ep-zoomgrp" role="group" aria-label="জুম নিয়ন্ত্রণ">
-            <button type="button" class="ep-zbtn" id="epZoomOut" title="জুম আউট" aria-label="জুম আউট"><i class="fas fa-minus" aria-hidden="true"></i></button>
-            <button type="button" class="ep-zpct" id="epZoomReset" title="জুম রিসেট" aria-label="জুম রিসেট">১০০%</button>
-            <button type="button" class="ep-zbtn" id="epZoomIn" title="জুম ইন" aria-label="জুম ইন"><i class="fas fa-plus" aria-hidden="true"></i></button>
-          </div>
-          <button type="button" class="ep-ctlbtn" id="epRotate" title="পেজ ঘোরান (৯০°)" aria-label="পেজ ঘোরান"><i class="fas fa-rotate-right" aria-hidden="true"></i></button>
-          <button type="button" class="ep-ctlbtn" id="epFs" title="ফুলস্ক্রিন রিডার" aria-label="ফুলস্ক্রিন রিডার"><i class="fas fa-expand" id="epFsIcon" aria-hidden="true"></i></button>
-          <span class="ep-act-sep" aria-hidden="true"></span>
-          <div class="ep-vt" role="tablist" aria-label="ভিউ মোড">
-            <%# সেশন ১৭৩ (ইউজার-স্পেক): ডিফল্ট = ডিজিটাল রিডার (আগে প্রচ্ছদ) %>
-            <button type="button" class="ep-vt-btn is-on" id="epModeReader" role="tab" aria-selected="true">ডিজিটাল রিডার</button>
-            <button type="button" class="ep-vt-btn" id="epModeThumb" role="tab" aria-selected="false">প্রচ্ছদ</button>
-          </div>
-          <%# session179 (ইউজার-স্পেক): "খুলুন"-বাহ্যিক-ড্রাইভ-লিংক স্থায়ীভাবে বাদ — পাঠক প্ল্যাটফর্মের ভেতরেই পড়বেন %>
-        </div>
-      </div>
       <div class="ep-stage" id="epStage">
         <div class="ep-stage-empty">
           <i class="fas fa-newspaper"></i>
-          <p>বাঁ-দিকের তালিকা থেকে একটি পত্রিকা বেছে নিন</p>
+          <p>ডান-দিকের তালিকা থেকে একটি পত্রিকা বেছে নিন</p>
         </div>
       </div>
     </section>
-
-    <aside class="ep-side" aria-label="পত্রিকা তালিকা">
-      <%# ── session182: একক-প্যানেল প্রিমিয়াম ডিরেক্টরি (ইউজার-স্পেক) — হেডার+সার্চ+তালিকা+ওয়ার্ম-স্ট্যাটাস
-           একই কার্ডে; তালিকা Apple-News-রীতি ফ্ল্যাট-কার্ড (ক্যাপসুল/পিল বাদ) ── %>
+    <%# ── ④ ডান প্যানেল: পুরোনো সংখ্যা (ক্যালেন্ডার) + পত্রিকা-তালিকা + ওয়ার্ম-স্ট্যাটাস ── %>
+    <aside class="ep-side" aria-label="পুরোনো সংখ্যা ও পত্রিকা তালিকা">
+      <div class="ep-cal280" aria-label="পুরোনো সংখ্যার ক্যালেন্ডার">
+        <div class="ep-cal-head">
+          <span class="ep-cal-title"><i class="fas fa-calendar-days" aria-hidden="true"></i> পুরোনো সংখ্যা</span>
+          <span class="ep-cal-nav">
+            <button type="button" class="ep-cal-btn" id="epCalPrev" aria-label="আগের মাস"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            <span class="ep-cal-month" id="epCalMonth">—</span>
+            <button type="button" class="ep-cal-btn" id="epCalNext" aria-label="পরের মাস"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+          </span>
+        </div>
+        <div class="ep-cal-grid" id="epCalGrid"></div>
+      </div>
       <div class="ep-side-head">
         <div class="ep-filter-top">
-          <span class="ep-filter-title"><i class="fas fa-layer-group"></i> সংরক্ষিত সংখ্যা</span>
+          <span class="ep-filter-title"><i class="fas fa-layer-group"></i> <span id="epListLbl">আজকের পত্রিকা</span></span>
           <span class="ep-count" id="epCount">০</span>
         </div>
         <div class="ep-search">
@@ -207,9 +187,9 @@
           <button type="button" class="ep-search-clear" id="epSearchClear" aria-label="খোঁজা মুছুন" hidden><i class="fas fa-xmark" aria-hidden="true"></i></button>
         </div>
       </div>
-      <%# ── পত্রিকা-তালিকা ── %>
+      <%# ── পত্রিকা-তালিকা (নির্বাচিত তারিখের) ── %>
       <div class="ep-list" id="epList" role="listbox" aria-label="পত্রিকার তালিকা"></div>
-      <%# ── session182: সিকুয়েন্সিয়াল-আইডল-ওয়ার্মার স্ট্যাটাস — "সব পেপার লোড করে রাখবে" (ইউজার-স্পেক) ── %>
+      <%# ── session182: সিকুয়েন্সিয়াল-আইডল-ওয়ার্মার স্ট্যাটাস ── %>
       <div class="ep-warmbar" id="epWarmBar" hidden aria-live="polite">
         <i class="fas fa-bolt" aria-hidden="true"></i>
         <div class="ep-warmbar-main">
@@ -282,11 +262,14 @@
   var searchTerm = '';
   var elCount = document.getElementById('epCount');
   var elStage = document.getElementById('epStage');
-  var elName = document.getElementById('epCurName');
-  var elCurDate = document.getElementById('epCurDate');
   var elReader = document.getElementById('epModeReader');
   var elThumb = document.getElementById('epModeThumb');
-  var elCurRank = document.getElementById('epCurRank'); // সেশন ১৭২: ভিউয়ার-বার র‍্যাংক-চিপ
+  // session280: ফুলস্ক্রিন-রুট = পূর্ণ ৩-প্যানেল গ্রিড; বার-তারিখ + পাতা-রেল + ক্যালেন্ডার-মডিউল-টার্গেট
+  var elGrid = document.getElementById('epGrid280');
+  var elBarDate = document.getElementById('epBarDate');
+  var elListLbl = document.getElementById('epListLbl');
+  var elRail = document.getElementById('epRail');
+  var elRailCount = document.getElementById('epRailCount');
   var mode = 'reader'; // সেশন ১৭৩ (ইউজার-স্পেক): ডিফল্ট = ডিজিটাল রিডার — পেজ-লোডেই ফুল-পিডিএফ ওপেন (আগে ছিল 'thumb')
   var activeId = null;
   if (!papers.length || !elList) return;
@@ -297,7 +280,6 @@
   // স্কেল-করা overflow স্ক্রলারের scrollable-overflow-তেই গণনা হয় → এক-স্ক্রলারে স্বাভাবিক প্যান।
   var zoomLevel = 100, rotation = 0;
   var ZOOM_MIN = 50, ZOOM_MAX = 300;
-  var elViewer = document.querySelector('.ep-viewer');
   var elFsIcon = document.getElementById('epFsIcon');
   function zoomTargetEl() {
     return elStage.querySelector('.ep-zoomwrap') || elStage.querySelector('.ep-cover') ||
@@ -345,11 +327,11 @@
     sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2;
   }
   function toggleFs() {
-    if (!elViewer) return;
+    if (!elGrid) return;
     var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
     if (!fsEl) {
-      var req = elViewer.requestFullscreen || elViewer.webkitRequestFullscreen;
-      if (req) req.call(elViewer);
+      var req = elGrid.requestFullscreen || elGrid.webkitRequestFullscreen;
+      if (req) req.call(elGrid);
     } else {
       var ex = document.exitFullscreen || document.webkitExitFullscreen;
       if (ex) ex.call(document);
@@ -361,7 +343,7 @@
     stowActiveScroll();
     cancelReader();
     if (!p.embed) {
-      elStage.innerHTML = '<div class="ep-stage-empty"><i class="fas fa-newspaper"></i><p>রিডার পাওয়া যায়নি — বাঁ-দিকের তালিকা থেকে অন্য সংখ্যা বেছে নিন</p></div>';
+      elStage.innerHTML = '<div class="ep-stage-empty"><i class="fas fa-newspaper"></i><p>রিডার পাওয়া যায়নি — ডান-দিকের তালিকা থেকে অন্য সংখ্যা বেছে নিন</p></div>';
       return;
     }
     elStage.innerHTML =
@@ -419,8 +401,10 @@
 
   function renderList() {
     var rows = filtered();
-    syncStrip(); // session279: কুইক-সুইচ স্ট্রিপ তারিখ-অনুযায়ী পুনর্নির্মাণ (active সিঙ্কসহ)
     elCount.textContent = bnDigits(rows.length) + ' টি';
+    calSync(); // session280: ক্যালেন্ডারে নির্বাচিত-দিন-সিঙ্ক
+    if (elListLbl) elListLbl.textContent = (elDate.value === todayIso ? 'আজকের পত্রিকা' : bnShort279(elDate.value) + '-এর পত্রিকা');
+    syncBarDate(); // session280: বারের বাংলা-তারিখ
     if (!rows.length) {
       elList.innerHTML = '<div class="ep-list-empty"><i class="far fa-folder-open"></i>' +
         '<p>এই তারিখে কোনো সংরক্ষিত ই-পেপার পাওয়া যায়নি</p>' +
@@ -452,14 +436,8 @@
     activeId = id;
     var p = papers.filter(function (x) { return x.id === id; })[0];
     if (!p) return;
-    elName.textContent = p.name;
-    // সেশন ১৭২: ভিউয়ার-বারে সক্রিয় পত্রিকার র‍্যাংক-চিপ
-    if (elCurRank) {
-      if (p.rank && p.rank < 999) { elCurRank.hidden = false; elCurRank.textContent = '#' + bnDigits(p.rank); }
-      else { elCurRank.hidden = true; elCurRank.textContent = ''; }
-    }
-    elCurDate.textContent = '· ' + p.dateBn;
-    syncPaperSelect(p); syncIssueSelect(p); syncStripActive(); // session279: প্রেসরিডার-কন্ট্রোল সিঙ্ক
+    // session280: নাম = বারের সিলেক্টর-নিজেই, তারিখ = বারের টেক্সট — পুনরাবৃত্তি-শূন্য
+    syncPaperSelect(p);
     renderStage(p); // session183: জুম পেপার-সুইচেও ধরে থাকে — ধারাবাহিক পাঠ-অভিজ্ঞতা
     renderList();
   }
@@ -594,7 +572,7 @@
       var h = elStage.querySelector('.ep-page-holder[data-n="' + n + '"]');
       if (h) { h.scrollIntoView({ behavior: 'smooth', block: 'start' }); sel.blur(); }
     };
-    buildPager(numPages); // session279: সংখ্যাযুক্ত পেজিনেশন + কাউন্টার সক্রিয়
+    railBuild(st, numPages); // session280: বাম-রেল নির্মাণ (থাম্বনেইল অলস-ক্রমিক)
     st.jumpSync = function () {
       if (!elStage.querySelector) return;
       var stageTop = elStage.getBoundingClientRect().top;
@@ -604,7 +582,7 @@
         if (d < bestD) { bestD = d; best = Number(h.getAttribute('data-n')) || 1; }
       });
       if (String(sel.value) !== String(best)) sel.value = String(best);
-      syncPager(best); // session279: পেজিনেশন বাটন/কাউন্টারও স্ক্রলে সিঙ্ক
+      syncRail(best); // session280: রেলে সক্রিয়-পাতা-সিঙ্ক
     };
     if (!st._jumpBound) {
       st._jumpBound = true;
@@ -622,7 +600,7 @@
     var sel = document.getElementById('epPageJump');
     if (!sel) return;
     sel.hidden = true; sel.disabled = true; sel.innerHTML = ''; sel._pages = 0;
-    hidePager(); // session279: পেজিনেশন/সব-পাতা-গ্রিডও রিসেট (iframe-ফলব্যাক/প্রচ্ছদ-মোডে অদৃশ্য)
+    railReset(); // session280: রেল-রিসেট (iframe-ফলব্যাক/প্রচ্ছদ-মোডে খালি-অবস্থা)
   }
 
   function openReader(p) {
@@ -640,7 +618,6 @@
       elStage.innerHTML = '';
       elStage.appendChild(w);
       w.scrollTop = sc.t; w.scrollLeft = sc.l;
-      setGrid(false); // session279: পেপার-সুইচে গ্রিড-মোড রিসেট (নতুন-র‍্যাপে ক্লাস নেই)
       applyStageTransform();
       armPageJump(cachedAlive.st, cachedAlive.numPages);
       return;
@@ -777,6 +754,7 @@
       if (reader) { try { if (reader.abort) reader.abort.abort(); } catch (e) {} }
       stowActiveScroll(); // রিডারের-স্ক্রল মনে রাখুন — ফেরত-এলে সেখানেই
       resetPageJump();
+      railReset(); // session280: প্রচ্ছদ-মোডে রেল খালি (স্টেল-থাম্ব-শূন্য)
     }
     if (mode === 'reader') { openReader(p); return; }
     if (p.thumbs && p.thumbs.length) {
@@ -951,9 +929,6 @@
   });
   // session182: দিন-পরিবর্তনে সেই-দিনের সব-পত্রিকার প্রস্তুতি-পুনরারম্ভ
   elDate.addEventListener('change', function () { renderList(); queueWarm(); });
-  document.getElementById('epTodayBtn').addEventListener('click', function () {
-    elDate.value = todayIso; renderList(); queueWarm();
-  });
   elReader.addEventListener('click', function () { setMode('reader'); });
   elThumb.addEventListener('click', function () { setMode('thumb'); });
   // ── সেশন ১৭১: জুম-ইন/আউট/রিসেট + রোটেট + ফুলস্ক্রিন-ইভেন্ট (সব-মোডে প্রযোজ্য) ──
@@ -967,7 +942,7 @@
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (ev) {
     document.addEventListener(ev, function () {
       var fs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-      if (elViewer) elViewer.classList.toggle('is-fs', fs);
+      if (elGrid) elGrid.classList.toggle('is-fs', fs);
       if (elFsIcon) elFsIcon.className = fs ? 'fas fa-compress' : 'fas fa-expand';
     });
   });
@@ -1012,23 +987,6 @@
     else if (e.key === 'f' || e.key === 'F') { toggleFs(); }
     else if (e.key === '0') { resetView(); }
   });
-  // আগের/পরের দিন — শুধু পত্রিকা-আছে-এমন দিনে লাফায়
-  document.getElementById('epPrevDay').addEventListener('click', function () { stepDay(1); });
-  document.getElementById('epNextDay').addEventListener('click', function () { stepDay(-1); });
-  function stepDay(dir) {
-    var cur = elDate.value;
-    var idx = dates.indexOf(cur);
-    if (idx < 0) { // বর্তমান-নির্বাচন তালিকায় নেই — দিক-অনুযায়ী নিকটতম
-      idx = dir > 0 ? dates.findIndex(function (d) { return d < cur; }) : dates.findIndex(function (d) { return d <= cur; });
-      if (idx < 0) idx = 0;
-    }
-    var nx = idx + dir;
-    if (nx < 0 || nx >= dates.length) return;
-    elDate.value = dates[nx];
-    renderList();
-    queueWarm();
-  }
-
   /* ═══════════ session279 (ইউজার-স্পেক): প্রেসরিডার-স্থাপত্যের কন্ট্রোল-মডিউল ═══════════
      ১) প্রধান পত্রিকা-সিলেক্টর (optgroup: জাতীয় / চট্টগ্রাম-আঞ্চলিক / ইংরেজি) — কন্ট্রোল-বারের শুরুতে
      ২) সংখ্যা-সিলেক্টর — নির্বাচিত পত্রিকার সংরক্ষিত সব তারিখ (একাধিক হলে)
@@ -1036,12 +994,6 @@
      ৪) "সব পাতা" গ্রিড-মোড — একই .ep-pages ধারকে CSS-টগলে ২-কলাম পাতার-জাল; পাতায়-ক্লিকে জাম্প
      ৫) কুইক-সুইচ স্ট্রিপ — বর্তমান-তারিখের পত্রিকাগুলোর পিল; এক-ক্লিকে সুইচ, পেজ-রিলোড শূন্য ═══════════ */
   var elPaperSel = document.getElementById('epPaperSelect');
-  var elIssueSel = document.getElementById('epIssueSelect');
-  var pagerWrap = document.getElementById('epPagePager');
-  var pagerNums = document.getElementById('epPgNums');
-  var pagerCount = document.getElementById('epPgCount');
-  var elAllPagesBtn = document.getElementById('epAllPagesBtn');
-  var pagerTotal = 0, pagerCur = 1, gridOn = false;
   var bnMonths279 = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
   function bnShort279(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
@@ -1090,122 +1042,155 @@
     select(pick.id); queueWarm();
   });
 
-  /* ── ২. সংখ্যা-সিলেক্টর: একই পত্রিকার সব সংরক্ষিত তারিখ ── */
-  function syncIssueSelect(p) {
-    if (!elIssueSel) return;
-    var rows = papers.filter(function (x) { return x.name === p.name; });
-    if (rows.length < 2) { elIssueSel.hidden = true; elIssueSel.innerHTML = ''; return; }
-    var frag = '';
-    rows.forEach(function (r) {
-      var d = String(r.date).slice(0, 10);
-      frag += '<option value="' + r.id + '"' + (String(r.id) === String(p.id) ? ' selected' : '') + '>' +
-        bnShort279(d) + (d === todayIso ? ' • আজ' : '') + '</option>';
-    });
-    elIssueSel.innerHTML = frag;
-    elIssueSel.hidden = false;
-  }
-  if (elIssueSel) elIssueSel.addEventListener('change', function () {
-    var p = papers.filter(function (x) { return String(x.id) === String(elIssueSel.value); })[0];
-    if (!p) return;
-    elDate.value = String(p.date).slice(0, 10);
-    select(p.id); queueWarm();
-  });
-
-  /* ── ৩. সংখ্যাযুক্ত পেজিনেশন (pdf.js-ডকের numPages-এ) ── */
-  function buildPager(numPages) {
-    if (!pagerWrap) return;
-    if (!numPages || numPages < 2) { pagerWrap.hidden = true; pagerTotal = 0; return; }
-    pagerTotal = numPages;
-    pagerWrap.hidden = false;
-    if (elAllPagesBtn) elAllPagesBtn.hidden = false;
-    renderPagerNums(1); syncPager(1);
-  }
-  function renderPagerNums(cur) {
-    var maxB = 7, s, e;
-    if (pagerTotal <= maxB) { s = 1; e = pagerTotal; }
-    else { s = Math.max(1, cur - 3); e = Math.min(pagerTotal, s + maxB - 1); s = Math.max(1, e - maxB + 1); }
-    var frag = '';
-    for (var n = s; n <= e; n++) frag += '<button type="button" class="ep-pg-btn" data-n="' + n + '" aria-label="পাতা ' + bnDigits(n) + '" aria-current="' + (n === cur) + '">' + bnDigits(n) + '</button>';
-    pagerNums.innerHTML = frag; pagerCur = cur;
-  }
-  function syncPager(cur) {
-    if (!pagerWrap || !pagerTotal) return;
-    pagerCur = Math.min(Math.max(1, cur), pagerTotal);
-    if (!pagerNums.querySelector('.ep-pg-btn[data-n="' + pagerCur + '"]')) renderPagerNums(pagerCur);
-    pagerNums.querySelectorAll('.ep-pg-btn').forEach(function (b) {
-      var on = Number(b.getAttribute('data-n')) === pagerCur;
-      b.classList.toggle('is-on', on); b.setAttribute('aria-current', on);
-    });
-    if (pagerCount) pagerCount.textContent = bnDigits(pagerCur) + '/' + bnDigits(pagerTotal);
-    var pv = document.getElementById('epPgPrev'), nx = document.getElementById('epPgNext');
-    if (pv) pv.disabled = pagerCur <= 1;
-    if (nx) nx.disabled = pagerCur >= pagerTotal;
-  }
+  /* ═══════════ session280 (ইউজার-স্পেক): ৩-প্যানেল PressReader-মডিউল ═══════════
+     ১) পাতা-পাজাম্প রক্ষী: gotoPage — রেল-ক্লিক/ড্রপডাউন উভয়-পথে
+     ২) বাম পাতা-রেল: pdf.js ছোট-ক্যানভাস অলস-ক্রমিক রেন্ডার (টোকেন-গার্ড, সুইচে-বাতিল)
+     ৩) ডান ক্যালেন্ডার: উপলব্ধ-তারিখ-ডট + আজ-রিং + নির্বাচিত-ফিল; মাস-নেভিগেশন
+     ৪) বার-তারিখ-টেক্সট: বাংলা-বার-সহ পূর্ণ-তারিখ (নির্বাচিত দিনের সাথে সিঙ্ক) ═══════════ */
   function gotoPage(n) {
     var h = elStage.querySelector('.ep-page-holder[data-n="' + n + '"]'); if (!h) return;
-    if (gridOn) setGrid(false);
     h.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-  function hidePager() {
-    if (pagerWrap) pagerWrap.hidden = true;
-    pagerTotal = 0;
-    if (elAllPagesBtn) { elAllPagesBtn.hidden = true; elAllPagesBtn.setAttribute('aria-pressed', 'false'); elAllPagesBtn.classList.remove('is-on'); }
-    setGrid(false);
-  }
-  if (pagerNums) pagerNums.addEventListener('click', function (e) {
-    var b = e.target.closest('.ep-pg-btn'); if (b) gotoPage(Number(b.getAttribute('data-n')));
-  });
-  var pgPrev = document.getElementById('epPgPrev'), pgNext = document.getElementById('epPgNext');
-  if (pgPrev) pgPrev.addEventListener('click', function () { gotoPage(pagerCur - 1); });
-  if (pgNext) pgNext.addEventListener('click', function () { gotoPage(pagerCur + 1); });
 
-  /* ── ৪. "সব পাতা" গ্রিড-মোড — CSS-টগল (.ep-pages.is-grid) + পাতায়-ক্লিকে জাম্প ── */
-  function setGrid(on) {
-    gridOn = !!on;
-    var pages = elStage.querySelector('.ep-pages');
-    if (pages) pages.classList.toggle('is-grid', gridOn);
-    if (elAllPagesBtn) { elAllPagesBtn.setAttribute('aria-pressed', String(gridOn)); elAllPagesBtn.classList.toggle('is-on', gridOn); }
+  /* ── ২. বাম পাতা-রেল ── */
+  var railTok = 0, railLastCur = 0;
+  function railReset() {
+    railTok++;
+    railLastCur = 0;
+    if (!elRail) return;
+    elRail.innerHTML = '<div class="ep-rail-empty"><i class="fas fa-layer-group" aria-hidden="true"></i><p>ডিজিটাল রিডারে পত্রিকা খুললে সব পাতা এখানে দেখা যাবে</p></div>';
+    if (elRailCount) elRailCount.textContent = '';
   }
-  if (elAllPagesBtn) elAllPagesBtn.addEventListener('click', function () { setGrid(!gridOn); });
-  elStage.addEventListener('click', function (e) {
-    if (!gridOn) return;
-    var h = e.target.closest('.ep-page-holder'); if (!h) return;
-    var n = Number(h.getAttribute('data-n')) || 1;
-    setGrid(false); gotoPage(n);
+  function railBuild(st, numPages) {
+    if (!elRail) return;
+    railTok++;
+    var tok = railTok;
+    railLastCur = 0;
+    if (!st || !st.doc || !numPages) { railReset(); return; }
+    if (elRailCount) elRailCount.textContent = bnDigits(numPages);
+    var frag = document.createDocumentFragment();
+    var items = [];
+    for (var n = 1; n <= numPages; n++) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ep-rail-item' + (n === 1 ? ' is-on' : '');
+      b.setAttribute('role', 'option');
+      b.setAttribute('data-n', n);
+      b.setAttribute('aria-label', n === 1 ? 'প্রথম পাতা' : 'পাতা ' + bnDigits(n));
+      b.innerHTML = '<span class="ep-rail-thumb is-pending" aria-hidden="true"></span>' +
+        '<span class="ep-rail-cap">' + (n === 1 ? 'প্রথম পাতা' : 'পাতা ' + bnDigits(n)) + '</span>';
+      frag.appendChild(b);
+      items.push(b);
+    }
+    elRail.innerHTML = '';
+    elRail.appendChild(frag);
+    // অলস-ক্রমিক থাম্বনেইল-রেন্ডার — ছোট-ক্যানভাস (২×-শার্পনেস, মেমরি-সামান্য), পেপার-সুইচে টোকেন-বাতিল
+    var TW = 176; // ব্যাকিং-প্রস্থ (≈৯২px CSS × ২ — রেটিনা-শার্প)
+    var idx = 0;
+    var step = function () {
+      if (tok !== railTok) return; // সুইচ-হয়েছে — বাতিল
+      if (idx >= items.length) return;
+      var n = idx + 1;
+      idx++;
+      var done = function () { setTimeout(step, 40); }; // CPU-শ্বাস-বিরতি — মূল-রেন্ডারের-সাথে-প্রতিযোগিতা-শূন্য
+      st.doc.getPage(n).then(function (page) {
+        if (tok !== railTok) return;
+        var base = page.getViewport({ scale: 1 });
+        var scale = Math.min(TW / base.width, 2.5);
+        var vp = page.getViewport({ scale: scale });
+        var cv = document.createElement('canvas');
+        cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+        var host = items[n - 1].querySelector('.ep-rail-thumb');
+        if (!host) return done();
+        host.classList.remove('is-pending');
+        host.innerHTML = '';
+        host.appendChild(cv);
+        return page.render({ canvasContext: cv.getContext('2d', { alpha: false }), viewport: vp, background: '#ffffff' }).promise;
+      }).then(function () { if (tok === railTok) done(); }).catch(function () { if (tok === railTok) done(); });
+    };
+    step();
+  }
+  function syncRail(cur) {
+    if (!elRail || !cur || cur === railLastCur) return;
+    railLastCur = cur;
+    elRail.querySelectorAll('.ep-rail-item').forEach(function (b) {
+      var on = Number(b.getAttribute('data-n')) === cur;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    var on = elRail.querySelector('.ep-rail-item.is-on');
+    if (on && on.scrollIntoView) {
+      try { on.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+    }
+  }
+  if (elRail) elRail.addEventListener('click', function (e) {
+    var b = e.target.closest('.ep-rail-item'); if (!b) return;
+    gotoPage(Number(b.getAttribute('data-n')) || 1);
   });
 
-  /* ── ৫. কুইক-সুইচ স্ট্রিপ: বর্তমান-তারিখের পত্রিকা-পিল ── */
-  var elStrip = document.getElementById('epSwitchStrip');
-  var elStripPills = document.getElementById('epSsPills');
-  function syncStrip() {
-    if (!elStrip || !elStripPills) return;
-    var rows = (byDate[elDate.value] || []).slice().sort(rankCmp);
-    if (!rows.length) { elStrip.hidden = true; return; }
-    elStrip.hidden = false;
-    var frag = '';
-    rows.slice(0, 14).forEach(function (p) {
-      frag += '<button type="button" role="tab" aria-selected="' + (p.id === activeId) + '" class="ep-ss-pill' + (p.id === activeId ? ' is-on' : '') +
-        '" data-id="' + p.id + '" title="' + p.name.replace(/"/g, '&quot;') + '">' + shortName279(p.name) + '</button>';
-    });
-    if (rows.length > 14) frag += '<span class="ep-ss-more">+' + bnDigits(rows.length - 14) + '</span>';
-    elStripPills.innerHTML = frag;
+  /* ── ৩. ডান ক্যালেন্ডার (পুরোনো সংখ্যা) ── */
+  var elCalMonth = document.getElementById('epCalMonth');
+  var elCalGrid = document.getElementById('epCalGrid');
+  var calY = 0, calM = 0; // 0-ভিত্তিক মাস
+  var calWds = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'];
+  function calIso(y, m, d) {
+    return y + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + d).slice(-2);
   }
-  function syncStripActive() {
-    if (!elStripPills) return;
-    elStripPills.querySelectorAll('.ep-ss-pill').forEach(function (b) {
-      var on = Number(b.getAttribute('data-id')) === activeId;
-      b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on);
+  function calRender() {
+    if (!elCalGrid || !elCalMonth) return;
+    elCalMonth.textContent = bnMonths279[calM] + ' ' + bnDigits(calY);
+    var first = new Date(calY, calM, 1);
+    var blanks = first.getDay();
+    var days = new Date(calY, calM + 1, 0).getDate();
+    var frag = '<span class="ep-cal-wd">' + calWds.join('</span><span class="ep-cal-wd">') + '</span>';
+    for (var b = 0; b < blanks; b++) frag += '<span class="ep-cal-off" aria-hidden="true"></span>';
+    for (var d = 1; d <= days; d++) {
+      var iso = calIso(calY, calM, d);
+      var cls = 'ep-cal-day';
+      var has = !!byDate[iso];
+      var future = iso > todayIso;
+      if (has) cls += ' has';
+      if (iso === todayIso) cls += ' is-today';
+      if (iso === elDate.value) cls += ' is-sel';
+      frag += '<button type="button" class="' + cls + '" data-d="' + iso + '"' + (future ? ' disabled' : '') +
+        (has ? ' title="' + bnShort279(iso) + ' — সংরক্ষিত সংখ্যা আছে"' : '') + '>' + bnDigits(d) + '</button>';
+    }
+    elCalGrid.innerHTML = frag;
+  }
+  function calSync() {
+    if (!elCalGrid) return;
+    var cur = elDate.value;
+    elCalGrid.querySelectorAll('.ep-cal-day').forEach(function (b) {
+      b.classList.toggle('is-sel', b.getAttribute('data-d') === cur);
     });
   }
-  if (elStripPills) elStripPills.addEventListener('click', function (e) {
-    var b = e.target.closest('.ep-ss-pill'); if (b) select(Number(b.getAttribute('data-id')));
+  function calJump(iso) {
+    elDate.value = iso;
+    renderList();
+    queueWarm();
+    // নির্বাচিত দিনের মাসে ক্যালেন্ডার-দৃশ্য মানানসই
+    var m = /^(\d{4})-(\d{2})/.exec(String(iso || ''));
+    if (m) { calY = +m[1]; calM = +m[2] - 1; calRender(); }
+  }
+  if (elCalGrid) elCalGrid.addEventListener('click', function (e) {
+    var b = e.target.closest('.ep-cal-day'); if (!b || b.disabled) return;
+    calJump(b.getAttribute('data-d'));
   });
-  var elSsAll = document.getElementById('epSsAll');
-  if (elSsAll) elSsAll.addEventListener('click', function (e) {
-    e.preventDefault();
-    var t = document.getElementById('epDir226TabDir'); // ডিরেক্টরি-ট্যাবে নরম-সুইচ (রিলোড শূন্য)
-    if (t) t.click(); else { try { location.hash = '#epDir226'; } catch (_) {} }
-  });
+  var elCalPrev = document.getElementById('epCalPrev'), elCalNext = document.getElementById('epCalNext');
+  if (elCalPrev) elCalPrev.addEventListener('click', function () { calM++; if (calM > 11) { calM = 0; calY++; } calRender(); });
+  if (elCalNext) elCalNext.addEventListener('click', function () { calM--; if (calM < 0) { calM = 11; calY--; } calRender(); });
+
+  /* ── ৪. বার-তারিখ-টেক্সট (বার-সহ পূর্ণ বাংলা তারিখ) ── */
+  var bnDayFmt280 = null;
+  try { bnDayFmt280 = new Intl.DateTimeFormat('bn-BD', { timeZone: 'Asia/Dhaka', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { bnDayFmt280 = null; }
+  function syncBarDate() {
+    if (!elBarDate) return;
+    var d = elDate.value;
+    if (!d) { elBarDate.textContent = '—'; return; }
+    try {
+      elBarDate.textContent = bnDayFmt280 ? bnDayFmt280.format(new Date(d + 'T00:00:00+06:00')) : bnShort279(d);
+    } catch (e) { elBarDate.textContent = bnShort279(d); }
+  }
 
   buildPaperSelect(); // বুটে-একবার (select() চেইনের আগে — নইলে প্রথম sync-এ value-মিলবে না)
 
@@ -1223,6 +1208,11 @@
   var bootRows = (byDate[bootDate] || []).slice().sort(rankCmp);
   if (bootPaper) { select(bootPaper.id); }
   else if (bootRows.length) { select(bootRows[0].id); }
+  // session280: ক্যালেন্ডার-বুট (নির্বাচিত দিনের মাসে; বার-তারিখ renderList-চেইনেই সিঙ্ক)
+  var _bm = /^(\d{4})-(\d{2})/.exec(String(bootDate || ''));
+  if (_bm) { calY = +_bm[1]; calM = +_bm[2] - 1; }
+  else { var _n = new Date(); calY = _n.getFullYear(); calM = _n.getMonth(); }
+  calRender();
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>

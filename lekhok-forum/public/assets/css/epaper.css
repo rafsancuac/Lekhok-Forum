@@ -12,24 +12,12 @@
 .ep-head-title { margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--lf-text-primary); line-height: 1.3; }
 .ep-head-sub { margin: 2px 0 0; font-size: .78rem; color: var(--lf-text-secondary); }
 .ep-head-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ep-day-step { display: flex; align-items: center; gap: 6px; }
-.ep-step-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); cursor: pointer; font-size: .8rem; transition: background .15s ease, border-color .15s ease; }
-.ep-step-btn:hover { background: var(--lf-ui-input-bg); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
-.ep-date-input { height: 34px; padding: 0 10px; border: 1px solid var(--lf-ui-border-strong); border-radius: 10px; background: var(--lf-ui-input-bg); color: var(--lf-text-primary); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
-.ep-btn-today { height: 34px; padding: 0 14px; border: none; border-radius: 10px; background: var(--lf-brand-primary); color: var(--lf-ui-surface); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.16); transition: background .15s ease; }
-.ep-btn-today:hover { background: var(--lf-brand-primary-hover); }
 
 /* ── টু-প্যানেল গ্রিড: মোবাইলে ভিউয়ার-আগে (DOM-ক্রম), ডেস্কটপে বাম-তালিকা/ডান-ভিউয়ার ── */
 .ep-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
 
 /* ── ভিউয়ার ── */
 .ep-viewer { background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-card); overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.05); display: flex; flex-direction: column; }
-.ep-viewer-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--lf-ui-border); background: var(--lf-ui-surface); }
-.ep-viewer-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 800; color: var(--lf-text-primary); font-size: .95rem; }
-.ep-viewer-name i { color: var(--lf-brand-primary); }
-.ep-viewer-name span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ep-viewer-date { font-weight: 600; font-size: .76rem; color: var(--lf-text-secondary); }
-.ep-viewer-actions { display: flex; align-items: center; gap: 8px; }
 .ep-vt { display: flex; gap: 2px; padding: 3px; background: var(--lf-ui-input-bg); border: 1px solid var(--lf-ui-border); border-radius: 10px; }
 .ep-vt-btn { border: none; background: transparent; color: var(--lf-text-secondary); font: inherit; font-size: .74rem; font-weight: 800; padding: 5px 10px; border-radius: 7px; cursor: pointer; transition: background .15s ease, color .15s ease; }
 .ep-vt-btn.is-on { background: var(--lf-ui-surface); color: var(--lf-brand-primary); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
@@ -98,22 +86,12 @@
 /* ── ফোকাস-দৃশ্যমানতা (অ্যাক্সেসিবিলিটি) ── */
 .ep-wrap button:focus-visible, .ep-wrap a:focus-visible, .ep-wrap input:focus-visible, .ep-wrap select:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
 
-/* ── ডেস্কটপ: বাম ৪-কলাম তালিকা, ডান ৮-কলাম ভিউয়ার (ভিউয়ার স্টিকি) ── */
-@media (min-width: 1024px) {
-  .ep-grid { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
-  .ep-side { order: -1; position: sticky; top: 76px; }
-  .ep-viewer { order: 1; }
-  .ep-stage { min-height: 680px; height: calc(100vh - 220px); }
-  .ep-list { max-height: calc(100vh - 380px); }
-}
-
 /* ── মোবাইল ফাইন-টিউনিং ── */
 @media (max-width: 600px) {
   .ep-wrap { padding: 8px 8px 32px; gap: 10px; }
   .ep-head-card { padding: 12px; }
   .ep-head-title { font-size: 1.02rem; }
   .ep-head-r { width: 100%; justify-content: space-between; }
-  .ep-date-input { flex: 1; min-width: 0; }
   .ep-stage { min-height: 380px; height: 60vh; }
   .ep-list { max-height: 420px; }
   .ep-item-name { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
@@ -160,11 +138,9 @@
 /* ── ফুলস্ক্রিন রিডার ── */
 .ep-viewer:fullscreen, .ep-viewer.is-fs { background: var(--lf-ui-canvas); border-radius: 0; }
 .ep-viewer:fullscreen .ep-stage, .ep-viewer.is-fs .ep-stage { height: calc(100vh - 62px); max-height: none; min-height: 0; }
-.ep-viewer:fullscreen .ep-viewer-bar, .ep-viewer.is-fs .ep-viewer-bar { padding: 10px 18px; }
 
 /* ── মোবাইল ফাইন-টিউনিং (session171) ── */
 @media (max-width: 600px) {
-  .ep-viewer-actions { width: 100%; justify-content: flex-start; }
   .ep-zpct { min-width: 40px; }
   .ep-act-sep { display: none; }
 }
@@ -498,21 +474,6 @@
                 বর্ণনা/উপ-টেক্সট = var(--font-body) (Kalpurush)।
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── ১. কুইক-সুইচ স্ট্রিপ (কন্ট্রোল-বারের ঠিক উপরে, ফুল-প্রস্থ) ── */
-.ep-switchstrip { display: flex; align-items: center; gap: 10px; background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-card); padding: 8px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
-.ep-ss-label { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-family: var(--font-heading); font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--lf-text-tertiary); }
-.ep-ss-label i { color: var(--lf-brand-primary); font-size: .74rem; }
-.ep-ss-pills { display: flex; align-items: center; gap: 6px; overflow-x: auto; scroll-behavior: smooth; padding: 2px; min-width: 0; flex: 1; scrollbar-width: none; }
-.ep-ss-pills::-webkit-scrollbar { display: none; }
-.ep-ss-pill { flex-shrink: 0; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); font-family: var(--font-heading); font-size: .76rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease; }
-.ep-ss-pill:hover { background: var(--lf-green-tint); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
-.ep-ss-pill.is-on { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); box-shadow: 0 2px 8px rgba(0,0,0,.16); }
-.ep-ss-pill:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 1px; }
-.ep-ss-more { flex-shrink: 0; font-family: var(--font-heading); font-size: .72rem; font-weight: 800; color: var(--lf-text-tertiary); padding: 0 4px; }
-.ep-ss-all { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-heading); font-size: .74rem; font-weight: 800; color: var(--lf-brand-primary); text-decoration: none; padding: 4px 4px 4px 12px; border-left: 1px solid var(--lf-ui-border); white-space: nowrap; transition: opacity .15s ease; }
-.ep-ss-all:hover { text-decoration: underline; }
-.ep-ss-all i { font-size: .68rem; }
-
 /* ── ২. কন্ট্রোল বার (ভিউয়ারের-শীর্ষে: পত্রিকা ▾ │ তারিখ │ সংখ্যা ▾ ··· পেজিনেশন │ সব-পাতা) ── */
 .ep-ctlbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--lf-ui-border); background: linear-gradient(180deg, var(--lf-ui-input-bg), var(--lf-ui-surface)); }
 .ep-ctlbar-l, .ep-ctlbar-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
@@ -521,56 +482,94 @@
 .ep-paper-select { min-width: 0; max-width: 240px; height: 34px; padding: 0 26px 0 31px; border: 2px solid var(--lf-brand-primary); border-radius: 9px; background: var(--lf-ui-surface); color: var(--lf-brand-primary); font-family: var(--font-heading); font-size: .8rem; font-weight: 800; cursor: pointer; text-overflow: ellipsis; box-shadow: 0 1px 3px rgba(0,0,0,.08); transition: background .15s ease, box-shadow .15s ease; }
 .ep-paper-select:hover { background: var(--lf-green-tint); }
 .ep-paper-select:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
-.ep-day-step-sm { gap: 4px; }
-.ep-day-step-sm .ep-step-btn { width: 30px; height: 30px; border-radius: 8px; }
-.ep-day-step-sm .ep-date-input { height: 30px; font-size: .76rem; border-radius: 8px; }
-.ep-issue-select { height: 34px; max-width: 200px; padding: 0 8px; border: 1px solid var(--lf-ui-border-strong); border-radius: 9px; background: var(--lf-ui-surface); color: var(--lf-text-primary); font-family: var(--font-heading); font-size: .76rem; font-weight: 700; cursor: pointer; transition: border-color .15s ease, color .15s ease; }
-.ep-issue-select:hover { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
-.ep-issue-select:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 2px; }
-.ep-ctlbar .ep-btn-today { height: 30px; padding: 0 11px; font-size: .74rem; border-radius: 8px; }
-
-/* ── ৩. সংখ্যাযুক্ত পেজিনেশন ── */
-.ep-pagepager { display: flex; align-items: center; gap: 5px; }
-.ep-pg-nav { width: 30px; height: 30px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); border-radius: 8px; cursor: pointer; font-size: .68rem; display: inline-flex; align-items: center; justify-content: center; transition: background .15s ease, border-color .15s ease, color .15s ease; }
-.ep-pg-nav:hover:not(:disabled) { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
-.ep-pg-nav:disabled { opacity: .38; cursor: default; }
-.ep-pg-nums { display: flex; align-items: center; gap: 3px; }
-.ep-pg-btn { min-width: 30px; height: 30px; padding: 0 5px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-primary); border-radius: 8px; font-family: var(--font-heading); font-size: .74rem; font-weight: 800; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
-.ep-pg-btn:hover { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
-.ep-pg-btn.is-on { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); box-shadow: 0 1px 4px rgba(0,0,0,.14); }
-.ep-pg-count { min-width: 54px; height: 30px; display: inline-flex; align-items: center; justify-content: center; padding: 0 8px; border: 1px solid var(--lf-ui-border); background: var(--lf-ui-input-bg); border-radius: 8px; font-family: var(--font-heading); font-size: .72rem; font-weight: 800; color: var(--lf-text-secondary); white-space: nowrap; }
-
-/* ── ৪. "সব পাতা" টগল-বাটন ── */
-.ep-btn-allpages { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border: 1px solid var(--lf-brand-primary); background: var(--lf-ui-surface); color: var(--lf-brand-primary); border-radius: 9px; font-family: var(--font-heading); font-size: .76rem; font-weight: 800; cursor: pointer; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
-.ep-btn-allpages:hover { background: var(--lf-green-tint); }
-.ep-btn-allpages.is-on { background: var(--lf-brand-primary); color: var(--lf-white); box-shadow: 0 1px 4px rgba(0,0,0,.14); }
-.ep-btn-allpages i { font-size: .7rem; }
-
-/* ── ৫. সব-পাতা গ্রিড-মোড (ধারক: .ep-pages > .ep-zoomwrap > .ep-page-holder —
-       ফ্লেক্স-প্যারেন্ট .ep-zoomwrap-কেই গ্রিড করতে হয়; .ep-pages-শুধু স্ক্রলার) ── */
-.ep-pages.is-grid .ep-zoomwrap { display: flex; flex-flow: row wrap; justify-content: center; align-items: flex-start; gap: 10px; }
-.ep-pages.is-grid .ep-page-holder { width: min(46%, 320px); min-height: 150px; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
-.ep-pages.is-grid .ep-page-holder:hover { border-color: var(--lf-brand-primary); box-shadow: 0 6px 18px rgba(0,0,0,.16); }
-.ep-pages.is-grid .ep-page-num { font-size: .6rem; padding: 1px 8px; }
 
 /* ── ফুলস্ক্রিনে কন্ট্রোল-বার সমান-শ্বাস ── */
 .ep-viewer:fullscreen .ep-ctlbar, .ep-viewer.is-fs .ep-ctlbar { padding: 10px 18px; }
 
-/* ── মোবাইল ফাইন-টিউনিং (session279) ── */
+/* ── মোবাইল ফাইন-টিউনিং (session280) ── */
 @media (max-width: 600px) {
-  .ep-switchstrip { padding: 7px 9px; gap: 7px; }
-  .ep-ss-label { font-size: .6rem; }
-  .ep-ss-pill { font-size: .72rem; padding: 4px 10px; }
-  .ep-ss-all { font-size: .7rem; padding-left: 9px; }
   .ep-ctlbar { padding: 8px 9px; gap: 7px; }
-  .ep-paper-select { max-width: 168px; font-size: .76rem; }
-  .ep-issue-select { max-width: 148px; height: 30px; font-size: .72rem; }
-  .ep-pg-btn { min-width: 26px; height: 26px; font-size: .68rem; }
-  .ep-pg-nav { width: 26px; height: 26px; }
-  .ep-pg-count { min-width: 44px; height: 26px; font-size: .66rem; }
-  .ep-btn-allpages { height: 30px; font-size: .72rem; padding: 0 9px; }
-  .ep-pages.is-grid .ep-page-holder { width: min(90%, 280px); }
+  .ep-paper-select { max-width: 150px; font-size: .74rem; }
+  .ep-bardate { font-size: .7rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ep-ss-pills { scroll-behavior: auto; }
+  .ep-rail-scroll { scroll-behavior: auto; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   session280 — PressReader ৩-প্যানেল (ইউজার-স্পেক): একক কন্ট্রোল-বার (গ্রিড-স্প্যান)
+   + বাম পাতা-রেল + মাঝে বড় ভিউ + ডানে ক্যালেন্ডার ও তালিকা।
+   নিয়ম অক্ষুণ্ণ: রঙ শুধু var(--lf-*) টোকেন (hex-ratchet baseline 0); shadow-এ rgba অনুমোদিত।
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ৩-প্যানেল গ্রিড: মোবাইলে এক-কলাম (বার → রেল-অনুভূমিক → ভিউয়ার → তালিকা),
+   ≥1024px: [রেল ১১২px │ ভিউয়ার ১fr │ তালিকা ৩০৪px] — বার সব-কলাম-স্প্যান ── */
+.ep-grid { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
+.ep-ctlbar { grid-column: 1 / -1; border: 1px solid var(--lf-ui-border); border-radius: var(--lf-radius-card); box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.ep-ctl-sep { color: var(--lf-text-tertiary); font-weight: 800; flex-shrink: 0; }
+.ep-bardate { font-family: var(--font-heading); font-size: .78rem; font-weight: 700; color: var(--lf-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+/* ── বাম পাতা-রেল ── */
+.ep-rail { display: flex; flex-direction: column; min-width: 0; background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.ep-rail-head { display: flex; align-items: center; gap: 6px; padding: 9px 10px; border-bottom: 1px solid var(--lf-ui-border); background: var(--lf-ui-input-bg); font-family: var(--font-heading); font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--lf-text-secondary); }
+.ep-rail-head i { color: var(--lf-brand-primary); font-size: .72rem; }
+.ep-rail-count { margin-left: auto; color: var(--lf-brand-primary); }
+.ep-rail-scroll { display: flex; flex-direction: row; gap: 8px; overflow-x: auto; overflow-y: hidden; padding: 9px; scroll-behavior: smooth; scrollbar-width: thin; }
+.ep-rail-item { flex-shrink: 0; width: 84px; display: flex; flex-direction: column; gap: 4px; padding: 4px; border: 1px solid var(--lf-ui-border); border-radius: 9px; background: var(--lf-ui-surface); cursor: pointer; font: inherit; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.ep-rail-item:hover { border-color: var(--lf-brand-primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.10); }
+.ep-rail-item.is-on { border-color: var(--lf-brand-primary); box-shadow: 0 0 0 2px var(--lf-brand-light), 0 4px 12px rgba(0,0,0,.10); }
+.ep-rail-thumb { position: relative; width: 100%; aspect-ratio: 3 / 4; border-radius: 6px; overflow: hidden; background: var(--lf-ui-input-bg); border: 1px solid var(--lf-ui-border-strong); display: flex; align-items: center; justify-content: center; }
+.ep-rail-thumb canvas { display: block; width: 100%; height: auto; }
+.ep-rail-thumb.is-pending::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, var(--lf-green-tint) 50%, transparent 70%); background-size: 200% 100%; animation: ep-rail-shimmer 1.4s ease infinite; }
+@keyframes ep-rail-shimmer { from { background-position: 180% 0; } to { background-position: -80% 0; } }
+.ep-rail-cap { font-family: var(--font-heading); font-size: .62rem; font-weight: 800; color: var(--lf-text-secondary); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-rail-item.is-on .ep-rail-cap { color: var(--lf-brand-primary); }
+.ep-rail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 26px 10px; color: var(--lf-text-tertiary); font-family: var(--font-heading); font-size: .72rem; font-weight: 700; text-align: center; width: 100%; }
+.ep-rail-empty i { font-size: 1.3rem; opacity: .5; }
+.ep-rail-empty p { margin: 0; }
+
+/* ── ডান ক্যালেন্ডার (পুরোনো সংখ্যা) ── */
+.ep-cal280 { background: var(--lf-ui-surface); border: 1px solid var(--lf-ui-border); border-radius: 14px; padding: 11px 12px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+.ep-cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+.ep-cal-title { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-heading); font-size: .7rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--lf-text-secondary); }
+.ep-cal-title i { color: var(--lf-brand-primary); }
+.ep-cal-nav { display: inline-flex; align-items: center; gap: 4px; }
+.ep-cal-btn { width: 26px; height: 26px; border: 1px solid var(--lf-ui-border-strong); background: var(--lf-ui-surface); color: var(--lf-text-secondary); border-radius: 7px; cursor: pointer; font-size: .62rem; display: inline-flex; align-items: center; justify-content: center; transition: background .15s ease, color .15s ease, border-color .15s ease; }
+.ep-cal-btn:hover { background: var(--lf-green-tint); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-cal-month { font-family: var(--font-heading); font-size: .74rem; font-weight: 800; color: var(--lf-text-primary); min-width: 108px; text-align: center; }
+.ep-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.ep-cal-wd { font-family: var(--font-heading); font-size: .58rem; font-weight: 800; color: var(--lf-text-tertiary); text-align: center; padding: 3px 0 5px; }
+.ep-cal-off { min-height: 27px; }
+.ep-cal-day { position: relative; min-height: 27px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--lf-text-primary); font-family: var(--font-heading); font-size: .68rem; font-weight: 700; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.ep-cal-day:hover:not(:disabled) { background: var(--lf-green-tint); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-cal-day:disabled { opacity: .32; cursor: default; }
+.ep-cal-day.has::after { content: ''; position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--lf-brand-primary); }
+.ep-cal-day.is-today { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-cal-day.is-sel { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); font-weight: 800; }
+.ep-cal-day.is-sel::after { background: var(--lf-white); }
+.ep-cal-day.has:not(.is-sel) { font-weight: 800; }
+
+/* ── ডেস্কটপ: ৩-কলাম; রেল/তালিকা স্টিকি; ভিউয়ার লম্বা ── */
+@media (min-width: 1024px) {
+  .ep-grid { grid-template-columns: 118px minmax(0, 1fr) 304px; }
+  .ep-rail, .ep-side { position: sticky; top: 76px; }
+  .ep-rail-scroll { flex-direction: column; overflow-x: hidden; overflow-y: auto; max-height: calc(100vh - 260px); }
+  .ep-rail-item { width: 100%; }
+  .ep-stage { min-height: 680px; height: calc(100vh - 240px); }
+  .ep-list { max-height: calc(100vh - 520px); }
+}
+
+/* ── মোবাইল: রেল-অনুভূমিক-স্ট্রিপ সংকোচন ── */
+@media (max-width: 600px) {
+  .ep-rail-head { padding: 7px 9px; }
+  .ep-rail-scroll { padding: 7px; gap: 7px; }
+  .ep-rail-item { width: 74px; }
+  .ep-cal-month { min-width: 96px; font-size: .7rem; }
+  .ep-list { max-height: 420px; }
+}
+
+/* ── ফুলস্ক্রিন-রুট = পূর্ণ ৩-প্যানেল গ্রিড (বার+রেল+ভিউ+তালিকা সব-থাকে) ── */
+.ep-grid:fullscreen, .ep-grid.is-fs { background: var(--lf-ui-canvas); padding: 10px; gap: 10px; overflow: auto; }
+.ep-grid:fullscreen .ep-stage, .ep-grid.is-fs .ep-stage { height: calc(100vh - 200px); max-height: none; min-height: 480px; }
+.ep-grid:fullscreen .ep-rail-scroll, .ep-grid.is-fs .ep-rail-scroll { max-height: calc(100vh - 190px); }
+.ep-grid:fullscreen .ep-list, .ep-grid.is-fs .ep-list { max-height: calc(100vh - 480px); }
