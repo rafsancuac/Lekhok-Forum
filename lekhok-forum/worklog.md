@@ -3000,3 +3000,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session288 লেবেল (worklog Task ID 128)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session287 + session286 + session285 + session284 + উভয়-session280-নোট পড়ুন
 - বাকি-প্রস্তাব: ep282-প্যানেলে aria-activedescendant-বিস্তার, LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), **ক্যালেন্ডার-কার্ডে aria-live/is-sel-ঘোষণা (ep287-পরবর্তী a11y-স্তর)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
 - রিমোট main = push-পরবর্তী HEAD (session287-ep287); working-tree ক্লিন
+
+---
+Task ID: 128 (session288 — cron 403679; ক্যালেন্ডার-কার্ডে a11y-ভার্বালাইজেশন ep288)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609240127)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=`e1ca0fc` (session287-ep287), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (BEHIND=০)
+- QA: ep287-প্রোড-ক্যানারি পূর্ব-রাউন্ডে-ই-সবুজ (বুট-আর্ম ২০২৬-০৯-২৩ + Home/End/wrap + Enter-জাম্প-ফোকাস-ফেরত) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session287-শীর্ষ-প্রস্তাব গ্রহণ: **ক্যালেন্ডার-কার্ডে aria-live/is-sel-ঘোষণা**)
+
+## এ-রাউন্ডে সম্পন্ন (session288)
+- **[Mandatory-ফিচার] ep288:** ক্যালেন্ডার-কার্ডে **aria-live লাইভ-রিজিয়ন** (epCalLive — role=status + aria-live=polite, sr-only) — **বাংলা-ঘোষণা** (রোভিং-দিন + মাস-পরিবর্তন; আজ/নির্বাচিত/সংরক্ষিত-সাফিক্স) + **বুট-নীরব (engaged-গেট)** + প্রোগ্রাম্যাটিক-set()-নীরব + দিন-বাটনে **aria-label** + **is-sel-এ aria-current="date"** + **স্টেপার-aria-label আচরণ-মিল-ফিক্স** (epCalPrev=calM++ → "পরের মাস"; epCalNext=calM-- → "আগের মাস" — s280-যুগের লেবেল-বনাম-আচরণ-বৈপরীত্য-বাগ) + **র‍্যাপার-স্তর ×২** (ep287SetActive/calRender-বডি-অস্পৃশ্য) + **__ep288QA হুক ×৬**
+- **[Mandatory-স্টাইল]:** ep288-ব্লক হেক্স-শূন্য টোকেন-শুধু — `.ep-cal-live` sr-only (clip-path) + **aria-current-দৃশ্যমান-রিং** (white-token-আউটলাইন — a11y-অবস্থা = ভিজ্যুয়াল-পলিশ-দ্বৈত)
+- **টেস্ট:** নতুন tests/s288-calaria-suite.sh **৪৯/৪৯ ×২-ধারাবাহিক (SKIP=০)** + **সিড-হেল্পার-পুনঃব্যবহার (s287-seedday — নতুন-হেল্পার-শূন্য)** + **পূর্ণ-রিগ্রেশন s260-s288 (৩০-সুইট সব-গ্রিন — রানার s288-regression.sh)** + role-policy **২৬০/২৬০** + guard:design + audit:views-গ্রিন
+- **গোটচা ×২ (PLANS session288):** ① **containsF-ফাইল-পাথ-গোটচা-পুনঃপ্রমাণিত** — রেন্ডার্ড-অ্যাসার্টে $PAGE-পাথ-পাঠানো → ৩-মিথ্যা-ফেল → PAGEC=$(cat "$PAGE")-প্রথা ② **sed-ডেরিভেশন-তালিকা-গোটচা** — পুরাতন-রানার-থেকে-sed-রানার → টেইল-সুইট-সাইলেন্ট-বাদ (২৮-সুইট-ভান) → সরাসরি-তালিকা-সম্পাদনা + মোট-সংখ্যা-অ্যাসার্ট
+- **পাইপলাইন:** প্যাচ scripts/s288-patch.py (idempotent ×২, ×৪-এডিট, পোস্ট-অ্যাসার্ট+হেক্স-শূন্য-অ্যাসার্ট) + feature-commit + ডক ×৩ (PROJECT §২৮৮ + PLANS session288 + repo-worklog Task-128; s288-docs.py idempotent ×২) + docs-commit + PNG-চার্ন-রিভার্ট (tracked-M-শুধু) + secret-scan-ক্লিন + fetch (BEHIND=০) + **push** → Vercel READY → প্রোড-স্পট + **ep288-লাইভ-যাচাই** + স্ক্রিনশট download/s288-prod-*.png
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session289 লেবেল (worklog Task ID 129)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session288 + session287 + session286 + session285 + উভয়-session280-নোট পড়ুন
+- বাকি-প্রস্তাব: ep282-প্যানেলে aria-activedescendant-বিস্তার, LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), মাস-প্যানেল (ep283)-খোলা/বন্ধ-ঘোষণা aria-expanded-সিঙ্ক, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+- রিমোট main = push-পরবর্তী HEAD (session288-ep288); working-tree ক্লিন
