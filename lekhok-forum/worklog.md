@@ -2611,3 +2611,27 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session271 লেবেল (worklog Task ID 111)**; PLANS session270-নোট অবশ্যই-পড়ুন (row-id-একক-প্রোব + actor-sed-বাউন্ডারি + detail-নরমালাইজেশন + লিমিট-সচেতন-পূর্বগণনা); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা (activity/trash-দ্বিতীয়-পাস; security.ejs-স্কোপ-ম্যাপ-পূর্বক; content-history.ejs-প্রার্থী), multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
 - রিমোট main = push-পরবর্তী HEAD (session270-জোড়া: feature `4c0b213` + worklog); working-tree ক্লিন
+
+---
+Task ID: 111 (session271 — cron 403679; অ্যাক্টিভিটি লগ তাৎক্ষণিক-ফিল্টার av271) — feature pending-push
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`bd283e8` (session270/Task110) → রাউন্ড-শেষে feature (এ-কমিট), working-tree ক্লিন, টোকেন-ভ্যালিদ, স্থায়ী-সার্ভার-জীবিত (৮০৯৪); device-flow-অবসর
+- স্টেল-সামারি-সংশোধন: কনটেক্সট-কম্প্রেশন-সামারি পুনরায় পুরাতন-যুগ দেখালেও (Task43/'commit-হয়নি'/device-flow) ACTIVE-LOCK Task110/session270-ই-সত্য ছিল (রাউন্ড-শুরুতে); রিপো-HEAD+origin-fetch-প্রমাণিত (bd283e8 উভয়-স্তরে)
+- রাউন্ড-শুরু QA: s270 ৬১/৬১ — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session270-বাকি-প্রস্তাব গ্রহণ: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা — activity সারফেস)
+
+## এ-রাউন্ডে সম্পন্ন (session271)
+- **[Mandatory-ফিচার] অ্যাক্টিভিটি লগ তাৎক্ষণিক-ফিল্টার (av271):** /admin/activity (admin/views/admin/activity.ejs — requireStaff, GET-শুধু) — সারি-সারফেস tr data-av-row (forEach-(r, avI271)) + দ্বিভাষিক data-kw (#activity-row-id + অ্যাক্টিভিটি activity + এন্ট্রি entry + সময় time + created_at + ব্যবহারকারী user + রোল role + অ্যাডমিন admin/মডারেটর moderator + অ্যাকশন action + টার্গেট target + বিস্তারিত detail-হোয়াইটস্পেস-নরমালাইজড) + ফিল্টার-স্ট্রিপ (avFilter271/avClear271/avCount271/kbd-hint — always-rendered card-বাইরে) + কাউন্ট-চিপ + শূন্য-অবস্থা (avZero271 data-av-empty — card-পরে, fa-filter-circle-xmark) + 'f'-ফোকাস (একক-স্ট্রিপ — মালিকানা-নির্দ্বিধা, au270-পূর্ণ-মিরর) + field-গার্ড + Escape-ক্লিয়ার+ব্লার + __avQA হুক (সারফেস-শূন্যে-ও-সংজ্ঞায়িত); table/thead/রোল-চিপ/DELETE-POST-chip/target-code/subtitle/sidebar অক্ষুণ্ণ
+- **[Mandatory-স্টাইল]:** av271-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active-প্রেস + reduced-motion-জোড়া + 640px-সংকোচন + hidden-গার্ড ×৩ সঠিক-বাইট — tr[data-av-row]idden] !important) — প্যাচ-পোস্ট-অ্যাসার্ট + suite-containsF দ্বি-প্রমাণ
+- **[লাইভ-সারফেস-DOM-পূর্বগণনা-চুক্তি (নতুন)]:** অ্যাক্টিভিটি-লগ লাইভ-সারফেস — সুইটের নিজস্ব logout/login-ও এন্ট্রি-লেখে → step-০-curl-পূর্বগণনা step-৩-এ ড্রিফট (LIMIT-200-চার্ন) → প্রোব-প্রত্যাশা ব্রাউজার-DOM-স্ন্যাপশট-থেকে-গণনা (domcount — kw-lowercase-সেমান্টিকস-মিরর) → চার্ন-প্রমাণ-শূন্য + মিউটেশন-POST-শূন্য → নেট-DB-রাইট-শূন্য (সারফেস ২০০ → ২০০)
+- **গোটচা ×৪ ডক-কৃত (PLANS session271):** ① লাইভ-সারফেস-চার্ন (DOM-স্ন্যাপশট-পূর্বগণনা-সমাধান) ② grep-case-সেমান্টিকস ('DELETE' বনাম ফিল্টার-lowercase) ③ KeyboardEvent-cancelable:true-বাধ্যতমূলক (defaultPrevented-প্রমাণে) ④ agent-browser-JSON-আউটার-কোট+ইনার-এস্কেপ (tr -d '"\\' + grep -qF); প্লাস প্যাচ-স্তর zero-box-আইকন-সংঘর্ষ-FATAL (fa-clock-rotate-left-দ্বৈত — প্রথম-রানে-ধরা, ফাইল-অলিখিত — প্যাচ-নিরাপত্তা-চুক্তি-প্রমাণ)
+- **টেস্ট:** নতুন tests/s271-avfilter-suite.sh **৫৮/৫৮ ×২-ধারাবাহিক (SKIP=০)** (কাঠামো ×১৭ + স্টাইল ×৯ + আচরণ ×২১ রিয়েল-ব্রাউজার + পূর্বশর্ত ×৬ — নির্ধারক-প্রোব ×৫ DOM-পূর্বগণনা-মিল + সর্বজনীন-অ্যালায়াস + নো-ম্যাচ→শূন্য-অবস্থা + সব-hidden + clear-পুনরুদ্ধার + চিপ ×৩-অ্যাসার্ট + 'f'-ফোকাস + ফিল্ড-গার্ড-দ্বৈত-প্রমাণ + Escape-ব্লার + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ কমিটেড) + পূর্ণ-রিগ্রেশন s270 ৬১/৬১ + s269 ৭৭/০/২ + s268 ৫৬/৫৬ + s267 ৫৯/৫৯ + s266 ৫৯/৫৯ + s265 ৫৭/৫৭ + s264 ৫৬/৫৬ + s263 ৫৩/০/১ + s262 ৪৮/০/১ + s261 ৫০/৫০ + s260 ৫২/৫২ + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs) + anchor-scan ০-ঝুঁকি
+- প্যাচ: scripts/s271-patch.py (skip-if-present idempotent — ৪-সম্পাদনা, SKIP-পুনঃরান-প্রমাণ, .av--নেমস্পেস-সংঘর্ষ-FATAL-গার্ড + টোকেন-গার্ড ×৭, সংরক্ষণ ×৮, সঠিক-বাইট ×৫ + হেক্স-শূন্য) + ডক ×২ (PROJECT §২৭১ + PLANS session271) → **push-pending (এ-কমিট)**
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session272 লেবেল (worklog Task ID 112)**; PLANS session271-নোট অবশ্যই-পড়ুন (লাইভ-সারফেস-চার্ন + domcount + cancelable + JSON-আউটার-কোট + আইকন-সংঘর্ষ); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা (trash-সুইট-স্তর-যাচাই; security.ejs-স্কোপ-ম্যাপ-পূর্বক; content-history.ejs/super-users-প্রার্থী), multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
+- রিমোট main = push-পরবর্তী HEAD (session271-জোড়া: feature + worklog); working-tree ক্লিন
