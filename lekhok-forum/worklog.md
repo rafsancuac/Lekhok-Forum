@@ -2360,3 +2360,27 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session257 লেবেল (worklog Task ID 97)**; PLANS session256-নোট অবশ্যই-পড়ুন (bubbles:true-সুইট-চুক্তি + [hidden]-গার্ড-জোড়া + containsF-ব্র্যাকেট); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: moderator-users-স্কোপড-ভ্যারিয়েন্ট, s255-'f'-অ্যাসার্ট bubbles:true-হার্ডেনিং (ঐচ্ছিক-সুইট-স্বাস্থ্য), Turso/প্রোড-পোর্ট
 - রিমোট main = `51047f5` (session256); working-tree ক্লিন
+
+---
+Task ID: 97 (session257 — cron 403679; ট্র্যাশ তাৎক্ষণিক-ফিল্টার tr257 + প্রোডাকশন-প্রবাহ-সিড-চুক্তি-বর্ধন + mawk-পোর্টেবিলিটি-গোটচা) — push `684a434`
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`842a2e7` (session256/Task96), working-tree ক্লিন, টোকেন-ভ্যালিদ (GH /user→200), live 200; device-flow-অবসর; প্যারালাল-সংঘর্ষ-শূন্য
+- রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s256 ৩৮/৩৮ + s255 ৩৯/৩৯ + s254 ৩৬/৩৬ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (ফিল্টার-প্যাক-ধারা: ট্র্যাশ-সারফেস)
+
+## এ-রাউন্ডে সম্পন্ন (session257)
+- **[Mandatory-ফিচার] ট্র্যাশ তাৎক্ষণিক-ফিল্টার (tr257):** /moderator/trash (admin/views/admin/trash.ejs — moderatorView-মোড) — data-tr-row + data-kw (#আইডি+টেবিল+স্ন্যাপশট-শিরোনাম+payload-স্নিপেট+মুছেছেন+সময়) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা + 'f'-ফোকাস (field-গার্ড) + Escape + clear + **__trQA হুক**; GET-q/টেবিল-সিলেক্ট/restore-all/data-bulk-all অক্ষুণ্ণ; hidden-গার্ড ×৩ (session256-শিক্ষা প্রি-অ্যাপ্লাইড)
+- **[Mandatory-স্টাইল]:** tr257-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px)
+- **সিড-চুক্তি-বর্ধন (প্রোডাকশন-প্রবাহ — স্বয়ং-নিরাময়ী):** নোটিশ-তৈরি (POST /moderator/notices 'qa257trash') → bulk-delete (trashed=<tid>-পার্সিং) → ট্র্যাশে ১-সারি → সুইট-শেষে মার্কার-সারি bulk-purge (/admin/trash/bulk-purge); প্রতি-POST-আগে ফ্রেশ-GET-_csrf; মার্কার-প্রোব নির্ধারক-১-মিল (ডেটা-স্বাধীন)
+- **টেস্ট:** নতুন tests/s257-trashfilter-suite.sh **৪৩/৪৩ ×২-ধারাবাহিক** (কাঠামো×১২+স্টাইল×৯+আচরণ×৮ রিয়েল-ব্রাউজার + সিড×৩ + 390px-hScroll-শূন্য + স্ক্রিনশট×২ + পরিষ্কারক) + role-policy ২৬০/২৬০ + guard:design + audit:views গ্রিন + EJS-compile/রেন্ডার-প্রমাণ
+- **গোটচা ×৩ ডক-কৃত (PLANS session257):** gawk-৩-প্যারামিটার-match mawk-অসমর্থিত (capture-array → RSTART/substr) · admin-ভিউ-নেস্টেড-রেজোলিউশন (app.set('views',[views,admin/views]) → admin/views/admin/*.ejs) · moderatorView-মোডে bulkBar/পার্জ-বোতাম-লুকানো
+- প্যাচ: scripts/s257-patch.py (skip-if-present) + ডক ×৩ (PROJECT §২৫৭ + PLANS session257 + এ-এন্ট্রি) → secret-scan-ক্লিন → fetch+rebase (সংঘর্ষ-শূন্য) → **push `842a2e7..684a434`** → Vercel **READY @ 684a434a** → প্রোড-স্পট home-200 + trash-গেট-307
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session258 লেবেল (worklog Task ID 98)**; PLANS session257-নোট অবশ্যই-পড়ুন (gawk/mawk-ম্যাচ + admin-ভিউ-নেস্টেড-পাথ + ট্র্যাশ-সিড-চুক্তি); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: moderator-press/sections/notices-সারফেস ফিল্টার-প্যাক (tr257-প্যাটার্ন-মিরর), s255-'f'-অ্যাসার্ট bubbles:true-হার্ডেনিং, Turso/প্রোড-পোর্ট
+- রিমোট main = `684a434` (session256-worklog `842a2e7`-পরে session257); working-tree ক্লিন
+
