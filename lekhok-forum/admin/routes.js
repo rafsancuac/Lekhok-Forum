@@ -3060,6 +3060,14 @@ router.post('/content/restore', requireAdmin, async (req, res) => {
   await TA42.audit(db, req, 'content-restore', 'settings', null, rev.key + ' → rev#' + rev.id);
   res.redirect('/admin/content/history?key=' + encodeURIComponent(rev.key) + '&saved=1');
 });
+// সেশন ২৭২: রিভিশন-ডিলিট — পুরনো সংস্করণ ম্যানুয়ালি পরিষ্কার (history পরিচর্যা)
+router.post('/content/history/delete', requireAdmin, async (req, res) => {
+  const rev = await db.prepare('SELECT * FROM content_revisions WHERE id = ?').get(req.body.rev_id);
+  if (!rev) return res.redirect('/admin/content/history?error=1');
+  await db.prepare('DELETE FROM content_revisions WHERE id = ?').run(rev.id);
+  await TA42.audit(db, req, 'revision-delete', 'content_revisions', rev.id, rev.key + ' rev#' + rev.id);
+  res.redirect('/admin/content/history?key=' + encodeURIComponent(rev.key) + '&saved=1');
+});
 
 // ═══ সেশন ৪৩: মিডিয়া লাইব্রেরি ═══
 const fs43 = require('fs');

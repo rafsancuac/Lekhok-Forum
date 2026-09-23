@@ -26,24 +26,37 @@
     </form>
   </div>
   <% if (typeof saved !== 'undefined' && saved) { %><div class="flash ok"><i class="fas fa-undo"></i> পুরনো সংস্করণ ফেরত নেওয়া হয়েছে।</div><% } %>
+  <div class="ch-instant" id="chInstant272">
+    <i class="fas fa-filter ch-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="chFilter272" class="ch-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — ফিল্ড / ব্যবহারকারী / পুরনো মান" autocomplete="off" aria-label="রিভিশন-হিস্ট্রি তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="chClear272" class="ch-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="ch-count-chip" id="chCount272" hidden></span>
+    <span class="ch-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
   <div class="card" style="padding:0;overflow:hidden;">
     <% if (!rows.length) { %>
     <div class="empty"><i class="fas fa-history"></i><p>কোনো রিভিশন নেই — কনটেন্ট সম্পাদকে কিছু বদলালে এখানে পুরনো মান জমা হবে।</p></div>
     <% } else { %>
     <table class="table">
-      <thead><tr><th style="width:70px;">rev</th><th style="width:160px;">সময়</th><th style="width:120px;">কে</th><th>পুরনো মান</th><th style="width:110px;">অ্যাকশন</th></tr></thead>
+      <thead><tr><th style="width:70px;">rev</th><th style="width:160px;">সময়</th><th style="width:120px;">কে</th><th>পুরনো মান</th><th style="width:132px;">অ্যাকশন</th></tr></thead>
       <tbody>
-        <% rows.forEach(r => { %>
-        <tr>
+        <% rows.forEach((r, chI272) => { %>
+        <tr data-ch-row="<%= chI272 %>" data-kw="#<%= r.id %> রিভিশন revision সংস্করণ version সময় time <%= r.saved_at || '' %> ব্যবহারকারী user <%= r.saved_by || '' %> পুরনো-মান oldvalue <%= String(r.value || '').slice(0, 220).replace(/\s+/g, ' ') %> ফেরত restore মুছুন delete">
           <td>#<%= r.id %></td>
           <td><%= r.saved_at %></td>
           <td><%= r.saved_by %></td>
           <td style="max-width:520px;"><%= String(r.value || '').slice(0, 220) %><% if (String(r.value || '').length > 220) { %>…<% } %></td>
           <td>
-            <form method="POST" action="/admin/content/restore">
-              <input type="hidden" name="rev_id" value="<%= r.id %>">
-              <button class="btn btn-sm btn-primary" type="submit"><i class="fas fa-undo"></i> ফেরত</button>
-            </form>
+            <div class="ch-act272">
+              <form method="POST" action="/admin/content/restore">
+                <input type="hidden" name="rev_id" value="<%= r.id %>">
+                <button class="btn btn-sm btn-primary" type="submit" title="এই সংস্করণ ফেরত আনুন"><i class="fas fa-undo"></i> ফেরত</button>
+              </form>
+              <form method="POST" action="/admin/content/history/delete" class="ch-del272">
+                <input type="hidden" name="rev_id" value="<%= r.id %>">
+                <button class="btn btn-sm btn-danger" type="submit" title="রিভিশন মুছে ফেলুন"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
           </td>
         </tr>
         <% }); %>
@@ -51,6 +64,80 @@
     </table>
     <% } %>
   </div>
+  <div class="ch-zero" id="chZero272" data-ch-empty hidden>
+    <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+    <span>কোনো রিভিশন মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
 </div>
+<script>
+  (function () {
+    /* session272 — ch272 তাৎক্ষণিক-ফিল্টার (au270/av271-প্যাটার্ন-মিরর, একক-স্ট্রিপ — 'f'-ফোকাস-মালিকানা-নির্দ্বিধা: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __chQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-ch-row]'));
+    var input = document.getElementById('chFilter272');
+    var clearBtn = document.getElementById('chClear272');
+    var countChip = document.getElementById('chCount272');
+    var zeroBox = document.getElementById('chZero272');
+    if (!input) { return; }
+    var total = rows.length;
+    function chApply272() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function chClearFn272() {
+      input.value = '';
+      chApply272();
+      input.blur();
+    }
+    input.addEventListener('input', chApply272);
+    if (clearBtn) { clearBtn.addEventListener('click', chClearFn272); }
+    input.addEventListener('keydown', function (ch) {
+      if (ch.key === 'Escape') { ch.stopPropagation(); chClearFn272(); }
+    });
+    document.addEventListener('keydown', function (ch) {
+      if (ch.key !== 'f' || ch.altKey || ch.ctrlKey || ch.metaKey) { return; }
+      var t = ch.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ch.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__chQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: chApply272,
+      clear: chClearFn272
+    };
+  })();
+</script>
+<style>
+    /* session272 — ch272 তাৎক্ষণিক-ফিল্টার স্টাইল (au270-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু) */
+    .ch-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .ch-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .ch-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .ch-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .ch-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .ch-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .ch-instant-clear:active { transform: scale(.96); }
+    .ch-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .ch-count-chip[hidden] { display: none; }
+    .ch-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .ch-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .ch-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .ch-zero[hidden] { display: none; }
+    .ch-act272 { display: flex; gap: 6px; align-items: center; }
+    .ch-del272 { display: inline-flex; }
+    tr[data-ch-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .ch-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .ch-kbd-hint { display: none; } .ch-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
