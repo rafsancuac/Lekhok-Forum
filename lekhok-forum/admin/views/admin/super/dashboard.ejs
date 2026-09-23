@@ -91,10 +91,27 @@
     <div class="ov-grid">
       <div class="ov-box">
         <h4><i class="fas fa-users-cog"></i> তদারকি-স্কোপধারী মডারেটর (ইউজার তদারকি)</h4>
+        <%# ── session275 — sd275 তাৎক্ষণিক-ফিল্টার (s274-প্যাটার্ন-মিরর; দ্বৈত-স্ট্রিপ: 'f'-মালিক sd275) ── %>
+        <div class="sd275-instant" id="sdInstant275">
+          <i class="fas fa-filter sd275-ico" aria-hidden="true"></i>
+          <input type="text" id="sdFilter275" class="sd275-input" placeholder="তাৎক্ষণিক ফিল্টার — নাম / @username / তদারকি" autocomplete="off" aria-label="তদারকি-স্কোপধারী মডারেটর তাৎক্ষণিক ফিল্টার" />
+          <button type="button" id="sdClear275" class="sd275-clear" aria-label="মডারেটর-ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+          <span class="sd275-count-chip" id="sdCount275" hidden></span>
+          <span class="sd275-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+        </div>
         <% if (oversight.userMgmtMods.length) { %>
         <ul class="ov-list">
-          <% oversight.userMgmtMods.forEach(m => { %>
-          <li>
+          <% oversight.userMgmtMods.forEach((m, sdI275) => { %>
+          <%# session275 — sd275 দ্বিভাষিক data-kw (হোয়াইটস্পেস-নরমালাইজড) %>
+          <% const sdKw275 = [
+               '#' + m.id,
+               'মডারেটর moderator',
+               '@' + m.username,
+               'নাম name', String(m.full_name || m.username || '').replace(/\s+/g, ' '),
+               'তদারকি oversight user_mgmt স্কোপ scope',
+               'শেষ লগইন last ' + String(m.last_login || '').slice(0, 10)
+             ].filter(Boolean).join(' '); %>
+          <li data-sd-row="<%= sdI275 %>" data-kw="<%= sdKw275 %>">
             <img src="<%= m.avatar_url || '/avatar/' + m.id %>" alt="" loading="lazy">
             <div><strong><%= m.full_name || m.username %></strong><span>@<%= m.username %><%= m.last_login ? ' · শেষ লগইন ' + (m.last_login + '').split(' ')[0] : '' %></span></div>
             <%# সেশন ৯০: এক-ক্লিকে user_mgmt স্কোপ প্রত্যাহার (সুপার-এডমিন নিয়ন্ত্রণ) %>
@@ -106,6 +123,10 @@
         </ul>
         <span class="ov-revoke-hint"><i class="fas fa-circle-info"></i> <i class="fas fa-user-slash"></i> = স্কোপ প্রত্যাহার (রোল অপরিবর্তিত — শুধু তদারকি-অনুমতি বাতিল)</span>
         <% } else { %><p class="ov-empty">কোনো মডারেটরের 'ইউজার তদারকি' স্কোপ নেই — <a href="/admin/moderators">মডারেটর ব্যবস্থাপনা</a> থেকে দিন।</p><% } %>
+        <div class="sd275-zero" id="sdZero275" data-sd-empty hidden>
+          <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+          <span>কোনো মডারেটর মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+        </div>
       </div>
       <div class="ov-box">
         <h4><i class="fas fa-gavel"></i> তদারকি-কার্যক্রম <span class="ov-ban-chip"><i class="fas fa-ban"></i> <%= oversight.banned %> নিষিদ্ধ ইউজার</span></h4>
@@ -126,6 +147,13 @@
   <!-- অ্যাডমিন সারসংক্ষেপ -->
   <div class="card">
     <h3 class="card-title"><i class="fas fa-user-shield"></i> অ্যাডমিন অ্যাকাউন্ট <a href="/admin/super/admins" class="super-manage-link">ব্যবস্থাপনা করুন <i class="fas fa-arrow-right"></i></a></h3>
+    <%# ── session275 — se275 তাৎক্ষণিক-ফিল্টার (s274-প্যাটার্ন-মিরর; স্বাধীন-স্ট্রিপ — page-'f'-শ্রোতা-নেই, s269-চুক্তি) ── %>
+    <div class="se275-instant" id="seInstant275">
+      <i class="fas fa-magnifying-glass se275-ico" aria-hidden="true"></i>
+      <input type="text" id="seFilter275" class="se275-input" placeholder="তাৎক্ষণিক ফিল্টার — নাম / @username / রোল / লক" autocomplete="off" aria-label="অ্যাডমিন সারসংক্ষেপ তাৎক্ষণিক ফিল্টার" />
+      <button type="button" id="seClear275" class="se275-clear" aria-label="অ্যাডমিন-ফিল্টার মুছুন" hidden><i class="fas fa-xmark"></i></button>
+      <span class="se275-count-chip" id="seCount275" hidden></span>
+    </div>
     <div class="super-admin-summary">
       <span class="chip chip-super"><i class="fas fa-crown"></i> <%= stats.superadmins %> সুপার এডমিন</span>
       <span class="chip chip-accent"><i class="fas fa-user-shield"></i> <%= stats.admins - stats.superadmins %> সাধারণ অ্যাডমিন</span>
@@ -133,8 +161,18 @@
       <% if (stats.lockedAdmins > 0) { %><span class="chip chip-danger"><i class="fas fa-lock"></i> <%= stats.lockedAdmins %> লকড</span><% } %>
     </div>
     <ul class="recent-list">
-      <% admins.slice(0, 6).forEach(a => { %>
-        <li>
+      <% admins.slice(0, 6).forEach((a, seI275) => { %>
+        <%# session275 — se275 দ্বিভাষিক data-kw (রোল/লক-মান-অ্যালায়াসসহ — হোয়াইটস্পেস-নরমালাইজড) %>
+        <% const seKw275 = [
+             '#' + a.id,
+             'অ্যাডমিন admin',
+             '@' + a.username,
+             'নাম name', String(a.display_name || a.username || '').replace(/\s+/g, ' '),
+             'রোল role', a.role === 'superadmin' ? 'সুপার-এডমিন superadmin' : 'এডমিন admin',
+             a.locked ? 'লকড locked' : 'আনলকড unlocked',
+             'শেষ লগইন last ' + String(a.last_login || '').slice(0, 16)
+           ].filter(Boolean).join(' '); %>
+        <li data-se-row="<%= seI275 %>" data-kw="<%= seKw275 %>">
           <span class="rl-ico <%= a.role === 'superadmin' ? 'ico-violet' : 'ico-blue' %>"><i class="fas <%= a.role === 'superadmin' ? 'fa-crown' : 'fa-user-shield' %>"></i></span>
           <span class="rl-body">
             <span class="rl-title"><%= a.display_name || a.username %> <small style="color:#94a3b8;">(@<%= a.username %>)</small></span>
@@ -144,6 +182,10 @@
         </li>
       <% }) %>
     </ul>
+    <div class="se275-zero" id="seZero275" data-se-empty hidden>
+      <i class="fas fa-circle-xmark" aria-hidden="true"></i>
+      <span>কোনো অ্যাডমিন মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+    </div>
   </div>
 
   <!-- লগ দুই-কলাম -->
@@ -191,5 +233,123 @@ document.querySelectorAll('form[data-ov-confirm]').forEach(function (f) {
   });
 });
 </script>
+<script>
+  (function () {
+    /* session275 — sd275 তাৎক্ষণিক-ফিল্টার (s274-প্যাটার্ন-মিরর; দ্বৈত-স্ট্রিপ 'f'-একক-মালিকানা s269-চুক্তি: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __sdQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত; li-সারফেস: [data-sd-row]-hidden-গার্ড) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-sd-row]'));
+    var input = document.getElementById('sdFilter275');
+    var clearBtn = document.getElementById('sdClear275');
+    var countChip = document.getElementById('sdCount275');
+    var zeroBox = document.getElementById('sdZero275');
+    if (!input) { return; }
+    var total = rows.length;
+    function sdApply275() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function sdClearFn275() {
+      input.value = '';
+      sdApply275();
+      input.blur();
+    }
+    input.addEventListener('input', sdApply275);
+    if (clearBtn) { clearBtn.addEventListener('click', sdClearFn275); }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { ev.stopPropagation(); sdClearFn275(); }
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+      var t = ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ev.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__sdQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: sdApply275,
+      clear: sdClearFn275
+    };
+  })();
+  (function () {
+    /* session275 — se275 তাৎক্ষণিক-ফিল্টার (স্বাধীন-স্ট্রিপ: page-'f'-শ্রোতা-নেই — s269 দ্বৈত-স্ট্রিপ-চুক্তি; __seQA) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-se-row]'));
+    var input = document.getElementById('seFilter275');
+    var clearBtn = document.getElementById('seClear275');
+    var countChip = document.getElementById('seCount275');
+    var zeroBox = document.getElementById('seZero275');
+    if (!input) { return; }
+    var total = rows.length;
+    function seApply275() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function seClearFn275() {
+      input.value = '';
+      seApply275();
+      input.blur();
+    }
+    input.addEventListener('input', seApply275);
+    if (clearBtn) { clearBtn.addEventListener('click', seClearFn275); }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { ev.stopPropagation(); seClearFn275(); }
+    });
+    window.__seQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: seApply275,
+      clear: seClearFn275
+    };
+  })();
+</script>
+<style>
+    /* session275 — sd275/se275 তাৎক্ষণিক-ফিল্টার স্টাইল (s274-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু; sd=ভায়োলেট সুপার-থিম, se=ব্লু) */
+    .sd275-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .sd275-ico { color: var(--lf-violet-600); opacity: .75; }
+    .sd275-input { flex: 1 1 220px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-violet-soft); transition: none; }
+    .sd275-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-violet-600) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-violet-600) 15%, transparent); }
+    .sd275-clear { border: 0; background: transparent; color: var(--lf-violet-600); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .sd275-clear:hover { background: var(--lf-violet-soft); }
+    .sd275-clear:active { transform: scale(.96); }
+    .sd275-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-violet-deep); background: var(--lf-violet-soft-2); }
+    .sd275-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .sd275-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-violet-600) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-violet-deep); background: var(--lf-white); }
+    .sd275-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding: 12px 14px; border: 1px dashed color-mix(in srgb, var(--lf-violet-600) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-violet-soft); }
+    .se275-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .se275-ico { color: var(--lf-blue-600); opacity: .75; }
+    .se275-input { flex: 1 1 220px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-blue-soft); transition: none; }
+    .se275-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-blue-600) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-blue-600) 15%, transparent); }
+    .se275-clear { border: 0; background: transparent; color: var(--lf-blue-600); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .se275-clear:hover { background: var(--lf-blue-soft); }
+    .se275-clear:active { transform: scale(.96); }
+    .se275-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-blue-800); background: var(--lf-blue-soft-2); }
+    .se275-zero { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; padding: 12px 14px; border: 1px dashed color-mix(in srgb, var(--lf-blue-600) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-blue-soft); }
+    .sd275-count-chip[hidden] { display: none; }
+    .sd275-zero[hidden] { display: none; }
+    .se275-count-chip[hidden] { display: none; }
+    .se275-zero[hidden] { display: none; }
+    [data-sd-row][hidden], [data-se-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .sd275-clear:active, .se275-clear:active { transform: none; } }
+    @media (max-width: 640px) { .sd275-kbd-hint { display: none; } .sd275-instant, .se275-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
