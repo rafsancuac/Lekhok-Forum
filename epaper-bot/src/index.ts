@@ -328,6 +328,105 @@ async function warmSiteCache(fileIds: string[]): Promise<void> {
   }
 }
 
+/* ── প্রতি-মেসেজ-প্রসেসর (session273 — live-লিসেনার ও পোল-স্ক্যান উভয়ের-শেয়ারড-পাইপলাইন) ──
+   আগে এই-লজিক scanOnce-এর-ভেতরে-ই-ছিল; এখন আলাদা-করা-হয়েছে যাতে NewMessage-ইভেন্ট-হ্যান্ডলারও
+   হুবহু একই-প্রবাহ ব্যবহার করে: উইন্ডো-চেক → ফিল্টার → ডিডুপ → ডাউনলোড → ওয়াটারমার্ক-ক্লিন →
+   ড্রাইভ-আপলোড → থাম্বনেইল → সাইট-সিঙ্ক। রিটার্ন true = এ-কলে সিঙ্ক-হয়েছে। */
+const inflight = new Set<string>() // একই-ফাইলে-সমান্তরাল-প্রসেসিং-রোধ (লাইভ-ইভেন্ট + পোল-রেস)
+
+async function processMessage(client: TelegramClient, m: any, doc: any, syncedIds: string[]): Promise<boolean> {
+  const msgDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(m.date * 1000))
+  const cutoff = dhakaDate(new Date(Date.now() - (BACKFILL_DAYS - 1) * 86400000)) // শেষ N দিন
+  if (msgDate < cutoff || msgDate > dhakaDate()) return false
+  const attrs = (doc.attributes || []) as any[]
+  const fName = (attrs.find((a) => a.fileName)?.fileName) || `epaper-${msgDate}-${m.id}.pdf`
+  // PAPER_FILTER দিলে শুধু মিলে-যাওয়া পত্রিকা (মেসেজ-টেক্সট/ফাইলনামে সার্চ)
+  if (PAPER_FILTER && !(`${m.message || ''} ${fName}`.toLowerCase().includes(PAPER_FILTER))) return false
+  if (!state[msgDate]) state[msgDate] = {}
+  if (state[msgDate][fName]) return false // এই-ফাইল সিঙ্কড
+  if (inflight.has(fName)) return false // অন্য-পথ (লাইভ/পোল) ইতোমধ্যে-প্রসেস-করছে
+  const rawMsg = String(m.message || '')
+  // নন-ই-পেপার-গার্ড (session176): বিজ্ঞপ্তি/ফলাফল-জাতীয় PDF আর্কাইভে ঢুকবে না
+  if (!mapHit(rawMsg, fName) && NON_EPAPER_RE.test(`${rawMsg} ${fName}`)) {
+    console.log('↷ নন-ই-পেপার (বিজ্ঞপ্তি/ফলাফল-জাতীয়) — বাদ:', fName)
+    return false
+  }
+  const paperName = resolvePaperName(rawMsg, fName)
+  console.log('📄 পাওয়া গেছে:', paperName, `(${msgDate}, ${fName})`)
+  inflight.add(fName)
+  try {
+    const token = await driveAccessToken()
+    const folderId = await driveEnsureFolder(token)
+    // ড্রাইভ-এ আগেই থাকলে ডাউনলোড-স্কিপ — সরাসরি sync-রিট্রাই (ব্যান্ডউইডথ-সাশ্রয়)
+    let fileId = await driveFindFile(token, folderId, fName)
+    let pdfBytes: Uint8Array | undefined
+    if (!fileId) {
+      const buffer = await client.downloadMedia(m, {})
+      pdfBytes = new Uint8Array(buffer as unknown as ArrayBuffer)
+      // সেশন ১৭৩ (ইউজার-স্পেক): সবুজ প্রমো-স্ট্যাম্প+লিংক-লেয়ার মুছে পরিষ্কার পিডিএফ
+      // (ব্যর্থতায় stripTelegramPromoLayer নিজেই মূল-বাফার ফেরত দেয় — প্রধান-প্রবাহ অটুট)
+      try {
+        console.log('⏳ ওয়াটারমার্ক পরিষ্কার করা হচ্ছে…')
+        const rawBuf = Buffer.from(pdfBytes) // ক্লিনার নো-অপে এই-রেফারেন্সই ফেরত দেয়
+        const clean = await stripTelegramPromoLayer(rawBuf)
+        if (clean !== rawBuf && clean.length) {
+          pdfBytes = new Uint8Array(clean)
+          console.log(`✅ পরিচ্ছন্ন পিডিএফ প্রস্তুত (${pdfBytes.length}B — আগে ${rawBuf.length}B)`)
+        } else {
+          console.log('↷ প্রমো-লেয়ার পাওয়া যায়নি — মূল পিডিএফ-ই রাখা হলো')
+        }
+      } catch (e) {
+        console.error('⚠️ ক্লিনার-ত্রুটি — মূল পিডিএফ আপলোড হবে:', e instanceof Error ? e.message : e)
+      }
+      fileId = await driveUpload(token, folderId, fName, pdfBytes, 'application/pdf')
+    } else {
+      console.log('↷ ড্রাইভ-এ আগেই আছে — ডাউনলোড-স্কিপ')
+    }
+    // থাম্বনেইল: টেলিগ্রাম-প্রিভিউ → PDF-প্রথম-পাতা-রেন্ডার (ডাউনলোড-স্কিপ হলে ড্রাইভ-থেকে-এক-বার)
+    const thumbId = await ensureThumb(token, folderId, fName, client, m, doc, pdfBytes, fileId || undefined)
+    await siteSync(msgDate, fileId, paperName, thumbId)
+    state[msgDate][fName] = fileId
+    saveState(state)
+    if (fileId) syncedIds.push(fileId)
+    return true
+  } catch (err) {
+    console.error('⚠️ আপলোড/সিঙ্ক-ত্রুটি:', err instanceof Error ? err.message : err)
+    return false
+  } finally {
+    inflight.delete(fName)
+  }
+}
+
+/* ── সংযোগ-ফ্যাক্টরি (session273): AUTH_KEY_DUPLICATED-সহনশীল ──
+   একই-টেলিগ্রাম-সেশন অন্য-কোনো-চলমান-কপি (ইউজারের-নিজের-সার্ভার/pm2) ব্যবহার-করলে Telegram
+   এ-এরর-দেয়। আগে: প্রসেস-ফেটাল → pm2 ৫-সেকেন্ডে-আবার → দুই-কপি-সেশন-লুটপাটে-মেরে-ফেলত।
+   এখন: ৫-মিনিট-গ্যাপে-শান্তিপূর্ণ-পুনঃচেষ্টা — অন্য-কপি-বন্ধ-হলে-ই-এ-কপি-নিশ্চিন্তে-দায়িত্ব-নেয়।
+   অবৈধ-সেশনেও হট-লুপ-নয় — ২-মিনিট-গ্যাপ। */
+async function makeConnectedClient(sessionStr: string): Promise<TelegramClient> {
+  for (;;) {
+    const client = new TelegramClient(new StringSession(sessionStr), TG_API_ID, TG_API_HASH, { connectionRetries: 5 })
+    try {
+      await client.connect()
+      if (!client.checkAuthorization()) {
+        console.error('❌ সেশন-স্ট্রিং মেয়াদোত্তীর্ণ/অবৈধ — ২-মিনিট-পর-পুনঃচেষ্টা (মেরামতের-আগে `bun run login` লাগবে)')
+        try { await client.destroy() } catch {}
+        await new Promise((r) => setTimeout(r, 120_000))
+        continue
+      }
+      return client
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      try { await client.destroy() } catch {}
+      if (/AUTH_KEY_DUPLICATED/i.test(msg)) {
+        console.error('🔒 AUTH_KEY_DUPLICATED — একই-সেশন-অন্য-কোথাও-চলছে; ৫-মিনিট-পর-আবার-চেষ্টা (সেশন-হ্যামার-নয়)')
+        await new Promise((r) => setTimeout(r, 300_000))
+        continue
+      }
+      throw e
+    }
+  }
+}
+
 /* ── টেলিগ্রাম ── */
 async function main(): Promise<void> {
   let sessionStr = TG_SESSION
@@ -336,12 +435,7 @@ async function main(): Promise<void> {
     console.error('❌ টেলিগ্রাম-সেশন নেই — আগে `bun run login` চালান (OTP দিয়ে লগইন করবে)')
     process.exit(1)
   }
-  const client = new TelegramClient(new StringSession(sessionStr), TG_API_ID, TG_API_HASH, { connectionRetries: 5 })
-  await client.connect()
-  if (!client.checkAuthorization()) {
-    console.error('❌ সেশন-স্ট্রিং মেয়াদোত্তীর্ণ/অবৈধ — আবার `bun run login` চালান')
-    process.exit(1)
-  }
+  const client = await makeConnectedClient(sessionStr)
   console.log('🤖 বট চালু — চ্যানেল @' + CHANNEL + ', পোল ' + POLL_MINUTES + ' মিনিট')
 
   const scanOnce = async (): Promise<void> => {
@@ -359,65 +453,55 @@ async function main(): Promise<void> {
       const doc = m.document as any
       const mime: string = doc.mimeType || ''
       if (!/pdf$/.test(mime)) continue
-      const msgDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(m.date * 1000))
-      if (msgDate < cutoff || msgDate > today) continue
-      const attrs = (doc.attributes || []) as any[]
-      const fName = (attrs.find((a) => a.fileName)?.fileName) || `epaper-${msgDate}-${m.id}.pdf`
-      // PAPER_FILTER দিলে শুধু মিলে-যাওয়া পত্রিকা (মেসেজ-টেক্সট/ফাইলনামে সার্চ)
-      if (PAPER_FILTER && !(`${m.message || ''} ${fName}`.toLowerCase().includes(PAPER_FILTER))) continue
-      if (!state[msgDate]) state[msgDate] = {}
-      if (state[msgDate][fName]) continue // এই-ফাইল সিঙ্কড
-      const rawMsg = String(m.message || '')
-      // নন-ই-পেপার-গার্ড (session176): বিজ্ঞপ্তি/ফলাফল-জাতীয় PDF আর্কাইভে ঢুকবে না
-      if (!mapHit(rawMsg, fName) && NON_EPAPER_RE.test(`${rawMsg} ${fName}`)) {
-        console.log('↷ নন-ই-পেপার (বিজ্ঞপ্তি/ফলাফল-জাতীয়) — বাদ:', fName)
-        continue
-      }
-      const paperName = resolvePaperName(rawMsg, fName)
-      console.log('📄 পাওয়া গেছে:', paperName, `(${msgDate}, ${fName})`)
-      attempted++
-      try {
-        const token = await driveAccessToken()
-        const folderId = await driveEnsureFolder(token)
-        // ড্রাইভ-এ আগেই থাকলে ডাউনলোড-স্কিপ — সরাসরি sync-রিট্রাই (ব্যান্ডউইডথ-সাশ্রয়)
-        let fileId = await driveFindFile(token, folderId, fName)
-        let pdfBytes: Uint8Array | undefined
-        if (!fileId) {
-          const buffer = await client.downloadMedia(m, {})
-          pdfBytes = new Uint8Array(buffer as unknown as ArrayBuffer)
-          // সেশন ১৭৩ (ইউজার-স্পেক): সবুজ প্রমো-স্ট্যাম্প+লিংক-লেয়ার মুছে পরিষ্কার পিডিএফ
-          // (ব্যর্থতায় stripTelegramPromoLayer নিজেই মূল-বাফার ফেরত দেয় — প্রধান-প্রবাহ অটুট)
-          try {
-            console.log('⏳ ওয়াটারমার্ক পরিষ্কার করা হচ্ছে…')
-            const rawBuf = Buffer.from(pdfBytes) // ক্লিনার নো-অপে এই-রেফারেন্সই ফেরত দেয়
-            const clean = await stripTelegramPromoLayer(rawBuf)
-            if (clean !== rawBuf && clean.length) {
-              pdfBytes = new Uint8Array(clean)
-              console.log(`✅ পরিচ্ছন্ন পিডিএফ প্রস্তুত (${pdfBytes.length}B — আগে ${rawBuf.length}B)`)
-            } else {
-              console.log('↷ প্রমো-লেয়ার পাওয়া যায়নি — মূল পিডিএফ-ই রাখা হলো')
-            }
-          } catch (e) {
-            console.error('⚠️ ক্লিনার-ত্রুটি — মূল পিডিএফ আপলোড হবে:', e instanceof Error ? e.message : e)
-          }
-          fileId = await driveUpload(token, folderId, fName, pdfBytes, 'application/pdf')
-        } else {
-          console.log('↷ ড্রাইভ-এ আগেই আছে — ডাউনলোড-স্কিপ')
-        }
-        // থাম্বনেইল: টেলিগ্রাম-প্রিভিউ → PDF-প্রথম-পাতা-রেন্ডার (ডাউনলোড-স্কিপ হলে ড্রাইভ-থেকে-এক-বার)
-        const thumbId = await ensureThumb(token, folderId, fName, client, m, doc, pdfBytes, fileId || undefined)
-        await siteSync(msgDate, fileId, paperName, thumbId)
-        state[msgDate][fName] = fileId
-        saveState(state)
-        if (fileId) syncedIds.push(fileId)
-      } catch (err) {
-        console.error('⚠️ আপলোড/সিঙ্ক-ত্রুটি:', err instanceof Error ? err.message : err)
-      }
+      if (await processMessage(client, m, doc, syncedIds)) attempted++
     }
     if (!attempted) console.log('↷ নতুন কিছু নেই — সব সিঙ্কড')
     // session178: সিঙ্ক-পরবর্তী ক্যাশ-ওয়ার্ম — ইউজার-ক্লিকের-আগেই সাইটে ক্লিন-পিডিএফ প্রস্তুত (ফায়ার-অ্যান্ড-ফরগেট)
     if (syncedIds.length) void warmSiteCache(syncedIds)
   }
+
+  /* ── ⚡ লাইভ-লিসেনার (session273 — ইউজার-স্পেক: "ফুলি অটোমেটেড", প্রতিদিন-নির্দেশ-যাবে-না) ──
+     আগে: শুধু ১৫-মিনিট-পোল — চ্যানেলে পিডিএফ-আসা ও পোল-ধরার-মাঝে-অপেক্ষা, আর প্রসেস-মৃত্যুতে
+     নিঃশব্দ-বন্ধ। এখন: NewMessage-ইভেন্ট-হ্যান্ডলার — চ্যানেলে নতুন-মেসেজ-আসা-মাত্রই-প্রসেসিং।
+     কঠোর-ফিল্টার: নন-টার্গেট-চ্যাট ও নন-পিডিএফ ১-সেকেন্ডে-স্কিপ (ক্র্যাশ-প্রুফ-গার্ডও-আছে-ই)।
+     পোল-লুপ সেফটি-নেট-হিসেবে-থাকছে — বন্ধ-থাকা-কালীন-ব্যাকলগ (৩-দিন-উইন্ডো) ধরে। */
+  const chanEntity = await client.getEntity(CHANNEL).catch(() => null)
+  const allowedChats = new Set<string>()
+  if (chanEntity && (chanEntity as any).id != null) {
+    const bare = String((chanEntity as any).id).replace(/^-/, '')
+    for (const v of [bare, '-' + bare, '-100' + bare]) allowedChats.add(v) // bare + মার্কড-রূপ
+  }
+  if (!allowedChats.size) {
+    // ফলব্যাক: চ্যানেলের-সর্বশেষ-মেসেজ-থেকে chatId-প্রোব
+    try {
+      const probe = await client.getMessages(CHANNEL, { limit: 1 })
+      const cid = probe[0]?.chatId
+      if (cid != null) {
+        const s = String(cid)
+        const bare = s.replace(/^-/, '')
+        for (const v of [s, bare, '-' + bare, '-100' + bare]) allowedChats.add(v)
+      }
+    } catch {}
+  }
+  console.log(`⚡ লাইভ-লিসেনার সক্রিয় — @${CHANNEL} (chat: ${[...allowedChats].join(', ') || 'auto'}) — নতুন পিডিএফ আসা-মাত্রই-প্রসেস`)
+  const liveSynced: string[] = []
+  client.addEventHandler(async (event: any) => {
+    try {
+      const m = event.message
+      if (!m) return
+      const chatKey = m.chatId == null ? '' : String(m.chatId)
+      if (allowedChats.size && !allowedChats.has(chatKey)) return // অন্য-চ্যাট/ডিএম — সরাসরি-স্কিপ
+      const doc = m.document as any
+      if (!doc || !/pdf$/.test(doc.mimeType || '')) return // টেক্সট/ছবি/ভয়েস — তাৎক্ষণিক-স্কিপ
+      console.log('⚡ লাইভ-ইভেন্ট: নতুন পিডিএফ-ডকুমেন্ট (chat ' + chatKey + ')')
+      if (await processMessage(client, m, doc, liveSynced)) {
+        const ids = liveSynced.splice(0)
+        if (ids.length) void warmSiteCache(ids)
+      }
+    } catch (e) {
+      console.error('⚡ লাইভ-লিসেনার-ত্রুটি (লিসেনার-জীবিত):', e instanceof Error ? e.stack : e)
+    }
+  }, new NewMessage({}))
 
   await scanOnce().catch((e) => console.error('প্রথম-স্ক্যান-ত্রুটি (পরের-পোলে-আবার):', e instanceof Error ? e.stack : e))
   setInterval(() => scanOnce().catch((e) => console.error('পোল-ত্রুটি (লুপ-অটুট):', e instanceof Error ? e.stack : e)), POLL_MINUTES * 60 * 1000)

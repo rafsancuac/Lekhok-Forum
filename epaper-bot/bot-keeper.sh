@@ -22,8 +22,10 @@ if [ -z "${GITHUB_TOKEN:-}" ] && [ -d "$ROOT/.git" ]; then
   unset _ORIGIN_URL _T
 fi
 
-# ① প্রসেস
-if ! pgrep -f "bun run src/index.ts" >/dev/null 2>&1; then
+# ① প্রসেস — ব্রড-প্যাটার্ন (session273): pm2-চালিত ("/home/z/.bun/bin/bun run src/index.ts") ও
+#    setsid-চালিত ("bun run src/index.ts") — দুই-রূপই ধরা-পড়ে
+BOT_PAT="src/index\.ts"
+if ! pgrep -f "$BOT_PAT" >/dev/null 2>&1; then
   say "⚠️ বট-প্রসেস-মৃত — পুনঃস্টার্ট-চেষ্টা…"
   bash "$BOT/ensure-bot.sh" || exit $?
 else
@@ -32,7 +34,8 @@ else
     HB_AGE=$(( $(date +%s) - $(date -d "$(cat "$HB")" +%s 2>/dev/null || echo 0) ))
     if [ "$HB_AGE" -gt 2700 ]; then
       say "⚠️ হার্টবিট ${HB_AGE}s-পুরোনো (স্তব্ধ) — kill+restart"
-      pkill -f "bun run src/index.ts" 2>/dev/null; sleep 2
+      pkill -f "$BOT_PAT" 2>/dev/null; sleep 2
+      # pm2-চালিত-হলে pkill-এর-পর pm2-নিজেই-রিস্টার্ট-করে; না-হলে ensure-bot.sh-ই-চালু-করবে
       bash "$BOT/ensure-bot.sh" || exit $?
     else
       say "✓ হার্টবিট ${HB_AGE}s — সুস্থ"

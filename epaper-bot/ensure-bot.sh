@@ -48,16 +48,25 @@ if grep -q "^TG_API_HASH=❌\|^GOOGLE_CLIENT_ID=❌\|^SITE_SYNC_TOKEN=❌" "$BOT
   say "⏳ .env-প্লেসহোল্ডার-পূরণ-বাকি (ইউজার-পুনঃঅথ-প্রতীক্ষিত) (exit 3)"; exit 3
 fi
 
-# ৪) প্রসেস
-if pgrep -f "bun run src/index.ts" >/dev/null 2>&1; then
-  say "✓ বট-ইতোমধ্যে-চলছে (pid: $(pgrep -f 'bun run src/index.ts' | head -1))"
+# ৪) প্রসেস — pgrep-প্যাটার্ন এখন ব্রড ("src/index.ts") যাতে pm2-চালিত প্রসেসও-ধরা-পড়ে (session273)
+BOT_PAT="src/index\.ts"
+if pgrep -f "$BOT_PAT" >/dev/null 2>&1; then
+  say "✓ বট-ইতোমধ্যে-চলছে (pid: $(pgrep -f "$BOT_PAT" | head -1))"
   exit 0
 fi
-say "▶️ বট-স্টার্ট (setsid-ডিটাচড)…"
-( cd "$BOT" && setsid nohup bun run src/index.ts >> "$LOG" 2>&1 & )
+# pm2 থাকলে pm2-ই-প্রধান (ক্র্যাশ → ৫-সেকেন্ডে-অটো-রিস্টার্ট); ব্যর্থ-হলে setsid-ফলব্যাক
+if command -v pm2 >/dev/null 2>&1; then
+  say "▶️ বট-স্টার্ট (pm2 — ক্র্যাশ-অটো-রিস্টার্ট)…"
+  ( cd "$BOT" && pm2 start ecosystem.config.cjs --update-env >/dev/null 2>&1 && pm2 save >/dev/null 2>&1 ) \
+    || say "⚠️ pm2-স্টার্ট-ব্যর্থ — setsid-ফলব্যাক-ব্যবহার-হবে"
+fi
+if ! pgrep -f "$BOT_PAT" >/dev/null 2>&1; then
+  say "▶️ বট-স্টার্ট (setsid-ডিটাচড)…"
+  ( cd "$BOT" && setsid nohup bun run src/index.ts >> "$LOG" 2>&1 & )
+fi
 sleep 3
-if pgrep -f "bun run src/index.ts" >/dev/null 2>&1; then
-  say "✅ বট-চালু (pid: $(pgrep -f 'bun run src/index.ts' | head -1))"
+if pgrep -f "$BOT_PAT" >/dev/null 2>&1; then
+  say "✅ বট-চালু (pid: $(pgrep -f "$BOT_PAT" | head -1))"
   exit 0
 fi
 say "❌ বট-স্টার্ট-ব্যর্থ — শেষ-লগ:"; tail -n 8 "$LOG" 2>/dev/null; exit 4
