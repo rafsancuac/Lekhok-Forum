@@ -1,47 +1,33 @@
-<%# পেজ-নির্দিষ্ট টাইটেল/CSS — header.ejs একমাত্র ডকুমেন্ট-ওপেনার (HTML nesting fix) %>
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ইভেন্ট | মডারেটর প্যানেল</title>
-  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
-  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>">
-</head>
-<body>
-<%- include('../../admin/views/admin/partials/sidebar') %>
-<div class="admin-main">
-<div class="mod-wrap">
-    <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
-    <h2><i class="fas fa-calendar-alt"></i> ইভেন্ট পোস্ট করুন</h2>
-    <% if (typeof posted !== 'undefined') { %><p style="color:#166534;">✓ সফলভাবে পোস্ট হয়েছে এবং সব ইউজারকে নোটিফিকেশন পাঠানো হয়েছে।</p><% } %>
-    <form method="POST" action="/moderator/events" class="mod-form">
-      <label>শিরোনাম</label>
-      <input type="text" name="title" required>
-      <label>বিবরণ</label>
-      <textarea name="description" rows="4"></textarea>
-      <label>শুরুর তারিখ</label>
-      <input type="date" name="date">
-      <label>শেষ তারিখ (ঐচ্ছিক)</label>
-      <input type="date" name="end_date">
-      <label>স্থান</label>
-      <input type="text" name="location" placeholder="ভেন্যু / অনলাইন">
-      <label>কভার ছবি URL (ঐচ্ছিক)</label>
-      <input type="url" name="image_url">
-      <%- include('../../admin/views/admin/partials/multi-image', { images: [] }) %>
-      <button class="btn btn-primary" type="submit">পোস্ট করুন</button>
-    </form>
-    <h3>সাম্প্রতিক ইভেন্ট<label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:10px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label></h3>
-  <form method="POST" action="/moderator/events/bulk-delete" class="bulk-bar" id="bulkBar">
-    <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
-    <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড ইভেন্টগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
-    <button type="submit" name="mode" value="publish" formaction="/moderator/events/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড ইভেন্টগুলো প্রকাশ করবে?"><i class="fas fa-eye"></i> প্রকাশ</button>
-    <button type="submit" name="mode" value="hide" formaction="/moderator/events/bulk-toggle" class="btn btn-sm" data-bulk-msg="সিলেক্টেড ইভেন্টগুলো লুকাবে?"><i class="fas fa-eye-slash"></i> লুকান</button>
-  </form>
+#!/usr/bin/env python3
+# s260-patch.py — session260: ইভেন্ট (/moderator/events) তাৎক্ষণিক-ফিল্টার (ev260)
+# চুক্তি: no259/pr258/tr257-প্যাটার্ন-মিরর — data-kw-সারি + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape-ক্লিয়ার+ব্লার + __evQA হুক
+# সংযোজন: আসন্ন/সমাপ্ত স্ট্যাটাস-চিপ (তারিখ-গণনা-ভিত্তিক — end_date||date বনাম আজ; upcoming/ended ইংরেজি-কী-সহ data-kw)
+# স্টাইল: ev260-ব্লক হেক্স-শূন্য টোকেন-শুধু + [hidden]-গার্ড-জোড়া + সারি-hidden-গার্ড + status-chip টোকেন-টিন্ট + past-মিউট
+# নো-রিগ্রেশন: bulk-bar (bulk-delete/bulk-toggle) + যোগ-ফর্ম (mod-form) + data-bulk-all সম্পূর্ণ অক্ষুণ্ণ
+import sys, io
 
-    <div class="ev-instant" id="evInstant260">
+VIEW = "/home/z/lekhok-forum/lekhok-forum/lekhok-forum/views/user/moderator-events.ejs"
+
+with io.open(VIEW, "r", encoding="utf-8") as f:
+    src = f.read()
+
+if "data-ev-row" in src:
+    print("SKIP: ev260 already present (idempotent)")
+    sys.exit(0)
+
+edits = []
+
+# ── এডিট-১: তালিকার-আগে ফিল্টার-বার + শূন্য-অবস্থা + forEach-সূচক + data-kw + স্ট্যাটাস-চিপ ──
+old1 = """    <% events.forEach(e => { %>
+      <div class="mod-item">
+        <input type="checkbox" name="bulk_ids" value="<%= e.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:4px;">
+        <div style="flex:1;"><strong><%= e.title %></strong><div style="color:#999; font-size:0.85rem;"><%= e.date %></div></div>
+        <form method="POST" action="/moderator/events/<%= e.id %>?_method=DELETE">
+          <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
+        </form>
+      </div>
+    <% }) %>"""
+new1 = """    <div class="ev-instant" id="evInstant260">
       <i class="fas fa-filter ev-instant-ico" aria-hidden="true"></i>
       <input type="text" id="evFilter260" class="ev-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / স্থান / তারিখ / অবস্থা / #আইডি" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
       <button type="button" id="evClear260" class="ev-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
@@ -67,11 +53,13 @@
           <button class="btn btn-danger btn-sm" type="submit">মুছুন</button>
         </form>
       </div>
-    <% }) %>
-  </div>
-  <script src="/assets/js/main.js?v=<%= AV %>"></script>
-<%- include('../partials/sandbox-preview') %>
-  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+    <% }) %>"""
+edits.append((old1, new1))
+
+# ── এডিট-২: premium.js-include-পরে স্টাইল-ব্লক + স্ক্রিপ্ট-ব্লক (</body>-আগে) ──
+old2 = """  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+</body>"""
+new2 = """  <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 <style>
 /* session260 — ইভেন্ট তাৎক্ষণিক-ফিল্টার (ev260 — হেক্স-শূন্য টোকেন-শুধু; no259/pr258/tr257-মিরর) */
 .ev-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 10px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
@@ -143,5 +131,15 @@
   };
 })();
 </script>
-</body>
-</html>
+</body>"""
+edits.append((old2, new2))
+
+for i, (o, n) in enumerate(edits, 1):
+    if o not in src:
+        print(f"FATAL: এডিট-{i}-অ্যাঙ্কর অনুপস্থিত (ভিউ-পরিবর্তিত?)")
+        sys.exit(1)
+    src = src.replace(o, n, 1)
+
+with io.open(VIEW, "w", encoding="utf-8") as f:
+    f.write(src)
+print("OK: ev260 প্রয়োগ-সম্পন্ন (ফিল্টার-বার + শূন্য-অবস্থা + data-kw-সারি + স্ট্যাটাস-চিপ + স্টাইল + __evQA)")

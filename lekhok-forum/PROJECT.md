@@ -3133,6 +3133,22 @@ Task53-প্রস্তাবকৃত পরবর্তী-ধাপ বা�
 
 **গোটচা (PLANS session254 ×৪):** testadmin-ভিউয়ার (moderator=403) · _csrfTok-কুকি-দ্বি-সমর্পণ (নেস্টেড-GET-টোকেন-রোটেশন) · s251-কোল্ড-স্টার্ট-ট্রানজিয়েন্ট (eval-empty শ্রেণি — ম্যানুয়াল-ওয়ার্ম-আপ-প্রোব → পুনঃরান) · `[h`-প্রদর্শন-আর্টিফ্যাক্ট (টুল-আউটপুটে `[hidden]`→`]idden]` দেখায়; od -c-ই-সত্য-উৎস)।
 
+## §২৬০ (session260 — cron 403679: ইভেন্ট তাৎক্ষণিক-ফিল্টার ev260 + আসন্ন/সমাপ্ত স্ট্যাটাস-চিপ) — s260 ৫২/৫২ ×২ (২৩ সেপ্টেম্বর ২০২৬)
+
+**রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`a92517f` (session259/Task99, clean-tree); GH /user→200; live-200; স্টেল-সামারি-সংশোধন ×২৬ (সামারি Task43/'commit-হয়নি'/device-flow যুগ — সব-ভুল; ACTIVE-LOCK Task99/session259-ই-সত্য)। রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s259 ৪৯/৪৯ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session259-বাকি-প্রস্তাব গ্রহণ: events-সারফেস ফিল্টার-প্যাক)।
+
+**[Mandatory-ফিচার] ইভেন্ট তাৎক্ষণিক-ফিল্টার (ev260):** /moderator/events (views/user/moderator-events.ejs) — no259/pr258/tr257-চুক্তি-মিরর: `data-ev-row`-সারি-সূচক (.mod-item) + `data-kw` (#আইডি + শিরোনাম + স্থান + শুরু-তারিখ + শেষ-তারিখ + অবস্থা-শব্দ আসন্ন/সমাপ্ত + upcoming/ended ইংরেজি-কী — ছোট-হাতের) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-কী ফোকাস (field-গার্ড + modifier-বাদ) + Escape ক্লিয়ার+ব্লার + clear-বাটন + **__evQA হুক (total/count/apply/clear)**; bulk-bar (bulk-delete/bulk-toggle) + data-bulk-all + mod-form যোগ-ফর্ম + প্রতি-সারি-মুছুন-ফর্ম সম্পূর্ণ অক্ষুণ্ণ; hidden-গার্ড ×৩ (`.mod-item[data-ev-row][hidden]` + `.ev-count-chip[hidden]` + `.ev-zero[hidden]`)।
+
+**[Mandatory-ফিচার-সংযোজন] আসন্ন/সমাপ্ত স্ট্যাটাস-চিপ:** প্রতি-সারিতে তারিখ-গণনা-ভিত্তিক অবস্থা-পিল (`end_date || date` বনাম আজ — ISO-তুলনা) — 'আসন্ন' (brandgreen-টিন্ট) / 'সমাপ্ত' (`.past` slate-মিউট); সারি-সাব-লাইন সমৃদ্ধ (তারিখ → শেষ-তারিখ · স্থান); উভয়ই data-kw-ফিল্টারেবল (বাংলা-শব্দ বা ইংরেজি-কী)।
+
+**[Mandatory-স্টাইল]:** ev260 ব্লক **হেক্স-শূন্য টোকেন-শুধু** — ফোকাস-রিং color-mix brandgreen-tint + kbd-পিল (dashed affordance) + :active প্রেস-ফিডব্যাক + reduced-motion-জোড়া + 640px-সংকোচন (kbd-none + status-chip-none) + ev-zero টোকেন-বক্স।
+
+**সিড/পরিষ্কারক-চুক্তি:** urlencoded-POST /moderator/events (marker 'qa260event' + date=2027-01-01 আসন্ন + location=qa260venue — body._csrf-পথ) + পরিষ্কারক POST `?_method=DELETE` → trashed=<tid>-পার্সিং → /admin/trash/bulk-purge (s259-পুনঃব্যবহার — স্বয়ং-নিরাময়ী idempotent); id-আবিষ্কার mod-item-open-tag-অ্যাঙ্কর + bulk_ids-gsub।
+
+**টেস্ট:** নতুন tests/s260-eventsfilter-suite.sh **৫২/৫২ ×২-ধারাবাহিক** (কাঠামো ×১৬ + স্টাইল ×১০ + আচরণ ×১৩ রিয়েল-ব্রাউজার + সিড ×৩ + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ + পরিষ্কারক) + role-policy ২৬০/২৬০ + s259 ৪৯/৪৯ + s258 ৪৮/৪৮ + guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs) + EJS-রেন্ডার-প্রমাণ (৬-সারি data-ev-row, ৪× আসন্ন)।
+
+**প্যাচ:** scripts/s260-patch.py (skip-if-present idempotent) + ডক ×৩ (PROJECT §২৬০ + PLANS session260-নোট + repo-worklog Task 100)।
+
 ## §২৫৯ (session259 — cron 403679: বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার no259 + ক্যাটাগরি-চিপ-সারি-সমৃদ্ধি) — s259 ৪৯/৪৯ ×২ (২৩ সেপ্টেম্বর ২০২৬)
 
 **রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`058800b` (session258/Task98, clean-tree); GH /user→200 + Vercel /v2/user→200; live-200; স্টেল-সামারি-সংশোধন ×২৫ (সামারি Task43/'commit-হয়নি'/device-flow/'১২-ট্রিগার' যুগ — সব-ভুল; ACTIVE-LOCK Task98/session258-ই-সত্য)। রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s258 ৪৮/৪৮ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session258-বাকি-প্রস্তাব গ্রহণ: notices-সারফেস ফিল্টার-প্যাক)।
