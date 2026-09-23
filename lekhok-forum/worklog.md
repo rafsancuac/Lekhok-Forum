@@ -2838,7 +2838,10 @@ Work Log:
 - স্থায়ী-সার্ভার-জীবিত (৮০৯৪) — টোকেন-ভ্যালিদ; device-flow-অবসর
 - **টেস্ট:** নতুন tests/s278-amlfilter-suite.sh **৭৪/৭৪ ×২-ধারাবাহিক (SKIP=২)** + পূর্ণ-রিগ্রেশন s260-s277 সব-গ্রিন (s277 ৬৬/৬৬ + s276 ৫৯/৫৯ + s275 ৮২/৮২ + s274 ৬১/৬১ + s273 ৫৭/৫৭ + s272 ৭২/৭২ + s271 ৫৮/৫৮ + s270 ৬১/৬১ + s269 ৭৭/০/২ + s268 ৫৬/৫৬ + s267 ৫৯/৫৯ + s266 ৫৯/৫৯ + s265 ৫৭/৫৭ + s264 ৫৬/৫৬ + s263 ৫৩/০/১ + s262 ৪৮/০/১ + s261 ৫০/৫০ + s260 ৫২/৫২) + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs)
 - PNG-চার্ন-রিভার্ট ×১৫ (session269-প্রথা — s265-s275-পুরাতন-স্ক্রিনশট) + secret-scan-ক্লিন
-- ডক ×৩ (PROJECT §২৭৮ + PLANS session278 + repo-worklog Task-118) + কমিট-জোড়া (ফিচার + ডক) → fetch+rebase → push (push-পরবর্তী HEAD = এ-কমিট) → Vercel READY → প্রোড-স্পট
+- ডক ×৩ (PROJECT §২৭৮ + PLANS session278 + repo-worklog Task-118) + কমিট-জোড়া (ফিচার + ডক)
+- **push-পূর্ব fetch-এ সমান্তরাল session278-ইউজার-রাউন্ড-আবিষ্কৃত** (e-paper থাম্বনেইল + constitution-v3 — ৪-কমিট) → **লেবেল-সংঘর্ষ (দুই-রাউন্ড-ই session278/Task-118)** → সংঘর্ষ-শূন্য rebase (ফাইল-সেট-বিচ্ছিন্ন) → **session105-প্রথা: শিরোনাম-কনটেন্ট-বিভাজন + রিলে-নোট** (PROJECT §২৭৮ ×২ / PLANS-নোট ×২ / worklog Task-118 ×২-সহ-অস্তিত্ব)
+- **rebase-পরবর্তী-পুনঃযাচাই:** guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs) + s278 **৭৪/৭৪**-পুনঃপ্রমাণ (constitution-v3 + e-paper-সহ-ট্রিতে aml278-অক্ষুণ্ণ) → push (push-পরবর্তী HEAD = ডক-রিলে-কমিট)
+- **Vercel: কোটা-দ্বৈত-ব্লক-অবধি-স্থগিত** (ইউজার-রাউন্ড-প্রমাণ: API 402 + git-push BLOCKED; reset 2026-09-24T10:38:35Z — reset-পরে-প্রথম-পুশই সম্মিলিত-ডিপ্লয়; আজ-প্রোড = পুরনো ed64e4c-ডিপ্লয়, কোড origin/main-এ সম্পূর্ণ-নিরাপদ)
 
 Stage Summary:
 - **[Mandatory-ফিচার]** /admin/members aml278 তাৎক্ষণিক-ফিল্টার — tr data-aml-row + দ্বিভাষিক data-kw (উইং/স্ট্যাটাস-মান-অ্যালায়াসসহ ×৫-নরমালাইজড) + স্ট্রিপ + চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + দ্বি-ফিল্ড-গার্ড (bulk_ids-INPUT + term-SELECT) + Escape + __amlQA
