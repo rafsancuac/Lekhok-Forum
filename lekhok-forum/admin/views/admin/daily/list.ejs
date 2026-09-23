@@ -31,6 +31,26 @@
     <span class="count-pill"><%= items.length %></span>
   </div>
 
+  <!-- session293: dcf293 তাৎক্ষণিক-ফিল্টার (কীওয়ার্ড + ধরন + স্ট্যাটাস — sb269-পরিবার-সম্প্রসারণ) -->
+  <div class="dcf-instant" id="dcfStrip293">
+    <i class="fas fa-filter dcf-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="dcfFilter293" class="dcf-instant-input" placeholder="শিরোনাম / বিবরণ খুঁজুন…" aria-label="ডেইলি কনটেন্ট খুঁজুন">
+    <select id="dcfType293" class="dcf-instant-select" aria-label="ধরন অনুযায়ী ফিল্টার">
+      <option value="">সব ধরন</option>
+      <% Object.keys(DAILY_TYPES).forEach(function (t) { %>
+      <option value="<%= t %>"><%= DAILY_TYPES[t].label %></option>
+      <% }); %>
+    </select>
+    <select id="dcfPub293" class="dcf-instant-select" aria-label="স্ট্যাটাস অনুযায়ী ফিল্টার">
+      <option value="">সব স্ট্যাটাস</option>
+      <option value="1">প্রকাশিত</option>
+      <option value="0">খসড়া</option>
+    </select>
+    <button type="button" id="dcfClear293" class="dcf-instant-clear" hidden aria-label="ফিল্টার পরিষ্কার"><i class="fas fa-xmark"></i></button>
+    <span class="dcf-count-chip" id="dcfCount293" hidden><i class="fas fa-list-ul" aria-hidden="true"></i> <span id="dcfCountTxt293">০ / ০</span></span>
+    <span class="dcf-kbd-hint"><kbd>F</kbd> খুঁজুন · <kbd>Esc</kbd> পরিষ্কার</span>
+  </div>
+  <div class="dcf-zero" id="dcfZero293" hidden><i class="fas fa-magnifying-glass-minus" aria-hidden="true"></i> কোনো মেলে-না — ফিল্টার বদলান বা পরিষ্কার করুন</div>
   <% if (items.length === 0) { %>
     <div class="empty-state-full">
       <i class="fas fa-sun"></i>
@@ -43,6 +63,8 @@
     <% const types = {};
        items.forEach(it => { types[it.content_type] = (types[it.content_type] || 0) + 1; });
        const totalItems = items.length; %>
+  <% /* session293: dcf293 ফিল্টার-সহায়ক — সারি-কীওয়ার্ড (শিরোনাম+বডি+ধরন-লেবেল+তারিখ; ১৪০-অক্ষর-ক্যাপ) */ %>
+  <% var dcfKw293 = function (it) { return [it.title, it.body, (DAILY_TYPES[it.content_type] ? DAILY_TYPES[it.content_type].label : it.content_type), (it.scheduled_date || '')].filter(Boolean).join(' ').replace(/\s+/g, ' ').slice(0, 140); }; %>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
       <span class="chip chip-accent"><i class="fas fa-layer-group"></i> সব <%= totalItems %></span>
       <% Object.keys(DAILY_TYPES).forEach(t => {
@@ -72,7 +94,7 @@
       </thead>
       <tbody>
         <% items.forEach(it => { %>
-          <tr>
+          <tr data-dcf-row data-kw="<%= dcfKw293(it) %>" data-dcf-type="<%= it.content_type %>" data-dcf-pub="<%= it.published ? '1' : '0' %>">
             <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= it.id %>" aria-label="সিলেক্ট"></td>
             <td>
               <span class="chip" style="font-size:.78rem;padding:4px 10px;">
@@ -127,5 +149,90 @@
     </div>
   <% } %>
 </div>
+<style>
+  /* session293 — dcf293 তাৎক্ষণিক-ফিল্টার স্টাইল (mo268/sb269-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু) */
+  .dcf-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+  .dcf-instant-ico { color: var(--lf-amber-deep); opacity: .75; }
+  .dcf-instant-input, .dcf-instant-select { border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-amber-soft); transition: none; }
+  .dcf-instant-input { flex: 1 1 220px; min-width: 0; }
+  .dcf-instant-select { flex: 0 1 auto; cursor: pointer; }
+  .dcf-instant-input:focus, .dcf-instant-select:focus { outline: none; border-color: color-mix(in srgb, var(--lf-amber-deep) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-amber-deep) 15%, transparent); }
+  .dcf-instant-clear { border: 0; background: transparent; color: var(--lf-amber-deep); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+  .dcf-instant-clear:hover { background: var(--lf-amber-soft); }
+  .dcf-instant-clear:active { transform: scale(.96); }
+  .dcf-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-amber-deep); background: var(--lf-amber-soft); }
+  .dcf-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+  .dcf-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-amber-deep) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-amber-deep); background: var(--lf-white); }
+  .dcf-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-amber-deep) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-amber-soft); }
+  .dcf-count-chip[hidden], .dcf-zero[hidden], .dcf-instant-clear[hidden] { display: none; }
+  tr[data-dcf-row][hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { .dcf-instant-clear:active { transform: none; } }
+  @media (max-width: 640px) { .dcf-kbd-hint { display: none; } .dcf-instant { padding: 9px 11px; } }
+</style>
+<script>
+(function () {
+  /* session293 — dcf293 তাৎক্ষণিক-ফিল্টার (sb269-প্যাটার্ন-মিরর + দ্বৈত-ফ্যাসেট: data-kw + ধরন + স্ট্যাটাস — সব-শর্ত AND;
+     'f'-ফোকাস-ফিল্ড-গার্ড + Escape + শূন্য-অবস্থা + কাউন্ট-চিপ + __dcf293QA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+  if (window.__dcf293wired) return; window.__dcf293wired = true;
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-dcf-row]'));
+  var input = document.getElementById('dcfFilter293');
+  var typeSel = document.getElementById('dcfType293');
+  var pubSel = document.getElementById('dcfPub293');
+  var clearBtn = document.getElementById('dcfClear293');
+  var countChip = document.getElementById('dcfCount293');
+  var countTxt = document.getElementById('dcfCountTxt293');
+  var zeroBox = document.getElementById('dcfZero293');
+  if (!input) return;
+  var total = rows.length;
+  var bn293 = function (n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+  function dcfActive293() {
+    return !!(input.value || '').trim() || !!typeSel.value || !!pubSel.value;
+  }
+  function dcfApply293() {
+    var q = (input.value || '').trim().toLowerCase();
+    var ty = typeSel.value;
+    var pb = pubSel.value;
+    var shown = 0;
+    rows.forEach(function (row) {
+      var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+      var hit = (!q || kw.indexOf(q) !== -1) && (!ty || row.getAttribute('data-dcf-type') === ty) && (!pb || row.getAttribute('data-dcf-pub') === pb);
+      row.hidden = !hit;
+      if (hit) { shown++; }
+    });
+    var act = dcfActive293();
+    if (countChip) { countChip.hidden = !act; if (act && countTxt) { countTxt.textContent = bn293(shown) + ' / ' + bn293(total); } }
+    if (clearBtn) { clearBtn.hidden = !act; }
+    if (zeroBox) { zeroBox.hidden = !(act && shown === 0); }
+  }
+  function dcfClear293() {
+    input.value = '';
+    typeSel.value = '';
+    pubSel.value = '';
+    dcfApply293();
+    input.blur();
+  }
+  input.addEventListener('input', dcfApply293);
+  typeSel.addEventListener('change', dcfApply293);
+  pubSel.addEventListener('change', dcfApply293);
+  if (clearBtn) { clearBtn.addEventListener('click', dcfClear293); }
+  input.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { ev.stopPropagation(); dcfClear293(); }
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+    var t = ev.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+    ev.preventDefault();
+    input.focus();
+    input.select();
+  });
+  window.__dcf293QA = {
+    total: function () { return total; },
+    count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+    apply: dcfApply293,
+    clear: dcfClear293
+  };
+})();
+</script>
 </body>
 </html>
