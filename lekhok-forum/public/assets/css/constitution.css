@@ -447,7 +447,11 @@
   font-size: 14px;
   line-height: 1.85;
   color: var(--lf-fb-ink);
-  font-weight: 600;
+  font-weight: 400;
+}
+.const-enum-title {
+  font-weight: 700;
+  color: var(--lf-gray-deep-ink);
 }
 .const-hr { border: 0; border-top: 1px solid var(--lf-ui-border); margin: 18px 0; }
 

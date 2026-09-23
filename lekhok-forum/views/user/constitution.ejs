@@ -21,6 +21,7 @@
       <span><i class="fas fa-layer-group" aria-hidden="true"></i> <%= toBn(chapters.length) %>টি অধ্যায়</span>
       <span><i class="fas fa-gavel" aria-hidden="true"></i> <%= toBn(totalSections) %>টি প্রকাশিত ধারা</span>
       <span><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> কার্যকর: ১৪ জুলাই ২০২০ (ধারা-০৯)</span>
+      <span><i class="fas fa-file-signature" aria-hidden="true"></i> সর্বশেষ সংশোধন: ০৬ জুন, ২০২৬</span>
     </div>
   </header>
 
@@ -43,7 +44,7 @@
             <a href="/constitution?chapter=<%= ch.id %>"
                class="const-index-item <%= ch.id === active.id ? 'is-active' : '' %>"
                <%= ch.id === active.id ? 'aria-current="page"' : '' %>>
-              <span class="const-index-bubble"><% if (ch.id === 'preface') { %><i class="fas fa-feather-pointed" aria-hidden="true" style="font-size:10px;"></i><% } else { %><%= toBn(ch.id.split('-')[1]) %><% } %></span>
+              <span class="const-index-bubble"><% if (ch.id === 'preface') { %><i class="fas fa-feather-pointed" aria-hidden="true" style="font-size:10px;"></i><% } else if (ch.id === 'amendment-2026') { %><i class="fas fa-file-signature" aria-hidden="true" style="font-size:10px;"></i><% } else { %><%= toBn(ch.id.split('-')[1]) %><% } %></span>
               <span class="const-index-text">
                 <span class="const-index-name"><%= ch.title %></span>
                 <span class="const-index-sub"><%= ch.subtitle %></span>
@@ -73,7 +74,7 @@
       <header class="const-art-head">
         <div class="const-art-eyebrow">
           <span><i class="fas fa-bookmark" aria-hidden="true"></i> অফিসিয়াল গেজেট ও নথি</span>
-          <span class="const-art-no"><%= active.id === 'preface' ? 'ভূমিকা' : 'অধ্যায় ' + toBn(active.id.split('-')[1]) %></span>
+          <span class="const-art-no"><%= active.id === 'preface' ? 'ভূমিকা' : (active.id === 'amendment-2026' ? 'সংশোধনী' : 'অধ্যায় ' + toBn(active.id.split('-')[1])) %></span>
         </div>
         <h2 class="const-art-title"><%= active.title %></h2>
         <p class="const-art-sub"><%= active.subtitle %></p>
@@ -83,7 +84,7 @@
               <i class="fas fa-gavel" aria-hidden="true"></i>
               <%= toBn(active.sections.length) %>টি ধারা
             </span>
-            <% if (active.sections.length > 1) { %>
+            <% if (active.sections.length > 1 && active.sections[0].badge && active.sections[0].badge.startsWith('ধারা-')) { %>
               <span class="const-chip const-chip-soft">
                 <%= active.sections[0].badge %> হতে <%= active.sections[active.sections.length - 1].badge %>
               </span>
@@ -125,7 +126,7 @@
                 <% } else if (g.type === 'enum') { %>
                   <p class="const-enum">
                     <span class="const-enum-no"><%= g.no %>.</span>
-                    <span class="const-enum-text"><%= g.text %></span>
+                    <span class="const-enum-text"><% if (g.title) { %><strong class="const-enum-title"><%= g.title %>:</strong> <% } %><%= g.text %></span>
                   </p>
                 <% } else { %>
                   <p class="const-sec-lead"><%= g.text %></p>
@@ -154,7 +155,7 @@
       </nav>
 
       <footer class="const-art-foot">
-        <span>গঠনতন্ত্র কার্যকর: ১৪ জুলাই ২০২০ • ধারা-০৯</span>
+        <span>গঠনতন্ত্র কার্যকর: ১৪ জুলাই ২০২০ • সর্বশেষ সংশোধন: ০৬ জুন, ২০২৬</span>
         <span class="const-art-foot-brand">লেখক ফোরাম গঠনতান্ত্রিক সংসদ</span>
       </footer>
     </article>

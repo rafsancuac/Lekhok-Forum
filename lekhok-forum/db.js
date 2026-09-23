@@ -909,6 +909,45 @@ async function constitutionGazetteSyncV2() {
   return synced;
 }
 
+// ── সেশন ২৩১: গেজেট v3 — সংশোধনী-বিজ্ঞপ্তি (জুন ২০২৬) সিঙ্ক ────────────────
+// স্মারক বাতকলেফো/২০২৬/বিবি/০১ (০৬ জুন ২০২৬-এ কার্যকর): ১৪-দফা সংশোধনী +
+// ধারা-১৮ (স্থায়ী পর্ষদ) ও ধারা-২০ (আজীবন উপদেষ্টা পর্ষদ) পূর্ণ-প্রতিস্থাপন +
+// নতুন 'amendment-2026' অধ্যায়। settings-মার্কার-গেটেড একবার-ই upsert:
+// (chapter, section_title) মিললে UPDATE, না-মিললে INSERT — পরবর্তী এডমিন-সম্পাদনা সুরক্ষিত।
+async function constitutionGazetteSyncV3() {
+  const MARKER = 'constitution_gazette_v3';
+  try {
+    const done = await backend.prepare('SELECT id FROM settings WHERE key = ?').get(MARKER);
+    if (done) return 0;
+  } catch (e) { return 0; }
+  const { CONSTITUTION_SECTIONS_V1 } = require('./data/constitution');
+  let n = 0;
+  for (const s of CONSTITUTION_SECTIONS_V1) {
+    try {
+      const row = await backend.prepare(
+        'SELECT id FROM constitution WHERE chapter = ? AND section_title = ? LIMIT 1'
+      ).get(s.chapter, s.section_title);
+      if (row) {
+        await backend.prepare(
+          'UPDATE constitution SET content = ?, sort_order = ? WHERE id = ?'
+        ).run(s.content, s.sort_order, row.id);
+      } else {
+        await backend.prepare(
+          'INSERT INTO constitution (section_title, content, sort_order, chapter) VALUES (?, ?, ?, ?)'
+        ).run(s.section_title, s.content, s.sort_order, s.chapter);
+      }
+      n++;
+    } catch (e) {
+      console.error('[db] gazette v3 upsert failed (' + s.section_title + '):', e.message);
+    }
+  }
+  try {
+    await backend.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)')
+      .run(MARKER, 'amendment-2026-sync');
+  } catch (e) { /* পরের বুটে আবার */ }
+  return n;
+}
+
 async function constitutionGazetteSeed206() {
   try {
     await backend.exec(
@@ -922,6 +961,14 @@ async function constitutionGazetteSeed206() {
     if (n) console.log('[db] constitutionGazetteSyncV2: ' + n + ' সারি verbatim-সিঙ্কড');
   } catch (e) {
     console.error('[db] constitutionGazetteSyncV2 failed:', e.message);
+  }
+  // (১.খ) গেজেট v3 — সংশোধনী-বিজ্ঞপ্তি (জুন ২০২৬) upsert: ধারা-১৮/২০ প্রতিস্থাপন +
+  // amendment-2026 অধ্যায়ের ৪ ধারা সংযোজন
+  try {
+    const n3 = await constitutionGazetteSyncV3();
+    if (n3) console.log('[db] constitutionGazetteSyncV3: ' + n3 + ' সারি upsert-সম্পন্ন');
+  } catch (e) {
+    console.error('[db] constitutionGazetteSyncV3 failed:', e.message);
   }
   const { CONSTITUTION_SECTIONS_V1 } = require('./data/constitution');
   let seeded = 0;
@@ -2383,7 +2430,8 @@ function bootFingerprint() {
   // গেজেট-ফাংশনদুটিও ফিঙ্গারপ্রিন্টে — নইলে Turso-বুট-ক্যাশ-হিটে নতুন গেজেট-সিড/সিঙ্ক স্কিপ হয়
   // (গেজেট v2 ফিক্স: constitutionGazetteSeed206+constitutionGazetteSyncV2 যোগ)
   const fns = [runMigrations, applyLaterMigrations, applySession42Migrations, seedAdmin, seedIfEmptyLocal,
-               seedDemoContent, ensureDemoModerator, constitutionGazetteSeed206, constitutionGazetteSyncV2];
+               seedDemoContent, ensureDemoModerator, constitutionGazetteSeed206, constitutionGazetteSyncV2,
+               constitutionGazetteSyncV3];
   return crypto.createHash('md5')
     .update(BOOT_CACHE_VERSION + '|' + fns.map(f => f.toString()).join('§')
             + '|' + JSON.stringify(LATER_COLUMNS))
