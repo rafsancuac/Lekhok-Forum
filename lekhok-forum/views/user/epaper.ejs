@@ -191,9 +191,10 @@
         <div class="ep-cal-mpanel" id="epCalMPanel" hidden>
           <div class="ep-cal-myear">
             <button type="button" class="ep-cal-btn" id="epCalMYPrev" aria-label="আগের বছর"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
-            <span class="ep-cal-mylabel" id="epCalMY">—</span>
+            <button type="button" class="ep-cal-mylabel" id="epCalMY" aria-haspopup="true" aria-expanded="false" title="বছর-তালিকা খুলুন">—</button>
             <button type="button" class="ep-cal-btn" id="epCalMYNext" aria-label="পরের বছর"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
           </div>
+          <div class="ep-cal-ylist" id="epCalYList" role="listbox" aria-label="বছর নির্বাচন" hidden></div>
           <div class="ep-cal-mgrid" id="epCalMGrid" role="listbox" aria-label="মাস নির্বাচন"></div>
         </div>
       </div>
@@ -1309,6 +1310,67 @@
     open: function () { ep283OpenPanel(); },
     close: function () { ep283ClosePanel(); },
     render: function () { ep283Render(); }
+  };
+
+  /* ═══════════ session284 (cron 403679): মাস-প্যানেলে বছর-তালিকা-শর্টকাট (ep284) ═══════════
+     বছর-লেবেল-ক্লিকে ইন-প্যানেল বছর-তালিকা-স্ট্রিপ (avail-উদ্ভূত — তথ্য-আছে-বছর-ই);
+     বছর-ক্লিকে স্টেপার-জাম্প (ep283Year-সেট + ep283Render-পুনঃরেন্ডার — ±১-পুনরাবৃত্তি-শূন্য);
+     প্যানেল-খোলা/বন্ধে স্ট্রিপ-সিঙ্ক (র‍্যাপার-স্তরে — ep283-ফাংশন-বডি-অস্পৃশ্য); __ep284QA হুক। */
+  var elCalYList = document.getElementById('epCalYList');
+  var ep284YOpen = false, ep284Last = '', ep284YearsN = 0;
+  function ep284YearsList() {
+    return Object.keys(ep283Avail()).map(Number).sort(function (a, b) { return b - a; });
+  }
+  function ep284Render() {
+    if (!elCalYList) return;
+    var ys = ep284YearsList();
+    ep284YearsN = ys.length;
+    var frag = '';
+    for (var i = 0; i < ys.length; i++) {
+      var y = ys[i], cur = (y === ep283Year);
+      frag += '<button type="button" class="ep-cal-y' + (cur ? ' is-cur' : '') +
+        '" data-y="' + y + '" role="option" aria-selected="' + (cur ? 'true' : 'false') + '">' + bnDigits(y) + '</button>';
+    }
+    elCalYList.innerHTML = frag;
+  }
+  function ep284OpenList() {
+    if (!elCalYList || ep284YOpen) return;
+    ep284YOpen = true;
+    ep284Render();
+    elCalYList.hidden = false;
+    if (elCalMY) { elCalMY.setAttribute('aria-expanded', 'true'); elCalMY.classList.add('is-open'); }
+  }
+  function ep284CloseList() {
+    if (!elCalYList || !ep284YOpen) return;
+    ep284YOpen = false;
+    elCalYList.hidden = true;
+    if (elCalMY) { elCalMY.setAttribute('aria-expanded', 'false'); elCalMY.classList.remove('is-open'); }
+  }
+  if (elCalMY) elCalMY.addEventListener('click', function () { ep284YOpen ? ep284CloseList() : ep284OpenList(); });
+  if (elCalYList) elCalYList.addEventListener('click', function (e) {
+    var b = e.target.closest('.ep-cal-y'); if (!b) return;
+    ep283Year = +b.getAttribute('data-y');
+    ep284Last = String(ep283Year);
+    ep283Render();
+    ep284CloseList();
+  });
+  /* প্যানেল-খোলা/বন্ধ + রেন্ডার-সিঙ্ক — র‍্যাপার-স্তর (ep283OpenPanel/ep283ClosePanel/ep283Render-বডি-অস্পৃশ্য;
+     ফাংশন-ডিক্লারেশন-বাইন্ডিং late-bound — পূর্ব-বাউন্ড হ্যান্ডলার-ও র‍্যাপার-ই দেখে) */
+  var ep283OpenPanelBase = ep283OpenPanel;
+  ep283OpenPanel = function () { ep283OpenPanelBase(); ep284CloseList(); };
+  var ep283ClosePanelBase = ep283ClosePanel;
+  ep283ClosePanel = function () { ep283ClosePanelBase(); ep284CloseList(); };
+  var ep283RenderBase = ep283Render;
+  ep283Render = function () { ep283RenderBase(); if (ep284YOpen) ep284Render(); };
+  /* session284 QA-হুক (__ep284QA — সারফেস-নেমস্পেস-রীতি; বছর-তালিকা-প্রমাণ) */
+  window.__ep284QA = {
+    isOpen: function () { return ep284YOpen; },
+    years: function () { return ep284YearsN; },
+    year: function () { return ep283Year; },
+    jumped: function () { return ep284Last; },
+    open: function () { ep284OpenList(); },
+    close: function () { ep284CloseList(); },
+    render: function () { ep284Render(); }
   };
 
   /* ── ৪. বার-তারিখ-টেক্সট (বার-সহ পূর্ণ বাংলা তারিখ) ── */

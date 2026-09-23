@@ -632,3 +632,17 @@
 .ep-cal-m.is-cur { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); font-weight: 800; }
 .ep-cal-m.is-cur::after { background: var(--lf-white); }
 @media (prefers-reduced-motion: reduce) { .ep-cal-mpanel { animation: none; } .ep-cal-month, .ep-cal-m { transition: none; } }
+
+/* ═══ session284 — মাস-প্যানেলে বছর-তালিকা-শর্টকাট (ep284 — হেক্স-শূন্য টোকেন-শুধু;
+       বছর-লেবেল-ট্রিগার + বছর-চিপ-স্ট্রিপ + এক-ক্লিক-বছর-জাম্প) ═══ */
+.ep-cal-mylabel { border: none; background: transparent; cursor: pointer; border-radius: 7px; padding: 3px 8px; transition: background .15s ease, color .15s ease; }
+.ep-cal-mylabel:hover, .ep-cal-mylabel.is-open { background: var(--lf-green-tint); }
+.ep-cal-mylabel:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 1px; }
+.ep-cal-ylist { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; border-top: 1px dashed var(--lf-ui-border-strong); margin-top: 2px; padding-top: 8px; margin-bottom: 8px; animation: ep-cal-y-in .16s ease; }
+@keyframes ep-cal-y-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.ep-cal-y { border: 1px solid var(--lf-ui-border-strong); border-radius: 7px; background: transparent; color: var(--lf-text-primary); font-family: var(--font-heading); font-size: .68rem; font-weight: 700; padding: 5px 10px; cursor: pointer; transition: background .12s ease, color .12s ease, border-color .12s ease; }
+.ep-cal-y:hover { background: var(--lf-green-tint); border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); }
+.ep-cal-y:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
+.ep-cal-y.is-cur { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); font-weight: 800; }
+@media (max-width: 640px) { .ep-cal-ylist { gap: 3px; } .ep-cal-y { padding: 4px 8px; font-size: .64rem; } }
+@media (prefers-reduced-motion: reduce) { .ep-cal-ylist { animation: none; } .ep-cal-mylabel, .ep-cal-y { transition: none; } }
