@@ -3976,3 +3976,19 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session261 লেবেল (worklog Task ID 101)**; PLANS session260-নোট অবশ্যই-পড়ুন (স্ট্যাটাস-চিপ-প্যাটার্ন + past-মিউট + দ্বি-ভাষা-kw); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: moderator-resources-সারফেস ফিল্টার-প্যাক (ev260/no259-প্যাটার্ন-মিরর), moderator-users-স্কোপড-ভ্যারিয়েন্ট, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
+
+---
+Task ID: keeper-401248 + অডিট-দাবি-যাচাই (session233-cont ধারাবাহিক)
+Agent: Super Z (keeper cron 401248, ১৪:৩৯-রাউন্ড)
+Task: কিপার-রাউন্ড + ইউজার-পাঠানো এক্সটার্নাল-অডিট-বিশ্লেষণের প্রতিটি দাবি আসল-রিপোর সাথে যাচাই
+
+Work Log:
+- কিপার: exit 3 (প্রত্যাশিত — TG-OTP-প্রতীক্ষিত, হার্টবিট 55s)
+- দাবি-যাচাই: ① sitemap-bug সত্যি — schema.sql-এ posts-টেবিলে updated_at নেই (শুধু published_at/created_at), নীরব catch এটা চাপাত; ② /questions/:id-vs-/qa/:id মিসম্যাচ সত্যি; ③ x-powered-by উন্মুক্ত ছিল; ④ PII-ব্যাকআপ members-user-links-2026-09-20.json গিটে ট্র্যাকড ছিল; ⑤ monolith-সাইজ সত্যি (db.js 241K, social.js 269K, server.js 87K, dashboard.js 124K, style.css 370K); ⑥ Next.js/Vite/drizzle-ফাইল রিপোতে অস্তিত্বশূন্য (git ls-files প্রমাণ) — ওই অভিযোগ আপলোডেড-জিপ-প্রোটোটাইপের বিভ্রম
+- কনকারেন্ট-এজেন্ট session272 (Task-112) অডিট-ফিক্স-কমিট 032b13e বানিয়ে আনপুশড-রেখে-গিয়েছিল (আমার দুই-কমান্ডের মাঝে commit হয়েছিল — behind-43→ahead-1 বিশৃঙ্খলা তারই প্রমাণ) → আমি পুশ করলাম (dbbfba3..032b13e)
+- লাইভ-যাচাই (lekhok-forum.vercel.app): ডিপ্লয়-পূর্বে sitemap ৩১-URL (আর্টিকেল-০/QA-০) + /questions/12→200 + x-powered-by:Express; ডিপ্লয়-পরে sitemap ৫০-URL (আর্টিকেল-১০ + QA-৯ + নোটিশ-৬) ✓ /questions/12→301→/qa/12 ✓ x-powered-by অনুপস্থিত ✓
+
+Stage Summary:
+- এক্সটার্নাল-অডিটের বাস্তব-ফিক্স ×৪ সব-লাইভ (sitemap/301/x-powered-by/PII-untrack+gitignore) — ইউজারকে পূর্ণ-ভেরডিক্ট জানানো হলো
+- অবশিষ্ট-নোট: গিট-হিস্ট্রিতে PII-ব্লব এখনো আছে (filter-repo-ব্যতীত যাবে না — ইউজার-সিদ্ধান্ত); GSC-তে sitemap re-submit-সুপারিশ; Gist-ভল্ট secret-scan-ঝুঁকি-নোট; monolith-রিফ্যাক্টর = দীর্ঘমেয়াদি
+- TG-সেশন-রিকভারি ইউজার-OTP-প্রতীক্ষিত (২২–২৩ তারিখের পেপার ব্যাকফিল-বাকি)
