@@ -2956,3 +2956,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session286 লেবেল (worklog Task ID 126)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session285 + session284 + session283 + উভয়-session280-নোট পড়ুন
 - বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), ep282-প্যানেলে aria-activedescendant-বিস্তার, **ep284-মাস-গ্রিডেও কী-বোর্ড-নেভিগেশন (ep285-র-ই-প্যাটার্ন — ৪-কলাম-গ্রিড-রোভিং)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
 - রিমোট main = push-পরবর্তী HEAD (session285-ep285); working-tree ক্লিন
+
+---
+Task ID: 126 (session286 — cron 403679; মাস-গ্রিডে কী-বোর্ড-নেভিগেশন ep286)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9, trace 202609240011)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- রাউন্ড-শুরু HEAD=origin=`5cc4eb0` (session285-ep285), working-tree ক্লিন; **ফিচার-কোড-লেখার-আগেই fetch** (BEHIND=০)
+- QA: প্রোড-স্পট home/epaper-200 + agent-browser-প্রোড ep285-ক্যানারি (প্যানেল→স্ট্রিপ-খোলায় আর্ম active=focused=২০২৬ + tabindex=০ + End→Enter-জাম্প + ফোকাস-ফেরত epCalMY) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (PLANS session285-শীর্ষ-প্রস্তাব গ্রহণ: **মাস-গ্রিডে কী-বোর্ড-নেভিগেশন**)
+
+## এ-রাউন্ডে সম্পন্ন (session286)
+- **[Mandatory-ফিচার] ep286:** ep283-মাস-গ্রিডে (৪-কলাম × ৩-সারি) **←→=±1, ↑=−4, ↓=+4-রোভিং (wrap + disabled-স্কিপ-লুপ — সব-disabled-নো-অপ tries≥১২-গার্ড)** + **Home/End-enabled** + **Enter/Space-সক্রিয়** (ep283-ক্লিক-হ্যান্ডলার-পুনঃব্যবহার); **খোলায়-আর্ম (is-cur→has→প্রথম-enabled)** + **রোভিং-ট্যাবইনডেক্স (disabled-স্পর্শ-শূন্য)** + is-act-শ্রেণি + **রি-রেন্ডার-সফট-আর্ম** + বন্ধে-রিসেট + **Escape-ফোকাস-ফেরত epCalMonth (capture-পতাকা — outside-click-ফোকাস-চুরি-শূন্য)** + জাম্পে-ফোকাস-ফেরত + **__ep286QA হুক ×৫**; র‍্যাপার-স্তর ×৩ (ep283/ep284/ep285-বডি-অস্পৃশ্য)
+- **[Mandatory-স্টাইল]:** ep286-ব্লক হেক্স-শূন্য টোকেন-শুধু — is-act-টিন্ট + is-act.has-ডট-সংরক্ষণ + is-act.is-cur-আউটলাইন + **মোবাইল-সংকোচন 640px (gap 2px + কমপ্যাক্ট)** + reduced-motion-গার্ড
+- **টেস্ট:** নতুন tests/s286-calgrid-suite.sh **৫৬/৫৬ ×২-ধারাবাহিক (SKIP=০)** + **নতুন সিড-হেল্পার s286-seedmonths.js** (২০২৬-জানু..আগস্ট ×৮ — নেট-শূন্য PRE=০→FINAL=০) + **পূর্ণ-রিগ্রেশন s260-s286 (২৮-সুইট সব-গ্রিন — রানার s286-regression.sh)** + role-policy **২৬০/২৬০** + guard:design + audit:views-গ্রিন (১২২ ejs)
+- **গোটচা ×৩ (PLANS session286):** ① **is-cur-সর্বশেষ-তারিখ-বুট** — পেজ সর্বশেষ-সংরক্ষিত-তারিখে-বুট → is-cur=আগস্ট-enabled → আর্ম has-প্রথম-নয় → সুইট-অ্যাসার্ট-ডায়নামিক + Home-অ্যাংকর-চুক্তি ② **disabled-রোভিং-স্পর্শ-শূন্য** — tabindex শুধু-enabled-বাটনে → m=enabled−1 (s285-র m=n−1-এখানে-প্রযোজ্য-নয়) ③ **রানার-সারাংশ-দ্বি-ফরম্যাট** — `ALL GREEN`-বিহীন `সারসংক্ষেপ: PASS=`-পরিবার (s280-ep3p) → রানার-উভয়-গ্রহণী
+- **পাইপলাইন:** প্যাচ scripts/s286-patch.py (idempotent ×২, ×২-এডিট) + feature-commit `a8e23f2` + ডক ×৩ (PROJECT §২৮৬ + PLANS session286 + repo-worklog Task-126; s286-docs.py idempotent ×২) + docs-commit + PNG-চার্ন-রিভার্ট (tracked-M-শুধু) + secret-scan-ক্লিন + fetch (BEHIND=০) + **push** → Vercel READY → প্রোড-স্পট + **ep286-লাইভ-যাচাই (প্রোডে আর্ম + Home→Enter-জাম্প + Escape-ফোকাস-ফেরত)** + স্ক্রিনশট download/s286-prod-*.png
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session287 লেবেল (worklog Task ID 127)**; **ফিচার-কোড-লেখার-আগেই fetch** + push-আগে পুনঃ-fetch+rebase + রিবেজ-পরবর্তী guard:design-পুনঃরান; PLANS session286 + session285 + session284 + উভয়-session280-নোট পড়ুন
+- বাকি-প্রস্তাব: LOWMEM-রেল-থাম্ব-প্রি-রেন্ডার-ক্যাপ, multipart-ব্রাউজার-পাথ-ই২ই, admin-সারফেস-ফিল্টার-অ-তালিকা-প্রার্থী (security.ejs স্কোপ-ম্যাপ-পূর্বক; trash-admin-ভ্যারিয়েন্ট; content-history সুইট-স্তর), ep282-প্যানেলে aria-activedescendant-বিস্তার, **দিন-গ্রিডে (epCalGrid) কী-বোর্ড-নেভিগেশন (ep286-র-ই-প্যাটার্ন — ৭-কলাম-রোভিং + মাস-সীমা-স্কিপ)**, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)
+- রিমোট main = push-পরবর্তী HEAD (session286-ep286); working-tree ক্লিন
