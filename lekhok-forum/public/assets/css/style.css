@@ -3346,3 +3346,118 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 }
 /* ═══════════ EOF সেশন ২৯২ (session292 ফিল্ম-থাম্ব) ═══════════ */
 /* ═══════════ EOF সেশন ২৯১ (epk291 কিয়স্ক) ═══════════ */
+
+/* ═══════════ সেশন ২৯৫ (session296): হোম ই-পেপার কিয়স্ক — প্রশস্ত প্রিমিয়াম ব্রডশিট ═══════════
+   ইউজার-স্পেক: কার্ড আরও প্রশস্ত — প্রথম পাতার থাম্বনেইল সম্পূর্ণ দৃশ্যমান (ব্যানার/শিরোনাম
+   কাটা-যাবে-না) + প্রিমিয়াম হোভার-ওভারলে + বড় ফিল্মস্ট্রিপ কার্ড (ডেস্কটপে র‍্যাপ-গ্রিড)।
+   চুক্তি: হেক্স-শূন্য টোকেন-শুধু; session291/292-মার্কার-ব্লক অক্ষুণ্ণ (s292-সুইট); এ-ব্লক
+   ক্যাসকেডে পরে — একই-স্পেসিফিসিটিতে এ-নিয়মই প্রযোজ্য হয়। */
+
+/* ── ১. প্রশস্ত ব্রডশিট-শিট: ফিক্সড-উচ্চতা → aspect-ratio (A4-অনুপাত-সদৃশ ~১:১.৪৫) ── */
+.epk291-sheet {
+  width: min(330px, 84vw);
+  height: auto;
+  aspect-ratio: 20 / 29;
+}
+.epk291-stage { min-height: 540px; padding: 22px 0 30px; }
+.epk291-shadow { width: 268px; bottom: 20px; }
+.epk291-back-l { transform: rotate(-7.5deg) translate(-38px, 14px); }
+.epk291-back-r { transform: rotate(6.5deg) translate(36px, 16px); }
+
+/* ── ২. সম্পূর্ণ-পাতা-দৃশ্যমানতা: cover → contain (ইউজার-মূল-অভিযোগ-ফিক্স) ── */
+.epk291-media { background: var(--lf-white); }
+.epk291-img { object-fit: contain; object-position: center top; }
+
+/* মাস্টহেড — বড় কার্ডে সমানুপাতিক টাইপোগ্রাফি */
+.epk291-masthead { gap: 3px; padding: 10px 12px 8px; }
+.epk291-kicker { font-size: 8.5px; }
+.epk291-name { font-size: 22px; }
+.epk291-rule { width: 42px; }
+.epk291-dateline { font-size: 10px; }
+.epk291-foot { margin: 0 14px 12px; padding-top: 8px; font-size: 10px; }
+
+/* ── ৩. প্রিমিয়াম হোভার-ওভারলে — "পূর্ণাঙ্গ পাতা পড়ুন" ── */
+.epk291-hover296 {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.42) 0%, rgba(15, 23, 42, 0.08) 55%);
+  opacity: 0;
+  transition: opacity .22s ease;
+  pointer-events: none;
+}
+.epk291-front:hover .epk291-hover296,
+.epk291-front:focus-visible .epk291-hover296 { opacity: 1; }
+.epk291-hoverbtn296 {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 10px;
+  background: var(--accent); color: var(--lf-white);
+  font-family: var(--font-heading); font-size: 12.5px; font-weight: 700;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.30);
+  transform: translateY(8px);
+  transition: transform .22s ease;
+}
+.epk291-hoverbtn296 .fas { font-size: 12px; }
+.epk291-front:hover .epk291-hoverbtn296,
+.epk291-front:focus-visible .epk291-hoverbtn296 { transform: translateY(0); }
+@media (hover: none) { .epk291-hover296 { display: none; } }
+
+/* ── ৪. ফিল্মস্ট্রিপ — বড় প্রিমিয়াম কার্ড (ডেস্কটপে র‍্যাপ-গ্রিড, মোবাইলে স্ন্যাপ-স্ক্রল) ── */
+.epk291-filmwrap { margin-top: 14px; }
+.epk291-film { gap: 8px; }
+.epk291-film-btn {
+  min-width: 98px;
+  min-height: 72px;
+  gap: 3px;
+  padding: 8px 10px 10px;
+  border-radius: 10px;
+}
+.epk291-film-thumb { width: 42px; height: 52px; border-radius: 6px; }
+.epk291-film-kicker { font-size: 9px; }
+.epk291-film-name { font-size: 12px; max-width: 120px; }
+@media (min-width: 640px) {
+  .epk291-film { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+  .epk291-film-btn { min-width: 0; width: 100%; }
+}
+@media (max-width: 480px) {
+  .epk291-stage { min-height: 508px; padding: 14px 0 26px; }
+  .epk291-sheet { width: min(78vw, 292px); }
+  .epk291-shadow { width: 224px; }
+  .epk291-name { font-size: 19px; }
+  .epk291-film-btn { min-width: 94px; min-height: 66px; }
+  .epk291-film-thumb { width: 38px; height: 47px; }
+}
+
+/* ── ৫. বাম-কলাম রিয়েল-ডেটা স্ট্যাট-রো (রেফারেন্স-ডিজাইনের প্রিমিয়াম-ব্যালান্স) ── */
+.te-stats296 {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+  margin-top: 9px; padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--lf-ui-border), transparent 25%);
+  font-family: var(--font-heading); font-size: 12px; font-weight: 600;
+  color: var(--text-muted);
+}
+.te-stats296 b {
+  font-size: 16px; font-weight: 800; color: var(--accent-dark);
+  margin-right: 3px; font-variant-numeric: tabular-nums;
+}
+.te-stats296 i {
+  width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0;
+  background: color-mix(in srgb, var(--lf-ui-border), var(--text-muted) 40%);
+}
+@media (max-width: 480px) {
+  .te-stats296 { gap: 8px 10px; font-size: 11.5px; }
+  .te-stats296 b { font-size: 14.5px; }
+}
+
+/* ── ৬. ব্যান্ড-প্রশস্ততা (লম্বা শিটে বাড়তি-শ্বাস) ── */
+.te-band233 { padding: 34px 34px 30px; }
+.te-grid233 { gap: 42px; }
+@media (max-width: 1023px) {
+  .te-band233 { padding: 26px 20px 24px; }
+  .te-grid233 { gap: 26px; }
+}
+
+/* ── ৬. রিডিউসড-মোশন ── */
+@media (prefers-reduced-motion: reduce) {
+  .epk291-hover296, .epk291-hoverbtn296 { transition: none; }
+}
+/* ═══════════ EOF সেশন ২৯৫ (session296 প্রশস্ত কিয়স্ক) ═══════════ */
