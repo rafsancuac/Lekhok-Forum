@@ -2524,3 +2524,25 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session267 লেবেল (worklog Task ID 107)**; PLANS session266-নোট অবশ্যই-পড়ুন (শর্তসাপেক্ষ-বাটন-গোটচা + export-সাব-পাথ-অ্যাঙ্কর + প্রোডাকশন-ফ্লো-সিড-চুক্তি); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা (moderators/subscribers/tasks/activity/audit — ms266/ac265-প্যাটার্ন-মিরর), multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
+
+---
+Task ID: 107 (session267 — cron 403679; মডারেটর টাস্ক তাৎক্ষণিক-ফিল্টার tk267 + অ্যাডমিন-ফর্ম-সিড-চুক্তি-বিস্তার + tr-গার্ড-প্রথা)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`48170d6` (session266/Task106) → রাউন্ড-শেষে নতুন-কমিট, working-tree ক্লিন, টোকেন-ভ্যালিদ (GH /user→200), live 200; device-flow-অবসর; প্যারালাল-সংঘর্ষ-শূন্য
+- রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s266 ৫৯/৫৯ + guard:design + audit:views (১২২ ejs) — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session266-বাকি-প্রস্তাব গ্রহণ: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা — tasks সারফেস)
+
+## এ-রাউন্ডে সম্পন্ন (session267)
+- **[Mandatory-ফিচার] মডারেটর টাস্ক তাৎক্ষণিক-ফিল্টার (tk267):** /admin/tasks — সারি-সারফেস tr data-tk-row (forEach-(t,idx)) + দ্বিভাষিক data-kw (#আইডি+টাস্ক task+শিরোনাম+বিবরণ-১২০+assignee_name+অনাবণ্ডিত unassigned+মডারেটর moderator+অগ্রাধিকার জরুরি urgent/উচ্চ high/সাধারণ normal+স্ট্যাটাস বাকি pending/চলমান in_progress/সম্পন্ন done+due_date+ডেডলাইন deadline) + ফিল্টার-স্ট্রিপ (tkFilter267/tkClear267/tkCount267/kbd-hint) + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + **__tkQA হুক** (সারফেস-শূন্যে-ও-সংজ্ঞায়িত); নতুন-টাস্ক-ফর্ম ×৫/q42-সার্চ/পেজিনেশন/বাল্ক-bar/data-bulk-all ×২/প্রতি-সারি status-select+delete ফর্ম/empty-state-full/topbar/sidebar অক্ষুণ্ণ; hidden-গার্ড ×৩
+- **[Mandatory-স্টাইল]:** tk267-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px + hidden-গার্ড ×৩ — **tr[data-tk-row][hidden] !important — tr-সারফেস-গার্ড-প্রথম (UA table-row — display:flex-শ্রেণির টেবিল-প্রতিরূপ)**
+- **[সিড-চুক্তি-বিস্তার] (s254/s257/s266 → s267):** requireAdmin-ফর্ম-POST /admin/tasks-সিড (মার্কার 'qa267task-3917'; CSRF-meta-পৃষ্ঠা-থেকে) + soft-delete→trashed=<tid>→trash/bulk-purge স্বয়ং-নিরাময়ী ক্লিনার + **ক্র্যাশ-অবশেষ-ক্লিনার-পূর্বে (মার্কার >১ → সব-clean)** → **নেট-DB-রাইট-শূন্য প্রমাণ (সারফেস ০ → ০, মার্কার-শূন্য)** — ব্রাউজার-প্রোব বাস্তব-ডেটায়
+- **টেস্ট:** নতুন tests/s267-tkfilter-suite.sh **৫৯/৫৯ ×২-ধারাবাহিক** (কাঠামো ×২২ + স্টাইল ×৯ + আচরণ ×১৭ রিয়েল-ব্রাউজার + নির্ধারক-প্রোব ×৩ ('qa267task-3917'-একক/'জরুরি urgent'-অগ্রাধিকার/'বাকি pending'-স্ট্যাটাস) পূর্বগণনা-মিল + ফিল্ড-গার্ড-প্রোব input[name=q] + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ কমিটেড) + পূর্ণ-রিগ্রেশন s266 ৫৯/৫৯ + s265 ৫৭/৫৭ + s264 ৫৬/৫৬ + s263 ৫৩/৫৩ + s262 ৪৮/৪৮ + s261 ৫০/৫০ + s260 ৫২/৫২ + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন
+- **গোটচা ×৩ ডক-কৃত (PLANS session267):** eval-JSON-কোট-এস্কেপ-গ্রেপ (`\"`-এস্কেপ → এস্কেপ-সহনশীল `h..:false` — প্রথম-রানে ১-মিথ্যা-ফেল) · tr-সারফেস hidden-গার্ড (UA table-row → !important-গার্ড-জোড়া) · admin-form-সিড CSRF-meta-পৃষ্ঠা-থেকে + ক্র্যাশ-অবশেষ-ক্লিনার-পূর্বে
+- প্যাচ: scripts/s267-patch.py (skip-if-present idempotent — ৪-সম্পাদনা, SKIP-পুনঃরান-প্রমাণ, admin.css `.tk-`-সংঘর্ষ-FATAL-গার্ড, সংরক্ষণ ×১৫ অ্যাসার্ট) + ডক ×৩ (PROJECT §২৬৭ + PLANS session267 + এ-এন্ট্রি) → secret-scan-ক্লিন → fetch+rebase → push → Vercel-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session268 লেবেল (worklog Task ID 108)**; PLANS session267-নোট অবশ্যই-পড়ুন (eval-JSON-এস্কেপ-গ্রেপ + tr-গার্ড-জোড়া + admin-form-সিড-চুক্তি + ক্র্যাশ-অবশেষ-ক্লিনার); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: অ্যাডমিন-সারফেস-ফিল্টার-ধারাবাহিকতা (moderators/subscribers/activity/audit — ms266/ac265/tk267-প্যাটার্ন-মিরর; subscribers দ্বৈত-টেবিল — স্কোপ-সিদ্ধান্ত-পূর্বক), multipart-ব্রাউজার-পাথ-যাচাই (press রিয়েল-ফাইল-আপলোড ই২ই), Turso/প্রোড-পোর্ট
