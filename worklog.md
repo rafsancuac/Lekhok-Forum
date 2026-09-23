@@ -3952,3 +3952,27 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session260 লেবেল (worklog Task ID 100)**; PLANS session259-নোট অবশ্যই-পড়ুন (urlencoded-সিড + method-override-DELETE + mod-item-অ্যাঙ্কর + cat-chip-প্যাটার্ন); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: moderator-events/resources-সারফেস ফিল্টার-প্যাক (no259-প্যাটার্ন-মিরর — events প্রায়-অভিন্ন .mod-item-গঠন), moderator-users-স্কোপড-ভ্যারিয়েন্ট, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
+
+---
+Task ID: 100 (session260 — cron 403679; ইভেন্ট তাৎক্ষণিক-ফিল্টার ev260 + আসন্ন/সমাপ্ত স্ট্যাটাস-চিপ) — push `bf3a0f5`
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`a92517f` (session259/Task99), working-tree ক্লিন, টোকেন-ভ্যালিদ (GH /user→200), live 200; device-flow-অবসর; প্যারালাল-সংঘর্ষ-শূন্য
+- স্টেল-সামারি-সংশোধন ×২৬: সামারি Task43/'commit-হয়নি'/device-flow যুগ — সব-ভুল; ACTIVE-LOCK Task99/session259-ই-সত্য
+- রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s259 ৪৯/৪৯ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session259-বাকি-প্রস্তাব গ্রহণ: events-সারফেস)
+
+## এ-রাউন্ডে সম্পন্ন (session260)
+- **[Mandatory-ফিচার] ইভেন্ট তাৎক্ষণিক-ফিল্টার (ev260):** /moderator/events — data-ev-row-সারি-সূচক + data-kw (#আইডি+শিরোনাম+স্থান+শুরু-তারিখ+শেষ-তারিখ+অবস্থা-শব্দ+upcoming/ended) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + clear-বাটন + **__evQA হুক**; bulk-bar/mod-form/data-bulk-all/প্রতি-সারি-মুছুন-ফর্ম অক্ষুণ্ণ; hidden-গার্ড ×৩
+- **[Mandatory-ফিচার-সংযোজন] আসন্ন/সমাপ্ত স্ট্যাটাস-চিপ:** তারিখ-গণনা-ভিত্তিক অবস্থা-পিল (end_date||date বনাম আজ — ISO-তুলনা) — brandgreen-টিন্ট / .past-slate-মিউট; সারি-সাব-লাইন সমৃদ্ধ (তারিখ → শেষ-তারিখ · স্থান); দ্বি-ভাষা-kw (বাংলা-শব্দ + ইংরেজি-কী)
+- **[Mandatory-স্টাইল]:** ev260-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px + past-মিউট)
+- **সিড/পরিষ্কারক:** urlencoded-POST (marker 'qa260event' + date=2027 + location=qa260venue) + POST ?_method=DELETE → trashed=<tid> → bulk-purge (স্বয়ং-নিরাময়ী idempotent); id-আবিষ্কার mod-item-open-tag-অ্যাঙ্কর + bulk_ids-gsub
+- **টেস্ট:** নতুন tests/s260-eventsfilter-suite.sh **৫২/৫২ ×২-ধারাবাহিক** (কাঠামো×১৬+স্টাইল×১০+আচরণ×১৩ রিয়েল-ব্রাউজার + সিড×৩ + 390px-hScroll-শূন্য + স্ক্রিনশট×২ + পরিষ্কারক) + role-policy ২৬০/২৬০ + s259 ৪৯/৪৯ + s258 ৪৮/৪৮ + guard:design + audit:views গ্রিন + EJS-রেন্ডার-প্রমাণ (৬-সারি, ৪× আসন্ন)
+- **গোটচা ×৩ ডক-কৃত (PLANS session260):** স্ট্যাটাস-চিপ-প্যাটার্ন (ISO-তুলনা + দ্বি-ভাষা-kw) · past-মিউট-ব্যবস্থা (hex-শূন্য) · সারি-সাব-লাইন-শর্তসাপেক্ষ-যোগ (ট্রেইলিং-সেপারেটর-শূন্য)
+- প্যাচ: scripts/s260-patch.py (skip-if-present idempotent) + ডক ×৩ (PROJECT §২৬০ + PLANS session260 + এ-এন্ট্রি) → secret-scan → fetch (origin-অনড়গমনীল) → push `bf3a0f5` → Vercel READY-যাচাই → প্রোড-স্পট
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session261 লেবেল (worklog Task ID 101)**; PLANS session260-নোট অবশ্যই-পড়ুন (স্ট্যাটাস-চিপ-প্যাটার্ন + past-মিউট + দ্বি-ভাষা-kw); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: moderator-resources-সারফেস ফিল্টার-প্যাক (ev260/no259-প্যাটার্ন-মিরর), moderator-users-স্কোপড-ভ্যারিয়েন্ট, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
