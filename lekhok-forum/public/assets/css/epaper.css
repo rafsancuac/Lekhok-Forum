@@ -681,3 +681,8 @@
 .ep-cal-month::after, .ep-cal-mylabel::after { content: '\25BE'; font-size: .55rem; margin-left: 4px; display: inline-block; transition: transform .18s ease, color .18s ease; color: var(--lf-text-tertiary); }
 .ep-cal-month.is-open::after, .ep-cal-mylabel.is-open::after { transform: rotate(180deg); color: var(--lf-brand-primary); }
 @media (prefers-reduced-motion: reduce) { .ep-cal-month::after, .ep-cal-mylabel::after { transition: none; } }
+
+/* ═══ session290 — কম্বো aria-activedescendant (ep290 — হেক্স-শূন্য টোকেন-শুধু;
+       is-act = অ্যাক্টিভ-ডিসেনডেন্ট-দৃশ্যমান-দ্বৈত: ইনসেট-বার + ওজন — SR-অ্যাক্টিভ-অপশন-চিহ্ন) ═══ */
+.ep-ps-opt.is-act { box-shadow: inset 3px 0 0 var(--lf-brand-primary); font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .ep-ps-opt.is-act { transition: none; } }
