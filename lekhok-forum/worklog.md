@@ -2754,4 +2754,28 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - পরের-এজেন্ট: **session276 লেবেল (worklog Task ID 116)**; PLANS session275-নোট অবশ্যই-পড়ুন (li-গার্ড + দ্বৈত-স্ট্রিপ-চুক্তি + আইকন ×১ + রিড-ওনলি-সীমা + aria-label-গণনা + সিবলিং-নির্বাচন); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: super/settings.ejs + super/support-settings.ejs (সিবলিং), admin-সাব-তালিকা (notices/events/gallery/members/resources-list), security.ejs-স্কোপ-ম্যাপ-পূর্বক, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
 - রিমোট main = push-পরবর্তী HEAD (session275-জোড়া: feature + worklog); working-tree ক্লিন
+---
+Task ID: 116 (session276 — cron 403679; অ্যাডমিন বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার an276 + epaper hex-ratchet-বাগ-ফিক্স + broadcast-সচেতন-চুক্তি)
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD(রাউন্ড-শুরু)=origin=`99db47c` (session275/Task115-জোড়া + টুল-কমিট), working-tree ক্লিন, টোকেন-ভ্যালিদ, স্থায়ী-সার্ভার-জীবিত (৮০৯৪); device-flow-অবসর
+- **স্টেল-সামারি-সংশোধন ×৪২:** পুরাতন-যুগ-দাবি — সব-ভুল; ACTIVE-LOCK/রিপো-প্রমাণে-ই-সত্য
+- রাউন্ড-শুরু QA: s275 ৮২/৮২ (SKIP=০) — বাগ-শূন্য, স্থিতিশীল → ফিচার-রাউন্ড (সারফেস-নির্বাচন-বিবর্তন: প্রস্তাবিত-সিবলিং পরিদর্শনে ফর্ম-পৃষ্ঠা-প্রমাণ → admin-notices-তালিকা নির্বাচন)
+
+## এ-রাউন্ডে সম্পন্ন (session276)
+- **[বাগ-ফিক্স] epaper.css hex-ratchet-সংশোধন (s226-অবদান — রাউন্ড-মাঝে-আবিষ্কৃত):** tokens.css-এ-অনুপস্থিত lf-টোকেন ×৬ সংযোজন (--lf-ink/-ink-mute/-ink-soft/-accent-soft/-accent-glow/-gold-badge) + হেক্স-ফলব্যাক-স্ট্রিপ ×৪৩ + rgba-ফলব্যাক-স্ট্রিপ ×৮ + কাঁচা-হেক্স→টোকেন ×৪ → হেক্স ৪৭→০ (baseline ০ ✓); computed-প্যারিটি (is-active bg rgb(0,106,78)/color rgb(255,255,255)); epaper ২০০; idempotent ×২; var-গণনা-অ্যাসার্ট-প্রথম-রানে-ধরা (ফাইল-অলিখিত)
+- **[Mandatory-ফিচার] অ্যাডমিন বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার (an276):** /admin/notices — tr[data-an-row] + দ্বিভাষিক data-kw (#id+বিজ্ঞপ্তি notice+শিরোনাম title+ক্যাটাগরি category+তারিখ date — নরমালাইজড ×৩) + ফিল্টার-স্ট্রিপ (anFilter276/anClear276/anCount276/kbd-hint — always-rendered) + চিপ + শূন্য-অবস্থা (anZero276) + 'f'-ফোকাস (একক-স্ট্রিপ) + ফিল্ড-গার্ড (bulk_ids-checkbox) + Escape + __anQA হুক; পৃষ্ঠায়-প্রথম <script>; bulk-bar/data-bulk-all/data-bulk-msg ×৩/CRUD-রুট অক্ষুণ্ণ
+- **[Mandatory-স্টাইল]:** an276-amber-পরিবার হেক্স-শূন্য টোকেন-শুধু + hidden-গার্ড ×৩ সঠিক-বাইট (tr[data-an-row][hidden] !important)
+- **রিড-ওনলি-নেট-শূন্য-চুক্তি (mo268 — broadcast-সাইড-এফেক্ট-সচেতন):** POST /admin/notices broadcastToAll + newsletter-queue করে → marker-seed-নিষিদ্ধ → সিড-শূন্য-রিড-ওনলি; নেট-প্রমাণ সারি ৬→৬ + প্রোব-অবশেষ-শূন্য
+- **গোটচা ×৩ ডক-কৃত (PLANS session276):** ① broadcast-সাইড-এফেক্ট-চুক্তি (seed-বাছাইের-আগে create-রুট-সাইড-এফেক্ট-ম্যাপ) ② s269-গোটচা-পুনঃপ্রমাণ (sidebar-included bulk-JS-ref — data-bulk-all রেন্ডার্ড ×৩/data-bulk-msg ×৫ — সঠিক-প্যাটার্ন-অ্যাসার্ট) ③ parallel-রাউন্ড-গার্ড-মিস (রিবেজ-পরবর্তী guard:design-পুনঃরান-বাধ্যতমূলক); প্লাস forEach-অ্যাসার্ট-প্রথম-রানে-ধরা (rows.forEach +১ — in-memory-ফেল)
+- **টেস্ট:** নতুন tests/s276-anfilter-suite.sh **৫৯/৫৯ ×২-ধারাবাহিক (SKIP=০)** (কাঠামো ×১৫ + স্টাইল ×৯ + আচরণ ×২২ রিয়েল-ব্রাউজার + পূর্বশর্ত ×৮ — নির্ধারক-প্রোব ×৫ + ক্যাটাগরি-বৈচিত্র্য (press ২/৬ + event ১/৬ + notice ৩/৬) + নো-ম্যাচ→শূন্য + computed-display:none + শূন্য-বক্স-বিপরীত-প্রমাণ + clear-পুনরুদ্ধার + চিপ-ত্রয়ী + 'f'-ফোকাস + ফিল্ড-গার্ড + Escape-ব্লার + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ কমিটেড + নেট-শূন্য) + পূর্ণ-রিগ্রেশন s275 ৮২/৮২ + s274 ৬১/৬১ + s273 ৫৭/৫৭ + s272 ৭২/৭২ + s271 ৫৮/৫৮ + s270 ৬১/৬১ + s269 ৭৭/০/২ + s268 ৫৬/৫৬ + s267 ৫৯/৫৯ + s266 ৫৯/৫৯ + s265 ৫৭/৫৭ + s264 ৫৬/৫৬ + s263 ৫৩/০/১ + s262 ৪৮/০/১ + s261 ৫০/৫০ + s260 ৫২/৫২ + role-policy ২৬০/২৬০ + guard:design-গ্রিন-পুনঃপ্রমাণ + audit:views-গ্রিন (১২২ ejs) + পুরাতন-PNG-চার্ন-রিভার্ট + anchor-scan ০-ঝুঁকি
+- প্যাচ: scripts/s276-patch.py (idempotent ×২, .an276--নেমস্পেস-গার্ড, আইকন-প্রি-গার্ড ×৩, PRESERVE-মানচিত্র, হেক্স-শূন্য-পোস্ট-অ্যাসার্ট, সঠিক-বাইট ×৩) + scripts/s276-epaperfix.py (idempotent ×২) + ডক ×৩ (PROJECT §২৭৬ + PLANS session276 + repo-worklog Task-116) → secret-scan-ক্লিন → fetch → push → Vercel READY → প্রোড-স্পট
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session277 লেবেল (worklog Task ID 117)**; PLANS session276-নোট অবশ্যই-পড়ুন (broadcast-চুক্তি + s269-গোটচা-পুনঃপ্রমাণ + parallel-গার্ড-মিস + সারফেস-নির্বাচনে-প্রথমে-ভিউ-পরিদর্শন); push-আগে fetch+rebase + **রিবেজ-পরবর্তী guard:design-পুনঃরান**
+- বাকি-প্রস্তাব: admin-সাব-তালিকা-অবশিষ্ট (events/gallery/members/resources-list — admin-ভার্সন-অফিল্টারড; notices-সম্পন্ন), security.ejs-স্কোপ-ম্যাপ-পূর্বক, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
+- রিমোট main = push-পরবর্তী HEAD (session276-জোড়া: fix + feature + worklog); working-tree ক্লিন
 
