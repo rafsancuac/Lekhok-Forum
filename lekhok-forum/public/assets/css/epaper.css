@@ -660,3 +660,13 @@
 .ep-cal-m.is-act.is-cur { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
 @media (max-width: 640px) { .ep-cal-mgrid { gap: 2px; } .ep-cal-m { padding: 6px 0 7px; font-size: .6rem; } }
 @media (prefers-reduced-motion: reduce) { .ep-cal-m.is-act { transition: none; } }
+
+/* ═══ session287 — দিন-গ্রিডে কী-বোর্ড-নেভিগেশন (ep287 — হেক্স-শূন্য টোকেন-শুধু;
+       ৭-কলাম-গ্রিড-রোভিং + is-act-টিন্ট + মোবাইল-সংকোচন) ═══ */
+.ep-cal-day.is-act { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
+.ep-cal-day.is-act.has::after { background: var(--lf-brand-primary); }
+.ep-cal-day.is-act.is-sel { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
+.ep-cal-day.is-act.is-sel::after { background: var(--lf-white); }
+.ep-cal-day:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
+@media (max-width: 640px) { .ep-cal-grid { gap: 1px; } .ep-cal-day { min-height: 25px; font-size: .64rem; } }
+@media (prefers-reduced-motion: reduce) { .ep-cal-day.is-act { transition: none; } }

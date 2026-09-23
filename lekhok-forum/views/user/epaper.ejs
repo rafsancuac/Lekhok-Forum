@@ -1541,6 +1541,90 @@
     arm: function () { ep286Arm(); }
   };
 
+  /* ═══════════ session287 (cron 403679): দিন-গ্রিডে কী-বোর্ড-নেভিগেশন (ep287) ═══════════
+     ৭-কলাম-গ্রিড-রোভিং: ←→=±1, ↑=-7, ↓=+7 (wrap + disabled-স্কিপ — ভবিষ্যৎ-দিন-লাফ;
+     মাস-সীমা-স্কিপ = সীমা-অতিক্রম-নয় — wrap-এ-সীমা-লাফ, ep286-চুক্তি);
+     Home=প্রথম-enabled, End=শেষ-enabled, Enter/Space-সক্রিয় (grid-ক্লিক-হ্যান্ডলার-পুনঃব্যবহার —
+     calJump-জাম্প-লজিক-ডুপ্লিকেট-নিষিদ্ধ) + জাম্পে-ফোকাস-ফেরত is-sel-দিন (calRender-পুনঃরেন্ডার-পরে);
+     বুট/রি-রেন্ডারে সফট-আর্ম (is-sel→is-today→প্রথম-enabled-অগ্রাধিকার; ফোকাস-চুরি-শূন্য) +
+     রোভিং-ট্যাবইনডেক্স (active=0, enabled-বাকি=−1; disabled-বাটন-স্পর্শ-শূন্য) + is-act-শ্রেণি;
+     calRender-র‍্যাপার (calRender-বডি-অস্পৃশ্য; ঘোষণা-আর-ডাক-এক-নাম — s285-নাম-মিল-গোটচা); __ep287QA হুক। */
+  var ep287Active = '';
+  function ep287Btns() { return elCalGrid ? [].slice.call(elCalGrid.querySelectorAll('.ep-cal-day')) : []; }
+  function ep287SetActive(d, doFocus) {
+    var bs = ep287Btns();
+    ep287Active = (typeof d === 'string' && d) ? d : '';
+    bs.forEach(function (b) {
+      var on = (!b.disabled && b.getAttribute('data-d') === ep287Active);
+      b.classList.toggle('is-act', on);
+      if (on) { b.setAttribute('tabindex', '0'); if (doFocus) { try { b.focus(); } catch (e) {} } }
+      else if (!b.disabled) { b.setAttribute('tabindex', '-1'); }
+    });
+  }
+  function ep287Pick(sel) { if (!elCalGrid) return ''; var el = elCalGrid.querySelector(sel); return el ? (el.getAttribute('data-d') || '') : ''; }
+  function ep287Arm() {
+    var d = ep287Pick('.ep-cal-day.is-sel:not(:disabled)');
+    if (!d) d = ep287Pick('.ep-cal-day.is-today:not(:disabled)');
+    if (!d) d = ep287Pick('.ep-cal-day:not(:disabled)');
+    ep287SetActive(d, true);
+  }
+  function ep287ArmSoft() {
+    var el = elCalGrid ? elCalGrid.querySelector('.ep-cal-day[data-d="' + ep287Active + '"]:not(:disabled)') : null;
+    var d = el ? ep287Active : ep287Pick('.ep-cal-day.is-sel:not(:disabled)');
+    if (!d) d = ep287Pick('.ep-cal-day.is-today:not(:disabled)');
+    if (!d) d = ep287Pick('.ep-cal-day:not(:disabled)');
+    ep287SetActive(d, false);
+  }
+  function ep287Move(step) {
+    var bs = ep287Btns();
+    if (!bs.length) return;
+    var idx = -1, i;
+    for (i = 0; i < bs.length; i++) { if (bs[i].getAttribute('data-d') === ep287Active) { idx = i; break; } }
+    if (idx < 0) { ep287Arm(); return; }
+    var n = (idx + step + bs.length) % bs.length, tries = 0;
+    while (tries < bs.length && bs[n] && bs[n].disabled) { n = (n + (step > 0 ? 1 : -1) + bs.length) % bs.length; tries++; }
+    if (tries >= bs.length || !bs[n] || bs[n].disabled) return;
+    ep287SetActive(bs[n].getAttribute('data-d'), true);
+  }
+  if (elCalGrid) elCalGrid.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'ArrowRight') { e.preventDefault(); ep287Move(1); }
+    else if (k === 'ArrowLeft') { e.preventDefault(); ep287Move(-1); }
+    else if (k === 'ArrowDown') { e.preventDefault(); ep287Move(7); }
+    else if (k === 'ArrowUp') { e.preventDefault(); ep287Move(-7); }
+    else if (k === 'Home') { e.preventDefault(); var f0 = elCalGrid.querySelector('.ep-cal-day:not(:disabled)'); if (f0) ep287SetActive(f0.getAttribute('data-d'), true); }
+    else if (k === 'End') {
+      e.preventDefault();
+      var all = ep287Btns(), fN = null, i;
+      for (i = all.length - 1; i >= 0; i--) { if (!all[i].disabled) { fN = all[i]; break; } }
+      if (fN) ep287SetActive(fN.getAttribute('data-d'), true);
+    }
+    else if (k === 'Enter' || k === ' ') {
+      e.preventDefault();
+      var t = e.target && e.target.closest ? e.target.closest('.ep-cal-day') : null;
+      if (t && !t.disabled) {
+        t.click();
+        var back = elCalGrid.querySelector('.ep-cal-day.is-sel:not(:disabled)') || elCalGrid.querySelector('.ep-cal-day[data-d="' + ep287Active + '"]:not(:disabled)');
+        if (back) { try { back.focus(); } catch (e2) {} }
+      }
+    }
+  });
+  /* বুট/রি-রেন্ডারে-সফট-আর্ম — র‍্যাপার-স্তর (calRender-বডি-অস্পৃশ্য; ঘোষণা-আর-ডাক-এক-নাম);
+     calRender-প্রথম-ডাকই বুট-আর্ম (tabindex=0 — Tab-কী-দ্বারা গ্রিডে-পৌঁছ) */
+  var ep287CalRenderBase = calRender;
+  calRender = function () { ep287CalRenderBase(); ep287ArmSoft(); };
+  /* session287 QA-হুক (__ep287QA — সারফেস-নেমস্পেস-রীতি; দিন-গ্রিড-কী-বোর্ড-প্রমাণ) */
+  window.__ep287QA = {
+    active: function () { return ep287Active; },
+    focused: function () { var a = document.activeElement; return a && a.classList && a.classList.contains('ep-cal-day') ? (a.getAttribute('data-d') || '') : ''; },
+    move: function (s) { ep287Move(s); },
+    set: function (d) { ep287SetActive(String(d || ''), true); },
+    arm: function () { ep287Arm(); },
+    days: function () { return ep287Btns().length; },
+    enabled: function () { return ep287Btns().filter(function (b) { return !b.disabled; }).length; },
+    tabbed: function () { return ep287Btns().filter(function (b) { return b.getAttribute('tabindex') === '0'; }).length; }
+  };
+
   /* ── ৪. বার-তারিখ-টেক্সট (বার-সহ পূর্ণ বাংলা তারিখ) ── */
   var bnDayFmt280 = null;
   try { bnDayFmt280 = new Intl.DateTimeFormat('bn-BD', { timeZone: 'Asia/Dhaka', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { bnDayFmt280 = null; }
