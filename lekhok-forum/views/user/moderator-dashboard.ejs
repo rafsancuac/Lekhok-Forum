@@ -66,6 +66,18 @@
     <span class="mod-scope-count"><%= myScopes.length %> / <%= scopes.length %> স্কোপ অনুমোদিত</span>
   </div>
 
+  <div class="mdf-instant" id="mdfInstant263">
+    <i class="fas fa-filter mdf-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="mdfFilter263" class="mdf-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — স্কোপ / কার্যক্রম / মেনু / রিপোর্ট / পত্রিকা" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="mdfClear263" class="mdf-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="mdf-count-chip" id="mdfCount263" hidden></span>
+    <span class="mdf-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
+  <div class="mdf-zero" id="mdfZero263" data-mdf-empty hidden>
+    <i class="fas fa-th-large" aria-hidden="true"></i>
+    <span>কোনো টাইল মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
+
   <% const links = {
     quiz: '/moderator/daily/quiz', this_day: '/moderator/daily/this_day',
     activity: '/moderator/daily/activity', epaper: '/moderator/daily/epaper',
@@ -90,19 +102,20 @@
   %>
 
   <div class="mod-grid">
-    <% scopes.forEach(s => {
+    <% scopes.forEach((s, mdfI263) => {
       const aliased = scopeAliases[s.key];
       const isDaily = dailyContentScopes.includes(s.key);
       const allowed = myScopes.includes(s.key) || (aliased && myScopes.includes(aliased)) || (isDaily && myScopes.includes('daily')) || user.role === 'admin';
+      var mdfKw263 = [s.label, descs[s.key] || '', s.key, links[s.key] || '', allowed ? 'খোলা অনুমোদিত unlocked allowed open' : 'লকড অনুমতি নেই locked denied'].filter(Boolean).join(' ');
     %>
       <% if (allowed) { %>
-        <a href="<%= links[s.key] %>" class="mod-tile">
+        <a href="<%= links[s.key] %>" class="mod-tile" data-mdf-row="<%= mdfI263 %>" data-kw="<%= mdfKw263 %>">
           <div class="mod-tile-icon"><i class="fas <%= icons[s.key] || 'fa-cog' %>"></i></div>
           <div class="mod-tile-label"><%= s.label %></div>
           <div class="mod-tile-desc"><%= descs[s.key] || '' %></div>
         </a>
       <% } else { %>
-        <div class="mod-tile locked" title="এই সেকশনের অনুমতি আপনার নেই">
+        <div class="mod-tile locked" title="এই সেকশনের অনুমতি আপনার নেই" data-mdf-row="<%= mdfI263 %>" data-kw="<%= mdfKw263 %>">
           <div class="mod-tile-icon"><i class="fas fa-lock"></i></div>
           <div class="mod-tile-label"><%= s.label %></div>
           <div class="mod-tile-desc">অনুমতি নেই</div>
@@ -114,21 +127,21 @@
   <%# ── সাইট মেনু ব্যবস্থাপনা (অ্যাডমিন + মডারেটর সবাই) ── %>
   <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;max-width:860px;">
     <%# ── সেশন ৮১: রিপোর্ট-কিউ টাইল (খোলা-রিপোর্ট ব্যাজসহ) ── %>
-    <a href="/moderator/reports" class="mod-tile" style="display:flex;align-items:center;gap:14px;position:relative;">
+    <a href="/moderator/reports" class="mod-tile" style="display:flex;align-items:center;gap:14px;position:relative;" data-mdf-row="<%= scopes.length %>" data-kw="রিপোর্ট-কিউ সদস্যদের রিপোর্ট দেখে কনটেন্ট লুকান খারিজ করুন /moderator/reports রিপোর্ট moderation reports queue">
       <div class="mod-tile-icon"><i class="fas fa-shield-alt"></i></div>
       <div>
         <div class="mod-tile-label">রিপোর্ট-কিউ <% if (stats.openReports > 0) { %><span class="mrq81-dash-badge"><%= stats.openReports %></span><% } %></div>
         <div class="mod-tile-desc">সদস্যদের রিপোর্ট দেখে কনটেন্ট লুকান/খারিজ করুন</div>
       </div>
     </a>
-    <a href="/moderator/navigation" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
+    <a href="/moderator/navigation" class="mod-tile" style="display:flex;align-items:center;gap:14px;" data-mdf-row="<%= scopes.length + 1 %>" data-kw="মেনু ব্যবস্থাপনা হোম পেজের মেনু ও সাব-মেনু এডিট করুন /moderator/navigation মেনু menu navigation">
       <div class="mod-tile-icon"><i class="fas fa-bars"></i></div>
       <div>
         <div class="mod-tile-label">মেনু ব্যবস্থাপনা</div>
         <div class="mod-tile-desc">হোম পেজের মেনু ও সাব-মেনু এডিট করুন</div>
       </div>
     </a>
-    <a href="/moderator/members" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
+    <a href="/moderator/members" class="mod-tile" style="display:flex;align-items:center;gap:14px;" data-mdf-row="<%= scopes.length + 2 %>" data-kw="কমিটি সদস্য ব্যবস্থাপনা কার্যনির্বাহী কমিটি ও উপদেষ্টাদের পদ কার্যবর্ষ তথ্য আপডেট করুন /moderator/members কমিটি members committee">
       <div class="mod-tile-icon"><i class="fas fa-users-cog"></i></div>
       <div>
         <div class="mod-tile-label">কমিটি সদস্য ব্যবস্থাপনা</div>
@@ -136,7 +149,7 @@
       </div>
     </a>
     <% if (myScopes.includes('epaper') || user.role === 'admin') { %>
-    <a href="/moderator/press" class="mod-tile" style="display:flex;align-items:center;gap:14px;">
+    <a href="/moderator/press" class="mod-tile" style="display:flex;align-items:center;gap:14px;" data-mdf-row="<%= scopes.length + 3 %>" data-kw="পত্রিকা কাটিং ব্যবস্থাপনা পত্রিকায় ফোরামকে নিয়ে প্রকাশিত নিউজের ছবি যোগ আপডেট করুন /moderator/press পত্রিকা press epaper cutting">
       <div class="mod-tile-icon"><i class="fas fa-newspaper"></i></div>
       <div>
         <div class="mod-tile-label">পত্রিকা কাটিং ব্যবস্থাপনা</div>
@@ -166,5 +179,74 @@
 <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
+<style>
+/* session263 — মডারেটর ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার (mdf263 — হেক্স-শূন্য টোকেন-শুধু; muf262-প্যাটার্ন-মিরর) */
+.mdf-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 10px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+.mdf-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+.mdf-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+.mdf-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+.mdf-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+.mdf-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+.mdf-instant-clear:active { transform: scale(.96); }
+.mdf-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+.mdf-count-chip[hidden] { display: none; }
+.mdf-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+.mdf-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+.mdf-zero { display: flex; align-items: center; gap: 10px; margin: 10px 0; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+.mdf-zero[hidden] { display: none; }
+.mod-tile[data-mdf-row][hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .mdf-instant-clear:active { transform: none; } }
+@media (max-width: 640px) { .mdf-kbd-hint { display: none; } .mdf-instant { padding: 9px 11px; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  /* session263 — mdf263 তাৎক্ষণিক-ফিল্টার (muf262-প্যাটার্ন-মিরর: data-kw-টাইল + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __mdfQA) */
+  var rows = Array.prototype.slice.call(document.querySelectorAll('[data-mdf-row]'));
+  var input = document.getElementById('mdfFilter263');
+  var clearBtn = document.getElementById('mdfClear263');
+  var countChip = document.getElementById('mdfCount263');
+  var zeroBox = document.getElementById('mdfZero263');
+  if (!input || !rows.length) { return; }
+  var total = rows.length;
+  function mdfApply263() {
+    var q = (input.value || '').trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function (row) {
+      var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+      var hit = !q || kw.indexOf(q) !== -1;
+      row.hidden = !hit;
+      if (hit) { shown++; }
+    });
+    if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+    if (clearBtn) { clearBtn.hidden = !q; }
+    if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+  }
+  function mdfClear263() {
+    input.value = '';
+    mdfApply263();
+    input.blur();
+  }
+  input.addEventListener('input', mdfApply263);
+  if (clearBtn) { clearBtn.addEventListener('click', mdfClear263); }
+  input.addEventListener('keydown', function (md) {
+    if (md.key === 'Escape') { md.stopPropagation(); mdfClear263(); }
+  });
+  document.addEventListener('keydown', function (md) {
+    if (md.key !== 'f' || md.altKey || md.ctrlKey || md.metaKey) { return; }
+    var t = md.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+    md.preventDefault();
+    input.focus();
+    input.select();
+  });
+  window.__mdfQA = {
+    total: function () { return total; },
+    count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+    apply: mdfApply263,
+    clear: mdfClear263
+  };
+})();
+</script>
 </body>
 </html>

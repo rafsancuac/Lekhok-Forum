@@ -3133,6 +3133,22 @@ Task53-প্রস্তাবকৃত পরবর্তী-ধাপ বা�
 
 **গোটচা (PLANS session254 ×৪):** testadmin-ভিউয়ার (moderator=403) · _csrfTok-কুকি-দ্বি-সমর্পণ (নেস্টেড-GET-টোকেন-রোটেশন) · s251-কোল্ড-স্টার্ট-ট্রানজিয়েন্ট (eval-empty শ্রেণি — ম্যানুয়াল-ওয়ার্ম-আপ-প্রোব → পুনঃরান) · `[h`-প্রদর্শন-আর্টিফ্যাক্ট (টুল-আউটপুটে `[hidden]`→`]idden]` দেখায়; od -c-ই-সত্য-উৎস)।
 
+## §২৬৩ (session263 — cron 403679: মডারেটর ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার mdf263 — muf262-প্যাটার্ন-মিরর) — s263 ৫৩/৫৩ ×২ (২৩ সেপ্টেম্বর ২০২৬)
+
+**রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`02e2104` (session262/Task102, clean-tree); GH /user→200 + Vercel /v2/user→200; স্থায়ী-সার্ভার-জীবিত (৮০৯৪); রাউন্ড-শুরু QA: s262 ৪৮/৪৮ + s261 ৫০/৫০ + role-policy ২৬০/২৬০ + guard:design + audit:views (১২২ ejs) — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session262-বাকি-প্রস্তাব গ্রহণ: moderator-dashboard-সারফেস-ফিল্টার)।
+
+**[Mandatory-ফিচার] মডারেটর ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার (mdf263):** /moderator (views/user/moderator-dashboard.ejs) — **পূর্ণ-সারফেস-কভারেজ: টাইল ×১৫** = scope-টাইল ×১১ (mod-grid — allowed `<a>` + locked `<div class="mod-tile locked">` ২-শাখায়ই data-mdf-row/data-kw) + এক্সট্রা-টাইল ×৪ (রিপোর্ট-কিউ/মেনু-ব্যবস্থাপনা/কমিটি-সদস্য/পত্রিকা-কাটিং — দ্বিতীয়-গ্রিড, স্ট্যাটিক দ্বি-ভাষা kw); `data-kw` = লেবেল+বর্ণনা+scope-key+লিংক-পাথ+অবস্থা-শব্দ (খোলা/অনুমোদিত unlocked/allowed/open বনাম লকড/অনুমতি-নেই locked/denied) + ফিল্টার-স্ট্রিপ (mdfFilter263 + mdfClear263 + mdfCount263 + mdf-kbd-hint) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স (mdfZero263 data-mdf-empty) + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + **__mdfQA হুক (total/count/apply/clear)**; hero/stats/section-head/scope-count/mrq81-dash-badge/switch/logout/info-note সম্পূর্ণ অক্ষুণ্ণ।
+
+**নেমস্পেস-ম্যাপ (session262-প্রথা প্রয়োগ):** পেজের `.mod-*` CSS পূর্ব-দখলকৃত (mod-hero/mod-tile/mod-grid/...) — ফিল্টার-প্রিফিক্স **mdf** (মডারেটর-ড্যাশবোর্ড-ফিল্টার) নেমস্পেস-পৃথক (সংঘর্ষ-মুক্ত যাচাইকৃত — grep-প্রমাণ শূন্য); সুইটে `.mdf-instant`-নেমস্পেস-পৃথকতা-অ্যাসার্ট।
+
+**[Mandatory-স্টাইল]:** mdf263 ব্লক **হেক্স-শূন্য টোকেন-শুধু** (guard-র্যাচেট-নিরাপদ) — ফোকাস-রিং color-mix brandgreen-tint + dashed kbd-পিল + :active প্রেস-ফিডব্যাক + reduced-motion-জোড়া + 640px-সংকোচন (kbd-none) + mdf-zero টোকেন-বক্স + hidden-গার্ড-ত্রয়ী — **টাইল-গার্ড `.mod-tile[data-mdf-row][hidden]{display:none!important}` বিশেষ-গুরুত্বপূর্ণ** (এক্সট্রা-টাইলে inline `style="display:flex"` আছে — author-!important-ই inline-ওভাররাইড-পথ, session256-শ্রেণি)।
+
+**সিড-শূন্য-চুক্তি (রিড-ওনলি-সারফেস):** ড্যাশবোর্ড DB-রাইট-শূন্য UI — টাইল-কাঠামোই-নির্ধারক (admin-ভিউয়ারে ১১-scope + ৪-এক্সট্রা = **১৫-টাইল স্ট্রাকচারাল-ধ্রুব**); প্রোব-প্রত্যাশা রেন্ডার্ড-HTML-পূর্বগণনা (QUIZN/REPORTN/MENUN/EVENTN/PRESSN/UNLOCKN/LOCKN — muf262-ডেটা-নির্ভর-প্রোব-চুক্তি); 'লকড'-প্রোব admin-ভিউয়ারে ০ → শর্তসাপেক্ষ-স্কিপ (মিথ্যা-ফেল-বিতাড়ন); রিড-ওনলি-নিশ্চয়তা (টাইল ১৫→১৫)।
+
+**টেস্ট:** নতুন tests/s263-mdfilter-suite.sh **৫৩/৫৩ ×২-ধারাবাহিক (SKIP=১ ডেটা-নির্ভর)** (কাঠামো ×১৮ + স্টাইল ×৯ + আচরণ ×১৮ রিয়েল-ব্রাউজার + নির্ধারক-প্রোব ×৬ ('কুইজ'/'রিপোর্ট'/'মেনু'/'ইভেন্ট'/'/moderator/press'/'unlocked') + inline-flex-hidden-গার্ড-প্রমাণ (নো-ম্যাচে ১৫/১৫ hidden) + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ + রিড-ওনলি-নিশ্চয়তা) + role-policy **২৬০/২৬০** + s262 **৪৮/৪৮** + guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs) + EJS-compile-প্রমাণ + স্ক্রিনশট ×২ কমিটেড।
+
+**গোটচা ×২ (PLANS session263):** ① **মিশ্র-ট্যাগ-সারফেস hidden-গার্ড** (`<a>`+`<div>` মিশ্র + inline-display:flex — tr-প্যাটার্নের সাধারণ `[data-x][hidden]` যথেষ্ট নয়; class-prefix+!important-ই-পথ) ② **স্ট্যাটিক-টাইল-ইনডেক্সিং** (এক্সট্রা-টাইলের data-mdf-row = `<%= scopes.length %>+n` — EJS-গণিত-ইনডেক্স, scope-লুপ-ইনডেক্সের ধারাবাহিকতা; press-টাইল-শর্তসাপেক্ষ → ইনডেক্স-গ্যাপ-সম্ভব, JS-অনিরপেক্ষ)। **পরের-এজেন্ট: session264 (Task ID 104)** — PLANS session263-নোট অবশ্যই-পড়ুন; push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!); বাকি-প্রস্তাব: multipart-ব্রাউজার-পাথ-যাচাই (press-ফর্ম রিয়েল-ফাইল-আপলোড ই২ই), admin-dashboard (/admin — session105-ভিউ) সারফেস-ফিল্টার, Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)।
+
 ## §২৬২ (session262 — cron 403679: ইউজার তাৎক্ষণিক-ফিল্টার muf262 — au251-এর moderator-স্কোপড-ভ্যারিয়েন্ট) — s262 ৪৮/৪৮ ×২ (২৩ সেপ্টেম্বর ২০২৬)
 
 **রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`8b30ad7` (session261/Task101, clean-tree); GH /user→200; স্থায়ী-সার্ভার-জীবিত; রাউন্ড-শুরু QA: s261 ৫০/৫০ + role-policy ২৬০/২৬০ + guard:design + audit:views (১২২ ejs) — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session261-বাকি-প্রস্তাব গ্রহণ: moderator-users-স্কোপড-ফিল্টার-ভ্যারিয়েন্ট)।
