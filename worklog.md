@@ -3929,3 +3929,26 @@ Stage Summary:
 session252-relabel-নোট (Task ID 92-dual — cron 403679):
 - সমান্তরাল-রাউন্ড (6832a52 নেতৃত্ব-প্রিমিয়াম + 592f58a) আর এ-রাউন্ড (role-policy পুনরুজ্জীবন + au251 ফিল্টার) উভয়েই session251/Task-92-লেবেল ব্যবহার করেছিল; আমার-কমিট 7fe67e2 পরে-ল্যান্ডেড → max+1-রীতিতে আমার-লেবেল session251→252; Task ID 92 = দ্বৈত-দাবি (ডক-কৃত)
 - পরের-এজেন্ট: **session253 লেবেল (Task ID 93)**; push-আগে fetch+rebase-বাধ্যতমূলক
+
+---
+Task ID: 99 (session259 — cron 403679; বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার no259 + ক্যাটাগরি-চিপ-সারি-সমৃদ্ধি) — push `b10ac77`
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`058800b` (session258/Task98), working-tree ক্লিন, টোকেন-ভ্যালিদ (GH /user→200 + Vercel /v2/user→200), live 200; device-flow-অবসর; প্যারালাল-সংঘর্ষ-শূন্য
+- স্টেল-সামারি-সংশোধন ×২৫: সামারি Task43/'commit-হয়নি'/device-flow/'১২-ট্রিগার' যুগ — সব-ভুল; ACTIVE-LOCK Task98/session258-ই-সত্য
+- রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s258 ৪৮/৪৮ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session258-বাকি-প্রস্তাব গ্রহণ: notices-সারফেস)
+
+## এ-রাউন্ডে সম্পন্ন (session259)
+- **[Mandatory-ফিচার] বিজ্ঞপ্তি তাৎক্ষণিক-ফিল্টার (no259):** /moderator/notices — data-no-row-সারি-সূচক + data-kw (#আইডি+শিরোনাম+ক্যাটাগরি-লেবেল+ক্যাটাগরি-কী+তারিখ) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-ফোকাস (field-গার্ড) + Escape-ক্লিয়ার+ব্লার + clear-বাটন + **__noQA হুক**; bulk-bar/mod-form/data-bulk-all/প্রতি-সারি-মুছুন-ফর্ম অক্ষুণ্ণ; hidden-গার্ড ×৩ (session256-শিক্ষা প্রি-অ্যাপ্লাইড)
+- **[Mandatory-স্টাইল]:** no259-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px) + **নতুন .no-cat-chip** (প্রতি-সারিতে ক্যাটাগরি-পিল — ভিজ্যুয়াল-সমৃদ্ধি + ফিল্টারেবল-ক্ষেত্র একসাথে)
+- **সিড/পরিষ্কারক:** urlencoded-POST (marker 'qa259notice' + urgent) + POST ?_method=DELETE → trashed=<tid> → bulk-purge (স্বয়ং-নিরাময়ী idempotent); id-আবিষ্কার mod-item-অ্যাঙ্কর + bulk_ids-gsub (PLANS session258-শিক্ষা)
+- **টেস্ট:** নতুন tests/s259-noticefilter-suite.sh **৪৯/৪৯ ×২-ধারাবাহিক** (কাঠামো×১৫+স্টাইল×১০+আচরণ×১২ রিয়েল-ব্রাউজার + সিড×৩ + 390px-hScroll-শূন্য + স্ক্রিনশট×২ + পরিষ্কারক) + role-policy ২৬০/২৬০ + s258 ৪৮/৪৮ + guard:design + audit:views গ্রিন + EJS-রেন্ডার-প্রমাণ
+- **গোটচা ×৩ ডক-কৃত (PLANS session259):** urlencoded-বডি-_csrf-পথ (multipart-হেডার-শ্রেণি-ব্যতিক্রম) · method-override-DELETE-চুক্তি (?_method=DELETE → trashed-পার্স) · mod-item-open-tag-অ্যাঙ্কর (nested-div-এ </div>-RS-ভঙ্গুর)
+- প্যাচ: scripts/s259-patch.py (skip-if-present idempotent) + ডক ×৩ (PROJECT §২৫৯ + PLANS session259 + এ-এন্ট্রি) → secret-scan → fetch+rebase (সংঘর্ষ-শূন্য) → push `b10ac77` → Vercel READY-যাচাই → প্রোড-স্পট
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session260 লেবেল (worklog Task ID 100)**; PLANS session259-নোট অবশ্যই-পড়ুন (urlencoded-সিড + method-override-DELETE + mod-item-অ্যাঙ্কর + cat-chip-প্যাটার্ন); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: moderator-events/resources-সারফেস ফিল্টার-প্যাক (no259-প্যাটার্ন-মিরর — events প্রায়-অভিন্ন .mod-item-গঠন), moderator-users-স্কোপড-ভ্যারিয়েন্ট, multipart-ব্রাউজার-পাথ-যাচাই, Turso/প্রোড-পোর্ট
