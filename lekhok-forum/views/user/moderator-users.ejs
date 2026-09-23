@@ -55,6 +55,17 @@
 
     <div class="mu-layout">
       <div class="mu-main">
+    <div class="muf-instant" id="mufInstant262">
+      <i class="fas fa-filter muf-instant-ico" aria-hidden="true"></i>
+      <input type="text" id="mufFilter262" class="muf-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — নাম / @ইউজারনেম / রোল / স্ট্যাটাস / #আইডি" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+      <button type="button" id="mufClear262" class="muf-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+      <span class="muf-count-chip" id="mufCount262" hidden></span>
+      <span class="muf-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+    </div>
+    <div class="muf-zero" id="mufZero262" data-muf-empty hidden>
+      <i class="fas fa-users" aria-hidden="true"></i>
+      <span>কোনো ইউজার মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+    </div>
     <% if (!users.length) { %>
       <p class="mu-empty"><i class="fas fa-inbox"></i> কোনো ইউজার পাওয়া যায়নি।</p>
     <% } else { %>
@@ -71,8 +82,8 @@
         </tr>
       </thead>
       <tbody>
-      <% users.forEach((u, uIdx) => { %>
-        <tr class="<%= u.status === 'banned' ? 'is-banned-row' : '' %>">
+      <% users.forEach((u, uIdx) => { var mufRoleL262 = u.role === 'moderator' ? 'মডারেটর' : (u.role === 'admin' ? 'এডমিন' : 'ইউজার'); var mufStL262 = u.status === 'banned' ? 'নিষিদ্ধ' : (u.status === 'pending' ? 'অপেক্ষমাণ' : 'সক্রিয়'); var mufKw262 = ['#' + u.id, '@' + (u.username || ''), (u.username || ''), (u.full_name || ''), mufRoleL262, (u.role || ''), mufStL262, (u.status || ''), (u.created_at || '').split(' ')[0], u.last_login ? (u.last_login + '').split(' ')[0] : ''].filter(Boolean).join(' '); %>
+        <tr class="<%= u.status === 'banned' ? 'is-banned-row' : '' %>" data-muf-row="<%= uIdx %>" data-kw="<%= mufKw262 %>">
           <td>
             <div class="mu-user">
               <img src="<%= u.avatar_url || '/avatar/' + u.id %>" alt="" width="38" height="38" loading="lazy">
@@ -179,6 +190,75 @@ document.querySelectorAll('form[data-mu-confirm]').forEach(function (f) {
     if (!window.confirm(f.getAttribute('data-mu-confirm'))) e.preventDefault();
   });
 });
+</script>
+<style>
+/* session262 — ইউজার তাৎক্ষণিক-ফিল্টার (muf262 — হেক্স-শূন্য টোকেন-শুধু; au251-স্কোপড-ভ্যারিয়েন্ট; re261-মিরর) */
+.muf-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 10px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+.muf-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+.muf-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+.muf-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+.muf-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+.muf-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+.muf-instant-clear:active { transform: scale(.96); }
+.muf-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+.muf-count-chip[hidden] { display: none; }
+.muf-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+.muf-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+.muf-zero { display: flex; align-items: center; gap: 10px; margin: 10px 0; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+.muf-zero[hidden] { display: none; }
+tr[data-muf-row][hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .muf-instant-clear:active { transform: none; } }
+@media (max-width: 640px) { .muf-kbd-hint { display: none; } .muf-instant { padding: 9px 11px; } }
+</style>
+<script>
+(function () {
+  'use strict';
+  /* session262 — muf262 তাৎক্ষণিক-ফিল্টার (au251-স্কোপড-ভ্যারিয়েন্ট; ev260/re261-চুক্তি-মিরর: data-kw-সারি + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __mufQA) */
+  var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-muf-row]'));
+  var input = document.getElementById('mufFilter262');
+  var clearBtn = document.getElementById('mufClear262');
+  var countChip = document.getElementById('mufCount262');
+  var zeroBox = document.getElementById('mufZero262');
+  if (!input || !rows.length) { return; }
+  var total = rows.length;
+  function mufApply262() {
+    var q = (input.value || '').trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function (row) {
+      var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+      var hit = !q || kw.indexOf(q) !== -1;
+      row.hidden = !hit;
+      if (hit) { shown++; }
+    });
+    if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+    if (clearBtn) { clearBtn.hidden = !q; }
+    if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+  }
+  function mufClear262() {
+    input.value = '';
+    mufApply262();
+    input.blur();
+  }
+  input.addEventListener('input', mufApply262);
+  if (clearBtn) { clearBtn.addEventListener('click', mufClear262); }
+  input.addEventListener('keydown', function (mu) {
+    if (mu.key === 'Escape') { mu.stopPropagation(); mufClear262(); }
+  });
+  document.addEventListener('keydown', function (mu) {
+    if (mu.key !== 'f' || mu.altKey || mu.ctrlKey || mu.metaKey) { return; }
+    var t = mu.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+    mu.preventDefault();
+    input.focus();
+    input.select();
+  });
+  window.__mufQA = {
+    total: function () { return total; },
+    count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+    apply: mufApply262,
+    clear: mufClear262
+  };
+})();
 </script>
 <%- include('../partials/sandbox-preview') %>
 </body>
