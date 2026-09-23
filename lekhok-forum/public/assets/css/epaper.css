@@ -675,3 +675,9 @@
        aria-live-স্ক্রিন-রিডার-লাইভ-রিজিয়ন (sr-only) + aria-current-দৃশ্যমান-রিং) ═══ */
 .ep-cal-live { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
 .ep-cal-day[aria-current="date"] { outline: 2px solid var(--lf-white); outline-offset: -3px; }
+
+/* ═══ session289 — মাস-প্যানেল খোলা/বন্ধ ঘোষণা (ep289 — হেক্স-শূন্য টোকেন-শুধু;
+       ডিসক্লোজার-ক্যারেট (▼ — খোলা-অবস্থায় ১৮০°-রোটেশন — aria-expanded-দৃশ্যমান-দ্বৈত)) ═══ */
+.ep-cal-month::after, .ep-cal-mylabel::after { content: '\25BE'; font-size: .55rem; margin-left: 4px; display: inline-block; transition: transform .18s ease, color .18s ease; color: var(--lf-text-tertiary); }
+.ep-cal-month.is-open::after, .ep-cal-mylabel.is-open::after { transform: rotate(180deg); color: var(--lf-brand-primary); }
+@media (prefers-reduced-motion: reduce) { .ep-cal-month::after, .ep-cal-mylabel::after { transition: none; } }

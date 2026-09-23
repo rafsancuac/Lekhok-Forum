@@ -1692,6 +1692,55 @@
     labeled: function () { return elCalGrid ? elCalGrid.querySelectorAll('.ep-cal-day[aria-label]').length : 0; }
   };
 
+  /* ═══════════ session289 (cron 403679): মাস-প্যানেল খোলা/বন্ধ ঘোষণা (ep289) ═══════════
+     ep288-লাইভ-রিজিয়নে প্যানেল/বছর-তালিকা-অবস্থা-ঘোষণা (খোলা: বছর+তথ্য-গণনা-সহ; বন্ধ: সংক্ষিপ্ত);
+     engaged-গেট-বিস্তার — প্যানেল-অভ্যন্তরীণ-প্রথম-ইনপুটেও সক্রিয় (প্রোড-প্রমাণিত ঘাটতি:
+     বছর-লেবেল-ক্লিকে engaged=false থেকে যেত); aria-expanded-সিঙ্ক-পুনঃপ্রমাণ (রেন্ডার্ড);
+     র‍্যাপার-স্তর ×৪ (ep283Open/ClosePanel + ep284Open/CloseList-বডি-অস্পৃশ্য — late-bound-চেইন-শেষে);
+     ঘোষণা-উৎস-একক: ep288Say-পুনঃব্যবহার (ep289Say-বৃত্ত-মাত্র — ডুপ্লিকেট-নিষিদ্ধ); __ep289QA হুক। */
+  var ep289Last = '';
+  function ep289Say(msg) { ep289Last = String(msg || ''); ep288Say(ep289Last); }
+  /* engaged-গেট-বিস্তার — কার্ড-ক্যাপচার-ফেজ (টার্গেট-লিসনারের-আগেই-সক্রিয় — at-target-রেজিস্ট্রেশন-ক্রম-গোটচা:
+     ep283-টগল-লিসনার-আগে-রেজিস্টার্ড → ওপেন-র‍্যাপার-চেকের-সময় ep288-এর-টার্গেট-লিসনার-এখনো-চলে-নাই;
+     কার্ড-ক্যাপচার = মাস-ট্রিগার + প্যানেল-অভ্যন্তর + স্টেপার + দিন-গ্রিড-সব-প্রথম-ইনপুটেই-ঢাকে) */
+  var ep289Card = elCalMPanel ? elCalMPanel.closest('.ep-cal280') : null;
+  if (ep289Card) {
+    ep289Card.addEventListener('click', function () { ep288Engaged = true; }, true);
+    ep289Card.addEventListener('keydown', function () { ep288Engaged = true; }, true);
+  }
+  /* র‍্যাপার ×৪ — খোলা/বন্ধে ঘোষণা (engaged-গেট: প্রোগ্রাম্যাটিক/বুট-নীরব — s288-চুক্তি) */
+  var ep289OpenPanelBase = ep283OpenPanel;
+  ep283OpenPanel = function () {
+    ep289OpenPanelBase();
+    if (ep288Engaged && ep283Open) ep289Say('মাস-তালিকা খোলা — ' + bnDigits(ep283Year) + ', তথ্য-আছে ' + bnDigits(ep283HasN) + ' মাস');
+  };
+  var ep289ClosePanelBase = ep283ClosePanel;
+  ep283ClosePanel = function () {
+    var was = ep283Open;
+    ep289ClosePanelBase();
+    if (ep288Engaged && was) ep289Say('মাস-তালিকা বন্ধ');
+  };
+  var ep289OpenListBase = ep284OpenList;
+  ep284OpenList = function () {
+    ep289OpenListBase();
+    if (ep288Engaged && ep284YOpen) ep289Say('বছর-তালিকা খোলা — ' + bnDigits(ep284YearsN) + ' বছর');
+  };
+  var ep289CloseListBase = ep284CloseList;
+  ep284CloseList = function () {
+    var was = ep284YOpen;
+    ep289CloseListBase();
+    if (ep288Engaged && was) ep289Say('বছর-তালিকা বন্ধ');
+  };
+  /* session289 QA-হুক (__ep289QA — সারফেস-নেমস্পেস-রীতি; প্যানেল-ঘোষণা-প্রমাণ) */
+  window.__ep289QA = {
+    last: function () { return ep289Last; },
+    engaged: function () { return ep288Engaged; },
+    expM: function () { return elCalMonth ? elCalMonth.getAttribute('aria-expanded') : null; },
+    expY: function () { return elCalMY ? elCalMY.getAttribute('aria-expanded') : null; },
+    open: function () { return ep283Open; },
+    yopen: function () { return ep284YOpen; }
+  };
+
   /* ── ৪. বার-তারিখ-টেক্সট (বার-সহ পূর্ণ বাংলা তারিখ) ── */
   var bnDayFmt280 = null;
   try { bnDayFmt280 = new Intl.DateTimeFormat('bn-BD', { timeZone: 'Asia/Dhaka', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { bnDayFmt280 = null; }
