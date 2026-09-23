@@ -18,6 +18,7 @@
   <div class="container">
     <div class="te-band233">
       <div class="te-decor233" aria-hidden="true"></div>
+      <div class="te-decor2a233" aria-hidden="true"></div>
       <div class="te-grid233">
 
         <!-- ═══ বাম কলাম: ই-পেপার বিবরণ ও ফিচারসমূহ ═══ -->
@@ -77,6 +78,10 @@
                     দৈনিক পত্রিকার সংরক্ষিত সংস্করণ
                   <% } %>
                 </p>
+                <div class="te-meta233">
+                  <span class="te-metachip233"><i class="fas fa-book-open" aria-hidden="true"></i> পৃষ্ঠা উল্টে পড়ার ভিউয়ার</span>
+                  <span class="te-metachip233"><i class="fas fa-print" aria-hidden="true"></i> হাই-রেজোলিউশন প্রিন্ট</span>
+                </div>
               </div>
               <a href="<%= teHref233(teActive233) %>" class="te-go233" aria-label="ই-পেপার খুলুন"><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
             </div>
@@ -86,7 +91,12 @@
               <div class="te-pills233">
                 <% if (teHasToday233 && tePapers233.length) { %>
                   <% tePapers233.slice(0, 4).forEach(p => { %>
-                  <a href="<%= teHref233(p) %>" class="te-pill233"><%= p.paperName %></a>
+                  <a href="<%= teHref233(p) %>"
+                     class="te-pill233<%= (teActive233 && String(teActive233.id) === String(p.id)) ? ' active' : '' %>"
+                     data-te-name="<%= p.paperName %>"
+                     data-te-sub="মুদ্রিত রূপ · সরাসরি ডিজিটাল রিডারে"
+                     data-te-tag="<%= teHasToday233 ? 'আজকের সংখ্যা' : 'সর্বশেষ' %>"
+                     data-te-href="<%= teHref233(p) %>"><%= p.paperName %></a>
                   <% }) %>
                 <% } else { %>
                   <a href="/epaper" class="te-pill233">আর্কাইভ দেখুন</a>
@@ -99,8 +109,8 @@
           </div>
 
           <div class="te-sync233">
-            <span class="te-sync-l233"><span class="te-dot233" aria-hidden="true"></span> গুগল ড্রাইভ ও টেলিগ্রাম থেকে স্বয়ংক্রিয়ভাবে সিঙ্কড</span>
-            <span class="te-sync-r233">ভোর ৬:০০ টায় আপডেট</span>
+            <span class="te-sync-l233"><span class="te-dot233" aria-hidden="true"></span> সর্বশেষ আনুষ্ঠানিক ডিজিটাল মুদ্রণ</span>
+            <span class="te-sync-r233">সার্বক্ষণিক হালনাগাদ</span>
           </div>
         </div>
 
@@ -108,3 +118,27 @@
     </div>
   </div>
 </section>
+<%# সেশন ২৭৩-প্রিমিয়াম: পিল-ক্লিকে রিলোড-ছাড়া প্রিভিউ-সুইচ (href-রক্ষিত — নতুন-ট্যাব/ফলব্যাক-নেভিগেশন অটুট) ── %>
+<script>
+(function () {
+  if (window.__te233wired) return; window.__te233wired = true;
+  var card = document.querySelector('.te-card233'); if (!card) return;
+  var name = card.querySelector('.te-name233'),
+      sub = card.querySelector('.te-cardsub233'),
+      tag = card.querySelector('.te-freshbadge233'),
+      go = card.querySelector('.te-go233'),
+      cta = document.querySelector('.te-btn-main233');
+  document.querySelectorAll('.te-pills233 .te-pill233[data-te-name]').forEach(function (pill) {
+    pill.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (name) name.textContent = pill.dataset.teName;
+      if (sub) sub.textContent = pill.dataset.teSub;
+      if (tag) tag.textContent = pill.dataset.teTag;
+      if (go) go.setAttribute('href', pill.dataset.teHref || pill.getAttribute('href'));
+      if (cta) cta.setAttribute('href', pill.dataset.teHref || pill.getAttribute('href'));
+      document.querySelectorAll('.te-pills233 .te-pill233').forEach(function (el) { el.classList.remove('active'); });
+      pill.classList.add('active');
+    });
+  });
+})();
+</script>

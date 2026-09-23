@@ -2773,10 +2773,18 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   border-radius: 16px;
   padding: 30px 30px 26px;
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
+.te-band233:hover { box-shadow: var(--shadow); border-color: rgba(5,150,105,0.34); }
 .te-decor233 {
   position: absolute; right: -48px; bottom: -48px; width: 260px; height: 260px;
   border-radius: 50%; background: rgba(5,150,105,0.06); filter: blur(48px);
+  pointer-events: none;
+}
+/* সেশন ২৭৩-প্রিমিয়াম: দ্বিতীয় অ্যাম্বিয়েন্ট আভা (উপর-বাম) — ভিজ্যুয়াল-গভীরতা */
+.te-decor2a233 {
+  position: absolute; left: -56px; top: -64px; width: 230px; height: 230px;
+  border-radius: 50%; background: rgba(16,185,129,0.07); filter: blur(52px);
   pointer-events: none;
 }
 .te-grid233 {
@@ -2845,10 +2853,17 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   padding: 3px 9px; border-radius: 7px; font-size: 10.5px; white-space: nowrap;
 }
 .te-card233 {
+  position: relative; overflow: hidden;
   background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0);
   border-radius: 14px; padding: 16px;
   box-shadow: var(--shadow-sm);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+/* সেশন ২৭৩-প্রিমিয়াম: কার্ডের উপরে মার্জিত অ্যাকসেন্ট-লাইন (ডিজিটাল-প্রেস-ফ্রেম-অনুভূতি) */
+.te-card233::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent-light), var(--accent) 45%, var(--accent-dark));
+  pointer-events: none;
 }
 .te-card233:hover { border-color: rgba(5,150,105,0.5); box-shadow: var(--shadow); transform: translateY(-2px); }
 .te-cardhead233 { display: flex; align-items: center; gap: 13px; }
@@ -2895,6 +2910,17 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   min-height: 26px; display: inline-flex; align-items: center;
 }
 .te-pill233:hover { background: var(--accent-soft, rgba(5,150,105,0.10)); color: var(--accent-dark, #047857); border-color: rgba(5,150,105,0.4); }
+/* সেশন ২৭৩-প্রিমিয়াম: পিল-সুইচারের সক্রিয়-অবস্থা (রিলোড-ছাড়া প্রিভিউ-সুইচ-চুক্তি) */
+.te-pill233.active { background: var(--accent-soft, rgba(5,150,105,0.10)); color: var(--accent-dark); border-color: rgba(5,150,105,0.45); font-weight: 700; }
+/* সেশন ২৭৩-প্রিমিয়াম: কার্ডের পেশাদার মেটা-ব্যাজ (পৃষ্ঠা-উল্টানো-ভিউয়ার + হাই-রেজ প্রিন্ট) */
+.te-meta233 { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.te-metachip233 {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-heading); font-size: 10px; font-weight: 600;
+  color: var(--accent-dark); background: var(--bg);
+  border: 1px solid var(--border); padding: 2.5px 8px; border-radius: 6px;
+}
+.te-metachip233 .fas { font-size: 9px; color: var(--accent); }
 .te-pillsoon233 { font-family: var(--font-body); font-size: 10.5px; color: var(--text-muted, #64748b); align-self: center; }
 .te-sync233 { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 3px; font-family: var(--font-body); font-size: 11px; color: var(--text-muted, #64748b); }
 .te-sync-l233 { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
