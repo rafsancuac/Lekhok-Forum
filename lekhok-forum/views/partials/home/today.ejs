@@ -1,11 +1,16 @@
-<%# ── সেশন ২৩৩: "আজকের ই-পেপার" — ই-পেপার-কেন্দ্রিক প্রিমিয়াম শোকেস (ইউজার-স্পেক) ──
-    পুরনো জেনেরিক 'আজকের কন্টেন্ট' ব্যান্ড (ক্যারোসেল-সহ) বাদ — এখন পুরোপুরি ডিজিটাল
-    নিউজস্ট্যান্ড: বামে লাইভ-ব্যাজ + শিরোনাম + চেকমার্ক-পয়েন্ট + ডুয়াল-CTA, ডানে
-    আজকের তাজা-সংস্করণ কার্ড (বাস্তব epaper_files ডেটা) + কুইক-সুইচ পিলস +
-    অটো-সিঙ্ক স্ট্যাটাস। প্রতিটি পিল/অ্যারো /epaper?file=<id>-তে deep-link —
-    epaper-অ্যাপের session233-boot-hook সেই পত্রিকাই সরাসরি খুলে দেয়।
-    ডেটা: routes/pages.js home-route (epaperToday/epaperLatest/todayBn)।
-    আজকের সংখ্যা না-থাকলে মর্যাদাপূর্ণ "সংস্করণ আসন্ন"-অবস্থা (সর্বশেষ সিঙ্কড-তারিখ সহ)। ── %>
+<%# ── সেশন ২৩৩ + ২৯১: "আজকের ই-পেপার" — অটো-স্লাইডিং ৩ডি নিউজপেপার কিয়স্ক ──
+    সেশন ২৩৩-এর প্রিমিয়াম ব্যান্ডের ওপর সেশন ২৯১-এ ইউজার-স্পেক কিয়স্ক:
+    • ডান কলাম = ৩ডি পেপার-স্টেজ (পেছনের ২ শিট + সামনের ইন্টারঅ্যাকটিভ শিট) +
+      ফিল্মস্ট্রিপ (প্রতি পত্রিকায় এক বাটন, accent-আন্ডারলাইন)।
+    • প্রতি ৩.৫ সেকেন্ডে স্লাইড — hover/focus-এ থামে (Pause); ক্লিকে ম্যানুয়াল-নির্বাচন।
+    • বাম কলামের মূল CTA স্লাইডের সাথে সিঙ্কে পত্রিকার নাম বদলায় ("প্রথম আলো পড়ুন →")।
+    • থাম্বনেইল কেবল নাম-মিলে (routes/pages.js epaperThumbByName291 — চতুঃস্তর-লক
+      data/newspaperLinks সোর্স); মিল-নেই → টেক্সট-মাস্টহেড ফলব্যাক — ভুল-পত্রিকার ছবি
+      কোনোভাবেই যায় না (ইউজার-নীতি: এক ই-পেপারের থাম্বনিল অন্য ইপেপারে যায় না)।
+    • থাম্ব-লোড-ব্যর্থতায় JS নিজেই টেক্সট-মাস্টহেডে ফিরে যায় (কখনো ভাঙা-ছবি নয়)।
+    • deep-link: /epaper?file=<id> — epaper-অ্যাপের session233-boot-hook সরাসরি খোলে।
+    • a11y: tablist/tab + aria-selected + aria-live ঘোষণা + focus-visible + reduced-motion।
+    ডেটা: routes/pages.js হোম-রাউন্ড (epaperToday/epaperLatest + p.thumb)। ── %>
 <% const bnN233 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
 <%
   const tePapers233 = (typeof epaperToday !== 'undefined' && epaperToday && epaperToday.length) ? epaperToday
@@ -13,6 +18,18 @@
   const teHasToday233 = (typeof epaperHasToday !== 'undefined') ? !!epaperHasToday : false;
   const teActive233 = tePapers233[0] || null;
   const teHref233 = (p) => p ? ('/epaper?file=' + encodeURIComponent(p.id)) : '/epaper';
+  // সেশন ২৯১: প্রতি-পত্রিকা accent — নির্ধারিত-ক্রমের টোকেন-প্যালেট (হেক্স-শূন্য)।
+  const teAccents291 = ['var(--lf-danger)', 'var(--lf-ink-max)', 'var(--lf-brand-primary)', 'var(--lf-danger-deep)', 'var(--lf-cyan-ink)', 'var(--lf-amber-deep)', 'var(--lf-dlx-gold)'];
+  const teAcc291 = (i) => teAccents291[i % teAccents291.length];
+  const teDateBn291 = (typeof todayBn !== 'undefined' && todayBn) ? todayBn : '';
+  const teFirstThumb291 = teActive233 ? (teActive233.thumb || '') : '';
+  // একক-ট্যাগ-গঠন (audit:views duplicate-id-নিরাপদ): img-এ src/alt/hidden — খালি-src কখনো নয়
+  const teImgAttrs291 = teFirstThumb291
+    ? ('src="' + teFirstThumb291 + '" alt="' + String(teActive233.paperName).replace(/"/g, '&quot;') + ' — ই-পেপার মাস্টহেড"')
+    : 'alt="" hidden';
+  const teJson291 = JSON.stringify(tePapers233.map((p, i) => ({
+    id: p.id, name: p.paperName, thumb: p.thumb || '', href: teHref233(p), acc: teAcc291(i)
+  })));
 %>
 <section class="section today-epaper-section reveal" id="today-epaper">
   <div class="container">
@@ -21,7 +38,7 @@
       <div class="te-decor2a233" aria-hidden="true"></div>
       <div class="te-grid233">
 
-        <!-- ═══ বাম কলাম: ই-পেপার বিবরণ ও ফিচারসমূহ ═══ -->
+        <!-- ═══ বাম কলাম: ই-পেপার বিবরণ ও ডায়নামিক CTA ═══ -->
         <div class="te-left233">
           <div class="te-badge233">
             <span class="te-live233" aria-hidden="true"></span>
@@ -40,9 +57,9 @@
           </ul>
 
           <div class="te-ctas233">
-            <a href="<%= teHref233(teActive233) %>" class="te-btn233 te-btn-main233">
+            <a href="<%= teHref233(teActive233) %>" class="te-btn233 te-btn-main233" id="teKioskCta291">
               <i class="fas fa-newspaper" aria-hidden="true"></i>
-              <span><%= teHasToday233 ? 'আজকের ই-পেপার পড়ুন' : 'সর্বশেষ ই-পেপার পড়ুন' %></span>
+              <span id="teKioskCtaText291"><%= teActive233 ? (teActive233.paperName + ' পড়ুন') : (teHasToday233 ? 'আজকের ই-পেপার পড়ুন' : 'সর্বশেষ ই-পেপার পড়ুন') %></span>
               <i class="fas fa-arrow-right te-arrow233" aria-hidden="true"></i>
             </a>
             <a href="/epaper" class="te-btn233 te-btn-ghost233">
@@ -52,61 +69,96 @@
           </div>
         </div>
 
-        <!-- ═══ ডান কলাম: লাইভ পত্রিকা প্রিভিউ কার্ড ═══ -->
+        <!-- ═══ ডান কলাম: ৩ডি পেপার কিয়স্ক (অটো-স্লাইড) ═══ -->
         <div class="te-right233">
           <div class="te-sidehead233">
             <span class="te-fresh233"><i class="fas fa-bolt" aria-hidden="true"></i> <%= teHasToday233 ? 'আজকের তাজা সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
-            <span class="te-date233"><%= (typeof todayBn !== 'undefined' && todayBn) ? todayBn : '' %></span>
+            <span class="te-date233"><%= teDateBn291 %></span>
           </div>
 
+          <% if (tePapers233.length) { %>
+          <div class="epk291" id="epKiosk291">
+            <!-- ৩ডি স্টেজ -->
+            <div class="epk291-stage" id="epk291Stage">
+              <div class="epk291-shadow" aria-hidden="true"></div>
+              <div class="epk291-sheet epk291-back epk291-back-l" aria-hidden="true">
+                <span class="epk291-edge"></span>
+                <span class="epk291-backname" id="epk291BackL">—</span>
+                <span class="epk291-mocklines"></span>
+              </div>
+              <div class="epk291-sheet epk291-back epk291-back-r" aria-hidden="true">
+                <span class="epk291-edge"></span>
+                <span class="epk291-backname" id="epk291BackR">—</span>
+                <span class="epk291-mocklines"></span>
+              </div>
+              <a class="epk291-sheet epk291-front" id="epk291Front" href="<%= teHref233(teActive233) %>">
+                <span class="epk291-edge" aria-hidden="true"></span>
+                <span class="epk291-fold" aria-hidden="true"></span>
+                <span class="epk291-masthead">
+                  <span class="epk291-kicker"><%= teHasToday233 ? 'আজকের মুদ্রিত সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
+                  <span class="epk291-name" id="epk291Name"><%= teActive233 ? teActive233.paperName : 'ই-পেপার' %></span>
+                  <span class="epk291-rule" aria-hidden="true"></span>
+                  <span class="epk291-dateline"><%= teDateBn291 %></span>
+                </span>
+                <span class="epk291-media">
+                  <%# সেশন ২৯১: প্রথম-পেপারের থাম্ব SSR-প্রি-রেন্ডার (no-JS-এও সঠিক; একক-ট্যাগ — দ্বৈত-id-শূন্য) %>
+                  <img class="epk291-img" id="epk291Img" <%- teImgAttrs291 %> loading="lazy" decoding="async">
+                  <span class="epk291-mockcols" id="epk291Mock" aria-hidden="true" <%- teFirstThumb291 ? 'hidden' : '' %>>
+                    <span class="epk291-mcol"></span><span class="epk291-mcol epk291-mcol-mid"></span><span class="epk291-mcol"></span>
+                  </span>
+                </span>
+                <span class="epk291-foot">
+                  <span>লেখক ফোরাম ডিজিটাল সংস্করণ</span>
+                  <span class="epk291-turn">পাতা উল্টান <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </span>
+              </a>
+            </div>
+
+            <!-- ফিল্মস্ট্রিপ -->
+            <div class="epk291-filmwrap">
+              <div class="epk291-film" id="epk291Film" role="tablist" aria-label="আজকের পত্রিকা নির্বাচন">
+                <% tePapers233.forEach((p, i) => { %>
+                <button type="button" role="tab" class="epk291-film-btn"
+                        aria-selected="<%= i === 0 ? 'true' : 'false' %>"
+                        data-epk-i="<%= i %>"
+                        style="--epkAcc291: <%= teAcc291(i) %>">
+                  <span class="epk291-film-kicker">দৈনিক</span>
+                  <span class="epk291-film-name"><%= p.paperName %></span>
+                </button>
+                <% }) %>
+              </div>
+            </div>
+
+            <!-- স্ক্রিন-রিডার ঘোষণা -->
+            <p class="epk291-live" id="epk291Live" aria-live="polite"></p>
+          </div>
+          <% } else { %>
           <div class="te-card233">
             <div class="te-cardhead233">
               <div class="te-ico233" aria-hidden="true"><i class="fas fa-newspaper"></i></div>
               <div class="te-cardbody233">
                 <div class="te-namerow233">
-                  <h4 class="te-name233"><%= teActive233 ? teActive233.paperName : 'ই-পেপার আর্কাইভ' %></h4>
-                  <% if (teActive233) { %>
-                  <span class="te-freshbadge233"><%= teHasToday233 ? 'আজকের সংখ্যা' : 'সর্বশেষ' %></span>
-                  <% } %>
+                  <h4 class="te-name233">ই-পেপার আর্কাইভ</h4>
                 </div>
-                <p class="te-cardsub233">
-                  <% if (teHasToday233 && tePapers233.length > 1) { %>
-                    আজকের <%= bnN233(tePapers233.length) %>টি সংস্করণ · সরাসরি ডিজিটাল রিডারে
-                  <% } else if (teActive233) { %>
-                    <%= teHasToday233 ? 'আজকের' : (typeof epaperLatestDateBn !== 'undefined' ? epaperLatestDateBn : '') %> মুদ্রিত রূপ · সরাসরি ডিজিটাল রিডারে
-                  <% } else { %>
-                    দৈনিক পত্রিকার সংরক্ষিত সংস্করণ
-                  <% } %>
-                </p>
+                <p class="te-cardsub233">দৈনিক পত্রিকার সংরক্ষিত সংস্করণ</p>
                 <div class="te-meta233">
                   <span class="te-metachip233"><i class="fas fa-book-open" aria-hidden="true"></i> পৃষ্ঠা উল্টে পড়ার ভিউয়ার</span>
                   <span class="te-metachip233"><i class="fas fa-print" aria-hidden="true"></i> হাই-রেজোলিউশন প্রিন্ট</span>
                 </div>
               </div>
-              <a href="<%= teHref233(teActive233) %>" class="te-go233" aria-label="ই-পেপার খুলুন"><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+              <a href="/epaper" class="te-go233" aria-label="ই-পেপার খুলুন"><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
             </div>
-
             <div class="te-pillrow233">
               <span class="te-pilllabel233">দ্রুত পড়ুন:</span>
               <div class="te-pills233">
-                <% if (teHasToday233 && tePapers233.length) { %>
-                  <% tePapers233.slice(0, 4).forEach(p => { %>
-                  <a href="<%= teHref233(p) %>"
-                     class="te-pill233<%= (teActive233 && String(teActive233.id) === String(p.id)) ? ' active' : '' %>"
-                     data-te-name="<%= p.paperName %>"
-                     data-te-sub="মুদ্রিত রূপ · সরাসরি ডিজিটাল রিডারে"
-                     data-te-tag="<%= teHasToday233 ? 'আজকের সংখ্যা' : 'সর্বশেষ' %>"
-                     data-te-href="<%= teHref233(p) %>"><%= p.paperName %></a>
-                  <% }) %>
-                <% } else { %>
-                  <a href="/epaper" class="te-pill233">আর্কাইভ দেখুন</a>
-                  <% if (typeof epaperLatestDateBn !== 'undefined' && epaperLatestDateBn) { %>
-                  <span class="te-pillsoon233">আজকের সংস্করণ আসন্ন — সর্বশেষ: <%= epaperLatestDateBn %></span>
-                  <% } %>
+                <a href="/epaper" class="te-pill233">আর্কাইভ দেখুন</a>
+                <% if (typeof epaperLatestDateBn !== 'undefined' && epaperLatestDateBn) { %>
+                <span class="te-pillsoon233">আজকের সংস্করণ আসন্ন — সর্বশেষ: <%= epaperLatestDateBn %></span>
                 <% } %>
               </div>
             </div>
           </div>
+          <% } %>
 
           <div class="te-sync233">
             <span class="te-sync-l233"><span class="te-dot233" aria-hidden="true"></span> সর্বশেষ আনুষ্ঠানিক ডিজিটাল মুদ্রণ</span>
@@ -118,27 +170,100 @@
     </div>
   </div>
 </section>
-<%# সেশন ২৭৩-প্রিমিয়াম: পিল-ক্লিকে রিলোড-ছাড়া প্রিভিউ-সুইচ (href-রক্ষিত — নতুন-ট্যাব/ফলব্যাক-নেভিগেশন অটুট) ── %>
+<%# সেশন ২৯১: কিয়স্ক-ইঞ্জিন — অটো-স্লাইড ৩.৫সে + hover/focus-পজ + ম্যানুয়াল-নির্বাচন + CTA-সিঙ্ক ── %>
 <script>
 (function () {
-  if (window.__te233wired) return; window.__te233wired = true;
-  var card = document.querySelector('.te-card233'); if (!card) return;
-  var name = card.querySelector('.te-name233'),
-      sub = card.querySelector('.te-cardsub233'),
-      tag = card.querySelector('.te-freshbadge233'),
-      go = card.querySelector('.te-go233'),
-      cta = document.querySelector('.te-btn-main233');
-  document.querySelectorAll('.te-pills233 .te-pill233[data-te-name]').forEach(function (pill) {
-    pill.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (name) name.textContent = pill.dataset.teName;
-      if (sub) sub.textContent = pill.dataset.teSub;
-      if (tag) tag.textContent = pill.dataset.teTag;
-      if (go) go.setAttribute('href', pill.dataset.teHref || pill.getAttribute('href'));
-      if (cta) cta.setAttribute('href', pill.dataset.teHref || pill.getAttribute('href'));
-      document.querySelectorAll('.te-pills233 .te-pill233').forEach(function (el) { el.classList.remove('active'); });
-      pill.classList.add('active');
+  if (window.__epk291wired) return; window.__epk291wired = true;
+  var kiosk = document.getElementById('epKiosk291');
+  if (!kiosk) return;
+  var papers = <%- teJson291 %>;
+  if (!papers.length) return;
+
+  var reduceMotion = false;
+  try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  var front = document.getElementById('epk291Front'),
+      img = document.getElementById('epk291Img'),
+      mock = document.getElementById('epk291Mock'),
+      nameEl = document.getElementById('epk291Name'),
+      backL = document.getElementById('epk291BackL'),
+      backR = document.getElementById('epk291BackR'),
+      cta = document.getElementById('teKioskCta291'),
+      ctaText = document.getElementById('teKioskCtaText291'),
+      live = document.getElementById('epk291Live'),
+      film = document.getElementById('epk291Film'),
+      btns = film ? Array.prototype.slice.call(film.querySelectorAll('.epk291-film-btn')) : [];
+
+  var current = 0, timer = null, paused = false;
+
+  function applyPaper(i) {
+    var p = papers[i];
+    if (!p) return;
+    front.href = p.href;
+    front.style.setProperty('--epkAcc291', p.acc);
+    nameEl.textContent = p.name;
+    backL.textContent = papers[(i + 1) % papers.length].name;
+    backR.textContent = papers[(i + 2) % papers.length].name;
+    if (cta && ctaText) {
+      cta.href = p.href;
+      ctaText.textContent = p.name + ' পড়ুন';
+    }
+    if (live) live.textContent = 'প্রদর্শিত পত্রিকা: ' + p.name;
+    // থাম্বনেইল কেবল নাম-মিলে-আসা সোর্সেই; না-থাকলে টেক্সট-মাস্টহেড (ভুল-ছবি-অসম্ভব)
+    if (p.thumb) {
+      img.hidden = false;
+      mock.hidden = true;
+      img.alt = p.name + ' — ই-পেপার মাস্টহেড';
+      if (img.getAttribute('src') !== p.thumb) img.src = p.thumb;
+    } else {
+      img.hidden = true;
+      img.removeAttribute('src');
+      mock.hidden = false;
+    }
+    btns.forEach(function (b, bi) { b.setAttribute('aria-selected', bi === i ? 'true' : 'false'); });
+    // ফ্লিপ-অ্যানিমেশন রিস্টার্ট
+    if (!reduceMotion) {
+      front.classList.remove('is-flip');
+      void front.offsetWidth;
+      front.classList.add('is-flip');
+    }
+    current = i;
+  }
+
+  function startTimer() {
+    if (reduceMotion || timer) return;
+    timer = setInterval(function () {
+      if (!paused) applyPaper((current + 1) % papers.length);
+    }, 3500);
+  }
+  function resetTimer() {
+    clearInterval(timer); timer = null; startTimer();
+  }
+
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var i = parseInt(b.getAttribute('data-epk-i'), 10);
+      if (!isNaN(i)) { applyPaper(i); resetTimer(); }
     });
   });
+
+  // hover + keyboard-focus — দুই ক্ষেত্রেই থামে (পাঠক নির্বাচনে স্বাচ্ছন্দ্য)
+  var section = document.getElementById('today-epaper') || kiosk;
+  section.addEventListener('mouseenter', function () { paused = true; });
+  section.addEventListener('mouseleave', function () { paused = false; });
+  kiosk.addEventListener('focusin', function () { paused = true; });
+  kiosk.addEventListener('focusout', function (e) {
+    if (!kiosk.contains(e.relatedTarget)) paused = false;
+  });
+
+  // থাম্ব-লোড-ব্যর্থতায় নিরীহ টেক্সট-মাস্টহেডে ফলব্যাক (কখনো ভাঙা-ছবি নয়)
+  img.addEventListener('error', function () {
+    img.hidden = true;
+    img.removeAttribute('src');
+    mock.hidden = false;
+  });
+
+  applyPaper(0);
+  startTimer();
 })();
 </script>

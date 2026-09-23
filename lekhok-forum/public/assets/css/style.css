@@ -3025,3 +3025,296 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   #leadership.in .leader-card, #current-leadership.in .leader-card { animation: none; }
 }
 /* ═══════════ EOF সেশন ২৫০ ═══════════ */
+
+/* ═══════════ সেশন ২৯১: হোম ই-পেপার — অটো-স্লাইডিং ৩ডি নিউজপেপার কিয়স্ক (epk291) ═══════════
+   ইউজার-স্পেক: পেপার-কাটিং একটার-পর-একটা স্লাইড; হোভারে পজ; বাম CTA সিঙ্কে নাম বদলায়।
+   থাম্বনেইল কেবল নাম-মিলে (routes/pages.js epaperThumbByName291) — মিসম্যাচ-অসম্ভব।
+   হেক্স-শূন্য টোকেন-শুধু (র্যাচেট-নিরাপদ); focus-visible + reduced-motion অন্তর্ভুক্ত। */
+
+.epk291 { position: relative; }
+
+/* ── ১. ৩ডি স্টেজ ── */
+.epk291-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 340px;
+  padding: 18px 0 26px;
+}
+.epk291-shadow {
+  position: absolute;
+  bottom: 14px;
+  width: 220px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  filter: blur(9px);
+  pointer-events: none;
+}
+
+/* ── ২. শিট (কাগজ) — সাধারণ অংশ ── */
+.epk291-sheet {
+  width: 236px;
+  height: 292px;
+  border-radius: var(--radius-sm, 5px);
+  background: var(--lf-amber-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 16px 30px rgba(0, 0, 0, 0.32),
+    0 2px 6px rgba(0, 0, 0, 0.16);
+  position: absolute;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* পেছনের দুই শিট — ৩ডি স্ট্যাক-ভাব */
+.epk291-back {
+  pointer-events: none;
+  background: var(--lf-surface-snow, var(--lf-amber-soft));
+}
+.epk291-back-l { transform: rotate(-9deg) translate(-30px, 12px); z-index: 1; opacity: .92; }
+.epk291-back-r { transform: rotate(8deg) translate(28px, 14px); z-index: 2; opacity: .95; }
+.epk291-backname {
+  display: block;
+  padding: 12px 10px 8px;
+  text-align: center;
+  font-weight: 800;
+  color: var(--lf-ink-max);
+  font-size: 14px;
+  line-height: 1.3;
+}
+.epk291-edge {
+  display: block;
+  height: 5px;
+  flex-shrink: 0;
+  background: var(--epkAcc291, var(--lf-brand-primary));
+}
+
+/* মক-কলাম লাইন (ফলব্যাক + পেছনের শিটে) */
+.epk291-mocklines, .epk291-mockcols {
+  flex: 1;
+  min-height: 0;
+  display: block;
+}
+.epk291-mocklines {
+  margin: 8px 14px 0;
+  height: 64px;
+  background:
+    repeating-linear-gradient(to bottom,
+      color-mix(in srgb, var(--lf-ink-soft), transparent 72%) 0 2.5px,
+      transparent 2.5px 10px);
+}
+.epk291-mockcols {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr 1fr;
+  gap: 8px;
+  padding: 10px 14px 0;
+}
+.epk291-mcol {
+  display: block;
+  border-radius: 2px;
+  background: repeating-linear-gradient(to bottom,
+    color-mix(in srgb, var(--lf-ink-soft), transparent 76%) 0 2.5px,
+    transparent 2.5px 9px);
+}
+.epk291-mcol-mid {
+  background:
+    linear-gradient(color-mix(in srgb, var(--lf-ink-soft), transparent 70%), color-mix(in srgb, var(--lf-ink-soft), transparent 70%)) 0 0 / 100% 34px no-repeat,
+    repeating-linear-gradient(to bottom,
+      color-mix(in srgb, var(--lf-ink-soft), transparent 76%) 0 2.5px,
+      transparent 2.5px 9px) 0 40px / 100% calc(100% - 40px) no-repeat;
+}
+
+/* ── ৩. সামনের শিট — ইন্টারঅ্যাকটিভ ── */
+.epk291-front {
+  z-index: 3;
+  transform: rotate(-1.5deg);
+  transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s ease;
+  text-decoration: none;
+  cursor: pointer;
+}
+.epk291-front:hover, .epk291-front:focus-visible {
+  transform: rotate(-1.5deg) translateY(-7px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 24px 42px rgba(0, 0, 0, 0.42),
+    0 3px 8px rgba(0, 0, 0, 0.2);
+  outline: none;
+}
+.epk291-front:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--epkAcc291, var(--lf-brand-primary)), transparent 0%);
+  outline-offset: 3px;
+}
+.epk291-front.is-flip { animation: epk291Flip .45s cubic-bezier(.2,.7,.2,1); }
+@keyframes epk291Flip {
+  from { opacity: .25; transform: rotate(-1.5deg) translateY(14px) scale(.965); }
+  to   { opacity: 1;   transform: rotate(-1.5deg) translateY(0) scale(1); }
+}
+.epk291-fold {
+  position: absolute;
+  top: 5px; right: 0;
+  width: 17px; height: 17px;
+  background: linear-gradient(225deg,
+    color-mix(in srgb, var(--lf-ink-max), transparent 88%) 46%,
+    color-mix(in srgb, var(--lf-ink-max), transparent 92%) 48%,
+    color-mix(in srgb, var(--lf-ink-max), transparent 94%) 54%,
+    transparent 55%);
+  pointer-events: none;
+}
+
+/* মাস্টহেড */
+.epk291-masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px 6px;
+  background: var(--lf-white);
+  border-bottom: 1px solid var(--lf-ui-border);
+  flex-shrink: 0;
+  text-align: center;
+}
+.epk291-kicker {
+  font-size: 8px;
+  letter-spacing: .16em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--lf-text-tertiary);
+}
+.epk291-name {
+  font-family: var(--font-serif, serif);
+  font-weight: 800;
+  font-size: 19px;
+  line-height: 1.25;
+  color: var(--lf-ink-max);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.epk291-rule {
+  width: 34px; height: 2.5px;
+  border-radius: 2px;
+  background: var(--epkAcc291, var(--lf-brand-primary));
+}
+.epk291-dateline {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--lf-text-tertiary);
+}
+
+/* মিডিয়া — নাম-মিলে থাম্ব বা মক-কলাম */
+.epk291-media { position: relative; flex: 1; min-height: 0; background: var(--lf-amber-soft); }
+.epk291-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+.epk291-mockcols[hidden] { display: none; }
+
+/* শিট-ফুটার */
+.epk291-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 0 12px 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--lf-ui-border);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--lf-text-tertiary);
+}
+.epk291-turn { color: var(--epkAcc291, var(--lf-brand-primary)); display: inline-flex; align-items: center; gap: 4px; }
+
+/* ── ৪. ফিল্মস্ট্রিপ ── */
+.epk291-filmwrap { margin-top: 10px; overflow-x: auto; scrollbar-width: none; }
+.epk291-filmwrap::-webkit-scrollbar { display: none; }
+.epk291-film {
+  display: flex;
+  gap: 7px;
+  width: max-content;
+  margin-inline: auto;
+  padding: 2px;
+}
+.epk291-film-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 86px;
+  min-height: 48px;
+  padding: 7px 12px 9px;
+  border: 1px solid var(--lf-ui-border);
+  border-radius: var(--lf-radius-card, 8px);
+  background: var(--lf-amber-soft);
+  color: var(--lf-ink-max);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.epk291-film-btn:hover { transform: translateY(-2px); }
+.epk291-film-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--epkAcc291, var(--lf-brand-primary)), transparent 0%);
+  outline-offset: 2px;
+}
+.epk291-film-kicker { font-size: 9px; color: var(--lf-text-tertiary); font-weight: 700; }
+.epk291-film-name {
+  font-size: 12px;
+  font-weight: 800;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.epk291-film-btn[aria-selected="true"] {
+  background: var(--lf-white);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
+}
+.epk291-film-btn[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--epkAcc291, var(--lf-brand-primary));
+}
+
+/* স্ক্রিন-রিডার ঘোষণা — দৃষ্টিহীনদের জন্য, ভিজ্যুয়াল-শূন্য */
+.epk291-live {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── ৫. রেসপন্সিভ ── */
+@media (max-width: 1023px) {
+  .epk291-stage { min-height: 320px; }
+}
+@media (max-width: 480px) {
+  .epk291-stage { min-height: 292px; padding: 10px 0 22px; }
+  .epk291-sheet { width: 205px; height: 256px; }
+  .epk291-shadow { width: 190px; }
+  .epk291-name { font-size: 17px; }
+  .epk291-film { justify-content: flex-start; }
+}
+
+/* ── ৬. রিডিউসড-মোশন — অ্যানিমেশন-শূন্য (অটো-স্লাইড JS-দিকেও বন্ধ) ── */
+@media (prefers-reduced-motion: reduce) {
+  .epk291-front.is-flip { animation: none; }
+  .epk291-film-btn, .epk291-front { transition: none; }
+}
+/* ═══════════ EOF সেশন ২৯১ (epk291 কিয়স্ক) ═══════════ */

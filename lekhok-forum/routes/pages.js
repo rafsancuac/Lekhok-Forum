@@ -5,6 +5,10 @@ const db = require('../db');
 // members.bio ফাঁকা হলে ভিউ এটি ব্যবহার করে (সেশন ২৯)
 const leaderStatements = require('../data/leaderStatements');
 const bnDate131 = require('../helpers/bn-date'); // সেশন ১৩১: সাইট-ওয়াইড তারিখ-চুক্তি
+// সেশন ২৯১: হোম ই-পেপার কিয়স্কের থাম্বনেইল-সোর্স — data/newspaperLinks-ই একক-সত্য-উৎস
+// (session-227-এর চতুঃস্তর-লক: নাম ↔ URL-ডোমেইন ↔ manifest# ↔ sha256)। নাম-মিল-ছাড়া
+// কোনো থাম্ব যাবে না — মিসম্যাচ-অসম্ভব (নিচে epaperThumbByName291)।
+const epd226Newspapers291 = require('../data/newspaperLinks');
 // সেশন ১৯৩: হোমপেজ লেআউট রেজিস্ট্রি — সেকশন/কার্ড/স্লাইড ক্রম অ্যাডমিন-নিয়ন্ত্রিত
 // (/admin/home-reorder প্যানেল সেভ করে settings-এ; এখানে পড়ে ভিউতে পাস হয়)
 const homeLayout = require('../helpers/home-layout');
@@ -228,6 +232,34 @@ router.get('/', async (req, res) => {
   const epaperLatest233 = epaperToday233.length ? epaperToday233 : (Array.isArray(epaperLatestRows233) ? epaperLatestRows233 : []);
   const epaperLatestDateBn233 = (epaperLatest233.length && epaperLatest233[0].paperDate) ? bnDate131.bnDate(epaperLatest233[0].paperDate) : '';
   const todayBn233 = bnDate131.bnDate(dhakaToday233);
+
+  // ── সেশন ২৯১: হোম ই-পেপার ৩ডি কিয়স্ক — নাম-ভিত্তিক থাম্বনেইল (মিসম্যাচ-অসম্ভব) ──
+  // ইউজার-নীতি (session-278-প্রতিরূপ): "এক ই-পেপারের থাম্বনিল অন্য ইপেপারে যেন না যায়"।
+  // সুতরাং: ① স্বাভাবিকীকরণ = trim + বহু-স্পেস সংকোচন মাত্র (কোনো অস্পষ্ট-মিল নয়)
+  // ② স্টেপ-১ সম্পূর্ণ-নাম-মিল; ③ স্টেপ-২: কেবল অগ্র-"দৈনিক "/"দ্য "-স্ট্রিপ-পুনঃপ্রচেষ্টা
+  //   (বট paper_name-এ অগ্র-দৈনিক-যোগ করে — "দৈনিক কালবেলা" → "কালবেলা");
+  // ④ স্ট্রিপ-পরে একাধিক লিংক-এন্ট্রি মিললে = অস্পষ্ট → থাম্ব-শূন্য (fallback-মাস্টহেড);
+  // ⑤ কোনো-মিল-নেই → থাম্ব-শূন্য। ফলে প্রতিটি থাম্ব তার নিজ-নামের পত্রিকায়ই যায়।
+  const epThumbMap291 = new Map();
+  epd226Newspapers291.forEach(function (n) {
+    const key291 = String(n.name || '').trim().replace(/\s+/g, ' ');
+    if (key291 && !epThumbMap291.has(key291)) epThumbMap291.set(key291, n.thumb || '');
+  });
+  function epaperThumbByName291(rawName) {
+    const nm291 = String(rawName || '').trim().replace(/\s+/g, ' ');
+    if (!nm291) return '';
+    if (epThumbMap291.has(nm291)) return epThumbMap291.get(nm291) || '';
+    const stripped291 = nm291.replace(/^(?:দৈনিক|দ্য)\s+/u, '');
+    if (stripped291 && stripped291 !== nm291) {
+      // অস্পষ্টতা-গার্ড: স্ট্রিপ-নামে একাধিক-এন্ট্রি মিললে থাম্ব-শূন্য (ভুল-পত্রিকা-প্রতিরোধ)
+      const hits291 = epd226Newspapers291.filter(function (n) {
+        return String(n.name || '').trim().replace(/\s+/g, ' ') === stripped291;
+      });
+      if (hits291.length === 1) return hits291[0].thumb || '';
+    }
+    return '';
+  }
+  epaperLatest233.forEach(function (p) { p.thumb = epaperThumbByName291(p.paperName); });
 
   res.render('lekhok-home', { faqItems42,
     layout: 'layout',
