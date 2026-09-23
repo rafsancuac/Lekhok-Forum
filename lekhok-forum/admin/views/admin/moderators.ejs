@@ -8,6 +8,25 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" /><%# session136: টোকেন-রেজোলিউশন (var(--lf-*) admin.css) %>
   <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* session268 — mo268 তাৎক্ষণিক-ফিল্টার স্টাইল (tk267-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু) */
+    .mo-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .mo-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .mo-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .mo-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .mo-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .mo-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+    .mo-instant-clear:active { transform: scale(.96); }
+    .mo-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .mo-count-chip[hidden] { display: none; }
+    .mo-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .mo-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .mo-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .mo-zero[hidden] { display: none; }
+    tr[data-mo-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .mo-instant-clear:active { transform: none; } }
+    @media (max-width: 640px) { .mo-kbd-hint { display: none; } .mo-instant { padding: 9px 11px; } }
+  </style>
 </head>
 <body>
 <%- include('./partials/sidebar') %>
@@ -93,6 +112,19 @@
     <h2>সব ইউজার</h2>
     <span class="count-pill"><%= users.length %></span>
   </div>
+
+  <div class="mo-instant" id="moInstant268">
+    <i class="fas fa-filter mo-instant-ico" aria-hidden="true"></i>
+    <input type="text" id="moFilter268" class="mo-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — নাম / ইউজারনেম / রোল / স্ট্যাটাস" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="moClear268" class="mo-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="mo-count-chip" id="moCount268" hidden></span>
+    <span class="mo-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
+  <div class="mo-zero" id="moZero268" data-mo-empty hidden>
+    <i class="fas fa-users" aria-hidden="true"></i>
+    <span>কোনো ইউজার মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
+
   <% if (users.length === 0) { %>
     <div class="empty-state-full">
       <i class="fas fa-users"></i>
@@ -105,8 +137,8 @@
       <tr><th>নাম</th><th>রোল</th><th>স্ট্যাটাস</th><th>যোগদান</th><th>অ্যাকশন</th></tr>
     </thead>
     <tbody>
-      <% users.forEach(u => { %>
-        <tr>
+      <% users.forEach((u, idx) => { %>
+        <tr data-mo-row="<%= idx %>" data-kw="#<%= u.id %> ইউজার user <%= u.full_name %> @<%= u.username %> <%= u.username %> <%= u.role === 'admin' ? 'অ্যাডমিন admin' : u.role === 'moderator' ? 'মডারেটর moderator' : 'ইউজার user' %> <%= u.status === 'active' ? 'সক্রিয় active' : u.status === 'banned' ? 'নিষিদ্ধ banned' : 'অপেক্ষমাণ pending' %> <%= (u.created_at || '').split(' ')[0] %> যোগদান joined">
           <td>
             <div style="display:flex; align-items:center; gap:10px;">
               <img src="<%= u.avatar_url || '/avatar/' + u.id %>" class="person-avatar" style="width:36px;height:36px;" alt="">
@@ -144,5 +176,54 @@
   </div>
   <% } %>
 </div>
+<script>
+  (function () {
+    /* session268 — mo268 তাৎক্ষণিক-ফিল্টার (tk267-প্যাটার্ন-মিরর: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড + Escape + __moQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('tr[data-mo-row]'));
+    var input = document.getElementById('moFilter268');
+    var clearBtn = document.getElementById('moClear268');
+    var countChip = document.getElementById('moCount268');
+    var zeroBox = document.getElementById('moZero268');
+    if (!input) { return; }
+    var total = rows.length;
+    function moApply268() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function moClear268() {
+      input.value = '';
+      moApply268();
+      input.blur();
+    }
+    input.addEventListener('input', moApply268);
+    if (clearBtn) { clearBtn.addEventListener('click', moClear268); }
+    input.addEventListener('keydown', function (mo) {
+      if (mo.key === 'Escape') { mo.stopPropagation(); moClear268(); }
+    });
+    document.addEventListener('keydown', function (mo) {
+      if (mo.key !== 'f' || mo.altKey || mo.ctrlKey || mo.metaKey) { return; }
+      var t = mo.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      mo.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__moQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: moApply268,
+      clear: moClear268
+    };
+  })();
+</script>
 </body>
 </html>
