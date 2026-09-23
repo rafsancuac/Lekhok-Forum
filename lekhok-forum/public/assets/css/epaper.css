@@ -686,3 +686,11 @@
        is-act = অ্যাক্টিভ-ডিসেনডেন্ট-দৃশ্যমান-দ্বৈত: ইনসেট-বার + ওজন — SR-অ্যাক্টিভ-অপশন-চিহ্ন) ═══ */
 .ep-ps-opt.is-act { box-shadow: inset 3px 0 0 var(--lf-brand-primary); font-weight: 800; }
 @media (prefers-reduced-motion: reduce) { .ep-ps-opt.is-act { transition: none; } }
+
+/* ═══ session291 — LOWMEM-আগাম-ক্যাপ + অলস-রেল-থাম্ব (is-lazy — ক্যাপ-পরবর্তী-কিউ-অবস্থা)
+   চুক্তি: হেক্স-শূন্য (টোকেন-শুধু) + reduced-motion-সম্মান + eager-থাম্ব-স্টাইল-অস্পৃশ্য ═══ */
+.ep-rail-item.is-lazy .ep-rail-thumb.is-pending { border-style: dashed; }
+.ep-rail-item.is-lazy .ep-rail-thumb.is-pending::after { animation-duration: 2.2s; opacity: .55; }
+@media (prefers-reduced-motion: reduce) {
+  .ep-rail-item.is-lazy .ep-rail-thumb.is-pending::after { animation: none; }
+}

@@ -1079,6 +1079,12 @@
   /* ── ২. বাম পাতা-রেল ── */
   var railTok = 0, railLastCur = 0;
   var ep281Stored = 0, ep281Restored = 0; // session281: ক্যাশ-QA-কাউন্টার (stored=নতুন-রেন্ডার-সংরক্ষণ, restored=dataURL-পুনঃদর্শন)
+  /* session291: LOWMEM-আগাম-ক্যাপ — eager-রেন্ডার প্রথম RAIL_PRE_MAX-পাতা পর্যন্ত; বাকি IO-অলস-পথে
+     (0 = ক্যাপ-শূন্য — সব-আগাম-রেন্ডার; LOWMEM-ডিভাইসে ৬ — খোলায় CPU/মেমরি-চাপ-সীমিত;
+     স্ক্রলে-দৃশ্যমান-হলে তবু-রেন্ডার; ক্যাশ-হিট-পথ ক্যাপের-উপরে তাৎক্ষণিক) */
+  var RAIL_PRE_MAX = LOWMEM ? 6 : 0;
+  var ep291Lazy = 0, ep291IO = null;
+  var ep291Eager = 0; // session291: eager-শাখা-কাউন্টার (নির্ধারক-ক্যাপ-প্রমাণ — IO-অপেক্ষাকৃত)
   function railReset() {
     railTok++;
     railLastCur = 0;
@@ -1132,6 +1138,9 @@
         step();
         return;
       }
+      // session291: আগাম-ক্যাপ-গেট — RAIL_PRE_MAX-পার হলে eager-লুপ অলস-কিউতে-হস্তান্তর করে পরের-ইনডেক্সে
+      if (RAIL_PRE_MAX > 0 && n > RAIL_PRE_MAX) { ep291Queue(items[n - 1], n, st, cache, tok); return step(); }
+      ep291Eager++;
       var done = function () { setTimeout(step, 40); }; // CPU-শ্বাস-বিরতি — মূল-রেন্ডারের-সাথে-প্রতিযোগিতা-শূন্য
       if (!host) return done();
       st.doc.getPage(n).then(function (page) {
@@ -1151,6 +1160,50 @@
       }).then(function () { if (tok === railTok) done(); }).catch(function () { if (tok === railTok) done(); });
     };
     step();
+  }
+  /* session291: অলস-রেল-পথ — ক্যাপ-পরবর্তী-থাম্ব দৃশ্যমান-হলে (IntersectionObserver) রেন্ডার;
+     ক্যাশ-হিট-তাৎক্ষণিক, রেন্ডার-টোকেন-গার্ড-যুক্ত (সুইচে-বাতিল); eager-বডি-অস্পৃশ্য-রীতি */
+  function ep291Paint(item, n, st, cache, tok) {
+    var host = item ? item.querySelector('.ep-rail-thumb') : null;
+    if (!host || tok !== railTok) return;
+    var cached = cache ? cache[n] : null;
+    if (cached) {
+      host.classList.remove('is-pending');
+      host.innerHTML = '<img alt="" draggable="false" src="' + cached + '" />';
+      ep281Restored++;
+      return;
+    }
+    st.doc.getPage(n).then(function (page) {
+      if (tok !== railTok) return;
+      var base = page.getViewport({ scale: 1 });
+      var vp = page.getViewport({ scale: Math.min(176 / base.width, 2.5) });
+      var cv = document.createElement('canvas');
+      cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+      host.classList.remove('is-pending');
+      host.innerHTML = '';
+      host.appendChild(cv);
+      return page.render({ canvasContext: cv.getContext('2d', { alpha: false }), viewport: vp, background: '#ffffff' }).promise.then(function () {
+        if (cache && tok === railTok) { try { cache[n] = cv.toDataURL('image/jpeg', 0.72); ep281Stored++; } catch (e) {} }
+      });
+    }).then(function () { ep291Lazy++; }).catch(function () { ep291Lazy++; });
+  }
+  function ep291Queue(item, n, st, cache, tok) {
+    if (!item || tok !== railTok) return;
+    item.classList.add('is-lazy');
+    if (!('IntersectionObserver' in window)) { ep291Paint(item, n, st, cache, tok); return; }
+    if (!ep291IO) {
+      ep291IO = new IntersectionObserver(function (ents) {
+        for (var i = 0; i < ents.length; i++) {
+          if (!ents[i].isIntersecting) continue;
+          var d = ents[i].target.__ep291;
+          if (!d) continue;
+          ep291IO.unobserve(ents[i].target);
+          ep291Paint(ents[i].target, d.n, d.st, d.cache, d.tok);
+        }
+      }, { root: elRail, rootMargin: '80px' });
+    }
+    item.__ep291 = { n: n, st: st, cache: cache, tok: tok };
+    try { ep291IO.observe(item); } catch (e) {}
   }
   function syncRail(cur) {
     if (!elRail || !cur || cur === railLastCur) return;
@@ -1175,6 +1228,23 @@
     restored: function () { return ep281Restored; },
     lowmem: function () { return !!LOWMEM; },
     cacheArmed: function () { var a = (reader && reader.fid) ? alive.get(reader.fid) : null; return !!(a && a.railThumbs); }
+  };
+
+  /* session291 QA-হুক (__ep291QA — আগাম-ক্যাপ + অলস-পথ-প্রমাণ; setPreMax-দ্বিতীয়-আর্গ = ক্যাশ-বিসর্জন) */
+  window.__ep291QA = {
+    preMax: function () { return RAIL_PRE_MAX; },
+    setPreMax: function (n, reset) {
+      RAIL_PRE_MAX = Math.max(0, Math.floor(Number(n) || 0));
+      var a = (reader && reader.fid) ? alive.get(reader.fid) : null;
+      if (a && reset) delete a.railThumbs;
+      if (a) railBuild(a.st, a.numPages);
+      return RAIL_PRE_MAX;
+    },
+    lazy: function () { return ep291Lazy; },
+    eager: function () { return ep291Eager; },
+    pending: function () { return elRail ? elRail.querySelectorAll('.ep-rail-thumb.is-pending').length : -1; }, // ep291-thumb-pending-fix
+    canvases: function () { return elRail ? elRail.querySelectorAll('.ep-rail-thumb canvas').length : -1; },
+    imgs: function () { return elRail ? elRail.querySelectorAll('.ep-rail-thumb img').length : -1; }
   };
 
   /* ── ৩. ডান ক্যালেন্ডার (পুরোনো সংখ্যা) ── */
