@@ -3133,6 +3133,20 @@ Task53-প্রস্তাবকৃত পরবর্তী-ধাপ বা�
 
 **গোটচা (PLANS session254 ×৪):** testadmin-ভিউয়ার (moderator=403) · _csrfTok-কুকি-দ্বি-সমর্পণ (নেস্টেড-GET-টোকেন-রোটেশন) · s251-কোল্ড-স্টার্ট-ট্রানজিয়েন্ট (eval-empty শ্রেণি — ম্যানুয়াল-ওয়ার্ম-আপ-প্রোব → পুনঃরান) · `[h`-প্রদর্শন-আর্টিফ্যাক্ট (টুল-আউটপুটে `[hidden]`→`]idden]` দেখায়; od -c-ই-সত্য-উৎস)।
 
+## §২৫৭ (session257 — cron 403679: ট্র্যাশ তাৎক্ষণিক-ফিল্টার tr257 + প্রোডাকশন-প্রবাহ-সিড-চুক্তি) — s257 ৪৩/৪৩ ×২ (২৩ সেপ্টেম্বর ২০২৬)
+
+**রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`842a2e7` (session256, clean-tree); GH /user→200; live-200; স্টেল-সামারি-শূন্য (ACTIVE-LOCK-সরাসরি-গৃহীত)। রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s256 ৩৮/৩৮ + s255 ৩৯/৩৯ + s254 ৩৬/৩৬ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (ফিল্টার-প্যাক-ধারা অব্যাহত: ট্র্যাশ-সারফেস)।
+
+**[Mandatory-ফিচার] ট্র্যাশ তাৎক্ষণিক-ফিল্টার (tr257):** /moderator/trash (admin/views/admin/trash.ejs — moderatorView-মোড) — `data-tr-row`-সারি-সূচক + `data-kw` (#আইডি + টেবিল + স্ন্যাপশট-শিরোনাম + payload-স্নিপেট ৪০০-ক + মুছেছেন + সময়) + লাইভ-কাউন্ট চিপ + শূন্য-অবস্থা বক্স + 'f'-কী ফোকাস (field-গার্ড + modifier-বাদ) + Escape ক্লিয়ার+ব্লার + clear-বাটন + **__trQA হুক (total/count/apply/clear)**; GET-q-সার্চ + টেবিল-সিলেক্ট + restore-all + data-bulk-all অক্ষুণ্ণ; hidden-গার্ড ×৩ (`.table tr[data-tr-row][hidden]` + `.tr-count-chip[hidden]` + `.tr-zero[hidden]` — session256-শিক্ষা প্রি-অ্যাপ্লাইড)।
+
+**[Mandatory-স্টাইল]:** tr257 ব্লক **হেক্স-শূন্য টোকেন-শুধু** — color-mix brandgreen ফোকাস-রিং + dashed kbd-পিল + :active প্রেস-ফিডব্যাক + reduced-motion-জোড়া + 640px-সংকোচন + tr-zero টোকেন-বক্স।
+
+**সিড-চুক্তি (প্রোডাকশন-প্রবাহ — s254-নীতি-বর্ধন):** ট্র্যাশ-মার্কার-শূন্য-হলে **নোটিশ-তৈরি (POST /moderator/notices 'qa257trash') → bulk-delete → ট্র্যাশে ১-সারি** (redirect `trashed=<tid>`-পার্সিং; প্রতি-POST-আগে ফ্রেশ-GET-_csrf); সুইট-শেষে **মার্কার-সারি bulk-purge** (/admin/trash/bulk-purge — testadmin=admin) → QA-DB-নিরাময়; ব্যর্থ-রানের-অবশিষ্ট-মার্কার-সারি পরের-রানে পুনঃ-ব্যবহৃত-ও-পরিষ্কার (স্বয়ং-নিরাময়ী idempotent); মার্কার-প্রোব 'qa257trash' → **নির্ধারক-১-মিল** (ডেটা-স্বাধীন অ্যাসার্ট)।
+
+**টেস্ট:** নতুন tests/s257-trashfilter-suite.sh **৪৩/৪৩ ×২-ধারাবাহিক** (কাঠামো ×১২ + স্টাইল ×৯ + আচরণ ×৮ রিয়েল-ব্রাউজার + সিড ×৩ + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ + পরিষ্কারক) + role-policy ২৬০/২৬০ + guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs)।
+
+**গোটচা (PLANS session257):** gawk-৩-প্যারামিটার-match মawk-অসমর্থিত (capture-array → RSTART/substr-বিকল্প) · admin-ভিউ-রেজোলিউশন `app.set('views', [views, admin/views])` নেস্টেড-প্যাটার্ন (admin/views/admin/*.ejs) · moderatorView-মোডে bulkBar/পার্জ-বোতাম-লুকানো (অ্যাসার্ট-বাদ)।
+
 ## §২৫৬ (session256 — cron 403679: লেখা-কিউরেশন তাৎক্ষণিক-ফিল্টার cu256 + [hidden]-ডিসপ্লে-ওভাররাইড বাগ-ফিক্স) — s256 ৩৮/৩৮ ×২ (২৩ সেপ্টেম্বর ২০২৬)
 
 **রাউন্ড-আরম্ভ-যাচাই:** HEAD=origin=`d2abbf7` (session255, clean-tree); GH /user→200; live-200; স্টেল-সামারি-সংশোধন ×২২ (সামারি Task43/'commit-হয়নি'/device-flow যুগ — সব-ভুল; ACTIVE-LOCK-ই-সত্য)। রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s255 ৩৯/৩৯ + s254 ৩৬/৩৬ + s253 ৩৫/৩৫ + s251 ৩১/৩১ + guard:design + audit:views — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (session255-বাকি-প্রস্তাব গ্রহণ: curation-ফিল্টার-প্যাক)।
