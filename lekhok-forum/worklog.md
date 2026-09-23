@@ -2456,3 +2456,26 @@ Task: cron-নির্দেশ — অবস্থা-যাচাই → agen
 - Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
 - পরের-এজেন্ট: **session264 লেবেল (worklog Task ID 104)**; PLANS session263-নোট অবশ্যই-পড়ুন (মিশ্র-ট্যাগ-গার্ড + স্ট্যাটিক-ইনডেক্সিং + স্ট্যাটিক-kw-চুক্তি); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
 - বাকি-প্রস্তাব: multipart-ব্রাউজার-পাথ-যাচাই (press ই২ই), admin-dashboard (/admin) সারফেস-ফিল্টার (mdf263-মিরর), Turso/প্রোড-পোর্ট
+
+---
+Task ID: 104 (session264 — cron 403679; অ্যাডমিন ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার adf264 + মিথ্যা-সেশন-গার্ড-গোটচা) — push `fd8e520`
+Agent: Z.ai Code (main session, cron 403679, web-26d1f0e9)
+Task: cron-নির্দেশ — অবস্থা-যাচাই → agent-browser QA → ফিক্স/ফিচার → worklog
+
+## বর্তমান প্রজেক্ট-অবস্থা (যাচাইকৃত)
+- HEAD=origin=`57d6b73` (session263/Task103), working-tree ক্লিন, টোকেন-ভ্যালিদ, live 200; device-flow-অবসর; প্যারালাল-সংঘর্ষ-শূন্য
+- স্টেল-সামারি-সংশোধন ×৩০: সামারি Task43/'commit-হয়নি'/device-flow/'১৪-ট্রিগার' যুগ — সব-ভুল; ACTIVE-LOCK Task103/session263-ই-সত্য
+- রাউন্ড-শুরু QA: role-policy ২৬০/২৬০ + s263 ৫৩/৫৩ (SKIP=১) + guard:design + audit:views (১২২ ejs) — সব-গ্রিন, বাগ-শূন্য → ফিচার-রাউন্ড (PLANS session263-বাকি-প্রস্তাব গ্রহণ: admin-dashboard-সারফেস)
+
+## এ-রাউন্ডে সম্পন্ন (session264)
+- **[Mandatory-ফিচার] অ্যাডমিন ড্যাশবোর্ড তাৎক্ষণিক-ফিল্টার (adf264):** /admin (admin/views/admin/dashboard.ejs) — মিশ্র-ট্যাগ সারফেস ×১৮ (stat-box ×৯ + কার্ড ×২ + কুইক-অ্যাকশন ×৭) data-adf-row + দ্বি-ভাষা data-kw (লেবেল+প্রতিশব্দ+লিংক-পাথ+ইংরেজি-অ্যালায়াস) + ফিল্টার-স্ট্রিপ + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + **__adfQA হুক** (total/count/apply/clear); welcome-banner/stat-grid/dash-cols/recent-list/quick-actions/sidebar অক্ষুণ্ণ; hidden-গার্ড ×৩ (মিশ্র-ট্যাগ — .stat-box display:flex-ওভাররাইড-সহ)
+- **[Mandatory-স্টাইল]:** adf264-ব্লক হেক্স-শূন্য টোকেন-শুধু (color-mix brandgreen রিং + dashed kbd-পিল + :active + reduced-motion-জোড়া + 640px)
+- **টেস্ট:** নতুন tests/s264-adfilter-suite.sh **৫৬/৫৬ ×২-ধারাবাহিক** (কাঠামো ×২০+স্টাইল ×১২+আচরণ ×১৮ রিয়েল-ব্রাউজার + নির্ধারক-প্রোব ×৬ পূর্বগণনা-মিল + 390px-hScroll-শূন্য + স্ক্রিনশট ×২ + রিড-ওনলি ১৮→১৮) + s263 ৫৩/৫৩ + role-policy ২৬০/২৬০ + guard:design + audit:views গ্রিন + EJS-compile/রেন্ডার-প্রমাণ
+- **গোটচা ×২ ডক-কৃত (PLANS session264):** মিথ্যা-সেশন-সক্রিয়-গার্ড (grep '/admin' লগইন-পেজেও মেলে → অ্যাঙ্করড '/admin/?$' — প্রথম-রানে ১৩-মিথ্যা-ফেল) · aligned multi-space অ্যাঙ্কর (href→class ২-৭-স্পেস → রেজেক্স+re.subn-ই-পথ)
+- প্যাচ: scripts/s264-patch.py (skip-if-present idempotent — ২১-সম্পাদনা) + ডক ×৩ (PROJECT §২৬৪ + PLANS session264 + এ-এন্ট্রি) → secret-scan-ক্লিন → fetch+rebase → push → Vercel-যাচাই
+
+## ঝুঁকি ও পরবর্তী
+- Turso/প্রোড-পোর্ট = পরিকল্পনা-গেটে-অক্ষুণ্ণ; টোকেন-নীতি অক্ষুণ্ণ (V3 .secrets/-এ-সক্রিয়; মুখোশ-ছাড়া-কখনো-প্রদর্শন-নয়); device-flow-অবসর
+- পরের-এজেন্ট: **session265 লেবেল (worklog Task ID 105)**; PLANS session264-নোট অবশ্যই-পড়ুন (মিথ্যা-সেশন-গার্ড + multi-space-অ্যাঙ্কর + ৩-ট্যাগ-গার্ড-ত্রয়ী); push-আগে fetch+rebase-বাধ্যতমূলক (প্যারালাল-রাউন্ড-সক্রিয়!)
+- বাকি-প্রস্তাব: multipart-ব্রাউজার-পাথ-যাচাই (press ই২ই), লেগেসি-সুইটের /admin/login-উপসর্গ-ট্যার্গেট-স্ক্যান (অ্যাঙ্করড-চেক-প্রথা), Turso/প্রোড-পোর্ট
+- রিমোট main = `fd8e520` (session264); working-tree ক্লিন
