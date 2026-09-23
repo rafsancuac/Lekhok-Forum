@@ -16,6 +16,14 @@
     <h1>গ্যালারি</h1>
     <p><%= items.length %> টি ছবি | <a href="/admin/gallery/new">+ নতুন ছবি</a></p>
   </div>
+  <%# ── session280 — agl280 তাৎক্ষণিক-ফিল্টার (s279/arl279-প্যাটার্ন-মিরর; কার্ড-সারফেস — s274-কার্ড-চুক্তি; একক-স্ট্রিপ — 'f'-মালিকানা-নির্দ্বিধা; ক্লায়েন্ট-সাইড অনুসন্ধান — GET-ফিল্টার-বার-বিহীন-সারফেস) ── %>
+  <div class="agl280-instant" id="aglInstant280">
+    <i class="fas fa-filter agl280-ico" aria-hidden="true"></i>
+    <input type="text" id="aglFilter280" class="agl280-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / ক্যাপশন / ক্যাটাগরি / আইডি" autocomplete="off" aria-label="গ্যালারি-তালিকা তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="aglClear280" class="agl280-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="agl280-count-chip" id="aglCount280" hidden></span>
+    <span class="agl280-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
   <% if (items.length === 0) { %>
     <div class="card empty">কোনো ছবি নেই</div>
   <% } else { %>
@@ -25,12 +33,23 @@
     <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড আইটেমগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
   </form>
   <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
-    <% items.forEach(g => { %>
-      <div class="card" style="padding:8px; position:relative;">
+    <% items.forEach((g, aglI280) => { %>
+      <%# session280 — agl280 দ্বিভাষিক data-kw (হোয়াইটস্পেস-নরমালাইজড ×৪; image_url+title+caption+category) %>
+      <% const aglKw280 = [
+           '#' + g.id,
+           'ছবি image', String(g.image_url || '').replace(/\s+/g, ' '),
+           'শিরোনাম title', String(g.title || '(শিরোনাম নেই)').replace(/\s+/g, ' '),
+           g.caption ? 'ক্যাপশন caption ' + String(g.caption).replace(/\s+/g, ' ') : '',
+           'ক্যাটাগরি category', String(g.category || 'general').replace(/\s+/g, ' '),
+           'সম্পাদনা edit',
+           'মুছুন delete'
+         ].filter(Boolean).join(' '); %>
+      <div class="card" data-agl-row="<%= aglI280 %>" data-kw="<%= aglKw280 %>" style="padding:8px; position:relative;">
         <label style="position:absolute; top:14px; left:14px; z-index:2; background:rgba(255,255,255,0.92); border:1px solid #ccd0d5; border-radius:5px; padding:4px 6px; cursor:pointer;"><input type="checkbox" name="bulk_ids" value="<%= g.id %>" style="margin:0; accent-color:#059669;"></label>
         <img src="<%= g.image_url %>" alt="<%= g.title || '' %>" style="width:100%; height:160px; object-fit:cover; border-radius:5px;" loading="lazy" />
         <p style="font-weight:600; margin:8px 0 4px;"><%= g.title || '(শিরোনাম নেই)' %></p>
         <p style="color:#666; font-size:0.85rem; min-height:30px;"><%= g.caption || '' %></p>
+        <span class="agl280-catchip"><i class="fas fa-tag" aria-hidden="true"></i> <%= g.category || 'general' %></span>
         <div style="margin-top:8px; display:flex; gap:6px;">
           <a href="/admin/gallery/<%= g.id %>/edit" class="btn btn-primary btn-sm">সম্পাদনা</a>
           <form method="POST" action="/admin/gallery/<%= g.id %>?_method=DELETE" style="display:inline;">
@@ -41,6 +60,80 @@
     <% }) %>
   </div>
   <% } %>
+  <div class="agl280-zero" id="aglZero280" data-agl-empty hidden>
+    <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+    <span>কোনো ছবি মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
 </div>
+<script>
+  (function () {
+    /* session280 — agl280 তাৎক্ষণিক-ফিল্টার (s279/arl279-প্যাটার্ন-মিরর, একক-স্ট্রিপ — 'f'-ফোকাস-মালিকানা-নির্দ্বিধা: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড (bulk_ids-checkbox INPUT) + Escape + __aglQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত; কার্ড-সারফেস s274-চুক্তি: div[data-agl-row]-hidden-গার্ড — tr-অনুমান-নিষিদ্ধ) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-agl-row]'));
+    var input = document.getElementById('aglFilter280');
+    var clearBtn = document.getElementById('aglClear280');
+    var countChip = document.getElementById('aglCount280');
+    var zeroBox = document.getElementById('aglZero280');
+    if (!input) { return; }
+    var total = rows.length;
+    function aglApply280() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function aglClearFn280() {
+      input.value = '';
+      aglApply280();
+      input.blur();
+    }
+    input.addEventListener('input', aglApply280);
+    if (clearBtn) { clearBtn.addEventListener('click', aglClearFn280); }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { ev.stopPropagation(); aglClearFn280(); }
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+      var t = ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ev.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__aglQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: aglApply280,
+      clear: aglClearFn280
+    };
+  })();
+</script>
+<style>
+    /* session280 — agl280 তাৎক্ষণিক-ফিল্টার স্টাইল (s279-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু; brandgreen-পরিবার) */
+    .agl280-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .agl280-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .agl280-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .agl280-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .agl280-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .agl280-clear:hover { background: var(--lf-brandgreen-soft); }
+    .agl280-clear:active { transform: scale(.96); }
+    .agl280-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .agl280-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .agl280-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .agl280-catchip { display: inline-flex; align-items: center; gap: 5px; margin: 2px 0 8px; padding: 2px 9px; border-radius: 999px; font-size: .68rem; font-weight: 700; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); border: 1px solid color-mix(in srgb, var(--lf-brandgreen) 25%, transparent); }
+    .agl280-catchip i { font-size: .6rem; color: var(--lf-brandgreen); }
+    .agl280-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .agl280-count-chip[hidden] { display: none; }
+    .agl280-zero[hidden] { display: none; }
+    [data-agl-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .agl280-clear:active { transform: none; } }
+    @media (max-width: 640px) { .agl280-kbd-hint { display: none; } .agl280-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
