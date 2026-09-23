@@ -2864,7 +2864,9 @@ Work Log:
 - **গোটচা-ধরা-ফিক্স:** hidden-backdrop-ফোকাস-গোটচা (rbmCsv focus()-অক্ষম — প্রথম-রানে ৬৬/১) → backdrop-খোলা-প্রোব-সংশোধনী → ৬৭/৬৭ ×২
 - **টেস্ট:** নতুন tests/s279-arlfilter-suite.sh **৬৭/৬৭ ×২-ধারাবাহিক (SKIP=০)** + পূর্ণ-রিগ্রেশন s260-s278 সব-গ্রিন + role-policy ২৬০/২৬০ + guard:design + audit:views-গ্রিন (১২২ ejs)
 - PNG-চার্ন-রিভার্ট (session269-প্রথা) + secret-scan-ক্লিন + EJS-কম্পাইল-প্রমাণ
-- ডক ×৩ (PROJECT §২৭৯ + PLANS session279 + repo-worklog Task-119) + কমিট-জোড়া (ফিচার + ডক) → fetch+rebase → push (push-পরবর্তী HEAD = এ-কমিট) → Vercel READY → প্রোড-স্পট
+- ডক ×৩ (PROJECT §২৭৯ + PLANS session279 + repo-worklog Task-119) + কমিট-জোড়া (ফিচার + ডক)
+- **push-পূর্ব fetch-এ সমান্তরাল session279-ইউজার-রাউন্ড-আবিষ্কৃত** (ই-পেপার রিডার pressreader-স্থাপত্য `2232672` + keeper হোম-ইপেপার-প্রিমিয়াম `be1dfcc` + keeper-worklog `4f135af` — ৩-কমিট) → **লেবেল-সংঘর্ষ (দুই-রাউন্ড-ই session279/Task-119)** → সংঘর্ষ-শূন্য rebase (ফাইল-সেট-বিচ্ছিন্ন) → **session105-প্রথা: শিরোনাম-কনটেন্ট-বিভাজন + রিলে-নোট** (PROJECT §২৭৯ ×২ / PLANS-নোট ×২-সহ-অস্তিত্ব)
+- **rebase-পরবর্তী-পুনঃযাচাই:** guard:design-গ্রিন + audit:views-গ্রিন (১২২ ejs) + s279 **৬৭/৬৭**-পুনঃপ্রমাণ → push (push-পরবর্তী HEAD = ডক-রিলে-কমিট) → Vercel READY → প্রোড-স্পট
 
 Stage Summary:
 - রিমোট main = push-পরবর্তী HEAD (session279-arl279); working-tree ক্লিন
