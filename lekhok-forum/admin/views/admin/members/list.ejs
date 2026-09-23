@@ -58,14 +58,46 @@
     <button type="submit" class="btn btn-sm" formaction="/admin/members/bulk-unsuspend" data-bulk-msg="নির্বাচিত সদস্যদের অ্যাকাউন্ট পুনঃসক্রিয় করা হবে?"><i class="fas fa-rotate-left"></i> পুনঃসক্রিয়</button>
     <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="নির্বাচিত সদস্যরা ট্র্যাশে যাবে — ট্র্যাশ থেকে ফেরত আনা যায়। নিশ্চিত?"><i class="fas fa-trash"></i> ট্র্যাশে পাঠান</button>
   </form>
+  <%# ── session278 — aml278 তাৎক্ষণিক-ফিল্টার (s277/ev277-প্যাটার্ন-মিরর; একক-স্ট্রিপ — 'f'-মালিকানা-নির্দ্বিধা; term/type-GET-ফিল্টারের-সহায়ক ক্লায়েন্ট-সাইড অনুসন্ধান) ── %>
+  <div class="aml278-instant" id="amlInstant278">
+    <i class="fas fa-filter aml278-ico" aria-hidden="true"></i>
+    <input type="text" id="amlFilter278" class="aml278-input" placeholder="তাৎক্ষণিক ফিল্টার — নাম / আইডি / পদ / কার্যবর্ষ" autocomplete="off" aria-label="সদস্য-তালিকা তাৎক্ষণিক ফিল্টার" />
+    <button type="button" id="amlClear278" class="aml278-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+    <span class="aml278-count-chip" id="amlCount278" hidden></span>
+    <span class="aml278-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন</span>
+  </div>
   <% if (members.length === 0) { %>
     <div class="card empty">কোনো সদস্য নেই</div>
   <% } else { %>
   <table>
     <thead><tr><th style="width:34px;"><input type="checkbox" data-bulk-all aria-label="সব সিলেক্ট করুন"></th><th>মেম্বার আইডি</th><th>নাম</th><th>পদ</th><th>ডিপার্টমেন্ট</th><th>কার্যবর্ষ</th><th>ধরন</th><th>স্ট্যাটাস</th><th>কার্যক্রম</th></tr></thead>
     <tbody>
-      <% members.forEach(m => { %>
-        <tr>
+      <% members.forEach((m, amlI278) => { %>
+        <%# session278 — aml278 দ্বিভাষিক data-kw (হোয়াইটস্পেস-নরমালাইজড ×৫; উইং-মান-অ্যালায়াস + স্ট্যাটাস-মান-অ্যালায়াস s273-চুক্তি) %>
+        <% const stAml278 = m.account_status || (m.user_id ? 'active' : 'unclaimed'); %>
+        <% const amlKw278 = [
+             '#' + m.id,
+             'সদস্য member',
+             'আইডি id', String(m.member_id || '').replace(/\s+/g, ' '),
+             'নাম name', String(m.name || '').replace(/\s+/g, ' '),
+             'পদ role', String(m.role || '').replace(/\s+/g, ' '),
+             'ডিপার্টমেন্ট department', String(m.department || '').replace(/\s+/g, ' '),
+             'কার্যবর্ষ term', String(m.term_year || '').replace(/\s+/g, ' '),
+             m.member_type === 'central' ? 'কেন্দ্রীয় central' :
+             m.member_type === 'advisory' ? 'উপদেষ্টা advisory' :
+             m.member_type === 'publication' ? 'প্রকাশনা publication' :
+             m.member_type === 'office' ? 'দপ্তর office' :
+             m.member_type === 'it-promo' ? 'আইটি itpromo' :
+             m.member_type === 'founder' ? 'প্রতিষ্ঠাতা founder' :
+             m.member_type === 'permanent' ? 'স্থায়ী permanent' :
+             m.member_type === 'branch' ? 'শাখা branch' : 'সাধারণ general',
+             stAml278 === 'active' ? 'অ্যাক্টিভ active' :
+             stAml278 === 'pending' ? 'পেন্ডিং pending' :
+             stAml278 === 'suspended' ? 'স্থগিত suspended' : 'আনক্লেইমড unclaimed',
+             'সম্পাদনা edit',
+             'মুছুন delete'
+           ].filter(Boolean).join(' '); %>
+        <tr data-aml-row="<%= amlI278 %>" data-kw="<%= amlKw278 %>">
           <td style="width:34px;"><input type="checkbox" name="bulk_ids" value="<%= m.id %>" aria-label="সিলেক্ট"></td>
           <td><code><%= m.member_id || '—' %></code></td>
           <td><strong><%= m.name %></strong></td>
@@ -99,6 +131,78 @@
     </tbody>
   </table>
   <% } %>
+  <div class="aml278-zero" id="amlZero278" data-aml-empty hidden>
+    <i class="fas fa-filter-circle-xmark" aria-hidden="true"></i>
+    <span>কোনো সদস্য মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+  </div>
 </div>
+<script>
+  (function () {
+    /* session278 — aml278 তাৎক্ষণিক-ফিল্টার (s277/ev277-প্যাটার্ন-মিরর, একক-স্ট্রিপ — 'f'-ফোকাস-মালিকানা-নির্দ্বিধা: data-kw-সারফেস + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস-ফিল্ড-গার্ড (term/type-SELECT + bulk_ids-INPUT) + Escape + __amlQA — সারফেস-শূন্যে-ও-সংজ্ঞায়িত; tr-সারফেস: tr[data-aml-row]-hidden-গার্ড) */
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-aml-row]'));
+    var input = document.getElementById('amlFilter278');
+    var clearBtn = document.getElementById('amlClear278');
+    var countChip = document.getElementById('amlCount278');
+    var zeroBox = document.getElementById('amlZero278');
+    if (!input) { return; }
+    var total = rows.length;
+    function amlApply278() {
+      var q = (input.value || '').trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var kw = (row.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row.hidden = !hit;
+        if (hit) { shown++; }
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = shown + ' / ' + total; } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function amlClearFn278() {
+      input.value = '';
+      amlApply278();
+      input.blur();
+    }
+    input.addEventListener('input', amlApply278);
+    if (clearBtn) { clearBtn.addEventListener('click', amlClearFn278); }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { ev.stopPropagation(); amlClearFn278(); }
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+      var t = ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+      ev.preventDefault();
+      input.focus();
+      input.select();
+    });
+    window.__amlQA = {
+      total: function () { return total; },
+      count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+      apply: amlApply278,
+      clear: amlClearFn278
+    };
+  })();
+</script>
+<style>
+    /* session278 — aml278 তাৎক্ষণিক-ফিল্টার স্টাইল (s277-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু; brandgreen-পরিবার) */
+    .aml278-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+    .aml278-ico { color: var(--lf-brandgreen); opacity: .75; }
+    .aml278-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+    .aml278-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+    .aml278-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+    .aml278-clear:hover { background: var(--lf-brandgreen-soft); }
+    .aml278-clear:active { transform: scale(.96); }
+    .aml278-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+    .aml278-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .aml278-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .aml278-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .aml278-count-chip[hidden] { display: none; }
+    .aml278-zero[hidden] { display: none; }
+    tr[data-aml-row][hidden] { display: none !important; }
+    @media (prefers-reduced-motion: reduce) { .aml278-clear:active { transform: none; } }
+    @media (max-width: 640px) { .aml278-kbd-hint { display: none; } .aml278-instant { padding: 9px 11px; } }
+  </style>
 </body>
 </html>
