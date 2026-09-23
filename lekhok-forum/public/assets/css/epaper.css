@@ -646,3 +646,9 @@
 .ep-cal-y.is-cur { background: var(--lf-brand-primary); border-color: var(--lf-brand-primary); color: var(--lf-white); font-weight: 800; }
 @media (max-width: 640px) { .ep-cal-ylist { gap: 3px; } .ep-cal-y { padding: 4px 8px; font-size: .64rem; } }
 @media (prefers-reduced-motion: reduce) { .ep-cal-ylist { animation: none; } .ep-cal-mylabel, .ep-cal-y { transition: none; } }
+
+/* ═══ session285 — বছর-স্ট্রিপে কী-বোর্ড-নেভিগেশন (ep285 — হেক্স-শূন্য টোকেন-শুধু;
+       রোভিং-ট্যাবইনডেক্স + is-act-টিন্ট + ফোকাস-চেইন) ═══ */
+.ep-cal-y.is-act { border-color: var(--lf-brand-primary); color: var(--lf-brand-primary); background: var(--lf-green-tint); }
+.ep-cal-y.is-act.is-cur { outline: 2px solid var(--lf-brand-primary); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) { .ep-cal-y.is-act { transition: none; } }
