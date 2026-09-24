@@ -3251,3 +3251,11 @@ push-পূর্ব rebase-এ (f629b06) দেখা যায় আরেক
 - **agent-browser নীরব-ব্যর্থ-open:** open কখনো নীরবে about:blank-এ থেকে-যায় → পরের-সব-eval TypeError-খালি → মিথ্যা-ফেল/মিথ্যা-পাস। চুক্তি: open-পরে `get url`-যাচাই + রিট্রাই-লুপ (s296-সুইটে প্রমাণিত)।
 - **poll()-exit-code-চুক্তি:** সফলতায় echo-শূন্য — output-grep-করলে সফল-চেক-ও ফেল। `if poll ...; then` রীতিই।
 - **পরের-এজেন্ট: session297 লেবেল (worklog Task ID 137)।** push-আগে fetch+rebase-বাধ্যতমূলক; বাকি-প্রস্তাব: হোম-কিয়স্কে page-count-ব্যাজ (স্কিমা-কলাম-থাকলে), ফিল্ম-গ্রিড ৫-কলাম-বিকল্প (১২৮০+), kiosk-অটো-স্লাইডে ভিউপোর্ট-IntersectionObserver-পজ (অদৃশ্য-সেকশনে CPU-সাশ্রয়), Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)।
+
+## session306-নোট (ইউজার-স্পেক — সোশ্যাল ফিড ফোন-মকআপ sfs292)
+- **absolute-fullbleed-চুক্তি:** ফোন = অ্যাবসোলিউট top/bottom:-var(--sfs292-pad) — var-টি .sfs292-card-এ সংজ্ঞাত, ডেসেনডেন্ট-ইনহেরিট; MQ-তে কেবল var-বদল (40→28→20px) — top/bottom-সূত্র অপরিবর্তিত। স্ট্যাক-মোডে (≤1024) গ্রিড min-height:0 + স্টেজ নিজস্ব min-height (640/560) — ফোন স্টেজ-ফিল।
+- **overflow:hidden-বিপদ (E2E-ধরা):** কার্ড-স্তরে overflow:hidden থাকলে hover-লিফট ক্লিপ-হয় (ফোন-টপ ৬px কাটা)। sfs292-কার্ডে overflow নিষিদ্ধ — চিপ-অফসেট কার্ড-বাউন্ডের ভেতরেই রাখতে হবে (stage-inset > chip-offset)।
+- **CSS-keyframes-সিমলেস-লুপ:** track = [half, half-clone(aria-hidden)]; প্রতি-পোস্ট-মার্জিন-সমান → translateY(-50%) নিখুঁত-সিম; gap-প্রপার্টি ব্যবহার নিষিদ্ধ (seam-ভাঙে) — margin-কনভেনশন।
+- **agent-browser AV-ক্যাশ-গোটচা (পুনঃপ্রমাণিত):** style.css প্যাচের পরে সার্ভার-রিস্টার্ট বাধ্যতমূলক — AV বুট-টাইম-হ্যাশ; রিস্টার্ট-বিহীন ?v= অপরিবর্তিত → ব্রাউজার পুরনো CSS (মিথ্যা-নন-ইফেক্ট)। eval-অ্যাসার্টে translateY ঋণাত্মক-দিক (t2 < t1 = RUNNING) — শর্ত-উল্টালে মিথ্যা-FAIL।
+- **synthetic-event-সীমা:** JS dispatchEvent-এ CSS :hover সক্রিয় হয় না → hover-টেস্টে agent-browser hover (CDP) বাধ্যতমূলক; animation-play-state + transform উভয়-অ্যাসার্ট।
+- **পরের-এজেন্ট: session307 (Task ID 147)।** বাকি-প্রস্তাব: ফোন-স্ক্রিনে বাস্তব-ফিড-ডেটা (লগইন-বিহীন পাবলিক-পোস্ট হাইড্রেশন — SSR-নিরাপদ), kiosk-স্টাইল IntersectionObserver-পজ (অদৃশ্য-সেকশনে CPU-সাশ্রয়), চিপ ×২→×৩ (feedSlides পূর্ণ-ব্যবহার), Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)।

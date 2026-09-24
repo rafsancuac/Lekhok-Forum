@@ -3321,3 +3321,21 @@ Stage Summary:
 - migrate.js-বুট-ফিক্স = সুপ্ত-প্রোড-মাইগ্রেশন-বাগও-সারা; নতুন-চুক্তি ×৩ (শ্রেণি-সংঘর্ষ-গ্রেপ + মার্কার-রিনেম-নিরপেক্ষতা + মাইগ্রেশন-গেটে-প্রকৃত-রান-প্রমাণ) PLANS-এ
 - প্যাচ/সিড/সুইট: scripts/s306-patch.py + scripts/s306-seed-epaper.js + tests/s306-suite.sh (৫০-চেক)
 - ডক: PROJECT §৩০৬ + PLANS session306 + worklog Task 146; পরের-এজেন্ট session307 (Task ID 147)
+
+---
+Task ID: 146
+Agent: Z.ai Code (main sandbox agent, web-9d4762c4 — session306)
+Task: ইউজার-স্পেক — "সোশ্যাল ফিডের ডিজাইন্টা এভাবে দাও! এখানে দেওয়া মোবাইলের স্ক্রিন যেন সেকশনের উচ্চতার সাথে ম্যাচ করে।" (session-292-র হারানো প্যাকেজের পুনঃনির্মাণ + পূর্ণ-এক্সিকিউশন)
+
+Work Log:
+- স্যান্ডবক্স-রিসেট-পুনঃপ্রতিষ্ঠা: রিপো-রিক্লোন (HEAD=7eb1749/session305) + সব-টোকেন .lekhok-secrets (×৬, chmod 600, আউটপুট-মাস্কড) — V3-টোকেন 200, WEB-টোকেন 401 (ডেড — ইউজারকে জানানো হবে)
+- অবস্থা-নির্ণয়: session-292-র ফোন-মকআপ রিপোতে কখনো-ল্যান্ডেড-নয় (স্যান্ডবক্স-রিসেটে প্যাকেজ-হারানো); বর্তমান feed.ejs = পুরনো fs-* ক্যারোসেল-শোকেস
+- ইমপ্ল ২-ফাইল: views/partials/home/feed.ejs (ফোন-মকআপ সিন — CMS-কী/section-id/reveal/feedSlides-অক্ষুণ্ণ) + style.css session306-ব্লক (sfs292-* ~420 লাইন, হেক্স-শূন্য) — অটো-স্ক্রল CSS-keyframes (JS-শূন্য), hover/focus-pause, reduced-motion
+- মূল-চাহিদা-প্রমাণ: ফোন অ্যাবসোলিউট top/bottom:-pad → সেকশন-কার্ড 702 / ফোন 700 (1:1, delta=বর্ডার×২); গ্রিড min-height:620 → অ্যাসপেক্ট 1:2.20 (বাস্তব-ফোন)
+- E2E (:3410 আইসোলেটেড + agent-browser): অটো-স্ক্রল RUNNING ✓ CDP-hover PAUSED + লিফট −6px ✓ RESUMED ✓ চিপ ×২ (feedSlides) ✓ ফোন-href/aria ✓ মোবাইল-390 hScroll-শূন্য ✓ কনসোল-শূন্য ✓ স্ক্রিনশট ×৫
+- পলিশ ×৩ (E2E-ধরা): overflow:hidden-ক্লিপ-বিলোপ · চিপ-এ 8→15% · গ্রিড min-height (475→702px ব্যান্ড)
+- রিগ্রেশন: EJS-compile + audit:views (১২২) + guard:design — সর্ব-গ্রিন; ডক-ত্রয় (এ-এন্ট্রি + PROJECT §৩০৬ + PLANS session306)
+
+Stage Summary:
+- **সোশ্যাল ফিড = প্রিমিয়াম ফোন-মকআপ সিন** — ফোন-স্ক্রিন সেকশন-কার্ডের সম্পূর্ণ উচ্চতায় (ইউজারের হুবহু চাহিদা), ভেতরে অটো-স্ক্রলিং অ্যাপ-ফিড (hover-পজ), ফোন-ক্লিক = /dashboard, ভাসমান-চিপ অ্যাডমিন-রিঅর্ডারযোগ্য
+- পরের-এজেন্ট: **session307 (Task ID 147)**; PLANS session306-নোট পড়ুন (AV-ক্যাশ + overflow + seam-গোটচা); push-আগে fetch+rebase
