@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
   // Turso-তে প্রতিটি await = ১টি নেটওয়ার্ক রাউন্ড-ট্রিপ → ওয়ার্ম TTFB-ই ৩-৭ সেকেন্ড,
   // যা Googlebot-এর ক্রল-রেট কমিয়ে দিত (GSC: "Discovered – currently not indexed")।
   // এখন স্বাধীন কুয়েরিগুলো এক প্যারালাল ব্যাচে ছোড়া হয়।
-  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, hiddenSlotsRaw205, extraMembersRaw205, recentArticles, faqItems42, sectionOrderRaw193, memberOrderRaw193, feedOrderRaw193, epaperTodayRows233, epaperLatestRows233, epaperStatsRow296] = await Promise.all([
+  const [recentNotices, homeTermYearRows, founders, foundingAdvisors, currentAdvisors, advisors, todayRows, hiddenSlotsRaw205, extraMembersRaw205, recentArticles, faqItems42, sectionOrderRaw193, memberOrderRaw193, feedOrderRaw193, epaperTodayRows233, epaperLatestRows233, epaperStatsRow296, epkSlideRows310] = await Promise.all([
     db.prepare('SELECT * FROM notices ORDER BY id DESC LIMIT 3').all(),
     db.prepare("SELECT DISTINCT term_year FROM members WHERE member_type = 'central' AND term_year IS NOT NULL").all(),
     db.prepare(MEMBER_JOIN + " WHERE m.member_type = 'founder' ORDER BY m.sort_order LIMIT 2").all(),
@@ -78,6 +78,9 @@ router.get('/', async (req, res) => {
     db.prepare("SELECT id, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, scheduled_date AS paperDate FROM epaper_files WHERE published = 1 AND scheduled_date = (SELECT MAX(scheduled_date) FROM epaper_files WHERE published = 1) ORDER BY id ASC LIMIT 14").all(),
     // সেশন ২৯৬: বাম-কলাম স্ট্যাট-রো (রিয়েল আর্কাইভ-পরিসংখ্যান — একই প্যারালাল-ব্যাচ)
     db.prepare("SELECT COUNT(*) AS totalIssues, COUNT(DISTINCT paper_name) AS totalPapers FROM epaper_files WHERE published = 1").get(),
+    // সেশন ৩১০: হোম ফুল-কভার স্লাইডার — অ্যাডমিন-নিয়ন্ত্রিত দৃশ্যমান স্লাইড (ক্রমানুসারে;
+    // /admin/home-epaper ড্যাশবোর্ড থেকে নিয়ন্ত্রিত — টেবিল না-থাকলেও হোম-ক্র্যাশ-শূন্য)
+    db.prepare('SELECT id, name, slug, thumb, color, link, "order" FROM home_epaper_slides WHERE isActive = 1 ORDER BY "order" ASC, id ASC').all(),
   ]);
   // সেশন ৯০: ফলব্যাক — এডমিন/মডারেটর এখনো কিছু বাছাই না করলে সেকশন ফাঁকা
   // না রেখে সর্বশেষ ৬টি খাঁটি writing (avatar/cover/প্রশ্ন কঠোরভাবে বাদ)
@@ -317,6 +320,29 @@ router.get('/', async (req, res) => {
     return a.id - b.id;
   });
 
+  // ── সেশন ৩১০: ফুল-কভার স্লাইডার-সারি — অ্যাডমিন-কনফিগারেশন + নাম-মিল-প্রথম-পাতা-চেইন ──
+  // ইউজার-স্পেক: কার্ডে শুধু প্রচ্ছদ (কোনো নাম-হেডার নেই, কোনো ছোট-কার্ড নেই), ৪ সেকেন্ডে
+  // অটো-স্লাইড। প্রতি-স্লাইডের ইমেজ-চেইন (মিসম্যাচ-অসম্ভব — session291/296-নীতিরই সম্প্রসারণ):
+  //   ① অ্যাডমিন-নির্ধারিত thumb (চূড়ান্ত — override) → ② নাম-মিল epaper_files-চেইন
+  //   (epNameBest296-ম্যাপ: fileId-প্রক্সি → thumbId-প্রক্সি → lh3 → drive) → ③ মাস্টহেড-ফলব্যাক।
+  // টেবিল-অনুপস্থিত/খালি হলে স্লাইড-সারি খালি → ভিউ লাইভ-ফিল্মস্ট্রিপ-ডেটাতেই গ্রেসফুল-ফলব্যাক।
+  const epkSlides310 = (Array.isArray(epkSlideRows310) ? epkSlideRows310 : []).map(function (s310) {
+    const nm310 = String(s310.name || '').trim().replace(/\s+/g, ' ');
+    const st310 = nm310.replace(/^(?:দৈনিক|দ্য)\s+/u, '');
+    const row310 = epNameBest296.get(st310) || epNameBest296.get(nm310) || null;
+    const adminThumb310 = String(s310.thumb || '').trim();
+    const chain310 = adminThumb310 ? [adminThumb310] : ((row310 && row310.thumbs) ? row310.thumbs.slice() : []);
+    return {
+      id: s310.id,
+      name: nm310,
+      slug: s310.slug || '',
+      color: s310.color || '#006A4E',
+      href: s310.link || (row310 ? ('/epaper?file=' + encodeURIComponent(row310.id)) : '/epaper?paper=' + encodeURIComponent(nm310)),
+      thumb: chain310[0] || '',
+      thumbs: chain310
+    };
+  }).filter(function (s310) { return !!s310.name; });
+
   res.render('lekhok-home', { faqItems42,
     layout: 'layout',
     pageTitle: 'হোম',
@@ -344,7 +370,9 @@ router.get('/', async (req, res) => {
     epaperLatestDateBn: epaperLatestDateBn233,
     todayBn: todayBn233,
     // সেশন ২৯৬: বাম-কলাম স্ট্যাট-রো
-    epaperStats296: { papers: epaperToday233.length, totalPapers: (epaperStatsRow296 && epaperStatsRow296.totalPapers) || 0, totalIssues: (epaperStatsRow296 && epaperStatsRow296.totalIssues) || 0 }
+    epaperStats296: { papers: epaperToday233.length, totalPapers: (epaperStatsRow296 && epaperStatsRow296.totalPapers) || 0, totalIssues: (epaperStatsRow296 && epaperStatsRow296.totalIssues) || 0 },
+    // সেশন ৩১০: ফুল-কভার অটো-স্লাইডার (অ্যাডমিন-নিয়ন্ত্রিত সারি — খালি হলে ভিউ লাইভ-ফলব্যাক)
+    epaperSlides310: epkSlides310
   });
 });
 

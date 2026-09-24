@@ -3930,3 +3930,163 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs292-btn-main:hover, .sfs292-phone:hover .sfs292-frame { transform: none; }
 }
 /* ═════════════════════ EOF session306 (sfs292) ═════════════════════ */
+/* ═══════════ session310 — হোম ই-পেপার ফুল-কভার অটো-স্লাইডার (epk310) ═══════════
+   প্রিভিউ session297-অনুমোদিত ডিজাইন: বড় কার্ডে শুধু প্রচ্ছদ (কোনো টেক্সট-হেডার নেই),
+   ছোট-থাম্বনেইল-কার্ড বিলোপ (শুধু ডটস), ৪ সেকেন্ডে অটো-স্লাইড, ৩ডি স্ট্যাকড-পেপার ফ্রেম।
+   ডিজাইন-টোকেন-শৃঙ্খলা: হেক্স-শূন্য — var(--lf-*) + color-mix (guard:design-চুক্তি)। ═══ */
+
+/* প্রিভিউ-অনুপাত: বাম-কলাম ৫ / ডান-কলাম ৭ (session233-এর ৭/৫-র session310-ওভাররাইড) */
+.te-grid233 { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+
+/* ── ৩ডি স্ট্যাকড-পেপার ফ্রেম ── */
+.epk310 { display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 0; }
+.epk310-stage {
+  position: relative; width: 100%; max-width: 490px;
+  display: flex; justify-content: center; padding: 8px 0 4px;
+  cursor: pointer;
+}
+.epk310-back {
+  position: absolute; left: 12px; right: 12px; top: 12px; bottom: 4px;
+  background: color-mix(in srgb, var(--lf-ui-border-strong) 55%, var(--lf-white));
+  border: 1px solid var(--lf-ui-border-strong);
+  border-radius: 16px;
+  transform: rotate(-2deg) scale(0.98);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  pointer-events: none;
+}
+.epk310-backB { transform: rotate(2deg) scale(0.98); background: color-mix(in srgb, var(--lf-ui-border-strong) 30%, var(--lf-white)); }
+.epk310-card {
+  position: relative; z-index: 1; width: 100%;
+  background: var(--lf-white);
+  border: 1px solid var(--lf-ui-border-strong);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px -18px rgba(0, 60, 45, 0.35);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: box-shadow 0.3s ease;
+}
+.epk310-stage:hover .epk310-card { box-shadow: 0 26px 60px -20px rgba(0, 60, 45, 0.42); }
+.epk310-card.is-flip { animation: epk310flip 0.5s ease; }
+@keyframes epk310flip {
+  0% { transform: translateY(3px) scale(0.992); opacity: 0.72; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* টপ-সিগনেচার স্ট্রাইপ (পত্রিকা-নির্দিষ্ট রঙ — ইনলাইন-স্টাইলে ডেটা-হেক্স) */
+.epk310-stripe { height: 6px; width: 100%; transition: background 0.5s ease; }
+
+/* সম্পূর্ণ প্রচ্ছদ — aspect 1/1.38, contain+top (কোনো কাটা-ব্যানার নয় — s296-চুক্তির ফুল-কভার-রূপ) */
+.epk310-media {
+  position: relative; width: 100%; aspect-ratio: 1 / 1.38;
+  background: color-mix(in srgb, var(--lf-ui-border-strong) 18%, var(--lf-white));
+  overflow: hidden; display: flex; align-items: flex-start; justify-content: center;
+}
+.epk310-link { display: block; width: 100%; height: 100%; position: relative; }
+.epk310-img {
+  width: 100%; height: 100%; object-fit: contain; object-position: top;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.epk310-stage:hover .epk310-img { transform: scale(1.015); }
+
+/* নেগোশিয়েশন-মাস্টহেড (লোড-পর্যন্ত দৃশ্যমান — ফাঁকা-শিট-ফ্ল্যাশ-শূন্য) */
+.epk310-mast {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+  padding: 22px; text-align: center;
+}
+.epk310-mast[hidden] { display: none; }
+.epk310-mast-kicker {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--lf-brand-primary);
+  border: 1px solid color-mix(in srgb, var(--lf-brand-primary) 35%, transparent);
+  border-radius: var(--lf-radius-chip); padding: 3px 10px;
+  background: color-mix(in srgb, var(--lf-ok-soft) 65%, var(--lf-white));
+}
+.epk310-mast-emoji { font-size: 30px; line-height: 1; }
+.epk310-mast-name { font-size: 19px; font-weight: 700; color: var(--lf-fb-ink); }
+.epk310-mast-rule { width: 74px; height: 3px; border-radius: 999px; background: linear-gradient(90deg, transparent, var(--lf-brand-primary), transparent); }
+.epk310-mast-date { font-size: 11px; color: var(--lf-ink-soft); }
+
+/* হোভার-ওভারলে রিডিং-CTA (টাচে বিলোপ) */
+.epk310-hover {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(1px);
+  opacity: 0; transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.epk310-stage:hover .epk310-hover { opacity: 1; }
+.epk310-hoverbtn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 8px;
+  background: var(--lf-brand-primary); color: var(--lf-white);
+  font-size: 12.5px; font-weight: 700;
+  box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.5);
+  transform: translateY(8px); transition: transform 0.2s ease;
+}
+.epk310-stage:hover .epk310-hoverbtn { transform: translateY(0); }
+
+/* কার্ড ফুটার-স্ট্রিপ */
+.epk310-foot {
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--lf-ui-border-strong) 12%, var(--lf-white));
+  border-top: 1px solid color-mix(in srgb, var(--lf-ui-border-strong) 62%, transparent);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.epk310-foot-l { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--lf-ink-soft); }
+.epk310-foot-r { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.epk310-count {
+  font-size: 10.5px; font-weight: 700; color: var(--lf-fb-ink-2, var(--lf-ink-soft));
+  background: var(--lf-white); border: 1px solid color-mix(in srgb, var(--lf-ui-border-strong) 70%, transparent);
+  padding: 2px 7px; border-radius: 6px;
+}
+.epk310-footlink { font-size: 11px; font-weight: 700; color: var(--lf-brand-primary); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.epk310-footlink:hover { text-decoration: underline; }
+.epk310-pulse {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--lf-ok);
+  animation: epk310pulse 1.8s ease-in-out infinite;
+}
+@keyframes epk310pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* ডট-ইন্ডিকেটর (সক্রিয় ডট = পত্রিকার স্ট্রাইপ-রঙ, প্রশস্ত) */
+.epk310-dots { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.epk310-dot {
+  width: 8px; height: 6px; border-radius: 999px; border: none; padding: 0;
+  cursor: pointer; transition: width 0.3s ease, background 0.3s ease;
+}
+.epk310-dot:hover { background: color-mix(in srgb, var(--lf-brand-primary) 50%, var(--lf-ui-border-strong)); }
+.epk310-dot[aria-selected="true"] { width: 24px; }
+.epk310-dot:focus-visible { outline: 2px solid var(--lf-brand-primary); outline-offset: 3px; }
+
+/* অটো-সিঙ্ক স্ট্যাটাস-স্ট্রিপ */
+.epk310-syncstrip {
+  width: 100%; max-width: 490px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 0 6px;
+}
+.epk310-sync-l { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--lf-ink-soft); min-width: 0; }
+.epk310-sync-r { font-size: 10.5px; font-weight: 600; color: var(--lf-brand-primary); white-space: nowrap; }
+.epk310-live { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* উষ্ণ-সংকেত (session299-ফানেল) — রিডার-লিঙ্ক প্রিফেচড হলে হোভার-বাটন-আভা */
+.epk310-link.epk299-warm .epk310-hoverbtn { box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px color-mix(in srgb, var(--lf-brand-primary) 45%, transparent); }
+
+/* রেসপন্সিভ */
+@media (max-width: 992px) {
+  .te-grid233 { grid-template-columns: 1fr; }
+  .epk310-stage { max-width: 430px; }
+}
+@media (max-width: 640px) {
+  .epk310-stage { max-width: 100%; padding: 6px 0 2px; }
+  .epk310-back { left: 9px; right: 9px; top: 9px; }
+  .epk310-hover { display: none; } /* টাচ-সারফেসে ট্যাপই রিডার (s296-রীতি) */
+  .epk310-foot { padding: 9px 12px; }
+  .epk310-syncstrip { flex-direction: column; align-items: flex-start; gap: 3px; }
+}
+
+/* রিডিউসড-মোশন গার্ড */
+@media (prefers-reduced-motion: reduce) {
+  .epk310-card.is-flip, .epk310-pulse { animation: none; }
+  .epk310-img, .epk310-card, .epk310-hover, .epk310-hoverbtn, .epk310-dot, .epk310-stripe { transition: none; }
+}
+/* ═══════════ EOF সেশন ৩১০ (epk310) ═══════════ */

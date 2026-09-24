@@ -1,0 +1,420 @@
+<%# ── সেশন ৩১০: হোম ই-পেপার ফুল-কভার স্লাইডার ব্যবস্থাপনা (/admin/home-epaper) ──
+    হোম-নেতৃত্ব-প্যানেলের (session55) আদলেই স্বতন্ত্র অ্যাডমিন-পেজ (standalone HTML —
+    fonts.css + tokens.css + admin.css + স্কোপড hep310-* ইনলাইন-স্টাইল):
+    • স্ট্যাট-চিপস (মোট/দৃশ্যমান/লুকানো) • ৪-কলাম কার্ড-গ্রিড
+    • টগল-সুইচ (role=switch) • ▲▼ ক্রম-সোয়াপ (এজে-ডিজেবলড) • সম্পাদনা-মোডাল
+      (নাম/slug/রঙ-সিলেক্ট/প্রচ্ছদ-প্রিভিউ/লিঙ্ক) • মুছে-ফেলা (confirm) • লাইভ-ইমপোর্ট
+    • টোস্ট (aria-live) • Esc/ব্যাকড্রপ-বন্ধ • কাস্টম-স্ক্রলবার
+    ডেটা: papers = [{ id, name, slug, thumb, color, link, order, isActive }]
+    API: /admin/api/home-epaper (GET) · /save (POST) · /toggle (PATCH/POST)
+         · /reorder (POST) · /delete (DELETE) · /sync-live (POST) ── %>
+<!DOCTYPE html>
+<html lang="bn" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>লেখক ফোরাম — হোম ই-পেপার স্লাইডার ব্যবস্থাপনা</title>
+  <link rel="stylesheet" href="/assets/css/fonts.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=<%= AV %>" />
+  <link rel="stylesheet" href="/assets/css/admin.css?v=<%= AV %>" />
+  <style>
+    /* ═══ session310 — hep310-* স্কোপড-স্টাইল (প্রিভিউ session297-অনুমোদিত ডিজাইন) ═══ */
+    body { background: #F0F2F5; }
+    .hep310-wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 18px; }
+    .hep310-card { background: #fff; border: 1px solid #CED0D4; border-radius: 10px; }
+
+    /* হেডার-বার */
+    .hep310-head { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+    @media (min-width: 640px) { .hep310-head { flex-direction: row; align-items: center; justify-content: space-between; } }
+    .hep310-crumb { font-size: 12px; color: #65676B; display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .hep310-crumb a { color: #65676B; text-decoration: none; }
+    .hep310-crumb a:hover { color: var(--lf-brand-primary, #006A4E); }
+    .hep310-crumb b { color: #050505; }
+    .hep310-title { margin: 0; font-size: 19px; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+    .hep310-sub { margin: 3px 0 0; font-size: 12.5px; color: #65676B; }
+    .hep310-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .hep310-btn { border: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 12px; border-radius: 8px; padding: 9px 15px; display: inline-flex; align-items: center; gap: 7px; transition: background .15s, border-color .15s, transform .1s; }
+    .hep310-btn:active { transform: translateY(1px); }
+    .hep310-btn-ghost { background: #fff; color: var(--lf-brand-primary, #006A4E); border: 1px solid rgba(0, 106, 78, .35); }
+    .hep310-btn-ghost:hover { background: #F2F4F7; }
+    .hep310-btn-main { background: var(--lf-brand-primary, #006A4E); color: #fff; }
+    .hep310-btn-main:hover { background: var(--lf-brand-primary-hover, #00523C); }
+    .hep310-btn[disabled] { opacity: .6; cursor: wait; }
+
+    /* স্ট্যাট-চিপস */
+    .hep310-stats { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; }
+    .hep310-chip { padding: 4px 11px; border-radius: 7px; background: #fff; border: 1px solid #E4E6EB; color: #4B4C4F; }
+    .hep310-chip-vis { background: var(--lf-ok-soft, #ECFDF5); border-color: #A7F3D0; color: var(--lf-brand-primary, #006A4E); }
+    .hep310-chip-hid { background: #F0F2F5; color: #8A8D91; }
+    .hep310-note { font-size: 11.5px; font-weight: 400; color: #8A8D91; margin-left: 4px; }
+
+    /* কার্ড-গ্রিড */
+    .hep310-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; max-height: 66vh; overflow-y: auto; padding: 2px; }
+    @media (min-width: 640px)  { .hep310-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) { .hep310-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    .hep310-grid::-webkit-scrollbar { width: 9px; }
+    .hep310-grid::-webkit-scrollbar-track { background: #F0F2F5; border-radius: 9px; }
+    .hep310-grid::-webkit-scrollbar-thumb { background: #CED0D4; border-radius: 9px; }
+    .hep310-grid::-webkit-scrollbar-thumb:hover { background: #B4B7BD; }
+    .hep310-item { background: #fff; border: 1px solid #CED0D4; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: box-shadow .15s, border-color .15s, opacity .2s; }
+    .hep310-item:hover { border-color: rgba(0, 106, 78, .45); box-shadow: 0 6px 18px rgba(15, 23, 42, .08); }
+    .hep310-item.is-hidden { opacity: .68; }
+    .hep310-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 9px; border-bottom: 1px solid #E4E6EB; }
+    .hep310-order { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 6px; border: 1px solid transparent; }
+    .hep310-vis { display: inline-flex; align-items: center; gap: 6px; }
+    .hep310-vis-label { font-size: 10.5px; font-weight: 700; color: #8A8D91; white-space: nowrap; }
+    .hep310-vis-label.on { color: var(--lf-brand-primary, #006A4E); }
+    .hep310-switch { width: 38px; height: 21px; border-radius: 999px; border: none; padding: 2px; cursor: pointer; display: inline-flex; align-items: center; background: #CED0D4; transition: background .18s; flex-shrink: 0; }
+    .hep310-switch .knob { width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(15,23,42,.25); transform: translateX(0); transition: transform .18s; }
+    .hep310-switch.on { background: var(--lf-brand-primary, #006A4E); }
+    .hep310-switch.on .knob { transform: translateX(17px); }
+    .hep310-switch:disabled { opacity: .55; cursor: wait; }
+    .hep310-mid { display: flex; align-items: flex-start; gap: 11px; }
+    .hep310-thumb { width: 56px; height: 80px; background: #F8FAF9; border: 1px solid #CED0D4; border-radius: 6px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .hep310-thumb img { width: 100%; height: 100%; object-fit: contain; object-position: top; }
+    .hep310-thumb .noimg { font-size: 17px; }
+    .hep310-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #050505; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hep310-slug { font-size: 10.5px; font-family: ui-monospace, monospace; color: #65676B; display: block; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hep310-colorrow { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; min-width: 0; max-width: 100%; }
+    .hep310-colorchip { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,.9); box-shadow: 0 0 0 1px rgba(0,0,0,.08); flex-shrink: 0; }
+    .hep310-linktxt { font-size: 10px; color: #8A8D91; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hep310-item-foot { padding-top: 10px; border-top: 1px solid #E4E6EB; display: flex; align-items: center; justify-content: space-between; }
+    .hep310-move { display: flex; gap: 4px; }
+    .hep310-ibtn { width: 32px; height: 32px; border: none; border-radius: 7px; background: #F0F2F5; color: #65676B; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background .15s, color .15s; }
+    .hep310-ibtn:hover:not([disabled]) { background: #E4E6EB; }
+    .hep310-ibtn.danger:hover { background: #FEF2F2; color: #DC2626; }
+    .hep310-ibtn[disabled] { opacity: .38; cursor: not-allowed; }
+    .hep310-editbtn { border: none; cursor: pointer; background: var(--lf-brand-primary, #006A4E); color: #fff; font-weight: 700; font-size: 11px; border-radius: 7px; padding: 7px 13px; display: inline-flex; align-items: center; gap: 5px; }
+    .hep310-editbtn:hover { background: var(--lf-brand-primary-hover, #00523C); }
+    .hep310-empty { grid-column: 1 / -1; text-align: center; padding: 44px 16px; color: #8A8D91; font-size: 13px; }
+
+    /* মোডাল */
+    .hep310-modal { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.42); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; padding: 16px; }
+    .hep310-modal.open { display: flex; }
+    .hep310-modal-box { background: #fff; border: 1px solid #CED0D4; border-radius: 14px; width: 100%; max-width: 430px; box-shadow: 0 30px 70px -20px rgba(0,0,0,.45); overflow: hidden; max-height: 92vh; overflow-y: auto; }
+    .hep310-modal-head { padding: 13px 17px; background: #FAFBFB; border-bottom: 1px solid #E4E6EB; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .hep310-modal-head h3 { margin: 0; font-size: 13.5px; font-weight: 700; }
+    .hep310-xbtn { width: 31px; height: 31px; border: none; border-radius: 7px; background: transparent; color: #65676B; font-size: 14px; cursor: pointer; }
+    .hep310-xbtn:hover { background: #F0F2F5; color: #050505; }
+    .hep310-form { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .hep310-label { font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px; }
+    .hep310-label .req { color: #DC2626; }
+    .hep310-input { width: 100%; box-sizing: border-box; background: #F8FAF9; border: 1px solid #CED0D4; border-radius: 8px; padding: 9px 12px; font-size: 12.5px; font-family: inherit; outline: none; transition: border-color .15s, background .15s; }
+    .hep310-input:focus { background: #fff; border-color: var(--lf-brand-primary, #006A4E); }
+    .hep310-input.mono { font-family: ui-monospace, monospace; }
+    .hep310-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hep310-select { width: 100%; background: #F8FAF9; border: 1px solid #CED0D4; border-radius: 8px; padding: 9px 10px; font-size: 12.5px; font-family: inherit; outline: none; cursor: pointer; }
+    .hep310-thumbprev { display: flex; align-items: center; gap: 10px; }
+    .hep310-thumbprev .box { width: 46px; height: 64px; border: 1px solid #CED0D4; border-radius: 6px; background: #F8FAF9; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .hep310-thumbprev img { width: 100%; height: 100%; object-fit: contain; object-position: top; }
+    .hep310-thumbprev .hint { font-size: 10.5px; color: #8A8D91; }
+    .hep310-form-foot { display: flex; align-items: center; justify-content: flex-end; gap: 9px; padding-top: 10px; border-top: 1px solid #E4E6EB; }
+    .hep310-btn-cancel { background: #F0F2F5; color: #050505; }
+    .hep310-btn-cancel:hover { background: #E4E6EB; }
+
+    /* টোস্ট */
+    .hep310-toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 70; font-size: 12px; font-weight: 700; padding: 11px 18px; border-radius: 9px; box-shadow: 0 12px 34px -10px rgba(0,0,0,.35); border: 1px solid transparent; display: none; max-width: 92vw; }
+    .hep310-toast.show { display: block; }
+    .hep310-toast.ok { background: #EBF5F0; color: #006A4E; border-color: #9BD4BC; }
+    .hep310-toast.err { background: #FEF2F2; color: #B91C1C; border-color: #FECACA; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar') %>
+<div class="admin-main">
+  <div class="hep310-wrap">
+
+    <!-- ব্রেডক্রাম্ব ও হেডার বার -->
+    <div class="hep310-card hep310-head">
+      <div>
+        <nav class="hep310-crumb crumbs" aria-label="ব্রেডক্রাম্ব">
+          <a href="/admin">অ্যাডমিন</a><span aria-hidden="true">›</span><b>হোম ই-পেপার স্লাইডার</b>
+        </nav>
+        <h1 class="hep310-title"><span aria-hidden="true">📰</span><span>হোমপেজ ই-পেপার স্লাইডার ব্যবস্থাপনা</span></h1>
+        <p class="hep310-sub">হোমপেজের ফুল-কভার স্লাইডারে কোন পত্রিকা দেখাবে ও কোন ক্রমে — সম্পূর্ণ নিয়ন্ত্রণ এখানেই</p>
+      </div>
+      <div class="hep310-actions">
+        <button type="button" class="hep310-btn hep310-btn-ghost" id="syncLiveBtn" onclick="syncLive(this)">
+          <span aria-hidden="true">⟳</span><span>লাইভ পেপার ইমপোর্ট</span>
+        </button>
+        <button type="button" class="hep310-btn hep310-btn-main" onclick="openPaperModal()">
+          <span aria-hidden="true">＋</span><span>নতুন পত্রিকা যুক্ত করুন</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- স্ট্যাট-চিপস -->
+    <div class="hep310-stats">
+      <span class="hep310-chip">মোট: <b id="stTotal"><%= papers.length %></b></span>
+      <span class="hep310-chip hep310-chip-vis">দৃশ্যমান: <b id="stVisible"><%= papers.filter(p => p.isActive).length %></b></span>
+      <span class="hep310-chip hep310-chip-hid">লুকানো: <b id="stHidden"><%= papers.filter(p => !p.isActive).length %></b></span>
+      <span class="hep310-note">• ক্রম = স্লাইডারের বাম-থেকে-ডান পালা • কেবল দৃশ্যমান পত্রিকারাই হোমপেজে ঘোরে • প্রচ্ছদ খালি থাকলে নাম-মিলে সর্বশেষ প্রথম-পাতা স্বয়ংক্রিয়ভাবে দেখায়</span>
+    </div>
+
+    <!-- কার্ড গ্রিড -->
+    <div class="hep310-grid" id="epaperCardsGrid">
+      <% if (!papers.length) { %>
+        <div class="hep310-empty">কোনো স্লাইড নেই — "নতুন পত্রিকা যুক্ত করুন" অথবা "লাইভ পেপার ইমপোর্ট" দিয়ে শুরু করুন</div>
+      <% } %>
+      <% papers.forEach((paper, idx) => { %>
+        <div class="hep310-item <%= paper.isActive ? '' : 'is-hidden' %>" id="card-<%= paper.id %>">
+          <div>
+            <!-- টপ বার: ক্রম ব্যাজ ও টগল -->
+            <div class="hep310-item-top">
+              <span class="hep310-order" style="color:<%= paper.color %>;background:<%= paper.color %>14;border-color:<%= paper.color %>45">ক্রম: #<%= paper.order %></span>
+              <span class="hep310-vis">
+                <span class="hep310-vis-label <%= paper.isActive ? 'on' : '' %>" id="label-<%= paper.id %>"><%= paper.isActive ? 'দৃশ্যমান' : 'লুকানো' %></span>
+                <button type="button" onclick="togglePaperVisibility('<%= paper.id %>')" id="btn-<%= paper.id %>"
+                  class="hep310-switch <%= paper.isActive ? 'on' : '' %>"
+                  role="switch" aria-checked="<%= paper.isActive ? 'true' : 'false' %>"
+                  aria-label="<%= paper.name %> হোমপেজে দেখানো বা লুকানো" title="হোমপেজে দেখানো বা লুকানোর সুইচ">
+                  <span class="knob" id="dot-<%= paper.id %>"></span>
+                </button>
+              </span>
+            </div>
+
+            <!-- প্রচ্ছদ ও পত্রিকার নাম -->
+            <div class="hep310-mid">
+              <div class="hep310-thumb">
+                <% if (paper.thumb) { %>
+                  <img src="<%= paper.thumb %>" alt="<%= paper.name %> প্রচ্ছদ" loading="lazy" decoding="async" onerror="this.outerHTML='<span class=noimg>🗞️</span>'">
+                <% } else { %>
+                  <span class="noimg" aria-hidden="true">🗞️</span>
+                <% } %>
+              </div>
+              <div style="min-width:0;flex:1;">
+                <h3 class="hep310-name" title="<%= paper.name %>"><%= paper.name %></h3>
+                <span class="hep310-slug">slug: <%= paper.slug %></span>
+                <span class="hep310-colorrow">
+                  <span class="hep310-colorchip" style="background:<%= paper.color %>" aria-hidden="true"></span>
+                  <span class="hep310-linktxt" title="<%= paper.link || ('/epaper?paper=' + paper.name) %>"><%= paper.link || ('/epaper?paper=' + paper.name) %></span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ফুটার: ক্রম-বোতাম ও সম্পাদনা/মুছে-ফেলা -->
+          <div class="hep310-item-foot">
+            <div class="hep310-move">
+              <button type="button" class="hep310-ibtn" onclick="moveOrder('<%= paper.id %>', 'up')" <%= idx === 0 ? 'disabled' : '' %> title="উপরে নিন" aria-label="<%= paper.name %> এক ধাপ উপরে নিন">▲</button>
+              <button type="button" class="hep310-ibtn" onclick="moveOrder('<%= paper.id %>', 'down')" <%= idx === papers.length - 1 ? 'disabled' : '' %> title="নিচে নিন" aria-label="<%= paper.name %> এক ধাপ নিচে নিন">▼</button>
+            </div>
+            <div class="hep310-move">
+              <button type="button" class="hep310-ibtn danger" onclick="deletePaper('<%= paper.id %>', '<%= paper.name %>')" title="মুছে ফেলুন" aria-label="<%= paper.name %> মুছে ফেলুন"><i class="fas fa-trash-can" aria-hidden="true"></i></button>
+              <button type="button" class="hep310-editbtn" onclick='editPaper(<%- JSON.stringify(paper) %>)'><span aria-hidden="true">✏️</span> সম্পাদনা</button>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- মোডাল -->
+  <div class="hep310-modal" id="paperModal" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+    <div class="hep310-modal-box">
+      <div class="hep310-modal-head">
+        <h3 id="modalHeading">পত্রিকার তথ্য সম্পাদনা</h3>
+        <button type="button" class="hep310-xbtn" onclick="closePaperModal()" aria-label="বন্ধ করুন">✕</button>
+      </div>
+      <form class="hep310-form" id="paperForm" onsubmit="savePaper(event)">
+        <input type="hidden" id="paperId" name="id">
+        <div>
+          <label class="hep310-label" for="paperName">পত্রিকার নাম: <span class="req">*</span></label>
+          <input type="text" id="paperName" class="hep310-input" required placeholder="যেমন: দৈনিক প্রথম আলো">
+        </div>
+        <div class="hep310-row2">
+          <div>
+            <label class="hep310-label" for="paperSlug">স্লাগ / কীওয়ার্ড: <span class="req">*</span></label>
+            <input type="text" id="paperSlug" class="hep310-input mono" required placeholder="যেমন: prothomalo">
+          </div>
+          <div>
+            <label class="hep310-label" for="paperColor">টপ স্ট্রাইপ রঙ:</label>
+            <select id="paperColor" class="hep310-select">
+              <option value="#E11D48">লাল (Rose)</option>
+              <option value="#B91C1C">গাঢ় লাল</option>
+              <option value="#047857">সবুজ (Emerald)</option>
+              <option value="#D97706">হলুদ (Amber)</option>
+              <option value="#2563EB">নীল (Blue)</option>
+              <option value="#0F766E">টিয়া (Teal)</option>
+              <option value="#7E22CE">বেগুনী (Purple)</option>
+              <option value="#BE185D">গোলাপি (Pink)</option>
+              <option value="#006A4E">ফোরাম-সবুজ</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="hep310-label" for="paperThumb">প্রচ্ছদের ছবির লিঙ্ক (URL):</label>
+          <input type="text" id="paperThumb" class="hep310-input mono" placeholder="https://... বা /api/epaper/thumb/..." oninput="updateThumbPreview()">
+          <div class="hep310-thumbprev" style="margin-top:8px;">
+            <div class="box" id="thumbPrevBox"><span class="noimg" aria-hidden="true">🗞️</span></div>
+            <span class="hint">খালি রাখলে নাম-মিলে সর্বশেষ প্রথম-পাতা স্বয়ংক্রিয়ভাবে বসে (ভুল-পত্রিকার-ছবি-অসম্ভব)</span>
+          </div>
+        </div>
+        <div>
+          <label class="hep310-label" for="paperLink">রিডার-লিঙ্ক <span style="font-weight:400;color:#8A8D91;">(খালি রাখলে স্বয়ংক্রিয়: /epaper?paper=নাম)</span></label>
+          <input type="text" id="paperLink" class="hep310-input mono" placeholder="/epaper?paper=প্রথম আলো">
+        </div>
+        <div class="hep310-form-foot">
+          <button type="button" class="hep310-btn hep310-btn-cancel" onclick="closePaperModal()">বাতিল</button>
+          <button type="submit" class="hep310-btn hep310-btn-main" id="saveBtn">সংরক্ষণ করুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- টোস্ট -->
+  <div class="hep310-toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+<!-- /admin-main -->
+
+  <script>
+    /* ─── টোস্ট ─── */
+    var toastTimer = null;
+    function say(kind, msg) {
+      var t = document.getElementById('toast');
+      t.textContent = (kind === 'ok' ? '✓ ' : '⚠ ') + msg;
+      t.className = 'hep310-toast show ' + (kind === 'ok' ? 'ok' : 'err');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.className = 'hep310-toast'; }, 3800);
+    }
+
+    /* ─── দৃশ্যমানতা টগল (অপটিমিস্টিক + ব্যর্থতায় রোলব্যাক) ─── */
+    async function togglePaperVisibility(id) {
+      var btn = document.getElementById('btn-' + id);
+      var label = document.getElementById('label-' + id);
+      var isActive = btn.getAttribute('aria-checked') === 'true';
+      var nextState = !isActive;
+      btn.disabled = true;
+      try {
+        var r = await fetch('/admin/api/home-epaper/toggle', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, isActive: nextState })
+        });
+        if (!r.ok) throw new Error('toggle failed');
+        btn.setAttribute('aria-checked', String(nextState));
+        btn.classList.toggle('on', nextState);
+        label.textContent = nextState ? 'দৃশ্যমান' : 'লুকানো';
+        label.classList.toggle('on', nextState);
+        document.getElementById('card-' + id).classList.toggle('is-hidden', !nextState);
+        bumpStats();
+        say('ok', nextState ? 'দৃশ্যমান করা হয়েছে' : 'লুকানো হয়েছে');
+      } catch (e) { say('err', 'টগল ব্যর্থ — আবার চেষ্টা করুন'); }
+      btn.disabled = false;
+    }
+
+    function bumpStats() {
+      var cards = document.querySelectorAll('[id^=card-]');
+      var vis = 0;
+      cards.forEach(function (c) { if (c.querySelector('[aria-checked="true"]')) vis++; });
+      var t = document.getElementById('stTotal'), v = document.getElementById('stVisible'), h = document.getElementById('stHidden');
+      if (t) t.textContent = cards.length;
+      if (v) v.textContent = vis;
+      if (h) h.textContent = cards.length - vis;
+    }
+
+    /* ─── ক্রম পরিবর্তন ─── */
+    async function moveOrder(id, direction) {
+      try {
+        var r = await fetch('/admin/api/home-epaper/reorder', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id, direction: direction })
+        });
+        if (!r.ok) throw new Error('reorder failed');
+        location.reload();
+      } catch (e) { say('err', 'ক্রম-পরিবর্তন ব্যর্থ'); }
+    }
+
+    /* ─── মুছে ফেলা ─── */
+    async function deletePaper(id, name) {
+      if (!confirm('"' + name + '" স্লাইডটি স্থায়ীভাবে মুছে ফেলবেন?')) return;
+      try {
+        var r = await fetch('/admin/api/home-epaper/delete?id=' + encodeURIComponent(id), { method: 'DELETE' });
+        if (!r.ok) throw new Error('delete failed');
+        location.reload();
+      } catch (e) { say('err', 'মুছে-ফেলা ব্যর্থ'); }
+    }
+
+    /* ─── মোডাল ─── */
+    function openPaperModal() {
+      document.getElementById('paperId').value = '';
+      document.getElementById('paperName').value = '';
+      document.getElementById('paperSlug').value = '';
+      document.getElementById('paperThumb').value = '';
+      document.getElementById('paperLink').value = '';
+      document.getElementById('paperColor').value = '#E11D48';
+      document.getElementById('modalHeading').textContent = 'নতুন পত্রিকা যুক্ত করুন';
+      updateThumbPreview();
+      document.getElementById('paperModal').classList.add('open');
+      document.getElementById('paperName').focus();
+    }
+    function editPaper(p) {
+      document.getElementById('paperId').value = p.id;
+      document.getElementById('paperName').value = p.name;
+      document.getElementById('paperSlug').value = p.slug;
+      document.getElementById('paperColor').value = p.color || '#E11D48';
+      document.getElementById('paperThumb').value = p.thumb || '';
+      document.getElementById('paperLink').value = p.link || '';
+      document.getElementById('modalHeading').textContent = p.name + ' — তথ্য সম্পাদনা';
+      updateThumbPreview();
+      document.getElementById('paperModal').classList.add('open');
+      document.getElementById('paperName').focus();
+    }
+    function closePaperModal() { document.getElementById('paperModal').classList.remove('open'); }
+    document.getElementById('paperModal').addEventListener('click', function (e) {
+      if (e.target === this) closePaperModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closePaperModal();
+    });
+
+    /* থাম্ব-প্রিভিউ (লাইভ) */
+    function updateThumbPreview() {
+      var box = document.getElementById('thumbPrevBox');
+      var u = document.getElementById('paperThumb').value.trim();
+      if (!u) { box.innerHTML = '<span class="noimg" aria-hidden="true">🗞️</span>'; return; }
+      box.innerHTML = '<img src="' + u.replace(/"/g, '&quot;') + '" alt="প্রচ্ছদ-প্রিভিউ" onerror="this.outerHTML=\'<span class=noimg>⚠️</span>\'">';
+    }
+
+    /* ─── সংরক্ষণ ─── */
+    async function savePaper(e) {
+      e.preventDefault();
+      var btn = document.getElementById('saveBtn');
+      btn.disabled = true; btn.textContent = 'সংরক্ষণ হচ্ছে...';
+      try {
+        var body = {
+          id: document.getElementById('paperId').value,
+          name: document.getElementById('paperName').value.trim(),
+          slug: document.getElementById('paperSlug').value.trim(),
+          color: document.getElementById('paperColor').value,
+          thumb: document.getElementById('paperThumb').value.trim(),
+          link: document.getElementById('paperLink').value.trim()
+        };
+        var res = await fetch('/admin/api/home-epaper/save', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        var d = await res.json().catch(function () { return {}; });
+        if (res.ok && d.success) { location.reload(); }
+        else { say('err', d.error || 'সংরক্ষণ ব্যর্থ'); }
+      } catch (err) { say('err', 'সংরক্ষণ ব্যর্থ'); }
+      btn.disabled = false; btn.textContent = 'সংরক্ষণ করুন';
+    }
+
+    /* ─── লাইভ পেপার ইমপোর্ট ─── */
+    async function syncLive(btn) {
+      btn.disabled = true;
+      var sp = btn.querySelector('span'), tx = btn.querySelector('span:last-child');
+      var oldTx = tx.textContent;
+      sp.textContent = '◌'; tx.textContent = 'সিঙ্ক হচ্ছে...';
+      try {
+        var res = await fetch('/admin/api/home-epaper/sync-live', { method: 'POST' });
+        var d = await res.json();
+        if (d.success) { location.reload(); }
+        else { say('err', d.error || 'ইমপোর্ট ব্যর্থ'); }
+      } catch (e) { say('err', 'ইমপোর্ট ব্যর্থ'); }
+      btn.disabled = false; sp.textContent = '⟳'; tx.textContent = oldTx;
+    }
+  </script>
+</body>
+</html>

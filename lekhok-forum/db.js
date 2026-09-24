@@ -2429,7 +2429,7 @@ function bootFingerprint() {
   const crypto = require('crypto');
   // গেজেট-ফাংশনদুটিও ফিঙ্গারপ্রিন্টে — নইলে Turso-বুট-ক্যাশ-হিটে নতুন গেজেট-সিড/সিঙ্ক স্কিপ হয়
   // (গেজেট v2 ফিক্স: constitutionGazetteSeed206+constitutionGazetteSyncV2 যোগ)
-  const fns = [runMigrations, applyLaterMigrations, applySession42Migrations, seedAdmin, seedIfEmptyLocal,
+  const fns = [runMigrations, applyLaterMigrations, applySession42Migrations, applySession310Migration, seedAdmin, seedIfEmptyLocal,
                seedDemoContent, ensureDemoModerator, constitutionGazetteSeed206, constitutionGazetteSyncV2,
                constitutionGazetteSyncV3];
   return crypto.createHash('md5')
@@ -2479,6 +2479,7 @@ async function initDb() {
   await runMigrations();
   await applyLaterMigrations();
   await applySession42Migrations();
+  await applySession310Migration();
 
   // Seed if empty (Turso + local)
   if (IS_TURSO) {
@@ -2687,6 +2688,50 @@ async function applySession42Migrations() {
   try {
     await backend.prepare(`DELETE FROM trash WHERE deleted_at < datetime('now', '-30 days', 'localtime')`).run();
   } catch (e) {}
+}
+
+// ── সেশন ৩১০: হোম ই-পেপার ফুল-কভার স্লাইডার — অ্যাডমিন-নিয়ন্ত্রিত স্লাইড-টেবিল ──
+// ইউজার-স্পেক (প্রিভিউ session297-অনুমোদিত): হোমপেজে 'আজকের ই-পেপার' ব্যান্ডের ডান-কলামে
+// ফুল-কভার প্রচ্ছদ অটো-স্লাইডার — কোনো টেক্সট-হেডার নেই, কোনো ছোট-থাম্বনেইল-কার্ড নেই;
+// কোন পত্রিকা ঘুরবে, কোন ক্রমে, দৃশ্যমান কি-না — সব /admin/home-epaper ড্যাশবোর্ড থেকে।
+// • thumb='' হলে হোম-রেন্ডার নাম-মিলে (session291-নীতি — মিসম্যাচ-অসম্ভব) epaper_files-এর
+//   সর্বশেষ সারির প্রথম-পাতা চেইন ব্যবহার করে; অ্যাডমিন-নির্ধারিত thumb থাকলে সেটিই চূড়ান্ত।
+// • সিড: শীর্ষ-৭ পত্রিকা (কেবল টেবিল-খালি হলে — অ্যাডমিন-ডেটা-ওভাররাইট-শূন্য)।
+async function applySession310Migration() {
+  await backend.prepare(`CREATE TABLE IF NOT EXISTS home_epaper_slides (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL,
+    slug       TEXT NOT NULL UNIQUE,
+    thumb      TEXT NOT NULL DEFAULT '',
+    color      TEXT NOT NULL DEFAULT '#006A4E',
+    link       TEXT NOT NULL DEFAULT '',
+    "order"    INTEGER NOT NULL DEFAULT 0,
+    isActive   INTEGER NOT NULL DEFAULT 1,
+    createdAt  TEXT NOT NULL DEFAULT (datetime('now')),
+    updatedAt  TEXT NOT NULL DEFAULT (datetime('now'))
+  )`).run();
+  try { await backend.prepare('CREATE INDEX IF NOT EXISTS idx_epk310_order ON home_epaper_slides("order")').run(); } catch (e) {}
+  // সিড — কেবল টেবিল-খালি হলে (প্রথম বুট); পরে অ্যাডমিন যা-ই কনফিগার করুক তা-ই সত্য
+  try {
+    const c310 = await backend.prepare('SELECT COUNT(*) AS c FROM home_epaper_slides').get();
+    if (c310 && c310.c === 0) {
+      const SEED310 = [
+        ['দৈনিক প্রথম আলো', 'prothomalo',  '#E11D48'],
+        ['দৈনিক ইত্তেফাক',   'ittefaq',     '#B91C1C'],
+        ['দৈনিক সমকাল',      'samakal',     '#047857'],
+        ['দৈনিক যুগান্তর',   'jugantor',    '#D97706'],
+        ['কালের কণ্ঠ',       'kalerkantho', '#2563EB'],
+        ['দৈনিক আমার দেশ',   'amardesh',    '#0F766E'],
+        ['দৈনিক মানবকণ্ঠ',   'manobkantha', '#7E22CE']
+      ];
+      let i310 = 1;
+      for (const [nm310, sl310, cl310] of SEED310) {
+        await backend.prepare('INSERT INTO home_epaper_slides (name, slug, thumb, color, link, "order", isActive) VALUES (?,?,?,?,?,?,1)')
+          .run(nm310, sl310, '', cl310, '/epaper?paper=' + encodeURIComponent(nm310), i310++);
+      }
+      console.log('[db] session310: home_epaper_slides seeded (7 newspapers)');
+    }
+  } catch (e) { console.error('[db] session310 seed (non-fatal):', e.message); }
 }
 
 async function ensureDemoModerator() {

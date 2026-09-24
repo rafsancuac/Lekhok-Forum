@@ -71,6 +71,7 @@ const ADMIN_PATH_AREAS = [
   { re: /^\/resources(\/|$)/,            key: 'resources' },
   { re: /^\/(content|sections|navigation|search-index)(\/|$)/, key: 'content' },
   { re: /^\/home-reorder(\/|$)/, key: 'content' },   // সেশন ১৯৩: হোমপেজ রি-অর্ডারিং → কনটেন্ট-এরিয়া
+  { re: /^\/(home-epaper|api\/home-epaper)(\/|$)/, key: 'epaper' },  // সেশন ৩১০: ই-পেপার স্লাইডার → ই-পেপার-এরিয়া
   { re: /^\/(achievements|constitution|past-leaders)(\/|$)/,   key: 'organization' },
   { re: /^\/media(\/|$)/,                key: 'media' },
   { re: /^\/(analytics|activity|audit|trash)(\/|$)/,            key: 'oversight' },
@@ -1030,6 +1031,183 @@ router.delete('/home-leadership/extra', requireAdmin, async (req, res) => {
   } catch (e) {
     console.error('[admin:home-leadership] extra delete failed:', e.message);
     return res.status(500).json({ ok: false, error: 'ডিলিট ব্যর্থ: ' + e.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── সেশন ৩১০: হোম ই-পেপার ফুল-কভার স্লাইডার ব্যবস্থাপনা (/admin/home-epaper) ──
+// হোম-নেতৃত্ব-প্যানেলের (session55) আদলেই ইন্টারঅ্যাক্টিভ ড্যাশবোর্ড:
+//   • দৃশ্যমানতা-টগল (isActive) • ▲▼ ক্রম-সোয়াপ • সম্পাদনা (নাম/slug/রঙ/প্রচ্ছদ/লিঙ্ক)
+//   • মুছে-ফেলা • লাইভ-পেপার-ইমপোর্ট (epaper_files-এর সর্বশেষ সিঙ্কড সংখ্যা থেকে;
+//     নাম-মিলে-গেলে অ্যাডমিন-নির্ধারিত প্রচ্ছদ ওভাররাইট-শূন্য; নতুনগুলো লুকানো-অবস্থায় শেষে যোগ)
+// টেবিল: home_epaper_slides (db.js applySession310Migration — বুটে CREATE+সিড-৭)
+// JSON-AJAX: CSRF-গার্ড urlencoded/multipart-সীমাবদ্ধ (server.js session57) — JSON বহির্ভূত
+// ══════════════════════════════════════════════════════════════════════════════
+
+/* নাম-স্বাভাবিকীকরণ: "দৈনিক প্রথম আলো" ↔ "প্রথম আলো" একই পত্রিকা (s291-রীতি) */
+function epkNorm310(n) { return String(n || '').trim().replace(/\s+/g, ' ').replace(/^(?:দৈনিক|দ্য)\s+/u, ''); }
+
+function epkRowToPaper310(r) {
+  return {
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    thumb: r.thumb || '',
+    color: r.color || '#006A4E',
+    link: r.link || '',
+    order: r.order,
+    isActive: !!r.isActive
+  };
+}
+
+router.get('/home-epaper', requireAdmin, async (req, res) => {
+  let papers = [];
+  try {
+    const r310 = await db.prepare('SELECT id, name, slug, thumb, color, link, "order", isActive FROM home_epaper_slides ORDER BY "order" ASC, id ASC').all();
+    papers = (r310 || []).map(epkRowToPaper310);
+  } catch (e) {
+    console.error('[admin:home-epaper] list failed:', e.message);
+  }
+  res.render('admin/home-epaper-slider', {
+    papers,
+    currentPath: '/admin/home-epaper',
+    pageTitle: 'ই-পেপার স্লাইডার'
+  });
+});
+
+/* GET /api/home-epaper — JSON তালিকা */
+router.get('/api/home-epaper', requireAdmin, async (req, res) => {
+  try {
+    const r310 = await db.prepare('SELECT id, name, slug, thumb, color, link, "order", isActive FROM home_epaper_slides ORDER BY "order" ASC, id ASC').all();
+    return res.json({ success: true, slides: (r310 || []).map(epkRowToPaper310) });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: String(e).slice(0, 160) });
+  }
+});
+
+/* POST /api/home-epaper/save — নতুন যোগ বা সম্পাদনা */
+router.post('/api/home-epaper/save', requireAdmin, async (req, res) => {
+  try {
+    const b310 = req.body || {};
+    const id310 = b310.id ? Number(b310.id) : null;
+    const name310 = String(b310.name || '').trim();
+    const slug310 = String(b310.slug || '').trim();
+    const thumb310 = String(b310.thumb || '').trim();
+    const color310 = String(b310.color || '#E11D48').trim();
+    const link310 = String(b310.link || '').trim();
+    if (!name310 || !slug310) return res.status(400).json({ success: false, error: 'নাম ও স্লাগ আবশ্যক' });
+    if (thumb310 && !/^https?:\/\//i.test(thumb310) && !thumb310.startsWith('/'))
+      return res.status(400).json({ success: false, error: 'প্রচ্ছদ-URL http(s) অথবা / দিয়ে শুরু হতে হবে' });
+
+    if (id310) {
+      const dup310 = await db.prepare('SELECT id FROM home_epaper_slides WHERE slug = ? AND id != ?').all(slug310, id310);
+      if (dup310 && dup310.length) return res.status(409).json({ success: false, error: 'এই স্লাগ অন্য পত্রিকায় ব্যবহৃত' });
+      await db.prepare('UPDATE home_epaper_slides SET name=?, slug=?, thumb=?, color=?, link=?, updatedAt=datetime(\'now\') WHERE id=?')
+        .run(name310, slug310, thumb310, color310, link310, id310);
+      try { await TA42.audit(db, req, 'home-epaper-save', 'home_epaper_slides', id310, name310); } catch (e) {}
+      return res.json({ success: true });
+    }
+    const dup310 = await db.prepare('SELECT id FROM home_epaper_slides WHERE slug = ?').all(slug310);
+    if (dup310 && dup310.length) return res.status(409).json({ success: false, error: 'এই স্লাগে পত্রিকা আগেই আছে' });
+    const mx310 = await db.prepare('SELECT COALESCE(MAX("order"),0) AS m FROM home_epaper_slides').get();
+    const nextOrder310 = ((mx310 && mx310.m) || 0) + 1;
+    const ins310 = await db.prepare('INSERT INTO home_epaper_slides (name, slug, thumb, color, link, "order", isActive) VALUES (?,?,?,?,?,?,1)')
+      .run(name310, slug310, thumb310, color310, link310, nextOrder310);
+    try { await TA42.audit(db, req, 'home-epaper-create', 'home_epaper_slides', ins310 && ins310.lastID, name310); } catch (e) {}
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: String(e).slice(0, 160) });
+  }
+});
+
+/* PATCH/POST /api/home-epaper/toggle — দৃশ্যমানতা */
+async function epkToggle310(req, res) {
+  try {
+    const b310 = req.body || {};
+    const id310 = b310.id ? Number(b310.id) : 0;
+    if (!id310 || typeof b310.isActive !== 'boolean') return res.status(400).json({ success: false, error: 'id ও isActive আবশ্যক' });
+    await db.prepare('UPDATE home_epaper_slides SET isActive=?, updatedAt=datetime(\'now\') WHERE id=?').run(b310.isActive ? 1 : 0, id310);
+    try { await TA42.audit(db, req, 'home-epaper-toggle', 'home_epaper_slides', id310, b310.isActive ? 'visible' : 'hidden'); } catch (e) {}
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: String(e).slice(0, 160) });
+  }
+}
+router.patch('/api/home-epaper/toggle', requireAdmin, epkToggle310);
+router.post('/api/home-epaper/toggle', requireAdmin, epkToggle310);
+
+/* POST /api/home-epaper/reorder — up/down সোয়াপ */
+router.post('/api/home-epaper/reorder', requireAdmin, async (req, res) => {
+  try {
+    const b310 = req.body || {};
+    const id310 = b310.id ? Number(b310.id) : 0;
+    const dir310 = String(b310.direction || '');
+    if (!id310 || !['up', 'down'].includes(dir310)) return res.status(400).json({ success: false, error: 'id ও direction আবশ্যক' });
+    const all310 = await db.prepare('SELECT id, "order" FROM home_epaper_slides ORDER BY "order" ASC, id ASC').all();
+    const idx310 = all310.findIndex((r) => Number(r.id) === id310);
+    if (idx310 === -1) return res.status(404).json({ success: false, error: 'পাওয়া যায়নি' });
+    const swap310 = dir310 === 'up' ? idx310 - 1 : idx310 + 1;
+    if (swap310 < 0 || swap310 >= all310.length) return res.json({ success: true, moved: false });
+    const a310 = all310[idx310], sw310 = all310[swap310];
+    await db.prepare('UPDATE home_epaper_slides SET "order"=? WHERE id=?').run(sw310.order, a310.id);
+    await db.prepare('UPDATE home_epaper_slides SET "order"=? WHERE id=?').run(a310.order, sw310.id);
+    try { await TA42.audit(db, req, 'home-epaper-reorder', 'home_epaper_slides', id310, dir310); } catch (e) {}
+    return res.json({ success: true, moved: true });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: String(e).slice(0, 160) });
+  }
+});
+
+/* DELETE /api/home-epaper/delete?id=... */
+router.delete('/api/home-epaper/delete', requireAdmin, async (req, res) => {
+  try {
+    const id310 = Number(req.query.id || 0);
+    if (!id310) return res.status(400).json({ success: false, error: 'id আবশ্যক' });
+    await db.prepare('DELETE FROM home_epaper_slides WHERE id=?').run(id310);
+    try { await TA42.audit(db, req, 'home-epaper-delete', 'home_epaper_slides', id310, ''); } catch (e) {}
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: String(e).slice(0, 160) });
+  }
+});
+
+/* POST /api/home-epaper/sync-live — বট-সিঙ্কড সর্বশেষ পেপার ইমপোর্ট
+   মিলন-নিয়ম (নাম-স্বাভাবিকীকরণ): মিলে-গেলে অ্যাডমিন-নির্ধারিত প্রচ্ছদ/ক্রম ওভাররাইট-শূন্য;
+   নতুনগুলো লুকানো (isActive=0) অবস্থায় তালিকার শেষে যোগ — অ্যাডমিন যাচাই করে টগল করবেন। */
+router.post('/api/home-epaper/sync-live', requireAdmin, async (req, res) => {
+  try {
+    const now310 = new Date(Date.now() + 6 * 3600 * 1000);
+    const date310 = now310.toISOString().split('T')[0];
+    let rows310 = await db.prepare('SELECT paper_name, drive_thumb_id FROM epaper_files WHERE scheduled_date=? AND published=1 ORDER BY id ASC').all(date310);
+    if (!rows310 || !rows310.length) {
+      const mx310 = await db.prepare('SELECT MAX(scheduled_date) AS d FROM epaper_files WHERE published=1').get();
+      const latest310 = mx310 && mx310.d;
+      if (latest310) rows310 = await db.prepare('SELECT paper_name, drive_thumb_id FROM epaper_files WHERE scheduled_date=? AND published=1 ORDER BY id ASC').all(latest310);
+    }
+    const seen310 = new Set();
+    const live310 = (rows310 || [])
+      .map((r) => ({ name: r.paper_name, thumbId: r.drive_thumb_id || '' }))
+      .filter((p) => { if (!p.name || seen310.has(p.name)) return false; seen310.add(p.name); return true; });
+
+    const existing310 = await db.prepare('SELECT name FROM home_epaper_slides').all();
+    const nameSet310 = new Set((existing310 || []).map((r) => epkNorm310(r.name)));
+    const mx310 = await db.prepare('SELECT COALESCE(MAX("order"),0) AS m FROM home_epaper_slides').get();
+    let nextOrder310 = ((mx310 && mx310.m) || 0) + 1;
+    const PALETTE310 = ['#E11D48', '#B91C1C', '#047857', '#D97706', '#2563EB', '#0F766E', '#7E22CE', '#BE185D'];
+    let imported310 = 0, matched310 = 0;
+
+    for (const p of live310) {
+      if (nameSet310.has(epkNorm310(p.name))) { matched310++; continue; }
+      const slug310 = 'live-' + Math.random().toString(36).slice(2, 10);
+      const thumb310 = p.thumbId ? ('https://drive.google.com/thumbnail?id=' + encodeURIComponent(p.thumbId) + '&sz=w400') : '';
+      await db.prepare('INSERT INTO home_epaper_slides (name, slug, thumb, color, link, "order", isActive) VALUES (?,?,?,?,?,?,0)')
+        .run(p.name, slug310, thumb310, PALETTE310[(nextOrder310 - 1) % PALETTE310.length], '/epaper?paper=' + encodeURIComponent(p.name), nextOrder310);
+      nextOrder310++; imported310++;
+    }
+    try { await TA42.audit(db, req, 'home-epaper-sync-live', 'home_epaper_slides', 0, 'imported=' + imported310); } catch (e) {}
+    return res.json({ success: true, totalLive: live310.length, matched: matched310, imported: imported310 });
+  } catch (e) {
+    return res.status(500).json({ success: false, error: String(e).slice(0, 200) });
   }
 });
 

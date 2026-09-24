@@ -1,45 +1,47 @@
-<%# ── সেশন ২৩৩ + ২৯১ + ২৯৬: "আজকের ই-পেপার" — প্রশস্ত প্রিমিয়াম ৩ডি নিউজপেপার কিয়স্ক ──
-    সেশন ২৩৩-এর প্রিমিয়াম ব্যান্ডের ওপর সেশন ২৯১-এ ইউজার-স্পেক কিয়স্ক:
-    • ডান কলাম = ৩ডি পেপার-স্টেজ (পেছনের ২ শিট + সামনের ইন্টারঅ্যাকটিভ শিট) +
-      ফিল্মস্ট্রিপ (প্রতি পত্রিকায় এক বাটন, accent-আন্ডারলাইন)।
-    • প্রতি ৩.৫ সেকেন্ডে স্লাইড — hover/focus-এ থামে (Pause); ক্লিকে ম্যানুয়াল-নির্বাচন।
-    • বাম কলামের মূল CTA স্লাইডের সাথে সিঙ্কে পত্রিকার নাম বদলায় ("প্রথম আলো পড়ুন →")।
-    • থাম্বনেইল কেবল নাম-মিলে (routes/pages.js epaperThumbByName291 — চতুঃস্তর-লক
-      data/newspaperLinks সোর্স); মিল-নেই → টেক্সট-মাস্টহেড ফলব্যাক — ভুল-পত্রিকার ছবি
-      কোনোভাবেই যায় না (ইউজার-নীতি: এক ই-পেপারের থাম্বনিল অন্য ইপেপারে যায় না)।
-    • থাম্ব-লোড-ব্যর্থতায় JS নিজেই টেক্সট-মাস্টহেডে ফিরে যায় (কখনো ভাঙা-ছবি নয়)।
-    • deep-link: /epaper?file=<id> — epaper-অ্যাপের session233-boot-hook সরাসরি খোলে।
-    • session292: ফিল্মস্ট্রিপ বাটনে মিনি-থাম্ব-প্রিভিউ — একই epaperThumbByName291 নাম-মিল-সোর্স
-      (ভুল-পত্রিকার-ছবি-অসম্ভব); লোড-ব্যর্থতায় JS থাম্ব-স্প্যান লুকায় — টেক্সট-অনলি-ফলব্যাক।
-    • session296 (ইউজার-স্পেক — প্রশস্ত প্রিমিয়াম): ① শিট প্রশস্ত + aspect-ratio — প্রথম পাতার
-      থাম্বনেইল সম্পূর্ণ দৃশ্যমান (cover→contain — ব্যানার/শিরোনাম কাটা-যাবে-না);
-      ② হোভার-ওভারলে "পূর্ণাঙ্গ পাতা পড়ুন" (hover:none-টাচে বিলোপ — ট্যাপই রিডারে);
-      ③ বাম-কলাম চেকমার্কে শীর্ষ-৭ জনপ্রিয় পত্রিকা (প্রথম আলো, ইত্তেফাক, যুগান্তর, সমকাল,
-      কালের কণ্ঠ, আমার দেশ, মানবকণ্ঠ); ④ ফিল্মস্ট্রিপ বড়-কার্ড (routes/pages.js
-      epPopularRank296 প্রাধিকার-ক্রম + LIMIT 14)।
-    • a11y: tablist/tab + aria-selected + aria-live ঘোষণা + focus-visible + reduced-motion।
-    ডেটা: routes/pages.js হোম-রাউন্ড (epaperToday/epaperLatest + p.thumb)। ── %>
-<% const bnN233 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
-<% const teStats296 = (typeof epaperStats296 !== 'undefined' && epaperStats296) ? epaperStats296 : { papers: 0, totalPapers: 0, totalIssues: 0 }; %>
+<%# ── সেশন ৩১০: "আজকের ই-পেপার" — ফুল-কভার প্রচ্ছদ অটো-স্লাইডার (প্রিভিউ session297-অনুমোদিত) ──
+    ইউজার-স্পেক (session297-প্রিভিউ, প্রোড-পোর্ট):
+    • ডান-কলামের বড় কার্ডে শুধু প্রচ্ছদ — উপরে কোনো টেক্সট-হেডার/নাম নেই (প্রচ্ছদেই নাম স্পষ্ট)।
+    • নিচের ছোট থাম্বনেইল-কার্ড (ফিল্মস্ট্রিপ) সম্পূর্ণ বিলোপ — শুধু রঙিন ডট-ইন্ডিকেটর।
+    • প্রতি ৪ সেকেন্ডে প্রচ্ছদ অটো-স্লাইড (fade); হোভার/ফোকাসে থামে; ট্যাব-ব্যাকগ্রাউন্ডে থামে;
+      সোয়াইপ-সমর্থিত; ডটে ক্লিক + কীবোর্ড ←/→/Home/End; ক্লিকে রিডারে যায়।
+    • ৩ডি স্ট্যাকড-পেপার ফ্রেম (পেছনে ২ শিট ±২°) + পত্রিকা-নির্দিষ্ট টপ-স্ট্রাইপ + কার্ড-ফুটার।
+    • স্লাইড-সারি = অ্যাডমিন-নিয়ন্ত্রিত (home_epaper_slides — /admin/home-epaper ড্যাশবোর্ড);
+      খালি হলে লাইভ-সিঙ্কড পেপারে (epaperLatest) গ্রেসফুল-ফলব্যাক — সেকশন কখনো ফাঁকা নয়।
+    • ইমেজ-চেইন (মিসম্যাচ-অসম্ভব — s291/s296-নীতি): অ্যাডমিন-থাম্ব → নাম-মিল-প্রথম-পাতা-চেইন →
+      টেক্সট-মাস্টহেড; ২-স্ট্রাইক রিট্রাই (cache-buster) — কখনো ভাঙা-ছবি নয়।
+    • deep-link: /epaper?file=<id> (সর্বোচ্চ-অগ্রাধিকার) → /epaper?paper=<নাম> → /epaper।
+    • QA-চুক্তি-সামঞ্জস্য: __epk297QA (inView/tabVisible/ioOn/timerOn/tickN/current/tick/sync),
+      __epk299QA (prefetch-ফানেল), __epk310QA (নতুন ফুল-কভার-চুক্তি) — papers-শূন্যে-ও সংজ্ঞায়িত।
+    • a11y: carousel-roledescription + tablist/tab dots + aria-live + focus-visible + reduced-motion।
+    ডেটা: routes/pages.js হোম-রাউন্ড (epaperSlides310 + epaperToday/epaperLatest + todayBn + epaperStats296)। ── %>
+<% const bnN310 = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[+d]); %>
+<% const teStats310 = (typeof epaperStats296 !== 'undefined' && epaperStats296) ? epaperStats296 : { papers: 0, totalPapers: 0, totalIssues: 0 }; %>
 <%
-  const tePapers233 = (typeof epaperToday !== 'undefined' && epaperToday && epaperToday.length) ? epaperToday
+  const tePapers310 = (typeof epaperToday !== 'undefined' && epaperToday && epaperToday.length) ? epaperToday
                      : (typeof epaperLatest !== 'undefined' ? epaperLatest : []);
-  const teHasToday233 = (typeof epaperHasToday !== 'undefined') ? !!epaperHasToday : false;
-  const teActive233 = tePapers233[0] || null;
-  const teHref233 = (p) => p ? ('/epaper?file=' + encodeURIComponent(p.id)) : '/epaper';
-  // সেশন ২৯১: প্রতি-পত্রিকা accent — নির্ধারিত-ক্রমের টোকেন-প্যালেট (হেক্স-শূন্য)।
-  const teAccents291 = ['var(--lf-danger)', 'var(--lf-ink-max)', 'var(--lf-brand-primary)', 'var(--lf-danger-deep)', 'var(--lf-cyan-ink)', 'var(--lf-amber-deep)', 'var(--lf-dlx-gold)'];
-  const teAcc291 = (i) => teAccents291[i % teAccents291.length];
-  const teDateBn291 = (typeof todayBn !== 'undefined' && todayBn) ? todayBn : '';
-  // সেশন ২৯৬: মূল-কার্ড-উৎস — সারির-নিজ প্রথম-পাতা-চেইনের প্রথম-প্রার্থী, নইলে নাম-মিলে লোগো-ব্যানার
-  const teFirstSrc296 = teActive233 ? ((teActive233.thumbs && teActive233.thumbs[0]) || teActive233.thumb || '') : '';
+  const teHasToday310 = (typeof epaperHasToday !== 'undefined') ? !!epaperHasToday : false;
+  const teDateBn310 = (typeof todayBn !== 'undefined' && todayBn) ? todayBn : '';
+  // লাইভ-ফলব্যাকের টোকেন-প্যালেট (হেক্স-শূন্য — session291-রীতি)
+  const teAccents310 = ['var(--lf-danger)', 'var(--lf-danger-deep)', 'var(--lf-brand-primary)', 'var(--lf-danger-deep)', 'var(--lf-cyan-ink)', 'var(--lf-amber-deep)', 'var(--lf-dlx-gold)'];
+  // ── স্লাইড-সারি: অ্যাডমিন-নিয়ন্ত্রিত → খালি হলে লাইভ-সিঙ্কড পেপার ──
+  const teAdminSlides310 = (typeof epaperSlides310 !== 'undefined' && Array.isArray(epaperSlides310)) ? epaperSlides310 : [];
+  const teSlides310 = teAdminSlides310.length
+    ? teAdminSlides310.map(function (s) {
+        return { id: 's' + s.id, name: String(s.name || ''), color: s.color || '#006A4E',
+                 href: s.href || '/epaper', thumbs: (s.thumbs && s.thumbs.length) ? s.thumbs : (s.thumb ? [s.thumb] : []) };
+      })
+    : tePapers310.map(function (p, i) {
+        return { id: 'p' + p.id, name: String(p.paperName || ''), color: teAccents310[i % teAccents310.length],
+                 href: p ? ('/epaper?file=' + encodeURIComponent(p.id)) : '/epaper',
+                 thumbs: (p.thumbs && p.thumbs.length) ? p.thumbs : (p.thumb ? [p.thumb] : []) };
+      });
+  const teActive310 = teSlides310[0] || null;
   // একক-ট্যাগ-গঠন (audit:views duplicate-id-নিরাপদ): img-এ src/alt/hidden — খালি-src কখনো নয়
-  const teImgAttrs291 = teFirstSrc296
-    ? ('src="' + teFirstSrc296 + '" alt="' + String(teActive233.paperName).replace(/"/g, '&quot;') + ' — ই-পেপার প্রথম পাতা"')
+  const teFirstSrc310 = teActive310 ? (teActive310.thumbs[0] || '') : '';
+  const teImgAttrs310 = teFirstSrc310
+    ? ('src="' + teFirstSrc310 + '" alt="' + String(teActive310.name).replace(/"/g, '&quot;') + ' — ই-পেপার প্রথম পাতা"')
     : 'alt="" hidden';
-  const teJson291 = JSON.stringify(tePapers233.map((p, i) => ({
-    id: p.id, name: p.paperName, thumb: p.thumb || '', thumbs: p.thumbs || [], href: teHref233(p), acc: teAcc291(i)
-  })));
+  const teJson310 = JSON.stringify(teSlides310);
 %>
 <section class="section today-epaper-section reveal" id="today-epaper">
   <div class="container">
@@ -61,15 +63,16 @@
           <p class="te-lead233"><%= C('home_ep_lead') %></p>
 
           <ul class="te-points233">
-            <li><span class="te-tick233" aria-hidden="true">✓</span> প্রথম আলো, ইত্তেফাক, যুগান্তর, সমকাল ও কালের কণ্ঠের মূল প্রথম পাতা</li>
+            <li><span class="te-tick233" aria-hidden="true">✓</span> প্রতি ৪ সেকেন্ডে প্রচ্ছদ বদলে যাওয়া স্বয়ংক্রিয় ফুল-কভার স্লাইডার</li>
+            <li><span class="te-tick233" aria-hidden="true">✓</span> প্রথম আলো, ইত্তেফাক, সমকাল, যুগান্তর ও কালের কণ্ঠের মূল মুদ্রিত পাতা</li>
             <li><span class="te-tick233" aria-hidden="true">✓</span> আমার দেশ, মানবকণ্ঠ ও ক্যাম্পাস সাহিত্য ক্রোড়পত্রের পূর্ণাঙ্গ সংখ্যা</li>
             <li><span class="te-tick233" aria-hidden="true">✓</span> মোবাইল ও পিসিতে পৃষ্ঠা উল্টে পড়ার জন্য মেমোরি-অপটিমাইজড রিডার</li>
           </ul>
 
           <div class="te-ctas233">
-            <a href="<%= teHref233(teActive233) %>" class="te-btn233 te-btn-main233" id="teKioskCta291">
+            <a href="<%= teActive310 ? teActive310.href : '/epaper' %>" class="te-btn233 te-btn-main233" id="teKioskCta291">
               <i class="fas fa-newspaper" aria-hidden="true"></i>
-              <span id="teKioskCtaText291"><%= teActive233 ? (teActive233.paperName + ' পড়ুন') : (teHasToday233 ? 'আজকের ই-পেপার পড়ুন' : 'সর্বশেষ ই-পেপার পড়ুন') %></span>
+              <span id="teKioskCtaText291"><%= teActive310 ? (teActive310.name + ' পড়ুন') : (teHasToday310 ? 'আজকের ই-পেপার পড়ুন' : 'সর্বশেষ ই-পেপার পড়ুন') %></span>
               <i class="fas fa-arrow-right te-arrow233" aria-hidden="true"></i>
             </a>
             <a href="/epaper" class="te-btn233 te-btn-ghost233">
@@ -78,85 +81,83 @@
             </a>
           </div>
 
-          <%# সেশন ২৯৬: রিয়েল-ডেটা স্ট্যাট-রো (রেফারেন্স-ডিজাইনের প্রিমিয়াম-ব্যালান্স) %>
+          <%# সেশন ২৯৬-রীতি: রিয়েল-ডেটা স্ট্যাট-রো %>
           <div class="te-stats296" role="list" aria-label="ই-পেপার আর্কাইভ পরিসংখ্যান">
-            <span role="listitem"><b><%= bnN233(teStats296.papers) %></b> জনপ্রিয় পত্রিকা</span>
+            <span role="listitem"><b><%= bnN310(teStats310.papers) %></b> জনপ্রিয় পত্রিকা</span>
             <i aria-hidden="true"></i>
-            <span role="listitem"><b><%= bnN233(teStats296.totalPapers) %></b> পত্রিকার আর্কাইভ</span>
+            <span role="listitem"><b><%= bnN310(teStats310.totalPapers) %></b> পত্রিকার আর্কাইভ</span>
             <i aria-hidden="true"></i>
-            <span role="listitem"><b><%= bnN233(teStats296.totalIssues) %></b>টি সংরক্ষিত সংখ্যা</span>
+            <span role="listitem"><b><%= bnN310(teStats310.totalIssues) %></b>টি সংরক্ষিত সংখ্যা</span>
           </div>
         </div>
 
-        <!-- ═══ ডান কলাম: ৩ডি পেপার কিয়স্ক (অটো-স্লাইড) ═══ -->
+        <!-- ═══ ডান কলাম: ফুল-কভার ৩ডি অটো-স্লাইডার (কোনো টেক্সট-হেডার নেই, কোনো ছোট-কার্ড নেই) ═══ -->
         <div class="te-right233">
           <div class="te-sidehead233">
-            <span class="te-fresh233"><i class="fas fa-bolt" aria-hidden="true"></i> <%= teHasToday233 ? 'আজকের তাজা সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
-            <span class="te-date233"><%= teDateBn291 %></span>
+            <span class="te-fresh233"><i class="fas fa-bolt" aria-hidden="true"></i> <%= teHasToday310 ? 'আজকের তাজা মুদ্রিত সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
+            <span class="te-date233"><%= teDateBn310 %></span>
           </div>
 
-          <% if (tePapers233.length) { %>
-          <div class="epk291" id="epKiosk291">
-            <!-- ৩ডি স্টেজ -->
-            <div class="epk291-stage" id="epk291Stage">
-              <div class="epk291-shadow" aria-hidden="true"></div>
-              <div class="epk291-sheet epk291-back epk291-back-l" aria-hidden="true">
-                <span class="epk291-edge"></span>
-                <span class="epk291-backname" id="epk291BackL">—</span>
-                <span class="epk291-mocklines"></span>
-              </div>
-              <div class="epk291-sheet epk291-back epk291-back-r" aria-hidden="true">
-                <span class="epk291-edge"></span>
-                <span class="epk291-backname" id="epk291BackR">—</span>
-                <span class="epk291-mocklines"></span>
-              </div>
-              <a class="epk291-sheet epk291-front" id="epk291Front" href="<%= teHref233(teActive233) %>">
-                <span class="epk291-edge" aria-hidden="true"></span>
-                <span class="epk291-fold" aria-hidden="true"></span>
-                <span class="epk291-masthead">
-                  <span class="epk291-kicker"><%= teHasToday233 ? 'আজকের মুদ্রিত সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
-                  <span class="epk291-name" id="epk291Name"><%= teActive233 ? teActive233.paperName : 'ই-পেপার' %></span>
-                  <span class="epk291-rule" aria-hidden="true"></span>
-                  <span class="epk291-dateline"><%= teDateBn291 %></span>
-                </span>
-                <span class="epk291-media">
-                  <%# সেশন ২৯১: প্রথম-পেপারের থাম্ব SSR-প্রি-রেন্ডার (no-JS-এও সঠিক; একক-ট্যাগ — দ্বৈত-id-শূন্য)
-                      সেশন ২৯৬: lazy→eager — hidden(display:none)-অবস্থায় lazy-লোড চিরকাল-স্থগিত হয়
-                      (ব্রাউজার-লেআউট-বক্স-বিহীন → intersection-স্থগিত); হিরো-প্রথম-পাতা eager-ই সঠিক %>
-                  <img class="epk291-img" id="epk291Img" <%- teImgAttrs291 %> loading="eager" decoding="async">
-                  <span class="epk291-mockcols" id="epk291Mock" aria-hidden="true" <%- teFirstSrc296 ? '' : 'hidden' %>>
-                    <span class="epk291-mcol"></span><span class="epk291-mcol epk291-mcol-mid"></span><span class="epk291-mcol"></span>
+          <% if (teSlides310.length) { %>
+          <div class="epk310" id="epKiosk310" role="group" aria-roledescription="carousel" aria-label="ই-পেপার প্রচ্ছদ স্লাইডার">
+            <!-- ৩ডি স্ট্যাকড-পেপার ফ্রেম -->
+            <div class="epk310-stage" id="epk310Stage">
+              <div class="epk310-back epk310-backA" aria-hidden="true"></div>
+              <div class="epk310-back epk310-backB" aria-hidden="true"></div>
+
+              <div class="epk310-card" id="epk310Card">
+                <%# টপ-সিগনেচার স্ট্রাইপ (পত্রিকা-নির্দিষ্ট রঙ) %>
+                <div class="epk310-stripe" id="epk310Stripe" <%- teActive310 ? ('style="background:' + teActive310.color + '"') : '' %> aria-hidden="true"></div>
+
+                <%# সম্পূর্ণ প্রচ্ছদ — কোনো বড় হেডার-টেক্সট ছাড়াই (ইউজার-স্পেক) %>
+                <div class="epk310-media">
+                  <a class="epk310-link" id="epk310Link" href="<%= teActive310 ? teActive310.href : '/epaper' %>" aria-label="<%= teActive310 ? (teActive310.name + ' — সম্পূর্ণ পত্রিকা রিডারে পড়ুন') : 'ই-পেপার রিডার' %>">
+                    <%# লোড-নেগোশিয়েশন-চলাকালীন মাস্টহেড দৃশ্যমান — ফাঁকা-শিট-ফ্ল্যাশ-শূন্য (s296-রীতি) %>
+                    <span class="epk310-mast" id="epk310Mast" <%- teFirstSrc310 ? '' : '' %> aria-hidden="true">
+                      <span class="epk310-mast-kicker"><%= teHasToday310 ? 'আজকের মুদ্রিত সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
+                      <span class="epk310-mast-emoji" aria-hidden="true">🗞️</span>
+                      <span class="epk310-mast-name" id="epk310MastName"><%= teActive310 ? teActive310.name : 'ই-পেপার' %></span>
+                      <span class="epk310-mast-rule" aria-hidden="true"></span>
+                      <span class="epk310-mast-date"><%= teDateBn310 %></span>
+                    </span>
+                    <img class="epk310-img" id="epk310Img" <%- teImgAttrs310 %> loading="eager" decoding="async">
+                    <%# হোভারে ভেসে-ওঠা রিডিং-CTA (hover:none-টাচে বিলোপ — ট্যাপই রিডার) %>
+                    <span class="epk310-hover" aria-hidden="true">
+                      <span class="epk310-hoverbtn"><i class="fas fa-book-open" aria-hidden="true"></i><span id="epk310HoverName"><%= teActive310 ? teActive310.name : 'পত্রিকা' %></span><span> পড়ুন</span><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                    </span>
+                  </a>
+                </div>
+
+                <%# কার্ড ফুটার-স্ট্রিপ %>
+                <div class="epk310-foot">
+                  <span class="epk310-foot-l"><span class="epk310-pulse" aria-hidden="true"></span> লেখক ফোরাম ডিজিটাল আর্কাইভ</span>
+                  <span class="epk310-foot-r">
+                    <span class="epk310-count" id="epk310Count" aria-live="polite" aria-label="স্লাইড ১ / <%= bnN310(teSlides310.length) %>"><%= bnN310(1) %> / <%= bnN310(teSlides310.length) %></span>
+                    <a class="epk310-footlink" id="epk310FootLink" href="<%= teActive310 ? teActive310.href : '/epaper' %>">পূর্ণাঙ্গ রিডার ভিউ <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                   </span>
-                </span>
-                <%# সেশন ২৯৬: প্রিমিয়াম হোভার-ওভারলে — পূর্ণাঙ্গ পাতা পড়ুন (front-anchor-সন্নিবেশিত — ক্লিকই রিডার) %>
-                <span class="epk291-hover296" aria-hidden="true">
-                  <span class="epk291-hoverbtn296"><i class="fas fa-book-open" aria-hidden="true"></i>পূর্ণাঙ্গ পাতা পড়ুন</span>
-                </span>
-                <span class="epk291-foot">
-                  <span>লেখক ফোরাম ডিজিটাল সংস্করণ</span>
-                  <span class="epk291-turn">পাতা উল্টান <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
-                </span>
-              </a>
+                </div>
+              </div>
             </div>
 
-            <!-- ফিল্মস্ট্রিপ -->
-            <div class="epk291-filmwrap">
-              <div class="epk291-film" id="epk291Film" role="tablist" aria-label="আজকের পত্রিকা নির্বাচন">
-                <% tePapers233.forEach((p, i) => { %>
-                <button type="button" role="tab" class="epk291-film-btn"
-                        aria-selected="<%= i === 0 ? 'true' : 'false' %>"
-                        data-epk-i="<%= i %>"
-                        style="--epkAcc291: <%= teAcc291(i) %>">
-                  <% if (p.thumb) { %><span class="epk291-film-thumb" aria-hidden="true"><img class="epk291-film-thumb-img" src="<%= p.thumb %>" alt="" loading="lazy" decoding="async"></span><% } %>
-                  <span class="epk291-film-kicker">দৈনিক</span>
-                  <span class="epk291-film-name"><%= p.paperName %></span>
-                </button>
-                <% }) %>
-              </div>
+            <%# ডটস-কন্ট্রোল (কীবোর্ড-সমর্থিত) %>
+            <div class="epk310-dots" id="epk310Dots" role="tablist" aria-label="প্রচ্ছদ-স্লাইড নির্বাচন">
+              <% teSlides310.forEach(function (s, i) { %>
+              <button type="button" role="tab" class="epk310-dot"
+                      aria-selected="<%= i === 0 ? 'true' : 'false' %>"
+                      aria-label="<%= bnN310(i + 1) %> নম্বর স্লাইড: <%= s.name %>"
+                      title="<%= s.name %>" data-epk310-i="<%= i %>"
+                      style="background: <%= i === 0 ? s.color : 'var(--lf-line-strong, #CED0D4)' %>;"></button>
+              <% }) %>
+            </div>
+
+            <%# অটো-সিঙ্ক স্ট্যাটাস %>
+            <div class="epk310-syncstrip">
+              <span class="epk310-sync-l"><span class="epk310-pulse" aria-hidden="true"></span> টেলিগ্রাম বট ও ড্রাইভ থেকে স্বয়ংক্রিয় সিঙ্কড</span>
+              <span class="epk310-sync-r">মাউস রাখলে থেমে যায় • সোয়াইপ-সমর্থিত</span>
             </div>
 
             <!-- স্ক্রিন-রিডার ঘোষণা -->
-            <p class="epk291-live" id="epk291Live" aria-live="polite"></p>
+            <p class="epk310-live" id="epk310Live" aria-live="polite"></p>
           </div>
           <% } else { %>
           <div class="te-card233">
@@ -196,30 +197,39 @@
     </div>
   </div>
 </section>
-<%# সেশন ২৯১: কিয়স্ক-ইঞ্জিন — অটো-স্লাইড ৩.৫সে + hover/focus-পজ + ম্যানুয়াল-নির্বাচন + CTA-সিঙ্ক ── %>
+<%# সেশন ৩১০: ফুল-কভার স্লাইডার-ইঞ্জিন — অটো-স্লাইড ৪সে + hover/focus-পজ + IO/ট্যাব-গেট +
+    সোয়াইপ + ডট-নেভিগেশন + CTA-সিঙ্ক + ইমেজ-চেইন (২-স্ট্রাইক) + QA-হুক-পরিবার ── %>
 <script>
 (function () {
-  if (window.__epk291wired) return; window.__epk291wired = true;
-  var kiosk = document.getElementById('epKiosk291');
-  if (!kiosk) return;
-  var papers = <%- teJson291 %>;
+  if (window.__epk310wired) return; window.__epk310wired = true;
+  var kiosk = document.getElementById('epKiosk310');
+  var papers = <%- teJson310 %>;
 
-  /* session297: ভিউপোর্ট-সচেতন অটো-স্লাইড-স্টেট + QA-হুক (papers-শূন্যে-ও __epk297QA সংজ্ঞায়িত —
-     পরিবার-চুক্তি; session296-প্রস্তাব: অদৃশ্য-সেকশনে/লুকানো-ট্যাবে ইঞ্জিন-স্থগিত — CPU-সাশ্রয়) */
-  var epk297InView = true, epk297TabVisible = true, epk297TickN = 0, epk297IO = null;
+  /* session297-চুক্তি: ভিউপোর্ট-সচেতন অটো-স্লাইড-স্টেট + QA-হুক (papers-শূন্যে-ও সংজ্ঞায়িত) */
+  var epk310InView = true, epk310TabVisible = true, epk310TickN = 0, epk310IO = null;
+  function qaSync310() {}
   window.__epk297QA = {
-    inView: function () { return epk297InView; },
-    tabVisible: function () { return epk297TabVisible; },
-    ioOn: function () { return !!epk297IO; },
+    inView: function () { return epk310InView; },
+    tabVisible: function () { return epk310TabVisible; },
+    ioOn: function () { return !!epk310IO; },
     timerOn: function () { return !!timer; },
-    tickN: function () { return epk297TickN; },
+    tickN: function () { return epk310TickN; },
     current: function () { return papers.length ? current : -1; },
-    tick: function () { if (papers.length) { applyPaper((current + 1) % papers.length); return true; } return false; },
-    sync: epk297Sync297
+    tick: function () { if (papers.length) { applySlide((current + 1) % papers.length); return true; } return false; },
+    sync: qaSync310
+  };
+  window.__epk310QA = {
+    count: function () { return papers.length; },
+    current: function () { return papers.length ? current : -1; },
+    colorAt: function (i) { return papers[i] ? papers[i].color : ''; },
+    hrefAt: function (i) { return papers[i] ? papers[i].href : ''; },
+    nameAt: function (i) { return papers[i] ? papers[i].name : ''; },
+    mastShown: function () { return !!(mast && !mast.hidden); },
+    tickN: function () { return epk310TickN; },
+    tick: window.__epk297QA.tick
   };
 
-  /* session299: ইচ্ছা-সচেতন রিডার-ডিপ-লিংক-প্রিফেচ-স্টেট + QA-হুক (papers-শূন্যে-ও __epk299QA সংজ্ঞায়িত —
-     পরিবার-চুক্তি; PLANS session298-প্রস্তাব: শিট-ক্লিকে প্রথম-পাতা-রিডার-ডিপ-লিংক-প্রিফেচ — নেভিগেশন-তাৎক্ষণিক) */
+  /* session299-চুক্তি: রিডার-ডিপ-লিংক-প্রিফেচ-ফানেল (ডিডুপ + অফলাইন/saveData-গার্ড) */
   var epk299Count = 0, epk299Warmed = {}, epk299Last = '';
   window.__epk299QA = {
     prefetched: function () { return epk299Count; },
@@ -227,28 +237,8 @@
     last: function () { return epk299Last; },
     links: function () { try { return document.querySelectorAll('link[rel="prefetch"][data-epk299]').length; } catch (e299) { return 0; } }
   };
-  if (!papers.length) return;
+  if (!papers.length || !kiosk) return;
 
-  var reduceMotion = false;
-  try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
-
-  var front = document.getElementById('epk291Front'),
-      img = document.getElementById('epk291Img'),
-      mock = document.getElementById('epk291Mock'),
-      nameEl = document.getElementById('epk291Name'),
-      backL = document.getElementById('epk291BackL'),
-      backR = document.getElementById('epk291BackR'),
-      cta = document.getElementById('teKioskCta291'),
-      ctaText = document.getElementById('teKioskCtaText291'),
-      live = document.getElementById('epk291Live'),
-      film = document.getElementById('epk291Film'),
-      btns = film ? Array.prototype.slice.call(film.querySelectorAll('.epk291-film-btn')) : [];
-
-  var current = 0, timer = null, paused = false;
-
-  /* session299: একক-ফানেল epk299Prefetch299 — ডিডুপ-ম্যাপ + অফলাইন/saveData-গার্ড +
-     link[rel=prefetch]-ইনজেকশন (ব্রাউজার-লো-প্রায়োরিটি-ক্যাশ-ওয়ার্ম) + উষ্ণ-সংকেত;
-     সব-ট্রিগার (hover/focus/select/cta) এ-ফানেলেই (session296b-একক-ফানেল-প্রথা) */
   function epk299Prefetch299(url, reason299) {
     if (!url || epk299Warmed[url]) return false;
     var cn299 = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -257,90 +247,150 @@
     epk299Count++; epk299Last = String(reason299 || 'intent');
     try {
       var l299 = document.createElement('link');
-      l299.rel = 'prefetch';
-      l299.as = 'document';
-      l299.href = url;
+      l299.rel = 'prefetch'; l299.as = 'document'; l299.href = url;
       l299.setAttribute('data-epk299', '1');
       document.head.appendChild(l299);
     } catch (e299) {}
-    if (front) front.classList.add('epk299-warm');
     return true;
   }
 
-  // সেশন ২৯৬: প্রথম-পাতা-থাম্ব-চেইন — সারির-নিজ সম্পদ (মিসম্যাচ-অসম্ভব); ব্যর্থতায়
-  // পরের-প্রার্থী → শেষে নাম-মিলে লোগো-ব্যানার → সব-ব্যর্থে টেক্সট-মাস্টহেড (কখনো ভাঙা-ছবি নয়)।
-  // নেগোশিয়েশন-চলাকালীন মাস্টহেড+মক-কলাম দৃশ্যমান থাকে — ফাঁকা-শিট-ফ্ল্যাশ-শূন্য।
-  var chain = [];
-  function showImg296() {
-    if (img.complete && img.naturalWidth > 0 && img.getAttribute('src')) { img.hidden = false; mock.hidden = true; }
+  var reduceMotion = false;
+  try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  var card = document.getElementById('epk310Card'),
+      stripe = document.getElementById('epk310Stripe'),
+      link = document.getElementById('epk310Link'),
+      img = document.getElementById('epk310Img'),
+      mast = document.getElementById('epk310Mast'),
+      mastName = document.getElementById('epk310MastName'),
+      hoverName = document.getElementById('epk310HoverName'),
+      footLink = document.getElementById('epk310FootLink'),
+      countEl = document.getElementById('epk310Count'),
+      live = document.getElementById('epk310Live'),
+      dotsWrap = document.getElementById('epk310Dots'),
+      dots = dotsWrap ? Array.prototype.slice.call(dotsWrap.querySelectorAll('.epk310-dot')) : [],
+      stage = document.getElementById('epk310Stage');
+
+  var current = 0, timer = null, paused = false;
+
+  /* ── ইমেজ-চেইন: সারির-নিজ-সম্পদ + ২-স্ট্রাইক রিট্রাই (cache-buster) — কখনো ভাঙা-ছবি নয় ── */
+  var chain = [], strikes = {}, loadedFor = -1;
+  function showImg310() {
+    if (img.complete && img.naturalWidth > 0 && img.getAttribute('src')) { img.hidden = false; mast.hidden = true; }
   }
-  function setImg296(p) {
-    chain = (p.thumbs && p.thumbs.length) ? p.thumbs.slice() : [];
-    if (p.thumb) chain.push(p.thumb); // লোগো-ব্যানার = শেষ-ইমেজ-ফলব্যাক
+  function chainFor310(i) {
+    var p = papers[i];
+    if (!p) return [];
+    var c310 = (p.thumbs && p.thumbs.length) ? p.thumbs.slice() : [];
+    if (p.thumb && c310.indexOf(p.thumb) === -1) c310.push(p.thumb);
+    return c310;
+  }
+  function setImg310(i) {
+    var p = papers[i];
+    if (!p) return;
+    chain = chainFor310(i);
+    mastName.textContent = p.name;
     if (chain.length) {
       img.alt = p.name + ' — ই-পেপার প্রথম পাতা';
-      img.hidden = true; mock.hidden = false; // লোড-পর্যন্ত মাস্টহেড-দৃশ্যমান
+      img.hidden = true; mast.hidden = false; /* লোড-পর্যন্ত মাস্টহেড-দৃশ্যমান */
       img.src = chain[0];
-      showImg296(); // ক্যাশড-সোর্সে তাৎক্ষণিক
+      showImg310(); /* ক্যাশড-সোর্সে তাৎক্ষণিক */
     } else {
       img.hidden = true;
       img.removeAttribute('src');
-      mock.hidden = false;
+      mast.hidden = false;
     }
   }
+  img.addEventListener('load', function () {
+    loadedFor = current;
+    strikes[img.src] = 0;
+    showImg310();
+  });
+  img.addEventListener('error', function () {
+    var src310 = img.getAttribute('src');
+    if (!chain.length || src310 !== chain[0]) return; /* বাসি-অনুরোধের error — উপেক্ষা */
+    strikes[src310] = (strikes[src310] || 0) + 1;
+    if (strikes[src310] < 2) { /* ২-স্ট্রাইক রিট্রাই — cache-buster */
+      img.src = src310 + (src310.indexOf('?') !== -1 ? '&' : '?') + 'r=' + strikes[src310];
+      return;
+    }
+    chain.shift();
+    if (chain.length) { img.src = chain[0]; showImg310(); return; }
+    img.hidden = true;
+    img.removeAttribute('src');
+    mast.hidden = false; /* সব-ব্যর্থে টেক্সট-মাস্টহেড */
+  });
 
-  function applyPaper(i) {
+  /* ── স্লাইড-প্রয়োগ: fade-রিস্টার্ট + স্ট্রাইপ/ডট/CTA/কাউন্টার-সিঙ্ক ── */
+  function applySlide(i) {
     var p = papers[i];
     if (!p) return;
-    front.href = p.href;
-    front.style.setProperty('--epkAcc291', p.acc);
-    nameEl.textContent = p.name;
-    backL.textContent = papers[(i + 1) % papers.length].name;
-    backR.textContent = papers[(i + 2) % papers.length].name;
-    if (cta && ctaText) {
-      cta.href = p.href;
-      ctaText.textContent = p.name + ' পড়ুন';
-    }
+    link.href = p.href;
+    footLink.href = p.href;
+    if (stripe) stripe.style.background = p.color;
+    if (hoverName) hoverName.textContent = p.name;
+    if (countEl) { countEl.textContent = bnDigits310(i + 1) + ' / ' + bnDigits310(papers.length); countEl.setAttribute('aria-label', 'স্লাইড ' + bnDigits310(i + 1) + ' / ' + bnDigits310(papers.length)); }
     if (live) live.textContent = 'প্রদর্শিত পত্রিকা: ' + p.name;
-    // থাম্বনেইল কেবল সারির-নিজ-চেইন/নাম-মিলে-আসা সোর্সেই; না-থাকলে টেক্সট-মাস্টহেড
-    setImg296(p);
-    btns.forEach(function (b, bi) { b.setAttribute('aria-selected', bi === i ? 'true' : 'false'); });
-    // ফ্লিপ-অ্যানিমেশন রিস্টার্ট
+    var cta = document.getElementById('teKioskCta291'), ctaText = document.getElementById('teKioskCtaText291');
+    if (cta && ctaText) { cta.href = p.href; ctaText.textContent = p.name + ' পড়ুন'; }
+    dots.forEach(function (d, di) {
+      d.setAttribute('aria-selected', di === i ? 'true' : 'false');
+      d.style.background = di === i ? papers[di].color : 'var(--lf-line-strong, #CED0D4)';
+    });
+    setImg310(i);
+    /* fade/উত্থান-অ্যানিমেশন রিস্টার্ট */
     if (!reduceMotion) {
-      front.classList.remove('is-flip');
-      void front.offsetWidth;
-      front.classList.add('is-flip');
+      card.classList.remove('is-flip');
+      void card.offsetWidth;
+      card.classList.add('is-flip');
     }
-    if (epk299Warmed[p.href]) { front.classList.add('epk299-warm'); } else { front.classList.remove('epk299-warm'); } /* session299: উষ্ণ-সংকেত-মিরর */
+    if (epk299Warmed[p.href]) link.classList.add('epk299-warm'); else link.classList.remove('epk299-warm');
     current = i;
   }
+  function bnDigits310(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
 
+  /* ── অটো-স্লাইড: ৪ সেকেন্ড — hover/focus-পজ + IO/ট্যাব-গেট (session297-চুক্তি) ── */
   function startTimer() {
     if (reduceMotion || timer) return;
     timer = setInterval(function () {
-      if (!paused && epk297InView && epk297TabVisible) { epk297TickN++; applyPaper((current + 1) % papers.length); }
-    }, 3500);
+      if (!paused && epk310InView && epk310TabVisible) { epk310TickN++; applySlide((current + 1) % papers.length); }
+    }, 4000);
   }
-  function resetTimer() {
-    clearInterval(timer); timer = null; startTimer();
+  function resetTimer() { clearInterval(timer); timer = null; startTimer(); }
+  function qaSync310Impl() {
+    if (!papers.length) return;
+    var run310 = epk310InView && epk310TabVisible;
+    if (run310 && !timer) startTimer();
+    else if (!run310 && timer) { clearInterval(timer); timer = null; }
   }
+  qaSync310 = qaSync310Impl;
 
-  btns.forEach(function (b) {
-    b.addEventListener('click', function () {
-      var i = parseInt(b.getAttribute('data-epk-i'), 10);
-      /* session299: নির্বাচন-ইচ্ছা (মোবাইল-পথ সহ) — নির্বাচিত-পত্রিকার রিডার-ডিপ-লিংক প্রিফেচ */
-      if (!isNaN(i) && papers[i]) { applyPaper(i); resetTimer(); epk299Prefetch299(papers[i].href, 'select'); }
+  /* ডট-ক্লিক/কীবোর্ড */
+  dots.forEach(function (d) {
+    d.addEventListener('click', function () {
+      var i = parseInt(d.getAttribute('data-epk310-i'), 10);
+      if (!isNaN(i) && papers[i]) { applySlide(i); resetTimer(); epk299Prefetch299(papers[i].href, 'select'); }
     });
+    d.addEventListener('focus', function () { paused = true; });
+    d.addEventListener('blur', function () { paused = false; });
+  });
+  if (dotsWrap) dotsWrap.addEventListener('keydown', function (e) {
+    var n = papers.length;
+    if (n <= 1) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); applySlide((current + 1) % n); resetTimer(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); applySlide((current - 1 + n) % n); resetTimer(); }
+    else if (e.key === 'Home') { e.preventDefault(); applySlide(0); resetTimer(); }
+    else if (e.key === 'End') { e.preventDefault(); applySlide(n - 1); resetTimer(); }
   });
 
-  /* session299: হোভার/ফোকাস-ইচ্ছা (ডেস্কটপ) + CTA-হোভার — সব-একক-ফানেলে; mouseenter-নন-বাবলিং তবু
-     টার্গেট-লিসনারে ডিসপ্যাচে স্বাভাবিক-প্রজ্বলিত (সুইট-প্রমাণ-পথ) */
+  /* hover/focus-ইচ্ছা → প্রিফেচ-ফানেল (session299-চুক্তি) */
   function epk299Hover299() { if (papers[current]) epk299Prefetch299(papers[current].href, 'hover'); }
-  front.addEventListener('mouseenter', epk299Hover299);
-  front.addEventListener('focusin', epk299Hover299);
-  if (cta) cta.addEventListener('mouseenter', function () { if (papers[current]) epk299Prefetch299(papers[current].href, 'cta'); });
+  link.addEventListener('mouseenter', epk299Hover299);
+  link.addEventListener('focusin', epk299Hover299);
+  var ctaEl = document.getElementById('teKioskCta291');
+  if (ctaEl) ctaEl.addEventListener('mouseenter', function () { if (papers[current]) epk299Prefetch299(papers[current].href, 'cta'); });
 
-  // hover + keyboard-focus — দুই ক্ষেত্রেই থামে (পাঠক নির্বাচনে স্বাচ্ছন্দ্য)
+  /* hover + keyboard-focus — দুই ক্ষেত্রেই থামে */
   var section = document.getElementById('today-epaper') || kiosk;
   section.addEventListener('mouseenter', function () { paused = true; });
   section.addEventListener('mouseleave', function () { paused = false; });
@@ -349,59 +399,35 @@
     if (!kiosk.contains(e.relatedTarget)) paused = false;
   });
 
-  /* session297: ভিউপোর্ট-সচেতন অটো-স্লাইড — IO (threshold .12) + visibilitychange দু-স্তরে
-     ইঞ্জিন-স্থগিত (অদৃশ্য-সেকশনে টাইমার-সম্পূর্ণ-বন্ধ — CPU-সাশ্রয়); দৃশ্যমানতায় পুনঃ-সূচনা।
-     IO-অসমর্থিত-ব্রাউজারে epk297InView=true-পূর্বস্থ — আচরণ-অপরিবর্তিত (গ্রেসফুল-ডিগ্রেডেশন)। */
-  function epk297Sync297() {
-    if (!papers.length) return;
-    var run297 = epk297InView && epk297TabVisible;
-    if (run297 && !timer) startTimer();
-    else if (!run297 && timer) { clearInterval(timer); timer = null; }
+  /* সোয়াইপ (মোবাইল) — threshold 42px */
+  var swipeX310 = null;
+  if (stage) {
+    stage.addEventListener('pointerdown', function (e) { swipeX310 = e.clientX; });
+    stage.addEventListener('pointerup', function (e) {
+      if (swipeX310 == null) return;
+      var d310 = e.clientX - swipeX310;
+      if (Math.abs(d310) > 42) { var n310 = papers.length; applySlide(d310 < 0 ? (current + 1) % n310 : (current - 1 + n310) % n310); resetTimer(); }
+      swipeX310 = null;
+    });
   }
+
+  /* IO + visibilitychange — অদৃশ্য-সেকশনে/ব্যাকগ্রাউন্ড-ট্যাবে টাইমার-সম্পূর্ণ-বন্ধ */
   try {
     if ('IntersectionObserver' in window) {
-      epk297IO = new IntersectionObserver(function (entries297) {
-        var en297 = entries297 && entries297[0];
-        epk297InView = !!(en297 && en297.isIntersecting);
-        epk297Sync297();
+      epk310IO = new IntersectionObserver(function (entries310) {
+        var en310 = entries310 && entries310[0];
+        epk310InView = !!(en310 && en310.isIntersecting);
+        qaSync310Impl();
       }, { threshold: 0.12 });
-      epk297IO.observe(section);
+      epk310IO.observe(section);
     }
-  } catch (e297) { epk297IO = null; epk297InView = true; }
+  } catch (e310) { epk310IO = null; epk310InView = true; }
   document.addEventListener('visibilitychange', function () {
-    epk297TabVisible = !(document.hidden === true);
-    epk297Sync297();
+    epk310TabVisible = !(document.hidden === true);
+    qaSync310Impl();
   });
 
-  // সফল-লোডে মাস্টহেড-থেকে-ছবি (ফ্ল্যাশ-শূন্য)
-  img.addEventListener('load', showImg296);
-  // থাম্ব-লোড-ব্যর্থতায় চেইন-অগ্রগতি: পরের-প্রার্থী; সব-শেষ → টেক্সট-মাস্টহেড (কখনো ভাঙা-ছবি নয়)
-  img.addEventListener('error', function () {
-    if (!chain.length || img.getAttribute('src') !== chain[0]) return; // বাসি-অনুরোধের error — উপেক্ষা
-    chain.shift();
-    if (chain.length) { img.src = chain[0]; showImg296(); return; }
-    img.hidden = true;
-    img.removeAttribute('src');
-    mock.hidden = false;
-  });
-
-  // session292: ফিল্ম-মিনি-থাম্ব লোড-ব্যর্থতায় থাম্ব-স্প্যান লুকান — টেক্সট-অনলি-ফলব্যাক
-  // (ভাঙা-ছবি-কখনো-নয়); error ইভেন্ট non-bubbling → film-কনটেইনারে capture-ফেজে শোনা হয়
-  if (film) {
-    film.addEventListener('error', function (e) {
-      var t = e.target;
-      if (!t || !t.classList || !t.classList.contains('epk291-film-thumb-img')) return;
-      var w = t.parentNode;
-      if (w && w.classList && w.classList.contains('epk291-film-thumb')) w.hidden = true;
-    }, true);
-    window.__epk292QA = {
-      total: function () { return film.querySelectorAll('.epk291-film-thumb').length; },
-      hidden: function () { return film.querySelectorAll('.epk291-film-thumb[hidden]').length; },
-      imgs: function () { return film.querySelectorAll('.epk291-film-thumb-img').length; }
-    };
-  }
-
-  applyPaper(0);
+  applySlide(0);
   startTimer();
 })();
 </script>
