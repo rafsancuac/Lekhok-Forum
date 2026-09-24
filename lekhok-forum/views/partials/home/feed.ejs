@@ -66,6 +66,23 @@
   const sfsInitial292 = (n) => n.trim().charAt(0);
   // সেশন ৩০৭: চিপ ×২→×৩ (feedSlides-রেজিস্ট্রির পূর্ণ-ব্যবহার)
   const sfsChips292 = (typeof feedSlides !== 'undefined' && feedSlides ? feedSlides : []).slice(0, 3);
+  // সেশন ৩১৩ (sfs313): বাস্তব-গ্রুপ-সম্মিলন — home_feed_order-অর্ডারে real-popular
+  // real-latest-এর আগে-হলে ফোন-ফিডে জনপ্রিয়-গ্রুপ-প্রথম; আইকন/লেবেল রেজিস্ট্রি-সত্য
+  // (fallback = বর্তমান-ধ্রুব — ডিফল্ট রেন্ডার অভিন্ন)।
+  const sfsSlides313 = (typeof feedSlides !== 'undefined' && Array.isArray(feedSlides)) ? feedSlides : [];
+  const sfsSlide313 = (k) => sfsSlides313.find((s) => s.key === k) || null;
+  const sfsIdxLatest313 = sfsSlides313.findIndex((s) => s.key === 'real-latest');
+  const sfsIdxPop313 = sfsSlides313.findIndex((s) => s.key === 'real-popular');
+  const sfsPopFirst313 = (sfsIdxPop313 !== -1) && (sfsIdxLatest313 === -1 || sfsIdxPop313 < sfsIdxLatest313);
+  const sfsRegLB313 = (k, fb) => (sfsSlide313(k) || {}).title || fb;
+  const sfsRegIC313 = (k, fb) => (sfsSlide313(k) || {}).icon || fb;
+  const sfsGroups313 = sfsPopFirst313 ? [
+    { ic: sfsRegIC313('real-popular', 'fa-fire'), lb: sfsRegLB313('real-popular', 'জনপ্রিয় আলোচনা'), rows: sfsPostsB292 },
+    { ic: sfsRegIC313('real-latest', 'fa-bolt'), lb: sfsRegLB313('real-latest', 'সর্বশেষ লেখা'), rows: sfsPostsA292 }
+  ] : [
+    { ic: sfsRegIC313('real-latest', 'fa-bolt'), lb: sfsRegLB313('real-latest', 'সর্বশেষ লেখা'), rows: sfsPostsA292 },
+    { ic: sfsRegIC313('real-popular', 'fa-fire'), lb: sfsRegLB313('real-popular', 'জনপ্রিয় আলোচনা'), rows: sfsPostsB292 }
+  ];
 %>
 <section class="section feed-showcase-section reveal" id="user-feed">
   <div class="container">
@@ -114,9 +131,13 @@
               </span>
               <span class="sfs292-feed">
                 <span class="sfs292-track">
-                  <span class="sfs292-half">
-                    <span class="sfs292-glabel"><i class="fas fa-bolt"></i> সর্বশেষ লেখা</span>
-                    <% sfsPostsA292.forEach((p) => { %>
+                  <%# সেশন ৩১৩ (sfs313): হাফ-ক্লোন-লুপ (×২-ডুপ্লিকেট-মার্কআপ নির্মূল —
+                      রেন্ডার-অভিন্ন) + গ্রুপ-ক্রম sfsGroups313 (ডিফল্টে সর্বশেষ-প্রথম)। %>
+                  <% [false, true].forEach((sfsHalf313) => { %>
+                  <span class="sfs292-half"<%- sfsHalf313 ? ' aria-hidden="true"' : '' %>>
+                    <% sfsGroups313.forEach((g313) => { %>
+                    <span class="sfs292-glabel"><i class="fas <%= g313.ic %>"></i> <%= g313.lb %></span>
+                    <% g313.rows.forEach((p) => { %>
                     <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
                       <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
                       <span class="sfs292-ptext"><%= p.t %></span>
@@ -124,38 +145,10 @@
                       <span class="sfs292-pacts"><span><i class="fas fa-heart"></i> <%= p.a %></span><span><i class="fas fa-comment"></i> <%= p.c %></span><span><i class="fas fa-<%= p.real ? 'eye' : 'share' %>"></i> <%= p.s %></span></span>
                     </span>
                     <% }) %>
-                    <span class="sfs292-glabel"><i class="fas fa-fire"></i> জনপ্রিয় আলোচনা</span>
-                    <% sfsPostsB292.forEach((p) => { %>
-                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
-                      <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
-                      <span class="sfs292-ptext"><%= p.t %></span>
-                      <% if (p.img) { %><span class="sfs292-pimg"><i class="fas fa-image"></i></span><% } %>
-                      <span class="sfs292-pacts"><span><i class="fas fa-heart"></i> <%= p.a %></span><span><i class="fas fa-comment"></i> <%= p.c %></span><span><i class="fas fa-<%= p.real ? 'eye' : 'share' %>"></i> <%= p.s %></span></span>
-                    </span>
                     <% }) %>
                   </span>
-                  <span class="sfs292-half" aria-hidden="true">
-                    <span class="sfs292-glabel"><i class="fas fa-bolt"></i> সর্বশেষ লেখা</span>
-                    <% sfsPostsA292.forEach((p) => { %>
-                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
-                      <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
-                      <span class="sfs292-ptext"><%= p.t %></span>
-                      <% if (p.img) { %><span class="sfs292-pimg"><i class="fas fa-image"></i></span><% } %>
-                      <span class="sfs292-pacts"><span><i class="fas fa-heart"></i> <%= p.a %></span><span><i class="fas fa-comment"></i> <%= p.c %></span><span><i class="fas fa-<%= p.real ? 'eye' : 'share' %>"></i> <%= p.s %></span></span>
-                    </span>
-                    <% }) %>
-                    <span class="sfs292-glabel"><i class="fas fa-fire"></i> জনপ্রিয় আলোচনা</span>
-                    <% sfsPostsB292.forEach((p) => { %>
-                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
-                      <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
-                      <span class="sfs292-ptext"><%= p.t %></span>
-                      <% if (p.img) { %><span class="sfs292-pimg"><i class="fas fa-image"></i></span><% } %>
-                      <span class="sfs292-pacts"><span><i class="fas fa-heart"></i> <%= p.a %></span><span><i class="fas fa-comment"></i> <%= p.c %></span><span><i class="fas fa-<%= p.real ? 'eye' : 'share' %>"></i> <%= p.s %></span></span>
-                    </span>
-                    <% }) %>
-                  </span>
+                  <% }) %>
                 </span>
-              </span>
               <span class="sfs292-tabbar" aria-hidden="true">
                 <span class="sfs292-tab is-on"><i class="fas fa-home"></i></span>
                 <span class="sfs292-tab"><i class="fas fa-compass"></i></span>
@@ -165,7 +158,7 @@
               </span>
             </span>
           </a>
-          <%# ── ভাসমান-চিপ ×২ — feedSlides-রেজিস্ট্রি (অ্যাডমিন-রিঅর্ডারযোগ্য) ── %>
+          <%# ── ভাসমান-চিপ ×৩ (s307) — feedSlides-রেজিস্ট্রি (অ্যাডমিন-রিঅর্ডারযোগ্য; s313-এ real-* কী-ও-অংশ নেয়) ── %>
           <% sfsChips292.forEach((s, i) => { %>
           <a class="sfs292-chip sfs292-chip-<%= ['a', 'b', 'c'][i] || 'a' %>" href="<%= s.href %>" aria-label="<%= s.title %> — <%= s.sub %>">
             <span class="sfs292-chip-ic"><i class="fas <%= s.icon %>" aria-hidden="true"></i></span>
@@ -232,6 +225,16 @@
     }
   } catch (e312) { q312.err = String((e312 && e312.message) || e312); }
   window.__sfs312QA = q312;
+})();
+</script>
+<script>
+/* session313 (sfs313): গ্রুপ-ক্রম-সমন্বয় QA-হুক (নতুন-নেমস্পেস — sfs307/sfs312 অক্ষুণ্ণ) */
+(function () {
+  var q313 = { popFirst: <%- sfsPopFirst313 ? 'true' : 'false' %>, labels: <%- JSON.stringify(sfsGroups313.map(function (g) { return g.lb; })) %>, chips: <%= sfsChips292.length %>, glabels: 0, err: '' };
+  try {
+    q313.glabels = document.querySelectorAll('.sfs292-glabel').length;
+  } catch (e313) { q313.err = String((e313 && e313.message) || e313); }
+  window.__sfs313QA = q313;
 })();
 </script>
 </section>

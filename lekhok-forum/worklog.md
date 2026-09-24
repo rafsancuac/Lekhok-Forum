@@ -3387,3 +3387,21 @@ Work Log:
 Stage Summary:
 - ফোন-ফিড বাস্তব-সারি = ট্যাপযোগ্য ডিপ-লিঙ্ক (/dashboard#post-<id> → scrollIntoView + ফ্ল্যাশ); s306-একক-লিঙ্ক-চুক্তি অক্ষুণ্ণ (pointer-অ্যাফোর্ডেন্স-মাত্র); JS-বিহীনে কেবল-প্রদর্শন (s306b-ধর্ম)
 - পরের-এজেন্ট: session313 (Task ID 150); PLANS session312-নোটের প্রস্তাব-ত্রয় দেখুন
+
+---
+
+Task ID: 150
+Agent: Main cron agent (session313 — cron 403679)
+Task: session313 sfs313 গ্রুপ-সম্মিলন (home_feed_order × বাস্তব-পোস্ট-গ্রুপ) + s313-land found:0-নোটিশ + toast-family স্টাইল — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- রাউন্ড-আরম্ভ-যাচাই: HEAD=origin=cbcdbdc (clean-tree, BEHIND=০) + agent-browser-QA বেসলাইন সবুজ (sfs307 real=8/chips=3/io=1; sfs312 wired=16; epk310 count=7; কনসোল-শূন্য)
+- PLANS session312-নোটের প্রস্তাব-①+③ গ্রহণ; s313-patch.py (idempotent ×N — ৯-ধাপ) — home-layout.js FEED_SLIDES +real-latest/real-popular (append-চুক্তি); feed.ejs sfsGroups313 + হাফ-ক্লোন-লুপ (×২-ডুপ্লিকেট নির্মূল — রেন্ডার-অভিন্ন) + __sfs313QA; dashboard.ejs land312()-রিফ্যাক্টর + hashchange-পুনঃচালু + found:0-লফ313-info-টোস্ট + প্রতি-চেষ্টায় সতেজ-স্টেট; style.css session313-ব্লক হেক্স-শূন্য (.toast-পরিবার ভিজ্যুয়াল-স্টেট + lf313-info ভ্যারিয়েন্ট + 640px safe-area + reduced-motion)
+- নতুন scripts/s313-order-toggle.js (settings.home_feed_order পাঠ/সেট/মুছ — সার্ভার-বন্ধ-চুক্তি) + নতুন tests/s313-suite.sh — ৬৩/৬৩ ×২-ধারাবাহিক (কাঠামো ×২১ + SSR ×৫ + DB-অর্ডার-টগল-ই২ই ×১১ + s313-land ×১১ + toast-family ×২ + মোবাইল ×২ + নেট-শূন্য ×৪)
+- রিগ্রেশন: s312 ৫৫/৫৫ (data-post-id ×৪→×১ আপডেট — লুপ-গঠন-চুক্তি) + s307 ৫৫/৫৫ (is-real307 ×৬→×৩ আপডেট) + s311 ৪৩/৪৩ + s306 ৫০/৫০ + guard:design + audit:views সর্ব-গ্রিন
+- ডক-ত্রয়: PROJECT §৩১৩ + PLANS session313-নোট + এ-ওয়ার্কলগ Task 150 (s313-docs.py idempotent ×২)
+
+Stage Summary:
+- ফোন-ফিড গ্রুপ-ক্রম এখন অ্যাডমিন-নিয়ন্ত্রিত (home_feed_order-এ real-popular আগে = জনপ্রিয়-প্রথম; রেজিস্ট্রি-চালিত — admin-reorder স্বয়ং-আবিষ্কার); ফোন-ফিড টেমপ্লেট ×২-ডুপ্লিকেট-মার্কআপ থেকে একক-লুপে (~৩০-লাইন হ্রাস, রেন্ডার-অভিন্ন)
+- ড্যাশবোর্ড-অবতরণ: found:0-পথে মৃদু-নোটিশ-টোস্ট + hash-only নেভিগেশনেও পুনঃচালু + প্রতি-চেষ্টায় সতেজ-স্টেট; গ্লোবাল .toast-পরিবারে success/error/lf313-info ভিজ্যুয়াল-স্টেট (বাম-অ্যাকসেন্ট-বার)
+- পরের-এজেন্ট: session314 (Task ID 151); PLANS session313-নোটের প্রস্তাব-ত্রয় দেখুন

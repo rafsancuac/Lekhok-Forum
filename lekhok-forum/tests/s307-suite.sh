@@ -62,7 +62,9 @@ grep -q "const sfsRow307 = (p) => ({" "$APP/views/partials/home/feed.ejs" && ok 
 grep -q "sfsReal307.slice(4, 8).slice().sort" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: গ্রুপ-বি জনপ্রিয়তা-সর্ট (engagement DESC)" || bad "feed.ejs: জনপ্রিয়তা-সর্ট-অনুপস্থিত"
 grep -q "sfsFill307(sfsRealA307, sfsDemoA292)" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: ডেমো-ফিল-চুক্তি (৪+৪ স্থিতিশীল)" || bad "feed.ejs: ফিল-অনুপস্থিত"
 # session312 (sfs312): রো-মার্ক ×৪ + s312-ইঞ্জিনের querySelectorAll-রেফারেন্স ×২ = ৬ (লিজিটিমেট-বৃদ্ধি)
-[ "$(grep -o "is-real307" "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')" = "6" ] && ok "feed.ejs: is-real307-রো-মার্ক ×৪ + s312-ইঞ্জিন-রেফ ×২" || bad "feed.ejs: রো-মার্ক-গণনা=$(grep -o 'is-real307' "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')"
+# session313-আপডেট (নতুন-মান+কারণ — গণনা-অ্যাসার্ট-চুক্তি): হাফ-ক্লোন-লুপ-গঠনে রো-মার্ক ×১-লুপে
+# নেমেছে (×৪-ডুপ্লিকেট নির্মূল — রেন্ডার্ড-আউটপুট অপরিবর্তিত) + s312-ইঞ্জিন-রেফ ×২ = ৩।
+[ "$(grep -o "is-real307" "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')" = "3" ] && ok "feed.ejs: is-real307 রো-মার্ক ×১-লুপ + s312-ইঞ্জিন-রেফ ×২ (session313-লুপ-গঠন)" || bad "feed.ejs: রো-মার্ক-গণনা=$(grep -o 'is-real307' "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')"
 grep -q 'sfsRealCount307 > 0' "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: লাইভ-পিল-গেট (realCount>0)" || bad "feed.ejs: লাইভ-পিল-গেট-অনুপস্থিত"
 grep -q "slice(0, 3);" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: চিপ ×২→×৩ (slice(0,3))" || bad "feed.ejs: চিপ-স্লাইস-অমিল"
 grep -q "\['a', 'b', 'c'\]\[i\]" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: চিপ-ক্লাস-ম্যাপিং ×৩" || bad "feed.ejs: চিপ-ম্যাপিং-অনুপস্থিত"

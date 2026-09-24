@@ -4236,3 +4236,62 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 }
 /* ═════════════════════ EOF session312 (sfs312) ═════════════════════ */
 
+/* ═════════════════════ session313 (s313-land + toast-family) ═════════════════════
+   ① .toast-পরিবারে ভিজ্যুয়াল-স্টেট — success/error/lf313-info (বাম-অ্যাকসেন্ট-বার —
+      এতদিন টোস্ট নিরপেক্ষ-একরঙা; স্টেট-পাঠ দৃশ্যমাল)। ② lf313-info = অবতরণ-নোটিশ
+      (ব্র্যান্ড-টিন্ট + তথ্য-আইকন)। ③ 640px safe-area + reduced-motion।
+   হেক্স-শূন্য — var(--lf-*) + color-mix (session312-চুক্তি)। */
+.toast {
+  overflow: hidden;
+}
+.toast::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  pointer-events: none;
+}
+.toast.success::before {
+  background: var(--lf-ok);
+}
+.toast.error::before {
+  background: var(--lf-danger);
+}
+.toast.lf313-info {
+  background: color-mix(in srgb, var(--lf-brand-primary) 88%, var(--lf-brand-light));
+  box-shadow: var(--lf-shadow-card);
+  border: 1px solid color-mix(in srgb, var(--lf-brand-light) 55%, transparent);
+  padding-right: 44px;
+}
+.toast.lf313-info::before {
+  background: var(--lf-brand-light);
+  width: 4px;
+}
+.toast.lf313-info::after {
+  content: '\f05a';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+  font-size: 16px;
+}
+@media (max-width: 640px) {
+  .toast {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100% - 24px);
+    font-size: 13px;
+  }
+  .toast.lf313-info { padding-right: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: opacity 0.01ms linear;
+  }
+}
+/* ═════════════════════ EOF session313 (s313-land + toast-family) ═════════════════════ */

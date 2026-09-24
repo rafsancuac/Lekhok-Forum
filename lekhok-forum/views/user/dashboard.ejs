@@ -445,10 +445,13 @@
    হ্যাশ-বিহীন লোড = no-op (প্রধান-প্রবাহ অটুট); কার্ড-অনুপস্থিতে found:0-গ্রেসফুল
    (ফিড-ব্যক্তিগতকরণ/পৃষ্ঠাভেদে গন্তব্য-কার্ড না-ও-থাকতে পারে)। */
 (function () {
-  var q312 = { found: 0, id: '', err: '' };
-  try {
-    var m312 = /^#post-(\d+)$/.exec(String(window.location.hash || ''));
-    if (m312) {
+  var q312 = { found: 0, id: '', notice: 0, hashEvents: 0, err: '' };
+  var land312 = function () {
+    q312.found = 0; q312.notice = 0; /* session313 (s313-land): প্রতি-চেষ্টায় সতেজ-স্টেট —
+       hash-শৃঙ্খলে পূর্ব-চেষ্টার স্টেল-উত্তর বহন-নিষিদ্ধ (found=শেষ-চেষ্টার-সত্য) */
+    try {
+      var m312 = /^#post-(\d+)$/.exec(String(window.location.hash || ''));
+      if (!m312) return;
       var id312 = m312[1];
       q312.id = id312;
       var el312 = document.querySelector('[data-s312-post="' + id312 + '"]') ||
@@ -458,9 +461,25 @@
         if (el312.scrollIntoView) el312.scrollIntoView({ block: 'center' });
         el312.classList.add('s312-land-flash');
         setTimeout(function () { el312.classList.remove('s312-land-flash'); }, 2400);
+      } else {
+        /* session313 (s313-land): found:0-পথে মৃদু-নোটিশ — গন্তব্য-কার্ড ফিডে-অনুপস্থিতে
+           নীরব-নো-অপ-এর-বদলে তথ্য-টোস্ট (session312-নোটের প্রস্তাব-৩)। হ্যাশ-বিহীন লোডে
+           এ-পথে-ই-ঢোকে-না (মূল-প্রবাহ অটুট); showToast-অনুপস্থিতে নীরব-গ্রেসফুল। */
+        q312.notice = 1;
+        if (typeof window.showToast === 'function') {
+          window.showToast('পোস্টটি এই ফিডে নেই — সার্চ বা হোম-ফিড থেকে দেখুন', 'lf313-info');
+        }
       }
-    }
-  } catch (e312) { q312.err = String((e312 && e312.message) || e312); }
+    } catch (e312) { q312.err = String((e312 && e312.message) || e312); }
+  };
+  land312();
+  /* session313 (s313-land): hash-only নেভিগেশনেও অবতরণ-পুনঃচালু — পূর্বে কেবল-লোড-টাইম
+     ছিল (dashboard-অবস্থায় #post-<id>-বদল নীরব-নো-অপ ছিল); sfs312-ট্যাপ-থ্রুর
+     dashboard-বহির্ভূত-প্রবাহ অপরিবর্তিত (পূর্ণ-নেভিগেশন = লোড-টাইম-ই-চালু)। */
+  window.addEventListener('hashchange', function () {
+    q312.hashEvents += 1;
+    land312();
+  });
   window.__s312LandQA = q312;
 })();
 </script>

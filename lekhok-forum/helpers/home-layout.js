@@ -30,7 +30,13 @@ const FEED_SLIDES = [
   { key: 'quiz',    icon: 'fa-brain',        title: 'আজকের কুইজ',        sub: 'প্রতিদিন নতুন প্রশ্ন, মেধা যাচাই করুন', href: '/quiz' },
   { key: 'thisday', icon: 'fa-calendar-day', title: 'এই দিনে ইতিহাসে',   sub: 'আজকের দিনের তাৎপর্য জেনে নিন', href: '/on-this-day' },
   { key: 'epaper',  icon: 'fa-newspaper',    title: 'আজকের ই-পেপার',     sub: 'সাহিত্য ও মতামত পাতার নির্বাচন', href: '/epaper' },
-  { key: 'best',    icon: 'fa-crown',        title: 'মাসিক সেরা লেখক',   sub: 'এই মাসের শ্রেষ্ঠ লেখক কে, দেখুন', href: '/best-writer' }
+  { key: 'best',    icon: 'fa-crown',        title: 'মাসিক সেরা লেখক',   sub: 'এই মাসের শ্রেষ্ঠ লেখক কে, দেখুন', href: '/best-writer' },
+  // সেশন ৩১৩ (sfs313): বাস্তব-পোস্ট-গ্রুপ রেজিস্ট্রিতে সম্মিলিত — home_feed_order-এ
+  // real-popular real-latest-এর আগে = ফোন-ফিডে জনপ্রিয়-গ্রুপ-প্রথম (আইকন/লেবেল-ও
+  // রেজিস্ট্রি-সত্য)। নতুন-কী append-চুক্তি (present-beats-default) — ডিফল্ট
+  // চিপ-slice(0,3) ও গ্রুপ-ক্রম অপরিবর্তিত; /admin/home-reorder স্বয়ং-আবিষ্কার।
+  { key: 'real-latest',  icon: 'fa-bolt', title: 'সর্বশেষ লেখা',    sub: 'ফোন-ফিডে সদ্য-প্রকাশিত পোস্ট', href: '/dashboard' },
+  { key: 'real-popular', icon: 'fa-fire', title: 'জনপ্রিয় আলোচনা', sub: 'সর্বাধিক সাড়া পাওয়া আলাপ', href: '/dashboard' }
 ];
 
 // ── ৩. নেতৃত্ব-গ্রুপ কী-সংজ্ঞা (home_member_order-এর চাবি) ──

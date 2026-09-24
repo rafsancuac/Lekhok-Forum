@@ -59,7 +59,9 @@ if curl -s -o /dev/null -m 2 "$BASE/"; then pkill -9 -f "node server.js" 2>/dev/
 echo "── ধাপ-১: কাঠামো (ভিউ/সিএসএস) ──"
 grep -q "id: p.id || ''," "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: sfsRow307-id-বহন" || bad "feed.ejs: id-বহন-অনুপস্থিত"
 N_DP=$(grep -o "data-post-id=\"<%= p.id || '' %>\"" "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')
-[ "$N_DP" = "4" ] && ok "feed.ejs: data-post-id ×৪-রো (২-গ্রুপ × ২-হাফ)" || bad "feed.ejs: data-post-id-গণনা=$N_DP (প্রত্যাশা ৪)"
+# session313-আপডেট (নতুন-মান+কারণ — s312-নোটের গণনা-অ্যাসার্ট-চুক্তি): হাফ-ক্লোন-লুপ-গঠনে
+# সারি-মার্কআপ একক-লুপে নামল (×৪-ডুপ্লিকেট নির্মূল) — রেন্ডার্ড-আউটপুট অপরিবর্তিত (glabel ×৪-প্রমাণ s313-suite ধাপ-২)।
+[ "$N_DP" = "1" ] && ok "feed.ejs: data-post-id ×১-লুপ (session313-লুপ-গঠন — রেন্ডার-অভিন্ন)" || bad "feed.ejs: data-post-id-গণনা=$N_DP (প্রত্যাশা ১ — session313-লুপ-গঠন)"
 grep -q "sfs312-tap" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: sfs312-tap-ক্লাস-ওয়্যারিং" || bad "feed.ejs: tap-ক্লাস-অনুপস্থিত"
 grep -q "stopPropagation" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: ফোন-অ্যাঙ্কর-দমন (stopPropagation)" || bad "feed.ejs: দমন-অনুপস্থিত"
 grep -q "preventDefault" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: ডিফল্ট-নেভিগেশন-দমন (preventDefault)" || bad "feed.ejs: preventDefault-অনুপস্থিত"
