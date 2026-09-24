@@ -612,5 +612,70 @@
   window.__sfs321QA = q321;
 })();
 </script>
+<script>
+/* session322 (sfs322): glabel-ট্যাপে grows-স্ক্রল-সমন্বয় (PLANS session321-নোটের প্রস্তাব-②)
+   • ট্যাপ-কৃত-গ্রুপের প্রথম-সারি phone-ফ্রেমে-আনা — s315-freeze-পথ-পুনঃব্যবহার:
+     __sfs319Show-পুনঃমোড়ক (s320-মোড়ক-চেইন-পরবর্তী) — কেবল tap-গেট-উপস্থিতে
+     (data-sfs321-tap) ও keynav-নিষ্ক্রিয়ে (data-sfs314-focus-অনুপস্থিত)
+     __sfs315Freeze(lab, phone) — লেবেল feed-শীর্ষ+২২px-প্যাডে (mask-fade-ব্যান্ড-নিচে —
+     s315-স্ন্যাপশট-গণিত-পুনঃব্যবহার, শূন্যীকরণ-মাপা-কৌশল-নিষিদ্ধ — prevY-চুক্তি);
+     keynav-সক্রিয়ে ট্যাপে ফ্রিজ-নীরব (viewport keynav-মালিকানাধীন — apply314-নিজস্ব-ফ্রিজ)।
+   • গেট-সমাপ্তি-আনফ্রিজ: MutationObserver (attributeFilter data-sfs321-tap +
+     data-sfs314-focus — microtask-পালা — পেইন্ট-পূর্বে): tap-গেট-বিলোপে (4.8s-সময়-পথ)
+     keynav-নিষ্ক্রিয়ে __sfs315Unfreeze → মার্কি-পুনঃপ্রবাহ (translate-বিলোপ → স্থগিত-
+     কীফ্রেম-থেকে — s315-শূন্য-লাফ-চুক্তি); keynav-সক্রিয়ে গেট-বিলোপ = keynav-
+     মালিকানাধীন-ফ্রিজ — স্পর্শ-নিষিদ্ধ। s321-গেট-লিক-হার্ডেনিং: keynav-বিলোপে
+     (focus-removal-রেকর্ড) স্থগিত tap-গেট-অবশিষ্ট হলে গেট-বিলোপ + আনফ্রিজ
+     (s321-টাইমার-ওয়ান-শট-পথে-অপ্রাপ্য-অবস্থা — MO-ই-একমাত্র-দৃশ্যমান-পথ)।
+   • CSS-সহায়তা: style.css session322-ব্লক — tap-গেটে মার্কি-বিরতি
+     (animation-play-state: paused — keynav-গেট-সমান্তরাল) + ট্যাপ-ফ্রেম-রিং।
+   • QA-হুক __sfs322QA {taps, unfrozen, tr(), gate(), err} — লেবেল-শূন্যে-ও-সংজ্ঞায়িত। */
+(function () {
+  var q322 = { taps: 0, unfrozen: 0, err: '' };
+  try {
+    var phone322 = document.querySelector('.sfs292-phone');
+    var trk322 = phone322 ? phone322.querySelector('.sfs292-track') : null;
+    var doUnfreeze322 = function () {
+      if (window.__sfs315QA && !window.__sfs315QA.frozen) return; /* ইতিমধ্যে-মুক্ত — গণনা-দ্বি-নিষিদ্ধ */
+      if (window.__sfs315Unfreeze) { window.__sfs315Unfreeze(); q322.unfrozen += 1; }
+    };
+    /* ① tap-পথ-ফ্রিজ — __sfs319Show-পুনঃমোড়ক (s320-মোড়ক-চেইন-পরবর্তী) */
+    if (window.__sfs319Show) {
+      var sh322 = window.__sfs319Show;
+      window.__sfs319Show = function (l322, i322, n322) {
+        sh322(l322, i322, n322);
+        try {
+          if (phone322 && phone322.hasAttribute('data-sfs321-tap') && !phone322.hasAttribute('data-sfs314-focus') && window.__sfs315Freeze) {
+            window.__sfs315Freeze(l322, phone322);
+            q322.taps += 1;
+          }
+        } catch (e322a) { q322.err = String((e322a && e322a.message) || e322a); }
+      };
+    }
+    /* ② গেট-সমাপ্তি-আনফ্রিজ + s321-গেট-লিক-হার্ডেনিং — MutationObserver */
+    if (phone322 && window.MutationObserver) {
+      var mo322 = new MutationObserver(function (muts322) {
+        try {
+          var knGone322 = false;
+          for (var m322 = 0; m322 < muts322.length; m322++) {
+            if (muts322[m322].attributeName === 'data-sfs314-focus' && !phone322.hasAttribute('data-sfs314-focus')) knGone322 = true;
+          }
+          if (!phone322.hasAttribute('data-sfs321-tap')) {
+            if (!phone322.hasAttribute('data-sfs314-focus')) doUnfreeze322(); /* গেট-সমাপ্তি (keynav-নিষ্ক্রিয়) → মার্কি-পুনঃপ্রবাহ */
+            /* keynav-সক্রিয়ে গেট-বিলোপ = keynav-মালিকানাধীন-ফ্রিজ — স্পর্শ-নিষিদ্ধ */
+          } else if (knGone322) {
+            phone322.removeAttribute('data-sfs321-tap'); /* s321-লিক: keynav-বিলোপে স্থগিত-গেট */
+            doUnfreeze322();
+          }
+        } catch (e322b) { q322.err = String((e322b && e322b.message) || e322b); }
+      });
+      mo322.observe(phone322, { attributes: true, attributeFilter: ['data-sfs321-tap', 'data-sfs314-focus'] });
+    }
+    q322.gate = function () { return !!(phone322 && phone322.hasAttribute('data-sfs321-tap')); };
+    q322.tr = function () { return trk322 ? trk322.style.translate : ''; };
+  } catch (e322x) { q322.err = String((e322x && e322x.message) || e322x); }
+  window.__sfs322QA = q322;
+})();
+</script>
 </section>
 

@@ -4530,3 +4530,17 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs292-phone[data-sfs321-tap] .sfs319-namechip { transition: opacity 0.01s linear, visibility 0.01s linear, transform 0.01s linear; }
 }
 /* ═══════════════════ EOF session321 (sfs321 টাচ-পথ-নাম-প্রকাশ) ═══════════════════ */
+/* ═══════════════════ session322 (sfs322 ট্যাপ-স্ক্রল-সমন্বয়) ═══════════════════ */
+/* hex-free (var — guard:design-চুক্তি); ① tap-গেটে মার্কি-বিরতি (keynav-গেট-সমান্তরাল —
+   s315-freeze-স্থায়িত্বের পূর্বশর্ত: চলমান-মার্কিত translate-অফসেট অস্থায়ী হবে; গেট-বিলোপে
+   স্বয়ং-পুনঃপ্রবাহ — attribute-গেট, কোনো-JS-আনসেট-নেই) ② ট্যাপ-সম্পৃষ্ট-ফ্রেম-রিং
+   (keynav-focus-ring-সমকক্ষ — টাচ-ব্যবহারকারীর ইঞ্জেজমেন্ট-প্রমাণ; outline-কেবল —
+   layout-neutral; :focus-visible-রিং-এর নরম-সমকক্ষ ৪৬%)। */
+.sfs292-phone[data-sfs321-tap] .sfs292-track {
+  animation-play-state: paused;
+}
+.sfs292-phone[data-sfs321-tap] .sfs292-frame {
+  outline: 3px solid color-mix(in srgb, var(--lf-brand-primary) 46%, transparent);
+  outline-offset: 3px;
+}
+/* ═══════════════════ EOF session322 (sfs322 ট্যাপ-স্ক্রল-সমন্বয়) ═══════════════════ */

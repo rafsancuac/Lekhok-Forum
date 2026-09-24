@@ -96,6 +96,12 @@
        সতেজ-কপিতে বিলোপ; সময়-ইটালিক + সামান্য-নিম্ন-অপাসিটি — সতেজ-সারির-সাথে-পার্থক্য) */
     .hr318-row.hr321-restored { opacity:.92; }
     .hr318-row.hr321-restored .hr318-t { font-style:italic; }
+    /* সেশন ৩২২ (hr322): sum-দ্বি-ক্লিক-হিন্ট (তালিকাযুক্ত-টুলটিপেই — hr319-live-গেট;
+       এক-ক্লিক-নীরব — দ্বি-ক্লিকেই-বিলোপ + টোস্ট; হিন্ট = DOM-যোগ .hr322-hint) */
+    .hr317-tip.hr319-live .hr318-sum { cursor: pointer; }
+    .hr317-tip.hr319-live .hr318-sum:hover { text-decoration: underline dotted rgba(220, 38, 38, 0.5); text-underline-offset: 3px; }
+    .hr322-hint { display: block; margin-top: 4px; padding-top: 3px; border-top: 1px dashed rgba(220, 38, 38, 0.28); font-size: 0.55rem; font-weight: 600; color: rgba(220, 38, 38, 0.78); white-space: nowrap; }
+    .hr322-hint:hover { color: rgba(220, 38, 38, 0.95); }
   </style>
 </head>
 <body>
@@ -699,6 +705,52 @@
   q321b.stored = function () { try { return !!sessionStorage.getItem(HR321_KEY); } catch (e321j) { return false; } };
   q321b.loadable = function () { return typeof sessionStorage !== 'undefined'; };
   window.__hrAria321QA = q321b;
+
+  /* সেশন ৩২২ (hr322): ইতিহাস-স্পষ্ট-নিয়ন্ত্রণ (PLANS session321-নোটের প্রস্তাব-③)
+     • sum-দ্বি-ক্লিকে hist+স্টোর-পরিষ্কার (স্থায়ীকরণ-পরিপূরক; ভুল-ক্লিপবোর্ড-পুনঃব্যবহার-রোধ):
+       hist317-শূন্য + sessionStorage 'hr321-hist'-বিলোপ + ptr320-বিলোপ (s320-স্টেল-
+       পয়েন্টার-পুনঃকপি-রোধ) + tipRender318-এক-উৎস-রিফ্রেশ (তালিকা-বিলোপ + hr319-live-
+       গেট-বন্ধ + restored-শূন্য) + tipHide317-বিলোপ + টোস্ট-প্রমাণ।
+     • গেট: কেবল .hr319-live-টুলটিপেই (pointer-events:auto — hr319-চুক্তি; শূন্য-ইতিহাসের
+       টুলটিপে দ্বি-ক্লিক-অসম্ভব-ই — pointer-events:none); এক-ক্লিক-নীরব (কেবল-দ্বি-ক্লিক —
+       আকস্মিক-বিলোপ-রোধ); document-স্তরের ডেলিগেটেড dblclick (টুলটিপ/সারি-পুনঃনির্মাণ-
+       নিরাপদ — s320-keydown-রীতি); dblclick-এর দুই-ক্লিক sum-এ row-মিল-শূন্য
+       (s319-ক্লিক-পথ-অস্পৃশ্য)।
+     • হিন্ট: tipRender318-পুনঃমোড়ক (s321-মোড়ক-চেইন-পরবর্তী) — তালিকাযুক্তে .hr322-hint
+       ("দ্বি-ক্লিক = ইতিহাস মুছুন" — DOM-API-নির্মাণ textContent — XSS-নিরাপদ)।
+     • QA-হুক __hrAria322QA {cleared, hist(), stored(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q322c = { cleared: 0, err: '' };
+  var trOrig322 = tipRender318;
+  tipRender318 = function (k322r) {
+    trOrig322(k322r);
+    try {
+      if (tip317 && hist317.length) {
+        var h322e = document.createElement('span');
+        h322e.className = 'hr322-hint';
+        h322e.textContent = 'দ্বি-ক্লিক = ইতিহাস মুছুন';
+        tip317.appendChild(h322e);
+      }
+    } catch (e322h) { q322c.err = String((e322h && e322h.message) || e322h); }
+  };
+  document.addEventListener('dblclick', function (e322d) {
+    try {
+      var s322m = e322d.target && e322d.target.closest ? e322d.target.closest('.hr318-sum, .hr322-hint') : null;
+      if (!s322m) return;
+      var t322p = s322m.closest('.hr317-tip');
+      if (!t322p || !t322p.classList.contains('hr319-live')) return; /* তালিকাযুক্ত-টুলটিপেই (hr319-গেট) */
+      if (!hist317.length) return;
+      hist317.length = 0;
+      try { sessionStorage.removeItem(HR321_KEY); } catch (e322i) { q322c.err = String((e322i && e322i.message) || e322i); }
+      ptr320 = ''; /* s320-পয়েন্টার-বিলোপ — স্টেল-পুনঃকপি-রোধ */
+      tipRender318(tipBtn317 ? (tipBtn317.getAttribute('data-copy') || '') : ''); /* এক-উৎস-রিফ্রেশ */
+      tipHide317(); /* বিলোপ-পরবর্তী বন্ধ — পুনঃহোভারে সতেজ-শূন্য-টুলটিপ */
+      q322c.cleared += 1;
+      showToast(true, 'কপি-ইতিহাস মুছে ফেলা হয়েছে');
+    } catch (e322j) { q322c.err = String((e322j && e322j.message) || e322j); }
+  });
+  q322c.hist = function () { return hist317.length; };
+  q322c.stored = function () { try { return !!sessionStorage.getItem(HR321_KEY); } catch (e322k) { return false; } };
+  window.__hrAria322QA = q322c;
 })();
 </script>
 </body>
