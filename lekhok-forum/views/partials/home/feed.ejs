@@ -174,6 +174,12 @@
                 kbdhint-কেন্দ্র-অস্পর্শ); দ্বি-গেট: [data-sfs314-focus] × [data-sfs318-on] —
                 মাউস-ব্যবহারকারীর জন্য চির-অদৃশ্য (kbdhint-রীতি)। %>
             <span class="sfs318-posbadge" aria-hidden="true"></span>
+            <%# সেশন ৩১৯ (sfs319): ব্যাজ-গ্রুপ-নাম-চিপ — অবস্থান-ব্যাজের সমৃদ্ধ-সমকক্ষ (গ্রুপ-আইকন +
+                গ্রুপ-নাম — keynav-মুহূর্তে কোন-গ্রুপ হাইলাইটেড তা নাম-ধরে-প্রমাণ); aria-hidden
+                ডেকোরেটিভ (posbadge-পূর্বাদাহ — accessible-name-অপরিবর্তিত); phone-অ্যাংকরড
+                absolute (badge-বাম-সন্নিবেশ — layout-neutral); দ্বি-গেট: [data-sfs314-focus] ×
+                [data-sfs319-on] — মাউস-ব্যবহারকারীর জন্য চির-অদৃশ্য (kbdhint-রীতি)। %>
+            <span class="sfs319-namechip" aria-hidden="true"></span>
           </a>
           <%# সেশন ৩১৭ (sfs317): keynav aria-live ঘোষণা-অঞ্চল — visually-hidden role=status;
               phone-অ্যাংকরের বাইরে (s306-একক-লিঙ্ক-চুক্তি অটুট — লিঙ্কের accessible-name-অপরিবর্তিত);
@@ -277,6 +283,7 @@
       if (window.__sfs315Unfreeze) window.__sfs315Unfreeze(phone314); /* s315: সংশোধনী-বিলোপ */
       if (window.__sfs317Clear) window.__sfs317Clear(); /* s317: ঘোষণা-বিলোপ */
       if (window.__sfs318Hide) window.__sfs318Hide(); /* s318: ব্যাজ-বিলোপ */
+      if (window.__sfs319Hide) window.__sfs319Hide(); /* s319: নাম-চিপ-বিলোপ */
       q314.focus = -1;
     };
     var apply314 = function (i314) {
@@ -286,6 +293,7 @@
       if (window.__sfs315Freeze) window.__sfs315Freeze(labs314[i314], phone314); /* s315: দৃশ্যমানতা-স্ক্রল-সমন্বয় */
       if (window.__sfs317Announce) window.__sfs317Announce(labs314[i314], i314, labs314.length); /* s317: SR-ঘোষণা */
       if (window.__sfs318Show) window.__sfs318Show(labs314[i314], i314, labs314.length); /* s318: দৃশ্যমান-ব্যাজ */
+      if (window.__sfs319Show) window.__sfs319Show(labs314[i314], i314, labs314.length); /* s319: গ্রুপ-নাম-চিপ */
     };
     if (phone314 && labs314.length === grows314.length && labs314.length > 0) {
       var in314 = true;
@@ -450,6 +458,60 @@
     q318.text = function () { var b318 = document.querySelector('.sfs318-posbadge'); return b318 ? b318.textContent : ''; };
   } catch (e318x) { q318.err = String((e318x && e318x.message) || e318x); }
   window.__sfs318QA = q318;
+})();
+</script>
+<script>
+/* session319 (sfs319): ব্যাজ-সমৃদ্ধকরণ — গ্রুপ-নাম-চিপ (PLANS session318-নোটের প্রস্তাব-②)
+   • sfs318-অবস্থান-ব্যাজের সমৃদ্ধ-সমকক্ষ: keynav-হাইলাইট-মুহূর্তে ব্যাজের বামে গ্রুপ-আইকন +
+     গ্রুপ-নাম-চিপ — কোন-গ্রুপ হাইলাইটেড তা নাম-ধরে-প্রমাণ (n/মোট-অবস্থানের পাশে পরিচয়)।
+   • উৎস-সত্য = হাইলাইট-লেবেল-ই (lab.querySelector('i')-আইকন + textContent-নাম) — কোনো
+     নতুন-স্টেট-ডুপ-নেই; DOM-API-নির্মাণ (createElement+textContent — XSS-নিরাপদ)।
+   • aria-hidden ডেকোরেটিভ (posbadge-পূর্বাদাহ — accessible-name-অপরিবর্তিত);
+     phone-অ্যাংকরড absolute (badge-বাম-সন্নিবেশ — layout-neutral); দ্বি-গেট
+     [data-sfs314-focus] × [data-sfs319-on] — মাউস-ব্যবহারকারীর জন্য চির-অদৃশ্য।
+   • চুক্তি: __sfs319Show(lab, idx, total) / __sfs319Hide() — s314-ইঞ্জিনের guarded-হুক
+     (sfs318-রীতি; apply314-ক্রম = ঘোষণা→ব্যাজ→নাম-চিপ); ইঞ্জিন-অনুপস্থিতে নীরব-নন-ফায়ার।
+   • QA-হুক __sfs319QA {shown, last, chip(), on(), text(), icon(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+(function () {
+  var q319 = { shown: 0, last: '', err: '' };
+  try {
+    var chip319 = document.querySelector('.sfs319-namechip');
+    window.__sfs319Show = function (lab319, i319, n319) {
+      try {
+        if (!chip319 || !lab319) return;
+        if (!(typeof i319 === 'number' && typeof n319 === 'number' && n319 > 0)) return;
+        while (chip319.firstChild) chip319.removeChild(chip319.firstChild);
+        var ic319 = lab319.querySelector('i');
+        var nm319 = String(lab319.textContent || '').replace(/\s+/g, ' ').trim();
+        if (ic319 && ic319.className) {
+          var i319e = document.createElement('i');
+          i319e.className = ic319.className;
+          i319e.setAttribute('aria-hidden', 'true');
+          chip319.appendChild(i319e);
+        }
+        var t319e = document.createElement('span');
+        t319e.className = 'sfs319-namechip-t';
+        t319e.textContent = nm319;
+        chip319.appendChild(t319e);
+        chip319.setAttribute('data-sfs319-on', '1');
+        q319.shown += 1;
+        q319.last = nm319;
+      } catch (e319b) { q319.err = String((e319b && e319b.message) || e319b); }
+    };
+    window.__sfs319Hide = function () {
+      try {
+        if (chip319) {
+          while (chip319.firstChild) chip319.removeChild(chip319.firstChild);
+          chip319.removeAttribute('data-sfs319-on');
+        }
+      } catch (e319c) { q319.err = String((e319c && e319c.message) || e319c); }
+    };
+    q319.chip = function () { return !!document.querySelector('.sfs319-namechip'); };
+    q319.on = function () { var c319 = document.querySelector('.sfs319-namechip'); return !!(c319 && c319.hasAttribute('data-sfs319-on')); };
+    q319.text = function () { var c319 = document.querySelector('.sfs319-namechip'); var t319 = c319 ? c319.querySelector('.sfs319-namechip-t') : null; return t319 ? t319.textContent : ''; };
+    q319.icon = function () { var c319 = document.querySelector('.sfs319-namechip'); var i319b = c319 ? c319.querySelector('i') : null; return i319b ? i319b.className : ''; };
+  } catch (e319x) { q319.err = String((e319x && e319x.message) || e319x); }
+  window.__sfs319QA = q319;
 })();
 </script>
 </section>

@@ -3497,4 +3497,21 @@ Work Log:
 
 Stage Summary:
 - session318 সম্পন্ন: sfs318 অবস্থান-ব্যাজ + hr318 ইতিহাস-তালিকা; ৭৪/৭৪ ×২ + সর্ব-রিগ্রেশন-গ্রিন; ডক-ত্রয় idempotent; পরের-এজেন্ট session319 (Task ID 156) — PLANS session318-নোটের প্রস্তাব-①②③ প্রস্তুত
+---
+Task ID: 156
+Agent: Main cron agent (session319 — cron 403679)
+Task: session319 sfs319 ব্যাজ-গ্রুপ-নাম-চিপ + hr319 সারি-ক্লিক-পুনঃকপি — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- রাউন্ড-আরম্ভ-যাচাই: HEAD=origin=d8cb90d (session318), clean-tree, BEHIND=০; QA বেসলাইন সবুজ (হোম-২০০, কনসোল-শূন্য-ব্যতিক্রম-নথিভুক্ত-ep-reader-ফলব্যাক; sfs317-live + sfs316-kbdhint + sfs315-css + sfs318-posbadge + sfs317QA/sfs318QA-হুক-জীবন্ত + sfs314 pairs=২)
+- প্রোড-স্পট (PLANS session318-প্রস্তাব-①): vercel home-200 + **sfs318-posbadge-মার্কার ×৫-লাইভ** (d8cb90d-ডিপ্লয়-প্রমাণ) + sfs317-live ×৪ + sfs316-kbdhint + sfs314-glab ×৫; প্রোড-অ্যাডমিন = প্রকৃত-অ্যাকাউন্ট-গেট (অপরিবর্তিত)
+- ① sfs319 (feed.ejs): sfs319-namechip (aria-hidden — posbadge-পূর্বাদাহ; badge-বাম-সন্নিবেশ এক-লাইন-জুটি) + গ্রুপ-আইকন+নাম (উৎস-সত্য = হাইলাইট-লেবেল-ই — স্টেট-ডুপ-শূন্য; DOM-API — XSS-নিরাপদ) + দ্বি-গেট [data-sfs314-focus]×[data-sfs319-on] + sfs314-apply/clear-এ guarded-হুক (ঘোষণা→ব্যাজ→চিপ-ক্রম) + ইঞ্জিন + __sfs319QA {shown, last, chip(), on(), text(), icon(), err}
+- ② hr319 (admin/home-reorder.ejs): pointer-events-none-গেট-পুনঃবিবেচনা = শর্তাধীন-গেট (.hr319-live — hist-সত্য-নির্ভর, tipRender318-এক-উৎস-টগল) + সারিতে data-copy + ডেলিগেটেড click → rowRecopy319 → copyAria316-পুনঃব্যবহার (এক-উৎস-কপি-পথ) + দ্বি-mouseout-গার্ড (relatedTarget-চুক্তি; তৈরিকালে-একবার) + hr319-hit-ফ্ল্যাশ (380ms-পোল-প্রয়োগ, 700ms-স্বয়ং-মুছ) + __hrAria319QA {recopies, lastKey, live(), rows(), hit(), err}
+- ③ [Mandatory-স্টাইল] style.css session319-ব্লক হেক্স-শূন্য (brand-tint-glass-পিল + নাম-clamp-ellipsis + দ্বি-গেট + 640px + reduced-motion); admin-লোকাল .hr319-{live,row-hover,hit} (ফাইল-রীতি — is-cur-সহাবস্থান)
+- সুইট: tests/s319-suite.sh ৭৭/৭৭ ×২-ধারাবাহিক (পরিবেশ ×৩ + কাঠামো ×১৮ + SSR ×৬ + sfs319-ই২ই ×১৭ + hr319-ই২ই ×২৩ + মোবাইল ×৫ + নেট-শূন্য ×৪); প্যাচ scripts/s319-patch.py idempotent ×২ (১১-ধাপ — পুনঃরানে সর্ব-SKIP; ধাপ-১০-probe-সংশোধন-ডক-কৃত)
+- রিগ্রেশন: s317 ৬৮/৬৮ + s316 ৫৫/৫৫ + s315 ৭১/৭১ + s314 ৬৭/৬৭ + s313 ৬৩/৬৩ + s312 ৫৫/৫৫ + s307 ৫৫/৫৫ + s311 ৪৩/৪৩ + s306 ৫০/৫০ + guard:design + audit:views সর্ব-গ্রিন
+- গোটচা ×২ ডক-কৃত (PLANS session319): hit-ফ্ল্যাশ × অ্যাসার্ট-উইনডো-প্রতিযোগিতা (ফ্ল্যাশ-অ্যাসার্ট = ক্লিক+৫৫০ms-মুহূর্তে) · সুইট-রান × cwd-নির্ভর require (sql.js — /tmp-থেকে-মিথ্যা-ব্যর্থ; সুইট-রান = রিপো-রুট-cwd)
+
+Stage Summary:
+- session319 সম্পন্ন: sfs319 নাম-চিপ + hr319 সারি-ক্লিক-পুনঃকপি; ৭৭/৭৭ ×২ + সর্ব-রিগ্রেশন-গ্রিন; ডক-ত্রয় idempotent; পরের-এজেন্ট session320 (Task ID 157) — PLANS session319-নোটের প্রস্তাব-①②③ প্রস্তুত
 

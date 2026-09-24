@@ -80,6 +80,14 @@
     .hr318-row .hr318-n { color:#047857; font-weight:700; white-space:nowrap; }
     .hr318-row .hr318-t { margin-left:auto; white-space:nowrap; color:rgba(6,95,70,.72); }
     .hr318-row.is-cur { background:rgba(4,120,87,.09); border-radius:3px; padding:1px 4px; margin:0 -4px; }
+    /* সেশন ৩১৯ (hr319): তালিকায় সারি-ক্লিক-পুনঃকপি — pointer-events-none-গেট-পুনঃবিবেচনা:
+       গেট-মূলনীতি অটুট — নিঃশর্ত-ইন্টারঅ্যাকশন-নয়, কেবল-তালিকাযুক্ত-টুলটিপেই (.hr319-live)
+       pointer-events:auto; সারি-হোভার-টিন্ট + পুনঃকপি-ফ্ল্যাশ (hr319-hit — স্বয়ংক্রিয়-মুছ);
+       is-cur-সহাবস্থান (is-cur-টিন্ট-অটুট; hover/hit-অগ্রাধিকার)। */
+    .hr317-tip.hr319-live { pointer-events:auto; cursor:default; }
+    .hr318-row[data-copy] { cursor:pointer; border-radius:3px; margin:0 -4px; padding-left:4px; padding-right:4px; transition:background .12s; }
+    .hr317-tip.hr319-live .hr318-row[data-copy]:hover { background:rgba(4,120,87,.07); }
+    .hr318-row.hr319-hit { background:rgba(5,150,105,.18) !important; }
   </style>
 </head>
 <body>
@@ -440,6 +448,7 @@
       hist317.forEach(function (e318) {
         var r318 = document.createElement('span');
         r318.className = 'hr318-row' + (e318.key === k318 ? ' is-cur' : '');
+        r318.setAttribute('data-copy', e318.key); /* s319: সারি-ক্লিক-পুনঃকপি-লক্ষ্য */
         var k318e = document.createElement('span'); k318e.className = 'hr318-k'; k318e.textContent = e318.key;
         var n318e = document.createElement('span'); n318e.className = 'hr318-n'; n318e.textContent = bn317a(e318.n) + ' বার';
         var t318e = document.createElement('span'); t318e.className = 'hr318-t'; t318e.textContent = ago317(e318.at);
@@ -448,6 +457,34 @@
       });
       tip317.appendChild(l318);
     }
+    tip317.classList.toggle('hr319-live', hist317.length > 0); /* s319: তালিকাযুক্তে-ই-ইন্টারঅ্যাক্টিভ */
+  };
+  /* সেশন ৩১৯ (hr319): সারি-ক্লিক-পুনঃকপি — তালিকা-সারি = সেই-কী-র পুনঃকপি-লক্ষ্য
+     • copyAria316-পুনঃব্যবহার (clipboard+fallback+টোস্ট+রেকর্ড — এক-উৎস-সত্য, কোনো-কপি-পথ-ডুপ-নেই);
+       রেকর্ড→tipRender318-রিফ্রেশে সারি-পুনঃনির্মাণ-হয় — ফ্ল্যাশ (hr319-hit) রিফ্রেশ-পরবর্তী
+       পুনঃঅনুসন্ধানে প্রয়োগ (380ms-বিলম্ব — async-কপি-সম্পন্নতা-পোল; 700ms-স্বয়ংক্রিয়-মুছ)। */
+  var flash319 = function (k319) {
+    setTimeout(function () {
+      try {
+        if (!tip317) return;
+        var rs319 = tip317.querySelectorAll('.hr318-row[data-copy]');
+        for (var i319 = 0; i319 < rs319.length; i319++) {
+          if (rs319[i319].getAttribute('data-copy') === k319) {
+            rs319[i319].classList.add('hr319-hit');
+            (function (el319) { setTimeout(function () { el319.classList.remove('hr319-hit'); }, 700); })(rs319[i319]);
+            break;
+          }
+        }
+      } catch (e319d) { if (window.__hrAria319QA) window.__hrAria319QA.err = String((e319d && e319d.message) || e319d); }
+    }, 380);
+  };
+  var rowRecopy319 = function (k319a, rowEl319) {
+    try {
+      if (!k319a) return;
+      if (window.__hrAria319QA) { window.__hrAria319QA.recopies += 1; window.__hrAria319QA.lastKey = k319a; }
+      copyAria316(k319a); /* s316-এক-উৎস-পুনঃব্যবহার: ক্লিপবোর্ড + রেকর্ড + টোস্ট */
+      flash319(k319a);
+    } catch (e319e) { if (window.__hrAria319QA) window.__hrAria319QA.err = String((e319e && e319e.message) || e319e); }
   };
   var tipShow317 = function (b317) {
     tipBtn317 = b317;
@@ -456,6 +493,19 @@
       tip317.className = 'hr317-tip';
       tip317.setAttribute('role', 'tooltip');
       document.body.appendChild(tip317);
+      /* s319: টুলটিপ-নিজস্ব-মাউস-জীবনচক্র — ভিতরে-গমনে টিকে-থাকা, বহির্গমনে বিলোপ
+         (তৈরিকালে-একবার-সংযুক্তি — renderInner-পুনঃরেন্ডার-নিরাপদ) */
+      tip317.addEventListener('mouseout', function (e319a) {
+        if (tip317 && e319a.relatedTarget && tip317.contains(e319a.relatedTarget)) return;
+        tipHide317();
+      });
+      /* s319: সারি-ক্লিক-পুনঃকপি — ডেলিগেটেড (সারি-পুনঃনির্মাণ-নিরাপদ) */
+      tip317.addEventListener('click', function (e319b) {
+        var r319b = e319b.target && e319b.target.closest ? e319b.target.closest('.hr318-row[data-copy]') : null;
+        if (!r319b) return;
+        e319b.preventDefault();
+        rowRecopy319(r319b.getAttribute('data-copy') || '', r319b);
+      });
     }
     tipRender318(b317.getAttribute('data-copy') || ''); /* s318: sum+list-দ্বি-স্তর */
     var r317 = b317.getBoundingClientRect();
@@ -479,7 +529,10 @@
   });
   innerEl.addEventListener('mouseout', function (e317e) {
     var b317e = e317e.target && e317e.target.closest ? e317e.target.closest('.hr-aria-copy') : null;
-    if (b317e) tipHide317();
+    if (b317e) {
+      if (tip317 && e317e.relatedTarget && tip317.contains(e317e.relatedTarget)) return; /* s319: বাটন→টুলটিপ-গমনে টিকে-থাকা */
+      tipHide317();
+    }
   });
   innerEl.addEventListener('focusin', function (e317f) {
     var b317f = e317f.target && e317f.target.closest ? e317f.target.closest('.hr-aria-copy') : null;
@@ -501,6 +554,17 @@
     list: function () {
       return Array.prototype.map.call(document.querySelectorAll('.hr317-tip.is-on .hr318-row'), function (r318) { return r318.textContent; });
     },
+    err: ''
+  };
+
+  /* সেশন ৩১৯ QA-হুক — সারি-ক্লিক-পুনঃকপি-প্রমাণ (live/rows/hit = ফাংশনাল-গেটার;
+     recopies/lastKey = হ্যান্ডলার-লেখিত — সারি-শূন্যে-ও-সংজ্ঞায়িত) */
+  window.__hrAria319QA = {
+    recopies: 0,
+    lastKey: '',
+    live: function () { var t319 = document.querySelector('.hr317-tip.is-on'); return !!(t319 && t319.classList.contains('hr319-live')); },
+    rows: function () { return document.querySelectorAll('.hr317-tip.is-on .hr318-row[data-copy]').length; },
+    hit: function () { return document.querySelectorAll('.hr318-row.hr319-hit').length; },
     err: ''
   };
 })();

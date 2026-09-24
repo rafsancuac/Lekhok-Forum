@@ -4458,3 +4458,48 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs318-posbadge { transition: opacity 0.01s linear, visibility 0.01s linear; transform: translateY(0); }
 }
 /* ═══════════════════ EOF session318 (sfs318 keynav-অবস্থান-ব্যাজ) ═══════════════════ */
+/* ═══════════════════ session319 (sfs319 ব্যাজ-গ্রুপ-নাম-চিপ) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); sfs318-posbadge-বাম-সন্নিবেশ
+   (এক-লাইন-জুটি — ব্যাজ right:10px-এর বামে); দ্বি-গেট [data-sfs314-focus] ×
+   [data-sfs319-on] — কেবল keynav-মুহূর্তে দৃশ্যমান (kbdhint-রীতি); নাম max-width
+   ক্ল্যাম্প + ellipsis (দীর্ঘ-গ্রুপ-নামেও ফ্রেম-বহির্ভূত-নিষিদ্ধ)। */
+.sfs319-namechip {
+  position: absolute;
+  right: 68px;
+  bottom: 54px;
+  z-index: 6;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 46%;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lf-brand-primary) 18%, color-mix(in srgb, var(--lf-slate-deeper) 72%, transparent));
+  color: var(--lf-white);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: 1px solid color-mix(in srgb, var(--lf-brand-primary) 46%, transparent);
+  box-shadow: 0 8px 20px -10px rgba(2, 6, 23, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(5px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.sfs319-namechip i { font-size: 0.72rem; opacity: 0.9; }
+.sfs319-namechip-t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sfs292-phone[data-sfs314-focus] .sfs319-namechip[data-sfs319-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+@media (max-width: 640px) {
+  .sfs319-namechip { font-size: 0.6rem; right: 60px; bottom: 48px; padding: 3px 8px; max-width: 52%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs319-namechip { transition: opacity 0.01s linear, visibility 0.01s linear; transform: translateY(0); }
+}
+/* ═══════════════════ EOF session319 (sfs319 ব্যাজ-গ্রুপ-নাম-চিপ) ═══════════════════ */
