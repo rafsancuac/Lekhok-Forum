@@ -758,3 +758,25 @@
 @media (prefers-reduced-motion: reduce) {
   .ep-strip294-pill, .ep-strip294-pill.epk300-warm { transition: none; }
 }
+
+/* ═══ session301 — ক্যালেন্ডার-দিন-সেল উষ্ণ-সংকেত + লোডিং-পোস্টার প্রবেশ (ep301; PLANS session300-প্রস্তাব)
+   চুক্তি: হেক্স-শূন্য টোকেন-শুধু + color-mix-অ্যাকসেন্ট + :not()-সংঘর্ষ-বিচ্ছিন্নতা (is-sel-অস্পৃশ্য)
+   + 640px-সংকোচন + reduced-motion-সম্মান (session300-সুপারসেট) ═══ */
+/* ① উষ্ণ-ক্যালেন্ডার-দিন — প্রিফেচড-সংখ্যার সেল প্রস্তুত-অবস্থা (রিং + টিন্ট; is-sel/is-today-অস্পৃশ্য) */
+.ep-cal-day.epk300-warm:not(.is-sel) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--lf-brand-primary) 8%, transparent);
+}
+/* ② সেল-ট্রানজিশন-সম্প্রসারণ (উষ্ণ-সংকেত-মসৃণ) */
+.ep-cal-day { transition: color .15s ease, background .15s ease, box-shadow .22s ease; }
+/* ③ লোডিং-পোস্টার প্রবেশ-পলিশ (onerror-কোট-ক্ষয়-ফিক্স-পরবর্তী দৃশ্যমানতা — নরম-ফেড) */
+@keyframes epk301PosterIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.ep-load-poster { animation: epk301PosterIn .45s ease-out both; }
+/* ④ 640px-সংকোচন (টাচ-সারফেসে উষ্ণ-সংকেত-শান্ত) */
+@media (max-width: 640px) {
+  .ep-cal-day.epk300-warm:not(.is-sel) { box-shadow: 0 0 0 1px color-mix(in srgb, var(--lf-brand-primary) 35%, transparent); }
+}
+/* ⑤ রিডিউসড-মোশন গার্ড */
+@media (prefers-reduced-motion: reduce) {
+  .ep-cal-day, .ep-load-poster { animation: none; transition: none; }
+}

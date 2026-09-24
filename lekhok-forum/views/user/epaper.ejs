@@ -402,7 +402,8 @@
     has: function (u) { return !!epk300Warmed[u]; },
     last: function () { return ep300Last; },
     links: function () { try { return document.querySelectorAll('link[rel="prefetch"][data-epk300]').length; } catch (e300) { return 0; } },
-    pills: function () { try { return document.querySelectorAll('.ep-strip294-pill').length; } catch (e300) { return 0; } }
+    pills: function () { try { return document.querySelectorAll('.ep-strip294-pill').length; } catch (e300) { return 0; } },
+    cells: function () { try { return document.querySelectorAll('.ep-cal-day.epk300-warm').length; } catch (e301) { return 0; } }
   };
   if (!papers.length || !elList) return;
 
@@ -763,7 +764,7 @@
     // session179 (ইউজার-স্পেক): লোডিং-স্ক্রিনের বাহ্যিক-ড্রাইভ-লিংক বাদ — লোডিং-স্ক্রিনেও বাইরের-লিংক কোথাও নয়;
     // বদলে পোস্টার-প্রিভিউ — ক্যানভাস-রেন্ডারের আগেই পরিচিত-প্রচ্ছদ দেখা যায় (উপলব্ধি-গতি)
     var posterSrc = (p.thumbs && p.thumbs.length) ? String(p.thumbs[0]).replace(/'/g, '%27') : '';
-    var posterHtml = posterSrc ? '<img class="ep-load-poster" src="' + posterSrc + '" alt="" onerror="this.style.display=\'none\"" />' : '';
+    var posterHtml = posterSrc ? '<img class="ep-load-poster" src="' + posterSrc + '" alt="" onerror="this.style.display=\'none\'" />' : '';
     elStage.innerHTML = '<div class="ep-reader-load">' + posterHtml +
       '<i class="fas fa-spinner fa-spin"></i>' +
       '<p>পত্রিকা লোড হচ্ছে…</p><div class="ep-prog"><i style="width:6%"></i></div>' +
@@ -2197,6 +2198,31 @@
       it300.classList[epk300Warmed[u300] ? 'add' : 'remove']('epk300-warm');
     }
   });
+
+  /* session301: ক্যালেন্ডার-দিন-সেল-ইচ্ছা (PLANS session300-প্রস্তাব) — ডেলিগেশন (mouseover+focusin —
+     calRender-পুনঃরেন্ডার-নিরাপদ); শুধু .ep-cal-day.has (সংরক্ষিত-সংখ্যা-আছে দিন — ভবিষ্যৎ/শূন্য-দিন
+     প্রিফেচ-শূন্য); byDate[iso] → ঐ-দিনের প্রথম-পত্রিকা → /epaper?file=<id>; বুট/calJump-প্রিফেচ-নিষিদ্ধ —
+     ইচ্ছা-গেট-ধর্ম অক্ষুণ্ণ (ep299/ep300-ধর্ম); উষ্ণ-মিরর warmed-has-ভিত্তিক (পুনঃ-ইচ্ছায় পুনঃ-প্রতিষ্ঠা) */
+  if (elCalGrid) {
+    var epk301CalFire = function (cell301, reason301) {
+      var iso301 = cell301.getAttribute('data-d');
+      if (!iso301 || !cell301.classList.contains('has')) return;
+      var arr301 = byDate[iso301];
+      var p301 = arr301 && arr301.length ? arr301[0] : null; /* প্রতি-তারিখে-অ্যারে — date-DESC-প্রথম = সর্বশেষ-সংখ্যা (s300-কনভেনশন) */
+      if (!p301 || !p301.id) return;
+      var u301 = epk300Url300(p301.id);
+      epk300Prefetch300(u301, reason301);
+      cell301.classList[epk300Warmed[u301] ? 'add' : 'remove']('epk300-warm');
+    };
+    elCalGrid.addEventListener('mouseover', function (e301) {
+      var c301 = e301.target && e301.target.closest ? e301.target.closest('.ep-cal-day') : null;
+      if (c301) epk301CalFire(c301, 'cal');
+    });
+    elCalGrid.addEventListener('focusin', function (e301) {
+      var c301 = e301.target && e301.target.closest ? e301.target.closest('.ep-cal-day') : null;
+      if (c301) epk301CalFire(c301, 'cal-focus');
+    });
+  }
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>

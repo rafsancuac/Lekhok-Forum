@@ -3511,3 +3511,13 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 }
 /* ═══════════ EOF সেশন ২৯৯ ═══════════ */
 
+/* ═══ session301 (ofx301) — টপবার মোবাইল-ক্লিপ ফিক্স: body+21px-উৎস-নির্মূল (PLANS session294-তদন্ত-প্রস্তাব)
+   রুট: 992-MQ-র .topbar-nav{display:none} ক্যাসকেড-পরবর্তী top-level .topbar-nav{display:inline-flex}
+   পুনঃঘোষণায় (notif-যুগ) বাসি → মোবাইলে লগইন/রেজিস্ট্রেশন-অ্যাঙ্কর ফিরে-আসে → .menu-toggle ২১px ডানে-ছাঁটা
+   (body{overflow-x:clip}-নীরব-ক্লিপ — স্ক্রলবার-শূন্য কিন্তু ট্যাপ-টার্গেট-ক্ষত)। সমাধান: ক্যাসকেড-শেষে
+   element-গঠন-স্পেসিফিকিটি (a.topbar-nav) + MQ-পুনঃপ্রতিষ্ঠা — ডেস্কটপ-অস্পৃশ্য; অথ-লিংক মোবাইল-সাইডবারে
+   .mobile-cta হিসেবে বিদ্যমান (হারানো-ক্ষমতা-শূন্য)। ═══ */
+@media (max-width: 992px) {
+  .topbar-right a.topbar-nav { display: none; }
+  a.topbar-nav { display: none; }
+}

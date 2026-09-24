@@ -17,8 +17,19 @@
     <p><a href="/moderator"><i class="fas fa-arrow-right"></i> মডারেটর প্যানেলে ফিরুন</a></p>
     <h2><i class="fas fa-star star-badge"></i> মাসিক সেরা লেখক নির্বাচন করুন</h2>
     <p style="color:#666;">যে লেখাগুলো "সেরা লেখক" হিসেবে চিহ্নিত থাকবে সেগুলো <code>/best-writer</code> পেইজে দেখা যাবে এবং লেখককে নোটিফিকেশন যাবে।</p>
-    <% articles.forEach(a => { %>
-      <div class="mod-item">
+    <div class="bwf-instant" id="bwfInstant301">
+      <i class="fas fa-filter bwf-instant-ico" aria-hidden="true"></i>
+      <input type="text" id="bwfFilter301" class="bwf-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / লেখক / @ইউজারনেম / #আইডি / অবস্থা" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+      <button type="button" id="bwfClear301" class="bwf-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+      <span class="bwf-count-chip" id="bwfCount301" hidden></span>
+      <span class="bwf-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন · <kbd>↵</kbd> প্রথম-মিল</span>
+    </div>
+    <div class="bwf-zero" id="bwfZero301" data-bwf-empty hidden>
+      <i class="fas fa-star" aria-hidden="true"></i>
+      <span>কোনো লেখা মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+    </div>
+    <% articles.forEach(function (a, bwfI301) { var bwfKw301 = ['#' + a.id, a.title || '', a.full_name || '', a.username || '', a.featured ? 'সেরা লেখক চিহ্নিত featured' : 'সাধারণ'].filter(Boolean).join(' '); %>
+      <div class="mod-item" data-bwf-row301="<%= a.id %>" data-kw="<%= bwfKw301 %>">
         <div>
           <strong><%= a.title %></strong>
           <div style="color:#999; font-size:0.85rem;"><%= a.full_name %> (@<%= a.username %>)</div>
@@ -31,6 +42,105 @@
       </div>
     <% }) %>
   </div>
+  <style>
+/* session301 — সেরা-লেখক তাৎক্ষণিক-ফিল্টার (bwf301 — হেক্স-শূন্য টোকেন-শুধু; re261/lsf298-মিরর) */
+.bwf-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 10px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+.bwf-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+.bwf-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+.bwf-instant-input:hover { border-color: color-mix(in srgb, var(--lf-brandgreen) 25%, transparent); }
+.bwf-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+.bwf-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+.bwf-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+.bwf-instant-clear:active { transform: scale(.96); }
+.bwf-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+.bwf-count-chip[hidden] { display: none; }
+.bwf-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+.bwf-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+.bwf-zero { display: flex; align-items: center; gap: 10px; margin: 10px 0; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+.bwf-zero[hidden] { display: none; }
+.mod-item[data-bwf-row301][hidden] { display: none !important; }
+.mod-item.bwf-flash301 { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .bwf-instant-clear:active { transform: none; } }
+@media (max-width: 640px) { .bwf-kbd-hint { display: none; } .bwf-instant { padding: 9px 11px; } }
+  </style>
+  <script>
+  (function () {
+    'use strict';
+    /* session301 — bwf301 তাৎক্ষণিক-ফিল্টার (lsf298/re261-চুক্তি-মিরর: রানটাইম-ইনডেক্স (per-apply DOM-পুনঃস্ক্যান —
+       re-render/আন্ডু-নিরাপদ) + কাউন্ট-চিপ (বাংলা-অঙ্ক) + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + Enter-firstMatch-
+       ফোকাস/ফ্ল্যাশ + boot-apply-init (session300-শিক্ষা — act=false: প্রশ্ন-খালি → দৃশ্যমান-প্রভাব-শূন্য,
+       total() বুট-সত্য) + __bwf301QA হুক রো-শূন্যে-ও-সংজ্ঞায়িত (পরিবার-চুক্তি)) */
+    var input = document.getElementById('bwfFilter301');
+    var surface = document.getElementById('bwfInstant301');
+    var countChip = document.getElementById('bwfCount301');
+    var clearBtn = document.getElementById('bwfClear301');
+    var zeroBox = document.getElementById('bwfZero301');
+    function bn301(n) { return String(n).replace(/\d/g, function (d301) { return '০১২৩৪৫৬৭৮৯'[d301]; }); }
+    function bwfIndex301() {
+      if (!surface) return [];
+      return Array.prototype.slice.call(surface.parentNode.querySelectorAll('.mod-item[data-bwf-row301]'));
+    }
+    function bwfMatches301() {
+      return bwfIndex301().filter(function (r301) { return !r301.hidden; });
+    }
+    function bwfApply301() {
+      if (!input) return;
+      var q = (input.value || '').trim().toLowerCase();
+      var rows301 = bwfIndex301();
+      var shown = 0;
+      rows301.forEach(function (row301) {
+        var kw = (row301.getAttribute('data-kw') || '').toLowerCase();
+        var hit = !q || kw.indexOf(q) !== -1;
+        row301.hidden = !hit;
+        if (hit) shown++;
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = bn301(shown) + ' / ' + bn301(rows301.length); } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function bwfClear301() {
+      if (!input) return;
+      input.value = '';
+      bwfApply301();
+      input.focus();
+    }
+    if (input) {
+      input.addEventListener('input', bwfApply301);
+      input.addEventListener('keydown', function (e301) {
+        if (e301.key === 'Escape') { e301.stopPropagation(); bwfClear301(); return; }
+        if (e301.key === 'Enter') {
+          var first301 = bwfMatches301()[0];
+          if (first301) {
+            e301.preventDefault();
+            var btn301 = first301.querySelector('button[type="submit"]');
+            if (btn301) { btn301.focus(); }
+            first301.classList.add('bwf-flash301');
+            setTimeout(function () { first301.classList.remove('bwf-flash301'); }, 900);
+          }
+        }
+      });
+      document.addEventListener('keydown', function (e301) {
+        if (e301.key !== 'f' || e301.altKey || e301.ctrlKey || e301.metaKey) { return; }
+        var t301 = e301.target;
+        if (t301 && (t301.tagName === 'INPUT' || t301.tagName === 'TEXTAREA' || t301.tagName === 'SELECT' || t301.isContentEditable)) { return; }
+        e301.preventDefault();
+        input.focus();
+        input.select();
+      });
+      bwfApply301(); /* boot-apply-init — session300-শিক্ষা */
+    }
+    window.__bwf301QA = {
+      surface: function () { return surface ? surface.id : ''; },
+      rows: function () { return bwfIndex301().length; },
+      matches: function () { return bwfMatches301().length; },
+      total: function () { return bwfIndex301().length; },
+      active: function () { return !!(input && (input.value || '').trim()); },
+      firstMatch: function () { var f301 = bwfMatches301()[0]; return f301 ? (f301.getAttribute('data-bwf-row301') || '') : ''; },
+      apply: bwfApply301,
+      clear: bwfClear301
+    };
+  })();
+  </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
 <%- include('../partials/sandbox-preview') %>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
