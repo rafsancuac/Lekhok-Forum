@@ -400,16 +400,128 @@ apply_edit(
     'await siteSync(msgDate, fileId, paperName, thumbId, pageCount)',
     'bot-siteSync-কল-সাইট')
 
+# ═══ 8. প্রোড-সেফটি ফলব্যাক — অ-মাইগ্রেটেড-ডিবিতে sync/archive ভাঙা-রোধ (গ্রেসফুল-গেট) ═══
+# Vercel-ডিপ্লয় ও Turso-মাইগ্রেশন-এর মাঝে-জানালায় page_count-বিহীন ডিবিতেও বট-sync ও
+# পাবলিক archive-API জীবিত থাকবে (প্রধান-প্রবাহ-অটুট চুক্তি — cleaner/route-ইতিহাস-ধর্ম)।
+print('── প্রোড-সেফটি ফলব্যাক (অ-মাইগ্রেটেড-ডিবি গ্রেসফুল-গেট) ──')
+P = APP + '/routes/api-epaper.js'
+apply_edit(
+    P,
+    'sync-আর্কাইভ-আপডেট-ফলব্যাক (session306-সেফটি)',
+    '''        await db.prepare(
+          "UPDATE epaper_files SET paper_name = ?, file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?"
+        ).run(paper, fUrl, pageCount, thumbIdStr, dup.id);''',
+    '''        try {
+            await db.prepare(
+              "UPDATE epaper_files SET paper_name = ?, file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?"
+            ).run(paper, fUrl, pageCount, thumbIdStr, dup.id);
+          } catch (e306pc) {
+            // sync-আর্কাইভ-আপডেট-ফলব্যাক (session306-সেফটি) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+            await db.prepare(
+              "UPDATE epaper_files SET paper_name = ?, file_url = ?, drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?"
+            ).run(paper, fUrl, thumbIdStr, dup.id);
+          }''',
+    'sync-আর্কাইভ-আপডেট-ফলব্যাক (session306-সেফটি)')
+apply_edit(
+    P,
+    'sync-আর্কাইভ-ইনসার্ট-ফলব্যাক (session306-সেফটি)',
+    '''        const r = await db.prepare(
+          "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
+        ).run(d, paper, fUrl, driveId, thumbIdStr, pageCount, src);''',
+    '''        let r;
+        try {
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
+          ).run(d, paper, fUrl, driveId, thumbIdStr, pageCount, src);
+        } catch (e306pc) {
+          // sync-আর্কাইভ-ইনসার্ট-ফলব্যাক (session306-সেফটি) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, source, published) VALUES (?, ?, ?, ?, ?, ?, 1)"
+          ).run(d, paper, fUrl, driveId, thumbIdStr, src);
+        }''',
+    'sync-আর্কাইভ-ইনসার্ট-ফলব্যাক (session306-সেফটি)')
+apply_edit(
+    P,
+    'sync-ফলব্যাক-আপডেট-সেফটি (session306)',
+    'await db.prepare("UPDATE epaper_files SET file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?").run(fUrl, pageCount, thumbIdStr, dup.id);',
+    '''try {
+          await db.prepare("UPDATE epaper_files SET file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?").run(fUrl, pageCount, thumbIdStr, dup.id);
+        } catch (e306pc) {
+          // sync-ফলব্যাক-আপডেট-সেফটি (session306) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+          await db.prepare("UPDATE epaper_files SET file_url = ?, drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?").run(fUrl, thumbIdStr, dup.id);
+        }''',
+    'sync-ফলব্যাক-আপডেট-সেফটি (session306)')
+apply_edit(
+    P,
+    'sync-ফলব্যাক-ইনসার্ট-সেফটি (session306)',
+    '''        const r = await db.prepare(
+          "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, NULL, ?, ?, ?, 1)"
+        ).run(d, paper, fUrl, thumbIdStr, pageCount, src);''',
+    '''        let r;
+        try {
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, NULL, ?, ?, ?, 1)"
+          ).run(d, paper, fUrl, thumbIdStr, pageCount, src);
+        } catch (e306pc) {
+          // sync-ফলব্যাক-ইনসার্ট-সেফটি (session306) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, source, published) VALUES (?, ?, ?, NULL, ?, ?, 1)"
+          ).run(d, paper, fUrl, thumbIdStr, src);
+        }''',
+    'sync-ফলব্যাক-ইনসার্ট-সেফটি (session306)')
+apply_edit(
+    P,
+    'archive-SELECT-ফলব্যাক (session306-সেফটি)',
+    '''    const rows = d
+      ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
+      : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);''',
+    '''    let rows;
+    try {
+      rows = d
+        ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
+        : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);
+    } catch (e306pc) {
+      // archive-SELECT-ফলব্যাক (session306-সেফটি) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি (pageCount:null)
+      rows = d
+        ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
+        : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);
+    }''',
+    'archive-SELECT-ফলব্যাক (session306-সেফটি)')
+P = APP + '/routes/daily.js'
+apply_edit(
+    P,
+    'epaper-SELECT-ফলব্যাক (session306-সেফটি)',
+    '''  let papers = [];
+  try {
+    papers = await db.prepare(
+      "SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT 400"
+    ).all();
+  } catch (e) { papers = []; }''',
+    '''  let papers = [];
+  try {
+    papers = await db.prepare(
+      "SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT 400"
+    ).all();
+  } catch (e306pc) {
+    // epaper-SELECT-ফলব্যাক (session306-সেফটি) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি (pageCount:null)
+    try {
+      papers = await db.prepare(
+        "SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT 400"
+      ).all();
+    } catch (e306pc2) { papers = []; }
+  }''',
+    'epaper-SELECT-ফলব্যাক (session306-সেফটি)')
+
 # ═══ পোস্ট-অ্যাসার্ট ═══
 print('── পোস্ট-অ্যাসার্ট ──')
 CHECKS = [
     (APP + '/db/schema.sql', ['page_count      INTEGER,']),
     (APP + '/db/migrate.js', ["ALTER TABLE epaper_files ADD COLUMN page_count INTEGER"]),
-    (APP + '/routes/api-epaper.js', ['const _pcRaw', 'page_count = COALESCE(?, page_count)',
+    (APP + '/routes/api-epaper.js', ['const _pcRaw', 'e306pc', 'archive-SELECT-ফলব্যাক (session306-সেফটি)', 'page_count = COALESCE(?, page_count)',
                                      'drive_thumb_id, page_count, source, published',
                                      'NULL, ?, ?, ?, 1', 'page_count AS pageCount, source',
                                      'paper, pageCount, mode:']),
-    (APP + '/routes/daily.js', ['page_count AS pageCount, created_at FROM epaper_files']),
+    (APP + '/routes/daily.js', ['page_count AS pageCount, created_at FROM epaper_files', 'epaper-SELECT-ফলব্যাক (session306-সেফটি)']),
     (APP + '/views/user/epaper.ejs', ['pages: p.pageCount || null,', 'class="ep-pages306" data-pages="',
                                       '__epg306QA', 'data-pages="\' + (p.pages || \'\')']),
     (APP + '/public/assets/css/epaper.css', ['.ep-pages306', 'session306 — পৃষ্ঠা-সংখ্যা-ব্যাজ']),

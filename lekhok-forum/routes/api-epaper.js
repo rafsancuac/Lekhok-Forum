@@ -72,14 +72,29 @@ router.post('/sync', async (req, res) => {
         "SELECT id FROM epaper_files WHERE scheduled_date = ? AND drive_file_id = ? ORDER BY id DESC LIMIT 1"
       ).get(d, driveId);
       if (dup && dup.id) {
-        await db.prepare(
-          "UPDATE epaper_files SET paper_name = ?, file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?"
-        ).run(paper, fUrl, pageCount, thumbIdStr, dup.id);
+        try {
+            await db.prepare(
+              "UPDATE epaper_files SET paper_name = ?, file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?"
+            ).run(paper, fUrl, pageCount, thumbIdStr, dup.id);
+          } catch (e306pc) {
+            // sync-আর্কাইভ-আপডেট-ফলব্যাক (session306-সেফটি) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+            await db.prepare(
+              "UPDATE epaper_files SET paper_name = ?, file_url = ?, drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?"
+            ).run(paper, fUrl, thumbIdStr, dup.id);
+          }
         archiveId = dup.id;
       } else {
-        const r = await db.prepare(
-          "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
-        ).run(d, paper, fUrl, driveId, thumbIdStr, pageCount, src);
+        let r;
+        try {
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, ?, ?, ?, ?, 1)"
+          ).run(d, paper, fUrl, driveId, thumbIdStr, pageCount, src);
+        } catch (e306pc) {
+          // sync-আর্কাইভ-ইনসার্ট-ফলব্যাক (session306-সেফটি) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, source, published) VALUES (?, ?, ?, ?, ?, ?, 1)"
+          ).run(d, paper, fUrl, driveId, thumbIdStr, src);
+        }
         archiveId = r.lastInsertRowid || r.insertId || null;
       }
     } else {
@@ -88,12 +103,25 @@ router.post('/sync', async (req, res) => {
         "SELECT id FROM epaper_files WHERE scheduled_date = ? AND paper_name = ? ORDER BY id DESC LIMIT 1"
       ).get(d, paper);
       if (dup && dup.id) {
-        await db.prepare("UPDATE epaper_files SET file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?").run(fUrl, pageCount, thumbIdStr, dup.id);
+        try {
+          await db.prepare("UPDATE epaper_files SET file_url = ?, page_count = COALESCE(?, page_count), drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?").run(fUrl, pageCount, thumbIdStr, dup.id);
+        } catch (e306pc) {
+          // sync-ফলব্যাক-আপডেট-সেফটি (session306) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+          await db.prepare("UPDATE epaper_files SET file_url = ?, drive_thumb_id = COALESCE(?, drive_thumb_id), published = 1 WHERE id = ?").run(fUrl, thumbIdStr, dup.id);
+        }
         archiveId = dup.id;
       } else {
-        const r = await db.prepare(
-          "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, NULL, ?, ?, ?, 1)"
-        ).run(d, paper, fUrl, thumbIdStr, pageCount, src);
+        let r;
+        try {
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, page_count, source, published) VALUES (?, ?, ?, NULL, ?, ?, ?, 1)"
+          ).run(d, paper, fUrl, thumbIdStr, pageCount, src);
+        } catch (e306pc) {
+          // sync-ফলব্যাক-ইনসার্ট-সেফটি (session306) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি
+          r = await db.prepare(
+            "INSERT INTO epaper_files (scheduled_date, paper_name, file_url, drive_file_id, drive_thumb_id, source, published) VALUES (?, ?, ?, NULL, ?, ?, 1)"
+          ).run(d, paper, fUrl, thumbIdStr, src);
+        }
         archiveId = r.lastInsertRowid || r.insertId || null;
       }
     }
@@ -185,9 +213,17 @@ router.get('/archive', async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(String(req.query.limit || '300'), 10) || 300, 1), 1000);
     const d = req.query.date ? cleanDate(req.query.date) : null;
-    const rows = d
-      ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
-      : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);
+    let rows;
+    try {
+      rows = d
+        ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
+        : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);
+    } catch (e306pc) {
+      // archive-SELECT-ফলব্যাক (session306-সেফটি) — page_count-বিহীন অ-মাইগ্রেটেড-ডিবি (pageCount:null)
+      rows = d
+        ? await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 AND scheduled_date = ? ORDER BY id ASC").all(d)
+        : await db.prepare("SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, source, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT ?").all(limit);
+    }
     // session178: স্বল্প-এজ-ক্যাশ — আর্কাইভ-তালিকা ≤৬০s, SWR-৫মি (বট-সিঙ্কের-পরে দ্রুত-দৃশ্যমান)
     res.set('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=300');
     return res.json({ ok: true, count: rows.length, papers: rows });

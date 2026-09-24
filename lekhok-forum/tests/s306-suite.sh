@@ -73,6 +73,9 @@ grep -q "import { PDFDocument } from 'pdf-lib'" "$APP/../epaper-bot/src/index.ts
 grep -q "getPageCount()" "$APP/../epaper-bot/src/index.ts" && ok "bot: getPageCount-নির্ণয়" || bad "bot: getPageCount-অনুপস্থিত"
 grep -q "pageCount: pageCount || undefined," "$APP/../epaper-bot/src/index.ts" && ok "bot: sync-বডি pageCount" || bad "bot: sync-বডি-অনুপস্থিত"
 grep -q "thumbId?: string, pageCount?: number" "$APP/../epaper-bot/src/index.ts" && ok "bot: siteSync-সিগনেচার pageCount" || bad "bot: সিগনেচার-অনুপস্থিত"
+grep -q "archive-SELECT-ফলব্যাক (session306-সেফটি)" "$APP/routes/api-epaper.js" && ok "api-epaper: archive-SELECT ফলব্যাক (অ-মাইগ্রেটেড-ডিবি গ্রেসফুল-গেট)" || bad "api-epaper: archive-ফলব্যাক-অনুপস্থিত"
+[ "$(grep -c "e306pc" "$APP/routes/api-epaper.js")" -ge 4 ] && ok "api-epaper: sync-স্টেটমেন্ট-ফলব্যাক ×৪ (বট-sync অ-মাইগ্রেটেড-ডিবিতেও-জীবিত)" || bad "api-epaper: sync-ফলব্যাক-গণনা=$(grep -c 'e306pc' "$APP/routes/api-epaper.js")"
+grep -q "epaper-SELECT-ফলব্যাক (session306-সেফটি)" "$APP/routes/daily.js" && ok "daily.js: /epaper-SELECT ফলব্যাক" || bad "daily.js: ফলব্যাক-অনুপস্থিত"
 
 echo "── ধাপ-২: ডিবি + SSR/API ──"
 PAGES_COL=$(node -e "
