@@ -144,7 +144,7 @@ ev "document.querySelector('.sfs292-card').scrollIntoView({block:'center'});'v2'
 agent-browser wait 500 >/dev/null 2>&1
 ev "JSON.stringify((function(){var p=document.querySelector('.sfs292-phone');var d=new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true});p.dispatchEvent(d);'c1'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
-C1=$(ev "JSON.stringify((function(){var g=document.querySelector('.sfs292-glabel.sfs314-gfocus');if(!g)return{cls:0};var s=getComputedStyle(g);return {cls:1,bgA:s.backgroundColor.split('/').pop()||'',inset:s.boxShadow.indexOf('inset')!==-1?1:0,pause:getComputedStyle(document.querySelector('.sfs292-track')).animationPlayState}})())")
+BGP=; for _bi in 1 2 3 4 5 6; do BGP=$(ev "JSON.stringify((function(){var g=document.querySelector('.sfs292-glabel.sfs314-gfocus');if(!g)return{cls:0};var s=getComputedStyle(g);return {cls:1,bgA:s.backgroundColor.split('/').pop()||'',inset:s.boxShadow.indexOf('inset')!==-1?1:0,pause:getComputedStyle(document.querySelector('.sfs292-track')).animationPlayState}})())"); case "$(unjj "$BGP")" in *0.14*) break;; esac; sleep 0.6; done; C1="$BGP"
 C1J=$(unjj "$C1")
 if [ "$(jf cls "$C1J")" = "1" ]; then ok "ই২ই: হাইলাইট-পুনঃপ্রয়োগ (গেট-পুনঃপ্রবেশ)"; else bad "ই২ই: পুনঃপ্রয়োগ-ব্যর্থ"; fi
 BGA=$(jf bgA "$C1J")

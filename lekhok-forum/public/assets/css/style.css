@@ -4516,3 +4516,17 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs319-namechip[data-sfs320-off] { transition: opacity 0.01s linear, transform 0.01s linear; }
 }
 /* ═══════════════════ EOF session320 (sfs320 নাম-চিপ সময়-ভিত্তিক-স্বয়ং-বিলোপ) ═══════════════════ */
+/* ═══════════════════ session321 (sfs321 টাচ-পথ-নাম-প্রকাশ) ═══════════════════ */
+.sfs292-phone[data-sfs321-tap] .sfs319-namechip[data-sfs319-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.sfs292-phone[data-sfs321-tap] .sfs319-namechip[data-sfs319-on][data-sfs320-off] {
+  opacity: 0;
+  transform: translateY(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs292-phone[data-sfs321-tap] .sfs319-namechip { transition: opacity 0.01s linear, visibility 0.01s linear, transform 0.01s linear; }
+}
+/* ═══════════════════ EOF session321 (sfs321 টাচ-পথ-নাম-প্রকাশ) ═══════════════════ */

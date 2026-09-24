@@ -567,5 +567,50 @@
   window.__sfs320QA = q320;
 })();
 </script>
+<script>
+/* session321 (sfs321): টাচ-পথ-নাম-প্রকাশ (PLANS session320-নোটের প্রস্তাব-②)
+   • মোবাইল/টাচ-ব্যবহারকারী keynav-বহির্ভূত — **গ্রুপ-লেবেল-ট্যাপেই** নাম-চিপ-এক-প্রদর্শন
+     (phone-অ্যাংকর-ট্যাপ নয় — s306-একক-লিঙ্ক-চুক্তি: phone-নেটিভ-নেভিগেশন-অস্পৃশ্য;
+     glabel সারি-বহির্ভূত — s312-.sfs312-tap-সংঘর্ষ-শূন্য);
+     • glabel = phone-অ্যাংকর-বংশধর (সারি-বহির্ভূত) — ট্যাপে preventDefault (নেভিগেশন-বিলোপ —
+       টাচ-নাম-প্রকাশ-অভিপ্রায়; s312-পূর্বাদাহ: সারি-ট্যাপ-ইন্টারসেপ্ট-রীতি); s320-সময়-বিলোপ-পথ-পুনঃব্যবহার:
+       ট্যাপ → __sfs319Show (s320-মোড়ক → রি-আর্ম) → ms-পরে off-ফেড; keynav-সক্রিয়ে
+       (data-sfs314-focus) ট্যাপ = keynav-সমতুল্য-পুনঃপ্রদর্শন (tap-গেট-অনাবশ্যক); keynav-নিষ্ক্রিয়ে
+       phone[data-sfs321-tap] → tap-CSS-দ্বার (s321-ব্লক) — 4.8s-পরবর্তী tap-গেট-পরিষ্কার।
+   • QA-হুক __sfs321QA {taps, on(), gate(), text(), err} — লেবেল-শূন্যে-ও-সংজ্ঞায়িত। */
+(function () {
+  var q321 = { taps: 0, err: '' };
+  try {
+    var phone321 = document.querySelector('.sfs292-phone');
+    var labs321 = document.querySelectorAll('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[id]');
+    var clearTm321 = null;
+    var tapShow321 = function (lab321) {
+      if (!phone321 || !lab321 || !window.__sfs319Show) return;
+      var i321 = Array.prototype.indexOf.call(labs321, lab321);
+      if (i321 < 0) return;
+      if (!phone321.hasAttribute('data-sfs314-focus')) phone321.setAttribute('data-sfs321-tap', '1');
+      window.__sfs319Show(lab321, i321 + 1, labs321.length);
+      q321.taps += 1;
+      if (clearTm321) clearTimeout(clearTm321);
+      clearTm321 = setTimeout(function () {
+        clearTm321 = null;
+        if (phone321 && !phone321.hasAttribute('data-sfs314-focus')) phone321.removeAttribute('data-sfs321-tap');
+      }, 4800);
+    };
+    Array.prototype.forEach.call(labs321, function (l321c) {
+      l321c.addEventListener('click', function (e321) {
+        try {
+          e321.preventDefault(); /* glabel = phone-অ্যাংকর-বংশধর — নেটিভ-নেভিগেশন-বিলোপ (s312-সারি-ট্যাপ-রীতি; phone-নিজস্ব/সারি-ট্যাপ-নেভিগেশন-অস্পৃশ্য) */
+          tapShow321(l321c);
+        } catch (e321a) { q321.err = String((e321a && e321a.message) || e321a); }
+      });
+    });
+    q321.on = function () { return window.__sfs319QA ? window.__sfs319QA.on() : false; };
+    q321.gate = function () { return !!(phone321 && phone321.hasAttribute('data-sfs321-tap')); };
+    q321.text = function () { return window.__sfs319QA ? window.__sfs319QA.text() : ''; };
+  } catch (e321x) { q321.err = String((e321x && e321x.message) || e321x); }
+  window.__sfs321QA = q321;
+})();
+</script>
 </section>
 

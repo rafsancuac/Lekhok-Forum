@@ -92,6 +92,10 @@
        (is-cur-সহাবস্থান — চলতি-কী-টিন্ট .০৯-এর গাঢ় .১৩ + inset-বাম-বার); সারি-focus/
        role/tabindex-অনুপ্রবেশ-শূন্য — কেবল-ভিজ্যুয়াল-পয়েন্টার (kbd-পথ)। */
     .hr318-row.hr320-ptr { background:rgba(4,120,87,.13); box-shadow:inset 2px 0 0 rgba(5,150,105,.85); border-radius:3px; margin:0 -4px; padding-left:4px; padding-right:4px; }
+    /* সেশন ৩২১ (hr321): স্থায়ীকৃত-ইতিহাস-সারি — restored-চিহ্ন (পুনঃলোডে-আসা-এন্ট্রি —
+       সতেজ-কপিতে বিলোপ; সময়-ইটালিক + সামান্য-নিম্ন-অপাসিটি — সতেজ-সারির-সাথে-পার্থক্য) */
+    .hr318-row.hr321-restored { opacity:.92; }
+    .hr318-row.hr321-restored .hr318-t { font-style:italic; }
   </style>
 </head>
 <body>
@@ -637,6 +641,64 @@
   tipHide317 = function () { ptr320 = ''; tipHideOrig320(); };
   q320.ptr = function () { return ptr320; };
   window.__hrAria320QA = q320;
+
+  /* সেশন ৩২১ (hr321): ইতিহাস-স্থায়ীকরণ (PLANS session320-নোটের প্রস্তাব-③)
+     • sessionStorage 'hr321-hist' — per-key {key, at, n, restored?}-রেজিস্ট্রি (১২-সীমা-অটুট);
+       বুটে লোড (সংবেদনশীল-যাচাই — key:string/at:number/n:number≥১) → hist317-পূর্ব-সজ্জিত;
+       পুনঃলোডে ইতিহাস-টিকে (একই-ট্যাব-সেশন — কুকি-স্বাধীন)।
+     • সংরক্ষণ: __hrAria317Record-পুনঃমোড়ক (s320-মোড়ক-চেইনের পরে — recOrig321→সংরক্ষণ);
+       কপি-কৃত-কী restored-বিলোপ (সতেজ-রেকর্ড); কোটা/serialization-ব্যর্থতায় নীরব-অবনমন।
+     • পুনঃরেন্ডার-হুক: tipRender318-মোড়ক → পুনঃনির্মাণ-পরবর্তী restored-সারি .hr321-restored।
+     • QA-হুক __hrAria321QA {stored(), loadable(), restored, err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var HR321_KEY = 'hr321-hist';
+  var q321b = { restored: 0, err: '' };
+  var save321 = function () {
+    try {
+      sessionStorage.setItem(HR321_KEY, JSON.stringify(hist317.slice(0, 12)));
+    } catch (e321b1) { q321b.err = String((e321b1 && e321b1.message) || e321b1); }
+  };
+  var load321 = function () {
+    try {
+      var raw321 = sessionStorage.getItem(HR321_KEY);
+      if (!raw321) return;
+      var arr321 = JSON.parse(raw321);
+      if (!Array.isArray(arr321)) return;
+      var valid321 = [];
+      for (var i321d = 0; i321d < arr321.length && valid321.length < 12; i321d++) {
+        var e321c = arr321[i321d];
+        if (e321c && typeof e321c.key === 'string' && e321c.key && typeof e321c.at === 'number' && typeof e321c.n === 'number' && e321c.n >= 1) {
+          valid321.push({ key: e321c.key, at: e321c.at, n: e321c.n, restored: true });
+        }
+      }
+      if (valid321.length) { hist317 = valid321; q321b.restored = valid321.length; }
+    } catch (e321b2) { q321b.err = String((e321b2 && e321b2.message) || e321b2); }
+  };
+  load321();
+  var recOrig321 = window.__hrAria317Record;
+  var applyRestored321 = function () {
+    try {
+      if (!tip317) return;
+      var rs321b = tip317.querySelectorAll('.hr318-row[data-copy]');
+      for (var j321 = 0; j321 < rs321b.length; j321++) {
+        var e321h = lastFor317(rs321b[j321].getAttribute('data-copy'));
+        rs321b[j321].classList.toggle('hr321-restored', !!(e321h && e321h.restored));
+      }
+    } catch (e321i) { q321b.err = String((e321i && e321i.message) || e321i); }
+  };
+  window.__hrAria317Record = function (k321d) {
+    recOrig321(k321d); /* s320-চেইন → orig — রেকর্ড+রিফ্রেশ-পুনঃনির্মাণ এখানেই ঘটে */
+    try { var e321e = lastFor317(k321d); if (e321e) e321e.restored = false; } catch (e321f) { q321b.err = String((e321f && e321f.message) || e321f); }
+    save321();
+    applyRestored321(); /* পুনঃনির্মাণ-পরবর্তী চিহ্ন-পুনঃসিঙ্ক (restored-বিলোপ-প্রতিফলন — টাইমিং-গোটচা: রেকর্ড-রিফ্রেশ চিহ্নের আগে ঘটে) */
+  };
+  var trOrig321 = tipRender318;
+  tipRender318 = function (k321g) {
+    trOrig321(k321g);
+    applyRestored321();
+  };
+  q321b.stored = function () { try { return !!sessionStorage.getItem(HR321_KEY); } catch (e321j) { return false; } };
+  q321b.loadable = function () { return typeof sessionStorage !== 'undefined'; };
+  window.__hrAria321QA = q321b;
 })();
 </script>
 </body>
