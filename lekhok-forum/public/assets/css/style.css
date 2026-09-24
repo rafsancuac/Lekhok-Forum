@@ -4682,3 +4682,31 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .epk310-back { transition: none; }
 }
 /* ═══════════ EOF সেশন ৩২৬ (epk326) ═══════════ */
+/* ═══════════════════ session326 (sfs326 ট্যাপ-পথের অবস্থান-ব্যাজ parity) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); s318-posbadge-এর ট্যাপ-পথ OR-গেট:
+   keynav-মূল-রুল ([data-sfs314-focus]) অস্পৃশ্য — কেবল-সংযোজন ([data-sfs321-tap] ×
+   [data-sfs318-on]) — মান-সমতা (opacity/visibility/translate — keynav-দৃশ্য-সমকক্ষ —
+   parity-নীতি); layout-neutral (ব্যাজ-নিজস্ব-absolute-অবস্থান-অস্পৃশ্য — s318-geometry);
+   640px-ভ্যারিয়েন্ট (বর্ডার-টিন্ট ৪২→৩৪% — ক্ষুদ্র-পর্দায় নরম) + reduced-motion (transition-নিরাপত্তা)। */
+/* transition-নিরাপত্তা মূল-রুলেই: ট্যাপ-প্রকাশ = বিনা-transitionে (s318-এর ০.২s-fade
+   tap-গেটে চালু-হলে freeze-জানালায় compositor-চাপ → মার্কি-pause-প্রয়োগ-ল্যাগ →
+   s315-গণিত ~৯px-রেস — সুইট-প্রমাণিত; বিনা-transition = তাৎক্ষণিক-প্রকাশ + রেস-বন্ধ) */
+.sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: none;
+  /* backdrop-filter-বিলোপ: blur-readback = প্রতি-ফ্রেমে-কম্পোজিটর-জট → মার্কি-pause-commit-ল্যাগ
+     → s315-গণিত-রেস (সুইট-প্রমাণিত ~৯px); কঠিন-পিল-প্রতিরূপ (bg ৭৪% অপরিবর্তিত) */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@media (max-width: 640px) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] {
+    border-color: color-mix(in srgb, var(--lf-brand-primary) 34%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] { transition: none; }
+}
+/* ═══════════════════ EOF session326 (sfs326 ট্যাপ-পথের অবস্থান-ব্যাজ parity) ═══════════════════ */

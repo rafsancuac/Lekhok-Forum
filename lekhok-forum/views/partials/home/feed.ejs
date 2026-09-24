@@ -844,5 +844,66 @@
   window.__sfs325QA = q325;
 })();
 </script>
+<script>
+/* session326 (sfs326): ট্যাপ-পথের অবস্থান-ব্যাজ parity (PLANS session325-নোটের প্রস্তাব-③)
+   • s318-posbadge (n/মোট) কেবল keynav-গেটে দৃশ্যমান ([data-sfs314-focus] × [data-sfs318-on]) —
+     টাচ-ব্যবহারকারী নাম-চিপ (s319) দেখে-ও অবস্থান-দেখে-না, অথচ SR-ঘোষণায় (sfs325) অবস্থান-বলে-হয়;
+     sfs326 = ট্যাপ-পথে **একই __sfs318Show-ইঞ্জিন-পুনঃব্যবহার** (নতুন-ব্যাজ-ডুপ-শূন্য — একই-উৎস-
+     সত্য); s325-মোড়ক-চেইন-পরবর্তী __sfs319Show-পুনঃমোড়ক (**৬ষ্ঠ-স্তর** — tap-গেট × keynav-নিষ্ক্রিয়
+     স্বতন্ত্রক — s322/s323/s324/s325-গেট-গণিত-অটুট); অবস্থান-সূত্র = লেবেল-স্বয়ং-নির্ণীত idx
+     (indexOf — s325-চুক্তি: পাস-কৃত-সূচকে-বিশ্বাস-নিষিদ্ধ — s321-এর ১-ভিত্তিক-পাস-অসমতা)।
+   • CSS-গেট-বিস্তার (style.css session326-ব্লক): [data-sfs321-tap] × [data-sfs318-on] = keynav-
+     গেট-রুলের মান-সমতা OR-পথ (গেট-স্পর্শ-নিষিদ্ধ — s318-মূল-রুল-অস্পৃশ্য — কেবল-সংযোজন)।
+   • জীবনচক্র = **৫ম-MO-অবর্জন** (গোটচা: পঞ্চম-সম-attributeFilter-MO = s322-freeze-commit-জানালা
+     বিস্তার → উল্লম্ব-মার্কি-অগ্রগতি-ড্রিফট — সুইট-বিসেক্ট-প্রমাণিত): ব্যাজ-বিলোপ = **__sfs317Clear-
+     মোড়ক-চেইন** (s325-MO-এর gateGone-পথ + keynav-clear314 — উভয়-পথ-এক-উৎস — call-time-পাঠ
+     বলে মোড়ক-ইন্টারসেপ্ট-কার্যকর); keynav-সক্রিয়ে ব্যাজ-মালিকানা-হস্তান্তর (apply314-নিজস্ব-Show —
+     s325-ঘোষণা-হস্তান্তর-রীতি-পুনঃপ্রয়োগ)।
+   • বিলম্বিত-প্রকাশ (setTimeout ১৫০ms): freeze-জানালায় ব্যাজ-কম্পোজিটর-চাপ-শূন্য + জানালায়
+     অবস্থা-পরিবর্তনে (keynav-সক্রিয়/গেট-বিলোপ) নীরব-বাতিল; ১৫০ms = অনুভূতিহীন-বিলম্ব।
+   • QA-হুক __sfs326QA {shown, on(), text(), err} — লেবেল-শূন্যে-ও-সংজ্ঞায়িত (s306b-ধর্ম)। */
+(function () {
+  var q326 = { shown: 0, err: '' };
+  try {
+    var phone326 = document.querySelector('.sfs292-phone');
+    var labs326 = document.querySelectorAll('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[id]');
+    /* tap-পথ-ব্যাজ — __sfs319Show-পুনঃমোড়ক (s320→s322→s323→s324→s325-মোড়ক-চেইন-পরবর্তী) */
+    if (window.__sfs319Show) {
+      var sh326 = window.__sfs319Show;
+      window.__sfs319Show = function (l326, i326b, n326) {
+        sh326(l326, i326b, n326);
+        try {
+          if (phone326 && phone326.hasAttribute('data-sfs321-tap') && !phone326.hasAttribute('data-sfs314-focus') && l326 && window.__sfs318Show) {
+            var nm326 = String(l326.textContent || '').replace(/\s+/g, ' ').trim();
+            if (!nm326) return; /* শূন্য-নামে নীরব (s317/s325-নাম-গেট-প্যারিটি) */
+            var i0326 = labs326.length ? Array.prototype.indexOf.call(labs326, l326) : -1;
+            if (i0326 < 0) return;
+            /* বিলম্বিত-প্রকাশ (setTimeout ১৫০ms): freeze-জানালায় ব্যাজ-চাপ-শূন্য; জানালায়
+               অবস্থা-পরিবর্তনে (keynav-সক্রিয়/গেট-বিলোপ) নীরব-বাতিল */
+            setTimeout(function () {
+              try {
+                if (!phone326 || !phone326.hasAttribute('data-sfs321-tap') || phone326.hasAttribute('data-sfs314-focus')) return;
+                window.__sfs318Show(l326, i0326, labs326.length);
+                q326.shown += 1;
+              } catch (e326c) { q326.err = String((e326c && e326c.message) || e326c); }
+            }, 150);
+          }
+        } catch (e326a) { q326.err = String((e326a && e326a.message) || e326a); }
+      };
+    }
+    /* জীবনচক্র — __sfs317Clear-মোড়ক (৫ম-MO-অবর্জন — call-time-পাঠ-বলে s325-MO/keynav-সর্ব-পথ-ইন্টারসেপ্ট) */
+    if (window.__sfs317Clear) {
+      var cl326 = window.__sfs317Clear;
+      window.__sfs317Clear = function () {
+        cl326();
+        try { if (window.__sfs318Hide) window.__sfs318Hide(); } catch (e326d) { q326.err = String((e326d && e326d.message) || e326d); }
+      };
+    }
+    q326.on = function () { var b326 = document.querySelector('.sfs318-posbadge'); return !!(b326 && b326.hasAttribute('data-sfs318-on') && phone326 && phone326.hasAttribute('data-sfs321-tap') && !phone326.hasAttribute('data-sfs314-focus')); };
+    q326.text = function () { var b326c = document.querySelector('.sfs318-posbadge'); return b326c ? b326c.textContent : ''; };
+  } catch (e326x) { q326.err = String((e326x && e326x.message) || e326x); }
+  window.__sfs326QA = q326;
+})();
+</script>
 </section>
 
