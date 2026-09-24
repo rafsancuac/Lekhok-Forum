@@ -4544,3 +4544,26 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   outline-offset: 3px;
 }
 /* ═══════════════════ EOF session322 (sfs322 ট্যাপ-স্ক্রল-সমন্বয়) ═══════════════════ */
+/* ═══════════════════ session323 (sfs323 ট্যাপ-লেবেল-হাইলাইট parity) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); ① gfocus-রেসিপি-মিরর (১৪%-টিন্ট + inset-রিং
+   ৩৮% — s314-মান-সমতা; geometry-স্পর্শ-নিষিদ্ধ — margin/padding-inline keynav-একচ্ছত্র —
+   s314-চুক্তি; .sfs292-glabel-এর s314-transition-ই মসৃণ-প্রয়োগ); দ্বি-সহাবস্থান
+   (data-sfs323-on × .sfs314-gfocus) = একই-মান — নিরীহ ② tap-ফ্রেম-রিং × keynav-হস্তান্তর:
+   keynav-সক্রিয়ে রিং-গভীরতা ৪৬%→৭০% (focus-ring-মান-সমতা — a11y-রিং-কখনো-হারে-না —
+   দৃশ্যমান-হস্তান্তর-প্রমাণ)। */
+.sfs292-glabel[data-sfs323-on] {
+  background: color-mix(in srgb, var(--lf-brand-primary) 14%, transparent);
+  color: var(--lf-brand-primary);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 38%, transparent);
+  border-radius: var(--lf-radius-chip, 999px);
+}
+.sfs292-phone[data-sfs314-focus][data-sfs321-tap] .sfs292-frame {
+  outline: 3px solid color-mix(in srgb, var(--lf-brand-primary) 70%, transparent);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .sfs292-glabel[data-sfs323-on] {
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--lf-brand-primary) 38%, transparent);
+  }
+}
+/* ═══════════════════ EOF session323 (sfs323 ট্যাপ-লেবেল-হাইলাইট parity) ═══════════════════ */

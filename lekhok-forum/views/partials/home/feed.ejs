@@ -677,5 +677,56 @@
   window.__sfs322QA = q322;
 })();
 </script>
+<script>
+/* session323 (sfs323): ট্যাপ-পথের লেবেল-হাইলাইট parity (PLANS session322-নোটের প্রস্তাব-②)
+   • keynav-পথের .sfs314-gfocus-এর ট্যাপ-সমকক্ষ: ট্যাপ-কৃত গ্রুপ-লেবেলে data-sfs323-on —
+     gfocus-রেসিপি-মিরর (১৪%-টিন্ট + inset-রিং — হেক্স-শূন্য; geometry-স্পর্শ-নিষিদ্ধ —
+     margin/padding-inline keynav-একচ্ছত্র — s314-চুক্তি); s322-মোড়ক-চেইন-পরবর্তী
+     __sfs319Show-পুনঃমোড়কে সেট (tap-গেট × keynav-নিষ্ক্রিয় স্বতন্ত্রক-পুনঃব্যবহার —
+     s322-ফ্রিজ-গণিত-অটুট — শূন্য-নতুন-স্টেট-ডুপ: উৎস-সত্য = ট্যাপ-কৃত-লেবেল-ই)।
+   • জীবনচক্র = সক্রিয়-পথ-অনুসরণ (MutationObserver — s322-MO-সমান্তরাল, দ্বি-MO-নিরাপদ —
+     attributeFilter দ্বি-গেট): হাইলাইট-টিকে কেবল (tap-গেট-উপস্থিত × keynav-নিষ্ক্রিয়);
+     keynav-সক্রিয়ে **হস্তান্তর** (gfocus-কে-পথ — দ্বি-হাইলাইট-বিভ্রান্তি-শূন্য) + গেট-সমাপ্তিে
+     বিলোপ (মার্কি-পুনঃপ্রবাহের সাথে সমকালীন — একই-মাইক্রোটাস্ক-পালা)।
+   • QA-হুক __sfs323QA {set, on(), count(), err} — লেবেল-শূন্যে-ও-সংজ্ঞায়িত (s306b-ধর্ম)। */
+(function () {
+  var q323 = { set: 0, err: '' };
+  try {
+    var phone323 = document.querySelector('.sfs292-phone');
+    var labsQ323 = function () { return document.querySelectorAll('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[id]'); };
+    var clearAll323 = function () {
+      var ls323 = labsQ323();
+      for (var i323 = 0; i323 < ls323.length; i323++) ls323[i323].removeAttribute('data-sfs323-on');
+    };
+    /* tap-পথ-হাইলাইট — __sfs319Show-পুনঃমোড়ক (s320→s322-মোড়ক-চেইন-পরবর্তী) */
+    if (window.__sfs319Show) {
+      var sh323 = window.__sfs319Show;
+      window.__sfs319Show = function (l323, i323b, n323) {
+        sh323(l323, i323b, n323);
+        try {
+          if (phone323 && phone323.hasAttribute('data-sfs321-tap') && !phone323.hasAttribute('data-sfs314-focus') && l323 && l323.id) {
+            clearAll323(); /* এক-সক্রিয়-চুক্তি — পুরাতন-বিলোপ-পূর্বে */
+            l323.setAttribute('data-sfs323-on', '1');
+            q323.set += 1;
+          }
+        } catch (e323a) { q323.err = String((e323a && e323a.message) || e323a); }
+      };
+    }
+    /* জীবনচক্র-পর্যবেক্ষণ — keynav-হস্তান্তর + গেট-সমাপ্তি-বিলোপ */
+    if (phone323 && window.MutationObserver) {
+      var mo323 = new MutationObserver(function () {
+        try {
+          var keep323 = phone323.hasAttribute('data-sfs321-tap') && !phone323.hasAttribute('data-sfs314-focus');
+          if (!keep323) clearAll323();
+        } catch (e323b) { q323.err = String((e323b && e323b.message) || e323b); }
+      });
+      mo323.observe(phone323, { attributes: true, attributeFilter: ['data-sfs321-tap', 'data-sfs314-focus'] });
+    }
+    q323.on = function () { var l323c = document.querySelector('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[data-sfs323-on]'); return !!(l323c && phone323 && phone323.hasAttribute('data-sfs321-tap')); };
+    q323.count = function () { return document.querySelectorAll('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[data-sfs323-on]').length; };
+  } catch (e323x) { q323.err = String((e323x && e323x.message) || e323x); }
+  window.__sfs323QA = q323;
+})();
+</script>
 </section>
 

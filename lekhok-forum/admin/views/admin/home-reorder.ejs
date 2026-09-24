@@ -102,6 +102,10 @@
     .hr317-tip.hr319-live .hr318-sum:hover { text-decoration: underline dotted rgba(220, 38, 38, 0.5); text-underline-offset: 3px; }
     .hr322-hint { display: block; margin-top: 4px; padding-top: 3px; border-top: 1px dashed rgba(220, 38, 38, 0.28); font-size: 0.55rem; font-weight: 600; color: rgba(220, 38, 38, 0.78); white-space: nowrap; }
     .hr322-hint:hover { color: rgba(220, 38, 38, 0.95); }
+    /* সেশন ৩২৩ (hr323): Delete ×২-নিরামড-ভিজ্যুয়াল (sum-লাল-টিন্ট + dotted-আন্ডারলাইন —
+       ধ্বংসাত্মক-প্রস্তুতি-সংকেত; ৩s-স্বয়ং-নিরামড; hint-সহ-উজ্জ্বল) */
+    .hr317-tip.hr323-armed .hr318-sum { color: rgba(220, 38, 38, 0.92); text-decoration: underline dotted rgba(220, 38, 38, 0.55); text-underline-offset: 3px; }
+    .hr317-tip.hr323-armed .hr322-hint { color: rgba(220, 38, 38, 0.95); }
   </style>
 </head>
 <body>
@@ -739,18 +743,69 @@
       var t322p = s322m.closest('.hr317-tip');
       if (!t322p || !t322p.classList.contains('hr319-live')) return; /* তালিকাযুক্ত-টুলটিপেই (hr319-গেট) */
       if (!hist317.length) return;
-      hist317.length = 0;
-      try { sessionStorage.removeItem(HR321_KEY); } catch (e322i) { q322c.err = String((e322i && e322i.message) || e322i); }
-      ptr320 = ''; /* s320-পয়েন্টার-বিলোপ — স্টেল-পুনঃকপি-রোধ */
-      tipRender318(tipBtn317 ? (tipBtn317.getAttribute('data-copy') || '') : ''); /* এক-উৎস-রিফ্রেশ */
-      tipHide317(); /* বিলোপ-পরবর্তী বন্ধ — পুনঃহোভারে সতেজ-শূন্য-টুলটিপ */
-      q322c.cleared += 1;
-      showToast(true, 'কপি-ইতিহাস মুছে ফেলা হয়েছে');
+      clearHist323(); /* s323: এক-উৎস-পরিষ্কার (dblclick + Delete ×২ — উভয়-পথ-একই-গণনা) */
     } catch (e322j) { q322c.err = String((e322j && e322j.message) || e322j); }
   });
   q322c.hist = function () { return hist317.length; };
   q322c.stored = function () { try { return !!sessionStorage.getItem(HR321_KEY); } catch (e322k) { return false; } };
   window.__hrAria322QA = q322c;
+
+  /* সেশন ৩২৩ (hr323): ইতিহাস-কীবোর্ড-পরিষ্কার-সমতা (PLANS session322-নোটের প্রস্তাব-③)
+     • Delete ×২ (Backspace-সমতুল্য) = sum-দ্বি-ক্লিকের কীবোর্ড-সমকক্ষ (স্ক্রিন-রিডার/কীবোর্ড-
+       ব্যবহারকারীর parity — hr322-এর মাউস-দ্বি-ক্লিক-নির্ভরতার সমতুল্য): এক-Delete = নিরামড
+       (৩s-জানালা + টোস্ট-সংকেত + .hr323-armed-ভিজ্যুয়াল) — দ্বি-Delete = clearHist323
+       (এক-উৎস — hr322-dblclick-ও এই-ফাংশনে-ডেলিগেট — কোনো-পরিষ্কার-পথ-ডুপ-নেই);
+       Escape = নিরামড; ৩s-ব্যতীত স্বয়ং-নিরামড।
+     • গেট: কেবল .hr-aria-copy-ফোকাস-প্রেক্ষাপটে (s320-keydown-রীতি — বাটন-বহির্ভূত-কী-
+       অস্পৃশ্য) + hist-শূন্যে নীরব (arm-ও-নয় — hr322-এক-ক্লিক-নীরব-দর্শনের কীবোর্ড-প্রতিরূপ —
+       আকস্মিক-বিলোপ-রোধ)।
+     • clearHist323 = এক-উৎস: hist317-শূন্য + স্টোর-বিলোপ + ptr320-বিলোপ + tipRender318-
+       রিফ্রেশ + tipHide317 + টোস্ট + q322c.cleared (s322-QA-গণনা-চুক্তি-অটুট — উভয়-পথ
+       একই-গণনায়) + q323h.cleared।
+     • QA-হুক __hrAria323QA {armed, cleared, arm(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var armed323 = false;
+  var tm323 = null;
+  var q323h = { armed: 0, cleared: 0, err: '' };
+  var disarm323 = function () {
+    armed323 = false;
+    if (tm323) { clearTimeout(tm323); tm323 = null; }
+    if (tip317) tip317.classList.remove('hr323-armed');
+  };
+  var clearHist323 = function () {
+    try {
+      hist317.length = 0;
+      try { sessionStorage.removeItem(HR321_KEY); } catch (e323a) { q323h.err = String((e323a && e323a.message) || e323a); }
+      ptr320 = ''; /* s320-পয়েন্টার-বিলোপ — স্টেল-পুনঃকপি-রোধ */
+      tipRender318(tipBtn317 ? (tipBtn317.getAttribute('data-copy') || '') : ''); /* এক-উৎস-রিফ্রেশ */
+      tipHide317(); /* বিলোপ-পরবর্তী বন্ধ — পুনঃহোভার/পুনঃফোকাসে সতেজ-শূন্য-টুলটিপ */
+      q322c.cleared += 1; /* s322-QA-গণনা (উভয়-পথ-একই-গণনা — s322-suite-চুক্তি-অটুট) */
+      showToast(true, 'কপি-ইতিহাস মুছে ফেলা হয়েছে');
+    } catch (e323b) { q323h.err = String((e323b && e323b.message) || e323b); }
+  };
+  document.addEventListener('keydown', function (e323c) {
+    try {
+      if (e323c.key === 'Escape') { if (armed323) disarm323(); return; }
+      var b323d = e323c.target && e323c.target.closest ? e323c.target.closest('.hr-aria-copy') : null;
+      if (!b323d) return;
+      if (e323c.key !== 'Delete' && e323c.key !== 'Backspace') return;
+      if (!hist317.length) return;
+      e323c.preventDefault(); /* প্রতিরক্ষামূলক — বাটনে-কোনো-নেটিভ-ডিলিট-নেই */
+      if (!armed323) {
+        armed323 = true;
+        if (tm323) clearTimeout(tm323);
+        tm323 = setTimeout(function () { armed323 = false; tm323 = null; if (tip317) tip317.classList.remove('hr323-armed'); }, 3000);
+        if (tip317) tip317.classList.add('hr323-armed');
+        showToast(true, 'আবার Delete চাপুন — কপি-ইতিহাস মুছে যাবে');
+        q323h.armed += 1;
+      } else {
+        disarm323();
+        clearHist323();
+        q323h.cleared += 1;
+      }
+    } catch (e323e) { q323h.err = String((e323e && e323e.message) || e323e); }
+  });
+  q323h.arm = function () { return armed323; };
+  window.__hrAria323QA = q323h;
 })();
 </script>
 </body>
