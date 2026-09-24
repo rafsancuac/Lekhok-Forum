@@ -4295,3 +4295,31 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   }
 }
 /* ═════════════════════ EOF session313 (s313-land + toast-family) ═════════════════════ */
+/* ═════════════════════ session314 (sfs314 aria-জোড়া + keynav-গ্রুপ-হাইলাইট) ═════════════════════ */
+/* গ্রুপ-রো-র‍্যাপার — layout-neutral (display:contents — মার্জিন-ভিত্তিক ব্লক-প্রবাহ অটুট);
+   ক্লোন-হাফে র‍্যাপার-নেই (sfs314-id-চুক্তি)। aria-জোড়া: glabel[aria-controls] ↔ grows[aria-labelledby]। */
+.sfs314-grows { display: contents; }
+.sfs292-glabel { transition: background-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease; }
+/* কীবোর্ড-roving-হাইলাইট (sfs314-keynav) — geometry-নিরপেক্ষ (margin-inline ≡ padding-inline
+   বাতিল — ফ্লো-প্রস্থ অপরিবর্তিত) + inset-রিং (var(--lf-*) + color-mix — হেক্স-শূন্য) */
+.sfs292-glabel.sfs314-gfocus {
+  background: color-mix(in srgb, var(--lf-brand-primary) 14%, transparent);
+  color: var(--lf-brand-primary);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 38%, transparent);
+  border-radius: var(--lf-radius-chip, 999px);
+  margin-inline: -8px;
+  padding-inline: 8px;
+}
+/* কীবোর্ড-নেভিগেশন-চলাকালে মার্কি-বিরতি — হাইলাইট দৃশ্যমান-স্থিতিশীল */
+.sfs292-phone[data-sfs314-focus] .sfs292-track { animation-play-state: paused; }
+@media (max-width: 640px) {
+  .sfs292-glabel.sfs314-gfocus {
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--lf-brand-primary) 38%, transparent);
+    margin-inline: -6px;
+    padding-inline: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs292-glabel { transition: none; }
+}
+/* ═════════════════════ EOF session314 (sfs314 aria-জোড়া + keynav) ═════════════════════ */

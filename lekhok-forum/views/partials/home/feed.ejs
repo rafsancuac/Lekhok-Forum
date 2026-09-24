@@ -76,12 +76,14 @@
   const sfsPopFirst313 = (sfsIdxPop313 !== -1) && (sfsIdxLatest313 === -1 || sfsIdxPop313 < sfsIdxLatest313);
   const sfsRegLB313 = (k, fb) => (sfsSlide313(k) || {}).title || fb;
   const sfsRegIC313 = (k, fb) => (sfsSlide313(k) || {}).icon || fb;
+  // সেশন ৩১৪ (sfs314): key-সমৃদ্ধ গ্রুপ — aria-জোড়ার (id/aria-controls/aria-labelledby)
+  // স্থিতিশীল-স্লাগ-উৎস ('real-latest'/'real-popular' — রেজিস্ট্রি-কী-সত্য)।
   const sfsGroups313 = sfsPopFirst313 ? [
-    { ic: sfsRegIC313('real-popular', 'fa-fire'), lb: sfsRegLB313('real-popular', 'জনপ্রিয় আলোচনা'), rows: sfsPostsB292 },
-    { ic: sfsRegIC313('real-latest', 'fa-bolt'), lb: sfsRegLB313('real-latest', 'সর্বশেষ লেখা'), rows: sfsPostsA292 }
+    { key: 'real-popular', ic: sfsRegIC313('real-popular', 'fa-fire'), lb: sfsRegLB313('real-popular', 'জনপ্রিয় আলোচনা'), rows: sfsPostsB292 },
+    { key: 'real-latest', ic: sfsRegIC313('real-latest', 'fa-bolt'), lb: sfsRegLB313('real-latest', 'সর্বশেষ লেখা'), rows: sfsPostsA292 }
   ] : [
-    { ic: sfsRegIC313('real-latest', 'fa-bolt'), lb: sfsRegLB313('real-latest', 'সর্বশেষ লেখা'), rows: sfsPostsA292 },
-    { ic: sfsRegIC313('real-popular', 'fa-fire'), lb: sfsRegLB313('real-popular', 'জনপ্রিয় আলোচনা'), rows: sfsPostsB292 }
+    { key: 'real-latest', ic: sfsRegIC313('real-latest', 'fa-bolt'), lb: sfsRegLB313('real-latest', 'সর্বশেষ লেখা'), rows: sfsPostsA292 },
+    { key: 'real-popular', ic: sfsRegIC313('real-popular', 'fa-fire'), lb: sfsRegLB313('real-popular', 'জনপ্রিয় আলোচনা'), rows: sfsPostsB292 }
   ];
 %>
 <section class="section feed-showcase-section reveal" id="user-feed">
@@ -136,7 +138,11 @@
                   <% [false, true].forEach((sfsHalf313) => { %>
                   <span class="sfs292-half"<%- sfsHalf313 ? ' aria-hidden="true"' : '' %>>
                     <% sfsGroups313.forEach((g313) => { %>
-                    <span class="sfs292-glabel"><i class="fas <%= g313.ic %>"></i> <%= g313.lb %></span>
+                    <%# সেশন ৩১৪ (sfs314): aria-জোড়া — দৃশ্যমান-হাফে glabel id+aria-controls ↔
+                        grows id+aria-labelledby; ক্লোন-হাফে id-নিষিদ্ধ (ডুপ-আইডি-বিস্ফোরণ);
+                        s306-একক-লিঙ্ক-চুক্তি অটুট — tabindex/role-অনুপ্রবেশ-নেই। %>
+                    <span class="sfs292-glabel"<%- sfsHalf313 ? '' : ' id="sfs314-glab-' + g313.key + '" aria-controls="sfs314-grows-' + g313.key + '"' %>><i class="fas <%= g313.ic %>"></i> <%= g313.lb %></span>
+                    <%- sfsHalf313 ? '' : '<span class="sfs314-grows" id="sfs314-grows-' + g313.key + '" aria-labelledby="sfs314-glab-' + g313.key + '">' %>
                     <% g313.rows.forEach((p) => { %>
                     <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
                       <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
@@ -145,6 +151,7 @@
                       <span class="sfs292-pacts"><span><i class="fas fa-heart"></i> <%= p.a %></span><span><i class="fas fa-comment"></i> <%= p.c %></span><span><i class="fas fa-<%= p.real ? 'eye' : 'share' %>"></i> <%= p.s %></span></span>
                     </span>
                     <% }) %>
+                    <%- sfsHalf313 ? '' : '</span>' %>
                     <% }) %>
                   </span>
                   <% }) %>
@@ -235,6 +242,64 @@
     q313.glabels = document.querySelectorAll('.sfs292-glabel').length;
   } catch (e313) { q313.err = String((e313 && e313.message) || e313); }
   window.__sfs313QA = q313;
+})();
+</script>
+<script>
+/* session314 (sfs314): গ্রুপ-লেবেল aria-জোড়া + কীবোর্ড-roving-হাইলাইট (PLANS session313-প্রস্তাব-②)
+   • ArrowDown/ArrowUp = দৃশ্যমান-হাফের গ্রুপ-লেবেল roving-হাইলাইট (ওয়ার্প-সহ); Escape = বিলোপ।
+   • IO-গেট (s307-রীতি): সেকশন ভিউপোর্টে থাকলে-ই কেবল অ্যারো-ইন্টারসেপ্ট — বহির্ভূতে নেটিভ-স্ক্রল।
+   • Enter/Tab-অস্পৃশ্য (s306-একক-লিঙ্ক-চুক্তি — ফোন-লিঙ্কের নেটিভ-নেভিগেশন অটুট)।
+   • QA-হুক __sfs314QA {pairs, focus, keys, io, err} — সারি-শূন্যে-ও-সংজ্ঞায়িত (s306b-ধর্ম)। */
+(function () {
+  var q314 = { pairs: 0, focus: -1, keys: 0, io: 0, err: '' };
+  try {
+    var phone314 = document.querySelector('.sfs292-phone');
+    var labs314 = document.querySelectorAll('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[id]');
+    var grows314 = document.querySelectorAll('.sfs314-grows[id]');
+    q314.pairs = grows314.length;
+    var clear314 = function () {
+      Array.prototype.forEach.call(labs314, function (l314) { l314.classList.remove('sfs314-gfocus'); });
+      if (q314.focus !== -1 && phone314) phone314.removeAttribute('data-sfs314-focus');
+      q314.focus = -1;
+    };
+    var apply314 = function (i314) {
+      Array.prototype.forEach.call(labs314, function (l314, k314) { l314.classList.toggle('sfs314-gfocus', k314 === i314); });
+      q314.focus = i314;
+      if (phone314) phone314.setAttribute('data-sfs314-focus', String(labs314[i314].id).replace('sfs314-glab-', ''));
+    };
+    if (phone314 && labs314.length === grows314.length && labs314.length > 0) {
+      var in314 = true;
+      if ('IntersectionObserver' in window) {
+        var card314 = document.querySelector('.sfs292-card');
+        if (card314) {
+          in314 = false;
+          var io314 = new IntersectionObserver(function (es314) {
+            es314.forEach(function (en314) {
+              in314 = en314.isIntersecting;
+              if (!in314) clear314();
+            });
+          }, { threshold: 0.14 });
+          io314.observe(card314);
+          q314.io = 1;
+        }
+      }
+      phone314.addEventListener('keydown', function (e314) {
+        var k314 = e314.key;
+        if (k314 !== 'ArrowDown' && k314 !== 'ArrowUp' && k314 !== 'Escape') return;
+        if (!in314) return;
+        if (k314 === 'Escape') { clear314(); return; }
+        e314.preventDefault();
+        q314.keys += 1;
+        var n314 = labs314.length;
+        var next314 = q314.focus < 0
+          ? (k314 === 'ArrowDown' ? 0 : n314 - 1)
+          : (q314.focus + (k314 === 'ArrowDown' ? 1 : -1) + n314) % n314;
+        apply314(next314);
+      });
+      phone314.addEventListener('blur', clear314);
+    }
+  } catch (e314x) { q314.err = String((e314x && e314x.message) || e314x); }
+  window.__sfs314QA = q314;
 })();
 </script>
 </section>

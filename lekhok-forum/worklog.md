@@ -3405,3 +3405,21 @@ Stage Summary:
 - ফোন-ফিড গ্রুপ-ক্রম এখন অ্যাডমিন-নিয়ন্ত্রিত (home_feed_order-এ real-popular আগে = জনপ্রিয়-প্রথম; রেজিস্ট্রি-চালিত — admin-reorder স্বয়ং-আবিষ্কার); ফোন-ফিড টেমপ্লেট ×২-ডুপ্লিকেট-মার্কআপ থেকে একক-লুপে (~৩০-লাইন হ্রাস, রেন্ডার-অভিন্ন)
 - ড্যাশবোর্ড-অবতরণ: found:0-পথে মৃদু-নোটিশ-টোস্ট + hash-only নেভিগেশনেও পুনঃচালু + প্রতি-চেষ্টায় সতেজ-স্টেট; গ্লোবাল .toast-পরিবারে success/error/lf313-info ভিজ্যুয়াল-স্টেট (বাম-অ্যাকসেন্ট-বার)
 - পরের-এজেন্ট: session314 (Task ID 151); PLANS session313-নোটের প্রস্তাব-ত্রয় দেখুন
+
+---
+
+Task ID: 151
+Agent: Main cron agent (session314 — cron 403679)
+Task: session314 sfs314 গ্রুপ-লেবেল aria-জোড়া + কীবোর্ড-roving-হাইলাইট + s314-cacheflush (getSettingsAll-ক্যাশ-যাচাই-হুক) — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- রাউন্ড-আরম্ভ-যাচাই: HEAD=origin=4a135be (clean-tree, BEHIND=০) + agent-browser-QA বেসলাইন সবুজ (sfs307 real=8/chips=3/io=1; sfs313 popFirst=false/glabels=4; sfs312 wired=16; s312Land হ্যাশ-বিহীন no-op; মোবাইল-390 hScroll-শূন্য; কনসোল-শূন্য)
+- PLANS session313-নোটের প্রস্তাব-②+③ গ্রহণ; s314-patch.py (idempotent ×N — ৭-ধাপ, স্পষ্ট-probe-চুক্তি; পুনঃরানে সর্ব-SKIP) — feed.ejs: sfsGroups313 key-সমৃদ্ধ + aria-জোড়া দ্বি-দিক (glabel id+aria-controls ↔ grows id+aria-labelledby — দৃশ্যমান-হাফে-কেবল) + keynav-ইঞ্জিন (ArrowDown/ArrowUp ওয়ার্প + Escape/blur-বিলোপ + IO-গেট + Enter/Tab-অস্পৃশ্য + জোড়া-অখণ্ডতা-গার্ড) + __sfs314QA; db.js: invalidateSettingsCache() + settingsCacheState() পাবলিক-হুক + setSetting-একক-উৎস + ক্রস-ইনস্ট্যান্স ≤10s বাউন্ড ডক; style.css session314-ব্লক হেক্স-শূন্য (display:contents র‍্যাপার + geometry-নিরপেক্ষ হাইলাইট color-mix + মার্কি-বিরতি-গেট + 640px + reduced-motion)
+- নতুন tests/s314-suite.sh — ৬৭/৬৭ ×২-ধারাবাহিক (কাঠামো ×২০ + SSR ×৮ + keynav-ই২ই ×১৮ + মোবাইল ×৩ + cacheflush-ইউনিট ×৭ সার্ভার-বন্ধ + নেট-শূন্য ×৪)
+- রিগ্রেশন: s313 ৬৩/৬৩ + s312 ৫৫/৫৫ + s307 ৫৫/৫৫ + s311 ৪৩/৪৩ (চেইন-রানে ৩৯/৪১ = নথিভুক্ত ব্রাউজার-স্টেল-ক্যাসকেড; একক-রানে সর্ব-সবুজ ×২) + s306 ৫০/৫০ + guard:design + audit:views সর্ব-গ্রিন
+- ডক-ত্রয়: PROJECT §৩১৪ + PLANS session314-নোট + এ-ওয়ার্কলগ Task 151 (s314-docs.py idempotent ×২)
+
+Stage Summary:
+- ফোন-ফিড গ্রুপ-লেবেল এখন aria-জোড়া-সম্পন্ন (glabel↔grows দ্বি-দিক; ক্লোন-হাফে id-শূন্য) + কীবোর্ড-ইউজারের roving-হাইলাইট (অ্যারো-চালিত, ওয়ার্প-সহ; ভিউপোর্ট-গেটেড; নেটিভ-নেভিগেশন-অটুট)
+- সেটিংস-ক্যাশ যাচাইযোগ্য (settingsCacheState) + নিয়ন্ত্রণযোগ্য (invalidateSettingsCache); ≤10s ক্রস-ইনস্ট্যান্স-বাউন্ড নথিভুক্ত; হোম-অর্ডার-পথ সর্বদা-ফ্রেশ-প্রমাণিত
+- পরের-এজেন্ট: session315 (Task ID 152); PLANS session314-নোটের প্রস্তাব-ত্রয় দেখুন

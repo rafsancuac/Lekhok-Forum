@@ -3131,8 +3131,24 @@ async function getSettingsAll() {
   return map;
 }
 
+// সেশন ৩১৪ (s314-cacheflush): ক্যাশ-যাচাই/অপারেশন হুক — PLANS session313-প্রস্তাব-③।
+// ক্রস-ইনস্ট্যান্স স্টেল-বাউন্ড = SETTINGS_CACHE_MS (≤১০সে): প্রসেস-A-র setSetting
+// প্রসেস-B-র (সার্ভারলেস-সম-রানটাইমের অন্য-ইনস্ট্যান্স) ক্যাশ ইনভ্যালিডেট করতে পারে না
+// (in-process ক্যাশ) — গৃহীত-বাউন্ড; সাধারণ-পাঠের হট-পাথ কোয়েরি-মুক্ত থাকে।
+// হোম-অর্ডার-পথ নিরাপদ: pages.js db.getSetting = সরাসরি-কোয়েরি (ক্যাশ-বহির্ভূত, সর্বদা-ফ্রেশ)।
+function invalidateSettingsCache() {
+  _settingsCache = null;
+  _settingsCacheAt = 0;
+}
+function settingsCacheState() {
+  return {
+    cached: _settingsCache !== null,
+    ageMs: _settingsCache ? (Date.now() - _settingsCacheAt) : -1,
+    ttlMs: SETTINGS_CACHE_MS
+  };
+}
 function setSetting(key, value) {
-  _settingsCache = null;  // invalidate read cache — next read re-queries
+  invalidateSettingsCache();  // invalidate read cache — next read re-queries (s314: একক-উৎস)
   if (backend.type === 'sqljs') {
     backend.prepare(
       'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP'
@@ -3408,6 +3424,8 @@ module.exports = {
   exec,
   getSetting,
   getSettingsAll,
+  invalidateSettingsCache,
+  settingsCacheState,
   setSetting,
   saveDb,
   flushDb,
