@@ -87,10 +87,28 @@
 .complaint-card[data-mc-row][hidden] { display: none !important; }
 @media (max-width: 640px) { .mc254-field { flex-basis: 100%; } .mc254-input { padding-right: 13px; } .mc254-kbd { display: none; } }
 @media (prefers-reduced-motion: reduce) { .mc254-input, .mc254-kbd { transition: none; } .mc254-clear:active { transform: none; } }
+/* session305 — checked-pinned সারি-অ্যাফোর্ডেন্স (cf305; হেক্স-শূন্য টোকেন-শুধু; pr303-মিরর):
+   চেক-করা bulk_ids-সারি = ফিল্টারে-ও-দৃশ্যমান (hit=pinned||match) → পিন-অবস্থার দৃশ্যমান-সংকেত
+   (soft brandgreen প্রান্ত+টিন্ট+বিষয়-গাঢ় — :has()-গেটেড, অসমর্থিত-ব্রাউজারে-নীরব)
+   + Enter-firstMatch ফ্ল্যাশ + চেকবক্স focus-visible রিং + মসৃণ-ট্রানজিশন */
+@supports selector(:has(*)) {
+  .complaint-card[data-mc-row]:has(input[name="bulk_ids"]:checked) { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); background: color-mix(in srgb, var(--lf-brandgreen) 6%, transparent); }
+  .complaint-card[data-mc-row]:has(input[name="bulk_ids"]:checked) > div > strong { color: var(--lf-brandgreen-deep); }
+}
+.complaint-card[data-mc-row] { transition: background .15s ease, box-shadow .15s ease; }
+.complaint-card[data-mc-row].mc-flash305 { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); outline-offset: 2px; }
+.complaint-card[data-mc-row] input[name="bulk_ids"]:focus-visible { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 60%, transparent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .complaint-card[data-mc-row] { transition: none; } .complaint-card[data-mc-row].mc-flash305 { outline-color: transparent; } }
+@media (max-width: 640px) { .complaint-card[data-mc-row]:has(input[name="bulk_ids"]:checked) { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); } }
 </style>
 
 <script>
-  /* ── session254: তাৎক্ষণিক-ফিল্টার (mr253-চুক্তি-মিরর — field-গার্ড keydown; Escape-ক্লিয়ার+ব্লার; __mcQA হুক) ── */
+  /* ── session254: তাৎক্ষণিক-ফিল্টার (mr253-চুক্তি-মিরর — field-গার্ড keydown; Escape-ক্লিয়ার+ব্লার; __mcQA হুক) ──
+     session305 (cf305) — **checked-pinned চুক্তি পোর্ট** (pr303-মিরর): hit = pinned || !v || kw-match —
+     চেক-করা bulk_ids-সারি ফিল্টারে-ও-দৃশ্যমান → bulk-delete কখনো অদৃশ্য-সারি-স্পর্শ-নয়;
+     sidebar initBulkBar-এর target-level sync আগে → document-level change-ডেলিগেশনে apply পরে (বাবল-ক্রম);
+     boot-apply-init + Enter-firstMatch (অ্যাঙ্কর = bulk-checkbox — স্ট্যাটাস-আপডেট/ডিলিট-বাটন-ফোকাস-বিপজ্জনক);
+     __mcQA হুক-বর্ধিত (pinned-সহ — legacy total/count/apply/clear-অক্ষুণ্ণ); কাউন্ট-চিপ ASCII (mc254-চুক্তি) */
   (function () {
     'use strict';
     var input = document.getElementById('mc254-filter');
@@ -99,27 +117,52 @@
     var cards = Array.prototype.slice.call(document.querySelectorAll('[data-mc-row]'));
     var emptyBox = document.querySelector('[data-mc-empty]');
     var total = cards.length;
+    function mcPinned254() {
+      return cards.filter(function (c) {
+        var cb = c.querySelector('input[name="bulk_ids"]');
+        return !!(cb && cb.checked);
+      }).length;
+    }
     function apply254() {
+      if (!input) return;
       var v = (input.value || '').trim().toLowerCase();
       var vis = 0;
       cards.forEach(function (c) {
-        var hit = !v || (c.getAttribute('data-kw') || '').indexOf(v) >= 0;
+        var cb = c.querySelector('input[name="bulk_ids"]');
+        var pinned = !!(cb && cb.checked);
+        var hit = pinned || !v || (c.getAttribute('data-kw') || '').indexOf(v) >= 0;
         c.hidden = !hit;
         if (hit) vis++;
       });
-      count.textContent = String(vis);
-      count.classList.toggle('mc254-dim', !!v && vis !== total);
+      if (count) { count.textContent = String(vis); count.classList.toggle('mc254-dim', !!v && vis !== total); }
       if (emptyBox) emptyBox.hidden = vis !== 0;
       if (clearBtn) clearBtn.hidden = !v;
     }
-    function clear254() { input.value = ''; apply254(); }
+    function clear254() { if (!input) return; input.value = ''; apply254(); }
     if (input) {
       input.addEventListener('input', apply254);
       input.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { clear254(); input.blur(); }
+        if (e.key === 'Escape') { clear254(); input.blur(); return; }
+        if (e.key === 'Enter') {
+          var first = cards.filter(function (c) { return !c.hidden; })[0];
+          if (first) {
+            e.preventDefault();
+            var cb = first.querySelector('input[name="bulk_ids"]');
+            if (cb) { cb.focus(); }
+            first.classList.add('mc-flash305');
+            setTimeout(function () { first.classList.remove('mc-flash305'); }, 900);
+          }
+        }
       });
     }
     if (clearBtn) clearBtn.addEventListener('click', function () { clear254(); input.focus(); });
+    /* checked-pinned ধর্ম — চেক-পরিবর্তনে পুনঃ-apply (bulk_ids-সরাসরি-ক্লিক + bulk-all-উভয়-পথ;
+       sidebar-এর target-level sync আগে চলে (বাবল-ক্রম) → এ-apply সর্বদা-সর্বশেষ-অবস্থায়) */
+    document.addEventListener('change', function (e) {
+      if (!e.target || !e.target.matches) return;
+      if (e.target.matches('input[name="bulk_ids"],[data-bulk-all]')) apply254();
+    });
+    apply254(); /* boot-apply-init — session300-শিক্ষা */
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'f' || e.ctrlKey || e.metaKey || e.altKey) return;
       var t = e.target && e.target.tagName;
@@ -127,9 +170,11 @@
       e.preventDefault();
       input.focus();
     });
-    /* session254 QA-হুক (__mcQA — সারফেস-নেমস্পেস-রীতি; ক্রমের-শেষ) */
+    /* session254/305 QA-হুক (__mcQA — পিন-সচেতন বর্ধিত) */
     window.__mcQA = {
+      surface: function () { return 'complaints'; },
       total: function () { return total; },
+      pinned: mcPinned254,
       count: function () { return document.querySelectorAll('[data-mc-row]:not([hidden])').length; },
       apply: apply254,
       clear: function () { clear254(); }

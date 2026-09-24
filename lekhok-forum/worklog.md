@@ -3281,3 +3281,21 @@ Stage Summary:
 - ঝুঁকি-নির্মূল: checked-pinned চুক্তি এখন ৬-সারফেস-পরিবারে (pr258/dqf302/re261/lsf298 + **no259/ev260/mm255**)
 - প্যাচ/সুইট: scripts/s304-patch.py (idempotent ×N) + tests/s304-suite.sh (৭৪-চেক)
 - ডক: PROJECT §৩০৪ + PLANS session304 (গোটচা ×৩) + worklog Task 144; পরের-এজেন্ট session305 (Task ID 145)
+---
+Task ID: 145
+Agent: Cron agent loop (session305 — Job 403679, trace 202609241454)
+Task: cf305 complaints checked-pinned পোর্ট (পরিবার-সম্পূর্ণতা) + [Mandatory] স্টাইল/ফিচার + সর্ব-রিগ্রেশন + ডক-ত্রয়
+
+Work Log:
+- worklog/PLANS/PROJECT পড়ে অবস্থা-যাচাই: HEAD=origin=91c6518 (session304-pushed, clean-tree, BEHIND=০)
+- **কভারেজ-ম্যাট্রিক্স-অডিট** (bulk × QA × pinned সর্ব-moderator-ভিউ): complaints (mc254) = শেষ-বাকি pre-contract bulk+filter-সারফেস; grep-অঙ্ক-অন্ধতা-গোটচা ধরা-পড়ে (daily-form প্রকৃতে dqf302-সজ্জিত — session302)
+- scripts/s305-patch.py: cf305 পোর্ট (hit=pinned||match + mcPinned254 + change-ডেলিগেশন + boot-apply + Enter-চেকবক্স-অ্যাঙ্কর — স্ট্যাটাস-আপডেট-বাটন-নিষিদ্ধ + ফ্ল্যাশ ৯০০ms + __mcQA-বর্ধিত + apply/input-গার্ড) + session305 CSS (pinned-অ্যাফোর্ডেন্স + focus-visible-রিং + ট্রানজিশন + reduced-motion + 640px — হেক্স-শূন্য)
+- tests/s305-suite.sh **৪২/৪২ ×৩-ধারাবাহিক** — নতুন-সিড-পথ: প্রোডাকশন dmca-report POST (ডুপ-গার্ড-সহনশীল); পরিষ্কারক bulk-delete→ট্র্যাহ→purge নেট-শূন্য ×৩-অ্যাসার্ট
+- রিগ্রেশন: s254 ৩৬/৩৬ + s304 ৭৪/৭৪ + guard:design + audit:views (১২২ ejs) — সর্ব-গ্রিন
+- প্রোড-স্পট: home-200 + epaper-200; s304/cf305-হুক-প্রোড-যাচাই অসম্পূর্ণ (prod-ক্রেড-অনুপস্থি — গেটেড, PLANS-নোট)
+- ডক-ত্রয়: PROJECT §৩০৫ + PLANS session305-নোট + repo worklog Task 145 (s305-docs.py idempotent ×২)
+
+Stage Summary:
+- **checked-pinned চুক্তি-সর্বসার্থকতা:** সর্ব-bulk+filter-সারফেস কভারড (৭-সারফেস) — অদৃশ্য-সারি-বাল্ক-ঝুঁকি কাঠামোগতভাবে শূন্য
+- প্যাচ/সুইট: scripts/s305-patch.py + tests/s305-suite.sh (৪২-চেক); নতুন-চুক্তি ×২ (grep-অঙ্ক-অন্ধতা + ম্যাট্রিক্স-অডিট) PLANS-এ
+- ডক: PROJECT §৩০৫ + PLANS session305 + worklog Task 145; পরের-এজেন্ট session306 (Task ID 146)
