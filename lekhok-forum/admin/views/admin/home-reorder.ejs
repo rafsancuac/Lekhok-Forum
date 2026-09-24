@@ -132,6 +132,19 @@
     .hr326-fmt:hover { border-style: solid; background: rgba(4, 120, 87, 0.16); border-color: rgba(4, 120, 87, 0.5); }
     .hr326-fmt:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
     .hr326-fmt.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
+    /* সেশন ৩২৭ (hr327): রপ্তাই-পূর্বরূপ-প্রিভিউ (hr324-বার-পরিবার — .hr324-btn-উত্তরাধিকার;
+       স্বতন্ত্র-শ্রেণি .hr327-pv — s324-.hr324-btn-গণনা-চুক্তি-অটুট; dotted-বর্ডার —
+       hr326-dashed-পার্থক্য; .hr327-pre = বার-পূর্বে ঝলক-ব্লক — DOM-API/textContent-কেবল
+       (XSS-নিরাপদ); টগল in-memory — পুনঃরেন্ডারে বন্ধ; rgba-only) */
+    .hr327-pv { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font: inherit; font-size: 0.55rem; font-weight: 600; color: rgba(6, 95, 70, 0.8); background: rgba(4, 120, 87, 0.08); border: 1px dotted rgba(4, 120, 87, 0.4); border-radius: 5px; padding: 3px 7px; cursor: pointer; white-space: nowrap; transition: background 0.12s ease, border-color 0.12s ease; }
+    .hr327-pv:hover { border-style: solid; background: rgba(4, 120, 87, 0.16); border-color: rgba(4, 120, 87, 0.55); }
+    .hr327-pv:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
+    .hr327-pv[aria-expanded="true"] { background: rgba(5, 150, 105, 0.14); border-color: rgba(5, 150, 105, 0.7); color: rgba(6, 95, 70, 1); }
+    .hr327-pv.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
+    .hr327-pre { display: block; margin-top: 5px; padding: 5px 7px; background: rgba(4, 120, 87, 0.05); border: 1px dashed rgba(6, 95, 70, 0.28); border-radius: 5px; max-height: 132px; overflow: auto; white-space: pre-wrap; word-break: break-word; font-size: 0.55rem; line-height: 1.5; color: rgba(6, 95, 70, 0.92); }
+    .hr327-pre .hr327-meta { display: block; font-weight: 700; color: rgba(4, 120, 87, 0.95); margin-bottom: 3px; padding-bottom: 3px; border-bottom: 1px dotted rgba(6, 95, 70, 0.22); white-space: normal; }
+    .hr327-pre .hr327-text { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.54rem; }
+    @media (prefers-reduced-motion: reduce) { .hr327-pv { transition: none; } }
   </style>
 </head>
 <body>
@@ -1086,6 +1099,111 @@
   q326h.mode = function () { return mode326; };
   q326h.strip = function () { return hist317.length ? strip324() : ''; };
   window.__hrAria326QA = q326h;
+  /* সেশন ৩২৭ (hr327): রপ্তাই-পূর্বরূপ-প্রিভিউ (PLANS session326-নোটের প্রস্তাব-②)
+     • স্ট্রিপ-বিষয়বস্তু টুলটিপেই ঝলক: .hr327-pv বাটন (hr324-বার-৪র্থ-বাটন — স্বতন্ত্র-শ্রেণি —
+       s324-.hr324-btn-গণনা-চুক্তি-অটুট; dotted-বর্ডার — hr326-dashed-পার্থক্য) — টগল =
+       .hr327-pre-ব্লক (বার-পূর্বে insertBefore — তালিকা↔বার-মাঝে) — **সঠিক strip324() পাঠ
+       (WYSIWYG — hr326-বিন্যাস-মোড-সম্মত — var-ডাইনামিক-রিড-এক-উৎস)** + .hr327-meta
+       (n লাইন · m অক্ষর — বাংলা-অঙ্ক bn317a; বিন্যাস-লেবেল)।
+     • DOM-API-নির্মাণ (textContent-কেবল — XSS-নিরাপদ); টগল-অবস্থা in-memory (পুনঃরেন্ডারে
+       বন্ধ — tipRender318-পুনঃনির্মাণ-চুক্তি); শূন্য-ইতিহাসে নীরব (hr323-দর্শন)।
+     • F-টগল-সমন্বয়: cycleFmt326-মোড়ক — মোড-পরিবর্তনে খোলা-প্রিভিউ সমকালীন-রিফ্রেশ
+       (এক-উৎস strip324-পুনঃপাঠ) + P-হিন্ট-সংরক্ষণ (cycleFmt326-র kbd-পুনঃলেখনে P-হারানো-বিরোধ)।
+     • কীবোর্ড-parity: P-শর্টকাট (s320/s324-keydown-রীতি — .hr-aria-copy-ফোকাস-প্রেক্ষাপট ×
+       মডিফায়ার-বর্জন × শূন্য-ইতিহাসে নীরব)।
+     • QA-হুক __hrAria327QA {opens, closes, last, preview(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q327h = { opens: 0, closes: 0, last: '', err: '' };
+  var pvOpen327 = false;
+  var meta327 = function (s327m) {
+    var st327 = String(s327m || '');
+    return bn317a(st327.split('\n').length) + ' লাইন · ' + bn317a(st327.replace(/\n/g, '').length) + ' অক্ষর';
+  };
+  var renderPv327 = function () {
+    var bar327 = tip317 ? tip317.querySelector('.hr324-bar') : null;
+    var pre327 = tip317 ? tip317.querySelector('.hr327-pre') : null;
+    if (!bar327) return null;
+    var txt327 = strip324();
+    if (!pre327) {
+      pre327 = document.createElement('div');
+      pre327.className = 'hr327-pre';
+      var mt327 = document.createElement('span');
+      mt327.className = 'hr327-meta';
+      pre327.appendChild(mt327);
+      var tx327 = document.createElement('span');
+      tx327.className = 'hr327-text';
+      pre327.appendChild(tx327);
+      bar327.parentNode.insertBefore(pre327, bar327);
+    }
+    var mt327b = pre327.querySelector('.hr327-meta');
+    var tx327b = pre327.querySelector('.hr327-text');
+    if (mt327b) mt327b.textContent = 'পূর্বরূপ — ' + meta327(txt327) + ' (বিন্যাস: ' + (mode326 === 'key' ? 'কেবল-কী' : 'সমৃদ্ধ') + ')';
+    if (tx327b) tx327b.textContent = txt327;
+    return txt327;
+  };
+  var togglePv327 = function (btn327) {
+    try {
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
+      var pre327x = tip317 ? tip317.querySelector('.hr327-pre') : null;
+      if (pre327x) {
+        pre327x.remove();
+        pvOpen327 = false;
+        q327h.closes += 1; q327h.last = 'closed';
+      } else {
+        var t327 = renderPv327();
+        pvOpen327 = true;
+        if (t327 !== null) { q327h.opens += 1; q327h.last = String(t327); }
+        flash324(btn327); /* hr324-ফ্ল্যাশ-এক-উৎস-পুনঃব্যবহার */
+      }
+      var bs327 = tip317 ? tip317.querySelector('.hr327-pv') : null; /* টগল-পথ-নিরপেক্ষ aria-সমকালীনতা (কীবোর্ড-পথেও বাটন-স্টেট-সঠিক) */
+      if (bs327) bs327.setAttribute('aria-expanded', pvOpen327 ? 'true' : 'false');
+    } catch (e327a) { q327h.err = String((e327a && e327a.message) || e327a); }
+  };
+  var cf326o = cycleFmt326;
+  cycleFmt326 = function (b327c) {
+    cf326o(b327c);
+    try {
+      var kb327 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
+      if (kb327 && kb327.textContent.indexOf('P = প্রিভিউ') < 0) kb327.textContent = kb327.textContent + ' · P = প্রিভিউ';
+      if (pvOpen327) renderPv327(); /* F-টগলে খোলা-প্রিভিউ-সমকালীন-রিফ্রেশ (এক-উৎস) */
+    } catch (e327b) { q327h.err = String((e327b && e327b.message) || e327b); }
+  };
+  var trOrig327 = tipRender318;
+  tipRender318 = function (k327r) {
+    trOrig327(k327r);
+    try {
+      pvOpen327 = false; /* পুনঃনির্মাণে প্রিভিউ-বন্ধ (tipRender318-পুনঃনির্মাণ-চুক্তি) */
+      if (tip317 && hist317.length) {
+        var bar327b = tip317.querySelector('.hr324-bar');
+        if (bar327b && !bar327b.querySelector('.hr327-pv')) {
+          var bp327 = document.createElement('button');
+          bp327.type = 'button';
+          bp327.className = 'hr327-pv'; /* স্বতন্ত্র-শ্রেণি (s324-.hr324-btn-গণনা-চুক্তি-অটুট) */
+          bp327.setAttribute('aria-label', 'রপ্তাই-পূর্বরূপ প্রিভিউ টগল করুন');
+          bp327.setAttribute('aria-expanded', 'false');
+          bp327.textContent = 'প্রিভিউ';
+          bp327.addEventListener('click', function (e327c) { e327c.preventDefault(); e327c.stopPropagation(); togglePv327(bp327); });
+          bar327b.appendChild(bp327);
+        }
+        var kb327b = tip317.querySelector('.hr324-kbd');
+        if (kb327b && kb327b.textContent.indexOf('P = প্রিভিউ') < 0) {
+          kb327b.textContent = kb327b.textContent + ' · P = প্রিভিউ';
+        }
+      }
+    } catch (e327d) { q327h.err = String((e327d && e327d.message) || e327d); }
+  };
+  document.addEventListener('keydown', function (e327e) {
+    try {
+      if (e327e.key !== 'p' && e327e.key !== 'P') return;
+      if (e327e.ctrlKey || e327e.metaKey || e327e.altKey) return;
+      var b327k = e327e.target && e327e.target.closest ? e327e.target.closest('.hr-aria-copy') : null;
+      if (!b327k) return;
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
+      e327e.preventDefault();
+      togglePv327(null);
+    } catch (e327f) { q327h.err = String((e327f && e327f.message) || e327f); }
+  });
+  q327h.preview = function () { var p327 = tip317 ? tip317.querySelector('.hr327-pre .hr327-text') : null; return p327 ? p327.textContent : ''; };
+  window.__hrAria327QA = q327h;
 })();
 </script>
 </body>

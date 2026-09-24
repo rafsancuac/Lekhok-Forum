@@ -905,5 +905,40 @@
   window.__sfs326QA = q326;
 })();
 </script>
+<script>
+/* session327 (sfs327): ট্যাপ-ব্যাজ × নাম-চিপ সম-প্রদর্শন-পলিশ (PLANS session326-নোটের প্রস্তাব-③)
+   • CSS-কেন্দ্রিক পলিশ-রাউন্ড (style.css session327-ব্লক): ① চিপ-কম্পোজিটর-সংকোচন
+     (transition:none + backdrop-filter:none — s326-ব্যাজ-রেসিপি-সমতা — s321-চিপ-গেটের
+     অবশিষ্ট ০.২s-fade+blur-একই-রেস-শ্রেণি-বন্ধ) ② সম-প্রদর্শন-গাটার (ব্যাজ-on-পূর্বসূরি ~-ভাই →
+     চিপ right ৬৮→৮৪px — বহু-অঙ্ক-ব্যাজ "১০/১২"-সংঘর্ষ-বন্ধ) ③ জুটি-টোন (চিপ-বর্ডার-টিন্ট
+     ৪৬→৫৮%) ④ ≤৩৬০px চিপ-প্রস্থ-সংকোচন (৫২→৩৮%)।
+   • MO-অবর্জন-চুক্তি-অটুট (৫ম-MO-গোটচা — সম-node-সম-filter-MO-গণনা ৪-এ-স্থগিত — কোনো-নতুন-
+     MutationObserver-নেই — কেবল computed-style-প্রোব); keynav-মূল-রুল-অস্পৃশ্য (কেবল-সংযোজন)।
+   • QA-হুক __sfs327QA {probe(), err} — লেবেল-শূন্যে-ও-সংজ্ঞায়িত (s306b-ধর্ম); probe() =
+     চিপ-computed {right, trans, blur, maxw, badgeOn, chipOn} — সুইটে computed-প্রমাণ-পথ
+     (s323-computed-রীতি)। */
+(function () {
+  var q327 = { err: '' };
+  try {
+    q327.probe = function () {
+      try {
+        var c327 = document.querySelector('.sfs319-namechip');
+        var b327 = document.querySelector('.sfs318-posbadge');
+        if (!c327) return null;
+        var cs327 = getComputedStyle(c327);
+        return {
+          right: cs327.right,
+          trans: cs327.transitionDuration,
+          blur: cs327.backdropFilter || 'none',
+          maxw: cs327.maxWidth,
+          badgeOn: !!(b327 && b327.hasAttribute('data-sfs318-on')),
+          chipOn: !!c327.hasAttribute('data-sfs319-on')
+        };
+      } catch (e327p) { q327.err = String((e327p && e327p.message) || e327p); return null; }
+    };
+  } catch (e327x) { q327.err = String((e327x && e327x.message) || e327x); }
+  window.__sfs327QA = q327;
+})();
+</script>
 </section>
 

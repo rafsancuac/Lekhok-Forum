@@ -4710,3 +4710,43 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] { transition: none; }
 }
 /* ═══════════════════ EOF session326 (sfs326 ট্যাপ-পথের অবস্থান-ব্যাজ parity) ═══════════════════ */
+/* ═══════════════════ session327 (sfs327 ট্যাপ-ব্যাজ × নাম-চিপ সম-প্রদর্শন-পলিশ) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); s326-পরবর্তী সম-প্রদর্শন-যুগ: ট্যাপ-পথে
+   ব্যাজ (s326 OR-গেট) × চিপ (s321-গেট) একত্রে-দৃশ্যমান — সম-প্রদর্শন-সৌন্দর্য+সংঘর্ষ-বন্ধ:
+   ① চিপ-কম্পোজিটর-সংকোচন (s326-ব্যাজ-রেসিপি-সমতা): s321-চিপ-গেটে ০.২s-fade+blur
+      অবশিষ্ট-ছিল (একই-রেস-শ্রেণি — s326-গোটচা: blur-readback → মার্কি-pause-commit-ল্যাগ →
+      s315-গণিত-ড্রিফট) — ট্যাপ-পথে transition:none + backdrop-filter:none (তাৎক্ষণিক-দর্শন —
+      s320-স্বয়ং-বিলোপ-ও-তাৎক্ষণিক-হয় — s326-ব্যাজ-ট্রেড-অফ-সমতা);
+   ② সম-প্রদর্শন-গাটার: ব্যাজ-on-পূর্বসূরি (~-ভাই — DOM-ক্রম badge→chip) → চিপ right
+      ৬৮→৮৪px (৬৪০px: ৬০→৭২px) — বহু-অঙ্ক-ব্যাজ ("১০/১২")-এর প্রশস্ত-রূপে স্থির-অফসেটে
+      চিপ-সংঘর্ষ-ঝুঁকি-বন্ধ (ব্যাজ-সচেতন-অফসেট);
+   ③ জুটি-টোন: সম-প্রদর্শনে চিপ-বর্ডার-টিন্ট ৪৬→৫৮% (এক-জুটি-পাঠ — কেবল-রঙ);
+   ④ ৩৬০px-ক্ষুদ্র-ভ্যারিয়েন্ট: সম-প্রদর্শনে চিপ max-width ৫২→৩৮% (ফ্রেম-বহির্ভূত-নিষেধ)।
+   layout-neutral: কেবল overlay-চিপ-নিজস্ব-absolute-মান — label-geometry/keynav-মান-অস্পৃশ্য
+   (s314-চুক্তি); MO-অবর্জন-চুক্তি-অটুট (সম-node-সম-filter-MO-গণনা ৪-এ-স্থগিত)। */
+/* ① চিপ-কম্পোজিটর-সংকোচন (ট্যাপ-পথ — s326-ব্যাজ-রেসিপি-সমতা — একই-রেস-শ্রেণি-বন্ধ) */
+.sfs292-phone[data-sfs321-tap] .sfs319-namechip[data-sfs319-on] {
+  transition: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* ② সম-প্রদর্শন-গাটার (ব্যাজ-সচেতন-চিপ-অফসেট — বহু-অঙ্ক-ব্যাজ-সংঘর্ষ-বন্ধ) */
+.sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+  right: 84px;
+  border-color: color-mix(in srgb, var(--lf-brand-primary) 58%, transparent);
+}
+@media (max-width: 640px) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    right: 72px;
+  }
+}
+/* ④ ক্ষুদ্র-পর্দা (≤৩৬০px): সম-প্রদর্শনে চিপ-প্রস্থ-সংকোচন (ফ্রেম-বহির্ভূত-নিষেধ) */
+@media (max-width: 360px) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    max-width: 38%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs292-phone[data-sfs321-tap] .sfs319-namechip[data-sfs319-on] { transition: none; }
+}
+/* ═══════════════════ EOF session327 (sfs327 ট্যাপ-ব্যাজ × নাম-চিপ সম-প্রদর্শন-পলিশ) ═══════════════════ */
