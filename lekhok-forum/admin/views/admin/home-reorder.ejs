@@ -59,6 +59,11 @@
     .hr-aria-note b { color:#065f46; }
     .hr-aria-note code { font-family:ui-monospace,monospace; font-size:.62rem; background:#d1fae5; color:#065f46; border-radius:4px; padding:1px 5px; }
     .hr-aria-chip { display:inline-block; margin-top:4px; max-width:100%; font-family:ui-monospace,monospace; font-size:.62rem; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:5px; padding:2px 7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* সেশন ৩১৬ (hr316): aria-chip কপি-বাটন — এক-ক্লিকে জোড়া-স্লাগ ক্লিপবোর্ডে */
+    .hr-aria-copy { margin-left:6px; border:1px solid #a7f3d0; background:#fff; color:#047857; border-radius:4px; font-size:.6rem; padding:2px 6px; cursor:pointer; vertical-align:middle; transition:background .12s, transform .12s; }
+    .hr-aria-copy:hover { background:#d1fae5; }
+    .hr-aria-copy:active { transform:scale(.94); }
+    .hr-aria-copy.is-done { color:#059669; border-color:#059669; }
   </style>
 </head>
 <body>
@@ -194,7 +199,7 @@
     row.className = 'hr-inner-row';
     row.innerHTML =
       '<span class="hr-item-id">' + bnNum(idx + 1) + '</span>' +
-      '<div class="hr-inner-meta"><h4>' + esc(title) + '</h4>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + (ariaChip ? '<code class="hr-aria-chip" title="ফোন-ফিড গ্রুপের কীবোর্ড-নেভ aria-জোড়া (স্থিতিশীল-স্লাগ)">' + esc(ariaChip) + '</code>' : '') + '</div>' +
+      '<div class="hr-inner-meta"><h4>' + esc(title) + '</h4>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + (ariaChip ? '<code class="hr-aria-chip" title="ফোন-ফিড গ্রুপের কীবোর্ড-নেভ aria-জোড়া (স্থিতিশীল-স্লাগ)">' + esc(ariaChip) + '<button type="button" class="hr-aria-copy" data-copy="' + esc(ariaChip) + '" aria-label="' + esc(ariaChip) + ' — কপি করুন" title="কী-জোড়া কপি করুন"><i class="fas fa-copy"></i></button></code>' : '') + '</div>' +
       '<div class="hr-btns">' +
         '<button type="button" class="hr-btn" ' + (onUp ? '' : 'disabled') + '>▲</button>' +
         '<button type="button" class="hr-btn" ' + (onDown ? '' : 'disabled') + '>▼</button>' +
@@ -302,6 +307,53 @@
     setTimeout(function () { t.style.transition = 'opacity .5s'; t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 550); }, 3500);
   }
 
+  /* সেশন ৩১৬ (hr316): aria-chip কপি-বাটন — clipboard API + execCommand-ফলব্যাক
+     (নন-সিকিউর-কনটেক্সট/অনুমতি-অস্বীকৃতিতে); ডেলিগেটেড click (renderInner-পুনঃরেন্ডার-নিরাপদ) */
+  var fallbackCopy316 = function (txt316) {
+    try {
+      var ta316 = document.createElement('textarea');
+      ta316.value = txt316;
+      ta316.setAttribute('readonly', '');
+      ta316.style.position = 'fixed';
+      ta316.style.opacity = '0';
+      document.body.appendChild(ta316);
+      ta316.select();
+      var ok316 = document.execCommand('copy');
+      ta316.remove();
+      return ok316;
+    } catch (e316b) { return false; }
+  };
+  var copyAria316 = function (txt316) {
+    var done316 = function () {
+      window.__hrAria316QA.copied = txt316;
+      showToast(true, 'কী-জোড়া কপি হয়েছে: ' + txt316);
+    };
+    var fail316 = function () {
+      window.__hrAria316QA.failed += 1;
+      showToast(false, 'কপি ব্যর্থ — ম্যানুয়ালি নির্বাচন করুন');
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt316).then(done316, function () { fallbackCopy316(txt316) ? done316() : fail316(); });
+      } else {
+        fallbackCopy316(txt316) ? done316() : fail316();
+      }
+    } catch (e316) { fail316(); }
+  };
+  innerEl.addEventListener('click', function (e316c) {
+    var b316 = e316c.target && e316c.target.closest ? e316c.target.closest('.hr-aria-copy') : null;
+    if (!b316) return;
+    e316c.preventDefault();
+    e316c.stopPropagation();
+    copyAria316(b316.getAttribute('data-copy') || '');
+    var i316 = b316.querySelector('i');
+    if (i316) {
+      i316.className = 'fas fa-check';
+      b316.classList.add('is-done');
+      setTimeout(function () { i316.className = 'fas fa-copy'; b316.classList.remove('is-done'); }, 1200);
+    }
+  });
+
   /* সেভ-টোস্ট অটো-হাইড */
   var toast = document.getElementById('hrSavedToast');
   if (toast) setTimeout(function () { toast.style.transition = 'opacity .5s'; toast.style.opacity = '0'; setTimeout(function () { toast.remove(); }, 550); }, 4000);
@@ -315,6 +367,14 @@
     keys: FEED_SLIDES.filter(function (s) { return SFS314_PAIRS[s.key]; }).map(function (s) { return s.key; }),
     note: function () { return document.querySelectorAll('.hr-aria-note').length; },
     chips: function () { return document.querySelectorAll('.hr-aria-chip').length; },
+    err: ''
+  };
+
+  /* সেশন ৩১৬ QA-হুক — কপি-বাটন-প্রমাণ (copied/failed = হ্যান্ডলার-লেখিত; btns = ফাংশনাল-গেটার) */
+  window.__hrAria316QA = {
+    copied: '',
+    failed: 0,
+    btns: function () { return document.querySelectorAll('.hr-aria-copy').length; },
     err: ''
   };
 })();

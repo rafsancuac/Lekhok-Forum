@@ -4343,3 +4343,52 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs292-track { transition: none; }
 }
 /* ═════════════════════ EOF session315 (sfs315 keynav-স্ক্রল-সমন্বয়) ═════════════════════ */
+/* ═════════════════════ session316 (sfs316 কীবোর্ড-মোড HUD) ═════════════════════ */
+/* phone-অ্যাংকরড HUD (frame static — layout-neutral); কেবল :focus-visible-এ দৃশ্যমান —
+   ট্যাব-নেভিগেটর sfs314-keynav/sfs315-ফ্রিজের অস্তিত্ব ফোকাস-মুহূর্তেই আবিষ্কার করে;
+   মাউস-ব্যবহারকারীর জন্য চির-অদৃশ্য (pointer-events-none + focus-gate) */
+.sfs316-kbdhint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(6px);
+  z-index: 6;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lf-slate-deeper) 74%, transparent);
+  color: var(--lf-white);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--lf-brand-primary) 42%, transparent);
+  box-shadow: 0 10px 26px -12px rgba(2, 6, 23, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.sfs292-phone:focus-visible .sfs316-kbdhint {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) translateY(0);
+}
+.sfs316-kbdhint kbd {
+  font-family: inherit;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--lf-brand-primary) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lf-white) 22%, transparent);
+}
+@media (max-width: 640px) {
+  .sfs316-kbdhint { font-size: 0.64rem; padding: 6px 10px; gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs316-kbdhint { transition: opacity 0.01s linear, visibility 0.01s linear; transform: translate(-50%, -50%); }
+}
+/* ═════════════════════ EOF session316 (sfs316 কীবোর্ড-মোড HUD) ═════════════════════ */
