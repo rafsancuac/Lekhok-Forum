@@ -780,3 +780,22 @@
 @media (prefers-reduced-motion: reduce) {
   .ep-cal-day, .ep-load-poster { animation: none; transition: none; }
 }
+
+/* ═══ session302 — মাস-প্যানেল উষ্ণ-সংকেত (ep302; PLANS session301-প্রস্তাব)
+   চুক্তি: হেক্স-শূন্য টোকেন-শুধু + color-mix + :not()-সংঘর্ষ-বিচ্ছিন্নতা (is-cur-অস্পৃশ্য)
+   + 640px-সংকোচন + reduced-motion (session301-সুপারসেট) ═══ */
+/* ① উষ্ণ-মাস-কোষ — প্রিফেচড-মাসের সেল প্রস্তুত-অবস্থা (রিং + টিন্ট; is-cur-অস্পৃশ্য) */
+.ep-cal-m.epk300-warm:not(.is-cur) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--lf-brand-primary) 10%, transparent);
+}
+/* ② মাস-কোষ-ট্রানজিশন-সম্প্রসারণ */
+.ep-cal-m { transition: color .15s ease, background .15s ease, box-shadow .22s ease; }
+/* ③ 640px-সংকোচন */
+@media (max-width: 640px) {
+  .ep-cal-m.epk300-warm:not(.is-cur) { box-shadow: 0 0 0 1px color-mix(in srgb, var(--lf-brand-primary) 35%, transparent); }
+}
+/* ④ রিডিউসড-মোশন গার্ড */
+@media (prefers-reduced-motion: reduce) {
+  .ep-cal-m { animation: none; transition: none; }
+}

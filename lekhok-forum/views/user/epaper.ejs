@@ -403,7 +403,8 @@
     last: function () { return ep300Last; },
     links: function () { try { return document.querySelectorAll('link[rel="prefetch"][data-epk300]').length; } catch (e300) { return 0; } },
     pills: function () { try { return document.querySelectorAll('.ep-strip294-pill').length; } catch (e300) { return 0; } },
-    cells: function () { try { return document.querySelectorAll('.ep-cal-day.epk300-warm').length; } catch (e301) { return 0; } }
+    cells: function () { try { return document.querySelectorAll('.ep-cal-day.epk300-warm').length; } catch (e301) { return 0; } },
+    months: function () { try { return document.querySelectorAll('.ep-cal-m.epk300-warm').length; } catch (e302) { return 0; } }
   };
   if (!papers.length || !elList) return;
 
@@ -1706,6 +1707,11 @@
      (ep283/ep284/ep285-বডি-অস্পৃশ্য; ঘোষণা-আর-ডাক-এক-নাম — s285-নাম-মিল-গোটচা) */
   var ep286OpenPanelBase = ep283OpenPanel;
   ep283OpenPanel = function () { ep286OpenPanelBase(); if (ep283Open) ep286Arm(); };
+  /* session302: প্যানেল-খোলার arm-ফোকাস (ep286Arm → focus) = ইচ্ছা-নয় (ep299-ধর্ম) — sync-quiet-জানালায়
+     ep302-ফোকাস-প্রিফেচ-সাপ্রেস (ep290-wrapper-প্যাটার্ন-মিরর); ব্যবহারকারীর Tab-ফোকাস = পরের-টাস্কে = ইচ্ছা */
+  var ep302Quiet302 = false;
+  var ep302OpenBase302 = ep283OpenPanel;
+  ep283OpenPanel = function () { ep302Quiet302 = true; ep302OpenBase302(); ep302Quiet302 = false; };
   var ep286RenderBase = ep283Render;
   ep283Render = function () { ep286RenderBase(); if (ep283Open) ep286ArmSoft(); };
   var ep286ClosePanelBase = ep283ClosePanel;
@@ -2221,6 +2227,37 @@
     elCalGrid.addEventListener('focusin', function (e301) {
       var c301 = e301.target && e301.target.closest ? e301.target.closest('.ep-cal-day') : null;
       if (c301) epk301CalFire(c301, 'cal-focus');
+    });
+  }
+
+  /* session302: মাস-প্যানেল-কোষ-ইচ্ছা (PLANS session301-প্রস্তাব) — ডেলিগেশন (mouseover+focusin —
+     ep283Render-পুনঃরেন্ডার-নিরাপদ); শুধু .ep-cal-m.has (তথ্য-আছে মাস — disabled/শূন্য-মাস-শূন্য);
+     ep283-ক্লিক-কনভেনশন-মিরর: YYYY-MM-প্রিফিক্স → byDate-কী-সর্ট-প্রথম = ঐ-মাসের প্রথম-সংরক্ষিত-দিন
+     → arr[0] = ঐ-দিনের সর্বশেষ-পত্রিকা → /epaper?file=<id>; বুট/panel-open/calJump-প্রিফেচ-নিষিদ্ধ —
+     ইচ্ছা-গেট-ধর্ম অক্ষুণ্ণ; উষ্ণ-মিরর warmed-has-ভিত্তিক (পুনঃ-ইচ্ছায় পুনঃ-প্রতিষ্ঠা) */
+  if (elCalMGrid) {
+    var ep302MonFire = function (cell302, reason302) {
+      if (!cell302.classList.contains('has') || cell302.disabled) return;
+      var mo302 = +cell302.getAttribute('data-m');
+      if (isNaN(mo302)) return;
+      var pre302 = ep283Year + '-' + ('0' + (mo302 + 1)).slice(-2) + '-';
+      var first302 = Object.keys(byDate).filter(function (iso302) { return String(iso302).indexOf(pre302) === 0; }).sort()[0];
+      if (!first302) return;
+      var arr302 = byDate[first302];
+      var p302 = arr302 && arr302.length ? arr302[0] : null;
+      if (!p302 || !p302.id) return;
+      var u302 = epk300Url300(p302.id);
+      epk300Prefetch300(u302, reason302);
+      cell302.classList[epk300Warmed[u302] ? 'add' : 'remove']('epk300-warm');
+    };
+    elCalMGrid.addEventListener('mouseover', function (e302) {
+      var c302 = e302.target && e302.target.closest ? e302.target.closest('.ep-cal-m') : null;
+      if (c302) ep302MonFire(c302, 'mon');
+    });
+    elCalMGrid.addEventListener('focusin', function (e302) {
+      if (ep302Quiet302) return; /* panel-open arm-focus-সাপ্রেস — ইচ্ছা-গেট-ধর্ম */
+      var c302 = e302.target && e302.target.closest ? e302.target.closest('.ep-cal-m') : null;
+      if (c302) ep302MonFire(c302, 'mon-focus');
     });
   }
 })();

@@ -57,14 +57,25 @@
     </form>
 
     <h3>সাম্প্রতিক পোস্ট<label style="font-size:.85rem;font-weight:600;color:#65676b;display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:10px;"><input type="checkbox" data-bulk-all style="width:16px;height:16px;"> সব সিলেক্ট</label></h3>
+    <div class="dqf-instant" id="dqfInstant302">
+      <i class="fas fa-filter dqf-instant-ico" aria-hidden="true"></i>
+      <input type="text" id="dqfFilter302" class="dqf-instant-input" placeholder="তাৎক্ষণিক ফিল্টার — শিরোনাম / #আইডি / তারিখ / ধরন" autocomplete="off" aria-label="তাৎক্ষণিক ফিল্টার" />
+      <button type="button" id="dqfClear302" class="dqf-instant-clear" aria-label="ফিল্টার মুছুন" hidden><i class="fas fa-times"></i></button>
+      <span class="dqf-count-chip" id="dqfCount302" hidden></span>
+      <span class="dqf-kbd-hint" aria-hidden="true"><kbd>f</kbd> ফোকাস · <kbd>Esc</kbd> মুছুন · <kbd>↵</kbd> প্রথম-মিল</span>
+    </div>
+    <div class="dqf-zero" id="dqfZero302" data-dqf-empty hidden>
+      <i class="fas fa-calendar-day" aria-hidden="true"></i>
+      <span>কোনো পোস্ট মেলেনি — ফিল্টার মুছে আবার চেষ্টা করুন</span>
+    </div>
   <form method="POST" action="/moderator/daily/bulk-delete" class="bulk-bar" id="bulkBar">
     <input type="hidden" name="back_type" value="<%= type %>">
     <span class="bulk-count"><i class="fas fa-check-double"></i> <strong>০</strong>টি সিলেক্টেড</span>
     <button type="submit" class="btn btn-danger btn-sm" data-bulk-msg="সিলেক্টেড পোস্টগুলো মুছে ফেলতে চান?"><i class="fas fa-trash"></i> মুছুন</button>
   </form>
 
-    <% items.forEach(it => { %>
-      <div class="mod-item">
+    <% items.forEach(function (it, dqfI302) { var dqfKw302 = ['#' + it.id, it.title || '', it.scheduled_date || '', type || '', (type === 'quiz' ? ((it.parsedOptions && it.parsedOptions.length >= 2) ? 'interactive ইন্টারঅ্যাক্টিভ' : 'static স্ট্যাটিক') : '')].filter(Boolean).join(' '); %>
+      <div class="mod-item" data-dqf-row302="<%= it.id %>" data-kw="<%= dqfKw302 %>">
         <input type="checkbox" name="bulk_ids" value="<%= it.id %>" aria-label="সিলেক্ট" style="width:16px;height:16px;flex-shrink:0;margin-right:4px;">
         <div style="flex:1;min-width:0;">
           <strong class="mod-item-title"><%= it.title %></strong>
@@ -115,6 +126,121 @@
       </div>
     <% }) %>
   </div>
+  <style>
+/* session302 — দৈনিক-পোস্ট তাৎক্ষণিক-ফিল্টার (dqf302 — হেক্স-শূন্য টোকেন-শুধু; bwf301/re261-মিরর) */
+.dqf-instant { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 10px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); }
+.dqf-instant-ico { color: var(--lf-brandgreen); opacity: .75; }
+.dqf-instant-input { flex: 1 1 230px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); transition: none; }
+.dqf-instant-input:hover { border-color: color-mix(in srgb, var(--lf-brandgreen) 25%, transparent); }
+.dqf-instant-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+.dqf-instant-clear { border: 0; background: transparent; color: var(--lf-brandgreen); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: none; }
+.dqf-instant-clear:hover { background: var(--lf-brandgreen-soft); }
+.dqf-instant-clear:active { transform: scale(.96); }
+.dqf-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft-2); }
+.dqf-count-chip[hidden] { display: none; }
+.dqf-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+.dqf-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+.dqf-zero { display: flex; align-items: center; gap: 10px; margin: 10px 0; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+.dqf-zero[hidden] { display: none; }
+.mod-item[data-dqf-row302][hidden] { display: none !important; }
+.mod-item.dqf-flash302 { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .dqf-instant-clear:active { transform: none; } }
+@media (max-width: 640px) { .dqf-kbd-hint { display: none; } .dqf-instant { padding: 9px 11px; } }
+  </style>
+  <script>
+  (function () {
+    'use strict';
+    /* session302 — dqf302 তাৎক্ষণিক-ফিল্টার (bwf301/re261-চুক্তি-মিরর + **checked-pinned চুক্তি**):
+       চেক-করা bulk_ids-চেকবক্সের সারি ফিল্টারে-ও-দৃশ্যমান থাকে → bulk-delete কখনো অদৃশ্য-সারি-মুছে-না;
+       sidebar.ejs-বাল্ক-স্ক্রিপ্টের সাথে-সহাবস্থান: bulk-all/target-level sync আগে → document-ডেলিগেশনে
+       apply() পরে (বাবল-ক্রম) → সব-চেক-পথেও পিন-সামঞ্জস্য; রানটাইম-ইনডেক্স + boot-apply-init +
+       'f'-ফোকাস + Escape + Enter-firstMatch-ফোকাস+ফ্ল্যাশ (প্রাথমিক-অ্যাঙ্কর = bulk-checkbox —
+       delete-বাটন-ফোকাস-বিপজ্জনক) + __dqf302QA হুক ×৯ রো-শূন্যে-ও-সংজ্ঞায়িত */
+    var input = document.getElementById('dqfFilter302');
+    var surface = document.getElementById('dqfInstant302');
+    var countChip = document.getElementById('dqfCount302');
+    var clearBtn = document.getElementById('dqfClear302');
+    var zeroBox = document.getElementById('dqfZero302');
+    function bn302(n) { return String(n).replace(/\d/g, function (d302) { return '০১২৩৪৫৬৭৮৯'[d302]; }); }
+    function dqfIndex302() {
+      return Array.prototype.slice.call(document.querySelectorAll('.mod-item[data-dqf-row302]'));
+    }
+    function dqfMatches302() {
+      return dqfIndex302().filter(function (r302) { return !r302.hidden; });
+    }
+    function dqfPinned302() {
+      return dqfIndex302().filter(function (r302) {
+        var cb302 = r302.querySelector('input[name="bulk_ids"]');
+        return !!(cb302 && cb302.checked);
+      }).length;
+    }
+    function dqfApply302() {
+      if (!input) return;
+      var q = (input.value || '').trim().toLowerCase();
+      var rows302 = dqfIndex302();
+      var shown = 0;
+      rows302.forEach(function (row302) {
+        var cb302 = row302.querySelector('input[name="bulk_ids"]');
+        var pinned302 = !!(cb302 && cb302.checked);
+        var kw = (row302.getAttribute('data-kw') || '').toLowerCase();
+        var hit = pinned302 || !q || kw.indexOf(q) !== -1;
+        row302.hidden = !hit;
+        if (hit) shown++;
+      });
+      if (countChip) { countChip.hidden = !q; if (q) { countChip.textContent = bn302(shown) + ' / ' + bn302(rows302.length); } }
+      if (clearBtn) { clearBtn.hidden = !q; }
+      if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
+    }
+    function dqfClear302() {
+      if (!input) return;
+      input.value = '';
+      dqfApply302();
+      input.focus();
+    }
+    if (input) {
+      input.addEventListener('input', dqfApply302);
+      input.addEventListener('keydown', function (e302) {
+        if (e302.key === 'Escape') { e302.stopPropagation(); dqfClear302(); return; }
+        if (e302.key === 'Enter') {
+          var first302 = dqfMatches302()[0];
+          if (first302) {
+            e302.preventDefault();
+            var cb302 = first302.querySelector('input[name="bulk_ids"]');
+            if (cb302) { cb302.focus(); }
+            first302.classList.add('dqf-flash302');
+            setTimeout(function () { first302.classList.remove('dqf-flash302'); }, 900);
+          }
+        }
+      });
+      document.addEventListener('keydown', function (e302) {
+        if (e302.key !== 'f' || e302.altKey || e302.ctrlKey || e302.metaKey) { return; }
+        var t302 = e302.target;
+        if (t302 && (t302.tagName === 'INPUT' || t302.tagName === 'TEXTAREA' || t302.tagName === 'SELECT' || t302.isContentEditable)) { return; }
+        e302.preventDefault();
+        input.focus();
+        input.select();
+      });
+      /* checked-pinned ধর্ম — চেক-পরিবর্তনে পুনঃ-apply (bulk_ids-সরাসরি-ক্লিক + bulk-all-উভয়-পথ;
+         bulk-all-এর নিজস্ব target-level হ্যান্ডলার আগে-চলে (বাবল-ক্রম) → এ-apply সর্বদা-সর্বশেষ-অবস্থায়) */
+      document.addEventListener('change', function (e302) {
+        if (!e302.target || !e302.target.matches) { return; }
+        if (e302.target.matches('input[name="bulk_ids"],[data-bulk-all]')) { dqfApply302(); }
+      });
+      dqfApply302(); /* boot-apply-init — session300-শিক্ষা */
+    }
+    window.__dqf302QA = {
+      surface: function () { return surface ? surface.id : ''; },
+      rows: function () { return dqfIndex302().length; },
+      matches: function () { return dqfMatches302().length; },
+      total: function () { return dqfIndex302().length; },
+      active: function () { return !!(input && (input.value || '').trim()); },
+      pinned: function () { return dqfPinned302(); },
+      firstMatch: function () { var f302 = dqfMatches302()[0]; return f302 ? (f302.getAttribute('data-dqf-row302') || '') : ''; },
+      apply: dqfApply302,
+      clear: dqfClear302
+    };
+  })();
+  </script>
   <script src="/assets/js/main.js?v=<%= AV %>"></script>
   <script src="/assets/js/premium.js?v=<%= AV %>"></script>
 </div><!-- /admin-main -->
