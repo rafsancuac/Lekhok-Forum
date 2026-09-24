@@ -404,7 +404,8 @@
     links: function () { try { return document.querySelectorAll('link[rel="prefetch"][data-epk300]').length; } catch (e300) { return 0; } },
     pills: function () { try { return document.querySelectorAll('.ep-strip294-pill').length; } catch (e300) { return 0; } },
     cells: function () { try { return document.querySelectorAll('.ep-cal-day.epk300-warm').length; } catch (e301) { return 0; } },
-    months: function () { try { return document.querySelectorAll('.ep-cal-m.epk300-warm').length; } catch (e302) { return 0; } }
+    months: function () { try { return document.querySelectorAll('.ep-cal-m.epk300-warm').length; } catch (e302) { return 0; } },
+    years: function () { try { return document.querySelectorAll('.ep-cal-y.epk300-warm').length; } catch (e303) { return 0; } }
   };
   if (!papers.length || !elList) return;
 
@@ -2258,6 +2259,41 @@
       if (ep302Quiet302) return; /* panel-open arm-focus-সাপ্রেস — ইচ্ছা-গেট-ধর্ম */
       var c302 = e302.target && e302.target.closest ? e302.target.closest('.ep-cal-m') : null;
       if (c302) ep302MonFire(c302, 'mon-focus');
+    });
+  }
+
+  /* session303 (cron 403679): বছর-তালিকা-কোষ-ইচ্ছা-প্রিফেচ (ep303 — PLANS session302-প্রস্তাব
+     epCalYList) — ডেলিগেশন (mouseover+focusin — ep284Render-পুনঃরেন্ডার-নিরাপদ); .ep-cal-y
+     কোষ = avail-উদ্ভূত (তথ্য-আছে-বছর-ই — disabled-গেট-অপ্রাসঙ্গিক); বছর-কোষের সরাসরি-কাগদ-গন্তব্য-নেই
+     (ক্লিক → মাস-গ্রিড) → recency-first মিরর: YYYY-প্রিফিক্স-কী DESC-প্রথম = ঐ-বছরের সর্বশেষ-সংখ্যা
+     → arr[0] (date-DESC-প্রথম — s300-কনভেনশন) → /epaper?file=<id>; বুট/panel-open/list-open/
+     calJump-প্রিফেচ-নিষিদ্ধ — ইচ্ছা-গেট-ধর্ম অক্ষুণ্ণ; উষ্ণ-মিরর warmed-has-ভিত্তিক (পুনঃ-ইচ্ছায়
+     পুনঃ-প্রতিষ্ঠা) */
+  var ep303Quiet303 = false;
+  var ep303OpenListBase303 = ep284OpenList;
+  ep284OpenList = function () { ep303Quiet303 = true; ep303OpenListBase303(); ep303Quiet303 = false; };
+  if (elCalYList) {
+    var ep303YearFire = function (cell303, reason303) {
+      var y303 = +cell303.getAttribute('data-y');
+      if (!y303) return;
+      var pre303 = y303 + '-';
+      var cand303 = Object.keys(byDate).filter(function (iso303) { return String(iso303).indexOf(pre303) === 0; }).sort().reverse()[0];
+      if (!cand303) return;
+      var arr303 = byDate[cand303];
+      var p303 = arr303 && arr303.length ? arr303[0] : null;
+      if (!p303 || !p303.id) return;
+      var u303 = epk300Url300(p303.id);
+      epk300Prefetch300(u303, reason303);
+      cell303.classList[epk300Warmed[u303] ? 'add' : 'remove']('epk300-warm');
+    };
+    elCalYList.addEventListener('mouseover', function (e303) {
+      var c303 = e303.target && e303.target.closest ? e303.target.closest('.ep-cal-y') : null;
+      if (c303) ep303YearFire(c303, 'year');
+    });
+    elCalYList.addEventListener('focusin', function (e303) {
+      if (ep303Quiet303) return; /* list-open arm-focus-সাপ্রেস — ইচ্ছা-গেট-ধর্ম */
+      var c303 = e303.target && e303.target.closest ? e303.target.closest('.ep-cal-y') : null;
+      if (c303) ep303YearFire(c303, 'year-focus');
     });
   }
 })();
