@@ -3486,3 +3486,28 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 }
 /* ═══════════ EOF সেশন ২৯৭ ═══════════ */
 
+/* ═══════════ সেশন ২৯৯ (session299 — ইচ্ছা-সচেতন রিডার-ডিপ-লিংক-প্রিফেচ ep299 + প্রবেশ-পলিশ) ═══════════ */
+/* ① উষ্ণ-সংকেত — প্রিফেচড-পত্রিকার হোভার-বাটন প্রস্তুত-অবস্থা (অ্যাকসেন্ট-রিং + উজ্জ্বলতা — transform-অস্পৃশ্য) */
+.epk291-front.epk299-warm .epk291-hoverbtn296 {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.30), 0 0 0 2px color-mix(in srgb, var(--epkAcc291, var(--lf-brand-primary)) 55%, transparent);
+  filter: brightness(1.06);
+}
+.epk291-front.epk299-warm .epk291-hover296 {
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.52) 0%, rgba(15, 23, 42, 0.10) 55%);
+}
+/* ② উষ্ণ-শিট-প্রান্ত — প্রিফেচড-পত্রিকার ধারে অ্যাকসেন্ট-ফেড (সলিড→স্বচ্ছ — উষ্ণতার দৃশ্য-সংকেত; s291-সলিড-সুপারসেট) */
+.epk291-front.epk299-warm .epk291-edge {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--epkAcc291, var(--lf-brand-primary)) 65%, transparent), color-mix(in srgb, var(--epkAcc291, var(--lf-brand-primary)) 18%, transparent));
+}
+/* ③ হোভার-বাটন ট্রানজিশন-সম্প্রসারণ (উষ্ণ-সংকেত-মসৃণ — s296-ট্রানজিশন-সুপারসেট) */
+.epk291-hoverbtn296 { transition: transform .22s ease, box-shadow .22s ease, filter .22s ease; }
+/* ④ 640px-সংকোচন (টাচ-সারফেসে উষ্ণ-সংকেত-শান্ত) */
+@media (max-width: 640px) {
+  .epk291-front.epk299-warm .epk291-hoverbtn296 { filter: none; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.30); }
+}
+/* ⑤ রিডিউসড-মোশন গার্ড */
+@media (prefers-reduced-motion: reduce) {
+  .epk291-hoverbtn296, .epk291-front.epk299-warm .epk291-hoverbtn296 { transition: none; }
+}
+/* ═══════════ EOF সেশন ২৯৯ ═══════════ */
+

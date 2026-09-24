@@ -217,6 +217,16 @@
     tick: function () { if (papers.length) { applyPaper((current + 1) % papers.length); return true; } return false; },
     sync: epk297Sync297
   };
+
+  /* session299: ইচ্ছা-সচেতন রিডার-ডিপ-লিংক-প্রিফেচ-স্টেট + QA-হুক (papers-শূন্যে-ও __epk299QA সংজ্ঞায়িত —
+     পরিবার-চুক্তি; PLANS session298-প্রস্তাব: শিট-ক্লিকে প্রথম-পাতা-রিডার-ডিপ-লিংক-প্রিফেচ — নেভিগেশন-তাৎক্ষণিক) */
+  var epk299Count = 0, epk299Warmed = {}, epk299Last = '';
+  window.__epk299QA = {
+    prefetched: function () { return epk299Count; },
+    has: function (u) { return !!epk299Warmed[u]; },
+    last: function () { return epk299Last; },
+    links: function () { try { return document.querySelectorAll('link[rel="prefetch"][data-epk299]').length; } catch (e299) { return 0; } }
+  };
   if (!papers.length) return;
 
   var reduceMotion = false;
@@ -235,6 +245,27 @@
       btns = film ? Array.prototype.slice.call(film.querySelectorAll('.epk291-film-btn')) : [];
 
   var current = 0, timer = null, paused = false;
+
+  /* session299: একক-ফানেল epk299Prefetch299 — ডিডুপ-ম্যাপ + অফলাইন/saveData-গার্ড +
+     link[rel=prefetch]-ইনজেকশন (ব্রাউজার-লো-প্রায়োরিটি-ক্যাশ-ওয়ার্ম) + উষ্ণ-সংকেত;
+     সব-ট্রিগার (hover/focus/select/cta) এ-ফানেলেই (session296b-একক-ফানেল-প্রথা) */
+  function epk299Prefetch299(url, reason299) {
+    if (!url || epk299Warmed[url]) return false;
+    var cn299 = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (navigator.onLine === false || (cn299 && cn299.saveData)) return false;
+    epk299Warmed[url] = String(reason299 || 'intent');
+    epk299Count++; epk299Last = String(reason299 || 'intent');
+    try {
+      var l299 = document.createElement('link');
+      l299.rel = 'prefetch';
+      l299.as = 'document';
+      l299.href = url;
+      l299.setAttribute('data-epk299', '1');
+      document.head.appendChild(l299);
+    } catch (e299) {}
+    if (front) front.classList.add('epk299-warm');
+    return true;
+  }
 
   // সেশন ২৯৬: প্রথম-পাতা-থাম্ব-চেইন — সারির-নিজ সম্পদ (মিসম্যাচ-অসম্ভব); ব্যর্থতায়
   // পরের-প্রার্থী → শেষে নাম-মিলে লোগো-ব্যানার → সব-ব্যর্থে টেক্সট-মাস্টহেড (কখনো ভাঙা-ছবি নয়)।
@@ -280,6 +311,7 @@
       void front.offsetWidth;
       front.classList.add('is-flip');
     }
+    if (epk299Warmed[p.href]) { front.classList.add('epk299-warm'); } else { front.classList.remove('epk299-warm'); } /* session299: উষ্ণ-সংকেত-মিরর */
     current = i;
   }
 
@@ -296,9 +328,17 @@
   btns.forEach(function (b) {
     b.addEventListener('click', function () {
       var i = parseInt(b.getAttribute('data-epk-i'), 10);
-      if (!isNaN(i)) { applyPaper(i); resetTimer(); }
+      /* session299: নির্বাচন-ইচ্ছা (মোবাইল-পথ সহ) — নির্বাচিত-পত্রিকার রিডার-ডিপ-লিংক প্রিফেচ */
+      if (!isNaN(i) && papers[i]) { applyPaper(i); resetTimer(); epk299Prefetch299(papers[i].href, 'select'); }
     });
   });
+
+  /* session299: হোভার/ফোকাস-ইচ্ছা (ডেস্কটপ) + CTA-হোভার — সব-একক-ফানেলে; mouseenter-নন-বাবলিং তবু
+     টার্গেট-লিসনারে ডিসপ্যাচে স্বাভাবিক-প্রজ্বলিত (সুইট-প্রমাণ-পথ) */
+  function epk299Hover299() { if (papers[current]) epk299Prefetch299(papers[current].href, 'hover'); }
+  front.addEventListener('mouseenter', epk299Hover299);
+  front.addEventListener('focusin', epk299Hover299);
+  if (cta) cta.addEventListener('mouseenter', function () { if (papers[current]) epk299Prefetch299(papers[current].href, 'cta'); });
 
   // hover + keyboard-focus — দুই ক্ষেত্রেই থামে (পাঠক নির্বাচনে স্বাচ্ছন্দ্য)
   var section = document.getElementById('today-epaper') || kiosk;
