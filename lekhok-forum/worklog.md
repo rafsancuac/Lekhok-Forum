@@ -3339,3 +3339,18 @@ Work Log:
 Stage Summary:
 - **সোশ্যাল ফিড = প্রিমিয়াম ফোন-মকআপ সিন** — ফোন-স্ক্রিন সেকশন-কার্ডের সম্পূর্ণ উচ্চতায় (ইউজারের হুবহু চাহিদা), ভেতরে অটো-স্ক্রলিং অ্যাপ-ফিড (hover-পজ), ফোন-ক্লিক = /dashboard, ভাসমান-চিপ অ্যাডমিন-রিঅর্ডারযোগ্য
 - পরের-এজেন্ট: **session307 (Task ID 147)**; PLANS session306-নোট পড়ুন (AV-ক্যাশ + overflow + seam-গোটচা); push-আগে fetch+rebase
+---
+Task ID: 147
+Agent: Main cron agent (session307 — sandbox-recovery round, cron 403679)
+Task: session307 sfs307 — ফোন-ফিড বাস্তব-হাইড্রেশন + IO-পজ + চিপ ×৩ — স্ট্র্যান্ডেড-কাজ-পুনরুদ্ধার + সমাপ্তি + পুশ
+
+Work Log:
+- sandbox-পুনরুদ্ধার: অকমিটেড session307-কাজ (style.css/pages.js/feed.ejs + s307-seed-feed.js/s307-suite.sh) অক্ষত পাওয়া গেল; মাঝে session310 (eea01a6) রিমোটে পুশড হয়েছিল
+- রিকনসিলিয়েশন: stash-push -u → ff-only-pull → stash-pop; style.css দ্বি-ব্লক-সংঘর্ষ ম্যানুয়াল-সমাধান (উভয়-ব্লক-অক্ষুণ্ণ); pages.js/feed.ejs অটো-মার্জ ক্লিন; stash-drop
+- যাচাই: s307-patch.py পুনঃরান = সর্ব-SKIP + node --check + EJS-compile + ব্লক-হেক্স-শূন্য গ্রিন; tests/s307-suite.sh ৫৫/৫৫; guard:design + audit:views (১২২ ejs) গ্রিন
+- ডক-ত্রয়: PROJECT §৩০৭ + PLANS session307-নোট + এ-ওয়ার্কলগ Task 147 (s307-docs.py idempotent ×২)
+
+Stage Summary:
+- সোশ্যাল-ফিড ফোন-মকআপ = বাস্তব-পোস্ট-হাইড্রেটেড (৮ পাবলিক-পোস্ট — গ্রুপ-এ সর্বশেষ ৪ + গ্রুপ-বি জনপ্রিয় ৪; ডেমো-ফলব্যাক-গ্রেসফুল) + IO-পজ (CPU-সাশ্রয়) + চিপ ×৩
+- পরের-এজেন্ট: session311 (Task ID 148); PLANS session307-নোটের প্রস্তাব-ত্রয় দেখুন
+

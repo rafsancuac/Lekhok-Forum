@@ -4090,3 +4090,61 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .epk310-img, .epk310-card, .epk310-hover, .epk310-hoverbtn, .epk310-dot, .epk310-stripe { transition: none; }
 }
 /* ═══════════ EOF সেশন ৩১০ (epk310) ═══════════ */
+
+/* ═════════════════════ session307 (sfs307) ═════════════════════
+   বাস্তব-ফিড-হাইড্রেশন + kiosk-স্টাইল IO-পজ + চিপ ×৩
+   নীতি: হেক্স-শূন্য (var(--lf-*)/rgb()/color-mix), sfs307/sfs292-স্কোপ, reduced-motion গার্ড।
+   ═════════════════════════════════════════════════════════════ */
+
+/* ── ১. লাইভ-পিল: বাস্তব-পোস্ট-হাইড্রেশন সংকেত (realCount>0-তেই-রেন্ডার) ── */
+.sfs307-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--lf-brand-primary);
+  background: color-mix(in srgb, var(--lf-brand-primary) 10%, var(--lf-white));
+  border: 1px solid color-mix(in srgb, var(--lf-brand-primary) 26%, transparent);
+}
+.sfs307-live-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--lf-brand-primary);
+  animation: sfs307Pulse 1.6s ease-in-out infinite;
+}
+@keyframes sfs307Pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.72); }
+}
+
+/* ── ২. বাস্তব-পোস্ট অ্যাফোর্ডেন্স: ব্র্যান্ড-রিং অ্যাভাটার (ডেমো-সারি অপরিবর্তিত) ── */
+.sfs292-post .sfs292-pav {
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+.sfs292-post.is-real307 .sfs292-pav {
+  border: 1.5px solid color-mix(in srgb, var(--lf-brand-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--lf-brand-primary) 12%, var(--lf-white));
+  color: var(--lf-brand-primary);
+}
+
+/* ── ৩. IO-পজ: সেকশন ভিউপোর্ট-বহির্ভূত হলে ট্র্যাক-অ্যানিমেশন স্থগিত (CPU-সাশ্রয়) ── */
+.sfs292-card.sfs307-io-off .sfs292-track { animation-play-state: paused; }
+
+/* ── ৪. চিপ ×৩: মধ্য-স্তর বাম-অবস্থান (a=উপরি-বাম, b=নিম্ন-ডান, c=মধ্য-বাম) ── */
+.sfs292-chip-c { top: 47%; left: -10px; animation-delay: -1.4s; }
+@media (max-width: 1024px) {
+  .sfs292-chip-c { left: 0; }
+}
+
+/* ── ৫. reduced-motion গার্ড ── */
+@media (prefers-reduced-motion: reduce) {
+  .sfs307-live-dot { animation: none; }
+}
+/* ═════════════════════ EOF session307 (sfs307) ═════════════════════ */

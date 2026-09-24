@@ -102,6 +102,20 @@ router.get('/', async (req, res) => {
     a.cover = c110 ? { type: c110.type, grad: c110.grad || '', url: c110.url || '', initial: c110.type === 'typo' ? COVERS110.initialOf(a.title) : '' } : null;
   });
 
+  // ── সেশন ৩০৭ (sfs307): ফোন-মকআপ বাস্তব-ফিড-হাইড্রেশন (SSR-নিরাপদ — প্রধান-প্রবাহ-অটুট) ──
+  // লগইন-বিহীন পাবলিক-পোস্ট: status='published' + audience='PUBLIC' + শেয়ার-কপি বাদ (shared_from)
+  // + লেখক active। substr(body,400) — লিন-কোয়েরি। ব্যর্থতায় (অ-মাইগ্রেটেড ডিবি/কলাম-অনুপস্থি)
+  // খালি-ই থাকুক — ভিউ ডেমো-ফলব্যাকে রেন্ডার করবে (s306b-গ্রেসফুল-গেট-ধর্ম)।
+  let sfsRealPosts307 = [];
+  try {
+    sfsRealPosts307 = await db.prepare(`SELECT p.id, p.excerpt, substr(p.body, 1, 400) AS body, p.cover_image, p.like_count, p.comment_count, p.view_count, p.published_at,
+       u.full_name, u.pen_name, u.username
+  FROM posts p JOIN users u ON u.id = p.author_id
+ WHERE p.status = 'published' AND p.audience = 'PUBLIC' AND p.shared_from IS NULL
+   AND u.status = 'active'
+ ORDER BY p.published_at DESC, p.id DESC LIMIT 8`).all();
+  } catch (e307) { sfsRealPosts307 = []; }
+
   // Leadership: 2 current (president + GS) + 2 founders + 4 advisors
   // সর্বশেষ কার্যবর্ষের (সর্বোচ্চ term_year) সভাপতি ও সাধারণ সম্পাদক দেখাই
   const homeTermYears = homeTermYearRows.map(r => r.term_year).sort((a, b) => bnLead(b) - bnLead(a));
@@ -360,6 +374,7 @@ router.get('/', async (req, res) => {
     todayByType,
     todaySlides: todaySlides193,
     feedSlides: feedSlides193,
+    sfsRealPosts: sfsRealPosts307, // সেশন ৩০৭: ফোন-ফিড বাস্তব-পোস্ট (খালি = ডেমো-ফলব্যাক)
     homeSections: homeSections193,
     hasToday,
     quizChallenge,
