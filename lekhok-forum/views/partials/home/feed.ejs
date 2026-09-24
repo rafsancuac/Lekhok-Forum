@@ -168,6 +168,12 @@
                 আবিষ্কারযোগ্যতা — sfs314/sfs315-keynav-এর অস্তিত্ব প্রথমে-ই-দেখা-যায়);
                 aria-hidden ডেকোরেটিভ; phone-অ্যাংকরড absolute (frame static — layout-neutral)। %>
             <span class="sfs316-kbdhint" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> গ্রুপ ব্রাউজ · <kbd>Esc</kbd></span>
+            <%# সেশন ৩১৮ (sfs318): keynav-অবস্থান-ব্যাজ — sfs317-ঘোষণার দৃশ্যমান-সমকক্ষ (n/মোট,
+                বাংলা-অঙ্ক); aria-hidden ডেকোরেটিভ (kbdhint-পূর্বাদাহ — accessible-name-অপরিবর্তিত);
+                phone-অ্যাংকরড absolute (frame static — layout-neutral; tabbar-উপরে ডান-কোণ —
+                kbdhint-কেন্দ্র-অস্পর্শ); দ্বি-গেট: [data-sfs314-focus] × [data-sfs318-on] —
+                মাউস-ব্যবহারকারীর জন্য চির-অদৃশ্য (kbdhint-রীতি)। %>
+            <span class="sfs318-posbadge" aria-hidden="true"></span>
           </a>
           <%# সেশন ৩১৭ (sfs317): keynav aria-live ঘোষণা-অঞ্চল — visually-hidden role=status;
               phone-অ্যাংকরের বাইরে (s306-একক-লিঙ্ক-চুক্তি অটুট — লিঙ্কের accessible-name-অপরিবর্তিত);
@@ -270,6 +276,7 @@
       if (q314.focus !== -1 && phone314) phone314.removeAttribute('data-sfs314-focus');
       if (window.__sfs315Unfreeze) window.__sfs315Unfreeze(phone314); /* s315: সংশোধনী-বিলোপ */
       if (window.__sfs317Clear) window.__sfs317Clear(); /* s317: ঘোষণা-বিলোপ */
+      if (window.__sfs318Hide) window.__sfs318Hide(); /* s318: ব্যাজ-বিলোপ */
       q314.focus = -1;
     };
     var apply314 = function (i314) {
@@ -278,6 +285,7 @@
       if (phone314) phone314.setAttribute('data-sfs314-focus', String(labs314[i314].id).replace('sfs314-glab-', ''));
       if (window.__sfs315Freeze) window.__sfs315Freeze(labs314[i314], phone314); /* s315: দৃশ্যমানতা-স্ক্রল-সমন্বয় */
       if (window.__sfs317Announce) window.__sfs317Announce(labs314[i314], i314, labs314.length); /* s317: SR-ঘোষণা */
+      if (window.__sfs318Show) window.__sfs318Show(labs314[i314], i314, labs314.length); /* s318: দৃশ্যমান-ব্যাজ */
     };
     if (phone314 && labs314.length === grows314.length && labs314.length > 0) {
       var in314 = true;
@@ -402,6 +410,46 @@
     q317.text = function () { var l317 = document.querySelector('.sfs317-live'); return l317 ? l317.textContent : ''; };
   } catch (e317x) { q317.err = String((e317x && e317x.message) || e317x); }
   window.__sfs317QA = q317;
+})();
+</script>
+<script>
+/* session318 (sfs318): keynav-অবস্থান-ব্যাজ (PLANS session317-নোটের প্রস্তাব-②)
+   • sfs317-SR-ঘোষণার দৃশ্যমান-সমকক্ষ: keynav-হাইলাইট-মুহূর্তে ফোন-প্রিভিউতে ছোট-ব্যাজ
+     "n/মোট" (বাংলা-অঙ্ক) — কীবোর্ড-ব্যবহারকারীর চাক্ষুষ-অবস্থা-প্রমাণ (SR-এর প্রতিটি
+     ঘোষণার দৃশ্যমান-প্রতিরূপ — parity-নীতি)।
+   • দ্বি-গেট: phone[data-sfs314-focus] (keynav-সক্রিয়) × data-sfs318-on (ব্যাজ-লেখা) —
+     মাউস-ব্যবহারকারীর জন্য চির-অদৃশ্য (kbdhint-রীতি)।
+   • aria-hidden ডেকোরেটিভ (kbdhint-পূর্বাদাহ — accessible-name-অপরিবর্তিত);
+     phone-অ্যাংকরড absolute (frame static — layout-neutral; tabbar-উপরে ডান-কোণ)।
+   • চুক্তি: __sfs318Show(lab, idx, total) / __sfs318Hide() — s314-ইঞ্জিনের guarded-হুক
+     (sfs317-রীতি); ইঞ্জিন-অনুপস্থিতে নীরব-নন-ফায়ার।
+   • QA-হুক __sfs318QA {shown, last, badge(), on(), text(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+(function () {
+  var q318 = { shown: 0, last: '', err: '' };
+  try {
+    var badge318 = document.querySelector('.sfs318-posbadge');
+    var bn318 = function (n318) { return String(n318).replace(/[0-9]/g, function (d318) { return '০১২৩৪৫৬৭৮৯'.charAt(+d318); }); };
+    window.__sfs318Show = function (lab318, i318, n318) {
+      try {
+        if (!badge318 || !lab318) return;
+        if (!(typeof i318 === 'number' && typeof n318 === 'number' && n318 > 0)) return;
+        var tx318 = bn318(i318 + 1) + '/' + bn318(n318);
+        badge318.textContent = tx318;
+        badge318.setAttribute('data-sfs318-on', '1');
+        q318.shown += 1;
+        q318.last = tx318;
+      } catch (e318b) { q318.err = String((e318b && e318b.message) || e318b); }
+    };
+    window.__sfs318Hide = function () {
+      try {
+        if (badge318) { badge318.textContent = ''; badge318.removeAttribute('data-sfs318-on'); }
+      } catch (e318c) { q318.err = String((e318c && e318c.message) || e318c); }
+    };
+    q318.badge = function () { return !!document.querySelector('.sfs318-posbadge'); };
+    q318.on = function () { var b318 = document.querySelector('.sfs318-posbadge'); return !!(b318 && b318.hasAttribute('data-sfs318-on')); };
+    q318.text = function () { var b318 = document.querySelector('.sfs318-posbadge'); return b318 ? b318.textContent : ''; };
+  } catch (e318x) { q318.err = String((e318x && e318x.message) || e318x); }
+  window.__sfs318QA = q318;
 })();
 </script>
 </section>

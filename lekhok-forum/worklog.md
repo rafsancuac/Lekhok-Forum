@@ -3480,4 +3480,21 @@ Work Log:
 
 Stage Summary:
 - session317 সম্পন্ন: sfs317 aria-live + hr317 কপি-ইতিহাস টুলটিপ; ৬৮/৬৮ ×২ + সর্ব-রিগ্রেশন-গ্রিন; ডক-ত্রয় idempotent; পরের-এজেন্ট session318 (Task ID 155) — PLANS session317-নোটের প্রস্তাব-①②③ প্রস্তুত
+---
+Task ID: 155
+Agent: Main cron agent (session318 — cron 403679)
+Task: session318 sfs318 keynav-অবস্থান-ব্যাজ + hr318 টুলটিপ-সম্পূর্ণ-ইতিহাস-তালিকা — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- রাউন্ড-আরম্ভ-যাচাই: HEAD=origin=c836ffc (session317), clean-tree, BEHIND=০; QA বেসলাইন সবুজ (হোম-২০০, কনসোল-শূন্য, sfs317-live + sfs316-kbdhint + sfs315 {frozen:0} + sfs314 pairs=২ + sfs317QA-হুক-জীবন্ত)
+- প্রোড-স্পট (PLANS session317-প্রস্তাব-①): vercel home-200 + **sfs317-live-মার্কার ×৪-লাইভ** (c836ffc-ডিপ্লয়-প্রমাণ) + sfs316-kbdhint + sfs315/sfs314-মার্কার; প্রোড-অ্যাডমিন = প্রকৃত-অ্যাকাউন্ট-গেট (অপরিবর্তিত)
+- ① sfs318 (feed.ejs): sfs318-posbadge (aria-hidden — kbdhint-পূর্বাদাহ; phone-অ্যাংকরড absolute — tabbar-উপরে ডান-কোণ) + sfs317-ঘোষণার দৃশ্যমান-সমকক্ষ (parity) + দ্বি-গেট [data-sfs314-focus]×[data-sfs318-on] + sfs314-apply/clear-এ guarded-হুক + ইঞ্জিন (bn-অঙ্ক n/মোট) + __sfs318QA
+- ② hr318 (admin/home-reorder.ejs): tipRender318 এক-উৎস-রেন্ডারার (show+refresh) — দ্বি-স্তর .hr318-sum (hr317-পাঠ-চুক্তি-অটুট; text() sum-ফলব্যাক) + .hr318-list (hist ×১২ সর্বশেষ-প্রথম, is-cur-হাইলাইট) + DOM-API-নির্মাণ (XSS-নিরাপদ) + __hrAria318QA
+- ③ [Mandatory-স্টাইল] style.css session318-ব্লক হেক্স-শূন্য (পিল + দ্বি-গেট + 640px + reduced-motion); admin-লোকাল .hr318-{sum,list,row,is-cur} (ফাইল-রীতি)
+- সুইট: tests/s318-suite.sh ৭৪/৭৪ ×২-ধারাবাহিক (পরিবেশ ×৩ + কাঠামো ×১৭ + SSR ×৫ + sfs318-ই২ই ×১৮ + hr318-ই২ই ×২২ + মোবাইল ×৫ + নেট-শূন্য ×৪); প্যাচ scripts/s318-patch.py idempotent ×২ (১০-ধাপ — পুনঃরানে সর্ব-SKIP)
+- রিগ্রেশন: s317 ৬৮/৬৮ + s316 ৫৫/৫৫ + s315 ৭১/৭১ (চেইনে ৩-ফ্লেক → একক-রান-পুনঃপ্রমাণ — marathon-ফ্লেক-চুক্তি-প্রয়োগ) + s314 ৬৭/৬৭ + s313 ৬৩/৬৩ + s312 ৫৫/৫৫ + s307 ৫৫/৫৫ + s311 ৪৩/৪৩ + s306 ৫০/৫০ + guard:design + audit:views সর্ব-গ্রিন
+- গোটচা ×২ ডক-কৃত (PLANS session318): headless-frame-starvation × transition-computed (focus-pause-ফ্রেম-বঞ্চনে t=০-উল্টো-পাঠ → viswait পোল-চুক্তি) · টপ-লেভেল-স্ট্রিং দ্বি-এনকোডিং × ↔-স্লাগ (jdec2 দ্বি-ডিকোড — s313-সম্প্রসারণ)
+
+Stage Summary:
+- session318 সম্পন্ন: sfs318 অবস্থান-ব্যাজ + hr318 ইতিহাস-তালিকা; ৭৪/৭৪ ×২ + সর্ব-রিগ্রেশন-গ্রিন; ডক-ত্রয় idempotent; পরের-এজেন্ট session319 (Task ID 156) — PLANS session318-নোটের প্রস্তাব-①②③ প্রস্তুত
 

@@ -68,6 +68,18 @@
        overflow:hidden-ক্লিপ-বহির্ভূত); কপি-বাটনের নিচে কেন্দ্র-স্থাপিত; hover/focus-গেট */
     .hr317-tip { position:absolute; z-index:9999; transform:translate(-50%, 4px); max-width:300px; font-size:.62rem; line-height:1.45; color:#065f46; background:#ffffff; border:1px solid #a7f3d0; border-radius:6px; padding:5px 9px; box-shadow:0 8px 22px -10px rgba(4,120,87,.45); opacity:0; visibility:hidden; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility .16s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .hr317-tip.is-on { opacity:1; visibility:visible; transform:translate(-50%, 0); }
+    /* সেশন ৩১৮ (hr318): টুলটিপ-সম্পূর্ণ-ইতিহাস-তালিকা — sum+list-দ্বি-স্তর (hr317-এক-লাইন-সারাংশ
+       উপরে অটুট); DOM-API-নির্মিত (textContent — XSS-নিরাপদ); চলতি-কী-সারি is-cur-হাইলাইট;
+       pointer-events:none-টুলটিপে কেবল-পাঠ্য-তালিকা (ইন্টারঅ্যাকশন-নেই); ১২-সারি-সীমায়
+       max-height-ক্ল্যাম্প (hist-রেজিস্ট্রি-সীমা = ১২ — s317-অটুট)। */
+    .hr318-sum { display:block; font-weight:700; }
+    .hr318-list { display:block; margin-top:4px; padding-top:4px; border-top:1px dashed #a7f3d0; max-height:148px; overflow:hidden; }
+    .hr318-row { display:flex; gap:6px; align-items:baseline; padding:1px 0; font-size:.58rem; }
+    .hr318-row + .hr318-row { border-top:1px dotted rgba(6,95,70,.16); }
+    .hr318-row .hr318-k { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:148px; font-weight:600; }
+    .hr318-row .hr318-n { color:#047857; font-weight:700; white-space:nowrap; }
+    .hr318-row .hr318-t { margin-left:auto; white-space:nowrap; color:rgba(6,95,70,.72); }
+    .hr318-row.is-cur { background:rgba(4,120,87,.09); border-radius:3px; padding:1px 4px; margin:0 -4px; }
   </style>
 </head>
 <body>
@@ -410,6 +422,33 @@
     if (!h317) return 'এখনো কপি হয়নি';
     return 'সর্বশেষ কপি: ' + h317.key + (h317.n > 1 ? ' · ' + bn317a(h317.n) + ' বার' : '') + ' · ' + ago317(h317.at);
   };
+  /* সেশন ৩১৮ (hr318): টুলটিপে সম্পূর্ণ-ইতিহাস-তালিকা (PLANS session317-নোটের প্রস্তাব-③)
+     • দ্বি-স্তর: .hr318-sum (এক-লাইন-সারাংশ — hr317-পাঠ-চুক্তি অটুট) + .hr318-list
+       (hist ×১২ সর্বশেষ-প্রথম — "key · n বার · সময়-আগে"; চলতি-কী-সারি is-cur)।
+     • কখনো-কপি-হয়নিতে তালিকা-অনুপস্থিত (কেবল-সারাংশ); DOM-API-নির্মাণ
+       (createElement+textContent — XSS-নিরাপদ); sum+list-উভয়-রিফ্রেশ এক-উৎস। */
+  var tipRender318 = function (k318) {
+    if (!tip317) return;
+    while (tip317.firstChild) tip317.removeChild(tip317.firstChild);
+    var s318 = document.createElement('span');
+    s318.className = 'hr318-sum';
+    s318.textContent = tipText317(k318);
+    tip317.appendChild(s318);
+    if (hist317.length) {
+      var l318 = document.createElement('span');
+      l318.className = 'hr318-list';
+      hist317.forEach(function (e318) {
+        var r318 = document.createElement('span');
+        r318.className = 'hr318-row' + (e318.key === k318 ? ' is-cur' : '');
+        var k318e = document.createElement('span'); k318e.className = 'hr318-k'; k318e.textContent = e318.key;
+        var n318e = document.createElement('span'); n318e.className = 'hr318-n'; n318e.textContent = bn317a(e318.n) + ' বার';
+        var t318e = document.createElement('span'); t318e.className = 'hr318-t'; t318e.textContent = ago317(e318.at);
+        r318.appendChild(k318e); r318.appendChild(n318e); r318.appendChild(t318e);
+        l318.appendChild(r318);
+      });
+      tip317.appendChild(l318);
+    }
+  };
   var tipShow317 = function (b317) {
     tipBtn317 = b317;
     if (!tip317) {
@@ -418,7 +457,7 @@
       tip317.setAttribute('role', 'tooltip');
       document.body.appendChild(tip317);
     }
-    tip317.textContent = tipText317(b317.getAttribute('data-copy') || '');
+    tipRender318(b317.getAttribute('data-copy') || ''); /* s318: sum+list-দ্বি-স্তর */
     var r317 = b317.getBoundingClientRect();
     tip317.style.left = Math.round(r317.left + r317.width / 2 + (window.scrollX || 0)) + 'px';
     tip317.style.top = Math.round(r317.bottom + 6 + (window.scrollY || 0)) + 'px';
@@ -431,7 +470,7 @@
       if (h317b) { h317b.at = Date.now(); h317b.n += 1; hist317.splice(hist317.indexOf(h317b), 1); hist317.unshift(h317b); }
       else hist317.unshift({ key: k317, at: Date.now(), n: 1 });
       if (hist317.length > 12) hist317.length = 12;
-      if (tipBtn317 && tip317) { tip317.textContent = tipText317(tipBtn317.getAttribute('data-copy') || ''); }
+      if (tipBtn317 && tip317) { tipRender318(tipBtn317.getAttribute('data-copy') || ''); } /* s318: sum+list-উভয়-রিফ্রেশ */
     } catch (e317a) { window.__hrAria317QA.err = String((e317a && e317a.message) || e317a); }
   };
   innerEl.addEventListener('mouseover', function (e317d) {
@@ -451,7 +490,17 @@
   window.__hrAria317QA = {
     hist: function () { return hist317.slice(); },
     tip: function () { var t317 = document.querySelector('.hr317-tip.is-on'); return !!t317; },
-    text: function () { var t317b = document.querySelector('.hr317-tip.is-on'); return t317b ? t317b.textContent : ''; },
+    text: function () { var s318 = document.querySelector('.hr317-tip.is-on .hr318-sum'); if (s318) return s318.textContent; var t317b = document.querySelector('.hr317-tip.is-on'); return t317b ? t317b.textContent : ''; },
+    err: ''
+  };
+
+  /* সেশন ৩১৮ QA-হুক — ইতিহাস-তালিকা-প্রমাণ (rows/cur = ফাংশনাল-গেটার — খোলা-টুলটিপে-মাত্র) */
+  window.__hrAria318QA = {
+    rows: function () { return document.querySelectorAll('.hr317-tip.is-on .hr318-row').length; },
+    cur: function () { return document.querySelectorAll('.hr317-tip.is-on .hr318-row.is-cur').length; },
+    list: function () {
+      return Array.prototype.map.call(document.querySelectorAll('.hr317-tip.is-on .hr318-row'), function (r318) { return r318.textContent; });
+    },
     err: ''
   };
 })();

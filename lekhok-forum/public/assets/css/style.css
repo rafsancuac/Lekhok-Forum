@@ -4416,3 +4416,45 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs317-live { transition: none; }
 }
 /* ═══════════════════ EOF session317 (sfs317 keynav aria-live ঘোষণা) ═══════════════════ */
+/* ═══════════════════ session318 (sfs318 keynav-অবস্থান-ব্যাজ) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); phone-অ্যাংকরড absolute (frame
+   static — layout-neutral); দ্বি-গেট [data-sfs314-focus] × [data-sfs318-on] — কেবল
+   keynav-মুহূর্তে দৃশ্যমান (kbdhint-রীতি — মাউস-ব্যবহারকারীর জন্য চির-অদৃশ্য);
+   tabbar-উপরে ডান-কোণ (kbdhint-কেন্দ্র-অঞ্চল-অস্পর্শ)। */
+.sfs318-posbadge {
+  position: absolute;
+  right: 10px;
+  bottom: 54px;
+  z-index: 6;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lf-slate-deeper) 74%, transparent);
+  color: var(--lf-white);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid color-mix(in srgb, var(--lf-brand-primary) 42%, transparent);
+  box-shadow: 0 8px 20px -10px rgba(2, 6, 23, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(5px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.sfs292-phone[data-sfs314-focus] .sfs318-posbadge[data-sfs318-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+@media (max-width: 640px) {
+  .sfs318-posbadge { font-size: 0.62rem; right: 8px; bottom: 48px; padding: 3px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs318-posbadge { transition: opacity 0.01s linear, visibility 0.01s linear; transform: translateY(0); }
+}
+/* ═══════════════════ EOF session318 (sfs318 keynav-অবস্থান-ব্যাজ) ═══════════════════ */
