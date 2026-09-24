@@ -16,10 +16,17 @@ const CLEAN = process.argv.includes('--clean');
 
 const dhakaToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Dhaka', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
+// সেশন-৩২৪-সংশোধন: ৩-কন্ট্রোল-সারি (page_count-NULL — ব্যাজ-বিহীন-দল) dhakaToday-তারিখেই —
+//   তারিখ-রোলওভার-টাইম-বোম্ব-নিরসন (s280-সারির-হার্ডকোডেড-তারিখ গতকাল-হয়ে-গেলে today-গ্রুপে
+//   ব্যাজ-বিহীন-দল-শূন্য হত — s306-suite-ব্যর্থতা ×২-প্রমাণিত); কন্ট্রোল = নিজস্ব-মার্কারে —
+//   s280-নির্ভরতা-শূন্য, --clean-এ-সর্ব-বিলোপ (নেট-শূন্য-অটুট)।
 const ROWS = [
   { date: dhakaToday, name: 's306কিউএ প্রথম আলো', fid: 's306fakepaper01A', pages: 52 },
   { date: dhakaToday, name: 's306কিউএ ইত্তেফাক', fid: 's306fakepaper02B', pages: 12 },
-  { date: dhakaToday, name: 's306কিউএ কালবেলা', fid: 's306fakepaper03C', pages: 8 }
+  { date: dhakaToday, name: 's306কিউএ কালবেলা', fid: 's306fakepaper03C', pages: 8 },
+  { date: dhakaToday, name: 's306কিউএ যুগান্তর', fid: 's306fakepaper04D', pages: null },
+  { date: dhakaToday, name: 's306কিউএ নয়া দিগন্ত', fid: 's306fakepaper05E', pages: null },
+  { date: dhakaToday, name: 's306কিউএ ভোরের কাগজ', fid: 's306fakepaper06F', pages: null }
 ];
 
 initSqlJs().then(function (SQL) {

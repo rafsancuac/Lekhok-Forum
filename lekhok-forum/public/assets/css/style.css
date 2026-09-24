@@ -4567,3 +4567,23 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   }
 }
 /* ═══════════════════ EOF session323 (sfs323 ট্যাপ-লেবেল-হাইলাইট parity) ═══════════════════ */
+/* ═══════════════════ session324 (sfs324 ট্যাপ-হাইলাইটে grows-প্রথম-পোস্ট-চিহ্ন) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); হাইলাইটেড-গ্রুপের grows-প্রথম-পোস্ট-চিহ্ন
+   (s322-ফ্রিজ + s323-লেবেল-হাইলাইট-যুগলের পরে অবশিষ্ট-গ্যাপ): inset-বার + টিন্ট — কেবল
+   রঙ/box-shadow (layout-neutral — geometry/aria-অস্পৃশ্য); গেট = data-sfs324-first (JS-এক-সক্রিয়
+   — sfs324-ইঞ্জিন); keynav-gfocus-সারি-সহাবস্থান অসম্ভব (MO-বিলোপ-সমকালীন — s323-চুক্তি);
+   640px-ভ্যারিয়েন্ট (বার-৩→২px) + reduced-motion (transition-নিরাপত্তা)। */
+.sfs314-grows > .sfs292-post[data-sfs324-first] {
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--lf-brand-primary) 46%, transparent);
+  background: color-mix(in srgb, var(--lf-brand-primary) 8%, transparent);
+  transition: box-shadow 0.18s ease, background 0.18s ease;
+}
+@media (max-width: 640px) {
+  .sfs314-grows > .sfs292-post[data-sfs324-first] {
+    box-shadow: inset 2px 0 0 color-mix(in srgb, var(--lf-brand-primary) 46%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs314-grows > .sfs292-post[data-sfs324-first] { transition: none; }
+}
+/* ═══════════════════ EOF session324 (sfs324 ট্যাপ-হাইলাইটে grows-প্রথম-পোস্ট-চিহ্ন) ═══════════════════ */

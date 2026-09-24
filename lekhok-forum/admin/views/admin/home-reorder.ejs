@@ -106,6 +106,15 @@
        ধ্বংসাত্মক-প্রস্তুতি-সংকেত; ৩s-স্বয়ং-নিরামড; hint-সহ-উজ্জ্বল) */
     .hr317-tip.hr323-armed .hr318-sum { color: rgba(220, 38, 38, 0.92); text-decoration: underline dotted rgba(220, 38, 38, 0.55); text-underline-offset: 3px; }
     .hr317-tip.hr323-armed .hr322-hint { color: rgba(220, 38, 38, 0.95); }
+    /* সেশন ৩২৪ (hr324): ইতিহাস-রপ্তাই-বার (তালিকাযুক্ত-টুলটিপেই — hr319-live-গেট-উত্তরাধিকার;
+       দ্বি-বাটন নেটিভ-বাটন — pointer-পথ; কীবোর্ড-পথ = E/D-শর্টকাট — s320/s323-keydown-রীতি;
+       focusout-জীবনচক্ষে-ট্যাব-অপ্রাপ্য — বাটন-নয়-শর্টকাট-ই কীবোর্ড-parity) */
+    .hr324-bar { display: flex; gap: 5px; margin-top: 4px; padding-top: 4px; border-top: 1px dashed rgba(6, 95, 70, 0.3); }
+    .hr324-btn { flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 4px; font: inherit; font-size: 0.55rem; font-weight: 700; color: rgba(6, 95, 70, 0.95); background: rgba(4, 120, 87, 0.08); border: 1px solid rgba(4, 120, 87, 0.32); border-radius: 5px; padding: 3px 7px; cursor: pointer; white-space: nowrap; transition: background 0.12s ease, border-color 0.12s ease; }
+    .hr324-btn:hover { background: rgba(4, 120, 87, 0.16); border-color: rgba(4, 120, 87, 0.5); }
+    .hr324-btn:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
+    .hr324-btn.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
+    .hr324-kbd { display: block; margin-top: 3px; font-size: 0.52rem; color: rgba(6, 95, 70, 0.66); white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -806,6 +815,113 @@
   });
   q323h.arm = function () { return armed323; };
   window.__hrAria323QA = q323h;
+
+  /* সেশন ৩২৪ (hr324): ইতিহাস-রপ্তাই (PLANS session323-নোটের প্রস্তাব-③)
+     • কপি-ইতিহাস (hist317) → ① ক্লিপবোর্ড-স্ট্রিপ ② .txt-ডাউনলোড — টুলটিপ-বার .hr324-bar
+       (tipRender318-মোড়ক-চেইন-পরবর্তী — s322-hint-পরে; তালিকাযুক্তে-ই — hr322/hr323-গেট-
+       দর্শন: শূন্য-ইতিহাসে বার-অনুপস্থিত — নীরব)।
+     • copyAria316-পুনঃব্যবহার-বর্জিত-ইচ্ছাকৃত (copyAria316-এর done316 → __hrAria317Record —
+       রপ্তাই-নিজেই-ইতিহাসে-রেকর্ড-হত — গণনা-দূষণ-গোটচা) → fallbackCopy316-মেকানিজম-
+       পুনঃব্যবহার + navigator.clipboard.writeText-সরাসরি — রেকর্ড-বিহীন রপ্তাই-পথ।
+     • কীবোর্ড-parity: টুলটিপ-বাটন focusout-জীবনচক্ষে-ট্যাবে-অপ্রাপ্য (s317-focusout-বিলোপ) —
+       বাটন-নয়, E/D-শর্টকাট-ই কীবোর্ড-পথ (s320/s323-keydown-রীতি — .hr-aria-copy-ফোকাস-
+       প্রেক্ষাপট; শূন্য-ইতিহাসে নীরব — hr323-দর্শন; মডিফায়ার-বর্জিত)।
+     • ডাউনলোড = Blob + a[download] (DOM-API — XSS-নিরাপদ) + revokeObjectURL-পরিষ্কার;
+       ফাইলনাম lekhok-copy-history-<ISO-তারিখ>.txt; টোস্ট-প্রমাণ + .hr324-done-ফ্ল্যাশ (১.২s)।
+     • QA-হুক __hrAria324QA {copies, downloads, last, strip(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q324h = { copies: 0, downloads: 0, last: '', err: '' };
+  var strip324 = function () {
+    var ls324 = [];
+    for (var i324a = 0; i324a < hist317.length; i324a++) {
+      ls324.push(hist317[i324a].key + ' · ' + bn317a(hist317[i324a].n) + ' বার');
+    }
+    return 'কপি-ইতিহাস (' + bn317a(hist317.length) + '):\n' + ls324.join('\n');
+  };
+  var flash324 = function (btn324) {
+    if (!btn324) return;
+    btn324.classList.add('hr324-done');
+    setTimeout(function () { btn324.classList.remove('hr324-done'); }, 1200);
+  };
+  var copyHist324 = function (btn324a) {
+    try {
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (গেট — বার-অনুপস্থিতেই-অপ্রাপ্য) */
+      var txt324 = strip324();
+      var ok324m = 'কপি-ইতিহাস ক্লিপবোর্ডে রপ্তাই হয়েছে (' + bn317a(hist317.length) + ' এন্ট্রি)';
+      var done324 = function () {
+        q324h.copies += 1; q324h.last = txt324;
+        showToast(true, ok324m);
+        flash324(btn324a);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt324).then(done324, function () { fallbackCopy316(txt324) ? done324() : showToast(false, 'রপ্তাই ব্যর্থ — ম্যানুয়ালি নির্বাচন করুন'); });
+      } else {
+        fallbackCopy316(txt324) ? done324() : showToast(false, 'রপ্তাই ব্যর্থ — ম্যানুয়ালি নির্বাচন করুন');
+      }
+    } catch (e324a) { q324h.err = String((e324a && e324a.message) || e324a); }
+  };
+  var dlHist324 = function (btn324b) {
+    try {
+      if (!hist317.length) return;
+      var b324d = new Blob([strip324()], { type: 'text/plain;charset=utf-8' });
+      var u324 = URL.createObjectURL(b324d);
+      var a324 = document.createElement('a');
+      a324.href = u324;
+      a324.download = 'lekhok-copy-history-' + new Date().toISOString().slice(0, 10) + '.txt';
+      document.body.appendChild(a324);
+      a324.click();
+      a324.remove();
+      setTimeout(function () { URL.revokeObjectURL(u324); }, 400);
+      q324h.downloads += 1; q324h.last = 'download';
+      showToast(true, 'কপি-ইতিহাস ডাউনলোড শুরু হয়েছে (.txt)');
+      flash324(btn324b);
+    } catch (e324b) { q324h.err = String((e324b && e324b.message) || e324b); }
+  };
+  var trOrig324 = tipRender318;
+  tipRender318 = function (k324r) {
+    trOrig324(k324r);
+    try {
+      if (tip317 && hist317.length) {
+        var bar324 = document.createElement('span');
+        bar324.className = 'hr324-bar';
+        var bc324 = document.createElement('button');
+        bc324.type = 'button';
+        bc324.className = 'hr324-btn hr324-copy';
+        bc324.setAttribute('aria-label', 'কপি-ইতিহাস ক্লিপবোর্ডে রপ্তাই করুন');
+        var ic324 = document.createElement('i'); ic324.className = 'fas fa-clipboard'; ic324.setAttribute('aria-hidden', 'true');
+        bc324.appendChild(ic324);
+        bc324.appendChild(document.createTextNode(' স্ট্রিপ কপি'));
+        bc324.addEventListener('click', function (e324c) { e324c.preventDefault(); e324c.stopPropagation(); copyHist324(bc324); });
+        var bd324 = document.createElement('button');
+        bd324.type = 'button';
+        bd324.className = 'hr324-btn hr324-dl';
+        bd324.setAttribute('aria-label', 'কপি-ইতিহাস .txt ফাইলে ডাউনলোড করুন');
+        var id324b = document.createElement('i'); id324b.className = 'fas fa-download'; id324b.setAttribute('aria-hidden', 'true');
+        bd324.appendChild(id324b);
+        bd324.appendChild(document.createTextNode(' ডাউনলোড'));
+        bd324.addEventListener('click', function (e324d) { e324d.preventDefault(); e324d.stopPropagation(); dlHist324(bd324); });
+        bar324.appendChild(bc324); bar324.appendChild(bd324);
+        tip317.appendChild(bar324);
+        var kb324 = document.createElement('span');
+        kb324.className = 'hr324-kbd';
+        kb324.textContent = 'কীবোর্ড (কপি-বাটন-ফোকাসে): E = স্ট্রিপ কপি · D = ডাউনলোড';
+        tip317.appendChild(kb324);
+      }
+    } catch (e324e) { q324h.err = String((e324e && e324e.message) || e324e); }
+  };
+  document.addEventListener('keydown', function (e324k) {
+    try {
+      if (e324k.key !== 'e' && e324k.key !== 'E' && e324k.key !== 'd' && e324k.key !== 'D') return;
+      if (e324k.ctrlKey || e324k.metaKey || e324k.altKey) return;
+      var b324k = e324k.target && e324k.target.closest ? e324k.target.closest('.hr-aria-copy') : null;
+      if (!b324k) return;
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (রপ্তাই-ও-নয় — hr323-দর্শন) */
+      e324k.preventDefault();
+      if (e324k.key === 'e' || e324k.key === 'E') copyHist324(null);
+      else dlHist324(null);
+    } catch (e324l) { q324h.err = String((e324l && e324l.message) || e324l); }
+  });
+  q324h.strip = function () { return hist317.length ? strip324() : ''; };
+  window.__hrAria324QA = q324h;
 })();
 </script>
 </body>

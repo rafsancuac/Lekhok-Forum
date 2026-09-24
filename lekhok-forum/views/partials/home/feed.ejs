@@ -728,5 +728,60 @@
   window.__sfs323QA = q323;
 })();
 </script>
+<script>
+/* session324 (sfs324): ট্যাপ-হাইলাইটে grows-প্রথম-পোস্ট-চিহ্ন (PLANS session323-নোটের প্রস্তাব-②)
+   • s322-ফ্রিজ + s323-লেবেল-হাইলাইট-যুগলের পরে অবশিষ্ট-গ্যাপ: ট্যাপ-কৃত গ্রুপের প্রথম-সারি
+     phone-ফ্রেমে আসে (freeze) কিন্তু সারি-নিজস্ব-চিহ্নহীন — sfs324 = হাইলাইটেড-গ্রুপের
+     grows-প্রথম-পোস্টে data-sfs324-first; উৎস-সত্য = data-sfs323-on-লেবেল-ই (label.id →
+     grows-id → first-post — স্টেট-ডুপ-শূন্য); s323-মোড়ক-চেইন-পরবর্তী __sfs319Show-
+     পুনঃমোড়ক (tap-গেট × keynav-নিষ্ক্রিয় — s322/s323-ফ্রিজ-হাইলাইট-গণিত-অটুট)।
+   • জীবনচক্র = সক্রিয়-পথ-অনুসরণ (MutationObserver — s322/s323-MO-সমান্তরাল, ত্রি-MO-নিরাপদ —
+     একই-attributeFilter): গেট-সমাপ্তি/keynav-সক্রিয়ে চিহ্ন-বিলোপ (s323-বিলোপের সমকালীন —
+     একই-মাইক্রোটাস্ক-পালা); CSS-কেবল-চিহ্ন (inset-বার + টিন্ট — layout-neutral —
+     geometry/aria-অস্পৃশ্য — s306-একক-লিঙ্ক-চুক্তি-অটুট)।
+   • QA-হুক __sfs324QA {set, on(), count(), first(), err} — লেবেল-শূন্যে-ও-সংজ্ঞায়িত (s306b-ধর্ম)। */
+(function () {
+  var q324 = { set: 0, err: '' };
+  try {
+    var phone324 = document.querySelector('.sfs292-phone');
+    var clearAll324 = function () {
+      var ps324 = document.querySelectorAll('.sfs314-grows > .sfs292-post[data-sfs324-first]');
+      for (var i324 = 0; i324 < ps324.length; i324++) ps324[i324].removeAttribute('data-sfs324-first');
+    };
+    /* tap-পথ-চিহ্ন — __sfs319Show-পুনঃমোড়ক (s320→s322→s323-মোড়ক-চেইন-পরবর্তী) */
+    if (window.__sfs319Show) {
+      var sh324 = window.__sfs319Show;
+      window.__sfs319Show = function (l324, i324b, n324) {
+        sh324(l324, i324b, n324);
+        try {
+          if (phone324 && phone324.hasAttribute('data-sfs321-tap') && !phone324.hasAttribute('data-sfs314-focus')) {
+            clearAll324(); /* এক-সক্রিয়-চুক্তি — পুরাতন-বিলোপ-পূর্বে */
+            var on324 = document.querySelector('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[data-sfs323-on][id]');
+            if (on324 && on324.id.indexOf('sfs314-glab-') === 0) {
+              var gr324 = document.getElementById('sfs314-grows-' + on324.id.slice(12));
+              var fp324 = gr324 ? gr324.querySelector('.sfs292-post') : null;
+              if (fp324) { fp324.setAttribute('data-sfs324-first', '1'); q324.set += 1; }
+            }
+          }
+        } catch (e324a) { q324.err = String((e324a && e324a.message) || e324a); }
+      };
+    }
+    /* জীবনচক্র-পর্যবেক্ষণ — গেট-সমাপ্তি/keynav-সক্রিয়ে চিহ্ন-বিলোপ (s323-সমকালীন) */
+    if (phone324 && window.MutationObserver) {
+      var mo324 = new MutationObserver(function () {
+        try {
+          var keep324 = phone324.hasAttribute('data-sfs321-tap') && !phone324.hasAttribute('data-sfs314-focus');
+          if (!keep324) clearAll324();
+        } catch (e324b) { q324.err = String((e324b && e324b.message) || e324b); }
+      });
+      mo324.observe(phone324, { attributes: true, attributeFilter: ['data-sfs321-tap', 'data-sfs314-focus'] });
+    }
+    q324.on = function () { return !!(phone324 && phone324.hasAttribute('data-sfs321-tap') && document.querySelector('.sfs314-grows > .sfs292-post[data-sfs324-first]')); };
+    q324.count = function () { return document.querySelectorAll('.sfs314-grows > .sfs292-post[data-sfs324-first]').length; };
+    q324.first = function () { var f324 = document.querySelector('.sfs314-grows > .sfs292-post[data-sfs324-first]'); return f324 ? (f324.getAttribute('data-post-id') || '') : ''; };
+  } catch (e324x) { q324.err = String((e324x && e324x.message) || e324x); }
+  window.__sfs324QA = q324;
+})();
+</script>
 </section>
 

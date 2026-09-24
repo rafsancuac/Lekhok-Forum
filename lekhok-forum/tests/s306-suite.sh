@@ -95,7 +95,7 @@ echo "── ধাপ-৩: E2E (agent-browser — ব্যাজ + হুক +
 bopen "$BASE/epaper" && ok "epaper-পেজ-ওপেন" || bad "epaper-ওপেন-ব্যর্থ"
 sleep 2
 H=$(ev "(function(){var h=window.__epg306QA; if(!h) return 'NO-HOOK'; return JSON.stringify({total:h.total,withPages:h.withPages,badges:h.badges()})})()")
-unj "$H" | grep -q '"total":8' && ok "হুক total=8 (৫-s280 + ৩-s306)" || bad "হুক total-অমিল: $H"
+unj "$H" | grep -q '"total":11' && ok "হুক total=11 (৫-s280 + ৬-s306 — ৩-ব্যাজড + ৩-কন্ট্রোল — session324-তারিখ-রোলওভার-নিরসন)" || bad "হুক total-অমিল: $H"
 unj "$H" | grep -q '"withPages":3' && ok "হুক withPages=3" || bad "হুক withPages-অমিল: $H"
 unj "$H" | grep -q '"badges":3' && ok "হুক badges=3 (এক-সারিতে-এক-ব্যাজ — ডুপ-শূন্য)" || bad "হুক badges-অমিল: $H"
 B=$(ev "(function(){var b=document.querySelector('#epList .ep-pages306'); return b? JSON.stringify({t:b.textContent.trim(),a:b.getAttribute('data-pages')}) : 'NO-BADGE'})()")
@@ -104,7 +104,7 @@ unj "$B" | grep -q '"a":"52"' && ok "ব্যাজ data-pages-অ্যাট�
 SR=$(ev "(function(){var b=document.querySelector('#epList .ep-pages306'); var n=b?b.closest('.ep-item').querySelector('.ep-item-name'):null; return (n&&b)? (Math.abs(n.getBoundingClientRect().top-b.getBoundingClientRect().top)<10 ? 'SAME-ROW':'WRAP') : 'NO-PAIR'})()")
 echo "$SR" | grep -q "SAME-ROW" && ok "ব্যাজ নামের-সারিতেই (flex-row — একল-র‍্যাপ-ধোঁকা-শূন্য)" || bad "সারি-বিন্যাস: $SR"
 NB=$(ev "(function(){var it=[].slice.call(document.querySelectorAll('#epList .ep-item')); var c=it.filter(function(x){return !x.querySelector('.ep-pages306')}).length; return String(c)})()")
-[ "$(echo "$NB" | tr -d '"')" = "3" ] && ok "page_count-শূন্য ৩-সারিতে ব্যাজ-অনুপস্থিত (গেটেড-চুক্তি)" || bad "ব্যাজ-বিহীন-গণনা: $NB (প্রত্যাশা ৩)"
+[ "$(echo "$NB" | tr -d '"')" = "3" ] && ok "page_count-শূন্য ৩-সারিতে ব্যাজ-অনুপস্থিত (গেটেড-চুক্তি — s306-নিজস্ব-কন্ট্রোল-দল — তারিখ-রোলওভার-নিরাপদ)" || bad "ব্যাজ-বিহীন-গণনা: $NB (প্রত্যাশা ৩)"
 ERRN=$(agent-browser errors 2>/dev/null | wc -l | tr -d ' ')
 [ "$ERRN" = "0" ] && ok "দ্বি-লোড JS-এরর-শূন্য" || bad "JS-এরর $ERRN টি"
 agent-browser set viewport 1366 900 >/dev/null 2>&1
