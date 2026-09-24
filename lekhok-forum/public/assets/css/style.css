@@ -4392,3 +4392,27 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs316-kbdhint { transition: opacity 0.01s linear, visibility 0.01s linear; transform: translate(-50%, -50%); }
 }
 /* ═════════════════════ EOF session316 (sfs316 কীবোর্ড-মোড HUD) ═════════════════════ */
+/* ═══════════════════ session317 (sfs317 keynav aria-live ঘোষণা) ═══════════════════ */
+/* visually-hidden live-অঞ্চল — phone-অ্যাংকরের বাইরে (s306-একক-লিঙ্ক-চুক্তি অটুট:
+   লিঙ্কের accessible-name-অপরিবর্তিত); layout-neutral (absolute + clip — ফ্লো-বহির্ভূত,
+   কোনো-স্থায়ী-আড়াল-নয়); SR-ঘোষণা = sfs314-keynav-হাইলাইট-পরিবর্তনে (s317-ইঞ্জিন) */
+.sfs317-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .sfs317-live { font-size: 0.62rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs317-live { transition: none; }
+}
+/* ═══════════════════ EOF session317 (sfs317 keynav aria-live ঘোষণা) ═══════════════════ */

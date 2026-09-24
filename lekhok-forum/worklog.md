@@ -3463,3 +3463,21 @@ Stage Summary:
 - কীবোর্ড-ব্যবহারকারী ফোন-প্রিভিউতে ফোকাস-করলেই HUD-তে ↑↓-নির্দেশনা — keynav-আবিষ্কারযোগ্য; দ্রুত-অ্যারো-চাপেও ফ্রিজ-অবস্থান নির্ভুল
 - অ্যাডমিন aria-জোড়া-স্লাগ এখন এক-ক্লিকে ক্লিপবোর্ডে (ফলব্যাক-সহ) — ডক-ইন্টিগ্রেশন/টিকিটে-পেস্টযোগ্য
 - পরের-এজেন্ট: session317 (Task ID 154); PLANS session316-নোটের প্রস্তাব দেখুন
+---
+Task ID: 154
+Agent: Main cron agent (session317 — cron 403679)
+Task: session317 sfs317 keynav aria-live ঘোষণা + hr317 সাম্প্রতিক-কপি-ইতিহাস টুলটিপ — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- রাউন্ড-আরম্ভ-যাচাই: HEAD=origin=368ae4d (session316), clean-tree, BEHIND=০; QA বেসলাইন সবুজ (হোম-২০০, কনসোল-শূন্য, sfs316-kbdhint + sfs315 {frozen:0} + sfs314 pairs=২ + sfs312 wired)
+- প্রোড-স্পট (PLANS session316-প্রস্তাব-①): vercel home-200 + sfs316-kbdhint-মার্কার-লাইভ (368ae4d-ডিপ্লয়-প্রমাণ) + sfs315/sfs314-মার্কার ×৫; প্রোড-অ্যাডমিন = প্রকৃত-অ্যাকাউন্ট-গেট (অপরিবর্তিত)
+- ① sfs317 (feed.ejs): sfs317-live লাইভ-অঞ্চল (role=status + polite + atomic — phone-অ্যাংকরের বাইরে, accessible-name-দূষণ-মুক্ত) + sfs314-apply/clear-এ guarded-হুক + ইঞ্জিন (গ্রুপ-লেবেল + বাংলা-অবস্থান n/মোট) + __sfs317QA
+- ② hr317 (admin/home-reorder.ejs): __hrAria317Record (per-key {at,n}-রেজিস্ট্রি, ১২-সীমা, ডুপ-নেই) + body-পোর্টাল-টুলটিপ (hover/focus — "সর্বশেষ কপি · x বার · সময়-আগে" / "এখনো কপি হয়নি") + Escape/blur-বিলোপ + রেকর্ড-রিফ্রেশ + __hrAria317QA
+- ③ [Mandatory-স্টাইল] style.css session317-ব্লক হেক্স-শূন্য (visually-hidden ইউটিলিটি + 640px + reduced-motion); admin-লোকাল .hr317-tip (ফাইল-রীতি)
+- সুইট: tests/s317-suite.sh ৬৮/৬৮ ×২-ধারাবাহিক (কাঠামো ×১৯ + SSR ×৬ + sfs317-জীবনচক্র ×১৫ + hr317 ×১৫ + মোবাইল ×৪ + নেট-শূন্য ×৪)
+- রিগ্রেশন: s316 ৫৫/৫৫ + s315 ৭১/৭১ + s314 ৬৭/৬৭ + s313 ৬৩/৬৩ + s312 ৫৫/৫৫ + s307 ৫৫/৫৫ + s311 ৪৩/৪৩ + s306 ৫০/৫০ + guard:design + audit:views সর্ব-গ্রিন
+- গোটচা ×২ ডক-কৃত (PLANS session317): লাইভ-অঞ্চল-স্থাপন (focus-যোগ্য-পূর্বসূরির-ভিতরে accessible-name-দূষণ) · সুইট-ম্যারাথন-লোড-ফ্লেক (d-মাপ/bg-alpha মিথ্যা-ব্যর্থ — শীতলীন-বিরতি-চুক্তি)
+
+Stage Summary:
+- session317 সম্পন্ন: sfs317 aria-live + hr317 কপি-ইতিহাস টুলটিপ; ৬৮/৬৮ ×২ + সর্ব-রিগ্রেশন-গ্রিন; ডক-ত্রয় idempotent; পরের-এজেন্ট session318 (Task ID 155) — PLANS session317-নোটের প্রস্তাব-①②③ প্রস্তুত
+

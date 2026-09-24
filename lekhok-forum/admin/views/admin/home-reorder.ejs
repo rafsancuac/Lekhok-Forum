@@ -64,6 +64,10 @@
     .hr-aria-copy:hover { background:#d1fae5; }
     .hr-aria-copy:active { transform:scale(.94); }
     .hr-aria-copy.is-done { color:#059669; border-color:#059669; }
+    /* সেশন ৩১৭ (hr317): সাম্প্রতিক-কপি-ইতিহাস টুলটিপ — body-পোর্টাল (chip-এর
+       overflow:hidden-ক্লিপ-বহির্ভূত); কপি-বাটনের নিচে কেন্দ্র-স্থাপিত; hover/focus-গেট */
+    .hr317-tip { position:absolute; z-index:9999; transform:translate(-50%, 4px); max-width:300px; font-size:.62rem; line-height:1.45; color:#065f46; background:#ffffff; border:1px solid #a7f3d0; border-radius:6px; padding:5px 9px; box-shadow:0 8px 22px -10px rgba(4,120,87,.45); opacity:0; visibility:hidden; pointer-events:none; transition:opacity .16s ease, transform .16s ease, visibility .16s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hr317-tip.is-on { opacity:1; visibility:visible; transform:translate(-50%, 0); }
   </style>
 </head>
 <body>
@@ -326,6 +330,7 @@
   var copyAria316 = function (txt316) {
     var done316 = function () {
       window.__hrAria316QA.copied = txt316;
+      if (window.__hrAria317Record) window.__hrAria317Record(txt316); /* s317: ইতিহাস-রেকর্ড */
       showToast(true, 'কী-জোড়া কপি হয়েছে: ' + txt316);
     };
     var fail316 = function () {
@@ -375,6 +380,78 @@
     copied: '',
     failed: 0,
     btns: function () { return document.querySelectorAll('.hr-aria-copy').length; },
+    err: ''
+  };
+
+  /* সেশন ৩১৭ (hr317): সাম্প্রতিক-কপি-ইতিহাস টুলটিপ (PLANS session316-নোটের প্রস্তাব-③)
+     • hr316-কপি-সফলতায় __hrAria317Record (guarded — done316-হুক) → per-key {at, n}-রেজিস্ট্রি
+       (সর্বশেষ-প্রথম, ১২-এন্ট্রি-সীমা); কপি-বাটনে hover/focus-এ পোর্টাল-টুলটিপ:
+       "সর্বশেষ কপি: <slug> · <x বার> · <সময়-আগে>" / কখনো-কপি-হয়নিতে "এখনো কপি হয়নি"।
+     • body-পোর্টাল (chip-এর overflow:hidden-ক্লিপ-বহির্ভূত); ডেলিগেটেড mouseover/out +
+       focusin/out (renderInner-পুনঃরেন্ডার-নিরাপদ) + Escape-বিলোপ; রেকর্ডে খোলা-টুলটিপ-রিফ্রেশ।
+     • QA-হুক __hrAria317QA {hist(), tip(), text(), err}। */
+  var hist317 = [];
+  var tip317 = null;
+  var tipBtn317 = null;
+  var bn317a = function (n317) { return String(n317).replace(/[0-9]/g, function (d317) { return '০১২৩৪৫৬৭৮৯'.charAt(+d317); }); };
+  var ago317 = function (ts317) {
+    var s317 = Math.max(0, Math.round((Date.now() - ts317) / 1000));
+    if (s317 < 60) return 'এইমাত্র';
+    if (s317 < 3600) return bn317a(Math.floor(s317 / 60)) + ' মিনিট আগে';
+    if (s317 < 86400) return bn317a(Math.floor(s317 / 3600)) + ' ঘণ্টা আগে';
+    return bn317a(Math.floor(s317 / 86400)) + ' দিন আগে';
+  };
+  var lastFor317 = function (k317) {
+    for (var i317 = 0; i317 < hist317.length; i317++) { if (hist317[i317].key === k317) return hist317[i317]; }
+    return null;
+  };
+  var tipText317 = function (k317) {
+    var h317 = lastFor317(k317);
+    if (!h317) return 'এখনো কপি হয়নি';
+    return 'সর্বশেষ কপি: ' + h317.key + (h317.n > 1 ? ' · ' + bn317a(h317.n) + ' বার' : '') + ' · ' + ago317(h317.at);
+  };
+  var tipShow317 = function (b317) {
+    tipBtn317 = b317;
+    if (!tip317) {
+      tip317 = document.createElement('div');
+      tip317.className = 'hr317-tip';
+      tip317.setAttribute('role', 'tooltip');
+      document.body.appendChild(tip317);
+    }
+    tip317.textContent = tipText317(b317.getAttribute('data-copy') || '');
+    var r317 = b317.getBoundingClientRect();
+    tip317.style.left = Math.round(r317.left + r317.width / 2 + (window.scrollX || 0)) + 'px';
+    tip317.style.top = Math.round(r317.bottom + 6 + (window.scrollY || 0)) + 'px';
+    tip317.classList.add('is-on');
+  };
+  var tipHide317 = function () { tipBtn317 = null; if (tip317) tip317.classList.remove('is-on'); };
+  window.__hrAria317Record = function (k317) {
+    try {
+      var h317b = lastFor317(k317);
+      if (h317b) { h317b.at = Date.now(); h317b.n += 1; hist317.splice(hist317.indexOf(h317b), 1); hist317.unshift(h317b); }
+      else hist317.unshift({ key: k317, at: Date.now(), n: 1 });
+      if (hist317.length > 12) hist317.length = 12;
+      if (tipBtn317 && tip317) { tip317.textContent = tipText317(tipBtn317.getAttribute('data-copy') || ''); }
+    } catch (e317a) { window.__hrAria317QA.err = String((e317a && e317a.message) || e317a); }
+  };
+  innerEl.addEventListener('mouseover', function (e317d) {
+    var b317d = e317d.target && e317d.target.closest ? e317d.target.closest('.hr-aria-copy') : null;
+    if (b317d) tipShow317(b317d);
+  });
+  innerEl.addEventListener('mouseout', function (e317e) {
+    var b317e = e317e.target && e317e.target.closest ? e317e.target.closest('.hr-aria-copy') : null;
+    if (b317e) tipHide317();
+  });
+  innerEl.addEventListener('focusin', function (e317f) {
+    var b317f = e317f.target && e317f.target.closest ? e317f.target.closest('.hr-aria-copy') : null;
+    if (b317f) tipShow317(b317f);
+  });
+  innerEl.addEventListener('focusout', function () { tipHide317(); });
+  document.addEventListener('keydown', function (e317g) { if (e317g.key === 'Escape') tipHide317(); });
+  window.__hrAria317QA = {
+    hist: function () { return hist317.slice(); },
+    tip: function () { var t317 = document.querySelector('.hr317-tip.is-on'); return !!t317; },
+    text: function () { var t317b = document.querySelector('.hr317-tip.is-on'); return t317b ? t317b.textContent : ''; },
     err: ''
   };
 })();
