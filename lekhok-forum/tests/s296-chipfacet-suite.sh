@@ -9,6 +9,9 @@
 #          (dcfApply293-হুক-প্রমাণ); Enter/Space-কীবোর্ড; ফোকাস-চুরি-শূন্য (দৃশ্যমান-কন্ট্রোল-প্রোব —
 #          session295-গোটচা); AND-কম্বো dcf293-অক্ষুণ্ণ)
 #          ④ 390px-hScroll-শূন্য + স্ক্রিনশট ×২
+# session297-রক্ষণাবেক্ষণ: ধাপ-৩-এর লগইন-open → open-রিট্রাই+url-যাচাই (fresh-daemon-first-open-wedge —
+#          wedge-প্রোটোকল-যুগে daemon-পুনঃসূচনা নিয়মিত) + লগইন-status-assert-এ opaqueredirect-0-গ্রহণ
+#          (fetch-স্পেক: redirect:manual → status-0 — warm-daemon-ALR-শাখার-পূর্ব-নির্ভরতা-বিলোপ)।
 # চুক্তি: ① সিড = DB-সরাসরি (s293-seeddaily পুনঃব্যবহার — POST-নিষিদ্ধ: published=1-এ broadcastToAll,
 #         s274/s277-চুক্তি; কিল→সিড→বুট ক্রম) ② ভিউয়ার = admin/admin123 (s277-প্রমাণিত) ③ প্রত্যাশা-গণনা =
 #         রেন্ডার্ড-HTML থেকে (চিপ-ইউনিক-জোড় 'data-dcf-chip296 data-dcf-type296=' — CSS/JS-লিটারাল-নিরাপদ;
@@ -127,12 +130,38 @@ echo "  (quiz+খসড়া-সারি=$QZD — AND-অ্যাসার্
 
 echo "── ধাপ-৩: E2E (agent-browser — ইউনিক-কোয়েরি-open) ──"
 Q1="qa296a=$(date +%s)$RANDOM"
-agent-browser open "$BASE/admin/login" >/dev/null 2>&1; sleep 1
+# session297-প্রয়োগ: open-রিট্রাই + url-যাচাই (নীরব-ব্যর্থ-open → about:blank; fresh-daemon-first-open-wedge —
+# wedge-প্রোটোকল-যুগে daemon-পুনঃসূচনা নিয়মিত → প্রথম-open ধীর/আটকে-যেতে-পারে — s296-epkwide-রীতি)
+OPENOK=""
+for k in 1 2 3 4; do
+  agent-browser open "$BASE/admin/login" >/dev/null 2>&1
+  sleep 1
+  UU=$(agent-browser get url 2>/dev/null | tr -d '"')
+  if echo "$UU" | grep -q "admin"; then OPENOK=1; break; fi
+  sleep 1
+done
+if [ -n "$OPENOK" ]; then ok "open (url-যাচাই — admin/*)"; else bad "open-ব্যর্থ (url=$UU)"; fi
 LR=$(ev '(function(){var c=document.querySelector("input[name=_csrf]");if(!c)return "ALR";return fetch("/admin/login",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},redirect:"manual",body:"username=admin&password=admin123&_csrf="+encodeURIComponent(c.value)}).then(function(r){return String(r.status)})})()' 2>/dev/null | tr -d '"')
-if echo "$LR" | grep -qE '30[23]'; then ok "ব্রাউজার-লগইন ($LR)"; else
-  if echo "$LR" | grep -qF 'ALR'; then ok "ব্রাউজার-সেশন পূর্ব-লগইনড (ALR)"; else bad "ব্রাউজার-লগইন ($LR)"; fi
+# session297: status "0" = opaqueredirect (fetch-স্পেক — redirect:manual → status-0, Chrome-প্রমাণিত) —
+# রিডাইরেক্ট-ঘটেছে-ই; 30[23] = পুরনো-চেইন। ALR = পূর্ব-লগইনড-সেশন (warm-daemon-যুগের-পথ)।
+if echo "$LR" | grep -qE '^30[23]$'; then ok "ব্রাউজার-লগইন ($LR)"; else
+  if echo "$LR" | grep -qE '^0$'; then ok "ব্রাউজার-লগইন (opaqueredirect-0 — রিডাইরেক্ট-প্রমাণিত)"; else
+    if echo "$LR" | grep -qF 'ALR'; then ok "ব্রাউজার-সেশন পূর্ব-লগইনড (ALR)"; else bad "ব্রাউজার-লগইন ($LR)"; fi
+  fi
 fi
-if agent-browser open "$BASE/admin/daily/?$Q1" >/dev/null 2>&1; then ok "open ($Q1 — অ্যাঙ্করড-টার্গেট)"; else bad "open-ব্যর্থ"; fi
+# session297: কুকি-সেটলমেন্ট-পোল — fetch-লগইনের Set-Cookie-প্রক্রিয়াকরণ opaqueredirect-ফিল্টারের-পরেও
+# এক-টিক-নিতে-পারে → সঙ্গে-সঙ্গে-open-করলে রেসে অ-লগইনড-বাউন্স (/admin)। authed-probe (authed=200,
+# unauth-রিডাইরেক্ট=opaqueredirect-0) 200-না-হওয়া-পর্যন্ত — নির্ধারক-সেটল।
+poll '(function(){return fetch("/admin/daily",{redirect:"manual"}).then(function(r){return r.status===200?"AUTHED":"WAIT"})})()' 'AUTHED' 20 && ok "লগইন-কুকি-সেটল (authed-probe-200)" || bad "লগইন-কুকি-সেটল"
+OPEN2=""
+for k in 1 2 3; do
+  agent-browser open "$BASE/admin/daily/?$Q1" >/dev/null 2>&1
+  sleep 1
+  UU2=$(agent-browser get url 2>/dev/null | tr -d '"')
+  if echo "$UU2" | grep -qF "admin/daily"; then OPEN2=1; break; fi
+  sleep 1
+done
+if [ -n "$OPEN2" ]; then ok "open ($Q1 — অ্যাঙ্করড-টার্গেট, url-যাচাই)"; else bad "open-ব্যর্থ (url=$UU2)"; fi
 if poll 'window.__dcf296QA ? ("N" + window.__dcf296QA.chips() + "P" + window.__dcf296QA.pressed() + "T" + window.__dcf296QA.pressedType()) : "NOHOOK"' "N${CHIPN}P1T"; then ok "বুট: হুক-জীবিত (chips=$CHIPN pressed=১ pressedType=''-সব)"; else bad "বুট-হুক"; fi
 # চিপ-ক্লিক (quiz) → একক-ফানেল: select-সেট + change-চেইন + aria-pressed-স্থানান্তর
 # গোটচা: বাস-সিঙ্গেল-কোটের-ভিতরে JS-স্ট্রিং-নেস্টেড-কোট নিষিদ্ধ → CSS-অ্যাট্রি-সিলেক্টর আনকোটেড (quiz/activity/this_day = বৈধ-আইডেন্টিফায়ার); সব-চিপ = প্রথম [data-dcf-chip296]

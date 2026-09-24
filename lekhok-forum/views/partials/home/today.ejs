@@ -203,6 +203,20 @@
   var kiosk = document.getElementById('epKiosk291');
   if (!kiosk) return;
   var papers = <%- teJson291 %>;
+
+  /* session297: ভিউপোর্ট-সচেতন অটো-স্লাইড-স্টেট + QA-হুক (papers-শূন্যে-ও __epk297QA সংজ্ঞায়িত —
+     পরিবার-চুক্তি; session296-প্রস্তাব: অদৃশ্য-সেকশনে/লুকানো-ট্যাবে ইঞ্জিন-স্থগিত — CPU-সাশ্রয়) */
+  var epk297InView = true, epk297TabVisible = true, epk297TickN = 0, epk297IO = null;
+  window.__epk297QA = {
+    inView: function () { return epk297InView; },
+    tabVisible: function () { return epk297TabVisible; },
+    ioOn: function () { return !!epk297IO; },
+    timerOn: function () { return !!timer; },
+    tickN: function () { return epk297TickN; },
+    current: function () { return papers.length ? current : -1; },
+    tick: function () { if (papers.length) { applyPaper((current + 1) % papers.length); return true; } return false; },
+    sync: epk297Sync297
+  };
   if (!papers.length) return;
 
   var reduceMotion = false;
@@ -272,7 +286,7 @@
   function startTimer() {
     if (reduceMotion || timer) return;
     timer = setInterval(function () {
-      if (!paused) applyPaper((current + 1) % papers.length);
+      if (!paused && epk297InView && epk297TabVisible) { epk297TickN++; applyPaper((current + 1) % papers.length); }
     }, 3500);
   }
   function resetTimer() {
@@ -293,6 +307,30 @@
   kiosk.addEventListener('focusin', function () { paused = true; });
   kiosk.addEventListener('focusout', function (e) {
     if (!kiosk.contains(e.relatedTarget)) paused = false;
+  });
+
+  /* session297: ভিউপোর্ট-সচেতন অটো-স্লাইড — IO (threshold .12) + visibilitychange দু-স্তরে
+     ইঞ্জিন-স্থগিত (অদৃশ্য-সেকশনে টাইমার-সম্পূর্ণ-বন্ধ — CPU-সাশ্রয়); দৃশ্যমানতায় পুনঃ-সূচনা।
+     IO-অসমর্থিত-ব্রাউজারে epk297InView=true-পূর্বস্থ — আচরণ-অপরিবর্তিত (গ্রেসফুল-ডিগ্রেডেশন)। */
+  function epk297Sync297() {
+    if (!papers.length) return;
+    var run297 = epk297InView && epk297TabVisible;
+    if (run297 && !timer) startTimer();
+    else if (!run297 && timer) { clearInterval(timer); timer = null; }
+  }
+  try {
+    if ('IntersectionObserver' in window) {
+      epk297IO = new IntersectionObserver(function (entries297) {
+        var en297 = entries297 && entries297[0];
+        epk297InView = !!(en297 && en297.isIntersecting);
+        epk297Sync297();
+      }, { threshold: 0.12 });
+      epk297IO.observe(section);
+    }
+  } catch (e297) { epk297IO = null; epk297InView = true; }
+  document.addEventListener('visibilitychange', function () {
+    epk297TabVisible = !(document.hidden === true);
+    epk297Sync297();
   });
 
   // সফল-লোডে মাস্টহেড-থেকে-ছবি (ফ্ল্যাশ-শূন্য)

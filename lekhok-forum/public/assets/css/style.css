@@ -3461,3 +3461,28 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .epk291-hover296, .epk291-hoverbtn296 { transition: none; }
 }
 /* ═══════════ EOF সেশন ২৯৬ (session296 প্রশস্ত কিয়স্ক) ═══════════ */
+
+/* ═══════════ সেশন ২৯৭ (session297 — ভিউপোর্ট-সচেতন কিয়স্ক ep297 + ফিল্ম/CTA প্রিমিয়াম-পলিশ) ═══════════ */
+/* ① ফিল্ম-গ্রিড ৫-কলাম — ≥1440px (s296-র 1280-চৌকাঠে ৪-কলাম-চুক্তি অক্ষুণ্ণ; ৮-বাটনে প্রশস্ত-ভারসাম্য) */
+@media (min-width: 1440px) {
+  .epk291-film { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+/* ② ফিল্ম-বাটন পলিশ — হোভার-লিফট + সফট-ছায়া + :active-স্কেল */
+.epk291-film-btn { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.epk291-film-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 9px rgba(0, 0, 0, 0.14); }
+.epk291-film-btn:active { transform: translateY(0) scale(.98); }
+/* ③ নির্বাচিত-বাটন — অ্যাকসেন্ট-রিং (per-paper --epkAcc291 — s291-ভেরিয়েবল-উত্তরাধিকার) */
+.epk291-film-btn[aria-selected="true"] { box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22), 0 0 0 1px color-mix(in srgb, var(--epkAcc291, var(--lf-brand-primary)) 24%, transparent); }
+/* ④ মিনি-থাম্ব পলিশ — হোভারে হালকা-ঘোরানো + বৃদ্ধি (নির্বাচিত-অবস্থার লিফটের সাথে-সামঞ্জস্য) */
+.epk291-film-thumb { transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.epk291-film-btn:hover .epk291-film-thumb { transform: rotate(-1.4deg) scale(1.05); }
+/* ⑤ প্রবেশ-CTA পলিশ — হোভার-লিফট + ছায়া */
+#teKioskCta291 { transition: transform .16s ease, box-shadow .16s ease; }
+#teKioskCta291:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+/* ⑥ রিডিউসড-মোশন গার্ড */
+@media (prefers-reduced-motion: reduce) {
+  .epk291-film-btn, .epk291-film-thumb, #teKioskCta291 { transition: none; }
+  .epk291-film-btn:hover, .epk291-film-btn:active, .epk291-film-btn:hover .epk291-film-thumb, #teKioskCta291:hover { transform: none; }
+}
+/* ═══════════ EOF সেশন ২৯৭ ═══════════ */
+
