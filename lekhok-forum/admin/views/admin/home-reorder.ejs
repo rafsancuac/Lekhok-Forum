@@ -115,6 +115,16 @@
     .hr324-btn:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
     .hr324-btn.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
     .hr324-kbd { display: block; margin-top: 3px; font-size: 0.52rem; color: rgba(6, 95, 70, 0.66); white-space: nowrap; }
+    /* সেশন ৩২৫ (hr325): ইতিহাস-সারি-একক-বিলোপ ×-নিয়ন্ত্রণ (তালিকাযুক্ত-টুলটিপেই — hr319-live-গেট;
+       সারি-হোভার/focus-within-এ প্রকাশ — ঘন-তালিকায়-স্থায়ী-ঘোষণা-বিভ্রান্তি-শূন্য; কীবোর্ড-পথ =
+       X-শর্টকাট (পয়েন্টার-সারি — hr320-পয়েন্টার — s320/s324-keydown-রীতি); লাল-টিন্ট =
+       hr322/hr323-বিলোপ-রীতি; rgba-only) */
+    .hr325-x { flex: 0 0 auto; opacity: 0; border: 0; background: transparent; color: rgba(6, 95, 70, 0.55); font-size: 0.6rem; line-height: 1; padding: 1px 3px; border-radius: 3px; cursor: pointer; transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease; }
+    .hr318-row:hover .hr325-x, .hr318-row:focus-within .hr325-x { opacity: 1; }
+    .hr325-x:hover { color: rgba(220, 38, 38, 0.95); background: rgba(220, 38, 38, 0.1); }
+    .hr325-x:focus-visible { outline: 2px solid rgba(220, 38, 38, 0.6); outline-offset: 1px; opacity: 1; }
+    .hr325-x:active { color: rgba(185, 28, 28, 1); }
+    @media (prefers-reduced-motion: reduce) { .hr325-x { transition: none; } }
   </style>
 </head>
 <body>
@@ -922,6 +932,77 @@
   });
   q324h.strip = function () { return hist317.length ? strip324() : ''; };
   window.__hrAria324QA = q324h;
+
+  /* সেশন ৩২৫ (hr325): ইতিহাস-সারি-একক-বিলোপ (PLANS session324-নোটের প্রস্তাব-③)
+     • সারি-হোভার ×-নিয়ন্ত্রণ (.hr325-x — tipRender318-মোড়ক-চেইন-পরবর্তী — hr324-বার-পরে):
+       এক-সারি-বিলোপ (hist317-splice + save321-স্থায়ীকরণ-সিঙ্ক + ptr320-স্টেল-বিলোপ —
+       hr322-রীতি + tipRender318-এক-উৎস-রিফ্রেশ + ptrSync320-পুনঃপ্রয়োগ — পুনঃনির্মাণে
+       ptr-চিহ্ন-হারায়); ×-ক্লিক = stopPropagation (s319-সারি-পুনঃকপি-সংঘর্ষ-শূন্য —
+       rowRecopy319-অস্পৃশ্য); DOM-API-নির্মাণ (aria-label + fa-icon — XSS-নিরাপদ)।
+     • কীবোর্ড-parity = X-শর্টকাট (পয়েন্টার-সারি — hr320-পয়েন্টার-নেভিগেশনের সম্প্রসারণ;
+       s320/s324-keydown-রীতি — .hr-aria-copy-ফোকাস-প্রেক্ষাপট × মডিফায়ার-বর্জন ×
+       পয়েন্টার-শূন্যে নীরব — কিছু-নির্বাচিত-নয়); টুলটিপ-বাটন focusout-জীবনচক্ষে-ট্যাবে-
+       অপ্রাপ্য-গোটচা-উত্তরাধিকার (hr324-রীতি) — শর্টকাট-ই parity-পথ।
+     • শূন্য-অবশেষ: সর্ব-সারি-বিলোপে tipHide317 (clearHist323-সমাপ্তি-দর্শন); টোস্ট-প্রমাণ।
+     • QA-হুক __hrAria325QA {deletes, lastKey, hist(), ptr(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q325h = { deletes: 0, lastKey: '', err: '' };
+  var deleteRow325 = function (k325) {
+    try {
+      if (!k325 || !hist317.length) return;
+      var idx325 = -1;
+      for (var i325a = 0; i325a < hist317.length; i325a++) { if (hist317[i325a].key === k325) { idx325 = i325a; break; } }
+      if (idx325 < 0) return;
+      hist317.splice(idx325, 1);
+      if (ptr320 === k325) ptr320 = ''; /* স্টেল-পয়েন্টার-বিলোপ (hr322-রীতি) */
+      save321(); /* স্থায়ীকরণ-সিঙ্ক (hr321-এক-উৎস — পুনঃলোডে বিলোপ-টিকে) */
+      tipRender318(tipBtn317 ? (tipBtn317.getAttribute('data-copy') || '') : ''); /* এক-উৎস-রিফ্রেশ */
+      ptrSync320(); /* পুনঃনির্মাণ-পরবর্তী ptr-চিহ্ন-পুনঃপ্রয়োগ (অবশিষ্ট-পয়েন্টার) */
+      if (!hist317.length) tipHide317(); /* সর্ব-বিলোপ = clearHist323-সমাপ্তি-দর্শন */
+      q325h.deletes += 1; q325h.lastKey = k325;
+      showToast(true, 'ইতিহাস-সারি বিলোপ হয়েছে: ' + k325);
+    } catch (e325e) { q325h.err = String((e325e && e325e.message) || e325e); }
+  };
+  var trOrig325 = tipRender318;
+  tipRender318 = function (k325r) {
+    trOrig325(k325r);
+    try {
+      if (tip317 && hist317.length) {
+        var rs325 = tip317.querySelectorAll('.hr318-row[data-copy]');
+        for (var i325b = 0; i325b < rs325.length; i325b++) {
+          (function (row325) {
+            var k325x = row325.getAttribute('data-copy') || '';
+            var x325 = document.createElement('button');
+            x325.type = 'button';
+            x325.className = 'hr325-x';
+            x325.setAttribute('aria-label', 'ইতিহাস-সারি বিলোপ: ' + k325x);
+            var ix325 = document.createElement('i'); ix325.className = 'fas fa-times'; ix325.setAttribute('aria-hidden', 'true');
+            x325.appendChild(ix325);
+            x325.addEventListener('click', function (e325f) { e325f.preventDefault(); e325f.stopPropagation(); deleteRow325(k325x); });
+            row325.appendChild(x325);
+          })(rs325[i325b]);
+        }
+        var kb325 = tip317.querySelector('.hr324-kbd');
+        if (kb325 && kb325.textContent.indexOf('X = পয়েন্টার-সারি বিলোপ') < 0) {
+          kb325.textContent = kb325.textContent + ' · X = পয়েন্টার-সারি বিলোপ';
+        }
+      }
+    } catch (e325g) { q325h.err = String((e325g && e325g.message) || e325g); }
+  };
+  document.addEventListener('keydown', function (e325h) {
+    try {
+      if (e325h.key !== 'x' && e325h.key !== 'X') return;
+      if (e325h.ctrlKey || e325h.metaKey || e325h.altKey) return;
+      var b325k = e325h.target && e325h.target.closest ? e325h.target.closest('.hr-aria-copy') : null;
+      if (!b325k) return;
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
+      if (!ptr320 || ptrIdx320() < 0) return; /* পয়েন্টার-শূন্যে নীরব (কিছু-নির্বাচিত-নয়) */
+      e325h.preventDefault();
+      deleteRow325(ptr320);
+    } catch (e325i) { q325h.err = String((e325i && e325i.message) || e325i); }
+  });
+  q325h.hist = function () { return hist317.length; };
+  q325h.ptr = function () { return ptr320; };
+  window.__hrAria325QA = q325h;
 })();
 </script>
 </body>

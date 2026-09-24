@@ -783,5 +783,66 @@
   window.__sfs324QA = q324;
 })();
 </script>
+<script>
+/* session325 (sfs325): ট্যাপ-পথের aria-live-ঘোষণা-parity (PLANS session324-নোটের প্রস্তাব-②)
+   • s317-live-ঘোষণা কেবল keynav-মুহূর্তে (apply314 → __sfs317Announce) — টাচ-ব্যবহারকারীর
+     ঘোষণা-শূন্য; sfs325 = ট্যাপ-পথে **একই-অঞ্চলে-একই-বিন্যাসে** ঘোষণা (parity — নতুন-অঞ্চল-ডুপ-শূন্য
+     — একই .sfs317-live পুনঃব্যবহার; s306-একক-লিঙ্ক-চুক্তি-অটুট); s324-মোড়ক-চেইন-পরবর্তী
+     __sfs319Show-পুনঃমোড়ক (৫ম-স্তর — tap-গেট × keynav-নিষ্ক্রিয় স্বতন্ত্রক — s322/s323/s324-
+     গেট-গণিত-অটুট); অবস্থান-সূত্র = লেবেল-স্বয়ং-নির্ণীত idx (indexOf — s321-এর ১-ভিত্তিক-পাস-
+     অসমতা-স্বাধীন — শূন্য-ভিত্তিক-সঠিক n/মোট — কোনো-স্টেট-ডুপ-নেই)।
+   • অভিন্ন-পাঠ-পুনঃঘোষণা: একই-লেবেল-পুনঃট্যাপে SR-অভিন্ন-পাঠ-বাদ-প্রতিরোধ — clear→task-বিভাজন
+     (setTimeout 0)→পুনঃস্থাপন (mutation-সমষ্টি-প্রতিরোধ — s317-একই-কনট্র্যাক্ট)।
+   • জীবনচক্র = গেট-সমাপ্তি-বিলোপ (MutationObserver — চতুর্থ-MO — সম-attributeFilter-নিরাপদ —
+     s322/s323/s324-ত্রি-MO-চুক্তি-বর্ধিত): গেট-বিলোপ × keynav-নিষ্ক্রিয়ে __sfs317Clear —
+     keynav-সক্রিয়ে অঞ্চল-মালিকানা-হস্তান্তর (keynav-নিজস্ব-ঘোষণা-স্পর্শ-নিষিদ্ধ — s323-রীতি)।
+   • QA-হুক __sfs325QA {announces, re, last, live(), text(), err} — লেবেল-শূন্যে-ও-সংজ্ঞায়িত (s306b-ধর্ম)। */
+(function () {
+  var q325 = { announces: 0, re: 0, last: '', err: '' };
+  try {
+    var phone325 = document.querySelector('.sfs292-phone');
+    var labs325 = document.querySelectorAll('.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel[id]');
+    /* tap-পথ-ঘোষণা — __sfs319Show-পুনঃমোড়ক (s320→s322→s323→s324-মোড়ক-চেইন-পরবর্তী) */
+    if (window.__sfs319Show) {
+      var sh325 = window.__sfs319Show;
+      window.__sfs319Show = function (l325, i325b, n325) {
+        sh325(l325, i325b, n325);
+        try {
+          if (phone325 && phone325.hasAttribute('data-sfs321-tap') && !phone325.hasAttribute('data-sfs314-focus') && l325 && window.__sfs317Announce) {
+            var nm325 = String(l325.textContent || '').replace(/\s+/g, ' ').trim();
+            if (!nm325) return; /* s317-নাম-গেট-প্যারিটি — শূন্য-নামে নীরব */
+            var liveEl325 = document.querySelector('.sfs317-live');
+            var prev325 = liveEl325 ? liveEl325.textContent : '';
+            var i0325 = labs325.length ? Array.prototype.indexOf.call(labs325, l325) : -1;
+            if (i0325 >= 0) window.__sfs317Announce(l325, i0325, labs325.length); /* শূন্য-ভিত্তিক-সঠিক অবস্থান */
+            else window.__sfs317Announce(l325);
+            var tx325 = liveEl325 ? liveEl325.textContent : '';
+            q325.announces += 1; q325.last = tx325;
+            if (tx325 && tx325 === prev325 && liveEl325) {
+              /* অভিন্ন-পাঠ-পুনঃঘোষণা: clear→task-বিভাজন→পুনঃস্থাপন (SR-mutation-সমষ্টি-প্রতিরোধ) */
+              liveEl325.textContent = '';
+              q325.re += 1;
+              setTimeout(function () { try { liveEl325.textContent = tx325; } catch (e325d) { q325.err = String((e325d && e325d.message) || e325d); } }, 0);
+            }
+          }
+        } catch (e325a) { q325.err = String((e325a && e325a.message) || e325a); }
+      };
+    }
+    /* জীবনচক্র-পর্যবেক্ষণ — গেট-সমাপ্তি × keynav-নিষ্ক্রিয়ে ঘোষণা-বিলোপ (keynav-সক্রিয়ে হস্তান্তর — অস্পৃশ্য) */
+    if (phone325 && window.MutationObserver) {
+      var mo325 = new MutationObserver(function () {
+        try {
+          var gateGone325 = !phone325.hasAttribute('data-sfs321-tap') && !phone325.hasAttribute('data-sfs314-focus');
+          if (gateGone325 && window.__sfs317Clear) window.__sfs317Clear();
+        } catch (e325b) { q325.err = String((e325b && e325b.message) || e325b); }
+      });
+      mo325.observe(phone325, { attributes: true, attributeFilter: ['data-sfs321-tap', 'data-sfs314-focus'] });
+    }
+    q325.live = function () { return !!document.querySelector('.sfs317-live'); };
+    q325.text = function () { var l325c = document.querySelector('.sfs317-live'); return l325c ? l325c.textContent : ''; };
+  } catch (e325x) { q325.err = String((e325x && e325x.message) || e325x); }
+  window.__sfs325QA = q325;
+})();
+</script>
 </section>
 

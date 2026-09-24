@@ -4587,3 +4587,22 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs314-grows > .sfs292-post[data-sfs324-first] { transition: none; }
 }
 /* ═══════════════════ EOF session324 (sfs324 ট্যাপ-হাইলাইটে grows-প্রথম-পোস্ট-চিহ্ন) ═══════════════════ */
+/* ═══════════════════ session325 (sfs325 ট্যাপ-ঘোষণা-parity + ট্যাপ-প্রেস-ফিডব্যাক) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); sfs325 = ট্যাপ-পথের aria-live-ঘোষণা-parity
+   (অদৃশ্য-অঞ্চল — .sfs317-live-পুনঃব্যবহার — নতুন-ভিজ্যুয়াল-নেই — layout-neutral); স্টাইল-রাউন্ড =
+   টাচ-প্রেস-ফিডব্যাক (glabel:active-টিন্ট-গভীরকরণ — s322-ট্যাপ-ফ্রেম-রিং-এর লেবেল-সমকক্ষ —
+   টাচ-ব্যবহারকারীর ইঞ্জেজমেন্ট-প্রমাণ; কেবল-রঙ — geometry-স্পর্শ-নিষিদ্ধ — s314-চুক্তি);
+   640px-ভ্যারিয়েন্ট (টিন্ট ১৮→২২%) + reduced-motion (transition-নিরাপত্তা)। */
+.sfs292-half:not([aria-hidden="true"]) .sfs292-glabel:active {
+  background: color-mix(in srgb, var(--lf-brand-primary) 18%, transparent);
+  color: var(--lf-brand-primary);
+}
+@media (max-width: 640px) {
+  .sfs292-half:not([aria-hidden="true"]) .sfs292-glabel:active {
+    background: color-mix(in srgb, var(--lf-brand-primary) 22%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs292-half:not([aria-hidden="true"]) .sfs292-glabel { transition: none; }
+}
+/* ═══════════════════ EOF session325 (sfs325 ট্যাপ-ঘোষণা-parity + ট্যাপ-প্রেস-ফিডব্যাক) ═══════════════════ */
