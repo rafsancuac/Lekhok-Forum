@@ -141,7 +141,7 @@ if [ "$(jf chipOn "$T3")" = "false" ]; then ok "ই২ই: গেট-সমা�
 ev "JSON.stringify((function(){var p=document.querySelector('.sfs292-phone');p.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));return 'k1'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
 T4=$(unjj "$(ev "JSON.stringify(window.__sfs327QA.probe())")")
-if [ "$(jf chipOn "$T4")" = "true" ] && [ "$(jf right "$T4")" = "68px" ]; then ok "ই২ই: keynav-পথ অস্পৃশ্য (চিপ-on × ব্যাজ-প্রি-Show — right=৬৮px-ভিত্তি — s319-geometry-অটুট)"; else bad "ই২ই: $(unjj "$T4")"; fi
+if [ "$(jf chipOn "$T4")" = "true" ] && [ "$(jf badgeOn "$T4")" = "true" ] && [ "$(jf right "$T4")" = "84px" ]; then ok "ই২ই: keynav-সম-প্রদর্শন-গাটার (sfs328-প্যারিটি — ট্যাপ-মান-সমতা ৮৪px — কেবল-সংযোজন)"; else bad "ই২ই: $(unjj "$T4")"; fi
 agent-browser set viewport 390 844 >/dev/null 2>&1
 bopen "$BASE/" >/dev/null 2>&1
 agent-browser wait 1400 >/dev/null 2>&1

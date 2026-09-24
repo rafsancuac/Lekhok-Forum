@@ -4750,3 +4750,23 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs292-phone[data-sfs321-tap] .sfs319-namechip[data-sfs319-on] { transition: none; }
 }
 /* ═══════════════════ EOF session327 (sfs327 ট্যাপ-ব্যাজ × নাম-চিপ সম-প্রদর্শন-পলিশ) ═══════════════════ */
+/* ═══════════════════ session328 (sfs328 keynav-পথের সম-প্রদর্শন-গাটার-প্যারিটি) ═══════════════════ */
+/* hex-free (var + color-mix — guard:design-চুক্তি); s327-পরবর্তী প্যারিটি-সমাপ্তি: keynav-পথেও
+   ব্যাজ (apply314-নিজস্ব-Show) × চিপ (apply314-নিজস্ব) সম-দৃশ্যমান — বহু-অঙ্ক-ব্যাজ ("১০/১২")-এর
+   প্রশস্ত-রূপে স্থির-অফসেটে চিপ-সংঘর্ষ-ঝুঁকি সেখানেও-বিদ্যমান ছিল (s327 = ট্যাপ-কেবল);
+   **কেবল-সংযোজন**: নতুন-সমবায়-নির্বাচক ([data-sfs314-focus] × badge-on ~ chip-on) —
+   keynav-মূল-রুল ([data-sfs314-focus]-একক-গেট) অস্পৃশ্য — মান = s327-ট্যাপ-মান-সমতা
+   (right ৮৪px / ৬৪০px: ৭২px + টোন ৫৮% — parity-নীতি); চিপ-transition-তালিকায় right-নেই →
+   পরিবর্তন-তাৎক্ষণিক (কম্পোজিটর-চাপ-শূন্য — s315-ফ্রিজ-গণিত-নিরাপদ); চিপ-নিজস্ব-
+   absolute-overlay — label-geometry-অস্পৃশ্য (s314-চুক্তি); MO-অবর্জন-চুক্তি-অটুট;
+   DOM-ক্রম-নির্ভরতা: posbadge→namechip-ক্রম-বদল-নিষিদ্ধ (~-ভাই — s327-চুক্তি-পুনঃপ্রয়োগ)। */
+.sfs292-phone[data-sfs314-focus] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+  right: 84px;
+  border-color: color-mix(in srgb, var(--lf-brand-primary) 58%, transparent);
+}
+@media (max-width: 640px) {
+  .sfs292-phone[data-sfs314-focus] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    right: 72px;
+  }
+}
+/* ═══════════════════ EOF session328 (sfs328 keynav-পথের সম-প্রদর্শন-গাটার-প্যারিটি) ═══════════════════ */

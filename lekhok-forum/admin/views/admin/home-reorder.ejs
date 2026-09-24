@@ -145,6 +145,14 @@
     .hr327-pre .hr327-meta { display: block; font-weight: 700; color: rgba(4, 120, 87, 0.95); margin-bottom: 3px; padding-bottom: 3px; border-bottom: 1px dotted rgba(6, 95, 70, 0.22); white-space: normal; }
     .hr327-pre .hr327-text { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.54rem; }
     @media (prefers-reduced-motion: reduce) { .hr327-pv { transition: none; } }
+    /* সেশন ৩২৮ (hr328): প্রিভিউ-কপি-বাটন (hr327-pre-পরিবার — স্বতন্ত্র-শ্রেণি —
+       s324-.hr324-btn-গণনা-চুক্তি-অটুট; কেবল-প্রিভিউ-খোলা-অবস্থায়-বিদ্যমান —
+       meta↔text-মাঝে সন্নিবেশ; rgba-only) */
+    .hr328-cp { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 0.55rem; font-weight: 700; color: rgba(6, 95, 70, 0.9); background: rgba(4, 120, 87, 0.1); border: 1px solid rgba(4, 120, 87, 0.35); border-radius: 5px; padding: 2px 8px; margin: 0 0 4px; cursor: pointer; transition: background 0.12s ease, border-color 0.12s ease; }
+    .hr328-cp:hover { background: rgba(4, 120, 87, 0.18); border-color: rgba(4, 120, 87, 0.55); }
+    .hr328-cp:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
+    .hr328-cp.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
+    @media (prefers-reduced-motion: reduce) { .hr328-cp { transition: none; } }
   </style>
 </head>
 <body>
@@ -1132,6 +1140,13 @@
       var tx327 = document.createElement('span');
       tx327.className = 'hr327-text';
       pre327.appendChild(tx327);
+      var bc328 = document.createElement('button'); /* hr328: প্রিভিউ-কপি-বাটন (meta↔text-মাঝে — স্বতন্ত্র-শ্রেণি) */
+      bc328.type = 'button';
+      bc328.className = 'hr328-cp';
+      bc328.setAttribute('aria-label', 'প্রিভিউ-বিষয়বস্তু ক্লিপবোর্ডে কপি করুন (বর্তমান-বিন্যাসে)');
+      bc328.textContent = 'কপি';
+      bc328.addEventListener('click', function (e328b) { e328b.preventDefault(); e328b.stopPropagation(); copyPv328(bc328); });
+      pre327.insertBefore(bc328, tx327);
       bar327.parentNode.insertBefore(pre327, bar327);
     }
     var mt327b = pre327.querySelector('.hr327-meta');
@@ -1204,6 +1219,73 @@
   });
   q327h.preview = function () { var p327 = tip317 ? tip317.querySelector('.hr327-pre .hr327-text') : null; return p327 ? p327.textContent : ''; };
   window.__hrAria327QA = q327h;
+  /* সেশন ৩২৮ (hr328): প্রিভিউ-কপি-বাটন (PLANS session327-নোটের প্রস্তাব-②)
+     • .hr328-cp (hr327-pre-পরিবার — স্বতন্ত্র-শ্রেণি — s324-.hr324-btn-গণনা-চুক্তি-অটুট):
+       ক্লিক = **বর্তমান-বিন্যাসেই সরাসরি রপ্তাই** (strip324() — WYSIWYG — hr326-বিন্যাস-মোড-
+       সম্মত — var-ডাইনামিক-রিড-এক-উৎস — hr327-প্রিভিউ-পাঠের সম-উৎস); রেকর্ড-বিহীন রপ্তাই-পথ
+       (copyAria316-বর্জন-ইচ্ছাকৃত — done316→__hrAria317Record-গণনা-দূষণ-গোটচা — hr324-রীতি);
+       fallbackCopy316-মেকানিজম + navigator.clipboard.writeText; টোস্ট-প্রমাণ (বিন্যাস-লেবেল-সহ) +
+       flash324-পুনঃব্যবহার।
+     • কীবোর্ড-parity: **C-শর্টকাট** (s320/s324-keydown-রীতি — .hr-aria-copy-ফোকাস-প্রেক্ষাপট ×
+       মডিফায়ার-বর্জন × শূন্য-ইতিহাসে নীরব); বন্ধ-প্রিভিউয়ে C = প্রথমে-খোলা (togglePv327-
+       পুনঃব্যবহার — opens-স্বাভাবিক-গণনা) তারপর-কপি।
+     • kbd-হিন্ট: '· C = প্রিভিউ কপি' — স্বতন্ত্র-মোড়ক-জুটি (cycleFmt326-পুনঃমোড়ক — P-হিন্ট-
+       সংরক্ষণ-চেইন-পরবর্তী + tipRender318-পুনঃমোড়ক — hr327-পুনঃনির্মাণ-চুক্তি-অস্পৃশ্য)।
+     • QA-হুক __hrAria328QA {copies, last, copy(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q328h = { copies: 0, last: '', err: '' };
+  var copyPv328 = function (btn328) {
+    try {
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
+      var txt328 = strip324();
+      var ok328m = 'প্রিভিউ কপি হয়েছে (' + bn317a(hist317.length) + ' এন্ট্রি — ' + (mode326 === 'key' ? 'কেবল-কী' : 'সমৃদ্ধ') + ')';
+      var done328 = function () {
+        q328h.copies += 1; q328h.last = txt328;
+        showToast(true, ok328m);
+        flash324(btn328); /* hr324-ফ্ল্যাশ-এক-উৎস-পুনঃব্যবহার */
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt328).then(done328, function () { fallbackCopy316(txt328) ? done328() : showToast(false, 'কপি ব্যর্থ — ম্যানুয়ালি নির্বাচন করুন'); });
+      } else {
+        fallbackCopy316(txt328) ? done328() : showToast(false, 'কপি ব্যর্থ — ম্যানুয়ালি নির্বাচন করুন');
+      }
+    } catch (e328a) { q328h.err = String((e328a && e328a.message) || e328a); }
+  };
+  var cf327w = cycleFmt326;
+  cycleFmt326 = function (b328e) {
+    cf327w(b328e);
+    try {
+      var kb328 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
+      if (kb328 && kb328.textContent.indexOf('C = প্রিভিউ কপি') < 0) kb328.textContent = kb328.textContent + ' · C = প্রিভিউ কপি';
+    } catch (e328f) { q328h.err = String((e328f && e328f.message) || e328f); }
+  };
+  var trOrig328 = tipRender318;
+  tipRender318 = function (k328r) {
+    trOrig328(k328r);
+    try {
+      if (tip317 && hist317.length) {
+        var kb328b = tip317.querySelector('.hr324-kbd');
+        if (kb328b && kb328b.textContent.indexOf('C = প্রিভিউ কপি') < 0) {
+          kb328b.textContent = kb328b.textContent + ' · C = প্রিভিউ কপি';
+        }
+      }
+    } catch (e328g) { q328h.err = String((e328g && e328g.message) || e328g); }
+  };
+  document.addEventListener('keydown', function (e328c) {
+    try {
+      if (e328c.key !== 'c' && e328c.key !== 'C') return;
+      if (e328c.ctrlKey || e328c.metaKey || e328c.altKey) return;
+      var b328k = e328c.target && e328c.target.closest ? e328c.target.closest('.hr-aria-copy') : null;
+      if (!b328k) return;
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
+      e328c.preventDefault();
+      if (!tip317 || !tip317.querySelector('.hr327-pre')) {
+        togglePv327(null); /* বন্ধ-অবস্থায় C = প্রথমে-খোলা (opens-স্বাভাবিক-গণনা) */
+      }
+      copyPv328(null);
+    } catch (e328d) { q328h.err = String((e328d && e328d.message) || e328d); }
+  });
+  q328h.copy = function () { return hist317.length ? strip324() : ''; };
+  window.__hrAria328QA = q328h;
 })();
 </script>
 </body>
