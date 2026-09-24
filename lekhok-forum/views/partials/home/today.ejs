@@ -85,6 +85,7 @@
           </div>
 
           <%# সেশন ২৯৬-রীতি: রিয়েল-ডেটা স্ট্যাট-রো %>
+          <% if ((+teStats310.papers || 0) + (+teStats310.totalPapers || 0) + (+teStats310.totalIssues || 0) > 0) { %>
           <div class="te-stats296" role="list" aria-label="ই-পেপার আর্কাইভ পরিসংখ্যান">
             <span role="listitem"><b><%= bnN310(teStats310.papers) %></b> জনপ্রিয় পত্রিকা</span>
             <i aria-hidden="true"></i>
@@ -92,12 +93,13 @@
             <i aria-hidden="true"></i>
             <span role="listitem"><b><%= bnN310(teStats310.totalIssues) %></b>টি সংরক্ষিত সংখ্যা</span>
           </div>
+          <% } %>
         </div>
 
         <!-- ═══ ডান কলাম: ফুল-কভার ৩ডি অটো-স্লাইডার (কোনো টেক্সট-হেডার নেই, কোনো ছোট-কার্ড নেই) ═══ -->
         <div class="te-right233">
           <div class="te-sidehead233">
-            <span class="te-fresh233"><i class="fas fa-bolt" aria-hidden="true"></i> <%= teHasToday310 ? 'আজকের তাজা মুদ্রিত সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
+            <span class="te-fresh233"><i class="fas fa-bolt" aria-hidden="true"></i> <%= teHasToday310 ? 'আজকের মুদ্রিত সংস্করণ' : 'সর্বশেষ মুদ্রিত সংস্করণ' %></span>
             <span class="te-date233"><%= teDateBn310 %></span>
           </div>
 
@@ -118,7 +120,7 @@
                   <a class="epk310-link" id="epk310Link" href="<%= teActive310 ? teActive310.href : '/epaper' %>" aria-label="<%= teActive310 ? (teActive310.name + ' — সম্পূর্ণ পত্রিকা রিডারে পড়ুন') : 'ই-পেপার রিডার' %>">
                     <%# লোড-নেগোশিয়েশন-চলাকালীন মাস্টহেড দৃশ্যমান — ফাঁকা-শিট-ফ্ল্যাশ-শূন্য (s296-রীতি) %>
                     <span class="epk310-mast" id="epk310Mast" <%- teFirstSrc310 ? '' : '' %> aria-hidden="true">
-                      <span class="epk310-mast-kicker"><%= teHasToday310 ? 'আজকের মুদ্রিত সংস্করণ' : 'সর্বশেষ সিঙ্কড সংস্করণ' %></span>
+                      <span class="epk310-mast-kicker"><%= teHasToday310 ? 'আজকের মুদ্রিত সংস্করণ' : 'সর্বশেষ মুদ্রিত সংস্করণ' %></span>
                       <span class="epk310-mast-emoji" aria-hidden="true">🗞️</span>
                       <span class="epk310-mast-name" id="epk310MastName"><%= teActive310 ? teActive310.name : 'ই-পেপার' %></span>
                       <span class="epk310-mast-rule" aria-hidden="true"></span>
@@ -134,10 +136,10 @@
 
                 <%# কার্ড ফুটার-স্ট্রিপ %>
                 <div class="epk310-foot">
-                  <span class="epk310-foot-l"><span class="epk310-pulse" aria-hidden="true"></span> লেখক ফোরাম ডিজিটাল আর্কাইভ</span>
+                  <span class="epk310-foot-l"><span class="epk310-pulse" aria-hidden="true"></span> ডিজিটাল আর্কাইভ</span>
                   <span class="epk310-foot-r">
                     <span class="epk310-count" id="epk310Count" aria-live="polite" aria-label="স্লাইড ১ / <%= bnN310(teSlides310.length) %>"><%= bnN310(1) %> / <%= bnN310(teSlides310.length) %></span>
-                    <a class="epk310-footlink" id="epk310FootLink" href="<%= teActive310 ? teActive310.href : '/epaper' %>">পূর্ণাঙ্গ রিডার ভিউ <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                    <a class="epk310-footlink" id="epk310FootLink" href="<%= teActive310 ? teActive310.href : '/epaper' %>">পাতা উল্টান <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                   </span>
                 </div>
               </div>
@@ -152,12 +154,6 @@
                       title="<%= s.name %>" data-epk310-i="<%= i %>"
                       style="background: <%= i === 0 ? s.color : 'var(--lf-line-strong, #CED0D4)' %>;"></button>
               <% }) %>
-            </div>
-
-            <%# অটো-সিঙ্ক স্ট্যাটাস %>
-            <div class="epk310-syncstrip">
-              <span class="epk310-sync-l"><span class="epk310-pulse" aria-hidden="true"></span> টেলিগ্রাম বট ও ড্রাইভ থেকে স্বয়ংক্রিয় সিঙ্কড</span>
-              <span class="epk310-sync-r">মাউস রাখলে থেমে যায় • সোয়াইপ-সমর্থিত</span>
             </div>
 
             <!-- স্ক্রিন-রিডার ঘোষণা -->
@@ -191,10 +187,6 @@
           </div>
           <% } %>
 
-          <div class="te-sync233">
-            <span class="te-sync-l233"><span class="te-dot233" aria-hidden="true"></span> সর্বশেষ আনুষ্ঠানিক ডিজিটাল মুদ্রণ</span>
-            <span class="te-sync-r233">সার্বক্ষণিক হালনাগাদ</span>
-          </div>
         </div>
 
       </div>
