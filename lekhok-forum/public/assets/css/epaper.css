@@ -725,3 +725,36 @@
 .ep-strip294-pill.is-active:focus-visible { outline-color: var(--lf-white); }
 @media (max-width: 640px) { .ep-strip294-thumb { width: 18px; height: 24px; } }
 @media (prefers-reduced-motion: reduce) { .ep-strip294-pill:focus-visible { outline-offset: 0; } }
+
+/* ═══ session300 — ইচ্ছা-সচেতন রিডার-ডিপ-লিংক-প্রিফেচ ep300 (আর্কাইভ-পিল/তালিকা-উষ্ণ-সংকেত; PLANS session299-প্রস্তাব)
+   চুক্তি: হেক্স-শূন্য টোকেন-শুধু + color-mix-অ্যাকসেন্ট + :not()-সংঘর্ষ-বিচ্ছিন্নতা (is-active/is-on-অস্পৃশ্য)
+   + 640px-সংকোচন + reduced-motion-সম্মান ═══ */
+/* ① উষ্ণ-পিল — প্রিফেচড-পত্রিকার দ্রুত-সুইচ-পিল প্রস্তুত-অবস্থা (অ্যাকসেন্ট-রিং + উজ্জ্বলতা — transform-অস্পৃশ্য) */
+.ep-strip294-pill.epk300-warm:not(.is-active) {
+  border-color: var(--lf-brand-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 40%, transparent);
+  filter: brightness(1.05);
+}
+.ep-strip294-pill.epk300-warm:not(.is-active) .ep-strip294-dot { background: var(--lf-brand-primary); }
+/* ② উষ্ণ-তালিকা-আইটেম — প্রিফেচড-আইটেমের বাম-প্রান্তে সফট-অ্যাকসেন্ট-বার (is-on-সলিড-বার-অস্পৃশ্য) */
+.ep-item.epk300-warm:not(.is-on)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: color-mix(in srgb, var(--lf-brand-primary) 45%, transparent);
+}
+.ep-item.epk300-warm:not(.is-on) .ep-item-name { color: var(--lf-brand-primary); }
+/* ③ পিল ট্রানজিশন-সম্প্রসারণ (উষ্ণ-সংকেত-মসৃণ — s294-ট্রানজিশন-সুপারসেট) */
+.ep-strip294-pill { transition: color .15s ease, border-color .15s ease, background .15s ease, transform .15s ease, box-shadow .22s ease, filter .22s ease; }
+/* ④ 640px-সংকোচন (টাচ-সারফেসে উষ্ণ-সংকেত-শান্ত) */
+@media (max-width: 640px) {
+  .ep-strip294-pill.epk300-warm:not(.is-active) { filter: none; box-shadow: 0 0 0 1px color-mix(in srgb, var(--lf-brand-primary) 35%, transparent); }
+}
+/* ⑤ রিডিউসড-মোশন গার্ড */
+@media (prefers-reduced-motion: reduce) {
+  .ep-strip294-pill, .ep-strip294-pill.epk300-warm { transition: none; }
+}

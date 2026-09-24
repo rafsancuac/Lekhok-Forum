@@ -165,6 +165,13 @@
 .clip-row[data-pr-row][hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .pr-instant-clear:active { transform: none; } }
 @media (max-width: 640px) { .pr-kbd-hint { display: none; } .pr-instant { padding: 9px 11px; } }
+/* session300 — আপলোড-ক্ষেত্র প্রবেশ-পলিশ (হেক্স-শূন্য টোকেন-শুধু; বিদ্যমান-ফাইল-ইনপুট-স্টাইল-শূন্য → সংঘর্ষ-অসম্ভব):
+   dashed-affordance (আপলোড-সামর্থ্য-দৃশ্যমান) + hover-টিন্ট + focus-visible/focus-within-রিং + reduced-motion */
+.clip-field-wide input[type="file"] { width: 100%; padding: .42rem .6rem; border: 1.5px dashed color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); border-radius: 10px; background: var(--lf-white); color: var(--lf-slate); cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+.clip-field-wide input[type="file"]:hover { border-color: var(--lf-brandgreen); background: var(--lf-brandgreen-soft); }
+.clip-field-wide input[type="file"]:focus-visible { outline: 2px solid var(--lf-brandgreen); outline-offset: 2px; }
+.clip-field-wide:focus-within { border-color: color-mix(in srgb, var(--lf-brandgreen) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen) 15%, transparent); }
+@media (prefers-reduced-motion: reduce) { .clip-field-wide input[type="file"] { transition: none; } }
 </style>
 <script>
 (function () {

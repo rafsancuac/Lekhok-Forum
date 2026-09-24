@@ -394,6 +394,16 @@
   var elRailCount = document.getElementById('epRailCount');
   var mode = 'reader'; // সেশন ১৭৩ (ইউজার-স্পেক): ডিফল্ট = ডিজিটাল রিডার — পেজ-লোডেই ফুল-পিডিএফ ওপেন (আগে ছিল 'thumb')
   var activeId = null;
+  /* session300: ইচ্ছা-সচেতন রিডার-ডিপ-লিংক-প্রিফেচ-স্টেট + QA-হুক (papers-শূন্যে-ও __epk300QA সংজ্ঞায়িত —
+     পরিবার-চুক্তি; PLANS session299-প্রস্তাব: আর্কাইভ-পিল/তালিকা-ইচ্ছায় /epaper?file=<id> প্রিফেচ — ক্যাশ-ওয়ার্ম) */
+  var ep300Count = 0, epk300Warmed = {}, ep300Last = '';
+  window.__epk300QA = {
+    prefetched: function () { return ep300Count; },
+    has: function (u) { return !!epk300Warmed[u]; },
+    last: function () { return ep300Last; },
+    links: function () { try { return document.querySelectorAll('link[rel="prefetch"][data-epk300]').length; } catch (e300) { return 0; } },
+    pills: function () { try { return document.querySelectorAll('.ep-strip294-pill').length; } catch (e300) { return 0; } }
+  };
   if (!papers.length || !elList) return;
 
   // ── সেশন ১৭১: জুম/রোটেট/ফুলস্ক্রিন-স্টেট + স্টেজ-ট্রান্সফর্ম (সব-মোডে: pdf.js/প্রচ্ছদ/iframe) ──
@@ -2131,6 +2141,62 @@
     activeId: function () { var vis = ps282Vis(); var b = (ep282Active >= 0 && vis[ep282Active]) ? vis[ep282Active] : null; return b ? (b.id || '') : ''; },
     expSearch: function () { return elPsSearch ? (elPsSearch.getAttribute('aria-expanded') || '') : ''; }
   };
+
+  /* session300: একক-ফানেল epk300Prefetch300 — ডিডুপ-ম্যাপ + অফলাইন/saveData-গার্ড +
+     link[rel=prefetch]-ইনজেকশন (ব্রাউজার-লো-প্রায়োরিটি-ক্যাশ-ওয়ার্ম); বুট/apply-প্রিফেচ-নিষিদ্ধ —
+     ইচ্ছা-গেট-ধর্ম (ep299-সুপারসেট); সব-ট্রিগার এ-ফানেলেই (একক-ফানেল-প্রথা) */
+  function epk300Prefetch300(url, reason300) {
+    if (!url || epk300Warmed[url]) return false;
+    var cn300 = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (navigator.onLine === false || (cn300 && cn300.saveData)) return false;
+    epk300Warmed[url] = String(reason300 || 'intent');
+    ep300Count++; ep300Last = String(reason300 || 'intent');
+    try {
+      var l300 = document.createElement('link');
+      l300.rel = 'prefetch';
+      l300.as = 'document';
+      l300.href = url;
+      l300.setAttribute('data-epk300', '1');
+      document.head.appendChild(l300);
+    } catch (e300) {}
+    return true;
+  }
+  function epk300Url300(id300) { return '/epaper?file=' + encodeURIComponent(String(id300)); }
+
+  /* session300: পিল-ইচ্ছা (mouseenter-নন-বাবলিং → per-node লিসনার; সার্ভার-রেন্ডারড-স্ট্যাটিক;
+     papers date-DESC-ক্রম → নাম-মিলের প্রথম-প্রার্থী = সর্বশেষ-সংখ্যা) + উষ্ণ-মিরর (warmed-has-ভিত্তিক —
+     পুনঃ-ইচ্ছায় পুনঃ-প্রতিষ্ঠা, স্টেল-শূন্য) */
+  document.querySelectorAll('.ep-strip294-pill').forEach(function (pill300) {
+    var fire300 = function (reason300) {
+      var name300 = pill300.getAttribute('data-ep-strip294') || '';
+      var p300 = null;
+      for (var pi300 = 0; pi300 < papers.length; pi300++) { if (String(papers[pi300].name) === name300) { p300 = papers[pi300]; break; } }
+      if (!p300) return;
+      var u300 = epk300Url300(p300.id);
+      epk300Prefetch300(u300, reason300);
+      pill300.classList[epk300Warmed[u300] ? 'add' : 'remove']('epk300-warm');
+    };
+    pill300.addEventListener('mouseenter', function () { fire300('pill'); });
+    pill300.addEventListener('focusin', function () { fire300('pill-focus'); });
+  });
+
+  /* session300: তালিকা-আইটেম-ইচ্ছা — ডেলিগেশন (mouseover-বাবলিং + focusin) — renderList-পুনঃরেন্ডার-নিরাপদ */
+  elList.addEventListener('mouseover', function (e300) {
+    var it300 = e300.target && e300.target.closest ? e300.target.closest('.ep-item') : null;
+    if (it300 && it300.getAttribute('data-id')) {
+      var u300 = epk300Url300(it300.getAttribute('data-id'));
+      epk300Prefetch300(u300, 'item');
+      it300.classList[epk300Warmed[u300] ? 'add' : 'remove']('epk300-warm');
+    }
+  });
+  elList.addEventListener('focusin', function (e300) {
+    var it300 = e300.target && e300.target.closest ? e300.target.closest('.ep-item') : null;
+    if (it300 && it300.getAttribute('data-id')) {
+      var u300 = epk300Url300(it300.getAttribute('data-id'));
+      epk300Prefetch300(u300, 'item-focus');
+      it300.classList[epk300Warmed[u300] ? 'add' : 'remove']('epk300-warm');
+    }
+  });
 })();
 </script>
 <script src="/assets/js/main.js?v=<%= AV %>"></script>
