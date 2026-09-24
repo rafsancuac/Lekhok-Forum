@@ -4,7 +4,7 @@
   <p style="font-size:.8rem;color:#6b7280;margin:0 0 14px;"><%= SECTIONS[active].hint %></p>
 
   <% rows.forEach((r, i) => { %>
-  <details class="sec-item" draggable="true" data-sec-id="<%= r.id %>">
+  <details class="sec-item" draggable="true" data-sec-id="<%= r.id %>" data-lsf-row298="1" data-kw="<%= '#' + r.id + ' #' + r.sort_order + ' ' + String(r.title||'').replace(/\s+/g,' ') + ' ' + String(r.subtitle||'').replace(/\s+/g,' ') + ' ' + String(r.body||'').replace(/\s+/g,' ') + ' ' + String(r.icon||'').replace(/\s+/g,' ') + ' ' + String(r.extra||'').replace(/\s+/g,' ') + ' ' + (r.is_active ? 'দৃশ্যমান visible' : 'লুকানো hidden') + ' আইটেম item row' %>">
     <summary>
       <span class="ord">#<%= r.sort_order %></span>
       <% if (r.image) { %><img class="sec-prev-img" src="<%= r.image %>" alt=""><% } %>
@@ -47,7 +47,7 @@
   </details>
   <% }); %>
 
-  <details class="sec-item" style="border-style:dashed;">
+  <details class="sec-item" style="border-style:dashed;" data-lsf-skip298="1">
     <summary><span class="ttl"><i class="fas fa-plus" style="color:#059669;"></i> নতুন আইটেম যোগ করুন</span></summary>
     <div class="sec-body">
       <form method="POST" class="sec-ajax" action="<%= BASE %>/sections/add" data-add-form="1">

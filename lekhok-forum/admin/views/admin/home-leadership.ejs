@@ -92,6 +92,24 @@
     .hl-delbtn { font-size: 11px; color: #e11d48; background: none; border: none; cursor: pointer; padding: 4px 2px; font-weight: 600; }
     .hl-delbtn:hover { text-decoration: underline; }
     .hl-delbtn.armed { color: #fff; background: #e11d48; border-radius: 6px; padding: 4px 8px; }
+    /* session298 — lsf298 তাৎক্ষণিক-ফিল্টার স্টাইল (cej294-প্যাটার্ন-মিরর — হেক্স-শূন্য টোকেন-শুধু; brandgreen-পরিবার) */
+    .lsf298-instant { position: relative; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border: 1px solid var(--lf-fb-border); border-radius: 14px; background: var(--lf-white); transition: border-color .15s, box-shadow .15s; }
+    .lsf298-instant:hover { border-color: color-mix(in srgb, var(--lf-brandgreen-deep) 35%, transparent); box-shadow: 0 2px 10px color-mix(in srgb, var(--lf-slate) 8%, transparent); }
+    .lsf298-ico { color: var(--lf-brandgreen-deep); opacity: .75; }
+    .lsf298-input { flex: 1 1 240px; min-width: 0; border: 1px solid transparent; border-radius: 10px; padding: 8px 12px; font: inherit; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .lsf298-input:focus { outline: none; border-color: color-mix(in srgb, var(--lf-brandgreen-deep) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-brandgreen-deep) 15%, transparent); }
+    .lsf298-clear { border: 0; background: transparent; color: var(--lf-brandgreen-deep); cursor: pointer; padding: 6px 9px; border-radius: 9px; transition: background .12s, transform .12s; }
+    .lsf298-clear:hover { background: var(--lf-brandgreen-soft); }
+    .lsf298-clear:active { transform: scale(.96); }
+    .lsf298-count-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: var(--lf-brandgreen-deep); background: var(--lf-brandgreen-soft); }
+    .lsf298-kbd-hint { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; color: var(--lf-slate); }
+    .lsf298-kbd-hint kbd { padding: 2px 7px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen-deep) 55%, transparent); border-radius: 7px; font: inherit; font-size: .74rem; color: var(--lf-brandgreen-deep); background: var(--lf-white); }
+    .lsf298-zero { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 14px 16px; border: 1px dashed color-mix(in srgb, var(--lf-brandgreen-deep) 35%, transparent); border-radius: 12px; color: var(--lf-slate); background: var(--lf-brandgreen-soft); }
+    .lsf298-count-chip[hidden], .lsf298-zero[hidden], .lsf298-clear[hidden] { display: none; }
+    .hl-slot[hidden] { display: none !important; }
+    .hl-slot.lsf298-flash { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { .lsf298-clear:active { transform: none; } .lsf298-instant { transition: none; } }
+    @media (max-width: 640px) { .lsf298-kbd-hint { display: none; } .lsf298-instant { padding: 9px 11px; } }
   </style>
 </head>
 <body>
@@ -105,6 +123,16 @@
 
   <% if (saved) { %><div class="hl-banner ok"><i class="fas fa-circle-check"></i> সফলভাবে সংরক্ষিত হয়েছে — হোমপেজে এখনই দেখা যাবে।</div><% } %>
   <% if (error) { %><div class="hl-banner err"><i class="fas fa-triangle-exclamation"></i> <%= error %></div><% } %>
+
+  <!-- session298: lsf298 তাৎক্ষণিক-ফিল্টার (mo268/sb269/dcf293/cej294-পরিবার; form-বহির্ভূত; রানটাইম-ইনডেক্স) -->
+  <div class="lsf298-instant" id="lsfStrip298">
+    <i class="fas fa-filter lsf298-ico" aria-hidden="true"></i>
+    <input type="text" id="lsfInput298" class="lsf298-input" placeholder="কার্ড খুঁজুন — নাম / পদবি / বাণী / স্লট-কী…" aria-label="নেতৃত্ব-কার্ড ফিল্টার করুন" autocomplete="off">
+    <button type="button" id="lsfClear298" class="lsf298-clear" hidden aria-label="ফিল্টার পরিষ্কার"><i class="fas fa-xmark"></i></button>
+    <span class="lsf298-count-chip" id="lsfCount298" hidden><i class="fas fa-list-ul" aria-hidden="true"></i> <span id="lsfCountTxt298">০ / ০</span></span>
+    <span class="lsf298-kbd-hint"><kbd>F</kbd> খুঁজুন · <kbd>Enter</kbd> প্রথম-মিল · <kbd>Esc</kbd> পরিষ্কার</span>
+  </div>
+  <div class="lsf298-zero" id="lsfZero298" hidden><i class="fas fa-magnifying-glass-minus" aria-hidden="true"></i> কোনো কার্ড মেলে-না — অন্য কীওয়ার্ড দিন</div>
 
   <% ['legacy', 'current'].forEach(sec => { const secSlots = slots.filter(s => s.section === sec); %>
   <div class="hl-section">
@@ -121,7 +149,7 @@
            const baniSource  = m ? ((m.message && String(m.message).trim()) ? 'বাণী ফিল্ড' : ((m.bio && String(m.bio).trim()) ? 'বায়ো' : 'ফলব্যাক-বাণী')) : 'ফলব্যাক-বাণী';
            const selTerm     = (m && m.term_year) ? m.term_year : (sec === 'current' && latestTerm ? latestTerm : '');
       %>
-      <div class="hl-slot<%= hiddenSlots.includes(slot.key) ? ' vis-hidden' : '' %>" id="slot-<%= slot.key %>" data-slot="<%= slot.key %>">
+      <div class="hl-slot<%= hiddenSlots.includes(slot.key) ? ' vis-hidden' : '' %>" id="slot-<%= slot.key %>" data-slot="<%= slot.key %>" data-lsf-row298="1" data-kw="<%= slot.key + ' ' + String(slot.title||'').replace(/\s+/g,' ') + ' ' + (hiddenSlots.includes(slot.key) ? 'লুকানো hidden' : 'দৃশ্যমান visible') + ' স্লট slot কার্ড card ' + String(displayName||'').replace(/\s+/g,' ') + ' ' + String(m ? (m.role||'') : '').replace(/\s+/g,' ') + ' ' + String(m ? (m.term_year||'') : '').replace(/\s+/g,' ') + ' ' + String(shownBani||'').replace(/\s+/g,' ').slice(0,300) %>">
         <div class="hl-slot-head">
           <span class="hl-slot-tag"><%= slot.title %></span>
           <span class="hl-okbadge" data-role="saveOk" hidden><i class="fas fa-check"></i> সংরক্ষিত হয়েছে</span>
@@ -245,7 +273,7 @@
       <% const baseSlot64 = sec === 'legacy' ? 'founding_advisor_2' : 'current_advisor_2'; %>
       <% const extraActive64 = (typeof extraActive !== 'undefined' ? extraActive : []); %>
       <% extras64.forEach(x => { const xActive = extraActive64.includes(Number(x.id)); const xName = x.user_full_name || x.name || ''; const xImg = x.user_avatar_url || x.image_url || '/assets/img/avatar-placeholder.svg?v=2'; const xBani = (x.message && String(x.message).trim()) ? x.message : (x.bio || ''); %>
-      <div class="hl-slot<%= xActive ? '' : ' vis-hidden' %>" id="extra-<%= x.id %>" data-extra="<%= x.id %>">
+      <div class="hl-slot<%= xActive ? '' : ' vis-hidden' %>" id="extra-<%= x.id %>" data-extra="<%= x.id %>" data-lsf-row298="1" data-kw="<%= 'অতিরিক্ত উপদেষ্টা extra advisor স্লট slot কার্ড card ' + (xActive ? 'দৃশ্যমান visible' : 'লুকানো hidden') + ' #' + x.id + ' ' + String(xName||'').replace(/\s+/g,' ') + ' ' + String(x.role||'').replace(/\s+/g,' ') + ' ' + String(x.term_year||'').replace(/\s+/g,' ') + ' ' + String(xBani||'').replace(/\s+/g,' ').slice(0,300) %>">
         <div class="hl-slot-head">
           <span class="hl-slot-tag">অতিরিক্ত উপদেষ্টা</span>
           <span class="hl-okbadge" data-role="saveOk" hidden><i class="fas fa-check"></i> সংরক্ষিত হয়েছে</span>
@@ -339,7 +367,7 @@
       </div>
       <% }); %>
       <%# ═══════════ সেশন ৬৪: "＋ নতুন উপদেষ্টা যোগ করুন" টাইল — যত-খুশি নতুন কার্ড ═══════════ %>
-      <div class="hl-addtile" data-addtile data-group="<%= sec %>">
+      <div class="hl-addtile" data-addtile data-group="<%= sec %>" data-lsf-skip298="1">
         <div data-role="addprompt">
           <i class="fas fa-user-plus"></i>
           <strong>＋ নতুন উপদেষ্টা / সদস্য যোগ করুন</strong>
@@ -687,6 +715,88 @@
       }
     }
   });
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  /* session298 — lsf298 তাৎক্ষণিক-ফিল্টার (leadership-সারফেস; ইন-প্লেস-এডিট-সচেতন: data-kw + লাইভ-টেক্সট (name/role/bani/tag/visLabel) সমৃদ্ধ-মিল — পরিবার: mo268/sb269/dcf293/cej294;
+     MutationObserver (childList+characterData-শুধু — attribute-ওয়াচ-শূন্য → নিজের-hidden-লেখায়-লুপ-ঝুঁকি-শূন্য);
+     countTxt-লেখা change-guarded (characterData-মিউটেশন-স্টর্ম-প্রতিরোধ)) */
+  if (window.__lsf298wired) return; window.__lsf298wired = true;
+  var input = document.getElementById('lsfInput298');
+  var clearBtn = document.getElementById('lsfClear298');
+  var countChip = document.getElementById('lsfCount298');
+  var countTxt = document.getElementById('lsfCountTxt298');
+  var zeroBox = document.getElementById('lsfZero298');
+  if (!input) return;
+  var bn298 = function (n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); };
+  var norm298 = function (s) { return (s || '').replace(/\s+/g, ' ').trim().toLowerCase(); };
+  var last298 = [], total298 = 0;
+  function lsfActive298() { return !!(input.value || '').trim(); }
+  function rows298() { return Array.prototype.slice.call(document.querySelectorAll('.hl-slot[data-lsf-row298]')); }
+  function lsfApply298() {
+    var q = norm298(input.value);
+    var act = lsfActive298();
+    var all = rows298();
+    total298 = all.length;
+    last298 = [];
+    all.forEach(function (el) {
+      var kw = el.getAttribute('data-kw') || '';
+      var live298 = ''; var nEl = el.querySelector('[data-role="name"]'); var rEl = el.querySelector('[data-role="role"]'); var bEl = el.querySelector('[data-role="bani"]'); var tEl = el.querySelector('.hl-slot-tag'); var vEl = el.querySelector('[data-role="visLabel"]'); if (nEl) live298 += ' ' + nEl.textContent; if (rEl) live298 += ' ' + rEl.textContent; if (bEl) live298 += ' ' + bEl.textContent; if (tEl) live298 += ' ' + tEl.textContent; if (vEl) live298 += ' ' + vEl.textContent;
+      var hit = !q || norm298(kw + live298).indexOf(q) !== -1;
+      if (hit) { last298.push(el); el.setAttribute('data-lsf-hit298', '1'); } else { el.removeAttribute('data-lsf-hit298'); }
+      if (act && !hit) { if (!el.hasAttribute('hidden')) el.setAttribute('hidden', ''); }
+      else { if (el.hasAttribute('hidden')) el.removeAttribute('hidden'); }
+    });
+    if (countChip) { countChip.hidden = !act; }
+    if (act && countTxt) { var nt = bn298(last298.length) + ' মিল · ' + bn298(total298) + ' কার্ড'; if (countTxt.textContent !== nt) countTxt.textContent = nt; }
+    if (clearBtn) { clearBtn.hidden = !act; }
+    if (zeroBox) { zeroBox.hidden = !(act && last298.length === 0); }
+    return last298.length;
+  }
+  function lsfClear298() { input.value = ''; lsfApply298(); try { input.blur(); } catch (e) {} }
+  function lsfJumpFirst298() {
+    if (!last298.length) return 0;
+    var el = last298[0];
+    try { el.scrollIntoView({ block: 'center' }); } catch (e) {}
+    el.classList.add('lsf298-flash');
+    setTimeout(function () { el.classList.remove('lsf298-flash'); }, 1600);
+    return 1;
+  }
+  input.addEventListener('input', lsfApply298);
+  input.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { ev.stopPropagation(); lsfClear298(); }
+    if (ev.key === 'Enter') { ev.preventDefault(); lsfJumpFirst298(); }
+  });
+  if (clearBtn) { clearBtn.addEventListener('click', lsfClear298); }
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
+    var t = ev.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) { return; }
+    ev.preventDefault();
+    input.focus();
+    input.select();
+  });
+  var lsfTimer298 = null;
+  var host298 = document.querySelector('.admin-main');
+  if (host298 && window.MutationObserver) {
+    new MutationObserver(function () {
+      if (lsfTimer298) return;
+      lsfTimer298 = setTimeout(function () { lsfTimer298 = null; if (lsfActive298()) lsfApply298(); }, 140);
+    }).observe(host298, { childList: true, subtree: true, characterData: true });
+  }
+  window.__lsf298QA = {
+    surface: 'leadership',
+    rows: function () { return rows298().length; },
+    matches: function () { return last298.length; },
+    total: function () { return total298; },
+    active: lsfActive298,
+    firstMatch: function () { return last298.length ? (last298[0].getAttribute('data-slot') || last298[0].getAttribute('data-extra') || '') : null; },
+    apply: lsfApply298,
+    clear: lsfClear298,
+    jumpFirst: lsfJumpFirst298
+  };
 })();
 </script>
 </body>
