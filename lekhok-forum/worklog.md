@@ -3246,3 +3246,19 @@ Stage Summary:
 - **যাচাই:** s302 **৬৫/৬৫ ×৩-ধারাবাহিক** (checked-pinned ×৪ + quiet-window + reason=mon + ডিডুপ + months-মিরর + hScroll + স্ক্রিনশট ×২); রিগ্রেশন s301 **৬৯/৬৯** + s300-multipart ৪৭/৪৭ + s300-epref ৬৫/৬৫ + role-policy **২৬০/২৬০** + guard:design + audit:views (১২২ ejs)।
 - **গোটচা ×৪:** panel-open arm-focus = লুকানো-ইচ্ছা-ট্রিগার (wrapper-quiet-সমাধান) · target/document-লিসনার-ক্রম (বাবল-গ্যারান্টি) · মাস-প্যানেল বুটে-শূন্য (ডেলিগেশন-বাধ্যতমূলক) · elCalMGrid-স্কোপ (IIFE-ভিতরেই) — বিস্তারিত PLANS session302।
 - **পরের-এজেন্ট: session303 (Task ID 143)** — PLANS session302-নোট পড়ুন; checked-pinned-পুনঃ-যাচাই (pr258/lsf298) + epCalYList-প্রিফেচ; push-আগে fetch+rebase; Turso/প্রোড-পোর্ট (গেটে-অক্ষুণ্ণ)।
+---
+Task ID: 143
+Agent: Cron agent loop (session303 — Job 403679, trace 202609241319)
+Task: QA-প্রথম রাউন্ড — press checked-pinned গ্যাপ-ফিক্স (pr303) + ep303 বছর-তালিকা-প্রিফেচ + [Mandatory] স্টাইল/ফিচার + সর্ব-রিগ্রেশন
+
+Work Log:
+- worklog/PLANS/ACTIVE-LOCK পাঠ → session303-চুক্তি নিশ্চিত; HEAD=origin=394a439 clean BEHIND=০
+- agent-browser QA: epaper ×৩-লোড এরর-শূন্য + হুক-জীবিত; ব্র্যাকেট-ক্ষয়-সন্দেহ → কোডপয়েন্ট-যাচাইয়ে মিথ্যা-অ্যালার্ম প্রমাণ (ডিসপ্লে-আর্টিফ্যাক্ট)
+- pr303: pr258-ইঞ্জিনে checked-pinned পোর্ট (বাস্তব-ঝুঁকি-ফিক্স) + Enter-firstMatch + হুক ×১০ + pinned-CSS
+- ep303: elCalYList ডেলিগেশন-প্রিফেচ + recency-first মিরর + quiet-window + years-গেটার + CSS
+- sections: bulk_ids-চেকবক্স-অনুপস্থিত-প্রমাণ (চুক্তি N/A — SSR-অ্যাসার্ট)
+- s303-suite ৭৫/৭৫ ×৩ (IIFE-() -ক্ষয়-গোটচা আবিষ্কার-সহ — নতুন-নির্ণয়-চুক্তি ডক-কৃত)
+- রিগ্রেশন সর্ব-গ্রিন + role-policy ২৬০/২৬০ + guard:design + audit:views
+
+Stage Summary:
+- commit দুই-খণ্ডে (feature + docs) push; নেট-শূন্য-সিড প্রমাণিত; পরের-এজেন্ট: session304 (Task ID 144)
