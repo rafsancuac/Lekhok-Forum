@@ -88,24 +88,51 @@
 .mod-item[data-no-row][hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .no-instant-clear:active { transform: none; } }
 @media (max-width: 640px) { .no-kbd-hint { display: none; } .no-instant { padding: 9px 11px; } .no-cat-chip { display: none; } }
+/* session304 — checked-pinned সারি-অ্যাফোর্ডেন্স (no304; হেক্স-শূন্য টোকেন-শুধু; pr303-মিরর):
+   চেক-করা bulk_ids-সারি = ফিল্টারে-ও-দৃশ্যমান (hit=pinned||match) → পিন-অবস্থার দৃশ্যমান-সংকেত
+   (soft brandgreen প্রান্ত+টিন্ট+শিরোনাম-গাঢ় — :has()-গেটেড, অসমর্থিত-ব্রাউজারে-নীরব)
+   + Enter-firstMatch ফ্ল্যাশ + চেকবক্স focus-visible রিং + মসৃণ-ট্রানজিশন */
+@supports selector(:has(*)) {
+  .mod-item[data-no-row]:has(input[name="bulk_ids"]:checked) { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); background: color-mix(in srgb, var(--lf-brandgreen) 6%, transparent); }
+  .mod-item[data-no-row]:has(input[name="bulk_ids"]:checked) > div > strong { color: var(--lf-brandgreen-deep); }
+}
+.mod-item[data-no-row] { transition: background .15s ease, box-shadow .15s ease; }
+.mod-item[data-no-row].no-flash304 { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); outline-offset: 2px; }
+.mod-item[data-no-row] input[name="bulk_ids"]:focus-visible { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 60%, transparent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .mod-item[data-no-row] { transition: none; } .mod-item[data-no-row].no-flash304 { outline-color: transparent; } }
+@media (max-width: 640px) { .mod-item[data-no-row]:has(input[name="bulk_ids"]:checked) { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); } }
 </style>
 <script>
 (function () {
   'use strict';
-  /* session259 — no259 তাৎক্ষণিক-ফিল্টার (pr258/tr257/cu256-চুক্তি-মিরর: data-kw-সারি + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __noQA) */
+  /* session259 — no259 তাৎক্ষণিক-ফিল্টার (pr258/tr257/cu256-চুক্তি-মিরর: data-kw-সারি + কাউন্ট-চিপ + শূন্য-অবস্থা + 'f'-ফোকাস + Escape + __noQA)
+     session304 (no304) — **checked-pinned চুক্তি পোর্ট** (pr303-মিরর): hit = pinned || !q || kw-match —
+     চেক-করা bulk_ids-সারি ফিল্টারে-ও-দৃশ্যমান → bulk-delete/publish/hide কখনো অদৃশ্য-সারি-স্পর্শ-নয়;
+     sidebar initBulkBar-এর target-level sync আগে → document-level change-ডেলিগেশনে apply পরে (বাবল-ক্রম —
+     s302-সহাবস্থান-চুক্তি); boot-apply-init + Enter-firstMatch (অ্যাঙ্কর = bulk-checkbox —
+     বিপজ্জনক-অ্যাকশন-বাটন-ফোকাস-নিষিদ্ধ-নিয়ম) + __noQA হুক রো-শূন্যে-ও-সংজ্ঞায়িত (পরিবার-চুক্তি);
+     কাউন্ট-চিপ ASCII-অঙ্ক (no259-চুক্তি — bn-পরিবর্তন-নিষিদ্ধ) */
   var rows = Array.prototype.slice.call(document.querySelectorAll('.mod-item[data-no-row]'));
   var input = document.getElementById('noFilter259');
   var clearBtn = document.getElementById('noClear259');
   var countChip = document.getElementById('noCount259');
   var zeroBox = document.getElementById('noZero259');
-  if (!input || !rows.length) { return; }
   var total = rows.length;
+  function noPinned259() {
+    return rows.filter(function (row) {
+      var cb = row.querySelector('input[name="bulk_ids"]');
+      return !!(cb && cb.checked);
+    }).length;
+  }
   function noApply259() {
+    if (!input) return;
     var q = (input.value || '').trim().toLowerCase();
     var shown = 0;
     rows.forEach(function (row) {
+      var cb = row.querySelector('input[name="bulk_ids"]');
+      var pinned = !!(cb && cb.checked);
       var kw = (row.getAttribute('data-kw') || '').toLowerCase();
-      var hit = !q || kw.indexOf(q) !== -1;
+      var hit = pinned || !q || kw.indexOf(q) !== -1;
       row.hidden = !hit;
       if (hit) { shown++; }
     });
@@ -114,15 +141,42 @@
     if (zeroBox) { zeroBox.hidden = !(q && shown === 0); }
   }
   function noClear259() {
+    if (!input) return;
     input.value = '';
     noApply259();
     input.blur();
   }
+  window.__noQA = {
+    surface: function () { return 'notices'; },
+    total: function () { return total; },
+    pinned: noPinned259,
+    count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
+    apply: noApply259,
+    clear: noClear259
+  };
+  if (!input || !rows.length) { return; }
   input.addEventListener('input', noApply259);
   if (clearBtn) { clearBtn.addEventListener('click', noClear259); }
   input.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Escape') { ev.stopPropagation(); noClear259(); }
+    if (ev.key === 'Escape') { ev.stopPropagation(); noClear259(); return; }
+    if (ev.key === 'Enter') {
+      var first = rows.filter(function (r) { return !r.hidden; })[0];
+      if (first) {
+        ev.preventDefault();
+        var cb = first.querySelector('input[name="bulk_ids"]');
+        if (cb) { cb.focus(); }
+        first.classList.add('no-flash304');
+        setTimeout(function () { first.classList.remove('no-flash304'); }, 900);
+      }
+    }
   });
+  /* checked-pinned ধর্ম — চেক-পরিবর্তনে পুনঃ-apply (bulk_ids-সরাসরি-ক্লিক + bulk-all-উভয়-পথ;
+     sidebar-এর target-level sync আগে চলে (বাবল-ক্রম) → এ-apply সর্বদা-সর্বশেষ-অবস্থায়) */
+  document.addEventListener('change', function (ev) {
+    if (!ev.target || !ev.target.matches) { return; }
+    if (ev.target.matches('input[name="bulk_ids"],[data-bulk-all]')) { noApply259(); }
+  });
+  noApply259(); /* boot-apply-init — session300-শিক্ষা */
   document.addEventListener('keydown', function (ev) {
     if (ev.key !== 'f' || ev.altKey || ev.ctrlKey || ev.metaKey) { return; }
     var t = ev.target;
@@ -131,12 +185,6 @@
     input.focus();
     input.select();
   });
-  window.__noQA = {
-    total: function () { return total; },
-    count: function () { return rows.filter(function (r) { return !r.hidden; }).length; },
-    apply: noApply259,
-    clear: noClear259
-  };
 })();
 </script>
 </body>

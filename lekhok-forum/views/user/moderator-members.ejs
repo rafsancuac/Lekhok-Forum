@@ -145,10 +145,29 @@ details.mem-row[data-mm-row][hidden] { display: none !important; }
 .mod-card[data-mm-sec][hidden] { display: none !important; }
 @media (max-width: 640px) { .mm255-field { flex-basis: 100%; } .mm255-input { padding-right: 13px; } .mm255-kbd { display: none; } }
 @media (prefers-reduced-motion: reduce) { .mm255-input, .mm255-kbd { transition: none; } .mm255-clear:active { transform: none; } }
+/* session304 — checked-pinned সারি-অ্যাফোর্ডেন্স (mm304; হেক্স-শূন্য টোকেন-শুধু; pr303-মিরর):
+   চেক-করা bulk_ids-সারি = ফিল্টারে-ও-দৃশ্যমান (hit=pinned||match) → পিন-অবস্থার দৃশ্যমান-সংকেত
+   (soft brandgreen প্রান্ত+টিন্ট+নাম-গাঢ় — :has()-গেটেড, অসমর্থিত-ব্রাউজারে-নীরব)
+   + Enter-firstMatch ফ্ল্যাশ + চেকবক্স focus-visible রিং + মসৃণ-ট্রানজিশন */
+@supports selector(:has(*)) {
+  details.mem-row[data-mm-row]:has(input[name="bulk_ids"]:checked) { box-shadow: inset 3px 0 0 color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); background: color-mix(in srgb, var(--lf-brandgreen) 6%, transparent); }
+  details.mem-row[data-mm-row]:has(input[name="bulk_ids"]:checked) .mem-name { color: var(--lf-brandgreen-deep); }
+}
+details.mem-row[data-mm-row] { transition: background .15s ease, box-shadow .15s ease; }
+details.mem-row[data-mm-row].mm-flash304 { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); outline-offset: 2px; }
+details.mem-row[data-mm-row] input[name="bulk_ids"]:focus-visible { outline: 2px solid color-mix(in srgb, var(--lf-brandgreen) 60%, transparent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { details.mem-row[data-mm-row] { transition: none; } details.mem-row[data-mm-row].mm-flash304 { outline-color: transparent; } }
+@media (max-width: 640px) { details.mem-row[data-mm-row]:has(input[name="bulk_ids"]:checked) { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--lf-brandgreen) 55%, transparent); } }
 </style>
 
 <script>
-  /* ── session255: তাৎক্ষণিক-ফিল্টার (mc254-চুক্তি-মিরর + grouped-list সেকশন-অটো-হাইড; __mmQA হুক) ── */
+  /* ── session255: তাৎক্ষণিক-ফিল্টার (mc254-চুক্তি-মিরর + grouped-list সেকশন-অটো-হাইড; __mmQA হুক) ──
+     session304 (mm304) — **checked-pinned চুক্তি পোর্ট** (pr303-মিরর): hit = pinned || !v || kw-match —
+     চেক-করা bulk_ids-সারি ফিল্টারে-ও-দৃশ্যমান → bulk-delete কখনো অদৃশ্য-সারি-স্পর্শ-নয়;
+     সেকশন-অটো-হাইড পিন-সচেতন (পিনড-সারি-বিশিষ্ট সেকশন সর্বদা-দৃশ্যমান); sidebar initBulkBar-এর
+     target-level sync আগে → document-level change-ডেলিগেশনে apply পরে (বাবল-ক্রম — s302-সহাবস্থান-চুক্তি);
+     boot-apply-init + Enter-firstMatch (অ্যাঙ্কর = bulk-checkbox — বিপজ্জনক-অ্যাকশন-বাটন-ফোকাস-নিষিদ্ধ-নিয়ম);
+     কাউন্ট-চিপ ASCII-অঙ্ক (mm255-চুক্তি — bn-পরিবর্তন-নিষিদ্ধ) */
   (function () {
     'use strict';
     var input = document.getElementById('mm255-filter');
@@ -158,11 +177,20 @@ details.mem-row[data-mm-row][hidden] { display: none !important; }
     var secs = Array.prototype.slice.call(document.querySelectorAll('[data-mm-sec]'));
     var emptyBox = document.querySelector('[data-mm-empty]');
     var total = cards.length;
+    function mmPinned255() {
+      return cards.filter(function (c) {
+        var cb = c.querySelector('input[name="bulk_ids"]');
+        return !!(cb && cb.checked);
+      }).length;
+    }
     function apply255() {
+      if (!input) return;
       var v = (input.value || '').trim().toLowerCase();
       var vis = 0;
       cards.forEach(function (c) {
-        var hit = !v || (c.getAttribute('data-kw') || '').indexOf(v) >= 0;
+        var cb = c.querySelector('input[name="bulk_ids"]');
+        var pinned = !!(cb && cb.checked);
+        var hit = pinned || !v || (c.getAttribute('data-kw') || '').indexOf(v) >= 0;
         c.hidden = !hit;
         if (hit) vis++;
       });
@@ -170,19 +198,35 @@ details.mem-row[data-mm-row][hidden] { display: none !important; }
         var any = s.querySelector('[data-mm-row]:not([hidden])');
         s.hidden = !!v && !any;
       });
-      count.textContent = String(vis);
-      count.classList.toggle('mm255-dim', !!v && vis !== total);
+      if (count) { count.textContent = String(vis); count.classList.toggle('mm255-dim', !!v && vis !== total); }
       if (emptyBox) emptyBox.hidden = vis !== 0;
       if (clearBtn) clearBtn.hidden = !v;
     }
-    function clear255() { input.value = ''; apply255(); }
+    function clear255() { if (!input) return; input.value = ''; apply255(); }
     if (input) {
       input.addEventListener('input', apply255);
       input.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { clear255(); input.blur(); }
+        if (e.key === 'Escape') { clear255(); input.blur(); return; }
+        if (e.key === 'Enter') {
+          var first = cards.filter(function (c) { return !c.hidden; })[0];
+          if (first) {
+            e.preventDefault();
+            var cb = first.querySelector('input[name="bulk_ids"]');
+            if (cb) { cb.focus(); }
+            first.classList.add('mm-flash304');
+            setTimeout(function () { first.classList.remove('mm-flash304'); }, 900);
+          }
+        }
       });
     }
     if (clearBtn) clearBtn.addEventListener('click', function () { clear255(); input.focus(); });
+    /* checked-pinned ধর্ম — চেক-পরিবর্তনে পুনঃ-apply (bulk_ids-সরাসরি-ক্লিক + bulk-all-উভয়-পথ;
+       sidebar-এর target-level sync আগে চলে (বাবল-ক্রম) → এ-apply সর্বদা-সর্বশেষ-অবস্থায়) */
+    document.addEventListener('change', function (e) {
+      if (!e.target || !e.target.matches) return;
+      if (e.target.matches('input[name="bulk_ids"],[data-bulk-all]')) apply255();
+    });
+    apply255(); /* boot-apply-init — session300-শিক্ষা */
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'f' || e.ctrlKey || e.metaKey || e.altKey) return;
       var t = e.target && e.target.tagName;
@@ -190,9 +234,10 @@ details.mem-row[data-mm-row][hidden] { display: none !important; }
       e.preventDefault();
       input.focus();
     });
-    /* session255 QA-হুক (__mmQA — সারফেস-নেমস্পেস-রীতি; ক্রমের-শেষ) */
+    /* session255/304 QA-হুক (__mmQA — সারফেস-নেমস্পেস-রীতি; pinned-সহ বর্ধিত) */
     window.__mmQA = {
       total: function () { return total; },
+      pinned: mmPinned255,
       count: function () { return document.querySelectorAll('[data-mm-row]:not([hidden])').length; },
       secs: function () { return document.querySelectorAll('[data-mm-sec]:not([hidden])').length; },
       apply: apply255,

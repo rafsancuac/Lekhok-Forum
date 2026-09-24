@@ -3262,3 +3262,22 @@ Work Log:
 
 Stage Summary:
 - commit দুই-খণ্ডে (feature + docs) push; নেট-শূন্য-সিড প্রমাণিত; পরের-এজেন্ট: session304 (Task ID 144)
+---
+Task ID: 144
+Agent: Cron agent loop (session304 — Job 403679, trace 202609241419)
+Task: checked-pinned পোর্ট-প্যাক (no304/ev304/mm304) + [Mandatory] স্টাইল/ফিচার + সর্ব-রিগ্রেশন + ডক-ত্রয়
+
+Work Log:
+- worklog/PLANS/PROJECT পড়ে অবস্থা-যাচাই: HEAD=origin=9da3ff0 (session303-pushed, clean-tree, BEHIND=০)
+- agent-browser QA: ত্রি-পৃষ্ঠা 200 + **ঝুঁকি-লাইভ-প্রমাণ** (notices: checked+গার্বেজ-কুয়েরি → rowHidden=true + bulkCount=১; events-এ পুনঃ-প্রমাণ) → session303-প্রস্তাবের পোর্ট-প্যাক-নির্বাচন
+- **মিথ্যা-বাগ-তদন্ত:** members.ejs-প্রদর্শিত `:not(idden])`-সদৃশ → od -c → **ফাইল-অক্ষত — ডিসপ্লে-স্তর `[hidden]`-ক্ষয়** (ফিক্স-নিষিদ্ধ; PLANS-এ নতুন-চুক্তি)
+- scripts/s304-patch.py: ত্রি-সারফেস ইঞ্জিন-আপগ্রেড (hit=pinned||match + গণক + change-ডেলিগেশন + boot-apply + Enter-চেকবক্স-অ্যাঙ্কর + ফ্ল্যাশ ৯০০ms + হুক-বর্ধিত রো-শূন্যে-ও) + session304 CSS ×৩ (প্রান্ত+টিন্ট+শিরোনাম-গাঢ় @supports-গেটেড + focus-visible-রিং + ট্রানজিশন + reduced-motion + 640px — হেক্স-শূন্য); mm304-বিশেষ: সেকশন-অটো-হাইড পিন-সচেতন
+- প্যাচ-গোটচা ×৩-ডক-কৃত: ডিসপ্লে-ক্ষয়-মিথ্যা-বাগ · HID-গণনা-অতিরিক্ত-`]`/IIFE-ব্রেস-কাউন্ট (শেষ-লাইন-`)();`-রীতিতে-সমাধান) · সংক্ষিপ্ত-অ্যাঙ্কর-সংঘর্ষ (count=2-FATAL → পূর্ণ-প্যাটার্ন)
+- tests/s304-suite.sh **৭৪/৭৪ ×৩-ধারাবাহিক** (কাঠামো ×২২ + SSR ×৯ + E2E-no ×১৭ + ev ×৩ + mm ×৪ + এরর-শূন্য ×৩ + নেট-শূন্য পরিষ্কারক ×৩-অ্যাসার্ট)
+- রিগ্রেশন: s255 ৩৯/৩৯ + s260 ৫২/৫২ + s303 ৭৫/০/২ + guard:design + audit:views (১২২ ejs) — সর্ব-গ্রিন
+- ডক-ত্রয়: PROJECT §৩০৪ + PLANS session304-নোট + repo worklog Task 144 (s304-docs.py idempotent ×২)
+
+Stage Summary:
+- ঝুঁকি-নির্মূল: checked-pinned চুক্তি এখন ৬-সারফেস-পরিবারে (pr258/dqf302/re261/lsf298 + **no259/ev260/mm255**)
+- প্যাচ/সুইট: scripts/s304-patch.py (idempotent ×N) + tests/s304-suite.sh (৭৪-চেক)
+- ডক: PROJECT §৩০৪ + PLANS session304 (গোটচা ×৩) + worklog Task 144; পরের-এজেন্ট session305 (Task ID 145)
