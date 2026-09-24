@@ -260,12 +260,14 @@
     var clear314 = function () {
       Array.prototype.forEach.call(labs314, function (l314) { l314.classList.remove('sfs314-gfocus'); });
       if (q314.focus !== -1 && phone314) phone314.removeAttribute('data-sfs314-focus');
+      if (window.__sfs315Unfreeze) window.__sfs315Unfreeze(phone314); /* s315: সংশোধনী-বিলোপ */
       q314.focus = -1;
     };
     var apply314 = function (i314) {
       Array.prototype.forEach.call(labs314, function (l314, k314) { l314.classList.toggle('sfs314-gfocus', k314 === i314); });
       q314.focus = i314;
       if (phone314) phone314.setAttribute('data-sfs314-focus', String(labs314[i314].id).replace('sfs314-glab-', ''));
+      if (window.__sfs315Freeze) window.__sfs315Freeze(labs314[i314], phone314); /* s315: দৃশ্যমানতা-স্ক্রল-সমন্বয় */
     };
     if (phone314 && labs314.length === grows314.length && labs314.length > 0) {
       var in314 = true;
@@ -300,6 +302,63 @@
     }
   } catch (e314x) { q314.err = String((e314x && e314x.message) || e314x); }
   window.__sfs314QA = q314;
+})();
+</script>
+<script>
+/* session315 (sfs315): keynav-হাইলাইট স্ক্রল-সমন্বয় (PLANS session314-প্রস্তাব-②)
+   • মার্কি-বিরতি-মোডে দৃশ্যমানতা-গ্যারান্টি: হাইলাইট-গ্রুপ-লেবেল track-ভিউপোর্টের
+     বাইরে থাকলে track-এ স্বাধীন translate-প্রোপার্টি — লেবেল feed-শীর্ষের
+     +22px-প্যাডে (mask-fade-ব্যান্ডের নিচে) আনা হয়।
+   • কেন-track-translate: .sfs292-half inline — transform-প্রয়োগ-অযোগ্য (computed-হয়
+     কিন্তু-রেন্ডার-হয়-না — রান-১-এ-প্রমাণিত); track block-level — translate কার্যকর,
+     এবং CSS Transforms L2-অনুযায়ী animation-এর transform-এর সাথে সংযুক্তি (কীফ্রেম-অস্পৃশ্য)।
+   • নিরাপত্তা: কেবল-মাপা-সংশোধনী (চলতি-কম্পিউটেড-translate-সচেতন — transition-ল্যাগ-সম্মত;
+     animation-অস্পৃশ্য (s314 CSS-গেট-ই বিরত-উৎস); ক্লিয়ারে translate-বিলোপ →
+     মার্কি স্থগিত-কীফ্রেম থেকেই চলে (শূন্য-থেকে-পুনঃআরম্ভ-লাফ নেই)।
+   • চুক্তি: __sfs315Freeze(lab, phone) / __sfs315Unfreeze(phone) — s314-ইঞ্জিনের
+     guarded-হুক (dcfChipSync296-রীতি); ইঞ্জিন-অনুপস্থিতে নীরব-নন-ফায়ার।
+   • QA-হুক __sfs315QA {frozen, shifts, err} — সারি-শূন্যে-ও-সংজ্ঞায়িত (s306b-ধর্ম)। */
+(function () {
+  var q315 = { frozen: 0, shifts: 0, err: '' };
+  try {
+    var trackFrozen315 = null;
+    window.__sfs315Freeze = function (lab315, phone315) {
+      try {
+        if (!lab315 || !phone315) return;
+        var feed315 = phone315.querySelector('.sfs292-feed');
+        var track315 = phone315.querySelector('.sfs292-track');
+        if (!feed315 || !track315) return;
+        var fTop = feed315.getBoundingClientRect().top;
+        var lTop = lab315.getBoundingClientRect().top;
+        /* চলতি-কম্পিউটেড-translate পার্স (transition-ল্যাগ-সচেতন: gBCR ও getComputedStyle
+           এক-স্ন্যাপশট-সচেতন — শূন্যীকরণ-মাপা-কৌশল নিষিদ্ধ — transition ঘোষিত-মানকে
+           অবিলম্বে-প্রয়োগ-করে-না — রান-২-গোটচা) → চূড়ান্ত = পূর্ববর্তী + সংশোধনী */
+        var prevY315 = 0;
+        var comp315 = getComputedStyle(track315).translate;
+        if (comp315 && comp315 !== 'none') {
+          var m315 = comp315.match(/(-?\d+(?:\.\d+)?)px(?:\s+(-?\d+(?:\.\d+)?)px)?/);
+          if (m315) prevY315 = m315[2] !== undefined ? parseFloat(m315[2]) : 0;
+        }
+        var shift = prevY315 + (fTop + 22) - lTop; /* লেবেল feed-শীর্ষ+২২px-প্যাডে — mask-fade-ব্যান্ড-নিচে */
+        track315.style.translate = '0px ' + shift.toFixed(2) + 'px';
+        track315.classList.add('sfs315-frozen');
+        trackFrozen315 = track315;
+        q315.frozen = 1;
+        q315.shifts += 1;
+      } catch (e315a) { q315.err = String((e315a && e315a.message) || e315a); }
+    };
+    window.__sfs315Unfreeze = function () {
+      try {
+        if (trackFrozen315) {
+          trackFrozen315.classList.remove('sfs315-frozen');
+          trackFrozen315.style.translate = '';
+          trackFrozen315 = null;
+        }
+        q315.frozen = 0;
+      } catch (e315b) { q315.err = String((e315b && e315b.message) || e315b); }
+    };
+  } catch (e315x) { q315.err = String((e315x && e315x.message) || e315x); }
+  window.__sfs315QA = q315;
 })();
 </script>
 </section>

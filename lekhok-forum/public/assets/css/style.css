@@ -4323,3 +4323,23 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs292-glabel { transition: none; }
 }
 /* ═════════════════════ EOF session314 (sfs314 aria-জোড়া + keynav) ═════════════════════ */
+/* ═════════════════════ session315 (sfs315 keynav-স্ক্রল-সমন্বয়) ═════════════════════ */
+/* ফ্রিজ-স্ক্রল: track-এ স্বাধীন translate-প্রোপার্টি (CSS Transforms L2) — animation-এর
+   transform-কীফ্রেম-অস্পৃশ্য-সংযুক্তি; .sfs292-half inline (transform-প্রয়োগ-অযোগ্য —
+   computed-হয়-কিন্তু-রেন্ডার-হয়-না — রান-১-গোটচা), track block-level — translate কার্যকর */
+.sfs292-track { transition: translate 0.26s ease-out; }
+.sfs292-track.sfs315-frozen { will-change: translate, transform; }
+/* ইন্সপেক্ট-মোডে হাইলাইট-রিং-গভীরতা (38% → 48%) — ফ্রিজ-অবস্থায় ফোকাস-স্পষ্টতা;
+   ব্যাকগ্রাউন্ড-টিন্ট s314-এর মান-ই থাকে (s314-suite bg-alpha-চুক্তি অটুট) */
+.sfs292-phone[data-sfs314-focus] .sfs292-glabel.sfs314-gfocus {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 48%, transparent);
+}
+@media (max-width: 640px) {
+  .sfs292-phone[data-sfs314-focus] .sfs292-glabel.sfs314-gfocus {
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--lf-brand-primary) 48%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs292-track { transition: none; }
+}
+/* ═════════════════════ EOF session315 (sfs315 keynav-স্ক্রল-সমন্বয়) ═════════════════════ */

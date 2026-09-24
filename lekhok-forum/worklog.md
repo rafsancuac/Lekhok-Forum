@@ -3423,3 +3423,23 @@ Stage Summary:
 - ফোন-ফিড গ্রুপ-লেবেল এখন aria-জোড়া-সম্পন্ন (glabel↔grows দ্বি-দিক; ক্লোন-হাফে id-শূন্য) + কীবোর্ড-ইউজারের roving-হাইলাইট (অ্যারো-চালিত, ওয়ার্প-সহ; ভিউপোর্ট-গেটেড; নেটিভ-নেভিগেশন-অটুট)
 - সেটিংস-ক্যাশ যাচাইযোগ্য (settingsCacheState) + নিয়ন্ত্রণযোগ্য (invalidateSettingsCache); ≤10s ক্রস-ইনস্ট্যান্স-বাউন্ড নথিভুক্ত; হোম-অর্ডার-পথ সর্বদা-ফ্রেশ-প্রমাণিত
 - পরের-এজেন্ট: session315 (Task ID 152); PLANS session314-নোটের প্রস্তাব-ত্রয় দেখুন
+
+---
+Task ID: 152
+Agent: Main cron agent (session315 — cron 403679)
+Task: session315 sfs315 keynav-স্ক্রল-সমন্বয় (দৃশ্যমানতা-গ্যারান্টি) + hr315 aria-জোড়া-সচেতন-কী-তালিকা — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- রাউন্ড-আরম্ভ-যাচাই: HEAD=origin=bb13b4d (session314), clean-tree, BEHIND=০; agent-browser QA বেসলাইন সবুজ (কনসোল-শূন্য, sfs314 pairs=২/io=১/err-শূন্য, মোবাইল-390 hScroll-শূন্য)
+- প্রোড-স্পট-যাচাই (PLANS session314-প্রস্তাব-①-এর যাচাইযোগ্য-অংশ): lekhok-forum.vercel.app home-200 + sfs314/sfs313/sfs312/epk311-মার্কার-লাইভ + admin-gate-307
+- ① sfs315 (feed.ejs): track-এ স্বাধীন translate-প্রোপার্টি-সংশোধনী (লেবেল feed-শীর্ষ+২২px-প্যাডে) + prevY-পার্স-স্ন্যাপশট-গণিত + __sfs315Freeze/Unfreeze guarded-হুক (s314-ইঞ্জিন-সন্নিবেশ) + __sfs315QA
+- ② hr315 (admin/home-reorder.ejs): hr-aria-note শিক্ষা-কপি + hr-aria-chip স্লাগ-জোড়া (SFS314_PAIRS রেজিস্ট্রি-সত্য) + __hrAria315QA ফাংশনাল-গেটার-হুক
+- ③ [Mandatory-স্টাইল] style.css session315-ব্লক হেক্স-শূন্য (track-translate-glide + will-change + রিং-গভীরতা ৪৮% কেবল-শ্যাডো + 640px + reduced-motion)
+- সুইট: tests/s315-suite.sh ৭১/৭১ ×২-ধারাবাহিক (কাঠামো ×২২ + SSR ×৪ + ফ্রিজ-ই২ই ×২১ + hr315 ×৯ + মোবাইল ×৬ + নেট-শূন্য ×৪)
+- রিগ্রেশন: s314 ৬৭/৬৭ + s313 ৬৩/৬৩ + s312 ৫৫/৫৫ + s307 ৫৫/৫৫ + s311 ৪৩/৪৩ + s306 ৫০/৫০ + guard:design + audit:views (১২২ ejs) সর্ব-গ্রিন
+- গোটচা ×৩ ডক-কৃত (PLANS session315): inline-transform-নীরব-নো-অপ · transition-ল্যাগ-মাপা-গোটচা · :focus-visible-বিরত-স্তর (p.blur()-চুক্তি)
+
+Stage Summary:
+- কীবোর্ড-ইউজারের হাইলাইট-করা গ্রুপ-লেবেল এখন সর্বাবস্থায় দৃশ্যমান (মার্কি-যে-কোনো-ফেজে থাকুক) — ফ্রিজ-গ্লাইড-সম্পন্ন, বিলোপে স্থগিত-কীফ্রেম-থেকে-পুনঃচলে
+- অ্যাডমিন এখন /admin/home-reorder-এই দেখতে পায় কোন-কোন-ফিড-কী aria-জোড়া-সম্পন্ন + কীবোর্ড-নেভ-ব্যবহারবিধি
+- পরের-এজেন্ট: session316 (Task ID 153); PLANS session315-নোটের প্রস্তাব দেখুন
