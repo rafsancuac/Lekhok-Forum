@@ -28,11 +28,14 @@
   const teSlides310 = teAdminSlides310.length
     ? teAdminSlides310.map(function (s) {
         return { id: 's' + s.id, name: String(s.name || ''), color: s.color || '#006A4E',
-                 href: s.href || '/epaper', thumbs: (s.thumbs && s.thumbs.length) ? s.thumbs : (s.thumb ? [s.thumb] : []) };
+                 href: s.href || '/epaper',
+                 pages: s.pages || null, // সেশন ৩১১: অ্যাডমিন-স্লাইড row310-উত্তরাধিকার
+                 thumbs: (s.thumbs && s.thumbs.length) ? s.thumbs : (s.thumb ? [s.thumb] : []) };
       })
     : tePapers310.map(function (p, i) {
         return { id: 'p' + p.id, name: String(p.paperName || ''), color: teAccents310[i % teAccents310.length],
                  href: p ? ('/epaper?file=' + encodeURIComponent(p.id)) : '/epaper',
+                 pages: p.pageCount || null, // সেশন ৩১১: লাইভ-পেপার page_count (গ্রেসফুল)
                  thumbs: (p.thumbs && p.thumbs.length) ? p.thumbs : (p.thumb ? [p.thumb] : []) };
       });
   const teActive310 = teSlides310[0] || null;
@@ -111,6 +114,7 @@
 
                 <%# সম্পূর্ণ প্রচ্ছদ — কোনো বড় হেডার-টেক্সট ছাড়াই (ইউজার-স্পেক) %>
                 <div class="epk310-media">
+                  <span class="epk310-pages" id="epk310Pages" <%- (teActive310 && teActive310.pages) ? '' : 'hidden' %>><i class="fas fa-file-alt" aria-hidden="true"></i><span id="epk310PagesTxt"><%= (teActive310 && teActive310.pages) ? (bnN310(teActive310.pages) + ' পৃষ্ঠা') : '' %></span></span>
                   <a class="epk310-link" id="epk310Link" href="<%= teActive310 ? teActive310.href : '/epaper' %>" aria-label="<%= teActive310 ? (teActive310.name + ' — সম্পূর্ণ পত্রিকা রিডারে পড়ুন') : 'ই-পেপার রিডার' %>">
                     <%# লোড-নেগোশিয়েশন-চলাকালীন মাস্টহেড দৃশ্যমান — ফাঁকা-শিট-ফ্ল্যাশ-শূন্য (s296-রীতি) %>
                     <span class="epk310-mast" id="epk310Mast" <%- teFirstSrc310 ? '' : '' %> aria-hidden="true">
@@ -223,6 +227,7 @@
     current: function () { return papers.length ? current : -1; },
     colorAt: function (i) { return papers[i] ? papers[i].color : ''; },
     hrefAt: function (i) { return papers[i] ? papers[i].href : ''; },
+    pagesAt: function (i) { return papers[i] ? (papers[i].pages || null) : null; }, /* সেশন ৩১১ */
     nameAt: function (i) { return papers[i] ? papers[i].name : ''; },
     mastShown: function () { return !!(mast && !mast.hidden); },
     tickN: function () { return epk310TickN; },
@@ -272,6 +277,8 @@
       stage = document.getElementById('epk310Stage');
 
   var current = 0, timer = null, paused = false;
+  var pagesEl311 = document.getElementById('epk310Pages');   /* সেশন ৩১১: ব্যাজ-র‍্যাপার */
+  var pagesTxt311 = document.getElementById('epk310PagesTxt'); /* সেশন ৩১১: ব্যাজ-টেক্সট */
 
   /* ── ইমেজ-চেইন: সারির-নিজ-সম্পদ + ২-স্ট্রাইক রিট্রাই (cache-buster) — কখনো ভাঙা-ছবি নয় ── */
   var chain = [], strikes = {}, loadedFor = -1;
@@ -337,6 +344,12 @@
       d.setAttribute('aria-selected', di === i ? 'true' : 'false');
       d.style.background = di === i ? papers[di].color : 'var(--lf-line-strong, #CED0D4)';
     });
+    /* সেশন ৩১১: ব্যাজ-সিঙ্ক — pages-বিহীন স্লাইডে hidden (s306-ব্যাজ-অদৃশ্য-ধর্ম) */
+    if (pagesEl311 && pagesTxt311) {
+      var pgTxt311 = p.pages ? (bnDigits310(p.pages) + ' পৃষ্ঠা') : '';
+      pagesTxt311.textContent = pgTxt311;
+      pagesEl311.hidden = pgTxt311 ? false : true;
+    }
     setImg310(i);
     /* fade/উত্থান-অ্যানিমেশন রিস্টার্ট */
     if (!reduceMotion) {

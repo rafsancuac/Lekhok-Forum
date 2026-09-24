@@ -4148,3 +4148,38 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs307-live-dot { animation: none; }
 }
 /* ═════════════════════ EOF session307 (sfs307) ═════════════════════ */
+/* ═════════════════════ session311 (epk311) ═════════════════════
+   স্লাইডার page-count-ব্যাজ — s306-ব্যাজ-ধর্মের epk310-ওভারলে রূপ
+   নীতি: হেক্স-শূন্য (var(--lf-*)/rgb()/color-mix), epk311-স্কোপ, reduced-motion গার্ড।
+   ═════════════════════════════════════════════════════════════ */
+.epk310-pages {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--lf-brand-primary);
+  background: color-mix(in srgb, var(--lf-white) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lf-brand-primary) 30%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.epk310-pages[hidden] { display: none; }
+.epk310-pages .fa-file-alt { font-size: 10px; opacity: 0.85; }
+@media (max-width: 640px) {
+  .epk310-pages { right: 8px; bottom: 8px; padding: 3px 8px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .epk310-pages { transition: none; }
+}
+/* ═════════════════════ EOF session311 (epk311) ═════════════════════ */
+

@@ -334,6 +334,19 @@ router.get('/', async (req, res) => {
     return a.id - b.id;
   });
 
+  // ── সেশন ৩১১ (epk311): স্লাইডার page-count-ব্যাজ ডেটা — গ্রেসফুল দ্বি-পথ (s306b-ধর্ম) ──
+  // epaper_files.page_count অ-মাইগ্রেটেড ডিবিতে অনুপস্থিত হতে পারে → প্রধান-প্যারালাল-ব্যাচ
+  // অক্ষুণ্ণ রেখে পৃথক try/catch-স্টেপে রেজলভ (ব্যর্থতায় pageCount=শূন্য — ব্যাজ-অদৃশ্য, ভাঙা-শূন্য)।
+  let epkPages311 = {};
+  try {
+    const ids311 = epaperLatest233.map(function (p) { return p.id; }).filter(Boolean);
+    if (ids311.length) {
+      const pcRows311 = await db.prepare('SELECT id, page_count FROM epaper_files WHERE id IN (' + ids311.map(function () { return '?'; }).join(',') + ')').all(...ids311);
+      pcRows311.forEach(function (r) { if (r && r.page_count) epkPages311[r.id] = r.page_count; });
+    }
+  } catch (e311) { epkPages311 = {}; }
+  epaperLatest233.forEach(function (p) { p.pageCount = epkPages311[p.id] || null; });
+
   // ── সেশন ৩১০: ফুল-কভার স্লাইডার-সারি — অ্যাডমিন-কনফিগারেশন + নাম-মিল-প্রথম-পাতা-চেইন ──
   // ইউজার-স্পেক: কার্ডে শুধু প্রচ্ছদ (কোনো নাম-হেডার নেই, কোনো ছোট-কার্ড নেই), ৪ সেকেন্ডে
   // অটো-স্লাইড। প্রতি-স্লাইডের ইমেজ-চেইন (মিসম্যাচ-অসম্ভব — session291/296-নীতিরই সম্প্রসারণ):
@@ -352,6 +365,7 @@ router.get('/', async (req, res) => {
       slug: s310.slug || '',
       color: s310.color || '#006A4E',
       href: s310.link || (row310 ? ('/epaper?file=' + encodeURIComponent(row310.id)) : '/epaper?paper=' + encodeURIComponent(nm310)),
+      pages: row310 ? (row310.pageCount || null) : null, // সেশন ৩১১: row310-উত্তরাধিকার (গ্রেসফুল)
       thumb: chain310[0] || '',
       thumbs: chain310
     };

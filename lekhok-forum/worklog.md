@@ -3354,3 +3354,19 @@ Stage Summary:
 - সোশ্যাল-ফিড ফোন-মকআপ = বাস্তব-পোস্ট-হাইড্রেটেড (৮ পাবলিক-পোস্ট — গ্রুপ-এ সর্বশেষ ৪ + গ্রুপ-বি জনপ্রিয় ৪; ডেমো-ফলব্যাক-গ্রেসফুল) + IO-পজ (CPU-সাশ্রয়) + চিপ ×৩
 - পরের-এজেন্ট: session311 (Task ID 148); PLANS session307-নোটের প্রস্তাব-ত্রয় দেখুন
 
+---
+Task ID: 148
+Agent: Main cron agent (session311 — cron 403679)
+Task: session311 epk311 — হোম ই-পেপার স্লাইডারে page-count-ব্যাজ — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- PLANS session307-নোটের প্রস্তাব-② গ্রহণ; s311-patch.py (idempotent ×N) — pages.js গ্রেসফুল page_count-রেজলভ + row310-উত্তরাধিকার, today.ejs দুই-শাখা-pages + .epk310-pages ব্যাজ + applySlide-সিঙ্ক + pagesAt-হুক, style.css session311-ব্লক হেক্স-শূন্য
+- গোটচা-ধরা ×৩ (রানটাইমে): debounced-saveDb-exit (সিড-ফ্লাশ-হারানো) · in-memory-স্টেল (ক্লিন-যাচাইয়ে রিস্টার্ট) · suite-CWD (node -e require)
+- নতুন tests/s311-suite.sh — ৪৩/৪৩ ×২-ধারাবাহিক (সিড: s306-epaper + মার্কার-নামের QA-অ্যাডমিন-স্লাইড; নেট-শূন্য ×৪-অ্যাসার্ট)
+- রিগ্রেশন: s306 ৫০/৫০ (APP-CWD) + s307 ৫৫/৫৫ + guard:design + audit:views (১২২) সর্ব-গ্রিন
+- ডক-ত্রয়: PROJECT §৩১১ + PLANS session311-নোট + এ-ওয়ার্কলগ Task 148 (s311-docs.py idempotent ×২)
+
+Stage Summary:
+- হোম ই-পেপার স্লাইডার = page-count-ব্যাজ-সজ্জিত (৫২ পৃষ্ঠা — বাংলা-অঙ্ক; pages-শূন্যে অদৃশ্য — s306-ধর্ম; অ-মাইগ্রেটেড-ডিবি-গ্রেসফুল — s306b-ধর্ম)
+- পরের-এজেন্ট: session312 (Task ID 149); PLANS session311-নোটের প্রস্তাব-ত্রয় দেখুন
+
