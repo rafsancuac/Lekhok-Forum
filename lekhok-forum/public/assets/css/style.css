@@ -4503,3 +4503,16 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   .sfs319-namechip { transition: opacity 0.01s linear, visibility 0.01s linear; transform: translateY(0); }
 }
 /* ═══════════════════ EOF session319 (sfs319 ব্যাজ-গ্রুপ-নাম-চিপ) ═══════════════════ */
+/* ═══════════════════ session320 (sfs320 নাম-চিপ সময়-ভিত্তিক-স্বয়ং-বিলোপ) ═══════════════════ */
+/* hex-free (var/color-mix-রীতি — guard:design-চুক্তি); off-গেট দ্বি-গেট-ভিতরেই
+   (specificity (০,৫,০) > on-দ্বার (০,৪,০)) — প্রদর্শন-মুহূর্তে-ই ফেড-আউট-ওভাররাইড;
+   visibility-অস্পৃশ্য (কেবল opacity+transform — ট্রানজিশন-দ্বি-স্তর-সংঘর্ষ-নিষিদ্ধ);
+   4s-পরবর্তী স্বয়ং-বিলোপ (keynav-জীবনচক্র-সম্পূরক — sfs320-ইঞ্জিন সেট করে)। */
+.sfs292-phone[data-sfs314-focus] .sfs319-namechip[data-sfs319-on][data-sfs320-off] {
+  opacity: 0;
+  transform: translateY(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sfs319-namechip[data-sfs320-off] { transition: opacity 0.01s linear, transform 0.01s linear; }
+}
+/* ═══════════════════ EOF session320 (sfs320 নাম-চিপ সময়-ভিত্তিক-স্বয়ং-বিলোপ) ═══════════════════ */

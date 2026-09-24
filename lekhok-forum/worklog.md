@@ -3515,3 +3515,11 @@ Work Log:
 Stage Summary:
 - session319 সম্পন্ন: sfs319 নাম-চিপ + hr319 সারি-ক্লিক-পুনঃকপি; ৭৭/৭৭ ×২ + সর্ব-রিগ্রেশন-গ্রিন; ডক-ত্রয় idempotent; পরের-এজেন্ট session320 (Task ID 157) — PLANS session319-নোটের প্রস্তাব-①②③ প্রস্তুত
 
+## Task 157 — session320: sfs320 চিপ-স্বয়ং-বিলোপ + hr320 ইতিহাস-কীবোর্ড-নেভিগেশন (২৪ সেপ্টেম্বর ২০২৬)
+- **রাউন্ড:** cron 403679 (trace `…202609242219`); রাউন্ড-আরম্ভে HEAD=origin=`e222bad` (session319), clean-tree, BEHIND=০; agent-browser-QA বেসলাইন সবুজ (হোম-২০০ + sfs319-QA-হুক ×৪-জীবন্ত; কনসোলে কেবল-নথিভুক্ত ep-reader ফলব্যাক-ওয়ার্নিং) + **প্রোড-স্পট** (vercel home-200 + **sfs319-namechip-মার্কার ×৮-লাইভ** = e222bad-ডিপ্লয়-প্রমাণ — PLANS session319-প্রস্তাব-①-যাচাই-সম্পন্ন)।
+- **[Mandatory-ফিচার-১] sfs320 (feed.ejs):** নাম-চিপ সময়-ভিত্তিক-স্বয়ং-বিলোপ — `__sfs320Cfg.ms` (ডিফল্ট ৪০০০ms) পরে data-sfs320-off → CSS-ফেড (দ্বি-গেট-ভিতরে opacity-ওভাররাইড); __sfs319Show/__sfs319Hide guarded-মোড়ক (s319-বন্ধ-অস্পৃশ্য); প্রতি-Show-এ রিসেট+রি-আর্ম; `__sfs320QA {fired, off(), ms(), arm(), err}`।
+- **[Mandatory-ফিচার-২] hr320 (admin/home-reorder.ejs):** ইতিহাস-কীবোর্ড-নেভিগেশন — বাটন-ফোকাসে ArrowDown/Up = পয়েন্টার-স্থানান্তর (clamp-বাউন্ড) + .hr320-ptr চিহ্ন; Enter = পয়েন্টার-পুনঃকপি (rowRecopy319-এক-উৎস); পয়েন্টার-শূন্যে নেটিভ-পথ-অস্পৃশ্য; ত্রি-মোড়ক (tipHide + __hrAria317Record + ptrIdx/ptrSync); সারি-focus/role/tabindex-অনুপ্রবেশ-শূন্য; `__hrAria320QA {ptr(), moves, copies, err}`।
+- **[Mandatory-স্টাইল]:** style.css session320-ব্লক হেক্স-শূন্য (off-ওভাররাইড + reduced-motion) + admin-লোকাল .hr320-ptr (inset-বাম-বার — kbd-পথ-চিহ্ন)।
+- **টেস্ট:** নতুন tests/s320-suite.sh ৭২/৭২ ×২ (পরিবেশ ×৩ + কাঠামো ×১৮ + SSR ×৫ + sfs320-ই২ই ×১৬ + hr320-ই২ই ×২০ + মোবাইল ×৫ + নেট-শূন্য ×৪); রিগ্রেশন সর্ব-গ্রিন: s319 ৭৭ + s318 ৭৪ + s317 ৬৮ + s316 ৫৫ + s315 ৭১ + s314 ৬৭ + s313 ৬৩ + s312 ৫৫ + s311 ৪৩ + s307 ৫৫ + s306 ৫০ + guard:design + audit:views (১২২ ejs)।
+- **গোটচা ×২:** ① রেকর্ড-টাইমিং (অ্যাসিনক-done316 × সমকালীন-ptrSync → চিহ্ন-বিলোপ) → __hrAria317Record-মোড়ক-চুক্তি ② আর্ম-জানালা (ইনজেক্টেড-ms-এ দীর্ঘ-বিলম্ব = ফায়ার-পরে-পাঠ) → ১০০ms-জানালা-চুক্তি।
+- **প্যাচ/ডক:** scripts/s320-patch.py (idempotent ×২ — ৪-ধাপ) + s320-docs.py (এ-ফাইল-ত্রয়); PLANS session320-নোটে session321-প্রস্তাব ×৪ (প্রোড-স্পট + টাচ-পথ-নাম-প্রকাশ + ইতিহাস-স্থায়ীকরণ + bot-গেটেড)।

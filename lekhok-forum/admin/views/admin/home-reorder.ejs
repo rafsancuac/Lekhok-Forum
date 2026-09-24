@@ -88,6 +88,10 @@
     .hr318-row[data-copy] { cursor:pointer; border-radius:3px; margin:0 -4px; padding-left:4px; padding-right:4px; transition:background .12s; }
     .hr317-tip.hr319-live .hr318-row[data-copy]:hover { background:rgba(4,120,87,.07); }
     .hr318-row.hr319-hit { background:rgba(5,150,105,.18) !important; }
+    /* সেশন ৩২০ (hr320): ইতিহাস-কীবোর্ড-পয়েন্টার — ArrowDown/Up-নেভিগেটেড সারির চিহ্ন
+       (is-cur-সহাবস্থান — চলতি-কী-টিন্ট .০৯-এর গাঢ় .১৩ + inset-বাম-বার); সারি-focus/
+       role/tabindex-অনুপ্রবেশ-শূন্য — কেবল-ভিজ্যুয়াল-পয়েন্টার (kbd-পথ)। */
+    .hr318-row.hr320-ptr { background:rgba(4,120,87,.13); box-shadow:inset 2px 0 0 rgba(5,150,105,.85); border-radius:3px; margin:0 -4px; padding-left:4px; padding-right:4px; }
   </style>
 </head>
 <body>
@@ -567,6 +571,72 @@
     hit: function () { return document.querySelectorAll('.hr318-row.hr319-hit').length; },
     err: ''
   };
+
+  /* সেশন ৩২০ (hr320): ইতিহাস-কীবোর্ড-নেভিগেশন — পুনঃকপি (PLANS session319-নোটের প্রস্তাব-②)
+     • সারি-focus/role/tabindex-অনুপ্রবেশ-শূন্য-পথ: কপি-বাটন-ফোকাসেই ArrowDown/ArrowUp =
+       ইতিহাস-পয়েন্টার-স্থানান্তর (hist[০]=সর্বশেষ; clamp-বাউন্ড) + টুলটিপ-সারিতে
+       .hr320-ptr চিহ্ন; Enter = পয়েন্টার-কী-র পুনঃকপি (rowRecopy319-এক-উৎস)।
+     • পয়েন্টার-শূন্যে Enter = বাটনের-নিজস্ব-কপি (নেটিভ-click — s316-পথ-অস্পৃশ্য);
+       পয়েন্টার-সক্রিয়ে preventDefault (নেটিভ-click-বিলোপ — দ্বি-কপি-নিষিদ্ধ)।
+     • জীবনচক্র: tipHide317-মোড়ক (mouseout/focusout/Escape-সর্ব-পথে পয়েন্টার-বিলোপ);
+       __hrAria317Record-মোড়ক (copyAria316-এর done316-অ্যাসিনক-কলব্যাক-পথ-সহ সর্ব-রেকর্ডে
+       রিফ্রেশ-পুনঃনির্মাণ-পরবর্তী ptrSync-পুনঃপ্রয়োগ — কপি-কৃত-কী hist[০]-এ unshift,
+       পয়েন্টার-অনুসরণ; সমকালীন-ptrSync-অপর্যাপ্ত — record-টাইমিং-গোটচা ডক-কৃত)।
+     • QA-হুক __hrAria320QA {ptr(), moves, copies, err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var ptr320 = '';
+  var q320 = { moves: 0, copies: 0, err: '' };
+  var ptrIdx320 = function () {
+    for (var i320a = 0; i320a < hist317.length; i320a++) { if (hist317[i320a].key === ptr320) return i320a; }
+    return -1;
+  };
+  var ptrSync320 = function () {
+    try {
+      if (!tip317) return;
+      var rs320 = tip317.querySelectorAll('.hr318-row[data-copy]');
+      for (var i320b = 0; i320b < rs320.length; i320b++) {
+        rs320[i320b].classList.toggle('hr320-ptr', ptr320 !== '' && rs320[i320b].getAttribute('data-copy') === ptr320);
+      }
+    } catch (e320a) { q320.err = String((e320a && e320a.message) || e320a); }
+  };
+  /* s320: __hrAria317Record-মোড়ক — রেকর্ড-রিফ্রেশে সারি-পুনঃনির্মাণ হয় (tipRender318) →
+     পুনঃনির্মাণ-পরবর্তী-ই ptrSync (copyAria316-এর done316-প্রমিজ-কলব্যাক-অ্যাসিনক-পথ-সহ);
+     Enter-শাখার সমকালীন-ptrSync একা-অপর্যাপ্ত (রেকর্ড-টাইমিং-গোটচা — s320-ডক) */
+  var recOrig320 = window.__hrAria317Record;
+  window.__hrAria317Record = function (k320r) {
+    recOrig320(k320r);
+    ptrSync320();
+  };
+  document.addEventListener('keydown', function (e320b) {
+    try {
+      var b320 = e320b.target && e320b.target.closest ? e320b.target.closest('.hr-aria-copy') : null;
+      if (!b320) return;
+      if (e320b.key === 'Escape') { ptr320 = ''; return; } /* tipHide317-মোড়ক-ও-বিলোপ-করবে */
+      if (e320b.key === 'ArrowDown' || e320b.key === 'ArrowUp') {
+        if (!hist317.length) return;
+        e320b.preventDefault(); /* পৃষ্ঠা-স্ক্রল-বিলোপ */
+        if (!tip317 || !tip317.classList.contains('is-on')) tipShow317(b320);
+        var i320c = ptrIdx320();
+        if (i320c < 0) { i320c = 0; }
+        else {
+          i320c += (e320b.key === 'ArrowDown' ? 1 : -1);
+          if (i320c < 0) i320c = 0;
+          if (i320c > hist317.length - 1) i320c = hist317.length - 1;
+        }
+        ptr320 = hist317[i320c].key;
+        ptrSync320();
+        q320.moves += 1;
+      } else if (e320b.key === 'Enter' && ptr320 && ptrIdx320() >= 0) {
+        e320b.preventDefault(); /* নেটিভ-click-বিলোপ — বাটন-কী-দ্বি-কপি-নিষিদ্ধ */
+        rowRecopy319(ptr320, null);
+        ptrSync320(); /* রেকর্ড-রিফ্রেশ-পুনঃনির্মাণ-পরবর্তী-পুনঃপ্রয়োগ (কপি-কৃত-কী hist[০]) */
+        q320.copies += 1;
+      }
+    } catch (e320c) { q320.err = String((e320c && e320c.message) || e320c); }
+  });
+  var tipHideOrig320 = tipHide317;
+  tipHide317 = function () { ptr320 = ''; tipHideOrig320(); };
+  q320.ptr = function () { return ptr320; };
+  window.__hrAria320QA = q320;
 })();
 </script>
 </body>

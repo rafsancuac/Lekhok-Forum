@@ -514,5 +514,58 @@
   window.__sfs319QA = q319;
 })();
 </script>
+<script>
+/* session320 (sfs320): নাম-চিপ সময়-ভিত্তিক-স্বয়ং-বিলোপ (PLANS session319-নোটের প্রস্তাব-③)
+   • keynav-জীবনচক্রের সম্পূরক: চিপ-প্রদর্শনের __sfs320Cfg.ms (ডিফল্ট ৪০০০ms) পরে
+     data-sfs320-off — CSS-ফেড-আউট (দ্বি-গেট-ভিতরে opacity-ওভাররাইড)। পাঠ-সম্পন্ন
+     হলে চিপ নিজে-ই সরে (দীর্ঘ-হাইলাইটে-স্থায়ী-ওভারলে-নিষিদ্ধ)।
+   • চুক্তি: __sfs319Show/__sfs319Hide-র guarded-মোড়ক (s319-বন্ধ-অস্পৃশ্য — shown/last
+     গণনা s319-ব্যবস্থাপন্ন); প্রতি-Show-এ off-বিলোপ + রি-আর্ম (গ্রুপ-পরিবর্তনে
+     টাইমার-পুনঃপ্রারম্ভ); Hide-এ ডিস-আর্ম + off-বিলোপ; __sfs320Cfg.ms পেজ-লোড-
+     পরবর্তী-সংশোধনযোগ্য (একই-বস্তু-রেফারেন্স — QA-সংক্ষিপ্ত-সময়-পথ)।
+   • QA-হুক __sfs320QA {fired, off(), ms(), arm(), err} — চিপ-শূন্যে-ও-সংজ্ঞায়িত। */
+(function () {
+  var q320 = { fired: 0, err: '' };
+  try {
+    var cfg320 = window.__sfs320Cfg = window.__sfs320Cfg || { ms: 4000 };
+    var tm320 = null;
+    var chip320 = function () { return document.querySelector('.sfs319-namechip'); };
+    var disarm320 = function () { if (tm320) { clearTimeout(tm320); tm320 = null; } };
+    var arm320 = function () {
+      disarm320();
+      var c320 = chip320();
+      if (!c320) return;
+      var ms320 = Math.max(50, +cfg320.ms || 4000);
+      tm320 = setTimeout(function () {
+        tm320 = null;
+        try {
+          var c320b = chip320();
+          if (c320b && c320b.hasAttribute('data-sfs319-on')) { c320b.setAttribute('data-sfs320-off', '1'); q320.fired += 1; }
+        } catch (e320a) { q320.err = String((e320a && e320a.message) || e320a); }
+      }, ms320);
+    };
+    if (window.__sfs319Show) {
+      var sh320 = window.__sfs319Show;
+      window.__sfs319Show = function (l320, i320, n320) {
+        sh320(l320, i320, n320);
+        try { var c320c = chip320(); if (c320c) c320c.removeAttribute('data-sfs320-off'); } catch (e320b) { q320.err = String((e320b && e320b.message) || e320b); }
+        arm320();
+      };
+    }
+    if (window.__sfs319Hide) {
+      var hd320 = window.__sfs319Hide;
+      window.__sfs319Hide = function () {
+        disarm320();
+        try { var c320d = chip320(); if (c320d) c320d.removeAttribute('data-sfs320-off'); } catch (e320c) { q320.err = String((e320c && e320c.message) || e320c); }
+        hd320();
+      };
+    }
+    q320.off = function () { var c320e = chip320(); return !!(c320e && c320e.hasAttribute('data-sfs320-off')); };
+    q320.ms = function () { return +cfg320.ms || 0; };
+    q320.arm = function () { return !!tm320; };
+  } catch (e320x) { q320.err = String((e320x && e320x.message) || e320x); }
+  window.__sfs320QA = q320;
+})();
+</script>
 </section>
 
