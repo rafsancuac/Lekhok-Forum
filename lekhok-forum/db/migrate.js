@@ -44,12 +44,24 @@ if (IS_VERCEL) {
         }
       }
     }
+    // session306: epaper_files.page_count-নিশ্চিতকারী (পুরাতন-ডিপ্লয়ে কলাম-যোগ — ইডেমপোটেন্ট)
+    try {
+      await client.execute('ALTER TABLE epaper_files ADD COLUMN page_count INTEGER');
+      console.log('  + epaper_files.page_count যোগ হয়েছে');
+    } catch (colErr306) {
+      if (!/duplicate column|already exists/i.test(String(colErr306 && colErr306.message))) {
+        console.error('  ✗ page_count-মাইগ্রেশন:', colErr306 && colErr306.message);
+      }
+    }
     await client.close();
     console.log('[migrate] Done.');
   })().catch(err => { console.error('[migrate] Fatal:', err.message); process.exit(1); });
 
 } else {
   // ── Local sql.js path (dev only) ───────────────────────────────────────
+  // session306-ফিক্স: top-level-await + require = ERR_AMBIGUOUS_MODULE_SYNTAX (Node 22+) —
+  // লোকাল-শাখা async-IIFE-এ মোড়ানো → CJS-পার্স-পুনঃপ্রতিষ্ঠা (node db/migrate.js পুনঃচালু)
+  (async () => {
   const initSqlJs = require('sql.js');
   const SQL       = await initSqlJs();
   const dbPath    = path.join(__dirname, '..', 'lekhok.db');
@@ -79,7 +91,17 @@ if (IS_VERCEL) {
     }
   }
 
+  // session306: epaper_files.page_count-নিশ্চিতকারী (লোকাল sql.js — ইডেমপোটেন্ট)
+  try {
+    db.run('ALTER TABLE epaper_files ADD COLUMN page_count INTEGER');
+    console.log('  + epaper_files.page_count যোগ হয়েছে (লোকাল)');
+  } catch (colErr306) {
+    if (!/duplicate column|already exists/i.test(String(colErr306 && colErr306.message))) {
+      console.error('  ✗ page_count-মাইগ্রেশন:', colErr306 && colErr306.message);
+    }
+  }
   const out = fs.writeFileSync(dbPath, db.export());
   console.log('[migrate] Saved to lekhok.db');
   console.log('[migrate] Done.');
+  })().catch((migErr306) => { console.error('migrate Fatal:', migErr306 && migErr306.message); process.exit(1); });
 }

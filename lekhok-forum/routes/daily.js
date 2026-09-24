@@ -211,7 +211,7 @@ router.get('/epaper', async (req, res) => {
   let papers = [];
   try {
     papers = await db.prepare(
-      "SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT 400"
+      "SELECT id, scheduled_date AS date, paper_name AS paperName, file_url AS fileUrl, drive_file_id AS fileId, drive_thumb_id AS thumbId, page_count AS pageCount, created_at FROM epaper_files WHERE published = 1 ORDER BY scheduled_date DESC, id ASC LIMIT 400"
     ).all();
   } catch (e) { papers = []; }
   // টেবিল এখনো-খালি হলে legacy-আর্কাইভ দিয়ে প্রথম-রেন্ডার (মাইগ্রেশন-কাল)

@@ -3299,3 +3299,24 @@ Stage Summary:
 - **checked-pinned চুক্তি-সর্বসার্থকতা:** সর্ব-bulk+filter-সারফেস কভারড (৭-সারফেস) — অদৃশ্য-সারি-বাল্ক-ঝুঁকি কাঠামোগতভাবে শূন্য
 - প্যাচ/সুইট: scripts/s305-patch.py + tests/s305-suite.sh (৪২-চেক); নতুন-চুক্তি ×২ (grep-অঙ্ক-অন্ধতা + ম্যাট্রিক্স-অডিট) PLANS-এ
 - ডক: PROJECT §৩০৫ + PLANS session305 + worklog Task 145; পরের-এজেন্ট session306 (Task ID 146)
+---
+Task ID: 146
+Agent: Cron agent loop (session306 — Job 403679, trace 202609241511)
+Task: ep306 পৃষ্ঠা-সংখ্যা-ব্যাজ (page-count-গেট-উন্মোচন) + migrate-বুট-ফিক্স + [Mandatory] স্টাইল/ফিচার + রিগ্রেশন + ডক-ত্রয়
+
+Work Log:
+- worklog/PLANS/PROJECT পড়ে অবস্থা-যাচাই: HEAD=origin=7eb1749 (session305-pushed, clean-tree, BEHIND=০); রিপো-টপোলজি-স্পষ্টীকরণ (একক-রিপো — সাইট lekhok-forum/-সাবট্রি + epaper-bot/ রুটে)
+- agent-browser QA-বেসলাইন: ৭-পৃষ্ঠা-সর্ব-200 + এরর-শূন্য; archive-APIতে pageCount-অনুপস্থিতি-প্রমাণ → session305-প্রস্তাবের page-count-গেট এ-রাউন্ডেই উন্মোচনের সিদ্ধান্ত
+- scripts/s306-patch.py: স্কিমা page_count + migrate-ALTER (উভয়-ব্যাকএন্ড) + api-epaper sync/pageCount (COALESCE + 1..999-স্যানিটাইজ) + archive/daily-SELECT + epaper.ejs payload/badge/hook + epaper.css session306-ব্লক (হেক্স-শূন্য + flex-row ≥641px-গেট) + bot pdf-lib getPageCount → sync-বডি
+- **QA-বাগ-ফিক্স:** db/migrate.js ERR_AMBIGUOUS_MODULE_SYNTAX (top-level await + require — Node 22+ অচল) → async-IIFE-মোড়ানো; node db/migrate.js পুনঃজীবিত + ALTER-প্রয়োগ-প্রমাণ
+- **গোটচা ×২ ধরা-পড়ে ও সংশোধিত:** শ্রেণি-সংঘর্ষ (.ep-pages রিডার-স্ক্রলার → .ep-pages306-নামস্পেস) + মার্কার-রিনেম-মিথস্ক্রিয়া (ডুপ-ব্যাজ-লাইন — হুক-অমিলে ধরা; কমেন্ট-ভিত্তিক-মার্কারে সংশোধন)
+- scripts/s306-seed-epaper.js (সার্ভার-বন্ধ মার্কার-সিড ৫২/১২/৮ + --clean) + tests/s306-suite.sh **৪৭/৪৭ ×৩-ধারাবাহিক**
+- রিগ্রেশন: s300-epref ৬৫/৬৫ + s301 ৬৯/৬৯ + s303 ৭৫/৭৫ + guard:design + audit:views (১২২ ejs) — সর্ব-গ্রিন
+- গেটেড-অবশিষ্ট: sync-write HTTP-E2E (EPAPER_SYNC_TOKEN-অনুপস্থি — 503-প্রমাণিত), প্রোড-ব্যাজ-যাচাই (বট-রিডিপ্লয় + Vercel-ডিপ্লয়-পরবর্তী)
+- ডক-ত্রয়: PROJECT §৩০৬ + PLANS session306-নোট + repo worklog Task 146 (s306-docs.py idempotent ×২)
+
+Stage Summary:
+- **page-count-গেট-উন্মোচন:** স্কিমা→API→ভিউ→বট চার-স্তরে পৃষ্ঠা-সংখ্যা-প্রবাহ; শূন্য-ডেটায় গ্রেসফুল (ব্যাজ-অদৃশ্য — ভাঙা-শূন্য)
+- migrate.js-বুট-ফিক্স = সুপ্ত-প্রোড-মাইগ্রেশন-বাগও-সারা; নতুন-চুক্তি ×৩ (শ্রেণি-সংঘর্ষ-গ্রেপ + মার্কার-রিনেম-নিরপেক্ষতা + মাইগ্রেশন-গেটে-প্রকৃত-রান-প্রমাণ) PLANS-এ
+- প্যাচ/সিড/সুইট: scripts/s306-patch.py + scripts/s306-seed-epaper.js + tests/s306-suite.sh (৪৭-চেক)
+- ডক: PROJECT §৩০৬ + PLANS session306 + worklog Task 146; পরের-এজেন্ট session307 (Task ID 147)

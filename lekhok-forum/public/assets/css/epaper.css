@@ -818,3 +818,48 @@
 @media (prefers-reduced-motion: reduce) {
   .ep-cal-y { animation: none; transition: none; }
 }
+
+/* ═══ session306 — পৃষ্ঠা-সংখ্যা-ব্যাজ (ep306; PLANS session305-প্রস্তাব page-count-গেট-উন্মোচন)
+   চুক্তি: হেক্স-শূন্য টোকেন-শুধু + color-mix-অ্যাকসেন্ট + focus-visible-রিং + ট্রানজিশন
+   + 640px-সংকোচন + reduced-motion-সম্মান (session303-সুপারসেট) ═══ */
+/* ① ব্যাজ-পিল — তালিকা-আইটেমের মেটা-সারিতে পৃষ্ঠা-সংখ্যা (page_count-শূন্যে-রেন্ডার-ই-হয়-না) */
+.ep-pages306 {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: var(--lf-radius-chip);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .2px;
+  line-height: 1.7;
+  white-space: nowrap;
+  color: var(--lf-text-secondary);
+  background: var(--lf-ui-input-bg);
+  border: 1px solid var(--lf-ui-border-strong);
+}
+.ep-pages306 i { font-size: .58rem; color: var(--lf-brand-primary); }
+/* ①-ব. মেটা-সারি flex-row (≥641px — নাম flex:1 + ব্যাজ/উষ্ণ-চিপ ডানে; ≤640px-এ s280-কলাম+২-লাইন-ক্ল্যাম্প চুক্তি অটুট) */
+@media (min-width: 641px) {
+  .ep-item .ep-item-meta { display: flex; flex-direction: row; align-items: center; gap: 6px; }
+  .ep-item .ep-item-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ep-item .ep-pages306, .ep-item .ep-warmchip { flex-shrink: 0; }
+  .ep-item .ep-pages306 { margin-left: 0; }
+}
+/* ② সক্রিয়-আইটেমে অ্যাকসেন্ট-উন্নয়ন (is-on — নির্বাচিত-পত্রিকায় ব্র্যান্ড-টিন্ট) */
+.ep-item.is-on .ep-pages306 {
+  color: var(--lf-brand-primary);
+  background: color-mix(in srgb, var(--lf-brand-primary) 9%, transparent);
+  border-color: color-mix(in srgb, var(--lf-brand-primary) 38%, transparent);
+}
+/* ③ ট্রানজিশন (থিম-সুইচ/নির্বাচন-মসৃণ) */
+.ep-pages306 { transition: color .15s ease, background .15s ease, border-color .15s ease; }
+/* ④ 640px-সংকোচন (টাচ-সার্ফেসে ঘন-তালিকায় কমপ্যাক্ট) */
+@media (max-width: 640px) {
+  .ep-pages306 { padding: 0 6px; font-size: .58rem; gap: 3px; }
+}
+/* ⑤ রিডিউসড-মোশন গার্ড */
+@media (prefers-reduced-motion: reduce) {
+  .ep-pages306 { transition: none; }
+}

@@ -14,6 +14,7 @@ import path from 'path'
 import { spawnSync } from 'child_process'
 import os from 'os'
 import { stripTelegramPromoLayer } from './cleaner'
+import { PDFDocument } from 'pdf-lib' // session306: পৃষ্ঠা-সংখ্যা-নির্ণয় (ep306)
 
 /* ── কনফিগ (.env) ── */
 const TG_API_ID = parseInt(process.env.TG_API_ID || '', 10)
@@ -212,7 +213,7 @@ async function driveUpload(token: string, folderId: string, name: string, bytes:
 }
 
 /* ── সাইট-সিঙ্ক ── */
-async function siteSync(date: string, fileId: string, paperName: string, thumbId?: string): Promise<void> {
+async function siteSync(date: string, fileId: string, paperName: string, thumbId?: string, pageCount?: number): Promise<void> {
   const link = `https://drive.google.com/file/d/${fileId}/view`
   const res = await fetch(`${SITE_URL}/api/epaper/sync`, {
     method: 'POST',
@@ -225,6 +226,7 @@ async function siteSync(date: string, fileId: string, paperName: string, thumbId
       fileUrl: link,
       fileId,
       thumbId: thumbId || undefined,
+      pageCount: pageCount || undefined, // session306: পৃষ্ঠা-সংখ্যা (নির্ণয়-ব্যর্থতায় undefined — সাইটে COALESCE-সংরক্ষণ)
       source: 'epaper-bot',
     }),
   })
@@ -382,9 +384,20 @@ async function processMessage(client: TelegramClient, m: any, doc: any, syncedId
     } else {
       console.log('↷ ড্রাইভ-এ আগেই আছে — ডাউনলোড-স্কিপ')
     }
+    // session306 (ep306): পৃষ্ঠা-সংখ্যা-নির্ণয় (ক্লিনড-বাইট থেকে — ব্যর্থতায় বাদ, প্রধান-প্রবাহ অটুট)
+    let pageCount: number | undefined
+    if (pdfBytes) {
+      try {
+        pageCount = (await PDFDocument.load(pdfBytes)).getPageCount()
+        if (!(pageCount >= 1 && pageCount <= 999)) pageCount = undefined
+      } catch (pcErr) {
+        console.log('↷ পৃষ্ঠা-সংখ্যা নির্ণয় ব্যর্থ — বাদ:', pcErr instanceof Error ? pcErr.message : pcErr)
+        pageCount = undefined
+      }
+    }
     // থাম্বনেইল: টেলিগ্রাম-প্রিভিউ → PDF-প্রথম-পাতা-রেন্ডার (ডাউনলোড-স্কিপ হলে ড্রাইভ-থেকে-এক-বার)
     const thumbId = await ensureThumb(token, folderId, fName, client, m, doc, pdfBytes, fileId || undefined)
-    await siteSync(msgDate, fileId, paperName, thumbId)
+    await siteSync(msgDate, fileId, paperName, thumbId, pageCount)
     state[msgDate][fName] = fileId
     saveState(state)
     if (fileId) syncedIds.push(fileId)

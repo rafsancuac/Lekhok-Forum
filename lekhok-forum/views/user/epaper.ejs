@@ -77,6 +77,7 @@
       embed: embedOf(p),
       view: fid ? ('https://drive.google.com/file/d/' + fid + '/view') : p.fileUrl,
       fid: fid,
+      pages: p.pageCount || null, // session306: পৃষ্ঠা-সংখ্যা (বট-সিঙ্কড page_count — শূন্য-সহনশীল)
       rank: rankOf(p.paperName)
     });
   });
@@ -407,6 +408,13 @@
     months: function () { try { return document.querySelectorAll('.ep-cal-m.epk300-warm').length; } catch (e302) { return 0; } },
     years: function () { try { return document.querySelectorAll('.ep-cal-y.epk300-warm').length; } catch (e303) { return 0; } }
   };
+  /* session306: পৃষ্ঠা-সংখ্যা-ব্যাজ QA-হুক (papers-শূন্যে-ও সংজ্ঞায়িত — পরিবার-চুক্তি) */
+  window.__epg306QA = {
+    total: papers.length,
+    withPages: papers.filter(function (p) { return !!p.pages; }).length,
+    badges: function () { try { return document.querySelectorAll('#epList .ep-pages306').length; } catch (e306) { return 0; } },
+    pages: function (id) { try { var q = papers.filter(function (x) { return x.id === id; })[0]; return q ? (q.pages || 0) : 0; } catch (e306) { return 0; } }
+  };
   if (!papers.length || !elList) return;
 
   // ── সেশন ১৭১: জুম/রোটেট/ফুলস্ক্রিন-স্টেট + স্টেজ-ট্রান্সফর্ম (সব-মোডে: pdf.js/প্রচ্ছদ/iframe) ──
@@ -552,12 +560,14 @@
       var rk = p.rank && p.rank < 999 ? p.rank : 0;
       // session182: ওয়ার্ম-অবস্থা — প্রি-লোডড/জীবিত হলে 'প্রস্তুত' চিপ, প্রস্তুতি-চলছে হলে স্পিনার-চিপ
       var warm = (warmState[p.fid] === 'done' || alive.get(p.fid)) ? 'done' : (warmState[p.fid] === 'busy' ? 'busy' : '');
-      frag += '<button type="button" role="option" aria-selected="' + on + '" class="ep-item' + (on ? ' is-on' : '') + '" data-id="' + p.id + '">' +
+      frag += '<button type="button" role="option" aria-selected="' + on + '" class="ep-item' + (on ? ' is-on' : '') + '" data-id="' + p.id + '" data-pages="' + (p.pages || '') + '">' +
         // session182 (ইউজার-স্পেক): ব্যাজ-বাক্সের বদলে টাইপোগ্রাফিক র‍্যাংক — প্রফেশনাল সংবাদ-ক্রম
         '<span class="ep-ranktxt' + (rk && rk <= 3 ? ' is-top' : '') + '" title="' + (rk ? 'পাঠকপ্রিয়তার ক্রমে ' + bnDigits(rk) + ' নম্বর' : 'র‍্যাংক-তালিকাভুক্ত নয়') + '">#' + (rk ? bnDigits(rk) : '–') + '</span>' +
         '<span class="ep-thumb">' + thumbHtml(p) + '</span>' +
         // session179 (ইউজার-স্পেক): প্রতি-কার্ডে তারিখ-পুনরাবৃত্তি বাদ — তারিখ হেডার/ভিউয়ার-বারেই একবার
         '<span class="ep-item-meta"><b class="ep-item-name">' + p.name + '</b>' +
+        // session306 (ep306): পৃষ্ঠা-সংখ্যা-ব্যাজ (page_count-শূন্যে-রেন্ডার-ই-হয়-না — গেটেড-চুক্তি)
+        (p.pages ? '<span class="ep-pages306" data-pages="' + p.pages + '" title="মোট পৃষ্ঠা"><i class="far fa-file-alt" aria-hidden="true"></i>' + bnDigits(p.pages) + ' পৃষ্ঠা</span>' : '') +
         (warm === 'done' ? '<span class="ep-warmchip"><i class="fas fa-bolt" aria-hidden="true"></i>প্রস্তুত</span>' : (warm === 'busy' ? '<span class="ep-warmchip is-busy"><i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i>প্রস্তুত হচ্ছে</span>' : '')) +
         '</span>' +
         '</button>';

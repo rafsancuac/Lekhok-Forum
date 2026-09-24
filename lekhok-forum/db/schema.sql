@@ -218,6 +218,7 @@ CREATE TABLE IF NOT EXISTS epaper_files (
   file_url        TEXT    NOT NULL,
   drive_file_id   TEXT,
   drive_thumb_id  TEXT,
+  page_count      INTEGER,
   source          TEXT    DEFAULT 'epaper-bot',
   published       INTEGER DEFAULT 1,
   created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
