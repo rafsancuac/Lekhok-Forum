@@ -3523,3 +3523,12 @@ Stage Summary:
 - **টেস্ট:** নতুন tests/s320-suite.sh ৭২/৭২ ×২ (পরিবেশ ×৩ + কাঠামো ×১৮ + SSR ×৫ + sfs320-ই২ই ×১৬ + hr320-ই২ই ×২০ + মোবাইল ×৫ + নেট-শূন্য ×৪); রিগ্রেশন সর্ব-গ্রিন: s319 ৭৭ + s318 ৭৪ + s317 ৬৮ + s316 ৫৫ + s315 ৭১ + s314 ৬৭ + s313 ৬৩ + s312 ৫৫ + s311 ৪৩ + s307 ৫৫ + s306 ৫০ + guard:design + audit:views (১২২ ejs)।
 - **গোটচা ×২:** ① রেকর্ড-টাইমিং (অ্যাসিনক-done316 × সমকালীন-ptrSync → চিহ্ন-বিলোপ) → __hrAria317Record-মোড়ক-চুক্তি ② আর্ম-জানালা (ইনজেক্টেড-ms-এ দীর্ঘ-বিলম্ব = ফায়ার-পরে-পাঠ) → ১০০ms-জানালা-চুক্তি।
 - **প্যাচ/ডক:** scripts/s320-patch.py (idempotent ×২ — ৪-ধাপ) + s320-docs.py (এ-ফাইল-ত্রয়); PLANS session320-নোটে session321-প্রস্তাব ×৪ (প্রোড-স্পট + টাচ-পথ-নাম-প্রকাশ + ইতিহাস-স্থায়ীকরণ + bot-গেটেড)।
+
+## Task — session72b (out-of-band): GSC Q&A-স্ট্রাকচার্ড-ডেটা-ফিক্স (২৪ সেপ্টেম্বর ২০২৬)
+- **উৎস:** ইউজার-ফরওয়ার্ডড Search Console নোটিশ — Q&A রিপোর্টে ২ non-critical সমস্যা (datePublished-টাইমজোন-শূন্য + mainEntity.author.url-অনুপস্থিত)। sessionN-চেইন-বহির্ভূত হটফিক্স — **পরের-এজেন্ট session321 (Task ID 158) অপরিবর্তিত**।
+- **ফিক্স:** views/user/qa-single.ejs সেশন-৭২b-ব্লক — `_isoUtc72b` (UTC-naive→ISO-Z; ISO-পাস-থ্রু) সব datePublished-এ + `_prof72b` author.url (siteUrl+/profile/username; উত্তর-লেখক-সহ) + acceptedAnswer.url নিরঙ্কুশীকরণ। এক-ফাইল-প্যাচ; অন্য-কোনো-ভিউ/রুট-অস্পৃশ্য।
+- **যাচাই:** লোকাল seed-qa-113 → /qa/4 — প্রশ্ন/গৃহীত-উত্তর/প্রস্তাবিত-উত্তর সব datePublished `...T...Z` + author.url + নিরঙ্কুশ anchor-url; ঘড়ি-সামঞ্জস্য প্রমাণিত; guard:design + audit:views গ্রিন; tests/-সুইটগুলো qa-single-অ্যাসার্ট-শূন্য (সংঘর্ষ-শূন্য)।
+- **ডক:** PLANS session72b-নোট + এ-এন্ট্রি। **GSC-রিপোর্ট পরিষ্কার হবে পুনঃক্রল-পরে (দিন-ব্যাপী) — Validate Fix চাপতে পারেন।**
+
+Stage Summary:
+- session72b সম্পন্ন: QAPage JSON-LD GSC-২-সমস্যা-মুক্ত (টাইমজোন-Z + author.url); এক-ফাইল-প্যাচ, সর্ব-লোকাল-যাচাই-গ্রিন; owner-চেইন-অস্পৃশ্য — পরের-এজেন্ট session321 (Task ID 158)

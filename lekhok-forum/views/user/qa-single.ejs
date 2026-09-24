@@ -6,10 +6,25 @@
     <img onerror=…> কখনো র-HTML হয় না। ভিউ কেবল রেডিমেড questionHtml /
     a.html বসায়। প্রশ্নের কন্টেইনার <p> → <div>: তালিকা/উদ্ধৃতি-ব্লক <p>-র
     ভেতরে অবৈধ নেস্টিং হতো (HTML nesting fix-নীতি, সেশন ৭)। ── %>
-<%# ── সেশন ৭২ (GSC-ফিক্স): QAPage JSON-LD — Google-এ সমৃদ্ধ ফলাফল + কনটেন্ট-সিগন্যাল ── %>
+<%# ── সেশন ৭২b (GSC-ফিক্স-২): Search Console Q&A-রিপোর্টের ২-সমস্যা —
+    ① mainEntity.datePublished টাইমজোন-শূন্য: SQLite CURRENT_TIMESTAMP/datetime('now') =
+    UTC-naive 'YYYY-MM-DD HH:MM:SS' → ISO-8601 'YYYY-MM-DDTHH:MM:SSZ' (উত্তরের datePublished-ও
+    একই-চিকিৎসা; আগে-থেকে-ISO মান ('T'/Z/অফসেট-বিদ্যমান) অস্পৃশ্য-পাস-থ্রু);
+    ② mainEntity.author-এ url-অনুপস্থিত → siteUrl + '/profile/' + username (উত্তরের
+    author-গুলোতেও একই — পরবর্তী-পতাকায়ন-প্রতিরোধ); সাথে acceptedAnswer.url
+    আপেক্ষিক→নিরঙ্কুশ (একই-পরিবারের-সম্ভাব্য-পরবর্তী-সতর্কতা)। ── %>
 <%
   var _qText72 = (s) => String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   var _accA127 = (answers || []).find(function (a) { return a.id === post.accepted_comment_id; });
+  var _isoUtc72b = (s) => {
+    var v = String(s || '').trim();
+    if (!v) return undefined;
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(v)) return v.replace(' ', 'T') + 'Z';
+    return v;
+  };
+  var _site72b = (typeof siteUrl !== 'undefined') ? String(siteUrl || '').replace(/\/+$/, '') : '';
+  var _prof72b = (u) => (_site72b && u) ? _site72b + '/profile/' + u : undefined;
+  var _qaUrl72b = _site72b ? _site72b + '/qa/' + post.id : '/qa/' + post.id;
   var _qaLd72 = {
     "@context": "https://schema.org",
     "@type": "QAPage",
@@ -18,11 +33,11 @@
       "name": post.title,
       "text": _qText72(post.body),
       "answerCount": (answers || []).length,
-      "author": { "@type": "Person", "name": displayName(post) },
-      "datePublished": post.published_at || post.created_at || undefined,
-      "acceptedAnswer": _accA127 ? { "@type": "Answer", "text": _qText72(_accA127.body), "datePublished": _accA127.created_at || undefined, "url": '/qa/' + post.id + '#answer-' + _accA127.id, "author": { "@type": "Person", "name": displayName(_accA127) } } : undefined,
+      "author": { "@type": "Person", "name": displayName(post), "url": _prof72b(post.username) },
+      "datePublished": _isoUtc72b(post.published_at || post.created_at),
+      "acceptedAnswer": _accA127 ? { "@type": "Answer", "text": _qText72(_accA127.body), "datePublished": _isoUtc72b(_accA127.created_at), "url": _qaUrl72b + '#answer-' + _accA127.id, "author": { "@type": "Person", "name": displayName(_accA127), "url": _prof72b(_accA127.username) } } : undefined,
       "suggestedAnswer": (answers || []).filter(function (a) { return a.id !== post.accepted_comment_id; }).map(function (a) {
-        return { "@type": "Answer", "text": _qText72(a.body), "datePublished": a.created_at || undefined, "author": { "@type": "Person", "name": displayName(a) } };
+        return { "@type": "Answer", "text": _qText72(a.body), "datePublished": _isoUtc72b(a.created_at), "author": { "@type": "Person", "name": displayName(a), "url": _prof72b(a.username) } };
       })
     }
   };
