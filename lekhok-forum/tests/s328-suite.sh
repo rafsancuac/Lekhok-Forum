@@ -145,7 +145,7 @@ agent-browser set viewport 1366 900 >/dev/null 2>&1
 echo "── ধাপ-৪: hr328-ই২ই (কপি-বাটন→WYSIWYG→F-সম-বিন্যাস→C-শর্টকাট→বন্ধ-খোলা→শূন্য-নীরব) ──"
 bopen "$BASE/admin/login" || { bad "ব্রাউজার-লগইন-পৃষ্ঠা open ব্যর্থ"; }
 agent-browser wait 800 >/dev/null 2>&1
-ev "JSON.stringify((function(){try{sessionStorage.removeItem('hr321-hist');sessionStorage.removeItem('hr326-fmt')}catch(e){};return 'clr'})())" >/dev/null 2>&1
+ev "JSON.stringify((function(){try{sessionStorage.removeItem('hr321-hist');sessionStorage.removeItem('hr326-fmt');sessionStorage.removeItem('hr327-pv')}catch(e){};return 'clr'})())" >/dev/null 2>&1
 CT=$(unjj "$(ev "document.querySelector('meta[name=csrf-token]')?document.querySelector('meta[name=csrf-token]').content:''")")
 LOGIN_JS="(function(){var x=new XMLHttpRequest();x.open('POST','/admin/login',false);x.setRequestHeader('Content-Type','application/x-www-form-urlencoded');x.send('username=testadmin&password=demo123&_csrf=$CT');return x.status})()"
 LS=$(ev "$LOGIN_JS" | tr -d '"')
@@ -211,7 +211,7 @@ ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[
 Z1=$(ev "JSON.stringify((function(){var c0=window.__hrAria328QA.copies;var o0=window.__hrAria327QA.opens;var b=document.querySelectorAll('.hr-aria-copy')[0];b.dispatchEvent(new KeyboardEvent('keydown',{key:'c',bubbles:true,cancelable:true}));return {h:window.__hrAria317QA.hist().length,c0:c0,c1:window.__hrAria328QA.copies,o0:o0,o1:window.__hrAria327QA.opens,pre:!!document.querySelector('.hr317-tip.is-on .hr327-pre')}})())")
 Z1J=$(unjj "$Z1")
 if [ "$(jf h "$Z1J")" = "0" ] && [ "$(jf c0 "$Z1J")" = "$(jf c1 "$Z1J")" ] && [ "$(jf o0 "$Z1J")" = "$(jf o1 "$Z1J")" ] && [ "$(jf pre "$Z1J")" = "false" ]; then ok "ই২ই: শূন্য-ইতিহাসে C-নীরব (Delete×২-পরিষ্কার + copies/opens-অপরিবর্তিত + প্রিভিউ-অনুপস্থিত — hr323-দর্শন)"; else bad "ই২ই: $(unjj "$Z1")"; fi
-ev "JSON.stringify((function(){try{sessionStorage.removeItem('hr326-fmt');sessionStorage.removeItem('hr321-hist')}catch(e){};return 'hyg'})())" >/dev/null 2>&1
+ev "JSON.stringify((function(){try{sessionStorage.removeItem('hr326-fmt');sessionStorage.removeItem('hr321-hist');sessionStorage.removeItem('hr327-pv')}catch(e){};return 'hyg'})())" >/dev/null 2>&1
 
 echo "── ধাপ-৫: মোবাইল-390 (hScroll-শূন্য + keynav-গাটার + স্ক্রিনশট) ──"
 agent-browser set viewport 390 844 >/dev/null 2>&1

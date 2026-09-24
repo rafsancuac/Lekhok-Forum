@@ -153,6 +153,16 @@
     .hr328-cp:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
     .hr328-cp.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
     @media (prefers-reduced-motion: reduce) { .hr328-cp { transition: none; } }
+
+    /* সেশন ৩২৯ (hr329): প্রিভিউ-ডাউনলোড-বাটন (hr324-D-সমতা — স্বতন্ত্র-শ্রেণি —
+       s324-.hr324-btn-গণনা-চুক্তি-অটুট; কেবল-প্রিভিউ-খোলা-অবস্থায়-বিদ্যমান — copy-পরে
+       সন্নিবেশ; double-বর্ডার — hr326-dashed/hr327-dotted/hr328-solid-পার্থক্ষ্য; rgba-only) */
+    .hr329-dl { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 0.55rem; font-weight: 700; color: rgba(6, 95, 70, 0.9); background: rgba(4, 120, 87, 0.06); border: 3px double rgba(4, 120, 87, 0.4); border-radius: 5px; padding: 0 7px; margin: 0 0 4px; cursor: pointer; transition: background 0.12s ease, border-color 0.12s ease; }
+    .hr329-dl:hover { background: rgba(4, 120, 87, 0.14); border-color: rgba(4, 120, 87, 0.6); }
+    .hr329-dl:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
+    .hr329-dl.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
+    .hr327-meta.hr329-restored { color: rgba(5, 150, 105, 1); font-weight: 700; }
+    @media (prefers-reduced-motion: reduce) { .hr329-dl { transition: none; } }
   </style>
 </head>
 <body>
@@ -1286,6 +1296,120 @@
   });
   q328h.copy = function () { return hist317.length ? strip324() : ''; };
   window.__hrAria328QA = q328h;
+  /* সেশন ৩২৯ (hr329): প্রিভিউ-অবস্থা-স্থায়ীকরণ + প্রিভিউ-ডাউনলোড (PLANS session328-নোটের প্রস্তাব-②)
+     • স্থায়ীকরণ: sessionStorage 'hr327-pv' ('open'|'closed' — togglePv327-মোড়ক — সর্ব-টগল-পথ
+       (বাটন × P × C-প্রথমে-খোলা) এক-উৎস-স্থায়ী; যাচাই-কৃত-পাঠ — বহির্ভূত-বর্জন; কোটা/অনুপলব্ধতায়
+       নীরব-অবনমন — hr326-রীতি)।
+     • পুনরুদ্ধার: প্রতি-পৃষ্ঠা-লোডে প্রথম-ইতিহাসযুক্ত-টুলটিপ-রেন্ডারে (pvRestored329-গেট —
+       শূন্য-ইতিহাস-রেন্ডারে গেট-খরচ-নেই) 'open'-হলে প্রিভিউ স্বয়ং-পুনরুদ্ধার — opens/closes-গণনা-
+       অস্পৃশ্য (q329h.restores-স্বতন্ত্র-গণনা); aria-expanded-টগল-পথ-নিরপেক্ষ-সিঙ্ক (s327-গোটচা-②-
+       চুক্তি — স্টেট-বহন aria-attr); meta-তে '· পুনরুদ্ধার' মার্কার + .hr329-restored-শ্রেণি;
+       পরবর্তী-পুনঃনির্মাণ = পুরাতন-চুক্তি (tipRender318-পুনঃনির্মাণে বন্ধ — s327-চুক্তি-অস্পৃশ্য)।
+     • ডাউনলোড: .hr329-dl বাটন (renderPv327-মোড়ক — copy-পরে সন্নিবেশ; double-বর্ডার) —
+       Blob+a[download]+revokeObjectURL (dlHist324-রীতি — DOM-API/textContent-কেবল — XSS-নিরাপদ);
+       ফাইলনাম 'lekhok-preview-' + ISO-তারিখ + '.txt'; টোস্ট-প্রমাণ (বিন্যাস-লেবেল-সহ) +
+       flash324-পুনঃব্যবহার; F-রিফ্রেশ-পথেও বাটন-টিকে (renderPv327-মোড়ক — পুনঃনির্মাণ-সন্নিবেশ)।
+     • কীবোর্ড-parity: **S-শর্টকাট** (s320/s324-keydown-রীতি — .hr-aria-copy-ফোকাস-প্রেক্ষাপট ×
+       মডিফায়ার-বর্জন × শূন্য-ইতিহাসে নীরব — hr324-D-সমতা — প্রিভিউ-বন্ধেও ডাউনলোড); kbd-হিন্ট
+       '· S = প্রিভিউ সংরক্ষণ' (স্বতন্ত্র-মোড়ক-জুটি — cycleFmt326-পুনঃমোড়ক + tipRender318-
+       পুনঃমোড়ক — C-হিন্ট-চেইন-পরবর্তী)।
+     • QA-হুক __hrAria329QA {restores, downloads, last, persist(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q329h = { restores: 0, downloads: 0, last: '', err: '' };
+  var persistPv329 = function () {
+    try { sessionStorage.setItem('hr327-pv', pvOpen327 ? 'open' : 'closed'); } catch (e329a) { q329h.err = String((e329a && e329a.message) || e329a); }
+    q329h.last = 'persist:' + (pvOpen327 ? 'open' : 'closed');
+  };
+  var tpOrig329 = togglePv327;
+  togglePv327 = function (b329t) {
+    tpOrig329(b329t);
+    try { persistPv329(); } catch (e329b) { q329h.err = String((e329b && e329b.message) || e329b); }
+  };
+  var dlPv329 = function (btn329) {
+    try {
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
+      var b329d = new Blob([strip324()], { type: 'text/plain;charset=utf-8' });
+      var u329 = URL.createObjectURL(b329d);
+      var a329 = document.createElement('a');
+      a329.href = u329;
+      a329.download = 'lekhok-preview-' + new Date().toISOString().slice(0, 10) + '.txt';
+      document.body.appendChild(a329);
+      a329.click();
+      a329.remove();
+      setTimeout(function () { URL.revokeObjectURL(u329); }, 400);
+      q329h.downloads += 1; q329h.last = 'download';
+      showToast(true, 'প্রিভিউ ডাউনলোড শুরু হয়েছে (.txt — ' + (mode326 === 'key' ? 'কেবল-কী' : 'সমৃদ্ধ') + ')');
+      flash324(btn329); /* hr324-ফ্ল্যাশ-এক-উৎস-পুনঃব্যবহার */
+    } catch (e329c) { q329h.err = String((e329c && e329c.message) || e329c); }
+  };
+  var rpOrig329 = renderPv327;
+  renderPv327 = function () {
+    var rv329 = rpOrig329();
+    try {
+      var pre329 = tip317 ? tip317.querySelector('.hr327-pre') : null;
+      if (pre329 && !pre329.querySelector('.hr329-dl')) {
+        var bd329 = document.createElement('button'); /* hr329: প্রিভিউ-ডাউনলোড-বাটন (copy-পরে — স্বতন্ত্র-শ্রেণি) */
+        bd329.type = 'button';
+        bd329.className = 'hr329-dl';
+        bd329.setAttribute('aria-label', 'প্রিভিউ-বিষয়বস্তু .txt ফাইলে ডাউনলোড করুন (বর্তমান-বিন্যাসে)');
+        bd329.textContent = 'সংরক্ষণ';
+        bd329.addEventListener('click', function (e329d) { e329d.preventDefault(); e329d.stopPropagation(); dlPv329(bd329); });
+        var bc329 = pre329.querySelector('.hr328-cp');
+        if (bc329 && bc329.nextSibling) pre329.insertBefore(bd329, bc329.nextSibling);
+        else pre329.appendChild(bd329);
+      }
+    } catch (e329e) { q329h.err = String((e329e && e329e.message) || e329e); }
+    return rv329;
+  };
+  var cf329 = cycleFmt326;
+  cycleFmt326 = function (b329f) {
+    cf329(b329f);
+    try {
+      var kb329 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
+      if (kb329 && kb329.textContent.indexOf('S = প্রিভিউ সংরক্ষণ') < 0) kb329.textContent = kb329.textContent + ' · S = প্রিভিউ সংরক্ষণ';
+    } catch (e329f) { q329h.err = String((e329f && e329f.message) || e329f); }
+  };
+  var pvRestored329 = false;
+  var trOrig329 = tipRender318;
+  tipRender318 = function (k329r) {
+    trOrig329(k329r);
+    try {
+      if (tip317 && hist317.length) {
+        var kb329b = tip317.querySelector('.hr324-kbd');
+        if (kb329b && kb329b.textContent.indexOf('S = প্রিভিউ সংরক্ষণ') < 0) {
+          kb329b.textContent = kb329b.textContent + ' · S = প্রিভিউ সংরক্ষণ';
+        }
+        if (!pvRestored329) {
+          pvRestored329 = true; /* প্রতি-পৃষ্ঠা-লোডে একবার (ইতিহাসযুক্ত-প্রথম-রেন্ডারে গেট-খরচ) — পরবর্তী-পুনঃনির্মাণ = পুরাতন-চুক্তি */
+          var st329 = null;
+          try { st329 = sessionStorage.getItem('hr327-pv'); } catch (e329g) {}
+          if (st329 === 'open' && !tip317.querySelector('.hr327-pre')) {
+            var t329 = renderPv327();
+            pvOpen327 = true;
+            if (t329 !== null) {
+              q329h.restores += 1; q329h.last = 'restored'; /* opens/closes-অস্পৃশ্য — স্বতন্ত্র-গণনা */
+              var bs329 = tip317.querySelector('.hr327-pv');
+              if (bs329) bs329.setAttribute('aria-expanded', 'true'); /* টগল-পথ-নিরপেক্ষ aria-সিঙ্ক — s327-গোটচা-②-চুক্তি */
+              var mt329 = tip317.querySelector('.hr327-meta');
+              if (mt329) { mt329.textContent = mt329.textContent + ' · পুনরুদ্ধার'; mt329.classList.add('hr329-restored'); }
+            }
+          }
+        }
+      }
+    } catch (e329h) { q329h.err = String((e329h && e329h.message) || e329h); }
+  };
+  document.addEventListener('keydown', function (e329i) {
+    try {
+      if (e329i.key !== 's' && e329i.key !== 'S') return;
+      if (e329i.ctrlKey || e329i.metaKey || e329i.altKey) return;
+      var b329k = e329i.target && e329i.target.closest ? e329i.target.closest('.hr-aria-copy') : null;
+      if (!b329k) return;
+      if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
+      e329i.preventDefault();
+      dlPv329(null);
+    } catch (e329j) { q329h.err = String((e329j && e329j.message) || e329j); }
+  });
+  q329h.persist = function () { try { return sessionStorage.getItem('hr327-pv') || ''; } catch (e329k) { return ''; } };
+  window.__hrAria329QA = q329h;
 })();
 </script>
 </body>

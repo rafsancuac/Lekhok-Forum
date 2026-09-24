@@ -173,7 +173,7 @@ agent-browser set viewport 1366 900 >/dev/null 2>&1
 echo "── ধাপ-৪: hr327-ই২ই (rich-প্রিভিউ→WYSIWYG→F-রিফ্রেশ→P-টগল→শূন্য-নীরব) ──"
 bopen "$BASE/admin/login" || { bad "ব্রাউজার-লগইন-পৃষ্ঠা open ব্যর্থ"; }
 agent-browser wait 800 >/dev/null 2>&1
-ev "JSON.stringify((function(){try{sessionStorage.removeItem('hr321-hist');sessionStorage.removeItem('hr326-fmt')}catch(e){};return 'clr'})())" >/dev/null 2>&1
+ev "JSON.stringify((function(){try{sessionStorage.removeItem('hr321-hist');sessionStorage.removeItem('hr326-fmt');sessionStorage.removeItem('hr327-pv')}catch(e){};return 'clr'})())" >/dev/null 2>&1
 CT=$(unjj "$(ev "document.querySelector('meta[name=csrf-token]')?document.querySelector('meta[name=csrf-token]').content:''")")
 LOGIN_JS="(function(){var x=new XMLHttpRequest();x.open('POST','/admin/login',false);x.setRequestHeader('Content-Type','application/x-www-form-urlencoded');x.send('username=testadmin&password=demo123&_csrf=$CT');return x.status})()"
 LS=$(ev "$LOGIN_JS" | tr -d '"')
