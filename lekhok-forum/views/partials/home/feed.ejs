@@ -46,6 +46,7 @@
     h: '@' + String(p.username || 'writer') + (sfsAgo307(p.published_at) ? ' · ' + sfsAgo307(p.published_at) : ''),
     t: (sfsStrip307(p.excerpt || p.body || '').slice(0, 110)) || String(p.title || '').slice(0, 110),
     a: toBn(p.like_count), c: toBn(p.comment_count), s: toBn(p.view_count),
+    id: p.id || '',
     img: !!p.cover_image, real: true
   });
   const sfsEng307 = (p) => (Number(p.like_count) || 0) + (Number(p.comment_count) || 0);
@@ -116,7 +117,7 @@
                   <span class="sfs292-half">
                     <span class="sfs292-glabel"><i class="fas fa-bolt"></i> সর্বশেষ লেখা</span>
                     <% sfsPostsA292.forEach((p) => { %>
-                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>">
+                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
                       <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
                       <span class="sfs292-ptext"><%= p.t %></span>
                       <% if (p.img) { %><span class="sfs292-pimg"><i class="fas fa-image"></i></span><% } %>
@@ -125,7 +126,7 @@
                     <% }) %>
                     <span class="sfs292-glabel"><i class="fas fa-fire"></i> জনপ্রিয় আলোচনা</span>
                     <% sfsPostsB292.forEach((p) => { %>
-                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>">
+                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
                       <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
                       <span class="sfs292-ptext"><%= p.t %></span>
                       <% if (p.img) { %><span class="sfs292-pimg"><i class="fas fa-image"></i></span><% } %>
@@ -136,7 +137,7 @@
                   <span class="sfs292-half" aria-hidden="true">
                     <span class="sfs292-glabel"><i class="fas fa-bolt"></i> সর্বশেষ লেখা</span>
                     <% sfsPostsA292.forEach((p) => { %>
-                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>">
+                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
                       <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
                       <span class="sfs292-ptext"><%= p.t %></span>
                       <% if (p.img) { %><span class="sfs292-pimg"><i class="fas fa-image"></i></span><% } %>
@@ -145,7 +146,7 @@
                     <% }) %>
                     <span class="sfs292-glabel"><i class="fas fa-fire"></i> জনপ্রিয় আলোচনা</span>
                     <% sfsPostsB292.forEach((p) => { %>
-                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>">
+                    <span class="sfs292-post<%= p.img ? ' has-img' : '' %><%= p.real ? ' is-real307' : '' %>" data-post-id="<%= p.id || '' %>">
                       <span class="sfs292-phead"><span class="sfs292-pav"><%= sfsInitial292(p.n) %></span><span class="sfs292-pwho"><strong><%= p.n %></strong><small><%= p.h %></small></span><i class="fas fa-ellipsis-h"></i></span>
                       <span class="sfs292-ptext"><%= p.t %></span>
                       <% if (p.img) { %><span class="sfs292-pimg"><i class="fas fa-image"></i></span><% } %>
@@ -195,6 +196,42 @@
     }
   } catch (e307) { q307.err = String((e307 && e307.message) || e307); }
   window.__sfs307QA = q307;
+})();
+</script>
+<script>
+/* session312 (sfs312): ফোন-ফিড ট্যাপ-থ্রু — is-real307-সারি → /dashboard#post-<id> ডিপ-লিঙ্ক
+   (PLANS session311-প্রস্তাব-①; পাবলিক /post/<id> রুট-অনুপস্থিত — লগইন-গেট)।
+   • প্রগ্রেসিভ-এনহ্যান্সমেন্ট: JS-বিহীনে সারি কেবল-প্রদর্শন (s306b-ধর্ম); ডেমো-সারি
+     (data-post-id শূন্য) অস্পৃশ্য; aria-hidden-ক্লোন-হাফও ট্যাপযোগ্য (দৃশ্যমান-অনুলিপি)।
+   • stopPropagation+preventDefault = ফোন-লেভেল /dashboard-অ্যাঙ্কর-দমন — s306-একক-লিঙ্ক-চুক্তি
+     অক্ষুণ্ণ (tabindex/role-অনুপ্রবেশ-নিষিদ্ধ; কীবোর্ড-ইউজার ফোন-লিঙ্কেই /dashboard)।
+   • অবতরণ: dashboard.ejs s312-অবতরণ-ব্লক — হ্যাশ → [data-s312-post] স্ক্রল + ফ্ল্যাশ।
+   • QA-হুক __sfs312QA (সারি-শূন্যে-ও-সংজ্ঞায়িত — s306b-ধর্ম)। */
+(function () {
+  var q312 = { wired: 0, taps: 0, lastId: '', err: '' };
+  try {
+    var phone312 = document.querySelector('.sfs292-phone');
+    if (phone312) {
+      var rows312 = phone312.querySelectorAll('.is-real307[data-post-id]:not([data-post-id=""])');
+      q312.wired = rows312.length;
+      Array.prototype.forEach.call(rows312, function (r312) { r312.classList.add('sfs312-tap'); });
+      var go312 = function (r312) {
+        var id312 = r312.getAttribute('data-post-id');
+        if (!id312) return;
+        q312.taps += 1;
+        q312.lastId = id312;
+        window.location.href = '/dashboard#post-' + encodeURIComponent(id312);
+      };
+      phone312.addEventListener('click', function (e312) {
+        var t312 = e312.target && e312.target.closest ? e312.target.closest('.sfs312-tap') : null;
+        if (!t312) return;
+        e312.stopPropagation();
+        e312.preventDefault();
+        go312(t312);
+      });
+    }
+  } catch (e312) { q312.err = String((e312 && e312.message) || e312); }
+  window.__sfs312QA = q312;
 })();
 </script>
 </section>

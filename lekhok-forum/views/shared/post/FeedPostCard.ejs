@@ -147,7 +147,7 @@
   </article>
 <% } else { %>
   <%# ── সাধারণ পোস্ট-কার্ড ── %>
-  <article class="<%= _cardClass %>"<%= item.is_pinned ? ' data-pinned-post="' + item.id + '"' : '' %>>
+  <article class="<%= _cardClass %>" data-s312-post="<%= item.id %>"<%= item.is_pinned ? ' data-pinned-post="' + item.id + '"' : '' %>>
     <% if (_o.pinnedLabel) { %><div class="pf-pinned-label"><i class="fas fa-thumbtack"></i> <%= _o.pinnedLabel %></div><% } %>
     <div class="feed-card-head">
       <%# সেশন ১৬৪ (ইউজার-স্পেক FB-কম্প্যাক্ট-কার্ড): হেডার সম্পূর্ণ ব্যাজ-শূন্য —

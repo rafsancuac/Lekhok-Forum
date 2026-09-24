@@ -4183,3 +4183,56 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 }
 /* ═════════════════════ EOF session311 (epk311) ═════════════════════ */
 
+/* ═══ session312 (sfs312): ফোন-ফিড ট্যাপ-থ্রু অ্যাফোর্ডেন্স + ড্যাশবোর্ড অবতরণ-ফ্ল্যাশ ═══
+   হেক্স-শূন্য — var(--lf-*) টোকেন + color-mix; s306-একক-লিঙ্ক-চুক্তি অক্ষুণ্ণ
+   (pointer-অ্যাফোর্ডেন্স-মাত্র — কোনো tabindex/role-অনুপ্রবেশ নয়)। */
+.sfs292-post.sfs312-tap {
+  position: relative;
+  cursor: pointer;
+  transition: background-color 180ms ease-out, border-color 180ms ease-out;
+}
+.sfs292-post.sfs312-tap::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 7px;
+  height: 7px;
+  transform: translateY(-50%) rotate(45deg);
+  border-top: 2px solid color-mix(in srgb, var(--lf-brand-primary) 55%, transparent);
+  border-right: 2px solid color-mix(in srgb, var(--lf-brand-primary) 55%, transparent);
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+.sfs292-post.sfs312-tap:hover {
+  background-color: color-mix(in srgb, var(--lf-brand-primary) 7%, var(--lf-white));
+  border-color: color-mix(in srgb, var(--lf-brand-primary) 30%, var(--lf-ui-border));
+}
+.sfs292-post.sfs312-tap:hover::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .sfs292-post.sfs312-tap,
+  .sfs292-post.sfs312-tap::after { transition: none; }
+}
+@media (max-width: 640px) {
+  .sfs292-post.sfs312-tap::after { right: 7px; width: 5px; height: 5px; }
+}
+/* ড্যাশবোর্ড অবতরণ-ফ্ল্যাশ — /dashboard#post-<id> গন্তব্য-কার্ড (s312-land) */
+.s312-land-flash {
+  animation: s312LandFlash 2.2s ease-out 1;
+}
+@keyframes s312LandFlash {
+  0%, 55% {
+    background-color: color-mix(in srgb, var(--lf-brand-primary) 9%, transparent);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 40%, transparent);
+  }
+  100% { background-color: transparent; box-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .s312-land-flash {
+    animation: none;
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lf-brand-primary) 40%, transparent);
+  }
+}
+/* ═════════════════════ EOF session312 (sfs312) ═════════════════════ */
+

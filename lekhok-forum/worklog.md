@@ -3370,3 +3370,20 @@ Stage Summary:
 - হোম ই-পেপার স্লাইডার = page-count-ব্যাজ-সজ্জিত (৫২ পৃষ্ঠা — বাংলা-অঙ্ক; pages-শূন্যে অদৃশ্য — s306-ধর্ম; অ-মাইগ্রেটেড-ডিবি-গ্রেসফুল — s306b-ধর্ম)
 - পরের-এজেন্ট: session312 (Task ID 149); PLANS session311-নোটের প্রস্তাব-ত্রয় দেখুন
 
+
+---
+
+Task ID: 149
+Agent: Main cron agent (session312 — cron 403679)
+Task: session312 sfs312 — ফোন-ফিড ট্যাপ-থ্রু (is-real307 → /dashboard#post-<id>) — [Mandatory-ফিচার + স্টাইল]
+
+Work Log:
+- রাউন্ড-আরম্ভ-যাচাই: HEAD=origin=88b2aab (clean-tree) + agent-browser-QA বেসলাইন সবুজ (sfs307 real=8; কনসোল-শূন্য)
+- PLANS session311-নোটের প্রস্তাব-① গ্রহণ; s312-patch.py (idempotent ×N) — feed.ejs sfsRow307-id + ×৪-রো data-post-id + session312-ইঞ্জিন (stopPropagation+preventDefault+navigate) + __sfs312QA; FeedPostCard.ejs data-s312-post (নামস্পেসড — data-post-id-সংঘর্ষ-গ্রেপ-প্রমাণিত); dashboard.ejs s312-অবতরণ-ব্লক (হ্যাশ-রেজেক্স + দ্বি-নির্বাচক + scrollIntoView + flash) + __s312LandQA; style.css session312-ব্লক হেক্স-শূন্য
+- নতুন tests/s312-suite.sh — ৫৫/৫৫ ×৩-ধারাবাহিক (কাঠামো ×২৪ + SSR-ডায়নামিক ×৬ + E2E ট্যাপ-থ্রু ×১০ + অ্যাফোর্ডেন্স ×৬ + মোবাইল-390 + নেট-শূন্য ×৪; ইন্টারসেকশন-নির্বাচন-চুক্তি)
+- রিগ্রেশন: s306 ৫০/৫০ + s307 ৫৫/৫৫ (is-real307 ×৪→×৬ আপডেট) + s311 ৪৩/৪৩ ×২ + guard:design + audit:views সর্ব-গ্রিন
+- ডক-ত্রয়: PROJECT §৩১২ + PLANS session312-নোট + এ-ওয়ার্কলগ Task 149 (s312-docs.py idempotent ×২)
+
+Stage Summary:
+- ফোন-ফিড বাস্তব-সারি = ট্যাপযোগ্য ডিপ-লিঙ্ক (/dashboard#post-<id> → scrollIntoView + ফ্ল্যাশ); s306-একক-লিঙ্ক-চুক্তি অক্ষুণ্ণ (pointer-অ্যাফোর্ডেন্স-মাত্র); JS-বিহীনে কেবল-প্রদর্শন (s306b-ধর্ম)
+- পরের-এজেন্ট: session313 (Task ID 150); PLANS session312-নোটের প্রস্তাব-ত্রয় দেখুন

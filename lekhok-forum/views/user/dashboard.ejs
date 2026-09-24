@@ -439,6 +439,31 @@
       window.__frQA159 = { focusSearch: focusSearch249, clearSearch: clearSearch249, input: function () { return input; } };
     })();
   </script>
+<script>
+/* session312 (s312-land): ডিপ-লিঙ্ক অবতরণ — /dashboard#post-<id> → [data-s312-post]/
+   [data-post-id] scrollIntoView + .s312-land-flash (sfs312-ট্যাপ-থ্রুর অবতরণ-অর্ধ)।
+   হ্যাশ-বিহীন লোড = no-op (প্রধান-প্রবাহ অটুট); কার্ড-অনুপস্থিতে found:0-গ্রেসফুল
+   (ফিড-ব্যক্তিগতকরণ/পৃষ্ঠাভেদে গন্তব্য-কার্ড না-ও-থাকতে পারে)। */
+(function () {
+  var q312 = { found: 0, id: '', err: '' };
+  try {
+    var m312 = /^#post-(\d+)$/.exec(String(window.location.hash || ''));
+    if (m312) {
+      var id312 = m312[1];
+      q312.id = id312;
+      var el312 = document.querySelector('[data-s312-post="' + id312 + '"]') ||
+                  document.querySelector('[data-post-id="' + id312 + '"]');
+      if (el312) {
+        q312.found = 1;
+        if (el312.scrollIntoView) el312.scrollIntoView({ block: 'center' });
+        el312.classList.add('s312-land-flash');
+        setTimeout(function () { el312.classList.remove('s312-land-flash'); }, 2400);
+      }
+    }
+  } catch (e312) { q312.err = String((e312 && e312.message) || e312); }
+  window.__s312LandQA = q312;
+})();
+</script>
 <%- include('../partials/sandbox-preview') %>
 </body>
 </html>

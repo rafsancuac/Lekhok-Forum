@@ -61,7 +61,8 @@ node --check "$APP/routes/pages.js" && ok "pages.js: node --check গ্রি�
 grep -q "const sfsRow307 = (p) => ({" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: sfsRow307-হাইড্রেশন-বিল্ডার" || bad "feed.ejs: বিল্ডার-অনুপস্থিত"
 grep -q "sfsReal307.slice(4, 8).slice().sort" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: গ্রুপ-বি জনপ্রিয়তা-সর্ট (engagement DESC)" || bad "feed.ejs: জনপ্রিয়তা-সর্ট-অনুপস্থিত"
 grep -q "sfsFill307(sfsRealA307, sfsDemoA292)" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: ডেমো-ফিল-চুক্তি (৪+৪ স্থিতিশীল)" || bad "feed.ejs: ফিল-অনুপস্থিত"
-[ "$(grep -o "is-real307" "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')" = "4" ] && ok "feed.ejs: is-real307-রো-মার্ক ×৪ (২-গ্রুপ × ২-হাফ)" || bad "feed.ejs: রো-মার্ক-গণনা=$(grep -o 'is-real307' "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')"
+# session312 (sfs312): রো-মার্ক ×৪ + s312-ইঞ্জিনের querySelectorAll-রেফারেন্স ×২ = ৬ (লিজিটিমেট-বৃদ্ধি)
+[ "$(grep -o "is-real307" "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')" = "6" ] && ok "feed.ejs: is-real307-রো-মার্ক ×৪ + s312-ইঞ্জিন-রেফ ×২" || bad "feed.ejs: রো-মার্ক-গণনা=$(grep -o 'is-real307' "$APP/views/partials/home/feed.ejs" | wc -l | tr -d ' ')"
 grep -q 'sfsRealCount307 > 0' "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: লাইভ-পিল-গেট (realCount>0)" || bad "feed.ejs: লাইভ-পিল-গেট-অনুপস্থিত"
 grep -q "slice(0, 3);" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: চিপ ×২→×৩ (slice(0,3))" || bad "feed.ejs: চিপ-স্লাইস-অমিল"
 grep -q "\['a', 'b', 'c'\]\[i\]" "$APP/views/partials/home/feed.ejs" && ok "feed.ejs: চিপ-ক্লাস-ম্যাপিং ×৩" || bad "feed.ejs: চিপ-ম্যাপিং-অনুপস্থিত"
