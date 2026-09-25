@@ -1,0 +1,615 @@
+<%%# ═══════════════════════════════════════════════════════════════════════
+   feed-motion-scene — হোমপেজের #user-feed সেকশনের ডান পাশের মোশন সিন
+   ইনক্লুড: <div class="fs-side"><%%- include('partials/feed-motion-scene') %%></div>
+   স্টাইল/স্ক্রিপ্ট গ্লোবালি লোড হয় (এখানেই ট্যাগ দেওয়া আছে):
+     public/assets/css/feed-motion-scene.css   → /assets/css/feed-motion-scene.css
+     public/assets/js/feed-motion-scene.js     → /assets/js/feed-motion-scene.js
+   পুরোনো ৩টি ফ্লোটিং পিল/কন্ট্রোল-বার প্যারেন্ট (#user-feed) থেকে মুছে ফেলুন।
+   ═══════════════════════════════════════════════════════════════════════ %%>
+<link rel="stylesheet" href="/assets/css/feed-motion-scene.css?v=<%= typeof AV !== 'undefined' ? AV : '5' %>">
+<script defer src="/assets/js/feed-motion-scene.js?v=<%= typeof AV !== 'undefined' ? AV : '5' %>"></script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     লেখক ফোরাম — ফিড মোশন সিন  v5  (views/partials/feed-motion-scene.ejs)
+     ───────────────────────────────────────────────────────────────────────────
+     ✔ ডিভাইস: iPhone 15 Pro — সঠিক অনুপাত 19.5:9 (393×852pt), Dynamic Island,
+       টাইটানিয়াম ফ্রেম, Action/Volume/Side বাটনের আসল অবস্থান, Home Indicator
+       (প্রিসেট বদলে Galaxy S24 Ultra / Pixel 8 Pro-ও ব্যবহার করা যায় → data-device)
+     ✔ অবস্থান: ফোন ডান দিকে (--lfmo-align: flex-end) — বাঁ দিকে চিপ, ডানে ফ্রেমের কিনারা
+     ✔ উচ্চতা: স্ক্রিন ৪৪০px + বেজেল ৬px = ৪৫২px → ফীড-ফ্রেম (~৫১৪px) থেকে ~৬০px ছোট
+     ✔ ফ্রেম-অটো-ফিট: প্যারেন্ট ছোট হলে পুরো সিন নিজে থেকেই স্কেল হয়ে ভেতরে বসে
+     ✔ সম্পূর্ণ জীবন্ত চক্র (১৬ দৃশ্য): পুল-রিফ্রেশ → স্টোরি → পোস্ট প্রকাশ →
+       ডাবল-ট্যাপ হার্ট + রিঅ্যাকশন পিকার → কমেন্ট → পোল ভোট → শেয়ার → সেভ →
+       নোটিফিকেশন সেন্টার → মেসেঞ্জার + ভয়েস নোট → অডিও কল → ভিডিও কল (PiP) →
+       রিডিং মোড + ডার্ক মোড → প্রোফাইল ভেরিফিকেশন → লাইভ সার্চ
+
+     ব্যবহার:   <%- include('partials/feed-motion-scene') %>
+     নিয়ন্ত্রণ: window.LFMotion.play() / .pause() / .toggle() / .replay() /
+                .setSpeed(1.4) / .duration() / .isPlaying() / .setDevice('galaxy-s24-ultra')
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<div class="lfmo" id="lfmoScene"
+     data-device="iphone15pro"
+     data-align="right"
+     data-lfmo-fit="auto"
+     role="img"
+     aria-label="লেখক ফোরাম অ্যাপের লাইভ প্রিভিউ — ফিড, রিঅ্যাকশন, কমেন্ট, পোল, শেয়ার, নোটিফিকেশন, মেসেঞ্জার, অডিও ও ভিডিও কল, রিডং ও প্রোফাইল ভেরিফিকেশন">
+
+  <!-- প্যারেন্ট ফ্রেমে অটো-ফিট র‍্যাপার (--lfmo-scale JS সেট করে) -->
+  <div class="lfmo-fit" id="lfsFit">
+    <div class="lfmo-phone" id="lfsPhone">
+
+      <!-- ── সাইড বাটনসমূহ (আসল iPhone 15 Pro বিন্যাস) ── -->
+      <span class="lfmo-btn lfmo-btn--action" aria-hidden="true"></span>
+      <span class="lfmo-btn lfmo-btn--volup"  aria-hidden="true"></span>
+      <span class="lfmo-btn lfmo-btn--voldn"  aria-hidden="true"></span>
+      <span class="lfmo-btn lfmo-btn--power"  aria-hidden="true"></span>
+
+      <div class="lfmo-frame">
+        <div class="lfmo-glass">
+          <div class="lfmo-screen" id="lfsScreen">
+
+            <!-- ── ডিভাইস ক্রোম ── -->
+            <span class="lfmo-island" aria-hidden="true"></span>
+            <div class="lfmo-status">
+              <span class="lfmo-status-time" id="lfsStatusTime">১০:২০</span>
+              <span class="lfmo-status-ico">
+                <svg viewBox="0 0 18 12" class="lfmo-sig"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" opacity=".35"/></svg>
+                <svg viewBox="0 0 16 12" class="lfmo-wifi"><path d="M8 10.6 5.6 8.1a3.4 3.4 0 0 1 4.8 0L8 10.6Z"/><path d="M8 5.4c1.7 0 3.3.65 4.5 1.83l1.5-1.53A8.1 8.1 0 0 0 8 3.2c-2.25 0-4.3.87-6 2.5l1.5 1.53A6.3 6.3 0 0 1 8 5.4Z"/></svg>
+                <svg viewBox="0 0 24 12" class="lfmo-bat"><rect x="0" y="1.5" width="19" height="9" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".45"/><rect x="2" y="3.2" width="12.5" height="5.6" rx="1.4"/><path d="M21.4 4.4v3.2c1-.3 1.6-1 1.6-1.6s-.6-1.3-1.6-1.6Z" opacity=".45"/></svg>
+              </span>
+            </div>
+
+            <!-- ── উড়ন্ত হার্ট + টাচ কার্সর + টোস্ট ── -->
+            <div class="lfmo-hearts" id="lfsHearts" aria-hidden="true"></div>
+            <span class="lfmo-bigheart" id="lfsBigHeart" aria-hidden="true">❤️</span>
+            <span class="lfmo-cursor" id="lfsCursor" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 3.5 18.5 11l-5.2 1.6L10.6 18 6 3.5Z" fill="#fff" stroke="#0f172a" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              <i class="lfmo-cursor-ripple"></i>
+            </span>
+            <div class="lfmo-toast" id="lfsToast">
+              <span class="lfmo-av lfmo-av-24" data-av="sadia"></span>
+              <span class="lfmo-toast-body">
+                <b id="lfsToastText">নতুন নোটিফিকেশন</b>
+                <small id="lfsToastSub">এখনই দেখুন</small>
+              </span>
+            </div>
+
+            <!-- ════════════════════ অ্যাপ ১: সোশ্যাল ফিড ════════════════════ -->
+            <div class="lfmo-app lfmo-app--feed" id="lfsFeedApp">
+
+              <div class="lfmo-appbar">
+                <span class="lfmo-brand" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+                </span>
+                <span class="lfmo-appbar-title">লেখক ফোরাম</span>
+                <span class="lfmo-live"><i></i>লাইভ</span>
+                <span class="lfmo-appbar-right">
+                  <span class="lfmo-ico" id="lfsThemeBtn" aria-hidden="true">
+                    <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+                    <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+                  </span>
+                  <span class="lfmo-ico" id="lfsSearchBtn" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+                  </span>
+                  <span class="lfmo-ico" id="lfsChatBtn" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.6 9.6 0 0 1-3.4-.6L3 21l1.8-4.6A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"/></svg>
+                    <span class="lfmo-dotbadge">২</span>
+                  </span>
+                  <span class="lfmo-ico lfmo-bell" id="lfsBell" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+                    <span class="lfmo-badge" id="lfsNotifBadge">৩</span>
+                  </span>
+                  <span class="lfmo-av lfmo-av-24" id="lfsAppbarAvatar" data-av="aziz"></span>
+                </span>
+              </div>
+
+              <!-- (নোটিফিকেশন সেন্টার ও লাইভ সার্চ এখন স্ক্রিন-লেভেলে — নিচে দেখুন) -->
+
+
+              <!-- ফিল্টার-চিপ -->
+              <div class="lfmo-filters" id="lfsFilters" aria-hidden="true">
+                <span class="lfmo-fchip is-on" data-f="fresh">তাজা</span>
+                <span class="lfmo-fchip" data-f="popular">জনপ্রিয়</span>
+                <span class="lfmo-fchip" data-f="discussed">আলোচিত</span>
+                <span class="lfmo-fchip" data-f="mine">নিজের</span>
+              </div>
+
+              <div class="lfmo-livebar">
+                <span class="lfmo-livebar-dot" aria-hidden="true"></span>
+                <span id="lfsLiveText">ফিডে এখন বাস্তব পোস্ট · ৮</span>
+              </div>
+
+              <div class="lfmo-stories" id="lfsStoryRail">
+                <span class="lfmo-story-item">
+                  <span class="lfmo-story-ring lfmo-story-ring--trend" id="lfsTrendRing">🔥</span>
+                  <small>ট্রেন্ডিং</small>
+                </span>
+                <span class="lfmo-story-item" data-story="0">
+                  <span class="lfmo-story-ring"><span class="lfmo-av lfmo-av-26" data-av="mitu"></span></span>
+                  <small>মিতু</small>
+                </span>
+                <span class="lfmo-story-item" data-story="1" id="lfsStoryTap">
+                  <span class="lfmo-story-ring"><span class="lfmo-av lfmo-av-26" data-av="sadia"></span></span>
+                  <small>সাদিয়া</small>
+                </span>
+                <span class="lfmo-story-item" data-story="2">
+                  <span class="lfmo-story-ring"><span class="lfmo-av lfmo-av-26" data-av="koushik"></span></span>
+                  <small>কৌশিক</small>
+                </span>
+                <span class="lfmo-story-item" data-story="3">
+                  <span class="lfmo-story-ring"><span class="lfmo-av lfmo-av-26" data-av="ata"></span></span>
+                  <small>আতা</small>
+                </span>
+              </div>
+
+              <!-- পুল-টু-রিফ্রেশ ইন্ডিকেটর -->
+              <div class="lfmo-refresh" id="lfsRefresh">
+                <span class="lfmo-refresh-spin" aria-hidden="true"></span>
+                <span id="lfsRefreshText">নতুন পোস্ট খোঁজা হচ্ছে…</span>
+              </div>
+
+              <!-- কম্পোজার -->
+              <div class="lfmo-composer" id="lfsComposer">
+                <div class="lfmo-comp-row">
+                  <span class="lfmo-av lfmo-av-24" data-av="aziz"></span>
+                  <span class="lfmo-comp-pill" id="lfsCompPill">লিখুন… আজ কী লিখছেন?</span>
+                  <span class="lfmo-comp-ico" aria-hidden="true">📷</span>
+                  <span class="lfmo-comp-ico" aria-hidden="true">😊</span>
+                </div>
+                <div class="lfmo-qacts" id="lfsQuickActs" aria-hidden="true">
+                  <span class="lfmo-qact" data-q="text"><i class="lfmo-qico">✎</i>লেখা</span>
+                  <span class="lfmo-qact" data-q="photo"><i class="lfmo-qico">🖼</i>ছবি</span>
+                  <span class="lfmo-qact" data-q="poll"><i class="lfmo-qico">📊</i>জরিপ</span>
+                  <span class="lfmo-qact" data-q="live"><i class="lfmo-qico lfmo-qico--live">●</i>লাইভ</span>
+                </div>
+                <div class="lfmo-exp-row">
+                  <div class="lfmo-exp-head">
+                    <span class="lfmo-av lfmo-av-24" data-av="aziz"></span>
+                    <span class="lfmo-exp-name" id="lfsExpName">আজিজ ওয়েসি</span>
+                    <span class="lfmo-exp-badge">যাচাইকৃত</span>
+                    <span class="lfmo-exp-close" aria-hidden="true">✕</span>
+                  </div>
+                  <div class="lfmo-exp-text" id="lfsComposeText"></div>
+                  <div class="lfmo-exp-foot">
+                    <span class="lfmo-exp-tools" aria-hidden="true"><span>📷</span><span>📄</span><span>😊</span><span>📍</span></span>
+                    <span class="lfmo-publish" id="lfsPublishBtn">
+                      <span class="lfmo-pub-fill" id="lfsPubFill"></span>
+                      <span class="lfmo-pub-label">পোস্ট করুন</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- পোস্ট তালিকা -->
+              <div class="lfmo-feedlist">
+                <div class="lfmo-feed-scroll" id="lfsFeedScroll">
+
+                  <div class="lfmo-sechead">⚡ সাহিত্য পোস্ট <span class="lfmo-sechead-live">লাইভ আপডেট</span></div>
+
+                  <!-- পুল-রিফ্রেশে ভেসে ওঠা নতুন পোস্ট -->
+                  <article class="lfmo-post lfmo-post--refresh" id="lfsRefreshPost" data-post="0">
+                    <div class="lfmo-p-head">
+                      <span class="lfmo-av lfmo-av-30" data-av="karishma"></span>
+                      <span class="lfmo-p-meta">
+                        <span class="lfmo-p-name">কারিশমা ইরিন এ্যামি <span class="lfmo-p-verify">✓</span></span>
+                        <span class="lfmo-p-sub">এইমাত্র • <b>সম্পাদকীয়</b></span>
+                      </span>
+                      <span class="lfmo-p-tag">নতুন</span>
+                    </div>
+                    <p class="lfmo-p-text lfmo-clamp-2">ত্রৈমাসিক দেয়ালিকার নতুন সংখ্যা প্রকাশিত — জমা দেওয়ার শেষ তারিখ ৩০ সেপ্টেম্বর। 📰</p>
+                  </article>
+
+                  <!-- নতুন পোস্ট (কম্পোজার থেকে প্রকাশিত) -->
+                  <article class="lfmo-post lfmo-post--new" id="lfsNewPost" data-post="1">
+                    <div class="lfmo-p-head">
+                      <span class="lfmo-av lfmo-av-30" data-av="aziz"></span>
+                      <span class="lfmo-p-meta">
+                        <span class="lfmo-p-name">আজিজ ওয়েসি <span class="lfmo-p-verify">✓</span></span>
+                        <span class="lfmo-p-sub" id="lfsSubTime">এইমাত্র • <b>সৃজনশীল কবিতা</b></span>
+                      </span>
+                      <span class="lfmo-p-dots" aria-hidden="true">•••</span>
+                    </div>
+
+                    <p class="lfmo-p-text" id="lfsNewPostText"></p>
+
+                    <div class="lfmo-p-media" id="lfsNewPostMedia">
+                      <span class="lfmo-p-media-ico" aria-hidden="true">📖</span>
+                      <span class="lfmo-p-media-body">
+                        <b>শাটলের শেষ বিকেল • আজিজ ওয়েসি</b>
+                        <small>ক্যাম্পাস কবিতা কর্নার • PDF</small>
+                      </span>
+                    </div>
+
+                    <div class="lfmo-p-sum">
+                      <span class="lfmo-p-stats" id="lfsReactionStack"><b>❤️</b> <span id="lfsLikeCount">১২৪</span> <b>💬</b> <span id="lfsCommentCount">১৮</span> <b>👁</b> <span id="lfsViewCount">১.২হা</span> <b>↗</b> <span id="lfsShareCount">৫</span></span>
+                    </div>
+
+                    <div class="lfmo-p-actions">
+                      <span class="lfmo-act lfmo-act--react" id="lfsReactBtn">
+                        <span class="lfmo-act-ico" id="lfsReactIcon">🤍</span><span class="lfmo-act-label" id="lfsReactLabel">লাইক</span>
+                      </span>
+                      <span class="lfmo-act" id="lfsCommentBtn">
+                        <span class="lfmo-act-ico">💬</span><span class="lfmo-act-label">মন্তব্য</span>
+                      </span>
+                      <span class="lfmo-act lfmo-act--share" id="lfsShareBtn">
+                        <span class="lfmo-act-ico">🔁</span><span class="lfmo-act-label" id="lfsShareLabel">শেয়ার</span>
+                      </span>
+                      <span class="lfmo-act lfmo-act--save" id="lfsSaveBtn">
+                        <span class="lfmo-act-ico" id="lfsSaveIcon">🔖</span><span class="lfmo-act-label">সেভ</span>
+                      </span>
+                                          <div class="lfmo-rxpicker" id="lfsPicker" aria-hidden="true">
+                        <span class="lfmo-pick" data-r="like">👍</span>
+                        <span class="lfmo-pick lfmo-pick--love" data-r="love">❤️</span>
+                        <span class="lfmo-pick" data-r="care">🤗</span>
+                        <span class="lfmo-pick" data-r="wow">😮</span>
+                        <span class="lfmo-pick" data-r="haha">😆</span>
+                        <span class="lfmo-pick" data-r="sad">😢</span>
+                        <span class="lfmo-pick" data-r="angry">😠</span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <!-- পুরোনো পোস্ট — সাথে পোল -->
+                  <article class="lfmo-post" id="lfsPollPost" data-post="2">
+                    <div class="lfmo-p-head">
+                      <span class="lfmo-av lfmo-av-30" data-av="babulu"></span>
+                      <span class="lfmo-p-meta">
+                        <span class="lfmo-p-name">মোঃ শাহরিয়ার বাবলু</span>
+                        <span class="lfmo-p-sub">১২ মিনিট আগে • <b>জরিপ</b></span>
+                      </span>
+                      <span class="lfmo-p-dots" aria-hidden="true">•••</span>
+                    </div>
+                    <p class="lfmo-p-text">সাহিত্য আসর কখন বসলে বেশি লোক আসে?</p>
+
+                    <div class="lfmo-poll" id="lfsPoll">
+                      <span class="lfmo-poll-q">মোট <b id="lfsPollTotal">৮৯</b> ভোট</span>
+                      <div class="lfmo-poll-opt" data-opt="0">
+                        <span class="lfmo-poll-fill"></span>
+                        <span class="lfmo-poll-label">সন্ধ্যা ৬টা <b class="lfmo-poll-pct">৩৮%</b></span>
+                      </div>
+                      <div class="lfmo-poll-opt" data-opt="1">
+                        <span class="lfmo-poll-fill"></span>
+                        <span class="lfmo-poll-label">বিকেল ৪টা <b class="lfmo-poll-pct">৬২%</b></span>
+                      </div>
+                    </div>
+
+                    <div class="lfmo-p-sum">
+                      <span class="lfmo-p-stats"><b>❤️</b> ২ <b>💬</b> ১৪ <b>👁</b> ৮৪০ <b>↗</b> ৩</span>
+                    </div>
+                  </article>
+
+                  <!-- পুরোনো পোস্ট ২ -->
+                  <article class="lfmo-post">
+                    <div class="lfmo-p-head">
+                      <span class="lfmo-av lfmo-av-30" data-av="rafsan"></span>
+                      <span class="lfmo-p-meta">
+                        <span class="lfmo-p-name">Md. রাফসান</span>
+                        <span class="lfmo-p-sub">১ ঘণ্টা আগে • <b>পাঠ প্রতিক্রিয়া</b></span>
+                      </span>
+                      <span class="lfmo-p-dots" aria-hidden="true">•••</span>
+                    </div>
+                    <p class="lfmo-p-text lfmo-clamp-2">“শাটলের শেষ বিকেল” পড়ে মনে হলো — শব্দের চেয়ে নীরবতাই বেশি কথা বলে।</p>
+                    <div class="lfmo-p-sum">
+                      <span class="lfmo-p-stats"><b>👏</b> ৩ <b>💬</b> ৯ <b>👁</b> ৬১২ <b>↗</b> ২</span>
+                    </div>
+                  </article>
+
+                </div>
+              </div>
+            </div>
+            <!-- ════════════════════ অ্যাপ ২: মেসেঞ্জার ════════════════════ -->
+            <div class="lfmo-app lfmo-app--chat" id="lfsChatApp">
+              <div class="lfmo-chatbar">
+                <span class="lfmo-ico lfmo-back" id="lfsChatBack" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+                </span>
+                <span class="lfmo-av lfmo-av-26" data-av="sadia"></span>
+                <span class="lfmo-chatbar-meta">
+                  <b>সাদিয়া ইসলাম</b>
+                  <small><i class="lfmo-online"></i> সক্রিয় আছেন</small>
+                </span>
+                <span class="lfmo-chatbar-ico" id="lfsChatCall" aria-hidden="true">📞</span>
+                <span class="lfmo-chatbar-ico" id="lfsVideoCallBtn" aria-hidden="true">🎥</span>
+              </div>
+
+              <div class="lfmo-chatbody" id="lfsChatBody">
+                <span class="lfmo-chat-day">আজ</span>
+                <div class="lfmo-bubble lfmo-bubble--in" id="lfsIncomingMsg">
+                  <span class="lfmo-bub-text" id="lfsIncomingText"></span>
+                </div>
+                <div class="lfmo-bubble lfmo-bubble--out" id="lfsReplyMsg">
+                  <span class="lfmo-bub-text">অসংখ্য ধন্যবাদ! পরের আসরে নিশ্চয়ই দেখা হবে। 🌸</span>
+                  <span class="lfmo-ticks" id="lfsReplyTicks">✓✓</span>
+                </div>
+                <div class="lfmo-voice" id="lfsVoiceMsg">
+                  <span class="lfmo-voice-play" aria-hidden="true">▶</span>
+                  <span class="lfmo-wave" id="lfsWave"></span>
+                  <span class="lfmo-voice-time" id="lfsVoiceTime">০:০০</span>
+                </div>
+                <div class="lfmo-sysmsg" id="lfsSysMsg">☎️ কল শেষ • ০:০৯</div>
+                <div class="lfmo-typing" id="lfsChatDots">
+                  <span class="lfmo-typing-bub"><i></i><i></i><i></i></span>
+                </div>
+              </div>
+
+              <div class="lfmo-chatdock">
+                <span class="lfmo-av lfmo-av-24" data-av="aziz"></span>
+                <span class="lfmo-chatdock-input">একটি বার্তা লিখুন…</span>
+                <span class="lfmo-chatdock-send" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 8 6 8-16-8Z"/></svg>
+                </span>
+              </div>
+            </div>
+
+            <!-- ════════════════════ ভিডিও কল (PiP) ════════════════════ -->
+      <!-- ── স্ক্রিন-লেভেল ওভারলে: নোটিফিকেশন সেন্টার + লাইভ সার্চ (অ্যাপ প্যানের বাইরে) ── -->
+<div class="lfmo-notifs" id="lfsNotifPanel">
+                      <span class="lfmo-notifs-head">নোটিফিকেশন <b>৩টি নতুন</b></span>
+                      <div class="lfmo-notif">
+                        <span class="lfmo-av lfmo-av-24" data-av="sadia"></span>
+                        <span class="lfmo-notif-body"><b>সাদিয়া ইসলাম</b> আপনার পোস্টে ❤️ রিঅ্যাকশন দিয়েছেন<small>২ মিনিট আগে</small></span>
+                      </div>
+                      <div class="lfmo-notif">
+                        <span class="lfmo-av lfmo-av-24" data-av="monem"></span>
+                        <span class="lfmo-notif-body"><b>মুনেম শাহরিয়ার</b> মন্তব্য করেছেন — “ছন্দ দারুণ!”<small>৯ মিনিট আগে</small></span>
+                      </div>
+                      <div class="lfmo-notif lfmo-notif--badge">
+                        <span class="lfmo-notif-ico">🎖️</span>
+                        <span class="lfmo-notif-body"><b>যাচাইকৃত লেখক</b> ব্যাজ যুক্ত হয়েছে<small>এখনই</small></span>
+                      </div>
+                      <span class="lfmo-notifs-foot">সব নোটিফিকেশন দেখুন ➔</span>
+                    </div>
+      <div class="lfmo-search" id="lfsSearch">
+                      <div class="lfmo-search-bar">
+                        <span class="lfmo-search-ico" aria-hidden="true">⌕</span>
+                        <span class="lfmo-search-input" id="lfsSearchInput"></span>
+                        <span class="lfmo-search-x" aria-hidden="true">✕</span>
+                      </div>
+                      <span class="lfmo-search-count" id="lfsSearchCount">ফলাফল খোঁজা হচ্ছে…</span>
+                      <div class="lfmo-search-results" id="lfsSearchResults">
+                        <div class="lfmo-sresult">
+                          <span class="lfmo-av lfmo-av-24" data-av="mitu"></span>
+                          <span><b>মিতু আক্তার</b><small>“নদীর ওপারে যেতে চাই” • কবিতা</small></span>
+                          <em>লেখক</em>
+                        </div>
+                        <div class="lfmo-sresult">
+                          <span class="lfmo-av lfmo-av-24" data-av="aziz"></span>
+                          <span><b>কবিতা সংগ্রহ ২০২৬</b><small>৪২টি লেখা • ক্যাম্পাস কর্নার</small></span>
+                          <em>সংগ্রহ</em>
+                        </div>
+                        <div class="lfmo-sresult">
+                          <span class="lfmo-av lfmo-av-24" data-av="koushik"></span>
+                          <span><b>কবিতা লেখার ৭টি টিপস</b><small>লেখা শেখা • ১২ মিনিট পাঠ</small></span>
+                          <em>পোস্ট</em>
+                        </div>
+                      </div>
+                    </div>
+
+            <div class="lfmo-video" id="lfsVideoCall">
+              <span class="lfmo-video-bg" aria-hidden="true"></span>
+              <span class="lfmo-av lfmo-av-56 lfmo-video-av" data-av="sadia"></span>
+              <b class="lfmo-video-name">সাদিয়া ইসলাম</b>
+              <span class="lfmo-video-timer" id="lfsVideoTimer">০:০৩</span>
+              <span class="lfmo-video-self" aria-hidden="true">
+                <span class="lfmo-av" data-av="aziz"></span>
+              </span>
+              <span class="lfmo-video-rec"><i></i>ভিডিও কল</span>
+              <span class="lfmo-video-end" id="lfsVideoEnd">✕</span>
+            </div>
+
+            <!-- ════════════════════ অডিও কল স্ক্রিন ════════════════════ -->
+
+            <div class="lfmo-call" id="lfsCall">
+              <span class="lfmo-call-avwrap">
+                <span class="lfmo-call-ring"></span>
+                <span class="lfmo-call-ring lfmo-call-ring--2"></span>
+                <span class="lfmo-av lfmo-av-56 lfmo-call-avatar" data-av="sadia"></span>
+              </span>
+              <b class="lfmo-call-name">সাদিয়া ইসলাম</b>
+              <span class="lfmo-call-status" id="lfsCallStatus">ইনকামিং অডিও কল…</span>
+              <span class="lfmo-call-timer" id="lfsCallTimer">০:০০</span>
+              <span class="lfmo-call-actions">
+                <span class="lfmo-call-btn" id="lfsCallMute">🔇</span>
+                <span class="lfmo-call-btn" id="lfsCallSpeaker">🔊</span>
+              </span>
+              <span class="lfmo-call-foot" id="lfsCallFoot">
+                <span class="lfmo-call-btn lfmo-call-btn--decline" id="lfsCallDecline">✕</span>
+                <span class="lfmo-call-btn lfmo-call-btn--accept" id="lfsCallAccept">📞</span>
+              </span>
+              <span class="lfmo-call-end" id="lfsCallEnd">কল শেষ করুন</span>
+            </div>
+
+            <!-- ════════════════════ স্টোরি ভিউয়ার ════════════════════ -->
+            <div class="lfmo-storyview" id="lfsStory">
+              <span class="lfmo-story-segs" id="lfsStorySegs">
+                <i class="lfmo-seg"><b></b></i><i class="lfmo-seg"><b></b></i><i class="lfmo-seg"><b></b></i>
+              </span>
+              <span class="lfmo-story-top">
+                <span class="lfmo-av lfmo-av-24" id="lfsStoryAv" data-av="mitu"></span>
+                <span class="lfmo-story-meta">
+                  <b id="lfsStoryName">মিতু আক্তার</b>
+                  <small id="lfsStoryTime">২ ঘণ্টা আগে</small>
+                </span>
+                <span class="lfmo-story-x" id="lfsStoryClose" aria-hidden="true">✕</span>
+              </span>
+              <span class="lfmo-story-body">
+                <span class="lfmo-story-quote" id="lfsStoryText">নদীর ওপারে যেতে চাই — শব্দের সেতু বানাই।</span>
+                <span class="lfmo-story-sign" id="lfsStorySign">— মিতু আক্তার</span>
+              </span>
+              <span class="lfmo-story-reply">প্রতিক্রিয়া দিন 🌸</span>
+            </div>
+
+            <!-- ════════════════════ রিডিং মোড ════════════════════ -->
+            <div class="lfmo-reader" id="lfsReader">
+              <span class="lfmo-reader-prog"><i id="lfsReaderProg"></i></span>
+              <span class="lfmo-reader-top">
+                <span class="lfmo-reader-x" id="lfsReaderClose" aria-hidden="true">✕</span>
+                <span class="lfmo-reader-meta">ক্যাম্পাস কবিতা কর্নার • ৩ মিনিট পাঠ</span>
+              </span>
+              <h4 class="lfmo-reader-title">শাটলের শেষ বিকেল</h4>
+              <span class="lfmo-reader-by">আজিজ ওয়েসি • ২৪ সেপ্টেম্বর, ২০২৬</span>
+              <p class="lfmo-reader-p">শাটলের শেষ বিকেলে ক্যাম্পাসের বারান্দায় বসে মনে হলো—শব্দের চেয়ে নীরবতাই বেশি কথা বলে।</p>
+              <p class="lfmo-reader-p">হাতের খাতায় লেখা হয়ে যায় ছোট ছোট পঙক্তি; পাশের ক্লাস থেকে ভেসে আসে বৃষ্টির গন্ধ।</p>
+              <p class="lfmo-reader-p">তবু লিখে যেতে হয় — কারণ লেখাই আমাদের সেতু, প্রজন্ম থেকে প্রজন্মে।</p>
+              <span class="lfmo-reader-tools">
+                <span class="lfmo-rtool is-on">🔖 সংরক্ষিত</span>
+                <span class="lfmo-rtool">A+ ফন্ট</span>
+                <span class="lfmo-rtool">🌙 ডার্ক</span>
+              </span>
+            </div>
+
+          <!-- ═══════════════════ শিট ৪: লিডারবোর্ড / ব্যাজ (১৬তম দৃশ্য) ═══════════════════ -->
+          <div class="lfmo-sheetwrap" id="lfsLeaderSheet">
+            <span class="lfmo-sheetbd"></span>
+            <div class="lfmo-sheet">
+              <span class="lfmo-grab"></span>
+              <div class="lfmo-sheet-head">
+                <b>🏆 সেরা লেখক লিডারবোর্ড</b><span class="lfmo-sheet-x" id="lfsLeaderClose">✕</span>
+              </div>
+              <div class="lfmo-lb-row lfmo-lb-row--1">
+                <span class="lfmo-lb-rank">১</span>
+                <span class="lfmo-av lfmo-av-24" data-av="rafsan"></span>
+                <span class="lfmo-lb-body"><b>Md. রাফসান</b><small>১৫ পোস্ট • এই মাসে</small></span>
+                <span class="lfmo-lb-score">৯৮০ পয়েন্ট</span>
+              </div>
+              <div class="lfmo-lb-row lfmo-lb-row--2">
+                <span class="lfmo-lb-rank">২</span>
+                <span class="lfmo-av lfmo-av-24" data-av="sadia"></span>
+                <span class="lfmo-lb-body"><b>সাদিয়া ইসলাম</b><small>৯ পোস্ট • এই মাসে</small></span>
+                <span class="lfmo-lb-score">৮৪০ পয়েন্ট</span>
+              </div>
+              <div class="lfmo-lb-row lfmo-lb-row--3">
+                <span class="lfmo-lb-rank">৩</span>
+                <span class="lfmo-av lfmo-av-24" data-av="mitu"></span>
+                <span class="lfmo-lb-body"><b>মিতু আক্তার</b><small>৮ পোস্ট • এই মাসে</small></span>
+                <span class="lfmo-lb-score">৭৯০ পয়েন্ট</span>
+              </div>
+              <div class="lfmo-lb-me">
+                <span class="lfmo-av lfmo-av-24" data-av="aziz"></span>
+                <span class="lfmo-lb-body"><b>আপনি — আজিজ ওয়েসি</b><small>৪৩ পোস্ট • এই মাসে ৫</small></span>
+                <span class="lfmo-lb-score">৬৫০ পয়েন্ট</span>
+              </div>
+              <div class="lfmo-sheet-cta">
+                <span class="lfmo-follow" id="lfsLeaderCta">＋ আরও পোস্ট করুন</span>
+                <span class="lfmo-ghost-btn">পুরো তালিকা</span>
+              </div>
+            </div>
+          </div>
+
+            <!-- ════════════════════ কমেন্ট শিট ════════════════════ -->
+            <div class="lfmo-sheetwrap" id="lfsCommentSheet">
+              <span class="lfmo-sheetbd"></span>
+              <div class="lfmo-sheet lfmo-sheet--comments">
+                <span class="lfmo-grab"></span>
+                <div class="lfmo-sheet-head">
+                  <b id="lfsCommentTitle">মন্তব্য (১৮)</b>
+                  <span class="lfmo-sheet-x" aria-hidden="true">✕</span>
+                </div>
+                <div class="lfmo-comment-list" id="lfsCommentList">
+                  <div class="lfmo-comment">
+                    <span class="lfmo-av lfmo-av-24" data-av="karishma"></span>
+                    <p><b>কারিশমা ইরিন এ্যামি</b> অসাধারণ হয়েছে! বাকি অংশটাও শীঘ্রই চাই।</p>
+                  </div>
+                  <div class="lfmo-comment">
+                    <span class="lfmo-av lfmo-av-24" data-av="monem"></span>
+                    <p><b>মুনেম শাহরিয়ার শাওন</b> ছন্দের বাঁধনটা দারুণ লেগেছে ভাই।</p>
+                  </div>
+                  <div class="lfmo-comment lfmo-comment--new" id="lfsCommentNew">
+                    <span class="lfmo-av lfmo-av-24" data-av="aziz"></span>
+                    <p><b>আজিজ ওয়েসি</b> <span id="lfsCommentNewText"></span></p>
+                  </div>
+                </div>
+                <div class="lfmo-comment-input">
+                  <span class="lfmo-av lfmo-av-24" data-av="aziz"></span>
+                  <span class="lfmo-cinput-text" id="lfsCommentInput">একটি মন্তব্য লিখুন…</span>
+                  <span class="lfmo-cinput-send" id="lfsCommentSend">➤</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ════════════════════ শেয়ার শিট ════════════════════ -->
+            <div class="lfmo-sheetwrap" id="lfsShareSheet">
+              <span class="lfmo-sheetbd"></span>
+              <div class="lfmo-sheet lfmo-sheet--share">
+                <span class="lfmo-grab"></span>
+                <div class="lfmo-sheet-head">
+                  <b>শেয়ার করুন</b>
+                  <span class="lfmo-sheet-x" aria-hidden="true">✕</span>
+                </div>
+                <div class="lfmo-share-grid">
+                  <span class="lfmo-share-item" id="lfsShareFb"><i>f</i><small>ফেসবুক</small></span>
+                  <span class="lfmo-share-item"><i>✈️</i><small>মেসেঞ্জার</small></span>
+                  <span class="lfmo-share-item"><i>🟢</i><small>হোয়াটসঅ্যাপ</small></span>
+                  <span class="lfmo-share-item"><i>🔗</i><small>লিংক</small></span>
+                </div>
+                <div class="lfmo-share-now" id="lfsShareNow">শেয়ার সম্পন্ন করুন</div>
+              </div>
+            </div>
+
+            <!-- ════════════════════ প্রোফাইল শিট ════════════════════ -->
+            <div class="lfmo-sheetwrap" id="lfsProfileSheet">
+              <span class="lfmo-sheetbd"></span>
+              <div class="lfmo-sheet lfmo-sheet--profile">
+                <span class="lfmo-grab"></span>
+                <div class="lfmo-cover" aria-hidden="true"></div>
+                <span class="lfmo-av lfmo-av-56 lfmo-av--ring lfmo-av--oncover" data-av="aziz"></span>
+                <b class="lfmo-sheet-name" id="lfsSheetName">আজিজ ওয়েসি</b>
+                <span class="lfmo-sheet-handle">@aziz_oyeasi • চট্টগ্রাম বিশ্ববিদ্যালয়</span>
+                <span class="lfmo-morph" id="lfsSheetBadge"><b>সদস্য</b></span>
+                <div class="lfmo-stats">
+                  <span class="lfmo-stat"><b id="lfsStatPosts">৪২</b><small>পোস্ট</small></span>
+                  <span class="lfmo-stat"><b id="lfsStatFollowers">১২৪০</b><small>অনুসারী</small></span>
+                  <span class="lfmo-stat"><b id="lfsStatReacts">৩২৮০</b><small>রিঅ্যাকশন</small></span>
+                </div>
+                <div class="lfmo-xp">
+                  <div class="lfmo-xp-lab"><span>লেখক প্রোফাইল সম্পূর্ণতা</span><b id="lfsXpVal">৭৮%</b></div>
+                  <span class="lfmo-xp-track"><i class="lfmo-xp-fill" id="lfsXpFill" style="width:78%"></i></span>
+                </div>
+                <div class="lfmo-sheet-cta">
+                  <span class="lfmo-follow" id="lfsFollowBtn">＋ অনুসরণ করুন</span>
+                  <span class="lfmo-ghost-btn" id="lfsLeaderLink">🏆 লিডারবোর্ড</span>
+                </div>
+                <div class="lfmo-ptabs" id="lfsProfileTabs">
+                  <span class="lfmo-ptab is-on" data-pt="posts">পোস্ট</span>
+                  <span class="lfmo-ptab" data-pt="media">মিডিয়া</span>
+                  <span class="lfmo-ptab" data-pt="saved">সংরক্ষিত</span>
+                </div>
+                <div class="lfmo-pgrid" id="lfsProfileGrid">
+                  <span class="lfmo-gitem" data-g="0"></span>
+                  <span class="lfmo-gitem" data-g="1"></span>
+                  <span class="lfmo-gitem" data-g="2"></span>
+                  <span class="lfmo-gitem" data-g="3"></span>
+                  <span class="lfmo-gitem" data-g="4"></span>
+                  <span class="lfmo-gitem" data-g="5"></span>
+                  <span class="lfmo-gitem" data-g="6"></span>
+                  <span class="lfmo-gitem" data-g="7"></span>
+                  <span class="lfmo-gitem" data-g="8"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- নিচের ন্যাভিগেশন বার -->
+            <nav class="lfmo-bottomnav" id="lfsBottomNav" aria-hidden="true">
+                <span class="lfmo-nitem is-on" data-nav="home"><i class="lfmo-nico">⌂</i><small>হোম</small></span>
+                <span class="lfmo-nitem" data-nav="reel"><i class="lfmo-nico">▶</i><small>রিল</small></span>
+                <span class="lfmo-nitem" data-nav="msg"><i class="lfmo-nico">✉</i><small>মেসেজ</small></span>
+                <span class="lfmo-nitem" data-nav="notif"><i class="lfmo-nico">🔔</i><small>নোটিফিকেশন</small></span>
+                <span class="lfmo-nitem" data-nav="profile"><span class="lfmo-av lfmo-av-18 lfmo-nav-av" data-av="aziz"></span><small>প্রোফাইল</small></span>
+            </nav>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ══ ঐচ্ছিক: সাইটের আসল পোস্ট-ডেটা (BACKEND থেকে রেন্ডার করুন) ══════════════
+       এখানে থাকলে সিন এই ডেটাই দেখাবে; না থাকলে ডেমো-কনটেন্ট চলবে।
+       গঠন: { "live": 8, "me": {"name":"আজিজ ওয়েসি","handle":"@aziz"},
+              "posts": [ {"name":"…","handle":"@…","time":"১৬ দিন আগে","badge":"সাহিত্য",
+                          "text":"…","likes":24,"comments":6,"shares":2} ] }
+       (EJS-এ: <script type="application/json" id="lfmo-data"><%- JSON.stringify(feedData) %></script>)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <script type="application/json" id="lfmo-data">{}</script>
+
+</div>
+</div>
