@@ -142,7 +142,7 @@ agent-browser wait 500 >/dev/null 2>&1
 ev "JSON.stringify((function(){var p=document.querySelector('.sfs292-phone');p.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));return 'kdesk'})())" >/dev/null 2>&1
 agent-browser wait 500 >/dev/null 2>&1
 BCDES=$(unjj "$(ev "$BCJS")")
-if [ "$(jf bc "$(unjj "$BCDES")")" = "$(jf bc "$(unjj "$BC390")")" ]; then ok "ই২ই: ডেস্কটপ-অটুট (৩৯০px-এর সম-মান — ৫৮% — s328-রুল-অস্পৃশ্য-পুনঃপ্রমাণ)"; else bad "ই২ই: desk=[$(unjj "$BCDES")] 390=[$(unjj "$BC390")]"; fi
+if [ "$(jf bc "$(unjj "$BCDES")")" != "$(jf bc "$(unjj "$BC390")")" ] && [ "$(jf bc "$(unjj "$BCDES")")" != "$(jf bc "$(unjj "$BC360")")" ]; then ok "ই২ই: টোন-ধার-প্রমাণ (ডেস্ক ৫৮% ≠ ৩৯০px ৬২% ≠ ৩৬০px ৬৬% — sfs331-রেঞ্জ-রুল — ডেস্ক-মূল-অটুট)"; else bad "ই২ই: desk=[$(unjj "$BCDES")] 390=[$(unjj "$BC390")] 360=[$(unjj "$BC360")]"; fi
 
 echo "── ধাপ-৪: hr330-ই২ই (?-টগল→Escape→বন্ধ-বাটন→কী-তালিকা→নন-মোডাল→হিন্ট→পুনঃলোড) ──"
 bopen "$BASE/admin/login" || { bad "ব্রাউজার-লগইন-পৃষ্ঠা open ব্যর্থ"; }

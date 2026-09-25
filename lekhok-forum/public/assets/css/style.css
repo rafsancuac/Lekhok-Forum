@@ -4805,3 +4805,23 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   }
 }
 /* ═══════════════════ EOF session330 (sfs330 ৩৬০px-সম-প্রদর্শন-টোন-ভ্যারিয়েন্ট) ═══════════════════ */
+/* ═══════════════════ session331 (sfs331 ৬৪০px-সম-প্রদর্শন-টোন-ধার) ═══════════════════ */
+/* hex-free (color-mix — guard:design-চুক্তি); s330-পরবর্তী টোন-সিঁড়ি-পুনর্বিবেচনা (PLANS
+   session330-প্রস্তাব-③): ৬৪০px-বেস-গাটার ৭২px-প্রেক্ষাপটে (৮৪px-ডেস্ক-সংকোচিত) টাইট-জ্যামিতিতে
+   সম-প্রদর্শন-টোন ৫৮→৬২% (মধ্য-ধার); টোন-সিঁড়ি-সম্পূর্ণ: বেস ৪৬% → সম-প্রদর্শন ৫৮% (>৬৪০px —
+   s327/s328) → **৬২% (৩৬১–৬৪০px — এ-ব্লক)** → ৬৬% (≤৩৬০px — s330-অটুট); **রেঞ্জ-স্কোপড
+   মিডিয়া-কোয়েরি** (max-width: 640px) and (min-width: 361px) — s330-এর ≤৩৬০px-রুল-স্পর্শ-শূন্য
+   (সর্ব-৩৬০px-মান-অটুট — ওভারল্যাপ-দ্বিধা-শূন্য); ট্যাপ-গেট ([data-sfs321-tap]) × keynav-গেট
+   ([data-sfs314-focus]) উভয়ে-সম-মান (parity-নীতি); **কেবল-রঙ (border-color)** — layout-neutral
+   (গাটার ৮৪/৭২px + প্রস্থ ৩৮%/৫২%-অস্পৃশ্য — s327/s328/s329/s330-মান-অটুট); চিপ-transition-
+   তালিকায় border-color-নেই → পরিবর্তন-তাৎক্ষণিক (কম্পোজিটর-চাপ-শূন্য — s315-ফ্রিজ-গণিত-নিরাপদ);
+   MO-অবর্জন-চুক্তি-অটুট; DOM-ক্রম-নির্ভরতা-অটুট (posbadge→namechip-ক্রম-বদল-নিষিদ্ধ — s327-চুক্তি)। */
+@media (max-width: 640px) and (min-width: 361px) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    border-color: color-mix(in srgb, var(--lf-brand-primary) 62%, transparent);
+  }
+  .sfs292-phone[data-sfs314-focus] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    border-color: color-mix(in srgb, var(--lf-brand-primary) 62%, transparent);
+  }
+}
+/* ═══════════════════ EOF session331 (sfs331 ৬৪০px-সম-প্রদর্শন-টোন-ধার) ═══════════════════ */

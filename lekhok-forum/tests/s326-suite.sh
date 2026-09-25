@@ -212,7 +212,12 @@ ev "JSON.stringify((function(){var b=document.querySelector('.hr317-tip.is-on .h
 agent-browser wait 400 >/dev/null 2>&1
 BC=$(ev "JSON.stringify({mode:window.__hrAria326QA.mode(),cy:window.__hrAria326QA.cycles,lbl:(document.querySelector('.hr317-tip.is-on .hr326-fmt')||{}).textContent||''})")
 BCJ=$(unjj "$BC")
-if [ "$(jf mode "$BCJ")" = "rich" ] && [ "$(jf cy "$BCJ")" = "2" ] && [ "$(jf lbl "$BCJ")" = "বিন্যাস: সমৃদ্ধ" ]; then ok "ই২ই: বাটন-ক্লিক → rich-পুনঃটগল (লেবেল-সমকালীন-আপডেট)"; else bad "ই২ই: $(unjj "$BC")"; fi
+if [ "$(jf mode "$BCJ")" = "json" ] && [ "$(jf cy "$BCJ")" = "2" ] && [ "$(jf lbl "$BCJ")" = "বিন্যাস: JSON" ]; then ok "ই২ই: বাটন-ক্লিক → json-চক্র (লেবেল-সমকালীন-আপডেট — hr331-ত্রি-মোড)"; else bad "ই২ই: $(unjj "$BC")"; fi
+ev "JSON.stringify((function(){var b=document.querySelector('.hr317-tip.is-on .hr326-fmt');if(!b)return 'nb';b.click();return 'bc2'})())" >/dev/null 2>&1
+agent-browser wait 400 >/dev/null 2>&1
+BC2=$(ev "JSON.stringify({mode:window.__hrAria326QA.mode(),cy:window.__hrAria326QA.cycles,lbl:(document.querySelector('.hr317-tip.is-on .hr326-fmt')||{}).textContent||''})")
+BC2J=$(unjj "$BC2")
+if [ "$(jf mode "$BC2J")" = "rich" ] && [ "$(jf cy "$BC2J")" = "3" ] && [ "$(jf lbl "$BC2J")" = "বিন্যাস: সমৃদ্ধ" ]; then ok "ই২ই: তৃতীয়-ক্লিক → rich-পূর্ণ-চক্র (json ⇄ key ⇄ rich — চক্র-সমাপ্তি-প্রমাণ — লেবেল-সমকালীন)"; else bad "ই২ই: $(unjj "$BC2")"; fi
 bopen "$BASE/admin/home-reorder" || bad "home-reorder-পুনঃopen-ব্যর্থ"
 agent-browser wait 1600 >/dev/null 2>&1
 P1=$(ev "JSON.stringify({mode:(window.__hrAria326QA?window.__hrAria326QA.mode():'x'),stored:(function(){try{var m=sessionStorage.getItem('hr326-fmt');sessionStorage.removeItem('hr326-fmt');return m}catch(e){return 'x'}})()})")
