@@ -4786,3 +4786,22 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
   }
 }
 /* ═══════════════════ EOF session329 (sfs329 keynav-পথের ৩৬০px-ক্ষুদ্র-ভ্যারিয়েন্ট-প্যারিটি) ═══════════════════ */
+
+/* ═══════════════════ session330 (sfs330 ৩৬০px-সম-প্রদর্শন-টোন-ভ্যারিয়েন্ট) ═══════════════════ */
+/* hex-free (color-mix — guard:design-চুক্তি); s329-পরবর্তী টোন-ধারাবাহিকতা (s328-টোন-রীতি):
+   টোন-সিঁড়ি-সমাপ্তি — বেস ৪৬% → সম-প্রদর্শন ৫৮% (s327/s328) → **ক্ষুদ্র-পর্দা-সম-প্রদর্শন ৬৬%**
+   (≤৩৬০px — চিপ max-width ৩৮%-সংকোচিত (s327/s329) — টাইট-জ্যামিতিতে ব্র্যান্ড-টিন্ট-শক্তিশালী =
+   জুটি-পাঠযোগ্যতা); ট্যাপ-গেট ([data-sfs321-tap]) × keynav-গেট ([data-sfs314-focus])
+   উভয়ে-সম-মান (parity-নীতি); **কেবল-রঙ (border-color)** — layout-neutral (গাটার/প্রস্থ-অস্পৃশ্য —
+   s327/s328/s329-মান-অটুট); চিপ-transition-তালিকায় border-color-নেই → পরিবর্তন-তাৎক্ষণিক
+   (কম্পোজিটর-চাপ-শূন্য — s315-ফ্রিজ-গণিত-নিরাপদ); MO-অবর্জন-চুক্তি-অটুট; DOM-ক্রম-নির্ভরতা-অটুট
+   (posbadge→namechip-ক্রম-বদল-নিষিদ্ধ — s327-চুক্তি)। */
+@media (max-width: 360px) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    border-color: color-mix(in srgb, var(--lf-brand-primary) 66%, transparent);
+  }
+  .sfs292-phone[data-sfs314-focus] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    border-color: color-mix(in srgb, var(--lf-brand-primary) 66%, transparent);
+  }
+}
+/* ═══════════════════ EOF session330 (sfs330 ৩৬০px-সম-প্রদর্শন-টোন-ভ্যারিয়েন্ট) ═══════════════════ */

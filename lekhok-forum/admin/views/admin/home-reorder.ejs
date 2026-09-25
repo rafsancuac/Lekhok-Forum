@@ -163,6 +163,21 @@
     .hr329-dl.hr324-done { background: rgba(5, 150, 105, 0.2); border-color: rgba(5, 150, 105, 0.85); color: rgba(6, 95, 70, 1); }
     .hr327-meta.hr329-restored { color: rgba(5, 150, 105, 1); font-weight: 700; }
     @media (prefers-reduced-motion: reduce) { .hr329-dl { transition: none; } }
+
+    /* সেশন ৩৩০ (hr330): '?'-শর্টকাট-সহায়তা-ওভারলে (স্বতন্ত্র-শ্রেণি-পরিবার — rgba-only —
+       body-স্থির-অবস্থান — নন-মোডাল — focus-visible-রিং + reduced-motion-সমতা) */
+    .hr330-ov { position: fixed; right: 14px; bottom: 14px; z-index: 9999; width: min(320px, calc(100vw - 28px)); margin: 0; background: rgba(255, 255, 255, 0.98); border: 1px solid rgba(4, 120, 87, 0.35); border-radius: 8px; box-shadow: 0 12px 32px -12px rgba(2, 6, 23, 0.35); font-family: inherit; font-size: 0.72rem; color: rgba(6, 78, 59, 1); overflow: hidden; }
+    .hr330-ov[hidden] { display: none; }
+    .hr330-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; background: rgba(4, 120, 87, 0.08); border-bottom: 1px solid rgba(4, 120, 87, 0.18); font-weight: 700; }
+    .hr330-x { font: inherit; font-size: 0.62rem; font-weight: 700; color: rgba(6, 95, 70, 0.9); background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(4, 120, 87, 0.3); border-radius: 4px; padding: 2px 7px; cursor: pointer; transition: background 0.12s ease, border-color 0.12s ease; }
+    .hr330-x:hover { background: rgba(4, 120, 87, 0.12); border-color: rgba(4, 120, 87, 0.5); }
+    .hr330-x:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
+    .hr330-list { margin: 0; padding: 6px 10px 8px; list-style: none; }
+    .hr330-li { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+    .hr330-k { flex: 0 0 auto; min-width: 20px; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.62rem; font-weight: 700; color: rgba(6, 95, 70, 1); background: rgba(4, 120, 87, 0.1); border: 1px solid rgba(4, 120, 87, 0.28); border-radius: 4px; padding: 1px 5px; }
+    .hr330-d { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hr330-ft { padding: 5px 10px 7px; border-top: 1px dashed rgba(4, 120, 87, 0.2); color: rgba(6, 95, 70, 0.72); font-size: 0.6rem; line-height: 1.45; }
+    @media (prefers-reduced-motion: reduce) { .hr330-ov, .hr330-x { transition: none; } }
   </style>
 </head>
 <body>
@@ -1410,6 +1425,136 @@
   });
   q329h.persist = function () { try { return sessionStorage.getItem('hr327-pv') || ''; } catch (e329k) { return ''; } };
   window.__hrAria329QA = q329h;
+  /* সেশন ৩৩০ (hr330): '?'-কী শর্টকাট-সহায়তা-ওভারলে (PLANS session329-নোটের প্রস্তাব-②)
+     • সমস্যা: kbd-হিন্ট-সারি-দীর্ঘায়ন (E/D/X/F/P/C/S — .hr324-kbd nowrap — ওভারফ্লো-ঝুঁকি) →
+       সমস্ত-শর্টকাট এক-ঝলকে-দর্শন-ওভারলে = আবিষ্কারযোগ্যতা-সমাধান (৮-সারি — kbd-চিপ + বর্ণনা)।
+     • খোলা/বন্ধ: '?'-কী-টগল (s320/s324-keydown-রীতি — .hr-aria-copy-ফোকাস-প্রেক্ষাপট ×
+       ctrl/meta/alt-বর্জন — shift-অনুমোদিত ('?' = shift+'/'-সমতা) × ওভারলে-অভ্যন্তরীণ-ফোকাস-ও
+       গ্রহণযোগ্য (টগল-চালুক্রম-অব্যাহত)); **ইতিহাস-গেট-নেই** (সহায়িকা = আবিষ্কারযোগ্যতা-সহায়ক —
+       শূন্য-ইতিহাসেও-কাজ-করে — X/F/P/C/S-নীরব-গেট-পরিবার-বহির্ভূত — সিদ্ধান্ত-ডক-কৃত);
+       Escape-বন্ধ (document-স্তর — ফোকাস-প্রেক্ষাপট-নিরপেক্ষ — ওভারলে-অভ্যন্তরীণ-ফোকাসেও-বন্ধ —
+       গোটচা-ডক-কৃত) + .hr330-x-বন্ধ-বাটন (pointer-path)।
+     • নন-মোডাল: aria-modal="false" + ফোকাস-চুরি-নেই (শর্টকাট-চালুক্রম-অব্যাহত —
+       .hr-aria-copy-ফোকাস-টিকে); body-সন্নিবেশ (tip317-বহির্ভূত — tipRender318-পুনঃনির্মাণ-
+       চুক্তি-অস্পৃশ্য — ওভারলে-টিকে); [hidden]-টগল (কোনো-নতুন-MO-নেই — hr-পরিবার-চুক্তি)।
+     • নির্মাণ: DOM-API/textContent-কেবল (XSS-নিরাপদ); অলস-নির্মাণ (প্রথম-'?'-এ একবার);
+       role="dialog" + aria-labelledby + kbd-চিপ-তালিকা (E/D/X/F/P/C/S/? — বর্ণনা-সহ)।
+     • কীবোর্ড-হিন্ট: '· ? = সহায়িকা' (স্বতন্ত্র-মোড়ক-জুটি — cycleFmt326 + tipRender318-
+       পুনঃমোড়ক — S-হিন্ট-চেইন-পরবর্তী)।
+     • QA-হুক __hrAria330QA {opens, closes, last, isOpen(), open(), close(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q330h = { opens: 0, closes: 0, last: '', err: '' };
+  var ov330 = null;
+  var ovOpen330 = false;
+  var buildOv330 = function () {
+    if (ov330) return;
+    ov330 = document.createElement('div');
+    ov330.className = 'hr330-ov';
+    ov330.setAttribute('role', 'dialog');
+    ov330.setAttribute('aria-modal', 'false');
+    ov330.setAttribute('aria-labelledby', 'hr330-t');
+    ov330.hidden = true;
+    var hd330 = document.createElement('div');
+    hd330.className = 'hr330-hd';
+    var t330 = document.createElement('span');
+    t330.id = 'hr330-t';
+    t330.textContent = 'কীবোর্ড শর্টকাট';
+    var x330 = document.createElement('button');
+    x330.type = 'button';
+    x330.className = 'hr330-x';
+    x330.setAttribute('aria-label', 'সহায়িকা বন্ধ করুন');
+    x330.textContent = 'বন্ধ ✕';
+    hd330.appendChild(t330);
+    hd330.appendChild(x330);
+    var ul330 = document.createElement('ul');
+    ul330.className = 'hr330-list';
+    var rows330 = [
+      ['E', 'কপি-ইতিহাস স্ট্রিপ কপি'],
+      ['D', 'কপি-ইতিহাস ডাউনলোড (.txt)'],
+      ['X', 'পয়েন্টার-সারি বিলোপ'],
+      ['F', 'রপ্তাই-বিন্যাস টগল (rich ⇄ key)'],
+      ['P', 'রপ্তাই-প্রিভিউ টগল'],
+      ['C', 'প্রিভিউ কপি'],
+      ['S', 'প্রিভিউ সংরক্ষণ (.txt)'],
+      ['?', 'এই সহায়িকা (টগল)']
+    ];
+    for (var i330 = 0; i330 < rows330.length; i330++) {
+      var li330 = document.createElement('li');
+      li330.className = 'hr330-li';
+      var k330 = document.createElement('kbd');
+      k330.className = 'hr330-k';
+      k330.textContent = rows330[i330][0];
+      var d330 = document.createElement('span');
+      d330.className = 'hr330-d';
+      d330.textContent = rows330[i330][1];
+      li330.appendChild(k330);
+      li330.appendChild(d330);
+      ul330.appendChild(li330);
+    }
+    var ft330 = document.createElement('div');
+    ft330.className = 'hr330-ft';
+    ft330.textContent = 'শর্টকাট কপি-বাটন-ফোকাসে সক্রিয় · Escape = বন্ধ · ? = টগল';
+    ov330.appendChild(hd330);
+    ov330.appendChild(ul330);
+    ov330.appendChild(ft330);
+    document.body.appendChild(ov330);
+    x330.addEventListener('click', function (e330x) {
+      e330x.preventDefault(); e330x.stopPropagation();
+      closeOv330('btn');
+    });
+  };
+  var openOv330 = function (src330) {
+    try {
+      buildOv330();
+      ov330.hidden = false;
+      ov330.setAttribute('aria-hidden', 'false');
+      ovOpen330 = true;
+      q330h.opens += 1; q330h.last = 'open:' + src330;
+    } catch (e330o) { q330h.err = String((e330o && e330o.message) || e330o); }
+  };
+  var closeOv330 = function (src330) {
+    try {
+      if (!ovOpen330) return;
+      ov330.hidden = true;
+      ov330.setAttribute('aria-hidden', 'true');
+      ovOpen330 = false;
+      q330h.closes += 1; q330h.last = 'close:' + src330;
+    } catch (e330c) { q330h.err = String((e330c && e330c.message) || e330c); }
+  };
+  var cf330 = cycleFmt326;
+  cycleFmt326 = function (b330f) {
+    cf330(b330f);
+    try {
+      var kb330 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
+      if (kb330 && kb330.textContent.indexOf('? = সহায়িকা') < 0) kb330.textContent = kb330.textContent + ' · ? = সহায়িকা';
+    } catch (e330f) { q330h.err = String((e330f && e330f.message) || e330f); }
+  };
+  var trOrig330 = tipRender318;
+  tipRender318 = function (k330r) {
+    trOrig330(k330r);
+    try {
+      if (tip317 && hist317.length) {
+        var kb330b = tip317.querySelector('.hr324-kbd');
+        if (kb330b && kb330b.textContent.indexOf('? = সহায়িকা') < 0) {
+          kb330b.textContent = kb330b.textContent + ' · ? = সহায়িকা';
+        }
+      }
+    } catch (e330g) { q330h.err = String((e330g && e330g.message) || e330g); }
+  };
+  document.addEventListener('keydown', function (e330k) {
+    try {
+      if (e330k.key === 'Escape' && ovOpen330) { e330k.preventDefault(); closeOv330('escape'); return; } /* ফোকাস-প্রেক্ষাপট-নিরপেক্ষ-বন্ধ — গোটচা-ডক-কৃত */
+      if (e330k.key !== '?') return;
+      if (e330k.ctrlKey || e330k.metaKey || e330k.altKey) return;
+      var b330k = e330k.target && e330k.target.closest ? (e330k.target.closest('.hr-aria-copy') || e330k.target.closest('.hr330-ov')) : null;
+      if (!b330k) return;
+      e330k.preventDefault();
+      if (ovOpen330) closeOv330('key'); else openOv330('key');
+    } catch (e330l) { q330h.err = String((e330l && e330l.message) || e330l); }
+  });
+  q330h.isOpen = function () { return ovOpen330; };
+  q330h.open = function () { openOv330('qa'); };
+  q330h.close = function () { closeOv330('qa'); };
+  window.__hrAria330QA = q330h;
 })();
 </script>
 </body>
