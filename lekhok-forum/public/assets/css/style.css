@@ -4611,7 +4611,7 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
    ইউজার-স্পেক: ছোট কার্ড (বাম-কনটেন্টের সাথে সামঞ্জস্য); পেছনের দুই শিট আরও-হেলানো এবং তাতেও আসল প্রচ্ছদ;
    অ্যানিমেশন = ডেক-শাফল (সামনের-কার্ড বামে-উড়ে যায়, বাম-শিট কার্ডের-নিচ-দিয়ে ডানে-আসে, নতুন-কভারে আলো-ঝলক)
    ~০.৪৪ সেকেন্ড; ডটে ৪-সেকেন্ড-প্রোগ্রেস। হেক্স-শূন্য — var(--lf-*) + color-mix + rgba। ═══ */
-.today-epaper-section { --epk326-w: 304px; }
+.today-epaper-section { --epk326-w: 260px; }
 .te-grid233 { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 30px; align-items: center; }
 .te-lead233 { max-width: 520px; }
 .te-right233 { align-items: center; gap: 12px; padding: 0 58px; }
@@ -4694,7 +4694,7 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 
 /* রেসপন্সিভ */
 @media (max-width: 992px) {
-  .today-epaper-section { --epk326-w: min(290px, 62vw); }
+  .today-epaper-section { --epk326-w: min(250px, 58vw); }
   .te-grid233 { grid-template-columns: 1fr; gap: 26px; }
   .te-right233 { align-items: center; padding: 0 34px; }
   .epk310-stage { max-width: var(--epk326-w); }
