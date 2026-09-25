@@ -925,17 +925,19 @@
   var dlHist324 = function (btn324b) {
     try {
       if (!hist317.length) return;
-      var b324d = new Blob([strip324()], { type: 'text/plain;charset=utf-8' });
+      var ex332a = (mode326 === 'json') ? '.json' : '.txt'; /* hr332: মোড-সম্মত-ফাইলনাম-এক্সটেনশন (call-time-রেজলিউশন — var-হোস্টিং-নিরাপদ) */
+      var b324d = new Blob([strip324()], { type: (mode326 === 'json') ? 'application/json;charset=utf-8' : 'text/plain;charset=utf-8' }); /* hr332: json-এ application/json-MIME */
       var u324 = URL.createObjectURL(b324d);
       var a324 = document.createElement('a');
       a324.href = u324;
-      a324.download = 'lekhok-copy-history-' + new Date().toISOString().slice(0, 10) + '.txt';
+      a324.download = 'lekhok-copy-history-' + new Date().toISOString().slice(0, 10) + ex332a; /* hr332: '.txt'-হার্ডকোড-মোছা (মোড-সম্মত) */
       document.body.appendChild(a324);
       a324.click();
       a324.remove();
       setTimeout(function () { URL.revokeObjectURL(u324); }, 400);
       q324h.downloads += 1; q324h.last = 'download';
-      showToast(true, 'কপি-ইতিহাস ডাউনলোড শুরু হয়েছে (.txt)');
+      if (mode326 === 'json') q332h.histJson += 1; /* hr332: json-মোড-ডাউনলোড-গণনা (q324h-অস্পৃশ্য — গণনা-সততা) */
+      showToast(true, 'কপি-ইতিহাস ডাউনলোড শুরু হয়েছে (' + ex332a + ')'); /* hr332: এক্সটেনশন-সম্মত-টোস্ট */
       flash324(btn324b);
     } catch (e324b) { q324h.err = String((e324b && e324b.message) || e324b); }
   };
@@ -957,7 +959,7 @@
         var bd324 = document.createElement('button');
         bd324.type = 'button';
         bd324.className = 'hr324-btn hr324-dl';
-        bd324.setAttribute('aria-label', 'কপি-ইতিহাস .txt ফাইলে ডাউনলোড করুন');
+        bd324.setAttribute('aria-label', 'কপি-ইতিহাস ' + ((mode326 === 'json') ? '.json' : '.txt') + ' ফাইলে ডাউনলোড করুন'); /* hr332: মোড-সম্মত-aria (নির্মাণ-কালে-মূল্যায়ন) */
         var id324b = document.createElement('i'); id324b.className = 'fas fa-download'; id324b.setAttribute('aria-hidden', 'true');
         bd324.appendChild(id324b);
         bd324.appendChild(document.createTextNode(' ডাউনলোড'));
@@ -1344,17 +1346,19 @@
   var dlPv329 = function (btn329) {
     try {
       if (!hist317.length) return; /* শূন্য-ইতিহাসে নীরব (hr323-দর্শন) */
-      var b329d = new Blob([strip324()], { type: 'text/plain;charset=utf-8' });
+      var ex332b = (mode326 === 'json') ? '.json' : '.txt'; /* hr332: মোড-সম্মত-ফাইলনাম-এক্সটেনশন (call-time-রেজলিউশন — var-হোস্টিং-নিরাপদ) */
+      var b329d = new Blob([strip324()], { type: (mode326 === 'json') ? 'application/json;charset=utf-8' : 'text/plain;charset=utf-8' }); /* hr332: json-এ application/json-MIME */
       var u329 = URL.createObjectURL(b329d);
       var a329 = document.createElement('a');
       a329.href = u329;
-      a329.download = 'lekhok-preview-' + new Date().toISOString().slice(0, 10) + '.txt';
+      a329.download = 'lekhok-preview-' + new Date().toISOString().slice(0, 10) + ex332b; /* hr332: '.txt'-হার্ডকোড-মোছা (মোড-সম্মত) */
       document.body.appendChild(a329);
       a329.click();
       a329.remove();
       setTimeout(function () { URL.revokeObjectURL(u329); }, 400);
       q329h.downloads += 1; q329h.last = 'download';
-      showToast(true, 'প্রিভিউ ডাউনলোড শুরু হয়েছে (.txt — ' + fmtLabel331(mode326) + ')');
+      if (mode326 === 'json') q332h.pvJson += 1; /* hr332: json-মোড-ডাউনলোড-গণনা (q329h-অস্পৃশ্য — গণনা-সততা) */
+      showToast(true, 'প্রিভিউ ডাউনলোড শুরু হয়েছে (' + ex332b + ' — ' + fmtLabel331(mode326) + ')'); /* hr332: এক্সটেনশন-সম্মত-টোস্ট */
       flash324(btn329); /* hr324-ফ্ল্যাশ-এক-উৎস-পুনঃব্যবহার */
     } catch (e329c) { q329h.err = String((e329c && e329c.message) || e329c); }
   };
@@ -1367,7 +1371,7 @@
         var bd329 = document.createElement('button'); /* hr329: প্রিভিউ-ডাউনলোড-বাটন (copy-পরে — স্বতন্ত্র-শ্রেণি) */
         bd329.type = 'button';
         bd329.className = 'hr329-dl';
-        bd329.setAttribute('aria-label', 'প্রিভিউ-বিষয়বস্তু .txt ফাইলে ডাউনলোড করুন (বর্তমান-বিন্যাসে)');
+        bd329.setAttribute('aria-label', 'প্রিভিউ-বিষয়বস্তু ' + ((mode326 === 'json') ? '.json' : '.txt') + ' ফাইলে ডাউনলোড করুন (বর্তমান-বিন্যাসে)'); /* hr332: মোড-সম্মত-aria (নির্মাণ-কালে-মূল্যায়ন) */
         bd329.textContent = 'সংরক্ষণ';
         bd329.addEventListener('click', function (e329d) { e329d.preventDefault(); e329d.stopPropagation(); dlPv329(bd329); });
         var bc329 = pre329.querySelector('.hr328-cp');
@@ -1595,6 +1599,35 @@
   q331h.mode = function () { return mode326; };
   q331h.strip = function () { return hist317.length ? strip324() : ''; };
   window.__hrAria331QA = q331h;
+
+  /* সেশন ৩৩২ (hr332): ডাউনলোড-ফাইলনাম-এক্সটেনশন-সমন্বয় (PLANS session331-নোটের প্রস্তাব-②-প্রথম-বিকল্প)
+     • json-মোডে D/S-ডাউনলোড '.json'-এক্সটেনশন + application/json;charset=utf-8-MIME — অ-জসন
+       মোডে পুরাতন '.txt' + text/plain-অটুট (dlHist324/dlPv329-ফাইলনাম-সাইট-দ্বয়ে ইন-প্লেস-
+       ন্যূনতম-সম্পাদনা — ex332a/ex332b — call-time-রেজলিউশন — var-হোস্টিং-নিরাপদ —
+       fmtLabel331-রীতি); WYSIWYG-অটুট (strip324-ডাইনামিক-রিড — ফাইলনাম = বিষয়বস্তু-বিন্যাস-সম্মত
+       — json-ফাইল = বিশুদ্ধ-JSON-বিষয়বস্তু); টোস্ট-এক্সটেনশন-সম্মত।
+     • aria-label-মোড-সম্মত: .hr324-dl/.hr329-dl নির্মাণ-কালে মূল্যায়ন (পুনঃনির্মাণ-পথেই-সঠিক) +
+       **জীবন্ত-সিঙ্ক** (cf332-মোড়ক — cycleFmt326-চেইন-পরবর্তী cf327→cf329→cf332 — মোড-বদলে
+       DOM-লুকআপ-সিঙ্ক — s327-গোটচা-②-চুক্তি — trigger-path-neutral — খোলা-টুলটিপ/প্রিভিউয়েও-সত্য);
+       সর্ব-s324-বাটন-গণনা-চুক্তি-অটুট (কোনো-নতুন-.hr324-btn-নয় — স্বতন্ত্র-শ্রেণি-অটুট)।
+     • QA-হুক __hrAria332QA {histJson, pvJson, last, ext(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত;
+       histJson/pvJson = json-মোড-ডাউনলোড-গণনা (q324h/q329h.downloads-অস্পৃশ্য — গণনা-সততা-চুক্তি);
+       last = 'sync:<ext>' (সিঙ্ক-পথ-চিহ্ন)। */
+  var q332h = { histJson: 0, pvJson: 0, last: '', err: '' };
+  var cf332 = cycleFmt326;
+  cycleFmt326 = function (b332f) {
+    cf332(b332f);
+    try {
+      var ex332s = (mode326 === 'json') ? '.json' : '.txt';
+      var b332d = tip317 ? tip317.querySelector('.hr324-dl') : null;
+      if (b332d) b332d.setAttribute('aria-label', 'কপি-ইতিহাস ' + ex332s + ' ফাইলে ডাউনলোড করুন');
+      var b332p = tip317 ? tip317.querySelector('.hr329-dl') : null;
+      if (b332p) b332p.setAttribute('aria-label', 'প্রিভিউ-বিষয়বস্তু ' + ex332s + ' ফাইলে ডাউনলোড করুন (বর্তমান-বিন্যাসে)');
+      q332h.last = 'sync:' + ex332s;
+    } catch (e332a) { q332h.err = String((e332a && e332a.message) || e332a); }
+  };
+  q332h.ext = function () { return (mode326 === 'json') ? '.json' : '.txt'; };
+  window.__hrAria332QA = q332h;
 })();
 </script>
 </body>
