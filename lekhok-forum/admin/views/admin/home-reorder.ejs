@@ -1037,10 +1037,7 @@
             row325.appendChild(x325);
           })(rs325[i325b]);
         }
-        var kb325 = tip317.querySelector('.hr324-kbd');
-        if (kb325 && kb325.textContent.indexOf('X = পয়েন্টার-সারি বিলোপ') < 0) {
-          kb325.textContent = kb325.textContent + ' · X = পয়েন্টার-সারি বিলোপ';
-        }
+        appendHint334('X'); /* hr334: হিন্ট-এক-উৎস (ovRows330-উদ্ভূত — গার্ড+গণনা-অন্তর্নির্মিত) */
       }
     } catch (e325g) { q325h.err = String((e325g && e325g.message) || e325g); }
   };
@@ -1096,7 +1093,7 @@
       showToast(true, 'রপ্তাই-বিন্যাস: ' + fmtLabel331(mode326));
       flash324(btn326); /* hr324-ফ্ল্যাশ-এক-উৎস-পুনঃব্যবহার */
       var kb326 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
-      if (kb326) kb326.textContent = 'কীবোর্ড (কপি-বাটন-ফোকাসে): E = স্ট্রিপ কপি · D = ডাউনলোড · X = পয়েন্টার-সারি বিলোপ · F = বিন্যাস (' + fmtLabel331(mode326) + ')';
+      if (kb326) kb326.textContent = kbdLine334(); /* hr334: kbd-লাইন-এক-উৎস (রেজিস্ট্রি-নির্মিত — সর্ব-হিন্ট-সমৃদ্ধ) */
       var bf331s = tip317 ? tip317.querySelector('.hr326-fmt') : null; /* hr331: বাটন-লেবেল-জীবন্ত-সিঙ্ক (s327-গোটচা-②-রীতি — ট্রিগার-পথ-নিরপেক্ষ DOM-লুকআপ-সিঙ্ক) */
       if (bf331s) { bf331s.textContent = 'বিন্যাস: ' + fmtLabel331(mode326); bf331s.setAttribute('aria-label', 'রপ্তাই-বিন্যাস নির্বাচন (বর্তমান: ' + fmtLabel331(mode326) + ')'); }
     } catch (e326f) { q326h.err = String((e326f && e326f.message) || e326f); }
@@ -1116,10 +1113,7 @@
           bf326.addEventListener('click', function (e326g) { e326g.preventDefault(); e326g.stopPropagation(); cycleFmt326(bf326); });
           bar326.appendChild(bf326);
         }
-        var kb326b = tip317.querySelector('.hr324-kbd');
-        if (kb326b && kb326b.textContent.indexOf('F = বিন্যাস') < 0) {
-          kb326b.textContent = kb326b.textContent + ' · F = বিন্যাস (' + fmtLabel331(mode326) + ')';
-        }
+        appendHint334('F'); /* hr334: হিন্ট-এক-উৎস ({fmt}-মোড-সচেতন) */
       }
     } catch (e326h) { q326h.err = String((e326h && e326h.message) || e326h); }
   };
@@ -1207,8 +1201,7 @@
   cycleFmt326 = function (b327c) {
     cf326o(b327c);
     try {
-      var kb327 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
-      if (kb327 && kb327.textContent.indexOf('P = প্রিভিউ') < 0) kb327.textContent = kb327.textContent + ' · P = প্রিভিউ';
+      appendHint334('P'); /* hr334: হিন্ট-এক-উৎস */
       if (pvOpen327) renderPv327(); /* F-টগলে খোলা-প্রিভিউ-সমকালীন-রিফ্রেশ (এক-উৎস) */
     } catch (e327b) { q327h.err = String((e327b && e327b.message) || e327b); }
   };
@@ -1229,10 +1222,7 @@
           bp327.addEventListener('click', function (e327c) { e327c.preventDefault(); e327c.stopPropagation(); togglePv327(bp327); });
           bar327b.appendChild(bp327);
         }
-        var kb327b = tip317.querySelector('.hr324-kbd');
-        if (kb327b && kb327b.textContent.indexOf('P = প্রিভিউ') < 0) {
-          kb327b.textContent = kb327b.textContent + ' · P = প্রিভিউ';
-        }
+        appendHint334('P'); /* hr334: হিন্ট-এক-উৎস */
       }
     } catch (e327d) { q327h.err = String((e327d && e327d.message) || e327d); }
   };
@@ -1284,8 +1274,7 @@
   cycleFmt326 = function (b328e) {
     cf327w(b328e);
     try {
-      var kb328 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
-      if (kb328 && kb328.textContent.indexOf('C = প্রিভিউ কপি') < 0) kb328.textContent = kb328.textContent + ' · C = প্রিভিউ কপি';
+      appendHint334('C'); /* hr334: হিন্ট-এক-উৎস */
     } catch (e328f) { q328h.err = String((e328f && e328f.message) || e328f); }
   };
   var trOrig328 = tipRender318;
@@ -1293,10 +1282,7 @@
     trOrig328(k328r);
     try {
       if (tip317 && hist317.length) {
-        var kb328b = tip317.querySelector('.hr324-kbd');
-        if (kb328b && kb328b.textContent.indexOf('C = প্রিভিউ কপি') < 0) {
-          kb328b.textContent = kb328b.textContent + ' · C = প্রিভিউ কপি';
-        }
+        appendHint334('C'); /* hr334: হিন্ট-এক-উৎস */
       }
     } catch (e328g) { q328h.err = String((e328g && e328g.message) || e328g); }
   };
@@ -1387,8 +1373,7 @@
   cycleFmt326 = function (b329f) {
     cf329(b329f);
     try {
-      var kb329 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
-      if (kb329 && kb329.textContent.indexOf('S = প্রিভিউ সংরক্ষণ') < 0) kb329.textContent = kb329.textContent + ' · S = প্রিভিউ সংরক্ষণ';
+      appendHint334('S'); /* hr334: হিন্ট-এক-উৎস */
     } catch (e329f) { q329h.err = String((e329f && e329f.message) || e329f); }
   };
   var pvRestored329 = false;
@@ -1397,10 +1382,7 @@
     trOrig329(k329r);
     try {
       if (tip317 && hist317.length) {
-        var kb329b = tip317.querySelector('.hr324-kbd');
-        if (kb329b && kb329b.textContent.indexOf('S = প্রিভিউ সংরক্ষণ') < 0) {
-          kb329b.textContent = kb329b.textContent + ' · S = প্রিভিউ সংরক্ষণ';
-        }
+        appendHint334('S'); /* hr334: হিন্ট-এক-উৎস */
         if (!pvRestored329) {
           pvRestored329 = true; /* প্রতি-পৃষ্ঠা-লোডে একবার (ইতিহাসযুক্ত-প্রথম-রেন্ডারে গেট-খরচ) — পরবর্তী-পুনঃনির্মাণ = পুরাতন-চুক্তি */
           var st329 = null;
@@ -1460,15 +1442,15 @@
      এক-ঝলকে-উৎস; D/S-বর্ণনা = মোড-সচেতন (ovDsText330 — নির্মাণ-কালে + cf333-জীবন্ত-সিঙ্ক —
      s327-গোটচা-②-চুক্তি-চতুর্থ-প্রয়োগ); mkLi330 = নির্মাতা-এক-উৎস (build/rebuild-সম-পথ);
      data-hr330-ds = D/S-বর্ণনা-হুক (sync-পথ-নিরপেক্ষ DOM-লুকআপ)। */
-  var ovRows330 = [
-    ['E', 'কপি-ইতিহাস স্ট্রিপ কপি'],
-    ['D', 'কপি-ইতিহাস ডাউনলোড (.txt)'],
-    ['X', 'পয়েন্টার-সারি বিলোপ'],
-    ['F', 'রপ্তাই-বিন্যাস চক্র (rich ⇄ key ⇄ json)'],
-    ['P', 'রপ্তাই-প্রিভিউ টগল'],
-    ['C', 'প্রিভিউ কপি'],
-    ['S', 'প্রিভিউ সংরক্ষণ (.txt)'],
-    ['?', 'এই সহায়িকা (টগল)']
+  var ovRows330 = [ /* hr334: তৃতীয়-উপাদান = kbd-হিন্ট (এক-উৎস — F='{fmt}'-মোড-সচেতন-টেমপ্লেট) */
+    ['E', 'কপি-ইতিহাস স্ট্রিপ কপি', 'E = স্ট্রিপ কপি'],
+    ['D', 'কপি-ইতিহাস ডাউনলোড (.txt)', 'D = ডাউনলোড'],
+    ['X', 'পয়েন্টার-সারি বিলোপ', 'X = পয়েন্টার-সারি বিলোপ'],
+    ['F', 'রপ্তাই-বিন্যাস চক্র (rich ⇄ key ⇄ json)', 'F = বিন্যাস ({fmt})'],
+    ['P', 'রপ্তাই-প্রিভিউ টগল', 'P = প্রিভিউ'],
+    ['C', 'প্রিভিউ কপি', 'C = প্রিভিউ কপি'],
+    ['S', 'প্রিভিউ সংরক্ষণ (.txt)', 'S = প্রিভিউ সংরক্ষণ'],
+    ['?', 'এই সহায়িকা (টগল)', '? = সহায়িকা']
   ];
   var ovList330 = null;
   var ovDsText330 = function (k330b, base330) {
@@ -1551,8 +1533,7 @@
   cycleFmt326 = function (b330f) {
     cf330(b330f);
     try {
-      var kb330 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
-      if (kb330 && kb330.textContent.indexOf('? = সহায়িকা') < 0) kb330.textContent = kb330.textContent + ' · ? = সহায়িকা';
+      appendHint334('?'); /* hr334: হিন্ট-এক-উৎস */
     } catch (e330f) { q330h.err = String((e330f && e330f.message) || e330f); }
   };
   var trOrig330 = tipRender318;
@@ -1560,10 +1541,7 @@
     trOrig330(k330r);
     try {
       if (tip317 && hist317.length) {
-        var kb330b = tip317.querySelector('.hr324-kbd');
-        if (kb330b && kb330b.textContent.indexOf('? = সহায়িকা') < 0) {
-          kb330b.textContent = kb330b.textContent + ' · ? = সহায়িকা';
-        }
+        appendHint334('?'); /* hr334: হিন্ট-এক-উৎস */
       }
     } catch (e330g) { q330h.err = String((e330g && e330g.message) || e330g); }
   };
@@ -1709,6 +1687,74 @@
   };
   q333h.sync = function () { syncDs330(); return true; };
   window.__hrAria333QA = q333h;
+
+  /* সেশন ৩৩৪ (hr334): kbd-হিন্ট-এক-উৎস — smarty-সমাপ্তি (PLANS session333-নোটের প্রস্তাব-②-প্রথম-বিকল্প)
+     • রেজিস্ট্রি-তৃতীয়-উপাদান: ovRows330-প্রতি-সারির [2] = kbd-হিন্ট-পাঠ (F-সারি '{fmt}'-টেমপ্লেট =
+       মোড-সচেতন — hintOf334-কল-টাইম split-join-সর্ব-উপস্থিতি — s333-গোটচা-②-রীতি); ওভারলে-বর্ণনা
+       [1]-অস্পৃশ্য (mkLi330/rebuildOv330/ovDsText330-অটুট); স্ট্যাটিক-বেস-লাইন (s324) অস্পৃশ্য।
+     • hintOf334: রেজিস্ট্রি-কী-লুকআপ → হিন্ট-পাঠ (অনুপস্থিতে ''); appendHint334: এক-উৎস-অ্যাপেন্ডার
+       (.hr324-kbd-লুকআপ + indexOf-ডুপ-রক্ষা + appends/dupSkips-গণনা — সর্ব-১০-অ্যাপেন্ড-সাইট
+       এ-ফাংশনে পুনঃনির্দেশিত — মোড়ক-চেইন-গঠন-অস্পৃশ্য); kbdLine334: রেজিস্ট্রি-নির্মিত-সম্পূর্ণ-
+       লাইন (উপসর্গ + সারি-ক্রম E→D→X→F→P→C→S→? — পুরাতন-চেইন-ক্রম-সমতা) — cycleFmt326-
+       পুনঃলেখন-সাইট এক-উৎস।
+     • নিবন্ধন-দ্বি-সাইট: q333h.register-মোড়ক (regOrig334 — চেইন-রীতি) — register(k, d, h)-তৃতীয়-
+       ঐচ্ছিক-প্যারামিটার h-সহ নিবন্ধনে ওভারলে-সারি + kbd-হিন্ট-উভয়-স্বয়ংক্রিয় (smarty-সমাপ্তি);
+       h-বিহীন-নিবন্ধন = পুরাতন-আচরণ-অটুট (s333-সুইট-সামঞ্জস্য)।
+     • QA-হুক __hrAria334QA {appends, dupSkips, dualRegs, last, hintOf(), append(), line(), err}
+       — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q334h = { appends: 0, dupSkips: 0, dualRegs: 0, last: '', err: '' };
+  var hintOf334 = function (k334) {
+    try {
+      for (var i334 = 0; i334 < ovRows330.length; i334++) {
+        if (ovRows330[i334][0] === k334 && ovRows330[i334].length > 2 && ovRows330[i334][2]) {
+          var h334 = String(ovRows330[i334][2]);
+          if (h334.indexOf('{fmt}') >= 0) h334 = h334.split('{fmt}').join(fmtLabel331(mode326)); /* মোড-সচেতন-এক-উৎস */
+          return h334;
+        }
+      }
+    } catch (e334h) { q334h.err = String((e334h && e334h.message) || e334h); }
+    return '';
+  };
+  var appendHint334 = function (k334a) {
+    try {
+      var h334a = hintOf334(k334a);
+      if (!h334a) return false;
+      var kb334 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
+      if (!kb334) return false;
+      if (kb334.textContent.indexOf(h334a) >= 0) { q334h.dupSkips += 1; return false; } /* ডুপ-রক্ষা-এক-উৎস */
+      kb334.textContent = kb334.textContent + ' · ' + h334a;
+      q334h.appends += 1; q334h.last = 'append:' + k334a;
+      return true;
+    } catch (e334a) { q334h.err = String((e334a && e334a.message) || e334a); return false; }
+  };
+  var kbdLine334 = function () {
+    try {
+      var p334 = [];
+      for (var i334b = 0; i334b < ovRows330.length; i334b++) {
+        var h334b = hintOf334(ovRows330[i334b][0]);
+        if (h334b) p334.push(h334b);
+      }
+      return 'কীবোর্ড (কপি-বাটন-ফোকাসে): ' + p334.join(' · ');
+    } catch (e334b) { q334h.err = String((e334b && e334b.message) || e334b); return ''; }
+  };
+  var regOrig334 = q333h.register;
+  q333h.register = function (k334g, d334g, h334g) {
+    var ok334 = regOrig334(k334g, d334g);
+    try {
+      if (ok334 && h334g !== undefined && h334g !== null && String(h334g) !== '') {
+        for (var i334g = 0; i334g < ovRows330.length; i334g++) {
+          if (ovRows330[i334g][0] === k334g) { ovRows330[i334g][2] = String(h334g); break; }
+        }
+        appendHint334(k334g); /* নিবন্ধন = হিন্ট+ওভারলে-দ্বি-সাইট-স্বয়ংক্রিয় (smarty-সমাপ্তি) */
+        q334h.dualRegs += 1; q334h.last = 'dual:' + k334g;
+      }
+    } catch (e334g) { q334h.err = String((e334g && e334g.message) || e334g); }
+    return ok334;
+  };
+  q334h.hintOf = function (k334q) { return hintOf334(k334q); };
+  q334h.append = function (k334q2) { return appendHint334(k334q2); };
+  q334h.line = function () { return kbdLine334(); };
+  window.__hrAria334QA = q334h;
 })();
 </script>
 </body>
