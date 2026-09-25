@@ -260,6 +260,19 @@
     @media (prefers-reduced-motion: reduce) { .hr344-abtn:active { transform: none; } }
     @media (max-width: 640px) { .hr344-abtn { font-size: 0.52rem; padding: 2px 6px; } .hr344-chip { font-size: 0.5rem; padding: 1px 5px; max-width: 116px; overflow: hidden; text-overflow: ellipsis; } }
     /* ═══════ EOF session344 (sfs344 সর্ব-মোড-শর্টহ্যান্ড-রপ্তাই — admin-ইনলাইন) ═══════ */
+    /* ═══════ session345 (sfs345 ওভারলে-সারি-কীবোর্ড-নেভিগেশন-কার্সর — admin-ইনলাইন) ═══════ */
+    /* সেশন ৩৪৫ (sfs345): ওভারলে-সারি-কার্সর-টোন (hr330-তালিকা — .hr345-cursor-অবস্থা-শ্রেণি —
+       syncNav345-এক-উৎস): সবুজ-পরিবার = ওভারলে-নেভ-সংকেত (hr330-মূল-সবুজ-সম-পরিবার — ধ্বংসাত্মক-
+       লাল/নীল-রিড/অ্যাম্বার-সর্ব-মোড-পরিবার-বিভাজন-অটুট); inset-বার-কার্সর + ক-চিপ-বুস্ট + ফোকাস-রিং
+       (প্রোগ্রাম্যাটিক-ফোকাস-দৃশ্যমানতা — tabIndex=-১-সারি); নতুন-অবস্থা-টোন-কেবল — বিদ্যমান-সারি-ডিফল্ট-
+       রূপ-অস্পৃশ্য (sfs343-অবস্থা-শ্রেণি-রীতি) — সর্ব-ব্যান্ড — rgba-only — হেক্স-শূন্য — MO=৪-অটুট। */
+    .hr330-ov .hr330-li.hr345-cursor { background: rgba(4, 120, 87, 0.08); border-radius: 4px; box-shadow: inset 2px 0 0 rgba(4, 120, 87, 0.45); }
+    .hr330-ov .hr330-li.hr345-cursor .hr330-k { background: rgba(4, 120, 87, 0.16); border-color: rgba(4, 120, 87, 0.5); }
+    .hr330-ov .hr330-li.hr345-cursor:focus { outline: 2px solid rgba(5, 150, 105, 0.6); outline-offset: 1px; }
+    .hr330-ov .hr330-li.hr345-cursor:focus-visible { outline: 2px solid rgba(5, 150, 105, 0.75); outline-offset: 1px; }
+    @media (prefers-reduced-motion: reduce) { .hr330-ov .hr330-li.hr345-cursor { transition: none; } }
+    @media (max-width: 640px) { .hr330-ov .hr330-li.hr345-cursor { box-shadow: inset 1.5px 0 0 rgba(4, 120, 87, 0.45); } }
+    /* ═══════ EOF session345 (sfs345 ওভারলে-সারি-কীবোর্ড-নেভিগেশন-কার্সর — admin-ইনলাইন) ═══════ */
     /* সেশন ৩২৫ (hr325): ইতিহাস-সারি-একক-বিলোপ ×-নিয়ন্ত্রণ (তালিকাযুক্ত-টুলটিপেই — hr319-live-গেট;
        সারি-হোভার/focus-within-এ প্রকাশ — ঘন-তালিকায়-স্থায়ী-ঘোষণা-বিভ্রান্তি-শূন্য; কীবোর্ড-পথ =
        X-শর্টকাট (পয়েন্টার-সারি — hr320-পয়েন্টার — s320/s324-keydown-রীতি); লাল-টিন্ট =
@@ -1608,6 +1621,7 @@
   var mkLi330 = function (row330m) {
     var li330 = document.createElement('li');
     li330.className = 'hr330-li';
+    li330.tabIndex = -1; /* hr345: সারি-প্রোগ্রাম্যাটিক-ফোকাসযোগ্য (নির্মাতা-এক-উৎস — build/rebuild-সম-পথ — ট্যাব-ক্রম-অস্পৃশ্য) */
     var k330 = document.createElement('kbd');
     k330.className = 'hr330-k';
     k330.textContent = row330m[0];
@@ -2936,6 +2950,129 @@
   q344h.abtn = function () { return !!abtn344(); };
   q344h.bar = function () { return !!(tip317 && tip317.querySelector('.hr344-bar')); };
   window.__hrAria344QA = q344h;
+
+  /* সেশন ৩৪৫ (hr345): ওভারলে-সারি-কীবোর্ড-নেভিগেশন (↑/↓/Home/End — সারি-ফোকাস-যাত্রা)
+     PLANS session344-নোটের প্রস্তাব-②-দ্বিতীয়-বিকল্প (৯-সারি-যুগে নতুন-মূল্যায়ন-সম্পন্ন-গৃহীত):
+     • mkLi330-এক-লাইন-সম্প্রসারণ: li330.tabIndex = -1 (প্রোগ্রাম্যাটিক-ফোকাসযোগ্য — নির্মাতা-এক-উৎস —
+       build/rebuild-সম-পথ — ট্যাব-ক্রম-অস্পৃশ্য)।
+     • গেট: ovOpen330 ∧ টার্গেট-সর্বনিকট .hr330-ov (ওভারলে-অভ্যন্তর-উৎস-কেবল — .hr-aria-copy-প্রেক্ষাপট =
+       hr320-ইতিহাস-পয়েন্টার-অটুট — দ্বি-নেভ-সংঘর্ষ-শূন্য; ইনপুট/textarea-গেট-অপ্রয়োজনীয় — ওভারলে-
+       অভ্যন্তরে ফরম-উপাদান-শূন্য; sfs292-phone-arrow-পথ-সহ সর্ব-পুরাতন-সুইট-শূন্য-স্পর্শ)।
+     • কার্সর-মেশিন (syncNav345-এক-উৎস — রি-রেন্ডার-বিহীন — শ্রেণি-কেবল — ৫ম-MO-নিষিদ্ধ-চুক্তি-অটুট
+       MO=৪): navIdx345 (−১ = কার্সর-শূন্য — নীরব-শূন্য-অবস্থা — fresh-DOM-অপরিবর্তিত); ArrowDown =
+       +১ {৮→০-মোড়ক}, ArrowUp = −১ {০→৮-মোড়ক}, Home = ০, End = ৮; কার্সর-শূন্য-প্রবেশ: Down→প্রথম,
+       Up→শেষ; .hr345-cursor-শ্রেণি-সিঙ্ক + সারি-focus() (সত্যিকার-ফোকাস-যাত্রা — activeElement-যাত্রা-
+       প্রমাণযোগ্য)।
+     • Space-ব্লক: ওভারলে-সারি-উৎস Space = preventDefault (পাতা-স্ক্রল-বিস্ময়-নিবারণ — blocks-গণনা);
+       .hr330-x-বাটন-নেটিভ-সক্রিয়করণ-অস্পৃশ্য (বাটন-টার্গেট-বর্জন — li-কেবল)।
+     • মিশ্র-পথ-সমতা (s343-রীতি): সারি-ক্লিক = কার্সর-সেট + ফোকাস (পয়েন্টার-প্রবেশ-পথ → কীবোর্ড-
+       ধারাবাহিকতা); W-সারি-সহ সর্ব-সারি-এক-উৎস (data-hr343-w-সহাবস্থান-অটুট)।
+     • জীবন্ত-সিঙ্ক (ত্রি-মোড়ক): openOv330-মোড়ক (ooOrig345 — খোলায় কার্সর-রিসেট — নীরব) +
+       closeOv330-মোড়ক (coOrig345 — বন্ধে কার্সর-পরিষ্কার + .hr330-ov-অভ্যন্তর-ফোকাস-ব্লার {hidden-
+       ফোকাস-ফাঁদ-নিবারণ}) + rebuildOv330-মোড়ক (rbOrig345 — পুনঃনির্মাণে tabIndex-মিলিত {mkLi330-এক-
+       উৎস} + কার্সর-পুনঃপ্রয়োগ syncNav345-এক-উৎস)।
+     • চুক্তি: ovRows330-অ্যারে-অস্পৃশ্য (৯-সারি-স্থায়িত্ব); q320-পয়েন্টার/q330h…q344h-কাউন্টার-অস্পৃশ্য;
+       registry/kbd-লাইন/storage-অস্পৃশ্য (নতুন-স্টোরেজ-কী-শূন্য — পরিষ্কারণ-চুক্তি-অটুট);
+       s324-স্ট্যাটিক-বেস-লাইন-অস্পৃশ্য; s344…s333-হুক-সহাবস্থান-অটুট।
+     • QA-হুক __hrAria345QA {navs, homes, ends, wraps, blocks, last, idx(), cur(), rows(), err}
+       — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q345h = { navs: 0, homes: 0, ends: 0, wraps: 0, blocks: 0, last: '', err: '' };
+  var navIdx345 = -1;
+  var navRows345 = function () {
+    try { var o345a = document.querySelector('.hr330-ov'); return o345a ? [].slice.call(o345a.querySelectorAll('.hr330-li')) : []; }
+    catch (e345a) { q345h.err = String((e345a && e345a.message) || e345a); return []; }
+  };
+  var syncNav345 = function () {
+    try {
+      var rows345 = navRows345();
+      for (var i345b = 0; i345b < rows345.length; i345b++) {
+        if (i345b === navIdx345) rows345[i345b].classList.add('hr345-cursor');
+        else rows345[i345b].classList.remove('hr345-cursor');
+      }
+      if (navIdx345 >= 0 && rows345[navIdx345] && ovOpen330) {
+        try { rows345[navIdx345].focus(); } catch (e345f) { q345h.err = String((e345f && e345f.message) || e345f); }
+      }
+    } catch (e345b) { q345h.err = String((e345b && e345b.message) || e345b); }
+  };
+  var navStep345 = function (k345n) {
+    try {
+      var rows345n = navRows345();
+      var n345n = rows345n.length;
+      if (!n345n) return;
+      if (k345n === 'home') { navIdx345 = 0; q345h.homes += 1; q345h.last = 'home'; syncNav345(); return; }
+      if (k345n === 'end') { navIdx345 = n345n - 1; q345h.ends += 1; q345h.last = 'end'; syncNav345(); return; }
+      var next345;
+      if (navIdx345 < 0) {
+        next345 = (k345n === 'down') ? 0 : n345n - 1; /* কার্সর-শূন্য-প্রবেশ: Down→প্রথম, Up→শেষ */
+      } else {
+        next345 = navIdx345 + (k345n === 'down' ? 1 : -1);
+        if (next345 < 0) { next345 = n345n - 1; q345h.wraps += 1; }
+        if (next345 > n345n - 1) { next345 = 0; q345h.wraps += 1; }
+      }
+      navIdx345 = next345;
+      q345h.navs += 1;
+      q345h.last = k345n + ':' + navIdx345;
+      syncNav345();
+    } catch (e345n) { q345h.err = String((e345n && e345n.message) || e345n); }
+  };
+  document.addEventListener('keydown', function (e345k) {
+    try {
+      if (!ovOpen330) return;
+      var t345k = e345k.target;
+      var inOv345 = !!(t345k && t345k.closest && t345k.closest('.hr330-ov'));
+      if (!inOv345) return;
+      if (e345k.key === 'ArrowDown') { e345k.preventDefault(); navStep345('down'); }
+      else if (e345k.key === 'ArrowUp') { e345k.preventDefault(); navStep345('up'); }
+      else if (e345k.key === 'Home') { e345k.preventDefault(); navStep345('home'); }
+      else if (e345k.key === 'End') { e345k.preventDefault(); navStep345('end'); }
+      else if (e345k.key === ' ' && t345k.closest('.hr330-li')) { e345k.preventDefault(); q345h.blocks += 1; q345h.last = 'block:space'; }
+    } catch (e345l) { q345h.err = String((e345l && e345l.message) || e345l); }
+  });
+  document.addEventListener('click', function (e345c) {
+    try {
+      var li345c = e345c.target && e345c.target.closest ? e345c.target.closest('.hr330-li') : null;
+      if (!li345c || !ovOpen330) return;
+      var rows345c = navRows345();
+      var i345c = rows345c.indexOf(li345c);
+      if (i345c < 0) return;
+      navIdx345 = i345c;
+      syncNav345();
+      q345h.last = 'click:' + i345c;
+    } catch (e345d) { q345h.err = String((e345d && e345d.message) || e345d); }
+  });
+  var ooOrig345 = openOv330;
+  openOv330 = function (src345o) {
+    ooOrig345(src345o);
+    try { navIdx345 = -1; syncNav345(); } catch (e345o) { q345h.err = String((e345o && e345o.message) || e345o); }
+  };
+  var coOrig345 = closeOv330;
+  closeOv330 = function (src345c) {
+    coOrig345(src345c);
+    try {
+      navIdx345 = -1;
+      var rows345x = navRows345();
+      for (var i345x = 0; i345x < rows345x.length; i345x++) rows345x[i345x].classList.remove('hr345-cursor');
+      var ae345x = document.activeElement;
+      if (ae345x && ae345x.closest && ae345x.closest('.hr330-ov') && ae345x.blur) ae345x.blur();
+    } catch (e345c2) { q345h.err = String((e345c2 && e345c2.message) || e345c2); }
+  };
+  var rbOrig345 = rebuildOv330;
+  rebuildOv330 = function () {
+    rbOrig345();
+    try { if (navIdx345 >= 0) syncNav345(); } catch (e345r) { q345h.err = String((e345r && e345r.message) || e345r); }
+  };
+  q345h.idx = function () { return navIdx345; };
+  q345h.cur = function () {
+    try {
+      var rows345q = navRows345();
+      for (var i345q = 0; i345q < rows345q.length; i345q++) {
+        if (rows345q[i345q].classList.contains('hr345-cursor')) return { i: i345q, k: (rows345q[i345q].querySelector('.hr330-k') || {}).textContent || '' };
+      }
+      return null;
+    } catch (e345q) { q345h.err = String((e345q && e345q.message) || e345q); return null; }
+  };
+  q345h.rows = function () { return navRows345().length; };
+  window.__hrAria345QA = q345h;
 
 })();
 </script>
