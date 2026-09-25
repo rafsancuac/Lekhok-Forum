@@ -157,7 +157,7 @@ CLK=$(ev "JSON.stringify((function(){var rs=[].slice.call(document.querySelector
 if [ "$(jf ok "$(unjj "$CLK")")" = "1" ]; then agent-browser wait 400 >/dev/null 2>&1; ok "ই২ই: USER_FEED-নির্বাচন"; else bad "ই২ই: USER_FEED-রো-অনুপস্থিত"; fi
 H0=$(ev "JSON.stringify({q:!!window.__hrAria333QA,r:window.__hrAria333QA?window.__hrAria333QA.rows():-1,reg:window.__hrAria333QA?window.__hrAria333QA.registrations:-1,q32:!!window.__hrAria332QA,x:window.__hrAria332QA?window.__hrAria332QA.ext():'x',e:((window.__hrAria333QA||{}).err||'')})")
 H0J=$(unjj "$H0")
-if [ "$(jf q "$H0J")" = "true" ] && [ "$(jf r "$H0J")" = "8" ] && [ "$(jf reg "$H0J")" = "0" ] && [ "$(jf q32 "$H0J")" = "true" ] && [ "$(jf x "$H0J")" = ".txt" ] && [ "$(jf e "$H0J")" = "" ]; then ok "ই২ই: __hrAria333QA-হুক (rows()=৮ + registrations=০) + s332-সহাবস্থান"; else bad "ই২ই: $(unjj "$H0")"; fi
+if [ "$(jf q "$H0J")" = "true" ] && [ "$(jf r "$H0J")" = "9" ] && [ "$(jf reg "$H0J")" = "0" ] && [ "$(jf q32 "$H0J")" = "true" ] && [ "$(jf x "$H0J")" = ".txt" ] && [ "$(jf e "$H0J")" = "" ]; then ok "ই২ই: __hrAria333QA-হুক (rows()=৯ + registrations=০ + hr343-W-সারি-সহ) + s332-সহাবস্থান"; else bad "ই২ই: $(unjj "$H0")"; fi
 ev "JSON.stringify((function(){Object.defineProperty(navigator,'clipboard',{value:{writeText:function(t){window.__clipCap333=t;return Promise.resolve()}},configurable:true});return 'stub'})())" >/dev/null 2>&1
 ev "JSON.stringify((function(){document.querySelectorAll('.hr-aria-copy')[0].click();return 'c1'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
@@ -194,7 +194,7 @@ ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[
 agent-browser wait 400 >/dev/null 2>&1
 O1=$(ev "JSON.stringify({o:window.__hrAria330QA.isOpen(),rows:window.__hrAria333QA.rows(),li:document.querySelectorAll('.hr330-ov .hr330-li').length,dD:(document.querySelector('.hr330-ov [data-hr330-ds=\"D\"]')||{textContent:''}).textContent,dS:(document.querySelector('.hr330-ov [data-hr330-ds=\"S\"]')||{textContent:''}).textContent})")
 O1J=$(unjj "$O1")
-if [ "$(jf o "$O1J")" = "true" ] && [ "$(jf li "$O1J")" = "8" ] && [ "$(jf rows "$O1J")" = "8" ]; then ok "ই২ই: ওভারলে-খোলা (৮-সারি — s330-কাঠামো-অটুট)"; else bad "ই২ই: $(unjj "$O1")"; fi
+if [ "$(jf o "$O1J")" = "true" ] && [ "$(jf li "$O1J")" = "9" ] && [ "$(jf rows "$O1J")" = "9" ]; then ok "ই২ই: ওভারলে-খোলা (৯-সারি — s330-কাঠামো-অটুট — hr343)"; else bad "ই২ই: $(unjj "$O1")"; fi
 if printf '%s' "$(jf dD "$O1J")" | grep -q '(.json)' && printf '%s' "$(jf dS "$O1J")" | grep -q '(.json)'; then ok "ই২ই: D/S-বর্ণনা নির্মাণ-কালে-মোড-সচেতন (json-মোডে খোলা — '.json'-বর্ণনা)"; else bad "ই২ই: dD=[$(jf dD "$O1J")] dS=[$(jf dS "$O1J")]"; fi
 ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[0];b.dispatchEvent(new KeyboardEvent('keydown',{key:'f',bubbles:true,cancelable:true}));return 'f3'})())" >/dev/null 2>&1
 agent-browser wait 400 >/dev/null 2>&1
@@ -203,7 +203,7 @@ O2J=$(unjj "$O2")
 if [ "$(jf o "$O2J")" = "true" ] && [ "$(jf m "$O2J")" = "rich" ] && printf '%s' "$(jf dD "$O2J")" | grep -q '(.txt)'; then ok "ই২ই: cf333-জীবন্ত-সিঙ্ক (খোলা-ওভারলেতে F → D-বর্ণনা '.txt'-সমকালীন — s327-গোটচা-②-চুক্তি)"; else bad "ই২ই: $(unjj "$O2")"; fi
 RG=$(ev "JSON.stringify({r1:window.__hrAria333QA.register('G','টেস্ট-বর্ণনা'),r2:window.__hrAria333QA.register('G','ডুপ'),rows:window.__hrAria333QA.rows(),reg:window.__hrAria333QA.registrations,g:!!document.querySelector('.hr330-ov .hr330-k'),gt:(function(){var ks=document.querySelectorAll('.hr330-ov .hr330-k');for(var i=0;i<ks.length;i++){if(ks[i].textContent==='G')return ks[i].nextSibling?ks[i].nextSibling.textContent||ks[i].parentNode.textContent:''}return ''})(),last:window.__hrAria333QA.last})")
 RGJ=$(unjj "$RG")
-if [ "$(jf r1 "$RGJ")" = "true" ] && [ "$(jf r2 "$RGJ")" = "false" ] && [ "$(jf rows "$RGJ")" = "9" ] && [ "$(jf reg "$RGJ")" = "1" ]; then ok "ই২ই: register-API (নিবন্ধন=true + ডুপ=false + rows()=৯ + registrations=১)"; else bad "ই২ই: $(unjj "$RG")"; fi
+if [ "$(jf r1 "$RGJ")" = "true" ] && [ "$(jf r2 "$RGJ")" = "false" ] && [ "$(jf rows "$RGJ")" = "10" ] && [ "$(jf reg "$RGJ")" = "1" ]; then ok "ই২ই: register-API (নিবন্ধন=true + ডুপ=false + rows()=১০ {৯+G} + registrations=১)"; else bad "ই২ই: $(unjj "$RG")"; fi
 GL=$(ev "JSON.stringify((function(){var ks=document.querySelectorAll('.hr330-ov .hr330-li');for(var i=0;i<ks.length;i++){var k=ks[i].querySelector('.hr330-k');if(k&&k.textContent==='G')return{found:true,d:ks[i].querySelector('.hr330-d').textContent}}return{found:false}})())")
 GLJ=$(unjj "$GL")
 if [ "$(jf found "$GLJ")" = "true" ] && [ "$(jf d "$GLJ")" = "টেস্ট-বর্ণনা" ]; then ok "ই২ই: খোলা-ওভারলেতে তাৎক্ষণিক-সারি (G-বর্ণনা দৃশ্যমান — rebuildOv330-প্রমাণ)"; else bad "ই২ই: $(unjj "$GL")"; fi
@@ -214,7 +214,7 @@ ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[
 agent-browser wait 400 >/dev/null 2>&1
 O3=$(ev "JSON.stringify({o:window.__hrAria330QA.isOpen(),g:window.__hrAria333QA.rows(),sync:window.__hrAria333QA.sync()})")
 O3J=$(unjj "$O3")
-if [ "$(jf o "$O3J")" = "true" ] && [ "$(jf g "$O3J")" = "9" ] && [ "$(jf sync "$O3J")" = "true" ]; then ok "ই২ই: পুনঃopen-রেজিস্ট্রি-স্থায়ী (G-টিকে — নিবন্ধন-রাজ্য-অটুট) + sync()=true"; else bad "ই২ই: $(unjj "$O3")"; fi
+if [ "$(jf o "$O3J")" = "true" ] && [ "$(jf g "$O3J")" = "10" ] && [ "$(jf sync "$O3J")" = "true" ]; then ok "ই২ই: পুনঃopen-রেজিস্ট্রি-স্থায়ী (G-টিকে — নিবন্ধন-রাজ্য-অটুট) + sync()=true"; else bad "ই২ই: $(unjj "$O3")"; fi
 ev "JSON.stringify((function(){document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));return 'esc2'})())" >/dev/null 2>&1
 agent-browser wait 350 >/dev/null 2>&1
 if [ "$(ev "JSON.stringify(window.__hrAria330QA.isOpen())" | tr -d '"')" = "false" ]; then ok "ই২ই: ওভারলে-Escape-বন্ধ (পরবর্তী-ধাপ-পরিষ্কার)"; else bad "ই২ই: ওভারলে-খোলা-অবশিষ্ট"; fi

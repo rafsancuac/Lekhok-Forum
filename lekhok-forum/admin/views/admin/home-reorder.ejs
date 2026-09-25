@@ -232,6 +232,18 @@
     @media (prefers-reduced-motion: reduce) { .hr342-bbtn:active { transform: none; } }
     @media (max-width: 640px) { .hr342-bbtn { font-size: 0.52rem; padding: 2px 6px; } }
     /* ═══════ EOF session342 (sfs342 সর্ব-মোড-ব্যাচ-রপ্তাই — admin-ইনলাইন) ═══════ */
+    /* ═══════ session343 (sfs343 ওভারলে-W-সারি-ধ্বংসাত্মক-টোন — admin-ইনলাইন) ═══════ */
+    /* সেশন ৩৪৩ (sfs343): ওভারলে-W-সারি-ধ্বংসাত্মক-টোন (hr330-তালিকা — data-hr343-w-মার্কার-হুক —
+       mkLi330-এক-লাইন-সম্প্রসারণ): লাল-ধ্বংসাত্মক-পরিবার (hr339-armed-সম-rgba-পরিবার — ধ্বংসাত্মক-ক্রিয়া-
+       পূর্ব-সংকেত — কী-চিপ/বর্ণনা-টোন-কেবল) + আর্মড-জীবন্ত-সিঙ্ক (.hr343-armed — label339-মোড়ক-জীবন্ত —
+       পয়েন্টার/W-দ্বি-পথ-সম-সিঙ্ক — সলিড-চিপ = নিশ্চিতকরণ-তাড়না) + ≤640px-কম্প্যাক্ট; বিদ্যমান-সারি-
+       অস্পৃশ্য — নতুন-টোন-কেবল — MO=৪-অটুট। */
+    .hr330-ov .hr330-li[data-hr343-w] .hr330-k { color: rgba(185, 28, 28, 0.95); background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.35); }
+    .hr330-ov .hr330-li[data-hr343-w] .hr330-d { color: rgba(153, 27, 27, 0.85); }
+    .hr330-ov .hr330-li[data-hr343-w].hr343-armed .hr330-k { color: rgba(255, 255, 255, 0.96); background: rgba(220, 38, 38, 0.82); border-color: rgba(185, 28, 28, 0.9); }
+    .hr330-ov .hr330-li[data-hr343-w].hr343-armed .hr330-d { color: rgba(185, 28, 28, 0.97); font-weight: 700; }
+    @media (max-width: 640px) { .hr330-ov .hr330-li[data-hr343-w] .hr330-k { min-width: 16px; padding: 1px 4px; } }
+    /* ═══════ EOF session343 (sfs343 ওভারলে-W-সারি-ধ্বংসাত্মক-টোন — admin-ইনলাইন) ═══════ */
     /* সেশন ৩২৫ (hr325): ইতিহাস-সারি-একক-বিলোপ ×-নিয়ন্ত্রণ (তালিকাযুক্ত-টুলটিপেই — hr319-live-গেট;
        সারি-হোভার/focus-within-এ প্রকাশ — ঘন-তালিকায়-স্থায়ী-ঘোষণা-বিভ্রান্তি-শূন্য; কীবোর্ড-পথ =
        X-শর্টকাট (পয়েন্টার-সারি — hr320-পয়েন্টার — s320/s324-keydown-রীতি); লাল-টিন্ট =
@@ -1567,6 +1579,7 @@
     ['P', 'রপ্তাই-প্রিভিউ টগল', 'P = প্রিভিউ'],
     ['C', 'প্রিভিউ কপি', 'C = প্রিভিউ কপি'],
     ['S', 'প্রিভিউ সংরক্ষণ (.txt)', 'S = প্রিভিউ সংরক্ষণ'],
+    ['W', 'স্থায়ী-হিন্ট-স্টোর মুছুন (দ্বি-চাপ-নিশ্চিত)', 'W = স্থায়ী মুছুন'], /* hr343: W-parity (৯ম-সারি — সহায়িকা-'?'-শেষ-রীতি-অটুট) */
     ['?', 'এই সহায়িকা (টগল)', '? = সহায়িকা']
   ];
   var ovList330 = null;
@@ -1586,6 +1599,7 @@
     d330.className = 'hr330-d';
     d330.textContent = ovDsText330(row330m[0], row330m[1]);
     if (row330m[0] === 'D' || row330m[0] === 'S') d330.setAttribute('data-hr330-ds', row330m[0]);
+    if (row330m[0] === 'W') li330.setAttribute('data-hr343-w', '1'); /* hr343: W-সারি-মার্কার (sfs343-টোন-হুক — নির্মাতা-এক-উৎস-অটুট) */
     li330.appendChild(k330);
     li330.appendChild(d330);
     return li330;
@@ -2676,6 +2690,90 @@
   q342h.bbtn = function () { return !!bbtn342(); };
   q342h.bar = function () { return !!(tip317 && tip317.querySelector('.hr342-bar')); };
   window.__hrAria342QA = q342h;
+
+  /* সেশন ৩৪৩ (hr343): register-'W'-সম্পূর্ণ-কীবোর্ড-parity — ক্লিয়ার-বাটন (PLANS session342-নোটের প্রস্তাব-②-প্রথম-বিকল্প — hr339-চুক্তি-প্রসারিত)
+     • রেজিস্ট্রি-নথিভুক্তকরণ: ovRows330-স্ট্যাটিক-সারি ['W', বর্ণনা, হিন্ট] ('S'-পরে-'?'-পূর্বে — সহায়িকা-
+       শেষ-রীতি-অটুট) — ৮→৯-সারি (ওভারলে-গণনা-সুইট-বিবর্তন-জুটি — s330/s333/s334/s335/s336/s337/s338/
+       s339/s340/s341/s342-গণনা-৮→৯ + s339-গার্ড-বিবর্তন — নথিভুক্তকরণ-সম্পন্ন = ধ্বংসাত্মক-সতর্কতা-মেটে —
+       ওভারলে-স্ব-ডকুমেন্টেড — hr339-'নথিভুক্ত-নয়'-স্তর-উত্তোলন)।
+     • W-keydown (s320/s324-keydown-রীতি): .hr-aria-copy-ফোকাস-প্রেক্ষাপট × মডিফায়ার-বর্জন × বাটন-গেট
+       (clearBtn339-উপস্থিত = store≥১ × tip-খোলা — hr339-গেট-সমতা — শূন্যে নীরব); প্রথম-W = আর্ম
+       (পয়েন্টার-আর্ম-সম-পথ — armed339 + .hr339-armed + label339 + tmr339-৩s-স্বয়ং-নিরামড) × দ্বিতীয়-W =
+       wipe339-এক-উৎস (q339h.clears-গণনা-সহ — parity-প্রমাণ); পয়েন্টার↔কীবোর্ড-সম-স্টেট-মেশিন (মিশ্র-
+       পথ-সমতা — W-আর্ম→ক্লিক-ওয়াইপ ∨ ক্লিক-আর্ম→W-ওয়াইপ উভয়-বৈধ)।
+     • আর্মড-জীবন্ত-সিঙ্ক (sfs343): label339-মোড়ক (চেইন-রীতি — labelOrig343) — আর্ম/নিরামড-উভয়-পথে
+       ওভারলে-W-সারি .hr343-armed-টগল (syncW343-এক-উৎস — ওভারলে-খোলা-অবস্থায়-জীবন্ত); openOv330-মোড়ক =
+       খোলা-পথে-আর্মড-পুনঃপ্রয়োগ (তাজা-নির্মিত-সারি-কভার); q337h.clearStore-মোড়ক (clrOrig343) =
+       ওয়াইপ-পথে-লেবেল-স্কিপ-গোটচা-সংশোধন (wipe339 → বাটন-অপসারণ-পূর্বে → disarm-এ label339-স্কিপ —
+       সর্ব-ওয়াইপ-পথে সারি-শ্রেণি-অপসারণ-নিশ্চিত); রি-রেন্ডার-বিহীন — ৫ম-MO-নিষিদ্ধ-চুক্তি-অটুট MO=৪।
+     • চুক্তি: hr339-আর্ম/ওয়াইপ-যন্ত্র-অস্পৃশ্য (র‍্যাপার-কেবল — regOrig334-চেইন-রীতি); hr340/hr341/hr342-
+       বার-কাউন্টার-অস্পৃশ্য; s324-স্ট্যাটিক-বেস-লাইন-অস্পৃশ্য; q339h-কাউন্টার-অস্পৃশ্য (wipe339-অভ্যন্তরীণ-গণনা-
+       ব্যতীত — এক-উৎস-প্রমাণ); q333h.register-অব্যবহৃত-অটুট (স্ট্যাটিক-সারি-রীতি — s339-গার্ড-বিবর্তন-সম-রীতি)।
+     • QA-হুক __hrAria343QA {press, arms, wipes, syncs, last, btn(), armed(), syncW(), err} — সারি-শূন্যে-ও-সংজ্ঞায়িত;
+       kbd-লাইন = trOrig343-রেন্ডার-সাইট-কেননিকাল-রি-রাইট (kbdLine334-এক-উৎস — hr334-রেন্ডার-সাইট-বৃদ্ধি —
+       append-স্তূপ-ক্রম-নিরপেক্ষ — W-নথিভুক্ত-স্ব-প্রদর্শিত); s342…s330-হুক-সহাবস্থান-অটুট। */
+  var q343h = { press: 0, arms: 0, wipes: 0, syncs: 0, last: '', err: '' };
+  var syncW343 = function (on343) {
+    try {
+      if (!ov330) return;
+      var w343 = ov330.querySelector('[data-hr343-w]');
+      if (!w343) return;
+      if (on343) w343.classList.add('hr343-armed'); else w343.classList.remove('hr343-armed');
+      q343h.syncs += 1;
+    } catch (e343s) { q343h.err = String((e343s && e343s.message) || e343s); }
+  };
+  var labelOrig343 = label339; /* চেইন-রীতি — আর্ম/নিরামড-দ্বি-পথ-এক-হুক */
+  label339 = function (b343l, on343l) {
+    labelOrig343(b343l, on343l);
+    try { syncW343(on343l); } catch (e343l) { q343h.err = String((e343l && e343l.message) || e343l); }
+  };
+  var ooOrig343 = openOv330; /* খোলা-পথ-আর্মড-পুনঃপ্রয়োগ (তাজা-নির্মিত-সারি-কভার) */
+  openOv330 = function (src343) {
+    ooOrig343(src343);
+    try { if (armed339) syncW343(true); } catch (e343o) { q343h.err = String((e343o && e343o.message) || e343o); }
+  };
+  var clrOrig343 = q337h.clearStore; /* hr337-চুক্তি-প্রসারিত — ওয়াইপ-পথে-লেবেল-স্কিপ-গোটচা-সংশোধন:
+     wipe339 → clearStore-মোড়ক (hr339/hr342-ensure) → বাটন-অপসারণ-পূর্বে → disarm339-এ b339d=null →
+     label339(false)-স্কিপ → সারি-শ্রেণি-স্টেল; এ-মোড়ক = সর্ব-ওয়াইপ-পথে (pointer ∨ W) সারি-শ্রেণি-অপসারণ-নিশ্চিত */
+  q337h.clearStore = function () {
+    var ok343c = clrOrig343();
+    try { if (ok343c) syncW343(false); } catch (e343c) { q343h.err = String((e343c && e343c.message) || e343c); }
+    return ok343c;
+  };
+  document.addEventListener('keydown', function (e343k) {
+    try {
+      if (e343k.key !== 'w' && e343k.key !== 'W') return;
+      if (e343k.ctrlKey || e343k.metaKey || e343k.altKey) return;
+      var b343k = e343k.target && e343k.target.closest ? e343k.target.closest('.hr-aria-copy') : null;
+      if (!b343k) return; /* s320/s324-রীতি — কপি-বাটন-ফোকাস-প্রেক্ষাপট */
+      var btn343 = clearBtn339();
+      if (!btn343) return; /* hr339-গেট-সমতা (store≥১ × tip-খোলা) — শূন্যে নীরব */
+      e343k.preventDefault();
+      q343h.press += 1;
+      if (armed339) {
+        wipe339(btn343); /* এক-উৎস-ওয়াইপ — q339h.clears-গণনা-সহ (parity-প্রমাণ) */
+        q343h.wipes += 1; q343h.last = 'w-wipe';
+      } else {
+        armed339 = true; q343h.arms += 1; q343h.last = 'w-arm';
+        btn343.classList.add('hr339-armed');
+        label339(btn343, true);
+        if (tmr339) clearTimeout(tmr339);
+        tmr339 = setTimeout(function () { disarm339(false); }, 3000); /* hr323-৩s-স্বয়ং-নিরামড-রীতি */
+      }
+    } catch (e343x) { q343h.err = String((e343x && e343x.message) || e343x); }
+  });
+  q343h.btn = function () { return !!clearBtn339(); };
+  q343h.armed = function () { return armed339; };
+  q343h.syncW = function (on343q) { syncW343(on343q); return true; };
+  window.__hrAria343QA = q343h;
+  var trOrig343 = tipRender318; /* hr342-চেইন-পরবর্তী — সর্ব-বহিঃস্থ-মোড়ক */
+  tipRender318 = function (k343t) {
+    trOrig343(k343t);
+    try {
+      var kb343 = tip317 ? tip317.querySelector('.hr324-kbd') : null;
+      if (kb343) kb343.textContent = kbdLine334(); /* hr343: রেন্ডার-সাইট-কেননিকাল-রি-রাইট (kbdLine334-এক-উৎস — W-স্বয়ং-অন্তর্ভুক্ত — append-ক্রম-নিরপেক্ষ — s324-বেস+append-স্তূপ-পরবর্তী-সর্ব-শেষ — live==line()-সর্বদা) */
+    } catch (e343t) { q343h.err = String((e343t && e343t.message) || e343t); }
+  };
 
 })();
 </script>

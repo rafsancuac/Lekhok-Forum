@@ -60,7 +60,7 @@ if curl -s -o /dev/null -m 2 "$BASE/"; then pkill -9 -f "node server.js" 2>/dev/
 
 echo "── ধাপ-১: কাঠামো (hr334-এক-উৎস + sfs334-ব্লক) ──"
 EJSF="$APP/admin/views/admin/home-reorder.ejs"
-grep -q "'E = স্ট্রিপ কপি'\]" "$EJSF" && grep -q "'D = ডাউনলোড'\]" "$EJSF" && grep -q "'X = পয়েন্টার-সারি বিলোপ'\]" "$EJSF" && grep -q "'F = বিন্যাস ({fmt})'\]" "$EJSF" && grep -q "'P = প্রিভিউ'\]" "$EJSF" && grep -q "'C = প্রিভিউ কপি'\]" "$EJSF" && grep -q "'S = প্রিভিউ সংরক্ষণ'\]" "$EJSF" && grep -q "'? = সহায়িকা'\]" "$EJSF" && ok "home-reorder.ejs: রেজিস্ট্রি-তৃতীয়-উপাদান ×৮ (kbd-হিন্ট — E/D/X/F/P/C/S/?)" || bad "home-reorder.ejs: রেজিস্ট্রি-হিন্ট-অমিল"
+grep -q "'E = স্ট্রিপ কপি'\]" "$EJSF" && grep -q "'D = ডাউনলোড'\]" "$EJSF" && grep -q "'X = পয়েন্টার-সারি বিলোপ'\]" "$EJSF" && grep -q "'F = বিন্যাস ({fmt})'\]" "$EJSF" && grep -q "'P = প্রিভিউ'\]" "$EJSF" && grep -q "'C = প্রিভিউ কপি'\]" "$EJSF" && grep -q "'S = প্রিভিউ সংরক্ষণ'\]" "$EJSF" && grep -q "'W = স্থায়ী মুছুন'\]" "$EJSF" && grep -q "'? = সহায়িকা'\]" "$EJSF" && ok "home-reorder.ejs: রেজিস্ট্রি-তৃতীয়-উপাদান ×৯ (kbd-হিন্ট — E/D/X/F/P/C/S/W/? — hr343)" || bad "home-reorder.ejs: রেজিস্ট্রি-হিন্ট-অমিল"
 grep -q "'F = বিন্যাস ({fmt})'" "$EJSF" && ok "home-reorder.ejs: F-হিন্ট '{fmt}'-টেমপ্লেট (মোড-সচেতন-এক-উৎস)" || bad "home-reorder.ejs: {fmt}-টেমপ্লেট-অনুপস্থিত"
 grep -q "var hintOf334 = function (k334)" "$EJSF" && grep -q "var appendHint334 = function (k334a)" "$EJSF" && grep -q "var kbdLine334 = function ()" "$EJSF" && ok "home-reorder.ejs: hintOf334 + appendHint334 + kbdLine334 (ত্রয়ী-এক-উৎস)" || bad "home-reorder.ejs: এক-উৎস-ত্রয়ী-অমিল"
 grep -q "split('{fmt}').join(fmtLabel331(mode326))" "$EJSF" && ok "home-reorder.ejs: {fmt}-split-join-সর্ব-উপস্থিতি (s333-গোটচা-②-রীতি)" || bad "home-reorder.ejs: split-join-অমিল"
@@ -183,9 +183,9 @@ ev "JSON.stringify((function(){document.querySelectorAll('.hr-aria-copy')[1].cli
 agent-browser wait 450 >/dev/null 2>&1
 ev "JSON.stringify((function(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();document.querySelectorAll('.hr-aria-copy')[0].focus();return 'foc'})())" >/dev/null 2>&1
 agent-browser wait 500 >/dev/null 2>&1
-KB1=$(ev "JSON.stringify((function(){var k=document.querySelector('.hr317-tip.is-on .hr324-kbd');if(!k)return{e:'no-kbd'};var t=k.textContent;var ks=['E = স্ট্রিপ কপি','D = ডাউনলোড','X = পয়েন্টার-সারি বিলোপ','F = বিন্যাস','P = প্রিভিউ','C = প্রিভিউ কপি','S = প্রিভিউ সংরক্ষণ','? = সহায়িকা'];var pos=[],i;for(i=0;i<ks.length;i++){pos.push(t.indexOf(ks[i]))}var order=true;for(i=1;i<pos.length;i++){if(pos[i]<=pos[i-1])order=false}return{all:pos.every(function(p){return p>=0}),order:order,line:window.__hrAria334QA.line(),eq:t===window.__hrAria334QA.line()}})())")
+KB1=$(ev "JSON.stringify((function(){var k=document.querySelector('.hr317-tip.is-on .hr324-kbd');if(!k)return{e:'no-kbd'};var t=k.textContent;var ks=['E = স্ট্রিপ কপি','D = ডাউনলোড','X = পয়েন্টার-সারি বিলোপ','F = বিন্যাস','P = প্রিভিউ','C = প্রিভিউ কপি','S = প্রিভিউ সংরক্ষণ','W = স্থায়ী মুছুন','? = সহায়িকা'];var pos=[],i;for(i=0;i<ks.length;i++){pos.push(t.indexOf(ks[i]))}var order=true;for(i=1;i<pos.length;i++){if(pos[i]<=pos[i-1])order=false}return{all:pos.every(function(p){return p>=0}),order:order,line:window.__hrAria334QA.line(),eq:t===window.__hrAria334QA.line()}})())")
 KB1J=$(unjj "$KB1")
-if [ "$(jf all "$KB1J")" = "true" ] && [ "$(jf order "$KB1J")" = "true" ]; then ok "ই২ই: fresh-render kbd-সর্ব-৮-হিন্ট-ক্রমত (E→D→X→F→P→C→S→? — রেজিস্ট্রি-ক্রম-সমতা)"; else bad "ই২ই: $(unjj "$KB1")"; fi
+if [ "$(jf all "$KB1J")" = "true" ] && [ "$(jf order "$KB1J")" = "true" ]; then ok "ই২ই: fresh-render kbd-সর্ব-৯-হিন্ট-ক্রমত (E→D→X→F→P→C→S→W→? — রেজিস্ট্রি-ক্রম-সমতা — hr343)"; else bad "ই২ই: $(unjj "$KB1")"; fi
 if [ "$(jf eq "$KB1J")" = "true" ]; then ok "ই২ই: live-kbd == kbdLine334() (এক-উৎস-সমতা-প্রমাণ)"; else bad "ই২ই: eq=$(unjj "$KB1")"; fi
 ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[0];b.dispatchEvent(new KeyboardEvent('keydown',{key:'f',bubbles:true,cancelable:true}));return 'f1'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
@@ -203,17 +203,17 @@ FJJ=$(unjj "$FJ")
 if [ "$(jf m "$FJJ")" = "json" ] && printf '%s' "$(jf h "$FJJ")" | grep -q 'F = বিন্যাস (JSON)' && [ "$(jf k "$FJJ")" = "true" ]; then ok "ই২ই: json-মোড {fmt}-রেজলভ (hintOf='F = বিন্যাস (JSON)' + live-kbd-সম্মত)"; else bad "ই২ই: $(unjj "$FJ")"; fi
 RG=$(ev "JSON.stringify((function(){var ok1=window.__hrAria333QA.register('H334','টেস্ট-বর্ণনা','H334 = টেস্ট হিন্ট');var k=document.querySelector('.hr317-tip.is-on .hr324-kbd');return{ok1:ok1,rows:window.__hrAria333QA.rows(),dr:window.__hrAria334QA.dualRegs,kb:k?k.textContent.indexOf('H334 = টেস্ট হিন্ট')>=0:false}})())")
 RGJ=$(unjj "$RG")
-if [ "$(jf ok1 "$RGJ")" = "true" ] && [ "$(jf rows "$RGJ")" = "9" ] && [ "$(jf dr "$RGJ")" = "1" ] && [ "$(jf kb "$RGJ")" = "true" ]; then ok "ই২ই: register(k,d,h)-দ্বি-সাইট (rows=৯ + kbd-হিন্ট-তাৎক্ষণিক + dualRegs=১ — smarty-সমাপ্তি)"; else bad "ই২ই: $(unjj "$RG")"; fi
+if [ "$(jf ok1 "$RGJ")" = "true" ] && [ "$(jf rows "$RGJ")" = "10" ] && [ "$(jf dr "$RGJ")" = "1" ] && [ "$(jf kb "$RGJ")" = "true" ]; then ok "ই২ই: register(k,d,h)-দ্বি-সাইট (rows=১০ {৯+H334} + kbd-হিন্ট-তাৎক্ষণিক + dualRegs=১ — smarty-সমাপ্তি)"; else bad "ই২ই: $(unjj "$RG")"; fi
 RD=$(ev "JSON.stringify({d:window.__hrAria333QA.register('H334','x','y'),r:window.__hrAria333QA.rows()})")
-if [ "$(jf d "$(unjj "$RD")")" = "false" ] && [ "$(jf r "$(unjj "$RD")")" = "9" ]; then ok "ই২ই: ডুপ-নিবন্ধন-বর্জন (false + rows-অপরিবর্তিত — s333-চুক্তি-অটুট)"; else bad "ই২ই: $(unjj "$RD")"; fi
+if [ "$(jf d "$(unjj "$RD")")" = "false" ] && [ "$(jf r "$(unjj "$RD")")" = "10" ]; then ok "ই২ই: ডুপ-নিবন্ধন-বর্জন (false + rows-অপরিবর্তিত — s333-চুক্তি-অটুট)"; else bad "ই২ই: $(unjj "$RD")"; fi
 RN=$(ev "JSON.stringify((function(){var ok2=window.__hrAria333QA.register('I334','হিন্ট-বিহীন-বর্ণনা');var k=document.querySelector('.hr317-tip.is-on .hr324-kbd');return{ok2:ok2,rows:window.__hrAria333QA.rows(),kb:k?k.textContent.indexOf('I334 =')>=0:false}})())")
 RNJ=$(unjj "$RN")
-if [ "$(jf ok2 "$RNJ")" = "true" ] && [ "$(jf rows "$RNJ")" = "10" ] && [ "$(jf kb "$RNJ")" = "false" ]; then ok "ই২ই: h-বিহীন-নিবন্ধন = পুরাতন-আচরণ (rows=১০ + kbd-অস্পৃশ্য — s333-সুইট-সামঞ্জস্য)"; else bad "ই২ই: $(unjj "$RN")"; fi
+if [ "$(jf ok2 "$RNJ")" = "true" ] && [ "$(jf rows "$RNJ")" = "11" ] && [ "$(jf kb "$RNJ")" = "false" ]; then ok "ই২ই: h-বিহীন-নিবন্ধন = পুরাতন-আচরণ (rows=১১ {৯+H334+I334} + kbd-অস্পৃশ্য — s333-সুইট-সামঞ্জস্য)"; else bad "ই২ই: $(unjj "$RN")"; fi
 ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[0];b.dispatchEvent(new KeyboardEvent('keydown',{key:'?',bubbles:true,cancelable:true}));return 'q1'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
 OV=$(ev "JSON.stringify({o:window.__hrAria330QA.isOpen(),li:document.querySelectorAll('.hr330-ov .hr330-li').length,last:(document.querySelectorAll('.hr330-ov .hr330-k')[9]||{textContent:''}).textContent})")
 OVJ=$(unjj "$OV")
-if [ "$(jf o "$OVJ")" = "true" ] && [ "$(jf li "$OVJ")" = "10" ]; then ok "ই২ই: ওভারলে-১০-সারি (H334+I334-নিবন্ধিত — রেজিস্ট্রি-তালিকা-সমতা)"; else bad "ই২ই: $(unjj "$OV")"; fi
+if [ "$(jf o "$OVJ")" = "true" ] && [ "$(jf li "$OVJ")" = "11" ]; then ok "ই২ই: ওভারলে-১১-সারি (৯+W + H334+I334-নিবন্ধিত — রেজিস্ট্রি-তালিকা-সমতা)"; else bad "ই২ই: $(unjj "$OV")"; fi
 if agent-browser screenshot "$SH_OV" >/dev/null 2>&1; then ok "স্ক্রিনশট: ওভারলে-নিবন্ধিত-সারি সংরক্ষিত"; else skip "স্ক্রিনশট-ব্যর্থ"; fi
 ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[0];b.dispatchEvent(new KeyboardEvent('keydown',{key:'?',bubbles:true,cancelable:true}));return 'q2'})())" >/dev/null 2>&1
 agent-browser wait 300 >/dev/null 2>&1

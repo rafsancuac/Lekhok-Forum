@@ -3,7 +3,7 @@
 # [Task ID 167] PLANS session329-নোটের প্রস্তাব-②+③ প্রয়োগ (①-প্রোড-স্পট রাউন্ড-আরম্ভেই-সম্পন্ন; ④-গেটেড):
 #   sfs330 (style.css session330-ব্লক — কেবল-সংযোজন): টোন-সিঁড়ি-সমাপ্তি (৪৬→৫৮→৬৬% — ≤৩৬০px
 #      সম-প্রদর্শনে ট্যাপ×keynav-উভয়-গেট — parity-নীতি; কেবল-রঙ — layout-neutral)
-#   hr330 (admin/home-reorder.ejs): '?'-কী শর্টকাট-সহায়তা-ওভারলে (৮-সারি — kbd-চিপ + বর্ণনা;
+#   hr330 (admin/home-reorder.ejs): '?'-কী শর্টকাট-সহায়তা-ওভারলে (৯-সারি — kbd-চিপ + বর্ণনা;
 #      '?'-টগল — ইতিহাস-গেট-নেই; Escape-বন্ধ — ফোকাস-প্রেক্ষাপট-নিরপেক্ষ; .hr330-x-বন্ধ-বাটন;
 #      নন-মোডাল — ফোকাস-চুরি-নেই; body-সন্নিবেশ — পুনঃনির্মাণ-চুক্তি-অস্পৃশ্য; হিন্ট-মোড়ক-জুটি) +
 #      __hrAria330QA {opens, closes, last, isOpen(), open(), close(), err}
@@ -166,7 +166,7 @@ agent-browser wait 400 >/dev/null 2>&1
 O1=$(ev "JSON.stringify({o:window.__hrAria330QA.isOpen(),h:window.__hrAria317QA.hist().length,last:window.__hrAria330QA.last,role:(document.querySelector('.hr330-ov')||{getAttribute:function(){return ''}}).getAttribute('role'),lb:(document.querySelector('.hr330-ov')||{getAttribute:function(){return ''}}).getAttribute('aria-labelledby'),rows:document.querySelectorAll('.hr330-ov .hr330-li').length})")
 O1J=$(unjj "$O1")
 if [ "$(jf o "$O1J")" = "true" ] && [ "$(jf h "$O1J")" = "0" ]; then ok "ই২ই: শূন্য-ইতিহাসে '?'-খোলা (ইতিহাস-গেট-নেই-প্রমাণ — আবিষ্কারযোগ্যতা-সিদ্ধান্ত)"; else bad "ই২ই: $(unjj "$O1")"; fi
-if [ "$(jf role "$O1J")" = "dialog" ] && [ "$(jf lb "$O1J")" = "hr330-t" ] && [ "$(jf rows "$O1J")" = "8" ]; then ok "ই২ই: ওভারলে-কাঠামো (role=dialog + aria-labelledby + ৮-সারি — E/D/X/F/P/C/S/?)"; else bad "ই২ই: role=[$(jf role "$O1J")] rows=[$(jf rows "$O1J")]"; fi
+if [ "$(jf role "$O1J")" = "dialog" ] && [ "$(jf lb "$O1J")" = "hr330-t" ] && [ "$(jf rows "$O1J")" = "9" ]; then ok "ই২ই: ওভারলে-কাঠামো (role=dialog + aria-labelledby + ৯-সারি — E/D/X/F/P/C/S/W/? — hr343)"; else bad "ই২ই: role=[$(jf role "$O1J")] rows=[$(jf rows "$O1J")]"; fi
 ev "JSON.stringify((function(){document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));return 'esc'})())" >/dev/null 2>&1
 agent-browser wait 400 >/dev/null 2>&1
 E1=$(ev "JSON.stringify({o:window.__hrAria330QA.isOpen(),c:window.__hrAria330QA.closes,last:window.__hrAria330QA.last})")
@@ -186,9 +186,9 @@ agent-browser wait 400 >/dev/null 2>&1
 B1=$(ev "JSON.stringify({o:window.__hrAria330QA.isOpen(),c:window.__hrAria330QA.closes,last:window.__hrAria330QA.last})")
 B1J=$(unjj "$B1")
 if [ "$(jf o "$B1J")" = "false" ] && [ "$(jf last "$B1J")" = "close:btn" ]; then ok "ই২ই: .hr330-x-বন্ধ-বাটন (pointer-path — last=close:btn)"; else bad "ই২ই: $(unjj "$B1")"; fi
-KL=$(ev "JSON.stringify((function(){var o=document.querySelector('.hr330-ov');if(!o)return 'no';var ks=[].slice.call(o.querySelectorAll('.hr330-k')).map(function(k){return k.textContent});var need=['E','D','X','F','P','C','S','?'];var miss=need.filter(function(k){return ks.indexOf(k)<0});return {n:ks.length,miss:miss.join('')}})())")
+KL=$(ev "JSON.stringify((function(){var o=document.querySelector('.hr330-ov');if(!o)return 'no';var ks=[].slice.call(o.querySelectorAll('.hr330-k')).map(function(k){return k.textContent});var need=['E','D','X','F','P','C','S','W','?'];var miss=need.filter(function(k){return ks.indexOf(k)<0});return {n:ks.length,miss:miss.join('')}})())")
 KLJ=$(unjj "$KL")
-if [ "$(jf n "$KLJ")" = "8" ] && [ "$(jf miss "$KLJ")" = "" ]; then ok "ই২ই: কী-তালিকা-সম্পূর্ণতা (E/D/X/F/P/C/S/? — ব্যস্ত-কী-স্ক্যান-সমতা)"; else bad "ই২ই: $(unjj "$KL")"; fi
+if [ "$(jf n "$KLJ")" = "9" ] && [ "$(jf miss "$KLJ")" = "" ]; then ok "ই২ই: কী-তালিকা-সম্পূর্ণতা (E/D/X/F/P/C/S/W/? — ব্যস্ত-কী-স্ক্যান-সমতা)"; else bad "ই২ই: $(unjj "$KL")"; fi
 ev "JSON.stringify((function(){Object.defineProperty(navigator,'clipboard',{value:{writeText:function(t){window.__clipCap330=t;return Promise.resolve()}},configurable:true});return 'stub'})())" >/dev/null 2>&1
 ev "JSON.stringify((function(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();document.querySelectorAll('.hr-aria-copy')[0].click();return 'c1'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
