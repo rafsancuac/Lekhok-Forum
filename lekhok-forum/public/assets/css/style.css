@@ -4607,45 +4607,55 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 }
 /* ═══════════════════ EOF session325 (sfs325 ট্যাপ-ঘোষণা-parity + ট্যাপ-প্রেস-ফিডব্যাক) ═══════════════════ */
 
-/* ═══════════ session326 — হোম ই-পেপার: কম্প্যাক্ট প্রিমিয়াম ফ্যান-স্ট্যাক (epk326) ═══════════
-   ইউজার-স্পেক: পেপার-কার্ড ছোট (বাম-কনটেন্টের সাথে সামঞ্জস্য) + পেছনের শিট নিচে-নিচে-সোজা নয় —
-   স্ক্রিনশটের মতো দুই পাশে বাঁকা "ফ্যান" (বাম রুলড-শিট / ডান সবুজাভ রুলড-শিট); হোভারে ফ্যান-খোলা।
-   কোনো টেকনিক্যাল-শব্দ নেই (সিঙ্ক-স্ট্রিপ বিলুপ্ত)। হেক্স-শূন্য — var(--lf-*) + color-mix + rgba। ═══ */
-.today-epaper-section { --epk326-w: 320px; }
-.te-grid233 { grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr); gap: 36px; align-items: center; }
+/* ═══════════ session326 — হোম ই-পেপার: কম্প্যাক্ট প্রিমিয়াম ফ্যান-স্ট্যাক + ডেক-শাফল (epk326) ═══════════
+   ইউজার-স্পেক: ছোট কার্ড (বাম-কনটেন্টের সাথে সামঞ্জস্য); পেছনের দুই শিট আরও-হেলানো এবং তাতেও আসল প্রচ্ছদ;
+   অ্যানিমেশন = ডেক-শাফল (সামনের-কার্ড বামে-উড়ে যায়, বাম-শিট কার্ডের-নিচ-দিয়ে ডানে-আসে, নতুন-কভারে আলো-ঝলক)
+   ~০.৪৪ সেকেন্ড; ডটে ৪-সেকেন্ড-প্রোগ্রেস। হেক্স-শূন্য — var(--lf-*) + color-mix + rgba। ═══ */
+.today-epaper-section { --epk326-w: 304px; }
+.te-grid233 { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 30px; align-items: center; }
 .te-lead233 { max-width: 520px; }
-.te-right233 { align-items: center; gap: 12px; padding: 0 38px; }
-
-/* ডান-কলামের শীর্ষ-বার: কার্ডের প্রস্থের সমান */
+.te-right233 { align-items: center; gap: 12px; padding: 0 58px; }
 .te-sidehead233 { width: var(--epk326-w); }
 
-/* কম্প্যাক্ট স্টেজ */
 .epk310 { gap: 14px; }
 .epk310-stage { width: var(--epk326-w); max-width: 100%; padding: 4px 0 10px; overflow: visible; }
 
-/* ফ্যান-স্ট্যাক: কার্ডের সমান-আকারের দুই শিট, নিচের-মধ্যবিন্দু থেকে ঘুরে দুই পাশে ছড়ানো */
+/* ফ্যান-স্ট্যাক: কার্ডের-সমান শিট, নিচের-মধ্যবিন্দু-থেকে ঘুরে দুই পাশে বেশি-হেলানো */
 .epk310-back {
   inset: 4px 0 10px 0; left: 0; right: 0; top: 4px; bottom: 10px;
+  overflow: hidden;
   border-radius: 14px;
-  transform-origin: 50% 96%;
+  transform-origin: 50% 100%;
   background-color: var(--lf-white);
   background-image: repeating-linear-gradient(to bottom, transparent 0 13px, color-mix(in srgb, var(--lf-ui-border-strong) 60%, transparent) 13px 14px);
   border: 1px solid var(--lf-ui-border-strong);
-  box-shadow: 0 14px 26px -16px rgba(15, 23, 42, 0.38);
-  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 14px 26px -16px rgba(15, 23, 42, 0.42);
+  transition: transform 0.46s cubic-bezier(0.3, 0.8, 0.25, 1);
   will-change: transform;
 }
-.epk310-backA { transform: translate(-9px, 3px) rotate(-5.5deg); }
-.epk310-backB {
-  transform: translate(9px, 1px) rotate(4.5deg);
+.epk310-back.is-l { transform: translate(-13px, 4px) rotate(-9deg); }
+.epk310-back.is-r {
+  transform: translate(13px, 2px) rotate(8deg);
   background-color: color-mix(in srgb, var(--lf-ok-soft) 60%, var(--lf-white));
-  background-image: repeating-linear-gradient(to bottom, transparent 0 13px, color-mix(in srgb, var(--lf-brand-primary) 16%, transparent) 13px 14px);
   border-color: color-mix(in srgb, var(--lf-brand-primary) 28%, var(--lf-ui-border-strong));
 }
-.epk310-stage:hover .epk310-backA { transform: translate(-15px, 4px) rotate(-8deg); }
-.epk310-stage:hover .epk310-backB { transform: translate(15px, 2px) rotate(7deg); }
+.epk310-back.no-trans { transition: none; }
+.epk310-stage:hover .epk310-back.is-l { transform: translate(-19px, 5px) rotate(-11.5deg); }
+.epk310-stage:hover .epk310-back.is-r { transform: translate(19px, 3px) rotate(10.5deg); }
+/* পেছনের-শিটের প্রচ্ছদ — সামনের-কার্ডের-মিডিয়া-অংশের-মতোই, একটু-ম্লান */
+.epk310-bimg {
+  position: absolute; left: 0; top: 4px; width: 100%; height: calc(100% - 38px);
+  object-fit: contain; object-position: top;
+  background: color-mix(in srgb, var(--lf-ui-border-strong) 18%, var(--lf-white));
+  filter: saturate(0.92) brightness(0.97);
+}
+.epk310-bimg[hidden] { display: none; }
+.epk310-back::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 55%, rgba(15, 23, 42, 0.10));
+}
 
-/* মূল কার্ড — পরিমিত, প্রিমিয়াম */
+/* মূল কার্ড */
 .epk310-card {
   border-radius: 14px;
   border-color: color-mix(in srgb, var(--lf-ui-border-strong) 85%, var(--lf-white));
@@ -4656,6 +4666,7 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 .epk310-stage:hover .epk310-card { box-shadow: 0 1px 0 color-mix(in srgb, var(--lf-white) 90%, transparent) inset, 0 32px 52px -24px rgba(0, 60, 45, 0.55), 0 8px 18px -8px rgba(15, 23, 42, 0.24); }
 .epk310-stripe { height: 4px; }
 .epk310-media { aspect-ratio: 1 / 1.36; }
+.epk310-img { transition: transform 0.5s ease; }
 .epk310-foot { padding: 8px 12px; }
 .epk310-foot-l { font-size: 10.5px; }
 .epk310-count { font-size: 10px; padding: 1px 6px; }
@@ -4663,23 +4674,40 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 .epk310-hoverbtn { padding: 9px 16px; font-size: 12px; }
 .epk310-dots { margin-top: 2px; }
 
+/* উড়ন্ত-প্রতিরূপ (ডেক-শাফলে বিদায়ী-কার্ড) + আলো-ঝলক */
+.epk326-fly { will-change: transform, opacity; }
+.epk326-shine {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 55%; z-index: 2; pointer-events: none; opacity: 0;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+  mix-blend-mode: soft-light;
+}
+
+/* ডট-প্রোগ্রেস: সক্রিয়-ডট ৪ সেকেন্ডে ভরে ওঠে (হোভারে থামে) */
+.epk310-dot { position: relative; overflow: hidden; }
+.epk310[data-prog="1"] .epk310-dot[aria-selected="true"]::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: rgba(255, 255, 255, 0.62); transform-origin: 100% 50%;
+  animation: epk326prog 4s linear forwards;
+}
+.epk310[data-paused="1"] .epk310-dot::after { animation-play-state: paused; }
+@keyframes epk326prog { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
 /* রেসপন্সিভ */
 @media (max-width: 992px) {
-  .today-epaper-section { --epk326-w: min(300px, 68vw); }
+  .today-epaper-section { --epk326-w: min(290px, 62vw); }
   .te-grid233 { grid-template-columns: 1fr; gap: 26px; }
-  .te-right233 { align-items: center; padding: 0 30px; }
+  .te-right233 { align-items: center; padding: 0 34px; }
   .epk310-stage { max-width: var(--epk326-w); }
 }
 @media (max-width: 640px) {
-  .te-right233 { padding: 0 26px; }
+  .te-right233 { padding: 0 30px; }
   .epk310-back { left: 0; right: 0; top: 4px; }
-  .epk310-backA { transform: translate(-6px, 3px) rotate(-4.2deg); }
-  .epk310-backB { transform: translate(6px, 1px) rotate(3.4deg); }
-  .epk310-stage:hover .epk310-backA { transform: translate(-6px, 3px) rotate(-4.2deg); }
-  .epk310-stage:hover .epk310-backB { transform: translate(6px, 1px) rotate(3.4deg); }
+  .epk310-back.is-l, .epk310-stage:hover .epk310-back.is-l { transform: translate(-7px, 3px) rotate(-6deg); }
+  .epk310-back.is-r, .epk310-stage:hover .epk310-back.is-r { transform: translate(7px, 1px) rotate(5.5deg); }
 }
 @media (prefers-reduced-motion: reduce) {
   .epk310-back { transition: none; }
+  .epk310[data-prog="1"] .epk310-dot[aria-selected="true"]::after { animation: none; display: none; }
 }
 /* ═══════════ EOF সেশন ৩২৬ (epk326) ═══════════ */
 /* ═══════════════════ session326 (sfs326 ট্যাপ-পথের অবস্থান-ব্যাজ parity) ═══════════════════ */

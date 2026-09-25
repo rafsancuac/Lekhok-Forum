@@ -46,6 +46,7 @@
     : 'alt="" hidden';
   const teJson310 = JSON.stringify(teSlides310);
 %>
+<% if (teFirstSrc310) { %><link rel="preload" as="image" href="<%= teFirstSrc310 %>" fetchpriority="high"><% } %>
 <section class="section today-epaper-section reveal" id="today-epaper">
   <div class="container">
     <div class="te-band233">
@@ -107,8 +108,9 @@
           <div class="epk310" id="epKiosk310" role="group" aria-roledescription="carousel" aria-label="ই-পেপার প্রচ্ছদ স্লাইডার">
             <!-- ৩ডি স্ট্যাকড-পেপার ফ্রেম -->
             <div class="epk310-stage" id="epk310Stage">
-              <div class="epk310-back epk310-backA" aria-hidden="true"></div>
-              <div class="epk310-back epk310-backB" aria-hidden="true"></div>
+              <%# সেশন ৩২৬: পেছনের দুই শিটেও আসল প্রচ্ছদ (ডানে = পরের, বামে = তার-পরের); পোজ = is-l / is-r %>
+              <div class="epk310-back epk310-backA is-l" aria-hidden="true"><img class="epk310-bimg" alt="" decoding="async" hidden></div>
+              <div class="epk310-back epk310-backB is-r" aria-hidden="true"><img class="epk310-bimg" alt="" decoding="async" hidden></div>
 
               <div class="epk310-card" id="epk310Card">
                 <%# টপ-সিগনেচার স্ট্রাইপ (পত্রিকা-নির্দিষ্ট রঙ) %>
@@ -116,6 +118,7 @@
 
                 <%# সম্পূর্ণ প্রচ্ছদ — কোনো বড় হেডার-টেক্সট ছাড়াই (ইউজার-স্পেক) %>
                 <div class="epk310-media">
+                  <span class="epk326-shine" aria-hidden="true"></span>
                   <span class="epk310-pages" id="epk310Pages" <%- (teActive310 && teActive310.pages) ? '' : 'hidden' %>><i class="fas fa-file-alt" aria-hidden="true"></i><span id="epk310PagesTxt"><%= (teActive310 && teActive310.pages) ? (bnN310(teActive310.pages) + ' পৃষ্ঠা') : '' %></span></span>
                   <a class="epk310-link" id="epk310Link" href="<%= teActive310 ? teActive310.href : '/epaper' %>" aria-label="<%= teActive310 ? (teActive310.name + ' — সম্পূর্ণ পত্রিকা রিডারে পড়ুন') : 'ই-পেপার রিডার' %>">
                     <%# লোড-নেগোশিয়েশন-চলাকালীন মাস্টহেড দৃশ্যমান — ফাঁকা-শিট-ফ্ল্যাশ-শূন্য (s296-রীতি) %>
@@ -126,7 +129,7 @@
                       <span class="epk310-mast-rule" aria-hidden="true"></span>
                       <span class="epk310-mast-date"><%= teDateBn310 %></span>
                     </span>
-                    <img class="epk310-img" id="epk310Img" <%- teImgAttrs310 %> loading="eager" decoding="async">
+                    <img class="epk310-img" id="epk310Img" <%- teImgAttrs310 %> loading="eager" fetchpriority="high" decoding="async">
                     <%# হোভারে ভেসে-ওঠা রিডিং-CTA (hover:none-টাচে বিলোপ — ট্যাপই রিডার) %>
                     <span class="epk310-hover" aria-hidden="true">
                       <span class="epk310-hoverbtn"><i class="fas fa-book-open" aria-hidden="true"></i><span id="epk310HoverName"><%= teActive310 ? teActive310.name : 'পত্রিকা' %></span><span> পড়ুন</span><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
@@ -272,11 +275,10 @@
   var pagesEl311 = document.getElementById('epk310Pages');   /* সেশন ৩১১: ব্যাজ-র‍্যাপার */
   var pagesTxt311 = document.getElementById('epk310PagesTxt'); /* সেশন ৩১১: ব্যাজ-টেক্সট */
 
-  /* ── ইমেজ-চেইন: সারির-নিজ-সম্পদ + ২-স্ট্রাইক রিট্রাই (cache-buster) — কখনো ভাঙা-ছবি নয় ── */
-  var chain = [], strikes = {}, loadedFor = -1;
-  function showImg310() {
-    if (img.complete && img.naturalWidth > 0 && img.getAttribute('src')) { img.hidden = false; mast.hidden = true; }
-  }
+  /* ═══ সেশন ৩২৬: কভার-লোডার — সব-কভার একসাথে প্রি-লোড (অগ্রাধিকার-ক্রম, সমান্তরাল ≤৩), ধীর-উৎসে হেজড-প্যারালাল-রিট্রাই,
+         ব্যর্থে ব্যাকঅফ-রিট্রাই (cache-buster); অটো-স্লাইড শুধু প্রস্তুত-কভারে যায় — কখনো "কয়েকটা আসে, কয়েকটা আসে না" নয় ═══ */
+  var HEDGE_MS = 2200, ATTEMPT_MS = 12000, MAX_FAILS = 3;
+  var cov = papers.map(function () { return { state: 'idle', src: '', img: null, p: null, fails: 0 }; });
   function chainFor310(i) {
     var p = papers[i];
     if (!p) return [];
@@ -284,46 +286,178 @@
     if (p.thumb && c310.indexOf(p.thumb) === -1) c310.push(p.thumb);
     return c310;
   }
-  function setImg310(i) {
-    var p = papers[i];
-    if (!p) return;
-    chain = chainFor310(i);
-    mastName.textContent = p.name;
-    if (chain.length) {
-      img.alt = p.name + ' — ই-পেপার প্রথম পাতা';
-      img.hidden = true; mast.hidden = false; /* লোড-পর্যন্ত মাস্টহেড-দৃশ্যমান */
-      img.src = chain[0];
-      showImg310(); /* ক্যাশড-সোর্সে তাৎক্ষণিক */
-    } else {
-      img.hidden = true;
-      img.removeAttribute('src');
-      mast.hidden = false;
-    }
+  function loadCover326(i) {
+    var c = cov[i];
+    if (!c) return Promise.reject(new Error('idx'));
+    if (c.state === 'ready') return Promise.resolve(i);
+    if (c.p) return c.p;
+    var ch = chainFor310(i);
+    c.p = new Promise(function (resolve, reject) {
+      if (!ch.length) { c.state = 'none'; c.fails = MAX_FAILS; c.p = null; reject(new Error('none')); return; }
+      c.state = 'loading';
+      var done = false, idx = 0, active = 0, tag = c.fails ? ('r=' + c.fails) : '', overall = null;
+      function fail() {
+        if (done) return; done = true; clearTimeout(overall);
+        c.state = 'failed'; c.fails++; c.p = null; reject(new Error('fail'));
+      }
+      function bust(u) { return tag ? (u + (u.indexOf('?') !== -1 ? '&' : '?') + tag) : u; }
+      function launch() {
+        if (done || idx >= ch.length) return;
+        var url = bust(ch[idx++]), im = new Image(), t = null;
+        active++;
+        t = setTimeout(launch, HEDGE_MS); /* ধীর-উৎস → পরের-বিকল্প সমান্তরালে শুরু (হেজড-রিকোয়েস্ট) */
+        im.onload = function () {
+          clearTimeout(t);
+          if (done) return; done = true; clearTimeout(overall);
+          c.state = 'ready'; c.src = url; c.img = im;
+          try { if (im.decode) im.decode().catch(function () {}); } catch (e) {}
+          resolve(i);
+        };
+        im.onerror = function () {
+          clearTimeout(t); active--;
+          if (done) return;
+          if (idx < ch.length) launch(); else if (active <= 0) fail();
+        };
+        im.decoding = 'async';
+        im.src = url;
+      }
+      overall = setTimeout(fail, ATTEMPT_MS);
+      launch();
+    });
+    return c.p;
   }
-  img.addEventListener('load', function () {
-    loadedFor = current;
-    strikes[img.src] = 0;
-    showImg310();
-  });
-  img.addEventListener('error', function () {
-    var src310 = img.getAttribute('src');
-    if (!chain.length || src310 !== chain[0]) return; /* বাসি-অনুরোধের error — উপেক্ষা */
-    strikes[src310] = (strikes[src310] || 0) + 1;
-    if (strikes[src310] < 2) { /* ২-স্ট্রাইক রিট্রাই — cache-buster */
-      img.src = src310 + (src310.indexOf('?') !== -1 ? '&' : '?') + 'r=' + strikes[src310];
-      return;
+  function ensure326(i) {
+    var pr = loadCover326(i);
+    pr.then(function () { onCoverReady326(i); }, function () {
+      var c = cov[i];
+      if (c && c.fails < MAX_FAILS) setTimeout(function () { ensure326(i); }, 1800 * c.fails);
+    });
+    return pr;
+  }
+  function preloadAll326() {
+    var n = papers.length, order = [], k, at = 0, running = 0, MAXP = 3;
+    for (k = 0; k < n; k++) order.push((current + k) % n);
+    function fin() { running--; pump(); }
+    function pump() {
+      while (running < MAXP && at < order.length) { running++; ensure326(order[at++]).then(fin, fin); }
     }
-    chain.shift();
-    if (chain.length) { img.src = chain[0]; showImg310(); return; }
-    img.hidden = true;
-    img.removeAttribute('src');
-    mast.hidden = false; /* সব-ব্যর্থে টেক্সট-মাস্টহেড */
-  });
+    pump();
+  }
+  /* প্রস্তুত-কভারগুলোর ঘূর্ণন-ক্রম (বর্তমানের-পর থেকে) */
+  function upcoming326(from) {
+    var n = papers.length, out = [], k, j;
+    for (k = 1; k < n; k++) { j = (from + k) % n; if (cov[j].state === 'ready') out.push(j); }
+    return out;
+  }
+  function nextTarget326() {
+    var up = upcoming326(current), n = papers.length, j;
+    if (up.length) return up[0];
+    for (j = 0; j < n; j++) if (j !== current && cov[j].state === 'loading') return -1; /* এখনো-আসছে — অপেক্ষা */
+    return n > 1 ? (current + 1) % n : -1; /* সবই-মাস্টহেড-মোড — আগের-মতো ঘোরে */
+  }
+  /* QA-হুক (সেশন ৩২৬) */
+  window.__epk326QA = {
+    states: function () { return cov.map(function (c) { return c.state + ':' + c.fails; }); },
+    upcoming: function () { return upcoming326(current); },
+    sheets: function () { return [sheetL ? sheetL._idx : null, sheetR ? sheetR._idx : null]; },
+    target: function () { return nextTarget326(); }
+  };
+  function showCover326(i) {
+    var c = cov[i], p = papers[i];
+    if (!c || c.state !== 'ready') return false;
+    img.alt = p.name + ' — ই-পেপার প্রথম পাতা';
+    if (img.getAttribute('src') !== c.src) img.src = c.src;
+    img.hidden = false; mast.hidden = true;
+    return true;
+  }
+  function showMast326(i) {
+    var p = papers[i];
+    mastName.textContent = p.name;
+    img.hidden = true; mast.hidden = false;
+  }
+  function onCoverReady326(i) {
+    if (i === current) showCover326(i);
+    refreshSheets326();
+  }
 
-  /* ── স্লাইড-প্রয়োগ: fade-রিস্টার্ট + স্ট্রাইপ/ডট/CTA/কাউন্টার-সিঙ্ক ── */
-  function applySlide(i) {
+  /* ── পেছনের-দুই-শিট (ফ্যান): ডানে = পরের-কভার, বামে = তার-পরের ── */
+  var sheetL = stage ? stage.querySelector('.epk310-backA') : null,
+      sheetR = stage ? stage.querySelector('.epk310-backB') : null,
+      shineEl = kiosk.querySelector('.epk326-shine');
+  function setSheet326(el, idx) {
+    if (!el) return;
+    var im = el.querySelector('.epk310-bimg');
+    if (!im) return;
+    if (idx == null || idx < 0 || !cov[idx] || cov[idx].state !== 'ready') { el._idx = -1; im.hidden = true; return; }
+    el._idx = idx;
+    if (im.getAttribute('src') !== cov[idx].src) im.src = cov[idx].src;
+    im.hidden = false;
+  }
+  function refreshSheets326() {
+    var up = upcoming326(current), r = up.length ? up[0] : -1, l = up.length > 1 ? up[1] : -1;
+    if (sheetR && sheetR._idx !== r) setSheet326(sheetR, r);
+    if (sheetL && sheetL._idx !== l) setSheet326(sheetL, l);
+  }
+  var canAnim326 = !reduceMotion && typeof Element !== 'undefined' && !!Element.prototype.animate;
+  /* ডেক-শাফল: বাম-শিট কার্ডের-নিচ-দিয়ে ডানে-যায়, পুরোনো-ডান-শিট (এখন সামনে) বামে নতুন-কভার-সহ ফেড-ইন */
+  function rotateSheets326() {
+    var up = upcoming326(current), X = sheetR, Y = sheetL;
+    if (!X || !Y) { refreshSheets326(); return; }
+    Y.classList.remove('is-l'); Y.classList.add('is-r');
+    X.classList.add('no-trans'); X.classList.remove('is-r'); X.classList.add('is-l');
+    setSheet326(X, up.length > 1 ? up[1] : -1);
+    void X.offsetWidth;
+    X.classList.remove('no-trans');
+    sheetR = Y; sheetL = X;
+    var r = up.length ? up[0] : -1;
+    if (Y._idx !== r) setSheet326(Y, r);
+    if (canAnim326 && up.length > 1) X.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 150, easing: 'ease-out', fill: 'backwards' });
+  }
+  function makeFlyer326() {
+    var f = card.cloneNode(true);
+    f.removeAttribute('id');
+    Array.prototype.forEach.call(f.querySelectorAll('[id]'), function (n) { n.removeAttribute('id'); });
+    Array.prototype.forEach.call(f.querySelectorAll('a,button'), function (n) { n.setAttribute('tabindex', '-1'); });
+    f.classList.add('epk326-fly');
+    f.setAttribute('aria-hidden', 'true');
+    f.style.cssText = 'position:absolute;margin:0;pointer-events:none;z-index:3;left:' + card.offsetLeft + 'px;top:' + card.offsetTop + 'px;width:' + card.offsetWidth + 'px;height:' + card.offsetHeight + 'px';
+    stage.appendChild(f);
+    return f;
+  }
+  function shine326() {
+    if (!canAnim326 || !shineEl) return;
+    shineEl.animate([{ transform: 'translateX(-140%) skewX(-18deg)', opacity: 0 }, { opacity: 1, offset: 0.3 }, { transform: 'translateX(140%) skewX(-18deg)', opacity: 0 }], { duration: 720, delay: 110, easing: 'ease-out' });
+  }
+  function animateForward326(flyer) {
+    if (flyer) {
+      var fa = flyer.animate([{ transform: 'translate(0,0) rotate(0deg)', opacity: 1 }, { transform: 'translate(-60%,-3%) rotate(-13deg)', opacity: 0 }], { duration: 420, easing: 'cubic-bezier(.45,.05,.55,.95)', fill: 'forwards' });
+      fa.onfinish = fa.oncancel = function () { if (flyer.parentNode) flyer.parentNode.removeChild(flyer); };
+    }
+    card.animate([{ transform: 'translate(16px,4px) rotate(7deg) scale(.985)' }, { transform: 'none' }], { duration: 440, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    shine326();
+  }
+  function animateSoft326() {
+    if (!canAnim326 || !card) return;
+    card.animate([{ transform: 'translateY(8px) scale(.985)', opacity: 0.6 }, { transform: 'none', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    shine326();
+  }
+  /* ডট-প্রোগ্রেস (৪ সেকেন্ড-ভরাট) — CSS-চালিত, হোভার-পজে থামে */
+  function restartProg326() { kiosk.removeAttribute('data-prog'); void kiosk.offsetWidth; kiosk.setAttribute('data-prog', '1'); }
+  function setPaused310(v) {
+    paused = !!v;
+    kiosk.setAttribute('data-paused', paused ? '1' : '0');
+    if (!paused) { resetTimer(); restartProg326(); }
+  }
+
+  /* ── স্লাইড-প্রয়োগ (সেশন ৩২৬): ডেক-শাফল-অ্যানিমেশন + স্ট্রাইপ/ডট/CTA/কাউন্টার-সিঙ্ক ── */
+  function applySlide(i, opt) {
     var p = papers[i];
     if (!p) return;
+    var prev = current, first = !!(opt && opt.initial);
+    var up0 = upcoming326(prev);
+    var forward = !first && i !== prev && canAnim326 && !!card && !!stage && up0.length > 0 && up0[0] === i && cov[i].state === 'ready';
+    var flyer = forward ? makeFlyer326() : null; /* বদলের-আগেই বর্তমান-কার্ডের-প্রতিরূপ */
+    current = i;
     link.href = p.href;
     footLink.href = p.href;
     if (stripe) stripe.style.background = p.color;
@@ -342,15 +476,12 @@
       pagesTxt311.textContent = pgTxt311;
       pagesEl311.hidden = pgTxt311 ? false : true;
     }
-    setImg310(i);
-    /* fade/উত্থান-অ্যানিমেশন রিস্টার্ট */
-    if (!reduceMotion) {
-      card.classList.remove('is-flip');
-      void card.offsetWidth;
-      card.classList.add('is-flip');
-    }
+    if (!showCover326(i)) { showMast326(i); ensure326(i); } /* প্রস্তুত-না-হলে মাস্টহেড + অগ্রাধিকার-লোড */
+    if (forward) rotateSheets326(); else refreshSheets326();
+    if (forward) animateForward326(flyer);
+    else if (!first && i !== prev) animateSoft326();
     if (epk299Warmed[p.href]) link.classList.add('epk299-warm'); else link.classList.remove('epk299-warm');
-    current = i;
+    restartProg326();
   }
   function bnDigits310(n) { return String(n).replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }); }
 
@@ -358,7 +489,7 @@
   function startTimer() {
     if (reduceMotion || timer) return;
     timer = setInterval(function () {
-      if (!paused && epk310InView && epk310TabVisible) { epk310TickN++; applySlide((current + 1) % papers.length); }
+      if (!paused && epk310InView && epk310TabVisible) { var nt326 = nextTarget326(); if (nt326 >= 0) { epk310TickN++; applySlide(nt326); } }
     }, 4000);
   }
   function resetTimer() { clearInterval(timer); timer = null; startTimer(); }
@@ -376,8 +507,8 @@
       var i = parseInt(d.getAttribute('data-epk310-i'), 10);
       if (!isNaN(i) && papers[i]) { applySlide(i); resetTimer(); epk299Prefetch299(papers[i].href, 'select'); }
     });
-    d.addEventListener('focus', function () { paused = true; });
-    d.addEventListener('blur', function () { paused = false; });
+    d.addEventListener('focus', function () { setPaused310(true); });
+    d.addEventListener('blur', function () { setPaused310(false); });
   });
   if (dotsWrap) dotsWrap.addEventListener('keydown', function (e) {
     var n = papers.length;
@@ -397,11 +528,11 @@
 
   /* hover + keyboard-focus — দুই ক্ষেত্রেই থামে */
   var section = document.getElementById('today-epaper') || kiosk;
-  section.addEventListener('mouseenter', function () { paused = true; });
-  section.addEventListener('mouseleave', function () { paused = false; });
-  kiosk.addEventListener('focusin', function () { paused = true; });
+  section.addEventListener('mouseenter', function () { setPaused310(true); });
+  section.addEventListener('mouseleave', function () { setPaused310(false); });
+  kiosk.addEventListener('focusin', function () { setPaused310(true); });
   kiosk.addEventListener('focusout', function (e) {
-    if (!kiosk.contains(e.relatedTarget)) paused = false;
+    if (!kiosk.contains(e.relatedTarget)) setPaused310(false);
   });
 
   /* সোয়াইপ (মোবাইল) — threshold 42px */
@@ -432,7 +563,9 @@
     qaSync310Impl();
   });
 
-  applySlide(0);
+  kiosk.setAttribute('data-paused', '0');
+  applySlide(0, { initial: true });
+  preloadAll326();
   startTimer();
 })();
 </script>
