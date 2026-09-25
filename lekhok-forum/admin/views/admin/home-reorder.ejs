@@ -273,6 +273,18 @@
     @media (prefers-reduced-motion: reduce) { .hr330-ov .hr330-li.hr345-cursor { transition: none; } }
     @media (max-width: 640px) { .hr330-ov .hr330-li.hr345-cursor { box-shadow: inset 1.5px 0 0 rgba(4, 120, 87, 0.45); } }
     /* ═══════ EOF session345 (sfs345 ওভারলে-সারি-কীবোর্ড-নেভিগেশন-কার্সর — admin-ইনলাইন) ═══════ */
+    /* ═══════ session346 (sfs346 ওভারলে-সারি-Enter-সক্রিয়করণ-ফ্ল্যাশ — admin-ইনলাইন) ═══════ */
+    /* সেশন ৩৪৬ (sfs346): ওভারলে-সারি-সক্রিয়করণ-ফ্ল্যাশ-টোন (hr330-তালিকা — .hr346-act-অবস্থা-শ্রেণি —
+       hr346-এক-উৎস): সবুজ-পরিবার-গভীর-টোন = সক্রিয়করণ-সম্পন্ন-সংকেত (hr345-কার্সর-সম-পরিবার —
+       নেভ→সক্রিয়-ধারাবাহিকতা — emerald-গভীর rgba(16,185,129)/rgba(5,150,105) — ধ্বংসাত্মক-লাল/নীল-রিড/
+       অ্যাম্বার-সর্ব-মোড-পরিবার-বিভাজন-অটুট); ফ্ল্যাশ = ১.২s-স্বয়ং-নিরামড (hr324-ফ্ল্যাশ-রীতি); নতুন-অবস্থা-
+       টোন-কেবল — বিদ্যমান-সারি-ডিফল্ট-রূপ-অস্পৃশ্য (sfs345-অবস্থা-শ্রেণি-রীতি) — .hr345-cursor-সহাবস্থান
+       (সম-সারি-দ্বি-অবস্থা-শ্রেণি) — সর্ব-ব্যান্ড — rgba-only — হেক্স-শূন্য — MO=৪-অটুট। */
+    .hr330-ov .hr330-li.hr346-act { background: rgba(16, 185, 129, 0.14); box-shadow: inset 2px 0 0 rgba(5, 150, 105, 0.75); }
+    .hr330-ov .hr330-li.hr346-act .hr330-k { background: rgba(16, 185, 129, 0.24); border-color: rgba(5, 150, 105, 0.65); }
+    @media (prefers-reduced-motion: reduce) { .hr330-ov .hr330-li.hr346-act { transition: none; } }
+    @media (max-width: 640px) { .hr330-ov .hr330-li.hr346-act { box-shadow: inset 1.5px 0 0 rgba(5, 150, 105, 0.75); } }
+    /* ═══════ EOF session346 (sfs346 ওভারলে-সারি-Enter-সক্রিয়করণ-ফ্ল্যাশ — admin-ইনলাইন) ═══════ */
     /* সেশন ৩২৫ (hr325): ইতিহাস-সারি-একক-বিলোপ ×-নিয়ন্ত্রণ (তালিকাযুক্ত-টুলটিপেই — hr319-live-গেট;
        সারি-হোভার/focus-within-এ প্রকাশ — ঘন-তালিকায়-স্থায়ী-ঘোষণা-বিভ্রান্তি-শূন্য; কীবোর্ড-পথ =
        X-শর্টকাট (পয়েন্টার-সারি — hr320-পয়েন্টার — s320/s324-keydown-রীতি); লাল-টিন্ট =
@@ -3073,6 +3085,50 @@
   };
   q345h.rows = function () { return navRows345().length; };
   window.__hrAria345QA = q345h;
+
+  /* সেশন ৩৪৬ (hr346): ওভারলে-সারি-Enter-সক্রিয়করণ — এক-উৎস-প্রতিনিধি (PLANS session345-নোটের
+     প্রস্তাব-②-তৃতীয়-বিকল্প — দ্বি-সক্রিয়করণ-ঝুঁকি-সতর্ক-মূল্যায়ন-সম্পন্ন-গৃহীত):
+     • গেট: ovOpen330 ∧ টার্গেট-সর্বনিকট .hr330-li (.hr330-ov-অভ্যন্তর) ∧ key==='Enter' ∧ মডিফায়ার-বর্জন —
+       .hr330-x-বাটন-নেটিভ-সক্রিয়করণ-অস্পৃশ্য (বাটন-টার্গেট-বর্জন — হাইজ্যাক-শূন্য); কার্সর-মেশিন-স্বাধীন
+       (নেভ-গণনা-স্পর্শ-শূন্য — q345h-অটুট)।
+     • প্রতিনিধি (এক-উৎস): সারি-কী (.hr330-k-textContent) = সংশ্লিষ্ট-শর্টকাট-কী — প্রথম .hr-aria-copy-উপরে
+       synthetic-KeyboardEvent-প্রেরণ {bubbles+cancelable — মডিফায়ার-শূন্য} → সর্ব-শর্টকাট-হ্যান্ডলার
+       (s324-E/D + s325-X + s326-F + s327-P + s328-C + s329-S + hr343-W + hr330-'?')-নিজস্ব-গেটে-সিদ্ধান্ত
+       (.hr-aria-copy-প্রেক্ষাপট × মডিফায়ার-বর্জন × hist≥১ × W-arm-দ্বি-চাপ × X-পয়েন্টার × '?'-টগল) —
+       অনুলিপি-লজিক-শূন্য; নীরব-নো-অপ-ও-প্রতিনিধি-গণিত (acts = প্রেরণ-গণনা — হ্যান্ডলার-সিদ্ধান্ত-স্বাধীন)।
+     • দ্বি-সক্রিয়করণ-ঝুঁকি-নিষ্ক্রিয়করণ (ত্রি-স্তর): ① প্রতিনিধি-কী = সারি-কী (≠'Enter') → hr346-পুনঃপ্রবেশ-
+       শূন্য (নিজস্ব-হ্যান্ডলার-Enter-কেবল) ② li = অ-বাটন-উপাদান → নেটিভ-Enter-সক্রিয়করণ-শূন্য ③
+       hr320-Enter-রিকপি-পথ = 'Enter'-কী-কেবল → প্রতিনিধি-কী-অস্পৃশ্য।
+     • ব্লক-পথ: .hr-aria-copy-অনুপস্থিতি (টিপ-বন্ধ = শর্টকাট-প্রেক্ষাপট-শূন্য) → preventDefault + blocked-
+       গণনা {act:notip} — নীরব-ব্লক; li-বহি-টার্গেট = নীরব-উপেক্ষা (গণনা-শূন্য — সক্রিয়করণ-প্রচেষ্টা-নয়)।
+     • ফ্ল্যাশ: .hr346-act-শ্রেণি ১.২s-স্বয়ং-নিরামড (hr324-ফ্ল্যাশ-রীতি — sfs346-টোন) — রি-রেন্ডার-বিহীন।
+     • চুক্তি: ovRows330-অ্যারে-অস্পৃশ্য; q320/q324h…q345h-কাউন্টার-অস্পৃশ্য; storage-অস্পৃশ্য; ফোকাস-স্থির
+       (dispatchEvent-ফোকাস-স্থানান্তর-শূন্য — সারি-ফোকাস-টিকে); s345/s344/…/s330-হুক-সহাবস্থান-অটুট।
+     • QA-হুক __hrAria346QA {acts, blocked, last, err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q346h = { acts: 0, blocked: 0, last: '', err: '' };
+  document.addEventListener('keydown', function (e346k) {
+    try {
+      if (e346k.key !== 'Enter') return;
+      if (e346k.ctrlKey || e346k.metaKey || e346k.altKey) return;
+      if (!ovOpen330) return;
+      var t346k = e346k.target;
+      var li346k = t346k && t346k.closest ? t346k.closest('.hr330-li') : null;
+      if (!li346k || !li346k.closest('.hr330-ov')) return; /* li-উৎস-কেবল — .hr330-x-বাটন-নেটিভ-অস্পৃশ্য */
+      var k346a = li346k.querySelector('.hr330-k');
+      var key346 = k346a ? (k346a.textContent || '').trim() : '';
+      if (!key346) return;
+      var ac346 = document.querySelector('.hr-aria-copy');
+      if (!ac346) { e346k.preventDefault(); q346h.blocked += 1; q346h.last = 'act:notip'; return; } /* টিপ-বন্ধ = শর্টকাট-প্রেক্ষাপট-শূন্য — নীরব-ব্লক */
+      e346k.preventDefault();
+      var idxAt346 = navIdx345; /* s346-গোটচা: dispatchEvent-সিঙ্ক্রোনাস-পার্শ্বপ্রভাব {'?'-টগল-বন্ধ → coOrig345-রিসেট} — idx-প্রি-ক্যাপচুর-বাধ্যতামূলক */
+      ac346.dispatchEvent(new KeyboardEvent('keydown', { key: key346, bubbles: true, cancelable: true })); /* এক-উৎস-প্রতিনিধি — সর্ব-শর্টকাট-হ্যান্ডলার-নিজস্ব-গেটে-সিদ্ধান্ত */
+      li346k.classList.add('hr346-act');
+      setTimeout(function () { li346k.classList.remove('hr346-act'); }, 1200); /* ফ্ল্যাশ-রীতি ১.২s */
+      q346h.acts += 1;
+      q346h.last = 'act:' + key346 + '@' + idxAt346;
+    } catch (e346l) { q346h.err = String((e346l && e346l.message) || e346l); }
+  });
+  window.__hrAria346QA = q346h;
 
 })();
 </script>
