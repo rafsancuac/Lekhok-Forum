@@ -300,6 +300,19 @@
     @media (prefers-reduced-motion: reduce) { .hr330-ov .hr330-li.hr347-io { transition: none; } }
     @media (max-width: 640px) { .hr330-ov .hr330-li.hr347-io { box-shadow: inset 1.5px 0 0 rgba(14, 116, 144, 0.75); } .hr330-ov .hr330-li.hr347-io.hr346-act { box-shadow: inset 1.5px 0 0 rgba(14, 116, 144, 0.75); } }
     /* ═══════ EOF session347 (sfs347 D/S-I/O-ফ্ল্যাশ-ভ্যারিয়েন্ট — admin-ইনলাইন) ═══════ */
+    /* ═══════ session348 (sfs348 ওভারলে-সারি-শর্টকাট-আবিষ্কার-টোন — admin-ইনলাইন) ═══════ */
+    /* সেশন ৩৪৮ (sfs348): ওভারলে-সারি-শর্টকাট-আবিষ্কার-টোন (hr330-তালিকা — hover/focus-আবিষ্কার-মুহূর্ত —
+       aria-keyshortcuts-অর্থবিদ্যার-দৃশ্যমান-প্যারিটি — hr348-এক-উৎস): ফায়ান্সি-পরিবার = শর্টকাট-আবিষ্কার-
+       সংকেত (নতুন-পরিবার-বিভাজন — নীল-রিড/বেগুনি-মোড/টিল-ব্যাচ/সবুজ-সম্পাদনা-সক্রিয়করণ/অ্যাম্বার-সর্ব-মোড/
+       লাল-ধ্বংসাত্মক/সায়ান-I/O-পরে — কী-চিপ-কীক্যাপ-বুস্ট = 'এই-কী-চাপলে-সারি-সক্রিয়'-আবিষ্কার); অবস্থা-
+       প্রাধিকার্য-রক্ষা (:not-গার্ড-চতুষ্টয় — [data-hr343-w]/.hr345-cursor/.hr346-act/.hr347-io-সারি-অস্পৃশ্য —
+       অবস্থা-টোন-অজেয়); কেবল-চিপ-টোন (সারি-ডিফল্ট-রূপ-অস্পৃশ্য — sfs345-রীতি) — সর্ব-ব্যান্ড — rgba-only —
+       হেক্স-শূন্য — MO=৪-অটুট। */
+    .hr330-ov .hr330-li:not([data-hr343-w]):not(.hr345-cursor):not(.hr346-act):not(.hr347-io):hover .hr330-k,
+    .hr330-ov .hr330-li:not([data-hr343-w]):not(.hr345-cursor):not(.hr346-act):not(.hr347-io):focus .hr330-k { color: rgba(134, 25, 143, 1); background: rgba(192, 38, 211, 0.12); border-color: rgba(192, 38, 211, 0.5); box-shadow: inset 0 -1.5px 0 rgba(162, 28, 175, 0.38); }
+    @media (prefers-reduced-motion: reduce) { .hr330-ov .hr330-li:hover .hr330-k, .hr330-ov .hr330-li:focus .hr330-k { transition: none; } }
+    @media (max-width: 640px) { .hr330-ov .hr330-li:not([data-hr343-w]):not(.hr345-cursor):not(.hr346-act):not(.hr347-io):hover .hr330-k, .hr330-ov .hr330-li:not([data-hr343-w]):not(.hr345-cursor):not(.hr346-act):not(.hr347-io):focus .hr330-k { box-shadow: inset 0 -1px 0 rgba(162, 28, 175, 0.38); } }
+    /* ═══════ EOF session348 (sfs348 ওভারলে-সারি-শর্টকাট-আবিষ্কার-টোন — admin-ইনলাইন) ═══════ */
     /* সেশন ৩২৫ (hr325): ইতিহাস-সারি-একক-বিলোপ ×-নিয়ন্ত্রণ (তালিকাযুক্ত-টুলটিপেই — hr319-live-গেট;
        সারি-হোভার/focus-within-এ প্রকাশ — ঘন-তালিকায়-স্থায়ী-ঘোষণা-বিভ্রান্তি-শূন্য; কীবোর্ড-পথ =
        X-শর্টকাট (পয়েন্টার-সারি — hr320-পয়েন্টার — s320/s324-keydown-রীতি); লাল-টিন্ট =
@@ -1657,6 +1670,7 @@
     d330.textContent = ovDsText330(row330m[0], row330m[1]);
     if (row330m[0] === 'D' || row330m[0] === 'S') d330.setAttribute('data-hr330-ds', row330m[0]);
     if (row330m[0] === 'W') li330.setAttribute('data-hr343-w', '1'); /* hr343: W-সারি-মার্কার (sfs343-টোন-হুক — নির্মাতা-এক-উৎস-অটুট) */
+    li330.setAttribute('aria-keyshortcuts', row330m[0]); /* hr348: সারি-শর্টকাট-attr (row330m[0] = .hr330-k-textContent-সম-উৎস = hr346-প্রতিনিধি-সম-কী — ত্রি-উৎস-এক-সত্য — স্ক্রিন-রিডার-সক্রিয়করণ-পরিচিতি — নির্মাতা-এক-উৎস → build/rebuild-সম-পথ-স্বয়ং-কভারড) */
     li330.appendChild(k330);
     li330.appendChild(d330);
     return li330;
@@ -3188,6 +3202,36 @@
     } catch (e347l) { q347h.err = String((e347l && e347l.message) || e347l); }
   });
   window.__hrAria347QA = q347h;
+
+  /* সেশন ৩৪৮ (hr348): ওভারলে-সারি-aria-keyshortcuts (PLANS session347-নোটের প্রস্তাব-②-দ্বিতীয়-বিকল্প):
+     • এক-উৎস: mkLi330-এক-লাইন-সম্প্রসারণ — li.setAttribute('aria-keyshortcuts', row330m[0]) — row330m[0]
+       = .hr330-k-textContent-সম-উৎস = hr346-প্রতিনিধি-সম-কী (ত্রি-উৎস-এক-সত্য — কী-চিপ/attr/প্রতিনিধি-সম-মান);
+       নির্মাতা-এক-উৎস → build/rebuild-সম-পথ-স্বয়ং-কভারড (buildOv330 + rebuildOv330)।
+     • অর্থবিদ্যা: স্ক্রিন-রিডার-সক্রিয়করণ-পরিচিতি (aria-keyshortcuts = স্পেস-বিভাজিত-কী-তালিকা — এক-কী-সারি —
+       li-ফোকাসযোগ্য hr345-tabIndex=-১ → ঘোষণায়-শর্টকাট-সহ-আসে); sfs348-ফায়ান্সি-আবিষ্কার-টোন = দৃশ্যমান-প্যারিটি।
+     • চুক্তি: ovRows330-অ্যারে-অস্পৃশ্য (৯-সারি); q-কাউন্টার/storage-অস্পৃশ্য; পাঠযোগ্য-attr-কেবল (লেজার-স্পর্শ-
+       শূন্য — hr347-regex-অস্পৃশ্য); s347…s330-হুক-সহাবস্থান-অটুট।
+     • QA-হুক __hrAria348QA {aks(), aksK(), last, err} — সারি-শূন্যে-ও-সংজ্ঞায়িত। */
+  var q348h = { last: 'built', err: '' };
+  q348h.aks = function () {
+    try {
+      var lis348 = document.querySelectorAll('.hr330-ov .hr330-li');
+      var out348 = [];
+      for (var i348 = 0; i348 < lis348.length; i348++) out348.push(lis348[i348].getAttribute('aria-keyshortcuts'));
+      return out348;
+    } catch (e348a) { q348h.err = String((e348a && e348a.message) || e348a); return []; }
+  };
+  q348h.aksK = function (k348q) {
+    try {
+      var lis348k = document.querySelectorAll('.hr330-ov .hr330-li');
+      for (var j348 = 0; j348 < lis348k.length; j348++) {
+        var kb348 = lis348k[j348].querySelector('.hr330-k');
+        if (kb348 && (kb348.textContent || '').trim() === k348q) return lis348k[j348].getAttribute('aria-keyshortcuts');
+      }
+      return null;
+    } catch (e348b) { q348h.err = String((e348b && e348b.message) || e348b); return null; }
+  };
+  window.__hrAria348QA = q348h;
 
 })();
 </script>
