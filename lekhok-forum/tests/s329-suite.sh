@@ -193,7 +193,7 @@ D1=$(ev "JSON.stringify({d:window.__hrAria329QA.downloads,ck:window.__dlStub329.
 D1J=$(unjj "$D1")
 NM=$(jf nm "$D1J")
 if [ "$(jf d "$D1J")" = "1" ] && [ "$(jf ck "$D1J")" = "1" ]; then ok "ই২ই: বাটন-ডাউনলোড (Blob+anchor-click — স্টাব-প্রমাণ)"; else bad "ই২ই: $(unjj "$D1")"; fi
-if printf '%s' "$NM" | grep -qE '^lekhok-preview-[0-9]{4}-[0-9]{2}-[0-9]{2}\.txt$' && [ "$(jf sz "$D1J")" != "" ] && [ "$(jf sz "$D1J")" != "0" ]; then ok "ই২ই: ডাউনলোড-ফাইলনাম+বিষয়বস্তু ([$NM] — ISO-তারিখ + non-empty-blob)"; else bad "ই২ই: nm=[$NM] sz=[$(jf sz "$D1J")]"; fi
+if printf '%s' "$NM" | grep -qE '^lekhok-preview-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}\.txt$' && [ "$(jf sz "$D1J")" != "" ] && [ "$(jf sz "$D1J")" != "0" ]; then ok "ই২ই: ডাউনলোড-ফাইলনাম+বিষয়বস্তু ([$NM] — ISO-তারিখ + non-empty-blob)"; else bad "ই২ই: nm=[$NM] sz=[$(jf sz "$D1J")]"; fi
 ev "JSON.stringify((function(){var b=document.querySelectorAll('.hr-aria-copy')[0];b.dispatchEvent(new KeyboardEvent('keydown',{key:'s',bubbles:true,cancelable:true}));return 's1'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
 D2=$(ev "JSON.stringify({d:window.__hrAria329QA.downloads,ck:window.__dlStub329.clicks})")

@@ -930,7 +930,8 @@
       var u324 = URL.createObjectURL(b324d);
       var a324 = document.createElement('a');
       a324.href = u324;
-      a324.download = 'lekhok-copy-history-' + new Date().toISOString().slice(0, 10) + ex332a; /* hr332: '.txt'-হার্ডকোড-মোছা (মোড-সম্মত) */
+      var iso333 = new Date().toISOString(); /* hr333: এক-উৎস-ISO (তারিখ + HHMMSS — সম-দিনে-বহু-ডাউনলোডে ওভাররাইট-বিবাদ-বন্ধ) */
+      a324.download = 'lekhok-copy-history-' + iso333.slice(0, 10) + '-' + iso333.slice(11, 19).replace(/:/g, '') + ex332a; /* hr332-মোড-সম্মত + hr333-টাইমস্ট্যাম্প */
       document.body.appendChild(a324);
       a324.click();
       a324.remove();
@@ -1351,7 +1352,8 @@
       var u329 = URL.createObjectURL(b329d);
       var a329 = document.createElement('a');
       a329.href = u329;
-      a329.download = 'lekhok-preview-' + new Date().toISOString().slice(0, 10) + ex332b; /* hr332: '.txt'-হার্ডকোড-মোছা (মোড-সম্মত) */
+      var iso333b = new Date().toISOString(); /* hr333: এক-উৎস-ISO (তারিখ + HHMMSS — সম-দিনে-বহু-ডাউনলোডে ওভাররাইট-বিবাদ-বন্ধ) */
+      a329.download = 'lekhok-preview-' + iso333b.slice(0, 10) + '-' + iso333b.slice(11, 19).replace(/:/g, '') + ex332b; /* hr332-মোড-সম্মত + hr333-টাইমস্ট্যাম্প */
       document.body.appendChild(a329);
       a329.click();
       a329.remove();
@@ -1451,6 +1453,44 @@
   var q330h = { opens: 0, closes: 0, last: '', err: '' };
   var ov330 = null;
   var ovOpen330 = false;
+  var q330h = { opens: 0, closes: 0, last: '', err: '' };
+  var ov330 = null;
+  var ovOpen330 = false;
+  /* hr333: ওভারলে-রেজিস্ট্রি-এক-উৎস (buildOv330-বহির্ভূত IIFE-স্কোপ — ভবিষ্যৎ-শর্টকাট-নিবন্ধনের
+     এক-ঝলকে-উৎস; D/S-বর্ণনা = মোড-সচেতন (ovDsText330 — নির্মাণ-কালে + cf333-জীবন্ত-সিঙ্ক —
+     s327-গোটচা-②-চুক্তি-চতুর্থ-প্রয়োগ); mkLi330 = নির্মাতা-এক-উৎস (build/rebuild-সম-পথ);
+     data-hr330-ds = D/S-বর্ণনা-হুক (sync-পথ-নিরপেক্ষ DOM-লুকআপ)। */
+  var ovRows330 = [
+    ['E', 'কপি-ইতিহাস স্ট্রিপ কপি'],
+    ['D', 'কপি-ইতিহাস ডাউনলোড (.txt)'],
+    ['X', 'পয়েন্টার-সারি বিলোপ'],
+    ['F', 'রপ্তাই-বিন্যাস চক্র (rich ⇄ key ⇄ json)'],
+    ['P', 'রপ্তাই-প্রিভিউ টগল'],
+    ['C', 'প্রিভিউ কপি'],
+    ['S', 'প্রিভিউ সংরক্ষণ (.txt)'],
+    ['?', 'এই সহায়িকা (টগল)']
+  ];
+  var ovList330 = null;
+  var ovDsText330 = function (k330b, base330) {
+    if (k330b === 'D' || k330b === 'S') {
+      try { if (typeof q332h !== 'undefined' && q332h.ext) return base330.split('.txt').join(q332h.ext()); } catch (e330d) { q330h.err = String((e330d && e330d.message) || e330d); }
+    }
+    return base330;
+  };
+  var mkLi330 = function (row330m) {
+    var li330 = document.createElement('li');
+    li330.className = 'hr330-li';
+    var k330 = document.createElement('kbd');
+    k330.className = 'hr330-k';
+    k330.textContent = row330m[0];
+    var d330 = document.createElement('span');
+    d330.className = 'hr330-d';
+    d330.textContent = ovDsText330(row330m[0], row330m[1]);
+    if (row330m[0] === 'D' || row330m[0] === 'S') d330.setAttribute('data-hr330-ds', row330m[0]);
+    li330.appendChild(k330);
+    li330.appendChild(d330);
+    return li330;
+  };
   var buildOv330 = function () {
     if (ov330) return;
     ov330 = document.createElement('div');
@@ -1473,28 +1513,9 @@
     hd330.appendChild(x330);
     var ul330 = document.createElement('ul');
     ul330.className = 'hr330-list';
-    var rows330 = [
-      ['E', 'কপি-ইতিহাস স্ট্রিপ কপি'],
-      ['D', 'কপি-ইতিহাস ডাউনলোড (.txt)'],
-      ['X', 'পয়েন্টার-সারি বিলোপ'],
-      ['F', 'রপ্তাই-বিন্যাস চক্র (rich ⇄ key ⇄ json)'],
-      ['P', 'রপ্তাই-প্রিভিউ টগল'],
-      ['C', 'প্রিভিউ কপি'],
-      ['S', 'প্রিভিউ সংরক্ষণ (.txt)'],
-      ['?', 'এই সহায়িকা (টগল)']
-    ];
-    for (var i330 = 0; i330 < rows330.length; i330++) {
-      var li330 = document.createElement('li');
-      li330.className = 'hr330-li';
-      var k330 = document.createElement('kbd');
-      k330.className = 'hr330-k';
-      k330.textContent = rows330[i330][0];
-      var d330 = document.createElement('span');
-      d330.className = 'hr330-d';
-      d330.textContent = rows330[i330][1];
-      li330.appendChild(k330);
-      li330.appendChild(d330);
-      ul330.appendChild(li330);
+    ovList330 = ul330; /* hr333: তালিকা-রেফারেন্স-স্থায়ী (rebuildOv330-পথ) */
+    for (var i330 = 0; i330 < ovRows330.length; i330++) {
+      ul330.appendChild(mkLi330(ovRows330[i330])); /* hr333: নির্মাতা-এক-উৎস (build/rebuild-সম-পথ — D/S মোড-সচেতন) */
     }
     var ft330 = document.createElement('div');
     ft330.className = 'hr330-ft';
@@ -1628,6 +1649,66 @@
   };
   q332h.ext = function () { return (mode326 === 'json') ? '.json' : '.txt'; };
   window.__hrAria332QA = q332h;
+
+  /* সেশন ৩৩৩ (hr333): ওভারলে-স্মার্টি-সম্প্রসারণ + ফাইলনাম-HHMMSS-টাইমস্ট্যাম্প (PLANS session332-নোটের প্রস্তাব-②-উভয়-বিকল্প)
+     • রেজিস্ট্রি-এক-উৎস: ovRows330 (buildOv330-বহির্ভূত IIFE-স্কোপ — hr330-ব্লক-স্তর) + mkLi330-
+       নির্মাতা-এক-উৎস (build/rebuild-সম-পথ) + rebuildOv330 (তালিকা-পুনঃনির্মাণ — ওভারলে-খোলা-
+       অবস্থায়ও-নিরাপদ); **registration-API** (q333h.register — ডুপ-বর্জন + তাৎক্ষণিক-পুনঃনির্মাণ —
+       ভবিষ্যৎ-শর্টকাট = এক-কল-নিবন্ধন — rows330-অ্যারে-এক-উৎস-রীতি-সমাপ্তি)।
+     • D/S-বর্ণনা-মোড-সচেতন: ovDsText330 ('.txt'-বেস-পাঠ = মোড-নিরপেক্ষ-টেমপ্লেট — q332h.ext()-
+       কল-টাইম-স্প্লিট); নির্মাণ-কালে-মূল্যায়ন (mkLi330) + **cf333-জীবন্ত-সিঙ্ক** (cycleFmt326-চেইন-
+       পরবর্তী cf327→cf329→cf332→cf333 — মোড-বদলে data-hr330-ds-DOM-লুকআপ-সিঙ্ক — ওভারলে-
+       খোলা-অবস্থায়ও-সত্য — s327-গোটচা-②-চুক্তি-চতুর্থ-প্রয়োগ — trigger-path-neutral)।
+     • ফাইলনাম-টাইমস্ট্যাম্প: dlHist324/dlPv329 — ISO-এক-উৎস (iso333/iso333b) — তারিখ + '-' +
+       HHMMSS (slice(11,19)-কোলন-বিহীন) — সম-দিনে-বহু-ডাউনলোডে ওভাররাইট-বিবাদ-বন্ধ; মোড-সম্মত-
+       এক্সটেনশন-অটুট (ex332a/ex332b — hr332-চুক্তি)।
+     • QA-হুক __hrAria333QA {registrations, last, rows(), register(), sync(), err} — সারি-শূন্যে-ও-
+       সংজ্ঞায়িত; rows() = রেজিস্ট্রি-গণনা; register() = নিবন্ধন (ডুপে false); sync() = বলপ্রয়োগ-
+       D/S-সিঙ্ক (পরীক্ষাযোগ্য); registrations = সফল-নিবন্ধন-গণনা (ovOpen/closes-অস্পৃশ্য)। */
+  var q333h = { registrations: 0, last: '', err: '' };
+  var syncDs330 = function () {
+    try {
+      if (!ovList330) return;
+      for (var i333s = 0; i333s < ovRows330.length; i333s++) {
+        var k333s = ovRows330[i333s][0];
+        if (k333s === 'D' || k333s === 'S') {
+          var el333s = ovList330.querySelector('[data-hr330-ds="' + k333s + '"]');
+          if (el333s) el333s.textContent = ovDsText330(k333s, ovRows330[i333s][1]);
+        }
+      }
+    } catch (e333s) { q333h.err = String((e333s && e333s.message) || e333s); }
+  };
+  var rebuildOv330 = function () {
+    try {
+      if (!ovList330) return;
+      while (ovList330.firstChild) ovList330.removeChild(ovList330.firstChild);
+      for (var i333r = 0; i333r < ovRows330.length; i333r++) {
+        ovList330.appendChild(mkLi330(ovRows330[i333r]));
+      }
+    } catch (e333r) { q333h.err = String((e333r && e333r.message) || e333r); }
+  };
+  var cf333 = cycleFmt326;
+  cycleFmt326 = function (b333c) {
+    cf333(b333c);
+    try {
+      if (ovOpen330) syncDs330(); /* মোড-বদলে খোলা-ওভারলের D/S-বর্ণনা-সমকালীন-সিঙ্ক */
+    } catch (e333c) { q333h.err = String((e333c && e333c.message) || e333c); }
+  };
+  q333h.rows = function () { return ovRows330.length; };
+  q333h.register = function (k333g, d333g) {
+    try {
+      if (!k333g) return false;
+      for (var i333g = 0; i333g < ovRows330.length; i333g++) {
+        if (ovRows330[i333g][0] === k333g) return false; /* ডুপ-বর্জন (এক-কী-এক-সারি) */
+      }
+      ovRows330.push([String(k333g), String(d333g === undefined ? '' : d333g)]);
+      if (ovList330) rebuildOv330();
+      q333h.registrations += 1; q333h.last = 'registered:' + k333g;
+      return true;
+    } catch (e333g) { q333h.err = String((e333g && e333g.message) || e333g); return false; }
+  };
+  q333h.sync = function () { syncDs330(); return true; };
+  window.__hrAria333QA = q333h;
 })();
 </script>
 </body>

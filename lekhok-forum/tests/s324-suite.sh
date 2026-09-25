@@ -205,7 +205,7 @@ D1=$(ev "JSON.stringify({dl:window.__hrAria324QA.downloads,ck:window.__dlStub324
 D1J=$(unjj "$D1")
 NM=$(jf nm "$D1J")
 if [ "$(jf dl "$D1J")" = "1" ] && [ "$(jf ck "$D1J")" = "1" ]; then ok "ই২ই: D-কী → ডাউনলোড-পথ (Blob+anchor-click — স্টাব-প্রমাণ)"; else bad "ই২ই: $(unjj "$D1")"; fi
-if printf '%s' "$NM" | grep -qE '^lekhok-copy-history-[0-9]{4}-[0-9]{2}-[0-9]{2}\.txt$' && [ "$(jf sz "$D1J")" != "" ] && [ "$(jf sz "$D1J")" != "0" ]; then ok "ই২ই: ডাউনলোড-ফাইলনাম+বিষয়বস্তু ([$NM] — ISO-তারিখ + non-empty-blob)"; else bad "ই২ই: nm=[$NM] sz=[$(jf sz "$D1J")]"; fi
+if printf '%s' "$NM" | grep -qE '^lekhok-copy-history-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}\.txt$' && [ "$(jf sz "$D1J")" != "" ] && [ "$(jf sz "$D1J")" != "0" ]; then ok "ই২ই: ডাউনলোড-ফাইলনাম+বিষয়বস্তু ([$NM] — ISO-তারিখ + non-empty-blob)"; else bad "ই২ই: nm=[$NM] sz=[$(jf sz "$D1J")]"; fi
 ev "JSON.stringify((function(){var b=document.querySelector('.hr317-tip.is-on .hr324-copy');if(!b)return'nb';b.click();return 'bc'})())" >/dev/null 2>&1
 agent-browser wait 450 >/dev/null 2>&1
 BC=$(ev "JSON.stringify({cp:window.__hrAria324QA.copies,h:window.__hrAria317QA.hist().length})")

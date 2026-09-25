@@ -4877,3 +4877,34 @@ a.ws118-cell:hover span{color:var(--accent-dark,#047857)}
 }
 /* ═══════════════════ EOF session332 (sfs332 ডেস্ক-সম-প্রদর্শন-ব্যাজ-টোন-ধার) ═══════════════════ */
 
+/* ═══════════════════ session333 (sfs333 চিপ-প্যারি-পটভূমি-ধার) ═══════════════════ */
+/* hex-free (color-mix — guard:design-চুক্তি); s332-পরবর্তী প্যারি-পাঠযোগ্যতা-ধার: সম-প্রদর্শন
+   টোন-সিঁড়ি এ-পর্যন্ত কেবল-বর্ডারে (চিপ ৪৬→৫৮→৬২→৬৬% + ডেস্ক-ব্যাজ ৪২→৫০%) — মোবাইল-ব্যান্ডের
+   টাইট-জ্যামিতিতে পটভূমি-ব্র্যান্ড-অংশও-সমানুপাতিক-বৃদ্ধি (বর্ডার-ধারের প্রতিধ্বনি — জুটি-এক-পাঠ):
+   ৩৬১–৬৪০px সম-প্রদর্শনে চিপ-পটভূমি ১৮→২৪% (বর্ডার-ধার ৬২%-এর সঙ্গী); ≤৩৬০px ১৮→২৮%
+   (৬৬%-ধারের সঙ্গী); **রেঞ্জ-স্কোপড মিডিয়া-কোয়েরি** (s331-রীতি — পূর্ব-ধার-রুল-স্পর্শ-শূন্য);
+   ট্যাপ-গেট ([data-sfs321-tap]) × keynav-গেট ([data-sfs314-focus]) উভয়ে-সম-মান (parity-নীতি —
+   s327/s328-সমবায়-নির্বাচক-পুনঃব্যবহার — badge-on ~ chip-on); **কেবল-রঙ (background-color)** —
+   layout-neutral (গাটার/প্রস্থ/বর্ডার-মান-অস্পৃশ্য — s327/s328/s329/s330/s331/s332-অটুট);
+   ডেস্ক->৬৪০px-অটুট (পটভূমি-বৃদ্ধি = মোবাইল-টাইট-জ্যামিতি-কেবল); চিপ-transition-তালিকায়
+   background-নেই → পরিবর্তন-তাৎক্ষণিক (কম্পোজিটর-চাপ-শূন্য — s315-ফ্রিজ-গণিত-নিরাপদ);
+   MO-অবর্জন-চুক্তি-অটুট; DOM-ক্রম-নির্ভরতা-অটুট (posbadge→namechip-ক্রম-বদল-নিষিদ্ধ — s327-চুক্তি)। */
+@media (max-width: 640px) and (min-width: 361px) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    background-color: color-mix(in srgb, var(--lf-brand-primary) 24%, color-mix(in srgb, var(--lf-slate-deeper) 72%, transparent));
+  }
+  .sfs292-phone[data-sfs314-focus] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    background-color: color-mix(in srgb, var(--lf-brand-primary) 24%, color-mix(in srgb, var(--lf-slate-deeper) 72%, transparent));
+  }
+}
+@media (max-width: 360px) {
+  .sfs292-phone[data-sfs321-tap] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    background-color: color-mix(in srgb, var(--lf-brand-primary) 28%, color-mix(in srgb, var(--lf-slate-deeper) 72%, transparent));
+  }
+  .sfs292-phone[data-sfs314-focus] .sfs318-posbadge[data-sfs318-on] ~ .sfs319-namechip[data-sfs319-on] {
+    background-color: color-mix(in srgb, var(--lf-brand-primary) 28%, color-mix(in srgb, var(--lf-slate-deeper) 72%, transparent));
+  }
+}
+/* ═══════════════════ EOF session333 (sfs333 চিপ-প্যারি-পটভূমি-ধার) ═══════════════════ */
+
+
