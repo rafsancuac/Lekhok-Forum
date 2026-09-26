@@ -18,6 +18,11 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
 fi
 say(){ echo "[ensure-bot] $*"; }
 
+# ০) সমান্তরাল-ইনভোকেশন-রোধ (session321): কিপার-ক্রন + ম্যানুয়াল-রান-ওভারল্যাপে
+#    দুই-স্টার্ট-রেস → একই-TG-সেশন-দুই-সংযোগ → AUTH_KEY_DUPLICATED। flock-এ-ধারাবাহিক।
+exec 9>/tmp/epaper-ensure.lock
+if ! flock -n 9; then say "⏳ অন্য-ensure-bot-চলছে — স্কিপ (রেস-প্রতিষেধক)"; exit 0; fi
+
 # ১) রিপো
 if [ ! -d "$BOT" ]; then
   say "রিপো নেই — ক্লোন হচ্ছে…"
@@ -55,14 +60,22 @@ if pgrep -f "$BOT_PAT" >/dev/null 2>&1; then
   exit 0
 fi
 # pm2 থাকলে pm2-ই-প্রধান (ক্র্যাশ → ৫-সেকেন্ডে-অটো-রিস্টার্ট); ব্যর্থ-হলে setsid-ফলব্যাক
+# 9>&-: pm2-ডেমন-সন্তান flock-fd-৯-উত্তরাধিকার-পাবে-না (session321 — নইলে-বট-জীবিত-থাকা-পর্যন্ত-সব-ensure-bot-স্কিপ-হতে-থাকবে)
 if command -v pm2 >/dev/null 2>&1; then
   say "▶️ বট-স্টার্ট (pm2 — ক্র্যাশ-অটো-রিস্টার্ট)…"
-  ( cd "$BOT" && pm2 start ecosystem.config.cjs --update-env >/dev/null 2>&1 && pm2 save >/dev/null 2>&1 ) \
+  ( cd "$BOT" && pm2 start ecosystem.config.cjs --update-env 9>&- >/dev/null 2>&1 && pm2 save 9>&- >/dev/null 2>&1 ) \
     || say "⚠️ pm2-স্টার্ট-ব্যর্থ — setsid-ফলব্যাক-ব্যবহার-হবে"
 fi
 if ! pgrep -f "$BOT_PAT" >/dev/null 2>&1; then
   say "▶️ বট-স্টার্ট (setsid-ডিটাচড)…"
-  ( cd "$BOT" && setsid nohup bun run src/index.ts >> "$LOG" 2>&1 & )
+  # session321-বুলেটপ্রুফ-ডিটাচ: ব্যাকগ্রাউন্ড-সাবশেল + exec-setsid + fd-৯-বন্ধ + stdio-বিচ্ছিন্ন —
+  # মূল-স্ক্রিপ্ট কখনো-সন্তানের-জন্য-অপেক্ষা-করবে-না (do_wait-ঝুলন্ত-বাগ-নির্মূল),
+  # বট-সন্তান flock-fd/পাইপ-উত্তরাধিকার-পাবে-না (লক-চিরস্থায়ী-আটকে-যাওয়া-নির্মূল)।
+  (
+    cd "$BOT" || exit 1
+    exec setsid nohup bun run src/index.ts 9>&- >> "$LOG" 2>&1 < /dev/null
+  ) >/dev/null 2>&1 </dev/null &
+  disown $! 2>/dev/null || true
 fi
 sleep 3
 if pgrep -f "$BOT_PAT" >/dev/null 2>&1; then

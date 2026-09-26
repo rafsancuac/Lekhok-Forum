@@ -31,10 +31,46 @@ const CHANNEL = process.env.EPAPER_CHANNEL || 'ePaperXpress'
 const POLL_MINUTES = Math.max(parseInt(process.env.POLL_MINUTES || '20', 10) || 20, 3)
 const PAPER_FILTER = (process.env.PAPER_FILTER || '').trim().toLowerCase() // খালি = সব পত্রিকা; যেমন: "prothom alo"
 const BACKFILL_DAYS = Math.max(parseInt(process.env.BACKFILL_DAYS || '2', 10) || 2, 1) // শেষ N দিনের পত্রিকা সিঙ্ক-হবে
+// session321: স্ক্যান-ডেপথ — আগে limit:50-এ ৩-দিনের-উইন্ডো-সম্পূর্ণ-ভরতে-পারত-না (৩-দিনে ~৬০-পিডিএফ
+// + টেক্সট-মেসেজ) → সবচেয়ে-পুরোনো-দিন (যেমন ২৪-সেপ্টেম্বর) চুপচাপ-বাদ-পড়ত। এখন ১৫০।
+const SCAN_LIMIT = Math.max(parseInt(process.env.SCAN_LIMIT || '150', 10) || 150, 50)
 
 const SESS_FILE = path.join(import.meta.dir, '..', '.tg-session')
 const STATE_FILE = path.join(import.meta.dir, '..', '.sync-state.json')
 const HEARTBEAT_FILE = path.join(import.meta.dir, '..', '.bot-heartbeat')
+const LOCK_FILE = path.join(import.meta.dir, '..', '.bot-lock')
+
+/* ── একক-ইনস্ট্যান্স-লক (session321 — AUTH_KEY_DUPLICATED-এর স্থায়ী-প্রতিষেধক) ──
+   একই TG-সেশন দুই-প্রসেস/দুই-সার্ভার থেকে সংযোগ করলেই Telegram auth-key স্থায়ীভাবে
+   তুলে নেয় — তখন-ই বার-বার OTP-পুনঃঅথ লাগত (২২-সেপ্টেম্বর-সংকটের-মূল-RCA)। তাই
+   সংযোগের-আগেই হার্ড-গার্ড: .bot-lock {pid, at} — জীবিত-অন্য-ইনস্ট্যান্স-থাকলে এ-কপি
+   কখনোই সংযোগ-করবে-না (exit 0); মৃত-কপির-স্টেল-লক-হলে দখল-নেয়। */
+function anotherInstanceAlive(pid: number): boolean {
+  try { process.kill(pid, 0); return pid !== process.pid } catch { return false }
+}
+function acquireInstanceLock(): boolean {
+  try {
+    if (fs.existsSync(LOCK_FILE)) {
+      try {
+        const prev = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf8')) as { pid?: number }
+        if (prev?.pid && anotherInstanceAlive(prev.pid)) return false // জীবিত-কপি-আছে — সংযোগ-নিষিদ্ধ
+      } catch { /* করাপ্ট-লক — নিচে-দখল-হবে */ }
+      try { fs.unlinkSync(LOCK_FILE) } catch {}
+    }
+    fs.writeFileSync(LOCK_FILE, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }), { flag: 'wx' })
+    return true
+  } catch { return false } // রেসে-হারজিত (অন্য-কপি wx-জিতেছে)
+}
+function releaseInstanceLock(): void {
+  try {
+    const cur = JSON.parse(fs.readFileSync(LOCK_FILE, 'utf8')) as { pid?: number }
+    if (cur?.pid === process.pid) fs.unlinkSync(LOCK_FILE)
+  } catch {}
+}
+for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(sig, () => { releaseInstanceLock(); process.exit(0) })
+}
+process.on('beforeExit', releaseInstanceLock)
 
 /* ── ক্র্যাশ-প্রুফ-গার্ড (session184): ধাক্কা-খাওয়া-অ্যাসিঙ্ক-এররে পোল-লুপ কখনো-মরবে-না ──
    আগে: কোনো-প্রমিস-রিজেক্ট-এস্কেপ করলে পুরো-প্রসেস মারা-যেত (ইউজার-অভিযোগের-মূল-কারণগুলোর-একটি)
@@ -442,6 +478,13 @@ async function makeConnectedClient(sessionStr: string): Promise<TelegramClient> 
 
 /* ── টেলিগ্রাম ── */
 async function main(): Promise<void> {
+  // একক-ইনস্ট্যান্স-হার্ড-গার্ড — সংযোগের-আগেই (session321)
+  if (!acquireInstanceLock()) {
+    let prevPid = 0
+    try { prevPid = (JSON.parse(fs.readFileSync(LOCK_FILE, 'utf8')) as { pid?: number }).pid || 0 } catch {}
+    console.log(`↷ অন্য-বট-ইনস্ট্যান্স-জীবিত (pid ${prevPid}) — এ-কপি-সংযোগ-করছে-না (AUTH_KEY_DUPLICATED-প্রতিষেধক)`)
+    process.exit(0)
+  }
   let sessionStr = TG_SESSION
   if (!sessionStr && fs.existsSync(SESS_FILE)) sessionStr = fs.readFileSync(SESS_FILE, 'utf8').trim()
   if (!sessionStr) {
@@ -455,8 +498,8 @@ async function main(): Promise<void> {
     const today = dhakaDate()
     const cutoff = dhakaDate(new Date(Date.now() - (BACKFILL_DAYS - 1) * 86400000)) // শেষ N দিন
     if (!state[today]) state[today] = {}
-    console.log('🔍 স্ক্যান:', today, `(উইন্ডো: ${cutoff} → আজ)`)
-    const msgs = await client.getMessages(CHANNEL, { limit: 50 })
+    console.log('🔍 স্ক্যান:', today, `(উইন্ডো: ${cutoff} → আজ, ডেপথ-${SCAN_LIMIT})`)
+    const msgs = await client.getMessages(CHANNEL, { limit: SCAN_LIMIT })
     // পুরোনো-থেকে-নতুন ক্রমে প্রসেস — ফিচার্ড-রো-তে সর্বশেষ-পোস্ট-করা পত্রিকাটি থাকে
     const list = [...msgs].reverse()
     let attempted = 0
