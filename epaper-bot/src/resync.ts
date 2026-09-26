@@ -138,6 +138,19 @@ async function main(): Promise<void> {
   let sessionStr = TG_SESSION
   if (!sessionStr && fs.existsSync(SESS_FILE)) sessionStr = fs.readFileSync(SESS_FILE, 'utf8').trim()
   if (!sessionStr) { console.error('❌ টেলিগ্রাম-সেশন নেই — আগে `bun run login` চালান'); process.exit(1) }
+  // ── সেশন-দ্বন্দ্ব-হার্ড-গার্ড (session321-সম্পূরক): বট/অন্য-TG-প্রসেস-জীবিত-থাকলে-সংযোগ-নিষিদ্ধ ──
+  // একই-TG-সেশন-দুই-সংযোগ = AUTH_KEY_DUPLICATED (auth-key স্থায়ী-বাতিল → আবার-ওটিপি-লাগে)।
+  const LOCK = path.join(import.meta.dir, '..', '.bot-lock')
+  try {
+    const prev = JSON.parse(fs.readFileSync(LOCK, 'utf8')) as { pid?: number }
+    if (prev?.pid && prev.pid !== process.pid) {
+      let alive = true
+      try { process.kill(prev.pid, 0) } catch { alive = false }
+      if (alive) { console.error(`🚨 বট-জীবিত (pid ${prev.pid}) — এ-স্ক্রিপ্ট-বাতিল (সেশন-দ্বন্দ্ব-প্রতিষেধক)। আগে বট-বন্ধ-করুন (kill ${prev.pid}), তারপর-আবার-চালান।`); process.exit(2) }
+    }
+  } catch { /* লক-নেই/করাপ্ট — নিরাপদ */ }
+  try { fs.writeFileSync(LOCK, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }), { flag: 'wx' }) } catch { console.error('🚨 লক-দখল-ব্যর্থ — সমসাময়িক-অন্য-TG-প্রসেস-সন্দেহ'); process.exit(2) }
+  process.on('exit', () => { try { const c = JSON.parse(fs.readFileSync(LOCK, 'utf8')) as { pid?: number }; if (c?.pid === process.pid) fs.unlinkSync(LOCK) } catch {} })
   const client = new TelegramClient(new StringSession(sessionStr), TG_API_ID, TG_API_HASH, { connectionRetries: 5 })
   await client.connect()
   if (!client.checkAuthorization()) { console.error('❌ সেশন অবৈধ — আবার `bun run login`'); process.exit(1) }

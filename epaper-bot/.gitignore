@@ -7,3 +7,5 @@ node_modules
 .backfill-state.json
 .bot-heartbeat
 bot.log
+.bot-lock
+.406-baseline

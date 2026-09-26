@@ -17,6 +17,8 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
   REPO_URL="https://${GITHUB_TOKEN}@github.com/rafsancuac/Lekhok-Forum.git"
 fi
 say(){ echo "[ensure-bot] $*"; }
+# session321-সম্পূরক: npm-global-বিন (যেমন pm2) ক্রন-শেলের-PATH-বহির্ভূত-হলে pm2-যাচাই-ব্যর্থ-হত
+export PATH="$HOME/.npm-global/bin:$PATH"
 
 # ০) সমান্তরাল-ইনভোকেশন-রোধ (session321): কিপার-ক্রন + ম্যানুয়াল-রান-ওভারল্যাপে
 #    দুই-স্টার্ট-রেস → একই-TG-সেশন-দুই-সংযোগ → AUTH_KEY_DUPLICATED। flock-এ-ধারাবাহিক।

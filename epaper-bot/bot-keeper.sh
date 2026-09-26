@@ -58,4 +58,15 @@ if curl -sf --max-time 25 "https://lekhok-forum.vercel.app/api/epaper/papers" -o
 else
   say "⚠️ সাইট-API-প্রোব-ব্যর্থ (নেটওয়ার্ক?)"
 fi
+
+# ④ সেশন-মৃত্যু-শনাক্তকরণ (session321-সম্পূরক): AUTH_KEY_DUPLICATED-নতুন-ঘটনা = তাৎক্ষণিক-সংকট-সংকেত
+#    (বেসলাইন-ফাইল-বনাম-বর্তমান-গণনা — পুরোনো-লগ-নয়, শুধু-নতুন-ঘটনায়-সংকেত)
+C406=$(grep -c "AUTH_KEY_DUPLICATED" "$LOG" 2>/dev/null || true)
+BASE_FILE="$BOT/.406-baseline"
+BASE=$(cat "$BASE_FILE" 2>/dev/null || echo 0)
+if [ "${C406:-0}" -gt "${BASE:-0}" ]; then
+  say "🚨 AUTH_KEY_DUPLICATED-নতুন-ঘটনা (+$((C406-BASE))) — TG-সেশন-স্থায়ী-মৃত; ইউজার-পুনঃঅথ (OTP) ছাড়া-পুনরুদ্ধার-অসম্ভব"
+fi
+echo "${C406:-0}" > "$BASE_FILE" 2>/dev/null || true
+
 exit 0
